@@ -78,6 +78,7 @@ typedef enum {STANDARD=0,
 void vp_putint (int w);
 int vp_getint (void);
 void vp_putfloat (float w);
+void vp_putfloat0 (float w);
 void vp_plot (float x, float y, bool down);
 void vp_uplot (float x, float y, bool down);
 void vp_clip (float xmin, float ymin, float xmax, float ymax);
