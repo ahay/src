@@ -32,7 +32,8 @@ for case in (1,2):
            point1=0.75 point2=0.75
            label1="Time (s)" label2="In-line" label3="Cross-line"
            ''' % title)
-    Flow(line,cube,'window n3=1 f3=40')
+    #    Flow(line,cube,'window n3=1 f3=40')
+    Flow(line,cube,'window n2=1 f2=50')
     Plot(line,line,
          'grey title=%s lanel1="Time (s)" label2="In-line" ' % title)
 Result('sline','s1line s2line','SideBySideAniso')
