@@ -12,12 +12,12 @@ int main (int argc, char *argv[])
 {
     int nt, nz, nx, iz, ix;
     bool slow;
-    float t0, dt, z0, dz, z, eps;
+    float t0, dt, z0, dz, z=0., eps;
     float *time, *depth, *vel;
     map str;
     sf_file in, out, velocity;
 
-sf_init(argc, argv);
+    sf_init(argc, argv);
     in = sf_input("in");
     velocity = sf_input("velocity");
     out = sf_output("out");
