@@ -13,7 +13,7 @@ int main (int argc, char* argv[])
 {
     map nmo;
     int it,ix,ih, nt,nx, nh, CDPtype;
-    float dt, t0, h, h0, f, dh, eps;
+    float dt, t0, h, h0, f, dh, eps, dy;
     float *trace, *vel, *off, *str, *out;
     sf_file cmp, nmod, velocity, offset;
 
@@ -31,6 +31,7 @@ int main (int argc, char* argv[])
 
     off = sf_floatalloc(nh);
 
+    CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
 	sf_read (off,sizeof(float),nh,offset);
@@ -39,6 +40,12 @@ int main (int argc, char* argv[])
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
 	
+	if (sf_histfloat(cmp,"d3",&dy)) {
+	    CDPtype=0.5+dh/dy;
+	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
+	} 	    
+	sf_warning("CDPtype=%d",CDPtype);
+
 	h0 *= 2.;
 	dh *= 2.;
 	/* full offset */
@@ -49,8 +56,6 @@ int main (int argc, char* argv[])
     }
 
     nx = sf_leftsize(cmp,2);
-
-    if (!sf_histint(cmp,"CDPtype",&CDPtype)) CDPtype=1;
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
     /* reference offset */
@@ -93,5 +98,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.1 2004/03/18 03:24:19 fomels Exp $	 */
+/* 	$Id: Minmo.c,v 1.2 2004/03/20 05:48:58 fomels Exp $	 */
 

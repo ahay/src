@@ -59,9 +59,9 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
 
     for (iy=0; iy < ny; iy++) {
-	for (ih=iy%type; ih < nh; ih += type) {
+	for (ih=iy%type; ih < nh+iy%type; ih += type) {
 	    is = (iy - ih)/type;
-	    if (is >= 0 && is < ns) {
+	    if (is >= 0 && is < ns && ih < nh) {
 		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
 		sf_read(trace,sizeof(char),nt,in);
 		sf_write(trace,sizeof(char),nt,out);
@@ -74,3 +74,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
+/* 	$Id: Mshot2cmp.c,v 1.6 2004/03/20 05:48:58 fomels Exp $	 */
