@@ -12,8 +12,7 @@ monof2 nmo noise nsmooth1 ofpwd ocparcel octentwt planemis2 planemis3
 planesignoi pnmo prestolt pwd radial radon randrefl refer reshape ricker
 shapebin shapebin1 shot2cmp shotholes slice smooth smoothder smoothreg
 smoothreg2 spectra spectra2 spline splinefilter stolt stretch taupmo
-time2depth tomo tpow trismooth2 twodip2 twofreq2 vscan velmod warp1 warpscan
-warpscan2 window1 window2 window3
+time2depth tomo tpow trismooth2 twodip2 twofreq2 vscan velmod
 '''
 
 try: # distributed version

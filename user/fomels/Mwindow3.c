@@ -84,4 +84,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow3.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

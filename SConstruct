@@ -50,7 +50,7 @@ env.Prepend(CPPPATH=['../../include'],
 
 Export('env')
 dirs = ('lib','main','proc','imag')
-user = ('fomels',)
+user = ('fomels','gee')
 
 Default('build/include')
 subdirs = map(lambda x: os.path.join('filt',x), dirs) + \

@@ -243,4 +243,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarp1.c,v 1.12 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */
