@@ -1,0 +1,29 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+from rsfrecipe import Helderiv, Bay
+
+###########################################################################
+Book()
+
+Bay('bay',f2=500,n2=1600,f1=400,n1=700)
+
+def plot(title):
+    return 'grey title="%s" pclip=99.9 gpow=.8 crowd=.85' % title
+
+Plot('bay','bay',plot('Topographic map, Stanford area'))
+Plot('slope','bay','igrad | ' + plot('Southward slope'))
+
+Helderiv('helocut','bay',eps=4,na=16,cut=1)
+Plot('helocut','helocut',plot('Helix derivative'))
+
+Combine('helocut','bay helocut slope','OverUnderAniso',result=1)
+
+###########################################################################
+End()
