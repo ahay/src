@@ -103,4 +103,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Midempatch.c,v 1.2 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id$	 */

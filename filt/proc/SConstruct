@@ -1,15 +1,15 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../..')
 import configure
 
 progs = '''
-abalance agc ai2refl aliasp autocorr bandpass bin bin1 blindpick blindpick2
-boxsmooth byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
-dealias2 decon deburst depth2time deriv despike dip dip2 dipfilter dips dix
-envelope explanesignoi expsignoi extract fft1 fft3 fint1 flat flat3 fourvc
-fourvc2 frame helicon hole idempatch igrad imospray impl1 impl2 infill inmo
-intbin intshow inttest1 inttest2 invbin1 iphase kolmog lapfill levint light
-linefit lopef losignoi lpad lpef make misif miss miss1 miss2 miss3 monof
+abalance agc ai2refl aliasp bandpass bin bin1 blindpick blindpick2
+boxsmooth byte2rsf causint clip conflict costaper cmp2shot
+cosft dealias2 depth2time deriv dip dip2 dipfilter dips
+dix envelope explanesignoi expsignoi extract fft1 fft3 flat flat3 fourvc
+fourvc2 igrad imospray impl1 impl2 infill inmo
+intbin intshow inttest1 inttest2 invbin1 iphase kolmog 
+linefit losignoi lpad lpef make misif miss miss1 miss2 miss3 monof
 monof2 msmiss mspef nhelicon nmo noise npef nsmooth1 ofpwd ocparcel octentwt
 parcel pef planemis2 planemis3 planesignoi pnmo prestolt pwd qdome radial
 radon randrefl refer reshape ricker signoi shapebin shapebin1 shot2cmp
@@ -26,6 +26,8 @@ try: # distributed version
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
     docmerge = configure.docmerge
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     root = None
     env = Environment()
@@ -35,6 +37,7 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
     SConscript('../lib/SConstruct')
+    src = glob.glob('[a-z]*.c')
 
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
@@ -55,13 +58,13 @@ prefilter printfilter pwd quantile radon randn random recfilt regrid repeat
 reshape shotfill signoi smoothder slinint spline3 spline steepdip stretch4
 stretch tcaf1 tcai1 tcai2 tent2 tent tomo triangle1 triangle2 triangle
 trianglen tridiagonal trisl twodip2 twodiv2 twofreq2 twoplane2 weight2 weight
-wilson
+wilson window1 window2 window3
 '''
 
-for source in Split(src2):
-    env.Include(source,prefix='')
-    obj = env.StaticObject(source+'.c')
-    env.Depends(obj,source+'.h')
+for source in src:
+    inc = env.Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
  
 mains = Split(progs)
 

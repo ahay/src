@@ -74,4 +74,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mconv.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

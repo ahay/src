@@ -1,13 +1,37 @@
+/* Extract window from data, 3-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "window3.h"
 
 static int *w, *nw, *n;
 static float *h;
 
-void window3_init (int* w_in, int* nw_in, int* n_in, float* h_in)
+void window3_init (int* w_in   /* window size [3] */, 
+		   int* nw_in  /* number of windows [3] */, 
+		   int* n_in   /* data size [3] */, 
+		   float* h_in /* overlap [3] */)
+/*< initialize >*/
 {
     w = w_in; 
     nw = nw_in; 
@@ -15,11 +39,14 @@ void window3_init (int* w_in, int* nw_in, int* n_in, float* h_in)
     h = h_in;
 }
 
-void window3_apply (const int* i, float*** dat, 
+void window3_apply (const int* i           /* window number [3] */, 
+		    float*** dat           /* input data */, 
 		    bool near, bool far, 
 		    bool left, bool right, 
-		    bool top, bool bottom,
-		    int* i0, float*** win)
+		    bool top, bool bottom  /* tapering */,
+		    int* i0                /* window start [3] */, 
+		    float*** win           /* output window */)
+/*< extract window >*/
 {
     int i1, i2, i3, j;
     float gain1, gain2, gain3;
@@ -65,4 +92,4 @@ void window3_apply (const int* i, float*** dat,
     }
 }
 
-/* 	$Id: window3.c,v 1.2 2004/06/16 17:55:15 fomels Exp $	 */
+/* 	$Id$	 */

@@ -64,4 +64,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mdespike.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

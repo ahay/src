@@ -1,4 +1,4 @@
-import sys, os, string, re, commands
+import sys, os, string, re, commands, types
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons.Script.SConscript
@@ -69,7 +69,9 @@ def check_all(context):
 
 def libs(context):
     context.Message("checking libraries ... ")
-    LIBS = string.split(context.env.get('LIBS','m'))
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
     if sys.platform[:5] == 'sunos':
         LIBS.append('nsl')
     elif sys.platform[:6] == 'cygwin':

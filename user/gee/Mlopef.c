@@ -29,14 +29,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "lopef.h"
 #include "printfilter.h"
 #include "bound.h"
-#include "randn.h"
+#include "random.h"
 
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], w[3], k[3], a[3], gap[3], center[3];
     int n123, n1, dim, dim1, nk, i, j, ik, na;
     bool stp;
-    float *data, *noiz, d[3], o[3], *mask, vel, tgap, dabs, di;
+    float *data, d[3], o[3], *mask, vel, tgap, dabs, di;
     char varname[6], *lagfile;
     filter aa, bb, ak;
     sf_file dat, pef, lag, known;
@@ -180,15 +180,10 @@ int main(int argc, char* argv[])
 	if (di > dabs) dabs=di;
     }
 
-    noiz = sf_floatalloc(n123);
-    random0(n123,noiz);
-
-
+    random_init (2004);
     for (i=0; i < n123; i++) {
-	data[i] = data[i]/dabs + 100.*FLT_EPSILON*(noiz[i]-0.5);
+	data[i] = data[i]/dabs + 100.*FLT_EPSILON*(random0()-0.5);
     }
-
-    free(noiz);
 
     for (ik=0; ik < nk; ik++) {
 	ak = aa+ik;
@@ -214,4 +209,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mlopef.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

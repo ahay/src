@@ -83,4 +83,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mautocorr.c,v 1.5 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

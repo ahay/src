@@ -113,4 +113,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mhelicon.c,v 1.7 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
