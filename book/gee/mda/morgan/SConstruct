@@ -21,7 +21,7 @@ for file in textures[0:5]:
     Fetch(file + '.H','textures')
     Flow(file,file + '.H',"dd data_format=native_float")
 
-Fetch('WGstack.H','iee')
+Fetch('WGstack.H','book/iee')
 Flow('WGstack','WGstack.H',"window f2=500 j2=2 n2=125 n1=250 j1=2")
 
 makepef = 'pef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'
