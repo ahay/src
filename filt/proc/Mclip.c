@@ -66,8 +66,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mclip.c,v 1.2 2004/06/25 08:41:19 fomels Exp $	 */
+/* 	$Id: Mclip.c,v 1.3 2004/06/30 18:28:59 fomels Exp $	 */
 
-#ifndef lint
-static char vcid[] = "$Id: Mclip.c,v 1.2 2004/06/25 08:41:19 fomels Exp $";
-#endif /* lint */

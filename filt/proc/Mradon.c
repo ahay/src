@@ -45,11 +45,11 @@ int main (int argc, char **argv)
     float maxw;               /* maximum weight */
     float complex *dd;        /* data (CMP gather)    */
     float complex *mm;        /* model (Radon gather) */
-    float complex *pp;        /* preconditioned model */
-    float complex *qq;        /* work array */
+    float complex *pp=NULL;        /* preconditioned model */
+    float complex *qq=NULL;        /* work array */
     float complex **cm, **cd; /* model and data storage */
     float *xx;                /* offset header */
-    float *ww;                /* weight */
+    float *ww=NULL;                /* weight */
     float *tt;                /* trace */
     sf_file in, out, offset;
 
@@ -267,4 +267,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mradon.c,v 1.4 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mradon.c,v 1.5 2004/06/30 18:28:59 fomels Exp $	 */

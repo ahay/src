@@ -22,6 +22,7 @@ try: # distributed version
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
+    docmerge = configure.docmerge
 except: # local version
     root = None
     env = Environment()
@@ -43,15 +44,11 @@ for prog in mains:
     prog = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
         env.Install(bindir,prog)
-
-if root:
-    docmerge = configure.docmerge
-    prefix = env.get('PROGPREFIX','')
-    for stretch in ['log','t2','lmo','nmo']:
-        stretch = prefix + stretch + 'stretch'
-        stretch0 = prefix + 'stretch'
-        env.InstallAs(os.path.join(bindir,stretch),stretch0)
-        docmerge = configure.docextra(docmerge,stretch0,stretch)
+	if prog=='stretch':
+	    for stretch in ('log','t2','lmo','nmo'):
+                copy = string.replace(str(main),'stretch',stretch+'stretch')
+                env.InstallAs(os.path.join(bindir,copy),main)
+	        docmerge = configure.docextra(docmerge,prog,copy)
 
 for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',
              'matmult','cmatmult','cburg','impl2','trisl']:
@@ -68,6 +65,7 @@ if root:
     main = 'sfproc.py'
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    env.Depends(docs,'#/rsfdoc.py')
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
@@ -75,4 +73,4 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.9 2004/06/27 22:22:05 fomels Exp $	
+# 	$Id: SConstruct,v 1.10 2004/06/30 18:28:59 fomels Exp $	
