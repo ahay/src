@@ -14,7 +14,9 @@ try:
     Import('env')
 except:
     env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g',
-                      CPPPATH=incdir)
+                      CPPPATH=incdir,
+                      LIBPATH=libdir,
+                      LIBS=['rsf','m'])
     env.Alias('install',[libdir,incdir])
 
 sys.path.append(root)
@@ -25,3 +27,11 @@ inc = env.Command('rsfplot.h',includes,Action(merge))
 
 env.Install(libdir,lib)
 env.Install(incdir,inc)
+
+##############################################################################
+# TESTING
+##############################################################################
+for file in ('axis','stdplot'):
+    test = 'Test' + file + '.c'
+    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
+##############################################################################

@@ -1,6 +1,7 @@
 #include <rsf.h>
 
 #include "stdplot.h"
+#include "vplot.h"
 
 int main(int argc, char* argv[])
 {
@@ -22,6 +23,7 @@ int main(int argc, char* argv[])
 		     true,false,true,false);    
     vp_frame_init(in,"tlb");
     vp_frame();
+    vp_barframe();
 
     exit(0);
 }

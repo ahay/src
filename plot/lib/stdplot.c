@@ -8,9 +8,10 @@
 #include "axis.h"
 #include "vplot.h"
 
-static float min1, min2, max1, max2, labelsz, inch1, inch2, orig1, orig2;
+static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
+static float labelsz, barlabelsz;
 static int framecol;
-static bool labelrot, transp, wheretics;
+static bool labelrot, transp, wheretics, scalebar, vertbar;
 static char blank[]=" ";
 
 static struct Label {
@@ -18,7 +19,7 @@ static struct Label {
     int fat;
     float x, y, xpath, ypath, xup, yup;
     char* text;
-} *label1=NULL, *label2=NULL, *title=NULL;
+} *label1=NULL, *label2=NULL, *title=NULL, *barlabel=NULL;
 
 static struct Axis {
     int ntic;
@@ -26,6 +27,7 @@ static struct Axis {
 } *axis1=NULL, *axis2=NULL;
 
 static void make_title (sf_file in, char wheret);
+static void make_barlabel (void);
 static void make_labels (sf_file in, char where1, char where2);
 static void make_axes (void);
 static void swap(float*a,float*b);
@@ -41,13 +43,15 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
 		      bool transp1, bool xreverse1, bool yreverse1, bool pad1)
 {
     bool pad, set, xreverse, yreverse;
-    float mid, off, scale1, scale2, uorig1, uorig2, crowd;
+    float mid, off, scale1, scale2, uorig1, uorig2, crowd, barwd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
+    char* barpos;
 
     transp = transp1;
     if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
     if (!sf_getbool ("yreverse",&yreverse)) yreverse = yreverse1;
     if (!sf_getbool ("pad",&pad)) pad = pad1;
+    if (!sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
 
     if (pad) { /* 4% stretch */
 	mid = 0.5*(umin1+umax1);
@@ -122,6 +126,20 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
 	}
     } else if (!set) {
 	yll = yur - inch2;
+    }
+
+    /* make frame smaller to accomodate scale bar */
+    if (scalebar) {
+	vertbar = (NULL == (barpos = sf_getstring("bartype"))) ||
+	    (barpos[0] == 'v');
+	if (!sf_getfloat("barwidth",&barwd)) barwd = 0.36;
+	if (vertbar) {
+	    xur -= (0.07*screenwd + barwd);
+	    xll -= 0.5*barwd;
+	} else {
+	    yur += 0.4*barwd;
+	    yll += (0.04*screenht + barwd);
+	}
     }
 
     /* set origin */
@@ -371,9 +389,71 @@ static void make_title (sf_file in, char wheret)
     }	   
 }    
 
+static void make_barlabel (void)
+{
+    float vs, xc, yc;
+    bool want;
+    char* where;
+
+    if (sf_getbool ("wantbaraxis", &want) && !want) {
+	barlabel = NULL;
+	return;
+    }
+
+    barlabel = (struct Label*) sf_alloc(1,sizeof(struct Label));
+
+    if (!sf_getfloat ("barlabelsz",&barlabelsz)) {
+	barlabelsz=labelsz;
+    } else {
+	barlabelsz /= 33.;
+    }
+    vs = 2.5*barlabelsz;
+    if (vertbar && labelrot) vs *= 1.7;
+
+    if (!sf_getint ("barlabelfat",&(barlabel->fat))) barlabel->fat=0;
+    if (NULL == (barlabel->text=sf_getstring("barlabel"))) 
+	barlabel->text = blank;
+
+    if (NULL != (where = sf_getstring("wherebarlabel"))) {
+	barlabel->where = *where;
+    } else {
+	barlabel->where = vertbar? 'r':'b';
+    }
+
+    if (vertbar) {
+	barlabel->ypath = labelrot? -labelsz: labelsz;
+	barlabel->yup = 0.;
+	barlabel->xpath = 0.;
+	barlabel->xup = labelrot? labelsz: -labelsz;
+
+	xc  = (barlabel->where == 'l')? min1: max1;
+	yc = 0.5*(min2 + max2);
+
+	vp_umove (xc, yc);
+	vp_where (&xc, &yc);
+
+	barlabel->y = yc;	
+	barlabel->x = (barlabel->where == 'l')? xc-vs: xc+vs;
+    } else {
+	barlabel->xpath = labelsz;
+	barlabel->xup = 0.;
+	barlabel->ypath = 0.;
+	barlabel->yup = labelsz;
+
+	xc = 0.5*(max1 + min1);
+	yc = (barlabel->where == 't') ? max2: min2;
+	vp_umove (xc, yc);
+	vp_where (&xc, &yc);
+
+	barlabel->x = xc;
+	barlabel->y = (barlabel->where == 't')? yc+vs: yc-vs;
+    }
+}
+
 void vp_frame_init (sf_file in, const char* where)
 {
     make_labels(in,where[0],where[1]);
+    if (scalebar) make_barlabel();
     make_axes();
     make_title(in,where[2]);
 }
