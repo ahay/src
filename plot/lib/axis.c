@@ -29,7 +29,7 @@ void vp_simple_axis (float x1, float y1,
     const float pad = 0.15; /* between tic and number, number and label */
     const float aspect = 0.8;
 
-    vp_color (7); /* white */
+    vp_color (VP_WHITE); /* white */
 
     /* draw axis */
     vp_move(x1,y1);

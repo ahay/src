@@ -93,8 +93,6 @@ struct txalign {
     int hor, ver;
 } txalign;
 
-enum {OVLY_NORMAL, OVLY_BOX, OVLY_SHADE, OVLY_SHADE_BOX};
-
 static int txfont = VP_DEFAULT_FONT;
 static int txprec = VP_DEFAULT_PREC;
 static int txovly = OVLY_NORMAL;

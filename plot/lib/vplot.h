@@ -77,6 +77,27 @@ typedef enum {
     VP_NORM,
     VP_ABSOLUTE} vp_plotstyle;
 
+enum {
+    VP_BLACK,
+    VP_BLUE,
+    VP_RED,
+    VP_PURPLE,
+    VP_GREEN,
+    VP_CYAN,
+    VP_YELLOW,
+    VP_WHITE
+};
+
+enum {
+    VP_NO_CHANGE=-1,
+    VP_STRING,
+    VP_CHAR,
+    VP_STROKE
+};
+
+/* text overlay */
+enum {OVLY_NORMAL, OVLY_BOX, OVLY_SHADE, OVLY_SHADE_BOX};    
+
 /* for debuging purposes */
 void vp_putint (int w);
 int vp_getint (void);
@@ -129,6 +150,6 @@ void vp_uraster (unsigned char **array, bool bit, int offset,
 		 int xpix, int ypix, 
 		 float xll, float yll, float xur, float yur, int orient);
 void vp_init(void);
-
+void vp_tfont (int font, int prec, int ovly);
 
 #endif

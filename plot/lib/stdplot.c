@@ -900,7 +900,7 @@ void vp_frame(void)
     
     if (cube) {
 	/* draw colored lines */
-	vp_color(6);
+	vp_color(VP_YELLOW);
 	vs = 0.5*labelsz;
 
 	if (NULL != label2) {
@@ -1099,4 +1099,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.19 2004/03/29 08:00:12 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.20 2004/04/01 02:12:54 fomels Exp $	 */
