@@ -4,7 +4,8 @@ import re, sys, os, string, glob, commands
 progs = {}
 
 def subdirs():
-    return filter(os.path.isdir,glob.glob('[a-z]*'))
+    return filter(lambda x: x[-5:] != '_html',
+                  filter(os.path.isdir,glob.glob('[a-z]*')))
 
 def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')

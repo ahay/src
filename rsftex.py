@@ -82,7 +82,7 @@ def latify(target=None,source=None,env=None):
                 ltx.write('\\usepackage{%s}\n' % package)
         ltx.write('\n')
     if lclass == 'geophysics':
-        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
+        ltx.write('\\inputdir{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
@@ -218,20 +218,29 @@ if latex2html:
 # CUSTOM SCANNERS
 #############################################################################
 
-isplot = re.compile(r'[^%]\\(?:side)?plot\s*\{([^\}]+)')
+isplot = re.compile(r'^[^%]*\\(?:side)?plot\s*\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-input = re.compile(r'\\input\{([^\}]+)')
+input = re.compile(r'\\input\s*\{([^\}]+)')
+chdir = re.compile(r'\\subdir\s*\{([^\}]+)')
 
 def latexscan(node,env,path):
+    top = str(node)
+    if top[-4:] != '.tex':
+        return []
     contents = node.get_contents()
-    plots = isplot.findall(contents)
     inputs = map(lambda x: x+'.tex',input.findall(contents))
+    inputs.append(str(node))
+    figdir = '.'
+    plots = []
     for file in inputs:
         inp = open(file,'r')
         for line in inp.readlines():
+            dir  = chdir.search(line)
+            if dir:
+                figdir = dir.group(1)
             check = isplot.search(line)
             if check:
-                plots.append(check.group(1))
+                plots.append(os.path.join(figdir,check.group(1)))
         inp.close()
     plots = map(lambda x: os.path.join(resdir,x) + ressuffix,plots)
     bibs = []
@@ -271,7 +280,7 @@ class TeXPaper(Environment):
                 self.imgs = []
         if pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
-        for fig in glob.glob(os.path.join(resdir,'.*'+vpsuffix)):
+        for fig in glob.glob(os.path.join(resdir,'[a-z]*/.*'+vpsuffix)):
             eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
             self.Build(eps,fig,opts=pstexpen)
             if epstopdf:
@@ -282,8 +291,8 @@ class TeXPaper(Environment):
                 png = os.path.join('Img',png)
                 self.PNGBuild(png,eps)
                 self.imgs.append(png)
-        for fig in glob.glob(os.path.join(resdir,'.*.pdf')):
-            pdf = re.sub(r'\.(\w.*\.pdf)',r'\1',fig)
+        for fig in glob.glob(os.path.join(resdir,'[a-z]*/.*.pdf')):
+            pdf = re.sub(r'\.(\w.*\.pdf)$',r'\1',fig)
             self.Command(pdf,fig,'cp $SOURCE $TARGET')
             if pdf2ps:
                 eps = re.sub('.pdf$',pssuffix,pdf)

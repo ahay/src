@@ -64,15 +64,11 @@ bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 
-figdir = None
 resdir = None
-record = 0
 
-def set_dir(ref='..',dir='Fig'):
-     global figdir, resdir, record
-     figdir = dir
+def set_dir(ref='.',dir='Fig'):
+     global resdir
      resdir = os.path.join(ref,dir)
-     record = ref == '..'
 
 set_dir()
 
@@ -190,7 +186,7 @@ class Project(Environment):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         self.SConsignFile(self.path+'.sconsign.db')
-        self.resdir = os.path.join(resdir,dir)
+        self.resdir = resdir
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'XAUTHORITY':
@@ -246,7 +242,7 @@ class Project(Environment):
                 if rsfdoc.progs.has_key(rsfprog):
                     command = os.path.join(bindir,rsfprog + self.progsuffix) 
                     sources.append(command)
-                    if record and (rsfprog not in self.coms):
+                    if rsfprog not in self.coms:
                         self.coms.append(rsfprog)
                 elif re.match(r'[^/]+\.exe$',command): # local program
                     command = os.path.join('.',command)                    
@@ -315,9 +311,7 @@ class Project(Environment):
             view = self.Alias('view',self.view)
             lock = self.Alias('lock',self.lock)
             test = self.Alias('test',self.test)
-        if record:
-            self.Command('.sf_uses',None,'echo %s' %
-                         string.join(self.coms,' '))
+        self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
     def Fetch(self,file,dir,private=None):
         return self.Retrieve(file,None,dir=dir,private=private)
 
