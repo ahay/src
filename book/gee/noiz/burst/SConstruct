@@ -1,0 +1,33 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+Flow('data',None,
+     '''
+     spike n1=250 |
+     headermath output="0.75*(sin(0.24*N) + sin(0.72*N))" |
+     noise type=n seed=121794 var=0.001 |
+     burstnoise sigma=200
+     ''')
+Flow('despike','data','despike wide=7')
+Flow('deburst0','data','deburst niter=200 eps=1 norm=cauchy')
+Flow('deburst1','data','deburst niter=200 eps=1 norm=l1')
+
+Result('burst','deburst0 deburst1 despike data',
+       '''
+       cat axis=2 ${SOURCES[1:4]} | clip clip=2.5 | 
+       dots dots=0 strings=0 connect=1 constsep=1 
+       labels="Cauchy:L1 de-burst:de-spike:input"
+       labelsz=6 Xclip=2.5 gaineach=0 overlap=.95
+       ''')
+
+###########################################################################
+End()
