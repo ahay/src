@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -32,8 +33,8 @@ int main(int argc, char* argv[])
     size_t i, n;
     sf_file in, out;
     char key1[7], key2[7], *val;
-    bool norm, rms;
-    float *trace, *sum, f;
+    bool norm, rms, min, max;
+    float *trace, *stack, f;
     sf_datatype type;
 
     sf_init (argc, argv);
@@ -45,21 +46,21 @@ int main(int argc, char* argv[])
 
     n1 = 1;
     for (j=0; j < axis-1; j++) {
-	sprintf(key1,"n%d",j+1);
-	if (!sf_histint(in,key1,&ni)) break;
-	n1 *= ni;
+    sprintf(key1,"n%d",j+1);
+    if (!sf_histint(in,key1,&ni)) break;
+    n1 *= ni;
     }
 
     n = (size_t) n1;
 
     type = sf_gettype (in);
     if (SF_FLOAT != type) {
-	if (SF_COMPLEX == sf_gettype (in)) {
-	    n *= 2; 
+    if (SF_COMPLEX == sf_gettype (in)) {
+        n *= 2; 
 /* possibly incorrect norm for complex data */
-	} else {
-	    sf_error("Incorrect data type in input");
-	}
+    } else {
+        sf_error("Incorrect data type in input");
+    }
     }
 
     sprintf(key1,"n%d",axis);
@@ -67,61 +68,78 @@ int main(int argc, char* argv[])
     
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
-	sprintf(key1,"n%d",j+1);
-	sprintf(key2,"n%d",j);
-	if (!sf_histint(in,key1,&ni)) {
-	    sf_putint(out,key2,1);
-	    break;
-	}
-	sf_putint(out,key2,ni);
-	n3 *= ni;
-	
-	sprintf(key1,"o%d",j+1);
-	sprintf(key2,"o%d",j);
-	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
+    sprintf(key1,"n%d",j+1);
+    sprintf(key2,"n%d",j);
+    if (!sf_histint(in,key1,&ni)) {
+        sf_putint(out,key2,1);
+        break;
+    }
+    sf_putint(out,key2,ni);
+    n3 *= ni;
+    
+    sprintf(key1,"o%d",j+1);
+    sprintf(key2,"o%d",j);
+    if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key1,"d%d",j+1);
-	sprintf(key2,"d%d",j);
-	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
+    sprintf(key1,"d%d",j+1);
+    sprintf(key2,"d%d",j);
+    if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
-	sprintf(key1,"label%d",j+1);
-	sprintf(key2,"label%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
+    sprintf(key1,"label%d",j+1);
+    sprintf(key2,"label%d",j);
+    if (NULL != (val = sf_histstring(in,key1))) 
+        sf_putstring(out,key2,val);
     }
 
+    /* jennings 3/14/05 added min and max   */
+    
     if (!sf_getbool("rms",&rms)) rms = false;
-    /* If y, compute the root-mean-square instead of stack */
+    /* If y, compute the root-mean-square instead of stack. */
     if (rms || !sf_getbool("norm",&norm)) norm = true;
-    /* If y, normalize by fold */
+    /* If y, normalize by fold. */
+    if (!sf_getbool("min",&min)) min = false;
+    /* If y, find minimum instead of stack.  Ignores rms and norm. */
+    if (!sf_getbool("max",&max)) max = false;
+    /* If y, find maximum instead of stack.  Ignores rms and norm. */
+    
+    if (min || max) rms = false; norm = false;
+    if (min && max) sf_error("Cannot have both min=y and max=y.");
 
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
-    sum   = sf_floatalloc (n);
+    stack = sf_floatalloc (n);
     
     for (i3=0; i3 < n3; i3++) {
-	memset (sum,0,n*sizeof(float));
-	if (norm) memset (fold,0,n*sizeof(int));
-	
-	for (i2=0; i2 < n2; i2++) {
-	    sf_floatread (trace, n, in);
-	    for (i=0; i < n; i++) {
-	      sum[i] += rms? trace[i]*trace[i]: trace[i];
-		if (norm && (0.0 != trace[i])) fold[i]++; 
-	    }
-	}
-	if (norm) {
-	    for (i=0; i < n; i++) {
-		if (fold[i] > 0) {
-		  sum[i] /= fold[i];
-		  if (rms) sum[i] = sqrtf(sum[i]);
-		}
-	    }
-	}
-	sf_floatwrite(sum, n, out); 
+        if (min || max) {
+            if (min) for (i=0; i<n; i++) stack[i] =  FLT_MAX;
+            if (max) for (i=0; i<n; i++) stack[i] = -FLT_MAX;
+        }
+        else memset (stack,0,n*sizeof(float));
+        if (norm) memset (fold,0,n*sizeof(int));
+        
+        for (i2=0; i2 < n2; i2++) {
+            sf_floatread (trace, n, in);
+            for (i=0; i < n; i++) {
+                if (min || max) {
+                    if (min) stack[i] = SF_MIN(stack[i],trace[i]);
+                    if (max) stack[i] = SF_MAX(stack[i],trace[i]);
+                }
+                else stack[i] += rms? trace[i]*trace[i]: trace[i];
+                if (norm && (0.0 != trace[i])) fold[i]++; 
+            }
+        }
+        if (norm) {
+            for (i=0; i < n; i++) {
+                if (fold[i] > 0) {
+                  stack[i] /= fold[i];
+                  if (rms) stack[i] = sqrtf(stack[i]);
+                }
+            }
+        }
+        sf_floatwrite(stack, n, out); 
     }
 
     exit (0);
 }
 
-/* 	$Id: stack.c,v 1.10 2004/07/02 11:54:37 fomels Exp $	 */
+/*  $Id$   */
