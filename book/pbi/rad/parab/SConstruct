@@ -1,0 +1,81 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/rad'
+
+Fetch('data.HH',datdir)
+Flow('data','data.HH','dd data_format=native_float')
+
+Flow('mod_spike',None,
+     '''
+     spike n1=1200 n2=40 o2=-0.2 d2=0.02
+     k1=200,620,970,200,620,970
+     k2=13,13,13,38,18,15
+     mag=2,2,2,2,2,2
+     nsp=6 |
+     bandpass flo=10 fhi=30
+     ''')
+Flow('dat_spike','mod_spike','radon parab=y nx=60 ox=0 dx=0.025 adj=n')
+
+gmod = '''
+grey transp=y poly=y yreverse=y crowd=0.89
+label2="q s.km^2" label1="time(s)" title="radon domain"
+'''
+
+gdat = '''
+grey transp=y poly=y yreverse=y crowd=0.89
+label2="offset(km)" label1="time(s)" title="cmp domain"
+'''
+
+Plot('mod_spike','mod_spike',gmod + ' pclip=100')
+Plot('dat_spike','dat_spike',gdat)
+Combine('datasynt','mod_spike dat_spike','SideBySideAniso',result=1)
+
+for case in range(0,3):
+    rad = 'rad%d' % case
+    frw = 'frw%d' % case
+    mul = 'mul%d' % case
+    Flow(rad,'dat_spike',
+         'radon parab=y adj=y inv=%d spk=%d p0=-0.2 np=60 dp=0.02' %
+         (case > 0, case > 1))
+    Flow(frw,rad,
+         'radon parab=y adj=n nx=60 ox=0 dx=0.025')
+    Flow(mul,rad,
+         'window n2=14 | pad n2=60 | radon parab=y adj=n nx=60 ox=0 dx=0.025')
+
+    Plot(rad,rad,gmod + ' pclip=100')
+    Plot(frw,frw,gdat)
+    Plot(mul,mul,gdat)
+
+    Combine('radon%d' % case,[rad,frw,mul],'SideBySideAniso',result=1)
+
+    rad = 'data_rad%d' % case
+    frw = 'data_frw%d' % case
+    mul = 'data_mul%d' % case
+
+    Flow(rad,'data',
+         'radon parab=y adj=y inv=%d spk=%d p0=-0.1 np=300 dp=0.001' %
+         (case > 0, case > 1))
+    Flow(frw,rad,'radon parab=y adj=n nx=60 ox=0.275 dx=0.05')
+
+    Plot(rad,rad,gmod)
+    Plot(frw,frw,gdat)
+    Plot(mul,[frw,'data'],
+         'add scale=1,-1 ${SOURCES[1]} | %s clip=131.365' % gdat)
+    
+    Combine('data-radon%d' % case,[rad,frw,mul],'SideBySideAniso',result=1)
+
+Result('data','data',gdat)
+
+############################################################################
+
+End()
