@@ -1,21 +1,20 @@
-/* Convert between different formats.
-*/
+/* Convert between different formats. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <stdio.h>
 
@@ -30,7 +29,7 @@ int main(int argc, char *argv[])
     size_t size, nin, nout, bufsiz=BUFSIZ;
     int line, ein, eout, n1, i, j, *ibuf;
     sf_file in, out;
-    char *format, bufin[BUFSIZ], bufout[BUFSIZ];
+    char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
     sf_datatype itype, otype;
     float *fbuf;
     float complex *cbuf;
@@ -40,27 +39,56 @@ int main(int argc, char *argv[])
     out = sf_output ("out");
     size = setfiledims(in,out);
     
-    format = sf_getstring("data_format");
-    /* format is type_form
-       type is int, bool, float
-       form is ascii, native, xdr */
-    if (NULL == format) sf_error("Specify data_format=");
+    form = sf_getstring("form");
+    /* ascii, native, xdr */
+    type = sf_getstring("type");
+    /* int, float, complex */
+    if (NULL == form && NULL == type) sf_error("Specify form= or type=");
 	
-    sf_setformat(out,format);
-
-    if (!sf_histint(in,"esize",&ein)) ein=4;
-    if (!sf_histint(out,"esize",&eout)) eout=4;
+    if (NULL != form) {
+	switch (form[0]) {
+	    case 'a':
+		sf_setform(out,SF_ASCII);
+		if (!sf_getint("line",&line)) line=8;
+		/* Number of numbers per line (for conversion to ASCII) */
+		format = sf_getstring("format");
+		/* Element format (for conversion to ASCII) */ 
+		sf_setaformat(format,line);
+		break;
+	    case 'n':
+		sf_setform(out,SF_NATIVE);
+		break;
+	    case 'x':
+		sf_setform(out,SF_XDR);
+		break;
+	    default:
+		sf_error("Unsupported form=\"%s\"",form);
+		break;
+	}
+    }
 
     itype = sf_gettype (in);
-    otype = sf_gettype (out);
+    otype = itype;
+    if (NULL != type) {
+	switch (type[0]) {
+	    case 'i':
+		otype = SF_INT;
+		break;
+	    case 'f':
+		otype = SF_FLOAT;
+		break;
+	    case 'c':
+		otype = SF_COMPLEX;
+		break;
+	    default:
+		sf_error("Unsupported type=\"%s\"",type);
+		break;
+	}
+	sf_settype(out,otype);
+    } 
 	
-    if (SF_ASCII == sf_getform(out)) {
-	if (!sf_getint("line",&line)) line=8;
-	/* Number of numbers per line (for conversion to ASCII) */
-	format = sf_getstring("format");
-	/* Element format (for conversion to ASCII) */ 
-	sf_setaformat(format,line);
-    }
+    if (!sf_histint(in,"esize",&ein)) ein=4;
+    if (!sf_histint(out,"esize",&eout)) eout=4;
     
     /* optimize buffer size */
     if (ein==0) {
@@ -169,4 +197,4 @@ static size_t setfiledims (sf_file in, sf_file out)
     return size;
 }
 
-/* 	$Id: dd.c,v 1.8 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */

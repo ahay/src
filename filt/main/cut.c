@@ -1,5 +1,12 @@
 /* Zero a portion of the dataset. 
 
+Takes: [j1=1 j2=1 ... f1=0 f2=0 ... n1=n1 n2=n2 ... max1= max2= ... min1= min2= ...]
+
+jN defines the jump in N-th dimension
+fN is the window start
+nN is the window size
+minN and maxN is the maximum and minimum in N-th dimension
+
 Reverse of window. */
 /*
   Copyright (C) 2004 University of Texas at Austin
