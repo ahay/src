@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 {
     fint1 str;
     bool inv, half;
-    int i2, n1,n2, i3, n3, n, dens, nw;
-    float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0;
+    int i2, n1,n2, i3, n3, n, dens, nw, CDPtype;
+    float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3;
     float (*forward)(float) = NULL, (*inverse)(float) = NULL;
     char *rule, *prog;
     sf_file in, out;
@@ -91,8 +91,18 @@ int main(int argc, char* argv[])
 	
 	if (!sf_getbool("half",&half)) half=true;
 	/* if y, the second axis is half-offset instead of full offset */
-	if (half) v0 *= 0.5;
-
+	if (half) {
+	    dh *= 2.;
+	    h0 *= 2.;
+	}
+	
+	CDPtype=1;
+	if (sf_histfloat(in,"d3",&d3)) {
+	    CDPtype=0.5+0.5*dh/d3;
+	    if (1 != CDPtype) sf_histint(in,"CDPtype",&CDPtype);
+	} 	    
+	sf_warning("CDPtype=%d",CDPtype);
+	
 	h0 /= v0; 
 	dh /= v0;
     }
@@ -157,7 +167,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
 	    if ('l' == rule[0] || 'n' == rule[0]) {
-		h = h0+i2*dh;
+		h = h0+i2*dh + (dh/CDPtype)*(i3%CDPtype);
 		if ('n' == rule[0]) h *= h;
 		if (inv) h = -h;
 	    } 

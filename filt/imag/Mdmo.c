@@ -23,8 +23,8 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, n12, i3,mint,n,type;
-    float *dat1, *dat2, t0,dt,dx,h,velhalf;
-    bool adj, inv;
+    float *dat1, *dat2, t0,dt,dx,velhalf, h0, dh;
+    bool adj, inv, half;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     if (!sf_getint ("n",&n)) n=32;
     /* number of offset samples */
 
-    if (!sf_getbool ("adj",&adj)) adj=false;
+    if (!sf_getbool ("adj",&adj)) adj=true;
     /* adjoint flag */
 
     if (!sf_getbool ("inv",&inv)) inv=false;
@@ -51,8 +51,22 @@ int main(int argc, char* argv[])
     if (!sf_getint ("type",&type)) type=1;
     /* type of amplitude (0,1,2,3) */
 
-    if (!sf_getfloat ("h",&h)) sf_error("Need h=");
-    /* half-offset */
+    if (1==n3) {
+	if (!sf_getfloat ("h",&h0)) sf_error("Need h=");
+	dh = 0.;
+	/* half-offset */
+    } else {
+	if (!sf_histfloat(in,"o3",&h0)) sf_error("No o3= in input");
+	if (!sf_histfloat(in,"o3",&dh)) sf_error("No d3= in input");
+
+	if (!sf_getbool("half",&half)) half=true;
+	/* if y, the third axis is half-offset instead of full offset */
+
+	if (!half) {
+	    h0 *= 0.5;
+	    dh *= 0.5;
+	}
+    }
 
     if (!sf_getfloat ("velhalf",&velhalf)) velhalf=0.75;
     /* half-velocity */
@@ -64,9 +78,11 @@ int main(int argc, char* argv[])
     dat1 = sf_floatalloc(n12);
     dat2 = sf_floatalloc(n12);
 
-    dmo_init (velhalf,inv,t0,dt,dx,n1,n2,h,mint,n,type);
+    dmo_init (velhalf,inv,t0,dt,dx,n1,n2,mint,n,type);
 
     for (i3=0; i3 < n3; i3++) { 
+	dmo_set(h0 + i3*dh);
+
 	sf_floatread(adj? dat2: dat1,n12,in); 
 
 	dmo_lop(adj,false,n12,n12,dat1,dat2);

@@ -10,7 +10,7 @@ static int nt2,nt,nx,ntx,mint,n,type;
 static float vel,t0,dt,dx,dh,h,h2,d1,tmax, **tmp;
 
 void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
-	       int nt1, int nx1, float h1, int mint1, int n1, int type1)
+	       int nt1, int nx1, int mint1, int n1, int type1)
 {
     vel = vel1;
     inv = inv1;
@@ -19,7 +19,6 @@ void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
     dx = dx1;
     nt = nt1;
     nx = nx1;
-    h = h1;
     mint = mint1-1;
     n = n1;
     type = type1;
@@ -28,12 +27,17 @@ void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
     if (nt%2) nt2++;
 
     ntx = nt*nx;
-    h2=h*h;
-    d1=fabsf(h)/n; 
-    dh=d1*d1;
     tmax=1./(t0+(nt-1)*dt);
 
     tmp = sf_floatalloc2(nt2,nx);
+}
+
+void dmo_set(float h1) 
+{
+    h = h1;
+    h2=h*h;
+    d1=fabsf(h)/n; 
+    dh=d1*d1;
 }
 
 void dmo_close(void)

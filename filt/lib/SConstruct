@@ -5,11 +5,11 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'kiss_fft kiss_fftr stack'
+src = 'kiss_fft kiss_fftr'
 
 src2 = '''
 adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
-decart dottest error file files getpar math1 segy simtab
+decart dottest error file files getpar math1 segy simtab stack
 '''
 
 try: # distribution version
