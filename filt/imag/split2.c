@@ -47,8 +47,7 @@ static float complex **wx; /* x wavefield */
 static float complex **wk; /* k wavefield */
 
 static float         **wt; /* interpolation weight */
-
-static float complex muir(int niter,float complex s,float k2,float dz);
+static float         **ph; /* phase */
 
 void split2_init(int nz1, float dz1  /* depth */,
 		 int ny1, float dy1  /* in-line midpoint */,
@@ -96,6 +95,7 @@ void split2_init(int nz1, float dz1  /* depth */,
     wk = sf_complexalloc2 (ny2,nx2);  /* k wavefield */
 
     wt = sf_floatalloc2   (ny,nx);
+    ph = sf_floatalloc2   (ny2,nx2);
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx2; ix++) {
@@ -160,7 +160,7 @@ void split2(bool verb                   /* verbosity flag */,
     nxy = nx*ny;
     for (iz=0; iz<nz; iz++) {
 	slice_get(slow,iz,  ss[0]);
-	nr[iz] = slowref(nrmax,ds,nxy,ss[0],sm[iz],sm[iz]);
+	nr[iz] = slowref(nrmax,ds,nxy,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<nz-1; iz++) {
@@ -250,12 +250,12 @@ void split2(bool verb                   /* verbosity flag */,
 		
 		fft2(false,pp);
 		slice_get(slow,iz+1,ss[0]);
-		
+
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
 		    cref = csqrtf(w2*sm[iz][ir]);
-		    LOOPxy2( cshift = muir(10,cref,kk[ix][iy],dz);
-/*			     cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz); */
+		    LOOPxy2( cshift = 
+			     cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
 			     wk[ix][iy] = pp[ix][iy]*conjf(cshift); );
 		    fft2(true,wk);
 
@@ -283,15 +283,19 @@ void split2(bool verb                   /* verbosity flag */,
     } /* iw */
 }
 
-static float complex muir(int niter,float complex s,float k2,float dz)
+/*
+static float complex muir(int niter,float complex s,float complex q,
+			  float k2,float dz)
 {
-    float complex q;
+    float complex q2;
     int iter;
-
-    q=0.;
+    
     for (iter=0; iter < niter; iter++) {
-	q = k2/(q - 2.*s);
+	q2 = k2/(q + 2.*s);
+	if (cabsf(q2-q) < FLT_EPSILON) break;
+	q = q2;
     }
 
-    return cexpf(q*dz);
+    return cexpf(-q2*dz);
 }
+*/

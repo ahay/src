@@ -1,4 +1,4 @@
-/* 3-D common-azimuth migration/modeling using split-step */
+/* 3-D common-azimuth migration/modeling using extended split-step */
 /*q
   Copyright (C) 2004 University of Texas at Austin
   
@@ -51,7 +51,6 @@ static float complex ***wx; /* wavefield x */
 static float         ***wt; /* interpolation weight */
 static float          **ksx;/* source   wavenumber  */
 static float          **krx;/* receiver wavenumber  */
-static float          **sz; /* reference slowness   */
 static float          **sm; /* reference slowness squared */
 static float          **ss; /* slowness */
 static int            **is; /* source   index */
@@ -150,7 +149,7 @@ void cam_init(bool verb_,
     /* compute reference slowness */
     for (iz=0; iz<az.n; iz++) {
 	slice_get(slow,iz,ss[0]);
-	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sz[iz],sm[iz]);
+	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
@@ -164,7 +163,6 @@ void cam_alloc(int nrmax)
 /*< allocate storage >*/
 {
     ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
-    sz = sf_floatalloc2          (nrmax,az.n);  /* reference slowness */
     sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
     nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
 
@@ -193,7 +191,6 @@ void cam_close(void)
     free(**wx); free( *wx); free( wx);
     free(**wt); free( *wt); free( wt);
     ;           free( *ss); free( ss);
-    ;           free( *sz); free( sz);
     ;           free( *sm); free( sm);
     ;           ;           free( nr);
     ;           free( *ksx);free( ksx);

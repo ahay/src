@@ -23,12 +23,11 @@ int slowref(int nr     /* maximum number of references */,
 	    float ds   /* minimum slowness separation */, 
 	    int ns     /* number of slownesses */, 
 	    const float* ss  /* [ns] slowness array */, 
-	    float* sr  /* [nr] reference slownesses */, 
-	    float* sr2 /* [nr] reference slownesses squared */)
+	    float* sr  /* [nr] reference slownesses squared */) 
 /*< compute reference slownesses, return their number >*/
 {
     int is,jr,ir;
-    float smin, smax, s, qr, *ss2;
+    float smin, smax, s, s2, qr, *ss2;
 
     ss2 = sf_floatalloc(ns);
     for (is=0; is<ns; is++) {
@@ -43,13 +42,13 @@ int slowref(int nr     /* maximum number of references */,
     for (ir=0; ir<nr; ir++) {
 	qr = (ir+1.0)/nr - 0.5 * 1./nr;
 	s = sf_quantile(qr*ns,ns,ss2);
-	if (0==ir || SF_ABS(s-sr[jr-1]) > ds) {
-	    sr [jr] = s;
-	    sr2[jr] = s*s;
-	    jr++;		
+	if (0==ir || SF_ABS(s-s2) > ds) {
+	    sr [jr] = s*s;
+	    s2 = s;
+	    jr++;
 	}
     }
-
+    
     free(ss2);
     return jr;
 }
