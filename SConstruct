@@ -122,7 +122,8 @@ Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 
 index = os.path.join(docdir,'index.html')
-env.Command(index,None,'RSFROOT=%s ./sfdoc -w %s' % (root,docdir))
+env.Command(index,None,'PYTHONPATH=%s %s sfdoc -w %s' % 
+           (libdir,WhereIs('python'),docdir))
 Depends(index,use)
 
-# 	$Id: SConstruct,v 1.31 2004/06/23 23:31:42 fomels Exp $	
+# 	$Id: SConstruct,v 1.32 2004/06/29 21:45:30 fomels Exp $	
