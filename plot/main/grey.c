@@ -7,10 +7,10 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, gainstep, panel, it;
+    int n1, n2, n3, gainstep, panel, it, nreserve;
     float o1, o2, o3, d1, d2, d3, tpow, gpow, clip, pclip, phalf, bias, t;
     float pbias;
-    bool transp, yreverse, gain, allpos, coltab, polarity, blast;
+    bool transp, yreverse, gain, allpos, polarity, blast;
     char *gainpanel, *color, **data2, tbl[TSIZE+1];
     float **data, *tgain;
     sf_file in;
@@ -81,9 +81,6 @@ int main(int argc, char* argv[])
     if (!sf_getbool("polarity",&polarity)) polarity=false;
     if (!sf_getbool("hurry",&blast)) blast=true;
 
-    if (!sf_getbool("coltab",&coltab)) coltab=true;
-    if (NULL == (color = sf_getstring("color"))) color="I";
-
     vp_stdplot_init (o1-0.5*d1, o1+(n1-1)*d1+0.5*d1, 
 		     o2-0.5*d2, o2+(n2-1)*d2+0.5*d2,
 		     transp, false, yreverse, false);
@@ -126,84 +123,19 @@ int main(int argc, char* argv[])
     }
 
     bias = allpos? 0.: TSIZE/2.;
+
+    /* initialize color table */
+    if (NULL == (color = sf_getstring("color"))) color="I";
+    if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
+    vp_rascoltab (nreserve, color);
+
+    vp_erase ();
     
- vp_erase ();
- vp_color (axis1.col[0]);
- if (coltab) {
-  if (color[0] >= '0' && color[0] <= '9') {
-    redbit = color[0] - '0';
-    greenbit = color[1] - '0';
-    bluebit = color[2] - '0';
-    if (redbit + greenbit + bluebit != 8)
-      seperr ("You must use exactly 8 bits!\n");
-
-    redoff = 0;
-    greenoff = redbit;
-    blueoff = redbit + greenbit;
-
-    for (i3 = 0; i3 < 256; i3++) {
-      ii = ~(~0 << redbit);
-      if (ii > 0) red[i3] = (float) ((i3 >> redoff) & ii) / (float) (ii);
-      else red[i3] = 0.;
-      ii = ~(~0 << greenbit);
-
-       if (ii > 0) green[i3] = (float) ((i3 >> greenoff) & ii) / (float) (ii);
-      else green[i3] = 0.;
-
-      ii = ~(~0 << bluebit);
-      if (ii > 0)
-         blue[i3] = (float) ((i3 >> blueoff) & ii) / (float) (ii);
-      else blue[i3] = 0.;
-    }
-    for (jj = 0; jj < 256; jj++) {
-      ii = 0;
-      greenbit2 = greenbit;
-      bluebit2 = bluebit;
-      redbit2 = redbit;
-      kk = 0;
-      while (kk < 8) {
-        greenbit2--;
-        if (greenbit2 >= 0) {
-          if (jj & (1 << (greenbit2 + greenoff))) ii |= 1 << kk;
-          kk++;
-        }
-        redbit2--;
-        if (redbit2 >= 0) {
-          if (jj & (1 << (redbit2 + redoff))) ii |= 1 << kk;
-          kk++;
-        }
-        bluebit2--;
-        if (bluebit2 >= 0) {
-          if (jj & (1 << (bluebit2 + blueoff))) ii |= 1 << kk;
-          kk++;
-        }
-      }
-      map[ii] = jj;
-    }
-    for (i3 = nreserve; i3 < 256; i3++) {
-      jj = i3 - nreserve;
-      vp_coltab (i3, red[map[jj]], green[map[jj]], blue[map[jj]]);
-    }
-  }
-  else { 
-		vp_rascoltab (nreserve, color);}
- }
-
- /* Set the coordinate transformation */
- gl_vplotint (&position, &coordinate, &axis1, &axis2);
- gl_plotpram (&colorin, &coordinate);
-	 multi_t=getch("titles","s",titles);
-	 if(0==fetch("title","s",title_temp)) sprintf(title_temp,"%s"," ");
-/* fastplt = fastplot ();*/
-  fastplt=0;
-
-
     exit (0);
 }
 
 #ifdef jhvkjhvb
 
-if (!getch ("nreserve", "d", &nreserve)) nreserve = 8;
 numorient = getch ("orient", "d", &orient);
 numinvert = getch ("invert", "1", &invert);
 
