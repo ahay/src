@@ -15,10 +15,11 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
-    float pbias, gain=0., x1, y1, x2, y2, **data, f;
+    float pbias, gain=0., x1, y1, x2, y2, **data, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
+    bool scalebar, nomin=true, nomax=true;
     char *gainpanel, *color;
-    unsigned char tbl[TSIZE+1], **buf, tmp;
+    unsigned char tbl[TSIZE+1], **buf, tmp, mincol, maxcol;
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     sf_file in;
     
@@ -53,7 +54,7 @@ int main(int argc, char* argv[])
     } else {	
 	orient = (xreverse==yreverse)? 0:2;
     }
- 
+
     panel = NO_GAIN; /* no need for gain */
 
     phalf=85.;
@@ -121,6 +122,15 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
+    if (!sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
+    /* if y, draw scalebar */
+    if (scalebar) {
+	nomin = !sf_getfloat("minval",&barmin);
+	/* minimum value for scalebar (default is the data minimum) */
+	nomax = !sf_getfloat("maxval",&barmax);
+	/* maximum value for scalebar (default is the data maximum) */
+    }
+
     x1 = o1-0.5*d1;
     x2 = o1+(n1-1)*d1+0.5*d1;
     y1 = o2-0.5*d2;
@@ -128,6 +138,7 @@ int main(int argc, char* argv[])
 
     vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
     vp_frame_init(in,"tlb");
+    if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
 
     if (transp) {
 	f=x1; x1=y1; y1=f;
@@ -195,7 +206,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-
+	    
 	/* convert to bytes */
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
@@ -230,10 +241,37 @@ int main(int argc, char* argv[])
 	vp_uraster (buf, false, 256, n1, n2, 
 		    x1, y1, x2, y2, orient);
 	vp_simpleframe();
+	
+	if (scalebar) {
+	    if (nomin) barmin = data[0][0];
+	    if (nomax) barmax = data[0][0];
+	    if (nomin || nomax) {
+		for (i2=0; i2 < n2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			dat = data[i2][i1];
+			if (nomin && barmin > dat) barmin = dat;
+			if (nomax && barmax < dat) barmax = dat;
+		    }
+		}
+		vp_barframe_init (barmin,barmax);
+	    }
+
+	    j = (barmin-pbias)*gain + bias;
+	    if      (j < 0) j=0;
+	    else if (j > TSIZE) j=TSIZE;
+	    mincol = tbl[j];
+	    j = (barmax-pbias)*gain + bias;
+	    if      (j < 0) j=0;
+	    else if (j > TSIZE) j=TSIZE;
+	    maxcol = tbl[j];
+
+	    vp_barraster(mincol,maxcol);
+	}
+
 	vp_purge(); 
     } 
 
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.11 2003/10/01 23:41:18 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.12 2003/10/06 20:19:45 fomels Exp $	 */
