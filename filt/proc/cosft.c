@@ -1,3 +1,22 @@
+/* Cosine Fourier transform */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "cosft.h"
@@ -7,7 +26,9 @@ static float *p /* , dt */;
 static float complex *pp;
 static kiss_fftr_cfg forw, invs;
 
-void cosft_init(int nw_in /*, float o1, float d1 */) {
+void cosft_init(int nw_in)
+/*< initialize >*/ 
+{
     nw = nw_in;
     nt = 2*(nw-1);
     p  = sf_floatalloc (nt);
@@ -16,14 +37,20 @@ void cosft_init(int nw_in /*, float o1, float d1 */) {
     invs = kiss_fftr_alloc(nt,1,NULL,NULL);
 }
 
-void cosft_close(void) {
+void cosft_close(void) 
+/*< free allocated storage >*/
+{
     free (p);
     free (pp);
     free (forw);
     free (invs);
 }
 
-void cosft_frw (float *q, int o1, int d1) {
+void cosft_frw (float *q /* data */, 
+		int o1   /* first sample */, 
+		int d1   /* step */) 
+/*< forward transform >*/
+{
     int i;
 
     for (i=0; i < nw; i++) {
@@ -40,7 +67,11 @@ void cosft_frw (float *q, int o1, int d1) {
     }
 }
 
-void cosft_inv (float *q, int o1, int d1) {
+void cosft_inv (float *q /* data */, 
+		int o1   /* first sample */, 
+		int d1   /* step */) 
+/*< inverse transform >*/
+{
     int i;
 
     for (i=0; i < nw; i++) {

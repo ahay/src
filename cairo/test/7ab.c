@@ -145,6 +145,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(zdat[0],nz*nx,d);
     }
 
+    cr_main();
     exit(0);
 }
 
