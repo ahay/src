@@ -3,16 +3,24 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = bandpass bin bin1 dip pwd randrefl sigmoid smooth
+PROGS = bandpass bin bin1 depth2time dip envelope nmo noise \
+	pwd randrefl sigmoid smooth spectra taup time2depth
 
 bandpass.OBJS = butterworth
 bin.OBJS = int2 interp adjnull
 bin1.OBJS = int1 interp adjnull
+depth2time.OBJS = stretch tridiagonal
 dip.OBJS = dip3 divide1 allp3 tridiagonal apfilt
+envelope.OBJS = triangle
+nmo.OBJS = stretch tridiagonal
+noise.OBJS = randn
 pwd.OBJS = allp3 apfilt
-randrefl.OBJS = random randn
+randrefl.OBJS = randn
 sigmoid.OBJS = random
 smooth.OBJS = triangle
+spectra.OBJS = empty
+taup.OBJS = radon cadj ctoeplitz
+time2depth.OBJS = fint1 tridiagonal spline interp_spline extend banded
 
 MAINS = $(addprefix sf, $(PROGS))
 OBJS = $(addsuffix .o, ${$*.OBJS})

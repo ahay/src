@@ -11,6 +11,7 @@ int main (int argc, char* argv[])
     bool diff[SF_MAX_DIM];
     char key[6];
     float* data;
+    triangle tr;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -48,14 +49,14 @@ int main (int argc, char* argv[])
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
-	    triangle_init (rect[i],n[i]);
+	    tr = triangle_init (rect[i],n[i]);
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    triangle (i0,s[i],diff[i],data);
+		    smooth (tr,i0,s[i],diff[i],data);
 		}
 	    }
-	    triangle_close();
+	    triangle_close(tr);
 	}
 	
 	sf_write(data,sizeof(float),n1,out);

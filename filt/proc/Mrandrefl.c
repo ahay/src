@@ -1,17 +1,14 @@
-#include <stdlib.h>
 #include <math.h>
 
 #include <rsf.h>
 
 #include "randn.h"
-#include "random.h"
-
-static const float pi = 3.1415926535898;
 
 static int compare_float (const void *a, const void *b)
 {
     float fa = * ((float*) a);
     float fb = * ((float*) b);
+ 
     return (fa < fb)? -1: (fa > fb)? 1: 0;
 }
 
@@ -44,7 +41,7 @@ static void synf(float fo, int n, float* s, int ns,
 	/* Ricker wavelet at tn with amplitude Rn */
 	/* accumulate the sum of all reflections */ 
 	for (i=0; i < n; i++) {
-	    a = pi*fo*(t[i]-tn);
+	    a = SF_PI*fo*(t[i]-tn);
 	    a *= a;
 	    s[i] += rn*(1-2*a)*expf(-a);
 	}
@@ -55,8 +52,8 @@ int main (int argc, char* argv[])
 {
     int nr, nt, it;
     float t0, dt, fo[3]={20.,8.,5.};
-    float *t, *pp, *ps, *ss, *tpp, *tss, *tps;
-    float *ts, *dtpp, *tm, *p2ss, *p2ps, *dtss, *dtps, *rs;
+    float *tim, *pp, *ps, *ss, *tpp, *tss, *tps;
+    float *ts, *dtpp, *tmean, *p2ss, *p2ps, *dtss, *dtps, *rs;
     sf_file mod, vpvs;
 
     sf_init (argc,argv);
@@ -65,7 +62,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("nr",&nr)) sf_error("Need nr=");
     if (!sf_getint("n1",&nt))   nt=3501;  sf_putint(mod,"n1",nt);
     if (!sf_getfloat("d1",&dt)) dt=0.001; sf_putfloat(mod,"d1",dt);
-    if (!sf_getfloat("o1",&t0)) dt=0.001; sf_putfloat(mod,"o1",t0);
+    if (!sf_getfloat("o1",&t0)) t0=0.0;   sf_putfloat(mod,"o1",t0);
     sf_putint(mod,"n2",3);
     sf_setformat(mod,"native_float");
 
@@ -76,18 +73,18 @@ int main (int argc, char* argv[])
     sf_putint(vpvs,"n2",2);
     sf_setformat(vpvs,"native_float");
 
-    t = sf_floatalloc (nt);
+    tim = sf_floatalloc (nt);
     pp = sf_floatalloc (nt);
     ps = sf_floatalloc (nt);
     ss = sf_floatalloc (nt);
     ts = sf_floatalloc (nr);
 
     for (it=0; it < nt; it++) {
-	t[it] = t0 + it*dt;
+	tim[it] = t0 + it*dt;
     }
 
     dtpp = sf_floatalloc (nr);
-    tm = sf_floatalloc (nr);
+    tmean = sf_floatalloc (nr);
     rs = sf_floatalloc (nr);
     tpp = sf_floatalloc (nr);
     tss = sf_floatalloc (nr);
@@ -97,12 +94,13 @@ int main (int argc, char* argv[])
     dtss = sf_floatalloc (nr);
     dtps = sf_floatalloc (nr);
 
-    /* ts - reflector positions */
-    
+    /* ts - reflector positions */    
+    srand(2003);
+
     for (it=0; it < nr; it++) {
-	ts[it] = 0.1+0.9*random0();
+	ts[it] = 0.1+0.9*random_one();
     }
-    qsort(ts,nt,sizeof(float),compare_float);
+    qsort(ts,nr,sizeof(float),compare_float);
 
     /* dtpp - layer thickness in PP time */    
     dtpp[0] = ts[0];
@@ -110,14 +108,14 @@ int main (int argc, char* argv[])
 	dtpp[it] = ts[it] - ts[it-1];
     }
 
-    /* tm - time in the middle of the layer */
+    /* tmean - time in the middle of the layer */
     /* p2ss - Vp/Vs ratio as a function of time */
     for (it=0; it < nr; it++) {
-	tm[it]=ts[it]-0.5*dtpp[it];
-	p2ss[it]=1./(0.12+(0.5*tm[it]));
+	tmean[it]=ts[it]-0.5*dtpp[it];
+	p2ss[it]=1./(0.12+(0.5*tmean[it]));
     }
 
-    sf_write(tm,sizeof(float),nr,vpvs);
+    sf_write(tmean,sizeof(float),nr,vpvs);
     sf_write(p2ss,sizeof(float),nr,vpvs);
     sf_fileclose(vpvs);
 
@@ -137,9 +135,9 @@ int main (int argc, char* argv[])
     cumsum(nr,dtps,tps);
     cumsum(nr,dtss,tss);
 
-    synf(fo[0],nt,pp,nr,t,tpp,rs);
-    synf(fo[1],nt,ps,nr,t,tps,rs);
-    synf(fo[2],nt,ss,nr,t,tss,rs);
+    synf(fo[0],nt,pp,nr,tim,tpp,rs);
+    synf(fo[1],nt,ps,nr,tim,tps,rs);
+    synf(fo[2],nt,ss,nr,tim,tss,rs);
 
     sf_write(pp,sizeof(float),nt,mod);
     sf_write(ps,sizeof(float),nt,mod);

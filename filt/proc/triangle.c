@@ -2,28 +2,39 @@
 
 #include "triangle.h"
 
-static float *tmp;
-static int np, nb, nx;
+struct Triangle {
+    float *tmp;
+    int np, nb, nx;
+};
 
-static void fold (int o, int d, const float *x, float* tmp);
+static void fold (int o, int d, int nx, int nb, int np, 
+		  const float *x, float* tmp);
 static void doubint (int nx, float *x, bool der);
-static void triple (int o, int d, float* x, const float* tmp);
+static void triple (int o, int d, int nx, int nb, 
+		    float* x, const float* tmp);
 
 /* 
    Triangle smoothing in 1-D 
    nbox - triangle length
    ndat - data length
 */
-void triangle_init (int nbox, int ndat)
+triangle triangle_init (int nbox, int ndat)
 {
-    nx = ndat;
-    nb = nbox;
-    np = nx + 2*nb;
+    triangle tr;
+
+    tr = (triangle) sf_alloc(1,sizeof(*tr));
+
+    tr->nx = ndat;
+    tr->nb = nbox;
+    tr->np = ndat + 2*nbox;
     
-    tmp = sf_floatalloc(np);
+    tr->tmp = sf_floatalloc(tr->np);
+
+    return tr;
 }
 
-static void fold (int o, int d, const float *x, float* tmp)
+static void fold (int o, int d, int nx, int nb, int np, 
+		  const float *x, float* tmp)
 {
     int i, j;
 
@@ -72,7 +83,7 @@ static void doubint (int nx, float *xx, bool der)
     }
 }
 
-static void triple (int o, int d, float* x, const float* tmp)
+static void triple (int o, int d, int nx, int nb, float* x, const float* tmp)
 {
     int i;
     const float *tmp1, *tmp2;
@@ -87,15 +98,16 @@ static void triple (int o, int d, float* x, const float* tmp)
     }
 }
 
-void triangle (int o, int d, bool der, float *x)
+void smooth (triangle tr, int o, int d, bool der, float *x)
 {
-    fold (o,d,x,tmp);
-    doubint (np,tmp,der);
-    triple (o,d,x,tmp);
+    fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
+    doubint (tr->np,tr->tmp,der);
+    triple (o,d,tr->nx,tr->nb,x,tr->tmp);
 }
 
-void  triangle_close(void)
+void  triangle_close(triangle tr)
 {
-    free (tmp);
+    free (tr->tmp);
+    free (tr);
 }
 
