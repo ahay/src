@@ -10,7 +10,7 @@ int main (int argc, char *argv[])
     bool cos, inv;
     int n1, nt, nw, i1, i2, n2;
     float dw, *p, *cc=NULL, d1, o1;
-    complex float *pp;
+    float complex *pp;
     sf_file in, out;
 
     sf_init(argc, argv);
@@ -118,4 +118,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mfft1.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mfft1.c,v 1.7 2003/10/14 21:53:33 fomels Exp $	 */

@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
 { 
     int i1, n1, i2, m2, n2, n, order, ng, ig, i0, w, nw, iw;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
-    float *corr, *win1, *win2, a, b, a2, b2, ab, h;
+    float *corr, *win1, *win2, a, b, *a2, *b2, *ab, h;
     bool taper;
     sf_file in, warped, other;
 
@@ -46,9 +46,9 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(other,"d1",&d2)) sf_error ("No d1= in other");
     if(!sf_histfloat(other,"o1",&o2)) o2 = 0.;
 
-    sf_putint  (warped,"n3",ng);
-    sf_putfloat(warped,"d3",dg);
-    sf_putfloat(warped,"o3",g0);
+    sf_putint  (warped,"n2",ng);
+    sf_putfloat(warped,"d2",dg);
+    sf_putfloat(warped,"o2",g0);
 
     n = n2*m2;
 
@@ -79,7 +79,12 @@ int main(int argc, char* argv[])
     inp =   sf_floatalloc2 (n1,m2);
     out =   sf_floatalloc (n2);
     oth =   sf_floatalloc2 (n2,m2);
+
     corr =  sf_floatalloc (nw);
+    ab = sf_floatalloc (nw);
+    a2 = sf_floatalloc (nw);
+    b2 = sf_floatalloc (nw);
+
     win1 = sf_floatalloc (w);
     win2 = sf_floatalloc (w);
 
@@ -94,6 +99,8 @@ int main(int argc, char* argv[])
     sf_fileclose(other);
 
     for (ig=0; ig < ng; ig++) {
+	sf_warning("scanned %d of %d",ig+1,ng);
+
 	g = g0 + ig*dg;
 
 	for (i1=0; i1 < n2; i1++) {
@@ -102,26 +109,35 @@ int main(int argc, char* argv[])
 
 	int1_init (coord, o1, d1, n1, spline_int, order, n2);
 
+	for (iw=0; iw < nw; iw++) {
+	    a2[iw]=0.;
+	    b2[iw]=0.;
+	    ab[iw]=0.;
+	}
+
 	for (i2=0; i2 < m2; i2++) {
 	    int1_lop (false,false,n1,n2,inp[i2],out);
 	    for (iw=0; iw < nw; iw++) {
 		i0 = window1_apply(iw,out,taper,taper,win1);
 		i0 = window1_apply(iw,oth[i2],taper,taper,win2);
-		a2 = b2 = ab = 0.;
 		for (i1=0; i1 < w; i1++) {
 		    a = win1[i1];
 		    b = win2[i1];
-		    ab += a*b;
-		    a2 += a*a;
-		    b2 += b*b;
+		    ab[iw] += a*b;
+		    a2[iw] += a*a;
+		    b2[iw] += b*b;
 		}
-		corr[iw] = ab/sqrtf(a2*b2+FLT_EPSILON);
 	    }
-	    sf_write(corr,sizeof(float),nw,warped);
 	}
+
+	for (iw=0; iw < nw; iw++) {
+	    corr[iw] = ab[iw]/sqrtf(a2[iw]*b2[iw]+FLT_EPSILON);
+	}
+
+	sf_write(corr,sizeof(float),nw,warped);
     }
 
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.4 2003/10/08 15:09:25 fomels Exp $	 */
+/* 	$Id: Mwarpscan.c,v 1.5 2003/10/14 21:53:33 fomels Exp $	 */

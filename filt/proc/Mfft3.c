@@ -1,14 +1,16 @@
-/* FFT transform on the extra axis.
+/* FFT transform on on extra axis.
 
 Takes: < input.rsf > output.rsf
+
+Input and output are complex data.
 */
 
 #include <rsf.h>
 
 int main (int argc, char **argv)
 {
-    int n1, nx, n3;	/* dimensions */
-    int i1, ix, i3;       /* loop counters 	*/
+    int n1, nx, n3, axis, dim, n[SF_MAX_DIM];	/* dimensions */
+    int i1, ix, i3, j;       /* loop counters 	*/
     int nk;		/* number of wavenumbers */	
 
     float dx;		/* space sampling interval */
@@ -19,41 +21,62 @@ int main (int argc, char **argv)
     float complex **cp;	        /* frequency-wavenumber */
 
     bool inv;              /* forward or inverse */
+
+    char varname[6]; /* variable name */
     
     sf_file in, out;
 
-    /* hook up getpar to handle the parameters */
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
+    if (SF_COMPLEX != sf_gettype(in)) sf_error ("Need complex input");
+
     if (!sf_getbool("inv",&inv)) inv = false;
     /* if y, perform inverse transform */
 
-    if (!sf_histint(in,"n1",&n1)) n1=1; 
-    n3 = sf_leftsize(in,2);
+    if (!sf_getint("axis",&axis)) axis=2;
+    /* Axis to transform */
+
+    dim = sf_filedims(in,n);
+
+    n1=n3=1;
+    for (j=0; j < dim; j++) {
+	if      (j < axis-1) n1 *= n[j];
+	else if (j > axis-1) n3 *= n[j]; 
+    }
     
-    if (SF_COMPLEX != sf_gettype(in)) sf_error ("Need complex input");
-
     if (inv) { 
-	if (!sf_histint(in,"n2",&nk)) sf_error ("No n2= in input");
-	if (!sf_histfloat(in,"d2",&dk)) sf_error ("No d2= in input");
+	sprintf(varname,"n%d",axis);
+	if (!sf_histint(in,varname,&nk)) sf_error ("No n2= in input");
+	sprintf(varname,"d%d",axis);
+	if (!sf_histfloat(in,varname,&dk)) sf_error ("No d2= in input");
 
-	if (!sf_histint(in,"ny",&nx)) sf_error ("No nx= in input");
-	if (!sf_histfloat(in,"y0",&x0)) x0 = 0.; 
+	sprintf(varname,"m%d",axis);
+	if (!sf_histint(in,varname,&nx)) sf_error ("No %s= in input",varname);
+	sprintf(varname,"c%d",axis);
+	if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
 
 	dx = 1./(nk*dk);
 
-	sf_putint (out,"n2",nx);
-	sf_putfloat (out,"d2",dx);
-	sf_putfloat (out,"o2",x0);
+	sprintf(varname,"n%d",axis);
+	sf_putint (out,varname,nx);
+	sprintf(varname,"d%d",axis);
+	sf_putfloat (out,varname,dx);
+	sprintf(varname,"o%d",axis);
+	sf_putfloat (out,varname,x0);
     } else { 
-	if (!sf_histint(in,"n2",&nx)) sf_error ("No n2= in input");
-	if (!sf_histfloat(in,"d2",&dx)) sf_error ("No d2= in input");
-	if (!sf_histfloat(in,"o2",&x0)) x0 = 0.;
+	sprintf(varname,"n%d",axis);
+	if (!sf_histint(in,varname,&nx)) sf_error ("No n2= in input");
+	sprintf(varname,"d%d",axis);
+	if (!sf_histfloat(in,varname,&dx)) sf_error ("No d2= in input");
+	sprintf(varname,"o%d",axis);
+	if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
 
-	sf_putint(out,"ny",nx);
-	sf_putfloat(out,"y0",x0);
+	sprintf(varname,"m%d",axis);
+	sf_putint(out,varname,nx);
+	sprintf(varname,"c%d",axis);
+	sf_putfloat(out,varname,x0);
 
 	/* determine wavenumber sampling, pad by 2 */
 	nk = nx*2;
@@ -61,9 +84,12 @@ int main (int argc, char **argv)
 	dk = 1./(nk*dx);
 	k0 = -0.5/dx;
 
-	sf_putint (out,"n2",nk);
-	sf_putfloat (out,"d2",dk);
-	sf_putfloat (out,"o2",k0);
+	sprintf(varname,"n%d",axis);
+	sf_putint (out,varname,nk);
+	sprintf(varname,"d%d",axis);
+	sf_putfloat (out,varname,dk);
+	sprintf(varname,"o%d",axis);
+	sf_putfloat (out,varname,k0);
     }
 
     cp = sf_complexalloc2(n1,nk);
@@ -108,4 +134,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mfft3.c,v 1.4 2003/10/14 21:53:33 fomels Exp $	 */

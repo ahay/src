@@ -59,7 +59,8 @@ int main (int argc, char* argv[])
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    smooth (tr,i0,s[i],diff[i],data);
+		    /* smooth (tr,i0,s[i],diff[i],data); */
+		    smooth2 (tr,i0,s[i],diff[i],data);
 		}
 	    }
 	    triangle_close(tr);
@@ -71,4 +72,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msmooth.c,v 1.5 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Msmooth.c,v 1.6 2003/10/14 21:53:33 fomels Exp $	 */

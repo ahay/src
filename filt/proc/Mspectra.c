@@ -12,7 +12,7 @@ int main (int argc, char* argv[])
 {
     int n1, n2, ni, nfft, nw, i, i1, i2;
     float d1, o1, dw, *spec, *trace, scale;
-    complex float *fft;
+    float complex *fft;
     char key[3];
     bool sum, isphase;
     sf_file in, out;
@@ -107,5 +107,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mspectra.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mspectra.c,v 1.3 2003/10/14 21:53:33 fomels Exp $	 */
 

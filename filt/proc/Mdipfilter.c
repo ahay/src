@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
     if (angle) {	
 	if (!sf_getfloat("v",&v)) v=-1.;
 	/* constant velocity (if angle-y)
-	   The default is max(frequency)/max(wavenumber) */
-	if (v < 0.) v=(dw*(nw-1))/hypotf(dx*(nx-1),dy*(ny-1));
+	   The default is d(frequency)/d(wavenumber) */
+	if (v < 0.) v=dw/hypotf(dx,dy);
 
 	if (!sf_getfloat("ang1",&ang1)) ang1=-50.;
 	if (!sf_getfloat("ang2",&ang2)) ang2=-45.;
@@ -76,16 +76,15 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("pass",&pass)) pass=true;
     /* Pass or reject band */
-    
-    minx = hypotf(dx,dy);
+
+    minx = hypotf(dx,dy)*FLT_EPSILON;
 
     for (i3=0; i3 < n3; i3++) { 
 	for (iy=0; iy < ny; iy++) {
 	    y = y0 + iy*dy;
 	    for (ix=0; ix < nx; ix++) {
 		x = x0 + ix*dx;
-		x = hypotf(x,y);
-		if (x < minx) x=minx;
+		x = hypotf(x,y)+minx;
 
 		sf_read(ctrace,sizeof(float),compl? 2*nw: nw,in);
 
@@ -121,4 +120,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mdipfilter.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mdipfilter.c,v 1.7 2003/10/14 21:53:33 fomels Exp $	 */

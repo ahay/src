@@ -35,3 +35,5 @@ void reshape (float m1, float a1, float m2, float a2, float* data)
     }
     sf_pfacr (-1,nfft,cdata,data);
 }
+
+/* 	$Id: reshape.c,v 1.2 2003/10/14 21:53:33 fomels Exp $	 */

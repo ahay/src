@@ -4,7 +4,7 @@
 
 static int nt, nw, n;
 static float *p, dt;
-static complex float *pp;
+static float complex *pp;
 
 void cosft_init(int n1, float o1, float d1) {
     nt = sf_npfar(2*(n1-1));
@@ -43,7 +43,7 @@ void cosft_frw (float *q, int o1, int d1) {
     }
 
     for (i=0; i < n; i++) {
-	q[o1+i*d1] = crealf(pp[n]);
+	q[o1+i*d1] = crealf(pp[i]);
     }
 }
 
@@ -64,4 +64,4 @@ void cosft_inv (float *q, int o1, int d1) {
     }
 }
 
-/* 	$Id: cosft.c,v 1.4 2003/10/03 03:14:32 fomels Exp $	 */
+/* 	$Id: cosft.c,v 1.5 2003/10/14 21:53:33 fomels Exp $	 */
