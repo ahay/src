@@ -48,24 +48,16 @@ bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 
-resdir = './Fig'
+figdir = None
+resdir = None
 record = 0
 
-def set_resdir(dir):
-     global resdir
-     resdir = dir
+def set_dir(ref='..',dir='Fig'):
+     global figdir, resdir
+     figdir = dir
+     resdir = os.path.join(ref,dir)
 
-def Book():
-    global record
-    set_resdir('../Fig')
-    record = 1
-
-def Standalone():
-    global record
-    set_resdir('./Fig')
-    record = 0
-
-Book()
+set_dir()
 
 latex = None
 bibtex = None
@@ -173,7 +165,7 @@ def latify(target=None,source=None,env=None):
                 ltx.write('\\usepackage{%s}\n' % package)
         ltx.write('\n')
     if lclass == 'geophysics':
-        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
+        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % figdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
@@ -502,7 +494,7 @@ class Project(Environment):
 	    self.pdfs.append(buildPDF)
 	    self.Alias(target + '.buildPDF',buildPDF)
         return plot
-    def End(self):
+    def End(self,use=None):
         self.Alias('view',self.view)
         if self.figs: # if any results
             build = self.Alias('build',self.figs)
@@ -515,10 +507,10 @@ class Project(Environment):
                 self.Alias('ps',self.Ps('paper'))
                 self.Alias('pdf',self.Pdf('paper'))
             else:
-                self.Latify(target='paper.ltx',source='paper.tex')
+                self.Latify(target='paper.ltx',source='paper.tex',use=use)
                 self.paper = self.Pdf(target='paper',source='paper.ltx')
                 self.Alias('pdf',self.paper)
-#            self.paper[0].target_scanner = Plots
+            self.paper[0].target_scanner = Plots
 	    if acroread:
 		self.Alias('read',self.Read('paper'))
                 self.Alias('print',self.Print('paper'))
@@ -550,11 +542,11 @@ def Pdf(source,**kw):
         project.Alias(source+'.read',project.Read(source))
         project.Alias(source+'.print',project.Print(source))
     return project.Pdf(target=source+'.pdf',source=source+'.ltx')
-def End():
-    project.End()
+def End(**kw):
+    return apply(project.End,[],kw)
 
 if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.42 2004/07/04 12:43:16 fomels Exp $	
+# 	$Id$	
