@@ -1,11 +1,11 @@
 #ifndef _gazdag_h
 #define _gazdag_h
 
-void gazdag_init (float eps1, int nt1, float dt1, 
-		  int nz1, float dz1, float *vt1);
+void gazdag_init (float eps, int nt, float dt, 
+		  int nz, float dz, float *vt, float *gt);
 void gazdag_close ();
 void gazdag (bool inv, float k2, float complex *p, float complex *q);
 
 #endif
 
-/* 	$Id: gazdag.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id: gazdag.h,v 1.3 2003/11/22 22:42:28 fomels Exp $	 */

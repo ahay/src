@@ -22,6 +22,7 @@ int main (int argc, char *argv[])
     float k2;             /* wave number squared */
     float dx;		/* spatial sampling interval	*/
     float *vt, v0;	/* velocity v(t)		*/
+    float *gt, g0;      /* slowness gradient            */
     float **p,**q;	/* input, output data		*/
 
     float complex **cp,**cq; /* complex input,output	*/
@@ -92,6 +93,16 @@ int main (int argc, char *argv[])
 	vt[iz] *= 0.25*vt[iz];
     }
 
+    if (sf_getfloat("grad",&g0)) {
+	/* slowness gradient */
+	gt = sf_floatalloc(nz);
+	for (iz=0; iz < nz; iz++) {
+	    gt[iz] = 2.*g0; /* /2 * 4 */
+	}
+    } else {
+	gt = NULL;
+    }
+
     /* determine wavenumber sampling (for real to complex FFT) */
     nxfft = sf_npfar(nx);
     nk = nxfft/2+1;
@@ -127,7 +138,7 @@ int main (int argc, char *argv[])
 	sf_pfa2rc(-1,2,nt,nxfft,p[0],cp[0]);
     }
 
-    gazdag_init(eps,nt,dt,nz,dz,vt);
+    gazdag_init(eps,nt,dt,nz,dz,vt,gt);
 
     /* migrate each wavenumber */
     for (ik=0; ik<nk; ik++) {
@@ -163,4 +174,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mgazdag.c,v 1.4 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mgazdag.c,v 1.5 2003/11/22 22:42:28 fomels Exp $	 */
