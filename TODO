@@ -1,14 +1,16 @@
 PROJ
+	get rid of the clean rule
 	parameter checking
 	Tkinter interface
 DOCUMENTATION
 	demos: SU/SEPlib/Claerbout
+	       move up, document
 	manual...
 	sfdoc -k keyword
-	interface examples
+	interface examples: F77, F90, Python, C++
+		  install/clean f90 .mod files
 FILT
 	splint
-	fortran interface
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
 PLOT

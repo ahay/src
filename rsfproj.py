@@ -1,7 +1,7 @@
 import os, stat, sys, types, commands, re, string, urllib
 import rsfdoc
 import rsfprog
-import rsfconfig
+import rsfconf
 
 ##############################################################################
 # BEGIN STANDARD SCons SCRIPT HEADER
@@ -92,6 +92,7 @@ from SCons.Util import WhereIs
 from SCons.Builder import Builder
 from SCons.Action import Action
 from SCons.Scanner import Base
+from SCons.Options import Options
 
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES
@@ -111,6 +112,8 @@ datapath = os.path.join(os.path.join(os.environ.get('HOME'),'scr'),'')
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
+libdir = os.path.join(top,'lib')
+incdir = os.path.join(top,'include')
 
 resdir = './Fig'
 
@@ -296,21 +299,28 @@ combine ={
 
 class Project(Environment):
     def __init__(self,**kw):
-        global view, dvips
         Environment.__init__(self,**kw)
+        # Add f90 later
+        opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        rsfconf.options(opts)
+        opts.Update(self)
         self.Append(ENV={'DATAPATH':datapath,
                          'DISPLAY':os.environ.get('DISPLAY')},
                     BUILDERS={'View':View,
                               'Clean':Klean,
                               'Build':Build,
                               'PDFBuild':PDFBuild,
-#                              'Dvi':Dvi,
-#                              'Ps':Ps,
+                              #                              'Dvi':Dvi,
+                              #                              'Ps':Ps,
                               'Pdf':Pdf,
                               'Read':Read,
                               'Retrieve':Retrieve},
-                    SCANNERS=[Plots])
-# Add f90 later
+                    SCANNERS=[Plots],
+                    LIBPATH=[libdir],
+                    CPPPATH=[incdir],
+                    LIBS=['rsf','m'],
+                    PROGSUFFIX='.x')
+        self['PROGPREFIX']=''
         self.view = []
         self.figs = []
         self.pdfs = []
@@ -355,11 +365,13 @@ class Project(Environment):
                 pars = string.split(subline)
                 # command is assumed to be always first in line
                 command = pars.pop(0)
-                rsfprog = prefix + command            
                 # check if this command is in our list
+                rsfprog = prefix + command            
                 if rsfdoc.progs.has_key(rsfprog):
                     command = os.path.join(bindir,rsfprog)
                     sources.append(command)
+                elif re.match(r'[^/]+\.x$',command): # local program
+                    command = os.path.join('.',command)
                 #<- check for par files and add to the sources
                 for par in pars:
                     if re.match("^par=",par):
@@ -387,7 +399,7 @@ class Project(Environment):
                 file = file + suffix
             targets.append(file)
         if clean:
-            self.junk.append(target)
+            self.junk = self.junk + targets
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
         return self.Flow(target,source,flow,suffix=suffix,**kw)
@@ -408,10 +420,12 @@ class Project(Environment):
         self.pdfs.append(buildPDF)
         self.Alias(target + '.buildPDF',buildPDF)
         return plot
-    def Combine(self,target,source,how,result=0):
+    def Combine(self,target,source,how,result=0,vppen=None):
         if not type(source) is types.ListType:
             source = string.split(source)
         flow = apply(combine[how],[len(source)])
+        if vppen:
+            flow = flow + ' ' + vppen
         if result:
             return self.Result(target,source,flow,src_suffix=vpsuffix,stdin=0)
         else:
