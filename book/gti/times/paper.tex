@@ -1,0 +1,357 @@
+\documentclass[12pt]{handout}
+
+\begin{document}
+
+\author{Sergey Fomel}
+\title{Geometry of Waves}
+
+In the introductory lecture, we talked about the geometry of seismic
+reflectors as seen in seismic images and the geometry of seismic
+reflection events as seen in field data. The connection between the
+two geometries is established via the geometry of seismic wave
+propagation.
+
+\section{What is a wave?}
+A wave (any wave) can be defined as a disturbance propagating with a
+finite speed. If a wave propagation process starts with a source in a
+limited area in space and we take a snapshot of the wave after a
+finite period of time, we will see two distinct regions: a region that
+``does not know yet'' about the existence of the wave and a region
+that ``has already seen the wave'' (Figure~\ref{fig:wave}). The
+boundary between these two regions is the wavefront.
+
+\sideplot{wave}{width=0.7\textwidth}{A wave is a disturbance
+  propagating with a finite speed. At a fixed point in time, the
+  boundary between the unperturbed region and the region already
+  touched by the wave propagation is the wavefront.}
+
+Of course, everything in the physical world propagates with a finite
+speed. However, we can distinguish between two fundamentally different
+kinds of propagation processes: wave propagation and diffusion. A
+fundamental difference between them is the existence of wavefronts. In
+a diffusion process, the transition between the unperturbed and
+unperturbed regions is so smooth that is impossible to draw a
+wavefront. In a wave propagation process, there is always some
+discontinuity on or across the wavefront. The fact that seismic energy
+propagates in a wave form allows us to use the geometrical properties
+of wavefronts in seismic imaging.
+
+\section{Eikonal}
+How can we describe the wavefront geometry mathematically? One
+possible approach is to define the function $T(\mathbf{x})$, which
+assigns the traveltime from the source to points $\mathbf{x}$ in
+space. The traveltime function is sometimes called
+\emph{eikonal}\footnote{The term ``eikonal'' is derived from the Greek
+word for ``image'' and is a relative of the word ``icon''.}. It is
+defined for a fixed wave source.
+
+A wavefront at a particular time $t$ is the collection of all points
+$\mathbf{x}$  for which $T(\mathbf{x}) = t$. In the simplest case of a
+point source at $\mathbf{x}_0$ in a homogeneous isotropic material,
+the traveltime simply equals the distance to the source divided by the
+velocity $V$:
+\begin{equation}
+  \label{eq:const}
+  T(\mathbf{x}) = \frac{\left|\mathbf{x}-\mathbf{x}_0\right|}{V}\;.
+\end{equation}
+We will use the notation $|\mathbf{a}|$ to denote the Euclidian length
+of the vector $\mathbf{a}=\{a_1,a_2,a_3\}$ so that
+$|\mathbf{a}|=\sqrt{a_1^2+a_2^2+a_3^2}$. In the case of a constant
+isotropic velocity, the wavefront at time $t$ is a sphere with the
+radius $V\,t$ centered at the source point $\mathbf{x}_0$
+(Figure~\ref{fig:cone}).
+
+\sideplot{cone}{width=0.9\textwidth}{In a constant isotropic velocity,
+  the traveltime function $T(\mathbf{x})$ is a cone. Its horizontal
+  sections are spherical wavefronts (circular in 2-D). Its vertical
+  sections are hyperboloids (hyperbolas in 2-D).}
+
+Wavefronts are \emph{level sets} or iso-surfaces of the traveltime
+function $T(\mathbf{x})$. In the locations where the traveltime gradient 
+\[
+\nabla T = \left\{
+\frac{\partial T}{\partial x_1},
+\frac{\partial T}{\partial x_2},
+\frac{\partial T}{\partial x_3}\right\}
+\]
+is defined, $\nabla T$ is a vector pointing in the direction of the
+maximum change in $T$ or, in other words, in the direction normal to
+the local wavefront. To describe the front evolution in time, it is
+sufficient to prescribe a velocity to the front propagation in the
+normal direction. Such a velocity is called \emph{phase velocity}. The
+general front propagation equation is
+\begin{equation}
+  \label{eq:front}
+  \left|\nabla T\right| = \frac{1}{V(\ldots)}\;,
+\end{equation}
+where $V$ is the phase velocity, which can depend on a number of
+different characteristics. In the case of isotropic wavefront
+propagation, the velocity depends only on the location, and
+equation~(\ref{eq:front}) takes the form
+\begin{equation}
+  \label{eq:eikonal}
+  \left|\nabla T\right| = \frac{1}{V(\mathbf{x})}\;.
+\end{equation}
+Equation~(\ref{eq:eikonal}) is known as the \emph{eikonal equation}.
+
+In the case of \emph{anisotropy}, the phase velocity depends both on
+the spacial position and on the direction of the local wavefront
+normal. The general anisotropic eikonal equation is
+\begin{equation}
+  \label{eq:anisoeikonal}
+  \left|\nabla T\right| = 
+  \frac{1}{V\left(\mathbf{x},\frac{\nabla T}{\left|\nabla T\right|}\right)}\;.
+\end{equation}
+We will limit the following analysis to the isotropic case and will return
+to anisotropy later in the course.
+
+\section{Ray tracing}
+Another way to approach the wavefront propagation problem is to track
+the movement of individual points on the wavefront. For the purposes
+of this analysis, it is convenient to rewrite the eikonal
+equation~(\ref{eq:eikonal}) in the form
+\begin{equation}
+  \label{eq:hamilton}
+  H(\mathbf{x},\mathbf{p}) = \mathbf{p} \cdot \mathbf{p} - 
+  S^2(\mathbf{x}) = 0\;,
+\end{equation}
+where the vector $\mathbf{p}$ denotes $\nabla T$ and $S$ is
+the slowness: $S(\mathbf{x}) = \frac{1}{V(\mathbf{x})}$ . According to
+the eikonal equation, the function $H(\mathbf{x},\mathbf{p})$ is equal
+to zero everywhere and does not change along rays (the trajectories of
+individual wavefront points). If $\sigma$ denotes a variable moving
+along a ray, then the differential $d\,H/d\,\sigma$ should be
+zero. Differentiating equation~(\ref{eq:hamilton}), we obtain
+\begin{equation}
+  \label{eq:dsigma}
+  \frac{d\,H}{d\,\sigma} = 
+  2\,\mathbf{p} \cdot \frac{d\,\mathbf{p}}{d\,\sigma} -
+  2\,S(\mathbf{x})\,\nabla S \cdot \frac{d\,\mathbf{x}}{d\,\sigma} = 0\;.
+\end{equation}
+Note that we have not specified the precise meaning of $\sigma$. It
+is just some parameter that changes monotonically along each ray
+(Figure~\ref{fig:ray}). The choice of $\sigma$ becomes constrained if
+we split equation~(\ref{eq:dsigma}) into a system of ordinary
+differential equations\footnote{This procedure is known in mathematics
+as the Hamilton-Jacobi theory.}
+\begin{eqnarray}
+  \label{eq:xray}
+  \frac{d\,\mathbf{x}}{d\,\sigma} & = & \mathbf{p}\;, \\
+  \label{eq:pray}
+  \frac{d\,\mathbf{p}}{d\,\sigma} & = & S(\mathbf{x})\,\nabla S\;.
+\end{eqnarray}
+Equations~(\ref{eq:xray}-\ref{eq:pray}) can be combined into one
+second-order equation for the ray trajectory $\mathbf{x}(\sigma)$:
+\begin{equation}
+  \label{eq:ray2}
+  \frac{d^2\,\mathbf{x}}{d\,\sigma^2} =  S(\mathbf{x})\,\nabla S
+\end{equation}
+The $\sigma$ variable in equations~(\ref{eq:xray}-\ref{eq:ray2}) has a defined
+meaning and the physical dimensions of distance squared divided by time.
+Starting with an initial point $\mathbf{x}(0)=\mathbf{x}_0$ and an initial
+direction vector $\mathbf{x}'(0)=\mathbf{p}(0)=\mathbf{p}_0$, one can, in
+principle, trace the ray trajectory $\mathbf{x}(\sigma)$. Repeating this
+process for every point on the wavefront, we can track the wavefront movement.
+The numerical approaches to ray tracing will be discussed in the next lecture.
+If the slowness $S(\mathbf{x})$ is constant, $\mathbf{p}$ does not change with
+$\sigma$, and all rays become straight lines that can be described with 
+equation
+\begin{equation}
+  \label{eq:straight}
+  \mathbf{x}(\sigma) = \mathbf{x}_0 + \mathbf{p}_0\,\sigma\;.
+\end{equation}
+
+\sideplot{ray}{width=0.45\textwidth}{Rays are trajectories of
+  individual points on the propagating wavefronts. The $\sigma$
+  parameter changes monotonically along each individual ray.}
+
+How does traveltime change along a ray? According to the chain rule,
+the derivative of any scalar function $f(\mathbf{x})$ along the
+$\sigma$ direction satisfies
+\[
+\frac{d\,f}{d\,\sigma} = \nabla f \cdot
+\frac{d\,\mathbf{x}}{d\,\sigma}\;.
+\]
+Similarly, for the traveltime function $T(\mathbf{x})$,
+\begin{equation}
+  \label{eq:tray0}
+  \frac{d\,T}{d\,\sigma} = \nabla T \cdot
+  \frac{d\,\mathbf{x}}{d\,\sigma}
+\end{equation}
+or, using the notation $\mathbf{p} = \nabla T$ and
+equations~(\ref{eq:hamilton}) and~(\ref{eq:xray}),
+\begin{equation}
+  \label{eq:tray}
+  \frac{d\,T}{d\,\sigma}
+  = \mathbf{p} \cdot \mathbf{p} =
+  S^2(\mathbf{x})\;.
+\end{equation}
+Solving equation~(\ref{eq:tray}) along with equations~(\ref{eq:xray})
+and ~(\ref{eq:pray}), we can track the wavefront changes along
+individual rays. In the constant velocity case, the traveltime changes
+linearly as
+\begin{equation}
+  \label{eq:tconst}
+  T(\sigma) = S^2\,\sigma\;.
+\end{equation}
+
+According to equation~(\ref{eq:tray}), the traveltime derivative
+$d\,T/d\,\sigma$ is always positive. This means that the traveltime
+increases monotonically along a ray. Therefore, it can be used instead
+of $\sigma$ as a ray trajectory variable. Dividing
+equations~(\ref{eq:xray}--\ref{eq:pray}) by equation~(\ref{eq:tray}),
+we obtain the ray tracing system defined in terms of traveltime, as
+follows:
+\begin{eqnarray}
+  \label{eq:xrayt}
+  \frac{d\,\mathbf{x}}{d\,T} & = & 
+  \frac{\mathbf{p}}{S^2(\mathbf{x})} = 
+  \frac{1}{S(\mathbf{x})}\,\frac{\mathbf{p}}{|\mathbf{p}|} =
+  V(\mathbf{x})\,\frac{\mathbf{p}}{|\mathbf{p}|}\;, \\
+  \label{eq:prayt}
+  \frac{d\,\mathbf{p}}{d\,T} & = & \frac{\nabla S}{
+    S(\mathbf{x})} = - \frac{\nabla V}{V(\mathbf{x})}\;.
+\end{eqnarray}
+The vector $d\,\mathbf{x}/d\,T$ is the \emph{group velocity}. It points
+  in the direction of the ray trajectory and describes the velocity of
+  an individual point on the wavefront. In the isotropic case, the
+  group velocity points in the direction normal to the wavefront and
+  coincides in value with the phase velocity.
+
+There are other alternative ways to define the ray tracing system. A
+curious property of system~(\ref{eq:xray}--\ref{eq:pray}) is the
+mechanical analogy described in the next section.
+
+\section{Mechanical analogy}
+As noticed by Sir Isaac Newton, there is a certain analogy between the
+trajectory of a ray and the trajectory of a mechanical particle moving
+in a potential field. The total energy $E$ of a moving particle is
+composed of the kinetic energy and the potential energy:
+\begin{equation}
+  \label{eq:energy}
+  E(\mathbf{x},\mathbf{v}) = m\,\frac{\mathbf{v} \cdot
+    \mathbf{v}}{2} - U(\mathbf{x})\;,
+\end{equation}
+where $m$ is the particle mass, $\mathbf{v}$ is the particle velocity,
+and $- U(\mathbf{x})$ is the potential energy. An example of a
+mechanical system described by equation~(\ref{eq:energy}) is a planet
+rotating around the Sun. In this case, $U$ is the gravitational
+potential
+\begin{equation}
+  \label{eq:sun}
+  U(\mathbf{x}) = G\,\frac{m\,M}{|\mathbf{x}-\mathbf{x}_0|}\;,
+\end{equation}
+where $G$ is the gravitational constant, $M$ is the sun mass, and
+$\mathbf{x}_0$ is the sun position.
+The total energy is conserved in the propagation process and does not
+change with the time $t$. Therefore,
+\begin{equation}
+  \label{eq:dt}
+  \frac{d\,E}{d\,t} = m\,\mathbf{v} \cdot
+  \frac{d\,\mathbf{v}}{d\,t} - \nabla U \cdot
+  \frac{d\,\mathbf{x}}{d\,t} = 0\;.
+\end{equation}
+The corresponding ``ray tracing'' system
+takes the form
+\begin{eqnarray}
+  \label{eq:xtraj}
+  \frac{d\,\mathbf{x}}{d\,t} & = & \mathbf{v} \\
+  \label{eq:vtraj}
+  \frac{d\,\mathbf{v}}{d\,t} & = & \frac{\nabla U}{m}\;.
+\end{eqnarray}
+The second-order equivalent of the first-order
+system~(\ref{eq:xtraj}-\ref{eq:vtraj}) is the equation
+\begin{equation}
+  \label{eq:xtraj2}
+  \frac{d^2\,\mathbf{x}}{d\,t^2} = \frac{\nabla U}{m}\;,
+\end{equation}
+which simply states Newton's second law of mechanics. The $\nabla U$
+term is the potential force that causes the particle acceleration. In
+the case of the planet motion, the gravitational force is directed
+towards the sun. In the absence of the external force, the velocity
+$\mathbf{v}$ remains constant (Newton's first law and the principle of
+inertia). This is analogous to the ray trajectory remaining a straight
+line in the absence of velocity variations.
+
+The analogy between particle trajectories and ray trajectories is
+summarized in Table~\ref{tab:anal}. 
+
+\begin{table}
+  \centering
+  \begin{tabular}{|c||c|} \hline
+    Particle & Ray \\ \hline \hline
+    Position $\mathbf{x}$ & Position $\mathbf{x}$ \\ \hline
+    Time $t$ & Natural ray coordinate $\sigma$ \\ \hline
+    Velocity $\mathbf{v}$ & Ray parameter (slowness vector) $\mathbf{p} = \nabla T$  \\ \hline
+    Acceleration 
+    $(\nabla U)/m$ & $S(\mathbf{x})\,\nabla S$ \\ \hline
+  \end{tabular}
+\caption{Analogy between physical quantities of a moving mechanical
+  particle and those of a ray.}
+\label{tab:anal}
+\end{table}
+
+\section{Snell's law}
+How many independent equations does the ray tracing
+system~(\ref{eq:xray}-\ref{eq:pray}) contain? On the first glance,
+there are six independent equations: three for the components of
+$\mathbf{x}(\sigma)$ and three for the components of
+$\mathbf{p}(\sigma)$. However, we can also use the eikonal
+equation~(\ref{eq:hamilton}), which serves as an additional constraint
+on the parameters. The eikonal equation states that the length of the
+vector $\mathbf{p}$ should always equal the local slowness
+$S(\mathbf{x})$. It is sufficient to specify $\mathbf{p}$ with only
+two parameters (such as the direction angles) and use the local
+slowness to find the third parameter (such as the vector length). In
+this way, the system will be reduced to five independent equations.
+
+Additional simplifications are possible for particular kinds of the
+velocity fields. An especially important case is the velocity that
+changes only with depth. Most of the Earth's upper crust is composed
+of horizontally-layered sediments, making vertical changes in seismic
+velocities the predominant factor in seismic exploration. To handle
+this case mathematically, let us partition the spatial location vector
+$\mathbf{x}$ into the horizontal and vertical coordinates, as follows:
+$\mathbf{x}=\{\mathbf{y},z\}$. Analogously, the $\mathbf{p}$ vector
+gets partitioned into horizontal and vertical components: 
+$\mathbf{p}=\{\mathbf{p}_y,p_z\}$. If the velocity $V(\mathbf{x})$
+depends only on the $z$ coordinate, then, according to
+equation~(\ref{eq:pray}), only the $p_z$ component of the ray vector
+$\mathbf{p}$ changes along the ray. The conservation of the lateral
+component $\mathbf{p}_y$ is the manifestation of Snell's law.
+
+\boxit{In a $V(z)$ medium, the lateral components of the slowness
+  vector $\mathbf{p}$ remain constant along each ray trajectory.}
+  
+If $\alpha$ is the angle of the ray measured from the vertical, then
+the vertical component of $\mathbf{p}$ can be expressed as $p_z =
+\frac{\cos{\alpha}}{V}$, and the length of the lateral component is
+$|\mathbf{p}_y| = \frac{\sin{\alpha}}{V}$. Consider a horizontal
+interface between two layers with velocities $V_1$ and $V_2$
+(Figure~\ref{fig:snell}). The conservation of $\mathbf{p}_y$ leads to
+the equation of refraction, which is the best known form of Snell's
+law:
+\begin{equation}
+  \label{eq:snell}
+  \frac{\sin{\alpha_1}}{V_1} =  \frac{\sin{\alpha_2}}{V_2}
+\end{equation}
+
+\sideplot{snell}{width=0.7\textwidth}{Snell's law governs the
+  refraction of rays across horizontal interfaces.}
+
+In the next lecture, we will discuss how Snell's law and other
+fundamental principles of geometrical seismics get applied in practice
+for numerical wavefront propagation.
+
+\section{Acknowledgments and references}
+An authoritative reference on all aspects of the seismic ray theory is
+\cite[]{cerveny}. Useful material can also be found in
+\cite[]{STI00-00-03630363}. The level-set approach to eikonal-type
+equations is developed by \cite{sethian}. Sergey Goldin and James
+Sethian had a major influence on my understanding of geometrical seismics.
+
+\bibliographystyle{sep}
+\bibliography{times,SEG}
+
+\end{document}
+
