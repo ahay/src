@@ -34,14 +34,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /* The following from C99 - must define for C90 */
 #include <complex.h>
 #undef I
-#ifdef _Imaginary_I
-#define I _Imaginary_I
-#else
-#ifdef _Complex_I
-#define I _Complex_I
-#else
+#ifdef sun
 #define I (1.0fi)
-#endif
+#else
+#define I _Complex_I
 #endif
 /*^*/
 
