@@ -22,4 +22,18 @@ int sf_cart2line( int dim, const int* nn, const int* ii) {
     return i;
 }
 
+int sf_first_index (int i, int j, int dim, const int *n, const int *s)
+{
+    int i0, n123, k, ii;
 
+    n123 = 1;
+    i0 = 0;
+    for (k=0; k < dim; k++) {
+	if (k == i) continue;
+	ii = (j/n123)%n[k]; /* to cartesian */
+	n123 *= n[k];	
+	i0 += ii*s[k];      /* back to line */
+    }
+
+    return i0;
+}
