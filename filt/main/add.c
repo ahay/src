@@ -89,21 +89,21 @@ int main (int argc, char* argv[])
     }
 
     (void) sf_getfloats("scale",scale,nin); 
-/* Scalar values to multiply each dataset with */
+    /* Scalar values to multiply each dataset with */
     (void) sf_getfloats("add",add,nin);
-/* Scalar values to add to each dataset */
+    /* Scalar values to add to each dataset */
 
     (void) sf_getbools("sqrt",sqrt_flag,nin);
-/* If take square root */
+    /* If take square root */
     (void) sf_getbools("abs",abs_flag,nin);
-/* If take absolute value */
+    /* If take absolute value */
     (void) sf_getbools("log",log_flag,nin);
-/* If take logarithm */
+    /* If take logarithm */
     (void) sf_getbools("exp",exp_flag,nin);
-/* If take exponent */
+    /* If take exponent */
 
     mode = sf_getstring("mode");
-/* 'a' means add (default), 'p' or 'm' means multiply, 'd' means divide */
+    /* 'a' means add (default), 'p' or 'm' means multiply, 'd' means divide */
     cmode = (NULL==mode)? 'a':mode[0];
 
     dim = sf_filedims(in[0],n);
