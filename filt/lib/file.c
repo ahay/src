@@ -817,6 +817,7 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
     size_t i, left, nbuf;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
+
     switch(file->form) {
 	case SF_ASCII:
 	    for (left = size; left > 0; left-=nbuf) {
@@ -1078,7 +1079,7 @@ void sf_seek (sf_file file, long offset, int whence)
 
 void sf_unpipe (sf_file file, size_t size) 
 {
-    size_t nbuf;
+    size_t nbuf, len;
     char *dataname=NULL;
     FILE* tmp;
     char buf[BUFSIZ];
@@ -1095,7 +1096,11 @@ void sf_unpipe (sf_file file, size_t size)
 	size -= nbuf;
     }
 
-    if (NULL != file->dataname ) strcpy (file->dataname,dataname);
+    if (NULL != file->dataname ) {
+	len = strlen(dataname)+1;
+	file->dataname = (char*) sf_realloc(file->dataname,len,sizeof(char));
+	memcpy(file->dataname,dataname,len);
+    }
 
     /*
       if (unlink(file->dataname))
@@ -1146,5 +1151,5 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
 }
 */
 
-/* 	$Id: file.c,v 1.24 2004/07/02 18:08:47 fomels Exp $	 */
+/* 	$Id: file.c,v 1.25 2004/07/04 12:43:17 fomels Exp $	 */
 

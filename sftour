@@ -29,7 +29,7 @@ sys.stderr.write(string.join(dirs,'::') + '\n')
 child = None
 
 def handler(signum, frame):
-    sys.stderr.write('\n%s: aborting...\n' % script)
+    sys.stderr.write('\n%s: aborting...\n' % comm)
     if child:
         os.kill (signal.SIGINT,child)
     sys.exit(-1)
@@ -55,7 +55,7 @@ for dir in dirs:
     try:
         os.chdir (dir)
     except:
-        sys.stderr.write('\n%s: wrong directory %s...\n' % (script,dir))
+        sys.stderr.write('\n%s: wrong directory %s...\n' % (comm,dir))
         sys.exit(1)
     os.environ['PWD'] = os.path.join(cwd,dir)
     sys.stderr.write(string.join(['+' * 44,dir,'\n'],' '))

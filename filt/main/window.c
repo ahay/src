@@ -157,7 +157,7 @@ int main (int argc, char *argv[])
     f[0] *= esize;
 
     sf_unpipe(in,sf_filesize(in)*esize);
-    
+
     buf = sf_charalloc (n1);
     table = sf_intalloc (n2);
 
@@ -173,6 +173,7 @@ int main (int argc, char *argv[])
 		}
 	    }
 	}
+
 	sf_charwrite(buf,m1,out);
     }
 
@@ -204,4 +205,4 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
     }
 }
 
-/* 	$Id: window.c,v 1.10 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id: window.c,v 1.11 2004/07/04 12:43:17 fomels Exp $	 */

@@ -39,8 +39,8 @@ if not datapath:
         file.close()
     if not datapath:
         datapath = os.path.join(os.environ.get('HOME'),'')
-rdatapath = os.environ.get('RDATAPATH',
-                           'ftp://begpc132.beg.utexas.edu/data/')
+dataserver = os.environ.get('RSF_DATASERVER',
+                           'ftp://begpc132.beg.utexas.edu/')
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -226,15 +226,20 @@ def latex2dvi(target=None,source=None,env=None):
 
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
-    global rdatapath
-    folder = env['dir']
+    global dataserver
+    folder = 'data/'+env['dir']
     private = env.get('private')
     if private:
         login = private['login']
         password = private['password']
         server = private['server']
-        session = ftplib.FTP(server,login,password)
-        session.cwd(folder)
+        try:
+            session = ftplib.FTP(server,login,password)
+            session.cwd(folder)
+        except:
+            print 'Could not establish connection with "%s/%s" ' % (server,
+                                                                    folder)
+            return 3
         for file in map(str,target):
             try:
                  download = open(file,'wb')
@@ -246,7 +251,7 @@ def retrieve(target=None,source=None,env=None):
         session.quit()
     else:
         for file in map(str,target):
-            urllib.urlretrieve(string.join([rdatapath,folder,file],'/'),
+            urllib.urlretrieve(string.join([dataserver,folder,file],'/'),
                                file)
 
     if os.stat(file)[6]:
@@ -544,4 +549,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.41 2004/07/02 11:54:02 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.42 2004/07/04 12:43:16 fomels Exp $	

@@ -8,8 +8,6 @@ import string
 #
 ###########################################################################
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/vecta'
-
 trace=300
 
 Flow('line',None,
@@ -29,7 +27,7 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 for mode in ['pp','ps']:
     data = 'bend_l1_%cmig_enhanc.sgy' % mode[1]
-    Fetch(data,datdir,private)
+    Fetch(data,'vecta',private)
     Flow(mode,data,
          'segyread tape=$SOURCE read=data | window n2=471',stdin=0)
     Plot(mode,mode,
