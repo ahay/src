@@ -26,6 +26,7 @@ bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par);
 char* sf_histstring (sf_file file, const char* key);
 void sf_fileflush (sf_file file, sf_file src);
 void sf_putint (sf_file file, char* key, int par);
+void sf_putints (sf_file file, char* key, int* par, size_t n);
 void sf_putfloat (sf_file file, char* key,float par);
 void sf_putstring (sf_file file, char* key,const char* par);
 void sf_putline (sf_file file, const char* line);

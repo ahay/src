@@ -11,6 +11,7 @@ void *sf_realloc (void* ptr, size_t n, size_t size);
 /*@out@*/ int *sf_intalloc (size_t n);
 /*@out@*/ float *sf_floatalloc (size_t n);
 /*@out@*/ bool *sf_boolalloc (size_t n);
+/*@out@*/ bool **sf_boolalloc2 (size_t n1, size_t n2);
 /*@out@*/ float complex *sf_complexalloc (size_t n);
 /*@out@*/ float complex **sf_complexalloc2 (size_t n1, size_t n2);
 /*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2);

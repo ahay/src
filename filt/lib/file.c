@@ -444,6 +444,21 @@ void sf_putint (sf_file file, char* key, int par)
     sf_simtab_enter (file->pars,key,val);
 }
 
+void sf_putints (sf_file file, char* key, int* par, size_t n)
+{
+    int i;
+    char val[1024], *v;
+
+    v = val;
+    for (i=0; i < n-1; i++) {
+	v += snprintf(v,1024,"%d,",par[i]);
+    }
+    snprintf(v,1024,"%d",par[n-1]);
+
+    sf_simtab_enter (file->pars,key,val);
+}
+
+
 void sf_putfloat (sf_file file, char* key,float par)
 {
     char val[256];
@@ -686,7 +701,7 @@ void sf_unpipe (sf_file file, size_t size)
     dataname = sf_charalloc (NAME_MAX+1);
     snprintf(dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
     tmp = fdopen(mkstemp(dataname),"wb");
-    if (NULL == fdopen) sf_error ("%s: cannot open %s:",__FILE__,dataname);
+    if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,dataname);
 
     while (size > 0) {
 	nbuf = (BUFSIZ < size)? BUFSIZ : size;

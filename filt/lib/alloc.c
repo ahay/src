@@ -72,6 +72,19 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
+/*@out@*/ bool **sf_boolalloc2 (size_t n1, size_t n2) 
+{
+    size_t i2;
+    bool **ptr;
+    
+    ptr = (bool**) sf_alloc (n2,sizeof(bool*));
+    ptr[0] = sf_boolalloc (n1*n2);
+    for (i2=1; i2 < n2; i2++) {
+	ptr[i2] = ptr[0]+i2*n1;
+    }
+    return ptr;
+}
+
 /*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2) 
 {
     size_t i2;
