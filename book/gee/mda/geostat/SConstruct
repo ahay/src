@@ -1,0 +1,79 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+Fetch('wood.H','textures')
+Flow('wood','wood.H','dd data_format=native_float')
+
+Flow('wood-hole','wood','hole')
+Plot('wood-hole','wood-hole','grey crowd=1')
+
+Flow('wood-known','wood','math output=1 | hole')
+Flow(['wood-pef','wood-lag'],['wood-hole','wood-known'],
+     'pef a=5,5 niter=60 maskin=${SOURCES[1]} lag=${TARGETS[1]}')
+Flow('wood-miss',['wood-hole','wood-pef','wood-known'],
+     'miss niter=140 filt=${SOURCES[1]} mask=${SOURCES[2]} padin=20')
+Plot('wood-miss','wood-miss','grey crowd=1')
+
+for seed in range(2):
+    nois = 'wood-nois%d' % seed
+    real = 'wood-real%d' % seed
+    Flow(nois,['wood-miss','wood-pef'],
+         '''
+         helicon filt=${SOURCES[1]} |
+         noise var=250 rep=y seed=%d |
+         helicon filt=${SOURCES[1]} div=y
+         ''' % (1994,2004)[seed])
+    Flow(real,['wood-hole','wood-pef','wood-known',nois],
+         '''add scale=1,-1 ${SOURCES[3]} |
+         miss niter=140 filt=${SOURCES[1]} mask=${SOURCES[2]} padin=20 |
+         add ${SOURCES[3]}
+         ''')
+    Plot(real,real,'grey crowd=1')
+
+Result('manywood','wood-hole wood-miss wood-real0 wood-real1','TwoByTwo')
+
+def sea(title=' '):
+    return '''
+    grey transp=n yreverse=n
+    label1=longitude label2=latitude title="%s" crowd=.80
+    ''' % title
+
+Fetch('seabin.HH','seab')
+Flow('sea','seabin.HH','dd data_format=native_float')
+Plot('sea','sea',sea())
+
+Flow(['sea-pef','sea-lag'],'sea',
+     'pef a=5,3 niter=50 lag=${TARGETS[1]}')
+Flow('sea-miss',['sea','sea-pef'],
+     'miss niter=100 filt=${SOURCES[1]}')
+Plot('sea-miss','sea-miss',sea())
+
+for seed in range(2):
+    nois = 'sea-nois%d' % seed
+    real = 'sea-real%d' % seed
+    Flow(nois,['sea-miss','sea-pef'],
+         '''
+         helicon filt=${SOURCES[1]} |    
+         noise var=0.001 rep=y seed=%d |
+         helicon filt=${SOURCES[1]} div=y
+         ''' % (1994,2004)[seed])
+    Flow(real,['sea','sea-pef',nois],
+         '''
+         add scale=1,-1 ${SOURCES[2]} |
+         miss niter=100 filt=${SOURCES[1]} mask=${SOURCES[0]} |
+         add ${SOURCES[2]}
+         ''')
+    Plot(real,real,sea('Realization %d' % (seed+1)))
+
+Result('bobsea','sea sea-miss sea-real0 sea-real1','TwoByTwo')
+    
+###########################################################################
+
+End()
