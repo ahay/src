@@ -4,8 +4,6 @@
 
 #include "dsr.h"
 
-#define ESIZE 4
-
 int main (int argc, char **argv)
 {
     int nt;               /* number of time samples */
