@@ -49,8 +49,8 @@ int main(int argc, char* argv[])
 
 
     sf_putint(dat,"n1",nt);
-    sf_putint(dat,"d1",dt);
-    sf_putint(dat,"o1",0.);
+    sf_putfloat(dat,"d1",dt);
+    sf_putfloat(dat,"o1",0.);
 
     sf_putint(dat,"n2",2);
 
@@ -64,9 +64,9 @@ int main(int argc, char* argv[])
     aps = sf_floatalloc(n1);
 
     sf_floatread(z,n1,depth);
-    sf_floatread(a,n1,vp);
-    sf_floatread(b,n1,vs);
-    sf_floatread(r,n1,rho);
+    sf_floatread(a,n1+1,vp);
+    sf_floatread(b,n1+1,vs);
+    sf_floatread(r,n1+1,rho);
 
     tp = ts = 0.;
     a2 = a[0];

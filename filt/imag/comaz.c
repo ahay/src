@@ -24,7 +24,29 @@ void comaz(float w              /* frequency */,
 	   float complex ***data      /* frequency slice [ny][nx][nh] */)
 /*< common-azimuth migration >*/
 {
-    int iz;
+    int nkx,nky,iz,ix,iy;
+    float kx,dkx,fkx,ky,dky,fky;
+    float complex cshift,w2;
+    kiss_fft_cfg xforw, xinvs, yforw, yinvs;
+    
+        /* determine wavenumber sampling, pad by 2 */
+    nkx = nx*2;
+    nkx *= 2;
+    dkx = 2.0*SF_PI/(nkx*dx);
+    fkx = -SF_PI/dx;
+
+    nky = ny*2;
+    nky *= 2;
+    dky = 2.0*SF_PI/(nky*dy);
+    fky = -SF_PI/dy;
+
+    xforw = kiss_fft_alloc(nkx,0,NULL,NULL);
+    xinvs = kiss_fft_alloc(nkx,1,NULL,NULL);
+    yforw = kiss_fft_alloc(nky,0,NULL,NULL);
+    yinvs = kiss_fft_alloc(nky,1,NULL,NULL);
+
+    if (NULL == xforw || NULL == xinvs || NULL == yforw || NULL == yinvs) 
+	sf_error("%s: KISS FFT allocation error",__FILE__);
 
     /* loop over migrated depths z */
     for (iz=0; iz<nz-1; iz++) {
