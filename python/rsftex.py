@@ -515,27 +515,27 @@ class TeXPaper(Environment):
         # mathematica figures:
         mths = glob.glob('%s/Math/*.ma' % topdir)
         if mths:
-             if mathematica:
-                  for mth in mths:
-                       pdf = re.sub(r'([^/]+)\.ma$',
-                                    os.path.join(resdir,'\g<1>.pdf'),mth)
-                       self.Math(pdf,mth)
-                       crfigs.append(pdf)
-             mathdir = os.path.join(self.docdir,'Math')
-             self.Install(mathdir,mths)
-             self.Alias('install',mathdir)
+            for mth in mths:
+                pdf = re.sub(r'([^/]+)\.ma$',
+                             os.path.join(resdir,'\g<1>.pdf'),mth)
+                if mathematica:
+                    self.Math(pdf,mth)
+                crfigs.append(pdf)
+            mathdir = os.path.join(self.docdir,'Math')
+            self.Install(mathdir,mths)
+            self.Alias('install',mathdir)
         # xfig figures:
         figs =  glob.glob('%s/XFig/*.fig' % topdir)
         if figs:
-            if fig2dev:
-                for fig in figs:
-                    pdf = re.sub(r'([^/]+)\.fig$',
-                                 os.path.join(resdir,'\g<1>.pdf'),fig)
+            for fig in figs:
+                pdf = re.sub(r'([^/]+)\.fig$',
+                             os.path.join(resdir,'\g<1>.pdf'),fig)
+                if fig2dev:
                     self.XFig(pdf,fig)
-                    crfigs.append(pdf)
-                figdir = os.path.join(self.docdir,'XFig')
-                self.Install(figdir,figs)
-                self.Alias('install',figdir)
+                crfigs.append(pdf)
+            figdir = os.path.join(self.docdir,'XFig')
+            self.Install(figdir,figs)
+            self.Alias('install',figdir)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
             os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
