@@ -1,22 +1,24 @@
+/* Clip the data. */
+
 #include <valarray>
 
 #include <rsf.hh>
 
 int main(int argc, char* argv[])
 {
-    sf_init(argc,argv);
+    sf_init(argc,argv); // Initialize RSF
+    
+    iRSF par(0), in; // input parameter, file
+    oRSF out;        // output file
 
-    iRSF par(0), in;
-    oRSF out;
-
-    int n1, n2;
-
+    int n1, n2;      // trace length, number of traces
+    
     in.get("n1",n1);
     n2=in.size(1);
 
     float clip;
 
-    par.get("clip",clip);
+    par.get("clip",clip); // parameter from the command line
 
     std::valarray<float> trace(n1);
 
