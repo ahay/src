@@ -1,9 +1,29 @@
+/* Fast marching main interface. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "fastmarch.h"
 #include "neighbors.h"
 
 void fastmarch_init (int n3,int n2,int n1) 
+/*< Initialize data dimensions >*/
 {
     int maxband;
     
@@ -15,13 +35,17 @@ void fastmarch_init (int n3,int n2,int n1)
     sf_pqueue_init (10*maxband);
 }
 
-void fastmarch (float* time, float* v, int* in, bool* plane,
-		int n3,int n2,int n1,
-		float o3,float o2,float o1,
-		float d3,float d2,float d1,
-		float s3,float s2,float s1,
-		int b3, int b2, int b1,
-		int order)
+void fastmarch (float* time                /* time */, 
+		float* v                   /* slowness */, 
+		int* in                    /* in/front/out flag */, 
+		bool* plane                /* if plane source */,
+		int n3,int n2,int n1       /* dimensions */,
+		float o3,float o2,float o1 /* origin */,
+		float d3,float d2,float d1 /* sampling */,
+		float s3,float s2,float s1 /* source */,
+		int b3, int b2, int b1     /* box around the source */,
+		int order                  /* accuracy order (1,2,3) */)
+/*< Run fast marching eikonal solver >*/
 {
     float xs[3], d[3], *p;
     int n[3], b[3], npoints, i;
@@ -55,6 +79,7 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
 }
 
 void fastmarch_close (void)
+/*< Free allocated storage >*/
 {
     sf_pqueue_close();
 }
