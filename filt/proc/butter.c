@@ -2,79 +2,117 @@
 
 #include "butter.h"
 
-static float **den, *yy, sinw, cosw;
-static int nn;
-
-void butter_init(int npoly, int nx)
+void butter_set(bool low, float cutoff, int na, float *num, float *den)
 {
-    nn = npoly;
-    den = sf_floatalloc2(3,nn/2);
-}
-
-void butter_close(void)
-{
-    free (den);
-}
-
-void butter_set(float cutoff)
-{
-    int i;
-    float arg, f;
+    int i, j, n1, nn;
+    float arg, ss, sinw, cosw, fact, scale;
 
     arg = 2.*SF_PI*cutoff;
     sinw = sinf(arg);
     cosw = cosf(arg);
 
-    /*
+    nn = na-1;
+
     if (nn%2) {
-	tanw = low? (1.+cosw)/sinw : sinw/(1.+cosw);
-	den[0] = 1.+tanw;
-	den[1] = 1.-tanw;
+	if (low) {
+	    fact = (1.+cosw)/sinw;
+	    den[0] = 1.+fact;
+	    den[1] = 1.-fact;
+	} else {
+	    fact = sinw/(1.+cosw);
+	    den[0] = fact+1.;
+	    den[1] = fact-1.;
+	}
 	n1 = 2;
     } else {
 	den[0] = 1.;
 	n1 = 1;
     }
-    */
+
+    fact = low? sinf(0.5*arg): cosf(0.5*arg);
+    fact = 1./(fact*fact);
+    scale = 1.;
 
     for (i=0; i < nn/2; i++) {
-	f = sinf(SF_PI*(2*i+1)/(2*nn))*sinw;
-	den[i][0] = (1.+f);
-	den[i][1] = -2.*cosw/(1.+f);
-	den[i][2] = (1.-f)/(1.+f);
+	ss = sinf(SF_PI*(2*i+1)/(2*nn))*sinw;
+
+	for (j=0; j < n1+2; j++) {
+	    num[j] = 0.;
+	}
+	for (j=0; j < n1; j++) {
+	    num[j]   += (1.+ss)*den[j];
+	    num[j+1] -= 2.*cosw*den[j];
+	    num[j+2] += (1.-ss)*den[j];
+	}
+	n1 += 2;
+	for (j=0; j < n1; j++) {
+	    den[j] = num[j];
+	}
+	scale *= fact;
     }
-
-    sinw = sinf(0.5*arg);
-    cosw = cosf(0.5*arg);
-
-    /*
-      scale = low? sinf(0.5*arg): cosf(0.5*arg);
-      scale = 1./(scale*scale);
-    */
+    
+    for (j=0; j < na; j++) {
+	den[j] *= scale;
+    }
+    
+    num[0] = 1.;
+    for (i=0; i < nn; i++) {
+	num[i+1] = 1.;
+	for (j=i-1; j >= 0; j--) {
+	    num[j+1] += num[j];
+	}
+    }
+    if (!low) {
+	for (j=1; j < na; j+=2) {
+	    num[j] = -num[j];
+	}
+    }
 }
 
-void butter (bool low, int ny, float *yy)
+void butter (bool adj, int na, float *num, float *den, 
+	     int nx, int ny, float *xx, float *yy)
 {
-    /* convolution */
-    for (iy=0; iy < ny; iy++) {
-	yy[iy] = xx[iy];
-    }
-    for (ia=1; ia < na; ia++) { 
-        for (iy=0; iy < ny; iy++) {
-	    yy[iy+ia] += xx[iy] * num[ia];
+    int ix, iy, ia;
+
+    if (adj) {
+	/* polynomial division */
+	for (ix=ny-1; ix >=0; ix--) {
+	    for (ia=1; ia < na; ia++) {
+		iy = ix+ia;
+		if (iy >= ny) break; 
+		yy[ix] -= den[ia] * yy[iy];
+	    }
+	    yy[ix] /= den[0];
 	}
-    }
-    /* polynomial division */
-    for (iy=0; iy < na-1; iy++) { /* lead-in terms */
-	for (ia=1; ia <= iy; ia++) { 
-	    yy[iy] -= den[ia] * yy[iy-ia];
+	/* convolution */
+	for (iy=0; iy < ny; iy++) {
+	    xx[iy] = yy[iy];
 	}
-	yy[iy] /= den[0];
-    }
-    for (iy=na-1; iy < ny; iy++) { /* steady state */
-	for (ia=1; ia < na; ia++) {
-	    yy[iy] -= den[ia] * yy[iy-ia];
+	for (ia=1; ia < na; ia++) { 
+	    for (iy=ia; iy < ny; iy++) {
+		ix=iy-ia;
+		xx[ix] += yy[iy] * num[ia];
+	    }
 	}
-	yy[iy] /= den[0];
+    } else {
+	/* convolution */
+	for (ix=0; ix < nx; ix++) {
+	    yy[ix] = xx[ix];
+	}
+	for (ia=1; ia < na; ia++) { 
+	    for (iy=ia; iy < ny; iy++) {
+		ix=iy-ia;
+		yy[iy] += xx[ix] * num[ia];
+	    }
+	}
+	/* polynomial division */
+	for (iy=0; iy < ny; iy++) { /* lead-in terms */
+	    for (ia=1; ia <= na; ia++) {
+		ix = iy-ia;
+		if (ix < 0) break;
+		yy[iy] -= den[ia] * yy[ix];
+	    }
+	    yy[iy] /= den[0];
+	}
     }
 }
