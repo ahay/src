@@ -1,4 +1,5 @@
 #include <math.h>
+#include <string.h>
 
 #include <rsf.h>
 
@@ -25,7 +26,7 @@ struct Axis {
 static void getscl(struct Axis *axis);
 static void labelaxis(struct Axis *axis);
 static void tjust(bool where);
-static float opttic(float min, float max, float inch, float num0);
+static float opttic(float min, float max, float inch, float num0, float size);
 static void makelabel (float num, float num2, struct Axis *axis);
 static void maketic (float num, struct Axis *axis);
 
@@ -297,7 +298,8 @@ void vp_fillin (void)
     vp_uarea (xp, yp, 4, 0, 1, 1);
 } 
 
-void vp_framenum (i3, d3, o3, xmin, ymin, labelsz)
+void vp_framenum (int i3, float d3, float o3, 
+		  float xmin, float ymin, float labelsz)
 {    
     float ch, xc, yc, f;
     char  string[80];
@@ -329,7 +331,7 @@ static void getscl(struct Axis *axis)
 
     if (inch <= 0) sf_error("%s: negative inch %g",__FILE__,inch);
 
-    axis->dnum = opttic(min,max,inch,axis->num0);
+    axis->dnum = opttic(min,max,inch,axis->num0,labelsz);
 }
 
 void vp_invmassage (float* min, float* max, float mid, float dev)
@@ -565,10 +567,11 @@ void vp_minmax (void)
     }
 }
 
-static float opttic(float min, float max, float inch, float num0) {
+static float opttic(float min, float max, float inch, float num0, float size) 
+{
     const float eps=.000001, bignum=10000.;
-    float num, div2, dnum, dmax, div, b;
-    int length, counter, len, i;
+    float num, dnum, dmax, div, b;
+    int length, counter, len, i, div2;
     char string[100];
 
     if (fabsf(max - min) < eps) return 0.5;
@@ -579,7 +582,7 @@ static float opttic(float min, float max, float inch, float num0) {
     
     div2 = log10f (div);
     if (div < 1.) div2--;
-    b = div / powf (10.,div2);
+    b = div / powf (10.,(float) div2);
     
     for (i = 0; i < 3; i++) {
 	if (sqr[i] > b) break;
@@ -595,7 +598,7 @@ static float opttic(float min, float max, float inch, float num0) {
 	    len = strlen (string);
 	    if (len > length) length = len;
 	}
-	dmax = (length + 1.5) * fabsf(max - min)*labelsz/(33.* inch);
+	dmax = (length + 1.5) * fabsf(max - min)*size/(33.* inch);
     }
 
     return dnum;
@@ -906,8 +909,7 @@ void vp_plottitle(void)
 void vp_simpleaxis (float x1, float y1, 
 		    float x2, float y2, 
 		    float num1, float num2,
-		    float dnum, float dnumticin, 
-		    float ltic, char* label, float labelsz)
+		    float dnum, float ltic, char* label, float size)
 {
     float ch, xpath, ypath, xup, yup, dist, costh, sinth, dtic, xpos, ypos;
     float dxtic, dytic, loc, num, pad, dnumtic;
@@ -915,7 +917,7 @@ void vp_simpleaxis (float x1, float y1,
 
     /* pad is the space skipped between tic and number, and number and label */
     pad = 0.15;
-    ch = labelsz / 33.;
+    ch = size / 33.;
 
     vp_color (7);
     vp_move(x1,y1);
@@ -929,40 +931,22 @@ void vp_simpleaxis (float x1, float y1,
     dxtic = ltic * sinth;
     dytic = -ltic * costh;
 
-    /* Figure out which quadrant we are in.
-     * This determines which side of the line the tic
-     * marks will go on, and how the text will be aligned.
-     * For each quadrant we compute the vplot text path
-     * and up vectors.
-     */
-    if (x1 <= x2 && y1 <= y2) {
+    if (x1 <= x2) {
         vp_tjust(TH_CENTER,TV_TOP);
         xpath = ch * costh;
         ypath = ch * sinth;
         xup = -ch * sinth;
         yup = ch * costh;
-    } else if (x1 > x2 && y1 <= y2) {	
+    } else {	
         vp_tjust(TH_CENTER,TV_BOTTOM);
         xpath = -ch * costh;
         ypath = -ch * sinth;
         xup = ch * sinth;
         yup = -ch * costh;
-    } else if (x1 > x2 && y1 > y2) {	
-        vp_tjust(TH_CENTER,TV_BOTTOM);
-        xpath = -ch * costh;
-        ypath = -ch * sinth;
-        xup = ch * sinth;
-        yup = -ch * costh;
-    } else if (x1 <= x2 && y1 > y2) {	
-        vp_tjust(TH_CENTER,TV_TOP);
-        xpath = ch * costh;
-        ypath = ch * sinth;
-        xup = -ch * sinth;
-        yup = ch * costh;
-    }
+    } 
 
-    dnumtic = dnumticin;
-    if (0. == dnumtic) dnumtic = opttic(num1,num2,dist,num1);
+    dnumtic = dnum;
+    if (0. == dnumtic) dnumtic = opttic(num1,num2,dist,num1,size);
     if (num1 > num2) dnumtic = -dnumtic;
 
     /* figure out the tic mark spacing */
@@ -1022,7 +1006,7 @@ void vp_stdplot (int fastplt, bool wantframe, bool wantframenum,
 	if (fastplt < 3 && wanttitle) vp_plottitle ();
 
 	if (fastplt < 13 && wantframenum && n3 > 1) {
-	    vp_framenum (d3, o3, min1, min2, labelsz);
+	    vp_framenum (n3, d3, o3, min1, min2, labelsz);
 	}
     }
 }
