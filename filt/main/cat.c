@@ -162,9 +162,12 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 		 (id != axis && fabsf(oi-o) > tol*fabsf(d))))
 		sf_warning("%s mismatch: need %g",key,o);
 	}
-	if (axis > dim) naxis[i]=1;
+	if (axis > dim) {
+	    (void) snprintf(key,3,"n%d",axis);
+	    if (!sf_histint(in[i],key,naxis+i)) naxis[i]=1;
+	}
     }
 }
 
-/* 	$Id: cat.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: cat.c,v 1.8 2004/03/26 15:46:50 fomels Exp $	 */
 

@@ -346,9 +346,9 @@ bool sf_simtab_getstrings (sf_simtab table, const char* key,
     memcpy(string,val+iopen,iclose);
     string[iclose]='\0';
    
-    par[0] = strtok(string,":");
+    par[0] = strsep(&string,":");
     for (i = 1; i < n; i++) {
-	par[i] = strtok(NULL,":");
+	par[i] = strsep(&string,":");
     }
 
     return true;
@@ -434,4 +434,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.9 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: simtab.c,v 1.10 2004/03/26 15:46:50 fomels Exp $	 */
