@@ -219,7 +219,7 @@ char* sf_simtab_getstring (sf_simtab table, const char* key)
     iclose = (NULL == qclose)? strlen(val): (size_t) (qclose-val);
     iclose -= iopen;
     string = sf_charalloc (iclose+1);
-    strncpy(string,val+iopen,iclose);
+    memcpy(string,val+iopen,iclose);
     string[iclose]='\0';
 
     return string;
@@ -323,6 +323,33 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
     return true;
 }
 
+bool sf_simtab_getstrings (sf_simtab table, const char* key,
+			   /*@out@*/ char **par,size_t n)
+{    
+    int i, iopen;
+    size_t iclose;
+    char *val, *string, *qopen, *qclose; 
+
+    val = sf_simtab_get(table,key);
+    if (NULL == val) return false;
+
+    qopen = strchr(val,'\"');   
+    iopen = (NULL == qopen)? 0: (qopen-val)+1; 	
+    qclose = strrchr(val,'\"'); 
+    iclose = (NULL == qclose)? strlen(val): (size_t) (qclose-val);
+    iclose -= iopen;
+    string = sf_charalloc (iclose+1);
+    memcpy(string,val+iopen,iclose);
+    string[iclose]='\0';
+   
+    par[0] = strtok(string,":");
+    for (i = 1; i < n; i++) {
+	par[i] = strtok(NULL,":");
+    }
+
+    return true;
+}
+
 void sf_simtab_put (sf_simtab table, const char *keyval) {
     char *eq, *key;
     size_t keylen;
@@ -333,7 +360,7 @@ void sf_simtab_put (sf_simtab table, const char *keyval) {
     
     keylen = (size_t) (eq-keyval);
     key = (char*) alloca(keylen);
-    strncpy(key,keyval,keylen);
+    memcpy(key,keyval,keylen);
     key[keylen-1]='\0';
 
     sf_simtab_enter(table,key,eq);

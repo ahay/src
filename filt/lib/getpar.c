@@ -99,6 +99,10 @@ char* sf_getstring (const char* key) {
     return sf_simtab_getstring(pars,key);
 }
 
+bool sf_getstrings (const char* key,/*@out@*/ char** par,size_t n) {
+    return sf_simtab_getstrings(pars,key,par,n);
+} 
+
 bool sf_getbool (const char* key,/*@out@*/ bool* par) {
     return sf_simtab_getbool(pars,key,par);
 } 

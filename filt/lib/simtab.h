@@ -21,6 +21,8 @@ bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool* par);
 bool sf_simtab_getbools (sf_simtab table, const char* key,
 			 /*@out@*/ bool* par,size_t n);
 char* sf_simtab_getstring (sf_simtab table, const char* key);
+bool sf_simtab_getstrings (sf_simtab table, const char* key,
+			   /*@out@*/ char** par,size_t n);
 void sf_simtab_enter(sf_simtab table, const char *key, const char* val);
 void sf_simtab_put(sf_simtab table, const char *keyval);
 void sf_simtab_input (sf_simtab table, FILE* fp);
