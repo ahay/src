@@ -1,11 +1,10 @@
 from rsfproj import *
 
-dat = 'gomshot.h'
-zof = 'gomnearoffset.H'
+dat = {'shot':'gomshot.h','offset':'gomnearoffset.H'}
 
-for case in [dat,zof]:
-    Fetch(case,'gom')
-    Flow(case,case,'dd data_format=native_float')
+for case in dat.keys():
+    Fetch(dat[case],'gom')
+    Flow(case,dat[case],'dd data_format=native_float')
 
 def showdat(title,max1,f2=1,flip=''):
     return '''
@@ -14,19 +13,19 @@ def showdat(title,max1,f2=1,flip=''):
      title="%s"
      ''' % (max1,f2,flip,title)
 
-Flow('mask',dat,'math output=1 | mutter half=n v0=4800 tp=1.6')
+Flow('mask','shot','math output=1 | mutter half=n v0=4800 tp=1.6')
 
 for filt in range(2):
     pef = 'pef%d' % filt
     lag = 'lag%d' % filt
     decon = 'decon%d' % filt
-    data = dat + str(filt)
-    Flow([pef,lag],[dat,'mask'],
+    data = 'shot' + str(filt)
+    Flow([pef,lag],['shot','mask'],
          'pef a=%s maskin=${SOURCES[1]} lag=${TARGETS[1]}' %
          ['30,1','20,5'][filt])
-    Flow(decon,[dat,pef],'helicon filt=${SOURCES[1]}')
+    Flow(decon,['shot',pef],'helicon filt=${SOURCES[1]}')
     Plot(decon,decon,showdat('PEF*Data',2.8+filt,f2=1+3*filt))
-    Plot(data,dat,showdat('Data',2.8+filt,flip='reverse which=2 |'))
+    Plot(data,'shot',showdat('Data',2.8+filt,flip='reverse which=2 |'))
     Result(decon,[data,decon],'SideBySideAniso')
 
 def showspec(title):
@@ -37,7 +36,7 @@ def showspec(title):
     wheretitle=bot wherexlabel=top
     ''' % title
 
-Plot('specdat',dat,showspec('Spectrum Data'))
+Plot('specdat','shot',showspec('Spectrum Data'))
 Plot('specdecon','decon0',showspec('Spectrum PEF*Data'))
 Result('specdecon','specdat specdecon','OverUnderAniso')
 
@@ -47,10 +46,10 @@ def showdat(title):
     grey crowd1=0.85  crowd2=0.8 label1="Time(s)" label2="X(ft)" title="%s"
     ''' % title
 
-Flow(['zofpef','zoflag'],zof,
+Flow(['zofpef','zoflag'],'offset',
      'window max3=6000 | pef a=10,2 lag=${TARGETS[1]}')
-Flow('zofdecon',[zof,'zofpef'],'helicon filt=${SOURCES[1]}')
-Plot('zof',zof,showdat('Data'))
+Flow('zofdecon',['offset','zofpef'],'helicon filt=${SOURCES[1]}')
+Plot('zof','offset',showdat('Data'))
 Plot('zofdecon','zofdecon',showdat('10x2 PEF * Data'))
 Result('zof','zof zofdecon','OverUnderAniso')
 
