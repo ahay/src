@@ -15,7 +15,8 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, re, glob, string, commands
-import rsfconf
+import cStringIO, token, tokenize, cgi, sys, keyword
+import rsfconf, rsfdoc, rsfprog
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons.Script.SConscript
@@ -82,7 +83,7 @@ def latify(target=None,source=None,env=None):
                 ltx.write('\\usepackage{%s}\n' % package)
         ltx.write('\n')
     if lclass == 'geophysics':
-        ltx.write('\\inputdir{%s}\n\n' % resdir)
+        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
@@ -169,6 +170,142 @@ def pstexpen(target=None,source=None,env=None):
         return 1
     return 0
 
+_KEYWORD = token.NT_OFFSET + 1
+_TEXT    = token.NT_OFFSET + 2
+
+_colors = {
+    token.NUMBER:       '#0080C0',
+    token.OP:           '#0000C0',
+    token.STRING:       '#004080',
+    tokenize.COMMENT:   '#008000',
+    token.NAME:         '#000000',
+    token.ERRORTOKEN:   '#FF8080',
+    _KEYWORD:           '#C00000',
+    _TEXT:              '#000000',
+    'Fetch':            '#0000C0',
+    'Flow':             '#0000C0',
+    'Plot':             '#0000C0',
+    'Result':           '#C00000'
+}
+
+_pos = 0
+
+def colorize(target=None,source=None,env=None):
+     "Colorize python source"
+     py = str(source[0])
+     html = str(target[0])
+
+     src = open(py,'r').read()
+     raw = string.strip(string.expandtabs(src))
+
+     out = open(html,'w')
+     out.write('''
+     <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN">
+     <html>
+     <head>
+     <title>%s</title>
+     <style type="text/css">
+     div.progs {
+     background-color: #DCE3C4;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.scons {
+     background-color: #FFF8ED;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     </style>
+     </head>
+     <body>
+     <div class="scons">
+     <table><tr><td>
+     ''' % py)
+
+     # store line offsets in self.lines
+     lines = [0, 0]
+     _pos = 0
+     while 1:
+          _pos = string.find(raw, '\n', _pos) + 1
+          if not _pos: break
+          lines.append(_pos)
+     lines.append(len(raw))
+
+
+     # parse the source and write it
+     _pos = 0
+     text = cStringIO.StringIO(raw)
+     out.write('<pre><font face="Lucida,Courier New">')
+
+     def call(toktype, toktext, (srow,scol), (erow,ecol), line):
+          global _pos
+          
+          # calculate new positions
+          oldpos = _pos
+          newpos = lines[srow] + scol
+          _pos = newpos + len(toktext)
+    
+          # handle newlines
+          if toktype in [token.NEWLINE, tokenize.NL]:
+               out.write("\n")
+               return
+
+          # send the original whitespace, if needed
+          if newpos > oldpos:
+               out.write(raw[oldpos:newpos])
+
+          # skip indenting tokens
+          if toktype in [token.INDENT, token.DEDENT]:
+               _pos = newpos
+               return
+
+          # map token type to a color group
+          if token.LPAR <= toktype and toktype <= token.OP:
+               toktype = token.OP
+          elif toktype == token.NAME and keyword.iskeyword(toktext):
+               toktype = _KEYWORD
+          elif toktype == token.NAME and toktext in _colors.keys():
+               toktype = toktext
+               
+          color = _colors.get(toktype, _colors[_TEXT])
+
+          style = ''
+          if toktype == token.ERRORTOKEN:
+               style = ' style="border: solid 1.5pt #FF0000;"'
+
+ 
+          # send text
+          out.write('<font color="%s"%s>' % (color, style))
+          out.write(cgi.escape(toktext))
+          out.write('</font>')
+
+     try:
+          tokenize.tokenize(text.readline, call)
+     except tokenize.TokenError, ex:
+          msg = ex[0]
+          line = ex[1][0]
+          out.write("<h3>ERROR: %s</h3>%s\n" % (msg, raw[lines[line]:]))
+          return 1
+
+     out.write('</font></pre></table>')
+
+     cwd = os.getcwd()
+     os.chdir(os.path.dirname(py))
+     (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
+     os.chdir(cwd)
+     
+     if not status:
+          out.write('</div><p><div class="progs">')
+          out.write(rsfdoc.multicolumn(string.split(progs),rsfdoc.link))
+     
+     out.write('''
+     </div>
+     </body>
+     </html>
+     ''')
+     return 0
 
 Latify = Builder(action = Action(latify,varlist=['lclass','options','use']),
                  src_suffix='.tex',suffix='.ltx')
@@ -213,6 +350,8 @@ if latex2html:
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir %s' %
                    (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
+
+Color = Builder(action = Action(colorize),suffix='.html')
                    
 #############################################################################
 # CUSTOM SCANNERS
@@ -221,7 +360,7 @@ if latex2html:
 isplot = re.compile(r'^[^%]*\\(?:side)?plot\s*\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'\\input\s*\{([^\}]+)')
-chdir = re.compile(r'\\subdir\s*\{([^\}]+)')
+chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
 
 def latexscan(node,env,path):
     top = str(node)
@@ -230,19 +369,18 @@ def latexscan(node,env,path):
     contents = node.get_contents()
     inputs = map(lambda x: x+'.tex',input.findall(contents))
     inputs.append(str(node))
-    figdir = '.'
+    figdir = resdir
     plots = []
     for file in inputs:
         inp = open(file,'r')
         for line in inp.readlines():
             dir  = chdir.search(line)
             if dir:
-                figdir = dir.group(1)
+                figdir = os.path.join(dir.group(1),resdir)
             check = isplot.search(line)
             if check:
-                plots.append(os.path.join(figdir,check.group(1)))
+                plots.append(os.path.join(figdir,check.group(1) + ressuffix))
         inp.close()
-    plots = map(lambda x: os.path.join(resdir,x) + ressuffix,plots)
     bibs = []
     for bib in isbib.findall(contents):
         for file in string.split(bib,','):
@@ -266,7 +404,12 @@ class TeXPaper(Environment):
                          'DISPLAY': os.environ.get('DISPLAY'),
                          'HOME': os.environ.get('HOME')},
                     SCANNERS=[LaTeX],
-                    BUILDERS={'Latify':Latify,'Pdf':Pdf,'Build':Build})
+                    BUILDERS={'Latify':Latify,
+                              'Pdf':Pdf,
+                              'Build':Build,
+                              'Color':Color},
+                    TARFLAGS = '-cvz',
+                    TARSUFFIX = '.tgz')
         if acroread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
@@ -280,26 +423,33 @@ class TeXPaper(Environment):
                 self.imgs = []
         if pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
-        for fig in glob.glob(os.path.join(resdir,'[a-z]*/.*'+vpsuffix)):
-            eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
-            self.Build(eps,fig,opts=pstexpen)
-            if epstopdf:
-                pdf = re.sub(pssuffix+'$','.pdf',eps)
-                self.PDFBuild(pdf,eps)
-            if latex2html and pstoimg:
-                png = os.path.basename(re.sub(pssuffix+'$','.png',eps))
-                png = os.path.join('Img',png)
-                self.PNGBuild(png,eps)
-                self.imgs.append(png)
-        for fig in glob.glob(os.path.join(resdir,'[a-z]*/.*.pdf')):
-            pdf = re.sub(r'\.(\w.*\.pdf)$',r'\1',fig)
-            self.Command(pdf,fig,'cp $SOURCE $TARGET')
+        self.scons = []
+        for scons in glob.glob('[a-z]*/SConstruct'):
+             dir = os.path.dirname(scons)
+             html = dir+'.html'
+             self.Color(html,scons)
+             self.scons.append(html)
+             tgz = dir+'.tgz'
+             self.Tar(tgz,dir)
+             self.scons.append(tgz)
+        # reproducible figures
+        for fig in glob.glob('[a-z]*/%s/.*%s' % (resdir,vpsuffix)):
+             eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
+             self.Build(eps,fig,opts=pstexpen)
+             if epstopdf:
+                  pdf = re.sub(pssuffix+'$','.pdf',eps)
+                  self.PDFBuild(pdf,eps)
+             if latex2html and pstoimg:
+                  png = re.sub(pssuffix+'$','.png',eps)
+                  self.PNGBuild(png,eps)
+                  self.imgs.append(png)
+        # non-reproducible figures
+        for pdf in glob.glob(os.path.join(resdir,'*.pdf')):
             if pdf2ps:
                 eps = re.sub('.pdf$',pssuffix,pdf)
                 self.PSBuild(eps,pdf)
                 if latex2html and pstoimg:
-                    png = os.path.basename(re.sub(pssuffix+'$','.png',eps))
-                    png = os.path.join('Img',png)
+                    png = re.sub(pssuffix+'$','.png',eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
         if os.path.isfile(paper+'.tex'):
@@ -325,8 +475,9 @@ class TeXPaper(Environment):
             self.Command(css,css0,'cp $SOURCE $TARGET') 
             self.HTML(html,paper+'.ltx')
             self.Depends(html,self.imgs)
+            self.Depends(html,self.scons)
             self.Depends(html,pdf)
-            self.Depends(html,css)
+            self.Depends(html,css)            
             self.Alias(paper+'.html',html)
 
 default = TeXPaper()

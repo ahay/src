@@ -8,14 +8,14 @@ byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
 dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dix
 envelope explanesignoi expsignoi extract fft1 fft3 fint1 flat fourvc fourvc2
 frame helicon hole idempatch igrad imospray impl1 impl2 infill inmo intbin
-intshow inttest1 inttest2 invbin1 kolmog lapfill levint light linefit lopef
-losignoi lpad lpef make misif miss miss1 miss2 miss3 monof monof2 msmiss mspef
-nhelicon nmo noise npef parcel pef planemis2 planemis3 planesignoi prestolt
-pwd qdome radial radon randrefl reshape ricker signoi shapebin shapebin1
-shot2cmp shotholes sigmoid slice smooth smoothder smoothreg smoothreg2 spectra
-spectra2 spline splinefilter stolt stretch synmarine taupmo tentwt
-time2depth tpow trismooth2 twodip2 twofreq2 vscan velmod warp1 warpscan
-wilson window1 window2 window3
+intshow inttest1 inttest2 invbin1 iphase kolmog lapfill levint light linefit
+lopef losignoi lpad lpef make misif miss miss1 miss2 miss3 monof monof2
+msmiss mspef nhelicon nmo noise npef parcel pef planemis2 planemis3
+planesignoi prestolt pwd qdome radial radon randrefl reshape ricker signoi
+shapebin shapebin1 shot2cmp shotholes sigmoid slice smooth smoothder
+smoothreg smoothreg2 spectra spectra2 spline splinefilter stolt stretch
+synmarine taupmo tentwt time2depth tpow trismooth2 twodip2 twofreq2 vscan
+velmod warp1 warpscan wilson window1 window2 window3
 '''
 
 try: # distributed version

@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 	if (sf_histfloat(in,"d3",&d3)) {
 	    CDPtype=0.5+0.5*dh/d3;
 	    if (1 != CDPtype) sf_histint(in,"CDPtype",&CDPtype);
+	    if (1 > CDPtype) CDPtype=1;
 	} 	    
 	sf_warning("CDPtype=%d",CDPtype);
 	

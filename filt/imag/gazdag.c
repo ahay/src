@@ -13,8 +13,6 @@ static kiss_fftr_cfg forw, invs;
 void gazdag_init (float eps1, int nt, float dt, 
                   int nz1, float dz1, float *vt1, bool depth1)
 {
-
-
     eps = eps1; 
     nz = nz1; dz = dz1;
     vt = vt1;
@@ -35,6 +33,8 @@ void gazdag_close ()
 {    
     /* free workspace */
     free (pp);  
+    free (forw);
+    free (invs);
 }
 
 void gazdag (bool inv, float k2, float *p, float *q)
@@ -51,7 +51,7 @@ void gazdag (bool inv, float k2, float *p, float *q)
         for (iz=nz-2; iz>=0; iz--) {
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
-                w2 = eps*dw + I*iw*dw;
+                w2 = (eps + I*iw)*dw;
 
                 if (depth) {
                     w2 = w2*w2 * vt[iz] + k2;
@@ -76,9 +76,9 @@ void gazdag (bool inv, float k2, float *p, float *q)
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
                 /* accumulate image (summed over frequency) */
-                q[iz] += pp[iw];
+                q[iz] += crealf(pp[iw]);
 
-                w2 = eps*dw + I*iw*dw;
+                w2 = (eps + I*iw)*dw;
 
                 if (depth) { /* depth migration */
                     w2 = w2*w2 * vt[iz] + k2;
