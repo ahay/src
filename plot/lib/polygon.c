@@ -1,5 +1,8 @@
 #include <rsf.h>
 
+#include "polygon.h"
+#include "device.h"
+
 enum{
     EMPTY=-100,
 	NOLINK=-10,
@@ -15,10 +18,10 @@ enum{
 static int poly[POLYS][5];
 static int pols[MAXPOL];	/* Point to the start of each polygon */
 static int polsc[MAXPOL];	/* Cycle length */
-static int npols;	/* How many polygons we have */
+static int npols;	        /* How many polygons we have */
 
 static int pedge[POLYS];	/* Edge points of the polygon */
-static int nedge, nedge2;	/* number of edge points */
+static int nedge;	        /* number of edge points */
 
 static int point, endlist;
 
@@ -26,6 +29,7 @@ static int edge (int x, int y, int xwmax, int xwmin, int ywmax, int ywmin);
 static void insert (int where, int x, int y, int z);
 static void delete (int where);
 static void scan (void);
+static int inter (int x1, int x2, int y1, int y2, int x);
 
 /* Read in the data for polystart */
 void vp_polyfix (int x, int y, bool *first, bool *allgone)  
@@ -357,4 +361,227 @@ static void scan (void)
 	    }
 	}
     }
+}
+
+static int inter (int x1, int x2, int y1, int y2, int x)
+{
+    return (y1 + (y2 - y1) * (x - x1) / (x2 - x1));
+}
+
+void vp_xminclip (int xin, int yin, int *first, vp_device dev)
+{
+    static int xstart, ystart, ostatus, firstout, xold, yold;
+    int status;
+
+    if (*first == 2) {
+	ostatus = -1;
+	firstout = 2;
+	vp_yminclip (0, 0, &firstout, dev);
+	return;
+    }
+
+    if (*first == -1) {
+	if (ostatus == -1) return;
+
+	/* finish up */
+	xin = xstart;
+	yin = ystart;
+    }
+
+    status = (xin >= dev->xwmin);
+
+    if (*first == 1) {	/* This is the first time we have been called */
+	xstart = xin;
+	ystart = yin;
+	firstout = 1;
+	*first = 0;
+	ostatus = status;
+	xold = xin;
+	yold = yin;
+	return;
+    }
+
+    if (status) {
+	if (ostatus) { /* in this time, in last time */
+	    vp_yminclip (xin, yin, &firstout, dev);
+	} else { /* out last time, in now */
+	    vp_yminclip (dev->xwmin, inter (xold, xin, yold, yin, dev->xwmin), 
+			 &firstout, dev);
+	    vp_yminclip (xin, yin, &firstout, dev);
+	}
+    } else if (ostatus) { /* in last time, out now */
+	vp_yminclip (dev->xwmin, inter (xold, xin, yold, yin, dev->xwmin), 
+		     &firstout, dev);
+    }
+	
+    if (*first == -1) {
+	firstout = -1;
+	vp_yminclip (0, 0, &firstout, dev);
+    } else {
+	xold = xin;
+	yold = yin;
+	ostatus = status;
+    }
+}
+
+void vp_yminclip (int xin, int yin, int *first, vp_device dev)
+{
+    static int xstart, ystart, ostatus;
+    int status;
+    static int firstout;
+    static int xold, yold;
+
+    if (*first == 2) {
+	ostatus = -1;
+	firstout = 2;
+	vp_xmaxclip (0, 0, &firstout, dev);
+	return;
+    }
+
+    if (*first == -1) {
+	if (ostatus == -1) return;
+	xin = xstart;
+	yin = ystart;
+    }
+
+    status = (yin >= dev->ywmin);
+
+    if (*first == 1) { /* This is the first time we have been called */
+	xstart = xin;
+	ystart = yin;
+	firstout = 1;
+	*first = 0;
+	ostatus = status;
+	xold = xin;
+	yold = yin;
+	return;
+    }
+
+    if (status) {
+	if (ostatus) {
+	    vp_xmaxclip (xin, yin, &firstout, dev);
+	} else {
+	    vp_xmaxclip (inter (yold, yin, xold, xin, dev->ywmin), dev->ywmin, 
+			 &firstout, dev);
+	    vp_xmaxclip (xin, yin, &firstout, dev);
+	}
+    } else if (ostatus) {
+	vp_xmaxclip (inter (yold, yin, xold, xin, dev->ywmin), dev->ywmin, 
+		     &firstout, dev);
+    }
+
+    if (*first == -1) {
+	firstout = -1;
+	vp_xmaxclip (0, 0, &firstout, dev);
+    } else {
+	xold = xin;
+	yold = yin;
+	ostatus = status;
+    }
+}
+
+void vp_xmaxclip (int xin, int yin, int *first, vp_device dev)
+{
+    static int xstart, ystart, ostatus;
+    int status;
+    static int firstout, xold, yold;
+
+    if (*first == 2) {
+	ostatus = -1;
+	firstout = 2;
+	vp_ymaxclip (0, 0, &firstout, dev);
+	return;
+    }
+
+    if (*first == -1) {
+	if (ostatus == -1) return;
+	xin = xstart;
+	yin = ystart;
+    }
+
+    status = (xin <= dev->xwmax);
+
+    if (*first == 1) { /* This is the first time we have been called */
+	xstart = xin;
+	ystart = yin;
+	firstout = 1;
+	*first = 0;
+	ostatus = status;
+	xold = xin;
+	yold = yin;
+	return;
+    }
+
+    if (status) {
+	if (ostatus) {
+	    vp_ymaxclip (xin, yin, &firstout, dev);
+	} else {
+	    vp_ymaxclip (dev->xwmax, inter (xold, xin, yold, yin, dev->xwmax), 
+			 &firstout, dev);
+	    vp_ymaxclip (xin, yin, &firstout, dev);
+	}
+    } else if (ostatus) {
+	vp_ymaxclip (dev->xwmax, inter (xold, xin, yold, yin, dev->xwmax), 
+		     &firstout, dev);
+    }
+
+    if (*first == -1) {
+	firstout = -1;
+	vp_ymaxclip (0, 0, &firstout, dev);
+    } else {
+	xold = xin;
+	yold = yin;
+	ostatus = status;
+    }
+}
+
+void vp_ymaxclip (int xin, int yin, int *first, vp_device dev)
+{
+    static int xstart, ystart, ostatus;
+    int status;
+    static int xold, yold;    
+    static bool firstout, allgone;
+
+    if (*first == 2) {
+	ostatus = -1;
+	return;
+    }
+
+    if (*first == -1) {
+	if (ostatus == -1) return;
+	xin = xstart;
+	yin = ystart;
+    }
+
+    status = (yin <= dev->ywmax);
+
+    if (*first == 1) { /* This is the first time we have been called */
+	xstart = xin;
+	ystart = yin;
+	firstout = true;
+	*first = 0;
+	ostatus = status;
+	xold = xin;
+	yold = yin;
+	return;
+    }
+
+    if (status) {
+	if (ostatus) {
+	    vp_polyfix (xin, yin, &firstout,&allgone);
+	} else {
+	    vp_polyfix (inter (yold, yin, xold, xin, dev->ywmax), dev->ywmax, 
+			&firstout,&allgone);
+	    vp_polyfix (xin, yin, &firstout,&allgone);
+	}
+    } else if (ostatus) {
+	vp_polyfix (inter (yold, yin, xold, xin, dev->ywmax), dev->ywmax, 
+		    &firstout,&allgone);
+    }
+
+    if (*first == -1) return;
+
+    xold = xin;
+    yold = yin;
+    ostatus = status;
 }

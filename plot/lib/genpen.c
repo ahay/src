@@ -1,84 +1,35 @@
-#ifdef kjhgkjhg
+#include <rsf.h>
 
-genarea (npts, head)
-    int             npts;
-    struct vertex  *head;
+#include "genpen.h"
+#include "device.h"
+#include "polygon.h"
+
+void vp_gen_area (vp_device dev, int npts, struct vp_vertex *head)
 {
-struct vertex  *v;
-int             firstpoint, i;
+    struct vp_vertex  *v;
+    int firstpoint, i;
 
-    Allgone = 1;		/* Assume none left unless polyfix tells us */
-    if (!smart_clip)
-    {
-	firstpoint = 2;
-	xminclip (0, 0, &firstpoint);	/* Tell them all to get ready */
-    }
 
+    firstpoint = 2;
+    vp_xminclip (0, 0, &firstpoint, dev);
     firstpoint = 1;
 
     v = head;
-    for (i = 0; i < npts; i++)
-    {
-	if (!smart_clip)
-	{
-	    xminclip (v->x, v->y, &firstpoint);
-	}
-	else
-	{
-	    polyfix (v->x, v->y, &firstpoint);
-	}
+    for (i = 0; i < npts; i++) {
+	vp_xminclip (v->x, v->y, &firstpoint,dev);
 	v++;
     }
-    if (!smart_clip)
-    {
-	firstpoint = -1;	/* Means this was the last point! */
-	xminclip (0, 0, &firstpoint);
-    }
-    if (Allgone == 0)		/* If still 1, means there's nothing left! */
-    {
-	polystart ();
-    }
+
+    firstpoint = -1;	/* Means this was the last point! */
+    vp_xminclip (0, 0, &firstpoint, dev);
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
+
+#ifdef kjhgkjhg
 
 /*
- *
- *  source file:   ./filters/genlib/genhatch.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger, Feb 16 1988
- *	Make number of arguments to dev.attributes consistent.
- * W. Bauske 03-26-91
- *	Remove re-declare of system alloc routine for RS/6000
-*  Bob Clapp
- *     Switch malloc,stdlib to site def
-
- */
-
-#include <sitedef.h>
-#include <stdio.h>
-#include <math.h>
-#include "../include/enum.h"
-#include "../include/vertex.h"
-#include "../include/params.h"
-#include "../include/extern.h"
-#include "../include/attrcom.h"
-
 extern int      cur_color;
 extern int      need_devcolor;
-
-#if !defined(HAVE_STDLIB_H)
-extern char    *malloc ();
-#endif
+*/
 
 genhatch (npts, numhatch, angle, hafat, hacol, haoff, hasiz, head)
     int             npts, numhatch;

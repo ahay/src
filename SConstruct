@@ -1,4 +1,5 @@
-SConscript('seis/rsf/SConstruct')
-SConscript('seis/main/SConstruct')
-SConscript('seis/proc/SConstruct')
-SConscript('seis/imag/SConstruct')
+SConscript(dirs=['seis/rsf','seis/main','seis/proc','seis/imag'],
+           name='SConstruct')
+SConscript(dirs=['vplot/lib','vplot/main'],
+           name='SConstruct')
+

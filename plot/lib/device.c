@@ -64,7 +64,6 @@ static bool device_open = false;	/* used by ERR */
 static int nplots = 0;	/* number of plots made */
 static bool no_stretch_text = true;	/* Don't allow stretched text? */
 
-static int xwmax, xwmin, ywmax, ywmin;	/* window */
 static int xnew, ynew;	/* new pen location */
 static int xold, yold;	/* old pen location */
 static int xorigin = 0, yorigin = 0;	/* global "origin" */
@@ -224,8 +223,7 @@ enum {STATUS, MAP, RED, GREEN, BLUE, GREY};
 enum {UNSET, SET, MAPPED, MAP_SET};
 
 static int greycorr (int colornum);
-static void reset_parameters (void (*attributes)(vp_attribute,
-						 int,int,int,int));
+static void reset_parameters (vp_device dev);
 static void vptodevxy (int x, int y, int *outx, int *outy);
 static void vptodevw (int x1, int y1, int x2, int y2, 
 		      int *x1out, int *y1out, int *x2out, int *y2out);
@@ -233,13 +231,10 @@ static void devtovpxy (int x, int y, int *outx, int *outy);
 static void devtovpw (int x1, int y1, int x2, int y2, 
 		      int *x1out, int *y1out, int *x2out, int *y2out);
 static void vptodevxy_text (int x, int y, int *outx, int *outy);
-static void reset_windows (void (*attributes)(vp_attribute,int,int,int,int));
+static void reset_windows (vp_device dev);
 static void init_colors (void);
-static void outline_window (void (*attributes)(vp_attribute,
-						 int,int,int,int),
-			    void (*vector)(int,int,int,int,int,bool));
-static void setstyle (vp_plotstyle new_style, 
-		      void (*attributes)(vp_attribute,int,int,int,int));
+static void outline_window (vp_device dev);
+static void setstyle (vp_plotstyle new_style, vp_device dev);
 static void update_color (void (*attributes)(vp_attribute,
 					     int,int,int,int));
 static void getxy (int *x, int *y);
@@ -249,7 +244,7 @@ static int getpolygon (int npts);
 static bool dupside (struct vp_vertex *base);
 static void vecoutline (struct vp_vertex *head, 
 			void (*vector)(int,int,int,int,int,bool));
-static void reset_all (void (*attributes)(vp_attribute,int,int,int,int));
+static void reset_all (vp_device dev);
 static void dithline (unsigned char *inpline, 
 		      unsigned char *outline, 
 		      int npixels, int linenum, int imethod);
@@ -506,16 +501,15 @@ static void init_colors (void)
     }
 }
 
-static void setstyle (vp_plotstyle new_style, 
-		      void (*attributes)(vp_attribute,int,int,int,int))
+static void setstyle (vp_plotstyle new_style, vp_device dev)
 {
     if (new_style != style) {
 	style = new_style;
-	reset_parameters (attributes);
+	reset_parameters (dev);
     }
 }
     
-static void reset_parameters (void (*attributes)(vp_attribute,int,int,int,int))
+static void reset_parameters (vp_device dev)
 {
     float inches, screenheight, screenwidth, f;
     int ix, iy;
@@ -625,12 +619,12 @@ static void reset_parameters (void (*attributes)(vp_attribute,int,int,int,int))
     if (yWmax > ymax) yWmax = ymax;
 
     /* plot window parameters defaulted to maximum size */
-    xwmax = xWmax;		
-    xwmin = xWmin;	
-    ywmax = yWmax;
-    ywmin = yWmin;
+    dev->xwmax = xWmax;		
+    dev->xwmin = xWmin;	
+    dev->ywmax = yWmax;
+    dev->ywmin = yWmin;
     
-    reset_windows (attributes);
+    reset_windows (dev);
 }
 
 /* Utility to modify color tables for plotting grey rasters. */
@@ -893,8 +887,8 @@ static void vplot_do (vp_device dev)
 
 /* Reset fatness, cur_color, etc. */
     new_style = default_style;
-    setstyle (new_style,dev->attributes);
-    reset_all (dev->attributes);
+    setstyle (new_style,dev);
+    reset_all (dev);
 
 /* Make SURE the color is what it's supposed to be, just to be safe. */
     dev->attributes (SET_COLOR, cur_color, 0, 0, 0);
@@ -912,7 +906,7 @@ static void vplot_do (vp_device dev)
     group_number++;
     ?????????????????? */
 
-    if (framewindows) outline_window (dev->attributes,dev->vector);
+    if (framewindows) outline_window (dev);
 
     while (EOF != c) {
 	switch (c)  {
@@ -929,9 +923,9 @@ static void vplot_do (vp_device dev)
 			new_style = VP_STANDARD;
 			break;
 		}
-		setstyle (new_style,dev->attributes);
+		setstyle (new_style,dev);
 
-		if (framewindows) outline_window (dev->attributes,dev->vector);
+		if (framewindows) outline_window (dev);
 		break;
 	    case VP_MOVE:  
 		/* Reset position in dash pattern. */
@@ -1584,8 +1578,8 @@ static void vplot_do (vp_device dev)
 		}
 
 		new_style = default_style;
-		setstyle (new_style,dev->attributes);
-		reset_all (dev->attributes);
+		setstyle (new_style,dev);
+		reset_all (dev);
 
 	    /*
 	     * Start a new group level 0 to contain the next frame (separated
@@ -1597,29 +1591,31 @@ static void vplot_do (vp_device dev)
 	    group_number++;
 	    */
 
-		if (framewindows) outline_window (dev->attributes,dev->vector);
+		if (framewindows) outline_window (dev);
 		break;
 
 	    case VP_WINDOW:
 		if (window) {
-		    xwmin = vp_getint();
-		    ywmin = vp_getint();
-		    xwmax = vp_getint();
-		    ywmax = vp_getint();
+		    dev->xwmin = vp_getint();
+		    dev->ywmin = vp_getint();
+		    dev->xwmax = vp_getint();
+		    dev->ywmax = vp_getint();
 
-		    if (xwmin > xwmax || 
-			ywmin > ywmax) {
-			xwmin = xWmax + 1;
-			xwmax = xWmin - 1;
-			ywmin = yWmax + 1;
-			ywmax = yWmin - 1;
+		    if (dev->xwmin > dev->xwmax || 
+			dev->ywmin > dev->ywmax) {
+			dev->xwmin = xWmax + 1;
+			dev->xwmax = xWmin - 1;
+			dev->ywmin = yWmax + 1;
+			dev->ywmax = yWmin - 1;
 		    } else {
-			vptodevw (xwmin, ywmin, xwmax, ywmax, 
-				  &xwmin, &ywmin, &xwmax, &ywmax);
-			if (xwmin < xWmin) xwmin=xWmin;
-			if (xwmax > xWmax) xwmax=xWmax;
-			if (ywmin < yWmin) ywmin=yWmin;
-			if (ywmax > yWmax) ywmax=yWmax;
+			vptodevw (dev->xwmin, dev->ywmin, 
+				  dev->xwmax, dev->ywmax, 
+				  &(dev->xwmin), &(dev->ywmin), 
+				  &(dev->xwmax), &(dev->ywmax));
+			if (dev->xwmin < xWmin) dev->xwmin=xWmin;
+			if (dev->xwmax > xWmax) dev->xwmax=xWmax;
+			if (dev->ywmin < yWmin) dev->ywmin=yWmin;
+			if (dev->ywmax > yWmax) dev->ywmax=yWmax;
 		    }
 		} else {
 		    vp_getint();
@@ -1628,8 +1624,8 @@ static void vplot_do (vp_device dev)
 		    vp_getint();
 		}
 
-		reset_windows (dev->attributes);
-		if (framewindows) outline_window (dev->attributes,dev->vector);
+		reset_windows (dev);
+		if (framewindows) outline_window (dev);
 		break;
 
 	    case VP_NOOP:
@@ -2011,10 +2007,10 @@ static void vplot_do (vp_device dev)
 		free ((char *) outraster);
 */
 	    } else {
-		if (xvr_min < xwmin) xvr_min=xwmin;
-		if (xvr_max > xwmax) xvr_max=xwmax;
-		if (yvr_min < ywmin) yvr_min=ywmin;
-		if (yvr_max > ywmax) yvr_max=ywmax;
+		if (xvr_min < dev->xwmin) xvr_min=dev->xwmin;
+		if (xvr_max > dev->xwmax) xvr_max=dev->xwmax;
+		if (yvr_min < dev->ywmin) yvr_min=dev->ywmin;
+		if (yvr_max > dev->ywmax) yvr_max=dev->ywmax;
 		
 		switch (ras_orient) {
 		    case 0:
@@ -2344,40 +2340,39 @@ static void vplot_do (vp_device dev)
 */
 }
 
-static void reset_windows (void (*attributes)(vp_attribute,int,int,int,int))
+static void reset_windows (vp_device dev)
 {
-    if (xwmax != xwmax_last || 
-	ywmax != ywmax_last || 
-	xwmin != xwmin_last || 
-	ywmin != ywmin_last)
-	attributes (SET_WINDOW, xwmin, ywmin, xwmax, ywmax);
+    if (dev->xwmax != xwmax_last || 
+	dev->ywmax != ywmax_last || 
+	dev->xwmin != xwmin_last || 
+	dev->ywmin != ywmin_last)
+	dev->attributes (SET_WINDOW, 
+			 dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmax);
 
-    xwmin_last = xwmin;
-    ywmin_last = ywmin;
-    xwmax_last = xwmax;
-    ywmax_last = ywmax;
+    xwmin_last = dev->xwmin;
+    ywmin_last = dev->ywmin;
+    xwmax_last = dev->xwmax;
+    ywmax_last = dev->ywmax;
 }
 
-static void outline_window (void (*attributes)(vp_attribute,
-						 int,int,int,int),
-			    void (*vector)(int,int,int,int,int,bool))
+static void outline_window (vp_device dev)
 {
     int color;
 
     color = color_set[VP_DEFAULT_COLOR][MAP];
 
     if (need_devcolor || cur_color != color) {
-	attributes (SET_COLOR, color, 0, 0, 0);
+	dev->attributes (SET_COLOR, color, 0, 0, 0);
 	need_devcolor = false;
     }
 
-    vector (xwmin, ywmin, xwmax, ywmin, 0, false);
-    vector (xwmax, ywmin, xwmax, ywmax, 0, false);
-    vector (xwmax, ywmax, xwmin, ywmax, 0, false);
-    vector (xwmin, ywmax, xwmin, ywmin, 0, false);
+    dev->vector (dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmin, 0, false);
+    dev->vector (dev->xwmax, dev->ywmin, dev->xwmax, dev->ywmax, 0, false);
+    dev->vector (dev->xwmax, dev->ywmax, dev->xwmin, dev->ywmax, 0, false);
+    dev->vector (dev->xwmin, dev->ywmax, dev->xwmin, dev->ywmin, 0, false);
 
     if (cur_color != color) 
-	attributes (SET_COLOR, cur_color, 0, 0, 0);
+	dev->attributes (SET_COLOR, cur_color, 0, 0, 0);
 }
 
 static void update_color (void (*attributes)(vp_attribute,
@@ -2528,19 +2523,19 @@ static bool dupside (struct vp_vertex *base)
 
 /* reset variables that can be affected by vplot commands when
  * processing multiple plots, and don't stay set across pages */
-static void reset_all (void (*attributes)(vp_attribute,int,int,int,int))
+static void reset_all (vp_device dev)
 {
     int i, j, k, color;
 
-    xwmin = xWmin;		/* plot window parameters defaulted */
-    xwmax = xWmax;		/* to maximum size	 */
-    ywmin = yWmin;
-    ywmax = yWmax;
+    dev->xwmin = xWmin;		/* plot window parameters defaulted */
+    dev->xwmax = xWmax;		/* to maximum size	 */
+    dev->ywmin = yWmin;
+    dev->ywmax = yWmax;
 
-    reset_windows (attributes);
+    reset_windows (dev);
 
     fat = fatmult * fatbase;
-    attributes (NEW_FAT, fat, 0, 0, 0);
+    dev->attributes (NEW_FAT, fat, 0, 0, 0);
 
     color =  color_set[VP_DEFAULT_COLOR][MAP];
     if (cur_color != color) {
@@ -2550,7 +2545,7 @@ static void reset_all (void (*attributes)(vp_attribute,int,int,int,int))
 
     txalign.hor = TH_NORMAL;
     txalign.ver = TV_NORMAL;
-    attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
+    dev->attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
 
     i = -1;
     j = -1;
@@ -2567,13 +2562,13 @@ static void reset_all (void (*attributes)(vp_attribute,int,int,int,int))
 	txovly = default_txovly;
 	k = txovly;
     }
-    attributes (NEW_FONT, i, j, k, 0);
+    dev->attributes (NEW_FONT, i, j, k, 0);
 
     dashon = false;
-    attributes (NEW_DASH, dashon, 0, 0, 0);
+    dev->attributes (NEW_DASH, dashon, 0, 0, 0);
 
     overlay = default_overlay;
-    attributes (NEW_OVERLAY, overlay, 0, 0, 0);
+    dev->attributes (NEW_OVERLAY, overlay, 0, 0, 0);
 }
 
 /* 1 random threshold

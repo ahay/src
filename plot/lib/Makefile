@@ -12,7 +12,7 @@ LDFLAGS = -L../../seis/rsf -lrsf
 DEPEND = -xM1
 DEPEND = -MM
 
-SRC = axis coltab device gainpar plot polygon stdplot vplot
+SRC = axis coltab device gainpar genpen plot polygon stdplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 

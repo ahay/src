@@ -1,6 +1,8 @@
 #ifndef _vp_device_h
 #define _vp_device_h
 
+#include <rsf.h>
+
 enum {
     VP_DEFAULT_COLOR=7,
     VP_DEFAULT_LINESTYLE=0,
@@ -38,7 +40,7 @@ struct vp_vertex {
 };
 
 typedef struct vp_Device {
-    int xwmax, int xwmin, int ywmax, int ywmin;
+    int xwmax, xwmin, ywmax, ywmin; /* window */
     void (*open)(void);
     void (*reset)(void);
     void (*close)(vp_close);
