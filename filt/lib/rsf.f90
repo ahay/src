@@ -8,6 +8,11 @@ module RSF
      integer tag
   end type file
   
+  type, public :: axa
+     integer   :: n
+     real      :: o,d
+  end type axa
+
   interface from_par
      module procedure from_history_int
      module procedure from_history_int_array
@@ -728,6 +733,41 @@ contains
     
     call rsf_write_complex_1d_n(hist,array,size(array))
   end subroutine rsf_write_complex_5d
+
+  !------------------------------------------------------------
+
+  subroutine iaxa(FF,AA,i)
+    type(file), intent(in) :: FF
+    integer   , intent(in) :: i
+    type(axa),  intent(out):: AA
+    character(len=128)     :: BB
+
+    write(BB,"(a,i1)" ) 'n',i
+    call from_par(FF,BB,AA%n,1)
+    write(BB,"(a,i1)" ) 'o',i
+    call from_par(FF,BB,AA%o,0.)
+    write(BB,"(a,i1)" ) 'd',i
+    call from_par(FF,BB,AA%d,1.)
+
+  end subroutine iaxa
+
+!------------------------------------------------------------
+
+  subroutine oaxa(FF,AA,i)
+    type(file), intent(in) :: FF
+    integer   , intent(in) :: i
+    type(axa),  intent(in) :: AA
+    character(len=128)     :: BB
+
+    write(BB,"(a,i1)" ) 'n',i
+    call to_par(FF,BB,AA%n)
+    write(BB,"(a,i1)" ) 'o',i
+    call to_par(FF,BB,AA%o)
+    write(BB,"(a,i1)" ) 'd',i
+    call to_par(FF,BB,AA%d)
+
+  end subroutine oaxa
+!------------------------------------------------------------
 end module RSF
 
 !	$Id: rsf.f90 757 2004-08-25 17:21:39Z fomels $	
