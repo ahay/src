@@ -40,7 +40,7 @@ int main (int argc, char *argv[])
     float p0, q0, ***u, ***p, win, *tent, *tmp;
     char key[3], *dipname, *wallname;
     bool verb, sign, ***m1, ***m2;
-    sf_file in, out, mask;
+    sf_file in, out, mask, dip0;
     FILE *wall, *dip;
 
     sf_init(argc,argv);
@@ -222,8 +222,14 @@ int main (int argc, char *argv[])
 	sf_floatread(u[0][0],n123,in);
 	
 	/* initialize t-x dip */
-	for(i=0; i < n123; i++) {
-	    p[0][0][i] = p0;
+	if (NULL != sf_getstring("idip")) {
+	    dip0 = sf_input("idip");
+	    sf_floatread(p[0][0],n123,dip0);
+	    sf_fileclose(dip0);
+	} else {
+	    for(i=0; i < n123; i++) {
+		p[0][0][i] = p0;
+	    }
 	}
   
 	/* estimate t-x dip */
@@ -235,10 +241,16 @@ int main (int argc, char *argv[])
 	if (1 == n[2]) exit(0); /* done if 2-D input */
 
 	/* initialize t-y dip */
-	for(i=0; i < n123; i++) {
-	    p[0][0][i] = q0;
-	}
-	
+	if (NULL != sf_getstring("xdip")) {
+	    dip0 = sf_input("xdip");
+	    sf_floatread(p[0][0],n123,dip0);
+	    sf_fileclose(dip0);
+	} else {
+	    for(i=0; i < n123; i++) {
+		p[0][0][i] = q0;
+	    }
+	}	
+
 	/* estimate t-y dip */
 	dip3(2, niter, order, nj2, verb, u, p, m2);
 	

@@ -28,8 +28,8 @@
 
 int main (int argc, char* argv[])
 {
-    bool half;
-    int it,ix,ih,iv, nt,nx, nh, CDPtype, ntx, nw;
+    bool half, mzo;
+    int it,ix,ih, nt,nx, nh, CDPtype, ntx, nw;
     float dt, t0, h, h0, t, tm, tp, tx, tq, dh, dx, x0, x;
     float *px, *ph, **coord, *ord, *img, *img2;
     sf_file cmp, mig, xdip, hdip;
@@ -45,13 +45,13 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
 
-    if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
-    if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
-    if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
+    if (!sf_histint(cmp,"n3",&nh)) sf_error("No n2= in input");
+    if (!sf_histfloat(cmp,"d3",&dh)) sf_error("No d2= in input");
+    if (!sf_histfloat(cmp,"o3",&h0)) sf_error("No o2= in input");
 
-    if (!sf_histint(cmp,"n3",&nx)) sf_error("No n2= in input");
-    if (!sf_histfloat(cmp,"d3",&dx)) sf_error("No d2= in input");
-    if (!sf_histfloat(cmp,"o3",&x0)) sf_error("No o2= in input");
+    if (!sf_histint(cmp,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histfloat(cmp,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(cmp,"o2",&x0)) sf_error("No o2= in input");
 
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
@@ -76,16 +76,19 @@ int main (int argc, char* argv[])
     ord = sf_floatalloc(nt);
     img = sf_floatalloc(ntx);
     img2 = sf_floatalloc(ntx);
-    
-    for (ix = 0; ix < nx; ix++) {
-	x = x0 + ix*dx;
+
+    if (!sf_getbool("mzo",&mzo)) mzo=false;
+    /* do migration to zero offset */
+
+    for (ih = 0; ih < nh; ih++) {
+	h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
 
 	for (it=0; it < ntx; it++) {
 	    img[it]=0.;
 	}
 
-	for (ih = 0; ih < nh; ih++) {
-	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
+	for (ix = 0; ix < nx; ix++) {
+	    x = x0 + ix*dx;
 	    	
 	    sf_floatread (ord, nt, cmp);
 	    sf_floatread (px, nt, xdip);
@@ -95,12 +98,20 @@ int main (int argc, char* argv[])
 		t = t0 + it*dt;
 		tm = t - ph[it]*h*dt/dh;
 		tx = h*px[it]*dt/dh;
-		tp = tm*ph[it] - px[it]*tx;
+		tp = tm*ph[it] + px[it]*tx;
 		tq = tm*tm-tx*tx;
 
-		coord[it][0] = 
-		    sqrtf(fabsf(t*ph[it]*tq*tq)/(fabsf(tm*tm*tp)+FLT_EPSILON));
-		coord[it][1] = x - t*h*px[it]/(tp+FLT_EPSILON);
+		if (mzo) {
+		    coord[it][0] = 
+			sqrtf(fabsf(t*tq*tq)/
+			      (fabsf(tm*tm*tm)+FLT_EPSILON));
+		    coord[it][1] = x - h*tx/(tm+FLT_EPSILON);
+		} else {
+		    coord[it][0] = 
+			sqrtf(fabsf(t*ph[it]*tq*tq)/
+			      (fabsf(tm*tm*tp)+FLT_EPSILON));
+		    coord[it][1] = x - t*h*px[it]/(tp+FLT_EPSILON);
+		}
 	    }
 
 	    int2_init (coord, t0, x0, dt, dx, nt, nx, spline_int, nw, nt);
@@ -110,7 +121,7 @@ int main (int argc, char* argv[])
 	/* from spline coefficients to model */
 	if (nw > 2) { 
 	    for (ix=0; ix < nx; ix++) {
-		spline_post (nw, iv*nt, 1, nt, img, img2);
+		spline_post (nw, ix*nt, 1, nt, img, img2);
 	    }
 	    for (it=0; it < nt; it++) {
 		spline_post (nw, it, nt, nx, img2, img);
