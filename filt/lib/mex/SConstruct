@@ -1,1 +1,28 @@
-mex -I../../../include CFLAGS='-std=gnu99' -L.. -lrsf -lm
+import sys,string
+sys.path.append('../../..')
+import configure
+
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env.Prepend(CPPPATH=['../../../include'],
+                LIBPATH=['../../lib'],
+                LIBS=['rsf'])
+
+suffix = '.mexglx'
+
+for inp in Split('par dim read'):
+    file = 'rsf_'+inp
+    env.Command(file+suffix,file+'.c',
+                '%s CFLAGS="%s %s" $SOURCE %s %s' %
+                (WhereIs('mex'),env['_CPPINCFLAGS'],
+                 env['CCFLAGS'],env['_LIBDIRFLAGS'],env['_LIBFLAGS']))
+

@@ -49,16 +49,13 @@ int main(int argc, char* argv[])
     for (n = sf_filesize(in); n > 0; n -= nbuf) {
 	if (nbuf > n) nbuf=n;
 
-	/*read a trace */
 	sf_floatread(trace,nbuf,in);
 
-	/* loop over samples */
 	for (i=0; i < nbuf; i++) {
 	    if      (trace[i] >  clip) trace[i]= clip;
 	    else if (trace[i] < -clip) trace[i]=-clip;
 	}
     
-	/* write a trace */
 	sf_floatwrite(trace,nbuf,out);
     }
     
