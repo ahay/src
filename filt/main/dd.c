@@ -161,6 +161,17 @@ int main(int argc, char *argv[])
 		}
 		break;
 	    case SF_COMPLEX:
+		cbuf = (float complex*) bufin;
+		sf_complexread(cbuf,nin,in);
+		switch (otype) {
+		    case SF_COMPLEX:
+			sf_complexwrite(cbuf,nout,out);
+			break;
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
 	    case SF_CHAR:
 	    default:
 		ddbreak (itype,otype);
