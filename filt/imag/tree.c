@@ -510,8 +510,6 @@ static void process_node (Node nd) {
 
     free (nd->parents);
     TraverseQueue (nd->children,process_child);
-    FreeNodeQueue (nd->children);
-    nd->children = NULL;
 }
 
 static void process_child (Node child) {
