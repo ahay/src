@@ -1,3 +1,22 @@
+/* Estimating constant dips */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "dips.h"
@@ -8,7 +27,12 @@ static int nd, n1, n2, n12, skip;
 static callpass2 *ap;
 static float *x, **tmp1, **tmp2;
 
-void dips_init(int nd1, int nw, int nj, int nx, int ny, float** x1)
+void dips_init(int nd1        /* number of dips */, 
+	       int nw         /* accuracy order */, 
+	       int nj         /* filter stretch for aliasing */, 
+	       int nx, int ny /* data dimensions */, 
+	       float** x1     /* data [ny][nx] */)
+/*< initialize >*/
 {
     int id;
 
@@ -29,6 +53,7 @@ void dips_init(int nd1, int nw, int nj, int nx, int ny, float** x1)
 }
 
 void dips_close(void)
+/*< free allocated storage >*/
 {
     int id;
 
@@ -42,7 +67,10 @@ void dips_close(void)
     free (tmp2);
 }
 
-void dips(const float *d, float *b, float **aa)
+void dips(const float *d /* initial dip [nd] */, 
+	  float *b       /* right-hand side [nx*ny] */, 
+	  float **aa     /* matrix to invert [nx*ny][nd] */)
+/*< estimate dips >*/
 {
     int id, jd, i1, i2, i;
     float **tmp;
