@@ -28,18 +28,26 @@ int main (int argc, char *argv[])
     float dt;             /* time error */
     int   px,py;          /* padding in the k domain */
     int   tx,ty;          /* boundary taper size */
+    bool cw;              /* converted waves flag */
 
     axa az,ax,ay,aw,alx,aly,ae;
 
-    sf_file Fs;     /*            slowness file S (nlx,nly,nz) */
-    sf_file Fd;     /* downgoing wavefield file D ( nx, ny,nw) */
-    sf_file Fu;     /*   upgoing wavefield file U ( nx, ny,nw) */
+    sf_file Fsd,Fsu;/*  slowness file S (nlx,nly,nz) */
+    sf_file Fd,Fu;  /* wavefield file D or U ( nx, ny,nw) */
     sf_file Fr;     /* reflectivity */
 
-    fslice slow,dwfl,uwfl,wfld,refl;
+    fslice dwfl,uwfl,wfld,refl;
+    fslice dslo,uslo;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
+
+    /* converted waves flag */
+    if (NULL != sf_getstring("sls")) {
+	cw=true;
+    } else {
+	cw=false;
+    }
 
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
@@ -51,10 +59,16 @@ int main (int argc, char *argv[])
     if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper on y   */
     
     /* slowness parameters */
-    Fs = sf_input ("slo");
-    iaxa(Fs,&alx,1); alx.l="lx";
-    iaxa(Fs,&aly,2); aly.l="ly";
-    iaxa(Fs,&az ,3);  az.l= "z";
+    Fsd = sf_input ("slo");
+    if(cw) {
+	Fsu=sf_input("sls");
+    } else {
+	Fsu=Fsd;
+    }
+    iaxa(Fsd,&alx,1); alx.l="lx";
+    iaxa(Fsd,&aly,2); aly.l="ly";
+    iaxa(Fsd,&az ,3);  az.l= "z";
+    /* test here if slo and sls have similar sizes */
 
     Fd = sf_input ( "in");
     Fu = sf_output("out"); sf_settype(Fu,SF_COMPLEX);
@@ -67,23 +81,32 @@ int main (int argc, char *argv[])
     iaxa(Fd,&aw,3); aw.l="w"; oaxa(Fu,&aw,3);
 
     /* slice management (temp files) */
-    slow = fslice_init(alx.n*aly.n, az.n,sizeof(float));
     dwfl = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
     uwfl = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
     wfld = fslice_init( ax.n* ay.n, az.n,sizeof(float complex)); /* temp */
+
     refl = fslice_init( ax.n* ay.n, az.n,sizeof(float));
-    fslice_load(Fs,slow,SF_FLOAT);
+
     fslice_load(Fd,dwfl,SF_COMPLEX);
     fslice_load(Fr,refl,SF_FLOAT);
 
-    srmod_init (verb,eps,dt,
-		ae,
-		az,aw,
-		ax,ay,
-		alx,aly,
-		tx,ty,
-		px,py,
-		nr,slow);
+    ;      dslo = fslice_init(alx.n*aly.n, az.n,sizeof(float));
+    if(cw) uslo = fslice_init(alx.n*aly.n, az.n,sizeof(float));
+    ;      fslice_load(Fsd,dslo,SF_FLOAT);
+    if(cw) fslice_load(Fsu,uslo,SF_FLOAT);
+
+    if(cw) {
+	srmod_init (verb,eps,dt,
+		    ae,az,aw,ax,ay,alx,aly,
+		    tx,ty,px,py,
+		    nr,dslo,uslo);
+    } else {
+	srmod_init (verb,eps,dt,
+		    ae,az,aw,ax,ay,alx,aly,
+		    tx,ty,px,py,
+		    nr,dslo,dslo);
+    }
+
     srmod_aloc();
     srmod(dwfl,uwfl,refl,wfld);
     srmod_free();
@@ -91,7 +114,9 @@ int main (int argc, char *argv[])
     
     /* slice management (temp files) */
     fslice_dump(Fu,uwfl,SF_COMPLEX);
-    fslice_close(slow);
+    ;      fslice_close(dslo);
+    if(cw) fslice_close(uslo);
+
     fslice_close(dwfl);
     fslice_close(uwfl);
     fslice_close(wfld);

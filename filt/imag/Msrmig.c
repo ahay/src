@@ -81,6 +81,7 @@ int main (int argc, char *argv[])
     fslice_load(Fs ,slow,SF_FLOAT);
     fslice_load(Fus,sdat,SF_COMPLEX);
     fslice_load(Fur,rdat,SF_COMPLEX);
+    /*------------------------------------------------------------*/
 
     srmig_init (verb,eps,dt,
 		ae,
@@ -94,7 +95,8 @@ int main (int argc, char *argv[])
     srmig(sdat,rdat,imag);
     srmig_free();
     srmig_close();
-	
+
+    /*------------------------------------------------------------*/
     /* slice management (temp files) */
     fslice_dump(Fi,imag,SF_FLOAT);
     fslice_close(slow);

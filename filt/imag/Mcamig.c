@@ -154,6 +154,8 @@ int main (int argc, char *argv[])
 	    } 
 	    break;
     }
+
+    /*------------------------------------------------------------*/
     
     camig_init(verb,eps,dt,
 	       az,aw,ae,
@@ -179,6 +181,8 @@ int main (int argc, char *argv[])
     }
 
     camig_close();
+
+    /*------------------------------------------------------------*/
 
     switch(mode[0]) {
 	case 'w':

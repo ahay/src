@@ -24,6 +24,8 @@ int main (int argc, char *argv[])
 {
     char *mode;           /* mode of operation */
     bool inv;             /* forward or adjoint */
+    bool causal;          /* causal/anti-causal flag */
+    bool twoway;          /* two-way traveltime */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
     int   nr;             /* number of reference velocities */
@@ -45,16 +47,17 @@ int main (int argc, char *argv[])
     /* default mode is migration/modeling */
     if (NULL == (mode = sf_getstring("mode"))) mode = "m";
 
-    if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
-    if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
-    if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
-    if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on x */
-    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on y*/
-
-    if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper on x*/
-    if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper on y */
+    if (!sf_getbool(  "verb",&verb))   verb = false; /* verbosity flag */
+    if (!sf_getfloat(  "eps",&eps ))    eps =  0.01; /* stability parameter */
+    if (!sf_getbool(   "inv",&inv ))    inv = false; /* y=modeling; n=migration */
+    if (!sf_getbool("causal",&causal))causal= false; /* y=causal; n=anti-causal */
+    if (!sf_getbool("twoway",&twoway))twoway=  true; /* two-way traveltime */
+    if (!sf_getint(     "nr",&nr  ))     nr =     1; /* maximum number of references */
+    if (!sf_getfloat(   "dt",&dt  ))     dt = 0.004; /* time error */
+    if (!sf_getint(    "pmx",&pmx ))    pmx =     0; /* padding on x */
+    if (!sf_getint(    "pmy",&pmy ))    pmy =     0; /* padding on y*/
+    if (!sf_getint(    "tmx",&tmx ))    tmx =     0; /* taper on x*/
+    if (!sf_getint(    "tmy",&tmy ))    tmy =     0; /* taper on y */
 
     /* slowness parameters */
     Fs = sf_input ("slo");
@@ -146,8 +149,9 @@ int main (int argc, char *argv[])
 	    }
 	    break;
     }
+    /*------------------------------------------------------------*/
     
-    zomig_init(verb,eps,dt,
+    zomig_init(verb,eps,twoway,dt,
 	       az,aw,ae,
 	       amx,amy,
 	       alx,aly,
@@ -157,21 +161,22 @@ int main (int argc, char *argv[])
 
     switch(mode[0]) {
 	case 'w':
-	    zowfl(    data,wfld);
+	    zowfl(inv,causal,data,wfld);
 	    break;
 	case 'd':
-	    zodtm(inv,data,wfld);
+	    zodtm(inv,causal,data,wfld);
 	    break;
 	case 'm':
 	default:
 	    zomig_aloc();
-	    zomig(inv,data,imag);
+	    zomig(inv,       data,imag);
 	    zomig_free();
 	    break;
     }
 
     zomig_close();
-    
+
+    /*------------------------------------------------------------*/
     switch(mode[0]) {
 	case 'w':
 	    fslice_dump(Fw,wfld,SF_COMPLEX);

@@ -30,8 +30,11 @@
 #include "slice.h"
 /*^*/
 
-#define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}}
-#define SOOP(a)                             for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
+#define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ \
+                for(imy=0;imy<amy.n;imy++){ \
+                for(imx=0;imx<amx.n;imx++){ {a} }}}
+#define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
+                for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 static axa az,aw,alx,aly,amx,amy,ahx,ae;
 static bool verb;

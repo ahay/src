@@ -171,8 +171,8 @@ void srmig(fslice sdat /* source   data [nw][ny][nx] */,
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
 	    
-	    ws = eps*aw.d + I*(aw.o+iw*aw.d);
-	    wr = eps*aw.d - I*(aw.o+iw*aw.d);
+	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
+	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 	    
 	    fslice_get(sdat,ie*aw.n+iw,us[0]); taper2(us);
 	    fslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(ur);
@@ -185,7 +185,7 @@ void srmig(fslice sdat /* source   data [nw][ny][nx] */,
 	    fslice_get(slow,0,so[0]);
 	    for (iz=0; iz<az.n-1; iz++) {
 		fslice_get(slow,iz+1,ss[0]);
-		
+
 		ssr_ssf(ws,us,so,ss,nr[iz],sm[iz]);
 		ssr_ssf(wr,ur,so,ss,nr[iz],sm[iz]);
 		
