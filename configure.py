@@ -3,6 +3,33 @@ import string, re
 from SCons.Util import WhereIs
 from SCons.Tool import createObjBuilders
 from SCons.Action import Action
+from SCons.Builder import Builder
+
+toheader = re.compile(r'\n\n((?:[^\n]|\n[^\n])+)\n'
+                      '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
+
+def header(target=None,source=None,env=None):
+    inp = open(str(source[0]),'r')
+    text = string.join(inp.readlines(),'')
+    inp.close()
+    file = str(target[0])
+    prefix = env.get('prefix','')
+    define = prefix + string.translate(file,string.maketrans('.','_'))
+    out = open(file,'w')    
+    out.write('#ifndef _' + define + '\n')
+    out.write('#define _' + define + '\n\n')
+    for extract in toheader.findall(text):
+        if extract[1] == '^':
+            out.write(extract[0]+'\n\n')
+        else:
+            out.write(extract[0]+';\n')
+            out.write('/*'+extract[1]+'*/\n\n')
+    out.write('#endif\n')
+    out.close()
+    return 0
+
+Header = Builder (action = Action(header,varlist=['prefix']),
+                  src_suffix='.c',suffix='.h')
 
 include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
 

@@ -1,10 +1,33 @@
+/* Convenience allocation programs. */
+/*
+Copyright (C) 2004 University of Texas at Austin
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdlib.h>
+/*^*/
 
-#include "alloc.h"
 #include "error.h"
-#include "c99.h"
 
-/*@out@*/ void *sf_alloc (size_t n, size_t size)
+#include "c99.h"
+/*^*/
+
+    /*@out@*/ void *sf_alloc (size_t n    /* number of elements */, 
+			      size_t size /* size of one element */)
+/*< output-checking allocation >*/
 {
     void *ptr; 
   
@@ -14,7 +37,10 @@
     return ptr;
 }
 
-void *sf_realloc (void* ptr, size_t n, size_t size)
+void *sf_realloc (void* ptr   /* previous data */, 
+		  size_t n    /* number of elements */, 
+		  size_t size /* size of one element */)
+/*< output-checing reallocation >*/
 {
     void *ptr2; 
   
@@ -24,42 +50,52 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr2;
 }
 
-/*@out@*/ char *sf_charalloc (size_t n) 
+/*@out@*/ char *sf_charalloc (size_t n /* number of elements */)
+/*< char allocation >*/ 
 {
     char *ptr;
     ptr = (char*) sf_alloc (n,sizeof(char));
     return ptr;
 }
 
-/*@out@*/ unsigned char *sf_ucharalloc (size_t n) 
+/*@out@*/ unsigned char *sf_ucharalloc (size_t n /* number of elements */)
+/*< unsigned char allocation >*/ 
 {
     unsigned char *ptr;
     ptr = (unsigned char*) sf_alloc (n,sizeof(unsigned char));
     return ptr;
 }
 
-/*@out@*/ int *sf_intalloc (size_t n) 
+/*@out@*/ int *sf_intalloc (size_t n /* number of elements */)
+/*< int allocation >*/  
 {
     int *ptr;
     ptr = (int*) sf_alloc (n,sizeof(int));
     return ptr;
 }
 
-/*@out@*/ float *sf_floatalloc (size_t n) 
+/*@out@*/ float *sf_floatalloc (size_t n /* number of elements */)
+/*< float allocation >*/ 
 {
     float *ptr;
     ptr = (float*) sf_alloc (n,sizeof(float));
     return ptr;
 }
 
-/*@out@*/ float complex *sf_complexalloc (size_t n) 
+#ifndef __cplusplus
+/*^*/
+
+/*@out@*/ float complex *sf_complexalloc (size_t n /* number of elements */) 
+/*< complex allocation >*/
 {
     float complex *ptr;
     ptr = (float complex*) sf_alloc (n,sizeof(float complex));
     return ptr;
 }
 
-/*@out@*/ float complex **sf_complexalloc2 (size_t n1, size_t n2) 
+/*@out@*/ float complex **sf_complexalloc2 (size_t n1 /* fast dimension */, 
+					    size_t n2 /* slow dimension */)
+/*< complex 2-D allocation, out[0] points to a contiguous array >*/ 
 {
     size_t i2;
     float complex **ptr;
@@ -72,14 +108,20 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ bool *sf_boolalloc (size_t n) 
+#endif
+/*^*/
+
+/*@out@*/ bool *sf_boolalloc (size_t n /* number of elements */)
+/*< bool allocation >*/
 {
     bool *ptr;
     ptr = (bool*) sf_alloc (n,sizeof(bool));
     return ptr;
 }
 
-/*@out@*/ bool **sf_boolalloc2 (size_t n1, size_t n2) 
+/*@out@*/ bool **sf_boolalloc2 (size_t n1 /* fast dimension */, 
+				size_t n2 /* slow dimension */)
+/*< bool 2-D allocation, out[0] points to a contiguous array >*/
 {
     size_t i2;
     bool **ptr;
@@ -92,7 +134,9 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2) 
+/*@out@*/ float **sf_floatalloc2 (size_t n1 /* fast dimension */, 
+				  size_t n2 /* slow dimension */)
+/*< float 2-D allocation, out[0] points to a contiguous array >*/ 
 {
     size_t i2;
     float **ptr;
@@ -105,7 +149,10 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3) 
+/*@out@*/ float ***sf_floatalloc3 (size_t n1 /* fast dimension */, 
+				   size_t n2 /* slower dimension */, 
+				   size_t n3 /* slowest dimension */)
+/*< float 3-D allocation, out[0][0] points to a contiguous array >*/ 
 {
     size_t i3;
     float ***ptr;
@@ -118,7 +165,9 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ int **sf_intalloc2 (size_t n1, size_t n2) 
+/*@out@*/ int **sf_intalloc2 (size_t n1 /* fast dimension */, 
+			      size_t n2 /* slow dimension */)
+/*< float 2-D allocation, out[0] points to a contiguous array >*/  
 {
     size_t i2;
     int **ptr;
@@ -131,7 +180,9 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ char **sf_charalloc2 (size_t n1, size_t n2) 
+/*@out@*/ char **sf_charalloc2 (size_t n1 /* fast dimension */, 
+				size_t n2 /* slow dimension */) 
+/*< char 2-D allocation, out[0] points to a contiguous array >*/
 {
     size_t i2;
     char **ptr;
@@ -144,7 +195,9 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/*@out@*/ unsigned char **sf_ucharalloc2 (size_t n1, size_t n2) 
+/*@out@*/ unsigned char **sf_ucharalloc2 (size_t n1 /* fast dimension */, 
+					  size_t n2 /* slow dimension */)
+/*< unsigned char 2-D allocation, out[0] points to a contiguous array >*/
 {
     size_t i2;
     unsigned char **ptr;
@@ -157,4 +210,4 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-/* 	$Id: alloc.c,v 1.5 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id$	 */
