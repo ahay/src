@@ -1,3 +1,22 @@
+/* 2-D velocity grid for ray tracing. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -5,26 +24,26 @@
 #include "grid2.h"
 #include "eno2.h"
 
-/* concrete data type */
+#ifndef _grid2_h
+
+typedef struct Grid2* grid2;
+/* abstract data type */
+/*^*/
+
+#endif
+
 struct Grid2 {
     eno2 pnt;
     int n1, n2;
     float o1, d1, o2, d2;
 };
+/* concrete data type */
 
-/*
-  Function: grid2_init
-  --------------------
-  Initialize 2-D grid
-  n1, n2        - grid dimensions
-  o1, o2        - grid coordinates
-  d1, d2        - grid spacing
-  slow2[n2][n1] - data values
-  order         - interpolation order
-*/
-grid2 grid2_init (int n1, float o1, float d1, 
-		  int n2, float o2, float d2,
-		  float *slow2, int order)
+grid2 grid2_init (int n1, float o1, float d1 /* first axis */, 
+		  int n2, float o2, float d2 /* second axis */,
+		  float *slow2               /* data values [n1*n2] */, 
+		  int order                  /* interpolation order */)
+/*< Initialize grid object >*/
 {
     grid2 grd;
     
@@ -39,13 +58,9 @@ grid2 grid2_init (int n1, float o1, float d1,
     return grd;
 }
 
-/*
-  Function: grid2_vel
-  -------------------
-  Extract a value from the grid
-  xy[2] - data coordinates
-*/
-float grid2_vel(void* par, float* xy)
+float grid2_vel(void* par /* grid */, 
+		float* xy /* coordinate [2] */)
+/*<  Extract a value from the grid >*/
 {
     grid2 grd;
     float x, y, f, f1[2];
@@ -59,14 +74,10 @@ float grid2_vel(void* par, float* xy)
     return f;
 }
 
-/*
-  Function: grid2_vgrad
-  ---------------------
-  Extract (1/2 of) gradient values from the grid
-  xy[2]   - data coordinates
-  grad[2] - gradient (output)
-*/
-void grid2_vgrad(void* par, float* xy, float* grad)
+void grid2_vgrad(void* par   /* grid */, 
+		 float* xy   /* coordinate [2] */, 
+		 float* grad /* output gradient [2] */)
+/*< Extract (1/2 of) gradient values from the grid >*/
 {
     grid2 grd;
     float x, y, f, f1[2];
@@ -82,14 +93,10 @@ void grid2_vgrad(void* par, float* xy, float* grad)
     grad[1] = 0.5*f1[1]/grd->d2;
 }
 
-/* 
-   Function: grid2_term
-   --------------------
-   Termination criterion
-   returns 0 if xy (data coordinates)
-   are inside the grid
-*/
-int grid2_term (void* par, float* xy)
+int grid2_term (void* par /* grid */, 
+		float* xy /* location [2] */)
+/*< Termination criterion. returns 0 if xy (data coordinates)
+  are inside the grid >*/
 {
     grid2 grd;
     
@@ -98,15 +105,11 @@ int grid2_term (void* par, float* xy)
 	    xy[1] < grd->o2 || xy[1] > grd->o2 + (grd->n2-1)*grd->d2);
 }
 
-/* 
-   Function: grid2_close
-   ---------------------
-   Free internal storage
-*/
 void grid2_close(grid2 grd)
+/*< Free internal storage >*/
 {
     eno2_close (grd->pnt);
     free (grd);
 }
 
-/* 	$Id: grid2.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */

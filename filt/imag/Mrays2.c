@@ -79,9 +79,9 @@ int main(int argc, char* argv[])
 
 	s = sf_floatalloc2 (ndim,nshot);
 
-	if (!sf_getfloat("zshot",s[0]))   s[0][0]=0.;
+	if (!sf_getfloat("zshot",&s[0][0]))   s[0][0]=0.;
 	/* shot coordinates (if no shotfile) */
-	if (!sf_getfloat("yshot",s[0]+1)) s[0][1]=o[1] + 0.5*(n[1]-1)*d[1];
+	if (!sf_getfloat("yshot",&s[0][1])) s[0][1]=o[1] + 0.5*(n[1]-1)*d[1];
 	
 	sf_warning("Shooting from z=%f, x=%f",s[0][0],s[0][1]);
     }
@@ -185,4 +185,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrays2.c,v 1.10 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */
