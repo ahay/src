@@ -1,0 +1,127 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/rain'
+
+Fetch(['border.HH','elevation.HH',
+            'alldata.HH','obsdata.HH',
+            'coord.HH','predict.HH'],
+           datdir)
+
+box = 'min1=-185.556 max1=193.18275 min2=-127.262 max2=127.25044'
+f2 = 0
+def border(name,n2):
+    global f2
+    Flow([name,name+'x',name+'y'],'border.HH',
+              '''
+              window n1=1 f1=0 n2=%(n2)d f2=%(f2)d > ${TARGETS[1]};
+              window n1=1 f1=1 n2=%(n2)d f2=%(f2)d > ${TARGETS[2]} < $SOURCE;
+              cmplx ${TARGETS[1]} ${TARGETS[2]}
+              ''' % {'n2':n2,'f2':f2})
+    Plot(name,name,
+              'graph %s title=" " plotcol=7 plotfat=2' % box)
+    f2 = f2 + n2
+
+border('border1',338)
+border('border2',234)
+border('border3',717)
+Combine('border',['border1','border2','border3'],'Overlay')
+
+Plot('elev','elevation.HH',
+          '''
+          igrad |
+          grey title=Elevation transp=n yreverse=n
+          wantaxis=n wantlabel=n wheretitle=t wherexlabel=b
+          ''')
+Combine('elev',['elev','border'],'Overlay',result=1)
+
+select = '''
+window n1=1 f1=0 > ${TARGETS[1]};
+window n1=1 f1=1 > ${TARGETS[2]} < $SOURCE;
+cmplx ${TARGETS[1]} ${TARGETS[2]}
+'''
+
+Flow(['alldata','alldatax','alldatay'],'alldata.HH',select)
+Result('alldata','alldata',
+            'graph symbol=x title="All data locations" ' + box)
+
+Flow(['obs','obsx','obsy'],'obsdata.HH',select)
+Plot('obs','obs',
+          'graph symbol=o title="Observed data locations" plotcol=7 ' + box)
+Combine('obsdata',['obs','border'],'Overlay')
+
+Flow('coord','coord.HH','dd data_format=native_float')
+Flow(['coord2','coordx','coordy'],'coord',select)
+Plot('coord','coord2','graph symbol=x wanttitle=n ' + box)
+Combine('data',['coord','border'],'Overlay')
+
+Combine('raindata',['obsdata','data'],'SideBySideIso',result=1)
+
+Flow('obsdata','obsdata.HH','dd data_format=native_float')
+Flow('raindata','obsdata','window f1=2')
+
+cases = [10,100,1000,10000,-10,-20,-40,0]
+for niter in cases:
+    lapinter = 'lapinter%d' % niter
+    if (niter == 0):
+        niter = 100
+        name = "Gauss Estimated"
+        extra = 'shape=y gauss=y pattern=${SOURCES[2]} eps=1.e-10'
+        Flow(lapinter,['raindata','obsdata','lapinter-40'],
+                  '''shapebin head=${SOURCES[1]}
+                  niter=%d xkey=0 ykey=1 filt1=25
+                  nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+                  %s''' % (niter,extra))
+    else:
+        if (niter < 0):
+            niter = -niter
+            name = "Gauss"
+            extra = 'shape=y'
+        else:
+            prec = 0
+            name = "Laplace"
+            extra = 'shape=n'
+        Flow(lapinter,['raindata','obsdata'],
+                  '''shapebin head=${SOURCES[1]}
+                  niter=%d xkey=0 ykey=1 filt1=25
+                  nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+                  %s''' % (niter,extra))
+    Plot('g'+lapinter,lapinter,
+              '''grey wantscalebar=y yreverse=n transp=n allpos=y
+              color=j clip=500 title="%s %d" ''' % (name,niter))
+    Plot('c'+lapinter,lapinter,
+              '''contour nc=6 c0=-0.001 dc=100
+              wantscalebar=y yreverse=n transp=n barlabel=' '
+              wanttitle=n plotcol=7 wantframe=y wantaxis=n''')
+    Combine(lapinter,['g'+lapinter,'c'+lapinter],'Overlay')
+
+Combine('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),
+             'TwoByTwo',result=1)
+Combine('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),
+             'SideBySideAniso',result=1)
+
+Flow('predict','predict.HH','dd data_format=native_float')
+for niter in [10000,-40,0]:
+    lapinter = 'lapinter%d' % niter
+    lapdat = 'lapdat%d' % niter
+    lapstat = 'lapstat%d' % niter
+    Flow(lapdat,[lapinter,'coord'],
+              'extract head=${SOURCES[1]} xkey=0 ykey=1')
+    Result(lapstat,['predict',lapdat],
+                '''cmplx ${SOURCES[0:2]} |
+                graph symbol="*" title="Laplace Correlation"
+                screenratio=1 min1=0 max1=500 min2=0 max2=500
+                ''',stdin=0)
+
+###########################################################################
+
+End()
