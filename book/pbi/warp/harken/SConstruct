@@ -182,6 +182,36 @@ Flow(['wcube','warp3'],
      warp1(2,220,440,440))
 Flow('wwarp','warp3 Warp3','warpadd add=${SOURCES[1]}')
 
+Flow('frac',['wwarp','time3'],
+     '''
+     math T=${SOURCES[1]} output="input+T" |
+     smoothder |
+     math output="0.5*((input+1)*(input+1)-1)" 
+     ''')
+Result('frac','frac',
+       '''
+       window min1=1.8 max1=2.2 |
+       byte bias=1.5 |
+       grey3 flat=n frame3=40 frame2=40 frame1=50
+       title="Fracture Intensity Attribute"
+       point1=0.5 point2=0.5 color=j 
+       label1="Time (s)" label2="In-line" label3="Cross-line"
+       ''')
+
+def plot3(title):
+    return '''
+    byte |
+    grey3 flat=y frame3=40 frame2=40 frame1=500 title="%s"
+    point1=0.5 point2=0.5
+    label1="Time (s)" label2="In-line" label3="Cross-line"
+    ''' % title
+
+Plot('s1cube','s1cube',plot3('Fast'))
+Plot('s2cube','s2cube',plot3('Slow'))
+Plot('wcube','wcube',plot3('Warped Slow'))
+
+Combine('before','s1cube s2cube','SideBySideAniso',result=1)
+Combine('after','s1cube wcube','SideBySideAniso',result=1)
 
 ###########################################################################
 End()

@@ -31,6 +31,12 @@ grey transp=y poly=y yreverse=y crowd=0.89
 label2="q s.km^2" label1="time(s)" title="radon domain"
 '''
 
+wmod = '''
+wiggle transp=y poly=y yreverse=y crowd=0.89
+label2="q s.km^2" label1="time(s)" title="radon domain"
+'''
+
+
 gdat = '''
 grey transp=y poly=y yreverse=y crowd=0.89
 label2="offset(km)" label1="time(s)" title="cmp domain"
@@ -40,7 +46,9 @@ Plot('mod_spike','mod_spike',gmod + ' pclip=100')
 Plot('dat_spike','dat_spike',gdat)
 Combine('datasynt','mod_spike dat_spike','SideBySideAniso',result=1)
 
-for case in range(0,3):
+Plot('data','data',gdat)
+
+for case in range(0,5):
     rad = 'rad%d' % case
     frw = 'frw%d' % case
     mul = 'mul%d' % case
@@ -54,27 +62,46 @@ for case in range(0,3):
 
     Plot(rad,rad,gmod + ' pclip=100')
     Plot(frw,frw,gdat)
-    Plot(mul,mul,gdat)
+    Plot(mul,mul,gdat + ' title=primaries')
 
     Combine('radon%d' % case,[rad,frw,mul],'SideBySideAniso',result=1)
 
     rad = 'data_rad%d' % case
     frw = 'data_frw%d' % case
     mul = 'data_mul%d' % case
+    pri = 'data_pri%d' % case
+    err = 'data_err%d' % case
 
     Flow(rad,'data',
-         'radon parab=y adj=y inv=%d spk=%d p0=-0.1 np=300 dp=0.001' %
-         (case > 0, case > 1))
+         '''
+         radon parab=y adj=y inv=%d spk=%d ns=%d p0=-0.05 np=201 dp=0.001
+         eps=0.5
+         ''' % (case > 0, case > 1, case-1))
     Flow(frw,rad,'radon parab=y adj=n nx=60 ox=0.275 dx=0.05')
 
     Plot(rad,rad,gmod)
     Plot(frw,frw,gdat)
-    Plot(mul,[frw,'data'],
-         'add scale=1,-1 ${SOURCES[1]} | %s clip=131.365' % gdat)
-    
-    Combine('data-radon%d' % case,[rad,frw,mul],'SideBySideAniso',result=1)
 
-Result('data','data',gdat)
+    if case==0:
+        Combine('data-radon%d' % case,
+                [rad,frw,'data'],'SideBySideAniso',result=1)
+    else:
+        Plot(err,[frw,'data'],
+             'add scale=1,-1 ${SOURCES[1]} | %s clip=131.365' % gdat)
+        Combine('data-radon%d' % case,
+                [rad,frw,err],'SideBySideAniso',result=1)
+
+        Flow(mul,rad,
+             '''
+             window max2=0.015 | pad n2=300 |
+             radon parab=y adj=n nx=60 ox=0.275 dx=0.05
+             ''')
+        Plot(mul,mul,'mutter half=n v0=1.8 | %s title=primaries' % gdat)
+
+        Flow(pri,['data',mul],'add scale=1,-1 ${SOURCES[1]}')
+        Plot(pri,pri,'mutter half=n v0=1.8 | %s title=multiples' % gdat)
+        Combine('data%d' % case,
+                ['data',mul,pri],'SideBySideAniso',result=1)
 
 ############################################################################
 

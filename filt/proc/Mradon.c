@@ -7,7 +7,6 @@ Takes: < in.rsf > out.rsf
 
 #include <rsf.h>
 
-/* #include "cg2.h" */
 #include "cweight.h"
 #include "radon.h"       
 #include "ctoeplitz.h"
@@ -255,4 +254,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mradon.c,v 1.1 2004/05/13 22:27:10 fomels Exp $	 */
+/* 	$Id: Mradon.c,v 1.2 2004/05/14 03:06:55 fomels Exp $	 */

@@ -613,10 +613,10 @@ Combine('cube3','ppresh wcube3','SideBySideAniso',result=1)
 
 def colorplot3(title):
     return '''
-    window min1=0.5 max1=2.5 |
-    byte allpos=y |
-    grey3 flat=y frame3=%d frame2=%d frame1=527 title="%s"
-    point1=0.5 point2=0.5 color=j bias=1
+    window min1=1 max1=2 |
+    byte clip=0.2 bias=1.8 |
+    grey3 flat=y frame3=%d frame2=%d frame1=300 title="%s"
+    point1=0.5 point2=0.5 color=j
     label1="Time (s)" label2="In-line" label3="Cross-line"
     ''' % (line-15,trace-18,title)
 
