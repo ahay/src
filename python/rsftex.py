@@ -236,9 +236,8 @@ def colorize(target=None,source=None,env=None):
      margin-right: 2em; }
      ''' % py)
      for style in _styles.keys():
-          out.write('.%s: { color: %s; }\n' % (_styles[style],_colors[style])) 
-     out.write('''
-     </style>
+          out.write('.%s { color: %s; }\n' % (_styles[style],_colors[style])) 
+     out.write('''</style>
      </head>
      <body>
      <div>
