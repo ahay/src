@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
     }
     dim1++;
     
-    buf = sf_charalloc(n1);
+    buf = sf_charalloc(n1*esize);
     
     if (n1>1) {
 	k1 = (size_t*) sf_alloc(n1,sizeof(size_t));

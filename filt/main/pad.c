@@ -60,14 +60,15 @@ int main (int argc, char* argv[])
 	if (n2[j] > 1 && j >= dim) dim=i;
     }
 
-    sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
     if (!sf_histint(in,"esize",&esize)) {
 	esize=4;
     } else if (0>=esize) {
 	sf_error("wrong esize=%d",esize);
     }
+
+    sf_fileflush(out,in);
+    sf_setformat(in,"raw");
+    sf_setformat(out,"raw");
 
     n[0]   *= esize; n0   = (size_t) n[0];
     n2[0]  *= esize; n20  = (size_t) n2[0];

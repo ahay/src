@@ -12,7 +12,7 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 
 int main (int argc, char* argv[])
 {
-    int i, axis, *naxis, n[SF_MAX_DIM], dim, n1, n2, i2, esize, nspace;
+    int i, axis, *naxis, n[SF_MAX_DIM], dim, dim1, n1, n2, i2, esize, nspace;
     size_t j, nin, ni, nbuf;
     sf_file *in, out;
     char* prog, key[3], buf[BUFSIZ];
@@ -53,6 +53,8 @@ int main (int argc, char* argv[])
     dim = sf_filedims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
     if (1 > axis) sf_error("axis=%d < 1",axis);
+
+    dim1 = dim;
     if (axis > dim) {
 	while (dim < axis) {
 	    n[dim++] = 1;
@@ -73,7 +75,7 @@ int main (int argc, char* argv[])
     } else if (0>=esize) {
 	sf_error("wrong esize=%d",esize);
     }
-    check_compat(esize,nin,in,axis,dim,n,naxis);
+    check_compat(esize,nin,in,axis,dim1,n,naxis);
 
     /* figure out the length of extended axis */
     ni = 0;
@@ -142,5 +144,6 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 		 (id != axis && fabsf(fi-f) > tol*fabsf(f))))
 		sf_warning("%s mismatch: need %g",key,f);
 	}
+	if (axis > dim) naxis[i]=1;
     }
 }
