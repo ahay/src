@@ -404,7 +404,6 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
-                        print main.name
                         main.html(dir)
             else:
                 raise BadUsage
@@ -448,5 +447,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.20 2004/07/01 23:11:24 fomels Exp $
-
+# 	$Id: rsfdoc.py,v 1.21 2004/07/02 10:05:32 fomels Exp $

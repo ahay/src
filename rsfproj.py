@@ -362,6 +362,7 @@ class Project(Environment):
         self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
+	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
@@ -376,6 +377,9 @@ class Project(Environment):
                     CPPPATH=[incdir],
                     LIBS=['rsf','m'],
                     PROGSUFFIX='.exe')
+        if sys.platform[:6] == 'cygwin': 
+	    self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
+	    self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
 	if acroread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
 	if epstopdf:
@@ -389,7 +393,7 @@ class Project(Environment):
         self.pdfs = []
         self.coms = []
     def Exe(self,source,**kw):
-         target = source.replace('.c','.exe')
+         target = source.replace('.c','.x')
          return apply(self.Program,(target,source),kw)
     def Flow(self,target,source,flow,stdout=1,stdin=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
@@ -419,7 +423,7 @@ class Project(Environment):
                 # check if this command is in our list
                 rsfprog = prefix + command            
                 if rsfdoc.progs.has_key(rsfprog):
-                    command = os.path.join(bindir,rsfprog)
+                    command = os.path.join(bindir,rsfprog + self.progsuffix) 
                     sources.append(command)
                     if record and (rsfprog not in self.coms):
                         self.coms.append(rsfprog)
@@ -544,4 +548,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.39 2004/07/01 23:11:24 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.40 2004/07/02 10:05:32 fomels Exp $	
