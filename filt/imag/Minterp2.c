@@ -24,7 +24,6 @@ int main (int argc, char* argv[])
   float *tx, *px, *zx;
   sf_file in, out, size, grid;
 
-  /* SEPlib initialization */
   sf_init (argc,argv);
   in = sf_input("in");
   
@@ -145,4 +144,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterp2.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Minterp2.c,v 1.3 2003/10/18 18:20:58 fomels Exp $	 */

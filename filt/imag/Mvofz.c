@@ -14,7 +14,6 @@ int main (int argc, char* argv[])
     float **vel, **time;
     sf_file out;
 
-    /* SEPlib initialization */
     sf_init (argc,argv);
     out = sf_output("out");
 
@@ -49,7 +48,7 @@ int main (int argc, char* argv[])
 	v = v0 + g*z;
 	z = 1. + a*(z*z+x)/v;
 	vel[i2][i1] = v;
-	time[i2][i1] = log(z + sqrt(z*z-1.))/g;
+	time[i2][i1] = logf(z + sqrtf(z*z-1.))/g;
       }
     }
 
@@ -59,5 +58,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mvofz.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */
+/* 	$Id: Mvofz.c,v 1.3 2003/10/18 18:20:58 fomels Exp $	 */
 
