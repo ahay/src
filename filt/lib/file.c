@@ -265,6 +265,13 @@ static bool getfilename (FILE* fp, char *filename)
     return success;
 }
 
+/* datapath rules:
+   1. check datapath= on the command line
+   2. check DATAPATH environmental variable
+   3. check .datapath file in the current directory
+   4. check .datapath in the home directory
+*/
+
 static char* getdatapath (void) 
 {
     char *path, *penv, *home, file[PATH_MAX];
@@ -785,4 +792,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.14 2003/10/18 18:21:15 fomels Exp $	 */
+/* 	$Id: file.c,v 1.15 2004/03/18 03:23:39 fomels Exp $	 */
