@@ -710,5 +710,34 @@ void vp_barframe(void)
     }    
 }
 
-/* 	$Id: stdplot.c,v 1.15 2003/09/30 02:40:17 fomels Exp $	 */
+void vp_barraster (unsigned char mincol, unsigned char maxcol)
+{
+    int numcol, i;
+    unsigned char *buf[1];
 
+    if (maxcol < mincol) {
+	numcol = mincol - maxcol + 1;
+	buf[0] = (unsigned char *) alloca(numcol);
+	for (i=0; i < numcol; i++) {
+	    buf[0][i] = mincol - i;
+	}
+    } else {
+	numcol = maxcol - mincol + 1;
+	buf[0] = (unsigned char *) alloca(numcol);
+	for (i=0; i < numcol; i++) {
+	    buf[0][i] = mincol + i;
+	}
+    }
+
+    vp_barframe();
+    if (vertbar) {
+	vp_raster(buf, false, 256, numcol, 1, 
+		  barmin,orig2-0.5*inch2,barmax,orig2+0.5*inch2, 3);
+    } else {
+	vp_raster(buf, false, 256, numcol, 1, 
+		  orig1-0.5*inch1,barmin,orig1+0.5*inch1,barmax, 0);
+    }
+    vp_simplebarframe();
+}
+
+/* 	$Id: stdplot.c,v 1.16 2003/10/06 20:19:32 fomels Exp $	 */

@@ -9,7 +9,10 @@ void vp_frame_init (sf_file in, const char *where);
 void vp_barframe_init (float min, float max);
 void vp_simpleframe(void);
 void vp_frame(void);
+void vp_barraster (unsigned char mincol, unsigned char maxcol);
 void vp_simplebarframe (void);
 void vp_barframe(void);
 
 #endif
+
+/* 	$Id: stdplot.h,v 1.9 2003/10/06 20:19:32 fomels Exp $	 */
