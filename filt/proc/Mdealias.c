@@ -2,11 +2,6 @@
 
 Takes: < in.rsf > out.rsf
 
-If the window size (w=) is unspecified, it is estimated from 
-the available memory (max_memory=). If there is enough memory, only 
-one window is used. If the number of windows (p=) is unspecified, 
-it is estimated to provide sufficient overlap.
-
 It may be necessary to bandpass the data before and after dealiasing 
 to ensure that the temporal spectrum is banded. Rule of thumb: if 
 max(jx,jy)=N, the temporal bandwidth should be 1/N of Nyquist.
@@ -16,16 +11,6 @@ max(jx,jy)=N, the temporal bandwidth should be 1/N of Nyquist.
 
 #include "dip3.h"
 #include "interpd.h"
-
-#define MBYTE 1000000.
-
-#ifndef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 
 int main (int argc, char *argv[])
 {

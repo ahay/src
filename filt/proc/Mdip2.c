@@ -13,7 +13,7 @@ int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, nw, nj, i;
     float eps, lam, p0, **u, **p;
-    bool verb, sign;
+    bool verb, sign, gauss;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -36,7 +36,6 @@ int main (int argc, char *argv[])
     eps = sqrtf(12*eps+1.);
     lam = sqrtf(12*lam+1.);
 
-
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial dip */
  
@@ -51,9 +50,11 @@ int main (int argc, char *argv[])
     /* verbosity flag */
     if (!sf_getbool("sign",&sign)) sign = false;
     /* if y, keep dip sign constant */
-    
+    if (!sf_getbool("gauss",&gauss)) gauss = true;
+    /* if y, use exact Gaussian for smoothing */
+
     /* initialize dip estimation */
-    dip2_init(n1, n2, eps, lam, sign);
+    dip2_init(n1, n2, eps, lam, sign, gauss);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
@@ -75,4 +76,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.2 2004/02/24 06:13:25 fomels Exp $	 */
+/* 	$Id: Mdip2.c,v 1.3 2004/02/26 14:34:25 fomels Exp $	 */

@@ -15,7 +15,7 @@ static const int niter=100;
 static bool sign;
 /* static div2 div0; */
 
-void dip2_init(int nx, int ny, float fx, float fy, bool sign1)
+void dip2_init(int nx, int ny, float fx, float fy, bool sign1, bool gauss)
 {
     n1=nx; n2=ny; n=n1*n2;
     u1 = sf_floatalloc2(n1,n2);
@@ -23,7 +23,7 @@ void dip2_init(int nx, int ny, float fx, float fy, bool sign1)
     dp = sf_floatalloc2(n1,n2);
 
     /* div0 = divide2_init (n1,n2,eps,lam); */
-    divide_init(n1,n2,fx,fy,niter);
+    divide_init(n1,n2,fx,fy,niter,gauss);
     sign = sign1;
 }
 
@@ -88,4 +88,4 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
     } /* iter */
 }
 
-/* 	$Id: dip2.c,v 1.1 2004/02/14 06:59:24 fomels Exp $	 */
+/* 	$Id: dip2.c,v 1.2 2004/02/26 14:34:25 fomels Exp $	 */

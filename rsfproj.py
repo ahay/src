@@ -306,7 +306,9 @@ combine ={
     'TwoByTwo': lambda n:
     sep + "vppen size=r vpstyle=n gridnum=2,2 $SOURCES",
     'Overlay': lambda n:
-    sep + "vppen erase=o vpstyle=n $SOURCES"   
+    sep + "vppen erase=o vpstyle=n $SOURCES",
+    'Movie': lambda n:
+    sep + "vppen vpstyle=n $SOURCES"
     }
 
 #############################################################################
@@ -483,4 +485,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.18 2004/02/14 06:51:07 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.19 2004/02/26 14:34:25 fomels Exp $	
