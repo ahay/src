@@ -1,5 +1,4 @@
-/* Smooth estimate of instanteneous frequency.
-*/
+/* Smooth estimate of instanteneous frequency. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,7 +25,7 @@
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *num, *den, *phase, p0, p1, a0, a1, c;
+    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a, b, c;
     char key[6];
     sf_file in, out;
 
@@ -48,6 +47,9 @@ int main (int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
     hilb = sf_floatalloc(n1);
+    dtrace = sf_floatalloc(n1);
+    dhilb = sf_floatalloc(n1);
+
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);
     phase = sf_floatalloc(n12);
@@ -62,25 +64,25 @@ int main (int argc, char* argv[])
 
     hilbert_init(n1, nh, c);
 
-    for (i2=0; i2 < n2; i2++) {
+    for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 	hilbert(trace,hilb);
+	deriv(trace,dtrace);
+	deriv(hilb,dhilb);
 
-	a0 = trace[n1-1];
-	p0 = trace[n1-1];
-	i = (i2+1)*n1-1;
-	num[i]=0.;
-	den[i]=0.;
-	for (i1=n1-2, i--; i1 >= 0; i1--, i--) {
-	    a1 = a0;
-	    p1 = p0;
-
-	    a0 = trace[i1];
-	    p0 = hilb[i1];
-
-	    /* Scheuer and Oldenburg ? */
-	    num[i] = a1*p0-a0*p1;
-	    den[i] = a0*a1+p1*p0;
+	for (i1=0; i1 < nh; i1++, i++) {
+	    num[i] = 0.;
+	    den[i] = 0.;
+	}
+	for (i1=nh; i1 < n1-nh; i1++, i++) {
+	    a = trace[i1];
+	    b = hilb[i1];
+	    num[i] = a*dhilb[i1]-b*dtrace[i1];
+	    den[i] = a*a+b*b;
+	}
+	for (i1=n1-nh; i1 < n1; i1++, i++) {
+	    num[i] = 0.;
+	    den[i] = 0.;
 	}
     }
 

@@ -118,12 +118,20 @@ void split1 (bool verb          /* verbosity flag */,
 	    }
 
 	    /* loop over migrated depths z */
-	    for (iz=0; iz<nz; iz++) {
+	    for (iz=0; iz<nz-1; iz++) {
 		/* accumulate image (summed over frequency) */
 		for (ix=0; ix<nx; ix++) { 
-		    q[ix][iz] += (iw==0)? crealf(pp[ix]): 2.*crealf(pp[ix]);
+		    q[ix][iz] += crealf(pp[ix]);
 		}
 		
+		for (ix=0; ix<nx; ix++) {
+		    cshift = conjf(cexpf(-0.5*csqrtf(w2*vt[ix][iz])*dz));
+		    pp[ix] *= cshift;
+		}
+		for (ix=nx; ix<nk; ix++) {
+		    pp[ix] = 0.;
+		}
+
 		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
 			 (kiss_fft_cpx *) pp);
 
@@ -132,7 +140,8 @@ void split1 (bool verb          /* verbosity flag */,
 		    k = fk + jx*dk;
 		    k *= k;
 	  
-		    cshift = conjf(cexpf((csqrtf(w2*v[iz])-
+		    cshift = conjf(cexpf((0.5*(csqrtf(w2*v[iz])+
+					       csqrtf(w2*v[iz+1]))-
 					  csqrtf(w2*v[iz]+k))*dz));
 		    pp[ix] *= cshift/nk;
 		    /* Fourier scaling included */
@@ -142,12 +151,13 @@ void split1 (bool verb          /* verbosity flag */,
 			 (kiss_fft_cpx *) pp);
 	
 		for (ix=0; ix<nx; ix++) {
-		    cshift = conjf(cexpf(-csqrtf(w2*vt[ix][iz])*dz));
+		    cshift = conjf(cexpf(-0.5*csqrtf(w2*vt[ix][iz+1])*dz));
 		    pp[ix] *= cshift;
 		}
-		for (ix=nx; ix<nk; ix++) {
-		    pp[ix] = 0.;
-		}
+	    }
+
+	    for (ix=0; ix<nx; ix++) { 
+		q[ix][nz-1] += crealf(pp[ix]);
 	    }
 	}
     }

@@ -36,7 +36,7 @@ int main (int argc, char *argv[])
     float dw;	        /* frequency sampling interval */
     float dx;		/* spatial sampling interval	*/
     float **vt, *v, v0;	/* velocities		*/
-    float **p,**q;	/* input, output data		*/
+    float *p,**q;	/* input, output data		*/
 
     float complex **cp;	   /* complex input		*/
 
@@ -135,7 +135,7 @@ int main (int argc, char *argv[])
     dw = 2.0*SF_PI/(ntfft*dt);
 	
     /* allocate space */
-    p = sf_floatalloc2(ntfft,nx);
+    p = sf_floatalloc(ntfft);
     q = sf_floatalloc2(nz,nx);
     cp = sf_complexalloc2(nw,nx);
 
@@ -145,14 +145,14 @@ int main (int argc, char *argv[])
 	if (inv) {
 	    sf_floatread(q[ix],nz,in);
 	} else {    
-	    sf_floatread(p[ix],nt,in);
+	    sf_floatread(p,nt,in);
 
 	    /* pad with zeros and Fourier transform t to w */
 	    for (it=nt; it<ntfft; it++) {
-		p[ix][it] = 0.0;
+		p[it] = 0.0;
 	    }
 
-	    kiss_fftr(fft, p[ix], (kiss_fft_cpx *) cp[ix]);
+	    kiss_fftr(fft, p, (kiss_fft_cpx *) cp[ix]);
 
 	    for (it=0; it<nw; it++)
 		cp[ix][it] /= ntfft;
@@ -170,10 +170,10 @@ int main (int argc, char *argv[])
 	if (inv) {
 	    /* Fourier transform w to t (including FFT scaling) */
 
-	    kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix], p[ix]);
+	    kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix], p);
 	    for (it=0; it<nt; it++)
-		p[ix][it] /= ntfft;
-	    sf_floatwrite (p[ix],nt,out);
+		p[it] /= ntfft;
+	    sf_floatwrite (p,nt,out);
 	} else {
 	    sf_floatwrite (q[ix],nz,out);
 	}

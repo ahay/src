@@ -47,13 +47,67 @@ void hilbert (const float* trace, float* trace2)
 	}
     }
 
-    trace2[0] = 2.*(h[1]-h[0])*c;
+    trace2[0] = 2.*(h[0]-h[1])*c;
     for (it=1; it < nt-1; it++) {
-	trace2[it] = (h[it+1]-h[it-1])*c;
+	trace2[it] = (h[it-1]-h[it+1])*c;
     }
-    trace2[nt-1] = 2.*(h[nt-1]-h[nt-2])*c;
+    trace2[nt-1] = 2.*(h[nt-2]-h[nt-1])*c;
+}
+
+void hilbert4 (const float* trace, float* trace2)
+{
+    int i, it;
+    
+    for (it=0; it < nt; it++) {
+	h[it] = trace[it];
+    }
+
+    for (i=n; i >= 1; i--) {
+	for (it=1; it < nt-1; it++) {
+	    trace2[it] = h[it]+(h[it+1]-2.*h[it]+h[it-1])*c2;
+	}
+	trace2[0] = trace2[1];
+	trace2[nt-1] = trace2[nt-2];
+
+	for (it=0; it < nt; it++) {
+	    h[it] = trace[it] + trace2[it]*(2*i-1)/(2*i);
+	}
+    }
+
+    for (it=0; it < nt-1; it++) {
+	trace2[it] = (h[it]-h[it+1])*c;
+    }
+    trace2[nt-1] = trace2[nt-2];
+}
+
+void deriv (const float* trace, float* trace2)
+{
+    int i, it;
+    
+    for (it=0; it < nt; it++) {
+	h[it] = trace[it];
+    }
+
+    for (i=n; i >= 1; i--) {
+	for (it=1; it < nt-1; it++) {
+	    trace2[it] = 0.5*h[it]-0.25*(h[it+1]+h[it-1]);
+	}
+	trace2[0] = trace2[1];
+	trace2[nt-1] = trace2[nt-2];
+
+	for (it=0; it < nt; it++) {
+	    h[it] = trace[it] + trace2[it]*2*i/(2*i+1);
+	}
+    }
+
+    trace2[0] = h[1]-h[0];
+    for (it=1; it < nt-1; it++) {
+	trace2[it] = 0.5*(h[it+1]-h[it-1]);
+    }
+    trace2[nt-1] = h[nt-1]-h[nt-2];
 }
 
     
+
     
 	    

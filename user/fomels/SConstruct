@@ -10,6 +10,8 @@ try:  # distributed version
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     root = None
     env = Environment()
@@ -20,11 +22,10 @@ except: # local version
     env.Prepend(CPPPATH=['../../include'],
                 LIBPATH=['../../filt/lib'],LIBS=['rsf'])
     SConscript('../../filt/lib/SConstruct')
+    src = glob.glob('[a-z]*.c')
 
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
-
-src = glob.glob('[a-z]*.c')
 
 for source in src:
     inc = env.Include(source,prefix='')

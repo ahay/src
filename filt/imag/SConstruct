@@ -8,12 +8,17 @@ halfint interp2 interp3 interpt kirchnew kirmod mutter preconstkirch rays2
 reg2tri remap1 s2ofz shoot2 sstep1 trace2 tri2reg trirand unif2 voft vofz
 '''
 
+sources = '''
+'''
+
 try:  # distributed version
     Import('env')
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
 except: # local version
     root = None
     env = Environment()
@@ -23,12 +28,11 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
     SConscript('../lib/SConstruct')
+    src = glob.glob('[a-z]*.c')
 
-# env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = glob.glob('[a-z]*.c')
 src.remove('predicates.c')
 
 for source in src:
@@ -67,7 +71,6 @@ if root:
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)
-# env.Append(SCANNERS=CScan)
 
 # 	$Id$
 

@@ -34,12 +34,12 @@ int main (int argc, char *argv[])
     float dt;		/* time sampling interval 	*/
     float dz;		/* migrated time sampling interval */
     float dw;	        /* frequency sampling interval */
-    float dx;		/* spatial sampling interval	*/
+    float x0, dx;	/* spatial origin, sampling interval	*/
     float h0, dh;       /* offset origin, sampling interval */
     float **vt, *v, v0;	/* velocities		*/
-    float **p,**q;	/* input, output data		*/
+    float *p,**q;	/* input, output data		*/
 
-    float complex **cp;	   /* complex input		*/
+    float complex ***cp;	   /* complex input		*/
 
     bool inv;             /* modeling or migration        */
     bool depth;           /* depth or time                */
@@ -61,9 +61,6 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
     /* stability parameter */
 
-    if (!sf_histint(in,"n2",&nx)) nx = 1;
-    if (!sf_histfloat(in,"d2",&dx)) sf_error ("No d2= in input");
-
     if (NULL == sf_getstring("velocity")) {
 	/* velocity file */
 	if (!sf_getfloat("vel",&v0)) sf_error ("Need vel=");
@@ -82,6 +79,25 @@ int main (int argc, char *argv[])
 	/* Time sampling (for modeling) */
 	sf_putint(out,"n1",nt);
 	sf_putfloat(out,"d1",dt);
+
+	if (!sf_histint(in,"n2",&nx)) nx=1;
+	if (!sf_histfloat(in,"d2",&dx)) sf_error ("No d2= in input");
+	if (!sf_histfloat(in,"o2",&x0)) x0=0.;
+
+	if (!sf_histint(in,"nh",&nh)) sf_error("Need nh=");
+	/* Number of offsets (for modeling) */
+	if (!sf_histfloat(in,"dh",&dh)) sf_error ("Need dh=");
+	/* Offset sampling (for modeling) */
+	if (!sf_histfloat(in,"h0",&h0)) h0=0.;
+        /* Offset origin (for modeling) */
+	
+	sf_putint(out,"n2",nh);
+	sf_putfloat(out,"d2",dh);
+	sf_putfloat(out,"o2",h0);
+
+	sf_putint(out,"n3",nx);
+	sf_putfloat(out,"d3",dx);
+	sf_putfloat(out,"o3",x0);
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
@@ -106,6 +122,20 @@ int main (int argc, char *argv[])
 	}
 	sf_putint(out,"n1",nz);
 	sf_putfloat(out,"d1",dz);
+	
+	if (!sf_histint(in,"n2",&nh)) nh=1;
+	if (!sf_histfloat(in,"d2",&dh)) sf_error ("No d2= in input");
+	if (!sf_histfloat(in,"o2",&h0)) h0=0.;
+	
+	if (!sf_histint(in,"n3",&nx)) nx=1;
+	if (!sf_histfloat(in,"d3",&dx)) sf_error ("No d3= in input");
+	if (!sf_histfloat(in,"o3",&x0)) x0=0.;
+
+	sf_putint(out,"n2",nx);
+	sf_putfloat(out,"d2",dx);
+	sf_putfloat(out,"o2",x0);
+
+	sf_putint(out,"n3",1);
     }
     
     vt = sf_floatalloc2(nz,nx);
@@ -124,7 +154,7 @@ int main (int argc, char *argv[])
     for (iz=0; iz < nz; iz++) {
 	v[iz] = 0.;
 	for (ix=0; ix < nx; ix++) {
-	    vt[ix][iz] = 4./(vt[ix][iz]*vt[ix][iz]);
+	    vt[ix][iz] = 1./(vt[ix][iz]*vt[ix][iz]);
 	    v[iz] += vt[ix][iz];
 	}
 	v[iz] /= nx;
@@ -136,27 +166,33 @@ int main (int argc, char *argv[])
     dw = 2.0*SF_PI/(ntfft*dt);
 	
     /* allocate space */
-    p = sf_floatalloc2(ntfft,nx);
+    p = sf_floatalloc(ntfft);
     q = sf_floatalloc2(nz,nx);
-    cp = sf_complexalloc2(nw,nx);
+    cp = sf_complexalloc3(nw,nh,nx);
 
     fft = kiss_fftr_alloc(ntfft,inv? 1: 0,NULL,NULL);
 
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
 	    sf_floatread(q[ix],nz,in);
-	} else {    
-	    sf_floatread(p[ix],nt,in);
-
-	    /* pad with zeros and Fourier transform t to w */
-	    for (it=nt; it<ntfft; it++) {
-		p[ix][it] = 0.0;
+	} else { 
+	    for (iz=0; iz < nz; iz++) {
+		q[iz] = 0.;
 	    }
+   
+	    for (ih=0; ih < nh; ih++) {
+		sf_floatread(p,nt,in);
 
-	    kiss_fftr(fft, p[ix], (kiss_fft_cpx *) cp[ix]);
+		/* pad with zeros and Fourier transform t to w */
+		for (it=nt; it<ntfft; it++) {
+		    p[it] = 0.0;
+		}
 
-	    for (it=0; it<nw; it++)
-		cp[ix][it] /= ntfft;
+		kiss_fftr(fft, p, (kiss_fft_cpx *) cp[ix][ih]);
+
+		for (it=0; it<nw; it++)
+		    cp[ix][ih][it] /= ntfft;
+	    }
 	}
     }
 
@@ -164,17 +200,20 @@ int main (int argc, char *argv[])
 	  nw, dw, 
 	  nz, dz, 
 	  nx, dx,
+	  nh, dh, h0,
 	  vt, v,
 	  cp, q);
     
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
-	    /* Fourier transform w to t (including FFT scaling) */
-
-	    kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix], p[ix]);
-	    for (it=0; it<nt; it++)
-		p[ix][it] /= ntfft;
-	    sf_floatwrite (p[ix],nt,out);
+	    for (ih=0; ih < nh; ih++) {
+		
+		/* Fourier transform w to t (including FFT scaling) */
+		kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix][ih], p);
+		for (it=0; it<nt; it++)
+		    p[it] /= ntfft;
+		sf_floatwrite (p,nt,out);
+	    }
 	} else {
 	    sf_floatwrite (q[ix],nz,out);
 	}

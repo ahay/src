@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
 	hilbert(data,hilb);
-	
+
 	if (!hlb) {
 	    for (i1=0; i1 < n1; i1++) {
 		hilb[i1] = hypotf(data[i1],hilb[i1]);
