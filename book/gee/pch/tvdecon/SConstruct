@@ -20,6 +20,29 @@ Flow('in',waves,'add ${SOURCES[1:%d]}' % len(waves))
 
 Flow('flt',None,'spike n1=1 n2=1 mag=-1')
 Flow('lag',None,'spike n1=1 | dd data_format=native_int')
+Flow('pch',None,'spike n1=400 n2=1 mag=0 | dd data_format=native_int')
 
+decs = ['in']
+labels = 'TVdecon input'
+for niter in [1,2,3,4,100]:
+    npef = 'npef%d' % niter
+    nlag = 'nlag%d' % niter
+    tvdec = 'tvdec%d' % niter
+    decs.append(tvdec)
+    labels = labels + ': iter=%d' % niter
+    
+    Flow([npef,nlag],'in flt pch lag',
+         '''
+         npef epsilon=0 filt=${SOURCES[1]} filt_pch=${SOURCES[2]}
+         filt_lag=${SOURCES[3]} lag=${TARGETS[1]}
+         a=3 niter=%d
+         ''' % niter)
+    Flow(tvdec,['in',npef],'nhelicon filt=${SOURCES[1]}')
+
+Result('tvdecon',decs,
+       '''
+       cat axis=2 ${SOURCES[1:%d]} |
+       dots yreverse=1 strings=1 connect=3 labels="%s"
+       ''' % (len(decs),labels))
 
 End()

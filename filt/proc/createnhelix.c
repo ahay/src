@@ -22,6 +22,7 @@ nfilter createnhelix(int dim, int *nd, int *center, int *gap, int *na,
     for (i=0; i < n123; i++) {
 	if (pch[i] > np) np=pch[i];
     }
+    np++;
 
     nh = sf_intalloc(np);
     for (ip=0; ip < np; ip++) {
@@ -32,9 +33,10 @@ nfilter createnhelix(int dim, int *nd, int *center, int *gap, int *na,
 	for (i=0; i < aa->nh; i++) {
 	    nsaa->hlx[ip]->lag[i] = aa->lag[i];
 	}
-	deallocatehelix(aa);
 	nbound(ip, dim, nd, na, nsaa); 
     }
+
+    deallocatehelix(aa);
 
     return nsaa;
 }

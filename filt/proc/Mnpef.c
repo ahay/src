@@ -137,19 +137,18 @@ int main(int argc, char* argv[])
     sf_putint(flt,"n1",nf);
     sf_putint(flt,"n2",np);
 
+    sf_putint(lag,"n1",nf);
+    sf_putint(lag,"n2",np);
+
     for (i=2; i < dim; i++) {
 	sprintf(varname,"n%d",i+1);
 	sf_putint(flt,varname,1);
-    }
-
-    sf_putint(lag,"n1",nf);
-
-    for (i=1; i < dim; i++) {
-	sprintf(varname,"n%d",i+1);
 	sf_putint(lag,varname,1);
     }
 
-    sf_intwrite(aa->hlx[0]->lag,nf,lag);
+    for (ip=0; ip < np; ip++) {
+	sf_intwrite(aa->hlx[ip]->lag,nf,lag);
+    }
     sf_fileclose(lag);
 
     if (NULL != sf_getstring("maskout")) {
@@ -168,7 +167,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(reg,"n1",&nbf)) sf_error("No n1= in filt");
     if (!sf_histint(reg,"n2",&nbp)) sf_error("No n2= in filt");
     
-
     if (NULL != sf_getstring("filt_pch")) {
 	patch = sf_input("filt_pch");
 	if (SF_INT != sf_gettype(patch)) sf_error("Need int filt_pch");
@@ -188,14 +186,13 @@ int main(int argc, char* argv[])
 	nh[i] = nbf;
     }
     
-    for (ig=0; ig < nf; ig++) {
+    for (id=ig=0; ig < nf; ig++) {
 	for (ip=0; ip < np; ip++, id++) {
 	    pch[id] = (NULL != pp)? pp[ip]: ip;
 	}
     }
 
     bb = nallocate (nbp, nf*np, nh, pch);
-
 
     if (NULL == (lagfile = sf_getstring("filt_lag")) &&
 	NULL == (lagfile = sf_histstring(reg,"lag"))) 

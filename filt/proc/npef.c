@@ -18,7 +18,7 @@ void find_pef(int nd, float *dd, nfilter aa, nfilter rr,
     npolydiv2_init( nr, rr);
 
     sf_solver_prec(nhconest_lop, sf_cgstep, npolydiv2_lop,
-		   nr, nr, nd, flt, dd, niter, eps);
+		   nr, nr, nd, flt, dd, niter, eps, "end");
     sf_cgstep_close();
     npolydiv2_close();
 

@@ -9,8 +9,8 @@ decon deburst depth2time despike dip dip2 dipfilter dix envelope extract
 fft1 fft2 fft3 fint1 flat fourvc frame helicon hole idempatch igrad imospray
 impl1 impl2 infill inmo intbin invbin1 kolmog lapfill levint light
 lopef losignoi lpad lpef make misif miss miss1 miss2 miss3 monof monof2
-msmiss mspef nmo noise npef parcel pef prestolt pwd radon randrefl reshape
-ricker signoi shapebin shapebin1 shot2cmp shotholes sigmoid slice
+msmiss mspef nhelicon nmo noise npef parcel pef prestolt pwd radon randrefl
+reshape ricker signoi shapebin shapebin1 shot2cmp shotholes sigmoid slice
 smooth smoothder smoothreg smoothreg2 spectra spectra2 spline stolt
 stretch synmarine taupmo tentwt time2depth tpow trismooth2 vscan velmod
 warp1 warpscan wilson window1 window2 window3
@@ -75,4 +75,4 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.4 2004/06/18 01:06:45 fomels Exp $	
+# 	$Id: SConstruct,v 1.5 2004/06/20 22:05:07 fomels Exp $	
