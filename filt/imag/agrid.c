@@ -23,7 +23,7 @@
 #include "agrid.h"
 #include "acell.h"
 
-#ifndef _acell_h
+#ifndef _agrid_h
 
 typedef struct AGrid *agrid;
 /* abstract data type */
