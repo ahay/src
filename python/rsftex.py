@@ -139,13 +139,10 @@ def pstexpen(target=None,source=None,env=None):
         space=0.
     else:
         space=float(space)
-    opts = os.environ.get('PSTEXPENOPTS')
+    opts = os.environ.get(os.path.splitext(os.path.basename(eps))[0]+'.pspen')
     if not opts:
-        opts = ''
-    pstexpenopts = env.get('opts')
-    if not pstexpenopts:
-        pstexpenopts = 'color=n fat=1 fatmult=1.5 invras=y'
-    opts = string.join([opts,pstexpenopts],' ')
+        opts = os.environ.get('PSTEXPENOPTS',
+                              'color=n fat=1 fatmult=1.5 invras=y')
     print opts
     head = string.split(
         commands.getoutput(sep +
@@ -358,7 +355,7 @@ if acroread:
                     'cat $SOURCES | %s -toPostScript | lpr' % acroread,
                     src_suffix='.pdf',suffix='.print')
 
-Build = Builder(action = Action(pstexpen,varlist=['opts']),
+Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
 
 if epstopdf:
@@ -487,7 +484,7 @@ class TeXPaper(Environment):
             self.Append(BUILDERS={'Math':Math})
         self.scons = []
         self.Dir()
-    def Dir(self,topdir='.',resdir='Fig',pstexpen=None):
+    def Dir(self,topdir='.',resdir='Fig'):
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
              dir = os.path.dirname(scons)
              html = dir+'.html'
@@ -503,7 +500,7 @@ class TeXPaper(Environment):
         for fig in glob.glob('%s/[a-z]*/%s/.*%s' % (topdir,resdir,vpsuffix)):
              eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
              figdir = os.path.join(self.docdir,os.path.dirname(eps))
-             self.Build(eps,fig,opts=pstexpen)
+             self.Build(eps,fig)
              if epstopdf:
                   pdf = re.sub(pssuffix+'$','.pdf',eps)
                   self.PDFBuild(pdf,eps)
