@@ -32,7 +32,7 @@ for prog in mains:
          if prog in alias.keys():
 	       copy = string.replace(str(main[0]),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,copy),main[0])
-               doc = os.path.splitext(str(main[0]))[0]
+               doc = os.path.splitext(copy)[0]
 	       docmerge = configure.docextra(docmerge,'sf'+prog,doc)
 
 ######################################################################
