@@ -190,7 +190,7 @@ int main (int argc, char* argv[])
 	    zerosignal = axis +  tracehigh * (0.-av)*range;
 	    
 	    if(NULL != labels[0] && NULL != labels[i2]) {
-		vp_color(5);
+		vp_color(VP_CYAN);
 		text(0.03*screenwide, zerosignal+.2*dd2, 
 		     labelsz, 0, labels[i2]);
 	    }
@@ -221,13 +221,13 @@ int main (int argc, char* argv[])
 		}
 
 		if(seemean) {
-		    vp_color(1);
+		    vp_color(VP_BLUE);
 		    move(marginl, zerosignal);
 		    draw(-marginr+screenwide, zerosignal);
 		}
 
 		if (connect) {
-		    vp_color(7);
+		    vp_color(VP_WHITE);
 		    for(i1=0; i1<n1; i1++) {
 			y = axis +  tracehigh * (data[i2][i1]-av)*range;
 			switch (connect) {
@@ -271,7 +271,7 @@ int main (int argc, char* argv[])
 		for (i1=0; i1<n1; i1++) {
 		    y = axis +  tracehigh * (data[i2][i1]-av)*range;
 		    x = marginl + dd1/2 + i1*dd1;
-		    vp_color( 6);
+		    vp_color(VP_YELLOW);
 		    if (strings) {
 			signal = y - zerosignal;
 			if(fabsf(signal)  > epsilon ) {
@@ -297,7 +297,7 @@ int main (int argc, char* argv[])
 	    x = marginl + .5*( screenwide-marginl-marginr);
 	    y = screenhigh - margint;
 
-	    vp_color( 5);
+	    vp_color(VP_CYAN);
 	    vp_tjust(TH_CENTER,TV_NORMAL);
 	    text (x, y, newsize, 0, title);
 	    vp_tjust(TH_NORMAL,TV_NORMAL);
@@ -349,9 +349,9 @@ static void circle(int corners,
 	vy[i] = y + radius * cosf(arg);
     }
 
-    vp_color(3);
+    vp_color(VP_PURPLE);
     vp_area(vx,vy,corners,1,1,1);
 }
 
-/* 	$Id: dots.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: dots.c,v 1.8 2004/04/01 02:13:03 fomels Exp $	 */
 
