@@ -49,10 +49,12 @@ void  int1_init (float* coord, float o1, float d1, int n1,
     }
 }
 
-void  int1_lop (bool adj, bool add, int nm, int nd, float* x, float* ord)
+void  int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 { 
     int id, i0, i, im;
     
+    if (ny != nd) sf_error("%s: wrong data size: %d != %d",__FILE__,ny,nd);
+
     adjnull (adj,add,nm,nd,x,ord);
 
     for (id=0; id < nd; id++) {

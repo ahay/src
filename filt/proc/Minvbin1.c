@@ -6,6 +6,7 @@
 #include "int1.h"
 #include "interp.h"
 #include "tcai1.h"
+#include "triangle1.h"
 #include "causint.h"
 #include "cgstep.h"
 #include "bigsolver.h"
@@ -93,7 +94,9 @@ int main (int argc, char* argv[])
 	    aa[1] = -2.;
 	    aa[2] = 1.;
 	}
-    }   
+    } else if (filt > 1) {
+	triangle1_init (filt, nx);
+    }
 
     mm = sf_floatalloc(nx);
     dd = sf_floatalloc(nd);
@@ -107,6 +110,9 @@ int main (int argc, char* argv[])
 	    if (filt==1) {
 		solver_prec(int1_lop, cgstep, causint_lop, nx, nx, nd,
 			    mm, dd, niter, eps, "end");
+	    } else {
+		solver_prec(int1_lop, cgstep, triangle1_lop, nx, nx, nd,
+			    mm, dd, niter, eps, "verb", false, "end");
 	    }
 	} else {
 	    solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 

@@ -57,29 +57,31 @@ void  int2_init (float** coord,
     }
 }
 
-void  int2_lop (bool adj, bool add, int nm, int nd, float* x, float* ord)
+void  int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 { 
-  int id, i0, j0, i, j, im;
-  float w;
+    int id, i0, j0, i, j, im;
+    float w;
 
-  adjnull (adj,add,nm,nd,x,ord);
+    if (ny != nd) sf_error("%s: wrong dimensions: %d != %d",__FILE__,ny,nd);
 
-  for (id=0; id < nd; id++) {
-      if (mask[id]) continue;
-      i0 = nxy[id][0]; 
-      j0 = nxy[id][1]; 
-      for (j = MAX(0,-j0); j < MIN(nf,m2-j0); j++) {
-	  w = w2[id][j];
-	  for (i = MAX(0,-i0); i < MIN(nf,m1-i0); i++) { 
-	      im = (i+i0) + (j+j0)*m1;
-	      if( adj) { 
-		  x[im] += ord[id] * w * w1[id][i];
-	      } else {
-		  ord[id] += x[im] * w * w1[id][i];
-	      }
-	  }
-      }
-  }
+    adjnull (adj,add,nm,nd,x,ord);
+
+    for (id=0; id < nd; id++) {
+	if (mask[id]) continue;
+	i0 = nxy[id][0]; 
+	j0 = nxy[id][1]; 
+	for (j = MAX(0,-j0); j < MIN(nf,m2-j0); j++) {
+	    w = w2[id][j];
+	    for (i = MAX(0,-i0); i < MIN(nf,m1-i0); i++) { 
+		im = (i+i0) + (j+j0)*m1;
+		if( adj) { 
+		    x[im] += ord[id] * w * w1[id][i];
+		} else {
+		    ord[id] += x[im] * w * w1[id][i];
+		}
+	    }
+	}
+    }
 }
 
 void int2_close (void)

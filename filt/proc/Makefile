@@ -3,8 +3,8 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = bandpass bin bin1 depth2time dip envelope invbin1 nmo noise \
-	pwd randrefl ricker sigmoid smooth spectra taup taupmo \
+PROGS = bandpass bin bin1 depth2time dip envelope fft1 invbin1 nmo noise \
+	pwd randrefl reshape ricker sigmoid smooth spectra taup taupmo \
 	time2depth warp1
 
 bandpass = butterworth
@@ -13,11 +13,14 @@ bin1 = int1 interp adjnull
 depth2time = stretch tridiagonal
 dip = dip3 divide1 allp3 tridiagonal apfilt
 envelope = triangle
-invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint
+fft1 = empty
+invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint \
+	triangle1 triangle
 nmo = fint1 tridiagonal spline interp_spline extend banded
 noise = randn
 pwd = allp3 apfilt
 randrefl = randn
+reshape = empty
 ricker = empty
 sigmoid = random
 smooth = triangle

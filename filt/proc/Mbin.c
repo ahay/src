@@ -8,9 +8,8 @@
 
 int main (int argc, char* argv[])
 {
-    int id, nd, im, nm, nt, it, nx, ny, hdr[SF_NKEYS];
-    int xkey, ykey, interp;
-    float *mm, *count, *dd, **xy;
+    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp;
+    float *mm, *count, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, clip;
     sf_file in, out, head, fold;
 
@@ -29,15 +28,22 @@ int main (int argc, char* argv[])
     xy = sf_floatalloc2(2,nd);
     head = sf_input("head");
 
+    if (SF_FLOAT != sf_gettype(head)) sf_error("Need float header");
+    if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");
+    if (!sf_histint(head,"n2",&n2) || n2 != nd) 
+	sf_error("Wrong n2= in head");
+
+    hdr = sf_floatalloc(nk);
+
     ymin = xmin = +FLT_MAX;
     ymax = xmax = -FLT_MAX;
     for (id=0; id<nd; id++) {	
-	sf_read (hdr,sizeof(int),SF_NKEYS,head);
-	f = hdr[xkey]/1000.; 
+	sf_read (hdr,sizeof(float),nk,head);
+	f = hdr[xkey]; 
 	if (f < xmin) xmin=f;
 	if (f > xmax) xmax=f;
 	xy[id][0] = f;
-	f = hdr[ykey]/1000.; 
+	f = hdr[ykey]; 
 	if (f < ymin) ymin=f;
 	if (f > ymax) ymax=f;
 	xy[id][1] = f;
