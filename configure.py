@@ -89,6 +89,8 @@ def libs(context):
         LIBS.append('nsl')
     elif sys.platform[:6] == 'cygwin':
         LIBS.append('rpc')
+    elif sys.platform[:6] == 'darwin':
+        LIBS.append('mx')
     text = '''
     #include <rpc/types.h>
     #include <rpc/xdr.h>
