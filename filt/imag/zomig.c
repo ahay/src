@@ -92,7 +92,8 @@ void zomig_init(bool verb_,
 	     ds);
 
     /* precompute taper */
-    taper2_init(amy.n,amx.n,
+    taper2_init(amy.n,
+		amx.n,
 		SF_MIN(tmy,amy.n-1),
 		SF_MIN(tmx,amx.n-1) );
     

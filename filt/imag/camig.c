@@ -93,7 +93,9 @@ void camig_init(bool verb_,
 	     ds);
 
     /* precompute taper */
-    taper3_init(ahx.n,amy.n,amx.n,
+    taper3_init(ahx.n,
+		amy.n,
+		amx.n,
 		SF_MIN(thx,ahx.n-1),
 		SF_MIN(tmy,amy.n-1),
 		SF_MIN(tmx,amx.n-1) );

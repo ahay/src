@@ -94,7 +94,8 @@ void srmig_init(bool verb_,
 	     ds);
 
     /* precompute taper */
-    taper2_init(ay.n,ax.n,
+    taper2_init(ay.n,
+		ax.n,
 		SF_MIN(ty,ay.n-1),
 		SF_MIN(tx,ax.n-1) );
 
