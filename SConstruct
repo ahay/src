@@ -59,7 +59,7 @@ env.Append(CPPPATH=['../../include'],
            LIBPATH=['../../filt/lib'],
            LIBS=['rsf','m'])
 
-if os.environ.get('OSTYPE') == 'solaris':
+if sys.platform[:5] == 'sunos':
     env.Append(LIBS=['nsl'])
     env['CCFLAGS']='-xO2'
 

@@ -108,7 +108,9 @@ vpsuffix = '.vpl'
 # suffix for eps files
 pssuffix = '.eps'
 # path bor binary files (change later for compliance with SEPlib)
-datapath = os.path.join(os.path.join(os.environ.get('HOME'),'scr'),'')
+datapath = os.environ.get('DATAPATH')
+if not datapath:
+    datapath = os.path.join(os.path.join(os.environ.get('HOME'),'scr'),'')
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -353,7 +355,7 @@ class Project(Environment):
 		self.Alias('read',self.Read('paper'))
             self.junk = ['paper.aux','paper.log','paper.bbl',
                          'paper.blg','paper.ps','paper.dvi']
-            Clean('paper.pdf',self.junk)
+#            Clean('paper.pdf',self.junk)
         else:
             self.junk = []
     def Flow(self,target,source,flow,clean=1,stdout=1,stdin=1,
