@@ -1,7 +1,7 @@
 #ifndef _vp_coltab_h
 #define _vp_coltab_h
 
-void name2coltab (char *colname, int nocol, 
+void name2coltab (const char *colname, int nocol, 
 		  float *red, float *green, float *blue);
 
 #endif

@@ -8,7 +8,7 @@
 static void hue2rgb (float hue,float *red, float *green, float *blue);
 
 /* nocol is >=2 and <= 256 */
-void name2coltab (char *colname, int nocol, 
+void name2coltab (const char *colname, int nocol, 
 		  float *red, float *green, float *blue)
 {
     int i, ic, c;

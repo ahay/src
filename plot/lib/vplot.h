@@ -115,5 +115,6 @@ void vp_uarea (const float *xp, const float *yp, int np,
 void vp_where (float *x, float *y);
 void vp_style (vp_plotstyle st);
 void vp_setdash (const float *dash, const float *gapp, int np);
+void vp_rascoltab (int nreserve, const char *colname);
 
 #endif

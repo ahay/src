@@ -362,7 +362,7 @@ void vp_purge ()
  * "colfile" name.
  */
 
-void vp_rascoltab (int nreserve, char *colname)
+void vp_rascoltab (int nreserve, const char *colname)
 {
     int i, j, k, incr, smap[256];
 /*
