@@ -12,6 +12,7 @@ Takes: < input.rsf head=header.rsf > binned.rsf
 #include "interp.h"
 #include "laplac2.h"
 #include "gauss2.h"
+#include "freqfilt2.h"
 
 int main (int argc, char* argv[])
 {
@@ -170,7 +171,7 @@ int main (int argc, char* argv[])
 	sf_read (dd,sizeof(float),nd,in);
 
 	if (gauss) {
-	    sf_conjgrad(int2_lop, gauss2_lop, pp, mm, dd, niter);
+	    sf_conjgrad(int2_lop, freqfilt2_lop, pp, mm, dd, niter);
 	} else {
 	    sf_solver_reg(int2_lop,sf_cgstep,laplac2_lop,
 			  nm,nm,nd,mm,dd,niter,eps,"end");
@@ -183,4 +184,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mlapbin.c,v 1.1 2004/02/14 07:01:42 fomels Exp $	 */
+/* 	$Id: Mlapbin.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */

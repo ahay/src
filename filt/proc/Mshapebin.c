@@ -13,6 +13,7 @@ Takes: < input.rsf head=header.rsf > binned.rsf
 #include "laplac2.h"
 #include "gaussshape2.h"
 #include "triangle2.h"
+#include "freqfilt2.h"
 
 int main (int argc, char* argv[])
 {
@@ -21,7 +22,7 @@ int main (int argc, char* argv[])
     float *pp, *mm, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
     char *xk, *yk;
-    sf_file in, out, head;
+    sf_file in, out, head, pattern=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -161,11 +162,19 @@ int main (int argc, char* argv[])
 	    sf_error("wrong filt1=%g or filt2=%g",filt1,filt2);
 
 	if (gauss) {
-	    a[0] = sqrtf((filt1*filt1-1.)/12.);
-	    a[2] = sqrtf((filt2*filt2-1.)/12.);
-	    a[1] = 0.;
+	    if (!sf_getfloat("a0",a))   a[0] = (filt1*filt1-1.)/12.;
+	    if (!sf_getfloat("b0",a+1)) a[1] = 0.;
+	    if (!sf_getfloat("c0",a+2)) a[2] = (filt2*filt2-1.)/12.;
+	    /* initial Gaussian shape parameters */
 
 	    gaussshape2_init(nx,ny);
+
+	    if (sf_getstring("pattern")) {
+		pattern = sf_input("pattern");
+	    } else { /* predefined Gaussian */
+		pattern = NULL;
+		gaussshape2_set2(a);
+	    }
 	} else {
 	    triangle2_init((int) filt1, (int) filt2, nx, ny);
 	}
@@ -183,14 +192,14 @@ int main (int argc, char* argv[])
 
 	if (shape) {
 	    if (gauss) {
-		/* bin */
-		int2_lop (true,false,nm,nd,mm,dd);
-
-		/* estimate shaper */
-		gaussshape2_set(a, nx, ny, mm, 100);
+		if (NULL != pattern) {
+		    /* estimate shaper */
+		    sf_read (mm,sizeof(float),nm,pattern);
+		    gaussshape2_set(a, mm, 100);
+		}
 
 		/* inverse interpolation */
-		sf_conjgrad(int2_lop, gaussshape2_lop, pp, mm, dd, niter);
+		sf_conjgrad(int2_lop, freqfilt2_lop, pp, mm, dd, niter);
 	    } else {
 		sf_conjgrad(int2_lop, triangle2_lop, pp, mm, dd, niter);
 	    }
@@ -206,4 +215,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.2 2004/02/25 16:15:10 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.3 2004/02/26 05:16:08 fomels Exp $	 */

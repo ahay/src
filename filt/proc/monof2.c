@@ -137,8 +137,9 @@ void monof2(float **data, int niter, float* a,
 	
 	for (j=0; j < 3; j++) {
 	    a[j] += da[j];
-	    if (a[j] < 0.) a[j] = 0.;
 	}
+	if (a[0] < 0.) a[0] = 0.;
+	if (a[2] < 0.) a[2] = 0.;
 	
 	if (r2 < eps || da[0]*da[0] + da[1]*da[1] + da[2]*da[2] < eps) 
 	    break;
@@ -159,4 +160,4 @@ void monof2(float **data, int niter, float* a,
     if (verb) sf_warning ("%d iterations", iter);
 }
 
-/* 	$Id: monof2.c,v 1.1 2004/02/25 16:16:27 fomels Exp $	 */
+/* 	$Id: monof2.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */

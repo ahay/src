@@ -52,7 +52,7 @@ void monofshape_set(float a0, int n, float* pattern, int niter)
     for (iw=0; iw < nw; iw++) {
 	w = (iw-i0)*dw;
 	w *= w;
-	shape[iw] = expf(-f*w)/nfft;
+	shape[iw] = expf(-0.5*f*w)/nfft;
     } 
 }
 
@@ -91,4 +91,4 @@ void monofshape_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: monofshape.c,v 1.1 2004/02/14 06:57:16 fomels Exp $	 */
+/* 	$Id: monofshape.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */
