@@ -3,6 +3,15 @@
 
 #include <stdbool.h>
 
+/* aspect ratio, default window */
+#define VP_SCREEN_RATIO 0.75 
+/* height in inches, rotated */    
+#define VP_ROTATED_HEIGHT 7.5
+/* height in inches, default device */ 
+#define VP_STANDARD_HEIGHT 10.24
+/* absolute maximum x or y in inches */
+#define VP_MAX 54.6           
+
 enum {
     RPERIN=600,         /* vplot units per inch */
     HATCHPERIN=100,	/* Hatch units per inch */
@@ -20,6 +29,9 @@ enum {
      */
     TEXTVECSCALE=10,
 };
+
+enum {TH_NORMAL, TH_LEFT, TH_CENTER, TH_RIGHT, TH_SYMBOL};
+enum {TV_NORMAL, TV_BOTTOM, TV_BASE, TV_HALF, TV_CAP, TV_TOP, TV_SYMBOL};
 
 enum {
     VP_SETSTYLE         = 'S',
@@ -76,6 +88,9 @@ void vp_draw (float x,float  y);
 void vp_udraw (float x,float  y);
 void vp_utext (float x, float y, int size, int orient, const char *string);
 void vp_text (float x, float y, int size, int orient, const char *string);
+void vp_gtext (float x, float y, 
+	       float xpath, float ypath, 
+	       float xup, float yup, const char *string);
 void vp_orig (float x,float  y);
 void vp_uorig (float x,float  y);
 void vp_color (int col);
@@ -91,5 +106,12 @@ void vp_penup (void);
 void vp_pendn (float x, float y);
 void vp_upendn (float x, float y);
 void vp_erase (void);
+void vp_coltab (int color, float r, float g, float b);
+void vp_area (const float *xp, const float *yp, int np, 
+	      int fat, int xmask, int ymask);
+void vp_uarea (const float *xp, const float *yp, int np, 
+	       int fat, int xmask, int ymask);
+void vp_where (float *x, float *y);
+void vp_style (vp_plotstyle st);
 
 #endif

@@ -2,11 +2,11 @@ CC = gcc
 CFLAGS = -Wall -pedantic -O3
 CFLAGS = -Wall -pedantic -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -g
-CFLAGS = -std=gnu9x -Wall -pedantic -g
+CFLAGS = -std=gnu9x -Wall -pedantic -g -I../../seis/rsf
 
 DEPEND = -MM
 
-SRC = coltab vplot
+SRC = coltab gplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 

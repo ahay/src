@@ -5,11 +5,6 @@
 #include "vplot.h"
 #include "coltab.h"
 
-static const float VP_MAX=54.6;           /* absolute maximum x or y in inches */
-static const float SCREEN_RATIO=0.75;     /* aspect ratio, default window */
-static const float ROTATED_HEIGHT=7.5;    /* height in inches, rotated */
-static const float STANDARD_HEIGHT=10.24; /* height in inches, default device */ 
-
 static float fx=0.0, fy=0.0;             /* origin in inches */
 static float ufx=0.0, ufy=0.0;           /* origin in user units */
 static float xold=0.0, yold=0.0;         /* old pen position (in inches) */
@@ -606,11 +601,11 @@ void vp_stretch (float xmin, float ymin, float xmax, float ymax) {
     vp_orig (0., 0.);
 
     if (ROTATED == style) {
-	vp_scale (ROTATED_HEIGHT / (xmax - xmin), 
-		  (ROTATED_HEIGHT / SCREEN_RATIO) / (ymax - ymin));
+	vp_scale (VP_ROTATED_HEIGHT / (xmax - xmin), 
+		  (VP_ROTATED_HEIGHT / VP_SCREEN_RATIO) / (ymax - ymin));
     } else {
-	vp_scale ((STANDARD_HEIGHT / SCREEN_RATIO) / (xmax - xmin), 
-		  STANDARD_HEIGHT / (ymax - ymin));
+	vp_scale ((VP_STANDARD_HEIGHT / VP_SCREEN_RATIO) / (xmax - xmin), 
+		  VP_STANDARD_HEIGHT / (ymax - ymin));
     }
 }
 
