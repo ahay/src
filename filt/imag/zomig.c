@@ -54,10 +54,10 @@ void zomig_init(bool verb_,
 		axa az_          /* depth */,
 		axa aw_          /* frequency */,
 		axa ae_          /* experiment */,
-		axa amx_         /* i-line (data) */,
-		axa amy_         /* x-line (data) */,
-		axa alx_         /* i-line (slowness/image) */,
-		axa aly_         /* x-line (slowness/image) */,
+		axa amx_         /* i-line (data/image) */,
+		axa amy_         /* x-line (data/image) */,
+		axa alx_         /* i-line (slowness) */,
+		axa aly_         /* x-line (slowness) */,
 		int tmx, int tmy /* taper size */,
 		int pmx, int pmy /* padding in the k domain */,
 		int nrmax        /* maximum number of references */,
@@ -230,9 +230,9 @@ void zomig(bool inv  /* forward/adjoint flag */,
 
 /*------------------------------------------------------------*/
 
-void zodtm(bool inv     /* forward/adjoint flag */, 
-	  fslice topdata /* top data [nw][nmy][nmx] */,
-	  fslice botdata /* bot data [nw][nmy][nmx] */)
+void zodtm(bool inv    /* forward/adjoint flag */, 
+	   fslice data /* data [nw][nmy][nmx] */,
+	   fslice wfld /* wfld [nw][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
     int iz,iw,ie, ilx,ily;
@@ -247,7 +247,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 	    if (inv) { /* UPWARD DATUMING */
 		w = eps*aw.d + I*(aw.o+iw*aw.d);
 		
-		fslice_get(botdata,iw+ie*aw.n,wx[0]);
+		fslice_get(wfld,iw+ie*aw.n,wx[0]);
 		taper2(wx);
 		
 		fslice_get(slow,az.n-1,so[0]);
@@ -260,11 +260,11 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 		}
 		
 		taper2(wx);
-		fslice_put(topdata,iw+ie*aw.n,wx[0]);
+		fslice_put(data,iw+ie*aw.n,wx[0]);
 	    } else { /* DOWNWARD DATUMING */
 		w = eps*aw.d - I*(aw.o+iw*aw.d);
 		
-		fslice_get(topdata,iw+ie*aw.n,wx[0]);
+		fslice_get(data,iw+ie*aw.n,wx[0]);
 		taper2(wx);
 		
 		fslice_get(slow,0,so[0]);
@@ -277,7 +277,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 		}
 		
 		taper2(wx);
-		fslice_put(botdata,iw+ie*aw.n,wx[0]);
+		fslice_put(wfld,iw+ie*aw.n,wx[0]);
 	    } /* else */
 	} /* iw */
     } /* ie */

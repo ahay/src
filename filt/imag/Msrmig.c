@@ -38,21 +38,19 @@ int main (int argc, char *argv[])
     sf_file Fus;    /*   source wavefield file Us( nx, ny,nw) */
     sf_file Fur;    /* receiver wavefield file Us( nx, ny,nw) */
 
-    fslice slow;
-    fslice imag;
-    fslice sdat,rdat;
+    fslice slow,imag,sdat,rdat;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
 
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
+    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of refs */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on i-line wavenumber */
-    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on x-line wavenumber */
-    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper size */
-    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
+    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on x */
+    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on y */
+    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper on x   */
+    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper on y   */
     
     /* slowness parameters */
     Fs = sf_input ("slo");

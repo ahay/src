@@ -171,7 +171,7 @@ void srmig(fslice sdat /* source   data [nw][ny][nx] */,
 
     for (ie=0; ie<ae.n; ie++) {
 	for (iw=0; iw<aw.n; iw++) {
-	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
 	    
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d);
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d);

@@ -61,7 +61,7 @@ void writept3d(sf_file F, pt3d *v, int n, int k)
 /*< output point3d vector >*/
 {
     int i;
-    float w[3];
+    float w[4];
 
     for( i=0; i<n; i++) {
 	w[0]          = v[i].x;

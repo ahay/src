@@ -132,11 +132,12 @@ int main(int argc, char* argv[])
     }
 */
 
+    sf_floatread (cube[0],az.n*ax.n,Fc);
+
     /* output axes */
     aa.n=1;
     oaxa(Fl,&aa,2); if(verb) raxa(aa);
 
-    sf_floatread (cube[0],az.n*ax.n,Fc);
     sf_floatwrite(cube[0],az.n*ax.n,Fl);
 
     free(cube);

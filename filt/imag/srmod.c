@@ -173,7 +173,7 @@ void srmod(fslice dwfl /* source   data [nw][ny][nx] */,
     float complex w;
     
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d:",iw+1,aw.n);
+	if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	/* downgoing wavefield */

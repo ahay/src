@@ -1,4 +1,5 @@
 #include "axa.h"
+#include <string.h>
 
 #include "file.h"
 /*^*/
@@ -60,6 +61,7 @@ void oaxa(sf_file FF, axa *AA, const int i)
     sf_putfloat(FF,BB,AA->d);
 
     (void) snprintf(LL,7,"label%d",i);
+    if(NULL == AA->l ) AA->l=" ";
     sf_putstring(FF,LL,AA->l);
 }
 

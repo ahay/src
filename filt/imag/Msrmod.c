@@ -36,23 +36,19 @@ int main (int argc, char *argv[])
     sf_file Fu;     /*   upgoing wavefield file U ( nx, ny,nw) */
     sf_file Fr;     /* reflectivity */
 
-    fslice slow;
-    fslice dwfl;
-    fslice uwfl;
-    fslice wfld;
-    fslice refl;
+    fslice slow,dwfl,uwfl,wfld,refl;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
 
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
+    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of refs */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on i-line wavenumber */
-    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on x-line wavenumber */
-    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper size */
-    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
+    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on x */
+    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on y */
+    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper on x   */
+    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper on y   */
     
     /* slowness parameters */
     Fs = sf_input ("slo");
@@ -64,7 +60,7 @@ int main (int argc, char *argv[])
     Fu = sf_output("out"); sf_settype(Fu,SF_COMPLEX);
     Fr = sf_input ("ref");
 
-    if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex source wavefield");
+    if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex source wavefield");
     
     iaxa(Fd,&ax,1); ax.l="x"; oaxa(Fu,&ax,1);
     iaxa(Fd,&ay,2); ay.l="y"; oaxa(Fu,&ay,2);

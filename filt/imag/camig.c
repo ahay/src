@@ -54,11 +54,11 @@ void camig_init(bool verb_,
 		axa az_                   /* depth */,
 		axa aw_                   /* frequency */,
 		axa ae_                   /* experiment */,
-		axa amx_                  /* i-line (data) */,
-		axa amy_                  /* x-line (data) */,
+		axa amx_                  /* i-line (data/image) */,
+		axa amy_                  /* x-line (data/image) */,
 		axa ahx_                  /* half-offset */,
-		axa alx_                  /* i-line (slowness/image) */,
-		axa aly_                  /* x-line (slowness/image) */,
+		axa alx_                  /* i-line (slowness) */,
+		axa aly_                  /* x-line (slowness) */,
 		int tmx, int tmy, int thx /* taper size */,
 		int pmx, int pmy, int phx /* padding in the k domain */,
 		int nrmax                 /* maximum number of references */,
@@ -155,8 +155,8 @@ void camig_free()
 /*------------------------------------------------------------*/
 
 void camig(bool inv  /* forward/adjoint flag */, 
-	  fslice data /* data  [nw][nhx][nmy][nmx] */,
-	  fslice imag /* image [nz][nhx][nmy][nmx] */)
+	   fslice data /* data  [nw][nhx][nmy][nmx] */,
+	   fslice imag /* image [nz][nhx][nmy][nmx] */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,imy,imx,ihx,ilx,ily;
@@ -227,9 +227,9 @@ void camig(bool inv  /* forward/adjoint flag */,
 
 /*------------------------------------------------------------*/
 
-void cadtm(bool inv     /* forward/adjoint flag */, 
-	  fslice topdata /* top data [nw][nhx][nmy][nmx] */,
-	  fslice botdata /* bot data [nw][nhx][nmy][nmx] */)
+void cadtm(bool inv    /* forward/adjoint flag */, 
+	   fslice data /* data [nw][nhx][nmy][nmx] */,
+	   fslice wfld /* wfld [nw][nhx][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
     int iz,iw,ie, ilx,ily;
@@ -244,7 +244,7 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 	    if (inv) { /* UPWARD DATUMING */
 		w = eps*aw.d + I*(aw.o+iw*aw.d);
 		
-		fslice_get(botdata,iw+ie*aw.n,wx[0][0]);
+		fslice_get(wfld,iw+ie*aw.n,wx[0][0]);
 		taper3(wx);
 		
 		fslice_get(slow,az.n-1,so[0]);
@@ -255,11 +255,11 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 		}
 		
 		taper3(wx);
-		fslice_put(topdata,iw+ie*aw.n,wx[0][0]);
+		fslice_put(data,iw+ie*aw.n,wx[0][0]);
 	    } else { /* DOWNWARD DATUMING */
 		w = eps*aw.d - I*(aw.o+iw*aw.d);
 		
-		fslice_get(topdata,iw+ie*aw.n,wx[0][0]);
+		fslice_get(data,iw+ie*aw.n,wx[0][0]);
 		taper3(wx);
 		
 		fslice_get(slow,0,so[0]);
@@ -270,7 +270,7 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 		}
 		
 		taper3(wx);
-		fslice_put(botdata,iw+ie*aw.n,wx[0][0]);
+		fslice_put(wfld,iw+ie*aw.n,wx[0][0]);
 	    } /* else */
 	} /* iw */
     } /* ie */
