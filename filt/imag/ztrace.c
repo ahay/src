@@ -1,3 +1,22 @@
+/* Multiple arrivals by marching down. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -15,6 +34,13 @@
 #define MAX(a,b) ((a)>(b))?(a):(b)
 #endif
 
+#ifndef _ztrace_h
+
+#define NS 4
+/*^*/
+
+#endif
+
 static int nx, nz, na, nax, nt;
 static float dx,dz,da, x0,z0,a0;
 static eno2 cvel, fslc[NS];
@@ -24,11 +50,21 @@ static const float eps = 1.e-5;
 
 static void psnap (float* p, float* q, int* iq);
 
-void ztrace_init (int order, int iorder,
-		  int nx1, int nz1, int na1, int nt1,
-		  float dx1, float dz1, float da1,
-		  float x01, float z01, float a01,
-		  float** vel, float** slice_in)
+void ztrace_init (int order        /* interpolation order for velocity */, 
+		  int iorder       /* interpolation order for values */,
+		  int nx1          /* lateral samples */, 
+		  int nz1          /* depth samples */, 
+		  int na1          /* angle samples */, 
+		  int nt1          /* ray tarcing steps */,
+		  float dx1        /* lateral sampling */, 
+		  float dz1        /* depth sampling */, 
+		  float da1        /* angle sampling */,
+		  float x01        /* lateral origin */, 
+		  float z01        /* depth origin */, 
+		  float a01        /* angle origin */,
+		  float** vel      /* slowness [nx][nz] */, 
+		  float** slice_in /* depth slice [nx][na][NS] */)
+/*< Initialize >*/
 {
     int is;
 
@@ -39,7 +75,7 @@ void ztrace_init (int order, int iorder,
     nax = na*nx; nt = nt1;
 
     cvel = eno2_init (order, nz, nx);
-    eno2_set (cvel, vel); /* vel is slowness */
+    eno2_set (cvel, vel);
 
     known = sf_boolalloc (nax);
 
@@ -51,6 +87,7 @@ void ztrace_init (int order, int iorder,
 }
 
 void ztrace_close (void)
+/*< Free allocated storage >*/
 {
     int is;
 
@@ -65,7 +102,9 @@ void ztrace_close (void)
     grad2fill_close ();
 }
 
-void ztrace_step (int kz) {
+void ztrace_step (int kz) 
+/*< Step in depth >*/
+{
     float v, v0, g[2], g0[2], t, z, x, a, p[2], q, s, sx, sz;
     int is, it, nk, kx, kp, k, ix, iz, ip, jx, jz;
     bool onx, onz;
@@ -178,7 +217,9 @@ void ztrace_step (int kz) {
     }
 }
 
-static void psnap (float* p, float* q, int* iq) {
+static void psnap (float* p, float* q, int* iq) 
+/* snap to the grid */
+{
     int ia;
     float a2, a;
 

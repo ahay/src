@@ -1,4 +1,4 @@
-import os, sys, re, string
+import os, sys, re, string, glob
 sys.path.append('../..')
 import configure
 
@@ -29,18 +29,13 @@ except: # local version
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = '''
-aastretch acell agrid atela cell celltrace ctridiagonal delaunay dmo dsr
-eno eno2 eno3 fastmarch fdmig fzero gazdag grad2fill grid2 grid3 halfint
-heap igrad2 kirchnew list_struct mutter neighbors node offruffp pick0
-pshift quadratic raytracing split1 tree
-'''
+src = glob.glob('[a-z]*.c')
+src.remove('predicates.c')
 
-for source in Split(src):
-    env.Include(source,prefix='')
-    obj = env.StaticObject(source+'.c')
-    env.Depends(obj,source+'.h')
-#    objects.append(obj)
+for source in src:
+    inc = env.Include(source,prefix='')
+    obj = env.StaticObject(source)
+    env.Depends(obj,inc)
 
 mains = Split(progs)
 
