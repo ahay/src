@@ -19,6 +19,7 @@ def depends(env,list,file):
 def check_all(context):
     cc(context)
     ar(context)
+    libs(context)
     api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
         cxx(context)
@@ -27,18 +28,42 @@ def check_all(context):
     if 'fortran-90' in api:
         f90(context)
 
+def libs(context):
+    context.Message("checking libraries ... ")
+    LIBS = string.split(context.env.get('LIBS','m'))
+    if sys.platform[:5] == 'sunos':
+        LIBS.append('nsl')
+    elif sys.platform[:6] == 'cygwin':
+        LIBS.append('rpc')
+    text = '''
+    #include <rpc/types.h>
+    #include <rpc/xdr.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }
+    '''
+    res = context.TryRun(text,'.c')
+    if res[0]:
+        context.Result(str(LIBS))
+        context.env['LIBS'] = LIBS
+    else:
+        context.Result(0)
+        context.Message("Please install RPC libraries.\n")
+        sys.exit(1)
+
 def ar(context):
     context.Message("checking ar ... ")
-    AR = context.env.get('AR')
+    AR = context.env.get('AR',WhereIs('ar'))
     if AR:
-        context.Result(AR)   
+        context.Result(AR)
+        context.env['AR'] = AR
     else:
         context.Result(0)
         sys.exit(1)
 
 def cc(context):
     context.Message("checking C compiler ... ")
-    CC = context.env.get('CC')
+    CC = context.env.get('CC',WhereIs('gcc'))
     if CC:
         context.Result(CC)   
     else:
@@ -272,4 +297,5 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.18 2004/06/30 18:28:25 fomels Exp $	
+#	$Id: configure.py,v 1.19 2004/07/01 11:36:26 fomels Exp $
+

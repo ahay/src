@@ -35,7 +35,7 @@ if not os.path.isfile('config.py'):
 Help(opts.GenerateHelpText(env))
 opts.Save('config.py',env)
 
-config = env.Command('config.py','configure.py',"")
+config = env.Command('config.py','configure.py','')
 env.Precious(config)
 env.InstallAs(os.path.join(libdir,'rsfconfig.py'),'config.py')
 env.InstallAs(os.path.join(libdir,'rsfconf.py'),'configure.py')
@@ -52,14 +52,9 @@ env.Append(BUILDERS = {'Doc' : Doc})
 ##########################################################################
 # FILT BUILD
 ##########################################################################
-env.Append(CPPPATH=['../../include'],
-           LIBPATH=['../../filt/lib'],
-           LIBS=['rsf','m'])
-
-if sys.platform[:5] == 'sunos':
-    env.Append(LIBS=['nsl'])
-elif sys.platform[:6] == 'cygwin':
-    env.Append(LIBS=['rpc'])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../filt/lib'],
+            LIBS=['rsf'])
 
 Export('env')
 dirs = ('lib','main','proc','imag')
@@ -125,4 +120,5 @@ env.Command(index,None,'PYTHONPATH=%s %s sfdoc -w %s' %
            (libdir,WhereIs('python'),docdir))
 Depends(index,use)
 
-# 	$Id: SConstruct,v 1.35 2004/06/30 18:28:25 fomels Exp $	
+# 	$Id: SConstruct,v 1.36 2004/07/01 11:36:26 fomels Exp $
+
