@@ -18,6 +18,7 @@
 */
 
 #include <math.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -28,9 +29,9 @@ int main (int argc, char* argv[])
     map4 nmo;
     bool half;
     int it,ix,ih, nt,nx, nh, nw, CDPtype;
-    float dt, t0, h, h0, t, f, dh, eps, dy;
-    float *trace, *p, *off, *str, *out;
-    sf_file cmp, nmod, dip, offset;
+    float dt, t0, h, h0, t, f, g, dh, eps, dy;
+    float *trace, *p, *q, *off, *str, *out;
+    sf_file cmp, nmod, dip, offset, crv;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -84,6 +85,14 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
 
+    if (NULL != sf_getstring("crv")) {
+	crv = sf_input("crv");
+	q = sf_floatalloc(nt);
+    } else {
+	crv = NULL;
+	q = NULL;
+    }
+
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
 
@@ -93,21 +102,36 @@ int main (int argc, char* argv[])
 
     for (ix = 0; ix < nx; ix++) {
 	for (ih = 0; ih < nh; ih++) {
+	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
+
 	    sf_floatread (trace,nt,cmp);
 	    sf_floatread (p, nt, dip);
 
-	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
-	    
-	    for (it=0; it < nt; it++) {
-		t = t0 + it*dt;
-		f = t - p[it]*h*dt/dh;
+	    if (NULL != crv)  {
+		sf_floatread (q, nt, crv);
 
-		if (f < 0.) {
-		    str[it]=t0-10.*dt;
-		} else {
-		    str[it] = sqrtf(t*f);
+		for (it=0; it < nt; it++) {
+		    t = t0 + it*dt;
+		    f = p[it] - 0.5*q[it];
+		    g = q[it]*h*dh/(f+FLT_EPSILON);
+		    if (g < 0.) {
+			str[it]=t0-10.*dt;
+		    } else {
+			str[it] = t - f*h*dt/(dh+sqrtf(g));
+		    }
 		}
-	    }
+	    } else {
+		for (it=0; it < nt; it++) {
+		    t = t0 + it*dt;
+		    f = t - p[it]*h*dt/dh;
+		    
+		    if (f < 0.) {
+			str[it]=t0-10.*dt;
+		    } else {
+			str[it] = sqrtf(t*f);
+		    }
+		}
+	    }		
 
 	    stretch4_define (nmo,str);
 	    stretch4_apply (nmo,trace,out);

@@ -73,6 +73,9 @@ int main(int argc, char* argv[])
 	/* first shot */
 	if (!sf_getfloat("ds",&ds)) ds=dx;
 	/* shot increment */
+
+	sf_putfloat(modl,"o3",s0);
+	sf_putfloat(modl,"d3",ds);
     }
 
     shot = sf_floatalloc(ns);

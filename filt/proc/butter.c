@@ -109,7 +109,7 @@ void butter_apply (const butter bw, int nx, float *x /* data [nx] */)
 	    y0 = (bw->low)? 
 		(x0 + x1 - d2 * y1)*d0:
 		(x0 - x1 - d2 * y1)*d0;
-	    y1 = y0; x[ix] = y0;
+	    x[ix] = y1 = y0;
 	}
     }
 
@@ -122,7 +122,7 @@ void butter_apply (const butter bw, int nx, float *x /* data [nx] */)
 	    y0 = (bw->low)? 
 		(x0 + 2*x1 + x2 - d1 * y1 - d2 * y2)*d0:
 		(x0 - 2*x1 + x2 - d1 * y1 - d2 * y2)*d0;
-	    y2 = y1; y1 = y0; x[ix] = y0;
+	    y2 = y1; x[ix] = y1 = y0;
 	}
     }
 }

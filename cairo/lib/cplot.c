@@ -43,7 +43,7 @@ enum {
 
 #endif
 
-static cairo_t *cr;
+static cairo_t *cr0;
 static GtkWidget *win, *vbox, *frame, *gtkcairo;
 
 static float fx=0.0, fy=0.0;     /* origin in inches */
@@ -55,11 +55,13 @@ static struct {
     int xmin, xmax, ymin, ymax;
 } clip;
 
-static void show (GtkWidget *widget, cairo_t *cairo, gpointer data)
+static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
     gint width  = widget->allocation.width;
     gint height = widget->allocation.height;
     gint box_size = (width+height)/6;
+
+    cr0 = cr;
 
     cairo_save (cr);
     cairo_default_matrix (cr);
@@ -92,15 +94,14 @@ void cr_init(int* argc, char** argv[])
     gtkcairo = gtk_cairo_new ();
     gtk_widget_set_usize (GTK_WIDGET (gtkcairo), 
 			  CR_INITIAL_WIDTH, CR_INITIAL_HEIGHT);
-    g_signal_connect (G_OBJECT (gtkcairo), "show",
+
+    g_signal_connect (G_OBJECT (gtkcairo), "paint",
 		      G_CALLBACK (show), NULL);
 
     gtk_container_add (GTK_CONTAINER (frame), gtkcairo);
     gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 0);
     
     gtk_container_add (GTK_CONTAINER (win), vbox);
-    
-    cr = gtk_cairo_get_cairo(GTK_CAIRO(gtkcairo));
 }
 
 void cr_main(void)
@@ -169,10 +170,10 @@ static void pout (float xp, float  yp, bool down)
     else if (yp < -CR_MAX) yp = -CR_MAX;
     
     if (down) {
-	cairo_line_to(cr,snap(xp),snap(yp));
+	cairo_line_to(cr0,snap(xp),snap(yp));
 	sf_warning("drawing to %g,%g",snap(xp),snap(yp));
     } else {
-	cairo_move_to(cr,snap(xp),snap(yp));
+	cairo_move_to(cr0,snap(xp),snap(yp));
 	sf_warning("moving to %g,%g",snap(xp),snap(yp));
     }
 }

@@ -10,4 +10,4 @@ void divide2 (div2 div, float** num, float** den,  float** rat);
 
 #endif
 
-/* 	$Id: divide2.h,v 1.1 2004/02/14 06:59:24 fomels Exp $	 */
+/* 	$Id$	 */
