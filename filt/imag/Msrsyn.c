@@ -82,46 +82,65 @@ int main (int argc, char *argv[])
     sw = sf_complexalloc3(aw.n,ax.n,ay.n);
     rw = sf_complexalloc3(aw.n,ax.n,ay.n);
 
-    sf_complexread(ss,aw.n,Fs);         /* read   source data */
-    for( isy=0;isy<asy.n;isy++) {
-	sy = asy.o + isy * asy.d;
-	for( isx=0;isx<asx.n;isx++) {
-	    sx = asx.o + isx * asx.d;
+    /* SOURCE wavefield */
+    sf_complexread(ss,aw.n,Fs);
 
+    for( isy=0;isy<asy.n;isy++) {             
+	sy = asy.o + isy * asy.d;
+	for( isx=0;isx<asx.n;isx++) {         
+	    sx = asx.o + isx * asx.d;
+	    
 	    for(iy=0;iy<ay.n;iy++) {
 		for(ix=0;ix<ax.n;ix++) {
 		    for(iw=0;iw<aw.n;iw++) {
 			sw[iy][ix][iw] = 0.;
+		    }
+		}
+	    }
+	    
+	    yy = sy; iy = INDEX(yy,ay);
+	    xx = sx; ix = INDEX(xx,ax);
+	    if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
+		
+		for( iw=0;iw<aw.n;iw++) {
+		    sw[iy][ix][iw] = ss[iw];
+		}
+	    }
+	    
+	    sf_complexwrite(sw[0][0],ax.n*ay.n*aw.n,Fsw);
+	}
+    }
+    
+    for( isy=0;isy<asy.n;isy++) {	      
+	sy = asy.o + isy * asy.d;
+	for( isx=0;isx<asx.n;isx++) {         
+	    sx = asx.o + isx * asx.d;
+	    
+	    for(iy=0;iy<ay.n;iy++) {
+		for(ix=0;ix<ax.n;ix++) {
+		    for(iw=0;iw<aw.n;iw++) {
 			rw[iy][ix][iw] = 0.;
 		    }
 		}
 	    }
+	    
+	    for( iry=0;iry<ary.n;iry++) {     
+		ry = ary.o + iry * ary.d;
+		for( irx=0;irx<arx.n;irx++) { 
+		    rx = arx.o + irx * arx.d;
 
-	    yy = sy; iy = INDEX(yy,ay);
-	    xx = sx; ix = INDEX(xx,ax);
-	    if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
-
-		for( iw=0;iw<aw.n;iw++) {
-		    sw[iy][ix][iw] = ss[iw];
-		}
-
-		for( iry=0;iry<ary.n;iry++) {
-		    ry = ary.o + iry * ary.d;
-		    for( irx=0;irx<arx.n;irx++) {
-			rx = arx.o + irx * arx.d;
-
-			yy = sy + ry; iy = INDEX(yy,ay);
-			xx = sx + rx; ix = INDEX(xx,ax);
-			if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
-			    sf_complexread(rr,aw.n,Fr); /* read receiver data */
-			    for( iw=0;iw<aw.n;iw++) {
-				rw[iy][ix][iw] = rr[iw];
-			    }
+		    sf_complexread(rr,aw.n,Fr);
+		    
+		    yy = sy + ry; iy = INDEX(yy,ay);
+		    xx = sx + rx; ix = INDEX(xx,ax);
+		    
+		    if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
+			for( iw=0;iw<aw.n;iw++) {
+			    rw[iy][ix][iw] = rr[iw];
 			}
 		    }
 		}
 	    }
-	    sf_complexwrite(sw[0][0],ax.n*ay.n*aw.n,Fsw);
 	    sf_complexwrite(rw[0][0],ax.n*ay.n*aw.n,Frw);
 	}
     }

@@ -35,7 +35,7 @@
 #define LOOP(a) for( iy=0; iy< ay.n; iy++){ for( ix=0; ix< ax.n; ix++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,ax,ay;
+static axa az,aw,alx,aly,ax,ay,ae;
 static bool verb;
 static float eps;
 
@@ -52,6 +52,7 @@ static slice         slow; /* slowness slice */
 void srmig_init(bool verb_,
 		float eps_,
 		float  dt,
+		axa ae_        /* experiments (e.g. shots) */,
 		axa az_        /* depth */,
 		axa aw_        /* frequency */,
 		axa ax_        /* i-line (data) */,
@@ -76,6 +77,7 @@ void srmig_init(bool verb_,
     ay = ay_;
     alx= alx_;
     aly= aly_;
+    ae = ae_;
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
@@ -159,7 +161,7 @@ void srmig(bool inv  /* forward/adjoint flag */,
     )
 /*< Apply S/R migration >*/
 {
-    int iz,iw,ix,iy,ilx,ily;
+    int iz,iw,ix,iy,ilx,ily,ie;
     float complex ws,wr;
     
     LOOP( qq[iy][ix] = 0.0; );
@@ -167,48 +169,49 @@ void srmig(bool inv  /* forward/adjoint flag */,
 	slice_put(imag,iz,qq[0]);
     }
 
-    for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
-
-	ws = eps*aw.d + I*(aw.o+iw*aw.d);
-	wr = eps*aw.d - I*(aw.o+iw*aw.d);
-
-	cslice_get(sdat,iw,us[0]); taper2(true,true,us);
-	cslice_get(rdat,iw,ur[0]); taper2(true,true,ur);
-
+    for (ie=0; ie<ae.n; ie++) {
+	for (iw=0; iw<aw.n; iw++) {
+	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    
+	    ws = eps*aw.d + I*(aw.o+iw*aw.d);
+	    wr = eps*aw.d - I*(aw.o+iw*aw.d);
+	    
+	    cslice_get(sdat,ie*aw.n+iw,us[0]); taper2(true,true,us);
+	    cslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(true,true,ur);
+	    
 /*	iz=0;*/
 /*	cslice_put(swfl,iw*az.n+iz,us[0]);*/
 /*	cslice_put(rwfl,iw*az.n+iz,ur[0]);*/
-
-	slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
-	LOOP(;             qq[iy][ix] += 
+	    
+	    slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
+	    LOOP(;             qq[iy][ix] += 
 		 crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
 /*	LOOP(;             qq[iy][ix] += */
 /*	     crealf( ( conjf(us[iy][ix]) * ur[iy][ix] ) /*/
 /*		     ( conjf(us[iy][ix]) * us[iy][ix] ) ); );*/
-	slice_put(imag,0,qq[0]);
-
-	slice_get(slow,0,so[0]);
-	for (iz=0; iz<az.n-1; iz++) {
-	    slice_get(slow,iz+1,ss[0]);
-
-	    ssr_ssf(ws,us,so,ss,nr[iz],sm[iz]);
-	    ssr_ssf(wr,ur,so,ss,nr[iz],sm[iz]);
-
-	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-
+	    slice_put(imag,0,qq[0]);
+	    
+	    slice_get(slow,0,so[0]);
+	    for (iz=0; iz<az.n-1; iz++) {
+		slice_get(slow,iz+1,ss[0]);
+		
+		ssr_ssf(ws,us,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(wr,ur,so,ss,nr[iz],sm[iz]);
+		
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		
 /*	    cslice_put(swfl,iw*az.n+iz+1,us[0]);*/
 /*	    cslice_put(rwfl,iw*az.n+iz+1,ur[0]);*/
-
-	    slice_get(imag,iz+1,qq[0]); /* imaging */
-	    LOOP(;             qq[iy][ix] += 
-		 crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
+		
+		slice_get(imag,iz+1,qq[0]); /* imaging */
+		LOOP(;             qq[iy][ix] += 
+		     crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
 /*	    LOOP(;             qq[iy][ix] += */
 /*		 crealf( ( conjf(us[iy][ix]) * ur[iy][ix] ) /*/
 /*			 ( conjf(us[iy][ix]) * us[iy][ix] ) ); );*/
-	    slice_put(imag,iz+1,qq[0]);
-
-	} /* z */
-    } /* w */
-
+		slice_put(imag,iz+1,qq[0]);
+		
+	    } /* z */
+	} /* w */
+    }
 }

@@ -32,6 +32,8 @@ int main (int argc, char *argv[])
     int   tx,ty;          /* boundary taper size */
 
     axa az,ax,ay,aw,alx,aly;
+    axa ae;
+    axa aj;
 
     sf_file Fs;     /*           slowness file S (nlx,nly,nz) */
     sf_file Fi;     /*              image file R ( nx, ny,nz) */
@@ -75,10 +77,16 @@ int main (int argc, char *argv[])
 
     if (SF_COMPLEX != sf_gettype(Fus)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fur)) sf_error("Need complex receiver data");
+
+    aj.n=1; aj.o=0; aj.d=1;
     
     iaxa(Fus,&ax,1); oaxa(Fi,&ax,1);
     iaxa(Fus,&ay,2); oaxa(Fi,&ay,2);
     iaxa(Fus,&aw,3); oaxa(Fi,&az,3);
+    ;                oaxa(Fi,&aj,4);
+    ;                oaxa(Fi,&aj,5);
+
+    iaxa(Fus,&ae,4); /* number of experiments */
 
 /*    oaxa(Fws,&ax,1); oaxa(Fwr,&ax,1);*/
 /*    oaxa(Fws,&ay,2); oaxa(Fwr,&ay,2);*/
@@ -93,6 +101,7 @@ int main (int argc, char *argv[])
 /*    rwfl = slice_init(Fwr,ax.n,ay.n,az.n*aw.n);*/
 
     srmig_init (verb,eps,dt,
+		ae,
 		az,aw,
 		ax,ay,
 		alx,aly,
