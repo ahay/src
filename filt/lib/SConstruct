@@ -43,14 +43,9 @@ else:
 ##############################################################################
 # TESTING
 ##############################################################################
-libs = ['m']	
-if sys.platform[:5] == 'sunos':
-    libs.append('nsl')
-elif sys.platform[:6] == 'cygwin':
-    libs.append('rpc')
 for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS=libs)
+    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
 
 api = string.split(string.lower(env.get('API','')),',')
 
