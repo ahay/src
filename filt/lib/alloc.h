@@ -8,6 +8,7 @@
 /*@out@*/ void *sf_alloc (size_t n, size_t size);
 void *sf_realloc (void* ptr, size_t n, size_t size);
 /*@out@*/ char *sf_charalloc (size_t n);
+/*@out@*/ unsigned char *sf_ucharalloc (size_t n);
 /*@out@*/ int *sf_intalloc (size_t n);
 /*@out@*/ float *sf_floatalloc (size_t n);
 /*@out@*/ bool *sf_boolalloc (size_t n);
@@ -18,5 +19,6 @@ void *sf_realloc (void* ptr, size_t n, size_t size);
 /*@out@*/ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3);
 /*@out@*/ int **sf_intalloc2 (size_t n1, size_t n2);
 /*@out@*/ char **sf_charalloc2 (size_t n1, size_t n2);
+/*@out@*/ unsigned char **sf_ucharalloc2 (size_t n1, size_t n2);
 
 #endif

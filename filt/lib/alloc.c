@@ -31,6 +31,13 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
+/*@out@*/ unsigned char *sf_ucharalloc (size_t n) 
+{
+    unsigned char *ptr;
+    ptr = (unsigned char*) sf_alloc (n,sizeof(unsigned char));
+    return ptr;
+}
+
 /*@out@*/ int *sf_intalloc (size_t n) 
 {
     int *ptr;
@@ -131,6 +138,19 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     
     ptr = (char**) sf_alloc (n2,sizeof(char*));
     ptr[0] = sf_charalloc (n1*n2);
+    for (i2=1; i2 < n2; i2++) {
+	ptr[i2] = ptr[0]+i2*n1;
+    }
+    return ptr;
+}
+
+/*@out@*/ unsigned char **sf_ucharalloc2 (size_t n1, size_t n2) 
+{
+    size_t i2;
+    unsigned char **ptr;
+    
+    ptr = (unsigned char**) sf_alloc (n2,sizeof(unsigned char*));
+    ptr[0] = sf_ucharalloc (n1*n2);
     for (i2=1; i2 < n2; i2++) {
 	ptr[i2] = ptr[0]+i2*n1;
     }

@@ -343,7 +343,7 @@ void vp_pmark (int npts, int mtype, int msize, const float *xp, const float *yp)
     }
 }
 
-void vp_purge ()
+void vp_purge (void)
 {
     putchar (VP_PURGE);
     fflush (stdout);
@@ -403,9 +403,9 @@ void vp_rascoltab (int nreserve, const char *colname)
      * "most important" colors are closer to the front. This way the first
      * colors lost due to a less-than-256-color device or less than 256
      * colors set aside for raster are the least important ones. 
-     */
-    for (incr = 2; incr < 512; incr *= 2) {
-	for (k = 1, i=2; k < incr && i < 256; k += 2, i++) {
+     */    
+    for (i=2, incr=2; incr < 512; incr *= 2) {
+	for (k = 1; k < incr && i < 256; k += 2, i++) {
 	    j = k * 256 / incr;
 	    smap[i] = j;
 	}
@@ -417,67 +417,15 @@ void vp_rascoltab (int nreserve, const char *colname)
     }
 }
 
-#define ARRAY(A,B)	array[((invert==0)?(A):(ypix-1-(A)))*xpix+(B)]
 
-#define MAXREP	8
-#define PUTHSIZE sizeof(int)
-
-#define RASOUT(NUMPAT,NUMBYTE,BITFLAG,BYTES)	\
-{\
-    vp_putint ((int) (NUMPAT));\
-    vp_putint ((int) (NUMBYTE));\
-\
-    if (BITFLAG)\
-    {\
-	for (n = 0; n + 7 < (NUMBYTE); n += 8)\
-	{\
-	    obyte = 0x00;\
-\
-	    obyte =\
-		((*((BYTES) + n + 0) != 0) << 7) |\
-		((*((BYTES) + n + 1) != 0) << 6) |\
-		((*((BYTES) + n + 2) != 0) << 5) |\
-		((*((BYTES) + n + 3) != 0) << 4) |\
-		((*((BYTES) + n + 4) != 0) << 3) |\
-		((*((BYTES) + n + 5) != 0) << 2) |\
-		((*((BYTES) + n + 6) != 0) << 1) |\
-		((*((BYTES) + n + 7) != 0) << 0);\
-	    putchar ((char) obyte);\
-	}\
-	if (n < (NUMBYTE))\
-	{\
-	    obyte = 0x00;\
-	    for (nn = 7; n < (NUMBYTE); n++, nn--)\
-	    {\
-		obyte |= ((*((BYTES) + n) != 0) << nn);\
-	    }\
-	    putchar ((char) obyte);\
-	}\
-    }\
-    else\
-    {\
-	for (n = 0; n < (NUMBYTE); n++)\
-	{\
-	    putchar ((char) * ((BYTES) + n));\
-	}\
-    }\
-}
-
-void vp_raster (unsigned char *array, int blast, int bit, int offset, 
+void vp_raster (unsigned char **array, bool bit, int offset, 
 		int xpix, int ypix, 
-		float xll, float yll, float ppi,
-		float *xur,float *yur, int orient, int invert)
+		float xll, float yll, float xur,float yur, int orient)
 {
-    int m, n, nn, l, k, j, i, count, ucount, bitbyte;
+    int i, n, nn;
     unsigned char obyte;
 
-    if (bit) {
-	bitbyte = 8;
-	putchar (VP_BIT_RASTER);
-    } else {
-	bitbyte = 1;
-	putchar (VP_BYTE_RASTER);
-    }
+    putchar (bit? VP_BIT_RASTER: VP_BYTE_RASTER);
 
     if (orient >= 0) {
 	orient %= 4;
@@ -489,97 +437,41 @@ void vp_raster (unsigned char *array, int blast, int bit, int offset,
     vp_putint (offset);
     vp_putfloat (xll);
     vp_putfloat (yll);
-    if (ppi > 0) {
-	xll += xpix / ppi;
-	yll += ypix / ppi;
-	*xur = xll;
-	*yur = yll;
-    } else {
-	xll = *xur;
-	yll = *yur;
-    }
-    vp_putfloat (xll);
-    vp_putfloat (yll);
+    vp_putfloat (xur);
+    vp_putfloat (yur);
 
     vp_putint (xpix);
     vp_putint (ypix);
 
-    if (blast) {
-	for (i = 0; i < ypix; i++) {
-	    vp_putint ((int) 1);
-	    RASOUT (1, xpix, bit, &ARRAY (i, 0));
-	}
-    } else { /* Try to compact it */
-	count = 1;
-	for (i = 0; i < ypix; i++) {
-	    for (j = 0; j < xpix; j++) {
-		if (i == ypix - 1 || ARRAY (i, j) != ARRAY (i + 1, j)) {
-/* Write this row out, it's not just a repeat of the next one */
-/* Write out how many times this line is to be repeated */
-		    vp_putint (count);
-/*
- * This entire section tries to efficiently represent ONE RASTER LINE
- */
-		    
-/*
- * Keep track of "unaccounted for" bytes between
- * bytes containted in a pattern
- */
-		    ucount = 0;
-/* Loop through a raster line */
-		    for (k = 0; k < xpix; k++) {
-/* Try different size patterns */
-			for (l = 1; l <= MAXREP; l++) {
-/* See how far this pattern size works */
-			    for (m = 0; m <= xpix - (k + l); m++) {
-/* Pattern stopped working */
-				if (m == xpix - (k + l) ||
-				    ARRAY (i, k + m) != ARRAY (i, k + m + l)) {
-/* See how many repetitions we got */
-				    m = l * (1 + m / l);
-/* Is it worth it to use this? */
-/* (PUTHSIZE is the number of bytes needed for a puth */
-				    if (PUTHSIZE * 2 + l <= 
-					1 + (m - 1) / bitbyte) {
-/* First take care of bytes not in a pattern */
-					if (ucount > 0) {
-					    RASOUT (1, ucount, bit, 
-						    &ARRAY (i, k - ucount));
-					    ucount = 0;
-					}
-/* Now take care of the bytes in the pattern */
-					RASOUT (m / l, l, bit, &ARRAY (i, k));
-					k += m - 1;
-/* Stop looking, we already found what we wanted */
-					goto compact_found;
-				    }
-/* This pattern didn't work. Stop looking at this size and try a longer one */
-				    break;
-				}
-			    }
-			}
-/* No pattern including this byte, add it to the unaccounted for list */
-			ucount++;
-		    compact_found: 
-			continue;
-		    }
-/* Take care of any bytes left hanging on the end */
-		    if (ucount > 0) {
-			RASOUT (1, ucount, bit, &ARRAY (i, k - ucount));
-		    }
-/*
- * END of section that does ONE RASTER LINE
- */
-
-
-/* Reset counter */
-		    count = 1;
-/* Exit the loop */
-		    break;
-		}
+    for (i = 0; i < ypix; i++) {
+	vp_putint (1);
+	vp_putint (1);
+ 
+	vp_putint (xpix);     
+	if (bit) {
+	    for (n = 0; n + 7 < xpix; n += 8) {
+		obyte =
+		    ((array[i][n+0] != 0) << 7) |
+		    ((array[i][n+1] != 0) << 6) |
+		    ((array[i][n+2] != 0) << 5) |
+		    ((array[i][n+3] != 0) << 4) |
+		    ((array[i][n+4] != 0) << 3) |
+		    ((array[i][n+5] != 0) << 2) |
+		    ((array[i][n+6] != 0) << 1) |
+		    ((array[i][n+7] != 0) << 0);
+		putchar ((char) obyte);
 	    }
-/* If we didn't write it out, it will just be a repeat of the next one */
-	    if (j == xpix) count++;
+	    if (n < xpix) {
+		obyte = 0x00;
+		for (nn = 7; n < xpix; n++, nn--) {
+		    obyte |= ((array[i][n] != 0) << nn);
+		}
+		putchar ((char) obyte);
+	    }
+	} else {
+	    for (n = 0; n < xpix; n++) {
+		putchar ((char) array[i][n]);
+	    }
 	}
     }
 }
@@ -709,29 +601,20 @@ void vp_uplot (float x, float y, bool down)
     vp_plot (x, y, down);
 }
 
-void vp_uraster (unsigned char *array, int blast, int bit, int offset,
+void vp_uraster (unsigned char **array, bool bit, int offset,
 		 int xpix, int ypix, 
-		 float xll, float yll, float ppi,
-		 float *xur,float *yur, int orient, int invert)
+		 float xll, float yll, float xur, float yur, int orient)
 {
     float x1, y1, x2, y2;
     
     x1 = fx + (xll - ufx) * xscl;
     y1 = fy + (yll - ufy) * yscl;
 
-    if (0. == ppi) {
-	x2 = fx + (*xur - ufx) * xscl;
-	y2 = fy + (*yur - ufy) * yscl;
-    }
+    x2 = fx + (xur - ufx) * xscl;
+    y2 = fy + (yur - ufy) * yscl;
 
-    vp_raster (array, blast, bit, offset, 
-	       xpix, ypix, 
-	       x1, y1, ppi, &x2, &y2, orient, invert);
-
-    if (ppi != 0. && xscl != 0. && yscl != 0.) {
-	*xur = (x2 - fx)/xscl + ufx;
-	*yur = (y2 - fy)/yscl + ufy;
-    }
+    vp_raster (array, bit, offset, 
+	       xpix, ypix, x1, y1, x2, y2, orient);
 }
 
 void vp_utext (float x, float y, int size, int orient, const char *string)

@@ -116,5 +116,11 @@ void vp_where (float *x, float *y);
 void vp_style (vp_plotstyle st);
 void vp_setdash (const float *dash, const float *gapp, int np);
 void vp_rascoltab (int nreserve, const char *colname);
-
+void vp_purge (void);
+void vp_raster (unsigned char **array, bool bit, int offset, 
+		int xpix, int ypix, 
+		float xll, float yll, float xur,float yur, int orient);
+void vp_uraster (unsigned char **array, bool bit, int offset,
+		 int xpix, int ypix, 
+		 float xll, float yll, float xur, float yur, int orient);
 #endif

@@ -375,6 +375,14 @@ void vp_frame_init (sf_file in, const char* where)
     make_title(in,where[2]);
 }
 
+void vp_minmax(float *x1, float* y1, float* x2, float* y2)
+{
+    *x1 = min1;
+    *x2 = max1;
+    *y1 = min2;
+    *y2 = max2;
+}
+
 void vp_frame(void)
 {
     int i, framecol;
