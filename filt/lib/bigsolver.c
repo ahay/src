@@ -240,21 +240,27 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	if (forget && nfreq != 0) {  /* periodic restart */
 	    forget = (iter%nfreq == 0);
 	} 
-	if (verb) {
-	    if (iter == 0) {
-		dprr0 = norm (ny, rr);
-		dpgm0 = norm (nprec, g);
-		dprr = 1.;
-		dpgm = 1.;
-	    } else {
-		dprr = norm (ny, rr)/dprr0;
-		dpgm = norm (nprec, g)/dpgm0;
-	    }
-	    dppd = norm (ny, p+nprec);
-	    dppm = norm (nprec, p);
+	
+	if (iter == 0) {
+	    dprr0 = norm (ny, rr);
+	    dpgm0 = norm (nprec, g);
+	    dprr = 1.;
+	    dpgm = 1.;
+	} else {
+	    dprr = norm (ny, rr)/dprr0;
+	    dpgm = norm (nprec, g)/dpgm0;
+	}
+	dppd = norm (ny, p+nprec);
+	dppm = norm (nprec, p);
 
+	if (verb) 
 	    sf_warning("iteration %d res %g prec dat %g prec mod %g grad %g", 
 		       iter, dprr, dppd, dppm, dpgm);
+
+	if (dprr < TOLERANCE || dpgm < TOLERANCE) {
+	    if (verb) 
+		sf_warning("convergence in %d iterations",iter+1);
+	    break;
 	}
     
 	solv (forget, nprec+ny, ny, p, g, rr, gg);
@@ -762,10 +768,10 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	    dpg = norm (nx, g)/dpg0;
 	}    
 
-	if (verb) {
+	if (verb) 
 	    sf_warning ("iteration %d res %f mod %f grad %f",
 			iter+1, dpr, norm (nx, x), dpg);
-	}
+	
 
 	if (dpr < TOLERANCE || dpg < TOLERANCE) {
 	    if (verb) 

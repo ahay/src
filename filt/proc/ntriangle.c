@@ -164,10 +164,10 @@ static void triple2 (int o, int d, int nx, int nb, const int* t,
 
     for (i=0; i < nx; i++) {
 	nb1 = t[i];
-	wt = 1./(nb1*nb1);
-	tmp[i+nb-nb1] -= x[o+i*d]*wt; 
-	tmp[i+nb]     += 2.*x[o+i*d]*wt;
-	tmp[i+nb+nb1] -= x[o+i*d]*wt;
+	wt = x[o+i*d]/(nb1*nb1);
+	tmp[i+nb-nb1] -= wt; 
+	tmp[i+nb]     += 2.*wt;
+	tmp[i+nb+nb1] -= wt;
     }
 }
 
@@ -178,7 +178,7 @@ void nsmooth (ntriangle tr /* smoothing object */,
 	      float *x     /* data (smoothed in place) */)
 /*< smooth >*/
 {
-    fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
+    fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp); 
     doubint (tr->np,tr->tmp,der);
     triple (o,d,tr->nx,tr->nb,t,x,tr->tmp);
 }

@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(dips,"n2",&i) || i != n2) sf_error("Wrong n2= in dips");
     if (sf_histint(dips,"n4",&i) && i != n3) sf_error("Wrong n4= in dips");
 
-    if (!sf_histint(dips,"n3",&nk)) sf_error("No n3= in dips");
+    if (!sf_histint(dips,"n3",&nk)) nk=1;
     sf_putint (out,"n3",nk);
     sf_putint (out,"n4",n3);
     

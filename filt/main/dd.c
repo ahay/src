@@ -26,8 +26,8 @@ static void ddbreak (sf_datatype itype, sf_datatype otype);
 
 int main(int argc, char *argv[])
 {
-    size_t size, nin, nout, bufsiz=BUFSIZ;
-    int line, ein, eout, n1, i, j, *ibuf;
+    size_t size, nin, nout, bufsiz=BUFSIZ, ein, eout;
+    int line, n1, i, j, *ibuf;
     sf_file in, out;
     char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
     sf_datatype itype, otype;
@@ -86,25 +86,21 @@ int main(int argc, char *argv[])
 	}
     } 
     sf_settype(out,otype);
-	
-    if (!sf_histint(in,"esize",&ein)) ein=4;
-    if (!sf_histint(out,"esize",&eout)) eout=4;
+
+    ein = sf_esize(in);
+    eout = sf_esize(out);
     
     /* optimize buffer size */
-    if (ein==0) {
-	if (eout != 0) bufsiz /= eout;
-    } else {
-	bufsiz /= ein;
-    }
+    bufsiz /= ein;
 
-    if (ein != 0 && eout != 0 && ein != eout && sf_histint(in,"n1",&n1)) {
+    if (ein != eout && sf_histint(in,"n1",&n1)) {
 	n1 = (n1*ein)/eout;
 	sf_putint(out,"n1",n1);
     }
 
     while (size > 0) {
 	nin = (bufsiz < size)? bufsiz:size;
-	nout = (0==eout || 0==ein)? nin : nin*ein/eout;
+	nout = nin*ein/eout;
 	switch (itype) {
 	    case SF_INT:
 		ibuf = (int*) bufin;
