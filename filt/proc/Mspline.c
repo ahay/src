@@ -1,3 +1,8 @@
+/* 1-D spline interpolation
+
+Takes: < input.rsf > interpolated.rsf
+*/
+
 #include <rsf.h>
 
 #include "spline3.h"
@@ -27,8 +32,11 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getint("n1",&n1)) sf_error("Need n1=");
+    /* Output grid size */
     if (!sf_getfloat("d1",&d1)) sf_error("Need d1=");
+    /* Output sampling */
     if (!sf_getfloat("o1",&o1)) sf_error("Need o1=");
+    /* Output origin */
 
     sf_putint(out,"n1",n1);
     sf_putfloat(out,"o1",o1);
@@ -65,3 +73,5 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: Mspline.c,v 1.3 2003/10/01 02:41:21 fomels Exp $	 */
