@@ -66,8 +66,6 @@ void smoothder(int niter, float* weight, float* data, float* der)
     } else {
 	sf_conjgrad(NULL,repeat_lop,trianglen_lop,tmp2,der,data,niter);
     }
-
-    repeat_lop(false,false,n,n,der,data);
 }
 
 void smoothdip(int niter, float** dip, float* weight, float* data, float* der) 
@@ -80,8 +78,6 @@ void smoothdip(int niter, float** dip, float* weight, float* data, float* der)
     } else {
 	sf_conjgrad(NULL,repeat_lop,trisl_lop,tmp2,der,data,niter);
     }
-    
-    repeat_lop(false,false,n,n,der,data);
 }
 
 
@@ -110,7 +106,5 @@ void smoothdiff(int niter, int ncycle, float* weight, float* data, float* der)
 	sf_conjgrad((NULL!=weight)? weight_lop: NULL,
 		    repeat_lop,impl2_lop,tmp2,der,data,niter/ncycle);
     }    
-
-    repeat_lop(false,false,n,n,der,data);
 }
 
