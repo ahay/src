@@ -136,4 +136,26 @@ void vint1_apply (vint1 fnt, int i, float x, bool der, float* f)
     }
 }
 
-/* 	$Id: fint1.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+void stretch(fint1 str, 
+	     float (*map)(float),
+	     int n1, float d1, float o1,
+	     int n2, float d2, float o2,
+	     float *trace)
+{
+    int i2, it;
+    float t;
+
+    for (i2=0; i2 < n2; i2++) {
+	t = o2+i2*d2;
+	t = map(t);
+	t = (t-o1)/d1;
+	it = t;
+	if (it >= 0 && it < n1) {
+	    trace[i2] = fint1_apply(str,it,t-it,false);
+	} else {
+	    trace[i2] = 0.;
+	}
+    }
+}
+
+/* 	$Id: fint1.c,v 1.3 2004/04/01 02:12:42 fomels Exp $	 */

@@ -16,7 +16,12 @@ void fint1_close (fint1 fnt);
 void vint1_close (vint1 fnt);
 float fint1_apply (fint1 fnt, int i, float x, bool der);
 void vint1_apply (vint1 fnt, int i, float x, bool der, float* f);
+void stretch(fint1 fnt, 
+	     float (*map)(float),
+	     int n1, float d1, float o1,
+	     int n2, float d2, float o2,
+	     float *trace);
 
 #endif
 
-/* 	$Id: fint1.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: fint1.h,v 1.3 2004/04/01 02:12:42 fomels Exp $	 */

@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     known = sf_boolalloc(n12);
 
     if (NULL != sf_getstring("mask")) {
+	/* optional mask file with zeroes for missing data locations */
 	mask = sf_input("mask");
 	msk =  sf_floatalloc(n12);
     } else {
