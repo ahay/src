@@ -304,7 +304,7 @@ def options(opts):
 
 def merge(target=None,source=None,env=None):
     sources = map(str,source)
-    local_include = re.compile(r'\s*\#include\s*\"([\w\.]+)')
+    local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
     includes = []
     for src in sources:
         if src in includes:
@@ -315,7 +315,7 @@ def merge(target=None,source=None,env=None):
             if match:
                 other = match.group(1)
                 if not other in includes:
-                    includes.append(os.path.join(os.path.dirname(src),other))
+                    includes.insert(0,os.path.join(os.path.dirname(src),other))
         inp.close()
         includes.append(src)
     out = open(str(target[0]),'w')

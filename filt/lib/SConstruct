@@ -6,12 +6,12 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''
-ccgstep cconjgrad cgstep chain conjgrad conjprec
+cconjgrad cgstep chain conjgrad conjprec
 decart dottest error file files getpar kiss_fft kiss_fftr math1
 segy simtab stack
 '''
 
-src2 = 'adjnull alloc bigsolver c99'
+src2 = 'adjnull alloc bigsolver c99 ccgstep'
 
 try: # distribution version
     Import('env')
@@ -142,3 +142,6 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
         env.Install(libdir,'c_rsf.py')
         env.Install(libdir,'rsf.py')
         Clean(python,['c_rsf.py','c_rsf.pyc'])
+        
+env['SCANNERS'].remove(configure.Include)
+env.Append(SCANNERS=CScan)

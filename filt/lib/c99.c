@@ -71,7 +71,7 @@ void cprint (float complex c)
     sf_warning("%g+%gi",crealf(c),cimagf(c));
 }
 
-#if defined(__APPLE__) || defined(__CYGWIN__) || defined (__STDC__) || (__STDC_VERSION__ < 199901L)
+#if defined(__APPLE__) || defined(__CYGWIN__) || !defined (__STDC__) || (__STDC_VERSION__ < 199901L)
 /*^*/
 
 float sf_crealf(/*@unused@*/ float complex c) 

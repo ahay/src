@@ -3,8 +3,13 @@
 #include "ccgstep.h"
 #include "alloc.h"
 
-/* precision */
-static const float EPSILON=1.e-12;
+#ifndef __cplusplus
+/*^*/
+
+#include "c99.h"
+/*^*/
+
+static const float EPSILON=1.e-12; /* precision */
 
 static float complex* S;  /* model step */
 static float complex* Ss; /* residual step */
@@ -12,20 +17,21 @@ static bool Allocated = false; /* if S and Ss are allocated */
 
 static double complex dotprod (int n, 
 			       const float complex* x, const float complex* y);
+/* complex dot product */
 static float norm(int n, const float complex* x);
+/* complex norm */
 
-/* ccgstep
-   --------
-   A step of Claerbout's conjugate-gradient iteration for complex operators.
-   nx - model size
-   ny - data size
-   x[nx] - current model
-   g[nx] - gradient
-   rr[ny] - residula (d - A x)
-   gg[ny] - conjugate gradient */
-void sf_ccgstep( bool forget, int nx, int ny, 
-		 float complex* x,  const float complex* g, 
-		 float complex* rr, const float complex* gg) {
+void sf_ccgstep( bool forget             /* restart flag */, 
+		 int nx                  /* model size */, 
+		 int ny                  /* data size */, 
+		 float complex* x        /* current model [nx] */,  
+		 const float complex* g  /* gradient [nx] */, 
+		 float complex* rr       /* data residual [ny] */,
+		 const float complex* gg /* conjugate gradient [ny] */) 
+/*< Step of Claerbout's conjugate-gradient iteration for complex operators. 
+  The data residual is rr = dat - A x
+>*/
+{
     double complex sds, gdg, gds, sdg, determ, gdr, sdr, alfa, beta;
     int i;
     if (Allocated == false) {
@@ -75,7 +81,9 @@ void sf_ccgstep( bool forget, int nx, int ny,
     }
 }
 
-void sf_ccgstep_close (void) {
+void sf_ccgstep_close (void) 
+/*< Free allocated space. >*/ 
+{
     if (Allocated == true) {
 	free (S);
 	free (Ss);
@@ -84,7 +92,8 @@ void sf_ccgstep_close (void) {
 }
 
 static double complex dotprod (int n, 
-			       const float complex* x, const float complex* y) 
+			       const float complex* x, const float complex* y)
+/* complex dot product */
 {
     double complex prod;
     float complex xi, yi;
@@ -99,7 +108,9 @@ static double complex dotprod (int n,
     return prod;
 }
 
-static float norm (int n, const float complex* x) {
+static float norm (int n, const float complex* x) 
+/* complex norm */
+{
     int i;
     float xn;
 
@@ -110,5 +121,7 @@ static float norm (int n, const float complex* x) {
     return xn;
 }
 
-/* 	$Id: ccgstep.c,v 1.1 2004/03/13 06:11:03 fomels Exp $	 */
+#endif
+/*^*/
 
+/* 	$Id$	 */
