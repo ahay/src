@@ -1,5 +1,7 @@
 #include <math.h>
 
+#include <rsf.h>
+
 #include "butterworth.h"
 
 static const float pi=3.141592653589793;

@@ -1,6 +1,13 @@
+CC = cc
+CC = gcc
 CFLAGS = -O3 
+CFLAGS = -g -I../rsf
 CFLAGS = -std=gnu9x -Wall -g -pedantic -I../rsf
+
 LDFLAGS = -L../rsf -lrsf -lm
+LDFLAGS = -L../rsf -lrsf -lm -lnsl
+
+DEPEND = -xM1
 DEPEND = -MM
 
 PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
