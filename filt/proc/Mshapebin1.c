@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "int1.h"
 #include "interp.h"
 #include "gauss.h"
-#include "triangle1.h"
 #include "monofshape.h"
 
 int main (int argc, char* argv[])
@@ -126,7 +125,7 @@ int main (int argc, char* argv[])
     if (gauss) {
 	gauss_init (nx+pad, filt);
     } else {
-	triangle1_init ((int) filt, nx);
+	sf_triangle1_init ((int) filt, nx);
     }
     sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-10, true, false);
 
@@ -138,7 +137,7 @@ int main (int argc, char* argv[])
 	if (gauss) {
 	    sf_conjgrad(NULL, int1_lop, sf_freqfilt_lop, pp, mm, dd, niter);
 	} else {
-	    sf_conjgrad(NULL, int1_lop, triangle1_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, int1_lop, sf_triangle1_lop, pp, mm, dd, niter);
 	}
 
 	if (pef) {

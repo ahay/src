@@ -29,7 +29,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "dip3.h"
 #include "mask6.h"
-#include "tent2.h"
 #include "ocpatch.h"
 #include "oc.h"
 
@@ -148,7 +147,7 @@ int main (int argc, char *argv[])
 	tent = sf_floatalloc(w123);
 	tmp = sf_floatalloc(w123);
 
-	tent2 (3, w, tent);
+	sf_tent2 (3, w, tent);
 
 	ocpatch_init(3,w123,p123,nw,n,w);
 	oc_zero(nall,dip);

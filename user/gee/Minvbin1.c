@@ -1,21 +1,20 @@
-/* 1-D inverse interpolation.
-*/
+/* 1-D inverse interpolation. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <float.h>
@@ -23,10 +22,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "int1.h"
-#include "interp.h"
+#include "lint1.h"
 #include "tcai1.h"
-#include "triangle1.h"
 #include "causint.h"
 #include "pef.h"
 #include "bound.h"
@@ -88,22 +85,7 @@ int main (int argc, char* argv[])
     sf_putfloat (out,"d1",dx);
     
     /* initialize interpolation */
-    if (!sf_getint("interp",&interp)) interp=2;
-    /* [1,2] forward interpolation method, 1: nearest neighbor, 2: linear */
-
-    switch (interp) {
-	case 1:
-	    int1_init (offset, x0,dx,nx, bin_int, 1, nd);
-	    sf_warning("Using nearest-neighbor interpolation");
-	    break;
-	case 2:
-	    int1_init (offset, x0,dx,nx, lin_int, 2, nd);
-	    sf_warning("Using linear interpolation");
-	    break;
-	default:
-	    sf_error("Unsupported interp=%d",interp);
-	    break;
-    }
+    lint1_init (x0,dx,offset);
 
     if (!sf_getint("filter",&filt)) filt=1;
     /* filter type */
@@ -124,7 +106,7 @@ int main (int argc, char* argv[])
 	    aa[2] = 1.;
 	}
     } else if (filt > 1) {
-	triangle1_init (filt, nx);
+	sf_triangle1_init (filt, nx);
     }
 
     mm = sf_floatalloc(nx);
@@ -141,14 +123,14 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 	if (prec) {
 	    if (filt==1) {
-		sf_solver_prec(int1_lop, sf_cgstep, causint_lop, nx, nx, nd,
-			       mm, dd, niter, eps, "end");
+		sf_solver_prec(lint1_lop, sf_cgstep, causint_lop, nx, nx, 
+			       nd, mm, dd, niter, eps, "end");
 	    } else {
-		sf_solver_prec(int1_lop, sf_cgstep, triangle1_lop, nx, nx, nd,
-			       mm, dd, niter, eps, "verb", false, "end");
+		sf_solver_prec(lint1_lop, sf_cgstep, sf_triangle1_lop, nx, nx, 
+			       nd, mm, dd, niter, eps, "verb", false, "end");
 	    }
 	} else {
-	    sf_solver_reg(int1_lop, sf_cgstep, tcai1_lop, nx+filt, nx, nd, 
+	    sf_solver_reg(lint1_lop, sf_cgstep, tcai1_lop, nx+filt, nx, nd, 
 			  mm, dd, niter, eps, "end");
 	}
 	sf_cgstep_close();
@@ -166,12 +148,12 @@ int main (int argc, char* argv[])
 		aa[2] = bb->flt[1];
 		if (prec) {
 		    polydiv_init (nx, bb);
-		    sf_solver_prec(int1_lop, sf_cgstep, polydiv_lop, nx, nx, nd,
-				   mm, dd, niter, eps, "end");
+		    sf_solver_prec(lint1_lop, sf_cgstep, polydiv_lop, 
+				   nx, nx, nd, mm, dd, niter, eps, "end");
 		} else {
 		    tcai1_init (3, aa);
-		    sf_solver_reg(int1_lop, sf_cgstep, tcai1_lop, nx+filt,nx,nd,
-				  mm, dd, niter, eps, "end");
+		    sf_solver_reg(lint1_lop, sf_cgstep, tcai1_lop, nx+filt,
+				  nx, nd, mm, dd, niter, eps, "end");
 		}
 		sf_cgstep_close();
 	    }
@@ -183,4 +165,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Minvbin1.c,v 1.11 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

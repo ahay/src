@@ -15,7 +15,7 @@ int main (int argc, char* argv[])
 	for (j=0; j < NX; j++) {
 	    yy[j] = xx[j];
 	}
-	printf("%d %f\n", i, quantile (i, NX, yy));
+	printf("%d %f\n", i, sf_quantile (i, NX, yy));
     }
     
     exit (0);

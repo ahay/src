@@ -20,15 +20,20 @@
 
 #include "triangle1.h"
 
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
+
+#include "triangle.h"
+#include "alloc.h"
+#include "adjnull.h"
+#include "error.h"
 
 static int nd;
 static sf_triangle tr;
 static float *tmp;
 
-void triangle1_init (int nbox /* triangle size */, 
-		     int ndat /* data size */)
+void sf_triangle1_init (int nbox /* triangle size */, 
+			int ndat /* data size */)
 /*< initialize >*/
 {
     nd = ndat;
@@ -36,7 +41,7 @@ void triangle1_init (int nbox /* triangle size */,
     tmp = sf_floatalloc (ndat);
 }
 
-void triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+void sf_triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
     int i;
@@ -63,7 +68,7 @@ void triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-void triangle1_close(void)
+void sf_triangle1_close(void)
 /*< free allocated storage >*/
 {
     free (tmp);

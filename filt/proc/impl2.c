@@ -8,7 +8,6 @@
 #include "impl2.h"
 #include "edge.h"
 #include "tridiagonal.h"
-#include "quantile.h"
 
 static float t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
 static int nstep, n1, n2, n, nclip;
@@ -98,7 +97,7 @@ void impl2_set(float ** x)
 	tmp[i] = w[0][i];
     }
 
-    a = quantile(nclip,n,tmp);
+    a = sf_quantile(nclip,n,tmp);
     if (a==0.) sf_error("%s: clip at nclip=%d is zero, use a higher pclip",
 			__FILE__,nclip);
 

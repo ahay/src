@@ -1,27 +1,25 @@
-/* 2-D synthetic data of conflicting dips.
-*/
+/* 2-D synthetic data of conflicting dips. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
 
-#include "int1.h"
-#include "interp.h"
+#include "lint1.h"
 #include "random.h"
 
 #define NT1 15
@@ -67,20 +65,18 @@ int main (int argc, char* argv[])
 	    amp[it] = (ix+1.)/ nx;
 	    t[it] = 0.4  * (ix+1.) / nx + (-2*nt + it*(nt/3))*dt;
 	}
-	int1_init (t,t0,dt,nt,lin_int,2,NT1);
-	int1_lop (true,true,nt,NT1,data[ix],amp);
+	lint1_init (t0,dt,t);
+	lint1_lop (true,true,nt,NT1,data[ix],amp);
     }
-    int1_close();
 
     for (ix=0; ix < nx; ix++) {
 	for (it=0; it < NT2; it++) {
 	    amp[it] = (float) (nx-ix)/ nx;
 	    t[it]   = 0.7  * (nx-ix-1.) / nx + (-2*nt + it*(nt/5))*dt;
 	}
-	int1_init (t,t0,dt,nt,lin_int,2,NT2);
-	int1_lop (true,true,nt,NT2,data[ix],amp);
+	lint1_init (t0,dt,t);
+	lint1_lop (true,true,nt,NT2,data[ix],amp);
     }
-    int1_close();
 
     sf_floatwrite(data[0],nt*nx,mod);
 

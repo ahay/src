@@ -1,4 +1,4 @@
-/* Cosine window weighting function */
+/* Computing quantiles by Hoar's algorithm */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -17,40 +17,32 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <math.h>
+#include "quantile.h"
 
-#include <rsf.h>
-
-#include "tent2.h"
-
-void tent2 (int dim /* number of dimensions */, 
-	    const int* nwind /* window size [dim] */, 
-	    float* windwt    /* window weight */)
-/*< define window weight >*/
+float sf_quantile(int q    /* quantile */, 
+		  int n    /* array length */, 
+		  float* a /* array [n] */) 
+/*< find quantile (caution: a is changed) >*/ 
 {
-    int i, j, nw, x[SF_MAX_DIM];
-    double w;
+    float *i, *j, ak, *low, *hi, buf, *k;
 
-    /* compute window size */
-    nw = 1;
-    for (j=0; j < dim; j++) {
-	nw *= nwind[j];
-    }
-
-    /* loop inside the window */
-    for (i=0; i < nw; i++) { 
-	sf_line2cart(dim, nwind, i, x);
-    
-	windwt[i] = 1.;
-	for (j=0; j < dim; j++) {
-	    if (nwind[j] > 1) {
-		w = cosf(2.*SF_PI*(x[j]+1.)/(nwind[j] + 1.));
-		w = 0.5*(1.-w);
-		if (w > 0.) 
-		    windwt[i] *= w;
-		else
-		    windwt[i] = 0.;
+    low=a;
+    hi=a+n-1;
+    k=a+q; 
+    while (low<hi) {
+	ak = *k;
+	i = low; j = hi;
+	do {
+	    while (*i < ak) i++;     
+	    while (*j > ak) j--;     
+	    if (i<=j) {
+		buf = *i;
+		*i++ = *j;
+		*j-- = buf;
 	    }
-	}
+	} while (i<=j);
+	if (j<k) low = i; 
+	if (k<i) hi = j;
     }
+    return (*k);
 }

@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "tent.h"
-#include "tent2.h"
 #include "mkwallwt.h"
 
 int main(int argc, char* argv[])
@@ -91,7 +90,7 @@ int main(int argc, char* argv[])
     if (tnt) {
 	tent (dim, w, center, a, wind);
     } else {
-	tent2 (dim, w, wind);
+	sf_tent2 (dim, w, wind);
     }
 
     sf_floatwrite (wind, w12, windwt);

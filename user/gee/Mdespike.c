@@ -19,8 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "quantile.h"
-
 int main(int argc, char* argv[]) 
 {
     int n1, wide, i1, shift, i, i2, n2;
@@ -55,7 +53,7 @@ int main(int argc, char* argv[])
 	    for (i=0; i < wide; i++) {
 		win[i] = data[shift+i];
 	    }
-	    signal[i1] = quantile(1+wide/2,wide,win);
+	    signal[i1] = sf_quantile(1+wide/2,wide,win);
 	}
 	
 	sf_floatwrite(signal,n1,out);

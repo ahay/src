@@ -23,8 +23,6 @@
 
 #include "irls.h"
 
-#include "quantile.h"
-
 static float *abs1;
 
 void irls_init(int n) 
@@ -49,9 +47,7 @@ void l1 (int n, const float *res, float *weight)
 	abs1[i] = fabsf(res[i]);
     }
 
-    rbar = quantile(n/2,n,abs1);
-
-    sf_warning("in l1");
+    rbar = sf_quantile(n/2,n,abs1);
 
     for (i=0; i < n; i++) {
 	weight[i] = 1./sqrtf(hypotf(1.,res[i]/rbar));
@@ -68,9 +64,7 @@ void cauchy (int n, const float *res, float *weight)
 	abs1[i] = fabsf(res[i]);
     }
 
-    rbar = quantile(n/2,n,abs1);
-
-    sf_warning("in cauchy");
+    rbar = sf_quantile(n/2,n,abs1);
 
     for (i=0; i < n; i++) {
 	weight[i] = 1./hypotf(1.,res[i]/rbar);

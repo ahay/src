@@ -25,7 +25,6 @@
 #include "impl1.h"
 #include "edge.h"
 #include "tridiagonal.h"
-#include "quantile.h"
 
 static float t, *w, *d1, *w1;
 static int nstep, n, nclip;
@@ -93,7 +92,7 @@ void impl1_apply (float *x)
 	    w1[i] = w[i];
 	}
 
-	a = quantile(nclip,n,w1);
+	a = sf_quantile(nclip,n,w1);
 	
 	if (a==0.) sf_error("%s: clip at nclip=%d is zero, use a higher pclip",
 			    __FILE__,nclip);
