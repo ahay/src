@@ -45,7 +45,7 @@ sf_list sf_llist_init(void)
     sf_list l;
 
     l = (sf_list) sf_alloc(1,sizeof(*l));
-    l->current = (struct Entry *) sf_alloc(1,sizeof(struct Entry));
+    l->first = (struct Entry *) sf_alloc(1,sizeof(struct Entry));
     l->depth = 0;
     sf_llist_rewind(l);
 

@@ -22,7 +22,6 @@
 #include "cdstep.h"
 #include "llist.h"
 #include "alloc.h"
-#include "error.h"
 
 #include "_bool.h"
 /*^*/
@@ -71,22 +70,13 @@ void sf_cdstep(bool forget     /* restart flag */,
     sf_llist_rewind (steps);
     n = sf_llist_depth (steps);
 
-    sf_warning("here %d",n);
-
     for (i=0; i < n; i++) {
-	sf_warning("step %d",i);
-
 	sf_llist_down (steps, &si, &beta);
 	alpha = dotprod (ny, gg, si+nx) / beta;
-
-	sf_warning("beta=%g alpha=%g",beta,alpha);
-
 	for (ix=0; ix < nx+ny; ix++) {
 	    s[ix] -= alpha * si[ix];
 	}
     }
-
-    sf_warning("there");
     
     beta = dotprod (ny, s+nx, s+nx);
     if (beta < DBL_EPSILON) return;

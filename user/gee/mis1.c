@@ -57,8 +57,6 @@ void mis1(int niter         /* number of iterations */,
 	  const char *step  /* solver */) 
 /*< interpolate >*/
 {
-    sf_warning("have \"%s\"",step);
-
     switch (step[1]) {
 	case 'g': /* conjugate gradients */
 	    sf_solver (tcai1_lop, sf_cgstep, nx, ny, xx, zero, niter, 
