@@ -317,7 +317,9 @@ def html(dir):
         if not dirs.has_key(dir):
             dirs[dir] = []
         dirs[dir].append(prog)
-    for dir in dirs.keys():
+    keys = dirs.keys()
+    keys.sort()
+    for dir in keys:
         names = dirs[dir]
         names.sort()
         content = content + bigsection(dir,'#ffffff', '#ee77aa',

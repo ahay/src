@@ -7,6 +7,7 @@ import sfimag
 
 # user
 import sffomels
+import sfgee
 
 # plot
 import sfplot
