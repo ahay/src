@@ -361,7 +361,8 @@ def dummy(target=None,source=None,env=None):
          plt = os.path.splitext(os.path.basename(fig))[0]
          dir = os.path.split(os.path.split(fig)[0])[0]
          if dir != dirold:
-             tex.write('\n\\inputdir{%s}\n\n' % dir)
+             tex.write('\n\\section{%s}\n' % dir)
+             tex.write('\\inputdir{%s}\n\n' % dir)
              dirold = dir
          tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,dir,plt))
          tex.write('\\clearpage\n')
