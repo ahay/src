@@ -21,7 +21,7 @@ Flow('vel0','model','math output=1.5')
 Flow('vel0.5','model',
      '''
      headermath output="0.5*(T+0.01)" |
-     math output="1.5*(exp(input)-1)/input"
+     math output="1.5*sqrt((exp(input)-1)/input)"
      ''')
 
 Flow('empty','model','scale dscale=0')
@@ -32,7 +32,6 @@ for alpha in [0,0.5]:
     vel = 'vel%g' % alpha + sfsuffix
     nmo = 'nmoalfa%g' % alpha
     strat = 'strat%g' % alpha + sfsuffix
-    print vel, nmo, strat
     Flow(nmo,['model',vel],
          '''
          spray n2=20 o2=0.6 d2=0.16 |
