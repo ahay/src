@@ -26,13 +26,13 @@
 #include "int1.h"
 #include "interp_spline.h"
 #include "prefilter.h"
-#include "div2.h"
+#include "divn.h"
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, m2, m3, n2, order, ng, ig, rect1, rect2, niter, n2g, i;
-    float *coord, *inp, **out, o1, d1, o2, d2, g0, dg, g, dout, doth, o, d;
-    float *rat1, *rat2, *num, *den, *oth;
+    int i1, n1, i2, m[4], ntr, n2, order, ng, ig, rect[4], niter, n2g, i, dim;
+    float *coord, *inp, ***out, o1, d1, o2, d2, g0, dg, g, dout, doth, o, d;
+    float *rat1, *rat2, *num, *den, **oth;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -44,8 +44,17 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"d1",&d1)) sf_error ("No d1= in input");
     if(!sf_histfloat(in,"o1",&o1)) o1 = 0.;
 
-    if(!sf_histint(in,"n2",&m2)) m2 = 1;
-    if(!sf_histint(in,"n3",&m3)) m3 = 1;
+    if(!sf_histint(in,"n2",&m[2])) m[2] = 1;
+    if(!sf_histint(in,"n3",&m[3])) m[3] = 1;
+    ntr = m[2]*m[3];
+
+    if (m[3] > 1) {
+	dim = 4;
+    } else if (m[2] > 1) {
+	dim = 3;
+    } else {
+	dim = 2;
+    }
 
     if (!sf_getint("ng",&ng)) ng=1;
     /* number of gamma values */
@@ -53,10 +62,14 @@ int main(int argc, char* argv[])
     /* gamma origin */
     if (!sf_getfloat("dg",&dg)) dg=g0;
     /* gamma sampling */
-    if (!sf_getint("rect1",&rect1)) rect1=1;
+    if (!sf_getint("rect1",&rect[0])) rect[0]=1;
     /* vertical smoothing */
-    if (!sf_getint("rect2",&rect2)) rect2=1;
+    if (!sf_getint("rect2",&rect[1])) rect[1]=1;
     /* gamma smoothing */
+    if (!sf_getint("rect3",&rect[2])) rect[2]=1;
+    /* in-line smoothing */
+    if (!sf_getint("rect4",&rect[3])) rect[3]=1;
+    /* cross-line smoothing */
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
 
@@ -69,29 +82,30 @@ int main(int argc, char* argv[])
     sf_putfloat(warped,"d1",d2);
     sf_putfloat(warped,"o1",o2);
 
+    m[0] = n2;
+    m[1] = ng;
+
     sf_putint  (warped,"n2",ng);
     sf_putfloat(warped,"d2",dg);
     sf_putfloat(warped,"o2",g0);
 
-    if (m3 > 1) {
+    if (dim > 3) {
 	if(!sf_histfloat(in,"d3",&d)) d=1.;
 	if(!sf_histfloat(in,"o3",&o)) o=0.;
 	
-	sf_putint  (warped,"n4",m3);
+	sf_putint  (warped,"n4",m[3]);
 	sf_putfloat(warped,"d4",d);
 	sf_putfloat(warped,"o4",o);
     } 
 
-    if (m2 > 1 || m3 > 1) {
+    if (dim > 2) {
 	if(!sf_histfloat(in,"d2",&d)) d=1.;
 	if(!sf_histfloat(in,"o2",&o)) o=0.;
 	
-	sf_putint  (warped,"n3",m2);
+	sf_putint  (warped,"n3",m[2]);
 	sf_putfloat(warped,"d3",d);
 	sf_putfloat(warped,"o3",o);
     }
-
-    m2 *= m3;
 
     if(!sf_getint("accuracy",&order)) {
 	/* [1-4] interpolation accuracy */
@@ -103,10 +117,10 @@ int main(int argc, char* argv[])
 
     coord = sf_floatalloc (n2); 
     inp =   sf_floatalloc (n1);
-    out =   sf_floatalloc2 (n2,ng);
-    oth =   sf_floatalloc (n2);
+    out =   sf_floatalloc3 (n2,ng,ntr);
+    oth =   sf_floatalloc2 (n2,ntr);
 
-    n2g = n2*ng;
+    n2g = n2*ng*ntr;
 
     rat1 = sf_floatalloc (n2g);
     rat2 = sf_floatalloc (n2g);
@@ -114,21 +128,20 @@ int main(int argc, char* argv[])
     den = sf_floatalloc (n2g);
 
     prefilter_init (order, n1, order*10);     
-    div2_init(n2, ng, (float) rect1,(float) rect2, niter, false);
-    
-    for (i2=0; i2 < m2; i2++) {
+    divn_init(dim, n2g, m, rect, niter);
+
+    doth = 0.;
+    dout = 0.;
+    for (i2=0; i2 < ntr; i2++) {
 	sf_floatread(inp,n1,in);
 	prefilter_apply (n1, inp);
 
-	sf_floatread(oth,n2,other);
+	sf_floatread(oth[i2],n2,other);
 
-	doth = 0.;
 	for (i1=0; i1 < n2; i1++) {
-	    doth += oth[i1]*oth[i1];
+	    doth += oth[i2][i1]*oth[i2][i1];
 	}
-	doth = sqrtf(n2/doth);
 	
-	dout = 0.;
 	for (ig=0; ig < ng; ig++) {
 	    g = g0 + ig*dg;
 
@@ -138,50 +151,56 @@ int main(int argc, char* argv[])
 
 	    int1_init (coord, o1, d1, n1, spline_int, order, n2);
 
-	    int1_lop (false,false,n1,n2,inp,out[ig]);
+	    int1_lop (false,false,n1,n2,inp,out[i2][ig]);
 
 	    for (i1=0; i1 < n2; i1++) {
-		dout += out[ig][i1]*out[ig][i1];
+		dout += out[i2][ig][i1]*out[i2][ig][i1];
 	    }
 	}
-	dout = sqrtf(n2*ng/dout);
-
-	for (ig=0; ig < ng; ig++) {
-	    for (i1=0; i1 < n2; i1++) {
-		i = ig*n2+i1;
-		den[i] = out[ig][i1]*dout;
-		num[i] = oth[i1]*dout;
-	    }
-	}
-	div2(num,den,rat1);
-	
-	for (ig=0; ig < ng; ig++) {
-	    for (i1=0; i1 < n2; i1++) {
-		i = ig*n2+i1;
-		num[i] = out[ig][i1]*doth;
-		den[i] = oth[i1]*doth;
-	    }
-	}
-	div2(num,den,rat2);
-	
-	for (i=0; i < n2g; i++) {
-	    if (rat1[i] > 0.) {
-		if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
-		    rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-		} else {
-		    rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-		}
-	    } else {
-		if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
-		    rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-		} else {
-		    rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-		}
-	    }
-	}
-	
-	sf_floatwrite(rat1,n2g,warped);
     }
+    doth = sqrtf(ntr*n2/doth);
+    dout = sqrtf(n2g/dout);
+
+    for (i2=0; i2 < ntr; i2++) {
+	for (ig=0; ig < ng; ig++) {
+	    for (i1=0; i1 < n2; i1++) {
+		i = (i2*ng + ig)*n2+i1;
+		den[i] = out[i2][ig][i1]*dout;
+		num[i] = oth[i2][i1]*dout;
+	    }
+	}
+    }
+
+    divn(num,den,rat1);
+	
+    for (i2=0; i2 < ntr; i2++) {
+	for (ig=0; ig < ng; ig++) {
+	    for (i1=0; i1 < n2; i1++) {
+		i = (i2*ng+ig)*n2+i1;
+		num[i] = out[i2][ig][i1]*doth;
+		den[i] = oth[i2][i1]*doth;
+	    }
+	}
+    }
+    divn(num,den,rat2);
+	
+    for (i=0; i < n2g; i++) {
+	if (rat1[i] > 0.) {
+	    if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
+		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
+	    } else {
+		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
+	    }
+	} else {
+	    if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
+		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
+	    } else {
+		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
+	    }
+	}
+    }
+	
+    sf_floatwrite(rat1,n2g,warped);
 
     exit (0);
 }
