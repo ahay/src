@@ -17,10 +17,28 @@ def underline(text):
     """Format a string in underline by overstriking."""
     return string.join(map(lambda ch: ch + "\b_", text),'')
 
+def replace(text, *pairs):
+    """Do a series of global replacements on a string."""
+    while pairs:
+        text = string.join(string.split(text, pairs[0]), pairs[1])
+        pairs = pairs[2:]
+    return text
+
 def section(head,body):
     text = string.join(map(lambda line: "\t" + line,
                            string.split(body,"\n")),"\n")
     return bold(string.upper(head)) + "\n" + text + "\n"
+
+def page(title, contents):
+    """Format an HTML page."""
+    return '''
+    <!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+    <html><head><title>RSF: %s</title>
+    <style type="text/css"><!--
+    TT { font-family: lucidatypewriter, lucida console, courier }
+    --></style></head><body bgcolor="#f0f0f8">
+    %s
+    </body></html>''' % (title, contents)
 
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
@@ -64,6 +82,10 @@ class rsfprog:
             doc = doc + section('see also',self.also)
         doc = doc + section('source',self.file)
         pydoc.pager(doc)
+    def html(self,dir):
+        file = open (os.path.join(dir,self.name + '.html'),'w')
+        file.write(page(self.name,'Test'))
+        file.close()
 
 comment = None
 param = None
@@ -155,8 +177,11 @@ def cli():
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:')
+        dir = None
         for opt, val in opts:
+            if opt == '-w':
+                dir = val
             if opt == '-k':
                 val = val.lower()
                 doc = ''
@@ -175,19 +200,25 @@ def cli():
                 prog = rsfprefix + prog
             main = progs.get(prog)
             if main:
-                main.document()
+                if dir:
+                    main.html(dir)
+                else:
+                    main.document()
             else:
                 print "No program %s in RSF." % prog
 
     except (getopt.error, BadUsage):
         print '''sfdoc - the RSF documentation tool
-    
-%s <prog1> <prog2> ...
+        
+%(prog)s <prog1> <prog2> ... 
     Show documentation on programs.
 
-%s -k <keyword>
+%(prog)s <prog1> <prog2> ... -w <dir>
+    Write program documentaton in <dir> directory.
+
+%(prog)s -k <keyword>
     Search for a keyword in the description lines of all available programs.
-''' % (this,this)
+''' % {'prog':this}
 
 if __name__ == "__main__":
     junk = open('junk.py',"w")
@@ -202,4 +233,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-
+# 	$Id: rsfdoc.py,v 1.9 2003/10/18 18:19:58 fomels Exp $	
