@@ -35,7 +35,7 @@
 
 int sf_filedims (sf_file file, /*@out@*/ int *n) 
 /*< Find file dimensions.
-
+---
 Outputs the number of dimensions dim and a dimension array n[dim] >*/
 {
     int i, dim;
@@ -97,7 +97,7 @@ void sf_cp(sf_file in, sf_file out)
 
 void sf_rm(const char* filename, bool force, bool verb, bool inquire)
 /*< Remove an RSF file.
-
+---
 force, verb, and inquire flags should behave similar to the corresponding flags in the Unix "rm" command. >*/
 {
     int c, c2;

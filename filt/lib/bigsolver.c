@@ -50,35 +50,35 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 		     float eps          /* regularization parameter */, 
 		     ...                /* variable number of arguments */) 
 /*< Generic preconditioned linear solver.
-
-  Solves
-  oper{x} =~ dat
-  eps p   =~ 0
-  where x = prec{p}
-
-  The last parameter in the call to this function should be "end".
-  Example: 
-
-  sf_solver_prec (oper_lop,sf_cgstep,prec_lop,
-  np,nx,ny,x,y,100,1.0,"x0",x0,"end");
-
-  Parameters in ...:
-  
-  "wt":     float*:         weight      
-  "wght":   sf_weight wght: weighting function
-  "x0":     float*:         initial model
-  "nloper": sf_operator:    nonlinear operator  
-  "mwt":    float*:         model weight
-  "verb":   bool:           verbosity flag
-  "known":  bool*:          known model mask
-  "nmem":   int:            iteration memory
-  "nfreq":  int:            periodic restart
-  "xmov":   float**:        model iteration
-  "rmov":   float**:        residual iteration
-  "err":    float*:         final error
-  "res":    float*:         final residual
-  "xp":     float*:         preconditioned model
-  >*/
+ ---
+ Solves
+ oper{x} =~ dat
+ eps p   =~ 0
+ where x = prec{p}
+ ---
+ The last parameter in the call to this function should be "end".
+ Example: 
+ ---
+ sf_solver_prec (oper_lop,sf_cgstep,prec_lop,
+ np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+ ---
+ Parameters in ...:
+ ... 
+ "wt":     float*:         weight      
+ "wght":   sf_weight wght: weighting function
+ "x0":     float*:         initial model
+ "nloper": sf_operator:    nonlinear operator  
+ "mwt":    float*:         model weight
+ "verb":   bool:           verbosity flag
+ "known":  bool*:          known model mask
+ "nmem":   int:            iteration memory
+ "nfreq":  int:            periodic restart
+ "xmov":   float**:        model iteration
+ "rmov":   float**:        residual iteration
+ "err":    float*:         final error
+ "res":    float*:         final residual
+ "xp":     float*:         preconditioned model
+ >*/
 {
     va_list args;
     char* par;
@@ -343,17 +343,17 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 		    float eps          /* regularization parameter */, 
 		    ...                /* variable number of arguments */) 
 /*< Generic regularized linear solver.
-
+  ---
   Solves
   oper{x}    =~ dat
   eps reg{x} =~ 0
-  
+  ---
   The last parameter in the call to this function should be "end".
   Example: 
-
+  ---
   sf_solver_reg (oper_lop,sf_cgstep,reg_lop,
   np,nx,ny,x,y,100,1.0,"x0",x0,"end");
-
+  ---
   Parameters in ...:
   
   "wt":     float*:         weight      
@@ -595,17 +595,17 @@ void sf_solver (sf_operator oper   /* linear operator */,
 		int niter          /* number of iterations */, 
 		...                /* variable number of arguments */)
 /*< Generic linear solver.
-
+  ---
   Solves
   oper{x}    =~ dat
-  
+  ---
   The last parameter in the call to this function should be "end".
   Example: 
-
+  ---
   sf_solver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
-
+  ---
   Parameters in ...:
-  
+  ---
   "wt":     float*:         weight      
   "wght":   sf_weight wght: weighting function
   "x0":     float*:         initial model
@@ -839,17 +839,17 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 		 int niter                /* number of iterations */, 
 		 ...                      /* variable number of arguments */) 
 /*< Generic linear solver for complex data.
-
+  ---
   Solves
   oper{x}    =~ dat
-  
+  ---
   The last parameter in the call to this function should be "end".
   Example: 
-
+  ---
   sf_csolver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
-
+  ---
   Parameters in ...:
-  
+  ---
   "wt":     float*:          weight      
   "wght":   sf_cweight wght: weighting function
   "x0":     float complex*:  initial model

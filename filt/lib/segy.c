@@ -1,3 +1,22 @@
+/* Operations with SEGY standard files. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <assert.h>
 #include <string.h>
 #include <math.h>
@@ -5,8 +24,30 @@
 
 #include "segy.h"
 #include "getpar.h"
-#include "_bool.h"
 #include "error.h"
+
+#include "_bool.h"
+/*^*/
+
+#ifndef _sf_segy_h
+
+#define SF_SEGY_FORMAT  24
+#define SF_SEGY_NS      20
+#define SF_SEGY_DT      16
+/*^*/
+
+
+enum {
+    SF_EBCBYTES=3200,	/* Bytes in the card image EBCDIC block */
+    SF_BNYBYTES=400,	/* Bytes in the binary coded block	*/
+    SF_HDRBYTES=240,	/* Bytes in the tape trace header	*/
+    SF_NKEYS=71,	/* Number of mandated header fields	*/
+    SF_BHKEYS=27	/* Number of mandated binary fields	*/
+};
+/*^*/
+
+
+#endif
 
 typedef unsigned char byte;
 
@@ -87,12 +128,19 @@ struct segy {
     unsigned int size;
 } segykey[] = {
     {"tracl",  4},  /* trace sequence number within line 0 */
+
     {"tracr",  4},  /* trace sequence number within reel 4 */
+
     {"fldr",   4},  /* field record number 8 */
+
     {"tracf",  4},  /* trace number within field record 12 */
+
     {"ep",     4},  /* energy source point number 16 */
+
     {"cdp",    4},  /* CDP ensemble number 20 */
+
     {"cdpt",   4},  /* trace number within CDP ensemble 24 */
+
     {"trid",   2},  /* trace identification code:
                         1 = seismic data
                         2 = dead
@@ -103,37 +151,55 @@ struct segy {
                         7 = timing
                         8 = water break
                         9---, N = optional use (N = 32,767) 28 */
+
     {"nvs",    2},  /* number of vertically summed traces (see
 		    vscode in bhed structure) 30 */
+
     {"nhs",    2},  /* number of horizontally summed traces (see
 		    vscode in bhed structure) 32 */
+
     {"duse",   2},  /* data use:
 		    1 = production
 		    2 = test 34 */
+
     {"offset", 4},  /* distance from source point to receiver
 		    group (negative if opposite to direction
 		    in which the line was shot) 36 */
+
     {"gelev",  4},  /* receiver group elevation from sea level
 		    (above sea level is positive) 40 */
+
     {"selev",  4},  /* source elevation from sea level
 		     (above sea level is positive) 44 */
+
     {"sdepth", 4},  /* source depth (positive) 48 */
+
     {"gdel",   4},  /* datum elevation at receiver group 52 */
+
     {"sdel",   4},  /* datum elevation at source 56 */
+
     {"swdep",  4},  /* water depth at source 60 */
+
     {"gwdep",  4},  /* water depth at receiver group 64 */
+
     {"scalel", 2},  /* scale factor for previous 7 entries
 		     with value plus or minus 10 to the
 		     power 0, 1, 2, 3, or 4 (if positive,
 		     multiply, if negative divide) 68 */
+
     {"scalco", 2},  /* scale factor for next 4 entries
 		     with value plus or minus 10 to the
 		     power 0, 1, 2, 3, or 4 (if positive,
 		     multiply, if negative divide) 70 */
+
     {"sx",     4},  /* X source coordinate 72 */
+
     {"sy",     4},  /* Y source coordinate 76 */
+
     {"gx",     4},  /* X group coordinate 80 */
+
     {"gy",     4},  /* Y source coordinate 84 */
+
     {"counit", 2},  /* coordinate units code:
 		     for previoius four entries
 		     1 = length (meters or feet)
@@ -142,13 +208,21 @@ struct segy {
 		     are latitude, a positive value designates
 		     the number of seconds east of Greenwich
 		     or north of the equator 88 */
+
     {"wevel",   2},  /* weathering velocity 90 */
+
     {"swevel",  2},  /* subweathering velocity 92 */
+
     {"sut",     2},  /* uphole time at source 94 */
+
     {"gut",     2},  /* uphole time at receiver group 96 */
+
     {"sstat",   2},  /* source static correction 98 */
+
     {"gstat",   2},  /* group static correction 100 */
+
     {"tstat",   2},  /* total static applied 102 */
+
     {"laga",    2},  /* lag time A, time in ms between end of 240-
 		      byte trace identification header and time
 		      break, positive if time break occurs after
@@ -156,70 +230,108 @@ struct segy {
 		      the initiation pulse which maybe recorded
 		      on an auxiliary trace or as otherwise
 		      specified by the recording system 104 */
+
     {"lagb",    2},  /* lag time B, time in ms between the time
 		      break and the initiation time of the energy source,
 		      may be positive or negative 106 */
+
     {"delrt",   2},  /* delay recording time, time in ms between
 		      initiation time of energy source and time
 		      when recording of data samples begins
 		      (for deep water work if recording does not
 		      start at zero time) 108 */
+
     {"muts",    2},  /* mute time--start 110 */
+
     {"mute",    2},  /* mute time--end 112 */
+
     {"ns",      2},  /* number of samples in this trace 114 */
+
     {"dt",      2},  /* sample interval, in micro-seconds 116 */
+
     {"gain",    2},  /* gain type of field instruments code:
 		      1 = fixed
 		      2 = binary
 		      3 = floating point
 		      4 ---- N = optional use 118 */
+
     {"igc",    2},   /* instrument gain constant 120 */
+
     {"igi",    2},   /* instrument early or initial gain 122 */
+
     {"corr",   2},   /* correlated:
 		      1 = no
 		      2 = yes 124 */    
+
     {"sfs",    2},   /* sweep frequency at start 126 */
+
     {"sfe",    2},   /* sweep frequency at end 128 */
+
     {"slen",   2},   /* sweep length in ms 130 */
+
     {"styp",   2},   /* sweep type code:
 		      1 = linear
 		      2 = cos-squared
 		      3 = other 132 */   
+
     {"stas",   2},   /* sweep trace length at start in ms 134 */
+
     {"stae",   2},   /* sweep trace length at end in ms 136 */
+
     {"tatyp",  2},   /* taper type: 1=linear, 2=cos^2, 3=other 138 */
+
     {"afilf",  2},   /* alias filter frequency if used 140 */
+
     {"afils",  2},   /* alias filter slope 142 */
+
     {"nofilf", 2},   /* notch filter frequency if used 144 */
+
     {"nofils", 2},   /* notch filter slope 146 */
+
     {"lcf",    2},   /* low cut frequency if used 148 */
+
     {"hcf",    2},   /* high cut frequncy if used 150 */
+
     {"lcs",    2},   /* low cut slope 152 */
+
     {"hcs",    2},   /* high cut slope 154 */
+
     {"year",   2},   /* year data recorded 156 */
+
     {"day",    2},   /* day of year 158 */
+
     {"hour",   2},   /* hour of day (24 hour clock) 160 */
+
     {"minute", 2},   /* minute of hour 162 */
+
     {"sec",    2},   /* second of minute 164 */
+
     {"timbas", 2},   /* time basis code:
 		      1 = local
 		      2 = GMT
 		      3 = other 166 */   
+
     {"trwf",   2},   /* trace weighting factor, defined as 1/2^N
 		      volts for the least sigificant bit 168 */
+
     {"grnors", 2},   /* geophone group number of roll switch
 		      position one 170 */
+
     {"grnofr", 2},   /* geophone group number of trace one within
 		      original field record 172 */
+
     {"grnlof", 2},   /* geophone group number of last trace within
 		      original field record 174 */
+
     {"gaps",   2},   /* gap size (total number of groups dropped) 176 */
+
     {"otrav",  2},   /* overtravel taper code:
 		      1 = down (or behind)
 		      2 = up (or ahead) 71/178 */
     /* 72/180 73/184 74/188 75/192 76/196 77/200 78/204 79/208 
        80/212 81/216 82/220 83/224 84/228 85/232 86/236 */
 };
+
 
 /* Big-endian to Little-endian conversion and back */
 static int convert2(const char* buf);
@@ -233,6 +345,7 @@ static float ibm2float (const char* num);
 static void float2ibm (float y, char* num);
 
 static void swapb(byte *x, byte *y) 
+/* swap two bytes */
 {
     byte tmp; 
 
@@ -242,6 +355,7 @@ static void swapb(byte *x, byte *y)
 }
 
 static int convert2(const char* buf)
+/* convert buf to 2-byte int */
 {
     union {
 	byte b[2];
@@ -256,6 +370,7 @@ static int convert2(const char* buf)
 }
 
 static void insert2(int y, char* buf)
+/* convert 2-byte int to buf */
 {
     union {
 	byte b[2];
@@ -270,6 +385,7 @@ static void insert2(int y, char* buf)
 }
 
 static int convert4(const char* buf)
+/* convert buf to 4-byte int */
 {
     union {
 	byte b[4];
@@ -287,6 +403,7 @@ static int convert4(const char* buf)
 }
 
 static void insert4(int y, char* buf)
+/* convert 4-byte int to buf */
 {
     union {
 	byte b[4];
@@ -303,8 +420,8 @@ static void insert4(int y, char* buf)
     memcpy(buf,x.b,4);
 }
 
-/* Little-endianness test */
 bool sf_endian (void)
+/*< Endianness test, returns true for little-endian machines >*/
 {
     union {
 	byte c[4];
@@ -321,6 +438,7 @@ bool sf_endian (void)
 }
 
 void sf_ebc2asc (int narr, char* arr)
+/*< Convert char array arrr[narr]: EBC to ASCII >*/
 {
     int i, j;
 
@@ -331,6 +449,7 @@ void sf_ebc2asc (int narr, char* arr)
 }
 
 void sf_asc2ebc (int narr, char* arr)
+/*< Convert char array arrr[narr]: ASCII to EBC >*/
 {
     int i, j;
 
@@ -340,22 +459,27 @@ void sf_asc2ebc (int narr, char* arr)
     }
 }
 
+
 int sf_segyformat (const char* bhead)
+/*< extracts SEGY format from binary header >*/
 {
     return convert2(bhead+SF_SEGY_FORMAT);
 }
-    
+
 int sf_segyns (const char* bhead)
+/*< extracts ns (number of samples) from binary header >*/
 {
     return convert2(bhead+SF_SEGY_NS);
 }
-    
+
 float sf_segydt (const char* bhead)
+/*< extracts dt (sampling) from binary header >*/
 {
     return (float) (convert2(bhead+SF_SEGY_DT)/1000000.);
 }
- 
+
 static void float2ibm (float y, char* num)
+/* floating-point conversion to IBM format */
 {
     unsigned long x, s, f;
     long e;
@@ -406,6 +530,7 @@ static void float2ibm (float y, char* num)
 }
 
 static float ibm2float (const char* num)
+/* floating point conversion from IBM format */
 {
     unsigned long x, s, f;
     const unsigned long fMAXIEEE = 0x7F7FFFFF;
@@ -455,6 +580,10 @@ static float ibm2float (const char* num)
 }
 
 void sf_segy2trace(const char* buf, float* trace, int ns, int format)
+/*< Extract a floating-point trace[nt] from buffer buf.
+---
+format: 1: IBM, 2: int4, 3: int2
+>*/
 {
     int i;
 
@@ -469,6 +598,10 @@ void sf_segy2trace(const char* buf, float* trace, int ns, int format)
 }
 
 void sf_trace2segy(char* buf, const float* trace, int ns, int format)
+/*< Convert a floating-point trace[ns] to buffer buf.
+---
+format: 1: IBM, 2: int4, 3: int2
+>*/
 {
     int i;
 
@@ -483,6 +616,7 @@ void sf_trace2segy(char* buf, const float* trace, int ns, int format)
 }
 
 void sf_segy2head(const char* buf, int* trace, int nk)
+/*< Create an integer trace header trace[nk] from buffer buf >*/
 {
     int i, byte;
     const char *buf0, *bufi;
@@ -507,8 +641,11 @@ void sf_segy2head(const char* buf, int* trace, int nk)
 	}
     }
 }
-       
-int sf_segykey (const char* key) {
+
+int sf_segykey (const char* key) 
+/*< Extract a SEGY key value >*/
+{
+    
     int i;
 
     for (i=0; i < SF_NKEYS; i++) {
@@ -518,11 +655,14 @@ int sf_segykey (const char* key) {
     return 0;
 }
 
-char* sf_segykeyword (int k) {
+char* sf_segykeyword (int k) 
+/*< Find a SEGY key from its number >*/
+{
     return segykey[k].name;
 }
 
 void sf_head2segy(char* buf, const int* trace, int nk)
+/*< Convert an integer trace[nk] to buffer buf >*/
 {
     int i;
 
@@ -536,5 +676,5 @@ void sf_head2segy(char* buf, const int* trace, int nk)
 	}
     }
 }
- 
+
 /* 	$Id$	 */

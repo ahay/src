@@ -154,7 +154,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 
 sf_file sf_output (/*@null@*/ const char* tag)
 /*< Create an output file structure.
-
+---
 Should do output after sf_input. >*/
 {
     sf_file file;
@@ -267,7 +267,7 @@ void sf_setform (sf_file file, sf_dataform form)
 
 void sf_setformat (sf_file file, const char* format)
 /*< Set file format.
-
+---
 format has a form "form_type", i.e. native_float, ascii_int, etc.
 >*/
 {
@@ -451,7 +451,7 @@ char* sf_histstring (sf_file file, const char* key)
 
 void sf_fileflush (sf_file file, sf_file src)
 /*< outputs parameter to a file (initially from source src)
-
+---
 Prepares file for writing binary data >*/ 
 {
     time_t tm;

@@ -28,7 +28,7 @@
 
 void sf_error( char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 
-
+---
 Format and variable arguments follow printf convention. Additionally, a ':' at
 the end of format adds system information for system errors. >*/
 {
@@ -55,7 +55,7 @@ the end of format adds system information for system errors. >*/
 
 void sf_warning( char *format, ... )
 /*< Outputs a warning message to stderr. 
-
+---
 Format and variable arguments follow printf convention. Additionally, a ':' at
 the end of format adds system information for system errors. >*/
 {
