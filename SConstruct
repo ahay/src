@@ -116,7 +116,7 @@ env.Alias('install',[bindir,pydir,libdir,incdir,docdir])
 
 use = os.path.join(pydir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use))
-Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
+Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]+user))
 Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 
