@@ -38,7 +38,6 @@ static axa aw,alx,aly,amx,amy,amz,ae;
 static bool verb;
 static float eps;
 
-static float         **qq;
 static float complex **ww_s,**ww_r;
 
 static int            *nr_s, *nr_r, *nr; /* number of references */
@@ -66,7 +65,7 @@ void srmig_init(bool verb_,
 
     verb=verb_;
     eps = eps_;
-    
+
     aw  = aw_;
     amx = amx_;
     amy = amy_;
@@ -89,9 +88,6 @@ void srmig_init(bool verb_,
 	     tmx ,tmy,
 	     ds);
 
-    /* IMG */
-    img_init(amz_,amx_,amy_);
-
     /* precompute taper */
     taper2_init(amy.n,
 		amx.n,
@@ -103,9 +99,6 @@ void srmig_init(bool verb_,
     /* allocate wavefield storage */
     ww_s = sf_complexalloc2(amx.n,amy.n);
     ww_r = sf_complexalloc2(amx.n,amy.n);
-
-    /* allocate image storage */
-    qq = sf_floatalloc2(amx.n,amy.n);
 }
 /*------------------------------------------------------------*/
 
@@ -227,32 +220,34 @@ void srmig_close(void)
     
     free( *ww_s); free( ww_s);
     free( *ww_r); free( ww_r);
-    free( *qq);   free( qq);
 }
 
 /*------------------------------------------------------------*/
 void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 	      fslice rdat /* receiver data [nw][ny][nx] */,
-	      fslice imag /*         image [nz][ny][nx] */
+	      fslice imag /*         image [nz][ny][nx] */,
+	      void (*imop)( int,int,
+			    fslice,
+			    float complex **, 
+			    float complex **)
     )
 /*< Apply S/R migration >*/
 {
     int imz,iw,ilx,ily,ie;
     float complex ws,wr;
     
-    img_zero(imag,qq);
-
     for (ie=0; ie<ae.n; ie++) {
 	for (iw=0; iw<aw.n; iw++) {
-	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",
+				 iw+1,aw.n,ie+1,ae.n);
 	    
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 	    
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);
-	    
-	    img_xcor(0,imag,qq,ww_s,ww_r);
+
+	    imop(0,iw,imag,ww_s,ww_r);
 
 	    fslice_get(slow,0,so[0]);
 	    for (imz=0; imz<amz.n-1; imz++) {
@@ -263,8 +258,7 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 		
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-		img_xcor(imz+1,imag,qq,ww_s,ww_r);
-
+		imop(imz+1,iw,imag,ww_s,ww_r);
 	    } /* z */
 	} /* w */
     }
@@ -274,18 +268,21 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 
 void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	      fslice rdat /* receiver data [nw][ny][nx] */,
-	      fslice imag /*         image [nz][ny][nx] */
+	      fslice imag /*         image [nz][ny][nx] */,
+	      void (*imop)( int,int,
+			    fslice,
+			    float complex **, 
+			    float complex **)
     )
 /*< Apply S/R migration >*/
 {
     int imz,iw,ilx,ily,ie;
     float complex ws,wr;
     
-    img_zero(imag,qq);
-
     for (ie=0; ie<ae.n; ie++) {
 	for (iw=0; iw<aw.n; iw++) {
-	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",
+				 iw+1,aw.n,ie+1,ae.n);
 	    
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
@@ -293,7 +290,7 @@ void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);
 	    
-	    img_xcor(0,imag,qq,ww_s,ww_r);
+	    imop(0,iw,imag,ww_s,ww_r);
 	    
 	    fslice_get(slow_s,0,so_s[0]);
 	    fslice_get(slow_r,0,so_r[0]);
@@ -307,8 +304,7 @@ void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 		SOOP( so_s[ily][ilx] = ss_s[ily][ilx]; );
 		SOOP( so_r[ily][ilx] = ss_r[ily][ilx]; );
 
-		img_xcor(imz+1,imag,qq,ww_s,ww_r);
-
+		imop(imz+1,iw,imag,ww_s,ww_r);
 	    } /* z */
 	} /* w */
     }

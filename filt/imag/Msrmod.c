@@ -24,10 +24,10 @@ int main (int argc, char *argv[])
 {
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
-    int   nr;             /* number of reference velocities */
-    float dt;             /* time error */
-    int   px,py;          /* padding in the k domain */
-    int   tx,ty;          /* boundary taper size */
+    int   nrmax;          /* number of reference velocities */
+    float dtmax;          /* time error */
+    int   pmx,pmy;        /* padding in the k domain */
+    int   tmx,tmy;        /* boundary taper size */
     bool cw;              /* converted waves flag */
 
     axa az,ax,ay,aw,alx,aly,ae;
@@ -51,12 +51,12 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of refs */
-    if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on x */
-    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on y */
-    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper on x   */
-    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper on y   */
+    if (!sf_getint(   "nrmax",&nrmax  ))   nrmax =     1; /* maximum number of refs */
+    if (!sf_getfloat( "dtmax",&dtmax  ))   dtmax = 0.004; /* time error */
+    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on x */
+    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on y */
+    if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper on x   */
+    if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper on y   */
     
     /*------------------------------------------------------------*/
     /* SLOWNESS */
@@ -94,16 +94,16 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* MODELING */
-    srmod_init (verb,eps,dt,
+    srmod_init (verb,eps,dtmax,
 		ae,az,aw,ax,ay,alx,aly,
-		tx,ty,px,py);
+		tmx,tmy,pmx,pmy);
     
     if(cw) { 
-	srmod_cw_init (dt,nr,slo_s,slo_r);
+	srmod_cw_init (dtmax,nrmax,slo_s,slo_r);
 	srmod_cw      (wfl_s,wfl_r,refl);
 	srmod_cw_close();
     } else { 
-	srmod_pw_init (dt,nr,slo_s);
+	srmod_pw_init (dtmax,nrmax,slo_s);
 	srmod_pw      (wfl_s,wfl_r,refl);
 	srmod_pw_close();
     }

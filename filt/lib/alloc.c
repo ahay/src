@@ -200,6 +200,23 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
+/*@out@*/ float ****sf_floatalloc4 (size_t n1 /* fast dimension */, 
+				    size_t n2 /* slower dimension */, 
+				    size_t n3 /* slower dimension */, 
+				    size_t n4 /* slowest dimension */)
+/*< float 4-D allocation, out[0][0][0] points to a contiguous array >*/ 
+{
+    size_t i4;
+    float ****ptr;
+    
+    ptr = (float****) sf_alloc (n4,sizeof(float***));
+    ptr[0] = sf_floatalloc3 (n1,n2,n3*n4);
+    for (i4=1; i4 < n4; i4++) {
+	ptr[i4] = ptr[0]+i4*n3;
+    }
+    return ptr;
+}
+
 /*@out@*/ int **sf_intalloc2 (size_t n1 /* fast dimension */, 
 			      size_t n2 /* slow dimension */)
 /*< float 2-D allocation, out[0] points to a contiguous array >*/  

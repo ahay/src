@@ -28,8 +28,8 @@ int main (int argc, char *argv[])
     bool twoway;          /* two-way traveltime */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
-    int   nr;             /* number of reference velocities */
-    float dt;             /* time error */
+    int   nrmax;             /* number of reference velocities */
+    float dtmax;             /* time error */
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
 
@@ -52,8 +52,8 @@ int main (int argc, char *argv[])
     if (!sf_getbool(   "inv",&inv ))    inv = false; /* y=modeling; n=migration */
     if (!sf_getbool("causal",&causal))causal= false; /* y=causal; n=anti-causal */
     if (!sf_getbool("twoway",&twoway))twoway=  true; /* two-way traveltime */
-    if (!sf_getint(     "nr",&nr  ))     nr =     1; /* maximum number of references */
-    if (!sf_getfloat(   "dt",&dt  ))     dt = 0.004; /* time error */
+    if (!sf_getint(     "nrmax",&nrmax  ))     nrmax =     1; /* maximum number of references */
+    if (!sf_getfloat(   "dtmax",&dtmax  ))     dtmax = 0.004; /* time error */
     if (!sf_getint(    "pmx",&pmx ))    pmx =     0; /* padding on x */
     if (!sf_getint(    "pmy",&pmy ))    pmy =     0; /* padding on y*/
     if (!sf_getint(    "tmx",&tmx ))    tmx =     0; /* taper on x*/
@@ -151,13 +151,13 @@ int main (int argc, char *argv[])
     }
     /*------------------------------------------------------------*/
     
-    zomig_init(verb,eps,twoway,dt,
+    zomig_init(verb,eps,twoway,dtmax,
 	       az,aw,ae,
 	       amx,amy,
 	       alx,aly,
 	       tmx,tmy,
 	       pmx,pmy,
-	       nr,slow);
+	       nrmax,slow);
 
     switch(mode[0]) {
 	case 'w':

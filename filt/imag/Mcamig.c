@@ -26,8 +26,8 @@ int main (int argc, char *argv[])
     bool inv;             /* forward or adjoint */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
-    int   nr;             /* number of reference velocities */
-    float dt;             /* time error */
+    int   nrmax;          /* number of reference velocities */
+    float dtmax;          /* time error */
     int   pmx,pmy,phx;    /* padding in the k domain */
     int   tmx,tmy,thx;    /* boundary taper size */
 
@@ -48,8 +48,8 @@ int main (int argc, char *argv[])
     if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
     if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of refs */
-    if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
+    if (!sf_getint(   "nrmax",&nrmax  ))   nrmax =     1; /* maximum number of refs */
+    if (!sf_getfloat( "dtmax",&dtmax  ))   dtmax = 0.004; /* time error */
     if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding mx*/
     if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding my*/
     if (!sf_getint(  "phx",&phx ))  phx =     0; /* padding hx*/
@@ -157,13 +157,13 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     
-    camig_init(verb,eps,dt,
+    camig_init(verb,eps,dtmax,
 	       az,aw,ae,
 	       amx,amy,ahx,
 	       alx,aly,
 	       tmx,tmy,thx,
 	       pmx,pmy,phx,
-	       nr,slow);
+	       nrmax,slow);
     
     switch(mode[0]) {
 	case 'w':
