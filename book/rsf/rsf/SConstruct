@@ -1,0 +1,6 @@
+from rsfproj import *
+
+Pdf('install',use='hyperref')
+Pdf('intro',use='hyperref')
+
+End()
