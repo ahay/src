@@ -19,7 +19,7 @@ import rsfproj, os, re, string
 susuffix = '.su'
 pssuffix = '.eps'
 
-topdir = os.environ.get('CWPROOT')
+topdir = os.environ.get('CWPROOT','')
 bindir = os.path.join(topdir,'bin')
 
 suprogs = os.listdir(bindir)

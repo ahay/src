@@ -1,3 +1,22 @@
+/* Gaussian shaping in 2-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -10,6 +29,7 @@ static int nfft, nw, nk;
 static float **shape, dw, dk, k0;
 
 void gaussshape2_init(int n1, int n2)
+/*< initialize with data size >*/
 {
     /* determine frequency sampling (for real to complex FFT) */
     nfft = n1;
@@ -27,14 +47,19 @@ void gaussshape2_init(int n1, int n2)
     freqfilt2_set(shape);
 }
 
-void gaussshape2_set(float* a, const float* pattern, int niter)
+void gaussshape2_set(float* a             /* shaper */, 
+		     const float* pattern /* training data */, 
+		     int niter            /* number of iterations */)
+/*< estimate shaping >*/
 {
     freqfilt2_spec(pattern,shape);
     monof2(shape, niter, a, nk, dk, k0, nw, dw, 0., true);
     gaussshape2_set2(a);
 }
 
-void gaussshape2_set2(const float* a) {
+void gaussshape2_set2(const float* a) 
+/*< set shaper >*/
+{
     int ik, iw;
     float w, w2, k, k2, wk;
 
@@ -51,7 +76,9 @@ void gaussshape2_set2(const float* a) {
     }
 }
 
-void gaussshape2_close(void) {
+void gaussshape2_close(void) 
+/*< free allocated storage >*/
+{
     free(shape[0]);
     free(shape);
     freqfilt2_close();
