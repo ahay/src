@@ -10,10 +10,11 @@ incdir = os.path.join(root,'include')
 import rsfproj
 
 proj = rsfproj.Project()
+proj['CXXFLAGS'] = string.replace(proj.get('CXXFLAGS',''),'-O2','-g')
 
 ############################################################################
 
-test = 'spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | %s.exe clip=0.5 | attr'
+test = 'spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr'
 
 ############################################################################
 # C API
@@ -35,6 +36,10 @@ if 'c++' in api:
     proj.Program('clip.cc',OBJSUFFIX='++.o',LIBS=['rsf++','rsf','m'])
     cctest = proj.Flow('cc','clip++.exe',test % 'clip++',suffix='.attr',stdin=0)
     Default(cctest)
+
+    test = proj.Program('matmult_test',
+                        ['matmult_test.cc','matmult.cc','matmult_wrap.cc'])
+    Default(test)
 
 ############################################################################
 # Fortran-77 API

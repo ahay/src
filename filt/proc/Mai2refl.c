@@ -8,9 +8,8 @@ Takes: < ai.rsf > reflectivity.rsf
 
 int main (int argc, char* argv[])
 {
-    int nt, it, n2, i2, is;
-    float dt, f, imp1, imp2, a, rc;
-    float *imp, *sig;
+    int nt, it, n2, i2;
+    float imp1, imp2, *imp, *sig;
     sf_file ai, mod;
 
     sf_init (argc,argv);
@@ -18,13 +17,7 @@ int main (int argc, char* argv[])
     mod = sf_output("out");
 
     if (!sf_histint(ai,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histfloat(ai,"d1",&dt)) sf_error("No d1= in input");
-
     n2 = sf_leftsize(ai,1);
-
-    if (!sf_getfloat ("f",&f)) f=40.;
-    /* Peak frequency of Ricker wavelet */
-    f *= SF_PI*dt;
 
     imp = sf_floatalloc (nt);
     sig = sf_floatalloc (nt);
@@ -39,14 +32,10 @@ int main (int argc, char* argv[])
 	imp1=imp[0];
 	for (it=0; it < nt-1; it++) {
 	    imp2 = imp[it+1];
-	    rc = (imp2-imp1)/(imp2+imp1);
-	    for (is=0; is < nt; is++) {
-		a = f*(is-it);
-		a *= a;
-		sig[is] += rc*(1.-2.*a)*expf(-a);
-	    }
+	    sig[it] = (imp2-imp1)/(imp2+imp1);
 	    imp1 = imp2;
 	}
+	sig[nt-1] = 0.;
 
 	sf_floatwrite(sig,nt,mod);
     }
