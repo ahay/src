@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n12, n3, i3, nd, id, niter, iter, nw, nj;
     float **dat, *dip, *inc, **aa, *b;
+    bool verb;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -52,6 +53,9 @@ int main(int argc, char* argv[])
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
     if (!sf_getint("nj",&nj)) nj=1;
     /* antialiasing */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
     
     sf_floatread(dat[0],n12,in);
     dips_init(nd, nw, nj, n1, n2, dat);
@@ -67,12 +71,12 @@ int main(int argc, char* argv[])
 	}
 	
 	for (iter=0; iter < niter; iter++) {
-	    sf_warning("------------\niteration %d",iter+1);
+	    if (verb) sf_warning("------------\niteration %d",iter+1);
 	    dips(dip, b, aa);
 	    sf_solver(matmult_lop,sf_cgstep,nd,n12,inc,b,nd+1,"end");
 	    sf_cgstep_close();
 	    for (id=0; id < nd; id++) {
-		sf_warning("dip%d=%g",id+1,dip[id]);
+		if (verb) sf_warning("dip%d=%g",id+1,dip[id]);
 		dip[id] += inc[id];
 	    }
 	}

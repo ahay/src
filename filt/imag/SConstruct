@@ -29,7 +29,7 @@ except: # local version
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = 'aastretch acell agrid atela cell celltrace ctridiagonal delaunay'
+src = 'aastretch acell agrid atela cell celltrace ctridiagonal delaunay dmo'
 
 for source in Split(src):
     env.Include(source,prefix='')

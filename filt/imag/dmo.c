@@ -1,6 +1,25 @@
+/* Kirchhoff DMO and inverse DMO operator. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "dmo.h" 
 #include "halfint.h"
@@ -9,8 +28,17 @@ static bool inv;
 static int nt2,nt,nx,ntx,mint,n,type;
 static float vel,t0,dt,dx,dh,h,h2,d1,tmax, **tmp;
 
-void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
-	       int nt1, int nx1, int mint1, int n1, int type1)
+void dmo_init (float vel1 /* velocity */, 
+	       bool inv1  /* inversion flag */, 
+	       float t01  /* time orgin */, 
+	       float dt1  /* time sampling */, 
+	       float dx1  /* midpoint sampling */,
+	       int nt1    /* time samples */, 
+	       int nx1    /* midpoint samples */, 
+	       int mint1  /* minimum time */, 
+	       int n1     /* operator sampling */, 
+	       int type1  /* amplitude type */)
+/*< Initialize >*/
 {
     vel = vel1;
     inv = inv1;
@@ -32,7 +60,8 @@ void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
     tmp = sf_floatalloc2(nt2,nx);
 }
 
-void dmo_set(float h1) 
+void dmo_set(float h1 /* half-offset */) 
+/*< set offset >*/
 {
     h = h1;
     h2=h*h;
@@ -41,12 +70,14 @@ void dmo_set(float h1)
 }
 
 void dmo_close(void)
+/*< free allocated storage >*/
 {
     free (tmp[0]);
     free (tmp);
 }
 
 void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
+/*< linear operator >*/
 {
     float fx,ft,gx,gt,ama,x1,rat,x0,sl,sm,z,t,bx,amp, b1,r;
     int ix,iz,x,it,i1,i,kx,n0, id1, id2;
