@@ -25,6 +25,7 @@ float xcorr (int n1, int n2, const float *x1, const float *x2,
 		}
 	    }
 	}
+	/* normalize */
 	xc[is] /= sqrtf(a1*a2+FLT_EPSILON);
     }
 

@@ -11,9 +11,9 @@ DEPEND = -xM1
 DEPEND = -MM
 
 PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
-	helicon invbin1 invwarp nmo noise pef pwd randrefl reshape ricker \
-	sigmoid smooth smoothder smoothfix spectra stretch2 taup taupmo \
-	time2depth warp1 window1 window2 xcorr1
+	helicon hole invbin1 invwarp nmo noise pef pwd randrefl reshape \
+	ricker sigmoid smooth smoothder smoothfix spectra stretch2 taup \
+	taupmo time2depth warp1 window1 window2 xcorr1
 
 ai2refl = empty
 bandpass = butterworth
@@ -26,6 +26,7 @@ fft1 = empty
 fft2 = empty
 fft3 = empty
 helicon = polydiv regrid helicon helix adjnull
+hole = empty
 invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint \
 	triangle1 triangle polydiv pef bound helix hconest helicon regrid
 invwarp = stretch tridiagonal

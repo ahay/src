@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
 
     for (iw=0; iw < nw; iw++) {
 	for (i2=0; i2 < n2; i2++) {
-	    i0 = window1_apply(iw,dat[i2] ,false,false,win[i2] );
-	    i0 = window1_apply(iw,dat2[i2],false,false,win2[i2]);
+	    i0 = window1_apply(iw,dat[i2] ,true,true,win[i2] );
+	    i0 = window1_apply(iw,dat2[i2],true,true,win2[i2]);
 	}
 	coord[iw] = i0 + 0.5*(w+1.);
 	shift[iw] = xcorr (w,n2,win[0], win2[0],nc,xc);
