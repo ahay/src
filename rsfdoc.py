@@ -273,7 +273,8 @@ def html(dir):
     file.write(page('RSF Programs',content))
     file.close()
 
-def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf'):
+def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
+            rsfplotprefix='vp',rsfplotsuffix='vpl'):
     global comment, param, synopsis, stringpar, inpout, version
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
@@ -355,6 +356,8 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf'):
         else:
             iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
         snps = snps + iostring
+    if re.match(rsfplotprefix,name):
+        snps = snps + ' > plot.' + rsfplotsuffix
     snps = snps + parline
     vers = version.search(text)
     if vers:
@@ -371,7 +374,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf'):
     out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,first))
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
 
-def cli(rsfprefix = 'sf'):
+def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     import getopt
     import rsfprog
 
@@ -406,7 +409,8 @@ def cli(rsfprefix = 'sf'):
                 raise BadUsage
 
         for prog in args:
-            if not re.match(rsfprefix,prog):
+            if     not re.match(rsfprefix,prog) and \
+                   not re.match(rsfplotprefix,prog):
                 prog = rsfprefix + prog
             main = progs.get(prog)
             if main:
@@ -443,4 +447,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.15 2004/06/23 23:31:42 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.16 2004/06/25 18:08:22 fomels Exp $	
