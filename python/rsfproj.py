@@ -61,8 +61,7 @@ if not datapath:
         file.close()
     if not datapath:
         datapath = './' # the ultimate fallback
-dataserver = os.environ.get('RSF_DATASERVER',
-                           'ftp://begpc132.beg.utexas.edu/')
+dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
