@@ -19,10 +19,11 @@ int main (void)
 
 static void doit(float wide, int panel)
 {
-    float v=1.,t,z,x,H, tmax=4., dx=.04;
+    float v, t,z,x,H, tmax=4., dx=.04;
     int	labelsize=7, iz;
 
     H=7.; /* height of top of frame */
+    v= 1.3 * wide/tmax;
 
     vp_fat (6);
     vp_umove (-wide,H-0.); 	
