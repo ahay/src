@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     float *wind;
     FILE *wall;
     char string[256], *temp;
-    bool tnt;
     sf_file wallwt, windwt;
 
     sf_init (argc, argv);

@@ -72,7 +72,7 @@ void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     for (i=0; i < dim; i++) {
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
-		i0 = sf_first_index (i,j,dim+1,n,s);
+		i0 = sf_first_index (i,j,dim,n,s);
 		sf_smooth2 (tr[i], i0, s[i], false, tmp);
 	    }
 	}
