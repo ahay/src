@@ -1,0 +1,24 @@
+from rsfproj import *
+
+def showdat(title):
+    return '''
+    window f2=10 f1=10 |
+    grey crowd1=0.85  crowd2=0.8 label1="Time(s)" label2="X(ft)" title="%s"
+    ''' % title
+
+Fetch('gomnearoffset.H','gom')
+Flow('offset','gomnearoffset.H','dd data_format=native_float')
+
+Plot('zof','offset',showdat('Data'))
+
+Flow('dip','offset','dip verb=y order=3 rect1=5 rect2=20 liter=100')
+Flow('dec','offset dip','pwd order=3 dip=${SOURCES[1]}')
+
+Result('dip','dip',
+       showdat('Dominant Dip') + ' crowd1=0.75 color=j wantscalebar=y ')
+
+Plot('dec','dec',showdat('Residual'))
+
+Result('dec','zof dec','OverUnderAniso')
+
+End()
