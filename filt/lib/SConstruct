@@ -102,23 +102,23 @@ if 'fortran' in api:
 ##############################################################################
 # FORTRAN-90 BINDING
 ##############################################################################
-if 'fortran-90' in api and env.has_key('F90'):
-    import configure
-    
-    configure.load_f90(env)
-    env.Object('fortran90.o','fortran.c',
-               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN90')
-    env.Object('rsf.o','rsf.f90')
-    libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o'])
+if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
+    if env.has_key('F90'):
+        import configure
+
+        env.Object('fortran90.o','fortran.c',
+                   CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN90')
+        env.Object('rsf.o','rsf.f90')
+        libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o'])
         
-    if root:
-        env.Install(libdir,libf90)
-        
-    for file in ['getpar','file']:
-        test = 'Test' + file + '.f90'
-        env.Program([test,libf90,lib],PROGSUFFIX='f90.x',PROGPREFIX='',
-                    OBJSUFFIX='f90.o',
-                    LINK=env.get('F90'),LINKFLAGS=env.get('F90FLAGS'))
+        if root:
+            env.Install(libdir,libf90)
+            
+        for file in ['getpar','file']:
+            test = 'Test' + file + '.f90'
+            env.Program([test,libf90,lib],PROGSUFFIX='f90.x',PROGPREFIX='',
+                        OBJSUFFIX='f90.o',
+                        LINK=env.get('F90'),LINKFLAGS=env.get('F90FLAGS'))
             
 ##############################################################################
 # PYTHON BINDING

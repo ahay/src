@@ -1,3 +1,5 @@
+! Fortran-90 interface
+
 module RSF
   implicit none
 
@@ -557,8 +559,8 @@ contains
 
   subroutine rsf_read_1d_n (hist, array, n)
     type (file),         intent (in)  :: hist
-    real, dimension (n), intent (out) :: array
     integer,             intent (in)  :: n
+    real, dimension (n), intent (out) :: array
 
     call sf_floatread(array, n, hist%tag)
   end subroutine rsf_read_1d_n
@@ -600,8 +602,8 @@ contains
   
   subroutine rsf_read_complex_1d_n (hist, array, n)
     type (file),         intent (in)  :: hist
-    complex, dimension (n), intent (out) :: array
     integer,             intent (in)  :: n
+    complex, dimension (n), intent (out) :: array
 
     call sf_complexread(array, n, hist%tag)
   end subroutine rsf_read_complex_1d_n
@@ -643,8 +645,8 @@ contains
   
   subroutine rsf_write_1d_n (hist, array, n)
     type (file),         intent (in)  :: hist
-    real, dimension (n), intent (in) :: array
     integer,             intent (in)  :: n
+    real, dimension (n), intent (in) :: array
 
     call sf_floatwrite(array, n, hist%tag)
   end subroutine rsf_write_1d_n
@@ -686,8 +688,8 @@ contains
   
   subroutine rsf_write_complex_1d_n (hist, array, n)
     type (file),            intent (in)  :: hist
-    complex, dimension (n), intent (in) :: array
     integer,                intent (in)  :: n
+    complex, dimension (n), intent (in) :: array
 
     call sf_complexwrite(array, n, hist%tag)
   end subroutine rsf_write_complex_1d_n
@@ -728,4 +730,4 @@ contains
   end subroutine rsf_write_complex_5d
 end module RSF
 
-!	$Id: rsf.f90,v 1.5 2004/06/23 08:54:31 fomels Exp $	
+!	$Id$	

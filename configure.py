@@ -65,7 +65,7 @@ def check_all(context):
         cxx(context)
     if 'fortran' in api:
         f77(context)
-    if 'fortran-90' in api:
+    if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
         f90(context)
 
 def libs(context):
@@ -205,7 +205,7 @@ def f90(context):
     context.Message("checking F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
-        compilers = ['f90','f95','xlf90','pgf90','ifc','pghpf']
+        compilers = ['f90','f95','xlf90','pgf90','ifort','ifc','pghpf']
         F90 = context.env.Detect(compilers)
         if not F90:
             for comp in compilers:
@@ -218,10 +218,9 @@ def f90(context):
     else:
         context.Result(0)
         return
-    if os.path.basename(F90) == 'ifc':
+    if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
         context.env.Append(F90FLAGS=' -Vaxlib')
-    load_f90(context.env) 
     main = '''program Test
     end program Test
     '''
@@ -255,15 +254,6 @@ def f90(context):
             break
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
-
-def load_f90(env):
-    env['F90COM']   = '$F90 $F90FLAGS $_F90INCFLAGS -c -o $TARGET $SOURCES'
-    env['SHF90COM'] = '$F90 $F90FLAGS $_F90INCFLAGS -c -o $TARGET $SOURCES'
-    static_obj, shared_obj = createObjBuilders(env)    
-    F90Action = Action("$F90COM")
-    ShF90Action = Action("$SHF90COM")
-    static_obj.add_action('.f90', F90Action)
-    shared_obj.add_action('.f90', ShF90Action)
 
 def intel(context):
     '''Trying to fix wierd intel setup.'''

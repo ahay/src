@@ -616,6 +616,9 @@ void sf_setaformat (const char* format /* number format (.i.e "%5g") */,
     aline = (size_t) line;
 }
 
+#ifndef __cplusplus
+/*^*/
+
 void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 /*< write a complex array arr[size] to file >*/
 {
@@ -697,6 +700,9 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
 	    break;
     }
 }
+
+#endif /* c++ */
+/*^*/
 
 void sf_charwrite (char* arr, size_t size, sf_file file)
 /*< write a char array arr[size] to file >*/
