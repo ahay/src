@@ -14,7 +14,7 @@ Takes: < input.rsf > output.rsf
 
 int main(int argc, char* argv[])
 {
-    int nt,nx,ny, iw,ix,iy, nf;
+    int nt,nx,ny, iw,ix,iy, nf, nw;
     float dw, dt, dx,dy, t0, vel, x,y, w,st,sq, *str, *trace2, *trace;
     sf_file in, out;
 
@@ -31,8 +31,12 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
 
-    cosft_init(nt, t0, dt);
-    dw = SF_PI/(sf_npfar(2*(nt-1))*dt);
+    if (!sf_getint ("pad",&nw)) nw=nt;
+    /* padding on the time axis */
+    nw=sf_npfar(2*(nw-1));
+
+    cosft_init(nw, t0, dt);
+    dw = SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
@@ -46,11 +50,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("nf",&nf)) nf=2;
     /* Interpolation accuracy */
 
-    trace = sf_floatalloc(nt);
-    trace2 = sf_floatalloc(nt);
-    str = sf_floatalloc(nt);
+    trace = sf_floatalloc(nw);
+    trace2 = sf_floatalloc(nw);
+    str = sf_floatalloc(nw);
 
-    prefilter_init (nf, nt, 3*nt);
+    prefilter_init (nf, nw, 3*nw);
     for (iy = 0; iy < ny; iy++) {
 	sf_warning("%d of %d",iy+1,ny);
 	y = iy*dy;
@@ -58,18 +62,21 @@ int main(int argc, char* argv[])
 	for (ix = 0; ix < nx; ix++) {
 	    x = ix*dx;
 	    x = st*(x*x + y);  
-	    for (iw = 0; iw < nt; iw++) {
+	    for (iw = 0; iw < nw; iw++) {
 		w = iw*dw;
 		sq = (vel < 0)? w*w - x: w*w + x;
 		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
 	    }
        
-	    int1_init (str, 0., dw, nt, spline_int, nf, nt);
+	    int1_init (str, 0., dw, nw, spline_int, nf, nw);
 
 	    sf_read(trace,sizeof(float),nt,in);
+	    for (iw = nt; iw < nw; iw++) { /* pad */
+		trace[iw]=0.;
+	    }
 	    cosft_frw (trace,0,1);
-	    prefilter_apply (nt, trace);
-	    int1_lop (false,false,nt,nt,trace,trace2);
+	    prefilter_apply (nw, trace);
+	    int1_lop (false,false,nw,nw,trace,trace2);
 	    cosft_inv (trace2,0,1);
 	    sf_write(trace2,sizeof(float),nt,out);
 	}
@@ -78,4 +85,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.5 2003/10/03 03:14:32 fomels Exp $	 */
+/* 	$Id: Mstolt.c,v 1.6 2003/10/18 18:21:31 fomels Exp $	 */

@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 		for (is = 0; is < ns; is++) {
 		    for (it = 0; it < nt; it++) {
 			t = slice[is][it];
-			t *= t;
+			/* t *= t; */
 			if (t > ampl[it]) {
 			    ampl[it] = t;
 			    pick[it] = s0+is*ds;
@@ -84,8 +84,11 @@ int main(int argc, char* argv[])
 			is=ns-1;
 			pick[it] = s0 + (ns-1)*ds;
 		    }
+		    /*
 		    t = slice[is][it];
 		    ampl[it] = t*t;
+		    */
+		    ampl[it] = slice[is][it];
 		}
 	    }
 
@@ -121,5 +124,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mblindpick.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mblindpick.c,v 1.5 2003/10/18 18:21:31 fomels Exp $	 */
 

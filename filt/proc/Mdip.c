@@ -30,10 +30,12 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps; 
+    if (!sf_getfloat("eps",&eps)) eps=1.; 
     /* vertical smoothness */
-    if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
+    eps = eps*eps; 
+    if (!sf_getfloat("lam",&lam)) lam=1.; 
     /* horizontal smoothness */
+    lam = lam*lam;
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */
@@ -90,4 +92,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mdip.c,v 1.3 2003/10/18 18:21:31 fomels Exp $	 */

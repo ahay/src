@@ -17,6 +17,7 @@ int main (int argc, char **argv)
     float dk;	        /* wavenumber sampling interval */
     float x0;             /* staring space */
     float k0;             /* starting wavenumber */
+    float wt;             /* Fourier scaling */
 
     float complex **cp;	        /* frequency-wavenumber */
 
@@ -102,16 +103,25 @@ int main (int argc, char **argv)
 	    sf_pfa2cc(1,2,n1,nk,cp[0]);
 
 	    /* FFT scaling */
+	    wt = -1./nk;
 	    for (ix=0; ix<nx; ix++) {
+		wt = -wt;
 		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] /= nk;
+		    cp[ix][i1] *= wt;
 		}
 	    }
       
 	    sf_write(cp[0],sizeof(float complex),n1*nx,out);
 	} else {
 	    sf_read(cp[0],sizeof(float complex),n1*nx,in);
-      
+	    
+	    /* FFT centering */
+	    for (ix=1; ix<nx; ix+=2) {
+		for (i1=0; i1<n1; i1++) {
+		    cp[ix][i1] = -cp[ix][i1];
+		}
+	    }
+
 	    /* pad with zeros */
 	    for (ix=nx; ix<nk; ix++) {
 		for (i1=0; i1<n1; i1++) {
@@ -122,10 +132,12 @@ int main (int argc, char **argv)
 	    /* Fourier transform x to k */
 	    sf_pfa2cc(-1,2,n1,nk,cp[0]);
       
-	    ix = nk/2+1; /* oddball negative nyquist */
+	    /* oddball negative nyquist 
+	    ix = nk/2+1; 
 	    for (i1=0; i1<n1; i1++) {
 		cp[ix][i1] = 0.;
 	    }
+	    */
 
 	    sf_write(cp[0],sizeof(float complex),n1*nk,out);
 	}
@@ -134,4 +146,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.4 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: Mfft3.c,v 1.5 2003/10/18 18:21:31 fomels Exp $	 */

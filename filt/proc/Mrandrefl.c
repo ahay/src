@@ -115,7 +115,7 @@ int main (int argc, char* argv[])
     srand(2003);
 
     for (it=0; it < nr; it++) {
-	ts[it] = 0.1+0.9*random_one();
+	ts[it] = 0.05+0.95*random_one();
     }
     qsort(ts,nr,sizeof(float),compare_float);
 
@@ -134,7 +134,7 @@ int main (int argc, char* argv[])
 		p2ss[it]=1./(0.12+(0.5*tmean[it]));
 		break;
 	    case 's': /* sinusoid */
-		p2ss[it]=2.+0.2*cosf(2.*SF_PI*tmean[it]);
+		p2ss[it]=2.+0.2*cosf(4.*SF_PI*tmean[it]);
 		break;
 	    case 'c': /* constant */
 		p2ss[it]=2.;
@@ -180,5 +180,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrandrefl.c,v 1.7 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mrandrefl.c,v 1.8 2003/10/18 18:21:31 fomels Exp $	 */
 
