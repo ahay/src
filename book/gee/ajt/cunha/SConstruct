@@ -1,0 +1,29 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+set_resdir('../Fig')
+
+Flow('model',None,
+     '''
+     spike n1=256 d1=.016 nsp=2 k1=24,140 n2=1 |
+     box rect1=20
+     ''')
+Flow('empty','model','scale dscale=0')
+Flow('data','model','imospray n2=11 d2=.60 o2=0. v=1.5')
+Flow('imag','data','imospray inv=y niter=0 v=1.5')
+
+Result('cunha',['model','empty','data','imag'],
+       '''cat axis=2 ${SOURCES[1:3]} ${SOURCES[1]} ${SOURCES[3]} |
+       dots dots=0 yreverse=1 gaineach=0
+       labels="Model:::::::Synthe-:tic data::::::Image"
+       ''')
+
+###########################################################################
+End()
