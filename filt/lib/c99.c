@@ -203,6 +203,36 @@ float hypotf(float x, float y)
 #endif
 /*^*/
 
+#ifdef __sun    /* SunOS */
+/*^*/
+
+float coshf(float x) 
+/*< float cosh >*/
+{ return (float) cosh(x);}
+
+float sinhf(float x) 
+/*< float sinh >*/
+{ return (float) sinh(x);}
+
+float tanhf(float x) 
+/*< float tanh >*/
+{ return (float) tanh(x);}
+
+float acoshf(float x) 
+/*< float acosh >*/
+{ return (float) acosh(x);}
+
+float asinhf(float x) 
+/*< float asinh >*/
+{ return (float) asinh(x);}
+
+float atanhf(float x) 
+/*< float atanh >*/
+{ return (float) atanh(x);}
+
+#endif /* SunOS */
+/*^*/
+
 #endif /* c++ */
 /*^*/
 
