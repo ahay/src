@@ -1,7 +1,7 @@
 #ifndef _atela_h
 #define _atela_h
 
-#include "bool.h"
+#include <rsf.h>
 
 /* 
    File: atela.h

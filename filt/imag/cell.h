@@ -1,7 +1,7 @@
 #ifndef _cell__h
 #define _cell__h
 
-#include "bool.h"
+#include <rsf.h>
 
 bool cell_snap (float *z, int *iz, float eps);
 float cell_p2a (float* p);

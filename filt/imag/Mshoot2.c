@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     free (slow);
 
     angle = sf_floatalloc (nr);
-    time = sf_floatalloc (nt);
+    time  = sf_floatalloc (nr);
 
     if (!sf_getfloat("tol",&tol)) tol=0.01;
     tol *= SF_PI/180.; /* 1/100 degree */
