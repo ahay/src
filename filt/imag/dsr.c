@@ -51,7 +51,7 @@ void dsr_init (float eps1 /* regularization */,
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
-    pshift_init(depth,0.5*dz,rule);
+    pshift_init(depth,dz,rule);
 } 
 
 void dsr_close ()

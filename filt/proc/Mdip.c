@@ -136,6 +136,8 @@ int main (int argc, char *argv[])
 
     if (p123 > 1) {
 	sf_warning("Going out of core...");
+	sf_warning("window: %d %d %d",w[0],w[1],w[2]);
+	sf_warning("patches: %d %d %d",nw[0],nw[1],nw[2]);
 
 	nall = n123*sizeof(float);
 
