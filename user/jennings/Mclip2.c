@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 
     n = sf_filesize(in);
 
-    if (!sf_getfloat("upper",&upper)) upper=FLT_MAX;
+    if (!sf_getfloat("upper",&upper)) upper=+FLT_MAX;
     /* upper clip value */
 
     if (!sf_getfloat("lower",&lower)) lower=-FLT_MAX;

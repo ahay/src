@@ -1,6 +1,15 @@
 /* Pad a dataset with zeros.
 
 Takes: [beg1= beg2= ... end1= end2=... | n1=  n2 = ... | n1out= n2out= ...]
+
+begN specifies the number of zeros to add before the beginning of axis N.
+endN specifies the number of zeros to add after the end of axis N.
+
+Alternatively:
+
+nN or nNout specify the output length of axis N, padding accurs at the end.
+nN and nNout are equivalent.
+
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -123,4 +132,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: pad.c,v 1.8 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */
