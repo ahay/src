@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <string.h>
+#include <ctype.h>
 #include <math.h>
 
 #include <unistd.h>
@@ -62,7 +63,10 @@ int main(int argc, char* argv[])
 	arg = argv[i];
 	eq =  strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
-	if (0 == strncmp(arg,"output",6)) continue; /* not a file */
+	if (0 == strncmp(arg,"output",6) ||
+	    (eq-arg == 2 &&
+	     (arg[0] == 'n' || arg[0] == 'd' || arg[0] == 'o') &&
+	     isdigit(arg[1]))) continue; /* not a file */
 	
 	len = (size_t) (eq-arg);
 	key = sf_charalloc(len+1);
@@ -75,7 +79,33 @@ int main(int argc, char* argv[])
 	free(key);
     }
 
-    dim = sf_filedims(in[0],n);
+    if (nin) {
+	if (SF_FLOAT != sf_gettype(in[0])) 
+	    sf_error("Need float input");
+
+	dim = sf_filedims(in[0],n);
+	for (i=0; i < dim; i++) {
+	    (void) snprintf(xkey,3,"d%d",i+1);
+	    if (!sf_histfloat(in[0],xkey,d+i)) d[i] = 1.;
+	    (void) snprintf(xkey,3,"o%d",i+1);
+	    if (!sf_histfloat(in[0],xkey,o+i)) o[i] = 0.; 
+	}
+    } else { /* get size from parameters */
+	dim = 1;
+	for (i=0; i < SF_MAX_DIM; i++) {
+	    (void) snprintf(xkey,3,"n%d",i+1);
+	    if (!sf_getint(xkey,n+i)) break;
+	    if (n[i] > 1) dim=i+1;
+	    sf_putint(out,xkey,n[i]);
+	    (void) snprintf(xkey,3,"d%d",i+1);
+	    if (!sf_getfloat(xkey,d+i)) d[i] = 1.;
+	    sf_putfloat(out,xkey,d[i]);
+	    (void) snprintf(xkey,3,"o%d",i+1);
+	    if (!sf_getfloat(xkey,o+i)) o[i] = 0.;
+	    sf_putfloat(out,xkey,o[i]);
+	}
+    }
+
     for (nsiz=1, i=0; i < dim; i++) {
 	sprintf(xkey,"x%d",i+1);
 	
@@ -86,7 +116,7 @@ int main(int argc, char* argv[])
 	nsiz *= n[i];
     }
     
-    check_compat(nin,in,dim,n,d,o);
+    if (nin) check_compat(nin,in,dim,n,d,o);
 
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Mathematical description of the output */
@@ -98,8 +128,12 @@ int main(int argc, char* argv[])
     fbuf = sf_floatalloc2(nbuf,nin+dim);
     fst  = sf_floatalloc2(nbuf,len+2);
 
-    sf_setformat(out,sf_histstring(in[0],"data_format"));    
-    sf_fileflush(out,in[0]);
+    if (nin) {
+	sf_setformat(out,sf_histstring(in[0],"data_format"));    
+	sf_fileflush(out,in[0]);
+    } else {
+	sf_setformat(out,"native_float");
+    }
 
     for (j=0; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf = nsiz;
@@ -130,14 +164,6 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n,
     char key[3];
     const float tol=1.e-5;
     
-    if (SF_FLOAT != sf_gettype(in[0])) 
-	sf_error("Need float input");
-    for (id=0; id < dim; id++) {
-	(void) snprintf(key,3,"d%d",id+1);
-	if (!sf_histfloat(in[0],key,d+id)) d[id] = 1.;
-	(void) snprintf(key,3,"o%d",id+1);
-	if (!sf_histfloat(in[0],key,o+id)) o[id] = 0.; 
-    }
     for (i=1; i < nin; i++) {
 	if (SF_FLOAT != sf_gettype(in[i])) 
 	    sf_error("Need float input");

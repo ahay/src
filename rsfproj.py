@@ -1,4 +1,5 @@
-import os, stat, sys, types, commands, re, string, urllib, ftplib, filecmp
+import os, stat, sys, types, commands
+import re, string, urllib, ftplib, filecmp, glob
 import rsfdoc
 import rsfprog
 import rsfconf
@@ -535,6 +536,15 @@ class Project(Environment):
                          string.join(self.coms,' '))
     def Fetch(self,file,dir,private=None):
         return self.Retrieve(file,None,dir=dir,private=private)
+    def Chapter(self,list=None):
+        if list:
+            dirs = Split(list)
+        else:
+            dirs = filter(os.path.isdir,glob.glob('[a-z]*'))
+        for dir in dirs:
+            self.Dir(dir)
+            SConscript(os.path.join(dir,'SConstruct'))
+        set_dir('.')
 
 # Default project
 project = Project()
@@ -542,6 +552,8 @@ def Flow(target,source,flow,**kw):
     return apply(project.Flow,(target,source,flow),kw)
 def Dir(dir):
     return project.Dir(dir)
+def Chapter(list=None):
+    return project.Chapter(list)
 def Plot (target,source,flow,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow,**kw):

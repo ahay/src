@@ -1,3 +1,22 @@
+/* Additional operations with RSF files. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdio.h>
 #include <string.h>
 
@@ -6,13 +25,18 @@
 #include <unistd.h>
 
 #include "files.h"
-#include "c99.h"
-#include "file.h"
 #include "simtab.h"
 #include "error.h"
 #include "alloc.h"
 
+#include "c99.h"
+#include "file.h"
+/*^*/
+
 int sf_filedims (sf_file file, /*@out@*/ int *n) 
+/*< Find file dimensions.
+
+Outputs the number of dimensions dim and a dimension array n[dim] >*/
 {
     int i, dim;
     char key[3];
@@ -27,11 +51,13 @@ int sf_filedims (sf_file file, /*@out@*/ int *n)
 }
 
 int sf_filesize (sf_file file) 
+/*< Find file size (product of all dimensions) >*/
 {    
     return sf_leftsize (file, 0);
 }
 
 int sf_leftsize (sf_file file, int dim) 
+/*< Find file size for dimensions greater than dim >*/
 {
     int size, ni;
     char key[3];
@@ -44,6 +70,7 @@ int sf_leftsize (sf_file file, int dim)
 }
 
 void sf_cp(sf_file in, sf_file out)
+/*< Copy file in to file out >*/
 {
     int esize;
     long nsiz, nbuf;
@@ -69,6 +96,9 @@ void sf_cp(sf_file in, sf_file out)
 }
 
 void sf_rm(const char* filename, bool force, bool verb, bool inquire)
+/*< Remove an RSF file.
+
+force, verb, and inquire flags should behave similar to the corresponding flags in the Unix "rm" command. >*/
 {
     int c, c2;
     char cc, *in;
@@ -120,4 +150,4 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire)
     sf_simtab_close (tab);
 }
 
-/* 	$Id: files.c,v 1.3 2004/04/19 21:51:26 fomels Exp $	 */
+/* 	$Id$	 */

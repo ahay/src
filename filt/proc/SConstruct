@@ -10,7 +10,7 @@ envelope extract fft1 fft3 fint1 flat fourvc fourvc2 frame helicon hole
 idempatch igrad imospray impl1 impl2 infill inmo intbin intshow inttest1
 invbin1 kolmog lapfill levint light linefit lopef losignoi lpad lpef make misif
 miss miss1 miss2 miss3 monof monof2 msmiss mspef nhelicon nmo noise npef parcel
-pef planesignoi prestolt pwd qdome radon randrefl reshape ricker signoi
+pef planesignoi prestolt pwd qdome radial radon randrefl reshape ricker signoi
 shapebin shapebin1 shot2cmp shotholes sigmoid slice smooth smoothder
 smoothreg smoothreg2 spectra spectra2 spline splinefilter stolt stretch
 synmarine taupmo tentwt time2depth tpow trismooth2 twodip2 vscan velmod
@@ -43,7 +43,7 @@ for prog in mains:
     if root:
         env.Install(bindir,main)
 	if prog=='stretch':
-	    for stretch in ('log','t2','lmo','nmo'):
+	    for stretch in ('log','t2','lmo','nmo','rad'):
                 copy = string.replace(str(main),'stretch',stretch+'stretch')
                 env.InstallAs(os.path.join(bindir,copy),main)
 	        docmerge = configure.docextra(docmerge,'sf'+prog,copy)
