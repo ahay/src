@@ -89,9 +89,9 @@ int main (int argc, char **argv)
 	sf_putfloat(out,"d2",dm);
 	sf_putfloat(out,"o2",m0);
 
-	/* ny? */
-	sf_putint(out,"ny",nh);
-	sf_putfloat(out,"dy",dh);
+	/* for sffft3 */
+	sf_putint(out,"m2",nh);
+	sf_putfloat(out,"c2",dh);
 
 	sf_putint(out,"n3",nk);
 	sf_putfloat(out,"d3",dk);
@@ -196,4 +196,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mdsr.c,v 1.6 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mdsr.c,v 1.7 2003/10/14 21:53:21 fomels Exp $	 */
