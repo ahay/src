@@ -223,7 +223,9 @@ enum {STATUS, MAP, RED, GREEN, BLUE, GREY};
 enum {UNSET, SET, MAPPED, MAP_SET};
 
 static int greycorr (int colornum);
-static void reset_parameters (vp_device dev);
+static void reset_parameters (vp_device dev, 
+			      void (*attributes)(vp_device,vp_attribute,
+						 int,int,int,int));
 static void vptodevxy (int x, int y, int *outx, int *outy);
 static void vptodevw (int x1, int y1, int x2, int y2, 
 		      int *x1out, int *y1out, int *x2out, int *y2out);
@@ -231,31 +233,54 @@ static void devtovpxy (int x, int y, int *outx, int *outy);
 static void devtovpw (int x1, int y1, int x2, int y2, 
 		      int *x1out, int *y1out, int *x2out, int *y2out);
 static void vptodevxy_text (int x, int y, int *outx, int *outy);
-static void reset_windows (vp_device dev);
+static void reset_windows (vp_device dev, 
+			   void (*attributes)(vp_device,
+					      vp_attribute,int,int,int,int));
 static void init_colors (void);
-static void outline_window (vp_device dev);
-static void setstyle (vp_plotstyle new_style, vp_device dev);
-static void update_color (void (*attributes)(vp_attribute,
-					     int,int,int,int));
+static void outline_window (vp_device dev,
+			    void (*attributes)(vp_device,
+					       vp_attribute,int,int,int,int),
+			    void (*vector)(vp_device,
+					   int,int,int,int,int,bool));
+static void setstyle (vp_plotstyle new_style, vp_device dev,
+		      void (*attributes)(vp_device,
+					 vp_attribute,int,int,int,int));
+static void update_color (vp_device dev, 
+			  void (*attributes)(vp_device,
+					     vp_attribute,int,int,int,int));
 static void getxy (int *x, int *y);
 static void getxy_text (int *x, int *y);
 static void getvpstring (void);
 static int getpolygon (int npts);
 static bool dupside (struct vp_vertex *base);
-static void vecoutline (struct vp_vertex *head, 
-			void (*vector)(int,int,int,int,int,bool));
-static void reset_all (vp_device dev);
+static void vecoutline (vp_device dev, struct vp_vertex *head, 
+			void (*vector)(vp_device,int,int,int,int,int,bool));
+static void reset_all (vp_device dev,
+		       void (*attributes)(vp_device,
+					  vp_attribute,int,int,int,int));
 static void dithline (unsigned char *inpline, 
 		      unsigned char *outline, 
 		      int npixels, int linenum, int imethod);
-static void drawpolygon (int npts, int *x, int *y,
-			 void (*attributes)(vp_attribute,int,int,int,int),
-			 void (*area) (int,struct vp_vertex*),
-			 void (*vector)(int,int,int,int,int,bool));
-static void vplot_init (vp_device dev);
-static void vplot_do (vp_device dev);
+static void drawpolygon (vp_device dev, int npts, int *x, int *y,
+			 void (*attributes)(vp_device,vp_attribute,
+					    int,int,int,int),
+			 void (*area) (vp_device,int,struct vp_vertex*),
+			 void (*vector)(vp_device,int,int,int,int,int,bool));
+static void vplot_init (vp_device dev, void (*open)(vp_device));
+static void vplot_do (vp_device dev, 
+		      void (*reset)(vp_device),
+		      void (*close)(vp_device,vp_close),
+		      void (*eras)(vp_device,vp_eras),
+		      void (*attributes)(vp_device,
+					 vp_attribute,int,int,int,int),
+		      void (*vector)(vp_device,int,int,int,int,int,bool),
+		      void (*marker)(vp_device,int,int,int,int*),
+		      void (*text) (vp_device,char*,float,float,float,float),
+		      void (*area) (vp_device,int,struct vp_vertex*),
+		      void (*raster) (vp_device,int,int,int,int,int,int,
+				      unsigned char*,int,int));
 
-static void vplot_init (vp_device dev)
+static void vplot_init (vp_device dev, void (*open)(vp_device))
 {
     char *string;
     int i;
@@ -280,7 +305,7 @@ static void vplot_init (vp_device dev)
 	pat[i].patbits = NULL;
     }
 
-    dev->open ();
+    open (dev);
     device_open = true;
 
     if (!sf_getbool ("endpause",&endpause)) endpause=false;
@@ -501,15 +526,19 @@ static void init_colors (void)
     }
 }
 
-static void setstyle (vp_plotstyle new_style, vp_device dev)
+static void setstyle (vp_plotstyle new_style, vp_device dev, 
+		      void (*attributes)(vp_device,
+					 vp_attribute,int,int,int,int))
 {
     if (new_style != style) {
 	style = new_style;
-	reset_parameters (dev);
+	reset_parameters (dev, attributes);
     }
 }
     
-static void reset_parameters (vp_device dev)
+static void reset_parameters (vp_device dev, 
+			      void (*attributes)(vp_device,
+						 vp_attribute,int,int,int,int))
 {
     float inches, screenheight, screenwidth, f;
     int ix, iy;
@@ -624,7 +653,7 @@ static void reset_parameters (vp_device dev)
     dev->ywmax = yWmax;
     dev->ywmin = yWmin;
     
-    reset_windows (dev);
+    reset_windows (dev, attributes);
 }
 
 /* Utility to modify color tables for plotting grey rasters. */
@@ -754,7 +783,7 @@ static void devtovpw (int x1, int y1, int x2, int y2,
 
 static void vptodevxy_text (int x, int y, int *outx, int *outy)
 {
-    float xscale_save, yscale_save;
+    float xscale_save=0., yscale_save=0.;
 
     if (no_stretch_text) {
 	xscale_save = xscale;
@@ -775,12 +804,23 @@ static void vptodevxy_text (int x, int y, int *outx, int *outy)
     }
 }
 
-static void vplot_do (vp_device dev)
+static void vplot_do (vp_device dev, 
+		      void (*reset)(vp_device),
+		      void (*close)(vp_device,vp_close),
+		      void (*eras)(vp_device,vp_eras),
+		      void (*attributes)(vp_device,
+					 vp_attribute,int,int,int,int),
+		      void (*vector)(vp_device,int,int,int,int,int,bool),
+		      void (*marker)(vp_device,int,int,int,int*),
+		      void (*text) (vp_device,char*,float,float,float,float),
+		      void (*area) (vp_device,int,struct vp_vertex*),
+		      void (*raster) (vp_device,int,int,int,int,int,int,
+				      unsigned char*,int,int))
 {
-    int i, j, k, c, key, size, npts, nmul, nx, ny, nx_orig, ny_orig;
-    int orient, ras_orient, *ptr, nx_mult, ny_mult, nx_temp, ny_temp;
+    int i, j=0, k, c, key, size, npts, nmul, nx, ny, nx_orig, ny_orig;
+    int orient, ras_orient, *ptr=NULL, nx_mult, ny_mult, nx_temp, ny_temp;
     int *tempbuf, new_style;
-    int col_tab_no, red, green, blue, grey, dist, min_dist, best_col;
+    int col_tab_no, red, green, blue, grey, dist, min_dist, best_col=0;
     int red_mask, green_mask, blue_mask;
     int red_0, green_0, blue_0;
     int red_7, green_7, blue_7;
@@ -788,8 +828,9 @@ static void vplot_do (vp_device dev)
     int	hasiz[NHATCH * 2], numhatch;
     int xpix, ypix, num_pat, num_byte, yrast, lastrast;
     int xvr_min, xvr_max, yvr_min, yvr_max;
-    int xr_min, xr_max, yr_min, yr_max, xvru_min, xvru_max, yvru_min, yvru_max;
-    int xru_min, yru_max, xxx[4], yyy[4];
+    int xvru_min, xvru_max, yvru_min, yvru_max;
+    int xr_min=0, xr_max=0, yr_min=0, yr_max=0;
+    int xru_min=0, yru_max=0, xxx[4], yyy[4];
     int pos, ii, jj, kk, num_rep, ras_offset, dither_it;
     int xnewer, ynewer;
     int xtext0, xtext1, xtext2, ytext0, ytext1, ytext2, type;
@@ -797,8 +838,8 @@ static void vplot_do (vp_device dev)
     int savefat;
     unsigned char *rasterline, *rasterline2, *outraster, *outraster2, ibyte;
     float red_f, green_f, blue_f, red_fm, green_fm, blue_fm;
-    float angle, xrasmult, yrasmult, savefatmult, f;
-    bool starterase, skip;
+    float angle, xrasmult=0., yrasmult=0., savefatmult, f;
+    bool starterase, skip=false;
        
     starterase = false;
     while ((VP_ERASE == (c = getchar ())) || 
@@ -809,7 +850,7 @@ static void vplot_do (vp_device dev)
     if (c == EOF) return;
 
     if (first_time) {
-	dev->reset ();
+	reset (dev);
 
 	if (xmax <= xmin ||
 	    ymax <= ymin ||
@@ -830,11 +871,11 @@ static void vplot_do (vp_device dev)
 
 	ever_called = true;
     } else {
-	dev->close (CLOSE_FLUSH);
+	close (dev,CLOSE_FLUSH);
 	if (epause > 0) {
 	    sleep ((unsigned int) epause);
 	} else if (epause < 0) {
-	    dev->close (CLOSE_FLUSH);
+	    close (dev,CLOSE_FLUSH);
 	    
 /*
 	    message (MESG_ERASE);
@@ -874,12 +915,12 @@ static void vplot_do (vp_device dev)
     if (((erase & FORCE_INITIAL) && (first_time || (erase & DO_LITERALS)))
 	|| (starterase && (erase & DO_LITERALS))) {
 	if (first_time) {
-	    dev->eras (ERASE_START);
+	    eras (dev,ERASE_START);
 	} else {
-	    dev->eras (ERASE_MIDDLE);
+	    eras (dev,ERASE_MIDDLE);
 	    nplots++;
 	}
-	dev->close (CLOSE_FLUSH);
+	close (dev,CLOSE_FLUSH);
     }
 
     first_time = false;
@@ -887,15 +928,15 @@ static void vplot_do (vp_device dev)
 
 /* Reset fatness, cur_color, etc. */
     new_style = default_style;
-    setstyle (new_style,dev);
-    reset_all (dev);
+    setstyle (new_style,dev,attributes);
+    reset_all (dev, attributes);
 
 /* Make SURE the color is what it's supposed to be, just to be safe. */
-    dev->attributes (SET_COLOR, cur_color, 0, 0, 0);
+    attributes (dev,SET_COLOR, cur_color, 0, 0, 0);
     need_devcolor = false;
 
 /*    message (MESG_OFF); */
-    dev->close (CLOSE_FLUSH);
+    close (dev,CLOSE_FLUSH);
 
 /* Start a group that will contain this frame (always group 0). */
 
@@ -906,7 +947,7 @@ static void vplot_do (vp_device dev)
     group_number++;
     ?????????????????? */
 
-    if (framewindows) outline_window (dev);
+    if (framewindows) outline_window (dev, attributes, vector);
 
     while (EOF != c) {
 	switch (c)  {
@@ -923,9 +964,9 @@ static void vplot_do (vp_device dev)
 			new_style = VP_STANDARD;
 			break;
 		}
-		setstyle (new_style,dev);
+		setstyle (new_style,dev,attributes);
 
-		if (framewindows) outline_window (dev);
+		if (framewindows) outline_window (dev, attributes, vector);
 		break;
 	    case VP_MOVE:  
 		/* Reset position in dash pattern. */
@@ -935,7 +976,7 @@ static void vplot_do (vp_device dev)
 		break;
 	    case VP_DRAW:
 		getxy (&xnew,&ynew);
-		update_color (dev->attributes);
+		update_color (dev, attributes);
 
 		while (VP_DRAW == (c = getchar ())) {
 		    getxy (&xnewer,&ynewer);
@@ -954,14 +995,14 @@ static void vplot_do (vp_device dev)
 			continue;
 		    }
 
-		    dev->vector (xold, yold, xnew, ynew, fat, dashon);
+		    vector (dev, xold, yold, xnew, ynew, fat, dashon);
 		    xold = xnew;
 		    yold = ynew;
 		    xnew = xnewer;
 		    ynew = ynewer;
 		}
 
-		dev->vector (xold, yold, xnew, ynew, fat, dashon);
+		vector (dev, xold, yold, xnew, ynew, fat, dashon);
 		xold = xnew;
 		yold = ynew;
 
@@ -982,7 +1023,7 @@ static void vplot_do (vp_device dev)
 		getxy (&xnew, &ynew);
 		npts--;
 
-		update_color (dev->attributes);
+		update_color (dev,attributes);
 		while (npts > 0) {
 		    getxy (&xnewer, &ynewer);
 		    npts--;
@@ -1000,14 +1041,14 @@ static void vplot_do (vp_device dev)
 			continue;
 		    }
 
-		    dev->vector (xold, yold, xnew, ynew, fat, dashon);
+		    vector (dev, xold, yold, xnew, ynew, fat, dashon);
 		    xold = xnew;
 		    yold = ynew;
 		    xnew = xnewer;
 		    ynew = ynewer;
 		}
 
-		dev->vector (xold, yold, xnew, ynew, fat, dashon);
+		vector (dev, xold, yold, xnew, ynew, fat, dashon);
 		xold = xnew;
 		yold = ynew;
 		break;
@@ -1029,9 +1070,9 @@ static void vplot_do (vp_device dev)
 		    getxy (mvec+ii,mvec+ii+1);
 		}
 
-		update_color (dev->attributes);
+		update_color (dev, attributes);
 
-		dev->marker (npts, type, size, marker_vec);
+		marker (dev, npts, type, size, marker_vec);
 
 		free (marker_vec);
 		break;
@@ -1125,16 +1166,16 @@ static void vplot_do (vp_device dev)
 
 		fat = (ifat >= 0)? fatmult * (ifat + fatbase): -1;
 
-		update_color (dev->attributes);
+		update_color (dev, attributes);
 
 		getvpstring ();
 
-		dev->text (txbuffer,
-			   txscale * xtext1 / TEXTVECSCALE,
-			   txscale * ytext1 / TEXTVECSCALE,
-			   txscale * xtext2 / TEXTVECSCALE,
-			   txscale * ytext2 / TEXTVECSCALE);
-
+		text (dev, txbuffer,
+		      txscale * xtext1 / TEXTVECSCALE,
+		      txscale * ytext1 / TEXTVECSCALE,
+		      txscale * xtext2 / TEXTVECSCALE,
+		      txscale * ytext2 / TEXTVECSCALE);
+		
 		fat = savefat;
 		fatmult = savefatmult;
 		break;
@@ -1190,14 +1231,14 @@ static void vplot_do (vp_device dev)
 		pat[ipat].ydim_orig = ny_orig;
 
 		npts = getpolygon (npts);
-		update_color (dev->attributes);
+		update_color (dev, attributes);
 
                 /* Do the polygon */
 		if (npts > 2 && shade && nx > 0 && ny > 0)
-		    dev->area (npts, vxbuffer);
+		    area (dev, npts, vxbuffer);
 
                 /* And then its border */
-		if (afat >= 0) vecoutline (vxbuffer,dev->vector);
+		if (afat >= 0) vecoutline (dev,vxbuffer,vector);
 
 		if (nx * ny > 0) free (ptr);
 		break;
@@ -1228,16 +1269,16 @@ static void vplot_do (vp_device dev)
 		if (!shade) {
 		    /* At least draw the boundary to show where it is */
 		    afat = 0;
-		    update_color (dev->attributes);
-		    vecoutline (vxbuffer,dev->vector);
+		    update_color (dev, attributes);
+		    vecoutline (dev,vxbuffer,vector);
 		} else {
 		    /* See whether raster or hatch area */
 		    if (pat[ipat].xdim >= 0) { /* raster */
 			if (npts > 2 && 
 			    pat[ipat].ydim > 0 && 
 			    pat[ipat].xdim > 0) {
-			    update_color (dev->attributes);
-			    dev->area (npts, vxbuffer);
+			    update_color (dev, attributes);
+			    area (dev, npts, vxbuffer);
 			}
 		    } else { /* hatch */
 			numhatch = -pat[ipat].xdim;
@@ -1264,7 +1305,7 @@ static void vplot_do (vp_device dev)
 
 		fat = (ifat >= 0)? fatmult * (ifat + fatbase): -1;
 
-		dev->attributes (NEW_FAT, fat, 0, 0, 0);
+		attributes (dev, NEW_FAT, fat, 0, 0, 0);
 		break;
 
 	    case VP_COLOR:
@@ -1401,8 +1442,8 @@ static void vplot_do (vp_device dev)
 
 		/* Process the new color table value */
 		if (col_tab_no < num_col) {
-		    dev->attributes (SET_COLOR_TABLE, 
-				     col_tab_no, red, green, blue);
+		    attributes (dev, SET_COLOR_TABLE, 
+				col_tab_no, red, green, blue);
 		    color_set[col_tab_no][STATUS] = SET;
 		} else if (col_tab_no > 7) {
 		    color_set[col_tab_no][STATUS] = MAPPED;
@@ -1494,14 +1535,14 @@ static void vplot_do (vp_device dev)
 		break;
 
 	    case VP_PURGE:
-		dev->close (CLOSE_FLUSH);
+		close (dev, CLOSE_FLUSH);
 		break;
 	    case VP_BREAK:		/* break */
 		if (BREAK_IGNORE == brake) break;
 		/* fall through */
 
 	    case VP_ERASE: 
-		dev->close (CLOSE_FLUSH);
+		close (dev, CLOSE_FLUSH);
 
 /*
  * Erases and breaks can't occur inside groups.
@@ -1570,16 +1611,16 @@ static void vplot_do (vp_device dev)
 
 		if (erase & DO_LITERALS) {
 		    if ((VP_ERASE == c) || brake) {
-			dev->eras (ERASE_MIDDLE);
+			eras (dev, ERASE_MIDDLE);
 		    } else {
-			dev->eras (ERASE_BREAK);
+			eras (dev, ERASE_BREAK);
 		    }
 		    nplots++;
 		}
 
 		new_style = default_style;
-		setstyle (new_style,dev);
-		reset_all (dev);
+		setstyle (new_style,dev,attributes);
+		reset_all (dev,attributes);
 
 	    /*
 	     * Start a new group level 0 to contain the next frame (separated
@@ -1591,7 +1632,7 @@ static void vplot_do (vp_device dev)
 	    group_number++;
 	    */
 
-		if (framewindows) outline_window (dev);
+		if (framewindows) outline_window (dev, attributes, vector);
 		break;
 
 	    case VP_WINDOW:
@@ -1624,8 +1665,8 @@ static void vplot_do (vp_device dev)
 		    vp_getint();
 		}
 
-		reset_windows (dev);
-		if (framewindows) outline_window (dev);
+		reset_windows (dev, attributes);
+		if (framewindows) outline_window (dev, attributes, vector);
 		break;
 
 	    case VP_NOOP:
@@ -1634,7 +1675,7 @@ static void vplot_do (vp_device dev)
 	    case VP_TXALIGN:
 		txalign.hor = vp_getint();
 		txalign.ver = vp_getint();
-		dev->attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
+		attributes (dev, NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
 		break;
 
 	    case VP_TXFONTPREC:	
@@ -1659,12 +1700,12 @@ static void vplot_do (vp_device dev)
 		    kk = -1;
 		}
 
-		dev->attributes (NEW_FONT, ii, jj, kk, 0);
+		attributes (dev, NEW_FONT, ii, jj, kk, 0);
 		break;
 
 	    case VP_OVERLAY:
 		overlay = vp_getint();
-		dev->attributes (NEW_OVERLAY, overlay, 0, 0, 0);
+		attributes (dev, NEW_OVERLAY, overlay, 0, 0, 0);
 		break;
 
 	    case VP_PATLOAD:	
@@ -1727,7 +1768,7 @@ static void vplot_do (vp_device dev)
 
 		    if (NULL != tempbuf) free (tempbuf);
 
-		    dev->attributes (NEW_PAT, ipat, 0, 0, 0);
+		    attributes (dev, NEW_PAT, ipat, 0, 0, 0);
 		} else { /* Hatch Pattern */
 		    nx = vp_getint();
 		    if (nx <= 0 || nx * 2 > NHATCH)
@@ -2227,28 +2268,28 @@ static void vplot_do (vp_device dev)
 
 			switch (ras_orient) {
 			    case 0:
-				dev->raster (yr_max - 1 - i, yr_max - yr_min,
-					     xvr_min, i + yvru_min,
-					     xr_max - xr_min, ras_orient, 
-					     outraster, 0, 0);
+				raster (dev,yr_max - 1 - i, yr_max - yr_min,
+					xvr_min, i + yvru_min,
+					xr_max - xr_min, ras_orient, 
+					outraster, 0, 0);
 			    break;
 			    case 1:
-				dev->raster (yr_max - 1 - i, yr_max - yr_min,
-					     xvru_min + i, yvr_max,
-					     xr_max - xr_min, ras_orient, 
-					     outraster, 0, 0);
+				raster (dev,yr_max - 1 - i, yr_max - yr_min,
+					xvru_min + i, yvr_max,
+					xr_max - xr_min, ras_orient, 
+					outraster, 0, 0);
 				break;
 			    case 2:
-				dev->raster (yr_max - 1 - i, yr_max - yr_min,
-					     xvr_max, yvru_max - i,
-					     xr_max - xr_min, ras_orient, 
-					     outraster, 0, 0);
+				raster (dev,yr_max - 1 - i, yr_max - yr_min,
+					xvr_max, yvru_max - i,
+					xr_max - xr_min, ras_orient, 
+					outraster, 0, 0);
 				break;
 			    case 3:
-				dev->raster (yr_max - 1 - i, yr_max - yr_min,
-					     xvru_max - i, yvr_min,
-					     xr_max - xr_min, ras_orient, 
-					     outraster, 0, 0);
+				raster (dev,yr_max - 1 - i, yr_max - yr_min,
+					xvru_max - i, yvr_min,
+					xr_max - xr_min, ras_orient, 
+					outraster, 0, 0);
 				break;
 			}
 		    }
@@ -2270,8 +2311,7 @@ static void vplot_do (vp_device dev)
 		    yyy[2] = yvru_max;
 		    xxx[3] = xvru_max;
 		    yyy[3] = yvru_min;
-		    drawpolygon (4, xxx, yyy,
-				 dev->attributes,dev->area,dev->vector);
+		    drawpolygon (dev,4, xxx, yyy,attributes,area,vector);
 		}
 	    }	    
 	    break;
@@ -2303,7 +2343,7 @@ static void vplot_do (vp_device dev)
 		    dashsum += dashes[ii];
 		}
 		if (!k) dashon = false;
-		dev->attributes (NEW_DASH, dashon, 0, 0, 0);
+		attributes (dev,NEW_DASH, dashon, 0, 0, 0);
 		break;
 	    default:	
 		sf_error("%s: invalid VPLOT command decimal %d character %c",
@@ -2314,7 +2354,7 @@ static void vplot_do (vp_device dev)
 	skip = false;
     }
 
-    dev->close (CLOSE_FLUSH);
+    close (dev,CLOSE_FLUSH);
 
 /* End the group for this frame 
     group_number--;
@@ -2340,14 +2380,16 @@ static void vplot_do (vp_device dev)
 */
 }
 
-static void reset_windows (vp_device dev)
+static void reset_windows (vp_device dev, 
+			   void (*attributes)(vp_device,
+					      vp_attribute,int,int,int,int))
 {
     if (dev->xwmax != xwmax_last || 
 	dev->ywmax != ywmax_last || 
 	dev->xwmin != xwmin_last || 
 	dev->ywmin != ywmin_last)
-	dev->attributes (SET_WINDOW, 
-			 dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmax);
+	attributes (dev,SET_WINDOW, 
+		    dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmax);
 
     xwmin_last = dev->xwmin;
     ywmin_last = dev->ywmin;
@@ -2355,31 +2397,35 @@ static void reset_windows (vp_device dev)
     ywmax_last = dev->ywmax;
 }
 
-static void outline_window (vp_device dev)
+static void outline_window (vp_device dev, 
+			    void (*attributes)(vp_device,
+					       vp_attribute,int,int,int,int),
+			    void (*vector)(vp_device,int,int,int,int,int,bool))
 {
     int color;
 
     color = color_set[VP_DEFAULT_COLOR][MAP];
 
     if (need_devcolor || cur_color != color) {
-	dev->attributes (SET_COLOR, color, 0, 0, 0);
+	attributes (dev, SET_COLOR, color, 0, 0, 0);
 	need_devcolor = false;
     }
 
-    dev->vector (dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmin, 0, false);
-    dev->vector (dev->xwmax, dev->ywmin, dev->xwmax, dev->ywmax, 0, false);
-    dev->vector (dev->xwmax, dev->ywmax, dev->xwmin, dev->ywmax, 0, false);
-    dev->vector (dev->xwmin, dev->ywmax, dev->xwmin, dev->ywmin, 0, false);
+    vector (dev, dev->xwmin, dev->ywmin, dev->xwmax, dev->ywmin, 0, false);
+    vector (dev, dev->xwmax, dev->ywmin, dev->xwmax, dev->ywmax, 0, false);
+    vector (dev, dev->xwmax, dev->ywmax, dev->xwmin, dev->ywmax, 0, false);
+    vector (dev, dev->xwmin, dev->ywmax, dev->xwmin, dev->ywmin, 0, false);
 
     if (cur_color != color) 
-	dev->attributes (SET_COLOR, cur_color, 0, 0, 0);
+	attributes (dev, SET_COLOR, cur_color, 0, 0, 0);
 }
 
-static void update_color (void (*attributes)(vp_attribute,
-					     int,int,int,int))
+static void update_color (vp_device dev, 
+			  void (*attributes)(vp_device,
+					     vp_attribute,int,int,int,int))
 {
     if (need_devcolor) {
-	attributes (SET_COLOR, cur_color, 0, 0, 0);
+	attributes (dev, SET_COLOR, cur_color, 0, 0, 0);
 	need_devcolor = false;
     }
 }
@@ -2475,8 +2521,8 @@ static int getpolygon (int npts)
  * doughnut to be defined by a single polygon without the line that
  * connects the inner and outer being plotted. */
 
-static void vecoutline (struct vp_vertex *head, 
-			void (*vector)(int,int,int,int,int,bool))
+static void vecoutline (vp_device dev, struct vp_vertex *head, 
+			void (*vector)(vp_device,int,int,int,int,int,bool))
 { 
     int xlast, ylast;
     struct vp_vertex *v;
@@ -2486,7 +2532,7 @@ static void vecoutline (struct vp_vertex *head,
 
     for (v = head; v->next != head; v = v->next) {
 	if (!dupside (v))
-	    vector (v->x, v->y, xlast, ylast, afat, false);
+	    vector (dev,v->x, v->y, xlast, ylast, afat, false);
 	xlast = v->x;
 	ylast = v->y;
     } 
@@ -2523,7 +2569,9 @@ static bool dupside (struct vp_vertex *base)
 
 /* reset variables that can be affected by vplot commands when
  * processing multiple plots, and don't stay set across pages */
-static void reset_all (vp_device dev)
+static void reset_all (vp_device dev, 
+		       void (*attributes)(vp_device,
+					  vp_attribute,int,int,int,int))
 {
     int i, j, k, color;
 
@@ -2532,10 +2580,10 @@ static void reset_all (vp_device dev)
     dev->ywmin = yWmin;
     dev->ywmax = yWmax;
 
-    reset_windows (dev);
+    reset_windows (dev, attributes);
 
     fat = fatmult * fatbase;
-    dev->attributes (NEW_FAT, fat, 0, 0, 0);
+    attributes (dev, NEW_FAT, fat, 0, 0, 0);
 
     color =  color_set[VP_DEFAULT_COLOR][MAP];
     if (cur_color != color) {
@@ -2545,7 +2593,7 @@ static void reset_all (vp_device dev)
 
     txalign.hor = TH_NORMAL;
     txalign.ver = TV_NORMAL;
-    dev->attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
+    attributes (dev, NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
 
     i = -1;
     j = -1;
@@ -2562,13 +2610,13 @@ static void reset_all (vp_device dev)
 	txovly = default_txovly;
 	k = txovly;
     }
-    dev->attributes (NEW_FONT, i, j, k, 0);
+    attributes (dev, NEW_FONT, i, j, k, 0);
 
     dashon = false;
-    dev->attributes (NEW_DASH, dashon, 0, 0, 0);
+    attributes (dev, NEW_DASH, dashon, 0, 0, 0);
 
     overlay = default_overlay;
-    dev->attributes (NEW_OVERLAY, overlay, 0, 0, 0);
+    attributes (dev, NEW_OVERLAY, overlay, 0, 0, 0);
 }
 
 /* 1 random threshold
@@ -2685,10 +2733,11 @@ static void dithline (unsigned char *inpline,
     }
 }
 
-static void drawpolygon (int npts, int *x, int *y,
-			 void (*attributes)(vp_attribute,int,int,int,int),
-			 void (*area) (int,struct vp_vertex*),
-			 void (*vector)(int,int,int,int,int,bool))
+static void drawpolygon (vp_device dev, int npts, int *x, int *y,
+			 void (*attributes)(vp_device,vp_attribute,
+					    int,int,int,int),
+			 void (*area) (vp_device,int,struct vp_vertex*),
+			 void (*vector)(vp_device,int,int,int,int,int,bool))
 {
     int i, j;
     static int point;
@@ -2735,30 +2784,43 @@ static void drawpolygon (int npts, int *x, int *y,
     pat[ipat].ydim = 1;
     pat[ipat].xdim_orig = 1;
     pat[ipat].ydim_orig = 1;
-    update_color (attributes);
+    update_color (dev, attributes);
     if (npts > 2) {
 	if (shade) {
-	    area (npts, vxbuffer);
+	    area (dev, npts, vxbuffer);
 	} else {
-	    vecoutline (vxbuffer,vector);
+	    vecoutline (dev,vxbuffer,vector);
 	}
     }
 }
 
-void vp_main(int argc, char* argv[], vp_device dev)
+void vp_main(int argc, char* argv[], vp_device dev, 
+	     void (*open)(vp_device),
+	     void (*reset)(vp_device),
+	     void (*close)(vp_device,vp_close),
+	     void (*eras)(vp_device,vp_eras),
+	     void (*attributes)(vp_device,
+				vp_attribute,int,int,int,int),
+	     void (*vector)(vp_device,int,int,int,int,int,bool),
+	     void (*marker)(vp_device,int,int,int,int*),
+	     void (*text) (vp_device,char*,float,float,float,float),
+	     void (*area) (vp_device,int,struct vp_vertex*),
+	     void (*raster) (vp_device,int,int,int,int,int,int,
+			     unsigned char*,int,int))
 {
     int i;
     char *arg;
 
-    vplot_init (dev);
-    vplot_do(dev);
+    vplot_init (dev, open);
+    vplot_do(dev,reset,close,eras,attributes,vector,marker,text,area,raster);
 
     for (i=1; i < argc; i++) {
 	arg = argv[i];
 	if (NULL == strchr(arg,'=')) { /* not a parameter */
 	    if (NULL == freopen(arg,"rb",stdin))
 		sf_error("%s: Cannot open file %s:",__FILE__,arg);
-	    vplot_do(dev);
+	    vplot_do(dev,reset,close,eras,attributes,
+		     vector,marker,text,area,raster);
 	}
     }
 }

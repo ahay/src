@@ -14,8 +14,8 @@ Takes: < data.rsf > plot.vpl
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
-    float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias;
-    float pbias, gain, x1, y1, x2, y2, **data, f;
+    float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
+    float pbias, gain=0., x1, y1, x2, y2, **data, f;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp;

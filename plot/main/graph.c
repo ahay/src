@@ -9,8 +9,8 @@ int main(int argc, char* argv[])
     bool transp;
     int n1, n2, n3, i1, i2, i3, len;
     float min1, max1, min2, max2, o3, d3, o1, d1;
-    float **x, **y, **tmp, f, *symbolsz, symsize, xc, yc;    
-    complex float** data;
+    float **x, **y, **tmp, f, *symbolsz=NULL, symsize, xc, yc;    
+    complex float** data=NULL;
     char* symbol, sym[2]=" ";
     sf_datatype type;
     sf_file in;

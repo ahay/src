@@ -7,9 +7,13 @@ from SCons.Defaults import StaticCheckSet, SharedCheckSet
 
 def check_all(context):
     cc(context)
-    cxx(context)
-    f77(context)
-    f90(context)
+    api = context.env.get('API','').lower().split(',')
+    if 'c++' in api:
+        cxx(context)
+    if 'fortran' in api:
+        f77(context)
+    if 'fortran-90' in api:
+        f90(context)
 
 def cc(context):
     context.Message("checking C compiler ... ")
@@ -195,6 +199,7 @@ def options(opts):
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
+    opts.Add('API','Support for additional languages (ossible values: c++, fortran, fortran-90, python)')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')

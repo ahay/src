@@ -41,22 +41,37 @@ struct vp_vertex {
 
 typedef struct vp_Device {
     int xwmax, xwmin, ywmax, ywmin; /* window */
-    void (*open)(void);
-    void (*reset)(void);
-    void (*close)(vp_close);
-    void (*eras)(vp_eras);
-    void (*attributes)(vp_attribute,int,int,int,int);
-    void (*vector)(int,int,int,int,int,bool);
-    void (*marker)(int,int,int,int*);
-    void (*text) (char*,float,float,float,float);
-    void (*area) (int,struct vp_vertex*);
-    void (*raster) (int,int,int,int,int,int,unsigned char*,int,int);
-    void (*startpoly) (int);
-    void (*midpoly)(int,int);
-    void (*endpoly)(bool);
 } *vp_device;
 
-void vp_main(int argc, char* argv[], vp_device dev);
+/* device methods
+   void (*open)(vp_device);
+   void (*reset)(vp_device);
+   void (*close)(vp_device,vp_close);
+   void (*eras)(vp_device,vp_eras);
+   void (*attributes)(vp_device,vp_attribute,int,int,int,int);
+   void (*vector)(vp_device,int,int,int,int,int,bool);
+   void (*marker)(vp_device,int,int,int,int*);
+   void (*text) (vp_device,char*,float,float,float,float);
+   void (*area) (vp_device,int,struct vp_vertex*);
+   void (*raster) (vp_device,int,int,int,int,int,int,unsigned char*,int,int);
+   void (*startpoly) (vp_device,int);
+   void (*midpoly)(vp_device,int,int);
+   void (*endpoly)(vp_device,bool);
+*/
+
+void vp_main(int argc, char* argv[], vp_device dev, 
+	     void (*open)(vp_device),
+	     void (*reset)(vp_device),
+	     void (*close)(vp_device,vp_close),
+	     void (*eras)(vp_device,vp_eras),
+	     void (*attributes)(vp_device,
+				vp_attribute,int,int,int,int),
+	     void (*vector)(vp_device,int,int,int,int,int,bool),
+	     void (*marker)(vp_device,int,int,int,int*),
+	     void (*text) (vp_device,char*,float,float,float,float),
+	     void (*area) (vp_device,int,struct vp_vertex*),
+	     void (*raster) (vp_device,int,int,int,int,int,int,
+			     unsigned char*,int,int));
 
 #endif
 

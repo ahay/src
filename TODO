@@ -9,6 +9,7 @@ PROJ
 DOCUMENTATION
 	demos: SU/SEPlib/Claerbout
 	       move up, document
+	       sfsynlv
 	manual...
 	sfdoc 
 	      -k keyword

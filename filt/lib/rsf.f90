@@ -727,3 +727,5 @@ contains
     call rsf_write_complex_1d_n(hist,array,size(array))
   end subroutine rsf_write_complex_5d
 end module RSF
+
+!	$Id: rsf.f90,v 1.4 2003/09/24 05:15:29 fomels Exp $	

@@ -57,7 +57,10 @@ void vp_polyfix (int x, int y, bool *first, bool *allgone)
 }
 
 /* Start working on the polygons */
-void vp_polystart (vp_device dev)		
+void vp_polystart (vp_device dev, 
+		   void (*startpoly) (vp_device,int),
+		   void (*midpoly)(vp_device,int,int),
+		   void (*endpoly)(vp_device,bool))
 {
     int i, j, k, l, ii;
     int firstpoint;
@@ -245,13 +248,13 @@ void vp_polystart (vp_device dev)
     scan ();
 
     for (i = 1; i <= npols; i++) {
-	dev->startpoly (polsc[i]);
+	startpoly (dev,polsc[i]);
 	j = pols[i];
 	do {
-	    dev->midpoly (poly[j][0], poly[j][1]);
+	    midpoly (dev,poly[j][0], poly[j][1]);
 	    j = poly[j][2];
 	} while (j != pols[i]);
-	dev->endpoly (i == npols);
+	endpoly (dev,i == npols);
     }
 }
 

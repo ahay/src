@@ -37,7 +37,7 @@ void spline3_close (void) {
    f[n] - function values
    coeff[4][n] - coefficients
 */
-void spline_coeffs(const float** table)
+void spline_coeffs(float** table)
 {
     int k;
     float xk, fk;

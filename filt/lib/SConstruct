@@ -43,63 +43,66 @@ for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
 
+api = env.get('API','').lower().split(',')
+
 ##############################################################################
 # C++ BINDING
 ##############################################################################
-libcc = env.StaticLibrary('rsf++','rsf.cc',
-                          OBJSUFFIX='++.o',CPPPATH='../../include')
-if root:
-    env.Install(libdir,libcc)
-    env.Install(incdir,'rsf.hh')
+if 'c++' in api:
+    libcc = env.StaticLibrary('rsf++','rsf.cc',
+                              OBJSUFFIX='++.o',CPPPATH='../../include')
+    if root:
+        env.Install(libdir,libcc)
+        env.Install(incdir,'rsf.hh')
 
-for file in ['getpar','file']:
-    test = 'Test' + file + '.cc'
-    env.Program([test,libcc,lib],
-                OBJSUFFIX='++.o',CPPPATH='../../include',
-                PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
-
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.cc'
+        env.Program([test,libcc,lib],
+                    OBJSUFFIX='++.o',CPPPATH='../../include',
+                    PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
+        
 ##############################################################################
 # FORTRAN-77 BINDING
 ##############################################################################
-env.Object('fortran.o','fortran.c',
-           CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
-libf = env.StaticLibrary('rsff','fortran.o')                         
-
-if root:
-    env.Install(libdir,libf)
-
-for file in ['getpar','file']:
-    test = 'Test' + file + '.f'
-    env.Program([test,libf,lib],PROGSUFFIX='.x',PROGPREFIX='',
-                OBJSUFFIX='f.o',
-                LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
-
+if 'fortran' in api:
+    env.Object('fortran.o','fortran.c',
+               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
+    libf = env.StaticLibrary('rsff','fortran.o')                         
+    
+    if root:
+        env.Install(libdir,libf)
+        
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f'
+        env.Program([test,libf,lib],PROGSUFFIX='.x',PROGPREFIX='',
+                    OBJSUFFIX='f.o',
+                    LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
+        
 ##############################################################################
 # FORTRAN-90 BINDING
 ##############################################################################
-import configure
-
-if env.has_key('F90'):
+if 'fortran-90' in api and env.has_key('F90'):
+    import configure
+    
     configure.load_f90(env)
     env.Object('fortran90.o','fortran.c',
                CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN90')
     env.Object('rsf.o','rsf.f90')
     libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o'])
-
+        
     if root:
         env.Install(libdir,libf90)
-
+        
     for file in ['getpar','file']:
         test = 'Test' + file + '.f90'
         env.Program([test,libf90,lib],PROGSUFFIX='f90.x',PROGPREFIX='',
                     OBJSUFFIX='f90.o',
                     LINK=env.get('F90'),LINKFLAGS=env.get('F90FLAGS'))
-    
+            
 ##############################################################################
 # PYTHON BINDING
 ##############################################################################
-
-if ('swig' in env.get('TOOLS')):
+if 'python' in api and 'swig' in env.get('TOOLS'):
     # Python includes for SWIG 
     pythinc = []
     for path in sys.path:
@@ -117,4 +120,4 @@ if ('swig' in env.get('TOOLS')):
         env.Install(libdir,python)
         env.Install(libdir,'c_rsf.py')
         env.Install(libdir,'rsf.py')
-    Clean(python,['c_rsf.py','c_rsf.pyc'])
+        Clean(python,['c_rsf.py','c_rsf.pyc'])

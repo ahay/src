@@ -3,7 +3,7 @@
 
 void spine3_init(int n1);
 void spline3_close (void);
-void spline_coeffs(const float** table);
+void spline_coeffs(float** table);
 float spline_eval(float y);
 
 #endif
