@@ -10,15 +10,17 @@ LDFLAGS = -L../rsf -lrsf -lm -lnsl
 DEPEND = -xM1
 DEPEND = -MM
 
-PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
-	helicon hole invbin1 invwarp nmo noise pef pwd randrefl reshape \
-	ricker sigmoid smooth smoothder smoothfix spectra stretch2 taup \
+PROGS = ai2refl bandpass bin bin1 blindpick depth2time dip envelope \
+	fft1 fft2 fft3 helicon hole invbin1 invwarp nmo noise \
+	pef pwd randrefl reshape ricker sigmoid \
+	smooth smoothder smoothfix spectra stretch2 taup \
 	taupmo time2depth warp1 window1 window2 xcorr1
 
 ai2refl = empty
 bandpass = butterworth
 bin = int2 interp adjnull
 bin1 = int1 interp adjnull
+blindpick = tridiagonal
 depth2time = stretch tridiagonal
 dip = dip3 divide1 allp3 tridiagonal apfilt
 envelope = triangle
@@ -40,7 +42,7 @@ reshape = empty
 ricker = empty
 sigmoid = random
 smooth = triangle
-smoothder = causint cgstep bigsolver adjnull chain
+smoothder = banded
 smoothfix = empty
 spectra = empty
 stretch2 = stretch2 banded

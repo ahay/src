@@ -1,13 +1,12 @@
 #include <rsf.h>
 
-#include "causint.h"
-#include "cgstep.h"
-#include "bigsolver.h"
+#include "banded.h"
 
 int main(int argc, char* argv[])
 { 
     int i1, n1, i2, n2, niter;
-    float *trace, *dtrace, d1, eps;
+    float *trace, *dtrace, d1, eps, *diag, **offd;
+    bands slv;
     sf_file in, der;
 
     sf_init (argc, argv);
@@ -19,23 +18,38 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     if (!sf_getfloat("eps",&eps)) eps=0.2;
-    eps *= n1;
 
     n2 = sf_leftsize(in,1);
 
     trace = sf_floatalloc (n1);
     dtrace = sf_floatalloc (n1);
+    diag = sf_floatalloc (n1);
+    offd = sf_floatalloc2 (n1,2);
+
+    for (i1=0; i1 < n1; i1++) {
+	diag[i1] = 1.+ 6.*eps;
+	offd[0][i1] = -4.*eps;
+	offd[1][i1] = eps;
+    }
+    diag[0] = diag[n1-1] = 1.+eps;
+    diag[1] = diag[n1-2] = 1.+5.*eps;
+    offd[0][0] = offd[0][n1-2] = -2.*eps;
+
+    slv = banded_init(n1,2);
+    banded_define (slv,diag,offd);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_read(trace,sizeof(float),n1,in);
 
-	solver_prec( causint_lop, cgstep, causint_lop, n1, n1, n1,
-		     dtrace, trace, niter, eps, "verb", false, "end");
-	cgstep_close();
+	/* smooth */
+	banded_solve(slv,trace);
 
-	for (i1=0; i1 < n1; i1++) {
+	/* differentiate */
+	for (i1=0; i1 < n1-1; i1++) {
+	    dtrace[i1] = trace[i1+1]-trace[i1];
 	    dtrace[i1] /= d1;
 	}
+	dtrace[n1-1] = dtrace[n1-2];
 
 	sf_write(dtrace,sizeof(float),n1,der);
     }
