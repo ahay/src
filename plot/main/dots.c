@@ -8,7 +8,7 @@ Takes: < data.rsf > plot.vpl
 #include <rsf.h>
 #include <rsfplot.h>
 
-static float screenwide, screenhigh;
+static float screenwide, screenhigh, screenratio;
 static bool transp;
 static const float eps=1.e-20;
 
@@ -110,8 +110,19 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("overlap",&overlap)) overlap=0.9; 
     /* trace overlap */
 
-    screenwide = VP_STANDARD_HEIGHT/VP_SCREEN_RATIO * xxscale;
-    screenhigh = VP_STANDARD_HEIGHT  * yyscale;  
+    /* get screen size */
+    if (!sf_getfloat ("screenratio",&screenratio))
+	screenratio = VP_SCREEN_RATIO;
+    /* screen aspect ratio */
+    if (!sf_getfloat ("screenht",&screenhigh))
+	screenhigh = VP_STANDARD_HEIGHT;
+    /* screen height */
+    if (!sf_getfloat ("screenwd",&screenwide))
+	screenwide = screenhigh / screenratio;
+    /* screen width */
+
+    screenwide *= xxscale;
+    screenhigh *= yyscale;  
     epsilon = .0002 * screenhigh;
 
     marginl = screenwide * ((NULL == labels[0])? 0.03: 0.15);
@@ -341,5 +352,5 @@ static void circle(int corners,
     vp_area(vx,vy,corners,1,1,1);
 }
 
-/* 	$Id: dots.c,v 1.5 2003/10/01 23:41:18 fomels Exp $	 */
+/* 	$Id: dots.c,v 1.6 2003/10/22 14:44:44 fomels Exp $	 */
 
