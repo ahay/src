@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
 
     prefilter_init (nf, nt, 3*nt);
     for (iy = 0; iy < ny; iy++) {
+	sf_warning("%d of %d",iy+1,ny);
 	y = iy*dy;
 	y *= y;
 	for (ix = 0; ix < nx; ix++) {
@@ -63,18 +64,18 @@ int main(int argc, char* argv[])
 		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
 	    }
        
-	    int1_init (str, 0., dw, nt, spline_int, nt, nf);
+	    int1_init (str, 0., dw, nt, spline_int, nf, nt);
 
 	    sf_read(trace,sizeof(float),nt,in);
 	    cosft_frw (trace,0,1);
 	    prefilter_apply (nt, trace);
 	    int1_lop (false,false,nt,nt,trace,trace2);
 	    cosft_inv (trace2,0,1);
-	    sf_read(trace2,sizeof(float),nt,out);
+	    sf_write(trace2,sizeof(float),nt,out);
 	}
     }
 
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.4 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mstolt.c,v 1.5 2003/10/03 03:14:32 fomels Exp $	 */

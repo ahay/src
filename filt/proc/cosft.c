@@ -9,6 +9,7 @@ static complex float *pp;
 void cosft_init(int n1, float o1, float d1) {
     nt = sf_npfar(2*(n1-1));
     nw = nt/2+1;
+    sf_warning("nw=%d",nw);
     p  = sf_floatalloc (nt);
     pp = sf_complexalloc(nw);
     n = n1;
@@ -63,4 +64,4 @@ void cosft_inv (float *q, int o1, int d1) {
     }
 }
 
-/* 	$Id: cosft.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: cosft.c,v 1.4 2003/10/03 03:14:32 fomels Exp $	 */
