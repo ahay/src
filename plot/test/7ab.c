@@ -1,11 +1,21 @@
 #include <math.h>
 
+#include <rsf.h>
 #include <rsfplot.h>
 
-int main(void)
+int main(int argc, char* argv[])
 {
-    float v=1.,t,z,x,x0, theta;
-    float top=3.2, c1=.9, c2=6.8;
+    const int nt=300, nx=64, nz=300, nb=50; 
+    int it, ib, iz, ix;
+    float v=1.,t,z,x,x0, theta, b[nb], tdat[nx][nt], zdat[nx][nz];
+    float top=3.2, c1=.9, c2=6.8, d1=0.02, d2=0.12, r;
+    sf_file c, d;
+
+    sf_init(argc,argv);
+
+    if (!sf_getfloat("top",&top)) top=5.;
+    if (!sf_getfloat("c1",&c1)) c1=0.5;
+    if (!sf_getfloat("c2",&c2)) c2=5.;
 
     vp_init();
 
@@ -18,11 +28,46 @@ int main(void)
 
     for (z=.4; z < 4.; z += .4) {
 	vp_penup ();
-	x0 = z * tanf( 6.283*45./360.);
+	x0 = z * tanf( SF_PI*45./180.);
 	for (x=0.; x < 4.; x += .01) {
 	    t = hypotf(z,x-x0)/v;
 	    vp_upendn (x,top-t);
 	}
+    }
+
+    	
+    for (ib=0; ib < nb; ib++) {
+	b[ib] = expf(-3.*(ib+1.)/20.) * sinf(SF_PI*(ib+1.)/10.);
+    }
+    
+    if (NULL != sf_getstring("c")) {
+	c = sf_output("c");
+	sf_setformat(c,"native_float");
+	sf_putint(c,"n1",nt);
+	sf_putint(c,"n2",nx);
+	sf_putfloat(c,"d1",d1);
+	sf_putfloat(c,"d2",d2);
+	
+	for (ix=0; ix < nx; ix++) {
+	    for (it=0; it < nt; it++) {
+		tdat[ix][it] = 0.;
+	    }
+	}
+	
+	for (iz=0; iz < 12; iz++) {
+	    z = (iz+1.)*nt/12.;
+	    x0 = z * tanf( SF_PI*45./180.);
+	    for (ix=0; ix < nx; ix++) {
+		x = (ix+1.) * d2/d1;
+		t = hypotf(z,x-x0)/v;
+		for (ib=0; ib < nb; ib++) {
+		    it = t+ib-1;
+		    if (it < nt) tdat[ix][it] += b[ib];
+		}
+	    }
+	}
+
+	sf_write(tdat[0],sizeof(float),nt*nx,c);
     }
 
     vp_uorig (-c2,-.5);
@@ -34,13 +79,46 @@ int main(void)
 
     for(t=.4; t<6.; t += .4) {
 	vp_penup ();
-	x0 = t / sinf( 6.283*45./360.);
+	x0 = t / sinf( SF_PI*45./180.);
 	for (theta=-89.5; theta<89.5; theta += 1.) {
-	    z =      t * cosf (6.28*theta/360.);
-	    x = x0 + t * sinf (6.28*theta/360.);
+	    z =      t * cosf (SF_PI*theta/180.);
+	    x = x0 + t * sinf (SF_PI*theta/180.);
 	    vp_upendn (x,top-z);
 	}
     }
 
-    return 0;
+    if (NULL != sf_getstring("d")) {
+	d = sf_output("d");
+	sf_setformat(d,"native_float");
+	sf_putint(d,"n1",nz);
+	sf_putint(d,"n2",nx);
+	sf_putfloat(d,"d1",d1);
+	sf_putfloat(d,"d1",d2);
+	
+	for (ix=0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+	    zdat[ix][iz] = 0.;
+	    }
+	}
+	
+	for (it=0; it < 20; it++) {
+	    t = (it+1.)*nz/20.;
+	    x0 = t / sinf( SF_PI*45./180.);
+	    for (theta=-89.5; theta<89.5; theta += 1.) {
+		z =      t * cosf (SF_PI*theta/180.);
+		x = x0 + t * sinf (SF_PI*theta/180.);
+		ix = x * d1/d2;
+		r = hypotf(z,x-x0);
+		for (ib=0; ib < nb; ib++) {
+		    iz = z + ib-1;
+		    if (iz >= 0 && iz < nz && ix >=0 && ix < nx)
+			zdat[ix][iz] += b[ib]*r;
+		}
+	    }
+	}
+	
+	sf_write(zdat[0],sizeof(float),nz*nx,d);
+    }
+
+    exit(0);
 }

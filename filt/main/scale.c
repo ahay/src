@@ -11,7 +11,7 @@ To scale by a constant factor, you can also use sfmath of sfheadermath.
 
 int main (int argc, char* argv[])
 {
-    int axis, n[SF_MAX_DIM], ndim, i, i2, n1, n2, nsize, nbuf = BUFSIZ;
+    int axis, n[SF_MAX_DIM], ndim, i, i2, n1, n2, nsize, nbuf = BUFSIZ, *ibuf;
     sf_file in, out;    
     float* fbuf, f, dscale;
     float complex* cbuf;
@@ -81,35 +81,49 @@ int main (int argc, char* argv[])
 	if (0.==dscale && !sf_getfloat("dscale",&dscale)) dscale=1.;
 	/* Scale by this factor (works if rscale=0) */
 
-	nbuf /= sizeof(float);
-	fbuf = sf_floatalloc(nbuf);
 	nsize = n1*n2;
 
 	switch (type = sf_gettype(in)) {
-	    case SF_FLOAT:
-		break;
 	    case SF_COMPLEX:
 		nsize *= 2;
 		sf_settype(in,SF_FLOAT);
 		sf_settype(out,SF_FLOAT);
+	    case SF_FLOAT:
+		nbuf /= sizeof(float);
+		fbuf = sf_floatalloc(nbuf);
+	
+		while (nsize > 0) {
+		    if (nsize < nbuf) nbuf = nsize;
+		    sf_read (fbuf,sizeof(float),nbuf,in);
+		    for (i=0; i < nbuf; i++) {
+			fbuf[i] *= dscale;
+		    }
+		    sf_write (fbuf,sizeof(float),nbuf,out);
+		    nsize -= nbuf;
+		}	
+		break;
+	    case SF_INT:
+		nbuf /= sizeof(int);
+		ibuf = sf_intalloc(nbuf);
+	
+		while (nsize > 0) {
+		    if (nsize < nbuf) nbuf = nsize;
+		    sf_read (ibuf,sizeof(int),nbuf,in);
+		    for (i=0; i < nbuf; i++) {
+			ibuf[i] *= dscale;
+		    }
+		    sf_write (ibuf,sizeof(int),nbuf,out);
+		    nsize -= nbuf;
+		}	
 		break;
 	    default:
 		sf_error("Unsupported type %d",type);
-	}			
-	
-	while (nsize > 0) {
-	    if (nsize < nbuf) nbuf = nsize;
-	    sf_read (fbuf,sizeof(float),nbuf,in);
-	    for (i=0; i < nbuf; i++) {
-		fbuf[i] *= dscale;
-	    }
-	    sf_write (fbuf,sizeof(float),nbuf,out);
-	    nsize -= nbuf;
-	}	
-    } 
+
+	} 
+    }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: scale.c,v 1.4 2004/04/06 02:02:54 fomels Exp $	 */
+/* 	$Id: scale.c,v 1.5 2004/04/06 13:19:17 fomels Exp $	 */
