@@ -13,6 +13,8 @@ void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 {
     int ix;
 
+    if (nx != ny) sf_error("%s: wrong size: %d != %d",nx,ny);
+
     sf_adjnull (adj,add,nx,ny,x,y);
 
     for (ix=0; ix < nx; ix++) {
@@ -23,5 +25,5 @@ void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 }
 
-/* 	$Id: mask.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: mask.c,v 1.4 2004/04/08 14:03:57 fomels Exp $	 */
 

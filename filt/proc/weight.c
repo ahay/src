@@ -1,5 +1,3 @@
-#include <assert.h>
-
 #include <rsf.h>
 
 #include "weight.h"
@@ -15,7 +13,7 @@ void weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 {
     int i;
 
-    assert(ny==nx);
+    if (ny!=nx) sf_error("%s: size mismatch: %d != %d",__FILE__,ny,nx);
 
     sf_adjnull (adj, add, nx, ny, xx, yy);
   
@@ -28,4 +26,4 @@ void weight_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     }
 }
 
-/* 	$Id: weight.c,v 1.1 2004/01/15 02:38:44 fomels Exp $	 */
+/* 	$Id: weight.c,v 1.2 2004/04/08 14:03:58 fomels Exp $	 */

@@ -15,7 +15,6 @@ void freqfilt_init(int n1, int nfft1, int nw1)
     nw = nw1;
 
     cdata = sf_complexalloc(nw);
-    shape = sf_floatalloc(nw);
     tmp = sf_floatalloc(nfft);
 }
 
@@ -43,7 +42,6 @@ void freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 
     sf_pfarc (1,nfft,tmp,cdata);
-
     for (iw=0; iw < nw; iw++) {
 	cdata[iw] *= shape[iw];
     }
@@ -58,4 +56,4 @@ void freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     } 
 }
 
-/* 	$Id: freqfilt.c,v 1.1 2004/04/02 02:30:49 fomels Exp $	 */
+/* 	$Id: freqfilt.c,v 1.2 2004/04/08 14:03:57 fomels Exp $	 */

@@ -25,6 +25,7 @@ def graph(title):
     return '''
     cat axis=2 ${SOURCES[1:%d]} | spectra |
     graph title="%s" label1="Frequency (cycles)"
+    labelsz=10 titlesz=12
     ''' % (repeat,title)
 
 Plot('exp',exps,dots)

@@ -6,7 +6,7 @@
 #include "error.h"
 
 static int np, nx, nr, nd;
-static float *r, *sp, *sx, *sr, *gp, *gx, *gr, *d;
+static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
@@ -76,7 +76,7 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
 	shape(false,false,np,nx,p,x);
 	if (NULL != prec) {
 	    oper(false,false,nx,nd,x,dat);
-	    prec(false,true,nd,nr,d,r);
+	    prec(false,true,nd,nr,dat,r);
 	} else {
 	    oper(false,true,nx,nr,x,r);
 	}

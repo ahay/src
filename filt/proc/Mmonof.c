@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	a = monof(data,i0,niter,a0,nk,dk,verb);
+	a = monof(data,i0,niter,a0,nk,2.*SF_PI*dk,verb);
 
 	k = (float) i0;
          
@@ -72,4 +72,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mmonof.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mmonof.c,v 1.3 2004/04/08 14:03:57 fomels Exp $	 */

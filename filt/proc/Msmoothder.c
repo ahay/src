@@ -1,6 +1,8 @@
 /* Smooth first derivative on the first axis.
 
 Takes: < data.rsf > derivative.rsf
+
+Applies D/(I + eps*D'D)
 */
 
 #include <rsf.h>
@@ -63,4 +65,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msmoothder.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Msmoothder.c,v 1.5 2004/04/08 14:03:57 fomels Exp $	 */

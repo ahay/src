@@ -24,7 +24,7 @@ void monofshape_init(int n1)
 void monofshape_set(float a0, int n, float* pattern, int niter)
 {
     int iw, i0;
-    float f, w, max;
+    float f, w, max, scale;
     
     for (iw=0; iw < n; iw++) {
 	tmp[iw] = pattern[iw];
@@ -33,11 +33,13 @@ void monofshape_set(float a0, int n, float* pattern, int niter)
 	tmp[iw] = 0.;
     }
 
+    scale = sqrtf(1./nfft); /* FFT scaling */ 
+
     sf_pfarc (1,nfft,tmp,cdata);
     max = 0.;
     i0 = 0;
     for (iw=0; iw < nw; iw++) {
-	f = cabsf(cdata[iw]);
+	f = cabsf(cdata[iw])*scale;
 	if (f > max) {
 	    max = f;
 	    i0 = iw;
@@ -91,4 +93,4 @@ void monofshape_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: monofshape.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */
+/* 	$Id: monofshape.c,v 1.3 2004/04/08 14:03:57 fomels Exp $	 */

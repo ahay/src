@@ -18,9 +18,11 @@ Plot('cmp','cmp',
      'grey wherexlabel=b wheretitle=t title="CMP Gather" label1="Time (s)" ')
 
 def vscan(semblance):
-    return 'vscan v0=1.2 dv=0.015 nv=105 semblance=%d half=n' % semblance
+    return '''
+    vscan v0=1.5 dv=0.015 nv=91 semblance=%d half=n
+    ''' % semblance
 
-win = ' min1=0 max1=4 min2=1.2 max2=2.775'
+win = ' min1=0 max1=4 min2=1.5 max2=2.85'
 
 Flow('scan','cmp',vscan(1))
 Plot('scan','scan',
