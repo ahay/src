@@ -149,3 +149,9 @@ static void check_zeros (sf_file file, int esize, int size, int ncheck,
 	}
     }
 }
+
+/* 	$Id: in.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+
+#ifndef lint
+static char vcid[] = "$Id: in.c,v 1.3 2003/09/29 14:34:56 fomels Exp $";
+#endif /* lint */

@@ -1,3 +1,9 @@
+/* Offset continuation by log-stretch F-K operator
+
+Takes < input.rsf > output.rsf
+
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -23,8 +29,11 @@ int main(int argc, char* argv[])
     if (!sf_histfloat (in,"d2",&dk)) sf_error("No d2= in input");
 
     if (!sf_getfloat("h",&h)) sf_error("Need h=");
+    /* final offset */
     if (!sf_getint("nh",&nh)) nh=1;
+    /* number of offset steps */
     if (!sf_getfloat("h0",&h0)) h0=0.;
+    /* initial offset */
     dh = (h-h0)/nh;
 
     sf_putint(out,"n3",nh);
@@ -61,3 +70,5 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: Mfkdmo.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */

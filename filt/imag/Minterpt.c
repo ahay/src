@@ -1,3 +1,9 @@
+/* Multiple-arrival interpolation (yet another) 
+
+Takes: < input.rsf > output.rsf
+
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -32,7 +38,9 @@ int main (int argc, char* argv[])
     
     if (!sf_getfloat ("sx",&sx)) sx=0.;
     if (!sf_getfloat ("sz",&sz)) sz=0.;
+    /* Shot coordinate */
     if (!sf_getint ("nw",&nw)) nw=4;
+    /* Interpolation accuracy */
 
     sf_putint (out,"n1",1);
 
@@ -116,3 +124,5 @@ static float func_eno(float t)
     eno_apply (pfnt,it,t,&f,&g,FUNC);
     return (f-sx);
 }
+
+/* 	$Id: Minterpt.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

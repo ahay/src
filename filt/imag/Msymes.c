@@ -1,3 +1,10 @@
+/* 2-D synthetic model for multiple-arrival generation.
+
+Takes: > model.rsf
+
+From Bill Symes.
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -14,8 +21,13 @@ int main(int argc, char* argv[])
     sf_init (argc,argv);
     mod = sf_output("out");
 
-    if (!sf_getint("nx",&nx)) nx=400; dx = 1./(nx-1);
-    if (!sf_getint("nz",&nz)) nz=800; dz = 2./(nz-1);
+    if (!sf_getint("nx",&nx)) nx=400; 
+    /* horizontal dimension */
+    if (!sf_getint("nz",&nz)) nz=800; 
+    /* vertical dimension */
+
+    dx = 1./(nx-1);
+    dz = 2./(nz-1);
 
     sf_putint   (mod,"n1",nz); 
     sf_putfloat (mod,"d1",dz); 
@@ -39,3 +51,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Msymes.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

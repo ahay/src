@@ -1,3 +1,9 @@
+/* 1-D ENO interpolation.
+
+Takes: < in.rsf > out.rsf
+
+*/
+
 #include <rsf.h>
 
 #include "eno.h"
@@ -19,8 +25,11 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getint("n1",&nn1)) nn1=n1;
+    /* Number of output samples */
     if (!sf_getfloat("d1",&dd1)) dd1=d1;
+    /* Output sampling */
     if (!sf_getfloat("o1",&oo1)) oo1=o1;
+    /* Output origin */
     sf_putint(out,"n1",nn1);
     sf_putfloat(out,"d1",dd1);
     sf_putfloat(out,"o1",oo1);
@@ -29,6 +38,7 @@ int main(int argc, char* argv[])
     tout = sf_floatalloc(nn1);
 
     if (!sf_getint("order",&order)) order=3;
+    /* Interpolation order */
     if (order > n1) order=n1;
 
     map = eno_init (order,n1);
@@ -46,3 +56,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mremap1.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

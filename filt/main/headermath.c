@@ -1,6 +1,7 @@
 /* Mathematical operations, possibly on header keys.
 
 Takes: < input.rsf > output.rsf
+
 */
 
 #include <string.h>
@@ -58,6 +59,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,n1>1? "o2":"o1",&o2)) o2=0.;
     
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
+    /* Describes the output in a mathematical notation. */
 
     len = sf_math_parse (output,out);
     
@@ -85,3 +87,6 @@ int main(int argc, char* argv[])
     
     exit(0);
 }
+
+/* 	$Id: headermath.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+

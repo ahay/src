@@ -16,3 +16,5 @@ void sf_stack_close(sf_stack s);
 void sf_stack_print (sf_stack s);
 
 #endif
+
+/* 	$Id: stack.h,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

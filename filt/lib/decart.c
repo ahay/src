@@ -37,3 +37,5 @@ int sf_first_index (int i, int j, int dim, const int *n, const int *s)
 
     return i0;
 }
+
+/* 	$Id: decart.c,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */

@@ -84,3 +84,4 @@ void sf_stack_close(sf_stack s)
     free (s);
 }
 
+/* 	$Id: stack.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

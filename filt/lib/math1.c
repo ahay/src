@@ -307,3 +307,5 @@ static void check (void)
 	sf_error ("%s[%d]: syntax error in output",
 		  __FILE__,__LINE__);
 }
+
+/* 	$Id: math1.c,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */

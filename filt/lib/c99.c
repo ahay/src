@@ -58,3 +58,5 @@ float hypotf(float x, float y) { return (float) hypot(x,y);}
 float fmodf(float x, float y) { return (float) fmod(x,y);}
 
 #endif
+
+/* 	$Id: c99.c,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */

@@ -1,3 +1,9 @@
+/* Transpose two axes in a dataset.
+
+Takes: < input.rsf > transposed.rsf
+
+*/
+
 #include <stdio.h>
 #include <string.h>
 
@@ -20,6 +26,7 @@ int main(int argc, char* argv[])
     out = sf_output ("out");
 
     if (!sf_getint("memsize",&mem) || 0 >= mem) mem = 100;
+    /* Available memory size (in Mb) */
     memsize = mem * (1 << 20); /* convert Mb to bytes */
     
     dim = sf_filedims(in,n);
@@ -31,6 +38,7 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getint("plane",&dim1)) {
+	/* Two-digit number with axes to transpose. The default is 12 */
 	dim1=1;
 	dim2=2;
     } else {
@@ -153,3 +161,5 @@ static void make_map (int dim1, int dim2,
 	map[i2] = j;
     }
 }
+
+/* 	$Id: transp.c,v 1.2 2003/09/29 14:34:57 fomels Exp $	 */

@@ -150,3 +150,5 @@ static size_t setfiledims (sf_file in, sf_file out)
     }
     return size;
 }
+
+/* 	$Id: dd.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */

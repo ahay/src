@@ -1,3 +1,8 @@
+/* Combine two datasets by inetrleaving.
+
+Takes: [< file.rsf | file.rsf] [other=other.rsf | other.rsf] > out.rsf
+*/ 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -32,6 +37,7 @@ int main (int argc, char* argv[])
     }
 
     if (NULL != sf_getstring("other")) {
+	/* Other dataset */
 	other = sf_input("other");
     } else {
 	other = NULL;
@@ -45,6 +51,7 @@ int main (int argc, char* argv[])
    
     dim = sf_filedims(in,n);
     if (!sf_getint("axis",&axis)) axis=3;
+    /* Axis for interleaving */
     if (axis > dim && axis <=0) 
 	sf_error("axis=%d is not in the range [1,%d]",axis,dim);
 
@@ -100,3 +107,5 @@ static void check_compat (sf_file other, int esize, int dim, const int *n)
 	    sf_error("%s mismatch: need %d",key,n[id]);
     }
 }
+
+/* 	$Id: interleave.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

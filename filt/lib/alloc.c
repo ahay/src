@@ -157,3 +157,4 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
+/* 	$Id: alloc.c,v 1.5 2003/09/29 14:34:55 fomels Exp $	 */

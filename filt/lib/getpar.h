@@ -20,3 +20,5 @@ bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
 #endif
+
+/* 	$Id: getpar.h,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Post-stack 2-D v(z) time modeling/migration with Gazdag phase-shift.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 #include "gazdag.h"
@@ -31,31 +36,33 @@ int main (int argc, char *argv[])
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
+    /* If y, modeling; if n, migration */
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
+    /* Stabilization parameter */
 
     if (!sf_histint(in,"n2",&nx)) nx = 1;
     if (!sf_histfloat(in,"d2",&dx)) 
 	sf_error ("No d2= in input");
 
     if (inv) { /* modeling */
-	if (!sf_histint(in,"n1",&nz)) 
-	    sf_error ("No n1= in input");
-	if (!sf_histfloat(in,"d1",&dz)) 
-	    sf_error ("No d1= in input");
-	if (!sf_getint("nt",&nt)) 
-	    sf_error ("nt= must be supplied");
-	if (!sf_getfloat("dt",&dt)) 
-	    sf_error ("dt= must be supplied");
+	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
+	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
+
+	if (!sf_getint("nt",&nt)) sf_error ("nt= must be supplied");
+	/* Length of time axis (for modeling) */
+	if (!sf_getfloat("dt",&dt)) sf_error ("dt= must be supplied");
+        /* Sampling of time axis (for modeling) */
+
 	sf_putint(out,"n1",nt);
 	sf_putfloat(out,"d1",dt);
     } else { /* migration */
-	if (!sf_histint(in,"n1",&nt)) 
-	    sf_error ("No n1= in input");
-	if (!sf_histfloat(in,"d1",&dt)) 
-	    sf_error ("No d1= in input");
+	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
+	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
 	if (NULL == sf_getstring("velocity")) {
 	    if (!sf_getint("nz",&nz)) nz = nt;
+	    /* Length of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("dz",&dz)) dz = dt;
+	    /* Sampling of depth axis (for migration, if no velocity file) */
 	} else {
 	    vel = sf_input("velocity");
 	    if (!sf_histint(vel,"n1",&nz)) 
@@ -69,8 +76,9 @@ int main (int argc, char *argv[])
 
     vt = sf_floatalloc(nz);
     if (NULL == sf_getstring("velocity")) {
-	if (!sf_getfloat("vel",&v0)) 
-	    sf_error ("vel= must be supplied");
+	/* file with velocity */
+	if (!sf_getfloat("vel",&v0)) sf_error ("vel= must be supplied");
+	/* Constant velocity (if no velocity file) */
 	for (iz=0; iz < nz; iz++) {
 	    vt[iz] = v0;
 	}
@@ -155,3 +163,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
+/* 	$Id: Mgazdag.c,v 1.4 2003/09/29 14:34:54 fomels Exp $	 */

@@ -1,3 +1,10 @@
+/* Create a complex dataset from its real and imaginary parts.
+
+Takes: real.rsf imag.rsf > cmplx.rsf
+
+There has to be only two input files specified and no additional parameters.
+*/
+
 #include <string.h>
 #include <stdio.h>
 
@@ -7,16 +14,24 @@ int main(int argc, char* argv[])
 {
     int resize, iesize, rsize, isize;
     size_t nleft, nbuf, i;
-    sf_file real, imag, cmplx;
+    sf_file real=NULL, imag=NULL, cmplx;
     char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf, *rformat, *cformat;
 
     sf_init(argc,argv);
-    
-    if (3 != argc) 
-	sf_error("wrong number of inputs: %d",argc-1);
 
-    real = sf_input(argv[1]);
-    imag = sf_input(argv[2]);
+    /* the first two non-parameters are real and imaginary files */
+    for (i=1; i< argc; i++) { 
+	if (NULL == strchr(argv[i],'=')) {
+	    if (NULL == real) {
+		real = sf_input (argv[i]);
+	    } else {
+		imag = sf_input (argv[i]);
+		break;
+	    }
+	}
+    }
+    if (NULL == real || NULL == imag)
+	sf_error ("not enough input");
     cmplx = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(real) ||
@@ -60,3 +75,7 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: cmplx.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+
+

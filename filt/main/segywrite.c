@@ -1,3 +1,10 @@
+/* Convert an RSF dataset to SEGY or SU.
+
+Takes: < file.rsf tfile=traceheaders.rsf tape=file.segy 
+
+Merges trace headers with data.
+*/
+
 #include <stdio.h>
 
 #include <rsf.h>
@@ -8,15 +15,18 @@ int main(int argc, char *argv[])
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *headname, *filename, *trace;
     sf_file in, hdr;
-    int format, ns, nk, nsegy, itr, ntr, *itrace;
+    int format=1, ns, nk, nsegy, itr, ntr, *itrace;
     FILE *head, *file;
     float *ftrace;
 
     sf_init(argc, argv);
 
     if (!sf_getbool("verbose",&verbose)) verbose=false;
+    /* Verbosity flag */
     if (!sf_getbool("su",&su)) su=false; 
+    /* y if output is SU, n if output is SEGY */
     if (!sf_getbool("xdr",&xdr)) xdr = sf_endian();
+    /* big/little endian flag. The default is estimated automatically */
 
     if (NULL == (filename = sf_getstring("tape")))
 	sf_error("Need to specify tape=");
@@ -26,6 +36,7 @@ int main(int argc, char *argv[])
 
     if (!su) {
 	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
+	/* input text data header file */
 
 	if (NULL == (head = fopen(headname,"r")))
 	    sf_error("Cannot open file \"%s\" for reading ascii header:",
@@ -43,6 +54,7 @@ int main(int argc, char *argv[])
 	    sf_error("Error writing ebcdic header");
  
 	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
+	/* input binary data header file */
 
 	if (NULL == (head = fopen(headname,"rb")))
 	    sf_error("Cannot open file \"%s\" for reading binary header:",
@@ -122,3 +134,5 @@ int main(int argc, char *argv[])
 
     exit (0);
 }
+
+/* 	$Id: segywrite.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */

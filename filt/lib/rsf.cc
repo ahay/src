@@ -312,3 +312,5 @@ oRSF::put (const char* name, int size, const int*   value) const
 // {
 //     sf_putfloats(file_,name,value,size);
 // }
+
+// 	$Id: rsf.cc,v 1.4 2003/09/29 14:34:56 fomels Exp $	

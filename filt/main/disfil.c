@@ -1,3 +1,10 @@
+/* Print out data values.
+
+Takes: < file.rsf
+
+Alternatively, use sfdd and convert to ASCII form.
+*/
+
 #include <rsf.h>
 
 int main (int argc, char* argv[])
@@ -17,8 +24,19 @@ int main (int argc, char* argv[])
     type = sf_gettype(in);
 
     if (!sf_getbool("number",&number)) number=true;
-    if (!sf_getint("col",&cols)) cols=0; 
+    /* If number the elements */
+    if (!sf_getint("col",&cols)) cols=0;
+    /* Number of columns.
+       The default depends on the data type:
+       10 for int and char,
+       5 for float,
+       3 for complex */
     format = sf_getstring("format");
+    /* Format for numbers (printf-style).
+       The default depends on the data type:
+       "%4d " for int and char,
+       "%13.4g" for float,
+       "%10.4g,%10.4gi" for complex */
 
     if (!sf_histint(in,"esize",&esize)) esize=4;
     if (0 != esize) bufsiz /= esize;
@@ -88,3 +106,6 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: disfil.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+

@@ -434,3 +434,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
+/* 	$Id: simtab.c,v 1.9 2003/09/29 14:34:56 fomels Exp $	 */

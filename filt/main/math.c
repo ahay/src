@@ -1,3 +1,14 @@
+/* Mathematical operations on data files.
+
+Takes: > out.rsf
+
+Example:
+
+sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)'
+
+See also: sfheadermath.
+*/
+
 #include <string.h>
 #include <math.h>
 
@@ -43,6 +54,7 @@ int main(int argc, char* argv[])
     check_compat(nin,in,dim,n);
 
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
+    /* Mathematical description of the output */
 
     len = sf_math_parse (output,out);
     
@@ -96,3 +108,5 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n)
 	}
     }
 }
+
+/* 	$Id: math.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */

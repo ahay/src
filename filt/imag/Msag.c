@@ -1,3 +1,9 @@
+/* Simple v(z) synthetic.
+
+Takes: > output.rsf
+
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -14,14 +20,22 @@ int main(int argc, char* argv[])
     sag = sf_output("out");
 
     if (!sf_getint ("nt",&nt)) nt = 200;
+    /* Number of samples in time */
     if (!sf_getint ("nx",&nx)) nx = 200;
+    /* Number of samples in distance */
 
     if (!sf_getfloat ("tmax",&tmax)) tmax = 4.;
+    /* Maximum time */
     if (!sf_getfloat ("xmax",&xmax)) xmax = 4.;
+    /* Maximum distance */
     if (!sf_getfloat ("delx",&delx)) delx = .5;
+    /* Increment in x */
     if (!sf_getfloat ("dxdz",&dxdz)) dxdz = 1.;
+    /* Slope for the line of diffractors */
     if (!sf_getfloat ("v0",&v0)) v0 = 1.5;
+    /* Initial velocity */
     if (!sf_getfloat ("alpha",&alpha)) alpha = 0.;
+    /* Velocity gradient */
 
     t0 = 0;		
     x0 = 0.;
@@ -69,3 +83,5 @@ int main(int argc, char* argv[])
  *	exp(alpha*tmax/2.) = 1 + alpha * zmax/ v0
  *	v0 * (exp( alpha * tmax/2.) - 1) /alpha =  zmax = dz * (nz+1)
  */
+
+/* 	$Id: Msag.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

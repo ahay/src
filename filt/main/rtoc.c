@@ -1,3 +1,10 @@
+/* Convert real data to complex (by adding zero imaginary part).
+
+Takes: < real.rsf > cmplx.rsf
+
+See also: sfcmplx
+*/
+
 #include <string.h>
 #include <stdio.h>
 
@@ -54,3 +61,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: rtoc.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

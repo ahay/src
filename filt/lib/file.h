@@ -43,3 +43,5 @@ void sf_seek (sf_file file, long offset, int whence);
 void sf_unpipe (sf_file file, size_t size);
 
 #endif
+
+/* 	$Id: file.h,v 1.5 2003/09/29 14:34:55 fomels Exp $	 */

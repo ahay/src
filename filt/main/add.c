@@ -1,3 +1,10 @@
+/* Add, divide, or multiple RSF datasets.
+
+Takes: [< file0.rsf] file1.rsf file2.rsf > result.rsf
+
+An alternative is to use sfmath, which is more versatile.
+*/
+
 #include <math.h>
 #include <string.h>
 
@@ -64,15 +71,22 @@ int main (int argc, char* argv[])
 	sqrt_flag[j] = abs_flag[j] = log_flag[j] = exp_flag[j] = false;
     }
 
-    (void) sf_getfloats("scale",scale,nin);
+    (void) sf_getfloats("scale",scale,nin); 
+/* Scalar values to multiply each dataset with */
     (void) sf_getfloats("add",add,nin);
+/* Scalar values to add to each dataset */
 
     (void) sf_getbools("sqrt",sqrt_flag,nin);
+/* If take square root */
     (void) sf_getbools("abs",abs_flag,nin);
+/* If take absolute value */
     (void) sf_getbools("log",log_flag,nin);
+/* If take logarithm */
     (void) sf_getbools("exp",exp_flag,nin);
+/* If take exponent */
 
     mode = sf_getstring("mode");
+/* 'a' means add (default), 'p' or 'm' means multiply, 'd' means divide */
     cmode = (NULL==mode)? 'a':mode[0];
 
     dim = sf_filedims(in[0],n);
@@ -263,3 +277,6 @@ static void check_compat (int esize,
 	}
     }
 }
+
+/* 	$Id: add.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+

@@ -1,3 +1,19 @@
+/* Display dataset attributes.
+
+Takes: < file.rsf
+
+Sample output from "sfspike n1=100 | sfbandpass fhi=60 | sfattr"
+*******************************************
+rms = 0.992354
+mean value = 0.987576
+norm value = 9.92354
+maximum value = 1.12735 at 97
+minimum value = 0.151392 at 100
+number of nonzero samples = 100
+total number of samples = 100
+*******************************************
+*/
+
 #include <math.h>
 #include <float.h>
 #include <limits.h>
@@ -20,6 +36,9 @@ int main(int argc, char* argv[])
     
     sf_init (argc,argv);
     want = sf_getstring("want");
+    /* 'all' (default), 'rms', 'mean', 'norm', 'max', 'min', 'norm', 'short' 
+       mode='short' displays a short one-line version
+     */ 
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
     
     in = sf_input("in");
@@ -163,3 +182,6 @@ static void location(size_t loc, size_t dim, const int *n)
     }
     printf("\n");
 }
+
+/* 	$Id: attr.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+

@@ -1,3 +1,9 @@
+/* Taking first derivative along the fast axis using ENO interpolation 
+
+Takes: < input.rsf > deriv.rsf
+
+*/
+
 #include <rsf.h>
 
 #include "eno.h"
@@ -19,6 +25,7 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if(!sf_getint("accuracy",&order)) order=4;
+    /* Interpolation accuracy order */
 
     trace = sf_floatalloc (n1);
     ent = eno_init (order, n1);
@@ -37,3 +44,6 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Menoder1.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
+

@@ -115,5 +115,5 @@ bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n) {
     return sf_simtab_getbools(pars,key,par,n);
 } 
  
-
+/* 	$Id: getpar.c,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */
 

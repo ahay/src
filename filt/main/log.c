@@ -1,3 +1,10 @@
+/* Take the base-10 logarithm of input data.
+
+Takes < in.rsf > log.rsf
+
+Alternatively, use sfmath or sfheadermath.
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -19,7 +26,9 @@ int main (int argc, char* argv[])
     size = (size_t) sf_filesize (in);
   
     if(!sf_getint("centered",&centered)) centered=2;
+    /* [0,1,2] defines method of shifting mean */
     if(!sf_getfloat("range",&range)) range=3.;
+    /* Smallest allowed value */
 
     data = sf_floatalloc(size);
     sf_read (data,sizeof(float),size,in);
@@ -67,3 +76,5 @@ int main (int argc, char* argv[])
     
     exit (0);
 }
+
+/* 	$Id: log.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

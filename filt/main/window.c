@@ -83,8 +83,8 @@ int main (int argc, char *argv[])
 	label[i] = sf_histstring(in,key);
     }
 
-    if (!sf_getbool("verb",&verb)) verb=true;
-    /* if y, provide feedback information */
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* Verbosity flag */
 
     if (verb) {
 	for (i=0; i < dim; i++) {
@@ -189,3 +189,5 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
 	t2 = t;
     }
 }
+
+/* 	$Id: window.c,v 1.6 2003/09/29 14:34:57 fomels Exp $	 */

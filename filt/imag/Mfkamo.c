@@ -1,3 +1,9 @@
+/* Azimuth moveout by log-stretch F-K operator
+
+Takes: < data1.rsf > data2.rsf
+
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -28,11 +34,16 @@ int main(int argc, char* argv[])
     if (!sf_histfloat (in,"d3",&dy)) sf_error("No d3= in input");
 
     if (!sf_getfloat("h1",&h1)) sf_error("Need h1=");
+    /* input offset */
     if (!sf_getfloat("h2",&h2)) sf_error("Need h2=");
+    /* output offset */
     if (!sf_getfloat("f1",&f1)) sf_error("Need f1=");
+    /* input azimuth in degrees */
     if (!sf_getfloat("f2",&f2)) sf_error("Need f2=");
+    /* output azimuth in degrees */
 
     if (!sf_getfloat("maxe",&maxe)) maxe=10.;
+    /* stability constraint */
 
     f1 *= SF_PI/180.;
     f2 *= SF_PI/180.;
@@ -74,4 +85,6 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mfkamo.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
 

@@ -1,3 +1,10 @@
+/* Add a Gaussian anomaly to the data.
+
+Takes: < input.rsf > output.rsf
+
+The anomaly added is a*exp(-((x1-c1)^2+(x2-c2)^2)/r^2). 
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -22,10 +29,13 @@ int main(int argc, char** argv)
     if (!sf_histfloat (in,"d2",&d2)) sf_error ("No d2 in input");
 
     if (!sf_getfloat ("a",&a)) a = 1.;
+    /* Amplitude of the anomaly */
     if (!sf_getfloat ("r",&r)) r = 25.;
+    /* Radius of the anomaly */
     r = 1./(r*r);
     if (!sf_getfloat ("c1",&c1)) c1 = o1+(n1/2-1)*d1;
     if (!sf_getfloat ("c2",&c2)) c2 = o2+(n2/2-1)*d2;
+    /* Anomaly center coordinates */
 
     vint = sf_floatalloc(n1);
     for (i2=0; i2 < n2; i2++) {
@@ -42,3 +52,5 @@ int main(int argc, char** argv)
     
     exit (0);
 }
+
+/* 	$Id: Mgauss.c,v 1.3 2003/09/29 14:34:54 fomels Exp $	 */

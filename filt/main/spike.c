@@ -1,3 +1,14 @@
+/* Generate simple data: spikes, planes, constants.
+
+Takes: > data.rsf [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... mag=1,1,...] 
+
+k1,k2,... specify the spike position (indexing starts with 1).
+
+Inserts label1="Time (s)" and label2=label3=...="Distance (km)"
+Inserts d1=0.004 and d2=d3=...=0.1
+
+*/
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -39,6 +50,7 @@ int main(int argc, char* argv[])
     }
 	
     if (!sf_getint("nsp",&nsp)) nsp=1;
+    /* Number of spikes */
     mag = sf_floatalloc (nsp);
     k = sf_intalloc2 (nsp,dim);
 
@@ -95,3 +107,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: spike.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */

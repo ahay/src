@@ -1,3 +1,10 @@
+/* Extend a dataset by duplicating in the second axis dimension.
+
+Takes: < input.rsf > output.rsf
+
+This operation is adjojnt to sfstack.
+*/
+
 #include <string.h>
 #include <stdio.h>
 
@@ -21,9 +28,12 @@ int main(int argc, char* argv[])
     n = (size_t) (n1*esize);
 
     if (!sf_getint("n2",&n2)) sf_error("Need n2=");
+    /* Size of the newly created dimension */ 
     sf_putint(out,"n2",n2);
     if (sf_getfloat("d2",&f)) sf_putfloat(out,"d2",f);
+    /* Sampling of the newly created dimension */ 
     if (sf_getfloat("o2",&f)) sf_putfloat(out,"o2",f);
+    /* Origin of the newly created dimension */
     
     n3 = 1;
     for (j=2; j < SF_MAX_DIM; j++) {
@@ -62,3 +72,5 @@ int main(int argc, char* argv[])
     
     exit (0);
 }
+
+/* 	$Id: spray.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */

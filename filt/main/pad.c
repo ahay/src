@@ -1,3 +1,13 @@
+/* Pad a dataset with zeros.
+
+Takes: < in.rsf > padded.rsf 
+
+Parameters: 
+
+[beg1= beg2= ... end1= end2=... | n1=  n2 = ... | n1out= n2out= ...]
+
+*/
+
 #include <stdio.h>
 #include <string.h>
 
@@ -101,3 +111,5 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: pad.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */

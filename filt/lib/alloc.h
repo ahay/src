@@ -26,3 +26,5 @@
 /*@out@*/ unsigned char **sf_ucharalloc2 (size_t n1, size_t n2);
 
 #endif
+
+/* 	$Id: alloc.h,v 1.7 2003/09/29 14:34:55 fomels Exp $	 */

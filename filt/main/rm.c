@@ -1,3 +1,12 @@
+/* Remove RSF files together with their data.
+
+Takes: file1.rsf [file2.rsf ...] [-i] [-v] [-f] 
+
+Mimics the standard Unix rm command.
+
+See also: sfmv, sfcp.
+*/
+
 #include <string.h>
 
 #include <rsf.h>

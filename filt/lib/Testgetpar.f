@@ -32,3 +32,5 @@ C      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
       if (.not. cond) call sf_error("failed")
       return
       end
+
+C	$Id: Testgetpar.f,v 1.2 2003/09/29 14:34:55 fomels Exp $	

@@ -119,3 +119,5 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire)
 	sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
     sf_simtab_close (tab);
 }
+
+/* 	$Id: files.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

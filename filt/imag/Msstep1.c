@@ -1,3 +1,8 @@
+/* 2-D post-stack modeling/migration with split step.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 #include "split1.h"
@@ -31,15 +36,21 @@ int main (int argc, char *argv[])
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
+    /* If y, modeling; if n, migration */
     if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
     if (!sf_getbool("depth",&depth)) depth = false;
+    /* depth or time migration */
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
+    /* stability parameter */
 
     if (!sf_histint(in,"n2",&nx)) nx = 1;
     if (!sf_histfloat(in,"d2",&dx)) sf_error ("No d2= in input");
 
     if (NULL == sf_getstring("velocity")) {
+	/* velocity file */
 	if (!sf_getfloat("vel",&v0)) sf_error ("Need vel=");
+	/* constant velocity (if no velocity file) */
 	vel = NULL;	
     } else {
 	vel = sf_input("velocity");
@@ -49,7 +60,9 @@ int main (int argc, char *argv[])
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
 	if (!sf_getint("nt",&nt)) sf_error ("Need nt=");
+	/* Length of time axis (for modeling) */ 
 	if (!sf_getfloat("dt",&dt)) sf_error ("Need dt=");
+	/* Time sampling (for modeling) */
 	sf_putint(out,"n1",nt);
 	sf_putfloat(out,"d1",dt);
     } else { /* migration */
@@ -57,10 +70,14 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
 	if (NULL == vel) {
 	    if (!sf_getint("nz",&nz)) {
+		/* number of steps in depth 
+		   (for constant-velocity depth migration) */
 		if (depth) sf_error ("Need nz=");
 		nz = nt;
 	    }
 	    if (!sf_getfloat("dz",&dz)) {
+		/* sampling in depth 
+		   (for constant-velocity depth migration) */
 		if (depth) sf_error ("Need dz=");
 		dz = dt*v0;
 	    }
@@ -145,3 +162,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
+/* 	$Id: Msstep1.c,v 1.3 2003/09/29 14:34:55 fomels Exp $	 */

@@ -56,3 +56,5 @@ void cprint (float complex c);
 #endif /* c++ */
 
 #endif
+
+/* 	$Id: c99.h,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */

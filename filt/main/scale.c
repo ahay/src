@@ -1,3 +1,10 @@
+/* Scale data.
+
+Takes: < input.rsf > scaled.rsf
+
+To scale by a constant factor, you can also use sfmath of sfheadermath.
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -16,7 +23,9 @@ int main (int argc, char* argv[])
     sf_fileflush(out,in);
 
     if (!sf_getint("axis",&axis)) axis = 0;
+    /* Scale by maximum in the dimensions up to this axis. */
     if (!sf_getfloat("rscale",&dscale)) dscale=0.;
+    /* Scale by this factor. */
 
     ndim = sf_filedims (in, n);
 
@@ -68,7 +77,8 @@ int main (int argc, char* argv[])
 	}
     } else {
 	if (0.==dscale && !sf_getfloat("dscale",&dscale)) dscale=1.;
-	
+	/* Scale by this factor (works if rscale=0) */
+
 	nbuf /= sizeof(float);
 	fbuf = sf_floatalloc(nbuf);
 	nsize = n1*n2;
@@ -98,3 +108,5 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: scale.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

@@ -1,3 +1,12 @@
+/* Create a header mask.
+
+Takes: < header.rsf > mask.rsf
+
+Mask is an integer data with ones and zeros. 
+Ones correspond to header values between min and max.
+The output can be used with sfheadermask.
+*/
+
 #include <float.h>
 
 #include <rsf.h>
@@ -20,7 +29,9 @@ int main(int argc, char* argv[]) {
     ibuf = sf_intalloc (nbuf);
 
     if (!sf_getfloat("min",&min)) min=-FLT_MAX;
+    /* minimum header value */
     if (!sf_getfloat("max",&max)) max=+FLT_MAX;
+    /* maximum header value */
 
     for (nsiz = sf_filesize (in); nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
@@ -33,3 +44,4 @@ int main(int argc, char* argv[]) {
     }
 }
 	    
+/* 	$Id: mask.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

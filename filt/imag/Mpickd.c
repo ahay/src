@@ -1,3 +1,9 @@
+/* Automatic traveltime picking (yet another)
+
+Takes: < input.rsf > output.rsf
+
+*/
+
 #include <rsf.h>
 
 #include "pick0.h"
@@ -18,7 +24,8 @@ int main (int argc, char *argv[])
     n3 = sf_leftsize(in,2);
     
     if (!sf_getint("order",&order)) order=4;
-    
+    /* Accuracy order */
+
     trace = sf_floatalloc (n1);
 
     pick0_init (n1, n2, order);
@@ -37,3 +44,5 @@ int main (int argc, char *argv[])
     
     exit (0);
 }
+
+/* 	$Id: Mpickd.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

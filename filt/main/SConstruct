@@ -21,6 +21,7 @@ except: # local version
     opts.Update(env)
     env.Append(CCFLAGS=' -g',CPPPATH=['../../include'],
                LIBPATH=['../lib'],LIBS=['rsf','m'])
+    SConscript('../lib/SConstruct')
 
 mains = Split(progs)
 map(lambda prog: env.Program(prog + '.c'),mains)

@@ -93,6 +93,7 @@ from SCons.Builder import Builder
 from SCons.Action import Action
 from SCons.Scanner import Base
 from SCons.Options import Options
+from SCons.Node.FS import default_fs 
 
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES
@@ -308,7 +309,7 @@ class Project(Environment):
                          'DISPLAY':os.environ.get('DISPLAY'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
-                              'Clean':Klean,
+#                              'Clean':Klean,
                               'Build':Build,
                               'PDFBuild':PDFBuild,
                               #                              'Dvi':Dvi,
@@ -376,7 +377,7 @@ class Project(Environment):
                 #<- check for par files and add to the sources
                 for par in pars:
                     if re.match("^par=",par):
-                        sources.append(par[4:])
+                        sources.append(default_fs.File(par[4:]))
                 #<<- assemble the command line
                 pars.insert(0,command)
                 substeps.append(string.join(pars,' '))
@@ -433,7 +434,7 @@ class Project(Environment):
             return self.Plot(target,source,flow,src_suffix=vpsuffix,stdin=0)  
     def End(self):
         self.Alias('view',self.view)
-        self.Alias('clean',self.Clean('clean',None,junk=self.junk))
+#        self.Alias('clean',self.Clean('clean',None,junk=self.junk))
         if self.figs: # if any results
             build = self.Alias('build',self.figs)
         if self.pdfs:

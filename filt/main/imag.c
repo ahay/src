@@ -1,3 +1,8 @@
+/* Extract real (sfreal) or imaginary (sfimag) part of a complex dataset.
+
+Takes: < cmplx.rsf > real.rsf
+*/
+
 #include <string.h>
 #include <stdio.h>
 
@@ -57,3 +62,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: imag.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

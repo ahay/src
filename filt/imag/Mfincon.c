@@ -1,3 +1,9 @@
+/* Offset continuation by finite differences 
+
+Takes: < input.rsf > output.rsf
+
+*/
+
 #include <rsf.h>
 
 #include "ctridiagonal.h"
@@ -23,8 +29,11 @@ int main(int argc, char* argv[])
     dw *= 2.*SF_PI;
 
     if (!sf_getint("nh",&nh)) sf_error("Need nh=");
+    /* Number of steps in offset */
     if (!sf_getfloat("dh",&dh)) sf_error("Need dh=");
+    /* Offset step size */
     if (!sf_getfloat("h0",&h0)) sf_error("Need h0=");
+    /* Initial offset */
 
     dh /= dx;
     h0 /= dx;
@@ -78,5 +87,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-
+/* 	$Id: Mfincon.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
 

@@ -1,4 +1,4 @@
-/* 3-D Fast marching eikonal solver.
+/* Fast marching eikonal solver (3-D).
 
 Takes: < velocity.rsf > time.rsf
 
@@ -40,7 +40,7 @@ int main (int argc,char* argv[])
     /* if y, the input is velocity; n, slowness */
 
     if(!sf_getint("order",&order)) order=2;
-    /* Accuracy order */
+    /* [1,2] Accuracy order */
 
     if(!sf_getfloat("br1",&br1)) br1=d1;    
     if(!sf_getfloat("br2",&br2)) br2=d2; 
@@ -121,3 +121,6 @@ int main (int argc,char* argv[])
     
     exit (0);
 }
+
+/* 	$Id: Meikonal.c,v 1.3 2003/09/29 14:34:54 fomels Exp $	 */
+

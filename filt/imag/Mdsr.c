@@ -1,3 +1,9 @@
+/* Prestack 2-D v(z) time modeling/migration by DSR.
+
+Takes: < input.rsf > output.rsf
+
+*/
+
 #include <stdio.h>
 
 #include <rsf.h>
@@ -36,7 +42,9 @@ int main (int argc, char **argv)
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
+    /* If y, modeling; If n, migration */
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
+    /* Stabilization parameter */
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
 
@@ -48,8 +56,11 @@ int main (int argc, char **argv)
 	if (!sf_histfloat(in,"d2",&dk)) sf_error ("No d2= in input");
 
 	if (!sf_getint("nt",&nt)) sf_error ("Need nt=");
+	/* Length of time axis (for modeling) */
 	if (!sf_getfloat("dt",&dt)) sf_error ("Need dt=");
+	/* Sampling of time axis (for modeling) */
 	if (!sf_getfloat("t0",&t0)) t0 = 0.;
+	/* Origin of time axis (for modeling) */
 	
 	sf_putint(out,"nt",nt);
 	sf_putfloat(out,"t0",t0);
@@ -64,8 +75,10 @@ int main (int argc, char **argv)
 	sf_putfloat(out,"o1",w0);
 
 	if (!sf_getint("nh",&nh)) sf_error ("Need nh=");
+	/* Number of offsets (for modeling) */
 	if (!sf_getfloat("dh",&dh)) sf_error ("Need dh=");
-    
+	/* Offset sampling (for modeling) */
+
 	/* determine wavenumber sampling, pad by 2 */
 	nm = nh*2;
 	nm = sf_npfao(nm,nm*2);
@@ -85,6 +98,7 @@ int main (int argc, char **argv)
 	sf_putfloat(out,"o3",k0);
 
 	if (NULL == sf_getstring("velocity")) {
+	    /* file with velocity */
 	    vel = NULL;
 	} else {
 	    vel = sf_input ("velocity");
@@ -102,10 +116,14 @@ int main (int argc, char **argv)
 	if (!sf_histfloat(in,"d3",&dk)) sf_error ("No d3= in input");
 
 	if (NULL == sf_getstring("velocity")) {
+	    /* file with velocity */
 	    vel = NULL;
 	    if (!sf_getint("nz",&nz)) sf_error ("Need nz=");
+	    /* Length of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("dz",&dz)) sf_error ("Need dz=");
+	    /* Sampling of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("z0",&z0)) z0 = 0.;
+	    /* Origin of depth axis (for migration, if no velocity file) */
 	} else {
 	    vel = sf_input ("velocity");
 	    if (!sf_histint(vel,"n1",&nz)) sf_error ("No n1= in velocity");
@@ -134,6 +152,7 @@ int main (int argc, char **argv)
 
     if (NULL == vel) {
 	if (!sf_getfloat("vel",&v0)) sf_error ("Need vel=");
+	/* Constant velocity (if no velocity file) */
 	for (iz=0; iz < nz; iz++) {
 	    vt[iz] = v0;
 	}
@@ -177,3 +196,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
+/* 	$Id: Mdsr.c,v 1.6 2003/09/29 14:34:54 fomels Exp $	 */

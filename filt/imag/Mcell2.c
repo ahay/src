@@ -2,7 +2,7 @@
 
 Takes: < velocity.rsf > rays.rsf
 
-Rays and wavefronts can be displayed with sfplotrays program.
+Rays and wavefronts can be displayed with sfplotrays.
 */
 
 #include <math.h>
@@ -34,12 +34,16 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
+    /* If y, the input is velocity; if n, slowness */
     if(!sf_getint("order",&order)) order=4;
+    /* Interpolation accuracy */
 
     if (!sf_getint("nt",&nt)) nt=nx*nz;
+    /* number of time steps */
 
     /* get shot locations */
     if (NULL != sf_getstring("shotfile")) {
+	/* file with shot locations */
 	shots = sf_input("shotfile");
 	if (!sf_histint(shots,"n1",&ndim) || 2 != ndim) 
 	    sf_error("Must have n1=2 in shotfile");
@@ -55,13 +59,16 @@ int main(int argc, char* argv[])
 
 	s = sf_floatalloc2 (ndim,nshot);
 
-	if (!sf_getfloat("zshot",s[0]))   s[0][0]=0.; 
+	if (!sf_getfloat("zshot",s[0]))   s[0][0]=0.;
+	/* shot location in depth (if shotfile is not specified) */
 	if (!sf_getfloat("yshot",s[0]+1)) s[0][1]=x0 + 0.5*(nx-1)*dx;
+	/* shot location in lateral (if shotfile is not specified) */
 	
 	sf_warning("Shooting from z=%f, x=%f",s[0][0],s[0][1]);
     }
 
     if (NULL != sf_getstring("anglefile")) {
+	/* file with initial angles */
 	angles = sf_input("anglefile");
 
 	if (!sf_histint(angles,"n1",&nr)) sf_error("No n1= in anglefile");
@@ -69,8 +76,11 @@ int main(int argc, char* argv[])
 	angles = NULL;
 
 	if (!sf_getint("nr",&nr)) sf_error("Need nr=");
+	/* Number of angles (if anglefile is not specified) */
 	if (!sf_getfloat("a0",&a0)) a0 = 0.; 
+	/* First angle in degrees (if anglefile is not specified) */
 	if (!sf_getfloat("amax",&amax)) amax=360.;
+	/* Maximum angle in degrees (if anglefile is not specified) */
 
 	/* convert degrees to radians */
 	a0 = a0*SF_PI/180.;
@@ -132,3 +142,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mcell2.c,v 1.9 2003/09/29 14:34:54 fomels Exp $	 */

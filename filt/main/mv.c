@@ -1,3 +1,11 @@
+/* Copy or move a dataset.
+
+Takes: in.rsf out,rsf
+
+sfcp - copy, sfmv - move.
+Mimics standard Unix commands.
+*/
+
 #include <string.h>
 
 #include <rsf.h>
@@ -31,3 +39,5 @@ int main(int argc, char* argv[])
     if (NULL != strstr (sf_getprog(),"mv")) sf_rm(infile,false,false,false);
     exit (0);
 }
+
+/* 	$Id: mv.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */

@@ -2,14 +2,6 @@
 
 Takes: < input.rsf > reversed.rsf
 
-The which parameter has the following meaning: 
-to reverse a given axis, start with 0,
-add 1 to number to reverse n1 dimension,
-add 2 to number to reverse n2 dimension,
-add 4 to number to reverse n3 dimension, etc.
-Thus, which=7 would reverse the first three dimensions,
-which=5 just n1 and n3, etc.
-which=0 will just pass the input on through unchanged.
 */
 
 #include <stdio.h>
@@ -43,13 +35,24 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"esize",&esize)) esize=4;
     
     if (!sf_getint("which",&which)) which=-1;
+    /* Which axis to reverse.
+       To reverse a given axis, start with 0,
+       add 1 to number to reverse n1 dimension,
+       add 2 to number to reverse n2 dimension,
+       add 4 to number to reverse n3 dimension, etc.
+       Thus, which=7 would reverse the first three dimensions,
+       which=5 just n1 and n3, etc.
+       which=0 will just pass the input on through unchanged. */
+
     opt = sf_getstring("opt");
+    /* If y, change o and d parameters on the reversed axis. */
     copt = (NULL == opt)? 'y':opt[0];
 
     /* Figure out which dimension is the slowest */
     if (-1 == which) which = (1 << (dim-1));
 
     if (!sf_getbool("verb",&verb)) verb=false;
+    /* Verbosity flag */
     if (!sf_getint("memsize",&memsize) || 0 >= memsize) 
 	memsize = 1 << 20; /* 1 Mb */
    
@@ -153,3 +156,5 @@ static void mirror (size_t n1, int dim,
     }
     if (0 != n1%2) k[n1/2]=n1/2; /* Take care of odd n1 */
 }
+
+/* 	$Id: reverse.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */

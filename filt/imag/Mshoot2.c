@@ -1,3 +1,8 @@
+/* 2-D ray shooting.
+
+Takes: < velocity.rsf > angles.rsf
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -34,13 +39,19 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
+    /* If y, the input is velocity; if n, slowness */
     if(!sf_getint("order",&order)) order=4;
+    /* Interpolation order */
 
     if (!sf_getint("nt",&nt)) nt=nx*nz;
+    /* Maximum number of time steps */
 
     if (!sf_getint("nr",&nr)) nr=1;
+    /* number of recievers */
     if (!sf_getfloat("r0",&r0)) r0=x0;
+    /* first receiver */
     if (!sf_getfloat("dr",&dr)) dr=dx;
+    /* receiver increment */
     rmax = r0 + (nr-1)*dr;
 
     /* sanity check */
@@ -52,6 +63,7 @@ int main(int argc, char* argv[])
  
     /* get shot locations */
     if (NULL != sf_getstring("shotfile")) {
+	/* file with shot locations */
 	shots = sf_input("shotfile");
 	if (!sf_histint(shots,"n1",&ndim) || 2 != ndim) 
 	    sf_error("Must have n1=2 in shotfile");
@@ -67,7 +79,8 @@ int main(int argc, char* argv[])
 
 	shot = sf_floatalloc2 (ndim,nshot);
 
-	if (!sf_getfloat("zshot",shot[0]))   shot[0][0]=0.; 
+	if (!sf_getfloat("zshot",shot[0]))   shot[0][0]=0.;
+	/* shot coordinates (if no shotfile) */
 	if (!sf_getfloat("yshot",shot[0]+1)) shot[0][1]=x0 + 0.5*(nx-1)*dx;
 	
 	sf_warning("Shooting from z=%f, x=%f",shot[0][0],shot[0][1]);
@@ -100,6 +113,7 @@ int main(int argc, char* argv[])
     time  = sf_floatalloc (nr);
 
     if (!sf_getfloat("tol",&tol)) tol=0.01;
+    /* Shooting tolerance (in degrees) */
     tol *= SF_PI/180.; /* 1/100 degree */
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
@@ -180,3 +194,5 @@ static float shooting(float a)
 
     return (x[1]-xr);
 }
+
+/* 	$Id: Mshoot2.c,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */

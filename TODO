@@ -1,20 +1,21 @@
 PROJ
-	Licensing
-	organize build/local better
-	separate APIs from main tree
-	get rid of the clean rule / emitter
+	*Licensing
+		FFTW
+		bandpass
+		Joe?
+	? get rid of the clean rule / emitter
 	interrupt signal in latex2dvi (->latex2pdf)
 	parameter checking
 	Tkinter interface
 DOCUMENTATION
 	demos: SU/SEPlib/Claerbout
-	       move up, document
+	       document
 	       sfsynlv
 	manual...
 	sfdoc 
-	      -k keyword
-	      fix parameter extration
-	      expand	
+	      getfloat[s]
+	      expand
+	      demos reference	
 FILT
 	splint
 	MPI interface

@@ -21,3 +21,5 @@ program Test
      call rsf_write(out,trace)
   end do
 end program Test
+
+!	$Id: Testfile.f90,v 1.3 2003/09/29 14:34:55 fomels Exp $	

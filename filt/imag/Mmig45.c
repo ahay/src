@@ -1,3 +1,9 @@
+/* Finite-difference modeling/migration with 45-degree approximation.
+
+Takes: < input.rsf > output.rsf
+
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -19,10 +25,14 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv=false;
+    /* If y, modeling; if n, migration */
     if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* Stabilization parameter */
     if (!sf_getfloat("beta",&beta)) beta=1./12.;
+    /* "1/6th trick" parameter */
 
     if (NULL != sf_getstring ("velocity")) {
+	/* velocity file */
 	velocity = sf_input("velocity");
     } else {
 	velocity = NULL;
@@ -37,7 +47,9 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
 
 	if (!sf_getint("nt",&nw)) sf_error("Need nt=");
+	/* Length of time axis (for modeling) */
 	if (!sf_getfloat("dt",&dw)) sf_error("Need dt=");
+	/* Sampling of time axis 9for modeling) */
 
 	dw = 1./(dw*nw);
 	nw = 1+nw/2;
@@ -63,7 +75,9 @@ int main(int argc, char* argv[])
 		sf_error("No d1= in velocity");
 	} else {
 	    if (!sf_getint("nz",&nz)) sf_error("Need nz=");
+	    /* Length of depth axis (for migration, if no velocity file) */
 	    if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
+	    /* Sampling of depth axis (for migration, if no velocity file) */
 	}
 
 	sf_putint (out,"n2",nx); 
@@ -81,6 +95,7 @@ int main(int argc, char* argv[])
 	sf_read (vel[0],sizeof(float),nz*nx,velocity);
     } else { /* constant velocity */
 	if (!sf_getfloat ("vel", &vel0)) sf_error("Need vel0=");
+	/* Constant velocity (if no velocity file) */
 	for (ix=0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {
 		vel[ix][iz] = vel0;
@@ -283,5 +298,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-
-
+/* 	$Id: Mmig45.c,v 1.8 2003/09/29 14:34:55 fomels Exp $	 */

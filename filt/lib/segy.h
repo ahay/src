@@ -32,3 +32,4 @@ char* sf_segykeyword (int k);
 
 #endif
 
+/* 	$Id: segy.h,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */

@@ -1,3 +1,10 @@
+/* Stack a dataset over the second dimension.
+
+Takes < gather.rsf > stack.rsf
+
+This operation is adjoint to sfspray.
+*/
+
 #include <string.h>
 #include <stdio.h>
 #include <math.h>
@@ -59,7 +66,9 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getbool("rms",&rms)) rms = false;
+    /* If y, compute the root-mean-square instead of stack */
     if (rms || !sf_getbool("norm",&norm)) norm = true;
+    /* If y, normalize by fold */
 
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
@@ -89,3 +98,5 @@ int main(int argc, char* argv[])
     
     exit (0);
 }
+
+/* 	$Id: stack.c,v 1.5 2003/09/29 14:34:57 fomels Exp $	 */

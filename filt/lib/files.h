@@ -11,3 +11,5 @@ void sf_cp(sf_file in, sf_file out);
 void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 
 #endif
+
+/* 	$Id: files.h,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

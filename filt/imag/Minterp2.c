@@ -1,3 +1,8 @@
+/* Multiple-arrival interpolation.
+
+Takes < input.rsf > output.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -30,9 +35,12 @@ int main (int argc, char* argv[])
 
   if (!sf_getfloat ("sx",&sx)) sx=0.;
   if (!sf_getfloat ("sz",&sz)) sz=0.;
+  /* Shot coordinates */
   if (!sf_getint ("nw",&nw)) nw=4;
+  /* Interpolation accuracy */
   if (!sf_getint ("plane",&plane)) plane=0;
-  
+  /* Point-source or plane-wave */
+
   size = sf_input("size");
   siz = sf_intalloc2 (nx,nz);
   sf_read(siz[0],sizeof(int),nx*nz,size);
@@ -136,3 +144,5 @@ static float func_eno(float t)
     eno_apply (pfnt,it,t,&f,&g,FUNC);
     return (f-sx);
 }
+
+/* 	$Id: Minterp2.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */

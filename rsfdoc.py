@@ -78,13 +78,16 @@ def getprog(file,out):
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
         param = re.compile(r'(?:if\s*\(\!)?sf_get(?P<type>bool|int|float)\s*'
                            '\(\s*\"(?P<name>\w+)\"\s*\,'
-                           '\s*\&(?P<var>[\w\[\]]+)\s*'
-                           '\)\s*[\)]?\s*[\{]?\s*'
-                           '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
-                           'sf_error[^\;]+)?'
-                           '\;\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
-        stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"[^\;]*\;'
-                            '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
+                           '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'
+                           '(?:[\{]|' # either \{ or
+                           '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|' # var=def
+                           'sf_[^\;]+)?' # or sf_error
+                           '[\;])\s*' # ending with ;
+                           '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                           '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+        stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
+                               '[^\;\{]*[\;\{]'
+                               '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
         synopsis = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                               '((?:.|\n)*)$')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
@@ -108,12 +111,12 @@ def getprog(file,out):
         type = par[0]
         parname = par[1]
         default = par[3]
-        desc = par[4]
-        range = ''
+        range = par[4]
+        desc = par[5]
         if (type == 'bool'):
             if (default == 'true'):
                 default = 'y'
-            else:
+            elif (default == 'false'):
                 default = 'n'
             type = 'bool  ' # to align with string
             range = '[y/n]'
@@ -143,13 +146,55 @@ def getprog(file,out):
             out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,cmts))
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
 
+
+def cli():
+    import getopt
+    import rsfprog
+
+    this = sys.argv.pop(0)
+    class BadUsage: pass
+
+    try:
+        opts, args = getopt.getopt(sys.argv, 'k:')
+        for opt, val in opts:
+            if opt == '-k':
+                val = val.lower()
+                doc = ''
+                for prog in progs.keys():
+                    desc = progs[prog].desc
+                    if re.search(val,desc.lower()):
+                        doc = doc + "%s: %s\n" % (bold(prog),desc)
+                pydoc.pager(doc)
+                return
+    
+        if not args:
+            raise BadUsage
+
+        for prog in args:
+            if not re.match(rsfprefix,prog):
+                prog = rsfprefix + prog
+            main = progs.get(prog)
+            if main:
+                main.document()
+            else:
+                print "No program %s in RSF." % prog
+
+    except (getopt.error, BadUsage):
+        print '''sfdoc - the RSF documentation tool
+    
+%s <prog1> <prog2> ...
+    Show documentation on programs.
+
+%s -k <keyword>
+    Search for a keyword in the description lines of all available programs.
+''' % (this,this)
+
 if __name__ == "__main__":
     junk = open('junk.py',"w")
     junk.write("import rsfdoc\n\n")
     junk.write("rsfprog = {}\n")
-    getprog('seis/main/dd.c',junk)
+    getprog('filt/main/dd.c',junk)
     junk.write("sfdd.document()\n\n")
-    junk.write("print sfdd.prog\n\n")
     junk.close()
     #
     import junk

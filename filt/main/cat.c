@@ -1,3 +1,10 @@
+/* Concatenate datasets. 
+
+Takes: [<file0.rsf] file1.rsf file2.rsf ... > merged.rsf
+
+sfmerge inserts additional space between merged data.
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -39,6 +46,8 @@ int main (int argc, char* argv[])
     out = sf_output ("out");
 
     if (!sf_getbool("space",&space)) {
+	/* Insert additional space.
+	   y is default for sfmerge, n is default for sfcat */
 	prog = sf_getprog();
 	if (NULL != strstr (prog, "merge")) {
 	    space = true;
@@ -52,6 +61,7 @@ int main (int argc, char* argv[])
 
     dim = sf_filedims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
+    /* Axis being merged */
     if (1 > axis) sf_error("axis=%d < 1",axis);
 
     dim1 = dim;
@@ -85,6 +95,7 @@ int main (int argc, char* argv[])
 
     if (space) {
 	if (!sf_getint("nspace",&nspace)) nspace = (int) (ni/(20*nin) + 1);
+	/* if space=y, number of traces to insert */ 
 	ni += nspace*(nin-1);
     } 
 
@@ -151,3 +162,6 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 	if (axis > dim) naxis[i]=1;
     }
 }
+
+/* 	$Id: cat.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+

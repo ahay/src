@@ -1,3 +1,8 @@
+/* Output parameters from the header.
+
+Takes: < file.rsf par1 par2 ...
+*/
+
 #include <stdio.h>
 #include <string.h>
 
@@ -14,6 +19,7 @@ int main (int argc, char* argv[])
     in = sf_input ("in");
     
     if(!sf_getbool("parform",&parform)) parform=true;
+    /* If y, print out parameter=value. If n, print out value. */
 
     for (i = 1; i < argc; i++) {
 	key = argv[i];
@@ -29,3 +35,6 @@ int main (int argc, char* argv[])
     
     exit(0);
 }
+
+/* 	$Id: get.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+

@@ -25,3 +25,6 @@ void sf_pfamcc (int isign, int n, int nt, int k, int kt, float complex z[]);
 #endif 
 
 #endif
+
+/* 	$Id: pfafft.h,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+

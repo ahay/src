@@ -743,3 +743,5 @@ void sf_unpipe (sf_file file, size_t size)
     if (NULL == file->stream)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
 } 
+
+/* 	$Id: file.c,v 1.13 2003/09/29 14:34:55 fomels Exp $	 */
