@@ -1,7 +1,9 @@
 #ifndef _sf_c99_h
 #define _sf_c99_h
 
-#if defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+#ifndef __cplusplus
+
+#if defined(__STDC__) && (__STDC_VERSION__ >= 199901L) 
 
 /* The following from C99 - must define for C90 */
 #include <stdbool.h>       /* define bool, true, false */
@@ -51,5 +53,6 @@ float complex sf_conjf(float complex c);
 
 void cprint (float complex c);
 
-#endif
+#endif /* c++ */
 
+#endif

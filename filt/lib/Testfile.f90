@@ -3,7 +3,7 @@ program Test
 
   implicit none
   type (file)                      :: in, out
-  integer                          :: type, n1, i
+  integer                          :: n1, i
 !  character (len=100)              :: label1
   real, dimension (:), allocatable :: trace
 

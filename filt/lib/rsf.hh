@@ -8,22 +8,25 @@
 #include <valarray>
 
 // to simplify main program includes
+extern "C" {
 #include <rsf.h>
+}
 
 class iRSF {
 public:
     // constructor
     iRSF (const char* file = "in");
-    iRSF ();
     // destructor
     ~iRSF();
     // reading data
-    const iRSF& operator>> (std:valarray <float> &vect) const;
+    const iRSF& operator>> (std::valarray <float> &vect) const;
     // reading parameters
     void get (const char* name,   int& value,   int defolt) const;
     void get (const char* name,   int& value) const;
     void get (const char* name, float& value, float defolt) const;
     void get (const char* name, float& value) const;
+    void get (const char* name,  bool& value,  bool defolt) const;
+    void get (const char* name,  bool& value) const;
 //    void get (const char* name,  char* value, const char* defolt) const;
 //    void get (const char* name,  char* value) const;
     // reading parameter arrays
@@ -31,8 +34,11 @@ public:
 	      const int*   defolt) const;
     void get (const char* name, int size, int*   value) const;
     void get (const char* name, int size, float* value, 
-	      const float* defolt) const;
+ 	      const float* defolt) const;
     void get (const char* name, int size, float* value) const;
+    void get (const char* name, int size, bool* value, 
+ 	      const bool* defolt) const;
+    void get (const char* name, int size, bool* value) const;
 private:
     sf_file file_;
     // copy constructor - undefined to prevent misuse
@@ -45,18 +51,17 @@ class oRSF {
 public:
     // constructors 
     oRSF (const char* file = "out");
-    oRSF ();
     // destructor 
     ~oRSF();
     // writing data
-    const oRSF& operator<< (std:valarray <float> &vect) const;
+    const oRSF& operator<< (std::valarray <float> &vect) const;
     // writing parameters
     void put (const char* name, int value) const;
     void put (const char* name, float value) const;
     void put (const char* name, const char* value) const; 
     // writing parameter arrays
     void put (const char* name, int size, const int*   value) const;
-    void put (const char* name, int size, const float* value) const;
+//     void put (const char* name, int size, const float* value) const;
 private:
     sf_file file_; 
     // copy constructor - undefined to prevent misuse

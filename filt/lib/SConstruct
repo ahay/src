@@ -42,7 +42,22 @@ else:
 for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
-        
+
+##############################################################################
+# C++ BINDING
+##############################################################################
+libcc = env.StaticLibrary('rsf++','rsf.cc',
+                          OBJSUFFIX='++.o',CPPPATH='../../include')
+if root:
+    env.Install(libdir,libcc)
+    env.Install(incdir,'rsf.hh')
+
+for file in ['getpar','file']:
+    test = 'Test' + file + '.cc'
+    env.Program([test,libcc,lib],
+                OBJSUFFIX='++.o',CPPPATH='../../include',
+                PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
+
 ##############################################################################
 # FORTRAN BINDING
 ##############################################################################

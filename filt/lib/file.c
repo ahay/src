@@ -45,7 +45,7 @@ static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
 
-sf_file sf_input (/*@null@*/ char* tag)
+sf_file sf_input (/*@null@*/ const char* tag)
 {
     int esize;
     sf_file file;
@@ -109,7 +109,7 @@ sf_file sf_input (/*@null@*/ char* tag)
 }
 
 /* Should do output after input */
-sf_file sf_output (/*@null@*/ char* tag)
+sf_file sf_output (/*@null@*/ const char* tag)
 {
     sf_file file;
     char *headname, *dataname, *path, *name, *format;
@@ -338,6 +338,23 @@ bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par)
     return sf_simtab_getfloat (file->pars,key,par);
 }
 
+bool sf_histfloats (sf_file file, const char* key,
+		    /*@out@*/ float* par,size_t n) 
+{
+    return sf_simtab_getfloats (file->pars,key,par, n);
+}
+
+bool sf_histbool (sf_file file, const char* key,/*@out@*/ bool* par) 
+{
+    return sf_simtab_getbool (file->pars,key,par);
+}
+
+bool sf_histbools (sf_file file, const char* key,
+		   /*@out@*/ bool* par, size_t n) 
+{
+    return sf_simtab_getbools (file->pars,key,par, n);
+}
+
 char* sf_histstring (sf_file file, const char* key) 
 {
     return sf_simtab_getstring (file->pars,key);
@@ -447,7 +464,7 @@ void sf_fileflush (sf_file file, sf_file src)
     file->dataname=NULL;
 }
 
-void sf_putint (sf_file file, char* key, int par)
+void sf_putint (sf_file file, const char* key, int par)
 {
     char val[256];
 
@@ -455,7 +472,7 @@ void sf_putint (sf_file file, char* key, int par)
     sf_simtab_enter (file->pars,key,val);
 }
 
-void sf_putints (sf_file file, char* key, int* par, size_t n)
+void sf_putints (sf_file file, const char* key, const int* par, size_t n)
 {
     int i;
     char val[1024], *v;
@@ -470,7 +487,7 @@ void sf_putints (sf_file file, char* key, int* par, size_t n)
 }
 
 
-void sf_putfloat (sf_file file, char* key,float par)
+void sf_putfloat (sf_file file, const char* key,float par)
 {
     char val[256];
 
@@ -478,7 +495,7 @@ void sf_putfloat (sf_file file, char* key,float par)
     sf_simtab_enter (file->pars,key,val);
 }
 
-void sf_putstring (sf_file file, char* key,const char* par)
+void sf_putstring (sf_file file, const char* key,const char* par)
 {
     char *val;
     

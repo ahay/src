@@ -11,7 +11,7 @@ def check_all(context):
     f90(context)
 
 def cc(context):
-    context.Message("Checking CC compiler ... ")
+    context.Message("Checking C compiler ... ")
     CC = context.env.get('CC')
     if CC:
         context.Result(CC)   

@@ -13,8 +13,12 @@
 /*@out@*/ float *sf_floatalloc (size_t n);
 /*@out@*/ bool *sf_boolalloc (size_t n);
 /*@out@*/ bool **sf_boolalloc2 (size_t n1, size_t n2);
+
+#ifndef __cplusplus
 /*@out@*/ float complex *sf_complexalloc (size_t n);
 /*@out@*/ float complex **sf_complexalloc2 (size_t n1, size_t n2);
+#endif
+
 /*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2);
 /*@out@*/ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3);
 /*@out@*/ int **sf_intalloc2 (size_t n1, size_t n2);
