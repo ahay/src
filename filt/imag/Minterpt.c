@@ -1,4 +1,4 @@
-/* Multiple-arrival interpolation (yet another) 
+/* Multiple-arrival interpolation (yet another).
 
 Takes: < input.rsf > output.rsf
 
@@ -125,4 +125,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterpt.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Minterpt.c,v 1.3 2003/10/01 23:40:46 fomels Exp $	 */

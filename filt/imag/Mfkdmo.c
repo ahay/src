@@ -1,4 +1,4 @@
-/* Offset continuation by log-stretch F-K operator
+/* Offset continuation by log-stretch F-K operator.
 
 Takes < input.rsf > output.rsf
 
@@ -71,4 +71,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfkdmo.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mfkdmo.c,v 1.3 2003/10/01 23:40:46 fomels Exp $	 */

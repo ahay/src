@@ -1,4 +1,4 @@
-/* Azimuth moveout by log-stretch F-K operator
+/* Azimuth moveout by log-stretch F-K operator.
 
 Takes: < data1.rsf > data2.rsf
 
@@ -86,5 +86,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mfkamo.c,v 1.3 2003/09/30 02:39:53 fomels Exp $	 */
+/* 	$Id: Mfkamo.c,v 1.4 2003/10/01 23:40:46 fomels Exp $	 */
 

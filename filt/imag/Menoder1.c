@@ -1,4 +1,4 @@
-/* Taking first derivative along the fast axis using ENO interpolation 
+/* Taking first derivative along the fast axis using ENO interpolation.
 
 Takes: < input.rsf > deriv.rsf
 
@@ -45,5 +45,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Menoder1.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Menoder1.c,v 1.3 2003/10/01 23:40:46 fomels Exp $	 */
 
