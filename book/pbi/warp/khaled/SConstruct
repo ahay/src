@@ -1,0 +1,509 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+#
+# Data
+#
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/fasken'
+
+data = {
+    'pp': 'Pw.sgy',
+    'ps': 'Cw.sgy'
+    }
+
+time = {
+    'pp': int(1.5/0.002),
+    'ps': int(2.413/0.002)
+    }
+
+line=67
+trace=74
+
+Flow('line',None,
+     'echo %d 0 %d 4 n1=4 data_format=ascii_float in=$TARGET' %
+     (trace,trace))
+Plot('line','line',
+     '''
+     dd data_format=native_float |
+     dd data_format=native_complex |
+     graph min2=0 max2=4 min1=17.05 max1=133.5 pad=n wantaxis=n wanttitle=n
+     ''')
+
+for mode in ['pp','ps']:
+    Fetch(data[mode],datdir)
+    Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
+              '''segyread tape=$SOURCE
+              hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+              fldr=180 tracf=184 sx=188 sy=193
+              ''',stdin=0)
+    Flow(mode+'cube',[mode,mode+'head'],
+              '''
+              intbin head=${SOURCES[1]} |
+              window n2=116 n3=132 min2=18 min3=15
+              ''')
+    Result(mode+'cube',mode+'cube',
+           '''byte gainpanel=all |
+           grey3 flat=n frame3=%d frame2=%d frame1=%d title=%s
+           point1=0.75 point2=0.75
+           label1="Time (s)" label2="In-line" label3="Cross-line"
+           ''' %
+           (line-15,trace-18,time[mode],mode.upper()))
+    Flow(mode+'line',mode+'cube','window n3=1 min3=%d' % line)
+    Plot(mode+'line',mode+'line',
+         'grey title=%s label1="Time (s)" label2="In-line" ' % mode.upper())
+    Combine(mode+'line',[mode+'line','line'],'Overlay',result=1)
+    Flow(mode+'trace',mode+'line','window n2=1 min2=%d' % trace)
+
+Result('trace','pstrace pptrace',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots poly=y label1="Time (s)" labels=PS:PP
+       ''')
+
+#############################################################################
+#
+# Initial warping
+#
+#############################################################################
+
+nails = Split('''
+1.046 1.788
+1.188 1.976
+1.396 2.270
+1.560 2.492
+3.000 4.500
+''')
+
+Flow('nails',None,
+     'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
+     (' '.join(nails),len(nails)/2))
+Flow('khaled1','nails',
+     '''
+     dd data_format=native_float |
+     spline n1=1501 d1=0.002 o1=0 |
+     headermath output="input-T"
+     ''')
+
+Flow('khaled2','khaled1','spray n2=116 d2=1 o2=18')
+Flow('time2','khaled1','headermath output=T | spray n2=116 d2=1 o2=18')
+
+Flow('khaled3','khaled2',
+     'spray n2=132 d2=1 o2=15 | transp plane=23')
+Flow('time3','time2',
+     'spray n2=132 d2=1 o2=15 | transp plane=23')
+
+warp2gamma = '''
+headermath output="input+T" |
+smoothder |
+math output="2*input-1" 
+'''
+
+warp2gamma2 = '''
+math T=${SOURCES[1]} output="input+T" |
+smoothder |
+math output="2*input-1" 
+'''
+
+Flow('gamma1','khaled1',warp2gamma)
+Flow('Gamma1',['khaled2','time2'],warp2gamma2)
+
+warp0 = '''
+warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+verb=1 nliter=0
+'''
+
+#############################################################################
+#
+# Trace processing
+#
+#############################################################################
+
+Flow('ptrace','pptrace','window max1=3 | costaper nw1=300')
+
+Flow('wtrace',['pstrace','ptrace','khaled1'],
+     warp0 + ' | costaper nw1=300')
+
+def difplot(min1,max1):
+    return '''
+    add scale=1,-1 ${SOURCES[1]} |
+    cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
+    window min1=%g max1=%g |
+    dots gaineach=0
+    labels="Difference:PS warped:PP" label1="Time (s)"
+    ''' % (min1,max1)
+dplot = difplot(0.5,2.5)
+
+Plot('warp0',['wtrace','ptrace'],dplot)
+
+def vgraph(min1,max1,min2,max2):
+    return '''graph wanttitle=n min1=%g max1=%g min2=%g max2=%g
+    wherexlabel=t wheretitle=b crowd=0.8 label2="Vp/Vs"
+    ''' % (min1,max1,min2,max2)
+graph = vgraph(0.5,2.5,1,4)
+
+Plot('gamma1','gamma1',graph)
+Combine('warp0','gamma1 warp0','OverUnderAniso',result=1)
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+Flow('pwin','ptrace','window1 nw=4 w=800')
+Flow('swin','wtrace','window1 nw=4 w=800')
+
+rick = 'spectra | ricker niter=1000 ma=$TARGET m=20'
+
+Flow('prick','pwin',rick,stdout=0)
+Flow('srick','swin',rick,stdout=0)
+
+reshape = '''
+reshape in2=${SOURCES[1]}
+ma=${SOURCES[2]} ma2=${SOURCES[3]}
+out2=${TARGETS[1]} |
+stack norm=no
+'''
+
+Flow(['presh','resh'],['pwin','swin','prick','srick'],reshape)
+Flow('sresh','resh','stack norm=no')
+Plot('warp1',['sresh','presh'],dplot)
+Combine('warp1','gamma1 warp1','OverUnderAniso',result=1)
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+def warpscan(ng,g0,gmax):
+    dg = (gmax-g0)/(ng-1)
+    return '''
+    warpscan other=${SOURCES[1]}
+    ng=%d dg=%g g0=%g nw=30 w=500 |
+    math output='(1+input)^4' |
+    window''' % (ng,dg,g0)
+
+def greyscan(min1,max1,min2,max2):
+     return '''grey title="Gamma scan" allpos=y 
+     min1=%g max1=%g min2=%g max2=%g
+     color=j pclip=100
+     label1="Time (s)" label2="Gamma"''' % (min1,max1,min2,max2)
+
+Flow('scan',['sresh','presh'],warpscan(51,0.95,1.05))
+Plot('scan','scan',greyscan(0.5,2.5,0.95,1.05))
+
+def blindpick(eps=10):
+    return '''
+    blindpick2 eps=%g |
+    spline pattern=${SOURCES[1]} |
+    window
+    ''' % eps
+
+def showpick(min1,max1,min2,max2):
+    return '''
+    graph transp=y min1=%g max1=%g min2=%g max2=%g
+    yreverse=y plotcol=7 
+    wantaxis=n wanttitle=n pad=n
+    ''' % (min1,max1,min2,max2)
+
+Flow('pick0',['scan','ptrace'],
+     'mutter inner=y abs=n half=n slope0=43 x0=0.97 | ' +
+     blindpick(2))
+Flow('pick','pick0','headermath output="(input-1)*T" ')
+Plot('pick','pick0',showpick(0.5,2.5,0.95,1.05))
+Combine('scan','scan pick','Overlay',result=1)
+
+###########################################################################
+# WARPING
+###########################################################################
+
+def warp1(niter,rect1=1,rect2=1,rect3=1):
+    return '''warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+    warpout=${TARGETS[2]} amplout=${TARGETS[3]}
+    verb=1 nliter=%d noamp=1 rect1=%d rect2=%d rect3=%d > ${TARGETS[1]};
+    warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % (niter,rect1,rect2,rect3)
+
+Flow(['warp2','wtrace2','w2','a2'],
+     ['sresh','presh','pick','khaled1'],
+     warp1(20,220))
+
+Flow('gamma2','warp2',warp2gamma)
+Plot('gamma2','gamma2',graph)
+Plot('warp2','wtrace2 presh',dplot)
+Combine('warp2','gamma2 warp2','OverUnderAniso',result=1)
+
+####################################################################
+# MOVE CLOSER
+####################################################################
+Flow('wtrace3',['pstrace','ptrace','warp2'],
+     warp0 + ' | costaper nw1=300')
+Plot('warp3','wtrace3 ptrace',dplot)
+Combine('warp3','gamma2 warp3','OverUnderAniso',result=1)
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+Flow('swin2','wtrace3','window1 nw=4 w=800')
+Flow('srick2','swin2',rick,stdout=0)
+
+Flow(['presh2','resh2'],['pwin','swin2','prick','srick2'],reshape)
+Flow('sresh2','resh2','stack norm=no')
+Plot('warp4',['sresh2','presh2'],dplot)
+Combine('warp4','gamma2 warp4','OverUnderAniso',result=1)
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('scan2',['sresh2','presh2'],warpscan(51,0.95,1.05))
+Plot('scan2','scan2',greyscan(0.5,2.5,0.95,1.05))
+
+Flow('pick1',['scan2','ptrace'],
+     'window min2=0.98 max2=1.02 | ' +
+     blindpick(100))
+Flow('pick2','pick1','headermath output="(input-1)*T" ')
+Plot('pick2','pick1',showpick(0.5,2.5,0.95,1.05))
+Combine('scan2','scan2 pick2','Overlay',result=1)
+
+###########################################################################
+# WARPING
+###########################################################################
+
+Flow(['warp5','wtrace5','w5','a5'],
+     ['sresh2','presh2','pick2','warp2'],
+     warp1(20,220))
+
+Flow('gamma5','warp5',warp2gamma)
+Plot('gamma5','gamma5',graph)
+Plot('warp5','wtrace5 presh2',dplot)
+Combine('warp5','gamma5 warp5','OverUnderAniso',result=1)
+
+#############################################################################
+#
+# Line processing
+#
+#############################################################################
+
+Flow('pline','ppline','window max1=3 | costaper nw1=300')
+
+Flow('wline',['psline','pline','khaled2'],
+     warp0 + ' | costaper nw1=300')
+
+def plot(title,clip=4):
+    return '''
+    window min1=0.5 max1=2.5 |
+    grey title="%s" label1="Time (s)" clip=%g
+    ''' % (title,clip)
+
+Plot('pline','pline',plot('PP'))
+Plot('wline','wline',plot('Warped PS'))
+Plot('diff','wline pline',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Plot('Gamma1','Gamma1',
+     plot('Vp/Vs',2) +
+     ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
+Combine('Warp0','pline wline diff Gamma1','TwoByTwo',result=1)
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+Flow('Pwin','pline','window2 nw=4,2 w=800,100')
+Flow('Swin','wline','window2 nw=4,2 w=800,100')
+
+rick2 = 'spectra | stack norm=y | ricker niter=1000 ma=$TARGET m=20'
+
+Flow('Prick','Pwin',rick2,stdout=0)
+Flow('Srick','Swin',rick2,stdout=0)
+
+reshape2 = '''
+reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
+ma2=${SOURCES[3]} out2=${TARGETS[1]} |
+transp plane=23 |
+stack norm=no
+'''
+
+Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
+Flow('Sresh','Resh','transp plane=23 | stack norm=no')
+
+Plot('Presh','Presh',plot('Balanced PP'))
+Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
+Plot('diff2','Sresh Presh',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Combine('Warp1','Presh Sresh diff2 Gamma1','TwoByTwo',result=1)
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('Scan',['Sresh','Presh'],warpscan(51,0.95,1.05))
+
+def scanplot3(frame3):
+    return '''
+    byte gainpanel=all allpos=y |
+    grey3 frame1=15 frame3=%d frame2=36 color=j flat=n
+    label1="Time (s)" label2="In-line" label3="Relative Gamma"
+    title="Gamma Scan"
+    ''' % frame3
+
+Result('Scan','Scan',scanplot3(31))
+
+
+Flow('mask',None,'spike n2=116 n1=1001 | pad n1=1501 beg1=250')
+
+def blindpick2(eps=10,lam=10):
+    return '''
+    blindpick2 eps=%g lam=%g |
+    math output=input-1 |
+    spline o1=0.5 d1=0.002 n1=1001 |
+    window |
+    pad n1=1501 beg1=250 |
+    miss2 eps=0 mask=${SOURCES[1]} niter=50 filt1=100 filt2=10 scons |
+    math output=input+1
+    ''' % (eps,lam)
+
+Flow('Pick0',['Scan','mask'],
+     'transp plane=23 | window min2=1 | ' +
+     blindpick2(2,64))
+Flow('Pick',['Pick0','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+
+###################################################################
+# WARPING
+###################################################################
+
+Flow(['Warp2','wline2','W2','A2'],
+     ['Sresh','Presh','Pick','khaled2'],
+     warp1(20,220,440))
+
+Plot('wline2','wline2',plot('Warped and Balanced PS'))
+Plot('diff3','wline2 Presh',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Flow('Gamma2',['Warp2','time2'],warp2gamma2)
+Plot('Gamma2','Gamma2',
+     plot('Vp/Vs',2) +
+     ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
+Combine('Warp2','Presh wline2 diff3 Gamma2','TwoByTwo',result=1)
+
+####################################################################
+# MOVE CLOSER
+####################################################################
+Flow('wline3',['psline','pline','Warp2'],
+     warp0 + ' | costaper nw1=300')
+
+Plot('wline3','wline3',plot('Warped PS'))
+Plot('diff4','wline3 pline',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Combine('Warp3','pline wline3 diff4 Gamma2','TwoByTwo',result=1)
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+Flow('Swin2','wline3','window2 nw=4,2 w=800,100')
+Flow('Srick2','Swin2',rick2,stdout=0)
+
+Flow(['Presh2','Resh2'],['Pwin','Swin2','Prick','Srick2'],reshape2)
+Flow('Sresh2','Resh2','transp plane=23 | stack norm=no')
+
+Plot('Presh2','Presh2',plot('Balanced PP'))
+Plot('Sresh2','Sresh2',plot('Warped and Balanced PS'))
+Plot('diff5','Sresh2 Presh2',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Combine('Warp4','Presh2 Sresh2 diff5 Gamma2','TwoByTwo',result=1)
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('Scan2',['Sresh2','Presh2'],warpscan(51,0.95,1.05))
+Result('Scan2','Scan2',scanplot3(25))
+
+Flow('Pick1',['Scan2','mask'],
+     'transp plane=23 | window min2=0.98 max2=1.02 | ' +
+     blindpick2(64,64))
+Flow('Pick2',['Pick1','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+
+###################################################################
+# WARPING
+###################################################################
+
+Flow(['Warp5','wline5','W5','A5'],
+     ['Sresh2','Presh2','Pick2','Warp2'],
+     warp1(20,220,440))
+
+Plot('wline5','wline5',plot('Warped and Balanced PS'))
+Plot('diff6','wline5 Presh2',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Flow('Gamma5',['Warp5','time2'],warp2gamma2)
+Plot('Gamma5','Gamma5',
+     plot('Vp/Vs',2) +
+     ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
+Combine('Warp5','Presh2 wline5 diff6 Gamma5','TwoByTwo',result=1)
+
+#############################################################################
+#
+# Cube processing
+#
+#############################################################################
+
+Flow('pcube','ppcube','window max1=3 | costaper nw1=300')
+
+Flow('wcube',['pscube','pcube','khaled3'],
+     warp0 + ' | costaper nw1=300')
+
+def plot3(title,clip=4):
+    return '''
+    window min1=0.5 max1=2.5 |
+    byte clip=%g |
+    grey3 flat=y frame3=%d frame2=%d frame1=527 title="%s"
+    point1=0.5 point2=0.5
+    label1="Time (s)" label2="In-line" label3="Cross-line"
+    ''' % (clip,line-15,trace-18,title)
+
+Plot('pcube','pcube',plot3('PP'))
+Plot('wcube','wcube',plot3('Warped PS (Before)'))
+Combine('cube0','pcube wcube','SideBySideAniso',result=1)
+
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+Flow('ppwin','pline','window2 nw=4,2 w=800,100')
+Flow('Swin','wline','window2 nw=4,2 w=800,100')
+
+rick2 = 'spectra | stack norm=y | ricker niter=1000 ma=$TARGET m=20'
+
+Flow('Prick','Pwin',rick2,stdout=0)
+Flow('Srick','Swin',rick2,stdout=0)
+
+reshape2 = '''
+reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
+ma2=${SOURCES[3]} out2=${TARGETS[1]} |
+transp plane=23 |
+stack norm=no
+'''
+
+Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
+Flow('Sresh','Resh','transp plane=23 | stack norm=no')
+
+Plot('Presh','Presh',plot('Balanced PP'))
+Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
+Plot('diff2','Sresh Presh',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Combine('Warp1','Presh Sresh diff2 Gamma1','TwoByTwo',result=1)
+
+
+
+Flow('Warp','Warp5','spray n2=132 d2=1 o2=15 | transp plane=23')
+Flow('wcube2',['pscube','pcube','Warp'],
+     warp0 + ' | costaper nw1=300')
+
+Plot('wcube2','wcube2',plot3('Warped PS (After)'))
+Combine('cube1','pcube wcube2','SideBySideAniso',result=1)
+
+###########################################################################
+End()
