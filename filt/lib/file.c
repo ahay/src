@@ -159,9 +159,16 @@ sf_file sf_output (/*@null@*/ const char* tag)
 
     file->pars = sf_simtab_init (tabsize);
 
+    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
+    if (file->pipe && ESPIPE != errno) 
+	sf_error ("%s: pipe problem:",__FILE__);
+
     dataname = sf_getstring("out");
 
-    if (NULL == dataname) {
+    if (file->pipe) {
+	file->dataname = sf_charalloc (7);
+	memcpy(file->dataname,"stdout",7);
+    } else if (NULL == dataname) {
 	path = getdatapath();
 	if (NULL == path) 
 	    sf_error("%s: Cannot find datapath",__FILE__);
@@ -177,12 +184,15 @@ sf_file sf_output (/*@null@*/ const char* tag)
 	    sprintf(name,"%sXXXXXX",sf_getprog());
 	    (void) close(mkstemp(file->dataname));
 	    (void) unlink(file->dataname);
+	    /* old code for named pipes below */
+	    /*
 	    if (NULL == headname &&
 		-1L == fseek(file->stream,0L,SEEK_CUR) &&
 		ESPIPE == errno && 
 		0 != mkfifo (file->dataname, S_IRUSR | S_IWUSR))
 		sf_error ("%s: Cannot make a pipe %s:",
 			  __FILE__,file->dataname);
+	    */
 	}  
     } else {
 	namelen = strlen(dataname)+1;
@@ -403,8 +413,7 @@ void sf_fileflush (sf_file file, sf_file src)
     char key[8], *val;
 #endif
     time_t tm;
-    const char eol='\014', eot='\004';
-
+ 
     if (NULL == file->dataname) return;
     
     tm = time (NULL);
@@ -484,20 +493,17 @@ void sf_fileflush (sf_file file, sf_file src)
 #endif
     
     sf_simtab_output(file->pars,file->stream);
-    
+   
     if (0==strcmp(file->dataname,"stdout")) { 
         /* keep stream, write the header end code */
-	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c\n",eol,eol,eot);
+	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",
+		SF_EOL,SF_EOL,SF_EOT);
     } else {
 	file->stream = freopen(file->dataname,"wb",file->stream);
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to data file %s:",
 		      __FILE__,file->dataname);	
     }
-
-    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
-    if (file->pipe && ESPIPE != errno) 
-	sf_error ("%s: pipe problem:",__FILE__);
 
     free (file->dataname);
     file->dataname=NULL;
@@ -1103,6 +1109,7 @@ void sf_unpipe (sf_file file, size_t size)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
 } 
 
+/*
 void sf_close(void)
 {
     if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
@@ -1137,6 +1144,7 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
 
     (void) fclose(tmp);
 }
+*/
 
-/* 	$Id: file.c,v 1.22 2004/07/02 10:06:07 fomels Exp $	 */
+/* 	$Id: file.c,v 1.23 2004/07/02 11:54:28 fomels Exp $	 */
 

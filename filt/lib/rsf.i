@@ -252,7 +252,6 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file);
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);
 void sf_unpipe (sf_file file, size_t size);
-void sf_close (void);
 
 void sf_init(int argc,char **argv);
 void sf_parclose (void);

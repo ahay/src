@@ -398,19 +398,12 @@ void sf_simtab_input (sf_simtab table, FILE* fp) {
     char line[LINELEN], word[LINELEN], *cl, *cw;
     int c;
     enum {START, INAWORD, STRING} state;
-    const char eol='\014', eot='\004';
-    long pos;
 
-    for (pos = ftell(fp); 
-	 NULL != fgets(line,LINELEN,fp);
-	 pos = ftell(fp)) {
+    while (NULL != fgets(line,4,fp)) {
 	/* code for the header end */
-	if (eol==line[0] && eol==line[1] && eot==line[2]) return;
-        /* {
-	    if (0 != fseek(fp,pos+3,SEEK_SET))
-		sf_error("%s: cannot seek to binary:",__FILE__);
-	    return;
-	} */
+	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) return;
+	if ('\n'  !=line[0] && '\n'  !=line[1] && '\n'  !=line[2] &&
+	    NULL == fgets(line+3,LINELEN-3,fp)) return;
 	cw = word;
 	state = START;
         for (cl = line; '\0' != (c=*cl); cl++) {
@@ -459,4 +452,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.14 2004/07/02 10:06:07 fomels Exp $	 */
+/* 	$Id: simtab.c,v 1.15 2004/07/02 11:54:29 fomels Exp $	 */

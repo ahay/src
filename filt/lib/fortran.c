@@ -71,7 +71,6 @@ bool sf_getbools_f (const char* key,/*@out@*/ int* ipar, size_t n)
 #endif 
 
 FCALLSCSUB0(sf_init_f,SF_INIT,sf_init)
-FCALLSCSUB0(sf_close,SF_CLOSE,sf_close)
 FCALLSCSUB0(sf_parclose,SF_PARCLOSE,sf_parclose)
 FCALLSCFUN0(STRING,sf_getprog,SF_GETPROG,sf_getprog)
 FCALLSCFUN2(LOGICAL,sf_getint,SF_GETINT,sf_getint,STRING,PINT)
@@ -128,4 +127,4 @@ FCALLSCFUN2(INT,sf_leftsize,SF_LEFTSIZE,sf_leftsize,INT,INT)
 FCALLSCSUB1(sf_error,SF_ERROR,sf_error,STRING)
 FCALLSCSUB1(sf_warning,SF_WARNING,sf_warning,STRING)
 
-/* 	$Id: fortran.c,v 1.6 2004/06/23 08:54:31 fomels Exp $	 */
+/* 	$Id: fortran.c,v 1.7 2004/07/02 11:54:29 fomels Exp $	 */

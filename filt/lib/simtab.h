@@ -5,6 +5,9 @@
 
 #include "c99.h"
 
+#define SF_EOL '\014'
+#define SF_EOT '\004'
+
 /* Simbol Table structure */
 typedef struct sf_SimTab *sf_simtab;
 
@@ -30,4 +33,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp);
 
 #endif
 
-/* 	$Id: simtab.h,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: simtab.h,v 1.4 2004/07/02 11:54:29 fomels Exp $	 */

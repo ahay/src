@@ -28,7 +28,6 @@ void sf_error( char *format, ... )
 
     fprintf (stderr, "\n");
 
-    sf_close();
     exit(EXIT_FAILURE); 
 }
 
@@ -53,5 +52,5 @@ void sf_warning( char *format, ... )
     fprintf (stderr, "\n");
 }
 
-/* 	$Id: error.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: error.c,v 1.4 2004/07/02 11:54:28 fomels Exp $	 */
 
