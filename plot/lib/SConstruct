@@ -40,6 +40,9 @@ else:
 ##############################################################################
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
+    libs = ['rsf','m']
+    if os.environ.get('OSTYPE') == 'solaris':
+	libs.append('nsl')
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',
-                LIBS=['rsf','m'],LIBPATH='../../filt/lib')
+                LIBS=libs,LIBPATH='../../filt/lib')
 ##############################################################################

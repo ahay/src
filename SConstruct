@@ -59,6 +59,10 @@ env.Append(CPPPATH=['../../include'],
            LIBPATH=['../../filt/lib'],
            LIBS=['rsf','m'])
 
+if os.environ.get('OSTYPE') == 'solaris':
+    env.Append(LIBS=['nsl'])
+    env['CCFLAGS']='-xO2'
+
 Export('env')
 dirs = ('lib','main','proc','imag')
 

@@ -1,5 +1,13 @@
 #include <stdlib.h>
 
+#ifdef __GNUC__
+#define alloca __builtin_alloca
+#else /* not GNU C  */
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
+#include <alloca.h>
+#endif
+#endif
+
 #include <rsf.h>
 
 #include "createhelix.h"
@@ -47,4 +55,4 @@ filter createhelix(int ndim, int* nd, int* center, int* gap, int* na)
     return aa;
 }
 
-/* 	$Id: createhelix.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: createhelix.c,v 1.5 2003/11/17 19:42:01 fomels Exp $	 */

@@ -70,7 +70,7 @@ int main (int argc, char* argv[])
 		sf_pfacc (-1,nw,cdat);
 		for (i1=0; i1 < n1; i1++) {
 		    bot[i2][i1] = crealf(conjf(cdat[i1])*cdat[i1]);
-		    top[i2][i1] = crealf(conjf(cdat[i1])*ctop[i1]/I);
+		    top[i2][i1] = crealf(-conjf(cdat[i1])*ctop[i1]*I);
 		}
 		smooth(tr1,i2*n1,1,false,top[0]);
 		smooth(tr1,i2*n1,1,false,bot[0]);
@@ -98,4 +98,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Menvelope.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Menvelope.c,v 1.4 2003/11/17 19:42:01 fomels Exp $	 */

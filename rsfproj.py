@@ -123,7 +123,7 @@ bibtex = None
 rerun = None
 
 # temporary (I hope)
-sep = os.path.join(top,"../SEP/bin/")
+sep = os.path.join(os.environ.get('SEP'),'bin/')
 
 ##############################################################################
 # END CONFIGURATION VARIABLES
@@ -248,8 +248,10 @@ View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 Klean = Builder(action = Action(clean,silent,['junk']))
 Build = Builder(action = Action(pstexpen,varlist=['opts']),
                 src_suffix=vpsuffix,suffix=pssuffix)
-PDFBuild = Builder(action = WhereIs('epstopdf') + " $SOURCES",
-                   src_suffix=pssuffix,suffix='.pdf')
+epstopdf = WhereIs('epstopdf')
+if epstopdf:
+    PDFBuild = Builder(action = epstopdf + " $SOURCES",
+		       src_suffix=pssuffix,suffix='.pdf')
 Retrieve = Builder(action = Action(retrieve,varlist=['dir']))
 
 #if WhereIs('dvips'):
@@ -266,8 +268,9 @@ dvips = 0
 Pdf = Builder(action = Action(latex2dvi,varlist=['latex']),
               src_suffix=['.tex','.ltx'],suffix='.pdf')
 
-Read = Builder(action = WhereIs('acroread') + " $SOURCES",
-               src_suffix='.pdf')
+acroread = WhereIs('acroread')
+if acroread:
+    Read = Builder(action = acroread + " $SOURCES",src_suffix='.pdf')
 ressuffix = '.pdf'
 
 #############################################################################
@@ -317,17 +320,21 @@ class Project(Environment):
                     BUILDERS={'View':View,
 #                              'Clean':Klean,
                               'Build':Build,
-                              'PDFBuild':PDFBuild,
+#                              'PDFBuild':PDFBuild,
                               #                              'Dvi':Dvi,
                               #                              'Ps':Ps,
                               'Pdf':Pdf,
-                              'Read':Read,
+#                              'Read':Read,
                               'Retrieve':Retrieve},
                     SCANNERS=[Plots],
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
                     LIBS=['rsf','m'],
                     PROGSUFFIX='.x')
+	if acroread:
+	    self.Append(BUILDERS={'Read':Read})
+	if epstopdf:
+	    self.Append(BUILDERS={'PDFBuild':PDFBuild})
         self['PROGPREFIX']=''
         self.view = []
         self.figs = []
@@ -342,7 +349,8 @@ class Project(Environment):
                 self.paper = self.Pdf(target='paper',source='paper.tex')
                 self.Alias('pdf',self.paper)
             self.paper.target_scanner = Plots
-            self.Alias('read',self.Read('paper'))
+	    if acroread:
+		self.Alias('read',self.Read('paper'))
             self.junk = ['paper.aux','paper.log','paper.bbl',
                          'paper.blg','paper.ps','paper.dvi']
             Clean('paper.pdf',self.junk)
@@ -426,9 +434,10 @@ class Project(Environment):
         else:
             plot = None
             build = target2 + pssuffix
-        buildPDF = self.PDFBuild(target2,build)
-        self.pdfs.append(buildPDF)
-        self.Alias(target + '.buildPDF',buildPDF)
+	if epstopdf:
+	    buildPDF = self.PDFBuild(target2,build)
+	    self.pdfs.append(buildPDF)
+	    self.Alias(target + '.buildPDF',buildPDF)
         return plot
     def Combine(self,target,source,how,result=0,vppen=None,**kw):
         if not type(source) is types.ListType:

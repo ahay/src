@@ -37,3 +37,5 @@ PLOT
 LATEX
 	documentation
 	package
+
+scons CC=`which cc` AR=`which ar` config

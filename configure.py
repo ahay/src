@@ -7,6 +7,7 @@ from SCons.Defaults import StaticCheckSet, SharedCheckSet
 
 def check_all(context):
     cc(context)
+    ar(context)
     api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
         cxx(context)
@@ -14,6 +15,15 @@ def check_all(context):
         f77(context)
     if 'fortran-90' in api:
         f90(context)
+
+def ar(context):
+    context.Message("checking ar ... ")
+    AR = context.env.get('AR')
+    if AR:
+        context.Result(AR)   
+    else:
+        context.Result(0)
+        sys.exit(1)
 
 def cc(context):
     context.Message("checking C compiler ... ")
@@ -189,6 +199,7 @@ def intel(context):
 
 def options(opts):
     opts.Add('ENV','SCons environment')
+    opts.Add('AR','Static library archiver')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

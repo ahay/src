@@ -42,7 +42,10 @@ else:
 ##############################################################################
 for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
+    libs = ['m']
+    if os.environ.get('OSTYPE') == 'solaris':
+	libs.append('nsl')
+    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS=libs)
 
 api = string.split(string.lower(env.get('API','')),',')
 
