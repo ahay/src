@@ -92,7 +92,7 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 # PYTHON MODULES
 ##########################################################################
 
-for src in ('doc','proj','prog'):
+for src in ('doc','proj','prog','tex'):
     py = "rsf%s.py"% src
     pyc = py + 'c'
     env.Install(pydir,py)
