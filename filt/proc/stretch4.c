@@ -1,3 +1,22 @@
+/* Inverse spline interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -15,6 +34,14 @@
 #define MIN(x,y) ((x) < (y) ? (x) : (y))
 #endif
 
+#ifndef _stretch4_h
+
+typedef struct Map4 *map4;
+/* abstract data type */
+/*^*/
+
+#endif
+
 struct Map4 {
     int nt, nd, ib, ie;
     float t0,dt, eps;
@@ -24,7 +51,10 @@ struct Map4 {
     bands slv;
 };
 
-map4 stretch4_init (int n1, float o1, float d1, int nd, float eps)
+map4 stretch4_init (int n1, float o1, float d1 /* regular axis */, 
+		    int nd                     /* data samples */, 
+		    float eps                  /* regularization */)
+/*< initialize >*/
 {
     int i;
     map4 str;
@@ -51,7 +81,8 @@ map4 stretch4_init (int n1, float o1, float d1, int nd, float eps)
     return str;
 }
 
-void stretch4_define (map4 str, float* coord)
+void stretch4_define (map4 str, const float* coord)
+/*< set coordinates >*/
 {
     int id, ix, i1, n1, i, j, i2;
     float rx, d, o[3], *w;
@@ -117,7 +148,8 @@ void stretch4_define (map4 str, float* coord)
     }
 }
 
-void stretch4_apply (map4 str, float* ord, float* mod)
+void stretch4_apply (map4 str, const float* ord, float* mod)
+/*< transform ordinates to model >*/
 {
     int id, it, i, nt, i1, i2;
     float *w, *mm;
@@ -165,6 +197,7 @@ void stretch4_apply (map4 str, float* ord, float* mod)
 }
 
 void stretch4_close (map4 str)
+/*< free allocated storage >*/
 {
     int i;
 
@@ -182,5 +215,5 @@ void stretch4_close (map4 str)
     free (str);
 }
 
-/* 	$Id: stretch4.c,v 1.5 2004/06/03 05:35:51 fomels Exp $	 */
+/* 	$Id$	 */
 

@@ -1,3 +1,22 @@
+/* Smooth derivative by shaping regularization */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "smoothder.h"
@@ -13,7 +32,12 @@ static int n, n2;
 static float **tmp, *tmp1, *tmp2;
 static bool diff, dip;
 
-int smoothder_init(int ndim, int *rect, int *ndat, bool diff1, bool dip1) 
+int smoothder_init(int ndim   /* number of dimensions */, 
+		   int *rect  /* smoothing radius [ndim] */, 
+		   int *ndat  /* data size [ndim] */, 
+		   bool diff1 /* use anisotropic diffusion */, 
+		   bool dip1  /* use slope */) 
+/*< initialize >*/
 {
     int i, n1;
     
@@ -48,6 +72,7 @@ int smoothder_init(int ndim, int *rect, int *ndat, bool diff1, bool dip1)
 }
 
 void smoothder_close(void)
+/*< free allocated storage >*/
 {
     free(tmp1);
     free(tmp);
@@ -57,7 +82,11 @@ void smoothder_close(void)
     if (dip) trisl_close();
 }
 
-void smoothder(int niter, float* weight, float* data, float* der) 
+void smoothder(int niter     /* number of iterations */, 
+	       float* weight /* data weighting */, 
+	       float* data   /* input data */, 
+	       float* der    /* output derivative */) 
+/*< find the derivative >*/
 {
  
     if (NULL != weight) {
@@ -68,7 +97,12 @@ void smoothder(int niter, float* weight, float* data, float* der)
     }
 }
 
-void smoothdip(int niter, float** dip, float* weight, float* data, float* der) 
+void smoothdip(int niter     /* number of iterations */, 
+	       float** dip   /* slope */, 
+	       float* weight /* data weighting */, 
+	       float* data   /* input data */, 
+	       float* der    /* output derivative */) 
+/*< find the derivative along slope >*/
 {
     trisl_set(dip);
 
@@ -81,7 +115,12 @@ void smoothdip(int niter, float** dip, float* weight, float* data, float* der)
 }
 
 
-void smoothdiff(int niter, int ncycle, float* weight, float* data, float* der) 
+void smoothdiff(int niter     /* number of iterations */, 
+		int ncycle    /* number of cycles */, 
+		float* weight /* data weighting */, 
+		float* data   /* input data */, 
+		float* der    /* output derivative */) 
+/*< find the derivative using anisotropic diffusion >*/
 {
     int i, iter;
 

@@ -1,6 +1,27 @@
+/* B-spline interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "spline.h"
+
 #include "banded.h"
 #include "tridiagonal.h"
+/*^*/
 
 static const float s3 = 0.75, s4 = 2./3., s6 = 11./20., s8 = 151./315.;
 static const float m4 = 0.625, m6 = 77./144., m8 = 151./320.;  
@@ -12,7 +33,9 @@ static const float flt6[] = {26./120., 1./120.};
 static const float flt8[] = {1191./5040., 120./5040., 1./5040.};
 static const float mom8[] = {2741./11520., 298./11520., 3./11520.};
 
-bands spline_init (int nw, int nd)
+bands spline_init (int nw /* interpolator length */, 
+		   int nd /* data length */)
+/*< initialize a banded matrix >*/
 {
     bands slv;
     int   na;
@@ -49,7 +72,8 @@ bands spline_init (int nw, int nd)
     return slv;
 }
 
-tris spline4_init (int nd)
+tris spline4_init (int nd /* data length */)
+/*< initialize a tridiagonal matrix for cubic splines >*/
 {
     tris slv;
     
@@ -60,6 +84,7 @@ tris spline4_init (int nd)
 }
 
 void spline4_post (int n, int n1, int n2, const float* inp, float* out)
+/*< cubic spline post-filtering >*/
 {
     int i;
     float o4;
@@ -78,6 +103,7 @@ void spline4_post (int n, int n1, int n2, const float* inp, float* out)
 }
 
 void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
+/*< 2-D spline post-filtering >*/
 {
     int i1, i2;
     for (i2 = 0; i2 < n2; i2++) {
@@ -94,4 +120,4 @@ void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
     }
 }
 
-/* 	$Id: spline.c,v 1.3 2004/04/03 02:41:17 fomels Exp $	 */
+/* 	$Id$	 */

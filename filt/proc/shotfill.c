@@ -1,6 +1,26 @@
+/* Differential shot continuation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "shotfill.h"
 #include "cbanded.h"
@@ -11,7 +31,10 @@ static float **c, *diag, s, h1, b0[3], eps;
 static void filt2matrix(const float complex *filt,
 			float* d, float complex *dd);
 
-void shotfill_init (int nh_in, float h0, float dh, float ds, float eps1)
+void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */, 
+		    float ds                      /* shot sampling */, 
+		    float eps1                    /* regularization */)
+/*< initialize >*/
 {
     nh = nh_in;
     offd[0] = sf_complexalloc(nh-1);
@@ -36,6 +59,7 @@ void shotfill_init (int nh_in, float h0, float dh, float ds, float eps1)
 }
 
 void shotfill_close (void)
+/*< free allocated storage >*/
 {
     free(*a);
     free(a);
@@ -61,7 +85,8 @@ static void filt2matrix(const float complex *filt,
     dd[2] = filt[2] * conjf (filt[0]);
 }
 
-void shotfill_define (float w)
+void shotfill_define (float w /* log-stretch frequency */)
+/*< Fill the shot continuation matrix >*/
 {
     float den, h;
     float complex *b;
@@ -107,8 +132,10 @@ void shotfill_define (float w)
     cbanded_define(diag,offd);
 }
 
-void shotfill_apply (const float complex *s1, const float complex *s2, 
-		     float complex *s)
+void shotfill_apply (const float complex *s1, 
+		     const float complex *s2 /* input shots [nh] */, 
+		     float complex *s        /* interpolated shot [nh] */)
+/*< interpolate a shot gather >*/
 {
     float complex *b, sum1, sum2; 
     int ih;

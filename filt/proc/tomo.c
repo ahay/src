@@ -1,3 +1,22 @@
+/* Simple tomographic operator */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -8,12 +27,10 @@
 static int nz, nx, np;
 static float dz, dx, dp, p0;
 
-/* initializer (constructor) 
-np1 - number of slopes
-n1, n2 - grid dimensions
-d1, d2 - cell size
-*/
-void tomo_init(int np1, int n1, int n2, float d1, float d2)
+void tomo_init(int np1            /* number of slopes */, 
+	       int n1, int n2     /* grid dimensions */, 
+	       float d1, float d2 /* grid sampling */)
+/*< initialize >*/
 {
   nz = n1;
   nx = n2;
@@ -25,16 +42,8 @@ void tomo_init(int np1, int n1, int n2, float d1, float d2)
   p0 = -1.;
 }
 
-/* linear operator: forward and ajoint
---------------------------------------
-adj: adjoint flag (either t = L s (adj=false) or s = L' t (adj=true) 
-add: addition flag (if true, t = t + L v or s = s + L' t)
-ns: total size of s (ns = nz*nx) nz is the fast axis
-nt: size of t (nt = np*nx) np is the fast axis
-s: slowness
-t: traveltime
-*/
 void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
+/*< linear operator >*/
 {
   int is, ix, iz, ip, iy, it;
   float p, x, deltax, distance;

@@ -1,19 +1,42 @@
+/* Apply a linear operator on each trace */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "repeat.h"
 
 static int n1, n2;
 static sf_operator oper;
 
-void repeat_init(int m1, int m2, sf_operator oper1)
+void repeat_init(int m1            /* trace length */, 
+		 int m2            /* number of traces */, 
+		 sf_operator oper1 /* operator */)
+/*< initialize >*/
 {
     n1 = m1;
     n2 = m2;
     oper = oper1;
 }
 
-/* Causal integration */
 void repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< combined linear operator >*/
 {
     int i2;       
     
@@ -26,5 +49,5 @@ void repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
     }
 }
 
-/* 	$Id: repeat.c,v 1.1 2004/04/05 14:38:29 fomels Exp $	 */
+/* 	$Id$	 */
 

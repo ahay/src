@@ -1,9 +1,38 @@
+/* Inverse linear interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "stretch.h"
 #include "tridiagonal.h"
+
+#ifndef _stretch_h
+
+typedef struct Map *map;
+/* abstract data type */
+/*^*/
+
+#endif
+
 
 struct Map {
     int nt, nd, ib, ie;
@@ -14,7 +43,11 @@ struct Map {
     tris slv;
 };
 
-map stretch_init (int n1, float o1, float d1, int nd, float eps, bool narrow)
+map stretch_init (int n1, float o1, float d1 /* regular axis */, 
+		  int nd                     /* data length */, 
+		  float eps                  /* regularization */, 
+		  bool narrow                /* if zero boundary */)
+/*< initialize >*/
 {
     map str;
     
@@ -38,7 +71,8 @@ map stretch_init (int n1, float o1, float d1, int nd, float eps, bool narrow)
     return str;
 }
 
-void stretch_define (map str, float* coord)
+void stretch_define (map str, const float* coord)
+/*< define coordinates >*/
 {
     int id, ix, i1;
     float rx, r1;
@@ -93,7 +127,8 @@ void stretch_define (map str, float* coord)
     }
 }
 
-void stretch_apply (map str, float* ord, float* mod)
+void stretch_apply (map str, const float* ord, float* mod)
+/*< convert ordinates to model >*/
 {
     int id, i1, i2;
     float w1, w2;
@@ -125,7 +160,8 @@ void stretch_apply (map str, float* ord, float* mod)
     }
 }
 
-void stretch_invert (map str, float* ord, float* mod)
+void stretch_invert (map str, float* ord, const float* mod)
+/*< convert model to ordinates by linear interpolation >*/
 {
     int id, i1, i2;
     float w1, w2;
@@ -141,6 +177,7 @@ void stretch_invert (map str, float* ord, float* mod)
 }
 
 void stretch_close (map str)
+/*< free allocated storage >*/
 {
     free (str->x);
     free (str->m);
@@ -152,5 +189,4 @@ void stretch_close (map str)
     free (str);
 }
 
-/* 	$Id: stretch.c,v 1.4 2004/04/03 02:41:17 fomels Exp $	 */
-
+/* 	$Id$	 */

@@ -1,3 +1,22 @@
+/* Cubic spline interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h> 
 
 #include "spline3.h"
@@ -7,7 +26,9 @@ static int n;
 static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx;
 static tris slv;
 
-void spine3_init(int n1) {
+void spine3_init(int n1 /*< trace length >*/) 
+/*< initialize >*/
+{
     n = n1;
     h = sf_floatalloc(n-1);
     x = sf_floatalloc(n-1);
@@ -21,7 +42,9 @@ void spine3_init(int n1) {
     slv = tridiagonal_init (n-2);
 }
 
-void spine3_init1(int n1, float o1, float d1) {
+void spine3_init1(int n1, float o1, float d1)
+/*< initialize for regular trace interpolation >*/ 
+{
     n = n1;
     x0 = o1;
     dx = d1;
@@ -36,7 +59,9 @@ void spine3_init1(int n1, float o1, float d1) {
     tridiagonal_const_define (slv,4.*d1,d1);
 }
 
-void spline3_close (void) {
+void spline3_close (void) 
+/*< free allocated storage >*/
+{
     free (h);
     free (a);
     free (*coeff);
@@ -44,13 +69,16 @@ void spline3_close (void) {
     tridiagonal_close (slv);
 }
 
-void spline3_close1 (void) {
+void spline3_close1 (void) 
+/*< free allocated storage for regular trace >*/
+{
     free (*coeff);
     free (coeff);
     tridiagonal_close (slv);
 }
 
 void spline_coeffs(float** table)
+/*< feel spline coefficients table >*/
 {
     int k;
     float xk, fk;
@@ -84,6 +112,7 @@ void spline_coeffs(float** table)
 }
 
 void spline_coeffs1(float* table1)
+/*< feel spline coefficients table for regular trace >*/
 {
     int k;
     float fk;
@@ -112,12 +141,8 @@ void spline_coeffs1(float* table1)
     }
 }
 
-/* Function: spline_eval
-   ---------------------
-   Evaluate a cubic spline
-   y - where to evaluate
-*/
 float spline_eval(float y)
+/*< evaluate a cubic spline >*/
 {
     float dh=0., s;
     int i, k;
@@ -138,6 +163,7 @@ float spline_eval(float y)
 }
 
 float spline_eval1(float y)
+/*< evaluate a cubic spline for regular trace >*/
 {
     float dh=0., s;
     int i, k;
@@ -155,4 +181,4 @@ float spline_eval1(float y)
     return s;
 }
 
-/* 	$Id: spline3.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */

@@ -1,6 +1,34 @@
+/* Triangle smoothing */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "triangle.h"
+
+#ifndef _triangle_h
+
+typedef struct Triangle *triangle;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Triangle {
     float *tmp;
@@ -16,12 +44,9 @@ static void triple (int o, int d, int nx, int nb,
 		    float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp);
 
-/* 
-   Triangle smoothing in 1-D 
-   nbox - triangle length
-   ndat - data length
-*/
-triangle triangle_init (int nbox, int ndat)
+triangle triangle_init (int nbox /* triangle length */, 
+			int ndat /* data length */)
+/*< initialize >*/
 {
     triangle tr;
 
@@ -150,14 +175,22 @@ static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp)
     }
 }
 
-void smooth (triangle tr, int o, int d, bool der, float *x)
+void smooth (triangle tr  /* smoothing object */, 
+	     int o, int d /* trace sampling */, 
+	     bool der     /* if derivative */, 
+	     float *x     /* data (smoothed in place) */)
+/*< apply triangle smoothing >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
     doubint (tr->np,tr->tmp,der);
     triple (o,d,tr->nx,tr->nb,x,tr->tmp);
 }
 
-void smooth2 (triangle tr, int o, int d, bool der, float *x)
+void smooth2 (triangle tr  /* smoothing object */, 
+	      int o, int d /* trace sampling */, 
+	      bool der     /* if derivative */, 
+	      float *x     /* data (smoothed in place) */)
+/*< apply adjoint triangle smoothing >*/
 {
     triple2 (o,d,tr->nx,tr->nb,x,tr->tmp);
     doubint (tr->np,tr->tmp,der);
@@ -165,10 +198,10 @@ void smooth2 (triangle tr, int o, int d, bool der, float *x)
 }
 
 void  triangle_close(triangle tr)
+/*< free allocated storage >*/
 {
     free (tr->tmp);
     free (tr);
 }
 
-/* 	$Id: triangle.c,v 1.5 2004/03/13 06:00:33 fomels Exp $	 */
-
+/* 	$Id$	 */

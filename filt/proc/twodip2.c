@@ -1,8 +1,28 @@
+/* Two-slope estimation by plane-wave destruction */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "twodip2.h"
 #include "twodiv2.h"
@@ -16,8 +36,12 @@ static bool sign;
 
 static void border(float** u);
 
-void twodip2_init(int nx, int ny, float fx, float fy, 
-		  bool sign1, bool gauss, bool both)
+void twodip2_init(int nx, int ny     /* data size */, 
+		  float fx, float fy /* smoothing radius */, 
+		  bool sign1         /* if keep slope signs */, 
+		  bool gauss         /* Gaussian versus triangle smoothing */, 
+		  bool both          /* both slopes or one */)
+/*< initialize >*/
 {
     n1=nx; n2=ny; n=n1*n2;
     u2 = sf_floatalloc2(n1,n2);
@@ -37,6 +61,7 @@ void twodip2_init(int nx, int ny, float fx, float fy,
  }
 
 void twodip2_close(void)
+/*< free allocated storage >*/
 {
     free (u1[0][0]); free (u1[0]); free (u1);
     free (u2[0]); free (u2);
@@ -45,8 +70,14 @@ void twodip2_close(void)
     twodiv2_close();
 }
 
-void twodip2(int niter, int nw, int nj1, int nj2, 
-	     bool verb, float **u, float*** pq, bool **mask)
+void twodip2(int niter        /* number of iterations */, 
+	     int nw           /* filter order */, 
+	     int nj1, int nj2 /* dealisianing stretch */, 
+	     bool verb        /* verbosity flag */, 
+	     float **u        /* input data */, 
+	     float*** pq      /* output slopes */, 
+	     bool **mask      /* mask for missing data */)
+/*< estimate slopes >*/
 {
     int i, iter;
     float mean, usum, psum, qsum, ui, dpi, pi;
@@ -122,8 +153,14 @@ void twodip2(int niter, int nw, int nj1, int nj2,
 }
 
 
-void otherdip2(int niter, int nw, int nj1, int nj2, 
-	       bool verb, float **u, float*** pq, bool **mask)
+void otherdip2(int niter        /* number of iterations */, 
+	       int nw           /* filter order */, 
+	       int nj1, int nj2 /* dealising stretch */, 
+	       bool verb        /* verbosity flag */, 
+	       float **u        /* input data */, 
+	       float*** pq      /* output slope */, 
+	       bool **mask      /* mask for missing data */)
+/*< estimate the second slope only >*/
 {
     int i, iter;
     float mean, usum, psum, qsum, ui, dpi, pi;

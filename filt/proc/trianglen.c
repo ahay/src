@@ -1,3 +1,22 @@
+/* N-D triangle smoothing as a linear operator */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "triangle.h"
 #include "trianglen.h"
 
@@ -7,7 +26,10 @@ static int *n, s[SF_MAX_DIM], nd, dim;
 static triangle *tr;
 static float *tmp;
 
-void trianglen_init (int ndim, int *nbox, int *ndat)
+void trianglen_init (int ndim  /* number of dimensions */, 
+		     int *nbox /* triangle radius [ndim] */, 
+		     int *ndat /* data dimensions [ndim] */)
+/*< initialize >*/
 {
     int i;
 
@@ -26,6 +48,7 @@ void trianglen_init (int ndim, int *nbox, int *ndat)
 }
 
 void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+/*< linear operator >*/
 {
     int i, j, i0;
 
@@ -67,6 +90,7 @@ void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 }
 
 void trianglen_close(void)
+/*< free allocated storage >*/
 {
     int i;
 
@@ -79,4 +103,4 @@ void trianglen_close(void)
     free(tr);
 }
 
-/* 	$Id: trianglen.c,v 1.1 2004/04/05 14:38:29 fomels Exp $	 */
+/* 	$Id$	 */

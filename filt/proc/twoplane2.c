@@ -1,4 +1,24 @@
+/* Plane-wave destruction with two slopes */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "twoplane2.h"
 #include "allp2.h"
@@ -7,8 +27,12 @@ static int nx, ny, nw;
 static allpass2 p, q;
 static float *tmp1, *tmp2;
 
-void twoplane2_init (int nw_in, int nj1, int nj2, int nx_in, int ny_in,
-		     float **pp, float **qq)
+void twoplane2_init (int nw_in            /* filter size */, 
+		     int nj1, int nj2     /* dealising stretch */, 
+		     int nx_in, int ny_in /* data size */,
+		     float **pp           /* first slope */, 
+		     float **qq           /* second slope */)
+/*< initialize >*/
 {
     nw = nw_in; nx = nx_in; ny = ny_in;
     p = allpass2_init(nw, nj1, nx, ny, pp);
@@ -21,12 +45,14 @@ void twoplane2_init (int nw_in, int nj1, int nj2, int nx_in, int ny_in,
 }
 
 void twoplane2_close(void)
+/*< free allocated storage >*/
 {
     free (tmp1);
     free (tmp2);
 }
 
 void twoplane2_lop (bool adj, bool add, int n1, int n2, float *xx, float *yy)
+/*< linear operator >*/
 {
     int ix, iy, i;
 

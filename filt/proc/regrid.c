@@ -1,11 +1,35 @@
+/* Convert a helix filter from one data size to another */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "regrid.h"
 
-/* Regrid
-   ------
-   Convert a helix filter from one data size to another. */
-void regrid( int dim, const int* nold, const int* nnew, filter aa) {
+#include "helix.h"
+/*^*/
+
+void regrid( int dim         /* number of dimensions */, 
+	     const int* nold /* old data size [dim] */, 
+	     const int* nnew /* new data size [dim] */, 
+	     filter aa       /* modified filter */) 
+/*< change data size >*/
+{
     int i, h0, h1, h, ii[SF_MAX_DIM];
 
     for (i=0; i < dim; i++) {
@@ -21,5 +45,5 @@ void regrid( int dim, const int* nold, const int* nnew, filter aa) {
     }
 }
 
-/* 	$Id: regrid.c,v 1.1 2004/06/11 10:47:16 fomels Exp $	 */
+/* 	$Id$	 */
 

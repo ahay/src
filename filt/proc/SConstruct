@@ -51,7 +51,11 @@ loconvol lopef mask6 mask matmult mis1 mis2 misif misinput mkwallwt monof2
 monof monofshape mshconest mshelicon mshelix msmis2 mspef nbound nhconest
 nhelicon nhelix nmisinput npef npolydiv2 npolydiv ntriangle oc ocmkwallwt
 ocparcel ocpatch parcel patch patching pef peftc planesignoi polydiv predict
-prefilter printfilter pwd quantile radon randn slinint
+prefilter printfilter pwd quantile radon randn random recfilt regrid repeat
+reshape shotfill signoi smoothder slinint spline3 spline steepdip stretch4
+stretch tcaf1 tcai1 tcai2 tent2 tent tomo triangle1 triangle2 triangle
+trianglen tridiagonal trisl twodip2 twodiv2 twofreq2 twoplane2 weight2 weight
+wilson
 '''
 
 for source in Split(src2):

@@ -1,17 +1,40 @@
+/* Wilson-Burg spectral factorization */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "wilson.h"
 #include "helicon.h"
 #include "polydiv.h"
 
+#include "helix.h"
+/*^*/
+
 static int n, n2;
 static float *au, *bb, *cc, *b, *c;    
 
-/* Wilson-Burg spectral factorization */
-void wilson_init( int nmax) 
+void wilson_init( int nmax /* maximum data size */) 
+/*< initialize >*/
 {
     n = nmax;
     n2 = 2*n-1;
@@ -22,8 +45,13 @@ void wilson_init( int nmax)
     c = sf_floatalloc (n);
 }
 
-float wilson_factor(int niter, float s0, filter ss, 
-		    filter aa, bool verb, float tol) 
+float wilson_factor(int niter /* number of iterations */, 
+		    float s0  /* zero-lag auto-correlation */, 
+		    filter ss /* input auto-correlation */, 
+		    filter aa /* output factor */, 
+		    bool verb /* verbosity flag */, 
+		    float tol /* tolerance */)
+/*< Factor >*/ 
 {
     float eps;
     int i, iter;
@@ -62,7 +90,9 @@ float wilson_factor(int niter, float s0, filter ss,
     return sqrtf(cc[n-1]);
 }
 
-void wilson_close( void) {
+void wilson_close( void) 
+/*< free allocated storage >*/
+{
     polydiv_close();
     free (au);
     free (bb);

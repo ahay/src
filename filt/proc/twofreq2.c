@@ -1,8 +1,28 @@
+/* Estimate two frequency components */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "twofreq2.h"
 #include "twodiv2.h"
@@ -13,7 +33,10 @@ static float *u1, *u2, *dp;
 static int n1, n2, n;
 static const int niter=100;
 
-void twofreq2_init(int nx, int ny, float fx, float fy, bool gauss)
+void twofreq2_init(int nx, int ny     /* data size */, 
+		   float fx, float fy /* smoothing radius */, 
+		   bool gauss         /* Gaussian or triangle smoothing */)
+/*< initialize >*/
 {
     n1=nx; n2=ny; n=n1*n2;
     u1 = sf_floatalloc(n*4);
@@ -24,6 +47,7 @@ void twofreq2_init(int nx, int ny, float fx, float fy, bool gauss)
 }
 
 void twofreq2_close(void)
+/*< free allocated storage >*/
 {
     free (u1);
     free (u2);
@@ -31,7 +55,11 @@ void twofreq2_close(void)
     twodiv2_close();
 }
 
-void twofreq2(int niter, bool verb, float *u, float** pq)
+void twofreq2(int niter  /* number of iterations */, 
+	      bool verb  /* verbosity flag */, 
+	      float *u   /* input data */, 
+	      float** pq /* estimated frequencies */)
+/*< estimate >*/
 {
     int i, iter;
     float mean, usum, psum1, psum2, psum3, psum4, ui;

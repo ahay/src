@@ -1,13 +1,41 @@
+/* Tridiagonal matrix solver */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "tridiagonal.h"
+
+#ifndef _tridiagonal_h
+
+typedef struct Tris *tris;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Tris {
     int n;
     float *d[2], *o[2], *x[2];  
 };
 
-tris tridiagonal_init (int n)
+tris tridiagonal_init (int n /* matrix size */)
+/*< initialize >*/
 {
     tris slv;
     
@@ -26,7 +54,10 @@ tris tridiagonal_init (int n)
     return slv;
 }
 
-void tridiagonal_define (tris slv, float* diag, float* offd)
+void tridiagonal_define (tris slv    /* solver object */, 
+			 float* diag /* diagonal */, 
+			 float* offd /* off-diagonal */)
+/*< fill the matrix >*/
 {
     int k;
     float t;
@@ -45,7 +76,10 @@ void tridiagonal_define (tris slv, float* diag, float* offd)
     }
 }
 
-void tridiagonal_const_define (tris slv, float diag, float offd)
+void tridiagonal_const_define (tris slv   /* solver object */, 
+			       float diag /* diagonal */, 
+			       float offd /* off-diagonal */)
+/*< fill the matrix for the Toeplitz case >*/
 {
     int k;
     
@@ -61,7 +95,9 @@ void tridiagonal_const_define (tris slv, float diag, float offd)
     }
 }
 
-void tridiagonal_solve (tris slv, float* b)
+void tridiagonal_solve (tris slv /* solver object */, 
+			float* b /* in - right-hand side, out - solution */)
+/*< invert the matrix >*/
 {
     int k;
 
@@ -84,6 +120,7 @@ void tridiagonal_solve (tris slv, float* b)
 }
 
 void tridiagonal_close (tris slv)
+/*< free allocated storage >*/
 {
     free (slv->d[0]); free (slv->d[1]); 
     free (slv->o[0]); free (slv->o[1]); 
@@ -91,4 +128,4 @@ void tridiagonal_close (tris slv)
     free (slv);
 }
 
-/* 	$Id: tridiagonal.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */
