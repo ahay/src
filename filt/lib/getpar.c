@@ -28,10 +28,10 @@
 
 #include "getpar.h"
 #include "error.h"
-#include "simtab.h"
 #include "alloc.h"
 
 #include "_bool.h"
+#include "simtab.h"
 /*^*/
 
 static sf_simtab pars;
@@ -106,6 +106,12 @@ void sf_parclose (void)
     sf_simtab_close (pars);
 }
 
+void sf_parout (FILE *file)
+/*< write the parameters to a file >*/
+{
+    sf_simtab_output (pars,file);
+}
+
 char* sf_getprog (void) 
 /*< returns name of the running program >*/ 
 {
@@ -177,5 +183,11 @@ bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n)
 {
     return sf_simtab_getbools(pars,key,par,n);
 } 
+
+sf_simtab sf_getpars (void)
+/*< provide access to the parameter table >*/
+{
+    return pars;
+}
  
 /* 	$Id$	 */

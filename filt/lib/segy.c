@@ -336,6 +336,7 @@ static struct segy {
 /* Big-endian to Little-endian conversion and back */
 static int convert2(const char* buf);
 static int convert4(const char* buf);
+static float fconvert4(const char* buf);
 static void insert2(int y, char* buf);
 static void insert4(int y, char* buf);
 static void swapb(byte *x, byte *y);
@@ -400,6 +401,24 @@ static int convert4(const char* buf)
     }
 
     return (int) x.s;
+}
+
+static float fconvert4(const char* buf)
+/* convert buf to 4-byte float */
+{
+    union {
+	byte b[4];
+	float s;
+    } x;
+
+    memcpy(x.b,buf,4);
+
+    if (little_endian) {
+	swapb(x.b,x.b+3);
+	swapb(x.b+1,x.b+2);
+    }
+
+    return x.s;
 }
 
 static void insert4(int y, char* buf)
@@ -594,6 +613,7 @@ format: 1: IBM, 2: int4, 3: int2
 	    case 1: trace[i] = ibm2float (buf);       break; /* IBM float */
 	    case 2: trace[i] = (float) convert4(buf); break; /* int4 */
 	    case 3: trace[i] = (float) convert2(buf); break; /* int2 */
+	    case 5: trace[i] = fconvert4(buf);        break; /* IEEE float */
 	    default: sf_error("Unknown format %d",format); break;
 	}
     }

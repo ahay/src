@@ -55,9 +55,9 @@
 
 #include "file.h"
 #include "getpar.h"
-#include "simtab.h"
 #include "alloc.h"
 #include "error.h"
+#include "simtab.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -301,6 +301,21 @@ void sf_settype (sf_file file, sf_datatype type)
 	default:
 	    sf_putint(file,"esize",(int) sizeof(char));
 	    break;
+    }
+}
+
+void sf_setpars (sf_file file)
+/*< change parameters to those from the command line >*/
+{
+    char *in;
+
+    in = sf_histstring(file,"in");
+    sf_simtab_close(file->pars);
+    file->pars = sf_getpars();
+
+    if (NULL != in) {
+	sf_putstring(file,"in",in);
+	free(in);
     }
 }
 

@@ -10,15 +10,19 @@
 typedef struct {
     int     n;
     float o,d;
+    char   *l;
 } axa;
 /*^*/
 
 #endif
 
+/*------------------------------------------------------------*/
+
 void iaxa(sf_file FF, axa *AA, const int i) 
-/*< read [n,o,d] for axis i >*/
+/*< read [n,o,d,l] for axis i >*/
 {
     char BB[3];
+    char LL[7];
     int     n;
     float o,d;
 
@@ -33,12 +37,18 @@ void iaxa(sf_file FF, axa *AA, const int i)
     (void) snprintf(BB,3,"d%d",i);
     if(! sf_histfloat(FF,BB,&d)) d=1;
     AA->d=d;
+
+    (void) snprintf(LL,7,"label%d",i);
+    if( NULL == (AA->l = sf_histstring(FF,LL))) AA->l=" ";
 }
 
+/*------------------------------------------------------------*/
+
 void oaxa(sf_file FF, axa *AA, const int i) 
-/*< write [n,o,d] for axis i >*/
+/*< write [n,o,d,l] for axis i >*/
 {
     char BB[3];
+    char LL[7];
 
     (void) snprintf(BB,3,"n%d",i);
     sf_putint(FF,BB,AA->n);
@@ -48,10 +58,17 @@ void oaxa(sf_file FF, axa *AA, const int i)
 
     (void) snprintf(BB,3,"d%d",i);
     sf_putfloat(FF,BB,AA->d);
+
+    (void) snprintf(LL,7,"label%d",i);
+    sf_putstring(FF,LL,AA->l);
 }
 
+/*------------------------------------------------------------*/
+
 void raxa(axa AA) 
-/*< report [n,o,d] for axis AA >*/
+/*< report [n,o,d,l] for axis AA >*/
 {    
-    sf_warning("n=%d o=%f d=%f",AA.n,AA.o,AA.d);
+    sf_warning("n=%4d \t o=%f \t d=%f \t l=%s",AA.n,AA.o,AA.d,AA.l);
 }
+
+/*------------------------------------------------------------*/
