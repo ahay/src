@@ -10,8 +10,22 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/chevron'
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/seab'
+Fetch('apr18.H',datdir)
 
+Flow('data','apr18.H','dd data_format=native_float')
+Flow('bin','data',
+     '''window n1=1 f1=2 | math output='(2978-input)/387' |
+     bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')
+
+def grey(title):
+    return '''
+    grey pclip=100 labelsz=10 titlesz=12
+    transp=n yreverse=n
+    label1=longitude label2=latitude title="%s"
+    ''' % title
+
+Result('seabin','bin',grey('April 18 Binned'))
 
 ###########################################################################
 End()
