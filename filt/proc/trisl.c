@@ -48,10 +48,14 @@ static void forw(int i2, const float* t1, float* t2)
     int i1, it;
     float t;
 
-    if (i2 < rect) {
-	back(2*rect-1-i2,t2,t1);
-    } else if (i2 >= n2+rect-1) {
-	back(2*(n2+rect)-3-i2,t2,t1);
+    if (i2 < rect-1) {
+	back(2*(rect-1)-i2,t2,t1);
+    } else if (i2 > n2+rect-1) {
+	back(2*(n2+rect-1)-i2,t2,t1);
+    } else if (i2 == rect-1 || i2 == n2+rect-1) {
+	for (i1=0; i1 < n1-1; i1++) {
+	    t2[i1] += t1[i1];
+	}
     } else {
 	for (i1=0; i1 < n1; i1++) {
 	    t = i1 + p[i2-rect][i1];
@@ -71,10 +75,14 @@ static void back(int i2, float* t1, const float* t2)
     int i1, it;
     float t;
 
-    if (i2 < rect) {
-	forw(2*rect-1-i2,t2,t1);
-    } else if (i2 >= n2+rect-1) {
-	forw(2*(n2+rect)-3-i2,t2,t1);
+    if (i2 < rect-1) {
+	forw(2*(rect-1)-i2,t2,t1);
+    } else if (i2 > n2+rect-1) {
+	forw(2*(n2+rect-1)-i2,t2,t1);
+    } else if (i2 == rect-1 || i2 == n2+rect-1) {
+	for (i1=0; i1 < n1-1; i1++) {
+	    t1[i1] += t2[i1];
+	}	
     } else {
 	for (i1=0; i1 < n1; i1++) {	    
 	    t = i1 + p[i2-rect][i1];
@@ -168,15 +176,10 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (!adj) smooth (tr,0,1,false,tmp1[i2+rect]);
     }
 
-    for (i2=rect-1; i2 >= 0; i2--) {
-	for (i1=0; i1 < n1; i1++) {
-	    tmp1[rect-1-i2][i1] = 0.;
-	}
-    }
-
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    tmp1[n2+rect+i2][i1] = 0.;
+	    tmp1[rect-1-i2][i1]  = tmp1[rect+i2][i1];
+	    tmp1[n2+rect+i2][i1] = tmp1[n2+rect-1-i2][i1];
 	}
     }
     
@@ -184,19 +187,12 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     shifts(tmp1,tmp2);
     roll(true,tmp2);
    
-/*
-    for (i2=rect-1; i2 >= 0; i2--) {
- 	for (i1=0; i1 < n1; i1++) {
-	    tmp2[n2+rect-2-i2][i1] += tmp2[n2+rect+i2][i1];
-	}
-    }
- 
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    tmp2[rect+i2+1][i1] += tmp2[rect-1-i2][i1];
+	    tmp2[rect+i2][i1]      += tmp2[rect-1-i2][i1];
+	    tmp2[n2+rect-1-i2][i1] += tmp2[n2+rect+i2][i1];
 	}
     }
-*/  
  
     for (i2=0; i2 < n2; i2++) {
 	if (adj) smooth (tr,0,1,false,tmp2[i2+rect]);

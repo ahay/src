@@ -161,6 +161,7 @@ combine ={
 class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
+        self.EnsureSConsVersion(0,96)
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
@@ -280,6 +281,9 @@ class Project(Environment):
         kw.update({'suffix':suffix})
         return apply(self.Flow,(target,source,flow),kw)
     def Result(self,target,source,flow=None,suffix=vpsuffix,**kw):
+        if not flow: # two arguments
+            flow = source
+            source = target
         target2 = os.path.join(self.resdir,target)
         plot = apply(self.Plot,(target2,source,flow),kw)
         self.Default (plot)
