@@ -2,7 +2,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "vplot.h"
+#include <rsfplot.h>
 
 #define MAXLINE 2016
 
@@ -91,8 +91,8 @@ int main (int argc, char* argv[])
 	    case VP_DRAW:
 		putchar (c);
 		sscanf (line, "%*c %f %f", &x, &y);
-		vp_putfloat (x * scale);
-		vp_putfloat (y * scale);
+		vp_putfloat0 (x * scale);
+		vp_putfloat0 (y * scale);
 		break;
 	    case VP_TXFONTPREC:
 		putchar (c);
@@ -109,8 +109,8 @@ int main (int argc, char* argv[])
 		while (npts--) {
 		    fgets (line, MAXLINE, stdin);
 		    sscanf (line, "%f %f", &x, &y);
-		    vp_putfloat (x * scale);
-		    vp_putfloat (y * scale);
+		    vp_putfloat0 (x * scale);
+		    vp_putfloat0 (y * scale);
 		}
 		break;
 	    case VP_PMARK:
@@ -118,12 +118,12 @@ int main (int argc, char* argv[])
 		sscanf (line, "%*c %d %d %f", &npts, &mtype, &msize);
 		vp_putint (npts);
 		vp_putint (mtype);
-		vp_putfloat (msize * txscale);
+		vp_putfloat0 (msize * txscale);
 		while (npts--) {
 		    fgets (line, MAXLINE, stdin);
 		    sscanf (line, "%f %f", &x, &y);
-		    vp_putfloat (x * scale);
-		    vp_putfloat (y * scale);
+		    vp_putfloat0 (x * scale);
+		    vp_putfloat0 (y * scale);
 		}
 		break;
 	    case VP_BEGIN_GROUP:
@@ -137,7 +137,7 @@ int main (int argc, char* argv[])
 	    case VP_TEXT:
 		putchar (VP_TEXT);
 		sscanf (line, "%*c %f %d", &size, &orient);
-		vp_putfloat (size * txscale);
+		vp_putfloat0 (size * txscale);
 		if (VP_OLDTEXT == c) orient *= 90;
 		vp_putint (orient);
 		text ();
@@ -145,10 +145,10 @@ int main (int argc, char* argv[])
 	    case VP_GTEXT:
 		putchar (c);
 		sscanf (line, "%*c %f %f %f %f", &x, &y, &xcor, &ycor);
-		vp_putfloat (x * scale * txvecscale);
-		vp_putfloat (y * scale * txvecscale);
-		vp_putfloat (xcor * scale * txvecscale);
-		vp_putfloat (ycor * scale * txvecscale);
+		vp_putfloat0 (x * scale * txvecscale);
+		vp_putfloat0 (y * scale * txvecscale);
+		vp_putfloat0 (xcor * scale * txvecscale);
+		vp_putfloat0 (ycor * scale * txvecscale);
 		text ();
 		break;
 	    case VP_COLOR:
@@ -162,22 +162,22 @@ int main (int argc, char* argv[])
 		sscanf (line, "%*c %d %f %f %f",
 			&col_tab_no, &red, &green, &blue);
 		vp_putint (col_tab_no);
-		vp_putfloat (red * colscale);
-		vp_putfloat (green * colscale);
-		vp_putfloat (blue * colscale);
+		vp_putfloat0 (red * colscale);
+		vp_putfloat0 (green * colscale);
+		vp_putfloat0 (blue * colscale);
 		break;
 	    case VP_FAT:
 		putchar (c);
 		sscanf (line, "%*c %f", &fat);
-		vp_putfloat (fat * fatscale);
+		vp_putfloat0 (fat * fatscale);
 		break;
 	    case VP_WINDOW:
 		putchar (c);
 		sscanf (line, "%*c %f %f %f %f", &xmin, &ymin, &xmax, &ymax);
-		vp_putfloat (scale * xmin);
-		vp_putfloat (scale * ymin);
-		vp_putfloat (scale * xmax);
-		vp_putfloat (scale * ymax);
+		vp_putfloat0 (scale * xmin);
+		vp_putfloat0 (scale * ymin);
+		vp_putfloat0 (scale * xmax);
+		vp_putfloat0 (scale * ymax);
 		break;
 	    case VP_OLDAREA:
 		putchar (c);
@@ -185,14 +185,14 @@ int main (int argc, char* argv[])
 		fgets (line, MAXLINE, stdin);
 		sscanf (line, "%f %d %d", &fat, &maskx, &masky);
 		vp_putint (npts);
-		vp_putfloat (fat * fatscale);
+		vp_putfloat0 (fat * fatscale);
 		vp_putint (maskx);
 		vp_putint (masky);
 		for (i = 0; i < npts; i++) {
 		    fgets (line, MAXLINE, stdin);
 		    sscanf (line, "%f %f", &x, &y);
-		    vp_putfloat (x * scale);
-		    vp_putfloat (y * scale);
+		    vp_putfloat0 (x * scale);
+		    vp_putfloat0 (y * scale);
 		}
 		break;
 	    case VP_AREA:
@@ -202,8 +202,8 @@ int main (int argc, char* argv[])
 		for (i = 0; i < npts; i++) {
 		    fgets (line, MAXLINE, stdin);
 		    sscanf (line, "%f %f", &x, &y);
-		    vp_putfloat (scale * x);
-		    vp_putfloat (scale * y);
+		    vp_putfloat0 (scale * x);
+		    vp_putfloat0 (scale * y);
 		}
 		break;
 	    case VP_PATLOAD:
@@ -234,10 +234,10 @@ int main (int argc, char* argv[])
 		    for (i = 0; i < ny * 2; i++) {
 			fgets (line, MAXLINE, stdin);
 			sscanf (line, "%f %d %f %f", &fat, &col, &off, &rep);
-			vp_putfloat (fat * fatscale);
+			vp_putfloat0 (fat * fatscale);
 			vp_putint (col);
-			vp_putfloat (off * hscale);
-			vp_putfloat (rep * hscale);
+			vp_putfloat0 (off * hscale);
+			vp_putfloat0 (rep * hscale);
 		    }
 		} break;
 	    case VP_BYTE_RASTER:
@@ -248,12 +248,12 @@ int main (int argc, char* argv[])
 		vp_putint (ras_offset);
 		fgets (line, MAXLINE, stdin);
 		sscanf (line, "%f %f", &xcor, &ycor);
-		vp_putfloat (xcor * scale);
-		vp_putfloat (ycor * scale);
+		vp_putfloat0 (xcor * scale);
+		vp_putfloat0 (ycor * scale);
 		fgets (line, MAXLINE, stdin);
 		sscanf (line, "%f %f", &xvplot, &yvplot);
-		vp_putfloat (scale * xvplot);
-		vp_putfloat (scale * yvplot);
+		vp_putfloat0 (scale * xvplot);
+		vp_putfloat0 (scale * yvplot);
 		fgets (line, MAXLINE, stdin);
 		sscanf (line, "%d %d", &xpix, &ypix);
 		vp_putint (xpix);

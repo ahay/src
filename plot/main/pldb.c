@@ -3,7 +3,7 @@
 #include <math.h>
 #include <string.h>
 
-#include "vplot.h"
+#include <rsfplot.h>
 
 static void text (void);
 
