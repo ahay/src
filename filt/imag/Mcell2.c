@@ -9,10 +9,10 @@ int main(int argc, char* argv[])
     bool velocity;
     int is, nz, nx, im, nm, order, nshot, ndim;
     int nt, nt1, nr, ir, it, i;
-    float dt, da, a0, amax, a, pi, t;
-    float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s;
+    float da, a0, amax, pi, t;
+    float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s, *a;
     celltrace ct;
-    sf_file shots, vel, rays;
+    sf_file shots, vel, rays, angles;
 
     sf_init (argc,argv);
     vel = sf_input("in");
@@ -30,21 +30,8 @@ int main(int argc, char* argv[])
     if(!sf_getbool("vel",&velocity)) velocity=true;
     if(!sf_getint("order",&order)) order=4;
 
-    if (!sf_getint("nt",&nt)) sf_error("Need nt=");
-    if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
-    if (!sf_getint("nr",&nr)) sf_error("Need nr=");
+    if (!sf_getint("nt",&nt)) nt=nx*nz;
 
-    if (!sf_getfloat("a0",&a0)) a0 = 0.; 
-    if (!sf_getfloat("amax",&amax)) amax=360.;
-
-    /* convert degrees to radians */
-    pi = acos (-1.);
-    a0 = a0*pi/180.;
-    amax = amax*pi/180.;
-
-    /* figure out angle spacing */
-    da = (nr > 1)? (amax - a0)/(nr-1) : 0.;
- 
     /* get shot locations */
     if (NULL != sf_getstring("shotfile")) {
 	shots = sf_input("shotfile");
@@ -68,6 +55,28 @@ int main(int argc, char* argv[])
 	sf_warning("Shooting from z=%f, x=%f",s[0][0],s[0][1]);
     }
 
+    if (NULL != sf_getstring("anglefile")) {
+	angles = sf_input("anglefile");
+
+	if (!sf_histint(angles,"n1",&nr)) sf_error("No n1= in anglefile");
+    } else {
+	angles = NULL;
+
+	if (!sf_getint("nr",&nr)) sf_error("Need nr=");
+	if (!sf_getfloat("a0",&a0)) a0 = 0.; 
+	if (!sf_getfloat("amax",&amax)) amax=360.;
+
+	/* convert degrees to radians */
+	pi = acosf (-1.);
+	a0 = a0*pi/180.;
+	amax = amax*pi/180.;
+
+	/* figure out angle spacing */
+	da = (nr > 1)? (amax - a0)/(nr-1) : 0.;
+    }
+
+    a = sf_floatalloc(nr);
+ 
     /* specify output dimensions */
     nt1 = nt+1;
     sf_putint (rays,"n1",nt1);
@@ -108,16 +117,22 @@ int main(int argc, char* argv[])
     traj = sf_floatalloc2 (ndim,nt1);
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
+	/* initialize angles */
+	if (NULL != angles) {
+	    sf_read(a,sizeof(float),nr,angles);
+	} else {
+	    for (ir = 0; ir < nr; ir++) {
+		a[ir] = a0+da*ir;
+	    }
+	}
 	for (ir = 0; ir < nr; ir++) { /* loop over rays */
-
 	    /* initialize position */
 	    x[0] = s[is][0]; 
 	    x[1] = s[is][1];
 
 	    /* initialize direction */
-	    a = a0+da*ir;
-	    p[0] = cos(a);
-	    p[1] = sin(a);
+	    p[0] = -cosf(a[ir]);
+	    p[1] = sinf(a[ir]);
 
 	    t = cell_trace (ct, x, p, &it, traj);
 	    if (it < 0) it = -it; /* keep side-exiting rays */
@@ -135,4 +150,3 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
-

@@ -1,12 +1,12 @@
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
 
 #include "fzero.h"
 
 #include <rsf.h>
 
 #define SIGN(a) ((a)>= 0.) 
-#define ABS(a) (((a)>0.)?(a):-(a)) 
 #ifndef MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #endif
@@ -21,7 +21,7 @@ float fzero (float (*func)(float),
     if (0. == fa) return a;
     if (0. == fb) return b;
 
-    if (SIGN(fa) != SIGN(fb)) 
+    if (SIGN(fa) == SIGN(fb)) 
 	sf_error("%s: need different sign for zero finding, "
 		 "got %f and %f",__FILE__,fa,fb);
 
@@ -32,21 +32,21 @@ float fzero (float (*func)(float),
 	   value of b, and c is on the opposite of the zero from b. */
 	if (SIGN(fb) == SIGN(fc)) {
 	    c = a;  fc = fa;
-	    d = b - a;  e = d;
+	    e = d = b - a;  
 	}
-	if (ABS(fc) < ABS(fb)) {
+	if (fabsf(fc) < fabsf(fb)) {
 	    a = b;    b = c;    c = a;
 	    fa = fb;  fb = fc;  fc = fa;
 	}
 	
 	/* Convergence test and possible exit */
 	m = 0.5*(c - b);
-	if ((ABS(m) <= toler) || (fb == 0.0)) return b;
+	if ((fabsf(m) <= toler) || (fb == 0.0)) return b;
    
 	/* Choose bisection or interpolation */
-	if ((ABS(e) < toler) || (ABS(fa) <= ABS(fb))) {
+	if ((fabsf(e) < toler) || (fabsf(fa) <= fabsf(fb))) {
 	    /* Bisection */
-	    d = m;  e = m;
+	    e = d = m;
 	    if (verb) strcpy(method,"bisection");
 	} else {
 	    /* Interpolation */
@@ -70,18 +70,18 @@ float fzero (float (*func)(float),
 		p = -p;
 	    }
 	    /* Is interpolated point acceptable */
-	    if ((2.0*p < 3.0*m*q - ABS(toler*q)) && (p < ABS(0.5*e*q))) {
+	    if ((2.0*p < 3.0*m*q - fabsf(toler*q)) && (p < fabsf(0.5*e*q))) {
 		e = d;  d = p/q;
 	    } else {
 		if (verb) strcpy(method,"interpolation not accepted");
-		d = m;  e = m;
+		e = d = m; 
 	    }
 	} /* Interpolation */
 	
 	/* Next point */
 	a = b;
 	fa = fb;
-	if (ABS(d) > toler) {
+	if (fabsf(d) > toler) {
 	    b += d;
 	} else if (b > c) {
 	    b -= toler;
@@ -90,7 +90,7 @@ float fzero (float (*func)(float),
 	}
 	fb = func(b);
 	
-	if (verb) fprintf(stderr,"b=%g fb=%e method=%s\n",b,fb,method);
+	if (verb) fprintf(stderr,"(%g,%g,%g) fb=%e method=%s\n",a,b,c,fb,method);
     } /* Main loop */
     
     return b;

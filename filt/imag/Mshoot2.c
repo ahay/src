@@ -15,7 +15,7 @@ int main(int argc, char* argv[])
 {
     bool velocity;
     int is, nz, nx, im, nm, order, nshot, ndim, nt, nr, ir, i1, i2, ia;
-    float dt, a, r0, dr, rmax, xmax, a0, amax, da, pi, r1, r2;
+    float a, b, fb, r0, dr, rmax, xmax, a0, amax, da, pi, r1, r2, tol;
     float dz, dx, z0, x0, *angle, *slow, **shot, *time;
     sf_file shots, vel, out;
 
@@ -36,8 +36,7 @@ int main(int argc, char* argv[])
     if(!sf_getbool("vel",&velocity)) velocity=true;
     if(!sf_getint("order",&order)) order=4;
 
-    if (!sf_getint("nt",&nt)) sf_error("Need nt=");
-    if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
+    if (!sf_getint("nt",&nt)) nt=nx*nz;
 
     if (!sf_getint("nr",&nr)) nr=1;
     if (!sf_getfloat("r0",&r0)) r0=x0;
@@ -101,6 +100,7 @@ int main(int argc, char* argv[])
     time = sf_floatalloc (nt);
 
     pi = acos(-1.);
+    if (!sf_getfloat("tol",&tol)) tol=0.1*pi/180.; /* 1/10 degree */
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
 	/* initialize position */
@@ -109,8 +109,8 @@ int main(int argc, char* argv[])
 
 	/* initialize directions */
 	da = 0.01*pi;
-	a0   = atan2f(r0  -xs[1],z0-xs[0]);
-	amax = atan2f(rmax-xs[1],z0-xs[0]);
+	a0   = atan2f(r0  -xs[1],xs[0]-z0);
+	amax = atan2f(rmax-xs[1],xs[0]-z0);
 
 	xr = r0;
 	for (a0 -= da; a0 > - pi; a0 -= da) {
@@ -119,6 +119,7 @@ int main(int argc, char* argv[])
 	}
 	r1 += xr;
 
+	xr = rmax;
 	for (amax += da; amax < pi; amax += da) {
 	    if (shooting(amax) >= 0.) break;
 	}
@@ -131,15 +132,27 @@ int main(int argc, char* argv[])
 	for (ia=0; ia < nr; ia++) {
 	    a = a0+(ia+1)*da;
 	    r2 = xr+shooting(a);
-	    i1 = ceilf((r1-r0)/dr);
-	    i2 = floorf((r2-r0)/dr);
+	    if (r1 < r2) {
+		i1 = ceilf((r1-r0)/dr);
+		i2 = floorf((r2-r0)/dr);
+	    } else {
+		i1 = ceilf((r2-r0)/dr);
+		i2 = floorf((r1-r0)/dr);
+	    }
 	    for (ir=i1; ir <= i2; ir++) {
 		if (ir >= nr) break;
 		if (ir < 0) continue;
 		xr = r0+ir*dr; /* target */
-		a = fzero(shooting,a-da,a,r1-xr,r2-xr,0.1*dr,false);
+
+		b = fzero(shooting,a-da,a,r1-xr,r2-xr,tol,false);
+		fb = shooting(b);
+
+		if (fabsf(fb) > 0.5*dr) 
+		    sf_warning("insufficient accuracy=%f "
+			       "on shot %d, receiver %d",fb,is+1,ir+1);
+ 
 		if (t < time[ir]) { /* select first arrivals */
-		    angle[ir] = a;
+		    angle[ir] = b;
 		    time[ir] = t;
 		}
 	    }
@@ -159,8 +172,8 @@ static float shooting(float a)
     x[0]=xs[0];
     x[1]=xs[1];
     
-    p[0] = cos(a);
-    p[1] = sin(a);
+    p[0] = -cosf(a);
+    p[1] = sinf(a);
 
     t = cell_trace (ct, x, p, &it, NULL);
 
