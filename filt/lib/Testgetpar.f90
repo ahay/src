@@ -35,4 +35,4 @@ contains
   end subroutine assert
 end program Test
 
-!	$Id: Testgetpar.f90,v 1.2 2003/09/29 14:34:55 fomels Exp $	
+!	$Id$	

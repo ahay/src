@@ -35,7 +35,7 @@
 
 int sf_filedims (sf_file file, /*@out@*/ int *n) 
 /*< Find file dimensions.
----
+--- 
 Outputs the number of dimensions dim and a dimension array n[dim] >*/
 {
     int i, dim;

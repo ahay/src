@@ -19,4 +19,4 @@
       stop 
       end
 
-C	$Id: Testfile.f,v 1.3 2004/06/23 08:54:31 fomels Exp $	
+C	$Id$	
