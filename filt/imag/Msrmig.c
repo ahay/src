@@ -24,8 +24,7 @@ int main (int argc, char *argv[])
 {
     bool inv;             /* forward or adjoint */
     bool verb;            /* verbosity */
-    float eps;            /* dip filter constant   */  
-
+    float eps;            /* dip filter constant */  
     int   nr;             /* number of reference velocities */
     float dt;             /* time error */
     int   px,py;          /* padding in the k domain */

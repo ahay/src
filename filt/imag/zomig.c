@@ -34,7 +34,7 @@
 #define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,amx,amy;
+static axa az,aw,alx,aly,amx,amy,ae;
 static bool verb;
 static float eps;
 
@@ -53,6 +53,7 @@ void zomig_init(bool verb_,
 		float  dt,
 		axa az_          /* depth */,
 		axa aw_          /* frequency */,
+		axa ae_          /* experiment */,
 		axa amx_         /* i-line (data) */,
 		axa amy_         /* x-line (data) */,
 		axa alx_         /* i-line (slowness/image) */,
@@ -71,6 +72,7 @@ void zomig_init(bool verb_,
 
     az = az_;
     aw = aw_;
+    ae = ae_;
     amx= amx_;
     amy= amy_;
     alx= alx_;
@@ -83,7 +85,7 @@ void zomig_init(bool verb_,
     ds  = dt/az.d;
 
     /* SSR */
-    ssr_init(az_ ,aw_,
+    ssr_init(az_ ,
 	     amx_,amy_,
 	     alx_,aly_,
 	     pmx ,pmy,
@@ -233,49 +235,52 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 	  slice botdata /* bot data [nw][nmy][nmx] */)
 /*< Apply upward/downward datuming >*/
 {
-    int iz,iw, ilx,ily;
+    int iz,iw,ie, ilx,ily;
     float complex w;
 
-    /* loop over frequencies w */
-    for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
-
-	if (inv) { /* UPWARD DATUMING */
-	    w = eps*aw.d + I*(aw.o+iw*aw.d);
-
-	    cslice_get(botdata,iw,wx[0]);
-	    taper2(wx);
-
-	    slice_get(slow,az.n-1,so[0]);
-	    SOOP( so[ily][ilx] *=2; ); /* 2-way time */
-	    for (iz=az.n-1; iz>0; iz--) {
-		slice_get(slow,iz-1,ss[0]);
-		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
-	    }
+    for(ie=0; ie<ae.n; ie++) {
+	
+	/* loop over frequencies w */
+	for (iw=0; iw<aw.n; iw++) {
+	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
 	    
-	    taper2(wx);
-	    cslice_put(topdata,iw,wx[0]);
-	} else { /* DOWNWARD DATUMING */
-	    w = eps*aw.d - I*(aw.o+iw*aw.d);
-
-	    cslice_get(topdata,iw,wx[0]);
-	    taper2(wx);
-	    
-	    slice_get(slow,0,so[0]);
-	    SOOP( so[ily][ilx] *=2; ); /* 2-way time */
-	    for (iz=0; iz<az.n-1; iz++) {
-		slice_get(slow,iz+1,ss[0]);
-		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
-	    }
-	    
-	    taper2(wx);
-	    cslice_put(botdata,iw,wx[0]);
-	} /* else */
-    } /* iw */
+	    if (inv) { /* UPWARD DATUMING */
+		w = eps*aw.d + I*(aw.o+iw*aw.d);
+		
+		cslice_get(botdata,iw+ie*aw.n,wx[0]);
+		taper2(wx);
+		
+		slice_get(slow,az.n-1,so[0]);
+		SOOP( so[ily][ilx] *=2; ); /* 2-way time */
+		for (iz=az.n-1; iz>0; iz--) {
+		    slice_get(slow,iz-1,ss[0]);
+		    SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
+		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
+		
+		taper2(wx);
+		cslice_put(topdata,iw+ie*aw.n,wx[0]);
+	    } else { /* DOWNWARD DATUMING */
+		w = eps*aw.d - I*(aw.o+iw*aw.d);
+		
+		cslice_get(topdata,iw+ie*aw.n,wx[0]);
+		taper2(wx);
+		
+		slice_get(slow,0,so[0]);
+		SOOP( so[ily][ilx] *=2; ); /* 2-way time */
+		for (iz=0; iz<az.n-1; iz++) {
+		    slice_get(slow,iz+1,ss[0]);
+		    SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
+		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
+		
+		taper2(wx);
+		cslice_put(botdata,iw+ie*aw.n,wx[0]);
+	    } /* else */
+	} /* iw */
+    } /* ie */
 }
 
 /*------------------------------------------------------------*/

@@ -86,7 +86,7 @@ void srmig_init(bool verb_,
     ds  = dt/az.d;
 
     /* SSR */
-    ssr_init(az_ ,aw_,
+    ssr_init(az_ ,
 	     ax_ ,ay_,
 	     alx_,aly_,
 	     px  ,py,

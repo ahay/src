@@ -25,18 +25,17 @@ int main (int argc, char *argv[])
     char *mode;           /* mode of operation */
     bool inv;             /* forward or adjoint */
     bool verb;            /* verbosity */
-    float eps;            /* dip filter constant   */  
-
+    float eps;            /* dip filter constant */  
     int   nr;             /* number of reference velocities */
     float dt;             /* time error */
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
 
-    axa az,amx,amy,aw,alx,aly;
+    axa az,amx,amy,aw,alx,aly,ae;
 
     sf_file Fs;    /*  slowness file S(nlx,nly,nz   ) */
     sf_file Fi;    /*     image file R(nmx,nmy,nz   ) */
-    sf_file Fd,Fe; /*      data file D(nmx,nmy,   nw) */
+    sf_file Fd,Fu; /*      data file D(nmx,nmy,   nw) */
     sf_file Fw;    /* wavefield file W(nmx,nmy,nz,nw) */
 
     slice slow;
@@ -83,25 +82,27 @@ int main (int argc, char *argv[])
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
-		Fe = sf_input ( "in");
+		Fu = sf_input ( "in");
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
-		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");
+		if (SF_COMPLEX != sf_gettype(Fu)) sf_error("Need complex data");
 
-		iaxa(Fe,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
-		iaxa(Fe,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
-		iaxa(Fe,&aw ,3);  aw.l= "w"; oaxa(Fd,&aw ,3);
+		iaxa(Fu,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
+		iaxa(Fu,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
+		iaxa(Fu,&aw ,3);  aw.l= "w"; oaxa(Fd,&aw ,3);
+		iaxa(Fu,&ae ,4);  ae.l= "e"; oaxa(Fd,&ae ,4);
 
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
-		Fe = sf_output("out"); sf_settype(Fe,SF_COMPLEX);
+		Fu = sf_output("out"); sf_settype(Fu,SF_COMPLEX);
 		if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 		
-		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fe,&amx,1);
-		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fe,&amy,2);
-		iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fe,&aw ,3);
+		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fu,&amx,1);
+		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fu,&amy,2);
+		iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fu,&aw ,3);
+		iaxa(Fd,&ae ,4);  ae.l= "e"; oaxa(Fu,&ae ,4);
 	    }
-	    data = slice_init(Fd,amx.n,amy.n,aw.n);
-	    wfld = slice_init(Fe,amx.n,amy.n,aw.n);
+	    data = slice_init(Fd,amx.n,amy.n,aw.n*ae.n);
+	    wfld = slice_init(Fu,amx.n,amy.n,aw.n*ae.n);
 	    break;
 	case 'm':
 	default:
@@ -132,13 +133,13 @@ int main (int argc, char *argv[])
 	    break;
     }
     
-    zomig_init (verb,eps,dt,
-	      az,aw,
-	      amx,amy,
-	      alx,aly,
-	      tmx,tmy,
-	      pmx,pmy,
-	      nr,slow);
+    zomig_init(verb,eps,dt,
+	       az,aw,ae,
+	       amx,amy,
+	       alx,aly,
+	       tmx,tmy,
+	       pmx,pmy,
+	       nr,slow);
 
     switch(mode[0]) {
 	case 'w':

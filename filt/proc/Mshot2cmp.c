@@ -23,24 +23,27 @@
 
 int main(int argc, char* argv[])
 {
-    int nt,ns, ny,nh, iy,ih,is, type, esize;
+    int type, esize;
     off_t pos;
     bool sign;
-    float ds, dy,dh, os, oy,oh;
+    int   ns,    ny,    nh, nt;
+    int   is,    iy,    ih;
+    float os,ds, oy,dy, oh,dh;
     char *trace, *zero;
     sf_file in, out;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+    in  = sf_input ( "in");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nh)) sf_error("No n2= in input");
-    if (!sf_histint(in,"n3",&ns)) sf_error("No n3= in input");
+    if (!sf_histint  (in,"n1",&nt)) sf_error("No n1= in input");
 
-    if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
-    if (!sf_histfloat(in,"d3",&ds)) sf_error("No d3= in input");
+    if (!sf_histint  (in,"n2",&nh)) sf_error("No n2= in input");
     if (!sf_histfloat(in,"o2",&oh)) sf_error("No o2= in input");
+    if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
+
+    if (!sf_histint  (in,"n3",&ns)) sf_error("No n3= in input");
+    if (!sf_histfloat(in,"d3",&ds)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"o3",&os)) sf_error("No o3= in input");
     
     if (!sf_getbool("positive",&sign)) sign=true;
@@ -49,13 +52,13 @@ int main(int argc, char* argv[])
     type = 0.5 + ds/dh;
     
     dy = dh;
-    oy = sign? os + oh: os - oh - type*((nh-1)/type)*dh;
+    oy = sign ? os + oh: os - oh - type*((nh-1)/type)*dh;
     ny = ns*type + nh - 1;
 
-    sf_putint(out,"n2",(nh+type-1)/type);
+    sf_putint  (out,"n2",(nh+type-1)/type);
     sf_putfloat(out,"d2",type*dh);
 
-    sf_putint(out,"n3",ny);
+    sf_putint  (out,"n3",ny);
     sf_putfloat(out,"d3",dy);
     sf_putfloat(out,"o3",oy);
 
@@ -67,11 +70,11 @@ int main(int argc, char* argv[])
     nt *= esize;
 
     trace = sf_charalloc(nt);
-    zero = sf_charalloc(nt);
+    zero  = sf_charalloc(nt);
     memset(zero,0,nt);
 
     sf_fileflush(out,in);
-    sf_setform(in,SF_NATIVE);
+    sf_setform( in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
     
     sf_unpipe(in,(long) ns*nh*nt);
@@ -94,5 +97,3 @@ int main(int argc, char* argv[])
     sf_close();
     exit(0);
 }
-
-/* 	$Id$	 */
