@@ -11,6 +11,7 @@ Takes: < nmod.rsf > stack.rsf
 int main(int argc, char* argv[])
 {
     ctris slv;
+    bool stack;
     int nw,nh,nx,iw,ix,ih,n1,n2,ns;
     float w0,dw, h0,dh,dx,w,w2,h,h2;
     float complex diag,diag2, c1,c2,offd,offd2;
@@ -34,10 +35,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(cmp,"d3",&dw)) sf_error("No d3= in input");
     if (!sf_histfloat(cmp,"o3",&w0)) sf_error("No o3= in input");
 
-    sf_putint(stk,"n3",1);
-    sf_putint(stk,"n2",nw);
-    sf_putfloat(stk,"o2",w0);
-    sf_putfloat(stk,"d2",dw);
+    if (!sf_getbool("stack",&stack)) stack=true;
+    /* if n, don't stack, output everything */
 
     in = sf_complexalloc(nx);
     out = sf_complexalloc(nx);
@@ -48,11 +47,22 @@ int main(int argc, char* argv[])
     if (dh > 0.) {
 	n1 = nh-1; 
 	ns = -1;
+	n2 = -0.5 - h0/dh;		    
     } else {
 	n1 = 0; 
 	ns = 1;
+	n2 = 0.5 - h0/dh;
     }
-    n2 = 0.5 - h0/dh;
+
+    if (stack) {
+	sf_putint(stk,"n3",1);
+	sf_putint(stk,"n2",nw);
+	sf_putfloat(stk,"o2",w0);
+	sf_putfloat(stk,"d2",dw);
+    } else {
+	sf_putint(stk,"n2",(n2-n1+ns)/ns);
+	sf_putfloat(stk,"o2",h0+(n2-n1)*dh);
+    }
 
     for (iw=0; iw < nw; iw++) {
 	sf_warning("frequency %d of %d",iw+1,nw);
@@ -67,7 +77,13 @@ int main(int argc, char* argv[])
 	}
 
 	if (fabsf(w) < dw) {	    
-	    sf_write(out,sizeof(float complex),nx,stk);
+	    if (stack) {
+		sf_write(out,sizeof(float complex),nx,stk);
+	    } else {
+		for (ih=n1; ih != n2; ih += ns) {
+		    sf_write(out,sizeof(float complex),nx,stk);
+		}
+	    }
 	    continue;
 	}
 
@@ -77,7 +93,7 @@ int main(int argc, char* argv[])
 	for (ih=n1; ih != n2; ih += ns) {
 	    for (ix=0; ix < nx; ix++) {
 		if (ih >=0 && ih < nh) {		    
-		    in[ix] = dat[ih][ix] + out[ix];
+		    in[ix] = stack? dat[ih][ix] + out[ix]: dat[ih][ix];
 		} else {
 		    in[ix] = out[ix];
 		}
@@ -102,8 +118,10 @@ int main(int argc, char* argv[])
 	    out[nx-1] = diag * in[nx-1] + offd * in[nx-2];
 
 	    ctridiagonal_solve (slv,out);
+
+	    if (!stack) sf_write (out,sizeof(float complex),nx,stk);
 	}
-	sf_write (out,sizeof(float complex),nx,stk);
+	if (stack) sf_write (out,sizeof(float complex),nx,stk);
     }
 
     sf_close();
