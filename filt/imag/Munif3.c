@@ -1,6 +1,7 @@
 /* Generate 3-D layered velocity model from specified interfaces. 
 
-In each layer, velocity is a linear function of position.
+Unless layers= is specified, velocity is a linear function of position inside
+each layer.
 
 Inspired by SU's unif2.
 */
