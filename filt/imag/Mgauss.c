@@ -1,8 +1,23 @@
 /* Add a Gaussian anomaly to the data.
 
-Takes: < input.rsf > output.rsf
-
 The anomaly added is a*exp(-((x1-c1)^2+(x2-c2)^2)/r^2). 
+*/
+/*
+Copyright (C) 2004 University of Texas at Austin
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -54,4 +69,4 @@ int main(int argc, char** argv)
     exit (0);
 }
 
-/* 	$Id: Mgauss.c,v 1.6 2004/04/19 21:51:16 fomels Exp $	 */
+/* 	$Id: Mgauss.c,v 1.7 2004/06/23 23:31:42 fomels Exp $	 */

@@ -121,7 +121,8 @@ Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
 Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 
-env.Command(docdir,None,'RSFROOT=%s ./sfdoc -w $TARGET' % root)
-Depends(docdir,use)
+index = os.path.join(docdir,'index.html')
+env.Command(index,None,'RSFROOT=%s ./sfdoc -w %s' % (root,docdir))
+Depends(index,use)
 
-# 	$Id: SConstruct,v 1.30 2004/06/23 18:29:51 fomels Exp $	
+# 	$Id: SConstruct,v 1.31 2004/06/23 23:31:42 fomels Exp $	

@@ -1,11 +1,4 @@
-	scalebar
-	framenum
-	grid
-	legend
-sepvplot
-	Wiggle
-	Thplot
-	Cubeplot
+legend
 filters
 	vppen
 	pspen, xtpen

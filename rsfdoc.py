@@ -190,7 +190,8 @@ class rsfprog:
                         usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
             doc = doc + section('used in',string.rstrip(usedoc))
         doc = doc + section('source',self.file)
-        doc = doc + section('version',self.vers)
+        if self.vers:
+            doc = doc + section('version',self.vers)
         pydoc.pager(doc)
     def html(self,dir):
         file = open (os.path.join(dir,self.name + '.html'),'w')
@@ -442,4 +443,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.14 2004/06/23 18:29:51 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.15 2004/06/23 23:31:42 fomels Exp $	
