@@ -61,15 +61,15 @@ int main(int argc, char *argv[])
 			case SF_FLOAT:
 			    fbuf = (float*) bufout;
 			    ibuf = (int*) bufin;
-			    for (i=0, j=0; i < nin && j < nout; i++, j++) {
-				*(fbuf++) = *(ibuf++); 
+			    for (i=j=0; i < nin && j < nout; i++, j++) {
+				fbuf[j] = ibuf[i]; 
 			    }
 			    break;
 			case SF_COMPLEX:
 			    cbuf = (float complex*) bufout;
 			    ibuf = (int*) bufin;
-			    for (i=0, j=0; i < nin && j < nout; i++, j++) {
-				*(cbuf++) = *(ibuf++); 
+			    for (i=j=0; i < nin && j < nout; i+=2, j++) {
+				cbuf[j] = ibuf[i]+I*ibuf[i+1]; 
 			    }
 			    break;
 			case SF_CHAR:
@@ -79,6 +79,27 @@ int main(int argc, char *argv[])
 		    }
 		    break;
 		case SF_FLOAT:
+		    switch (otype) {
+			case SF_INT:
+			    fbuf = (float*) bufin;
+			    ibuf = (int*) bufout;
+			    for (i=j=0; i < nin && j < nout; i++, j++) {
+				ibuf[i] = fbuf[j]; 
+			    }
+			    break;
+			case SF_COMPLEX:
+			    cbuf = (float complex*) bufout;
+			    fbuf = (float*) bufin;
+			    for (i=j=0; i < nin && j < nout; i+=2, j++) {
+				cbuf[j] = fbuf[i] + I*fbuf[i+1];
+			    }
+			    break;
+			case SF_CHAR:
+			case SF_FLOAT:
+			default:
+			    ddbreak (itype,otype);
+		    }
+		    break;
 		case SF_COMPLEX:
 		case SF_CHAR:
 		default:
@@ -96,8 +117,10 @@ int main(int argc, char *argv[])
 
 static void ddbreak (sf_datatype itype, sf_datatype otype)
 {
-    sf_error("Conversion from %d to %d"
-	     "is unsupported",itype,otype);
+    const char* types[]={"char","int","float","complex"};
+
+    sf_error("Conversion from %s to %s"
+	     " is unsupported",types[itype],types[otype]);
 }
 
 static size_t setfiledims (sf_file in, sf_file out) 
