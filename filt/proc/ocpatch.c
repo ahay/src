@@ -6,7 +6,6 @@
 
 static int n1, n2;
 static long **table; 
-static char zero[BUFSIZ];
 
 void ocpatch_init(int dim, int nw, int np, int* npatch, int* nwall, int* nwind)
 {
@@ -51,27 +50,12 @@ void ocpatch_init(int dim, int nw, int np, int* npatch, int* nwall, int* nwind)
 	    table[ip][i2] = (t*nwall[0] + ff[0])*sizeof(float); 
 	}
     }
-
-    memset(zero,0,BUFSIZ);
 }
 
 void ocpatch_close(void)
 {
     free(table[0]);
     free(table);
-}
-
-void ocpatch_zero (size_t n, FILE *wall) 
-{
-    size_t nbuf;
-
-    if (0 != fseek(wall,0L,SEEK_SET))
-	sf_error("%s: seeking error:",__FILE__);
-    for (nbuf = BUFSIZ; n > 0; n -= nbuf) {
-	if (nbuf > n) nbuf=n;
-	if (nbuf != fwrite (zero,1,nbuf,wall))
-	    sf_error("%s: writing error:",__FILE__);
-    }
 }
 
 void ocpatch_lop (int ip, bool adj, FILE *wall, float* wind)

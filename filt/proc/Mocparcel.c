@@ -18,10 +18,13 @@
 */
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include <rsf.h>
 
 #include "ocparcel.h"
 #include "ocpatch.h"
+#include "oc.h"
 
 int main (int argc, char* argv[]) {
     int dim, i, j, n[SF_MAX_DIM], w[SF_MAX_DIM], k[SF_MAX_DIM], np, nw, n12;
@@ -59,7 +62,7 @@ int main (int argc, char* argv[]) {
     
     ocparcel_lop (false, n12, nw, tmp, wind);
 
-    ocpatch_zero(n12*sizeof(float),tmp);
+    oc_zero(n12*sizeof(float),tmp);
 
     ocparcel_lop ( true, n12, nw, tmp, wind);
 
@@ -74,6 +77,8 @@ int main (int argc, char* argv[]) {
     }
 
     sf_floatwrite (data,n12,out);
+
+    unlink(temp);
 
     exit (0);
 }
