@@ -63,7 +63,7 @@ void halfint_init (bool adj  /* causal or anticausal */,
 }
 
 void halfint (float* x /* [n] */)
-/* < Integrate in place >*/
+/*< Integrate in place >*/
 {
     int i;
 

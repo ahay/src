@@ -121,12 +121,12 @@ void kirmod_table (maptype type               /* velocity distribution */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy;
-    float x, x1, x2, **ta, t, a;
+    float x, x1, x2, **ta, t, a, p;
 
     for (iy=0; iy < ny; iy++) {	
 	x1 = y[iy].x;
 	if (0==iy || x1 != x2) {
-	    ta = sf_floatalloc2(2,nx);
+	    ta = sf_floatalloc2(3,nx);
 
 	    for (ix=0; ix < nx; ix++) {
 		x = x0 + ix*dx;
