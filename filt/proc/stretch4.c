@@ -3,164 +3,164 @@
 #include <rsf.h>
 
 #include "stretch4.h"
+#include "interp_spline.h"
+#include "spline.h"
 #include "banded.h"
 
 struct Map4 {
-    int nt, nd;
+    int nt, nw, nd, ib, ie;
     float t0,dt, eps;
     int *x; 
     bool *m;
-    float *w, *diag, *offd[3];
+    float **w, *diag, *offd[3];
     bands slv;
 };
 
-map stretch4_init (int n1, float o1, float d1, int nd, float eps)
+map4 stretch4_init (int n1, float o1, float d1, int nd, int nw, float eps)
 {
     int i;
     map4 str;
     
     str = (map4) sf_alloc (1, sizeof(*str));
 
-    str->nt = n1; 
+    str->nt = n1+2*nw; 
     str->t0 = o1; 
     str->dt = d1; 
     str->nd = nd; 
+    str->nw = nw;
     str->eps = eps;
     
     str->x = sf_intalloc (nd);
     str->m = sf_boolalloc (nd);
-    str->w = sf_floatalloc (nd);
-    str->diag = sf_floatalloc (n1);
+    str->w = sf_floatalloc2 (4,nd);
+    str->diag = sf_floatalloc (str->nt);
     
     for (i = 0; i < 3; i++) {
-	slv->offd[i] = sf_floatalloc (n1-1-i);
+	str->offd[i] = sf_floatalloc (str->nt-1-i);
     }
   
-    str->slv = banded_init (n1,3);
+    str->slv = banded_init (str->nt,3);
 
     return str;
 }
 
-void stretch4_define (map str, float* coord)
+void stretch4_define (map4 str, float* coord)
 {
-    int id, ix, i1, n1;
-    float rx, r1;
-    const float t=0.01; /* tension */
+    int id, ix, i1, n1, i, j;
+    float rx, d, o[3], *w;
     
     n1=str->nt;
 
-    for (i1 = 0; i1 < n1-3; i1++) {
+    d = str->eps*2./3.;
+    o[0] = -str->eps/8.;
+    o[1] = -str->eps/5.;
+    o[2] = -str->eps/120.;
+
+    for (i1 = 0; i1 < n1; i1++) {
 	/* regularization */
-	str->diag[i1] = str->eps*0.8*(4. - 3.*t);
-	str->offd[0][i1] = str->eps*0.15*(11.*t - 12.);
-	str->offd[1][i1] = -str->eps*0.24*t;
-	str->offd[2][i1] = str->eps*(0.2-0.21*t);
+	str->diag[i1] = d;
+	for (j=0; j < 3; j++) {
+	    if (i1 < n1-1-j) str->offd[j][i1] = o[j];
+	}
     }
-    str->diag[n1-3] = str->eps*0.8*(4. - 3.*t);
-    str->offd[0][n1-3] = str->eps*0.15*(11.*t - 12.);
-    str->offd[1][n1-3] = -str->eps*0.24*t;
-    str->diag[n1-2] = str->eps*0.8*(4. - 3.*t);
-    str->offd[0][n1-2] = str->eps*0.15*(11.*t - 12.);
-    str->diag[n1-1] = str->eps*0.8*(4. - 3.*t);
     
     for (id = 0; id < str->nd; id++) {
 	rx = (coord[id] - str->t0)/str->dt; 
 	ix = floorf(rx); 
 	rx -= ix;
-	if (ix < 1 || ix > str->nt - 2) {
+	if (ix < -1 - str->nw/2 || ix > n1 - str->nw/2 - 4) {
 	    str->m[id] = true; 
 	    continue;
 	}
 	str->x[id] = ix; 
 	str->m[id] = false; 
-	str->w[id] = rx;
+	w = str->w[id];
+
+	spline4_int(rx,w);
 	
-	r1 = 1. - rx;
-	
-	str->diag[ix]   += r1 * r1;
-	str->diag[ix+1] += rx * rx;
-	str->offd[ix]   += r1 * rx;
-    }
-    
-    tridiagonal_define (str->slv, str->diag, str->offd);
-    
-    if (str->narrow) {
-	str->ib = -1;
-	for (i1 = 0; i1 < str->nt; i1++) {
-	    if (str->diag[i1] != str->eps) {
-		str->ib = i1-1; 
-		break;
+	for (i=0; i < 4; i++) {
+	    str->diag[ix+i] += w[i] * w[i];
+	    for (j=0; j < 3-i; j++) {
+		str->offd[j][ix+i] += w[i] * w[i+j+1];
 	    }
 	}
+    }
 
-	str->ie = str->nt;
-	for (i1 = str->nt-1; i1 >= 0; i1--) {
-	    if (str->diag[i1] != str->eps) {
-		str->ie = i1+1;
-		break;
-	    }
+    banded_define (str->slv, str->diag, str->offd);
+    
+    str->ib = -1;
+    for (i1 = 0; i1 < n1; i1++) {
+	if (str->diag[i1] != d) {
+	    str->ib = i1-1; 
+	    break;
+	}
+    }
+    
+
+    str->ie = n1;
+    for (i1 = n1-1; i1 >= 0; i1--) {
+	if (str->diag[i1] != d) {
+	    str->ie = i1+1;
+	    break;
 	}
     }
 }
 
-void stretch4_apply (map str, float* ord, float* mod)
+void stretch4_apply (map4 str, float* ord, float* mod)
 {
-    int id, i1, i2;
-    float w1, w2;
+    int id, it, i, k, nw, nt;
+    float *w, *mm;
     
-    for (i1 = 0; i1 < str->nt; i1++) {
-	mod[i1] = 0.;
+    mm = str->diag;
+    nw = str->nw;
+    nt = str->nt;
+
+    for (it = 0; it < nt; it++) {
+	mm[it] = 0.;
     }
     
     for (id = 0; id < str->nd; id++) {
 	if (str->m[id]) continue;
 	
-	i1 = str->x[id]; i2 = i1+1;
-	w2 = str->w[id]; w1 = 1.-w2;
+	it = str->x[id]; 
+	w = str->w[id]; 
 	
-	mod[i1] += w1 * ord[id];
-	mod[i2] += w2 * ord[id];
+	for (i=0; i < 4; i++) {
+	    k = it + nw/2 + i + 1;
+	    mm[k] += w[i]*ord[id];
+	}
+    }    
+
+    banded_solve (str->slv, mm);
+
+    for (it = 0; it <= str->ib; it++) {
+	mm[it] = 0.;
     }
     
-    tridiagonal_solve (str->slv, mod);
-
-    if (str->narrow) {
-	for (i1 = 0; i1 <= str->ib; i1++) {
-	    mod[i1] = 0.;
-	}
-      
-	for (i1 = str->ie; i1 < str->nt; i1++) {
-	    mod[i1] = 0.;
-	}
+    for (it = str->ie; it < nt; it++) {
+	mm[it] = 0.;
     }
+
+    spline4_post(nt,nw,nt-nw,mm,mod);
 }
 
-void stretch4_invert (map str, float* ord, float* mod)
+void stretch4_close (map4 str)
 {
-    int id, i1, i2;
-    float w1, w2;
-    
-    for (id = 0; id < str->nd; id++) {
-	if (str->m[id]) continue;
-	
-	i1 = str->x[id]; i2 = i1+1;
-	w2 = str->w[id]; w1 = 1.-w2;
-	
-	ord[id] = w1*mod[i1] + w2*mod[i2];
-    }
-}
+    int i;
 
-void stretch4_close (map str)
-{
     free (str->x);
     free (str->m);
+    free (str->w[0]);
     free (str->w);
     free (str->diag);
-    free (str->offd);
+
+    for (i = 0; i < 3; i++) {
+	free (str->offd[i]);
+    }
     
-    tridiagonal_close (str->slv);
+    banded_close (str->slv);
     free (str);
 }
 
-/* 	$Id: stretch4.c,v 1.1 2004/04/02 15:55:35 fomels Exp $	 */
+/* 	$Id: stretch4.c,v 1.2 2004/04/03 02:41:17 fomels Exp $	 */
 

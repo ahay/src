@@ -1,6 +1,8 @@
 /* Normal moveout.
 
 Takes: < gather.rsf velocity=velocity.rsf [offset=offset.rsf] > nmod.rsf
+
+Compatible with sfvscan.
 */
 
 #include <math.h>
@@ -12,9 +14,9 @@ Takes: < gather.rsf velocity=velocity.rsf [offset=offset.rsf] > nmod.rsf
 int main (int argc, char* argv[])
 {
     fint1 nmo;
-    bool half;
+    bool half, slow;
     int it,ix,iz,ih, nt,nx,nw, nh, CDPtype;
-    float dt, t0, h, h0, f, dh, dy;
+    float dt, t0, h, h0, f, dh, dy, v;
     float *trace, *vel, *off;
     sf_file cmp, nmod, velocity, offset;
 
@@ -60,6 +62,9 @@ int main (int argc, char* argv[])
 	}	
     }
 
+    if (!sf_getbool("slowness",&slow)) slow=false;
+    /* if y, use slowness instead of velocity */
+
     nx = sf_leftsize(cmp,2);
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
@@ -84,7 +89,9 @@ int main (int argc, char* argv[])
 	    
 	    for (it=0; it < nt; it++) {
 		f = t0 + it*dt;
-		f = f*f + h/(vel[it]*vel[it]);
+		v = vel[it];
+		v = slow? h*v*v: h/(v*v);
+		f = f*f + v;
 		if (f < 0.) {
 		    trace[it]=0.;
 		} else {
@@ -106,5 +113,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mnmo.c,v 1.7 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id: Mnmo.c,v 1.8 2004/04/03 02:41:17 fomels Exp $	 */
 

@@ -7,13 +7,13 @@ Takes: < gather.rsf velocity=velocity.rsf [offset=offset.rsf] > nmod.rsf
 
 #include <rsf.h>
 
-#include "stretch.h"
+#include "stretch4.h"
 
 int main (int argc, char* argv[])
 {
-    map nmo;
+    map4 nmo;
     bool half;
-    int it,ix,ih, nt,nx, nh, CDPtype;
+    int it,ix,ih, nt,nx, nh, nw, CDPtype;
     float dt, t0, h, h0, f, dh, eps, dy;
     float *trace, *vel, *off, *str, *out;
     sf_file cmp, nmod, velocity, offset;
@@ -72,7 +72,10 @@ int main (int argc, char* argv[])
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
 
-    nmo = stretch_init (nt, t0, dt, nt, eps, true);
+    if (!sf_getint("extend",&nw)) nw=8;
+    /* trace extension */
+
+    nmo = stretch4_init (nt, t0, dt, nt, nw, eps);
     
     for (ix = 0; ix < nx; ix++) {
 	sf_read (vel,sizeof(float),nt,velocity);	
@@ -87,14 +90,14 @@ int main (int argc, char* argv[])
 		f = t0 + it*dt;
 		f = f*f + h/(vel[it]*vel[it]);
 		if (f < 0.) {
-		    str[it]=t0-2.*dt;
+		    str[it]=t0-10.*dt;
 		} else {
 		    str[it] = sqrtf(f);
 		}
 	    }
 
-	    stretch_define (nmo,str);
-	    stretch_apply (nmo,trace,out);
+	    stretch4_define (nmo,str);
+	    stretch4_apply (nmo,trace,out);
 	    
 	    sf_write (out,sizeof(float),nt,nmod);
 	}
@@ -104,5 +107,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.4 2004/04/02 15:46:41 fomels Exp $	 */
+/* 	$Id: Minmo.c,v 1.5 2004/04/03 02:41:17 fomels Exp $	 */
 

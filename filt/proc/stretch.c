@@ -48,9 +48,10 @@ void stretch_define (map str, float* coord)
 	str->diag[i1] = str->eps;
 	str->offd[i1] = -0.5*str->eps;
     }
-    str->diag[0] = 0.5*str->eps;
-    str->diag[str->nt-1] = 0.5*str->eps;
-    /*  str->diag[str->nt-1] = str->eps; */
+    if (! str->narrow) {
+	str->diag[0] = 0.5*str->eps;
+	str->diag[str->nt-1] = 0.5*str->eps;
+    }
     
     for (id = 0; id < str->nd; id++) {
 	rx = (coord[id] - str->t0)/str->dt; 
@@ -151,5 +152,5 @@ void stretch_close (map str)
     free (str);
 }
 
-/* 	$Id: stretch.c,v 1.3 2004/03/18 03:23:49 fomels Exp $	 */
+/* 	$Id: stretch.c,v 1.4 2004/04/03 02:41:17 fomels Exp $	 */
 

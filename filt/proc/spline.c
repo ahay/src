@@ -59,6 +59,24 @@ tris spline4_init (int nd)
     return slv;
 }
 
+void spline4_post (int n, int n1, int n2, const float* inp, float* out)
+{
+    int i;
+    float o4;
+
+    o4 = flt4[0];
+
+    for (i=n1; i < n2; i++) {
+	if (0==i) {
+	    out[i-n1] = s4*inp[i] + o4*inp[i+1];
+	} else if (n-1==i) {
+	    out[i-n1] = s4*inp[i] + o4*inp[i-1];
+	} else {
+	    out[i-n1] = s4*inp[i] + o4*(inp[i-1]+inp[i+1]);
+	}
+    }
+}
+
 void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
 {
     int i1, i2;
@@ -76,4 +94,4 @@ void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
     }
 }
 
-/* 	$Id: spline.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: spline.c,v 1.3 2004/04/03 02:41:17 fomels Exp $	 */

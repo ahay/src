@@ -1,6 +1,8 @@
 /* Velocity analysis.
 
 Takes: < cmp.rsf > scan.rsf
+
+Inverse of sfvelmod
 */
 
 #include <math.h>
@@ -9,12 +11,19 @@ Takes: < cmp.rsf > scan.rsf
 
 #include "fint1.h"
 
+static float v;
+
+static float hyperb(float t) 
+{ 
+    return hypotf(t,v); 
+} 
+
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl, half;
-    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, iz, CDPtype;
-    float dt, dh, t0, h0, v0, dv, h, v, num, den, t, dy;
+    bool sembl, half, slow;
+    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype;
+    float amp, dt, dh, t0, h0, v0, dv, h, num, den, dy;
     float *trace, **stack, **stack2;
     sf_file cmp, scan;
 
@@ -36,6 +45,21 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
     if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 
+    if (!sf_getfloat("v0",&v0) && !sf_histfloat(cmp,"v0",&v0)) 
+	sf_error("Need v0=");
+    if (!sf_getfloat("dv",&dv) && !sf_histfloat(cmp,"dv",&dv)) 
+	sf_error("Need dv=");
+    if (!sf_getint("nv",&nv) && !sf_histint(cmp,"nv",&nv)) 
+	sf_error("Need nv=");
+
+    sf_putfloat(scan,"o2",v0);
+    sf_putfloat(scan,"d2",dv);
+    sf_putint(scan,"n2",nv);
+
+    sf_putfloat(scan,"h0",h0);
+    sf_putfloat(scan,"dh",dh);
+    sf_putint(scan,"nh",nh);
+
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
 
@@ -51,14 +75,7 @@ int main(int argc, char* argv[])
     } 	    
     sf_warning("CDPtype=%d",CDPtype);
 
-    if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");
-    if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
-    if (!sf_getint("nv",&nv)) sf_error("Need nv=");
-
-    sf_putfloat(scan,"o2",v0+dv);
-    sf_putfloat(scan,"d2",dv);
-    sf_putint(scan,"n2",nv);
-    sf_putstring(scan,"label2","velocity");
+    sf_putstring(scan,"label2",slow? "slowness": "velocity");
 
     trace = sf_floatalloc(nt);
     stack =  sf_floatalloc2(nt,nv);
@@ -70,6 +87,9 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(nt);
     nmo = fint1_init(nw,nt);
 
+    if (!sf_getbool("slowness",&slow)) slow=false;
+    /* if y, use slowness instead of velocity */
+
     for (ix=0; ix < nx; ix++) {
 	sf_warning("cmp %d of %d",ix+1,nx);
 
@@ -80,7 +100,6 @@ int main(int argc, char* argv[])
 
 	for (ih=0; ih < nh; ih++) {
 	    h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
-	    h *= h; 
 	    sf_read(trace,sizeof(float),nt,cmp); 
 
 	    for (it=0; it < nt; it++) {
@@ -90,19 +109,14 @@ int main(int argc, char* argv[])
 
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + iv * dv;
-		v = 1./(v*v);
+		v = slow? h*v: h/v;
+
+		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace);
 
 		for (it=0; it < nt; it++) {
-		    t = t0+it*dt;
-		    t = sqrtf(t*t + h*v);
-		    t = (t-t0)/dt;
-		    iz = t;
-
-		    if (iz >=0 && iz < nt) {
-			t = fint1_apply(nmo,iz,t-iz,false);
-			stack[iv][it] += t;
-			if (sembl) stack2[iv][it] += t*t;
-		    }
+		    amp = fabsf(v)*trace[it];
+		    stack[iv][it] += amp;
+		    if (sembl) stack2[iv][it] += amp*amp;
 		}
 	    } /* v */
 	} /* h */
@@ -133,6 +147,6 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mvscan.c,v 1.3 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id: Mvscan.c,v 1.4 2004/04/03 02:41:17 fomels Exp $	 */
 
 
