@@ -7,7 +7,17 @@
 #include "stack.h"
 #include "error.h"
 #include "alloc.h"
+
 #include "file.h"
+/*^*/
+
+#ifndef SF_PI
+
+#define SF_PI (3.141592653589793)
+/*^*/
+
+#endif
+
 
 typedef float (*func)(float);
 static func functable[] = {
@@ -29,7 +39,11 @@ static sf_stack st1, st2;
 
 static void check (void);
 
-void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst)
+void sf_math_evaluate (int len /* stack length */, 
+		       int nbuf /* buffer length */, 
+		       float** fbuf /* number buffers */, 
+		       float** fst /* stack */)
+/*< Evaluate a mathematical expression from stack >*/
 {
     char *op;
     int *indx, i;
@@ -107,7 +121,9 @@ void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst)
     }
 }
 
-int sf_math_parse (char* output, sf_file out)
+int sf_math_parse (char* output /* expression */, 
+		   sf_file out  /* parameter file */)
+/*< Parse a mathematical expression, returns stack length >*/ 
 {
     int i, j, keylen, *indx, type=-1, top, len, c, c2;
     char *key;

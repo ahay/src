@@ -98,4 +98,4 @@ int main(int argc, char* argv[])
  *	v0 * (exp( alpha * tmax/2.) - 1) /alpha =  zmax = dz * (nz+1)
  */
 
-/* 	$Id: Msag.c,v 1.4 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id$	 */

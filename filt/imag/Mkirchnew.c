@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    sf_floatwrite (data[0],n12,in);
+	    sf_floatwrite (data[0],n12,out);
 	}
     }
 

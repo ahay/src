@@ -23,7 +23,7 @@ void twodip2_init(int nx, int ny, float fx, float fy, bool sign1, bool gauss)
     u3 = sf_floatalloc2(n1,n2);
     dp = sf_floatalloc3(n1,n2,2);
 
-    twodiv2_init(n1,n2,fx,fy,niter,gauss);
+    twodiv2_init(2,n1,n2,fx,fy,niter,gauss,u1[0][0]);
     sign = sign1;
 }
 
@@ -85,7 +85,7 @@ void twodip2(int niter, int nw, int nj1, int nj2,
 
 	if (verb) sf_warning("%d %g %g %g", iter+1, 
 			     sqrt(usum/n), psum/n, qsum/n);
-	twodiv2(u2[0],u1[0][0],dp[0][0]);
+	twodiv2(u2[0],dp[0][0]);
 
 	for(i=0; i < 2*n; i++) {
 	    dpi = dp[0][0][i];

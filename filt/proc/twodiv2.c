@@ -11,8 +11,8 @@ static int n, niter;
 static float *p;
 static bool gauss;
 
-void twodiv2_init(int n1, int n2, float f1, float f2, int niter1, 
-		    bool gauss1) 
+void twodiv2_init(int nw, int n1, int n2, float f1, float f2, int niter1, 
+		  bool gauss1, float* den) 
 {
     n = n1*n2;
     niter = niter1;
@@ -20,13 +20,14 @@ void twodiv2_init(int n1, int n2, float f1, float f2, int niter1,
 
     if (gauss) {
 	gauss2_init(n1,n2,f1,f2);
-	repeat_init(n,2,freqfilt2_lop);
+	repeat_init(n,nw,freqfilt2_lop);
     } else {
 	triangle2_init((int) f1, (int) f2, n1, n2);
-	repeat_init(n,2,triangle2_lop);
+	repeat_init(n,nw,triangle2_lop);
     }
-    sf_conjgrad_init(2*n, 2*n, n, n, 1., 1.e-6, true, false);
-    p = sf_floatalloc (2*n);
+    sf_conjgrad_init(nw*n, nw*n, n, n, 1., 1.e-6, true, false);
+    p = sf_floatalloc (nw*n);
+    weight2_init(nw,n,den);
 }
 
 void twodiv2_close (void)
@@ -38,11 +39,11 @@ void twodiv2_close (void)
     }
     sf_conjgrad_close();
     free (p);
+    weight2_close();
 }
 
-void twodiv2 (float* num, float* den,  float* rat)
+void twodiv2 (float* num, float* rat)
 {
-    weight2_init(den,den+n);
     sf_conjgrad(NULL,weight2_lop,repeat_lop,p,rat,num,niter);
 }
 
