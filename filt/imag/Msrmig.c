@@ -39,13 +39,9 @@ int main (int argc, char *argv[])
     sf_file Fus;    /*   source wavefield file Us( nx, ny,nw) */
     sf_file Fur;    /* receiver wavefield file Us( nx, ny,nw) */
 
-/*    sf_file Fws;*/
-/*    sf_file Fwr;*/
-
     slice slow;
     slice imag;
     slice sdat,rdat;
-/*    slice swfl,rwfl;*/
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -71,9 +67,6 @@ int main (int argc, char *argv[])
     Fur = sf_input ("rwf");
     Fi  = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 
-/*    Fws = sf_output("wws"); sf_settype(Fws,SF_COMPLEX);*/
-/*    Fwr = sf_output("wwr"); sf_settype(Fwr,SF_COMPLEX);*/
-
     if (SF_COMPLEX != sf_gettype(Fus)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fur)) sf_error("Need complex receiver data");
 
@@ -85,17 +78,9 @@ int main (int argc, char *argv[])
     iaxa(Fus,&ae,4); ae.l="e"; oaxa(Fi,&aj,4); /* no of experiments */
     ;                          oaxa(Fi,&aj,5);
 
-/*    oaxa(Fws,&ax,1); oaxa(Fwr,&ax,1);*/
-/*    oaxa(Fws,&ay,2); oaxa(Fwr,&ay,2);*/
-/*    oaxa(Fws,&az,3); oaxa(Fwr,&az,3);*/
-/*    oaxa(Fws,&aw,4); oaxa(Fwr,&aw,4);*/
-
     sdat = slice_init(Fus,ax.n,ay.n,aw.n);
     rdat = slice_init(Fur,ax.n,ay.n,aw.n);
     imag = slice_init( Fi,ax.n,ay.n,az.n);
-
-/*    swfl = slice_init(Fws,ax.n,ay.n,az.n*aw.n);*/
-/*    rwfl = slice_init(Fwr,ax.n,ay.n,az.n*aw.n);*/
 
     srmig_init (verb,eps,dt,
 		ae,
@@ -107,7 +92,7 @@ int main (int argc, char *argv[])
 		nr,slow);
 
     srmig_aloc();
-/*    srmig(inv,sdat,rdat,imag,swfl,rwfl);*/
+
     srmig(inv,sdat,rdat,imag);
 
     srmig_free();

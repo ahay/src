@@ -182,16 +182,9 @@ void srmig(bool inv  /* forward/adjoint flag */,
 	    cslice_get(sdat,ie*aw.n+iw,us[0]); taper2(us);
 	    cslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(ur);
 	    
-/*	iz=0;*/
-/*	cslice_put(swfl,iw*az.n+iz,us[0]);*/
-/*	cslice_put(rwfl,iw*az.n+iz,ur[0]);*/
-	    
 	    slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 	    LOOP(;             qq[iy][ix] += 
 		 crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
-/*	LOOP(;             qq[iy][ix] += */
-/*	     crealf( ( conjf(us[iy][ix]) * ur[iy][ix] ) /*/
-/*		     ( conjf(us[iy][ix]) * us[iy][ix] ) ); );*/
 	    slice_put(imag,0,qq[0]);
 	    
 	    slice_get(slow,0,so[0]);
@@ -203,15 +196,9 @@ void srmig(bool inv  /* forward/adjoint flag */,
 		
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-/*	    cslice_put(swfl,iw*az.n+iz+1,us[0]);*/
-/*	    cslice_put(rwfl,iw*az.n+iz+1,ur[0]);*/
-		
 		slice_get(imag,iz+1,qq[0]); /* imaging */
 		LOOP(;             qq[iy][ix] += 
 		     crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
-/*	    LOOP(;             qq[iy][ix] += */
-/*		 crealf( ( conjf(us[iy][ix]) * ur[iy][ix] ) /*/
-/*			 ( conjf(us[iy][ix]) * us[iy][ix] ) ); );*/
 		slice_put(imag,iz+1,qq[0]);
 		
 	    } /* z */
