@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
     if (!byte) {
 	/* initialize color table */
 	if (NULL == (color = sf_getstring("color"))) color="I";
-	/* color scheme */
+	/* color scheme (default is I) */
 	if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
 	/* reserved colors */
 	vp_rascoltab (nreserve, color);
@@ -315,4 +315,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.17 2004/04/01 15:38:21 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.18 2004/04/02 02:23:22 fomels Exp $	 */

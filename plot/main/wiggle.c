@@ -6,13 +6,16 @@ Takes < in.rsf [xpos=xpos.rsf] > out.vpl
 #include <rsf.h>
 #include <rsfplot.h>
 
+static void check(float *x, float *y);
+static bool transp;
+
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i3, i2, i1, i, fatp, xmask, ymask;
     float o1, o2, o3, d1, d2, d3, *xp, pclip, zplot, zdata, x1, x2, y1, y2;
-    float gpow, scale, x0, y0, tmp0, zero;
+    float gpow, scale, x0, y0, zero;
     float **pdata, *q, *x, *y, *px=NULL, *py=NULL, *tmp;
-    bool poly, seemean, verb, transp, xreverse, yreverse;
+    bool poly, seemean, verb, xreverse, yreverse;
     sf_file in, xpos;
 
     sf_init(argc,argv);
@@ -147,21 +150,24 @@ int main(int argc, char* argv[])
 	    if (seemean) {
 		x0 = x1;
 		y0 = zero;
+		check(&x0,&y0);
 
 		vp_umove(x0,y0);
 
 		x0 = x2;
 		y0 = zero;
+		check(&x0,&y0);
 
 		vp_udraw(x0,y0);
 	    }
 
 	    if (poly) {
 		i = 0;
-		if (q[0] > 0.) {
+		if (q[0] > 0.) { /* start polygon */
 		    x0 = x1;
 		    y0 = zero;
-
+		    check(&x0,&y0);
+		    
 		    px[i] = x0;
 		    py[i] = y0;
 		    i++;
@@ -170,80 +176,49 @@ int main(int argc, char* argv[])
 		    i++;
 		}
 
-		for (i1 = 1; i1 < n1; i1++) {
-		    if (q[i1] > 0. && q[i1-1] <= 0.) {
-			x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
-			y0 = zero;
+		for (i1 = 0; i1 < n1; i1++) {
+		    if (0 == i) {
+			if (q[i1] > 0.) { /* start polygon */
+			    x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
+			    y0 = zero;
+			    check(&x0,&y0);
 
-			px[i] = x0;
-			py[i] = y0;
-			i++;
-			px[i] = x[i1];
-			py[i] = y[i1];
-			i++;
-		    } else if (q[i1] > 0. && i != 0) {
-			px[i] = x[i1];
-			py[i] = y[i1];
-			i++;
-		    } else if (q[i1] <= 0. && q[i1-1] > 0.) {
-			/* fill the polygon */
-			
-			x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
-			y0 = zero;
-			
-			px[i] = x0;
-			py[i] = y0;
-			i++;
+			    px[i] = x0;
+			    py[i] = y0;
+			    i++;
+			    px[i] = x[i1];
+			    py[i] = y[i1];
+			    i++;
+			}
+		    } else {
+			if (q[i1] > 0.) { /* continue polygon */
+			    px[i] = x[i1];
+			    py[i] = y[i1];
+			    i++;
+			} else { /* end polygon */
+			    x0 = o1+(i1 - q[i1]/(q[i1] - q[i1-1]))*d1;
+			    y0 = zero;
+			    check(&x0,&y0);
+
+			    px[i] = x0;
+			    py[i] = y0;
+			    i++;
 		    
-			vp_uarea (px, py, i, fatp, xmask, ymask);
-			i = 0;
+			    vp_uarea (px, py, i, fatp, xmask, ymask);
+			    i = 0;
+			}
 		    }
-		}
+		} /* i1 */
 
-		/* check last sample of trace */
-		if (q[n1-1] <= 0. && i > 0.) {
-		    x0 = o1+(i1 - q[n1-1]/(q[n1-1] - q[n1-2]))*d1;
-		    y0 = zero;
-		    
-		    px[i] = x0;
-		    py[i] = y0;
-		    i++;
-		    
-		    vp_uarea (px, py, i, fatp, xmask, ymask);
-		    i = 0;
-		} else if (q[n1-1] > 0. && i != 0) {
-		    px[i] = x[n1-1];
-		    py[i] = y[n1-1];
-		    i++;
-
+		if (0 != i) { /* end polygon */
 		    x0 = x2;
 		    y0 = zero;
+		    check(&x0,&y0);
 
 		    px[i] = x0;
 		    py[i] = y0;
 		    i++;
 		    vp_uarea (px, py, i, fatp, xmask, ymask);
-		    i = 0;
-		} else if (q[n1-1] > 0. && i == 0) {
-		    x0 = x2 - q[n1-1]*d1/(q[n1-1] - q[n1-2]);
-		    y0 = zero;
-		    
-		    px[i] = x0;
-		    py[i] = y0;
-		    i++;
-
-		    px[i] = x[n1-1];
-		    py[i] = y[n1-1];
-		    i++;
-
-		    x0 = x2;
-		    y0 = zero;
-
-		    px[i] = x0;
-		    py[i] = y0;
-		    i++;
-		    vp_uarea (px, py, i, fatp, xmask, ymask);
-		    i = 0;
 		}
 	    } /* if poly */
 	} /* i2 */
@@ -256,3 +231,9 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
+static void check(float *x, float *y)
+{
+    float t;
+    
+    if (transp) { t=*x; *x=*y; *y=t; }
+}
