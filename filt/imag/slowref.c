@@ -21,11 +21,11 @@
 
 #include "slowref.h"
 
-int slowref(int nr     /* maximum number of references */, 
-	    float ds   /* minimum slowness separation */, 
-	    int ns     /* number of slownesses */, 
+int slowref(int nr           /* maximum number of references */, 
+	    float ds         /* minimum slowness separation */, 
+	    int ns           /* number of slownesses */, 
 	    const float* ss  /* [ns] slowness array */, 
-	    float* sr  /* [nr] reference slownesses squared */) 
+	    float* sr        /* [nr] reference slownesses squared */) 
 /*< compute reference slownesses, return their number >*/
 {
     int is,jr,ir;

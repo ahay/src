@@ -67,7 +67,7 @@ int main (int argc, char *argv[])
     slow = slice_init(Fs,alx.n,aly.n,az.n);
     
     switch(mode[0]) {
-	case 'w':
+	case 'w': /* save wavefield */
 	    Fd = sf_input ( "in");
 	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
 	    if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
