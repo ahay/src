@@ -7,7 +7,10 @@ root = os.environ.get('RSFROOT')
 sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
-from rsfrecipe import Helderiv, Bay
+
+sys.path.append('../../Scons')
+from bay import Bay
+from helderiv import Helderiv
 
 ###########################################################################
 Book()
@@ -20,8 +23,14 @@ def plot(title):
 Plot('bay','bay',plot('Topographic map, Stanford area'))
 Plot('slope','bay','igrad | ' + plot('Southward slope'))
 
-Helderiv('helocut','bay',eps=4,na=16,cut=1)
-Plot('helocut','helocut',plot('Helix derivative'))
+Helderiv('aa',eps=0.001,na=16)
+Helderiv('bb',eps=4,na=16)
+
+Plot('helocut','bay aa bb',
+     '''
+     helicon filt=${SOURCES[1]} div=0 |
+     helicon filt=${SOURCES[2]} div=1 |
+     ''' + plot('Helix derivative'))
 
 Combine('helocut','bay helocut slope','OverUnderAniso',result=1)
 

@@ -7,7 +7,9 @@ root = os.environ.get('RSFROOT')
 sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
-from rsfrecipe import Bay
+
+sys.path.append('../../Scons')
+from bay import Bay
 ###########################################################################
 Book()
 

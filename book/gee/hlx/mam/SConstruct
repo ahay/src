@@ -7,7 +7,9 @@ root = os.environ.get('RSFROOT')
 sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
-from rsfrecipe import Helderiv
+
+sys.path.append('../../Scons')
+from helderiv import Helderiv
 
 ###########################################################################
 Book()
@@ -17,17 +19,14 @@ datdir  = 'ftp://begpc132.beg.utexas.edu/data/mammogram'
 for case in [1,5]:
     Fetch('jbreast%d.asci' % case,datdir)
 
-mean1 = 69.1985
-    
 Flow('mam1','jbreast1.asci',
      '''
      echo "in=$SOURCE data_format=ascii_float n1=3401 n2=4386" |
      dd data_format=native_float |
      window f1=1400 n1=1600 f2=400 n2=900 |
-     math output="input-(%g)" |
      smooth rect1=4 rect2=4 |
      window j1=5 j2=5
-     ''' % mean1,stdin=0)
+     ''',stdin=0)
 
 Flow('mam5','jbreast5.asci',
      '''
@@ -42,14 +41,14 @@ Flow('mam5','jbreast5.asci',
 def plot(title):
     return 'grey color=I crowd=.9 pclip=99.8 title="%s" ' % title
 
-Helderiv('hel1','mam1',na=10)
-Helderiv('hel5','mam5',na=16)
+Helderiv('hel',na=10)
 
-Plot('mam1','mam1',plot('Mammogram'))
-Plot('hel1','hel1',plot('Helix Derivative'))
-
-Plot('mam5','mam5',plot('Mammogram') + ' allpos=y')
-Plot('hel5','hel5',plot('Helix Derivative'))
+for case in [1,5]:
+    mam = 'mam%d' % case
+    hel = 'hel%d' % case
+    Plot(mam,mam,plot('Mammogram') + ' allpos=y')
+    Plot(hel,[mam,'hel'],
+         'helicon filt=${SOURCES[1]} | ' + plot('Helix Derivative'))
 
 Combine('scratch','mam1 hel1','SideBySideAniso',result=1)
 Combine('mam','mam5 hel5','SideBySideAniso',result=1)

@@ -7,7 +7,10 @@ root = os.environ.get('RSFROOT')
 sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
-from rsfrecipe import Galilee, Helderiv
+
+sys.path.append('../../Scons')
+from galilee import Galilee
+from helderiv import Helderiv
 ##########################################################################
 Book()
 
@@ -22,8 +25,9 @@ Galilee('mesh')
 Flow('fill','mesh','lapfill grad=y niter=20')
 Plot('ruf2','fill','igrad | ' + plot('Filled and d/dx'))
 
-Helderiv('held','fill',na=128,eps=0.00001)
-Plot('held','held',plot('Filled and helix derivative'))
+Helderiv('hel',na=128,eps=0.00001)
+Plot('held','fill hel',
+     'helicon filt=${SOURCES[1]} | ' + plot('Filled and helix derivative'))
 
 Combine('helgal','ruf2 held','SideBySideAniso',result=1)
 

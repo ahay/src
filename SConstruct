@@ -101,14 +101,11 @@ for src in ('doc','proj','prog'):
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
-SConscript(dirs='recipe')
-
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use))
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
 Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
-Depends(use,os.path.join(libdir,'rsfrecipe.py'))
 AlwaysBuild(use)
 
 ##########################################################################
@@ -117,4 +114,4 @@ AlwaysBuild(use)
 
 env.Alias('install',[bindir,libdir,incdir])
 
-# 	$Id: SConstruct,v 1.25 2004/04/02 02:20:38 fomels Exp $	
+# 	$Id: SConstruct,v 1.26 2004/04/02 15:46:41 fomels Exp $	

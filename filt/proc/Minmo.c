@@ -12,6 +12,7 @@ Takes: < gather.rsf velocity=velocity.rsf [offset=offset.rsf] > nmod.rsf
 int main (int argc, char* argv[])
 {
     map nmo;
+    bool half;
     int it,ix,ih, nt,nx, nh, CDPtype;
     float dt, t0, h, h0, f, dh, eps, dy;
     float *trace, *vel, *off, *str, *out;
@@ -39,16 +40,20 @@ int main (int argc, char* argv[])
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
+
+	if (!sf_getbool("half",&half)) half=true;
+	/* if y, the second axis is half-offset instead of full offset */
+	
+	if (half) {
+	    dh *= 2.;
+	    h0 *= 2.;
+	}
 	
 	if (sf_histfloat(cmp,"d3",&dy)) {
-	    CDPtype=0.5+dh/dy;
+	    CDPtype=0.5+0.5*dh/dy;
 	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
 	} 	    
 	sf_warning("CDPtype=%d",CDPtype);
-
-	h0 *= 2.;
-	dh *= 2.;
-	/* full offset */
 
 	for (ih = 0; ih < nh; ih++) {
 	    off[ih] = h0 + ih*dh; 
@@ -99,5 +104,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minmo.c,v 1.4 2004/04/02 15:46:41 fomels Exp $	 */
 
