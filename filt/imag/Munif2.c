@@ -69,15 +69,15 @@ int main(int argc, char **argv)
 
     /* Input layer velocities and velocity derivatives */
     if (!sf_getfloats("x0",x0,ninf)) 
-	for(i=0;i<=ninf;++i) x0[i] = 0.;
+	for(i=0;i< ninf;i++) x0[i] = 0.;
     if (!sf_getfloats("z0",z0,ninf))
-	for(i=0;i<=ninf;++i) z0[i] = 0.;
+	for(i=0;i< ninf;i++) z0[i] = 0.;
     if (!sf_getfloats("v00",v0,ninf))
-	for(i=0;i<=ninf;++i) v0[i] = 1500.+ 500*i;
+	for(i=0;i< ninf;i++) v0[i] = 1500.+ 500*i;
     if (!sf_getfloats("dvdx",dvdx,ninf)) 
-	for(i=0;i<=ninf;++i) dvdx[i] = 0.;
+	for(i=0;i< ninf;i++) dvdx[i] = 0.;
     if (!sf_getfloats("dvdz",dvdz,ninf)) 
-	for(i=0;i<=ninf;++i) dvdz[i] = 0.;
+	for(i=0;i< ninf;i++) dvdz[i] = 0.;
 
     trace = sf_floatalloc(n1);
 
@@ -101,4 +101,4 @@ int main(int argc, char **argv)
     exit(0);
 }
 
-/* 	$Id: Munif2.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id: Munif2.c,v 1.8 2004/07/02 18:08:39 fomels Exp $	 */
