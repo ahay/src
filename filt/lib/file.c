@@ -150,7 +150,8 @@ sf_file sf_output (/*@null@*/ char* tag)
 		-1L == fseek(file->stream,0L,SEEK_CUR) &&
 		ESPIPE == errno &&
 		0 != mkfifo (file->dataname, S_IRUSR | S_IWUSR))
-		sf_error ("%s: Cannot make a pipe %s:",__FILE__,file->dataname);
+		sf_error ("%s: Cannot make a pipe %s:",
+			  __FILE__,file->dataname);
 	} 
 	
     } else {
