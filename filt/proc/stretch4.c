@@ -74,7 +74,7 @@ void stretch4_define (map4 str, float* coord)
 	    continue;
 	}
 
-	str->x[id] = ix + nw + ; 
+	str->x[id] = ix + nw + 1; 
 	str->m[id] = false; 
 	w = str->w[id];
 
@@ -166,5 +166,5 @@ void stretch4_close (map4 str)
     free (str);
 }
 
-/* 	$Id: stretch4.c,v 1.3 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id: stretch4.c,v 1.4 2004/04/13 01:41:14 fomels Exp $	 */
 
