@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != type) {
     if (SF_COMPLEX == sf_gettype (in)) {
         n *= 2; 
-/* possibly incorrect norm for complex data */
+	/* possibly incorrect norm for complex data */
     } else {
         sf_error("Incorrect data type in input");
     }
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("max",&max)) max = false;
     /* If y, find maximum instead of stack.  Ignores rms and norm. */
     
-    if (min || max) rms = false; norm = false;
+    if (min || max) { rms = false; norm = false; }
     if (min && max) sf_error("Cannot have both min=y and max=y.");
 
     if (norm) fold = sf_intalloc (n);
