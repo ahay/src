@@ -1,4 +1,4 @@
-/* 3-D post-stack modeling/migration with split step. */
+/* 3-D post-stack modeling/migration with extended split step. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -28,6 +28,7 @@ int main (int argc, char *argv[])
     int nz;		/* number of migrated time samples */
     int nx, ny;		/* number of midpoints 	*/
     int nt, ntx, nty;   /* boundary taper size */
+    int padx, pady;     /* padding */
     int nr;             /* number of reference velocities */
 
     float w0;		/* frequency origin 	*/
@@ -66,6 +67,11 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("nr",&nr)) nr = 1;
     /* maximum number of references */
+
+    if (!sf_getint("padx",&padx)) padx = 0;
+    /* cross-line padding */
+    if (!sf_getint("pady",&pady)) pady = 0;
+    /* in-line padding */
 
     if (!sf_getfloat("dt",&dt)) dt=0.004;
     /* time error */
@@ -111,8 +117,8 @@ int main (int argc, char *argv[])
     imag = slice_init(inv? in:out,ny,nx,nz);
     
     /* initialize split-step */
-    split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,nr);
-    split2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow, dt);
+    split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,padx,pady,nr,dt);
+    split2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow);
 
     exit (0);
 }

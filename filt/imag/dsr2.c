@@ -40,7 +40,6 @@ static float dz;
 static float         **qq;             /* image */
 static int     **is, **ir, *ii;        /* indices */
 static float   **ks, **kr;             /* wavenumber */
-static float         **tt;             /* taper */
 
 static float         **sz;             /* reference slowness */
 static float         **sm;             /* reference slowness squared */
@@ -60,7 +59,7 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 	       int nx1, float dx1, float x01  /* midpoint */,
 	       int nu1, float du,  float u0   /* slowness grid */,
 	       int ntx, int nth               /* taper size */,
-	       int nr1                        /* maximum number of references */,
+	       int nr1                        /* number of references */,
 	       int npad                       /* padding on nh */)
 /*< initialize >*/
 {
@@ -103,8 +102,6 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     ir = sf_intalloc2     (nh, nx);        /* receiver reference */
     ii = sf_intalloc          (nx);        /* midpoint reference */
 
-    tt = sf_floatalloc2   (nh, nx);        /* taper */
-
     pk = sf_complexalloc2 (nh2,nx);        /* padded wavefield */ 
     wx = sf_complexalloc2 (nh, nx);        /* x wavefield */
     wk = sf_complexalloc2 (nh2,nx);        /* k wavefield */
@@ -113,7 +110,7 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     mr = sf_intalloc2     (nh, nx);        /* MRS map receiver */
     ma = sf_floatalloc2   (nh, nx);        /* MRS mask */
 
-    skip = sf_boolalloc3 (nrmax,nrmax,nz); /* skip S-R reference slowness combination */
+    skip = sf_boolalloc3 (nrmax,nrmax,nz); /* skip slowness combination */
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
@@ -153,8 +150,7 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     }
 
     /* precompute taper array */
-    LOOPxh(tt[ix][ih]=1.;);
-    taper2(ntx,nth,true,false,nx,nh,tt);
+    taper2_init(ntx,nth);
 
     mms = fslice_init(nh,nx,nz,sizeof(int));
     mmr = fslice_init(nh,nx,nz,sizeof(int));
@@ -177,8 +173,6 @@ void dsr2_close(void)
     free( *is); free( is);
     free( *ir); free( ir);
     free(  ii);
-    
-    free( *tt); free( tt);
 
     free( *ms); free( ms);
     free( *mr); free( mr);
@@ -188,6 +182,8 @@ void dsr2_close(void)
     free( *skip); free(skip);
     fslice_close(mms);
     fslice_close(mmr);
+    taper2_close();
+    fft2_close();
 }
 
 void dsr2(bool verb                   /* verbosity flag */, 
@@ -257,9 +253,10 @@ void dsr2(bool verb                   /* verbosity flag */,
 	    for (iz=nz-2; iz>=0; iz--) {
 		/* w-x @ bottom */
 		LOOPxh2( pk[ix][ih] = 0.;);
+		taper2(true,false,nx,nh,wx);
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
 				  si[ ir[ix][ih] ]);
-			cshift = cexpf(-w*sy*dz)*tt[ix][ih];
+			cshift = cexpf(-w*sy*dz);
 			pk[ix][ih] = 
 			wx[ix][ih] * cshift; );
 		
@@ -288,7 +285,8 @@ void dsr2(bool verb                   /* verbosity flag */,
 			fft2(true,wk);
 
 			/* create MRS mask */
-			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && mr[ix][ih]==k)?1.:0.; );
+			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && 
+					     mr[ix][ih]==k)?1.:0.; );
 
 			/* accumulate wavefield */
 			LOOPxh( wx[ix][ih] += wk[ix][ih] * ma[ix][ih]; );
@@ -305,19 +303,15 @@ void dsr2(bool verb                   /* verbosity flag */,
 			qq[ii[ix]][ih] + 
 			wx   [ix] [ih] * cshift; );
 	    } /* iz */
-	    
-	    /* taper */
-	    LOOPxh( wx[ix][ih] *= tt[ix][ih]; );
 
+	    taper2(true,false,nx,nh,wx);
 	    sf_complexwrite(wx[0],nx*nh,data);
 
 	} else { /* MIGRATION */
 	    si = slow[0];
 
 	    sf_complexread(wx[0],nx*nh,data);
-
-	    /* taper */
-	    LOOPxh( wx[ix][ih] *= tt[ix][ih]; );
+	    taper2(true,false,nx,nh,wx);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
@@ -361,7 +355,8 @@ void dsr2(bool verb                   /* verbosity flag */,
 			fft2(true,wk);
 
 			/* create MRS mask */
-			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && mr[ix][ih]==k)?1.:0.; );
+			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && 
+					     mr[ix][ih]==k)?1.:0.; );
 
 			/* accumulate wavefield */
 			LOOPxh( wx[ix][ih] += wk[ix][ih] * ma[ix][ih]; );
@@ -372,8 +367,9 @@ void dsr2(bool verb                   /* verbosity flag */,
 		/* w-x @ bottom */
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
 				  si[ ir[ix][ih] ]);
-			cshift = conjf(cexpf(-w*sy*dz))*tt[ix][ih];
+			cshift = conjf(cexpf(-w*sy*dz));
 			wx[ix][ih] *= cshift; );
+		taper2(true,false,nx,nh,wx);
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */

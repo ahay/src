@@ -21,46 +21,115 @@
 
 #include "taper.h"
 
-void taper2(int ntx, int nty      /* taper lengths */, 
-	    bool begx, bool begy  /* taper in the beginning  */, 
-	    int nx, int ny        /* dimensions */, 
-	    float** tt            /* [nx][ny] tapered array (in and out) */)
-/*< 2-D taper >*/
+static int nt1, nt2, nt3;
+static float *tap1=NULL, *tap2=NULL, *tap3=NULL;
+
+void taper2_init(int n2, int n1 /* taper lengths */)
+/*< 2-D initialize >*/
 {
-    int it,ix,iy;
+    int it;
     float gain;
 
-    for (it=0; it < ntx; it++) {
-	gain = sinf(0.5*SF_PI*it/ntx);
-	gain *= gain;
-	for (iy=0; iy < ny; iy++) {
-	    if(begx) tt[   it  ][iy] *= gain;
-	    ;        tt[nx-it-1][iy] *= gain;
+    nt1=n1;
+    nt2=n2;
+    if (nt1 > 0) {
+	tap1 = sf_floatalloc(nt1);
+	for (it=0; it < nt1; it++) {
+	    gain = sinf(0.5*SF_PI*it/nt1);
+	    tap1[it]=gain*gain;
 	}
     }
-
-    for (it=0; it < nty; it++) {
-	gain = sinf(0.5*SF_PI*it/nty);
-	gain *= gain;
-	for (ix=0; ix < nx; ix++) {
-	    if(begy) tt[ix][   it  ] *= gain;
-	    ;        tt[ix][ny-it-1] *= gain;
+    if (nt2 > 0) {
+	tap2 = sf_floatalloc(nt2);
+	for (it=0; it < nt2; it++) {
+	    gain = sinf(0.5*SF_PI*it/nt2);
+	    tap2[it]=gain*gain;
 	}
     }
 }
 
-void taper3(int nt3, int nt2, int nt1  /* taper lengths */, 
-	    bool b3, bool b2, bool b1  /* taper in the beginning  */, 
-	    int n3, int n2, int n1     /* dimensions */, 
-	    float*** tt                /* [n3][n2][n1] tapered array (in and out) */)
+void taper2_close(void)
+/*< 2-D free allocated storage >*/
+{
+    free(tap1);
+    free(tap2);
+}
+
+void taper3_init(int n3, int n2, int n1 /* taper lengths */)
+/*< 3-D initialize >*/
+{
+    int it;
+    float gain;
+
+    nt1=n1;
+    nt2=n2;
+    nt3=n3;
+    if (nt1 > 0) {
+	tap1 = sf_floatalloc(nt1);
+	for (it=0; it < nt1; it++) {
+	    gain = sinf(0.5*SF_PI*it/nt1);
+	    tap1[it]=gain*gain;
+	}
+    }
+    if (nt2 > 0) {
+	tap2 = sf_floatalloc(nt2);
+	for (it=0; it < nt2; it++) {
+	    gain = sinf(0.5*SF_PI*it/nt2);
+	    tap2[it]=gain*gain;
+	}
+    }
+    if (nt3 > 0) {
+	tap3 = sf_floatalloc(nt3);
+	for (it=0; it < nt3; it++) {
+	    gain = sinf(0.5*SF_PI*it/nt3);
+	    tap2[it]=gain*gain;
+	}
+    }
+}
+
+void taper3_close(void)
+/*< 2-D free allocated storage >*/
+{
+    if (nt1 > 0) free(tap1);
+    if (nt2 > 0) free(tap2);
+    if (nt3 > 0) free(tap3);
+}
+
+void taper2(bool beg2, bool beg1  /* taper in the beginning  */, 
+	    int n2, int n1        /* dimensions */, 
+	    float complex** tt    /* [n2][n1] tapered array (in and out) */)
+/*< 2-D taper >*/
+{
+    int it,i2,i1;
+    float gain;
+
+    for (it=0; it < nt2; it++) {
+	gain = tap2[it];
+	for (i1=0; i1 < n1; i1++) {
+	    if (beg2) tt[it][i1] *= gain;
+	    tt[n2-it-1][i1] *= gain;
+	}
+    }
+
+    for (it=0; it < nt1; it++) {
+	gain = tap1[it];
+	for (i2=0; i2 < n2; i2++) {
+	    if (beg1) tt[i2][it] *= gain;
+	    tt[i2][n1-it-1] *= gain;
+	}
+    }
+}
+
+void taper3(bool b3, bool b2, bool b1 /* taper in the beginning  */, 
+	    int n3, int n2, int n1    /* dimensions */, 
+	    float complex*** tt       /* [n3][n2][n1] tapered array (inout) */)
 /*< 3-D taper >*/
 {
     int it,i1,i2,i3;
     float gain;
 
     for (it=0; it < nt3; it++) {
-	gain = sinf(0.5*SF_PI*it/nt3);
-	gain *= gain;
+	gain = tap3[it];
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
 		if(b3) tt[   it  ][i2][i1] *= gain;
@@ -70,8 +139,7 @@ void taper3(int nt3, int nt2, int nt1  /* taper lengths */,
     }
 
     for (it=0; it < nt2; it++) {
-	gain = sinf(0.5*SF_PI*it/nt2);
-	gain *= gain;
+	gain = tap2[it];
 	for (i3=0; i3 < n3; i3++) {
 	    for (i1=0; i1 < n1; i1++) {
 		if(b2) tt[i3][   it  ][i1] *= gain;
@@ -81,8 +149,7 @@ void taper3(int nt3, int nt2, int nt1  /* taper lengths */,
     }
 
     for (it=0; it < nt1; it++) {
-	gain = sinf(0.5*SF_PI*it/nt1);
-	gain *= gain;
+	gain = tap1[it];
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		if(b1) tt[i3][i2][   it  ] *= gain;

@@ -41,7 +41,6 @@ static float         ***qq;            /* image */
 static float   **ss;                   /* slowness */
 static int     **is, **ir, *ii, *ij;   /* indices */
 static float   **ks, **kr;             /* wavenumber */
-static float         ***tt;            /* taper */
 
 static float         **sz;             /* reference slowness */
 static float         **sm;             /* reference slowness squared */
@@ -62,16 +61,12 @@ void comaz_init(int nz1, float dz1             /* depth */,
 		int nu1, float du,  float u0   /* i-line (slowness/image) */,
 		int nv1, float dv,  float v0   /* x-line (slowness/image) */,
 		int ntx, int nty, int nth      /* taper size */,
-		int nr1                        /* maximum number of references */,
+		int nr1                        /* number of references */,
 		int npad                       /* padding on nh */)
 /*< initialize >*/
 {
-    int   ix, iy, ih, iu, iv;
-    int       jy, jh;
-    float  x,  y,  h;
-    float kx, ky, kh, k;
-    float     dy, dh;
-    float      y0, h0;
+    int ix, iy, jy, ih, jh, iu, iv;
+    float x, y, h, y0, h0, dy, dh, ky, kh, k;
 
     nz = nz1;
     dz = dz1;
@@ -111,8 +106,6 @@ void comaz_init(int nz1, float dz1             /* depth */,
     ir = sf_intalloc2     (nh ,ny);       /* receiver reference */
     ii = sf_intalloc          (nx);       /* midpoint reference */
     ij = sf_intalloc          (ny);       /* midpoint reference */
-
-    tt = sf_floatalloc3   (nh, ny, nx);   /* taper */
 
     pk = sf_complexalloc3 (nh2,ny, nx);   /* padded wavefield */ 
     wk = sf_complexalloc3 (nh2,ny, nx);   /* k wavefield */
@@ -170,8 +163,7 @@ void comaz_init(int nz1, float dz1             /* depth */,
     }    
 
     /* precompute taper array */
-    LOOPxyh(tt[ix][iy][ih]=1.;);
-    taper3(ntx,nty,nth,true,true,false,nx,ny,nh,tt);
+    taper3_init(ntx,nty,nth);
 
     mms = fslice_init(nh,nx*ny,nz,sizeof(int));
     mmr = fslice_init(nh,nx*ny,nz,sizeof(int));    
@@ -199,19 +191,11 @@ void comaz_close(void)
     free( *kr); free( kr);
     free( *is); free( is);
     free( *ir); free( ir);
-    
-    free(**tt); 
-    free( *tt); free( tt);
-    free(**ms); 
-    free( *ms); free( ms);
-    free(**mr); 
-    free( *mr); free( mr);
-    
-    free(**skip); 
-    free( *skip); free(skip);
 
     fslice_close(mms);
     fslice_close(mmr);
+    taper3_close();
+    fft3_close();
 }
 
 void comaz(bool verb                   /* verbosity flag */, 
@@ -282,12 +266,13 @@ void comaz(bool verb                   /* verbosity flag */,
 	    for (iz=nz-2; iz>=0; iz--) {
 		/* w-x @ bottom */
 		LOOPxyh2( pk[ix][iy][ih] = 0.;);
+		taper3(true,true,false,nx,ny,nh,wx);
 		LOOPxyh( sy = 0.5*(ss[ ii[ix] ][ is[iy][ih] ] + 
 				   ss[ ii[ix] ][ ir[iy][ih] ]);
-			 cshift = cexpf(-w*sy*dz)*tt[ix][iy][ih];
+			 cshift = cexpf(-w*sy*dz);
 			 pk[ix][iy][ih] = 
 			 wx[ix][iy][ih] * cshift; );
-		
+
 		/* FFT */
 		fft3(false,pk);		
 		
@@ -307,7 +292,8 @@ void comaz(bool verb                   /* verbosity flag */,
 				 kx = x0 + jx*dx; 
 				 cs = csqrtf(w2*sm[iz][j]+ks[iy][ih]);
 				 cr = csqrtf(w2*sm[iz][k]+kr[iy][ih]);
-				 kh = kx*(cr-cs)/(cr+cs); /* comaz approximation */
+				 /* comaz approximation */
+				 kh = kx*(cr-cs)/(cr+cs); 
 				 kss = 0.5*(kx-kh);
 				 krr = 0.5*(kx+kh);
 				 kss = kss*kss + ks[iy][ih];
@@ -340,18 +326,15 @@ void comaz(bool verb                   /* verbosity flag */,
 
 	    } /* iz */
 	    
-	    /* taper */
-	    LOOPxyh( wx[ix][iy][ih] *= tt[ix][iy][ih]; );
 
+	    taper3(true,true,false,nx,ny,nh,wx);
 	    sf_complexwrite(wx[0][0],nx*ny*nh,data);
 
 	} else { /* MIGRATION */
 	    slice_get(slow,0,ss[0]);
 
 	    sf_complexread(wx[0][0],nx*ny*nh,data);
-
-	    /* taper */
-	    LOOPxyh( wx[ix][iy][ih] *= tt[ix][iy][ih]; );
+	    taper3(true,true,false,nx,ny,nh,wx);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
@@ -389,7 +372,8 @@ void comaz(bool verb                   /* verbosity flag */,
 				 kx = x0 + jx*dx; 
 				 cs = csqrtf(w2*sm[iz][j] + ks[iy][ih]);
 				 cr = csqrtf(w2*sm[iz][k] + kr[iy][ih]);
-				 kh = kx*(cr-cs)/(cr+cs); /* comaz approximation */
+				 /* comaz approximation */
+				 kh = kx*(cr-cs)/(cr+cs); 
 				 kss = 0.5*(kx-kh);
 				 krr = 0.5*(kx+kh);
 				 kss = kss*kss + ks[iy][ih];
@@ -414,8 +398,9 @@ void comaz(bool verb                   /* verbosity flag */,
 		/* w-x @ bottom */
 		LOOPxyh( sy = 0.5*(ss[ ii[ix] ][ is[iy][ih] ] + 
 				   ss[ ii[ix] ][ ir[iy][ih] ]);
-			 cshift = conjf(cexpf(-w*sy*dz))*tt[ix][iy][ih];
+			 cshift = conjf(cexpf(-w*sy*dz));
 			 wx[ix][iy][ih] *= cshift; );
+		taper3(true,true,false,nx,ny,nh,wx);
 	    } /* iz */
 	    	    
 	    /* imaging condition @ bottom */

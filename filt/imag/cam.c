@@ -48,7 +48,6 @@ static float         ***qq; /* image */
 static float complex ***pk; /* wavefield k */
 static float complex ***wk; /* wavefield k */
 static float complex ***wx; /* wavefield x */
-static float         ***tt; /* taper */
 static int           ***ms; /* multi-reference slowness map  */
 static int           ***mr; /* multi-reference slowness map  */
 static bool          ***skip;
@@ -124,7 +123,6 @@ void cam_init(bool verb_,
     pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
     wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
     wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
-    tt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* taper */
     ms = sf_intalloc3     (amx.n,amy.n,ahx.n);  /* MRS map */
     mr = sf_intalloc3     (amx.n,amy.n,ahx.n);  /* MRS map */
 
@@ -184,8 +182,7 @@ void cam_init(bool verb_,
     }    
 
     /* precompute taper array */
-    LOOPhmm(tt[ihx][imy][imx]=1.;);
-    taper3(nth,nty,ntx,true,true,false,ahx.n,amy.n,amx.n,tt);
+    taper3_init(nth,nty,ntx);
 
     mms = fslice_init(amy.n*amx.n,ahx.n,az.n,sizeof(int));
     mmr = fslice_init(amy.n*amx.n,ahx.n,az.n,sizeof(int));    
@@ -235,7 +232,6 @@ void cam_close(void)
     ;           free( *krx);free( krx);
     ;           free( *is); free( is);
     ;           free( *ir); free( ir);
-    free(**tt); free( *tt); free( tt);
     free(**ms); free( *ms); free( ms);
     free(**mr); free( *mr); free( mr);
     
@@ -245,6 +241,7 @@ void cam_close(void)
     fslice_close(mmr);
     
     fft3_close();
+    taper3_close();
 }
 
 void cam( bool inv   /* migration/modeling flag */, 
@@ -287,7 +284,7 @@ void cam( bool inv   /* migration/modeling flag */,
 				   ss[ jy[imy] ][ ir[ihx][imx] ]);
 			 cshift = cexpf(-w*sy*az.d);
 			 wx[ihx][imy][imx] *= cshift; );
-		LOOPhmm( pk[ihx][imy][imx] *= tt[ihx][imy][imx]; );
+		taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
 
 		/* FFT */
 		KOOPhmm( pk[ihx][imy][imx] = 0.;);
@@ -342,15 +339,17 @@ void cam( bool inv   /* migration/modeling flag */,
 			 qq[ihx][jy[imy]][jx[imx]]; );
 
 	    } /* iz */
-	    
-	    LOOPhmm( wx[ihx][imy][imx] *= tt[ihx][imy][imx]; ); /* taper wavefield */
+
+	    taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
+
 	    cslice_put(data,iw,wx[0][0]);    /* put wavefield = data on file */
 	    
 	} else { /* MIGRATION */
 	    slice_get(slow,0,ss[0]);                      /* slowness at top */
 
 	    cslice_get(data,iw,wx[0][0]);    /* get wavefield = data on file */
-	    LOOPhmm( wx[ihx][imy][imx] *= tt[ihx][imy][imx]; ); /* taper wavefield */
+
+	    taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< az.n-1; iz++) {
@@ -414,13 +413,12 @@ void cam( bool inv   /* migration/modeling flag */,
 				   ss[ jy[imy] ][ ir[ihx][imx] ]);
 			 cshift = conjf(cexpf(-w*sy*az.d));
 			 wx[ihx][imy][imx] *= cshift; );
-		LOOPhmm( wx[ihx][imy][imx] *= tt[ihx][imy][imx]; );
+		taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */
 	    slice_get(imag,az.n-1,qq[0][0]);
-	    LOOPhmm(        qq[ihx][jy[imy]][jx[imx]] += 
-		     crealf(wx[ihx]   [imy]    [imx] ); );
+	    LOOPhmm(qq[ihx][jy[imy]][jx[imx]] +=  crealf(wx[ihx][imy][imx]); );
 	    slice_put(imag,az.n-1,qq[0][0]);
 	} /* else */
     } /* iw */
