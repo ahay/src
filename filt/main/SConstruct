@@ -32,11 +32,11 @@ for prog in mains:
     main = env.Program(prog + '.c')
     
     if root:
-        env.Install(bindir,main)
+        env.Install(bindir,main[0])
         if prog in alias.keys():
-	       copy = string.replace(str(main),prog,alias[prog])
-               env.InstallAs(os.path.join(bindir,copy),main)
-	       docmerge = configure.docextra(docmerge,'sf'+prog,copy)
+	       other = string.replace(str(main[0]),prog,alias[prog])
+               env.InstallAs(os.path.join(bindir,other),main[0])
+	       docmerge = configure.docextra(docmerge,'sf'+prog,other)
 
 ######################################################################
 # SELF-DOCUMENTATION

@@ -21,13 +21,15 @@
 #include <rsf.h>
 
 #include "divn.h"
+#include "fint1.h"
 
 int main (int argc, char* argv[])
 {
     int n1, n2, i1, i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *num, *den, *phase, x1, x2, y1, y2;
+    float *trace, *num, *den, *phase, **a, p0, p1, a0, a1;
     float complex *ctrace;
     char key[6];
+    vint1 fnt;
     kiss_fft_cfg forw, invs;
     sf_file in, out;
 
@@ -48,50 +50,78 @@ int main (int argc, char* argv[])
     n2 = n12/n1;
 
     trace = sf_floatalloc(n1);
-    ctrace = sf_complexalloc (n1);
+    ctrace = sf_complexalloc (4*(n1-1));
 
-    forw = kiss_fft_alloc(n1,0,NULL,NULL);
-    invs = kiss_fft_alloc(n1,1,NULL,NULL);
+    forw = kiss_fft_alloc(4*(n1-1),0,NULL,NULL);
+    invs = kiss_fft_alloc(4*(n1-1),1,NULL,NULL);
     if (NULL == forw || NULL == invs) sf_error("KISS FFT allocation error");
 
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);
     phase = sf_floatalloc(n12);
 
+    a = sf_floatalloc2(n1,2);
+
+    if (!sf_getint("niter",&niter)) niter=100;
+    /* number of iterations */
+
+    fnt = vint1_init (4, n1, 2);
+
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 	for (i1=0; i1 < n1; i1++) {
 	    ctrace[i1]=trace[i1];
 	}
+	for (i1=n1; i1 < 2*n1-1; i1++) {
+	    ctrace[i1]=2*trace[n1-1]-trace[2*n1-2-i1];
+	}
+	for (i1=2*n1-1; i1 < 3*n1-2; i1++) {
+	    ctrace[i1]=2*trace[n1-1]-trace[i1-2*n1+2];
+	}
+	for (i1=3*n1-2; i1 < 4*n1-4; i1++) {
+	    ctrace[i1]=trace[4*n1-4-i1];
+	}
 
-	/* make an analytical phase */
+	/* make an analytical signal */
 	kiss_fft(forw,(const kiss_fft_cpx *) ctrace, (kiss_fft_cpx *) ctrace);
 	ctrace[0] *= 0.5;
-	ctrace[n1/2] *= 0.5;
-	for (i1=n1/2+1; i1 < n1; i1++) {
+	ctrace[2*(n1-1)] *= 0.5;
+	for (i1=2*n1-1; i1 < 4*(n1-1); i1++) {
 	    ctrace[i1]=0.;
 	}
 	kiss_fft(invs,(const kiss_fft_cpx *) ctrace, (kiss_fft_cpx *) ctrace);
 
-	x2 = y2 = 0.;
 	for (i1=0; i1 < n1; i1++) {
-	    x1 = x2;
-	    y1 = y2;
-	    x2 = crealf(ctrace[i1]); 
-	    y2 = cimagf(ctrace[i1]); 
+	    a[0][i1] = crealf(ctrace[i1])/(4*(n1-1));
+	    a[1][i1] = cimagf(ctrace[i1])/(4*(n1-1)); 
+	}
+	
+	vint1_set (fnt, a);
 
+	for (i1=0; i1 < n1; i1++) {
+	    a0 = a[0][i1];
+	    a1 = a[1][i1];
 	    i = i1 + i2*n1;
-	    num[i] = x1*y2-x2*y1;
-	    den[i] = x1*x2+y1*y2;
+
+	    if (i1==0) {
+		p0 = a[0][i1+1]-a[0][i1];
+		p1 = a[1][i1+1]-a[1][i1];
+	    } else if (i1==n1-1) {
+		p0 = a[0][i1]-a[0][i1-1];
+		p1 = a[1][i1]-a[1][i1-1];
+	    } else {
+		p0 = 0.5*(a[0][i1+1]-a[0][i1-1]);
+		p1 = 0.5*(a[1][i1+1]-a[1][i1-1]);
+	    }
+
+	    num[i] = a0*p1-a1*p0;
+	    den[i] = a0*a0+a1*a1;
 	}
     }
 
-    if (!sf_getint("niter",&niter)) niter=100;
-    /* number of iterations */
-
     divn_init(dim, n12, n, rect, niter);
     divn (num, den, phase);
-    sf_floatwrite(phase,n12,out);
+    sf_floatwrite(den,n12,out);
 
     exit(0);
 }

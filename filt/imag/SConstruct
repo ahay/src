@@ -25,11 +25,11 @@ except: # local version
     env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
     SConscript('../lib/SConstruct')
 
-env['SCANNERS'].remove(CScan)
+# env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = 'aastretch acell agrid atela'
+src = 'aastretch acell agrid atela cell'
 
 for source in Split(src):
     env.Include(source,prefix='')
@@ -68,7 +68,7 @@ if root:
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)
-env.Append(SCANNERS=CScan)
+# env.Append(SCANNERS=CScan)
 
 # 	$Id$
 

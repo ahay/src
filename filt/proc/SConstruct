@@ -5,7 +5,7 @@ import configure
 progs = '''
 agc ai2refl aliasp autocorr bandpass bin bin1 blindpick blindpick2 boxsmooth
 byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
-dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dix
+dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dips dix
 envelope explanesignoi expsignoi extract fft1 fft3 fint1 flat fourvc fourvc2
 frame helicon hole idempatch igrad imospray impl1 impl2 infill inmo intbin
 intshow inttest1 inttest2 invbin1 iphase kolmog lapfill levint light linefit
@@ -42,11 +42,11 @@ for prog in mains:
     configure.depends(env,sources,'M'+prog)
     main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,main)
+        env.Install(bindir,main[0])
 	if prog=='stretch':
 	    for stretch in ('log','t2','lmo','nmo','rad'):
-                copy = string.replace(str(main),'stretch',stretch+'stretch')
-                env.InstallAs(os.path.join(bindir,copy),main)
+                copy = string.replace(str(main[0]),'stretch',stretch+'stretch')
+                env.InstallAs(os.path.join(bindir,copy),main[0])
 	        docmerge = configure.docextra(docmerge,'sf'+prog,copy)
 
 for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',

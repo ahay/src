@@ -1,6 +1,26 @@
+/* Cell ray tracing */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "cell.h"
 #include "quadratic.h"
@@ -9,6 +29,7 @@ static float pg;
 
 void cell1_intersect (float a, float x, float dy, float p, 
 		      float *sx, int *jx)
+/*< intersecting a straight ray with cell boundaries >*/
 {
     float si; 
     int i;
@@ -25,10 +46,8 @@ void cell1_intersect (float a, float x, float dy, float p,
     }
 }
 
-
-/* symplectic first-order */
-
 float cell1_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic first-order: step 1 >*/
 {
     int i;
     
@@ -41,6 +60,7 @@ float cell1_update1 (int dim, float s, float v, float *p, const float *g)
 
 
 float cell1_update2 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic first-order: step 2 >*/
 {
     int i;
     float d;
@@ -64,6 +84,7 @@ float cell1_update2 (int dim, float s, float v, float *p, const float *g)
 void cell11_intersect2 (float a, float da, 
 			const float* p, const float* g, 
 			float *sp, int *jp)
+/*< intersecting a straight ray with cell boundaries >*/
 {
     float den, s1, p1[2];
     
@@ -90,10 +111,8 @@ void cell11_intersect2 (float a, float da,
     }
 }
 
-
-/* nonsymplectic first-order */
-
 float cell11_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< nonsymplectic first-order: step 1 >*/
 {
     int i;
     
@@ -104,8 +123,8 @@ float cell11_update1 (int dim, float s, float v, float *p, const float *g)
     return (0.5*v*v*s*(1. + s*pg));
 }
 
-
 float cell11_update2 (int dim, float s, float v, float *p, const float *g) 
+/*< nonsymplectic first-order: step 2 >*/
 {
     int i;
     float d;
@@ -127,6 +146,7 @@ float cell11_update2 (int dim, float s, float v, float *p, const float *g)
 
 void cell_intersect (float a, float x, float dy, float p, 
 		     float *sx, int *jx)
+/*< intersecting a parabolic ray with cell boundaries >*/
 {
     float si; 
     int i;
@@ -142,6 +162,7 @@ void cell_intersect (float a, float x, float dy, float p,
 }
 
 bool cell_snap (float *z, int *iz, float eps)
+/*< round to the nearest boundary >*/
 {
     if (*z > 1.-eps) {
 	*z = 0.;
@@ -164,6 +185,7 @@ bool cell_snap (float *z, int *iz, float eps)
 }
 
 float cell_update1 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic second-order: step 1 >*/
 {
     int i;
     
@@ -176,6 +198,7 @@ float cell_update1 (int dim, float s, float v, float *p, const float *g)
 
 
 float cell_update2 (int dim, float s, float v, float *p, const float *g) 
+/*< symplectic second-order: step 2 >*/
 {
     int i;
     float d;
@@ -197,6 +220,7 @@ float cell_update2 (int dim, float s, float v, float *p, const float *g)
 }
 
 float cell_p2a (float* p)
+/*< convert ray parameter to angle >*/
 {
     float a;
     
@@ -227,4 +251,4 @@ float cell_p2a (float* p)
     return a;
 }
 
-/* 	$Id: cell.c,v 1.4 2003/10/08 15:08:52 fomels Exp $	 */
+/* 	$Id$	 */

@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
     /* verbosity flag */
     if (!sf_getbool("sign",&sign)) sign = false;
     /* if y, keep dip sign constant */
-    if (!sf_getbool("gauss",&gauss)) gauss = true;
+    if (!sf_getbool("gauss",&gauss)) gauss = false;
     /* if y, use exact Gaussian for smoothing */
     if (!sf_getbool("both",&both)) both = true;
     /* if y, estimate both dips */

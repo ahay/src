@@ -22,7 +22,7 @@ except: # local version
     env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 
-env['SCANNERS'].remove(CScan)
+# env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
@@ -69,7 +69,7 @@ env.Command('../plint/lint',map(lambda x: x+'.c',psrc),
 env.Alias('plint','../plint')
         
 env['SCANNERS'].remove(configure.Include)
-env.Append(SCANNERS=CScan)
+# env.Append(SCANNERS=CScan)
 
 # 	$Id$	
 

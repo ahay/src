@@ -1,11 +1,5 @@
-/*
- * File: basic_struct.h
- * --------------------
- * Contains structure declaration for "Node", "Edge", and "Triangle". 
+/* Structures for Delauney triangulation. */
 
- * Course CS368, 05/19/97, 
- * Project --- Conforming Delauney Triangulation.
- */
 #ifndef _basic_struct_h
 #define _basic_struct_h
 
@@ -13,7 +7,6 @@ typedef struct CNode {
     double *x;
     enum elemType type;
 } CNode;
-
 
 typedef struct CEdge {
     struct CNode *ends[2];
