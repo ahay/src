@@ -119,8 +119,8 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	if (zdata <= 0.) {
-	    gainpar (in,pdata,n1,n2,1,
-		     pclip,pclip,&zdata,&gpow,0.,n3,0);
+	    vp_gainpar (in,pdata,n1,n2,1,
+			pclip,pclip,&zdata,&gpow,0.,n3,0);
 	    if (verb) sf_warning("clip=%g",zdata);
 	} else {	    
 	  sf_floatread(pdata[0],n1*n2,in);
@@ -253,4 +253,4 @@ static void check(float *x, float *y)
     if (transp) { t=*x; *x=*y; *y=t; }
 }
 
-/* 	$Id: wiggle.c,v 1.7 2004/07/02 11:54:57 fomels Exp $	 */
+/* 	$Id$	 */

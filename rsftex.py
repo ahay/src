@@ -25,11 +25,14 @@ globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 # CONFIGURATION VARIABLES
 #############################################################################
 
-latex =    WhereIs('pdflatex')
-bibtex =   WhereIs('bibtex')
-acroread = WhereIs('acroread')
-epstopdf = WhereIs('epstopdf')
-fig2dev =  WhereIs('fig2dev')
+latex      = WhereIs('pdflatex')
+bibtex     = WhereIs('bibtex')
+acroread   = WhereIs('acroread')
+epstopdf   = WhereIs('epstopdf')
+fig2dev    = WhereIs('fig2dev')
+latex2html = WhereIs('latex2html')
+pdf2ps     = WhereIs('pdf2ps')
+pstoimg    = WhereIs('pstoimg')
 
 ressuffix = '.pdf'
 vpsuffix  = '.vpl'
@@ -190,15 +193,35 @@ if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
                    suffix='.pdf',src_suffix='.fig')
 
+if pstoimg:
+    PNGBuild = Builder(action = pstoimg + \
+                       ' $SOURCE -out $TARGET -type png -interlaced',
+                       suffix='.png',src_suffix=pssuffix)
+
+if pdf2ps:
+    PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
+                      suffix=pssuffix,src_suffix='.pdf')
+
+if latex2html:
+    styles = os.environ.get('LATEX2HTMLSTYLES','')
+    inputs = os.environ.get('TEXINPUTS','')
+    if styles:
+        init = '-init_file ' + os.path.join(styles,'.latex2html-init')
+    else:
+        init = ''
+    HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s %s '
+                   '-debug $SOURCE -dir $TARGET.dir %s' %
+                   (inputs,styles,latex2html,init),src_suffix='.ltx')
+                   
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
 
 isplot = re.compile(r'\\(?:side)?plot\s*\{([^\}]+)')
+isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'\\input\{([^\}]+)')
 
-def getplots(node,env,path):
-    global isplot, ressufix
+def latexscan(node,env,path):
     contents = node.get_contents()
     plots = isplot.findall(contents)
     inputs = map(lambda x: x+'.tex',input.findall(contents))
@@ -209,24 +232,16 @@ def getplots(node,env,path):
             if check:
                 plots.append(check.group(1))
         inp.close()
-    return map(lambda x: os.path.join(resdir,x) + ressuffix,plots)
-
-isbib = None
-def getbibs(node,env,path):
-    global isbib
-    if not isbib:
-        isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-    contents = node.get_contents()
+    plots = map(lambda x: os.path.join(resdir,x) + ressuffix,plots)
     bibs = []
     for bib in isbib.findall(contents):
-        for file in split(bib,','):
+        for file in string.split(bib,','):
             file = file+'.bib'
             if os.path.isfile(file):
                 bibs.append(file)
-    return bibs
+    return plots + inputs + bibs
 
-Plots = Scanner(name='Plots',function=getplots,skeys=['.tex','.ltx'])
-Bibs = Scanner(name='Bibs',function=getbibs,skeys=['.tex','.ltx'])
+LaTeX = Scanner(name='LaTeX',function=latexscan,skeys=['.tex','.ltx'])
 
 #############################################################################
 
@@ -239,7 +254,7 @@ class TeXPaper(Environment):
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY')},
-                    SCANNERS=[Plots,Bibs],
+                    SCANNERS=[LaTeX],
                     BUILDERS={'Latify':Latify,'Pdf':Pdf,'Build':Build})
         if acroread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
@@ -247,28 +262,59 @@ class TeXPaper(Environment):
 	    self.Append(BUILDERS={'PDFBuild':PDFBuild})
         if fig2dev:
             self.Append(BUILDERS={'XFig':XFig})
-        if os.path.isfile(paper+'.tex'):
-            self.Paper(paper)
-            self.Alias('pdf',paper+'.pdf')
-            self.Alias('read',paper+'.read')
-            self.Alias('print',paper+'.print')
-            self.Default('pdf')
+        if latex2html:
+            self.Append(BUILDERS={'HTML':HTML})
+            if pstoimg:
+                self.Append(BUILDERS={'PNGBuild':PNGBuild})
+                self.imgs = []
+        if pdf2ps:
+            self.Append(BUILDERS={'PSBuild':PSBuild})
         for fig in glob.glob(os.path.join(resdir,'.*'+vpsuffix)):
             eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
             self.Build(eps,fig,opts=pstexpen)
             if epstopdf:
                 pdf = re.sub(pssuffix+'$','.pdf',eps)
                 self.PDFBuild(pdf,eps)
+            if latex2html and pstoimg:
+                png = os.path.basename(re.sub(pssuffix+'$','.png',eps))
+                png = os.path.join('Img',png)
+                self.PNGBuild(png,eps)
+                self.imgs.append(png)
         for fig in glob.glob(os.path.join(resdir,'.*.pdf')):
             pdf = re.sub(r'\.(\w.*\.pdf)',r'\1',fig)
             self.Command(pdf,fig,'cp $SOURCE $TARGET')
+            if pdf2ps:
+                eps = re.sub('.pdf$',pssuffix,pdf)
+                self.PSBuild(eps,pdf)
+                if latex2html and pstoimg:
+                    png = os.path.basename(re.sub(pssuffix+'$','.png',eps))
+                    png = os.path.join('Img',png)
+                    self.PNGBuild(png,eps)
+                    self.imgs.append(png)
+        if os.path.isfile(paper+'.tex'):
+            self.Paper(paper)
+            self.Alias('pdf',paper+'.pdf')
+            self.Alias('read',paper+'.read')
+            self.Alias('print',paper+'.print')
+            self.Alias('html',paper+'.html')
+            self.Default('pdf')
     def Paper(self,paper,use=None):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',use=use)
-        pdf = self.Pdf(target='paper',source='paper.ltx')
-        pdf[0].target_scanner = Plots
+        pdf = self.Pdf(target=paper,source=paper+'.ltx')
+        pdf[0].target_scanner = LaTeX
         if acroread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
+        if latex2html:
+            dir = paper+'_html'
+            if not os.path.exists(dir):
+                os.mkdir(dir)
+            html = os.path.join(dir,'index.html')
+            self.HTML(html,paper+'.ltx')
+            print self.imgs
+            self.Depends(html,self.imgs)
+            self.Depends(html,pdf)
+            self.Alias(paper+'.html',html)
 
 default = TeXPaper()
 def Paper(paper,**kw):

@@ -207,8 +207,8 @@ int main(int argc, char* argv[])
 	data = sf_floatalloc2(n1,n2);
 
 	if (GAIN_ALL==panel || panel >= 0) {
-	    gainpar (in,data,n1,n2,gainstep,
-		     pclip,phalf,&clip,&gpow,pbias,n3,panel);
+	    vp_gainpar (in,data,n1,n2,gainstep,
+			pclip,phalf,&clip,&gpow,pbias,n3,panel);
 	    if (verb) sf_warning("panel=%d clip=%g gpow=%g",panel,clip,gpow);
 	    sf_seek(in,0L,SEEK_SET); /* rewind */
 	}
@@ -228,8 +228,8 @@ int main(int argc, char* argv[])
 	    if (GAIN_EACH == panel) {
 		if (eclip) clip=0.;
 		if (egpow) gpow=0.;
-		gainpar (in,data,n1,n2,gainstep,
-			 pclip,phalf,&clip,&gpow,pbias,n3,0);
+		vp_gainpar (in,data,n1,n2,gainstep,
+			    pclip,phalf,&clip,&gpow,pbias,n3,0);
 		if (verb) sf_warning("clip=%g gpow=%g",clip,gpow);
 	    } else {
 		sf_floatread(data[0],n1*n2,in);

@@ -1,6 +1,26 @@
+/* Finding clip and gpow. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "gainpar.h"
 
@@ -9,10 +29,17 @@ static void gain (sf_file in, float **data, int n1, int n2,int step,
 		  float *clip, float *gpow, float bias, int nt, float* buf);
 static float quantile (float  p, float* x, int n);
 
-void gainpar (sf_file in, float **data, int n1, int n2,int step,
-	      float pclip,float phalf,
-	      float *clip, float *gpow, float bias, 
-	      int n3, int panel)
+void vp_gainpar (sf_file in, float **data, 
+		 int n1, int n2 /* panel size */,
+		 int step       /* step on the first axis */,
+		 float pclip    /* percentage clip */,
+		 float phalf    /* percentage for gpow */,
+		 float *clip    /* output clip */, 
+		 float *gpow    /* output gpow */, 
+		 float bias, 
+		 int n3         /* number of panels */ ,
+		 int panel      /* gain type */)
+/*< Find clip and gpow parameters >*/
 {
     int nt, i3;
     float *buf, *clipnp, *gpownp;
@@ -20,7 +47,7 @@ void gainpar (sf_file in, float **data, int n1, int n2,int step,
     nt = n1 / step;
     buf = sf_floatalloc(nt*n2);
   
-    if(panel >= 0) {
+    if(panel >= 0) { /* gain from a particular panel */
 	if (panel > 0) sf_seek(in,panel*n1*n2*sizeof(float),SEEK_SET);
 	gain (in, data, n1, n2, step, pclip, phalf,
 	      clip, gpow, bias, nt, buf);

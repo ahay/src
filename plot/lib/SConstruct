@@ -5,9 +5,9 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'coltab gainpar plot polygon stdplot vplot'
+src = 'polygon stdplot vplot'
 
-src2 = 'axis'
+src2 = 'axis coltab gainpar plot'
 
 sources  = map(lambda x: x+'.c',Split(src)) 
 includes = map(lambda x: x+'.h',Split(src))

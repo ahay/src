@@ -1,3 +1,22 @@
+/* Managing vector plots. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -7,9 +26,8 @@
 static float *dashtype;
 static int *fat, *col;
 
-static void set_dash (float type);
-
-/*
+static void set_dash (float type)
+/* type is
  *	0 continuous   DEFAULT
  *	1 fine dash
  *	2 fine dot
@@ -22,7 +40,6 @@ static void set_dash (float type);
  *	9 loose dash  The part after the decimal point determines 
  *                     the pattern repetition interval
  */
-static void set_dash (float type)
 {
     float size=0.;
     float dash[2], gap[2];
@@ -103,7 +120,8 @@ static void set_dash (float type)
     vp_setdash (dash, gap, 2);
 }
 
-void vp_plot_init(int n2)
+void vp_plot_init(int n2 /* number of lines */)
+/*< initialize vector plot >*/
 {
     int i;
 
@@ -126,7 +144,8 @@ void vp_plot_init(int n2)
     }
 }
 
-void vp_plot_set (int i2)
+void vp_plot_set (int i2 /* line number */)
+/*< select a line >*/
 {
     vp_fat (fat[i2]);
     vp_color (col[i2]);
@@ -134,6 +153,7 @@ void vp_plot_set (int i2)
 }
 
 void vp_plot_close (void)
+/*< free allocated storage >*/
 {
     free (dashtype);
     free (fat);

@@ -1,32 +1,26 @@
 #include "quantile.h"
 
 /* changes a */
-float quantile(int k, int n, float* a) {
-    int i, j;
-    float ak;
+float quantile(int q, int n, float* a) {
+    float *i, *j, ak, *low, *hi, buf, *k;
 
-    ak = a[k];
-    for (j=0, i=0; i < n; i++) {
-	if (a[i] < ak) j++;
-    }
-    if (j > k) {
-	for (j=0, i=0; i < n; i++) {
-	    if (a[i] < ak) a[j++] = a[i];
-	}
-	return quantile(k, j, a);
-    } else {
-	for (j=0, i=0; i < n; i++) {
-	    if (a[i] > ak) j++;
-	}
-	if (j > n - 1 - k) {
-	    for (j=0, i=0; i < n; i++) {
-		if (a[i] > ak) a[j++] = a[i];
+    low=a;
+    hi=a+n-1;
+    k=a+q; 
+    while (low<hi) {
+	ak = *k;
+	i = low; j = hi;
+	do {
+	    while (*i < ak) i++;     
+	    while (*j > ak) j--;     
+	    if (i<=j) {
+		buf = *i;
+		*i++ = *j;
+		*j-- = buf;
 	    }
-	    return quantile(j + k - n, j, a);
-	}
-	return ak;
+	} while (i<=j);
+	if (j<k) low = i; 
+	if (k<i) hi = j;
     }
+    return (*k);
 }
-
-
-

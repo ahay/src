@@ -141,8 +141,8 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("bias",&pbias)) pbias=0.;
 	/* subtract bias from data */
 
-	gainpar (NULL,fff[0],nx,ny,gainstep,
-		 pclip,100.,&clip,&gg,pbias,n3,-2);
+	vp_gainpar (NULL,fff[0],nx,ny,gainstep,
+		    pclip,100.,&clip,&gg,pbias,n3,-2);
     }
 
     if (!sf_getfloat ("dclip",&dclip)) dclip=1.;
@@ -391,4 +391,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: thplot.c,v 1.3 2004/07/02 11:54:57 fomels Exp $	 */
+/* 	$Id$	 */
