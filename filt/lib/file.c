@@ -144,7 +144,7 @@ sf_file sf_output (/*@null@*/ char* tag)
 	file->dataname = sf_charalloc (PATH_MAX+NAME_MAX+1);
 	strcpy (file->dataname,path);
 	name = file->dataname+strlen(path);
-	/* free (path); */
+	free (path);
 	if (getfilename (file->stream,name)) {
 	    namelen = strlen(file->dataname);
 	    file->dataname[namelen]='@';
@@ -267,15 +267,19 @@ static bool getfilename (FILE* fp, char *filename)
 
 static char* getdatapath (void) 
 {
-    char *path, *home, file[PATH_MAX];
+    char *path, *penv, *home, file[PATH_MAX];
     
     path = sf_getstring ("datapath");
     if (NULL != path) return path;
 
-    path = getenv("DATAPATH");
-    if (NULL != path) return path;
-
     path = sf_charalloc(PATH_MAX+1);
+
+    penv = getenv("DATAPATH");
+    if (NULL != penv) {
+	strncpy(path,penv,PATH_MAX);
+	return path;
+    }
+
     if (readpathfile (".datapath",path)) return path;
     
     home = getenv("HOME");

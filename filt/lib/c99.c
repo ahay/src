@@ -3,6 +3,15 @@
 #include "c99.h"
 #include "error.h"
 
+void cprint (float complex c)
+{
+    sf_warning("%g+%gi",crealf(c),cimagf(c));
+}
+
+#if defined (__STDC__) && (__STDC_VERSION__ >= 199901L)
+
+#else
+
 float sf_crealf(/*@unused@*/ float complex c) 
 { 
     sf_warning("No support for complex types!!!\n"
@@ -47,3 +56,5 @@ float atan2f(float x, float y) { return (float) atan2(x,y);}
 float powf(float x, float y) { return (float) pow(x,y);}
 float hypotf(float x, float y) { return (float) hypot(x,y);}
 float fmodf(float x, float y) { return (float) fmod(x,y);}
+
+#endif

@@ -49,4 +49,7 @@ float complex sf_conjf(float complex c);
 
 #endif
 
+void cprint (float complex c);
+
 #endif
+
