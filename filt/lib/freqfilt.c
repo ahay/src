@@ -22,6 +22,7 @@
 #include "freqfilt.h"
 
 #include "_bool.h"
+#include "c99.h"
 /*^*/
 
 #include "c99.h"
@@ -31,8 +32,8 @@
 #include "kiss_fftr.h"
 
 static int nfft, nw;
-static float complex *cdata;
-static float *shape, *tmp;
+static float complex *cdata, *shape;
+static float *tmp;
 static kiss_fftr_cfg forw, invs;
 
 void sf_freqfilt_init(int nfft1 /* time samples (possibly padded) */, 
@@ -52,6 +53,16 @@ void sf_freqfilt_init(int nfft1 /* time samples (possibly padded) */,
 
 void sf_freqfilt_set(float *filt /* frequency filter [nw] */)
 /*< Initialize filter (zero-phase) >*/
+{
+    int iw;
+    
+    for (iw=0; iw < nw; iw++) {
+	shape[iw] = filt[iw];
+    }
+}
+
+void sf_freqfilt_cset(float complex *filt /* frequency filter [nw] */)
+/*< Initialize filter >*/
 {
     shape = filt;
 }

@@ -408,7 +408,7 @@ Color = Builder(action = Action(colorize),suffix='.html')
 
 isplot = re.compile(r'^[^%]*\\(?:side)?plot\s*\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-input = re.compile(r'\\input\s*\{([^\}]+)')
+input = re.compile(r'[^%]\\input\s*\{([^\}]+)')
 # listing = re.compile(r'\\lstinputlisting(?:\[[^\]]+\])?\{([^\}]+)')
 chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
 subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')

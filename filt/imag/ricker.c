@@ -4,30 +4,41 @@
 
 #include "ricker.h"
 
-static float *shape;
+static float complex *shape;
 
-void ricker_init(int nfft /* time samples */, 
-		 float freq /* frequency */)
+void ricker_init(int nfft   /* time samples */, 
+		 float freq /* frequency */,
+		 int order  /* derivative order */)
 /*< initialize >*/
 {
     int iw, nw;
-    float dw, w, a;
+    float dw, w;
+    float complex cw;
 
     /* determine frequency sampling (for real to complex FFT) */
     nw = nfft/2+1;
     dw = 1./(nfft*freq);
-    a = dw/powf(SF_PI,0.375);
-
-    shape = sf_floatalloc(nw);
+ 
+    shape = sf_complexalloc(nw);
 
     for (iw=0; iw < nw; iw++) {
 	w = iw*dw;
 	w *= w;
-	shape[iw] = a*w*expf(-w);
+
+	switch (order) {
+	    case 2: /* half-order derivative */
+		cw = csqrtf((1.+I*iw)*2*SF_PI/nfft);
+		shape[iw] = cw*w*expf(1-w)/nfft;
+		break;
+	    case 0:
+	    default:
+		shape[iw] = w*expf(1-w)/nfft;
+		break;
+	}
     }
 
     sf_freqfilt_init(nfft,nw);
-    sf_freqfilt_set(shape);
+    sf_freqfilt_cset(shape);
 }
 
 void ricker_close(void) 
