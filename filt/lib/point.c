@@ -47,7 +47,7 @@ void writept2d(sf_file F, pt2d *v, int n, int k)
 /*< output point2d vector >*/
 {
     int i;
-    float w[k];
+    float w[3];
 
     for( i=0; i<n; i++) {
 	w[0]          = v[i].x; 
@@ -61,7 +61,7 @@ void writept3d(sf_file F, pt3d *v, int n, int k)
 /*< output point3d vector >*/
 {
     int i;
-    float w[k];
+    float w[3];
 
     for( i=0; i<n; i++) {
 	w[0]          = v[i].x;
@@ -78,7 +78,7 @@ void readpt2d(sf_file F, pt2d *v, int n, int k)
 /*< input point2d vector >*/
 {
     int i;
-    float w[k];
+    float w[3];
 
     for( i=0; i<n; i++) {
 	sf_floatread(w,k,F);
@@ -92,7 +92,7 @@ void readpt3d(sf_file F, pt3d *v, int n, int k)
 /*< input point3d vector >*/
 {
     int i;
-    float w[k];
+    float w[3];
 
     for( i=0; i<n; i++) {
 	sf_floatread(w,k,F);

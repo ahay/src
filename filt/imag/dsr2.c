@@ -28,7 +28,7 @@
 #include "slice.h"
 /*^*/
 
-static int nx, nh, nz, ny, **is, **ir;
+static int nx, nh, nz, ny, **is, **ir, **ii;
 static float dz, **qq, **ks, **kr, *s;
 static float complex **pp;
 
@@ -59,11 +59,12 @@ void dsr2_init(int nz1, float dz1            /* depth */,
     fft2_init(nh,nx);
 
     s = sf_floatalloc (nz);      /* reference slowness */
-    qq = sf_floatalloc2 (nh,nx); /* image */
+    qq = sf_floatalloc2 (nh,ny); /* image */
     ks = sf_floatalloc2 (nh,nx); /* source wavenumber */
     kr = sf_floatalloc2 (nh,nx); /* receiver wavenumber */
     is = sf_intalloc2(nh,nx);    /* source reference */
     ir = sf_intalloc2(nh,nx);    /* receiver reference */
+    ii = sf_intalloc2(nh,nx);    /* midpoint reference */
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
@@ -91,11 +92,16 @@ void dsr2_init(int nz1, float dz1            /* depth */,
 	    if (iy < 0) iy=0;
 	    else if (iy >= ny) iy=ny-1;
 	    ir[ix][ih] = iy;
+
+	    iy = 0.5+(x-y0)/dy;
+	    if (iy < 0) iy=0;
+	    else if (iy >= ny) iy=ny-1;
+	    ii[ix][ih] = iy;
 	}
     }    
 }
 
-void split2_close(void)
+void dsr2_close(void)
 /*< free allocated storage >*/
 {
     free(*pp);
@@ -113,13 +119,13 @@ void split2_close(void)
     free(ir);
 }
 
-void split2(bool verb                   /* verbosity flag */, 
-	    bool inv                    /* migration/modeling flag */, 
-	    float eps                   /* stability factor */,  
-	    int nw, float dw, float w0  /* frequency (radian) */,
-	    float complex *** cp        /* data [nw][nx][nh] */,
-	    slice imag                  /* image file [nz][nx][nh] */,
-	    float **slow                /* slowness [nz][nx] */)
+void dsr2(bool verb                   /* verbosity flag */, 
+	  bool inv                    /* migration/modeling flag */, 
+	  float eps                   /* stability factor */,  
+	  int nw, float dw, float w0  /* frequency (radian) */,
+	  float complex *** cp        /* data [nw][nx][nh] */,
+	  slice imag                  /* image file [nz][ny][nh] */,
+	  float **slow                /* slowness [nz][nx] */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,ih;
@@ -127,7 +133,7 @@ void split2(bool verb                   /* verbosity flag */,
     float complex cshift, cref, w, w2, **pp, cs, cr;
 
     if (!inv) { /* prepare image for migration */
-	for (ix=0; ix<nx; ix++) {      
+	for (ix=0; ix<ny; ix++) {      
 	    for (ih=0; ih<nh; ih++) {
 		qq[ix][ih] = 0.0;
 	    }
@@ -164,7 +170,7 @@ void split2(bool verb                   /* verbosity flag */,
 	    
 	    for (ix=0; ix<nx; ix++) {
 		for (ih=0; ih<nh; ih++) {
-		    pp[ix][ih] = qq[ix][ih];
+		    pp[ix][ih] = qq[ii[ix][ih]][ih];
 		}
 	    }
 
@@ -203,7 +209,7 @@ void split2(bool verb                   /* verbosity flag */,
 		    for (ih=0; ih<nh; ih++) {
 			sy = si[is[ix][ih]]+si[ir[ix][ih]];
 			cshift = cexpf(-0.5*w*sy*dz);
-			pp[ix][ih] = qq[ix][ih] + pp[ix][ih]*cshift; 
+			pp[ix][ih] = qq[ii[ix][ih]][ih] + pp[ix][ih]*cshift; 
                         /* add tapering later */
 		    }
 		}
@@ -217,7 +223,7 @@ void split2(bool verb                   /* verbosity flag */,
 
 		for (ix=0; ix<nx; ix++) {
 		    for (ih=0; ih<nh; ih++) {
-			qq[ix][ih] += crealf(pp[ix][ih]); /* imaging cond. */
+			qq[ii[ix][ih]][ih] += crealf(pp[ix][ih]); /* imaging cond. */
 			sy = si[is[ix][ih]]+si[ir[ix][ih]];
 			cshift = conjf(cexpf(-0.5*w*sy*dz));
 			pp[ix][ih] *= cshift;
@@ -256,7 +262,7 @@ void split2(bool verb                   /* verbosity flag */,
 	    
 	    for (ix=0; ix<nx; ix++) {
 		for (ih=0; ih<nh; ih++) {
-		    qq[ix][ih] += crealf(pp[ix][ih]); /* imaging condition */ 
+		    qq[ii[ix][ih]][ih] += crealf(pp[ix][ih]); /* imaging condition */ 
 		}
 	    }	    
 	    slice_put(imag,nz-1,qq[0]);
