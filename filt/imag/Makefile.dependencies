@@ -1,0 +1,20 @@
+Mgazdag.o: Mgazdag.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h pfafft.h \
+  gazdag.h
+Mrays2.o: Mrays2.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h raytracing.h
+Msymes.o: Msymes.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h symes.h
+atela.o: atela.c atela.h ../rsf/bool.h
+eno.o: eno.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h eno.h
+eno2.o: eno2.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h eno2.h eno.h
+eno3.o: eno3.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h eno3.h eno.h \
+  eno2.h
+gazdag.o: gazdag.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h gazdag.h \
+  pfafft.h
+grid2.o: grid2.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h grid2.h eno2.h \
+  eno.h
+grid3.o: grid3.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h grid3.h eno3.h \
+  eno.h
+junk.o: junk.c
+pfafft.o: pfafft.c pfafft.h ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h
+raytracing.o: raytracing.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h \
+  raytracing.h grid2.h grid3.h atela.h ../rsf/bool.h
+symes.o: symes.c symes.h

@@ -1,0 +1,77 @@
+#include <rsf.h>
+
+#include "dip3.h"
+
+int main (int argc, char *argv[])
+{
+    int n1,n2,n3, n123, niter, nw, nj1, nj2, i;
+    float eps, lam, p0, q0, ***u, ***p;
+    bool verb, sign;
+    sf_file in, out;
+
+    sf_init(argc,argv);
+    in = sf_input ("in");
+    out = sf_output ("out");
+
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
+
+    if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
+    if (!sf_histint(in,"n2",&n2)) n2=1;
+    if (!sf_histint(in,"n3",&n3)) n3=1;
+    n123 = n1*n2*n3;
+
+    /* two dips output in 3-D */
+    if (n3 > 1) sf_putint(out,"n4",2); 
+
+    if (!sf_getint("niter",&niter)) niter=5;
+    if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps; 
+    if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
+
+    if (!sf_getfloat("p0",&p0)) p0=0.;
+    if (!sf_getfloat("q0",&q0)) q0=0.;
+
+    if (!sf_getint("order",&nw)) nw=1;
+    if (nw < 1 || nw > 3) 
+	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+    if (!sf_getint("nj1",&nj1)) nj1=1;
+    if (!sf_getint("nj2",&nj2)) nj2=1;
+
+
+    if (!sf_getbool("verb",&verb)) verb = false;
+    if (!sf_getbool("sign",&sign)) sign = false;
+    
+    /* initialize dip estimation */
+    dip3_init(n1, n2, n3, eps, lam, sign);
+
+    u = sf_floatalloc3(n1,n2,n3);
+    p = sf_floatalloc3(n1,n2,n3);
+
+    /* read data */
+    sf_read(u[0][0],sizeof(float),n123,in);
+
+    /* initialize t-x dip */
+    for(i=0; i < n123; i++) {
+	p[0][0][i] = p0;
+    }
+  
+    /* estimate t-x dip */
+    dip3(1, niter, nw, nj1, verb, u, p);
+
+    /* write t-x dip */
+    sf_write(p[0][0],sizeof(float),n123,out);
+
+    if (n3 > 1) { /* if 3-D input */
+	/* initialize t-y dip */
+	for(i=0; i < n123; i++) {
+	    p[0][0][i] = q0;
+	}
+  
+	/* estimate t-y dip */
+	dip3(2, niter, nw, nj2, verb, u, p);
+
+	/* write t-y dip */
+	sf_write(p[0][0],sizeof(float),n123,out);
+    }
+    
+    exit (0);
+}

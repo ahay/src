@@ -1,0 +1,26 @@
+Mbandpass.o: Mbandpass.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h \
+  butterworth.h
+Mbin.o: Mbin.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h int2.h interp.h
+Mbin1.o: Mbin1.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h int1.h interp.h
+Mdip.o: Mdip.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h dip3.h
+Msigmoid.o: Msigmoid.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h random.h
+Msmooth.o: Msmooth.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h triangle.h
+adjnull.o: adjnull.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h adjnull.h
+allp3.o: allp3.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h allp3.h apfilt.h
+apfilt.o: apfilt.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h apfilt.h
+bandpass.o: bandpass.c bandpass.h butterworth.h
+butterworth.o: butterworth.c butterworth.h
+dip3.o: dip3.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h dip3.h divide1.h \
+  allp3.h
+divide1.o: divide1.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h divide1.h \
+  tridiagonal.h
+int1.o: int1.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h int1.h interp.h \
+  adjnull.h
+int2.o: int2.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h int2.h interp.h \
+  adjnull.h
+interp.o: interp.c interp.h
+pwd.o: pwd.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h allp3.h
+random.o: random.c random.h
+triangle.o: triangle.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h triangle.h
+tridiagonal.o: tridiagonal.c ../rsf/rsf.h ../rsf/c99.h ../rsf/file.h \
+  tridiagonal.h
