@@ -11,8 +11,8 @@ int main (int argc, char* argv[])
 {
     int it, nt,nx,nz, ix,iz, iw, nw;
     float a, dz, z, dw, w0, w1, w2, w, sx, sz, dx;
-    float *tx, *px, *zx;
-    float complex *trace1, *trace2, c;
+    float *tx, *px, *zx, *trace2;
+    float complex *trace1, c;
     sf_file in, out, place, depth, wave;
 
     sf_init (argc,argv);
@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
     /* highest frequency */
 
     trace1 = sf_complexalloc(nw);
-    trace2 = sf_complexalloc(nw);
+    trace2 = sf_floatalloc(nx);
  
     sf_read(trace1,sizeof(float complex),nw,wave);
 
@@ -40,7 +40,9 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
     if (!sf_histint(in,"n3",&nz)) sf_error("No n3= in input");
 
-    if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_getfloat("dx",&dx)) sf_error("Need dx= ");
+    /* location error */
+
     if (!sf_histfloat(in,"d3",&dz)) sf_error("No d3= in input");
     dz *= (0.5*nz);
 
@@ -51,10 +53,12 @@ int main (int argc, char* argv[])
     if (!sf_getfloat ("z",&z)) z=0.5;
     /* depth */
 
-    sf_putint(out,"n1",nw);
-    sf_putfloat(out,"d1",dw);
-    sf_putfloat(out,"o1",w0);
-    sf_settype(out,SF_COMPLEX);
+    sf_putint(out,"n1",1);
+/*    
+      sf_putfloat(out,"d1",dw);
+      sf_putfloat(out,"o1",w0); 
+      sf_settype(out,SF_COMPLEX); 
+*/
 
     tx = sf_floatalloc(nt);
     px = sf_floatalloc(nt);
@@ -67,13 +71,14 @@ int main (int argc, char* argv[])
 	    sf_read(px,sizeof(float),nt,place);
 	    sf_read(zx,sizeof(float),nt,depth);
 	    
+	    trace2[ix] = 0.;
+
 	    for (iw = 0; iw < nw; iw++) {
-		trace2[iw] = 0.;
-		
 		w = w0 + iw*dw;
-		if (w < w1 || w > w1) continue;
+		if (w < w1 || w > w2) continue;
 		
 		c = trace1[iw];
+		if (fabsf(w) < dw) c *= 2.;
 		w *= 2.*SF_PI;
 		
 		for (it = 0; it < nt; it++) {
@@ -81,15 +86,15 @@ int main (int argc, char* argv[])
 		    
 		    a = fabsf(px[it]-sx);
 		    if (a < dx) {
-			trace2[iw] += (1.-a)*c*cexp(I*w*tx[it]);
+			trace2[ix] += crealf((1.-a/dx)*c*cexpf(-I*w*tx[it]));
 		    }
 		} /* nt */
 	    } /* nw */
-	    sf_write (trace2,sizeof(float complex),nw,out);
 	} /* nx */
+	sf_write (trace2,sizeof(float),nx,out);
     } /* nz */
     
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.3 2003/10/23 03:38:28 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.4 2003/10/24 14:57:58 fomels Exp $	 */
