@@ -100,6 +100,7 @@ int main(int argc, char* argv[])
 	    interp = spline_int;
 	    break;
 	default:
+	    interp = NULL;
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }

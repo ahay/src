@@ -278,12 +278,54 @@ void sf_settype (sf_file file, sf_datatype type)
 /*< set file type >*/
 {
     file->type = type;
+    switch(type) {
+	case SF_FLOAT:
+	    sf_putint(file,"esize",(int) sizeof(float));
+	    break;
+	case SF_INT:
+	    sf_putint(file,"esize",(int) sizeof(int));
+	    break;
+	case SF_COMPLEX:
+#ifndef __cplusplus
+	    sf_putint(file,"esize",(int) sizeof(float complex));
+#else
+	    sf_putint(file,"esize",2 * (int) sizeof(float));
+	    break;
+#endif
+	case SF_CHAR:
+	default:
+	    sf_putint(file,"esize",(int) sizeof(char));
+	    break;
+    }
 }
 
 void sf_setform (sf_file file, sf_dataform form)
 /*< set file form >*/
 {
     file->form = form;
+    
+    switch(form) {
+	case SF_ASCII:
+	    if (NULL != file->buf) {
+		free (file->buf);
+		file->buf = NULL;
+	    }
+	    sf_putint(file,"esize",0);
+	    break;
+	case SF_XDR:
+	    if (NULL == file->buf) {
+		file->buf = sf_charalloc(BUFSIZ);
+		xdrmem_create(&(file->xdr),file->buf,BUFSIZ,file->op);
+	    }
+	    break;
+	case SF_NATIVE:
+	default:
+	    if (NULL != file->buf) {
+		free (file->buf);
+		file->buf = NULL;
+	    }
+	    break;
+    }
 }
 
 void sf_setformat (sf_file file, const char* format)
@@ -293,42 +335,21 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
 >*/
 {
     if (NULL != strstr(format,"float")) {
-	file->type = SF_FLOAT;
-	sf_putint(file,"esize",(int) sizeof(float));
+	sf_settype(file,SF_FLOAT);
     } else if (NULL != strstr(format,"int")) {
-	file->type = SF_INT;
-	sf_putint(file,"esize",(int) sizeof(int));
+	sf_settype(file,SF_INT);
     } else if (NULL != strstr(format,"complex")) {
-	file->type = SF_COMPLEX;
-#ifndef __cplusplus
-	sf_putint(file,"esize",(int) sizeof(float complex));
-#else
-	sf_putint(file,"esize",2 * (int) sizeof(float));
-#endif
+	sf_settype(file,SF_COMPLEX);
     } else {
-	file->type = SF_CHAR;
-	sf_putint(file,"esize",(int) sizeof(char));
+	sf_settype(file,SF_CHAR);
     }
     
     if (0 == strncmp(format,"ascii_",6)) {
-	file->form = SF_ASCII;
-	if (NULL != file->buf) {
-	    free (file->buf);
-	    file->buf = NULL;
-	}
-	sf_putint(file,"esize",0);
+	sf_setform(file,SF_ASCII);
     } else if (0 == strncmp(format,"xdr_",4)) {
-	file->form = SF_XDR;
-	if (NULL == file->buf) {
-	    file->buf = sf_charalloc(BUFSIZ);
-	    xdrmem_create(&(file->xdr),file->buf,BUFSIZ,file->op);
-	}
+	sf_setform(file,SF_XDR);
     } else {
-	file->form = SF_NATIVE;
-	if (NULL != file->buf) {
-	    free (file->buf);
-	    file->buf = NULL;
-	}
+	sf_setform(file,SF_NATIVE);
     }
 }
     

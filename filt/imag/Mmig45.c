@@ -154,8 +154,7 @@ int main(int argc, char* argv[])
     slv = ctridiagonal_init (nx);
 
     /* d.c. */
-    sf_warning("frequency 1 of %d",iw+1, nw);
-
+    sf_warning("frequency 1 of %d",nw);
 
     for (iw = 1; iw < nw; iw++) {
 	sf_warning("frequency %d of %d",iw+1, nw);

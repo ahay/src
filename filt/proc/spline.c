@@ -143,6 +143,8 @@ void spline_post (int nw, int o, int d, int n, float *modl, float *datr)
 	    flt = flt8;
 	    break;
 	default:
+	    a0 = 0.;
+	    flt = NULL;
 	    sf_error("%s: unsupported spline length  %d",__FILE__,nw);
 	    break;
     }

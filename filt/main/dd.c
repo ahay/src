@@ -84,8 +84,8 @@ int main(int argc, char *argv[])
 		sf_error("Unsupported type=\"%s\"",type);
 		break;
 	}
-	sf_settype(out,otype);
     } 
+    sf_settype(out,otype);
 	
     if (!sf_histint(in,"esize",&ein)) ein=4;
     if (!sf_histint(out,"esize",&eout)) eout=4;

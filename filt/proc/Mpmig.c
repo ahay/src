@@ -81,14 +81,13 @@ int main (int argc, char* argv[])
     /* do migration to zero offset */
 
     for (ih = 0; ih < nh; ih++) {
-	h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
-
 	for (it=0; it < ntx; it++) {
 	    img[it]=0.;
 	}
 
 	for (ix = 0; ix < nx; ix++) {
 	    x = x0 + ix*dx;
+	    h = h0 + (ih+0.5)*dh + (dh/CDPtype)*(ix%CDPtype); 
 	    	
 	    sf_floatread (ord, nt, cmp);
 	    sf_floatread (px, nt, xdip);
