@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
     char key1[7], key2[7], *val;
     bool norm;
-    float *trace, *sum;
+    float *trace, *sum, f;
     sf_datatype type;
 
     sf_init (argc, argv);
@@ -36,19 +36,20 @@ int main(int argc, char* argv[])
     for (j=2; j < SF_MAX_DIM; j++) {
 	sprintf(key1,"n%d",j+1);
 	sprintf(key2,"n%d",j);
-	if (!sf_histint(in,key1,&ni)) break;
+	if (!sf_histint(in,key1,&ni)) {
+	    sf_putint(out,key2,1);
+	    break;
+	}
 	sf_putint(out,key2,ni);
 	n3 *= ni;
 	
 	sprintf(key1,"o%d",j+1);
 	sprintf(key2,"o%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key1,"d%d",j+1);
 	sprintf(key2,"d%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key1,"label%d",j+1);
 	sprintf(key2,"label%d",j);

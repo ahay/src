@@ -6,6 +6,7 @@
 int main(int argc, char* argv[])
 {
     int j, n1, n2, n3, i2, i3, ni, esize;
+    float f;
     size_t n;
     sf_file in, out;
     char key1[7], key2[7], *val, *trace;
@@ -21,8 +22,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("n2",&n2)) sf_error("Need n2=");
     sf_putint(out,"n2",n2);
-    if (NULL != (val = sf_getstring("d2"))) sf_putstring(out,"d2",val);
-    if (NULL != (val = sf_getstring("o2"))) sf_putstring(out,"o2",val);
+    if (sf_getfloat("d2",&f)) sf_putfloat(out,"d2",f);
+    if (sf_getfloat("o2",&f)) sf_putfloat(out,"o2",f);
     
     n3 = 1;
     for (j=2; j < SF_MAX_DIM; j++) {
@@ -34,13 +35,11 @@ int main(int argc, char* argv[])
 	
 	sprintf(key2,"o%d",j+1);
 	sprintf(key1,"o%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"d%d",j+1);
 	sprintf(key1,"d%d",j);
-	if (NULL != (val = sf_histstring(in,key1))) 
-	    sf_putstring(out,key2,val);
+	if (sf_histfloat(in,key1,&f)) sf_putfloat(out,key2,f);
 
 	sprintf(key2,"label%d",j+1);
 	sprintf(key1,"label%d",j);

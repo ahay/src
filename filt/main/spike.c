@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 
 	snprintf(key,7,"label%d",i+1);
 	if (NULL == (label = sf_getstring(key)))
-	    label = (i==0)? "Time (sec)":"Distance (km)";
+	    label = (i==0)? "Time (s)":"Distance (km)";
 	sf_putstring(spike,key,label);
     }
 	

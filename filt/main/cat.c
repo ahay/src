@@ -7,8 +7,8 @@
 
 #include <rsf.h>
 
-static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim, 
-			  const int *n, /*@out@*/ int *naxis);
+static void check_compat (int esize, size_t nin, sf_file *in, int axis, 
+			  int dim, const int *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
@@ -81,7 +81,6 @@ int main (int argc, char* argv[])
     ni = 0;
     for (j=0; j < nin; j++) {
 	ni += naxis[j];
-	sf_setformat(in[j],"raw");
     }
 
     if (space) {
@@ -91,8 +90,13 @@ int main (int argc, char* argv[])
 
     (void) snprintf(key,3,"n%d",axis);
     sf_putint(out,key,(int) ni);
+    
+    sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
     sf_setformat(out,"raw");
+    for (j=0; j < nin; j++) {
+    	sf_setformat(in[j],"raw");
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
