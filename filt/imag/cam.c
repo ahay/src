@@ -73,7 +73,7 @@ void cam_init(bool verb_,
 	      axa aly_  /* x-line (slowness/image) */,
 	      int ntx, int nty, int nth      /* taper size */,
 	      int nr1                        /* maximum number of references */,
-	      int npad                       /* padding on nh */,
+	      int padmx,int padmy,int padhx  /* padding in the k domain */,
 	      slice slow)
 /*< initialize >*/
 {
@@ -98,21 +98,21 @@ void cam_init(bool verb_,
     ds2 = ds*ds;
     ds2 *= ds2;
 
-    bmy.n = amy.n;
+    bmx.n = amx.n + padmx ;
+    bmx.d =           2.0*SF_PI/(bmx.n*amx.d);
+    bmx.o = (1==bmx.n)?0:-SF_PI/       amx.d ;
+
+    bmy.n = amy.n + padmy;
     bmy.d =           2.0*SF_PI/(bmy.n*amy.d);
     bmy.o = (1==bmy.n)?0:-SF_PI/       amy.d ;
 
-    bmx.n = amx.n;
-    bmx.d =           2.0*SF_PI/(bmx.n*amx.d);
-    bmx.o = (1==bmx.n)?0:-SF_PI/      amx.d ;
-
-    bhx.n = ahx.n + npad;
+    bhx.n = ahx.n + padhx;
     bhx.d =           2.0*SF_PI/(bhx.n*ahx.d);
     bhx.d = (1==bhx.n)?0:-SF_PI/       ahx.d ;
 
-    nrmax = nr1;
-
     fft3_init(bmx.n,bmy.n,bhx.n);
+
+    nrmax = nr1;
 
     /* allocate workspace */
     qq = sf_floatalloc3   (alx.n,aly.n,ahx.n);  /* image */
@@ -126,13 +126,13 @@ void cam_init(bool verb_,
     wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
     wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
 
-    ksx= sf_floatalloc2   (amx.n,      bhx.n);  /* source   wavenumber */
-    krx= sf_floatalloc2   (amx.n,      bhx.n);  /* receiver wavenumber */
-    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
-    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
+    ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
+    krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
 
     jy = sf_intalloc      (      amy.n      );  /* midpoint index */
     jx = sf_intalloc      (amx.n            );  /* midpoint index */
+    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
+    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
 
     /* precompute indices */
     for (imy=0; imy<amy.n; imy++) {
