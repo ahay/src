@@ -261,6 +261,8 @@ iRSF::get (const char* name, int size, float* value) const
 void
 iRSF::get (const char* name, int size, bool* value, const bool* defolt) const
 {
+    //// BUG: in gcc < 3 where sizeof(bool)=4
+
     if (file_) {
 	if (!sf_histbools(file_,name,value,size)) {
 	    for (int i = 0; i < size; i++) {
@@ -279,6 +281,8 @@ iRSF::get (const char* name, int size, bool* value, const bool* defolt) const
 void 
 iRSF::get (const char* name, int size, bool* value) const
 {
+    //// BUG: in gcc < 3 where sizeof(bool)=4
+
     if (file_) {
 	if (!sf_histbools(file_,name,value,size))
 	    sf_error("missing history value: %s",name);
