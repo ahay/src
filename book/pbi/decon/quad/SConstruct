@@ -6,16 +6,16 @@ Flow('Ricker',None,
      ''')
 
 
-Flow('ricker ricker1 ricker2','Ricker',
+Flow('ricker0 ricker1 ricker2','Ricker',
      '''
      rtoc | fft1 inv=y > ${TARGETS[1]};
      window < ${TARGETS[1]} n1=520  > ${TARGETS[2]};
      window < ${TARGETS[1]} n1=520 f1=520 | cat axis=1 ${TARGETS[2]} |
      window n1=41 f1=500
      ''')
-Flow('integr','ricker','causint')
+Flow('integr','ricker0','causint')
 
-Result('spec','ricker integr minphase',
+Result('spec','ricker0 integr minphase',
        '''
        cat axis=2 ${SOURCES[1:3]} |
        pad n1=1024 |
@@ -24,7 +24,7 @@ Result('spec','ricker integr minphase',
        ''')
 
 Flow('minphase','Ricker','rtoc | kolmog | window n1=20 | pad n1=41 beg1=21')
-Result('time','minphase ricker',
+Result('time','minphase ricker0',
        '''
        cat axis=2 ${SOURCES[1]} |
        dots labels=Min-phase:Zero-phase title="Ricker Wavelet" label1=" "
