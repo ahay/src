@@ -32,7 +32,7 @@ Plot('exp',exps,dots)
 Plot('tri',tris,dots)
 
 Plot('exp1',exps,graph('Spectrum of regularized smoothing'))
-Plot('tri1',tris,graph('Triangle spectrum'))
+Plot('tri1',tris,graph('Spectrum of triangle smoothing'))
 
 for case in ['exp','tri']:
     Combine(case,[case,case+'1'],'SideBySideAniso',result=1)
