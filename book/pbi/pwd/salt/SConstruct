@@ -1,0 +1,40 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+###########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/salt'
+Fetch('line19410.sgy',datdir)
+
+grey = '''
+grey label1="Time (s)" label2="Lateral (m)" wantscalebar=y
+'''
+
+Flow(['line','head.A','head.B'],'line19410.sgy',
+     '''segyread tape=$SOURCE read=data
+     hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     window min1=1.5''',stdin=0)
+Plot('line','line',grey + ' title="Input Line"')
+
+Flow('dip','line','dip eps=10 lam=10 verb=y niter=10')
+Plot('dip','dip',grey + ' title="Dip" color=j')
+
+Combine('dip','line dip','OverUnderAniso',result=1)
+
+Flow('pwd','line dip','pwd dip=${SOURCES[1]}')
+Flow('smooth','pwd',
+          'math output="input*input" | smooth rect1=10 rect2=10')
+Plot('pwd','smooth',grey + ' title="Coherency" allpos=y color=j')
+
+Combine('pwd','line pwd','OverUnderAniso',result=1)
+
+###########################################################################
+
+End()
