@@ -39,7 +39,7 @@ def depends(env,list,file):
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include.findall(line):
-            if inc not in list:
+            if inc not in list and inc[0] != '_':
                 list.append(inc)
                 depends(env,list,inc)
     fd.close()
