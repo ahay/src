@@ -128,14 +128,14 @@ void dsr2(bool verb                   /* verbosity flag */,
 	  float **slow                /* slowness [nz][nx] */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,ih;
+    int iz,iw,ix,ih,iy;
     float sy, *si;
     float complex cshift, cref, w, w2, **pp, cs, cr;
 
     if (!inv) { /* prepare image for migration */
-	for (ix=0; ix<ny; ix++) {      
+	for (iy=0; iy<ny; iy++) {      
 	    for (ih=0; ih<nh; ih++) {
-		qq[ix][ih] = 0.0;
+		qq[iy][ih] = 0.0;
 	    }
 	}
 	for (iz=0; iz<nz; iz++) {

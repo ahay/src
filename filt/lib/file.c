@@ -961,10 +961,6 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	    }
 	    break;
 	default:
-	  sf_warning("before %p %d %s",
-		     file->stream,
-		     ftell(file->stream),
-		     file->pipe? "y":"n");
 	    got = fread(arr,sizeof(float),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);

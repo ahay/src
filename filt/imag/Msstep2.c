@@ -34,6 +34,7 @@ int main (int argc, char *argv[])
     float z0, dz;		/* migrated time sampling interval */
     float dw;	        /* frequency sampling interval */
     float dx,dy;		/* spatial sampling interval	*/
+    float dt;           /* time error */
 
     float complex ***data;	   /* complex input		*/
 
@@ -64,7 +65,10 @@ int main (int argc, char *argv[])
     /* taper size */
 
     if (!sf_getint("nr",&nr)) nr = 1;
-    /* reference slownesses */
+    /* maximum number of references */
+
+    if (!sf_getfloat("dt",&dt)) dt=0.004;
+    /* time error */
 
     vel = sf_input("slowness");
 
@@ -115,7 +119,7 @@ int main (int argc, char *argv[])
     /* migration */
     if (!inv) sf_complexread(data[0][0],ny*nx*nw,in);
 
-    split2 (verb, inv, eps,  nw, dw, w0, data, imag, slow);
+    split2 (verb, inv, eps,  nw, dw, w0, data, imag, slow, dt);
 
     /* modeling */
     if ( inv) sf_complexwrite(data[0][0],ny*nx*nw,out);

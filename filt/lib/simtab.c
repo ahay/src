@@ -456,10 +456,7 @@ void sf_simtab_input (sf_simtab table, FILE* fp)
 
     while (NULL != fgets(line,4,fp)) {
 	/* code for the header end */
-	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) {
-	  sf_warning("got it %p",fp);
-	  return;
-	}
+	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) return;
 	if ('\n'  !=line[0] && '\n'  !=line[1] && '\n'  !=line[2] &&
 	    NULL == fgets(line+3,LINELEN-3,fp)) return;
 	cw = word;

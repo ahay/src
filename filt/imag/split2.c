@@ -26,15 +26,14 @@
 #include "fft2.h"
 
 #define LOOPxy(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ {a} }}
-/*^*/
 
 #include "slice.h"
 /*^*/
 
-static int nx,ny,nz,nt,nr;
+static int nx,ny,nz,nt,nrmax;
 static float dz;
 static float         **ss; /* slowness */
-static float         **so; /* slowness */
+static float         **sm; /* medium slowness squared */
 static float         **qq; /* image */
 static float         **kk; /* wavenumber */
 static float         **tt; /* taper */
@@ -42,6 +41,7 @@ static float         **sz; /* reference slowness */
 
 static int           **mm; /* multi-reference slowness map  */
 static float         **ma; /* multi-reference slowness mask */
+static int           *nr;  /* number of references */
 
 static float complex **pp; /* wavefield */
 static float complex **wt; /* wavefield top */
@@ -50,8 +50,8 @@ static float complex **wb; /* wavefield bot */
 void split2_init(int nz1, float dz1  /* depth */,
 		 int ny1, float dy1  /* in-line midpoint */,
 		 int nx1, float dx1  /* cross-line midpoint */,
-		 int nt1             /* taper size */, 
-		 int nr1             /* number of reference slownesses */ )
+		 int nt1             /* taper size */,
+		 int nr1             /* maximum number of references */) 
 /*< initialize >*/
 {
     int ix, iy, jx, jy;
@@ -69,14 +69,14 @@ void split2_init(int nz1, float dz1  /* depth */,
     y0 = (1==ny)?0:-SF_PI/dy1;
 
     nt = nt1;
-    nr = nr1;
+    nrmax = nr1;
 
     fft2_init(ny,nx);
 
     /* allocate workspace */
     ss  = sf_floatalloc2 (ny,nx);  /* slowness */
-    so  = sf_floatalloc2 (ny,nx);  /* slowness */
-    sz  = sf_floatalloc2 (nr,nz);  /* reference slowness */
+    sz  = sf_floatalloc2 (nrmax,nz); /* reference slowness */
+    sm  = sf_floatalloc2 (nrmax,nz);
 
     qq  = sf_floatalloc2 (ny,nx);  /* image */
     kk  = sf_floatalloc2 (ny,nx);  /* wavenumber */
@@ -84,6 +84,7 @@ void split2_init(int nz1, float dz1  /* depth */,
 
     mm  = sf_intalloc2   (ny,nx);  /* MRS map */
     ma  = sf_floatalloc2 (ny,nx);  /* MRS mask */
+    nr = sf_intalloc (nz);
 
     pp  = sf_complexalloc2 (ny,nx);/* wavefield */
     wt  = sf_complexalloc2 (ny,nx);/* wavefield top */
@@ -114,8 +115,8 @@ void split2_close(void)
     free(*wb); free( wb);
 
     free(*ss); free( ss);
-    free(*so); free( so);
     free(*sz); free( sz);
+    free(*sm); free( sm);
 
     free(*qq); free( qq);
     free(*kk); free( kk);
@@ -131,12 +132,13 @@ void split2(bool verb                   /* verbosity flag */,
 	    int nw, float dw, float w0  /* frequency (radian) */,
 	    float complex *** cp        /* data  [nw][nx][ny] */,
 	    slice imag                  /* imag  [nz][nx][ny] */,
-	    slice slow                  /* slow  [nz][nx][ny] */)
+	    slice slow                  /* slow  [nz][nx][ny] */,
+	    float dt            /* time error */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,iy,ir;
+    int iz,iw,ix,iy,ir, nxy;
     float complex cshift, cref, w, w2, **pp;
-    float qr;
+    float qr, smax, smin;
 
     if (!inv) { /* prepare image for migration */
 	LOOPxy( qq[ix][iy] = 0.0; );
@@ -145,24 +147,23 @@ void split2(bool verb                   /* verbosity flag */,
 	}
     }
 
-    /* find reference from average slowness in layer */
-    for (iz=0; iz<nz-1; iz++) {
-	slice_get(slow,iz,  so[0]);
-	slice_get(slow,iz+1,ss[0]);
-	LOOPxy( ss[ix][iy] += so[ix][iy]; 
-		ss[ix][iy] /= 2; );
-	for (ir=0; ir<nr; ir++) {
-	    qr = (ir+1.0)/nr - 0.5 * 1./nr;
-	    sz[iz][ir]  = sf_quantile(qr*nx*ny,nx*ny,ss[0]);
+    nxy = nx*ny;
+    for (iz=0; iz<nz; iz++) {
+	slice_get(slow,iz,  ss[0]);
+	smax = sf_quantile(nxy-1,nxy,ss[0]);
+	smin = sf_quantile(0,nxy,ss[0]);
+	nr[iz] = SF_MIN(nrmax,1+(smax-smin)*dz/dt);
+	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
+	for (ir=0; ir<nr[iz]; ir++) {
+	    qr = (ir+1.0)/nr[iz] - 0.5 * 1./nr[iz];
+	    sz[iz][ir]  = sf_quantile(qr*nxy,nxy,ss[0]);
+	    sm[iz][ir] = sz[iz][ir]*sz[iz][ir];
 	}
     }
-    for (ir=0; ir<nr; ir++) {
-	sz[nz-1][ir] = sz[nz-2][ir];
-    }
-    
-    /* compute reference slowness squared */
-    for (iz=0; iz<nz; iz++) {
-	sz[iz][ir] *= sz[iz][ir];
+    for (iz=0; iz<nz-1; iz++) {
+	for (ir=0; ir<nr[iz]; ir++) {
+	    sm[iz][ir] = 0.5*(sm[iz][ir]+sm[iz+1][ir]);
+	}
     }
 
     /* loop over frequencies w */
@@ -186,35 +187,53 @@ void split2(bool verb                   /* verbosity flag */,
 	    for (iz=nz-2; iz>=0; iz--) {
 		
 		/* w-x @ bottom */
-		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
+		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz)*tt[ix][iy];
 			pp[ix][iy] *= cshift; );
 		
-		/* taper and FFT */
-		LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+		/* FFT */
 		fft2(false,pp);
-		
-		/* w-k phase shift */
-		cref = csqrtf(w2*sz[iz][ir]);
-		LOOPxy( cshift = cexpf((cref-csqrtf(w2*sz[iz][ir]+kk[ix][iy]))*dz);
-			pp[ix][iy] *= cshift; );
+
+		slice_get(slow,iz,ss[0]);
+
+		/* create MRS map */
+		LOOPxy( mm[ix][iy] = 0; );
+		for (ir=0; ir<nr[iz]-1; ir++) {
+		    LOOPxy( if(ss[ix][iy] > 0.5*(sz[iz][ir]+sz[iz][ir+1])) mm[ix][iy]++; );
+		}
+
+		LOOPxy( wt[ix][iy] = 0; );
+		for (ir=0; ir<nr[iz]; ir++) {
+		    /* w-k phase shift */
+		    cref = csqrtf(w2*sm[iz][ir]);
+		    LOOPxy( cshift = cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
+			    wb[ix][iy] = pp[ix][iy]*cshift; );
 
 
-		/* taper and IFT */
-		fft2(true,pp);
-		LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+		    /* IFT */
+		    fft2(true,wb);
+
+/* create MRS mask */
+		    LOOPxy(                     ma[ix][iy]=0.; );
+		    LOOPxy( if( mm[ix][iy]==ir) ma[ix][iy]=1.; );
+		    
+/* accumulate wavefield */
+		    LOOPxy( wt[ix][iy] += wb[ix][iy] * ma[ix][iy]; );
+		    
+		} /* ir loop */
+
+		slice_get(imag,iz,qq[0]);
 		
 		/* w-x at top */
-		slice_get(slow,iz,ss[0]);		
 		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] *= cshift; );
-		
-		/* imaging condition */
-		slice_get(imag,iz,qq[0]);
-		LOOPxy( pp[ix][iy] += qq[ix][iy]; );
-
+			pp[ix][iy] = qq[ix][iy] + wt[ix][iy]*cshift; );
 	    } /* iz */
+
+	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+
 	} else { /* MIGRATION */
 	    slice_get(slow,0,ss[0]);
+
+	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
@@ -228,51 +247,40 @@ void split2(bool verb                   /* verbosity flag */,
 		LOOPxy( cshift= cexpf(-0.5*w*ss[ix][iy]*dz);
 			pp[ix][iy] *= conjf(cshift); );
 
-		/* taper and FFT */
-		LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+		/* FFT */
 		fft2(false,pp);
-
-/* START MRS */
-		/* create MRS map */
-		slice_get(slow,iz  ,so[0]);
+		
 		slice_get(slow,iz+1,ss[0]);
-		LOOPxy( ss[ix][iy] += so[ix][iy]; 
-			ss[ix][iy] /= 2; );
 
+		/* create MRS map */
 		LOOPxy( mm[ix][iy] = 0; );
-		for (ir=0; ir<nr-1; ir++) {
-		    LOOPxy( if(ss[ix][iy] > 0.5*(sz[iz][ir]+sz[iz][ir+1] )) mm[ix][iy] +=1; );
+		for (ir=0; ir<nr[iz]-1; ir++) {
+		    LOOPxy( if(ss[ix][iy] > 0.5*(sz[iz+1][ir]+sz[iz+1][ir+1])) 
+			    mm[ix][iy]++; );
 		}
 
-		LOOPxy( wt[ix][iy] = pp[ix][iy]; ); /* save wavefield */
 		LOOPxy( wb[ix][iy] = 0; );
-		for (ir=0; ir<nr; ir++) {
-		    LOOPxy( pp[ix][iy] = wt[ix][iy]; );
-		    
+		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
-		    cref = csqrtf(w2*sz[iz][ir]);
-		    LOOPxy( cshift = cexpf((cref-csqrtf(w2*sz[iz][ir]+kk[ix][iy]))*dz);
-			    pp[ix][iy] *= conjf(cshift); );
+		    cref = csqrtf(w2*sm[iz][ir]);
+		    LOOPxy( cshift = cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
+			    wt[ix][iy] = pp[ix][iy]*conjf(cshift); );
 		    
-		    /* IFT and taper */
-		    fft2(true,pp);
-		    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+		    /* IFT */
+		    fft2(true,wt);
 
 		    /* create MRS mask */
 		    LOOPxy(                     ma[ix][iy]=0.; );
 		    LOOPxy( if( mm[ix][iy]==ir) ma[ix][iy]=1.; );
 
 		    /* accumulate wavefield */
-		    LOOPxy( wb[ix][iy] += pp[ix][iy] * ma[ix][iy]; );
+		    LOOPxy( wb[ix][iy] += wt[ix][iy] * ma[ix][iy]; );
 		    
 		} /* ir loop */
-		LOOPxy( pp[ix][iy] = wb[ix][iy]; ); /* collect wavefield */
-/* END MRS */
 		
 		/* w-x @ bottom */
-		slice_get(slow,iz+1,ss[0]);
-		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] *= conjf(cshift); );
+		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz)*tt[ix][iy];
+			pp[ix][iy] = wb[ix][iy]*conjf(cshift); );
 	    } /* iz */
 
 	    /* imaging condition @ bottom */ 
@@ -296,8 +304,8 @@ void taper_init(int nt)
 	    if(nx>=nt) {
 		for(it=0; it<nt; it++) {
 		    for(iy=0; iy<ny; iy++) {
-			tt[   it  ][iy] = cos(SF_PI/2* (float)SF_ABS(nt-it)/nt);
-			tt[nx-it-1][iy] = cos(SF_PI/2* (float)SF_ABS(nt-it)/nt);
+			tt[   it  ][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
+			tt[nx-it-1][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
 		    }
 		}
 	    }
@@ -305,8 +313,8 @@ void taper_init(int nt)
 	    if(ny>=nt) {
 		for(it=0; it<nt; it++) {
 		    for(ix=0; ix<nx; ix++) {
-			tt[ix][   it  ] = cos(SF_PI/2* (float)SF_ABS(nt-it)/nt);
-			tt[ix][ny-it-1] = cos(SF_PI/2* (float)SF_ABS(nt-it)/nt);
+			tt[ix][   it  ] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
+			tt[ix][ny-it-1] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
 		    }
 		}
 	    }
