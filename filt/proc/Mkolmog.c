@@ -24,14 +24,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[]) {
     int n1, nfft, nw;
     float *trace;
-    float complex *fft;
+    bool spec;
     sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
-    if (SF_COMPLEX == sf_gettype(in)) { /* input complex spectrum */
+    if (!sf_getbool("spec",&spec)) spec=false;
+    /* if y, the input is spectrum squared; n, time-domain signal */
+
+    if (spec) { 
 	if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
 	nfft = 2*(nw-1);
 
@@ -39,12 +42,11 @@ int main(int argc, char* argv[]) {
 	sf_settype(out,SF_FLOAT);
 
 	trace = sf_floatalloc(nfft);
-	fft = sf_complexalloc(nw);
 
-	sf_complexread(fft,nw,in);
+	sf_floatread(trace,nw,in);
 	kolmog_init(nfft);
-	kolmog2(trace,fft);
-
+	kolmog2(trace);
+	
 	sf_floatwrite(trace,nfft,out);
     } else { /* input signal */
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");

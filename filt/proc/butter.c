@@ -1,60 +1,65 @@
 #include <rsf.h>
 
 #include "butter.h"
-#include "kolmog.h"
 
-static const int nw, na;
-static float *cw;
+static float **den, *yy, sinw, cosw;
+static int nn;
 
-void butter_init(int nw_in)
+void butter_init(int npoly, int nx)
 {
-    nw=sf_npfar(nw_in);
-    cw = sf_floatalloc(nw);
-    kolmog_init(nw);
+    nn = npoly;
+    den = sf_floatalloc2(3,nn/2);
 }
 
 void butter_close(void)
 {
-    free(cw);
-    kolmog_close();
+    free (den);
 }
 
-void butter_set(bool low, float cutoff, int npoly, float *num, float *den)
+void butter_set(float cutoff)
 {
-    int nn, i;
-    real arg, tancut;
+    int i;
+    float arg, f;
 
-    na = npoly;
-    nn = npoly - 1;
-    tancut = 1./tanf(cutoff*SF_PI);
-    for (i=0; i < nw; i++) {
-        arg = SF_PI * i / nw;
-	cx[i] = powf(cosf(arg),2*nn) + powf(sinf(arg) * tancut,2*nn);
+    arg = 2.*SF_PI*cutoff;
+    sinw = sinf(arg);
+    cosw = cosf(arg);
+
+    /*
+    if (nn%2) {
+	tanw = low? (1.+cosw)/sinw : sinw/(1.+cosw);
+	den[0] = 1.+tanw;
+	den[1] = 1.-tanw;
+	n1 = 2;
+    } else {
+	den[0] = 1.;
+	n1 = 1;
     }
-    kolmog(nw, cx); /* spectral factorization */
-    for (i=0; i < npoly; i++) {
-	den[i] = cx[i]; /* denominator */
+    */
+
+    for (i=0; i < nn/2; i++) {
+	f = sinf(SF_PI*(2*i+1)/(2*nn))*sinw;
+	den[i][0] = (1.+f);
+	den[i][1] = -2.*cosw/(1.+f);
+	den[i][2] = (1.-f)/(1.+f);
     }
-    for (i=0; i < nw; i++) {
-        arg = SF_PI * i / nw;
-	cx[i] = low? powf(cosf(arg),2*nn): powf(sinf(arg) * tancut,2*nn);
-    }
-    kolmog(nw, cx); /* spectral factorization */
-    for (i=0; i < npoly; i++) {
-	num[i] = cx[i]; /* numerator */
-    }
+
+    sinw = sinf(0.5*arg);
+    cosw = cosf(0.5*arg);
+
+    /*
+      scale = low? sinf(0.5*arg): cosf(0.5*arg);
+      scale = 1./(scale*scale);
+    */
 }
 
-void butter (int nx, int ny, const float *num, const float *den, 
-	     const float *xx, float *yy)
+void butter (bool low, int ny, float *yy)
 {
-    int ia, iy;
-
     /* convolution */
     for (iy=0; iy < ny; iy++) {
-	yy[iy] = 0.;
+	yy[iy] = xx[iy];
     }
-    for (ia=0; ia < na; ia++) { 
+    for (ia=1; ia < na; ia++) { 
         for (iy=0; iy < ny; iy++) {
 	    yy[iy+ia] += xx[iy] * num[ia];
 	}

@@ -20,15 +20,16 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "butterworth.h"
+#include "butter.h"
 
 static void reverse (int n1, float* trace);
 
 int main (int argc, char* argv[]) 
 {
     bool phase, verb;
-    int i2, n1, n2, nplo, nphi;
-    float d1, flo, fhi, *trace;
+    int i1, i2, n1, n2, nplo, nphi;
+    float d1, flo, fhi;
+    float *trace, *trace2, *numlo=NULL, *numhi=NULL, *denlo=NULL, *denhi=NULL;
     const float eps=0.0001;
     sf_file in, out;
 
@@ -84,26 +85,49 @@ int main (int argc, char* argv[])
 			 flo,fhi,nplo,nphi);
     
     trace = sf_floatalloc(n1);
+    trace2 = sf_floatalloc(n1);
+
+    butter_init((1+nphi+nplo)*100);
+    if (flo > eps) {
+	nplo++;
+	numlo = sf_floatalloc(nplo);
+	denlo = sf_floatalloc(nplo);
+	butter_set(false, flo, nplo, numlo, denlo);
+    }
+    if (fhi > eps) {
+	nphi++;
+	numhi = sf_floatalloc(nphi);
+	denhi = sf_floatalloc(nphi);
+	butter_set(true, fhi, nphi, numhi, denhi);
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
-	if (flo > eps) {
-	    bfhighpass (nplo, flo, n1, trace, trace);
+	if (NULL != numlo) {
+	    butter (n1, numlo, denlo, trace, trace2); 
 
-	    if (!phase) {
-		reverse (n1, trace);
-		bfhighpass (nplo, flo, n1, trace, trace);
+	    if (phase) {
+		for (i1=0; i1 < n1; i1++) {
+		    trace[i1] = trace2[i1];
+		}
+	    } else {
+		reverse (n1, trace2);
+		butter (n1, numlo, denlo, trace2, trace); 
 		reverse (n1, trace);
 	    }
 	}
 
-	if (fhi < 0.5-eps) {    
-	    bflowpass (nphi, fhi, n1, trace, trace);
+	if (NULL != numhi) {
+	    butter (n1, numhi, denhi, trace, trace2); 
 
-	    if (!phase) {
+	    if (phase) {
+		for (i1=0; i1 < n1; i1++) {
+		    trace[i1] = trace2[i1];
+		}
+	    } else {
 		reverse (n1, trace);
-		bflowpass (nphi, fhi, n1, trace, trace);
+		butter (n1, numhi, denhi, trace2, trace); 
 		reverse (n1, trace);
 	    }
 	}

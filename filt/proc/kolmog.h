@@ -6,6 +6,6 @@
 void kolmog_init(int n1);
 void kolmog_close(void);
 void kolmog(float *trace);
-void kolmog2(float *trace, float complex *fft);
+void kolmog2(float *trace);
 
 #endif

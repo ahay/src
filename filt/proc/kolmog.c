@@ -27,20 +27,24 @@ void kolmog_close(void)
 
 void kolmog(float *trace)
 {
+    int i1;
+
     /* Fourier transform */
     kiss_fftr(forw,trace, (kiss_fft_cpx *) fft);
+    for (i1=0; i1 < nw; i1++) {
+	trace[i1] = crealf(fft[i1]*conjf(fft[i1]));
+    }
 
-    kolmog2(trace, fft);
-    free(fft);
+    kolmog2(trace);
 }
 
-void kolmog2(float *trace, float complex *fft)
+void kolmog2(float *trace)
 {
     int i1;
     const double eps=1.e-32;
 
     for (i1=0; i1 < nw; i1++) {
-	fft[i1] = clog(fft[i1]*conj(fft[i1])+eps)/nfft;
+	fft[i1] = clog(trace[i1]+eps)/nfft;
     }
 
     /* Inverse transform */
