@@ -102,7 +102,7 @@ int main (int argc, char* argv[])
 
     for (ix = 0; ix < nx; ix++) {
 	for (ih = 0; ih < nh; ih++) {
-	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
+	    h = off[ih] + 0.5*dh + (dh/CDPtype)*(ix%CDPtype); 
 
 	    sf_floatread (trace,nt,cmp);
 	    sf_floatread (p, nt, dip);
