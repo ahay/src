@@ -20,12 +20,14 @@
 #include <rsf.h>
 #include "twoplane2.h"
 #include "allp2.h"
+#include "predict.h"
+#include "predict2.h"
 
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n12, np;
     float *mm, *dd, **pp, **qq;
-    bool *known, verb;
+    bool *known, verb, prec;
     sf_file in, out, dip, mask;
 
     sf_init (argc,argv);
@@ -44,6 +46,9 @@ int main(int argc, char* argv[])
     /* [1,2,3] accuracy order */
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+
+    if (!sf_getbool("prec",&prec)) prec = false;
+    /* if y, apply preconditioning */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -82,13 +87,28 @@ int main(int argc, char* argv[])
     }
 
     if (NULL != qq) {
-	twoplane2_init(nw, 1,1, n1,n2, pp, qq);
-	sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		  "known", known, "x0", mm, "verb", verb, "end");
+	if (prec) {
+	    predict2_init(n1,n2,0.0001,pp,qq);
+	    sf_mask_init(known);
+	    sf_solver_prec(sf_mask_lop, sf_cgstep, predict2_lop, n12, n12, n12, 
+			   mm, mm, niter, 0.,"verb", verb,"end");
+	} else {
+	    twoplane2_init(nw, 1,1, n1,n2, pp, qq);
+	    sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
+		      "known", known, "x0", mm, "verb", verb, "end");
+	}
     } else {
-	allpass22_init(allpass2_init(nw, 1, n1,n2, pp));
-	sf_solver(allpass21_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		  "known", known, "x0", mm, "verb", verb, "end");
+	if (prec) {
+	    predict_init(n1,n2,0.0001);
+	    predict_set(pp);
+	    sf_mask_init(known);
+	    sf_solver_prec(sf_mask_lop, sf_cgstep, predict_lop, n12, n12, n12, 
+			   mm, mm, niter, 0.,"verb", verb,"end");
+	} else {
+	    allpass22_init(allpass2_init(nw, 1, n1,n2, pp));
+	    sf_solver(allpass21_lop, sf_cgstep, n12, n12, mm, dd, niter,
+		      "known", known, "x0", mm, "verb", verb, "end");
+	}
     }
 
     sf_floatwrite (mm,n12,out);

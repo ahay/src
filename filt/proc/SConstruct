@@ -62,7 +62,7 @@ for prog in mains:
 
 for prog in Split('''
 banded cbanded gauss2 gaussshape2 triangle2
-matmult cmatmult impl2 predict trisl trianglen
+matmult cmatmult impl2 predict predict2 trisl trianglen
 '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)

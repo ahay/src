@@ -132,8 +132,10 @@ void dip3(int dip    /* 1 - inline, 2 - crossline */,
 		dpi = lam*dp[i];
 		if (sign) {
 		    pi = p0[i];
+		    /* dip is nonzero and we keep its sign */ 
 		    if (fabsf(pi) > FLT_EPSILON && dpi/pi >= -1.) 
 			p[i] = p0[i]*(1.+dpi/pi);
+		    /* otherwise we don't change it */
 		} else {			
 		    p[i] = p0[i]+dpi;
 		}		

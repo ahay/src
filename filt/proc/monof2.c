@@ -54,7 +54,7 @@ void monof2(float **data               /* input [ny][nx] */,
 {
     int ix, iy, iter, i, j;
     float f2, fe, ee, fep[3], eep[3], epep[6], x, y, da[3], aa, f, e2;
-    float ep[3], eps, num[3], den[6], r2, e, x2, y2, xy, det, w, p;
+    float ep[3], eps, num[3], den[6], r2, e, x2, y2, xy, det, w;
     
     eps = 10.*FLT_EPSILON;
     eps *= eps;

@@ -107,46 +107,47 @@ void mask3 (int nw         /* filter size */,
 void mask6 (int nw           /* filter size */, 
 	    int nj1, int nj2 /* dealiasing stretch */, 
 	    int nx, int ny   /* data size */, 
-	    float **yy       /* data [ny][nx] */, 
-	    bool **mm        /* mask [ny][nx] */) 
+	    float *yy       /* data [ny][nx] */, 
+	    bool *mm        /* mask [ny][nx] */) 
 /*< two-dip mask in 2-D >*/
 {
-    int ix, iy, iw, is;
-    bool **xx;
+    int ix, iy, iw, is, n, i;
+    bool *xx;
 
-    xx = sf_boolalloc2(nx,ny);
+    n = nx*ny;
+
+    xx = sf_boolalloc(n);
     
-    for (iy=0; iy < ny; iy++) {
-	for (ix=0; ix < nx; ix++) {
-	    mm[iy][ix] = (yy[iy][ix] == 0.);
-	    xx[iy][ix] = false;
-	}
+    for (i=0; i < n; i++) {
+	mm[i] = (yy[i] == 0.);
+	xx[i] = false;
     }
 
     for (iy=0; iy < ny-1; iy++) {
 	for (ix = nw*nj1; ix < nx-nw*nj1; ix++) {
+	    i = ix + nx*iy;
+
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj1;
-		xx[iy][ix] = xx[iy][ix] || mm[iy+1][ix+is] || mm[iy][ix-is];
+		xx[i] = xx[i] || mm[i+nx+is] || mm[i-is];
 	    }
 	}
     }
     
-    for (iy=0; iy < ny; iy++) {
-	for (ix=0; ix < nx; ix++) {
-	    mm[iy][ix] = false;
-	}
+    for (i=0; i < n; i++) {
+	mm[i] = false;
     }
-
+    
     for (iy=0; iy < ny-1; iy++) {
 	for (ix = nw*nj2; ix < nx-nw*nj2; ix++) {
+	    i = ix + nx*iy;
+	    
 	    for (iw = 0; iw <= 2*nw; iw++) {
 		is = (iw-nw)*nj2;
-		mm[iy][ix] = mm[iy][ix] || xx[iy+1][ix+is] || xx[iy][ix-is];
+		mm[i] = mm[i] || xx[i+nx+is] || xx[i-is];
 	    }
 	}
     }
-
-    free(xx[0]);
+    
     free(xx);
 }

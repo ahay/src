@@ -13,8 +13,8 @@ Takes: < data.rsf > dip.rsf
 int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, nw, nj1, nj2, i;
-    float eps, lam, p0, q0, **u, ***p;
-    bool verb, sign, gauss, both, **m;
+    float eps, lam, p0, q0, *u, **p;
+    bool verb, sign, gauss, both, *m;
     sf_file in, out, mask, dip1, dip2;
 
     sf_init(argc,argv);
@@ -60,8 +60,8 @@ int main (int argc, char *argv[])
     /* initialize dip estimation */
     twodip2_init(n1, n2, eps, lam, sign, gauss, both);
 
-    u = sf_floatalloc2(n1,n2);
-    p = sf_floatalloc3(n1,n2,2);
+    u = sf_floatalloc(n12);
+    p = sf_floatalloc2(n12,2);
 
     if (NULL != sf_getstring("dip1")) {
 	p0 = 1.;
@@ -84,25 +84,25 @@ int main (int argc, char *argv[])
     /* initialize dips */
     if (NULL == dip1) {
 	for(i=0; i < n12; i++) {
-	    p[0][0][i] = p0;
+	    p[0][i] = p0;
 	}
     } else {
-	sf_floatread(p[0][0],n12,dip1);
+	sf_floatread(p[0],n12,dip1);
     }
     if (NULL == dip2) {
 	for(i=0; i < n12; i++) {
-	    p[1][0][i] = q0;
+	    p[1][i] = q0;
 	}
     } else {
-	sf_floatread(p[1][0],n12,dip2);
+	sf_floatread(p[1],n12,dip2);
     }
   
     /* initialize mask */
     if (NULL != sf_getstring("mask")) {
-	m = sf_boolalloc2(n1,n2);
+	m = sf_boolalloc(n12);
 
 	mask = sf_input("mask");
-	sf_floatread(u[0],n12,mask);
+	sf_floatread(u,n12,mask);
 	sf_fileclose(mask);
 
 	mask6 (nw, nj1, nj2, n1, n2, u, m);
@@ -111,7 +111,7 @@ int main (int argc, char *argv[])
     }
 
     /* read data */
-    sf_floatread(u[0],n12,in);
+    sf_floatread(u,n12,in);
 
     /* estimate dip */
     if (both) {
@@ -121,7 +121,7 @@ int main (int argc, char *argv[])
     }
 
     /* write dips */
-    sf_floatwrite(p[0][0],n12*2,out);
+    sf_floatwrite(p[0],n12*2,out);
      
     exit (0);
 }

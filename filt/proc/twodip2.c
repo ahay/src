@@ -27,14 +27,14 @@
 #include "twodip2.h"
 #include "twodiv2.h"
 #include "div2.h"
-#include "allp2.h"
+#include "allp3.h"
 
-static float ***u1, **u2, **u3, ***dp;
+static float **u1, *u2, *u3, *dp, *p0;
 static int n1, n2, n, skip;
 static const int niter=100;
 static bool sign;
 
-static void border(float** u);
+static void border(float* u);
 
 void twodip2_init(int nx, int ny     /* data size */, 
 		  float fx, float fy /* smoothing radius */, 
@@ -44,16 +44,18 @@ void twodip2_init(int nx, int ny     /* data size */,
 /*< initialize >*/
 {
     n1=nx; n2=ny; n=n1*n2;
-    u2 = sf_floatalloc2(n1,n2);
-    u3 = sf_floatalloc2(n1,n2);
+    u2 = sf_floatalloc(n);
+    u3 = sf_floatalloc(n);
 
     if (both) {
-	u1 = sf_floatalloc3(n1,n2,2);
-	dp = sf_floatalloc3(n1,n2,2);
-	twodiv2_init(2,n1,n2,fx,fy,niter,gauss,u1[0][0]);
+	u1 = sf_floatalloc2(n,2);
+	dp = sf_floatalloc(n*2);
+	p0 = sf_floatalloc(n*2);
+	twodiv2_init(2,n1,n2,fx,fy,niter,gauss,u1[0]);
     } else {
-	u1 = sf_floatalloc3(n1,n2,1);
-	dp = sf_floatalloc3(n1,n2,1);
+	u1 = sf_floatalloc2(n,1);
+	dp = sf_floatalloc(n);
+	p0 = sf_floatalloc(n);
 	div2_init(n1,n2,fx,fy,niter,gauss);
     }
     
@@ -63,10 +65,11 @@ void twodip2_init(int nx, int ny     /* data size */,
 void twodip2_close(void)
 /*< free allocated storage >*/
 {
-    free (u1[0][0]); free (u1[0]); free (u1);
-    free (u2[0]); free (u2);
-    free (u3[0]); free (u3);
-    free (dp[0][0]); free (dp[0]); free (dp);
+    free (*u1); free (u1);
+    free (u2);
+    free (u3);
+    free (dp);
+    free (p0);
     twodiv2_close();
 }
 
@@ -74,34 +77,34 @@ void twodip2(int niter        /* number of iterations */,
 	     int nw           /* filter order */, 
 	     int nj1, int nj2 /* dealisianing stretch */, 
 	     bool verb        /* verbosity flag */, 
-	     float **u        /* input data */, 
-	     float*** pq      /* output slopes */, 
-	     bool **mask      /* mask for missing data */)
+	     float *u         /* input data */, 
+	     float** pq       /* output slopes */, 
+	     bool *mask       /* mask for missing data */)
 /*< estimate slopes >*/
 {
-    int i, iter;
-    float mean, usum, psum, qsum, ui, dpi, pi;
-    allpass2 ap, aq;
+    int i, iter, k;
+    float mean, usum, psum, qsum, ui, dpi, pi, lam, usum2;
+    allpass ap, aq;
  
-    ap = allpass2_init (nw,nj1,n1,n2,pq[0]);
-    aq = allpass2_init (nw,nj2,n1,n2,pq[1]);
+    ap = allpass_init (nw,nj1,n1,n2,1,pq[0]);
+    aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
+    allpass1 (false, ap, u, u3);
+    allpass1 (false, aq, u3,u2);
+    border(u2);
+    
     for (iter =0; iter < niter; iter++) {
-	allpass21 (false, ap, u,u3);
-	allpass21 (false, aq, u3,u2);
-	border(u2);
-
-	allpass21 (true,  aq, u3,u1[1]);
+	allpass1 (true,  aq, u3,u1[1]);
 	border(u1[1]);
 	
-	allpass21 (true,  ap, u,u3);
-	allpass21 (false, aq, u3,u1[0]);
+	allpass1 (true,  ap, u, u3);
+	allpass1 (false, aq, u3,u1[0]);
 	border(u1[0]);
 
 	mean = 0.;
 	for(i=0; i < 2*n; i++) {
-	    ui = u1[0][0][i];
+	    ui = u1[0][i];
 	    mean += ui*ui;
 	}
 	if (mean == 0.) return;
@@ -113,14 +116,16 @@ void twodip2(int niter        /* number of iterations */,
 	qsum = 0.;
 
 	for(i=0; i < n; i++) {
-	    u1[0][0][i]  /= mean;
-	    u1[1][0][i]  /= mean;
-	    u2[0][i]     /= mean;
+	    u1[0][i]  /= mean;
+	    u1[1][i]  /= mean;
+	    u2[i]     /= mean;
+	    usum += u2[i]*u2[i];
 	    if (verb) {
-		usum += u2[0][i]*u2[0][i];
-		psum += pq[0][0][i];
-		qsum += pq[1][0][i];
+		psum += pq[0][i];
+		qsum += pq[1][i];
 	    }
+	    p0[i]   = pq[0][i];
+	    p0[n+i] = pq[1][i];
 	}
 
 	if (verb) sf_warning("%d %g %g %g", iter+1, 
@@ -128,60 +133,75 @@ void twodip2(int niter        /* number of iterations */,
 
 	if (NULL != mask) {
 	    for(i=0; i < n; i++) {
-		if (mask[0][i]) {
-		    u1[0][0][i] = 0.;
-		    u1[1][0][i] = 0.;
-		    u2[0][i] = 0.;
+		if (mask[i]) {
+		    u1[0][i] = 0.;
+		    u1[1][i] = 0.;
+		    u2[i] = 0.;
 		}
 	    }
 	}
 
-	twodiv2(u2[0],dp[0][0]);
+	twodiv2(u2,dp);
 	
-	for(i=0; i < 2*n; i++) {
-	    dpi = dp[0][0][i];
-	    pi = pq[0][0][i];
-	    if (sign && 
-		fabsf(pi) > FLT_EPSILON && 
-		fabsf(pi) > fabsf (dpi)) {
-		pq[0][0][i] *= expf(dpi/pi);
-	    } else {			
-		pq[0][0][i] += dpi;
+	lam = 1.;
+	for (k=0; k < 8; k++) {
+	    for(i=0; i < 2*n; i++) {
+		dpi = lam*dp[i];
+		if (sign) {
+		    pi = p0[i];
+		    /* dip is nonzero and we keep its sign */ 
+		    if (fabsf(pi) > FLT_EPSILON && dpi/pi >= -1.)
+			pq[0][i] = p0[i]*(1.+dpi/pi);
+		    /* otherwise we don't change it */
+		} else {
+		    pq[0][i] = p0[i]+dpi;
+		}
 	    }
+	    
+	    allpass1 (false, ap, u, u3);
+	    allpass1 (false, aq, u3,u2);
+	    border(u2);
+
+	    usum2 = 0.;
+	    for(i=0; i < n; i++) {
+		usum2 += u2[i]*u2[i];
+	    }
+	    
+	    if (usum2 < usum*mean*mean) break;
+	    lam *= 0.5;
 	}
     } /* iter */
 }
-
 
 void otherdip2(int niter        /* number of iterations */, 
 	       int nw           /* filter order */, 
 	       int nj1, int nj2 /* dealising stretch */, 
 	       bool verb        /* verbosity flag */, 
-	       float **u        /* input data */, 
-	       float*** pq      /* output slope */, 
-	       bool **mask      /* mask for missing data */)
+	       float *u         /* input data */, 
+	       float** pq       /* output slope */, 
+	       bool *mask       /* mask for missing data */)
 /*< estimate the second slope only >*/
 {
-    int i, iter;
-    float mean, usum, psum, qsum, ui, dpi, pi;
-    allpass2 ap, aq;
+    int i, iter, k;
+    float mean, usum, psum, qsum, ui, dpi, pi, lam, usum2;
+    allpass ap, aq;
  
-    ap = allpass2_init (nw,nj1,n1,n2,pq[0]);
-    aq = allpass2_init (nw,nj2,n1,n2,pq[1]);
+    ap = allpass_init (nw,nj1,n1,n2,1,pq[0]);
+    aq = allpass_init (nw,nj2,n1,n2,1,pq[1]);
     skip = nj1>nj2? 2*nw*nj1 : 2*nw*nj2;
 
+    allpass1 (false, ap, u, u3);
+    allpass1 (false, aq, u3,u2);
+    border(u2);
+
     for (iter =0; iter < niter; iter++) {
-	allpass21 (false, ap, u,u3);
-	allpass21 (false, aq, u3,u2);
-	border(u2);
-	
-	allpass21 (true,  ap, u,u3);
-	allpass21 (false, aq, u3,u1[0]);
+	allpass1 (true,  ap, u, u3);
+	allpass1 (false, aq, u3,u1[0]);
 	border(u1[0]);
 
 	mean = 0.;
 	for(i=0; i < n; i++) {
-	    ui = u1[0][0][i];
+	    ui = u1[0][i];
 	    mean += ui*ui;
 	}
 	if (mean == 0.) return;
@@ -193,57 +213,72 @@ void otherdip2(int niter        /* number of iterations */,
 	qsum = 0.;
 
 	for(i=0; i < n; i++) {
-	    u1[0][0][i]  /= mean;
-	    u2[0][i]     /= mean;
-	    if (verb) {
-		usum += u2[0][i]*u2[0][i];
-		psum += pq[0][0][i];
-	    }
+	    u1[0][i]  /= mean;
+	    u2[i]     /= mean;
+	    usum += u2[i]*u2[i];
+	    if (verb) psum += pq[0][i];
+	    p0[i] = pq[0][i];
 	}
 
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
 
 	if (NULL != mask) {
 	    for(i=0; i < n; i++) {
-		if (mask[0][i]) {
-		    u1[0][0][i] = 0.;
-		    u2[0][i] = 0.;
+		if (mask[i]) {
+		    u1[0][i] = 0.;
+		    u2[i] = 0.;
 		}
 	    }
 	}
 
 
-	div2(u2[0],u1[0][0],dp[0][0]);
+	div2(u2,u1[0],dp);
 
-	for(i=0; i < n; i++) {
-	    dpi = dp[0][0][i];
-	    pi = pq[0][0][i];
-	    if (sign && 
-		fabsf(pi) > FLT_EPSILON && 
-		fabsf(pi) > fabsf (dpi)) {
-		pq[0][0][i] *= expf(dpi/pi);
-	    } else {			
-		pq[0][0][i] += dpi;
+	lam = 1.;
+	for (k=0; k < 8; k++) {
+	    for(i=0; i < n; i++) {
+		dpi = lam*dp[i];
+		if (sign) {
+		    pi = p0[i];
+		    /* dip is nonzero and we keep its sign */ 
+		    if (fabsf(pi) > FLT_EPSILON && dpi/pi >= -1.)
+			pq[0][i] = p0[i]*(1.+dpi/pi);
+		    /* otherwise we don't change it */
+		} else {
+		    pq[0][i] = p0[i]+dpi;
+		}
 	    }
+	    
+	    allpass1 (false, ap, u, u3);
+	    allpass1 (false, aq, u3,u2);
+	    border(u2);
+	    
+	    usum2 = 0.;
+	    for(i=0; i < n; i++) {
+		usum2 += u2[i]*u2[i];
+	    }
+	    
+	    if (usum2 < usum*mean*mean) break;
+	    lam *= 0.5;
 	}
     } /* iter */
 }
 
-static void border(float** u)
+static void border(float* u)
 {
     int i1, i2;
 
     for (i2=n2-2; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    u[i2][i1]=0.;
+	    u[i2*n1+i1]=0.;
 	}
     }
     for (i2=0; i2 < n2-2; i2++) {
 	for (i1=0; i1 < skip; i1++) {
-	    u[i2][i1]=0.;
+	    u[i2*n1+i1]=0.;
 	}
 	for (i1=n1-skip; i1 < n1; i1++) {
-	    u[i2][i1]=0.;
+	    u[i2*n1+i1]=0.;
 	}
     }
 }

@@ -97,7 +97,8 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
     float* xp = NULL;
     float* wht = NULL;
     float *p, *g, *rr, *gg, *tp = NULL, *td = NULL;
-    int i, iter, dprr, dppd, dppm, dpgm;
+    int i, iter;
+    double dprr, dppd, dppm, dpgm, dprr0, dpgm0;
     bool forget = false;
 
     va_start (args, eps);
@@ -240,11 +241,19 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	    forget = (iter%nfreq == 0);
 	} 
 	if (verb) {
-	    dprr = (int) norm (ny, rr);
-	    dppd = (int) norm (ny, p+nprec);
-	    dppm = (int) norm (nprec, p);
-	    dpgm = (int) norm (nprec, g);
-	    sf_warning("iteration %d res %d prec dat %d prec mod %d grad %d", 
+	    if (iter == 0) {
+		dprr0 = norm (ny, rr);
+		dpgm0 = norm (nprec, g);
+		dprr = 1.;
+		dpgm = 1.;
+	    } else {
+		dprr = norm (ny, rr)/dprr0;
+		dpgm = norm (nprec, g)/dpgm0;
+	    }
+	    dppd = norm (ny, p+nprec);
+	    dppm = norm (nprec, p);
+
+	    sf_warning("iteration %d res %g prec dat %g prec mod %g grad %g", 
 		       iter, dprr, dppd, dppm, dpgm);
 	}
     
