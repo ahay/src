@@ -7,13 +7,15 @@ def subdirs():
     return filter(os.path.isdir,glob.glob('[a-z]*'))
 
 def use(target=None,source=None,env=None):
-    doc = open(str(target[0]),'w')
-    doc.write('import rsfdoc\n\n')
+    out = open(str(target[0]),'w')
+    doc = ['import rsfdoc\n']
     os.chdir('book')
     for book in subdirs():
         os.chdir(book)
+        print "%s..." % book
         for chapter in subdirs():
             os.chdir(chapter)
+            print "...%s" % chapter
             for project in subdirs():
                 os.chdir(project)
                 (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
@@ -22,13 +24,14 @@ def use(target=None,source=None,env=None):
                            (book,chapter,project,progs))
                 else:
                     for prog in progs.split():
-                        doc.write('rsfdoc.progs["%s"].use("%s","%s","%s")\n' %
-                                  (prog,book,chapter,project))
+                        doc.append('rsfdoc.progs["%s"].use("%s","%s","%s")' %
+                                   (prog,book,chapter,project))
                 os.chdir('..')
             os.chdir('..')
         os.chdir('..')
     os.chdir('..')
-    doc.close()
+    out.write('\n'.join(doc) + '\n')
+    out.close()
 
 def selfdoc(target=None,source=None,env=None):
     src = str(source[0])
@@ -278,4 +281,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.11 2004/03/31 03:16:33 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.12 2004/04/01 02:11:49 fomels Exp $	

@@ -267,4 +267,8 @@ echo "import rsfdoc" >> $TARGET
 echo "" >> $TARGET
 cat $SOURCES >> $TARGET'''
 
-#	$Id: configure.py,v 1.11 2004/03/30 08:00:26 fomels Exp $	
+def docextra(docmerge,source,copy):
+    return docmerge + '''
+    echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
+
+#	$Id: configure.py,v 1.12 2004/04/01 02:11:49 fomels Exp $	
