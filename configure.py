@@ -278,7 +278,7 @@ def f90(context):
 
 def intel(context):
     '''Trying to fix wierd intel setup.'''
-    libdirs = string.split(os.environ.get('LD_LIBRARY_PATH'),':')
+    libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
     libs = filter (lambda x: re.search('intel',x) and os.path.isdir(x),
                    libdirs)
     context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
