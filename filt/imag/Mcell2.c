@@ -7,16 +7,15 @@
 int main(int argc, char* argv[])
 {
     bool velocity;
-    int is, nz, nx, im, nm, order, nshot, ndim;
+    int is, nz, nx, im, nm, order, nshot, ndim, nsr;
     int nt, nt1, nr, ir, it, i;
     float da, a0, amax, t;
     float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s, *a;
     celltrace ct;
-    sf_file shots, vel, rays, angles;
+    sf_file shots, vel, angles;
 
     sf_init (argc,argv);
     vel = sf_input("in");
-    rays = sf_output("out");
 
     /* get 2-D grid parameters */
     if (!sf_histint(vel,"n1",&nz))   sf_error("No n1= in input");
@@ -77,24 +76,8 @@ int main(int argc, char* argv[])
     a = sf_floatalloc(nr);
  
     /* specify output dimensions */
-    nt1 = nt+1;
-    sf_putint (rays,"n1",nt1);
-    sf_putint (rays,"n2",nr);
-    sf_putint (rays,"n3",nshot);
-    sf_setformat (rays,"native_complex");
-    sf_fileflush (rays,NULL);
-
-    switch (sf_getform(vel)) {
-	case SF_XDR:
-	    sf_setformat (rays,"xdr_float");
-	    break;
-	case SF_NATIVE:
-	    sf_setformat (rays,"native_float");
-	    break;
-	default:
-	    sf_setformat (rays,"ascii_float");
-	    break;
-    }
+    nsr = nr*nshot;
+    fwrite(&nsr,sizeof(int),1,stdout);
 	    
     /* get slowness */
     nm = nz*nx;
@@ -135,15 +118,8 @@ int main(int argc, char* argv[])
 
 	    t = cell_trace (ct, x, p, &it, traj);
 	    if (it < 0) it = -it; /* keep side-exiting rays */
-
-	    if (it > 0) { /* complete ray by copying the last point */
-		for (i = it+1; i < nt1; i++) {
-		    traj[i][0] = traj[it][0];
-		    traj[i][1] = traj[it][1];
-		}
-	    }
-      
-	    sf_write (traj[0],sizeof(float),nt1*ndim,rays); 
+	    fwrite(&it,sizeof(int),1,stdout);
+	    fwrite(traj[0],sizeof(float),(it+1)*ndim,stdout);
 	}
     }
 

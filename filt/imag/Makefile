@@ -3,10 +3,11 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = cell2 eikonal enoder1 gazdag gauss pick0 pickd \
+PROGS = cell2 dsr eikonal enoder1 gazdag gauss pick0 pickd \
 	rays2 sag shoot2 sstep1 symes voft
 
 cell2 = celltrace cell eno2 eno quadratic
+dsr = dsr
 eikonal = fastmarch pqueue neighbors
 enoder1 = eno
 gazdag = gazdag
