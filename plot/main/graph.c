@@ -1,3 +1,4 @@
+#include <string.h>
 #include <float.h>
 
 #include <rsf.h>
@@ -5,9 +6,12 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, i1, i2, i3;
-    float min1, max1, min2, max2, o3, d3, o1, d1, **x, **y, f;    
+    bool transp;
+    int n1, n2, n3, i1, i2, i3, len;
+    float min1, max1, min2, max2, o3, d3, o1, d1;
+    float **x, **y, **tmp, f, *symbolsz, symsize, xc, yc;    
     complex float** data;
+    char* symbol, sym[2]=" ";
     sf_datatype type;
     sf_file in;
 
@@ -45,6 +49,28 @@ int main(int argc, char* argv[])
     }
 
     vp_plot_init(n2);
+
+    symbol = sf_getstring("symbol");
+    if (NULL != symbol) {
+	len = strlen(symbol);
+	if (len < n2) {
+	    symbol = (char*) sf_realloc(symbol,n2,sizeof(char));
+	    for (i2=len; i2 < n2; i2++) {
+		symbol[i2] = symbol[i2 % len];
+	    }
+	}
+
+	symbolsz = sf_floatalloc(n2);
+	if (!sf_getfloats("symbolsz",symbolsz,n2)) {
+	    for (i2 = 0; i2 < n2; i2++)
+		symbolsz[i2] = 2./33.;
+	} else {
+	    for (i2 = 0; i2 < n2; i2++)
+		symbolsz[i2] /= 33.;
+	}
+    }
+
+    if (!sf_getbool ("transp",&transp)) transp=false;
  
     for (i3 = 0; i3 < n3; i3++) {
 	min2 = +FLT_MAX;
@@ -78,8 +104,10 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	if (transp) {tmp=x; x=y; y=tmp;}
+
 	vp_stdplot_init (min1, max1, min2, max2,
-			 false,false,false,true);
+			 transp,false,false,true);
 	vp_frame_init(in,"blt");
 
 	if (i3 > 0) vp_erase();
@@ -87,66 +115,28 @@ int main(int argc, char* argv[])
 
 	for (i2=0; i2 < n2; i2++) {
 	    vp_plot_set (i2);
-	    vp_umove(x[i2][0],y[i2][0]);
 	    
-	    for (i1=1; i1 < n1; i1++) {
-		vp_udraw(x[i2][i1],y[i2][i1]);
+	    if (NULL != symbol) {
+		sym[0] = symbol[i2];
+		symsize = symbolsz[i2];
+
+		for (i1=1; i1 < n1; i1++) {
+		    vp_umove(x[i2][i1],y[i2][i1]);
+		    vp_where (&xc, &yc);
+		    vp_tjust (TH_SYMBOL, TV_SYMBOL);
+		    vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
+		}
+	    } else {
+		vp_umove(x[i2][0],y[i2][0]);	    
+		for (i1=1; i1 < n1; i1++) {
+		    vp_udraw(x[i2][i1],y[i2][i1]);
+		}
 	    }
 	}
-    }
-    
+
+	if (transp) {tmp=x; x=y; y=tmp;}
+    } 
+   
     exit (0);
 }
 
-
-#ifdef lkjghkjhg
-
-	    gl_fat (plot.fat[js]);
-	    gl_color (plot.col[js]);
-	    ch = plot.symbolsz[js] / 33.;
-
-	    gl_tjust ("s");
-	    gl_penup ();
-	    for (j = 0; j < data.n1[i]; j++)
-	    {
-		if (plot.symbol[i] != ' ')
-		{
-		    sprintf (string, "%c", plot.symbol[i]);
-		    xpath = ch;
-		    ypath = 0;
-		    xup = 0;
-		    yup = ch;
-		    gl_umove (x[l], y[l]);
-		    gl_where (&xc, &yc);
-		    gl_gtext (xc, yc, xpath, ypath, xup, yup, string, "s");
-
-		    if (plot.lineunder)
-		    if(coordinate.transp)
-		    {
-			gl_umove (0., y[l]);
-			gl_udraw (x[l], y[l]);
-		    }
-		    else
-		    {
-			gl_umove (x[l], 0.);
-			gl_udraw (x[l], y[l]);
-		    }
-		}
-		else
-		{
-		    gl_upendn (x[l], y[l]);
-		}
-		l = l + 1;
-	    }
-	    gl_purge ();
-	}
-	sti2 = i;
-	dash.dash[0] = 0.;
-	dash.dash[1] = 0.;
-	dash.gap[0] = 0.;
-	dash.gap[1] = 0.;
-	gl_dash (&dash);
-	gl_uclip (coordinate.min1, coordinate.min2, coordinate.max1, coordinate.max2);
-	gl_stdplot (&data, &coordinate, &axis1, &axis2, &grid, &title, n3_loop, fastplt, wantframe,wantframenum);  
-
-#endif
