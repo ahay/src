@@ -10,11 +10,11 @@ extract fft1 fft3 flat flat3 focus fourvc fourvc2 grad2 igrad imospray impl1
 impl2 infill inmo intbin intshow inttest1 inttest2 iphase kolmog lapfill
 linefit lpad miss2 miss3 modrefl monof monof2 nmo noise nsmooth nsmooth1 ofpwd
 ofpwd2 ofsemb ocparcel octentwt planemis2 planemis3 planesignoi pmig pnmo
-postfilter2 predict prestolt pveltran pwd pwdix pwdsigk radial radon randrefl
-refer reshape ricker shapebin shapebin1 shapesigk shearer shot2cmp shotholes slice
-smooth smoothder smoothreg smoothreg2 spectra spectra2 spline splinefilter
-stolt stretch taupmo time2depth tomo tpow trismooth2 twodip2 twofreq2 vscan
-velmod warp1 warpscan warpscan2 window1
+postfilter2 pp2psang predict prestolt pveltran pwd pwdix pwdsigk radial radon
+randrefl refer reshape ricker shapebin shapebin1 shapesigk shearer shot2cmp
+shotholes slice smooth smoothder smoothreg smoothreg2 spectra spectra2 spline
+splinefilter stolt stretch taupmo time2depth tomo tpow trismooth2 twodip2
+twofreq2 vscan velmod warp1 warpscan warpscan2 window1
 '''
 
 try: # distributed version
