@@ -67,7 +67,7 @@ void vp_fat (int f)
     vp_putint (f);
 }
 
-void vp_fill (float *xp, float *yp, int  np)
+void vp_fill (const float *xp, const float *yp, int  np)
 {
     int i;
 
@@ -80,7 +80,8 @@ void vp_fill (float *xp, float *yp, int  np)
     }
 }
 
-void vp_area (float *xp, float *yp, int np, int fat, int xmask, int ymask)
+void vp_area (const float *xp, const float *yp, int np, 
+	      int fat, int xmask, int ymask)
 {
     int i;
 
@@ -95,7 +96,8 @@ void vp_area (float *xp, float *yp, int np, int fat, int xmask, int ymask)
     }
 }
 
-void vp_uarea (float *xp, float *yp, int np, int fat, int xmask, int ymask)
+void vp_uarea (const float *xp, const float *yp, int np, 
+	       int fat, int xmask, int ymask)
 {
     int i;
     float x, y;
@@ -129,7 +131,7 @@ void vp_coltab (int color, float r, float g, float b)
 
 void vp_gtext (float x, float y, 
 	       float xpath, float ypath, 
-	       float xup, float yup, char *string)
+	       float xup, float yup, const char *string)
 {
     pout (x, y, 0);
     putchar (VP_GTEXT);
@@ -160,7 +162,7 @@ void vp_hatchload (int angle,int nhatch, int ihatch, int *hatch)
     }
 }
 
-void vp_message (char *string)
+void vp_message (const char *string)
 {
     putchar (VP_MESSAGE);
 
@@ -220,12 +222,18 @@ void vp_pendn (float x, float y)
     pendown = true;
 }
 
+void vp_upendn (float x, float y)
+{
+    vp_uplot (x, y, pendown);
+    pendown = true;
+}
+
 void vp_penup (void)
 {
     pendown = false;
 }
 
-void vp_pline (float *xp, float *yp, int np)
+void vp_pline (const float *xp, const float *yp, int np)
 {
     int i;
 
@@ -234,6 +242,21 @@ void vp_pline (float *xp, float *yp, int np)
     for (i = 0; i < np; i++) {
 	vp_putfloat (xp[i]);
 	vp_putfloat (yp[i]);
+    }
+}
+
+void vp_upline (const float *xp, const float *yp, int np)
+{
+    int i;
+    float x, y;
+
+    putchar (VP_PLINE);
+    vp_putint (np);
+    for (i = 0; i < np; i++) {
+	x = fx + (xp[i]-ufx) * xscl;
+	y = fy + (yp[i]-ufy) * yscl;
+	vp_putfloat (x);
+	vp_putfloat (y);
     }
 }
 
@@ -304,7 +327,7 @@ void vp_udraw (float x,float  y)
     vp_plot (x, y, true);
 }
 
-void vp_pmark (int npts, int mtype, int msize, float *xp, float *yp)
+void vp_pmark (int npts, int mtype, int msize, const float *xp, const float *yp)
 {
     int i;
 
@@ -566,7 +589,7 @@ void vp_scale (float xscale, float  yscale)
     yscl = yscale;
 }
 
-void vp_setdash (float *dash, float *gapp, int np)
+void vp_setdash (const float *dash, const float *gapp, int np)
 {
     int i;
 
@@ -608,7 +631,7 @@ void vp_style (vp_plotstyle st) {
     }
 }
 
-void vp_text (float x, float y, int size, int orient, char *string)
+void vp_text (float x, float y, int size, int orient, const char *string)
 {
     if (0 == size) return;
 
@@ -666,7 +689,7 @@ void vp_uclip (float xmin, float ymin, float xmax, float ymax)
 
 void vp_ugtext (float x, float y, 
 		float xpath, float ypath,
-		float xup, float yup, char *string)
+		float xup, float yup, const char *string)
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
@@ -710,7 +733,7 @@ void vp_uraster (unsigned char *array, int blast, int bit, int offset,
     }
 }
 
-void vp_utext (float x, float y, int size, int orient, char *string)
+void vp_utext (float x, float y, int size, int orient, const char *string)
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
@@ -819,5 +842,25 @@ void vp_uarrow (float x1, float y1, float x, float y, float r)
 	} else {
 	    vp_uarea (xp, yp, 3, 0, 1, 1);
 	}
+    }
+}
+
+void vp_dash (float dash1, float gap1, float dash2, float gap2)
+{
+    if (dash1 < 0. || gap1 < 0. || dash2 < 0. || gap2 < 0.) {
+	dashon = false;
+	return;
+    }
+
+    ddef[0] = dash1;
+    ddef[1] = dash1 + gap1;
+    ddef[2] = ddef[1] + dash2;
+    ddef[3] = ddef[2] + gap2;
+
+    if (ddef[3] <= 0.) {
+	dashon = false;
+    } else {
+	dashon = true;
+	dashpos = 0.0;
     }
 }
