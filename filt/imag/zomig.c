@@ -237,7 +237,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 
 	if (inv) { /* UPWARD DATUMING */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d);
@@ -288,14 +288,14 @@ void zowfl(slice data /*      data [nw][nmy][nmx] */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	cslice_get(data,iw,wx[0]);
 	taper2(true,true,wx);
 	
 	taper2(true,true,wx);
-	cslice_put(wfld,iw,wx[0]);
+	cslice_put(wfld,iw*az.n,wx[0]);
 
 	slice_get(slow,0,so[0]);
 	SOOP( so[ily][ilx] *=2; ); /* 2-way time */	
@@ -306,8 +306,8 @@ void zowfl(slice data /*      data [nw][nmy][nmx] */,
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 	    taper2(true,true,wx);
-	    cslice_put(wfld,iw,wx[0]);
-	}	    
+	    cslice_put(wfld,iw*az.n+iz+1,wx[0]);
+	}
     } /* iw */
 }
 

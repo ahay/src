@@ -52,21 +52,24 @@ int main (int argc, char *argv[])
     if (!sf_getint  ("nx",&ax.n)) sf_error ("Need nx=");
     if (!sf_getfloat("dx",&ax.d)) sf_error ("Need dx=");
     if (!sf_getfloat("ox",&ax.o)) sf_error ("Need ox=");
+    ax.l="x";
 
     if (!sf_getint  ("ny",&ay.n)) ay.n=1;
     if (!sf_getfloat("dy",&ay.d)) ay.o=0;
     if (!sf_getfloat("oy",&ay.o)) ay.d=1;
+    ay.l="y";
 
-    iaxa(Fr,&aw ,1);
-    iaxa(Fr,&arx,2);
-    iaxa(Fr,&ary,3);
-    iaxa(Fr,&asx,4);
-    iaxa(Fr,&asy,5);
+    iaxa(Fr,&aw ,1);  aw.l= "w";
+    iaxa(Fr,&arx,2); arx.l="rx";
+    iaxa(Fr,&ary,3); ary.l="ry";
+    iaxa(Fr,&asx,4); asx.l="sx";
+    iaxa(Fr,&asy,5); asy.l="sy";
 
     /* experiments axis */
     ae.o=0;
     ae.d=1;
     ae.n=asx.n*asy.n;
+    ae.l="e";
 
     oaxa(Fsw, &aw,1); oaxa(Frw, &aw,1);
     oaxa(Fsw, &ax,2); oaxa(Frw, &ax,2);
@@ -110,7 +113,8 @@ int main (int argc, char *argv[])
 	    sf_complexwrite(sw[0][0],ax.n*ay.n*aw.n,Fsw);
 	}
     }
-    
+
+    /* RECEIVER wavefield */
     for( isy=0;isy<asy.n;isy++) {	      
 	sy = asy.o + isy * asy.d;
 	for( isx=0;isx<asx.n;isx++) {         

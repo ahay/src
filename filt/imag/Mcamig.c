@@ -64,9 +64,9 @@ int main (int argc, char *argv[])
 
     /* slowness parameters */
     Fs = sf_input ("slowness");
-    iaxa(Fs,&alx,1);
-    iaxa(Fs,&aly,2);
-    iaxa(Fs,&az ,3);
+    iaxa(Fs,&alx,1); alx.l="lx";
+    iaxa(Fs,&aly,2); aly.l="ly";
+    iaxa(Fs,&az ,3);  az.l= "z";
     slow = slice_init(Fs,alx.n,aly.n,az.n);
     
     switch(mode[0]) {
@@ -75,35 +75,35 @@ int main (int argc, char *argv[])
 	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
 	    if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
  
-	    iaxa(Fd,&amx,1); oaxa(Fw,&amx,1);
-	    iaxa(Fd,&amy,2); oaxa(Fw,&amy,2);
-	    iaxa(Fd,&ahx,3); oaxa(Fw,&ahx,3);
-	    ;                oaxa(Fw,&az ,4);
-	    iaxa(Fd,&aw ,4); oaxa(Fw,&aw ,5);
+	    iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fw,&amx,1);
+	    iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fw,&amy,2);
+	    iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fw,&ahx,3);
+	    ;                            oaxa(Fw,&az ,4);
+	    iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fw,&aw ,5);
 
 	    data = slice_init(Fd,amx.n*amy.n,ahx.n,     aw.n);
-	    wfld = slice_init(Fw,amx.n*amy.n*ahx.n,az.n,aw.n);
+	    wfld = slice_init(Fw,amx.n*amy.n,ahx.n,az.n*aw.n);
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
 		Fe = sf_input ( "in");
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
-		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");		
+		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");
 
-		iaxa(Fe,&amx,1); oaxa(Fd,&amx,1);
-		iaxa(Fe,&amy,2); oaxa(Fd,&amy,2);
-		iaxa(Fe,&ahx,3); oaxa(Fd,&ahx,3);
-		iaxa(Fe,&aw ,4); oaxa(Fd,&aw ,4);
+		iaxa(Fe,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
+		iaxa(Fe,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
+		iaxa(Fe,&ahx,3); ahx.l="hx"; oaxa(Fd,&ahx,3);
+		iaxa(Fe,&aw ,4);  aw.l= "w"; oaxa(Fd,&aw ,4);
 
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
 		Fe = sf_output("out"); sf_settype(Fe,SF_COMPLEX);
 		if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 		
-		iaxa(Fd,&amx,1); oaxa(Fe,&amx,1);
-		iaxa(Fd,&amy,2); oaxa(Fe,&amy,2);
-		iaxa(Fd,&ahx,3); oaxa(Fe,&ahx,3);
-		iaxa(Fd,&aw ,4); oaxa(Fe,&aw ,4);
+		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fe,&amx,1);
+		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fe,&amy,2);
+		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fe,&ahx,3);
+		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fe,&aw ,4);
 	    }
 	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
 	    wfld = slice_init(Fe,amx.n*amy.n,ahx.n,aw.n);
@@ -119,21 +119,21 @@ int main (int argc, char *argv[])
 		if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 		if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
 		
-		iaxa(Fi,&amx,1); oaxa(Fd,&amx,1);
-		iaxa(Fi,&amy,2); oaxa(Fd,&amy,2);
-		iaxa(Fi,&ahx,3); oaxa(Fd,&ahx,3);
-		iaxa(Fi,&az ,4); oaxa(Fd,&aw ,4);
+		iaxa(Fi,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
+		iaxa(Fi,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
+		iaxa(Fi,&ahx,3); ahx.l="hx"; oaxa(Fd,&ahx,3);
+		iaxa(Fi,&az ,4);  az.l= "z"; oaxa(Fd,&aw ,4);
 		
 	    } else { /* migration */
 		Fd = sf_input ( "in");
 		Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 		if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 		
-		iaxa(Fd,&amx,1); oaxa(Fi,&amx,1);
-		iaxa(Fd,&amy,2); oaxa(Fi,&amy,2);
-		iaxa(Fd,&ahx,3); oaxa(Fi,&ahx,3);
-		iaxa(Fd,&aw ,4); oaxa(Fi,&az ,4);
-	    }
+		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fi,&amx,1);
+		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
+		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fi,&ahx,3);
+		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fi,&az ,4);
+	    } 
 	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
 	    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
 	    break;

@@ -78,11 +78,11 @@ int main(int argc, char* argv[])
     Fd = sf_output("out"); /* data */
 
     /* read axes*/
-    iaxa(Fw,&at,1); if(verb) raxa(at); /* time */
-    iaxa(Fv,&az,1); if(verb) raxa(az); /* depth */
-    iaxa(Fv,&ax,2); if(verb) raxa(ax); /* space */
-    iaxa(Fs,&as,2); if(verb) raxa(as); /* sources */
-    iaxa(Fr,&ar,2); if(verb) raxa(ar); /* receivers */
+    iaxa(Fw,&at,1); at.l="t"; if(verb) raxa(at); /* time */
+    iaxa(Fv,&az,1); az.l="z"; if(verb) raxa(az); /* depth */
+    iaxa(Fv,&ax,2); ax.l="x"; if(verb) raxa(ax); /* space */
+    iaxa(Fs,&as,2); as.l="s"; if(verb) raxa(as); /* sources */
+    iaxa(Fr,&ar,2); ar.l="r"; if(verb) raxa(ar); /* receivers */
 
     /* configure wavefield snapshots */
     if(snap) {
@@ -103,8 +103,8 @@ int main(int argc, char* argv[])
 	nbx=nop;
     }
     /* expanded domain ( az+2 nz, ax+2 nx ) */
-    bz.n=az.n+2*nbz; bz.o=az.o-nbz*az.d; bz.d=az.d; 
-    bx.n=ax.n+2*nbx; bx.o=ax.o-nbx*ax.d; bx.d=ax.d;
+    bz.n=az.n+2*nbz; bz.o=az.o-nbz*az.d; bz.d=az.d; bz.l="z";
+    bx.n=ax.n+2*nbx; bx.o=ax.o-nbx*ax.d; bx.d=ax.d; bx.l="x";
 
     if(verb) raxa(bz);
     if(verb) raxa(bx);
@@ -115,6 +115,7 @@ int main(int argc, char* argv[])
 	bt.n = at.n / jsnap;
 	bt.o = at.o;
 	bt.d = at.d * jsnap;
+	bt.l = "t";
 
 	oaxa(Fo,&bz,1);
 	oaxa(Fo,&bx,2);

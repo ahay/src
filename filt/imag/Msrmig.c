@@ -63,9 +63,9 @@ int main (int argc, char *argv[])
 
     /* slowness parameters */
     Fs = sf_input ("slowness");
-    iaxa(Fs,&alx,1);
-    iaxa(Fs,&aly,2);
-    iaxa(Fs,&az ,3);
+    iaxa(Fs,&alx,1); alx.l="lx";
+    iaxa(Fs,&aly,2); aly.l="ly";
+    iaxa(Fs,&az ,3);  az.l= "z";
     slow = slice_init(Fs,alx.n,aly.n,az.n);
     
     Fus = sf_input ( "in");
@@ -78,15 +78,13 @@ int main (int argc, char *argv[])
     if (SF_COMPLEX != sf_gettype(Fus)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fur)) sf_error("Need complex receiver data");
 
-    aj.n=1; aj.o=0; aj.d=1;
+    aj.n=1; aj.o=0; aj.d=1; aj.l=" ";
     
-    iaxa(Fus,&ax,1); oaxa(Fi,&ax,1);
-    iaxa(Fus,&ay,2); oaxa(Fi,&ay,2);
-    iaxa(Fus,&aw,3); oaxa(Fi,&az,3);
-    ;                oaxa(Fi,&aj,4);
-    ;                oaxa(Fi,&aj,5);
-
-    iaxa(Fus,&ae,4); /* number of experiments */
+    iaxa(Fus,&ax,1); ax.l="x"; oaxa(Fi,&ax,1);
+    iaxa(Fus,&ay,2); ay.l="y"; oaxa(Fi,&ay,2);
+    iaxa(Fus,&aw,3); aw.l="w"; oaxa(Fi,&az,3);
+    iaxa(Fus,&ae,4); ae.l="e"; oaxa(Fi,&aj,4); /* no of experiments */
+    ;                          oaxa(Fi,&aj,5);
 
 /*    oaxa(Fws,&ax,1); oaxa(Fwr,&ax,1);*/
 /*    oaxa(Fws,&ay,2); oaxa(Fwr,&ay,2);*/

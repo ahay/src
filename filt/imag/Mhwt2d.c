@@ -47,8 +47,8 @@ int main (int argc, char *argv[])
 
     /* velocity file */
     Fv = sf_input ("in");
-    iaxa(Fv,&az,1); if(verb) raxa(az);
-    iaxa(Fv,&ax,2); if(verb) raxa(ax);
+    iaxa(Fv,&az,1); az.l="z"; if(verb) raxa(az);
+    iaxa(Fv,&ax,2); ax.l="x"; if(verb) raxa(ax);
 
     vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
 
@@ -61,11 +61,13 @@ int main (int argc, char *argv[])
     if(! sf_getint  ("nt",&at.n)) at.n=100;
     if(! sf_getfloat("ot",&at.o)) at.o=0;
     if(! sf_getfloat("dt",&at.d)) at.d=0.001;
+    at.l="t";
 
     /* shooting angle axis */
     if(! sf_getint  ("ng",&ag.n)) ag.n= 360;
     if(! sf_getfloat("og",&ag.o)) ag.o=-180;
     if(! sf_getfloat("dg",&ag.d)) ag.d= 1;
+    ag.l="g";
 
 /*------------------------------------------------------------*/
 

@@ -234,7 +234,7 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 
 	if (inv) { /* UPWARD DATUMING */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d);
@@ -281,14 +281,14 @@ void cawfl(slice data /*      data [nw][nhx][nmy][nmx] */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	cslice_get(data,iw,wx[0][0]);
 	taper3(false,true,true,wx);
 	
 	taper3(false,true,true,wx);
-	cslice_put(wfld,iw,wx[0][0]);
+	cslice_put(wfld,iw*az.n,wx[0][0]);
 
 	slice_get(slow,0,so[0]);
 	for (iz=0; iz<az.n-1; iz++) {	    
@@ -297,7 +297,7 @@ void cawfl(slice data /*      data [nw][nhx][nmy][nmx] */,
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 	    taper3(false,true,true,wx);
-	    cslice_put(wfld,iw,wx[0][0]);
+	    cslice_put(wfld,iw*az.n+iz+1,wx[0][0]);
 	}	    
     } /* iw */
 }
