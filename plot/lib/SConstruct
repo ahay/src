@@ -5,7 +5,9 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = "axis coltab device gainpar plot polygon stdplot vplot"
+src = 'coltab gainpar plot polygon stdplot vplot'
+
+src2 = 'axis'
 
 sources  = map(lambda x: x+'.c',Split(src)) 
 includes = map(lambda x: x+'.h',Split(src))
@@ -25,10 +27,30 @@ except: # local version
     env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 
-lib = env.StaticLibrary('rsfplot',sources)
+env['SCANNERS'].remove(CScan)
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
+##############################################################################
+# INCLUDES
+##############################################################################
+sources  = map(lambda x: x+'.c',Split(src))
+includes = map(lambda x: x+'.h',Split(src2)+Split(src))
+
+objects = []
+for source in Split(src2):
+    env.Include(source,prefix='vp_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
+lib = env.StaticLibrary('rsfplot',objects+sources)
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
-
+ 
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
@@ -44,7 +66,15 @@ for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
 
+#############################################################################
+# LINT
 ##############################################################################
+
+env.Command('../lint/lint',map(lambda x: x+'.c',Split(src2)),
+            'splint +posixlib $SOURCES')
+        
+env['SCANNERS'].remove(configure.Include)
+env.Append(SCANNERS=CScan)
 
 # 	$Id$	
 

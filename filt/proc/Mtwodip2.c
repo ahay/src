@@ -14,8 +14,8 @@ int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, nw, nj1, nj2, i;
     float eps, lam, p0, q0, **u, ***p;
-    bool verb, sign, gauss, **m;
-    sf_file in, out, mask;
+    bool verb, sign, gauss, both, **m;
+    sf_file in, out, mask, dip1, dip2;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -39,11 +39,6 @@ int main (int argc, char *argv[])
     eps = sqrtf(12*eps+1.);
     lam = sqrtf(12*lam+1.);
 
-    if (!sf_getfloat("p0",&p0)) p0=1.;
-    /* initial first dip */
-    if (!sf_getfloat("q0",&q0)) q0=0.;
-    /* initial second dip */
-
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy order */
     if (nw < 1 || nw > 3) 
@@ -59,19 +54,50 @@ int main (int argc, char *argv[])
     /* if y, keep dip sign constant */
     if (!sf_getbool("gauss",&gauss)) gauss = true;
     /* if y, use exact Gaussian for smoothing */
-
+    if (!sf_getbool("both",&both)) both = true;
+    /* if y, estimate both dips */
+    
     /* initialize dip estimation */
-    twodip2_init(n1, n2, eps, lam, sign, gauss);
+    twodip2_init(n1, n2, eps, lam, sign, gauss, both);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc3(n1,n2,2);
 
-    /* initialize dip */
-    for(i=0; i < n12; i++) {
-	p[0][0][i] = p0;
-	p[1][0][i] = q0;
+    if (NULL != sf_getstring("dip1")) {
+	p0 = 1.;
+	dip1 = sf_input("dip1");
+    } else {
+	if (!sf_getfloat("p0",&p0)) p0=1.;
+	/* initial first dip */
+	dip1 = NULL;
+    }
+
+    if (NULL != sf_getstring("dip2")) {
+	q0 = 0.;
+	dip2 = sf_input("dip2");
+    } else {
+	if (!sf_getfloat("q0",&q0)) q0=0.;
+	/* initial second dip */
+	dip2 = NULL;
+    }
+
+    /* initialize dips */
+    if (NULL == dip1) {
+	for(i=0; i < n12; i++) {
+	    p[0][0][i] = p0;
+	}
+    } else {
+	sf_floatread(p[0][0],n12,dip1);
+    }
+    if (NULL == dip2) {
+	for(i=0; i < n12; i++) {
+	    p[1][0][i] = q0;
+	}
+    } else {
+	sf_floatread(p[1][0],n12,dip2);
     }
   
+    /* initialize mask */
     if (NULL != sf_getstring("mask")) {
 	m = sf_boolalloc2(n1,n2);
 
@@ -88,7 +114,11 @@ int main (int argc, char *argv[])
     sf_floatread(u[0],n12,in);
 
     /* estimate dip */
-    twodip2(niter, nw, nj1, nj2, verb, u, p, m);
+    if (both) {
+	twodip2(niter, nw, nj1, nj2, verb, u, p, m);
+    } else {
+	otherdip2(niter, nw, nj1, nj2, verb, u, p, m);
+    }
 
     /* write dips */
     sf_floatwrite(p[0][0],n12*2,out);

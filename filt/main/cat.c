@@ -153,7 +153,7 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
     int ni, id;
     float o, d, di, oi;
     char key[3];
-    const float tol=1.e-5;
+    const float tol=1.e-3;
     
     naxis[0] = n[axis-1];
     for (i=1; i < nin; i++) {
@@ -185,5 +185,5 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
     }
 }
 
-/* 	$Id: cat.c,v 1.11 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */
 
