@@ -7,7 +7,6 @@ afdm2d camig cell2 constfdmig2 distance dmo dsr eikonal fincon finstack fkamo
 fkdmo gazdag halfint hwt2d hwtex interp2 interp3 interpt kirchnew kirmod mig45
 mutter preconstkirch rays2 reg2tri remap1 ricker1 rwemete2d s2ofz shoot2
 sstep2 trace2 tri2reg trirand unif2 voft vofz zomig srsyn srmig
-dsr2 srsyn2
 '''
 
 try:  # distributed version
