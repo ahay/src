@@ -42,7 +42,7 @@ env.Append(BUILDERS={'Include':configure.Header},
 src2 = '''
 allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
 callp2 causint cbanded cmatmult compress copy cosft createhelix createmshelix
-createnhelix ctoeplitz
+createnhelix ctoeplitz cweight deburst
 '''
 
 for source in Split(src2):
@@ -81,7 +81,7 @@ if root:
     main = 'sfproc.py'
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/rsfdoc.py')
+    env.Depends(docs,'#/python/rsfdoc.py')
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))

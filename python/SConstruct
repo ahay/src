@@ -1,0 +1,38 @@
+import os, rsfdoc
+
+Import('env')
+
+root = env.get('RSFROOT')
+
+bindir = os.path.join(root,'bin')
+libdir = os.path.join(root,'lib')
+docdir = os.path.join(root,'doc')
+
+for src in ('doc','proj','prog','tex','book'):
+    py = 'rsf%s.py' % src
+    pyc = py + 'c'
+    env.Install(libdir,py)
+    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
+
+env.Install(libdir,'suproj.py')
+env.Install(bindir,'sfdoc')
+env.Install(bindir,'sftour')
+
+dirs = ('main','proc','imag','plot','fomels')
+
+use = os.path.join(libdir,'rsfuse.py')
+env.Command(use,None,action=Action(rsfdoc.use))
+Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
+Depends(use,os.path.join(libdir,'vpplot.py'))
+
+index = os.path.join(docdir,'index.html')
+env.Command(index,None,'PYTHONPATH=%s %s python/sfdoc -w %s' % 
+            (libdir,WhereIs('python'),docdir))
+Depends(index,use)
+
+##########################################################################
+# SELF DOCUMENTATION
+##########################################################################
+Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix']),
+               src_suffix='.c',suffix='.py')
+env.Append(BUILDERS = {'Doc' : Doc})

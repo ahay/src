@@ -61,11 +61,17 @@ void sf_freqfilt_set(float *filt /* frequency filter [nw] */)
     }
 }
 
+#ifndef __cplusplus
+/*^*/
+
 void sf_freqfilt_cset(float complex *filt /* frequency filter [nw] */)
 /*< Initialize filter >*/
 {
     shape = filt;
 }
+
+#endif
+/*^*/
 
 void sf_freqfilt_close(void) 
 /*< Free allocated storage >*/

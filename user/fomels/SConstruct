@@ -47,7 +47,7 @@ if root:
     main = 'sffomels.py'
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/rsfdoc.py')	
+    env.Depends(docs,'#/python/rsfdoc.py')	
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
