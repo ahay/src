@@ -68,7 +68,7 @@ void pick0_step (float t0, float* t)
 void pick0_step0 (float t0, float* t)
 {
     int i, i2;
-    float k1, k2;
+    float k1;
 
     t[0] = t0;
     for (i2 = 0; i2 < n2-1; i2++) {

@@ -1,4 +1,5 @@
 #include <math.h>
+#include <assert.h>
 
 #include <rsf.h>
 
@@ -192,172 +193,138 @@ void tree_build(void)
 		} 
 
 		i = ia + ix*na + iz*nax;
+		assert (i != k);
 
 		node->t = t;
 		if (onz) { /* hits a z wall */
 		    node->w1 = a;
 		    node->w2 = x;
-		    if (x != 1. && a != 1.) {
+		    if (x != 1. && a != 1.) 
 			AddChild(Tree,i,0,0,node);
-			/*** debug ***
-			sf_warning("parent: %d %d %d",ia,ix,iz);
-			*************/
-		    }
-		    if (ia == na-1) {
+		    
+		    if (ia == na-1 || k == i+1) {
 			node->n1 = 1;
 		    } else {
 			node->n1 = order;
-			if (x != 1. && a != 0.) {
-			    AddChild(Tree,i+1,0,1,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia+1,ix,iz);
-			    *************/
-			}
+			if (x != 1. && a != 0.)
+			    AddChild(Tree,i+1,0,1,node);		
 		    }
 
-		    if (ix == nx-1) {
+		    if (ix == nx-1 || k == i+na) {
 			node->n2 = 1;
 		    } else {
 			node->n2 = order;
-			if (x != 0. && a != 1.) {
+			if (x != 0. && a != 1.)
 			    AddChild(Tree,i+na,1,0,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia,ix+1,iz);
-			    *************/
-			}
 		    }
 
-		    if (node->n1 == order && node->n2 == order && 
-			x != 0. && a != 0.) { 
+		    if (node->n1 == order && 
+			node->n2 == order && 
+			x != 0. && a != 0.) 
 			AddChild(Tree,i+na+1,1,1,node);
-			/*** debug ***
-			sf_warning("parent: %d %d %d",ia+1,ix+1,iz);
-			*************/
-		    }
 
 		    if (3==order) {
-			if (ia == 0) {
+			if (ia == 0 || k == i-1) {
 			    if (node->n1 > 1) node->n1 = 2;
 			} else if (x != 1. && a != 0. && a != 1.) {
 				AddChild(Tree,i-1,0,2,node);
-				/*** debug ***
-				sf_warning("parent: %d %d %d",ia-1,ix,iz);
-				*************/
 			}
 
-			if (ix == 0) {
+			if (ix == 0 || k == i-na) {
 			    if (node->n2 > 1) node->n2 = 2;
 			} else if (x != 0. && x != 1. && a != 1.) {
 			    AddChild(Tree,i-na,2,0,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia,ix-1,iz);
-			    *************/
 			}
 
 			if (x != 0. && a != 0. && 
 			    node->n1 > 1 && node->n2 > 1) {
-			    if (node->n1 == 3 && a != 1.) { 
-				AddChild(Tree,i+na-1,1,2,node);
-				/*** debug ***
-				sf_warning("parent: %d %d %d",ia-1,ix+1,iz);
-				*************/
-				if (node->n2 == 3 && x != 1.) {
-				    AddChild(Tree,i-na-1,2,2,node);
-				    /*** debug ***
-				    sf_warning("parent: %d %d %d",
-					       ia-1,ix-1,iz);
-				    *************/
+			    if (node->n1 == 3 && a != 1.) {
+				if (k == i+na-1) {
+				    node->n1 = 2;
+				} else {
+				    AddChild(Tree,i+na-1,1,2,node);
+
+				    if (node->n2 == 3 && x != 1.) {
+					if (k == i-na-1) {
+					    node->n2 = 2;
+					} else {
+					    AddChild(Tree,i-na-1,2,2,node);
+					}
+				    }
 				}
 			    }
 			    if (node->n2 == 3 && x != 1.) {
-				AddChild(Tree,i-na+1,2,1,node);
-				/*** debug ***
-				sf_warning("parent: %d %d %d",ia+1,ix-1,iz);
-				*************/
+				if (k == i-na+1) {
+				    node->n2 = 2;
+				} else {
+				    AddChild(Tree,i-na+1,2,1,node);
+				}
 			    }
-			}
-
+			}			
 		    }
 		} else { /* hits an x wall */
 		    node->w1 = a;
 		    node->w2 = z;
-		    if (z != 1. && a != 1.) {
+		    if (z != 1. && a != 1.)
 			AddChild(Tree,i,0,0,node);
-			/*** debug ***
-			sf_warning("parent: %d %d %d",ia,ix,iz);
-			*************/
-		    }
-		    if (ia == na-1) {
+
+		    if (ia == na-1 || k == i+1) {
 			node->n1 = 1;
 		    } else {
 			node->n1 = order;
-			if (z != 1. && a != 0.) {
+			if (z != 1. && a != 0.) 
 			    AddChild(Tree,i+1,0,1,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia+1,ix,iz);
-			    *************/
-			}
 		    }
 
-		    if (iz == nz-1) {
+		    if (iz == nz-1 || k == i+nax) {
 			node->n2 = 1;
 		    } else {
 			node->n2 = order;
-			if (z != 0. && a != 1.) {
+			if (z != 0. && a != 1.) 
 			    AddChild(Tree,i+nax,1,0,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia,ix,iz+1);
-			    *************/
-			}
 		    }
 
 		    if (node->n1 == order && node->n2 == order && 
-			z != 0. && a != 0.) {
+			z != 0. && a != 0.) 
 			AddChild(Tree,i+nax+1,1,1,node);
-			/*** debug ***
-			sf_warning("parent: %d %d %d",ia+1,ix,iz+1);
-			*************/
-		    }
+
 
 		    if (3==order) {
-			if (ia == 0) {
+			if (ia == 0 || k == i-1) {
 			    if (node->n1 > 1) node->n1 = 2;
 			} else if (z != 1. && a != 0. && a != 1.) {
 			    AddChild(Tree,i-1,0,2,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia-1,ix,iz);
-			    *************/
 			}
 
-			if (iz == 0) {
+			if (iz == 0 || k == i-nax) {
 			    if (node->n2 > 1) node->n2 = 2;
 			} else if (z != 0. && z != 1. && a != 1.) {
 			    AddChild(Tree,i-nax,2,0,node);
-			    /*** debug ***
-			    sf_warning("parent: %d %d %d",ia,ix,iz-1);
-			    *************/
 			}
 			
 			if (z != 0. && a != 0. && 
 			    node->n1 > 1 && node->n2 > 1) {
 			    if (node->n1 == 3 && a != 1.) { 
-				AddChild(Tree,i+nax-1,1,2,node);
-				/*** debug ***
-				sf_warning("parent: %d %d %d",ia-1,ix,iz+1);
-				*************/
-				if (node->n2 == 3 && z != 1.) {
-				    AddChild(Tree,i-nax-1,2,2,node);
-				    /*** debug ***
-				    sf_warning("parent: %d %d %d",
-				    ia-1,ix,iz-1);
-				    *************/
+				if (k == i+nax-1) {
+				    node->n1 = 2;
+				} else {
+				    AddChild(Tree,i+nax-1,1,2,node);
+
+				    if (node->n2 == 3 && z != 1.) {
+					if (k == i-nax-1) {
+					    node->n2 = 2;
+					} else {
+					    AddChild(Tree,i-nax-1,2,2,node);
+					}
+				    }
 				}
 			    }
 			    if (node->n2 == 3 && z != 1.) { 
-				AddChild(Tree,i-nax+1,2,1,node);
-				/*** debug ***
-				sf_warning("parent: %d %d %d",ia+1,ix,iz-1);
-				*************/
+				if (k == i-nax+1) {
+				    node->n2 = 2;
+				} else {
+				    AddChild(Tree,i-nax+1,2,1,node);
+				}
 			    }
 			}
 		    }

@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
     bool inv;
     int nw,nz,nx, iw,ix,iz;
-    float dw,dz,dx, vel0, eps, beta;
+    float dw,dz,dx, vel0, eps, beta, energy;
     float complex w, a, *ctime, *tt, *diag1, *diag2, *offd1, *offd2;
     float **depth, **vel, **voff;
     ctris slv;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 	sf_warning("frequency %d of %d",iw+1, nw);
 
 	if (inv) { /* modeling */
-	    w = dw*(eps+iw*I);
+	    w = dw*(eps-iw*I);
 
 	    for (ix=0; ix < nx; ix++) {
 		ctime[ix] = depth[ix][nz-1];
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 
 	    for (iz = nz-2; iz >= 0; iz--) { /* step up */
 
-		for (ix=1; ix < nx; ix++) {
+		for (ix=0; ix < nx; ix++) {
 		    vel0 = vel[ix][iz];
 		    diag1[ix] =   -2.*(beta - (vel0/w-dz)*vel0*dx/w);
 		    diag2[ix] = 1.-2.*(beta - (vel0/w+dz)*vel0*dx/w);
@@ -169,22 +169,57 @@ int main(int argc, char* argv[])
 			offd1[ix]*ctime[ix+1];
 		}
 		tt[nx-1] = offd1[nx-2]*ctime[nx-2] + diag1[nx-1]*ctime[nx-1];
+
+		energy = 0.;
+		for (ix=0; ix < nx; ix++) {
+		    energy += crealf(diag1[ix]*conjf(diag1[ix]));
+		}
+		energy /= nx;
+
+		sf_warning("%g %g %g: %g!",
+			   cabsf(diag1[0]),
+			   cabsf(diag1[nx-1]),
+			   cabsf(diag1[nx/2]),
+			   energy);
  
 		for (ix=0; ix < nx; ix++) {
 		    ctime[ix] += tt[ix];
 		}
 
+		energy = 0.;
+		for (ix=0; ix < nx; ix++) {
+		    energy += crealf(ctime[ix]*conjf(ctime[ix]));
+		}
+
+		sf_warning("w=(%g,%g) z=%d %g",crealf(w),cimagf(w),iz,energy);
+
 		ctridiagonal_define (slv, diag2, offd2);
 		ctridiagonal_solve (slv, ctime);
+
+		energy = 0.;
+		for (ix=0; ix < nx; ix++) {
+		    energy += crealf(ctime[ix]*conjf(ctime[ix]));
+		}
+
+		sf_warning("w=(%g,%g) z=%d %g",crealf(w),cimagf(w),iz,energy);
 
 		for (ix=0; ix < nx; ix++) {
 		    vel0 = vel[ix][iz];
 		    ctime[ix] = ctime[ix] * cexpf(-w*dz/vel0) + depth[ix][iz];
 		}
 
+		energy = 0.;
+		for (ix=0; ix < nx; ix++) {
+		    energy += crealf(ctime[ix]*conjf(ctime[ix]));
+		}
+
+		sf_warning("w=(%g,%g) z=%d %g",crealf(w),cimagf(w),iz,energy);
+
+/*
 		sf_warning("z=%d a=(%g,%g) ctime[0]=(%g,%g)",
 			   iz,crealf(a),cimagf(a),
 			   crealf(ctime[0]),cimagf(ctime[0]));
+*/
 	    }
 
 	    sf_write (ctime,sizeof(float complex),nx,out);
