@@ -494,7 +494,7 @@ class TeXPaper(Environment):
                   self.Install(figdir,[png,pdf])
                   self.Alias('install',figdir)
         # mathematica figures:
-        mths = glob.glob('Math/[a-z]*.ma')
+        mths = glob.glob('Math/*.ma')
         if mths:
              if mathematica:
                   for mth in mths:
