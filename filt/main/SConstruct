@@ -4,8 +4,8 @@ import configure
 
 progs = """
 add attr cat cmplx cp dd disfil get headermath headersort headerwindow
-imag in interleave log mask math merge mv pad real reverse rm 
-rtoc scale segyread segywrite spike spray stack transp window
+in interleave log mask math pad real reverse rm rtoc scale
+segyread segywrite spike spray stack transp window
 """
 try: # distributed version
     Import('env')
@@ -23,14 +23,19 @@ except: # local version
                LIBPATH=['../lib'],LIBS=['rsf','m'])
     SConscript('../lib/SConstruct')
 
-for pair in [('merge','cat'),('imag','real'),('mv','cp')]:
-    env.Command(pair[0]+'.c',pair[1]+'.c','cp $SOURCE $TARGET')
-
 mains = Split(progs)
 map(lambda prog: env.Program(prog + '.c'),mains)
 
 if root:
-    env.Install(bindir,map(lambda prog: 'sf' + prog,mains))
+    docmerge = configure.docmerge
+    sf = env.get('PROGPREFIX','')
+    
+    env.Install(bindir,map(lambda prog: sf + prog,mains))
+
+    for pair in [['merge','cat'],['imag','real'],['mv','cp']]:
+        [copy,source] = map(lambda x: sf+x,pair)
+        env.InstallAs(os.path.join(bindir,copy),source)
+        docmerge = configure.docextra(docmerge,source,copy)
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -40,9 +45,9 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog),mains)
 
-    doc = env.Command(main,docs,configure.docmerge)
+    doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.11 2004/03/19 16:01:06 fomels Exp $	
+# 	$Id: SConstruct,v 1.12 2004/04/01 02:12:29 fomels Exp $	
