@@ -1,3 +1,22 @@
+/* Basic vplot operations. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <stdio.h>
 
@@ -7,6 +26,109 @@
 
 #include "vplot.h"
 #include "coltab.h"
+
+#ifndef _vp_vplot_h
+
+#define VP_SCREEN_RATIO 0.75 
+/* aspect ratio, default window */
+#define VP_ROTATED_HEIGHT 7.5
+/* height in inches, rotated */    
+#define VP_STANDARD_HEIGHT 10.24
+/* height in inches, default device */ 
+#define VP_MAX 54.6           
+/* absolute maximum x or y in inches */
+/*^*/
+
+enum {
+    RPERIN=600,         /* vplot units per inch */
+    HATCHPERIN=100,	/* Hatch units per inch */
+    TXPERIN=33,	        /* Text units per inch */
+    FATPERIN=200,	/* Fatness units per inch */
+    MAX_GUN=255,	/* Maximum color gun strength */
+    /*
+     * This is the factor we scale our path and up vectors by before
+     * running them through the local text coordinate transformation.
+     * (The coordinate transformation, being in terms of device units,
+     * gets done in integers. If we don't scale up we get severe roundoff
+     * problems for small text sizes at odd angles. We can't make this
+     * factor too big, though, or we risk very large text overflowing
+     * the maximum possible integer.)
+     */
+    TEXTVECSCALE=10,
+};
+/*^*/
+
+enum {TH_NORMAL, TH_LEFT, TH_CENTER, TH_RIGHT, TH_SYMBOL};
+enum {TV_NORMAL, TV_BOTTOM, TV_BASE, TV_HALF, TV_CAP, TV_TOP, TV_SYMBOL};
+/*^*/
+
+enum {
+    VP_SETSTYLE         = 'S',
+    VP_MOVE             = 'm',
+    VP_DRAW	        = 'd',
+    VP_PLINE	    	= 'L',
+    VP_PMARK	   	= 'M',
+    VP_TEXT		= 'T',
+    VP_GTEXT		= 'G',
+    VP_AREA		= 'A',
+    VP_OLDAREA		= 'a',
+    VP_BYTE_RASTER	= 'R',
+    VP_BIT_RASTER	= 'r',    
+    VP_ERASE		= 'e',
+    VP_BREAK		= 'b',
+    VP_PURGE		= 'p',
+    VP_NOOP		= 'n',    
+    VP_ORIGIN		= 'o',
+    VP_WINDOW		= 'w',    
+    VP_FAT		= 'f',
+    VP_SETDASH		= 's',
+    VP_COLOR		= 'c',
+    VP_SET_COLOR_TABLE	= 'C',
+    VP_TXALIGN		= 'J',
+    VP_TXFONTPREC	= 'F',
+    VP_PATLOAD		= 'l',
+    VP_OVERLAY		= 'v',    
+    VP_MESSAGE		= 'z',
+    VP_BEGIN_GROUP	= '[',
+    VP_END_GROUP	= ']',    
+    VP_OLDTEXT		= 't'
+};
+/*^*/
+
+typedef enum {
+    VP_NO_STYLE_YET=-1,
+    VP_STANDARD,
+    VP_ROTATED,
+    VP_NORM,
+    VP_ABSOLUTE
+} vp_plotstyle;
+/*^*/
+
+enum {
+    VP_BLACK,
+    VP_BLUE,
+    VP_RED,
+    VP_PURPLE,
+    VP_GREEN,
+    VP_CYAN,
+    VP_YELLOW,
+    VP_WHITE
+};
+/*^*/
+
+enum {
+    VP_NO_CHANGE=-1,
+    VP_STRING,
+    VP_CHAR,
+    VP_STROKE
+};
+/*^*/
+
+enum {OVLY_NORMAL, OVLY_BOX, OVLY_SHADE, OVLY_SHADE_BOX};    
+/* text overlay */
+/*^*/
+
+#endif
 
 static float fx=0.0, fy=0.0;             /* origin in inches */
 static float ufx=0.0, ufy=0.0;           /* origin in user units */
@@ -20,15 +142,17 @@ static vp_plotstyle style=VP_STANDARD;
 static int font=-1, prec=-1, ovly=-1;    /* font, precision, and overlay */
 static int xjust=0, yjust=0;             /* x and y text justification */
 
-static void pout (float xp, float  yp, int  down);
+static void pout (float xp, float  yp, bool down);
 
 void vp_init(void)
+/*< Initialize output to vplot >*/
 {
     if (isatty(fileno(stdout)))
 	sf_error("You don't want to dump binary to terminal.");
 }
 
 int vp_getint (void)
+/*< Extract and decode an integer (for debugging) >*/
 {
     unsigned short w;
 
@@ -39,48 +163,57 @@ int vp_getint (void)
 }
 
 void vp_putint (int w)
+/*< Output an encoded integer >*/
 {
     char j;
     
     j = w & 255;        /* low order byte of halfword value */
-    putchar (j);
+    (void) putchar (j);
     
     j = (w >> 8) & 255;	/* high order byte of halfword value */
-    putchar (j);
+    (void) putchar (j);
 }
 
 void vp_putfloat (float w)
+/*< Output an encoded float with scaling >*/
 {
     w *= RPERIN;
-    vp_putint((int) (w < 0.0)? w-0.5 : w+0.5);
+    vp_putint((int) ((w < 0.0)? w-0.5 : w+0.5));
 }
 
 void vp_putfloat0 (float w)
+/*< Output an encoded float without scaling >*/
 {
-    vp_putint((int) (w < 0.0)? w-0.5 : w+0.5);
+    vp_putint((int) ((w < 0.0)? w-0.5 : w+0.5));
 }
 
 void vp_egroup (void)
+/*< end group >*/
 {
-    putchar (VP_END_GROUP);
+    (void) putchar (VP_END_GROUP);
 }
 
 void vp_erase (void)
+/*< erase screen >*/
 {
-    putchar (VP_ERASE);
+    (void) putchar (VP_ERASE);
 }
 
 void vp_fat (int f)
+/*< set fat >*/
 {
-    putchar (VP_FAT);
+    (void) putchar (VP_FAT);
     vp_putint (f);
 }
 
-void vp_fill (const float *xp, const float *yp, int  np)
+void vp_fill (const float *xp /* [np] */, 
+	      const float *yp /* [np] */, 
+	      int  np         /* number of points */)
+/*< fill polygon >*/
 {
     int i;
 
-    putchar (VP_AREA);
+    (void) putchar (VP_AREA);
     vp_putint (np);
 
     for (i = 0; i < np; i++) {
@@ -89,12 +222,15 @@ void vp_fill (const float *xp, const float *yp, int  np)
     }
 }
 
-void vp_ufill (const float *xp, const float *yp, int  np)
+void vp_ufill (const float *xp /* [np] */, 
+	       const float *yp /* [np] */, 
+	       int  np         /* number of points */)
+/*< fill polygon defined in user coordinates >*/
 {
     int i;
     float x, y;
 
-    putchar (VP_AREA);
+    (void) putchar (VP_AREA);
     vp_putint (np);
 
     for (i = 0; i < np; i++) {
@@ -107,10 +243,11 @@ void vp_ufill (const float *xp, const float *yp, int  np)
 
 void vp_area (const float *xp, const float *yp, int np, 
 	      int fat, int xmask, int ymask)
+/*< old-style polygon >*/
 {
     int i;
 
-    putchar (VP_OLDAREA);
+    (void) putchar (VP_OLDAREA);
     vp_putint (np);
     vp_putint (fat);
     vp_putint (xmask);
@@ -123,11 +260,12 @@ void vp_area (const float *xp, const float *yp, int np,
 
 void vp_uarea (const float *xp, const float *yp, int np, 
 	       int fat, int xmask, int ymask)
+/*< old-style polygon defined in user coordinates >*/
 {
     int i;
     float x, y;
 
-    putchar (VP_OLDAREA);
+    (void) putchar (VP_OLDAREA);
     vp_putint (np);
     vp_putint (fat);
     vp_putint (xmask);
@@ -140,13 +278,17 @@ void vp_uarea (const float *xp, const float *yp, int np,
     }
 }
 
-void vp_coltab (int color, float r, float g, float b)
+void vp_coltab (int color /* color index */, 
+		float r   /* red */, 
+		float g   /* green */, 
+		float b   /* blue */)
+/*< set a color table entry >*/
 {
     r *= MAX_GUN; r += (r < 0.0)? -0.5: +0.5;
     g *= MAX_GUN; g += (g < 0.0)? -0.5: +0.5;
     b *= MAX_GUN; b += (b < 0.0)? -0.5: +0.5;
 
-    putchar (VP_SET_COLOR_TABLE);
+    (void) putchar (VP_SET_COLOR_TABLE);
     vp_putint (color);
     vp_putint ((int) r);
     vp_putint ((int) g);
@@ -157,24 +299,42 @@ void vp_coltab (int color, float r, float g, float b)
 void vp_gtext (float x, float y, 
 	       float xpath, float ypath, 
 	       float xup, float yup, const char *string)
+/*< output text string >*/
 {
     pout (x, y, 0);
-    putchar (VP_GTEXT);
+    (void) putchar (VP_GTEXT);
     vp_putfloat (TEXTVECSCALE * xpath);
     vp_putfloat (TEXTVECSCALE * ypath);
     vp_putfloat (TEXTVECSCALE * xup);
     vp_putfloat (TEXTVECSCALE * yup);
 
     do {
-	putchar (*string);
-    } while (*string++);
+	(void) putchar (*string);
+    } while (*string++ != '\0');
 }
 
+void vp_ugtext (float x, float y, 
+		float xpath, float ypath,
+		float xup, float yup, const char *string)
+/*< output text string in user coordinates >*/
+{
+    x = fx + (x - ufx) * xscl;
+    y = fy + (y - ufy) * yscl;
+    xpath *= xscl;
+    ypath *= yscl;
+    xup *= xscl;
+    yup *= yscl;
+
+    vp_ugtext (x, y, xpath, ypath, xup, yup, string);
+}
+
+
 void vp_hatchload (int angle,int nhatch, int ihatch, int *hatch)
+/*< ? >*/
 {
     int c, i;
 
-    putchar (VP_PATLOAD);
+    (void) putchar (VP_PATLOAD);
     vp_putint (angle);
     vp_putint (-1);
     vp_putint (nhatch);
@@ -188,20 +348,23 @@ void vp_hatchload (int angle,int nhatch, int ihatch, int *hatch)
 }
 
 void vp_message (const char *string)
+/*< output message >*/
 {
-    putchar (VP_MESSAGE);
+    (void) putchar (VP_MESSAGE);
 
     do {
-	putchar (*string);
+	(void) putchar (*string);
     } while (*string++);
 }
 
 void vp_move (float x,float  y)
+/*< move to a point >*/
 {
     vp_plot (x, y, false);
 }
 
 void vp_umove (float x,float  y)
+/*< move to a point in user coordinates >*/
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
@@ -209,22 +372,25 @@ void vp_umove (float x,float  y)
 }
 
 void vp_orig (float x,float  y)
+/*< set the origin >*/
 {
     fx = x;
     fy = y;
 }
 
 void vp_uorig (float x,float  y)
+/*< set the origin in user coordinates >*/
 {
     ufx = x;
     ufy = y;
 }
 
 void vp_patload (int ppi, int  nx, int ny, int ipat, int *col)
+/*< ? >*/
 {
     int c, i;
 
-    putchar (VP_PATLOAD);
+    (void) putchar (VP_PATLOAD);
     c = ppi;
     vp_putint (c);
     c = nx;
@@ -240,29 +406,34 @@ void vp_patload (int ppi, int  nx, int ny, int ipat, int *col)
     }
 }
 
-/* go to location (x,y) and then put the pen down */
 void vp_pendn (float x, float y)
+/*< go to location (x,y) and then put the pen down >*/
 {
     vp_plot (x, y, pendown);
     pendown = true;
 }
 
 void vp_upendn (float x, float y)
+/*< go to location (x,y) in user coordinates and then put the pen down >*/
 {
     vp_uplot (x, y, pendown);
     pendown = true;
 }
 
 void vp_penup (void)
+/*< put pen up >*/
 {
     pendown = false;
 }
 
-void vp_pline (const float *xp, const float *yp, int np)
+void vp_pline (const float *xp /* [np] */, 
+	       const float *yp /* [np] */, 
+	       int np          /* number of points */)
+/*< draw a line >*/
 {
     int i;
 
-    putchar (VP_PLINE);
+    (void) putchar (VP_PLINE);
     vp_putint (np);
     for (i = 0; i < np; i++) {
 	vp_putfloat (xp[i]);
@@ -270,12 +441,15 @@ void vp_pline (const float *xp, const float *yp, int np)
     }
 }
 
-void vp_upline (const float *xp, const float *yp, int np)
+void vp_upline (const float *xp /* [np] */, 
+		const float *yp /* [np] */, 
+		int np          /* number of points */)
+/*< draw a line in user coordinates >*/
 {
     int i;
     float x, y;
 
-    putchar (VP_PLINE);
+    (void) putchar (VP_PLINE);
     vp_putint (np);
     for (i = 0; i < np; i++) {
 	x = fx + (xp[i]-ufx) * xscl;
@@ -286,6 +460,7 @@ void vp_upline (const float *xp, const float *yp, int np)
 }
 
 void vp_plot (float x, float y, bool  down)
+/*< line drawing >*/
 {
     float dx, dy, dist, dpos, xp, yp, tonext, cosine, sine;
     int i;
@@ -328,35 +503,47 @@ void vp_plot (float x, float y, bool  down)
     yold = yp;
 }
 
-static void pout (float xp, float  yp, int  down)
+void vp_uplot (float x, float y, bool down)
+/*< line drawing in user coordinates >*/
+{
+    x = fx + (x - ufx) * xscl;
+    y = fy + (y - ufy) * yscl;
+    vp_plot (x, y, down);
+}
+
+static void pout (float xp, float  yp, bool down)
 {
     
     if      (xp >  VP_MAX) xp =  VP_MAX;
     else if (xp < -VP_MAX) xp = -VP_MAX;
     if      (yp >  VP_MAX) yp =  VP_MAX;
     else if (yp < -VP_MAX) yp = -VP_MAX;
-    putchar ((down ? VP_DRAW : VP_MOVE));
+    (void) putchar ((down ? VP_DRAW : VP_MOVE));
     vp_putfloat (xp);
     vp_putfloat (yp);
 }
 
 void vp_draw (float x,float  y)
+/*< line drawing step >*/
 {
     vp_plot (x, y, true);
 }
 
 void vp_udraw (float x,float  y)
+/*< line drawing step in user coordinates >*/
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
     vp_plot (x, y, true);
 }
 
-void vp_pmark (int npts, int mtype, int msize, const float *xp, const float *yp)
+void vp_pmark (int npts, int mtype, int msize, 
+	       const float *xp, const float *yp)
+/*< ? >*/
 {
     int i;
 
-    putchar (VP_PMARK);
+    (void) putchar (VP_PMARK);
     vp_putint (npts);
     vp_putint (mtype);
     vp_putint (msize);
@@ -368,25 +555,14 @@ void vp_pmark (int npts, int mtype, int msize, const float *xp, const float *yp)
 }
 
 void vp_purge (void)
+/*< purge >*/
 {
-    putchar (VP_PURGE);
-    fflush (stdout);
+    (void) putchar (VP_PURGE);
+    (void) fflush (stdout);
 }
 
-/*
- * This routine sets up a "raster color table", to be used with vp_raster
- * with an offset of 256.
- * It sets this color table up in colors 256 through 511.
- * Colors 0 through nreserve-1 are left untouched; you can either let
- * these default or set them yourself.
- * "colname" is a string which defines what raster color table you
- * want to use. For now, it is the same as the "color" option of "Movie",
- * with the extensions that appending a "C" means to flag clipped colors
- * in red, and a string longer than 2 characters is interpreted as a
- * "colfile" name.
- */
-
 void vp_rascoltab (int nreserve, const char *colname)
+/*< set a raster color table >*/
 {
     int i, j, k, incr, smap[256];
 /*
@@ -445,11 +621,12 @@ void vp_rascoltab (int nreserve, const char *colname)
 void vp_raster (unsigned char **array, bool bit, int offset, 
 		int xpix, int ypix, 
 		float xll, float yll, float xur,float yur, int orient)
+/*< Output a raster array >*/
 {
     int i, n, nn;
     unsigned char obyte;
 
-    putchar (bit? VP_BIT_RASTER: VP_BYTE_RASTER);
+    (void) putchar (bit? VP_BIT_RASTER: VP_BYTE_RASTER);
 
     if (orient >= 0) {
 	orient %= 4;
@@ -483,151 +660,27 @@ void vp_raster (unsigned char **array, bool bit, int offset,
 		    ((array[i][n+5] != 0) << 2) |
 		    ((array[i][n+6] != 0) << 1) |
 		    ((array[i][n+7] != 0) << 0);
-		putchar ((char) obyte);
+		(void) putchar ((char) obyte);
 	    }
 	    if (n < xpix) {
 		obyte = 0x00;
 		for (nn = 7; n < xpix; n++, nn--) {
 		    obyte |= ((array[i][n] != 0) << nn);
 		}
-		putchar ((char) obyte);
+		(void) putchar ((char) obyte);
 	    }
 	} else {
 	    for (n = 0; n < xpix; n++) {
-		putchar ((char) array[i][n]);
+		(void) putchar ((char) array[i][n]);
 	    }
 	}
     }
 }
 
-void vp_scale (float xscale, float  yscale)
-{
-    xscl = xscale;
-    yscl = yscale;
-}
-
-void vp_setdash (const float *dash, const float *gapp, int np)
-{
-    int i;
-
-    putchar (VP_SETDASH);
-    vp_putint (np);
-    for (i = 0; i < np; i++) {
-	vp_putfloat (dash[i]);
-	vp_putfloat (gapp[i]);
-    }
-}
-
-void vp_stretch (float xmin, float ymin, float xmax, float ymax) {
-    vp_uorig (xmin, ymin);
-    vp_orig (0., 0.);
-
-    if (VP_ROTATED == style) {
-	vp_scale (VP_ROTATED_HEIGHT / (xmax - xmin), 
-		  (VP_ROTATED_HEIGHT / VP_SCREEN_RATIO) / (ymax - ymin));
-    } else {
-	vp_scale ((VP_STANDARD_HEIGHT / VP_SCREEN_RATIO) / (xmax - xmin), 
-		  VP_STANDARD_HEIGHT / (ymax - ymin));
-    }
-}
-
-void vp_style (vp_plotstyle st) {
-    style = st;
-    putchar (VP_SETSTYLE);
-    switch (style) {
-	case VP_ROTATED:
-	    putchar ('r');
-	    break;
-	case VP_ABSOLUTE:
-	    putchar ('a');
-	    break;
-	case VP_STANDARD:
-	default:
-	    putchar ('s');
-	    break;
-    }
-}
-
-void vp_text (float x, float y, int size, int orient, const char *string)
-{
-    if (0 == size) return;
-
-    pout (x, y, 0);
-    putchar (VP_TEXT);
-    vp_putint (size);
-    vp_putint (orient);
-
-    do {
-	putchar (*string);
-    }
-    while (*string++);
-}
-
-void vp_tfont (int font1, int prec1, int ovly1)
-{
-    font = font1;
-    prec = prec1;
-    ovly = ovly1;
-
-    putchar (VP_TXFONTPREC);
-    vp_putint (font);
-    vp_putint (prec);
-    vp_putint (ovly);
-}
-
-void vp_tjust (int xjust1, int yjust1)
-{
-    xjust = xjust1;
-    yjust = yjust1;
-
-    putchar (VP_TXALIGN);
-    vp_putint (xjust);
-    vp_putint (yjust);
-}
-
-void vp_clip (float xmin, float ymin, float xmax, float ymax)
-{
-    putchar (VP_WINDOW);
-    vp_putfloat (xmin);
-    vp_putfloat (ymin);
-    vp_putfloat (xmax);
-    vp_putfloat (ymax);
-}
-
-
-void vp_uclip (float xmin, float ymin, float xmax, float ymax)
-{
-    xmin = fx + (xmin - ufx) * xscl;
-    ymin = fy + (ymin - ufy) * yscl;
-    xmax = fx + (xmax - ufx) * xscl;
-    ymax = fy + (ymax - ufy) * yscl;
-    vp_clip (xmin, ymin, xmax, ymax);
-}
-
-void vp_ugtext (float x, float y, 
-		float xpath, float ypath,
-		float xup, float yup, const char *string)
-{
-    x = fx + (x - ufx) * xscl;
-    y = fy + (y - ufy) * yscl;
-    xpath *= xscl;
-    ypath *= yscl;
-    xup *= xscl;
-    yup *= yscl;
-
-    vp_ugtext (x, y, xpath, ypath, xup, yup, string);
-}
-
-void vp_uplot (float x, float y, bool down)
-{
-    x = fx + (x - ufx) * xscl;
-    y = fy + (y - ufy) * yscl;
-    vp_plot (x, y, down);
-}
-
 void vp_uraster (unsigned char **array, bool bit, int offset,
 		 int xpix, int ypix, 
 		 float xll, float yll, float xur, float yur, int orient)
+/*< Output a raster array in user coordinates >*/
 {
     float x1, y1, x2, y2;
     
@@ -641,27 +694,132 @@ void vp_uraster (unsigned char **array, bool bit, int offset,
 	       xpix, ypix, x1, y1, x2, y2, orient);
 }
 
+void vp_scale (float xscale, float  yscale)
+/*< set scaling >*/
+{
+    xscl = xscale;
+    yscl = yscale;
+}
+
+void vp_stretch (float xmin, float ymin, float xmax, float ymax) 
+/*< set scale and origin for a rectangular area >*/
+{
+    vp_uorig (xmin, ymin);
+    vp_orig (0., 0.);
+
+    if (VP_ROTATED == style) {
+	vp_scale (VP_ROTATED_HEIGHT / (xmax - xmin), 
+		  (VP_ROTATED_HEIGHT / VP_SCREEN_RATIO) / (ymax - ymin));
+    } else {
+	vp_scale ((VP_STANDARD_HEIGHT / VP_SCREEN_RATIO) / (xmax - xmin), 
+		  VP_STANDARD_HEIGHT / (ymax - ymin));
+    }
+}
+
+void vp_style (vp_plotstyle st) 
+/*< set vpplot style >*/
+{
+    style = st;
+    (void) putchar (VP_SETSTYLE);
+    switch (style) {
+	case VP_ROTATED:
+	    (void) putchar ('r');
+	    break;
+	case VP_ABSOLUTE:
+	    (void) putchar ('a');
+	    break;
+	case VP_STANDARD:
+	default:
+	    (void) putchar ('s');
+	    break;
+    }
+}
+
+void vp_text (float x, float y, int size, int orient, const char *string)
+/*< output text string >*/
+{
+    if (0 == size) return;
+
+    pout (x, y, 0);
+    (void) putchar (VP_TEXT);
+    vp_putint (size);
+    vp_putint (orient);
+
+    do {
+	(void) putchar (*string);
+    }
+    while (*string++);
+}
+
 void vp_utext (float x, float y, int size, int orient, const char *string)
+/*< output text string in user coordinates >*/
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
     vp_text (x, y, size, orient, string);
 }
 
+void vp_tfont (int font1, int prec1, int ovly1)
+/*< set text font >*/
+{
+    font = font1;
+    prec = prec1;
+    ovly = ovly1;
+
+    (void) putchar (VP_TXFONTPREC);
+    vp_putint (font);
+    vp_putint (prec);
+    vp_putint (ovly);
+}
+
+void vp_tjust (int xjust1, int yjust1)
+/*< set text alignment >*/
+{
+    xjust = xjust1;
+    yjust = yjust1;
+
+    (void) putchar (VP_TXALIGN);
+    vp_putint (xjust);
+    vp_putint (yjust);
+}
+
+void vp_clip (float xmin, float ymin, float xmax, float ymax)
+/*< set rectangular clip >*/
+{
+    (void) putchar (VP_WINDOW);
+    vp_putfloat (xmin);
+    vp_putfloat (ymin);
+    vp_putfloat (xmax);
+    vp_putfloat (ymax);
+}
+
+
+void vp_uclip (float xmin, float ymin, float xmax, float ymax)
+/*< set rectangular clip in user coordinates >*/
+{
+    xmin = fx + (xmin - ufx) * xscl;
+    ymin = fy + (ymin - ufy) * yscl;
+    xmax = fx + (xmax - ufx) * xscl;
+    ymax = fy + (ymax - ufy) * yscl;
+    vp_clip (xmin, ymin, xmax, ymax);
+}
+
 void vp_where (float *x, float *y)
+/*< output current pen location >*/
 {
     *x = xold;
     *y = yold;
 }
 
 void vp_color (int col)
+/*< set pen color >*/
 {
-    putchar (VP_COLOR);
+    (void) putchar (VP_COLOR);
     vp_putint (col);
 }
 
-/* plot an arrow from (x1,y1) to (x,y) with arrow-size r */
 void vp_arrow (float x1, float y1, float x, float y, float r)
+/*< plot an arrow from (x1,y1) to (x,y) with arrow-size r >*/
 {
     float beta, alpha, xp[4], yp[4];
     const float pio4=0.785398;
@@ -706,9 +864,8 @@ void vp_arrow (float x1, float y1, float x, float y, float r)
     }
 }
 
-
-/* plot an arrow from (x1,y1) to (x,y) with arrow-size r */
 void vp_uarrow (float x1, float y1, float x, float y, float r)
+/*< plot an arrow in user coordinates >*/
 {
     float beta, alpha, xp[4], yp[4];
     const float pio4=0.785398;
@@ -754,6 +911,7 @@ void vp_uarrow (float x1, float y1, float x, float y, float r)
 }
 
 void vp_dash (float dash1, float gap1, float dash2, float gap2)
+/*< set dash pattern >*/
 {
     if (dash1 < 0. || gap1 < 0. || dash2 < 0. || gap2 < 0.) {
 	dashon = false;
@@ -770,5 +928,18 @@ void vp_dash (float dash1, float gap1, float dash2, float gap2)
     } else {
 	dashon = true;
 	dashpos = 0.0;
+    }
+}
+
+void vp_setdash (const float *dash, const float *gapp, int np)
+/*< set dash pattern >*/
+{
+    int i;
+
+    (void) putchar (VP_SETDASH);
+    vp_putint (np);
+    for (i = 0; i < np; i++) {
+	vp_putfloat (dash[i]);
+	vp_putfloat (gapp[i]);
     }
 }

@@ -27,11 +27,11 @@
 static void hue2rgb (float hue,float *red, float *green, float *blue);
 /* convert hue to RGB triple */
 
-void vp_name2coltab (const char *colname /* color table name */, 
-		     int nocol           /* number of colors */,
-		     float *red, 
-		     float *green, 
-		     float *blue         /* RGB values */)
+void vp_name2coltab (const char *colname     /* color table name */, 
+		     int nocol               /* number of colors */,
+		     /*@out@*/ float *red, 
+		     /*@out@*/ float *green, 
+		     /*@out@*/ float *blue   /* RGB values */)
 /*< Create a color table. nocol is between 2 and 256. >*/
 {
     int i, ic, c;
@@ -217,9 +217,10 @@ void vp_name2coltab (const char *colname /* color table name */,
     
     /* If clipping flagged, change the 2 values at either end to red */
     if (colname[0] != '\0' && colname[1] == 'C') {
-	red[0] = red[1] = red[nocol-2] = red[nocol-1] = 1.;
-	green[0] = green[1] = green[nocol-2] = green[nocol-1] = 0.;
-	blue[0] = blue[1] = blue[nocol-2] = blue[nocol-1] = 0.;
+	red[0] = 1.; green[0] = 0.; blue[0] = 0.;
+	red[1] = 1.; green[1] = 0.; blue[1] = 0.;
+	red[nocol-2] = 1.; green[nocol-2] = 0.; blue[nocol-2] = 0.;
+	red[nocol-1] = 1.; green[nocol-1] = 0.; blue[nocol-1] = 0.;
     }
 }
 
@@ -229,7 +230,7 @@ static void hue2rgb (float hue,float *red, float *green, float *blue)
     float df, dg;
     int i;
     
-    hue = hue*360.0; 
+    hue *= 360.0; 
     if (hue >= 360.0) hue = 0.0; 
     else hue /= 60.0;
     

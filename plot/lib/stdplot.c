@@ -43,13 +43,22 @@ static struct Label {
     int fat;
     float x, y, xpath, ypath, xup, yup, min, max;
     char* text;
-} *label1=NULL, *label2=NULL, *label3=NULL, *title=NULL, *barlabel=NULL;
+}   /*@null@*/ *label1=NULL, 
+    /*@null@*/ *label2=NULL, 
+    /*@null@*/ *label3=NULL, 
+    /*@null@*/ *title=NULL, 
+    /*@null@*/ *barlabel=NULL;
 
 static struct Axis {
     int ntic;
     float or, dnum, num0;
-} *axis1=NULL, *axis2=NULL, *axis3=NULL, *baraxis=NULL, 
-    *grid1=NULL, *grid2=NULL, *grid3=NULL;
+}   /*@null@*/ *axis1=NULL, 
+    /*@null@*/ *axis2=NULL, 
+    /*@null@*/ *axis3=NULL, 
+    /*@null@*/ *baraxis=NULL, 
+    /*@null@*/ *grid1=NULL, 
+    /*@null@*/ *grid2=NULL, 
+    /*@null@*/ *grid3=NULL;
 
 static void make_title (sf_file in, char wheret);
 static void make_barlabel (void);
@@ -162,8 +171,13 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 
     /* make frame smaller to accomodate scale bar */
     if (scalebar) {
-	vertbar = (NULL == (bartype = sf_getstring("bartype"))) ||
-	    (bartype[0] == 'v');
+	bartype = sf_getstring("bartype");
+	if (NULL == bartype) {
+	    vertbar = true;
+	} else {
+	    vertbar = (bartype[0] == 'v');
+	    free (bartype);
+	}
 	if (!sf_getfloat("barwidth",&barwd)) barwd = 0.36;
 	if (vertbar) {
 	    xur -= (0.07*screenwd + barwd);
@@ -942,7 +956,7 @@ void vp_frame(void)
 	    vp_where (&xc, &yc);
 	    vp_draw (xc, yc+vs);
 
-	    sprintf (string, "%1.5g", num);
+	    snprintf (string,32,"%1.5g", num);
 	    vp_gtext(xc, yc+1.5*vs, labelsz, 0., 0., labelsz, string);
 	}
     }    
@@ -980,7 +994,7 @@ void vp_frame(void)
 	    vp_where (&xc, &yc);
 	    vp_draw (xc+vs, yc);
 
-	    sprintf (string, "%1.5g", num);
+	    snprintf (string,32,"%1.5g", num);
 
 	    if (labelrot) {
 		vp_gtext(xc+5.0*vs, yc, 0., -labelsz, labelsz, 0., string);
@@ -1015,7 +1029,7 @@ void vp_frame(void)
 		vp_where (&xc, &yc);
 		vp_draw (xc, yc+vs);
 
-		sprintf (string, "%1.5g", num);
+		snprintf (string,32,"%1.5g", num);
 		vp_gtext(xc, yc+1.5*vs,labelsz,0.,0.,labelsz,string);
 	    } else {
 		xc = mid1+(num-label3->min)*(max1-mid1)/
@@ -1027,7 +1041,7 @@ void vp_frame(void)
 		vp_where (&xc, &yc);
 		vp_draw (xc-vs*sinth, yc+vs*costh);
 		
-		sprintf (string, "%1.5g", num);
+		snprintf (string,32,"%1.5g", num);
 		vp_gtext(xc-1.5*vs*sinth, yc+1.5*vs*costh, 
 			 labelsz*costh,labelsz*sinth,
 			 -labelsz*sinth,labelsz*costh,string);
@@ -1069,7 +1083,7 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 
 	    num = label2->max+(frame1+0.5)*d1;
-	    sprintf (string,"%1.5g",num);
+	    snprintf (string,32,"%1.5g",num);
 
 	    vp_tjust (TH_CENTER, TV_TOP);
 	    if (labelrot) {
@@ -1093,7 +1107,7 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 	    
 	    num = label1->min+(frame2+0.5)*d2;
-	    sprintf (string,"%1.5g",num);
+	    snprintf (string,32,"%1.5g",num);
 	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 	    vp_gtext(xc,yc+0.5*vs, labelsz, 0., 0., labelsz, string);
@@ -1122,7 +1136,7 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 
 	    num = label3->min+(frame3+0.5)*d3;
-	    sprintf (string,"%1.5g",num);
+	    snprintf (string,32,"%1.5g",num);
 
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 
@@ -1179,7 +1193,7 @@ void vp_barframe(void)
 	    if (fabsf(baraxis->dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 
-	    sprintf (string, "%1.5g", num);	    
+	    snprintf (string,32,"%1.5g", num);	    
 	    
 	    if (vertbar) {
 		yc = bar0 + i*dbar;

@@ -5,12 +5,7 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'vplot'
-
-src2 = 'axis coltab gainpar plot stdplot'
-
-sources  = map(lambda x: x+'.c',Split(src)) 
-includes = map(lambda x: x+'.h',Split(src))
+psrc = Split('axis coltab gainpar plot stdplot vplot')
 
 try: # distribution version
     Import('env')
@@ -34,11 +29,10 @@ env.Append(BUILDERS={'Include':configure.Header},
 ##############################################################################
 # INCLUDES
 ##############################################################################
-sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src2)+Split(src))
+includes = map(lambda x: x+'.h',psrc)
 
 objects = []
-for source in Split(src2):
+for source in psrc:
     env.Include(source,prefix='vp_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
@@ -47,7 +41,7 @@ for source in Split(src2):
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('rsfplot',objects+sources)
+lib = env.StaticLibrary('rsfplot',objects)
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
  
@@ -70,8 +64,9 @@ for file in ('axis','stdplot'):
 # LINT
 ##############################################################################
 
-env.Command('../lint/lint',map(lambda x: x+'.c',Split(src2)),
-            'splint +posixlib $SOURCES')
+env.Command('../plint/lint',map(lambda x: x+'.c',psrc),
+            'splint +posixlib -I%s $SOURCES' % env['CPPPATH'][0])
+env.Alias('plint','../plint')
         
 env['SCANNERS'].remove(configure.Include)
 env.Append(SCANNERS=CScan)

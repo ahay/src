@@ -30,7 +30,8 @@
 static float power (float f, int ie);
 static float nice_number (float d);
 static int optimal_scale(int n, float min, float max, 
-			 float *onum, float *dnum);
+			 /*@out@*/ float *onum, 
+			 /*@out@*/ float *dnum);
 
 void vp_simple_axis (float x1, float y1,     /* starting coordinates */
 		     float x2, float y2,     /* ending coordinates */
@@ -96,7 +97,7 @@ if dnum=0., an optimal linear scale is estimated
     /* move to each tic mark location, draw the tic and the number */
     for (i=0; i < nopt; i++) {
 	num = onum + i*dnum;
-        sprintf(string,"%1.5g",num);
+        snprintf(string,32,"%1.5g",num);
 	loc = otic + i*dtic;
 	xpos = x1 + loc * costh;
 	ypos = y1 + loc * sinth;
@@ -112,9 +113,10 @@ if dnum=0., an optimal linear scale is estimated
     vp_gtext(xpos,ypos,xpath,ypath,xup,yup,label);
 }
 
-int vp_optimal_scale(float chars              /* characters */, 
+int vp_optimal_scale(int chars                /* characters */, 
 		     float min, float max,    /* scale range */ 
-		     float *onum, float *dnum /* output scaling */)
+		     /*@out@*/ float *onum,   /* output origin */
+		     /*@out@*/ float *dnum    /* output scaling */)
 /*< Find an optimal scale. Returns the number of tics >*/
 {
     int i, ntics, nopt;
@@ -131,7 +133,7 @@ int vp_optimal_scale(float chars              /* characters */,
 	    if (fabsf(*dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 
-	    sprintf(string,"%1.5g",num);
+	    snprintf(string,32,"%1.5g",num);
 	    if ((strlen(string)+2)*nopt > chars) break;
 	}
 	    
@@ -142,7 +144,8 @@ int vp_optimal_scale(float chars              /* characters */,
     return nopt;
 }
 
-static int optimal_scale(int n, float min, float max, float *onum, float *dnum)
+static int optimal_scale(int n, float min, float max, 
+			 /*@out@*/ float *onum, /*@out@*/ float *dnum)
 /* Algorithm for internal labeling from Tom Steppe, "Composing
  * well-tempered linear scales", Computer Language, September 1989,
  * 49-65. */
