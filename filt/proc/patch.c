@@ -38,8 +38,10 @@ void patch_lop (bool adj, bool add,
     for(i = 0; i < dim; i++) {
 	if(npatch[i] == 1) {
 	    jj[i] = 0;
-	} else {
-	    jj[i] = (int) (0.5 + (nwall[i] - nwind[i])*jj[i]/
+	} else if (jj[i] == npatch[i]-1) {
+	    jj[i] = nwall[i] - nwind[i];
+	} else {	    
+	    jj[i] = (int) ((nwall[i] - nwind[i])*jj[i]/
 			   ((float) (npatch[i] - 1)));
 	}
     }

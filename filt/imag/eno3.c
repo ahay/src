@@ -1,25 +1,49 @@
+/* 3-D ENO interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "eno3.h"
 #include "eno2.h"
-#include "eno.h"
 
-/* concrete data type */
+#include "eno.h"
+/*^*/
+
+#ifndef _eno3_h
+
+typedef struct Eno3 *eno3;
+/* abstract data type */
+/*^*/
+
+#endif
+
 struct Eno3 {
     int order, ng, n1, n2, n3;
     eno **ent;
     eno2 jnt;
     float **f, **f1;
 };
+/* concrete data type */
 
-/* 
-   Function: eno3_init
-   -------------------
-   Initialize interpolation object
-   order      - interpolation order
-   n1, n2, n3 - data dimensions
-*/
-eno3 eno3_init (int order, int n1, int n2, int n3)
+eno3 eno3_init (int order              /* interpolation order */, 
+		int n1, int n2, int n3 /* data dimensions */)
+/*< Initialize interpolation object >*/
 {
     eno3 pnt;
     int i2, i3;
@@ -46,15 +70,8 @@ eno3 eno3_init (int order, int n1, int n2, int n3)
     return pnt;
 }
 
-/* 
-   Function: eno3_set
-   ------------------
-   Set the interpolation table
-   pnt           - ENO object
-   c[n3][n2][n1] - data
-   Note: c can be changed or freed afterwords
-*/
-void eno3_set (eno3 pnt, float*** c)
+void eno3_set (eno3 pnt, float*** c /* data [n3][n2][n1] */)
+/*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2, i3;
     
@@ -65,15 +82,8 @@ void eno3_set (eno3 pnt, float*** c)
     }
 }
 
-/* 
-   Function: eno3_set1
-   ------------------_
-   Set the interpolation table
-   pnt           - ENO object
-   c[n3*n2*n1] - data
-   Note: c can be changed or freed afterwords
-*/
-void eno3_set1 (eno3 pnt, float* c)
+void eno3_set1 (eno3 pnt, float* c /* data [n3*n2*n1] */)
+/*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2, i3;
     
@@ -84,12 +94,8 @@ void eno3_set1 (eno3 pnt, float* c)
     }
 }
 
-/* 
-   Function: eno3_close
-   --------------------
-   Free internal storage
-*/
 void eno3_close (eno3 pnt)
+/*< Free internal storage. >*/
 {
     int i2, i3;
     
@@ -108,24 +114,13 @@ void eno3_close (eno3 pnt)
     free (pnt);
 }
 
-/* 
-   Function: eno3_apply
-   --------------------
-   Apply interpolation
-   pnt   - ENO object
-   i,j,k - grid location
-   x,y,z - offsets from grid
-   f     - data value (output)
-   f1[3] - derivative value (output)
-   what  - flag of what to compute: 
-            FUNC - function value
-	    DER  - derivative value
-	    BOTH - both
-*/
 void eno3_apply (eno3 pnt, 
-		 int i, int j, int k, 
-		 float x, float y, float z,
-		 float* f, float* f1, der what)
+		 int i, int j, int k       /* grid location */, 
+		 float x, float y, float z /* offsets from grid */,
+		 float* f                  /* output data */, 
+		 float* f1                 /* output derivative */, 
+		 der what                  /* to compute [FUNC|DER|BOTH] */)
+/*< Apply interpolation. >*/
 {
     int i2, i3, b2, b3;
     float g;
@@ -169,4 +164,4 @@ void eno3_apply (eno3 pnt,
     }
 }
 
-/* 	$Id: eno3.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */

@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     bool adj;
-    int n1, n2, n12, n3, i3, rect1, rect2;
+      int n1, n2, n12, n3, i3, rect1, rect2;
     float *input, *smooth, **slope;
     sf_file in, out, dip;
 
@@ -69,4 +69,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mtrismooth2.c,v 1.5 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

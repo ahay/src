@@ -8,8 +8,8 @@
 #include "_bool.h"
 #include "c99.h"
 
-    /*@out@*/ void *sf_alloc (size_t n    /* number of elements */, 
-			      size_t size /* size of one element */);
+/*@out@*/ void *sf_alloc (size_t n    /* number of elements */, 
+			  size_t size /* size of one element */);
 /*< output-checking allocation >*/
 
 void *sf_realloc (void* ptr   /* previous data */, 

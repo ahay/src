@@ -32,7 +32,7 @@ void trisl_set(float** p1)
 
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    p[i2][i1]=p1[0][i1]*i2/rect;
+	    p[i2][i1]=-p1[rect-1-i2][i1];
 	}
     }
 
@@ -44,7 +44,7 @@ void trisl_set(float** p1)
 
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    p[n2+2*rect-1-i2][i1]=p1[n2-1][i1]*i2/rect;
+	    p[n2+2*rect-1-i2][i1]=-p1[n2-rect+i2][i1];
 	}
     }
 }
@@ -185,7 +185,6 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (!adj) smooth (tr,0,1,false,tmp1[i2+rect]);
     }
 
-/*
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    tmp1[rect-1-i2][i1] = tmp1[rect+i2][i1];
@@ -194,22 +193,11 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    tmp1[n2+rect+i2][i1] = tmp1[n2+rect-1-i2][i1];
 	}
     }
-*/
-
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    tmp1[rect-1-i2][i1] = 0.;
-	}
-	for (i1=0; i1 < n1; i1++) {
-	    tmp1[n2+rect+i2][i1] = 0.;
-	}
-    }
-
+    
     roll(false,tmp1);
     shifts(tmp1,tmp2);
     roll(true,tmp2);
 
-/*
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    tmp2[rect+i2][i1] += tmp2[rect-1-i2][i1];
@@ -218,7 +206,6 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    tmp2[n2+rect-1-i2][i1] += tmp2[n2+rect+i2][i1];
 	}
     }
-*/  
   
     for (i2=0; i2 < n2; i2++) {
 	if (adj) smooth (tr,0,1,false,tmp2[i2+rect]);

@@ -18,11 +18,14 @@
 */
 #include <rsf.h>
 
+#include "kirmod.h"
+
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix, it;
-    float *rfl, *crv, *recv, *shot, *trace;
-    float dx, x0, dt, t0, t, ds, s0, s, dh, h0, g, r0;
+    float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, slow2[5];
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0;
+    maptype type = CONST;
     sf_file refl, curv, modl, shots, recvs;
 
     sf_init(argc,argv);
@@ -107,6 +110,10 @@ int main(int argc, char* argv[])
     
     sf_putint(modl,"n2",nh);
 
+    /*** Allocate space ***/
+    
+    kirmod_init(ns, s0, ds, nh, h0, dh);
+
     /*** Initialize reflector ***/
 
     crv = sf_floatalloc(nx);
@@ -126,14 +133,40 @@ int main(int argc, char* argv[])
 	}
     }
 
+    /*** Initialize slowness ***/
+
+    if (!sf_getfloat("slow2",slow2)) {
+	/* slowness squared */
+	if (!sf_getfloat("vel",slow2)) sf_error("Need slow2= or vel=");
+	/* velocity (if no slow2=) */
+	slow2[0] = 1./(slow2[0]*slow2[0]);
+    } 
+
+    if (!sf_getfloat("refx",&slow2[4])) slow2[4]=x0;
+    if (!sf_getfloat("refz",&slow2[3])) slow2[3]=0.;
+    /* reference coordinates for slowness */
+    
+    if (!sf_getfloat("gradx",&slow2[2])) slow2[2]=0.;
+    if (!sf_getfloat("gradz",&slow2[1])) slow2[1]=0.;
+    /* gradient of slowness squared */
+
+    slow2[2] *= 0.5;
+    slow2[1] *= 0.5;
+    
+    /*** Compute traveltime table ***/
+
+    kirmod_table (type, nx, x0, dx, crv, slow2);
+
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
-	s = s0+is*ds;
 	for (ih=0; ih < nh; ih++) {
-	    g = s + h0 + ih*dh;
-
 	    for (it=0; it < nt; it++) {
 		trace[it] = 0.;
+	    }
+
+	    for (ix=0; ix < nx; ix++) {
+		ts = kirmod_map(is,nh,ix);
+		tg = kirmod_map(is,ih,ix);
 	    }
 
 	    sf_floatwrite(trace,nt,modl);

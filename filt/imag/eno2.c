@@ -1,23 +1,47 @@
+/* ENO interpolation in 2-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "eno2.h"
-#include "eno.h"
 
-/* concrete data type */
+#include "eno.h"
+/*^*/
+
+#ifndef _eno2_h
+
+typedef struct Eno2 *eno2;
+/* abstract data type */
+/*^*/
+
+#endif
+
 struct Eno2 {
     int order, ng, n1, n2;
     eno jnt, *ent;
     float *f, *f1;
 };
+/* concrete data type */
 
-/* 
-   Function: eno2_init
-   -------------------
-   Initialize interpolation object
-   order  - interpolation order
-   n1, n2 - data dimensions
-*/
-eno2 eno2_init (int order, int n1, int n2)
+eno2 eno2_init (int order      /* interpolation order */, 
+		int n1, int n2 /* data dimensions */)
+/*< Initialize interpolation object >*/
 {
     eno2 pnt;
     int i2;
@@ -39,15 +63,8 @@ eno2 eno2_init (int order, int n1, int n2)
     return pnt;
 }
 
-/* 
-   Function: eno2_set
-   ------------------
-   Set the interpolation table
-   pnt       - ENO object
-   c[n2][n1] - data
-   Note: c can be changed or freed afterwords
-*/
-void eno2_set (eno2 pnt, float** c)
+void eno2_set (eno2 pnt, float** c /* data [n2][n1] */)
+/*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2;
     
@@ -56,15 +73,8 @@ void eno2_set (eno2 pnt, float** c)
     }
 }
 
-/* 
-   Function: eno2_set1
-   -------------------
-   Set the interpolation table
-   pnt      - ENO object
-   c[n2*n1] - data
-   Note: c can be changed or freed afterwords
-*/
-void eno2_set1 (eno2 pnt, float* c)
+void eno2_set1 (eno2 pnt, float* c /* data [n2*n1] */)
+/*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2;
     
@@ -73,12 +83,8 @@ void eno2_set1 (eno2 pnt, float* c)
     }
 }
 
-/* 
-   Function: eno2_close
-   --------------------
-   Free internal storage
-*/
 void eno2_close (eno2 pnt)
+/*< Free internal storage >*/
 {
     int i2;
     
@@ -92,22 +98,13 @@ void eno2_close (eno2 pnt)
     free (pnt);
 }
 
-/* 
-   Function: eno2_apply
-   --------------------
-   Apply interpolation
-   pnt   - ENO object
-   i,j   - grid location
-   x,y   - offsets from grid
-   f     - data value (output)
-   f1[2] - derivative value (output)
-   what  - flag of what to compute: 
-            FUNC - function value
-	    DER  - derivative value
-	    BOTH - both
-*/
-void eno2_apply (eno2 pnt, int i, int j, float x, float y, 
-		 float* f, float* f1, der what)
+void eno2_apply (eno2 pnt, 
+		 int i, int j     /* grid location */, 
+		 float x, float y /* offset from grid */, 
+		 float* f         /* output data value */, 
+		 float* f1        /* output derivative [2] */,
+		 der what         /* what to compute [FUNC,DER,BOTH] */)
+/*< Apply interpolation. >*/
 {
     int k, b2;
     float g;
@@ -139,4 +136,4 @@ void eno2_apply (eno2 pnt, int i, int j, float x, float y,
     }
 }
 
-/* 	$Id: eno2.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */
