@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-
 #include "cam.h"
 
 int main (int argc, char *argv[])
@@ -36,7 +35,7 @@ int main (int argc, char *argv[])
     slice slow;
     slice data;
 
-    axa az,ay,ax,aw,au,av,ah;
+    axa az,amx,amy,aw,alx,aly,ahx;
     sf_file Fi; /* image    file */
     sf_file Fd; /* data     file */
     sf_file Fs; /* slowness file */
@@ -56,9 +55,9 @@ int main (int argc, char *argv[])
     Fd = inv ? sf_output("out"): sf_input ( "in"); 
     Fs = sf_input ("slowness");
     
-    /*     data[nh][ny][nx][nw] */
-    /*    image[nh][nu][nv][nz] */
-    /* slowness    [nu][nv][nz] */
+    /*     data[nhx][nmx][nmy][nw] */
+    /*    image[nhx][nlx][nly][nz] */
+    /* slowness     [nlx][nly][nz] */
     if (inv) { /* modeling */
 	if (SF_FLOAT != sf_gettype(Fi)) sf_error("Need float image");
 	sf_settype(Fd,SF_COMPLEX);
@@ -67,41 +66,41 @@ int main (int argc, char *argv[])
 	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 	if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
 
-	iaxa(Fi,&ah,1);        oaxa(Fd,&ah,1);
-	iaxa(Fi,&au,2); ay=au; oaxa(Fd,&ay,2);
-	iaxa(Fi,&av,3); ax=av; oaxa(Fd,&ax,3);
-	iaxa(Fi,&az,4);        oaxa(Fd,&aw,4);
+	iaxa(Fi,&ahx,1);          oaxa(Fd,&ahx,1);
+	iaxa(Fi,&alx,2); amx=alx; oaxa(Fd,&amx,2);
+	iaxa(Fi,&aly,3); amy=aly; oaxa(Fd,&amy,3);
+	iaxa(Fi,&az ,4);          oaxa(Fd,&aw ,4);
 
     } else { /* migration */
 	if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 	sf_settype(Fi,SF_FLOAT);
 
-	iaxa(Fd,&ah,1); oaxa(Fi,&ah,1);
-	iaxa(Fd,&ay,2);
-	iaxa(Fd,&ax,3);
-	iaxa(Fd,&aw,4);
+	iaxa(Fd,&ahx,1); oaxa(Fi,&ahx,1);
+	iaxa(Fd,&amx,2);
+	iaxa(Fd,&amy,3);
+	iaxa(Fd,&aw ,4);
 
-	iaxa(Fs,&au,1); oaxa(Fi,&au,2);
-	iaxa(Fs,&av,2); oaxa(Fi,&av,3);
-	iaxa(Fs,&az,3); oaxa(Fi,&az,4);
+	iaxa(Fs,&alx,1); oaxa(Fi,&alx,2);
+	iaxa(Fs,&aly,2); oaxa(Fi,&aly,3);
+	iaxa(Fs,&az ,3); oaxa(Fi,&az ,4);
     }
 
     /* taper */
-    ntx = SF_MIN(nt,ax.n-1);
-    nty = SF_MIN(nt,ay.n-1);
-    nth = SF_MIN(nt,ah.n-1);
+    ntx = SF_MIN(nt,amx.n-1);
+    nty = SF_MIN(nt,amy.n-1);
+    nth = SF_MIN(nt,ahx.n-1);
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    slow = slice_init(Fs,     au.n,av.n,az.n);
-    imag = slice_init(Fi,ah.n,au.n*av.n,az.n);
-    data = slice_init(Fd,ah.n,ay.n*ax.n,aw.n);
+    slow = slice_init(Fs,      alx.n,aly.n,az.n);
+    imag = slice_init(Fi,ahx.n,alx.n*aly.n,az.n);
+    data = slice_init(Fd,ahx.n,amx.n*amy.n,aw.n);
 
-    cam_init(verb,eps,dt,
-	     az,aw,ah,ay,ax,au,av,
-	     ntx,nty,nth,nr,npad);
+    cam_init (verb,eps,dt,
+	      az,aw,ahx,amx,amy,alx,aly,
+	      ntx,nty,nth,nr,npad);
     cam      (inv,data,imag,slow);
     cam_close();
     

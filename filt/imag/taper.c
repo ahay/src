@@ -49,10 +49,10 @@ void taper2(int ntx, int nty      /* taper lengths */,
     }
 }
 
-void taper3(int nt3, int nt2, int nt1      /* taper lengths */, 
+void taper3(int nt3, int nt2, int nt1  /* taper lengths */, 
 	    bool b3, bool b2, bool b1  /* taper in the beginning  */, 
-	    int n3, int n2, int n1        /* dimensions */, 
-	    float*** tt            /* [n3][n2][n1] tapered array (in and out) */)
+	    int n3, int n2, int n1     /* dimensions */, 
+	    float*** tt                /* [n3][n2][n1] tapered array (in and out) */)
 /*< 3-D taper >*/
 {
     int it,i1,i2,i3;
@@ -63,8 +63,8 @@ void taper3(int nt3, int nt2, int nt1      /* taper lengths */,
 	gain *= gain;
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		if (b3) tt[it][i2][i1] *= gain;
-		tt[n3-it-1][i2][i1] *= gain;
+		if(b3) tt[   it  ][i2][i1] *= gain;
+		;      tt[n3-it-1][i2][i1] *= gain;
 	    }
 	}
     }
@@ -74,8 +74,8 @@ void taper3(int nt3, int nt2, int nt1      /* taper lengths */,
 	gain *= gain;
 	for (i3=0; i3 < n3; i3++) {
 	    for (i1=0; i1 < n1; i1++) {
-		if (b2) tt[i3][it][i1] *= gain;
-		tt[i3][n2-it-1][i1] *= gain;
+		if(b2) tt[i3][   it  ][i1] *= gain;
+		;      tt[i3][n2-it-1][i1] *= gain;
 	    }
 	}
     }
@@ -85,8 +85,8 @@ void taper3(int nt3, int nt2, int nt1      /* taper lengths */,
 	gain *= gain;
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		if (b1) tt[i3][i2][it] *= gain;
-		tt[i3][i2][n1-it-1] *= gain;
+		if(b1) tt[i3][i2][   it  ] *= gain;
+		;      tt[i3][i2][n1-it-1] *= gain;
 	    }
 	}
     }
