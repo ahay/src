@@ -52,6 +52,8 @@ static func functable[] = {
     fabsf
 };
 
+#ifndef __cplusplus
+
 typedef float complex (*cfunc)(float complex);
 static cfunc cfunctable[] = {
     ccosf,
@@ -70,6 +72,8 @@ static cfunc cfunctable[] = {
     clogf,
     csqrtf
 };
+
+#endif
 
 enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
 
@@ -160,6 +164,9 @@ void sf_math_evaluate (int len /* stack length */,
     }
 }
 
+#ifndef __cplusplus
+/*^*/
+
 void sf_complex_math_evaluate (int len              /* stack length */, 
 			       int nbuf             /* buffer length */, 
 			       float complex** fbuf /* number buffers */, 
@@ -237,6 +244,9 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 	}
     }
 }
+
+#endif
+/*^*/
 
 size_t sf_math_parse (char* output /* expression */, 
 		      sf_file out  /* parameter file */)
