@@ -84,6 +84,14 @@ nails = Split('''
 3.000 4.500
 ''')
 
+milo_nails = Split('''
+1.057 1.804
+1.197 1.984
+1.411 2.289
+1.575 2.507
+3.000 4.500
+''')
+
 Flow('nails',None,
      'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
      (' '.join(nails),len(nails)/2))
