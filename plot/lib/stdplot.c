@@ -10,7 +10,6 @@
 
 static float min1, min2, max1, max2, labelsz, inch1, inch2;
 static bool labelrot, transp, wheretics;
-static int framecol;
 static char blank[]=" ";
 
 static struct Label {
@@ -315,7 +314,6 @@ static void make_title (sf_file in)
 
 void vp_frame_init (sf_file in, bool transp1)
 {
-    if (!sf_getint ("axiscol",&framecol)) framecol=7;
     transp = transp1;
     
     make_labels(in);
@@ -325,9 +323,11 @@ void vp_frame_init (sf_file in, bool transp1)
 
 void vp_frame(void)
 {
-    int i;
+    int i, framecol;
     float num, xc, yc, vs;
     char string[32];
+    
+    if (!sf_getint ("axiscol",&framecol)) framecol=7;
 
     vp_color(framecol);
     vp_umove(min1, min2);
