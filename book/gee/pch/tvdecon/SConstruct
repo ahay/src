@@ -1,0 +1,25 @@
+from rsfproj import *
+
+n1=400
+
+Flow('spike',None,'spike n1=%d d1=1 label1=" " ' % n1)
+
+waves = []
+for j in range(n1/15,n1,n1/5):
+    wave = 'wave%d' % j
+    waves.append(wave)
+    Flow(wave,'spike',
+         '''
+         headermath
+         output="exp(-(N-%(j)d)*15./%(n1)d)*sin((N-%(j)d)*.95*%(j)d/%(n1)d)" |
+         window f1=%(j)d | pad beg1=%(j)d
+         '''
+         % {'n1':n1,'j':j})
+Flow('in',waves,'add ${SOURCES[1:%d]}' % len(waves))
+
+
+Flow('flt',None,'spike n1=1 n2=1 mag=-1')
+Flow('lag',None,'spike n1=1 | dd data_format=native_int')
+
+
+End()

@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
  
     for (i=0; i < n123-n1+1; i += n1) {
 	signoi_init (naa, saa, niter, nw, eps);
-	for (ik=0; ik < nk; nk++) {
+	for (ik=0; ik < nk; ik++) {
 	    sf_floatread((naa+ik)->flt,nf,npef);
 	    sf_floatread((saa+ik)->flt,sf,spef);
 	}

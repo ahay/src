@@ -16,7 +16,7 @@ void fastmarch_init (int n3,int n2,int n1)
     pqueue_init (maxband);
 }
 
-void fastmarch (float* time, float* v, int* in,
+void fastmarch (float* time, float* v, int* in, bool* plane,
 		int n3,int n2,int n1,
 		float o3,float o2,float o1,
 		float d3,float d2,float d1,
@@ -34,7 +34,7 @@ void fastmarch (float* time, float* v, int* in,
     pqueue_start();
     neighbors_init (in, d, n, order, time);
 
-    for (npoints =  nearsource (xs, b, d, v);
+    for (npoints =  nearsource (xs, b, d, v, plane);
 	 npoints > 0;
 	 npoints -= neighbours(i)) {
 	/* Pick smallest value in the NarrowBand
@@ -57,4 +57,4 @@ void fastmarch_close (void)
     pqueue_close();
 }
 
-/* 	$Id: fastmarch.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id: fastmarch.c,v 1.3 2004/06/18 01:06:45 fomels Exp $	 */

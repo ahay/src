@@ -120,7 +120,7 @@ Plot('simp','simp',grey % '(shot1+shot3)/2')
 
 Flow('simperr',['simp','shot2'],'add scale=1,-1 ${SOURCES[1]}')
 Plot('simperr','simperr',grey % 'error: (shot1+shot3)/2-shot2')
-Result('shot3','shot1 shot3 simp simperr','TwoByTwo')
+Result('shot3','shot1 shot3 simp simperr','TwoRows')
 
 Flow('shotftd','shot',
      '''window f1=50 | logstretch nout=256 |

@@ -15,7 +15,7 @@ for data in ('mod','dat','mod2','dat2'):
          dots gaineach=0 dots=0 seemean=1 strings=0
          constsep=1 overlap=6. transp=1 label1=" "
          ''')
-Result('velvel','mod dat mod2 dat2','TwoByTwo')
+Result('velvel','mod dat mod2 dat2','TwoRows')
 
 Fetch('midpts.HH','midpts')
 

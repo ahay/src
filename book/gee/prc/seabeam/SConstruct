@@ -49,7 +49,7 @@ for niter in [20,100]:
              'grey transp=n yreverse=n title="niter=%d prec=%d" ' %
              (niter,prec))
 
-Result('prcfill',fills,'TwoByTwo')
+Result('prcfill',fills,'TwoRows')
 
 ###########################################################################
 End()

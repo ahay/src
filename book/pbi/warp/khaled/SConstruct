@@ -308,7 +308,7 @@ Plot('diff','wline pline',
 Plot('Gamma1','Gamma1',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp0','pline wline diff Gamma1','TwoByTwo')
+Result('Warp0','pline wline diff Gamma1','TwoRows')
 
 ####################################################################
 # SPECTRAL BALANCING
@@ -371,7 +371,7 @@ Plot('Presh','Presh',plot('Balanced PP'))
 Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
 Plot('diff2','Sresh Presh',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp1','Presh Sresh diff2 Gamma1','TwoByTwo')
+Result('Warp1','Presh Sresh diff2 Gamma1','TwoRows')
 
 ####################################################################
 # GAMMA SCAN
@@ -423,7 +423,7 @@ Flow('Gamma2',['Warp2','time2'],warp2gamma2)
 Plot('Gamma2','Gamma2',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp2','Presh wline2 diff3 Gamma2','TwoByTwo')
+Result('Warp2','Presh wline2 diff3 Gamma2','TwoRows')
 
 ####################################################################
 # MOVE CLOSER
@@ -434,7 +434,7 @@ Flow('wline3',['psline','pline','Warp2'],
 Plot('wline3','wline3',plot('Warped PS'))
 Plot('diff4','wline3 pline',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp3','pline wline3 diff4 Gamma2','TwoByTwo')
+Result('Warp3','pline wline3 diff4 Gamma2','TwoRows')
 
 ####################################################################
 # SPECTRAL BALANCING
@@ -449,7 +449,7 @@ Plot('Presh2','Presh2',plot('Balanced PP'))
 Plot('Sresh2','Sresh2',plot('Warped and Balanced PS'))
 Plot('diff5','Sresh2 Presh2',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp4','Presh2 Sresh2 diff5 Gamma2','TwoByTwo')
+Result('Warp4','Presh2 Sresh2 diff5 Gamma2','TwoRows')
 
 ####################################################################
 # GAMMA SCAN
@@ -478,7 +478,7 @@ Flow('Gamma5',['Warp5','time2'],warp2gamma2)
 Plot('Gamma5','Gamma5',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp5','Presh2 wline5 diff6 Gamma5','TwoByTwo')
+Result('Warp5','Presh2 wline5 diff6 Gamma5','TwoRows')
 
 Plot('inter2',['Presh2','wline5'],
      '''

@@ -31,7 +31,7 @@ for example in ('sigmoid','gulf'):
     Result(txr,[example,txr],'SideBySideAniso')
     Result(pwd,[example,pwd],'SideBySideAniso')
     Plot(dip,dip,'grey title=DIP color=j wantscalebar=y')
-    Result(example,[example,dip,txr,pwd],'TwoByTwo')
+    Result(example,[example,dip,txr,pwd],'TwoRows')
 
 ############################################################################
 

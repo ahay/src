@@ -45,7 +45,7 @@ void find_lopef(int dim, float *wall, filter aa,
 	for (mis=iw=0; iw < nw; iw++) {
 	    if (!bb->mis[iw]) mis++;
 	}
-	if (mis < nh) { /* enough equations */
+	if (mis > nh) { /* enough equations */
 	    find_pef(nw, windata, bb, nh);
 	} else if (ip > 1) { /* use last PEF */
 	    for (ih=0; ih < nh; ih++) {

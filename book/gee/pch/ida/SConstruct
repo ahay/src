@@ -5,8 +5,8 @@ Fetch('ida.H','ida')
 Flow('ida','ida.H','dd data_format=native_float | window n1=600')
 Plot('ida','ida','grey gpow=0.5 crowd=0.85 title="stack (gpow=0.5)" ')
 
-Flow('npef nlag','ida','lopef a=5,1 w=81,11 lag=${TARGETS[1]}')
-Flow('spef slag','ida','lopef a=9,3 w=81,11 gap=0,1 lag=${TARGETS[1]}')
+Flow('npef nlag','ida','lopef a=5,1 w=81,11 k=12,30 lag=${TARGETS[1]}')
+Flow('spef slag','ida','lopef a=9,3 w=81,11 k=12,30 gap=0,1 lag=${TARGETS[1]}')
 
 eps = 2
 

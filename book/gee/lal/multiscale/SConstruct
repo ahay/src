@@ -34,7 +34,7 @@ for jump in ([1],[1,4]):
         Plot(out,out,plot('%s, iter=%d' %
                           (('singlescale','multiscale')[len(jump)-1],niter))) 
 
-Result('msiter',outs,'TwoByTwo')
+Result('msiter',outs,'TwoRows')
 
 ###########################################################################
 End()

@@ -191,7 +191,7 @@ static void grid (int *i, const int *n)
     }
 }
 
-int nearsource(float* xs, int* b, float* d, float* vv1)
+int nearsource(float* xs, int* b, float* d, float* vv1, bool *plane)
 {
     int npoints, ic, i, j, is, start[3], endx[3], ix, iy, iz;
     double delta[3], delta2;
@@ -235,7 +235,7 @@ int nearsource(float* xs, int* b, float* d, float* vv1)
 
 		delta2 = 0.;
 		for (j=0; j < 3; j++) {
-		    delta2 += delta[j]*delta[j];
+		    if (!plane[j]) delta2 += delta[j]*delta[j];
 		}
 
 		/* analytical formula (Euclid) */ 
@@ -254,5 +254,5 @@ int nearsource(float* xs, int* b, float* d, float* vv1)
     return npoints;
 }
 
-/* 	$Id: neighbors.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id: neighbors.c,v 1.3 2004/06/18 01:06:45 fomels Exp $	 */
 

@@ -24,26 +24,28 @@ filter steep(int dim, int *n, int *a, float *d, float vel, float tgap)
 	sf_line2cart(dim, a, i, c);
 
 	for (j=0; j < dim-1; j++) {
-	    c[j] -= (a[j]+1)/2;
+	    c[j] -= (a[j]-1)/2;
 	}
 
 	t0 = 0.;
-	for (j=0; j < dim; j++) {
+	for (j=0; j < dim-1; j++) {
 	    x = d[j]*c[j];
 	    t0 += x*x;
 	}
 	t0 = sqrtf(t0)/vel;
 	if (t0 < tgap) t0 = tgap;
 
-	if(x > t0) continue;
-
-	lag[h++] = sf_cart2line(dim, n, c);
+	x = d[dim-1]*c[dim-1];
+	if(x >= t0) {
+	    lag[h] = sf_cart2line(dim, n, c);
+	    h++;
+	}
     }
 
     aa = allocatehelix(h);
 
     for (i=0; i < h; i++) {
-	aa->lag[i] = lag[i]-1;
+	aa->lag[i] = lag[i];
 	aa->flt[i] = 0.;
     }
 

@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
 	sf_fileclose (mask);
     } else {
 	for (i=0; i < n123; i++) {
-	    kk[i] = 1.;
+	    kk[i] = 1;
 	}
     }
 
@@ -145,4 +145,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mpef.c,v 1.1 2004/06/11 10:47:16 fomels Exp $	 */
+/* 	$Id: Mpef.c,v 1.2 2004/06/18 01:06:45 fomels Exp $	 */

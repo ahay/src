@@ -15,7 +15,7 @@ int main (int argc,char* argv[])
     float br1, br2, br3, o1, o2, o3, d1, d2, d3, slow;
     float **s, *t, *v;
     char *sfile;
-    bool isvel;
+    bool isvel, plane[3];
     sf_file vel, time, shots;
 
     sf_init (argc, argv);
@@ -47,9 +47,14 @@ int main (int argc,char* argv[])
     if(!sf_getfloat("br3",&br3)) br3=d3;
     /* Constant-velocity box around the source (in physical dimensions) */
  
-    if(!sf_getint("b1",&b1)) b1= (int) (br1/d1+0.5); 
-    if(!sf_getint("b2",&b2)) b2= (int) (br2/d2+0.5); 
-    if(!sf_getint("b3",&b3)) b3= (int) (br3/d3+0.5); 
+    if(!sf_getbool("plane1",&plane[2])) plane[2]=false;
+    if(!sf_getbool("plane2",&plane[1])) plane[1]=false;
+    if(!sf_getbool("plane3",&plane[0])) plane[0]=false;
+    /* plane-wave source */
+
+    if(!sf_getint("b1",&b1)) b1= plane[2]? n1: (int) (br1/d1+0.5); 
+    if(!sf_getint("b2",&b2)) b2= plane[1]? n2: (int) (br2/d2+0.5); 
+    if(!sf_getint("b3",&b3)) b3= plane[0]? n3: (int) (br3/d3+0.5); 
     /* Constant-velocity box around the source (in samples) */
 
     if( b1<1 ) b1=1;  
@@ -108,7 +113,7 @@ int main (int argc,char* argv[])
   
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
-	fastmarch(t,v,p,
+	fastmarch(t,v,p, plane,
 		  n3,n2,n1,
 		  o3,o2,o1,
 		  d3,d2,d1,
@@ -123,5 +128,5 @@ int main (int argc,char* argv[])
     exit (0);
 }
 
-/* 	$Id: Meikonal.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */
+/* 	$Id: Meikonal.c,v 1.6 2004/06/18 01:06:45 fomels Exp $	 */
 

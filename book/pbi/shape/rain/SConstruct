@@ -121,10 +121,11 @@ for seed in range(2000,2005):
     for cont in range(2): 
         Plot('c'+str(cont)+real,real,contour(cont))
     Plot(real,['g'+real,'c0'+real,'c1'+real],'Overlay')
-Result('real',map(lambda seed: 'real%d' % seed,range(2000,2005)),'TwoByTwo')
+Result('real',map(lambda seed: 'real%d' % seed,range(2000,2005)),'TwoRows')
 
-Result('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),'TwoByTwo')
-Result('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),'SideBySideIso')
+Result('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),'TwoRows')
+Result('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),
+       'SideBySideIso')
 
 Flow('predict','predict.HH','dd data_format=native_float')
 for niter in [10000,-40,0]:

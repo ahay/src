@@ -35,7 +35,7 @@ Result('kirspec','smod skir2 skir',
        label1="Frequency (Hz)" dots=0
        ''')
 
-Result('skmod','mod1 dki1 mod2 dki2','TwoByTwo')
+Result('skmod','mod1 dki1 mod2 dki2','TwoRows')
 
 ###########################################################################
 End()

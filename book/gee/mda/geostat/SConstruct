@@ -29,7 +29,7 @@ for seed in range(2):
          ''')
     Plot(real,real,'grey crowd=1')
 
-Result('manywood','wood-hole wood-miss wood-real0 wood-real1','TwoByTwo')
+Result('manywood','wood-hole wood-miss wood-real0 wood-real1','TwoRows')
 
 def sea(title=' '):
     return '''
@@ -64,7 +64,7 @@ for seed in range(2):
          ''')
     Plot(real,real,sea('Realization %d' % (seed+1)))
 
-Result('bobsea','sea sea-miss sea-real0 sea-real1','TwoByTwo')
+Result('bobsea','sea sea-miss sea-real0 sea-real1','TwoRows')
     
 ###########################################################################
 
