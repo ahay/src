@@ -22,7 +22,6 @@
 
 int main (int argc, char *argv[])
 {
-    bool inv;             /* forward or adjoint */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
     int   nr;             /* number of reference velocities */
@@ -46,7 +45,6 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
 
-    if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
     if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
@@ -90,13 +88,9 @@ int main (int argc, char *argv[])
 		tx,ty,
 		px,py,
 		nr,slow);
-
     srmig_aloc();
-
-    srmig(inv,sdat,rdat,imag);
-
+    srmig(sdat,rdat,imag);
     srmig_free();
-
     srmig_close();
 	
     exit (0);

@@ -155,12 +155,10 @@ void srmig_free()
 }
 
 /*------------------------------------------------------------*/
-void srmig(bool inv  /* forward/adjoint flag */, 
+void srmig(
 	   slice sdat /* source   data [nw][ny][nx] */,
 	   slice rdat /* receiver data [nw][ny][nx] */,
 	   slice imag /*         image [nz][ny][nx] */
-/*	   slice swfl,*/
-/*	   slice rwfl*/
     )
 /*< Apply S/R migration >*/
 {
