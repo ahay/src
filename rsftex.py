@@ -429,48 +429,48 @@ LaTeX = Scanner(name='LaTeX',function=latexscan,skeys=['.tex','.ltx'])
 #############################################################################
 
 class TeXPaper(Environment):
-     def __init__(self,paper='paper',use=None,**kw):
-          apply(Environment.__init__,(self,),kw)
-          opts = Options(os.path.join(libdir,'rsfconfig.py'))
-          rsfconf.options(opts)
-          opts.Update(self)
-          self.Append(ENV={'XAUTHORITY':
-                           os.path.join(os.environ.get('HOME'),'.Xauthority'),
-                           'DISPLAY': os.environ.get('DISPLAY'),
-                           'HOME': os.environ.get('HOME')},
-                      SCANNERS=[LaTeX],
-                      BUILDERS={'Latify':Latify,
-                                'Pdf':Pdf,
-                                'Build':Build,
-                                'Color':Color},
-                      TARFLAGS = '-cvz',
-                      TARSUFFIX = '.tgz')
-          self.docdir = string.replace(os.getcwd(),'book','doc/book',1)
-          if acroread:
-               self.Append(BUILDERS={'Read':Read,'Print':Print})
-          if epstopdf:
-               self.Append(BUILDERS={'PDFBuild':PDFBuild})
-          if fig2dev:
-               self.Append(BUILDERS={'XFig':XFig})
-          if latex2html:
-               self.Append(BUILDERS={'HTML':HTML})
-               if pstoimg:
-                    self.Append(BUILDERS={'PNGBuild':PNGBuild})
-                    self.imgs = []
-          if pdf2ps:
-               self.Append(BUILDERS={'PSBuild':PSBuild})
-          if mathematica:
-               self.Append(BUILDERS={'Math':Math})
-          self.scons = []
-          self.Dir()
-          if os.path.isfile(paper+'.tex'):
-               self.Paper(paper)
-               self.Alias('pdf',paper+'.pdf')
-               self.Alias('read',paper+'.read')
-               self.Alias('print',paper+'.print')
-               self.Alias('html',paper+'.html')
-               self.Default('pdf')
-     def Dir(self,topdir='.',resdir='Fig',pstexpen=None):
+    def __init__(self,paper='paper',**kw):
+        apply(Environment.__init__,(self,),kw)
+        opts = Options(os.path.join(libdir,'rsfconfig.py'))
+        rsfconf.options(opts)
+        opts.Update(self)
+        self.Append(ENV={'XAUTHORITY':
+                         os.path.join(os.environ.get('HOME'),'.Xauthority'),
+                         'DISPLAY': os.environ.get('DISPLAY'),
+                         'HOME': os.environ.get('HOME')},
+                    SCANNERS=[LaTeX],
+                    BUILDERS={'Latify':Latify,
+                              'Pdf':Pdf,
+                              'Build':Build,
+                              'Color':Color},
+                    TARFLAGS = '-cvz',
+                    TARSUFFIX = '.tgz')
+        self.docdir = string.replace(os.getcwd(),'book','doc/book',1)
+        if acroread:
+            self.Append(BUILDERS={'Read':Read,'Print':Print})
+        if epstopdf:
+            self.Append(BUILDERS={'PDFBuild':PDFBuild})
+        if fig2dev:
+            self.Append(BUILDERS={'XFig':XFig})
+        if latex2html:
+            self.Append(BUILDERS={'HTML':HTML})
+            if pstoimg:
+                self.Append(BUILDERS={'PNGBuild':PNGBuild})
+                self.imgs = []
+        if pdf2ps:
+            self.Append(BUILDERS={'PSBuild':PSBuild})
+        if mathematica:
+            self.Append(BUILDERS={'Math':Math})
+        self.scons = []
+        self.Dir()
+        if os.path.isfile(paper+'.tex'):
+            self.Paper(paper)
+            self.Alias('pdf',paper+'.pdf')
+            self.Alias('read',paper+'.read')
+            self.Alias('print',paper+'.print')
+            self.Alias('html',paper+'.html')
+            self.Default('pdf')
+    def Dir(self,topdir='.',resdir='Fig',pstexpen=None):
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
              dir = os.path.dirname(scons)
              html = dir+'.html'
@@ -521,8 +521,9 @@ class TeXPaper(Environment):
                     figdir = os.path.join(self.docdir,os.path.dirname(png))
                     self.Install(figdir,[png,pdf])
                     self.Alias('install',figdir)
-     def Paper(self,paper,use=None):
-        self.Latify(target=paper+'.ltx',source=paper+'.tex',use=use)
+    def Paper(self,paper,lclass='geophysics',use=None):
+        self.Latify(target=paper+'.ltx',source=paper+'.tex',
+                     use=use,lclass=lclass)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
         self.Install(self.docdir,paper+'.pdf')

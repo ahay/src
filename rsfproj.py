@@ -54,7 +54,7 @@ if not datapath:
                 datapath = check.group(1)
         file.close()
     if not datapath:
-        datapath = os.path.join(os.environ.get('HOME'),'')
+        datapath = './' # the ultimate fallback
 dataserver = os.environ.get('RSF_DATASERVER',
                            'ftp://begpc132.beg.utexas.edu/')
 
@@ -182,7 +182,10 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Update(self)
         dir = os.path.basename(os.getcwd())
-        self.path = datapath + dir + os.sep
+        if datapath == './':
+            self.path = datapath
+        else:
+            self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         self.SConsignFile(self.path+'.sconsign.db')

@@ -3,17 +3,16 @@
 #include <rsf.h>
 
 #include "dijkstra.h"
-#include "pqueue.h"
 
 typedef struct Step {
     int ud, lr;
-    Step* next;
+    struct Step* next;
 } *step;
 
 static int n1, n2, np, **status;
 static float **cost;
 static step **path;
-static const float big_value = FLT_MAX;
+static const float big_number = FLT_MAX;
 
 void dijkstra_init(int m1, int m2)
 {

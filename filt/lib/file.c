@@ -213,8 +213,6 @@ Should do output after sf_input. >*/
 	memcpy(file->dataname,"stdout",7);
     } else if (NULL == dataname) {
 	path = getdatapath();
-	if (NULL == path) 
-	    sf_error("%s: Cannot find datapath",__FILE__);
 	file->dataname = sf_charalloc (PATH_MAX+NAME_MAX+1);
 	strcpy (file->dataname,path);
 	name = file->dataname+strlen(path);
@@ -362,6 +360,7 @@ Datapath rules:
 2. check DATAPATH environmental variable
 3. check .datapath file in the current directory
 4. check .datapath in the home directory
+5. use '.' (not a SEPlib behavior)
 */
 {
     char *path, *penv, *home, file[PATH_MAX];
@@ -385,7 +384,10 @@ Datapath rules:
 	if (readpathfile (file,path)) return path;
     }
 
-    return NULL;
+    path = sf_charalloc(3);
+    strncpy(path,"./",3);
+
+    return path;
 }
 
 static bool readpathfile (const char* filename, char* datapath) 
@@ -963,8 +965,6 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     char *path;
     
     path = getdatapath();
-    if (NULL == path) 
-	sf_error ("%s: Cannot find datapath",__FILE__);
     *dataname = sf_charalloc (NAME_MAX+1);
     snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
     tmp = fdopen(mkstemp(*dataname),mode);
