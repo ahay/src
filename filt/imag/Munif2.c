@@ -7,6 +7,8 @@ In each layer, velocity is a linear function of position.
 Inspired by SU's unif2.
 */
 
+/* 	$Id: Munif2.c,v 1.2 2003/09/20 06:10:49 fomels Exp $	 */
+
 #include <rsf.h>
 
 int main(int argc, char **argv)
