@@ -6,7 +6,7 @@
 
 #include "dip2.h"
 /* #include "divide2.h" */
-#include "divide.h"
+#include "div2.h"
 #include "allp2.h"
 
 static float **u1, **u2, **dp;
@@ -23,7 +23,7 @@ void dip2_init(int nx, int ny, float fx, float fy, bool sign1, bool gauss)
     dp = sf_floatalloc2(n1,n2);
 
     /* div0 = divide2_init (n1,n2,eps,lam); */
-    divide_init(n1,n2,fx,fy,niter,gauss);
+    div2_init(n1,n2,fx,fy,niter,gauss);
     sign = sign1;
 }
 
@@ -33,7 +33,7 @@ void dip2_close(void)
     free (u2[0]); free (u2);
     free (dp[0]); free (dp);
     /*   divide2_close(div0); */
-    divide_close();
+    div2_close();
 }
 
 void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
@@ -72,7 +72,7 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
 
 	/* divide2 (div0, u2, u1, dp); */
-	divide(u2[0],u1[0],dp[0]);
+	div2(u2[0],u1[0],dp[0]);
 
 	for(i=0; i < n; i++) {
 	    dpi = dp[0][i];
@@ -88,4 +88,4 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
     } /* iter */
 }
 
-/* 	$Id: dip2.c,v 1.3 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: dip2.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */

@@ -11,6 +11,7 @@ Takes: < irregular.rsf head=header.rsf > regular.rsf
 #include "int1.h"
 #include "interp.h"
 #include "gauss.h"
+#include "freqfilt.h"
 #include "triangle1.h"
 #include "monofshape.h"
 
@@ -117,7 +118,7 @@ int main (int argc, char* argv[])
 	sf_read (dd,sizeof(float),nd,in);
 
 	if (gauss) {
-	    sf_conjgrad(int1_lop, gauss_lop, pp, mm, dd, niter);
+	    sf_conjgrad(int1_lop, freqfilt_lop, pp, mm, dd, niter);
 	} else {
 	    sf_conjgrad(int1_lop, triangle1_lop, pp, mm, dd, niter);
 	}
@@ -134,4 +135,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mshapebin1.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */

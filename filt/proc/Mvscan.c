@@ -12,7 +12,7 @@ Takes: < cmp.rsf > scan.rsf
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl;
+    bool sembl, half;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, iz, CDPtype;
     float dt, dh, t0, h0, v0, dv, h, v, num, den, t, dy;
     float *trace, **stack, **stack2;
@@ -36,9 +36,17 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
     if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
+    if (half) {
+	dh *= 2.;
+	h0 *= 2.;
+    }
+
     CDPtype=1;
     if (sf_histfloat(cmp,"d3",&dy)) {
-	CDPtype=0.5+dh/dy;
+	CDPtype=0.5+0.5*dh/dy;
 	if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
     } 	    
     sf_warning("CDPtype=%d",CDPtype);
@@ -72,7 +80,7 @@ int main(int argc, char* argv[])
 
 	for (ih=0; ih < nh; ih++) {
 	    h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
-	    h = 4. * h * h; 
+	    h *= h; 
 	    sf_read(trace,sizeof(float),nt,cmp); 
 
 	    for (it=0; it < nt; it++) {
@@ -125,6 +133,6 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mvscan.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mvscan.c,v 1.3 2004/04/02 02:23:02 fomels Exp $	 */
 
 

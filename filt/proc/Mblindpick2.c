@@ -7,7 +7,8 @@ Takes: < semblance.rsf > pick.rsf
 
 #include <rsf.h>
 
-#include "divide.h"
+#include "div2.h"
+#include "div1.h"
 
 int main(int argc, char* argv[])
 {
@@ -42,8 +43,12 @@ int main(int argc, char* argv[])
     if (!sf_getbool("gauss",&gauss)) gauss = false;
     /* if y, use exact Gaussian for smoothing */
 
-    divide_init(nt,nx,eps,lam,niter,gauss);
-    
+    if (nx > 1) {
+	div2_init(nt,nx,eps,lam,niter,gauss);
+    } else {
+	div1_init(nt,eps,niter,gauss);
+    }
+
     slice = sf_floatalloc2(nt,ns);
 
     n = nt*nx;
@@ -99,12 +104,17 @@ int main(int argc, char* argv[])
 	pick0[i] *= ampl[i];
     }
 
-    divide(pick0,ampl,pick);
+    if (nx > 1) {
+	div2(pick0,ampl,pick);
+    } else {
+	div1(pick0,ampl,pick);
+    }
+
     sf_write (pick,sizeof(float),n,out);	
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mblindpick2.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */
 
