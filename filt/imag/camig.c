@@ -171,7 +171,7 @@ void camig(bool inv  /* forward/adjoint flag */,
     
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+/*	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);*/
 
 	if (inv) { /* MODELING */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* +1 for upward continuation */
@@ -179,6 +179,7 @@ void camig(bool inv  /* forward/adjoint flag */,
 
 	    fslice_get(slow,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
+		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz,az.n);
 		fslice_get(imag,iz,qq[0][0]);
 		LOOP( wx[ihx][imy][imx] +=
 		      qq[ihx][imy][imx]; );
@@ -209,6 +210,7 @@ void camig(bool inv  /* forward/adjoint flag */,
 
 	    fslice_get(slow,0,so[0]);
 	    for (iz=0; iz<az.n-1; iz++) {
+		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
 
 		/* downward continuation */
 		fslice_get(slow,iz+1,ss[0]);
@@ -287,7 +289,7 @@ void cawfl(fslice data /*      data [nw][nhx][nmy][nmx] */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+/*	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);*/
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	fslice_get(data,iw,wx[0][0]);
@@ -297,7 +299,9 @@ void cawfl(fslice data /*      data [nw][nhx][nmy][nmx] */,
 	fslice_put(wfld,iw*az.n,wx[0][0]);
 
 	fslice_get(slow,0,so[0]);
-	for (iz=0; iz<az.n-1; iz++) {	    
+	for (iz=0; iz<az.n-1; iz++) {	
+	    if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
+
 	    fslice_get(slow,iz+1,ss[0]);
 	    cam_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
