@@ -1,0 +1,35 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+set_resdir('../Fig')
+
+Flow('model',None,
+     '''
+     spike n1=256 d1=.016 nsp=2 k1=24,140 n2=1 |
+     box rect1=20
+     ''')
+Flow('empty','model','scale dscale=0')
+Flow('data','model','imospray n2=11 d2=.60 o2=0. v=1.5')
+
+images = ['model','empty','data','empty']
+labels = "Model:::::::Synthe-:tic data:::::"
+for niter in range(5):
+    imag = 'imag%d' % niter
+    Flow(imag,'data','imospray inv=y niter=%d v=1.5' % niter)
+    images.append(imag)
+    labels = labels + ":niter=%d" % niter
+
+Result('invstack',images,
+       '''cat axis=2 ${SOURCES[1:%d]} |
+       dots dots=0 yreverse=1 gaineach=0 labels="%s"
+       ''' % (len(images),labels))
+
+###########################################################################
+End()
