@@ -6,12 +6,12 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''
-cgstep chain conjgrad conjprec
+conjgrad conjprec
 decart dottest error file files getpar kiss_fft kiss_fftr math1
 segy simtab stack
 '''
 
-src2 = 'adjnull alloc bigsolver c99 ccgstep cconjgrad'
+src2 = 'adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain'
 
 try: # distribution version
     Import('env')
@@ -34,7 +34,7 @@ env.Append(BUILDERS={'Include':configure.Header},
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src)+Split(src2))
+includes = map(lambda x: x+'.h',Split(src2)+Split(src))
 
 objects = []
 for source in Split(src2):
@@ -60,8 +60,9 @@ else:
 # TESTING
 ##############################################################################
 for file in ['file','getpar','simtab']:
-    test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
+    test = env.StaticObject('Test' + file + '.c')
+    prog = env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
+    env.Depends(test,includes) # remove later 
 
 api = string.split(string.lower(env.get('API','')),',')
 

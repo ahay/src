@@ -1,7 +1,7 @@
 #include <stdlib.h>
 
 #include "dottest.h"
-#include "bigsolver.h"
+#include "_solver.h"
 #include "alloc.h"
 
 static float dotprod (int n, const float* x, const float* y);

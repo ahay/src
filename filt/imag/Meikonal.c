@@ -128,13 +128,15 @@ int main (int argc,char* argv[])
   
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
+	sf_warning("in");
 	fastmarch(t,v,p, plane,
 		  n3,n2,n1,
 		  o3,o2,o1,
 		  d3,d2,d1,
 		  s[is][2],s[is][1],s[is][0], 
 		  b3,b2,b1,
-		  order); 
+		  order);
+	sf_warning("out");
 	
 	sf_floatwrite (t,n123,time);
     }
@@ -142,4 +144,4 @@ int main (int argc,char* argv[])
     exit (0);
 }
 
-/* 	$Id: Meikonal.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

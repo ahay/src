@@ -24,29 +24,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "c99.h"
 /*^*/
 
+#include "_solver.h"
+/*^*/
+
 #include "bigsolver.h"
 #include "chain.h"
 #include "alloc.h"
 #include "error.h"
-
-#ifndef _sf_bigsolver_h
-
-typedef void (*sf_operator)(bool,bool,int,int,float*,float*);
-typedef void (*sf_solverstep)(bool,int,int,float*,
-			   const float*,float*,const float*);
-typedef void (*sf_weight)(int,const float*,float*);
-/*^*/
-
-#ifndef __cplusplus
-typedef void (*sf_coperator)(bool,bool,int,int,float complex*,float complex*);
-typedef void (*sf_csolverstep)(bool,int,int,float complex*,
-			       const float complex*,float complex*,
-			       const float complex*);
-typedef void (*sf_cweight)(int,const float complex*,float*);
-#endif 
-/*^*/
-
-#endif
 
 static const float TOLERANCE=1.e-12;
 

@@ -1,12 +1,41 @@
-#include "bigsolver.h"
+/* Chaining linear operators. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include "c99.h"
+#include "_solver.h"
+/*^*/
+
 #include "chain.h"
 
-/* chain
-   -----
-   Chains two operators, computing oper1{oper2{mod}} or its adjoint.
-   The tmp[nt] array is used for temporary storage. */
-void sf_chain( sf_operator oper1, sf_operator oper2, bool adj, bool add, 
-	    int nm, int nd, int nt, float* mod, float* dat, float* tmp) {
+void sf_chain( sf_operator oper1 /* outer operator */, 
+	       sf_operator oper2 /* inner operator */, 
+	       bool adj          /* adjoint flag */, 
+	       bool add          /* addition flag */, 
+	       int nm            /* model size */, 
+	       int nd            /* data size */, 
+	       int nt            /* intermediate size */, 
+	       float* mod        /* [nm] model */, 
+	       float* dat        /* [nd] data */, 
+	       float* tmp        /* [nt] intermediate */) 
+/*< Chains two operators, computing oper1{oper2{mod}} or its adjoint.
+  The tmp array is used for temporary storage. >*/
+{
     if (adj) {
 	oper1 (true, false, nt, nd, tmp, dat);
 	oper2 (true, add, nm, nt, mod, tmp);
@@ -16,12 +45,19 @@ void sf_chain( sf_operator oper1, sf_operator oper2, bool adj, bool add,
     }
 }
 
-/* array
-   -----
-   Constructs an array of two operators, computing {oper1{mod},oper2{mod}} 
-   or its adjoint. */
-void sf_array( sf_operator oper1, sf_operator oper2, bool adj, bool add, 
-	       int nm, int nd1, int nd2, float* mod, float* dat1, float* dat2) {
+void sf_array( sf_operator oper1 /* top operator */, 
+	       sf_operator oper2 /* bottom operator */, 
+	       bool adj          /* adjoint flag */, 
+	       bool add          /* addition flag */, 
+	       int nm            /* model size */, 
+	       int nd1           /* top data size */, 
+	       int nd2           /* bottom data size */, 
+	       float* mod        /* [nm] model */, 
+	       float* dat1       /* [nd1] top data */, 
+	       float* dat2       /* [nd2] bottom data */) 
+/*< Constructs an array of two operators, computing {oper1{mod},oper2{mod}} 
+  or its adjoint. >*/
+{
     if (adj) {
 	oper1 (true, add,  nm, nd1, mod, dat1);
 	oper2 (true, true, nm, nd2, mod, dat2);
@@ -31,16 +67,34 @@ void sf_array( sf_operator oper1, sf_operator oper2, bool adj, bool add,
     }
 }
 
-void sf_normal (sf_operator oper, bool add, 
-		int nm, int nd, float *mod, float *dat, float *tmp)
+void sf_normal (sf_operator oper /* operator */, 
+		bool add         /* addition flag */, 
+		int nm           /* model size */, 
+		int nd           /* data size */, 
+		float *mod       /* [nd] model */, 
+		float *dat       /* [nd] data */, 
+		float *tmp       /* [nm] intermediate */)
+/*< Applies a normal operator (self-adjoint) >*/
 {
     oper (true, false, nm, nd, tmp, mod);
     oper (false, add,  nm, nd, tmp, dat);
 }
 
-void sf_chain3 (sf_operator oper1, sf_operator oper2, sf_operator oper3, 
-		bool adj, bool add, int nm, int nt1, int nt2, int nd, 
-		float* mod, float* dat, float* tmp1, float* tmp2)
+void sf_chain3 (sf_operator oper1 /* outer operator */, 
+		sf_operator oper2 /* middle operator */, 
+		sf_operator oper3 /* inner operator */, 
+		bool adj          /* adjoint flag */, 
+		bool add          /* addition flag */, 
+		int nm            /* model size */, 
+		int nt1           /* inner intermediate size */, 
+		int nt2           /* outer intermediate size */, 
+		int nd            /* data size */, 
+		float* mod        /* [nm] model */, 
+		float* dat        /* [nd] data */, 
+		float* tmp1       /* [nt1] inner intermediate */, 
+		float* tmp2       /* [nt2] outer intermediate */)
+/*< Chains three operators, computing oper1{oper2{poer3{{mod}}} or its adjoint.
+  The tmp1 and tmp2 arrays are used for temporary storage. >*/
 {
     if (adj) {
 	oper1 (true, false, nt2, nd, tmp2, dat);
@@ -53,5 +107,4 @@ void sf_chain3 (sf_operator oper1, sf_operator oper2, sf_operator oper3,
     }
 }
 
-/* 	$Id: chain.c,v 1.1 2003/10/21 15:12:39 fomels Exp $	 */
-
+/* 	$Id$	 */

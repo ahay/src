@@ -3,6 +3,9 @@
 #include "cgstep.h"
 #include "alloc.h"
 
+#include "c99.h"
+/*^*/
+
 /* precision */
 static const float EPSILON=1.e-12;
 
@@ -11,18 +14,19 @@ static float* Ss; /* residual step */
 static bool Allocated = false; /* if S and Ss are allocated */
 
 static double dotprod (int n, const float* x, const float* y);
+/* double-precision dot product */
 
-/* cgstep
-   --------
-   A step of Claerbout's conjugate-gradient iteration.
-   nx - model size
-   ny - data size
-   x[nx] - current model
-   g[nx] - gradient
-   rr[ny] - residula (d - A x)
-   gg[ny] - conjugate gradient */
-void sf_cgstep( bool forget, int nx, int ny, 
-		float* x, const float* g, float* rr, const float* gg) {
+void sf_cgstep( bool forget     /* restart flag */, 
+		int nx          /* model size */, 
+		int ny          /* data size */, 
+		float* x        /* current model [nx] */, 
+		const float* g  /* gradient [nx] */, 
+		float* rr       /* data residual [ny] */, 
+		const float* gg /* conjugate gradient [ny] */) 
+/*< Step of Claerbout's conjugate-gradient iteration for complex operators. 
+  The data residual is rr = dat - A x
+>*/
+{
     double sds, gdg, gds, determ, gdr, sdr, alfa, beta;
     int i;
     if (Allocated == false) {
@@ -72,7 +76,9 @@ void sf_cgstep( bool forget, int nx, int ny,
     }
 }
 
-void sf_cgstep_close (void) {
+void sf_cgstep_close (void) 
+/*< Free allocated space. >*/ 
+{
     if (Allocated == true) {
 	free (S);
 	free (Ss);
@@ -80,7 +86,9 @@ void sf_cgstep_close (void) {
     }
 }
 
-static double dotprod (int n, const float* x, const float* y) {
+static double dotprod (int n, const float* x, const float* y) 
+/* double-precision dot product */
+{
     double prod;
     int i;
     prod = 0.;
@@ -90,5 +98,5 @@ static double dotprod (int n, const float* x, const float* y) {
     return prod;
 }
 
-/* 	$Id: cgstep.c,v 1.2 2004/03/13 06:00:15 fomels Exp $	 */
+/* 	$Id$	 */
 

@@ -1,8 +1,8 @@
 #ifndef _sf_conjprec_h
 #define _sf_conjprec_h
 
-#include "bigsolver.h"
 #include "c99.h"
+#include "_solver.h"
 
 typedef void (*sf_operator2)(int,float*);
 

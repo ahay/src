@@ -13,7 +13,7 @@ void fastmarch_init (int n3,int n2,int n1)
     if (n2 > 1) maxband += 2*n1*n3;
     if (n3 > 1) maxband += 2*n1*n2;
 
-    pqueue_init (maxband);
+    pqueue_init (10*maxband);
 }
 
 void fastmarch (float* time, float* v, int* in, bool* plane,
@@ -40,6 +40,8 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
 	/* Pick smallest value in the NarrowBand
 	   mark as good, decrease points_left */
 
+	/* sf_warning("npoints=%d",npoints); */
+
 	p = pqueue_extract();
 
 	if (p == NULL) {
@@ -48,6 +50,7 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
 	}
 
 	i = p - time;
+
 	in[i] = FMM_IN;
     }
 }
@@ -57,4 +60,4 @@ void fastmarch_close (void)
     pqueue_close();
 }
 
-/* 	$Id: fastmarch.c,v 1.3 2004/06/18 01:06:45 fomels Exp $	 */
+/* 	$Id$	 */
