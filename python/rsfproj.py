@@ -339,7 +339,7 @@ def End(**kw):
 def Program(*arg,**kw):
     return apply(project.Program,arg,kw)
 def Get(name):
-    return project.get(name)
+    return project['ENV'].get(name)
 def Program90(prog):
     sources = [prog]
     rsfconf.depends90(project,sources,prog)
