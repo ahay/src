@@ -21,10 +21,21 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-#    env['CCFLAGS'] += ' -g'
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
     SConscript('../lib/SConstruct')
+
+env['SCANNERS'].remove(CScan)
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
+src = 'aastretch'
+
+for source in Split(src):
+    env.Include(source,prefix='_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+#    objects.append(obj)
 
 mains = Split(progs)
 
@@ -55,6 +66,9 @@ if root:
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
+
+env['SCANNERS'].remove(configure.Include)
+env.Append(SCANNERS=CScan)
 
 # 	$Id$
 

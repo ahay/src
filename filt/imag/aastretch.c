@@ -1,6 +1,33 @@
+/* Anti-aliasing interpolation for Kirchhoff-type operators. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "aastretch.h"
 
 #include <rsf.h>
+
+#ifdef _aastretch_h
+
+typedef struct Aamap *aamap;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Aamap {
     int nt, nd, **x;
@@ -8,7 +35,11 @@ struct Aamap {
     bool *m;
 };
 
-aamap aastretch_init (int n1, float o1, float d1, int nd)
+aamap aastretch_init (int n1   /* trace length */, 
+		      float o1 /* trace origin */, 
+		      float d1 /* trace sampling */, 
+		      int nd   /* number of data samples */)
+/*< initialization >*/
 {
     aamap str;
 
@@ -29,9 +60,10 @@ aamap aastretch_init (int n1, float o1, float d1, int nd)
 }
 
 void aastretch_define (aamap str, 
-		       const float *coord, 
-		       const float *dt, 
-		       const float *amp)
+		       const float *coord /* data coordinates [nd] */, 
+		       const float *dt    /* antialiasing length [nd] */, 
+		       const float *amp   /* amplitude [nd] */)
+/*< Set up interpolation >*/
 {
     int id, ix[3], j;
     float rx[3];
@@ -62,7 +94,10 @@ void aastretch_define (aamap str,
     }
 }
 
-void aastretch_apply (aamap str, const float *ord, float *modl)
+void aastretch_apply (aamap str, 
+		      const float *ord /* data [nd] */, 
+		      float *modl      /* model [nt] */)
+/*< apply interpolation >*/
 {
     int id, i1, i2, j, it, n;
     float w1, w2, t, w, *tmp;
@@ -107,6 +142,7 @@ void aastretch_apply (aamap str, const float *ord, float *modl)
 }
 
 void aastretch_close (aamap str)
+/*< free allocated storage >*/
 {
     free (str->x[0]);
     free (str->x);
@@ -118,5 +154,4 @@ void aastretch_close (aamap str)
     free (str);
 }
 
-
-
+/* 	$Id$ */
