@@ -61,8 +61,16 @@ def datum(swf1,rwf1,slow,swf0,rwf0,par):
     # half slowness because zomig is two-way
     Flow(_slow,slow,'math "output=input/2"') 
 
-    Flow(swf1,[swf0,_slow],'%(ZOM)s mode=d inv=y slo=${SOURCES[1]}' % par )
-    Flow(rwf1,[rwf0,_slow],'%(ZOM)s mode=d inv=n slo=${SOURCES[1]}' % par )
+    Flow(swf1,[swf0,_slow],
+         '''
+         %(ZOM)s mode=d inv=y
+         slo=${SOURCES[1]}
+         ''' % par )
+    Flow(rwf1,[rwf0,_slow],
+         '''
+         %(ZOM)s mode=d inv=n
+         slo=${SOURCES[1]}
+         ''' % par )
 
 
 def image(imag,slow,swlf,rwfl,par):
@@ -74,3 +82,11 @@ def image(imag,slow,swlf,rwfl,par):
          ''' % par )
 
     Result(imag,imag,'window | transp |'+ igrey('pclip=99'))
+
+def cimage(imag,slow,swlf,rwfl,par):
+    Flow(imag,[swlf,slow,rwfl],
+         '''
+         slo=${SOURCES[1]}
+         <   ${SOURCES[0]}
+         rwf=${SOURCES[2]}
+         ''' % par, stdin=0)
