@@ -81,38 +81,32 @@ void fft3(bool inv            /* inverse/forward flag */,
     if (inv) {
 
 	/* IFT 1 */
-	if(n1>1) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i2=0; i2 < n2; i2++) {
-		    kiss_fft(invs1,
-			     (const kiss_fft_cpx *) pp[i3][i2], 
-			     (      kiss_fft_cpx *) pp[i3][i2]);
-		}
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		kiss_fft(invs1,
+			 (const kiss_fft_cpx *) pp[i3][i2], 
+			 (      kiss_fft_cpx *) pp[i3][i2]);
 	    }
 	}
 
 	/* IFT 2 */
-	if(n2>1) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i1=0; i1 < n1; i1++) {
-		    kiss_fft_stride(invs2,
-				    (const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				    (      kiss_fft_cpx *) trace2,n1);
-		    for (i2=0; i2 < n2; i2++) {
-			pp[i3][i2][i1] = trace2[i2];
-		    }
+	for (i3=0; i3 < n3; i3++) {
+	    for (i1=0; i1 < n1; i1++) {
+		kiss_fft_stride(invs2,
+				(const kiss_fft_cpx *) (pp[i3][0]+i1), 
+				(      kiss_fft_cpx *) trace2,n1);
+		for (i2=0; i2 < n2; i2++) {
+		    pp[i3][i2][i1] = trace2[i2];
 		}
 	    }
 	}
 	
 	/* IFT 3 */
-	if(n3>1) {
-	    for (i2=0; i2 < n2; i2++) {
-		for (i1=0; i1 < n1; i1++) {
-		    kiss_fft_stride(invs3,
-				    (const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				    (      kiss_fft_cpx *) trace3,n1);
-		}
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		kiss_fft_stride(invs3,
+				(const kiss_fft_cpx *) (pp[0][i2]+i1), 
+				(      kiss_fft_cpx *) trace3,n1);
 		for (i3=0; i3 < n3; i3++) {
 		    pp[i3][i2][i1] = trace3[i3];
 		}
@@ -127,17 +121,14 @@ void fft3(bool inv            /* inverse/forward flag */,
 		}
 	    }
 	}
-
+	
     } else {
-
 	/* FFT 3 */
-	if(n3>1) {
-	    for (i2=0; i2 < n2; i2++) {
-		for (i1=0; i1 < n1; i1++) {
-		    kiss_fft_stride(forw3,
-				    (const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				    (      kiss_fft_cpx *) trace3,n1);
-		}
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		kiss_fft_stride(forw3,
+				(const kiss_fft_cpx *) (pp[0][i2]+i1), 
+				(      kiss_fft_cpx *) trace3,n1);
 		for (i3=0; i3 < n3; i3++) {
 		    pp[i3][i2][i1] = trace3[i3];
 		}
@@ -145,27 +136,23 @@ void fft3(bool inv            /* inverse/forward flag */,
 	}
 
 	/* FFT 2 */
-	if(n2>1) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i1=0; i1 < n1; i1++) {
-		    kiss_fft_stride(forw2,
-				    (const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				    (      kiss_fft_cpx *) trace2,n1);
-		    for (i2=0; i2 < n2; i2++) {
-			pp[i3][i2][i1] = trace2[i2];
-		    }
+	for (i3=0; i3 < n3; i3++) {
+	    for (i1=0; i1 < n1; i1++) {
+		kiss_fft_stride(forw2,
+				(const kiss_fft_cpx *) (pp[i3][0]+i1), 
+				(      kiss_fft_cpx *) trace2,n1);
+		for (i2=0; i2 < n2; i2++) {
+		    pp[i3][i2][i1] = trace2[i2];
 		}
 	    }
 	}
 
 	/* FFT 1 */
-	if(n1>1) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i2=0; i2 < n2; i2++) {
-		    kiss_fft(forw1,
-			     (const kiss_fft_cpx *) pp[i3][i2], 
-			     (      kiss_fft_cpx *) pp[i3][i2]);
-		}
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		kiss_fft(forw1,
+			 (const kiss_fft_cpx *) pp[i3][i2], 
+			 (      kiss_fft_cpx *) pp[i3][i2]);
 	    }
 	}
     }
