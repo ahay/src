@@ -7,26 +7,17 @@ root = os.environ.get('RSFROOT')
 sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
+from rsfrecipe import Bay
 ###########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/bay'
-Fetch('bay.H',datdir)
+Bay('bay',f2=500,n2=1600,f1=50,n1=1050)
 
-Flow('bay','bay.H',
-     '''
-     dd data_format=native_float |
-     window f2=500 n2=1600 f1=50 n1=1050 |
-     reverse which=1 |
-     costaper nw=50
-     ''')
+def plot(title):
+    return 'grey title="%s" pclip=99.9 gpow=.8 crowd=.85' % title
 
-plot = 'grey pclip=99.9 gpow=.8 crowd=.85'
-
-Plot('bay','bay',
-     '%s title="%s" ' % (plot,'Topographic map, Stanford area'))
-Plot('slope','bay',
-     'igrad | %s title="%s" ' % (plot,'Southward slope'))
+Plot('bay','bay',plot('Topographic map, Stanford area'))
+Plot('slope','bay','igrad | ' + plot('Southward slope'))
 Combine('stangrad','bay slope','OverUnderAniso',result=1)
 
 ###########################################################################
