@@ -388,8 +388,7 @@ int main(int argc, char* argv[])
 	}
     } /* i3 */
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: thplot.c,v 1.2 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: thplot.c,v 1.3 2004/07/02 11:54:57 fomels Exp $	 */

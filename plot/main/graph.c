@@ -163,8 +163,7 @@ int main(int argc, char* argv[])
 	if (transp) {tmp=x; x=y; y=tmp;}
     } 
    
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: graph.c,v 1.13 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: graph.c,v 1.14 2004/07/02 11:54:57 fomels Exp $	 */

@@ -243,7 +243,6 @@ int main(int argc, char* argv[])
 
     } /* i3 */
 
-    sf_close();
     exit(0);
 }
 
@@ -254,4 +253,4 @@ static void check(float *x, float *y)
     if (transp) { t=*x; *x=*y; *y=t; }
 }
 
-/* 	$Id: wiggle.c,v 1.6 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: wiggle.c,v 1.7 2004/07/02 11:54:57 fomels Exp $	 */

@@ -334,8 +334,7 @@ int main(int argc, char* argv[])
 	vp_purge(); 
     } /* i3 loop */
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.21 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.22 2004/07/02 11:54:57 fomels Exp $	 */

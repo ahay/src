@@ -247,8 +247,7 @@ int main(int argc, char* argv[])
 	vp_purge(); 
     } /* frame loop */
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: grey3.c,v 1.4 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: grey3.c,v 1.5 2004/07/02 11:54:57 fomels Exp $	 */
