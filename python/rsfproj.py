@@ -180,7 +180,7 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Update(self)
         dir = os.path.basename(os.getcwd())
-        if datapath == './':
+        if datapath[:2] == './':
             self.path = datapath
         else:
             self.path = datapath + dir + os.sep
