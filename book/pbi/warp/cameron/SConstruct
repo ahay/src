@@ -1,0 +1,46 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+###########################################################################
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/cameron'
+
+data = {
+    'pz': 'PZmig_nail.sgy',
+    'ps': 'PSmig_nail.sgy'
+    }
+
+for mode in ['pz','ps']:
+    Fetch(data[mode],datdir)
+    Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
+              '''segyread tape=$SOURCE
+              hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+              ''',stdin=0)
+    Flow(mode+'cube',[mode,mode+'head'],
+              'intbin head=${SOURCES[1]} yk=cdp')
+
+Flow('pznail','pzcube','window n1=1 min1=0.796')
+Flow('psnail','pscube','window n1=1 min1=1.964')
+
+grey = '''
+grey transp=n yreverse=n color=b
+label1="Inline" label2="Crossline" title="%s"
+'''
+
+Plot('pznail','pznail',grey % 'PP: Time=0.796 s')
+Plot('psnail','psnail',grey % 'PS: Time=1.964 s')
+Combine('nails',['pznail','psnail'],'SideBySideAniso',result=1)
+#             pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+
+
+Plot('pzzero','pznail','scale dscale=0 | ' + grey % 'PP: Time=0.796 s')
+Plot('pszero','psnail','scale dscale=0 | ' + grey % 'PS: Time=1.964 s')
+Combine('zero',['pzzero','pszero'],'SideBySideAniso',result=1)
+     
+###########################################################################
+End()
