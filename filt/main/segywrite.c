@@ -40,7 +40,7 @@ int main(int argc, char *argv[])
     /* Verbosity flag */
     if (!sf_getbool("su",&su)) su=false; 
     /* y if output is SU, n if output is SEGY */
-    if (!sf_getbool("xdr",&xdr)) xdr = sf_endian();
+    if (!sf_getbool("endian",&xdr)) xdr = sf_endian();
     /* big/little endian flag. The default is estimated automatically */
 
     if (NULL == (filename = sf_getstring("tape")))
@@ -108,9 +108,9 @@ int main(int argc, char *argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (su) {
 	if (xdr) {
-	    if (SF_NATIVE != sf_getform(in)) sf_error("Need native input");
-	} else {
 	    if (SF_XDR != sf_getform(in)) sf_error("Need xdr input");
+	} else {
+	    if (SF_NATIVE != sf_getform(in)) sf_error("Need native input");
 	}
 	sf_setform(in,SF_NATIVE);
     }
