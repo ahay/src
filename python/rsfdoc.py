@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc
-import re, sys, os, string, glob, commands
+import re, sys, os, string, glob, commands, string
 
 progs = {}
 
@@ -43,7 +43,7 @@ def use(target=None,source=None,env=None):
                     if status:
                         print ('No uses found in book/%s/%s/%s/: %s' %
                                (book,chapter,project,progs))
-                    elif progs[:5] != 'scons':
+                    elif string.find(progs,'scons') < 0:
                         for prog in string.split(progs):
                             doc.append(
                                 'rsfdoc.progs["%s"].use("%s","%s","%s")' %
