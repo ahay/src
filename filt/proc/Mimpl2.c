@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	sf_read (dat[0],sizeof(float),n1*n2,in);
-	impl2_apply (dat);
+	impl2_apply (dat,true,false);
 	sf_write (dat[0],sizeof(float),n1*n2,out);
     }
 
@@ -47,5 +47,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mimpl2.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mimpl2.c,v 1.3 2004/04/09 13:17:10 fomels Exp $	 */
 

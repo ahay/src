@@ -7,7 +7,7 @@
 #include "tridiagonal.h"
 #include "quantile.h"
 
-static float t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2;
+static float a, t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
 static int nstep, n1, n2, n, nclip;
 static bool up;
 static tris slv1, slv2;
@@ -36,6 +36,7 @@ void impl2_init (float r1, float r2, int n1_in, int n2_in,
 
     y = sf_floatalloc2(n1,n2);
     w = sf_floatalloc2(n1,n2);
+    t = sf_floatalloc2(n1,n2);
     tmp = sf_floatalloc(n);
 
     d1 = sf_floatalloc(n1);
@@ -74,36 +75,44 @@ void impl2_close (void)
     tridiagonal_close (slv2);
 }
 
-void impl2_apply (float **x)
+void impl2_set(float ** x)
+{
+    int i;
+    float xsum, wsum;
+
+    grad9(n1,n2,x,w);
+
+    for (i=0; i < n; i++) {
+	tmp[i] = w[0][i];
+    }
+
+    a = quantile(nclip,n,tmp);
+    if (a==0.) sf_error("%s: clip at nclip=%d is zero, use a higher pclip",
+			__FILE__,nclip);
+
+    for (i=0; i < n; i++) {
+	w[0][i] = sqrtf(1.+w[0][i]/a);
+	if (up) w[0][i] = 1./w[0][i];
+    }
+
+    wsum = xsum = 0.;
+    for (i=0; i < n; i++) {
+	wsum += w[0][i];
+	xsum += x[0][i]*x[0][i];
+    }
+
+    sf_warning("xsum=%g, wsum=%g, a=%g", xsum, wsum, a);
+}
+
+void impl2_apply (float **x, bool set, bool adj)
 {
     int istep, i1, i2, i;
-    float a, xsum, wsum;
 
     for (istep=0; istep < nstep; istep++) {
-	grad9(n1,n2,x,w);
+	if (set) impl2_set(x);
 
 	for (i=0; i < n; i++) {
-	    tmp[i] = w[0][i];
-	}
-
-	a = quantile(nclip,n,tmp);
-	
-	if (a==0.) sf_error("%s: clip at nclip=%d is zero, use a higher pclip",
-			    __FILE__,nclip);
-
-	wsum = xsum = 0.;
-	for (i=0; i < n; i++) {
-	    w[0][i] = sqrtf(1.+w[0][i]/a);
-	    wsum += w[0][i];
-	    xsum += x[0][i]*x[0][i];
-	}
-
-	sf_warning("step %d of %d, xsum=%g, wsum=%g, a=%g",  
-		   istep, nstep, xsum, wsum, a);
-
-	for (i=0; i < n; i++) {
-	    if (up) w[0][i] = 1./w[0][i];
-	    x[0][i] *= w[0][i];
+	    if (!adj) x[0][i] *= w[0][i];
 	    y[0][i] = x[0][i];
 	}
 
@@ -177,13 +186,35 @@ void impl2_apply (float **x)
 	}
 	for (i=0; i < n; i++) {
 	    x[0][i] = 0.5*(x[0][i]+y[0][i]);
+	    if (adj) x[0][i] *= w[0][i];
 	}
     }
 }
 
+void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+{
+    int i1, i2;
 
+    sf_adjnull(adj,add,nx,ny,x,y);
 
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    t[i2][i1] = adj? y[i1+i2*n1]: x[i1+i2*n1];
+	}
+    }
 
+    impl2_apply(t,false,adj);
 
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    if (adj) {
+		x[i1+i2*n1] += t[i2][i1];
+	    } else {
+		y[i1+i2*n1] += t[i2][i1];
+	    }
+	}
+    }
+}
 
+/* 	$Id: impl2.c,v 1.2 2004/04/09 13:17:10 fomels Exp $	 */
 

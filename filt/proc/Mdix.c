@@ -16,6 +16,7 @@ int main(int argc, char* argv[])
     int i, niter, nd, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM], n1, n2, i1, i2;
     float **vr, **vi, **wt, wti;
     char key[6];
+    bool diff;
     sf_file vrms, vint, weight, vout;
 
     sf_init(argc,argv);
@@ -30,7 +31,10 @@ int main(int argc, char* argv[])
 	if (!sf_getint(key,rect+i)) rect[i]=1;
     }
 
-    nd = smoothder_init(dim, rect,n);
+    if (!sf_getbool("diff",&diff)) diff=false;
+    /* if y, apply anisotropic diffusion */
+
+    nd = smoothder_init(dim, rect, n, diff);
     n1 = n[0];
     n2 = nd/n1;
     
