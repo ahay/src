@@ -27,3 +27,15 @@ susuffix = '.su'
 # suffix for postscript files
 pssuffix = '.eps'
 
+# directory tree for executable files
+top = os.environ.get('CWPROOT')
+bindir = os.path.join(top,'bin')
+
+class Project(Environment):
+    def __init__(self,**kw):
+        apply(Environment.__init__,(self,),kw)
+        self['ENV']['PATH'] = self['ENV']['PATH'] + bindir
+        
+        
+
+

@@ -66,6 +66,9 @@ int main(int argc, char* argv[])
 	sf_putstring(spike,key,label);
     }
 	
+    if (NULL != (label = sf_getstring("title")))
+	sf_putstring(spike,"title",label);
+
     if (!sf_getint("nsp",&nsp)) nsp=1;
     /* Number of spikes */
     mag = sf_floatalloc (nsp);
@@ -124,4 +127,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: spike.c,v 1.6 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id$	 */

@@ -31,7 +31,9 @@ command = r'\{(?:([^\}\{]*)(?:[^\{\}]*\{[^\}]*\}[^\{\}]*)*)\}'
 # this will not work (Joel)
 
 re_author = re.compile(r'\\author\s*'+command)
-r_title = re.compile(r'\\(?:title|chapter)\s*(?:\[[^\]]+\])?\s*'+command)
+re_title = re.compile(r'\\(?:title|chapter)\s*(?:\[[^\]]+\])?\s*'+command)
+
+year = 2004
 
 def report_toc(target=None,source=None,env=None):
     "Build a table of contents from a collection of papers"
@@ -39,20 +41,23 @@ def report_toc(target=None,source=None,env=None):
     report = string.replace(string.upper(os.path.basename(os.getcwd())),
                             'SEP','SEP--')
     toc.write('''
-    \cleardoublepage
-    \renewcommand{\REPORT}{%s} 
-    \title{\REPORT\ --- TABLE OF CONTENTS}
-    \maketitle
-    %% start entries
-
-    ''' % report)
+    \\cleardoublepage
+    \\renewcommand{\REPORT}{%s} 
+    \\title{\REPORT\ --- TABLE OF CONTENTS}
+    \\maketitle
+    %% start entries\n\n''' % report)
     ### Do sections later
     for src in source:
-        print "paper=" + str(src)
+        dir = os.path.basename(os.path.dirname(str(src)))
         paper = src.get_contents()
         author = re_author.search(paper)
-        if author:
-            print "author=" + author.group(1)
+        title = re_title.search(paper)
+        if author and title:
+            toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
+                      (author.group(1),title.group(1),dir))
+        else:
+            print "Could not find author or title"
+    toc.write('\n\\cleardoublepage\n')
     toc.close()
     return 0
 

@@ -9,12 +9,14 @@ static int n1, n2, rect;
 static float **p, **tmp1, **tmp2, *trace1, *trace2, amp;
 static triangle tr;
 
+static void forw(int i2, const float* t1, float* t2);
+static void back(int i2, float* t1, const float* t2);
+
 void trisl_init(int m1, int m2, int rect1, int rect2)
 {
     n1 = m1;
     n2 = m2;
     rect = rect2;
-    p = sf_floatalloc2(n1,n2+2*rect);
 
     tmp1 = sf_floatalloc2(n1,n2+2*rect);
     tmp2 = sf_floatalloc2(n1,n2+2*rect);
@@ -28,31 +30,11 @@ void trisl_init(int m1, int m2, int rect1, int rect2)
 
 void trisl_set(float** p1)
 {
-    int i1, i2;
-
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    p[i2][i1]=-p1[rect-1-i2][i1];
-	}
-    }
-
-    for (i2=0; i2 < n2; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    p[i2+rect][i1]=p1[i2][i1];
-	}
-    }
-
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    p[n2+2*rect-1-i2][i1]=-p1[n2-rect+i2][i1];
-	}
-    }
+    p = p1;
 }
 
 void trisl_close(void)
 {
-    free(*p);
-    free(p);
     free(*tmp1);
     free(tmp1);
     free(*tmp2);
@@ -61,42 +43,68 @@ void trisl_close(void)
     free(trace2);
 }
 
+static void forw(int i2, const float* t1, float* t2)
+{
+    int i1, it;
+    float t;
+
+    if (i2 < rect) {
+	back(2*rect-1-i2,t2,t1);
+    } else if (i2 >= n2+rect-1) {
+	back(2*(n2+rect)-3-i2,t2,t1);
+    } else {
+	for (i1=0; i1 < n1; i1++) {
+	    t = i1 + p[i2-rect][i1];
+	    if (t < 0.) continue;
+	    it = t;
+	    t -= it;
+	    if (it >=0 && it < n1-1) {
+		t2[it]   += t1[i1]*(1.-t);
+		t2[it+1] += t1[i1]*t;
+	    }
+	}
+    }
+}
+
+static void back(int i2, float* t1, const float* t2)
+{
+    int i1, it;
+    float t;
+
+    if (i2 < rect) {
+	forw(2*rect-1-i2,t2,t1);
+    } else if (i2 >= n2+rect-1) {
+	forw(2*(n2+rect)-3-i2,t2,t1);
+    } else {
+	for (i1=0; i1 < n1; i1++) {	    
+	    t = i1 + p[i2-rect][i1];
+	    if (t < 0.) continue;
+	    it = t;
+	    t -= it;
+	    if (it >=0 && it < n1-1) 
+		t1[i1] += t2[it]*(1.-t) + t2[it+1]*t;
+	}
+    }
+}
+
 static void roll(bool adj, float** in)
 {
-    int i1, i2, it;
-    float t;
+    int i2;
 
     if (adj) {
 	for (i2=n2+2*rect-2; i2 >=0; i2--) {	    
-	    for (i1=0; i1 < n1; i1++) {
-		t = i1 + p[i2][i1];
-		if (t < 0.) continue;
-		it = t;
-		t -= it;
-		if (it >=0 && it < n1-1) 
-		    in[i2][i1] += in[i2+1][it]*(1.-t) + in[i2+1][it+1]*t;
-	    }	    
+	    back(i2,in[i2],in[i2+1]);
 	}
     } else {
 	for (i2=0; i2 < n2+2*rect-1; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		t = i1 + p[i2][i1];
-		if (t < 0.) continue;
-		it = t;
-		t -= it;
-		if (it >=0 && it < n1-1) {
-		    in[i2+1][it]   += in[i2][i1]*(1.-t);
-		    in[i2+1][it+1] += in[i2][i1]*t;
-		}
-	    }
+	    forw(i2,in[i2],in[i2+1]);
 	}
     }
 }
 
 static void shifts(float** in, float** out)
 {
-    int i1, i2, ir, it;
-    float t;
+    int i1, i2, ir;
 
     for (i2=0; i2 < n2+2*rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -104,66 +112,41 @@ static void shifts(float** in, float** out)
 	}
     }
 
-    for (i2=0; i2 < n2+2*rect; i2++) {
-	if (i2 < n2+rect) {
-	    for (i1=0; i1 < n1; i1++) {
-		trace2[i1]=in[i2][i1];
-	    }
+    for (i2=0; i2 < n2+rect; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    trace2[i1]=in[i2][i1];
+	}
 	    
-	    for (ir=i2; ir < i2+rect; ir++) {
-		for (i1=0; i1 < n1; i1++) {
-		    trace1[i1] = trace2[i1];
-		    trace2[i1]=0.;
-		}
-		for (i1=0; i1 < n1; i1++) {
-		    t = i1 + p[ir][i1];
-		    if (t < 0.) continue;
-		    it = t;
-		    t -= it;
-		    if (it >=0 && it < n1-1) {
-			trace2[it]   += trace1[i1]*(1.-t);
-			trace2[it+1] += trace1[i1]*t;
-		    }
-		}
+	for (ir=i2; ir < i2+rect; ir++) {
+	    for (i1=0; i1 < n1; i1++) {
+		trace1[i1] = trace2[i1];
+		trace2[i1]=0.;
 	    }
+	    forw(ir,trace1,trace2);
+	}
 
-	    for (i1=0; i1 < n1; i1++) {
-		out[i2+rect][i1] -= amp*trace2[i1];
-	    }
+	for (i1=0; i1 < n1; i1++) {
+	    out[i2+rect][i1] -= amp*trace2[i1];
+	    out[i2][i1] += amp*in[i2][i1];
+	}
+     }
 
-	    for (i1=0; i1 < n1; i1++) {
-		out[i2][i1] += amp*in[i2][i1];
-	    }
-	} 
-
-	if (i2 >= rect) {
-	    for (i1=0; i1 < n1; i1++) {
-		out[i2][i1] += amp*in[i2][i1];
-	    }
+    for (i2=rect; i2 < n2+2*rect; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    trace2[i1] = in[i2][i1];
+	}
 	    
-	    
+	for (ir=i2-1; ir >= i2-rect; ir--) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace2[i1] = -amp*in[i2][i1];
+		trace1[i1] = trace2[i1];
+		trace2[i1] = 0.;
 	    }
-	    
-	    for (ir=i2-1; ir >= i2-rect; ir--) {
-		for (i1=0; i1 < n1; i1++) {
-		    trace1[i1] = trace2[i1];
-		    trace2[i1] = 0.;
-		}
-		for (i1=0; i1 < n1; i1++) {
-		    t = i1 + p[ir][i1];
-		    if (t < 0.) continue;
-		    it = t;
-		    t -= it;
-		    if (it >=0 && it < n1-1) 
-			trace2[i1] = trace1[it]*(1.-t) + trace1[it+1]*t;
-		}
-	    }
-	    
-	    for (i1=0; i1 < n1; i1++) {
-		out[i2-rect][i1] += trace2[i1];
-	    }
+	    back(ir,trace2,trace1);
+	}
+	
+	for (i1=0; i1 < n1; i1++) {
+	    out[i2-rect][i1] -= amp*trace2[i1];
+	    out[i2][i1] += amp*in[i2][i1];
 	}
     }
 }
@@ -185,28 +168,36 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (!adj) smooth (tr,0,1,false,tmp1[i2+rect]);
     }
 
+    for (i2=rect-1; i2 >= 0; i2--) {
+	for (i1=0; i1 < n1; i1++) {
+	    tmp1[rect-1-i2][i1] = 0.;
+	}
+    }
+
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    tmp1[rect-1-i2][i1] = tmp1[rect+i2][i1];
-	}
-	for (i1=0; i1 < n1; i1++) {
-	    tmp1[n2+rect+i2][i1] = tmp1[n2+rect-1-i2][i1];
+	    tmp1[n2+rect+i2][i1] = 0.;
 	}
     }
     
     roll(false,tmp1);
     shifts(tmp1,tmp2);
     roll(true,tmp2);
-
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    tmp2[rect+i2][i1] += tmp2[rect-1-i2][i1];
-	}
+   
+/*
+    for (i2=rect-1; i2 >= 0; i2--) {
  	for (i1=0; i1 < n1; i1++) {
-	    tmp2[n2+rect-1-i2][i1] += tmp2[n2+rect+i2][i1];
+	    tmp2[n2+rect-2-i2][i1] += tmp2[n2+rect+i2][i1];
 	}
     }
-  
+ 
+    for (i2=0; i2 < rect; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    tmp2[rect+i2+1][i1] += tmp2[rect-1-i2][i1];
+	}
+    }
+*/  
+ 
     for (i2=0; i2 < n2; i2++) {
 	if (adj) smooth (tr,0,1,false,tmp2[i2+rect]);
 	for (i1=0; i1 < n1; i1++) {
@@ -217,5 +208,4 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    }
 	}
     }
-
 }

@@ -1,10 +1,56 @@
+/* Node operations for the tree structure. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <stdlib.h>
 
 #include <rsf.h>
 
 #include "node.h"
 
-NodeQueue CreateNodeQueue (void) {
+#ifndef _node_h
+
+typedef struct CNodeCell {
+    struct CNode *node;
+    struct CNodeCell *link;
+} *NodeCell;
+/*^*/
+
+typedef struct CNodeQueue {
+    struct CNodeCell* head;
+    struct CNodeCell* tail;
+} *NodeQueue;
+/*^*/
+
+typedef struct CNode {
+    int nparents, **parents; /* number of alive parents, immediate parents */
+    int n1, n2;
+    float w1, w2, t;
+    struct CNodeQueue* children;
+} *Node;
+/*^*/
+
+#endif
+
+NodeQueue CreateNodeQueue (void) 
+/*< start a queue >*/
+{
     NodeQueue queue;
   
     queue = (NodeQueue) sf_alloc(1, sizeof(*queue));
@@ -14,7 +60,9 @@ NodeQueue CreateNodeQueue (void) {
     return queue;
 }
 
-void FreeNodeQueue (NodeQueue queue) {
+void FreeNodeQueue (NodeQueue queue) 
+/*< Free allocated storage >*/
+{
     NodeCell cell, next;
 
     for (cell = queue->head; NULL != cell; cell = next) {
@@ -25,7 +73,10 @@ void FreeNodeQueue (NodeQueue queue) {
     free (queue);
 }
 
-Node CreateNodes (int n, int order) {
+Node CreateNodes (int n     /* number of nodes */, 
+		  int order /* interpolation order */) 
+/*< Node array allocation >*/
+{
     Node nd;
     int i, j, k;
 
@@ -44,7 +95,9 @@ Node CreateNodes (int n, int order) {
     return nd;
 }
 
-void FreeNodes (Node nd, int n) {
+void FreeNodes (Node nd, int n /* number of nodes */) 
+/*< free allocated storage >*/
+{
     int i;
 
     for (i=0; i < n; i++) {
@@ -55,7 +108,9 @@ void FreeNodes (Node nd, int n) {
     free (nd);
 }
 
-void AddNode (NodeQueue queue, Node nd) {
+void AddNode (NodeQueue queue, Node nd) 
+/*< Add a node to the queue >*/
+{
     NodeCell cell;
 
     cell = (NodeCell) sf_alloc(1,sizeof(*cell));
@@ -70,7 +125,9 @@ void AddNode (NodeQueue queue, Node nd) {
     queue->tail = cell;    
 }
 
-Node ExtractNode (NodeQueue queue) {
+Node ExtractNode (NodeQueue queue) 
+/*< Extract a node from the queue >*/
+{
     Node nd;
     NodeCell cell;
 
@@ -84,14 +141,18 @@ Node ExtractNode (NodeQueue queue) {
     return nd;
 }
 
-/* parent is i in the queue, [j][k] for child */
-void AddChild (Node parent, int i, int j, int k, Node child) {
+
+void AddChild (Node parent, int i, int j, int k, Node child) 
+/*< Add a child. parent is i in the queue, [j][k] for child >*/
+{
     AddNode (parent[i].children, child);
     child->parents[j][k] = i;
     child->nparents++;
 }
 
-void TraverseQueue (NodeQueue queue, void (*apply)(Node nd)) {
+void TraverseQueue (NodeQueue queue, void (*apply)(Node nd)) 
+/*< Apply a function to every node in the queue >*/
+{
     NodeCell cell;
 
     for (cell = queue->head; NULL != cell; cell = cell->link) {
@@ -99,7 +160,9 @@ void TraverseQueue (NodeQueue queue, void (*apply)(Node nd)) {
     }
 }
 
-void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd)) {
+void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd)) 
+/*< Apply a function to every node and delete the queue >*/
+{
     NodeCell cell, next;
 
     for (cell = queue->head; NULL != cell; cell = next) {
@@ -110,4 +173,4 @@ void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd)) {
     queue->head = NULL;
 }
 
-/* 	$Id: node.c,v 1.5 2003/09/30 14:30:53 fomels Exp $	 */
+/* 	$Id$	 */

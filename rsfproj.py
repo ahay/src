@@ -75,23 +75,6 @@ set_dir()
 # temporary (I hope)
 sep = os.path.join(os.environ.get('SEP'),'bin/')
 
-##############################################################################
-# END CONFIGURATION VARIABLES
-##############################################################################
-
-def collect_exe(dir):
-    "Make a list of executable files in a directory"
-    def isexe(file):
-        "Check if a file is executable" # Posix only?
-        return (os.stat(file)[stat.ST_MODE] &
-                (stat.S_IXUSR|stat.S_IXGRP|stat.S_IXOTH))
-    exe = []
-    for file in os.listdir(dir):
-        file = os.path.join(dir,file)
-        if os.path.isfile(file) and isexe(file):
-            exe.append(file)
-    return exe
-
 #############################################################################
 # CUSTOM BUILDERS
 #############################################################################

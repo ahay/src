@@ -552,6 +552,7 @@ class TeXPaper(Environment):
             self.InstallAs(css,css0)
             self.Install(icons,glob.glob('%s/*.png' % icons0))
             self.HTML(html,paper+'.ltx')
+            self.Depends(self.imgs,pdf)
             self.Depends(html,self.imgs)
             self.Depends(html,self.scons)
             self.Depends(html,pdf)
@@ -569,7 +570,7 @@ class TeXPaper(Environment):
             self.Alias('read',paper+'.read')
             self.Alias('print',paper+'.print')
             self.Alias('html',paper+'.html')
-            self.Alias('install',paper+'install')
+            self.Alias('install',paper+'.install')
             self.Default('pdf')
 
 default = TeXPaper()
