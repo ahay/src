@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
     sf_unpipe(in,n1*n2*n3);
 
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
-    vp_frame_init (in,"blt");
+    vp_frame_init (in,"blt",false);
 
     /* fill empty areas */
     b = '\0';

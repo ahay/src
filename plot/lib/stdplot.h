@@ -5,7 +5,8 @@
 
 void vp_stdplot_init (float min1, float max1, float min2, float max2,
 		      bool transp, bool xreverse, bool yreverse, bool pad);
-void vp_frame_init (sf_file in, const char *where);
+void vp_frame_init (sf_file in, const char *where, bool grid); 
+/* where: label1,label2,title */
 void vp_barframe_init (float min, float max);
 void vp_simpleframe(void);
 void vp_frame(void);
@@ -21,4 +22,4 @@ void vp_cuberaster(int n1, int n2, unsigned char** buf,
 
 #endif
 
-/* 	$Id: stdplot.h,v 1.12 2004/03/29 08:00:12 fomels Exp $	 */
+/* 	$Id: stdplot.h,v 1.13 2004/04/01 15:38:21 fomels Exp $	 */

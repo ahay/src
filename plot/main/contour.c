@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
 
 	vp_stdplot_init (min1, max1, min2, max2,
 			 transp,false,true,false);
-	vp_frame_init(in,"tlb");
+	vp_frame_init(in,"tlb",false);
 
 	if (i3 > 0) vp_erase();
 	vp_frame();
@@ -382,5 +382,5 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: contour.c,v 1.8 2004/04/01 15:38:21 fomels Exp $	 */
 

@@ -23,7 +23,8 @@ def filter(filt):
     return ('echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
             (' '.join(map(str,filt)),len(filt)))
 
-Flow('in',None,filter(input))
+Flow('in0',None,filter(input))
+Flow('in','in0','dd data_format=native_float')
 for case in filters.keys():
     name = 'm'+case
     Flow(case+'0',None,filter(filters[case]))

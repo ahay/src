@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
 	vp_stdplot_init (min1, max1, min2, max2,
 			 transp,false,false,true);
-	vp_frame_init(in,"blt");
+	vp_frame_init(in,"blt",false);
 
 	if (i3 > 0) vp_erase();
 	vp_frame();
@@ -149,4 +149,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: graph.c,v 1.10 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: graph.c,v 1.11 2004/04/01 15:38:21 fomels Exp $	 */

@@ -21,7 +21,8 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env.Append(CCFLAGS=' -g',CPPPATH=['../../filt/lib'])
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 
 lib = env.StaticLibrary('rsfplot',sources)

@@ -12,7 +12,7 @@
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3;
-static int framecol, frame1, frame2, frame3;
+static int framecol, frame1, frame2, frame3, gridcol, gridfat;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat;
 static char blank[]=" ";
@@ -28,13 +28,15 @@ static struct Label {
 static struct Axis {
     int ntic;
     float or, dnum, num0;
-} *axis1=NULL, *axis2=NULL, *axis3=NULL, *baraxis=NULL;
+} *axis1=NULL, *axis2=NULL, *axis3=NULL, *baraxis=NULL, 
+    *grid1=NULL, *grid2=NULL, *grid3=NULL;
 
 static void make_title (sf_file in, char wheret);
 static void make_barlabel (void);
 static void make_labels (sf_file in, char where1, char where2);
 static void make_baraxis (float min, float max);
 static void make_axes (void);
+static void make_grid (bool grid);
 static void swap(float*a,float*b);
 
 static void swap(float*a,float*b)
@@ -193,7 +195,7 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     vp_orig (orig1, orig2);
     vp_uorig (uorig1, uorig2);
 
-    if (!sf_getint ("axiscol",&framecol)) framecol=7;
+    if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
 }
 
 void vp_cubeplot_init (int n1pix, int n2pix, int n1front, int n2front, 
@@ -498,6 +500,70 @@ static void make_axes (void)
 	('a' == *where);
 }
 
+
+static void make_grid (bool grid)
+{
+    bool need;
+    float num;
+
+    if (axis1 != NULL) { 
+	if (!sf_getbool("grid",&need) && !sf_getbool("grid1",&need))
+	    need = grid;
+
+	if (need) {
+	    grid1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+	    grid1->num0 = axis1->num0;
+	    grid1->or = axis1->or;
+
+	    if (!sf_getfloat ("g1num",&(grid1->dnum))) {
+		grid1->dnum = axis1->dnum;
+		grid1->ntic = axis1->ntic;
+	    } else {
+		grid1->ntic=0; 
+		for (num=grid1->num0; num <= max1; num += grid1->dnum) {
+		    grid1->ntic++;
+		}
+	    }
+	}
+    }
+
+    if ((axis2 != NULL) && 
+	((sf_getbool("grid",&need) && need) || 
+	 (sf_getbool("grid2",&need) && need))) {
+	grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+	grid2->num0 = axis2->num0;
+	grid2->or = axis2->or;
+	
+	if (!sf_getfloat ("g2num",&(grid2->dnum))) {
+	    grid2->dnum = axis2->dnum;
+	    grid2->ntic = axis2->ntic;
+	} else {
+	    grid2->ntic=0; 
+	    for (num=grid2->num0; num <= max2; num += grid2->dnum) {
+		grid2->ntic++;
+	    }
+	}
+    }
+    
+    if ((axis3 != NULL) && 
+	((sf_getbool("grid",&need) && need) || 
+	 (sf_getbool("grid3",&need) && need))) {
+	grid3 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+	grid3->num0 = axis3->num0;
+	grid3->or = axis3->or;
+	grid3->dnum = axis3->dnum;
+	grid3->ntic = axis3->ntic;
+    }
+
+    if (NULL != grid1 || NULL != grid2 || NULL != grid3) {
+	if (!sf_getint("gridcol",&gridcol)) gridcol=grid? VP_RED: framecol;
+	if (!sf_getint("gridfat",&gridfat)) gridfat=1;
+    } 
+}
+
 static void make_title (sf_file in, char wheret)
 {
     bool want;
@@ -631,10 +697,11 @@ static void make_barlabel (void)
     }
 }
 
-void vp_frame_init (sf_file in, const char* where)
+void vp_frame_init (sf_file in, const char* where, bool grid)
 {
     make_labels(in,where[0],where[1]);
     make_axes();
+    make_grid(grid);
     make_title(in,where[2]);
 }
 
@@ -646,7 +713,51 @@ void vp_barframe_init (float min, float max)
 
 void vp_simpleframe(void)
 {
-   /* draw outline */   
+    int i;
+    float xc, yc, num;
+
+    if (NULL != grid1 || NULL != grid2 || NULL != grid3) {
+	vp_color (gridcol);
+	vp_fat (gridfat);
+
+	if (NULL != grid1) {
+	    for (i=0; i < grid1->ntic; i++) {
+		num = grid1->num0 + i*(grid1->dnum);
+		if (fabsf(grid1->dnum) > FLT_EPSILON && 
+		    fabsf(num) < FLT_EPSILON) num=0.;
+		
+		if (cube) {
+		    xc = (num-label1->min)*(mid1-min1)/
+			(label1->max-label1->min);
+		} else {
+		    xc = num;
+		}
+		
+		vp_umove (xc, min2);
+		vp_udraw (xc, max2);
+	    }
+	}
+
+	if (NULL != grid2) {
+	    for (i=0; i < grid2->ntic; i++) {
+		num = grid2->num0 + i*(grid2->dnum);
+		if (fabsf(grid2->dnum) > FLT_EPSILON && 
+		    fabsf(num) < FLT_EPSILON) num=0.;
+
+		if (cube) {
+		    yc = mid2+(num-label2->max)*(mid2-min2)/
+			(label2->max-label2->min);
+		} else {
+		    yc = num;
+		}	    
+
+		vp_umove (min1, yc);
+		vp_udraw (max1, yc);
+	    }
+	}
+    }
+
+    /* draw outline */   
     vp_color(framecol);
     vp_umove(min1, min2);
 
@@ -737,7 +848,7 @@ void vp_frame(void)
     if (cube) {
 	if (flat) {
 	    /* remove rectange */
-	    vp_color(0);
+	    vp_color(VP_BLACK);
 	    xp[0] = mid1; yp[0] = mid2;
 	    xp[1] = max1; yp[1] = mid2;
 	    xp[2] = max1; yp[2] = max2;
@@ -745,7 +856,7 @@ void vp_frame(void)
 	    vp_ufill(xp,yp,4);
 	} else {
 	    /* remove two triangles */
-	    vp_color(0);
+	    vp_color(VP_BLACK);
 	    xp[0] = min1;      yp[0] = mid2;
 	    xp[1] = min1;      yp[1] = max2;
 	    xp[2] = max1-mid1; yp[2] = max2;
@@ -989,6 +1100,7 @@ void vp_frame(void)
 	} /* label3 */
     } /* if cube */
 
+
     vp_uclip (min1, min2, max1, max2);
 }
 
@@ -1099,4 +1211,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.20 2004/04/01 02:12:54 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.21 2004/04/01 15:38:20 fomels Exp $	 */

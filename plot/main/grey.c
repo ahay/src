@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 
     if (!byte) {
 	vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
-	vp_frame_init(in,"tlb");
+	vp_frame_init(in,"tlb",false);
 	if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
     }
 
@@ -315,4 +315,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.16 2004/03/29 08:00:12 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.17 2004/04/01 15:38:21 fomels Exp $	 */
