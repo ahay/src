@@ -37,8 +37,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_file file;
 
     /* Check for proper number of arguments. */
-    if (nrhs != 1 && nrhs != 2) {
-	mexErrMsgTxt("One or two inputs required.");
+    if (nrhs < 1) {
+	mexErrMsgTxt("One or more inputs required.");
     } else if (nlhs > 1) { 
 	mexErrMsgTxt("Too many output arguments.");
     }
@@ -100,6 +100,13 @@ void mexFunction(int nlhs, mxArray *plhs[],
 		    mexErrMsgTxt("Unsupported file type.");
 		    break;  
 	    }
+	}
+    } else if (1+dim != nrhs) {
+	mexErrMsgTxt("Wrong number of arguments.");
+    } else {
+	for (i=0; i < dim; i++) {
+	    if (mxGetM(prhs[1+i]) != 1 || !mxIsNumeric(prhs[1+i]))
+		mexErrMsgTxt("Input must be a row vector.");
 	}
     }
 }

@@ -302,10 +302,11 @@ int main(int argc, char *argv[])
 	if (verbose) sf_warning("Binary header written to \"%s\"",headname);
 
 	if (!sf_getint("format",&format)) format = sf_segyformat (bhead);
-	/* [1,2,3] Data format. The default is taken from binary header.
+	/* [1,2,3,5] Data format. The default is taken from binary header.
 	   1 is IBM floating point
 	   2 is 4-byte integer
 	   3 is 2-byte integer
+	   5 is IEEE floating point
 	*/
 
 	switch (format) {
@@ -317,6 +318,9 @@ int main(int argc, char *argv[])
 		break;
 	    case 3:
 		if (verbose) sf_warning("Assuming 2 byte integer format");
+		break;
+	    case 5:
+		if (verbose) sf_warning("Assuming IEEE floating point format");
 		break;
 	    default:
 		sf_error("Nonstandard format: %d",format);

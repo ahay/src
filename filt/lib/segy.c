@@ -594,6 +594,8 @@ format: 1: IBM, 2: int4, 3: int2
 	    case 1: trace[i] = ibm2float (buf);       break; /* IBM float */
 	    case 2: trace[i] = (float) convert4(buf); break; /* int4 */
 	    case 3: trace[i] = (float) convert2(buf); break; /* int2 */
+	    case 5: trace[i] = 
+			(float) (char) convert4(buf); break; /* IEEE float */
 	    default: sf_error("Unknown format %d",format); break;
 	}
     }
