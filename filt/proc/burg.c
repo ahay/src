@@ -1,6 +1,26 @@
+/* PEF estimation by Burg's algorithm. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "burg.h"
 
-float pef_burg(int n, float* trace)
+float pef_burg(int n, float* trace /* data [n] */)
+/*< return a for 3-point pef (1,a,1) >*/
 {
     int i;
     float a, avto, cros;
@@ -21,7 +41,8 @@ float pef_burg(int n, float* trace)
     return a;
 }
 
-float pef_burg2(int n1, int n2, float** trace)
+float pef_burg2(int n1, int n2, float** trace /* data[n2][n1] */)
+/*< return a for 3-point pef (1,a,1) >*/
 {
     int i1, i2;
     float a;
@@ -48,6 +69,7 @@ float pef_burg2(int n1, int n2, float** trace)
 }
 
 void pef_define (int n, float a, float eps, float* diag, float** offd)
+/*< insert PEF into a pentadiagonal matrix for regularization >*/
 {
     int i;
 

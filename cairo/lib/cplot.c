@@ -42,6 +42,7 @@ enum {
 #endif
 
 static cairo_t *cr;
+static GtkWidget *gtkcairo;
 
 static float fx=0.0, fy=0.0;     /* origin in inches */
 static float ufx=0.0, ufy=0.0;   /* origin in user units */
@@ -52,10 +53,17 @@ static struct {
     int xmin, xmax, ymin, ymax;
 } clip;
 
+static void show (GtkWidget *widget, cairo_t *cairo, gpointer data)
+{
+    cairo_save (cr);
+    cairo_default_matrix (cr);
+    cairo_restore (cr);
+}
+
 void cr_init(int* argc, char** argv[])
 /*< Initialize >*/
 {
-    GtkWidget *win, *vbox, *frame, *gtkcairo;
+    GtkWidget *win, *vbox, *frame;
 
     gtk_init (argc, argv);
 
@@ -73,8 +81,8 @@ void cr_init(int* argc, char** argv[])
     gtkcairo = gtk_cairo_new ();
     gtk_widget_set_usize (GTK_WIDGET (gtkcairo), 
 			  CR_INITIAL_WIDTH, CR_INITIAL_HEIGHT);
-/*    g_signal_connect (G_OBJECT (gtkcairo), "paint",
-      G_CALLBACK (paint), slider); */
+    g_signal_connect (G_OBJECT (gtkcairo), "show",
+		      G_CALLBACK (show), NULL);
 
     cr = (cairo_t *) G_OBJECT (gtkcairo);
 
@@ -88,6 +96,8 @@ void cr_init(int* argc, char** argv[])
 
     gtk_main ();
 }
+
+
 
 void cr_uorig (float x,float  y)
 /*< set the origin in user coordinates >*/

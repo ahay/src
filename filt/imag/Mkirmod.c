@@ -1,9 +1,4 @@
-/* Kirchhoff 2.5-D modeling with analytical Green's functions. 
-
-Test:
-spike mag=2 n1=301 d1=0.01 o1=1 | 
-kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0 
-*/
+/* Kirchhoff 2.5-D modeling with analytical Green's functions. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -33,11 +28,11 @@ kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix, it;
-    float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, vel[5], slow;
+    float *rfl, *crv, *shot, *trace, *ts, *tg, vel[5], slow;
     float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq;
     maptype type = CONST;
     aamap map;
-    sf_file refl, curv, modl, shots, recvs;
+    sf_file refl, curv, modl, shots;
 
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -95,33 +90,16 @@ int main(int argc, char* argv[])
 
     /*** Initialize offsets ***/
 
-    if (NULL != sf_getstring("recvs")) {
-	recvs = sf_input("recvs");
-	
-	if (!sf_histint(recvs,"n1",&nh)) sf_error("No n1= in recvs");
-    } else {
-	recvs = NULL;
+    if (!sf_getint("nh",&nh)) nh=nx;
+    /* number of offsets */
+    if (!sf_getfloat("h0",&h0)) h0=0.;
+    /* first offset */
+    if (!sf_getfloat("dh",&dh)) dh=dx;
+    /* offset increment */
 
-	if (!sf_getint("nh",&nh)) nh=nx;
-	/* number of recvs */
-	if (!sf_getfloat("h0",&h0)) h0=0.;
-	/* first recv */
-	if (!sf_getfloat("dh",&dh)) dh=dx;
-	/* recv increment */
-    }
-
-    recv = sf_floatalloc(nh);
-
-    if (NULL != recvs) {
-	sf_floatread(recv,nh,recvs);
-	sf_fileclose(recvs);
-    } else {
-	for (ih=0; ih < nh; ih++) {
-	    recv[ih] = h0+ih*dh;
-	}
-    }
-    
     sf_putint(modl,"n2",nh);
+    sf_putfloat(modl,"o2",h0);
+    sf_putfloat(modl,"d2",dh);
 
     /*** Allocate space ***/
     
@@ -200,9 +178,8 @@ int main(int argc, char* argv[])
 		tg = kirmod_map(is,ih,ix);
 		time[ix] = ts[0] + tg[0];
 		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt);
-		/* delt[ix] = tg[2]; */
-                /* 2.5-D amplitude? */
-		delt[ix] = 0.;
+		delt[ix] = tg[2]*dh; 
+		/* 2.5-D amplitude? */
 	    }
 
 	    aastretch_define (map,time,delt,ampl);

@@ -243,6 +243,8 @@ class rsfprog:
             %s
             \end{tabular}
             ''' % pardoc
+        file.write(contents)
+        file.close()
     def html(self,dir):
         file = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
@@ -436,11 +438,14 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:l:')
         dir = None
+        ldir = None
         for opt, val in opts:
             if opt == '-w':
                 dir = val
+            if opt == '-l':
+                ldir = val
             if opt == '-k':
                 val = val.lower()
                 doc = ''
@@ -469,6 +474,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
             if main:
                 if dir:
                     main.html(dir)
+                elif ldir:
+                    main.latex(ldir)
                 else:
                     main.document()
             else:
@@ -481,7 +488,10 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     Show documentation on programs.
 
 %(prog)s -w <dir> <prog1> <prog2> ... 
-    Write program documentaton in <dir> directory.
+    Write program HTML documentaton in <dir> directory.
+
+%(prog)s -l <dir> <prog1> <prog2> ... 
+    Write program LaTeX documentaton in <dir> directory.
 
 %(prog)s -k <keyword>
     Search for a keyword in the description lines of all available programs.
