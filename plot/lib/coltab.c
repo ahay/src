@@ -63,9 +63,11 @@ void vp_name2coltab (const char *colname     /* color table name */,
 	}
 	gray = ((float) ic)/(nocol - 1.);
 	switch (tolower(c)) {
+
 	    case 'a': /* rainbow - HSV */
 		hue2rgb (gray, &red[ic], &green[ic], &blue[ic]);
 		break;
+
 	    case 'h': case 'p': case 'b': /* hot, pink, bone */
 		if (i < hnocol) {
 		    red[ic] = (i + 1.) / hnocol;
@@ -93,11 +95,13 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		    blue[ic] = (7.*gray + redsave)/8.;
 		}	  
 		break;
+
 	    case 'c': /* cool */
 		red[ic] = gray;
 		green[ic] = 1. - gray;
 		blue[ic] = 1.;
 		break;
+
 	    case 'l': /* linear = COPPER */
 		redsave = 1.25 * gray;
 		if (redsave < 1.) redsave = 1.;
@@ -105,6 +109,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		green[ic] = 0.7812 * gray;
 		blue[ic] = 0.4975 * gray;
 		break;
+
 	    case 'e': /* blue-white-red */
 		if (i < hnocol) {
 		    red[ic] = 1.;
@@ -114,6 +119,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		    blue[ic] = 1.;
 		}
 		break;
+
 	    case 'f': /* flag */
 		switch (i%4) {
 		    case 0: /* red */
@@ -140,6 +146,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 			break;
 		}
 		break;
+
 	    case 'g': /* black-white-red */
 		if (i < hnocol) {
 		    red[ic] = 1.;
@@ -148,6 +155,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		    red[ic] = green[ic] = blue[ic] = (nocol-1-i)/hnocol;
 		}
 		break;
+
 	    case 'j': /* jet */
 		if (i <= hnocol/2) {
 		    red[ic] = 0.;
@@ -175,6 +183,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		    blue[ic] = 0.;
 		}
 		break;
+
 	    case 't': /* traffic */
 		blue[ic] = 0.;
 		if (i <= hnocol/2) { /* green up */
@@ -199,6 +208,7 @@ void vp_name2coltab (const char *colname     /* color table name */,
 		    blue[ic] = 0.;
 		}
 		break;
+
 	    default: /* grayscale */
 		red[ic] = gray;
 		green[ic] = gray;
