@@ -11,9 +11,9 @@ Book()
 
 Flow('time',None,
      "spike n1=200 d1=1 o1=1 label1='Sample' | headermath output='N*0.4'")
-Flow('head','time',"window n1=41 | headermath t=0 output='exp(0.25*t)+11'")
-Flow('ideal','time',"headermath t=0 output='sin(t)*0.5'")
-Flow('alias','head',"headermath t=0 output='sin(t)*0.5'")
+Flow('head','time',"window n1=41 | math output='exp(0.25*input)+11'")
+Flow('ideal','time',"math output='sin(input)*0.5'")
+Flow('alias','head',"math output='sin(input)*0.5'")
 
 doty = 'dots dots=0 connect=0 gaineach=0 constsep=1 strings=0 clip=1.2'
 
