@@ -1,0 +1,35 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os, string
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+#
+# Data
+#
+###########################################################################
+
+data = {
+    'pp': 'pz_221.sgy',
+    'ps': '221_PS_PSTM_FullLine_STK_MSL_segy.sgy'
+    }
+
+for mode in ['pp','ps']:
+    Fetch(data[mode],'haibin')
+    Flow([mode,mode+'hhead',mode+'bhead'],data[mode],
+         '''
+         segyread tape=$SOURCE data=y
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+         ''',stdin=0)
+    Result(mode,mode,'grey title=%s label1="Time (s)" ' % string.upper(mode))
+
+Result('ppwin','pp','window max1=3 | grey title=PP label1="Time (s)" ')
+Result('pswin','ps','window max1=6 | grey title=PS label1="Time (s)" ')
+
+###########################################################################
+End()
