@@ -23,10 +23,9 @@ class rsfpar:
         return self.type + bold(name + self.default) + self.range + self.desc
 
 class rsfprog:
-    def __init__(self,name,file,dir,desc=None):
+    def __init__(self,name,file,desc=None):
         self.name = name
         self.file = file
-        self.prog = os.path.join(dir,name) 
         self.desc = desc
         self.snps = None
         self.cmts = None
@@ -69,7 +68,8 @@ def getprog(file,out):
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
         param = re.compile(r'if\s*\(\!sf_get(?P<type>bool|int|float)\s*'
-                           '\(\s*\"(?P<name>\w+)\"\s*\,\s*\&(?P<var>\w+)\s*'
+                           '\(\s*\"(?P<name>\w+)\"\s*\,'
+                           '\s*\&(?P<var>[\w\[\]]+)\s*'
                            '\)\s*\)\s*[\{]?\s*'
                            '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+))?'
                            '\;\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
@@ -77,8 +77,6 @@ def getprog(file,out):
                             '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
         synopsis = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                               '((?:.|\n)*)$')
-    dir = os.path.dirname(os.path.abspath(file))
-    print dir
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
     name = re.sub('.c$','',name)
     src = open(file,"r")   # open source
@@ -91,9 +89,9 @@ def getprog(file,out):
         first = "\n".join(tops)
     else:
         desc = None
-    prog = rsfprog(name,file,dir,desc)
-    out.write("%s = rsfdoc.rsfprog('%s','%s','%s','%s')\n" %
-              (name,name,file,dir,desc))
+    prog = rsfprog(name,file,desc)
+    out.write("%s = rsfdoc.rsfprog('%s','%s','%s')\n" %
+              (name,name,file,desc))
     pars = param.findall(text)
     parline = ''
     for par in pars:

@@ -1,3 +1,8 @@
+/* 3-D Fast marching eikonal solver.
+
+Takes: < velocity.rsf > time.rsf
+
+*/
 #include <math.h>
 
 #include<rsf.h>
@@ -9,6 +14,7 @@ int main (int argc,char* argv[])
     int b1, b2, b3, n1, n2, n3, i, nshot, ndim, is,order,n123, *p;
     float br1, br2, br3, o1, o2, o3, d1, d2, d3, slow;
     float **s, *t, *v;
+    char *sfile;
     bool isvel;
     sf_file vel, time, shots;
 
@@ -31,19 +37,29 @@ int main (int argc,char* argv[])
     if(!sf_histfloat(vel,"o3",&o3)) o3=0.;
 
     if(!sf_getbool("vel",&isvel)) isvel=true;
-    if(!sf_getint("order",&order)) order=2;
+    /* if y, the input is velocity; n, slowness */
 
-    if(!sf_getfloat("br1",&br1)) br1=d1; 
+    if(!sf_getint("order",&order)) order=2;
+    /* Accuracy order */
+
+    if(!sf_getfloat("br1",&br1)) br1=d1;    
     if(!sf_getfloat("br2",&br2)) br2=d2; 
-    if(!sf_getfloat("br3",&br3)) br3=d3; 
+    if(!sf_getfloat("br3",&br3)) br3=d3;
+    /* Constant-velocity box around the source (in physical dimensions) */
+ 
     if(!sf_getint("b1",&b1)) b1= (int) (br1/d1+0.5); 
     if(!sf_getint("b2",&b2)) b2= (int) (br2/d2+0.5); 
     if(!sf_getint("b3",&b3)) b3= (int) (br3/d3+0.5); 
+    /* Constant-velocity box around the source (in samples) */
+
     if( b1<1 ) b1=1;  
     if( b2<1 ) b2=1;  
     if( b3<1 ) b3=1;
 
-    if(NULL != sf_getstring("shotfile")) {
+    sfile = sf_getstring("shotfile");
+    /* File with shot locations (n2=number of shots, n1=3) */
+
+    if(NULL != sfile) {
 	shots = sf_input("shotfile");
 
 	if (SF_FLOAT != sf_gettype(shots)) 
@@ -57,16 +73,18 @@ int main (int argc,char* argv[])
 	sf_read(s[0],sizeof(float),nshot*ndim,shots);
     
 	sf_putint (time,"n4",nshot);
+	free (sfile);
     } else {
 	nshot = 1;
 	ndim = 3;
     
 	s = sf_floatalloc2 (ndim,nshot);     
 
-	if(!sf_getfloat("zshot",s[0])  ) s[0][0]=0.; 
-	if(!sf_getfloat("yshot",s[0]+1)) s[0][1]=o2 + 0.5*(n2-1)*d2;
-	if(!sf_getfloat("xshot",s[0]+2)) s[0][2]=o3 + 0.5*(n3-1)*d3;
-    
+	if(!sf_getfloat("zshot",&s[0][0])  ) s[0][0]=0.; 
+	/* Shot location (used if no shotfile) */
+	if(!sf_getfloat("yshot",&s[0][1])) s[0][1]=o2 + 0.5*(n2-1)*d2;
+	if(!sf_getfloat("xshot",&s[0][2])) s[0][2]=o3 + 0.5*(n3-1)*d3;
+
 	sf_warning("Shooting from zshot=%g yshot=%g xshot=%g",
 		   s[0][0],s[0][1],s[0][2]);
     }

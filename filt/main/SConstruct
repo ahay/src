@@ -10,22 +10,20 @@ env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g',
                   LIBS=['rsf','m'],
                   PROGPREFIX='sf')
 
-###########################################################################
-import sys
+bindir = '../../bin'
 
-sys.path.append('../..')
+mains = Split(progs)
+map(lambda prog: env.Program(prog + '.c'),mains)
 
-import rsf
-##########################################################################
+env.Install(bindir,map(lambda prog: 'sf' + prog,mains))
+Default(bindir)
 
-env.Append(BUILDERS = {'Doc' : rsf.Doc})
-
-docs = []
-for prog in Split(progs):
-    env.Program(prog + '.c')
-    docs.append(env.Doc(prog))
-
-env.Command('RSFdoc',docs,"cat $SOURCES > $TARGET")
-
+try:
+    Import('env')
+    
+    docs = map(lambda prog: env.Doc(prog),mains)
+    env.Command('RSFdoc',docs,"cat $SOURCES > $TARGET")
+except:
+    pass
     
 
