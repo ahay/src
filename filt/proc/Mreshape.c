@@ -73,7 +73,9 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
     
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = reshape_init (n1,d1);
+    nfft = n1;
+    if (n1%2) nfft++;
+    reshape_init (nfft,d1);
 
     if (!sf_histint(ma,"n1",&n) || n != 2)
 	sf_error("Wrong n1= in ma");
@@ -118,4 +120,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mreshape.c,v 1.10 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

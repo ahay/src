@@ -31,7 +31,6 @@ int main (int argc, char* argv[])
     char key[3];
     bool sum, isphase;
     sf_file in, out;
-    kiss_fftr_cfg cfg;
 
     sf_init (argc, argv); 
     in = sf_input("in");
@@ -49,8 +48,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = n1;
-    if (n1%2) nfft++;
+    nfft = sf_npfar(n1);
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 
@@ -76,17 +74,18 @@ int main (int argc, char* argv[])
     if (!sf_getbool("phase",&isphase)) isphase=false;
     /* if y, compute phase spectra */
     
-    if (n1%2) trace[nfft-1] = 0.; /* pad with zeros */
+    for (i1=n1; i1 < nfft; i1++) { /* pad with zeros */
+	trace[i1]=0.;
+    }
 
     scale = sqrtf(1./nfft); /* FFT scaling */ 
-    cfg = kiss_fftr_alloc(nfft,0,NULL,NULL);
 
-    /*  loop over all traces */
+/*  loop over all traces */
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
 	/* Fourier transform */
-	kiss_fftr (cfg,trace,(kiss_fft_cpx *) fft);
+	sf_pfarc (1,nfft,trace,fft);
 
 	if (sum) {
 	    if (isphase) {
@@ -123,4 +122,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mspectra.c 691 2004-07-04 19:28:08Z fomels $	 */
+/* 	$Id$	 */

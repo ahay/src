@@ -270,6 +270,7 @@ Author:  Dave Hale, Colorado School of Mines, 04/27/89
 #include <stdlib.h>
 
 #include "pfafft.h"
+#include "math1.h"
 
 #define NTAB 240
 static struct {
@@ -3846,5 +3847,5 @@ Author:  Dave Hale, Colorado School of Mines, 06/13/89
     }
 }
 
-/* 	$Id: pfafft.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id$	 */
 

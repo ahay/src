@@ -64,7 +64,7 @@ int main (int argc, char* argv[])
 	    }
 	    snprintf(key,3,"d%d",i+1);
 	    if (!sf_histfloat(in,key,d+i)) d[i]=1.;
-	    sf_putfloat(out,key,1./(sf_npfar(2*(n[i]-1))*d[i]));
+	    sf_putfloat(out,key,1./(2*(n[i]-1)*d[i]));
 	}
     }
 
@@ -104,4 +104,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mcosft.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

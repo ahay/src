@@ -4,18 +4,22 @@
 
 #include "freqfilt.h"
 
-static int nfft, nw, n;
+static int nfft, nw;
 static float complex *cdata;
 static float *shape, *tmp;
+static kiss_fftr_cfg forw, invs;
 
-void freqfilt_init(int n1, int nfft1, int nw1)
+void freqfilt_init(int nfft1, int nw1)
 {
-    n = n1;
     nfft = nfft1;
     nw = nw1;
 
     cdata = sf_complexalloc(nw);
     tmp = sf_floatalloc(nfft);
+    forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
+    invs = kiss_fftr_alloc(nfft,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("%s: KISS FFT allocation problem",__FILE__);
 }
 
 void freqfilt_set(float *filt)
@@ -26,6 +30,8 @@ void freqfilt_set(float *filt)
 void freqfilt_close(void) {
     free(cdata);
     free(tmp);
+    free(forw);
+    free(invs);
 }
 
 void freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
@@ -41,11 +47,11 @@ void freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	tmp[iw] = 0.;
     }
 
-    sf_pfarc (1,nfft,tmp,cdata);
+    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
     for (iw=0; iw < nw; iw++) {
 	cdata[iw] *= shape[iw];
     }
-    sf_pfacr (-1,nfft,cdata,tmp);	
+    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, tmp);
 
     for (iw=0; iw < nx; iw++) {	    
 	if (adj) {
@@ -56,4 +62,4 @@ void freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     } 
 }
 
-/* 	$Id: freqfilt.c,v 1.2 2004/04/08 14:03:57 fomels Exp $	 */
+/* 	$Id$	 */

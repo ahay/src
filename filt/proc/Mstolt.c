@@ -48,9 +48,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint ("pad",&nw)) nw=nt;
     /* padding on the time axis */
-    nw=sf_npfar(2*(nw-1));
+    nw=2*(nw-1);
 
-    cosft_init(nw /*, t0, dt */);
+    cosft_init(nw);
     dw = 2.*SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
@@ -100,4 +100,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.12 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

@@ -51,6 +51,7 @@ int main (int argc, char **argv)
     float *xx;                /* offset header */
     float *ww=NULL;                /* weight */
     float *tt;                /* trace */
+    static kiss_fftr_cfg forw, invs;
     sf_file in, out, offset;
 
     sf_init(argc,argv);
@@ -107,9 +108,12 @@ int main (int argc, char **argv)
     nc = sf_leftsize(in,2);
 
     /* determine frequency sampling (for real to complex FFT) */
-    nt2 = sf_npfaro(nt,2*nt);
-    nw = nt2/2+1;
+    nt2 = 2*nt;
+    nw = nt+1;
     dw = 2.0*SF_PI/(nt2*dt);
+
+    forw = kiss_fftr_alloc(nt2,0,NULL,NULL);
+    invs = kiss_fftr_alloc(nt2,1,NULL,NULL);
 
     if (adj && inv) {
 	if (!sf_getfloat("eps",&eps)) eps=1.;
@@ -187,7 +191,9 @@ int main (int argc, char **argv)
 		for (it=nt; it < nt2; it++) {
 		    tt[it]=0.;
 		}
-		sf_pfarc(-1,nt2,tt,cd[ix]); /* FFT to frequency */
+		
+		/* FFT to frequency */
+		kiss_fftr(invs,tt, (kiss_fft_cpx *) cd[ix]);
 	    }
 	} else { /* modeling */
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
@@ -195,7 +201,9 @@ int main (int argc, char **argv)
 		for (it=nt; it < nt2; it++) {
 		    tt[it]=0.;
 		}
-		sf_pfarc(-1,nt2,tt,cm[ip]); /* FFT to frequency */
+
+		/* FFT to frequency */
+		kiss_fftr(invs,tt, (kiss_fft_cpx *) cm[ip]);
 	    }
 	}
 	
@@ -250,13 +258,15 @@ int main (int argc, char **argv)
 
 	if (adj) {
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
-		sf_pfacr(1,nt2,cm[ip],tt); /* FFT to time */
+		/* FFT to time */
+		kiss_fftri(forw,(const kiss_fft_cpx *) cm[ip], tt);
 		
 		sf_floatwrite(tt,nt,out);
 	    }
 	} else { /* modeling */
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
-		sf_pfacr(1,nt2,cd[ix],tt); /* FFT to time */
+		/* FFT to time */
+		kiss_fftri(forw,(const kiss_fft_cpx *) cd[ix], tt);
 		
 		sf_floatwrite(tt,nt,out);
 	    }
@@ -266,4 +276,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mradon.c,v 1.6 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

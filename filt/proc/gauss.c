@@ -7,13 +7,12 @@
 
 static float *shape;
 
-void gauss_init(int n1, float rect)
+void gauss_init(int nfft, float rect)
 {
-    int iw, nfft, nw;
+    int iw, nw;
     float dw, w;
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = sf_npfar(n1);
     nw = nfft/2+1;
     dw = 2.*SF_PI/nfft;
 
@@ -27,7 +26,7 @@ void gauss_init(int n1, float rect)
 	shape[iw] = expf(-w)/nfft;
     }
 
-    freqfilt_init(n1,nfft,nw);
+    freqfilt_init(nfft,nw);
     freqfilt_set(shape);
 }
 
@@ -36,4 +35,4 @@ void gauss_close(void) {
     freqfilt_close();
 }
 
-/* 	$Id: gauss.c,v 1.2 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id$	 */

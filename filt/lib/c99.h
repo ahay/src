@@ -72,4 +72,5 @@ void cprint (float complex c);
 
 #endif
 
-/* 	$Id: c99.h,v 1.9 2004/06/30 18:28:41 fomels Exp $	 */
+/* 	$Id$	 */
+

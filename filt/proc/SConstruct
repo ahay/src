@@ -8,12 +8,13 @@ byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
 dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dix
 envelope extract fft1 fft2 fft3 fint1 flat fourvc fourvc2 frame helicon hole
 idempatch igrad imospray impl1 impl2 infill inmo intbin invbin1 kolmog
-lapfill levint light lopef losignoi lpad lpef make misif miss
-miss1 miss2 miss3 monof monof2 msmiss mspef nhelicon nmo noise npef parcel
+lapfill levint light lopef losignoi lpad lpef make misif
+miss miss1 miss2 miss3 monof monof2 msmiss mspef nhelicon nmo noise npef parcel
 pef prestolt pwd qdome radon randrefl reshape ricker signoi shapebin shapebin1
 shot2cmp shotholes sigmoid slice smooth smoothder smoothreg smoothreg2
-spectra spectra2 spline stolt stretch synmarine taupmo tentwt time2depth
-tpow trismooth2 vscan velmod warp1 warpscan wilson window1 window2 window3
+spectra spectra2 spline stolt stretch synmarine taupmo tentwt
+time2depth tpow trismooth2 vscan velmod warp1 warpscan wilson
+window1 window2 window3
 '''
 
 try: # distributed version
@@ -70,5 +71,5 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.12 2004/07/01 23:11:24 fomels Exp $
+# 	$Id$
 

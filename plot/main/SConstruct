@@ -48,5 +48,5 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.5 2004/07/01 23:11:24 fomels Exp $
+# 	$Id$
 

@@ -301,7 +301,7 @@ if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
                    suffix='.pdf',src_suffix='.fig')
 
-Test = Builder(action=Action(test),src_suffix='.pdf')
+Test = Builder(action=Action(test))
 
 #############################################################################
 # CUSTOM SCANNERS
@@ -496,26 +496,26 @@ class Project(Environment):
         else:
             plot = None
             build = target2 + pssuffix
+        lock = self.InstallAs(os.path.join(resdir,'.'+target+suffix),
+                              target2+suffix)
+        self.lock.append(lock)
+        self.Alias(target + '.lock',lock)
+        test = self.Test('.test_'+target,target2+suffix)
+        self.test.append(test)
+        self.Alias(target + '.test',test)
 	if epstopdf:
 	    buildPDF = self.PDFBuild(target2,build)
 	    self.pdfs.append(buildPDF)
 	    self.Alias(target + '.buildPDF',buildPDF)
-            lock = self.InstallAs(os.path.join(resdir,'.'+target+'.pdf'),
-                                  target2+'.pdf')
-            self.lock.append(lock)
-            self.Alias(target + '.lock',lock)
-            test = self.Test('.test_'+target,target2)
-            self.test.append(test)
-            self.Alias(target + '.test',test)
         return plot
     def End(self,use=None):
-        self.Alias('view',self.view)
         if self.figs: # if any results
+            view = self.Alias('view',self.view)
             build = self.Alias('build',self.figs)
-        if self.pdfs:
-            buildPDF = self.Alias('buildPDF',self.pdfs)
             lock = self.Alias('lock',self.lock)
             test = self.Alias('test',self.test)
+        if self.pdfs:
+            buildPDF = self.Alias('buildPDF',self.pdfs)
         if os.path.isfile('paper.tex'): # if there is a paper
             if dvips:
                 self.paper = self.Dvi(target='paper',source='paper.ltx')

@@ -297,5 +297,5 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.19 2004/07/01 11:36:26 fomels Exp $
+#	$Id$
 

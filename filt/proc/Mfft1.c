@@ -27,12 +27,14 @@ int main (int argc, char *argv[])
     float dw, *p, *cc=NULL, d1, o1;
     float complex *pp;
     sf_file in, out;
+    kiss_fftr_cfg cfg;
 
     sf_init(argc, argv);
     in = sf_input("in");
     out = sf_output("out");
 
     if (!sf_getbool("cos",&cos)) cos=false;
+    if (cos) sf_error("cos=y is not implemented yet");
     /* if y, perform cosine transform */
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, perform inverse transform */
@@ -55,7 +57,8 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nt = sf_npfar(cos? 2*(n1-1): n1);
+	nt = n1;
+	if (n1%2) nt++;
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
 
@@ -82,6 +85,9 @@ int main (int argc, char *argv[])
     pp = sf_complexalloc(nw);
     if (cos) cc = sf_floatalloc(nw);
 
+    
+    cfg = kiss_fftr_alloc(nt,inv? 1:0,NULL,NULL);
+
     for (i2=0; i2 < n2; i2++) {
 	if (!inv) {
 	    sf_floatread (p,n1,in);
@@ -98,7 +104,7 @@ int main (int argc, char *argv[])
 		}
 	    }
 	    
-	    sf_pfarc(1,nt,p,pp);
+	    kiss_fftr (cfg,p,(kiss_fft_cpx *) pp);
 	    
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
@@ -130,7 +136,7 @@ int main (int argc, char *argv[])
 		}
 	    }
 
-	    sf_pfacr(-1,nt,pp,p);
+	    kiss_fftri(cfg,(const kiss_fft_cpx *) pp,p);
 
 	    for (i1=0; i1 < n1; i1++) {
 		p[i1] /= nt;
@@ -143,4 +149,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mfft1.c,v 1.12 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

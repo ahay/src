@@ -2,22 +2,36 @@
 
 #include "kolmog.h"
 
-void kolmog(int nfft, float *trace)
-{
-    int nw;
-    float complex *fft;
+static kiss_fftr_cfg forw, invs;
+static int nfft, nw;
+static float complex *fft;
 
+void kolmog_init(int n1)
+{
+    nfft = n1;
     nw = nfft/2+1;
     fft = sf_complexalloc(nw);
+    forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
+    invs = kiss_fftr_alloc(nfft,1,NULL,NULL);
+}
 
+void kolmog_close(void)
+{
+    free(fft);
+    free(forw);
+    free(invs);
+}
+
+void kolmog(float *trace)
+{
     /* Fourier transform */
-    sf_pfarc (1,nfft,trace,fft);
+    kiss_fftr(forw,trace, (kiss_fft_cpx *) fft);
 
-    kolmog2(nfft, nw, trace, fft);
+    kolmog2(trace, fft);
     free(fft);
 }
 
-void kolmog2(int nfft, int nw, float *trace, float complex *fft)
+void kolmog2(float *trace, float complex *fft)
 {
     int i1;
     const double eps=1.e-32;
@@ -28,7 +42,7 @@ void kolmog2(int nfft, int nw, float *trace, float complex *fft)
     }
 
     /* Inverse transform */
-    sf_pfacr(-1,nfft,fft,trace);
+    kiss_fftri(invs,(const kiss_fft_cpx *) fft, trace);
 
     trace[0] *= 0.5;
     trace[nfft/2] *= 0.5;
@@ -37,16 +51,14 @@ void kolmog2(int nfft, int nw, float *trace, float complex *fft)
     }
 
     /* Fourier transform */
-    sf_pfarc (1,nfft,trace,fft);
-
+    kiss_fftr(forw,trace, (kiss_fft_cpx *) fft);
+    
     for (i1=0; i1 < nw; i1++) {
 	fft[i1] = cexp(fft[i1])/nfft;
 	sf_warning("got %d: (%g,%g)",i1,crealf(fft[i1]),cimagf(fft[i1]));
     }
 
     /* Inverse transform */
-    sf_pfacr(-1,nfft,fft,trace);
+    kiss_fftri(invs,(const kiss_fft_cpx *) fft, trace);
 }
-
-
 

@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat ("dh",&dh)) sf_error("Need dh=");
 	/* offset sampling */
 
-	dh = 1./(sf_npfar(2*(nh-1))*dh);
+	dh = 1./(2*(nh-1)*dh);
 
 	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
 	if (!sf_histfloat(in,"d3",&dy)) dy=dx;
@@ -92,9 +92,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint ("pad",&nw)) nw=nt;
     /* padding on the time axis */
-    nw=sf_npfar(2*(nw-1));
+    nw=2*(nw-1);
 
-    cosft_init(nw /* , w0, dw */);
+    cosft_init(nw);
     dw = 2.*SF_PI/(nw*dw);
     dh *= 2.*SF_PI;
     dx *= 2.*SF_PI;
@@ -207,4 +207,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mprestolt.c,v 1.8 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */
