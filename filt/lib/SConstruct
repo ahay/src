@@ -31,22 +31,23 @@ env.Install(incdir,'rsf.h')
 # PYTHON BINDINGS
 ##############################################################################
 
-# Python includes for SWIG
-pythinc = []
-for path in sys.path:
-    if string.find(path,'python') >= 0:
-        dir = string.replace(path,'lib','include')
-        if os.path.isdir(dir):
-            pythinc.append(dir)
+if ('swig' in env.get('TOOLS')):
+    # Python includes for SWIG 
+    pythinc = []
+    for path in sys.path:
+        if string.find(path,'python') >= 0:
+            dir = string.replace(path,'lib','include')
+            if os.path.isdir(dir):
+                pythinc.append(dir)
 
-python = env.SharedLibrary('rsf',['rsf.i',lib],
-                           SWIGFLAGS='-python',
-                           CPPPATH=pythinc,
-                           SHLIBPREFIX='_c_')
-env.Install(libdir,python)
-env.Install(libdir,'c_rsf.py')
-env.Install(libdir,'rsf.py')
-Clean(python,['c_rsf.py','c_rsf.pyc'])
+    python = env.SharedLibrary('rsf',['rsf.i',lib],
+                               SWIGFLAGS='-python',
+                               CPPPATH=pythinc,
+                               SHLIBPREFIX='_c_')
+    env.Install(libdir,python)
+    env.Install(libdir,'c_rsf.py')
+    env.Install(libdir,'rsf.py')
+    Clean(python,['c_rsf.py','c_rsf.pyc'])
 
 ##############################################################################
 # TESTING
