@@ -14,6 +14,7 @@ geological surfaces, producing a new set of surfaces that do not cross.
 
 See also: sfminmax, sfstack.
 */
+
 /*
 Copyright (C) 2004 University of Texas at Austin
 

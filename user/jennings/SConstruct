@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-minmax listminmax
+minmax listminmax clip2
 '''
 
 try:  # distributed version
