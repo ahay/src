@@ -78,7 +78,7 @@ def set_dir(ref='.',dir='Fig'):
 set_dir()
 
 # temporary (I hope)
-sep = os.path.join(os.environ.get('SEP'),'bin/')
+sep = os.path.join(os.environ.get('SEP',''),'bin/')
 
 #############################################################################
 # CUSTOM BUILDERS
