@@ -1,0 +1,84 @@
+/* Illustration of angle gathers.
+
+Takes: > angle.rsf
+*/
+
+#include <math.h>
+
+#include <rsf.h>
+
+int main(int argc, char* argv[])
+{
+    int iw, ih, im, nw, nh, nm;
+    float w0, dw, dh, dm, w, m, h, vel, *trace;
+    sf_file angle;
+    
+    sf_init(argc,argv);
+    angle=sf_output("out");
+    sf_setformat(angle,"native_float");
+
+    if (!sf_getint("nw",&nw)) nw=513;
+    if (!sf_getint("nm",&nm)) nm=257;
+    if (!sf_getint("nh",&nh)) nh=257;
+
+    if (!sf_getfloat("dw",&dw)) dw=1./(2*(nw-1)*0.004);
+    if (!sf_getfloat("dm",&dm)) dm=1./(2*(nm-1)*0.01);
+    if (!sf_getfloat("dh",&dh)) dh=1./(2*(nh-1)*0.01);
+
+    if (!sf_getfloat("w0",&w0)) w0=dw; 
+
+    if (!sf_getfloat("vel",&vel)) vel=2.;
+
+    sf_putint(angle,"n1",nh);
+    sf_putfloat(angle,"o1",0.);
+    sf_putfloat(angle,"d1",dh);
+    sf_putstring(angle,"label1","Offset Wavenumber (1/km)");
+
+    sf_putint(angle,"n2",nm);
+    sf_putfloat(angle,"o2",0.);
+    sf_putfloat(angle,"d2",dm);
+    sf_putstring(angle,"label2","Midpoint Wavenumber (1/km)");
+
+    sf_putint(angle,"n3",nw);
+    sf_putfloat(angle,"o3",w0);
+    sf_putfloat(angle,"d3",dw);
+    sf_putstring(angle,"label3","Frequency (1/s)");
+
+    w0 *= 2.*SF_PI/vel;
+    dw *= 2.*SF_PI/vel;
+    dm *= 2.*SF_PI;
+    dh *= 2.*SF_PI;
+
+    trace = sf_floatalloc(nh);
+
+    for (iw=0; iw < nw; iw++) {
+	sf_warning("frequency %d of %d",iw,nw-1); 
+	w = w0+iw*dw;
+	w *= 4.*w;
+	for (im=0; im < nm; im++) {
+	    m = im*dm;
+	    m *= m;
+	    for (ih=0; ih < nh; ih++) {
+		h = ih*dh;
+		h *= h;
+		h = w + m - h;
+		if (h*h >= 4.*m*w) {
+		    h = (h + sqrtf(h*h - 4.*m*w))/(2.*w);
+		    if (h >= 0. && h <= 1.) {
+			h = acosf(sqrtf(h))*180./SF_PI;		
+			trace[ih] = h;
+		    } else {
+			trace[ih] = -dh;
+		    }
+		} else {
+		    trace[ih] = -dh;
+		}
+	    }
+	    sf_write(trace,sizeof(float),nh,angle);
+	}
+    }
+
+    exit(0);
+}
+
+    
