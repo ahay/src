@@ -1,6 +1,6 @@
 /* Prestack Kirchhoff modeling/migration in constant velocity.
 
-Takes < input.rsf > output.rsf
+Takes: < input.rsf > output.rsf
 */
 
 #include <math.h>
@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 {
     aamap nmo;
     bool inv, zero;
-    int nt,nx,ny,nh, ix,iy,it,ih, ixin,iyin, n123, ix1, ix2, iy1, iy2;
+    int nt,nx,ny, nh, ix,iy,it,ih, ixin,iyin, n123, ix1, ix2, iy1, iy2;
     float dt,dx,dy, t0,x,y, vel0, rx,ry, dh, h0, h, hx, t, sq, ti, t1,t2;
     float *time, *str, *add, *tx, *amp, ***cinp, ***cout, ***stack=NULL;
     sf_file in, out;
@@ -23,7 +23,9 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv=false;
+    /* if y, modeling; if n, migration */
     if (!sf_getbool("zero",&zero)) zero=false;
+    /* if y, stack in migration */
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -32,8 +34,11 @@ int main(int argc, char* argv[])
 
     if (inv && zero) {
 	if (!sf_getint ("nh",&nh)) sf_error("Need nh=");
-	if (!sf_getfloat ("dh",&dh)) sf_error("Need dh="); 
+	/* number of offsets */
+	if (!sf_getfloat ("dh",&dh)) sf_error("Need dh=");
+	/* offset sampling */
 	if (!sf_getfloat ("h0",&h0)) sf_error("Need h0="); 
+	/* offset origin */
 
 	sf_putint(out,"n4",nh);
 	sf_putfloat(out,"d4",dh);
@@ -52,6 +57,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
 
     if (!sf_getfloat ("vel",&vel0)) sf_error("Need vel=");
+    /* velocity */
 
     vel0 *= 0.5;
     dx /= vel0;
@@ -192,6 +198,6 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mpreconstkirch.c,v 1.2 2003/12/04 05:13:12 fomels Exp $	 */
+/* 	$Id: Mpreconstkirch.c,v 1.3 2004/03/13 06:00:04 fomels Exp $	 */
 
 

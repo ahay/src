@@ -1,3 +1,8 @@
+/* Half-order integration or differentiation.
+
+Takes: < in.rsf > out.rsf
+*/
+
 #include <rsf.h>
 
 #include "halfint.h"
@@ -17,8 +22,11 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getbool("adj",&adj)) adj=false;
+    /* If y, apply adjoint */
     if (!sf_getbool("inv",&inv)) inv=false;
+    /* If y, do differentiation instead of integration */
     if (!sf_getfloat("rho",&rho)) rho = 1.-1./n1;
+    /* Leaky integration constant */
 
     if (adj) {
 	sf_warning("%s half-order differentiation",inv? "anticausal":"causal");
