@@ -62,7 +62,8 @@ int main (int argc, char* argv[])
     }
     check_compat(other,esize,dim,n);
     
-    for (n1=esize, i=1; i <= axis; i++) {
+    n1 = esize;
+    for (i=1; i < axis; i++) {
 	n1 *= n[i-1];
     }
     for (n2=1; i <= dim; i++) {
@@ -73,6 +74,8 @@ int main (int argc, char* argv[])
 
     out = sf_output ("out");
     sf_putint(out,key,n[axis-1]*2);
+    sf_setformat(out,sf_histstring(in,"data_format"));
+
     sf_fileflush(out,in);
     sf_setformat(in,"raw");
     sf_setformat(other,"raw");
@@ -108,4 +111,4 @@ static void check_compat (sf_file other, int esize, int dim, const int *n)
     }
 }
 
-/* 	$Id: interleave.c,v 1.3 2003/10/01 23:40:57 fomels Exp $	 */
+/* 	$Id: interleave.c,v 1.4 2004/03/20 05:48:46 fomels Exp $	 */
