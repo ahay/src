@@ -31,7 +31,7 @@ for slice in range(3):
          ''' % (25,50,75)[slice])
     Plot(cont+'a',angle,contour(0,6))
     Plot(cont+'b',angle,contour(7,1))
-    Combine(angle,[grey,cont+'a',cont+'b'],'Overlay',result=1)
+    Result(angle,[grey,cont+'a',cont+'b'],'Overlay')
 
 ###########################################################################
 

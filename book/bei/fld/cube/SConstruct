@@ -26,7 +26,7 @@ label1="Time (s)" label2=Offset label3=Shot wanttitle=n
 
 Plot('flat','cube',cubeplot)
 Plot('cube','cube',cubeplot + ' flat=n') 
-Combine('cube','flat cube','SideBySideAniso',result=1)
+Result('cube','flat cube','SideBySideAniso')
 
 ###########################################################################
 End()

@@ -53,7 +53,7 @@ for file in textures:
     Flow(wht,[file,pef],"helicon filt=${SOURCES[1]}")
     Plot(wht,wht,g % "TI * PEF")
 
-    Combine(file,[file,syn,wht],'SideBySideAniso',result=1)
+    Result(file,[file,syn,wht],'SideBySideAniso')
 
 for file in textures[1:5]:
     #------------------------------------------------------------
@@ -76,7 +76,7 @@ for file in textures[1:5]:
               "miss filt=${SOURCES[2]} mask=${SOURCES[1]} padin=20")
     Plot(fill,fill,g % "Restored")
 
-    Combine(fill,[hole,file,fill],'SideBySideAniso',result=1)
+    Result(fill,[hole,file,fill],'SideBySideAniso')
     
 ###########################################################################
 

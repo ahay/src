@@ -31,8 +31,7 @@ for case in ('34','32','20'):
     Flow(lmo,case,'lmostretch delay=1 v0=1.47 half=n | ' + window)
     Plot(lmo,lmo,'grey wanttitle=n')
 
-    Combine('wzl.'+case,[raw,lmo],'SideBySideAniso',result=1,
-            vppen='txscale=1.5')
+    Result('wzl.'+case,[raw,lmo],'SideBySideAniso',vppen='txscale=1.5')
 
 Fetch('midpts.HH','midpts')
 Flow('cdp','midpts.HH','window n3=1 n1=300 j1=2 | dd data_format=native_float')
@@ -46,7 +45,7 @@ label1="Time (s)" label2="Offset (km)"
 
 Plot('cdp','cdp',wiggle % ' ')
 Plot('lmo','lmo',wiggle % 'LMO')
-Combine('wglmo','cdp lmo','SideBySideAniso',result=1,vppen='txscale=1.5')
+Result('wglmo','cdp lmo','SideBySideAniso',vppen='txscale=1.5')
 
 ###########################################################################
 End()

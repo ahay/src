@@ -30,7 +30,7 @@ def border(name,n2):
 border('border1',338)
 border('border2',234)
 border('border3',717)
-Combine('border',['border1','border2','border3'],'Overlay')
+Plot('border',['border1','border2','border3'],'Overlay')
 
 Plot('elev','elevation.HH',
           '''
@@ -38,7 +38,7 @@ Plot('elev','elevation.HH',
           grey title=Elevation transp=n yreverse=n
           wantaxis=n wantlabel=n wheretitle=t wherexlabel=b
           ''')
-Combine('elev',['elev','border'],'Overlay',result=1)
+Result('elev',['elev','border'],'Overlay')
 
 select = '''
 window n1=1 f1=0 > ${TARGETS[1]};
@@ -53,14 +53,14 @@ Result('alldata','alldata',
 Flow(['obs','obsx','obsy'],'obsdata.HH',select)
 Plot('obs','obs',
           'graph symbol=o title="Observed data locations" plotcol=5 ' + box)
-Combine('obsdata',['obs','border'],'Overlay')
+Plot('obsdata',['obs','border'],'Overlay')
 
 Flow('coord','coord.HH','dd data_format=native_float')
 Flow(['coord2','coordx','coordy'],'coord',select)
 Plot('coord','coord2','graph symbol=x wanttitle=n plotcol=7 ' + box)
-Combine('data',['coord','border'],'Overlay')
+Plot('data',['coord','border'],'Overlay')
 
-Combine('raindata',['obsdata','data'],'SideBySideIso',result=1)
+Result('raindata',['obsdata','data'],'SideBySideIso')
 
 Flow('obsdata','obsdata.HH','dd data_format=native_float')
 Flow('raindata','obsdata','window f1=2')
@@ -106,7 +106,7 @@ for niter in cases:
               color=j clip=500 title="%s %d" ''' % (name,niter))
     for cont in range(2):
         Plot('c'+str(cont)+lapinter,lapinter,contour(cont))
-    Combine(lapinter,['g'+lapinter,'c0'+lapinter,'c1'+lapinter],'Overlay')
+    Plot(lapinter,['g'+lapinter,'c0'+lapinter,'c1'+lapinter],'Overlay')
 
 reals = []
 for seed in range(2000,2005):
@@ -129,14 +129,11 @@ for seed in range(2000,2005):
          color=j clip=500 title="Realization %d" ''' % (seed-1999))
     for cont in range(2): 
         Plot('c'+str(cont)+real,real,contour(cont))
-    Combine(real,['g'+real,'c0'+real,'c1'+real],'Overlay')
-Combine('real',map(lambda seed: 'real%d' % seed,range(2000,2005)),
-        'TwoByTwo',result=1)
+    Plot(real,['g'+real,'c0'+real,'c1'+real],'Overlay')
+Result('real',map(lambda seed: 'real%d' % seed,range(2000,2005)),'TwoByTwo')
 
-Combine('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),
-             'TwoByTwo',result=1)
-Combine('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),
-             'SideBySideIso',result=1)
+Result('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),'TwoByTwo')
+Result('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),'SideBySideIso')
 
 Flow('predict','predict.HH','dd data_format=native_float')
 for niter in [10000,-40,0]:
@@ -154,8 +151,7 @@ for niter in [10000,-40,0]:
          graph symbol="*" title="%s"
          screenratio=1 min1=0 max1=500 min2=0 max2=500
          ''' % name,stdin=0)
-Combine('stat','lapstat10000 lapstat-40','SideBySideIso',result=1)
-
+Result('stat','lapstat10000 lapstat-40','SideBySideIso')
 
 ###########################################################################
 

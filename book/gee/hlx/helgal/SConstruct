@@ -29,7 +29,7 @@ Helderiv('hel',na=128,eps=0.00001)
 Plot('held','fill hel',
      'helicon filt=${SOURCES[1]} | ' + plot('Filled and helix derivative'))
 
-Combine('helgal','ruf2 held','SideBySideAniso',result=1)
+Result('helgal','ruf2 held','SideBySideAniso')
 
 ###########################################################################
 End()

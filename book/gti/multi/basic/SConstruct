@@ -30,7 +30,7 @@ Flow(meiko,'hale','eikonal yshot=5')
 Plot(meiko,meiko,
           '''contour title='Fast marching' nc=35 c0=0 dc=0.1 plotcol=7
           wantscalebar=y wantaxis=n''')
-Combine(meiko,['hale',meiko],'Overlay',result=1)
+Result(meiko,['hale',meiko],'Overlay')
 
 Flow(['call-hale','size-hale','grid-hale'],'hale',
           '''trace2 size=${TARGETS[1]} grid=${TARGETS[2]}
@@ -49,11 +49,9 @@ for branch in range(3):
               '''contour wanttitle=n wantscalebar=y plotcol=7 wantaxis=n
               nc=35 c0=0 dc=0.1''')    
 all = 'cmode-hale'
-Combine(all,
-             map(lambda x: "cmode%d-hale" % x, range(3)),
-             'Overlay')
-Combine(all,['hale',all],'Overlay',result=1,
-             pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+Plot(all,map(lambda x: "cmode%d-hale" % x, range(3)),'Overlay')
+Result(all,['hale',all],'Overlay',
+       pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
 #######################################################
 
@@ -68,11 +66,9 @@ for branch in range(3):
               '''contour wanttitle=n wantscalebar=y plotcol=7 wantaxis=n
               nc=35 c0=0 dc=0.1''')    
 all = 'pmode-hale'
-Combine(all,
-             map(lambda x: "pmode%d-hale" % x, range(3)),
-             'Overlay')
-Combine(all,['hale',all],'Overlay',result=1,
-             pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+Plot(all,map(lambda x: "pmode%d-hale" % x, range(3)),'Overlay')
+Result(all,['hale',all],'Overlay',
+       pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
 ######## Z marching ####################################
 
@@ -93,11 +89,9 @@ for branch in range(3):
               '''contour wanttitle=n wantscalebar=y plotcol=7
               nc=35 c0=0 dc=0.1''')
 all = 'mode-hale'
-Combine(all,
-             map(lambda x: "mode%d-hale" % x, range(3)),
-             'Overlay')
-Combine(all,['hale',all],'Overlay',result=1,
-             pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+Plot(all,map(lambda x: "mode%d-hale" % x, range(3)),'Overlay')
+Result(all,['hale',all],'Overlay',
+       pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
 ################## Fixed angle #########################
 podo = 'podo-hale'
@@ -111,11 +105,9 @@ for branch in range(3):
               '''contour wanttitle=n wantscalebar=y plotcol=7
               nc=35 c0=0 dc=0.1''')
 all = 'pode-hale'
-Combine(all,
-             map(lambda x: "pode%d-hale" % x, range(3)),
-             'Overlay')
-Combine(all,['hale',all],'Overlay',result=1,
-             pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+Plot(all,map(lambda x: "pode%d-hale" % x, range(3)),'Overlay')
+Result(all,['hale',all],'Overlay',
+       pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
 ######################## Green's function ##############
 Flow('wave',None,
@@ -218,12 +210,11 @@ for model in ('spike','pgauss','mgauss','pgauss2','mgauss2','mgauss3'):
             Plot(interp,interp,"contour wanttitle=n nc=30 c0=0 dc=0.05")
         if narr > 1:
             all = 'trde' + mod
-            Combine(all,
-                         map(lambda x: "trde%d%s" % (x,mod), xrange(narr)),
-                         'Overlay')
+            Plot(all,map(lambda x: "trde%d%s" % (x,mod), xrange(narr)),
+                 'Overlay')
         else:
             all = 'trde0' + mod
-        Combine(all,[all,meiko],'SideBySideAniso',result=1)
+        Result(all,[all,meiko],'SideBySideAniso')
 
 
 for model in ('spike','pgauss','mgauss'):
@@ -242,12 +233,11 @@ for model in ('spike','pgauss','mgauss'):
         Plot(mode,mode,"contour wanttitle=n nc=30 c0=0 dc=0.05")
     if narr > 1:
         all = 'cmode-' + model
-        Combine(all,
-                     map(lambda x: "cmode%d-%s" % (x,model), range(narr)),
-                     'Overlay')
+        Plot(all,map(lambda x: "cmode%d-%s" % (x,model), range(narr)),
+             'Overlay')
     else:
         all = 'cmode0-' + model
-    Combine(all,[all,'meiko-'+model],'SideBySideAniso',result=1)
+    Result(all,[all,'meiko-'+model],'SideBySideAniso')
      
 ###########################################################################
 End()

@@ -32,8 +32,8 @@ Flow('kir','dki3',
 for case in ['mod3','dki3','kir','mod1','dki1','mod2','dki2']:
     Plot(case,case,'grey title="%s" labelsz=10' % case)
 
-Combine('kfgood','mod3 dki3','SideBySideAniso',result=1)
-Combine('skmig','mod3 kir','SideBySideAniso',result=1)
+Result('kfgood','mod3 dki3','SideBySideAniso')
+Result('skmig', 'mod3 kir ','SideBySideAniso')
 
 Flow('smod','mod','spectra all=y | scale axis=1')
 Flow('skir','kir','spectra all=y | scale axis=1')
@@ -45,7 +45,7 @@ Result('kirspec','smod skir2 skir',
        label1="Frequency (Hz)" dots=0
        ''')
 
-Combine('skmod','mod1 dki1 mod2 dki2','TwoByTwo',result=1)
+Result('skmod','mod1 dki1 mod2 dki2','TwoByTwo')
 
 ###########################################################################
 End()

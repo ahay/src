@@ -43,8 +43,8 @@ Plot('text3',None,
      xt=1.000000 yt=1.000000 lab_fat=0 lab_color=7 boxit=1 size=0.250000 p
      ointer=1 x_oval=0.000000 y_oval=0.000000 out=$TARGET
      ''')
-Combine('ai',['ai','text1','text2','text3'],'Overlay',result=1)
-Combine('gai',['gai','text1','text2','text3'],'Overlay',result=1)
+Result('ai',['ai','text1','text2','text3'],'Overlay')
+Result('gai',['gai','text1','text2','text3'],'Overlay')
 
 for hz in (30,60,100):
     mod = 'mod%d' % hz

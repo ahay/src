@@ -34,7 +34,7 @@ for scale in scales:
     Flow(spline,'exact','window j1=%d | spline pattern=$SOURCE' % scale)
     Plot(spline,spline,
               "graph wanttitle=0 wantaxis=0 min2=-1.5 max2=1.5 plotcol=5")
-    Combine(spline,[spline,'exact'],'Overlay',result=1)
+    Result(spline,[spline,'exact'],'Overlay')
     Flow(sample,None,
               'spike n1=1 | headermath output="%d*0.0001"' % scale)
     Flow(error,['exact',spline],
@@ -65,8 +65,7 @@ Plot('line-spline','curve',
           "graph title='Spline Convergence' label1='Sampling' label2='Error'")
 Plot('star-spline','curve',
           'graph wanttitle=n wantaxis=n plotcol=5 symbol="*"')
-Combine('spline',['line-spline','star-spline'],
-             'Overlay',result=1)
+Result('spline',['line-spline','star-spline'],'Overlay')
 
 Plot('log-line-spline','log-curve',
           '''graph title='Spline Convergence'
@@ -77,8 +76,7 @@ Plot('log-star-spline','log-curve',
           '''graph wanttitle=n wantaxis=n plotcol=5 symbol="*"
           min1=-10 max1=0 min2=-25 max2=5 screenratio=3 labelsz=3 titlesz=3
           ''')
-Combine('log-spline',['log-line-spline','log-star-spline'],
-             'Overlay',result=1)
+Result('log-spline',['log-line-spline','log-star-spline'],'Overlay')
 
 min1 = [0,-10,-10,-10,-10,-10,-10]
 max1 = [0, 3,0,0,0,0,0]
@@ -97,7 +95,7 @@ for order in orders:
                   (scale,order))
         Plot(remap,remap,
                   "graph wanttitle=0 wantaxis=0 min2=-1.5 max2=1.5 plotcol=5")
-        Combine(remap,[remap,'exact'],'Overlay',result=1)
+        Result(remap,[remap,'exact'],'Overlay')
         Flow(error,['exact',remap],
                   '''
                   add scale=1,-1 ${SOURCES[1]} |
@@ -122,7 +120,7 @@ for order in orders:
               '''% order)
     Plot('star-' + error,curve,
               'graph wanttitle=n wantaxis=n plotcol=5 symbol="*"')
-    Combine(error,['line-' + error,'star-' + error],'Overlay',result=1)
+    Result(error,['line-' + error,'star-' + error],'Overlay')
     Plot('line-log-' + error,'log-' + curve,
               '''
               graph title='Convergence for order %d'
@@ -137,8 +135,7 @@ for order in orders:
               min1=%d max1=%d min2=%d max2=%d screenratio=%g
                ''' % (min1[order],max1[order],min2[order],max2[order],
                      ratio[order]))
-    Combine('log-' + error,
-                 ['line-log-' + error,'star-log-' + error],'Overlay',result=1)
+    Result('log-' + error,['line-log-' + error,'star-log-' + error],'Overlay')
         
 ###########################################################################
 

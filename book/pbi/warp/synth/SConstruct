@@ -172,8 +172,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
                   "cat axis=2 $SOURCE | " + graph % 'PS',stdin=0)
         # Plot(sized("ss"),ss,
         #           "cat axis=2 $SOURCE | " + graph % 'SS',stdin=0)
-        Combine(synth,map(sized,all),'OverUnderAniso',result=1,
-                     pstexpen='color=y fat=1 fatmult=1.5 invras=n')
+        Result(synth,map(sized,all),'OverUnderAniso',
+               pstexpen='color=y fat=1 fatmult=1.5 invras=n')
         Flow([vpvs+'0',vpvs+'1',vpvs+'2'],[synth,vpvs],
                   '''
                   window n2=1 f2=0 < ${SOURCES[1]} > ${TARGETS[1]};
@@ -194,11 +194,10 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             grey = grey2 + ' title=%s'
             if x == 'ss': grey = grey + ' label1="Time (s)"'
             Plot(sized('g' + x),sized(x),grey % string.upper(x))
-            Combine(sized('g-' + x),[sized('g' + x),x + 'nail'],'Overlay')
-        Combine(sized('bot'),map(lambda x: sized('g-' + x),all),
-                     'OverUnderAniso')
-        Combine(vpvs,[vpvs,sized('bot')],'OverUnderAniso',result=1,
-                     pstexpen='color=n fat=1 fatmult=1.5 invras=y')
+            Plot(sized('g-' + x),[sized('g' + x),x + 'nail'],'Overlay')
+        Plot(sized('bot'),map(lambda x: sized('g-' + x),all),'OverUnderAniso')
+        Result(vpvs,[vpvs,sized('bot')],'OverUnderAniso',
+               pstexpen='color=n fat=1 fatmult=1.5 invras=y')
 
         ##################################################################
         # EXACT WARPING
@@ -215,9 +214,9 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
                   min1=0 max1=1 crowd=0.8 labelsz=10
                   title="Traveltime Error (s)"
                   ''')
-        Combine(sized('morph-top'),[vpvs,f + 'spps'],'Overlay')
-        Combine(morph,map(lambda x: sized('morph-'+x),['top','bot']),
-                     'OverUnderAniso',result=1)
+        Plot(sized('morph-top'),[vpvs,f + 'spps'],'Overlay')
+        Result(morph,map(lambda x: sized('morph-'+x),['top','bot']),
+               'OverUnderAniso')
         
         Result(sized('morphs'),[morph,pp],difplot,pstexpen='color=y')
 
@@ -274,8 +273,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         Flow(pick + '0',[scan,pp],blindpick(1))
         Flow(pick,pick + '0','headermath g=0 output="(g-1)*T"')
         Plot(pick,pick + '0',pickplot(0.8,1.2))
-        Combine(scan,[scan,pick],'Overlay',result=1,
-                     pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+        Result(scan,[scan,pick],'Overlay',
+               pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
         ####################################################################
         # ADDITIONAL WARPING
@@ -285,7 +284,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         Flow([warp,morph1,'varp6','ampl6'],[morph,pp,pick,f+'swrp'],
                   warp1(2,350))
         Plot(warp,warp,warp2gamma + ' | ' + graph2)
-        Combine(sized('morph2-top'),[vpvs,warp],'Overlay')
+        Plot(sized('morph2-top'),[vpvs,warp],'Overlay')
         def botplot(min,max):
             return '''add scale=1,-1 ${SOURCES[1]} | scale dscale=1000 |
             graph plotcol=2
@@ -296,9 +295,9 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             title="Traveltime Error (s)"
             ''' % (min,max)
         Plot(sized('morph2-bot'),[warp,f + 'swrp'],botplot(-4,4))
-        Combine(sized('morph2-'),
-                     map(lambda x: sized('morph2-'+x),['top','bot']),
-                     'OverUnderAniso',result=1)
+        Result(sized('morph2-'),
+               map(lambda x: sized('morph2-'+x),['top','bot']),
+               'OverUnderAniso')
         
         Result(sized('morph2-s'),[morph1,pp],difplot)
  
@@ -316,9 +315,9 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
 
             Plot(start('morphl-bot'),[swrp,f + 'swrp'],botplot(-100,100))
                       
-            Combine(start('morphl-top'),[vpvs,spps],'Overlay')
-            Combine(morph,map(lambda x: start('morphl-'+x),['top','bot']),
-                         'OverUnderAniso',result=1)
+            Plot(start('morphl-top'),[vpvs,spps],'Overlay')
+            Result(morph,map(lambda x: start('morphl-'+x),['top','bot']),
+                   'OverUnderAniso')
 
             Result(start('morphls'),[morph,pp],difplot)
         
@@ -349,8 +348,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow(pick + '0',[scan,pp],blindpick(eps=eps[f][st]))
             Flow(pick,pick + '0','headermath g=0 output="(g-1)*T"')
             Plot(pick,pick + '0',pickplot(gmin[f][st],gmax[f][st]))
-            Combine(scan,[scan,pick],'Overlay',result=1,
-                         pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+            Result(scan,[scan,pick],'Overlay',
+                   pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
             # WARPING CORRECTION
             warp = start('warpl1-')
@@ -358,13 +357,13 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow([warp,morph1,'varp7','ampl7'],[morph,pp,pick,swrp],
                  warp1(1,500))
             Plot(warp,warp,warp2gamma + '| ' + graph2)
-            Combine(start('morphl2-top'),[vpvs,warp],'Overlay')
+            Plot(start('morphl2-top'),[vpvs,warp],'Overlay')
 
             Plot(start('morphl2-bot'),[warp,f + 'swrp'],botplot(-20,20))
             
-            Combine(start('morphl2-'),
-                         map(lambda x: start('morphl2-'+x),['top','bot']),
-                         'OverUnderAniso',result=1)
+            Result(start('morphl2-'),
+                   map(lambda x: start('morphl2-'+x),['top','bot']),
+                   'OverUnderAniso')
 
             Result(start('morphl2s'),[morph1,pp],difplot)
 
@@ -373,8 +372,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             morph = start('morphr')
             Flow(morph,[sized('ps'),pp,warp],warp0)
             Plot(start('morphr-bot'),[morph,pp],difplot)
-            Combine(morph,map(start, ['morphl2-top','morphr-bot']),
-                         'OverUnderAniso',result=1)
+            Result(morph,map(start, ['morphl2-top','morphr-bot']),
+                   'OverUnderAniso')
 
             # SPECTRAL BALANCING
             pwin = start('pwinr')
@@ -392,9 +391,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow([pp,resh],[pwin,swin,prick,srick],reshape)
             Flow(morph,resh,"stack norm=no")
             Plot(start('morphr1-bot'),[morph,pp],difplot)
-            Combine(start('morphr1-'),
-                     map(start,["morphl2-top","morphr1-bot"]),
-                     'OverUnderAniso',result=1)
+            Result(start('morphr1-'),map(start,["morphl2-top","morphr1-bot"]),
+                   'OverUnderAniso')
 
             # GAMMA SCAN
             scan = start('scanr')
@@ -406,8 +404,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow(pick + '0',[scan,pp],blindpick(eps=eps[f][st]/2))
             Flow(pick,pick + '0','headermath g=0 output="(g-1)*T"')
             Plot(pick,pick + '0',pickplot(0.8,1.2))
-            Combine(scan,[scan,pick],'Overlay',result=1,
-                         pstexpen='color=y fat=1 fatmult=1.5 invras=y')
+            Result(scan,[scan,pick],'Overlay',
+                   pstexpen='color=y fat=1 fatmult=1.5 invras=y')
 
             # WARPING CORRECTION 2
             init = warp
@@ -416,19 +414,19 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow([warp,morph1,'varp8','ampl8'],[morph,pp,pick,init],
                  warp1(2,500))
             Plot(warp,warp,warp2gamma + ' | ' + graph2)
-            Combine(start('morphr2-top'),[vpvs,warp],'Overlay')
+            Plot(start('morphr2-top'),[vpvs,warp],'Overlay')
             Plot(start('morphr2-bot'),[morph1,pp],difplot)
-            Combine(start('morphr2-'),
-                         map(lambda x: start('morphr2-'+x),['top','bot']),
-                         'OverUnderAniso',result=1)
+            Result(start('morphr2-'),
+                   map(lambda x: start('morphr2-'+x),['top','bot']),
+                   'OverUnderAniso')
 
             # MOVE CLOSER
             pp = sized('pp')
             morph = start('morphq')
             Flow(morph,[sized('ps'),pp,warp],warp0)
             Plot(start('morphq-bot'),[morph,pp],difplot)
-            Combine(morph,map(start, ['morphr2-top','morphq-bot']),
-                         'OverUnderAniso',result=1)
+            Result(morph,map(start, ['morphr2-top','morphq-bot']),
+                   'OverUnderAniso')
         
             # SPECTRAL BALANCING
             pwin = start('pwinq')
@@ -446,9 +444,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow([pp,resh],[pwin,swin,prick,srick],reshape)
             Flow(morph,resh,"stack norm=no")
             Plot(start('morphq1-bot'),[morph,pp],difplot)
-            Combine(start('morphq1-'),
-                         map(start,['morphr2-top','morphq1-bot']),
-                         'OverUnderAniso',result=1)
+            Result(start('morphq1-'),
+                   map(start,['morphr2-top','morphq1-bot']),'OverUnderAniso')
         
             # GAMMA SCAN
             scan = start('scanq')
@@ -460,7 +457,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             Flow(pick + '0',[scan,pp],blindpick(eps=eps[f][st]/4))
             Flow(pick,pick + '0','headermath g=0 output="(g-1)*T"')
             Plot(pick,pick + '0',pickplot(0.8,1.2))
-            Combine(scan,[scan,pick],'Overlay',result=1)
+            Result(scan,[scan,pick],'Overlay')
 
             # WARPING CORRECTION 3
             init = warp
@@ -472,10 +469,10 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
 
             Plot(start('morphq2-bot'),[warp,f + 'swrp'],botplot(-5,5))
              
-            Combine(start('morphq2-top'),[vpvs,warp],'Overlay')
-            Combine(start('morphq2-'),
-                         map(lambda x: start('morphq2-'+x),['top','bot']),
-                         'OverUnderAniso',result=1)
+            Plot(start('morphq2-top'),[vpvs,warp],'Overlay')
+            Result(start('morphq2-'),
+                   map(lambda x: start('morphq2-'+x),['top','bot']),
+                   'OverUnderAniso')
 
             Result(start('morphq2s'),[morph1,pp],difplot)
     

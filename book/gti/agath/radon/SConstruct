@@ -32,7 +32,7 @@ for a in [0,45]:
              ''' % (a,b))
         Plot(cont+'a',angl,contour(0,6))
         Plot(cont+'b',angl,contour(7,1))
-        Combine(angl,[grey,cont+'a',cont+'b'],'Overlay',result=1)
+        Result(angl,[grey,cont+'a',cont+'b'],'Overlay')
 
 ###########################################################################
 

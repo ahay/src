@@ -21,7 +21,7 @@ plotrays par=cgrad.rsf screenht=6 screenwd=12 jr=5 plotcol=0
 Flow('const',None,'spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0')
 Plot('const','const',grey)
 Plot('cell2','const',rays)
-Combine('straight','const cell2','Overlay',result=1)
+Result('straight','const cell2','Overlay')
 
 Flow('cgrad',None,
           '''spike n1=601 d1=0.01 |
@@ -29,7 +29,7 @@ Flow('cgrad',None,
           spray axis=2 n=1201 d=0.01 o=0''')
 Plot('cgrad','cgrad',grey)
 Plot('ccell2','cgrad',rays)
-Combine('parab','cgrad ccell2','Overlay',result=1)
+Result('parab','cgrad ccell2','Overlay')
 
 ###########################################################################
 

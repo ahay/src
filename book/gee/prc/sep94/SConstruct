@@ -20,8 +20,8 @@ doty = 'dots dots=0 connect=0 gaineach=0 constsep=1 strings=0 clip=1.2'
 Flow('data',['alias','head'],'bin1 head=${SOURCES[1]} nx=200 dx=0.4 x0=0')
 Plot('data','data',doty + ' strings=1 d1=1 o1=1')
 Plot('ideal','ideal',doty + ' connect=1')
-Combine('both','data ideal','Overlay')
-Combine('data','both data','SideBySideAniso',result=1)
+Plot('both','data ideal','Overlay')
+Result('data','both data','SideBySideAniso')
 
 doty = doty + ' connect=1 d1=1 o1=1'
 
@@ -43,7 +43,7 @@ for prec in [0,1]:
          cat axis=2 ${SOURCES[1:%d]} | %s connect=1 overlap=2
          title=%s labels=%s labelsz=10 
          ''' % (len(iters),doty,title[prec],labels))
-Combine('conv',['im','fm'],'SideBySideAniso',result=1)
+Result('conv',['im','fm'],'SideBySideAniso')
 
 ###########################################################################
 

@@ -36,11 +36,10 @@ for example in ('sigmoid','gulf'):
     Plot(example,example,'grey title=INPUT')
     Plot(pwd,pwd,
          'grey title=RESIDUAL pclip=%d wantscalebar=y' % pclip[example])
-    Combine(txr,[example,txr],'SideBySideAniso',result=1)
-    Combine(pwd,[example,pwd],'SideBySideAniso',result=1)
+    Result(txr,[example,txr],'SideBySideAniso')
+    Result(pwd,[example,pwd],'SideBySideAniso')
     Plot(dip,dip,'grey title=DIP color=j wantscalebar=y')
-    Combine(example,[example,dip,txr,pwd],'TwoByTwo',result=1)
-
+    Result(example,[example,dip,txr,pwd],'TwoByTwo')
 
 ############################################################################
 

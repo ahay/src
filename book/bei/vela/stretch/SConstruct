@@ -24,7 +24,7 @@ Flow('nmo','data','nmostretch v0=1.44 half=n')
 
 Plot('data','data','grey wanttitle=n labelsz=12')
 Plot('nmo','nmo','grey wanttitle=n labelsz=12')
-Combine('stretch','data nmo','SideBySideAniso',result=1)
+Result('stretch','data nmo','SideBySideAniso')
 
 ###########################################################################
 End()

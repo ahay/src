@@ -40,17 +40,17 @@ Plot('diag-presto','diag-presto',
           cosft sign2=-1 |
           %s pclip=99.8 title="Prestack Stolt" 
           ''' % plot)
-Combine('diag-presto','diag diag-presto','SideBySideAniso',result=1)
+Result('diag-presto','diag diag-presto','SideBySideAniso')
 
 Plot('diag-phase','diag',
           '''gazdag eps=0.01 nt=129 dt=0.004 vel=1.5 inv=1 |
           %s pclip=99.8 title=Gazdag''' % plot)
-Combine('diag-phase','diag diag-phase','SideBySideAniso',result=1)
+Result('diag-phase','diag diag-phase','SideBySideAniso')
 
 Plot('diag-sstep','diagz',
           '''sstep1 eps=0.01 nt=129 dt=0.004 vel=1.5 inv=1 |
           %s pclip=99.8 title=Gazdag1''' % plot)
-Combine('diag-sstep',['diag','diag-sstep'],'SideBySideAniso',result=1)
+Result('diag-sstep',['diag','diag-sstep'],'SideBySideAniso')
 
 Flow('diag-predsr','diag',
           '''fft2 | dsr nh=65 dh=0.008 vel=1.5 inv=1 nt=129 dt=0.004 |
@@ -60,7 +60,7 @@ Plot('diag-dsr','diag-predsr',
           '''fft2 both=1 | transp plane=23 | fft3 |
           dsr vel=1.5 nz=129 dz=0.004 | fft2 inv=1 |
           %s pclip=100 title="DSR"''' % plot)
-Combine('diag-dsr',['diag','diag-dsr'],'SideBySideAniso',result=1)
+Result('diag-dsr',['diag','diag-dsr'],'SideBySideAniso')
 
 Flow('sagmod',None,"sag nt=65 nx=65 tmax=4 v0=1.5 alpha=0.5")
 Flow('sagvel','sagmod',"voft v0=1.5 alpha=0.5")
@@ -153,14 +153,14 @@ for mod in ('const','wall','noise',
               time2depth velocity=${SOURCES[2]}
               ''')
     Plot(phase,phase,plot + 'label1="Depth (km)" wanttitle=n')
-    Combine(phase,[phase,trav],'Overlay',result=1)
+    Result(phase,[phase,trav],'Overlay')
 
     # Depth migration by split-step
     phase = mod + '-sstep'
     Flow(phase,['impuls',mod],
               'window n2=256 | sstep1 eps=1 velocity=${SOURCES[1]}')    
     Plot(phase,phase,plot + 'label1="Depth (km)" wanttitle=n')
-    Combine(phase,[phase,trav],'Overlay',result=1)
+    Result(phase,[phase,trav],'Overlay')
 
     # Time migration by DSR
     phase = mod + '-phase2'
@@ -171,7 +171,7 @@ for mod in ('const','wall','noise',
               time2depth velocity=${SOURCES[2]}
               ''')
     Plot(phase,phase,plot + 'label1="Depth (km)" wanttitle=n')
-    Combine(phase,[phase,trav2],'Overlay',result=1)
+    Result(phase,[phase,trav2],'Overlay')
 
 grad = {
     'vofx3':-0.00375,
@@ -190,7 +190,7 @@ for mod in  ['vofx','vofx3']:
               grad=%g | time2depth velocity=${SOURCES[2]}
               ''' % grad[mod])
     Plot(phase,phase,plot + 'label1="Depth (km)" wanttitle=n')
-    Combine(phase,[phase,trav],'Overlay',result=1)
+    Result(phase,[phase,trav],'Overlay')
 
 ###########################################################################
 # STOLT TEST
@@ -215,9 +215,7 @@ for nf in [2,4,8]:
               '''window n2=1 f2=64 |
               grey title="Stolt migration %d: In-line slice"
               screenratio=0.5 screenht=6''' % nf)
-    Combine(stolt,[stolt+'-line',stolt+'-depth'],'OverUnderIso',result=1)
-
-    
+    Result(stolt,[stolt+'-line',stolt+'-depth'],'OverUnderIso')
     
 ###########################################################################
 End()

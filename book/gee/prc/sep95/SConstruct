@@ -60,12 +60,11 @@ for filt in filters:
             Flow(iter,['in',filt],miss(prec,niter))
         Plot(res+'4',iters,dots(4) +
              ' overlap=1 yreverse=1 labels=iter=1:=2:=3:=4')
-        Combine(res,[res+'3',res+'4'],'SideBySideAniso')
+        Plot(res,[res+'3',res+'4'],'SideBySideAniso')
 
 for prec in [0,1]:
-    Combine(name[prec]+'all',
-            map(lambda filt: name[prec]+filt, filters),
-            'OverUnderAniso',result=1)
+    Result(name[prec]+'all',
+           map(lambda filt: name[prec]+filt, filters),'OverUnderAniso')
 
 ###############################################################################
 

@@ -17,8 +17,8 @@ Flow(['7ab','7c','7d'],None,
 Plot('7ab','7ab',sep+'vppen xscale=.57 yscale=1.2')
 Plot('7c','7c','grey wanttitle=n')
 Plot('7d','7d','grey wanttitle=n')
-Combine('7cd','7c 7d','SideBySideAniso')
-Combine('dip','7ab 7cd','OverUnderAniso',result=1)
+Plot('7cd','7c 7d','SideBySideAniso')
+Result('dip','7ab 7cd','OverUnderAniso')
 
 ###########################################################################
 End()

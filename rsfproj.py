@@ -453,7 +453,14 @@ class Project(Environment):
                     datafiles.append(datafile)
             targets = targets + datafiles
         return self.Command(targets,sources,command)
-    def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
+    def Plot (self,target,source,flow,suffix=vpsuffix,vppen=None,**kw):
+        if combine.has_key(flow):
+            if not type(source) is types.ListType:
+                source = string.split(source)
+            flow = apply(combine[flow],[len(source)])
+            if vppen:
+                flow = flow + ' ' + vppen
+            kw.update({'src_suffix':vpsuffix,'stdin':0})
         kw.update({'suffix':suffix})
         return apply(self.Flow,(target,source,flow),kw)
     def Result(self,target,source,flow,suffix=vpsuffix,
@@ -474,17 +481,6 @@ class Project(Environment):
 	    self.pdfs.append(buildPDF)
 	    self.Alias(target + '.buildPDF',buildPDF)
         return plot
-    def Combine(self,target,source,how,result=0,vppen=None,**kw):
-        if not type(source) is types.ListType:
-            source = string.split(source)
-        flow = apply(combine[how],[len(source)])
-        if vppen:
-            flow = flow + ' ' + vppen
-        kw.update({'src_suffix':vpsuffix,'stdin':0})
-        if result:
-            return apply(self.Result,(target,source,flow),kw)
-        else:
-            return apply(self.Plot,(target,source,flow),kw)
     def End(self):
         self.Alias('view',self.view)
         if self.figs: # if any results
@@ -518,8 +514,6 @@ def Plot (target,source,flow,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow,**kw):
     return apply(project.Result,(target,source,flow),kw)
-def Combine(target,source,how,**kw):
-    return apply(project.Combine,(target,source,how),kw)
 def Fetch(file,dir):
     return project.Fetch(file,dir)
 def XFig(file):
@@ -533,4 +527,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.28 2004/05/24 02:17:47 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.29 2004/05/25 03:30:53 fomels Exp $	

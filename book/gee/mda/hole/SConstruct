@@ -31,8 +31,7 @@ title = {
 for plot in title.keys():
     Plot(plot,plot,'grey clip=.075 title=%s wantaxis=n' % title[plot])
 
-Combine('hole','make hole miss mask','SideBySideAniso',
-        result=1,vppen='txscale=2')
+Result('hole','make hole miss mask','SideBySideAniso',vppen='txscale=2')
 
 ###########################################################################
 End()

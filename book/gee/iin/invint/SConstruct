@@ -27,7 +27,7 @@ for im in filter.keys():
          'invbin1 head=${SOURCES[1]} nx=200 dx=0.4 x0=0 filter=%d prec=n' %
          filter[im])
     Plot(im,im,doty)
-    Combine(im,['data',im],'Overlay',result=1)
+    Result(im,['data',im],'Overlay')
 
 ###########################################################################
 

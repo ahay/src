@@ -33,7 +33,7 @@ Plot('cros','fill',
      ''')
 Plot('ruf2','fill','igrad | ' + plot('Filled and d/dx'))
 
-Combine('locfil','mesh fill cros ruf2','TwoByTwo',result=1)
+Result('locfil','mesh fill cros ruf2','TwoByTwo')
 
 ###########################################################################
 End()

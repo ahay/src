@@ -20,7 +20,7 @@ def plot(title):
 
 Plot('bay','bay',plot('Topographic map, Stanford area'))
 Plot('slope','bay','igrad | ' + plot('Southward slope'))
-Combine('stangrad','bay slope','OverUnderAniso',result=1)
+Result('stangrad','bay slope','OverUnderAniso')
 
 ###########################################################################
 End()

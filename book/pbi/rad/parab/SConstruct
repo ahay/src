@@ -37,7 +37,7 @@ label2="offset(km)" label1="time(s)" title="cmp domain"
 
 Plot('mod_spike','mod_spike',gmod + ' pclip=100')
 Plot('dat_spike','dat_spike',gdat)
-Combine('datasynt','mod_spike dat_spike','SideBySideAniso',result=1)
+Result('datasynt','mod_spike dat_spike','SideBySideAniso')
 
 Flow('data','data.HH','dd data_format=native_float')
 Flow('gulf','gulf.HH',
@@ -88,7 +88,7 @@ for case in range(4):
     Plot(frw,frw,gdat)
     Plot(mul,mul,gdat + ' title=primaries')
 
-    Combine('radon%d' % case,[rad,frw,mul],'SideBySideAniso',result=1)
+    Result('radon%d' % case,[rad,frw,mul],'SideBySideAniso')
 
     for data in ('data','gulf'):
         rad = '%s_rad%d' % (data,case)
@@ -108,14 +108,12 @@ for case in range(4):
         Plot(frw,frw,gdat)
 
         if case==0:
-            Combine('%s-radon%d' % (data,case),
-                    [rad,frw,data],'SideBySideAniso',result=1)
+            Result('%s-radon%d' % (data,case),[rad,frw,data],'SideBySideAniso')
         else:
             Plot(err,[frw,data],
                  'add scale=1,-1 ${SOURCES[1]} | %s clip=%g' %
                  (gdat,clip[data]))
-            Combine('%s-radon%d' % (data,case),
-                    [rad,frw,err],'SideBySideAniso',result=1)
+            Result('%s-radon%d' % (data,case),[rad,frw,err],'SideBySideAniso')
 
             Flow(mul,rad,
                  'window %s | radon parab=y adj=n %s' %
@@ -126,10 +124,7 @@ for case in range(4):
             Flow(pri,[data,mul],'add scale=1,-1 ${SOURCES[1]}')
             Plot(pri,pri,'mutter half=n v0=%g | %s title=multiples clip=%g' %
                  (mutter[data],gdat,clip[data]))
-            Combine('%s%d' % (data,case),
-                    [data,mul,pri],'SideBySideAniso',result=1)
-
-
+            Result('%s%d' % (data,case),[data,mul,pri],'SideBySideAniso')
 
 ############################################################################
 

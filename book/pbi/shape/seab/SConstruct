@@ -40,10 +40,10 @@ for iter in range(1,21):
     Flow(miss,'bin','miss2 filt1=10 niter=%d force=n eps=0.2 shape=y' % iter)
     Plot(miss,miss,grey('niter=%d' % iter))
     misses.append(miss)
-Combine('movie',misses,'Movie')
+Plot('movie',misses,'Movie')
 
-Combine('fill',['bin','fill'],'SideBySideAniso',result=1)
-Combine('miss',['bin','miss'],'SideBySideAniso',result=1)
+Result('fill',['bin','fill'],'SideBySideAniso')
+Result('miss',['bin','miss'],'SideBySideAniso')
 
 for inp in ['bin','fill']:
     spec = 'spec-' + inp
@@ -64,10 +64,10 @@ for inp in ['bin','fill']:
          grey color=j allpos=y clip=2 transp=n title='%s'
          label1='X Wavenumber (1/m)' label2='Y Wavenumber (1/m)'
          ''' % title[sp])
-    Combine(spec,[spec,spec2],'SideBySideAniso',result=1)
+    Result(spec,[spec,spec2],'SideBySideAniso')
 
 ###########################################################################
 
 End()
 
-# 	$Id: SConstruct,v 1.2 2004/05/24 02:17:47 fomels Exp $	
+# 	$Id: SConstruct,v 1.3 2004/05/25 03:30:53 fomels Exp $	

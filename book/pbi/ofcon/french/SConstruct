@@ -63,10 +63,9 @@ for slice in [0,25,50]:
     Plot(hole,'hole',grey)
     nmos.append(nmo)
     holes.append(hole)
-Combine('nmo',nmos,'OverUnderAniso')
-Combine('hole',holes,'OverUnderAniso')
-Combine('data',['nmo','hole'],'SideBySideAniso',result=1,
-        vppen='txscale=3')
+Plot('nmo',nmos,'OverUnderAniso')
+Plot('hole',holes,'OverUnderAniso')
+Result('data',['nmo','hole'],'SideBySideAniso',vppen='txscale=3')
 
 nmos = []
 holes = []
@@ -83,10 +82,9 @@ for slice in [124,224,324]:
     Plot(hole,'hole',grey)
     nmos.append(nmo)
     holes.append(hole)
-Combine('tnmo',nmos,'OverUnderAniso')
-Combine('thole',holes,'OverUnderAniso')
-Combine('tslice',['tnmo','thole'],'SideBySideAniso',result=1,
-        vppen='txscale=3')
+Plot('tnmo',nmos,'OverUnderAniso')
+Plot('thole',holes,'OverUnderAniso')
+Result('tslice',['tnmo','thole'],'SideBySideAniso',vppen='txscale=3')
 
 Flow('fftd','hole',
      '''window f1=40 | stretch rule=L nout=512 |
@@ -111,10 +109,9 @@ for slice in [15,20,25]:
     Plot(fill,'fill',grey)
     ffts.append(fft)
     fills.append(fill)
-Combine('fft',ffts,'OverUnderAniso')
-Combine('fill',fills,'OverUnderAniso')
-Combine('fslice',['fft','fill'],'SideBySideAniso',result=1,
-        vppen='txscale=3')
+Plot('fft',ffts,'OverUnderAniso')
+Plot('fill',fills,'OverUnderAniso')
+Result('fslice',['fft','fill'],'SideBySideAniso',vppen='txscale=3')
 
 back = '''pad n3=261 | transp plane=23 | transp | fft1 inv=y |
      window n1=512 | stretch rule=L inv=y | pad beg1=40'''
@@ -137,10 +134,9 @@ for slice in [0,25,50]:
     Plot(bad,'hild',grey)
     bads.append(bad)
     goods.append(good)
-Combine('bad',bads,'OverUnderAniso')
-Combine('good',goods,'OverUnderAniso')
-Combine('all',['bad','good'],'SideBySideAniso',result=1,
-        vppen='txscale=3')
+Plot('bad',bads,'OverUnderAniso')
+Plot('good',goods,'OverUnderAniso')
+Result('all',['bad','good'],'SideBySideAniso',vppen='txscale=3')
 
 Flow('shot','nmo','transp plane=23 | cmp2shot')
 Flow('shot1','shot','window n3=1 f3=101')
@@ -159,7 +155,7 @@ Plot('simp','simp',grey % '(shot1+shot3)/2')
 
 Flow('simperr',['simp','shot2'],'add scale=1,-1 ${SOURCES[1]}')
 Plot('simperr','simperr',grey % 'error: (shot1+shot3)/2-shot2')
-Combine('shot3','shot1 shot3 simp simperr','TwoByTwo',result=1)
+Result('shot3','shot1 shot3 simp simperr','TwoByTwo')
 
 Flow('shotftd','shot',
      '''window f1=40 | stretch rule=L nout=512 |
@@ -175,8 +171,7 @@ Flow('shoterr',['shotnd','shot2'],'add scale=1,-1 ${SOURCES[1]}')
 
 Plot('shotnd','shotnd',grey % 'Interpolated Shot')
 Plot('shoterr','shoterr',grey % 'Error')
-Combine('shotin','shotnd shoterr','SideBySideAniso',result=1)
-
+Result('shotin','shotnd shoterr','SideBySideAniso')
 
 ###########################################################################
 End()

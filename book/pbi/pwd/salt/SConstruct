@@ -24,14 +24,14 @@ Plot('line','line',grey + ' title="Input Line"')
 Flow('dip','line','dip eps=10 lam=10 verb=y niter=10')
 Plot('dip','dip',grey + ' title="Dip" color=j')
 
-Combine('dip','line dip','OverUnderAniso',result=1)
+Result('dip','line dip','OverUnderAniso')
 
 Flow('pwd','line dip','pwd dip=${SOURCES[1]}')
 Flow('smooth','pwd',
           'math output="input*input" | smooth rect1=10 rect2=10')
 Plot('pwd','smooth',grey + ' title="Coherency" allpos=y color=j')
 
-Combine('pwd','line pwd','OverUnderAniso',result=1)
+Result('pwd','line pwd','OverUnderAniso')
 
 ###########################################################################
 

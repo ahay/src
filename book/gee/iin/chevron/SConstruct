@@ -50,12 +50,12 @@ for data in sets:
          'frame xyz=${SOURCES[1]} base=%g' % baseplate)
     Plot(data+'1',data+'1',grey('Binned and framed %s data' % data))
 
-Combine('wellseis',sets,'SideBySideIso',result=1)
+Result('wellseis',sets,'SideBySideIso')
 
 Flow('sx','seismic1','lapfill niter=500')
 Plot('sx','sx',grey('Extended seismic'))
 
-Combine('misseis',['seismic1','sx'],'SideBySideIso',result=1)
+Result('misseis',['seismic1','sx'],'SideBySideIso')
 
 Flow('mask','well1','add mode=d $SOURCE')
 Flow('vv',['well1','sx','mask'],
@@ -84,8 +84,8 @@ for case in [1,2]:
          title="Map based on %s"
          ''' % label)
 
-Combine('diffdiff',['vv','d1','d2'],'SideBySideAniso',result=1)
-Combine('finalmap',['m2','c2'],'SideBySideAniso',result=1)
+Result('diffdiff',['vv','d1','d2'],'SideBySideAniso')
+Result('finalmap',['m2','c2'],'SideBySideAniso')
 
 ###########################################################################
 End()

@@ -39,7 +39,7 @@ Flow('con','fft1',"fincon h0=0 dh=0.004 nh=125")
 Flow('imp2','con',
      "transp | fft1 inv=y | window n1=512 | stretch dens=2 inv=y rule=L")
 Plot('imp2','imp2',grey +  ' title="FinDif OC impulse response"')
-Combine('off-imp','imp imp2','SideBySideAniso',result=1)
+Result('off-imp','imp imp2','SideBySideAniso')
 
 fft3 = 'fft1 | fft3 axis=2 | fft3 axis=3'
 ifft3 = 'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y'

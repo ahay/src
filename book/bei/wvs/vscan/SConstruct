@@ -31,8 +31,8 @@ for case in cases:
     Flow(nmo,[case,'vrms'],'nmo half=n velocity=${SOURCES[1]}')
     Plot(nmo,nmo,'grey wanttitle=n clip=%g' % clip)
         
-Combine('mutter',cases,'SideBySideAniso',result=1,vppen='txscale=1.5')
-Combine('nmogath',nmos,'SideBySideAniso',result=1,vppen='txscale=1.5')
+Result('mutter',cases,'SideBySideAniso',vppen='txscale=1.5')
+Result('nmogath',nmos,'SideBySideAniso',vppen='txscale=1.5')
 
 ###########################################################################
 End()

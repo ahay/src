@@ -29,11 +29,11 @@ for case in ['data','miss']:
              grey crowd=0.95 wanttitle=n
              ''' % wind)
 
-    Combine(case+'top',plots[0:4],'SideBySideAniso')
-    Combine(case+'mid',plots[4:8],'SideBySideAniso')
-    Combine(case+'bot',plots[8:12],'SideBySideAniso')
-    Combine(case,map(lambda x: case+x,['top','mid','bot']),'OverUnderAniso')
-Combine('passfill','data miss','SideBySideAniso',result=1)
+    Plot(case+'top',plots[0:4],'SideBySideAniso')
+    Plot(case+'mid',plots[4:8],'SideBySideAniso')
+    Plot(case+'bot',plots[8:12],'SideBySideAniso')
+    Plot(case,map(lambda x: case+x,['top','mid','bot']),'OverUnderAniso')
+Result('passfill','data miss','SideBySideAniso')
 
 ###########################################################################
 End()

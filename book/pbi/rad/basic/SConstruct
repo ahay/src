@@ -31,7 +31,7 @@ radon = map(lambda x: 'radon%d' % x,range(3))
 Plot(radon[1],'rad', 'window n1=860 | grey ' + labelr) # middle
 Plot(radon[0],'data','window n1=860 | grey ' + labelc) # left
 Plot(radon[2],'frw', 'window n1=860 | grey ' + labelc) # right
-Combine('radon',radon,'SideBySideAniso',result=1)
+Result('radon',radon,'SideBySideAniso')
 
 Flow('inv','data',
      'radon nx=60 ox=0.275 dx=0.005 p0=0 np=200 dp=0.005')
@@ -45,7 +45,7 @@ Plot(radon_inv[2],'pre data',
           labelc) # right
 Plot(radon_inv[1],'pre',
           'window n1=860 | grey clip=131.365' + labelc) # middle
-Combine('radon-inv',radon_inv,'SideBySideAniso',result=1)
+Result('radon-inv',radon_inv,'SideBySideAniso')
 
 Flow('cdpv','cdp-rad','window n2=1 | headermath output=1.5')
 Flow('cdp-nmo','cdp-rad cdpv','taupmo velocity=${SOURCES[1]}')
@@ -56,7 +56,7 @@ Plot('pik','cdp-pik',
           '''window j2=40 |
           graph min2=0 max2=999 pad=n
           yreverse=y wanttitle=n plotcol=6 wantaxis=n''')
-Combine('cdp-pick','sig pik','Overlay',result=1)
+Result('cdp-pick','sig pik','Overlay')
           
 ############################################################################
 

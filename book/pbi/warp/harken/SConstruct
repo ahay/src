@@ -35,7 +35,7 @@ for case in (1,2):
     Flow(line,cube,'window n3=1 f3=40')
     Plot(line,line,
          'grey title=%s lanel1="Time (s)" label2="In-line" ' % title)
-Combine('sline','s1line s2line','SideBySideAniso',result=1)
+Result('sline','s1line s2line','SideBySideAniso')
 
 ###########################################################################
 #
@@ -134,7 +134,7 @@ def interleave(title):
 
 Plot('inter0','s1line-2 s2line-2',interleave('Before'))
 Plot('inter2','s1line-2 wline2-2',interleave('After'))
-Combine('hinter','inter0 inter2','OverUnderAniso',result=1)
+Result('hinter','inter0 inter2','OverUnderAniso')
 
 #############################################################################
 #
@@ -206,8 +206,8 @@ Plot('s1cube','s1cube',plot3('Fast'))
 Plot('s2cube','s2cube',plot3('Slow'))
 Plot('wcube','wcube',plot3('Warped Slow'))
 
-Combine('before','s1cube s2cube','SideBySideAniso',result=1)
-Combine('after','s1cube wcube','SideBySideAniso',result=1)
+Result('before','s1cube s2cube','SideBySideAniso')
+Result('after','s1cube wcube','SideBySideAniso')
 
 ###########################################################################
 End()

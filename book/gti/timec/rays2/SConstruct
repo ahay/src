@@ -30,20 +30,20 @@ Flow('syrays2','symes','rays2' + par)
 Plot('syrays2','syrays2','window j2=5 |' + graph)
 Plot('syfronts2','syrays2','window j1=100 | transp |' + graph)
 
-Combine('syrays2','symes syrays2','Overlay',result=1)
-Combine('syfronts2','symes syfronts2','Overlay',result=1)
+Result('syrays2','symes syrays2','Overlay')
+Result('syfronts2','symes syfronts2','Overlay')
 
 Plot('sycell2','symes',
      '''cell2 %s |
      plotrays frame=$SOURCE screenratio=2 jr=5 plotcol=7''' % par)
-Combine('sycell2','symes sycell2','Overlay',result=1)
+Result('sycell2','symes sycell2','Overlay')
 
 Flow('sytable','symes',
      'shoot2 %s zshot=1 nr=40 r0=0.2 dr=0.02' % par)
 Plot('syshoot2',['symes','sytable'],          
      '''cell2 %s zshot=1 anglefile=${SOURCES[1]} |
      plotrays frame=${SOURCES[0]} screenratio=2 plotcol=7''' % par)
-Combine('syshoot2','symes syshoot2','Overlay',result=1)
+Result('syshoot2','symes syshoot2','Overlay')
 
 ############################################################################
 

@@ -27,7 +27,7 @@ Helderiv('hel',eps=0.001,na=16)
 Plot('helderiv','bay hel',
      'helicon filt=${SOURCES[1]} | ' + plot('Helix derivative'))
 
-Combine('helderiv','bay helderiv slope','OverUnderAniso',result=1)
+Result('helderiv','bay helderiv slope','OverUnderAniso')
 
 ###########################################################################
 End()

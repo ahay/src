@@ -69,8 +69,7 @@ Flow('sdiam',['shorz','diag'],helicon())
 Plot('horz','shorz',g % 'A')
 Plot('diag','sdiag',g % 'B')
 Plot('diam','sdiam',g % 'A (convolve) B')
-Combine('diamond','horz diag diam','SideBySideAniso',
-             result=1,vppen='txscale=2.4')
+Result('diamond','horz diag diam','SideBySideAniso',vppen='txscale=2.4')
 
 Flow('spike2',None,
           'spike n1=20 n2=20 nsp=2 k1=3,7 k2=7,3 mag=1,-1')
@@ -87,15 +86,13 @@ for filt in ('four','waves'):
     Flow(div,[inp,filt],helicon(div=1))
     Plot(inp,inp,g % 'input')
     Plot(div,div,g % 'input/filter')
-    Combine('wrap-' + filt,[inp,div],'SideBySideAniso',
-                 result=1,vppen='txscale=1.4')
+    Result('wrap-' + filt,[inp,div],'SideBySideAniso',vppen='txscale=1.4')
 
     Flow(div2,[div,filt],helicon(1,1))
     Flow(div4,[div2,filt],helicon(1) + ' | ' + helicon(0))
     Plot(div2,div2,g % '(input/filter)/filter\'')
     Plot(div4,div4,g % '((input/filter)/filter\')filter\'filter')
-    Combine('back-' + filt,[div2,div4],'SideBySideAniso',
-                 result=1,vppen='txscale=1.4')
+    Result('back-' + filt,[div2,div4],'SideBySideAniso',vppen='txscale=1.4')
     
 Flow('spike3',None,'spike n1=30 n2=30 nsp=2 k1=4,10 k2=10,4 mag=1,-1')
 Flow('inp3',None,'spike n1=30 n2=30 nsp=2 k1=29,25 k2=20,10 mag=1,-1')
@@ -111,8 +108,7 @@ for filt in ('lapfac','dip'):
     Plot(inp,inp,  g % 'input')
     Plot(div,div,  g % 'input/filter')
     Plot(div2,div2,g % '(input/filter)/filter\'')
-    Combine(filt,[inp,div,div2],'SideBySideAniso',
-                 result=1,vppen='txscale=2.4')
+    Result(filt,[inp,div,div2],'SideBySideAniso',vppen='txscale=2.4')
 
 Flow('spik',None,'spike n1=30 n2=30 k1=15 k2=15 d1=1 d2=1')
 
@@ -131,8 +127,7 @@ for filt in ['damp','lapfac','two','wide','four','dip','waves']:
          'wilson lagin=${SOURCES[1]} lagout=${TARGETS[1]}')
     Plot(fact,['spik',fact],helicon(0,0) + ' | ' + g % 'Wilson factor')
     Plot(invs,[self,fact],helicon(0,1) + ' | ' + g % 'Wilson inversion')
-    Combine(auto,[self,auto,fact,invs],'SideBySideAniso',result=1,
-            vppen='txscale=2.4')
+    Result(auto,[self,auto,fact,invs],'SideBySideAniso',vppen='txscale=2.4')
     
 ###########################################################################
 

@@ -19,7 +19,7 @@ grey = 'grey label1="Time (s)" label2=Trace wanttitle=n'
 
 Plot('emil1','emil1',grey)
 Plot('emil2','emil2',grey)
-Combine('emil','emil1 emil2','SideBySideAniso',result=1)
+Result('emil','emil1 emil2','SideBySideAniso')
     
 ###########################################################################
 End()

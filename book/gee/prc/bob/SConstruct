@@ -42,12 +42,12 @@ def graph(title):
 Flow('rms','scan','blindpick2 eps=100 | window')
 Plot('rms','rms',graph(' ') + ' pad=y plotcol=3 plotfat=10 wantaxis=n' + win)
 
-Combine('scan2',['scan','rms'],'Overlay')
+Plot('scan2',['scan','rms'],'Overlay')
 
 Flow('weight',['stack','rms'],'slice pick=${SOURCES[1]}')
 Plot('weight','weight',graph('Weight') + ' label2=Amplitude')
 
-Combine('clapp',['cmp','scan2','weight'],'SideBySideAniso',result=1)
+Result('clapp',['cmp','scan2','weight'],'SideBySideAniso')
 
 rect = {'stiff': 30, 'flex': 3}
 
@@ -61,7 +61,7 @@ for case in rect.keys():
          'cat axis=2 ${SOURCES[1]} | ' +
          graph('RMS Velocity') +
          ' dash=0,1')
-    Combine(case,[case2,case],'SideBySideIso',result=1)
+    Result(case,[case2,case],'SideBySideIso')
 
 ###########################################################################
 End()

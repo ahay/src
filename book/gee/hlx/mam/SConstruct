@@ -48,8 +48,8 @@ for case in [1,5]:
     Plot(hel,[mam,'hel'],
          'helicon filt=${SOURCES[1]} | ' + plot('Helix Derivative'))
 
-Combine('scratch','mam1 hel1','SideBySideAniso',result=1)
-Combine('mam','mam5 hel5','SideBySideAniso',result=1)
+Result('scratch','mam1 hel1','SideBySideAniso')
+Result('mam',    'mam5 hel5','SideBySideAniso')
 
 ###########################################################################
 End()

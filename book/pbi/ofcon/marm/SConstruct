@@ -88,7 +88,7 @@ for shot in [101,151,201]:
         shots.append(shoti)
         Plot(shoti,'snmo',shotplot(slice))
     shoti = 'shot%d' % shot
-    Combine(shoti,shots,'SideBySideAniso',result=1)
+    Result(shoti,shots,'SideBySideAniso')
 
     shotin = 'shotin%d' % shot
     shoterr = 'shoterr%d' % shot
@@ -100,7 +100,7 @@ for shot in [101,151,201]:
     Plot(simperr,'diff0',
          shotplot(shot) +
          ' title="(Shot%d+Shot%d)/2-Shot%d" ' % (shot,shot+2,shot+1))
-    Combine(shotin,[shotin,shoterr,simperr],'SideBySideAniso',result=1)
+    Result(shotin,[shotin,shoterr,simperr],'SideBySideAniso')
 
 Flow('sparsecmp','marm','window j3=2 | shot2cmp positive=n')
 Flow('backcmp',['snmo2','vrms'],
@@ -126,9 +126,9 @@ for cmp in [3000,4000,5000,6000,7000]:
     Plot('dens'+cmpi,'dens'+cmpi,cmpplot + '  title=Interpolated')
     Plot('err'+cmpi,['back'+cmpi,cmpi],
          'add scale=1,-1 ${SOURCES[1]} | ' + cmpplot + '  title=Error')
-    Combine(cmpi,[cmpi,'sparse'+cmpi],'SideBySideAniso',result=1)
-    Combine('err'+cmpi,['back'+cmpi,'err'+cmpi],'SideBySideAniso',result=1)
-    Combine('dens'+cmpi,[cmpi,'dens'+cmpi],'SideBySideAniso',result=1)
+    Result(cmpi,[cmpi,'sparse'+cmpi],'SideBySideAniso')
+    Result('err'+cmpi,['back'+cmpi,'err'+cmpi],'SideBySideAniso')
+    Result('dens'+cmpi,[cmpi,'dens'+cmpi],'SideBySideAniso')
 
 ###########################################################################
 End()

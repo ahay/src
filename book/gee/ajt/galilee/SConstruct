@@ -36,7 +36,7 @@ def plot(title,allpos=0):
 
 Plot('galbin1','galbin1',plot('Coarse Binning',1))
 Plot('galbin2','galbin2',plot('Fine Binning',1))
-Combine('galbin',['galbin1','galbin2'],'SideBySideAniso',result=1)
+Result('galbin',['galbin1','galbin2'],'SideBySideAniso')
 
 Flow('mesh','triplets',bin + ' interp=2 nx=140 ny=220')
 # Plot('mesh','mesh',plot('Binned',1))
@@ -45,7 +45,7 @@ Flow('ruff2','mesh','light ay=0 ax=1 eps=0.4')
 Flow('ruff0','mesh','light ay=0 ax=1 eps=0')
 Plot('ruff2','ruff2',plot('Roughened: Lowcut'))
 Plot('ruff0','ruff0',plot('Roughened: Gradient'))
-Combine('galocut',['ruff2','ruff0'],'SideBySideAniso',result=1)
+Result('galocut',['ruff2','ruff0'],'SideBySideAniso')
 
 ###########################################################################
 End()

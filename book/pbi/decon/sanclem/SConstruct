@@ -91,7 +91,7 @@ Plot('ai','ai',
        wantscalebar=y barlabel="Acoustic Impedance"
        title=SanClemente label1="Time (s)"
        ''')
-Combine('sanclem','vp ro ai','OverUnderAniso',result=1)
+Result('sanclem','vp ro ai','OverUnderAniso')
 
 freq = (30,60,120)
 for hz in freq:
@@ -102,7 +102,7 @@ for hz in freq:
          grey title="Seismic Model (%d-Hz Ricker)" color=G
          label1="Time (s)"
          ''' % hz)
-Combine('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso',result=1)
+Result('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso')
 
 Flow('vel2','topvel vel',
      'cat axis=1 ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[0]}')

@@ -32,7 +32,7 @@ Plot('helocut','bay aa bb',
      helicon filt=${SOURCES[2]} div=1 |
      ''' + plot('Helix derivative'))
 
-Combine('helocut','bay helocut slope','OverUnderAniso',result=1)
+Result('helocut','bay helocut slope','OverUnderAniso')
 
 ###########################################################################
 End()
