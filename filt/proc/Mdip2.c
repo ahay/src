@@ -3,6 +3,8 @@
 Takes: < data.rsf > dip.rsf
 */
 
+#include <math.h>
+
 #include <rsf.h>
 
 #include "dip2.h"
@@ -30,6 +32,10 @@ int main (int argc, char *argv[])
     /* vertical smoothness */
     if (!sf_getfloat("lam",&lam)) lam=1; 
     /* horizontal smoothness */
+
+    eps = sqrtf(12*eps+1.);
+    lam = sqrtf(12*lam+1.);
+
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial dip */
@@ -69,4 +75,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.1 2004/02/14 07:01:42 fomels Exp $	 */
+/* 	$Id: Mdip2.c,v 1.2 2004/02/24 06:13:25 fomels Exp $	 */
