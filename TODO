@@ -2,7 +2,6 @@ PROJ
 	parameter checking
 	Tkinter interface
 DOCUMENTATION
-	self-doc
 	demos: SU/SEPlib/Claerbout
 	manual
 SEIS
@@ -12,9 +11,9 @@ SEIS
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
 VPLOT
-	finish sepmains
 	vppen
-	filters: gtk, svg, pdf
+	filters: gtk, svg, pdf	
+	finish sepmains
 LATEX
 	finish SEG.bib
 	documentation
