@@ -278,20 +278,18 @@ Plots = Base(name='Plots',function=getplots,skeys=['.tex','.ltx'])
 # PLOTTING COMMANDS
 #############################################################################
 
-def SideBySideAniso(n=2):
-    return sep + "vppen yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n)
-
-def OverUnderAniso(n=2):
-    return sep + "vppen xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n)
-
-def SideBySideIso(n=2):
-    return sep + "vppen size=r vpstyle=n gridnum=%d,1 $SOURCES" % n
-
-def OverUnderIso(n=2):
-    return sep + "vppen size=r vpstyle=n gridnum=1,%d $SOURCES" % n
-
-def Overlay():
-    return sep + "vppen erase=o vpstyle=n $SOURCES"
+combine ={
+    'SideBySideAniso': lambda n:
+    sep + "vppen yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
+    'OverUnderAniso': lambda n:
+    sep + "vppen xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
+    'SideBySideIso': lambda n:
+    sep + "vppen size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
+    'OverUnderIso': lambda n:
+    sep + "vppen size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
+    'Overlay': lambda n:
+    sep + "vppen erase=o vpstyle=n $SOURCES"
+    }
 
 #############################################################################
 
@@ -330,10 +328,10 @@ class Project(Environment):
             Clean('paper.pdf',self.junk)
         else:
             self.junk = []
-    def Flow(self,target,input,flow,source=None,clean=1,
-             suffix=sfsuffix,prefix=sfprefix):
+    def Flow(self,target,source,flow,clean=1,stdout=1,stdin=1,
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
         if not flow:
-            return None
+            return None        
         sources = []
         if source:
             if type(source) is types.ListType:
@@ -342,8 +340,10 @@ class Project(Environment):
                 files = string.split(source)
             for file in files:
                 if ('.' not in file):
-                    file = file + sfsuffix
+                    file = file + src_suffix
                 sources.append(file)
+        else:
+            stdin=0
         lines = string.split(flow,';')
         steps = []
         for line in lines:
@@ -368,25 +368,32 @@ class Project(Environment):
             #<-
             steps.append(string.join(substeps," | "))
         #<- assemble the pipeline
-        command = string.join(steps,";\n") + " > $TARGET"
-        if input:
-            if ('.' not in input):
-                input = input + sfsuffix
-            sources.append(input)
-            command = ("< %s " % input) + command
-        if not re.search(suffix + '$',target):
-            target = target + suffix
+        command = string.join(steps," ;\n")
+        if stdout:
+            command = command + " > $TARGET"
+        else:
+            command = command + " >/dev/null"
+        if stdin:
+            command = "< $SOURCE " + command
+        targets = []
+        if type(target) is types.ListType:
+            files = target
+        else:
+            files = string.split(target)
+        for file in files:
+            if not re.search(suffix + '$',file):
+                file = file + suffix
+            targets.append(file)
         if clean:
             self.junk.append(target)
-        return self.Command(target,sources,command)
-    def Plot (self,target,input,flow,source=None,clean=1,
-              suffix=vpsuffix,**kw):
-        return self.Flow(target,input,flow,source,clean,suffix)
-    def Result(self,target,input,flow,source=None,clean=0,
-               suffix=vpsuffix,repr=1,**kw):
+        return self.Command(targets,sources,command)
+    def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
+        return self.Flow(target,source,flow,suffix=suffix,**kw)
+    def Result(self,target,source,flow,clean=0,suffix=vpsuffix,**kw):
         target2 = os.path.join(resdir,target)
         if flow:
-            plot = self.Plot(target2,input,flow,source,clean,suffix)
+            plot = self.Plot(target2,source,flow,
+                             clean=clean,suffix=suffix,**kw)
             Default (plot)
             self.view.append(self.View(target + '.view',plot))
             build = self.Build(target2 + pssuffix,plot)
@@ -399,6 +406,12 @@ class Project(Environment):
         self.pdfs.append(buildPDF)
         self.Alias(target + '.buildPDF',buildPDF)
         return plot
+    def Combine(self,target,source,how,result=0):
+        flow = apply(combine[how],[len(source)])
+        if result:
+            return self.Result(target,source,flow,src_suffix=vpsuffix,stdin=0)
+        else:
+            return self.Plot(target,source,flow,src_suffix=vpsuffix,stdin=0)  
     def End(self):
         self.Alias('view',self.view)
         self.Alias('clean',self.Clean('clean',None,junk=self.junk))

@@ -25,5 +25,3 @@ SConscript(dirs=['seis/main','seis/proc','seis/imag','vplot/main'],
            name='SConstruct')
 
 env.Alias('all',[bindir,libdir,incdir])
-
-
