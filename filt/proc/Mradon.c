@@ -1,21 +1,20 @@
-/* High-resolution Radon transform. 
-*/
+/* High-resolution Radon transform. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -193,7 +192,7 @@ int main (int argc, char **argv)
 		}
 		
 		/* FFT to frequency */
-		kiss_fftr(invs,tt, (kiss_fft_cpx *) cd[ix]);
+		kiss_fftr(forw,tt, (kiss_fft_cpx *) cd[ix]);
 	    }
 	} else { /* modeling */
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
@@ -203,7 +202,7 @@ int main (int argc, char **argv)
 		}
 
 		/* FFT to frequency */
-		kiss_fftr(invs,tt, (kiss_fft_cpx *) cm[ip]);
+		kiss_fftr(forw,tt, (kiss_fft_cpx *) cm[ip]);
 	    }
 	}
 	
@@ -258,18 +257,18 @@ int main (int argc, char **argv)
 
 	if (adj) {
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
-		/* FFT to time */
-		kiss_fftri(forw,(const kiss_fft_cpx *) cm[ip], tt);
+	      /* FFT to time */
+	      kiss_fftri(invs,(const kiss_fft_cpx *) cm[ip], tt);
 		
-		sf_floatwrite(tt,nt,out);
+	      sf_floatwrite(tt,nt,out);
 	    }
 	} else { /* modeling */
-	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
-		/* FFT to time */
-		kiss_fftri(forw,(const kiss_fft_cpx *) cd[ix], tt);
-		
-		sf_floatwrite(tt,nt,out);
-	    }
+	  for (ix=0; ix < nx; ix++) { /* loop over offsets */
+	    /* FFT to time */
+	    kiss_fftri(invs,(const kiss_fft_cpx *) cd[ix], tt);
+	    
+	    sf_floatwrite(tt,nt,out);
+	  }
 	}
     } /* loop over CMPs */
 

@@ -14,20 +14,19 @@ static void mysin (float q, void* v, float* f)
 
   f[0] = x;
   f[1] = sinf(x);
-
-  sf_warning("got %g %g\n",f[0],f[1]);
 }
 
 int main(int argc, char* argv[])
 {
-  int maxsplit, nx, ng;
+  int maxsplit, nx, ng, ig;
   float **place, **out, min1, max1;
+  float complex *c;
   agrid grd;
   sf_file grid;
 
   sf_init (argc,argv);
   grid = sf_output("out");
-  sf_setformat(grid,"native_float");
+  sf_setformat(grid,"native_complex");
 
   if (!sf_getint("nx",&nx)) nx=5;
   /* number of points */
@@ -53,10 +52,15 @@ int main(int argc, char* argv[])
   ng = grid_size(grd);
   out = write_grid(grd);
 
-  sf_putint(grid,"n1",2);
-  sf_putint(grid,"n2",ng);
+  sf_putint(grid,"n1",ng);
 
-  sf_floatwrite(out[0],ng*2, grid);
+  c = sf_complexalloc(ng);
+
+  for (ig=0; ig < ng; ig++) {
+    c[ig] = out[ig][0] + I*out[ig][1];
+  }
+
+  sf_complexwrite(c, ng, grid);
 
   exit(0);
 }

@@ -51,8 +51,8 @@ void radon_set (float w   /* frequency */,
     int ix;
 
     for (ix=0; ix < nx; ix++) {
-	dc[ix] = cexpf(w*dp*xx[ix]*I);
-	c0[ix] = cexpf(w*p0*xx[ix]*I); 
+      dc[ix] = cexpf(w*dp*xx[ix]*I);
+      c0[ix] = cexpf(w*p0*xx[ix]*I); 
     }
 }
 

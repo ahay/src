@@ -22,13 +22,15 @@
 #include <rsf.h>
 /*^*/
 
-static int *n, s[SF_MAX_DIM], nd, dim;
-static sf_triangle *tr;
+#include "ntriangle.h"
+
+static int *n, s[SF_MAX_DIM], nd, dim, **tlen;
+static ntriangle *tr;
 static float *tmp;
 
 void ntrianglen_init (int ndim  /* number of dimensions */, 
-		     int *nbox /* triangle radius [ndim] */, 
-		     int *ndat /* data dimensions [ndim] */)
+		      int *nbox /* triangle radius [ndim] */, 
+		      int *ndat /* data dimensions [ndim] */)
 /*< initialize >*/
 {
     int i;
@@ -36,15 +38,24 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
     n = ndat;
     dim = ndim;
 
-    tr = (sf_triangle*) sf_alloc(dim,sizeof(sf_triangle));
+    tr = (ntriangle*) sf_alloc(dim,sizeof(ntriangle));
+
 
     nd = 1;
     for (i=0; i < dim; i++) {
-	tr[i] = (nbox[i] > 1)? sf_triangle_init (nbox[i],ndat[i]): NULL;
+	tr[i] = (nbox[i] > 1)? ntriangle_init (nbox[i],ndat[i]): NULL;
 	s[i] = nd;
 	nd *= ndat[i];
     }
     tmp = sf_floatalloc (nd);
+    tlen = (int**) sf_alloc(dim,sizeof(int*)); 
+}
+
+void ntrianglen_set (int dim /* dimension number */, 
+		     int *len /* triangle length [nd] */)
+/*< set triangle length for the specified dimension >*/
+{
+  tlen[dim] = len;
 }
 
 void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
@@ -73,7 +84,7 @@ void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim+1,n,s);
-		sf_smooth2 (tr[i], i0, s[i], false, tmp);
+		nsmooth2 (tr[i], i0, s[i], false, tlen[i], tmp);
 	    }
 	}
     }
@@ -97,10 +108,11 @@ void ntrianglen_close(void)
     free (tmp);
 
     for (i=0; i < dim; i++) {
-	if (NULL != tr[i]) sf_triangle_close (tr[i]);
+	if (NULL != tr[i]) ntriangle_close (tr[i]);
     }
 
     free(tr);
+    free(tlen);
 }
 
 /* 	$Id: ntrianglen.c 839 2004-10-25 11:54:43Z fomels $	 */
