@@ -26,14 +26,15 @@ globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 # CONFIGURATION VARIABLES
 #############################################################################
 
-latex      = WhereIs('pdflatex')
-bibtex     = WhereIs('bibtex')
-acroread   = WhereIs('acroread')
-epstopdf   = WhereIs('epstopdf')
-fig2dev    = WhereIs('fig2dev')
-latex2html = WhereIs('latex2html')
-pdf2ps     = WhereIs('pdf2ps')
-pstoimg    = WhereIs('pstoimg')
+latex       = WhereIs('pdflatex')
+bibtex      = WhereIs('bibtex')
+acroread    = WhereIs('acroread')
+epstopdf    = WhereIs('epstopdf')
+fig2dev     = WhereIs('fig2dev')
+latex2html  = WhereIs('latex2html')
+pdf2ps      = WhereIs('pdf2ps')
+pstoimg     = WhereIs('pstoimg')
+mathematica = WhereIs('math')
 
 ressuffix = '.pdf'
 vpsuffix  = '.vpl'
@@ -377,13 +378,16 @@ if latex2html:
     else:
         init = ''
 
-# latex2html -html_version 4.0,math -no_math -no_navigation html.tex
-# latex2html -html_version 4.0,math -no_math_parsing -no_navigation html.tex
-        
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir %s' %
                    (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
 
+if mathematica:
+     Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
+                    '< $SOURCE >& /dev/null > /dev/null && '
+                    'mv junk_ma.pdf $TARGET' % mathematica,
+                    suffix='.pdf',src_suffix='.ma')
+     
 Color = Builder(action = Action(colorize),suffix='.html')
                    
 #############################################################################
@@ -459,7 +463,9 @@ class TeXPaper(Environment):
                 self.Append(BUILDERS={'PNGBuild':PNGBuild})
                 self.imgs = []
         if pdf2ps:
-            self.Append(BUILDERS={'PSBuild':PSBuild})
+             self.Append(BUILDERS={'PSBuild':PSBuild})
+        if mathematica:
+             self.Append(BUILDERS={'Math':Math})
         self.scons = []
         for scons in glob.glob('[a-z]*/SConstruct'):
              dir = os.path.dirname(scons)
@@ -486,6 +492,12 @@ class TeXPaper(Environment):
                   self.imgs.append(png)
                   self.Install(figdir,[png,pdf])
                   self.Alias('install',figdir)
+        # mathematica figures:
+        if mathematica:
+             for mth in glob.glob('Math/[a-z]*.ma'):
+                  pdf = os.path.join(resdir,re.sub(r'\.ma$','.pdf',
+                                                   os.path.basename(mth)))
+                  self.Math(pdf,mth)
         # non-reproducible figures
         for pdf in glob.glob(os.path.join(resdir,'*.pdf')):
             if pdf2ps:
