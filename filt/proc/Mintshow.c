@@ -1,4 +1,7 @@
-/* Testing forward interpolation in 1-D. */
+/* Output interpolation filter. 
+
+See also: inttest1.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -20,7 +23,6 @@
  
 #include <rsf.h>
 
-#include "int1.h"
 #include "interp.h"
 #include "interp_cube.h"
 #include "interp_sinc.h"
@@ -29,30 +31,15 @@
 
 int main(int argc, char* argv[])
 {
-    int n, n2, nd, nw, i2;
-    float *mm, *coord, *z, o, oo, d, dd, kai;
+    int nw;
+    float *w, kai, x;
     char *intp;
     interpolator interp;
-    sf_file in, out, crd;
+    sf_file filt;
 
     sf_init (argc,argv);
-    in = sf_input("in");
-    out = sf_output("out");
-    crd = sf_input("coord");
-
-    if (!sf_histint(in,"n1",&n)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
-
-    if (!sf_histint(crd,"n1",&nd)) sf_error("No n1= in coord");
-    sf_putint(out,"n1",nd);
-
-    if (!sf_histfloat(in,"d1",&d))   sf_error("No d1= in input");
-    if (!sf_histfloat(crd,"d1",&dd)) sf_error("No d1= in coord");
-    sf_putfloat(out,"d1",dd);
-
-    if (!sf_histfloat(in,"o1",&o))   sf_error("No o1= in input");
-    if (!sf_histfloat(crd,"o1",&oo)) sf_error("No o1= in coord");
-    sf_putfloat(out,"o1",oo);
+    filt = sf_output("out");
+    sf_setformat(filt,"native_float");
 
     intp = sf_getstring("interp");
     /* interpolation (lagrange,cubic,kaiser,lanczos,cosine,welch,spline) */
@@ -61,8 +48,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("nw",&nw)) sf_error("Need nw=");
     /* interpolator size */
 
-    coord = sf_floatalloc(nd);
-    sf_floatread(coord,nd,crd);
+    sf_putint(filt,"n1",nw);
+    w = sf_floatalloc(nw);
+
+    if (!sf_getfloat("x",&x)) sf_error("Need x=");
+    /* interpolation shift */
 
     switch(intp[0]) {
 	case 'l':
@@ -96,7 +86,7 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-	    prefilter_init (nw, n, 3*n);
+/*	    prefilter_init (nw, n, 3*n); */
 	    interp = spline_int;
 	    break;
 	default:
@@ -104,19 +94,8 @@ int main(int argc, char* argv[])
 	    break;
     }
 
-    int1_init (coord, o, d, n, interp, nw, nd);
-    
-    z = sf_floatalloc(nd);
-    mm = sf_floatalloc(n);
- 
-    for (i2=0; i2 < n2; i2++) {
-        sf_floatread (mm,n,in);
-        if ('s' == intp[0]) prefilter_apply (n,mm);
-	
-	int1_lop (false,false,n,nd,mm,z);
-     
-	sf_floatwrite (z,nd,out);
-    }
+    interp(x,nw,w);
+    sf_floatwrite(w,nw,filt);
 
     exit(0);
 }
