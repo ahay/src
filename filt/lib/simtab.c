@@ -170,6 +170,8 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
     result = true;
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
+	if (NULL == fval) 
+	    sf_error("%s: Not enough values in %s=: %d < %d",__FILE__,key,i,n);
 	fvali = strpbrk(fval,"x*");
 	if (NULL != fvali) {
 	    strncpy(cnum,fval,(size_t) (fvali-fval));
