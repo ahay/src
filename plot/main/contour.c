@@ -18,9 +18,10 @@ int main (int argc, char* argv[])
     float **z, zi, dc, c0, zmin, zmax, *c, min1, min2, max1, max2;
     bool hasc, hasdc, hasc0;
     sf_file in;
-
+    
     sf_init(argc,argv);
     in = sf_input("in");
+    vp_init();
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;

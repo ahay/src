@@ -18,6 +18,8 @@ int main (int argc, char* argv[])
     float xmin, ymin, xmax, ymax, xvplot, yvplot;
     char line[MAXLINE], c, a, *ptr;
 
+    vp_init();
+
     fatscale = 1.;
     txvecscale = 1.;
     txscale = 1.;

@@ -1,3 +1,8 @@
+/* Generate raster plot.
+
+Takes: < data.rsf > plot.vpl
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -16,9 +21,10 @@ int main(int argc, char* argv[])
     unsigned char tbl[TSIZE+1], **buf, tmp;
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     sf_file in;
-
+    
     sf_init(argc,argv);
     in = sf_input("in");
+    vp_init();
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -35,8 +41,11 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&d3)) d3=1.;
     
     if (!sf_getbool("transp",&transp)) transp=true;
+    /* if y, transpose the display axes */
     if (!sf_getbool("yreverse",&yreverse)) yreverse=true;
+    /* if y, reverse the vertical axis */
     if (!sf_getbool("xreverse",&xreverse)) xreverse=false;
+    /* if y, reverse the horizontal axis */
 
     /* I don't understand this */
     if (transp) {
@@ -50,9 +59,11 @@ int main(int argc, char* argv[])
     phalf=85.;
     if (!sf_getfloat("gpow",&gpow)) {
 	gpow=1.;
+	/* raise data to gpow power for display */
     } else if (gpow <= 0.) {
 	gpow=0.;
 	sf_getfloat("phalf",&phalf);
+	/* percentage for estimating gpow */
 	if (phalf <=0. || phalf > 100.)
 	    sf_error("phalf=%g should be > 0 and <= 100",phalf);
 	panel = 0;
