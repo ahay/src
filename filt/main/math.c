@@ -12,6 +12,8 @@ See also: sfheadermath.
 #include <string.h>
 #include <math.h>
 
+#include <unistd.h>
+
 #include <rsf.h>
 
 static void check_compat (size_t nin, sf_file *in, int dim, const int *n);
@@ -25,10 +27,18 @@ int main(int argc, char* argv[])
     float **fbuf, **fst;
 
     sf_init (argc,argv);
-    in = (sf_file*) sf_alloc ((size_t) argc-1,sizeof(sf_file));
+    
+    in = (sf_file*) sf_alloc ((size_t) argc-1,sizeof(sf_file));    
     out = sf_output ("out");
+    
+    if (0 != isatty(fileno(stdin))) { /* no input file in stdin */
+	nin=0;
+    } else {
+	in[0] = sf_input("in");
+	sf_putint(out,"input",0);
+	nin=1;
+    }
 
-    nin=0;
     for (i=1; i< argc; i++) { /* collect inputs */
 	arg = argv[i];
 	eq =  strchr(arg,'=');
@@ -109,4 +119,4 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n)
     }
 }
 
-/* 	$Id: math.c,v 1.5 2004/03/13 06:00:24 fomels Exp $	 */
+/* 	$Id: math.c,v 1.6 2004/04/02 02:22:52 fomels Exp $	 */
