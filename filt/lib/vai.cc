@@ -15,6 +15,6 @@ VAI::VAI(int m0, int m1)
 int VAI::operator() (int i0,int i1)
 {
     int ii;
-    ii = (i1-1)*n[0] + i0 - 1;
+    ii = i1*n[0] + i0;
     return(ii);
 }

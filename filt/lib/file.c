@@ -92,7 +92,7 @@ struct sf_File {
     enum xdr_op op;
     sf_datatype type;
     sf_dataform form;
-    bool pipe;
+    bool pipe, rw;
 };
 
 /*@null@*/ static sf_file infile=NULL;
@@ -256,6 +256,9 @@ Should do output after sf_input. >*/
     }
 
     if (NULL != headname) free(headname);
+
+    if (!sf_getbool("readwrite",&(file->rw))) file->rw=false;
+
     return file;
 }
 
@@ -544,7 +547,7 @@ Prepares file for writing binary data >*/
 	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",
 		SF_EOL,SF_EOL,SF_EOT);
     } else {
-	file->stream = freopen(file->dataname,"wb",file->stream);
+	file->stream = freopen(file->dataname,file->rw? "w+b":"wb",file->stream);       
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to data file %s:",
 		      __FILE__,file->dataname);	

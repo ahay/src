@@ -132,13 +132,17 @@ def retrieve(target=None,source=None,env=None):
     else:
         for file in map(str,target):
             remote = os.path.basename(file)
-            urllib.urlretrieve(string.join([dataserver,folder,remote],'/'),
-                               file)
+            rdir =  string.join([dataserver,folder,remote],'/')
+            try:
+                urllib.urlretrieve(rdir,file)
 
-            if not os.stat(file)[6]:
-                print 'Could not download file "%s" ' % file
-                os.unlink(file)
-                return 2
+                if not os.stat(file)[6]:
+                    print 'Could not download file "%s" ' % file
+                    os.unlink(file)
+                    return 2
+            except:
+                print 'Could not download "%s" from "%s" ' % (file,rdir)
+                return 5
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
