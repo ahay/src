@@ -2,11 +2,9 @@ from rsfproj import *
 
 def Bay(name,f2=500,n2=1600,f1=400,n1=700):
     '''Extracts the Bay Area dataset (digital topography) and windows it'''
-    
-    datdir  = 'ftp://begpc132.beg.utexas.edu/data/bay'
-    Fetch('bay.H',datdir)
+    Fetch('bay.h','bay')
 
-    Flow(name,'bay.H',
+    Flow(name,'bay.h',
          '''
          dd data_format=native_float |
          window f2=%d n2=%d f1=%d n1=%d |

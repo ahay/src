@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('shots.HH','shots')
+Fetch('shots.hh','shots')
 
-Flow('cube','shots.HH',
+Flow('cube','shots.hh',
      '''
      dd data_format=native_float |
      window n1=400 n2=24 |

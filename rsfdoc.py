@@ -448,4 +448,5 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.19 2004/06/30 18:28:25 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.20 2004/07/01 23:11:24 fomels Exp $
+

@@ -2,13 +2,12 @@ from rsfproj import *
 
 def Galilee(name,grad=1):
     '''Extracts the Sea of Galiee dataset and bins it'''
-    
-    datdir  = 'ftp://begpc132.beg.utexas.edu/data/galilee'
-    Fetch('galilee.H',datdir)
+
+    Fetch('galilee.h','galilee')
 
     base = -212
 
-    Flow('data','galilee.H','dd data_format=native_float')
+    Flow('data','galilee.h','dd data_format=native_float')
     Flow('mask','data','window n1=1 f1=2 | mask max=%g' % base)
     Flow('triplets',['data','mask'],'headerwindow mask=${SOURCES[1]}')
 

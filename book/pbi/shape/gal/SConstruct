@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('galilee.H','galilee')
+Fetch('galilee.h','galilee')
 
-Flow('gal','galilee.H','dd data_format=native_float')
+Flow('gal','galilee.h','dd data_format=native_float')
 Flow('clip','gal','window f1=2 | mask max=-212')
 Flow('gal2',['gal','clip'],'headerwindow mask=${SOURCES[1]}')
 
@@ -44,4 +44,4 @@ Plot('movie',fills,'Movie')
 
 End()
 
-# 	$Id: SConstruct,v 1.4 2004/06/15 16:27:42 fomels Exp $	
+# 	$Id: SConstruct,v 1.5 2004/07/01 23:11:24 fomels Exp $	

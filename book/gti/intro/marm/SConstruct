@@ -1,15 +1,15 @@
 from rsfproj import *
 
-Fetch(['marmrefl.HH','marmvel.HH'],'marm')
+Fetch(['marmrefl.hh','marmvel.hh'],'marm')
 
-Result('shot','marmrefl.HH',
+Result('shot','marmrefl.hh',
        '''dd data_format=native_float |
        window n3=1 min3=6000 |
        grey title='Marmousi Shot Gather'
        label1="Time (s)" label2="Offset (m)"
        ''')
 
-Result('model','marmvel.HH',
+Result('model','marmvel.hh',
        '''
        dd data_format=native_float |
        grey title="Marmousi Model" allpos=y

@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('cmp.H','cmp')
+Fetch('cmp.h','cmp')
 
-Flow('cmp','cmp.H','dd data_format=native_float')
+Flow('cmp','cmp.h','dd data_format=native_float')
 Plot('cmp','cmp',
      'grey wherexlabel=b wheretitle=t title="CMP Gather" label1="Time (s)" ')
 

@@ -5,9 +5,9 @@ private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
            'server':os.environ.get('BEG_SERVER')}
 
-Fetch(['acig10.HH','cmp.HH'],'acig',private)
+Fetch(['acig10.hh','cmp.hh'],'acig',private)
 
-Flow('acig','acig10.HH',
+Flow('acig','acig10.hh',
      'dd data_format=native_float | window n3=1')
 Plot('acig','acig','grey title="Angle Common-Image Gather" ')
 
@@ -28,7 +28,7 @@ for plot in [0,1]:
 Plot('acig0','acig pick0 pick1','Overlay')
 Result('acig','acig acig0 dso','SideBySideAniso')
 
-Flow('cmp','cmp.HH',
+Flow('cmp','cmp.hh',
      '''
      dd data_format=native_float |
      tpow tpow=2 |

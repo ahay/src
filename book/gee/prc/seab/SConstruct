@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('apr18.H','seab')
+Fetch('apr18.h','seab')
 
-Flow('data','apr18.H','dd data_format=native_float')
+Flow('data','apr18.h','dd data_format=native_float')
 Flow('bin','data',
      '''window n1=1 f1=2 | math output='(2978-input)/387' |
      bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')

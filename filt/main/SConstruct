@@ -36,7 +36,7 @@ for prog in mains:
         if prog in alias.keys():
 	       copy = string.replace(str(main),prog,alias[prog])
                env.InstallAs(os.path.join(bindir,copy),main)
-#	       docmerge = configure.docextra(docmerge,prog,copy)
+	       docmerge = configure.docextra(docmerge,'sf'+prog,copy)
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -54,5 +54,5 @@ if root:
 
 #####################################################################
 
-# 	$Id: SConstruct,v 1.16 2004/07/01 11:36:59 fomels Exp $
+# 	$Id: SConstruct,v 1.17 2004/07/01 23:11:24 fomels Exp $
 

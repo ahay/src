@@ -1,14 +1,14 @@
 from rsfproj import *
 
-Fetch(['border.HH','elevation.HH',
-       'alldata.HH','obsdata.HH',
-       'coord.HH','predict.HH'],'rain')
+Fetch(['border.hh','elevation.HH',
+       'alldata.hh','obsdata.hh',
+       'coord.hh','predict.hh'],'rain')
 
 box = 'min1=-185.556 max1=193.18275 min2=-127.262 max2=127.25044'
 f2 = 0
 def border(name,n2):
     global f2
-    Flow([name,name+'x',name+'y'],'border.HH',
+    Flow([name,name+'x',name+'y'],'border.hh',
               '''
               window n1=1 f1=0 n2=%(n2)d f2=%(f2)d > ${TARGETS[1]};
               window n1=1 f1=1 n2=%(n2)d f2=%(f2)d > ${TARGETS[2]} < $SOURCE;
@@ -37,23 +37,23 @@ window n1=1 f1=1 > ${TARGETS[2]} < $SOURCE;
 cmplx ${TARGETS[1]} ${TARGETS[2]}
 '''
 
-Flow(['alldata','alldatax','alldatay'],'alldata.HH',select)
+Flow(['alldata','alldatax','alldatay'],'alldata.hh',select)
 Result('alldata','alldata',
             'graph symbol=x title="All data locations" plotcol=7 ' + box)
 
-Flow(['obs','obsx','obsy'],'obsdata.HH',select)
+Flow(['obs','obsx','obsy'],'obsdata.hh',select)
 Plot('obs','obs',
           'graph symbol=o title="Observed data locations" plotcol=5 ' + box)
 Plot('obsdata',['obs','border'],'Overlay')
 
-Flow('coord','coord.HH','dd data_format=native_float')
+Flow('coord','coord.hh','dd data_format=native_float')
 Flow(['coord2','coordx','coordy'],'coord',select)
 Plot('coord','coord2','graph symbol=x wanttitle=n plotcol=7 ' + box)
 Plot('data',['coord','border'],'Overlay')
 
 Result('raindata',['obsdata','data'],'SideBySideIso')
 
-Flow('obsdata','obsdata.HH','dd data_format=native_float')
+Flow('obsdata','obsdata.hh','dd data_format=native_float')
 Flow('raindata','obsdata','window f1=2')
 
 def contour(cont):
@@ -127,7 +127,7 @@ Result('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),'TwoRows')
 Result('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),
        'SideBySideIso')
 
-Flow('predict','predict.HH','dd data_format=native_float')
+Flow('predict','predict.hh','dd data_format=native_float')
 for niter in [10000,-40,0]:
     lapinter = 'lapinter%d' % niter
     lapdat = 'lapdat%d' % niter

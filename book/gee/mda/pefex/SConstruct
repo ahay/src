@@ -1,11 +1,11 @@
 from rsfproj import *
 
-dat = 'gomshot'
-zof = 'gomnearoffset'
+dat = 'gomshot.h'
+zof = 'gomnearoffset.H'
 
 for case in [dat,zof]:
-    Fetch(case+'.H','gom')
-    Flow(case,case+'.H','dd data_format=native_float')
+    Fetch(case,'gom')
+    Flow(case,case,'dd data_format=native_float')
 
 def showdat(title,max1,f2=1,flip=''):
     return '''

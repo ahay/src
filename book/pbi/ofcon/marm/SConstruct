@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('marmrefl.HH','marm')
+Fetch('marmrefl.hh','marm')
 
-Flow('marm','marmrefl.HH',
+Flow('marm','marmrefl.hh',
      '''dd data_format=native_float | reverse which=2 > $TARGET;
      echo d2=12.5 >> $TARGET''',stdout=-1)
 

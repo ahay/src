@@ -1,10 +1,8 @@
 from rsfproj import *
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/rad'
-
-Fetch(['data.HH','cdp.HH'],'rad')
-Flow('data','data.HH','dd data_format=native_float | pad n1=1200')
-Flow('cdp','cdp.HH','dd data_format=native_float')
+Fetch(['data.hh','cdp.hh'],'rad')
+Flow('data','data.hh','dd data_format=native_float | pad n1=1200')
+Flow('cdp','cdp.hh','dd data_format=native_float')
 
 Flow('rad','data',
      'radon nx=60 ox=0.275 dx=0.005 inv=n p0=0 np=200 dp=0.005')

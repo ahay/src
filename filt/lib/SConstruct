@@ -64,7 +64,7 @@ if 'c++' in api:
         
         env.Program([test,libcc,lib],
                     OBJSUFFIX='++.o',CPPPATH='../../include',
-                    PROGSUFFIX='.x',PROGPREFIX='',LIBS=libs)
+                    PROGSUFFIX='.x',PROGPREFIX='')
         
 ##############################################################################
 # FORTRAN-77 BINDING

@@ -23,8 +23,8 @@ for case in ('34','32','20'):
 
     Result('wzl.'+case,[raw,lmo],'SideBySideAniso',vppen='txscale=1.5')
 
-Fetch('midpts.HH','midpts')
-Flow('cdp','midpts.HH','window n3=1 n1=300 j1=2 | dd data_format=native_float')
+Fetch('midpts.hh','midpts')
+Flow('cdp','midpts.hh','window n3=1 n1=300 j1=2 | dd data_format=native_float')
 Flow('lmo','cdp','lmostretch delay=0.4 v0=1.47 half=n')
 
 wiggle = '''

@@ -246,9 +246,15 @@ def retrieve(target=None,source=None,env=None):
         session.quit()
     else:
         for file in map(str,target):
-            urllib.urlretrieve(string.join([rdatapath,folder,file],os.sep),
+            urllib.urlretrieve(string.join([rdatapath,folder,file],'/'),
                                file)
-    return 0
+
+    if os.stat(file)[6]:
+        return 0
+    else:
+        print 'Could not download file "%s" ' % file
+        os.unlink(file)
+        return 2
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 # Klean = Builder(action = Action(clean,silent,['junk']))
@@ -538,4 +544,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.38 2004/07/01 11:36:26 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.39 2004/07/01 23:11:24 fomels Exp $	

@@ -35,7 +35,7 @@ Flow('gulf','gulf.HH',
      'dd data_format=native_float | window min1=8 max1=13')
 
 for data in ('data','gulf'):
-    Fetch(data+'.HH','rad')
+    Fetch(data+'.hh','rad')
     Plot(data,data,gdat)
 
 prange = {

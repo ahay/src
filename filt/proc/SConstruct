@@ -38,14 +38,14 @@ mains = Split(progs)
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    main = env.Program(prog,map(lambda x: x + '.c',sources))
     if root:
-        env.Install(bindir,prog)
+        env.Install(bindir,main)
 	if prog=='stretch':
 	    for stretch in ('log','t2','lmo','nmo'):
                 copy = string.replace(str(main),'stretch',stretch+'stretch')
                 env.InstallAs(os.path.join(bindir,copy),main)
-	        docmerge = configure.docextra(docmerge,prog,copy)
+	        docmerge = configure.docextra(docmerge,'sf'+prog,copy)
 
 for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',
              'matmult','cmatmult','cburg','impl2','trisl']:
@@ -70,5 +70,5 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.11 2004/07/01 11:37:08 fomels Exp $
+# 	$Id: SConstruct,v 1.12 2004/07/01 23:11:24 fomels Exp $
 

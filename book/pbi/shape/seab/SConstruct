@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('apr18.H','seab')
+Fetch('apr18.h','seab')
 
-Flow('data','apr18.H','dd data_format=native_float')
+Flow('data','apr18.h','dd data_format=native_float')
 Flow('depth','data',
      "window n1=1 f1=2 | math output='(2978-input)/387' ")
 
@@ -64,4 +64,4 @@ for inp in ['bin','fill']:
 
 End()
 
-# 	$Id: SConstruct,v 1.4 2004/06/15 16:27:42 fomels Exp $	
+# 	$Id: SConstruct,v 1.5 2004/07/01 23:11:24 fomels Exp $	

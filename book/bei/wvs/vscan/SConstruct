@@ -1,6 +1,6 @@
 from rsfproj import *
 
-Fetch('midpts.HH','midpts')
+Fetch('midpts.hh','midpts')
 
 Flow('cdp','midpts.HH','window n3=1 j1=2 | dd data_format=native_float')
 Flow('mutter','cdp','mutter half=n v0=1.4') 

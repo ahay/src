@@ -1,8 +1,8 @@
 from rsfproj import *
 
-Fetch('seabin.HH','seab')
+Fetch('seabin.hh','seab')
 
-Flow('mesh','seabin.HH',
+Flow('mesh','seabin.hh',
      'dd data_format=native_float | pad n1=200 beg1=20')
 
 flt = '''342  -176 14

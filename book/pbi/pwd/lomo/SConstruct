@@ -5,8 +5,8 @@ Flow('sigmoid',None,
      '''sigmoid d1=.004 n1=200 d2=.008 n2=200 |
      smooth rect1=3 diff1=1 | smooth rect1=3''')
 
-Fetch('gulf.HH','pwd')
-Flow('gulf','gulf.HH','dd data_format=native_float')
+Fetch('gulf.hh','pwd')
+Flow('gulf','gulf.hh','dd data_format=native_float')
 
 smooth = {'sigmoid': 'eps=1 lam=1',
           'gulf': 'eps=10 lam=10'}

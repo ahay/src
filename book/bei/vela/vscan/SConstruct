@@ -17,9 +17,9 @@ for data in ('mod','dat','mod2','dat2'):
          ''')
 Result('velvel','mod dat mod2 dat2','TwoRows')
 
-Fetch('midpts.HH','midpts')
+Fetch('midpts.hh','midpts')
 
-Flow('cdp','midpts.HH','window n3=1 j1=2 | dd data_format=native_float')
+Flow('cdp','midpts.hh','window n3=1 j1=2 | dd data_format=native_float')
 Flow('mutter','cdp','mutter half=n v0=1.4') 
 Flow('veltran','mutter','vscan slowness=y half=n v0=0.3 nv=81 dv=0.005')
 
