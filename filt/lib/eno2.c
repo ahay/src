@@ -17,14 +17,17 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "eno.h"
 /*^*/
 
 #include "eno2.h"
 
-#ifndef _eno2_h
+#include "alloc.h"
+#include "error.h"
 
-typedef struct Eno2 *eno2;
+#ifndef _sf_eno2_h
+
+typedef struct Eno2 *sf_eno2;
 /* abstract data type */
 /*^*/
 
@@ -37,14 +40,14 @@ struct Eno2 {
 };
 /* concrete data type */
 
-eno2 eno2_init (int order      /* interpolation order */, 
+sf_eno2 sf_eno2_init (int order      /* interpolation order */, 
 		int n1, int n2 /* data dimensions */)
 /*< Initialize interpolation object >*/
 {
-    eno2 pnt;
+    sf_eno2 pnt;
     int i2;
     
-    pnt = (eno2) sf_alloc(1,sizeof(*pnt));
+    pnt = (sf_eno2) sf_alloc(1,sizeof(*pnt));
     pnt->order = order; 
     pnt->n1 = n1; 
     pnt->n2 = n2;
@@ -61,7 +64,7 @@ eno2 eno2_init (int order      /* interpolation order */,
     return pnt;
 }
 
-void eno2_set (eno2 pnt, float** c /* data [n2][n1] */)
+void sf_eno2_set (sf_eno2 pnt, float** c /* data [n2][n1] */)
 /*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2;
@@ -71,7 +74,7 @@ void eno2_set (eno2 pnt, float** c /* data [n2][n1] */)
     }
 }
 
-void eno2_set1 (eno2 pnt, float* c /* data [n2*n1] */)
+void sf_eno2_set1 (sf_eno2 pnt, float* c /* data [n2*n1] */)
 /*< Set the interpolation table. c can be changed or freed afterwords. >*/
 {
     int i2;
@@ -81,7 +84,7 @@ void eno2_set1 (eno2 pnt, float* c /* data [n2*n1] */)
     }
 }
 
-void eno2_close (eno2 pnt)
+void sf_eno2_close (sf_eno2 pnt)
 /*< Free internal storage >*/
 {
     int i2;
@@ -96,7 +99,7 @@ void eno2_close (eno2 pnt)
     free (pnt);
 }
 
-void eno2_apply (eno2 pnt, 
+void sf_eno2_apply (sf_eno2 pnt, 
 		 int i, int j     /* grid location */, 
 		 float x, float y /* offset from grid */, 
 		 float* f         /* output data value */, 

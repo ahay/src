@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "grid2.h"
-#include "eno2.h"
 
 #ifndef _grid2_h
 
@@ -33,7 +32,7 @@ typedef struct Grid2* grid2;
 #endif
 
 struct Grid2 {
-    eno2 pnt;
+    sf_eno2 pnt;
     int n1, n2;
     float o1, d1, o2, d2;
 };
@@ -52,8 +51,8 @@ grid2 grid2_init (int n1, float o1, float d1 /* first axis */,
     grd->n1 = n1; grd->o1 = o1; grd->d1 = d1; 
     grd->n2 = n2; grd->o2 = o2; grd->d2 = d2;
     
-    grd->pnt = eno2_init (order, n1, n2);
-    eno2_set1 (grd->pnt, slow2);
+    grd->pnt = sf_eno2_init (order, n1, n2);
+    sf_eno2_set1 (grd->pnt, slow2);
 
     return grd;
 }
@@ -70,7 +69,7 @@ float grid2_vel(void* par /* grid */,
     x = (xy[0]-grd->o1)/grd->d1; i = x; x -= i;
     y = (xy[1]-grd->o2)/grd->d2; j = y; y -= j;
     
-    eno2_apply(grd->pnt, i, j, x, y, &f, f1, FUNC);
+    sf_eno2_apply(grd->pnt, i, j, x, y, &f, f1, FUNC);
     return f;
 }
 
@@ -87,7 +86,7 @@ void grid2_vgrad(void* par   /* grid */,
     x = (xy[0]-grd->o1)/grd->d1; i = floor(x); x -= i;
     y = (xy[1]-grd->o2)/grd->d2; j = floor(y); y -= j;
     
-    eno2_apply(grd->pnt, i, j, x, y, &f, f1, DER);
+    sf_eno2_apply(grd->pnt, i, j, x, y, &f, f1, DER);
     
     grad[0] = 0.5*f1[0]/grd->d1;
     grad[1] = 0.5*f1[1]/grd->d2;
@@ -108,7 +107,7 @@ int grid2_term (void* par /* grid */,
 void grid2_close(grid2 grd)
 /*< Free internal storage >*/
 {
-    eno2_close (grd->pnt);
+    sf_eno2_close (grd->pnt);
     free (grd);
 }
 

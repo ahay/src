@@ -19,23 +19,24 @@
 
 #include <math.h>
 
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "cell.h"
 #include "quadratic.h"
+#include "math1.h"
 
 static float pg;
 
-void cell1_intersect (float a, float x, float dy, float p, 
+void sf_cell1_intersect (float a, float x, float dy, float p, 
 		      float *sx, int *jx)
 /*< intersecting a straight ray with cell boundaries >*/
 {
     float si; 
     int i;
     
-    *sx = HUG;
-    if (fabsf(p) > EPS) {
+    *sx = SF_HUGE;
+    if (fabsf(p) > SF_EPS) {
 	for (i = 0; i < 3; i++) {
 	    si = dy*(1-i-x)/p;
 	    if (si > 0. && si < *sx) {
@@ -46,7 +47,7 @@ void cell1_intersect (float a, float x, float dy, float p,
     }
 }
 
-float cell1_update1 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell1_update1 (int dim, float s, float v, float *p, const float *g) 
 /*< symplectic first-order: step 1 >*/
 {
     int i;
@@ -59,7 +60,7 @@ float cell1_update1 (int dim, float s, float v, float *p, const float *g)
 }
 
 
-float cell1_update2 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell1_update2 (int dim, float s, float v, float *p, const float *g) 
 /*< symplectic first-order: step 2 >*/
 {
     int i;
@@ -81,7 +82,7 @@ float cell1_update2 (int dim, float s, float v, float *p, const float *g)
     return (0.5*v*v*s*(1. - s*pg));
 }
 
-void cell11_intersect2 (float a, float da, 
+void sf_cell11_intersect2 (float a, float da, 
 			const float* p, const float* g, 
 			float *sp, int *jp)
 /*< intersecting a straight ray with cell boundaries >*/
@@ -90,9 +91,9 @@ void cell11_intersect2 (float a, float da,
     
     den = g[0]*g[0]+g[1]*g[1];
     
-    *sp = HUG;
+    *sp = SF_HUGE;
     
-    if (den < EPS) return;
+    if (den < SF_EPS) return;
     
     p1[0] = -cosf(a+da)-p[0];
     p1[1] = sinf(a+da)-p[1];
@@ -111,7 +112,7 @@ void cell11_intersect2 (float a, float da,
     }
 }
 
-float cell11_update1 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell11_update1 (int dim, float s, float v, float *p, const float *g) 
 /*< nonsymplectic first-order: step 1 >*/
 {
     int i;
@@ -123,7 +124,7 @@ float cell11_update1 (int dim, float s, float v, float *p, const float *g)
     return (0.5*v*v*s*(1. + s*pg));
 }
 
-float cell11_update2 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell11_update2 (int dim, float s, float v, float *p, const float *g) 
 /*< nonsymplectic first-order: step 2 >*/
 {
     int i;
@@ -144,16 +145,16 @@ float cell11_update2 (int dim, float s, float v, float *p, const float *g)
     return (0.5*v*v*s*(1. - s*pg));
 }
 
-void cell_intersect (float a, float x, float dy, float p, 
+void sf_cell_intersect (float a, float x, float dy, float p, 
 		     float *sx, int *jx)
 /*< intersecting a parabolic ray with cell boundaries >*/
 {
     float si; 
     int i;
     
-    *sx = HUG;
+    *sx = SF_HUGE;
     for (i = 0; i < 3; i++) {
-	si = quadratic_solve (0.5*a,0.5*p,dy*(x+i-1));
+	si = sf_quadratic_solve (0.5*a,0.5*p,dy*(x+i-1));
 	if (si < *sx) {
 	    *sx = si;
 	    *jx = 1-i;
@@ -161,7 +162,7 @@ void cell_intersect (float a, float x, float dy, float p,
     }
 }
 
-bool cell_snap (float *z, int *iz, float eps)
+bool sf_cell_snap (float *z, int *iz, float eps)
 /*< round to the nearest boundary >*/
 {
     if (*z > 1.-eps) {
@@ -184,7 +185,7 @@ bool cell_snap (float *z, int *iz, float eps)
     }
 }
 
-float cell_update1 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell_update1 (int dim, float s, float v, float *p, const float *g) 
 /*< symplectic second-order: step 1 >*/
 {
     int i;
@@ -197,7 +198,7 @@ float cell_update1 (int dim, float s, float v, float *p, const float *g)
 }
 
 
-float cell_update2 (int dim, float s, float v, float *p, const float *g) 
+float sf_cell_update2 (int dim, float s, float v, float *p, const float *g) 
 /*< symplectic second-order: step 2 >*/
 {
     int i;
@@ -219,28 +220,28 @@ float cell_update2 (int dim, float s, float v, float *p, const float *g)
     return (0.5*v*v*s*(1. - s*pg));
 }
 
-float cell_p2a (float* p)
+float sf_cell_p2a (float* p)
 /*< convert ray parameter to angle >*/
 {
     float a;
     
     if (p[0] <= 0.) {
-	if (p[1] >= 1.-10.*FLT_EPSILON) {
+	if (p[1] >= 1.-10.*SF_EPS) {
 	    a = asinf(1.);
-	} else if (p[1] <= -1.+10.*FLT_EPSILON) {
+	} else if (p[1] <= -1.+10.*SF_EPS) {
 	    a = asinf(-1.);
 	} else {
 	    a = asinf(p[1]);
 	}
     } else {
 	if (p[1] >= 0.) {
-	    if (p[1] >= 1.-10.*FLT_EPSILON) {
+	    if (p[1] >= 1.-10.*SF_EPS) {
 		a = asinf(1.);
 	    } else {
 		a = SF_PI - asinf(p[1]);
 	    }
 	} else {
-	    if (p[1] <= -1.+10.*FLT_EPSILON) {
+	    if (p[1] <= -1.+10.*SF_EPS) {
 		a = asinf(-1.);
 	    } else {
 		a = -SF_PI - asinf(p[1]);

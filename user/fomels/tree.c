@@ -26,8 +26,6 @@
 
 #include "tree.h"
 #include "node.h"
-#include "eno2.h"
-#include "cell.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b))?(a):(b)
@@ -36,7 +34,7 @@
 static Node Tree;
 static NodeQueue Orphans;
 
-static eno2 cvel;
+static sf_eno2 cvel;
 
 static int nz, nx, na, nax, naxz, order, nacc, ii, jj;
 static float dz, dx, da, z0, x0, a0, **val;
@@ -79,8 +77,8 @@ void tree_init (int order1    /* interpolation order */,
     nax = na*nx; naxz = nax*nz;
     order = order1;
     
-    cvel = eno2_init (order, nz, nx);
-    eno2_set (cvel, vel);
+    cvel = sf_eno2_init (order, nz, nx);
+    sf_eno2_set (cvel, vel);
 
     val = value;
     accepted = sf_boolalloc(naxz);
@@ -106,7 +104,7 @@ void tree_build(bool debug)
 	sf_warning("Building %d of %d",kz+1,nz);
 	for (kx=0; kx < nx; kx++) {
 	
-	    eno2_apply(cvel,kz,kx,0.,0.,&v0,g0,BOTH);
+	    sf_eno2_apply(cvel,kz,kx,0.,0.,&v0,g0,BOTH);
 	    g0[1] /= dx;
 	    g0[0] /= dz;
 
@@ -137,7 +135,7 @@ void tree_build(bool debug)
 		    vk[0] = x0 + kx*dx;
 		    vk[1] = z0 + kz*dz;
 		    vk[2] = 0.;
-		    vk[3] = cell_p2a (p);
+		    vk[3] = sf_cell_p2a (p);
 		    accepted[k] = true;
 		    nacc++;
 		    continue;
@@ -154,15 +152,15 @@ void tree_build(bool debug)
 
 		switch (order) {
 		    case 2:
-			t = cell1_update2 (2, 0., v, p, g);
+			t = sf_cell1_update2 (2, 0., v, p, g);
 			/* p is normal vector now ||p|| = 1 */
 	    
-			cell1_intersect (g[1],x,dx/v,p[1],&sx,&jx);
-			cell1_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+			sf_cell1_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+			sf_cell1_intersect (g[0],z,dz/v,p[0],&sz,&jz);
 	    
 			s = MIN(sx,sz);
 	    
-			t += cell1_update1 (2, s, v, p, g);
+			t += sf_cell1_update1 (2, s, v, p, g);
 			/* p is slowness vector now ||p||=v */
 	    
 			if (s == sz) {
@@ -173,27 +171,27 @@ void tree_build(bool debug)
 			    z += p[0]*s/dz;
 			}
 	    
-			onz = cell_snap (&z,&iz,eps);
-			onx = cell_snap (&x,&ix,eps);
+			onz = sf_cell_snap (&z,&iz,eps);
+			onx = sf_cell_snap (&x,&ix,eps);
 	    
-			eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+			sf_eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
 			g[1] /= dx;
 			g[0] /= dz;
 	    
-			t += cell1_update2 (2, s, v, p, g);
+			t += sf_cell1_update2 (2, s, v, p, g);
 			/* p is normal vector now ||p||=1 */
 			psnap (p,&a,&ia);
 			break;
 		    case 3:
-			t = cell_update2 (2, 0., v, p, g);
+			t = sf_cell_update2 (2, 0., v, p, g);
 			/* p is normal vector now ||p|| = 1 */
 	    
-			cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
-			cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+			sf_cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+			sf_cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
 	    
 			s = MIN(sx,sz);
 	    
-			t += cell_update1 (2, s, v, p, g);
+			t += sf_cell_update1 (2, s, v, p, g);
 			/* p is slowness vector now ||p||=v */
 	    
 			if (s == sz) {
@@ -204,14 +202,14 @@ void tree_build(bool debug)
 			    z += p[0]*s/dz;
 			}
 	    
-			onz = cell_snap (&z,&iz,eps);
-			onx = cell_snap (&x,&ix,eps);
+			onz = sf_cell_snap (&z,&iz,eps);
+			onx = sf_cell_snap (&x,&ix,eps);
 	    
-			eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+			sf_eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
 			g[1] /= dx;
 			g[0] /= dz;
 	    
-			t += cell_update2 (2, s, v, p, g);
+			t += sf_cell_update2 (2, s, v, p, g);
 			/* p is normal vector now ||p||=1 */
 			psnap (p,&a,&ia);
 			break;
@@ -233,7 +231,7 @@ void tree_build(bool debug)
 		    vk[0] = x0 + kx*dx;
 		    vk[1] = z0 + kz*dz;
 		    vk[2] = 0.;
-		    vk[3] = cell_p2a (p);
+		    vk[3] = sf_cell_p2a (p);
 		    accepted[k] = true;
 		    nacc++;
 		    continue;
@@ -422,7 +420,7 @@ static void orphanize (Node node)
     kz = ka/nax; ka -= nax*kz;
     kx = ka/na;  ka -= na*kx;
 
-    eno2_apply(cvel,kz,kx,0.,0.,&v,g,BOTH);
+    sf_eno2_apply(cvel,kz,kx,0.,0.,&v,g,BOTH);
     g[1] /= dx;
     g[0] /= dz;
 
@@ -435,20 +433,20 @@ static void orphanize (Node node)
     z = 0.; iz=kz;		
  
     if (order==2) {
-	t = cell1_update2 (2, 0., v, p, g);
+	t = sf_cell1_update2 (2, 0., v, p, g);
     } else {
-	t = cell_update2 (2, 0., v, p, g);
+	t = sf_cell_update2 (2, 0., v, p, g);
     }    
     /* p is normal vector now ||p|| = 1 */
 
     for (it=0; it < nx*nz; it++) {
 	if (order==2) {
-	    cell1_intersect (g[1],x,dx/v,p[1],&sx,&jx);
-	    cell1_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+	    sf_cell1_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+	    sf_cell1_intersect (g[0],z,dz/v,p[0],&sz,&jz);
 	    
 	    s = MIN(sx,sz);
 	    
-	    t += cell1_update1 (2, s, v, p, g);
+	    t += sf_cell1_update1 (2, s, v, p, g);
 	    /* p is slowness vector now ||p||=v */
 	    
 	    if (s == sz) {
@@ -459,22 +457,22 @@ static void orphanize (Node node)
 		z += p[0]*s/dz;
 	    }
 	    
-	    onz = cell_snap (&z,&iz,eps);
-	    onx = cell_snap (&x,&ix,eps);
+	    onz = sf_cell_snap (&z,&iz,eps);
+	    onx = sf_cell_snap (&x,&ix,eps);
 	    
-	    eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+	    sf_eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
 	    g[1] /= dx;
 	    g[0] /= dz;
 	    
-	    t += cell1_update2 (2, s, v, p, g);
+	    t += sf_cell1_update2 (2, s, v, p, g);
 	    /* p is normal vector now ||p||=1 */
 	} else {
-	    cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
-	    cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+	    sf_cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+	    sf_cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
 	    
 	    s = MIN(sx,sz);
 	    
-	    t += cell_update1 (2, s, v, p, g);
+	    t += sf_cell_update1 (2, s, v, p, g);
 	    /* p is slowness vector now ||p||=v */
 	    
 	    if (s == sz) {
@@ -485,14 +483,14 @@ static void orphanize (Node node)
 		z += p[0]*s/dz;
 	    }
 	    
-	    onz = cell_snap (&z,&iz,eps);
-	    onx = cell_snap (&x,&ix,eps);
+	    onz = sf_cell_snap (&z,&iz,eps);
+	    onx = sf_cell_snap (&x,&ix,eps);
 	    
-	    eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+	    sf_eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
 	    g[1] /= dx;
 	    g[0] /= dz;
 	    
-	    t += cell_update2 (2, s, v, p, g);
+	    t += sf_cell_update2 (2, s, v, p, g);
 	    /* p is normal vector now ||p||=1 */
 	}
 	psnap (p,&a,&ia);
@@ -505,7 +503,7 @@ static void orphanize (Node node)
 	    vk[0] = x0 + kx*dx;
 	    vk[1] = z0 + kz*dz;
 	    vk[2] = t;
-	    vk[3] = cell_p2a (p);
+	    vk[3] = sf_cell_p2a (p);
 	    accepted[k] = true;
 	    sf_pqueue_insert(val[k]+2);
 /*	    TraverseQueue (node->children,process_child); */
@@ -881,10 +879,10 @@ static void psnap (float* p, float* q, int* iq) {
     int ia;
     float a2, a;
 
-    a = cell_p2a(p);
+    a = sf_cell_p2a(p);
     a2 = (a-a0)/da;
     ia = floor (a2); a2 -= ia;
-    cell_snap (&a2, &ia, 10.*eps);
+    sf_cell_snap (&a2, &ia, 10.*eps);
 
     if (ia < 0) {
 	ia=0.; a2=0.; 

@@ -22,8 +22,6 @@
 #include <rsf.h>
 
 #include "celltrace.h"
-#include "eno2.h"
-#include "cell.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b))?(a):(b)
@@ -40,7 +38,7 @@ typedef struct CellTrace *celltrace;
 struct CellTrace {
     int nt, nx, nz;
     float dx, dz, x0, z0;
-    eno2 pnt;
+    sf_eno2 pnt;
 };  
 
 
@@ -63,8 +61,8 @@ celltrace celltrace_init (int order   /* interpolation accuracy */,
     ct->dx = dx; ct->dz = dz;
     ct->nx = nx; ct->nz = nz;
     ct->x0 = x0; ct->z0 = z0;
-    ct->pnt = eno2_init (order, nz, nx); 
-    eno2_set1 (ct->pnt, slow); 
+    ct->pnt = sf_eno2_init (order, nz, nx); 
+    sf_eno2_set1 (ct->pnt, slow); 
     
     return ct;
 } 
@@ -72,7 +70,7 @@ celltrace celltrace_init (int order   /* interpolation accuracy */,
 void celltrace_close (celltrace ct)
 /*< Free allocated storage >*/
 {
-    eno2_close (ct->pnt);
+    sf_eno2_close (ct->pnt);
     free (ct);
 }
 
@@ -90,14 +88,14 @@ float cell_trace (celltrace ct,
 
     x = (xp[1]-ct->x0)/ct->dx; ix = floor(x); x -= ix;
     z = (xp[0]-ct->z0)/ct->dz; iz = floor(z); z -= iz;
-    onx = cell_snap (&x,&ix,eps);
-    onz = cell_snap (&z,&iz,eps);
+    onx = sf_cell_snap (&x,&ix,eps);
+    onz = sf_cell_snap (&z,&iz,eps);
 
-    eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+    sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
     g[1] /= ct->dx;
     g[0] /= ct->dz;
 
-    t = cell_update2 (2, 0., v, p, g);
+    t = sf_cell_update2 (2, 0., v, p, g);
     /* p is normal vector now ||p|| = 1 */
   
     if (traj != NULL) {
@@ -114,22 +112,22 @@ float cell_trace (celltrace ct,
 	    (onx && ix == 0 && p[1] < 0.) ||
 	    (ix == ct->nx-1 && (!onx || p[1] > 0.))) break;
 
-	cell_intersect (g[1],x,ct->dx/v,p[1],&sx,&jx);
-	cell_intersect (g[0],z,ct->dz/v,p[0],&sz,&jz);
+	sf_cell_intersect (g[1],x,ct->dx/v,p[1],&sx,&jx);
+	sf_cell_intersect (g[0],z,ct->dz/v,p[0],&sz,&jz);
 
 	s = MIN(sx,sz);
 
-	t += cell_update1 (2, s, v, p, g);
+	t += sf_cell_update1 (2, s, v, p, g);
 	/* p is slowness vector now ||p||=v */
 
 	if (s == sz) {
 	    z = 0.; onz = true; iz += jz;
 	    x += p[1]*s/ct->dx;
-	    onx = cell_snap (&x,&ix,eps);
+	    onx = sf_cell_snap (&x,&ix,eps);
 	} else {
 	    x = 0.; onx = true; ix += jx;
 	    z += p[0]*s/ct->dz;
-	    onz = cell_snap (&z,&iz,eps);
+	    onz = sf_cell_snap (&z,&iz,eps);
 	}
 
 	if (traj != NULL) {
@@ -137,11 +135,11 @@ float cell_trace (celltrace ct,
 	    traj[i+1][1] = ct->x0 + (x+ix)*ct->dx;
 	}    
 	
-	eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
+	sf_eno2_apply(ct->pnt,iz,ix,z,x,&v,g,BOTH);
 	g[1] /= ct->dx;
 	g[0] /= ct->dz;
 
-	t += cell_update2 (2, s, v, p, g);
+	t += sf_cell_update2 (2, s, v, p, g);
 	/* p is normal vector now ||p||=1 */
     }
 

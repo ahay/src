@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "celltrace.h"
-#include "cell.h"
 #include "agrid.h"
 
 static float da, a0;
@@ -163,7 +162,7 @@ static void raytrace (float q, void* xv, float* xzt) {
     xzt[2] = cell_trace (ct,(float*) x,p,&it,NULL);
     xzt[1] = x[0];
     xzt[0] = x[1];
-    xzt[4] = cell_p2a(p)*180./SF_PI;
+    xzt[4] = sf_cell_p2a(p)*180./SF_PI;
 }
 
 /* 	$Id$	 */

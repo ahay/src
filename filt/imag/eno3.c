@@ -21,7 +21,6 @@
 /*^*/
 
 #include "eno3.h"
-#include "eno2.h"
 
 #ifndef _eno3_h
 
@@ -34,7 +33,7 @@ typedef struct Eno3 *eno3;
 struct Eno3 {
     int order, ng, n1, n2, n3;
     sf_eno **ent;
-    eno2 jnt;
+    sf_eno2 jnt;
     float **f, **f1;
 };
 /* concrete data type */
@@ -54,7 +53,7 @@ eno3 eno3_init (int order              /* interpolation order */,
     pnt->ng = 2*order-2;
     if (pnt->ng > n2 || pnt->ng > n3) 
 	sf_error("%s: ng=%d is too big",__FILE__,pnt->ng);
-    pnt->jnt = eno2_init (order, pnt->ng, pnt->ng);
+    pnt->jnt = sf_eno2_init (order, pnt->ng, pnt->ng);
     pnt->f  = sf_floatalloc2(pnt->ng,pnt->ng);
     pnt->f1 = sf_floatalloc2(pnt->ng,pnt->ng);
     pnt->ent = (sf_eno**) sf_alloc(n3,sizeof(sf_eno*));
@@ -97,7 +96,7 @@ void eno3_close (eno3 pnt)
 {
     int i2, i3;
     
-    eno2_close (pnt->jnt);
+    sf_eno2_close (pnt->jnt);
     for (i3 = 0; i3 < pnt->n3; i3++) {
 	for (i2 = 0; i2 < pnt->n2; i2++) {
 	    sf_eno_close (pnt->ent[i3][i2]);
@@ -153,12 +152,12 @@ void eno3_apply (eno3 pnt,
 	}
     }
     
-    eno2_set (pnt->jnt,pnt->f);
-    eno2_apply (pnt->jnt,j,k,y,z,f,f1+1,what);
+    sf_eno2_set (pnt->jnt,pnt->f);
+    sf_eno2_apply (pnt->jnt,j,k,y,z,f,f1+1,what);
     
     if (what != FUNC) {
-	eno2_set (pnt->jnt,pnt->f1);
-	eno2_apply(pnt->jnt,j,k,y,z,f1,&g,FUNC);
+	sf_eno2_set (pnt->jnt,pnt->f1);
+	sf_eno2_apply(pnt->jnt,j,k,y,z,f1,&g,FUNC);
     }
 }
 

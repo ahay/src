@@ -1,12 +1,14 @@
-#include <rsf.h>
-
 #include "eno2.h"
+#include "file.h"
+#include "error.h"
+#include "getpar.h"
+#include "alloc.h"
 
 int main(int argc, char* argv[]) 
 {
     int n1, n2, i1, i2, order;
     float **dat, ***der;
-    eno2 ent;
+    sf_eno2 ent;
     sf_file in, out, deriv;
 
     sf_init(argc,argv);
@@ -28,12 +30,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("order",&order)) sf_error("Need order=");
 
-    ent = eno2_init(order,n1,n2);
-    eno2_set (ent, dat);
+    ent = sf_eno2_init(order,n1,n2);
+    sf_eno2_set (ent, dat);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    eno2_apply (ent, i1, i2, 0., 0.,dat[i2]+i1,der[i2][i1],BOTH);
+	    sf_eno2_apply (ent, i1, i2, 0., 0.,dat[i2]+i1,der[i2][i1],BOTH);
 	}
     }
 
@@ -43,4 +45,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Testeno2.c,v 1.4 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

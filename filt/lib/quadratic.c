@@ -21,39 +21,37 @@
 #include <float.h>
 /*^*/
 
-#include <rsf.h>
-
 #include "quadratic.h"
 
 #ifndef _quadratic_h
 
-#define EPS FLT_EPSILON
-#define HUG FLT_MAX
+#define SF_EPS FLT_EPSILON
+#define SF_HUGE FLT_MAX
 /*^*/
 
 #endif
 
-float quadratic_solve (float a, float b, float c) 
+float sf_quadratic_solve (float a, float b, float c) 
 /*< solves a x^2 + 2 b x + c == 0 for smallest positive x >*/
 {
     float d;
     
-    if (fabsf(c) < EPS && 
-	((b > EPS && a  < -EPS) || (b < - EPS && a > EPS))) 
+    if (fabsf(c) < SF_EPS && 
+	((b > SF_EPS && a  < -SF_EPS) || (b < - SF_EPS && a > SF_EPS))) 
 	return (-2.*b/a);
     
     d = b*b - a*c;
-    if (d < 0.) return HUG;
+    if (d < 0.) return SF_HUGE;
     
     d = sqrtf(d)+fabsf(b);
     
     if (b*c <= 0.) {
-	if (d > EPS && fabsf(c) > 0.) return (fabsf(c)/d);
+	if (d > SF_EPS && fabsf(c) > 0.) return (fabsf(c)/d);
     } else if (b*a <= 0.) {
-	if (fabsf(a) > EPS && d > 0.) return (d/fabsf(a));
+	if (fabsf(a) > SF_EPS && d > 0.) return (d/fabsf(a));
     } 
     
-    return HUG;
+    return SF_HUGE;
 }
 
 /* 	$Id$	 */

@@ -6,7 +6,7 @@ progs = '''
 cell2 constfdmig2 cup dmo dsr eikonal fincon finstack
 fkamo fkdmo gazdag halfint interp2 interp3 interpt kirchnew kirmod mutter
 preconstkirch rays2 reg2tri remap1 s2ofz shoot2 sstep1
-trace2 tree tri2reg trirand unif2 voft vofz warpadd ztrace
+trace2 tri2reg trirand unif2 voft vofz warpadd ztrace
 '''
 
 try:  # distributed version
@@ -46,7 +46,7 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-for prog in ['eno2','ctridiagonal']:
+for prog in ('ctridiagonal',):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
