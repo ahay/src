@@ -39,9 +39,10 @@ int main(int argc, char* argv[])
 
     file = sf_getstring("lag");
     if (NULL == file) sf_error("Need lag=");
+    sf_putstring(flt,"lag",file);
     
     lag = sf_output(file);
-    sf_setformat(flt,"native_int");    
+    sf_setformat(lag,"native_int");    
 
     ss = allocatehelix (12);
     ss->lag[0] = 1;
@@ -97,6 +98,10 @@ int main(int argc, char* argv[])
     aa = compress (aa, eps);
 
     na = aa->nh;
+
+    for (i=0; i < na; i++) {
+	aa->flt[i] *= a0;
+    }
 
     sf_putint(flt,"n1",na);
     sf_putfloat(flt,"a0",a0);
