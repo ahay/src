@@ -87,7 +87,6 @@ sys.path = libs + sys.path
 ##############################################################################
 
 from SCons.Environment import Environment
-#from SCons.Script.SConscript import Default, Clean
 from SCons.Util import WhereIs
 from SCons.Builder import Builder
 from SCons.Action import Action
@@ -110,7 +109,21 @@ pssuffix = '.eps'
 # path bor binary files (change later for compliance with SEPlib)
 datapath = os.environ.get('DATAPATH')
 if not datapath:
-    datapath = os.path.join(os.path.join(os.environ.get('HOME'),'scr'),'')
+    try:
+        file = open('.datapath','r')
+    except:
+        try:
+            file = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+        except:
+            file = None
+    if file:
+        for line in file.readlines():
+            check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
+            if check:
+                datapath = check.group(1)
+        file.close()
+    if not datapath:
+        datapath = os.path.join(os.environ.get('HOME'),'')
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -148,14 +161,14 @@ def collect_exe(dir):
 # CUSTOM BUILDERS
 #############################################################################
 
-def clean(target=None,source=None,env=None):
-    for junk in env['junk']:
-        if (os.path.isfile (junk)):
-            try:
-                os.unlink(junk)
-            except:
-                pass
-    return 0
+#def clean(target=None,source=None,env=None):
+#    for junk in env['junk']:
+#        if (os.path.isfile (junk)):
+#            try:
+#                os.unlink(junk)
+#            except:
+#                pass
+#    return 0
 
 def silent(target=None,source=None,env=None):
     return None
@@ -247,7 +260,7 @@ def retrieve(target=None,source=None,env=None):
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
-Klean = Builder(action = Action(clean,silent,['junk']))
+# Klean = Builder(action = Action(clean,silent,['junk']))
 Build = Builder(action = Action(pstexpen,varlist=['opts']),
                 src_suffix=vpsuffix,suffix=pssuffix)
 epstopdf = WhereIs('epstopdf')
@@ -313,6 +326,12 @@ combine ={
 
 #############################################################################
 
+display = os.environ.get('DISPLAY')
+host = re.sub(':[\d\.]*$','',display)
+if host == '':
+    host = 'localhost'
+    os.system('xhost ' + host)
+
 class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
@@ -320,8 +339,11 @@ class Project(Environment):
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
-        self.Append(ENV={'DATAPATH':datapath,
-                         'DISPLAY':os.environ.get('DISPLAY'),
+        self.path = datapath + os.path.basename(os.getcwd()) + os.sep
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)        
+        self.Append(ENV={'DATAPATH':self.path,
+                         'DISPLAY':display,
                          'RSFROOT':top},
                     BUILDERS={'View':View,
 #                              'Clean':Klean,
@@ -357,12 +379,12 @@ class Project(Environment):
             self.paper.target_scanner = Plots
 	    if acroread:
 		self.Alias('read',self.Read('paper'))
-            self.junk = ['paper.aux','paper.log','paper.bbl',
-                         'paper.blg','paper.ps','paper.dvi']
+#            self.junk = ['paper.aux','paper.log','paper.bbl',
+#                         'paper.blg','paper.ps','paper.dvi']
 #            Clean('paper.pdf',self.junk)
-        else:
-            self.junk = []
-    def Flow(self,target,source,flow,clean=1,stdout=1,stdin=1,
+#        else:
+#            self.junk = []
+    def Flow(self,target,source,flow,stdout=1,stdin=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
         if not flow:
             return None        
@@ -420,17 +442,23 @@ class Project(Environment):
             if not re.search(suffix + '$',file):
                 file = file + suffix
             targets.append(file)
-        if clean:
-            self.junk = self.junk + targets
+        if suffix == sfsuffix:
+            datafiles = [] 
+            for target in targets:
+                datafile = self.path + target + '@'
+                datafiles.append(datafile)
+            targets = targets + datafiles
+#        if clean:
+#            self.junk = self.junk + targets
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
         kw.update({'suffix':suffix})
         return apply(self.Flow,(target,source,flow),kw)
-    def Result(self,target,source,flow,clean=0,suffix=vpsuffix,
+    def Result(self,target,source,flow,suffix=vpsuffix,
                pstexpen=None,**kw):
         target2 = os.path.join(resdir,target)
         if flow:
-            kw.update({'clean':clean,'suffix':suffix})
+#            kw.update({'clean':clean,'suffix':suffix})
             plot = apply(self.Plot,(target2,source,flow),kw)
             self.Default (plot)
             self.view.append(self.View(target + '.view',plot))
@@ -485,4 +513,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.19 2004/02/26 14:34:25 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.20 2004/03/18 03:23:30 fomels Exp $	
