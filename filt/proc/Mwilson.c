@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
 	if (SF_INT != sf_gettype(lag0)) 
 	    sf_error("Need int data in lag file '%s'",lagfile);
 
-	sf_read(ss->lag,sizeof(int),ns,lag0);
+	sf_intread(ss->lag,ns,lag0);
     }
  
     maxlag = 0;
@@ -76,13 +76,13 @@ int main(int argc, char* argv[])
 
 	aa = allocatehelix (na);
 
-	sf_read(aa->lag,sizeof(int),na,lag0);
+	sf_intread(aa->lag,na,lag0);
     }
     for (ia=0; ia < na; ia++) {	    
 	aa->flt[ia]=0.;
     }
 
-    sf_read(ss->flt,sizeof(float),ns,in);
+    sf_floatread(ss->flt,ns,in);
 
     wilson_init( maxlag*10);
     a0 = wilson_factor(niter, 2.*s0, ss, aa, true, 1.e-6);
@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     sf_settype(lag,SF_INT);
     sf_fileflush(lag,lag0);
 
-    sf_write(aa->lag,sizeof(int),na,lag);
+    sf_intwrite(aa->lag,na,lag);
     sf_fileclose(lag);
 
     if (NULL != (lagfile = sf_getstring("lagout"))) 
@@ -107,13 +107,13 @@ int main(int argc, char* argv[])
     for( ia=0; ia < na; ia++) {
 	aa->flt[ia] *= a0;
     }
-    sf_write(aa->flt,sizeof(float),na,out);
+    sf_floatwrite(aa->flt,na,out);
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwilson.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mwilson.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */
 
 
 

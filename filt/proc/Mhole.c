@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) { 	
-	    sf_read (pp,sizeof(float),n1,in);
+	    sf_floatread (pp,n1,in);
 
 	    for (i1=0; i1 < n1; i1++) { 
 		x = ((float) i1)/n1 - 0.5;
@@ -42,8 +42,8 @@ int main (int argc, char* argv[])
 		}
 	    }
 	    	    
-	    sf_write (pp,sizeof(float),n1,out);
-	    sf_write (maskout,sizeof(float),n1,mask);
+	    sf_floatwrite (pp,n1,out);
+	    sf_floatwrite (maskout,n1,mask);
 	}
     }
 
@@ -51,5 +51,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mhole.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mhole.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */
 

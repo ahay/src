@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
   
     window2_init (w,nw,n,h);
 
-    sf_read (dat[0],sizeof(float),n[0]*n[1],in);
+    sf_floatread (dat[0],n[0]*n[1],in);
 
     for (i[1]=0; i[1] < nw[1]; i[1]++) {
 	for (i[0]=0; i[0] < nw[0]; i[0]++) {
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-	    sf_write (dat2[0],sizeof(float),n[0]*n[1],out);
+	    sf_floatwrite (dat2[0],n[0]*n[1],out);
 	}
     }
 
@@ -62,4 +62,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow2.c,v 1.4 2004/04/13 06:02:53 fomels Exp $	 */
+/* 	$Id: Mwindow2.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

@@ -54,16 +54,16 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	w = w0 + iw*dw;
 
-	sf_read (ss[0],sizeof(float complex),nh*ns,in);
+	sf_complexread (ss[0],nh*ns,in);
 
 	if(fabsf(w) < dw) { /* dc */
 	    for (ih=0; ih < nh; ih++) {
 		s[ih] = 0.;
 	    }
-	    sf_write(s,sizeof(float complex),nh,out);
+	    sf_complexwrite(s,nh,out);
 	    for (is=1; is < ns; is++) {
-		sf_write(s,sizeof(float complex),nh,out);
-		sf_write(s,sizeof(float complex),nh,out);
+		sf_complexwrite(s,nh,out);
+		sf_complexwrite(s,nh,out);
 	    }
 	    continue;
 	}
@@ -77,13 +77,13 @@ int main(int argc, char* argv[])
 
 	shotfill_define(w);
 
-	sf_write(ss[0],sizeof(float complex),nh,out);
+	sf_complexwrite(ss[0],nh,out);
 
 	for (is=1; is < ns; is++) {
 	    shotfill_apply(ss[is-1],ss[is],s);
 
-	    sf_write(s,sizeof(float complex),nh,out);
-	    sf_write(ss[is],sizeof(float complex),nh,out);
+	    sf_complexwrite(s,nh,out);
+	    sf_complexwrite(ss[is],nh,out);
 	} /* s */
     } /* w */
   
@@ -91,5 +91,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Minfill.c,v 1.4 2004/03/26 03:30:36 fomels Exp $	 */
+/* 	$Id: Minfill.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     data = sf_floatalloc(nk);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(data,sizeof(float),nk,in);
+	sf_floatread(data,nk,in);
 
 	a = 0.;
 	i0 = 0;
@@ -62,14 +62,14 @@ int main(int argc, char* argv[])
 
 	k = (float) i0;
          
-	sf_write(&a,sizeof(float),1,ma);
-	sf_write(&k,sizeof(float),1,ma);
+	sf_floatwrite(&a,1,ma);
+	sf_floatwrite(&k,1,ma);
         
-	sf_write (data,sizeof(float),nk,out);
+	sf_floatwrite (data,nk,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmonof.c,v 1.3 2004/04/08 14:03:57 fomels Exp $	 */
+/* 	$Id: Mmonof.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */

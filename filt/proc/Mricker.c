@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     eps *= eps;
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(data,sizeof(float),na,in);
+	sf_floatread(data,na,in);
 
 	d2 = 0.;
 	for (ia=0; ia < na; ia++) {
@@ -100,8 +100,8 @@ int main(int argc, char* argv[])
 	m = fabsf(m);
 	m2 = m*m;
         
-	sf_write(&m2,sizeof(float),1,ma);
-	sf_write(&a,sizeof(float),1,ma);
+	sf_floatwrite(&m2,1,ma);
+	sf_floatwrite(&a,1,ma);
         
 	for (ia = 0; ia < na; ia++) {
 	    f = f0 + ia*df;
@@ -112,11 +112,11 @@ int main(int argc, char* argv[])
 	if (verb) sf_warning("m=%g a=%g",m,a*m*sqrtf(SF_PI)*0.5);
 	if (verb) sf_warning ("%d of %d, %d iterations", i2+1, n2, iter);
         
-	sf_write (data,sizeof(float),na,out);
+	sf_floatwrite (data,na,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mricker.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mricker.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

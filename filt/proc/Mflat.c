@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
     for (i3=0; i3 < n3; i3++) {
 	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
 
-	sf_read(u[0],sizeof(float),n1*n2,in);
+	sf_floatread(u[0],n1*n2,in);
 
 	for (i2=0; i2 < n2; i2++) {
 	    /* initialize dip */
@@ -73,8 +73,8 @@ int main (int argc, char *argv[])
 	dip2(niter, nw, nj1, verb, u, p);
 	predict_flat(u, v, p);
 
-	sf_write(v[0],sizeof(float),n1*n2,out);
-	if (NULL != dip) sf_write(p[0],sizeof(float),n1*n2,dip);
+	sf_floatwrite(v[0],n1*n2,out);
+	if (NULL != dip) sf_floatwrite(p[0],n1*n2,dip);
     }
 
     sf_close();

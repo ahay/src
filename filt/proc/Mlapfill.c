@@ -42,9 +42,9 @@ int main(int argc, char* argv[])
     lapfill_init (n1,n2,grad);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_read(map,sizeof(float),n12,in);
+	sf_floatread(map,n12,in);
 	
-	if (NULL != mask) sf_read(msk,sizeof(float),n12,mask);
+	if (NULL != mask) sf_floatread(msk,n12,mask);
 
 	for (i1=0; i1 < n12; i1++) {
 	    known[i1] = (msk[i1] != 0.);
@@ -52,9 +52,12 @@ int main(int argc, char* argv[])
 
 	lapfill(niter,map,known);
 
-	sf_write(map,sizeof(float),n12,out);
+	sf_floatwrite(map,n12,out);
     }
 
     sf_close();
     exit(0);
 }
+
+/* 	$Id: Mlapfill.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */
+

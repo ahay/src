@@ -49,7 +49,7 @@ int main (int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    sf_read(data,sizeof(float),n1,in);
+	    sf_floatread(data,n1,in);
 	    for (i1=0; i1 < n1; i1++) {
 		cdat[i1]=data[i1];
 	    }
@@ -79,7 +79,7 @@ int main (int argc, char* argv[])
 		for (i1=0; i1 < n1; i1++) {
 		    data[i1] = 2.*cabsf(cdat[i1])/nw;
 		}
-		sf_write(data,sizeof(float),n1,out);
+		sf_floatwrite(data,n1,out);
 	    }
 	}
 	if (freq) {
@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 		    if (den != 0.) top[i2][i1] /= den;
 		}
 	    }
-	    sf_write(top[0],sizeof(float),n1*n2,out);
+	    sf_floatwrite(top[0],n1*n2,out);
 	}
     }
 
@@ -99,4 +99,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Menvelope.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Menvelope.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

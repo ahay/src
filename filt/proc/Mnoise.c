@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_read(dat,sizeof(float),nbuf,in);
+	    sf_floatread(dat,nbuf,in);
 	    
 	    if (normal) {
 		for (i=0; i < nbuf; i++) {
@@ -78,11 +78,11 @@ int main (int argc, char* argv[])
 	    }
 	}
 
-	sf_write(dat,sizeof(float),nbuf,out);  
+	sf_floatwrite(dat,nbuf,out);  
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mnoise.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mnoise.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

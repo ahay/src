@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
     ymin = xmin = +FLT_MAX;
     ymax = xmax = -FLT_MAX;
     for (id=0; id<nd; id++) {	
-	sf_read (hdr,sizeof(float),nk,head);
+	sf_floatread (hdr,nk,head);
 	f = hdr[xkey]; 
 	if (f < xmin) xmin=f;
 	if (f > xmax) xmax=f;
@@ -188,13 +188,13 @@ int main (int argc, char* argv[])
     sf_conjgrad_init(nm, nm, nd, nd, eps, 1.e-9, true, false);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (dd,sizeof(float),nd,in);
+	sf_floatread (dd,nd,in);
 
 	if (shape) {
 	    if (gauss) {
 		if (NULL != pattern) {
 		    /* estimate shaper */
-		    sf_read (mm,sizeof(float),nm,pattern);
+		    sf_floatread (mm,nm,pattern);
 		    gaussshape2_set(a, mm, 100);
 		}
 
@@ -209,11 +209,11 @@ int main (int argc, char* argv[])
 	    sf_cgstep_close();
 	}
 
-	sf_write (mm,sizeof(float),nm,out);
+	sf_floatwrite (mm,nm,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

@@ -46,8 +46,8 @@ int main(int argc, char* argv[])
     slope = sf_floatalloc2(n1,n2);
  
     for (i3=0; i3 < n3; i3++) {
-	sf_read(input,sizeof(float),n12,in);
-	sf_read(slope[0],sizeof(float),n12,dip);
+	sf_floatread(input,n12,in);
+	sf_floatread(slope[0],n12,dip);
 
 	boxsl_set(n2,slope);
 
@@ -57,12 +57,12 @@ int main(int argc, char* argv[])
 	    boxsl_lop(false,false,n12,m12,input,smooth);
 	}
 
-	sf_write(smooth,sizeof(float),m12,out);
+	sf_floatwrite(smooth,m12,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mboxsmooth2.c,v 1.1 2004/04/12 15:47:22 fomels Exp $	 */
+/* 	$Id: Mboxsmooth2.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     }
 
     for (ix = 0; ix < nx; ix++) {
-	sf_read (slice[0],sizeof(float),nt*ns,in);
+	sf_floatread (slice[0],nt*ns,in);
 
 	if (ix > 0) {
 	    for (it = 0; it < nt; it++) { /* previous trace */
@@ -118,12 +118,12 @@ int main(int argc, char* argv[])
 	    tridiagonal_solve (slv, pick);    
 	} /* iterations */
 
-	sf_write (pick,sizeof(float),nt,out);	
+	sf_floatwrite (pick,nt,out);	
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mblindpick.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mblindpick.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */
 

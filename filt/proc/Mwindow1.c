@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     window1_init (w,nw,n,h,w-h);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read (dat, sizeof(float), n, in);
+	sf_floatread (dat, n, in);
 	for (iw=0; iw < nw; iw++) {
 	    if (hastaper) {
 		i0 = window1_apply(iw,dat,taper,taper,win);
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
 	    for (i1=i0+w; i1 < n; i1++) {
 		dat2[i1] = 0.;
 	    }
-	    sf_write (dat2,sizeof(float),n,out);
+	    sf_floatwrite (dat2,n,out);
 	}
     }
 
@@ -71,4 +71,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow1.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mwindow1.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */

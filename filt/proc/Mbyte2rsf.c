@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
 	for (x = 0; x < n1; x++) {
 	    array[x] = (float) line[x];
 	}
-	sf_write(array,sizeof(float),n1,out); 
+	sf_floatwrite(array,n1,out); 
     }
 
     exit (0);

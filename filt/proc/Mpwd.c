@@ -51,10 +51,10 @@ int main (int argc, char *argv[])
     p  = sf_floatalloc3(n1,n2,n3);
 
     /* read data */
-    sf_read(u1[0][0],sizeof(float),n123,in);
+    sf_floatread(u1[0][0],n123,in);
 
     /* read t-x dip */
-    sf_read(p[0][0],sizeof(float),n123,dip);
+    sf_floatread(p[0][0],n123,dip);
 
     ap = allpass_init (nw,nj1,n1,n2,n3,p);
   
@@ -62,11 +62,11 @@ int main (int argc, char *argv[])
     allpass1(false, ap, u1, u2);
 
     /* write t-x destruction */
-    sf_write(u2[0][0],sizeof(float),n123,out);
+    sf_floatwrite(u2[0][0],n123,out);
 
     if (n3 > 1) { /* if 3-D input */
 	/* read t-y dip */
-	sf_read(p[0][0],sizeof(float),n123,dip);
+	sf_floatread(p[0][0],n123,dip);
 	
 	if (nj2 != nj1) ap = allpass_init (nw,nj2,n1,n2,n3,p);
   
@@ -74,11 +74,11 @@ int main (int argc, char *argv[])
 	allpass2(false, ap, u1, u2);
 
 	/* write t-y destruction */
-	sf_write(u2[0][0],sizeof(float),n123,out);
+	sf_floatwrite(u2[0][0],n123,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mpwd.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mpwd.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

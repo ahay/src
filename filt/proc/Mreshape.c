@@ -72,14 +72,14 @@ int main(int argc, char* argv[])
     if (NULL != in2) data2 = sf_floatalloc(nfft);
 
     for (i3=0; i3 < n3; i3++) { /* loop over windows */
-	sf_read(&m1,sizeof(float),1,ma);
-	sf_read(&a1,sizeof(float),1,ma);
-	sf_read(&m2,sizeof(float),1,ma2);
-	sf_read(&a2,sizeof(float),1,ma2);
+	sf_floatread(&m1,1,ma);
+	sf_floatread(&a1,1,ma);
+	sf_floatread(&m2,1,ma2);
+	sf_floatread(&a2,1,ma2);
 	
 	for (i2=0; i2 < n2; i2++) { /* loop over traces in a window */
-	    sf_read(data,sizeof(float),n1,in);
-	    if (NULL != in2) sf_read(data2,sizeof(float),n1,in2);
+	    sf_floatread(data,n1,in);
+	    if (NULL != in2) sf_floatread(data2,n1,in2);
 	
 	    /* Fourier transform */
 	    if (m1 > m2) {
@@ -94,8 +94,8 @@ int main(int argc, char* argv[])
 		reshape (m2, a2, m1, a1, data2);
 	    }
 	    
-	    sf_write(data,sizeof(float),n1,out);
-	    if (NULL != in2) sf_write(data2,sizeof(float),n1,out2);
+	    sf_floatwrite(data,n1,out);
+	    if (NULL != in2) sf_floatwrite(data2,n1,out2);
 	}
     }
 	
@@ -103,4 +103,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mreshape.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mreshape.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */

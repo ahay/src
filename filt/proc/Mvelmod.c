@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 
 	for (iv=0; iv < nv; iv++) {
 	    v = v0 + iv * dv;
-	    sf_read(trace,sizeof(float),nt,scan); 
+	    sf_floatread(trace,nt,scan); 
 
 	    for (it=0; it < nt; it++) {
 		trace[it] /= nt*nh;
@@ -116,11 +116,11 @@ int main(int argc, char* argv[])
 	    } /* h */
 	} /* v */
 	
-	sf_write (stack[0],sizeof(float),nt*nh,cmp);
+	sf_floatwrite (stack[0],nt*nh,cmp);
     } /* x */
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mvelmod.c,v 1.1 2004/04/03 03:08:28 fomels Exp $	 */
+/* 	$Id: Mvelmod.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */

@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
 	if (!sf_histint(filt,"n1",&na)) sf_error("No n1= in filtin");
 
 	aa = sf_floatalloc(na);
-	sf_read(aa,sizeof(float),na,filt);
+	sf_floatread(aa,na,filt);
     }  else {
 	aa = sf_floatalloc(2);
 	aa[0] = 1.;
@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     mis1_init(n1,na,aa);
 
     for (i2=0; i2 < n2; i2++) {
-        sf_read (xx,sizeof(float),n1,in);
+        sf_floatread (xx,n1,in);
 
 	for (i1=0; i1 < n1; i1++) {
 	    known[i1] = (xx[i1] != 0.);
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
         mis1 (n1, xx, known);
 
-	sf_write (xx,sizeof(float),n1,out);
+	sf_floatwrite (xx,n1,out);
     }
 
     sf_close();

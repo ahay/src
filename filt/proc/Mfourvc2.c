@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	h = h0 + ih*dh;
 	h *= h;
 
-	sf_read(image[0],sizeof(float),n1*nx,in);
+	sf_floatread(image[0],n1*nx,in);
 
 	for (i1=0; i1 < n1; i1++) {
 	    cosft_frw(image[0],i1,n1);
@@ -186,7 +186,7 @@ int main(int argc, char* argv[])
 
 		trace[i1] = den > 0.? num/den: 0.;
 	    }
-	    sf_write (trace, sizeof(float), n1, out);
+	    sf_floatwrite (trace,n1,out);
 	}
     }
 
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfourvc2.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mfourvc2.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 
 
 

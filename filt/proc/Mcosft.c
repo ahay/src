@@ -64,7 +64,7 @@ int main (int argc, char* argv[])
     data = sf_floatalloc (n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(data,sizeof(float),n1,in);
+	sf_floatread(data,n1,in);
 	
 	for (i=0; i <= dim1; i++) {
 	    if (!sign[i]) continue;
@@ -81,12 +81,12 @@ int main (int argc, char* argv[])
 	    cosft_close();
 	}
 	
-	sf_write(data,sizeof(float),n1,out);
+	sf_floatwrite(data,n1,out);
     }    
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcosft.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mcosft.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -58,17 +58,17 @@ int main(int argc, char* argv[])
     data = sf_floatalloc2(nx,ny);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(data[0],sizeof(float),nx*ny,in);
+	sf_floatread(data[0],nx*ny,in);
 
 	monof2(data,niter,a,nx,dx,x0,ny,dy,y0,verb);
          
-	sf_write(a,sizeof(float),3,ma);
+	sf_floatwrite(a,3,ma);
         
-	sf_write (data[0],sizeof(float),nx*ny,out);
+	sf_floatwrite (data[0],nx*ny,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmonof2.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mmonof2.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */

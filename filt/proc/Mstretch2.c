@@ -25,8 +25,8 @@ int main(int argc, char* argv[])
     dat = sf_floatalloc(nd);
     coord = sf_floatalloc(nd);
 
-    sf_read (dat,sizeof(float),nd,in);
-    sf_read (coord,sizeof(float),nd,head);
+    sf_floatread (dat,nd,in);
+    sf_floatread (coord,nd,head);
     
     if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
     /* number of output samples */
@@ -50,11 +50,11 @@ int main(int argc, char* argv[])
     stretch2_define (str, coord, true);
     stretch2_apply (str, dat, mod);
 
-    sf_write (mod,sizeof(float),nx,out);
+    sf_floatwrite (mod,nx,out);
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mstretch2.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mstretch2.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -82,7 +82,7 @@ int main (int argc, char* argv[])
 
     /*  loop over all planes */
     for (i3=0; i3 < n3; i3++) {
-	sf_read(plane[0],sizeof(float),n1*n2,in);
+	sf_floatread(plane[0],n1*n2,in);
 
 	/* Fourier transform */
 	sf_pfa2rc (1,2,n1,nfft,plane[0],fft[0]);
@@ -108,7 +108,7 @@ int main (int argc, char* argv[])
 	    }
 	} /* i2 */
 
-	sf_write(spec[0],sizeof(float),nw*nk,out);
+	sf_floatwrite(spec[0],nw*nk,out);
     } /* i3 */
 
     if (sum) { /* normalize and output */
@@ -118,12 +118,12 @@ int main (int argc, char* argv[])
 		spec[i2][i1] *= scale;
 	    }
 	}
-	sf_write(spec[0],sizeof(float),nw*nk,out);
+	sf_floatwrite(spec[0],nw*nk,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mspectra2.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mspectra2.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */
 

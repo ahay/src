@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
        
 	    int1_init (str, 0., dw, nw, spline_int, nf, nw);
 
-	    sf_read(trace,sizeof(float),nt,in);
+	    sf_floatread(trace,nt,in);
 	    for (iw = nt; iw < nw; iw++) { /* pad */
 		trace[iw]=0.;
 	    }
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 	    prefilter_apply (nw, trace);
 	    int1_lop (false,false,nw,nw,trace,trace2);
 	    cosft_inv (trace2,0,1);
-	    sf_write(trace2,sizeof(float),nt,out);
+	    sf_floatwrite(trace2,nt,out);
 	}
     }
 
@@ -86,4 +86,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.9 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mstolt.c,v 1.10 2004/04/19 21:51:46 fomels Exp $	 */

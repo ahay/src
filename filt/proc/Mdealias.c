@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
     dip3_init(n1, n2, n3, eps, lam, sign);
     interp_init (n1, 0.0001, verb);
 
-    sf_read(u1[0][0],sizeof(float),n12,in);
+    sf_floatread(u1[0][0],n12,in);
 
     if (verb) sf_warning("Estimating slopes...");
     
@@ -153,11 +153,11 @@ int main (int argc, char *argv[])
 	interp2(n3,uu2[i1],u2[i1],q2[i1]);
     }
     
-    sf_write(uu[0][0],sizeof(float),m12,out);
+    sf_floatwrite(uu[0][0],m12,out);
   
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdealias.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mdealias.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -59,10 +59,10 @@ int main (int argc, char *argv[])
     c = sf_floatalloc3(n1,n2,n3);
 
     /* read data */
-    sf_read(u[0][0],sizeof(float),n123,in);
+    sf_floatread(u[0][0],n123,in);
 
     /* read t-x dip */
-    sf_read(p[0][0],sizeof(float),n123,dip);
+    sf_floatread(p[0][0],n123,dip);
 
     ch = coh_init (nw,nj1,n1,n2,n3,p);
   
@@ -76,11 +76,11 @@ int main (int argc, char *argv[])
     }
 
     /* write t-x coherency */
-    sf_write(c[0][0],sizeof(float),n123,out);
+    sf_floatwrite(c[0][0],n123,out);
 
     if (n3 > 1) { /* if 3-D input */
 	/* read t-y dip */
-	sf_read(p[0][0],sizeof(float),n123,dip);
+	sf_floatread(p[0][0],n123,dip);
 	
 	if (nj2 != nj1) ch = coh_init (nw,nj2,n1,n2,n3,p);
   
@@ -94,11 +94,11 @@ int main (int argc, char *argv[])
 	}
 
 	/* write t-y coherency */
-	sf_write(c[0][0],sizeof(float),n123,out);
+	sf_floatwrite(c[0][0],n123,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcoh.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mcoh.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */

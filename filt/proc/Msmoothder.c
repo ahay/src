@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     banded_define (slv,diag,offd);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(trace,sizeof(float),n1,in);
+	sf_floatread(trace,n1,in);
 
 	/* smooth */
 	banded_solve(slv,trace);
@@ -58,11 +58,11 @@ int main(int argc, char* argv[])
 	}
 	dtrace[n1-1] = dtrace[n1-2];
 
-	sf_write(dtrace,sizeof(float),n1,der);
+	sf_floatwrite(dtrace,n1,der);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Msmoothder.c,v 1.5 2004/04/08 14:03:57 fomels Exp $	 */
+/* 	$Id: Msmoothder.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     if (dip) {
 	slope = sf_input("slope");
 	p = sf_floatalloc2(n1,n2);
-	sf_read(p[0],sizeof(float),nd,slope);
+	sf_floatread(p[0],nd,slope);
 	sf_fileclose(slope);
     }
     
@@ -53,8 +53,8 @@ int main(int argc, char* argv[])
     vi = sf_floatalloc2(n1,n2);
     wt = sf_floatalloc2(n1,n2);
 
-    sf_read(vr[0],sizeof(float),nd,vrms);
-    sf_read(wt[0],sizeof(float),nd,weight);
+    sf_floatread(vr[0],nd,vrms);
+    sf_floatread(wt[0],nd,weight);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
@@ -92,13 +92,13 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_write(vi[0],sizeof(float),nd,vint);
+    sf_floatwrite(vi[0],nd,vint);
 
     if (NULL != sf_getstring("vrmsout")) {
 	/* optionally, output predicted vrms */
 	vout = sf_output("vrmsout");
 
-	sf_write(vr[0],sizeof(float),nd,vout);
+	sf_floatwrite(vr[0],nd,vout);
     }
 
     sf_close();

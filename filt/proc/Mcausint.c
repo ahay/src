@@ -28,20 +28,20 @@ int main(int argc, char* argv[])
     /* if y, do adjoint integration */
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(pp,sizeof(float),n1,in);
+	sf_floatread(pp,n1,in);
 	if (adj) {
 	    causint_lop (true,false,n1,n1,qq,pp);
 	} else {
 	    causint_lop (false,false,n1,n1,pp,qq);
 	}
-	sf_write(qq,sizeof(float),n1,out);
+	sf_floatwrite(qq,n1,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mcausint.c,v 1.1 2004/03/26 03:32:17 fomels Exp $	 */
+/* 	$Id: Mcausint.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */
 
 
 

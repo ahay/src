@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     aa = allocatehelix (na);
 
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
-    sf_read (aa->flt,sizeof(float),na,filt);
+    sf_floatread (aa->flt,na,filt);
     for( ia=0; ia < na; ia++) {
 	aa->flt[ia] /= a0;
     }
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 	NULL != (lagfile = sf_histstring(filt,"lag"))) {
 	lag = sf_input(lagfile);
 
-	sf_read(aa->lag,sizeof(int),na,lag);
+	sf_intread(aa->lag,na,lag);
     } else {
 	lag = NULL;
 	for( ia=0; ia < na; ia++) {
@@ -75,9 +75,9 @@ int main(int argc, char* argv[])
     qq = sf_floatalloc (nx);
 
     if (adj) {
-	sf_read (qq,sizeof(float),nx,in);
+	sf_floatread (qq,nx,in);
     } else {
-	sf_read (pp,sizeof(float),nx,in);
+	sf_floatread (pp,nx,in);
     }
 
     if (inv) {
@@ -90,14 +90,14 @@ int main(int argc, char* argv[])
     }
 
     if (adj) {
-	sf_write (pp,sizeof(float),nx,out);
+	sf_floatwrite (pp,nx,out);
     } else {
-	sf_write (qq,sizeof(float),nx,out);
+	sf_floatwrite (qq,nx,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mhelicon.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mhelicon.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 

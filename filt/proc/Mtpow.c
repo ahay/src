@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (ix=0; ix < nx; ix++) {
-	    sf_read(trace,sizeof(float),nt,in);
+	    sf_floatread(trace,nt,in);
 	    
 	    if (0. != tpow) {
 		for (it=0; it < nt; it++) {
@@ -69,7 +69,7 @@ int main(int argc, char *argv[])
 		}
 	    }
 
-	    sf_write(trace,sizeof(float),nt,out);
+	    sf_floatwrite(trace,nt,out);
 	}
     }
 

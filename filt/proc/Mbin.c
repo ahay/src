@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
     ymin = xmin = +FLT_MAX;
     ymax = xmax = -FLT_MAX;
     for (id=0; id<nd; id++) {	
-	sf_read (hdr,sizeof(float),nk,head);
+	sf_floatread (hdr,nk,head);
 	f = hdr[xkey]; 
 	if (f < xmin) xmin=f;
 	if (f > xmax) xmax=f;
@@ -162,7 +162,7 @@ int main (int argc, char* argv[])
 	sf_putfloat(fold,"o2",y0);
 	sf_putfloat(fold,"d1",dx);
 	sf_putfloat(fold,"d2",dy);
-	sf_write (count,sizeof(float),nm,fold);
+	sf_floatwrite (count,nm,fold);
 	sf_fileclose (fold);
     }
 
@@ -175,16 +175,16 @@ int main (int argc, char* argv[])
     }
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (dd,sizeof(float),nd,in);
+	sf_floatread (dd,nd,in);
 	int2_lop (true,false,nm,nd,mm,dd);
 	for (im=0; im<nm; im++) {
 	    mm[im] *= count[im];
 	}
-	sf_write (mm,sizeof(float),nm,out);
+	sf_floatwrite (mm,nm,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mbin.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mbin.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */

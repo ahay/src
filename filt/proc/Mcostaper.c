@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(trace,sizeof(float),n1,in);
+	sf_floatread(trace,n1,in);
 	for (iw=0; iw < nw1; iw++) {
 	    wi = w1[iw];
 	    trace[iw]      *= wi;
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 		trace[i1] *= wi;
 	    }
 	}
-	sf_write(trace,sizeof(float),n1,out);
+	sf_floatwrite(trace,n1,out);
     }
 
     sf_close();

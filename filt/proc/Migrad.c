@@ -21,16 +21,16 @@ int main(int argc, char* argv[])
     qq = sf_floatalloc(n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(pp,sizeof(float),n1,in);
+	sf_floatread(pp,n1,in);
 	igrad1_lop (false,false,n1,n1,pp,qq);
-	sf_write(qq,sizeof(float),n1,out);
+	sf_floatwrite(qq,n1,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Migrad.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Migrad.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */
 
 
 

@@ -88,7 +88,7 @@ int main (int argc, char **argv)
     mm = sf_complexalloc(np);
     xx = sf_floatalloc(nx); 
 
-    sf_read (xx,sizeof(float),nx,offset);
+    sf_floatread (xx,nx,offset);
 
     if (1. != x0) { 
 	for (ix=0; ix < nx; ix++) {
@@ -110,7 +110,7 @@ int main (int argc, char **argv)
     for (ic = 0; ic < nc; ic++) { /* loop over CMPs */
 	if (adj) {
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
-		sf_read(tt,sizeof(float),nt,in);
+		sf_floatread(tt,nt,in);
 		for (it=nt; it < nt2; it++) {
 		    tt[it]=0.;
 		}
@@ -118,7 +118,7 @@ int main (int argc, char **argv)
 	    }
 	} else { /* modeling */
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
-		sf_read(tt,sizeof(float),nt,in);
+		sf_floatread(tt,nt,in);
 		for (it=nt; it < nt2; it++) {
 		    tt[it]=0.;
 		}
@@ -162,13 +162,13 @@ int main (int argc, char **argv)
 	    for (ip=0; ip < np; ip++) { /* loop over slopes */
 		sf_pfacr(1,nt2,cm[ip],tt); /* FFT to time */
 		
-		sf_write(tt,sizeof(float),nt,out);
+		sf_floatwrite(tt,nt,out);
 	    }
 	} else { /* modeling */
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
 		sf_pfacr(1,nt2,cd[ix],tt); /* FFT to time */
 		
-		sf_write(tt,sizeof(float),nt,out);
+		sf_floatwrite(tt,nt,out);
 	    }
 	}
     } /* loop over CMPs */
@@ -177,4 +177,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mtaup.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mtaup.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */

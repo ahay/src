@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 		x = x0 + ix*dx;
 		x = hypotf(x,y)+minx;
 
-		sf_read(ctrace,sizeof(float),compl? 2*nw: nw,in);
+		sf_floatread(ctrace,compl? 2*nw: nw,in);
 
 		for (iw=0; iw < nw; iw++) {
 		    w = w0+iw*dw;	    
@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 		    }
 		} /* iw */
 
-		sf_write(ctrace,sizeof(float),compl? 2*nw: nw,out);
+		sf_floatwrite(ctrace,compl? 2*nw: nw,out);
 	    } /* ix */
 	} /* iy */
     } /* i3 */
@@ -121,4 +121,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mdipfilter.c,v 1.8 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mdipfilter.c,v 1.9 2004/04/19 21:51:46 fomels Exp $	 */

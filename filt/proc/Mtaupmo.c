@@ -45,13 +45,13 @@ int main (int argc, char* argv[])
     nmo = fint1_init (nw, nt);
 
     for (ix=0; ix < nx; ix++) {
-	sf_read (vel,sizeof(float),nt,velocity);	
+	sf_floatread (vel,nt,velocity);	
 
 	for (ip=0; ip < np; ip++) {
 	    p = p0 + ip*dp;
 	    p *= p;
 
-	    sf_read (trace,sizeof(float),nt,taup);
+	    sf_floatread (trace,nt,taup);
 	    fint1_set(nmo,trace);
 
 	    f = 0.;
@@ -76,7 +76,7 @@ int main (int argc, char* argv[])
 		    trace[it] = 0.;
 		}
 	    }
-	    sf_write (trace,sizeof(float),nt,nmod);
+	    sf_floatwrite (trace,nt,nmod);
 	}
     }
     
@@ -84,4 +84,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mtaupmo.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mtaupmo.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

@@ -58,8 +58,8 @@ int main(int argc, char* argv[])
     window1_init (w,nw,n,h,w-h);
     str = stretch2_init (n,1.,1.,nw,eps,lam);
 
-    sf_read (dat[0],sizeof(float),n*n2,in);
-    sf_read (dat2[0],sizeof(float),n*n2,other);
+    sf_floatread (dat[0],n*n2,in);
+    sf_floatread (dat2[0],n*n2,other);
   
     sf_putint(xcr,"n1",nc);
     sf_putint(xcr,"n2",nw);
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 	}
 	coord[iw] = i0 + 0.5*(w+1.);
 	shift[iw] = xcorr (w,n2,win[0], win2[0],nc,xc);
-	sf_write(xc,sizeof(float),nc,xcr);
+	sf_floatwrite(xc,nc,xcr);
 	if (verb) sf_warning("shift[%d]=%g",iw,shift[iw]);
     }
   
@@ -86,11 +86,11 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < n2; i2++) {
-	sf_write (warp,sizeof(float),n,out);
+	sf_floatwrite (warp,n,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mxcorr1.c,v 1.9 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mxcorr1.c,v 1.10 2004/04/19 21:51:46 fomels Exp $	 */

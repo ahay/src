@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
 	    sig[it]=0.;
 	}
 
-	sf_read(imp,sizeof(float),nt,ai);
+	sf_floatread(imp,nt,ai);
 
 	imp1=imp[0];
 	for (it=0; it < nt-1; it++) {
@@ -53,11 +53,11 @@ int main (int argc, char* argv[])
 	    imp1 = imp2;
 	}
 
-	sf_write(sig,sizeof(float),nt,mod);
+	sf_floatwrite(sig,nt,mod);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mai2refl.c,v 1.4 2004/03/30 08:00:27 fomels Exp $	 */
+/* 	$Id: Mai2refl.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

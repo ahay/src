@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
 
-    sf_read(w[0],sizeof(float),nd,warp);
+    sf_floatread(w[0],nd,warp);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -65,15 +65,17 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_write(g[0],sizeof(float),nd,gamma);
+    sf_floatwrite(g[0],nd,gamma);
 
     if (NULL != sf_getstring("warpout")) {
 	/* optionally, output predicted warp */
 	wout = sf_output("warpout");
 
-	sf_write(w[0],sizeof(float),nd,wout);
+	sf_floatwrite(w[0],nd,wout);
     }
 
     sf_close();
     exit(0);
 }
+
+/* 	$Id: Mwarp2gamma.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */

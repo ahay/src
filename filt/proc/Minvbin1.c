@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
 
     head = sf_input("head");
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
-    sf_read (offset,sizeof(float),nd,head);
+    sf_floatread (offset,nd,head);
     sf_fileclose (head);
 
     xmin = +FLT_MAX;
@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
     /* if y, use PEF for regularization */
  
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (dd,sizeof(float),nd,in);
+	sf_floatread (dd,nd,in);
 	if (prec) {
 	    if (filt==1) {
 		sf_solver_prec(int1_lop, sf_cgstep, causint_lop, nx, nx, nd,
@@ -162,12 +162,12 @@ int main (int argc, char* argv[])
 	    }
 	}
 	
-    	sf_write (mm,sizeof(float),nx,out);
+    	sf_floatwrite (mm,nx,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Minvbin1.c,v 1.8 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minvbin1.c,v 1.9 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     ampl = sf_floatalloc(n);
 
     for (ix = 0; ix < nx; ix++) {
-	sf_read (slice[0],sizeof(float),nt*ns,in);
+	sf_floatread (slice[0],nt*ns,in);
 
 	/* pick blind maximum */
 	for (it = 0; it < nt; it++) {
@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
 	div1(pick0,ampl,pick);
     }
 
-    sf_write (pick,sizeof(float),n,out);	
+    sf_floatwrite (pick,n,out);	
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id: Mblindpick2.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
 

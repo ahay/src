@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
     /* repeat filtering several times */
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(data,sizeof(float),n1,in);
+	sf_floatread(data,n1,in);
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
@@ -68,11 +68,11 @@ int main (int argc, char* argv[])
 	    triangle_close(tr);
 	}
 	
-	sf_write(data,sizeof(float),n1,out);
+	sf_floatwrite(data,n1,out);
     }    
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Msmooth.c,v 1.9 2004/04/08 01:54:49 fomels Exp $	 */
+/* 	$Id: Msmooth.c,v 1.10 2004/04/19 21:51:46 fomels Exp $	 */

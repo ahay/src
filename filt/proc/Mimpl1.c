@@ -35,14 +35,14 @@ int main(int argc, char* argv[])
     dat = sf_floatalloc(n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read (dat,sizeof(float),n1,in);
+	sf_floatread (dat,n1,in);
 	impl1_apply (dat);
-	sf_write (dat,sizeof(float),n1,out);
+	sf_floatwrite (dat,n1,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mimpl1.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mimpl1.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */
 

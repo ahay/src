@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     t1 = sf_floatalloc(n2);
     t2 = sf_floatalloc(n2);
 
-    sf_read (map[0],sizeof(float),n1*n2,in);
+    sf_floatread (map[0],n1*n2,in);
 
     if (eps > 0.) {
 	hipass_init(eps);
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_write (map[0],sizeof(float),n1*n2,out);
+    sf_floatwrite (map[0],n1*n2,out);
 
     sf_close();
     exit(0);

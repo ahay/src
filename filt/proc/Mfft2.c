@@ -121,7 +121,7 @@ int main (int argc, char **argv)
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
 	    for (ik=0; ik<nk; ik++) {
-		sf_read(cq,sizeof(float complex),nw,in);
+		sf_complexread(cq,nw,in);
 		
 		if (ik==0) {
 		    for (it=0; it<nt; it++) {
@@ -150,9 +150,9 @@ int main (int argc, char **argv)
 		}
 	    }
 
-	    sf_write(p[0],sizeof(float),nt*nx,out);
+	    sf_floatwrite(p[0],nt*nx,out);
 	} else { /* forward */
-	    sf_read(p[0],sizeof(float),nt*nx,in);
+	    sf_floatread(p[0],nt*nx,in);
       
 	    /* pad with zeros */
 	    for (ix=nx; ix<nxfft; ix++) {
@@ -190,7 +190,7 @@ int main (int argc, char **argv)
 		    }  
 		}
 	
-		sf_write(cq,sizeof(float complex),nw,out); 
+		sf_complexwrite(cq,nw,out); 
 	    }
 	}
     }
@@ -199,4 +199,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft2.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mfft2.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */

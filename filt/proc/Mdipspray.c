@@ -18,14 +18,14 @@ int main(int argc, char* argv[])
     next = sf_floatalloc(n1);
     slope = sf_floatalloc(n1);
 
-    sf_read(next,sizeof(float),n1,trace);
-    sf_write(next,sizeof(float),n1,out);
+    sf_floatread(next,n1,trace);
+    sf_floatwrite(next,n1,out);
     
     for (i2=1; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    data[i1] = next[i1];
 	}
-	sf_read(slope,sizeof(float),n1,dip);
+	sf_floatread(slope,n1,dip);
 	for (i1=0; i1 < n1; i1++) {
 	    t = i1-slope[i1];
 	    it = t; t -= it;
@@ -37,9 +37,11 @@ int main(int argc, char* argv[])
 		next[i1] = t*data[it+1] + (1.-t)*data[it];
 	    }
 	}
-	sf_write(next,sizeof(float),n1,out);
+	sf_floatwrite(next,n1,out);
     }
 
     sf_close();
     exit(0);
 }
+
+/* 	$Id: Mdipspray.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */

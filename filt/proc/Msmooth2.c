@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     smooth = sf_floatalloc(n12);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_read(input,sizeof(float),n12,in);
+	sf_floatread(input,n12,in);
 	
 	if (gauss) {
 	    freqfilt2_lop(false,false,n12,n12,input,smooth);
@@ -50,12 +50,12 @@ int main(int argc, char* argv[])
 	    triangle2_lop(false,false,n12,n12,input,smooth);
 	}
 
-	sf_write(smooth,sizeof(float),n12,out);
+	sf_floatwrite(smooth,n12,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Msmooth2.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Msmooth2.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -38,11 +38,11 @@ int main(int argc, char* argv[])
 	if (SF_INT != sf_gettype(lag0)) 
 	    sf_error("Need int data in lag file '%s'",lagfile);
 
-	sf_read(aa->lag,sizeof(int),na,lag0);
+	sf_intread(aa->lag,na,lag0);
     }
 
     if (!sf_histfloat(in,"a0",&a0)) a0=1.;
-    sf_read (aa->flt,sizeof(float),na,in);
+    sf_floatread (aa->flt,na,in);
 
     ss = autocorr (aa, a0, &s0, 1.e-6);
     ns = ss->nh;
@@ -55,13 +55,13 @@ int main(int argc, char* argv[])
     sf_settype(lag,SF_INT);
     sf_fileflush(lag,lag0);
 
-    sf_write(ss->lag,sizeof(int),ns,lag);
+    sf_intwrite(ss->lag,ns,lag);
     sf_fileclose(lag);
 
     if (NULL != (lagfile = sf_getstring("lagout"))) 
 	sf_putstring(out,"lag",lagfile);
 
-    sf_write (ss->flt,sizeof(float),ns,out);
+    sf_floatwrite (ss->flt,ns,out);
   
     sf_close();
     exit (0);

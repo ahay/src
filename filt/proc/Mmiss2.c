@@ -65,10 +65,10 @@ int main(int argc, char* argv[])
     gaussshape2_set2(a);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_read(mm,sizeof(float),n12,in);
+	sf_floatread(mm,n12,in);
 
 	if (NULL != mask) {
-	    sf_read(kk,sizeof(float),n12,mask);
+	    sf_floatread(kk,n12,mask);
 	    for (i=0; i < n12; i++) {
 		known[i] = (kk[i] != 0.);
 	    }
@@ -97,11 +97,11 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	sf_write(mm,sizeof(float),n12,out);
+	sf_floatwrite(mm,n12,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmiss2.c,v 1.5 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id: Mmiss2.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

@@ -51,7 +51,7 @@ int main(int argc, char* argv[]) {
 
     xyz = sf_floatalloc2(3,nd);
 
-    sf_read(xyz[0],sizeof(float),3*nd,xyzs);
+    sf_floatread(xyz[0],3*nd,xyzs);
 
     if (!sf_getfloat("base",&base)) base=0.;
     /* base to be subtracted from z */
@@ -59,7 +59,7 @@ int main(int argc, char* argv[]) {
     for (iy=0; iy < ny; iy++) {
 	y = y0+iy*dy;
 
-	sf_read(mm,sizeof(float),nx,in);
+	sf_floatread(mm,nx,in);
 
 	if (0==iy || ny-1==iy) {
 	    for (ix=0; ix < nx; ix++) {
@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
 	    mm[nx-1] = frame(x0+(nx-1)*dx,y,base,nd,xyz);
 	}
 
-	sf_write(mm,sizeof(float),nx,out);
+	sf_floatwrite(mm,nx,out);
     }
 
     sf_close();

@@ -63,7 +63,7 @@ int main (int argc, char *argv[])
     p = sf_floatalloc3(n1,n2,n3);
 
     /* read data */
-    sf_read(u[0][0],sizeof(float),n123,in);
+    sf_floatread(u[0][0],n123,in);
 
     /* initialize t-x dip */
     for(i=0; i < n123; i++) {
@@ -74,7 +74,7 @@ int main (int argc, char *argv[])
     dip3(1, niter, nw, nj1, verb, u, p);
 
     /* write t-x dip */
-    sf_write(p[0][0],sizeof(float),n123,out);
+    sf_floatwrite(p[0][0],n123,out);
 
     if (n3 > 1) { /* if 3-D input */
 	/* initialize t-y dip */
@@ -86,11 +86,11 @@ int main (int argc, char *argv[])
 	dip3(2, niter, nw, nj2, verb, u, p);
 
 	/* write t-y dip */
-	sf_write(p[0][0],sizeof(float),n123,out);
+	sf_floatwrite(p[0][0],n123,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdip.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mdip.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */

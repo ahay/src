@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     str = stretch_init (n2, o2, d2, n1, eps, false);
 
     for (i2=0; i2 < m2; i2++) {
-	sf_read (inp,sizeof(float),n1,in);
+	sf_floatread (inp,n1,in);
 
 	stretch_define (str, inp);
 
@@ -59,12 +59,12 @@ int main(int argc, char* argv[])
   }
 */
 
-	sf_write(outp,sizeof(float),n2,out);
+	sf_floatwrite(outp,n2,out);
     }
 
     sf_close();
     exit (0);
 }
     
-/* 	$Id: Minvwarp.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minvwarp.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -147,13 +147,13 @@ int main(int argc, char* argv[])
 		if (inv) h = -h;
 	    } 
 
-	    sf_read (trace,sizeof(float),n1,in);
+	    sf_floatread (trace,n1,in);
 	    fint1_set(str,trace);
 	    
 	    stretch(str,inv? forward: inverse, 
 		    n1, d1, o1, n, d2, o2, stretched);
 
-	    sf_write (stretched,sizeof(float),n,out);
+	    sf_floatwrite (stretched,n,out);
 	}
     }
 
@@ -161,5 +161,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstretch.c,v 1.1 2004/04/01 02:17:14 fomels Exp $	 */
+/* 	$Id: Mstretch.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */
 

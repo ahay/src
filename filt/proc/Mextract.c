@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
     hdr = sf_floatalloc(nk);
 
     for (id=0; id<nd; id++) {	
-	sf_read (hdr,sizeof(float),nk,head);
+	sf_floatread (hdr,nk,head);
 	xy[id][0] = hdr[xkey];
 	xy[id][1] = hdr[ykey];
     }
@@ -92,15 +92,15 @@ int main (int argc, char* argv[])
     dd = sf_floatalloc(nd);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (mm,sizeof(float),nm,in);
+	sf_floatread (mm,nm,in);
 
 	int2_lop(false,false,nm,nd,mm,dd);
 
-	sf_write (dd,sizeof(float),nd,out);
+	sf_floatwrite (dd,nd,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mextract.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mextract.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */

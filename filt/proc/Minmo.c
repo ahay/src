@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
-	sf_read (off,sizeof(float),nh,offset);
+	sf_floatread (off,nh,offset);
 	sf_fileclose(offset);
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
@@ -78,10 +78,10 @@ int main (int argc, char* argv[])
     nmo = stretch4_init (nt, t0, dt, nt, nw, eps);
     
     for (ix = 0; ix < nx; ix++) {
-	sf_read (vel,sizeof(float),nt,velocity);	
+	sf_floatread (vel,nt,velocity);	
 
 	for (ih = 0; ih < nh; ih++) {
-	    sf_read (trace,sizeof(float),nt,cmp);
+	    sf_floatread (trace,nt,cmp);
 	    
 	    h = off[ih] + (dh/CDPtype)*(ix%CDPtype); 
 	    h = h*h - h0*h0;
@@ -99,7 +99,7 @@ int main (int argc, char* argv[])
 	    stretch4_define (nmo,str);
 	    stretch4_apply (nmo,trace,out);
 	    
-	    sf_write (out,sizeof(float),nt,nmod);
+	    sf_floatwrite (out,nt,nmod);
 	}
     }
 	
@@ -107,5 +107,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.5 2004/04/03 02:41:17 fomels Exp $	 */
-
+/* 	$Id: Minmo.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

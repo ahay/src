@@ -56,8 +56,8 @@ int main(int argc, char* argv[])
     memset(zero,0,nt);
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
     
     sf_unpipe(in,(long) ns*nh*nt);
     pos = sf_tell(in);
@@ -68,10 +68,10 @@ int main(int argc, char* argv[])
 
 	    if (is >= 0 && is < ns && ih < nh) {
 		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
-		sf_read(trace,sizeof(char),nt,in);
-		sf_write(trace,sizeof(char),nt,out);
+		sf_charread(trace,nt,in);
+		sf_charwrite(trace,nt,out);
 	    } else {
-		sf_write(zero,sizeof(char),nt,out);
+		sf_charwrite(zero,nt,out);
 	    }
 	}
     }
@@ -80,4 +80,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshot2cmp.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mshot2cmp.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */

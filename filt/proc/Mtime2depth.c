@@ -56,8 +56,8 @@ int main (int argc, char *argv[])
     vel = sf_floatalloc (nz);
 
     for (ix = 0; ix < nx; ix++) {
-	sf_read (time,sizeof(float),nt,in);
-	sf_read (vel,sizeof(float),nz,velocity);
+	sf_floatread (time,nt,in);
+	sf_floatread (vel,nz,velocity);
 
 	fint1_set (fnt, time);
 
@@ -81,11 +81,11 @@ int main (int argc, char *argv[])
 	    }
 	}
 
-	sf_write (depth,sizeof(float),nz,out);
+	sf_floatwrite (depth,nz,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtime2depth.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mtime2depth.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */

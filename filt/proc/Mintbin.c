@@ -57,7 +57,7 @@ int main (int argc, char* argv[])
     ymin = xmin = +INT_MAX;
     ymax = xmax = -INT_MAX;
     for (id=0; id<nd; id++) {	
-	sf_read (hdr,sizeof(int),nk,head);
+	sf_intread (hdr,nk,head);
 	i = hdr[xkey]; 
 	if (i < xmin) xmin=i;
 	if (i > xmax) xmax=i;
@@ -115,8 +115,8 @@ int main (int argc, char* argv[])
     nt *= esize;
 	    
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     buf = sf_charalloc(nt);
     zero = sf_charalloc(nt);
@@ -132,11 +132,11 @@ int main (int argc, char* argv[])
 	for (ix=0; ix < nx; ix++) {
 	    id = map[iy][ix];
 	    if (id < 0) {
-		sf_write (zero,sizeof(char),nt,out);
+		sf_charwrite (zero,nt,out);
 	    } else {
 		sf_seek(in,pos + (long) id*nt,SEEK_SET);		
-		sf_read (buf,sizeof(char),nt,in);
-		sf_write (buf,sizeof(char),nt,out);
+		sf_charread (buf,nt,in);
+		sf_charwrite (buf,nt,out);
 	    }
 	}
     }
@@ -145,4 +145,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mintbin.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mintbin.c,v 1.3 2004/04/19 21:51:46 fomels Exp $	 */

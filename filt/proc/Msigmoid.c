@@ -148,10 +148,10 @@ int main (int argc, char* argv[])
 	}
     }
 
-    sf_write (refl[0],sizeof(float),n1*n2,mod);
+    sf_floatwrite (refl[0],n1*n2,mod);
 
     exit (0);
 }
 
-/* 	$Id: Msigmoid.c,v 1.3 2004/04/14 13:44:55 fomels Exp $	 */
+/* 	$Id: Msigmoid.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */
 

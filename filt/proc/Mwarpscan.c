@@ -87,12 +87,12 @@ int main(int argc, char* argv[])
 
     prefilter_init (order, n1, order*10);     
     for (i2=0; i2 < m2; i2++) {
-	sf_read(inp[i2],sizeof(float),n1,in);
+	sf_floatread(inp[i2],n1,in);
 	prefilter_apply (n1, inp[i2]);
     }
     prefilter_close();
 
-    sf_read(oth[0],sizeof(float),m2*n2,other);
+    sf_floatread(oth[0],m2*n2,other);
     sf_fileclose(other);
 
     for (ig=0; ig < ng; ig++) {
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		corr[iw] = ab/sqrtf(a2*b2+FLT_EPSILON);
 	    }
 
-	    sf_write(corr,sizeof(float),nw,warped);
+	    sf_floatwrite(corr,nw,warped);
 	}
     }
 
@@ -135,4 +135,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mwarpscan.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */

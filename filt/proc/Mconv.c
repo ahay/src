@@ -40,11 +40,11 @@ int main(int argc, char* argv[])
     yy = sf_floatalloc(ny);
     if (trans) sf_putint(out,"n1",ny);
 
-    if (!each) sf_read (ff,sizeof(float),nf,filt);
+    if (!each) sf_floatread (ff,nf,filt);
 
     for (i2=0; i2 < n2; i2++) {
-        if (each) sf_read (ff,sizeof(float),nf,filt);
-        sf_read (xx,sizeof(float),nx,in);
+        if (each) sf_floatread (ff,nf,filt);
+        sf_floatread (xx,nx,in);
         if (trans) {
 	    tcai1_init(nf,ff);
 	    tcai1_lop (false, false,nx,ny,xx,yy);
@@ -52,15 +52,11 @@ int main(int argc, char* argv[])
 	    icai1_init(nf,ff,lag);
 	    icai1_lop (false, false,nx,ny,xx,yy);
 	}
-	sf_write (yy,sizeof(float),ny,out);
+	sf_floatwrite (yy,ny,out);
     }
 
     sf_close();
     exit(0);
 }
 
-
-
-
-
-
+/* 	$Id: Mconv.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */

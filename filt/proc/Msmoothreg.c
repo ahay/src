@@ -44,17 +44,17 @@ int main(int argc, char* argv[])
     tridiagonal_define (slv,diag,offd);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(trace,sizeof(float),n1,in);
+	sf_floatread(trace,n1,in);
 
 	for (ir=0; ir < nr; ir++){
 	    tridiagonal_solve(slv,trace);
 	}
 
-	sf_write(trace,sizeof(float),n1,smooth);
+	sf_floatwrite(trace,n1,smooth);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Msmoothreg.c,v 1.1 2004/04/08 01:57:36 fomels Exp $	 */
+/* 	$Id: Msmoothreg.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */

@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
 
     head = sf_input("head");
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
-    sf_read (offset,sizeof(float),nd,head);
+    sf_floatread (offset,nd,head);
     sf_fileclose (head);
 
     xmin = +FLT_MAX;
@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
 	sf_putint(fold,"n2",1);
 	sf_putfloat(fold,"o1",x0);
 	sf_putfloat(fold,"d1",dx);
-	sf_write (count,sizeof(float),nx,fold);
+	sf_floatwrite (count,nx,fold);
 	sf_fileclose (fold);
     }
 
@@ -114,17 +114,17 @@ int main (int argc, char* argv[])
     }
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (dd,sizeof(float),nd,in);
+	sf_floatread (dd,nd,in);
 	int1_lop (true,false,nx,nd,mm,dd);
 	for (ix=0; ix<nx; ix++) {
 	    mm[ix] *= count[ix];
 	}
-	sf_write (mm,sizeof(float),nx,out);
+	sf_floatwrite (mm,nx,out);
     }
     
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mbin1.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mbin1.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
 

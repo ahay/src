@@ -150,8 +150,8 @@ int main (int argc, char* argv[])
 
     free (func);
 
-    sf_write(tmean,sizeof(float),nr,vpvs);
-    sf_write(p2ss,sizeof(float),nr,vpvs);
+    sf_floatwrite(tmean,nr,vpvs);
+    sf_floatwrite(p2ss,nr,vpvs);
     sf_fileclose(vpvs);
 
     for (it=0; it < nr; it++) {
@@ -176,12 +176,12 @@ int main (int argc, char* argv[])
     synf(fo[1],nt,ps,nr,tim,tps,rs);
     synf(fo[2],nt,ss,nr,tim,tss,rs);
 
-    sf_write(pp,sizeof(float),nt,mod);
-    sf_write(ps,sizeof(float),nt,mod);
-    sf_write(ss,sizeof(float),nt,mod);
+    sf_floatwrite(pp,nt,mod);
+    sf_floatwrite(ps,nt,mod);
+    sf_floatwrite(ss,nt,mod);
 
     exit (0);
 }
 
-/* 	$Id: Mrandrefl.c,v 1.9 2003/11/14 22:51:39 fomels Exp $	 */
+/* 	$Id: Mrandrefl.c,v 1.10 2004/04/19 21:51:46 fomels Exp $	 */
 

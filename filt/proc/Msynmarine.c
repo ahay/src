@@ -53,7 +53,7 @@ int main(int argc, char* argv[]) {
 		it = sqrtf(depth[iz]*depth[iz] + 25.*ih*ih);   
 		if (it < nt) data[it] += refl[iy][iz];
 	    }
-	    sf_write(data,sizeof(float),nt,out);
+	    sf_floatwrite(data,nt,out);
 	}
     }
 

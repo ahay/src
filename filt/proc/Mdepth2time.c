@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
     vel = sf_floatalloc (nz);
 
     for (ix = 0; ix < nx; ix++) {
-	sf_read (vel,sizeof(float),nz,velocity);
+	sf_floatread (vel,nz,velocity);
 
 	for (iz = 0; iz < nz; iz++) {
 	    if (iz == 0) {
@@ -74,14 +74,14 @@ int main (int argc, char *argv[])
 
 	stretch_define (str, depth);
 
-	sf_read (depth,sizeof(float),nz,in);
+	sf_floatread (depth,nz,in);
 	stretch_apply (str, depth, time);
-	sf_write (time,sizeof(float),nt,out);
+	sf_floatwrite (time,nt,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdepth2time.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mdepth2time.c,v 1.7 2004/04/19 21:51:46 fomels Exp $	 */
 

@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
 
     head = sf_input("head");
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
-    sf_read (offset,sizeof(float),nd,head);
+    sf_floatread (offset,nd,head);
     sf_fileclose (head);
 
     xmin = +FLT_MAX;
@@ -115,7 +115,7 @@ int main (int argc, char* argv[])
     if (pef) monofshape_init(nx);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
-	sf_read (dd,sizeof(float),nd,in);
+	sf_floatread (dd,nd,in);
 
 	if (gauss) {
 	    sf_conjgrad(NULL, int1_lop, freqfilt_lop, pp, mm, dd, niter);
@@ -128,11 +128,11 @@ int main (int argc, char* argv[])
 	    sf_conjgrad(NULL, int1_lop, monofshape_lop, pp, mm, dd, niter);
 	}
 	
-    	sf_write (mm,sizeof(float),nx,out);
+    	sf_floatwrite (mm,nx,out);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id: Mshapebin1.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

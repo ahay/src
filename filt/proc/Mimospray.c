@@ -57,13 +57,13 @@ int main(int argc, char* argv[])
     imospray_init (1./v, o2,d2, o1,d1, n1,n2);
 
     if (inv) {
-	sf_read(dat,sizeof(float),n12,in);
+	sf_floatread(dat,n12,in);
 	sf_solver(imospray_lop,sf_cgstep,n1,n12,model,dat,niter+1,"end");
-	sf_write(model,sizeof(float),n1,out);
+	sf_floatwrite(model,n1,out);
     } else {	
-	sf_read(model,sizeof(float),n1,in);
+	sf_floatread(model,n1,in);
 	imospray_lop (false,false,n1,n12,model,dat);
-	sf_write(dat,sizeof(float),n12,out);
+	sf_floatwrite(dat,n12,out);
     }
 
     sf_close();

@@ -101,7 +101,7 @@ int main (int argc, char **argv)
 
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
-	    sf_read(cp[0],sizeof(float complex),n1*nk,in);
+	    sf_complexread(cp[0],n1*nk,in);
       
 	    /* Fourier transform k to x */
 	    sf_pfa2cc(1,2,n1,nk,cp[0]);
@@ -115,9 +115,9 @@ int main (int argc, char **argv)
 		}
 	    }
       
-	    sf_write(cp[0],sizeof(float complex),n1*nx,out);
+	    sf_complexwrite(cp[0],n1*nx,out);
 	} else {
-	    sf_read(cp[0],sizeof(float complex),n1*nx,in);
+	    sf_complexread(cp[0],n1*nx,in);
 	    
 	    /* FFT centering */
 	    for (ix=1; ix<nx; ix+=2) {
@@ -143,7 +143,7 @@ int main (int argc, char **argv)
 	    }
 	    */
 
-	    sf_write(cp[0],sizeof(float complex),n1*nk,out);
+	    sf_complexwrite(cp[0],n1*nk,out);
 	}
     }
 
@@ -151,4 +151,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mfft3.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */

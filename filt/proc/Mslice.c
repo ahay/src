@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc (nt);
 
     for (ix=0; ix < nx; ix++) {
-	sf_read (semb[0],sizeof(float),nt*ns,in);
-	sf_read (picks,sizeof(float),nt,pick);
+	sf_floatread (semb[0],nt*ns,in);
+	sf_floatread (picks,nt,pick);
 
 	for (it=0; it < nt; it++) {
 	    s = (picks[it] - s0)/ds;
@@ -45,11 +45,11 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	sf_write (trace,sizeof(float),nt,out);
+	sf_floatwrite (trace,nt,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mslice.c,v 1.3 2004/04/06 02:03:03 fomels Exp $	 */
+/* 	$Id: Mslice.c,v 1.4 2004/04/19 21:51:46 fomels Exp $	 */

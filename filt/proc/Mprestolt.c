@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 	    x *= x;
 
 	    if (inv) {
-		sf_read(trace,sizeof(float),nt,in);
+		sf_floatread(trace,nt,in);
 		for (it=nt; it < nw; it++) { /* pad */
 		    trace[it]=0.;
 		}
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 		h += x + y;
 
 		if (!inv) {
-		    sf_read(trace,sizeof(float),nt,in);
+		    sf_floatread(trace,nt,in);
 		    for (it=nt; it < nw; it++) { /* pad */
 			trace[it]=0.;
 		    }		
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 
 		if (inv || !stack) {
 		    cosft_inv (trace,0,1);
-		    sf_write(trace,sizeof(float),nt,out);
+		    sf_floatwrite(trace,nt,out);
 		} else {
 		    for (iw=0; iw < nw; iw++) {
 			keep[iw] += trace[iw];
@@ -184,7 +184,7 @@ int main(int argc, char* argv[])
 	    } /* h */
 	    if (!inv && stack) {
 		cosft_inv (keep,0,1);
-		sf_write(keep,sizeof(float),nt,out);
+		sf_floatwrite(keep,nt,out);
 	    }
 	} /* x */
     } /* y */
@@ -193,7 +193,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mprestolt.c,v 1.5 2004/03/22 05:43:25 fomels Exp $	 */
-
-
-
+/* 	$Id: Mprestolt.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */

@@ -74,13 +74,13 @@ int main(int argc, char* argv[])
 	    sf_error("Need int data in lag file '%s'",lagfile);
 	if (!sf_histints(lag,"n",m,dim)) sf_error("No n= in lag");
 
-	sf_read(aa->lag,sizeof(int),na,lag);
+	sf_intread(aa->lag,na,lag);
 	sf_fileclose(lag);
     }
 
     bound (dim, m, n, a, aa);
 
-    sf_read(aa->flt,sizeof(float),na,filt);
+    sf_floatread(aa->flt,na,filt);
     sf_fileclose(filt);
 
     for (ia=0; ia < na; ia++) {
@@ -106,12 +106,12 @@ int main(int argc, char* argv[])
 	known[i]=false;
     }
 
-    sf_read(mm+p1,sizeof(float),p2,in);
+    sf_floatread(mm+p1,p2,in);
 
     if (NULL != sf_getstring("mask")) {
 	/* optional input mask file for known data */
 	mask = sf_input("mask");
-	sf_read(kk+p1,sizeof(float),p2,mask);
+	sf_floatread(kk+p1,p2,mask);
 	sf_fileclose(mask);
 	
 	for (i=p1; i < p1+p2; i++) {
@@ -148,10 +148,10 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_write(mm+p1,sizeof(float),p2,out);
+    sf_floatwrite(mm+p1,p2,out);
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmiss.c,v 1.7 2004/04/06 02:03:03 fomels Exp $	 */
+/* 	$Id: Mmiss.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */

@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
 
 /*  loop over all traces */
     for (i2=0; i2 < n2; i2++) {
-	sf_read(trace,sizeof(float),n1,in);
+	sf_floatread(trace,n1,in);
 
 	/* Fourier transform */
 	sf_pfarc (1,nfft,trace,fft);
@@ -92,7 +92,7 @@ int main (int argc, char* argv[])
 		    spec[i1] = cabsf(fft[i1])*scale;
 		}
 	    }
-	    sf_write(spec,sizeof(float),nw,out);
+	    sf_floatwrite(spec,nw,out);
 	}
     }
 
@@ -101,12 +101,12 @@ int main (int argc, char* argv[])
 	for (i1=0; i1 < nw; i1++) {
 	    spec[i1] *= scale;
 	}
-	sf_write(spec,sizeof(float),nw,out);
+	sf_floatwrite(spec,nw,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mspectra.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mspectra.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 

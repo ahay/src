@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 
 	for (ih=0; ih < nh; ih++) {
 	    h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
-	    sf_read(trace,sizeof(float),nt,cmp); 
+	    sf_floatread(trace,nt,cmp); 
 
 	    for (it=0; it < nt; it++) {
 		trace[it] /= nt*nh;
@@ -136,10 +136,10 @@ int main(int argc, char* argv[])
 		    }
 		    trace[it] = (den > 0.)? num/den: 0.;
 		}
-		sf_write(trace,sizeof(float),nt,scan);
+		sf_floatwrite(trace,nt,scan);
 	    }
 	} else {
-	    sf_write (stack[0],sizeof(float),nt*nv,scan);
+	    sf_floatwrite (stack[0],nt*nv,scan);
 	}
     } /* x */
 
@@ -147,6 +147,6 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mvscan.c,v 1.4 2004/04/03 02:41:17 fomels Exp $	 */
+/* 	$Id: Mvscan.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
 
 

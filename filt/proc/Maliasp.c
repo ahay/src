@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
     for (ix=0; ix < nx; ix++) {
 	it = nt*sqrtf(1. + 0.01*(ix-ix0)*(ix-ix0))/3.;
 	if (it > nt) it=nt;
-	if (it > 0)  sf_write(data,sizeof(float),it,out);
-	if (nt > it) sf_write(wave,sizeof(float),nt-it,out);
+	if (it > 0)  sf_floatwrite(data,it,out);
+	if (nt > it) sf_floatwrite(wave,nt-it,out);
     }
  
     exit(0);
