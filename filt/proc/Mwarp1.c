@@ -10,15 +10,18 @@
 #include "interp_spline.h"
 #include "prefilter.h"
 #include "divlap1.h"
+/* #include "divide1.h" */
 
 int main(int argc, char* argv[])
 { 
     int i1, n1, i2, m2, n2, n, order, iter, nliter;
-    float **coord, **inp, **out, **oth, **der, **warp, **ampl, **damp;
+    float **coord, **inp, **out, **oth, **der, **warp;
+    float **ampl=NULL, **damp=NULL;
     float o1, d1, o2, d2, error, mean, eps, lam, eps2, lam2, **num, **den;
     bool verb, noamp;
-    divlap divw, diva;
-    sf_file in, warped, other, warpin, warpout, amplout;
+    divlap divw, diva=NULL; 
+/*    div1 divw, diva=NULL; */
+    sf_file in, warped, other, warpin, warpout, amplout=NULL;
 
     sf_init (argc, argv);
     in = sf_input("in");
@@ -118,7 +121,9 @@ int main(int argc, char* argv[])
     if (verb) sf_warning("Initialization completed");
   
     divw = divlap1_init(n2, eps, lam);
-    if (!noamp) diva = divlap1_init(n2, eps2, lam2);
+    if (!noamp) diva = divlap1_init(n2, eps2, lam2); 
+/*    divw = divide1_init(n2, eps, lam);
+      if (!noamp) diva = divide1_init(n2, eps2, lam2); */
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
@@ -147,6 +152,7 @@ int main(int argc, char* argv[])
 	    }
 
 	    divlap2 (diva, m2, num, den, NULL, ampl);
+/*	    divide2 (diva, m2, num, den, ampl); */
 	    
 	    for (i2=0; i2 < m2; i2++) {
 		for (i1=0; i1 < n2; i1++) {
@@ -156,7 +162,8 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    divlap2 (diva, m2, num, den, NULL, damp);
+	    divlap2 (diva, m2, num, den, NULL, damp); 
+/*	    divide2 (diva, m2, num, den, damp); */
 	
 	    for (i2=0; i2 < m2; i2++) {
 		for (i1=0; i1 < n2; i1++) {
@@ -193,7 +200,8 @@ int main(int argc, char* argv[])
 	}
 
 	/* warp <- out/der */
-	divlap2 (divw, m2, out, der, NULL, warp);
+	divlap2 (divw, m2, out, der, NULL, warp); 
+/*	divide2 (divw, m2, out, der, warp); */
 	
 	for (i2=0; i2 < m2; i2++) {
 	    for (i1=0; i1 < n2; i1++) {
@@ -203,7 +211,9 @@ int main(int argc, char* argv[])
     }
 
     if (!noamp) divlap1_close(diva);
-    divlap1_close(divw);
+    divlap1_close(divw); 
+/*    if (!noamp) divide1_close(diva);
+      divide1_close(divw); */
 
     for (i2=0; i2 < m2; i2++) {
 	int1_init (coord[i2], o1, d1, n1, spline_int, order, n2);

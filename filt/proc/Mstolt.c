@@ -5,65 +5,67 @@
 #include "int1.h"
 #include "interp_spline.h"
 #include "prefilter.h"
+#include "cosft.h"
 
 int main(int argc, char* argv[])
 {
-    int inv, nw,nt,nx,ny, iw,ix,iy, nf;
-    float dw,dx,dy, vel, x,y, w,st,sq, *str, *out, *trace;
+    int nt,nx,ny, iw,ix,iy, nf;
+    float dw, dt, dx,dy, t0, vel, x,y, w,st,sq, *str, *trace2, *trace;
     sf_file in, out;
 
     sf_init (argc,argv);
+    in = sf_input("in");
+    out = sf_output("out");
+
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) nx=1;
     if (!sf_histint(in,"n3",&ny)) ny=1;
 
     if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
+    if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
 
-  call from_par ("pad",nw,nt)
-  call from_history ("d1",dw); dw = pi/(dw*nw)
+    cosft_init(nt, t0, dt);
+    dw = SF_PI/(sf_npfar(2*(nt-1))*dt);
 
+    if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"d3",&dy)) dy=dx;
+    dx *= SF_PI * fabsf (vel) * 0.5;
+    dy *= SF_PI * fabsf (vel) * 0.5;	
 
-  call from_history ("d2",dx); dx = dx*pi* abs (vel) * 0.5
-  call from_history ("d3",dy); dy = dy*pi* abs (vel) * 0.5
-  call from_either ("stretch", st, 1.); if (vel < 0) st = 2.-st
-  call from_par ("nf",nf,2)
-  call sep_close ()
+    if (!sf_getfloat("stretch", &st)) st=1.;
+    if (vel < 0) st = 2.-st;
 
-  allocate (out (nw), trace (nw), str (nw))
+    if (!sf_getint("nf",&nf)) nf=2;
 
-  call prefilter_init (nf, 3*nw)
-  do iy = 1, ny
-     y = (iy-1)*dy
-     y = y*y
-     do ix = 1, nx
-        x = (ix-1)*dx
-        x = st*(x*x + y)  
-        do iw = 1, nw
-           w = (iw-1)*dw
-           sq = w*w + sign (x, vel)           
-           if (sq > 0.) then              
-              str (iw) = w*(1.-1./st) + sqrt (sq)/st
-           else ! evanescent
-              str (iw) = - 2.*dw
-           end if
-        end do
-        
-        call int1_init (str, 0., dw, nw, spline_int, nw, nf)
+    trace = sf_floatalloc(nt);
+    trace2 = sf_floatalloc(nt);
+    str = sf_floatalloc(nt);
 
-        call sep_read (trace (:nt))
-        if (nw > nt) trace (nt+1:nw) = 0.
-        call cosft (nw, trace, .true.)
+    prefilter_init (nf, nt, 3*nt);
+    for (iy = 0; iy < ny; iy++) {
+	y = iy*dy;
+	y *= y;
+	for (ix = 0; ix < nx; ix++) {
+	    x = ix*dx;
+	    x = st*(x*x + y);  
+	    for (iw = 0; iw < nt; iw++) {
+		w = iw*dw;
+		sq = (vel < 0)? w*w - x: w*w + x;
+		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
+	    }
+       
+	    int1_init (str, 0., dw, nt, spline_int, nt, nf);
 
-        call prefilter_apply (trace)
-        stat = int1_lop (.false.,.false.,trace,out)
+	    sf_read(trace,sizeof(float),nt,in);
+	    cosft_frw (trace,0,1);
+	    prefilter_apply (nt, trace);
+	    int1_lop (false,false,nt,nt,trace,trace2);
+	    cosft_inv (trace2,0,1);
+	    sf_read(trace2,sizeof(float),nt,out);
+	}
+    }
 
-        call cosft (nw, out, .false.); out = out*2./(nw-1)        
-        call sep_write (out (:nt))
-     end do
-  end do
-  call int1_close ()
-  call prefilter_close ()
-           
-  deallocate (out, str, trace)
-  call exit (0)
-end program Stolt
+    exit (0);
+}
+

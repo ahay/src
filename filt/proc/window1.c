@@ -20,7 +20,7 @@ int window1_apply (int iw, float* dat, bool left, bool right, float *win)
     int i, i0;
     float gain;
 
-    i0 = 0.5+(n-w)*iw/(nw-1.);
+    i0 = 0.5+iw*(w-h);
     for (i=0; i < w; i++) {
 	if (left && i < h) {
 	    gain = sinf(0.5*SF_PI*i/h);

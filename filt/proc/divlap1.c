@@ -79,6 +79,8 @@ void divlap1 (divlap div, float* num, float* den, float* ref,
 	      float* rat1, float* rat2, float* rat)
 {
     int i;
+/*    float a, anum, aden, da, db; */
+    const float a=1.;
 
     if (rat1 != NULL) {
 	if (rat2 != NULL) {
@@ -104,15 +106,28 @@ void divlap1 (divlap div, float* num, float* den, float* ref,
 	    rat[i] = num[i];
 	}
     }
+    
+    /* data-dependent b.c. 
+    anum = aden = 0.;
+    db = den[0]-den[1];
+    for (i=1; i < div->n-1; i++) {
+	da = den[i]-den[i+1];
+	anum += da*db;
+	aden += da*da + db*db;
+	db = da;
+    }
+    a = 2.*anum/aden;
 
-    /* absorbing b.c. 
-    div->diag[0] -= 5.*(div->eps);
-    div->diag[1] -= (div->eps);
-    div->diag[div->n-2] -= (div->eps);
-    div->diag[div->n-1] -= 5.*(div->eps);
-    div->offd[0][0] = -2.*(div->eps);
-    div->offd[0][div->n-2] = -2.*(div->eps);
+    sf_warning("a=%g",a);
     */
+
+    /* absorbing b.c. */
+    div->diag[0] += (a-6.)*(div->eps);
+    div->diag[1] += (a-2.)*(div->eps);
+    div->diag[div->n-2] += (a-2.)*(div->eps);
+    div->diag[div->n-1] += (a-6.)*(div->eps);
+    div->offd[0][0] = -(1.+a)*(div->eps);
+    div->offd[0][div->n-2] = -(1.+a)*(div->eps);
 
     if (ref != NULL) {
 	rat[0] += (div->eps)*(ref[0]-2.*ref[1]+ref[2]);

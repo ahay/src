@@ -4,7 +4,7 @@
 #include "tridiagonal.h"
 
 static int n;
-static float *h, *a, *b, *c, *d, **coeff, *x;
+static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx;
 static tris slv;
 
 void spine3_init(int n1) {
@@ -21,6 +21,21 @@ void spine3_init(int n1) {
     slv = tridiagonal_init (n-2);
 }
 
+void spine3_init1(int n1, float o1, float d1) {
+    n = n1;
+    x0 = o1;
+    dx = d1;
+
+    coeff = sf_floatalloc2(n-1,4);
+    /* rename for convenience */
+    b = coeff[1];
+    c = coeff[2];
+    d = coeff[3];
+
+    slv = tridiagonal_init (n-2);
+    tridiagonal_const_define (slv,4.*d1,d1);
+}
+
 void spline3_close (void) {
     free (h);
     free (a);
@@ -29,14 +44,12 @@ void spline3_close (void) {
     tridiagonal_close (slv);
 }
 
-/* Function: spline_coeffs
-   -----------------------
-   Compute spline coefficients for interpolating natural cubic spline
-   n - number of knots
-   x[n] - knots
-   f[n] - function values
-   coeff[4][n] - coefficients
-*/
+void spline3_close1 (void) {
+    free (*coeff);
+    free (coeff);
+    tridiagonal_close (slv);
+}
+
 void spline_coeffs(float** table)
 {
     int k;
@@ -70,6 +83,35 @@ void spline_coeffs(float** table)
     }
 }
 
+void spline_coeffs1(float* table1)
+{
+    int k;
+    float fk;
+    
+    for (k=0; k < n-1; k++) {
+	coeff[0][k] = fk = table1[k];
+	b[k] = (table1[k+1]-fk)/dx;  /* divided difference */
+    }
+    for (k=0; k < n-2; k++) {
+	c[k+1] = b[k+1] - b[k];            /* right-hand side */
+    }
+    c[0] = 0;
+
+    /* solve the tridiagonal system */
+    tridiagonal_solve(slv,c+1);
+
+    for (k=0; k < n-1; k++) {
+	if (k < n-2) {
+	    d[k] = (c[k+1]-c[k])/dx;
+	    b[k] -= (c[k+1]+2.*c[k])*dx;
+	} else {
+	    d[k] = -c[k]/dx;
+	    b[k] -= 2.*c[k]*dx;
+	}
+	c[k] *= 3.;
+    }
+}
+
 /* Function: spline_eval
    ---------------------
    Evaluate a cubic spline
@@ -94,3 +136,22 @@ float spline_eval(float y)
     }
     return s;
 }
+
+float spline_eval1(float y)
+{
+    float dh=0., s;
+    int i, k;
+
+    k = (y-x0)/dx;
+    if (k < 0)   k=0;
+    if (k > n-2) k=n-2;
+    dh = y - (x0+k*dx);
+    
+    /* evaluate cubic by Horner's rule */
+    s = coeff[3][k];
+    for (i=2; i >=0; i--) {
+	s = s*dh + coeff[i][k];
+    }
+    return s;
+}
+

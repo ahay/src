@@ -11,6 +11,7 @@
 static float ***u1, ***u2, ***dp;
 static int n1, n2, n3, n;
 static bool sign;
+static div1 div0;
 
 void dip3_init(int nx, int ny, int nz, float eps, float lam, bool sign1)
 {
@@ -19,7 +20,7 @@ void dip3_init(int nx, int ny, int nz, float eps, float lam, bool sign1)
     u2 = sf_floatalloc3(n1,n2,n3);
     dp = sf_floatalloc3(n1,n2,n3);
 
-    divide1_init (n1,eps,lam);
+    div0 = divide1_init (n1,eps,lam);
     sign = sign1;
 }
 
@@ -28,7 +29,7 @@ void dip3_close(void)
     free (u1[0][0]); free (u1[0]); free (u1);
     free (u2[0][0]); free (u2[0]); free (u2);
     free (dp[0][0]); free (dp[0]); free (dp);
-    divide1_close();
+    divide1_close(div0);
 }
 
 void dip3(int dip, int niter, int nw, int nj, bool verb, 
@@ -72,7 +73,7 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
 
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
 
-	divide3 (n3, n2, u2, u1, dp);
+	divide3 (div0, n3, n2, u2, u1, dp);
 
 	for(i=0; i < n; i++) {
 	    dpi = dp[0][0][i];
