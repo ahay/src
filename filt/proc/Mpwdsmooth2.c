@@ -1,4 +1,4 @@
-/* 2-D smoothing by triangle directional shaping. */
+/* 2-D smoothing by triangle plane-wave construction shaping. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,13 +19,13 @@
 
 #include <rsf.h>
 
-#include "trisl.h"
+#include "pwdsl.h"
 
 int main(int argc, char* argv[])
 {
     bool adj;
     int n1, n2, n12, n3, i3, rect1, rect2;
-    float *input, *smooth, **slope;
+    float *input, *smooth, **slope, eps;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -43,8 +43,12 @@ int main(int argc, char* argv[])
     /* smoothing radius */
 
     if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
 
-    trisl_init(n1, n2, rect1, rect2);
+    if (!sf_getfloat("eps",&eps)) eps=0.0001;
+    /* regularization */
+
+    pwdsl_init(n1, n2, rect1, rect2, eps);
 
     input = sf_floatalloc(n12);
     smooth = sf_floatalloc(n12);
@@ -54,12 +58,12 @@ int main(int argc, char* argv[])
 	sf_floatread(input,n12,in);
 	sf_floatread(slope[0],n12,dip);
 
-	trisl_set(slope);
+	pwdsl_set(slope);
 
 	if (adj) {
-	    trisl_lop(true,false,n12,n12,smooth,input);
+	    pwdsl_lop(true,false,n12,n12,smooth,input);
 	} else {
-	    trisl_lop(false,false,n12,n12,input,smooth);
+	    pwdsl_lop(false,false,n12,n12,input,smooth);
 	}
 
 	sf_floatwrite(smooth,n12,out);
@@ -68,4 +72,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Mtrismooth2.c 752 2004-08-22 21:57:40Z fomels $	 */
