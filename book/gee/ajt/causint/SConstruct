@@ -22,10 +22,10 @@ Flow('data7','data5','causint')
 data = ['data%d' % i for i in range(1,8)]
 
 Result('causint',data,
-       '''cat axis=2 ${SOURCES[:%d]} |
+       '''cat axis=2 ${SOURCES[1:%d]} |
        dots labels="in1:C in1:C\` in1:in2:C in2:C\` in2:CC in2"
        labelsz=10 yreverse=1 overlap=.8 constsep=1 connect=0
-       ''' % len(data),stdin=0)
+       ''' % len(data))
 
 ###########################################################################
 End()
