@@ -1,3 +1,10 @@
+/* Ray tracing by a high-order symplectic Runge-Kutta integrator.
+
+Takes: < velocity.rsf > rays.rsf
+
+Rays can be plotted with sfplotrays program.
+*/
+
 #include <math.h>
 
 #include <rsf.h>

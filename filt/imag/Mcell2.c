@@ -1,3 +1,10 @@
+/* Second-order cell ray tracing with locally parabolic rays.
+
+Takes: < velocity.rsf > rays.rsf
+
+Rays and wavefronts can be displayed with sfplotrays program.
+*/
+
 #include <math.h>
 
 #include <rsf.h>
