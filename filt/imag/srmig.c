@@ -226,10 +226,7 @@ void srmig_close(void)
 void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 	      fslice rdat /* receiver data [nw][ny][nx] */,
 	      fslice imag /*         image [nz][ny][nx] */,
-	      void (*imop)( int,int,
-			    fslice,
-			    float complex **, 
-			    float complex **)
+	      void (*imop)( fslice, int)
     )
 /*< Apply S/R migration >*/
 {
@@ -246,8 +243,6 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 	    
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);
-
-	    imop(0,iw,imag,ww_s,ww_r);
 
 	    fslice_get(slow,0,so[0]);
 	    for (imz=0; imz<amz.n-1; imz++) {
@@ -258,10 +253,12 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 		
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-		imop(imz+1,iw,imag,ww_s,ww_r);
+		imgstore(imz,ww_s,ww_r);
 	    } /* z */
+	    
+	    imop(imag,iw);
 	} /* w */
-    }
+    } /* e */
 }
 
 /*------------------------------------------------------------*/
@@ -269,10 +266,7 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	      fslice rdat /* receiver data [nw][ny][nx] */,
 	      fslice imag /*         image [nz][ny][nx] */,
-	      void (*imop)( int,int,
-			    fslice,
-			    float complex **, 
-			    float complex **)
+	      void (*imop)( fslice,int)
     )
 /*< Apply S/R migration >*/
 {
@@ -289,8 +283,6 @@ void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	    
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);
-	    
-	    imop(0,iw,imag,ww_s,ww_r);
 	    
 	    fslice_get(slow_s,0,so_s[0]);
 	    fslice_get(slow_r,0,so_r[0]);
@@ -304,10 +296,12 @@ void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 		SOOP( so_s[ily][ilx] = ss_s[ily][ilx]; );
 		SOOP( so_r[ily][ilx] = ss_r[ily][ilx]; );
 
-		imop(imz+1,iw,imag,ww_s,ww_r);
+		imgstore(imz,ww_s,ww_r);
 	    } /* z */
+
+	    imop(imag,iw);
 	} /* w */
-    }
+    } /* e */
 }
 
 /*------------------------------------------------------------*/

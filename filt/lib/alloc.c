@@ -217,6 +217,24 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
+/*@out@*/ float *****sf_floatalloc5 (size_t n1 /* fast dimension */, 
+				     size_t n2 /* slower dimension */, 
+				     size_t n3 /* slower dimension */, 
+				     size_t n4 /* slower dimension */,
+				     size_t n5 /* slowest dimension */)
+/*< float 5-D allocation, out[0][0][0][0] points to a contiguous array >*/ 
+{
+    size_t i5;
+    float *****ptr;
+    
+    ptr = (float*****) sf_alloc (n5,sizeof(float****));
+    ptr[0] = sf_floatalloc4 (n1,n2,n3,n4*n5);
+    for (i5=1; i5 < n5; i5++) {
+	ptr[i5] = ptr[0]+i5*n4;
+    }
+    return ptr;
+}
+
 /*@out@*/ int **sf_intalloc2 (size_t n1 /* fast dimension */, 
 			      size_t n2 /* slow dimension */)
 /*< float 2-D allocation, out[0] points to a contiguous array >*/  

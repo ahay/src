@@ -41,7 +41,7 @@ int main (int argc, char *argv[])
     axa amx,amy,amz;
     axa alx,aly;
     axa aw,ae,aj;
-    axa ahx,ahy,    aht;
+    axa ahx,ahy,ahz,aht;
 
     sf_file Fs_s,Fs_r;/*  slowness file S (nlx,nly,nz) */
     sf_file Fw_s,Fw_r;/* wavefield file W ( nx, ny,nw) */
@@ -64,8 +64,8 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
-    if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* maximum number of refs */
-    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* time error */
+    if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* max number of refs */
+    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
     if (!sf_getint(    "pmx",&pmx  ))   pmx =     0; /* padding on x */
     if (!sf_getint(    "pmy",&pmy  ))   pmy =     0; /* padding on y */
     if (!sf_getint(    "tmx",&tmx  ))   tmx =     0; /* taper on x   */
@@ -112,35 +112,38 @@ int main (int argc, char *argv[])
 	    
 	    oaxa(Fi,&amx,1);
 	    oaxa(Fi,&amy,2);
-	    oaxa(Fi,&aht,3);
-	    oaxa(Fi,&amz,4);
+	    oaxa(Fi,&amz,3);
+	    oaxa(Fi,&aht,4);
 	    oaxa(Fi,&aj, 5);
 
-	    imag = fslice_init( amx.n*amy.n*aht.n, amz.n,sizeof(float));
+	    imag = fslice_init( amx.n*amy.n*amz.n,aht.n,sizeof(float));
 	    imgt_init(amz,amx,amy,aht,aw,imag);
 
 	    break;
 	case 'x': /* space offset imaging condition */
 	    if(!sf_getint("nhx",&ahx.n)) ahx.n=1;
 	    if(!sf_getint("nhy",&ahy.n)) ahy.n=1;
-	    ahx.o=0;     ahy.o=0;
-	    ahx.d=amx.d; ahy.d=amy.d;
-	    ahx.l="hx";  ahy.l="hy";
+	    if(!sf_getint("nhz",&ahz.n)) ahz.n=1;
+	    ahx.o=0;     ahy.o=0;     ahz.o=0.;
+	    ahx.d=amx.d; ahy.d=amy.d; ahz.d=amz.d;
+	    ahx.l="hx";  ahy.l="hy";  ahz.l="hz";
 
 	    if(!sf_getbool("hsym",&hsym)) hsym = false;
 	    if(hsym) {
 		if(ahx.n>1) { ahx.o = - ahx.n * ahx.d; ahx.n *=2; }
 		if(ahy.n>1) { ahy.o = - ahy.n * ahy.d; ahy.n *=2; }
+		if(ahz.n>1) { ahz.o = - ahz.n * ahz.d; ahz.n *=2; }
 	    }
 
 	    oaxa(Fi,&amx,1);
 	    oaxa(Fi,&amy,2);
-	    oaxa(Fi,&ahx,3);
-	    oaxa(Fi,&ahy,4);
-	    oaxa(Fi,&amz,5);
-
-	    imag = fslice_init( amx.n*amy.n*ahx.n*ahy.n, amz.n,sizeof(float));
-	    imgx_init(amz,amx,amy,ahx,ahy,aw,imag);
+	    oaxa(Fi,&amz,3);
+	    oaxa(Fi,&ahx,4);
+	    oaxa(Fi,&ahy,5);
+	    oaxa(Fi,&ahz,6);
+	    
+	    imag = fslice_init(amx.n*amy.n*amz.n,ahx.n*ahy.n*ahz.n,sizeof(float));
+	    imgx_init(amz,amx,amy,ahx,ahy,ahz,imag);
 
 	    break;
 	case 'o': /* zero offset imaging condition */
@@ -151,7 +154,7 @@ int main (int argc, char *argv[])
 	    oaxa(Fi,&aj, 4);
 	    oaxa(Fi,&aj, 5);
 
-	    imag = fslice_init( amx.n*amy.n, amz.n,sizeof(float));
+	    imag = fslice_init( amx.n*amy.n*amz.n,1,sizeof(float));
 	    imgo_init(amz,amx,amy,imag);
 
 	    break;

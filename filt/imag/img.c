@@ -30,30 +30,60 @@
 #define LOOP(a) for( imy=0; imy< amy.n; imy++){ \
                 for( imx=0; imx< amx.n; imx++){ {a} }}
 
-#define IND(ihx,ihy) (ihy-LOy)* ahx.n + (ihx-LOx);
+#define MLOOP(a) for( imz=0; imz< amz.n; imz++){ \
+                 for( imy=0; imy< amy.n; imy++){ \
+                 for( imx=0; imx< amx.n; imx++){ {a} }}}
 
-#define CLOOP(a) for(imy  = abs(ihy); imy<amy.n-abs(ihy) ; imy++){ \
+#define HLOOP(a) for(ihz=LOz; ihz<HIz; ihz++){ \
+                 for(ihy=LOy; ihy<HIy; ihy++){ \
+                 for(ihx=LOx; ihx<HIx; ihx++){ \
+                    {a} \
+                 }}}
+
+#define CLOOP(a) for(imz  = abs(ihz); imz<amz.n-abs(ihz) ; imz++){ \
+                     imzs = imz + ihz; \
+                     imzr = imz - ihz; \
+                 for(imy  = abs(ihy); imy<amy.n-abs(ihy) ; imy++){ \
                      imys = imy + ihy; \
                      imyr = imy - ihy; \
                  for(imx  = abs(ihx); imx<amx.n-abs(ihx) ; imx++){ \
                      imxs = imx + ihx; \
                      imxr = imx - ihx; \
                     {a} \
-                 }}
+                 }}}
+
+#define IND(ihx,ihy,ihz) (ihz-LOz)*(ahx.n*ahy.n) + \
+                         (ihy-LOy)* ahx.n        + \
+                         (ihx-LOx);
 
 static axa amx,amy,amz;
-static axa ahx,ahy;
+static axa ahx,ahy,ahz;
 static axa aht;
 static axa aw;
 
 static float complex  **tt; /* phase shift for time offset */
-
-static float        ****qx; /* x-offset imaging condition */
-static float         ***qt; /* t-offset imaging condition */
-static float          **qo; /* o-offset imaging condition */
+static float complex ***qs,***qr;
+static float         ***qi;
 
 static int LOx,HIx;
 static int LOy,HIy;
+static int LOz,HIz;
+
+/*------------------------------------------------------------*/
+
+void imgstore( int imz,
+	       float complex **ww_s,
+	       float complex **ww_r
+    )
+/*< store wavefield >*/
+{
+    int imx,imy;
+
+    LOOP( 
+	qs[imz][imy][imx] = ww_s[imy][imx];
+	qr[imz][imy][imx] = ww_r[imy][imx];
+	);
+}
 
 /*------------------------------------------------------------*/
 void imgo_init(axa amz_,
@@ -65,17 +95,60 @@ void imgo_init(axa amz_,
 {
     int imx,imy,imz;
 
-    amz = amz_;
     amx = amx_;
     amy = amy_;
+    amz = amz_;
 
     /* allocate image storage */
-    qo = sf_floatalloc2(amx.n,amy.n);
+    qs = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qr = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
+    MLOOP( 
+	qs[imz][imy][imx] = 0.0; 
+	qr[imz][imy][imx] = 0.0; 
+	qi[imz][imy][imx] = 0.0; 
+	);
+    fslice_put(imag,1,qi[0][0]);
+}
 
-    LOOP( qo[imy][imx] = 0.0; );
-    for (imz=0; imz<amz.n; imz++) {
-	fslice_put(imag,imz,qo[0]);
-    }
+void imgx_init(axa amz_,
+	       axa amx_,
+	       axa amy_,
+	       axa ahx_,
+	       axa ahy_,
+	       axa ahz_,
+	       fslice imag
+    )
+/*< initialize x-offset imaging condition >*/
+{
+    int imx,imy,imz;
+    int ihx,ihy,ihz,ih;
+
+    amx = amx_;
+    amy = amy_;
+    amz = amz_;
+
+    ahx = ahx_;
+    ahy = ahy_;
+    ahz = ahz_;
+
+    LOx = floor(ahx.o/ahx.d); HIx = LOx + ahx.n;
+    LOy = floor(ahy.o/ahy.d); HIy = LOy + ahy.n;
+    LOz = floor(ahz.o/ahz.d); HIz = LOz + ahz.n;
+
+    /* allocate image storage */
+    qs = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qr = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
+    MLOOP( 
+	qs[imz][imy][imx] = 0.0; 
+	qr[imz][imy][imx] = 0.0; 
+	qi[imz][imy][imx] = 0.0; 
+	);
+
+    HLOOP( ih = IND(ihx,ihy,ihz);
+	   fslice_put(imag,ih,qi[0][0]);
+	);
 }
 
 void imgt_init(axa amz_,
@@ -91,22 +164,27 @@ void imgt_init(axa amz_,
     int  iht,iw;
     float ht, w;
 
-    amz = amz_;
     amx = amx_;
     amy = amy_;
+    amz = amz_;
+
     aht = aht_;
     aw  = aw_;
 
     /* allocate image storage */
-    qt = sf_floatalloc3(amx.n,amy.n,aht.n);
+    qs = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qr = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
+    MLOOP( 
+	qs[imz][imy][imx] = 0.0; 
+	qr[imz][imy][imx] = 0.0; 
+	qi[imz][imy][imx] = 0.0; 
+	);
 
     for (iht=0; iht<aht.n; iht++) {
-	LOOP( qt[iht][imy][imx]= 0.0; );
+	fslice_put(imag,iht,qi[0][0]);
     }
-    for (imz=0; imz<amz.n; imz++) {
-	fslice_put(imag,imz,qt[0][0]);
-    }
-
+    
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
@@ -121,106 +199,59 @@ void imgt_init(axa amz_,
 	}
     }
 }
-
-void imgx_init(axa amz_,
-	       axa amx_,
-	       axa amy_,
-	       axa ahx_,
-	       axa ahy_,
-	       axa aw_,
-	       fslice imag
-    )
-/*< initialize x-offset imaging condition >*/
-{
-    int imx,imy,imz;
-    int ihx,ihy;
-
-    amz = amz_;
-    amx = amx_;
-    amy = amy_;
-    ahx = ahx_;
-    ahy = ahy_;
-    aw  = aw_;
-
-    /* allocate image storage */
-    qx = sf_floatalloc4(amx.n,amy.n,ahx.n,ahy.n);
-
-    for (ihy=0; ihy<ahy.n; ihy++) {
-	for (ihx=0; ihx<ahx.n; ihx++) {
-	    LOOP( qx[ihy][ihx][imy][imx]= 0.0; );
-	}
-    }
-    for (imz=0; imz<amz.n; imz++) {
-	fslice_put(imag,imz,qx[0][0][0]);
-    }
-
-    LOx = floor(ahx.o/ahx.d); HIx = LOx + ahx.n;
-    LOy = floor(ahy.o/ahy.d); HIy = LOy + ahy.n;
-
-}
-
 /*------------------------------------------------------------*/
 
-void imgo(int            imz,
-	  int            iw,
-	  fslice         imag  /* image slice [ny][nx] */,
-	  float complex **ww_s /* source   wavefield */,
-	  float complex **ww_r /* receiver wavefield */
-    )
+void imgo( fslice imag,
+	      int   iw)
 /*< Apply o-offset imaging condition >*/
 {
-    int imx,imy;
+    int imx,imy,imz;
 
-    fslice_get(imag,imz,qo[0]);
-    LOOP(;              qo  [imy][imx] += 
-	  crealf( conjf(ww_s[imy][imx]) 
-		  *     ww_r[imy][imx] ); );
-    fslice_put(imag,imz,qo[0]);
+    fslice_get(imag,0,qi[0][0]);
+    MLOOP(
+	;             qi[imz][imy][imx] +=
+	crealf( conjf(qs[imz][imy][imx]) 
+		*     qr[imz][imy][imx] );
+	);
+    fslice_put(imag,0,qi[0][0]);
 }
 
-void imgt(int            imz,
-	  int            iw,
-	  fslice         imag  /* image slice [ny][nx] */,
-	  float complex **ww_s /* source   wavefield */,
-	  float complex **ww_r /* receiver wavefield */
-    )
-/*< Apply t-offset imaging condition >*/
-{
-    int imx,imy,iht;
-
-    fslice_get(imag,imz,qt[0][0]);
-    for(iht=0; iht<aht.n; iht++) {
-	LOOP(;          qt[iht][imy][imx] += 
-	     crealf( conjf(ww_s[imy][imx]) 
-		     *     ww_r[imy][imx] * tt[iw][iht] ); );
-    }
-    fslice_put(imag,imz,qt[0][0]);
-}
-
-void imgx(int            imz,
-	  int            iw,
-	  fslice         imag  /* image slice [ny][nx] */,
-	  float complex **ww_s /* source   wavefield */,
-	  float complex **ww_r /* receiver wavefield */
-    )
+void imgx( fslice imag,
+	      int   iw)
 /*< Apply x-offset imaging condition >*/
 {
-    int imx,imy,ihx,ihy;
-    int imys,imyr;
-    int imxs,imxr;
+    int imx ,imy ,imz;
+    int ihx ,ihy ,ihz ,ih;
+    int imys,imyr,imzs;
+    int imxs,imxr,imzr;
 
-    fslice_get(imag,imz,qx[0][0][0]);
+    HLOOP( ih = IND(ihx,ihy,ihz);
+	   fslice_get(imag,ih,qi[0][0]);
+	   CLOOP(
+	       ;             qi[imz ][imy ][imx ] +=
+	       crealf( conjf(qs[imzs][imys][imxs]) 
+		       *     qr[imzr][imyr][imxr] );
+	       );
+	   fslice_put(imag,ih,qi[0][0]);
+	);
+}
 
-    for(ihy=LOy; ihy<HIy; ihy++){
-	for(ihx=LOx; ihx<HIx; ihx++){
-	    CLOOP(
-		qx[ihy-LOy][ihx-LOx][imy][imx] += crealf( 
-		    conjf(ww_s[imys][imxs]) 
-		    *     ww_r[imyr][imxr]          ); 
-		);
-	}
+void imgt( fslice imag,
+	   int      iw)
+/*< Apply t-offset imaging condition >*/
+{
+    int imx,imy,imz,iht;
+    float complex wt;
+
+    for(iht=0; iht<aht.n; iht++) {
+	wt = tt[iw][iht];
+
+	fslice_get(imag,iht,qi[0][0]);
+	MLOOP(;             qi[imz][imy][imx] += 
+	      crealf( conjf(qs[imz][imy][imx]) 
+		      *     qr[imz][imy][imx] * wt ); );
+	fslice_put(imag,iht,qi[0][0]);
     }
-    fslice_put(imag,imz,qx[0][0][0]);
 }
 
 /*------------------------------------------------------------*/
@@ -228,18 +259,15 @@ void imgx(int            imz,
 void imgo_close()
 /*< deallocate >*/
 {
-    free( *qo); free( qo);
 }
 
 void imgt_close()
 /*< deallocate >*/
 {
     free( *tt); free( tt);
-    free(**qt); free( *qt); free( qt);
 }
 
 void imgx_close()
 /*< deallocate >*/
 {
-    free(***qx); free(**qx); free( *qx); free( qx);
 }
