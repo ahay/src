@@ -1,4 +1,4 @@
-/* Fit a Gaussian to 2-D spectrum by nonlinear least squares */
+/* Fit a Gaussian to 2-D spectrum by nonlinear weighted least squares */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
