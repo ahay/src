@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     
     tree_build();
 
-    /* tree_print(); */
+/*    tree_print(); */
 
     sf_write(node[0],sizeof(float),4*naxz,out);
     

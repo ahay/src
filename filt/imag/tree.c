@@ -17,7 +17,7 @@ static NodeQueue Orphans;
 
 static eno2 cvel;
 
-static int nz, nx, na, nt, nax, naxz, order;
+static int nz, nx, na, nt, nax, naxz, order, nacc, ii, jj;
 static float dz, dx, da, z0, x0, a0, **val;
 static const float eps = 1.e-5;
 static bool *accepted;
@@ -40,10 +40,11 @@ void tree_init (int order1,
     order = order1;
     
     cvel = eno2_init (order, nz, nx);
-    eno2_set (cvel, vel); /* vel is slowness */
+    eno2_set (cvel, vel); /* Del is slowness */
 
     val = value;
     accepted = sf_boolalloc(naxz);
+    nacc = 0;
 
     Orphans = CreateNodeQueue();
     Tree = CreateNodes(naxz,order);
@@ -51,7 +52,7 @@ void tree_init (int order1,
 
 void tree_build(void)
 {
-    int i, k, iz, ix, ia, kx, kz, ka, jx, jz;
+    int i, k, iz, ix, ia, kx, kz, ka, jx, jz, k2, k1, iter;
     float x, z, p[2], a, v, v0, g0[2], g[2], s, sx, sz, t, *vk;
     bool onx, onz;
     Node node;
@@ -94,6 +95,7 @@ void tree_build(void)
 		    vk[2] = 0.;
 		    vk[3] = cell_p2a (p);
 		    accepted[k] = true;
+		    nacc++;
 		    continue;
 		} else {
 		    accepted[k] = false;
@@ -189,6 +191,7 @@ void tree_build(void)
 		    vk[2] = 0.;
 		    vk[3] = cell_p2a (p);
 		    accepted[k] = true;
+		    nacc++;
 		    continue;
 		} 
 
@@ -333,29 +336,81 @@ void tree_build(void)
 	}
     }
 
-    TraverseQueue (Orphans,process_node);
+/*    tree_print(); */
+    
+    for (iter=1; iter < 100; iter++) {
+	TraverseQueue (Orphans,process_node);
+	
+	if (nacc == naxz) break;
+
+	sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
+	FreeNodeQueue (Orphans);
+	Orphans = CreateNodeQueue();
+	
+	for (k=0; k < naxz; k++) {
+	    node = Tree+k;
+	    if (0 < node->nparents && iter >= node->nparents) {
+		if (order == node->n1) node->n1--;
+		if (order == node->n2) node->n2--;
+		node->nparents=0;
+		for (k2=0; k2 < node->n2; k2++) {		  
+		    for (k1=0; k1 < node->n1; k1++) {
+			i = node->parents[k2][k1];
+			if (i >= 0 && !accepted[i]) node->nparents++;
+		    }
+		}
+		if (0==node->nparents) AddNode(Orphans,node);
+	    }
+	}
+    }
 }
 
-/* print_node and print_queue 
-void tree_print (void) {
-    int k, ic;
+static void catch_node (Node node) {
+    if (ii == node-Tree) sf_error("got it %d!",jj);
+    jj++;
+    TraverseQueue(node->children,catch_node);
+}
+
+static void catch(int k) {
     Node node;
+
+    ii = k;
+    jj = 0;
+    node = Tree+k;
+    TraverseQueue(node->children,catch_node);
+}
+
+static void print_node (Node node) {
+    int k, kx, kz, ka;
+    
+    k = node-Tree;
+    kz = k/nax; k -= nax*kz;
+    kx = k/na;  k -= na*kx;
+    ka = k;
+
+    fprintf(stderr,"[%d %d %d] ",ka+1,kx+1,kz+1);
+}
+
+/* print_queue */
+void tree_print (void) {
+    int k;
+    Node node;
+
+    catch(0);
 
     for (k=0; k < naxz; k++) {
 	node = Tree+k;
-	fprintf(stderr,"Node %d, nparents=%d, children: ",k,node->nparents);
-	for (ic=0; ic < node->children->nitems; ic++) {
-	    fprintf(stderr,"%d ",node->children->queue[ic]-Tree);
-	}
+	fprintf(stderr,"Node ");
+	print_node(node);
+	fprintf(stderr,"nparents=%d, children: ",node->nparents);
+	if (NULL != node->children)
+	    TraverseQueue (node->children,print_node);
 	fprintf(stderr,"\n");
     }
     fprintf(stderr,"Orphans: ");
-    for (ic=0; ic < Orphans->nitems; ic++) {
-	fprintf(stderr,"%d ",Orphans->queue[ic]-Tree);
-    }
+    TraverseQueue (Orphans,print_node);
     fprintf(stderr,"\n");
 } 
-*/
 
 static void process_node (Node nd) {
     static int n=0;
@@ -437,9 +492,13 @@ static void process_node (Node nd) {
 	}
 	
 	accepted[k] = true;
+	nacc++;
     }
-    
+
+    free (nd->parents);
     TraverseQueue (nd->children,process_child);
+    FreeNodeQueue (nd->children);
+    nd->children = NULL;
 }
 
 static void process_child (Node child) {
@@ -450,7 +509,6 @@ static void process_child (Node child) {
 void tree_close (void)
 {
     FreeNodes(Tree,naxz);
-    FreeNodeQueue (Orphans);
 }
 
 static void psnap (float* p, float* q, int* iq) {
