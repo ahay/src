@@ -48,6 +48,9 @@ sf%: M%.o ../rsf/librsf.a ../rsf/rsf.h
 	${MAKE} ${OBJS}
 	${CC} ${CFLAGS} M$*.o ${OBJS} ${LDFLAGS} -o $@
 
+Test%.x: Test%.c %.o
+	${CC} ${CFLAGS} Test$*.c $*.o ${LDFLAGS} -o $@ 
+
 %.lint: %.c ../rsf/rsf.h
 	-splint +posixlib -I../rsf $^ > $@
 
@@ -60,5 +63,5 @@ Makefile.dependencies:: *.c
 	$(CC) $(CFLAGS) $(DEPEND) $^ > Makefile.dependencies
 
 clean:
-	touch sfjunk junk.H junk.lint junk.o junklint Makefile.dependencies
-	rm sf* *.H *.lint *.o junklint Makefile.dependencies
+	touch sfjunk junk.H junk.lint junk.o junklint Makefile.dependencies Testjunk.x
+	rm sf* *.H *.lint *.o junklint Makefile.dependencies Test*.x

@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <rsf.h>
 
 #include "ctridiagonal.h"

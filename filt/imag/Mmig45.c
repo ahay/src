@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
     int nw,nz,nx, iw,ix,iz;
     float dw,dz,dx, vel0, eps, beta;
     float complex w, a, *ctime, *tt, *diag1, *diag2, *offd1, *offd2;
-    float **depth, **vel, **voff, *time;
+    float **depth, **vel, **voff;
     ctris slv;
     sf_file in, out, velocity;
 
@@ -29,6 +29,8 @@ int main(int argc, char* argv[])
     }
 
     if (inv) { /* modeling */
+	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+
 	if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 	if (!sf_histfloat(in,"d1",&dz)) sf_error("No d1= in input");
@@ -36,13 +38,19 @@ int main(int argc, char* argv[])
 
 	if (!sf_getint("nt",&nw)) sf_error("Need nt=");
 	if (!sf_getfloat("dt",&dw)) sf_error("Need dt=");
-	dw = 1./(dw*(nw-1));
+
+	dw = 1./(dw*nw);
+	nw = 1+nw/2;
 
 	sf_putint (out,"n2",nw); 
 	sf_putfloat (out,"d2",dw);
 	sf_putint (out,"n1",nx); 
 	sf_putfloat (out,"d1",dx);
+
+	sf_settype(out,SF_COMPLEX);
     } else { /* migration */
+	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
+
 	if (!sf_histint(in,"n1",&nx)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
 	if (!sf_histfloat(in,"d1",&dx)) sf_error("No d1= in input");
@@ -62,6 +70,8 @@ int main(int argc, char* argv[])
 	sf_putfloat (out,"d2",dx);
 	sf_putint (out,"n1",nz); 
 	sf_putfloat (out,"d1",dz);
+
+	sf_settype(out,SF_FLOAT);
     }
 
     vel = sf_floatalloc2(nz,nx);
@@ -92,7 +102,7 @@ int main(int argc, char* argv[])
     dx = 0.25/(dx*dx);
 
     depth = sf_floatalloc2(nz,nx);
-    time = sf_floatalloc(nx);
+
     ctime = sf_complexalloc (nx);
     tt = sf_complexalloc (nx);
     diag1 = sf_complexalloc (nx);
@@ -119,7 +129,7 @@ int main(int argc, char* argv[])
 	sf_warning("frequency %d of %d",iw+1, nw);
 
 	if (inv) { /* modeling */
-	    w = dw*(eps+I*(iw-1));
+	    w = dw*(eps+iw*I);
 
 	    for (ix=0; ix < nx; ix++) {
 		ctime[ix] = depth[ix][nz-1];
@@ -127,15 +137,16 @@ int main(int argc, char* argv[])
 
 	    for (iz = nz-2; iz >= 0; iz--) { /* step up */
 
-		for (ix=0; ix < nx; ix++) {
+		for (ix=1; ix < nx; ix++) {
 		    vel0 = vel[ix][iz];
 		    diag1[ix] =   -2.*(beta - (vel0/w-dz)*vel0*dx/w);
 		    diag2[ix] = 1.-2.*(beta - (vel0/w+dz)*vel0*dx/w);
 		}           
 
+		/*
 		vel0 = vel[0][iz];
 		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
-		
+
 		diag1[0] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
 		diag2[0] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
 
@@ -144,6 +155,7 @@ int main(int argc, char* argv[])
 
 		diag1[nx-1] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
 		diag2[nx-1] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
+		*/
 
 		for (ix=0; ix < nx-1; ix++) {
 		    vel0 = voff[ix][iz];
@@ -167,22 +179,17 @@ int main(int argc, char* argv[])
 		ctridiagonal_define (slv, diag2, offd2);
 		ctridiagonal_solve (slv, ctime);
 
-		for (ix=0; ix < nx-1; ix++) {
+		for (ix=0; ix < nx; ix++) {
 		    vel0 = vel[ix][iz];
 		    ctime[ix] = ctime[ix] * cexpf(-w*dz/vel0) + depth[ix][iz];
 		}
 	    }
 
-	    for (ix=0; ix < nx-1; ix++) {
-		time[ix] = crealf (ctime[ix]);
-	    }
-	    sf_write (time,sizeof(float),nx,out);
+	    sf_write (ctime,sizeof(float complex),nx,out);
 	} else { /* migration */
-	    w = dw*(eps-(iw-1)*I);
-	    sf_read (time,sizeof(float),nx,in);
-	    for (ix=0; ix < nx; ix++) {
-		ctime[ix] = time[ix];
-	    }
+	    w = dw*(eps-iw*I);
+	    sf_read (ctime,sizeof(float complex),nx,in);
+
 	    for (iz=0; iz < nz; iz++) {
 		for (ix=0; ix < nx-1; ix++) {
 		    depth[ix][iz] += crealf (ctime[ix]);
@@ -226,7 +233,7 @@ int main(int argc, char* argv[])
 		ctridiagonal_define (slv, diag2, offd2);
 		ctridiagonal_solve (slv, ctime);
 
-		for (ix=0; ix < nx-1; ix++) {
+		for (ix=0; ix < nx; ix++) {
 		    vel0 = vel[ix][iz];
 		    ctime[ix] *= cexpf(-w*dz/vel0); 
 		}
