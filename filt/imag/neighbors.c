@@ -228,6 +228,7 @@ static int dist(int k, float x1, float x2, float x3)
     if (SF_OUT == in[k]) {
 	in[k] = SF_IN;
 	time[k] = ti;
+	sf_pqueue_insert (time+k);
 	return 1;
     } else if (ti < time[k]) {
 	time[k] = ti;
