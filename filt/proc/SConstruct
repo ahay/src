@@ -45,7 +45,9 @@ callp2 causint cbanded cmatmult compress copy cosft createhelix createmshelix
 createnhelix ctoeplitz cweight deburst dijkstra dip2 dip3 dips div1 div2 divn
 edge expder2 explanesignoi expont2 expont expsignoi2 extend fint1 freqfilt2
 gauss2 gauss gaussshape2 hconest helicon helix hilbert hipass hypotenusei
-icai1 igrad1 igrad2 imospray impl1 impl2 int1 int2 interp interp_cube slinint
+icai1 igrad1 igrad2 imospray impl1 impl2 int1 int2 interp interp_cube interpd
+interp_sinc interp_spline irls kolmog lace lapfill laplac2 levint lint1
+loconvol lopef mask6 mask slinint
 '''
 
 for source in Split(src2):

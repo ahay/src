@@ -1,9 +1,34 @@
+/* Boundary masks for plane-wave destruction */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "mask6.h"
 
-void mask32 (int nw, int nj1, int nj2, int nx, int ny, int nz, 
-	     float ***yy, bool ***m1, bool ***m2)
+void mask32 (int nw                 /* filter size */, 
+	     int nj1, int nj2       /* dealiasing stretch */, 
+	     int nx, int ny, int nz /* data size */, 
+	     float ***yy            /* data [nz][ny][nx] */, 
+	     bool ***m1             /* first dip mask [nz][ny][nx] */, 
+	     bool ***m2             /* second dip mask [nz][ny][nx] */)
+/*< two-dip masks in 3-D >*/
 {
     int ix, iy, iz, iw, is;
     bool ***xx;
@@ -49,7 +74,12 @@ void mask32 (int nw, int nj1, int nj2, int nx, int ny, int nz,
     free(xx); 
 }
 
-void mask3 (int nw, int nj, int nx, int ny, float **yy, bool **mm) 
+void mask3 (int nw         /* filter size */, 
+	    int nj         /* dealiasing stretch */, 
+	    int nx, int ny /* data size */, 
+	    float **yy     /* data */, 
+	    bool **mm      /* mask */) 
+/*< one-dip mask in 2-D >*/
 {
     int ix, iy, iw, is;
     bool **xx;
@@ -76,7 +106,12 @@ void mask3 (int nw, int nj, int nx, int ny, float **yy, bool **mm)
     free(xx);
 }
 
-void mask6 (int nw, int nj1, int nj2, int nx, int ny, float **yy, bool **mm) 
+void mask6 (int nw           /* filter size */, 
+	    int nj1, int nj2 /* dealiasing stretch */, 
+	    int nx, int ny   /* data size */, 
+	    float **yy       /* data [ny][nx] */, 
+	    bool **mm        /* mask [ny][nx] */) 
+/*< two-dip mask in 2-D >*/
 {
     int ix, iy, iw, is;
     bool **xx;

@@ -232,11 +232,7 @@ class rsfprog:
             pars.sort()
             pardoc = ''
             for par in pars:
-                pardoc = pardoc + par
-#                heading(self.pars[par].html(par),
-#                        '#000000', bgcol,
-#                        string.replace(self.pars[par].desc,
-#                                       '\n','<br>\n'),add='')
+                pardoc = pardoc + ' %s: %s\n' % (par, self.pars[par])
             contents = contents + '''
             \\par\\noindent
             \\begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}
@@ -252,7 +248,7 @@ class rsfprog:
             name = name + " (%s)" % self.vers
         contents = heading(name,'#ffffff','#7799ee',
                            '<a href="./index.html">index</a><br>'+
-                           '<a href="/viewcvs/trunk/%s">%s</a>' %
+                           '<a href="/viewcvs/trunk/%s?view=markup">%s</a>' %
                            (self.file,self.file))
         if self.desc:
             contents = contents + self.desc

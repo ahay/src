@@ -1,15 +1,20 @@
+/*< Simple mask operator >*/
+
 #include <rsf.h>
+/*^*/
 
 #include "mask.h"
 
 static const bool *m;
 
 void mask_init(const bool *m_in)
+/*< initialize with mask >*/
 {
     m = m_in;
 }
 
 void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< linear operator >*/
 {
     int ix;
 
@@ -25,5 +30,5 @@ void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 }
 
-/* 	$Id: mask.c,v 1.4 2004/04/08 14:03:57 fomels Exp $	 */
+/* 	$Id$	 */
 

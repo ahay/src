@@ -190,7 +190,7 @@ void stretch(fint1 str                  /* interpolation object */,
 	     int n1, float d1, float o1 /* old sampling */,
 	     int n2, float d2, float o2 /* new sampling */,
 	     float *trace               /* new trace [n2] */)
-/* trace interpolation */
+/*< trace interpolation >*/
 {
     int i2, it;
     float t;

@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 	div2(num,den,rat2);
 	
 	for (i=0; i < n2g; i++) {
-	    rat1[i] *= rat2[i];
+	    rat1[i] *= fabsf(rat2[i]);
 	}
 
 	sf_floatwrite(rat1,n2g,warped);

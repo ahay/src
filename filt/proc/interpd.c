@@ -1,3 +1,22 @@
+/* Trace interpolation with plane-wave destruction */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "interpd.h"
@@ -11,7 +30,9 @@ static bands slv;
 static float **offd, eps;
 static pwd w1, w2;
 
-void interp_init (int n, float e)
+void interp_init (int n   /* trace length */, 
+		  float e /* regularization */)
+/*< initialize >*/
 {
     const int nw=1;
 
@@ -29,6 +50,7 @@ void interp_init (int n, float e)
 }
 
 void interp_close (void)
+/*< free allocated storage >*/
 {
     banded_close (slv);
     free (*offd);
@@ -38,7 +60,11 @@ void interp_close (void)
     bandpass_close ();
 }
 
-void interp2(int n2, float** in, float** out, float** pp)
+void interp2(int n2      /* number of traces */, 
+	     float** in  /* input [n2][n1] */, 
+	     float** out /* output [2*n2-1][n1] */, 
+	     float** pp  /* slope [n2][n1] */)
+/*< interpolate >*/
 {
     int i1, i2;
     float *diag, a;
