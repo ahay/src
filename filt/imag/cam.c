@@ -75,7 +75,7 @@ void cam_init(bool verb_,
 	      axa ahx_                  /* half-offset */,
 	      axa alx_                  /* i-line (slowness/image) */,
 	      axa aly_                  /* x-line (slowness/image) */,
-	      int nt                    /* taper size */,
+	      int tmx, int tmy, int thx /* taper size */,
 	      int pmx, int pmy, int phx /* padding in the k domain */,
 	      int nrmax                 /* maximum number of references */,
 	      slice slow_)
@@ -85,7 +85,6 @@ void cam_init(bool verb_,
     int        jmx, jhx;
     float  my,  mx,  hx,    k;
     float      kmx, khx;
-    int ntx,nty,nth;
 
     slow = slow_;
 
@@ -174,11 +173,11 @@ void cam_init(bool verb_,
     }    
 
     /* precompute taper */
-    ntx = SF_MIN(nt,amx.n-1);
-    nty = SF_MIN(nt,amy.n-1);
-    nth = SF_MIN(nt,ahx.n-1);
-    taper3_init(ahx.n,amy.n,amx.n,nth,nty,ntx);
-
+    taper3_init(ahx.n,amy.n,amx.n,
+		SF_MIN(thx,ahx.n-1),
+		SF_MIN(tmy,amy.n-1),
+		SF_MIN(tmx,amx.n-1) );
+		
     /* compute reference slowness */
     for (iz=0; iz<az.n; iz++) {
 	slice_get(slow,iz,ss[0]);
@@ -434,18 +433,18 @@ void camwex(float complex w,int iz)
 		drc = fabsf( so[ jy[imy] ][ ir[ihx][imx] ] *
 			     so[ jy[imy] ][ ir[ihx][imx] ] - sm[iz][jr]);
 		d = sqrt(dsc*dsc + drc*drc);
-		d = 1./(d*d+ds2);
+		d = ds2/(d*d+ds2);
 		wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
 		wt[ihx][imy][imx] += d; );
 	} /* jr loop */
     } /* js loop */
     LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
 
-    taper3(false,true,true,wx);
-
     LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
 		   ss[ jy[imy] ][ ir[ihx][imx] ]);
 	  wx[ihx][imy][imx] *= cexpf(-w*s*az.d); );
+
+    taper3(false,true,true,wx);
 }
 
 /*------------------------------------------------------------*/

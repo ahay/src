@@ -26,14 +26,20 @@ static int  n1,  n2,  n3;
 static float *tap1=NULL, *tap2=NULL, *tap3=NULL;
 
 
-void taper2_init(int n2, int n1 /* taper lengths */)
+void taper2_init(int n2_, int n1_ /* cube dimensions */,
+		 int m2_, int m1_ /* taper lengths */)
 /*< 2-D initialize >*/
 {
+
     int it;
     float gain;
 
-    nt1=n1;
-    nt2=n2;
+    nt1=m1_;
+    nt2=m2_;
+    
+    n1 =n1_;
+    n2 =n2_;
+
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
 	for (it=0; it < nt1; it++) {
@@ -69,9 +75,9 @@ void taper3_init(
     nt2=m2_;
     nt3=m3_;
 
-    n1 = n1_;
-    n2 = n2_;
-    n3 = n3_;
+    n1 =n1_;
+    n2 =n2_;
+    n3 =n3_;
 
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
@@ -105,7 +111,6 @@ void taper3_close(void)
 }
 
 void taper2(bool beg2, bool beg1  /* taper in the beginning  */, 
-	    int n2, int n1        /* dimensions */, 
 	    float complex** tt    /* [n2][n1] tapered array (in and out) */)
 /*< 2-D taper >*/
 {
