@@ -1,0 +1,33 @@
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+
+###########################################################################
+set_resdir('../Fig')
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/marm'
+
+Fetch(['marmrefl.HH','marmvel.HH'],datdir)
+
+Result('shot','marmrefl.HH',
+       '''dd data_format=native_float |
+       window n3=1 min3=6000 |
+       grey title='Marmousi Shot Gather'
+       label1="Time (s)" label2="Offset (m)"
+       ''')
+
+Result('model','marmvel.HH',
+       '''
+       dd data_format=native_float |
+       grey title="Marmousi Model" allpos=y
+       bias=1000 label1="Depth (m)" label2="Lateral (m)" pclip=100
+       screenht=3.75 screenwd=11.5 titlesz=5 labelsz=4
+       ''')
+
+###########################################################################
+
+End()
