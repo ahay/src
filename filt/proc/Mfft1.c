@@ -4,7 +4,7 @@ int main (int argc, char *argv[])
 {
     bool cos, inv;
     int n1, nt, nw, i1, i2, n2;
-    float dw, *p, *cc, d1, o1;
+    float dw, *p, *cc=NULL, d1, o1;
     complex float *pp;
     sf_file in, out;
 

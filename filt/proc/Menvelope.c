@@ -6,9 +6,9 @@ int main (int argc, char* argv[])
 {
     bool freq;
     int n1,n2,n3, i1,i2,i3, tc1, tc2, nw;
-    float *data, **bot, **top, den;
-    float complex *cdat, *ctop;
-    triangle tr1, tr2;
+    float *data, **bot=NULL, **top=NULL, den;
+    float complex *cdat, *ctop=NULL;
+    triangle tr1=NULL, tr2=NULL;
     sf_file in, out;
 
     sf_init (argc,argv);

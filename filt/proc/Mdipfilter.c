@@ -1,4 +1,4 @@
-/*
+/* 
 #	pass=1	Pass dips in band
 #	    =0	Reject dips in band
 #
@@ -19,8 +19,8 @@
 #	 __/         \___
 #	  v1         v4
 #
-# AUTHOR: James Rickett - Oct 97
 */
+/* AUTHOR: James Rickett - Oct 97 */
 #include <float.h>
 #include <math.h>
 
@@ -100,6 +100,8 @@ int main(int argc, char* argv[])
 	sf_pfa2rc(-1,2,n1,n2pad,data[0],cdata[0]);
 
 	for (i2=0; i2 < nk; i2++) {
+	    k = i2*dk;
+
 	    /* Fourier transform t to w, with w centered */
 	    for (i1=0; i1 < n1; i1++) {
 		/* include FFT scaling */
