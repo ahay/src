@@ -105,12 +105,12 @@ static void border(float** u)
 {
     int i1, i2;
 
-    for (i2=0; i2 < 2; i2++) {
+    for (i2=n2-2; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    u2[i2][i1]=0.;
 	}
     }
-    for (i2=2; i2 < n2; i2++) {
+    for (i2=0; i2 < n2-2; i2++) {
 	for (i1=0; i1 < skip; i1++) {
 	    u2[i2][i1]=0.;
 	}

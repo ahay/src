@@ -37,7 +37,7 @@ static float eps, tol;
 static bool verb, hasp0;
 
 static double norm (int n, const float complex* x) 
-/* double-precision norm of a complex number */
+/* double-precision L2 norm of a complex number */
 {
     double prod;
     double complex xi;
@@ -51,13 +51,13 @@ static double norm (int n, const float complex* x)
     return prod;
 }
 
-void sf_cconjgrad_init(int np1    /* preconditioned size */, 
-		       int nx1    /* model size */, 
-		       int nd1    /* data size */, 
-		       int nr1    /* residual size */, 
-		       float eps1 /* scaling */,
-		       float tol1 /* tolerance */, 
-		       bool verb1 /* verbosity flag */, 
+void sf_cconjgrad_init(int np1     /* preconditioned size */, 
+		       int nx1     /* model size */, 
+		       int nd1     /* data size */, 
+		       int nr1     /* residual size */, 
+		       float eps1  /* scaling */,
+		       float tol1  /* tolerance */, 
+		       bool verb1  /* verbosity flag */, 
 		       bool hasp01 /* if has initial model */) 
 /*< solver constructor >*/
 {

@@ -112,6 +112,7 @@ FCALLSCFUN1(LONG,sf_bytes,SF_BYTES,sf_bytes,INT)
 FCALLSCFUN1(LONG,sf_tell,SF_TELL,sf_tell,INT)
 FCALLSCSUB3(sf_seek,SF_SEEK,sf_seek,INT,LONG,INT)
 FCALLSCSUB2(sf_unpipe,SF_UNPIPE,sf_unpipe,INT,LONG)
+FCALLSCSUB0(sf_close,SF_CLOSE,sf_close)
 
 FCALLSCSUB3(sf_floatwrite,SF_WRITE,sf_floatwrite,PFLOAT,INT,INT)
 FCALLSCSUB3(sf_floatread,SF_READ,sf_floatread,PFLOAT,INT,INT)
@@ -127,4 +128,4 @@ FCALLSCFUN2(INT,sf_leftsize,SF_LEFTSIZE,sf_leftsize,INT,INT)
 FCALLSCSUB1(sf_error,SF_ERROR,sf_error,STRING)
 FCALLSCSUB1(sf_warning,SF_WARNING,sf_warning,STRING)
 
-/* 	$Id: fortran.c,v 1.7 2004/07/02 11:54:29 fomels Exp $	 */
+/* 	$Id$	 */

@@ -128,7 +128,6 @@ int main (int argc,char* argv[])
   
     /* loop over shots */
     for( is = 0; is < nshot; is++) {
-	sf_warning("in");
 	fastmarch(t,v,p, plane,
 		  n3,n2,n1,
 		  o3,o2,o1,
@@ -136,7 +135,6 @@ int main (int argc,char* argv[])
 		  s[is][2],s[is][1],s[is][0], 
 		  b3,b2,b1,
 		  order);
-	sf_warning("out");
 	
 	sf_floatwrite (t,n123,time);
     }

@@ -91,8 +91,9 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    
+
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshot2cmp.c,v 1.10 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

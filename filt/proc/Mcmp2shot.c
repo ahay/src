@@ -93,7 +93,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mcmp2shot.c,v 1.7 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

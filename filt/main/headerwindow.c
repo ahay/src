@@ -73,7 +73,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit(0);
 }
     
-/* 	$Id: headerwindow.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */

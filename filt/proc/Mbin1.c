@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
 {
     int id, nd, nt, it, ix, nx, interp;
     float *mm, *count, *dd, *offset, x0, dx, xmin, xmax, f, clip;
-    sf_file in, out, head, fold;
+    sf_file in, out, head, fold, pattern;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -55,12 +55,6 @@ int main (int argc, char* argv[])
 	if (f < xmin) xmin=f;
 	if (f > xmax) xmax=f;
     }
- 
-    /* create model */
-    if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
-    /* Number of bins */
-
-    sf_putint(out,"n1",nx);
 
     /* let user overwrite */
     sf_getfloat ("xmin",&xmin);
@@ -69,15 +63,35 @@ int main (int argc, char* argv[])
 
     if (xmax <= xmin) sf_error ("xmax=%f <= xmin=%f",xmax,xmin);
 
-    if (!sf_getfloat("x0",&x0)) x0=xmin; 
-    /* grid origin */
-    sf_putfloat (out,"o1",x0);
+    /* create model */
+    if (NULL != sf_getstring("pattern")) {
+	pattern = sf_input("pattern");
 
-    if (!sf_getfloat("dx",&dx)) {
-	/* grid spacing */
-	if (1 >= nx) sf_error("Need dx=");
-	dx = (xmax-xmin)/(nx-1);
+	if (!sf_histint (pattern,"n1",&nx)) sf_error("Need nx=");
+	if (!sf_histfloat(pattern,"o1",&x0)) x0=xmin; 
+	if (!sf_histfloat(pattern,"d1",&dx)) {
+	    /* grid spacing */
+	    if (1 >= nx) sf_error("Need dx=");
+	    dx = (xmax-xmin)/(nx-1);
+	}
+
+	sf_fileclose(pattern);
+    } else {
+	if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
+	/* Number of bins */
+	
+	if (!sf_getfloat("x0",&x0)) x0=xmin; 
+	/* grid origin */
+
+	if (!sf_getfloat("dx",&dx)) {
+	    /* grid spacing */
+	    if (1 >= nx) sf_error("Need dx=");
+	    dx = (xmax-xmin)/(nx-1);
+	}	
     }
+
+    sf_putint(out,"n1",nx);
+    sf_putfloat (out,"o1",x0);
     sf_putfloat (out,"d1",dx);
     
     /* initialize interpolation */
@@ -140,4 +154,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mbin1.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

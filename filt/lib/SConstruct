@@ -6,12 +6,12 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''
-conjgrad conjprec
+conjprec
 decart dottest error file files getpar kiss_fft kiss_fftr math1
 segy simtab stack
 '''
 
-src2 = 'adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain'
+src2 = 'adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad'
 
 try: # distribution version
     Import('env')

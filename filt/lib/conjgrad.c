@@ -1,16 +1,40 @@
+/* Conjugate-gradient with shaping regularization. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include "conjgrad.h"
 #include "alloc.h"
-#include "c99.h"
 #include "error.h"
+
+#include "c99.h"
+#include "_solver.h"
+/*^*/
 
 static int np, nx, nr, nd;
 static float *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
-static double norm (int n, const float* x) {
+static double norm (int n, const float* x) 
+/* double-precision L2 norm */
+{
     double prod, xi;
     int i;
 
@@ -22,8 +46,15 @@ static double norm (int n, const float* x) {
     return prod;
 }
 
-void sf_conjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
-		      float tol1, bool verb1, bool hasp01) 
+void sf_conjgrad_init(int np1     /* preconditioned size */, 
+		      int nx1     /* model size */, 
+		      int nd1     /* data size */, 
+		      int nr1     /* residual size */, 
+		      float eps1  /* scaling */,
+		      float tol1  /* tolerance */, 
+		      bool verb1  /* verbosity flag */, 
+		      bool hasp01 /* if has initial model */) 
+/*< solver constructor >*/
 {
     np = np1; 
     nx = nx1;
@@ -45,6 +76,7 @@ void sf_conjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
 }
 
 void sf_conjgrad_close(void) 
+/*< Free allocated space >*/
 {
     free (r);
     free (d);
@@ -56,8 +88,14 @@ void sf_conjgrad_close(void)
     free (gr);
 }
 
-void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape, 
-		 float* p, float* x, float* dat, int niter) 
+void sf_conjgrad(sf_operator prec  /* data preconditioning */, 
+		 sf_operator oper  /* linear operator */, 
+		 sf_operator shape /* shaping operator */, 
+		 float* p          /* preconditioned model */, 
+		 float* x          /* estimated model */, 
+		 float* dat        /* data */, 
+		 int niter         /* number of iterations */) 
+/*< Conjugate gradient solver with shaping >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0, b0;
     int i, iter;
@@ -187,4 +225,4 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
     }
 }
 
-/* 	$Id: conjgrad.c,v 1.4 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id$	 */

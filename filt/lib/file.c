@@ -1114,15 +1114,15 @@ void sf_unpipe (sf_file file, size_t size)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
 } 
 
-/*
 void sf_close(void)
 {
     if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
-
+    
     if (strcmp("stdin",infile->dataname) && unlink(infile->dataname))
 	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
 }
 
+/*
 FILE* sf_direct (const sf_file file)
 {
     return file->pipe? sf_tempfile(&(file->dataname)): file->stream;
@@ -1151,5 +1151,5 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
 }
 */
 
-/* 	$Id: file.c,v 1.25 2004/07/04 12:43:17 fomels Exp $	 */
+/* 	$Id$	 */
 

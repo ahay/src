@@ -149,6 +149,7 @@ int main(int argc, char* argv[])
 	}
     }
     
+    if (n2 > 1) sf_close();
     exit (0);
 }
 
@@ -171,4 +172,4 @@ static void mirror (size_t n1, int dim,
     if (0 != n1%2) k[n1/2]=n1/2; /* Take care of odd n1 */
 }
 
-/* 	$Id: reverse.c,v 1.8 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */
