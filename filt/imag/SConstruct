@@ -6,11 +6,10 @@ progs = '''
 cell2 constfdmig2 distance dmo dsr eikonal fincon finstack fkamo fkdmo gazdag
 halfint interp2 interp3 interpt kirchnew kirmod mig45 mutter preconstkirch
 rays2 reg2tri remap1 ricker1 s2ofz shoot2 sstep1 sstep2 trace2 tri2reg
-trirand unif2 voft vofz hwt2d afdm2d
+trirand unif2 voft vofz
 '''
 
-sources = '''
-'''
+# hwt2d afdm2d
 
 try:  # distributed version
     Import('env')
