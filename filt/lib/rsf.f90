@@ -68,6 +68,21 @@ module rsf
   end interface
 
 contains
+  function filesize (f, dim) result (s)
+    integer                  :: s 
+    type (file), intent (in) :: f
+    integer,     intent (in) :: dim
+    optional                 :: dim
+
+    integer sf_filesize, sf_leftsize
+    external sf_filesize, sf_leftsize
+
+    if (present (dim)) then
+       s = sf_filesize(f%tag)
+    else
+       s = sf_leftsize(f%tag,dim)
+    end if
+  end function filesize
 
   function rsf_input (tag) result (f)
     type (file)                    :: f

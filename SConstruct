@@ -67,6 +67,9 @@ for dir in map(lambda x: os.path.join('filt',x), dirs):
     SConscript(dirs=build,name='SConstruct')
     Default(build)
 
+env.Install(incdir,'rsf.d')
+env.InstallAs(os.path.join(incdir,'rsf.pc'),'work.pc')
+
 ##########################################################################
 # PLOT BUILD
 ##########################################################################

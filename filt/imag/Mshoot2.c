@@ -113,6 +113,7 @@ int main(int argc, char* argv[])
 	amax = atan2f(rmax-xs[1],xs[0]-z0);
 
 	xr = r0;
+	r1 = 0.;
 	for (a0 -= da; a0 > - SF_PI; a0 -= da) {
 	    r1 = shooting(a0);
 	    if (r1 <= 0.) break;

@@ -9,6 +9,7 @@
 #include "alloc.h"
 #include "file.h"
 #include "getpar.h"
+#include "files.h"
 %}
 
 %include "typemaps.i"
@@ -272,3 +273,8 @@ bool sf_getstrings (const char* key,/*@out@*/ char** par,size_t n);
 bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
+int sf_filedims (sf_file file, /*@out@*/ int *n);
+int sf_filesize (sf_file file);
+int sf_leftsize (sf_file file, int dim);
+void sf_cp(sf_file in, sf_file out);
+void sf_rm(const char* filename, bool force, bool verb, bool inquire);

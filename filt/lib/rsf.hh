@@ -18,6 +18,8 @@ public:
     iRSF (const char* file = "in");
     // destructor
     ~iRSF();
+    // file size
+    int size (int dim=0);
     // reading data
     const iRSF& operator>> (std::valarray <float> &vect) const;
     // reading parameters

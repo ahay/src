@@ -50,6 +50,8 @@ class File:
     def __init__(self):
         self.type = datatype[c_rsf.sf_gettype(self.file)]
         self.form = dataform[c_rsf.sf_getform(self.file)]
+    def size(self,dim=0):
+        return c_rsf.sf_leftsize(self.file,dim)
     def settype(self,type):
         for i in xrange(len(datatype)):
             if type == datatype[i]:

@@ -305,7 +305,8 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Update(self)
         self.Append(ENV={'DATAPATH':datapath,
-                         'DISPLAY':os.environ.get('DISPLAY')},
+                         'DISPLAY':os.environ.get('DISPLAY'),
+                         'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Clean':Klean,
                               'Build':Build,

@@ -3,6 +3,7 @@ import sys, os
 
 root = os.environ.get('RSFROOT')
 libdir = os.path.join(root,'lib')
+incdir = os.path.join(root,'include')
 sys.path.append(libdir)
 
 ###########################################################################
@@ -19,10 +20,42 @@ test = 'spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | %s.x clip=0.5 | attr'
 # C API
 ############################################################################
 
-cprog = proj.Program('clip.c')
-ctest = proj.Flow('c',None,test % 'clip',suffix='.attr')
-proj.Depends(ctest,cprog)
+proj.Program('clip.c')
+ctest = proj.Flow('c','clip.x',test % 'clip',suffix='.attr',stdin=0)
 Default(ctest)
+
+############################################################################
+# C++ API
+############################################################################
+
+proj.Program('clip.cc',OBJSUFFIX='++.o',LIBS=['rsf++','rsf','m'])
+cctest = proj.Flow('cc','clip++.x',test % 'clip++',suffix='.attr',stdin=0)
+Default(cctest)
+
+############################################################################
+# Fortran-77 API
+############################################################################
+
+proj.Program('clip.f',OBJSUFFIX='f.o',LIBS=['rsff','rsf','m'],
+             LINK=proj.get('F77'),LINKFLAGS=proj.get('F77FLAGS'))
+ftest = proj.Flow('f','clipf.x',test % 'clipf',suffix='.attr',stdin=0)
+Default(ftest)
+
+############################################################################
+# Fortran-90 API
+############################################################################
+
+proj.Program('clip.f90',PROGSUFFIX='f90.x',LIBS=['rsff90','rsf','m'],
+             LINK=proj.get('F90'),LINKFLAGS=proj.get('F90FLAGS'))
+f90test = proj.Flow('f90','clipf90.x',test % 'clipf90',suffix='.attr',stdin=0)
+Default(f90test)
+
+############################################################################
+# Python API
+############################################################################
+
+pytest = proj.Flow('py','clippy.x',test % 'clippy',suffix='.attr',stdin=0)
+Default(pytest)
 
 ############################################################################
 

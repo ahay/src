@@ -45,6 +45,15 @@ oRSF::~oRSF()
     sf_fileclose(file_);
 }
 
+
+// file size
+// ----------------
+int 
+iRSF::size (int dim /* =0 */)
+{
+    return sf_leftsize(file_,dim);
+}
+
 // Reading data
 // ------------
 const iRSF&

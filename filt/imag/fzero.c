@@ -25,6 +25,9 @@ float fzero (float (*func)(float),
 	sf_error("%s: need different sign for zero finding, "
 		 "got %f and %f",__FILE__,fa,fb);
 
+    c = b;  
+    e = d = b - a;  
+
     fc = fb;
     /* Main loop, exit from middle of the loop */
     while (fb != 0.) {
