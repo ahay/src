@@ -74,8 +74,7 @@ int main(int argc, char* argv[])
 	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: rtoc.c,v 1.5 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id: rtoc.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */

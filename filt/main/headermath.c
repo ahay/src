@@ -100,9 +100,7 @@ int main(int argc, char* argv[])
     sf_math_evaluate (len, n2, fbuf, fst);
     sf_floatwrite(fst[1],n2,out);
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: headermath.c,v 1.10 2004/06/23 18:30:00 fomels Exp $	 */
-
+/* 	$Id: headermath.c,v 1.11 2004/07/02 11:54:37 fomels Exp $	 */

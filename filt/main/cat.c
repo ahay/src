@@ -143,7 +143,6 @@ int main (int argc, char* argv[])
 	}
     }
     
-    sf_close();
     exit(0);
 }
 
@@ -186,5 +185,5 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
     }
 }
 
-/* 	$Id: cat.c,v 1.10 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id: cat.c,v 1.11 2004/07/02 11:54:37 fomels Exp $	 */
 

@@ -120,8 +120,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: pad.c,v 1.7 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id: pad.c,v 1.8 2004/07/02 11:54:37 fomels Exp $	 */

@@ -147,7 +147,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit (0);
 }
 
@@ -177,4 +176,4 @@ static void make_map (int dim1, int dim2,
     }
 }
 
-/* 	$Id: transp.c,v 1.5 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id: transp.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */

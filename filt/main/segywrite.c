@@ -147,8 +147,7 @@ int main(int argc, char *argv[])
 	    sf_error ("Error writing trace %d",itr+1);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: segywrite.c,v 1.6 2004/06/23 18:30:00 fomels Exp $	 */
+/* 	$Id: segywrite.c,v 1.7 2004/07/02 11:54:37 fomels Exp $	 */

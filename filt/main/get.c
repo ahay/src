@@ -50,9 +50,7 @@ int main (int argc, char* argv[])
 	} 
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: get.c,v 1.4 2004/06/23 18:30:00 fomels Exp $	 */
-
+/* 	$Id: get.c,v 1.5 2004/07/02 11:54:37 fomels Exp $	 */
