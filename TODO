@@ -1,6 +1,7 @@
 PROJ
 	Licensing
 	get rid of the clean rule / emitter
+	interrupt signal in latex2dvi (->latex2pdf)
 	parameter checking
 	Tkinter interface
 DOCUMENTATION

@@ -51,21 +51,39 @@ Doc = Builder (action = Action(rsfdoc.selfdoc),src_suffix='.c',suffix='.py')
 env.Append(BUILDERS = {'Doc' : Doc})
 
 ##########################################################################
-# MAIN BUILD
+# FILT BUILD
 ##########################################################################
 env.Append(CPPPATH=['../../include'],
-           LIBPATH=['../../filt/lib','../../plot/lib'],
-           LIBS=['rsfplot','rsf','m'])
+           LIBPATH=['../../filt/lib'],
+           LIBS=['rsf','m'])
 
 Export('env')
-libdirs = ['filt/lib','plot/lib']
-prgdirs = ['filt/main','filt/proc','filt/imag','plot/main']
+dirs = ('lib','main','proc','imag')
 
 Default('build/include')
-for dir in libdirs+prgdirs:
+for dir in map(lambda x: os.path.join('filt',x), dirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')
     Default(build)
+
+##########################################################################
+# PLOT BUILD
+##########################################################################
+env.Prepend(LIBPATH=['../../plot/lib'],LIBS=['rsfplot'])
+
+Export('env')
+dirs = ('lib','main')
+
+Default('build/include')
+for dir in map(lambda x: os.path.join('plot',x), dirs):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
+
+##########################################################################
+# INSTALLATION
+##########################################################################
 
 env.Alias('install',[bindir,libdir,incdir])

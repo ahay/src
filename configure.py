@@ -7,11 +7,12 @@ from SCons.Defaults import StaticCheckSet, SharedCheckSet
 
 def check_all(context):
     cc(context)
+    cxx(context)
     f77(context)
     f90(context)
 
 def cc(context):
-    context.Message("Checking C compiler ... ")
+    context.Message("checking C compiler ... ")
     CC = context.env.get('CC')
     if CC:
         context.Result(CC)   
@@ -23,7 +24,7 @@ def cc(context):
     return 0;
     }
     '''
-    context.Message("Checking if %s works ... " % CC)
+    context.Message("checking if %s works ... " % CC)
     res = context.TryRun(text,'.c')
     context.Result(res[0])
     if not res:
@@ -33,7 +34,7 @@ def cc(context):
         for flag in ('-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
                      '-Wall -pedantic'):
-            context.Message("Checking if gcc accepts '%s' ... " % flag)
+            context.Message("checking if gcc accepts '%s' ... " % flag)
             context.env['CCFLAGS'] = oldflag + ' ' + flag
             res = context.TryCompile(text,'.c')
             context.Result(res)
@@ -42,11 +43,43 @@ def cc(context):
         if not res:
             context.env['CCFLAGS'] = oldflag
 
+def cxx(context):
+    context.Message("checking C++ compiler ... ")
+    CXX = context.env.get('CXX')
+    if CXX:
+        context.Result(CXX)   
+    else:
+        context.Result(0)
+        return
+    text = '''
+    #include <valarray>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }
+    '''
+    context.Message("checking if %s works ... " % CXX)
+    res = context.TryRun(text,'.cc')
+    context.Result(res[0])
+    if not res:
+        del context.env['CXX']
+        return
+    if CXX == 'g++':
+        oldflag = context.env.get('CXXFLAGS')
+        for flag in ['-Wall -pedantic']:
+            context.Message("checking if g++ accepts '%s' ... " % flag)
+            context.env['CXXFLAGS'] = oldflag + ' ' + flag
+            res = context.TryCompile(text,'.cc')
+            context.Result(res)
+            if res:
+                break
+        if not res:
+            context.env['CXXFLAGS'] = oldflag
+
 fortran = {'g77':'f2cFortran',
            'f2c':'f2cFortran'}
 
 def f77(context):
-    context.Message("Checking F77 compiler ... ")
+    context.Message("checking F77 compiler ... ")
     F77 = context.env.get('F77')
     if F77:
         context.Result(F77)
@@ -60,7 +93,7 @@ def f77(context):
       stop
       end
       '''
-    context.Message("Checking if %s works ... " % F77)
+    context.Message("checking if %s works ... " % F77)
     oldlink = context.env.get('LINK')
     context.env['LINK'] = F77
     res = context.TryRun(text,'.f')
@@ -72,11 +105,11 @@ def f77(context):
         return
     cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
     context.env['CFORTRAN'] = cfortran 
-    context.Message("Checking %s type for cfortran.h ... " % F77)
+    context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
     
 def f90(context):
-    context.Message("Checking F90 compiler ... ")
+    context.Message("checking F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
         compilers = ['f90','f95','xlf90','pgf90','ifc','pghpf']
@@ -102,7 +135,7 @@ def f90(context):
     module = '''module test
     end module test
     '''
-    context.Message("Checking if %s works ... " % F90)
+    context.Message("checking if %s works ... " % F90)
     oldlink = context.env.get('LINK')
     context.env['LINK'] = F90
     res1 = context.TryCompile(module,'.f90')
@@ -116,7 +149,7 @@ def f90(context):
     base = os.path.basename(F90)
     cfortran = fortran.get(base,'NAGf90Fortran')
     context.env['CFORTRAN90'] = cfortran 
-    context.Message("Checking %s type for cfortran.h ... " % base)
+    context.Message("checking %s type for cfortran.h ... " % base)
     context.Result(cfortran)
 
 def load_f90(env):
@@ -151,6 +184,9 @@ def options(opts):
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
+    opts.Add('CXX','The C++ compiler')
+    opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
+             '-O2')
     opts.Add('F77','The Fortran-77 compiler')
     opts.Add('F77FLAGS','General options that are passed to the F77 compiler',
              '-O2')
