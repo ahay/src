@@ -104,7 +104,7 @@ int main(int argc, char **argv)
 	    for(i1=0; i1 < n1; i1++) {
 		z = o1 + i1*d1;
 		for (i=0; i < ninf-1; i++) {
-		    if (z < inter[i][i2][i3]) {
+		    if (z < inter[i][i3][i2]) {
 			trace[i1] = v0[i] + 
 			    (x-x0[i])*dvdx[i] + 
 			    (y-y0[i])*dvdy[i] + 
