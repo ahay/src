@@ -18,4 +18,4 @@ mains = ['seis/main','seis/proc','seis/imag','vplot/main']
 
 env.Command('rsfprogs.py',map(lambda x: os.path.join(x,'RSFdoc'),mains),doc)
 
-
+Clean('rsfprogs.py','rsfprogs.pyc')
