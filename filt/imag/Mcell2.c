@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     bool velocity;
     int is, nz, nx, im, nm, order, nshot, ndim, nsr;
     int nt, nr, ir, it;
-    float da, a0, amax, t;
+    float da=0., a0, amax, t;
     float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s, *a;
     celltrace ct;
     sf_file shots, vel, angles;

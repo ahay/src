@@ -83,6 +83,12 @@ int main (int argc, char **argv)
 	sf_putint(out,"n3",nk);
 	sf_putfloat(out,"d3",dk);
 	sf_putfloat(out,"o3",k0);
+
+	if (NULL == sf_getstring("velocity")) {
+	    vel = NULL;
+	} else {
+	    vel = sf_input ("velocity");
+	}
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nw)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error ("No d1= in input");

@@ -63,7 +63,7 @@ int atela_step (int dim, int nt, float dt, bool intime, float* x, float* p,
 {
     int it, i;
     float f[3];
-    float v, h;
+    float v, h=0.;
     double sum, one;
 
     if (traj != NULL) {
@@ -72,7 +72,7 @@ int atela_step (int dim, int nt, float dt, bool intime, float* x, float* p,
 	}
     }
 
-    if (intime == false) h = dt;
+    if (!intime) h = dt;
 
     for (it = 0; it < nt; it++) {
 	v = slow2(par, x);
@@ -85,7 +85,7 @@ int atela_step (int dim, int nt, float dt, bool intime, float* x, float* p,
 	    p[i] *= one; /* enforce the eikonal equation */
 	}
 
-	if (intime == true) h = dt/v;
+	if (intime) h = dt/v;
 
 	vgrad (par, x, f);
 	for (i=0; i < dim; i++) {

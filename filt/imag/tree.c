@@ -7,6 +7,7 @@
 #include "node.h"
 #include "eno2.h"
 #include "cell.h"
+#include "pqueue.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b))?(a):(b)
@@ -26,6 +27,7 @@ static void psnap (float* p, float* q, int* iq);
 
 static void process_node (Node nd);
 static void process_child (Node child);
+static void check_front (void);
 
 void tree_init (int order1,
 		int nz1, int nx1, int na1, int nt1, 
@@ -52,9 +54,9 @@ void tree_init (int order1,
 
 void tree_build(void)
 {
-    int i, k, iz, ix, ia, kx, kz, ka, jx, jz, k2, k1, iter;
-    float x, z, p[2], a, v, v0, g0[2], g[2], s, sx, sz, t, *vk;
-    bool onx, onz;
+    int i, k, iz, ix, ia, kx, kz, ka, jx, jz;
+    float x, z, p[2], a, v, v0, g0[2], g[2], s, sx, sz, t=0., *vk;
+    bool onx, onz=false;
     Node node;
 
     sf_warning("Method=%d",order);
@@ -337,29 +339,40 @@ void tree_build(void)
     }
 
 /*    tree_print(); */
-    
-    for (iter=1; iter < 100; iter++) {
-	TraverseQueue (Orphans,process_node);
-	
-	if (nacc == naxz) break;
 
-	sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
-	FreeNodeQueue (Orphans);
-	Orphans = CreateNodeQueue();
+    TraverseQueue (Orphans,process_node);
 	
-	for (k=0; k < naxz; k++) {
+    if (nacc == naxz) return;
+
+    sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
+
+    FreeNodeQueue (Orphans);
+    Orphans = CreateNodeQueue();
+	
+    pqueue_init (naxz-nacc);
+    pqueue_start ();
+
+    check_front();
+}
+
+static void check_front (void) {
+    int k;
+    bool atfront=false;
+    NodeCell cell;
+    Node node;
+
+    for (k=0; k < naxz; k++) {
+	if (accepted[k]) {
 	    node = Tree+k;
-	    if (0 < node->nparents && iter >= node->nparents) {
-		if (order == node->n1) node->n1--;
-		if (order == node->n2) node->n2--;
-		node->nparents=0;
-		for (k2=0; k2 < node->n2; k2++) {		  
-		    for (k1=0; k1 < node->n1; k1++) {
-			i = node->parents[k2][k1];
-			if (i >= 0 && !accepted[i]) node->nparents++;
-		    }
-		}
-		if (0==node->nparents) AddNode(Orphans,node);
+	    for (cell = node->children->head; 
+		 NULL != cell; 
+		 cell = cell->link) {
+		atfront = (cell->node->nparents > 0);
+		if (atfront) break;
+	    }
+	    if (atfront) {
+		pqueue_insert(val[k]+2);
+		sf_warning("%d",k);
 	    }
 	}
     }
