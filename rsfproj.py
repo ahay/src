@@ -134,10 +134,16 @@ libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 
 resdir = './Fig'
+record = 0
 
 def set_resdir(dir):
      global resdir
      resdir = dir
+
+def Book():
+    global record
+    set_resdir('../Fig')
+    record = 1
 
 latex = None
 bibtex = None
@@ -265,7 +271,16 @@ def retrieve(target=None,source=None,env=None):
         urllib.urlretrieve(string.join([dir,file],os.sep),file)
     return 0
 
-View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
+host = ''
+display = os.environ.get('DISPLAY')
+if display:
+    host = re.sub(':[\d\.]*$','',display)
+if host == '':
+    host = 'localhost'
+
+View = Builder(action = "%s %s; %sxtpen $SOURCES" %
+               (WhereIs('xhost'),host,sep),
+               src_suffix=vpsuffix)
 # Klean = Builder(action = Action(clean,silent,['junk']))
 Build = Builder(action = Action(pstexpen,varlist=['opts']),
                 src_suffix=vpsuffix,suffix=pssuffix)
@@ -337,13 +352,6 @@ combine ={
 
 #############################################################################
 
-display = os.environ.get('DISPLAY')
-if display:
-    host = re.sub(':[\d\.]*$','',display)
-    if host == '':
-        host = 'localhost'
-    os.system('xhost ' + host)
-
 class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
@@ -376,6 +384,7 @@ class Project(Environment):
         self.view = []
         self.figs = []
         self.pdfs = []
+        self.coms = []
     def Exe(self,source,**kw):
          target = source.replace('.c','.exe')
          return apply(self.Program,(target,source),kw)
@@ -409,6 +418,8 @@ class Project(Environment):
                 if rsfdoc.progs.has_key(rsfprog):
                     command = os.path.join(bindir,rsfprog)
                     sources.append(command)
+                    if record and (rsfprog not in self.coms):
+                        self.coms.append(rsfprog)
                 elif re.match(r'[^/]+\.exe$',command): # local program
                     command = os.path.join('.',command)                    
                 #<- check for par files and add to the sources
@@ -496,6 +507,8 @@ class Project(Environment):
             self.paper.target_scanner = Plots
 	    if acroread:
 		self.Alias('read',self.Read('paper'))
+        if record:
+            self.Command('.sf_uses',None,'echo %s' % ' '.join(self.coms))
     def Fetch(self,file,dir):
         return self.Retrieve(file,None,dir=dir)
 
@@ -522,4 +535,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.24 2004/03/30 02:06:30 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.25 2004/03/31 03:16:33 fomels Exp $	

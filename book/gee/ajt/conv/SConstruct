@@ -8,8 +8,7 @@ sys.path.append(os.path.join(root,'lib'))
 
 from rsfproj import *
 ###########################################################################
-
-set_resdir('../Fig')
+Book()
 
 Flow('in',None,'spike n1=15 label1=" " ')
 Flow('filt1',None,

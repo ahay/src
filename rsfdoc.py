@@ -1,7 +1,34 @@
 import pydoc
-import re, sys, os, string
+import re, sys, os, string, glob, commands
 
 progs = {}
+
+def subdirs():
+    return filter(os.path.isdir,glob.glob('[a-z]*'))
+
+def use(target=None,source=None,env=None):
+    doc = open(str(target[0]),'w')
+    doc.write('import rsfdoc\n\n')
+    os.chdir('book')
+    for book in subdirs():
+        os.chdir(book)
+        for chapter in subdirs():
+            os.chdir(chapter)
+            for project in subdirs():
+                os.chdir(project)
+                (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
+                if status:
+                    print ('No uses found in book/%s/%s/%s/: %s' %
+                           (book,chapter,project,progs))
+                else:
+                    for prog in progs.split():
+                        doc.write('rsfdoc.progs["%s"].use("%s","%s","%s")\n' %
+                                  (prog,book,chapter,project))
+                os.chdir('..')
+            os.chdir('..')
+        os.chdir('..')
+    os.chdir('..')
+    doc.close()
 
 def selfdoc(target=None,source=None,env=None):
     src = str(source[0])
@@ -58,12 +85,19 @@ class rsfprog:
         self.snps = None
         self.cmts = None
         self.also = None
+        self.uses = {}
         self.pars = {}
     def synopsis (self,snps,cmts):
         self.snps = snps
         self.cmts = cmts
     def par (self,name,par):
         self.pars[name] = par
+    def use (self,book,chapter,project):
+        if not self.uses.has_key(book):
+            self.uses[book]={}
+        if not self.uses[book].has_key(chapter):
+            self.uses[book][chapter] = []
+        self.uses[book][chapter].append(project)
     def document(self):
         doc = section('name',self.name)
         if self.desc:
@@ -81,6 +115,17 @@ class rsfprog:
             doc = doc + section('parameters',string.rstrip(pardoc))
         if self.also:
             doc = doc + section('see also',self.also)
+        books = self.uses.keys()
+        if books:
+            usedoc = '' 
+            books.sort()
+            for book in books:
+                chapters = self.uses[book].keys()
+                chapters.sort()
+                for chapter in chapters:
+                    for project in self.uses[book][chapter]:
+                        usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
+            doc = doc + section('used in',string.rstrip(usedoc))
         doc = doc + section('source',self.file)
         pydoc.pager(doc)
     def html(self,dir):
@@ -124,6 +169,7 @@ def getprog(file,out,rsfprefix = 'sf'):
     else:
         desc = None
     prog = rsfprog(name,file,desc)
+    file = re.sub('^[^\/]*\/','',file)
     out.write("%s = rsfdoc.rsfprog('%s','%s','%s')\n" %
               (name,name,file,desc))
     pars = param.findall(text)
@@ -232,4 +278,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.10 2004/03/30 02:06:30 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.11 2004/03/31 03:16:33 fomels Exp $	

@@ -7,7 +7,7 @@ sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 
 from rsfproj import *
 
-set_resdir('../Fig')
+Book()
 
 Flow('time',None,
      "spike n1=200 d1=1 o1=1 label1='Sample' | headermath output='N*0.4'")

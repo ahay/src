@@ -8,7 +8,7 @@ sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 from rsfproj import *
 
 ###########################################################################
-set_resdir('../Fig')
+Book()
 
 figs = 'cone ray snell wave'
 
