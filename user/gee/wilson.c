@@ -49,13 +49,13 @@ float wilson_factor(int niter /* number of iterations */,
 		    float s0  /* zero-lag auto-correlation */, 
 		    filter ss /* input auto-correlation */, 
 		    filter aa /* output factor */, 
-		    bool verb /* verbosity flag */, 
+		    bool verb /* verbosity flag */,
 		    float tol /* tolerance */)
 /*< Factor >*/ 
 {
     float eps;
     int i, iter;
-
+    
     for(i=0; i < n2; i++) {
 	au[i] = 0.;
     }
@@ -63,15 +63,15 @@ float wilson_factor(int niter /* number of iterations */,
     b[0] = 1.;       /* initialize */
 		     
     for(i=0; i < ss->nh; i++) {  /* symmetrize input auto */
-	au[n+ss->lag[i]-1] =  ss->flt[i];        
-	au[n-ss->lag[i]-1] =  ss->flt[i];
+	au[n-1+ss->lag[i]] =  ss->flt[i];        
+	au[n-1-ss->lag[i]] =  ss->flt[i];
     }                   
 
     helicon_init( aa);                      /* multiply polynoms */
     polydiv_init( n2, aa);                  /* divide   polynoms */
     for(iter=0; iter < niter; iter++) {
 	polydiv_lop(false,false, n2, n2, au, bb);  /* bb = S/A */
-	polydiv_lop(true,false, n2, n2, cc,   bb);   /* cc = S/(AA') */
+	polydiv_lop(true, false, n2, n2, cc, bb);  /* cc = S/(AA') */
 	eps = 0.;
 	for(i=1; i < n; i++) {      
 	  /* b = plusside(1+cc) */
