@@ -3,13 +3,16 @@ PROJ
 	Tkinter interface
 DOCUMENTATION
 	demos: SU/SEPlib/Claerbout
-	manual
-SEIS
+	manual...
+	sfdoc -k keyword
+	interface examples
+FILT
 	splint
 	fortran interface
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
-VPLOT
+PLOT
+	check test dir
 	vppen
 	filters: gtk, svg, pdf	
 	finish sepmains

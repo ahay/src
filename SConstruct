@@ -52,14 +52,14 @@ env.Append(BUILDERS = {'Doc' : Doc})
 # MAIN BUILD
 ##########################################################################
 env.Append(CPPPATH=['../../include'],
-           LIBPATH=['../../seis/rsf','../../vplot/lib'],
+           LIBPATH=['../../filt/lib','../../plot/lib'],
            LIBS=['rsfplot','rsf','m'])
 
 Export('env')
-libdirs = ['seis/rsf','vplot/lib']
-progdirs = ['seis/main','seis/proc','seis/imag','vplot/main']
+libdirs = ['filt/lib','plot/lib']
+prgdirs = ['filt/main','filt/proc','filt/imag','plot/main']
 
-for dir in libdirs+progdirs:
+for dir in libdirs+prgdirs:
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')

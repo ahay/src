@@ -1,6 +1,7 @@
 import os, stat, sys, types, commands, re, string, urllib
 import rsfdoc
 import rsfprog
+import rsfconfig
 
 ##############################################################################
 # BEGIN STANDARD SCons SCRIPT HEADER
@@ -292,12 +293,6 @@ combine ={
     }
 
 #############################################################################
-# FORTRAN-90 TOOL
-############################################################################
-
-import f90
-
-#############################################################################
 
 class Project(Environment):
     def __init__(self,**kw):
@@ -315,8 +310,7 @@ class Project(Environment):
                               'Read':Read,
                               'Retrieve':Retrieve},
                     SCANNERS=[Plots])
-        if self.Detect(f90.compilers):
-            self.Append(TOOLS=[f90.tool])
+# Add f90 later
         self.view = []
         self.figs = []
         self.pdfs = []
