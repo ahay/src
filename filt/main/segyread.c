@@ -1,0 +1,448 @@
+/* Convert a SEG-Y or SU dataset to RSF.
+
+Takes: > file.rsf tfile=traceheaders.rsf tape=file.segy
+
+Data headers and trace headers are separated from the data.
+
+SEGY key names:
+
+tracl: trace sequence number within line 0
+
+tracr: trace sequence number within reel 4
+
+fldr:     field record number 8 
+
+tracf:    trace number within field record 12 
+
+ep:       energy source point number 16 
+
+cdp:      CDP ensemble number 20 
+
+cdpt:     trace number within CDP ensemble 24 
+
+trid:     trace identification code:
+1 = seismic data
+2 = dead
+3 = dummy
+4 = time break
+5 = uphole
+6 = sweep
+7 = timing
+8 = water break
+9---, N = optional use (N = 32,767) 28 
+
+nvs:      number of vertically summed traces 30 
+
+nhs:      number of horizontally summed traces 32 
+
+duse:     data use:
+1 = production
+2 = test 34
+
+offset:   distance from source point to receiver
+group (negative if opposite to direction
+in which the line was shot) 36 
+
+gelev:    receiver group elevation from sea level
+(above sea level is positive) 40 
+
+selev:    source elevation from sea level
+(above sea level is positive) 44 
+
+sdepth:   source depth (positive) 48 
+
+gdel:     datum elevation at receiver group 52 
+
+sdel:     datum elevation at source 56 
+
+swdep:    water depth at source 60 
+
+gwdep:    water depth at receiver group 64 
+
+scalel:   scale factor for previous 7 entries
+with value plus or minus 10 to the
+power 0, 1, 2, 3, or 4 (if positive,
+multiply, if negative divide) 68 
+
+scalco:   scale factor for next 4 entries
+with value plus or minus 10 to the
+power 0, 1, 2, 3, or 4 (if positive,
+multiply, if negative divide) 70 
+
+sx:       X source coordinate 72 
+
+sy:       Y source coordinate 76 
+
+gx:       X group coordinate 80 
+
+gy:       Y group coordinate 84 
+
+counit:   coordinate units code:
+for previoius four entries
+1 = length (meters or feet)
+2 = seconds of arc (in this case, the
+X values are unsigned intitude and the Y values
+are latitude, a positive value designates
+the number of seconds east of Greenwich
+or north of the equator 88 
+
+wevel:     weathering velocity 90 
+
+swevel:    subweathering velocity 92 
+
+sut:       uphole time at source 94 
+
+gut:       uphole time at receiver group 96 
+
+sstat:     source static correction 98 
+
+gstat:     group static correction 100 
+
+tstat:     total static applied 102 
+
+laga:      lag time A, time in ms between end of 240-
+byte trace identification header and time
+break, positive if time break occurs after
+end of header, time break is defined as
+the initiation pulse which maybe recorded
+on an auxiliary trace or as otherwise
+specified by the recording system 104 
+
+lagb:      lag time B, time in ms between the time
+break and the initiation time of the energy source,
+may be positive or negative 106 
+
+delrt:     delay recording time, time in ms between
+initiation time of energy source and time
+when recording of data samples begins
+(for deep water work if recording does not
+start at zero time) 108 
+
+muts:      mute time--start 110 
+
+mute:      mute time--end 112 
+
+ns:        number of samples in this trace 114 
+
+dt:        sample interval, in micro-seconds 116 
+
+gain:      gain type of field instruments code:
+1 = fixed
+2 = binary
+3 = floating point
+4 ---- N = optional use 118 
+
+igc:       instrument gain constant 120 
+
+igi:       instrument early or initial gain 122 
+
+corr:      correlated:
+1 = no
+2 = yes 124     
+
+sfs:       sweep frequency at start 126 
+
+sfe:       sweep frequency at end 128 
+
+slen:      sweep length in ms 130 
+
+styp:      sweep type code:
+1 = linear
+2 = cos-squared
+3 = other 132    
+
+stas:      sweep trace length at start in ms 134 
+
+stae:      sweep trace length at end in ms 136 
+
+tatyp:     taper type: 1=linear, 2=cos^2, 3=other 138 
+
+afilf:     alias filter frequency if used 140 
+
+afils:     alias filter slope 142 
+
+nofilf:    notch filter frequency if used 144 
+
+nofils:    notch filter slope 146 
+
+lcf:       low cut frequency if used 148 
+
+hcf:       high cut frequncy if used 150 
+
+lcs:       low cut slope 152 
+
+hcs:       high cut slope 154 
+
+year:      year data recorded 156 
+
+day:       day of year 158 
+
+hour:      hour of day (24 hour clock) 160 
+
+minute:    minute of hour 162 
+
+sec:       second of minute 164 
+
+timbas:    time basis code:
+1 = local
+2 = GMT
+3 = other 166    
+
+trwf:      trace weighting factor, defined as 1/2^N
+volts for the least sigificant bit 168 
+
+grnors:    geophone group number of roll switch
+position one 170 
+
+grnofr:    geophone group number of trace one within
+original field record 172 
+
+grnlof:    geophone group number of last trace within
+original field record 174 
+
+gaps:      gap size (total number of groups dropped) 176 
+
+otrav:     overtravel taper code:
+1 = down (or behind)
+2 = up (or ahead) 
+
+*/
+
+#include <stdio.h>
+
+#include <rsf.h>
+
+int main(int argc, char *argv[])
+{
+    bool verbose, su, xdr;
+    char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
+    char *headname, *filename, *trace, *read;
+    sf_file out, hdr, msk=NULL;
+    int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask;
+    long pos, nsegy;
+    FILE *head, *file;
+    float *ftrace, dt;
+
+    sf_init(argc, argv);
+    
+    if (!sf_getbool("verbose",&verbose)) verbose=false;
+    /* Verbosity flag */
+    if (!sf_getbool("su",&su)) su=false;
+    /* y if input is SU, n if input is SEGY */
+    if (!sf_getbool("endian",&xdr) || xdr) sf_endian();
+    /* big/little endian flag, the default is estimated automatically */
+    
+    if (NULL == (filename = sf_getstring("tape"))) /* input data */
+	sf_error("Need to specify tape=");
+
+    if (NULL == (file = fopen(filename,"rb")))
+	sf_error("Cannot open \"%s\" for reading:",filename);
+
+    fseek(file,0,SEEK_END);
+    pos = ftell(file); /* pos is the filesize in bytes */
+    fseek(file,0,SEEK_SET);
+
+    if (NULL == (read = sf_getstring("read"))) read = "b";
+    /* what to read: h - header, d - data, b - both (default) */
+
+    if (!su) {
+	if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, file)) 
+	    sf_error("Error reading ebcdic header");
+	
+	sf_ebc2asc (SF_EBCBYTES, ahead);
+	
+	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
+	/* output text data header file */
+
+	if (NULL == (head = fopen(headname,"w")))
+	    sf_error("Cannot open file \"%s\" for writing ascii header:",
+		     headname);
+    
+	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, head)) 
+	    sf_error("Error writing ascii header");
+	fclose (head);
+
+	if (verbose) sf_warning("ASCII header written to \"%s\"",headname);
+    
+	if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, file))
+	    sf_error("Error reading binary header");
+
+	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
+	/* output binary data header file */
+
+	if (NULL == (head = fopen(headname,"wb")))
+	    sf_error("Cannot open file \"%s\" for writing binary header:",
+		     headname);
+    
+	if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, head)) 
+	    sf_error("Error writing binary header");
+	fclose (head);
+
+	if (verbose) sf_warning("Binary header written to \"%s\"",headname);
+
+	if (!sf_getint("format",&format)) format = sf_segyformat (bhead);
+	/* [1,2,3] Data format. The default is taken from binary header.
+	   1 is IBM floating point
+	   2 is 4-byte integer
+	   3 is 2-byte integer
+	*/
+
+	switch (format) {
+	    case 1:
+		if (verbose) sf_warning("Assuming IBM floating point format");
+		break;
+	    case 2:
+		if (verbose) sf_warning("Assuming 4 byte integer format");
+		break;
+	    case 3:
+		if (verbose) sf_warning("Assuming 2 byte integer format");
+		break;
+	    default:
+		sf_error("Nonstandard format: %d",format);
+		break;
+	}
+
+	if (!sf_getint("ns",&ns)) ns = sf_segyns (bhead);
+	/* Number of samples. The default is taken from binary header */
+	if (0>=ns) sf_error("Number of samples is not set in binary header");
+
+	if (verbose) sf_warning("Detected trace length of %d",ns);
+
+	dt = sf_segydt (bhead);
+	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
+	ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
+    } else {
+	/* figure out ns and ntr */
+
+	trace = sf_charalloc (SF_HDRBYTES);
+	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
+	    sf_error ("Error reading first trace header");
+	fseek(file,0,SEEK_SET);
+
+	sf_segy2head(trace, itrace, SF_NKEYS);
+	ns = itrace[sf_segykey("ns")];
+	dt = itrace[sf_segykey("dt")]/1000000.;
+	free (trace);
+
+	nsegy = SF_HDRBYTES + ns*4;
+	ntr = pos/nsegy;
+    }
+
+    if (verbose) sf_warning("Expect %d traces",ntr);
+
+    
+    if (NULL != sf_getstring("mask")) {
+	/* optional header mask for reading only selected traces */
+	msk = sf_input("mask");
+	if (SF_INT != sf_gettype(msk)) sf_error("Need integer mask");
+
+	mask = sf_intalloc(ntr);
+	sf_intread(mask,ntr,msk);
+	sf_fileclose(msk);
+
+	for (n2=itr=0; itr < ntr; itr++) {
+	    if (mask[itr]) n2++;
+	}
+    } else {
+	mask = NULL;
+	n2 = ntr;
+    }
+
+    if (read[0] != 'h') { /* not only header */
+	out = sf_output("out");
+	sf_putint(out,"n1",ns);
+	sf_putint(out,"n2",n2);
+	sf_putfloat(out,"d1",dt);
+	sf_putfloat(out,"o1",0.);
+	sf_setformat(out, "native_float");
+	sf_fileflush(out,NULL);
+    
+	if (su) {
+	    sf_setform(out,SF_NATIVE);
+	    ftrace = NULL;
+	} else {
+	    ftrace = sf_floatalloc (ns);
+	}
+    } else {
+	out = NULL;
+	ftrace = NULL;
+    }
+
+    if (read[0] != 'd') { /* not only data */
+	hdr = sf_output("tfile");
+	sf_putint(hdr,"n1",SF_NKEYS);
+	sf_putint(hdr,"n2",n2);
+	sf_setformat(hdr,"native_int");
+    } else {
+	hdr = NULL;
+    }
+    
+    switch (read[0]) {
+	case 'h': /* header only */
+	    trace = sf_charalloc (SF_HDRBYTES);
+	    nsegy -= SF_HDRBYTES;
+
+	    for (itr=0; itr < ntr; itr++) {
+		if (NULL != mask && !mask[itr]) {
+		    fseek(file,SF_HDRBYTES,SEEK_CUR);
+		    continue;
+		} else if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file)) {
+			sf_error ("Error reading trace header %d",itr+1);
+		}
+		fseek(file,nsegy,SEEK_CUR);
+
+		sf_segy2head(trace, itrace, SF_NKEYS);
+		sf_intwrite(itrace,SF_NKEYS,hdr);
+	    }
+
+	    break;
+	case 'd': /* data only */
+	    nsegy -= SF_HDRBYTES;		    
+	    trace = sf_charalloc (nsegy);
+
+	    for (itr=0; itr < ntr; itr++) {
+		fseek(file,SF_HDRBYTES,SEEK_CUR);
+		if (NULL != mask && !mask[itr]) {
+		    fseek(file,nsegy,SEEK_CUR);
+		    continue;
+		} else if (nsegy != fread(trace, 1, nsegy, file)) {
+			sf_error ("Error reading trace data %d",itr+1);
+		}
+
+		if (su) {
+		    sf_charwrite (trace,ns*sizeof(float),out);
+		} else {
+		    sf_segy2trace(trace, ftrace, ns,format);
+		    sf_floatwrite (ftrace,ns,out);
+		}
+	    }
+
+	    break;
+	default: /* both header and data */
+	    trace = sf_charalloc (nsegy);
+
+	    for (itr=0; itr < ntr; itr++) {
+		if (NULL != mask && !mask[itr]) {
+		    fseek(file,nsegy,SEEK_CUR);
+		    continue;
+		} else if (nsegy != fread(trace, 1, nsegy, file)) {
+		    sf_error ("Error reading trace header %d",itr+1);
+		}
+
+		sf_segy2head(trace, itrace, SF_NKEYS);
+		sf_intwrite(itrace,SF_NKEYS,hdr);
+
+		if (su) {
+		    sf_charwrite (trace + SF_HDRBYTES,ns*sizeof(float),out);
+		} else {
+		    sf_segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
+		    sf_floatwrite (ftrace,ns,out);
+		}
+	    }
+	    break;
+    }
+
+    exit (0);
+}
+
+/* 	$Id: segyread.c,v 1.1 2004/06/11 10:47:04 fomels Exp $	 */
