@@ -70,9 +70,12 @@ enum {
     VP_OLDTEXT		= 't'
 };
 
-typedef enum {STANDARD=0,
-	      ROTATED=1,
-	      ABSOLUTE=3} vp_plotstyle;
+typedef enum {
+    VP_NO_STYLE_YET=-1,
+    VP_STANDARD,
+    VP_ROTATED,
+    VP_NORM,
+    VP_ABSOLUTE} vp_plotstyle;
 
 /* for debuging purposes */
 void vp_putint (int w);

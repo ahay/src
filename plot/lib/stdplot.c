@@ -75,7 +75,7 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     if (xreverse) swap(&min1,&max1);
     if (yreverse) swap(&min2,&max2);
     
-    vp_style (STANDARD);
+    vp_style (VP_STANDARD);
 
     /* get screen size */
     if (!sf_getfloat ("screenratio",&screenratio))

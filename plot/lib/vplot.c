@@ -14,7 +14,7 @@ static float ddef[4]={0.0,0.0,0.0,0.0};  /* definition of dashes (in inches) */
 static float xscl=1.0, yscl=1.0;         /* scaling from user units to inches */
 static bool pendown=false;               /* is pen down (or up) */
 static bool dashon=false;                /* true if dashed line */
-static vp_plotstyle style=STANDARD;          
+static vp_plotstyle style=VP_STANDARD;          
 static int font=-1, prec=-1, ovly=-1;    /* font, precision, and overlay */
 static int xjust=0, yjust=0;             /* x and y text justification */
 
@@ -498,7 +498,7 @@ void vp_stretch (float xmin, float ymin, float xmax, float ymax) {
     vp_uorig (xmin, ymin);
     vp_orig (0., 0.);
 
-    if (ROTATED == style) {
+    if (VP_ROTATED == style) {
 	vp_scale (VP_ROTATED_HEIGHT / (xmax - xmin), 
 		  (VP_ROTATED_HEIGHT / VP_SCREEN_RATIO) / (ymax - ymin));
     } else {
@@ -511,13 +511,13 @@ void vp_style (vp_plotstyle st) {
     style = st;
     putchar (VP_SETSTYLE);
     switch (style) {
-	case ROTATED:
+	case VP_ROTATED:
 	    putchar ('r');
 	    break;
-	case ABSOLUTE:
+	case VP_ABSOLUTE:
 	    putchar ('a');
 	    break;
-	case STANDARD:
+	case VP_STANDARD:
 	default:
 	    putchar ('s');
 	    break;
