@@ -51,17 +51,16 @@ static float         **wt;
 
 /*------------------------------------------------------------*/
 
-void ssr_init(
-    axa az_,
-    axa ax_,
-    axa ay_,
-    axa lx_,
-    axa ly_,
-    int px,
-    int py,
-    int tx,
-    int ty,
-    float ds
+void ssr_init( axa az_,
+	       axa ax_,
+	       axa ay_,
+	       axa lx_,
+	       axa ly_,
+	       int px,
+	       int py,
+	       int tx,
+	       int ty,
+	       float ds
     )
 /*< initialize >*/
 {

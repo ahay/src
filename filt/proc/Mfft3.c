@@ -26,27 +26,27 @@ int main (int argc, char **argv)
 {
     int n1, nx, n3, axis, dim, n[SF_MAX_DIM];	/* dimensions */
     int i1, ix, i3, j;       /* loop counters 	*/
-    int nk;		/* number of wavenumbers */	
-    int npad;           /* padding */
+    int nk;		     /* number of wavenumbers */	
+    int npad;                /* padding */
 
-    float dx;		/* space sampling interval */
-    float dk;	        /* wavenumber sampling interval */
-    float x0;             /* staring space */
-    float k0;             /* starting wavenumber */
-    float wt;             /* Fourier scaling */
+    float dx;		     /* space sampling interval */
+    float dk;	             /* wavenumber sampling interval */
+    float x0;                /* staring space */
+    float k0;                /* starting wavenumber */
+    float wt;                /* Fourier scaling */
 
     float complex **cp, *ctrace; /* frequency-wavenumber */
 
-    bool inv;              /* forward or inverse */
-    int sign;              /* transform sign */
+    bool inv;                /* forward or inverse */
+    int sign;                /* transform sign */
 
-    char varname[6]; /* variable name */
+    char varname[6];         /* variable name */
     kiss_fft_cfg cfg;
     
     sf_file in, out;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+    in  = sf_input ( "in");
     out = sf_output("out");
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error ("Need complex input");
@@ -70,14 +70,12 @@ int main (int argc, char **argv)
     
     if (inv) { 
 	sprintf(varname,"n%d",axis);
-	if (!sf_histint(in,varname,&nk)) 
-	    sf_error ("No %s= in input",varname);
+	if (!sf_histint  (in,varname,&nk)) sf_error("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dk)) 
-	    sf_error ("No %s= in input",varname);
+	if (!sf_histfloat(in,varname,&dk)) sf_error("No %s= in input",varname);
 
 	sprintf(varname,"m%d",axis);
-	if (!sf_histint(in,varname,&nx)) nx=nk;
+	if (!sf_histint  (in,varname,&nx)) nx=nk;
 	sprintf(varname,"c%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
 
@@ -93,11 +91,9 @@ int main (int argc, char **argv)
 	cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
     } else { 
 	sprintf(varname,"n%d",axis);
-	if (!sf_histint(in,varname,&nx)) 
-	    sf_error ("No %s= in input",varname);
+	if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dx)) 
-	    sf_error ("No %s= in input",varname);
+	if (!sf_histfloat(in,varname,&dx)) sf_error("No %s= in input",varname);
 	sprintf(varname,"o%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
 
@@ -175,7 +171,7 @@ int main (int argc, char **argv)
 	    sf_complexwrite(cp[0],n1*nk,out);
 	}
     }
-
+    
     exit (0);
 }
 

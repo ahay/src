@@ -22,21 +22,23 @@
 
 #include "fft3.h"
 
-static kiss_fft_cfg forw1, invs1, forw2, invs2, forw3, invs3;
+static kiss_fft_cfg forw1, invs1;
+static kiss_fft_cfg forw2, invs2;
+static kiss_fft_cfg forw3, invs3;
 static int n1, n2, n3;
-static float scale;
+static float fftscale;
 static float complex *trace2, *trace3;
 
 #define LOOP1(a) for(i1=0;i1<n1;i1++){ {a} }
 #define LOOP2(a) for(i2=0;i2<n2;i2++){ {a} }
 #define LOOP3(a) for(i3=0;i3<n3;i3++){ {a} }
 
-void fft3_init(int m1, int m2, int m3 /* dimensions */)
+void fft3_init(int n1_, int n2_, int n3_)
 /*< initialize >*/
 {
-    n1 = m1; 
-    n2 = m2;
-    n3 = m3;
+    n1 = n1_; 
+    n2 = n2_;
+    n3 = n3_;
 
     forw1 = kiss_fft_alloc(n1,0,NULL,NULL);
     invs1 = kiss_fft_alloc(n1,1,NULL,NULL);
@@ -55,7 +57,7 @@ void fft3_init(int m1, int m2, int m3 /* dimensions */)
     trace2 = sf_complexalloc(n2);
     trace3 = sf_complexalloc(n3);
 
-    scale = 1./(n1*n2*n3);
+    fftscale = 1./(n1*n2*n3);
 }
 
 void fft3_close(void)
@@ -117,7 +119,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
-		    pp[i3][i2][i1] *= scale;
+		    pp[i3][i2][i1] *= fftscale;
 		}
 	    }
 	}

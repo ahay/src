@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
 	    for (it=0; it < nt; it++) {
 		f = t0 + it*dt;
 		v = vel[it];
-		v = slow? h*v*v: h/(v*v);
+		v = slow ? h*(v*v) : h/(v*v);
 		f = f*f + v;
 		if (f < 0.) {
 		    trace[it]=0.;

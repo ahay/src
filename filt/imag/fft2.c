@@ -22,70 +22,129 @@
 
 #include "fft2.h"
 
-static kiss_fft_cfg xforw, xinvs, yforw, yinvs;
-static int nx, ny;
+static kiss_fft_cfg forw1, invs1; /* FFT on axis 1 */
+static kiss_fft_cfg forw2, invs2; /* FFT on axis 2 */
+static int            n1,n2;
+static float          fftscale;
 static float complex *ctrace;
+static float complex *shf1,*shf2;
 
-void fft2_init(int ny1, int nx1 /* in-line, cross-line */)
+void fft2_init(int n1_, int n2_)
 /*< initialize >*/
 {
-    nx = nx1;
-    ny = ny1;
+    n1 = n1_;
+    n2 = n2_;
 
-    xforw = kiss_fft_alloc(nx,0,NULL,NULL);
-    xinvs = kiss_fft_alloc(nx,1,NULL,NULL);
-    yforw = kiss_fft_alloc(ny,0,NULL,NULL);
-    yinvs = kiss_fft_alloc(ny,1,NULL,NULL);
+    forw1 = kiss_fft_alloc(n1,0,NULL,NULL);
+    invs1 = kiss_fft_alloc(n1,1,NULL,NULL);
+    forw2 = kiss_fft_alloc(n2,0,NULL,NULL);
+    invs2 = kiss_fft_alloc(n2,1,NULL,NULL);
 
-    ctrace = sf_complexalloc(nx);
+    ctrace = sf_complexalloc(n2);
 
-    if (NULL == xforw || NULL == xinvs || NULL == yforw || NULL == yinvs) 
+    if (NULL == forw2 || NULL == invs2 || 
+	NULL == forw1 || NULL == invs1) 
 	sf_error("%s: KISS FFT allocation error",__FILE__);
+
+    fftscale = 1./(n1*n2);
 }
 
 void fft2_close(void)
 /*< Free allocated storage >*/
 {
     free (ctrace);
-    free (xforw);
-    free (xinvs);
-    free (yforw);
-    free (yinvs);
+    free (forw2);
+    free (invs2);
+    free (forw1);
+    free (invs1);
 }
 
 void fft2(bool inv           /* inverse/forward flag */, 
-	  complex float **pp /* [nx][ny] */) 
+	  complex float **pp /* [1...n2][1...n1] */) 
 /*< Apply 2-D FFT >*/
 {
-    int ix, iy;
+    int i1,i2;
     
     if (inv) {
-	for (ix=0; ix < nx; ix++) {
-	    kiss_fft(yinvs,
-		     (const kiss_fft_cpx *) pp[ix], 
-		     (      kiss_fft_cpx *) pp[ix]);
+	for (i2=0; i2 < n2; i2++) {
+	    kiss_fft(invs1,
+		     (const kiss_fft_cpx *) pp[i2], 
+		     (      kiss_fft_cpx *) pp[i2]);
 	}
-	for (iy=0; iy < ny; iy++) {
-	    kiss_fft_stride(xinvs,
-			    (const kiss_fft_cpx *) (pp[0]+iy), 
-			    (      kiss_fft_cpx *) ctrace,ny);
-	    for (ix=0; ix<nx; ix++) {
-		pp[ix][iy] = ctrace[ix]/(nx*ny);
+	for (i1=0; i1 < n1; i1++) {
+	    kiss_fft_stride(invs2,
+			    (const kiss_fft_cpx *) (pp[0]+i1), 
+			    (      kiss_fft_cpx *) ctrace,n1);
+	    for (i2=0; i2<n2; i2++) {
+		pp[i2][i1] = ctrace[i2];
+	    }
+	}
+
+	for (i1=0; i1 < n1; i1++) {
+	    for (i2=0; i2<n2; i2++) {
+		pp[i2][i1] *= fftscale;
 	    }
 	}
     } else {
-	for (iy=0; iy < ny; iy++) {
-	    kiss_fft_stride(xforw,
-			    (const kiss_fft_cpx *) (pp[0]+iy), 
-			    (      kiss_fft_cpx *) ctrace,ny);
-	    for (ix=0; ix<nx; ix++) {
-		pp[ix][iy] = ctrace[ix];
+	for (i1=0; i1 < n1; i1++) {
+	    kiss_fft_stride(forw2,
+			    (const kiss_fft_cpx *) (pp[0]+i1), 
+			    (      kiss_fft_cpx *) ctrace,n1);
+	    for (i2=0; i2<n2; i2++) {
+		pp[i2][i1] = ctrace[i2];
 	    }
 	}
-	for (ix=0; ix < nx; ix++) {
-	    kiss_fft(yforw,
-		     (const kiss_fft_cpx *) pp[ix], 
-		     (      kiss_fft_cpx *) pp[ix]);
+	for (i2=0; i2 < n2; i2++) {
+	    kiss_fft(forw1,
+		     (const kiss_fft_cpx *) pp[i2], 
+		     (      kiss_fft_cpx *) pp[i2]);
+	}
+    }
+}
+
+void sft2_init(float o1, float d1, float o2, float d2)
+/*< origin shift >*/
+{
+    int i1,i2;
+
+    shf1 = sf_complexalloc(n1);
+    for( i1=0; i1<n1; i1++) {
+	shf1[i1] = cexpf(+I*2.0*SF_PI*i1/n1*o1/d1);
+    }
+
+    shf2 = sf_complexalloc(n2);
+    for( i2=0; i2<n2; i2++) {
+	shf2[i2] = cexpf(+I*2.0*SF_PI*i2/n2*o2/d2);
+    }
+}
+
+void sft2_close()
+/*< close shift >*/
+{
+    free(shf1);
+    free(shf2);
+}
+
+void sft2(complex float **pp)
+/*< apply shift >*/
+{
+    int i1,i2;
+
+    for(i2=0; i2<n2; i2++) {
+	for (i1=0; i1<n1; i1++) {
+	    pp[i2][i1] *= shf1[i1]*shf2[i2];
+	}
+    }    
+}
+
+void cnt2(complex float **pp)
+/*< apply centering >*/
+{
+    int i1,i2;
+
+    for(i2=1; i2<n2; i2+=2) {
+	for(i1=1; i1<n1; i1+=2) {
+	    pp[i2][i1] = - pp[i2][i1];
 	}
     }
 }

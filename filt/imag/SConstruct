@@ -3,11 +3,11 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-afdm2d camig cell2 constfdmig2 distance dmo dsr dsr2 eikonal fincon finstack
+afdm2d camig cell2 constfdmig2 distance dmo dsr dsr2 eikonal fft2 fincon finstack
 fkamo fkdmo gazdag halfint hwt2d hwtex interp2 interp3 interpt kirchnew kirmod
 mig45 mutter preconstkirch rays2 reg2tri remap1 ricker1 rwemete2d s2ofz shoot2
 srsyn srmig srmod sstep2 trace2 tri2reg trirand unif2 unif3 voft vofz zomig
-cube2list phmig
+cube2list phmig weimc wefic
 '''
 
 # exfdm weimc

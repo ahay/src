@@ -1,5 +1,4 @@
-/* Extract real (sfreal) or imaginary (sfimag) part of a complex dataset.
- */
+/* Extract real (sfreal) or imaginary (sfimag) part of a complex dataset. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

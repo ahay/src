@@ -39,19 +39,19 @@ int main (int argc, char *argv[])
     /* if y, perform inverse transform */
     
     if (cos) {  
-	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+	if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
     } else if (inv) {
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
 	sf_settype (out,SF_FLOAT);
     } else {
-	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+	if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
     	sf_settype (out,SF_COMPLEX);
     }
 
     n2 = sf_leftsize(in,1);
 
     if (!inv) {
-	if (!sf_histint(in,"n1",&n1)) n1=1;
+	if (!sf_histint  (in,"n1",&n1)) n1=1;
 	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
@@ -61,13 +61,13 @@ int main (int argc, char *argv[])
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
 
-	sf_putint(out,"n1",nw);
+	sf_putint  (out,"n1",nw);
 	sf_putfloat(out,"o1",0.);
 	sf_putfloat(out,"d1",dw);
 
 	sf_putfloat(out,"t0",o1);
     } else {
-	if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
+	if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
 	if (!sf_histfloat(in,"t0",&o1)) o1=0.; 
 
@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
 	d1 = 1./(nt*dw);
 	n1 = cos? 1+nt/2:nt;
 
-	sf_putint(out,"n1",n1);
+	sf_putint  (out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
 	sf_putfloat(out,"o1",o1);
     }	
@@ -84,8 +84,7 @@ int main (int argc, char *argv[])
     pp = sf_complexalloc(nw);
     if (cos) cc = sf_floatalloc(nw);
 
-    
-    cfg = kiss_fftr_alloc(nt,inv? 1:0,NULL,NULL);
+    cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
 
     for (i2=0; i2 < n2; i2++) {
 	if (!inv) {

@@ -85,7 +85,6 @@ void phs(float            w,
 
     LOOP( wk[ih][im] = 
 	  wx[ih][im]; );
-/*    sf_warning("%f %f",crealf(wk[0][20]),cimagf(wk[0][20]));*/
     fft2(false,wk);
     
 /*------------------------------------------------------------*/
@@ -94,12 +93,10 @@ void phs(float            w,
 	cr  = csqrtf(w2*s2 + kr[ih][im]);
 
 	cc = cs + cr;
-	sf_warning("%d %f %f",im,crealf(cc),cimagf(cc));
 	wk[ih][im] *= cexpf(-cc*az.d);
 	);
 /*------------------------------------------------------------*/
     fft2(true,wk);
-    sf_warning("%f %f",crealf(wk[0][20]),cimagf(wk[0][20]));
     LOOP( wx[ih][im] = 
 	  wk[ih][im]; );
 }

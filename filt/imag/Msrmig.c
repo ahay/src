@@ -26,83 +26,107 @@ int main (int argc, char *argv[])
     float eps;            /* dip filter constant */  
     int   nr;             /* number of reference velocities */
     float dt;             /* time error */
-    int   px,py;          /* padding in the k domain */
-    int   tx,ty;          /* boundary taper size */
+    int   pmx,pmy;        /* padding in the k domain */
+    int   tmx,tmy;        /* boundary taper size */
+    bool cw;              /* converted waves flag */
 
-    axa az,ax,ay,aw,alx,aly;
-    axa ae;
+    axa amz,amx,amy;
+    axa     alx,aly;
+    axa aw,ae;
     axa aj;
 
-    sf_file Fs;     /*           slowness file S (nlx,nly,nz) */
-    sf_file Fi;     /*              image file R ( nx, ny,nz) */
-    sf_file Fus;    /*   source wavefield file Us( nx, ny,nw) */
-    sf_file Fur;    /* receiver wavefield file Us( nx, ny,nw) */
+    sf_file Fs_s,Fs_r;/*  slowness file S (nlx,nly,nz) */
+    sf_file Fw_s,Fw_r;/* wavefield file W ( nx, ny,nw) */
+    sf_file Fi;       /*     image file R ( nx, ny,nz) */
 
-    fslice slow,imag,sdat,rdat;
+    fslice wfl_s,wfl_r,imag;
+    fslice slo_s,slo_r;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
+
+    /* converted waves flag */
+    if (NULL != sf_getstring("sls")) {
+	cw=true;
+    } else {
+	cw=false;
+    }
 
     if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
     if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of refs */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on x */
-    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on y */
-    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper on x   */
-    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper on y   */
-    
-    /* slowness parameters */
-    Fs = sf_input ("slo");
-    iaxa(Fs,&alx,1); alx.l="lx";
-    iaxa(Fs,&aly,2); aly.l="ly";
-    iaxa(Fs,&az ,3);  az.l= "z";
-    
-    Fus = sf_input ( "in");
-    Fur = sf_input ("rwf");
-    Fi  = sf_output("out"); sf_settype(Fi,SF_FLOAT);
+    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on x */
+    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on y */
+    if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper on x   */
+    if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper on y   */
 
-    if (SF_COMPLEX != sf_gettype(Fus)) sf_error("Need complex   source data");
-    if (SF_COMPLEX != sf_gettype(Fur)) sf_error("Need complex receiver data");
+    /*------------------------------------------------------------*/
+    /* SLOWNESS */
+    ;      Fs_s = sf_input("slo");
+    if(cw) Fs_r = sf_input("sls");
+    iaxa(Fs_s,&alx,1); alx.l="lx";
+    iaxa(Fs_s,&aly,2); aly.l="ly";
+    iaxa(Fs_s,&amz,3); amz.l="mz";
+    /* test here if slo and sls have similar sizes */
+
+    ;      slo_s = fslice_init(alx.n*aly.n, amz.n, sizeof(float));
+    if(cw) slo_r = fslice_init(alx.n*aly.n, amz.n, sizeof(float));
+    ;      fslice_load(Fs_s,slo_s,SF_FLOAT);
+    if(cw) fslice_load(Fs_r,slo_r,SF_FLOAT);
+
+    /*------------------------------------------------------------*/    
+    /* WAVEFIELD/IMAGE */
+
+    Fw_s = sf_input ( "in");
+    Fw_r = sf_input ("rwf");
+    Fi   = sf_output("out"); sf_settype(Fi,SF_FLOAT);
+
+    if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("Need complex   source data");
+    if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("Need complex receiver data");
 
     aj.n=1; aj.o=0; aj.d=1; aj.l=" ";
     
-    iaxa(Fus,&ax,1); ax.l="x"; oaxa(Fi,&ax,1);
-    iaxa(Fus,&ay,2); ay.l="y"; oaxa(Fi,&ay,2);
-    iaxa(Fus,&aw,3); aw.l="w"; oaxa(Fi,&az,3);
-    iaxa(Fus,&ae,4); ae.l="e"; oaxa(Fi,&aj,4); /* no of experiments */
-    ;                          oaxa(Fi,&aj,5);
+    iaxa(Fw_s,&amx,1); amx.l="mx"; oaxa(Fi,&amx,1);
+    iaxa(Fw_s,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
+    iaxa(Fw_s,&aw,3);  aw.l="w";   oaxa(Fi,&amz,3);
+    iaxa(Fw_s,&ae,4);  ae.l="e";   oaxa(Fi,&aj, 4); /* experiments */
+    ;                              oaxa(Fi,&aj, 5);
 
     /* slice management (temp files) */
-    slow = fslice_init(alx.n*aly.n, az.n,     sizeof(float));
-    sdat = fslice_init( ax.n* ay.n, aw.n*ae.n,sizeof(float complex));
-    rdat = fslice_init( ax.n* ay.n, aw.n*ae.n,sizeof(float complex));
-    imag = fslice_init( ax.n* ay.n, az.n,     sizeof(float));
-    fslice_load(Fs ,slow,SF_FLOAT);
-    fslice_load(Fus,sdat,SF_COMPLEX);
-    fslice_load(Fur,rdat,SF_COMPLEX);
-    /*------------------------------------------------------------*/
+    wfl_s = fslice_init( amx.n * amy.n, aw.n*ae.n,sizeof(float complex));
+    wfl_r = fslice_init( amx.n * amy.n, aw.n*ae.n,sizeof(float complex));
+    imag  = fslice_init( amx.n * amy.n, amz.n,    sizeof(float));
 
+    fslice_load(Fw_s,wfl_s,SF_COMPLEX);
+    fslice_load(Fw_r,wfl_r,SF_COMPLEX);
+    /*------------------------------------------------------------*/
+    /* MIGRATION */
     srmig_init (verb,eps,dt,
-		ae,
-		az,aw,
-		ax,ay,
-		alx,aly,
-		tx,ty,
-		px,py,
-		nr,slow);
-    srmig_aloc();
-    srmig(sdat,rdat,imag);
-    srmig_free();
+		ae,aw,amx,amy,amz,alx,aly,
+		tmx,tmy,pmx,pmy);
+
+    if(cw) { 
+	srmig_cw_init (dt,nr,slo_s,slo_r);
+	srmig_cw      (wfl_s,wfl_r,imag);
+	srmig_cw_close();
+    } else { 
+	srmig_pw_init (dt,nr,slo_s);
+	srmig_pw      (wfl_s,wfl_r,imag);
+	srmig_pw_close();
+    }
+
     srmig_close();
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
     fslice_dump(Fi,imag,SF_FLOAT);
-    fslice_close(slow);
-    fslice_close(sdat);
-    fslice_close(rdat);
-    fslice_close(imag);
+
+    ;      fslice_close(slo_s);
+    if(cw) fslice_close(slo_r);
+    ;      fslice_close(wfl_s);
+    ;      fslice_close(wfl_r);
+    ;      fslice_close(imag);
 
     exit (0);
 }
