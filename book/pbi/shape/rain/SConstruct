@@ -72,6 +72,7 @@ Flow('raindata','obsdata','window f1=2')
 cases = [10,100,1000,10000,-10,-20,-40,0]
 for niter in cases:
     lapinter = 'lapinter%d' % niter
+    pout = 'pout%d' % niter
     if (niter == 0):
         niter = 100
         name = "Gauss Estimated"
@@ -90,11 +91,11 @@ for niter in cases:
             prec = 0
             name = "Laplace"
             extra = 'shape=n'
-        Flow(lapinter,['raindata','obsdata'],
-                  '''shapebin head=${SOURCES[1]}
-                  niter=%d xkey=0 ykey=1 filt1=25
-                  nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
-                  %s''' % (niter,extra))
+        Flow([lapinter,pout],['raindata','obsdata'],
+             '''shapebin head=${SOURCES[1]} pout=${TARGETS[1]}
+             niter=%d xkey=0 ykey=1 filt1=25
+             nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+             %s''' % (niter,extra))
     Plot('g'+lapinter,lapinter,
               '''grey wantscalebar=y yreverse=n transp=n allpos=y
               color=j clip=500 title="%s %d" ''' % (name,niter))
@@ -103,6 +104,30 @@ for niter in cases:
               wantscalebar=y yreverse=n transp=n barlabel=' '
               wanttitle=n plotcol=7 wantframe=y wantaxis=n''')
     Combine(lapinter,['g'+lapinter,'c'+lapinter],'Overlay')
+
+reals = []
+for seed in range(2000,2005):
+    rand = 'rand%d' % seed
+    real = 'real%d' % seed
+    reals.append(real)
+    Flow(rand,'pout-40',
+         'noise mean=152.776 var=13911.731 rep=y seed=%d' % seed)
+    Flow(real,['raindata','obsdata',rand],
+         '''
+         shapebin head=${SOURCES[1]} shape=y pin=${SOURCES[2]}
+         niter=40 xkey=0 ykey=1 filt1=25
+         nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+         ''')
+    Plot('g'+real,real,
+         '''grey wantscalebar=y yreverse=n transp=n allpos=y
+         minval=0 maxval=525
+         color=j clip=500 title="Realization %d" ''' % (seed-1999))
+    Plot('c'+real,real,
+         '''contour nc=6 c0=-0.001 dc=100
+         minval=0 maxval=525
+         wantscalebar=y yreverse=n transp=n barlabel=' '
+         wanttitle=n plotcol=7 wantframe=y wantaxis=n''')
+    Combine(real,['g'+real,'c'+real],'Overlay',result=1)
 
 Combine('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),
              'TwoByTwo',result=1)
