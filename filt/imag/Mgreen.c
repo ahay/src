@@ -22,6 +22,7 @@ int main (int argc, char* argv[])
     out = sf_output("out");
     wave = sf_input("wave");
 
+    if (SF_COMPLEX != sf_gettype(wave)) sf_error("Need complex wave");
     if (!sf_histint(wave,"n1",&nw)) sf_error("No n1= in wave");
     if (!sf_histfloat(wave,"d1",&dw)) sf_error("No d1= in wave");
     if (!sf_histfloat(wave,"o1",&w0)) sf_error("No o1= in wave");
@@ -53,6 +54,7 @@ int main (int argc, char* argv[])
     sf_putint(out,"n1",nw);
     sf_putfloat(out,"d1",dw);
     sf_putfloat(out,"o1",w0);
+    sf_settype(out,SF_COMPLEX);
 
     tx = sf_floatalloc(nt);
     px = sf_floatalloc(nt);
@@ -83,11 +85,11 @@ int main (int argc, char* argv[])
 		    }
 		} /* nt */
 	    } /* nw */
-	    sf_write (trace2,sizeof(float),nw,out);
+	    sf_write (trace2,sizeof(float complex),nw,out);
 	} /* nx */
     } /* nz */
     
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.2 2003/10/23 03:34:47 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.3 2003/10/23 03:38:28 fomels Exp $	 */
