@@ -128,11 +128,11 @@ int main (int argc, char* argv[])
     if (NULL == (func = sf_getstring("func"))) func="const";
     /* type of vpvs function */
 
-    /* ts - reflector positions */    
-    srand(2003);
+    init_genrand(2003);
 
+    /* ts - reflector positions */    
     for (it=0; it < nr; it++) {
-	ts[it] = tscale*(0.05+0.95*random_one());
+	ts[it] = tscale*(0.05+0.95*genrand_real1());
     }
     qsort(ts,nr,sizeof(float),compare_float);
 

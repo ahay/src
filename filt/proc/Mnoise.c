@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("seed",&seed)) seed = time(NULL);
     /* random seed */
-    srand(seed);
+    init_genrand((unsigned long) seed);
 
     if (!sf_getbool("type",&normal)) normal=true;
     /* noise distribution, y: normal, n: uniform */
@@ -75,7 +75,7 @@ int main (int argc, char* argv[])
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] = a*random_one() + b;
+		    dat[i] = a*genrand_real1() + b;
 		}
 	    }
 	} else {
@@ -87,7 +87,7 @@ int main (int argc, char* argv[])
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] += a*random_one() + b;
+		    dat[i] += a*genrand_real1() + b;
 		}
 	    }
 	}

@@ -41,6 +41,8 @@ except: # local version
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
+src.remove('mt19937ar.c')
+
 for source in src:
     inc = env.Include(source,prefix='')
     obj = env.StaticObject(source)
