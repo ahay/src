@@ -13,7 +13,7 @@ Book()
 datdir  = 'ftp://begpc132.beg.utexas.edu/data/cassis'
 Fetch('datacassisAll.su.poscdp',datdir)
 
-Flow(['all','head'],all,
+Flow(['all','head'],'datacassisAll.su.poscdp',
      'segyread tape=$SOURCE tfile=${TARGETS[1]} su=1 endian=0',
      stdin=0)
 Flow(['cassis','junk1','junk2'],['all','head'],
@@ -22,7 +22,7 @@ Flow(['cassis','junk1','junk2'],['all','head'],
      window < ${TARGETS[0]} n2=196 > ${TARGETS[2]};
      cat axis=2 ${TARGETS[1]} ${TARGETS[2]} > ${TARGETS[0]};
      echo o3=0 d3=0.0125 label3=offset >> ${TARGETS[0]};
-     echo o2=0.5 d2=0.025 label2=shot >> ${TARGETS[0]}',
+     echo o2=0.5 d2=0.025 label2=shot >> ${TARGETS[0]}''',
      stdout=-1)
 Flow('cmp','cassis','transp plane=23 memsize=500 | shot2cmp')
 
