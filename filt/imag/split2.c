@@ -48,6 +48,8 @@ static float complex **wk; /* k wavefield */
 
 static float         **wt; /* interpolation weight */
 
+static float complex muir(int niter,float complex s,float k2,float dz);
+
 void split2_init(int nz1, float dz1  /* depth */,
 		 int ny1, float dy1  /* in-line midpoint */,
 		 int nx1, float dx1  /* cross-line midpoint */,
@@ -191,7 +193,8 @@ void split2(bool verb                   /* verbosity flag */,
 		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz);
 			pp[ix][iy] = wx[ix][iy]*cshift; 
 			wt[ix][iy] = 0.; 
-			wx[ix][iy] = 0.; );
+			wx[ix][iy] = 0.; 
+		    );
 		
 		fft2(false,pp);
 		slice_get(slow,iz,ss[0]);
@@ -207,7 +210,7 @@ void split2(bool verb                   /* verbosity flag */,
 
 		    /* accumulate wavefield */
 		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
-			    d = 1./(d*d+ds2);
+			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
 			    wt[ix][iy] += d;
 			);
@@ -251,8 +254,8 @@ void split2(bool verb                   /* verbosity flag */,
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
 		    cref = csqrtf(w2*sm[iz][ir]);
-		    LOOPxy2( cshift = 
-			     cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
+		    LOOPxy2( cshift = muir(10,cref,kk[ix][iy],dz);
+/*			     cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz); */
 			     wk[ix][iy] = pp[ix][iy]*conjf(cshift); );
 		    fft2(true,wk);
 
@@ -260,13 +263,14 @@ void split2(bool verb                   /* verbosity flag */,
 		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
 			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
-			    wt[ix][iy] += d;
-			);
+			    wt[ix][iy] += d; );
 		} /* ir loop */
 		
 		/* w-x @ bottom */
-		LOOPxy( cshift = conjf(cexpf(-w*ss[ix][iy]*dz))/wt[ix][iy];
-			wx[ix][iy] *= cshift; );
+		LOOPxy( 
+		    cshift = conjf(cexpf(-w*ss[ix][iy]*dz))/wt[ix][iy];
+		    wx[ix][iy] *= cshift; 
+		    );
 		taper2(true,true,nx,ny,wx);
 	    } /* iz */
 
@@ -277,4 +281,17 @@ void split2(bool verb                   /* verbosity flag */,
 	    
 	} /* else */
     } /* iw */
+}
+
+static float complex muir(int niter,float complex s,float k2,float dz)
+{
+    float complex q;
+    int iter;
+
+    q=0.;
+    for (iter=0; iter < niter; iter++) {
+	q = k2/(q - 2.*s);
+    }
+
+    return cexpf(q*dz);
 }
