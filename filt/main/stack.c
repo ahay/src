@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     size_t i, n;
     sf_file in, out;
     char key1[7], key2[7], *val;
-    bool norm;
+    bool norm, rms;
     float *trace, *sum, f;
     sf_datatype type;
 
@@ -57,8 +57,9 @@ int main(int argc, char* argv[])
 	    sf_putstring(out,key2,val);
     }
 
-    if (!sf_getbool("norm",&norm)) norm = true;
-		
+    if (!sf_getbool("rms",&rms)) rms = false;
+    if (rms || !sf_getbool("norm",&norm)) norm = true;
+
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
     sum   = sf_floatalloc (n);
@@ -70,13 +71,16 @@ int main(int argc, char* argv[])
 	for (i2=0; i2 < n2; i2++) {
 	    sf_read (trace, sizeof(float), n, in);
 	    for (i=0; i < n; i++) {
-		sum[i] += trace[i];
+	      sum[i] += rms? trace[i]*trace[i]: trace[i];
 		if (norm && (0.0 != trace[i])) fold[i]++; 
 	    }
 	}
 	if (norm) {
 	    for (i=0; i < n; i++) {
-		if (fold[i] > 0) sum[i] /= fold[i];
+		if (fold[i] > 0) {
+		  sum[i] /= fold[i];
+		  if (rms) sum[i] = sqrtf(sum[i]);
+		}
 	    }
 	}
 	sf_write(sum, sizeof(float), n, out); 
