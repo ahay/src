@@ -243,8 +243,11 @@ class rsfprog:
                 chapters.sort()
                 for chapter in chapters:
                     for project in self.uses[book][chapter]:
-                        bookdoc = bookdoc + \
-                                 '%s/%s<br>\n' % (chapter,project)
+                        bookdoc = bookdoc + '''
+                        <a href="book/%s/%s/paper_html/index.html">
+                        %s/%s
+                        </a><br>
+                        ''' % (book,chapter,chapter,project)
                 usedoc = usedoc + \
                          bigsection(string.upper(book),
                                     '#000000','#ffd8c8',bookdoc)

@@ -190,6 +190,11 @@ _colors = {
 
 _pos = 0
 
+def _link(name):
+     link = '<a href="../../../%s.html">%s</a>' % \
+            (rsfdoc.progs[name].name, name)
+     return link
+ 
 def colorize(target=None,source=None,env=None):
      "Colorize python source"
      py = str(source[0])
@@ -295,10 +300,10 @@ def colorize(target=None,source=None,env=None):
      os.chdir(os.path.dirname(py))
      (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
      os.chdir(cwd)
-     
+    
      if not status:
           out.write('</div><p><div class="progs">')
-          out.write(rsfdoc.multicolumn(string.split(progs),rsfdoc.link))
+          out.write(rsfdoc.multicolumn(string.split(progs),_link))
      
      out.write('''
      </div>
@@ -345,8 +350,13 @@ if latex2html:
     if l2hdir:
         init = '-init_file ' + os.path.join(l2hdir,'.latex2html-init')
         css0 = os.path.join(l2hdir,'style.css')
+        icons0 = os.path.join(l2hdir,'icons')
     else:
         init = ''
+
+# latex2html -html_version 4.0,math -no_math -no_navigation html.tex
+# latex2html -html_version 4.0,math -no_math_parsing -no_navigation html.tex
+        
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir %s' %
                    (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
@@ -410,6 +420,7 @@ class TeXPaper(Environment):
                               'Color':Color},
                     TARFLAGS = '-cvz',
                     TARSUFFIX = '.tgz')
+        self.docdir = string.replace(os.getcwd(),'book','doc/book',1)
         if acroread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
@@ -432,9 +443,13 @@ class TeXPaper(Environment):
              tgz = dir+'.tgz'
              self.Tar(tgz,dir)
              self.scons.append(tgz)
+        if self.scons:
+             self.Install(self.docdir,self.scons)
+        self.Alias('install',self.docdir)
         # reproducible figures
         for fig in glob.glob('[a-z]*/%s/.*%s' % (resdir,vpsuffix)):
              eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
+             figdir = os.path.join(self.docdir,os.path.dirname(eps))
              self.Build(eps,fig,opts=pstexpen)
              if epstopdf:
                   pdf = re.sub(pssuffix+'$','.pdf',eps)
@@ -443,6 +458,8 @@ class TeXPaper(Environment):
                   png = re.sub(pssuffix+'$','.png',eps)
                   self.PNGBuild(png,eps)
                   self.imgs.append(png)
+                  self.Install(figdir,[png,pdf])
+                  self.Alias('install',figdir)
         # non-reproducible figures
         for pdf in glob.glob(os.path.join(resdir,'*.pdf')):
             if pdf2ps:
@@ -452,6 +469,9 @@ class TeXPaper(Environment):
                     png = re.sub(pssuffix+'$','.png',eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
+                    figdir = os.path.join(self.docdir,os.path.dirname(png))
+                    self.Install(figdir,[png,pdf])
+                    self.Alias('install',figdir)
         if os.path.isfile(paper+'.tex'):
             self.Paper(paper)
             self.Alias('pdf',paper+'.pdf')
@@ -463,22 +483,28 @@ class TeXPaper(Environment):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',use=use)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
+        self.Install(self.docdir,paper+'.pdf')
         if acroread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
         if latex2html:
             dir = paper+'_html'
-            if not os.path.exists(dir):
-                os.mkdir(dir)
             css  = os.path.join(dir,paper+'.css')
             html = os.path.join(dir,'index.html')
-            self.Command(css,css0,'cp $SOURCE $TARGET') 
+            icons = os.path.join(dir,'icons')
+            self.InstallAs(css,css0)
+            self.Install(icons,glob.glob('%s/*.png' % icons0))
             self.HTML(html,paper+'.ltx')
             self.Depends(html,self.imgs)
             self.Depends(html,self.scons)
             self.Depends(html,pdf)
-            self.Depends(html,css)            
+            self.Depends(html,css)
+            self.Depends(html,icons)
             self.Alias(paper+'.html',html)
+            docdir = os.path.join(self.docdir,dir)
+            self.Command(os.path.join(docdir,'index.html'),html,
+                         'cp -r $SOURCE.dir/* $TARGET.dir')
+            self.Alias('install',docdir)
 
 default = TeXPaper()
 def Paper(paper,**kw):
