@@ -1,9 +1,32 @@
+/* Simple data extrapolation. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "extend.h"
 
 static const int nw = 3;
 static const float a[] = {7./3., -5./3., 1./3.};
 
-void extend (int ne, int nd, float *dat, float *ext)
+void extend (int ne     /* padding */, 
+	     int nd     /* data length */, 
+	     float *dat /* data [nd] */, 
+	     float *ext /* extension [nd+2*ne] */)
+/*< 1-D extension >*/
 {
     int i, j;
     float s;
@@ -25,8 +48,13 @@ void extend (int ne, int nd, float *dat, float *ext)
     }
 }
 
-void extend2 (int ne, int n1, int n2, float** dat, float** ext, 
-	      float* tmp1, float* tmp2)
+void extend2 (int ne         /* padding */, 
+	      int n1, int n2 /* data size */, 
+	      float** dat    /* data [n2][n1] */, 
+	      float** ext    /* extension [n2+2*ne][n1+2*ne] */, 
+	      float* tmp1    /* temporary storage [n2] */, 
+	      float* tmp2    /* temporary storage [n2+2*ne] */)
+/*< 2-D extension >*/
 {
     int i1, i2;
     for (i2=0; i2 < n2; i2++) {
@@ -43,4 +71,4 @@ void extend2 (int ne, int n1, int n2, float** dat, float** ext,
     }
 }
 
-/* 	$Id: extend.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */

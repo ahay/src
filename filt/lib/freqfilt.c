@@ -32,7 +32,7 @@
 #include "kiss_fftr.h"
 
 static int nfft, nw;
-static float complex *cdata, *shape;
+static float complex *cdata, *shape=NULL;
 static float *tmp;
 static kiss_fftr_cfg forw, invs;
 
@@ -56,6 +56,8 @@ void sf_freqfilt_set(float *filt /* frequency filter [nw] */)
 {
     int iw;
     
+    if (NULL==shape) shape = sf_complexalloc(nw);
+
     for (iw=0; iw < nw; iw++) {
 	shape[iw] = filt[iw];
     }

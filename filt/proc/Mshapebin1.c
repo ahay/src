@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char* argv[])
 {
     bool pef, gauss;
-    int id, nd, nt, it, nx, interp, niter;
+    int id, nd, nt, it, nx, interp, niter, pad;
     float *pp, *mm, *dd, *offset, x0, dx, xmin, xmax, f, filt, eps;
     sf_file in, out, head;
 
@@ -114,19 +114,23 @@ int main (int argc, char* argv[])
     /* number of conjugate-gradient iterations */
     if (!sf_getfloat("eps",&eps)) eps=1./nd;
     /* regularization parameter */
+
+
     if (!sf_getbool("pef",&pef)) pef=false;
     /* if y, use monofrequency regularization */
     if (!sf_getbool("gauss",&gauss)) gauss=false;
     /* if y, use Gaussian shaping */
+    if (!sf_getint("pad",&pad)) pad=0;
+    /* padding for Gaussian shaping */
 
     if (gauss) {
-	gauss_init (nx, filt);
+	gauss_init (nx+pad, filt);
     } else {
 	triangle1_init ((int) filt, nx);
     }
-    sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-9, true, false);
+    sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-10, true, false);
 
-    if (pef) monofshape_init(nx);
+    if (pef) monofshape_init(nx+pad);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_floatread (dd,nd,in);

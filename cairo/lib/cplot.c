@@ -16,6 +16,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <setjmp.h>
 
 #include <cairo.h>
 
@@ -51,6 +52,8 @@ static float ufx=0.0, ufy=0.0;   /* origin in user units */
 static float xscl=1.0, yscl=1.0; /* scaling from user units to inches */
 static float xold=0.0, yold=0.0; /* old pen position (in inches) */
 
+static jmp_buf env; /* hacking gtk event loop */
+
 static struct {
     int xmin, xmax, ymin, ymax;
 } clip;
@@ -61,14 +64,15 @@ static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
     gint height = widget->allocation.height;
     gint box_size = (width+height)/6;
 
-    cr0 = cr;
-
     cairo_save (cr);
     cairo_default_matrix (cr);
 
     cairo_translate (cr, width/2, height/2);
+    sf_warning("translating to %d %d",width/2, height/2);
 
     cairo_rectangle (cr, -box_size, -box_size, box_size, box_size);
+    sf_warning("rectangle %d",box_size);
+
     cairo_set_rgb_color (cr, 1, 0, 0);
     cairo_fill (cr);
     
@@ -102,14 +106,19 @@ void cr_init(int* argc, char** argv[])
     gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 0);
     
     gtk_container_add (GTK_CONTAINER (win), vbox);
+ 
+    cr0 = gtk_cairo_get_cairo(GTK_CAIRO(gtkcairo));
+    cairo_set_rgb_color (cr0, 0, 1, 0);
 }
 
 void cr_main(void)
 /*< go into main loop >*/
 {
-    gtk_widget_show_all (vbox);
-    gtk_widget_show (win);
-    gtk_main ();
+    if (0 == setjmp (env)) {
+	gtk_widget_show_all (vbox);
+	gtk_widget_show (win);
+	gtk_main ();
+    }
 }
 
 void cr_uorig (float x,float  y)

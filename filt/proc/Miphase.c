@@ -1,4 +1,9 @@
-/* Smooth estimate of instanteneous frequency. */
+/* Smooth estimate of instanteneous frequency. 
+
+Takes: rect1=1 rect2=1 ... 
+
+rectN defines the size of the smoothing stencil in N-th dimension.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,8 +31,9 @@
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a, b, c, mean;
+    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
     char key[6];
+    bool hertz;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -46,6 +52,8 @@ int main (int argc, char* argv[])
     }
     n2 = n12/n1;
 
+    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+
     trace = sf_floatalloc(n1);
     hilb = sf_floatalloc(n1);
     dtrace = sf_floatalloc(n1);
@@ -62,6 +70,9 @@ int main (int argc, char* argv[])
     /* Hilbert transformer order */
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */
+
+    if (!sf_getbool("hertz",&hertz)) hertz=false;
+    /* if y, convert output to Hertz */
 
     hilbert_init(n1, nh, c);
 
@@ -97,6 +108,15 @@ int main (int argc, char* argv[])
 
     divn_init(dim, n12, n, rect, niter);
     divn (num, den, phase);
+
+    if (hertz) {
+	/* convert to Hertz */    
+	d1 = 1./(2.*SF_PI*d1);
+	for (i=0; i < n12; i++) {
+	    phase[i] *= d1;
+	}
+    }
+
     sf_floatwrite(phase,n12,out);
 
     exit(0);
