@@ -1,5 +1,4 @@
 #include <stdlib.h>
-#include <alloca.h>
 #include <stdio.h>
 
 #include <rsf.h>
@@ -49,4 +48,4 @@ void print (int dim, const int *nd, const int *center, const int *na,
     free (filt);
 }
 
-/* 	$Id: printfilter.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: printfilter.c,v 1.4 2004/03/30 08:00:27 fomels Exp $	 */

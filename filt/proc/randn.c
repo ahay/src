@@ -1,6 +1,8 @@
 #include <stdlib.h>
 #include <math.h>
 
+#include <rsf.h>
+
 #include "randn.h"
 
 static const float s = 0.449871, tt = -0.386595;
@@ -51,4 +53,4 @@ void random0 (int nr, float *r)
     }
 }
 
-/* 	$Id: randn.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: randn.c,v 1.4 2004/03/30 08:00:27 fomels Exp $	 */

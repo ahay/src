@@ -11,7 +11,7 @@ Does not estimate tpow automatically.
 int main(int argc, char *argv[])
 {
     int nt, n2, i2, it;
-    float tpow, *trace, *tgain, dt, t0;
+    float tpow, *trace, *tgain=NULL, dt, t0;
     sf_file in, out;
 
     sf_init(argc,argv);

@@ -267,3 +267,4 @@ echo "import rsfdoc" >> $TARGET
 echo "" >> $TARGET
 cat $SOURCES >> $TARGET'''
 
+#	$Id: configure.py,v 1.11 2004/03/30 08:00:26 fomels Exp $	

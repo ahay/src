@@ -1,6 +1,5 @@
 #include <string.h>
 #include <stdlib.h>
-#include <alloca.h>
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
@@ -160,13 +159,13 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
     size_t i;
     long num;
     char *val, *fval, *cnum, *fvali;
-    double fi;
+    double fi=0.;
     bool result;
 
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
     
-    cnum = (char*) alloca(strlen(val));
+    cnum = sf_charalloc(strlen(val));
     result = true;
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
@@ -203,6 +202,7 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 	}
 	par[i] = fi;
     }
+    free(cnum);
 
     return result;
 }
@@ -252,7 +252,7 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
 
-    cnum = (char*) alloca(strlen(val));
+    cnum = sf_charalloc(strlen(val));
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
 	fvali = strpbrk(fval,"x*");
@@ -280,6 +280,7 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 	}
 	par[i] = test;
     }
+    free(cnum);
 
     return true;
 }
@@ -294,7 +295,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
     val = sf_simtab_get(table,key);
     if (NULL == val) return false;
     
-    cnum = (char*) alloca(strlen(val));
+    cnum = sf_charalloc(strlen(val));
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
 	if (NULL==fval) {
@@ -323,6 +324,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 	}
 	par[i] = (int) j;
     }
+    free(cnum);
 
     return true;
 }
@@ -363,11 +365,12 @@ void sf_simtab_put (sf_simtab table, const char *keyval) {
     eq++;
     
     keylen = (size_t) (eq-keyval);
-    key = (char*) alloca(keylen);
+    key = sf_charalloc(keylen);
     memcpy(key,keyval,keylen);
     key[keylen-1]='\0';
 
     sf_simtab_enter(table,key,eq);
+    free(key);
 }
 
 void sf_simtab_input (sf_simtab table, FILE* fp) {
@@ -434,4 +437,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.10 2004/03/26 15:46:50 fomels Exp $	 */
+/* 	$Id: simtab.c,v 1.11 2004/03/30 08:00:27 fomels Exp $	 */

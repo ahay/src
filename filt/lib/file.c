@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <alloca.h>
 #include <string.h>
 #include <time.h>
 
 #include <limits.h>
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -12,6 +12,8 @@
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
+
+#include <rpc/rpc.h>
 #include <rpc/xdr.h>
 
 #include "file.h"
@@ -813,4 +815,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.16 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: file.c,v 1.17 2004/03/30 08:00:27 fomels Exp $	 */

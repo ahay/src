@@ -180,10 +180,10 @@ static void location(size_t loc, size_t dim, const int *n)
     int ni;
 
     for (ni=1, i=0; i < dim; ni *= n[i], i++) {
-	printf("%d ",(int) 1+(loc/ni)%n[i]);
+      printf("%d ",(int) (1+(loc/ni)%n[i]));
     }
     printf("\n");
 }
 
-/* 	$Id: attr.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: attr.c,v 1.4 2004/03/30 08:00:27 fomels Exp $	 */
 
