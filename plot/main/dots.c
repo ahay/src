@@ -19,7 +19,7 @@ static void circle(int corners,
 
 int main (int argc, char* argv[])
 {
-    int i, i1,n1, i2,n2, ir, labelsz, connect, corners, dots, newsize;
+    int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
     float epsilon, dd1, dd2, axis, hi, lo, av, maxab, range;
     float marginl, marginr, margint, marginb, x, y, radius;
@@ -34,7 +34,9 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if(!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if(!sf_histint(in,"n2",&n2)) n2=1; 
+    if(!sf_histint(in,"n2",&n2)) n2=1;
+    n3 = sf_leftsize(in,2);
+ 
     if(!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
     if(!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
 
@@ -55,9 +57,7 @@ int main (int argc, char* argv[])
     }
 
     data = sf_floatalloc2 (n1,n2);
-    sf_read(data[0],sizeof(float),n1*n2,in);
-    sf_fileclose(in);
-
+ 
     if (!sf_getint("dots",&dots)) dots = (n1 <= 130)? 1: 0;
     if (!sf_getbool("seemean",&seemean)) seemean = (n2 <= 30);
     if (!sf_getbool("strings",&strings)) strings = (n1 <= 400);
@@ -104,32 +104,14 @@ int main (int argc, char* argv[])
 
     tracehigh = overlap * (dots? dd2 - 3*radius: dd2);
 
-    vp_erase();
+    for (i3=0; i3 < n3; i3++) {
+	sf_read(data[0],sizeof(float),n1*n2,in);
+	
+	vp_erase();
     
-    if(!gaineach) {
-	hi = lo = data[0][0];
-	for(i2=0; i2<n2; i2++) {
-	    for(i1=0; i1<n1; i1++) {
-		f = data[i2][i1];
-		if(f > hi) {
-		    hi = f;
-		} else if (f < lo) {
-		    lo = f;
-		}
-	    }
-	}
-    }
-
-    for(i2=0; i2<n2; i2++) {
-	ir = yreverse? n2-1-i2: i2;
-	axis = marginb + dd2*(ir + 0.5*overlap);
-
-	if (clip > 0.) {
-	    hi =  clip;
-	    lo = -clip;
-	} else {	    
-	    if(gaineach) {
-		hi = lo = data[i2][0];
+	if(!gaineach) {
+	    hi = lo = data[0][0];
+	    for(i2=0; i2<n2; i2++) {
 		for(i1=0; i1<n1; i1++) {
 		    f = data[i2][i1];
 		    if(f > hi) {
@@ -139,130 +121,154 @@ int main (int argc, char* argv[])
 		    }
 		}
 	    }
-
-	    if(constsep || silk) {
-		maxab = ( -lo > hi)? -lo: hi;
-		hi =  maxab;
-		lo = -maxab;
-	    }
 	}
-
-	av = (hi + lo) / 2.;
-	range = (hi>lo)? 1./(hi-lo): 1./eps;
-	zerosignal = axis +  tracehigh * (0.-av)*range;
-
-	if(NULL != labels[0] && NULL != labels[i2]) {
-	    vp_color(5);
-	    text(0.03*screenwide, zerosignal+.2*dd2, labelsz, 0, labels[i2]);
-	}
-
-	if (silk) {
-	    for (i1=0; i1<n1; i1++) {
-		d = 2. * data[i2][i1] * range;
-		abs = (d > 0.) ? d  : -d ;
-		sgn = (d > 0.) ? 1. : -1.;
-		full = .4 + .45 * sgn * sqrt(abs);
-		full = (full > 0) ? full : 0.;
-		y = axis;
-		x = marginl + dd1/2 + i1*dd1;
-		i = 0;
-		vx[i] = x + dd1*full; vy[i] = y           ; i++;
-		vx[i] = x           ; vy[i] = y + dd2*full; i++;
-		vx[i] = x - dd1*full; vy[i] = y           ; i++;
-		vx[i] = x           ; vy[i] = y - dd2*full; i++;
-		vx[i] = x + dd1*full; vy[i] = y           ; i++;
-		vp_area(vx,vy,5,1,1,1);
-	    }
-	} else {
-	    if(!seedead) {
-		for(i1=0; i1<n1; i1++) {
-		    if (data[i2][i1] != 0.) break;
+	
+	for(i2=0; i2<n2; i2++) {
+	    ir = yreverse? n2-1-i2: i2;
+	    axis = marginb + dd2*(ir + 0.5*overlap);
+	    
+	    if (clip > 0.) {
+		hi =  clip;
+		lo = -clip;
+	    } else {	    
+		if(gaineach) {
+		    hi = lo = data[i2][0];
+		    for(i1=0; i1<n1; i1++) {
+			f = data[i2][i1];
+			if(f > hi) {
+			    hi = f;
+			} else if (f < lo) {
+			    lo = f;
+			}
+		    }
 		}
-		if (i1==n1) continue;
+		
+		if(constsep || silk) {
+		    maxab = ( -lo > hi)? -lo: hi;
+		    hi =  maxab;
+		    lo = -maxab;
+		}
 	    }
-
-	    if(seemean) {
-		vp_color(1);
-		move(marginl, zerosignal);
-		draw(-marginr+screenwide, zerosignal);
+	    
+	    av = (hi + lo) / 2.;
+	    range = (hi>lo)? 1./(hi-lo): 1./eps;
+	    zerosignal = axis +  tracehigh * (0.-av)*range;
+	    
+	    if(NULL != labels[0] && NULL != labels[i2]) {
+		vp_color(5);
+		text(0.03*screenwide, zerosignal+.2*dd2, 
+		     labelsz, 0, labels[i2]);
 	    }
+	    
+	    if (silk) {
+		for (i1=0; i1<n1; i1++) {
+		    d = 2. * data[i2][i1] * range;
+		    abs = (d > 0.) ? d  : -d ;
+		    sgn = (d > 0.) ? 1. : -1.;
+		    full = .4 + .45 * sgn * sqrt(abs);
+		    full = (full > 0) ? full : 0.;
+		    y = axis;
+		    x = marginl + dd1/2 + i1*dd1;
+		    i = 0;
+		    vx[i] = x + dd1*full; vy[i] = y           ; i++;
+		    vx[i] = x           ; vy[i] = y + dd2*full; i++;
+		    vx[i] = x - dd1*full; vy[i] = y           ; i++;
+		    vx[i] = x           ; vy[i] = y - dd2*full; i++;
+		    vx[i] = x + dd1*full; vy[i] = y           ; i++;
+		    vp_area(vx,vy,5,1,1,1);
+		}
+	    } else {
+		if(!seedead) {
+		    for(i1=0; i1<n1; i1++) {
+			if (data[i2][i1] != 0.) break;
+		    }
+		    if (i1==n1) continue;
+		}
 
-	    if (connect) {
-		vp_color(7);
-		for(i1=0; i1<n1; i1++) {
+		if(seemean) {
+		    vp_color(1);
+		    move(marginl, zerosignal);
+		    draw(-marginr+screenwide, zerosignal);
+		}
+
+		if (connect) {
+		    vp_color(7);
+		    for(i1=0; i1<n1; i1++) {
+			y = axis +  tracehigh * (data[i2][i1]-av)*range;
+			switch (connect) {
+			    case 4: /* no segment */
+				x = marginl + dd1/2 + i1*dd1;
+				if (i1 == 0) {
+				    move (x, y);
+				} else if(data[i2][i1]   != 0. &&  
+					  data[i2][i1-1] != 0.) {
+				    draw (x, y); 
+				} else { 
+				    move (x, y);
+				}
+				break;
+			    case 1: /* diagonal segments */
+				x = marginl + dd1/2 + i1*dd1;
+				if (i1 == 0) {
+				    move (x, y);
+				} else {
+				    draw (x, y);
+				}
+				break;
+			    case 2: /* bar graph */
+				x = marginl + i1*dd1;
+				if (i1 == 0) {
+				    move (x, y);
+				} else {
+				    draw (x, y);
+				}
+				draw (x + dd1, y); /* bar */
+				break;
+			    case 3: /* horizontal segments */
+				x = marginl + i1*dd1;
+				move (x, y);
+				draw (x + dd1, y);
+				break;
+			}
+		    }
+		}
+
+		for (i1=0; i1<n1; i1++) {
 		    y = axis +  tracehigh * (data[i2][i1]-av)*range;
-		    switch (connect) {
-			case 4: /* no segment */
-			    x = marginl + dd1/2 + i1*dd1;
-			    if (i1 == 0) {
-				move (x, y);
-			    } else if(data[i2][i1]   != 0. &&  
-				      data[i2][i1-1] != 0.) {
-				draw (x, y); 
-			    } else { 
-				move (x, y);
-			    }
-			    break;
-			case 1: /* diagonal segments */
-			    x = marginl + dd1/2 + i1*dd1;
-			    if (i1 == 0) {
-				move (x, y);
-			    } else {
-				draw (x, y);
-			    }
-			    break;
-			case 2: /* bar graph */
-			    x = marginl + i1*dd1;
-			    if (i1 == 0) {
-				move (x, y);
-			    } else {
-				draw (x, y);
-			    }
-			    draw (x + dd1, y); /* bar */
-			    break;
-			case 3: /* horizontal segments */
-			    x = marginl + i1*dd1;
+		    x = marginl + dd1/2 + i1*dd1;
+		    vp_color( 6);
+		    if (strings) {
+			signal = y - zerosignal;
+			if(fabsf(signal)  > epsilon ) {
 			    move (x, y);
-			    draw (x + dd1, y);
-			    break;
+			    draw (x, zerosignal);
+			}
 		    }
-		}
+
+		    if (1==dots || (2==dots && data[i2][i1] != 0.))
+			circle (corners, cx, cy, x, y, radius);
+		}	
 	    }
+	} /* i2 */
 
-	    for (i1=0; i1<n1; i1++) {
-		y = axis +  tracehigh * (data[i2][i1]-av)*range;
-		x = marginl + dd1/2 + i1*dd1;
-		vp_color( 6);
-		if (strings) {
-		    signal = y - zerosignal;
-		    if(fabsf(signal)  > epsilon ) {
-			move (x, y);
-			draw (x, zerosignal);
-		    }
-		}
+	if(NULL != label1) 
+	    vp_simple_axis(marginl, marginb*0.8,  
+			   screenwide-marginr, marginb*0.8,
+			   o1, o1+(n1-1)*d1, 0., 0., 
+			   .25, label1, 0.03*labelsz);
 
-		if (1==dots || (2==dots && data[i2][i1] != 0.))
-		    circle (corners, cx, cy, x, y, radius);
-	    }	
+	if(NULL != title) {
+	    newsize = 1.2*labelsz;
+	    x = marginl + .5*( screenwide-marginl-marginr);
+	    y = screenhigh - margint;
+
+	    vp_color( 5);
+	    vp_tjust(TH_CENTER,TV_NORMAL);
+	    text (x, y, newsize, 0, title);
+	    vp_tjust(TH_NORMAL,TV_NORMAL);
 	}
-    } /* i2 */
 
-    if(NULL != label1) 
-	vp_simple_axis(marginl, marginb*0.8,  
-		       screenwide-marginr, marginb*0.8,
-		       o1, o1+(n1-1)*d1, 0., 0., 
-		       .25, label1, 0.03*labelsz);
-
-    if(NULL != title) {
-	newsize = 1.2*labelsz;
-	x = marginl + .5*( screenwide-marginl-marginr);
-	y = screenhigh - margint;
-
-	vp_color( 5);
-	vp_tjust(TH_CENTER,TV_NORMAL);
-	text (x, y, newsize, 0, title);
-	vp_tjust(TH_NORMAL,TV_NORMAL);
-    }
+    } /* i3 */
     
     exit(0);
 }
