@@ -1,3 +1,17 @@
+/* Reverse one or more axes in the data hypercube.
+
+Takes: < input.rsf > reversed.rsf
+
+The which parameter has the following meaning: 
+to reverse a given axis, start with 0,
+add 1 to number to reverse n1 dimension,
+add 2 to number to reverse n2 dimension,
+add 4 to number to reverse n3 dimension, etc.
+Thus, which=7 would reverse the first three dimensions,
+which=5 just n1 and n3, etc.
+which=0 will just pass the input on through unchanged.
+*/
+
 #include <stdio.h>
 #include <string.h>
 
@@ -14,7 +28,7 @@ int main(int argc, char* argv[])
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int j, i, dim, dim1, dim2;
     int n[SF_MAX_DIM], esize, which, memsize;
-    long pos;
+    long pos=0;
     size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL, m;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;
@@ -97,7 +111,7 @@ int main(int argc, char* argv[])
 	k2 = (size_t*) sf_alloc(n2,sizeof(size_t));
 	mirror(n2,dim2-dim1,n+dim1,f+dim1,k2);
 	pos = sf_tell(in);
-    }
+    } 
 
     if (verb) sf_warning("n1=%d, n2=%d, n3=%d",
 			 (int) n1,(int) n2,(int) n3);
