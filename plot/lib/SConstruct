@@ -21,7 +21,7 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env.Append(CCFLAGS=' -g',CPPPATH=['../../seis/rsf'])
+    env.Append(CCFLAGS=' -g',CPPPATH=['../../filt/lib'])
 
 lib = env.StaticLibrary('rsfplot',sources)
 inc = env.Command('../../include/rsfplot.h',includes,Action(configure.merge))
@@ -36,6 +36,5 @@ if root:
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',
-                CPPPATH='../../seis/rsf',
-                LIBS=['rsf','m'],LIBPATH='../../seis/rsf')
+                LIBS=['rsf','m'],LIBPATH='../../filt/lib')
 ##############################################################################
