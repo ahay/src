@@ -1,0 +1,38 @@
+import os, string, rsfproj
+
+root   = os.environ.get('RSFROOT')
+libdir = os.path.join(root,'lib')
+incdir = os.path.join(root,'include')
+
+print "-----------------------------------------------------------------------"
+print libdir
+print incdir
+print "-----------------------------------------------------------------------"
+
+# C environment
+cenv=Environment(LIBPATH=[libdir],
+                 CPPPATH=[incdir],
+                 CCFLAGS='-O2 -std=gnu99 -Wall -pedantic -D_FILE_OFFSET_BITS=64')
+cenv.Program('AFDMc__.x',
+             Split('AFDMc__.c'),
+             LIBS=['rsf','m'])
+
+# C++ environment
+penv=Environment(LIBPATH=[libdir],
+                 CPPPATH=[incdir],
+                 CCFLAGS='-O2 -std=gnu99 -Wall -pedantic -D_FILE_OFFSET_BITS=64',
+                 CXXFLAGS = '-O2 -Wall -pedantic')
+penv.Program('AFDMc++.x',
+             Split('AFDMc++.cc cub.cc'),
+             LIBS=['rsf++','rsf','m'])
+
+# F90 environment
+fenv=Environment(LIBPATH=[libdir],
+                 F90PATH=[incdir],
+                 F90='/opt/intel/bin/ifort',
+                 F90FLAGS= '-O2 -Vaxlib',
+                 LINK=rsfproj.Get('F90'))
+fenv.Program('AFDMf90.x',
+             Split('AFDMf90.f90'),
+             LIBS=['rsff90','rsf','m'])
+
