@@ -1,3 +1,5 @@
+#include <math.h>
+
 #include <rsf.h>
 
 #include "ctridiagonal.h"
@@ -6,13 +8,13 @@ int main(int argc, char* argv[])
 {
     bool inv;
     int nw,nz,nx, iw,ix,iz;
-    float dw,dz,dx, vel0,pi, eps, den, beta;
+    float dw,dz,dx, vel0, eps, beta;
     float complex w, a, *ctime, *tt, *diag1, *diag2, *offd1, *offd2;
     float **depth, **vel, **voff, *time;
     ctris slv;
     sf_file in, out, velocity;
 
-    sf_init ();
+    sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
@@ -41,7 +43,7 @@ int main(int argc, char* argv[])
 	sf_putint (out,"n1",nx); 
 	sf_putfloat (out,"d1",dx);
     } else { /* migration */
-	f (!sf_histint(in,"n1",&nx)) sf_error("No n1= in input");
+	if (!sf_histint(in,"n1",&nx)) sf_error("No n1= in input");
 	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
 	if (!sf_histfloat(in,"d1",&dx)) sf_error("No d1= in input");
 	if (!sf_histfloat(in,"d2",&dw)) sf_error("No d2= in input");
@@ -49,7 +51,7 @@ int main(int argc, char* argv[])
 	if (NULL != velocity) {
 	    if (!sf_histint(velocity,"n1",&nz)) 
 		sf_error("No n1= in velocity");
-	    if (!sf_hisfloat(velocity,"d1",&dz)) 
+	    if (!sf_histfloat(velocity,"d1",&dz)) 
 		sf_error("No d1= in velocity");
 	} else {
 	    if (!sf_getint("nz",&nz)) sf_error("Need nz=");
@@ -153,12 +155,12 @@ int main(int argc, char* argv[])
 		for (ix=1; ix < nx-1; ix++) {
 		    tt[ix] = 
 			offd1[ix-1]*ctime[ix-1] +
-			diag1[ix]*ctime[ix] + &
+			diag1[ix]*ctime[ix] +
 			offd1[ix]*ctime[ix+1];
 		}
 		tt[nx-1] = offd1[nx-2]*ctime[nx-2] + diag1[nx-1]*ctime[nx-1];
  
-		for (ix=0; ix < nx-1; ix++) {
+		for (ix=0; ix < nx; ix++) {
 		    ctime[ix] += tt[ix];
 		}
 
@@ -176,50 +178,66 @@ int main(int argc, char* argv[])
 	    }
 	    sf_write (time,sizeof(float),nx,out);
 	} else { /* migration */
-        w = cmplx(eps*dw,-(iw-1)*dw)
-        call sep_read (time)
-        ctime = time
-        do iz = 1, nz
-           depth (iz,:) = depth(iz,:) + real (ctime)
+	    w = dw*(eps-(iw-1)*I);
+	    sf_read (time,sizeof(float),nx,in);
+	    for (ix=0; ix < nx; ix++) {
+		ctime[ix] = time[ix];
+	    }
+	    for (iz=0; iz < nz; iz++) {
+		for (ix=0; ix < nx-1; ix++) {
+		    depth[ix][iz] += crealf (ctime[ix]);
 
-           diag1 =   -2.*(beta - (vel(iz,:)/w-dz)*vel(iz,:)*dx/w)
-           diag2 = 1.-2.*(beta - (vel(iz,:)/w+dz)*vel(iz,:)*dx/w)
+		    vel0 = vel[ix][iz];
+		    diag1[ix] =   -2.*(beta - (vel0/w-dz)*vel0*dx/w);
+		    diag2[ix] = 1.-2.*(beta - (vel0/w+dz)*vel0*dx/w);
+		}
 
-           a = cexp(-0.5*w/(vel(iz,1)*sqrt(dx)))
+		vel0 = vel[0][iz];
+		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
 
-           diag1(1) =    (a-2.)*(beta - (vel(iz,1)/w-dz)*vel(iz,1)*dx/w)
-           diag2(1) = 1.+(a-2.)*(beta - (vel(iz,1)/w+dz)*vel(iz,1)*dx/w)
+		diag1[0] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
+		diag2[0] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
 
-           a = cexp(-0.5*w/(vel(iz,nx)*sqrt(dx)))
+		vel0 = vel[nx-1][iz];
+		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
 
-           diag1(nx) =    (a-2.)*(beta - (vel(iz,nx)/w-dz)*vel(iz,nx)*dx/w)
-           diag2(nx) = 1.+(a-2.)*(beta - (vel(iz,nx)/w+dz)*vel(iz,nx)*dx/w)
+		diag1[nx-1] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
+		diag2[nx-1] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
 
-           offd1 = beta - (voff(iz,:)/w-dz)*voff(iz,:)*dx/w
-           offd2 = beta - (voff(iz,:)/w+dz)*voff(iz,:)*dx/w
+		for (ix=0; ix < nx-1; ix++) {
+		    vel0 = voff[ix][iz];
+		    offd1[ix] = beta - (vel0/w-dz)*vel0*dx/w;
+		    offd2[ix] = beta - (vel0/w+dz)*vel0*dx/w;
+		}
 
-           tt(1) = diag1(1)*ctime(1) + offd1(1)*ctime(2)
-           tt(2:nx-1) = &
-                offd1(1:nx-2)*ctime(1:nx-2) + &
-                diag1(2:nx-1)*ctime(2:nx-1) + &
-                offd1(2:nx-1)*ctime(3:nx)
-           tt(nx) = offd1(nx-1)*ctime(nx-1) + diag1(nx)*ctime(nx)
+		tt[0] = diag1[0]*ctime[0] + offd1[0]*ctime[1];
+		for (ix=1; ix < nx-1; ix++) {
+		    tt[ix] =
+			offd1[ix-1]*ctime[ix-1] +
+			diag1[ix]*ctime[ix] +
+			offd1[ix]*ctime[ix+1];
+		}
+		tt[nx-1] = offd1[nx-2]*ctime[nx-2] + diag1[nx-1]*ctime[nx-1];
   
-           ctime = ctime + tt
+		for (ix=0; ix < nx; ix++) {
+		    ctime[ix] += tt[ix];
+		}
 
-           call ctridiagonal_define (slv, diag2, offd2)
-           call ctridiagonal_solve (slv, ctime)
+		ctridiagonal_define (slv, diag2, offd2);
+		ctridiagonal_solve (slv, ctime);
 
-           ctime = ctime * cexp(-w*dz/vel(iz,:)) 
-        end do
-     end if
-  end do
-  call ctridiagonal_close (slv)
-  if (.not. inv) call sep_write (depth)
+		for (ix=0; ix < nx-1; ix++) {
+		    vel0 = vel[ix][iz];
+		    ctime[ix] *= cexpf(-w*dz/vel0); 
+		}
+	    } /* iz depth loop */
+	} /* if inverse */
+    } /* iw frequency loop */
+  
+    if (!inv) sf_write (depth[0],sizeof(float),nz*nx,out);
 
-  deallocate (depth, time, ctime, vel, voff, tt)
-  deallocate (diag1, offd1, diag2, offd2)
-  call exit (0)
-end program FinDif
+    exit (0);
+}
+
 
 

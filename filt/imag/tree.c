@@ -65,6 +65,10 @@ void tree_build(void)
 		k = ka + kx*na + kz*nax;
 		node = Tree+k;
 
+		/*** debug ***
+		sf_warning("node %d %d %d",ka,kx,kz);
+		*************/
+
 		a = a0 + ka*da;
 		p[0] = -cos(a);
 		p[1] = sin(a);
@@ -75,6 +79,11 @@ void tree_build(void)
 		    (kz==0    && p[0] < 0.) ||
 		    (kz==nz-1 && p[0] > 0.)) {
 		    AddNode(Orphans,node);
+
+		    /*** debug ***
+		    sf_warning("orphan");
+		    *************/
+
 		    vk = val[k];
 		    vk[0] = x0 + kx*dx;
 		    vk[1] = z0 + kz*dz;
@@ -165,6 +174,11 @@ void tree_build(void)
 		if (ix < 0 || ix > nx-1 ||
 		    iz < 0 || iz > nz-1) {
 		    AddNode(Orphans,node);
+
+		    /*** debug ***
+		    sf_warning("orphan 2");
+		    *************/
+
 		    vk = val[k];
 		    vk[0] = x0 + kx*dx;
 		    vk[1] = z0 + kz*dz;
@@ -180,94 +194,168 @@ void tree_build(void)
 		if (onz) { /* hits a z wall */
 		    node->w1 = a;
 		    node->w2 = x;
-		    if (x != 1. && a != 1.) AddChild(Tree,i,0,0,node);
+		    if (x != 1. && a != 1.) {
+			AddChild(Tree,i,0,0,node);
+			/*** debug ***
+			sf_warning("parent: %d %d %d",ia,ix,iz);
+			*************/
+		    }
 		    if (ia == na-1) {
 			node->n1 = 1;
 		    } else {
 			node->n1 = order;
-			if (x != 1. && a != 0.) AddChild(Tree,i+1,0,1,node);
+			if (x != 1. && a != 0.) {
+			    AddChild(Tree,i+1,0,1,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia+1,ix,iz);
+			    *************/
+			}
 		    }
 
 		    if (ix == nx-1) {
 			node->n2 = 1;
 		    } else {
 			node->n2 = order;
-			if (x != 0. && a != 1.) AddChild(Tree,i+na,1,0,node);
+			if (x != 0. && a != 1.) {
+			    AddChild(Tree,i+na,1,0,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia,ix+1,iz);
+			    *************/
+			}
 		    }
 
 		    if (node->n1 == order && node->n2 == order && 
-			x != 0. && a != 0.) 
+			x != 0. && a != 0.) { 
 			AddChild(Tree,i+na+1,1,1,node);
+			/*** debug ***
+			sf_warning("parent: %d %d %d",ia+1,ix+1,iz);
+			*************/
+		    }
 
 		    if (3==order) {
 			if (ia == 0) {
 			    if (node->n1 > 1) node->n1 = 2;
 			} else if (x != 1. && a != 0. && a != 1.) {
 				AddChild(Tree,i-1,0,2,node);
+				/*** debug ***
+				sf_warning("parent: %d %d %d",ia-1,ix,iz);
+				*************/
 			}
 
 			if (ix == 0) {
 			    if (node->n2 > 1) node->n2 = 2;
 			} else if (x != 0. && x != 1. && a != 1.) {
 			    AddChild(Tree,i-na,2,0,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia,ix-1,iz);
+			    *************/
 			}
 
 			if (x != 0. && a != 0. && 
 			    node->n1 > 1 && node->n2 > 1) {
 			    if (node->n1 == 3 && a != 1.) { 
 				AddChild(Tree,i+na-1,1,2,node);
-				if (node->n2 == 3 && x != 1.)
+				/*** debug ***
+				sf_warning("parent: %d %d %d",ia-1,ix+1,iz);
+				*************/
+				if (node->n2 == 3 && x != 1.) {
 				    AddChild(Tree,i-na-1,2,2,node);
+				    /*** debug ***
+				    sf_warning("parent: %d %d %d",
+					       ia-1,ix-1,iz);
+				    *************/
+				}
 			    }
-			    if (node->n2 == 3 && x != 1.) 
+			    if (node->n2 == 3 && x != 1.) {
 				AddChild(Tree,i-na+1,2,1,node);
+				/*** debug ***
+				sf_warning("parent: %d %d %d",ia+1,ix-1,iz);
+				*************/
+			    }
 			}
 
 		    }
 		} else { /* hits an x wall */
 		    node->w1 = a;
 		    node->w2 = z;
-		    if (z != 1. && a != 1.) AddChild(Tree,i,0,0,node);
+		    if (z != 1. && a != 1.) {
+			AddChild(Tree,i,0,0,node);
+			/*** debug ***
+			sf_warning("parent: %d %d %d",ia,ix,iz);
+			*************/
+		    }
 		    if (ia == na-1) {
 			node->n1 = 1;
 		    } else {
 			node->n1 = order;
-			if (z != 1. && a != 0.) AddChild(Tree,i+1,0,1,node);
+			if (z != 1. && a != 0.) {
+			    AddChild(Tree,i+1,0,1,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia+1,ix,iz);
+			    *************/
+			}
 		    }
 
 		    if (iz == nz-1) {
 			node->n2 = 1;
 		    } else {
 			node->n2 = order;
-			if (z != 0. && a != 1.) AddChild(Tree,i+nax,1,0,node);
+			if (z != 0. && a != 1.) {
+			    AddChild(Tree,i+nax,1,0,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia,ix,iz+1);
+			    *************/
+			}
 		    }
 
 		    if (node->n1 == order && node->n2 == order && 
-			z != 0. && a != 0.) 
+			z != 0. && a != 0.) {
 			AddChild(Tree,i+nax+1,1,1,node);
+			/*** debug ***
+			sf_warning("parent: %d %d %d",ia+1,ix,iz+1);
+			*************/
+		    }
 
 		    if (3==order) {
 			if (ia == 0) {
 			    if (node->n1 > 1) node->n1 = 2;
 			} else if (z != 1. && a != 0. && a != 1.) {
-				AddChild(Tree,i-1,0,2,node);
+			    AddChild(Tree,i-1,0,2,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia-1,ix,iz);
+			    *************/
 			}
 
 			if (iz == 0) {
 			    if (node->n2 > 1) node->n2 = 2;
 			} else if (z != 0. && z != 1. && a != 1.) {
 			    AddChild(Tree,i-nax,2,0,node);
+			    /*** debug ***
+			    sf_warning("parent: %d %d %d",ia,ix,iz-1);
+			    *************/
 			}
 			
 			if (z != 0. && a != 0. && 
 			    node->n1 > 1 && node->n2 > 1) {
 			    if (node->n1 == 3 && a != 1.) { 
 				AddChild(Tree,i+nax-1,1,2,node);
-				if (node->n2 == 3 && z != 1.)
+				/*** debug ***
+				sf_warning("parent: %d %d %d",ia-1,ix,iz+1);
+				*************/
+				if (node->n2 == 3 && z != 1.) {
 				    AddChild(Tree,i-nax-1,2,2,node);
+				    /*** debug ***
+				    sf_warning("parent: %d %d %d",
+				    ia-1,ix,iz-1);
+				    *************/
+				}
 			    }
-			    if (node->n2 == 3 && z != 1.) 
+			    if (node->n2 == 3 && z != 1.) { 
 				AddChild(Tree,i-nax+1,2,1,node);
+				/*** debug ***
+				sf_warning("parent: %d %d %d",ia+1,ix,iz-1);
+				*************/
+			    }
 			}
 		    }
 		}
@@ -299,6 +387,9 @@ void tree_print (void) {
 void tree_traverse (void) {
     Node node, child;
     int k, i, j, k1, k2, n, nc, **parents;
+    /*** debug ***
+    int ia, ix, iz, ka, kx, kz;
+    *************/
     float x, w1[3], w2[3], *fk;
 
     for (n=0; n < Orphans->nitems; n++) {
@@ -333,7 +424,7 @@ void tree_traverse (void) {
 	    }
 
 	    x = node->w2; 
-	    switch (node->n1) {
+	    switch (node->n2) {
 		case 1:
 		    w2[0] = 1;
 		    break;
@@ -348,11 +439,28 @@ void tree_traverse (void) {
 		    break;
 	    }
 
+	    
+	    /**** debug ****
+	    kz = k/nax; 
+	    kx = (k-kz*nax)/na;
+	    ka = k-kz*nax-kx*na;
+	    sf_warning("node %d %d %d",ka,kx,kz);
+	    ***************/
+
+
 	    for (k2=0; k2 < node->n2; k2++) {		  
 		for (k1=0; k1 < node->n1; k1++) {
 		    i = parents[k2][k1];
-		    if (i >= 0) {
+		    if (i >= 0) {					
 			x = w2[k2]*w1[k1];
+
+			/**** debug ****
+			iz = i/nax; 
+			ix = (i-iz*nax)/na;
+			ia = i-iz*nax-ix*na;
+			sf_warning("weight %d %d %d: %g",ia,ix,iz,x);
+			***************/
+
 			for (j=0; j < 4; j++) {
 			    fk[j] += x*val[i][j];
 			}
