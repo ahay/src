@@ -5,23 +5,6 @@
 
 int main(void)
 {
-/*
-integer narray
-integer plotcol,plotfat,polarity,pad,fat
-integer wantframe
-integer outfd, output
-integer ilay
-real xll,yll,xur,yur
-real xmin,zmin,xmax,zmax
-real xcenter,zcenter,xscale,zscale
-real v1,v2,v3,dz1,dz2,dz3
-real zbottom,theta3
-real h,t,x,z,x1,z1,xtxt,ztxt
-real sn(narray),cs(narray),vv(narray),dz(narray)
-character*50 out
-character*80 title
-*/
-
     bool wantframe=false;
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87,theta3=20.;
     float sn[3],cs[3],vv[3]={1.5,2.0,2.5},dz[3]={1.0,2.0,1.5};
@@ -42,14 +25,14 @@ character*80 title
     for (i=2; i >= 0; i--) {
 	if (i != 2)  sn[i] = sn[i+1]*vv[i]/vv[i+1]; /* snell's law */
 	cs[i] = sqrtf(1. - sn[i]*sn[i]);
-	h += h + dz[i]*sn[i]/cs[i];
+	h += dz[i]*sn[i]/cs[i];
 	t += 2*dz[i]/(cs[i]*vv[i]);
     }
 
-    xmin = -h - 0.1*zbottom; if (xmin < -2.) xmin=-2.;
+    xmin = -h - 0.1*zbottom; if (xmin > -2.) xmin=-2.;
     zmin = -0.1 * zbottom;
     xmax = -xmin;
-    zmax = 1.1*zbottom; if (zmax > 3.) zmax=3.;
+    zmax = 1.1*zbottom; if (zmax < 3.) zmax=3.;
     xcenter=0.5*(xmin+xmax);
     zcenter=0.5*(zmin+zmax);
 
@@ -111,7 +94,7 @@ character*80 title
 	    z1 = z; 
 	    x -= dz[i]*sn[i]/cs[i];
 	    z -= dz[i]; 
-	    vp_uarrow(x1,z1,x,z,0.02*zbottom);
+	    vp_uarrow(x,z,x1,z1,0.02*zbottom);
 	}  
     }
 
@@ -165,10 +148,11 @@ character*80 title
     vp_fat(plotfat);
 /*						bottom of triangle */
     z=zbottom-dz[2];
-    x=dz[3]*sn[3]/cs[3];
+    x=dz[2]*sn[2]/cs[2];
     vp_umove(x,z);
     x1 = x + dz[1]*sn[1]/cs[1];
-    vp_udraw(x1,z);
+    z1 = z;
+    vp_udraw(x1,z1);
     xtxt = (x+x1)/2.;
     ztxt = z + 0.05 * zbottom;
     vp_utext(xtxt,ztxt,8,0,"\\F9 D\\F3 x\\_\\s60 i");
