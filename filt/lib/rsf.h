@@ -12,6 +12,7 @@ void *sf_realloc (void* ptr, size_t n, size_t size);
 /*@out@*/ float *sf_floatalloc (size_t n);
 /*@out@*/ bool *sf_boolalloc (size_t n);
 /*@out@*/ float complex *sf_complexalloc (size_t n);
+/*@out@*/ float complex **sf_complexalloc2 (size_t n1, size_t n2);
 /*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2);
 /*@out@*/ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3);
 /*@out@*/ int **sf_intalloc2 (size_t n1, size_t n2);
@@ -117,6 +118,7 @@ void sf_unpipe (sf_file file, size_t size);
 
 int sf_filedims (sf_file file, /*@out@*/ int *n);
 int sf_filesize (sf_file file);
+int sf_leftsize (sf_file file, int dim);
 void sf_cp(sf_file in, sf_file out);
 void sf_rm(const char* filename, bool force, bool verb, bool inquire);
 

@@ -66,7 +66,7 @@ int main (int argc, char *argv[])
 	    if (sf_getfloat(key,&a)) {
 		m[i] = 1.5 + (a - o[i]) / d[i];
 	    } else {
-		m[i] = 1.5 + (n[i] - 1. - f[i]) / j[i];
+		m[i] = 1.5 + (n[i] - 1 - f[i]) / j[i];
 	    }
 	}
 	if (1+(m[i]-1)*j[i] > n[i]) 
@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
     n2 = sf_leftsize(out,1);
     m1 = m[0]*esize;
     n1 = (1+(m[0]-1)*j[0])*esize;
-    jump = j[0];
+    jump = (j[0]-1) * esize;
     n[0] *= esize;
     f[0] *= esize;
 
@@ -147,10 +147,10 @@ int main (int argc, char *argv[])
     for (i2=0; i2 < n2; i2++) {
 	if (table[i2]) sf_seek(in,table[i2],SEEK_CUR);
 	sf_read(buf,1,n1,in);
-	if (jump > 1) {
-	    for (i1=1, j1=jump; i1 < m1; i1++, j1 += jump) {
-		for (i=0; i < esize; i++) {
-		    buf[i1++] = buf[j1++];
+	if (jump) {
+	    for (i1=j1=0; i1 < m1; j1 += jump) {
+		for (i=0; i < esize; i++, i1++, j1++) {
+		    buf[i1] = buf[j1];
 		}
 	    }
 	}

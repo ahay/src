@@ -313,7 +313,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 		if (0==i) return false;
 	    } else {
 		j = strtol(fval,NULL,10);
-		if (ERANGE == errno || i < INT_MIN || i > INT_MAX) 
+		if (ERANGE == errno || j < INT_MIN || j > INT_MAX) 
 		    sf_error ("%s: Wrong value in %s='%s':",__FILE__,key,fval);
 	    }
 	}

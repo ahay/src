@@ -52,6 +52,19 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
+/*@out@*/ float complex **sf_complexalloc2 (size_t n1, size_t n2) 
+{
+    size_t i2;
+    float complex **ptr;
+    
+    ptr = (float complex**) sf_alloc (n2,sizeof(float complex*));
+    ptr[0] = sf_complexalloc (n1*n2);
+    for (i2=1; i2 < n2; i2++) {
+	ptr[i2] = ptr[0]+i2*n1;
+    }
+    return ptr;
+}
+
 /*@out@*/ bool *sf_boolalloc (size_t n) 
 {
     bool *ptr;
@@ -59,7 +72,7 @@ void *sf_realloc (void* ptr, size_t n, size_t size)
     return ptr;
 }
 
-float **sf_floatalloc2 (size_t n1, size_t n2) 
+/*@out@*/ float **sf_floatalloc2 (size_t n1, size_t n2) 
 {
     size_t i2;
     float **ptr;
@@ -72,7 +85,7 @@ float **sf_floatalloc2 (size_t n1, size_t n2)
     return ptr;
 }
 
-float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3) 
+/*@out@*/ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3) 
 {
     size_t i3;
     float ***ptr;
@@ -85,7 +98,7 @@ float ***sf_floatalloc3 (size_t n1, size_t n2, size_t n3)
     return ptr;
 }
 
-int **sf_intalloc2 (size_t n1, size_t n2) 
+/*@out@*/ int **sf_intalloc2 (size_t n1, size_t n2) 
 {
     size_t i2;
     int **ptr;
@@ -98,7 +111,7 @@ int **sf_intalloc2 (size_t n1, size_t n2)
     return ptr;
 }
 
-char **sf_charalloc2 (size_t n1, size_t n2) 
+/*@out@*/ char **sf_charalloc2 (size_t n1, size_t n2) 
 {
     size_t i2;
     char **ptr;

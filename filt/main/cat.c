@@ -52,8 +52,12 @@ int main (int argc, char* argv[])
 
     dim = sf_filedims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
-    if (axis > dim && axis <=0) 
-	sf_error("axis=%d is not in the range [1,%d]",axis,dim);
+    if (1 > axis) sf_error("axis=%d < 1",axis);
+    if (axis > dim) {
+	while (dim < axis) {
+	    n[dim++] = 1;
+	}
+    }
 
     n1=1;
     n2=1;

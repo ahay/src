@@ -65,12 +65,12 @@ int main(int argc, char* argv[])
     }
 
     n1 = n[0];
-    n2 = sf_filesize(spike)/n1;
+    n2 = sf_leftsize(spike,1);
 
     trace = sf_floatalloc (n[0]);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_line2cart(dim-1, n+1, i2, ii);
+	sf_line2cart(dim-1, n+1, i2, ii+1);
 	/* zero trace */
 	for (i1=0; i1 < n1; i1++) trace[i1]=0.;
 	/* put spikes in it */
