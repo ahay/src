@@ -46,14 +46,14 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("w2",&w2)) w2=w0+(nw-1)*dw;
     /* highest frequency */
 
+    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_histint(in,"n3",&nz)) sf_error("No n3= in input");
+
     trace1 = sf_complexalloc(nw);
     trace2 = sf_floatalloc(nx);
  
     sf_complexread(trace1,nw,wave);
-
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-    if (!sf_histint(in,"n3",&nz)) sf_error("No n3= in input");
 
     if (!sf_getfloat("dx",&dx)) sf_error("Need dx= ");
     /* location error */
@@ -107,7 +107,6 @@ int main (int argc, char* argv[])
 		} /* nt */
 	    } /* nw */
 	} /* nx */
-	sf_warning("lateral done");
 	sf_floatwrite (trace2,nx,out);
     } /* nz */
     
