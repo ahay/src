@@ -21,7 +21,6 @@
 /*^*/
 
 #include "helicon.h"
-#include "copy.h"
 
 #include "helix.h"
 /*^*/
@@ -39,7 +38,7 @@ void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
 {
     int ia, iy, ix;
     
-    copy_lop(adj, add, nx, ny, xx, yy);
+    sf_copy_lop(adj, add, nx, ny, xx, yy);
 
     for (ia = 0; ia < aa->nh; ia++) {
 	for (iy = aa->lag[ia]; iy < ny; iy++) {

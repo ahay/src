@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "copy.h"
 #include "igrad2.h"
 
 int main(int argc, char* argv[])
@@ -55,7 +54,7 @@ int main(int argc, char* argv[])
     igrad2_init(n1,n2);
 
     for (ir=0; ir < nr; ir++){
-	sf_solver_reg (copy_lop, sf_cgstep, igrad2_lop, 
+	sf_solver_reg (sf_copy_lop, sf_cgstep, igrad2_lop, 
 		       2*n12, n12, n12, out, trace, 
 		       2*n12, eps, "end");
 	sf_cgstep_close();
@@ -70,4 +69,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msmoothreg2.c,v 1.3 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

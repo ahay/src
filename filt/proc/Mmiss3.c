@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "mask.h"
 #include "trianglen.h"
 
 int main(int argc, char* argv[])
@@ -68,7 +67,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("force",&force)) force=true;
     /* if y, keep known values */
 
-    mask_init(known);
+    sf_mask_init(known);
     trianglen_init(dim, rect, n);
     sf_conjgrad_init(n12, n12, n12, n12, eps, 1.e-9, true, false);
 
@@ -91,7 +90,7 @@ int main(int argc, char* argv[])
 	}
     }
  
-    sf_conjgrad(NULL, mask_lop, trianglen_lop, pp, mm, mm, niter);
+    sf_conjgrad(NULL, sf_mask_lop, trianglen_lop, pp, mm, mm, niter);
 
     if (force) {
 	for (i=0; i < n12; i++) {
@@ -104,4 +103,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mmiss3.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

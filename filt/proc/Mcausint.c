@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
-#include "causint.h"
 
 int main(int argc, char* argv[])
 {
@@ -45,9 +44,9 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);
 	if (adj) {
-	    causint_lop (true,false,n1,n1,qq,pp);
+	    sf_causint_lop (true,false,n1,n1,qq,pp);
 	} else {
-	    causint_lop (false,false,n1,n1,pp,qq);
+	    sf_causint_lop (false,false,n1,n1,pp,qq);
 	}
 	sf_floatwrite(qq,n1,out);
     }
@@ -55,4 +54,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mcausint.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

@@ -5,7 +5,6 @@
 /*^*/
 
 #include "mis2.h"
-#include "mask.h"
 #include "helicon.h" 
 #include "polydiv.h" 
 
@@ -21,10 +20,10 @@ void mis2(int niter         /* number of iterations */,
     float *dd;
 
     if (doprec) {                          /*  preconditioned */
-	mask_init(known);
+	sf_mask_init(known);
 	polydiv_init(nx, aa);
-	sf_solver_prec(mask_lop, sf_cgstep, polydiv_lop, nx, nx, nx, xx, xx, 
-		       niter, 0., "end");
+	sf_solver_prec(sf_mask_lop, sf_cgstep, polydiv_lop, nx, nx, nx, 
+		       xx, xx, niter, 0., "end");
 	polydiv_close();
     } else {                               /*  regularized */
 	dd = sf_floatalloc(nx);

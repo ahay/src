@@ -1,4 +1,4 @@
-/* Causal integration */
+/*< Simple mask operator >*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -17,31 +17,38 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "mask.h"
+
+#include "_bool.h"
 /*^*/
 
-#include "causint.h"
+#include "adjnull.h"
+#include "error.h"
 
-void causint_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+static const bool *m;
+
+void sf_mask_init(const bool *m_in)
+/*< initialize with mask >*/
+{
+    m = m_in;
+}
+
+void sf_mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
-    int i;       
-    float t;
+    int ix;
 
-    sf_adjnull (adj, add, nx, ny, xx, yy);
+    if (nx != ny) sf_error("%s: wrong size: %d != %d",nx,ny);
 
-    t = 0.;
-    if ( adj) {
-	for (i=nx-1; i >= 0; i--) {
-	    t += yy[i];
-	    xx[i] += t;
-	}
-    } else {
-	for (i=0; i < nx; i++) {
-	    t += xx[i];
-	    yy[i] += t;
+    sf_adjnull (adj,add,nx,ny,x,y);
+
+    for (ix=0; ix < nx; ix++) {
+	if (m[ix]) {
+	    if (adj) x[ix] += y[ix];
+	    else     y[ix] += x[ix];
 	}
     }
 }
 
 /* 	$Id$	 */
+

@@ -22,7 +22,6 @@
 #include "smoothder.h"
 
 #include "repeat.h"
-#include "causint.h"
 #include "trianglen.h"
 #include "trisl.h"
 #include "weight.h"
@@ -49,7 +48,7 @@ int smoothder_init(int ndim   /* number of dimensions */,
     n1 = ndat[0];
     n2 = n/n1;
     
-    repeat_init(n1,n2,causint_lop);
+    repeat_init(n1,n2,sf_causint_lop);
     trianglen_init(ndim,rect,ndat);
 
     tmp = sf_floatalloc2(n1,n2);

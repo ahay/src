@@ -1,4 +1,4 @@
-/* Multi-scale missing data interpolation */
+/* Causal integration */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -17,39 +17,33 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "causint.h"
+
+#include "_bool.h"
 /*^*/
 
-#include "msmis2.h"
-#include "mshelicon.h" 
+#include "adjnull.h"
 
-#include "mshelix.h"
-/*^*/
-
-void msmis2(int niter         /* number of iterations */, 
-	    int nx            /* data size */, 
-	    int ns            /* number of scales */, 
-	    float *xx         /* data */, 
-	    msfilter aa       /* filter */, 
-	    const bool *known /* mask for known data */)
-/*< interpolate >*/ 
+void sf_causint_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
 {
-    int ix, nxs;
-    float *dd;
+    int i;       
+    float t;
 
-    nxs = ns*nx;
+    sf_adjnull (adj, add, nx, ny, xx, yy);
 
-    dd = sf_floatalloc(nxs);
-    for (ix=0; ix < nxs; ix++) {
-	dd[ix]=0.;
+    t = 0.;
+    if ( adj) {
+	for (i=nx-1; i >= 0; i--) {
+	    t += yy[i];
+	    xx[i] += t;
+	}
+    } else {
+	for (i=0; i < nx; i++) {
+	    t += xx[i];
+	    yy[i] += t;
+	}
     }
-    
-    mshelicon_init(aa);
-    sf_solver (mshelicon_lop, sf_cgstep, nx, nxs, xx, dd, niter, 
-	       "known", known, "x0", xx, "end");
-    
-    sf_cgstep_close();
-    free(dd);
 }
 
 /* 	$Id$	 */

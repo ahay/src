@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "tent.h"
 #include "ocmkwallwt.h"
 #include "oc.h"
 
@@ -85,17 +84,10 @@ int main(int argc, char* argv[])
 
     sf_getints ("center",center,dim);
 
-    if (!sf_getbool ("tent",&tnt)) tnt = true;
-    /* if y, use tent-like weight; n, cosine weight */
-    
     wind = sf_floatalloc(w12);
     wall = sf_tempfile(&temp,"w+b");
 
-    if (tnt) {
-	tent (dim, w, center, a, wind);
-    } else {
-	sf_tent2 (dim, w, wind);
-    }
+    sf_tent2 (dim, w, wind);
 
     sf_floatwrite (wind, w12, windwt);
 

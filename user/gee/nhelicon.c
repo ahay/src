@@ -21,7 +21,6 @@
 /*^*/
 
 #include "nhelicon.h"
-#include "copy.h"
 
 #include "nhelix.h"
 /*^*/
@@ -40,7 +39,7 @@ void nhelicon_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
     int iy, ix, ia, ip, na, *lag;
     float *flt;
 
-    copy_lop(adj,add,nx,ny,xx,yy);
+    sf_copy_lop(adj,add,nx,ny,xx,yy);
 
     for (iy=0; iy < ny; iy++) {    
         if (NULL != aa->mis && aa->mis[iy]) continue;

@@ -17,12 +17,15 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-/*^*/
-
 #include "copy.h"
 
-void copy_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
+#include "_bool.h"
+/*^*/
+
+#include "adjnull.h"
+#include "error.h"
+
+void sf_copy_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
 /*< linear operator >*/
 {
     int i;

@@ -24,7 +24,6 @@
 
 #include "lint1.h"
 #include "tcai1.h"
-#include "causint.h"
 #include "pef.h"
 #include "bound.h"
 #include "polydiv.h"
@@ -123,7 +122,7 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 	if (prec) {
 	    if (filt==1) {
-		sf_solver_prec(lint1_lop, sf_cgstep, causint_lop, nx, nx, 
+		sf_solver_prec(lint1_lop, sf_cgstep, sf_causint_lop, nx, nx, 
 			       nd, mm, dd, niter, eps, "end");
 	    } else {
 		sf_solver_prec(lint1_lop, sf_cgstep, sf_triangle1_lop, nx, nx, 

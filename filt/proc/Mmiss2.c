@@ -20,7 +20,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "mask.h"
 #include "gaussshape2.h"
 #include "freqfilt2.h"
 
@@ -73,7 +72,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("force",&force)) force=true;
     /* if y, keep known values */
 
-    mask_init(known);
+    sf_mask_init(known);
     gaussshape2_init(n1,n2);
     sf_conjgrad_init(n12, n12, n12, n12, eps, 1.e-9, true, false);
 
@@ -99,11 +98,11 @@ int main(int argc, char* argv[])
 	    }
 	}
  
-	sf_conjgrad(NULL, mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+	sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
 
 	if (shape) {
 	    gaussshape2_set(a, mm, 100);
-	    sf_conjgrad(NULL, mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+	    sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
 	}
 
 	if (force) {
@@ -118,4 +117,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mmiss2.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
