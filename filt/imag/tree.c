@@ -1,3 +1,23 @@
+
+/* Tree structure for multiple arrivals. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <assert.h>
 #include <float.h>
@@ -18,7 +38,7 @@ static NodeQueue Orphans;
 
 static eno2 cvel;
 
-static int nz, nx, na, nt, nax, naxz, order, nacc, ii, jj;
+static int nz, nx, na, nax, naxz, order, nacc, ii, jj;
 static float dz, dx, da, z0, x0, a0, **val;
 static const float eps = 1.e-5;
 static bool *accepted;
@@ -29,17 +49,30 @@ static void process_node (Node nd);
 static void process_child (Node child);
 static void check_front (void);
 static void orphanize (Node node);
+
+#if 0
+
 static void postprocess_node (Node nd);
 
-void tree_init (int order1,
-		int nz1, int nx1, int na1, int nt1, 
-		float dz1, float dx1, float da1, 
-		float z01, float x01, float a01, 
-		float** vel, float** value) 
+#endif
+
+void tree_init (int order1    /* interpolation order */,
+		int nz1       /* depth samples */, 
+		int nx1       /* lateral samples */, 
+		int na1       /* angle samples */, 
+		float dz1     /* depth sampling */, 
+		float dx1     /* lateral sampling */, 
+		float da1     /* angle sampling */, 
+		float z01     /* depth origin */, 
+		float x01     /* lateral origin */, 
+		float a01     /* angle origin */, 
+		float** vel   /* slowness [nx][nz] */ , 
+		float** value /* output [nx*nz*na][4] */) 
+/*< initialize >*/
 {
     int i;
 
-    nx = nx1; nz = nz1; na = na1; nt = nt1;
+    nx = nx1; nz = nz1; na = na1; 
     dx = dx1; dz = dz1; da = da1;
     x0 = x01; z0 = z01; a0 = a01;
 
@@ -47,7 +80,7 @@ void tree_init (int order1,
     order = order1;
     
     cvel = eno2_init (order, nz, nx);
-    eno2_set (cvel, vel); /* Del is slowness */
+    eno2_set (cvel, vel);
 
     val = value;
     accepted = sf_boolalloc(naxz);
@@ -61,6 +94,7 @@ void tree_init (int order1,
 }
 
 void tree_build(bool debug)
+/*< Create a dependency tree >*/
 {
     int i, k, iz, ix, ia, kx, kz, ka, jx, jz;
     float x, z, p[2], a, v, v0, g0[2], g[2], s, sx, sz, t=0., *vk;
@@ -679,6 +713,8 @@ static void catch_node (Node node) {
     TraverseQueue(node->children,catch_node);
 }
 
+#if 0
+
 static void catch(int k) {
     Node node;
 
@@ -687,6 +723,8 @@ static void catch(int k) {
     node = Tree+k;
     TraverseQueue(node->children,catch_node);
 }
+
+#endif
 
 static void print_node (Node node) {
     int k, kx, kz, ka;
@@ -703,8 +741,9 @@ static void print_node (Node node) {
     }
 }
 
-/* print_queue */
-void tree_print (void) {
+void tree_print (void) 
+/*< Print out the tree (for debugging >*/
+{
     int k;
     Node node;
 
@@ -724,6 +763,8 @@ void tree_print (void) {
     fprintf(stderr,"\n");
 } 
 
+#if 0
+
 static void postprocess_node (Node nd)
 {
     int k;
@@ -735,6 +776,8 @@ static void postprocess_node (Node nd)
     process_node (nd);
     if (!infront) sf_pqueue_insert(val[k]+2);
 }
+
+#endif
 
 static void process_node (Node nd) {
     static int n=0;
@@ -829,6 +872,7 @@ static void process_child (Node child) {
 }
 
 void tree_close (void)
+/*< Free allocated storage >*/
 {
     FreeNodes(Tree,naxz);
 }

@@ -561,9 +561,10 @@ class TeXPaper(Environment):
             self.Depends(html,icons)
             self.Alias(paper+'.html',html)
             docdir = os.path.join(self.docdir,dir)
-            self.Command(os.path.join(docdir,'index.html'),html,
+            dochtml = os.path.join(docdir,'index.html')
+            self.Command(dochtml,html,
                          'cd $SOURCE.dir && cp -r * $TARGET.dir && cd ..')
-            self.Alias(paper+'.install',docdir)
+            self.Alias(paper+'.install',dochtml)
     def End(self,paper='paper',**kw):
         if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)

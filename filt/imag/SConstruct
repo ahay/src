@@ -33,7 +33,7 @@ src = '''
 aastretch acell agrid atela cell celltrace ctridiagonal delaunay dmo dsr
 eno eno2 eno3 fastmarch fdmig fzero gazdag grad2fill grid2 grid3 halfint
 heap igrad2 kirchnew list_struct mutter neighbors node offruffp pick0
-pshift quadratic raytracing
+pshift quadratic raytracing split1 tree
 '''
 
 for source in Split(src):

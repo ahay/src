@@ -1,15 +1,40 @@
+/* Split-step migration/modeling */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "split1.h"
 
-void split1 (bool verb, bool inv, float eps,  
-	     int nw, float dw, 
-	     int nz, float dz,
-	     int nx, float dx,
-	     float **vt, float *v,
-	     float complex **cp, float **q)
+void split1 (bool verb          /* verbosity flag */, 
+	     bool inv           /* migration/modeling flag */, 
+	     float eps          /* stability factor */,  
+	     int nw, float dw   /* frequency */, 
+	     int nz, float dz   /* depth */,
+	     int nx, float dx   /* midpoint */,
+	     float **vt         /* slowness [nx][nz] */, 
+	     float *v           /* reference slowness [nz] */,
+	     float complex **cp /* data [nx][nw] */, 
+	     float **q          /* image [nx][nz] */)
+/*< Apply migration/modeling >*/
 {
     int nk,iz,iw,ix,jx;
     float k,dk,fk;

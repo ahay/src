@@ -134,8 +134,8 @@ static void check_zeros (sf_file file, int esize, long long size, int ncheck,
 	if (bytes < 0) bytes = size;
 
 	if (size != bytes) 
-	    sf_warning("\t\tActually %l bytes, %g%% of expected.",
-		       bytes, 100.*bytes/size);	
+	    sf_warning("\t\tActually %lld bytes, %g%% of expected.",
+		       bytes, (100.00*bytes)/size);	
 	
 	for (nzero=0, nleft = bytes, nbuf = BUFSIZ; 
 	     nzero < ncheck && nleft > 0; 

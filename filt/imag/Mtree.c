@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     bool velocity, debug;
-    int nz,nx, i, iz, na, nt, ix, order, naxz;
+    int nz,nx, i, iz, na, ix, order, naxz;
     float **slow, **node;
     float dz,dx,da,x0,z0,a0;
     sf_file vel, out;
@@ -44,9 +44,6 @@ int main(int argc, char* argv[])
   
     if (!sf_histfloat(vel,"o1",&z0)) sf_error("No o1= in input");
     if (!sf_histfloat(vel,"o2",&x0)) sf_error("No o2= in input");
-
-    if (!sf_getint("nt",&nt)) nt=nx*nz;
-    /* Maximum number of steps */
 
     sf_putint(out,"n4",nz);
     sf_putfloat(out,"d4",dz);
@@ -94,7 +91,7 @@ int main(int argc, char* argv[])
    
     naxz = na*nx*nz;
     node = sf_floatalloc2(4,naxz);
-    tree_init (order, nz, nx, na, nt,
+    tree_init (order, nz, nx, na, 
 	       dz, dx, da, z0, x0, a0, slow, node);
     
     for (i = 0; i < naxz; i++) {
@@ -115,4 +112,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mtree.c,v 1.11 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

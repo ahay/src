@@ -34,13 +34,13 @@ void hilbert (const float* trace, float* trace2)
     }
 
     for (i=n; i >= 1; i--) {
-	trace2[0] = h[0] + 4*(h[2]-2*h[1]+h[0])*c2;
-	trace2[1] = h[1] + 2*(h[3]-h[2]-h[1]+h[0])*c2;
+	trace2[0] = h[0] + (h[2]-2*h[1]+h[0])*c2;
+	trace2[1] = h[1] + (h[3]-3*h[1]+2*h[0])*c2;
 	for (it=2; it < nt-2; it++) {
 	    trace2[it] = h[it]+(h[it+2]-2.*h[it]+h[it-2])*c2;
 	}
-	trace2[nt-2] = h[nt-2] + 2*(h[nt-1]-h[nt-2]-h[nt-3]+h[nt-4])*c2;
-	trace2[nt-1] = h[nt-1] + 4*(h[nt-1]-2*h[nt-2]+h[nt-3])*c2;
+	trace2[nt-2] = h[nt-2] + (h[nt-4]-3*h[nt-2]+2*h[nt-1])*c2;
+	trace2[nt-1] = h[nt-1] + (h[nt-3]-2*h[nt-2]+h[nt-1])*c2;
 
 	for (it=0; it < nt; it++) {
 	    h[it] = trace[it] + trace2[it]*(2*i-1)/(2*i);
