@@ -47,7 +47,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    divn_init(dim,nd,n,rect,niter);
+    for (i=1; i < dim-1; i++) {
+	n[i] = n[i+1];
+    }
+    dim--;
+
+    divn_init(dim,nm,n,rect,niter);
 
     slice = sf_floatalloc2(nt,ns);
 
@@ -111,5 +116,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mblindpick.c,v 1.8 2004/05/07 03:40:04 fomels Exp $	 */
+/* 	$Id: Mblindpick.c,v 1.9 2004/05/08 03:44:11 fomels Exp $	 */
 
