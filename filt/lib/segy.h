@@ -26,6 +26,7 @@ void sf_segy2head(const char* buf, int* head, int ns);
 void sf_trace2segy(char* buf, const float* trace, int ns, int format);
 void sf_head2segy(char* buf, const int* head, int ns);
 int sf_segykey (const char* key);
+char* sf_segykeyword (int k);
 
 #endif
 

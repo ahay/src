@@ -9,6 +9,7 @@ error.o: error.c error.h getpar.h c99.h
 file.o: file.c file.h c99.h getpar.h simtab.h alloc.h error.h
 files.o: files.c files.h c99.h file.h simtab.h error.h alloc.h
 getpar.o: getpar.c getpar.h c99.h simtab.h alloc.h error.h
+math1.o: math1.c stack.h c99.h error.h alloc.h file.h
 segy.o: segy.c segy.h c99.h error.h
 simtab.o: simtab.c simtab.h c99.h alloc.h error.h
 stack.o: stack.c c99.h stack.h alloc.h error.h

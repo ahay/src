@@ -247,11 +247,11 @@ static void check_compat (int esize,
 		sf_error("%s mismatch: need %d",key,n[id-1]);
 	    (void) snprintf(key,3,"d%d",id);
 	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || (fabs(fi-f) > tol*fabs(f))))
+		(!sf_histfloat(in[i],key,&fi) || (fabsf(fi-f) > tol*fabsf(f))))
 		sf_warning("%s mismatch: need %g",key,f);
 	    (void) snprintf(key,3,"o%d",id);
 	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || (fabs(fi-f) > tol*fabs(f))))
+		(!sf_histfloat(in[i],key,&fi) || (fabsf(fi-f) > tol*fabsf(f))))
 		sf_warning("%s mismatch: need %g",key,f);
 	}
     }

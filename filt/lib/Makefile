@@ -5,7 +5,7 @@ CFLAGS = -std=gnu99 -Wall -pedantic -g
 
 DEPEND = -MM
 
-SRC = alloc c99 decart error file files getpar segy simtab stack
+SRC = alloc c99 decart error file files getpar math1 segy simtab stack
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 

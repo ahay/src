@@ -130,7 +130,7 @@ int main (int argc, char *argv[])
     sf_setformat(out,"raw");
     
     /* Now do the actual work */
-    n2 = sf_leftsize(out,1);
+    n2 = sf_filesize(out)/m[0];
     m1 = m[0]*esize;
     n1 = (1+(m[0]-1)*j[0])*esize;
     jump = (j[0]-1) * esize;

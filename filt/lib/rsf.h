@@ -144,6 +144,15 @@ bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
 #endif
+#ifndef _sf_math_h
+#define _sf_math_h
+
+#include "file.h"
+
+void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst);
+int sf_math_parse (char* output, sf_file out);
+
+#endif
 #ifndef _sf_segy_h
 #define _sf_segy_h
 
@@ -172,6 +181,7 @@ void sf_segy2head(const char* buf, int* head, int ns);
 void sf_trace2segy(char* buf, const float* trace, int ns, int format);
 void sf_head2segy(char* buf, const int* head, int ns);
 int sf_segykey (const char* key);
+char* sf_segykeyword (int k);
 
 #endif
 

@@ -508,6 +508,10 @@ int sf_segykey (const char* key) {
     return 0;
 }
 
+char* sf_segykeyword (int k) {
+    return segykey[k].name;
+}
+
 void sf_head2segy(char* buf, const int* trace, int nk)
 {
     int i;
