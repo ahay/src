@@ -86,13 +86,17 @@ sys.path = libs + sys.path
 # END STANDARD SCons SCRIPT HEADER
 ##############################################################################
 
-from SCons.Environment import Environment
-from SCons.Util import WhereIs
-from SCons.Builder import Builder
-from SCons.Action import Action
-from SCons.Scanner import Base
-from SCons.Options import Options
-from SCons.Node.FS import default_fs 
+# The following adds all SCons SConscript API to the globals of this module.
+import SCons.Script.SConscript
+globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+
+#from SCons.Environment import Environment
+#from SCons.Util import WhereIs
+#from SCons.Builder import Builder
+#from SCons.Action import Action
+#from SCons.Scanner import Base
+#from SCons.Options import Options
+#from SCons.Node.FS import default_fs 
 
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES
@@ -321,7 +325,7 @@ def getplots(node,env,path):
     plots = isplot.findall(contents)
     return map(lambda x: os.path.join(resdir,x) + ressuffix,plots)
 
-Plots = Base(name='Plots',function=getplots,skeys=['.tex','.ltx'])
+Plots = Scanner(name='Plots',function=getplots,skeys=['.tex','.ltx'])
 
 #############################################################################
 # PLOTTING COMMANDS
@@ -527,4 +531,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.29 2004/05/25 03:30:53 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.30 2004/05/27 01:21:54 fomels Exp $	
