@@ -52,15 +52,17 @@ int main(int argc, char* argv[])
     float  *bzl,*bzh,*bxl,*bxh;  /* boundary */
 
     int   nop=2;       /* Laplacian operator size */
-    float c0=-30./12.; /* Laplacian operator coefficients */
-    float c1=+16./12.;
-    float c2=- 1./12.;
+    float c0, c1, c2;  /* Laplacian operator coefficients */
 
     int  nbz,nbx; // boundary size
     float tz, tx; // sponge boundary decay coefficients
     float dp;
 
 /*------------------------------------------------------------*/
+
+    c0=-30./12.; 
+    c1=+16./12.;
+    c2=- 1./12.;
 
     /* init RSF */
     sf_init(argc,argv);
