@@ -62,6 +62,7 @@ if not datapath:
     if not datapath:
         datapath = './' # the ultimate fallback
 dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
+tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -189,6 +190,7 @@ class Project(Environment):
         self.resdir = resdir
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
+                         'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
                          'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
