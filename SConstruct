@@ -58,9 +58,8 @@ env.Append(CPPPATH=['../../include'],
 
 if sys.platform[:5] == 'sunos':
     env.Append(LIBS=['nsl'])
-    if not env['CC'].endswith('gcc'):
-        # Sun's native compiler 
-        env['CCFLAGS']='-xO2'
+elif sys.platform[:6] == 'cygwin':
+    env.Append(LIBS=['rpc'])
 
 Export('env')
 dirs = ('lib','main','proc','imag')
@@ -126,4 +125,4 @@ env.Command(index,None,'PYTHONPATH=%s %s sfdoc -w %s' %
            (libdir,WhereIs('python'),docdir))
 Depends(index,use)
 
-# 	$Id: SConstruct,v 1.34 2004/06/30 10:44:21 fomels Exp $	
+# 	$Id: SConstruct,v 1.35 2004/06/30 18:28:25 fomels Exp $	

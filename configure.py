@@ -67,6 +67,9 @@ def cc(context):
                 break
         if not res:
             context.env['CCFLAGS'] = oldflag
+    elif sys.platform[:5] == 'sunos':
+        context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
+                                                '-O2','-xO2')
 
 def cxx(context):
     context.Message("checking C++ compiler ... ")
@@ -269,4 +272,4 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.17 2004/06/29 17:43:33 fomels Exp $	
+#	$Id: configure.py,v 1.18 2004/06/30 18:28:25 fomels Exp $	

@@ -310,7 +310,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
         desc = None
     prog = rsfprog(name,file,desc)
     file = re.sub('^[^\/]*\/','',file)
-    out.write("%s = rsfdoc.rsfprog('%s','%s','%s')\n" %
+    out.write("%s = rsfdoc.rsfprog('%s','%s','''%s''')\n" %
               (name,name,file,desc))
     pars = param.findall(text)
     parline = ''
@@ -448,4 +448,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.18 2004/06/29 19:51:05 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.19 2004/06/30 18:28:25 fomels Exp $	
