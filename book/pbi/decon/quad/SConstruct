@@ -1,0 +1,44 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+Flow('Ricker',None,
+     '''spike n1=1024 | spectra |
+     headermath output="T*T/1000" | math output="input*exp(-input)"
+     ''')
+
+
+Flow('ricker ricker1 ricker2','Ricker',
+     '''
+     rtoc | fft1 inv=y > ${TARGETS[1]};
+     window < ${TARGETS[1]} n1=520  > ${TARGETS[2]};
+     window < ${TARGETS[1]} n1=520 f1=520 | cat axis=1 ${TARGETS[2]} |
+     window n1=41 f1=500
+     ''')
+Flow('integr','ricker','causint')
+
+Result('spec','ricker integr',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       pad n1=1024 |
+       spectra |
+       graph title=Spectrum label1="Frequency (Hz)" 
+       ''')
+
+Flow('minphase','Ricker','rtoc | kolmog | window n1=20 | pad n1=41 beg1=21')
+Result('time','minphase ricker',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots labels=Min-phase:Zero-phase title="Ricker Wavelet" label1=" "
+       ''')
+
+###########################################################################
+End()
