@@ -1,0 +1,40 @@
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+from rsfproj import *
+###########################################################################
+Book()
+
+Flow('spike',None,'spike n1=41 k1=21 d1=1 label1=" " ')
+
+exps = []
+tris = []
+repeat = 5
+
+for iter in range(1,repeat+1):
+    exp = 'exp%d' % iter 
+    tri = 'tri%d' % iter 
+    exps.append(exp)
+    tris.append(tri)
+    Flow(tri,'spike','smooth    rect1=5 repeat=%d' % iter)
+    Flow(exp,'spike','smoothreg eps=5  repeat=%d' % iter)
+
+dots = 'cat axis=2 ${SOURCES[1:%d]} | dots yreverse=y' % repeat
+
+def graph(title):
+    return '''
+    cat axis=2 ${SOURCES[1:%d]} | spectra |
+    graph title="%s" label1="Frequency (cycles)"
+    ''' % (repeat,title)
+
+Plot('exp',exps,dots)
+Plot('tri',tris,dots)
+
+Plot('exp1',exps,graph('Spectrum of regularized smoothing'))
+Plot('tri1',tris,graph('Triangle spectrum'))
+
+for case in ['exp','tri']:
+    Combine(case,[case,case+'1'],'SideBySideAniso',result=1)
+    
+###########################################################################
+End()
