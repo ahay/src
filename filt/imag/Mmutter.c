@@ -5,6 +5,8 @@ Takes: < cmp.rsf > muted.rsf
 Data is smoothly weighted inside the mute zone.
 The weight is zero for t <       (x-x0) * slope0
 The weight is one  for t >  tp + (x-x0) * slopep
+
+The signs are reversed for inner=y.
 */
 
 #include <rsf.h>
@@ -14,7 +16,7 @@ The weight is one  for t >  tp + (x-x0) * slopep
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype;
-    bool abs, half;
+    bool abs, half, inner;
     float tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, v0, *data;
     sf_file in, out;
 
@@ -42,6 +44,7 @@ int main(int argc, char* argv[])
     CDPtype=1;
     if (sf_histfloat(in,"d3",&d3)) {
 	CDPtype=0.5+0.5*d2/d3;
+	if (CDPtype < 1) CDPtype=1;
 	if (1 != CDPtype) sf_histint(in,"CDPtype",&CDPtype);
     } 	    
     sf_warning("CDPtype=%d",CDPtype);
@@ -55,9 +58,12 @@ int main(int argc, char* argv[])
     if (!sf_getbool("abs",&abs)) abs=true;
     /* if y, use absolute value |x-x0| */
 
+    if (!sf_getbool("inner",&inner)) inner=false;
+    /* if y, do inner muter */
+
     data = sf_floatalloc(n1);
 
-    mutter_init(n1,o1,d1,abs);
+    mutter_init(n1,o1,d1,abs,inner);
 
     for (i3=0; i3 < n3; i3++) { 
 	x0= o2 + (d2/CDPtype)*(i3%CDPtype) - x1;
@@ -74,4 +80,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.5 2004/04/02 02:22:23 fomels Exp $	 */
+/* 	$Id: Mmutter.c,v 1.6 2004/04/13 01:40:48 fomels Exp $	 */
