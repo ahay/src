@@ -1,5 +1,7 @@
 #include "adjnull.h"
 
+#include "c99.h"
+
 /*
   Function: adjnull
   -----------------
@@ -38,5 +40,5 @@ void sf_cadjnull (bool adj, bool add, int nx, int ny,
     }
 }
 
-/* 	$Id: adjnull.c,v 1.2 2004/03/13 06:00:15 fomels Exp $	 */
+/* 	$Id: adjnull.c,v 1.3 2004/04/02 02:22:38 fomels Exp $	 */
 
