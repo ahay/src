@@ -3,6 +3,9 @@
 #include <string.h>
 #include <time.h>
 
+/* Solaris? */
+#include <alloca.h>
+
 #include <limits.h>
 
 #include <sys/types.h>
@@ -1122,4 +1125,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.18 2004/04/19 21:51:26 fomels Exp $	 */
+/* 	$Id: file.c,v 1.19 2004/06/15 16:27:42 fomels Exp $	 */

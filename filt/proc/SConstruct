@@ -30,6 +30,8 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Append(CPPPATH=['../../include'],
                LIBPATH=['../lib'],LIBS=['rsf','m'])
+    if sys.platform[:5] == 'sunos':
+        env.Append(LIBS=['nsl'])
     SConscript('../lib/SConstruct')
 
 mains = Split(progs)
@@ -72,4 +74,4 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.1 2004/06/11 10:47:16 fomels Exp $	
+# 	$Id: SConstruct,v 1.2 2004/06/15 16:27:42 fomels Exp $	

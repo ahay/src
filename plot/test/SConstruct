@@ -23,6 +23,8 @@ except:
 	env.Append(CPPPATH=['../../include'],
 		   LIBPATH=['../../filt/lib','../lib'],
 		   LIBS=['rsfplot','rsf','m'])
+	if sys.platform[:5] == 'sunos':
+		env.Append(LIBS=['nsl'])
 	SConscript('../lib/SConstruct')
 
 vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
@@ -64,4 +66,4 @@ if root:
 #####################################################################
 
 
-# 	$Id: SConstruct,v 1.6 2004/06/02 15:09:58 fomels Exp $	
+# 	$Id: SConstruct,v 1.7 2004/06/15 16:27:42 fomels Exp $	

@@ -24,7 +24,8 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env.Append(CCFLAGS=' -g')
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+
 
 ##############################################################################
 # MAIN LIBRARY

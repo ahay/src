@@ -1,6 +1,6 @@
 #include <math.h>
-#include <stdbool.h>
 
+#include <rsf.h>
 #include <rsfplot.h>
 
 #define NARRAY 41

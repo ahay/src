@@ -38,6 +38,27 @@ static int hash (const char *key, int size)
     return (h % size);
 }
 
+/* portable strsep */
+static char *
+strsep1(char **stringp, char *delim)
+{
+    char *start = *stringp;
+    char *cp;
+    char ch;
+
+    if (start == NULL) return NULL;
+
+    for (cp = start; ch = *cp; cp++) {
+        if (strchr(delim, ch)) {
+            *cp++ = 0;
+            *stringp = cp;
+            return start;
+        }
+    }
+    *stringp = NULL;
+    return start;
+}
+
 sf_simtab sf_simtab_init(int size)
 {
     sf_simtab table;
@@ -348,9 +369,9 @@ bool sf_simtab_getstrings (sf_simtab table, const char* key,
     memcpy(string,val+iopen,iclose);
     string[iclose]='\0';
    
-    par[0] = strsep(&string,":");
+    par[0] = strsep1(&string,":");
     for (i = 1; i < n; i++) {
-	par[i] = strsep(&string,":");
+	par[i] = strsep1(&string,":");
     }
 
     return true;
@@ -437,4 +458,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.11 2004/03/30 08:00:27 fomels Exp $	 */
+/* 	$Id: simtab.c,v 1.12 2004/06/15 16:27:42 fomels Exp $	 */

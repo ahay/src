@@ -1,7 +1,7 @@
 #include <stdlib.h>
-#include <stdbool.h>
 #include <math.h>
 
+#include <rsf.h>
 #include <rsfplot.h>
 
 #define NANGLES 11

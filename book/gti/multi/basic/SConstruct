@@ -1,12 +1,5 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os
-
-sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
-
 from rsfproj import *
-Book()
+
 ###########################################################################
 Flow('spike',None,"spike n1=101 n2=101 d1=0.01 d2=0.01 mag=1")
 Flow('mgauss','spike',"gauss r=0.1 a=-0.5")

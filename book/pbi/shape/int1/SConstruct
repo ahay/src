@@ -1,13 +1,4 @@
-###########################################################################
-import sys, os
-
-sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
-
-##########################################################################
-
 from rsfproj import *
-
-Book()
 
 Flow('time',None,
      "spike n1=200 d1=1 o1=1 label1=' ' | headermath output='N*0.4'")

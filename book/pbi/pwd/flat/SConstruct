@@ -1,15 +1,5 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os
-
-root = os.environ.get('RSFROOT')
-sys.path.append(os.path.join(root,'lib'))
-
 from rsfproj import *
-Book()
 
-###########################################################################
 Fetch(['acig10.HH','cmp.HH'],'acig')
 
 Flow('acig','acig10.HH',

@@ -1,11 +1,4 @@
-###########################################################################
-import sys, os, string
-
-sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 from rsfproj import *
-
-###########################################################################
-Book()
 
 t = "titles=\"in:in/A:A*in/A:(in/A)/A':AA'(in/A)/A'\""
 g = 'grey gainpanel=every pclip=100 wantaxis=n crowd=.88 gpow=.7 title="%s" '

@@ -1,14 +1,4 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os
-
-root = os.environ.get('RSFROOT')
-sys.path.append(os.path.join(root,'lib'))
-
 from rsfproj import *
-###########################################################################
-Book()
 
 tpow = {'02':2.0,'20':1.0} # doubled because there is no tpow in grey
 gpow = {'02':0.5,'20':0.8}

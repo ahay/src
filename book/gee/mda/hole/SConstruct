@@ -1,14 +1,4 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os, string
-
-root = os.environ.get('RSFROOT')
-sys.path.append(os.path.join(root,'lib'))
-
 from rsfproj import *
-##########################################################################
-Book()
 
 Flow('make',None,'make n1=100 n2=20')
 Flow('hole','make','hole')

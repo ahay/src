@@ -60,6 +60,13 @@ def Book():
     set_resdir('../Fig')
     record = 1
 
+def Standalone():
+    global record
+    set_resdir('./Fig')
+    record = 0
+
+Book()
+
 latex = None
 bibtex = None
 rerun = None
@@ -440,4 +447,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.32 2004/06/02 15:09:58 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.33 2004/06/15 16:27:41 fomels Exp $	

@@ -44,7 +44,9 @@ float hypotf(float,float);
 #define I 0.0
 #define csqrtf sqrtf
 #define clogf logf
+#define clog log
 #define cexpf expf
+#define cexp exp
 #define cabsf fabsf
 #define crealf sf_crealf
 #define cimagf sf_cimagf
@@ -70,4 +72,4 @@ void cprint (float complex c);
 
 #endif
 
-/* 	$Id: c99.h,v 1.7 2004/03/30 08:00:27 fomels Exp $	 */
+/* 	$Id: c99.h,v 1.8 2004/06/15 16:27:42 fomels Exp $	 */

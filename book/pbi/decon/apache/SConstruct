@@ -1,14 +1,5 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os
-
-sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
-
 from rsfproj import *
-Book()
 
-###########################################################################
 Fetch('abo40i.dat','apache')
 
 Flow('apache','abo40i.dat',

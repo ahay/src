@@ -6,14 +6,14 @@
 
 #include "quantile.h"
 
-static float *abs;
+static float *abs1;
 
 void irls_init(int n) {
-    abs = sf_floatalloc(n);
+    abs1 = sf_floatalloc(n);
 }
 
 void irls_close(void) {
-    free (abs);
+    free (abs1);
 }
 
 void l1 (int n, const float *res, float *weight)  {
@@ -21,10 +21,10 @@ void l1 (int n, const float *res, float *weight)  {
     int i;
 
     for (i=0; i < n; i++) {
-	abs[i] = fabsf(res[i]);
+	abs1[i] = fabsf(res[i]);
     }
 
-    rbar = quantile(n/2,n,abs);
+    rbar = quantile(n/2,n,abs1);
 
     sf_warning("in l1");
 
@@ -38,10 +38,10 @@ void cauchy (int n, const float *res, float *weight)  {
     int i;
 
     for (i=0; i < n; i++) {
-	abs[i] = fabsf(res[i]);
+	abs1[i] = fabsf(res[i]);
     }
 
-    rbar = quantile(n/2,n,abs);
+    rbar = quantile(n/2,n,abs1);
 
     sf_warning("in cauchy");
 

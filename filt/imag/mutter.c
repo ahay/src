@@ -6,14 +6,14 @@
 
 static float dt, t0;
 static int nt;
-static bool abs, inner;              
+static bool abs0, inner;              
 
 void mutter_init (int n1, float o1, float d1, bool abs1, bool inner1)
 {
     nt = n1;
     t0 = o1;
     dt = d1;
-    abs = abs1;
+    abs0 = abs1;
     inner = inner1;
 }
 
@@ -22,7 +22,7 @@ void mutter (float tp, float slope0, float slopep, float x, float *data)
     int it;
     float wt, t;
 
-    if (abs) x = fabsf(x);
+    if (abs0) x = fabsf(x);
 
     for (it=0; it < nt; it++) {
 	t = t0+it*dt;
@@ -40,5 +40,5 @@ void mutter (float tp, float slope0, float slopep, float x, float *data)
     }
 }
 
-/* 	$Id: mutter.c,v 1.3 2004/04/13 01:40:48 fomels Exp $	 */
+/* 	$Id: mutter.c,v 1.4 2004/06/15 16:27:42 fomels Exp $	 */
 

@@ -1,5 +1,7 @@
 #include <math.h>
 
+#include <rsf.h>
+
 #include "quadratic.h"
 
 /* solves a x^2 + 2 b x + c == 0 for smallest positive x */
@@ -25,4 +27,4 @@ float quadratic_solve (float a, float b, float c)
     return HUG;
 }
 
-/* 	$Id: quadratic.c,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */
+/* 	$Id: quadratic.c,v 1.3 2004/06/15 16:27:42 fomels Exp $	 */

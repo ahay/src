@@ -1,18 +1,9 @@
-###########################################################################
-# STANDARD HEADER
-###########################################################################
-import sys, os
-
-root = os.environ.get('RSFROOT')
-sys.path.append(os.path.join(root,'lib'))
-
 from rsfproj import *
 
+import sys
 sys.path.append('../../Scons')
 from galilee import Galilee
 from helderiv import Helderiv
-##########################################################################
-Book()
 
 def plot(title):
     return '''
