@@ -30,11 +30,11 @@ env = Environment(BUILDERS={'Chevron':Chevron})
 
 sets = ['seismic','well']
 baseplate = -2782
-def grey(title):
+def grey(title,clip='allpos=y clip=2000'):
     return '''
-    grey allpos=y clip=2000 crowd=0.88 transp=n yreverse=n
+    grey %s crowd=0.88 transp=n yreverse=n
     title="%s" label1="X axis" label2="Y axis"
-    ''' % title
+    ''' % (clip,title)
 
 for data in sets:
     file = data[0]+'2000'
@@ -47,11 +47,47 @@ for data in sets:
          bin interp=1 nx=40 ny=40 xkey=0 ykey=1 head=$SOURCE
          xmin=2000 xmax=28000 ymin=-25000 ymax=12000
          ''' % baseplate)
-    Plot(data,data,grey('Binned %s data' % data))
+    Plot(data,data,grey('Binned %s data' % data))    
+    Flow(data+'1',[data,file],
+         'frame xyz=${SOURCES[1]} base=%g' % baseplate)
+    Plot(data+'1',data+'1',grey('Binned and framed %s data' % data))
+
 Combine('wellseis',sets,'SideBySideIso',result=1)
 
-Flow('sx',['seismic','s2000'],'frame xyz=${SOURCES[1]} base=%g' % baseplate)
+Flow('sx','seismic1','lapfill niter=500')
 Plot('sx','sx',grey('Extended seismic'))
+
+Combine('misseis',['seismic1','sx'],'SideBySideIso',result=1)
+
+Flow('mask','well1','add mode=d $SOURCE')
+Flow('vv',['well1','sx','mask'],
+     '''
+     add scale=1,-1 ${SOURCES[1]} |
+     add mode=p ${SOURCES[2]}
+     ''')
+Plot('vv','vv',grey('Wells - Seismic',clip='pclip=100')) 
+
+for case in [1,2]:
+    diff = 'd%d' % case
+    modl = 'm%d' % case
+    cont = 'c%d' % case
+
+    case = 2-case
+    label = ['Laplacian','Gradient'][case]
+
+    Flow(diff,'vv','lapfill niter=500 grad=%d' % case)
+    Plot(diff,diff,grey('%s Map - Seismic' % label,clip='pclip=100'))
+
+    Flow(modl,[diff,'sx'],'add ${SOURCES[1]}')
+    Plot(modl,modl,grey('Map based on %s' % label))
+    Plot(cont,modl,
+         '''
+         contour nc=50 c0=0 transp=n yreverse=n crowd=.88
+         title="Map based on %s"
+         ''' % label)
+
+Combine('diffdiff',['vv','d1','d2'],'SideBySideAniso',result=1)
+Combine('finalmap',['m2','c2'],'SideBySideAniso',result=1)
 
 ###########################################################################
 End()
