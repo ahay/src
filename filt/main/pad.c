@@ -2,6 +2,7 @@
 
 Takes: [beg1= beg2= ... end1= end2=... | n1=  n2 = ... | n1out= n2out= ...]
 
+
 begN specifies the number of zeros to add before the beginning of axis N.
 endN specifies the number of zeros to add after the end of axis N.
 
@@ -9,8 +10,8 @@ Alternatively:
 
 nN or nNout specify the output length of axis N, padding accurs at the end.
 nN and nNout are equivalent.
-
 */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -28,6 +29,7 @@ nN and nNout are equivalent.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <stdio.h>
 #include <string.h>
 

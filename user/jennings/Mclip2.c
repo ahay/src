@@ -11,7 +11,6 @@ sfclip2 < in.rsf > out.rsf upper=x lower=-x
 is equivalent to
 
 sfclip < in.rsf > out.rsf clip=x
-
 */
 
 /*
