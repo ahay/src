@@ -30,7 +30,7 @@ opts.Save('config.py',env)
 config = env.Command('config.py','configure.py',"")
 env.Precious(config)
 env.InstallAs(os.path.join(libdir,'rsfconfig.py'),'config.py')
-Clean(config,['#/config.log','#/.sconf_temp'])
+Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 env.Alias('config',config)
 
 ##########################################################################
@@ -38,8 +38,9 @@ env.Alias('config',config)
 ##########################################################################
 for src in ('doc','proj','prog'):
     py = "rsf%s.py"% src
+    pyc = py + 'c'
     env.Install(libdir,py)
-    Clean(os.path.join(libdir,py),os.path.join(libdir,py+'c'))
+    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
 env.Install(bindir,'sfdoc')
 
 ##########################################################################
