@@ -20,9 +20,10 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"N",0);
     sf_putint(out,"T",1);
+    sf_putint(out,"input",2);
 
     for (i=0; i < SF_NKEYS; i++) {
-	sf_putint(out,sf_segykeyword(i),i+2);
+	sf_putint(out,sf_segykeyword(i),i+3);
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
@@ -37,7 +38,7 @@ int main(int argc, char* argv[])
 	key[len]='\0';
 
 	if (sf_getint(key,&nkey))
-	    sf_putint(out,key,nkey+2);
+	    sf_putint(out,key,nkey+3);
 	free(key);
     }
 
@@ -63,18 +64,19 @@ int main(int argc, char* argv[])
     len = sf_math_parse (output,out);
     
     ftra = sf_floatalloc2(n1,n2);
-    fbuf = sf_floatalloc2(n2,n1+2);
-    fst  = sf_floatalloc2(n2,len+2);
+    fbuf = sf_floatalloc2(n2,n1+3);
+    fst  = sf_floatalloc2(n2,len+3);
     
     sf_read(ftra[0],sizeof(float),n1*n2,in);
 
     for (i2=0; i2 < n2; i2++) {
-	fbuf[0][i2]=(float) i2;
-	fbuf[1][i2]=o2+i2*d2;
+	fbuf[0][i2]=(float) i2;  /* N */
+	fbuf[1][i2]=o2+i2*d2;    /* T */
+	fbuf[2][i2]=ftra[0][i2]; /* input */ 
     }
     for (i1=0; i1 < n1; i1++) {
 	for (i2=0; i2 < n2; i2++) {
-	    fbuf[i1+2][i2]=ftra[i2][i1];
+	    fbuf[i1+3][i2]=ftra[i2][i1];
 	}
     }
 
@@ -88,5 +90,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: headermath.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: headermath.c,v 1.8 2004/04/13 01:40:59 fomels Exp $	 */
 
