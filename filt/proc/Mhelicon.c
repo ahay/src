@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
     float a0, *pp, *qq;
     bool adj, inv;
     filter aa;
+    char* lagfile;
     sf_file in, out, filt, lag;
 
     sf_init (argc,argv);
@@ -28,24 +29,29 @@ int main(int argc, char* argv[])
     for( ia=0; ia < na; ia++) {
 	aa->flt[ia] /= a0;
     }
-    sf_fileclose(filt);
 
-    if (!sf_getints ("n",m,dim)) {
+    if (NULL != (lagfile = sf_getstring("lag")) || 
+	NULL != (lagfile = sf_histstring(filt,"lag"))) {
+	lag = sf_input(lagfile);
+
+	sf_read(aa->lag,sizeof(int),na,lag);
+    } else {
+	lag = NULL;
+	for( ia=0; ia < na; ia++) {
+	    aa->lag[ia] = ia+1;
+	}
+    }
+
+    sf_fileclose(filt);
+    
+    if (!sf_getints ("n",m,dim) && (NULL == lag ||
+				    !sf_histints (lag,"n",m,dim))) {
 	for (i=0; i < dim; i++) {
 	    m[i] = n[i];
 	}
     }
  
-    if (NULL != sf_getstring("lag")) {
-	lag = sf_input("lag");
-
-	sf_read(aa->lag,sizeof(int),na,lag);
-	sf_fileclose(lag);
-    } else {    
-	for( ia=0; ia < na; ia++) {
-	    aa->lag[ia] = ia+1;
-	}
-    }
+    if (NULL != lag) sf_fileclose(lag);
 
     regrid (dim, m, n, aa);
 

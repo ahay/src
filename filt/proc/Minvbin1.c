@@ -10,12 +10,16 @@
 #include "causint.h"
 #include "cgstep.h"
 #include "bigsolver.h"
+#include "pef.h"
+#include "bound.h"
+#include "polydiv.h"
 
 int main (int argc, char* argv[])
 {
-    bool prec;
-    int id, nd, nt, it, nx, interp, filt, niter;
+    bool prec, pef;
+    int id, nd, nt, it, nx, interp, filt, niter, three=3, i;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
+    filter bb;
     sf_file in, out, head;
 
     sf_init (argc,argv);
@@ -122,6 +126,31 @@ int main (int argc, char* argv[])
 	sf_write (mm,sizeof(float),nx,out);
     }
     
+    if (!sf_getbool("pef",&pef)) pef=false;
+    if (pef) {
+	bb = allocatehelix (2);
+	aa = sf_floatalloc (3);
+	aa[0] = 1.;
+	bb->lag[0] = 1;
+	bb->lag[1] = 2;
+	bound(1, &nx, &nx, &three, bb); 
+	for (i=0; i < 3; i++) {
+	    find_pef (nx, mm, bb, 3);
+	    aa[1] = bb->flt[0];
+	    aa[2] = bb->flt[1];
+	    if (prec) {
+		polydiv_init (nx, bb);
+		solver_prec(int1_lop, cgstep, polydiv_lop, nx, nx, nd,
+			    mm, dd, niter, eps, "end");
+	    } else {
+		tcai1_init (3, aa);
+		solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
+			   mm, dd, niter, eps, "end");
+	    }
+	    cgstep_close();
+	}
+    }
+
     exit(0);
 }
 

@@ -3,10 +3,11 @@ CFLAGS = -std=gnu9x -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = bandpass bin bin1 depth2time dip envelope fft1 helicon invbin1 nmo \
-	noise pwd randrefl reshape ricker sigmoid smooth spectra taup taupmo \
-	time2depth warp1 window1
+PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
+	helicon invbin1 nmo noise pwd randrefl reshape ricker sigmoid smooth \
+	spectra stretch2 taup taupmo time2depth warp1 window1 xcorr1
 
+ai2refl = empty
 bandpass = butterworth
 bin = int2 interp adjnull
 bin1 = int1 interp adjnull
@@ -14,9 +15,11 @@ depth2time = stretch tridiagonal
 dip = dip3 divide1 allp3 tridiagonal apfilt
 envelope = triangle
 fft1 = empty
+fft2 = empty
+fft3 = empty
 helicon = polydiv regrid helicon helix adjnull
 invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint \
-	triangle1 triangle
+	triangle1 triangle polydiv pef bound helix hconest helicon regrid
 nmo = fint1 tridiagonal spline interp_spline extend banded
 noise = randn
 pwd = allp3 apfilt
@@ -26,11 +29,13 @@ ricker = empty
 sigmoid = random
 smooth = triangle
 spectra = empty
+stretch2 = stretch2 banded
 taup = radon cadj ctoeplitz
 taupmo = fint1 tridiagonal spline interp_spline extend banded
 time2depth = fint1 tridiagonal spline interp_spline extend banded
 warp1 = divlap1 int1 interp_spline prefilter recfilt adjnull banded
 window1 = window1
+xcorr1 = window1 xcorr stretch2 banded
 
 MAINS = $(addprefix sf, $(PROGS))
 OBJS = $(addsuffix .o, ${$*})
@@ -43,6 +48,9 @@ all: ${MAINS}
 sf%: M%.o ../rsf/librsf.a ../rsf/rsf.h 
 	${MAKE} ${OBJS}
 	${CC} ${CFLAGS} M$*.o ${OBJS} ${LDFLAGS} -o $@
+
+Test%.x: Test%.c %.o
+	${CC} ${CFLAGS} Test$*.c $*.o ${LDFLAGS} -o $@ 
 
 %.lint: %.c ../rsf/rsf.h
 	-splint +posixlib -I../rsf $^ > $@

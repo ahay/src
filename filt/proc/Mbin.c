@@ -11,6 +11,7 @@ int main (int argc, char* argv[])
     int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp;
     float *mm, *count, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, clip;
+    char *xk, *yk;
     sf_file in, out, head, fold;
 
     sf_init (argc,argv);
@@ -21,8 +22,16 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_getint("xkey",&xkey)) xkey = sf_segykey("sx");
-    if (!sf_getint("ykey",&ykey)) ykey = sf_segykey("sy");
+    if (NULL != (xk = sf_getstring("xk"))) {
+	xkey = sf_segykey(xk);
+    }  else if (!sf_getint("xkey",&xkey)) {
+	xkey = sf_segykey("sx");
+    }
+    if (NULL != (yk = sf_getstring("yk"))) {
+	ykey = sf_segykey(yk);
+    }  else if (!sf_getint("ykey",&ykey)) {
+	ykey = sf_segykey("sy");
+    }
 
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);
