@@ -487,6 +487,7 @@ class TeXPaper(Environment):
         if mathematica:
             self.Append(BUILDERS={'Math':Math})
         self.scons = []
+        self.Dir()
     def Dir(self,topdir='.',resdir='Fig',pstexpen=None):
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
              dir = os.path.dirname(scons)
@@ -584,8 +585,7 @@ class TeXPaper(Environment):
                          'cd $SOURCE.dir && cp -r * $TARGET.dir && cd ..')
             self.Alias(paper+'.install',dochtml)
     def End(self,paper='paper',**kw):
-        apply(self.Dir,[],kw)
-        if os.path.isfile(paper+'.tex'):
+         if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)
             self.Alias('pdf',paper+'.pdf')
             self.Alias('read',paper+'.read')
@@ -600,6 +600,8 @@ def Dir(**kw):
      return apply(default.Dir,[],kw)
 def Paper(paper,**kw):
     return apply(default.Paper,(paper,),kw)
+def Command(target,source,command):
+    return default.Command(target,source,command)
 def End(paper='paper',**kw):
     return apply(default.End,(paper,),kw)
 

@@ -44,7 +44,7 @@ static void triple (int o, int d, int nx, int nb,
 static void triple2 (int o, int d, int nx, int nb, 
 		     const int* t, const float* x, float* tmp);
 
-ntriangle ntriangle_init (int nbox /* triangle length */, 
+ntriangle ntriangle_init (int nbox /* maximum triangle length */, 
 			  int ndat /* data length */)
 /*< initialize >*/
 {

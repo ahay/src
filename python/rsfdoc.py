@@ -146,6 +146,9 @@ def multicolumn(list, format, cols=4):
         result = result + '</td>'
     return '<table width="100%%" summary="list"><tr>%s</tr></table>' % result
 
+def verbatim(text):
+    return '\\begin{verbatim}%s\\end{verbatim}\n' % string.strip(text)
+
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
         self.type = type
@@ -159,6 +162,10 @@ class rsfpar:
         return self.type + " " + \
                "<strong>" + name + self.default + \
                "</strong>" + self.range
+    def latex(self,name):
+        tex = '\\underline{%s} & \\textbf{%s%s} & %s & ' % \
+              (self.type,name,self.default,self.range)
+        return tex + string.replace(self.desc,'\n','\\newline') + '\\\\ \n'
         
 class rsfprog:
     def __init__(self,name,file,desc=None):
@@ -222,23 +229,17 @@ class rsfprog:
         name = '\\subsection{%s: %s}\n' % (self.name,self.desc)
         contents = contents + name
         if self.snps:
-            snps = '\\begin{verbatim}\n%s\n\\end{verbatim}\n' % self.snps
-            contents = contents + snps
+            contents = contents + verbatim(self.snps)
         if self.cmts:
-            cmts = '\\vspace{-12pt}\n%s\n' % self.cmts
-            contents = contents + cmts
+            contents = contents + '\\vspace{-15pt}\n' + verbatim(self.cmts)
         pars =  self.pars.keys()
         if pars:
             pars.sort()
-            pardoc = ''
+            contents = contents + '\\par\\noindent\n' + \
+                       '\\begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}\n'
             for par in pars:
-                pardoc = pardoc + ' %s: %s\n' % (par, self.pars[par])
-            contents = contents + '''
-            \\par\\noindent
-            \\begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}
-            %s
-            \\end{tabular}
-            ''' % pardoc
+                contents = contents + self.pars[par].latex(par)
+            contents = contents + '\\end{tabular}\n'
         file.write(contents)
         file.close()
     def html(self,dir):

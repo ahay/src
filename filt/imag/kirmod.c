@@ -127,20 +127,20 @@ void kirmod_table (maptype type               /* velocity distribution */,
 	    ta = sf_floatalloc2(3,nx);
 
 	    for (ix=0; ix < nx; ix++) {
-		x = x0 + ix*dx;
+		x = x0-x1 + ix*dx;
 		switch (type) {
 		    case CONST:	
-			a = hypotf(x-x1,curve[ix]);
+			a = hypotf(x,curve[ix]);
 			t = a/veloc[0];
-			p = fabsf(x-x1)/(a*veloc[0]);
+			p = fabsf(x)/(a*veloc[0]);
 			break;		    
 		    default:
 			sf_error("__FILE__: case %d is not implemented",type);
 			break;
 		}
-		ta[ix][0] = t;
-		ta[ix][1] = a;
-		ta[ix][2] = p;
+		ta[ix][0] = t; /* traveltime */
+		ta[ix][1] = a; /* amplitude */
+		ta[ix][2] = p; /* slope */
 	    }
 	}
 	y[iy].ta = ta;

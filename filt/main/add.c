@@ -1,6 +1,6 @@
 /* Add, divide, or multiple RSF datasets.
 
-Takes: [< file0.rsf] file1.rsf file2.rsf
+Takes: [< file0.rsf] file1.rsf file2.rsf ... > out.rsf
 
 An alternative is to use sfmath, which is more versatile.
 */
@@ -316,5 +316,5 @@ static void check_compat (int esize,
     }
 }
 
-/* 	$Id: add.c,v 1.11 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */
 
