@@ -1,3 +1,10 @@
+/* Multi-dimensional smoothing.
+
+Takes: < input.rsf > smooth.rsf rect1=1 rect2=1 ... 
+
+rectN defines the size of the smoothing stencil in N-th dimension.
+*/
+
 #include <rsf.h>
 
 #include "triangle.h"
@@ -43,6 +50,7 @@ int main (int argc, char* argv[])
     data = sf_floatalloc (n1);
 
     if (!sf_getint("repeat",&nrep)) nrep=1;
+    /* repeat filtering several times */
 
     for (i2=0; i2 < n2; i2++) {
 	sf_read(data,sizeof(float),n1,in);
