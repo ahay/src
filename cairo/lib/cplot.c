@@ -35,6 +35,8 @@ enum {
 };
 /*^*/
 
+#define CR_SCALE 0.088
+/* scaling fron units to screen */
 #define CR_MAX 54.6           
 /* absolute maximum x or y in inches */
 /*^*/
@@ -55,10 +57,19 @@ static struct {
 
 static void show (GtkWidget *widget, cairo_t *cairo, gpointer data)
 {
-    cr = gtk_cairo_get_cairo(GTK_CAIRO(widget));
+    gint width  = widget->allocation.width;
+    gint height = widget->allocation.height;
+    gint box_size = (width+height)/6;
 
     cairo_save (cr);
     cairo_default_matrix (cr);
+
+    cairo_translate (cr, width/2, height/2);
+
+    cairo_rectangle (cr, -box_size, -box_size, box_size, box_size);
+    cairo_set_rgb_color (cr, 1, 0, 0);
+    cairo_fill (cr);
+    
     cairo_restore (cr);
 }
 
@@ -88,14 +99,15 @@ void cr_init(int* argc, char** argv[])
     gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 0);
     
     gtk_container_add (GTK_CONTAINER (win), vbox);
-    gtk_widget_show_all (vbox);
-
-    gtk_widget_show (win);
+    
+    cr = gtk_cairo_get_cairo(GTK_CAIRO(gtkcairo));
 }
 
 void cr_main(void)
 /*< go into main loop >*/
 {
+    gtk_widget_show_all (vbox);
+    gtk_widget_show (win);
     gtk_main ();
 }
 
@@ -106,11 +118,11 @@ void cr_uorig (float x,float  y)
     ufy = y;
 }
 
-static int snap(float x)
+static double snap(float x)
 /* round to the specified resolution */
 {
     x *= CR_RPERIN;
-    return ((int) ((x < 0.0)? x-0.5 : x+0.5));
+    return (CR_SCALE*((int) ((x < 0.0)? x-0.5 : x+0.5)));
 }
 
 void cr_clip (float xmin, float ymin, float xmax, float ymax)
@@ -157,9 +169,11 @@ static void pout (float xp, float  yp, bool down)
     else if (yp < -CR_MAX) yp = -CR_MAX;
     
     if (down) {
-	cairo_line_to(cr,(double) snap(xp),(double) snap(yp));
+	cairo_line_to(cr,snap(xp),snap(yp));
+	sf_warning("drawing to %g,%g",snap(xp),snap(yp));
     } else {
-	cairo_move_to(cr,(double) snap(xp),(double) snap(yp));
+	cairo_move_to(cr,snap(xp),snap(yp));
+	sf_warning("moving to %g,%g",snap(xp),snap(yp));
     }
 }
 

@@ -1,6 +1,26 @@
+/* Dijkstra's shortest-path algorithm, 2-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "dijkstra.h"
 
@@ -15,6 +35,7 @@ static step **path, here;
 static const float big_number = FLT_MAX;
 
 void dijkstra_init(int m1, int m2)
+/*< initialize with model size >*/
 {
     int i2, i1;
 
@@ -38,6 +59,7 @@ void dijkstra_init(int m1, int m2)
 }
 
 void dijkstra_close(void)
+/*< free allocated storage >*/
 {
     int i2, i1;
 
@@ -57,7 +79,10 @@ void dijkstra_close(void)
     free(path);
 }
 
-static void fix_neighbor(int s1, int s2, int ud, int lr, float shift)
+static void fix_neighbor(int s1, int s2 /* location */, 
+			 int ud, int lr /* up-down, left-right */, 
+			 float shift    /* cost */)
+/* process a sample */
 {
     float *neighbor, newcost, oldstatus;
     step st;
@@ -88,6 +113,7 @@ static void fix_neighbor(int s1, int s2, int ud, int lr, float shift)
 }
 
 static void neighbors(int s1, int s2, float **ud, float **lr)
+/* process neighbors */
 {
     if (s1 < n1-1) { fix_neighbor(s1,s2,+1,0,ud[s2][s1  ]); }
     if (s1 > 0)    { fix_neighbor(s1,s2,-1,0,ud[s2][s1-1]); }
@@ -95,7 +121,9 @@ static void neighbors(int s1, int s2, float **ud, float **lr)
     if (s2 > 0)    { fix_neighbor(s1,s2,0,-1,lr[s2-1][s1]); }
 }
 
-void dijkstra(int s1, int s2, float **ud, float **lr) 
+void dijkstra(int s1, int s2         /* source location */, 
+	      float **ud, float **lr /* up-down and left-right cost */) 
+/*< run the algorithm >*/
 {
     int s;
     float *p;
@@ -125,13 +153,15 @@ void dijkstra(int s1, int s2, float **ud, float **lr)
 	neighbors(s1,s2,ud,lr);
     }
 }
-    
-void dijkstra_start(int s1, int s2) 
+
+void dijkstra_start(int s1, int s2)
+/*< intialize path >*/
 {
     here = path[s2][s1];
 }
 
 bool dijkstra_next(int *ud, int *lr) 
+/*< find the next shift (up-down, left-right), return true on success >*/
 {
     if (NULL == here) return false;
 
