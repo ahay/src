@@ -248,9 +248,10 @@ int main (int argc, char* argv[])
     } /* i2 */
 
     if(NULL != label1) 
-	vp_simpleaxis(marginl, marginb*0.8,  
-		      screenwide-marginr, marginb*0.8,
-		      o1, o1+(n1-1)*d1, 0., .25, label1, .66*labelsz);
+	vp_simple_axis(marginl, marginb*0.8,  
+		       screenwide-marginr, marginb*0.8,
+		       o1, o1+(n1-1)*d1, 0., 0., 
+		       .25, label1, 0.03*labelsz);
 
     if(NULL != title) {
 	newsize = 1.2*labelsz;

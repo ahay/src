@@ -3,11 +3,6 @@
 
 #include <rsf.h>
 
-void vp_simpleaxis (float x1, float y1, 
-		    float x2, float y2, 
-		    float num1, float num2,
-		    float dnum, float ltic, char* label, float labelsz);
-
 void vp_coord_init (bool transp1, bool yreverse1);
 void vp_plot_init(int n2);
 void vp_title_init(sf_file file);

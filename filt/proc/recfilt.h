@@ -1,7 +1,7 @@
 #ifndef _recfilt_h
 #define _recfilt_h
 
-#include "bool.h"
+#include <rsf.h>
 
 /*
   Recfilt

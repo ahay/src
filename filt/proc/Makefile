@@ -1,5 +1,5 @@
 CFLAGS = -O3 
-CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
+CFLAGS = -std=gnu9x -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 

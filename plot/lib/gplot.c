@@ -70,6 +70,7 @@ void vp_axis_init (const sf_file in)
 	    axis2.want = true;
     }
 
+    /* frame or axis */
     wheretics = NULL != (stmp = sf_getstring ("wheretics")) &&
 	'a' == *stmp;
 
@@ -331,7 +332,9 @@ static void getscl(struct Axis *axis)
 
     if (inch <= 0) sf_error("%s: negative inch %g",__FILE__,inch);
 
+    /*******************************************************
     axis->dnum = vp_opttic(min,max,inch,axis->num0,labelsz);
+    ********************************************************/
 }
 
 void vp_invmassage (float* min, float* max, float mid, float dev)
