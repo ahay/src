@@ -6,7 +6,7 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''adjnull alloc bigsolver c99 cgstep chain conjgrad conjprec decart
-error file files getpar math1 pfafft segy simtab stack'''
+dottest error file files getpar math1 pfafft segy simtab stack'''
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
