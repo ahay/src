@@ -44,6 +44,7 @@ int main(int argc, char* argv[]) {
 	sf_complexread(fft,nw,in);
 	kolmog_init(nfft);
 	kolmog2(trace,fft);
+
 	sf_floatwrite(trace,nfft,out);
     } else { /* input signal */
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
@@ -54,10 +55,12 @@ int main(int argc, char* argv[]) {
 	trace = sf_floatalloc(nfft);
 	
 	sf_floatread(trace,n1,in);
+
 	if (n1%2) trace[nfft-1]=0.;
 
 	kolmog_init(nfft);
 	kolmog(trace);
+
 	sf_floatwrite(trace,n1,out);
     }
     

@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("nplo",&nplo)) nplo = 3;
     /* number of poles for low cutoff */
     else if (nplo < 1)            nplo = 1;
-    else if (nphi > 1)            nphi /= 2; 
+    else if (nplo > 1)            nplo /= 2; 
 
     if (!sf_getint("nphi",&nphi)) nphi = 3;
     /* number of poles for high cutoff */
@@ -126,4 +126,4 @@ static void reverse (int n1, float* trace) {
     }
 }
 
-/* 	$Id: Mbandpass.c,v 1.7 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

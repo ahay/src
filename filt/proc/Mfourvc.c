@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
     float *trace, *strace;
     float complex *ctrace, **cstack;
+    static kiss_fftr_cfg forw, invs;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -46,8 +47,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad",&n2)) n2=n1;
     if (!sf_getint("pad2",&n3)) n3=n2;
 
-    n3 = sf_npfar(n3);
+    if (n3%2) n3++;
     nw = n3/2+1;
+    forw = kiss_fftr_alloc(n3,0,NULL,NULL);
+    invs = kiss_fftr_alloc(n3,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("KISS FFT allocation error");
 
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
     o2 = o1*o1;
@@ -127,8 +132,7 @@ int main(int argc, char* argv[])
 		    strace[i2] = 0.;
 		}
 		
-		sf_pfarc(1,n3,strace,ctrace);
-
+		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);       	
 		ctrace[0]=0.; /* dc */
 
 		for (iv=0; iv < nv; iv++) {
@@ -151,7 +155,7 @@ int main(int argc, char* argv[])
 		    ctrace[i2] = cstack[iv][i2] * cexpf(-I*o2*w);
 		}
 
-		sf_pfacr(-1,n3,ctrace,strace);
+		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
 		fint1_set(istr,strace);
 
 		for (i1=0; i1 < n1; i1++) {
@@ -174,4 +178,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mfourvc.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

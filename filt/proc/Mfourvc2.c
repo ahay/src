@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t;
     float *trace, *strace, ***stack, ***stack2, ***cont, **image;
     float complex *ctrace, *ctrace0;
+    static kiss_fftr_cfg forw, invs;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -47,8 +48,12 @@ int main(int argc, char* argv[])
     if (!sf_getint("pad",&n2)) n2=n1;
     if (!sf_getint("pad2",&n3)) n3=n2;
 
-    n3 = sf_npfar(n3);
+    if (n3%2) n3++;
     nw = n3/2+1;
+    forw = kiss_fftr_alloc(n3,0,NULL,NULL);
+    invs = kiss_fftr_alloc(n3,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("KISS FFT allocation error");
 
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;  
     o2 = o1*o1;
@@ -72,7 +77,7 @@ int main(int argc, char* argv[])
 
     sf_putstring(out,"label3","Velocity (km/s)");
 
-    dx = 2.*SF_PI/(sf_npfar(2*(nx-1))*dx);
+    dx = 2.*SF_PI/(2*(nx-1)*dx);
 
     stack = sf_floatalloc3(n1,nx,nv);
     stack2 = sf_floatalloc3(n1,nx,nv);
@@ -131,7 +136,7 @@ int main(int argc, char* argv[])
 		strace[i2] = 0.;
 	    }
 		
-	    sf_pfarc(1,n3,strace,ctrace0);
+	    kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace0);   
 
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + (iv+1)* dv;
@@ -147,7 +152,7 @@ int main(int argc, char* argv[])
 		    ctrace[i2] = ctrace0[i2] * cexpf(-I*(v2/w+(v1-o2)*w));
 		} /* w */
 
-		sf_pfacr(-1,n3,ctrace,strace);
+		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);
 		
 		fint1_set(istr,strace);
 		
@@ -208,4 +213,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfourvc2.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

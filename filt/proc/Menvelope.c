@@ -25,10 +25,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char* argv[])
 {
     bool freq;
-    int n1,n2,n3, i1,i2,i3, tc1, tc2, nw;
+    int n1,n2,n3, i1,i2,i3, tc1, tc2;
     float *data, **bot=NULL, **top=NULL, den;
     float complex *cdat, *ctop=NULL;
     triangle tr1=NULL, tr2=NULL;
+    kiss_fft_cfg forw, invs;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -40,17 +41,14 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1; 
     n3 = sf_leftsize(in,2);
 
-    /* determine frequency sampling (for real to complex FFT) */
-    nw = sf_npfa(n1);
-     
     if (!sf_getbool("freq",&freq)) freq=false;
     /* if y, compute instantenous frequency */
 
     data = sf_floatalloc(n1);
-    cdat = sf_complexalloc (nw);
+    cdat = sf_complexalloc (n1);
 
     if (freq) {
-	ctop = sf_complexalloc (nw);
+	ctop = sf_complexalloc (n1);
 	top = sf_floatalloc2(n1,n2);
 	bot = sf_floatalloc2(n1,n2);
 
@@ -62,27 +60,31 @@ int main (int argc, char* argv[])
 	tr2 = triangle_init (tc2,n2);
     }
 
+    forw = kiss_fft_alloc(n1,0,NULL,NULL);
+    invs = kiss_fft_alloc(n1,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) sf_error("KISS FFT allocation error");
+
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
 	    sf_floatread(data,n1,in);
 	    for (i1=0; i1 < n1; i1++) {
 		cdat[i1]=data[i1];
 	    }
-	    for (i1=n1; i1 < nw; i1++) {
-		cdat[i1]=0.;
-	    }
-	    sf_pfacc (1,nw,cdat);
+	    kiss_fft(forw,(const kiss_fft_cpx *) cdat, 
+		     (kiss_fft_cpx *) cdat);
 	    cdat[0] *= 0.5;
-	    cdat[nw/2] *= 0.5;
-	    for (i1=nw/2+1; i1 < nw; i1++) {
+	    cdat[n1/2] *= 0.5;
+	    for (i1=n1/2+1; i1 < n1; i1++) {
 		cdat[i1]=0.;
 	    }
 	    if (freq) {
-		for (i1=0; i1 < nw; i1++) {
+		for (i1=0; i1 < n1; i1++) {
 		    ctop[i1] = (2.*SF_PI*I*i1/n1) * cdat[i1];
 		}
-		sf_pfacc (-1,nw,ctop);
-		sf_pfacc (-1,nw,cdat);
+		kiss_fft(invs,(const kiss_fft_cpx *) ctop,
+			 (kiss_fft_cpx *) ctop);
+		kiss_fft(invs,(const kiss_fft_cpx *) cdat,
+			 (kiss_fft_cpx *) cdat);
 		for (i1=0; i1 < n1; i1++) {
 		    bot[i2][i1] = crealf(conjf(cdat[i1])*cdat[i1]);
 		    top[i2][i1] = crealf(-conjf(cdat[i1])*ctop[i1]*I);
@@ -90,9 +92,10 @@ int main (int argc, char* argv[])
 		smooth(tr1,i2*n1,1,false,top[0]);
 		smooth(tr1,i2*n1,1,false,bot[0]);
 	    } else {
-		sf_pfacc (-1,nw,cdat);
+		kiss_fft(invs,(const kiss_fft_cpx *) cdat,
+			 (kiss_fft_cpx *) cdat);
 		for (i1=0; i1 < n1; i1++) {
-		    data[i1] = 2.*cabsf(cdat[i1])/nw;
+		    data[i1] = 2.*cabsf(cdat[i1])/n1;
 		}
 		sf_floatwrite(data,n1,out);
 	    }
@@ -113,4 +116,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Menvelope.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

@@ -10,9 +10,12 @@ void kolmog_init(int n1)
 {
     nfft = n1;
     nw = nfft/2+1;
-    fft = sf_complexalloc(nw);
+    fft = sf_complexalloc(nw);   
+
     forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
     invs = kiss_fftr_alloc(nfft,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("%s: KISS FFT allocation error");
 }
 
 void kolmog_close(void)
@@ -38,7 +41,6 @@ void kolmog2(float *trace, float complex *fft)
 
     for (i1=0; i1 < nw; i1++) {
 	fft[i1] = clog(fft[i1]*conj(fft[i1])+eps)/nfft;
-	sf_warning("got %d: (%g,%g)",i1,crealf(fft[i1]),cimagf(fft[i1]));
     }
 
     /* Inverse transform */
@@ -55,7 +57,6 @@ void kolmog2(float *trace, float complex *fft)
     
     for (i1=0; i1 < nw; i1++) {
 	fft[i1] = cexp(fft[i1])/nfft;
-	sf_warning("got %d: (%g,%g)",i1,crealf(fft[i1]),cimagf(fft[i1]));
     }
 
     /* Inverse transform */

@@ -44,6 +44,7 @@ int main (int argc, char *argv[])
     bool depth;           /* depth or time                */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant          */  
+    kiss_fftr_cfg fft;
     sf_file in, out, vel;
 
     sf_init(argc,argv);
@@ -129,7 +130,7 @@ int main (int argc, char *argv[])
     }
 
     /* determine wavenumber sampling (for real to complex FFT) */
-    ntfft = sf_npfaro(nt,nt*2);
+    ntfft = nt*2;
     nw = ntfft/2+1;
     dw = 2.0*SF_PI/(ntfft*dt);
 	
@@ -137,6 +138,8 @@ int main (int argc, char *argv[])
     p = sf_floatalloc2(ntfft,nx);
     q = sf_floatalloc2(nz,nx);
     cp = sf_complexalloc2(nw,nx);
+
+    fft = kiss_fftr_alloc(ntfft,inv? 0: 1,NULL,NULL);
 
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
@@ -148,8 +151,9 @@ int main (int argc, char *argv[])
 	    for (it=nt; it<ntfft; it++) {
 		p[ix][it] = 0.0;
 	    }
-	    
-	    sf_pfarc(-1,ntfft,p[ix],cp[ix]);
+
+	    kiss_fftr(fft, p[ix], (kiss_fft_cpx *) cp[ix]);
+
 	    for (it=0; it<nw; it++)
 		cp[ix][it] /= ntfft;
 	}
@@ -165,7 +169,8 @@ int main (int argc, char *argv[])
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
 	    /* Fourier transform w to t (including FFT scaling) */
-	    sf_pfacr(1,ntfft,cp[ix],p[ix]);
+
+	    kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix], p[ix]);
 	    for (it=0; it<nt; it++)
 		p[ix][it] /= ntfft;
 	    sf_floatwrite (p[ix],nt,out);
@@ -177,4 +182,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Msstep1.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

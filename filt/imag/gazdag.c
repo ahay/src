@@ -5,9 +5,10 @@
 #include "gazdag.h"
 
 static float eps, dt, dz, *vt, dw, fw;
-static int nt, nz, nw;
+static int nt, nz;
 static float complex *pp;
 static bool depth;
+static kiss_fft_cfg forw, invs;
 
 void gazdag_init (float eps1, int nt1, float dt1, 
 		  int nz1, float dz1, float *vt1, bool depth1)
@@ -19,12 +20,16 @@ void gazdag_init (float eps1, int nt1, float dt1,
     depth = depth1;
 
     /* determine frequency sampling */
-    nw = sf_npfa(nt);
-    dw = 2.0*SF_PI/(nw*dt);
+    dw = 2.0*SF_PI/(nt*dt);
     fw = -SF_PI/dt;
     
+    forw = kiss_fft_alloc(nt,0,NULL,NULL);
+    invs = kiss_fft_alloc(nt,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("%s: KISS FFT allocation error",__FILE__);
+    
     /* allocate workspace */
-    pp = sf_complexalloc (nw);
+    pp = sf_complexalloc (nt);
 }
 
 void gazdag_close ()
@@ -39,14 +44,14 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
     float complex cshift, w2;
 	
     if (inv) { /* modeling */
-	for (iw=0; iw<nw; iw++) {
+	for (iw=0; iw<nt; iw++) {
 	    pp[iw] = q[nz-1];
 	}
 
 	/* loop over migrated times z */
 	for (iz=nz-2; iz>=0; iz--) {
 	    /* loop over frequencies w */
-	    for (iw=0; iw<nw; iw++) {
+	    for (iw=0; iw<nt; iw++) {
 		w2 = eps*dw + I*(fw + iw*dw);
 
 		if (depth) {
@@ -60,7 +65,8 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	    }
 	}
 
-	sf_pfacc(1,nw,pp);
+	kiss_fft(forw,(const kiss_fft_cpx *) pp, 
+		 (kiss_fft_cpx *) pp);
 	for (it=0; it<nt; it++) {
 	    p[it] = (it%2)? -pp[it] : pp[it];
 	}
@@ -68,12 +74,10 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	/* pad with zeros and Fourier transform t to w, with w centered */
 	for (it=0; it<nt; it++) {
 	    /* scale accumulated image just as we would for an FFT */
-	    pp[it] = (it%2 ? -p[it] : p[it])/nw;
+	    pp[it] = (it%2 ? -p[it] : p[it])/nt;
 	}
-	for (it=nt; it<nw; it++) {
-	    pp[it] = 0.0;
-	}
-	sf_pfacc(-1,nw,pp);
+	kiss_fft(invs,(const kiss_fft_cpx *) pp, 
+		 (kiss_fft_cpx *) pp);
     
 	/* loop over migrated times z */
 	for (iz=0; iz<nz; iz++) {
@@ -81,7 +85,7 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	    q[iz] = 0.0;
       
 	    /* loop over frequencies w */
-	    for (iw=0; iw<nw; iw++) {
+	    for (iw=0; iw<nt; iw++) {
 		/* accumulate image (summed over frequency) */
 		q[iz] += pp[iw];
 
@@ -101,4 +105,4 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
     }
 }
 
-/* 	$Id: gazdag.c,v 1.7 2004/01/15 02:36:32 fomels Exp $	 */
+/* 	$Id$	 */

@@ -80,7 +80,7 @@ int main (int argc, char **argv)
 	sf_putfloat(out,"t0",t0);
 
 	/* determine frequency sampling */
-	nw = sf_npfa(nt);
+	nw = nt;
 	dw = 1./(nw*dt);
 	w0 = -0.5/dt;
 
@@ -95,7 +95,7 @@ int main (int argc, char **argv)
 
 	/* determine wavenumber sampling, pad by 2 */
 	nm = nh*2;
-	nm = sf_npfao(nm,nm*2);
+	nm *= 2;
 	dm = 1./(nm*dh);
 	m0 = -0.5/dh;
 
@@ -210,4 +210,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mdsr.c,v 1.12 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

@@ -14,12 +14,18 @@ void split1 (bool verb, bool inv, float eps,
     int nk,iz,iw,ix,jx;
     float k,dk,fk;
     float complex cshift,*pp,w2;
+    kiss_fft_cfg forw, invs;
 
     /* determine wavenumber sampling, pad by 2 */
     nk = nx*2;
-    nk = sf_npfao(nk,nk*2);
+    nk *= 2;
     dk = 2.0*SF_PI/(nk*dx);
     fk = -SF_PI/dx;
+
+    forw = kiss_fft_alloc(nk,0,NULL,NULL);
+    invs = kiss_fft_alloc(nk,1,NULL,NULL);
+    if (NULL == forw || NULL == invs) 
+	sf_error("%s: KISS FFT allocation error",__FILE__);
 
     /* allocate workspace */
     pp  = sf_complexalloc (nk);
@@ -48,7 +54,8 @@ void split1 (bool verb, bool inv, float eps,
 
 	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
-		sf_pfacc(1,nk,pp);
+		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
+			 (kiss_fft_cpx *) pp);
 		pp[nk/2+1] = 0.; /* oddball negative nyquist */
 
 		for (ix=0; ix<nk; ix++) {
@@ -62,7 +69,8 @@ void split1 (bool verb, bool inv, float eps,
 		    /* FFT scaling included */
 		}
 		
-		sf_pfacc(-1,nk,pp);
+		kiss_fft(invs,(const kiss_fft_cpx *) pp, 
+			 (kiss_fft_cpx *) pp);
 
 		for (ix=0; ix<nx; ix++) {
 		    cshift = cexpf(-csqrtf(w2*vt[ix][iz])*dz);
@@ -92,7 +100,8 @@ void split1 (bool verb, bool inv, float eps,
 		    q[ix][iz] += (iw==0)? crealf(pp[ix]): 2.*crealf(pp[ix]);
 		}
 		
-		sf_pfacc(1,nk,pp);
+		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
+			 (kiss_fft_cpx *) pp);
 		pp[nk/2+1] = 0.0; /* oddball negative nyquist */
 
 		for (ix=0; ix<nk; ix++) {
@@ -106,7 +115,8 @@ void split1 (bool verb, bool inv, float eps,
 		    /* Fourier scaling included */
 		}
 
-		sf_pfacc(-1,nk,pp);
+		kiss_fft(invs,(const kiss_fft_cpx *) pp, 
+			 (kiss_fft_cpx *) pp);
 	
 		for (ix=0; ix<nx; ix++) {
 		    cshift = conjf(cexpf(-csqrtf(w2*vt[ix][iz])*dz));
@@ -120,6 +130,8 @@ void split1 (bool verb, bool inv, float eps,
     }
     
     free (pp);
+    free (forw);
+    free (invs);
 }
 
-/* 	$Id: split1.c,v 1.3 2003/09/30 14:30:53 fomels Exp $	 */
+/* 	$Id$	 */
