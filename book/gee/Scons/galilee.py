@@ -1,3 +1,5 @@
+from rsfproj import *
+
 def Galilee(name,grad=1):
     '''Extracts the Sea of Galiee dataset and bins it'''
     
