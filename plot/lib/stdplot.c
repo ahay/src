@@ -7,6 +7,7 @@
 #include "stdplot.h"
 #include "axis.h"
 #include "vplot.h"
+#include "plot.h"
 
 static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar;
@@ -710,34 +711,41 @@ void vp_barframe(void)
     }    
 }
 
-void vp_barraster (unsigned char mincol, unsigned char maxcol)
+void vp_barraster (int nbuf, unsigned char** buf)
 {
-    int numcol, i;
-    unsigned char *buf[1];
-
-    if (maxcol < mincol) {
-	numcol = mincol - maxcol + 1;
-	buf[0] = (unsigned char *) alloca(numcol);
-	for (i=0; i < numcol; i++) {
-	    buf[0][i] = mincol - i;
-	}
-    } else {
-	numcol = maxcol - mincol + 1;
-	buf[0] = (unsigned char *) alloca(numcol);
-	for (i=0; i < numcol; i++) {
-	    buf[0][i] = mincol + i;
-	}
-    }
-
     vp_barframe();
     if (vertbar) {
-	vp_raster(buf, false, 256, numcol, 1, 
+	vp_raster(buf, false, 256, nbuf, 1, 
 		  barmin,orig2-0.5*inch2,barmax,orig2+0.5*inch2, 3);
     } else {
-	vp_raster(buf, false, 256, numcol, 1, 
+	vp_raster(buf, false, 256, nbuf, 1, 
 		  orig1-0.5*inch1,barmin,orig1+0.5*inch1,barmax, 0);
     }
     vp_simplebarframe();
 }
 
-/* 	$Id: stdplot.c,v 1.16 2003/10/06 20:19:32 fomels Exp $	 */
+void vp_barline (int nc, float *c, float cmin, float cmax)
+{
+    int ic;
+    float level, c0, dc;
+
+    c0 = 0.5*(cmax+cmin);
+    dc = cmax-cmin+FLT_EPSILON;
+
+    vp_barframe();
+    for (ic = 0; ic < nc; ic++) {
+	    vp_plot_set (ic);
+	    if (vertbar) {
+		level = orig2 + inch2*(c[ic]-c0)/dc;
+		vp_move(barmin,level);
+		vp_draw(barmax,level);
+	    } else {
+		level = orig1 + inch1*(c[ic]-c0)/dc;
+		vp_move(level,barmin);
+		vp_draw(level,barmax);
+	    }
+    }
+    /*   vp_simplebarframe(); */
+}
+
+/* 	$Id: stdplot.c,v 1.17 2003/10/14 21:53:43 fomels Exp $	 */
