@@ -67,9 +67,10 @@ extern off_t ftello (FILE *);
 #ifndef NAME_MAX
 #ifdef MAXNAMELEN
 #define	NAME_MAX MAXNAMELEN
-#endif
+#else
 #ifdef FILENAME_MAX
 #define NAME_MAX FILENAME_MAX
+#endif
 #endif
 #endif
 
@@ -136,6 +137,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 
     file->pars = sf_simtab_init (tabsize);
     sf_simtab_input (file->pars,file->stream);
+
     if (NULL == filename) {
 	infile = file;
     } else {
@@ -959,6 +961,10 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	    }
 	    break;
 	default:
+	  sf_warning("before %p %d %s",
+		     file->stream,
+		     ftell(file->stream),
+		     file->pipe? "y":"n");
 	    got = fread(arr,sizeof(float),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);

@@ -26,6 +26,8 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
 
 #env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},

@@ -84,7 +84,9 @@ int main(int argc, char* argv[])
 	nbuf = (bufsiz < nleft)? bufsiz: nleft;
 	switch (type) {
 	    case SF_FLOAT: 
+	      sf_warning("before");
 		sf_floatread((float*) buf,nbuf,in);
+		sf_warning("after");
 		break;
 	    case SF_INT:
 		sf_intread((int*) buf,nbuf,in);

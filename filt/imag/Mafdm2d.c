@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     /* cube axes */
     axa at,az,ax,as,ar;
     axa bt,bz,bx;
-    int it,iz,ix,is,ir;
+    int it,iz,ix,is,ir, iop;
     float idx,idz,dt2;
 
     /* arrays */
@@ -325,7 +325,7 @@ int main(int argc, char* argv[])
 	
 	/* one-way ABC apply */
 	if(abc) {
-	    for(int iop=0;iop<nop;iop++) {
+	    for(iop=0;iop<nop;iop++) {
 		for(ix=0;ix<bx.n;ix++) {
 		    uo      [ix][     nop-iop  ] 
 			= um[ix][     nop-iop+1] 
