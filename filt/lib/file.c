@@ -317,6 +317,11 @@ bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par)
     return sf_simtab_getint (file->pars,key,par);
 }
 
+bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par,size_t n) 
+{
+    return sf_simtab_getints (file->pars,key,par, n);
+}
+
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par) 
 {
     return sf_simtab_getfloat (file->pars,key,par);

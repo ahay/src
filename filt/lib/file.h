@@ -21,6 +21,7 @@ void sf_setformat (sf_file file, const char* format);
 void sf_setaformat (const char* format, int line);
 void sf_fileclose (sf_file file);
 bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par);
+bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par, size_t n);
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par);
 char* sf_histstring (sf_file file, const char* key);
 void sf_fileflush (sf_file file, sf_file src);
