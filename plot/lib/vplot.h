@@ -126,4 +126,6 @@ void vp_raster (unsigned char **array, bool bit, int offset,
 void vp_uraster (unsigned char **array, bool bit, int offset,
 		 int xpix, int ypix, 
 		 float xll, float yll, float xur, float yur, int orient);
+void vp_init(void);
+
 #endif

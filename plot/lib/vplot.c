@@ -1,6 +1,8 @@
 #include <math.h>
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include <rsf.h>
 
 #include "vplot.h"
@@ -19,6 +21,12 @@ static int font=-1, prec=-1, ovly=-1;    /* font, precision, and overlay */
 static int xjust=0, yjust=0;             /* x and y text justification */
 
 static void pout (float xp, float  yp, int  down);
+
+void vp_init(void)
+{
+    if (isatty(fileno(stdout)))
+	sf_error("You don't want to dump binary to terminal.");
+}
 
 int vp_getint (void)
 {
