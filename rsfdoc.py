@@ -76,11 +76,12 @@ def getprog(file,out):
     global comment, param, synopsis, stringpar
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
-        param = re.compile(r'if\s*\(\!sf_get(?P<type>bool|int|float)\s*'
+        param = re.compile(r'(?:if\s*\(\!)?sf_get(?P<type>bool|int|float)\s*'
                            '\(\s*\"(?P<name>\w+)\"\s*\,'
                            '\s*\&(?P<var>[\w\[\]]+)\s*'
-                           '\)\s*\)\s*[\{]?\s*'
-                           '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+))?'
+                           '\)\s*[\)]?\s*[\{]?\s*'
+                           '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|'
+                           'sf_error[^\;]+)?'
                            '\;\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
         stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"[^\;]*\;'
                             '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
