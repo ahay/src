@@ -25,6 +25,7 @@ static int point, endlist;
 static int edge (int x, int y, int xwmax, int xwmin, int ywmax, int ywmin);
 static void insert (int where, int x, int y, int z);
 static void delete (int where);
+static void scan (void);
 
 /* Read in the data for polystart */
 void vp_polyfix (int x, int y, bool *first, bool *allgone)  
@@ -52,7 +53,7 @@ void vp_polyfix (int x, int y, bool *first, bool *allgone)
 }
 
 /* Start working on the polygons */
-void vp_polystart (int xwmax, int xwmin, int ywmax, int ywmin)		
+void vp_polystart (vp_device dev)		
 {
     int i, j, k, l, ii;
     int firstpoint;
@@ -89,7 +90,8 @@ void vp_polystart (int xwmax, int xwmin, int ywmax, int ywmin)
     i = firstpoint = 1;
 
     do {
-	poly[i][4] = edge (poly[i][0], poly[i][1], xwmax, xwmin, ywmax, ywmin);
+	poly[i][4] = edge (poly[i][0], poly[i][1], 
+			   dev->xwmax, dev->xwmin, dev->ywmax, dev->ywmin);
 	if (poly[i][4])	{ /* It's on an edge */
 	    nedge++;
 	    pedge[nedge] = i;
@@ -232,98 +234,22 @@ void vp_polystart (int xwmax, int xwmin, int ywmax, int ywmin)
 	    }
 	}
     }
-}
-
-#ifdef kjhkjh
-
 
 /* Our polygon has been fragmented into multiple smaller polygons as
  * necessary! Output the resulting polygons */
 
     scan ();
 
-    for (i = 1; i <= npols; i++)
-    {
-	dev.startpoly (polsc[i]);
+    for (i = 1; i <= npols; i++) {
+	dev->startpoly (polsc[i]);
 	j = pols[i];
-	do
-	{
-	    dev.midpoly (poly[j][0], poly[j][1]);
+	do {
+	    dev->midpoly (poly[j][0], poly[j][1]);
 	    j = poly[j][2];
-	}
-	while (j != pols[i]);
-	dev.endpoly (i == npols);
+	} while (j != pols[i]);
+	dev->endpoly (i == npols);
     }
 }
-
-
-/*
- * See how many polygons we have, and where they start.
- * Put this information in pols.
- */
-scan ()
-{
-int             polyon[POLYS];	/* Array to remember whom this point belongs
-				 * to */
-int             joe;
-int             cycle;
-int             firstpoint;
-int             where;
-
-    for (joe = 1; joe < endlist; joe++)
-    {
-	if (poly[joe][0] == EMPTY)
-	{
-	    polyon[joe] = EMPTY;
-	}
-	else
-	{
-	    polyon[joe] = UNCLAIMED;
-	}
-    }
-
-    npols = 0;
-    for (joe = 1; joe < endlist; joe++)
-    {
-	if (polyon[joe] == UNCLAIMED)
-	{
-	    /* Found the start of a polygon */
-	    firstpoint = joe;
-	    polyon[firstpoint] = CLAIMED;
-	    cycle = 1;
-	    where = poly[firstpoint][2];
-	    while (firstpoint != where)
-	    {
-		cycle++;
-		polyon[where] = CLAIMED;
-		where = poly[where][2];
-		if (where == NOLINK)
-		    ERR (FATAL, name, "Oh, No! Polygon list damaged! (This shouldn't be able to happen.)");
-	    }
-	    if (cycle < 3)
-	    {			/* Not really a polygon, remove it */
-		where = poly[firstpoint][2];
-		while (firstpoint != where)
-		{
-		    delete (where);
-		    where = poly[firstpoint][2];
-		}
-		delete (firstpoint);
-	    }
-	    else
-	    {
-		/* We found another polygon */
-		npols++;
-		if (npols > MAXPOL)
-		    ERR (FATAL, name, "Too many polygons!");
-		pols[npols] = firstpoint;
-		polsc[npols] = cycle;
-	    }
-	}
-    }
-}
-
-#endif
 
 /* Find out which edges this point is on */
 static int edge (int x, int y, int xwmax, int xwmin, int ywmax, int ywmin)
@@ -388,4 +314,47 @@ static void delete (int where)
     poly[0][2] = where;
     poly[poly[where][2]][3] = where;
     poly[poly[temp][2]][3] = temp;
+}
+
+/* See how many polygons we have, and where they start.
+ * Put this information in pols. */
+static void scan (void)
+{
+    int polyon[POLYS];
+    int joe, cycle, firstpoint, where;
+
+    for (joe = 1; joe < endlist; joe++) {
+	polyon[joe] = (poly[joe][0] == EMPTY)? EMPTY:UNCLAIMED;
+    }
+
+    npols = 0;
+    for (joe = 1; joe < endlist; joe++) {
+	if (polyon[joe] == UNCLAIMED) { /* Found the start of a polygon */
+	    firstpoint = joe;
+	    polyon[firstpoint] = CLAIMED;
+	    cycle = 1;
+	    where = poly[firstpoint][2];
+	    while (firstpoint != where) {
+		cycle++;
+		polyon[where] = CLAIMED;
+		where = poly[where][2];
+		if (where == NOLINK)
+		    sf_error ("%s: Polygon list damaged",__FILE__);
+	    }
+	    if (cycle < 3) { /* Not really a polygon, remove it */
+		where = poly[firstpoint][2];
+		while (firstpoint != where) {
+		    delete (where);
+		    where = poly[firstpoint][2];
+		}
+		delete (firstpoint);
+	    } else { /* We found another polygon */
+		npols++;
+		if (npols > MAXPOL)
+		    sf_error ("%s: Too many polygons",__FILE__);
+		pols[npols] = firstpoint;
+		polsc[npols] = cycle;
+	    }
+	}
+    }
 }

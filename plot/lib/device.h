@@ -38,6 +38,7 @@ struct vp_vertex {
 };
 
 typedef struct vp_Device {
+    int xwmax, int xwmin, int ywmax, int ywmin;
     void (*open)(void);
     void (*reset)(void);
     void (*close)(vp_close);
@@ -48,6 +49,9 @@ typedef struct vp_Device {
     void (*text) (char*,float,float,float,float);
     void (*area) (int,struct vp_vertex*);
     void (*raster) (int,int,int,int,int,int,unsigned char*,int,int);
+    void (*startpoly) (int);
+    void (*midpoly)(int,int);
+    void (*endpoly)(bool);
 } *vp_device;
 
 void vp_main(int argc, char* argv[], vp_device dev);
