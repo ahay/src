@@ -40,8 +40,8 @@ void offruffp_init (float h0_in, int nh_in, float dh_in /* half-offset axis */,
     nx = nx_in; 
     w2  = w*w; 
     num = num_in;
-    c1 = 3.*(9. + w2  - 4.*w*I)/(w2*(3.+w*I));
-    c2 = 3.*(w2 - 27. - 8.*w*I)/(w2*(3.+w*I));
+    c1 = 3.*(9. + w2  + 4.*w*I)/(w2*(3.-w*I));
+    c2 = 3.*(w2 - 27. + 8.*w*I)/(w2*(3.-w*I));
 }
 
 float complex offruffp_c1 (void)

@@ -24,8 +24,8 @@
 #include "dsr.h"
 #include "pshift.h"
 
-static float eps, *vt, dw;
-static int nz, nw;
+static float eps, *vt, dw, dz, da;
+static int nz, nw, na;
 static float complex *pp;
 static kiss_fftr_cfg forw, invs;
 
@@ -33,14 +33,20 @@ void dsr_init (float eps1 /* regularization */,
 	       int nt     /* time samples */, 
 	       float dt   /* time sampling */, 
 	       int nz1    /* depth samples */, 
-	       float dz   /* depth sampling */, 
+	       float dz1  /* depth sampling */, 
 	       float *vt1 /* velocity/slowness */, 
 	       bool depth /* depth or time migration */,
-	       char rule   /* interpolation rule */)
+	       char rule   /* interpolation rule */,
+	       int na1     /* angle samples */,
+	       float da1   /* angle sampling */)
 /*< initialize >*/
 {
-    eps = eps1;     nz = nz1; 
+    eps = eps1;     
+    nz = nz1; 
+    dz = dz1;
     vt = vt1;
+    na = na1;
+    da = da1;
 
     /* determine frequency sampling */
     nw = nt/2+1;
@@ -51,7 +57,7 @@ void dsr_init (float eps1 /* regularization */,
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
-    pshift_init(depth,dz,rule);
+    pshift_init(depth,rule);
 } 
 
 void dsr_close ()
@@ -66,12 +72,12 @@ void dsr (bool inv /* modeling or migration */,
 	  float kx /* midpoint wavenumber */, 
 	  float kh /* half-offset wavenumber */, 
 	  float *p /* time trace */, 
-	  float *q /* depth trace */)
+	  float **q /* depth trace */)
 /*< apply >*/
 {
     int iz,iw;
-    float s, r;
-    float complex w2;
+    float s, r, a;
+    float complex w, k;
 
     s = 0.5*(kx-kh);
     r = 0.5*(kx+kh);
@@ -80,17 +86,17 @@ void dsr (bool inv /* modeling or migration */,
 
     if (inv) { /* modeling */
 	for (iw=0; iw<nw; iw++) {
-	    pp[iw] = q[nz-1];
+	    pp[iw] = q[nz-1][0];
 	}
 	
 	/* loop over migrated times z */
 	for (iz=nz-2; iz>=0; iz--) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
-		w2 = (eps + I*iw)*dw;
-		pp[iw] = q[iz] + pp[iw]*
-		    pshift(w2,r,vt[iz],vt[iz+1])*
-		    pshift(w2,s,vt[iz],vt[iz+1]);
+		w = (eps + I*iw)*dw;
+		pp[iw] = q[iz][0] + pp[iw]*
+		    cexpf(-(pshift(w,r,vt[iz],vt[iz+1])+
+			    pshift(w,s,vt[iz],vt[iz+1]))*dz);
 	    }
 	}
 
@@ -102,17 +108,19 @@ void dsr (bool inv /* modeling or migration */,
 	for (iz=0; iz<nz-1; iz++) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
-		w2 = (eps+I*iw)*dw;
+		w = (eps+I*iw)*dw;
 
+		/* find angle */
+		
 		/* accumulate image (summed over frequency) */
-		q[iz] += crealf(pp[iw]);
-		pp[iw] *= conjf(pshift(w2,r,vt[iz],vt[iz+1])*
-				pshift(w2,s,vt[iz],vt[iz+1]));
+		q[iz][0] += crealf(pp[iw]);
+		pp[iw] *= conjf(cexpf(-(pshift(w,r,vt[iz],vt[iz+1])+
+					pshift(w,s,vt[iz],vt[iz+1]))*dz));
 	    }
 	}
 
 	for (iw=0; iw<nw; iw++) {
-	    q[nz-1] += crealf(pp[iw]);
+	    q[nz-1][0] += crealf(pp[iw]);
 	}
     }
 }

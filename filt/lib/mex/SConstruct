@@ -1,0 +1,1 @@
+mex -I../../../include CFLAGS='-std=gnu99' -L.. -lrsf -lm

@@ -28,18 +28,20 @@ int main (int argc, char **argv)
     int nt, nt2;               /* number of time samples */
     int nz;		/* number of migrated time samples */
     int nh;               /* number of offsets */
-    int ik,im,iz;      /* loop counters 	*/
+    int ik,im,iz,ia;      /* loop counters 	*/
     int nk,nm;		/* number of wave numbers */	
+    int na;             /* number of angles */
 
     float dt;             /* time sampling interval */
     float dz;		/* migrated time sampling interval */
     float dh;             /* offset sampling interval */
     float dk,dm;	        /* wave number sampling interval */
+    float da;              /* angle sampling interval */
     float k,m;            /* wave number                  */
     float k0=0.;       /* first offset wavenumber */
     float *vt, v0;	/* velocity v(t)		*/
 
-    float *p, *q;	/* input,output	data */
+    float *p, **q;	/* data, image */
 
     bool inv;              /* modeling or migration        */
     bool depth;           /* time or depth migration      */
@@ -62,6 +64,13 @@ int main (int argc, char **argv)
     /* if true, depth migration */
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+
+    if (!sf_getint("na",&na)) na=1;
+    /* number of angles */
+
+    if (!sf_getfloat("da",&da)) da=90.;
+    /* angle sampling (in degrees) */
+    da *= SF_PI/180.;
 
     if (inv) { /* modeling */
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
@@ -156,15 +165,14 @@ int main (int argc, char **argv)
 	    if (!sf_histint(vel,"n1",&nz)) sf_error ("No n1= in velocity");
 	    if (!sf_histfloat(vel,"d1",&dz)) sf_error ("No d1= in velocity");
 	}
-	sf_putint(out,"n1",nz);
-	sf_putfloat(out,"d1",dz);
+
+	sf_putint(out,"n1",na);
+	sf_putfloat(out,"d1",da);
 	sf_putfloat(out,"o1",0.);
 
-	sf_putint(out,"n2",nk);
-	sf_putfloat(out,"d2",dk);
-	sf_putfloat(out,"o2",k0);
-
-	sf_putint(out,"n3",1);
+	sf_putint(out,"n2",nz);
+	sf_putfloat(out,"d2",dz);
+	sf_putfloat(out,"o2",0.);
     }
 
     dm *= 2.0*SF_PI;
@@ -194,14 +202,15 @@ int main (int argc, char **argv)
     nt2 = nt;
     if (nt%2) nt2++;
 
-    /* allocate space */
-    p = sf_floatalloc(nt2);
-    q = sf_floatalloc(nz);
-
     if (NULL == (rule = sf_getstring("rule"))) rule="simple";
     /* phase-shift interpolation rule (simple, midpoint, linear) */
 
-    dsr_init(eps, nt2, dt, nz, dz, vt, depth, rule[0]);
+    /* allocate space */
+    p = sf_floatalloc(nt2);
+    q = sf_floatalloc2(na,nz);
+
+    
+    dsr_init(eps, nt2, dt, nz, dz, vt, depth, rule[0], na, da);
 
     /* migrate each wavenumber */
     for (ik=0; ik<nk; ik++) {
@@ -210,10 +219,12 @@ int main (int argc, char **argv)
 	k = k0+ik*dk;
 
 	if (inv) {
-	    sf_floatread(q,nz,in);
+	    sf_floatread(q[0],nz*na,in);
 	} else {
 	    for (iz=0; iz < nz; iz++) {
-		q[iz] = 0.;
+		for (ia=0; ia < na; ia++) {
+		    q[iz][ia] = 0.;
+		}
 	    }
 	}
 
@@ -230,7 +241,7 @@ int main (int argc, char **argv)
 	    if (inv) sf_floatwrite(p,nt,out);
 	}
  
-	if (!inv) sf_floatwrite(q,nz,out);
+	if (!inv) sf_floatwrite(q[0],nz*na,out);
     }
 
     exit (0);

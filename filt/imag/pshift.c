@@ -24,16 +24,13 @@
 
 static bool depth;
 static char rule;
-static float dz;
 
 void pshift_init(bool depth1 /* depth (or time) */,
-		 float dz1 /* depth step */, 
 		 char rule1 /* interpolation rule */)
 /*< Initialize >*/
 {
     depth = depth1;
     rule = rule1;
-    dz = dz1;
 }
 
 float complex pshift(float complex w2, float k2, float v1, float v2)
@@ -80,5 +77,5 @@ float complex pshift(float complex w2, float k2, float v1, float v2)
 	    }
 	    break;
     }
-    return cexpf(-cshift*dz);
+    return cshift;
 }

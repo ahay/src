@@ -1,0 +1,9 @@
+sfspike:	fomels@BEGPC132	Tue Sep  7 07:57:22 2004
+
+	o1=0
+	label1="Time (s)"
+	data_format="native_float"
+	esize=4
+	in="/home/fomels/scratch/spike.rsf@"
+	d1=0.004
+	n1=10

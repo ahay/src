@@ -1,20 +1,20 @@
 /* */
 /*
-Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -42,14 +42,12 @@ int main(int argc, char* argv[])
 
     cr_init(&argc,&argv);
 
-/*
-    vp_uorig (-c1,-.5);
-    vp_uclip (0.,top-3.,4.,top);
-    vp_umove (0.,top-0.);  
-    vp_udraw (0.,top-4.);
-    vp_umove (0.,top-0.);  
-    vp_udraw (4.,top-0.);
-*/
+    cr_uorig (-c1,-.5);
+    cr_uclip (0.,top-3.,4.,top);
+    cr_umove (0.,top-0.);  
+    cr_udraw (0.,top-4.);
+    cr_umove (0.,top-0.);  
+    cr_udraw (4.,top-0.);
 
     for (z=.4; z < 4.; z += .4) {
 /*	vp_penup (); */

@@ -18,10 +18,12 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     /* check that the input is float */
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    if (SF_FLOAT != sf_gettype(in)) 
+	sf_error("Need float input");
 
     /* n1 is the fastest dimension (trace length) */
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n1",&n1)) 
+	sf_error("No n1= in input");
     /* leftsize gets n2*n3*n4*... (the number of traces) */
     n2 = sf_leftsize(in,1);
 

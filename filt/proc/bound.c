@@ -1,3 +1,22 @@
+/* Helix filter boundary conditions. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -5,9 +24,15 @@
 #include "helicon.h"
 #include "regrid.h"
 
-/* mark helix filter outputs where input is off data. */
-void bound (int dim, const int *nold, const int *nd, const int *na, 
-	    const filter aa) 
+#include "helix.h"
+/*^*/
+
+void bound (int dim         /* number of dimensions */, 
+	    const int *nold /* old data coordinates [dim] */, 
+	    const int *nd   /* new data coordinates [dim] */, 
+	    const int *na   /* filter box size [dim] */, 
+	    const filter aa /* helix filter */) 
+/*< Mark helix filter outputs where input is off data. >*/
 {
     int nb[SF_MAX_DIM], ii[SF_MAX_DIM];
     float *xx, *yy;
@@ -62,4 +87,4 @@ void bound (int dim, const int *nold, const int *nd, const int *na,
     free (yy);
 } 
 
-/* 	$Id: bound.c,v 1.1 2004/06/11 10:47:16 fomels Exp $	 */
+/* 	$Id$	 */

@@ -25,7 +25,7 @@
 #include "gazdag.h"
 #include "pshift.h"
 
-static float eps, *vt, dw;
+static float eps, *vt, dw, dz;
 static int nz, nw;
 static float complex *pp;
 static kiss_fftr_cfg forw, invs;
@@ -34,7 +34,7 @@ void gazdag_init (float eps1  /* regularization */,
 		  int nt      /* time samples */, 
 		  float dt    /* time sampling */, 
                   int nz1     /* depth samples */, 
-		  float dz    /* depth sampling */, 
+		  float dz1   /* depth sampling */, 
 		  float *vt1  /* velocity (time) or slowness (depth) */, 
 		  bool depth  /* depth (or time) */,
 		  char rule   /* interpolation rule */)
@@ -42,6 +42,7 @@ void gazdag_init (float eps1  /* regularization */,
 {
     eps = eps1; 
     nz = nz1; 
+    dz = dz1;
     vt = vt1;
 
     /* determine frequency sampling */
@@ -53,7 +54,7 @@ void gazdag_init (float eps1  /* regularization */,
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
-    pshift_init(depth,dz,rule);
+    pshift_init(depth,rule);
 }
 
 void gazdag_close ()
@@ -71,7 +72,7 @@ void gazdag (bool inv  /* modeling (or migration) */,
 /*< Run >*/
 {
     int iz,iw;
-    float complex w2;
+    float complex w2, kz;
         
     if (inv) { /* modeling */
         for (iw=0; iw<nw; iw++) {
@@ -83,7 +84,8 @@ void gazdag (bool inv  /* modeling (or migration) */,
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
                 w2 = (eps + I*iw)*dw;
-                pp[iw] = pp[iw]*pshift(w2,k2,vt[iz],vt[iz+1]) + q[iz];
+		kz = -pshift(w2,k2,vt[iz],vt[iz+1]);
+                pp[iw] = pp[iw]*cexpf(kz*dz) + q[iz];
             }
         }
 
@@ -102,7 +104,8 @@ void gazdag (bool inv  /* modeling (or migration) */,
 
                 /* accumulate image (summed over frequency) */
                 q[iz] += crealf(pp[iw]);
-                pp[iw] *= conjf(pshift(w2,k2,vt[iz],vt[iz+1]));
+		kz = -pshift(w2,k2,vt[iz],vt[iz+1]);
+                pp[iw] *= conjf(cexpf(kz*dz));
             }
         }
 
