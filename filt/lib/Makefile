@@ -2,6 +2,7 @@ CC = gcc
 CFLAGS = -Wall -pedantic -O3
 CFLAGS = -Wall -pedantic -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -g
+CFLAGS = -std=gnu9x -Wall -pedantic -g
 
 DEPEND = -MM
 

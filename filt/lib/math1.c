@@ -132,7 +132,7 @@ int sf_math_parse (char* output, sf_file out)
 	if ('.' == c || isdigit(c)) { /* number */
 	    for (j=i+1; j < len; j++) {
 		c2 = output[j];
-		if ('.' != c2 || !isdigit(c2)) break;
+		if ('.' != c2 && !isdigit(c2)) break;
 	    }
 	    keylen = j-i;
 	    key = sf_charalloc(keylen+1);
