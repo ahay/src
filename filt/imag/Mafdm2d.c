@@ -28,8 +28,6 @@ int main(int argc, char* argv[])
     bool snap; /* wavefield snapshots flag */
     int  jsnap;/* save wavefield every *jsnap* time steps */
 
-/*    fprintf(stderr,"verb=%d\n",verb); */
-
     /* I/O files */
     sf_file Fw,Fv,Fs,Fr;
     sf_file Fd,Fo;

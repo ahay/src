@@ -31,12 +31,12 @@ int main (int argc, char *argv[])
     int nr;             /* number of reference velocities */
 
     float w0;		/* frequency origin 	*/
-    float z0, dz;		/* migrated time sampling interval */
+    float z0, dz;	/* migrated time sampling interval */
     float dw;	        /* frequency sampling interval */
-    float dx,dy;		/* spatial sampling interval	*/
+    float dx,dy;	/* spatial sampling interval	*/
     float dt;           /* time error */
 
-    float complex ***data;	   /* complex input		*/
+    float complex ***data;
 
     bool inv;             /* modeling or migration        */
     bool verb;            /* verbosity */

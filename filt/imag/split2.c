@@ -33,19 +33,20 @@
 static int nx,ny,nz,nt,nrmax;
 static float dz;
 static float         **ss; /* slowness */
-static float         **sm; /* medium slowness squared */
+static float         **sz; /* reference slowness */
+static float         **sm; /* reference slowness squared */
+static int            *nr; /* number of references */
+
 static float         **qq; /* image */
 static float         **kk; /* wavenumber */
 static float         **tt; /* taper */
-static float         **sz; /* reference slowness */
-
-static int           **mm; /* multi-reference slowness map  */
-static float         **ma; /* multi-reference slowness mask */
-static int           *nr;  /* number of references */
 
 static float complex **pp; /* wavefield */
 static float complex **wt; /* wavefield top */
 static float complex **wb; /* wavefield bot */
+
+static int           **mm; /* multi-reference slowness map  */
+static float         **ma; /* multi-reference slowness mask */
 
 void split2_init(int nz1, float dz1  /* depth */,
 		 int ny1, float dy1  /* in-line midpoint */,
@@ -61,11 +62,11 @@ void split2_init(int nz1, float dz1  /* depth */,
     dz = dz1;
 
     nx = nx1;
-    dx = 2.0*SF_PI/(nx*dx1);
+    dx =        2.0*SF_PI/(nx*dx1);
     x0 = (1==nx)?0:-SF_PI/dx1;
 
     ny = ny1;
-    dy = 2.0*SF_PI/(ny*dy1);
+    dy =        2.0*SF_PI/(ny*dy1);
     y0 = (1==ny)?0:-SF_PI/dy1;
 
     nt = nt1;
@@ -74,21 +75,21 @@ void split2_init(int nz1, float dz1  /* depth */,
     fft2_init(ny,nx);
 
     /* allocate workspace */
-    ss  = sf_floatalloc2 (ny,nx);  /* slowness */
-    sz  = sf_floatalloc2 (nrmax,nz); /* reference slowness */
-    sm  = sf_floatalloc2 (nrmax,nz);
+    ss = sf_floatalloc2 (ny,nx);    /* slowness */
+    sz = sf_floatalloc2 (nrmax,nz); /* reference slowness */
+    sm = sf_floatalloc2 (nrmax,nz); /* reference slowness squared*/
+    nr = sf_intalloc    (      nz); /* number of reference slownesses */
 
-    qq  = sf_floatalloc2 (ny,nx);  /* image */
-    kk  = sf_floatalloc2 (ny,nx);  /* wavenumber */
-    tt  = sf_floatalloc2 (ny,nx);  /* taper */
+    qq = sf_floatalloc2   (ny,nx);  /* image */
+    kk = sf_floatalloc2   (ny,nx);  /* wavenumber */
+    tt = sf_floatalloc2   (ny,nx);  /* taper */
 
-    mm  = sf_intalloc2   (ny,nx);  /* MRS map */
-    ma  = sf_floatalloc2 (ny,nx);  /* MRS mask */
-    nr = sf_intalloc (nz);
+    pp = sf_complexalloc2 (ny,nx);  /* wavefield */
+    wt = sf_complexalloc2 (ny,nx);  /* wavefield top */
+    wb = sf_complexalloc2 (ny,nx);  /* wavefield bot */
 
-    pp  = sf_complexalloc2 (ny,nx);/* wavefield */
-    wt  = sf_complexalloc2 (ny,nx);/* wavefield top */
-    wb  = sf_complexalloc2 (ny,nx);/* wavefield bot */
+    mm = sf_intalloc2     (ny,nx);  /* MRS map */
+    ma = sf_floatalloc2   (ny,nx);  /* MRS mask */
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
@@ -110,20 +111,21 @@ void split2_init(int nz1, float dz1  /* depth */,
 void split2_close(void)
 /*< free allocated storage >*/
 {
-    free(*pp); free( pp);
-    free(*wt); free( wt);
-    free(*wb); free( wb);
+    free(*pp); free(pp);
+    free(*wt); free(wt);
+    free(*wb); free(wb);
 
-    free(*ss); free( ss);
-    free(*sz); free( sz);
-    free(*sm); free( sm);
+    free(*ss); free(ss);
+    free(*sz); free(sz);
+    free(*sm); free(sm);
+    free( nr);
 
-    free(*qq); free( qq);
-    free(*kk); free( kk);
-    free(*tt); free( tt);
+    free(*qq); free(qq);
+    free(*kk); free(kk);
+    free(*tt); free(tt);
 
-    free(*mm); free( mm);
-    free(*ma); free( ma);
+    free(*mm); free(mm);
+    free(*ma); free(ma);
 }
 
 void split2(bool verb                   /* verbosity flag */, 
@@ -133,7 +135,7 @@ void split2(bool verb                   /* verbosity flag */,
 	    float complex *** cp        /* data  [nw][nx][ny] */,
 	    slice imag                  /* imag  [nz][nx][ny] */,
 	    slice slow                  /* slow  [nz][nx][ny] */,
-	    float dt            /* time error */)
+	    float dt                    /* time error */)
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,iy,ir, nxy;
@@ -147,16 +149,19 @@ void split2(bool verb                   /* verbosity flag */,
 	}
     }
 
+    /* compute reference slowness */
     nxy = nx*ny;
     for (iz=0; iz<nz; iz++) {
 	slice_get(slow,iz,  ss[0]);
+
 	smax = sf_quantile(nxy-1,nxy,ss[0]);
-	smin = sf_quantile(0,nxy,ss[0]);
+	smin = sf_quantile(    0,nxy,ss[0]);
 	nr[iz] = SF_MIN(nrmax,1+(smax-smin)*dz/dt);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
+
 	for (ir=0; ir<nr[iz]; ir++) {
 	    qr = (ir+1.0)/nr[iz] - 0.5 * 1./nr[iz];
-	    sz[iz][ir]  = sf_quantile(qr*nxy,nxy,ss[0]);
+	    sz[iz][ir] = sf_quantile(qr*nxy,nxy,ss[0]);
 	    sm[iz][ir] = sz[iz][ir]*sz[iz][ir];
 	}
     }
@@ -208,15 +213,14 @@ void split2(bool verb                   /* verbosity flag */,
 		    LOOPxy( cshift = cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
 			    wb[ix][iy] = pp[ix][iy]*cshift; );
 
-
 		    /* IFT */
 		    fft2(true,wb);
 
-/* create MRS mask */
+		    /* create MRS mask */
 		    LOOPxy(                     ma[ix][iy]=0.; );
 		    LOOPxy( if( mm[ix][iy]==ir) ma[ix][iy]=1.; );
 		    
-/* accumulate wavefield */
+		    /* accumulate wavefield */
 		    LOOPxy( wt[ix][iy] += wb[ix][iy] * ma[ix][iy]; );
 		    
 		} /* ir loop */
@@ -228,11 +232,13 @@ void split2(bool verb                   /* verbosity flag */,
 			pp[ix][iy] = qq[ix][iy] + wt[ix][iy]*cshift; );
 	    } /* iz */
 
+	    /* taper */
 	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
 
 	} else { /* MIGRATION */
 	    slice_get(slow,0,ss[0]);
 
+	    /* taper */
 	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
 
 	    /* loop over migrated depths z */
@@ -301,24 +307,24 @@ void taper_init(int nt)
     
     if(nt>=1) {
 	
-	    if(nx>=nt) {
-		for(it=0; it<nt; it++) {
-		    for(iy=0; iy<ny; iy++) {
-			tt[   it  ][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-			tt[nx-it-1][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		    }
+	if(nx>=nt) {
+	    for(it=0; it<nt; it++) {
+		for(iy=0; iy<ny; iy++) {
+		    tt[   it  ][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
+		    tt[nx-it-1][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
 		}
 	    }
-	    
-	    if(ny>=nt) {
-		for(it=0; it<nt; it++) {
-		    for(ix=0; ix<nx; ix++) {
-			tt[ix][   it  ] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-			tt[ix][ny-it-1] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		    }
+	}
+	
+	if(ny>=nt) {
+	    for(it=0; it<nt; it++) {
+		for(ix=0; ix<nx; ix++) {
+		    tt[ix][   it  ] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
+		    tt[ix][ny-it-1] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
 		}
 	    }
-
+	}
+	
     } /* nt>1 */
-
+    
 }

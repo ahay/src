@@ -28,13 +28,17 @@ int main (int argc, char *argv[])
     int nx;		/* number of midpoints 	*/
     int nh;             /* number of offsets */
     int nw;		/* number of frequencies */	
+    int nt;             /* boundary taper size */
+    int nr;             /* number of reference velocities */
 
     float z0, dz;	/* depth origin, sampling interval */
     float w0, dw;	/* frequency origin, sampling interval */
     float x0, dx;	/* midpoint origin, sampling interval	*/
     float y0, dy;       /* spatial origin, sampling interval	*/
     float h0, dh;       /* offset origin, sampling interval */
-    float **slow;	/* slowness		*/
+    float dt;           /* time error */
+
+    float          **slow;
     float complex ***data;
 
     bool inv;             /* modeling or migration        */
@@ -55,51 +59,60 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
     /* stability parameter */
 
-    if (!sf_histint(in,"n1",&nh)) nh = 1;
+    if (!sf_histint  (in,"n1",&nh)) nh = 1;
     if (!sf_histfloat(in,"d1",&dh)) sf_error ("No d1= in input");
     if (!sf_histfloat(in,"o1",&h0)) h0=0.;
 
-    if (!sf_histint(in,"n2",&nx)) nx = 1;
+    if (!sf_histint  (in,"n2",&nx)) nx = 1;
     if (!sf_histfloat(in,"d2",&dx)) sf_error ("No d2= in input");
     if (!sf_histfloat(in,"o2",&x0)) x0=0.;
+
+    if (!sf_getint("nt",&nt)) nt = 1;
+    /* taper size */
+    
+    if (!sf_getint("nr",&nr)) nr = 1;
+    /* maximum number of references */
+
+    if (!sf_getfloat("dt",&dt)) dt=0.004;
+    /* time error */
 
     if (inv) { /* modeling */
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 	sf_settype(out,SF_COMPLEX);
 
-	if (!sf_histint(in,"n3",&nz)) sf_error ("No n3= in input");
+	if (!sf_histint  (in,"n3",&nz)) sf_error ("No n3= in input");
 	if (!sf_histfloat(in,"d3",&dz)) sf_error ("No d3= in input");
 	
-	if (!sf_histint(in,"n2",&ny)) sf_error ("No n2= in input");
+	if (!sf_histint  (in,"n2",&ny)) sf_error ("No n2= in input");
 	if (!sf_histfloat(in,"d2",&dy)) sf_error ("No d2= in input");
 	if (!sf_histfloat(in,"o2",&y0)) sf_error ("No o2= in input");
 
-	if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
+	if (!sf_getint  ("nw",&nw)) sf_error ("Need nw=");
 	/* Length of frequency axis (for modeling) */ 
 	if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
 	/* Frequency sampling (for modeling) */
 	if (!sf_getfloat("w0",&w0)) w0=0.;
 	/* Frequency origin (for modeling) */
-	sf_putint(out,"n3",nw);
+	sf_putint  (out,"n3",nw);
 	sf_putfloat(out,"d3",dw);
 	sf_putfloat(out,"o3",w0);
     } else { /* migration */
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
 	sf_settype(out,SF_FLOAT);
 
-	if (!sf_histint(in,"n3",&nw)) sf_error ("No n3= in input");
+	if (!sf_histint  (in,"n3",&nw)) sf_error ("No n3= in input");
 	if (!sf_histfloat(in,"d3",&dw)) sf_error ("No d3= in input");
 	if (!sf_histfloat(in,"o3",&w0)) sf_error ("No o3= in input");
 
-	if (!sf_histint(vel,"n2",&nz)) sf_error ("No n2= in slowness");
+	if (!sf_histint  (vel,"n2",&nz)) sf_error ("No n2= in slowness");
 	if (!sf_histfloat(vel,"d2",&dz)) sf_error ("No d2= in slowness");
 	if (!sf_histfloat(vel,"o2",&z0)) z0=0.; 
 
-	if (!sf_histint(vel,"n1",&ny)) sf_error ("No n1= in slowness");
+	if (!sf_histint  (vel,"n1",&ny)) sf_error ("No n1= in slowness");
 	if (!sf_histfloat(vel,"d1",&dy)) sf_error ("No d1= in slowness");
 	if (!sf_histfloat(vel,"o1",&y0)) y0=0.; 
 
-	sf_putint(out,"n3",nz);
+	sf_putint  (out,"n3",nz);
 	sf_putfloat(out,"d3",dz);
 	sf_putfloat(out,"o3",z0);
     }
@@ -114,15 +127,13 @@ int main (int argc, char *argv[])
     imag = slice_init(inv? in:out,nh,ny,nz);
     data = sf_complexalloc3(nh,nx,nw);
 
-    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0);
+    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, nt,nr);
 
     if (!inv) sf_complexread(data[0][0],nh*nx*nw,in);
 
-    dsr2 (verb, inv, eps,  nw, dw, w0, data, imag, slow);
+    dsr2 (verb, inv, eps,  nw, dw, w0, data, imag, slow, dt);
 
     if (inv) sf_complexwrite(data[0][0],nh*nx*nw,out);
     
     exit (0);
 }
-
-/* 	$Id: Msstep1.c 703 2004-07-12 18:16:36Z fomels $	 */
