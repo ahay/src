@@ -23,6 +23,7 @@
 #include <ctype.h>
 
 #include "math1.h"
+#include "c99.h"
 #include "stack.h"
 #include "error.h"
 #include "alloc.h"

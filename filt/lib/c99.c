@@ -173,7 +173,7 @@ float sinf(float x)
 { return (float) sin(x);}
 
 float tanf(float x) 
-/* float tan >*/
+/*< float tan >*/
 { return (float) tan(x);}
 
 float acosf(float x) 
