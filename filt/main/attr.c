@@ -44,7 +44,8 @@ int main(int argc, char* argv[])
     int n[SF_MAX_DIM], nzero;
     size_t i, nsiz, nbuf, nleft, dim, minloc=0, maxloc=0;
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
-    float fmean, fsqr, fnorm, f, fmin, fmax;
+    float f, fmin, fmax;
+    double fmean, fsqr, fnorm;
     float complex c=0., cmin1=0., cmin2=0., cmax1=0., cmax2=0.;
     sf_datatype type;
     
@@ -139,8 +140,8 @@ int main(int argc, char* argv[])
 	}
     }
     fmean /= nsiz;
-    fnorm = sqrtf(fsqr);
-    fsqr = sqrtf(fsqr/(float) nsiz);
+    fnorm = sqrt(fsqr);
+    fsqr = sqrt(fsqr/nsiz);
 
     if( NULL==want){
 	printf("******************************************* \n");
@@ -148,11 +149,11 @@ int main(int argc, char* argv[])
 	    printf("   rms, mean and norm refer to amplitude    \n\n");
     }
     if(NULL==want || 0==strcmp(want,"rms"))
-	printf("rms = %g \n",fsqr);
+	printf("rms = %g \n",(float) fsqr);
     if(NULL==want || 0==strcmp(want,"mean"))
-	printf("mean value = %g \n",fmean);
+	printf("mean value = %g \n",(float) fmean);
     if(NULL==want || 0==strcmp(want,"norm"))
-	printf("norm value = %g \n",fnorm);
+	printf("norm value = %g \n",(float) fnorm);
     if(SF_COMPLEX==type) {
 	if (NULL==want || 0==strcmp(want,"max")) {
 	    printf("maximum real value      = (%g,%g) at ",

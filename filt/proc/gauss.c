@@ -25,14 +25,15 @@
 
 static float *shape;
 
-void gauss_init(int nfft   /* trace length */, 
+void gauss_init(int nx     /* trace length */, 
 		float rect /* smoothing length */)
 /*< initialize (call sf_freqfilt afterwards) >*/
 {
-    int iw, nw;
+    int iw, nw, nfft;
     float dw, w;
 
     /* determine frequency sampling (for real to complex FFT) */
+    nfft = nx%2? nx+1:nx;
     nw = nfft/2+1;
     dw = 2.*SF_PI/nfft;
 
