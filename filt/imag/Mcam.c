@@ -22,95 +22,143 @@
 
 int main (int argc, char *argv[])
 {
-    bool inv;             /* modeling or migration */
+    char *mode;           /* mode of operation */
+    bool inv;             /* forward or adjoint */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant   */  
 
-    int nt,ntx,nty,nth;   /* boundary taper size */
-    int nr;               /* number of reference velocities */
-    int pmx;              /* padding in the k domain */
-    int pmy;              /* padding in the k domain */
-    int phx;              /* padding in the k domain */
+    int   nt;             /* boundary taper size */
+    int   nr;             /* number of reference velocities */
     float dt;             /* time error */
-
-    slice imag;
-    slice slow;
-    slice data;
+    int   pmx,pmy,phx;    /* padding in the k domain */
 
     axa az,amx,amy,aw,alx,aly,ahx;
-    sf_file Fi; /* image    file */
-    sf_file Fd; /* data     file */
-    sf_file Fs; /* slowness file */
+
+    sf_file Fs;    /*  slowness file S(nlx,nly,    nz   ) */
+    sf_file Fi;    /*     image file R(nmx,nmy,nhx,nz   ) */
+    sf_file Fd,Fe; /*      data file D(nmx,nmy,nhx,   nw) */
+    sf_file Fw;    /* wavefield file W(nmx,nmy,nhx,nz,nw) */
+
+    slice slow;
+    slice imag;
+    slice data,wfld;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
 
+    /* default mode is migration/modeling */
+    if (NULL == (mode = sf_getstring("mode"))) mode = "m";
+
     if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
     if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint  ( "nr",&nr  ))   nr =     1; /* maximum number of references */
+    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
     if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on i-line wavenumber */
     if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on x-line wavenumber */
     if (!sf_getint(  "phx",&phx ))  phx =     0; /* padding on offset wavenumber */
-
     if (!sf_getint(   "nt",&nt  ))   nt =     0; /* taper size */
-    
-    Fi = inv ? sf_input ( "in"): sf_output("out");
-    Fd = inv ? sf_output("out"): sf_input ( "in"); 
-    Fs = sf_input ("slowness");
-    
-    /*     data[nmx][nmy][nhx][nw] */
-    /*    image[nlx][nly][nhx][nz] */
-    /* slowness[nlx][nly]     [nz] */
 
-    
+    /* slowness parameters */
+    Fs = sf_input ("slowness");
     iaxa(Fs,&alx,1);
     iaxa(Fs,&aly,2);
     iaxa(Fs,&az ,3);
+    slow = slice_init(Fs,alx.n,aly.n,az.n);
+    
+    switch(mode[0]) {
+	case 'w':
+	    Fd = sf_input ( "in");
+	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
+	    if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
+ 
+	    iaxa(Fd,&amx,1); oaxa(Fw,&amx,1);
+	    iaxa(Fd,&amy,2); oaxa(Fw,&amy,2);
+	    iaxa(Fd,&ahx,3); oaxa(Fw,&ahx,3);
+	    ;                oaxa(Fw,&az ,4);
+	    iaxa(Fd,&aw ,4); oaxa(Fw,&aw ,5);
 
-    if (inv) { /* modeling */
-	if (SF_FLOAT != sf_gettype(Fi)) sf_error("Need float image");
-	sf_settype(Fd,SF_COMPLEX);
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,     aw.n);
+	    wfld = slice_init(Fw,amx.n*amy.n*ahx.n,az.n,aw.n);
+	    break;
+	case 'd':
+	    if (inv) { /*   upward continuation */
+		Fe = sf_input ( "in");
+		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
+		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");		
 
-	if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
-	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
-	if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
+		iaxa(Fe,&amx,1); oaxa(Fd,&amx,1);
+		iaxa(Fe,&amy,2); oaxa(Fd,&amy,2);
+		iaxa(Fe,&ahx,3); oaxa(Fd,&ahx,3);
+		iaxa(Fe,&aw ,4); oaxa(Fd,&aw ,4);
 
-	iaxa(Fi,&amx,1); oaxa(Fd,&amx,1);
-	iaxa(Fi,&amy,2); oaxa(Fd,&amy,2);
-	iaxa(Fi,&ahx,3); oaxa(Fd,&ahx,3);
-	iaxa(Fi,&az ,4); oaxa(Fd,&aw ,4);
+	    } else {   /* downward continuation */
+		Fd = sf_input ( "in");
+		Fe = sf_output("out"); sf_settype(Fe,SF_COMPLEX);
+		if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
+		
+		iaxa(Fd,&amx,1); oaxa(Fe,&amx,1);
+		iaxa(Fd,&amy,2); oaxa(Fe,&amy,2);
+		iaxa(Fd,&ahx,3); oaxa(Fe,&ahx,3);
+		iaxa(Fd,&aw ,4); oaxa(Fe,&aw ,4);
+	    }
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
+	    wfld = slice_init(Fe,amx.n*amy.n,ahx.n,aw.n);
+	    break;
+	case 'm':
+	default:
+	    if (inv) { /* modeling */
+		Fi = sf_input ( "in");
+		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
+		if (SF_FLOAT != sf_gettype(Fi)) sf_error("Need float image");
+		
+		if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
+		if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
+		if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
+		
+		iaxa(Fi,&amx,1); oaxa(Fd,&amx,1);
+		iaxa(Fi,&amy,2); oaxa(Fd,&amy,2);
+		iaxa(Fi,&ahx,3); oaxa(Fd,&ahx,3);
+		iaxa(Fi,&az ,4); oaxa(Fd,&aw ,4);
+		
+	    } else { /* migration */
+		Fd = sf_input ( "in");
+		Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
+		if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
+		
+		iaxa(Fd,&amx,1); oaxa(Fi,&amx,1);
+		iaxa(Fd,&amy,2); oaxa(Fi,&amy,2);
+		iaxa(Fd,&ahx,3); oaxa(Fi,&ahx,3);
+		iaxa(Fd,&aw ,4); oaxa(Fi,&az ,4);
+	    }
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
+	    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
+	    break;
+    }
+    
+    cam_init (verb,eps,dt,
+	      az,aw,
+	      amx,amy,ahx,
+	      alx,aly,
+	      nt,
+	      pmx,pmy,phx,
+	      nr,slow);
 
-    } else { /* migration */
-	if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
-	sf_settype(Fi,SF_FLOAT);
-
-	iaxa(Fd,&amx,1); oaxa(Fi,&amx,1);
-	iaxa(Fd,&amy,2); oaxa(Fi,&amy,2);
-	iaxa(Fd,&ahx,3); oaxa(Fi,&ahx,3);
-	iaxa(Fd,&aw ,4); oaxa(Fi,&az ,4);
+    switch(mode[0]) {
+	case 'w':
+	    cawfl(    data,wfld);
+	    break;
+	case 'd':
+	    cadtm(inv,data,wfld);
+	    break;
+	case 'm':
+	default:
+	    camig_init();
+	    camig(inv,data,imag);
+	    camig_close();
+	    break;
     }
 
-    /* taper */
-    ntx = SF_MIN(nt,amx.n-1);
-    nty = SF_MIN(nt,amy.n-1);
-    nth = SF_MIN(nt,ahx.n-1);
-
-    /* from hertz to radian */
-    aw.d *= 2.*SF_PI; 
-    aw.o *= 2.*SF_PI;
-
-    slow = slice_init(Fs,alx.n,aly.n,      az.n);
-    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
-    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
-
-    cam_init (verb,eps,dt,
-	      az,aw,ahx,amx,amy,alx,aly,
-	      ntx,nty,nth,nr,
-	      pmx,pmy,phx,
-	      slow);
-    cam      (inv,data,imag,slow);
     cam_close();
     
     exit (0);

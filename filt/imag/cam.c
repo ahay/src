@@ -1,5 +1,5 @@
 /* 3-D common-azimuth migration/modeling using extended split-step */
-/*q
+/*
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
@@ -38,8 +38,8 @@
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
-static axa az,amx,amy,aw,alx,aly,ahx;
-static axa    bmx,bmy,           bhx;
+static axa az,aw,alx,aly,amx,amy,ahx;
+static axa               bmx,bmy,bhx;
 static bool verb;
 static float eps;
 static float ds, ds2;
@@ -59,26 +59,33 @@ static int             *jx; /* i-line index */
 static int             *jy; /* x-line index */
 static int             *nr; /* number of references */
 
+static slice          slow; /* slowness slice */
+
+/*------------------------------------------------------------*/
+
 void cam_init(bool verb_,
 	      float eps_,
 	      float  dt,
-	      axa az_   /* depth */,
-	      axa aw_   /* frequency */,
-	      axa ahx_  /* half-offset */,
-	      axa amx_  /* i-line (data) */,
-	      axa amy_  /* x-line (data) */,
-	      axa alx_  /* i-line (slowness/image) */,
-	      axa aly_  /* x-line (slowness/image) */,
-	      int ntx, int nty, int nth      /* taper size */,
-	      int nrmax                      /* maximum number of references */,
-	      int pmx, int pmy, int phx      /* padding in the k domain */,
-	      slice slow)
+	      axa az_                   /* depth */,
+	      axa aw_                   /* frequency */,
+	      axa amx_                  /* i-line (data) */,
+	      axa amy_                  /* x-line (data) */,
+	      axa ahx_                  /* half-offset */,
+	      axa alx_                  /* i-line (slowness/image) */,
+	      axa aly_                  /* x-line (slowness/image) */,
+	      int nt                    /* taper size */,
+	      int pmx, int pmy, int phx /* padding in the k domain */,
+	      int nrmax                 /* maximum number of references */,
+	      slice slow_)
 /*< initialize >*/
 {
     int   imy, imx, ihx, ilx, ily, iz, j;
     int        jmx, jhx;
     float  my,  mx,  hx,    k;
     float      kmx, khx;
+    int ntx,nty,nth;
+
+    slow = slow_;
 
     verb=verb_;
     eps = eps_;
@@ -90,6 +97,10 @@ void cam_init(bool verb_,
     alx= alx_;
     aly= aly_;
     ahx= ahx_;
+    
+    /* from hertz to radian */
+    aw.d *= 2.*SF_PI; 
+    aw.o *= 2.*SF_PI;
 
     ds  = dt/az.d;
     ds2 = ds*ds;
@@ -102,27 +113,43 @@ void cam_init(bool verb_,
     fft3_init(bmx.n,bmy.n,bhx.n);
 
     /* allocate storage */
-    cam_alloc(nrmax);
+    ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
+    sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
+    nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
+
+    wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
+    wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
+
+    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /*        k wavefield */
+    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded k wavefield */ 
+
+    ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
+    krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
+
+    jy = sf_intalloc      (      amy.n      );  /* midpoint index */
+    jx = sf_intalloc      (amx.n            );  /* midpoint index */
+    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
+    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
 
     /* precompute indices */
     for (imy=0; imy<amy.n; imy++) {
 	my = amy.o + imy*amy.d;
 	ily     = INDEX( my,aly);
-	jy[imy] = BOUND(ily,aly.n);                     /* x-line index */
+	jy[imy] = BOUND(ily,aly.n);            /* x-line index */
     }
     for (imx=0; imx<amx.n; imx++) {
 	mx = amx.o + imx*amx.d;
 	ilx     = INDEX( mx,alx);
-	jx[imx] = BOUND(ilx,alx.n);                     /* i-line index */
+	jx[imx] = BOUND(ilx,alx.n);            /* i-line index */
 
 	for (ihx=0; ihx<ahx.n; ihx++) {
 	    hx = ahx.o + ihx*ahx.d;
 	    
 	    ilx          = INDEX(mx-hx,alx);
-	    is[ihx][imx] = BOUND(  ilx,alx.n);          /* source index */
+	    is[ihx][imx] = BOUND(  ilx,alx.n); /* source index */
 
 	    ilx          = INDEX(mx+hx,alx);
-	    ir[ihx][imx] = BOUND(  ilx,alx.n);          /* receiver index */
+	    ir[ihx][imx] = BOUND(  ilx,alx.n); /* receiver index */
 	}
     }
 
@@ -143,7 +170,10 @@ void cam_init(bool verb_,
 	}
     }    
 
-    /* precompute taper array */
+    /* precompute taper */
+    ntx = SF_MIN(nt,amx.n-1);
+    nty = SF_MIN(nt,amy.n-1);
+    nth = SF_MIN(nt,ahx.n-1);
     taper3_init(nth,nty,ntx);
 
     /* compute reference slowness */
@@ -159,33 +189,19 @@ void cam_init(bool verb_,
     }
 }
 
-void cam_alloc(int nrmax)
-/*< allocate storage >*/
+/*------------------------------------------------------------*/
+
+void camig_init()
+/*< allocate migration storage >*/
 {
-    ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
-    sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
-    nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
-
     qq = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* image */
-    wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
-    wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
-
-    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
-    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
-
-    ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
-    krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
-
-    jy = sf_intalloc      (      amy.n      );  /* midpoint index */
-    jx = sf_intalloc      (amx.n            );  /* midpoint index */
-    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
-    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
 }
+
+/*------------------------------------------------------------*/
 
 void cam_close(void)
 /*< free allocated storage >*/
 {
-    free(**qq); free( *qq); free( qq);
     free(**pk); free( *pk); free( pk);
     free(**wk); free( *wk); free( wk);
     free(**wx); free( *wx); free( wx);
@@ -202,17 +218,22 @@ void cam_close(void)
     taper3_close();
 }
 
-void cam( bool inv   /* migration/modeling flag */, 
-	  slice data /* data       [nw][nhx][nmy][nmx] */,
-	  slice imag /* image file [nz][nhx][nly][nlx] */,
-	  slice slow /* slowness   [nz]     [nly][nlx]     */)
+/*------------------------------------------------------------*/
+
+void camig_close()
+/*< free migration storage >*/
+{
+    free(**qq); free( *qq); free( qq);
+}
+/*------------------------------------------------------------*/
+
+void camig(bool inv  /* forward/adjoint flag */, 
+	  slice data /* data  [nw][nhx][nmy][nmx] */,
+	  slice imag /* image [nz][nhx][nmy][nmx] */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,imy,imx,ihx,js,jr;
-    int       jmy;
-    float sy, kmy;
-    float complex cshift=0, cref=0, w, w2, cs, cr, khy, kss, krr;
-    float d, dsc,drc;
+    int iz,iw,imy,imx,ihx;
+    float complex w;
 
     if (!inv) { /* prepare image for migration */
 	LOOP( qq[ihx][imy][imx] = 0.0; );
@@ -224,168 +245,260 @@ void cam( bool inv   /* migration/modeling flag */,
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
 	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
-
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
-	w2 = w*w;
 
 	if (inv) { /* MODELING */
-	    slice_get(slow,az.n-1,ss[0]);              /* slowness at bottom */
+	    slice_get(slow,az.n-1,ss[0]);    /* input slowness */
 
-	    /* imaging condition @ bottom */
-	    slice_get(imag,az.n-1,qq[0][0]);
-	    LOOP( wx[ihx][imy][imx] = qq[ihx][imy][imx]; );
+	    slice_get(imag,az.n-1,qq[0][0]); /* imaging @ az.n-1 */
+	    LOOP( wx[ihx][imy][imx] =
+		  qq[ihx][imy][imx]; );
 	  
-	    /* loop over migrated depths z */
 	    for (iz=az.n-2; iz>=0; iz--) {
+		camupc(w,iz);               /* upward continuation */
 
-		/* w-x @ bottom */
-		LOOP( sy = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
-				   ss[ jy[imy] ][ ir[ihx][imx] ]);
-			 cshift = cexpf(-w*sy*az.d);
-			 wx[ihx][imy][imx] *= cshift; );
-		taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
-
-		/* FFT */
-		KOOP( pk[ihx][imy][imx] = 0.;);
-		LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
-		fft3(false,pk);		
-		
-		LOOP( wx[ihx][imy][imx] = 0; );
-		LOOP( wt[ihx][imy][imx] = 0; );
-		for (js=0; js<nr[iz]; js++) {
-		    for (jr=0; jr<nr[iz]; jr++) {
-
-			/* w-k phase shift */
-			cref = csqrtf(w2*sm[iz][js]) + csqrtf(w2*sm[iz][jr]); /* w so */
-			KOOP( jmy = KMAP(imy,bmy.n);
-			      kmy = bmy.o + jmy*bmy.d; 
-			      cs  = csqrtf(w2*sm[iz][js]+ksx[ihx][imx]);
-			      cr  = csqrtf(w2*sm[iz][jr]+krx[ihx][imx]);
-			      khy = kmy*(cr-cs)/(cr+cs); /* comaz approximation */
-			      kss = 0.5*(kmy-khy);
-			      krr = 0.5*(kmy+khy);
-			      kss = kss*kss + ksx[ihx][imx];
-			      krr = krr*krr + krx[ihx][imx];
-			      cs  = csqrtf(w2*sm[iz][js] + kss);
-			      cr  = csqrtf(w2*sm[iz][jr] + krr);
-			      cshift = cexpf((cref-cs-cr)*az.d);  /* w so - kzs - kzr */
-			      wk[ihx][imy][imx] = 
-			      pk[ihx][imy][imx] * cshift; ); 
-			
-			/* IFT */
-			fft3(true,wk);
-
-			/* accumulate wavefield */
-			LOOP( 
-			    dsc = fabsf( ss[ jy[imy] ][ is[ihx][imx] ] *
-					 ss[ jy[imy] ][ is[ihx][imx] ] - sm[iz][js]);
-			    drc = fabsf( ss[ jy[imy] ][ ir[ihx][imx] ] *
-					 ss[ jy[imy] ][ ir[ihx][imx] ] - sm[iz][jr]);
-			    d = sqrt(dsc*dsc + drc*drc);
-			    d = 1./(d*d+ds2);
-			    wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
-			    wt[ihx][imy][imx] += d; );			
-		    } /* jr loop */
-		} /* js loop */
-		LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
-		
-		/* w-x at top */
-		slice_get(slow,iz,ss[0]);
-		LOOP( sy = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
-				   ss[ jy[imy] ][ ir[ihx][imx] ]);
-			 cshift = cexpf(-w*sy*az.d);
-			 wx[ihx][imy][imx] *= cshift; ); 
-
-		/* imaging condition */
-		slice_get(imag,iz,qq[0][0]);
-		LOOP( wx[ihx][imy][imx]  +=
-			 qq[ihx][imy][imx]; );
-
-	    } /* iz */
-
+		slice_get(imag,iz,qq[0][0]);/* imaging */
+		LOOP( wx[ihx][imy][imx]  += 
+		      qq[ihx][imy][imx]; );		
+	    }
+	    
 	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
-	    cslice_put(data,iw,wx[0][0]);    /* put wavefield = data on file */
+	    cslice_put(data,iw,wx[0][0]);    /* output data */
 	    
 	} else { /* MIGRATION */
-	    slice_get(slow,0,ss[0]);                      /* slowness at top */
-
-	    cslice_get(data,iw,wx[0][0]);    /* get wavefield = data on file */
+	    slice_get(slow,0,ss[0]);         /* slowness at top */
+	    
+	    cslice_get(data,iw,wx[0][0]);    /* input data */
 	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
-
-	    /* loop over migrated depths z */
-	    for (iz=0; iz< az.n-1; iz++) {
-
-		/* imaging condition */
-		slice_get(imag,iz,qq[0][0]);
-		LOOP(       qq[ihx][imy][imx] += 
-		     crealf(wx[ihx][imy][imx] ); );
+	    
+	    for (iz=0; iz<az.n-1; iz++) {
+		slice_get(imag,iz,qq[0][0]); /* imaging */
+		LOOP(        qq[ihx][imy][imx] += 
+		      crealf(wx[ihx][imy][imx] ); );
 		slice_put(imag,iz,qq[0][0]);
 
-		/* w-x @ top */
-		LOOP( sy = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
-				ss[ jy[imy] ][ ir[ihx][imx] ]);
-			 cshift = conjf(cexpf(-w*sy*az.d));
-			 wx[ihx][imy][imx] *= cshift; );
-
-		/* FFT */
-		KOOP( pk[ihx][imy][imx] = 0.; );
-		LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
-		fft3(false,pk);
-
-		LOOP( wx[ihx][imy][imx] = 0; );
-		LOOP( wt[ihx][imy][imx] = 0; );
-		for (js=0; js<nr[iz]; js++) {
-		    for (jr=0; jr<nr[iz]; jr++) {
-
-			/* w-k phase shift */
-			cref= csqrtf(w2*sm[iz][js]) 
-			    + csqrtf(w2*sm[iz][jr]); /* w so */
-			KOOP( jmy = KMAP(imy,bmy.n);
-			      kmy = bmy.o + jmy*bmy.d; 
-			      cs  = csqrtf(w2*sm[iz][js] + ksx[ihx][imx]);
-			      cr  = csqrtf(w2*sm[iz][jr] + krx[ihx][imx]);
-			      khy = kmy*(cr-cs)/(cr+cs); /* comaz approximation */
-			      kss = 0.5*(kmy-khy);
-			      krr = 0.5*(kmy+khy);
-			      kss = kss*kss + ksx[ihx][imx];
-			      krr = krr*krr + krx[ihx][imx];
-			      cs  = csqrtf(w2*sm[iz][js] + kss);
-			      cr  = csqrtf(w2*sm[iz][jr] + krr);
-			      cshift = conjf(cexpf((cref-cs-cr)*az.d)); /* w so - kzs - kzr */
-			      wk[ihx][imy][imx] = 
-			      pk[ihx][imy][imx] * cshift; );
-			
-			/* IFT */
-			fft3(true,wk);
-
-			/* accumulate wavefield */
-			LOOP( 
-			    dsc = fabsf( ss[ jy[imy] ][ is[ihx][imx] ] *
-					 ss[ jy[imy] ][ is[ihx][imx] ] - sm[iz][js]);
-			    drc = fabsf( ss[ jy[imy] ][ ir[ihx][imx] ] *
-					 ss[ jy[imy] ][ ir[ihx][imx] ] - sm[iz][jr]);
-			    d = sqrt(dsc*dsc + drc*drc);
-			    d = 1./(d*d+ds2);
-			    wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
-			    wt[ihx][imy][imx] += d; );
-		    } /* jr loop */
-		} /* js loop */
-		LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
-
-		/* w-x @ bottom */
-		slice_get(slow,iz+1,ss[0]);
-		LOOP( sy = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
-				ss[ jy[imy] ][ ir[ihx][imx] ]);
-			 cshift = conjf(cexpf(-w*sy*az.d));
-			 wx[ihx][imy][imx] *= cshift; );
-		taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
-	    } /* iz */
+		camdwc(w,iz);                /* downward continuation */
+	    }
 	    
-	    /* imaging condition @ bottom */
-	    slice_get(imag,az.n-1,qq[0][0]);
-	    LOOP(qq[ihx][imy][imx] +=  crealf(wx[ihx][imy][imx]); );
+	    slice_get(imag,az.n-1,qq[0][0]); /* imaging @ az.n-1 */
+	    LOOP(       qq[ihx][imy][imx] +=  
+		 crealf(wx[ihx][imy][imx] ); );
 	    slice_put(imag,az.n-1,qq[0][0]);
 	} /* else */
     } /* iw */
 }
 
+/*------------------------------------------------------------*/
+
+void cadtm(bool inv     /* forward/adjoint flag */, 
+	  slice topdata /* top data [nw][nhx][nmy][nmx] */,
+	  slice botdata /* bot data [nw][nhx][nmy][nmx] */)
+/*< Apply upward/downward datuming >*/
+{
+    int iz,iw;
+    float complex w;
+
+    /* loop over frequencies w */
+    for (iw=0; iw<aw.n; iw++) {
+	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	w = eps*aw.d + I*(aw.o+iw*aw.d);
+
+	if (inv) { /* UPWARD DATUMING */
+	    slice_get(slow,az.n-1,ss[0]);    /* input slowness */
+
+	    cslice_get(botdata,iw,wx[0][0]); /* input data */
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	  
+	    for (iz=az.n-2; iz>=0; iz--) {
+		camupc(w,iz);                /* upward continuation */
+	    }
+	    
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	    cslice_put(topdata,iw,wx[0][0]); /* output data */
+	    
+	} else { /* DOWNWARD DATUMING */
+	    slice_get(slow,0,ss[0]);         /* slowness at top */	    
+
+	    cslice_get(topdata,iw,wx[0][0]); /* input bottom data */
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	    
+	    for (iz=0; iz<az.n-1; iz++) {
+		camdwc(w,iz);                /* downward continuation */
+	    }
+	    
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	    cslice_put(botdata,iw,wx[0][0]); /* output data */
+	} /* else */
+    } /* iw */
+}
+
+/*------------------------------------------------------------*/
+
+void cawfl(slice data /*      data [nw][nhx][nmy][nmx] */,
+	   slice wfld /* wavefield [nw][nhx][nmy][nmx] */)
+/*< Save wavefield from downward continuation >*/
+{
+    int iz,iw;
+    float complex w;
+
+    /* loop over frequencies w */
+    for (iw=0; iw<aw.n; iw++) {
+	if (verb) sf_warning ("frequency %d of %d",iw+1,aw.n);
+	w = eps*aw.d + I*(aw.o+iw*aw.d);
+
+	slice_get(slow,0,ss[0]);
+	
+	cslice_get(data,iw,wx[0][0]);
+	taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	
+	taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	cslice_put(wfld,iw,wx[0][0]);
+
+	for (iz=0; iz<az.n-1; iz++) {	    
+	    camdwc(w,iz);
+
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+	    cslice_put(wfld,iw,wx[0][0]);
+	}	    
+    } /* iw */
+}
+
+/*------------------------------------------------------------*/
+
+void camdwc(float complex w,int iz)
+/*< Downward continuation >*/
+{
+    int imy,imx,ihx,jmy,js,jr;
+    float  s, kmy, d, dsc,drc;
+    float complex cshift=0, cref=0, w2, cs, cr, khy, kss, krr;
+    
+    w2 = w*w;
+
+    /* w-x @ top */
+    LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
+		   ss[ jy[imy] ][ ir[ihx][imx] ]);
+	  cshift = conjf(cexpf(-w*s*az.d));
+	  wx[ihx][imy][imx] *= cshift; );
+
+    /* FFT */
+    KOOP( pk[ihx][imy][imx] = 0.; );
+    LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
+    fft3(false,pk);
+
+    LOOP( wx[ihx][imy][imx] = 0;
+	  wt[ihx][imy][imx] = 0; );
+    for (js=0; js<nr[iz]; js++) {
+	for (jr=0; jr<nr[iz]; jr++) {
+	    
+	    /* w-k phase shift */
+	    cref= csqrtf(w2*sm[iz][js]) 
+		+ csqrtf(w2*sm[iz][jr]);
+	    KOOP( jmy = KMAP(imy,bmy.n);
+		  kmy = bmy.o + jmy*bmy.d; 
+		  cs  = csqrtf(w2*sm[iz][js] + ksx[ihx][imx]);
+		  cr  = csqrtf(w2*sm[iz][jr] + krx[ihx][imx]);
+		  khy = kmy*(cr-cs)/(cr+cs);
+		  kss = 0.5*(kmy-khy);
+		  krr = 0.5*(kmy+khy);
+		  kss = kss*kss + ksx[ihx][imx];
+		  krr = krr*krr + krx[ihx][imx];
+		  cs  = csqrtf(w2*sm[iz][js] + kss);
+		  cr  = csqrtf(w2*sm[iz][jr] + krr);
+		  cshift = cexpf((cref-cs-cr)*az.d);
+		  wk[ihx][imy][imx] = 
+		  pk[ihx][imy][imx] * conjf(cshift); );
+	    
+	    /* IFT */
+	    fft3(true,wk);
+	    
+	    /* accumulate wavefield */
+	    LOOP( 
+		dsc = fabsf( ss[ jy[imy] ][ is[ihx][imx] ] *
+			     ss[ jy[imy] ][ is[ihx][imx] ] - sm[iz][js]);
+		drc = fabsf( ss[ jy[imy] ][ ir[ihx][imx] ] *
+			     ss[ jy[imy] ][ ir[ihx][imx] ] - sm[iz][jr]);
+		d = sqrt(dsc*dsc + drc*drc);
+		d = 1./(d*d+ds2);
+		wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
+		wt[ihx][imy][imx] += d; );
+	} /* jr loop */
+    } /* js loop */
+    LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
+
+    /* w-x @ bottom */
+    slice_get(slow,iz+1,ss[0]);
+    LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
+		   ss[ jy[imy] ][ ir[ihx][imx] ]);
+	  cshift = cexpf(-w*s*az.d);
+	  wx[ihx][imy][imx] *= conjf(cshift); );
+    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+}
+
+void camupc(float complex w,int iz)
+/*< Upward continuation >*/
+{
+    int imy,imx,ihx,jmy,js,jr;
+    float  s, kmy, d, dsc,drc;
+    float complex cshift=0, cref=0, w2, cs, cr, khy, kss, krr;
+    
+    w2 = w*w;
+    
+    /* w-x @ bottom */
+    LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
+		   ss[ jy[imy] ][ ir[ihx][imx] ]);
+	  cshift = cexpf(-w*s*az.d);
+	  wx[ihx][imy][imx] *= cshift; );
+    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
+    
+    /* FFT */
+    KOOP( pk[ihx][imy][imx] = 0.;);
+    LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
+    fft3(false,pk);		
+    
+    LOOP( wx[ihx][imy][imx] = 0;
+	  wt[ihx][imy][imx] = 0; );
+    for (js=0; js<nr[iz]; js++) {
+	for (jr=0; jr<nr[iz]; jr++) {
+	    
+	    /* w-k phase shift */
+	    cref= csqrtf(w2*sm[iz][js]) 
+		+ csqrtf(w2*sm[iz][jr]);
+	    KOOP( jmy = KMAP(imy,bmy.n);
+		  kmy = bmy.o + jmy*bmy.d; 
+		  cs  = csqrtf(w2*sm[iz][js]+ksx[ihx][imx]);
+		  cr  = csqrtf(w2*sm[iz][jr]+krx[ihx][imx]);
+		  khy = kmy*(cr-cs)/(cr+cs);
+		  kss = 0.5*(kmy-khy);
+		  krr = 0.5*(kmy+khy);
+		  kss = kss*kss + ksx[ihx][imx];
+		  krr = krr*krr + krx[ihx][imx];
+		  cs  = csqrtf(w2*sm[iz][js] + kss);
+		  cr  = csqrtf(w2*sm[iz][jr] + krr);
+		  cshift = cexpf((cref-cs-cr)*az.d);
+		  wk[ihx][imy][imx] = 
+		  pk[ihx][imy][imx] * cshift; ); 
+	    
+	    /* IFT */
+	    fft3(true,wk);
+	    
+	    /* accumulate wavefield */
+	    LOOP( 
+		dsc = fabsf( ss[ jy[imy] ][ is[ihx][imx] ] *
+			     ss[ jy[imy] ][ is[ihx][imx] ] - sm[iz][js]);
+		drc = fabsf( ss[ jy[imy] ][ ir[ihx][imx] ] *
+			     ss[ jy[imy] ][ ir[ihx][imx] ] - sm[iz][jr]);
+		d = sqrt(dsc*dsc + drc*drc);
+		d = 1./(d*d+ds2);
+		wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
+		wt[ihx][imy][imx] += d; );			
+	} /* jr loop */
+    } /* js loop */
+    LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
+    
+    /* w-x at top */
+    slice_get(slow,iz,ss[0]);
+    LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
+		   ss[ jy[imy] ][ ir[ihx][imx] ]);
+	  cshift = cexpf(-w*s*az.d);
+	  wx[ihx][imy][imx] *= cshift; ); 
+}
