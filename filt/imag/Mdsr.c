@@ -43,7 +43,10 @@ int main (int argc, char **argv)
 
     bool inv;              /* modeling or migration        */
     bool depth;           /* time or depth migration      */
-    float eps;            /* dip filter constant          */               
+    float eps;            /* dip filter constant          */   
+    
+    char *rule;         /* phase-shuft interpolation rule */
+            
     sf_file vel, in, out;
 
     sf_init(argc,argv);
@@ -195,7 +198,10 @@ int main (int argc, char **argv)
     p = sf_floatalloc(nt2);
     q = sf_floatalloc(nz);
 
-    dsr_init(eps, nt2, dt, nz, dz, vt, depth);
+    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
+    /* phase-shift interpolation rule (simple, midpoint, linear) */
+
+    dsr_init(eps, nt2, dt, nz, dz, vt, depth, rule[0]);
 
     /* migrate each wavenumber */
     for (ik=0; ik<nk; ik++) {
@@ -203,7 +209,13 @@ int main (int argc, char **argv)
 	
 	k = k0+ik*dk;
 
-	if (inv) sf_floatread(q,nz,in);
+	if (inv) {
+	    sf_floatread(q,nz,in);
+	} else {
+	    for (iz=0; iz < nz; iz++) {
+		q[iz] = 0.;
+	    }
+	}
 
 	for (im=0; im<nm; im++) {	    
 	    m = im*dm;      

@@ -540,7 +540,8 @@ class TeXPaper(Environment):
                      use=use,lclass=lclass)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
-        self.Install(self.docdir,paper+'.pdf')
+        pdfinstall = self.Install(self.docdir,paper+'.pdf')
+        self.Alias(paper+'.install',pdfinstall)
         if acroread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))

@@ -21,25 +21,26 @@
 
 #include <rsf.h>
 
-static float eps, dz, *vt, dw;
+#include "dsr.h"
+#include "pshift.h"
+
+static float eps, *vt, dw;
 static int nz, nw;
 static float complex *pp;
-static bool depth;
 static kiss_fftr_cfg forw, invs;
 
 void dsr_init (float eps1 /* regularization */, 
 	       int nt     /* time samples */, 
 	       float dt   /* time sampling */, 
 	       int nz1    /* depth samples */, 
-	       float dz1  /* depth sampling */, 
+	       float dz   /* depth sampling */, 
 	       float *vt1 /* velocity/slowness */, 
-	       bool depth1 /* depth or time migration */)
+	       bool depth /* depth or time migration */,
+	       char rule   /* interpolation rule */)
 /*< initialize >*/
 {
-    eps = eps1; 
-    nz = nz1; dz = dz1;
+    eps = eps1;     nz = nz1; 
     vt = vt1;
-    depth = depth1;
 
     /* determine frequency sampling */
     nw = nt/2+1;
@@ -50,6 +51,7 @@ void dsr_init (float eps1 /* regularization */,
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
+    pshift_init(depth,0.5*dz,rule);
 } 
 
 void dsr_close ()
@@ -69,7 +71,7 @@ void dsr (bool inv /* modeling or migration */,
 {
     int iz,iw;
     float s, r;
-    float complex cshift, w2;
+    float complex w2;
 
     s = 0.5*(kx-kh);
     r = 0.5*(kx+kh);
@@ -86,16 +88,9 @@ void dsr (bool inv /* modeling or migration */,
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
 		w2 = (eps + I*iw)*dw;
-		w2 *= w2;
-
-		if (depth) {
-		    w2 = csqrtf(w2 * vt[iz] + r) + csqrtf(w2 * vt[iz] + s);
-		} else {
-		    w2 = csqrtf(w2 + vt[iz] * r) + csqrtf(w2 + vt[iz] * s);
-		}
-	
-		cshift = cexpf(-0.5*w2*dz);
-		pp[iw] = pp[iw]*cshift+q[iz];
+		pp[iw] = q[iz] + pp[iw]*
+		    pshift(w2,r,vt[iz],vt[iz+1])*
+		    pshift(w2,s,vt[iz],vt[iz+1]);
 	    }
 	}
 
@@ -104,28 +99,20 @@ void dsr (bool inv /* modeling or migration */,
 	kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
 
 	/* loop over migrated times z */
-	for (iz=0; iz<nz; iz++) {
-	    /* initialize migrated sample */
-            q[iz] = 0.0;
-      
+	for (iz=0; iz<nz-1; iz++) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
+		w2 = (eps+I*iw)*dw;
+
 		/* accumulate image (summed over frequency) */
 		q[iz] += crealf(pp[iw]);
-
-		w2 = (eps+I*iw)*dw;
-		w2 *= w2;
-		
-		if (depth) {
-		    w2 = csqrtf(w2 * vt[iz] + r) + csqrtf(w2 * vt[iz] + s);
-		} else {
-		    w2 = csqrtf(w2 + vt[iz] * r) + csqrtf(w2 + vt[iz] * s);
-		}
-		
-		/* extrapolate down one migrated time step */
-		cshift = cexpf(-0.5*w2*dz);
-		pp[iw] *= conjf(cshift);
+		pp[iw] *= conjf(pshift(w2,r,vt[iz],vt[iz+1])*
+				pshift(w2,s,vt[iz],vt[iz+1]));
 	    }
+	}
+
+	for (iw=0; iw<nw; iw++) {
+	    q[nz-1] += crealf(pp[iw]);
 	}
     }
 }

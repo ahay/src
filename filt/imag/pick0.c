@@ -1,3 +1,21 @@
+/* Simple horizon picking. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #include <math.h>
 
 #include <rsf.h>
@@ -9,7 +27,9 @@ static int n1, n2;
 static eno *ent;
 static float pmax, pmin;
 
-void pick0_init (int n1_in, int n2_in, int order)
+void pick0_init (int n1_in, int n2_in /* dimensions */, 
+		 int order            /* interpolation order */)
+/*< Initialize >*/
 {
     int i2;
 
@@ -26,6 +46,7 @@ void pick0_init (int n1_in, int n2_in, int order)
 }
 
 void pick0_set (int i2, float* dip)
+/*< set dip at trace i2 >*/
 {
     int i1;
 
@@ -37,6 +58,7 @@ void pick0_set (int i2, float* dip)
 }
 
 void pick0_close (void)
+/*< Free allocated storage >*/
 {
     int i2;
     
@@ -47,6 +69,7 @@ void pick0_close (void)
 }
 
 void pick0_step (float t0, float* t)
+/*< step picking starting from t0 to t[n2] >*/
 {
     int i, i2;
     float k1, k2;
@@ -66,6 +89,7 @@ void pick0_step (float t0, float* t)
 }
 
 void pick0_step0 (float t0, float* t)
+/*< step picking starting from t0 to t[n2] >*/
 {
     int i, i2;
     float k1;
@@ -81,6 +105,7 @@ void pick0_step0 (float t0, float* t)
 }
 
 void pick0_delta (int m2, float* t)
+/* pick differences t[n1] */
 {
     int i, i2, i1;
     float ti, k1, k2;
@@ -101,5 +126,5 @@ void pick0_delta (int m2, float* t)
     }
 }
 
-/* 	$Id: pick0.c,v 1.3 2003/09/30 14:30:53 fomels Exp $	 */
+/* 	$Id$	 */
 
