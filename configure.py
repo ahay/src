@@ -1,5 +1,4 @@
-import sys, os
-import string, re
+import sys, os, string, re, commands
 
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons.Script.SConscript
@@ -132,6 +131,16 @@ def cc(context):
                 break
         if not res:
             context.env['CCFLAGS'] = oldflag
+        # large file support
+        (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
+        if not status:
+            oldflag = context.env.get('CCFLAGS')
+            context.Message("checking if gcc accepts '%s' ... " % lfs)
+            context.env['CCFLAGS'] = oldflag + ' ' + lfs
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if not res:
+                context.env['CCFLAGS'] = oldflag
     elif sys.platform[:5] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')

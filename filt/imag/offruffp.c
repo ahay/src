@@ -1,4 +1,24 @@
+/* Offset continuation roughening operator. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "offruffp.h"  
 
@@ -6,8 +26,11 @@ static int nh, nx, num;
 static float h0, dh;
 static float complex c1, c2;
 
-void offruffp_init (float h0_in, int nh_in, float dh_in,
-		    int nx_in, float dx, float w, int num_in)
+void offruffp_init (float h0_in, int nh_in, float dh_in /* half-offset axis */,
+		    int nx_in, float dx                 /* midpoint axis */, 
+		    float w                             /* frequency */, 
+		    int num_in                          /* continuation */)
+/*< Initialize >*/
 {
     float w2;
 
@@ -22,17 +45,21 @@ void offruffp_init (float h0_in, int nh_in, float dh_in,
 }
 
 float complex offruffp_c1 (void)
+/*< return first coefficient >*/
 {
     return c1;
 }
 
 float complex offruffp_c2 (void)
+/*< return second coefficient >*/
 {
     return c2;
 }
 
 void hderp_lop (bool adj, bool add, int n1, int n2, 
-		complex float *x, complex float *y) {
+		complex float *x, complex float *y) 
+/*< simple derivative roughening >*/
+{
     int ih, ix, i;
 
     sf_cadjnull (adj,add,n1,n2,x,y);
@@ -51,7 +78,9 @@ void hderp_lop (bool adj, bool add, int n1, int n2,
 }
 
 void offruffp_lop (bool adj, bool add, int n1, int n2, 
-		   complex float *x, complex float *y) {
+		   complex float *x, complex float *y) 
+/*< offset continuation roughening >*/
+{
     int ih, ix, i;
     float h1, h2;
     float complex diag1, diag2, offd1, offd2;

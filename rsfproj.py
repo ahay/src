@@ -266,7 +266,10 @@ class Project(Environment):
                     datafiles.append(datafile)
             targets = targets + datafiles
         return self.Command(targets,sources,command)
-    def Plot (self,target,source,flow,suffix=vpsuffix,vppen=None,**kw):
+    def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,**kw):
+        if not flow: # two arguments
+            flow = source
+            source = target
         if combine.has_key(flow):
             if not type(source) is types.ListType:
                 source = string.split(source)
@@ -276,14 +279,11 @@ class Project(Environment):
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         kw.update({'suffix':suffix})
         return apply(self.Flow,(target,source,flow),kw)
-    def Result(self,target,source,flow,suffix=vpsuffix,**kw):
+    def Result(self,target,source,flow=None,suffix=vpsuffix,**kw):
         target2 = os.path.join(self.resdir,target)
-        if flow:
-            plot = apply(self.Plot,(target2,source,flow),kw)
-            self.Default (plot)
-            self.view.append(self.View(target + '.view',plot))
-        else:
-            plot = None
+        plot = apply(self.Plot,(target2,source,flow),kw)
+        self.Default (plot)
+        self.view.append(self.View(target + '.view',plot))
         lock = self.InstallAs(os.path.join(self.resdir,'.'+target+suffix),
                               target2+suffix)
         self.lock.append(lock)
@@ -305,9 +305,9 @@ class Project(Environment):
 project = Project()
 def Flow(target,source,flow,**kw):
     return apply(project.Flow,(target,source,flow),kw)
-def Plot (target,source,flow,**kw):
+def Plot (target,source,flow=None,**kw):
     return apply(project.Plot,(target,source,flow),kw)
-def Result(target,source,flow,**kw):
+def Result(target,source,flow=None,**kw):
     return apply(project.Result,(target,source,flow),kw)
 def Fetch(file,dir,private=0):
     return project.Fetch(file,dir,private)
