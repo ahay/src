@@ -102,6 +102,12 @@ Flow('khaled1','nails',
      headermath output="input-T"
      ''')
 
+gamma = 1.7
+
+Flow('khaled0',None,
+     'spike n1=1501 d1=0.002 o1=0 | headermath output="%g*T" ' %
+     (0.5*(gamma-1)))
+
 Flow('khaled2','khaled1','spray n=116 d=1 o=18')
 Flow('time2','khaled1','headermath output=T | spray n=116 d=1 o=18')
 
@@ -136,7 +142,7 @@ verb=1 nliter=0
 
 Flow('ptrace','pptrace','window max1=3 | costaper nw1=300')
 
-Flow('wtrace',['pstrace','ptrace','khaled1'],
+Flow('wtrace',['pstrace','ptrace','khaled0'],
      warp0 + ' | costaper nw1=300')
 
 def difplot(min1,max1):
@@ -201,8 +207,8 @@ def greyscan(min1,max1,min2,max2):
      color=j pclip=100
      label1="Time (s)" label2="Gamma"''' % (min1,max1,min2,max2)
 
-Flow('scan',['sresh','presh'],warpscan(51,0.95,1.05))
-Plot('scan','scan',greyscan(0.5,2.5,0.95,1.05))
+Flow('scan',['sresh','presh'],warpscan(51,0.9,1.0))
+Plot('scan','scan',greyscan(0.5,2.5,0.9,1.0))
 
 def blindpick(eps=10):
     return '''
@@ -219,10 +225,9 @@ def showpick(min1,max1,min2,max2):
     ''' % (min1,max1,min2,max2)
 
 Flow('pick0',['scan','ptrace'],
-     'mutter inner=y abs=n half=n slope0=43 x0=0.97 | ' +
-     blindpick(2))
+     'window max2=0.95 | ' + blindpick(2))
 Flow('pick','pick0','headermath output="(input-1)*T" ')
-Plot('pick','pick0',showpick(0.5,2.5,0.95,1.05))
+Plot('pick','pick0',showpick(0.5,2.5,0.9,1.0))
 Combine('scan','scan pick','Overlay',result=1)
 
 ###########################################################################
@@ -236,7 +241,7 @@ def warp1(niter,rect1=1,rect2=1,rect3=1):
     warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % (niter,rect1,rect2,rect3)
 
 Flow(['warp2','wtrace2','w2','a2'],
-     ['sresh','presh','pick','khaled1'],
+     ['sresh','presh','pick','khaled0'],
      warp1(20,220))
 
 Flow('gamma2','warp2',warp2gamma)
@@ -597,26 +602,26 @@ def blindpick3(rect1=10,rect2=10,rect3=10):
     ''' % (rect1,rect2,rect3)
 
 Flow('ppick0',['sscan','mask2'],
-     'transp plane=24 | %s | transp plane=23' % blindpick3(4,64,64))
+     'transp plane=24 | %s | transp plane=23' % blindpick3(4,4,4))
 Flow('ppick1',['ppick0','time3'],'math T=${SOURCES[1]} output="(input-1)*T" ')
 
 ###################################################################
 # WARPING
 ###################################################################
 
-#Flow(['wwarp','wcube3','ww','aa'],
-#     ['ssresh','ppresh','ppick1','Warp'],
-#     warp1(20,220,440,440))
+Flow(['wwarp','wcube3','ww','aa'],
+     ['ssresh','ppresh','ppick1','Warp'],
+     warp1(2,50,100,100))
 
 Plot('wcube3','wcube3',plot3('Warped and Balanced PS (After)'))
 Combine('cube3','ppresh wcube3','SideBySideAniso',result=1)
 
 def colorplot3(title):
     return '''
-    window min1=1 max1=2 |
-    byte clip=0.2 bias=1.8 |
-    grey3 flat=y frame3=%d frame2=%d frame1=300 title="%s"
-    point1=0.5 point2=0.5 color=j
+    window min1=1.5 max1=1.7 |
+    byte bias=1.8 |
+    grey3 flat=y frame3=%d frame2=%d frame1=50 title="%s"
+    point1=0.1 point2=0.5 color=j
     label1="Time (s)" label2="In-line" label3="Cross-line"
     ''' % (line-15,trace-18,title)
 
