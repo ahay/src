@@ -1,12 +1,8 @@
 /* Element by element minimum or maximum of two RSF files.
 
-Example:
+file1 and file2 must have the same number of elements.
 
-sfminmax file1=file1.rsf file2=file2.rsf mode=min > out.rsf
-
-file1 and file2 must be floats and have the same number of elements.
-
-See also: sflistminmax.
+See also: sflistminmax, sfstack.
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -41,7 +37,9 @@ int main(int argc, char* argv[])
     
                                         /* Check file parameters    */
     if (sf_getstring("file1") == NULL) sf_error("Need file1=");
+    /* RSF filename required, data type must be float */
     if (sf_getstring("file2") == NULL) sf_error("Need file2=");
+    /* RSF filename required, data type must be float */
 
     file1 = sf_input("file1");          /* Open files               */
     file2 = sf_input("file2");
@@ -63,7 +61,7 @@ int main(int argc, char* argv[])
     /* 'min' (default) or 'max' */ 
 
     if (strcmp(mode,"min")!=0 && strcmp(mode,"max")!=0)
-        sf_error ("Unknown mode.");
+        sf_error ("Unknown mode %s.",mode);
     
     nbuf = BUFSIZ/sizeof(float);        /* Get buffer size          */
     
@@ -92,4 +90,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: min.c 1032 2005-03-09 16:44:37Z jennings $	 */
+/* 	$Id: Mminmax.c 1032 2005-03-09 16:44:37Z jennings $	 */

@@ -1,18 +1,18 @@
 /* Construct incremental minimum or maximum lists from an RSF file.
 
-Example:
-
-sflistminmax mode=min < in.rsf > out.rsf
-
-Input must be floats.
-
 Constructs the following set of minimum or maximum lists for each
 x2, x3, ... xn in the input RSF file:
 
 out[0] = in[0]
 out[i] = min or max of (in[i], out[i-1]) for i = 1, 2, 3, ... n1
 
-See also: sflistminmax.
+The input file data type must be float.
+The output file data type will be float.
+
+sflistminmax mode=min, can be used to simulate "erosion" for a set of 
+geological surfaces, producing a new set of surfaces that do not cross.
+
+See also: sfminmax, sfstack.
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     /* 'min' (default) or 'max' */ 
 
     if (strcmp(mode,"min")!=0 && strcmp(mode,"max")!=0)
-        sf_error ("Unknown mode.");
+        sf_error ("Unknown mode %s.",mode);
     
     list = sf_floatalloc(n1);           /* Allocate list            */
     
@@ -84,4 +84,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: min.c 1032 2005-03-09 16:44:37Z jennings $	 */
+/* 	$Id: Mlistminmax.c 1032 2005-03-09 16:44:37Z jennings $	 */
