@@ -18,11 +18,9 @@
 */
 
 #include <rsf.h>
+/*^*/
 
 #include "eno2.h"
-
-#include "eno.h"
-/*^*/
 
 #ifndef _eno2_h
 
@@ -34,7 +32,7 @@ typedef struct Eno2 *eno2;
 
 struct Eno2 {
     int order, ng, n1, n2;
-    eno jnt, *ent;
+    sf_eno jnt, *ent;
     float *f, *f1;
 };
 /* concrete data type */
@@ -52,12 +50,12 @@ eno2 eno2_init (int order      /* interpolation order */,
     pnt->n2 = n2;
     pnt->ng = 2*order-2;
     if (pnt->ng > pnt->n2) sf_error("%s: ng=%d is too big",__FILE__,pnt->ng);
-    pnt->jnt = eno_init (order, pnt->ng);
+    pnt->jnt = sf_eno_init (order, pnt->ng);
     pnt->f  = sf_floatalloc(pnt->ng);
     pnt->f1 = sf_floatalloc(pnt->ng);
-    pnt->ent = (eno*) sf_alloc(n2,sizeof(eno));
+    pnt->ent = (sf_eno*) sf_alloc(n2,sizeof(sf_eno));
     for (i2 = 0; i2 < n2; i2++) {
-	pnt->ent[i2] = eno_init (order, n1);
+	pnt->ent[i2] = sf_eno_init (order, n1);
     }
 
     return pnt;
@@ -69,7 +67,7 @@ void eno2_set (eno2 pnt, float** c /* data [n2][n1] */)
     int i2;
     
     for (i2 = 0; i2 < pnt->n2; i2++) {
-	eno_set (pnt->ent[i2], c[i2]);
+	sf_eno_set (pnt->ent[i2], c[i2]);
     }
 }
 
@@ -79,7 +77,7 @@ void eno2_set1 (eno2 pnt, float* c /* data [n2*n1] */)
     int i2;
     
     for (i2 = 0; i2 < pnt->n2; i2++) {
-	eno_set (pnt->ent[i2], c+i2*(pnt->n1));
+	sf_eno_set (pnt->ent[i2], c+i2*(pnt->n1));
     }
 }
 
@@ -88,9 +86,9 @@ void eno2_close (eno2 pnt)
 {
     int i2;
     
-    eno_close (pnt->jnt);
+    sf_eno_close (pnt->jnt);
     for (i2 = 0; i2 < pnt->n2; i2++) {
-	eno_close (pnt->ent[i2]);
+	sf_eno_close (pnt->ent[i2]);
     }
     free (pnt->f);
     free (pnt->f1);
@@ -121,18 +119,18 @@ void eno2_apply (eno2 pnt,
     
     for (k = 0; k < pnt->ng; k++) {
 	if (what != FUNC) {
-	    eno_apply (pnt->ent[b2+k],i,x,pnt->f+k, pnt->f1+k,BOTH);
+	    sf_eno_apply (pnt->ent[b2+k],i,x,pnt->f+k, pnt->f1+k,BOTH);
 	} else {
-	    eno_apply (pnt->ent[b2+k],i,x,pnt->f+k, pnt->f1+k,FUNC);
+	    sf_eno_apply (pnt->ent[b2+k],i,x,pnt->f+k, pnt->f1+k,FUNC);
 	}
     }
     
-    eno_set (pnt->jnt,pnt->f);
-    eno_apply (pnt->jnt,j,y,f,f1+1,what);
+    sf_eno_set (pnt->jnt,pnt->f);
+    sf_eno_apply (pnt->jnt,j,y,f,f1+1,what);
     
     if (what != FUNC) {
-	eno_set (pnt->jnt,pnt->f1);
-	eno_apply(pnt->jnt,j,y,f1,&g,FUNC);
+	sf_eno_set (pnt->jnt,pnt->f1);
+	sf_eno_apply(pnt->jnt,j,y,f1,&g,FUNC);
     }
 }
 

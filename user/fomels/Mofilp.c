@@ -91,4 +91,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mofilp.c,v 1.5 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

@@ -19,14 +19,14 @@
 
 #include <math.h>
 #include <float.h>
-
-#include <rsf.h>
+#include <stdlib.h>
 
 #include "eno.h"
+#include "alloc.h"
 
-#ifndef _eno_h
+#ifndef _sf_eno_h
 
-typedef struct Eno *eno;
+typedef struct Eno *sf_eno;
 /* abstract data type */
 /*^*/
 
@@ -51,14 +51,14 @@ static const float big_number = FLT_MAX;
 #define MIN(a,b) ((a)<(b))?(a):(b)
 #endif
 
-eno eno_init (int order /* interpolation order */, 
+sf_eno sf_eno_init (int order /* interpolation order */, 
 	      int n     /* data size */)
 /*< Initialize interpolation object. >*/
 {
-    eno ent;
+    sf_eno ent;
     int i;
     
-    ent = (eno) sf_alloc(1,sizeof(*ent));
+    ent = (sf_eno) sf_alloc(1,sizeof(*ent));
     ent->order = order;
     ent->n = n;
     ent->diff = (float**) sf_alloc(order,sizeof(float*));
@@ -69,7 +69,7 @@ eno eno_init (int order /* interpolation order */,
     return ent;
 }
 
-void eno_close (eno ent)
+void sf_eno_close (sf_eno ent)
 /*< Free internal storage >*/
 {
     int i;
@@ -81,7 +81,7 @@ void eno_close (eno ent)
     free (ent);
 }
 
-void eno_set (eno ent, float* c /* data [n] */)
+void sf_eno_set (sf_eno ent, float* c /* data [n] */)
 /*< Set the interpolation table. c can be changed or freed afterwords >*/
 {
     int i, j;
@@ -99,7 +99,7 @@ void eno_set (eno ent, float* c /* data [n] */)
     }
 }
 
-void eno_apply (eno ent, 
+void sf_eno_apply (sf_eno ent, 
 		int i     /* grid location */, 
 		float x   /* offset from grid */, 
 		float *f  /* output data value */, 

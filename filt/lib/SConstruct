@@ -9,7 +9,7 @@ src = 'kiss_fft kiss_fftr'
 
 src2 = '''
 adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
-decart dottest error file files getpar math1 pqueue segy simtab stack
+decart dottest eno error file files getpar math1 pqueue segy simtab stack
 '''
 
 try: # distribution version

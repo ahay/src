@@ -22,10 +22,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "eno.h"
 #include "fzero.h"
 
-static eno tfnt, pfnt;
+static sf_eno tfnt, pfnt;
 static int it;
 static float sx, sz;
 
@@ -62,8 +61,8 @@ int main (int argc, char* argv[])
     zx = sf_floatalloc(nt);
     xztp = sf_floatalloc(four);
     
-    tfnt = eno_init (nw, nt);
-    pfnt = eno_init (nw, nt);
+    tfnt = sf_eno_init (nw, nt);
+    pfnt = sf_eno_init (nw, nt);
 
     ng = 0;
     for (iz=0; iz<nz; iz++) {
@@ -76,8 +75,8 @@ int main (int argc, char* argv[])
 		zx[it] = xztp[1];
 	    }
 
-	    eno_set (tfnt, tx);
-	    eno_set (pfnt, px);
+	    sf_eno_set (tfnt, tx);
+	    sf_eno_set (pfnt, px);
  
 	    ig = 0;
 	    for (it = 0; it < nt-1; it++) {
@@ -90,7 +89,7 @@ int main (int argc, char* argv[])
 		    (a >= 0. && b < 0.)) {
 
 		    t = fzero(func_eno,0.,1.,a,b,1.e-3,false);
-		    eno_apply (tfnt,it,t,&f,&g,FUNC);
+		    sf_eno_apply (tfnt,it,t,&f,&g,FUNC);
 	  
 		    tx[ig] = f;
 		    ig++;
@@ -111,8 +110,8 @@ int main (int argc, char* argv[])
 	}
     }
     
-    eno_close (tfnt);
-    eno_close (pfnt);
+    sf_eno_close (tfnt);
+    sf_eno_close (pfnt);
   
     sf_warning("number of branches = %d", ng);
 
@@ -134,8 +133,8 @@ static int compfunc(const void *a, const void *b)
 static float func_eno(float t)
 {
     float f, g;
-    eno_apply (pfnt,it,t,&f,&g,FUNC);
+    sf_eno_apply (pfnt,it,t,&f,&g,FUNC);
     return (f-sx);
 }
 
-/* 	$Id: Minterpt.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

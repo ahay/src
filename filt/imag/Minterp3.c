@@ -22,10 +22,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "eno.h"
 #include "fzero.h"
 
-static eno tfnt, pfnt, zfnt;
+static sf_eno tfnt, pfnt, zfnt;
 static int it;
 static float sx, sz;
 
@@ -66,9 +65,9 @@ int main (int argc, char* argv[])
     px = sf_floatalloc(nt);
     zx = sf_floatalloc(nt);
 
-    tfnt = eno_init (nw, nt);
-    pfnt = eno_init (nw, nt);
-    zfnt = eno_init (nw, nt);
+    tfnt = sf_eno_init (nw, nt);
+    pfnt = sf_eno_init (nw, nt);
+    zfnt = sf_eno_init (nw, nt);
 
     ng = 0;
     iy = nx*nz;
@@ -80,9 +79,9 @@ int main (int argc, char* argv[])
 	    sf_floatread(px,nt,place);
 	    sf_floatread(zx,nt,depth);
 
-	    eno_set (tfnt, tx);
-	    eno_set (pfnt, px);
-	    eno_set (zfnt, zx);
+	    sf_eno_set (tfnt, tx);
+	    sf_eno_set (pfnt, px);
+	    sf_eno_set (zfnt, zx);
 
 	    ig = 0;
 	    for (it = 0; it < nt-1; it++) {
@@ -99,11 +98,11 @@ int main (int argc, char* argv[])
 
 		    t = fzero(func_eno,0.,1.,a,b,1.e-3,false);
 
-		    eno_apply (zfnt,it,t,&f,&g,FUNC);
+		    sf_eno_apply (zfnt,it,t,&f,&g,FUNC);
 		    if (f > sz + dz || 
 			f < sz - dz) continue;
 
-		    eno_apply (tfnt,it,t,&f,&g,FUNC);
+		    sf_eno_apply (tfnt,it,t,&f,&g,FUNC);
 	  
 		    if (ix + nx*iz == iy) {
 			if (fabs (tx[ig-1]-f) < dt) continue;
@@ -158,8 +157,8 @@ static int compfunc(const void *a, const void *b)
 static float func_eno(float t)
 {
     float f, g;
-    eno_apply (pfnt,it,t,&f,&g,FUNC);
+    sf_eno_apply (pfnt,it,t,&f,&g,FUNC);
     return (f-sx);
 }
 
-/* 	$Id: Minterp3.c,v 1.5 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

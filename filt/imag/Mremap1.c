@@ -20,13 +20,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "eno.h"
-
 int main(int argc, char* argv[])
 {
     int n1, n2, i1, nn1, i2, order, i;
     float o1, d1, oo1, dd1, *tin, *tout, f, f1;
-    eno map;
+    sf_eno map;
     sf_file in, out, pattern;
 
     sf_init (argc, argv);
@@ -75,15 +73,15 @@ int main(int argc, char* argv[])
     /* Interpolation order */
     if (order > n1) order=n1;
 
-    map = eno_init (order,n1);
+    map = sf_eno_init (order,n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(tin,n1,in);
-	eno_set (map,tin);
+	sf_eno_set (map,tin);
 
 	for (i1=0; i1 < nn1; i1++) {
 	    f = (oo1+i1*dd1-o1)/d1; i=f; f -= i;
-	    eno_apply(map, i, f, tout+i1, &f1, FUNC);
+	    sf_eno_apply(map, i, f, tout+i1, &f1, FUNC);
 	}
 	sf_floatwrite(tout,nn1,out);
     }
@@ -91,4 +89,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mremap1.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

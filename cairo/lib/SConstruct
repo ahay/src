@@ -5,7 +5,7 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-psrc = Split('axis coltab gainpar plot stdplot vplot')
+psrc = Split('cplot')
 
 try: # distribution version
     Import('env')
@@ -22,6 +22,8 @@ except: # local version
     env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 
+env.ParseConfig('pkg-config --cflags --libs "gtk+-2.0 cairo >= 0.1.1" ') 
+
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
@@ -32,7 +34,7 @@ includes = map(lambda x: x+'.h',psrc)
 
 objects = []
 for source in psrc:
-    env.Include(source,prefix='vp_')
+    env.Include(source,prefix='cr_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
@@ -40,35 +42,14 @@ for source in psrc:
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('rsfplot',objects)
-inc = env.Command('rsfplot.h',includes,Action(configure.merge))
+lib = env.StaticLibrary('rsfcairo',objects)
+inc = env.Command('rsfcairo.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
  
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
-else:
-    pass
-#    env.Alias('install',install)
 
-##############################################################################
-# TESTING
-##############################################################################
-env.Prepend(LIBS=['rsf'],LIBPATH=['../../filt/lib'])
-for file in ('axis','stdplot'):
-    test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
-
-#############################################################################
-# LINT
-##############################################################################
-
-env.Command('../plint/lint',map(lambda x: x+'.c',psrc),
-            'splint +posixlib -I%s $SOURCES' % env['CPPPATH'][0])
-env.Alias('plint','../plint')
-        
 env['SCANNERS'].remove(configure.Include)
-# env.Append(SCANNERS=CScan)
 
-# 	$Id$	
-
+# 	$Id$

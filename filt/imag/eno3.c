@@ -18,12 +18,10 @@
 */
 
 #include <rsf.h>
+/*^*/
 
 #include "eno3.h"
 #include "eno2.h"
-
-#include "eno.h"
-/*^*/
 
 #ifndef _eno3_h
 
@@ -35,7 +33,7 @@ typedef struct Eno3 *eno3;
 
 struct Eno3 {
     int order, ng, n1, n2, n3;
-    eno **ent;
+    sf_eno **ent;
     eno2 jnt;
     float **f, **f1;
 };
@@ -59,11 +57,11 @@ eno3 eno3_init (int order              /* interpolation order */,
     pnt->jnt = eno2_init (order, pnt->ng, pnt->ng);
     pnt->f  = sf_floatalloc2(pnt->ng,pnt->ng);
     pnt->f1 = sf_floatalloc2(pnt->ng,pnt->ng);
-    pnt->ent = (eno**) sf_alloc(n3,sizeof(eno*));
+    pnt->ent = (sf_eno**) sf_alloc(n3,sizeof(sf_eno*));
     for (i3 = 0; i3 < n3; i3++) {
-	pnt->ent[i3] = (eno*) sf_alloc(n2,sizeof(eno));
+	pnt->ent[i3] = (sf_eno*) sf_alloc(n2,sizeof(sf_eno));
 	for (i2 = 0; i2 < n2; i2++) {
-	    pnt->ent[i3][i2] = eno_init (order, n1);
+	    pnt->ent[i3][i2] = sf_eno_init (order, n1);
 	}
     }
 
@@ -77,7 +75,7 @@ void eno3_set (eno3 pnt, float*** c /* data [n3][n2][n1] */)
     
     for (i3 = 0; i3 < pnt->n3; i3++) {
 	for (i2 = 0; i2 < pnt->n2; i2++) {
-	    eno_set (pnt->ent[i3][i2], c[i3][i2]);
+	    sf_eno_set (pnt->ent[i3][i2], c[i3][i2]);
 	}
     }
 }
@@ -89,7 +87,7 @@ void eno3_set1 (eno3 pnt, float* c /* data [n3*n2*n1] */)
     
     for (i3 = 0; i3 < pnt->n3; i3++) {
 	for (i2 = 0; i2 < pnt->n2; i2++) {
-	    eno_set (pnt->ent[i3][i2], c+(pnt->n1)*(i2+(pnt->n2)*i3));
+	    sf_eno_set (pnt->ent[i3][i2], c+(pnt->n1)*(i2+(pnt->n2)*i3));
 	}
     }
 }
@@ -102,7 +100,7 @@ void eno3_close (eno3 pnt)
     eno2_close (pnt->jnt);
     for (i3 = 0; i3 < pnt->n3; i3++) {
 	for (i2 = 0; i2 < pnt->n2; i2++) {
-	    eno_close (pnt->ent[i3][i2]);
+	    sf_eno_close (pnt->ent[i3][i2]);
 	}
 	free (pnt->ent[i3]);
     }
@@ -148,7 +146,7 @@ void eno3_apply (eno3 pnt,
     
     for (i3 = 0; i3 < pnt->ng; i3++) {
 	for (i2 = 0; i2 < pnt->ng; i2++) {
-	    eno_apply (pnt->ent[b3+i3][b2+i2],i,x,
+	    sf_eno_apply (pnt->ent[b3+i3][b2+i2],i,x,
 		       &(pnt->f[i3][i2]),
 		       &(pnt->f1[i3][i2]),
 		       (what==FUNC? FUNC: BOTH));

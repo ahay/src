@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../..')
 import configure
 
-progs = 'angle angle2'
+progs = 'angle angle2 green ofilp pick0'
 
 try:  # distributed version
     Import('env')
