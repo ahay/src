@@ -41,7 +41,7 @@ void tree_init (int order,
     accepted = sf_boolalloc(naxz);
 
     Orphans = CreateNodeList(nax);
-    Tree = CreateNodes(naxz);
+    Tree = CreateNodes(naxz,order);
 }
 
 void tree_build(int method)
@@ -51,6 +51,7 @@ void tree_build(int method)
     bool onx, onz;
     Node node;
 
+    sf_warning("Method=%d",method);
     for (kz=0; kz < nz; kz++) {
 	sf_warning("Building %d of %d",kz+1,nz);
 	for (kx=0; kx < nx; kx++) {
@@ -123,34 +124,104 @@ void tree_build(int method)
 			/* p is normal vector now ||p||=1 */
 			psnap (p,&a,&ia);
 			break;
+		case 2:
+		  t = cell_update2 (2, 0., v, p, g);
+		  /* p is normal vector now ||p|| = 1 */
+	    
+			cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+			cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+	    
+			s = MIN(sx,sz);
+	    
+			t += cell_update1 (2, s, v, p, g);
+			/* p is slowness vector now ||p||=v */
+	    
+			if (s == sz) {
+			    z = 0.; iz += jz;
+			    x += p[1]*s/dx;
+			} else {
+			    x = 0.; ix += jx;
+			    z += p[0]*s/dz;
+			}
+	    
+			onz = cell_snap (&z,&iz,eps);
+			onx = cell_snap (&x,&ix,eps);
+	    
+			eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+			g[1] /= dx;
+			g[0] /= dz;
+	    
+			t += cell_update2 (2, s, v, p, g);
+			/* p is normal vector now ||p||=1 */
+			psnap (p,&a,&ia);
+			break;
 		    default:
 			sf_error("Unknown method");
 			break;
 		}
-  
+  		
+		/* pathological exits */
+		if (ix < 0 || ix > nx-1 ||
+		    iz < 0 || iz > nz-1) {
+		  AddNode(Orphans,node);
+		  vk = val[k];
+		  vk[0] = x0 + kx*dx;
+		  vk[1] = z0 + kz*dz;
+		  vk[2] = 0.;
+		  vk[3] = cell_p2a (p);
+		  accepted[k] = true;
+		  continue;
+		} 
+
 		i = ia + ix*na + iz*nax;
 
 		node->t = t;
 		if (onz) { /* hits a z wall */
 		    node->w1 = a;
 		    node->w2 = x;
-		    if (x != 1. && a != 1.) AddChild(Tree,i,0,node);
+		    if (x != 1. && a != 1.) AddChild(Tree,i,0,0,node);
 		    if (x != 1. && a != 0. && ia < na-1) 
-			AddChild(Tree,i+1,1,node);
+			AddChild(Tree,i+1,0,1,node);
 		    if (x != 0. && a != 1. && ix < nx-1) 
-			AddChild(Tree,i+na,2,node);
+			AddChild(Tree,i+na,1,0,node);
 		    if (x != 0. && a != 0. && ia < na-1 && ix < nx-1) 
-			AddChild(Tree,i+na+1,3,node);
+		      AddChild(Tree,i+na+1,1,1,node);
+		    if (2==method) {
+		      if (x != 0. && a != 0. && a != 1. && ix < nx-1 && ia > 0)
+			AddChild(Tree,i+na-1,1,2,node);
+		      if (x != 1. && a != 0. && a != 1. && ia > 0)
+			AddChild(Tree,i-1,0,2,node);
+		      if (x != 0. && x != 1. && a != 0. && a != 1. &&
+			  ix > 0 && ia > 0) 
+			AddChild(Tree,i-na-1,2,2,node);
+		      if (x != 0. && x != 1. && a != 1. && ix > 0)
+			AddChild(Tree,i-na,2,0,node);
+		      if (x != 0. && x != 1. && a != 0. && ix > 0 && ia < na-1)
+			AddChild(Tree,i-na+1,2,1,node);
+		    }
 		} else { /* hits an x wall */
 		    node->w1 = a;
 		    node->w2 = z;
-		    if (z != 1. && a != 1.) AddChild(Tree,i,0,node);
+		    if (z != 1. && a != 1.) AddChild(Tree,i,0,0,node);
 		    if (z != 1. && a != 0. && ia < na-1) 
-			AddChild(Tree,i+1,1,node);
+		      AddChild(Tree,i+1,0,1,node);
 		    if (z != 0. && a != 1. && iz < nz-1) 
-			AddChild(Tree,i+nax,2,node);
+		      AddChild(Tree,i+nax,1,0,node);
 		    if (z != 0. && a != 0. && ia < na-1 && iz < nz-1) 
-			AddChild(Tree,i+nax+1,3,node);
+		      AddChild(Tree,i+nax+1,1,1,node);
+		    if (2==method) {
+		      if (x != 0. && a != 0. && a != 1. && ix < nx-1 && ia > 0)
+			AddChild(Tree,i+na-1,1,2,node);
+		      if (x != 1. && a != 0. && a != 1. && ia > 0)
+			AddChild(Tree,i-1,0,2,node);
+		      if (x != 0. && x != 1. && a != 0. && a != 1. &&
+			  ix > 0 && ia > 0) 
+			AddChild(Tree,i-na-1,2,2,node);
+		      if (x != 0. && x != 1. && a != 1. && ix > 0)
+			AddChild(Tree,i-na,2,0,node);
+		      if (x != 0. && x != 1. && a != 0. && ix > 0 && ia < na-1)
+			AddChild(Tree,i-na+1,2,1,node);
+		    }
 		}
 	    }
 	}
@@ -177,10 +248,10 @@ void tree_print (void) {
 } 
 
 
-void tree_traverse (void) {
+void tree_traverse (int method) {
     Node node, child;
-    int k, i, j, n, nc, *parents;
-    float w1, w2, *fk;
+    int k, i, j, k1, k2, n, nc, **parents;
+    float x, w1[3], w2[3], *fk;
 
     for (n=0; n < Orphans->nitems; n++) {
 	if (0==n%nax) fprintf(stderr,"Got %d of %d\n",n+1,naxz);
@@ -195,15 +266,46 @@ void tree_traverse (void) {
 	    fk[2] = node->t;
 	    fk[3] = 0.;
 
-	    w1 = node->w1;
-	    w2 = node->w2;
 	    parents = node->parents;
 
-	    for (j=0; j < 4; j++) {
-		if ((i=parents[0])>=0) fk[j] += (1.-w2)*(1.-w1)*val[i][j];
-		if ((i=parents[1])>=0) fk[j] += (1.-w2)*    w1 *val[i][j];
-		if ((i=parents[2])>=0) fk[j] +=     w2 *(1.-w1)*val[i][j];
-		if ((i=parents[3])>=0) fk[j] +=     w2 *    w1 *val[i][j];
+	    switch (method) {
+	    case 1:
+	      x = node->w1; w1[0] = 1.-x; w1[1] = x;
+	      x = node->w2; w2[0] = 1.-x; w2[1] = x;
+
+	      for (k2=0; k2 < 2; k2++) {		  
+		for (k1=0; k1 < 2; k1++) {
+		  i = parents[k2][k1];
+		  if (i >= 0) {
+		    x = w2[k2]*w1[k1];
+		    for (j=0; j < 4; j++) {
+		      fk[j] += x*val[i][j];
+		    }
+		  }
+		}
+	      }
+	      break;
+	    case 2:
+	      x = node->w1; 
+	      w1[0] = 1.-x*x; w1[1] = 0.5*x*(x+1.); w1[2] = 0.5*x*(x-1.);
+	      x = node->w2; 
+	      w2[0] = 1.-x*x; w2[1] = 0.5*x*(x+1.); w2[2] = 0.5*x*(x-1.);
+
+	      for (k2=0; k2 < 3; k2++) {		  
+		for (k1=0; k1 < 3; k1++) {
+		  i = parents[k2][k1];
+		  if (i >= 0) {
+		    x = w2[k2]*w1[k1];
+		    for (j=0; j < 4; j++) {
+		      fk[j] += x*val[i][j];
+		    }
+		  }
+		}
+	      }
+	      break;
+	    default:
+	      sf_error("Unknown method %d",method);
+	      break;
 	    }
       
 	    accepted[k] = true;

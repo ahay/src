@@ -1,10 +1,18 @@
+CC = cc
+CC = gcc
+
 CFLAGS = -O3 
-CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
+CFLAGS = -g -I../rsf
+CFLAGS = -std=gnu9x -Wall -g -pedantic -I../rsf
+
 LDFLAGS = -L../rsf -lrsf -lm
+LDFLAGS = -L../rsf -lrsf -lm -lnsl
+
+DEPEND = -xM1
 DEPEND = -MM
 
-PROGS = cell2 dsr eikonal enoder1 gazdag gauss interpt pick0 pickd \
-	rays2 sag shoot2 sstep1 symes tree voft
+PROGS = cell2 dsr eikonal enoder1 gazdag gauss interp2 interpt pick0 pickd \
+	rays2 sag shoot2 sstep1 symes trace2 tree voft vofz
 
 cell2 = celltrace cell eno2 eno quadratic
 dsr = dsr
@@ -12,6 +20,7 @@ eikonal = fastmarch pqueue neighbors
 enoder1 = eno
 gazdag = gazdag
 gauss = empty
+interp2 = eno fzero
 interpt = eno fzero 
 pick0 = pick0 eno
 pickd = pick0 eno
@@ -20,8 +29,10 @@ sag = empty
 shoot2 = celltrace cell eno2 eno quadratic fzero
 sstep1 = split1
 symes = symes
+trace2 = agrid acell celltrace cell eno2 eno quadratic
 tree = tree eno2 node eno cell quadratic
 voft = empty
+vofz = empty
 
 MAINS = $(addprefix sf, $(PROGS))
 OBJS = $(addsuffix .o, ${$*})

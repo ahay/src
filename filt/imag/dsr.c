@@ -50,7 +50,7 @@ void dsr (int inv, float eps, float kx, float kh,
 		w2 = csqrtf(w2+vs2)+ csqrtf(w2+vr2);
 	
 		/* extrapolate down one migrated time step */
-		cshift = cexp(-0.5*w2*dz);
+		cshift = cexpf(-0.5*w2*dz);
 		p[iw] *= cshift;
 	    }
 	}

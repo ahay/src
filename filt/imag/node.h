@@ -7,20 +7,19 @@ typedef struct CNodeList {
 } *NodeList;
  
 typedef struct CNode {
-  int nparents;
-  int parents[4];
+  int nparents, **parents; /* number of alive parents, immediate parents */
   float w1, w2, t;
   struct CNodeList* children;
 } *Node;
 
 NodeList CreateNodeList (int n);
 
-Node CreateNodes (int n);
+Node CreateNodes (int n, int order);
 
 void FreeNodes (Node nd, int n);
 
 void AddNode (NodeList list, Node nd);
 
-void AddChild (Node parent, int i, int k, Node child);
+void AddChild (Node parent, int i, int j, int k, Node child);
 
 #endif

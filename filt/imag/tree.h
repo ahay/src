@@ -6,7 +6,7 @@ void tree_init (int order,
 		float dz1, float dx1, float dp1, 
 		float z01, float x01, float p01, 
 		float** vel, float** val);
-void tree_traverse(void);
+void tree_traverse(int method);
 void tree_build(int method);
 void tree_close(void);
 void tree_print (void);

@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
     bool velocity;
-    int nz,nx, i, iz, ia, na, nt, ix, order, naxz, meth;
+    int nz,nx, i, iz, na, nt, ix, order, naxz, meth;
     float **slow, **node;
     float dz,dx,da,x0,z0,a0;
     sf_file vel, out;
@@ -50,13 +50,14 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
-    if(!sf_getint("order",&order)) order=2;
     if(!sf_getint("method",&meth)) meth=1;
+    if(!sf_getint("order",&order)) order=meth;
+    order++;
 
     slow  = sf_floatalloc2(nz,nx);
     sf_read(slow[0],sizeof(float),nz*nx,vel);
 
-    if (velocity) {
+    if (velocity) { /* transform velocity to slowness */
 	for(ix = 0; ix < nx; ix++){
 	    for (iz = 0; iz < nz; iz++) {
 		slow[ix][iz] = 1./slow[ix][iz];
@@ -66,8 +67,8 @@ int main(int argc, char* argv[])
    
     naxz = na*nx*nz;
     node = sf_floatalloc2(4,naxz);
-    tree_init (order, nx, nz, na, nt,
-	       dx, dz, da, x0, z0, a0, slow,node);
+    tree_init (order, nz, nx, na, nt,
+	       dz, dx, da, z0, x0, a0, slow, node);
     
     for (i = 0; i < naxz; i++) {
 	node[i][0]=0.;
@@ -75,12 +76,14 @@ int main(int argc, char* argv[])
 	node[i][2]=-1.;
 	node[i][3]=0.;
     }
+
+    /* build dependency graph */
     
     tree_build(meth);
 
     /* tree_print(); */
 
-    tree_traverse();
+    tree_traverse(meth);
 
     sf_write(node[0],sizeof(float),4*naxz,out);
     

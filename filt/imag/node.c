@@ -15,18 +15,20 @@ NodeList CreateNodeList (int n) {
     return list;
 }
 
-Node CreateNodes (int n) {
+Node CreateNodes (int n, int order) {
     Node nd;
-    int i;
+    int i, j, k;
 
     nd = (Node) sf_alloc(n, sizeof(*nd));
     for (i=0; i < n; i++) {
 	nd[i].nparents=0;
 	nd[i].children = CreateNodeList(1);
-	nd[i].parents[0] = -1;
-	nd[i].parents[1] = -1;
-	nd[i].parents[2] = -1;
-	nd[i].parents[3] = -1;
+	nd[i].parents = sf_intalloc2(order,order);
+	for (j=0; j < order; j++) {
+	  for (k=0; k < order; k++) {
+	    nd[i].parents[j][k] = -1;
+	  }
+	}
     }
 
     return nd;
@@ -38,13 +40,16 @@ void FreeNodes (Node nd, int n) {
     for (i=0; i < n; i++) {
 	free(nd[i].children->list);
 	free(nd[i].children);
+	free(nd[i].parents[0]);
+	free(nd[i].parents);
     }
     free (nd);
 }
 
-void AddChild (Node parent, int i, int k, Node child) {
+/* parent is i in the list, [j][k] for child */
+void AddChild (Node parent, int i, int j, int k, Node child) {
     AddNode (parent[i].children, child);
-    child->parents[k] = i;
+    child->parents[j][k] = i;
     child->nparents++;
 }
 

@@ -24,8 +24,8 @@ int main(int argc, char** argv)
     if (!sf_getfloat ("a",&a)) a = 1.;
     if (!sf_getfloat ("r",&r)) r = 25.;
     r = 1./(r*r);
-    if (!sf_getfloat ("c1",&c1)) c1 = 65.;
-    if (!sf_getfloat ("c2",&c2)) c2 = 65.;
+    if (!sf_getfloat ("c1",&c1)) c1 = o1+(n1/2-1)*d1;
+    if (!sf_getfloat ("c2",&c2)) c2 = o2+(n2/2-1)*d2;
 
     vint = sf_floatalloc(n1);
     for (i2=0; i2 < n2; i2++) {
