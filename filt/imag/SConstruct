@@ -26,7 +26,7 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-O2 -g')
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
     SConscript('../lib/SConstruct')
     src = glob.glob('[a-z]*.c')

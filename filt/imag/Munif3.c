@@ -70,7 +70,6 @@ int main(int argc, char **argv)
 
     inter = sf_floatalloc3(n2,n3,ninf);
     sf_floatread(inter[0][0],n2*n3*ninf,surface);
-    sf_fileclose(surface);
 
     ninf++; /* more layers than interfaces */
 

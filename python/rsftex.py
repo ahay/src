@@ -603,7 +603,7 @@ class TeXPaper(Environment):
         if acroread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
-        if latex2html:
+        if latex2html and l2hdir:
             dir = paper+'_html'
             css  = os.path.join(dir,paper+'.css')
             html = os.path.join(dir,'index.html')
@@ -633,7 +633,7 @@ class TeXPaper(Environment):
             self.Alias('install',paper+'.install')
             self.Default('pdf')
          self.Command('dummy.tex',self.figs,Action(dummy))
-         apply(self.Paper,('dummy',),kw)
+#         apply(self.Paper,('dummy','dummy.tex'),kw)
 
 default = TeXPaper()
 def Dir(**kw):
