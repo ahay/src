@@ -32,7 +32,7 @@ typedef struct Allpass *allpass;
 
 struct Allpass {
     int nx, ny, nz, nw, nj;
-    float*** pp;
+    float* pp;
 };
 
 static allpass ap1, ap2;
@@ -40,7 +40,7 @@ static allpass ap1, ap2;
 allpass allpass_init(int nw                 /* filter size (1,2,3) */, 
 		     int nj                 /* filter step */, 
 		     int nx, int ny, int nz /* data size */, 
-		     float ***pp            /* data [nz][ny][nx] */)
+		     float *pp              /* data [nz*ny*nx] */)
 /*< Initialize >*/
 {
     allpass ap;
@@ -59,35 +59,42 @@ allpass allpass_init(int nw                 /* filter size (1,2,3) */,
 
 void allpass1 (bool der         /* derivative flag */, 
 	       const allpass ap /* PWD object */, 
-	       float*** xx      /* input */, 
-	       float*** yy      /* output */)
+	       float* xx        /* input */, 
+	       float* yy        /* output */)
 /*< in-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is;
+    int ix, iy, iz, iw, is, i, nx, ny, nz;
     float a[7];
 
-    for (iz=0; iz < ap->nz; iz++) {
-	for (iy=0; iy < ap->ny; iy++) {
-	    for (ix=0; ix < ap->nx; ix++) {
-		yy[iz][iy][ix] = 0.;
+    nx = ap->nx;
+    ny = ap->ny;
+    nz = ap->nz;
+
+
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		yy[i] = 0.;
 	    }
 	}
     }
   
-    for (iz=0; iz < ap->nz; iz++) {
-	for (iy=0; iy < ap->ny-1; iy++) {
-	    for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny-1; iy++) {
+	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[iz][iy][ix], a);
+		    aderfilter(ap->nw, ap->pp[i], a);
 		} else {
-		    passfilter(ap->nw, ap->pp[iz][iy][ix], a);
+		    passfilter(ap->nw, ap->pp[i], a);
 		}
 	      
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		  
-		    yy[iz][iy][ix] += (xx[iz][iy+1][ix+is] - 
-				       xx[iz][iy  ][ix-is]) * a[iw];
+		    yy[i] += (xx[i+is+nx] - xx[i-is]) * a[iw];
 		}
 	    }
 	}
@@ -96,35 +103,41 @@ void allpass1 (bool der         /* derivative flag */,
 
 void allpass2 (bool der         /* derivative flag */, 
 	       const allpass ap /* PWD object */, 
-	       float*** xx      /* input */, 
-	       float*** yy      /* output */)
+	       float* xx        /* input */, 
+	       float* yy        /* output */)
 /*< cross-line plane-wave destruction >*/
 {
-    int ix, iy, iz, iw, is;
+    int ix, iy, iz, iw, is, i, nx, ny, nz;
     float a[7];
+
+    nx = ap->nx;
+    ny = ap->ny;
+    nz = ap->nz;
     
-    for (iz=0; iz < ap->nz; iz++) {
-	for (iy=0; iy < ap->ny; iy++) {
-	    for (ix=0; ix < ap->nx; ix++) {
-		yy[iz][iy][ix] = 0.;
+    for (iz=0; iz < nz; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix=0; ix < nx; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		yy[i] = 0.;
 	    }
 	}
     }
     
-    for (iz=0; iz < ap->nz-1; iz++) {
-	for (iy=0; iy < ap->ny; iy++) {
-	    for (ix = ap->nw*ap->nj; ix < ap->nx-ap->nw*ap->nj; ix++) {
+    for (iz=0; iz < nz-1; iz++) {
+	for (iy=0; iy < ny; iy++) {
+	    for (ix = ap->nw*ap->nj; ix < nx-ap->nw*ap->nj; ix++) {
+		i = ix + nx * (iy + ny * iz);
+		
 		if (der) {
-		    aderfilter(ap->nw, ap->pp[iz][iy][ix], a);
+		    aderfilter(ap->nw, ap->pp[i], a);
 		} else {
-		    passfilter(ap->nw, ap->pp[iz][iy][ix], a);
+		    passfilter(ap->nw, ap->pp[i], a);
 		}
 		
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		    
-		    yy[iz][iy][ix] += (xx[iz+1][iy][ix+is] - 
-				       xx[iz  ][iy][ix-is]) * a[iw];
+		    yy[i] += (xx[ix+is+nx*ny] - xx[i-is]) * a[iw];
 		}
 	    }
 	}
@@ -161,7 +174,7 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap1->pp[iz][iy][ix], a);
+		passfilter(nw, ap1->pp[i], a);
 	      
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;
@@ -190,7 +203,7 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	    for (ix = nw*nj; ix < nx-nw*nj; ix++) {
 		i = ix + nx*(iy + ny*iz);
 
-		passfilter(nw, ap2->pp[iz][iy][ix], a);
+		passfilter(nw, ap2->pp[i], a);
 		
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj;

@@ -25,33 +25,32 @@
 void mask32 (int nw                 /* filter size */, 
 	     int nj1, int nj2       /* dealiasing stretch */, 
 	     int nx, int ny, int nz /* data size */, 
-	     float ***yy            /* data [nz][ny][nx] */, 
-	     bool ***m1             /* first dip mask [nz][ny][nx] */, 
-	     bool ***m2             /* second dip mask [nz][ny][nx] */)
+	     float *yy              /* data [nz][ny][nx] */, 
+	     bool *m1               /* first dip mask [nz][ny][nx] */, 
+	     bool *m2               /* second dip mask [nz][ny][nx] */)
 /*< two-dip masks in 3-D >*/
 {
-    int ix, iy, iz, iw, is;
-    bool ***xx;
+    int ix, iy, iz, iw, is, i, n;
+    bool *xx;
 
-    xx = sf_boolalloc3(nx,ny,nz);
+    n = nx*ny*nz;
 
-    for (iz=0; iz < nz; iz++) {
-	for (iy=0; iy < ny; iy++) {
-	    for (ix=0; ix < nx; ix++) {
-		xx[iz][iy][ix] = (yy[iz][iy][ix] == 0.);
-		m1[iz][iy][ix] = false;
-		m2[iz][iy][ix] = false;
-	    }
-	}
+    xx = sf_boolalloc(nx);
+
+    for (i=0; i < n; i++) {
+	xx[i] = (yy[i] == 0.);
+	m1[i] = false;
+	m2[i] = false;
     }
 
     for (iz=0; iz < nz; iz++) {
 	for (iy=0; iy < ny-1; iy++) {
 	    for (ix = nw*nj1; ix < nx-nw*nj1; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj1;		  
-		    m1[iz][iy][ix] = m1[iz][iy][ix] || 
-			xx[iz][iy+1][ix+is] || xx[iz][iy][ix-is];
+		    m1[i] = m1[i] || xx[i-is] || xx[i+nx+is];
 		}
 	    }
 	}
@@ -60,17 +59,16 @@ void mask32 (int nw                 /* filter size */,
     for (iz=0; iz < nz-1; iz++) {
 	for (iy=0; iy < ny; iy++) {
 	    for (ix = nw*nj2; ix < nx-nw*nj2; ix++) {
+		i = ix + nx * (iy + ny * iz);
+
 		for (iw = 0; iw <= 2*nw; iw++) {
 		    is = (iw-nw)*nj2;		  
-		    m2[iz][iy][ix] = m2[iz][iy][ix] ||
-			xx[iz][iy+1][ix+is] || xx[iz][iy][ix-is];
+		    m2[i] = m2[i] || xx[i-is] || xx[i+ny*nx+is];
 		}
 	    }
 	}
     }
 	
-    free(xx[0][0]);
-    free(xx[0]);
     free(xx); 
 }
 

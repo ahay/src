@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char *argv[])
 {
     int n1,n2,n3, m1, m2, m3, n123, nw, nj1, nj2;
-    float ***u1, ***u2, ***p;
+    float *u1, *u2, *p;
     sf_file in, out, dip;
     allpass ap;
 
@@ -61,15 +61,15 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
 
-    u1 = sf_floatalloc3(n1,n2,n3);
-    u2 = sf_floatalloc3(n1,n2,n3);
-    p  = sf_floatalloc3(n1,n2,n3);
+    u1 = sf_floatalloc(n123);
+    u2 = sf_floatalloc(n123);
+    p  = sf_floatalloc(n123);
 
     /* read data */
-    sf_floatread(u1[0][0],n123,in);
+    sf_floatread(u1,n123,in);
 
     /* read t-x dip */
-    sf_floatread(p[0][0],n123,dip);
+    sf_floatread(p,n123,dip);
 
     ap = allpass_init (nw,nj1,n1,n2,n3,p);
   
@@ -77,11 +77,11 @@ int main (int argc, char *argv[])
     allpass1(false, ap, u1, u2);
 
     /* write t-x destruction */
-    sf_floatwrite(u2[0][0],n123,out);
+    sf_floatwrite(u2,n123,out);
 
     if (n3 > 1) { /* if 3-D input */
 	/* read t-y dip */
-	sf_floatread(p[0][0],n123,dip);
+	sf_floatread(p,n123,dip);
 	
 	if (nj2 != nj1) ap = allpass_init (nw,nj2,n1,n2,n3,p);
   
@@ -89,10 +89,10 @@ int main (int argc, char *argv[])
 	allpass2(false, ap, u1, u2);
 
 	/* write t-y destruction */
-	sf_floatwrite(u2[0][0],n123,out);
+	sf_floatwrite(u2,n123,out);
     }
     
     exit (0);
 }
 
-/* 	$Id: Mpwd.c,v 1.7 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int i, niter, nw, n1, n2, n3, n123;
-    float *mm, *dd, ***pp, ***qq;
+    float *mm, *dd, *pp, *qq;
     bool *known, verb;
     sf_file in, out, dip, mask;
 
@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    pp = sf_floatalloc3(n1,n2,n3);
-    qq = sf_floatalloc3(n1,n2,n3);
+    pp = sf_floatalloc(n123);
+    qq = sf_floatalloc(n123);
 
-    sf_floatread(pp[0][0],n123,dip);
-    sf_floatread(qq[0][0],n123,dip);
+    sf_floatread(pp,n123,dip);
+    sf_floatread(qq,n123,dip);
 
     mm = sf_floatalloc(n123);
     dd = sf_floatalloc(2*n123);

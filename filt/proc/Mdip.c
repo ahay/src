@@ -37,9 +37,9 @@ int main (int argc, char *argv[])
     int w123,p123,n123, niter, order, nj1,nj2, i,j, liter, mem,memsize, ip,iw;
     int n[3], rect[3], nw[3], w[3]; 
     size_t nall;
-    float p0, q0, ***u, ***p, win, *tent, *tmp;
+    float p0, q0, *u, *p, win, *tent, *tmp;
     char key[3], *dipname, *wallname;
-    bool verb, sign, ***m1, ***m2;
+    bool verb, sign, *m1, *m2;
     sf_file in, out, mask, dip0;
     FILE *wall, *dip;
 
@@ -118,15 +118,15 @@ int main (int argc, char *argv[])
     /* initialize dip estimation */
     dip3_init(w[0], w[1], w[2], rect, liter, sign);
 
-    u = sf_floatalloc3(w[0],w[1],w[2]);
-    p = sf_floatalloc3(w[0],w[1],w[2]);
+    u = sf_floatalloc(w123);
+    p = sf_floatalloc(w123);
 
     /* Fix later for patching mask */
     if (p123 == 1 && NULL != sf_getstring("mask")) {
-	m1 = sf_boolalloc3(n[0],n[1],n[2]);
-	m2 = sf_boolalloc3(n[0],n[1],n[2]);
+	m1 = sf_boolalloc(n123);
+	m2 = sf_boolalloc(n123);
 	mask = sf_input("mask");
-	sf_floatread(u[0][0],n123,mask);
+	sf_floatread(u,n123,mask);
 	mask32 (order, nj1, nj2, n[0], n[1], n[2], u, m1, m2);
     } else {
 	m1 = NULL;
@@ -156,11 +156,11 @@ int main (int argc, char *argv[])
 	/* loop over patches */
 	for (ip=0; ip < p123; ip++) {
 	    /* read data */
-	    ocpatch_flop (ip,false,in,u[0][0]);
+	    ocpatch_flop (ip,false,in,u);
 	    
 	    /* initialize t-x dip */
 	    for(i=0; i < w123; i++) {
-		p[0][0][i] = p0;
+		p[i] = p0;
 	    }
 	    
             /* estimate t-x dip */
@@ -176,7 +176,7 @@ int main (int argc, char *argv[])
 	    /* write dip */
 	    ocpatch_lop (ip,false,dip,tmp);
 	    for (iw=0; iw < w123; iw++) {
-		tmp[iw] += tent[iw]*p[0][0][iw];
+		tmp[iw] += tent[iw]*p[iw];
 	    }
 	    ocpatch_lop (ip,true,dip,tmp);
 	}
@@ -194,11 +194,11 @@ int main (int argc, char *argv[])
         /* loop over patches */
 	for (ip=0; ip < p123; ip++) {
 	    /* read data */
-	    ocpatch_flop (ip,false,in,u[0][0]);
+	    ocpatch_flop (ip,false,in,u);
 	    
 	    /* initialize t-x dip */
 	    for(i=0; i < w123; i++) {
-		p[0][0][i] = q0;
+		p[i] = q0;
 	    }
 	    
             /* estimate t-x dip */
@@ -207,7 +207,7 @@ int main (int argc, char *argv[])
 	    /* write dip */
 	    ocpatch_lop (ip,false,dip,tmp);
 	    for (iw=0; iw < w123; iw++) {
-		tmp[iw] += tent[iw]*p[0][0][iw];
+		tmp[iw] += tent[iw]*p[iw];
 	    }
 	    ocpatch_lop (ip,true,dip,tmp);
 	}
@@ -219,16 +219,16 @@ int main (int argc, char *argv[])
 
     } else {
 	/* read data */
-	sf_floatread(u[0][0],n123,in);
+	sf_floatread(u,n123,in);
 	
 	/* initialize t-x dip */
 	if (NULL != sf_getstring("idip")) {
 	    dip0 = sf_input("idip");
-	    sf_floatread(p[0][0],n123,dip0);
+	    sf_floatread(p,n123,dip0);
 	    sf_fileclose(dip0);
 	} else {
 	    for(i=0; i < n123; i++) {
-		p[0][0][i] = p0;
+		p[i] = p0;
 	    }
 	}
   
@@ -236,18 +236,18 @@ int main (int argc, char *argv[])
 	dip3(1, niter, order, nj1, verb, u, p, m1);
 
 	/* write t-x dip */
-	sf_floatwrite(p[0][0],n123,out);
+	sf_floatwrite(p,n123,out);
 
 	if (1 == n[2]) exit(0); /* done if 2-D input */
 
 	/* initialize t-y dip */
 	if (NULL != sf_getstring("xdip")) {
 	    dip0 = sf_input("xdip");
-	    sf_floatread(p[0][0],n123,dip0);
+	    sf_floatread(p,n123,dip0);
 	    sf_fileclose(dip0);
 	} else {
 	    for(i=0; i < n123; i++) {
-		p[0][0][i] = q0;
+		p[i] = q0;
 	    }
 	}	
 
@@ -255,7 +255,7 @@ int main (int argc, char *argv[])
 	dip3(2, niter, order, nj2, verb, u, p, m2);
 	
 	/* write t-y dip */
-	sf_floatwrite(p[0][0],n123,out);
+	sf_floatwrite(p,n123,out);
     }
     
     exit (0);
