@@ -2,6 +2,8 @@
 
 #include "butterworth.h"
 
+static const float pi=3.141592653589793;
+
 /* Copyright (c) Colorado School of Mines, 2000.*/
 /* All rights reserved.                       */
 
@@ -20,7 +22,7 @@ void bflowpass (int npoles, float f3db, int n, float p[], float q[]);
 void bfdesign (float fpass, float apass, float fstop, float astop,
 	int *npoles, float *f3db);
 
-******************************************************************************
+	******************************************************************************
 bfdesign:
 Input:
 fpass		frequency in pass band at which amplitude is >= apass
@@ -64,11 +66,9 @@ Author:  Dave Hale, Colorado School of Mines, 06/02/89
 *****************************************************************************/
 /**************** end self doc ********************************/
 
-static float PI;
-
-void
-bfdesign (float fpass, float apass, float fstop, float astop,
-	int *npoles, float *f3db)
+    void
+	bfdesign (float fpass, float apass, float fstop, float astop,
+		  int *npoles, float *f3db)
 /*****************************************************************************
 Butterworth filter:  compute number of poles and -3 db frequency
 for a low-pass or high-pass filter, given a frequency response
@@ -96,37 +96,35 @@ Notes:
 (3) if (fpass<fstop)
 		a low-pass filter is assumed
 	else
-		a high-pass filter is assumed
+		a high-pass filter is assume
 ******************************************************************************
 Author:  Dave Hale, Colorado School of Mines, 06/02/89
 *****************************************************************************/
 {
-  float wpass,wstop,fnpoles,w3db;
+    float wpass,wstop,fnpoles,w3db;
 
-  PI = acos(-1.);
+    /* warp frequencies according to bilinear transform */
+    wpass = 2.0*tanf(pi*fpass);
+    wstop = 2.0*tanf(pi*fstop);
 
-  /* warp frequencies according to bilinear transform */
-  wpass = 2.0*tan(PI*fpass);
-  wstop = 2.0*tan(PI*fstop);
-
-	/* if lowpass filter, then */
-	if (fstop>fpass) {
-		fnpoles = log((1.0/(apass*apass)-1.0)/(1.0/(astop*astop)-1.0))
-			/ log(pow(wpass/wstop,2.0));
-		w3db = wpass/pow((1.0/(apass*apass)-1.0),0.5/fnpoles);
+    /* if lowpass filter, then */
+    if (fstop>fpass) {
+	fnpoles = 0.5*logf((1.0/(apass*apass)-1.0)/(1.0/(astop*astop)-1.0))
+	    / logf(fabsf(wpass/wstop));
+	w3db = wpass/powf((1.0/(apass*apass)-1.0),0.5/fnpoles);
 
 	/* else, if highpass filter, then */
-	} else {
-		fnpoles = log((1.0/(apass*apass)-1.0)/(1.0/(astop*astop)-1.0))
-			/ log(pow(wstop/wpass,2.0));
-		w3db = wpass*pow((1.0/(apass*apass)-1.0),0.5/fnpoles);
-	}
+    } else {
+	fnpoles = 0.5*logf((1.0/(apass*apass)-1.0)/(1.0/(astop*astop)-1.0))
+	/ logf(fabsf(wstop/wpass));
+	w3db = wpass*powf((1.0/(apass*apass)-1.0),0.5/fnpoles);
+    }
 
-	/* determine integer number of poles */
-	*npoles = 1+(int)fnpoles;
+    /* determine integer number of poles */
+    *npoles = 1+(int)fnpoles;
 
-	/* determine (unwarped) -3 db frequency */
-	*f3db = atan(0.5*w3db)/PI;
+    /* determine (unwarped) -3 db frequency */
+    *f3db = atanf(0.5*w3db)/pi;
 }
 
 void
@@ -146,45 +144,45 @@ q		filtered array[n] (may be equivalent to p)
 Author:  Dave Hale, Colorado School of Mines, 06/02/89
 *****************************************************************************/
 {
-	int jpair,j;
-	float r,scale,theta,a,b1,b2,pj,pjm1,pjm2,qjm1,qjm2;
+    int jpair,j;
+    float r,scale,theta,a,b1,b2,pj,pjm1,pjm2,qjm1,qjm2;
 
-	r = 2.0*tan(PI*fabs(f3db));
-	if (npoles%2!=0) {
-		scale = r+2.0;
-		a = 2.0/scale;
-		b1 = (r-2.0)/scale;
-		pj = 0.0;
-		qjm1 = 0.0;
-		for (j=0; j<n; j++) {
-			pjm1 = pj;
-			pj = p[j];
-			q[j] = a*(pj-pjm1)-b1*qjm1;
-			qjm1 = q[j];
-		}
-	} else {
-		for (j=0; j<n; j++)
-			q[j] = p[j];
+    r = 2.0*tan(pi*fabs(f3db));
+    if (npoles%2!=0) {
+	scale = r+2.0;
+	a = 2.0/scale;
+	b1 = (r-2.0)/scale;
+	pj = 0.0;
+	qjm1 = 0.0;
+	for (j=0; j<n; j++) {
+	    pjm1 = pj;
+	    pj = p[j];
+	    q[j] = a*(pj-pjm1)-b1*qjm1;
+	    qjm1 = q[j];
 	}
-	for (jpair=0; jpair<npoles/2; jpair++) {
-		theta = PI*(2*jpair+1)/(2*npoles);
-		scale = 4.0+4.0*r*sin(theta)+r*r;
-		a = 4.0/scale;
-		b1 = (2.0*r*r-8.0)/scale;
-		b2 = (4.0-4.0*r*sin(theta)+r*r)/scale;
-		pjm1 = 0.0;
-		pj = 0.0;
-		qjm2 = 0.0;
-		qjm1 = 0.0;
-		for (j=0; j<n; j++) {
-			pjm2 = pjm1;
-			pjm1 = pj;
-			pj = q[j];
-			q[j] = a*(pj-2.0*pjm1+pjm2)-b1*qjm1-b2*qjm2;
-			qjm2 = qjm1;
-			qjm1 = q[j];
-		}
+    } else {
+	for (j=0; j<n; j++)
+	    q[j] = p[j];
+    }
+    for (jpair=0; jpair<npoles/2; jpair++) {
+	theta = pi*(2*jpair+1)/(2*npoles);
+	scale = 4.0+4.0*r*sinf(theta)+r*r;
+	a = 4.0/scale;
+	b1 = (2.0*r*r-8.0)/scale;
+	b2 = (4.0-4.0*r*sinf(theta)+r*r)/scale;
+	pjm1 = 0.0;
+	pj = 0.0;
+	qjm2 = 0.0;
+	qjm1 = 0.0;
+	for (j=0; j<n; j++) {
+	    pjm2 = pjm1;
+	    pjm1 = pj;
+	    pj = q[j];
+	    q[j] = a*(pj-2.0*pjm1+pjm2)-b1*qjm1-b2*qjm2;
+	    qjm2 = qjm1;
+	    qjm1 = q[j];
 	}
+    }
 }
 
 void
@@ -204,44 +202,44 @@ q		filtered array[n] (may be equivalent to p)
 Author:  Dave Hale, Colorado School of Mines, 06/02/89
 *****************************************************************************/
 {
-	int jpair,j;
-	float r,scale,theta,a,b1,b2,pj,pjm1,pjm2,qjm1,qjm2;
+    int jpair,j;
+    float r,scale,theta,a,b1,b2,pj,pjm1,pjm2,qjm1,qjm2;
 
-	r = 2.0*tan(PI*fabs(f3db));
-	if (npoles%2!=0) {
-		scale = r+2.0;
-		a = r/scale;
-		b1 = (r-2.0)/scale;
-		pj = 0.0;
-		qjm1 = 0.0;
-		for (j=0; j<n; j++) {
-			pjm1 = pj;
-			pj = p[j];
-			q[j] = a*(pj+pjm1)-b1*qjm1;
-			qjm1 = q[j];
-		}
-	} else {
-		for (j=0; j<n; j++)
-			q[j] = p[j];
+    r = 2.0*tan(pi*fabs(f3db));
+    if (npoles%2!=0) {
+	scale = r+2.0;
+	a = r/scale;
+	b1 = (r-2.0)/scale;
+	pj = 0.0;
+	qjm1 = 0.0;
+	for (j=0; j<n; j++) {
+	    pjm1 = pj;
+	    pj = p[j];
+	    q[j] = a*(pj+pjm1)-b1*qjm1;
+	    qjm1 = q[j];
 	}
-	for (jpair=0; jpair<npoles/2; jpair++) {
-		theta = PI*(2*jpair+1)/(2*npoles);
-		scale = 4.0+4.0*r*sin(theta)+r*r;
-		a = r*r/scale;
-		b1 = (2.0*r*r-8.0)/scale;
-		b2 = (4.0-4.0*r*sin(theta)+r*r)/scale;
-		pjm1 = 0.0;
-		pj = 0.0;
-		qjm2 = 0.0;
-		qjm1 = 0.0;
-		for (j=0; j<n; j++) {
-			pjm2 = pjm1;
-			pjm1 = pj;
-			pj = q[j];
-			q[j] = a*(pj+2.0*pjm1+pjm2)-b1*qjm1-b2*qjm2;
-			qjm2 = qjm1;
-			qjm1 = q[j];
-		}
+    } else {
+	for (j=0; j<n; j++)
+	    q[j] = p[j];
+    }
+    for (jpair=0; jpair<npoles/2; jpair++) {
+	theta = pi*(2*jpair+1)/(2*npoles);
+	scale = 4.0+4.0*r*sinf(theta)+r*r;
+	a = r*r/scale;
+	b1 = (2.0*r*r-8.0)/scale;
+	b2 = (4.0-4.0*r*sinf(theta)+r*r)/scale;
+	pjm1 = 0.0;
+	pj = 0.0;
+	qjm2 = 0.0;
+	qjm1 = 0.0;
+	for (j=0; j<n; j++) {
+	    pjm2 = pjm1;
+	    pjm1 = pj;
+	    pj = q[j];
+	    q[j] = a*(pj+2.0*pjm1+pjm2)-b1*qjm1-b2*qjm2;
+	    qjm2 = qjm1;
+	    qjm1 = q[j];
 	}
+    }
 }
 
