@@ -48,6 +48,8 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
 	nd *= ndat[i];
     }
     tlen = len; 
+
+    tmp = sf_floatalloc(nd);
 }
 
 void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)

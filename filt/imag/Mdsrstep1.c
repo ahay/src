@@ -176,10 +176,6 @@ int main (int argc, char *argv[])
 	if (inv) {
 	    sf_floatread(q[ix],nz,in);
 	} else { 
-	    for (iz=0; iz < nz; iz++) {
-		q[iz] = 0.;
-	    }
-   
 	    for (ih=0; ih < nh; ih++) {
 		sf_floatread(p,nt,in);
 
@@ -206,8 +202,7 @@ int main (int argc, char *argv[])
     
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
-	    for (ih=0; ih < nh; ih++) {
-		
+	    for (ih=0; ih < nh; ih++) {		
 		/* Fourier transform w to t (including FFT scaling) */
 		kiss_fftri(fft,(const kiss_fft_cpx *) cp[ix][ih], p);
 		for (it=0; it<nt; it++)

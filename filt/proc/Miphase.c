@@ -1,4 +1,4 @@
-/* Smooth estimate of instanteneous frequency. 
+/* Smooth estimate of instantaneous frequency. 
 
 Takes: rect1=1 rect2=1 ... 
 
@@ -33,7 +33,7 @@ int main (int argc, char* argv[])
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
     char key[6];
-    bool hertz;
+    bool hertz, band;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -74,33 +74,53 @@ int main (int argc, char* argv[])
     if (!sf_getbool("hertz",&hertz)) hertz=false;
     /* if y, convert output to Hertz */
 
+    if (!sf_getbool("band",&band)) band=false;
+    /* if y, compute instantaneous bandwidth */
+
     hilbert_init(n1, nh, c);
 
     mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 	hilbert(trace,hilb);
-	deriv(trace,dtrace);
-	deriv(hilb,dhilb);
+
+	if (band) {
+	    for (i1=0; i1 < n1; i1++) {
+		/* find envelope */
+		trace[i1] = hypotf(trace[i1],hilb[i1]);
+	    }
+	    deriv(trace,hilb);
+	} else {
+	    deriv(trace,dtrace);
+	    deriv(hilb,dhilb);
+	}
 
 	for (i1=0; i1 < nh; i1++, i++) {
 	    num[i] = 0.;
 	    den[i] = 0.;
-	}
+	}	
+
 	for (i1=nh; i1 < n1-nh; i1++, i++) {
 	    a = trace[i1];
 	    b = hilb[i1];
-	    num[i] = a*dhilb[i1]-b*dtrace[i1];
-	    den[i] = a*a+b*b;
+	    if (band) {
+		num[i] = b;
+		den[i] = a;
+	    } else {
+		num[i] = a*dhilb[i1]-b*dtrace[i1];
+		den[i] = a*a+b*b;
+	    }
 	    mean += den[i]*den[i];
 	}
+
 	for (i1=n1-nh; i1 < n1; i1++, i++) {
 	    num[i] = 0.;
 	    den[i] = 0.;
 	}
+	
     }
     mean = sqrtf(n12/mean);
-
+    
     for (i=0; i < n12; i++) {
 	num[i] *= mean;
 	den[i] *= mean;

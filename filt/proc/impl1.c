@@ -85,6 +85,13 @@ void impl1_apply (float *x)
     int istep, i;
     float a, xsum, wsum;
 
+    /******** 
+	      dx/dt = 1/w D' 1/w D u
+	      x_{t+1} = (I + t 1/w D' 1/w D)^{-1} x_t
+	      = (w + D' t/w D)^{-1} w x_t 
+    *********/
+
+
     for (istep=0; istep < nstep; istep++) {
 	grad2(n,x,w);
 

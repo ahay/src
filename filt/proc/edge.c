@@ -35,6 +35,7 @@ void grad2 (int n          /* data size */,
 	ww = 0.5*(x[i+1]-x[i-1]);
 	w[i] = ww*ww;
     }
+    w[n-1] = 0.;
 }
 
 void grad31 (int n1, int n2         /* data size */, 

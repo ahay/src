@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     data = sf_floatalloc (n1);
     smoo = sf_floatalloc (n1);
 
-    for (i=0; i < dim1; i++) {
+    for (i=0; i <= dim1; i++) {
 	box[i] = 1;
 	if (NULL != rect[i]) {
 	    rct[i] = sf_intalloc (n1);
@@ -83,7 +83,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    ntrianglen_init(dim1,box,n,rct);
+    ntrianglen_init(dim1+1,box,n,rct);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);

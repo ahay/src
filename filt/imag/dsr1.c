@@ -37,24 +37,33 @@ void dsr1 (bool verb                  /* verbosity flag */,
 	   float **q                  /* image [nx][nz] */)
 /*< Apply migration/modeling >*/
 {
-    int nk,iz,iw,ix,jx,ih,jh;
-    float k,dk,fk;
-    float complex cshift,*pp,w2;
-    kiss_fft_cfg forw, invs;
-
+    int nk,ng,iz,iw,ix,jx,ih,jh;
+    float k,dk,fk, g,dg,fg, s,r;
+    float complex cshift,**pp, w2;
+    kiss_fft_cfg xforw, xinvs, hforw, hinvs;
+    
     /* determine wavenumber sampling, pad by 2 */
     nk = nx*2;
     nk *= 2;
     dk = 2.0*SF_PI/(nk*dx);
     fk = -SF_PI/dx;
+    
+    ng = nh*2;
+    nh *= 2;
+    dg = 2.0*SF_PI/(ng*dh);
+    fg = -SF_PI/dh;
 
-    forw = kiss_fft_alloc(nk,0,NULL,NULL);
-    invs = kiss_fft_alloc(nk,1,NULL,NULL);
-    if (NULL == forw || NULL == invs) 
+    xforw = kiss_fft_alloc(nk,0,NULL,NULL);
+    xinvs = kiss_fft_alloc(nk,1,NULL,NULL);
+    hforw = kiss_fft_alloc(nk,0,NULL,NULL);
+    hinvs = kiss_fft_alloc(nk,1,NULL,NULL);
+
+    if (NULL == xforw || NULL == xinvs || 
+	NULL == hforw || NULL == xinvs) 
 	sf_error("%s: KISS FFT allocation error",__FILE__);
 
     /* allocate workspace */
-    pp  = sf_complexalloc (nk);
+    pp  = sf_complexalloc2 (ng,nk);
   
     if (!inv) { /* prepare image for migration */
 	for (ix=0; ix<nx; ix++) {      
@@ -72,100 +81,161 @@ void dsr1 (bool verb                  /* verbosity flag */,
 
 	if (inv) { /* modeling */
 	    for (ix=0; ix<nx; ix++) {
-		pp[ix] = q[ix][nz-1];
+		for (ih=0; ih < nh; ih++) {
+		    pp[ix][ih] = q[ix][nz-1];
+		}
+		for (ih=nh; ih < ng; ih++) {
+		    pp[ix][ih] = 0.;
+		}
 	    }
 	    for (ix=nx; ix<nk; ix++) {
-		pp[ix] = 0.;
+		for (ih=nh; ih < ng; ih++) {
+		    pp[ix][ih] = 0.;
+		}
 	    }
 
 	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
-		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
-			 (kiss_fft_cpx *) pp);
-
+		for (ih=0; ih<ng; ih++) {
+		    kiss_fft_stride(xforw,(kiss_fft_cpx *) (pp[0]+ih),
+				    (kiss_fft_cpx *) (pp[0]+ih),ng);
+		}		
 		for (ix=0; ix<nk; ix++) {
+		    kiss_fft(hforw,(const kiss_fft_cpx *) pp[ix], 
+			     (kiss_fft_cpx *) pp[ix]);
+
 		    jx = (ix < nk/2)? ix + nk/2: ix - nk/2;
 		    k = fk + jx*dk;
-		    k *= k;
-	  
-		    cshift = cexpf((csqrtf(w2*v[iz])-
-				    csqrtf(w2*v[iz]+k))*dz); 
-		    pp[ix] *= cshift/nk; 
-		    /* FFT scaling included */
+		    for (ih=0; ih<ng; ih++) {
+			jh = (ih < ng/2)? ih + ng/2: ih - ng/2;
+			g = fg + jh*dg;
+	
+			s = 0.5*(k-g);
+			r = 0.5*(k+g);
+			s *= s;
+			r *= r;
+
+			cshift = cexpf((2.*csqrtf(w2*v[iz])-
+					csqrtf(w2*v[iz]+s) -
+					csqrtf(w2*v[iz]+r))*dz); 
+			pp[ix][ih] *= cshift/(nk*ng); 
+			/* FFT scaling included */
+		    }
+ 	
+		    kiss_fft(hinvs,(const kiss_fft_cpx *) pp[ix], 
+			     (kiss_fft_cpx *) pp[ix]);
 		}
-		
-		kiss_fft(invs,(const kiss_fft_cpx *) pp, 
-			 (kiss_fft_cpx *) pp);
+		for (ih=0; ih<ng; ih++) {
+		    kiss_fft_stride(xinvs,(kiss_fft_cpx *) (pp[0]+ih),
+				    (kiss_fft_cpx *) (pp[0]+ih),ng);
+		}
 
 		for (ix=0; ix<nx; ix++) {
 		    cshift = cexpf(-csqrtf(w2*vt[ix][iz])*dz);
-		    pp[ix]= q[ix][iz] + pp[ix]*cshift;
+		    for (ih=0; ih < nh; ih++) {
+			pp[ix][ih] = q[ix][iz] + pp[ix][ih]*cshift;
+		    }
+		    for (ih=nh; ih < ng; ih++) {
+			pp[ix][ih] = 0.;
+		    }
 		}
 		for (ix=nx; ix<nk; ix++) {
-		    pp[ix] = 0.;
+		    for (ih=0; ih < ng; ih++) {
+			pp[ix][ih] = 0.;
+		    }
 		}
 	    }
 
 	    for (ix=0; ix<nx; ix++) {
-		cp[ix][ih][iw] = pp[ix];
+		for (ih=0; ih < nh; ih++) {
+		    cp[ix][ih][iw] = pp[ix][ih];
+		}
 	    }
 	} else { /* migration */
     
 	    for (ix=0; ix<nx; ix++) {
-		pp[ix] = cp[ix][ih][iw];
-	    }
-	    for (ix=nx; ix<nk; ix++) {
-		pp[ix] = 0.;
+		for (ih=0; ih < nh; ih++) {
+		    pp[ix][ih] = cp[ix][ih][iw];
+		}
 	    }
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz<nz-1; iz++) {
 		/* accumulate image (summed over frequency) */
 		for (ix=0; ix<nx; ix++) { 
-		    q[ix][iz] += crealf(pp[ix]);
+		    for (ih=0; ih < nh; ih++) {
+			q[ix][iz] += crealf(pp[ix][ih]);
+		    }
 		}
 		
 		for (ix=0; ix<nx; ix++) {
-		    cshift = conjf(cexpf(-0.5*csqrtf(w2*vt[ix][iz])*dz));
-		    pp[ix] *= cshift;
-		}
-		for (ix=nx; ix<nk; ix++) {
-		    pp[ix] = 0.;
+		    cshift = conjf(cexpf(-csqrtf(w2*vt[ix][iz])*dz));
+		    for (ih=0; ih < nh; ih++) {
+			pp[ix][ih] *= cshift;
+		    }
+		    for (ih=nh; ih < ng; ih++) {
+			pp[ix][ih] = 0.;
+		    }
 		}
 
-		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
-			 (kiss_fft_cpx *) pp);
+		for (ix=nx; ix<nk; ix++) {
+		    for (ih=0; ih < ng; ih++) {
+			pp[ix][ih] = 0.;
+		    }
+		}
+
+		for (ih=0; ih<ng; ih++) {
+		    kiss_fft_stride(xforw,(kiss_fft_cpx *) (pp[0]+ih),
+				    (kiss_fft_cpx *) (pp[0]+ih),ng);
+		}
 
 		for (ix=0; ix<nk; ix++) {
+		    kiss_fft(hforw,(const kiss_fft_cpx *) pp[ix], 
+			     (kiss_fft_cpx *) pp[ix]);
+
 		    jx = (ix < nk/2)? ix + nk/2: ix - nk/2;
 		    k = fk + jx*dk;
-		    k *= k;
-	  
-		    cshift = conjf(cexpf((0.5*(csqrtf(w2*v[iz])+
-					       csqrtf(w2*v[iz+1]))-
-					  csqrtf(w2*v[iz]+k))*dz));
-		    pp[ix] *= cshift/nk;
-		    /* Fourier scaling included */
-		}
-
-		kiss_fft(invs,(const kiss_fft_cpx *) pp, 
-			 (kiss_fft_cpx *) pp);
+		    for (ih=0; ih<ng; ih++) {
+			jh = (ih < ng/2)? ih + ng/2: ih - ng/2;
+			g = fg + jh*dg;
 	
-		for (ix=0; ix<nx; ix++) {
-		    cshift = conjf(cexpf(-0.5*csqrtf(w2*vt[ix][iz+1])*dz));
-		    pp[ix] *= cshift;
+			s = 0.5*(k-g);
+			r = 0.5*(k+g);
+			s *= s;
+			r *= r;
+	  
+			cshift = conjf(cexpf((2.*csqrtf(w2*v[iz])-
+					      csqrtf(w2*v[iz]+s) -
+					      csqrtf(w2*v[iz]+r))*dz)); 
+
+			pp[ix][ih] *= cshift/(nk*ng);
+			/* Fourier scaling included */
+		    }
+
+		    kiss_fft(hinvs,(const kiss_fft_cpx *) pp[ix], 
+			     (kiss_fft_cpx *) pp[ix]);
+		}
+		
+		for (ih=0; ih<ng; ih++) {
+		    kiss_fft_stride(xinvs,(kiss_fft_cpx *) (pp[0]+ih),
+				    (kiss_fft_cpx *) (pp[0]+ih),ng);
 		}
 	    }
 
 	    for (ix=0; ix<nx; ix++) { 
-		q[ix][nz-1] += crealf(pp[ix]);
+		for (ih=0; ih < nh; ih++) {
+		    q[ix][nz-1] += crealf(pp[ix][ih]);
+		}
 	    }
 	}
     }
-    
+
+    free (*pp);
     free (pp);
-    free (forw);
-    free (invs);
+    free (xforw);
+    free (xinvs);
+    free (hforw);
+    free (hinvs);
 }
 
 /* 	$Id: split1.c 790 2004-09-10 18:51:51Z fomels $	 */
