@@ -14,8 +14,8 @@ The weight is one  for t >  tp + (x-x0) * slopep
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype;
-    bool abs;
-    float tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, *data;
+    bool abs, half;
+    float tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, v0, *data;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -31,15 +31,24 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
 
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
+    if (half) {
+	d2 *= 2.;
+	o2 *= 2.;
+    }
+
     CDPtype=1;
     if (sf_histfloat(in,"d3",&d3)) {
-	CDPtype=0.5+d2/d3;
+	CDPtype=0.5+0.5*d2/d3;
 	if (1 != CDPtype) sf_histint(in,"CDPtype",&CDPtype);
     } 	    
     sf_warning("CDPtype=%d",CDPtype);
     
     if (!sf_getfloat("tp",&tp)) tp=0.150;
-    if (!sf_getfloat("slope0",&slope0)) slope0=1./1.45;
+    if (!sf_getfloat("v0",&v0)) v0=1.45; 
+    if (!sf_getfloat("slope0",&slope0)) slope0=1./v0;
     if (!sf_getfloat("slopep",&slopep)) slopep=slope0;
     if (!sf_getfloat("x0",&x1)) x1=0.;
 
@@ -65,4 +74,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.4 2004/03/27 03:29:18 fomels Exp $	 */
+/* 	$Id: Mmutter.c,v 1.5 2004/04/02 02:22:23 fomels Exp $	 */
