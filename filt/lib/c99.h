@@ -1,7 +1,6 @@
 #ifndef _sf_c99_h
 #define _sf_c99_h
 
-/* Is it 1994 or 1999?? */
 #if defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
 
 /* The following from C99 - must define for C90 */

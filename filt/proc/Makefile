@@ -12,8 +12,8 @@ DEPEND = -MM
 
 PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
 	helicon invbin1 invwarp nmo noise pef pwd randrefl reshape ricker \
-	sigmoid smooth spectra stretch2 taup taupmo time2depth warp1 \
-	window1 window2 xcorr1
+	sigmoid smooth smoothder spectra stretch2 taup taupmo time2depth \
+	warp1 window1 window2 xcorr1
 
 ai2refl = empty
 bandpass = butterworth
@@ -39,6 +39,7 @@ reshape = empty
 ricker = empty
 sigmoid = random
 smooth = triangle
+smoothder = causint cgstep bigsolver adjnull chain
 spectra = empty
 stretch2 = stretch2 banded
 taup = radon cadj ctoeplitz

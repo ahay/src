@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     int i1, n1, i2, m2, n2, n, order, iter, nliter;
     float **coord, **inp, **out, **oth, **der, **warp, **ampl, **damp;
     float o1, d1, o2, d2, error, mean, eps, lam, eps2, lam2, **num, **den;
-    bool verb;
+    bool verb, noamp;
     divlap divw, diva;
     sf_file in, warped, other, warpin, warpout, amplout;
 
@@ -44,6 +44,7 @@ int main(int argc, char* argv[])
     n = n2*m2;
 
     if(!sf_getbool("verb",&verb)) verb = false;
+    if(!sf_getbool("noamp",&noamp)) noamp = false;
 
     if(!sf_getint("accuracy",&order)) {
 	order = 2;
@@ -56,20 +57,23 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps;
     if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
     
-    if (!sf_getfloat("eps2",&eps2)) eps2=10.; eps2 = eps2*eps2;
-    if (!sf_getfloat("lam2",&lam2)) lam2=10.; lam2 = lam2*lam2;
+    if (!noamp) {
+	if (!sf_getfloat("eps2",&eps2)) eps2=10.; eps2 = eps2*eps2;
+	if (!sf_getfloat("lam2",&lam2)) lam2=10.; lam2 = lam2*lam2;
+    }
 
     warpout = sf_output("warpout");
     sf_putint(warpout,"n1",n2);
     sf_putfloat(warpout,"d1",d2);
     sf_putint(warpout,"n2",m2);
-    sf_putfloat(warpout,"o2",1.);
 
-    amplout = sf_output("amplout");
-    sf_putint(amplout,"n1",n2);
-    sf_putfloat(amplout,"d1",d2);
-    sf_putint(amplout,"n2",m2);
-    sf_putfloat(amplout,"o2",1.);
+    if (!noamp) {
+	amplout = sf_output("amplout");
+	sf_putint(amplout,"n1",n2);
+	sf_putfloat(amplout,"d1",d2);
+	sf_putint(amplout,"n2",m2);
+	sf_putfloat(amplout,"o2",1.);
+    }
     
     coord = sf_floatalloc2 (n2,m2); 
     inp =   sf_floatalloc2 (n1,m2);
@@ -77,8 +81,10 @@ int main(int argc, char* argv[])
     oth =   sf_floatalloc2 (n2,m2);
     der =   sf_floatalloc2 (n2,m2);
     warp =  sf_floatalloc2 (n2,m2);
-    ampl =  sf_floatalloc2 (n2,m2);
-    damp =  sf_floatalloc2 (n2,m2);
+    if (!noamp) {
+	ampl =  sf_floatalloc2 (n2,m2);
+	damp =  sf_floatalloc2 (n2,m2);
+    }
     num =   sf_floatalloc2 (n2,m2);
     den =   sf_floatalloc2 (n2,m2);
 
@@ -112,7 +118,7 @@ int main(int argc, char* argv[])
     if (verb) sf_warning("Initialization completed");
   
     divw = divlap1_init(n2, eps, lam);
-    diva = divlap1_init(n2, eps2, lam2);
+    if (!noamp) diva = divlap1_init(n2, eps2, lam2);
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
@@ -123,46 +129,53 @@ int main(int argc, char* argv[])
 	    int1_lop (false,false,n1,n2,inp[i2],der[i2]);
 	}
 
-	mean = 0.;
-	for (i2=0; i2 < m2; i2++) {
-	    for (i1=0; i1 < n2; i1++) {
-		mean  += out[i2][i1]*out[i2][i1];
-	    }
-	}
-	mean = n/mean;
-	
-	for (i2=0; i2 < m2; i2++) {
-	    for (i1=0; i1 < n2; i1++) {
-		num[i2][i1] = oth[i2][i1]*out[i2][i1]*mean;
-		den[i2][i1] = out[i2][i1]*out[i2][i1]*mean;
-	    }
-	}
+	if (!noamp) {
 
-	divlap2 (diva, m2, num, den, NULL, ampl);
+	    mean = 0.;
+	    for (i2=0; i2 < m2; i2++) {
+		for (i1=0; i1 < n2; i1++) {
+		    mean  += out[i2][i1]*out[i2][i1];
+		}
+	    }
+	    mean = n/mean;
+	    
+	    for (i2=0; i2 < m2; i2++) {
+		for (i1=0; i1 < n2; i1++) {
+		    num[i2][i1] = oth[i2][i1]*out[i2][i1]*mean;
+		    den[i2][i1] = out[i2][i1]*out[i2][i1]*mean;
+		}
+	    }
+
+	    divlap2 (diva, m2, num, den, NULL, ampl);
+	    
+	    for (i2=0; i2 < m2; i2++) {
+		for (i1=0; i1 < n2; i1++) {
+		    num[i2][i1] = 
+			(oth[i2][i1]-2.*ampl[i2][i1]*out[i2][i1])*
+			der[i2][i1]*mean;
+		}
+	    }
+
+	    divlap2 (diva, m2, num, den, NULL, damp);
 	
-	for (i2=0; i2 < m2; i2++) {
-	    for (i1=0; i1 < n2; i1++) {
-		num[i2][i1] = (oth[i2][i1]*der[i2][1]
-			       -2.*ampl[i2][i1]*der[i2][i1]*out[i2][i1])*mean;
+	    for (i2=0; i2 < m2; i2++) {
+		for (i1=0; i1 < n2; i1++) {
+		    der[i2][i1] = ampl[i2][i1]*der[i2][i1] 
+			+ out[i2][i1]*damp[i2][i1];
+		}
 	    }
 	}
-
-	divlap2 (diva, m2, num, den, NULL, damp);
-	
-	for (i2=0; i2 < m2; i2++) {
-	    for (i1=0; i1 < n2; i1++) {
-		der[i2][i1] = ampl[i2][i1]*der[i2][i1] 
-		    + out[i2][i1]*damp[i2][i1];
-	    }
-	}
-
 
 	error = 0.;
 	mean = 0.;
 
 	for (i2=0; i2 < m2; i2++) {
 	    for (i1=0; i1 < n2; i1++) {
-		out[i2][i1] = ampl[i2][i1]*out[i2][i1] - oth[i2][i1];
+		if (noamp) {
+		    out[i2][i1] -= oth[i2][i1];
+		} else {
+		    out[i2][i1] = ampl[i2][i1]*out[i2][i1] - oth[i2][i1];
+		}
 		error += out[i2][i1]*out[i2][i1];
 		mean  += der[i2][i1]*der[i2][i1];
 	    }
@@ -189,14 +202,14 @@ int main(int argc, char* argv[])
 	}
     }
 
-    divlap1_close(diva);
+    if (!noamp) divlap1_close(diva);
     divlap1_close(divw);
 
     for (i2=0; i2 < m2; i2++) {
 	int1_init (coord[i2], o1, d1, n1, spline_int, order, n2);
 	int1_lop (false,false,n1,n2,inp[i2],out[i2]);
 
-	if (nliter > 0) {
+	if (nliter > 0 && !noamp) {
 	    for (i1=0; i1 < n2; i1++) {
 		out[i2][i1] *= ampl[i2][i1];
 	    }
@@ -210,7 +223,7 @@ int main(int argc, char* argv[])
 
 	sf_write(warp[i2],sizeof(float),n2,warpout);
 
-	if (nliter > 0) 
+	if (nliter > 0 && !noamp) 
 	    sf_write(ampl[i2],sizeof(float),n2,amplout);
     }
 
