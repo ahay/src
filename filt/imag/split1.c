@@ -46,7 +46,7 @@ void split1 (bool verb, bool inv, float eps,
 		pp[ix] = 0.;
 	    }
 
-	    /* loop over migrated times z */
+	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
 		sf_pfacc(1,nk,pp);
 		pp[nk/2+1] = 0.; /* oddball negative nyquist */
@@ -89,12 +89,9 @@ void split1 (bool verb, bool inv, float eps,
 	    for (iz=0; iz<nz; iz++) {
 		/* accumulate image (summed over frequency) */
 		for (ix=0; ix<nx; ix++) { 
-		    if (iw==0)
-			q[ix][iz] += (iw==0)? 
-			    crealf(pp[ix]): 
-			    2.*crealf(pp[ix]);
+		    q[ix][iz] += (iw==0)? crealf(pp[ix]): 2.*crealf(pp[ix]);
 		}
-
+		
 		sf_pfacc(1,nk,pp);
 		pp[nk/2+1] = 0.0; /* oddball negative nyquist */
 

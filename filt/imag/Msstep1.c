@@ -30,7 +30,7 @@ int main (int argc, char *argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_getbool("inv",&inv)) inv = true;
+    if (!sf_getbool("inv",&inv)) inv = false;
     if (!sf_getbool("verb",&verb)) verb = false;
     if (!sf_getbool("depth",&depth)) depth = false;
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
@@ -112,7 +112,7 @@ int main (int argc, char *argv[])
 	} else {    
 	    sf_read(p[ix],sizeof(float),nt,in);
 
-	    /* pad with zeros and Fourier transform x to k */
+	    /* pad with zeros and Fourier transform t to w */
 	    for (it=nt; it<ntfft; it++) {
 		p[ix][it] = 0.0;
 	    }
