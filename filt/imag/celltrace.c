@@ -1,3 +1,22 @@
+/* Cell ray tracing. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -10,17 +29,31 @@
 #define MIN(a,b) ((a)<(b))?(a):(b)
 #endif
 
+#ifndef _celltrace_h
+
+typedef struct CellTrace *celltrace;
+/* abstract data type */
+/*^*/
+
+#endif
+
 struct CellTrace {
     int nt, nx, nz;
     float dx, dz, x0, z0;
     eno2 pnt;
 };  
 
-/* slow - slowness */
-celltrace celltrace_init (int order, int nt,
-			  int nz, int nx, 
-			  float dz, float dx, 
-			  float z0, float x0, float* slow)
+
+celltrace celltrace_init (int order   /* interpolation accuracy */, 
+			  int nt      /* maximum time steps */,
+			  int nz      /* depth samples */, 
+			  int nx      /* lateral samples */, 
+			  float dz    /* depth sampling */, 
+			  float dx    /* lateral sampling */, 
+			  float z0    /* depth origin */, 
+			  float x0    /* lateral origin */, 
+			  float* slow /* slowness [nz*nx] */)
+/*< Initialize ray tracing object >*/
 {
     celltrace ct;
 
@@ -37,12 +70,18 @@ celltrace celltrace_init (int order, int nt,
 } 
 
 void celltrace_close (celltrace ct)
+/*< Free allocated storage >*/
 {
     eno2_close (ct->pnt);
     free (ct);
 }
 
-float cell_trace (celltrace ct, float* xp, float* p, int* it, float** traj)
+float cell_trace (celltrace ct, 
+		  float* xp    /* position */, 
+		  float* p     /* ray parameter */, 
+		  int* it      /* steps till boundary */, 
+		  float** traj /* trajectory */)
+/*< ray trace >*/
 {
     const float eps = 1.e-5;
     float t, v, x, z, s, sx, sz, g[2];
@@ -114,4 +153,4 @@ float cell_trace (celltrace ct, float* xp, float* p, int* it, float** traj)
     return t;
 }
 
-/* 	$Id: celltrace.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */
