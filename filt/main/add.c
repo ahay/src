@@ -118,7 +118,6 @@ int main (int argc, char* argv[])
 			      cmode, scale[j], add[j], 
 			      abs_flag[j], log_flag[j], 
 			      sqrt_flag[j], exp_flag[j]);
-		    sf_floatwrite((float*) buf,nbuf,out);
 		    break;
 		case SF_COMPLEX:		    
 		    sf_complexread((float complex*) bufi,nbuf,in[j]);
@@ -127,7 +126,6 @@ int main (int argc, char* argv[])
 				cmode, scale[j], add[j], 
 				abs_flag[j], log_flag[j], 
 				sqrt_flag[j], exp_flag[j]);
-		    sf_complexwrite((float complex*) buf,nbuf,out);
 		    break;
 		case SF_INT:
 		    sf_intread((int*) bufi,nbuf,in[j]);
@@ -136,13 +134,28 @@ int main (int argc, char* argv[])
 			    cmode, scale[j], add[j], 
 			    abs_flag[j], log_flag[j], 
 			    sqrt_flag[j], exp_flag[j]);
-		    sf_intwrite((int*) buf,nbuf,out);
 		    break;
 		default:
 		    sf_error("wrong type");
 		    break;
 	    }
 	}
+
+	switch(type) {
+	    case SF_FLOAT:
+		sf_floatwrite((float*) buf,nbuf,out);
+		break;
+	    case SF_COMPLEX:
+		sf_complexwrite((float complex*) buf,nbuf,out);
+		break;
+	    case SF_INT:
+		sf_intwrite((int*) buf,nbuf,out);
+		break;
+	    default:
+		sf_error("wrong type");
+		break;
+	}	
+	
     }
     
     sf_close();
@@ -287,5 +300,5 @@ static void check_compat (int esize,
     }
 }
 
-/* 	$Id: add.c,v 1.8 2004/04/19 21:51:35 fomels Exp $	 */
+/* 	$Id: add.c,v 1.9 2004/04/20 05:00:16 fomels Exp $	 */
 

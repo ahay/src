@@ -1,0 +1,42 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/imgs'
+
+Fetch('mona.img',datdir)
+Flow('mona','mona.img','byte2rsf n1=512 n2=513')
+Plot('mona','mona',
+     'grey transp=n allpos=y title="Mona Lisa" color=b screenratio=1')
+
+for rect in [10,20,30,40,50,60,70,80]:
+    mona = 'mona%d' % rect
+    Flow(mona,'mona','impl2 rect1=%d rect2=%d tau=1' % (rect,rect))
+    Plot(mona,mona,
+         '''grey transp=n allpos=y
+         title="Mona Lisa %d" color=b screenratio=1''' % rect)
+
+Flow('one',None,'spike n1=30 mag=2')
+Flow('two',None,'spike n1=30')
+Flow('spk',['one','two'],
+     'cat axis=1 ${SOURCES[1]} ${SOURCES[0]} ${SOURCES[1]}')
+Flow('noi',None,'spike n1=120 mag=0 | noise var=0.001 | bandpass fhi=60')
+Flow('sig',['spk','noi'],'add ${SOURCES[1]}')
+Plot('sig','sig','graph title=Signal')
+
+for rect in [5,10,20,40,80]:
+    sig = 'sig%d' % rect
+    Flow(sig,'sig','impl1 rect1=%d' % rect)
+    Plot(sig,sig,'graph title="Smooth %d" ' % rect)
+
+############################################################################
+
+End()

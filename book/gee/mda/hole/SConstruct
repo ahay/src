@@ -1,0 +1,38 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os, string
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+##########################################################################
+Book()
+
+Flow('make',None,'make n1=100 n2=20')
+Flow('hole','make','hole')
+Flow(['pef','mask0','lag'],'hole',
+     '''
+     pef maskin=$SOURCE maskout=${TARGETS[1]}
+     a=5,3 niter=100 lag=${TARGETS[2]}
+     ''')
+Flow('mask','mask0','dd data_format=native_float')
+Flow('miss',['hole','pef'],
+     'miss padin=10 filt=${SOURCES[1]} niter=100')
+
+title = {
+    'make':'original',
+    'hole':'gapped',
+    'mask':'selector',
+    'miss':'restored',
+    }
+
+for plot in title.keys():
+    Plot(plot,plot,'grey clip=.075 title=%s wantaxis=n' % title[plot])
+
+Combine('hole','make hole miss mask','SideBySideAniso',
+        result=1,vppen='txscale=2')
+
+###########################################################################
+End()

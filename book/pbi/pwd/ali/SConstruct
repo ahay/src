@@ -1,0 +1,65 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+Flow('sigmoid',None,
+          '''
+          sigmoid n1=200 n2=210 d2=0.008 |
+          smooth rect1=3 diff1=1 | smooth rect1=3 |
+          bandpass fhi=60
+          ''')
+Flow('orig','sigmoid','window n2=209')
+Plot('sigmoid','orig','grey title=Original clip=0.003')
+Flow('sigmoid-dec','sigmoid','window j2=2')
+Plot('sigmoid-dec','sigmoid-dec','grey title=Decimated clip=0.003')
+Combine('sigmoid-top','sigmoid sigmoid-dec','SideBySideAniso')
+
+title = {'sigmoid':'Original',
+         'sigmoid-dec':'Decimated',
+         'aliasp': 'Input',
+         'dealiasp': 'Output'}
+
+for input in ['sigmoid','sigmoid-dec']:
+    dip = input + '-dip'     
+    Flow(dip,input,'dip2 order=3')
+    Plot(dip,dip,
+         'grey color=j wantscalebar=y title=%s' % title[input])
+Combine('dip',['sigmoid-dip','sigmoid-dec-dip'],
+        'SideBySideAniso',result=1)
+
+res = 'res'
+err = 'err'
+bot = 'bot'
+    
+Flow(res,'sigmoid-dec','dealias2 verb=1 nw=3 niter=10')
+Plot(res,res,'grey title=Restored clip=0.003')
+Plot(err,[res,'orig'],
+     'add scale=1,-1 ${SOURCES[1]} | grey title=Error clip=0.003')
+Combine(bot,[res,err],'SideBySideAniso')
+Combine('sigmoid',['sigmoid-top',bot],'OverUnderAniso',result=1)
+
+Flow('aliasp',None,'aliasp cycles=25')
+Flow('dealiasp','aliasp',
+     '''
+     bandpass fhi=0.25 |
+     dealias2 verb=y order=3 niter=10 sign=y p0=20 nj=4
+     ''')
+for alias in ['aliasp','dealiasp']:
+    Plot(alias,alias,
+         '''
+         window n1=575 |
+         grey title=%s crowd=0.9 wantaxis=n
+         ''' % title[alias])
+Combine('aliasp',['aliasp','dealiasp'],'SideBySideAniso',result=1)
+
+###########################################################################
+
+End()

@@ -1,0 +1,40 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os, string
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+##########################################################################
+Book()
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/blast'
+Fetch('blast.46.H',datdir)
+
+Flow('data','blast.46.H',
+     'dd data_format=native_float | window f1=150 n1=150')
+Flow(['pef','lag'],'data',
+     'pef lag=${TARGETS[1]} maskin=$SOURCE a=7,2,2')
+Flow('miss',['data','pef'],'miss padin=10 filt=${SOURCES[1]} prec=0')
+
+for case in ['data','miss']:
+    Flow(case+'bin',case,'byte clip=.0007')
+    plots = []
+
+    for wind in range(12):
+        plots.append(case + str(wind))
+        Plot(plots[wind],case+'bin',
+             '''window n3=1 f3=%d |
+             grey crowd=0.95 wanttitle=n
+             ''' % wind)
+
+    Combine(case+'top',plots[0:4],'SideBySideAniso')
+    Combine(case+'mid',plots[4:8],'SideBySideAniso')
+    Combine(case+'bot',plots[8:12],'SideBySideAniso')
+    Combine(case,map(lambda x: case+x,['top','mid','bot']),'OverUnderAniso')
+Combine('passfill','data miss','SideBySideAniso',result=1)
+
+###########################################################################
+End()
