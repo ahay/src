@@ -37,7 +37,7 @@ int main (int argc, char *argv[])
     } 
     sf_putfloat(out,"o1",z0);
 
-    if (!sf_getint ("nw",&nw)) nw = 4;
+    if (!sf_getint ("extend",&nw)) nw = 4;
     if (!sf_getbool ("slow",&slow)) slow = false;
 
     fnt = fint1_init (nw, nt);

@@ -14,31 +14,34 @@
 #endif
 
 static int nd, nf, m1, *nx;
-static bool *mask;
+static bool *mask, allocated=false;
 static float **w1;
 
 void  int1_init (float* coord, float o1, float d1, int n1, 
 		 interpolator interp, int nf_in, int nd_in)
 {
     int id, i1; 
-    float x1, rx;
+    float rx;
 
     nf = nf_in;
     nd = nd_in;
     m1 = n1;
 
-    nx = sf_intalloc(nd);
-    mask = sf_boolalloc(nd);
-    w1 = sf_floatalloc2(nf,nd);
+    if (!allocated) {
+	nx = sf_intalloc(nd);
+	mask = sf_boolalloc(nd);
+	w1 = sf_floatalloc2(nf,nd);
+	allocated = true;
+    }
 
     for (id = 0; id < nd; id++) {
 	rx = (coord[id] - o1)/d1;
 	i1 = (int) floor(rx + 1. - 0.5*nf);
-	x1 = rx - floor(rx);
+	rx -= floorf(rx);
    
 	if (i1 > - nf && i1 < n1) {
 	    mask[id] = false; 
-	    interp (x1, nf, w1[id]);
+	    interp (rx, nf, w1[id]);
 	    nx[id] = i1;
 	} else {
 	    mask[id] = true;
@@ -69,8 +72,10 @@ void  int1_lop (bool adj, bool add, int nm, int nd, float* x, float* ord)
 
 void int1_close (void)
 {
-    free (nx);
-    free (mask);
-    free (*w1);
-    free (w1);
+    if (allocated) {
+	free (nx);
+	free (mask);
+	free (*w1);
+	free (w1);
+    }
 }

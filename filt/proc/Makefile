@@ -4,7 +4,8 @@ LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
 PROGS = bandpass bin bin1 depth2time dip envelope invbin1 nmo noise \
-	pwd randrefl sigmoid smooth spectra taup time2depth warp1
+	pwd randrefl ricker sigmoid smooth spectra taup taupmo \
+	time2depth warp1
 
 bandpass = butterworth
 bin = int2 interp adjnull
@@ -12,15 +13,17 @@ bin1 = int1 interp adjnull
 depth2time = stretch tridiagonal
 dip = dip3 divide1 allp3 tridiagonal apfilt
 envelope = triangle
-invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep
-nmo = stretch tridiagonal
+invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint
+nmo = fint1 tridiagonal spline interp_spline extend banded
 noise = randn
 pwd = allp3 apfilt
 randrefl = randn
+ricker = empty
 sigmoid = random
 smooth = triangle
 spectra = empty
 taup = radon cadj ctoeplitz
+taupmo = fint1 tridiagonal spline interp_spline extend banded
 time2depth = fint1 tridiagonal spline interp_spline extend banded
 warp1 = divlap1 int1 interp_spline prefilter recfilt adjnull banded
 

@@ -6,12 +6,14 @@
 #include "int1.h"
 #include "interp.h"
 #include "tcai1.h"
+#include "causint.h"
 #include "cgstep.h"
 #include "bigsolver.h"
 
 int main (int argc, char* argv[])
 {
-    int id, nd, nt, it, nx, interp, filt, meth, niter;
+    bool prec;
+    int id, nd, nt, it, nx, interp, filt, niter;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
     sf_file in, out, head;
 
@@ -59,7 +61,7 @@ int main (int argc, char* argv[])
     sf_putfloat (out,"d1",dx);
     
     /* initialize interpolation */
-    if (!sf_getint("interp",&interp)) interp=1;
+    if (!sf_getint("interp",&interp)) interp=2;
 
     switch (interp) {
 	case 1:
@@ -76,26 +78,21 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getint("filter",&filt)) filt=1;
-    if (!sf_getint("meth",&meth)) meth=1;
+    if (!sf_getbool("prec",&prec)) prec=true;
 
-    switch (meth) {
-	case 1:
-	    filt++;
-	    sf_warning("Using differential regularization");	    
-	    aa = sf_floatalloc(filt);
-	    tcai1_init(filt,aa);
-	    switch (filt) {
-		case 2:
-		    aa[0] = 1.;
-		    aa[1] = -1.;
-		    break;
-		default:
-		    aa[0] = 1.;
-		    aa[1] = -2.;
-		    aa[2] = 1.;
-		    break;
-	    }
-	    break;
+    if (!prec) {
+	filt++;
+	sf_warning("Using differential regularization");	    
+	aa = sf_floatalloc(filt);
+	tcai1_init(filt,aa);
+	if (filt==2) {
+	    aa[0] = 1.;
+	    aa[1] = -1.;
+	} else {
+	    aa[0] = 1.;
+	    aa[1] = -2.;
+	    aa[2] = 1.;
+	}
     }   
 
     mm = sf_floatalloc(nx);
@@ -106,11 +103,14 @@ int main (int argc, char* argv[])
 
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
-	switch (meth) {
-	    case 1:
-		solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
-			   mm, dd, niter, eps, "end");
-		break;
+	if (prec) {
+	    if (filt==1) {
+		solver_prec(int1_lop, cgstep, causint_lop, nx, nx, nd,
+			    mm, dd, niter, eps, "end");
+	    }
+	} else {
+	    solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
+		       mm, dd, niter, eps, "end");
 	}
 	cgstep_close();
 	sf_write (mm,sizeof(float),nx,out);
