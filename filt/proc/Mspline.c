@@ -1,4 +1,6 @@
-/* 1-D spline interpolation
+/* 1-D spline interpolation.
+
+Takes: n1= o1= d1=
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -107,4 +109,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mspline.c,v 1.9 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

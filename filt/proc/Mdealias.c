@@ -117,7 +117,7 @@ int main (int argc, char *argv[])
     }
  
     dip3_init(n1, n2, n3, rect, liter, sign);
-    interp_init (n1, 0.0001, verb);
+    interp_init (n1, 0.0001);
 
     sf_floatread(u1[0][0],n12,in);
 

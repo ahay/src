@@ -42,14 +42,20 @@ int main(int argc, char* argv[])
 
     if (n2 > 1) {
 	sf_putint(out,"n2",n2*jump);
-	if (sf_histfloat(in,"d2",&d)) sf_putfloat(out,"d2",d/jump);
+	sf_putint(mask,"n2",n2*jump);
+	if (sf_histfloat(in,"d2",&d)) {
+	    sf_putfloat(out,"d2",d/jump);
+	    sf_putfloat(mask,"d2",d/jump);
+	}
     }
     if (n3 > 1) {
 	sf_putint(out,"n3",n3*jump);
-	if (sf_histfloat(in,"d3",&d)) sf_putfloat(out,"d3",d/jump);
+	sf_putint(mask,"n3",n3*jump);
+	if (sf_histfloat(in,"d3",&d)) {
+	    sf_putfloat(out,"d3",d/jump);
+	    sf_putfloat(mask,"d3",d/jump);
+	}
     }
-
-    sf_fileflush(mask,out);
 
     pp = sf_floatalloc(n1);
     zero = sf_floatalloc(n1);
@@ -83,4 +89,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mlpad.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

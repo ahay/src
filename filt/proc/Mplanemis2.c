@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    if (!sf_histint(dip,"n3",&np)) sf_error("No n3= in dip");
+    if (!sf_histint(dip,"n3",&np)) np=1;
 
     pp = sf_floatalloc2(n1,n2);
     sf_floatread(pp[0],n12,dip);
@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
     if (np > 1) {
 	qq = sf_floatalloc2(n1,n2);
 	sf_floatread(qq[0],n12,dip);
+    } else {
+	qq = NULL;
     }
 
     mm = sf_floatalloc(n12);
@@ -79,7 +81,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (np > 1) {
+    if (NULL != qq) {
 	twoplane2_init(nw, 1,1, n1,n2, pp, qq);
 	sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
 		  "known", known, "x0", mm, "verb", verb, "end");

@@ -30,7 +30,7 @@ int main (int argc, char *argv[])
     int n1,n2, n3, i3, n12, niter, nw, nj, i;
     float eps, lam, p0, **u, **p;
     bool verb, sign, gauss, **m;
-    sf_file in, out, mask;
+    sf_file in, out, mask, dip;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -53,8 +53,14 @@ int main (int argc, char *argv[])
     eps = sqrtf(12*eps+1.);
     lam = sqrtf(12*lam+1.);
 
-    if (!sf_getfloat("p0",&p0)) p0=0.;
-    /* initial dip */
+    if (NULL != sf_getstring("dip0")) {
+	p0 = 0.;
+	dip = sf_input("dip0");
+    } else {
+	if (!sf_getfloat("p0",&p0)) p0=0.;
+	/* initial dip */
+	dip = NULL;
+    }
  
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy order */
@@ -94,8 +100,12 @@ int main (int argc, char *argv[])
 	sf_floatread(u[0],n12,in);
 	
 	/* initialize dip */
-	for(i=0; i < n12; i++) {
-	    p[0][i] = p0;
+	if (NULL != dip) {
+	    sf_floatread(p[0],n12,dip);
+	} else {
+	    for(i=0; i < n12; i++) {
+		p[0][i] = p0;
+	    }
 	}
 	
 	/* estimate dip */

@@ -11,7 +11,7 @@ static bands slv;
 static float **offd, eps;
 static pwd w1, w2;
 
-void interp_init (int n, float e, int verb)
+void interp_init (int n, float e)
 {
     const int nw=1;
 

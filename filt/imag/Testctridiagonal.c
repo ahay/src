@@ -13,7 +13,6 @@ int main(void)
 
     ctridiagonal_define(slv,diag,offd);
     ctridiagonal_solve(slv,x);
-    ctridiagonal_close(slv);
 
     printf("(%g,%g) (%g,%g) (%g,%g) (%g,%g)\n",
 	   crealf(x[0]),cimagf(x[0]),
@@ -21,8 +20,20 @@ int main(void)
 	   crealf(x[2]),cimagf(x[2]),
 	   crealf(x[3]),cimagf(x[3]));
 
+    
+    ctridiagonal_const_define(slv,1+2.*I,I);
+    ctridiagonal_solve(slv,x);
+
+    printf("(%g,%g) (%g,%g) (%g,%g) (%g,%g)\n",
+	   crealf(x[0]),cimagf(x[0]),
+	   crealf(x[1]),cimagf(x[1]),
+	   crealf(x[2]),cimagf(x[2]),
+	   crealf(x[3]),cimagf(x[3]));
+
+    ctridiagonal_close(slv);
+
     return 0;
 }
     
-/* 	$Id: Testctridiagonal.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */
 
