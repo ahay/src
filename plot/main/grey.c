@@ -5,8 +5,8 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, gainstep, panel;
     float o1, o2, o3, d1, d2, d3, tpow, gpow, clip, pclip, phalf, bias;
-    bool transp, yreverse, gain=false, allpos;
-    char *gainpanel;
+    bool transp, yreverse, gain=false, allpos, coltab, polarity;
+    char *gainpanel, *color;
     sf_file in;
 
     sf_init(argc,argv);
@@ -71,6 +71,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("allpos",&allpos)) allpos=false;
     if (!sf_getfloat("bias",&bias)) bias=0.; 
+    if (!sf_getbool("polarity",&polarity)) polarity=false;
+
+    if (!sf_getbool("coltab",&coltab)) coltab=true;
+    if (NULL == (color = sf_getstring("color"))) color="I";
+
+    vp_stdplot_init (o1-0.5*d1, o1+(n1-1)*d1+0.5*d1, 
+		     o2-0.5*d2, o2+(n2-1)*d2+0.5*d2,
+		     transp, false, yreverse, false);
 
     exit (0);
 }
@@ -79,93 +87,7 @@ int main(int argc, char* argv[])
 
 if(datain. esize==4) make_unpipe("in");
 
-{
-  coltab = 1;
-  getch ("coltab", "1", &coltab);
-  if (!coltab && datain.esize == 3) seperr ("esize must be 1 if coltab=no\n");
-
-  if (datain.esize != 3) strcpy (color, "I");
-  else strcpy (color, "332");
-
-
-  getch ("color", "s", color);
-/*	if(color[0] == 'v' || color[0] == 'V') color[0] = 'j';*/
-
-  if (!getch ("nreserve", "d", &nreserve)) nreserve = 8;
-  if (!getch ("movish", "1", &movish)) movish = 0;
-
-
-  /* Polarity stuff */
-  polarity = 1; getch ("polarity", "d", &polarity);
-  o1num = dataout.o1[0];
-  o2num = dataout.o2;
-  strcpy (axis1.wherelabel, "t");
-  strcpy (axis2.wherelabel, "l");
-  strcpy (title.wheretitle, "b");
-  wantframe = 1;
-  getch("wantframe", "1", &wantframe);
-  wantframenum = 1;
-  getch ("wantframenum", "1", &wantframenum);
-  coordinate.transp = 1;
-  coordinate.yreverse = 1;
-  coordinate.xreverse = 0;
-  invert = 1;
-  orient = 1;
-
-  /* Scale Bar */
-  wantscalebar = 0;
-  getch("wantscalebar", "1", &wantscalebar);
-
-  /*
-   * Here we get into the problem of how to put axes on a raster plot.
-   * If you have n1=3, with o1=0 and d1=1, then you expect the three
-   * points to have values 0, 1, and 2, and you put 0 at one end of the
-   * plot and 2 at the other end. But if the three points are rasters,
-   * what is the value of the leftmost edge of the leftmost raster?
-   * If you say 0, then you force the rightmost edge of the rightmost raster
-   * to have value 3, completely pushing the last raster off the plot. It seems
-   * the most consistent definition is that the raster pixels are CENTERED on
-   * their corresponding data point; by this definition the leftmost edge of the
-   * leftmost raster would have value -.5 and the rightmost edge of the
-   * rightmost raster would have value 2.5. This way raster, contour,
-   * and wiggle plots with the same axes will overlay consistently.
-   * - Joe D. Feb 24 1992
-   */
-    coordinatec.min1 = dataout.o1[0] - dataout.d1[0]/2.;
-    coordinatec.min2 = dataout.o2 - dataout.d2/2.;
-    coordinatec.max1 = dataout.o1[0] + dataout.d1[0] * (dataout.n1[0] - 1)
-      + dataout.d1[0]/2.;
-    coordinatec.max2 = dataout.o2 + dataout.d2 * (dataout.n2 - 1)
-      + dataout.d2/2.;
-
-    if (!getch ("min1", "f", &coordinate.min1))
-      coordinate.min1 = coordinatec.min1;
-    if (!getch ("min2", "f", &coordinate.min2))
-      coordinate.min2 = coordinatec.min2;
-    if (!getch ("max1", "f", &coordinate.max1))
-      coordinate.max1 = coordinatec.max1;
-    if (!getch ("max2", "f", &coordinate.max2))
-      coordinate.max2 = coordinatec.max2;
-    gl_coordint (&position, &coordinate, &axis1, &axis2);
-    if (coordinate.transp) {
-      tempminmax = coordinatec.min1;
-      coordinatec.min1 = coordinatec.min2;
-      coordinatec.min2 = tempminmax;
-      tempminmax = coordinatec.max1;
-      coordinatec.max1 = coordinatec.max2;
-      coordinatec.max2 = tempminmax;
-      tempminmax = coordinate.min1;
-      coordinate.min1 = coordinate.min2;
-      coordinate.min2 = tempminmax;
-      tempminmax = coordinate.max1;
-      coordinate.max1 = coordinate.max2;
-        coordinate.max2 = tempminmax;
-
-    }
-     gl_axisint (&axis1, &axis2, &coordinate, &position);
-    gl_gridint (&grid, &coordinate, &axis1, &axis2);
-    gl_titleint (&title);
-    gl_colorint (&colorin);
+if (!getch ("nreserve", "d", &nreserve)) nreserve = 8;
 
    numorient = getch ("orient", "d", &orient);
    numinvert = getch ("invert", "1", &invert);
