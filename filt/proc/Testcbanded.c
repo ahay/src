@@ -5,11 +5,18 @@
 int main(void)
 {
     float diag[]={4.,2.,3.,4.};
-    float complex offd1[]={-I,0.,1.+I};
-    float complex offd2[]={1.,-1.-I};
+    float complex offd1[3];
+    float complex offd2[2];
     float complex *offd[2];
 
     float complex x[]={5.-2.*I,-2.-3*I,7.+I,-3.+9.*I}; 
+
+    offd1[0] = -I;
+    offd1[1] = 0.;
+    offd1[2] = 1.+I;
+
+    offd2[0] = 1.;
+    offd2[1] = -1.-I;
     
     cbanded_init (4,2);
 
@@ -30,5 +37,5 @@ int main(void)
     return 0;
 }
     
-/* 	$Id: Testcbanded.c,v 1.1 2004/03/13 06:11:12 fomels Exp $	 */
+/* 	$Id: Testcbanded.c,v 1.2 2004/04/19 22:03:22 fomels Exp $	 */
 

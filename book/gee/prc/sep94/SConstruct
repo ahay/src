@@ -23,7 +23,7 @@ Plot('ideal','ideal',doty + ' connect=1')
 Combine('both','data ideal','Overlay')
 Combine('data','both data','SideBySideAniso',result=1)
 
-doty += ' connect=1 d1=1 o1=1'
+doty = doty + ' connect=1 d1=1 o1=1'
 
 name = 'if'
 title = ['Regularization','Preconditioning']

@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     bool inv, half;
     int i2, n1,n2, i3, n3, n, dens, nw;
     float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0;
-    float (*forward)(float), (*inverse)(float);
+    float (*forward)(float) = NULL, (*inverse)(float) = NULL;
     char *rule, *prog;
     sf_file in, out;
 
@@ -161,5 +161,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstretch.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mstretch.c,v 1.3 2004/04/19 22:03:22 fomels Exp $	 */
 

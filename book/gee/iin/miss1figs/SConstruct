@@ -1,5 +1,5 @@
 ###########################################################################
-import sys, os
+import sys, os, string
 
 sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 
@@ -21,7 +21,7 @@ input = [0,0,0,0,0.5,0,1,0.5,1,0,0,0,0,0,0]
 
 def filter(filt):
     return ('echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
-            (' '.join(map(str,filt)),len(filt)))
+            (string.join(map(str,filt),' '),len(filt)))
 
 Flow('in0',None,filter(input))
 Flow('in','in0','dd data_format=native_float')

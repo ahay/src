@@ -7,11 +7,15 @@ int main(int argc, char* argv[])
 {
     const int nt=300, nx=64, nz=300, nb=50; 
     int it, ib, iz, ix;
-    float v=1.,t,z,x,x0, theta, b[nb], tdat[nx][nt], zdat[nx][nz];
+    float v=1.,t,z,x,x0, theta, *b, **tdat, **zdat;
     float top=3.2, c1=.9, c2=6.8, d1=0.02, d2=0.12, r;
     sf_file c, d;
 
     sf_init(argc,argv);
+    
+    b = sf_floatalloc(nb);
+    tdat = sf_floatalloc2(nt,nx);
+    zdat = sf_floatalloc2(nz,nx);
 
     if (!sf_getfloat("top",&top)) top=5.;
     if (!sf_getfloat("c1",&c1)) c1=0.5;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-import sys, os, glob, signal
+import sys, os, glob, signal, string
 
 if len(sys.argv) < 2:
     print '''
@@ -18,13 +18,13 @@ if comm == "-q":
 else:
    verbose = 1
 
-comm = ' '.join(sys.argv)
+comm = string.join(sys.argv,' ')
 
 sys.stderr.write('Executing "%s"...\n' % comm)
 
 dirs = filter(os.path.isdir,glob.glob('[a-z]*'))
 
-sys.stderr.write('::'.join(dirs) + '\n')
+sys.stderr.write(string.join(dirs,'::') + '\n')
 
 child = None
 
@@ -58,10 +58,10 @@ for dir in dirs:
         sys.stderr.write('\n%s: wrong directory %s...\n' % (script,dir))
         sys.exit(1)
     os.environ['PWD'] = os.path.join(cwd,dir)
-    sys.stderr.write(' '.join(['+' * 44,dir,'\n']))
+    sys.stderr.write(string.join(['+' * 44,dir,'\n'],' '))
     if comm:
         syswait(comm)
-    sys.stderr.write(' '.join(['-' * 44,dir,'\n']))
+    sys.stderr.write(string.join(['-' * 44,dir,'\n'],' '))
 
 sys.stderr.write('Done.\n')
 

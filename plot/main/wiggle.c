@@ -105,20 +105,19 @@ int main(int argc, char* argv[])
 	    gainpar (in,pdata,n1,n2,1,
 		     pclip,pclip,&zdata,&gpow,0.,n3,0);
 	    if (verb) sf_warning("clip=%g",zdata);
-
-	    if (zdata > 0.) {
-		scale = zplot/zdata;
-	    } else {
-		scale = 0.;
-		for (i2=0; i2 < n2; i2++) {
-		    for (i1=0; i1 < n1; i1++) {
-			scale += fabsf(pdata[i2][i1]);
-		    }
-		}
-		if (scale > 0.) scale=zplot*n1*n2/scale;
-	    }
 	} else {	    
-	    sf_floatread(pdata[0],n1*n2,in);
+	  sf_floatread(pdata[0],n1*n2,in);
+	}
+
+	if (zdata > 0.) {
+	  scale = zplot/zdata;
+	} else {
+	  scale = 0.;
+	  for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+	      scale += fabsf(pdata[i2][i1]);
+	    }
+	  }
 	}
 
 	if (i3 > 0) vp_erase();
@@ -238,5 +237,5 @@ static void check(float *x, float *y)
     if (transp) { t=*x; *x=*y; *y=t; }
 }
 
-/* 	$Id: wiggle.c,v 1.4 2004/04/19 21:52:05 fomels Exp $	 */
+/* 	$Id: wiggle.c,v 1.5 2004/04/19 22:03:22 fomels Exp $	 */
 

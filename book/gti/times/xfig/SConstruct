@@ -12,8 +12,11 @@ Book()
 
 figs = 'cone ray snell wave'
 
-for fig in Split(figs):
-    Default(XFig(fig))
+try:
+    for fig in Split(figs):
+        Default(XFig(fig))
+except:
+    pass
 
 ###########################################################################
 

@@ -201,7 +201,7 @@ def pstexpen(target=None,source=None,env=None):
     pstexpenopts = env.get('opts')
     if not pstexpenopts:
         pstexpenopts = 'color=n fat=1 fatmult=1.5 invras=y'
-    opts = ' '.join([opts,pstexpenopts])
+    opts = string.join([opts,pstexpenopts],' ')
     print opts
     head = string.split(
         commands.getoutput(sep +
@@ -507,7 +507,8 @@ class Project(Environment):
 	    if acroread:
 		self.Alias('read',self.Read('paper'))
         if record:
-            self.Command('.sf_uses',None,'echo %s' % ' '.join(self.coms))
+            self.Command('.sf_uses',None,'echo %s' %
+                         string.join(self.coms,' '))
     def Fetch(self,file,dir):
         return self.Retrieve(file,None,dir=dir)
 
@@ -534,4 +535,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.26 2004/04/02 02:20:38 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.27 2004/04/19 22:03:22 fomels Exp $	

@@ -1,5 +1,5 @@
 ###########################################################################
-import sys, os
+import sys, os, string
 
 sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 
@@ -29,7 +29,7 @@ input = [0,0,0,0,0.5,0,1,0.5,1,0,0,0,0,0,0]
 n1 = len(input)
 
 Flow('in0',None,'echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
-     (' '.join(map(str,input)),n1))
+     (string.join(map(str,input),' '),n1))
 Flow('in','in0','dd data_format=native_float')
 
 Flow('imp',None,'spike n1=%d k1=1 label1=" "' % n1)

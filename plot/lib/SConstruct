@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, string
 sys.path.append('../..')
 import configure
 
@@ -21,7 +21,7 @@ except: # local version
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 

@@ -1,5 +1,5 @@
 ###########################################################################
-import sys, os
+import sys, os, string
 
 sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 from rsfproj import *
@@ -48,11 +48,11 @@ for filt in filters.keys():
     n1 = len(lag)
     Flow(flag+'0',None,
          "echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET" %
-         (' '.join(map (str, lag)),n1))
+         (string.join(map (str, lag),' '),n1))
     Flow(flag,flag+'0',"dd data_format=native_int")
     Flow(filt+'0',flag,
          '''echo %s a0=%g n1=%d data_format=ascii_float in=$TARGET
-         lag=$SOURCE''' % (' '.join(map (str, flt)),a0,n1),
+         lag=$SOURCE''' % (string.join(map (str, flt),' '),a0,n1),
          stdin=0)
     Flow(filt,filt+'0',"dd data_format=native_float")
 

@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, string
 sys.path.append('../..')
 import configure
 
@@ -19,7 +19,7 @@ except:
 	opts=Options('../../config.py')
 	configure.options(opts)
 	opts.Update(env)
-	env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
 	env.Append(CPPPATH=['../../include'],
 		   LIBPATH=['../../filt/lib','../lib'],
 		   LIBS=['rsfplot','rsf','m'])
@@ -35,7 +35,7 @@ for plot in Split(plots):
 	if plot in ['reflexpt','reflkine']:
 		env.Object(plot+'.o','reflector.c',
 			   CCFLAGS=env.get('CCFLAGS','') +
-			   ' -D%s' % plot.upper())
+			   ' -D%s' % string.upper(plot))
 		prog = env.Program(plot+'.o')
 	else:
 		prog = env.Program(plot+'.c')
@@ -64,4 +64,4 @@ if root:
 #####################################################################
 
 
-# 	$Id: SConstruct,v 1.4 2004/04/14 13:44:55 fomels Exp $	
+# 	$Id: SConstruct,v 1.5 2004/04/19 22:03:22 fomels Exp $	

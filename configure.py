@@ -7,7 +7,7 @@ from SCons.Action import Action
 include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
 
 def depends(env,list,file):
-    filename = env.File(file+'.c').abspath.replace('build/','',1)
+    filename = string.replace(env.File(file+'.c').abspath,'build/','',1)
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include.findall(line):
@@ -271,4 +271,4 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.12 2004/04/01 02:11:49 fomels Exp $	
+#	$Id: configure.py,v 1.13 2004/04/19 22:03:22 fomels Exp $	

@@ -23,14 +23,14 @@ def use(target=None,source=None,env=None):
                     print ('No uses found in book/%s/%s/%s/: %s' %
                            (book,chapter,project,progs))
                 else:
-                    for prog in progs.split():
+                    for prog in string.split(progs):
                         doc.append('rsfdoc.progs["%s"].use("%s","%s","%s")' %
                                    (prog,book,chapter,project))
                 os.chdir('..')
             os.chdir('..')
         os.chdir('..')
     os.chdir('..')
-    out.write('\n'.join(doc) + '\n')
+    out.write(string.join(doc,'\n') + '\n')
     out.close()
 
 def selfdoc(target=None,source=None,env=None):
@@ -281,4 +281,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.12 2004/04/01 02:11:49 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.13 2004/04/19 22:03:22 fomels Exp $	

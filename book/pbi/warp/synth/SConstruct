@@ -1,4 +1,4 @@
-import sys, os
+import sys, os, string
 
 sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 from rsfproj import *
@@ -95,7 +95,7 @@ htable = '''
 '''
 Flow('htable',None,
      'echo %s n1=2 n2=3 in=$TARGET data_format=ascii_float' %
-     ' '.join(Split(htable)))
+     string.join(Split(htable),' '))
 Flow('hswrp1',['htable','hswrp'],
           'dd data_format=native_float | spline pattern=${SOURCES[1]}')
 Flow('hswrp2','hswrp',
@@ -163,7 +163,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         # GRAPH PLOT
         ####################################################################
         def plusenv(name):
-            return ' '.join(map (sized, [name,'e' + name]))
+            return string.join(map (sized, [name,'e' + name]),' ')
         # [pp,ps,ss] = map(plusenv,all)
         [pp,ps] = map(plusenv,all)
         Plot(sized("pp"),pp,
@@ -192,8 +192,8 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         ##################################################################
         for x in all:
             grey = grey2 + ' title=%s'
-            if x == 'ss': grey += ' label1="Time (s)"'
-            Plot(sized('g' + x),sized(x),grey % x.upper())
+            if x == 'ss': grey = grey + ' label1="Time (s)"'
+            Plot(sized('g' + x),sized(x),grey % string.upper(x))
             Combine(sized('g-' + x),[sized('g' + x),x + 'nail'],'Overlay')
         Combine(sized('bot'),map(lambda x: sized('g-' + x),all),
                      'OverUnderAniso')
