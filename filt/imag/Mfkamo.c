@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 			phase2 = 1-eps2+logf(0.5*(1.+eps2));
 
 			amp = expf(0.5*(eps1-logf(amp1)+logf(amp2)-eps2));
-			oper[iw] = amp*cexpf(I*SF_PI*(phase1-phase2)*w);
+			oper[iw] = amp*cexpf(I*SF_PI*(phase2-phase1)*w);
 		    } else {
 			oper[iw] = 0.;
 		    }
@@ -86,5 +86,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mfkamo.c,v 1.4 2003/10/01 23:40:46 fomels Exp $	 */
+/* 	$Id: Mfkamo.c,v 1.5 2003/10/06 20:19:23 fomels Exp $	 */
 
