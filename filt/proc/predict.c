@@ -60,7 +60,8 @@ void predict_close (void)
     if (NULL != tt) free(tt);
 }
 
-void predict_step(bool forw    /* forward or backward */, 
+void predict_step(bool adj     /* adjoint flag */,
+		  bool forw    /* forward or backward */, 
 		  float* trace /* trace */, 
 		  float* pp    /* slope */)
 /*< prediction step >*/
@@ -78,19 +79,27 @@ void predict_step(bool forw    /* forward or backward */,
 
     pwd_define (forw, w, pp, diag, offd);
     banded_define (slv, diag, offd);
-    pwd_set (w, trace, trace, diag);
-    banded_solve (slv, trace);
+
+    if (adj) {
+	banded_solve (slv, trace);
+	pwd_set (true, w, trace, trace, diag);
+    } else {
+	pwd_set (false, w, trace, trace, diag);
+	banded_solve (slv, trace);
+    }
 }
 
 void predict_set(float **dip1 /* dip field [n2][n1] */)
+/*< set the local slopes for applying the linear operator >*/
 {
     dip=dip1;
     tt = sf_floatalloc(n1);
 }
 
 void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
 {
-    int i1, i2, i;
+    int i1, i2;
 
     if (nx != ny || nx != n1*n2) sf_error("%s: Wrong dimensions",__FILE__);
 
@@ -102,6 +111,7 @@ void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 
     if (adj) {
 	for (i2=n2-1; i2 >= 0; i2--) {
+	    predict_step(true,true,tt,dip[i2]);
 	    for (i1=0; i1 < n1; i1++) {
 		tt[i1] += yy[i1+i2*n1];
 	    }
@@ -117,6 +127,7 @@ void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 	    for (i1=0; i1 < n1; i1++) {
 		yy[i1+i2*n1] += tt[i1];
 	    }
+	    predict_step(false,true,tt,dip[i2]);
 	}
     }
 }
@@ -153,7 +164,7 @@ void predict_flat(int i0     /* reference trace number */,
         for (k2=0; k2 <= i2; k2++) {
             trace = m[k2];
 
-            pwd_set (w, trace, trace, diag);
+            pwd_set (false, w, trace, trace, diag);
             banded_solve (slv, trace);
         }
     }
@@ -179,7 +190,7 @@ void predict_flat(int i0     /* reference trace number */,
         for (k2=n2-1; k2 >= i2; k2--) {
             trace = m[k2];
 
-            pwd_set (w, trace, trace, diag);
+            pwd_set (false, w, trace, trace, diag);
             banded_solve (slv, trace);
         }
     }

@@ -88,17 +88,17 @@ int main (int argc, char *argv[])
 		if (0==lr) {
 		    if (ud > 0) {
 			j2 -= ud;
-			predict_step(false,trace,p[j3][j2]);
+			predict_step(false,false,trace,p[j3][j2]);
 		    } else {
-			predict_step(true,trace,p[j3][j2]);
+			predict_step(false,true,trace,p[j3][j2]);
 			j2 -= ud;
 		    }
 		} else if (0==ud) {
 		    if (lr > 0) {
 			j3 -= lr;
-			predict_step(false,trace,q[j3][j2]);
+			predict_step(false,false,trace,q[j3][j2]);
 		    } else {
-			predict_step(true,trace,q[j3][j2]);
+			predict_step(false,true,trace,q[j3][j2]);
 			j3 -= lr;
 		    }
 		}

@@ -83,8 +83,8 @@ void interp2(int n2      /* number of traces */,
 
 	banded_define (slv, diag, offd);
 
-	pwd_set (w1, in[i2],   offd[0], diag);
-	pwd_set (w2, in[i2+1], offd[1], diag);
+	pwd_set (false, w1, in[i2],   offd[0], diag);
+	pwd_set (false, w2, in[i2+1], offd[1], diag);
 	for (i1=0; i1 < n1; i1++) {
 	    diag[i1] = offd[0][i1] + offd[1][i1];
 	}
