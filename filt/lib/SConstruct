@@ -6,12 +6,13 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''
-decart dottest error file files getpar kiss_fft kiss_fftr math1
+dottest error file files getpar kiss_fft kiss_fftr math1
 segy simtab stack
 '''
 
 src2 = '''
 adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
+decart
 '''
 
 try: # distribution version

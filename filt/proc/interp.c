@@ -23,6 +23,23 @@ void lin_int (float x, int n, float* w)
 	    w[i] = 0.;
     }
 }
+
+void lg_int (float x, int n, float* w) 
+{
+    int i, j, nc;
+    float f, xi;
+
+    nc = (n-1)*0.5;
+    for (i=0; i < n; i++) {
+	f = 1.;
+	xi = x + nc - i;
+	for (j=0; j < n; j++) {
+	    if (i != j) f *= (1. + xi / (i - j));
+	}
+	w[i] = f;
+    }
+}
+
   
-/* 	$Id: interp.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */
 

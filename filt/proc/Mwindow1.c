@@ -59,15 +59,15 @@ int main(int argc, char* argv[])
     win = sf_floatalloc (w);
     dat2 = sf_floatalloc (n);
   
-    window1_init (w,nw,n,h,w-h);
+    window1_init (h,w-h);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (dat, n, in);
 	for (iw=0; iw < nw; iw++) {
 	    if (hastaper) {
-		i0 = window1_apply(iw,dat,taper,taper,win);
+		i0 = window1_apply(iw,w,dat,taper,taper,win);
 	    } else {
-		i0 = window1_apply(iw,dat,(iw > 0),(iw < nw-1),win);
+		i0 = window1_apply(iw,w,dat,(iw > 0),(iw < nw-1),win);
 	    }
 	    for (i1=0; i1 < i0; i1++) {
 		dat2[i1] = 0.;
@@ -85,4 +85,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow1.c,v 1.9 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

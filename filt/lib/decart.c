@@ -1,7 +1,30 @@
+/* Conversion between line and Cartesian coordinates of a vector. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "decart.h"
 
-/* index transform (vector to matrix) and its inverse */
-void sf_line2cart( int dim, const int* nn, int i, int* ii) {
+void sf_line2cart( int dim       /* number of dimensions */, 
+		   const int* nn /* box size [dim] */, 
+		   int i         /* line coordinate */, 
+		   int* ii       /* cartesian coordinates [dim] */)
+/*< Convert line to Cartesian >*/
+{
     int axis;
  
     for (axis = 0; axis < dim; axis++) {
@@ -10,7 +33,11 @@ void sf_line2cart( int dim, const int* nn, int i, int* ii) {
     }
 }
 
-int sf_cart2line( int dim, const int* nn, const int* ii) {
+int sf_cart2line( int dim       /* number of dimensions */, 
+		  const int* nn /* box size [dim] */, 
+		  const int* ii /* cartesian coordinates [dim] */) 
+/*< Convert Cartesian to line >*/
+{
     int i, axis;
 
     if (dim < 1) return 0;
@@ -22,7 +49,12 @@ int sf_cart2line( int dim, const int* nn, const int* ii) {
     return i;
 }
 
-int sf_first_index (int i, int j, int dim, const int *n, const int *s)
+int sf_first_index (int i        /* dimension [0...dim-1] */, 
+		    int j        /* line coordinate */, 
+		    int dim      /* number of dimensions */, 
+		    const int *n /* box size [dim] */, 
+		    const int *s /* step [dim] */)
+/*< Find first index for multidimensional transforms >*/
 {
     int i0, n123, k, ii;
 
@@ -38,4 +70,4 @@ int sf_first_index (int i, int j, int dim, const int *n, const int *s)
     return i0;
 }
 
-/* 	$Id: decart.c,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id$	 */

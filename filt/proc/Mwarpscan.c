@@ -31,9 +31,10 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, m2, m3, n2, n, order, ng, ig, i0, w, nw, iw;
+    int i1, n1, i2, m2, m3, n2, n, order, ng, ig, i0, w, nw, iw, jw, nw1, nw2;
+    int wi;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
-    float *corr, *win1, *win2, a, b, a2, b2, ab, h;
+    float *corr, *win1, *win2, a, b, a2, b2, ab, h, dw;
     bool taper;
     sf_file in, warped, other;
 
@@ -96,11 +97,16 @@ int main(int argc, char* argv[])
     if (!sf_getbool("taper",&taper)) taper=true;
     /* window tapering */
 
-    sf_putint(warped,"n1",nw);
-    sf_putfloat(warped,"o1",(0.5*w+1.)*d1);
-    sf_putfloat(warped,"d1",(n2-w)*d1/(nw-1.));
+    dw = (n2-w)/(nw-1.);
+    nw1 = (0.5*w+1.)/dw;
+    nw2 = (0.5*w-2.)/dw;
+    nw += nw1 + nw2;
 
-    window1_init (w,nw,n2,h,(n2-w)/(nw-1.));
+    sf_putint(warped,"n1",nw);
+    sf_putfloat(warped,"o1",o2+(0.5*w+1.)*d2-nw2*dw*d2);
+    sf_putfloat(warped,"d1",dw*d2);
+
+    window1_init (h,dw);
 
     coord = sf_floatalloc (n2); 
     inp =   sf_floatalloc2 (n1,m2);
@@ -110,6 +116,7 @@ int main(int argc, char* argv[])
     corr =  sf_floatalloc (nw);
 
     win1 = sf_floatalloc (w);
+    win2 = sf_floatalloc (w);
     win2 = sf_floatalloc (w);
 
     prefilter_init (order, n1, order*10);     
@@ -141,9 +148,20 @@ int main(int argc, char* argv[])
 		b2=0.;
 		ab=0.;
 
-		i0 = window1_apply(iw,out,taper,taper,win1);
-		i0 = window1_apply(iw,oth[i2],taper,taper,win2);
-		for (i1=0; i1 < w; i1++) {
+		if (iw < nw1) {
+		    jw = 0;
+		    wi = 0.5*(w+1.) + iw*dw;
+		} else if (iw >= nw-nw2) {
+		    jw = iw-nw1;
+		    wi = 0.5*(w+1.) + (nw-1-iw)*dw; 
+		} else {
+		    jw = iw-nw1;
+		    wi = w;
+		}
+
+		i0 = window1_apply(jw,wi,out,taper,taper,win1);
+		i0 = window1_apply(jw,wi,oth[i2],taper,taper,win2);
+		for (i1=0; i1 < wi; i1++) {
 		    a = win1[i1];
 		    b = win2[i1];
 		    ab += a*b;
@@ -161,4 +179,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.11 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

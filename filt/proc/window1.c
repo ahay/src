@@ -4,19 +4,16 @@
 
 #include "window1.h"
 
-static int w,nw,n;
 static float h,dw;
 
-void window1_init (int w_in, int nw_in, int n_in, float h_in, float dw_in)
+void window1_init (float h_in, float dw_in)
 {
-    w = w_in; 
-    nw = nw_in; 
-    n = n_in; 
     h = h_in;
     dw = dw_in;
 }
 
-int window1_apply (int iw, float* dat, bool left, bool right, float *win)
+int window1_apply (int iw, int w, const float* dat, 
+		   bool left, bool right, float *win)
 {
     int i, i0;
     float gain;
@@ -37,4 +34,4 @@ int window1_apply (int iw, float* dat, bool left, bool right, float *win)
     return i0;
 }
 
-/* 	$Id: window1.c,v 1.4 2003/10/08 15:09:25 fomels Exp $	 */
+/* 	$Id$	 */
