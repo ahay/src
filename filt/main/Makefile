@@ -2,6 +2,7 @@ CC = gcc
 CFLAGS = -Wall -pedantic -I../rsf -O3
 CFLAGS = -Wall -pedantic -I../rsf -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -I../rsf -g
+CFLAGS = -std=gnu9x -Wall -pedantic -I../rsf -g
 
 LDFLAGS = -L../rsf -lrsf -lm
 
