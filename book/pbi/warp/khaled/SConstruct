@@ -123,7 +123,7 @@ math output="2*input-1"
 '''
 
 Flow('gamma1','khaled1',warp2gamma)
-Flow('Gamma1',['khaled2','time2'],warp2gamma2)
+Flow('Ggamma1',['khaled2','time2'],warp2gamma2)
 
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -312,21 +312,21 @@ Plot('pline','pline',plot('PP'))
 Plot('wline','wline',plot('Warped PS'))
 Plot('diff','wline pline',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Plot('Gamma1','Gamma1',
+Plot('Ggamma1','Ggamma1',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp0','pline wline diff Gamma1','TwoRows')
+Result('Waarp0','pline wline diff Ggamma1','TwoRows')
 
 ####################################################################
 # SPECTRAL BALANCING
 ####################################################################
-Flow('Pwin','pline','window2 nw=4,2 w=800,100')
-Flow('Swin','wline','window2 nw=4,2 w=800,100')
+Flow('Pwwin','pline','window2 nw=4,2 w=800,100')
+Flow('Swwin','wline','window2 nw=4,2 w=800,100')
 
 rick2 = 'spectra | stack norm=y | ricker niter=1000 ma=$TARGET m=20'
 
-Flow('Prick','Pwin',rick2,stdout=0)
-Flow('Srick','Swin',rick2,stdout=0)
+Flow('Prrick','Pwwin',rick2,stdout=0)
+Flow('Srrick','Swwin',rick2,stdout=0)
 
 reshape2 = '''
 reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
@@ -334,8 +334,8 @@ ma2=${SOURCES[3]} out2=${TARGETS[1]} |
 stack axis=3 norm=no
 '''
 
-Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
-Flow('Sresh','Resh','stack axis=3 norm=no')
+Flow(['Prresh','Reesh'],['Pwwin','Swwin','Prrick','Srrick'],reshape2)
+Flow('Srresh','Reesh','stack axis=3 norm=no')
 
 Flow('Pspec0','pline','spectra all=y')
 Flow('Sspec0','wline','spectra all=y')
@@ -344,26 +344,26 @@ Plot('spec0','Pspec0 Sspec0',
      cat axis=2 ${SOURCES[1]} |
      graph title=Before max1=150 max2=6 label1="Frequency (Hz)"
      ''')
-Flow('Pspec','Presh','spectra all=y')
-Flow('Sspec','Sresh','spectra all=y')
-Plot('spec1','Pspec Sspec',
+Flow('Psppec','Prresh','spectra all=y')
+Flow('Ssppec','Srresh','spectra all=y')
+Plot('spec1','Psppec Ssppec',
      '''
      cat axis=2 ${SOURCES[1]} |
      graph title=After max1=150 max2=6 label1="Frequency (Hz)"
      ''')
 Result('spec1','spec0 spec1','SideBySideAniso')
 
-Plot('inter',['Presh','Sresh'],
+Plot('inter',['Prresh','Srresh'],
      '''
      interleave axis=2 other=${SOURCES[1]} |
      grey title='Interleaved (Before)'
      ''')
 
-Flow(['pstack','pshift'],'Presh',
+Flow(['pstack','pshift'],'Prresh',
      '''pad end2=1 > ${TARGETS[1]};
      pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
      ''')
-Flow(['sstack','sshift'],'Sresh',
+Flow(['sstack','sshift'],'Srresh',
      '''pad end2=1 > ${TARGETS[1]};
      pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
      ''')
@@ -374,17 +374,17 @@ Plot('inter1',['pstack','sstack'],
      label1='Time (s)' label2='In-line'
      ''')
 
-Plot('Presh','Presh',plot('Balanced PP'))
-Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
-Plot('diff2','Sresh Presh',
+Plot('Prresh','Prresh',plot('Balanced PP'))
+Plot('Srresh','Srresh',plot('Warped and Balanced PS'))
+Plot('diff2','Srresh Prresh',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp1','Presh Sresh diff2 Gamma1','TwoRows')
+Result('Waarp1','Prresh Srresh diff2 Ggamma1','TwoRows')
 
 ####################################################################
 # GAMMA SCAN
 ####################################################################
 
-Flow('Scan',['Sresh','Presh'],warpscan(51,0.95,1.05))
+Flow('Sccan',['Srresh','Prresh'],warpscan(51,0.95,1.05))
 
 def scanplot3(frame3):
     return '''
@@ -394,7 +394,7 @@ def scanplot3(frame3):
     title="Gamma Scan"
     ''' % frame3
 
-Result('Scan','Scan',scanplot3(31))
+Result('Sccan','Sccan',scanplot3(31))
 
 
 Flow('mask',None,'spike n2=116 n1=1001 | pad n1=1501 beg1=250')
@@ -410,91 +410,91 @@ def blindpick2(eps=10,lam=10):
     math output=input+1
     ''' % (eps,lam)
 
-Flow('Pick0',['Scan','mask'],
+Flow('Piick0',['Sccan','mask'],
      'transp plane=23 | window min2=1 | ' +
      blindpick2(2,64))
-Flow('Pick',['Pick0','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+Flow('Piick',['Piick0','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
 
 ###################################################################
 # WARPING
 ###################################################################
 
-Flow(['Warp2','wline2','W2','A2'],
-     ['Sresh','Presh','Pick','khaled2'],
+Flow(['Waarp2','wline2','W22','A22'],
+     ['Srresh','Prresh','Piick','khaled2'],
      warp1(20,220,440))
 
 Plot('wline2','wline2',plot('Warped and Balanced PS'))
-Plot('diff3','wline2 Presh',
+Plot('diff3','wline2 Prresh',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Flow('Gamma2',['Warp2','time2'],warp2gamma2)
-Plot('Gamma2','Gamma2',
+Flow('Gaamma2',['Waarp2','time2'],warp2gamma2)
+Plot('Gaamma2','Gaamma2',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp2','Presh wline2 diff3 Gamma2','TwoRows')
+Result('Waarp2','Prresh wline2 diff3 Gaamma2','TwoRows')
 
 ####################################################################
 # MOVE CLOSER
 ####################################################################
-Flow('wline3',['psline','pline','Warp2'],
+Flow('wline3',['psline','pline','Waarp2'],
      warp0 + ' | costaper nw1=300')
 
 Plot('wline3','wline3',plot('Warped PS'))
 Plot('diff4','wline3 pline',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp3','pline wline3 diff4 Gamma2','TwoRows')
+Result('Waarp3','pline wline3 diff4 Gaamma2','TwoRows')
 
 ####################################################################
 # SPECTRAL BALANCING
 ####################################################################
-Flow('Swin2','wline3','window2 nw=4,2 w=800,100')
-Flow('Srick2','Swin2',rick2,stdout=0)
+Flow('Swwin2','wline3','window2 nw=4,2 w=800,100')
+Flow('Srrick2','Swwin2',rick2,stdout=0)
 
-Flow(['Presh2','Resh2'],['Pwin','Swin2','Prick','Srick2'],reshape2)
-Flow('Sresh2','Resh2','stack axis=3 norm=no')
+Flow(['Prresh2','Reesh2'],['Pwwin','Swwin2','Prrick','Srrick2'],reshape2)
+Flow('Srresh2','Reesh2','stack axis=3 norm=no')
 
-Plot('Presh2','Presh2',plot('Balanced PP'))
-Plot('Sresh2','Sresh2',plot('Warped and Balanced PS'))
-Plot('diff5','Sresh2 Presh2',
+Plot('Prresh2','Prresh2',plot('Balanced PP'))
+Plot('Srresh2','Srresh2',plot('Warped and Balanced PS'))
+Plot('diff5','Srresh2 Prresh2',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Result('Warp4','Presh2 Sresh2 diff5 Gamma2','TwoRows')
+Result('Waarp4','Prresh2 Srresh2 diff5 Gaamma2','TwoRows')
 
 ####################################################################
 # GAMMA SCAN
 ####################################################################
 
-Flow('Scan2',['Sresh2','Presh2'],warpscan(51,0.95,1.05))
-Result('Scan2','Scan2',scanplot3(25))
+Flow('Sccan2',['Srresh2','Prresh2'],warpscan(51,0.95,1.05))
+Result('Sccan2','Sccan2',scanplot3(25))
 
-Flow('Pick1',['Scan2','mask'],
+Flow('Piick1',['Sccan2','mask'],
      'transp plane=23 | window min2=0.98 max2=1.02 | ' +
      blindpick2(64,64))
-Flow('Pick2',['Pick1','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+Flow('Piick2',['Piick1','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
 
 ###################################################################
 # WARPING
 ###################################################################
 
-Flow(['Warp5','wline5','W5','A5'],
-     ['Sresh2','Presh2','Pick2','Warp2'],
+Flow(['Waarp5','wline5','W55','A55'],
+     ['Srresh2','Prresh2','Piick2','Waarp2'],
      warp1(20,220,440))
 
 Plot('wline5','wline5',plot('Warped and Balanced PS'))
-Plot('diff6','wline5 Presh2',
+Plot('diff6','wline5 Prresh2',
      'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Flow('Gamma5',['Warp5','time2'],warp2gamma2)
-Plot('Gamma5','Gamma5',
+Flow('Gaamma5',['Waarp5','time2'],warp2gamma2)
+Plot('Gaamma5','Gaamma5',
      plot('Vp/Vs',2) +
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
-Result('Warp5','Presh2 wline5 diff6 Gamma5','TwoRows')
+Result('Waarp5','Prresh2 wline5 diff6 Gaamma5','TwoRows')
 
-Plot('inter2',['Presh2','wline5'],
+Plot('inter2',['Prresh2','wline5'],
      '''
      interleave axis=2 other=${SOURCES[1]} | 
      grey title='Interleaved (After)'
      ''')
 Result('inter',['inter','inter2'],'OverUnderAniso')
 
-Flow(['pstack2','pshift2'],'Presh2',
+Flow(['pstack2','pshift2'],'Prresh2',
      '''pad end2=1 > ${TARGETS[1]};
      pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
      ''')
@@ -534,8 +534,8 @@ Plot('pcube','pcube',plot3('PP'))
 Plot('wcube','wcube',plot3('Warped PS (Before)'))
 Result('cube0','pcube wcube','SideBySideAniso')
 
-Flow('Warp','Warp5','spray axis=3 n=132 d=1 o=15')
-Flow('wcube2',['pscube','pcube','Warp'],
+Flow('Waarp','Waarp5','spray axis=3 n=132 d=1 o=15')
+Flow('wcube2',['pscube','pcube','Waarp'],
      warp0 + ' | costaper nw1=300')
 Plot('wcube2','wcube2',plot3('Warped PS (Before)'))
 
