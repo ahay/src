@@ -508,7 +508,7 @@ static void make_grid (bool grid)
 
     if (axis1 != NULL) { 
 	if (!sf_getbool("grid",&need) && !sf_getbool("grid1",&need))
-	    need = grid;
+	    need = transp? false: grid;
 
 	if (need) {
 	    grid1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
@@ -528,21 +528,24 @@ static void make_grid (bool grid)
 	}
     }
 
-    if ((axis2 != NULL) && 
-	((sf_getbool("grid",&need) && need) || 
-	 (sf_getbool("grid2",&need) && need))) {
-	grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+    if (axis2 != NULL) {
+	if (!sf_getbool("grid",&need) && !sf_getbool("grid2",&need))
+	    need = transp? grid: false;
 
-	grid2->num0 = axis2->num0;
-	grid2->or = axis2->or;
-	
-	if (!sf_getfloat ("g2num",&(grid2->dnum))) {
-	    grid2->dnum = axis2->dnum;
-	    grid2->ntic = axis2->ntic;
-	} else {
-	    grid2->ntic=0; 
-	    for (num=grid2->num0; num <= max2; num += grid2->dnum) {
-		grid2->ntic++;
+	if (need) {
+	    grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+	    
+	    grid2->num0 = axis2->num0;
+	    grid2->or = axis2->or;
+	    
+	    if (!sf_getfloat ("g2num",&(grid2->dnum))) {
+		grid2->dnum = axis2->dnum;
+		grid2->ntic = axis2->ntic;
+	    } else {
+		grid2->ntic=0; 
+		for (num=grid2->num0; num <= max2; num += grid2->dnum) {
+		    grid2->ntic++;
+		}
 	    }
 	}
     }
@@ -1211,4 +1214,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.21 2004/04/01 15:38:20 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.22 2004/04/02 02:23:11 fomels Exp $	 */
