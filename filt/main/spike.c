@@ -1,37 +1,38 @@
-/* Generate simple data: spikes, planes, constants.
+/* Generate simple data: spikes, boxes, planes, constants.
 
-Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... mag=1,1,...] 
+Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... l1= l2= ... mag=1,1,...] 
 
-k1,k2,... specify the spike position (indexing starts with 1).
+k1,k2,... specify the spike starting position (indexing starts with 1).
+l1,l2,... specify the spike ending position (indexing starts with 1).
 
 Inserts label1="Time (s)" and label2=label3=...="Distance (km)"
 Inserts d1=0.004 and d2=d3=...=0.1
 
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 { 
-    int i, is, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
-    int nsp, **k, n1, n2, i1, i2, kk;
+    int i, j, is, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
+    int nsp, **k, **l, n1, n2, i1, i2, kk, ll;
     char key[7], *label;
     float f, *trace, *mag;
     sf_file spike;
@@ -73,6 +74,7 @@ int main(int argc, char* argv[])
     /* Number of spikes */
     mag = sf_floatalloc (nsp);
     k = sf_intalloc2 (nsp,dim);
+    l = sf_intalloc2 (nsp,dim);
 
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"k%d",i+1);
@@ -82,12 +84,25 @@ int main(int argc, char* argv[])
 	    }
 	} else {
 	    for (is=0; is < nsp; is++) {
-		if (k[i][is] > n[i]) 
-		    sf_error("Invalid k%d[%d]=%d > n%d=%d",
-			     i+1,is+1,k[i][is],i+1,n[i]);
-		k[i][is]--; /* C notation */
+	      if (k[i][is] > n[i]) 
+		sf_error("Invalid k%d[%d]=%d > n%d=%d",
+			 i+1,is+1,k[i][is],i+1,n[i]);
+	      k[i][is]--; /* C notation */
 	    }
 	}
+	snprintf(key,3,"l%d",i+1);
+	if (!sf_getints(key,l[i],nsp)) {
+	    for (is=0; is < nsp; is++) {
+	      l[i][is]=k[i][is];
+	    }
+	} else {
+	    for (is=0; is < nsp; is++) {
+	      if (l[i][is] > n[i]) 
+		sf_error("Invalid l%d[%d]=%d > n%d=%d",
+			 i+1,is+1,l[i][is],i+1,n[i]);
+	      l[i][is]--; /* C notation */
+	    }
+	}	
     }
 
     if (!sf_getfloats("mag",mag,nsp)) {
@@ -101,20 +116,26 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc (n[0]);
 
-    for (i2=0; i2 < n2; i2++) {
+    for (i2=0; i2 < n2; i2++) { /* loop over traces */
 	sf_line2cart(dim-1, n+1, i2, ii+1);
 	/* zero trace */
 	for (i1=0; i1 < n1; i1++) trace[i1]=0.;
 	/* put spikes in it */
-	for (is=0; is < nsp; is++) {
+	for (is=0; is < nsp; is++) { /* loop over spikes */
 	    for (i=1; i < dim; i++) {
 		kk = k[i][is];
-		if ((kk < -1) || (kk >= 0 && kk != ii[i])) break;	    
+		ll = l[i][is];
+		if ((kk < -1 && ll < -1) || 
+		    (kk >= 0 && ll >= 0 && 
+		     (kk > ii[i] || ll < ii[i]))) break;	    
 	    }
-	    if (i < dim) continue;
+	    if (i < dim) continue; /* skip this spike */
 	    kk = k[0][is];
-	    if (kk >= 0) { /* one spike per trace */
-		trace[kk] += mag[is];
+	    ll = l[0][is];
+	    if (kk >= 0) { /* one segment per trace */
+	      for (j=kk; j <= ll; j++) {
+		trace[j] += mag[is];
+	      }
 	    } else {
 		for (i1=0; i1 < n1; i1++) {
 		    trace[i1] += mag[is];
