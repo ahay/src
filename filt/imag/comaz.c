@@ -23,7 +23,6 @@
 /*^*/
 
 #include "comaz.h"
-#include "fft2.h"
 #include "fft3.h"
 #include "taper.h"
 #include "slowref.h"
@@ -134,7 +133,7 @@ void comaz_init(int nz1, float dz1             /* depth */,
 	ky = y0 + jy*dy;
 	y = y01 + iy*dy1;
 	
-	iu = 0.5+(x-u0)/du;
+	iu = 0.5+(y-u0)/du;
 	if      (iu <   0) iu=0;
 	else if (iu >= nu) iu=nu-1;
 	ij[iy] = iu;
@@ -157,10 +156,10 @@ void comaz_init(int nz1, float dz1             /* depth */,
 	    jh = (ih < nh2/2)? ih + nh2/2: ih - nh2/2;
 	    kh = h0 + jh*dh;
 
-	    k = 0.5*(kx-kh);
+	    k = 0.5*(ky-kh);
 	    ks[iy][ih] = k*k;
 
-	    k = 0.5*(kx+kh);
+	    k = 0.5*(ky+kh);
 	    kr[iy][ih] = k*k;
 	}
     }    
