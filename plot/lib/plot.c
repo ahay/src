@@ -24,7 +24,7 @@ static void set_dash (float type);
  */
 static void set_dash (float type)
 {
-    float size;
+    float size=0.;
     float dash[2], gap[2];
     
     switch ((int) type) {

@@ -11,8 +11,9 @@
 static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
 static float labelsz, barlabelsz, barmin, barmax;
 static int framecol;
-static bool labelrot, transp, wheretics, scalebar, vertbar;
+static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static char blank[]=" ";
+static const float aspect=0.8;
 
 static struct Label {
     char where;
@@ -24,11 +25,12 @@ static struct Label {
 static struct Axis {
     int ntic;
     float or, dnum, num0;
-} *axis1=NULL, *axis2=NULL;
+} *axis1=NULL, *axis2=NULL, *baraxis=NULL;
 
 static void make_title (sf_file in, char wheret);
 static void make_barlabel (void);
 static void make_labels (sf_file in, char where1, char where2);
+static void make_baraxis (float min, float max);
 static void make_axes (void);
 static void swap(float*a,float*b);
 
@@ -284,9 +286,37 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 }
 
+static void make_baraxis (float min, float max)
+{
+    char* where;
+
+    if (barlabel == NULL) return;
+
+    if (NULL == baraxis) 
+	baraxis = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+    if (!sf_getfloat ("axisorbar",&(baraxis->or))) {
+	if (vertbar) {
+	    baraxis->or = (barlabel->where == 'l'? barmin: barmax);
+	} else {
+	    baraxis->or = (barlabel->where == 'b'? barmin: barmax);
+	}
+    }
+
+    if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
+    if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
+	!sf_getfloat ("obarnum", &(baraxis->num0))) 
+	baraxis->ntic = vp_optimal_scale(inch1/(aspect*labelsz), 
+					 min, max, 
+					 &(baraxis->num0), 
+					 &(baraxis->dnum));
+
+    wherebartics = (NULL != (where = sf_getstring ("wherebartics"))) &&
+	('a' == *where);
+}	
+
 static void make_axes (void)
 {
-    const float aspect=0.8;
     char* where;
 
     if (label1 != NULL) {
