@@ -93,7 +93,7 @@ void predict_set(float **dip1 /* dip field [n2][n1] */)
 /*< set the local slopes for applying the linear operator >*/
 {
     dip=dip1;
-    tt = sf_floatalloc(n1);
+    if (NULL == tt) tt = sf_floatalloc(n1);
 }
 
 void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
