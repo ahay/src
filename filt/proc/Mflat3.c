@@ -16,16 +16,18 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <math.h>
 
 #include <rsf.h>
+
 #include "predict.h"
 #include "dijkstra.h"
 
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, n12, ref2, ref3, i2,i3,i1;
-    float eps, ***u, ***p, ***q, **p2, **q2, ***v, pi, qi;
+    int n1,n2,n3, n12, ref2, ref3, i2,i3,i1, ud, lr, j3, j2;
+    float eps, *trace, ***p, ***q, **p2, **q2, pi, qi;
     sf_file in, out, idip, xdip;
 
     sf_init(argc,argv);
@@ -47,8 +49,6 @@ int main (int argc, char *argv[])
     if (!sf_getint("ref3",&ref3)) ref3=0;
     /* reference trace */
 
-    u = sf_floatalloc3(n1,n2,n3);
-    v = sf_floatalloc3(n1,n2,n3);
     p = sf_floatalloc3(n1,n2,n3);
     q = sf_floatalloc3(n1,n2,n3);
 
@@ -66,13 +66,48 @@ int main (int argc, char *argv[])
 		pi += p[i3][i2][i1]*p[i3][i2][i1]; 
 		qi += q[i3][i2][i1]*q[i3][i2][i1];
 	    }
-	    p2[i3][i2] = pi;
-	    q2[i3][i2] = qi;
+	    p2[i3][i2] = sqrtf(pi/n1);
+	    q2[i3][i2] = sqrtf(qi/n1);
 	}
     }
 
     dijkstra_init(n2,n3);
     dijkstra(ref2,ref3,p2,q2);
+
+    trace = sf_floatalloc(n1);
+    predict_init(n1,0,eps);
+
+    for (i3=0; i3 < n3; i3++) {
+	for (i2=0; i2 < n2; i2++) {
+	    sf_floatread(trace,n1,in);
+	    dijkstra_start(i2,i3);
+	    j2 = i2;
+	    j3 = i3;
+	    if (verb) sf_warning("start with %d,%d",j2,j3);
+	    while (dijkstra_next(&ud,&lr)) {
+		if (0==lr) {
+		    if (ud > 0) {
+			j2 -= ud;
+			predict_step(false,trace,p[j3][j2]);
+		    } else {
+			predict_step(true,trace,p[j3][j2]);
+			j2 -= ud;
+		    }
+		} else if (0==ud) {
+		    if (lr > 0) {
+			j3 -= lr;
+			predict_step(false,trace,q[j3][j2]);
+		    } else {
+			predict_step(true,trace,q[j3][j2]);
+			j3 -= lr;
+		    }
+		}
+
+		if (verb) sf_warning("then %d,%d",j2,j3);
+	    }
+	    sf_floatwrite(trace,n1,out);
+	}
+    }
 
     exit (0);
 }

@@ -1,9 +1,5 @@
-/*
- * File: list_struct.c
- * -------------------
- * Implementation for node and edge list manipulations
- */
-#include <stdlib.h>
+/* Manipulating structures for triangulation. */
+
 #include <string.h>
 #include <stddef.h>
 
@@ -11,6 +7,23 @@
 
 #include "list_struct.h"
 #include "_basic_struct.h"
+
+#ifndef _list_struct_h
+
+#define DIMENSION 3
+/* number of dimensions */
+/*^*/
+
+enum elemType {EMPTY = -1,BOUNDARY,ADDED};
+/* Flag to distinguish elements */
+/*^*/
+
+typedef struct CEdge *Edge;
+typedef struct CNode *Node;
+/* abstract data types */
+/*^*/
+
+#endif
 
 /* private variables */
 static Node NodeList, LastNode;
@@ -20,23 +33,15 @@ static int NumbNode;
 /* private functions */
 static void FreeEdge (Edge edge);
 
-/* 
- * Function: CreateNodeList
- * ------------------------
- * Allocates an empty list
- */
 void CreateNodeList (int n) 
+/*< Allocates an empty list >*/
 {
-    LastNode = NodeList = (Node) malloc (n*sizeof (CNode));
+    LastNode = NodeList = (Node) sf_alloc (n,sizeof (CNode));
     NumbNode = n;
 }   
 
-/* 
- * Function: FreeNodeList
- * ----------------------
- * Frees all the storage associated with the list.
- */
 void FreeNodeList (void) 
+/*< Frees all the storage associated with the list. >*/
 {
     Node  node;
     for (node = NodeList; node != LastNode; node++) {
@@ -45,14 +50,10 @@ void FreeNodeList (void)
     free (NodeList);
 }
 
-/* 
- * Function: AppendNode
- * --------------------
- * Appends a node to the end of the list. 
- * Returns a pointer to the inserted node 
- * (useful for incremental insertions.)
- */
 Node AppendNode (double x, double y, double z, enum elemType type) 
+/*< Appends a node to the end of the list. 
+ * Returns a pointer to the inserted node 
+ * (useful for incremental insertions.) >*/
 {  
     Node node;
 
@@ -69,14 +70,9 @@ Node AppendNode (double x, double y, double z, enum elemType type)
     return node;
 } 
 
-
-/* 
- * Function: NodeNumber
- * --------------------
- * Translates a pointer to a node into the node number in the list.
- * If node == NULL, returns the total number of nodes.
- */
 int NodeNumber (Node node) 
+/*< Translates a pointer to a node into the node number in the list.
+ * If node == NULL, returns the total number of nodes. >*/
 {
     int n;
 
@@ -85,22 +81,14 @@ int NodeNumber (Node node)
     return n;
 }
 
-/* 
- * Function: GetNode
- * -----------------
- * Returns n-th node.
- */
 Node GetNode (int n)
+/*< Returns n-th node. >*/
 {
     return (NodeList+n);
 }
 
-/* 
- * Function: ReadEdgeList
- * ----------------------
- * Reads an edge list from the file edgefile. 
- */
 void ReadEdgeList (sf_file edgefile)
+/*< Reads an edge list from the file edgefile. >*/
 {
     int i, lr[2], edges, two;
 
@@ -120,13 +108,9 @@ void ReadEdgeList (sf_file edgefile)
     }
 }
 
-/* 
- * Function: WriteList
- * -----------------------
- * Writes a  node list to the file nodefile.
- * Writes an edge list to the file edgefile.
- */
 void WriteList (sf_file nodefile, sf_file edgefile)
+/*< Writes a  node list to the file nodefile.
+ * Writes an edge list to the file edgefile. >*/
 {
     Node node;
     Edge edge;
@@ -157,12 +141,8 @@ void WriteList (sf_file nodefile, sf_file edgefile)
     }
 }
 
-/* 
- * Function: NodeExec
- * ------------------
- * Recursive operations on nodes in the list.
- */
 void NodeExec (void (* exec) (Node))
+/*< Recursive operations on nodes in the list. >*/
 {
     Node node;
 
@@ -173,24 +153,16 @@ void NodeExec (void (* exec) (Node))
     } 
 }
 
-/* 
- * Function: NodeOut
- * -----------------
- * Copy a Nodes to 3 numbers
- */
 void NodeOut (Node q, float *x, float *y, float *z)
+/*< Copy a Nodes to 3 numbers. >*/
 {
     *x = q->x[0];
     *y = q->x[1];
     *z = q->x[2];
 }
 
-/* 
- * Function: EdgeOut
- * -----------------
- * Copy Edges to a float array. Returns the number of edges.
- */
 int EdgeOut (float *e)
+/*< Copy Edges to a float array. Returns the number of edges. >*/
 {
     int i, j;
     Edge edge;
@@ -217,14 +189,15 @@ int EdgeOut (float *e)
     return j;
 }
 
-/* !!! debugging !!! */
 void WriteNode (Node list)
+/*< Debugging >*/
 {
     printf ("%lf %lf %lf %i\n", 
 	    list->x[0], list->x[1], list->x[2], list->type);
 }
 
 void WriteEdge (Edge list)
+/*< Debugging >*/
 {
     printf ("%u %u %i\n", 
 	    NodeNumber (list->ends[0]), 
@@ -233,12 +206,8 @@ void WriteEdge (Edge list)
     WriteNode (list->ends[1]);
 }
 
-/* 
- * Function: CreateEdgeList
- * ------------------------
- * Allocates an empty list
- */
 void CreateEdgeList (void)
+/*< Allocates an empty list >*/
 {
     int i;
 
@@ -251,12 +220,8 @@ void CreateEdgeList (void)
     EdgeList->type = BOUNDARY;
 }   
 
-/* 
- * Function: ClearEdgeList
- * -----------------------
- * Frees added edges in the list.
- */
 void ClearEdgeList (void)
+/*< Frees added edges in the list. >*/
 {
     Edge tmp;
   
@@ -283,23 +248,15 @@ void ClearEdgeList (void)
     LastEdge = LastEdge->next;
 }
 
-/* 
- * Function: FreeEdgeList
- * ----------------------
- * Frees all the storage associated with the list.
- */
 void FreeEdgeList (void)
+/*< Frees all the storage associated with the list. >*/
 {
     FreeEdge (EdgeList);
 }
 
-/* 
- * Function: FreeEdge
- * ------------------
- * Frees all the storage associated with 
- * the edge and its descendants recursively.
- */
 void FreeEdge (Edge edge)
+/*< Frees all the storage associated with 
+ * the edge and its descendants recursively. >*/
 {
     if (edge != NULL) {
 	FreeEdge (edge->next);
@@ -307,15 +264,10 @@ void FreeEdge (Edge edge)
     }
 }
 
-
-/* 
- * Function: AppendEdge
- * --------------------
- * Appends an edge to the end of the list. 
- * Returns a pointer to the inserted node 
- * (useful for incremental insertions.)
- */ 
 Edge AppendEdge (Node left, Node right, enum elemType type) 
+/*< Appends an edge to the end of the list. 
+ * Returns a pointer to the inserted node 
+ * (useful for incremental insertions.) >*/
 {
     int i;
     Edge tmp;
@@ -336,12 +288,8 @@ Edge AppendEdge (Node left, Node right, enum elemType type)
     return tmp;
 } 
 
-/* 
- * Function: EdgeNumber
- * --------------------
- * Returns the number of edges in the list.
- */  
 int EdgeNumber (void)
+/*< Returns the number of edges in the list. >*/
 {
     int n;
     Edge list;
@@ -352,12 +300,8 @@ int EdgeNumber (void)
     return n; 
 }
 
-/* 
- * Function: EdgeEnumerate
- * -----------------------
- * Give numbers to edges
- */  
 void EdgeEnumerate (void)
+/*< Give numbers to edges. >*/
 {
     int n;
     Edge list;
@@ -371,12 +315,8 @@ void EdgeEnumerate (void)
     }
 }
 
-/* 
- * Function: EdgeExec
- * ------------------
- * Recursive operations on edges in the list.
- */
 void EdgeExec (void (* exec) (Edge))
+/*< Recursive operations on edges in the list. >*/
 {
     Edge edge;
 
@@ -387,12 +327,8 @@ void EdgeExec (void (* exec) (Edge))
     } 
 }
 
-/*
- * Function: EdgeLength
- * --------------------
- * Returns the length of an edge
- */
 double EdgeLength (Edge ab)
+/*< Returns the length of an edge. >*/
 {
     double dx, dy;
 
@@ -401,13 +337,10 @@ double EdgeLength (Edge ab)
     return (dx*dx + dy*dy);
 }
 
-/*
- * Function: MoveNode
- * --------------------
- * New position for the node
- */
 void MoveNode (Node q, double x, double y)
+/*< New position for the node. >*/
 {
     q->x[0] = x;
     q->x[1] = y;
 }
+

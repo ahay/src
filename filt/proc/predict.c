@@ -35,6 +35,25 @@ void predict_close (void)
     pwd_close (w);
 }
 
+void predict_step(bool forw, float* trace, float* pp)
+{
+    int i1;
+
+    for (i1=0; i1 < n1; i1++) {
+	diag[i1] = 6.*eps;
+	offd[0][i1] = -4.*eps;
+	offd[1][i1] = eps;
+    }
+    diag[0] = diag[n1-1] = 1.+eps;
+    diag[1] = diag[n1-2] = 1.+5.*eps;
+    offd[0][0] = offd[0][n1-2] = -2.*eps;
+
+    pwd_define (forw, w, pp, diag, offd);
+    banded_define (slv, diag, offd);
+    pwd_set (w, trace, trace, diag);
+    banded_solve (slv, trace);
+}
+
 void predict_flat(int i0, float** d, float** m, float** pp)
 {
     int i1, i2, k2;

@@ -21,7 +21,7 @@ void tent2 (int dim, const int* nwind, float* windwt)
 	nw *= nwind[j];
     }
 
-    /* loop inside the windoe */
+    /* loop inside the window */
     for (i=0; i < nw; i++) { 
 	sf_line2cart(dim, nwind, i, x);
     

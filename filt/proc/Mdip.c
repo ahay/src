@@ -23,17 +23,23 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <stdio.h>
 
+#include <unistd.h>
+
 #include <rsf.h>
 
 #include "dip3.h"
 #include "mask6.h"
+#include "tent2.h"
+#include "ocpatch.h"
+#include "oc.h"
 
 int main (int argc, char *argv[])
 {
-    int w123, p123, n123, niter, order, nj1,nj2, i,j, liter, mem, memsize, ip;
+    int w123,p123,n123, niter, order, nj1,nj2, i,j, liter, mem,memsize, ip,iw;
     int n[3], rect[3], nw[3], w[3]; 
-    float p0, q0, ***u, ***p, win;
-    char key[3];
+    size_t nall;
+    float p0, q0, ***u, ***p, win, *tent, *tmp;
+    char key[3], *dipname, *wallname;
     bool verb, sign, ***m1, ***m2;
     sf_file in, out, mask;
     FILE *wall, *dip;
@@ -131,12 +137,85 @@ int main (int argc, char *argv[])
     if (p123 > 1) {
 	sf_warning("Going out of core...");
 
-	sf_unpipe(in,n123*sizeof(float));
+	nall = n123*sizeof(float);
+
+	sf_unpipe(in,nall);
+	dip = sf_tempfile(&dipname,"w+b");
+	wall = sf_tempfile(&wallname,"w+b");
 	
+	tent = sf_floatalloc(w123);
+	tmp = sf_floatalloc(w123);
+
+	tent2 (3, w, tent);
+
+	ocpatch_init(3,w123,p123,nw,n,w);
+	oc_zero(nall,dip);
+	oc_zero(nall,wall);
+
 	/* loop over patches */
 	for (ip=0; ip < p123; ip++) {
+	    /* read data */
+	    ocpatch_flop (ip,false,in,u[0][0]);
+	    
+	    /* initialize t-x dip */
+	    for(i=0; i < w123; i++) {
+		p[0][0][i] = p0;
+	    }
+	    
+            /* estimate t-x dip */
+	    dip3(1, niter, order, nj1, verb, u, p, m1);
 
+	    /* write weight */
+	    ocpatch_lop (ip,false,wall,tmp);
+	    for (iw=0; iw < w123; iw++) {
+		tmp[iw] += tent[iw];
+	    }
+	    ocpatch_lop (ip,true,wall,tmp);
+
+	    /* write dip */
+	    ocpatch_lop (ip,false,dip,tmp);
+	    for (iw=0; iw < w123; iw++) {
+		tmp[iw] += tent[iw]*p[0][0][iw];
+	    }
+	    ocpatch_lop (ip,true,dip,tmp);
 	}
+
+	oc_divide(nall,dip,wall,out);
+
+	if (1 == n[2]) { /* done if 2-D input */
+	    unlink(dipname);
+	    unlink(wallname);
+	    exit(0);
+	}
+
+	oc_zero(nall,dip);
+
+        /* loop over patches */
+	for (ip=0; ip < p123; ip++) {
+	    /* read data */
+	    ocpatch_flop (ip,false,in,u[0][0]);
+	    
+	    /* initialize t-x dip */
+	    for(i=0; i < w123; i++) {
+		p[0][0][i] = q0;
+	    }
+	    
+            /* estimate t-x dip */
+	    dip3(2, niter, order, nj2, verb, u, p, m2);
+
+	    /* write dip */
+	    ocpatch_lop (ip,false,dip,tmp);
+	    for (iw=0; iw < w123; iw++) {
+		tmp[iw] += tent[iw]*p[0][0][iw];
+	    }
+	    ocpatch_lop (ip,true,dip,tmp);
+	}
+
+	oc_divide(nall,dip,wall,out);
+
+	unlink(dipname);
+	unlink(wallname);
+
     } else {
 	/* read data */
 	sf_floatread(u[0][0],n123,in);
@@ -152,18 +231,18 @@ int main (int argc, char *argv[])
 	/* write t-x dip */
 	sf_floatwrite(p[0][0],n123,out);
 
-	if (n[2] > 1) { /* if 3-D input */
-	    /* initialize t-y dip */
-	    for(i=0; i < n123; i++) {
-		p[0][0][i] = q0;
-	    }
-  
-	    /* estimate t-y dip */
-	    dip3(2, niter, order, nj2, verb, u, p, m2);
-	    
-	    /* write t-y dip */
-	    sf_floatwrite(p[0][0],n123,out);
+	if (1 == n[2]) exit(0); /* done if 2-D input */
+
+	/* initialize t-y dip */
+	for(i=0; i < n123; i++) {
+	    p[0][0][i] = q0;
 	}
+	
+	/* estimate t-y dip */
+	dip3(2, niter, order, nj2, verb, u, p, m2);
+	
+	/* write t-y dip */
+	sf_floatwrite(p[0][0],n123,out);
     }
     
     exit (0);

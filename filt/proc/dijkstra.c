@@ -11,7 +11,7 @@ typedef struct Step {
 
 static int n1, n2, np, **status;
 static float **cost;
-static step **path;
+static step **path, here;
 static const float big_number = FLT_MAX;
 
 void dijkstra_init(int m1, int m2)
@@ -126,3 +126,19 @@ void dijkstra(int s1, int s2, float **ud, float **lr)
     }
 }
     
+void dijkstra_start(int s1, int s2) 
+{
+    here = path[s2][s1];
+}
+
+bool dijkstra_next(int *ud, int *lr) 
+{
+    if (NULL == here) return false;
+
+    *ud = here->ud;
+    *lr = here->lr;
+
+    here = here->next;
+
+    return true;
+}

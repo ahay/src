@@ -68,9 +68,9 @@ if env.has_key('F90'):
     F90 = os.path.basename(env.get('F90'))
     if modsuffix:
         if 'ifort'==F90:
-            mod = 'rsf'+modsuffix
+            mod = '#/rsf'+modsuffix
         else:
-            mod = 'RSF'+modsuffix
+            mod = '#/RSF'+modsuffix
         env.Install(incdir,mod)
         Clean(build,mod)
     elif 'ifc' == F90: # old Intel compiler quirks

@@ -392,6 +392,7 @@ isplot = re.compile(r'^[^%]*\\(?:side)?plot\s*\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'\\input\s*\{([^\}]+)')
 chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
+subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
 
 def latexscan(node,env,path):
     top = str(node)
@@ -401,14 +402,19 @@ def latexscan(node,env,path):
     inputs = map(lambda x: x+'.tex',input.findall(contents))
     inputs.append(str(node))
     resdir = env.get('resdir','Fig')
-    figdir = resdir
+    inputdir = env.get('inputdir','.')
     plots = []
     for file in inputs:
         inp = open(file,'r')
-        for line in inp.readlines():
+        for line in inp.readlines():            
             dir  = chdir.search(line)
             if dir:
-                figdir = os.path.join(dir.group(1),resdir)
+                inputdir = dir.group(1)
+            dir = subdir.search(line)
+            if dir:
+                resdir = dir.group(1)
+            figdir = os.path.join(inputdir,resdir)
+            
             check = isplot.search(line)
             if check:
                  plot = check.group(1)
@@ -496,21 +502,36 @@ class TeXPaper(Environment):
                   self.imgs.append(png)
                   self.Install(figdir,[png,pdf])
                   self.Alias('install',figdir)
+        # conditionally reproducible figures
+        crfigs = []
         # mathematica figures:
         mths = glob.glob('%s/Math/*.ma' % topdir)
         if mths:
              if mathematica:
                   for mth in mths:
-                       pdf = os.path.join(resdir,re.sub(r'\.ma$','.pdf',
-                                                        os.path.basename(mth)))
+                       pdf = re.sub(r'([^/]+)\.ma$',
+                                    os.path.join(resdir,'\g<1>.pdf'),mth)
                        self.Math(pdf,mth)
+                       crfigs.append(pdf)
              mathdir = os.path.join(self.docdir,'Math')
              self.Install(mathdir,mths)
              self.Alias('install',mathdir)
+        # xfig figures:
+        figs =  glob.glob('%s/XFig/*.fig' % topdir)
+        if figs:
+            if fig2dev:
+                for fig in figs:
+                    pdf = re.sub(r'([^/]+)\.fig$',
+                                 os.path.join(resdir,'\g<1>.pdf'),fig)
+                    self.XFig(pdf,fig)
+                    crfigs.append(pdf)
+                figdir = os.path.join(self.docdir,'XFig')
+                self.Install(figdir,figs)
+                self.Alias('install',figdir)
         # non-reproducible figures
-        for pdf in glob.glob(os.path.join(topdir,
-                                          os.path.join(resdir,
-                                                       '*.pdf'))):
+        nrfigs = crfigs + glob.glob(
+            os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
+        for pdf in nrfigs:
              if pdf2ps:
                 eps = re.sub('.pdf$',pssuffix,pdf)
                 self.PSBuild(eps,pdf)
@@ -546,7 +567,7 @@ class TeXPaper(Environment):
             self.Alias(paper+'.html',html)
             docdir = os.path.join(self.docdir,dir)
             self.Command(os.path.join(docdir,'index.html'),html,
-                         'cp -r $SOURCE.dir/* $TARGET.dir')
+                         'cd $SOURCE.dir && cp -r * $TARGET.dir && cd ..')
             self.Alias('install',docdir)
 
 default = TeXPaper()
