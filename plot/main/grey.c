@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
-    bool eclip=false, egpow=false;
+    bool eclip=false, egpow=false, barreverse;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
@@ -170,6 +170,8 @@ int main(int argc, char* argv[])
 	nomax = !sf_getfloat("maxval",&barmax);
 	/* maximum value for scalebar (default is the data maximum) */
 	barbuf[0] = (unsigned char*) sf_alloc(BSIZE,sizeof(unsigned char));
+	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
+	/* if y, go from small to large on the bar scale */
     }
 
     if (!sf_getbool("wantframenum",&framenum)) framenum = (n3 > 1);
@@ -317,11 +319,19 @@ int main(int argc, char* argv[])
 			if (nomax && barmax < dat) barmax = dat;
 		    }
 		}
-		vp_barframe_init (barmin,barmax);
+		if (barreverse) {
+		    vp_barframe_init (barmax,barmin);
+		} else {
+		    vp_barframe_init (barmin,barmax);
+		}
 	    }
 
 	    for (it=0; it < BSIZE; it++) {
-		dat = (barmax*it + barmin*(BSIZE-1-it))/(BSIZE-1);
+		if (barreverse) {
+		    dat = (barmin*it + barmax*(BSIZE-1-it))/(BSIZE-1);
+		} else {
+		    dat = (barmax*it + barmin*(BSIZE-1-it))/(BSIZE-1);
+		}
 		j = (dat-pbias)*gain + bias;
 		if      (j < 0) j=0;
 		else if (j > TSIZE) j=TSIZE;
@@ -337,4 +347,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.22 2004/07/02 11:54:57 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.23 2004/07/02 18:08:56 fomels Exp $	 */
