@@ -63,3 +63,6 @@ float* pqueue_extract (void)
   *xi = t;
   return v;
 }
+
+/* 	$Id: pqueue.c,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */
+

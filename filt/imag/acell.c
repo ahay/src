@@ -206,3 +206,5 @@ static void untree (acell cell, acell *flat)
 	untree (cell->child[1],flat);
     }
 }
+
+/* 	$Id: acell.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

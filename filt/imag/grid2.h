@@ -58,3 +58,5 @@ int grid2_term(void* par, float* xy);
 void grid2_close(grid2 grd);
 
 #endif
+
+/* 	$Id: grid2.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

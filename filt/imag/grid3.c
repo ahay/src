@@ -114,3 +114,6 @@ void grid3_close(grid3 grd)
     eno3_close (grd->pnt);
     free (grd);
 }
+
+/* 	$Id: grid3.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+

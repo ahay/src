@@ -57,4 +57,5 @@ void dsr (int inv, float eps, float kx, float kh,
     }
 }
 
+/* 	$Id: dsr.c,v 1.4 2003/09/30 14:30:52 fomels Exp $	 */
 

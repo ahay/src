@@ -14,3 +14,5 @@ void eno3_apply (eno3 pnt, int i, int j, int k,
 		 float* f, float* f1, der what);
 
 #endif
+
+/* 	$Id: eno3.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

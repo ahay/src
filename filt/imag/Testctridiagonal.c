@@ -24,4 +24,5 @@ int main(void)
     return 0;
 }
     
-    
+/* 	$Id: Testctridiagonal.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+

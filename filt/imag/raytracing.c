@@ -131,4 +131,4 @@ int trace_ray (raytrace rt, float* x, float* p, float** traj)
     }
 }
 
-
+/* 	$Id: raytracing.c,v 1.3 2003/09/30 14:30:53 fomels Exp $	 */

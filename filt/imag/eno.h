@@ -56,3 +56,5 @@ void eno_set (eno ent, float* c);
 void eno_apply (eno ent, int i, float x, float *f, float *f1, der what);
 
 #endif
+
+/* 	$Id: eno.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

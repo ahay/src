@@ -109,3 +109,4 @@ void grid2_close(grid2 grd)
     free (grd);
 }
 
+/* 	$Id: grid2.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

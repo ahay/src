@@ -168,3 +168,5 @@ void eno3_apply (eno3 pnt,
 	eno2_apply(pnt->jnt,j,k,y,z,f1,&g,FUNC);
     }
 }
+
+/* 	$Id: eno3.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

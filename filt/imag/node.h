@@ -37,3 +37,5 @@ void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd));
 Node ExtractNode (NodeQueue queue);
 
 #endif
+
+/* 	$Id: node.h,v 1.6 2003/09/30 14:30:53 fomels Exp $	 */

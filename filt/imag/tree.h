@@ -12,3 +12,5 @@ void tree_close(void);
 void tree_print (void);
 
 #endif
+
+/* 	$Id: tree.h,v 1.6 2003/09/30 14:30:53 fomels Exp $	 */

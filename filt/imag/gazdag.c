@@ -88,3 +88,5 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	}
     }
 }
+
+/* 	$Id: gazdag.c,v 1.4 2003/09/30 14:30:52 fomels Exp $	 */

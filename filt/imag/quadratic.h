@@ -9,3 +9,5 @@
 float quadratic_solve (float a, float b, float c);
 
 #endif
+
+/* 	$Id: quadratic.h,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

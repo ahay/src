@@ -845,3 +845,4 @@ static void psnap (float* p, float* q, int* iq) {
     *iq = ia;
 }
 
+/* 	$Id: tree.c,v 1.12 2003/09/30 14:30:53 fomels Exp $	 */

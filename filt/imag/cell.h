@@ -26,3 +26,5 @@ float cell11_update2 (int dim, float s, float v, float *p, const float *g);
 
 
 #endif
+
+/* 	$Id: cell.h,v 1.3 2003/09/30 14:30:52 fomels Exp $	 */

@@ -9,3 +9,5 @@ void pick0_step0 (float t0, float* t);
 void pick0_delta (int k2, float* t);
 
 #endif
+
+/* 	$Id: pick0.h,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

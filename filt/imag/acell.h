@@ -22,3 +22,5 @@ float* get_node (acell cell, int i);
 void flat_cell (acell cell, acell *flat, float** dat);
 
 #endif
+
+/* 	$Id: acell.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

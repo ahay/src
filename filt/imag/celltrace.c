@@ -113,3 +113,5 @@ float cell_trace (celltrace ct, float* xp, float* p, int* it, float** traj)
     
     return t;
 }
+
+/* 	$Id: celltrace.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

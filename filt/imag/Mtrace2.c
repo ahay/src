@@ -1,3 +1,8 @@
+/* 2-D multiple arrivals by cell ray tracing.
+
+Takes: < velocity.rsf > arrivals.rsf
+*/
+
 #include <stdio.h>
 #include <math.h>
 
@@ -14,14 +19,14 @@ static void raytrace (float q, void* x, float* xzt);
 
 int main(int argc, char* argv[])
 {
-  int nx, na, na2, ia, nz, order, maxsplit, ix, iz, *siz;
-  float **place, *slow, **out, dx,dz, x0,z0, x[2];
-  float max1, min1, max2, min2;
-  bool isvel;
-  agrid grd;
-  sf_file vel, outp, size, grid;
+    int nx, na, na2, ia, nz, order, maxsplit, ix, iz, *siz;
+    float **place, *slow, **out, dx,dz, x0,z0, x[2];
+    float max1, min1, max2, min2;
+    bool isvel;
+    agrid grd;
+    sf_file vel, outp, size, grid;
     
-
+    
     sf_init (argc,argv);
 
     /* get 2-D grid parameters */
@@ -34,7 +39,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(vel,"o2",&x0)) x0=0.;
 
     outp = sf_output("out");
-
+    
     sf_putint(outp,"n4",nz);
     sf_putfloat(outp,"d4",dz);
     sf_putfloat(outp,"o4",z0);
@@ -44,12 +49,17 @@ int main(int argc, char* argv[])
     sf_putfloat(outp,"o3",x0);
 
     if (!sf_getint("na",&na)) na=60;
+    /* number of angles */
     if (!sf_getfloat("da",&da)) da=3.1;
+    /* angle increment (in degrees) */
     if (!sf_getfloat("a0",&a0)) a0=-90.;
+    /* initial angle (in degrees) */
 
     if (!sf_getint("maxsplit",&maxsplit)) maxsplit=10;
+    /* maximum splitting for adaptive grid */
 
     if (!sf_getfloat("minx",&min1)) min1=0.5*dx;
+    /* parameters for adaptive grid */
     if (!sf_getfloat("maxx",&max1)) max1=2.*dx;
     if (!sf_getfloat("mina",&min2)) min2=0.5*da;
     if (!sf_getfloat("maxa",&max2)) max2=2.*da;
@@ -72,7 +82,9 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&isvel)) isvel=true;
+    /* y: velocity, n: slowness */
     if(!sf_getint("order",&order)) order=3;
+    /* velocity interpolation order */
 
     slow  = sf_floatalloc(nz*nx);
     place = sf_floatalloc2(5,na);
@@ -140,3 +152,4 @@ static void raytrace (float q, void* xv, float* xzt) {
     xzt[4] = cell_p2a(p)*180./SF_PI;
 }
 
+/* 	$Id: Mtrace2.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */

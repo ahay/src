@@ -1,3 +1,9 @@
+/* Multiple arrivals with a fast algorithm.
+
+Takes: < velocity.rsf > arrivals.rsf
+
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -26,6 +32,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(vel,"o2",&x0)) sf_error("No o2= in input");
 
     if (!sf_getint("nt",&nt)) nt=nx*nz;
+    /* Maximum number of steps */
 
     sf_putint(out,"n4",nz);
     sf_putfloat(out,"d4",dz);
@@ -36,8 +43,11 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o3",x0);
 
     if (!sf_getint("na",&na)) na=361;
+    /* number of angles */
     if (!sf_getfloat("da",&da)) da=1.;
+    /* angle increment (in degrees) */
     if (!sf_getfloat("a0",&a0)) a0=-180.;
+    /* first angle (in degrees) */
 
     sf_putint(out,"n2",na);
     sf_putfloat(out,"d2",da);
@@ -50,7 +60,9 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
+    /* y: theinput is velocity; n: slowness */
     if(!sf_getint("method",&order)) order=1; order++;
+    /* accuracy order */
 
     slow  = sf_floatalloc2(nz,nx);
     sf_read(slow[0],sizeof(float),nz*nx,vel);
@@ -85,3 +97,5 @@ int main(int argc, char* argv[])
     
     exit (0);
 }
+
+/* 	$Id: Mtree.c,v 1.6 2003/09/30 14:30:51 fomels Exp $	 */

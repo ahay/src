@@ -121,3 +121,5 @@ void split1 (bool verb, bool inv, float eps,
     
     free (pp);
 }
+
+/* 	$Id: split1.c,v 1.3 2003/09/30 14:30:53 fomels Exp $	 */

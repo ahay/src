@@ -14,3 +14,5 @@ void ctridiagonal_solve (ctris slv, float complex* b);
 void ctridiagonal_close (ctris slv);
 
 #endif
+
+/* 	$Id: ctridiagonal.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

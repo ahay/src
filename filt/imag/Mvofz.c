@@ -1,3 +1,8 @@
+/* Analytical traveltime in a linear V(z) model.
+
+Takes: > velocitytime.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -14,9 +19,13 @@ int main (int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_getint("n",&n)) sf_error("Need n=");
+    /* number of samples */
     if (!sf_getfloat("g",&g)) g = 1.;
+    /* velocity gradient */
     if (!sf_getfloat("v0",&v0)) v0 = 0.5;
+    /* initial velocity */
     if (!sf_getfloat("s",&s)) s = 0.5;
+    /* shot location at the surface */
     
     d = 0.5/n;
     n1 = n+1;
@@ -50,6 +59,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-  
+/* 	$Id: Mvofz.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */
 
- 

@@ -99,3 +99,5 @@ void cbanded_close (void)
     free (d);
     free (o);
 }
+
+/* 	$Id: cbanded.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

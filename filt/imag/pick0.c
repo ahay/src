@@ -100,3 +100,6 @@ void pick0_delta (int m2, float* t)
 	t[i1]=ti-i1;
     }
 }
+
+/* 	$Id: pick0.c,v 1.3 2003/09/30 14:30:53 fomels Exp $	 */
+

@@ -59,3 +59,5 @@ int grid3_term(void* par, float* x);
 void grid3_close(grid3 grd);
 
 #endif
+
+/* 	$Id: grid3.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

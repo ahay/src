@@ -253,3 +253,6 @@ int nearsource(float* xs, int* b, float* d, float* vv1)
     
     return npoints;
 }
+
+/* 	$Id: neighbors.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+

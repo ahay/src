@@ -62,3 +62,5 @@ int trace_ray (raytrace rt, float* x, float* p, float** traj);
 void raytrace_close (raytrace rt);
 
 #endif
+
+/* 	$Id: raytracing.h,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

@@ -49,3 +49,5 @@ int atela_step (int dim, int nt, float dt, bool intime, float* x, float* p,
 		int (*term)(void*,float*), float** traj);
 
 #endif
+
+/* 	$Id: atela.h,v 1.3 2003/09/30 14:30:52 fomels Exp $	 */

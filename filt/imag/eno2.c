@@ -138,3 +138,5 @@ void eno2_apply (eno2 pnt, int i, int j, float x, float y,
 	eno_apply(pnt->jnt,j,y,f1,&g,FUNC);
     }
 }
+
+/* 	$Id: eno2.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

@@ -25,3 +25,4 @@ float quadratic_solve (float a, float b, float c)
     return HUG;
 }
 
+/* 	$Id: quadratic.c,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

@@ -98,3 +98,5 @@ float fzero (float (*func)(float),
     
     return b;
 }
+
+/* 	$Id: fzero.c,v 1.4 2003/09/30 14:30:52 fomels Exp $	 */

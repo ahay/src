@@ -109,3 +109,5 @@ void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd)) {
     }
     queue->head = NULL;
 }
+
+/* 	$Id: node.c,v 1.5 2003/09/30 14:30:53 fomels Exp $	 */

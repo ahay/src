@@ -19,3 +19,5 @@ void pqueue_insert (float* v);
 float* pqueue_extract (void);
 
 #endif
+
+/* 	$Id: pqueue.h,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

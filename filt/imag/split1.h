@@ -11,3 +11,5 @@ void split1 (bool verb, bool inv, float eps,
 	     float complex **cp, float **q);
 
 #endif
+
+/* 	$Id: split1.h,v 1.2 2003/09/30 14:30:53 fomels Exp $	 */

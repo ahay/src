@@ -133,3 +133,6 @@ void eno_apply (eno ent, int i, float x, float *f, float *f1, der what)
     if (what != DER) *f = g/n;
     if (what != FUNC) *f1 = g1/n;
 }
+
+/* 	$Id: eno.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+

@@ -1,3 +1,8 @@
+/* V(t) function for a linear V(Z) profile.
+
+Takes: < in.rsf > voft.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -20,7 +25,9 @@ int main(int argc, char** argv)
     if (!sf_histfloat (in,"d1",&d1)) sf_error ("No d1= in input\n");
 
     if (!sf_getfloat ("v0",&v0)) v0 = 1.5;
+    /* initial velocity */
     if (!sf_getfloat ("alpha",&alpha)) alpha = 0.5;
+    /* velocity gradient */
 
     vint = sf_floatalloc(n1);
     for (i1=0; i1 < n1; i1++) {
@@ -37,3 +44,6 @@ int main(int argc, char** argv)
 
     exit (0);
 }
+
+/* 	$Id: Mvoft.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */
+

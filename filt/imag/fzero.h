@@ -8,3 +8,5 @@ float fzero (float (*func)(float),
 	     float toler, bool verb);
 
 #endif
+
+/* 	$Id: fzero.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */

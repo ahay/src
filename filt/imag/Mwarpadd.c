@@ -1,9 +1,12 @@
+/* Add a perturbation to the warping function.
+
+Takes: < warp1.rsf add=dwarp.rsf > warp2.rsf
+*/
+
 #include <math.h>
 
-/**************** RSF includes *****************/
 #include <rsf.h> 
 
-/**************** Local includes ***************/
 #include "eno.h"
 
 int main(int argc, char* argv[])
@@ -26,6 +29,7 @@ int main(int argc, char* argv[])
     if(!sf_histint(in,"n2",&m2)) m2 = 1;
 
     if(!sf_getint("accuracy",&order)) {
+	/* Interpolation accuracy order */
 	order = 2;
     } else if (order < 1 || order > 4) {
 	sf_error ("accuracy must be between 1 and 4");
@@ -33,6 +37,7 @@ int main(int argc, char* argv[])
     order *= 2;
 
     if (!sf_getint("m1",&n2)) n2=n1*2;
+    /* Trace pading */
 
     ent = eno_init(order,n2);
 
@@ -62,3 +67,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mwarpadd.c,v 1.3 2003/09/30 14:30:51 fomels Exp $	 */

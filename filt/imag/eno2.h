@@ -67,3 +67,5 @@ void eno2_apply (eno2 pnt, int i, int j, float x, float y,
 		 float* f, float* f1, der what);
 
 #endif
+
+/* 	$Id: eno2.h,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
