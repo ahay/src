@@ -4,7 +4,7 @@ import configure
 
 plots = '''
 7ab cmp croshyp csp dc dcretard ellipse
-headray nmotraj reflector reflexpt reflkine sg vrms whitepruf
+headray hyplay nmotraj reflector reflexpt reflkine sg vrms whitepruf
 '''
 
 try:

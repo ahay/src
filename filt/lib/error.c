@@ -25,7 +25,6 @@
 
 #include "error.h"
 #include "getpar.h"
-#include "file.h"
 
 void sf_error( char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 

@@ -66,4 +66,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msymes.c,v 1.4 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id$	 */

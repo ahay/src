@@ -37,6 +37,7 @@ int main (int argc, char **argv)
     float complex **cp, *ctrace; /* frequency-wavenumber */
 
     bool inv;              /* forward or inverse */
+    int sign;              /* transform sign */
 
     char varname[6]; /* variable name */
     kiss_fft_cfg cfg;
@@ -51,6 +52,9 @@ int main (int argc, char **argv)
 
     if (!sf_getbool("inv",&inv)) inv = false;
     /* if y, perform inverse transform */
+
+    if (!sf_getint("sign",&sign)) sign = inv? 1: 0;
+    /* transform sign (0 or 1) */
 
     if (!sf_getint("axis",&axis)) axis=2;
     /* Axis to transform */
@@ -85,7 +89,7 @@ int main (int argc, char **argv)
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,x0);
 
-	cfg = kiss_fft_alloc(nk,1,NULL,NULL);
+	cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
     } else { 
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint(in,varname,&nx)) 
@@ -113,7 +117,7 @@ int main (int argc, char **argv)
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,k0);
 
-	cfg = kiss_fft_alloc(nk,0,NULL,NULL);
+	cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
     }
 
     cp = sf_complexalloc2(n1,nk);

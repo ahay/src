@@ -68,4 +68,4 @@ int main(int argc, char** argv)
     exit (0);
 }
 
-/* 	$Id: Mgauss.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id: Mgauss.c 691 2004-07-04 19:28:08Z fomels $	 */

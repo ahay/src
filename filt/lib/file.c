@@ -1,4 +1,6 @@
 #include <stdio.h>
+/*^*/
+
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -28,11 +30,13 @@
 #include <rpc/xdr.h>
 
 #include "file.h"
-#include "c99.h"
 #include "getpar.h"
 #include "simtab.h"
 #include "alloc.h"
 #include "error.h"
+
+#include "c99.h"
+/*^*/
 
 /* BSD - MAXNAMELEN, Posix - NAME_MAX */
 #ifndef NAME_MAX
@@ -42,6 +46,20 @@
 #ifdef FILENAME_MAX
 #define NAME_MAX FILENAME_MAX
 #endif
+#endif
+
+#ifndef _sf_file_h
+
+#define SF_MAX_DIM 9
+/*^*/
+
+typedef struct sf_File *sf_file;
+/*^*/
+
+typedef enum {SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
+typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
+/*^*/
+
 #endif
 
 struct sf_File {
@@ -63,8 +81,10 @@ static size_t aline=8;
 static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
+static FILE *sf_tempfile(char** dataname);
 
 sf_file sf_input (/*@null@*/ const char* tag)
+/*< Create an input file structure >*/
 {
     int esize;
     sf_file file;
@@ -131,8 +151,10 @@ sf_file sf_input (/*@null@*/ const char* tag)
     return file;
 }
 
-/* Should do output after input */
 sf_file sf_output (/*@null@*/ const char* tag)
+/*< Create an output file structure.
+
+Should do output after sf_input. >*/
 {
     sf_file file;
     char *headname, *dataname, *path, *name, *format;
@@ -219,26 +241,34 @@ sf_file sf_output (/*@null@*/ const char* tag)
 }
 
 sf_datatype sf_gettype (sf_file file)
+/*< return file type >*/
 {
     return file->type;
 }
 
 sf_dataform sf_getform (sf_file file)
+/*< return file form >*/
 {
     return file->form;
 }
 
 void sf_settype (sf_file file, sf_datatype type)
+/*< set file type >*/
 {
     file->type = type;
 }
 
 void sf_setform (sf_file file, sf_dataform form)
+/*< set file form >*/
 {
     file->form = form;
 }
 
 void sf_setformat (sf_file file, const char* format)
+/*< Set file format.
+
+format has a form "form_type", i.e. native_float, ascii_int, etc.
+>*/
 {
     if (NULL != strstr(format,"float")) {
 	file->type = SF_FLOAT;
@@ -280,6 +310,9 @@ void sf_setformat (sf_file file, const char* format)
 }
     
 static bool getfilename (FILE* fp, char *filename)
+/* Finds filename of an open file from the file descriptor.
+
+Unix-specific and probably non-portable. */
 {
     DIR* dir;
     struct stat buf;
@@ -303,14 +336,15 @@ static bool getfilename (FILE* fp, char *filename)
     return success;
 }
 
-/* datapath rules:
-   1. check datapath= on the command line
-   2. check DATAPATH environmental variable
-   3. check .datapath file in the current directory
-   4. check .datapath in the home directory
-*/
-
 static char* getdatapath (void) 
+/* Finds datapath.
+
+Datapath rules:
+1. check datapath= on the command line
+2. check DATAPATH environmental variable
+3. check .datapath file in the current directory
+4. check .datapath in the home directory
+*/
 {
     char *path, *penv, *home, file[PATH_MAX];
     
@@ -337,6 +371,7 @@ static char* getdatapath (void)
 }
 
 static bool readpathfile (const char* filename, char* datapath) 
+/* find datapath from the datapath file */
 {
     FILE *fp;
     char format[PATH_MAX];
@@ -355,6 +390,7 @@ static bool readpathfile (const char* filename, char* datapath)
 }
 
 void sf_fileclose (sf_file file) 
+/*< close a file and free allocated space >*/
 {
     if (file->stream != stdin && 
 	file->stream != stdout && 
@@ -368,50 +404,55 @@ void sf_fileclose (sf_file file)
     free (file);
 }
 
-bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par) 
+bool sf_histint (sf_file file, const char* key,/*@out@*/ int* par)
+/*< read an int parameter from file >*/ 
 {
     return sf_simtab_getint (file->pars,key,par);
 }
 
 bool sf_histints (sf_file file, const char* key,/*@out@*/ int* par,size_t n) 
+/*< read an int array of size n parameter from file >*/ 
 {
     return sf_simtab_getints (file->pars,key,par, n);
 }
 
 bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par) 
+/*< read a float parameter from file >*/
 {
     return sf_simtab_getfloat (file->pars,key,par);
 }
 
 bool sf_histfloats (sf_file file, const char* key,
 		    /*@out@*/ float* par,size_t n) 
+/*< read a float array of size n parameter from file >*/ 
 {
     return sf_simtab_getfloats (file->pars,key,par, n);
 }
 
 bool sf_histbool (sf_file file, const char* key,/*@out@*/ bool* par) 
+/*< read a bool parameter from file >*/
 {
     return sf_simtab_getbool (file->pars,key,par);
 }
 
 bool sf_histbools (sf_file file, const char* key,
 		   /*@out@*/ bool* par, size_t n) 
+/*< read a bool array of size n parameter from file >*/ 
 {
     return sf_simtab_getbools (file->pars,key,par, n);
 }
 
 char* sf_histstring (sf_file file, const char* key) 
+/*< read a string parameter from file (returns NULL on failure) >*/ 
 {
     return sf_simtab_getstring (file->pars,key);
 }
 
 void sf_fileflush (sf_file file, sf_file src)
+/*< outputs parameter to a file (initially from source src)
+
+Prepares file for writing binary data >*/ 
 {
-#if 0
-    int i, n;
-    float f;
-    char key[8], *val;
-#endif
     time_t tm;
  
     if (NULL == file->dataname) return;
@@ -471,26 +512,6 @@ void sf_fileflush (sf_file file, sf_file src)
     }    
     if (NULL != src && NULL != src->pars)
 	sf_simtab_output(src->pars,file->stream);
-#if 0
-        for (i=1; i <= SF_MAX_DIM; i++) {
-	    snprintf(key,4,"n%d",i);
-	    if (!sf_simtab_getint(src->pars,key,&n)) break;
-	    if (0 >= fprintf(file->stream,"\t%s=%d\n",key,n))
-		sf_error ("%s: cannot flush %s:",__FILE__,key);
-	    snprintf(key,4,"o%d",i);
-	    if (sf_simtab_getfloat(src->pars,key,&f) &&
-		0 >= fprintf(file->stream,"\t%s=%g\n",key,f))
-		sf_error ("%s: cannot flush %s:",__FILE__,key);
-	    snprintf(key,4,"d%d",i);
-	    if (sf_simtab_getfloat(src->pars,key,&f) &&
-		0 >= fprintf(file->stream,"\t%s=%g\n",key,f))
-		sf_error ("%s: cannot flush %s:",__FILE__,key);
-	    snprintf(key,8,"label%d",i);
-	    if (NULL != (val=sf_simtab_getstring(src->pars,key)) &&
-		0 >= fprintf(file->stream,"\t%s=\"%s\"\n",key,val))
-		sf_error ("%s: cannot flush %s:",__FILE__,key);
-	}
-#endif
     
     sf_simtab_output(file->pars,file->stream);
    
@@ -510,6 +531,7 @@ void sf_fileflush (sf_file file, sf_file src)
 }
 
 void sf_putint (sf_file file, const char* key, int par)
+/*< put an int parameter to a file >*/
 {
     char val[256];
 
@@ -518,6 +540,7 @@ void sf_putint (sf_file file, const char* key, int par)
 }
 
 void sf_putints (sf_file file, const char* key, const int* par, size_t n)
+/*< put an int array of size n parameter to a file >*/
 {
     int i;
     char val[1024], *v;
@@ -533,6 +556,7 @@ void sf_putints (sf_file file, const char* key, const int* par, size_t n)
 
 
 void sf_putfloat (sf_file file, const char* key,float par)
+/*< put a float parameter to a file >*/
 {
     char val[256];
 
@@ -541,6 +565,7 @@ void sf_putfloat (sf_file file, const char* key,float par)
 }
 
 void sf_putstring (sf_file file, const char* key,const char* par)
+/*< put a string parameter to a file >*/
 {
     char *val;
     
@@ -550,12 +575,15 @@ void sf_putstring (sf_file file, const char* key,const char* par)
 }
 
 void sf_putline (sf_file file, const char* line)
+/*< put a string line to a file >*/
 {
     if (0 >= fprintf(file->stream,"\t%s\n",line))
 	sf_error ("%s: cannot put line '%s':",__FILE__,line);
 }
 
-void sf_setaformat (const char* format, int line)
+void sf_setaformat (const char* format /* number format (.i.e "%5g") */, 
+		    int line /* numbers in line */ )
+/*< Set format for ascii output >*/
 {
     size_t len;
 
@@ -570,168 +598,8 @@ void sf_setaformat (const char* format, int line)
     aline = (size_t) line;
 }
 
-/*
-void sf_write (void* arr, size_t esize, size_t size, sf_file file)
-{
-    char* buf;
-    size_t i, left, nbuf;
-    bool_t success;
-    float complex c;
-
-    if (NULL != file->dataname) sf_fileflush (file,infile);
-    switch(file->form) {
-	case SF_ASCII:
-	    for (left = size; left > 0; left-=nbuf) {
-		nbuf = (aline < left)? aline: left;
-		switch(file->type) {
-		    case SF_INT:
-			for (i=size-left; i < size-left+nbuf; i++) {
-			    if (EOF==fprintf(file->stream,
-					     (NULL != aformat)? aformat:"%d ",
-					     ((int*)arr)[i]))
-				sf_error ("%s: trouble writing ascii",__FILE__);
-			}
-			break;
-		    case SF_FLOAT:
-			for (i=size-left; i < size-left+nbuf; i++) {
-			    if (EOF==fprintf(file->stream,
-					     (NULL != aformat)? aformat:"%g ",
-					     ((float*)arr)[i]))
-				sf_error ("%s: trouble writing ascii",__FILE__);
-			}
-			break;
-		    case SF_COMPLEX:
-			for (i=size-left; i < size-left+nbuf; i++) {
-			    c = ((float complex*)arr)[i];
-			    if (EOF==fprintf(file->stream,
-					     (NULL != aformat)? 
-					     aformat:"(%g,%g) ",
-					     crealf(c),cimagf(c)))
-				sf_error ("%s: trouble writing ascii",__FILE__);
-			}
-			break;
-		    default:
-			for (i=size-left; i < size-left+nbuf; i++) {
-			    if (EOF==fputc(((char*)arr)[i],file->stream))
-				sf_error ("%s: trouble writing ascii",__FILE__);
-			}
-			break;
-		}
-		if (EOF==fprintf(file->stream,"\n"))
-		    sf_error ("%s: trouble writing ascii",__FILE__);
-	    }
-	    break;
-	case SF_XDR:
-	    size *= esize;
-	    buf = (char*)arr+size;
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		switch(file->type) {
-		    case SF_INT:
-			success=xdr_vector(file->xdr,buf-left,
-				     nbuf/sizeof(int),sizeof(int),
-				     (xdrproc_t) xdr_int);
-			break;
-		    case SF_FLOAT:
-		    case SF_COMPLEX:
-			success=xdr_vector(file->xdr,buf-left,
-				nbuf/sizeof(float),sizeof(float),
-					(xdrproc_t) xdr_float);
-			break;
-		    default:
-			success=xdr_opaque(file->xdr,buf-left,nbuf);
-			break;
-		}       
-		if (0 == success) sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
-	    }
-	    break;
-	default:
-	    if (size != fwrite(arr,esize,size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
-	    break;
-    }
-}
-
-void sf_read (void* arr, size_t esize, size_t size, sf_file file)
-{
-    char* buf;
-    size_t i, left, nbuf, got;
-    bool_t success;
-    int c;
-    float re, im;
-
-    switch (file->form) {
-	case SF_ASCII:
-	    switch (file->type) {
-		case SF_INT:
-		    for (i = 0; i < size; i++) {
-			if (EOF==fscanf(file->stream,"%d",(int*)arr+i))
-			    sf_error ("%s: trouble reading ascii:",__FILE__);
-		    }
-		    break;
-		case SF_FLOAT:
-		    for (i = 0; i < size; i++) {
-			if (EOF==fscanf(file->stream,"%g",(float*)arr+i))
-			    sf_error ("%s: trouble reading ascii:",__FILE__);
-		    }
-		    break;
-		case SF_COMPLEX:
-		    for (i = 0; i < size; i++) {
-			if (EOF==fscanf(file->stream,"(%g,%g)",&re,&im))
-			    sf_error ("%s: trouble reading ascii:",__FILE__);
-			((float complex*)arr)[i]=re+I*im;
-		    }
-		    break;
-		default:
-		    for (i = 0; i < size; i++) {
-			c=fgetc(file->stream);
-			if (EOF==c)
-			    sf_error ("%s: trouble reading ascii:",__FILE__);
-			((char*)arr)[i]= (char) c;
-		    }
-		    break;
-	    }
-	    break;
-	case SF_XDR:
-	    size *= esize;
-	    buf = (char*)arr+size;
-	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		if (nbuf != fread(file->buf,1,nbuf,file->stream))
-		    sf_error ("%s: trouble reading:",__FILE__);
-		switch (file->type) {
-		    case SF_INT:
-			success=xdr_vector(file->xdr,buf-left,
-				     nbuf/sizeof(int),sizeof(int),
-				     (xdrproc_t) xdr_int);
-			break;
-		    case SF_FLOAT:
-		    case SF_COMPLEX:
-			success=xdr_vector(file->xdr,buf-left,
-				     nbuf/sizeof(float),sizeof(float),
-				     (xdrproc_t) xdr_float);
-			break;
-		    default:
-			success=xdr_opaque(file->xdr,buf-left,nbuf);
-			break;
-		}
-		if (0==success) sf_error ("%s: trouble reading xdr",__FILE__);
-	    }
-	    break;
-	default:
-	    got = fread(arr,esize,size,file->stream);
-	    if (got != size) 
-		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
-	    break;
-    }
-}
-*/
-
 void sf_complexwrite (float complex* arr, size_t size, sf_file file)
+/*< write a complex array arr[size] to file >*/
 {
     char* buf;
     size_t i, left, nbuf;
@@ -776,6 +644,7 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 }
 
 void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
+/*< read a complex array arr[size] from file >*/
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -812,6 +681,7 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
 }
 
 void sf_charwrite (char* arr, size_t size, sf_file file)
+/*< write a char array arr[size] to file >*/
 {
     char* buf;
     size_t i, left, nbuf;
@@ -849,6 +719,7 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 }
 
 void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
+/*< read a char array arr[size] fromfile >*/
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -883,6 +754,7 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 }
 
 void sf_intwrite (int* arr, size_t size, sf_file file)
+/*< write an int array arr[size] to file >*/
 {
     char* buf;
     size_t i, left, nbuf;
@@ -924,6 +796,7 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 }
 
 void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
+/*< read an int array arr[size] from file >*/
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -958,6 +831,7 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 }
 
 void sf_floatwrite (float* arr, size_t size, sf_file file)
+/*< write a float array arr[size] to file >*/
 {
     char* buf;
     size_t i, left, nbuf;
@@ -999,6 +873,7 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 }
 
 void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
+/*< read a float array arr[size] from file >*/
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -1033,6 +908,7 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 }
 
 long sf_bytes (sf_file file)
+/*< Count the file data size (in bytes) >*/
 {
     int st;
     long size;
@@ -1049,13 +925,15 @@ long sf_bytes (sf_file file)
     size = buf.st_size;
     return size;
 }
-    
+
 long sf_tell (sf_file file)
+/*< Find position in file >*/
 {
     return ftell(file->stream);
 }
 
-FILE *sf_tempfile(char** dataname)
+static FILE *sf_tempfile(char** dataname)
+/* Create a temporary file with a unique name */
 {
     FILE *tmp;
     char *path;
@@ -1072,12 +950,14 @@ FILE *sf_tempfile(char** dataname)
 }
 
 void sf_seek (sf_file file, long offset, int whence)
+/*< Seek to a position in file. Follows fseek convention. >*/
 {
     if (0 > fseek(file->stream,offset,whence))
 	sf_error ("%s: seek problem:",__FILE__);
 }
 
 void sf_unpipe (sf_file file, size_t size) 
+/*< Redirect a pipe input to a direct access file >*/
 {
     size_t nbuf, len;
     char *dataname=NULL;
@@ -1115,6 +995,7 @@ void sf_unpipe (sf_file file, size_t size)
 } 
 
 void sf_close(void)
+/*< Remove temporary file, created by sf_unpipe >*/
 {
     if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
     
