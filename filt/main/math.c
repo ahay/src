@@ -52,6 +52,7 @@ int main(int argc, char* argv[])
     fst  = sf_floatalloc2(nbuf,len+2);
     
     sf_fileflush(out,in[0]);
+    sf_setformat(out,sf_histstring(in[0],"data_format"));
 
     for (; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf = nsiz;

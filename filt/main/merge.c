@@ -7,12 +7,12 @@
 
 #include <rsf.h>
 
-static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim, 
-			  const int *n, /*@out@*/ int *naxis);
+static void check_compat (int esize, size_t nin, sf_file *in, int axis, 
+			  int dim, const int *n, /*@out@*/ int *naxis);
 
 int main (int argc, char* argv[])
 {
-    int i, axis, *naxis, n[SF_MAX_DIM], dim, n1, n2, i2, esize, nspace;
+    int i, axis, *naxis, n[SF_MAX_DIM], dim, dim1, n1, n2, i2, esize, nspace;
     size_t j, nin, ni, nbuf;
     sf_file *in, out;
     char* prog, key[3], buf[BUFSIZ];
@@ -52,8 +52,14 @@ int main (int argc, char* argv[])
 
     dim = sf_filedims(in[0],n);
     if (!sf_getint("axis",&axis)) axis=3;
-    if (axis > dim && axis <=0) 
-	sf_error("axis=%d is not in the range [1,%d]",axis,dim);
+    if (1 > axis) sf_error("axis=%d < 1",axis);
+
+    dim1 = dim;
+    if (axis > dim) {
+	while (dim < axis) {
+	    n[dim++] = 1;
+	}
+    }
 
     n1=1;
     n2=1;
@@ -69,13 +75,12 @@ int main (int argc, char* argv[])
     } else if (0>=esize) {
 	sf_error("wrong esize=%d",esize);
     }
-    check_compat(esize,nin,in,axis,dim,n,naxis);
+    check_compat(esize,nin,in,axis,dim1,n,naxis);
 
     /* figure out the length of extended axis */
     ni = 0;
     for (j=0; j < nin; j++) {
 	ni += naxis[j];
-	sf_setformat(in[j],"raw");
     }
 
     if (space) {
@@ -85,8 +90,13 @@ int main (int argc, char* argv[])
 
     (void) snprintf(key,3,"n%d",axis);
     sf_putint(out,key,(int) ni);
+    
+    sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
     sf_setformat(out,"raw");
+    for (j=0; j < nin; j++) {
+    	sf_setformat(in[j],"raw");
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
@@ -138,5 +148,6 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 		 (id != axis && fabsf(fi-f) > tol*fabsf(f))))
 		sf_warning("%s mismatch: need %g",key,f);
 	}
+	if (axis > dim) naxis[i]=1;
     }
 }

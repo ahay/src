@@ -87,8 +87,10 @@ int main (int argc, char* argv[])
     }
     check_compat(esize,nin,in,dim,n);
 
+    sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
-    type = sf_gettype (in[0]);
+
+    type = sf_gettype (out);
 
     for (nbuf /= esize; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
