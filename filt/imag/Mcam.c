@@ -55,9 +55,10 @@ int main (int argc, char *argv[])
     Fd = inv ? sf_output("out"): sf_input ( "in"); 
     Fs = sf_input ("slowness");
     
-    /*     data[nhx][nmx][nmy][nw] */
-    /*    image[nhx][nlx][nly][nz] */
-    /* slowness     [nlx][nly][nz] */
+    /*     data[nmx][nmy][nhx][nw] */
+    /*    image[nlx][nly][nhx][nz] */
+    /* slowness[nlx][nly]     [nz] */
+
     if (inv) { /* modeling */
 	if (SF_FLOAT != sf_gettype(Fi)) sf_error("Need float image");
 	sf_settype(Fd,SF_COMPLEX);
@@ -66,22 +67,23 @@ int main (int argc, char *argv[])
 	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 	if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
 
-	iaxa(Fi,&ahx,1);          oaxa(Fd,&ahx,1);
-	iaxa(Fi,&alx,2); amx=alx; oaxa(Fd,&amx,2);
-	iaxa(Fi,&aly,3); amy=aly; oaxa(Fd,&amy,3);
+	iaxa(Fi,&alx,1); amx=alx; oaxa(Fd,&amx,1);
+	iaxa(Fi,&aly,2); amy=aly; oaxa(Fd,&amy,2);
+	iaxa(Fi,&ahx,3);          oaxa(Fd,&ahx,3);
 	iaxa(Fi,&az ,4);          oaxa(Fd,&aw ,4);
 
     } else { /* migration */
 	if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 	sf_settype(Fi,SF_FLOAT);
 
-	iaxa(Fd,&ahx,1); oaxa(Fi,&ahx,1);
-	iaxa(Fd,&amx,2);
-	iaxa(Fd,&amy,3);
+	iaxa(Fd,&amx,1);
+	iaxa(Fd,&amy,2);
+	iaxa(Fd,&ahx,3); 
 	iaxa(Fd,&aw ,4);
 
-	iaxa(Fs,&alx,1); oaxa(Fi,&alx,2);
-	iaxa(Fs,&aly,2); oaxa(Fi,&aly,3);
+	iaxa(Fs,&alx,1); oaxa(Fi,&alx,1);
+	iaxa(Fs,&aly,2); oaxa(Fi,&aly,2);
+	;                oaxa(Fi,&ahx,3);
 	iaxa(Fs,&az ,3); oaxa(Fi,&az ,4);
     }
 
@@ -94,13 +96,14 @@ int main (int argc, char *argv[])
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    slow = slice_init(Fs,      alx.n,aly.n,az.n);
-    imag = slice_init(Fi,ahx.n,alx.n*aly.n,az.n);
-    data = slice_init(Fd,ahx.n,amx.n*amy.n,aw.n);
+    slow = slice_init(Fs,alx.n,aly.n,      az.n);
+    imag = slice_init(Fi,alx.n*aly.n,ahx.n,az.n);
+    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
 
     cam_init (verb,eps,dt,
 	      az,aw,ahx,amx,amy,alx,aly,
-	      ntx,nty,nth,nr,npad);
+	      ntx,nty,nth,nr,npad,
+	      slow);
     cam      (inv,data,imag,slow);
     cam_close();
     

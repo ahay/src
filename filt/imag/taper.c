@@ -34,8 +34,8 @@ void taper2(int ntx, int nty      /* taper lengths */,
 	gain = sinf(0.5*SF_PI*it/ntx);
 	gain *= gain;
 	for (iy=0; iy < ny; iy++) {
-	    if (begx) tt[it][iy] *= gain;
-	    tt[nx-it-1][iy] *= gain;
+	    if(begx) tt[   it  ][iy] *= gain;
+	    ;        tt[nx-it-1][iy] *= gain;
 	}
     }
 
@@ -43,8 +43,8 @@ void taper2(int ntx, int nty      /* taper lengths */,
 	gain = sinf(0.5*SF_PI*it/nty);
 	gain *= gain;
 	for (ix=0; ix < nx; ix++) {
-	    if (begy) tt[ix][it] *= gain;
-	    tt[ix][ny-it-1] *= gain;
+	    if(begy) tt[ix][   it  ] *= gain;
+	    ;        tt[ix][ny-it-1] *= gain;
 	}
     }
 }
