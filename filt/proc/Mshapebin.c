@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "int2.h"
-#include "interp.h"
 #include "laplac2.h"
 #include "gaussshape2.h"
 #include "triangle2.h"
@@ -143,11 +141,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    int2_init (xy, x0,y0,dx,dy,nx,ny, bin_int, 1, nd);
+	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    int2_init (xy, x0,y0,dx,dy,nx,ny, lin_int, 2, nd);
+	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
 	case 3:
@@ -232,10 +230,10 @@ int main (int argc, char* argv[])
 		    pp[im] = -pp[im];
 		}
 		shaping(false,false,nm,nm,pp,mm0);
-		int2_lop(false,true,nm,nd,mm0,dd);
+		sf_int2_lop(false,true,nm,nd,mm0,dd);
 	    }
 	    
-	    sf_conjgrad(NULL, int2_lop, shaping, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, sf_int2_lop, shaping, pp, mm, dd, niter);
 
 	    if (NULL != pin) {
 		for (im=0; im < nm; im++) {
@@ -243,7 +241,7 @@ int main (int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_solver_reg(int2_lop,sf_cgstep,laplac2_lop,
+	    sf_solver_reg(sf_int2_lop,sf_cgstep,laplac2_lop,
 			  nm,nm,nd,mm,dd,niter,eps,"end");
 	    sf_cgstep_close();
 	}

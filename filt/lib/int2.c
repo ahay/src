@@ -19,33 +19,29 @@
 
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
-
 #include "interp.h"
 /*^*/
 
 #include "int2.h"
+#include "alloc.h"
+#include "adjnull.h"
+#include "error.h"
+#include "_defs.h"
 
-#ifndef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
+#include "_bool.h"
+/*^*/
 
 static int nd, nf, m1, m2, **nxy;
 static bool *mask, allocated=false;
 static float **w1, **w2;
 
-void  int2_init (float** coord       /* coordinates [nd][2] */, 
-		 float o1, float o2, 
-		 float d1, float d2,
-		 int n1, int n2      /* axes */, 
-		 interpolator interp /* interpolation function */, 
-		 int nf_in           /* interpolator length */, 
-		 int nd_in           /* number of data points */)
+void  sf_int2_init (float** coord          /* coordinates [nd][2] */, 
+		    float o1, float o2, 
+		    float d1, float d2,
+		    int n1, int n2         /* axes */, 
+		    sf_interpolator interp /* interpolation function */, 
+		    int nf_in              /* interpolator length */, 
+		    int nd_in              /* number of data points */)
 /*< initialize >*/
 {
     int id, i1, i2; 
@@ -85,7 +81,7 @@ void  int2_init (float** coord       /* coordinates [nd][2] */,
     }
 }
 
-void  int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
+void  sf_int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 /*< linear operator >*/
 { 
     int id, i0, j0, i, j, im;
@@ -99,9 +95,9 @@ void  int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 	if (mask[id]) continue;
 	i0 = nxy[id][0]; 
 	j0 = nxy[id][1]; 
-	for (j = MAX(0,-j0); j < MIN(nf,m2-j0); j++) {
+	for (j = SF_MAX(0,-j0); j < SF_MIN(nf,m2-j0); j++) {
 	    w = w2[id][j];
-	    for (i = MAX(0,-i0); i < MIN(nf,m1-i0); i++) { 
+	    for (i = SF_MAX(0,-i0); i < SF_MIN(nf,m1-i0); i++) { 
 		im = (i+i0) + (j+j0)*m1;
 		if( adj) { 
 		    x[im] += ord[id] * w * w1[id][i];

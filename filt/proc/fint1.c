@@ -23,7 +23,6 @@
 #include "fint1.h"
 #include "extend.h"
 #include "spline.h"
-#include "interp_spline.h"
 #include "tridiagonal.h"
 
 #ifndef _fint1_h
@@ -148,9 +147,9 @@ float fint1_apply (fint1 fnt /* interpolation object */,
     int j, k;
 
     if (der) {
-	spline4_der (x,fnt->w);
+	sf_spline4_der (x,fnt->w);
     } else {
-	spline4_int (x,fnt->w);
+	sf_spline4_int (x,fnt->w);
     }
     
     f = 0.;
@@ -171,9 +170,9 @@ void vint1_apply (vint1 fnt /* interpolation object */,
     int j, k, n;
     
     if (der) {
-	spline4_der (x,fnt->w);
+	sf_spline4_der (x,fnt->w);
     } else {
-	spline4_int (x,fnt->w);
+	sf_spline4_int (x,fnt->w);
     }
     
     for (n=0; n < fnt->dim; n++) {

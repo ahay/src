@@ -16,10 +16,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
-
 #include "interp_spline.h"
+#include "error.h"
 
 static void spline8_int (float x, float* w);
 static void spline6_int (float x, float* w);
@@ -31,7 +29,7 @@ static void spline6_der (float x, float* w);
 static void spline3_der (float x, float* w);
 static void spline2_der (float x, float* w);
 
-void spline_int (float x, int n, float* w)
+void sf_spline_int (float x, int n, float* w)
 /*< interpolation function >*/
 {
     switch (n) {    
@@ -42,7 +40,7 @@ void spline_int (float x, int n, float* w)
 	    spline6_int (x, w); 
 	    break;
 	case 4: 
-	    spline4_int (x, w); 
+	    sf_spline4_int (x, w); 
 	    break;
 	case 3: 
 	    spline3_int (x, w); 
@@ -57,7 +55,7 @@ void spline_int (float x, int n, float* w)
     }
 }
 
-void spline_der (float x, int n, float* w)
+void sf_spline_der (float x, int n, float* w)
 /*< derivative computation >*/
 {
     switch (n) {    
@@ -68,7 +66,7 @@ void spline_der (float x, int n, float* w)
 	    spline6_der (x, w); 
 	    break;
 	case 4: 
-	    spline4_der (x, w); 
+	    sf_spline4_der (x, w); 
 	    break;
 	case 3: 
 	    spline3_der (x, w); 
@@ -112,7 +110,7 @@ static void spline3_der (float x, float* w)
     w[2] = x+0.5;
 }
 
-void spline4_int (float x, float* w)
+void sf_spline4_int (float x, float* w)
 /*< Cubic spline interpolation >*/
 {
     float x2;
@@ -124,7 +122,7 @@ void spline4_int (float x, float* w)
     w[3] = x2*x/6.;
 }
 
-void spline4_der (float x, float* w)
+void sf_spline4_der (float x, float* w)
 /*< Cubic spline derivative >*/
 {
     float x1;

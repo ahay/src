@@ -22,9 +22,6 @@
 
 #include <rsf.h>
 
-#include "int2.h"
-#include "interp.h"
-
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nm, nt, it, nx, ny, xkey, ykey, interp;
@@ -88,11 +85,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    int2_init (xy, x0,y0,dx,dy,nx,ny, bin_int, 1, nd);
+	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    int2_init (xy, x0,y0,dx,dy,nx,ny, lin_int, 2, nd);
+	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
 	case 3:
@@ -107,7 +104,7 @@ int main (int argc, char* argv[])
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_floatread (mm,nm,in);
 
-	int2_lop(false,false,nm,nd,mm,dd);
+	sf_int2_lop(false,false,nm,nd,mm,dd);
 
 	sf_floatwrite (dd,nd,out);
     }

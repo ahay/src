@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "int2.h"
-#include "interp_spline.h"
 #include "spline.h"
 
 int main (int argc, char* argv[])
@@ -113,8 +111,8 @@ int main (int argc, char* argv[])
 		}
 	    }
 
-	    int2_init (coord, t0, x0, dt, dx, nt, nx, spline_int, nw, nt);
-	    int2_lop (true,true,ntx,nt,img,ord);	    
+	    sf_int2_init (coord, t0,x0, dt,dx, nt,nx, sf_spline_int, nw, nt);
+	    sf_int2_lop (true,true,ntx,nt,img,ord);	    
 	}
 	
 	/* from spline coefficients to model */

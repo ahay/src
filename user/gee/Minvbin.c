@@ -22,7 +22,6 @@
 
 #include <rsf.h>
 
-#include "lint2.h"
 #include "polydiv.h"
 #include "regrid.h"
 
@@ -30,7 +29,7 @@ int main (int argc, char* argv[])
 {
     int id, nk, nd, nm, nt, it, nx, ny, n2, xkey, ykey, na, ia, niter;
     int n[2], m[2];
-    float *mm, *dd, *x, *y, *hdr;
+    float *mm, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, a0, eps;
     char *xk, *yk, *lagfile;
     filter aa;
@@ -45,8 +44,7 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     /* create coordinates */
-    x = sf_floatalloc(nd);
-    y = sf_floatalloc(nd);
+    xy = sf_floatalloc2(2,nd);
     head = sf_input("head");
 
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float header");
@@ -83,11 +81,11 @@ int main (int argc, char* argv[])
 	f = hdr[xkey]; 
 	if (f < xmin) xmin=f;
 	if (f > xmax) xmax=f;
-	x[id] = f;
+	xy[id][0] = f;
 	f = hdr[ykey]; 
 	if (f < ymin) ymin=f;
 	if (f > ymax) ymax=f;
-	y[id] = f;
+	xy[id][1] = f;
     }
 
     sf_fileclose (head);
@@ -140,7 +138,7 @@ int main (int argc, char* argv[])
     sf_putfloat (out,"d1",dx);
     sf_putfloat (out,"d2",dy);
 
-    lint2_init (nx,x0,dx, ny,y0,dy, x, y);
+    sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_lin_int, 2, nd);
 
     nm = nx*ny;
     mm = sf_floatalloc(nm);
@@ -194,7 +192,7 @@ int main (int argc, char* argv[])
 	sf_warning("%d of %d",it+1,nt);
 	
 	sf_floatread (dd,nd,in);
-	sf_solver_prec (lint2_lop, sf_cgstep, polydiv_lop,
+	sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
 			nm, nm, nd, mm, dd, niter, eps, "end");
 	sf_cgstep_close();
 	sf_floatwrite (mm,nm,out);

@@ -19,15 +19,15 @@
 
 #include "interp.h"
 
-#ifndef _interp_h
+#ifndef _sf_interp_h
 
-typedef void (*interpolator)(float,int,float*);
+typedef void (*sf_interpolator)(float,int,float*);
 /* generic interpolation interface */
 /*^*/
 
 #endif
 
-void bin_int (float x, int n, float* w) 
+void sf_bin_int (float x, int n, float* w) 
 /*< nearest neighbor >*/
 {
   int i;
@@ -38,7 +38,7 @@ void bin_int (float x, int n, float* w)
       w[i] = 0.;
 }
 
-void lin_int (float x, int n, float* w) 
+void sf_lin_int (float x, int n, float* w) 
 /*< linear >*/
 {
     int i;
@@ -53,7 +53,7 @@ void lin_int (float x, int n, float* w)
     }
 }
 
-void lg_int (float x, int n, float* w) 
+void sf_lg_int (float x, int n, float* w) 
 /*< Lagrangian >*/
 {
     int i, j, nc;

@@ -20,11 +20,8 @@
  
 #include <rsf.h>
 
-#include "int2.h"
-#include "interp.h"
 #include "interp_cube.h"
 #include "interp_sinc.h"
-#include "interp_spline.h"
 #include "prefilter.h"
 
 int main(int argc, char* argv[])
@@ -32,7 +29,7 @@ int main(int argc, char* argv[])
     int m[2], n, n3, nd1, nd2, nd, nw, i3, two;
     float *mm, **coord, *z, o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
     char *intp;
-    interpolator interp=NULL;
+    sf_interpolator interp=NULL;
     sf_file in, out, crd;
 
     sf_init (argc,argv);
@@ -82,7 +79,7 @@ int main(int argc, char* argv[])
     switch(intp[0]) {
 	case 'l':
 	    if (!strncmp("lag",intp,3)) { /* Lagrange */
-		interp = lg_int;
+		interp = sf_lg_int;
 	    } else if (!strncmp("lan",intp,3)) { /* Lanczos */
 		sinc_init('l', 0.);
 		interp = sinc_int;
@@ -92,7 +89,7 @@ int main(int argc, char* argv[])
 	    break;
 	case 'c':
 	    if (!strncmp("cub",intp,3)) { /* Cubic convolution */
-		interp = lg_int;
+		interp = sf_lg_int;
 	    } else if (!strncmp("cos",intp,3)) { /* Cosine */
 		sinc_init('c', 0.);
 		interp = sinc_int;
@@ -112,14 +109,14 @@ int main(int argc, char* argv[])
 	    break;
 	case 's':
 	    prefilter_init (nw, n, 3*n);
-	    interp = spline_int;
+	    interp = sf_spline_int;
 	    break;
 	default:
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
 
-    int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
+    sf_int2_init (coord, o1, o2, d1, d2, m[0], m[1], interp, nw, nd);
     
     z = sf_floatalloc(nd);
     mm = sf_floatalloc(n);
@@ -128,7 +125,7 @@ int main(int argc, char* argv[])
         sf_floatread (mm,n,in);
         if ('s' == intp[0]) prefilter(2,m,mm);
 	
-	int2_lop (false,false,n,nd,mm,z);
+	sf_int2_lop (false,false,n,nd,mm,z);
      
 	sf_floatwrite (z,nd,out);
     }

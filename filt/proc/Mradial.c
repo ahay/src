@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "int1.h"
-#include "interp_spline.h"
 #include "prefilter.h"
 
 int main(int argc, char* argv[])
@@ -121,13 +120,13 @@ int main(int argc, char* argv[])
 			r[ix] = (x0+ix*dx)/(t-tp);
 		    }
 
-		    int1_init (r, vmin, dv, nv, spline_int, nw, nx);
+		    int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
 		} else {
 		    for (iv=0; iv < nv; iv++) {
 			r[iv] = (vmin+iv*dv)*(t-tp);
 		    }
 
-		    int1_init (r, x0,   dx, nx, spline_int, nw, nv);
+		    int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
 		}
 
 		int1_lop (false,false,ntr,ntm,trace,modl);

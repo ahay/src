@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "int1.h"
-#include "interp_spline.h"
 #include "prefilter.h"
 #include "cosft.h"
 
@@ -83,7 +82,7 @@ int main(int argc, char* argv[])
 		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
 	    }
        
-	    int1_init (str, 0., dw, nw, spline_int, nf, nw);
+	    int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
 
 	    sf_floatread(trace,nt,in);
 	    for (iw = nt; iw < nw; iw++) { /* pad */

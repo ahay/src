@@ -24,7 +24,6 @@
 #include <rsf.h> 
 
 #include "int1.h"
-#include "interp_spline.h"
 #include "prefilter.h"
 #include "window1.h"
 
@@ -139,7 +138,7 @@ int main(int argc, char* argv[])
 	    coord[i1] = (o2+i1*d2)*g;
 	}
 
-	int1_init (coord, o1, d1, n1, spline_int, order, n2);
+	int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
 
 	for (i2=0; i2 < m2; i2++) {
 	    int1_lop (false,false,n1,n2,inp[i2],out);

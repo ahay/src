@@ -22,17 +22,8 @@
 #include <rsf.h>
 
 #include "stretch4.h"
-#include "interp_spline.h"
 #include "spline.h"
 #include "banded.h"
-
-#ifndef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 
 #ifndef _stretch4_h
 
@@ -116,10 +107,10 @@ void stretch4_define (map4 str, const float* coord)
 	str->m[id] = false; 
 	w = str->w[id];
 
-	spline4_int(rx,w);
+	sf_spline4_int(rx,w);
 	
-	i1 = MAX(0,-ix);
-	i2 = MIN(4,n1-ix);
+	i1 = SF_MAX(0,-ix);
+	i2 = SF_MIN(4,n1-ix);
 
 	for (i = i1; i < i2; i++) { 
 	    str->diag[ix+i] += w[i] * w[i];
@@ -167,8 +158,8 @@ void stretch4_apply (map4 str, const float* ord, float* mod)
 	it = str->x[id]; 
 	w = str->w[id]; 
 	
-	i1 = MAX(0,-it);
-	i2 = MIN(4,nt-it);
+	i1 = SF_MAX(0,-it);
+	i2 = SF_MIN(4,nt-it);
 
 	for (i=i1; i < i2; i++) {
 	    mm[it+i] += w[i]*ord[id];

@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "int1.h"
-#include "interp.h"
 #include "gauss.h"
 #include "monofshape.h"
 
@@ -88,11 +87,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    int1_init (offset, x0,dx,nx, bin_int, 1, nd);
+	    int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    int1_init (offset, x0,dx,nx, lin_int, 2, nd);
+	    int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
 	default:

@@ -22,18 +22,7 @@
 #include <rsf.h>
 /*^*/
 
-#include "interp.h"
-/*^*/
-
 #include "int1.h"
-
-#ifndef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
-#ifndef MIN
-#define MIN(x,y) ((x) < (y) ? (x) : (y))
-#endif
 
 static int nd, nf, m1, *nx;
 static bool *mask, allocated=false;
@@ -41,7 +30,7 @@ static float **w1;
 
 void  int1_init (float* coord               /* cooordinates [nd] */, 
 		 float o1, float d1, int n1 /* axis */, 
-		 interpolator interp        /* interpolation function */, 
+		 sf_interpolator interp     /* interpolation function */, 
 		 int nf_in                  /* interpolator length */, 
 		 int nd_in                  /* number of data points */)
 /*< initialize >*/
@@ -88,7 +77,7 @@ void  int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 	if (mask[id]) continue;
 	i0 = nx[id];
 
-	for (i = MAX(0,-i0); i < MIN(nf,m1-i0); i++) { 
+	for (i = SF_MAX(0,-i0); i < SF_MIN(nf,m1-i0); i++) { 
 	    im = i+i0;
 	    if( adj) { 
 		x[im] += ord[id] * w1[id][i];
