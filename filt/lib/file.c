@@ -334,9 +334,11 @@ char* sf_histstring (sf_file file, const char* key)
 
 void sf_fileflush (sf_file file, sf_file src)
 {
+#if 0
     int i, n;
     float f;
     char key[8], *val;
+#endif
     time_t tm;
     const char eol='\014', eot='\004';
 
@@ -349,6 +351,7 @@ void sf_fileflush (sf_file file, sf_file src)
 		     sf_gethost(),
 		     ctime(&tm)))
 	sf_error ("%s: cannot flush header:",__FILE__);
+
     switch (file->type) {
 	case SF_FLOAT: 
 	    switch (file->form) {
@@ -394,8 +397,10 @@ void sf_fileflush (sf_file file, sf_file src)
 			 (NULL==file->xdr)? "native_byte":"xdr_byte");
 	    break;
     }    
-    if (NULL != src && NULL != src->pars) {	
-	for (i=1; i <= SF_MAX_DIM; i++) {
+    if (NULL != src && NULL != src->pars)
+	sf_simtab_output(src->pars,file->stream);
+#if 0
+        for (i=1; i <= SF_MAX_DIM; i++) {
 	    snprintf(key,4,"n%d",i);
 	    if (!sf_simtab_getint(src->pars,key,&n)) break;
 	    if (0 >= fprintf(file->stream,"\t%s=%d\n",key,n))
@@ -413,7 +418,7 @@ void sf_fileflush (sf_file file, sf_file src)
 		0 >= fprintf(file->stream,"\t%s=\"%s\"\n",key,val))
 		sf_error ("%s: cannot flush %s:",__FILE__,key);
 	}
-    }
+#endif
     
     sf_simtab_output(file->pars,file->stream);
     

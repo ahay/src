@@ -387,31 +387,25 @@ void sf_simtab_input (sf_simtab table, FILE* fp) {
         for (cl = line; '\0' != (c=*cl); cl++) {
 	    switch (state) {
                 case START:
-		    if ('"' == c) {
-			state = STRING;
-		    } else if (!isspace(c)) {
+		    if (!isspace(c)) {
 			*cw++ = c;
-			state = INAWORD;
+			state = ('"' == c)? STRING:INAWORD;
 		    }
 		    break;
                 case INAWORD:
-		    if ('"' == c) {
-			state = STRING;
-		    } else if (isspace(c)) {
+		    if (isspace(c)) {
 			*cw = '\0';
 			sf_simtab_put (table,word);
 			cw = word;
 			state = START;
 		    } else {
 			*cw++ = c;
+			if ('"' == c) state = STRING;
 		    }
 		    break;
                 case STRING:
-		    if ('"' == c) {
-			state = INAWORD;
-		    } else {
-			*cw++ = c;
-		    }
+		    *cw++ = c;
+		    if ('"' == c) state = INAWORD;
 		    break;
 	    }
         }

@@ -4,6 +4,7 @@
 #include <stdio.h>
 
 #include "segy.h"
+#include "getpar.h"
 #include "c99.h"
 #include "error.h"
 
@@ -85,13 +86,13 @@ struct segy {
     char *name;
     unsigned int size;
 } segykey[] = {
-    {"tracl",  4},  /* trace sequence number within line */
-    {"tracr",  4},  /* trace sequence number within reel */
-    {"fldr",   4},  /* field record number */
-    {"tracf",  4},  /* trace number within field record */
-    {"ep",     4},  /* energy source point number */
-    {"cdp",    4},  /* CDP ensemble number */
-    {"cdpt",   4},  /* trace number within CDP ensemble */
+    {"tracl",  4},  /* trace sequence number within line 0 */
+    {"tracr",  4},  /* trace sequence number within reel 4 */
+    {"fldr",   4},  /* field record number 8 */
+    {"tracf",  4},  /* trace number within field record 12 */
+    {"ep",     4},  /* energy source point number 16 */
+    {"cdp",    4},  /* CDP ensemble number 20 */
+    {"cdpt",   4},  /* trace number within CDP ensemble 24 */
     {"trid",   2},  /* trace identification code:
                         1 = seismic data
                         2 = dead
@@ -101,38 +102,38 @@ struct segy {
                         6 = sweep
                         7 = timing
                         8 = water break
-                        9---, N = optional use (N = 32,767) */
+                        9---, N = optional use (N = 32,767) 28 */
     {"nvs",    2},  /* number of vertically summed traces (see
-		    vscode in bhed structure) */
+		    vscode in bhed structure) 30 */
     {"nhs",    2},  /* number of horizontally summed traces (see
-		    vscode in bhed structure) */
+		    vscode in bhed structure) 32 */
     {"duse",   2},  /* data use:
 		    1 = production
-		    2 = test */
+		    2 = test 34 */
     {"offset", 4},  /* distance from source point to receiver
 		    group (negative if opposite to direction
-		    in which the line was shot) */
+		    in which the line was shot) 36 */
     {"gelev",  4},  /* receiver group elevation from sea level
-		    (above sea level is positive) */
+		    (above sea level is positive) 40 */
     {"selev",  4},  /* source elevation from sea level
-		     (above sea level is positive) */
-    {"sdepth", 4},  /* source depth (positive) */
-    {"gdel",   4},  /* datum elevation at receiver group */
-    {"sdel",   4},  /* datum elevation at source */
-    {"swdep",  4},  /* water depth at source */
-    {"gwdep",  4},  /* water depth at receiver group */
+		     (above sea level is positive) 44 */
+    {"sdepth", 4},  /* source depth (positive) 48 */
+    {"gdel",   4},  /* datum elevation at receiver group 52 */
+    {"sdel",   4},  /* datum elevation at source 56 */
+    {"swdep",  4},  /* water depth at source 60 */
+    {"gwdep",  4},  /* water depth at receiver group 64 */
     {"scalel", 2},  /* scale factor for previous 7 entries
 		     with value plus or minus 10 to the
 		     power 0, 1, 2, 3, or 4 (if positive,
-		     multiply, if negative divide) */
+		     multiply, if negative divide) 68 */
     {"scalco", 2},  /* scale factor for next 4 entries
 		     with value plus or minus 10 to the
 		     power 0, 1, 2, 3, or 4 (if positive,
-		     multiply, if negative divide) */
-    {"sx",     4},  /* X source coordinate */
-    {"sy",     4},  /* Y source coordinate */
-    {"gx",     4},  /* X group coordinate */
-    {"gy",     4},  /* Y source coordinate */
+		     multiply, if negative divide) 70 */
+    {"sx",     4},  /* X source coordinate 72 */
+    {"sy",     4},  /* Y source coordinate 76 */
+    {"gx",     4},  /* X group coordinate 80 */
+    {"gy",     4},  /* Y source coordinate 84 */
     {"counit", 2},  /* coordinate units code:
 		     for previoius four entries
 		     1 = length (meters or feet)
@@ -140,82 +141,84 @@ struct segy {
 		     X values are unsigned intitude and the Y values
 		     are latitude, a positive value designates
 		     the number of seconds east of Greenwich
-		     or north of the equator */
-    {"wevel",   2},  /* weathering velocity */
-    {"swevel",  2},  /* subweathering velocity */
-    {"sut",     2},  /* uphole time at source */
-    {"gut",     2},  /* uphole time at receiver group */
-    {"sstat",   2},  /* source static correction */
-    {"gstat",   2},  /* group static correction */
-    {"tstat",   2},  /* total static applied */
+		     or north of the equator 88 */
+    {"wevel",   2},  /* weathering velocity 90 */
+    {"swevel",  2},  /* subweathering velocity 92 */
+    {"sut",     2},  /* uphole time at source 94 */
+    {"gut",     2},  /* uphole time at receiver group 96 */
+    {"sstat",   2},  /* source static correction 98 */
+    {"gstat",   2},  /* group static correction 100 */
+    {"tstat",   2},  /* total static applied 102 */
     {"laga",    2},  /* lag time A, time in ms between end of 240-
 		      byte trace identification header and time
 		      break, positive if time break occurs after
 		      end of header, time break is defined as
 		      the initiation pulse which maybe recorded
 		      on an auxiliary trace or as otherwise
-		      specified by the recording system */
+		      specified by the recording system 104 */
     {"lagb",    2},  /* lag time B, time in ms between the time
 		      break and the initiation time of the energy source,
-		      may be positive or negative */
+		      may be positive or negative 106 */
     {"delrt",   2},  /* delay recording time, time in ms between
 		      initiation time of energy source and time
 		      when recording of data samples begins
 		      (for deep water work if recording does not
-		      start at zero time) */
-    {"muts",    2},  /* mute time--start */
-    {"mute",    2},  /* mute time--end */
-    {"ns",      2},  /* number of samples in this trace */
-    {"dt",      2},  /* sample interval, in micro-seconds */
+		      start at zero time) 108 */
+    {"muts",    2},  /* mute time--start 110 */
+    {"mute",    2},  /* mute time--end 112 */
+    {"ns",      2},  /* number of samples in this trace 114 */
+    {"dt",      2},  /* sample interval, in micro-seconds 116 */
     {"gain",    2},  /* gain type of field instruments code:
 		      1 = fixed
 		      2 = binary
 		      3 = floating point
-		      4 ---- N = optional use */
-    {"igc",    2},   /* instrument gain constant */
-    {"igi",    2},   /* instrument early or initial gain */
+		      4 ---- N = optional use 118 */
+    {"igc",    2},   /* instrument gain constant 120 */
+    {"igi",    2},   /* instrument early or initial gain 122 */
     {"corr",   2},   /* correlated:
 		      1 = no
-		      2 = yes */    
-    {"sfs",    2},   /* sweep frequency at start */
-    {"sfe",    2},   /* sweep frequency at end */
-    {"slen",   2},   /* sweep length in ms */
+		      2 = yes 124 */    
+    {"sfs",    2},   /* sweep frequency at start 126 */
+    {"sfe",    2},   /* sweep frequency at end 128 */
+    {"slen",   2},   /* sweep length in ms 130 */
     {"styp",   2},   /* sweep type code:
 		      1 = linear
 		      2 = cos-squared
-		      3 = other */   
-    {"stas",   2},   /* sweep trace length at start in ms */
-    {"stae",   2},   /* sweep trace length at end in ms */
-    {"tatyp",  2},   /* taper type: 1=linear, 2=cos^2, 3=other */
-    {"afilf",  2},   /* alias filter frequency if used */
-    {"afils",  2},   /* alias filter slope */
-    {"nofilf", 2},   /* notch filter frequency if used */
-    {"nofils", 2},   /* notch filter slope */
-    {"lcf",    2},   /* low cut frequency if used */
-    {"hcf",    2},   /* high cut frequncy if used */
-    {"lcs",    2},   /* low cut slope */
-    {"hcs",    2},   /* high cut slope */
-    {"year",   2},   /* year data recorded */
-    {"day",    2},   /* day of year */
-    {"hour",   2},   /* hour of day (24 hour clock) */
-    {"minute", 2},   /* minute of hour */
-    {"sec",    2},   /* second of minute */
+		      3 = other 132 */   
+    {"stas",   2},   /* sweep trace length at start in ms 134 */
+    {"stae",   2},   /* sweep trace length at end in ms 136 */
+    {"tatyp",  2},   /* taper type: 1=linear, 2=cos^2, 3=other 138 */
+    {"afilf",  2},   /* alias filter frequency if used 140 */
+    {"afils",  2},   /* alias filter slope 142 */
+    {"nofilf", 2},   /* notch filter frequency if used 144 */
+    {"nofils", 2},   /* notch filter slope 146 */
+    {"lcf",    2},   /* low cut frequency if used 148 */
+    {"hcf",    2},   /* high cut frequncy if used 150 */
+    {"lcs",    2},   /* low cut slope 152 */
+    {"hcs",    2},   /* high cut slope 154 */
+    {"year",   2},   /* year data recorded 156 */
+    {"day",    2},   /* day of year 158 */
+    {"hour",   2},   /* hour of day (24 hour clock) 160 */
+    {"minute", 2},   /* minute of hour 162 */
+    {"sec",    2},   /* second of minute 164 */
     {"timbas", 2},   /* time basis code:
 		      1 = local
 		      2 = GMT
-		      3 = other */   
+		      3 = other 166 */   
     {"trwf",   2},   /* trace weighting factor, defined as 1/2^N
-		      volts for the least sigificant bit */
+		      volts for the least sigificant bit 168 */
     {"grnors", 2},   /* geophone group number of roll switch
-		      position one */
+		      position one 170 */
     {"grnofr", 2},   /* geophone group number of trace one within
-		      original field record */
+		      original field record 172 */
     {"grnlof", 2},   /* geophone group number of last trace within
-		      original field record */
-    {"gaps",   2},   /* gap size (total number of groups dropped) */
+		      original field record 174 */
+    {"gaps",   2},   /* gap size (total number of groups dropped) 176 */
     {"otrav",  2},   /* overtravel taper code:
 		      1 = down (or behind)
-		      2 = up (or ahead) */
+		      2 = up (or ahead) 71/178 */
+    /* 72/180 73/184 74/188 75/192 76/196 77/200 78/204 79/208 
+       80/212 81/216 82/220 83/224 84/228 85/232 86/236 */
 };
 
 /* Big-endian to Little-endian conversion and back */
@@ -481,20 +484,25 @@ void sf_trace2segy(char* buf, const float* trace, int ns, int format)
 
 void sf_segy2head(const char* buf, int* trace, int nk)
 {
-    int i;
+    int i, byte;
+    const char *buf0, *bufi;
 
+    buf0 = buf;
     for (i=0; i < nk; i++) {
+	/* allow to remap header keys */
+	bufi = sf_getint(segykey[i].name,&byte)? buf0+byte:buf;
+
 	switch (segykey[i].size) {
 	    case 2:
-		trace[i] = convert2(buf);
+		trace[i] = convert2(bufi);
 		buf += 2;
 		break;
 	    case 4:
-		trace[i] = convert4(buf);
+		trace[i] = convert4(bufi);
 		buf += 4;
 		break;
 	    default:
-		sf_error("Unknown key size");
+		sf_error("Unknown size %d",segykey[i].size);
 		break;
 	}
     }
@@ -519,18 +527,12 @@ void sf_head2segy(char* buf, const int* trace, int nk)
     int i;
 
     for (i=0; i < nk; i++) {
-	switch (segykey[i].size) {
-	    case 2:
-		insert2(trace[i],buf);
-		buf += 2;
-		break;
-	    case 4:
-		insert4(trace[i],buf);
-		buf += 4;
-		break;
-	    default:
-		sf_error("Unknown key size");
-		break;
+	if (i < SF_NKEYS && 2 == segykey[i].size) {
+	    insert2(trace[i],buf);
+	    buf += 2;
+	} else {
+	    insert4(trace[i],buf);
+	    buf += 4;
 	}
     }
 }

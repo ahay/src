@@ -66,10 +66,18 @@ void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst)
 		}
 		break;
 	    case POW:
-		sf_pop(st2);
+		op = (char*) sf_pop(st2);
 		num = *fst;
 		farr = *(--fst);
-		for (i=0; i < nbuf; i++) { farr[i] = powf(farr[i],num[i]); }
+		if ('^' == *op) {
+		    for (i=0; i < nbuf; i++) { 
+			farr[i] = powf(farr[i],num[i]);
+		    }
+		} else {
+		    for (i=0; i < nbuf; i++) { 
+			farr[i] = atan2f(farr[i],num[i]);
+		    }
+		}
 		break;
 	    case MULDIV:
 		op = (char*) sf_pop(st2);
@@ -215,6 +223,7 @@ int sf_math_parse (char* output, sf_file out)
 		type = MULDIV;
 		break;
 	    case '^':
+	    case '&':
 		type = POW;
 		break;
 	    default:
