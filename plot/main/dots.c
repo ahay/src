@@ -19,7 +19,7 @@ static void circle(int corners,
 
 int main (int argc, char* argv[])
 {
-    int i, i1,n1, i2,n2, ir, labelsz, connected, corners, dots, newsize;
+    int i, i1,n1, i2,n2, ir, labelsz, connect, corners, dots, newsize;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
     float epsilon, dd1, dd2, axis, hi, lo, av, maxab, range;
     float marginl, marginr, margint, marginb, x, y, radius;
@@ -35,8 +35,24 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if(!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if(!sf_histint(in,"n2",&n2)) n2=1; 
-    if(!sf_histfloat(in,"o1",&o1)) o1=0.;
-    if(!sf_histfloat(in,"d1",&d1)) d1=1.;
+    if(!sf_getfloat("o1",&o1) && !sf_histfloat(in,"o1",&o1)) o1=0.;
+    if(!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
+
+    if (NULL == (label1 = sf_getstring("label1"))) 
+	label1 = sf_histstring(in,"label1");
+    if (label1 != NULL &&
+	(*label1 == '\0' || (*label1 == ' ' && *(label1+1) == '\0'))) {
+	free (label1);
+	label1 = NULL;
+    }
+ 
+    if (NULL == (title = sf_getstring("title")))
+	title = sf_histstring(in,"title");
+    if (title != NULL &&
+	(*title == '\0' || (*title == ' ' && *(title+1) == '\0'))) {
+	free (title);
+	title = NULL;
+    }
 
     data = sf_floatalloc2 (n1,n2);
     sf_read(data[0],sizeof(float),n1*n2,in);
@@ -45,7 +61,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("dots",&dots)) dots = (n1 <= 130)? 1: 0;
     if (!sf_getbool("seemean",&seemean)) seemean = (n2 <= 30);
     if (!sf_getbool("strings",&strings)) strings = (n1 <= 400);
-    if (!sf_getint("connected",&connected)) connected = 1; 
+    if (!sf_getint("connect",&connect)) connect = 1; 
     if (!sf_getint("corners",&corners)) {
 	corners=7;
     } else {
@@ -66,8 +82,6 @@ int main (int argc, char* argv[])
     labels = (char**) sf_alloc(n2,sizeof(char*));
     if (!sf_getstrings("labels",labels,n2)) labels[0] = NULL;
 
-    label1 = sf_getstring("label1");
-    title = sf_getstring("title");
     if (!sf_getfloat("xxscale",&xxscale)) xxscale=1.;
     if (!sf_getfloat("yyscale",&yyscale)) yyscale=1.;
     if (!sf_getfloat("clip",&clip)) clip=-1.; 
@@ -77,7 +91,7 @@ int main (int argc, char* argv[])
     screenhigh = VP_STANDARD_HEIGHT  * yyscale;  
     epsilon = .0002 * screenhigh;
 
-    marginl = screenwide * ((NULL == labels)? 0.03: 0.15);
+    marginl = screenwide * ((NULL == labels[0])? 0.03: 0.15);
     margint = screenhigh * ((NULL == title)? 0.03: 0.07);
     marginb = screenhigh * ((NULL == label1)? 0.03: 0.15);
     marginr = screenwide * 0.03;
@@ -173,11 +187,11 @@ int main (int argc, char* argv[])
 		draw(-marginr+screenwide, zerosignal);
 	    }
 
-	    if (connected) {
+	    if (connect) {
 		vp_color(7);
 		for(i1=0; i1<n1; i1++) {
 		    y = axis +  tracehigh * (data[i2][i1]-av)*range;
-		    switch (connected) {
+		    switch (connect) {
 			case 4: /* no segment */
 			    x = marginl + dd1/2 + i1*dd1;
 			    if (i1 == 0) {
@@ -236,7 +250,7 @@ int main (int argc, char* argv[])
     if(NULL != label1) 
 	vp_simpleaxis(marginl, marginb*0.8,  
 		      screenwide-marginr, marginb*0.8,
-		      o1, o1+(n1-1)*d1, d1, 0., .25, label1, .66*labelsz);
+		      o1, o1+(n1-1)*d1, 0., .25, label1, .66*labelsz);
 
     if(NULL != title) {
 	newsize = 1.2*labelsz;
