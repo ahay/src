@@ -11,14 +11,14 @@ Takes: < input.rsf head=header.rsf > binned.rsf
 #include "int2.h"
 #include "interp.h"
 #include "laplac2.h"
-/* #include "gauss2.h" */
+#include "gaussshape2.h"
 #include "triangle2.h"
 
 int main (int argc, char* argv[])
 {
-    bool gauss;
+    bool gauss, shape;
     int id, nk, nd, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter;
-    float *pp, *mm, *dd, **xy, *hdr, filt1, filt2;
+    float *pp, *mm, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
     char *xk, *yk;
     sf_file in, out, head;
@@ -147,10 +147,12 @@ int main (int argc, char* argv[])
     /* number of iterations */
     if (!sf_getfloat("eps",&eps)) eps=1./nd;
     /* regularization parameter */
-    if (!sf_getbool("gauss",&gauss)) gauss=true;
-    /* if y, use gaussian shaping */
+    if (!sf_getbool("gauss",&gauss)) gauss=false;
+    /* if y, use gaussian shaping (estimated from the data) */
+    if (!sf_getbool("shape",&shape)) shape=true;
+    /* if y, use shaping regularization */
 
-    if (gauss) {
+    if (shape) {
 	if (!sf_getfloat("filt1",&filt1)) filt1=3.;
 	if (!sf_getfloat("filt2",&filt2)) filt2=filt1;
 	/* smoothing length for shaping */
@@ -158,8 +160,16 @@ int main (int argc, char* argv[])
 	if (filt1 < 1. || filt2 < 1.) 
 	    sf_error("wrong filt1=%g or filt2=%g",filt1,filt2);
 
-	/* gauss2_init(nx,ny,filt1,filt2); */
-	triangle2_init((int) filt1, (int) filt2, nx, ny);
+	if (gauss) {
+	    a[0] = sqrtf((filt1*filt1-1.)/12.);
+	    a[2] = sqrtf((filt2*filt2-1.)/12.);
+	    a[1] = 0.;
+
+	    gaussshape2_init(nx,ny);
+	} else {
+	    triangle2_init((int) filt1, (int) filt2, nx, ny);
+	}
+
 	pp = sf_floatalloc(nm);
     } else {
 	laplac2_init(nx,ny);
@@ -171,9 +181,19 @@ int main (int argc, char* argv[])
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
 
-	if (gauss) {
-	  /*	    sf_conjgrad(int2_lop, gauss2_lop, pp, mm, dd, niter); */
-	  sf_conjgrad(int2_lop, triangle2_lop, pp, mm, dd, niter);
+	if (shape) {
+	    if (gauss) {
+		/* bin */
+		int2_lop (true,false,nm,nd,mm,dd);
+
+		/* estimate shaper */
+		gaussshape2_set(a, nx, ny, mm, 100);
+
+		/* inverse interpolation */
+		sf_conjgrad(int2_lop, gaussshape2_lop, pp, mm, dd, niter);
+	    } else {
+		sf_conjgrad(int2_lop, triangle2_lop, pp, mm, dd, niter);
+	    }
 	} else {
 	    sf_solver_reg(int2_lop,sf_cgstep,laplac2_lop,
 			  nm,nm,nd,mm,dd,niter,eps,"end");
@@ -186,4 +206,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.1 2004/02/24 16:13:58 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.2 2004/02/25 16:15:10 fomels Exp $	 */

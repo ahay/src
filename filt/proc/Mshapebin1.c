@@ -11,11 +11,12 @@ Takes: < irregular.rsf head=header.rsf > regular.rsf
 #include "int1.h"
 #include "interp.h"
 #include "gauss.h"
+#include "triangle1.h"
 #include "monofshape.h"
 
 int main (int argc, char* argv[])
 {
-    bool pef;
+    bool pef, gauss;
     int id, nd, nt, it, nx, interp, niter;
     float *pp, *mm, *dd, *offset, x0, dx, xmin, xmax, f, filt, eps;
     sf_file in, out, head;
@@ -100,8 +101,14 @@ int main (int argc, char* argv[])
     /* regularization parameter */
     if (!sf_getbool("pef",&pef)) pef=false;
     /* if y, use monofrequency regularization */
+    if (!sf_getbool("gauss",&gauss)) gauss=false;
+    /* if y, use Gaussian shaping */
 
-    gauss_init (nx, filt);
+    if (gauss) {
+	gauss_init (nx, filt);
+    } else {
+	triangle1_init ((int) filt, nx);
+    }
     sf_conjgrad_init(nx, nx, nd, eps, 1.e-9, true, false);
 
     if (pef) monofshape_init(nx);
@@ -109,7 +116,11 @@ int main (int argc, char* argv[])
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
 
-	sf_conjgrad(int1_lop, gauss_lop, pp, mm, dd, niter);
+	if (gauss) {
+	    sf_conjgrad(int1_lop, gauss_lop, pp, mm, dd, niter);
+	} else {
+	    sf_conjgrad(int1_lop, triangle1_lop, pp, mm, dd, niter);
+	}
 
 	if (pef) {
 	    monofshape_set(0.1,nx,mm,100);
@@ -122,4 +133,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.1 2004/02/14 07:01:42 fomels Exp $	 */
+/* 	$Id: Mshapebin1.c,v 1.2 2004/02/25 16:15:10 fomels Exp $	 */
