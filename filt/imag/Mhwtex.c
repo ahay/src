@@ -27,9 +27,7 @@ int main (int argc, char *argv[])
     axa az,ax,at,ag;
     int       it,ig;
     
-    float xsou,zsou;
-
-    sf_file Fv,Fw;
+    sf_file Fv,Fs,Fw;
 
     float **vv; /* velocity       */
     pt2d   *wm; /* wavefront it-1 */
@@ -52,20 +50,20 @@ int main (int argc, char *argv[])
 
     vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
 
-    /* source location */
-    if(! sf_getfloat("zsou",&zsou)) zsou=az.o + az.n*az.d/2;
-    if(! sf_getfloat("xsou",&xsou)) xsou=ax.o + ax.n*ax.d/2;
-    if(verb) fprintf(stderr,"xsou=%f zsou=%f\n",xsou,zsou);    
+    /* source location = initial wavefront file*/
+    Fs = sf_input ("sou");
+    iaxa(Fs,&ag,1); if(verb) raxa(ag);
+
 
     /* time axis */
     if(! sf_getint  ("nt",&at.n)) at.n=100;
     if(! sf_getfloat("ot",&at.o)) at.o=0;
     if(! sf_getfloat("dt",&at.d)) at.d=0.001;
 
-    /* shooting angle axis */
-    if(! sf_getint  ("ng",&ag.n)) ag.n= 360;
-    if(! sf_getfloat("og",&ag.o)) ag.o=-180;
-    if(! sf_getfloat("dg",&ag.d)) ag.d= 1;
+
+
+
+
 
 /*------------------------------------------------------------*/
 
@@ -98,30 +96,43 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
 
-    /* construct first wavefront (it=0) */
+    /* read initial wavefront (it=0) */
     it=0;
-
+    readpt2d (Fs,wm,ag.n,2);
     for( ig=0; ig<ag.n; ig++) {
-	wm[ig].x=xsou;
-	wm[ig].z=zsou;
-	wm[ig].v=hwtgetv(wm[ig]);
+	Po = wm[ig];
+	Po.v=hwtgetv(Po);
+	wm[ig] = Po;
     }
     writept2d(Fw,wm,ag.n,2);
 
 /*------------------------------------------------------------*/
 
-    /* construct second wavefront (it=1) */
+    /* compute second wavefront (it=1) by orthogonal rays */
     it=1;
-    for( ig=0; ig<ag.n; ig++) {
-	double d,g;
 
-	d = at.d * hwtgetv(wm[ig]);
-	g = (ag.o+ig*ag.d) * SF_PI/180;
+    Po=wm[0]; 
+    Pp=wm[2]; 
+    Ro=hwtorth(Po,Po,Pp);
+    wo[0] = Ro;
 
-	wo[ig].x=xsou + d*sin(g);
-	wo[ig].z=zsou + d*cos(g);
-	wo[ig].v=hwtgetv(wo[ig]);
+    for( ig=1; ig<ag.n-1; ig++) {
+
+	Pm = wm[ig-1];
+	Po = wm[ig  ];
+	Pp = wm[ig+1];
+	
+	/* orthogonal rays */
+	Ro = hwtorth(Pm,Po,Pp);
+
+	wo[ig] = Ro;
     }
+
+    Pm=wm[ag.n-3]; 
+    Po=wm[ag.n-1]; 
+    Ro=hwtorth(Pm,Po,Po);
+    wo[ag.n-1] = Ro;
+
     writept2d(Fw,wo,ag.n,2); /* write wavefront it=1 */
 
 /*------------------------------------------------------------*/
@@ -133,8 +144,7 @@ int main (int argc, char *argv[])
 	    /* boundary */
 	    ig=0;      wp[ig] = raytr(wm[ig],wo[ig]);
 
-	    for (ig=1; ig<ag.n-1; ig++) {
-		
+	    for (ig=1; ig<ag.n-1; ig++) {		
 		Pm = wo[ig-1];
 		Po = wo[ig  ];  Qo = wm[ig];
 		Pp = wo[ig+1];
