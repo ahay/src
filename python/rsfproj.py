@@ -15,7 +15,13 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types
-import re, string, urllib, ftplib, filecmp
+import re, string, urllib, ftplib
+
+try:
+    import filecmp
+except:
+    import cmp
+
 import rsfdoc
 import rsfprog
 import rsfconf
@@ -83,8 +89,12 @@ def test(target=None,source=None,env=None):
     src = str(source[0])
     locked = re.sub('\/([^\/]+)$','/.\\1',src)
     if os.path.isfile(locked):
-        if not filecmp.cmp(locked,src,shallow=0):
-            return 1
+        try:
+            if not filecmp.cmp(locked,src,shallow=0):
+                return 1
+        except:
+            if not cmp.cmp(locked,src):
+                return 1
     else:
         print 'No locked file "%s" ' % locked
     return 0

@@ -74,9 +74,9 @@ float wilson_factor(int niter /* number of iterations */,
 	polydiv_lop(true,false, n2, n2, cc,   bb);   /* cc = S/(AA') */
 	eps = 0.;
 	for(i=1; i < n; i++) {      
-	    /* b = plusside(1+cc) */
-	    b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
-	    if (fabs(b[i]) > eps) eps = fabs(b[i]);
+	  /* b = plusside(1+cc) */
+	  b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
+	  if (fabs(b[i]) > eps) eps = fabs(b[i]);
 	}
 	if (verb) sf_warning("wilson %d %f",iter,eps);
 	if (eps < tol) break;
