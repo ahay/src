@@ -49,8 +49,9 @@ if 'fortran' in api:
 # Fortran-90 API
 ############################################################################
 
-if 'fortran-90' in api:
-    proj.Program('clip.f90',PROGSUFFIX='f90.exe',LIBS=['rsff90','rsf','m'],
+if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
+    proj.Program('clip.f90',OBJSUFFIX='f90.o',LIBS=['rsff90','rsf','m'],
+                 F90PATH=[incdir],
                  LINK=proj.get('F90'),LINKFLAGS=proj.get('F90FLAGS'))
     f90test = proj.Flow('f90','clipf90.exe',test % 'clipf90',
                         suffix='.attr',stdin=0)

@@ -65,10 +65,15 @@ for dir in map(lambda x: os.path.join('filt',x), dirs):
 
 if env.has_key('F90'):
     modsuffix = env.get('F90MODSUFFIX')
+    F90 = os.path.basename(env.get('F90'))
     if modsuffix:
-        env.Install(incdir,'RSF'+modsuffix)
-        Clean(build,'RSF'+modsuffix)
-    elif re.search(r'ifc$',env.get('F90')): # old Intel compiler quirks
+        if 'ifort'==F90:
+            mod = 'rsf'+modsuffix
+        else:
+            mod = 'RSF'+modsuffix
+        env.Install(incdir,mod)
+        Clean(build,mod)
+    elif 'ifc' == F90: # old Intel compiler quirks
         env.InstallAs(os.path.join(incdir,'rsf.pc'),'work.pc')
         env.Install(incdir,'rsf.d')
         Clean(build,['rsf.d','work.pc'])

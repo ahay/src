@@ -730,4 +730,4 @@ contains
   end subroutine rsf_write_complex_5d
 end module RSF
 
-!	$Id$	
+!	$Id: rsf.f90 757 2004-08-25 17:21:39Z fomels $	
