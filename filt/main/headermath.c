@@ -35,12 +35,19 @@ int main(int argc, char* argv[])
 	free(key);
     }
 
-    if (!sf_histint(in,"n1",&n1)) n1=1;
-    if (!sf_histint(in,"n2",&n2)) n2=1;
     if (SF_FLOAT != sf_gettype (in)) sf_error("Need float input");
 
-    sf_putint(out,"n1",1);
-
+    if (!sf_histint(in,"n1",&n1)) n1=1;
+    if (!sf_histint(in,"n2",&n2)) n2=1;
+    if (n1 > 1) {
+	if (n2 > 1) {
+	    sf_putint(out,"n1",1);
+	} else {
+	    n2 = n1;
+	    n1 = 1;
+	}
+    }
+    
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
 
     len = sf_math_parse (output,out);
