@@ -207,6 +207,11 @@ void sf_settype (sf_file file, sf_datatype type)
     file->type = type;
 }
 
+void sf_setform (sf_file file, sf_dataform form)
+{
+    file->form = form;
+}
+
 void sf_setformat (sf_file file, const char* format)
 {
     if (NULL != strstr(format,"float")) {
@@ -543,6 +548,7 @@ void sf_setaformat (const char* format, int line)
     aline = (size_t) line;
 }
 
+/*
 void sf_write (void* arr, size_t esize, size_t size, sf_file file)
 {
     char* buf;
@@ -627,7 +633,7 @@ void sf_write (void* arr, size_t esize, size_t size, sf_file file)
     }
 }
 
-void sf_read (/*@out@*/ void* arr, size_t esize, size_t size, sf_file file)
+void sf_read (void* arr, size_t esize, size_t size, sf_file file)
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -696,6 +702,307 @@ void sf_read (/*@out@*/ void* arr, size_t esize, size_t size, sf_file file)
 	    break;
 	default:
 	    got = fread(arr,esize,size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+*/
+
+void sf_complexwrite (float complex* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf;
+    float complex c;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    c = arr[i];
+		    if (EOF==fprintf(file->stream,
+				     (NULL != aformat)? 
+				     aformat:"(%g,%g) ",
+				     crealf(c),cimagf(c)))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(float complex);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(float),sizeof(float),
+				(xdrproc_t) xdr_float))
+		    sf_error ("sf_file: trouble writing xdr");
+		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
+		    sf_error ("%s: trouble writing:",__FILE__);
+	    }
+	    break;
+	default:
+	    if (size != fwrite(arr,sizeof(float complex),size,file->stream)) 
+		sf_error ("%s: trouble writing:",__FILE__);
+	    break;
+    }
+}
+
+void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf, got;
+    float re, im;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		if (EOF==fscanf(file->stream,"(%g,%g)",&re,&im))
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+		arr[i]=re+I*im;
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(float complex);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(float),sizeof(float),
+				(xdrproc_t) xdr_float))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(float complex),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_charwrite (char* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    if (EOF==fputc(arr[i],file->stream))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    buf = arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (!xdr_opaque(file->xdr,buf-left,nbuf))
+		    sf_error ("sf_file: trouble writing xdr");
+		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
+		    sf_error ("%s: trouble writing:",__FILE__);
+	    }
+	    break;
+	default:
+	    if (size != fwrite(arr,sizeof(char),size,file->stream)) 
+		sf_error ("%s: trouble writing:",__FILE__);
+	    break;
+    }
+}
+
+void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf, got;
+    int c;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		c=fgetc(file->stream);
+		if (EOF==c)
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+		arr[i]= (char) c;
+	    }
+	    break;
+	case SF_XDR:
+	    buf = arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_opaque(file->xdr,buf-left,nbuf))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(char),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_intwrite (int* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    if (EOF==fprintf(file->stream,
+				     (NULL != aformat)? aformat:"%d ",
+				     arr[i]))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(int);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(int),sizeof(int),
+				(xdrproc_t) xdr_int))
+		    sf_error ("sf_file: trouble writing xdr");
+		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
+		    sf_error ("%s: trouble writing:",__FILE__);
+	    }
+	    break;
+	default:
+	    if (size != fwrite(arr,sizeof(int),size,file->stream)) 
+		sf_error ("%s: trouble writing:",__FILE__);
+	    break;
+    }
+}
+
+void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf, got;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		if (EOF==fscanf(file->stream,"%d",arr+i))
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(int);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(int),sizeof(int),
+				(xdrproc_t) xdr_int))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(int),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_floatwrite (float* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    if (EOF==fprintf(file->stream,
+				     (NULL != aformat)? aformat:"%g ",
+				     arr[i]))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(float);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(float),sizeof(float),
+				(xdrproc_t) xdr_float))
+		    sf_error ("sf_file: trouble writing xdr");
+		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
+		    sf_error ("%s: trouble writing:",__FILE__);
+	    }
+	    break;
+	default:
+	    if (size != fwrite(arr,sizeof(float),size,file->stream)) 
+		sf_error ("%s: trouble writing:",__FILE__);
+	    break;
+    }
+}
+
+void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
+{
+    char* buf;
+    size_t i, left, nbuf, got;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		if (EOF==fscanf(file->stream,"%g",arr+i))
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    size *= sizeof(float);
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(file->xdr,0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(file->xdr,buf-left,
+				nbuf/sizeof(float),sizeof(float),
+				(xdrproc_t) xdr_float))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(float),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
 	    break;
@@ -815,4 +1122,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.17 2004/03/30 08:00:27 fomels Exp $	 */
+/* 	$Id: file.c,v 1.18 2004/04/19 21:51:26 fomels Exp $	 */

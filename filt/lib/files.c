@@ -63,8 +63,8 @@ void sf_cp(sf_file in, sf_file out)
 
     for (nbuf = BUFSIZ; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
-	sf_read (buf,1,nbuf,in);
-	sf_write (buf,1,nbuf,out);
+	sf_charread (buf,nbuf,in);
+	sf_charwrite (buf,nbuf,out);
     }
 }
 
@@ -120,4 +120,4 @@ void sf_rm(const char* filename, bool force, bool verb, bool inquire)
     sf_simtab_close (tab);
 }
 
-/* 	$Id: files.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: files.c,v 1.3 2004/04/19 21:51:26 fomels Exp $	 */
