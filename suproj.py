@@ -14,28 +14,25 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-# The following adds all SCons SConscript API to the globals of this module.
-import SCons.Script.SConscript
-globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+import rsfproj, os
 
-##############################################################################
-# CONFIGURATION VARIABLES
-##############################################################################
-
-#suffix for su files
+#suffix for rsf files
 susuffix = '.su'
-# suffix for postscript files
-pssuffix = '.eps'
 
-# directory tree for executable files
-top = os.environ.get('CWPROOT')
-bindir = os.path.join(top,'bin')
+topdir = os.environ.get('CWPROOT')
+bindir = os.path.join(topdir,'bin')
 
-class Project(Environment):
+class SUProject(rsfproj.Project):
     def __init__(self,**kw):
-        apply(Environment.__init__,(self,),kw)
-        self['ENV']['PATH'] = self['ENV']['PATH'] + bindir
-        
-        
+        apply(rsfproj.Project.__init__,(self,),kw)
+        self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
+    def Flow(self,target,source,flow,**kw):
+        kw.update({'rsf':0,'suffix': susuffix,'src_suffix':susuffix})
+        return apply(rsfproj.Project.Flow,(self,target,source,flow),kw)
 
-
+# Default project
+project = SUProject()
+def Flow(target,source,flow,**kw):
+    return apply(project.Flow,(target,source,flow),kw)
+def End(**kw):
+    return apply(project.End,[],kw)

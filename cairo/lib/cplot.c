@@ -27,10 +27,12 @@
 #define INITIAL_WIDTH 737
 #define INITIAL_HEIGHT 540
 
-void cr_init(void)
+void cr_init(int* argc, char** argv[])
 /*< Initialize >*/
 {
     GtkWidget *win, *vbox, *frame, *gtkcairo;
+
+    gtk_init (argc, argv);
 
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
     gtk_window_set_title (GTK_WINDOW (win), sf_getprog());
@@ -56,6 +58,8 @@ void cr_init(void)
     gtk_widget_show_all (vbox);
 
     gtk_widget_show (win);
+
+    gtk_main ();
 }
 
 

@@ -101,10 +101,12 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 ##########################################################################
 
 for src in ('doc','proj','prog','tex','book'):
-    py = "rsf%s.py"% src
+    py = 'rsf%s.py' % src
     pyc = py + 'c'
     env.Install(pydir,py)
     Clean(os.path.join(pydir,py),[os.path.join(pydir,pyc),pyc])
+
+env.Install(pydir,'suproj.py')
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 

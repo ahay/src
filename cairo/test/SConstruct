@@ -2,10 +2,7 @@ import os, sys, string
 sys.path.append('../..')
 import configure
 
-plots = '''
-7ab cmp croshyp csp dc dcretard ellipse
-headray hyplay nmotraj reflector reflexpt reflkine sg vrms whitepruf
-'''
+plots = '7ab'
 
 try:
 	Import('env')
@@ -22,46 +19,40 @@ except:
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
 	env.Append(CPPPATH=['../../include'],
 		   LIBPATH=['../../filt/lib','../lib'],
-		   LIBS=['rsfplot','rsf'])
+		   LIBS=['rsfcairo','rsf'])
 	SConscript('../lib/SConstruct')
 
-vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
-env.Append(BUILDERS = {'Vplot' : vplot})
-env['PROGPREFIX'] = 'vp'
+#vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
+#env.Append(BUILDERS = {'Vplot' : vplot})
+
+ccflags = ' ' + env.get('CCFLAGS','')
+del env['CCFLAGS']
+libs = 'gtk+-2.0 cairo >= 0.1.1 gtkcairo'
+env.ParseConfig('pkg-config --cflags --libs "%s" ' % libs)
+env['CCFLAGS'] = ccflags
+
+env['PROGPREFIX'] = 'cr'
 
 mains = []
 
 for plot in Split(plots):
-	if plot in ['reflexpt','reflkine']:
-		env.Object(plot+'.o','reflector.c',
-			   CCFLAGS=env.get('CCFLAGS','') +
-			   ' -D%s' % string.upper(plot))
-		prog = env.Program(plot+'.o')
-	else:
-		prog = env.Program(plot+'.c')
-		mains.append(plot+'.c')
+	prog = env.Program(plot+'.c')
+	mains.append(plot+'.c')
 	if root:
 		env.Install(bindir,prog)
-	elif plot == 'sg':
-		env.Command('geqs.vpl', prog,'./$SOURCE 1 > $TARGET')
-		env.Command('geq2s.vpl',prog,'./$SOURCE 2 > $TARGET')
-	else:
-		env.Vplot(plot,prog)
 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-	main = 'vpplot.py'
+	main = 'crplot.py'
     
-	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
+	docs = map(lambda prog: env.Doc(prog,rsfprefix='cr'),mains)
 	docmerge = configure.docmerge
-	docmerge = configure.docextra(docmerge,'vpreflector','vpreflexpt')
-	docmerge = configure.docextra(docmerge,'vpreflector','vpreflkine')
 	doc = env.Command(main,docs,docmerge)
 	env.Install(libdir,doc)
 	Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
 
-# 	$Id$	
+# 	$Id: SConstruct 719 2004-07-25 23:09:36Z fomels $	

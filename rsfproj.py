@@ -198,9 +198,9 @@ class Project(Environment):
         self.test = []
         self.coms = []
     def Exe(self,source,**kw):
-         target = source.replace('.c','.x')
-         return apply(self.Program,(target,source),kw)
-    def Flow(self,target,source,flow,stdout=1,stdin=1,
+        target = source.replace('.c','.x')
+        return apply(self.Program,(target,source),kw)
+    def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
         if not flow:
             return None        
@@ -226,12 +226,13 @@ class Project(Environment):
                 # command is assumed to be always first in line
                 command = pars.pop(0)
                 # check if this command is in our list
-                rsfprog = prefix + command            
-                if rsfdoc.progs.has_key(rsfprog):
-                    command = os.path.join(bindir,rsfprog + self.progsuffix) 
-                    sources.append(command)
-                    if rsfprog not in self.coms:
-                        self.coms.append(rsfprog)
+                if rsf:
+                    rsfprog = prefix + command            
+                    if rsfdoc.progs.has_key(rsfprog):
+                        command = os.path.join(bindir,rsfprog+self.progsuffix) 
+                        sources.append(command)
+                        if rsfprog not in self.coms:
+                            self.coms.append(rsfprog)
                 elif re.match(r'[^/]+\.exe$',command): # local program
                     command = os.path.join('.',command)                    
                 #<- check for par files and add to the sources

@@ -1,13 +1,42 @@
+/* Banded matrix solver. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "banded.h"
+
+#ifndef _banded_h
+
+typedef struct Bands *bands;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Bands {
     int n, band;
     float *d, **o;
 };
 
-bands banded_init (int n, int band)
+bands banded_init (int n    /* matrix size */, 
+		   int band /* band size */)
+/*< initialize >*/
 {
     bands slv;
     int i;
@@ -24,7 +53,10 @@ bands banded_init (int n, int band)
     return slv;
 }
 
-void banded_define (bands slv, float* diag, float** offd)
+void banded_define (bands slv, 
+		    float* diag  /* diagonal [n] */, 
+		    float** offd /* off-diagonal [band][n] */)
+/*< define the matrix >*/
 {
     int k, m, n;
     float t;
@@ -56,7 +88,10 @@ void banded_define (bands slv, float* diag, float** offd)
     }
 }
 
-void banded_const_define (bands slv, float diag, const float* offd)
+void banded_const_define (bands slv, 
+			  float diag        /* diagonal */, 
+			  const float* offd /* off-diagonal [band] */)
+/*< define matrix with constant diagonal coefficients >*/
 {
     int k, m, n;
     float t;
@@ -89,6 +124,7 @@ void banded_const_define (bands slv, float diag, const float* offd)
 }
 
 void banded_solve (bands slv, float* b)
+/*< invert (in place) >*/
 {
     int k, m;
     float t;
@@ -120,6 +156,7 @@ void banded_solve (bands slv, float* b)
 }
 
 void banded_close (bands slv)
+/*< free allocated storage >*/
 {
     int i;
 
@@ -131,4 +168,4 @@ void banded_close (bands slv)
     free (slv);
 }
 
-/* 	$Id: banded.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */
