@@ -1,5 +1,5 @@
 /* 
- * time-domain acoustic FD modeling
+ * exploding reflector time-domain acoustic FD modeling
  */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -46,21 +46,22 @@ int main(int argc, char* argv[])
     float *fzs,*fxs,    *fzr,*fxr;
     int   *jzs,*jxs,    *jzr,*jxr;
 
+    float *ws00,*ws01,*ws10,*ws11;
+    float *wr00,*wr01,*wr10,*wr11;
+
     float **um,**uo,**up,**ud,**vp,**tt;
     float  *bzl,*bzh,*bxl,*bxh;  /* boundary */
 
     int   nop=2;       /* Laplacian operator size */
     float c0, c1, c2;  /* Laplacian operator coefficients */
+    float co,c1x,c2x,c1z,c2z;
 
     int  nbz,nbx; /* boundary size */
     float tz, tx; /* sponge boundary decay coefficients */
     float dp;
+    float ws;     /* injected data */
 
 /*------------------------------------------------------------*/
-
-    c0=-30./12.; 
-    c1=+16./12.;
-    c2=- 1./12.;
 
     /* init RSF */
     sf_init(argc,argv);
@@ -130,6 +131,17 @@ int main(int argc, char* argv[])
     idz = 1/(az.d*az.d);
     idx = 1/(ax.d*ax.d);
 
+    /* Laplacian coefficients */
+    c0=-30./12.; 
+    c1=+16./12.;
+    c2=- 1./12.;
+
+    co = c0 * (idx+idz);
+    c1x= c1 *  idx;
+    c2x= c2 *  idx;
+    c1z= c1 *      idz;
+    c2z= c2 *      idz;
+
 /*------------------------------------------------------------*/
      
     /* allocate arrays */
@@ -148,6 +160,11 @@ int main(int argc, char* argv[])
     jzr=sf_intalloc(ar.n); fzr=sf_floatalloc(ar.n);
     jxs=sf_intalloc(as.n); fxs=sf_floatalloc(as.n);
     jxr=sf_intalloc(ar.n); fxr=sf_floatalloc(ar.n);
+
+    ws00 = sf_floatalloc(as.n); wr00 = sf_floatalloc(ar.n); 
+    ws01 = sf_floatalloc(as.n); wr01 = sf_floatalloc(ar.n);
+    ws10 = sf_floatalloc(as.n); wr10 = sf_floatalloc(ar.n);
+    ws11 = sf_floatalloc(as.n); wr11 = sf_floatalloc(ar.n);
 /*------------------------------------------------------------*/
 
     for (is=0;is<as.n;is++) {
@@ -166,6 +183,12 @@ int main(int argc, char* argv[])
 	    fzs[is] = 1;
 	    ss[is].v= 0;
 	}
+
+	ws00[is] = (1-fzs[is])*(1-fxs[is]);
+	ws01[is] = (  fzs[is])*(1-fxs[is]);
+	ws10[is] = (1-fzs[is])*(  fxs[is]);
+	ws11[is] = (  fzs[is])*(  fxs[is]);
+
     }
 
     for (ir=0;ir<ar.n;ir++) {
@@ -186,6 +209,11 @@ int main(int argc, char* argv[])
 	    fzr[ir] = 1;
 	    rr[ir].v= 0;
 	}
+
+	wr00[ir] = (1-fzr[ir])*(1-fxr[ir]);
+	wr01[ir] = (  fzr[ir])*(1-fxr[ir]);
+	wr10[ir] = (1-fzr[ir])*(  fxr[ir]);
+	wr11[ir] = (  fzr[ir])*(  fxr[ir]);
     }
     
 /*------------------------------------------------------------*/
@@ -283,80 +311,93 @@ int main(int argc, char* argv[])
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
 	/* 4th order Laplacian operator */
-	for (iz=nop; iz<bz.n-nop; iz++) {
-	    for (ix=nop; ix<bx.n-nop; ix++) {
+	for (ix=nop; ix<bx.n-nop; ix++) {
+	    for (iz=nop; iz<bz.n-nop; iz++) {
 		ud[ix][iz] = 
-		    c0* uo[ix  ][iz  ] * (idx+idz) + 
-		    c1*(uo[ix-1][iz  ] + uo[ix+1][iz  ])*idx +
-		    c2*(uo[ix-2][iz  ] + uo[ix+2][iz  ])*idx +
-		    c1*(uo[ix  ][iz-1] + uo[ix  ][iz+1])*idz +
-		    c2*(uo[ix  ][iz-2] + uo[ix  ][iz+2])*idz;	  
+		    co * uo[ix  ][iz  ] + 
+		    c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+		    c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+		    c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+		    c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	  
 	    }
 	}
 
 	/* velocity scale */
-	for (iz=0; iz<bz.n; iz++) {
-	    for (ix=0; ix<bx.n; ix++) {
-		ud[ix][iz] *= vp[ix][iz];
+	for (ix=0; ix<bx.n; ix++) {
+	    for (iz=0; iz<bz.n; iz+=2) {
+		ud[ix][iz  ] *= vp[ix][iz  ];
+		ud[ix][iz+1] *= vp[ix][iz+1];
 	    }
 	}
-
+	
 	/* inject wavelet */
 	for (is=0;is<as.n;is++) {
-	    ud[ jxs[is]  ][ jzs[is]  ] -= ww[it] * ss[is].v * (1-fzs[is])*(1-fxs[is]);
-	    ud[ jxs[is]  ][ jzs[is]+1] -= ww[it] * ss[is].v * (  fzs[is])*(1-fxs[is]);
-	    ud[ jxs[is]+1][ jzs[is]  ] -= ww[it] * ss[is].v * (1-fzs[is])*(  fxs[is]);
-	    ud[ jxs[is]+1][ jzs[is]+1] -= ww[it] * ss[is].v * (  fzs[is])*(  fxs[is]);
+	    ws = ww[it] * ss[is].v;
+	    ud[ jxs[is]  ][ jzs[is]  ] -= ws * ws00[is];
+	    ud[ jxs[is]  ][ jzs[is]+1] -= ws * ws01[is];
+	    ud[ jxs[is]+1][ jzs[is]  ] -= ws * ws10[is];
+	    ud[ jxs[is]+1][ jzs[is]+1] -= ws * ws11[is];
 	}
 
 	/* time step */
-	for (iz=0; iz<bz.n; iz++) {
-	    for (ix=0; ix<bx.n; ix++) {
-		up[ix][iz] = 
-		    2*uo[ix][iz] 
-		    - um[ix][iz] 
-		    + ud[ix][iz] * dt2; 
+	for (ix=0; ix<bx.n; ix++) {
+	    for (iz=0; iz<bz.n; iz+=2) {
+		up[ix][iz  ] = 2*uo[ix][iz  ] - um[ix][iz  ] + ud[ix][iz  ] * dt2; 
+		um[ix][iz  ] =   uo[ix][iz  ];
+		uo[ix][iz  ] =   up[ix][iz  ];
 		
-		um[ix][iz] = uo[ix][iz];
-		uo[ix][iz] = up[ix][iz];
+		up[ix][iz+1] = 2*uo[ix][iz+1] - um[ix][iz+1] + ud[ix][iz+1] * dt2;
+		um[ix][iz+1] =   uo[ix][iz+1];
+		uo[ix][iz+1] =   up[ix][iz+1];
 	    }
 	}
 	
 	/* one-way ABC apply */
 	if(abc) {
-	    for(iop=0;iop<nop;iop++) {
-		for(ix=0;ix<bx.n;ix++) {
-		    uo      [ix][     nop-iop  ] 
-			= um[ix][     nop-iop+1] 
-			+(um[ix][     nop-iop  ]
-			- uo[ix][     nop-iop+1]) * bzl[ix];
-
-		    uo      [ix][bz.n-nop+iop-1] 
-			= um[ix][bz.n-nop+iop-2]
-			+(um[ix][bz.n-nop+iop-1]
-			- uo[ix][bz.n-nop+iop-2]) * bzh[ix];
+	    for(ix=0;ix<bx.n;ix++) {
+		for(iop=0;iop<nop;iop++) {
+		    iz = nop-iop;
+		    uo      [ix][iz  ] 
+			= um[ix][iz+1] 
+			+(um[ix][iz  ]
+			- uo[ix][iz+1]) * bzl[ix];
+		    
+		    iz = bz.n-nop+iop-1;
+		    uo      [ix][iz  ] 
+			= um[ix][iz-1]
+			+(um[ix][iz  ]
+			- uo[ix][iz-1]) * bzh[ix];
 		}
-		for(iz=0;iz<bz.n;iz++) {
-		    uo      [     nop-iop  ][iz] 
-			= um[     nop-iop+1][iz] 
-			+(um[     nop-iop  ][iz]
-			- uo[     nop-iop+1][iz]) * bxl[iz];
+	    }
 
-		    uo      [bx.n-nop+iop-1][iz] 
-			= um[bx.n-nop+iop-2][iz]
-			+(um[bx.n-nop+iop-1][iz]
-			- uo[bx.n-nop+iop-2][iz]) * bxh[iz];
+	    for(iop=0;iop<nop;iop++) {
+		for(iz=0;iz<bz.n;iz++) {
+		    ix = nop-iop;
+		    uo      [ix  ][iz] 
+			= um[ix+1][iz] 
+			+(um[ix  ][iz]
+			- uo[ix+1][iz]) * bxl[iz];
+		    
+		    ix = bx.n-nop+iop-1;
+		    uo      [ix  ][iz] 
+			= um[ix-1][iz]
+			+(um[ix  ][iz]
+			- uo[ix-1][iz]) * bxh[iz];
 		}
 	    }
 	}
-
+	
 	/* sponge ABC apply */
 	if(abc) {
-	    for (iz=0; iz<bz.n; iz++) {
-		for (ix=0; ix<bx.n; ix++) {
-		    uo[ix][iz] *= tt[ix][iz];
-		    um[ix][iz] *= tt[ix][iz];
-		    ud[ix][iz] *= tt[ix][iz];
+	    for (ix=0; ix<bx.n; ix++) {
+		for (iz=0; iz<bz.n; iz+=2) {
+		    uo[ix][iz  ] *= tt[ix][iz  ];
+		    um[ix][iz  ] *= tt[ix][iz  ];
+		    ud[ix][iz  ] *= tt[ix][iz  ];
+
+		    uo[ix][iz+1] *= tt[ix][iz+1];
+		    um[ix][iz+1] *= tt[ix][iz+1];
+		    ud[ix][iz+1] *= tt[ix][iz+1];
 		}
 	    }
 	}
@@ -369,10 +410,10 @@ int main(int argc, char* argv[])
 	/* write data */
 	for (ir=0;ir<ar.n;ir++) {
 	    dd[ir] =
-		uo[ jxr[ir]  ][ jzr[ir]  ] * (1-fzr[ir])*(1-fxr[ir]) +
-		uo[ jxr[ir]  ][ jzr[ir]+1] * (  fzr[ir])*(1-fxr[ir]) +
-		uo[ jxr[ir]+1][ jzr[ir]  ] * (1-fzr[ir])*(  fxr[ir]) +
-		uo[ jxr[ir]+1][ jzr[ir]+1] * (  fzr[ir])*(  fxr[ir]);
+		uo[ jxr[ir]  ][ jzr[ir]  ] * wr00[ir] +
+		uo[ jxr[ir]  ][ jzr[ir]+1] * wr01[ir] +
+		uo[ jxr[ir]+1][ jzr[ir]  ] * wr10[ir] +
+		uo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
 	    dd[ir] *= rr[ir].v;
 	}
 	sf_floatwrite(dd,ar.n,Fd);
