@@ -62,18 +62,16 @@ void monof2(float **data               /* input [ny][nx] */,
     if (verb) sf_warning("got a0=%g b0=%g c0=%g\n"
 			 "nx=%d dx=%g x0=%g ny=%d dy=%g y0=%g",
 			 a[0],a[1],a[2],nx,dx,x0,ny,dy,y0);
+
+    if (nliter > 1) sf_irls_init(nx*ny);
 	
     for (i = 0; i < nliter; i++) {
 	f2 = 0.;
 	for (iy=0; iy < ny; iy++) {
 	    for (ix=0; ix < nx; ix++) {
 		f = data[iy][ix];
-		if (i > 0) {
-		    p = pred[iy][ix]-f;
-		    w = 1./(p*p+eps);
-		} else {
-		    w = 1.;
-		}
+		w = (0 == i)? 1.:pred[iy][ix];
+
 		f2 += w*f*f;		    
 	    }
 	}
@@ -102,12 +100,7 @@ void monof2(float **data               /* input [ny][nx] */,
 		    ep[2] = -y2*e;
 	    
 		    f = data[iy][ix];
-		    if (i > 0) {
-			p = pred[iy][ix]-f;
-			w = 1./(p*p+eps);
-		    } else {
-			w = 1.;
-		    }
+		    w = (0 == i)? 1.:pred[iy][ix];
 	    
 		    ee += w*e2;
 		    fe += w*f*e;
@@ -189,12 +182,17 @@ void monof2(float **data               /* input [ny][nx] */,
 		x2 = x*x;
 		xy = x*y;
 		e = expf(-a[0]*x2-a[1]*xy-a[2]*y2);
-		pred[iy][ix] = aa*e;
+
+		pred[iy][ix] = (i < nliter-1)? aa*e-data[iy][ix]: aa*e;
 	    }
 	}
+
+	if (i < nliter-1) sf_cauchy (nx*ny,pred[0],pred[0]);
 	
 	if (verb) sf_warning ("%d iterations", iter);
     } /* reweighting iterations */
+
+    if (nliter > 1) sf_irls_close();
 }
 
 /* 	$Id$	 */

@@ -172,3 +172,9 @@ bool dijkstra_next(int *ud, int *lr)
 
     return true;
 }
+
+float *dijsktra_cost(void)
+/*< return pointer to the final cost >*/
+{
+    return (*cost);
+}
