@@ -17,13 +17,12 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#define _LARGEFILE_SOURCE
 #include <sys/types.h>
-#include <stdio.h>
+#include <unistd.h>
 /*^*/
 
-/* stupid stdio.h */
-extern int fseeko (FILE *,off_t,int);
-extern off_t ftello (FILE *);
+#include <stdio.h>
 /*^*/
 
 #include <stdlib.h>
@@ -44,7 +43,6 @@ extern off_t ftello (FILE *);
 
 #include <sys/stat.h>
 #include <sys/param.h>
-#include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -157,7 +155,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     }
     free (filename);
 
-    file->pipe = (-1 == fseeko(file->stream,0,SEEK_CUR));
+    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 
@@ -207,7 +205,7 @@ Should do output after sf_input. >*/
 
     file->pars = sf_simtab_init (tabsize);
 
-    file->pipe = (-1 == fseeko(file->stream,0,SEEK_CUR));
+    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 

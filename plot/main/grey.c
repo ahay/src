@@ -45,6 +45,7 @@ int main(int argc, char* argv[])
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
+    off_t pos;
     sf_file in, out=NULL;
     
     sf_init(argc,argv);
@@ -207,10 +208,12 @@ int main(int argc, char* argv[])
 	data = sf_floatalloc2(n1,n2);
 
 	if (GAIN_ALL==panel || panel >= 0) {
+	    pos = sf_tell(in);
+	    if (panel > 0) sf_seek(in,pos+panel*n1*n2*sizeof(float),SEEK_SET);
 	    vp_gainpar (in,data,n1,n2,gainstep,
 			pclip,phalf,&clip,&gpow,pbias,n3,panel);
 	    if (verb) sf_warning("panel=%d clip=%g gpow=%g",panel,clip,gpow);
-	    sf_seek(in,0,SEEK_SET); /* rewind */
+	    sf_seek(in,pos,SEEK_SET); /* rewind */
 	}
     }
 
