@@ -1,0 +1,47 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/pwd'
+
+Flow('sigmoid',None,
+     '''sigmoid d1=.004 n1=200 d2=.008 n2=200 |
+     smooth rect1=3 diff1=1 | smooth rect1=3''')
+
+Fetch('gulf.HH',datdir)
+Flow('gulf','gulf.HH','dd data_format=native_float')
+
+smooth = {'sigmoid': 'eps=1 lam=1',
+          'gulf': 'eps=10 lam=10'}
+
+pclip = {'sigmoid': 100,
+         'gulf': 96}
+
+for example in ('sigmoid','gulf'):
+    dip = example + '-dip'
+    pwd = example + '-pwd'
+    coh = example + '-coh'
+    txr = example + '-txr'
+    Flow(dip,example,
+         'dip2 %s verb=y order=2 niter=10 gauss=n' % smooth[example])
+    Flow(txr,dip,
+         'noise rep=y | trismooth2 dip=$SOURCE rect1=10 rect2=10')
+    Plot(txr,txr,'grey title=TEXTURE wantscalebar=y')
+    Flow(pwd,[example,dip],'pwd order=2 dip=${SOURCES[1]} | smooth rect1=4')
+    Plot(example,example,'grey title=INPUT wantscalebar=y')
+    Plot(pwd,pwd,
+         'grey title=RESIDUAL pclip=%d wantscalebar=y' % pclip[example])
+    Combine(txr,[example,txr],'SideBySideAniso',result=1)
+    Combine(pwd,[example,pwd],'SideBySideAniso',result=1)
+    Result(dip,dip,'grey title=DIP color=j wantscalebar=y')
+
+############################################################################
+
+End()
