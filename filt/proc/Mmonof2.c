@@ -27,8 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    int n2, i2, nx, ny, niter;
-    float x0, dx, y0, dy, a[3], **data;
+    int n2, i2, nx, ny, niter, nliter;
+    float x0, dx, y0, dy, a[3], **data, **pred;
 
     bool verb;
     sf_file in, out, ma;
@@ -57,6 +57,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
+    if (!sf_getint("nliter",&nliter)) nliter=1;
+    /* number of reweighting iterations */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
@@ -71,18 +73,19 @@ int main(int argc, char* argv[])
     sf_fileflush(ma,in);
 
     data = sf_floatalloc2(nx,ny);
+    pred = sf_floatalloc2(nx,ny);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data[0],nx*ny,in);
 
-	monof2(data,niter,a,nx,dx,x0,ny,dy,y0,verb);
+	monof2(data,pred,nliter,niter,a,nx,dx,x0,ny,dy,y0,verb);
          
 	sf_floatwrite(a,3,ma);
         
-	sf_floatwrite (data[0],nx*ny,out);
+	sf_floatwrite (pred[0],nx*ny,out);
     }
     
     exit (0);
 }
 
-/* 	$Id: Mmonof2.c,v 1.5 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    int niter, n1, n2, n3, i3, n12, i;
+    int niter, nliter, n1, n2, n3, i3, n12, i;
     float *mm, *kk, *pp, filt1, filt2, a[3], eps;
     bool *known, shape, force;
     sf_file in, out, mask;
@@ -36,6 +36,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* Number of iterations */
+    if (!sf_getint("nliter",&nliter)) nliter=1;
+    /* Number of reweighting iterations */
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
@@ -101,7 +103,7 @@ int main(int argc, char* argv[])
 	sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
 
 	if (shape) {
-	    gaussshape2_set(a, mm, 100);
+	    gaussshape2_set(a, mm, 100, nliter);
 	    sf_conjgrad(NULL, sf_mask_lop, freqfilt2_lop, pp, mm, mm, niter);
 	}
 

@@ -30,7 +30,7 @@
 int main (int argc, char* argv[])
 {
     bool gauss, shape;
-    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter;
+    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter, nliter;
     float *pp, *mm, *mm0=NULL, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
     char *xk, *yk;
@@ -159,6 +159,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=nm;
     /* number of iterations */
+    if (!sf_getint("nliter",&nliter)) nliter=1;
+    /* number of reweighting iterations */
+
     if (!sf_getfloat("eps",&eps)) eps=1./nd;
     /* regularization parameter */
     if (!sf_getbool("gauss",&gauss)) gauss=false;
@@ -220,7 +223,7 @@ int main (int argc, char* argv[])
 		if (NULL != pattern) {
 		    /* estimate shaper */
 		    sf_floatread (mm,nm,pattern);
-		    gaussshape2_set(a, mm, 100);
+		    gaussshape2_set(a, mm, 100, nliter);
 		}
 	    }
 
