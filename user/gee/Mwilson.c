@@ -21,6 +21,7 @@
 
 #include "helix.h"
 #include "wilson.h"
+#include "wilson2.h"
 #include "compress.h"
 
 int main(int argc, char* argv[])
@@ -28,9 +29,9 @@ int main(int argc, char* argv[])
     int ns, na, niter, maxlag, ia;
     float a0, s0, eps;
     filter ss, aa;
-    bool verb;
-    char *lagfile;
-    sf_file in, out, lag0, lag;
+    bool verb, stable;
+    char *file;
+    sf_file in, out, lag0, lag, flt0;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -39,8 +40,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&ns)) sf_error("No n1= in input");
     ss = allocatehelix (ns);
 
-    if (NULL == (lagfile = sf_histstring(in,"lag"))) {
-	if (NULL == (lagfile = sf_getstring("lag"))) {
+    if (NULL == (file = sf_histstring(in,"lag"))) {
+	if (NULL == (file = sf_getstring("lag"))) {
 	    /* optional input file with filter lags */
 	    for (ia=0; ia < ns; ia++) {
 		ss->lag[ia]=ia+1;
@@ -50,12 +51,12 @@ int main(int argc, char* argv[])
 	    lag0 = sf_input("lag");
 	}
     } else {
-	lag0 = sf_input(lagfile);
+	lag0 = sf_input(file);
     }
 
     if (NULL != lag0) {
 	if (SF_INT != sf_gettype(lag0)) 
-	    sf_error("Need int data in lag file '%s'",lagfile);
+	    sf_error("Need int data in lag file '%s'",file);
 
 	sf_intread(ss->lag,ns,lag0);
     }
@@ -73,7 +74,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=1.e-6;
     /* truncation tolerance */
 
-    if (NULL == (lagfile = sf_getstring("lagin"))) {
+    if (NULL == (file = sf_getstring("lagin"))) {
 	/* optional input file with output filter lags */
 	if (!sf_getint("n1",&na)) na=maxlag;
 	/* output filter length */
@@ -87,26 +88,42 @@ int main(int argc, char* argv[])
 	lag0 = sf_input("lagin");
 
 	if (SF_INT != sf_gettype(lag0)) 
-	    sf_error("Need int data in lag file '%s'",lagfile);
+	    sf_error("Need int data in lag file '%s'",file);
 
 	if (!sf_histint(lag0,"n1",&na)) 
-	    sf_error("No n1= in lag file '%s'",lagfile);
+	    sf_error("No n1= in lag file '%s'",file);
 
 	aa = allocatehelix (na);
 
 	sf_intread(aa->lag,na,lag0);
     }
-    for (ia=0; ia < na; ia++) {	    
-	aa->flt[ia]=0.;
+
+    if (!sf_getfloat("a0",&a0)) a0=1.;
+
+    if (NULL == (file = sf_getstring("filtin"))) {
+	for (ia=0; ia < na; ia++) {	    
+	    aa->flt[ia]=0.;
+	}
+    } else {
+	flt0 = sf_input(file);
+	sf_floatread(aa->flt,na,flt0);
+	sf_fileclose(flt0);
     }
 
     if (!sf_getbool("verb",&verb)) verb=true;
     /* verbosity flag */
+    if (!sf_getbool("stable",&stable)) stable=false;
+    /* stability flag */
 
     sf_floatread(ss->flt,ns,in);
 
-    wilson_init( maxlag*10);
-    a0 = wilson_factor(niter, 2.*s0, ss, aa, verb, 1.e-6);
+    if (stable) {
+	wilson_init( maxlag*10);
+	a0 = wilson_factor(niter, 2.*s0, ss, aa, verb, 1.e-6);
+    } else {
+	wilson2_init( maxlag*10);
+	a0 = wilson2_factor(niter, 2.*s0, ss, a0, aa, verb, 1.e-6);
+    }
 
     aa = compress(aa,eps);
     na = aa->nh;
@@ -119,8 +136,8 @@ int main(int argc, char* argv[])
     sf_intwrite(aa->lag,na,lag);
     sf_fileclose(lag);
 
-    if (NULL != (lagfile = sf_getstring("lagout"))) 
-	sf_putstring(out,"lag",lagfile);
+    if (NULL != (file = sf_getstring("lagout"))) 
+	sf_putstring(out,"lag",file);
 
     sf_putint(out,"n1",na);
     sf_putfloat(out,"a0",a0);

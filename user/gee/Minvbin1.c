@@ -31,7 +31,7 @@
 int main (int argc, char* argv[])
 {
     bool prec, pef;
-    int id, nd, nt, it, nx, interp, filt, niter, three=3, i;
+    int id, nd, nt, it, nx, filt, niter, three=3, i;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
     filter bb;
     sf_file in, out, head;
