@@ -327,9 +327,10 @@ combine ={
 #############################################################################
 
 display = os.environ.get('DISPLAY')
-host = re.sub(':[\d\.]*$','',display)
-if host == '':
-    host = 'localhost'
+if display:
+    host = re.sub(':[\d\.]*$','',display)
+    if host == '':
+        host = 'localhost'
     os.system('xhost ' + host)
 
 class Project(Environment):
@@ -513,4 +514,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.20 2004/03/18 03:23:30 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.21 2004/03/22 06:29:07 fomels Exp $	
