@@ -139,6 +139,9 @@ int main (int argc, char* argv[])
 	    case 'c': /* constant */
 		p2ss[it]=2.;
 		break;
+	    case 'l': /* linear */
+		p2ss[it]=3.-tmean[it];
+		break;
 	    default:
 		sf_error("Unknown case %s",func);
 		break;
@@ -180,5 +183,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrandrefl.c,v 1.8 2003/10/18 18:21:31 fomels Exp $	 */
+/* 	$Id: Mrandrefl.c,v 1.9 2003/11/14 22:51:39 fomels Exp $	 */
 
