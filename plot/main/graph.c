@@ -3,20 +3,13 @@
 #include <rsf.h>
 #include <rsfplot.h>
 
-
 int main(int argc, char* argv[])
 {
-    bool wantframe, wantframenum, transp, yreverse, pad, npad; 
-    int nnx, fastplt=0, i, j, k, l, i3, i2, i1;
-    int movie, wantlegend, legendsz,legendfat, sti2 = 0, js;
-    int n1, n2, n3;
-    char string[80],titles[1024],title_temp[128],title_out[128];
-    char curvelabel[1024],legendloc[3];
-    float min1, max1, min2, max2, o3, d3, o2, d2, f;
-    float ch, vs, **x, **y, **tmp, xc, yc, xup, yup, xpath, ypath;    
+    int n1, n2, n3, i1, i2, i3;
+    float min1, max1, min2, max2, o3, d3, o1, d1, **x, **y, f;    
     complex float** data;
-    sf_file in;
     sf_datatype type;
+    sf_file in;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -29,36 +22,30 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,"d3",&d3)) d3=1.;
     }
 
-    type = sf_gettype(in);
-    if (SF_FLOAT != type && SF_COMPLEX != type)
-	sf_error("wrong data type %d",type);
-
     x = sf_floatalloc2(n1,n2);
     y = sf_floatalloc2(n1,n2);
 
-    if (SF_FLOAT == type) {
-	if (!sf_histfloat(in,"o2",&o2)) o2=0.;
-	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
-
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		x[i2][i1] = o2 + i2*d2;
+    type = sf_gettype(in);
+    switch (type) {
+	case SF_FLOAT:
+	    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+	    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	    
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    x[i2][i1] = o1 + i1*d1;
+		}
 	    }
-	}
-    } else {
-	data = sf_complexalloc2(n1,n2);
+	    break;
+	case SF_COMPLEX:
+	    data = sf_complexalloc2(n1,n2);
+	    break;
+	default:
+	    sf_error("Wrong data type (need float or complex)");
     }
 
-    if (!sf_getbool ("wantframe",&wantframe)) wantframe=true;
-    if (!sf_getbool ("wantframenum",&wantframenum)) wantframenum=true;
-    if (!sf_getbool ("transp",&transp)) transp=false;
-
-    vp_coord_init (false, false);
-    vp_plot_init (n2);
-    vp_title_init(in);
-    vp_color_init ();
-    vp_erase ();
-
+    vp_plot_init(n2);
+ 
     for (i3 = 0; i3 < n3; i3++) {
 	min2 = +FLT_MAX;
 	max2 = -FLT_MAX;
@@ -79,9 +66,9 @@ int main(int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_read(y[i2],sizeof(float),n1*n2,in);
-	    min1=o2;
-	    max1=o2+(n2-1)*d2;
+	    sf_read(y[0],sizeof(float),n1*n2,in);
+	    min1=o1;
+	    max1=o1+(n1-1)*d1;
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    f = y[i2][i1];
@@ -90,28 +77,21 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-	vp_minmax (min1, min2, max1, max2);
-	
-	if (transp) {
-	    tmp = x;
-	    x = y;
-	    y = tmp;
-	}
 
-	npad = sf_getbool ("pad",&pad);
-	vp_pad_init(pad, npad);
+	vp_stdplot_init (min1, max1, min2, max2,
+			 false,false,false,true);
+	vp_frame_init(in,"blt");
 
-	vp_rotate(n1*n2,x[0],y[0]);
-	vp_axis_init(in);
+	if (i3 > 0) vp_erase();
+	vp_frame();
 
-	if (i3 != 0){
-	    vp_erase ();
-	    vp_plot_init (n2);
-	}
-	vp_color_init ();
-	vp_vplot_init ();
 	for (i2=0; i2 < n2; i2++) {
-	    vp_dash_fig (i2);	    
+	    vp_plot_set (i2);
+	    vp_umove(x[i2][0],y[i2][0]);
+	    
+	    for (i1=1; i1 < n1; i1++) {
+		vp_udraw(x[i2][i1],y[i2][i1]);
+	    }
 	}
     }
     

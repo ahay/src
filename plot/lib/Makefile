@@ -7,7 +7,7 @@ LDFLAGS = -L../../seis/rsf -lrsf
 
 DEPEND = -MM
 
-SRC = axis coltab gplot stdplot vplot
+SRC = axis coltab plot stdplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 

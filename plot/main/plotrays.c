@@ -20,7 +20,8 @@ int main(int argc, char* argv[])
     traj = sf_floatalloc2 (2,nt);
 
     /* transp and yreverse */
-    vp_stdplot_init (o2,o2+(n2-1)*d2,o1+(n1-1)*d1,o1);
+    vp_stdplot_init (o1,o1+(n1-1)*d1,o2,o2+(n2-1)*d2,
+		     true,false,true,false);
     vp_frame();
 
     fread(&nsr,sizeof(int),1,stdin);

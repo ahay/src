@@ -22,13 +22,68 @@ static struct Label {
 static struct Axis {
     int ntic;
     float or, dnum, num0;
-} *axis1, *axis2;
+} *axis1=NULL, *axis2=NULL;
 
-static void make_title (sf_file in);
-static void make_labels (sf_file in);
+static void stdplot_init (float umin1, float umax1, float umin2, float umax2);
+static void make_title (sf_file in, char wheret);
+static void make_labels (sf_file in, char where1, char where2);
 static void make_axes (void);
 
-void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2)
+void vp_stdplot_init (float min1, float max1, float min2, float max2,
+		      bool transp1, bool xreverse1, bool yreverse1, bool pad1)
+{
+    bool xreverse, yreverse, pad;
+    float mid, off;
+
+    if (!sf_getbool ("transp",&transp)) transp=transp1;
+    if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
+    if (!sf_getbool ("yreverse",&yreverse)) yreverse = yreverse1;
+    if (!sf_getbool ("pad",&pad)) pad = pad1;
+
+    if (pad) { /* 4% stretch */
+	mid = 0.5*(min1+max1);
+	off = 1.04*0.5*(max1-min1);
+	min1 = mid-off;
+	max1 = mid+off;
+	
+	mid = 0.5*(min2+max2);
+	off = 1.04*0.5*(max2-min2);
+	min2 = mid-off;
+	max2 = mid+off;
+    }
+ 
+    if (transp) {
+	if (yreverse) {
+	    if (xreverse) {
+		stdplot_init (max2, min2, max1, min1);
+	    } else {
+		stdplot_init (min2, max2, max1, min1);
+	    }
+	} else {
+	    if (xreverse) {
+		stdplot_init (max2, min2, min1, max1);
+	    } else {
+		stdplot_init (min2, max2, min1, max1);
+	    }
+	}
+    } else {
+	if (yreverse) {
+	    if (xreverse) {
+		stdplot_init (max1, min1, max2, min2);
+	    } else {
+		stdplot_init (min1, max1, max2, min2);
+	    }
+	} else {	    
+	    if (xreverse) {
+		stdplot_init (max1, min1, min2, max2);
+	    } else {
+		stdplot_init (min1, max1, min2, max2);
+	    }
+	}
+    }
+}
+
+static void stdplot_init (float umin1, float umax1, float umin2, float umax2)
 {
     float scale1, scale2, orig1, orig2, uorig1, uorig2, crowd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
@@ -104,6 +159,22 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2)
 	orig2 = screenht*0.5;
     }
     
+    if (min1 == 0. && max1 == 0.) {
+	min1 = -1.;
+	max1 = 1.;
+    } else if (min1 == max1) {
+        max1 *= 1.04;
+        min1 *= 0.96;
+    }
+    
+    if (min2 == 0. && max2 == 0.) {
+	min2 = -1.;
+	max2 = 1.;
+    } else if (min2 == max2) {
+        max2 *= 1.04;
+        min2 *= 0.96;
+    }
+    
     /* find scales and user origin */
     scale1 = inch1 / (max1 - min1);
     scale2 = inch2 / (max2 - min2);
@@ -116,7 +187,7 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2)
     vp_uorig (uorig1, uorig2);
 }
 
-static void make_labels (sf_file in)
+static void make_labels (sf_file in, char where1, char where2)
 {
     float vs, xc, yc;
     bool want;
@@ -131,15 +202,15 @@ static void make_labels (sf_file in)
 
     if (sf_getbool ("wantaxis1",&want) && !want) {
 	label1 = NULL;
-    } else {
-	label1 = (struct Label*) sf_alloc(1,sizeof(*label1));
+    } else if (NULL == label1) { 
+	label1 = (struct Label*) sf_alloc(1,sizeof(struct Label));
     }
 
     if (sf_getbool ("wantaxis2",&want) && !want) {
 	label2 = NULL;
 	if (NULL == label1) return;
-    } else {
-	label2 = (struct Label*) sf_alloc(2,sizeof(*label2));
+    } else if (NULL == label2) {
+	label2 = (struct Label*) sf_alloc(2,sizeof(struct Label));
     }
 
     if (transp) {
@@ -156,7 +227,7 @@ static void make_labels (sf_file in)
 	if (NULL != (where = sf_getstring("wherexlabel"))) {
 	    label1->where = *where;
 	} else {
-	    label1->where = 't';
+	    label1->where = where1;
 	}
 	if (!sf_getint ("labelfat",&(label1->fat))) label1->fat=0;
 	if ((NULL == (label1->text=sf_getstring(transp? "label2":"label1"))) &&
@@ -182,7 +253,7 @@ static void make_labels (sf_file in)
 	if (NULL != (where = sf_getstring("whereylabel"))) {
 	    label2->where = *where;
 	} else {
-	    label2->where = 'l';
+	    label2->where = where2;
 	}
 	if (!sf_getint ("labelfat",&(label2->fat))) label2->fat=0;
 	if ((NULL == (label2->text=sf_getstring(transp? "label1":"label2"))) &&
@@ -214,7 +285,8 @@ static void make_axes (void)
     char* where;
 
     if (label1 != NULL) {
-	axis1 = (struct Axis*) sf_alloc(1,sizeof(*axis1));
+	if (NULL == axis1) 
+	    axis1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
 	if (!sf_getfloat ("axisor1",&(axis1->or)))
 	    axis1->or = (label1->where == 'b'? min2: max2);
@@ -228,7 +300,8 @@ static void make_axes (void)
     }	
     
     if (label2 != NULL) {
-	axis2 = (struct Axis*) sf_alloc(1,sizeof(*axis2));
+	if (NULL == axis2)
+	    axis2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
 	if (!sf_getfloat ("axisor2",&(axis2->or)))
 	    axis2->or = (label2->where == 'l'? min1: max1);
@@ -245,7 +318,7 @@ static void make_axes (void)
 	('a' == *where);
 }
 
-static void make_title (sf_file in)
+static void make_title (sf_file in, char wheret)
 {
     bool want;
     char* where;
@@ -256,12 +329,13 @@ static void make_title (sf_file in)
 	return;
     }
 
-    title = (struct Label*) sf_alloc(1,sizeof(*title));
+    if (NULL == title)
+	title = (struct Label*) sf_alloc(1,sizeof(struct Label));
 
     if (NULL != (where = sf_getstring("wheretitle"))) {
 	title->where = *where;
     } else {
-	title->where = 'b';
+	title->where = wheret;
     }
 
     if (!sf_getint ("titlefat",&(title->fat))) title->fat=0;
@@ -312,13 +386,11 @@ static void make_title (sf_file in)
     }	   
 }    
 
-void vp_frame_init (sf_file in, bool transp1)
+void vp_frame_init (sf_file in, const char* where)
 {
-    transp = transp1;
-    
-    make_labels(in);
+    make_labels(in,where[0],where[1]);
     make_axes();
-    make_title(in);
+    make_title(in,where[2]);
 }
 
 void vp_frame(void)

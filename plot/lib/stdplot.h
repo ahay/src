@@ -1,8 +1,9 @@
 #ifndef _vp_stdplot_h
 #define _vp_stdplot_h
 
-void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2);
-void vp_frame_init (sf_file in, bool transp);
+void vp_stdplot_init (float min1, float max1, float min2, float max2,
+		      bool transp, bool xreverse, bool yreverse, bool pad);
+void vp_frame_init (sf_file in, const char *where);
 void vp_frame(void);
 
 #endif
