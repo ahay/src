@@ -3,14 +3,16 @@
 #include <rsf.h>
 
 #include "shotfill.h"
+/*
 #include "cburg.h"
+*/
 
 int main(int argc, char* argv[])
 {
     int ns, nh, nw, iw, ih, is;
     bool sign;
     float ds, h0, dh, w0, dw, w, eps;
-    float complex *s, **ss, a[3];
+    float complex *s, **ss; /* a[3]; */
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -32,6 +34,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.1;
     /* regularization parameter */
+    eps *= eps;
 
     if (!sf_getbool("positive",&sign)) sign=true;
     /* initial offset orientation */
@@ -45,8 +48,8 @@ int main(int argc, char* argv[])
     ss = sf_complexalloc2(nh,ns);
     s = sf_complexalloc(nh);
 
-    shotfill_init(nh,h0,dh,sign? ds: -ds);
-    cburg_init(nh,ns,3);
+    shotfill_init(nh,h0,dh,sign? ds: -ds, eps);
+/*    cburg_init(nh,ns,3); */
 
     for (iw=0; iw < nw; iw++) {
 	w = w0 + iw*dw;
@@ -65,11 +68,14 @@ int main(int argc, char* argv[])
 	    continue;
 	}
 
+/*
 	cburg_apply (ss, a);
 	a[0] *= eps;
 	a[1] *= eps;
 	a[2] *= eps;
-	shotfill_define(w, a);
+*/
+
+	shotfill_define(w);
 
 	sf_write(ss[0],sizeof(float complex),nh,out);
 
@@ -85,5 +91,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Minfill.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minfill.c,v 1.4 2004/03/26 03:30:36 fomels Exp $	 */
 

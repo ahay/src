@@ -18,8 +18,8 @@ void tcai1_init (int na, float* aa) {
 void tcai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) {
     int b, x, y;
 
-    if(ny < nx+nb) sf_error("%s: size problem: %d < %d+%d",
-			    __FILE__,ny,nx,nb);
+    if(ny < nx+nb-1) sf_error("%s: size problem: %d < %d+%d-1",
+			      __FILE__,ny,nx,nb);
     sf_adjnull (adj, add, nx, ny, xx, yy);
     
     for( b=0; b < nb; b++) {
@@ -31,4 +31,4 @@ void tcai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) {
     }
 }
 
-/* 	$Id: tcai1.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: tcai1.c,v 1.4 2004/03/26 03:30:36 fomels Exp $	 */

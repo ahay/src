@@ -6,12 +6,12 @@
 #include "cbanded.h"
 
 static int nh;
-static float complex **a, *offd[2], **cc;
-static float **c, *diag, s, h1, b0[3];
+static float complex **a, *offd[2], **cc, *s0;
+static float **c, *diag, s, h1, b0[3], eps;
 static void filt2matrix(const float complex *filt,
 			float* d, float complex *dd);
 
-void shotfill_init (int nh_in, float h0, float dh, float ds)
+void shotfill_init (int nh_in, float h0, float dh, float ds, float eps1)
 {
     nh = nh_in;
     offd[0] = sf_complexalloc(nh-1);
@@ -21,6 +21,7 @@ void shotfill_init (int nh_in, float h0, float dh, float ds)
     a = sf_complexalloc2(3,nh);
     c = sf_floatalloc2(3,nh);
     cc = sf_complexalloc2(3,nh);
+    s0 = sf_complexalloc(nh);
 
     cbanded_init(nh, 2);
     
@@ -30,6 +31,8 @@ void shotfill_init (int nh_in, float h0, float dh, float ds)
     b0[0] = (2.-s)*(1.-s)/12.;
     b0[1] = (2.-s)*(2.+s)/6.;
     b0[2] = (2.+s)*(1.+s)/12.;
+
+    eps = eps1;
 }
 
 void shotfill_close (void)
@@ -58,14 +61,16 @@ static void filt2matrix(const float complex *filt,
     dd[2] = filt[2] * conjf (filt[0]);
 }
 
-void shotfill_define (float w, const float complex* pef)
+void shotfill_define (float w)
 {
-    float den, h, d[3];
-    float complex *b, dd[3];
+    float den, h;
+    float complex *b;
     int ih;
 
+/*
     filt2matrix(pef,d,dd);
-  
+*/  
+
     for (ih=1; ih < nh-1; ih++) {
 	h = h1 + ih;
 
@@ -80,24 +85,24 @@ void shotfill_define (float w, const float complex* pef)
 	filt2matrix(b,c[ih],cc[ih]);
     }
 
-    diag[0] = c[1][0] + c[1][2] + d[2];
-    diag[1] = 2.*c[1][1] + c[2][0] + c[2][2] + d[1] + d[2];
+    diag[0] = c[1][0] + c[1][2] + eps;
+    diag[1] = 2.*c[1][1] + c[2][0] + eps;
     for (ih=2; ih < nh-2; ih++) {
 	diag[ih] = c[ih-1][0] + c[ih-1][2] + 2.*c[ih][1]
-	    +      c[ih+1][0] + c[ih+1][2] + d[0] + d[1] + d[2];
+	    +      c[ih+1][0] + c[ih+1][2] + eps;
     }
-    diag[nh-2] = c[nh-3][0] + c[nh-3][2] + 2.*c[nh-2][1] + d[0] + d[1];
-    diag[nh-1] = c[nh-2][0] + c[nh-2][2] + d[0];
+    diag[nh-2] = c[nh-3][0] + c[nh-3][2] + 2.*c[nh-2][1] + eps;
+    diag[nh-1] = c[nh-2][0] + c[nh-2][2] + eps;
 
-    offd[0][0] = cc[1][0] + cc[1][1] + dd[1];
-    offd[1][0] = 2.*cc[1][2] + dd[2];
+    offd[0][0] = cc[1][0] + cc[1][1];
+    offd[1][0] = 2.*cc[1][2];
     for (ih=1; ih < nh-2; ih++) {
 	offd[0][ih] = 
 	    cc[ih][0] + cc[ih+1][0] +  
-	    cc[ih][1] + cc[ih+1][1] + dd[0] + dd[1];
-	offd[1][ih] = 2.*cc[ih+1][2] + dd[2];
+	    cc[ih][1] + cc[ih+1][1];
+	offd[1][ih] = 2.*cc[ih+1][2];
     }
-    offd[0][nh-2] = cc[nh-2][0] + cc[nh-2][1] + dd[0];
+    offd[0][nh-2] = cc[nh-2][0] + cc[nh-2][1];
     
     cbanded_define(diag,offd);
 }
@@ -110,6 +115,7 @@ void shotfill_apply (const float complex *s1, const float complex *s2,
 
     for (ih=0; ih < nh; ih++) {
 	s[ih] = 0.;
+	s0[ih] = 0.5*(s1[ih]+s2[ih]);
     }
 
     for (ih=1; ih < nh-1; ih++) {
@@ -124,6 +130,24 @@ void shotfill_apply (const float complex *s1, const float complex *s2,
 	s[ih+1] += sum1*b[2] + sum2*conjf(b[0]);
     }
 
+    s[0] -= (diag[0]-eps)*s0[0] + 
+	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
+    s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
+	conjf(offd[0][1])*s0[2] + conjf(offd[1][1])*s0[3];
+    for (ih=2; ih < nh-2; ih++) {
+	s[ih] -= offd[1][ih-2]*s0[ih-2]+offd[0][ih-1]*s0[ih-1] + 
+	    (diag[ih]-eps)*s0[ih] + 
+	    conjf(offd[0][ih])*s0[ih+1] + conjf(offd[1][ih])*s0[ih+2];
+    }
+    s[nh-2] -= offd[1][nh-4]*s0[nh-4]+offd[0][nh-3]*s0[nh-3] + 
+	(diag[nh-2]-eps)*s0[nh-2] + conjf(offd[0][nh-2])*s0[nh-1];
+    s[nh-1] -= offd[1][nh-3]*s0[nh-3]+offd[0][nh-2]*s0[nh-2] + 
+	(diag[nh-1]-eps)*s0[nh-1];
+
     cbanded_solve(s);
+
+    for (ih=0; ih < nh; ih++) {
+	s[ih] += s0[ih];
+    }
 }
 
