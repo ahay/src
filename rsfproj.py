@@ -278,9 +278,7 @@ if display:
 if host == '':
     host = 'localhost'
 
-View = Builder(action = "%s %s; %sxtpen $SOURCES" %
-               (WhereIs('xhost'),host,sep),
-               src_suffix=vpsuffix)
+View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 # Klean = Builder(action = Action(clean,silent,['junk']))
 Build = Builder(action = Action(pstexpen,varlist=['opts']),
                 src_suffix=vpsuffix,suffix=pssuffix)
@@ -365,6 +363,7 @@ class Project(Environment):
             os.mkdir(self.path)
         self.Append(ENV={'DATAPATH':self.path,
                          'DISPLAY':display,
+                         'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Build':Build,
@@ -535,4 +534,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.25 2004/03/31 03:16:33 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.26 2004/04/02 02:20:38 fomels Exp $	

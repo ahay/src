@@ -37,22 +37,6 @@ Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])
 env.Alias('config',config)
 
 ##########################################################################
-# PYTHON MODULES
-##########################################################################
-
-for src in ('doc','proj','prog'):
-    py = "rsf%s.py"% src
-    pyc = py + 'c'
-    env.Install(libdir,py)
-    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
-env.Install(bindir,'sfdoc')
-env.Install(bindir,'sftour')
-
-use = os.path.join(libdir,'rsfuse.py')
-env.Command(use,None,action=Action(rsfdoc.use))
-AlwaysBuild(use)
-
-##########################################################################
 # SELF DOCUMENTATION
 ##########################################################################
 Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix']),
@@ -72,7 +56,6 @@ if sys.platform[:5] == 'sunos':
 
 Export('env')
 dirs = ('lib','main','proc','imag')
-Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
 
 Default('build/include')
 for dir in map(lambda x: os.path.join('filt',x), dirs):
@@ -97,19 +80,41 @@ if env.has_key('F90'):
 env.Prepend(LIBPATH=['../../plot/lib'],LIBS=['rsfplot'])
 
 Export('env')
-dirs = ('lib','main','test')
-Depends(use,os.path.join(libdir,'sfplot.py'))
-Depends(use,os.path.join(libdir,'vpplot.py'))
+pdirs = ('lib','main','test')
 
 Default('build/include')
-for dir in map(lambda x: os.path.join('plot',x), dirs):
+for dir in map(lambda x: os.path.join('plot',x), pdirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')
     Default(build)
 
 ##########################################################################
+# PYTHON MODULES
+##########################################################################
+
+for src in ('doc','proj','prog'):
+    py = "rsf%s.py"% src
+    pyc = py + 'c'
+    env.Install(libdir,py)
+    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
+env.Install(bindir,'sfdoc')
+env.Install(bindir,'sftour')
+
+SConscript(dirs='recipe')
+
+use = os.path.join(libdir,'rsfuse.py')
+env.Command(use,None,action=Action(rsfdoc.use))
+Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
+Depends(use,os.path.join(libdir,'sfplot.py'))
+Depends(use,os.path.join(libdir,'vpplot.py'))
+Depends(use,os.path.join(libdir,'rsfrecipe.py'))
+AlwaysBuild(use)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 
 env.Alias('install',[bindir,libdir,incdir])
+
+# 	$Id: SConstruct,v 1.25 2004/04/02 02:20:38 fomels Exp $	
