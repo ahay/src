@@ -135,5 +135,68 @@ void fslice_close(fslice sl)
     free(sl);
 }
 
+void fslice_load(sf_file in, fslice sl, sf_datatype type)
+/*< load the contents of in into a slice file >*/
+{
+    off_t nleft, n;
+    char buf[BUFSIZ];
+
+    /* data size */
+    n = (sl->n3)*(sl->n12);
+
+    /* rewind */
+    if (0 != fseeko(sl->file,0,SEEK_SET))
+	sf_error("%s: seeking error:",__FILE__);
+
+    for (nleft = BUFSIZ; n > 0; n -= nleft) {
+	if (nleft > n) nleft=n;
+	switch (type) {
+	    case SF_FLOAT:
+		sf_floatread((float*) buf,nleft/sizeof(float),in);
+		break;
+	    case SF_COMPLEX:
+		sf_complexread((float complex*) buf,
+				nleft/sizeof(float complex),in);
+		break;
+	    default:
+		sf_error("%s: unsupported type %d",__FILE__,type);
+		break;
+	}
+	if (nleft != fwrite (buf,1,nleft,sl->file))
+	    sf_error("%s: writing error:",__FILE__);
+    }
+}
+
+void fslice_dump(fslice sl, sf_file out, sf_datatype type)
+/*< dump the contents of a slice file to out >*/
+{
+    off_t nleft, n;
+    char buf[BUFSIZ];
+
+    /* data size */
+    n = (sl->n3)*(sl->n12);
+
+    /* rewind */
+    if (0 != fseeko(sl->file,0,SEEK_SET))
+	sf_error("%s: seeking error:",__FILE__);
+
+    for (nleft = BUFSIZ; n > 0; n -= nleft) {
+	if (nleft > n) nleft=n;
+	if (nleft != fread (buf,1,nleft,sl->file))
+	    sf_error("%s: reading error:",__FILE__);
+	switch (type) {
+	    case SF_FLOAT:
+		sf_floatwrite((float*) buf,nleft/sizeof(float),out);
+		break;
+	    case SF_COMPLEX:
+		sf_complexwrite((float complex*) buf,
+				nleft/sizeof(float complex),out);
+		break;
+	    default:
+		sf_error("%s: unsupported type %d",__FILE__,type);
+		break;
+	}
+    }
+}
 
 /*------------------------------------------------------------*/
