@@ -1,5 +1,5 @@
 /* Window a portion of the dataset. 
-
+   
 Takes: [j1=1 j2=1 ... f1=0 f2=0 ... n1=n1 n2=n2 ... max1= max2= ... min1= min2= ...]
 
 jN defines the jump in N-th dimension

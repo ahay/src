@@ -1,21 +1,21 @@
 /* Extract real (sfreal) or imaginary (sfimag) part of a complex dataset.
-*/
+ */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <string.h>
@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
     char rbuf[BUFSIZ], *cbuf, *rformat, *cformat, *prog;
 
     sf_init(argc,argv);
-    cmplx = sf_input("in");
-    real = sf_output ("out");
+    cmplx = sf_input ( "in");
+    real  = sf_output("out");
 
     if (SF_COMPLEX != sf_gettype(cmplx)) sf_error("wrong input type");
     
@@ -50,11 +50,11 @@ int main(int argc, char* argv[])
     size = sf_filesize (cmplx);
     
     sf_fileflush(real,cmplx);
-    sf_setform(real,SF_NATIVE);
+    sf_setform(real ,SF_NATIVE);
     sf_setform(cmplx,SF_NATIVE);
-
+    
     prog = sf_getprog();
-    if (NULL != strstr(prog,"real")) {
+    if (       NULL != strstr(prog,"real")) {
 	shift=0;
     } else if (NULL != strstr(prog,"imag")) {
 	shift=esize;
@@ -73,9 +73,8 @@ int main(int argc, char* argv[])
 	}
 	sf_charwrite(rbuf,nbuf,real);
     }
+    
     sf_fileclose(real);
-
+    
     exit (0);
 }
-
-/* 	$Id: real.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */

@@ -1,7 +1,4 @@
-/* Output parameters from the header.
-   
-Takes: par1 par2 ...
-*/
+/* Input parameters into a header. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,36 +16,17 @@ Takes: par1 par2 ...
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <stdio.h>
-#include <string.h>
-
 #include <rsf.h>
 
 int main (int argc, char* argv[])
 {
-    int i;
-    char *string, *key;
-    bool parform;
-    sf_file in;
-    
+    sf_file in, out;
+
     sf_init (argc,argv);
-    in = sf_input ("in");
-    
-    if(!sf_getbool("parform",&parform)) parform=true;
-    /* If y, print out parameter=value. If n, print out value. */
-    
-    for (i = 1; i < argc; i++) {
-	key = argv[i];
-	if (NULL != strchr(key,'=')) continue;
-	string = sf_histstring(in,key);
-	if (NULL == string) {
-	    sf_warning("No key %s",key);
-	} else {
-	    if (parform) printf ("%s=",key);
-	    printf("%s\n",string);
-	} 
-    }
-    
+    in = sf_input("in");
+    out = sf_output("out");
+    sf_setpars(out);
+
+    sf_cp(in, out);
     exit(0);
 }

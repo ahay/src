@@ -4,7 +4,7 @@ import configure
 
 progs = """
 add attr cat cmplx cp cut dd disfil get headerattr headermath
-headersort headerwindow in interleave log mask math pad real
+headersort headerwindow in interleave log mask math pad put real
 reverse rm rtoc scale segyread segywrite spike spray stack transp window
 """
 try: # distributed version

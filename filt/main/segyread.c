@@ -434,7 +434,7 @@ int main(int argc, char *argv[])
 			sf_error ("Error reading trace data %d",itr+1);
 		}
 
-		if (su || 5==format) {
+		if (su) {
 		    sf_charwrite (trace,ns*sizeof(float),out);
 		} else {
 		    sf_segy2trace(trace, ftrace, ns,format);
@@ -457,7 +457,7 @@ int main(int argc, char *argv[])
 		sf_segy2head(trace, itrace, SF_NKEYS);
 		sf_intwrite(itrace,SF_NKEYS,hdr);
 
-		if (su || 5==format) {
+		if (su) {
 		    sf_charwrite (trace + SF_HDRBYTES,ns*sizeof(float),out);
 		} else {
 		    sf_segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
