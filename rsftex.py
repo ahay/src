@@ -382,10 +382,11 @@ if latex2html:
                    '-debug $SOURCE -dir $TARGET.dir %s' %
                    (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
 
-if mathematica:
+if mathematica and epstopdf:
      Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
                     '< $SOURCE >& /dev/null > /dev/null && '
-                    'mv junk_ma.pdf $TARGET' % mathematica,
+                    '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
+                    (mathematica,epstopdf),
                     suffix='.pdf',src_suffix='.ma')
      
 Color = Builder(action = Action(colorize),suffix='.html')
@@ -493,11 +494,16 @@ class TeXPaper(Environment):
                   self.Install(figdir,[png,pdf])
                   self.Alias('install',figdir)
         # mathematica figures:
-        if mathematica:
-             for mth in glob.glob('Math/[a-z]*.ma'):
-                  pdf = os.path.join(resdir,re.sub(r'\.ma$','.pdf',
-                                                   os.path.basename(mth)))
-                  self.Math(pdf,mth)
+        mths = glob.glob('Math/[a-z]*.ma')
+        if mths:
+             if mathematica:
+                  for mth in mths:
+                       pdf = os.path.join(resdir,re.sub(r'\.ma$','.pdf',
+                                                        os.path.basename(mth)))
+                       self.Math(pdf,mth)
+             mathdir = os.path.join(self.docdir,'Math')
+             self.Install(mathdir,mths)
+             self.Alias('install',mathdir)
         # non-reproducible figures
         for pdf in glob.glob(os.path.join(resdir,'*.pdf')):
             if pdf2ps:
