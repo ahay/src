@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	sf_write(tdat[0],sizeof(float),nt*nx,c);
+	sf_floatwrite(tdat[0],nt*nx,c);
     }
 
     vp_uorig (-c2,-.5);
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	sf_write(zdat[0],sizeof(float),nz*nx,d);
+	sf_floatwrite(zdat[0],nz*nx,d);
     }
 
     exit(0);
