@@ -8,7 +8,7 @@
 #include "axis.h"
 #include "vplot.h"
 
-static float min1, min2, max1, max2, labelsz, inch1, inch2;
+static float min1, min2, max1, max2, labelsz, inch1, inch2, orig1, orig2;
 static int framecol;
 static bool labelrot, transp, wheretics;
 static char blank[]=" ";
@@ -41,7 +41,7 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
 		      bool transp1, bool xreverse1, bool yreverse1, bool pad1)
 {
     bool pad, set, xreverse, yreverse;
-    float mid, off, scale1, scale2, orig1, orig2, uorig1, uorig2, crowd;
+    float mid, off, scale1, scale2, uorig1, uorig2, crowd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
 
     transp = transp1;
@@ -386,6 +386,18 @@ void vp_simpleframe(void)
     vp_udraw(max1, max2);
     vp_udraw(max1, min2);
     vp_udraw(min1, min2);
+}
+
+void vp_barframe (void)
+{
+    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2);
+
+    vp_color(framecol);
+    vp_move(orig1+0.6*inch1,orig2-0.5*inch2);
+    vp_draw(orig1+0.7*inch1,orig2-0.5*inch2);
+    vp_draw(orig1+0.7*inch1,orig2+0.5*inch2);
+    vp_draw(orig1+0.6*inch1,orig2+0.5*inch2);
+    vp_draw(orig1+0.6*inch1,orig2-0.5*inch2);
 }
 
 void vp_frame(void)
