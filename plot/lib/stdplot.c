@@ -261,6 +261,7 @@ static void make_labels (sf_file in, char where1, char where2)
 
 static void make_axes (void)
 {
+    const float aspect=0.8;
     char* where;
 
     if (label1 != NULL) {
@@ -273,7 +274,8 @@ static void make_axes (void)
 	if (!sf_getint ("n1tic",&(axis1->ntic))) axis1->ntic = 1;
 	if (!sf_getfloat ("d1num", &(axis1->dnum)) ||
 	    !sf_getfloat ("o1num", &(axis1->num0))) 
-	    axis1->ntic = vp_optimal_scale(inch1/labelsz, min1, max1, 
+	    axis1->ntic = vp_optimal_scale(inch1/(aspect*labelsz), 
+					   min1, max1, 
 					   &(axis1->num0), 
 					   &(axis1->dnum));
     }	
@@ -288,7 +290,8 @@ static void make_axes (void)
 	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
 	if (!sf_getfloat ("d2num", &(axis2->dnum)) ||
 	    !sf_getfloat ("o2num", &(axis2->num0))) 
-	    axis2->ntic = vp_optimal_scale(inch2/labelsz, min2, max2, 
+	    axis2->ntic = vp_optimal_scale(inch2/(aspect*labelsz), 
+					   min2, max2, 
 					   &(axis2->num0), 
 					   &(axis2->dnum));
     }

@@ -25,7 +25,8 @@ void vp_simple_axis (float x1, float y1,
     float dxtic, dytic, loc, num, xpos, ypos;
     char string[32];
     const float pad = 0.15; /* between tic and number, number and label */
- 
+    const float aspect = 0.8;
+
     vp_color (7); /* white */
 
     /* draw axis */
@@ -56,7 +57,7 @@ void vp_simple_axis (float x1, float y1,
     } 
 
     if (dnum == 0.) { /* figure out onum and dnum */
-	nopt = vp_optimal_scale(dist/size, num1, num2, &onum, &dnum);
+	nopt = vp_optimal_scale(dist/(aspect*size), num1, num2, &onum, &dnum);
     } else { /* use client's scale */
 	nopt = 1+ (int) (floor) (num2-onum)/dnum;
 	if (onum+(nopt-1)*dnum > num2) nopt--;
@@ -101,10 +102,11 @@ int vp_optimal_scale(float chars, float min, float max,
 		fabsf(num) < FLT_EPSILON) num=0.;
 
 	    sprintf(string,"%1.5g",num);
-	    if ((strlen(string)+1.5)*ntics > chars) break;
+	    if ((strlen(string)+2)*nopt > chars) break;
 	}
 	    
 	if (i == nopt) break;
+	if (ntics > nopt) ntics = nopt;
     } 
     
     return nopt;
