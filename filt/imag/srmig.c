@@ -47,7 +47,7 @@ static float         **sm; /* reference slowness squared */
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
 static int            *nr; /* number of references */
-static slice         slow; /* slowness slice */
+static fslice        slow; /* slowness slice */
 
 void srmig_init(bool verb_,
 		float eps_,
@@ -62,7 +62,7 @@ void srmig_init(bool verb_,
 		int tx, int ty /* taper size */,
 		int px, int py /* padding in the k domain */,
 		int nrmax      /* maximum number of references */,
-		slice slow_)
+		fslice slow_)
 /*< initialize >*/
 {
     int   iz, jj;
@@ -108,7 +108,7 @@ void srmig_init(bool verb_,
     nr = sf_intalloc          (az.n); /* nr of ref slownesses */
     slow = slow_;
     for (iz=0; iz<az.n; iz++) {
-	slice_get(slow,iz,ss[0]);
+	fslice_get(slow,iz,ss[0]);
 	
 	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
@@ -155,10 +155,9 @@ void srmig_free()
 }
 
 /*------------------------------------------------------------*/
-void srmig(
-	   slice sdat /* source   data [nw][ny][nx] */,
-	   slice rdat /* receiver data [nw][ny][nx] */,
-	   slice imag /*         image [nz][ny][nx] */
+void srmig(fslice sdat /* source   data [nw][ny][nx] */,
+	   fslice rdat /* receiver data [nw][ny][nx] */,
+	   fslice imag /*         image [nz][ny][nx] */
     )
 /*< Apply S/R migration >*/
 {
@@ -167,7 +166,7 @@ void srmig(
     
     LOOP( qq[iy][ix] = 0.0; );
     for (iz=0; iz<az.n; iz++) {
-	slice_put(imag,iz,qq[0]);
+	fslice_put(imag,iz,qq[0]);
     }
 
     for (ie=0; ie<ae.n; ie++) {
@@ -177,27 +176,27 @@ void srmig(
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d);
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d);
 	    
-	    cslice_get(sdat,ie*aw.n+iw,us[0]); taper2(us);
-	    cslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(ur);
+	    fslice_get(sdat,ie*aw.n+iw,us[0]); taper2(us);
+	    fslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(ur);
 	    
-	    slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
+	    fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 	    LOOP(;             qq[iy][ix] += 
 		 crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
-	    slice_put(imag,0,qq[0]);
+	    fslice_put(imag,0,qq[0]);
 	    
-	    slice_get(slow,0,so[0]);
+	    fslice_get(slow,0,so[0]);
 	    for (iz=0; iz<az.n-1; iz++) {
-		slice_get(slow,iz+1,ss[0]);
+		fslice_get(slow,iz+1,ss[0]);
 		
 		ssr_ssf(ws,us,so,ss,nr[iz],sm[iz]);
 		ssr_ssf(wr,ur,so,ss,nr[iz],sm[iz]);
 		
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-		slice_get(imag,iz+1,qq[0]); /* imaging */
+		fslice_get(imag,iz+1,qq[0]); /* imaging */
 		LOOP(;             qq[iy][ix] += 
 		     crealf( conjf(us[iy][ix]) * ur[iy][ix] ); );
-		slice_put(imag,iz+1,qq[0]);
+		fslice_put(imag,iz+1,qq[0]);
 		
 	    } /* z */
 	} /* w */

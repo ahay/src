@@ -152,11 +152,12 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
 	if (nleft > n) nleft=n;
 	switch (type) {
 	    case SF_FLOAT:
-		sf_floatread((float*) buf,nleft/sizeof(float),in);
+		sf_floatread  ((float*) buf,
+			       nleft/sizeof(float),in);
 		break;
 	    case SF_COMPLEX:
 		sf_complexread((float complex*) buf,
-				nleft/sizeof(float complex),in);
+			       nleft/sizeof(float complex),in);
 		break;
 	    default:
 		sf_error("%s: unsupported type %d",__FILE__,type);
@@ -167,7 +168,7 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
     }
 }
 
-void fslice_dump(fslice sl, sf_file out, sf_datatype type)
+void fslice_dump(sf_file out, fslice sl, sf_datatype type)
 /*< dump the contents of a slice file to out >*/
 {
     off_t nleft, n;
@@ -186,7 +187,8 @@ void fslice_dump(fslice sl, sf_file out, sf_datatype type)
 	    sf_error("%s: reading error:",__FILE__);
 	switch (type) {
 	    case SF_FLOAT:
-		sf_floatwrite((float*) buf,nleft/sizeof(float),out);
+		sf_floatwrite  ((float*) buf,
+				nleft/sizeof(float),out);
 		break;
 	    case SF_COMPLEX:
 		sf_complexwrite((float complex*) buf,

@@ -38,9 +38,9 @@ int main (int argc, char *argv[])
     sf_file Fd,Fu; /*      data file D(nmx,nmy,nhx,   nw) */
     sf_file Fw;    /* wavefield file W(nmx,nmy,nhx,nz,nw) */
 
-    slice slow;
-    slice imag;
-    slice data,wfld;
+    fslice slow;
+    fslice imag;
+    fslice data,wfld;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -66,7 +66,8 @@ int main (int argc, char *argv[])
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";
-    slow = slice_init(Fs,alx.n,aly.n,az.n);
+    slow = fslice_init(alx.n,aly.n,az.n,sizeof(float));
+	fslice_load(Fs,slow,SF_FLOAT);
     
     switch(mode[0]) {
 	case 'w': /* save wavefield */
@@ -80,8 +81,9 @@ int main (int argc, char *argv[])
 	    ;                            oaxa(Fw,&az ,4);
 	    iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fw,&aw ,5);
 
-	    data = slice_init(Fd,amx.n*amy.n,ahx.n,     aw.n);
-	    wfld = slice_init(Fw,amx.n*amy.n,ahx.n,az.n*aw.n);
+	    data = fslice_init(amx.n*amy.n,ahx.n,     aw.n,sizeof(float complex));
+	    wfld = fslice_init(amx.n*amy.n,ahx.n,az.n*aw.n,sizeof(float complex));
+		fslice_load(Fd,data,SF_COMPLEX);
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
@@ -95,6 +97,9 @@ int main (int argc, char *argv[])
 		iaxa(Fu,&aw ,4);  aw.l= "w"; oaxa(Fd,&aw ,4);
 		iaxa(Fu,&ae ,5);  ae.l= "e"; oaxa(Fd,&ae ,5);
 
+	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+	    wfld = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+		fslice_load(Fu,wfld,SF_COMPLEX);
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
 		Fu = sf_output("out"); sf_settype(Fu,SF_COMPLEX);
@@ -105,9 +110,11 @@ int main (int argc, char *argv[])
 		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fu,&ahx,3);
 		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fu,&aw ,4);
 		iaxa(Fd,&ae ,5);  ae.l= "e"; oaxa(Fu,&ae ,5);
+
+	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+	    wfld = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+		fslice_load(Fd,data,SF_COMPLEX);
 	    }
-	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n*ae.n);
-	    wfld = slice_init(Fu,amx.n*amy.n,ahx.n,aw.n*ae.n);
 	    break;
 	case 'm':
 	default:
@@ -126,6 +133,9 @@ int main (int argc, char *argv[])
 		iaxa(Fi,&ahx,3); ahx.l="hx"; oaxa(Fd,&ahx,3);
 		iaxa(Fi,&az ,4);  az.l= "z"; oaxa(Fd,&aw ,4);
 		
+	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n,sizeof(float complex));
+	    imag = fslice_init(amx.n*amy.n,ahx.n,az.n,sizeof(float));
+		fslice_load(Fi,imag,SF_FLOAT);
 	    } else { /* migration */
 		Fd = sf_input ( "in");
 		Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
@@ -135,9 +145,10 @@ int main (int argc, char *argv[])
 		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
 		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fi,&ahx,3);
 		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fi,&az ,4);
+	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n,sizeof(float complex));
+	    imag = fslice_init(amx.n*amy.n,ahx.n,az.n,sizeof(float));
+		fslice_load(Fd,data,SF_COMPLEX);
 	    } 
-	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
-	    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
 	    break;
     }
     
@@ -165,6 +176,35 @@ int main (int argc, char *argv[])
     }
 
     camig_close();
+
+	    switch(mode[0]) {
+        case 'w':
+        fslice_dump(Fw,wfld,SF_COMPLEX);
+        fslice_close(data);
+        fslice_close(wfld);
+        break;
+        case 'd':
+        if(inv) {
+                fslice_dump(Fd,data,SF_COMPLEX);
+        } else {
+                fslice_dump(Fw,wfld,SF_COMPLEX);
+        }
+        fslice_close(data);
+        fslice_close(wfld);
+        break;
+        case 'm':
+        if(inv) {
+                fslice_dump(Fd,data,SF_COMPLEX);
+        } else {
+                fslice_dump(Fi,imag,SF_FLOAT);
+        }
+        fslice_close(data);
+        fslice_close(imag);
+        default:
+        break;
+    }
+    fslice_close(slow);
+
     
     exit (0);
 }

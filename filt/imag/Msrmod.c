@@ -34,14 +34,13 @@ int main (int argc, char *argv[])
     sf_file Fs;     /*            slowness file S (nlx,nly,nz) */
     sf_file Fd;     /* downgoing wavefield file D ( nx, ny,nw) */
     sf_file Fu;     /*   upgoing wavefield file U ( nx, ny,nw) */
-    sf_file Fw;     /* tmp wavefield */
     sf_file Fr;     /* reflectivity */
 
-    slice slow;
-    slice dwfl;
-    slice uwfl;
-    slice wfld;
-    slice refl;
+    fslice slow;
+    fslice dwfl;
+    fslice uwfl;
+    fslice wfld;
+    fslice refl;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -60,23 +59,26 @@ int main (int argc, char *argv[])
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";
-    slow = slice_init(Fs,alx.n,aly.n,az.n);
-    
+
     Fd = sf_input ( "in");
     Fu = sf_output("out"); sf_settype(Fu,SF_COMPLEX);
-    Fw = sf_output("www"); sf_settype(Fw,SF_COMPLEX);
     Fr = sf_input ("ref");
 
     if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex source wavefield");
     
-    iaxa(Fd,&ax,1); ax.l="x"; oaxa(Fu,&ax,1); oaxa(Fw,&ax,1);
-    iaxa(Fd,&ay,2); ay.l="y"; oaxa(Fu,&ay,2); oaxa(Fw,&ay,2);
-    iaxa(Fd,&aw,3); aw.l="w"; oaxa(Fu,&aw,3); oaxa(Fw,&az,3);
+    iaxa(Fd,&ax,1); ax.l="x"; oaxa(Fu,&ax,1);
+    iaxa(Fd,&ay,2); ay.l="y"; oaxa(Fu,&ay,2);
+    iaxa(Fd,&aw,3); aw.l="w"; oaxa(Fu,&aw,3);
 
-    dwfl = slice_init(Fd,ax.n,ay.n,aw.n);
-    uwfl = slice_init(Fu,ax.n,ay.n,aw.n);
-    wfld = slice_init(Fw,ax.n,ay.n,az.n);
-    refl = slice_init(Fr,ax.n,ay.n,az.n);
+    /* slice management (temp files) */
+    slow = fslice_init(alx.n,aly.n,az.n,sizeof(float));
+    dwfl = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
+    uwfl = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
+    wfld = fslice_init( ax.n, ay.n,az.n,sizeof(float complex)); /* temp */
+    refl = fslice_init( ax.n, ay.n,az.n,sizeof(float));
+    fslice_load(Fs,slow,SF_FLOAT);
+    fslice_load(Fd,dwfl,SF_COMPLEX);
+    fslice_load(Fr,refl,SF_FLOAT);
 
     srmod_init (verb,eps,dt,
 		ae,
@@ -90,6 +92,14 @@ int main (int argc, char *argv[])
     srmod(dwfl,uwfl,refl,wfld);
     srmod_free();
     srmod_close();
-	
+
+    /* slice management (temp files) */
+    fslice_dump(Fu,uwfl,SF_COMPLEX);
+    fslice_close(slow);
+    fslice_close(dwfl);
+    fslice_close(uwfl);
+    fslice_close(wfld);
+    fslice_close(refl);
+
     exit (0);
 }

@@ -22,7 +22,7 @@
 #include <rsf.h>
 /*^*/
 
-#include "srmig.h"
+#include "srmod.h"
 
 #include "fft2.h"
 #include "taper.h"
@@ -47,7 +47,7 @@ static float         **sm; /* reference slowness squared */
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
 static int            *nr; /* number of references */
-static slice         slow; /* slowness slice */
+static fslice        slow; /* slowness slice */
 
 static float         **rr; /* reflectivity */
 
@@ -64,7 +64,7 @@ void srmod_init(bool verb_,
 		int tx, int ty /* taper size */,
 		int px, int py /* padding in the k domain */,
 		int nrmax      /* maximum number of references */,
-		slice slow_)
+		fslice slow_)
 /*< initialize >*/
 {
     int   iz, jj;
@@ -110,7 +110,7 @@ void srmod_init(bool verb_,
     nr = sf_intalloc          (az.n); /* nr of ref slownesses */
     slow = slow_;
     for (iz=0; iz<az.n; iz++) {
-	slice_get(slow,iz,ss[0]);
+	fslice_get(slow,iz,ss[0]);
 	
 	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
@@ -162,10 +162,10 @@ void srmod_free()
 }
 
 /*------------------------------------------------------------*/
-void srmod(slice dwfl /* source   data [nw][ny][nx] */,
-	   slice uwfl /* receiver data [nw][ny][nx] */,
-	   slice refl,
-	   slice wfld
+void srmod(fslice dwfl /* source   data [nw][ny][nx] */,
+	   fslice uwfl /* receiver data [nw][ny][nx] */,
+	   fslice refl,
+	   fslice wfld
     )
 /*< Apply S/R modeling >*/
 {
@@ -177,35 +177,35 @@ void srmod(slice dwfl /* source   data [nw][ny][nx] */,
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	/* downgoing wavefield */
-	cslice_get(dwfl,iw,ud[0]); taper2(ud);
+	fslice_get(dwfl,iw,ud[0]); taper2(ud);
 
-	cslice_put(wfld,0,ud[0]);
+	fslice_put(wfld,0,ud[0]);
 
-	slice_get(slow,0,so[0]);
+	fslice_get(slow,0,so[0]);
 	for (iz=0; iz<az.n-1; iz++) {
-	    slice_get(slow,iz+1,ss[0]);
+	    fslice_get(slow,iz+1,ss[0]);
 
 	    ssr_ssf(w,ud,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
-	    cslice_put(wfld,iz+1,ud[0]);
+	    fslice_put(wfld,iz+1,ud[0]);
 	}
 	
 	/* upgoing wavefield */
 	LOOP( uu[iy][ix] = 0; );
 
-	slice_get(slow,az.n-1,so[0]);
+	fslice_get(slow,az.n-1,so[0]);
 	for (iz=az.n-1; iz>0; iz--) {
-	    slice_get(slow,iz-1,ss[0]);
+	    fslice_get(slow,iz-1,ss[0]);
 
-	    cslice_get(wfld,iz,ud[0]); 
-	    slice_get (refl,iz,rr[0]); /* reflectivity */
+	    fslice_get(wfld,iz,ud[0]); 
+	    fslice_get(refl,iz,rr[0]); /* reflectivity */
 	    LOOP( ud[iy][ix] *= rr[iy][ix]; );
 	    LOOP( uu[iy][ix] += ud[iy][ix]; );
 
 	    ssr_ssf(w,uu,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	}
-	cslice_put(uwfl,iw,uu[0]);
+	fslice_put(uwfl,iw,uu[0]);
     } /* iw */
 }

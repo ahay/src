@@ -38,9 +38,9 @@ int main (int argc, char *argv[])
     sf_file Fus;    /*   source wavefield file Us( nx, ny,nw) */
     sf_file Fur;    /* receiver wavefield file Us( nx, ny,nw) */
 
-    slice slow;
-    slice imag;
-    slice sdat,rdat;
+    fslice slow;
+    fslice imag;
+    fslice sdat,rdat;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -59,7 +59,6 @@ int main (int argc, char *argv[])
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";
-    slow = slice_init(Fs,alx.n,aly.n,az.n);
     
     Fus = sf_input ( "in");
     Fur = sf_input ("rwf");
@@ -76,9 +75,14 @@ int main (int argc, char *argv[])
     iaxa(Fus,&ae,4); ae.l="e"; oaxa(Fi,&aj,4); /* no of experiments */
     ;                          oaxa(Fi,&aj,5);
 
-    sdat = slice_init(Fus,ax.n,ay.n,aw.n);
-    rdat = slice_init(Fur,ax.n,ay.n,aw.n);
-    imag = slice_init( Fi,ax.n,ay.n,az.n);
+    /* slice management (temp files) */
+    slow = fslice_init(alx.n,aly.n,az.n,sizeof(float));
+    sdat = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
+    rdat = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
+    imag = fslice_init( ax.n, ay.n,az.n,sizeof(float));
+    fslice_load(Fs ,slow,SF_FLOAT);
+    fslice_load(Fus,sdat,SF_COMPLEX);
+    fslice_load(Fur,rdat,SF_COMPLEX);
 
     srmig_init (verb,eps,dt,
 		ae,
@@ -93,5 +97,12 @@ int main (int argc, char *argv[])
     srmig_free();
     srmig_close();
 	
+    /* slice management (temp files) */
+    fslice_dump(Fi,imag,SF_FLOAT);
+    fslice_close(slow);
+    fslice_close(sdat);
+    fslice_close(rdat);
+    fslice_close(imag);
+
     exit (0);
 }
