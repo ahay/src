@@ -14,8 +14,8 @@ DOCUMENTATION
 	manual...
 	sfdoc 
 	      getfloat[s]
-	      expand
-	      demos reference	
+	      demos reference
+	      stdplot doc	
 FILT
 	splint
 	MPI interface
