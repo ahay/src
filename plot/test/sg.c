@@ -13,6 +13,7 @@ int main (int argc, char* argv[])
     g0=.5; 
 
     dgods = strtod(argv[1],NULL);
+
     ns=20; ng=20; size=5;
     ns=10; ng=10; size=10;
     ns=13; ng=18; size=10;

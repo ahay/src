@@ -89,6 +89,22 @@ void vp_fill (const float *xp, const float *yp, int  np)
     }
 }
 
+void vp_ufill (const float *xp, const float *yp, int  np)
+{
+    int i;
+    float x, y;
+
+    putchar (VP_AREA);
+    vp_putint (np);
+
+    for (i = 0; i < np; i++) {
+	x = fx + (xp[i]-ufx) * xscl;
+	y = fy + (yp[i]-ufy) * yscl;
+	vp_putfloat (x);
+	vp_putfloat (y);
+    }
+}
+
 void vp_area (const float *xp, const float *yp, int np, 
 	      int fat, int xmask, int ymask)
 {

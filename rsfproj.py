@@ -133,6 +133,10 @@ incdir = os.path.join(top,'include')
 
 resdir = './Fig'
 
+def set_resdir(dir):
+     global resdir
+     resdir = dir
+
 latex = None
 bibtex = None
 rerun = None
@@ -359,7 +363,7 @@ class Project(Environment):
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
                     LIBS=['rsf','m'],
-                    PROGSUFFIX='.x')
+                    PROGSUFFIX='.exe')
 	if acroread:
 	    self.Append(BUILDERS={'Read':Read})
 	if epstopdf:
@@ -368,6 +372,9 @@ class Project(Environment):
         self.view = []
         self.figs = []
         self.pdfs = []
+    def Exe(self,source,**kw):
+         target = source.replace('.c','.exe')
+         return apply(self.Program,(target,source),kw)
     def Flow(self,target,source,flow,stdout=1,stdin=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
         if not flow:
@@ -398,8 +405,8 @@ class Project(Environment):
                 if rsfdoc.progs.has_key(rsfprog):
                     command = os.path.join(bindir,rsfprog)
                     sources.append(command)
-                elif re.match(r'[^/]+\.x$',command): # local program
-                    command = os.path.join('.',command)
+                elif re.match(r'[^/]+\.exe$',command): # local program
+                    command = os.path.join('.',command)                    
                 #<- check for par files and add to the sources
                 for par in pars:
                     if re.match("^par=",par):
@@ -502,6 +509,8 @@ def Combine(target,source,how,**kw):
     return apply(project.Combine,(target,source,how),kw)
 def Fetch(file,dir):
     return project.Fetch(file,dir)
+def Exe(source,**kw):
+     return apply(project.Exe,[source],kw)
 def End():
     project.End()
 
@@ -509,4 +518,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.22 2004/03/27 03:28:58 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.23 2004/03/29 08:00:12 fomels Exp $	

@@ -111,6 +111,8 @@ void vp_pendn (float x, float y);
 void vp_upendn (float x, float y);
 void vp_erase (void);
 void vp_coltab (int color, float r, float g, float b);
+void vp_fill (const float *xp, const float *yp, int  np);
+void vp_ufill (const float *xp, const float *yp, int  np);
 void vp_area (const float *xp, const float *yp, int np, 
 	      int fat, int xmask, int ymask);
 void vp_uarea (const float *xp, const float *yp, int np, 
@@ -127,5 +129,6 @@ void vp_uraster (unsigned char **array, bool bit, int offset,
 		 int xpix, int ypix, 
 		 float xll, float yll, float xur, float yur, int orient);
 void vp_init(void);
+
 
 #endif

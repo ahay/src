@@ -9,24 +9,26 @@
 #include "vplot.h"
 #include "plot.h"
 
-static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
-static float labelsz, barlabelsz, barmin, barmax, bar0, dbar;
-static int framecol;
+static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
+static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
+static float d1, d2, d3;
+static int framecol, frame1, frame2, frame3;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
+static bool cube=false, flat;
 static char blank[]=" ";
 static const float aspect=0.8;
 
 static struct Label {
     char where;
     int fat;
-    float x, y, xpath, ypath, xup, yup;
+    float x, y, xpath, ypath, xup, yup, min, max;
     char* text;
-} *label1=NULL, *label2=NULL, *title=NULL, *barlabel=NULL;
+} *label1=NULL, *label2=NULL, *label3=NULL, *title=NULL, *barlabel=NULL;
 
 static struct Axis {
     int ntic;
     float or, dnum, num0;
-} *axis1=NULL, *axis2=NULL, *baraxis=NULL;
+} *axis1=NULL, *axis2=NULL, *axis3=NULL, *baraxis=NULL;
 
 static void make_title (sf_file in, char wheret);
 static void make_barlabel (void);
@@ -194,9 +196,28 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     if (!sf_getint ("axiscol",&framecol)) framecol=7;
 }
 
+void vp_cubeplot_init (int n1pix, int n2pix, int n1front, int n2front, 
+		       bool flat1) 
+{
+    min1 = -0.5;
+    max1 = n1pix-0.5;
+    mid1 = n1front-0.5;
+
+    min2 = -0.5;
+    max2 = n2pix-0.5;
+    mid2 = n2front-0.5;
+
+    cube = true;
+    flat = flat1;
+
+    vp_stdplot_init (min1,max1,min2,max2, true, false, false, false);
+    swap(&mid1,&mid2); /* transp=true */
+}
+
 static void make_labels (sf_file in, char where1, char where2)
 {
-    float vs, xc, yc;
+    int n1, n2, n3;
+    float vs, xc, yc, x1, y1, x2, y2, o1, o2, o3;
     bool want;
     char* where;
     struct Label *label;
@@ -204,6 +225,7 @@ static void make_labels (sf_file in, char where1, char where2)
     if (sf_getbool ("wantaxis", &want) && !want) {
 	label1 = NULL;
 	label2 = NULL;
+	if (cube) label3 = NULL;
 	return;
     }
 
@@ -215,9 +237,18 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (sf_getbool ("wantaxis2",&want) && !want) {
 	label2 = NULL;
-	if (NULL == label1) return;
+	if (!cube && NULL == label1) return;
     } else if (NULL == label2) {
-	label2 = (struct Label*) sf_alloc(2,sizeof(struct Label));
+	label2 = (struct Label*) sf_alloc(1,sizeof(struct Label));
+    }
+
+    if (cube) {
+	if (sf_getbool ("wantaxis3",&want) && !want) {
+	    label3 = NULL;
+	    if (NULL == label1 && NULL == label2) return;
+	} else if (NULL == label3) {
+	    label3 = (struct Label*) sf_alloc(1,sizeof(struct Label));
+	}
     }
 
     if (transp) {
@@ -227,11 +258,15 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
-    labelsz /= 33.;
+    if (cube) {
+	labelsz *= 0.03; /* slightly smaller */
+    } else {
+	labelsz /= 33.;
+    }
     vs = 2.5*labelsz;
 
     if (NULL != label1) {
-	if (NULL != (where = sf_getstring("wherexlabel"))) {
+	if (!cube && NULL != (where = sf_getstring("wherexlabel"))) {
 	    label1->where = *where;
 	} else {
 	    label1->where = where1;
@@ -247,17 +282,80 @@ static void make_labels (sf_file in, char where1, char where2)
 	label1->ypath = 0.;
 	label1->yup = labelsz;
 
-	xc = 0.5*(max1 + min1);
+	xc = cube? 0.5*(mid1 + min1) : 0.5*(max1 + min1);
 	yc = (label1->where == 't') ? max2: min2;
+
 	vp_umove (xc, yc);
 	vp_where (&xc, &yc);
 
 	label1->x = xc;
 	label1->y = (label1->where == 't') ? yc+vs: yc-vs;
+
+	if (cube) {
+	    if (!sf_histint(in,"n2",&n2)) n2=1;
+	    if (!sf_histfloat(in,"o2",&o2)) o2=0.;
+	    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+	    label1->min = o2-0.5*d2;
+	    label1->max = o2+(n2-0.5)*d2;
+	} else {
+	    label1->min = min1;
+	    label1->max = max1;
+	}
+    }
+
+    if (NULL != label3) {
+	if (!sf_getint ("labelfat",&(label3->fat))) label3->fat=0;
+	if ((NULL == (label3->text=sf_getstring("label3"))) &&
+	    (NULL == (label3->text=sf_histstring(in,"label3"))))
+	    label3->text = blank;
+
+	if (flat) {
+	    vp_umove (mid1,min2);
+	    vp_where (&x1, &y1);
+	    vp_umove (max1,min2);
+	    vp_where (&x2, &y1);
+	    inch3 = fabsf(x2-x1);
+
+	    label3->xpath = labelsz;
+	    label3->xup = 0.;
+	    label3->ypath = 0.;
+	    label3->yup = labelsz;
+
+	    xc = 0.5*(x2+x1);
+	    yc = y1;
+
+	    label3->y = yc-vs;	
+	    label3->x = xc;
+	} else {
+	    vp_umove (mid1,min2);
+	    vp_where (&x1, &y1);
+	    vp_umove (max1,max2-mid2);
+	    vp_where (&x2, &y2);
+	    inch3 = hypotf(x2-x1,y2-y1);
+	    costh = (x2-x1)/inch3;
+	    sinth = (y2-y1)/inch3;
+
+	    label3->xpath = labelsz*costh;
+	    label3->xup = -labelsz*sinth;
+	    label3->ypath = labelsz*sinth;
+	    label3->yup = labelsz*costh;
+
+	    xc = 0.5*(x1+x2);
+	    yc = 0.5*(y1+y2);
+
+	    label3->y = yc-vs*costh;	
+	    label3->x = xc+vs*sinth;
+	}
+
+	n3 = sf_leftsize(in,2);
+	if (!sf_histfloat(in,"o3",&o3)) o3=0.;
+	if (!sf_histfloat(in,"d3",&d3)) d3=1.;
+	label3->min = o3-0.5*d3;
+	label3->max = o3+(n3-0.5)*d3;
     }
 
     if (NULL != label2) {
-	if (NULL != (where = sf_getstring("whereylabel"))) {
+	if (!cube && NULL != (where = sf_getstring("whereylabel"))) {
 	    label2->where = *where;
 	} else {
 	    label2->where = where2;
@@ -277,14 +375,25 @@ static void make_labels (sf_file in, char where1, char where2)
 	label2->xup = labelrot? labelsz: -labelsz;
 
 	xc  = (label2->where == 'l')? min1: max1;
-	yc = 0.5*(min2 + max2);
+	yc = cube? 0.5*(min2 + mid2) : 0.5*(min2 + max2);
 
 	vp_umove (xc, yc);
 	vp_where (&xc, &yc);
 
 	label2->y = yc;	
 	label2->x = (label2->where == 'l')? xc-vs: xc+vs;
-    }
+	
+	if (cube) {
+	    if (!sf_histint(in,"n1",&n1)) n1=1;
+	    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+	    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	    label2->max = o1-0.5*d1;
+	    label2->min = o1+(n1-0.5)*d1;
+	} else {
+	    label2->min = min2;
+	    label2->max = max2;
+	}
+    } 
 }
 
 static void make_baraxis (float min, float max)
@@ -341,8 +450,11 @@ static void make_axes (void)
 	if (!sf_getint ("n1tic",&(axis1->ntic))) axis1->ntic = 1;
 	if (!sf_getfloat ("d1num", &(axis1->dnum)) ||
 	    !sf_getfloat ("o1num", &(axis1->num0))) 
-	    axis1->ntic = vp_optimal_scale(inch1/(aspect*labelsz), 
-					   min1, max1, 
+	    axis1->ntic = vp_optimal_scale(cube? 
+					   inch1*(mid1-min1)/
+					   ((max1-min1)*aspect*labelsz):
+					   inch1/(aspect*labelsz), 
+					   label1->min, label1->max, 
 					   &(axis1->num0), 
 					   &(axis1->dnum));
     }	
@@ -357,10 +469,29 @@ static void make_axes (void)
 	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
 	if (!sf_getfloat ("d2num", &(axis2->dnum)) ||
 	    !sf_getfloat ("o2num", &(axis2->num0))) 
-	    axis2->ntic = vp_optimal_scale(inch2/(aspect*labelsz), 
-					   min2, max2, 
+	    axis2->ntic = vp_optimal_scale(cube?
+					   inch2*(mid2-min2)/
+					   ((max2-min2)*aspect*labelsz):
+					   inch2/(aspect*labelsz), 
+					   label2->min, label2->max, 
 					   &(axis2->num0), 
 					   &(axis2->dnum));
+    }
+
+    if (label3 != NULL) {
+	if (NULL == axis3)
+	    axis3 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+
+	if (!sf_getfloat ("axisor3",&(axis3->or)))
+	    axis3->or = min1;
+	
+	if (!sf_getint ("n3tic",&(axis3->ntic))) axis3->ntic = 1;
+	if (!sf_getfloat ("d3num", &(axis3->dnum)) ||
+	    !sf_getfloat ("o3num", &(axis3->num0))) 
+	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz), 
+					   label3->min, label3->max, 
+					   &(axis3->num0), 
+					   &(axis3->dnum));
     }
 
     wheretics = (NULL != (where = sf_getstring ("wheretics"))) &&
@@ -381,7 +512,7 @@ static void make_title (sf_file in, char wheret)
     if (NULL == title)
 	title = (struct Label*) sf_alloc(1,sizeof(struct Label));
 
-    if (NULL != (where = sf_getstring("wheretitle"))) {
+    if (!cube && NULL != (where = sf_getstring("wheretitle"))) {
 	title->where = *where;
     } else {
 	title->where = wheret;
@@ -419,7 +550,8 @@ static void make_title (sf_file in, char wheret)
     } else {
 	if (NULL != label1 && title->where == label1->where) 
 	    vs += 3.25*labelsz;
- 
+	if (cube) vs += 2.00*labelsz;
+
 	title->ypath = 0.;
 	title->yup = titlesz;
 	title->xpath = titlesz;
@@ -514,12 +646,39 @@ void vp_barframe_init (float min, float max)
 
 void vp_simpleframe(void)
 {
+   /* draw outline */   
     vp_color(framecol);
     vp_umove(min1, min2);
-    vp_udraw(min1, max2);
-    vp_udraw(max1, max2);
-    vp_udraw(max1, min2);
-    vp_udraw(min1, min2);
+
+    if (cube) {
+	if (flat) {
+	    vp_udraw(max1,min2);
+	    vp_udraw(max1,mid2);
+	} else {
+	    vp_udraw(mid1,min2);
+	    vp_udraw(max1,max2-mid2);
+	    vp_udraw(max1,max2);
+	    vp_udraw(mid1,mid2);
+	}
+	vp_udraw(min1,mid2);
+
+	vp_umove(min1,min2);
+	if (flat) {
+	    vp_udraw(min1,max2);
+	    vp_udraw(mid1,max2);
+	} else {
+	    vp_udraw(min1,mid2);
+	    vp_udraw(max1-mid1,max2);
+	    vp_udraw(max1,max2);
+	    vp_udraw(mid1,mid2);
+	}
+	vp_udraw(mid1,min2);
+    } else { /* simple box */
+	vp_udraw(min1, max2);
+	vp_udraw(max1, max2);
+	vp_udraw(max1, min2);
+	vp_udraw(min1, min2);
+    }
 }
 
 void vp_framenum(float num)
@@ -572,8 +731,31 @@ void vp_simplebarframe (void)
 void vp_frame(void)
 {
     int i;
-    float num, xc, yc, vs;
+    float num, xc, yc, vs, xp[4], yp[4];
     char string[32];
+
+    if (cube) {
+	if (flat) {
+	    /* remove rectange */
+	    vp_color(0);
+	    xp[0] = mid1; yp[0] = mid2;
+	    xp[1] = max1; yp[1] = mid2;
+	    xp[2] = max1; yp[2] = max2;
+	    xp[3] = mid1; yp[3] = max2;    
+	    vp_ufill(xp,yp,4);
+	} else {
+	    /* remove two triangles */
+	    vp_color(0);
+	    xp[0] = min1;      yp[0] = mid2;
+	    xp[1] = min1;      yp[1] = max2;
+	    xp[2] = max1-mid1; yp[2] = max2;
+	    vp_ufill(xp,yp,3);
+	    xp[0] = mid1;      yp[0] = min2;
+	    xp[1] = max1;      yp[1] = min2;
+	    xp[2] = max1;      yp[2] = max2-mid2;
+	    vp_ufill(xp,yp,3);
+	}
+    }
 
     vp_simpleframe();
     
@@ -597,8 +779,13 @@ void vp_frame(void)
 	    if (fabsf(axis1->dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 	    
-	    xc = num;
-	    yc = axis1->or;
+	    if (cube) {
+		xc = (num-label1->min)*(mid1-min1)/(label1->max-label1->min);
+		yc = min2;
+	    } else {
+		xc = num;
+		yc = axis1->or;
+	    }
 
 	    vp_umove (xc, yc);
 	    vp_where (&xc, &yc);
@@ -629,9 +816,15 @@ void vp_frame(void)
 	    if (fabsf(axis2->dnum) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 
-	    yc = num;
-	    xc = axis2->or;
-	    
+	    if (cube) {
+		yc = mid2+(num-label2->max)*(mid2-min2)/
+		    (label2->max-label2->min);
+		xc = min1;
+	    } else {
+		yc = num;
+		xc = axis2->or;
+	    }	    
+
 	    vp_umove (xc, yc);
 	    vp_where (&xc, &yc);
 	    vp_draw (xc+vs, yc);
@@ -642,6 +835,51 @@ void vp_frame(void)
 		vp_gtext(xc+5.0*vs, yc, 0., -labelsz, labelsz, 0., string);
 	    } else {
 		vp_gtext(xc+1.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+	    }
+	}
+    }
+
+    if (NULL != label3) {
+	vp_fat (label3->fat);
+
+	/* plot label */
+	vp_tjust (TH_CENTER, TV_TOP);
+	vp_gtext(label3->x, label3->y, 
+		 label3->xpath, label3->ypath, 
+		 label3->xup, label3->yup, label3->text);
+	
+        /* plot tics */
+	vs = -0.5*labelsz;
+	for (i=0; i < axis3->ntic; i++) {
+	    num = axis3->num0 + i*(axis3->dnum);
+	    if (fabsf(axis3->dnum) > FLT_EPSILON && 
+		fabsf(num) < FLT_EPSILON) num=0.;
+
+	    if (flat) {
+		xc = mid1+(num-label3->min)*(max1-mid1)/
+		    (label3->max-label3->min);
+		yc = min2;
+	    
+		vp_umove (xc, yc);
+		vp_where (&xc, &yc);
+		vp_draw (xc, yc+vs);
+
+		sprintf (string, "%1.5g", num);
+		vp_gtext(xc, yc+1.5*vs,labelsz,0.,0.,labelsz,string);
+	    } else {
+		xc = mid1+(num-label3->min)*(max1-mid1)/
+		    (label3->max-label3->min);
+		yc = min2+(num-label3->min)*(max2-mid2-min2)/
+		    (label3->max-label3->min);
+	    
+		vp_umove (xc, yc);
+		vp_where (&xc, &yc);
+		vp_draw (xc-vs*sinth, yc+vs*costh);
+		
+		sprintf (string, "%1.5g", num);
+		vp_gtext(xc-1.5*vs*sinth, yc+1.5*vs*costh, 
+			 labelsz*costh,labelsz*sinth,
+			 -labelsz*sinth,labelsz*costh,string);
 	    }
 	}
     }
@@ -660,6 +898,97 @@ void vp_frame(void)
 		 title->xup, title->yup, title->text);
     }
     
+    if (cube) {
+	/* draw colored lines */
+	vp_color(6);
+	vs = 0.5*labelsz;
+
+	if (NULL != label2) {
+	    yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(label2->min-label2->max);
+
+	    vp_umove(min1,yc);
+ 
+	    if (flat) {
+		vp_udraw(max1,yc);
+	    } else {
+		vp_udraw(mid1,yc);
+		vp_udraw(max1,yc+max2-mid2);
+	    }
+
+	    vp_where(&xc,&yc);
+
+	    num = label2->max+(frame1+0.5)*d1;
+	    sprintf (string,"%1.5g",num);
+
+	    vp_tjust (TH_CENTER, TV_TOP);
+	    if (labelrot) {
+		vp_gtext(xc+4.0*vs,yc,0.,-labelsz,labelsz,0.,string);
+	    } else {
+		vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+	    }
+	}
+
+	if (NULL != label1) {
+	    xc = min1+(mid1-min1)*(frame2+0.5)*d2/(label1->max-label1->min);
+	    vp_umove(xc,min2);
+	    
+	    if (flat) {
+		vp_udraw(xc,max2);
+	    } else {
+		vp_udraw(xc,mid2);
+		vp_udraw(xc+max1-mid1,max2);
+	    }
+	    
+	    vp_where(&xc,&yc);
+	    
+	    num = label1->min+(frame2+0.5)*d2;
+	    sprintf (string,"%1.5g",num);
+	    
+	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	    vp_gtext(xc,yc+0.5*vs, labelsz, 0., 0., labelsz, string);
+	}
+
+	if (NULL != label3) {
+	    yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(label3->max-label3->min);
+	    xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(label3->max-label3->min);
+
+	    if (flat) {
+		vp_umove(xc,min2);
+		vp_udraw(xc,mid2);
+	    } else {
+		vp_umove(xc,yc+min2-mid2);
+		vp_udraw(xc,yc); 
+	    }
+
+	    if (flat) {
+		vp_umove(mid1,yc);
+		vp_udraw(min1,yc);
+	    } else {
+		vp_umove(xc,yc);
+		vp_udraw(xc+min1-mid1,yc);
+	    }
+
+	    vp_where(&xc,&yc);
+
+	    num = label3->min+(frame3+0.5)*d3;
+	    sprintf (string,"%1.5g",num);
+
+	    vp_tjust (TH_CENTER, TV_BOTTOM);
+
+	    if (flat) {
+		if (labelrot) {
+		    vp_gtext(xc-4.0*vs, yc, 0.,-labelsz, labelsz,0.,string);
+		} else {
+		    vp_gtext(xc-0.5*vs, yc, 0., labelsz,-labelsz,0.,string);
+		}
+	    } else {
+		vp_gtext(xc-0.5*vs*sinth, yc+0.5*vs*costh, 
+			 labelsz*costh,labelsz*sinth,
+			 -labelsz*sinth,labelsz*costh,string);
+	    }
+	} /* label3 */
+    } /* if cube */
+
     vp_uclip (min1, min2, max1, max2);
 }
 
@@ -737,6 +1066,15 @@ void vp_barraster (int nbuf, unsigned char** buf)
     vp_simplebarframe();
 }
 
+void vp_cuberaster(int n1, int n2, unsigned char** buf, 
+		   int f1, int f2, int f3) {
+    vp_uraster (buf, false, 256, n1, n2, min1,min2,max1,max2, 3);
+    frame1 = f1;
+    frame2 = f2;
+    frame3 = f3;
+    vp_frame();    
+}
+
 void vp_barline (int nc, float *c, float cmin, float cmax)
 {
     int ic;
@@ -761,4 +1099,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.18 2003/10/18 18:21:45 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.19 2004/03/29 08:00:12 fomels Exp $	 */
