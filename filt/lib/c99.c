@@ -192,20 +192,6 @@ float atan2f(float x, float y)
 /*< float atan2 >*/
 { return (float) atan2(x,y);}
 
-float powf(float x, float y) 
-/*< float pow >*/
-{ return (float) pow(x,y);}
-
-float hypotf(float x, float y) 
-/*< float hypot >*/
-{ return (float) hypot(x,y);}
-
-#endif
-/*^*/
-
-#ifdef __sun    /* SunOS */
-/*^*/
-
 float coshf(float x) 
 /*< float cosh >*/
 { return (float) cosh(x);}
@@ -230,7 +216,15 @@ float atanhf(float x)
 /*< float atanh >*/
 { return (float) atanh(x);}
 
-#endif /* SunOS */
+float powf(float x, float y) 
+/*< float pow >*/
+{ return (float) pow(x,y);}
+
+float hypotf(float x, float y) 
+/*< float hypot >*/
+{ return (float) hypot(x,y);}
+
+#endif
 /*^*/
 
 #endif /* c++ */
