@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsfproj, os, re, string
+import rsfproj, os, re, string, sys
 
 susuffix = '.su'
 pssuffix = '.eps'
@@ -22,7 +22,12 @@ pssuffix = '.eps'
 topdir = os.environ.get('CWPROOT','')
 bindir = os.path.join(topdir,'bin')
 
-suprogs = os.listdir(bindir)
+try:
+    suprogs = os.listdir(bindir)
+except:
+    print "No SU installed"
+    sys.exit(1)
+
 suplots = []
 for prog in suprogs:
     if prog[0] == 'x' and 'ps'+prog[1:] in suprogs:
