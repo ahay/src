@@ -6,7 +6,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    int n, nw, w, iw, i0, maxshift, i, order, i2, n2, nc;
+    int n, nw, w, iw, i0=0, maxshift, i, order, i2, n2, nc;
     float dt,h, eps, lam;
     bool verb, taper;
     float **dat, **dat2, **win, **win2, *coord, *shift, *warp, *xc;

@@ -18,7 +18,7 @@ int main (int argc, char* argv[])
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], sign[SF_MAX_DIM], s[SF_MAX_DIM];
     int n1, n2, i2, i0;
-    char key[6];
+    char key[6], key2[6];
     float *data, o[SF_MAX_DIM], d[SF_MAX_DIM];
     sf_file in, out;
 
@@ -33,12 +33,21 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"sign%d",i+1);
 	if (!sf_getint(key,sign+i)) sign[i]=0;
-	if (!sign[i]) {
+	if (sign[i]) {
 	    dim1 = i;
 	    snprintf(key,3,"o%d",i+1);
-	    if (!sf_getfloat(key,o+i)) o[i]=0.;
+	    snprintf(key2,3,"u%d",i+1);
+	    if (sign[i] > 0) {
+		if (!sf_histfloat(in,key,o+i)) o[i]=0.;
+		sf_putfloat(out,key,0.);
+		sf_putfloat(out,key2,o[i]);
+	    } else {		
+		if (!sf_histfloat(in,key2,o+i)) o[i]=0.;
+		sf_putfloat(out,key,o[i]);
+	    }
 	    snprintf(key,3,"d%d",i+1);
-	    if (!sf_getfloat(key,d+i)) d[i]=1.;
+	    if (!sf_histfloat(in,key,d+i)) d[i]=1.;
+	    sf_putfloat(out,key,1./(sf_npfar(2*(n[i]-1))*d[i]));
 	}
     }
 

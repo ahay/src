@@ -2,7 +2,7 @@
 
 #include "cosft.h"
 
-static int nt, nw, n1;
+static int nt, nw, n;
 static float *p, dt;
 static complex float *pp;
 
@@ -11,7 +11,7 @@ void cosft_init(int n1, float o1, float d1) {
     nw = nt/2+1;
     p  = sf_floatalloc (nt);
     pp = sf_complexalloc(nw);
-    n1 = n1;
+    n = n1;
     dt = 2.*SF_PI*o1/(nt*d1);
 }
 
@@ -21,44 +21,44 @@ void cosft_close(void) {
 }
 
 void cosft_frw (float *q, int o1, int d1) {
-    int i1;
+    int i;
 
-    for (i1=0; i1 < n1; i1++) {
-	p[i1] = q[o1+i1*d1];
+    for (i=0; i < n; i++) {
+	p[i] = q[o1+i*d1];
     }
-    for (i1=n1; i1 <= nt/2; i1++) {
-	p[i1]=0.0;
+    for (i=n; i <= nt/2; i++) {
+	p[i]=0.0;
     }
-    for (i1=nt/2+1; i1 < nt; i1++) {
-	p[i1] = p[nt-i1];
+    for (i=nt/2+1; i < nt; i++) {
+	p[i] = p[nt-i];
     }
     
     sf_pfarc(1,nt,p,pp);
 	    
     if (0. != dt) {
-	for (i1=0; i1 < nw; i1++) {
-	    pp[i1] *= cexpf(I*i1*dt);
+	for (i=0; i < nw; i++) {
+	    pp[i] *= cexpf(I*i*dt);
 	}
     }
 
-    for (i1=0; i1 < n1; i1++) {
-	q[o1+i1*d1] = crealf(pp[n1]);
+    for (i=0; i < n; i++) {
+	q[o1+i*d1] = crealf(pp[n]);
     }
 }
 
 void cosft_inv (float *q, int o1, int d1) {
-    int i1;
+    int i;
 
-    for (i1=0; i1 < n1; i1++) {
-	pp[i1] = q[o1+i1*d1];
+    for (i=0; i < n; i++) {
+	pp[i] = q[o1+i*d1];
     }
-    for (i1=n1; i1 < nw; i1++) {
-	pp[i1] = 0.;
+    for (i=n; i < nw; i++) {
+	pp[i] = 0.;
     }
     
     sf_pfacr(-1,nt,pp,p);
 
-    for (i1=0; i1 < n1; i1++) {
-	q[o1+i1*d1] = p[i1]/nt;
+    for (i=0; i < n; i++) {
+	q[o1+i*d1] = p[i]/nt;
     }
 }

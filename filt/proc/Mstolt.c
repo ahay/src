@@ -12,7 +12,7 @@ int main(int argc, char* argv[])
     float dw,dx,dy, vel, x,y, w,st,sq, *str, *out, *trace;
     sf_file in, out;
 
-    sf_init ();
+    sf_init (argc,argv);
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) nx=1;
     if (!sf_histint(in,"n3",&ny)) ny=1;

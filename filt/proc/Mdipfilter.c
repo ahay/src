@@ -28,43 +28,45 @@
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, nw, n2pad, nk, i3, i2, i1;
-    float d1,d2, dk,k, w0,dw,w, vel,v;
-    float ang1, ang2, ang3, ang4, v1, v2, v3, v4, factor, **data;
-    float complex **cdata, *ctrace;
-    bool angle, pass;
+    int nw, nx, ny, iw, ix, iy, i3, n3, dim;
+    float x0,dx,x, y0,dy,y, w0,dw,w, vel,v;
+    float ang1, ang2, ang3, ang4, v1, v2, v3, v4, factor, *ctrace;
+    bool angle, pass, compl;
     sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
+    compl = (SF_COMPLEX == sf_gettype(in));
 
-    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+    if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+    if (!sf_getint("dim",&dim)) dim=2;
+    if (3==dim) {
+	if (!sf_histint(in,"n3",&ny)) sf_error("No n3= in input");
+	if (!sf_histfloat(in,"d3",&dy)) sf_error("No d3= in input");
+	if (!sf_histfloat(in,"o3",&y0)) sf_error("No o3= in input");
+	n3 = sf_leftsize(in,3);		
+    } else {
+	ny=1;
+	y0=0.;
+	dy=1.;
+	n3 = sf_leftsize(in,2);
+    }
 
-/* determine frequency sampling (for complex FFT) */
-    nw = sf_npfa(n1);
-    dw = 2.0*SF_PI/(nw*d1);
-    w0 = -SF_PI/d1;
-
-/* determine wavenumber sampling (for real to complex FFT) */
-    n2pad = sf_npfar(n2);
-    nk = n2pad/2+1;
-    dk = 2.0*SF_PI/(n2pad*d2);
-
-    data = sf_floatalloc2(n1,n2pad);
-    cdata = sf_complexalloc2(n1,nk);
-    ctrace = sf_complexalloc(nw);
+    if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+    if (!sf_histfloat(in,"o1",&w0)) sf_error("No o1= in input");
+    if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
+    
+    ctrace = sf_floatalloc(compl? 2*nw: nw);
 
     if (!sf_getbool("angle",&angle)) angle=false;
 
     if (angle) {	
 	if (!sf_getfloat("v",&v)) v=-1.;
-	if (v < 0.) v=(d2*(n2-1))/(d1*(n1-1));
+	if (v < 0.) v=(dw*(nw-1))/hypotf(dx*(nx-1),dy*(ny-1));
 
 	if (!sf_getfloat("ang1",&ang1)) ang1=-50.;
 	if (!sf_getfloat("ang2",&ang2)) ang2=-45.;
@@ -87,70 +89,44 @@ int main(int argc, char* argv[])
     if (!sf_getbool("pass",&pass)) pass=true;
 
     for (i3=0; i3 < n3; i3++) { 
-	sf_read(data[0],sizeof(float),n1*n2,in);
+	for (iy=0; iy < ny; iy++) {
+	    y = y0 + iy*dy;
+	    for (ix=0; ix < nx; ix++) {
+		x = x0 + ix*dx;
+		x = hypotf(x,y);
 
-	/* pad */ 
-	for (i2=n2; i2 < n2pad; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		data[i2][i1]=0.;
-	    }
-	}
+		sf_read(ctrace,sizeof(float),compl? 2*nw: nw,in);
 
-	/* Fourier transform x to k */
-	sf_pfa2rc(-1,2,n1,n2pad,data[0],cdata[0]);
+		if (x > FLT_EPSILON) {	    
+		    for (iw=0; iw < nw; iw++) {
+			w = w0+iw*dw;		    
+			vel = w/x; 
 
-	for (i2=0; i2 < nk; i2++) {
-	    k = i2*dk;
-
-	    /* Fourier transform t to w, with w centered */
-	    for (i1=0; i1 < n1; i1++) {
-		/* include FFT scaling */
-		ctrace[i1] = (i1%2 ? -cdata[i2][i1] : cdata[i2][i1])/nw;
-	    }	    
-	    for (i1=n1; i1 < nw; i1++) {
-		ctrace[i1] = 0.;
-	    }
-	    sf_pfacc(1,nw,ctrace);
-	    
-	    for (i1=0; i1 < nw; i1++) {
-		w = w0+i1*dw;		    
-		vel = w/(k+FLT_EPSILON); 
+			if ((vel>=v1) && (vel<=v2)) {
+			    factor=1.-sinf(0.5*SF_PI*(vel-v1)/(v2-v1));
+			} else if ((vel>=v2) && (vel<=v3)) {
+			    factor=0.;
+			} else if ((vel>=v3) && (vel<=v4)) {
+			    factor=sinf(0.5*SF_PI*(vel-v3)/(v4-v3));
+			} else {
+			    factor=1.;
+			}
+			
+			if (pass) factor=1.-factor;
 		
-		if ((vel>=v1) && (vel<=v2)) {
-		    factor=1.-sinf(0.5*SF_PI*(vel-v1)/(v2-v1));
-		} else if ((vel>=v2) && (vel<=v3)) {
-		    factor=0.;
-		} else if ((vel>=v3) && (vel<=v4)) {
-		    factor=sinf(0.5*SF_PI*(vel-v3)/(v4-v3));
-		} else {
-		    factor=1.;
+			if (compl) {
+			    ctrace[2*iw] *= factor;
+			    ctrace[2*iw+1] *= factor;
+			} else {
+			    ctrace[iw] *= factor;
+			}
+		    } /* iw */
 		}
-		
-		if (pass) factor=1.-factor;
-		
-		ctrace[i1] *= factor;
-	    }
 
-	    /* Fourier transform w to t */
-	    sf_pfacc(-1,nw,ctrace);
-
-	    for (i1=0; i1 < n1; i1++) {
-		cdata[i2][i1] = (i1%2 ? -ctrace[i1] : ctrace[i1]);
-	    }
-	}
-
-	/* Fourier transform k to x */
-	sf_pfa2cr(1,2,n1,n2pad,cdata[0],data[0]);
-
-	/* FFT scaling */
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		data[i2][i1] /= n2pad;
-	    }
-	}
-
-	sf_write(data[0],sizeof(float),n1*n2,out);
-    } /* loop over n3 */
+		sf_write(ctrace,sizeof(float),compl? 2*nw: nw,out);
+	    } /* ix */
+	} /* iy */
+    } /* i3 */
 
     exit(0);
 }
