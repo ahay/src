@@ -95,6 +95,8 @@ int vp_optimal_scale(float chars, float min, float max,
     float num;
     char string[32];
 
+    nopt = 0;
+
     for (ntics = chars; ntics >= 1; ntics--) {
 	nopt = optimal_scale(ntics, min, max, onum, dnum);
 	

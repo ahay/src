@@ -9,7 +9,7 @@
 #include "vplot.h"
 
 static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
-static float labelsz, barlabelsz;
+static float labelsz, barlabelsz, barmin, barmax;
 static int framecol;
 static bool labelrot, transp, wheretics, scalebar, vertbar;
 static char blank[]=" ";
@@ -45,7 +45,7 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     bool pad, set, xreverse, yreverse;
     float mid, off, scale1, scale2, uorig1, uorig2, crowd, barwd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
-    char* barpos;
+    char* bartype;
 
     transp = transp1;
     if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
@@ -130,15 +130,19 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
 
     /* make frame smaller to accomodate scale bar */
     if (scalebar) {
-	vertbar = (NULL == (barpos = sf_getstring("bartype"))) ||
-	    (barpos[0] == 'v');
+	vertbar = (NULL == (bartype = sf_getstring("bartype"))) ||
+	    (bartype[0] == 'v');
 	if (!sf_getfloat("barwidth",&barwd)) barwd = 0.36;
 	if (vertbar) {
 	    xur -= (0.07*screenwd + barwd);
 	    xll -= 0.5*barwd;
+	    barmax = 0.88*screenwd;
+	    barmin = barmax-barwd;
 	} else {
 	    yur += 0.4*barwd;
 	    yll += (0.04*screenht + barwd);
+	    barmin = 0.12*screenht;
+	    barmax = barmin+barwd;
 	}
     }
 
@@ -470,14 +474,36 @@ void vp_simpleframe(void)
 
 void vp_barframe (void)
 {
-    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2);
+    float min, max;
+
+/*    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2); */
 
     vp_color(framecol);
-    vp_move(orig1+0.6*inch1,orig2-0.5*inch2);
-    vp_draw(orig1+0.7*inch1,orig2-0.5*inch2);
-    vp_draw(orig1+0.7*inch1,orig2+0.5*inch2);
-    vp_draw(orig1+0.6*inch1,orig2+0.5*inch2);
-    vp_draw(orig1+0.6*inch1,orig2-0.5*inch2);
+    if (vertbar) {
+	min = orig2-0.5*inch2;
+	max = orig2+0.5*inch2;
+
+	vp_clip(barmin-0.1*inch1,min-0.1*inch2,
+		barmax+0.1*inch1,max+0.1*inch2);
+
+	vp_move(barmin,min);
+	vp_draw(barmax,min);
+	vp_draw(barmax,max);
+	vp_draw(barmin,max);
+	vp_draw(barmin,min);
+    } else {
+	min = orig1-0.5*inch1;
+	max = orig1+0.5*inch1;
+
+	vp_clip(min-0.1*inch1,barmin-0.1*inch2,
+		max+0.1*inch1,barmax+0.1*inch2);
+
+	vp_move(min,barmin);
+	vp_draw(min,barmax);
+	vp_draw(max,barmax);
+	vp_draw(max,barmin);
+	vp_draw(min,barmin);
+    }
 }
 
 void vp_frame(void)
