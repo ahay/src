@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(   "py",&py  ))   py =     0; /* padding on x-line wavenumber */
     if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper size */
     if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
-
+    
     /* slowness parameters */
     Fs = sf_input ("slo");
     iaxa(Fs,&alx,1); alx.l="lx";
@@ -71,11 +71,11 @@ int main (int argc, char *argv[])
     iaxa(Fd,&aw,3); aw.l="w"; oaxa(Fu,&aw,3);
 
     /* slice management (temp files) */
-    slow = fslice_init(alx.n,aly.n,az.n,sizeof(float));
-    dwfl = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
-    uwfl = fslice_init( ax.n, ay.n,aw.n,sizeof(float complex));
-    wfld = fslice_init( ax.n, ay.n,az.n,sizeof(float complex)); /* temp */
-    refl = fslice_init( ax.n, ay.n,az.n,sizeof(float));
+    slow = fslice_init(alx.n*aly.n, az.n,sizeof(float));
+    dwfl = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
+    uwfl = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
+    wfld = fslice_init( ax.n* ay.n, az.n,sizeof(float complex)); /* temp */
+    refl = fslice_init( ax.n* ay.n, az.n,sizeof(float));
     fslice_load(Fs,slow,SF_FLOAT);
     fslice_load(Fd,dwfl,SF_COMPLEX);
     fslice_load(Fr,refl,SF_FLOAT);
@@ -92,7 +92,7 @@ int main (int argc, char *argv[])
     srmod(dwfl,uwfl,refl,wfld);
     srmod_free();
     srmod_close();
-
+    
     /* slice management (temp files) */
     fslice_dump(Fu,uwfl,SF_COMPLEX);
     fslice_close(slow);
@@ -100,6 +100,6 @@ int main (int argc, char *argv[])
     fslice_close(uwfl);
     fslice_close(wfld);
     fslice_close(refl);
-
+    
     exit (0);
 }

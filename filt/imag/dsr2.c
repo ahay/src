@@ -152,8 +152,8 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     /* precompute taper array */
     taper2_init(nx,nh,ntx,nth,true,false);
 
-    mms = fslice_init(nh,nx,nz,sizeof(int));
-    mmr = fslice_init(nh,nx,nz,sizeof(int));
+    mms = fslice_init(nh*nx,nz,sizeof(int));
+    mmr = fslice_init(nh*nx,nz,sizeof(int));
 }
 
 void dsr2_close(void)

@@ -66,39 +66,39 @@ int main (int argc, char *argv[])
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";
-    slow = fslice_init(alx.n,aly.n,az.n,sizeof(float));
-	fslice_load(Fs,slow,SF_FLOAT);
+    slow = fslice_init(alx.n*aly.n,az.n,sizeof(float));
+    fslice_load(Fs,slow,SF_FLOAT);
     
     switch(mode[0]) {
 	case 'w': /* save wavefield */
 	    Fd = sf_input ( "in");
 	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
 	    if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
- 
+	    
 	    iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fw,&amx,1);
 	    iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fw,&amy,2);
 	    iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fw,&ahx,3);
 	    ;                            oaxa(Fw,&az ,4);
 	    iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fw,&aw ,5);
-
-	    data = fslice_init(amx.n*amy.n,ahx.n,     aw.n,sizeof(float complex));
-	    wfld = fslice_init(amx.n*amy.n,ahx.n,az.n*aw.n,sizeof(float complex));
-		fslice_load(Fd,data,SF_COMPLEX);
+	    
+	    data = fslice_init(amx.n*amy.n*ahx.n,      aw.n,sizeof(float complex));
+	    wfld = fslice_init(amx.n*amy.n*ahx.n, az.n*aw.n,sizeof(float complex));
+	    fslice_load(Fd,data,SF_COMPLEX);
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
 		Fu = sf_input ( "in");
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
 		if (SF_COMPLEX != sf_gettype(Fu)) sf_error("Need complex data");
-
+		
 		iaxa(Fu,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
 		iaxa(Fu,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
 		iaxa(Fu,&ahx,3); ahx.l="hx"; oaxa(Fd,&ahx,3);
 		iaxa(Fu,&aw ,4);  aw.l= "w"; oaxa(Fd,&aw ,4);
 		iaxa(Fu,&ae ,5);  ae.l= "e"; oaxa(Fd,&ae ,5);
-
-	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
-	    wfld = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+		
+		data = fslice_init(amx.n*amy.n*ahx.n, aw.n*ae.n,sizeof(float complex));
+		wfld = fslice_init(amx.n*amy.n*ahx.n, aw.n*ae.n,sizeof(float complex));
 		fslice_load(Fu,wfld,SF_COMPLEX);
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
@@ -110,9 +110,9 @@ int main (int argc, char *argv[])
 		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fu,&ahx,3);
 		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fu,&aw ,4);
 		iaxa(Fd,&ae ,5);  ae.l= "e"; oaxa(Fu,&ae ,5);
-
-	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
-	    wfld = fslice_init(amx.n*amy.n,ahx.n,aw.n*ae.n,sizeof(float complex));
+		
+		data = fslice_init(amx.n*amy.n*ahx.n, aw.n*ae.n,sizeof(float complex));
+		wfld = fslice_init(amx.n*amy.n*ahx.n, aw.n*ae.n,sizeof(float complex));
 		fslice_load(Fd,data,SF_COMPLEX);
 	    }
 	    break;
@@ -127,14 +127,14 @@ int main (int argc, char *argv[])
 		if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 		if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
 		aw.l="w";
-
+		
 		iaxa(Fi,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
 		iaxa(Fi,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
 		iaxa(Fi,&ahx,3); ahx.l="hx"; oaxa(Fd,&ahx,3);
 		iaxa(Fi,&az ,4);  az.l= "z"; oaxa(Fd,&aw ,4);
 		
-	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n,sizeof(float complex));
-	    imag = fslice_init(amx.n*amy.n,ahx.n,az.n,sizeof(float));
+		data = fslice_init(amx.n*amy.n*ahx.n, aw.n,sizeof(float complex));
+		imag = fslice_init(amx.n*amy.n*ahx.n, az.n,sizeof(float));
 		fslice_load(Fi,imag,SF_FLOAT);
 	    } else { /* migration */
 		Fd = sf_input ( "in");
@@ -145,8 +145,8 @@ int main (int argc, char *argv[])
 		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
 		iaxa(Fd,&ahx,3); ahx.l="hx"; oaxa(Fi,&ahx,3);
 		iaxa(Fd,&aw ,4);  aw.l= "w"; oaxa(Fi,&az ,4);
-	    data = fslice_init(amx.n*amy.n,ahx.n,aw.n,sizeof(float complex));
-	    imag = fslice_init(amx.n*amy.n,ahx.n,az.n,sizeof(float));
+		data = fslice_init(amx.n*amy.n*ahx.n, aw.n,sizeof(float complex));
+		imag = fslice_init(amx.n*amy.n*ahx.n, az.n,sizeof(float));
 		fslice_load(Fd,data,SF_COMPLEX);
 	    } 
 	    break;
@@ -174,37 +174,37 @@ int main (int argc, char *argv[])
 	    camig_free();
 	    break;
     }
-
+    
     camig_close();
-
-	    switch(mode[0]) {
+    
+    switch(mode[0]) {
         case 'w':
-        fslice_dump(Fw,wfld,SF_COMPLEX);
-        fslice_close(data);
-        fslice_close(wfld);
-        break;
+	    fslice_dump(Fw,wfld,SF_COMPLEX);
+	    fslice_close(data);
+	    fslice_close(wfld);
+	    break;
         case 'd':
-        if(inv) {
+	    if(inv) {
                 fslice_dump(Fd,data,SF_COMPLEX);
-        } else {
+	    } else {
                 fslice_dump(Fw,wfld,SF_COMPLEX);
-        }
-        fslice_close(data);
-        fslice_close(wfld);
-        break;
+	    }
+	    fslice_close(data);
+	    fslice_close(wfld);
+	    break;
         case 'm':
-        if(inv) {
+	    if(inv) {
                 fslice_dump(Fd,data,SF_COMPLEX);
-        } else {
+	    } else {
                 fslice_dump(Fi,imag,SF_FLOAT);
-        }
-        fslice_close(data);
-        fslice_close(imag);
+	    }
+	    fslice_close(data);
+	    fslice_close(imag);
         default:
-        break;
+	    break;
     }
     fslice_close(slow);
-
+    
     
     exit (0);
 }

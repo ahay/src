@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(   "py",&py  ))   py =     0; /* padding on x-line wavenumber */
     if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper size */
     if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
-
+    
     /* slowness parameters */
     Fs = sf_input ("slo");
     iaxa(Fs,&alx,1); alx.l="lx";
@@ -76,10 +76,10 @@ int main (int argc, char *argv[])
     ;                          oaxa(Fi,&aj,5);
 
     /* slice management (temp files) */
-    slow = fslice_init(alx.n,aly.n,az.n,     sizeof(float));
-    sdat = fslice_init( ax.n, ay.n,aw.n*ae.n,sizeof(float complex));
-    rdat = fslice_init( ax.n, ay.n,aw.n*ae.n,sizeof(float complex));
-    imag = fslice_init( ax.n, ay.n,az.n,     sizeof(float));
+    slow = fslice_init(alx.n*aly.n, az.n,     sizeof(float));
+    sdat = fslice_init( ax.n* ay.n, aw.n*ae.n,sizeof(float complex));
+    rdat = fslice_init( ax.n* ay.n, aw.n*ae.n,sizeof(float complex));
+    imag = fslice_init( ax.n* ay.n, az.n,     sizeof(float));
     fslice_load(Fs ,slow,SF_FLOAT);
     fslice_load(Fus,sdat,SF_COMPLEX);
     fslice_load(Fur,rdat,SF_COMPLEX);

@@ -50,8 +50,8 @@ struct Slice {
 struct FSlice {
     FILE* file;
     char* name;
-    off_t n12;
-    int n3;
+    off_t n1;
+    int   n2;
 };
 
 
@@ -101,31 +101,31 @@ void cslice_put(slice sl, int i3, complex float* data)
 
 /*------------------------------------------------------------*/
 
-fslice fslice_init(int n1, int n2, int n3, size_t size)
+fslice fslice_init(int n1, int n2, size_t size)
 /*< initialize a sliceable file object >*/
 {
     fslice sl;
 
     sl = (fslice) sf_alloc(1,sizeof(*sl));
     sl->file = sf_tempfile(&(sl->name), "w+b");
-    sl->n12 = n1*n2*size;
-    sl->n3 = n3;
+    sl->n1 = n1*size;
+    sl->n2 = n2;
     
     return sl;
 }
 
-void fslice_get(fslice sl, int i3, void* data)
-/*< get a slice at level i3 >*/
+void fslice_get(fslice sl, int i2, void* data)
+/*< get a slice at level i2 >*/
 {
-    fseeko(sl->file,i3*(sl->n12),SEEK_SET);
-    fread(data,sl->n12,1,sl->file);
+    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
+    fread(data,sl->n1,1,sl->file);
 }
 
-void fslice_put(fslice sl, int i3, void* data)
-/*< put a slice at level i3 >*/
+void fslice_put(fslice sl, int i2, void* data)
+/*< put a slice at level i2 >*/
 {
-    fseeko(sl->file,i3*(sl->n12),SEEK_SET);
-    fwrite(data,sl->n12,1,sl->file);
+    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
+    fwrite(data,sl->n1,1,sl->file);
 }
 
 void fslice_close(fslice sl)
@@ -142,7 +142,7 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
     char buf[BUFSIZ];
 
     /* data size */
-    n = (sl->n3)*(sl->n12);
+    n = (sl->n2)*(sl->n1);
 
     /* rewind */
     if (0 != fseeko(sl->file,0,SEEK_SET))
@@ -175,7 +175,7 @@ void fslice_dump(sf_file out, fslice sl, sf_datatype type)
     char buf[BUFSIZ];
 
     /* data size */
-    n = (sl->n3)*(sl->n12);
+    n = (sl->n2)*(sl->n1);
 
     /* rewind */
     if (0 != fseeko(sl->file,0,SEEK_SET))
