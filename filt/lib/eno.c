@@ -24,6 +24,9 @@
 #include "eno.h"
 #include "alloc.h"
 
+#include "_defs.h"
+/*^*/
+
 #ifndef _sf_eno_h
 
 typedef struct Eno *sf_eno;
@@ -43,13 +46,6 @@ struct Eno {
 /* concrete data type */
 
 static const float big_number = FLT_MAX;
-
-#ifndef MAX
-#define MAX(a,b) ((a)>(b))?(a):(b)
-#endif
-#ifndef MIN
-#define MIN(a,b) ((a)<(b))?(a):(b)
-#endif
 
 sf_eno sf_eno_init (int order /* interpolation order */, 
 	      int n     /* data size */)
@@ -110,8 +106,8 @@ void sf_eno_apply (sf_eno ent,
     int j, k, i1, i2, n;
     float s, s1, y, w, g, g1;
     
-    i2 = MAX(0,MIN(i,ent->n-ent->order));
-    i1 = MIN(i2,MAX(0,i-ent->order+2));
+    i2 = SF_MAX(0,SF_MIN(i,ent->n-ent->order));
+    i1 = SF_MIN(i2,SF_MAX(0,i-ent->order+2));
     
     w = fabsf(ent->diff[ent->order-1][i1]);
     for (j=i1+1; j <=i2; j++) {
