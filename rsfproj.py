@@ -306,7 +306,7 @@ combine ={
 
 class Project(Environment):
     def __init__(self,**kw):
-        Environment.__init__(self,**kw)
+        apply(Environment.__init__,(self,),kw)
         # Add f90 later
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
@@ -410,13 +410,14 @@ class Project(Environment):
             self.junk = self.junk + targets
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
-        return self.Flow(target,source,flow,suffix=suffix,**kw)
+        kw.update({'suffix':suffix})
+        return apply(self.Flow,(target,source,flow),kw)
     def Result(self,target,source,flow,clean=0,suffix=vpsuffix,
                pstexpen=None,**kw):
         target2 = os.path.join(resdir,target)
         if flow:
-            plot = self.Plot(target2,source,flow,
-                             clean=clean,suffix=suffix,**kw)
+            kw.update({'clean':clean,'suffix':suffix})
+            plot = apply(self.Plot,(target2,source,flow),kw)
             self.Default (plot)
             self.view.append(self.View(target + '.view',plot))
             build = self.Build(target2 + pssuffix,plot,opts=pstexpen)
@@ -435,12 +436,11 @@ class Project(Environment):
         flow = apply(combine[how],[len(source)])
         if vppen:
             flow = flow + ' ' + vppen
+        kw.update({'src_suffix':vpsuffix,'stdin':0})
         if result:
-            return self.Result(target,source,flow,src_suffix=vpsuffix,
-                               stdin=0,**kw)
+            return apply(self.Result,(target,source,flow),kw)
         else:
-            return self.Plot(target,source,flow,src_suffix=vpsuffix,
-                             stdin=0,**kw)  
+            return apply(self.Plot,(target,source,flow),kw)
     def End(self):
         self.Alias('view',self.view)
 #        self.Alias('clean',self.Clean('clean',None,junk=self.junk))
@@ -454,13 +454,13 @@ class Project(Environment):
 # Default project
 project = Project()
 def Flow(target,source,flow,**kw):
-    return project.Flow(target,source,flow,**kw)
+    return apply(project.Flow,(target,source,flow),kw)
 def Plot (target,source,flow,**kw):
-    return project.Plot(target,source,flow,**kw)
+    return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow,**kw):
-    return project.Result(target,source,flow,**kw)
+    return apply(project.Result,(target,source,flow),kw)
 def Combine(target,source,how,**kw):
-    return project.Combine(target,source,how,**kw)
+    return apply(project.Combine,(target,source,how),kw)
 def Fetch(file,dir):
     return project.Fetch(file,dir)
 def End():

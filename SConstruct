@@ -1,8 +1,10 @@
 import os, sys, string, re
 import configure, rsfdoc
 
-here = os.getcwd()
-root = os.environ.setdefault('RSFROOT',here)
+if os.environ.has_key('RSFROOT'):
+    root = os.environ['RSFROOT']
+else:
+    root = os.getcwd()
 
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')

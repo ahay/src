@@ -7,7 +7,7 @@ from SCons.Defaults import StaticCheckSet, SharedCheckSet
 
 def check_all(context):
     cc(context)
-    api = context.env.get('API','').lower().split(',')
+    api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
         cxx(context)
     if 'fortran' in api:

@@ -44,7 +44,7 @@ for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
 
-api = env.get('API','').lower().split(',')
+api = string.split(string.lower(env.get('API','')),',')
 
 ##############################################################################
 # C++ BINDING
