@@ -3,7 +3,6 @@
  * time-domain acoustic FD modeling
  */
 
-
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -25,7 +24,7 @@ int main(int argc, char* argv[])
     int   nt,nz,nx;
     float ot,oz,ox;
     float dt,dz,dx;
-    float idx,idz;
+    float idx,idz,dt2;
 
     /* wavefield arrays */
     float **um, **uo, **up, **ud;
@@ -35,9 +34,8 @@ int main(int argc, char* argv[])
     float c1=+16./12.;
     float c2=- 1./12.;
 
-    /* misc */
+    /* indices */
     int it,iz,ix;
-
     
     /* 
      * init param I/O
@@ -59,7 +57,8 @@ int main(int argc, char* argv[])
     if(! sf_histint(   in,"n1",&nt)) sf_error("No nt in wvl");  
     if(! sf_histfloat( in,"d1",&dt)) sf_error("No dt in wvl");
     if(! sf_histfloat( in,"o1",&ot)) sf_error("No ot in wvl");
-    
+    dt2=dt*dt;
+
     /* 
      * read wavelet
      */
@@ -78,7 +77,7 @@ int main(int argc, char* argv[])
     
     idx = 1/(dx*dx);
     idz = 1/(dz*dz);
-        
+
     /* 
      * read velocity, density, reflectivity
      */
@@ -91,26 +90,22 @@ int main(int argc, char* argv[])
     rr=sf_floatalloc2(nz,nx);
     sf_floatread(rr[0],nz*nx,ref);
     
-    
     /* 
      * setup output header
      */
     sf_putint  (out,"n1",nz);
-    sf_putfloat(out,"o1",dz);
-    sf_putfloat(out,"d1",oz);
+    sf_putfloat(out,"o1",oz);
+    sf_putfloat(out,"d1",dz);
     sf_putint  (out,"n2",nx);
-    sf_putfloat(out,"o2",dx);
-    sf_putfloat(out,"d2",ox);
+    sf_putfloat(out,"o2",ox);
+    sf_putfloat(out,"d2",dx);
     sf_putint  (out,"n3",nt);
-    sf_putfloat(out,"o3",dt);
-    sf_putfloat(out,"d3",ot);
-
-    
+    sf_putfloat(out,"o3",ot);
+    sf_putfloat(out,"d3",dt);
 
     /* 
      * allocate temporary arrays
      */
-
     up=sf_floatalloc2(nz,nx);
     uo=sf_floatalloc2(nz,nx);
     um=sf_floatalloc2(nz,nx);
@@ -125,16 +120,11 @@ int main(int argc, char* argv[])
 	}
     }
     
-    fprintf(stderr,"%d %d \n",nz,nx);
-    fprintf(stderr,"%f %f %f\n", c0,c1,c2);
-    fprintf(stderr,"%f %f   \n", idx,idz);
-    
-    
     /* 
      *  MAIN LOOP
      */
     for (it=0; it<nt; it++) {
-	fprintf(stderr,"%d\t",it);
+	fprintf(stderr,"%d\n",it);
 	
 	/* 4th order laplacian */
 	for (iz=2; iz<nz-2; iz++) {
@@ -154,30 +144,52 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	/* exploding reflectors */
+	/* inject wavelet */
 	for (iz=0; iz<nz; iz++) {
 	    for (ix=0; ix<nx; ix++) {
 		ud[ix][iz] -= wvl[it] * rr[ix][iz];
 	    }
 	}
-	fprintf(stderr,"%g\t",wvl[it]);
-	fprintf(stderr,"%g\n",ud[10][10]);
-	
+/*	fprintf(stderr,"INJ\n");*/
+/*	for (iz=0; iz<nz; iz++) {*/
+/*	    for (ix=0; ix<nx; ix++) {*/
+/*		fprintf(stderr," %g ",ud[ix][iz]);*/
+/*	    }*/
+/*	    fprintf(stderr,"\n");*/
+/*	}*/
+/*	fprintf(stderr,"\n");*/
+
 	/* time step */
 	for (iz=0; iz<nz; iz++) {
 	    for (ix=0; ix<nx; ix++) {
-		up[ix][iz] = 2*uo[ix][iz] 
+		up[ix][iz] = 
+		    2*uo[ix][iz] 
 		    - um[ix][iz] 
-		    + ud[ix][iz] * dt*dt;
+		    + ud[ix][iz] * dt2; 
 		
 		um[ix][iz] = uo[ix][iz];
 		uo[ix][iz] = up[ix][iz];
 	    }
 	}
 	
+/*	for (iz=0; iz<nz; iz++) {*/
+/*	    for (ix=0; ix<nx; ix++) {*/
+/*		fprintf(stderr," %g ",uo[ix][iz]);*/
+/*	    }*/
+/*	    fprintf(stderr,"\n");*/
+/*	}*/
+
+/*	for (iz=0; iz<nz; iz++) {*/
+/*	    for (ix=0; ix<nx; ix++) {*/
+/*		uo[ix][iz] = it;*/
+/*	    }*/
+/*	}*/
+
 	/* write wavefield to output */
-	sf_floatwrite(ud[0],nz*nx,out);
+	sf_floatwrite(uo[0],nz*nx,out);
+
+/*	fprintf(stderr,"\n-----------------------------\n");*/
     }
-    
+
     exit (0);
 }
