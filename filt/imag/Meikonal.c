@@ -1,5 +1,4 @@
-/* Fast marching eikonal solver (3-D).
-*/
+/* Fast marching eikonal solver (3-D). */
 /*
 Copyright (C) 2004 University of Texas at Austin
 

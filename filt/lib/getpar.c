@@ -16,6 +16,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
 
@@ -23,6 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <limits.h>
 
 #include "getpar.h"
 #include "error.h"
@@ -45,6 +47,7 @@ void sf_init(int argc,char *argv[])
     struct utsname uhost;
     FILE *fp;
     size_t len;
+    char *rsf, sfdoc[PATH_MAX];
 
     pars = sf_simtab_init (argc);
 
@@ -53,8 +56,17 @@ void sf_init(int argc,char *argv[])
     prog = (NULL == prog)? argv[0]:prog+1;
 
     /* no pars and input from terminal */
-    if (1==argc && isatty(fileno(stdin)))
-	execlp("sfdoc","sfdoc",prog,NULL); /* selfdoc and exit */
+    if (1==argc && isatty(fileno(stdin))) {
+	/* selfdoc and exit */
+	rsf = getenv("RSFROOT");
+	if (NULL != rsf) {
+	    (void) snprintf(sfdoc,PATH_MAX,"%s/bin/sfdoc",rsf);
+	    execl(sfdoc,sfdoc,prog,NULL);
+	} else { /* no RSFROOT, try it anyway */
+	    execlp("sfdoc","sfdoc",prog,NULL); 
+	}
+	sf_error("Could not find sfdoc in $RSFROOT/bin or in $PATH");
+    }
 	
     /* set user */
     user = getlogin();

@@ -236,10 +236,10 @@ static int dist(int k, float x1, float x2, float x3)
     return 0;
 }
 
-int distance(int np         /* number of points */, 
-	     float **points /* point coordinates */,
-	     float *d       /* grid sampling [3] */,
-	     float *o       /* grid origin [3] */)
+int neighbors_distance(int np         /* number of points */, 
+		       float **points /* point coordinates[np][3] */,
+		       float *d       /* grid sampling [3] */,
+		       float *o       /* grid origin [3] */)
 /*< initialize distance computation >*/
 {
     int npoints, ip, i, j, n123, ix[3], k;
