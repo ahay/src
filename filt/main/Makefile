@@ -8,7 +8,7 @@ LDFLAGS = -L../rsf -lrsf -lm
 
 PROGS = add attr cat cmplx cp dd disfil get headermath headersort \
 	imag in interleave log math merge mv pad real reverse rm \
-	rtoc scale segyread segywrite spike stack transp window
+	rtoc scale segyread segywrite spike spray stack transp window 
 
 MAINS = $(addprefix sf, $(PROGS))
 
