@@ -27,6 +27,8 @@ public:
     void get (const char* name,   int& value) const;
     void get (const char* name, float& value, float defolt) const;
     void get (const char* name, float& value) const;
+    void get (const char* name, double& value, double defolt) const;
+    void get (const char* name, double& value) const;
     void get (const char* name,  bool& value,  bool defolt) const;
     void get (const char* name,  bool& value) const;
 //    void get (const char* name,  char* value, const char* defolt) const;
@@ -74,4 +76,4 @@ private:
 
 #endif
 
-// 	$Id: rsf.hh,v 1.4 2003/09/29 14:34:56 fomels Exp $	
+// 	$Id$	

@@ -140,6 +140,16 @@ iRSF::get (const char* name, float& value, float defolt) const
 }
 
 void 
+iRSF::get (const char* name, double& value, double defolt) const
+{
+    if (file_)  {
+	if (!sf_histdouble (file_,name,&value)) value = defolt;
+    } else {
+	if (!sf_getdouble (name,&value)) value = defolt;
+    }
+}
+
+void 
 iRSF::get (const char* name, float& value) const
 {
     if (file_)  {
@@ -147,6 +157,18 @@ iRSF::get (const char* name, float& value) const
 	    sf_error("missing history value: %s",name);
     } else {
 	if (!sf_getfloat(name,&value)) 
+	    sf_error("missing parameter value: %s",name);
+    }
+}
+
+void 
+iRSF::get (const char* name, double& value) const
+{
+    if (file_)  {
+	if (!sf_histdouble(file_,name,&value)) 
+	    sf_error("missing history value: %s",name);
+    } else {
+	if (!sf_getdouble(name,&value)) 
 	    sf_error("missing parameter value: %s",name);
     }
 }

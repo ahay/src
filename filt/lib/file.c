@@ -477,6 +477,12 @@ bool sf_histfloat (sf_file file, const char* key,/*@out@*/ float* par)
     return sf_simtab_getfloat (file->pars,key,par);
 }
 
+bool sf_histdouble (sf_file file, const char* key,/*@out@*/ double* par) 
+/*< read a float parameter from file >*/
+{
+    return sf_simtab_getdouble (file->pars,key,par);
+}
+
 bool sf_histfloats (sf_file file, const char* key,
 		    /*@out@*/ float* par,size_t n) 
 /*< read a float array of size n parameter from file >*/ 
