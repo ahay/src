@@ -18,11 +18,12 @@ Takes: < input.rsf head=header.rsf > binned.rsf
 int main (int argc, char* argv[])
 {
     bool gauss, shape;
-    int id, nk, nd, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter;
-    float *pp, *mm, *dd, **xy, *hdr, filt1, filt2, a[3];
+    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter;
+    float *pp, *mm, *mm0=NULL, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
     char *xk, *yk;
-    sf_file in, out, head, pattern=NULL;
+    sf_file in, out, head, pattern=NULL, pin=NULL, pout=NULL;
+    sf_operator shaping=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -175,11 +176,23 @@ int main (int argc, char* argv[])
 		pattern = NULL;
 		gaussshape2_set2(a);
 	    }
+	    shaping = freqfilt2_lop;
 	} else {
 	    triangle2_init((int) filt1, (int) filt2, nx, ny);
+	    shaping = triangle2_lop;
 	}
 
 	pp = sf_floatalloc(nm);
+
+	if (NULL != sf_getstring("pin")) {
+	    pin = sf_input("pin");
+	    mm0 = sf_floatalloc(nm);
+	} 
+	
+	if (NULL != sf_getstring("pout")) {
+	    pout = sf_output("pout");
+	    sf_fileflush(pout,out);
+	}
     } else {
 	laplac2_init(nx,ny);
 	pp = NULL;
@@ -197,11 +210,23 @@ int main (int argc, char* argv[])
 		    sf_floatread (mm,nm,pattern);
 		    gaussshape2_set(a, mm, 100);
 		}
+	    }
 
-		/* inverse interpolation */
-		sf_conjgrad(NULL, int2_lop, freqfilt2_lop, pp, mm, dd, niter);
-	    } else {
-		sf_conjgrad(NULL, int2_lop, triangle2_lop, pp, mm, dd, niter);
+	    if (NULL != pin) {
+		sf_floatread(pp,nm,pin);
+		for (im=0; im < nm; im++) {
+		    pp[im] = -pp[im];
+		}
+		shaping(false,false,nm,nm,pp,mm0);
+		int2_lop(false,true,nm,nd,mm0,dd);
+	    }
+	    
+	    sf_conjgrad(NULL, int2_lop, shaping, pp, mm, dd, niter);
+
+	    if (NULL != pin) {
+		for (im=0; im < nm; im++) {
+		    mm[im] -= mm0[im];
+		}
 	    }
 	} else {
 	    sf_solver_reg(int2_lop,sf_cgstep,laplac2_lop,
@@ -210,10 +235,11 @@ int main (int argc, char* argv[])
 	}
 
 	sf_floatwrite (mm,nm,out);
+	if (NULL != pout) sf_floatwrite(pp,nm,pout);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.7 2004/05/13 00:00:06 fomels Exp $	 */
