@@ -305,15 +305,15 @@ void cam( bool inv   /* migration/modeling flag */,
 			cref = csqrtf(w2*sm[iz][js]) + csqrtf(w2*sm[iz][jr]); /* w so */
 			KOOPmmh( jmy = KMAP(imy,bmy.n);
 				 kmy = bmy.o + jmy*bmy.d; 
-				 cs = csqrtf(w2*sm[iz][js]+ksx[imx][ihx]);
-				 cr = csqrtf(w2*sm[iz][jr]+krx[imx][ihx]);
-				 khy= kmy*(cr-cs)/(cr+cs); /* comaz approximation */
+				 cs  = csqrtf(w2*sm[iz][js]+ksx[imx][ihx]);
+				 cr  = csqrtf(w2*sm[iz][jr]+krx[imx][ihx]);
+				 khy = kmy*(cr-cs)/(cr+cs); /* comaz approximation */
 				 kss = 0.5*(kmy-khy);
 				 krr = 0.5*(kmy+khy);
 				 kss = kss*kss + ksx[imx][ihx];
 				 krr = krr*krr + krx[imx][ihx];
-				 cs = csqrtf(w2*sm[iz][js] + kss);
-				 cr = csqrtf(w2*sm[iz][jr] + krr);
+				 cs  = csqrtf(w2*sm[iz][js] + kss);
+				 cr  = csqrtf(w2*sm[iz][jr] + krr);
 				 cshift = cexpf((cref-cs-cr)*az.d);  /* w so - kzs - kzr */
 				 wk[imy][imx][ihx] = 
 				 pk[imy][imx][ihx] * cshift; ); 
@@ -384,15 +384,15 @@ void cam( bool inv   /* migration/modeling flag */,
 			    + csqrtf(w2*sm[iz][jr]); /* w so */
 			KOOPmmh( jmy = KMAP(imy,bmy.n);
 				 kmy = bmy.o + jmy*bmy.d; 
-				 cs = csqrtf(w2*sm[iz][js] + ksx[imx][ihx]);
-				 cr = csqrtf(w2*sm[iz][jr] + krx[imx][ihx]);
-				 khy= kmy*(cr-cs)/(cr+cs); /* comaz approximation */
+				 cs  = csqrtf(w2*sm[iz][js] + ksx[imx][ihx]);
+				 cr  = csqrtf(w2*sm[iz][jr] + krx[imx][ihx]);
+				 khy = kmy*(cr-cs)/(cr+cs); /* comaz approximation */
 				 kss = 0.5*(kmy-khy);
 				 krr = 0.5*(kmy+khy);
 				 kss = kss*kss + ksx[imx][ihx];
 				 krr = krr*krr + krx[imx][ihx];
-				 cs = csqrtf(w2*sm[iz][js] + kss);
-				 cr = csqrtf(w2*sm[iz][jr] + krr);
+				 cs  = csqrtf(w2*sm[iz][js] + kss);
+				 cr  = csqrtf(w2*sm[iz][jr] + krr);
 				 cshift = conjf(cexpf((cref-cs-cr)*az.d)); /* w so - kzs - kzr */
 				 wk[imy][imx][ihx] = 
 				 pk[imy][imx][ihx] * cshift; );
