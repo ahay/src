@@ -27,10 +27,10 @@ The program works with 2-D data.
 
 int main(int argc, char* argv[])
 {
-    int i, n1, n2, n12, n3, n123, niter;
-    float eps, *d, *s, ***pp;
+    int i, n1, n2, n12, n3, n123, niter, nliter, iter;
+    float eps, *d, *s, ***pp, *w=NULL, *p=NULL;
     bool verb;
-    sf_file in, out, dips;
+    sf_file in, out, dips, weight=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -51,6 +51,9 @@ int main(int argc, char* argv[])
     if (!sf_getint ("niter",&niter)) niter=50;
     /* maximum number of iterations */
 
+    if (!sf_getint ("nliter",&nliter)) nliter=1;
+    /* number of reweighting iterations */
+
     if (!sf_getfloat ("eps",&eps)) eps=0.;
     /* regularization parameter */
 
@@ -61,14 +64,41 @@ int main(int argc, char* argv[])
     d = sf_floatalloc(n12);
     pp = sf_floatalloc3(n1,n2,n3);
 
+    if (nliter > 1) {
+	w = sf_floatalloc(n123);
+	p = sf_floatalloc(n123);
+
+	if (NULL != sf_getstring("weight")) {
+	    weight = sf_output("weight"); 
+	    sf_putint(weight,"n3",n3);
+	}
+    }
+
     sf_floatread (d,n12,in);
     sf_floatread (pp[0][0],n123,dips);
     
     predk_init(n3,n1,n2,0.0001,pp);
     copyk_init(n3,n12);
 
-    sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
-		    n123,n123,n12,s,d,niter,eps,"verb",verb,"end");
+    if (1 == nliter) {
+	sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
+			n123,n123,n12,s,d,niter,eps,"verb",verb,"end");
+    } else {
+	for (i=0; i < n123; i++) {
+	    w[i] = 1.;
+	}
+	for (iter=0; iter < nliter; iter++) {
+	    sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
+			    n123,n123,n12,s,d,niter,eps,
+			    "verb",verb,"mwt",w,"xp",p,"end");
+	    sf_cgstep_close();
+
+	    for (i=0; i < n123; i++) {
+		w[i] *= p[i];
+	    }	    
+	}
+	if (NULL != weight) sf_floatwrite(w,n123,weight);
+    }
 
     sf_floatwrite(s,n123,out);
 
