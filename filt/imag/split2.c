@@ -113,6 +113,8 @@ void split2_init(int nz1, float dz1  /* depth */,
 void split2_close(void)
 /*< free allocated storage >*/
 {
+    fft2_close();
+
     free(*pp); free(pp);
     free(*wt); free(wt);
     free(*wb); free(wb);
@@ -141,7 +143,7 @@ void split2(bool verb                   /* verbosity flag */,
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,iy,ir,nxy;
-    float complex cshift, cref, w, w2;
+    float complex cshift, cref=0, w, w2;
 
     if (!inv) { /* prepare image for migration */
 	LOOPxy( qq[ix][iy] = 0.0; );

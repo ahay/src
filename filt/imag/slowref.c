@@ -44,14 +44,12 @@ int slowref(int nr     /* maximum number of references */,
 	qr = (ir+1.0)/nr - 0.5 * 1./nr;
 	s = sf_quantile(qr*ns,ns,ss2);
 	if (0==ir || SF_ABS(s-sr[jr-1]) > ds) {
-	    sr[jr] = s;
+	    sr [jr] = s;
 	    sr2[jr] = s*s;
 	    jr++;		
 	}
     }
 
     free(ss2);
-
     return jr;
 }
-

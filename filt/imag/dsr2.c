@@ -27,9 +27,9 @@
 #include "taper.h"
 #include "slowref.h"
 
-#define LOOPxh(a) for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh;ih++){ {a} }}
+#define LOOPxh(a)  for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh; ih++){ {a} }}
 #define LOOPxh2(a) for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh2;ih++){ {a} }}
-#define LOOPuh(a) for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh;ih++){ {a} }}
+#define LOOPuh(a)  for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh; ih++){ {a} }}
 
 #include "slice.h"
 /*^*/
@@ -64,21 +64,25 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 	       int npad                       /* padding on nh */)
 /*< initialize >*/
 {
-    int ix, ih, jx, jh, iu;
-    float x, h, x0, h0, dx, dh, kx, kh, k;
-
+    int   ix,  ih,  iu;
+    int   jx,  jh;
+    float  x,   h;
+    float  kx, kh, k;
+    float  dx, dh;
+    float   x0, h0;
+    
     nz = nz1;
     dz = dz1;
 
     nx = nx1;
     dx = 2.0*SF_PI/(nx*dx1);
-    x0 =    -SF_PI/dx1;
+    x0 =    -SF_PI/    dx1 ;
 
     nh = nh1;
     nh2 = nh+npad;
 
     dh = 2.0*SF_PI/(nh2*dh1);
-    h0 =    -SF_PI/dh1;
+    h0 =    -SF_PI/     dh1 ;
 
     nu = nu1;
 
@@ -87,28 +91,29 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     fft2_init(nh2,nx);
 
     /* allocate workspace */
-    sz = sf_floatalloc2  (nrmax,nz); /* reference slowness */
-    sm = sf_floatalloc2  (nrmax,nz); /* reference slowness squared*/
-    nr = sf_intalloc     (      nz); /* number of reference slownesses */
+    sz = sf_floatalloc2  (nrmax,nz);       /* reference slowness */
+    sm = sf_floatalloc2  (nrmax,nz);       /* reference slowness squared*/
+    nr = sf_intalloc     (      nz);       /* number of reference slownesses */
 
-    qq = sf_floatalloc2   (nh,nu);   /* image */
+    qq = sf_floatalloc2     (nh,nu);       /* image */
 
-    ks = sf_floatalloc2   (nh2,nx);   /* source wavenumber */
-    kr = sf_floatalloc2   (nh2,nx);   /* receiver wavenumber */
-    is = sf_intalloc2     (nh,nx);    /* source reference */
-    ir = sf_intalloc2     (nh,nx);    /* receiver reference */
-    ii = sf_intalloc     (nx);        /* midpoint reference */
+    ks = sf_floatalloc2   (nh2,nx);        /* source wavenumber */
+    kr = sf_floatalloc2   (nh2,nx);        /* receiver wavenumber */
+    is = sf_intalloc2     (nh, nx);        /* source reference */
+    ir = sf_intalloc2     (nh, nx);        /* receiver reference */
+    ii = sf_intalloc          (nx);        /* midpoint reference */
 
-    tt = sf_floatalloc2   (nh,nx);   /* taper */
+    tt = sf_floatalloc2   (nh, nx);        /* taper */
 
-    pk = sf_complexalloc2 (nh2,nx);   /* padded wavefield */ 
-    wx = sf_complexalloc2 (nh,nx);  /* x wavefield */
-    wk = sf_complexalloc2 (nh2,nx);  /* k wavefield */
+    pk = sf_complexalloc2 (nh2,nx);        /* padded wavefield */ 
+    wx = sf_complexalloc2 (nh, nx);        /* x wavefield */
+    wk = sf_complexalloc2 (nh2,nx);        /* k wavefield */
 
-    ms = sf_intalloc2     (nh,nx);  /* MRS map */
-    mr = sf_intalloc2     (nh,nx);
-    skip = sf_boolalloc3 (nrmax,nrmax,nz);
-    ma = sf_floatalloc2   (nh,nx);  /* MRS mask */
+    ms = sf_intalloc2     (nh, nx);        /* MRS map source */
+    mr = sf_intalloc2     (nh, nx);        /* MRS map receiver */
+    ma = sf_floatalloc2   (nh, nx);        /* MRS mask */
+
+    skip = sf_boolalloc3 (nrmax,nrmax,nz); /* skip S-R reference slowness combination */
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
@@ -158,28 +163,29 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 void dsr2_close(void)
 /*< free allocated storage >*/
 {
-    free(*pk); free(pk);
-    free(*wk); free(wk);
-    free(*wx); free(wx);
+    free( *pk); free( pk);
+    free( *wk); free( wk);
+    free( *wx); free( wx);
 
-    free(*sz); free(sz);
-    free(*sm); free(sm);
-    free( nr);
+    free( *sz); free( sz);
+    free( *sm); free( sm);
+    free(  nr);
 
-    free(*qq); free(qq);
-    free(*ks); free(ks);
-    free(*kr); free(kr);
-    free(*is); free(is);
-    free(*ir); free(ir);
-    free(ii);
+    free( *qq); free( qq);
+    free( *ks); free( ks);
+    free( *kr); free( kr);
+    free( *is); free( is);
+    free( *ir); free( ir);
+    free(  ii);
     
-    free(*tt); free(tt);
+    free( *tt); free( tt);
 
-    free(*ms); free(ms);
-    free(*mr); free(mr);
-    free(*ma); free(ma);
+    free( *ms); free( ms);
+    free( *mr); free( mr);
+    free( *ma); free( ma);
     
-    free(**skip); free(*skip); free(skip);
+    free(**skip); 
+    free( *skip); free(skip);
     fslice_close(mms);
     fslice_close(mmr);
 }
@@ -245,15 +251,17 @@ void dsr2(bool verb                   /* verbosity flag */,
 
 	    /* imaging condition */
 	    slice_get(imag,nz-1,qq[0]);	    
-	    LOOPxh( wx[ix][ih] = qq[ii[ix]][ih];  );
+	    LOOPxh( wx[ix][ih] = qq[ ii[ix] ][ih];  );
 
 	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
 		/* w-x @ bottom */
 		LOOPxh2( pk[ix][ih] = 0.;);
-		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
+		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
+				  si[ ir[ix][ih] ]);
 			cshift = cexpf(-w*sy*dz)*tt[ix][ih];
-			pk[ix][ih] = wx[ix][ih]*cshift; );
+			pk[ix][ih] = 
+			wx[ix][ih] * cshift; );
 		
 		/* FFT */
 		fft2(false,pk);		
@@ -265,15 +273,16 @@ void dsr2(bool verb                   /* verbosity flag */,
 		LOOPxh( wx[ix][ih] = 0; );
 		for (j=0; j<nr[iz]; j++) {
 		    for (k=0; k<nr[iz]; k++) {
-			if (skip[iz][j][k]) continue;
+			if (skip[iz][j][k]) continue; /* skip S-R reference combinations */
 
 			/* w-k phase shift */
 			cref =       csqrtf(w2*sm[iz][j])
 			    +        csqrtf(w2*sm[iz][k]);
-			LOOPxh2(cs = csqrtf(w2*sm[iz][j]+ks[ix][ih]);
-				cr = csqrtf(w2*sm[iz][k]+kr[ix][ih]);
+			LOOPxh2(cs = csqrtf(w2*sm[iz][j] + ks[ix][ih]);
+				cr = csqrtf(w2*sm[iz][k] + kr[ix][ih]);
 				cshift = cexpf((cref-cs-cr)*dz); 
-				wk[ix][ih] = pk[ix][ih]*cshift; ); 
+				wk[ix][ih] = 
+				pk[ix][ih]*cshift; ); 
 		
 			/* IFT */
 			fft2(true,wk);
@@ -289,9 +298,12 @@ void dsr2(bool verb                   /* verbosity flag */,
 		slice_get(imag,iz,qq[0]);
 
 		/* w-x at top */
-		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
+		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
+				  si[ ir[ix][ih] ]);
 			cshift = cexpf(-w*sy*dz);
-			wx[ix][ih] = qq[ii[ix]][ih] + wx[ix][ih]*cshift; );
+			wx   [ix] [ih] = 
+			qq[ii[ix]][ih] + 
+			wx   [ix] [ih] * cshift; );
 	    } /* iz */
 	    
 	    /* taper */
@@ -312,14 +324,17 @@ void dsr2(bool verb                   /* verbosity flag */,
 
 		/* imaging condition */
 		slice_get(imag,iz,qq[0]);
-		LOOPxh( qq[ii[ix]][ih] += crealf(wx[ix][ih]); );
+		LOOPxh(        qq[ii[ix]][ih] += 
+			crealf(wx   [ix] [ih] ); );
 		slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
 		LOOPxh2( pk[ix][ih] = 0.;);
-		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
+		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
+				  si[ ir[ix][ih] ]);
 			cshift = conjf(cexpf(-w*sy*dz));
-			pk[ix][ih] = wx[ix][ih]*cshift; );
+			pk[ix][ih] = 
+			wx[ix][ih] * cshift; );
 
 		/* FFT */
 		fft2(false,pk);
@@ -335,10 +350,11 @@ void dsr2(bool verb                   /* verbosity flag */,
 		
 			/* w-k phase shift */
 			cref = csqrtf(w2*sm[iz][j])+csqrtf(w2*sm[iz][k]);
-			LOOPxh2( cs = csqrtf(w2*sm[iz][j]+ks[ix][ih]);
-				 cr = csqrtf(w2*sm[iz][k]+kr[ix][ih]);
+			LOOPxh2( cs = csqrtf(w2*sm[iz][j] + ks[ix][ih]);
+				 cr = csqrtf(w2*sm[iz][k] + kr[ix][ih]);
 				 cshift = conjf(cexpf((cref-cs-cr)*dz)); 
-				 wk[ix][ih] = pk[ix][ih]*cshift; ); 
+				 wk[ix][ih] = 
+				 pk[ix][ih] * cshift; ); 
 		    
 			
 			/* IFT */
@@ -354,14 +370,16 @@ void dsr2(bool verb                   /* verbosity flag */,
 
 
 		/* w-x @ bottom */
-		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
+		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + 
+				  si[ ir[ix][ih] ]);
 			cshift = conjf(cexpf(-w*sy*dz))*tt[ix][ih];
 			wx[ix][ih] *= cshift; );
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */
 	    slice_get(imag,nz-1,qq[0]);
-	    LOOPxh( qq[ii[ix]][ih] += crealf(wx[ix][ih]); );
+	    LOOPxh(        qq[ii[ix]][ih] += 
+		    crealf(wx   [ix] [ih]); );
 	    slice_put(imag,nz-1,qq[0]);
 	} /* else */
     } /* iw */

@@ -27,9 +27,9 @@
 #include "taper.h"
 #include "slowref.h"
 
-#define LOOPxyh(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ for(ih=0;ih<nh;ih++){ {a}}}}
-#define LOOPxyh2(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ for(ih=0;ih<nh2;ih++){ {a}}}}
-#define LOOPvuh(a) for(iv=0;iv<nv;iv++){ for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh;ih++){ {a}}}}
+#define LOOPxyh(a)  for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ for(ih=0;ih<nh; ih++){ {a} }}}
+#define LOOPxyh2(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ for(ih=0;ih<nh2;ih++){ {a} }}}
+#define LOOPvuh(a)  for(iv=0;iv<nv;iv++){ for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh; ih++){ {a} }}}
 
 #include "slice.h"
 /*^*/
@@ -38,8 +38,8 @@ static int nx,ny,nh,nh2,nz,nu,nv,nrmax;
 static float dz,x0,dx;
 
 static float         ***qq;            /* image */
-static float   **ss;                 /* slowness */
-static int     **is, **ir, *ii, *ij; /* indices */
+static float   **ss;                   /* slowness */
+static int     **is, **ir, *ii, *ij;   /* indices */
 static float   **ks, **kr;             /* wavenumber */
 static float         ***tt;            /* taper */
 
@@ -48,43 +48,47 @@ static float         **sm;             /* reference slowness squared */
 static int            *nr;             /* number of references */
 
 static float complex ***pk; /* wavefield */
-static float complex ***wk; /* wavefield top */
-static float complex ***wx; /* wavefield bot */
+static float complex ***wk; /* wavefield k */
+static float complex ***wx; /* wavefield x */
 
-static int ***ms, ***mr; /* multi-reference slowness map  */
-static bool ***skip;
+static int    ***ms, ***mr; /* multi-reference slowness map  */
+static bool   ***skip;
 static fslice mms, mmr;
 
 void comaz_init(int nz1, float dz1             /* depth */,
 		int nh1, float dh1, float h01  /* half-offset */,
-		int ny1, float dy1, float y01  /* midpoint in-line */,
-		int nx1, float dx1, float x01  /* midpoint cross-line */,
-		int nu1, float du,  float u0   /* slowness grid in-line */,
-		int nv1, float dv,  float v0   /* slowness grid cross-line */,
+		int ny1, float dy1, float y01  /* i-line (data) */,
+		int nx1, float dx1, float x01  /* x-line (data) */,
+		int nu1, float du,  float u0   /* i-line (slowness/image) */,
+		int nv1, float dv,  float v0   /* x-line (slowness/image) */,
 		int ntx, int nty, int nth      /* taper size */,
 		int nr1                        /* maximum number of references */,
 		int npad                       /* padding on nh */)
 /*< initialize >*/
 {
-    int ix, iy, jy, ih, jh, iu, iv;
-    float x, y, h, y0, h0, dy, dh, kx, ky, kh, k;
+    int   ix, iy, ih, iu, iv;
+    int       jy, jh;
+    float  x,  y,  h;
+    float kx, ky, kh, k;
+    float     dy, dh;
+    float      y0, h0;
 
     nz = nz1;
     dz = dz1;
 
     nx = nx1;
     dx = 2.0*SF_PI/(nx*dx1);
-    x0 =    -SF_PI/dx1;
+    x0 =    -SF_PI/    dx1 ;
 
     ny = ny1;
     dy = 2.0*SF_PI/(ny*dy1);
-    y0 =    -SF_PI/dy1;
+    y0 =    -SF_PI/    dy1 ;
 
     nh = nh1;
     nh2 = nh+npad;
 
     dh = 2.0*SF_PI/(nh2*dh1);
-    h0 =    -SF_PI/dh1;
+    h0 =    -SF_PI/     dh1 ;
 
     nu = nu1;
     nv = nv1;
@@ -94,31 +98,32 @@ void comaz_init(int nz1, float dz1             /* depth */,
     fft3_init(nh2,ny,nx);
 
     /* allocate workspace */
-    sz = sf_floatalloc2  (nrmax,nz); /* reference slowness */
-    sm = sf_floatalloc2  (nrmax,nz); /* reference slowness squared*/
-    nr = sf_intalloc     (      nz); /* number of reference slownesses */
+    sz = sf_floatalloc2  (nrmax,nz);      /* reference slowness */
+    sm = sf_floatalloc2  (nrmax,nz);      /* reference slowness squared*/
+    nr = sf_intalloc     (      nz);      /* number of reference slownesses */
 
-    qq = sf_floatalloc3   (nh,nu,nv);   /* image */
-    ss = sf_floatalloc2 (nu,nv);
+    qq = sf_floatalloc3  (nh,nu,nv);      /* image */
+    ss = sf_floatalloc2     (nu,nv);      /* slowness */
 
-    ks = sf_floatalloc2   (nh2,ny);   /* source wavenumber */
-    kr = sf_floatalloc2   (nh2,ny);   /* receiver wavenumber */
-    is = sf_intalloc2     (nh,ny);   /* source reference */
-    ir = sf_intalloc2     (nh,ny);   /* receiver reference */
-    ii = sf_intalloc (nx);   /* midpoint reference */
-    ij = sf_intalloc (ny);   /* midpoint reference */
+    ks = sf_floatalloc2   (nh2,ny);       /* source wavenumber */
+    kr = sf_floatalloc2   (nh2,ny);       /* receiver wavenumber */
+    is = sf_intalloc2     (nh ,ny);       /* source reference */
+    ir = sf_intalloc2     (nh ,ny);       /* receiver reference */
+    ii = sf_intalloc          (nx);       /* midpoint reference */
+    ij = sf_intalloc          (ny);       /* midpoint reference */
 
-    tt = sf_floatalloc3   (nh,ny,nx);   /* taper */
+    tt = sf_floatalloc3   (nh, ny, nx);   /* taper */
 
-    pk = sf_complexalloc3 (nh2,ny,nx);   /* wavefield */ 
-    wk = sf_complexalloc3 (nh2,ny,nx);  /* wavefield top */
-    wx = sf_complexalloc3 (nh,ny,nx);  /* wavefield bot */
+    pk = sf_complexalloc3 (nh2,ny, nx);   /* padded wavefield */ 
+    wk = sf_complexalloc3 (nh2,ny, nx);   /* k wavefield */
+    wx = sf_complexalloc3 (nh, ny, nx);   /* x wavefield */
 
-    ms = sf_intalloc3     (nh,ny,nx);  /* MRS map */
-    mr = sf_intalloc3     (nh,ny,nx);  /* MRS map */
+    ms = sf_intalloc3     (nh, ny, nx);   /* MRS map */
+    mr = sf_intalloc3     (nh, ny, nx);   /* MRS map */
     
-    skip = sf_boolalloc3 (nrmax,nrmax,nz);
+    skip = sf_boolalloc3 (nrmax,nrmax,nz);/* skip S-R reference slowness combination */
 
+    /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
 	x = x01 + ix*dx1;
 
@@ -175,27 +180,36 @@ void comaz_init(int nz1, float dz1             /* depth */,
 void comaz_close(void)
 /*< free allocated storage >*/
 {
-    free(**pk); free(*pk); free(pk);
-    free(**wk); free(*wk); free(wk);
-    free(**wx); free(*wx); free(wx);
+    free(**pk); 
+    free( *pk); free(pk);
+    free(**wk); 
+    free( *wk); free(wk);
+    free(**wx); 
+    free( *wx); free(wx);
 
-    free(*sz); free(sz);
-    free(*sm); free(sm);
-    free( nr);
+    free( *sz); free(sz);
+    free( *sm); free(sm);
+    free(  nr);
 
-    free(**qq); free(*qq); free(qq);
-    free(*ss); free(ss);
-    free(*ks); free(ks);
-    free(*kr); free(kr);
-    free(*is); free(is);
-    free(*ir); free(ir);
+    free(**qq); 
+    free( *qq); free( qq);
+
+    free( *ss); free( ss);
+    free( *ks); free( ks);
+    free( *kr); free( kr);
+    free( *is); free( is);
+    free( *ir); free( ir);
     
-    free(**tt); free(*tt); free(tt);
-
-    free(**ms); free(*ms); free(ms);
-    free(**mr); free(*mr); free(mr);
+    free(**tt); 
+    free( *tt); free( tt);
+    free(**ms); 
+    free( *ms); free( ms);
+    free(**mr); 
+    free( *mr); free( mr);
     
-    free(**skip); free(*skip); free(skip);
+    free(**skip); 
+    free( *skip); free(skip);
+
     fslice_close(mms);
     fslice_close(mmr);
 }
@@ -210,7 +224,8 @@ void comaz(bool verb                   /* verbosity flag */,
 	   float dt                    /* time error */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,jx,iy,ih,iu,iv, j,k;
+    int iz,iw,ix,iy,ih,iu,iv, j,k;
+    int       jx;
     float sy, kx;
     float complex cshift, cref, w, w2, cs, cr, kh, kss, krr;
 
@@ -270,7 +285,8 @@ void comaz(bool verb                   /* verbosity flag */,
 		LOOPxyh( sy = 0.5*(ss[ ii[ix] ][ is[iy][ih] ] + 
 				   ss[ ii[ix] ][ ir[iy][ih] ]);
 			 cshift = cexpf(-w*sy*dz)*tt[ix][iy][ih];
-			 pk[ix][iy][ih] = wx[ix][iy][ih]*cshift; );
+			 pk[ix][iy][ih] = 
+			 wx[ix][iy][ih] * cshift; );
 		
 		/* FFT */
 		fft3(false,pk);		
@@ -280,10 +296,9 @@ void comaz(bool verb                   /* verbosity flag */,
 		fslice_get(mmr,iz,mr[0][0]);
 
 		LOOPxyh( wx[ix][iy][ih] = 0; );
-
 		for (j=0; j<nr[iz]; j++) {
 		    for (k=0; k<nr[iz]; k++) {
-			if (skip[iz][j][k]) continue;
+			if (skip[iz][j][k]) continue; /* skip S-R reference combinations */
 
 			/* w-k phase shift */
 			cref =        csqrtf(w2*sm[iz][j])
@@ -295,12 +310,13 @@ void comaz(bool verb                   /* verbosity flag */,
 				 kh = kx*(cr-cs)/(cr+cs); /* comaz approximation */
 				 kss = 0.5*(kx-kh);
 				 krr = 0.5*(kx+kh);
-				 kss = kss*kss+ks[iy][ih];
-				 krr = krr*krr+kr[iy][ih];
-				 cs = csqrtf(w2*sm[iz][j]+kss);
-				 cr = csqrtf(w2*sm[iz][k]+krr);
+				 kss = kss*kss + ks[iy][ih];
+				 krr = krr*krr + kr[iy][ih];
+				 cs = csqrtf(w2*sm[iz][j] + kss);
+				 cr = csqrtf(w2*sm[iz][k] + krr);
 				 cshift = cexpf((cref-cs-cr)*dz); 
-				 wk[ix][iy][ih] = pk[ix][iy][ih]*cshift; ); 
+				 wk[ix][iy][ih] = 
+				 pk[ix][iy][ih]*cshift; ); 
 			
 			/* IFT */
 			fft3(true,wk);
@@ -318,8 +334,9 @@ void comaz(bool verb                   /* verbosity flag */,
 		LOOPxyh( sy = 0.5*(ss[ ii[ix] ][ is[iy][ih] ] + 
 				   ss[ ii[ix] ][ ir[iy][ih] ]);
 			 cshift = cexpf(-w*sy*dz);
-			 wx[ix][iy][ih] = qq[ii[ix]][ij[iy]][ih] + 
-			 wx[ix][iy][ih]*cshift; );
+			 wx   [ix]    [iy] [ih] = 
+			 qq[ii[ix]][ij[iy]][ih] + 
+			 wx   [ix]    [iy] [ih]*cshift; );
 
 	    } /* iz */
 	    
@@ -341,7 +358,8 @@ void comaz(bool verb                   /* verbosity flag */,
 
 		/* imaging condition */
 		slice_get(imag,iz,qq[0][0]);
-		LOOPxyh( qq[ii[ix]][ij[iy]][ih] += crealf(wx[ix][iy][ih]); );
+		LOOPxyh(        qq[ii[ix]][ij[iy]][ih] += 
+			 crealf(wx   [ix]    [iy] [ih] ); );
 		slice_put(imag,iz,qq[0][0]);
 
 		/* w-x @ top */
@@ -349,7 +367,8 @@ void comaz(bool verb                   /* verbosity flag */,
 		LOOPxyh( sy = 0.5*(ss[ ii[ix] ][ is[iy][ih] ] + 
 				   ss[ ii[ix] ][ ir[iy][ih] ]);
 			 cshift = conjf(cexpf(-w*sy*dz));
-			 pk[ix][iy][ih] = wx[ix][iy][ih]*cshift; );
+			 pk[ix][iy][ih] = 
+			 wx[ix][iy][ih] * cshift; );
 
 		/* FFT */
 		fft3(false,pk);
@@ -368,17 +387,18 @@ void comaz(bool verb                   /* verbosity flag */,
 			    +  csqrtf(w2*sm[iz][k]);
 			LOOPxyh2(jx = (ix < nx/2)? ix + nx/2: ix - nx/2;
 				 kx = x0 + jx*dx; 
-				 cs = csqrtf(w2*sm[iz][j]+ks[iy][ih]);
-				 cr = csqrtf(w2*sm[iz][k]+kr[iy][ih]);
+				 cs = csqrtf(w2*sm[iz][j] + ks[iy][ih]);
+				 cr = csqrtf(w2*sm[iz][k] + kr[iy][ih]);
 				 kh = kx*(cr-cs)/(cr+cs); /* comaz approximation */
 				 kss = 0.5*(kx-kh);
 				 krr = 0.5*(kx+kh);
-				 kss = kss*kss+ks[iy][ih];
-				 krr = krr*krr+kr[iy][ih];
-				 cs = csqrtf(w2*sm[iz][j]+kss);
-				 cr = csqrtf(w2*sm[iz][k]+krr);
+				 kss = kss*kss + ks[iy][ih];
+				 krr = krr*krr + kr[iy][ih];
+				 cs = csqrtf(w2*sm[iz][j] + kss);
+				 cr = csqrtf(w2*sm[iz][k] + krr);
 				 cshift = conjf(cexpf((cref-cs-cr)*dz)); 
-				 wk[ix][iy][ih] = pk[ix][iy][ih]*cshift; ); 
+				 wk[ix][iy][ih] = 
+				 pk[ix][iy][ih] * cshift; ); 
 			
 			/* IFT */
 			fft3(true,wk);
@@ -400,7 +420,8 @@ void comaz(bool verb                   /* verbosity flag */,
 	    	    
 	    /* imaging condition @ bottom */
 	    slice_get(imag,nz-1,qq[0][0]);
-	    LOOPxyh( qq[ii[ix]][ij[ix]][ih] += crealf(wx[ix][iy][ih]); );
+	    LOOPxyh(        qq[ii[ix]][ij[iy]][ih] += 
+		     crealf(wx   [ix]    [iy] [ih]); );
 	    slice_put(imag,nz-1,qq[0][0]);
 	} /* else */
     } /* iw */

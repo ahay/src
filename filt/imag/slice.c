@@ -83,6 +83,22 @@ void slice_put(slice sl, int i3, float* data)
     sf_floatwrite(data,sl->n12,sl->file);
 }
 
+void cslice_get(slice sl, int i3, complex float* data)
+/*< get a slice at level i3 >*/
+{
+    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(complex float),SEEK_SET);
+    sf_complexread(data,sl->n12,sl->file);
+}
+
+void cslice_put(slice sl, int i3, complex float* data)
+/*< put a slice at level i3 >*/
+{
+    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(complex float),SEEK_SET);
+    sf_complexwrite(data,sl->n12,sl->file);
+}
+
+/*------------------------------------------------------------*/
+
 fslice fslice_init(int n1, int n2, int n3, size_t size)
 /*< initialize a sliceable file object >*/
 {
@@ -116,3 +132,6 @@ void fslice_close(fslice sl)
     unlink(sl->name);
     free(sl);
 }
+
+
+/*------------------------------------------------------------*/

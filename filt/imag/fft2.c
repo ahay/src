@@ -61,27 +61,31 @@ void fft2(bool inv           /* inverse/forward flag */,
     
     if (inv) {
 	for (ix=0; ix < nx; ix++) {
-	    kiss_fft(yinvs,(const kiss_fft_cpx *) pp[ix], 
-		     (kiss_fft_cpx *) pp[ix]);
+	    kiss_fft(yinvs,
+		     (const kiss_fft_cpx *) pp[ix], 
+		     (      kiss_fft_cpx *) pp[ix]);
 	}
 	for (iy=0; iy < ny; iy++) {
-	    kiss_fft_stride(xinvs,(const kiss_fft_cpx *) (pp[0]+iy), 
-			    (kiss_fft_cpx *) ctrace,ny);
+	    kiss_fft_stride(xinvs,
+			    (const kiss_fft_cpx *) (pp[0]+iy), 
+			    (      kiss_fft_cpx *) ctrace,ny);
 	    for (ix=0; ix<nx; ix++) {
 		pp[ix][iy] = ctrace[ix]/(nx*ny);
 	    }
 	}
     } else {
 	for (iy=0; iy < ny; iy++) {
-	    kiss_fft_stride(xforw,(const kiss_fft_cpx *) (pp[0]+iy), 
-			    (kiss_fft_cpx *) ctrace,ny);
+	    kiss_fft_stride(xforw,
+			    (const kiss_fft_cpx *) (pp[0]+iy), 
+			    (      kiss_fft_cpx *) ctrace,ny);
 	    for (ix=0; ix<nx; ix++) {
 		pp[ix][iy] = ctrace[ix];
 	    }
 	}
 	for (ix=0; ix < nx; ix++) {
-	    kiss_fft(yforw,(const kiss_fft_cpx *) pp[ix], 
-		     (kiss_fft_cpx *) pp[ix]);
+	    kiss_fft(yforw,
+		     (const kiss_fft_cpx *) pp[ix], 
+		     (      kiss_fft_cpx *) pp[ix]);
 	}
     }
 }

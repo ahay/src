@@ -27,6 +27,10 @@ static int n1, n2, n3;
 static float scale;
 static float complex *trace2, *trace3;
 
+#define LOOP1(a) for(i1=0;i1<n1;i1++){ {a} }
+#define LOOP2(a) for(i2=0;i2<n2;i2++){ {a} }
+#define LOOP3(a) for(i3=0;i3<n3;i3++){ {a} }
+
 void fft3_init(int m1, int m2, int m3 /* dimensions */)
 /*< initialize >*/
 {
@@ -36,8 +40,10 @@ void fft3_init(int m1, int m2, int m3 /* dimensions */)
 
     forw1 = kiss_fft_alloc(n1,0,NULL,NULL);
     invs1 = kiss_fft_alloc(n1,1,NULL,NULL);
+
     forw2 = kiss_fft_alloc(n2,0,NULL,NULL);
     invs2 = kiss_fft_alloc(n2,1,NULL,NULL);
+
     forw3 = kiss_fft_alloc(n3,0,NULL,NULL);
     invs3 = kiss_fft_alloc(n3,1,NULL,NULL);
     
@@ -48,6 +54,7 @@ void fft3_init(int m1, int m2, int m3 /* dimensions */)
 
     trace2 = sf_complexalloc(n2);
     trace3 = sf_complexalloc(n3);
+
     scale = 1./(n1*n2*n3);
 }
 
@@ -56,6 +63,7 @@ void fft3_close(void)
 {
     free (trace2);
     free (trace3);
+
     free (forw1);
     free (invs1);
     free (forw2);
@@ -66,54 +74,98 @@ void fft3_close(void)
 
 void fft3(bool inv            /* inverse/forward flag */, 
 	  complex float ***pp /* [n1][n2][n3] */) 
-/*< Apply 2-D FFT >*/
+/*< Apply 3-D FFT >*/
 {
     int i1, i2, i3;
     
     if (inv) {
-	for (i3=0; i3 < n3; i3++) {
-	    for (i2=0; i2 < n2; i2++) {
-		kiss_fft(invs1,(const kiss_fft_cpx *) pp[i3][i2], 
-			 (kiss_fft_cpx *) pp[i3][i2]);
-	    }
-	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(invs2,(const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				(kiss_fft_cpx *) trace2,n1);
+
+	/* IFT 1 */
+	if(n1>1) {
+	    for (i3=0; i3 < n3; i3++) {
 		for (i2=0; i2 < n2; i2++) {
-		    pp[i3][i2][i1] = trace2[i2];
+		    kiss_fft(invs1,
+			     (const kiss_fft_cpx *) pp[i3][i2], 
+			     (      kiss_fft_cpx *) pp[i3][i2]);
 		}
 	    }
 	}
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(invs3,(const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				(kiss_fft_cpx *) trace3,n1);
-	    }
+
+	/* IFT 2 */
+	if(n2>1) {
 	    for (i3=0; i3 < n3; i3++) {
-		 pp[i3][i2][i1] = trace3[i3]*scale;
+		for (i1=0; i1 < n1; i1++) {
+		    kiss_fft_stride(invs2,
+				    (const kiss_fft_cpx *) (pp[i3][0]+i1), 
+				    (      kiss_fft_cpx *) trace2,n1);
+		    for (i2=0; i2 < n2; i2++) {
+			pp[i3][i2][i1] = trace2[i2];
+		    }
+		}
 	    }
 	}
+	
+	/* IFT 3 */
+	if(n3>1) {
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    kiss_fft_stride(invs3,
+				    (const kiss_fft_cpx *) (pp[0][i2]+i1), 
+				    (      kiss_fft_cpx *) trace3,n1);
+		}
+		for (i3=0; i3 < n3; i3++) {
+		    pp[i3][i2][i1] = trace3[i3]*scale;
+		}
+	    }
+	}
+
+	/* scaling */
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    pp[i3][i2][i1] *= scale;
+		}
+	    }
+	}
+
     } else {
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(forw3,(const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				(kiss_fft_cpx *) trace3,n1);
-	    }
-	    for (i3=0; i3 < n3; i3++) {
-		pp[i3][i2][i1] = trace3[i3];
-	    }
-	}
-	for (i3=0; i3 < n3; i3++) {
-	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(forw2,(const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				(kiss_fft_cpx *) trace2,n1);
-		for (i2=0; i2 < n2; i2++) {
-		    pp[i3][i2][i1] = trace2[i2];
+
+	/* FFT 3 */
+	if(n3>1) {
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    kiss_fft_stride(forw3,
+				    (const kiss_fft_cpx *) (pp[0][i2]+i1), 
+				    (      kiss_fft_cpx *) trace3,n1);
+		}
+		for (i3=0; i3 < n3; i3++) {
+		    pp[i3][i2][i1] = trace3[i3];
 		}
 	    }
-	    for (i2=0; i2 < n2; i2++) {
-		kiss_fft(forw1,(const kiss_fft_cpx *) pp[i3][i2], 
-			 (kiss_fft_cpx *) pp[i3][i2]);
+	}
+
+	/* FFT 2 */
+	if(n2>1) {
+	    for (i3=0; i3 < n3; i3++) {
+		for (i1=0; i1 < n1; i1++) {
+		    kiss_fft_stride(forw2,
+				    (const kiss_fft_cpx *) (pp[i3][0]+i1), 
+				    (      kiss_fft_cpx *) trace2,n1);
+		    for (i2=0; i2 < n2; i2++) {
+			pp[i3][i2][i1] = trace2[i2];
+		    }
+		}
+	    }
+	}
+
+	/* FFT 1 */
+	if(n1>1) {
+	    for (i3=0; i3 < n3; i3++) {
+		for (i2=0; i2 < n2; i2++) {
+		    kiss_fft(forw1,
+			     (const kiss_fft_cpx *) pp[i3][i2], 
+			     (      kiss_fft_cpx *) pp[i3][i2]);
+		}
 	    }
 	}
     }

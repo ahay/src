@@ -129,11 +129,22 @@ int main (int argc, char *argv[])
     sf_floatread(slow[0],ny*nz,vel);
     sf_fileclose(vel);
 
-    imag = slice_init(inv? in:out,nh,ny,nz);
+    imag = slice_init( inv ? in:out,nh,ny,nz);
 
-    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, ntx,nth,nr,npad);
-    dsr2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow, dt);
-    dsr2_close ();
+    dsr2_init (nz,dz, 
+	       nh,dh,h0, 
+	       nx,dx,x0, 
+	       ny,dy,y0, 
+	       ntx,nth,
+	       nr,
+	       npad);
+    dsr2      (verb, inv, eps,  
+	       nw, dw, w0,
+	       inv ? out:in, 
+	       imag, 
+	       slow, 
+	       dt);
+    dsr2_close();
     
     exit (0);
 }
