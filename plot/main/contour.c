@@ -20,8 +20,9 @@ static float o1, o2, d1, d2;
 int main (int argc, char* argv[])
 {
     int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2;
-    float **z, zi, dc, c0, zmin, zmax, *c, min1, min2, max1, max2, bmin, bmax;
-    bool hasc, hasdc, hasc0, scalebar, nomin, nomax;
+    float **z, zi, dc, c0, zmin=0., zmax=0., *c;
+    float  min1, min2, max1, max2, bmin, bmax;
+    bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false;
     sf_file in;
     
     sf_init(argc,argv);
@@ -62,8 +63,8 @@ int main (int argc, char* argv[])
 
     z = sf_floatalloc2(n1,n2);
 
-    if (!sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
-    /* if y, draw scalebar */
+    if (!sf_getbool ("wantscalebar",&scalebar) ||
+	NULL == sf_getstring("barlabel")) scalebar = false;
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&bmin);
 	/* minimum value for scalebar (default is the data minimum) */
@@ -380,5 +381,5 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.5 2003/10/14 21:53:54 fomels Exp $	 */
+/* 	$Id: contour.c,v 1.6 2003/10/18 18:22:04 fomels Exp $	 */
 

@@ -18,7 +18,7 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
     float pbias, gain=0., x1, y1, x2, y2, **data, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
-    bool scalebar, nomin=true, nomax=true;
+    bool scalebar, nomin=true, nomax=true, framenum;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
@@ -133,6 +133,9 @@ int main(int argc, char* argv[])
 	barbuf[0] = (unsigned char*) sf_alloc(BSIZE,sizeof(unsigned char));
     }
 
+    if (!sf_getbool("wantframenum",&framenum)) framenum = (n3 > 1);
+    /* if y, display third axis position in the corner */
+
     x1 = o1-0.5*d1;
     x2 = o1+(n1-1)*d1+0.5*d1;
     y1 = o2-0.5*d2;
@@ -239,6 +242,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	if (framenum) vp_framenum(o3+i3*d3);
 	vp_frame(); 
 	vp_uraster (buf, false, 256, n1, n2, 
 		    x1, y1, x2, y2, orient);
@@ -275,4 +279,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.13 2003/10/14 21:53:54 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.14 2003/10/18 18:22:04 fomels Exp $	 */
