@@ -62,9 +62,9 @@ int main (int argc, char* argv[])
 	if (beg[j] > 0) {
 	    sprintf(key,"o%d",i);
 	    if (sf_histfloat(in,key,&o)) {
-		sprintf(key,"d%d",i);
-		if (sf_histfloat(in,key,&d))
-		    sf_putfloat(out,key2,o-d*beg[j]);
+		sprintf(key2,"d%d",i);
+		if (sf_histfloat(in,key2,&d))
+		    sf_putfloat(out,key,o-d*beg[j]);
 	    }
 	}
 	if (n2[j] > 1 && j >= dim) dim=i;
@@ -112,4 +112,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: pad.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: pad.c,v 1.4 2004/03/13 06:00:24 fomels Exp $	 */

@@ -62,9 +62,9 @@ int main(int argc, char* argv[])
 
     fbuf = sf_floatalloc2(nbuf,nin);
     fst  = sf_floatalloc2(nbuf,len+2);
-    
+
+    sf_setformat(out,sf_histstring(in[0],"data_format"));    
     sf_fileflush(out,in[0]);
-    sf_setformat(out,sf_histstring(in[0],"data_format"));
 
     for (; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf = nsiz;
@@ -109,4 +109,4 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n)
     }
 }
 
-/* 	$Id: math.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: math.c,v 1.5 2004/03/13 06:00:24 fomels Exp $	 */

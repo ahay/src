@@ -167,7 +167,7 @@ static void add_float (bool collect, size_t nbuf, float* buf, float* bufi,
 		    buf[j] *= f;
 		    break;
 		case 'd':
-		    buf[j] /= f;
+		    if (f != 0.) buf[j] /= f;
 		    break;
 		default:
 		    buf[j] += f;
@@ -202,7 +202,7 @@ static void add_int (bool collect, size_t nbuf, int* buf, int* bufi,
 		    buf[j] *= f;
 		    break;
 		case 'd':
-		    buf[j] /= f;
+		    if (f != 0.) buf[j] /= f;
 		    break;
 		default:
 		    buf[j] += f;
@@ -238,7 +238,7 @@ static void add_complex (bool collect, size_t nbuf,
 		    buf[j] *= c;
 		    break;
 		case 'd':
-		    buf[j] /= c;
+		    if (c != 0.) buf[j] /= c;
 		    break;
 		default:
 		    buf[j] += c;
@@ -278,5 +278,5 @@ static void check_compat (int esize,
     }
 }
 
-/* 	$Id: add.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: add.c,v 1.6 2004/03/13 06:00:24 fomels Exp $	 */
 
