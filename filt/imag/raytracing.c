@@ -109,7 +109,7 @@ void raytrace_close (raytrace rt)
 */
 int trace_ray (raytrace rt, float* x, float* p, float** traj)
 {
-    int it;
+    int it=0;
     
     switch (rt->dim) {
 	case 2:
