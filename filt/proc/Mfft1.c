@@ -47,16 +47,20 @@ int main (int argc, char *argv[])
 	sf_putint(out,"n1",nw);
 	sf_putfloat(out,"o1",0.);
 	sf_putfloat(out,"d1",dw);
+
+	sf_putfloat(out,"t0",o1);
     } else {
 	if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
-	
+	if (!sf_histfloat(in,"t0",&o1)) o1=0.; 
+
 	nt = 2*(nw-1);
 	d1 = 1./(nt*dw);
 	n1 = cos? 1+nt/2:nt;
 
 	sf_putint(out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
+	sf_putfloat(out,"o1",o1);
     }	
     
     p = sf_floatalloc(nt);
@@ -105,6 +109,12 @@ int main (int argc, char *argv[])
 		sf_read(pp,sizeof(float complex),nw,in);
 	    }
 
+	    if (0. != o1) {
+		for (i1=0; i1 < nw; i1++) {
+		    pp[i1] *= cexpf(-I*2.0*SF_PI*i1*dw*o1);
+		}
+	    }
+
 	    sf_pfacr(-1,nt,pp,p);
 
 	    for (i1=0; i1 < n1; i1++) {
@@ -118,4 +128,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mfft1.c,v 1.7 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: Mfft1.c,v 1.8 2004/03/13 06:00:33 fomels Exp $	 */

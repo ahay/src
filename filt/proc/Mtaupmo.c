@@ -66,8 +66,15 @@ int main (int argc, char* argv[])
 		} 
 
 		f += sqrtf(ft);
+
+		ft = (f-t0)/dt;
 		iz = f;
-		trace[it] = fint1_apply(nmo,iz,f-iz,false);
+
+		if (iz >= 0 && iz < nt) {
+		    trace[it] = fint1_apply(nmo,iz,f-iz,false);
+		} else {
+		    trace[it] = 0.;
+		}
 	    }
 	    sf_write (trace,sizeof(float),nt,nmod);
 	}
@@ -76,4 +83,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mtaupmo.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mtaupmo.c,v 1.3 2004/03/13 06:00:33 fomels Exp $	 */

@@ -7,13 +7,13 @@ Takes < input.rsf > output.rsf
 
 #include <rsf.h>
 
-#include "stretch.h"
+#include "fint1.h"
 #include "cosft.h"
 
 int main(int argc, char* argv[])
 {
-    map str, istr;
-    int i1,i2, n1,n2,n3, ix,iv,ih, ib, ie, nb, nx,nv,nh, nw;
+    fint1 str, istr;
+    int i1,i2, n1,n2,n3, ix,iv,ih, ib, ie, nb, nx,nv,nh, nw, next;
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t;
     float *trace, *strace, ***stack, ***stack2, ***cont, **image;
     float complex *ctrace, *ctrace0;
@@ -68,21 +68,10 @@ int main(int argc, char* argv[])
     ctrace = sf_complexalloc(nw);
     ctrace0 = sf_complexalloc(nw);
 
-    for (i1=0; i1 < n1; i1++) {
-	t = o1+i1*d1;
-	trace[i1] = t*t;
-    }
-
-    str = stretch_init (n2, o2, d2, n1, eps);
-    stretch_define (str, trace);
-
-    for (i2=0; i2 < n2; i2++) {
-	t = o2+i2*d2;
-	strace[i2] = sqrtf(t);
-    }
-
-    istr = stretch_init (n1, o1, d1, n2, eps);
-    stretch_define (istr, strace);
+    if (!sf_getint("extend",&next)) next=4;
+    /* trace extension */
+    str = fint1_init(next,n1);
+    istr = fint1_init(next,n2);
 
     for (i1=0; i1 < n1*nx*nv; i1++) {
 	stack[0][0][i1] = 0.;
@@ -109,7 +98,19 @@ int main(int argc, char* argv[])
 
 	    k = x * 0.25 * 0.25 * 0.5;
 
-	    stretch_apply (str, image[ix], strace);
+	    fint1_set(str,image[ix]);
+
+	    for (i2=0; i2 < n2; i2++) {
+		t = o2+i2*d2;
+		t = sqrtf(t);
+		t = (t-o1)/d1;
+		i1 = t;
+		if (i1 >= 0 && i1 < n1) {
+		    strace[i2] = fint1_apply(str,i1,t-i1,false);
+		} else {
+		    strace[i2] = 0.;
+		}
+	    }
 	    
 	    for (i2=n2; i2 < n3; i2++) {
 		strace[i2] = 0.;
@@ -132,8 +133,20 @@ int main(int argc, char* argv[])
 		} /* w */
 
 		sf_pfacr(-1,n3,ctrace,strace);
-
-		stretch_apply (istr, strace, cont[iv][ix]);    
+		
+		fint1_set(istr,strace);
+		
+		for (i1=0; i1 < n1; i1++) {
+		    t = o1+i1*d1;
+		    t = t*t;
+		    t = (t-o2)/d2;
+		    i2 = t;
+		    if (i2 >= 0 && i2 < n2) {
+			cont[iv][ix][i1] = fint1_apply(istr,i2,t-i2,false);
+		    } else {
+			cont[iv][ix][i1] = 0.;
+		    }
+		}
 	    } /* v */
 	} /* x */
 

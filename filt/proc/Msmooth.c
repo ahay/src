@@ -1,8 +1,10 @@
 /* Multi-dimensional smoothing.
 
-Takes: < input.rsf > smooth.rsf rect1=1 rect2=1 ... 
+Takes: < input.rsf > smooth.rsf 
+rect1=1 rect2=1 ... diff1=n diff2=n ... 
 
 rectN defines the size of the smoothing stencil in N-th dimension.
+diffN is a flag for differentiating
 */
 
 #include <rsf.h>
@@ -72,4 +74,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msmooth.c,v 1.6 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: Msmooth.c,v 1.7 2004/03/13 06:00:33 fomels Exp $	 */

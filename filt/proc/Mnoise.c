@@ -1,6 +1,6 @@
 /* Add random noise to the data.
 
-Takes: data.rsf > noisy,rsf
+Takes: < data.rsf > noisy.rsf
 */
 
 #include <math.h>
@@ -84,4 +84,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mnoise.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mnoise.c,v 1.3 2004/03/13 06:00:33 fomels Exp $	 */

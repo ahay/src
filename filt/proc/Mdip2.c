@@ -28,9 +28,9 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1; 
+    if (!sf_getfloat("eps",&eps)) eps=1.; 
     /* vertical smoothness */
-    if (!sf_getfloat("lam",&lam)) lam=1; 
+    if (!sf_getfloat("lam",&lam)) lam=1.; 
     /* horizontal smoothness */
 
     eps = sqrtf(12*eps+1.);
@@ -76,4 +76,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.3 2004/02/26 14:34:25 fomels Exp $	 */
+/* 	$Id: Mdip2.c,v 1.4 2004/03/13 06:00:33 fomels Exp $	 */

@@ -55,7 +55,7 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
 	}
 	if (mean == 0.) return;
 
-	mean = sqrt (mean/n);
+	mean = sqrtf(mean/n);
 
 	usum = 0.;
 	psum = 0.;
@@ -88,4 +88,4 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
     } /* iter */
 }
 
-/* 	$Id: dip2.c,v 1.2 2004/02/26 14:34:25 fomels Exp $	 */
+/* 	$Id: dip2.c,v 1.3 2004/03/13 06:00:33 fomels Exp $	 */

@@ -9,12 +9,12 @@ struct Triangle {
 
 static void fold (int o, int d, int nx, int nb, int np, 
 		  const float *x, float* tmp);
+static void fold2 (int o, int d, int nx, int nb, int np, 
+		   float *x, const float* tmp);
 static void doubint (int nx, float *x, bool der);
 static void triple (int o, int d, int nx, int nb, 
 		    float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp);
-static void fold2 (int o, int d, int nx, int nb, int np, 
-		   float *x, const float* tmp);
 
 /* 
    Triangle smoothing in 1-D 
@@ -44,7 +44,7 @@ static void fold (int o, int d, int nx, int nb, int np,
     /* copy middle */
     for (i=0; i < nx; i++) 
 	tmp[i+nb] = x[o+i*d];
-
+    
     /* reflections from the right side */
     for (j=nb+nx; j < np; j += nx) {
 	for (i=0; i < nx && i < np-j; i++)
@@ -53,7 +53,7 @@ static void fold (int o, int d, int nx, int nb, int np,
 	for (i=0; i < nx && i < np-j; i++)
 	    tmp[j+i] = x[o+i*d];
     }
-
+    
     /* reflections from the left side */
     for (j=nb; j >= 0; j -= nx) {
 	for (i=0; i < nx && i < j; i++)
@@ -81,7 +81,7 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 	for (i=0; i < nx && i < np-j; i++)
 	    x[o+i*d] += tmp[j+i];
     }
-
+    
     /* reflections from the left side */
     for (j=nb; j >= 0; j -= nx) {
 	for (i=0; i < nx && i < j; i++)
@@ -91,7 +91,7 @@ static void fold2 (int o, int d, int nx, int nb, int np,
 	    x[o+(nx-1-i)*d] += tmp[j-1-i];
     }
 }
-
+    
 static void doubint (int nx, float *xx, bool der)
 {
     int i;
@@ -170,5 +170,5 @@ void  triangle_close(triangle tr)
     free (tr);
 }
 
-/* 	$Id: triangle.c,v 1.4 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: triangle.c,v 1.5 2004/03/13 06:00:33 fomels Exp $	 */
 

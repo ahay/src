@@ -8,14 +8,14 @@ Takes: < input.rsf > output.rsf
 
 #include <rsf.h>
 
-#include "stretch.h"
+#include "fint1.h"
 
 int main(int argc, char* argv[])
 {
-    map str;
+    fint1 str;
     bool inv;
-    int i1,i2, n1,n2, n, dens;
-    float d1, o1, d2, o2, eps, t0, *trace, *s, *stretched, t;
+    int i1,i2, n1,n2, n, dens, it, nw;
+    float d1, o1, d2, o2, t0, *trace, *stretched, t;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -27,8 +27,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse stretching */
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    /* smoothness parameter */
     if (!sf_getint("dens",&dens)) dens=1;
     /* axis stretching factor */
 
@@ -60,24 +58,32 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
     stretched = sf_floatalloc(n);
-    s = sf_floatalloc(n1);
 
-    for (i1=0; i1 < n1; i1++) {
-	t = o1+i1*d1;
-	s[i1] = inv? t0*expf(t): logf(t/t0);
-    }
-
-    str = stretch_init (n, o2, d2, n1, eps);
-    stretch_define (str, s);
+    if (!sf_getint("extend",&nw)) nw=4;
+    /* trace extension */
+    str = fint1_init(nw,n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_read (trace,sizeof(float),n1,in);
-        stretch_apply (str, trace, stretched);
+	fint1_set(str,trace);
+
+	for (i1=0; i1 < n; i1++) {
+	    t = o2+i1*d2;
+	    t = inv? logf(t/t0): t0*expf(t);
+	    t = (t-o1)/d1;
+	    it = t;
+	    if (it >= 0 && it < n1) {
+		stretched[i1] = fint1_apply(str,it,t-it,false);
+	    } else {
+		stretched[i1] = 0.;
+	    }
+	}
+
         sf_write (stretched,sizeof(float),n,out);
     }
 
     exit (0);
 }
 
-/* 	$Id: Mlogstretch.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mlogstretch.c,v 1.4 2004/03/13 06:00:33 fomels Exp $	 */
 
