@@ -1,0 +1,116 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os, string
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/sanclem'
+
+input = 'Sanclemente_r.rsf'
+Fetch(input,datdir)
+Flow('r',input,'dd data_format=ascii_int out=$TARGET',stdout=0)
+
+colors = {
+    'red':    ('2.3','2.2'),  # red: pebly, cong. sand
+    'orange': ('2.5','2.25'), # med-coarse sand, amalgamated
+    'yellow': ('2.1','2.3'),  # med-coarse sand, thick bedded
+    'pink':   ('1.9','2.3'),  # med-coarse sand, large mud clasts
+    'blue':   ('1.7','2.35'), # med-fine sand, thin bedded + mudstone
+    'grey':   ('3','2.4')     # mudstone, very thin bedded sand
+    }
+    
+rocks = {
+    '206': 'red',
+    '99':  'blue',
+    '246': 'yellow',
+    '223': 'red',
+    '101': 'blue',
+    '247': 'orange',
+    '255': 'yellow',
+    '245': 'pink',
+    '250': 'grey',
+    '92':  'grey',
+    '100': 'grey',
+    '148': 'grey'
+    }
+
+def color2ai(target=None,source=None,env=None):
+    red = open(str(source[0]),'r')
+    vfile = str(target[0])
+    dfile = str(target[1])
+    vel = open(vfile,'w')
+    den = open(dfile,'w')    
+    for line in red.readlines():
+        reds = string.split(line)
+        vp = string.join(map(lambda x: colors[rocks[x]][0],reds),' ')+'\n'
+        ro = string.join(map(lambda x: colors[rocks[x]][1],reds),' ')+'\n'
+        vel.write(vp)
+        den.write(ro)
+    vel.write('n2=289 n1=5650 data_format=ascii_float esize=0 in=%s\n' % vfile)
+    den.write('n2=289 n1=5650 data_format=ascii_float esize=0 in=%s\n' % dfile)
+    vel.close()
+    den.close()
+    red.close()
+
+Color2ai = Builder(action=Action(color2ai))
+env = Environment(BUILDERS={'Color2ai':Color2ai})
+
+env.Color2ai(['vp0'+sfsuffix,'ro0'+sfsuffix],'r'+sfsuffix)
+
+label = {
+    'vp': 'Velocity (km/s)',
+    'ro': 'Density (g/cc)'
+    }
+
+for case in ['vp','ro']:
+    Flow(case,case+'0',
+         '''
+         dd data_format=native_float |
+         transp | reverse which=1 > $TARGET;
+         echo o1=0 d1=0.1 d2=0.1 >> $TARGET''',stdout=-1)
+    Plot(case,case,
+         '''
+         grey wantscalebar=y barlabel="%s" color=j
+         bias=2 pclip=100 title=SanClemente label1="Depth (m)"
+         ''' % label[case])
+
+Flow('vel','vp','scale dscale=1000')
+Flow('ai0','ro vp','add mode=p ${SOURCES[1]}')
+Flow('ai','ai0 vel',
+     '''
+     depth2time velocity=${SOURCES[1]} dt=0.0001 nt=250 eps=1 |
+     smooth rect1=5
+     ''')
+Plot('ai','ai',
+       '''
+       grey color=j allpos=y bias=4 pclip=100
+       wantscalebar=y barlabel="Acoustic Impedance"
+       title=SanClemente label1="Time (s)"
+       ''')
+Combine('sanclem','vp ro ai','OverUnderAniso',result=1)
+
+freq = (30,60,120)
+for hz in freq:
+    mod = 'clem%d' % hz
+    Flow(mod,'ai','ai2refl f=%d' % hz)
+    Plot(mod,mod,
+         'grey title="Seismic Model (%d-Hz Ricker)" color=G' % hz)
+Combine('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso',result=1)
+
+Flow('vel2','topvel vel','cat axis=1 ${SOURCES[1]} ${SOURCES[0]}')
+Flow('topai','ai','math output=7.2')
+Flow('topvel','vel','math output=3000')
+Flow('mod','topai ai vel2',
+     '''
+     cat axis=1 ${SOURCES[1]} ${SOURCES[0]} |
+     ai2refl f=120 |
+     time2depth nz=578 dz=0.1 velocity=${SOURCES[2]}
+     ''')
+
+###########################################################################
+End()
