@@ -1,0 +1,61 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+grey = '''grey color=j allpos=y screenht=6 screenwd=12
+wanttitle=n label1="Depth (km)" label2="Lateral (km)"
+wantscalebar=y barlabel="Velocity (km/s)"'''
+
+rays =  '''cell2 nr=1000 nt=4000 yshot=0 |
+plotrays frame=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=0
+wantscalebar=y'''
+
+contour = '''contour wantscalebar=y plotcol=0 wanttitle=n
+screenht=6 screenwd=12 c0=0 dc=0.1 nc=20'''
+
+fronts = ' | '.join(['eikonal yshot=0',contour])
+exact = ' | '.join(['window n3=1 f3=1',contour])
+
+Flow('const',None,"spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0")
+Plot('const','const',grey)
+Plot('cell2','const',rays)
+Combine('straight','const cell2','Overlay',result=1)
+
+#Flow('cgrad',None,
+#          '''spike n1=601 d1=0.01 |
+#          headermath output="1/sqrt(1-N*0.00165)" |
+#          spray n2=1201 d2=0.01 o2=0''')
+
+Flow('vofz',None,'vofz n=600 s=0')
+Flow('cgrad','vofz','window n3=1')
+Plot('cgrad','cgrad',grey)
+Plot('ccell2','cgrad',rays)
+Combine('circle','cgrad ccell2','Overlay',result=1)
+
+Plot('ceiko','cgrad',fronts)
+Combine('ceiko','cgrad ceiko','Overlay',result=1)
+Plot('cexact','vofz',exact)
+Combine('cexact','cgrad cexact','Overlay',result=1)
+
+Flow('s2ofz',None,'s2ofz n=600 s=0')
+Flow('c2grad','s2ofz','window n3=1')
+Plot('c2grad','c2grad',grey)
+Plot('c2cell2','c2grad',rays)
+Combine('parab','c2grad c2cell2','Overlay',result=1)
+
+Plot('c2eiko','c2grad',fronts)
+Combine('c2eiko','c2grad c2eiko','Overlay',result=1)
+Plot('c2exact','s2ofz',exact)
+Combine('c2exact','c2grad c2exact','Overlay',result=1)
+    
+###########################################################################
+End()
