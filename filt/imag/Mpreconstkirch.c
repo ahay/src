@@ -1,3 +1,8 @@
+/* Prestack Kirchhoff modeling/migration in constant velocity.
+
+Takes < input.rsf > output.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -22,7 +27,7 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
-    if (!sf_histint(in,"n3",&ny)) sf_error("No n3= in input");
+    if (!sf_histint(in,"n3",&ny)) ny=1;
     n123 = nt*nx*ny;
 
     if (inv && zero) {
@@ -187,5 +192,6 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
+/* 	$Id: Mpreconstkirch.c,v 1.2 2003/12/04 05:13:12 fomels Exp $	 */
 
 
