@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 
     dy = dh;
     oy = os + oh;
-    ny = ns + nh - 1;
+    ny = ns*type + nh - 1;
 
     sf_putint(out,"n2",(nh+type-1)/type);
     sf_putfloat(out,"d2",type*dh);
@@ -59,8 +59,8 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
 
     for (iy=0; iy < ny; iy++) {
-	for (ih=0; ih < nh; ih += type) {
-	    is = iy - ih;
+	for (ih=iy%type; ih < nh; ih += type) {
+	    is = (iy - ih)/type;
 	    if (is >= 0 && is < ns) {
 		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
 		sf_read(trace,sizeof(char),nt,in);

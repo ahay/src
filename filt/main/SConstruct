@@ -23,8 +23,8 @@ except: # local version
                LIBPATH=['../lib'],LIBS=['rsf','m'])
     SConscript('../lib/SConstruct')
 
-env.Command('merge.c','cat.c','cp $SOURCE $TARGET')
-env.Command('imag.c','real.c','cp $SOURCE $TARGET')
+for pair in [('merge','cat'),('imag','real'),('mv','cp')]:
+    env.Command(pair[0]+'.c',pair[1]+'.c','cp $SOURCE $TARGET')
 
 mains = Split(progs)
 map(lambda prog: env.Program(prog + '.c'),mains)
@@ -45,4 +45,4 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.10 2004/03/19 06:10:54 fomels Exp $	
+# 	$Id: SConstruct,v 1.11 2004/03/19 16:01:06 fomels Exp $	
