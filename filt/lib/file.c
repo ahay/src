@@ -356,6 +356,8 @@ Unix-specific and probably non-portable. */
 	}
     }
 
+    closedir(dir);
+
     return success;
 }
 

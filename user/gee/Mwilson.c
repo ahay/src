@@ -118,11 +118,11 @@ int main(int argc, char* argv[])
     sf_floatread(ss->flt,ns,in);
 
     if (stable) {
-	wilson_init( maxlag*10);
-	a0 = wilson_factor(niter, 2.*s0, ss, aa, verb, 1.e-6);
-    } else {
 	wilson2_init( maxlag*10);
 	a0 = wilson2_factor(niter, 2.*s0, ss, a0, aa, verb, 1.e-6);
+    } else {
+	wilson_init( maxlag*10);
+	a0 = wilson_factor(niter, 2.*s0, ss, aa, verb, 1.e-6);
     }
 
     aa = compress(aa,eps);
