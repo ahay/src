@@ -111,11 +111,13 @@ for seed in range(2000,2005):
     real = 'real%d' % seed
     reals.append(real)
     Flow(rand,'pout-40',
-         'noise mean=152.776 var=13911.731 rep=y seed=%d' % seed)
+         '''
+         noise mean=152.776 var=1e5 rep=y seed=%d
+          ''' % seed)
     Flow(real,['raindata','obsdata',rand],
          '''
          shapebin head=${SOURCES[1]} shape=y pin=${SOURCES[2]}
-         niter=40 xkey=0 ykey=1 filt1=25
+         niter=100 xkey=0 ykey=1 filt1=25
          nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
          ''')
     Plot('g'+real,real,
