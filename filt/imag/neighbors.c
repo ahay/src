@@ -37,7 +37,7 @@ static bool updaten (int m, float* res, struct Upd *v[]);
 static void grid (int *i, const int *n);
 
 static int *in, *n, s[3], order;
-static float *time, *vv, rdx[3];
+static float *ttime, *vv, rdx[3];
 static double v1;
 static const float big_value = FLT_MAX;
 
@@ -48,7 +48,7 @@ void neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */,
 		     float *time1 /* traveltime [n[0]*n[1]*n[2]] */)
 /*< Initialize >*/
 {
-    in = in1; time = time1; 
+    in = in1; ttime = time1; 
     n = n1; order = order1;
     s[0] = 1; s[1] = n[0]; s[2] = n[0]*n[1];
     rdx[0] = 1./(rdx1[0]*rdx1[0]);
@@ -79,11 +79,11 @@ int  neighbours(int i)
 static int update (float value, int i)
 /* update gridpoint i with new value */
 {
-    if (value < time[i]) {
-	time[i]   = value;
+    if (value < ttime[i]) {
+	ttime[i]   = value;
 	if (in[i] == SF_OUT) { 
 	    in[i] = SF_FRONT;      
-	    sf_pqueue_insert (time+i);
+	    sf_pqueue_insert (ttime+i);
 	    return 1;
 	}
     }
@@ -103,14 +103,14 @@ static float qsolve(int i)
 	
 	if (ix > 0) { 
 	    k = i-s[j];
-	    a = time[k];
+	    a = ttime[k];
 	} else {
 	    a = big_value;
 	}
 
 	if (ix < n[j]-1) {
 	    k = i+s[j];
-	    b = time[k];
+	    b = ttime[k];
 	} else {
 	    b = big_value;
 	}
@@ -127,12 +127,12 @@ static float qsolve(int i)
 	if (order > 1) {
 	    if (a < b  && ix-2 >= 0) { 
 		k = i-2*s[j];
-		if (in[k] != SF_OUT && a >= (t=time[k]))
+		if (in[k] != SF_OUT && a >= (t=ttime[k]))
 		    stencil(t,xj);
 	    }
 	    if (a > b && ix+2 <= n[j]-1) { 
 		k = i+2*s[j];
-		if (in[k] != SF_OUT && b >= (t=time[k]))
+		if (in[k] != SF_OUT && b >= (t=ttime[k]))
 		    stencil(t,xj);
 	    }
 	}
@@ -227,11 +227,11 @@ static int dist(int k, float x1, float x2, float x3)
     ti = hypotf(x1,hypotf(x2,x3));
     if (SF_OUT == in[k]) {
 	in[k] = SF_IN;
-	time[k] = ti;
-	sf_pqueue_insert (time+k);
+	ttime[k] = ti;
+	sf_pqueue_insert (ttime+k);
 	return 1;
-    } else if (ti < time[k]) {
-	time[k] = ti;
+    } else if (ti < ttime[k]) {
+	ttime[k] = ti;
     }
 
     return 0;
@@ -253,7 +253,7 @@ int neighbors_distance(int np         /* number of points */,
     /* initialize everywhere */
     for (i=0; i < n123; i++) {
 	in[i] = SF_OUT;
-	time[i] = big_value;
+	ttime[i] = big_value;
 	vv[i] = 1.;
     }
 
@@ -307,7 +307,7 @@ int nearsource(float* xs   /* source location [3] */,
     /* initialize everywhere */
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
 	in[i] = SF_OUT;
-	time[i] = big_value;
+	ttime[i] = big_value;
     }
 
     vv = vv1;
@@ -346,13 +346,13 @@ int nearsource(float* xs   /* source location [3] */,
 		}
 
 		/* analytical formula (Euclid) */ 
-		time[i] = sqrtf(v1*delta2);
+		ttime[i] = sqrtf(v1*delta2);
 		in[i] = SF_IN;
 
 		if ((n[0] > 1 && (iz == start[0] || iz == endx[0])) ||
 		    (n[1] > 1 && (iy == start[1] || iy == endx[1])) ||
 		    (n[2] > 1 && (ix == start[2] || ix == endx[2]))) {
-		    sf_pqueue_insert (time+i);
+		    sf_pqueue_insert (ttime+i);
 		}
 	    }
 	}
