@@ -6,9 +6,9 @@ CFLAGS = -std=gnu9x -Wall -pedantic -I../rsf -g
 
 LDFLAGS = -L../rsf -lrsf -lm
 
-PROGS = add attr cat cmplx cp dd disfil get headermath imag in interleave \
-	log math merge mv pad real reverse rm rtoc scale \
-	segyread segywrite spike stack transp window
+PROGS = add attr cat cmplx cp dd disfil get headermath headersort \
+	imag in interleave log math merge mv pad real reverse rm \
+	rtoc scale segyread segywrite spike stack transp window
 
 MAINS = $(addprefix sf, $(PROGS))
 

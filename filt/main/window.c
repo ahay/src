@@ -137,7 +137,7 @@ int main (int argc, char *argv[])
     n[0] *= esize;
     f[0] *= esize;
 
-    sf_unpipe(in,sf_filesize(in));
+    sf_unpipe(in,sf_filesize(in)*esize);
     
     buf = sf_charalloc (n1);
     table = sf_intalloc (n2);
