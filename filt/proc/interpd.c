@@ -23,7 +23,7 @@ void interp_init (int n, float e, int verb)
     slv = banded_init (n1, nb);
     offd = sf_floatalloc2 (n1,nb);
 
-    bandpass_init(verb);
+    bandpass_init();
     w1 = pwd_init (n1, nw);
     w2 = pwd_init (n1, nw);
 }
@@ -35,6 +35,7 @@ void interp_close (void)
     free (offd);
     pwd_close (w1);
     pwd_close (w2);
+    bandpass_close ();
 }
 
 void interp2(int n2, float** in, float** out, float** pp)

@@ -2,21 +2,23 @@
 #include <stdio.h>
 
 #include "bandpass.h"
-#include "butterworth.h"
+#include "butter.h"
 
-static int hipoles, lopoles;
-static float hidb, lodb;
+static butter blo, bhi;
 
-void bandpass_init (int verb)
+void bandpass_init (void)
 {
-    const float lopass=0.25, apass=0.95, lostop=0.3, astop=0.05;
-    const float hipass=0.02, histop=0.01;
+    const float fhi=0.275314, flo=0.0141445;
+    const int nphi=10, nplo=5;
 
-    bfdesign (lopass, sqrt(apass), lostop, sqrt(astop), &lopoles, &lodb);
-    bfdesign (hipass, sqrt(apass), histop, sqrt(astop), &hipoles, &hidb);
+    blo = butter_init(false,flo,nplo);
+    bhi = butter_init(true, fhi,nphi);
+}
 
-    if (verb) fprintf(stderr,"lopoles=%d hipoles=%d lodb=%g hidb=%g\n",
-		      lopoles,hipoles,lodb,hidb);
+void bandpass_close (void)
+{
+    butter_close(blo);
+    butter_close(bhi);
 }
 
 void bandpass (int n1, float* trace)
@@ -24,26 +26,25 @@ void bandpass (int n1, float* trace)
     int i1;
     float t;
 
-    bflowpass (lopoles, lodb, n1, trace, trace);
+    butter_apply(blo,n1,trace);
     for (i1=0; i1 < n1/2; i1++) { 
 	t=trace[i1];
 	trace[i1]=trace[n1-1-i1];
 	trace[n1-1-i1]=t;
     }
-    bflowpass (lopoles, lodb, n1, trace, trace);
+    butter_apply(blo,n1,trace);
     for (i1=0; i1 < n1/2; i1++) { 
 	t=trace[i1];
 	trace[i1]=trace[n1-1-i1];
 	trace[n1-1-i1]=t;
     }
-    
-    bfhighpass (hipoles, hidb, n1, trace, trace);
+    butter_apply(bhi,n1,trace);
     for (i1=0; i1 < n1/2; i1++) { 
 	t=trace[i1];
 	trace[i1]=trace[n1-1-i1];
 	trace[n1-1-i1]=t;
     }
-    bfhighpass (hipoles, hidb, n1, trace, trace);
+    butter_apply(bhi,n1,trace);
     for (i1=0; i1 < n1/2; i1++) { 
 	t=trace[i1];
 	trace[i1]=trace[n1-1-i1];
@@ -51,5 +52,4 @@ void bandpass (int n1, float* trace)
     }
 }
 
-/* 	$Id: bandpass.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
-
+/* 	$Id$	 */

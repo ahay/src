@@ -25,7 +25,7 @@ void predict_init (int nx, int ny, float e, int verb)
     diag = sf_floatalloc (n1);
     offd = sf_floatalloc2 (n1,nb);
 
-    bandpass_init(verb);
+    bandpass_init();
     w = pwd_init (n1, nw);
 }
 
@@ -35,6 +35,7 @@ void predict_close (void)
     free (diag);
     free (*offd);
     free (offd);
+    bandpass_close ();
     pwd_close (w);
 }
 
