@@ -106,6 +106,7 @@ static size_t aline=8;
 
 static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
+static char* gettmpdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
 
 sf_file sf_input (/*@null@*/ const char* tag)
@@ -400,6 +401,41 @@ Unix-specific and probably non-portable. */
     closedir(dir);
 
     return success;
+}
+
+static char* gettmpdatapath (void) 
+/* Finds temporary datapath.
+
+Datapath rules:
+1. check tmpdatapath= on the command line
+2. check TMPDATAPATH environmental variable
+3. check .tmpdatapath file in the current directory
+4. check .tmpdatapath in the home directory
+5. return NULL
+*/
+{
+    char *path, *penv, *home, file[PATH_MAX];
+    
+    path = sf_getstring ("tmpdatapath");
+    if (NULL != path) return path;
+
+    path = sf_charalloc(PATH_MAX+1);
+
+    penv = getenv("TMPDATAPATH");
+    if (NULL != penv) {
+	strncpy(path,penv,PATH_MAX);
+	return path;
+    }
+
+    if (readpathfile (".tmpdatapath",path)) return path;
+    
+    home = getenv("HOME");
+    if (NULL != home) {
+	(void) snprintf(file,PATH_MAX,"%s/.tmpdatapath",home);
+	if (readpathfile (file,path)) return path;
+    }
+
+    return NULL;
 }
 
 static char* getdatapath (void) 
@@ -1020,7 +1056,8 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     FILE *tmp;
     char *path;
     
-    path = getdatapath();
+    path = gettmpdatapath();
+    if (NULL == path) path = getdatapath();
     *dataname = sf_charalloc (NAME_MAX+1);
     snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
     tmp = fdopen(mkstemp(*dataname),mode);

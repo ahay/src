@@ -98,7 +98,6 @@ int main (int argc, char* argv[])
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
-	if (nh2 != nh) 
 
 	for (ih = 0; ih < nh; ih++) {
 	    sf_floatread (trace,nt,cmp);
