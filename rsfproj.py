@@ -106,7 +106,7 @@ sfsuffix = '.rsf'
 vpsuffix = '.vpl'
 # suffix for eps files
 pssuffix = '.eps'
-# path bor binary files (change later for compliance with SEPlib)
+# path bor binary files
 datapath = os.environ.get('DATAPATH')
 if not datapath:
     try:
@@ -256,7 +256,7 @@ def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
     dir = env['dir']
     for file in map(str,target):
-        urllib.urlretrieve(string.join([dir,file],'/'),file)
+        urllib.urlretrieve(string.join([dir,file],os.sep),file)
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
@@ -340,9 +340,10 @@ class Project(Environment):
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
-        self.path = datapath + os.path.basename(os.getcwd()) + os.sep
+        dir = os.path.basename(os.getcwd())
+        self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
-            os.mkdir(self.path)        
+            os.mkdir(self.path)
         self.Append(ENV={'DATAPATH':self.path,
                          'DISPLAY':display,
                          'RSFROOT':top},
@@ -352,7 +353,6 @@ class Project(Environment):
 #                              'PDFBuild':PDFBuild,
                               #                              'Dvi':Dvi,
                               #                              'Ps':Ps,
-                              'Pdf':Pdf,
 #                              'Read':Read,
                               'Retrieve':Retrieve},
                     SCANNERS=[Plots],
@@ -368,23 +368,6 @@ class Project(Environment):
         self.view = []
         self.figs = []
         self.pdfs = []
-        if os.path.isfile('paper.tex'): # if there is a paper
-            if dvips:
-                self.paper = self.Dvi(target='paper',source='paper.tex')
-                self.Alias('dvi',self.paper)
-                self.Alias('ps',self.Ps('paper'))
-                self.Alias('pdf',self.Pdf('paper'))
-            else:
-                self.paper = self.Pdf(target='paper',source='paper.tex')
-                self.Alias('pdf',self.paper)
-            self.paper.target_scanner = Plots
-	    if acroread:
-		self.Alias('read',self.Read('paper'))
-#            self.junk = ['paper.aux','paper.log','paper.bbl',
-#                         'paper.blg','paper.ps','paper.dvi']
-#            Clean('paper.pdf',self.junk)
-#        else:
-#            self.junk = []
     def Flow(self,target,source,flow,stdout=1,stdin=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
         if not flow:
@@ -443,14 +426,13 @@ class Project(Environment):
             if not re.search(suffix + '$',file):
                 file = file + suffix
             targets.append(file)
-        if suffix == sfsuffix:
+        if suffix == sfsuffix:            
             datafiles = [] 
             for target in targets:
-                datafile = self.path + target + '@'
-                datafiles.append(datafile)
+                if os.sep not in target:
+                    datafile = self.path + target + '@'
+                    datafiles.append(datafile)
             targets = targets + datafiles
-#        if clean:
-#            self.junk = self.junk + targets
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
         kw.update({'suffix':suffix})
@@ -492,6 +474,19 @@ class Project(Environment):
             build = self.Alias('build',self.figs)
         if self.pdfs:
             buildPDF = self.Alias('buildPDF',self.pdfs)
+        self.Append(BUILDERS={'Pdf':Pdf})
+        if os.path.isfile('paper.tex'): # if there is a paper
+            if dvips:
+                self.paper = self.Dvi(target='paper',source='paper.tex')
+                self.Alias('dvi',self.paper)
+                self.Alias('ps',self.Ps('paper'))
+                self.Alias('pdf',self.Pdf('paper'))
+            else:
+                self.paper = self.Pdf(target='paper',source='paper.tex')
+                self.Alias('pdf',self.paper)
+            self.paper.target_scanner = Plots
+	    if acroread:
+		self.Alias('read',self.Read('paper'))
     def Fetch(self,file,dir):
         return self.Retrieve(file,None,dir=dir)
 
@@ -514,4 +509,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.21 2004/03/22 06:29:07 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.22 2004/03/27 03:28:58 fomels Exp $	

@@ -45,6 +45,7 @@ for src in ('doc','proj','prog'):
     env.Install(libdir,py)
     Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
 env.Install(bindir,'sfdoc')
+env.Install(bindir,'sftour')
 
 ##########################################################################
 # SELF DOCUMENTATION
