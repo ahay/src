@@ -6,14 +6,18 @@
 typedef void (*sf_operator)(bool,bool,int,int,float*,float*);
 typedef void (*sf_solverstep)(bool,int,int,float*,
 			   const float*,float*,const float*);
+typedef void (*sf_weight)(int,const float*,float*);
+
+#ifndef __cplusplus
 
 typedef void (*sf_coperator)(bool,bool,int,int,float complex*,float complex*);
 typedef void (*sf_csolverstep)(bool,int,int,float complex*,
 			       const float complex*,float complex*,
 			       const float complex*);
 
-typedef void (*sf_weight)(int,const float*,float*);
 typedef void (*sf_cweight)(int,const float complex*,float*);
+
+#endif /* c++ */
 
 /* solver_prec
    -------------
@@ -74,6 +78,8 @@ void sf_solver_reg (sf_operator oper, sf_solverstep solv, sf_operator reg,
 void sf_solver (sf_operator oper, sf_solverstep solv, int nx, int ny, 
 		float* x, const float* dat, int niter, ...); 
 
+#ifndef __cplusplus
+
 /* csolver
    ------
    Generic linear solver for complex operators.
@@ -91,6 +97,8 @@ void sf_csolver (sf_coperator oper, sf_csolverstep solv, int nx, int ny,
 		 float complex* x, const float complex* dat, int niter, ...); 
 
 
+#endif /* c++ */
+
 #endif
 
-/* 	$Id: bigsolver.h,v 1.1 2004/06/11 10:46:55 fomels Exp $	 */
+/* 	$Id: bigsolver.h,v 1.2 2004/06/23 08:54:31 fomels Exp $	 */

@@ -106,7 +106,7 @@ class Input(File):
     def read(self,data,n=-1):
         if n<0:
             n = numarray.size(data)
-        c_rsf.sf_read(data,n,self.file)
+        c_rsf.sf_floatread(data,n,self.file)
 
 class Output(File):
     def __init__(self,tag="out"):
@@ -115,7 +115,7 @@ class Output(File):
     def write(self,data,n=-1):
         if n<0:
             n = numarray.size(data)       
-        c_rsf.sf_write(data,n,self.file)
+        c_rsf.sf_floatwrite(data,n,self.file)
 
 if __name__ == "__main__":
     # Testing getpar
@@ -161,4 +161,4 @@ if __name__ == "__main__":
         output.write(trace)
     os.system("sfrm junk.rsf")
     
-# 	$Id: rsf.py,v 1.4 2004/03/22 05:43:24 fomels Exp $	
+# 	$Id: rsf.py,v 1.5 2004/06/23 08:54:31 fomels Exp $	

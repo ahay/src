@@ -60,7 +60,7 @@ const iRSF&
 iRSF::operator>> (std::valarray<float> &array) const
 {
     if (NULL == file_) sf_error("Cannot write data to parameter file");
-    sf_read(&(array[0]),sizeof(float),array.size(),file_);
+    sf_floatread(&(array[0]),array.size(),file_);
     return *this;
 }
 
@@ -69,7 +69,7 @@ iRSF::operator>> (std::valarray<float> &array) const
 const oRSF&
 oRSF::operator<< (std::valarray<float> &array) const
 {
-    sf_write(&(array[0]),sizeof(float),array.size(),file_);
+    sf_floatwrite(&(array[0]),array.size(),file_);
     return *this;
 }
 
@@ -313,4 +313,4 @@ oRSF::put (const char* name, int size, const int*   value) const
 //     sf_putfloats(file_,name,value,size);
 // }
 
-// 	$Id: rsf.cc,v 1.4 2003/09/29 14:34:56 fomels Exp $	
+// 	$Id: rsf.cc,v 1.5 2004/06/23 08:54:31 fomels Exp $	

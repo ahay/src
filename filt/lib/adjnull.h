@@ -4,9 +4,14 @@
 #include "c99.h"
 
 void sf_adjnull (bool adj, bool add, int nx, int ny, float* x, float* y);
+
+#ifndef __cplusplus
+
 void sf_cadjnull (bool adj, bool add, int nx, int ny, 
 		  float complex* x, float complex* y);
 
+#endif /* c++ */
+
 #endif
 
-/* 	$Id: adjnull.h,v 1.2 2004/03/13 06:00:15 fomels Exp $	 */
+/* 	$Id: adjnull.h,v 1.3 2004/06/23 08:54:31 fomels Exp $	 */

@@ -560,14 +560,14 @@ contains
     real, dimension (n), intent (out) :: array
     integer,             intent (in)  :: n
 
-    call sf_read(array, 4, n, hist%tag)
+    call sf_floatread(array, n, hist%tag)
   end subroutine rsf_read_1d_n
 
   subroutine rsf_read_1d (hist, array)    
     type (file),         intent (in)  :: hist
     real, dimension (:), intent (out) :: array
 
-    call sf_read(array, 4, size(array), hist%tag)
+    call sf_floatread(array, size(array), hist%tag)
   end subroutine rsf_read_1d
 
   subroutine rsf_read_2d (hist, array)    
@@ -603,14 +603,14 @@ contains
     complex, dimension (n), intent (out) :: array
     integer,             intent (in)  :: n
 
-    call sf_read(array, 8, n, hist%tag)
+    call sf_complexread(array, n, hist%tag)
   end subroutine rsf_read_complex_1d_n
 
   subroutine rsf_read_complex_1d (hist, array)    
     type (file),         intent (in)  :: hist
     complex, dimension (:), intent (out) :: array
 
-    call sf_read(hist,array,size(array))
+    call sf_complexread(hist,array,size(array))
   end subroutine rsf_read_complex_1d
 
   subroutine rsf_read_complex_2d (hist, array)    
@@ -646,7 +646,7 @@ contains
     real, dimension (n), intent (in) :: array
     integer,             intent (in)  :: n
 
-    call sf_write(array, 4, n, hist%tag)
+    call sf_floatwrite(array, n, hist%tag)
   end subroutine rsf_write_1d_n
 
   subroutine rsf_write_1d (hist, array)    
@@ -689,14 +689,14 @@ contains
     complex, dimension (n), intent (in) :: array
     integer,                intent (in)  :: n
 
-    call sf_write(array, 8, n, hist%tag)
+    call sf_complexwrite(array, n, hist%tag)
   end subroutine rsf_write_complex_1d_n
 
   subroutine rsf_write_complex_1d (hist, array)    
     type (file),            intent (in)  :: hist
     complex, dimension (:), intent (in) :: array
 
-    call sf_write(array, 8, size(array), hist%tag)
+    call sf_complexwrite(array, size(array), hist%tag)
   end subroutine rsf_write_complex_1d
 
   subroutine rsf_write_complex_2d (hist, array)    
@@ -728,4 +728,4 @@ contains
   end subroutine rsf_write_complex_5d
 end module RSF
 
-!	$Id: rsf.f90,v 1.4 2003/09/24 05:15:29 fomels Exp $	
+!	$Id: rsf.f90,v 1.5 2004/06/23 08:54:31 fomels Exp $	

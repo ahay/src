@@ -118,7 +118,7 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
             if os.path.isdir(dir):
                 pythinc.append(dir)
 
-    python = env.SharedLibrary('rsf',['rsf.i',lib],
+    python = env.SharedLibrary('rsf',['rsf.i']+sources,
                                SWIGFLAGS='-python',
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')

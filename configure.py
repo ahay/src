@@ -52,7 +52,7 @@ def cc(context):
     context.Message("checking if %s works ... " % CC)
     res = context.TryRun(text,'.c')
     context.Result(res[0])
-    if not res:
+    if not res[0]:
         sys.exit(1)
     if CC.endswith('gcc'):
         oldflag = context.env.get('CCFLAGS')
@@ -85,7 +85,7 @@ def cxx(context):
     context.Message("checking if %s works ... " % CXX)
     res = context.TryRun(text,'.cc')
     context.Result(res[0])
-    if not res:
+    if not res[0]:
         del context.env['CXX']
         return
     if CXX == 'g++':
@@ -124,10 +124,10 @@ def f77(context):
     res = context.TryRun(text,'.f')
     context.env['LINK'] = oldlink
     context.Result(res[0])
-    if not res:
+    if not res[0]:
         sys.stderr.write("No working F77 compiler detected.\n")
         del context.env['F77']
-        return
+        sys.exit(1)
     cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
     context.env['CFORTRAN'] = cfortran 
     context.Message("checking %s type for cfortran.h ... " % F77)
@@ -167,10 +167,10 @@ def f90(context):
     res2 = context.TryRun(main,'.f90')
     context.env['LINK'] = oldlink
     context.Result(res1 and res2[0])
-    if not res1 or not res2:
+    if not res1 or not res2[0]:
         sys.stderr.write("No working F90 compiler detected.\n")
         del context.env['F90']
-        return
+        sys.exit(1)
     base = os.path.basename(F90)
     context.Message("checking %s type for cfortran.h ... " % base)
     cfortran = fortran.get(base,'NAGf90Fortran')
@@ -221,7 +221,7 @@ def options(opts):
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
-    opts.Add('API','Support for additional languages (ossible values: c++, fortran, fortran-90, python)')
+    opts.Add('API','Support for additional languages (possible values: c++, fortran, fortran-90, python)')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')
@@ -271,4 +271,4 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.14 2004/06/16 17:55:15 fomels Exp $	
+#	$Id: configure.py,v 1.15 2004/06/23 08:54:31 fomels Exp $	

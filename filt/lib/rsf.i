@@ -198,7 +198,7 @@ free ((char*) $1);
          }
 %}
 
-%typemap(in) (void* arr, size_t esize) {
+%typemap(in) (float* arr) {
   import_libnumarray();
 	
   /* Check if is a numarray */
@@ -206,12 +206,10 @@ free ((char*) $1);
      NumarrayType type = NA_NumarrayType($input);
      if (tFloat64 == type) type = tFloat32; /* This is a bug! */
      switch (type) {
-        case tInt32: case tFloat32:
-	     $2=4; break;
-        case tInt64: case tFloat64: case tComplex32:
-             $2=8; break;
+        case tFloat64: case tFloat32:
+	     break;
         default:
-	     PyErr_SetString(PyExc_TypeError,"unsupported data type");
+	     PyErr_SetString(PyExc_TypeError,"wrong data type");
              break;	
      }
      $1 = NA_OFFSETDATA(NA_InputArray($input,type,C_ARRAY));    
@@ -248,8 +246,8 @@ void sf_putstring (sf_file file, char* key,const char* par);
 void sf_putline (sf_file file, const char* line);
 long sf_bytes (sf_file file);
 
-void sf_write (void* arr, size_t esize, size_t size, sf_file file);
-void sf_read (/*@out@*/ void* arr, size_t esize, size_t size, sf_file file);
+void sf_floatwrite (float* arr, size_t size, sf_file file);
+void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file);
 
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);

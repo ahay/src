@@ -18,7 +18,7 @@
 	if (.not. sf_getfloat("clip",clip)) call sf_error("Need clip=")
 
 	do 10 i2=1, n2
-	   call sf_read(trace,4,n1,in)
+	   call sf_floatread(trace,n1,in)
 
 	   do 20 i1=1, n1
 	      if (trace(i1) >  clip) then
@@ -28,7 +28,7 @@
 	      end if
  20	   continue
 
-	   call sf_write(trace,4,n1,out)
+	   call sf_floatwrite(trace,n1,out)
  10	continue
 
 	stop

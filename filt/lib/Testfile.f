@@ -12,11 +12,11 @@
       out = sf_output("out")
       type = sf_gettype(in)
       call sf_putint(out,"n2",5)
-      call sf_read(trace,4,100,in)
+      call sf_floatread(trace,100,in)
       do 10 i=1,5
-         call sf_write(trace,4,100,out)
+         call sf_floatwrite(trace,100,out)
  10   continue
       stop 
       end
 
-C	$Id: Testfile.f,v 1.2 2003/09/29 14:34:55 fomels Exp $	
+C	$Id: Testfile.f,v 1.3 2004/06/23 08:54:31 fomels Exp $	

@@ -3,6 +3,8 @@
 
 #include "c99.h"
 
+#ifndef __cplusplus
+
 /* ccgstep
    --------
    A step of Claerbout's  conjugate-gradient iteration for complex operators.
@@ -17,6 +19,8 @@ void sf_ccgstep( bool forget, int nx, int ny,
 		float complex* rr, const float complex* gg);
 void sf_ccgstep_close (void);
 
+#endif /* c++ */
+
 #endif
 
-/* 	$Id: ccgstep.h,v 1.1 2004/03/13 06:11:03 fomels Exp $	 */
+/* 	$Id: ccgstep.h,v 1.2 2004/06/23 08:54:31 fomels Exp $	 */

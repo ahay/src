@@ -49,8 +49,12 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file);
 void sf_intwrite (int* arr, size_t size, sf_file file);
 void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file);
 
+#ifndef __cplusplus
+
 void sf_complexwrite (float complex* arr, size_t size, sf_file file);
 void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file);
+
+#endif /* c++ */
 
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);
@@ -62,4 +66,4 @@ void sf_close (void);
 
 #endif
 
-/* 	$Id: file.h,v 1.8 2004/04/19 21:51:26 fomels Exp $	 */
+/* 	$Id: file.h,v 1.9 2004/06/23 08:54:31 fomels Exp $	 */
