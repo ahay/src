@@ -219,10 +219,84 @@ static void grid (int *i, const int *n)
     }
 }
 
+static int dist(int k, float x1, float x2, float x3) 
+/* assign distance to a neighboring grid point */
+{
+    float ti;
+
+    ti = hypotf(x1,hypotf(x2,x3));
+    if (SF_OUT == in[k]) {
+	in[k] = SF_IN;
+	time[k] = ti;
+	return 1;
+    } else if (ti < time[k]) {
+	time[k] = ti;
+    }
+
+    return 0;
+}
+
+int distance(int np         /* number of points */, 
+	     float **points /* point coordinates */,
+	     float *d       /* grid sampling [3] */,
+	     float *o       /* grid origin [3] */)
+/*< initialize distance computation >*/
+{
+    int npoints, ip, i, j, n123, ix[3], k;
+    float x[3];
+
+    n123 = n[0]*n[1]*n[2];
+
+    vv = sf_floatalloc(n123);
+
+    /* initialize everywhere */
+    for (i=0; i < n123; i++) {
+	in[i] = SF_OUT;
+	time[i] = big_value;
+	vv[i] = 1.;
+    }
+
+    npoints = 0;
+    for (ip=0; ip < np; ip++) {
+	for (j=0; j < 3; j++) {
+	    x[j] = (points[ip][j]-o[j])/d[j];
+	    ix[j] = x[j];
+	}
+	if (x[0] < 0. || ix[0] >= n[0] ||
+	    x[1] < 0. || ix[1] >= n[1] ||
+	    x[2] < 0. || ix[2] >= n[2]) continue;
+	k = 0;
+	for (j=0; j < 3; j++) {
+	    x[j] = (x[j]-ix[j])*d[j];
+	    k += ix[j]*s[j];
+	}
+	npoints += dist(k,x[0],x[1],x[2]);
+	if (ix[0] != n[0]-1) {
+	    npoints += dist(k+s[0],d[0]-x[0],x[1],x[2]);
+	    if (x[1] != n[1]-1) {
+		npoints += dist(k+s[0]+s[1],d[0]-x[0],d[1]-x[1],x[2]);
+		if (ix[2] != n[2]-1) 
+		    npoints += 
+			dist(k+s[0]+s[1]+s[2],d[0]-x[0],d[1]-x[1],d[2]-x[2]);
+	    }
+	    if (ix[2] != n[2]-1) 
+		npoints += dist(k+s[0]+s[2],d[0]-x[0],x[1],d[2]-x[2]);
+	}
+	if (ix[1] != n[1]-1) {
+	    npoints += dist(k+s[1],x[0],d[1]-x[1],x[2]);
+	    if (ix[2] != n[2]-1) 
+		npoints += dist(k+s[1]+s[2],x[0],d[1]-x[1],d[2]-x[2]);
+	}
+	if (ix[2] != n[2]-1) npoints += dist(k+s[2],x[0],x[1],d[2]-x[2]);
+    }
+
+    return npoints;
+}
+
 int nearsource(float* xs   /* source location [3] */, 
 	       int* b      /* constant-velocity box around it [3] */, 
 	       float* d    /* grid sampling [3] */, 
-	       float* vv1  /* slowness [n[0]*n[1]*n[2] */, 
+	       float* vv1  /* slowness [n[0]*n[1]*n[2]] */, 
 	       bool *plane /* if plane-wave source */)
 /*< initialize the source >*/
 {
