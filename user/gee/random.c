@@ -1,4 +1,4 @@
-/* Simple psedu-random number generator */
+/* Simple pseudo-random number generator */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
