@@ -1,0 +1,33 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+set_resdir('../Fig')
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/shots'
+Fetch('shots.HH',datdir)
+
+Flow('cube','shots.HH',
+     '''
+     dd data_format=native_float |
+     window n1=400 n2=24 |
+     byte
+     ''')
+
+cubeplot = '''
+grey3 frame1=320 frame2=3 frame3=20 point1=.75
+label1="Time (s)" label2=Offset label3=Shot wanttitle=n 
+'''
+
+Plot('flat','cube',cubeplot)
+Plot('cube','cube',cubeplot + ' flat=n') 
+Combine('cube','flat cube','SideBySideAniso',result=1)
+
+###########################################################################
+End()

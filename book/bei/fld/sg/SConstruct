@@ -1,0 +1,19 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+set_resdir('../Fig')
+
+Exe('sg.c',LIBS=['rsfplot','rsf','m'])
+Result('geqs', 'sg.exe','./$SOURCE 1 > $TARGET',stdin=0)
+Result('geq2s','sg.exe','./$SOURCE 2 > $TARGET',stdin=0)
+
+
+###########################################################################
+End()
