@@ -18,7 +18,7 @@ env.Install(libdir,'suproj.py')
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
-dirs = ('main','proc','imag','plot','fomels','savap','gee')
+dirs = ('main','proc','imag','plot','fomels','savap','gee','jennings')
 
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use))

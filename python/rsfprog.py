@@ -9,6 +9,7 @@ import sfimag
 import sffomels
 import sfgee
 import sfsavap
+import sfjennings
 
 # plot
 import sfplot
