@@ -16,6 +16,8 @@ int main (void)
     z = 0.; /* ? */
     v = 1.01 * xmax/ sqrtf( tmax*tmax - z*z);
 
+    vp_init();
+
     vp_uorig( -1.+xmin, 0.);
     vp_umove( xmin, 9.5);       
     vp_udraw( xmax, 9.5);

@@ -9,6 +9,8 @@ int main (int argc, char* argv[])
     int	size, is, ns,ng, ih,nh;
     float h, s, g, ds,dg,s0,g0, dgods;
 
+    vp_init();
+
     s0=.5; 
     g0=.5; 
 

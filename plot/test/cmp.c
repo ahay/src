@@ -11,6 +11,8 @@ int main (void)
     float dx, xmin=-4., xmax=7., tmax=9.0, x,t,z, x0,t0, v=1., alfa, ca, sa;
     int ix, iz, nz=100, nx=100, degrees=85;
 
+    vp_init();
+
     t0 = 0;	
     x0= xmin;
     dx= (xmax-xmin)/(nx-1);

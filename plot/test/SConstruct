@@ -2,6 +2,10 @@ import os, sys
 sys.path.append('../..')
 import configure
 
+plots = '''
+7ab cmp croshyp csp dc dcretard ellipse headray nmotraj reflector vrms
+'''
+
 try:
 	Import('env')
 	root = env.get('RSFROOT')
@@ -20,10 +24,6 @@ except:
 		   LIBS=['rsfplot','rsf','m'])
 	SConscript('../lib/SConstruct')
 
-plots = '7ab cmp croshyp csp dc dcretard headray nmotraj'
-
-# Fix \\ in ellipse vrms reflector
-
 vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
 env.Append(BUILDERS = {'Vplot' : vplot})
 env['PROGPREFIX'] = 'vp'
@@ -37,12 +37,12 @@ for plot in Split(plots):
 	else:
 		env.Vplot(plot,prog)
 
-#for plot in ['reflexpt','reflkine']:
-#	env.Object(plot+'.o','reflector.c',
-#		   CCFLAGS=env.get('CCFLAGS','') + ' -D%s' % plot.upper())
-#	prog = env.Program(plot+'.o')
-#	if not root:
-#		env.Vplot(plot,prog)
+for plot in ['reflexpt','reflkine']:
+	env.Object(plot+'.o','reflector.c',
+		   CCFLAGS=env.get('CCFLAGS','') + ' -D%s' % plot.upper())
+	prog = env.Program(plot+'.o')
+	if not root:
+		env.Vplot(plot,prog)
 
 prog = env.Program('sg.c')
 if root:
@@ -64,4 +64,4 @@ if root:
 #####################################################################
 
 
-# 	$Id: SConstruct,v 1.2 2004/03/30 02:07:10 fomels Exp $	
+# 	$Id: SConstruct,v 1.3 2004/04/02 02:23:40 fomels Exp $	

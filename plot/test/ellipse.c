@@ -16,6 +16,8 @@ int main (void)
     float xcenter, zcenter, xscale, zscale, dth, thtmp, xz, xsp;
     float tanth, sinth, costh, d, xr, zr, x,z, x1,z1, xend,zend;
 
+    vp_init();
+
     /*				set parameters */
     a = v * time /2.;
     b = sqrtf(a*a-h*h);

@@ -9,6 +9,8 @@ int main (void)
     int j;
     float wide=1.4;
 
+    vp_init();
+
     for (j=0; j <= 3; j++) {
 	vp_uorig ( -.5-wide - 2.3*wide * j, 0.);
 	doit( wide,j);

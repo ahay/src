@@ -7,6 +7,8 @@ int main(void)
     float v=1.,t,z,x,x0, theta;
     float top=3.2, c1=.9, c2=6.8;
 
+    vp_init();
+
     vp_uorig (-c1,-.5);
     vp_uclip (0.,top-3.,4.,top);
     vp_umove (0.,top-0.);  

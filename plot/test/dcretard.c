@@ -8,6 +8,8 @@ int main (void)
 {
     float wide=3.;
 
+    vp_init();
+
     vp_uorig ( -.5-wide, 0.);		
     doit( wide, 1 );
     vp_uorig ( -.5-wide-2.2*wide, 0.);	

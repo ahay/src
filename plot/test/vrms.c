@@ -12,6 +12,8 @@ int main(void)
     float xmin, zmin, xmax, zmax, xcenter, zcenter, xscale, zscale;
     int i, plotcol=6,plotfat=1;
 
+    vp_init();
+
 /* precompute quantities related to vplot scales */
     zbottom = 0.;
     for (i = 0; i < 3; i++) {

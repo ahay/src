@@ -14,6 +14,8 @@ int main (void)
     float ymax = 3.;
     float d = 2.;
 
+    vp_init();
+
     vp_uorig (-.1,-.1);
     vp_color (4);
 

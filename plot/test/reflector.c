@@ -103,6 +103,9 @@ int main(void)
 	}
     }
 
+
+    vp_init();
+
 /* 						set vplot scales */
     vp_orig(xll,yur);
     vp_uorig(xmin,zmin);
