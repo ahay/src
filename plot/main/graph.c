@@ -120,7 +120,7 @@ int main(int argc, char* argv[])
 		sym[0] = symbol[i2];
 		symsize = symbolsz[i2];
 
-		for (i1=1; i1 < n1; i1++) {
+		for (i1=0; i1 < n1; i1++) {
 		    vp_umove(x[i2][i1],y[i2][i1]);
 		    vp_where (&xc, &yc);
 		    vp_tjust (TH_SYMBOL, TV_SYMBOL);
