@@ -21,7 +21,7 @@
 
 #include "tent2.h"
 
-#include "math1.h"
+#include "_defs.h"
 #include "file.h"
 #include "decart.h"
 

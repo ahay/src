@@ -19,6 +19,8 @@
 
 #include <rsf.h>
 
+#include "slowref.h"
+
 int slowref(int nr     /* maximum number of references */, 
 	    float ds   /* minimum slowness separation */, 
 	    int ns     /* number of slownesses */, 

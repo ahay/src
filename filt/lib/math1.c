@@ -27,17 +27,10 @@
 #include "stack.h"
 #include "error.h"
 #include "alloc.h"
+#include "_defs.h"
 
 #include "file.h"
 /*^*/
-
-#ifndef SF_PI
-
-#define SF_PI (3.141592653589793)
-/*^*/
-
-#endif
-
 
 typedef float (*func)(float);
 static func functable[] = {
