@@ -1,4 +1,24 @@
+/* Constant-velocity implicit finite-difference migration */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "fdmig.h"
 #include "ctridiagonal.h"
@@ -9,8 +29,16 @@ static ctris slv;
 static bool hi;
 static int nx, nz, nw;
 
-void fdmig_init(bool hi1, int nx1, int nz1, int nw1, 
-		float dx, float dz, float dw1, float vel, float beta1)
+void fdmig_init(bool hi1    /* if use 45-degree */, 
+		int nx1     /* lateral samples */, 
+		int nz1     /* vertical samples */, 
+		int nw1     /* frequency samples */, 
+		float dx    /* lateral sampling */, 
+		float dz    /* vertical sampling */, 
+		float dw1   /* frequency sampling */, 
+		float vel   /* velocity */, 
+		float beta1 /* "one-sixth" term */)
+/*< Initialize >*/
 {
     hi = hi1;
     nx = nx1;
@@ -27,13 +55,17 @@ void fdmig_init(bool hi1, int nx1, int nz1, int nw1,
 }
 
 void fdmig_close(void) 
+/*< Free allocated storage >*/
 {
     ctridiagonal_close(slv);
     free (cd);
     free (cu);
 }
 
-void fdmig (float complex **dat, float **img, sf_file movie)
+void fdmig (float complex **dat /* input data */, 
+	    float **img         /* output image */, 
+	    sf_file movie       /* save movie (if not NULL) */)
+/*< Migrate >*/
 {
     int iz, ix, iw;
     float omega;
@@ -78,3 +110,6 @@ void fdmig (float complex **dat, float **img, sf_file movie)
 	}
     }
 }
+
+/* 	$Id$	 */
+

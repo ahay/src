@@ -41,8 +41,7 @@ void patch_lop (bool adj, bool add,
 	} else if (jj[i] == npatch[i]-1) {
 	    jj[i] = nwall[i] - nwind[i];
 	} else {	    
-	    jj[i] = (int) ((nwall[i] - nwind[i])*jj[i]/
-			   ((float) (npatch[i] - 1)));
+	    jj[i] = jj[i]*(nwall[i] - nwind[i])/(npatch[i] - 1.0);
 	}
     }
 

@@ -31,7 +31,7 @@ env.Append(BUILDERS={'Include':configure.Header},
 
 src = '''
 aastretch acell agrid atela cell celltrace ctridiagonal delaunay dmo dsr
-eno eno2 eno3 fastmarch kirmod
+eno eno2 eno3 fastmarch fdmig kirmod
 '''
 
 for source in Split(src):

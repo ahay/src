@@ -50,19 +50,23 @@ int main (int argc, char* argv[]) {
     wind = sf_floatalloc (nw);
 
     sf_floatread(data,n12,in);
-    tmp = sf_tempfile(&temp,"wrb");
+    tmp = sf_tempfile(&temp,"w+b");
 
     ocparcel_init (dim, k, n, w);
 
-    fwrite(data,sizeof(float),n12,tmp);
+    if (n12 != fwrite(data,sizeof(float),n12,tmp))
+	sf_error("writing error:");
     
     ocparcel_lop (false, n12, nw, tmp, wind);
 
-    ocpatch_zero(n12,tmp);
+    ocpatch_zero(n12*sizeof(float),tmp);
 
     ocparcel_lop ( true, n12, nw, tmp, wind);
 
-    fread(data,sizeof(float),n12,tmp);
+    rewind(tmp);
+
+    if (n12 != fread(data,sizeof(float),n12,tmp))
+	sf_error("reading error");
 
     for (i=0; i < n12; i++) {
 	sf_line2cart(dim, n, i, k);

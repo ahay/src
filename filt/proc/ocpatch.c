@@ -48,7 +48,7 @@ void ocpatch_init(int dim, int nw, int np, int* npatch, int* nwall, int* nwind)
 		/* line coordinates in input */
 		t = t*nwall[i] + ff[i];
 	    }
-	    table[ip][i2] = (t*nwall[0] + ff[0]-n1)*sizeof(float); 
+	    table[ip][i2] = (t*nwall[0] + ff[0])*sizeof(float); 
 	}
     }
 
@@ -65,10 +65,12 @@ void ocpatch_zero (size_t n, FILE *wall)
 {
     size_t nbuf;
 
-    fseek(wall,0L,SEEK_SET);
+    if (0 != fseek(wall,0L,SEEK_SET))
+	sf_error("%s: seeking error:",__FILE__);
     for (nbuf = BUFSIZ; n > 0; n -= nbuf) {
 	if (nbuf > n) nbuf=n;
-	fwrite (zero,1,nbuf,wall);
+	if (nbuf != fwrite (zero,1,nbuf,wall))
+	    sf_error("%s: writing error:",__FILE__);
     }
 }
 
@@ -77,12 +79,15 @@ void ocpatch_lop (int ip, bool adj, FILE *wall, float* wind)
     int i2;
 
     for (i2=0; i2 < n2; i2++, wind += n1) {
-	fseek(wall,table[ip][i2],SEEK_SET);
+	if (0 != fseek(wall,table[ip][i2],SEEK_SET))
+	    sf_error("%s: seeking error:",__FILE__);
 
 	if (adj) {
-	    fwrite(wind,sizeof(float),n1,wall);
+	    if (n1 != fwrite(wind,sizeof(float),n1,wall))
+		sf_error("%s: writing error:",__FILE__);
 	} else {
-	    fread(wind,sizeof(float),n1,wall);
+	    if (n1 != fread(wind,sizeof(float),n1,wall))
+		sf_error("%s: reading error:",__FILE__);
 	}
     }
 }
