@@ -144,7 +144,7 @@ sf_file sf_output (/*@null@*/ char* tag)
 	file->dataname = sf_charalloc (PATH_MAX+NAME_MAX+1);
 	strcpy (file->dataname,path);
 	name = file->dataname+strlen(path);
-	free (path);
+	/* free (path); */
 	if (getfilename (file->stream,name)) {
 	    namelen = strlen(file->dataname);
 	    file->dataname[namelen]='@';
