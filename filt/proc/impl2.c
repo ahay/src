@@ -15,11 +15,8 @@ static tris slv1, slv2;
 void impl2_init (float r1, float r2, int n1_in, int n2_in, 
 		 float tau, float pclip, bool up_in)
 {
-    float q;
-
-    q = 0.25/SF_PI;
-    t1 = r1*r1*q;
-    t2 = r2*r2*q;
+    t1 = (r1*r1-1.)/12.;
+    t2 = (r2*r2-1.)/12.;
 
     nstep = (t1>t2? t1:t2)/tau;
     if (nstep > 1) {
@@ -216,5 +213,5 @@ void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: impl2.c,v 1.2 2004/04/09 13:17:10 fomels Exp $	 */
+/* 	$Id: impl2.c,v 1.3 2004/04/10 01:23:51 fomels Exp $	 */
 

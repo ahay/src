@@ -9,7 +9,7 @@
 #include "impl2.h"
 
 static int n;
-static float **tmp, *tmp1;
+static float **tmp, *tmp1, *d;
 static bool diff;
 
 int smoothder_init(int ndim, int *rect, int *ndat, bool diff1) 
@@ -34,8 +34,11 @@ int smoothder_init(int ndim, int *rect, int *ndat, bool diff1)
 
     diff = diff1;
 
-    if (diff) impl2_init ((float) rect[0], (float) rect[1], 
-			  n1, n2, 0.1, 50., false);
+    if (diff) {
+	impl2_init ((float) rect[0], (float) rect[1], 
+		    n1, n2, 1., 50., false);
+	d = sf_floatalloc(n);
+    }
 
     return n;
 }
@@ -46,7 +49,10 @@ void smoothder_close(void)
     free(tmp);
     sf_conjgrad_close();
     trianglen_close();
-    if (diff) impl2_close();
+    if (diff) {
+	impl2_close();
+	free(d);
+    }
 }
 
 void smoothder(int niter, float* weight, float* data, float* der) 
@@ -54,6 +60,12 @@ void smoothder(int niter, float* weight, float* data, float* der)
     int i;
 
     if (NULL != weight) {
+	if (diff) {
+	    for (i=0; i < n; i++) {
+		d[i] = data[i];
+	    }
+	}
+
 	weight_init(weight);
 	sf_conjgrad(weight_lop,repeat_lop,trianglen_lop,tmp1,der,data,niter);
     } else {
@@ -67,7 +79,7 @@ void smoothder(int niter, float* weight, float* data, float* der)
 	impl2_set(tmp);
 
 	sf_conjgrad((NULL!=weight)? weight_lop: NULL,
-		    repeat_lop,impl2_lop,tmp1,der,data,niter);
+		    repeat_lop,impl2_lop,tmp1,der,d,niter);
     }
 
     repeat_lop(false,false,n,n,der,data);
