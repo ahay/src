@@ -88,13 +88,13 @@ int main(int argc, char* argv[])
 	    break;
     }
 	    
-    /* get slowness squared */
+    /* get slowness */
     nm = nz*nx;
     slow = sf_floatalloc(nm);
 
     sf_read(slow,sizeof(float),nm,vel);
 
-    if (vel) {
+    if (vel) { /* convert to slowness */
 	for(im = 0; im < nm; im++){
 	    slow[im] = 1./slow[im];
 	}

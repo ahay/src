@@ -76,7 +76,9 @@ int main (int argc, char *argv[])
 	    vt[iz] = v0;
 	}
     } else {
+	vel = sf_input("velocity");
 	sf_read(vt,sizeof(float),nz,vel);
+	sf_fileclose(vel);
     }
     /* vt -> 1/4 vt^2 */ 
     for (iz=0; iz < nz; iz++) {
