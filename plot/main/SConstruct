@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, string
 sys.path.append('../..')
 import configure
 
@@ -10,6 +10,8 @@ try:
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
+    docmerge = configure.docmerge
+    alias = {'grey':'byte','grey3':'cubeplot'}
 except:
     root = None
     env = Environment()
@@ -24,17 +26,15 @@ except:
     SConscript('../lib/SConstruct')
 
 mains = Split(progs)
-map(lambda prog: env.Program(prog + '.c'),mains)
 
-if root:
-    docmerge = configure.docmerge
-    sf = env.get('PROGPREFIX','')
-    
-    env.Install(bindir,map(lambda prog: sf + prog,mains))
-    for pair in [['byte','grey'],['cubeplot','grey3']]:
-        [copy,source] = map(lambda x: sf+x,pair)
-        env.InstallAs(os.path.join(bindir,copy),source)
-        docmerge = configure.docextra(docmerge,source,copy)
+for prog in mains:
+    main = env.Program(prog + '.c')
+    if root:
+         env.Install(bindir,main)
+         if prog in alias.keys():
+	       copy = string.replace(str(main),prog,alias[prog])
+               env.InstallAs(os.path.join(bindir,copy),main)
+#	       docmerge = configure.docextra(docmerge,prog,copy)
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -43,9 +43,11 @@ if root:
     main = 'sfplot.py'
     
     docs = map(lambda prog: env.Doc(prog),mains)
+    env.Depends(docs,'#/rsfdoc.py')
+
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.2 2004/06/16 17:55:15 fomels Exp $	
+# 	$Id: SConstruct,v 1.3 2004/06/30 18:29:16 fomels Exp $	
