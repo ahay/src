@@ -59,7 +59,7 @@ void sf_ccgstep( bool forget             /* restart flag */,
 	S  = sf_complexalloc (nx);
 	Ss = sf_complexalloc (ny);
     }
-    if ( forget == true) {
+    if (forget) {
 	for (i = 0; i < nx; i++) {
 	    S[i] = 0.;
 	}
@@ -104,7 +104,7 @@ void sf_ccgstep( bool forget             /* restart flag */,
 void sf_ccgstep_close (void) 
 /*< Free allocated space. >*/ 
 {
-    if (Allocated == true) {
+    if (Allocated) {
 	free (S);
 	free (Ss);
 	Allocated = false;

@@ -136,6 +136,23 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
+/*@out@*/ bool ***sf_boolalloc3 (size_t n1 /* fast dimension */, 
+				  size_t n2 /* slower dimension */, 
+				  size_t n3 /* slowest dimension */)
+/*< bool 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+    size_t i3;
+    bool ***ptr;
+    
+    ptr = (bool***) sf_alloc (n3,sizeof(bool**));
+    ptr[0] = sf_boolalloc2 (n1,n2*n3);
+    for (i3=1; i3 < n3; i3++) {
+	ptr[i3] = ptr[0]+i3*n2;
+    }
+    return ptr;
+}
+
+
 /*@out@*/ float **sf_floatalloc2 (size_t n1 /* fast dimension */, 
 				  size_t n2 /* slow dimension */)
 /*< float 2-D allocation, out[0] points to a contiguous array >*/ 

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char* argv[])
 {
     map4 nmo;
-    bool half;
+    bool half, slow;
     int it,ix,ih, nt,nx, nh, nw, CDPtype;
     float dt, t0, h, h0, f, dh, eps, dy;
     float *trace, *vel, *off, *str, *out;
@@ -75,6 +75,9 @@ int main (int argc, char* argv[])
 	}
     }
 
+    if (!sf_getbool("slowness",&slow)) slow=false;
+    /* if y, use slowness instead of velocity */
+
     nx = sf_leftsize(cmp,2);
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
@@ -103,7 +106,11 @@ int main (int argc, char* argv[])
 	    
 	    for (it=0; it < nt; it++) {
 		f = t0 + it*dt;
-		f = f*f + h/(vel[it]*vel[it]);
+		if (slow) {
+		    f = f*f + h*vel[it]*vel[it];
+		} else {
+		    f = f*f + h/(vel[it]*vel[it]);
+		}
 		if (f < 0.) {
 		    str[it]=t0-10.*dt;
 		} else {
@@ -121,4 +128,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.9 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

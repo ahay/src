@@ -58,7 +58,7 @@ struct sf_SimTab {
 };
 
 
-static int hash (const char *key, int size)
+static unsigned int hash (const char *key, int size)
 /* Taken from Kernigan and Pike, "The practice of programming" */
 {
     unsigned int h;
@@ -66,7 +66,7 @@ static int hash (const char *key, int size)
 
     h=0;
     for (p = (unsigned char*) key; *p != '\0'; p++) {
-	h = 31 * h + *p;
+	h = 31 * h + (int) *p;
     }
     return (h % size);
 }
@@ -262,7 +262,7 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 		    sf_error("%s: %s='%s' is out of range:",__FILE__,key,fval);
 	    }
 	}
-	par[i] = fi;
+	par[i] = (float) fi;
     }
     free(cnum);
 
@@ -381,7 +381,10 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 		for (; i < n && i < (size_t) num; i++) {
 		    par[i] = (int) j;
 		}
-		if (i == n) return true;
+		if (i == n) {
+		    free(cnum);
+		    return true;
+		}
 	    } else {
 		j = strtol(fval,NULL,10);
 		if (ERANGE == errno || j < INT_MIN || j > INT_MAX) 
@@ -461,7 +464,7 @@ void sf_simtab_input (sf_simtab table, FILE* fp)
                 case START:
 		    if (!isspace(c)) {
 			*cw++ = c;
-			state = ('"' == c)? STRING:INAWORD;
+			state = ('"' == (char) c)? STRING:INAWORD;
 		    }
 		    break;
                 case INAWORD:
@@ -493,7 +496,7 @@ void sf_simtab_input (sf_simtab table, FILE* fp)
 void sf_simtab_output (sf_simtab table, FILE* fp) 
 /*< output parameters to a file >*/
 {
-    size_t i;
+    int i;
     struct entry *e;
 
     for (i=0; i < table->size; i++) {

@@ -89,7 +89,7 @@ int main (int argc, char *argv[])
 	}
 
 	/* estimate dip */
-	dip2(niter, nw, nj1, verb, u, p);
+	dip2(niter, nw, nj1, verb, u, p, NULL);
 	predict_flat(u, v, p);
 
 	sf_floatwrite(v[0],n1*n2,out);
@@ -99,4 +99,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mflat.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

@@ -27,7 +27,7 @@
 
 static float dotprod (int n, const float* x, const float* y);
 /* dot product */
-static void randvec (int n, float* x);
+static void randvec (int n, /*@out@*/ float* x);
 /* random vector */
 
 void sf_dot_test(sf_operator oper /* linear operator */, 
@@ -68,7 +68,7 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     free (dat2);
 }
 
-static void randvec (int n, float* x) 
+static void randvec (int n, /*@out@*/ float* x) 
 /* fills an array x[n] with pseudo-random numbers */
 {
     int i;

@@ -14,7 +14,7 @@ int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, nw, nj1, nj2, i;
     float eps, lam, p0, q0, **u, ***p;
-    bool verb, sign, gauss, *m;
+    bool verb, sign, gauss, **m;
     sf_file in, out, mask;
 
     sf_init(argc,argv);
@@ -73,16 +73,13 @@ int main (int argc, char *argv[])
     }
   
     if (NULL != sf_getstring("mask")) {
-	m = sf_boolalloc(n12);
+	m = sf_boolalloc2(n1,n2);
 
 	mask = sf_input("mask");
 	sf_floatread(u[0],n12,mask);
 	sf_fileclose(mask);
 
-	mask6_apply (nw, nj1, nj2, n1, n2, u);
-	for(i=0; i < n12; i++) {
-	    m[i] = (u[0][i] != 0.);
-	}
+	mask6 (nw, nj1, nj2, n1, n2, u, m);
     } else {
 	m = NULL;
     }

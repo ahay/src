@@ -41,11 +41,11 @@ struct entry
 };
 
 struct sf_Stack {
-    int size;
+    size_t size;
     struct entry *entry, *top;
 };
 
-sf_stack sf_stack_init (int size)
+sf_stack sf_stack_init (size_t size)
 /*< create a stack >*/
 {
     sf_stack s;

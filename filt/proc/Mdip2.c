@@ -23,13 +23,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "dip2.h"
+#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
     int n1,n2, n3, i3, n12, niter, nw, nj, i;
     float eps, lam, p0, **u, **p;
-    bool verb, sign, gauss;
-    sf_file in, out;
+    bool verb, sign, gauss, **m;
+    sf_file in, out, mask;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -75,7 +76,20 @@ int main (int argc, char *argv[])
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
 
+    if (NULL != sf_getstring("mask")) {
+	m = sf_boolalloc2(n1,n2);
+	mask = sf_input("mask");
+    } else {
+	m = NULL;
+	mask = NULL;
+    }
+
     for (i3=0; i3 < n3; i3++) {
+	if (NULL != m) {
+	    sf_floatread(u[0],n12,mask);
+	    mask3 (nw, nj, n1, n2, u, m);
+	}
+
 	/* read data */
 	sf_floatread(u[0],n12,in);
 	
@@ -85,7 +99,7 @@ int main (int argc, char *argv[])
 	}
 	
 	/* estimate dip */
-	dip2(niter, nw, nj, verb, u, p);
+	dip2(niter, nw, nj, verb, u, p, m);
 
 	/* write dip */
 	sf_floatwrite(p[0],n12,out);
@@ -94,4 +108,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.9 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

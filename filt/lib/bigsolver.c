@@ -104,37 +104,37 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
     va_start (args, eps);
     for (;;) {
 	par = va_arg (args, char *);
-	if      (!strcmp (par,"end")) {break;}
-	else if (!strcmp (par,"wt"))      
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"wt"))      
 	{                    wt = va_arg (args, float*);}
-	else if (!strcmp (par,"wght"))      
+	else if (0 == strcmp (par,"wght"))      
 	{                    wght = va_arg (args, sf_weight);}
-	else if (!strcmp (par,"x0"))      
+	else if (0 == strcmp (par,"x0"))      
 	{                    x0 = va_arg (args, float*);}
-	else if (!strcmp (par,"nloper"))      
+	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_operator);}
-	else if (!strcmp (par,"mwt"))      
+	else if (0 == strcmp (par,"mwt"))      
 	{                    mwt = va_arg (args, float*);}
-	else if (!strcmp (par,"verb"))      
-	{                    verb = va_arg (args, int);}    
-	else if (!strcmp (par,"known"))      
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
 	{                    known = va_arg (args, bool*);}  
-	else if (!strcmp (par,"nmem"))      
+	else if (0 == strcmp (par,"nmem"))      
 	{                    nmem = va_arg (args, int);}
-	else if (!strcmp (par,"nfreq"))      
+	else if (0 == strcmp (par,"nfreq"))      
 	{                    nfreq = va_arg (args, int);}
-	else if (!strcmp (par,"xmov"))      
+	else if (0 == strcmp (par,"xmov"))      
 	{                    xmov = va_arg (args, float**);}
-	else if (!strcmp (par,"rmov"))      
+	else if (0 == strcmp (par,"rmov"))      
 	{                    rmov = va_arg (args, float**);}
-	else if (!strcmp (par,"err"))      
+	else if (0 == strcmp (par,"err"))      
 	{                    err = va_arg (args, float*);}
-	else if (!strcmp (par,"res"))      
+	else if (0 == strcmp (par,"res"))      
 	{                    res = va_arg (args, float*);}
-	else if (!strcmp (par,"xp"))      
+	else if (0 == strcmp (par,"xp"))      
 	{                    xp = va_arg (args, float*);}
 	else 
-	{ exit (1);}
+	{ sf_error("%s: unknown parameter %s",__FILE__,par);}
     }
     va_end (args);
   
@@ -397,37 +397,37 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
     va_start (args, eps);
     for (;;) {
 	par = va_arg (args, char *);
-	if      (!strcmp (par,"end")) {break;}
-	else if (!strcmp (par,"wt"))      
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"wt"))      
 	{                    wt = va_arg (args, float*);}
-	else if (!strcmp (par,"wght"))      
+	else if (0 == strcmp (par,"wght"))      
 	{                    wght = va_arg (args, sf_weight);}
-	else if (!strcmp (par,"x0"))      
+	else if (0 == strcmp (par,"x0"))      
 	{                    x0 = va_arg (args, float*);}
-	else if (!strcmp (par,"nloper"))      
+	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_operator);}
-	else if (!strcmp (par,"nlreg"))      
+	else if (0 == strcmp (par,"nlreg"))      
 	{                    nlreg = va_arg (args, sf_operator);}
-	else if (!strcmp (par,"verb"))      
-	{                    verb = va_arg (args, int);}    
-	else if (!strcmp (par,"known"))      
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
 	{                    known = va_arg (args, bool*);}  
-	else if (!strcmp (par,"nmem"))      
+	else if (0 == strcmp (par,"nmem"))      
 	{                    nmem = va_arg (args, int);}
-	else if (!strcmp (par,"nfreq"))      
+	else if (0 == strcmp (par,"nfreq"))      
 	{                    nfreq = va_arg (args, int);}
-	else if (!strcmp (par,"xmov"))      
+	else if (0 == strcmp (par,"xmov"))      
 	{                    xmov = va_arg (args, float**);}
-	else if (!strcmp (par,"rmov"))      
+	else if (0 == strcmp (par,"rmov"))      
 	{                    rmov = va_arg (args, float**);}
-	else if (!strcmp (par,"err"))      
+	else if (0 == strcmp (par,"err"))      
 	{                    err = va_arg (args, float*);}
-	else if (!strcmp (par,"res"))      
+	else if (0 == strcmp (par,"res"))      
 	{                    res = va_arg (args, float*);}
-	else if (!strcmp (par,"resm"))      
+	else if (0 == strcmp (par,"resm"))      
 	{                    resm = va_arg (args, float*);}
 	else 
-	{ exit (1);}
+	{ sf_error ("%s: unknown parameter %s",__FILE__,par);}
     }
     va_end (args);
  
@@ -644,30 +644,30 @@ void sf_solver (sf_operator oper   /* linear operator */,
     va_start (args, niter);
     for (;;) {
 	par = va_arg (args, char *);
-	if      (!strcmp (par,"end")) {break;}
-	else if (!strcmp (par,"wt"))      
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"wt"))      
 	{                    wt = va_arg (args, float*);}
-	else if (!strcmp (par,"wght"))      
+	else if (0 == strcmp (par,"wght"))      
 	{                    wght = va_arg (args, sf_weight);}
-	else if (!strcmp (par,"x0"))      
+	else if (0 == strcmp (par,"x0"))      
 	{                    x0 = va_arg (args, float*);}
-	else if (!strcmp (par,"nloper"))      
+	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_operator);}
-	else if (!strcmp (par,"verb"))      
-	{                    verb = va_arg (args, int);}    
-	else if (!strcmp (par,"known"))      
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
 	{                    known = va_arg (args, bool*);}  
-	else if (!strcmp (par,"nmem"))      
+	else if (0 == strcmp (par,"nmem"))      
 	{                    nmem = va_arg (args, int);}
-	else if (!strcmp (par,"nfreq"))      
+	else if (0 == strcmp (par,"nfreq"))      
 	{                    nfreq = va_arg (args, int);}
-	else if (!strcmp (par,"xmov"))      
+	else if (0 == strcmp (par,"xmov"))      
 	{                    xmov = va_arg (args, float**);}
-	else if (!strcmp (par,"rmov"))      
+	else if (0 == strcmp (par,"rmov"))      
 	{                    rmov = va_arg (args, float**);}
-	else if (!strcmp (par,"err"))      
+	else if (0 == strcmp (par,"err"))      
 	{                    err = va_arg (args, float*);}
-	else if (!strcmp (par,"res"))      
+	else if (0 == strcmp (par,"res"))      
 	{                    res = va_arg (args, float*);}
 	else 
 	{ sf_error("solver: unknown argument %s",par);}
@@ -888,30 +888,30 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
     va_start (args, niter);
     for (;;) {
 	par = va_arg (args, char *);
-	if      (!strcmp (par,"end")) {break;}
-	else if (!strcmp (par,"wt"))      
+	if      (0 == strcmp (par,"end")) {break;}
+	else if (0 == strcmp (par,"wt"))      
 	{                    wt = va_arg (args, float*);}
-	else if (!strcmp (par,"wght"))      
+	else if (0 == strcmp (par,"wght"))      
 	{                    wght = va_arg (args, sf_cweight);}
-	else if (!strcmp (par,"x0"))      
+	else if (0 == strcmp (par,"x0"))      
 	{                    x0 = va_arg (args, float complex *);}
-	else if (!strcmp (par,"nloper"))      
+	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_coperator);}
-	else if (!strcmp (par,"verb"))      
-	{                    verb = va_arg (args, int);}    
-	else if (!strcmp (par,"known"))      
+	else if (0 == strcmp (par,"verb"))      
+	{                    verb = (bool) va_arg (args, int);}    
+	else if (0 == strcmp (par,"known"))      
 	{                    known = va_arg (args, bool*);}  
-	else if (!strcmp (par,"nmem"))      
+	else if (0 == strcmp (par,"nmem"))      
 	{                    nmem = va_arg (args, int);}
-	else if (!strcmp (par,"nfreq"))      
+	else if (0 == strcmp (par,"nfreq"))      
 	{                    nfreq = va_arg (args, int);}
-	else if (!strcmp (par,"xmov"))      
+	else if (0 == strcmp (par,"xmov"))      
 	{                    xmov = va_arg (args, float complex **);}
-	else if (!strcmp (par,"rmov"))      
+	else if (0 == strcmp (par,"rmov"))      
 	{                    rmov = va_arg (args, float complex **);}
-	else if (!strcmp (par,"err"))      
+	else if (0 == strcmp (par,"err"))      
 	{                    err = va_arg (args, float complex *);}
-	else if (!strcmp (par,"res"))      
+	else if (0 == strcmp (par,"res"))      
 	{                    res = va_arg (args, float complex *);}
 	else 
 	{ sf_error("solver: unknown argument %s",par);}

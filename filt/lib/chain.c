@@ -23,16 +23,16 @@
 
 #include "chain.h"
 
-void sf_chain( sf_operator oper1 /* outer operator */, 
-	       sf_operator oper2 /* inner operator */, 
-	       bool adj          /* adjoint flag */, 
-	       bool add          /* addition flag */, 
-	       int nm            /* model size */, 
-	       int nd            /* data size */, 
-	       int nt            /* intermediate size */, 
-	       float* mod        /* [nm] model */, 
-	       float* dat        /* [nd] data */, 
-	       float* tmp        /* [nt] intermediate */) 
+void sf_chain( sf_operator oper1     /* outer operator */, 
+	       sf_operator oper2     /* inner operator */, 
+	       bool adj              /* adjoint flag */, 
+	       bool add              /* addition flag */, 
+	       int nm                /* model size */, 
+	       int nd                /* data size */, 
+	       int nt                /* intermediate size */, 
+	       /*@out@*/ float* mod  /* [nm] model */, 
+	       /*@out@*/ float* dat  /* [nd] data */, 
+	       float* tmp            /* [nt] intermediate */) 
 /*< Chains two operators, computing oper1{oper2{mod}} or its adjoint.
   The tmp array is used for temporary storage. >*/
 {
@@ -45,16 +45,16 @@ void sf_chain( sf_operator oper1 /* outer operator */,
     }
 }
 
-void sf_array( sf_operator oper1 /* top operator */, 
-	       sf_operator oper2 /* bottom operator */, 
-	       bool adj          /* adjoint flag */, 
-	       bool add          /* addition flag */, 
-	       int nm            /* model size */, 
-	       int nd1           /* top data size */, 
-	       int nd2           /* bottom data size */, 
-	       float* mod        /* [nm] model */, 
-	       float* dat1       /* [nd1] top data */, 
-	       float* dat2       /* [nd2] bottom data */) 
+void sf_array( sf_operator oper1     /* top operator */, 
+	       sf_operator oper2     /* bottom operator */, 
+	       bool adj              /* adjoint flag */, 
+	       bool add              /* addition flag */, 
+	       int nm                /* model size */, 
+	       int nd1               /* top data size */, 
+	       int nd2               /* bottom data size */, 
+	       /*@out@*/ float* mod  /* [nm] model */, 
+	       /*@out@*/ float* dat1 /* [nd1] top data */, 
+	       /*@out@*/ float* dat2 /* [nd2] bottom data */) 
 /*< Constructs an array of two operators, computing {oper1{mod},oper2{mod}} 
   or its adjoint. >*/
 {

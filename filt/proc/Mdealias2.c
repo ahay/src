@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
 	}
     }
 
-    dip2(niter, nf, nj, verb, u1, p);
+    dip2(niter, nf, nj, verb, u1, p, NULL);
 
     if (verb) sf_warning("Interpolating...");
 
@@ -112,4 +112,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdealias2.c,v 1.5 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

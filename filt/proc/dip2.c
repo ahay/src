@@ -36,7 +36,8 @@ void dip2_close(void)
     div2_close();
 }
 
-void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
+void dip2(int niter, int nw, int nj, bool verb, float **u, float** p, 
+	  bool **mask)
 {
     int i, iter;
     float mean, usum, psum, ui, dpi, pi;
@@ -71,6 +72,15 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
 
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
 
+	if (NULL != mask) {
+	    for(i=0; i < n; i++) {
+		if (mask[0][i]) {
+		    u1[0][i] = 0.;
+		    u2[0][i] = 0.;
+		}
+	    }
+	}
+
 	/* divide2 (div0, u2, u1, dp); */
 	div2(u2[0],u1[0],dp[0]);
 
@@ -88,4 +98,4 @@ void dip2(int niter, int nw, int nj, bool verb, float **u, float** p)
     } /* iter */
 }
 
-/* 	$Id: dip2.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id$	 */

@@ -140,11 +140,12 @@ void sf_math_evaluate (int len /* stack length */,
     }
 }
 
-int sf_math_parse (char* output /* expression */, 
-		   sf_file out  /* parameter file */)
+size_t sf_math_parse (char* output /* expression */, 
+		      sf_file out  /* parameter file */)
 /*< Parse a mathematical expression, returns stack length >*/ 
 {
-    int i, j, keylen, *indx, type=-1, top, len, c, c2;
+    int *indx, type=-1, top, c, c2;
+    size_t i, j, keylen, len;
     char *key;
     float *num;
     bool hasleft;
@@ -155,25 +156,25 @@ int sf_math_parse (char* output /* expression */,
     
     hasleft = false;
     for (i=0; i < len; i++) {
-	c = output[i];
+	c = (int) output[i];
 	
 	if (isspace(c)) continue; /* skip white space */ 
 	
 	/* handle parentheses */
 
-	if ('(' == c) {
+	if ('(' == (char) c) {
 	    hasleft = false;
 	    sf_push(st2,&c,GRP);
 	    continue;
 	}
 
-	if (')' == c) {
+	if (')' == (char) c) {
 	    hasleft = true;
 	    top = -1;
 	    while (sf_full(st2)) {
 		top = sf_top(st2);		
 		if (GRP == top) {
-		    sf_pop(st2);
+		    (void) sf_pop(st2);
 		    break;
 		}
 		sf_push(st1,sf_pop(st2),top);
@@ -184,7 +185,7 @@ int sf_math_parse (char* output /* expression */,
 	    continue;
 	}
 	
-	if ('.' == c || isdigit(c)) { /* number */
+	if ('.' == (char) c || isdigit(c)) { /* number */
 	    hasleft = true;
 	    for (j=i+1; j < len; j++) {
 		c2 = output[j];
@@ -312,7 +313,7 @@ static void check (void)
 		break;
 	    case FUN:
 	    case UNARY:
-		sf_pop(st2);
+		(void) sf_pop(st2);
 		top = sf_top (st1);
 		if (NUM != top && INDX != top) 
 		    sf_error ("%s [%d]: syntax error in output",
@@ -321,12 +322,12 @@ static void check (void)
 	    case POW:
 	    case MULDIV:
 	    case PLUSMIN:
-		sf_pop(st2);
+		(void) sf_pop(st2);
 		top = sf_top (st1);
 		if (NUM != top && INDX != top) 
 		    sf_error ("%s[%d]: syntax error in output",
 			      __FILE__,__LINE__);
-		sf_pop(st1);
+		(void) sf_pop(st1);
 		top = sf_top (st1);
 		if (NUM != top && INDX != top) 
 		    sf_error ("%s[%d]: syntax error in output",

@@ -21,13 +21,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "dip3.h"
+#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
     int n1,n2,n3, n123, niter, nw, nj1, nj2, i, rect[3], liter;
     float p0, q0, ***u, ***p;
-    bool verb, sign;
-    sf_file in, out;
+    bool verb, sign, ***m1, ***m2;
+    sf_file in, out, mask;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -78,6 +79,17 @@ int main (int argc, char *argv[])
     u = sf_floatalloc3(n1,n2,n3);
     p = sf_floatalloc3(n1,n2,n3);
 
+    if (NULL != sf_getstring("mask")) {
+	m1 = sf_boolalloc3(n1,n2,n3);
+	m2 = sf_boolalloc3(n1,n2,n3);
+	mask = sf_input("mask");
+	sf_floatread(u[0][0],n123,mask);
+	mask32 (nw, nj1, nj2, n1, n2, n3, u, m1, m2);
+    } else {
+	m1 = NULL;
+	m2 = NULL;
+    }
+
     /* read data */
     sf_floatread(u[0][0],n123,in);
 
@@ -87,7 +99,7 @@ int main (int argc, char *argv[])
     }
   
     /* estimate t-x dip */
-    dip3(1, niter, nw, nj1, verb, u, p);
+    dip3(1, niter, nw, nj1, verb, u, p, m1);
 
     /* write t-x dip */
     sf_floatwrite(p[0][0],n123,out);
@@ -99,7 +111,7 @@ int main (int argc, char *argv[])
 	}
   
 	/* estimate t-y dip */
-	dip3(2, niter, nw, nj2, verb, u, p);
+	dip3(2, niter, nw, nj2, verb, u, p, m2);
 
 	/* write t-y dip */
 	sf_floatwrite(p[0][0],n123,out);
@@ -108,4 +120,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

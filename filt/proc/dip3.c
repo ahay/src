@@ -41,7 +41,7 @@ void dip3_close(void)
 }
 
 void dip3(int dip, int niter, int nw, int nj, bool verb, 
-	  float ***u, float*** p)
+	  float ***u, float*** p, bool*** mask)
 {
     int i, iter;
     float mean, usum, psum, ui, dpi, pi;
@@ -80,6 +80,15 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
 	}
 
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
+	
+	if (NULL != mask) {
+	    for(i=0; i < n; i++) {
+		if (mask[0][0][i]) {
+		    u1[0][0][i] = 0.;
+		    u2[0][0][i] = 0.;
+		}
+	    }
+	}
 
 	divn (u2[0][0], u1[0][0], dp[0][0]);
 
@@ -97,4 +106,4 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
     } /* iter */
 }
 
-/* 	$Id: dip3.c,v 1.4 2004/05/22 00:13:24 fomels Exp $	 */
+/* 	$Id$	 */

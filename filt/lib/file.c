@@ -37,6 +37,8 @@
 #include <limits.h>
 
 #include <sys/types.h>
+/*^*/
+
 #include <sys/stat.h>
 #include <sys/param.h>
 #include <unistd.h>
@@ -86,7 +88,7 @@ struct sf_File {
     FILE *stream; 
     char *dataname, *buf;
     sf_simtab pars;
-    XDR *xdr;
+    XDR xdr;
     enum xdr_op op;
     sf_datatype type;
     sf_dataform form;
@@ -156,7 +158,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	sf_error ("%s: pipe problem:",__FILE__);
 
     file->op = XDR_DECODE;
-    file->xdr = NULL;
+    file->buf = NULL;
 
     format = sf_histstring(file,"data_format");
     if (NULL == format) {
@@ -246,7 +248,7 @@ Should do output after sf_input. >*/
     sf_putstring(file,"in",file->dataname);    
 
     file->op = XDR_ENCODE;
-    file->xdr = NULL;
+    file->buf = NULL;
 
     if (NULL != infile && 
 	NULL != (format = sf_histstring(infile,"data_format"))) {
@@ -306,26 +308,23 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
     
     if (0 == strncmp(format,"ascii_",6)) {
 	file->form = SF_ASCII;
-	if (NULL != file->xdr) {
-	    free (file->xdr);
+	if (NULL != file->buf) {
 	    free (file->buf);
+	    file->buf = NULL;
 	}
-	file->xdr = NULL;
 	sf_putint(file,"esize",0);
     } else if (0 == strncmp(format,"xdr_",4)) {
 	file->form = SF_XDR;
-	if (NULL == file->xdr) {
-	    file->xdr = (XDR*) sf_alloc(1,sizeof(XDR));
+	if (NULL == file->buf) {
 	    file->buf = sf_charalloc(BUFSIZ);
-	    xdrmem_create(file->xdr,file->buf,BUFSIZ,file->op);
+	    xdrmem_create(&(file->xdr),file->buf,BUFSIZ,file->op);
 	}
     } else {
 	file->form = SF_NATIVE;
-	if (NULL != file->xdr) {
-	    free (file->xdr);
+	if (NULL != file->buf) {
 	    free (file->buf);
+	    file->buf = NULL;
 	}
-	file->xdr = NULL;
     }
 }
     
@@ -383,7 +382,7 @@ Datapath rules:
     
     home = getenv("HOME");
     if (NULL != home) {
-	snprintf(file,PATH_MAX,"%s/.datapath",home);
+	(void) snprintf(file,PATH_MAX,"%s/.datapath",home);
 	if (readpathfile (file,path)) return path;
     }
 
@@ -402,7 +401,7 @@ static bool readpathfile (const char* filename, char* datapath)
     if (0 >= fscanf(fp,"datapath=%s",datapath))
 	sf_error ("No datapath found in file %s",filename);
 
-    snprintf(format,PATH_MAX,"%s datapath=%%s",sf_gethost());
+    (void) snprintf(format,PATH_MAX,"%s datapath=%%s",sf_gethost());
     (void) fscanf(fp,format,datapath);
 
     (void) fclose (fp);
@@ -416,9 +415,9 @@ void sf_fileclose (sf_file file)
 	file->stream != stdout && 
 	file->stream != NULL) (void) fclose (file->stream);
     if (NULL != file->pars) sf_simtab_close (file->pars);
-    if (NULL != file->xdr) {
-	free (file->xdr);
+    if (NULL != file->buf) {
 	free (file->buf);
+	file->buf = NULL;
     }
     if (NULL != file->dataname) free (file->dataname);
     free (file);
@@ -527,7 +526,7 @@ Prepares file for writing binary data >*/
 	    break;
 	default:
 	    sf_putstring(file,"data_format",
-			 (NULL==file->xdr)? "native_byte":"xdr_byte");
+			 (NULL==file->buf)? "native_byte":"xdr_byte");
 	    break;
     }    
     if (NULL != src && NULL != src->pars)
@@ -647,8 +646,8 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		if (!xdr_vector(file->xdr,buf-left,
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("sf_file: trouble writing xdr");
@@ -683,10 +682,10 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
+		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(file->xdr,buf-left,
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("%s: trouble reading xdr",__FILE__);
@@ -724,8 +723,8 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 	    buf = arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		if (!xdr_opaque(file->xdr,buf-left,nbuf))
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("sf_file: trouble writing xdr");
 		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
 		    sf_error ("%s: trouble writing:",__FILE__);
@@ -758,10 +757,10 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    buf = arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
+		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_opaque(file->xdr,buf-left,nbuf))
+		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("%s: trouble reading xdr",__FILE__);
 	    }
 	    break;
@@ -799,8 +798,8 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		if (!xdr_vector(file->xdr,buf-left,
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(int),sizeof(int),
 				(xdrproc_t) xdr_int))
 		    sf_error ("sf_file: trouble writing xdr");
@@ -833,10 +832,10 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
+		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(file->xdr,buf-left,
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(int),sizeof(int),
 				(xdrproc_t) xdr_int))
 		    sf_error ("%s: trouble reading xdr",__FILE__);
@@ -876,8 +875,8 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
-		if (!xdr_vector(file->xdr,buf-left,
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("sf_file: trouble writing xdr");
@@ -910,10 +909,10 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
-		(void) xdr_setpos(file->xdr,0);
+		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(file->xdr,buf-left,
+		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("%s: trouble reading xdr",__FILE__);
@@ -927,11 +926,11 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
     }
 }
 
-long sf_bytes (sf_file file)
+off_t sf_bytes (sf_file file)
 /*< Count the file data size (in bytes) >*/
 {
     int st;
-    long size;
+    off_t size;
     struct stat buf;
     
     if (0 == strcmp(file->dataname,"stdin")) return -1L;
@@ -1019,7 +1018,8 @@ void sf_close(void)
 {
     if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
     
-    if (strcmp("stdin",infile->dataname) && unlink(infile->dataname))
+    if (0 != strcmp("stdin",infile->dataname) && 
+	0 != unlink(infile->dataname))
 	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
 }
 

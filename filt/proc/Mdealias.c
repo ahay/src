@@ -132,8 +132,8 @@ int main (int argc, char *argv[])
 	}
     }
 
-    dip3(1, niter, nf, nj1, verb, u1, p);
-    dip3(2, niter, nf, nj2, verb, u1, q);
+    dip3(1, niter, nf, nj1, verb, u1, p, NULL);
+    dip3(2, niter, nf, nj2, verb, u1, q, NULL);
 
     if (verb) sf_warning("Expanding slopes...");
 
@@ -176,4 +176,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdealias.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

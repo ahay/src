@@ -47,6 +47,12 @@ void *sf_realloc (void* ptr   /* previous data */,
 				size_t n2 /* slow dimension */);
 /*< bool 2-D allocation, out[0] points to a contiguous array >*/
 
+/*@out@*/ bool ***sf_boolalloc3 (size_t n1 /* fast dimension */, 
+				  size_t n2 /* slower dimension */, 
+				  size_t n3 /* slowest dimension */);
+/*< bool 3-D allocation, out[0][0] points to a contiguous array >*/
+
+
 /*@out@*/ float **sf_floatalloc2 (size_t n1 /* fast dimension */, 
 				  size_t n2 /* slow dimension */);
 /*< float 2-D allocation, out[0] points to a contiguous array >*/

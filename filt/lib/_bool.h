@@ -7,7 +7,8 @@
 
 #else
 
-typedef enum {false, true} bool;
+typedef enum {false, true} _Bool;
+#define bool _Bool
 
 #endif
 

@@ -123,7 +123,7 @@ static byte ASCtoEBC[256] = {
     0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0xFF
 };
 
-struct segy {
+static struct segy {
     char *name;
     unsigned int size;
 } segykey[] = {
@@ -377,7 +377,7 @@ static void insert2(int y, char* buf)
 	short s;
     } x;
 
-    x.s=y;
+    x.s = (short) y;
 
     if (little_endian) swapb(x.b,x.b+1);
     
@@ -429,7 +429,7 @@ bool sf_endian (void)
     } test;
 
     test.i=0;
-    test.c[0]=1;
+    test.c[0] = (byte) 1;
     
     assert (2 == sizeof(short) && 4 == sizeof(long)); /* fix this later */
     little_endian = (0 != (test.i << 8));
@@ -440,7 +440,8 @@ bool sf_endian (void)
 void sf_ebc2asc (int narr, char* arr)
 /*< Convert char array arrr[narr]: EBC to ASCII >*/
 {
-    int i, j;
+    int i;
+    unsigned char j;
 
     for (i=0; i < narr; i++) {
 	j = (unsigned char) arr[i];
@@ -451,7 +452,8 @@ void sf_ebc2asc (int narr, char* arr)
 void sf_asc2ebc (int narr, char* arr)
 /*< Convert char array arrr[narr]: ASCII to EBC >*/
 {
-    int i, j;
+    int i;
+    unsigned char j;
 
     for (i=0; i < narr; i++) {
 	j = (unsigned char) arr[i];

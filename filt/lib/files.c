@@ -43,7 +43,7 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
 
     dim = 1;
     for (i=0; i < SF_MAX_DIM; i++) {
-	snprintf(key,3,"n%d",i+1);
+	(void) snprintf(key,3,"n%d",i+1);
 	if (!sf_histint(file,key,n+i)) break;
 	if (n[i] > 1) dim=i+1;
     }
@@ -63,7 +63,7 @@ int sf_leftsize (sf_file file, int dim)
     char key[3];
 
     for (size=1; dim < SF_MAX_DIM; dim++, size *= ni) {
-	snprintf(key,3,"n%d",dim+1);
+	(void) snprintf(key,3,"n%d",dim+1);
 	if (!sf_histint(file,key,&ni)) break;
     }
     return size;
@@ -73,7 +73,7 @@ void sf_cp(sf_file in, sf_file out)
 /*< Copy file in to file out >*/
 {
     int esize;
-    long nsiz, nbuf;
+    off_t nsiz, nbuf;
     char buf[BUFSIZ];
     
     nsiz = sf_bytes (in);
@@ -88,7 +88,7 @@ void sf_cp(sf_file in, sf_file out)
     sf_setformat(in,"raw");
     sf_setformat(out,"raw");
 
-    for (nbuf = BUFSIZ; nsiz > 0; nsiz -= nbuf) {
+    for (nbuf = (off_t) BUFSIZ; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 	sf_charread (buf,nbuf,in);
 	sf_charwrite (buf,nbuf,out);

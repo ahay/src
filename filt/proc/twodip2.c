@@ -37,7 +37,7 @@ void twodip2_close(void)
 }
 
 void twodip2(int niter, int nw, int nj1, int nj2, 
-	     bool verb, float **u, float*** pq, bool *mask)
+	     bool verb, float **u, float*** pq, bool **mask)
 {
     int i, iter;
     float mean, usum, psum, qsum, ui, dpi, pi;
@@ -88,7 +88,7 @@ void twodip2(int niter, int nw, int nj1, int nj2,
 
 	if (NULL != mask) {
 	    for(i=0; i < n; i++) {
-		if (mask[i]) {
+		if (mask[0][i]) {
 		    u1[0][0][i] = 0.;
 		    u1[1][0][i] = 0.;
 		    u2[0][i] = 0.;

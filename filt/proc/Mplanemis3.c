@@ -1,4 +1,4 @@
-/* Missing data interpolation in 2-D using plane-wave destruction. */
+/* Missing data interpolation in 3-D using plane-wave destruction. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,13 +18,12 @@
 */
 
 #include <rsf.h>
-#include "twoplane2.h"
-#include "allp2.h"
+#include "allp3.h"
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, np;
-    float *mm, *dd, **pp, **qq;
+    int i, niter, nw, n1, n2, n3, n123;
+    float *mm, *dd, ***pp, ***qq;
     bool *known, verb;
     sf_file in, out, dip, mask;
 
@@ -35,7 +34,8 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n12 = n1*n2;
+    if (!sf_histint(in,"n3",&n3)) sf_error("No n3= in input");
+    n123 = n1*n2*n3;
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -48,48 +48,41 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    if (!sf_histint(dip,"n3",&np)) sf_error("No n3= in dip");
+    pp = sf_floatalloc3(n1,n2,n3);
+    qq = sf_floatalloc3(n1,n2,n3);
 
-    pp = sf_floatalloc2(n1,n2);
-    sf_floatread(pp[0],n12,dip);
+    sf_floatread(pp[0][0],n123,dip);
+    sf_floatread(qq[0][0],n123,dip);
 
-    if (np > 1) {
-	qq = sf_floatalloc2(n1,n2);
-	sf_floatread(qq[0],n12,dip);
-    }
+    mm = sf_floatalloc(n123);
+    dd = sf_floatalloc(2*n123);
+    known = sf_boolalloc(n123);
 
-    mm = sf_floatalloc(n12);
-    dd = sf_floatalloc(n12);
-    known = sf_boolalloc(n12);
-
-    sf_floatread(mm,n12,in);
+    sf_floatread(mm,n123,in);
     
     if (NULL != sf_getstring ("mask")) {
 	mask = sf_input("mask");
-	sf_floatread(dd,n12,mask);
+	sf_floatread(dd,n123,mask);
 
-	for (i=0; i < n12; i++) {
+	for (i=0; i < n123; i++) {
 	    known[i] = (dd[i] != 0.);
-	    dd[i] = 0.;
 	}
     } else {
-	for (i=0; i < n12; i++) {
+	for (i=0; i < n123; i++) {
 	    known[i] = (mm[i] != 0.);
-	    dd[i] = 0.;
 	}
     }
 
-    if (np > 1) {
-	twoplane2_init(nw, 1,1, n1,n2, pp, qq);
-	sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		  "known", known, "x0", mm, "verb", verb, "end");
-    } else {
-	allpass22_init(allpass2_init(nw, 1, n1,n2, pp));
-	sf_solver(allpass21_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		  "known", known, "x0", mm, "verb", verb, "end");
+    for (i=0; i < 2*n123; i++) {
+	dd[i] = 0.;
     }
 
-    sf_floatwrite (mm,n12,out);
+    allpass3_init(allpass_init(nw, 1, n1,n2,n3, pp),
+		  allpass_init(nw, 1, n1,n2,n3, qq));
+    sf_solver(allpass3_lop, sf_cgstep, n123, 2*n123, mm, dd, niter,
+	      "known", known, "x0", mm, "verb", verb, "end");
+
+    sf_floatwrite (mm,n123,out);
 
     exit(0);
 }
