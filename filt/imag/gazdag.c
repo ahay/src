@@ -28,7 +28,53 @@ static float eps, dz, *vt, dw;
 static int nz, nw;
 static float complex *pp;
 static bool depth;
+static char rule;
 static kiss_fftr_cfg forw, invs;
+
+static float complex shift(float complex w2, float k2, float v1, float v2)
+/* phase shift for different rules */
+{
+    float complex cshift, cshift1, cshift2, y;
+    float x;
+
+    switch (rule) {
+	case 's': /* simple */			
+	    if (depth) {
+		w2 = w2*w2 * v1 + k2;
+	    } else {
+		w2 = w2*w2 + v1 * k2;
+	    }
+	    cshift = csqrtf(w2);
+	    break;
+	case 'm': /* midpoint */
+	    if (depth) {
+		w2 = 0.5 * w2*w2 * (v1+v2) + k2;
+	    } else {
+		w2 = w2*w2 + 0.5 * (v1+v2) * k2;
+	    }
+	    cshift = csqrtf(w2);
+	    break;
+	case 'l': /* linear slowth */ 
+	default:
+	    if (depth) {
+		cshift1 = csqrtf(w2*w2 * v1 + k2);
+		cshift2 = csqrtf(w2*w2 * v2 + k2);
+			
+		cshift = (cshift1 + cshift2 - 
+			  1./(1./cshift1+1./cshift2))/1.5;
+	    } else {
+		cshift1 = csqrtf(w2*w2 + v1 * k2);
+		cshift2 = csqrtf(w2*w2 + v2 * k2);
+			
+		x = 1./(1.+v2/v1);
+		cshift = cshift1 + x*(cshift2-cshift1);
+		y = x*cshift2/cshift;
+		cshift *= (1.-y*(1.-y))/(1.-x*(1.-x));
+	    }
+	    break;
+    }
+    return cexpf(-cshift*dz);
+}
 
 void gazdag_init (float eps1  /* regularization */, 
 		  int nt      /* time samples */, 
@@ -36,13 +82,15 @@ void gazdag_init (float eps1  /* regularization */,
                   int nz1     /* depth samples */, 
 		  float dz1   /* depth sampling */, 
 		  float *vt1  /* velocity (time) or slowness (depth) */, 
-		  bool depth1 /* depth (or time) */)
+		  bool depth1 /* depth (or time) */,
+		  char rule1  /* velocity interpolation rule */)
 /*< Initialize >*/
 {
     eps = eps1; 
     nz = nz1; dz = dz1;
     vt = vt1;
     depth = depth1;
+    rule = rule1;
 
     /* determine frequency sampling */
     nw = nt/2+1;
@@ -63,14 +111,14 @@ void gazdag_close ()
     free (invs);
 }
 
-void gazdag (bool inv /* modeling (or migration) */, 
-	     float k2 /* wavenumber squared */, 
-	     float *p /* data [nt] */, 
-	     float *q /* image [nz] */)
+void gazdag (bool inv  /* modeling (or migration) */,
+	     float k2  /* wavenumber squared */, 
+	     float *p  /* data [nt] */, 
+	     float *q  /* image [nz] */)
 /*< Run >*/
 {
     int iz,iw;
-    float complex cshift, w2;
+    float complex w2;
         
     if (inv) { /* modeling */
         for (iw=0; iw<nw; iw++) {
@@ -82,15 +130,7 @@ void gazdag (bool inv /* modeling (or migration) */,
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
                 w2 = (eps + I*iw)*dw;
-
-                if (depth) {
-                    w2 = w2*w2 * vt[iz] + k2;
-                } else {
-                    w2 = w2*w2 + vt[iz] * k2;
-                }
-        
-                cshift = cexpf(-csqrtf(w2)*dz);
-                pp[iw] = pp[iw]*cshift + q[iz];
+                pp[iw] = pp[iw]*shift(w2,k2,vt[iz],vt[iz+1]) + q[iz];
             }
         }
 
@@ -99,28 +139,24 @@ void gazdag (bool inv /* modeling (or migration) */,
 	kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
     
         /* loop over migrated times z */
-        for (iz=0; iz<nz; iz++) {
+        for (iz=0; iz<nz-1; iz++) {
             /* initialize migrated sample */
             q[iz] = 0.0;
       
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
+		w2 = (eps + I*iw)*dw;
+
                 /* accumulate image (summed over frequency) */
                 q[iz] += crealf(pp[iw]);
-
-                w2 = (eps + I*iw)*dw;
-
-                if (depth) { /* depth migration */
-                    w2 = w2*w2 * vt[iz] + k2;
-                } else { /* time migration */
-                    w2 = w2*w2 + vt[iz] * k2;
-                }
-        
-                /* extrapolate down one migrated time step */
-                cshift = cexpf(-csqrtf(w2)*dz);
-                pp[iw] *= conjf(cshift);
+                pp[iw] *= conjf(shift(w2,k2,vt[iz],vt[iz+1]));
             }
         }
+
+	q[nz-1] = 0.;
+	for (iw=0; iw<nw; iw++) {
+	    q[nz-1] += crealf(pp[iw]);
+	}
     }
 }
 

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     in = sf_input ("in");
     out = sf_output ("out");
 
-    if (!sf_getint("memsize",&mem) || 0 >= mem) mem = 100;
+    if (!sf_getint("memsize",&mem)) mem = 100;
     /* Available memory size (in Mb) */
     memsize = mem * (1 << 20); /* convert Mb to bytes */
     

@@ -27,13 +27,15 @@ kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0
 #include <rsf.h>
 
 #include "kirmod.h"
+#include "stretch4.h"
 
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix, it;
     float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, vel[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, t, a;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, eps, *time, *ampl;
     maptype type = CONST;
+    map4 map;
     sf_file refl, curv, modl, shots, recvs;
 
     sf_init(argc,argv);
@@ -167,7 +169,16 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("refx",&vel[4])) vel[4]=x0;
     if (!sf_getfloat("refz",&vel[3])) vel[3]=0.;
     /* reference coordinates for velocity */
-    
+
+    /*** Initialize stretch ***/
+
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* stretch regularization */
+    map = stretch4_init (nt, t0, dt, nx, eps);
+
+    time = sf_floatalloc(nx);
+    ampl = sf_floatalloc(nx);
+
     /*** Compute traveltime table ***/
 
     kirmod_table (type, nx, x0, dx, crv, vel);
@@ -182,13 +193,13 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		ts = kirmod_map(is,nh,ix);
 		tg = kirmod_map(is,ih,ix);
-		t = ts[0] + tg[0];                   /* time */
-		it = 0.5+(t-t0)/dt;
-		if (it < 0 || it >= nt) continue;
-		a = sqrt(ts[1]*tg[1]*(ts[1]+tg[1])); /* 2.5-D amplitude */
-		if (a < FLT_MIN) continue;
-		trace[it] += 1./a;
+		time[ix] = ts[0] + tg[0];
+		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+eps); 
+                /* 2.5-D amplitude? */
 	    }
+
+	    stretch4_define (map,time);
+	    stretch4_apply (map,ampl,trace);
 
 	    sf_floatwrite(trace,nt,modl);
 	}

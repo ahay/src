@@ -37,9 +37,11 @@ int main (int argc, char *argv[])
     float *vt, v0;	/* velocity v(t)		*/
     float *p,*q;	/* input, output data		*/
 
-    bool inv;             /* modeling or migration        */
-    bool depth;           /* time or depth migration      */
-    float eps;            /* dip filter constant          */   
+    bool inv;           /* modeling or migration        */
+    bool depth;         /* time or depth migration      */
+    float eps;          /* dip filter constant          */   
+
+    char *rule;         /* phase-shuft interpolation rule */
 
     sf_file in, out, vel;
 
@@ -136,7 +138,10 @@ int main (int argc, char *argv[])
     p = sf_floatalloc(nt2);
     q = sf_floatalloc(nz);
 
-    gazdag_init (eps, nt2, dt, nz, dz, vt, depth);
+    if (NULL == (rule = sf_getstring("rule"))) rule="simple";
+    /* phase-shift interpolation rule (simple, midpoint, linear) */
+
+    gazdag_init (eps, nt2, dt, nz, dz, vt, depth, rule[0]);
 
     for (ik=0; ik < nk; ik++) {
 	k = k0+ik*dk;

@@ -54,3 +54,4 @@ void oc_dump (size_t n, FILE *wall, sf_file out)
 	sf_floatwrite(fbuf,nleft/sizeof(float),out);
     }
 }
+

@@ -1,4 +1,8 @@
-/* 3-D dip estimation by plane wave destruction.
+/* 3-D dip estimation by plane wave destruction. 
+
+Takes: w1=n1 w2=n2 w3=n3 p1=1 p2=1 p3=1
+
+w1,w2,w3 is window size, p1,p2,p3 is number of patches. 
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -17,6 +21,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <stdio.h>
 
 #include <rsf.h>
 
@@ -25,10 +30,13 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3, n123, niter, nw, nj1, nj2, i, rect[3], liter;
-    float p0, q0, ***u, ***p;
+    int w123, p123, n123, niter, order, nj1,nj2, i,j, liter, mem, memsize, ip;
+    int n[3], rect[3], nw[3], w[3]; 
+    float p0, q0, ***u, ***p, win;
+    char key[3];
     bool verb, sign, ***m1, ***m2;
     sf_file in, out, mask;
+    FILE *wall, *dip;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -36,13 +44,13 @@ int main (int argc, char *argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
-    if (!sf_histint(in,"n2",&n2)) n2=1;
-    if (!sf_histint(in,"n3",&n3)) n3=1;
-    n123 = n1*n2*n3;
+    if (!sf_histint(in,"n1",&n[0])) sf_error("Need n1= in input");
+    if (!sf_histint(in,"n2",&n[1])) n[1]=1;
+    if (!sf_histint(in,"n3",&n[2])) n[2]=1;
+    n123 = n[0]*n[1]*n[2];
 
     /* two dips output in 3-D */
-    if (n3 > 1) sf_putint(out,"n4",2); 
+    if (n[2] > 1) sf_putint(out,"n4",2); 
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -54,15 +62,44 @@ int main (int argc, char *argv[])
     if (!sf_getint("rect3",&rect[2])) rect[2]=1;
     /* dip smoothness */
 
+    if (!sf_getint("memsize",&mem)) mem = 100;
+    /* Available memory size (in Mb) */
+    memsize = mem * (1 << 20); /* convert Mb to bytes */
+
+    /* estimated relative window size */
+    win = powf((1. + memsize/40.)/n123,1./3.);
+    if (win > 1.) win=1.;
+    
+    for (j=0; j <3; j++) {
+	snprintf(key,3,"w%d",j+1);
+	if (!sf_getint(key,w+j)) {
+	    w[j] = n[j]*win;
+	    if (w[j] < 1) w[j]=1;
+	} else if (w[j] > n[j]) {
+	    w[j] = n[j];
+	}
+
+	snprintf(key,3,"p%d",j+1);
+	if (!sf_getint(key,nw+j)) {
+	    if (n[j] > w[j]) {
+		nw[j] = 1 + 1.5*n[j]/w[j]; /* 50% overlap */
+	    } else {
+		nw[j] = 1;
+	    }
+	}
+    }
+    w123 = w[0]*w[1]*w[2];
+    p123 = nw[0]*nw[1]*nw[2];
+
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */
     if (!sf_getfloat("q0",&q0)) q0=0.;
     /* initial cross-line dip */
 
-    if (!sf_getint("order",&nw)) nw=1;
+    if (!sf_getint("order",&order)) order=1;
     /* [1,2,3] accuracy order */
-    if (nw < 1 || nw > 3) 
-	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+    if (order < 1 || order > 3) 
+	sf_error ("Unsupported order=%d, choose between 1 and 3",order);
     if (!sf_getint("nj1",&nj1)) nj1=1;
     /* in-line antialiasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
@@ -74,47 +111,59 @@ int main (int argc, char *argv[])
     /* if y, keep dip sign constant */
     
     /* initialize dip estimation */
-    dip3_init(n1, n2, n3, rect, liter, sign);
+    dip3_init(w[0], w[1], w[2], rect, liter, sign);
 
-    u = sf_floatalloc3(n1,n2,n3);
-    p = sf_floatalloc3(n1,n2,n3);
+    u = sf_floatalloc3(w[0],w[1],w[2]);
+    p = sf_floatalloc3(w[0],w[1],w[2]);
 
-    if (NULL != sf_getstring("mask")) {
-	m1 = sf_boolalloc3(n1,n2,n3);
-	m2 = sf_boolalloc3(n1,n2,n3);
+    /* Fix later for patching mask */
+    if (p123 == 1 && NULL != sf_getstring("mask")) {
+	m1 = sf_boolalloc3(n[0],n[1],n[2]);
+	m2 = sf_boolalloc3(n[0],n[1],n[2]);
 	mask = sf_input("mask");
 	sf_floatread(u[0][0],n123,mask);
-	mask32 (nw, nj1, nj2, n1, n2, n3, u, m1, m2);
+	mask32 (order, nj1, nj2, n[0], n[1], n[2], u, m1, m2);
     } else {
 	m1 = NULL;
 	m2 = NULL;
     }
 
-    /* read data */
-    sf_floatread(u[0][0],n123,in);
+    if (p123 > 1) {
+	sf_warning("Going out of core...");
 
-    /* initialize t-x dip */
-    for(i=0; i < n123; i++) {
-	p[0][0][i] = p0;
-    }
-  
-    /* estimate t-x dip */
-    dip3(1, niter, nw, nj1, verb, u, p, m1);
+	sf_unpipe(in,n123*sizeof(float));
+	
+	/* loop over patches */
+	for (ip=0; ip < p123; ip++) {
 
-    /* write t-x dip */
-    sf_floatwrite(p[0][0],n123,out);
-
-    if (n3 > 1) { /* if 3-D input */
-	/* initialize t-y dip */
+	}
+    } else {
+	/* read data */
+	sf_floatread(u[0][0],n123,in);
+	
+	/* initialize t-x dip */
 	for(i=0; i < n123; i++) {
-	    p[0][0][i] = q0;
+	    p[0][0][i] = p0;
 	}
   
-	/* estimate t-y dip */
-	dip3(2, niter, nw, nj2, verb, u, p, m2);
+	/* estimate t-x dip */
+	dip3(1, niter, order, nj1, verb, u, p, m1);
 
-	/* write t-y dip */
+	/* write t-x dip */
 	sf_floatwrite(p[0][0],n123,out);
+
+	if (n[2] > 1) { /* if 3-D input */
+	    /* initialize t-y dip */
+	    for(i=0; i < n123; i++) {
+		p[0][0][i] = q0;
+	    }
+  
+	    /* estimate t-y dip */
+	    dip3(2, niter, order, nj2, verb, u, p, m2);
+	    
+	    /* write t-y dip */
+	    sf_floatwrite(p[0][0],n123,out);
+	}
     }
     
     exit (0);

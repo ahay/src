@@ -75,3 +75,18 @@ void ocpatch_lop (int ip, bool adj, FILE *wall, float* wind)
 	}
     }
 }
+
+void ocpatch_flop (int ip, bool adj, sf_file wall, float* wind)
+{
+    int i2;
+
+    for (i2=0; i2 < n2; i2++, wind += n1) {
+	sf_seek(wall,table[ip][i2],SEEK_SET);
+
+	if (adj) {
+	    sf_floatwrite(wind,n1,wall);
+	} else {
+	    sf_floatread(wind,n1,wall);
+	}
+    }
+}
