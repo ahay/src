@@ -2,17 +2,7 @@ pad - does not do expand
 add - slower than Add
 dd - requires 'data_format'
 math - requires 'output', flexible syntax
-
 ----------------
-Next: 
-      suread 
-      suwrite
-      headermath
-      parmath
-      spectrum
-----------------
-Graphics
-PVI BEI IEE
 SU demos
 Documentation
 ----------------
