@@ -82,5 +82,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mclip2.c 917 2004-12-19 20:23:06Z savap $	 */
+/* 	$Id$	 */
       
