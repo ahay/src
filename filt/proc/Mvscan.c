@@ -158,8 +158,7 @@ int main(int argc, char* argv[])
 	}
     } /* x */
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mvscan.c,v 1.6 2004/06/25 18:08:43 fomels Exp $	 */
+/* 	$Id: Mvscan.c,v 1.7 2004/07/02 11:54:48 fomels Exp $	 */

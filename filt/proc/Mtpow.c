@@ -89,8 +89,7 @@ int main(int argc, char *argv[])
 	}
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mtpow.c,v 1.5 2004/06/25 18:08:43 fomels Exp $	 */
+/* 	$Id: Mtpow.c,v 1.6 2004/07/02 11:54:48 fomels Exp $	 */

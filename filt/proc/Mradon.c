@@ -263,8 +263,7 @@ int main (int argc, char **argv)
 	}
     } /* loop over CMPs */
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mradon.c,v 1.5 2004/06/30 18:28:59 fomels Exp $	 */
+/* 	$Id: Mradon.c,v 1.6 2004/07/02 11:54:48 fomels Exp $	 */

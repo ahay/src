@@ -91,8 +91,7 @@ int main(int argc, char* argv[])
 
     print (dim, n, center, a, aa);
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mlpef.c,v 1.2 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mlpef.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */

@@ -158,8 +158,7 @@ int main(int argc, char* argv[])
     sf_intwrite(msaa->lag[0],nh*ns,lag);
     sf_floatwrite(msaa->flt,nh,pef);
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmspef.c,v 1.2 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mmspef.c,v 1.3 2004/07/02 11:54:48 fomels Exp $	 */

@@ -68,8 +68,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite(trace,n1,smooth);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Msmoothreg.c,v 1.3 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Msmoothreg.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */

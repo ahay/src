@@ -110,8 +110,7 @@ int main (int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Menvelope.c,v 1.7 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Menvelope.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */

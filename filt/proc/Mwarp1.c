@@ -240,8 +240,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(out,nd,warped);
     sf_floatwrite(warp,nd,warpout);
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarp1.c,v 1.11 2004/06/25 18:08:43 fomels Exp $	 */
+/* 	$Id: Mwarp1.c,v 1.12 2004/07/02 11:54:48 fomels Exp $	 */

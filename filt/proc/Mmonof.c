@@ -83,8 +83,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (data,nk,out);
     }
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmonof.c,v 1.5 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mmonof.c,v 1.6 2004/07/02 11:54:47 fomels Exp $	 */

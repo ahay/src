@@ -62,9 +62,8 @@ int main(int argc, char* argv[])
 	sf_floatwrite(trace,nbuf,out);
     }
     
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mclip.c,v 1.3 2004/06/30 18:28:59 fomels Exp $	 */
-
+/* 	$Id: Mclip.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
+      

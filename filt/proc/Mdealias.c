@@ -173,9 +173,7 @@ int main (int argc, char *argv[])
     
     sf_floatwrite(uu[0][0],m12,out);
   
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdealias.c,v 1.7 2004/06/25 18:08:42 fomels Exp $	 */
-
+/* 	$Id: Mdealias.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */

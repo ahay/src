@@ -205,8 +205,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mfourvc2.c,v 1.7 2004/06/27 22:22:05 fomels Exp $	 */
+/* 	$Id: Mfourvc2.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */

@@ -63,8 +63,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (trace,nt,out);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mslice.c,v 1.5 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mslice.c,v 1.6 2004/07/02 11:54:48 fomels Exp $	 */

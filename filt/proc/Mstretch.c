@@ -172,8 +172,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mstretch.c,v 1.4 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mstretch.c,v 1.5 2004/07/02 11:54:48 fomels Exp $	 */

@@ -156,8 +156,7 @@ int main(int argc, char* argv[])
     sf_intwrite(aa->lag,aa->nh,lag);
     sf_floatwrite(aa->flt,aa->nh,filt);
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mpef.c,v 1.3 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mpef.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */

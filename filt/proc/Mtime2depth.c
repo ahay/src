@@ -99,8 +99,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite (depth,nz,out);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtime2depth.c,v 1.8 2004/06/25 18:08:43 fomels Exp $	 */
+/* 	$Id: Mtime2depth.c,v 1.9 2004/07/02 11:54:48 fomels Exp $	 */

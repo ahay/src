@@ -253,8 +253,7 @@ int main (int argc, char* argv[])
 	if (NULL != pout) sf_floatwrite(pp,nm,pout);
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.8 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.9 2004/07/02 11:54:48 fomels Exp $	 */

@@ -80,8 +80,7 @@ int main(int argc, char* argv[])
     }
     sf_intwrite (known[0],n2*n3,mask);
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshotholes.c,v 1.5 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mshotholes.c,v 1.6 2004/07/02 11:54:48 fomels Exp $	 */

@@ -204,8 +204,7 @@ int main(int argc, char* argv[])
 	} /* x */
     } /* y */
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mprestolt.c,v 1.7 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mprestolt.c,v 1.8 2004/07/02 11:54:48 fomels Exp $	 */

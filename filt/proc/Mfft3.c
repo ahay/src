@@ -162,8 +162,7 @@ int main (int argc, char **argv)
 	}
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.9 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mfft3.c,v 1.10 2004/07/02 11:54:47 fomels Exp $	 */

@@ -115,8 +115,7 @@ int main(int argc, char* argv[])
 	}
     }
 	
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mreshape.c,v 1.9 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mreshape.c,v 1.10 2004/07/02 11:54:48 fomels Exp $	 */

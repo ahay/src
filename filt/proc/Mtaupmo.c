@@ -95,8 +95,7 @@ int main (int argc, char* argv[])
 	}
     }
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtaupmo.c,v 1.6 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mtaupmo.c,v 1.7 2004/07/02 11:54:48 fomels Exp $	 */

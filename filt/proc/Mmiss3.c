@@ -101,8 +101,7 @@ int main(int argc, char* argv[])
     
     sf_floatwrite(mm,n12,out);
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmiss3.c,v 1.2 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mmiss3.c,v 1.3 2004/07/02 11:54:47 fomels Exp $	 */

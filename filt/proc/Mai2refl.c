@@ -56,8 +56,7 @@ int main (int argc, char* argv[])
 	sf_floatwrite(sig,nt,mod);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mai2refl.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mai2refl.c,v 1.6 2004/07/02 11:54:47 fomels Exp $	 */

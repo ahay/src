@@ -134,8 +134,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (stack[0],nt*nh,cmp);
     } /* x */
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mvelmod.c,v 1.3 2004/06/25 18:08:43 fomels Exp $	 */
+/* 	$Id: Mvelmod.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */

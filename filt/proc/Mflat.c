@@ -96,8 +96,7 @@ int main (int argc, char *argv[])
 	if (NULL != dip) sf_floatwrite(p[0],n1*n2,dip);
     }
 
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mflat.c,v 1.3 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id: Mflat.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
