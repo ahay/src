@@ -109,7 +109,7 @@ def html_section(title, fgcol, bgcol, contents, width=6,
 def bigsection(title, *args):
     """Format a section with a big heading."""
     title = '<big><strong>%s</strong></big>' % title
-    return html_section(title, *args)
+    return apply(html_section,(title,)+args)
 
 def multicolumn(list, format, cols=4):
     """Format a list of items into a multi-column list."""
@@ -447,4 +447,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.16 2004/06/25 18:08:22 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.17 2004/06/29 17:43:33 fomels Exp $	

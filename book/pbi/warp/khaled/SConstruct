@@ -1,5 +1,7 @@
 from rsfproj import *
 
+import string
+
 ###########################################################################
 #
 # Data
@@ -51,10 +53,10 @@ for mode in ['pp','ps']:
            point1=0.75 point2=0.75
            label1="Time (s)" label2="In-line" label3="Cross-line"
            ''' %
-           (line-15,trace-18,time[mode],mode.upper()))
+           (line-15,trace-18,time[mode],string.upper(mode)))
     Flow(mode+'line',mode+'cube','window n3=1 min3=%d' % line)
     Plot(mode+'line',mode+'line',
-         'grey title=%s label1="Time (s)" label2="In-line" ' % mode.upper())
+         'grey title=%s label1="Time (s)" label2="In-line" ' % string.upper(mode))
     Result(mode+'line',[mode+'line','line'],'Overlay')
     Flow(mode+'trace',mode+'line','window n2=1 min2=%d' % trace)
 
@@ -88,7 +90,7 @@ milo_nails = Split('''
 
 Flow('nails',None,
      'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
-     (' '.join(nails),len(nails)/2))
+     (string.join(nails,' '),len(nails)/2))
 Flow('khaled1','nails',
      '''
      dd data_format=native_float |

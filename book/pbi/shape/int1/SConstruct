@@ -14,7 +14,7 @@ Plot('ideal','ideal',doty + ' connect=1')
 Plot('both','data ideal','Overlay')
 Result('data','both data','SideBySideAniso')
 
-doty += ' yreverse=y connect=1 d1=1 o1=1'
+doty = doty + ' yreverse=y connect=1 d1=1 o1=1'
 
 name = 'ifs'
 title = ['Regularization','Preconditioning','Shaping']

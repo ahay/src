@@ -1,5 +1,7 @@
 from rsfproj import *
 
+import string
+
 ###########################################################################
 
 grey = '''grey color=j allpos=y screenht=6 screenwd=12
@@ -13,8 +15,8 @@ wantscalebar=y'''
 contour = '''contour wantscalebar=y plotcol=0 wanttitle=n
 screenht=6 screenwd=12 c0=0 dc=0.1 nc=20'''
 
-fronts = ' | '.join(['eikonal yshot=0',contour])
-exact = ' | '.join(['window n3=1 f3=1',contour])
+fronts = string.join(['eikonal yshot=0',contour],' | ')
+exact = string.join(['window n3=1 f3=1',contour],' | ')
 
 Flow('const',None,"spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0")
 Plot('const','const',grey)

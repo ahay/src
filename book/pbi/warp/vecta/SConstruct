@@ -1,5 +1,7 @@
 from rsfproj import *
 
+import string
+
 ###########################################################################
 #
 # Data
@@ -31,7 +33,7 @@ for mode in ['pp','ps']:
     Flow(mode,data,
          'segyread tape=$SOURCE read=data | window n2=471',stdin=0)
     Plot(mode,mode,
-         'grey title=%s label1="Time (s)" label2="Trace" ' % mode.upper())
+         'grey title=%s label1="Time (s)" label2="Trace" ' % string.upper(mode))
     Result(mode,[mode,'line'],'Overlay')
     Flow(mode+'trace',mode,'window n2=1 min2=%d' % trace)
 

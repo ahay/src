@@ -236,9 +236,13 @@ def retrieve(target=None,source=None,env=None):
         session = ftplib.FTP(server,login,password)
         session.cwd(folder)
         for file in map(str,target):
-            download = open(file,'wb')
-            session.retrbinary('RETR '+file,lambda x: download.write(x))
-            download.close()
+            try:
+                 download = open(file,'wb')
+                 session.retrbinary('RETR '+file,lambda x: download.write(x))
+                 download.close()
+            except:
+                 print 'Could not download file "%s" ' % file
+                 return 1
         session.quit()
     else:
         for file in map(str,target):
@@ -530,4 +534,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.36 2004/06/27 22:22:05 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.37 2004/06/29 17:43:33 fomels Exp $	
