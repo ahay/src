@@ -117,7 +117,8 @@ int main(int argc, char* argv[])
 	} /* iy */
     } /* i3 */
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mdipfilter.c,v 1.7 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: Mdipfilter.c,v 1.8 2004/03/22 05:43:24 fomels Exp $	 */

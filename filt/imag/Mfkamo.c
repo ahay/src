@@ -83,8 +83,9 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mfkamo.c,v 1.5 2003/10/06 20:19:23 fomels Exp $	 */
+/* 	$Id: Mfkamo.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
 

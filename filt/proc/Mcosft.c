@@ -84,8 +84,9 @@ int main (int argc, char* argv[])
 	sf_write(data,sizeof(float),n1,out);
     }    
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcosft.c,v 1.4 2003/12/04 05:13:21 fomels Exp $	 */
+/* 	$Id: Mcosft.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
 

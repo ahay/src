@@ -69,8 +69,9 @@ int main(int argc, char* argv[])
 	    sf_write(trace, 1, n, out);
 	} 
     }
-    
+
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: spray.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: spray.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

@@ -73,7 +73,8 @@ int main (int argc, char *argv[])
     /* write dip */
     sf_write(p[0],sizeof(float),n12,out);
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.4 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: Mdip2.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

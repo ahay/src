@@ -67,7 +67,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwindow1.c,v 1.5 2003/10/08 15:09:25 fomels Exp $	 */
+/* 	$Id: Mwindow1.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */

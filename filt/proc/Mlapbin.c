@@ -181,7 +181,8 @@ int main (int argc, char* argv[])
 	sf_write (mm,sizeof(float),nm,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mlapbin.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */
+/* 	$Id: Mlapbin.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */

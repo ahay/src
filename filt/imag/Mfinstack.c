@@ -106,6 +106,7 @@ int main(int argc, char* argv[])
 	sf_write (out,sizeof(float complex),nx,stk);
     }
 
+    sf_close();
     exit(0);
 }
 

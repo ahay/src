@@ -141,7 +141,8 @@ int main (int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mintbin.c,v 1.1 2004/03/19 05:46:05 fomels Exp $	 */
+/* 	$Id: Mintbin.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */

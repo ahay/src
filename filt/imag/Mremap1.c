@@ -74,7 +74,8 @@ int main(int argc, char* argv[])
 	sf_write(tout,sizeof(float),nn1,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mremap1.c,v 1.3 2004/03/15 06:57:59 fomels Exp $	 */
+/* 	$Id: Mremap1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

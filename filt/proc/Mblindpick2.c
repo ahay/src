@@ -102,8 +102,9 @@ int main(int argc, char* argv[])
     divide(pick0,ampl,pick);
     sf_write (pick,sizeof(float),n,out);	
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.2 2004/03/15 06:57:59 fomels Exp $	 */
+/* 	$Id: Mblindpick2.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

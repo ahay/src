@@ -121,6 +121,8 @@ int main(int argc, char* argv[])
     fnorm = sqrtf(fsqr);
     fsqr = sqrtf(fsqr/(float) nsiz);
 
+    sf_close();
+
     if( NULL==want){
 	printf("******************************************* \n");
 	if(SF_COMPLEX==type) 
@@ -183,5 +185,5 @@ static void location(size_t loc, size_t dim, const int *n)
     printf("\n");
 }
 
-/* 	$Id: attr.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: attr.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

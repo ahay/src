@@ -95,8 +95,9 @@ int main(int argc, char* argv[])
 	}
 	sf_write(sum, sizeof(float), n, out); 
     }
-    
+
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: stack.c,v 1.5 2003/09/29 14:34:57 fomels Exp $	 */
+/* 	$Id: stack.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */

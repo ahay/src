@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
 {
     int nt,ns, ny,nh, iy,ih,is,it, type, esize;
     long pos;
+    bool sign;
     float ds, dy,dh, os, oy,oh;
     char *trace, *zero;
     sf_file in, out;
@@ -28,10 +29,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&oh)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"o3",&oy)) sf_error("No o3= in input");
 
+    if (!sf_getbool("positive",&sign)) sign=true;
+    /* initial offset orientation */
+
     type = 0.5 + dh/dy;
 
     ds = dh;
-    os = oy - oh - (nh-1)*dh;
+    os = sign? oy - oh - (nh-1)*dh: oy + oh;
     ns = (ny-1)/type + nh;
 
     sf_putint(out,"n2",type*nh);
@@ -62,7 +66,7 @@ int main(int argc, char* argv[])
     for (is=0; is < ns; is++) {
 	for (ih=0; ih < nh; ih++) {
 	    for (it=0; it < type; it++) {
-		iy = it + type*(is + ih - nh + 1);
+		iy = sign? it + type*(is + ih - nh + 1): type*(is - ih) - it;
 		if (iy >= 0 && iy < ny) {
 		    sf_seek(in,pos+(iy*nh+ih)*nt,SEEK_SET);
 		    sf_read(trace,sizeof(char),nt,in);
@@ -74,7 +78,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mcmp2shot.c,v 1.3 2004/03/19 05:45:23 fomels Exp $	 */
+/* 	$Id: Mcmp2shot.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

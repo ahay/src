@@ -130,6 +130,7 @@ int main(int argc, char* argv[])
 	sf_write (siz,sizeof(int),nx,size);
     }
 
+    sf_close();
     exit (0);
 }
 
@@ -152,4 +153,4 @@ static void raytrace (float q, void* xv, float* xzt) {
     xzt[4] = cell_p2a(p)*180./SF_PI;
 }
 
-/* 	$Id: Mtrace2.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */
+/* 	$Id: Mtrace2.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */

@@ -155,5 +155,9 @@ int main (int argc, char *argv[])
     
     sf_write(uu[0][0],sizeof(float),m12,out);
   
+    sf_close();
     exit (0);
 }
+
+/* 	$Id: Mdealias.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+

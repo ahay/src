@@ -89,7 +89,8 @@ int main(int argc, char* argv[])
 	sf_write (warp,sizeof(float),n,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mxcorr1.c,v 1.8 2003/10/08 15:09:25 fomels Exp $	 */
+/* 	$Id: Mxcorr1.c,v 1.9 2004/03/22 05:43:25 fomels Exp $	 */

@@ -50,7 +50,8 @@ int main(int argc, char** argv)
 	sf_write (vint,sizeof(float),n1,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgauss.c,v 1.4 2003/10/01 22:45:37 fomels Exp $	 */
+/* 	$Id: Mgauss.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

@@ -14,7 +14,7 @@ int main(int argc, char* argv[])
     fint1 nmo;
     bool sembl;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, iz, CDPtype;
-    float dt, dh, t0, h0, v0, dv, h, v, num, den, t;
+    float dt, dh, t0, h0, v0, dv, h, v, num, den, t, dy;
     float *trace, **stack, **stack2;
     sf_file cmp, scan;
 
@@ -26,8 +26,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
     nx = sf_leftsize(cmp,2);
 
-    if (!sf_histint(cmp,"CDPtype",&CDPtype)) CDPtype=1;
-
     if (!sf_getbool("semblance",&sembl)) sembl=false;
     /* if y, compute semblance; if n, stack */
     if (!sf_getint("nb",&nb)) nb=2;
@@ -37,6 +35,13 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
     if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
+
+    CDPtype=1;
+    if (sf_histfloat(cmp,"d3",&dy)) {
+	CDPtype=0.5+dh/dy;
+	if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
+    } 	    
+    sf_warning("CDPtype=%d",CDPtype);
 
     if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");
     if (!sf_getfloat("dv",&dv)) sf_error("Need dv=");
@@ -116,6 +121,10 @@ int main(int argc, char* argv[])
 	}
     } /* x */
 
+    sf_close();
     exit(0);
 }
+
+/* 	$Id: Mvscan.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+
 

@@ -52,7 +52,8 @@ int main (int argc, char* argv[])
 	sf_write(sig,sizeof(float),nt,mod);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mai2refl.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mai2refl.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */

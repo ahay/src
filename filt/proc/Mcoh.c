@@ -97,7 +97,8 @@ int main (int argc, char *argv[])
 	sf_write(c[0][0],sizeof(float),n123,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcoh.c,v 1.1 2003/10/18 18:28:05 fomels Exp $	 */
+/* 	$Id: Mcoh.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */

@@ -190,7 +190,11 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit(0);
 }
+
+/* 	$Id: Mfourvc2.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+
 
 

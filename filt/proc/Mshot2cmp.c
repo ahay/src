@@ -10,6 +10,7 @@ int main(int argc, char* argv[])
 {
     int nt,ns, ny,nh, iy,ih,is, type, esize;
     long pos;
+    bool sign;
     float ds, dy,dh, os, oy,oh;
     char *trace, *zero;
     sf_file in, out;
@@ -26,11 +27,14 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d3",&ds)) sf_error("No d3= in input");
     if (!sf_histfloat(in,"o2",&oh)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"o3",&os)) sf_error("No o3= in input");
+    
+    if (!sf_getbool("positive",&sign)) sign=true;
+    /* initial offset orientation */
 
     type = 0.5 + ds/dh;
 
     dy = dh;
-    oy = os + oh;
+    oy = sign? os + oh: os - oh - type*((nh-1)/type)*dh;
     ny = ns*type + nh - 1;
 
     sf_putint(out,"n2",(nh+type-1)/type);
@@ -60,7 +64,8 @@ int main(int argc, char* argv[])
 
     for (iy=0; iy < ny; iy++) {
 	for (ih=iy%type; ih < nh+iy%type; ih += type) {
-	    is = (iy - ih)/type;
+	    is = sign? (iy - ih)/type : (iy + ih)/type - (nh - 1)/type;
+
 	    if (is >= 0 && is < ns && ih < nh) {
 		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
 		sf_read(trace,sizeof(char),nt,in);
@@ -70,8 +75,9 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-
+    
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshot2cmp.c,v 1.6 2004/03/20 05:48:58 fomels Exp $	 */
+/* 	$Id: Mshot2cmp.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */

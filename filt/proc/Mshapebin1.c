@@ -130,7 +130,8 @@ int main (int argc, char* argv[])
     	sf_write (mm,sizeof(float),nx,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.2 2004/02/25 16:15:10 fomels Exp $	 */
+/* 	$Id: Mshapebin1.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */

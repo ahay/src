@@ -41,10 +41,11 @@ void sf_read (/*@out@*/ void* arr, size_t esize, size_t size, sf_file file);
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);
 void sf_unpipe (sf_file file, size_t size);
-FILE *sf_tempfile(char* dataname);
+FILE *sf_tempfile(char** dataname);
 FILE* sf_direct (const sf_file file);
 void sf_pipe (sf_file file, FILE* tmp, size_t size);
+void sf_close (void);
 
 #endif
 
-/* 	$Id: file.h,v 1.6 2003/10/18 18:21:15 fomels Exp $	 */
+/* 	$Id: file.h,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */

@@ -115,7 +115,8 @@ int main(int argc, char* argv[])
 	sf_write (data,sizeof(float),na,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mricker.c,v 1.3 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mricker.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */

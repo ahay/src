@@ -40,5 +40,9 @@ int main(int argc, char* argv[])
 	sf_write (dat,sizeof(float),n1,out);
     }
 
+    sf_close();
     exit(0);
 }
+
+/* 	$Id: Mimpl1.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+

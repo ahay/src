@@ -40,5 +40,6 @@ int main(int argc, char* argv[])
 	sf_write(next,sizeof(float),n1,out);
     }
 
+    sf_close();
     exit(0);
 }

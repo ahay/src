@@ -193,7 +193,8 @@ int main (int argc, char **argv)
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdsr.c,v 1.8 2004/03/18 15:43:06 fomels Exp $	 */
+/* 	$Id: Mdsr.c,v 1.9 2004/03/22 05:43:24 fomels Exp $	 */

@@ -64,6 +64,11 @@ int main(int argc, char* argv[])
     }
     sf_write (known[0],sizeof(int),n2*n3,mask);
 
+    sf_close();
     exit(0);
 }
+
+/* 	$Id: Mshotholes.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+
+
 

@@ -65,7 +65,8 @@ int main(int argc, char* argv[])
 	sf_write(first,sizeof(float),n1,sum);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarpadd.c,v 1.3 2003/09/30 14:30:51 fomels Exp $	 */
+/* 	$Id: Mwarpadd.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

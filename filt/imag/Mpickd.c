@@ -42,7 +42,8 @@ int main (int argc, char *argv[])
 	}
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mpickd.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Mpickd.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */

@@ -165,7 +165,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mrays2.c,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Mrays2.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */

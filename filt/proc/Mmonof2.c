@@ -67,7 +67,8 @@ int main(int argc, char* argv[])
 	sf_write (data[0],sizeof(float),nx*ny,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmonof2.c,v 1.1 2004/02/25 16:16:27 fomels Exp $	 */
+/* 	$Id: Mmonof2.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */

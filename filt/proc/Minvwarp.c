@@ -62,8 +62,9 @@ int main(int argc, char* argv[])
 	sf_write(outp,sizeof(float),n2,out);
     }
 
+    sf_close();
     exit (0);
 }
     
-/* 	$Id: Minvwarp.c,v 1.3 2004/03/18 03:23:49 fomels Exp $	 */
+/* 	$Id: Minvwarp.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
 

@@ -189,8 +189,11 @@ int main(int argc, char* argv[])
 	} /* x */
     } /* y */
 
+    sf_close();
     exit (0);
 }
+
+/* 	$Id: Mprestolt.c,v 1.5 2004/03/22 05:43:25 fomels Exp $	 */
 
 
 

@@ -159,7 +159,8 @@ int main (int argc, char *argv[])
 	}
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Msstep1.c,v 1.3 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Msstep1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

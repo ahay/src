@@ -79,8 +79,9 @@ int main (int argc, char *argv[])
 	sf_write (time,sizeof(float),nt,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdepth2time.c,v 1.5 2004/03/18 03:23:49 fomels Exp $	 */
+/* 	$Id: Mdepth2time.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
 

@@ -141,6 +141,7 @@ int main (int argc, char* argv[])
 	sf_write(buf,(size_t) esize,nbuf,out);
     }
     
+    sf_close();
     exit (0);
 }
 
@@ -255,7 +256,7 @@ static void check_compat (int esize,
 {
     int ni, id;
     size_t i;
-    float f, fi;
+    float d, di, o, oi;
     char key[3];
     const float tol=1.e-5;
     
@@ -267,16 +268,20 @@ static void check_compat (int esize,
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
 		sf_error("%s mismatch: need %d",key,n[id-1]);
 	    (void) snprintf(key,3,"d%d",id);
-	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || (fabsf(fi-f) > tol*fabsf(f))))
-		sf_warning("%s mismatch: need %g",key,f);
+	    if (sf_histfloat(in[0],key,&d)) {
+		if (!sf_histfloat(in[i],key,&di) || 
+		    (fabsf(di-d) > tol*fabsf(d)))
+		    sf_warning("%s mismatch: need %g",key,d);
+	    } else {
+		d = 1.;
+	    }
 	    (void) snprintf(key,3,"o%d",id);
-	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || (fabsf(fi-f) > tol*fabsf(f))))
-		sf_warning("%s mismatch: need %g",key,f);
+	    if (sf_histfloat(in[0],key,&o) && 
+		(!sf_histfloat(in[i],key,&oi) || (fabsf(oi-o) > tol*fabsf(d))))
+		sf_warning("%s mismatch: need %g",key,o);
 	}
     }
 }
 
-/* 	$Id: add.c,v 1.6 2004/03/13 06:00:24 fomels Exp $	 */
+/* 	$Id: add.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
 

@@ -32,9 +32,10 @@ int main (int argc, char* argv[])
 	    printf("%s\n",string);
 	} 
     }
-    
+
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: get.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: get.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

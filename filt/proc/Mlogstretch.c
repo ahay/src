@@ -82,8 +82,9 @@ int main(int argc, char* argv[])
         sf_write (stretched,sizeof(float),n,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mlogstretch.c,v 1.4 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: Mlogstretch.c,v 1.5 2004/03/22 05:43:25 fomels Exp $	 */
 

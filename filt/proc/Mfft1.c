@@ -125,7 +125,8 @@ int main (int argc, char *argv[])
 	}
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mfft1.c,v 1.8 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: Mfft1.c,v 1.9 2004/03/22 05:43:24 fomels Exp $	 */

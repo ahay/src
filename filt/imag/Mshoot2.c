@@ -176,6 +176,7 @@ int main(int argc, char* argv[])
 	sf_write(angle,sizeof(float),nr,out);
     }
     
+    sf_close();
     exit (0);
 }
 
@@ -195,4 +196,4 @@ static float shooting(float a)
     return (x[1]-xr);
 }
 
-/* 	$Id: Mshoot2.c,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Mshoot2.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */

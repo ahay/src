@@ -52,8 +52,9 @@ int main(int argc, char* argv[])
 
     sf_write (mod,sizeof(float),nx,out);
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mstretch2.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mstretch2.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
 

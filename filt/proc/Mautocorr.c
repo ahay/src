@@ -63,5 +63,6 @@ int main(int argc, char* argv[])
 
     sf_write (ss->flt,sizeof(float),ns,out);
   
+    sf_close();
     exit (0);
 }

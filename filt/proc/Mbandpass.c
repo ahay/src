@@ -96,6 +96,7 @@ int main (int argc, char* argv[])
 	sf_write(trace,sizeof(float),n1,out);
     }
 
+    sf_close();
     exit (0);
 }
 
@@ -111,4 +112,4 @@ static void reverse (int n1, float* trace) {
     }
 }
 
-/* 	$Id: Mbandpass.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mbandpass.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

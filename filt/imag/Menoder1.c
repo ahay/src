@@ -42,8 +42,9 @@ int main(int argc, char* argv[])
 	sf_write(trace,sizeof(float),n1,der);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Menoder1.c,v 1.3 2003/10/01 23:40:46 fomels Exp $	 */
+/* 	$Id: Menoder1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
 

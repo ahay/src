@@ -89,7 +89,8 @@ int main(int argc, char* argv[])
 	sf_write(trace,sizeof(float),n1,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mspline.c,v 1.5 2004/03/15 06:57:59 fomels Exp $	 */
+/* 	$Id: Mspline.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */

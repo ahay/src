@@ -6,6 +6,7 @@
 
 #include "error.h"
 #include "getpar.h"
+#include "file.h"
 
 void sf_error( char *format, ... )
 {
@@ -26,6 +27,8 @@ void sf_error( char *format, ... )
 	fprintf (stderr, " %s", strerror(errno));
 
     fprintf (stderr, "\n");
+
+    sf_close();
     exit(EXIT_FAILURE); 
 }
 
@@ -50,5 +53,5 @@ void sf_warning( char *format, ... )
     fprintf (stderr, "\n");
 }
 
-/* 	$Id: error.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: error.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

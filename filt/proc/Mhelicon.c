@@ -95,8 +95,9 @@ int main(int argc, char* argv[])
 	sf_write (qq,sizeof(float),nx,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mhelicon.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mhelicon.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
 

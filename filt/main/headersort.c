@@ -70,7 +70,8 @@ int main(int argc, char* argv[])
 	sf_write(trace,1,n1,out);
     }
 
+    sf_close();
     exit(0);
 }
     
-/* 	$Id: headersort.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: headersort.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */

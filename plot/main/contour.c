@@ -135,6 +135,7 @@ int main (int argc, char* argv[])
 
     } /* i3 */
 
+    sf_close();
     exit(0);
 }
 
@@ -381,5 +382,5 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.6 2003/10/18 18:22:04 fomels Exp $	 */
+/* 	$Id: contour.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
 

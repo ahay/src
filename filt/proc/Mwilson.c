@@ -109,6 +109,11 @@ int main(int argc, char* argv[])
     }
     sf_write(aa->flt,sizeof(float),na,out);
 
+    sf_close();
     exit (0);
 }
+
+/* 	$Id: Mwilson.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
+
+
 

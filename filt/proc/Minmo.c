@@ -95,8 +95,9 @@ int main (int argc, char* argv[])
 	}
     }
 	
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.2 2004/03/20 05:48:58 fomels Exp $	 */
+/* 	$Id: Minmo.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

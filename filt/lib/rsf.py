@@ -11,7 +11,7 @@ class Par:
         c_rsf.sf_init(len(argv),argv)
         self.prog = c_rsf.sf_getprog()
     def close(self):
-        c_rsf.sf_close()
+        c_rsf.sf_parclose()
     def __get(self,func,key,default):
         get,par = func(key)
         if get:
@@ -161,4 +161,4 @@ if __name__ == "__main__":
         output.write(trace)
     os.system("sfrm junk.rsf")
     
-# 	$Id: rsf.py,v 1.3 2003/09/24 05:15:29 fomels Exp $	
+# 	$Id: rsf.py,v 1.4 2004/03/22 05:43:24 fomels Exp $	

@@ -305,6 +305,7 @@ int main (int argc, char* argv[])
 
     } /* i3 */
     
+    sf_close();
     exit(0);
 }
 
@@ -352,5 +353,5 @@ static void circle(int corners,
     vp_area(vx,vy,corners,1,1,1);
 }
 
-/* 	$Id: dots.c,v 1.6 2003/10/22 14:44:44 fomels Exp $	 */
+/* 	$Id: dots.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */
 

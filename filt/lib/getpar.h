@@ -6,7 +6,7 @@
 #include "c99.h"
 
 void sf_init(int argc,char *argv[]);
-void sf_close (void);
+void sf_parclose (void);
 char* sf_getprog (void);
 char* sf_getuser (void);
 char* sf_gethost (void);
@@ -21,4 +21,4 @@ bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
 #endif
 
-/* 	$Id: getpar.h,v 1.4 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: getpar.h,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

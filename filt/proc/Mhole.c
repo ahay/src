@@ -47,8 +47,9 @@ int main (int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mhole.c,v 1.5 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mhole.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
 

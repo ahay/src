@@ -122,8 +122,9 @@ int main (int argc, char* argv[])
 	sf_write (mm,sizeof(float),nx,out);
     }
     
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mbin1.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mbin1.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
 

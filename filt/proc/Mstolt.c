@@ -82,7 +82,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.8 2003/12/04 05:13:21 fomels Exp $	 */
+/* 	$Id: Mstolt.c,v 1.9 2004/03/22 05:43:25 fomels Exp $	 */

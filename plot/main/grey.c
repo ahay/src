@@ -276,7 +276,8 @@ int main(int argc, char* argv[])
 	vp_purge(); 
     } 
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.14 2003/10/18 18:22:04 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.15 2004/03/22 05:43:25 fomels Exp $	 */

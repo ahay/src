@@ -148,7 +148,8 @@ int main(int argc, char* argv[])
 
     sf_write(mm+p1,sizeof(float),p2,out);
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmiss.c,v 1.5 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mmiss.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */

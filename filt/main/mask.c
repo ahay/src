@@ -42,6 +42,9 @@ int main(int argc, char* argv[]) {
 	}
 	sf_write(ibuf,sizeof(int),nbuf,out);
     }
+
+    sf_close();
+    exit(0);
 }
 	    
-/* 	$Id: mask.c,v 1.3 2003/10/08 15:09:04 fomels Exp $	 */
+/* 	$Id: mask.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

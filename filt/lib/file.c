@@ -34,6 +34,7 @@ struct sf_File {
     enum xdr_op op;
     sf_datatype type;
     sf_dataform form;
+    bool pipe;
 };
 
 /*@null@*/ static sf_file infile=NULL;
@@ -91,6 +92,10 @@ sf_file sf_input (/*@null@*/ const char* tag)
 	    sf_error("%s: Cannot read data file %s:",__FILE__,filename);
     }
     free (filename);
+
+    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
+    if (file->pipe && ESPIPE != errno) 
+	sf_error ("%s: pipe problem:",__FILE__);
 
     file->op = XDR_DECODE;
     file->xdr = NULL;
@@ -154,13 +159,13 @@ sf_file sf_output (/*@null@*/ const char* tag)
 	    sprintf(name,"%sXXXXXX",sf_getprog());
 	    (void) close(mkstemp(file->dataname));
 	    (void) unlink(file->dataname);
-	    if (NULL == headname && 
+	    if (NULL == headname &&
 		-1L == fseek(file->stream,0L,SEEK_CUR) &&
-		ESPIPE == errno &&
+		ESPIPE == errno && 
 		0 != mkfifo (file->dataname, S_IRUSR | S_IWUSR))
 		sf_error ("%s: Cannot make a pipe %s:",
 			  __FILE__,file->dataname);
-	} 
+	}  
     } else {
 	namelen = strlen(dataname)+1;
 	file->dataname = sf_charalloc (namelen);
@@ -326,7 +331,7 @@ void sf_fileclose (sf_file file)
 	free (file->xdr);
 	free (file->buf);
     }
-    free (file->dataname);
+    if (NULL != file->dataname) free (file->dataname);
     free (file);
 }
 
@@ -464,8 +469,12 @@ void sf_fileflush (sf_file file, sf_file src)
 	file->stream = freopen(file->dataname,"wb",file->stream);
 	if (NULL == file->stream) 
 	    sf_error ("%s: Cannot write to data file %s:",
-		      __FILE__,file->dataname);
+		      __FILE__,file->dataname);	
     }
+
+    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
+    if (file->pipe && ESPIPE != errno) 
+	sf_error ("%s: pipe problem:",__FILE__);
 
     free (file->dataname);
     file->dataname=NULL;
@@ -714,7 +723,7 @@ long sf_tell (sf_file file)
     return ftell(file->stream);
 }
 
-FILE *sf_tempfile(char* dataname)
+FILE *sf_tempfile(char** dataname)
 {
     FILE *tmp;
     char *path;
@@ -722,10 +731,10 @@ FILE *sf_tempfile(char* dataname)
     path = getdatapath();
     if (NULL == path) 
 	sf_error ("%s: Cannot find datapath",__FILE__);
-    dataname = sf_charalloc (NAME_MAX+1);
-    snprintf(dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
-    tmp = fdopen(mkstemp(dataname),"wb");
-    if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,dataname);
+    *dataname = sf_charalloc (NAME_MAX+1);
+    snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
+    tmp = fdopen(mkstemp(*dataname),"wb");
+    if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,*dataname);
 
     return tmp;
 }
@@ -743,10 +752,9 @@ void sf_unpipe (sf_file file, size_t size)
     FILE* tmp;
     char buf[BUFSIZ];
 
-    if (-1L != fseek(file->stream,0L,SEEK_CUR)) return;
-    if (ESPIPE != errno) sf_error ("%s: pipe problem:",__FILE__);
+    if (!(file->pipe)) return;
 	
-    tmp = sf_tempfile(dataname);
+    tmp = sf_tempfile(&dataname);
 
     while (size > 0) {
 	nbuf = (BUFSIZ < size)? BUFSIZ : size;
@@ -755,19 +763,32 @@ void sf_unpipe (sf_file file, size_t size)
 	    sf_error ("%s: trouble unpiping:",__FILE__);
 	size -= nbuf;
     }
+
+    if (NULL != file->dataname) {
+	if (unlink(file->dataname))
+	    sf_warning ("%s: trouble removing %s:",__FILE__,file->dataname);
+
+	strcpy (file->dataname,dataname);
+    }    
+
     (void) fclose(file->stream);
-	
     file->stream = freopen(dataname,"rb",tmp);
+
     if (NULL == file->stream)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
 } 
 
+void sf_close(void)
+{
+    if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
+
+    if (unlink(infile->dataname))
+	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
+}
+
 FILE* sf_direct (const sf_file file)
 {
-    if (-1L != fseek(file->stream,0L,SEEK_CUR)) return file->stream;
-    if (ESPIPE != errno) sf_error ("%s: pipe problem:",__FILE__);
-
-    return sf_tempfile(file->dataname);
+    return file->pipe? sf_tempfile(&(file->dataname)): file->stream;
 }
 
 void sf_pipe (sf_file file, FILE* tmp, size_t size) 
@@ -792,4 +813,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.15 2004/03/18 03:23:39 fomels Exp $	 */
+/* 	$Id: file.c,v 1.16 2004/03/22 05:43:24 fomels Exp $	 */

@@ -104,8 +104,9 @@ int main (int argc, char* argv[])
 	sf_write(spec,sizeof(float),nw,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mspectra.c,v 1.3 2003/10/14 21:53:33 fomels Exp $	 */
+/* 	$Id: Mspectra.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
 

@@ -140,7 +140,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mcell2.c,v 1.9 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mcell2.c,v 1.10 2004/03/22 05:43:23 fomels Exp $	 */

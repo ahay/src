@@ -131,7 +131,8 @@ int main(int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.6 2003/11/06 16:42:45 fomels Exp $	 */
+/* 	$Id: Mwarpscan.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */

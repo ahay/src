@@ -77,7 +77,8 @@ int main (int argc, char *argv[])
 	sf_write(u2[0][0],sizeof(float),n123,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mpwd.c,v 1.3 2004/01/15 02:36:44 fomels Exp $	 */
+/* 	$Id: Mpwd.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */

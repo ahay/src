@@ -165,8 +165,9 @@ int main (int argc, char* argv[])
     	sf_write (mm,sizeof(float),nx,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Minvbin1.c,v 1.7 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: Minvbin1.c,v 1.8 2004/03/22 05:43:24 fomels Exp $	 */
 

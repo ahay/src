@@ -109,7 +109,8 @@ int main (int argc, char* argv[])
 	}
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: pad.c,v 1.4 2004/03/13 06:00:24 fomels Exp $	 */
+/* 	$Id: pad.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

@@ -94,7 +94,8 @@ int main (int argc, char* argv[])
 	sf_write (trace2,sizeof(float),nx,out);
     } /* nz */
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.4 2003/10/24 14:57:58 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

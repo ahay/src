@@ -295,7 +295,8 @@ int main(int argc, char* argv[])
   
     if (!inv) sf_write (depth[0],sizeof(float),nz*nx,out);
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmig45.c,v 1.8 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Mmig45.c,v 1.9 2004/03/22 05:43:24 fomels Exp $	 */

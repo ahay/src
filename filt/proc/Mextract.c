@@ -99,7 +99,8 @@ int main (int argc, char* argv[])
 	sf_write (dd,sizeof(float),nd,out);
     }
 
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mextract.c,v 1.1 2004/02/14 07:01:42 fomels Exp $	 */
+/* 	$Id: Mextract.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */

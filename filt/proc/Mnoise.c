@@ -81,7 +81,8 @@ int main (int argc, char* argv[])
 	sf_write(dat,sizeof(float),nbuf,out);  
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mnoise.c,v 1.3 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: Mnoise.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */

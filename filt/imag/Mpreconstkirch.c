@@ -195,9 +195,10 @@ int main(int argc, char* argv[])
     if (!inv && zero) 
 	sf_write (stack[0][0],sizeof(float),n123,out);
  
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mpreconstkirch.c,v 1.3 2004/03/13 06:00:04 fomels Exp $	 */
+/* 	$Id: Mpreconstkirch.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
 
 

@@ -8,6 +8,7 @@
 int main(int argc, char* argv[])
 {
     int ns, nh, nw, iw, ih, is;
+    bool sign;
     float ds, h0, dh, w0, dw, w, eps;
     float complex *s, **ss, a[3];
     sf_file in, out;
@@ -32,6 +33,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.1;
     /* regularization parameter */
 
+    if (!sf_getbool("positive",&sign)) sign=true;
+    /* initial offset orientation */
+
     sf_putint(out,"n2",2*ns-1);
     sf_putfloat(out,"d2",0.5*ds);
 
@@ -41,7 +45,7 @@ int main(int argc, char* argv[])
     ss = sf_complexalloc2(nh,ns);
     s = sf_complexalloc(nh);
 
-    shotfill_init(nh,h0,dh,ds);
+    shotfill_init(nh,h0,dh,sign? ds: -ds);
     cburg_init(nh,ns,3);
 
     for (iw=0; iw < nw; iw++) {
@@ -77,7 +81,9 @@ int main(int argc, char* argv[])
 	} /* s */
     } /* w */
   
+    sf_close();
     exit(0);
 }
 
+/* 	$Id: Minfill.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 

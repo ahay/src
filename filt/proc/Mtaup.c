@@ -173,7 +173,8 @@ int main (int argc, char **argv)
 	}
     } /* loop over CMPs */
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtaup.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Mtaup.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */

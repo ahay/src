@@ -162,6 +162,7 @@ int main (int argc, char *argv[])
 	sf_write(buf,1,m1,out);
     }
 
+    sf_close();
     exit (0);
 }
 
@@ -190,4 +191,4 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
     }
 }
 
-/* 	$Id: window.c,v 1.6 2003/09/29 14:34:57 fomels Exp $	 */
+/* 	$Id: window.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */

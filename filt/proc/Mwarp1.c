@@ -248,7 +248,8 @@ int main(int argc, char* argv[])
 	    sf_write(ampl[i2],sizeof(float),n2,amplout);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarp1.c,v 1.5 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: Mwarp1.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */

@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
 	size -= nin;
     }
     
+    sf_close();
     exit (0);
 }
 
@@ -151,4 +152,4 @@ static size_t setfiledims (sf_file in, sf_file out)
     return size;
 }
 
-/* 	$Id: dd.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: dd.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

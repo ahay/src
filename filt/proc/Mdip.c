@@ -89,7 +89,8 @@ int main (int argc, char *argv[])
 	sf_write(p[0][0],sizeof(float),n123,out);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdip.c,v 1.3 2003/10/18 18:21:31 fomels Exp $	 */
+/* 	$Id: Mdip.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */

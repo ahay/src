@@ -119,8 +119,9 @@ int main (int argc,char* argv[])
 	sf_write (t,sizeof(float),n123,time);
     }
     
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Meikonal.c,v 1.3 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Meikonal.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
 

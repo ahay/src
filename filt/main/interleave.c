@@ -94,6 +94,7 @@ int main (int argc, char* argv[])
 	}
     }
     
+    sf_close();
     exit(0);
 }
 
@@ -111,4 +112,4 @@ static void check_compat (sf_file other, int esize, int dim, const int *n)
     }
 }
 
-/* 	$Id: interleave.c,v 1.4 2004/03/20 05:48:46 fomels Exp $	 */
+/* 	$Id: interleave.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */

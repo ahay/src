@@ -166,7 +166,8 @@ int main (int argc, char *argv[])
 	sf_write (q[0],sizeof(float),nz*nx,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgazdag.c,v 1.6 2004/01/15 02:36:32 fomels Exp $	 */
+/* 	$Id: Mgazdag.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */

@@ -99,7 +99,8 @@ int main(int argc, char* argv[])
 	}
     }
 	
+    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mreshape.c,v 1.6 2003/10/08 15:09:25 fomels Exp $	 */
+/* 	$Id: Mreshape.c,v 1.7 2004/03/22 05:43:25 fomels Exp $	 */

@@ -121,8 +121,9 @@ int main(int argc, char* argv[])
 	sf_write (pick,sizeof(float),nt,out);	
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mblindpick.c,v 1.5 2003/10/18 18:21:31 fomels Exp $	 */
+/* 	$Id: Mblindpick.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
 

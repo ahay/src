@@ -42,8 +42,9 @@ int main(int argc, char** argv)
 	sf_write(vint,sizeof(float),n1,out);
     }
 
+    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mvoft.c,v 1.2 2003/09/30 14:30:51 fomels Exp $	 */
+/* 	$Id: Mvoft.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
 
