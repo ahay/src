@@ -29,7 +29,8 @@ int main(int argc, char* argv[])
 {
     int i1, i2, i3, n1, n2, n3, n, ns, p, t1, t2;
     float **pp, *s1, *s2;
-    triangle tr1, tr2;
+    bool second;
+    triangle tr1, tr2=NULL;
     sf_file mod;
 
     sf_init (argc,argv);
@@ -39,7 +40,11 @@ int main(int argc, char* argv[])
     if (!sf_getint("n1",&n1)) n1=100;
     if (!sf_getint("n2",&n2)) n2=14;
     if (!sf_getint("n3",&n3)) n3=1;
-    
+    /* dimensions */
+
+    if (!sf_getbool("second",&second)) second=true;
+    /* if n, only one plane wave is modeled */
+
     sf_putint(mod,"n1",n1);
     sf_putint(mod,"n2",n2);
     sf_putint(mod,"n3",n3);
@@ -60,18 +65,21 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getint("t1",&t1)) t1=4;
-    if (!sf_getint("t2",&t2)) t2=4;
-
+    /* triangle smoother for first wave */
     tr1 = triangle_init (t1, ns);
-    tr2 = triangle_init (t2, ns);
-
     smooth2(tr1,0,1,false,s1);
-    smooth2(tr2,0,1,false,s2);
+
+    if (second) {
+	if (!sf_getint("t2",&t2)) t2=4;
+	/* triangle smoother for second wave */
+	tr2 = triangle_init (t2, ns);
+	smooth2(tr2,0,1,false,s2);
+    }	
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    pp[i2][i1]  = s1[i1 + n/2 * n1 + i2];
-	    pp[i2][i1] += s2[i1 + n/2 * n1 - i2*2];
+	    if (second) pp[i2][i1] += s2[i1 + n/2 * n1 - i2*2];
 	}
     }
 
@@ -82,4 +90,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmake.c,v 1.2 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id$	 */

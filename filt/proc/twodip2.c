@@ -106,7 +106,7 @@ static void border(float** u)
     int i1, i2;
 
     for (i2=0; i2 < 2; i2++) {
-	for (i1=0; i1 < n1; i2++) {
+	for (i1=0; i1 < n1; i1++) {
 	    u2[i2][i1]=0.;
 	}
     }
@@ -120,4 +120,4 @@ static void border(float** u)
     }
 }
 
-/* 	$Id: twodip2.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

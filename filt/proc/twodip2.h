@@ -10,4 +10,4 @@ void twodip2(int niter, int nw, int nj1, int nj2,
 
 #endif
 
-/* 	$Id: twodip2.h,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

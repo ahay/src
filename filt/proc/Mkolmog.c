@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
 	
 	sf_floatread(trace,n1,in);
 
-	if (n1%2) trace[nfft-1]=0.;
+	if (n1%2) trace[n1]=0.;
 
 	kolmog_init(nfft);
 	kolmog(trace);

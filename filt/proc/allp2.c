@@ -8,6 +8,8 @@ struct Allpass2 {
     float** pp;
 };
 
+static allpass2 ap2;
+
 allpass2 allpass2_init(int nw, int nj, int nx, int ny, float **pp)
 {
     allpass2 ap;
@@ -21,6 +23,40 @@ allpass2 allpass2_init(int nw, int nj, int nx, int ny, float **pp)
     ap->pp = pp;
     
     return ap;
+}
+
+void allpass22_init (allpass2 ap1)
+{
+    ap2 = ap1;
+}
+
+void allpass21_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
+{
+    int i, ix, iy, iw, is, nx, ny;
+    float a[7];
+
+    sf_adjnull(adj,add,n1,n2,xx,yy);
+  
+    nx = ap2->nx;
+    ny = ap2->ny;
+
+    for (iy=0; iy < ny-1; iy++) {
+	for (ix = ap2->nw*ap2->nj; ix < nx-ap2->nw*ap2->nj; ix++) {
+	    passfilter(ap2->nw, ap2->pp[iy][ix], a);
+	    i = ix + iy*nx;
+	      
+	    for (iw = 0; iw <= 2*ap2->nw; iw++) {
+		is = (iw-ap2->nw)*ap2->nj;
+		  
+		if (adj) {
+		    xx[i+is+nx] += yy[i]*a[iw];
+		    xx[i-is]    -= yy[i]*a[iw];
+		} else {
+		    yy[i] += (xx[i+is+nx] - xx[i-is]) * a[iw];
+		}
+	    }
+	}
+    }
 }
 
 void allpass21 (bool der, const allpass2 ap, float** xx, float** yy)
@@ -52,4 +88,4 @@ void allpass21 (bool der, const allpass2 ap, float** xx, float** yy)
     }
 }
 
-/* 	$Id: allp2.c,v 1.1 2004/02/14 06:59:24 fomels Exp $	 */
+/* 	$Id$	 */

@@ -7,5 +7,5 @@ void twodiv2 (float* num, float* den,  float* rat);
 
 #endif
 
-/* 	$Id: twodiv2.h,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */
 

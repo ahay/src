@@ -80,8 +80,7 @@ int main (int argc, char *argv[])
     /* write dips */
     sf_floatwrite(p[0][0],n12*2,out);
      
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtwodip2.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

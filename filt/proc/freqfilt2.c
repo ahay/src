@@ -29,8 +29,6 @@ void freqfilt2_init(int n1, int n2, int nw1)
     ctrace = sf_complexalloc(nw);
     ctrace2 = sf_complexalloc(n2);
     fft = sf_complexalloc2(nw,n2);
-
-    if (n1%2) trace[n1]=0.;
 }
 
 void freqfilt2_set(float **filt)
@@ -56,7 +54,9 @@ void freqfilt2_spec (const float* x, float** y) {
     for (ik=0; ik < m2; ik++) {
 	for (iw=0; iw < m1; iw++) {
 	    trace[iw] = x[ik*m1+iw];
-	}
+	}	
+	if (m1%2) trace[m1]=0.;
+
 	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
 	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
@@ -82,6 +82,7 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (iw=0; iw < m1; iw++) {
 	    trace[iw] = adj? y[ik*m1+iw]: x[ik*m1+iw];
 	}
+	if (m1%2) trace[m1]=0.;
 	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
 	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
