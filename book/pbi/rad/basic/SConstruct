@@ -1,0 +1,68 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+##########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/rad'
+
+Flow('offset',None,'spike n1=60 o1=0.275 d1=0.005 | headermath output=T')
+
+Fetch(['data.HH','cdp.HH'],datdir)
+Flow('data','data.HH',
+          'dd data_format=native_float | pad n1=1200')
+Flow('cdp','cdp.HH','dd data_format=native_float')
+
+Flow('rad','data offset',
+     'taup offset=${SOURCES[1]} inv=n p0=0 np=200 dp=0.005')
+
+Flow('cdpx',None,
+          'spike n1=24 o1=0.132 d1=0.067 | headermath output=T')
+Flow('cdp-rad','cdp cdpx',
+     'taup offset=${SOURCES[1]} inv=y p0=0 np=100 dp=0.012')
+Flow('frw','rad offset','taup adj=n offset=${SOURCES[1]}')
+
+label = 'transp=y poly=y yreverse=y crowd=0.89'
+labelr = label + 'label2="p (s/km)" label1="tau (s)" title="tau-p domain"'
+labelc = label + 'label2="Offset (km)" label1="Time (s)" title="cmp domain"'
+
+radon = map(lambda x: 'radon%d' % x,range(3))    
+Plot(radon[1],'rad', 'window n1=860 | grey ' + labelr) # middle
+Plot(radon[0],'data','window n1=860 | grey ' + labelc) # left
+Plot(radon[2],'frw', 'window n1=860 | grey ' + labelc) # right
+Combine('radon',radon,'SideBySideAniso',result=1)
+
+Flow('inv','data offset',
+     'taup offset=${SOURCES[1]} p0=0 np=200 dp=0.005')
+Flow('pre','inv offset','taup adj=n offset=${SOURCES[1]}')
+
+radon_inv = map(lambda x: 'radon-inv%d' % x,range(3))
+Plot(radon_inv[0],'inv','window n1=860 | grey ' + labelr) # left
+Plot(radon_inv[2],'pre data',
+          '''add scale=1,-1 ${SOURCES[1]} |
+          window n1=860 | grey clip=131.365''' +
+          labelc) # right
+Plot(radon_inv[1],'pre',
+          'window n1=860 | grey clip=131.365' + labelc) # middle
+Combine('radon-inv',radon_inv,'SideBySideAniso',result=1)
+
+Flow('cdpv','cdp-rad','window n2=1 | headermath output=1.5')
+Flow('cdp-nmo','cdp-rad cdpv','taupmo velocity=${SOURCES[1]}')
+Flow('cdp-dip','cdp-nmo','dip2 niter=10 eps=20 lam=10 order=2')
+Flow('cdp-pik','cdp-dip','pick0')
+Plot('sig','cdp-rad','grey wanttitle=n')
+Plot('pik','cdp-pik',
+          '''window j2=40 |
+          graph min2=0 max2=999 pad=n
+          yreverse=y wanttitle=n plotcol=6 wantaxis=n''')
+Combine('cdp-pick','sig pik','Overlay',result=1)
+          
+############################################################################
+
+End()
