@@ -1,0 +1,12 @@
+src = "axis coltab device gainpar genpen plot polygon stdplot vplot"
+
+sources = map(lambda x: x+'.c',src.split()) 
+includes = map(lambda x: x+'.h',src.split())
+
+env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g',
+                  CPPPATH='../../seis/rsf')
+
+env.StaticLibrary('librsfplot',sources)
+env.Command('rsfplot.h',includes,"cat $SOURCES > $TARGET")
+
+
