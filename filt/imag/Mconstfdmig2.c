@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
     sf_putint(imag,"n2",nz);
     sf_putfloat(imag,"d2",dz);
 
-
     if (NULL != sf_getstring("movie")) {
 	movie = sf_output("movie");
 	sf_putint(movie,"n2",nz);

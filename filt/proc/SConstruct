@@ -43,7 +43,7 @@ src2 = '''
 allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
 callp2 causint cbanded cmatmult compress copy cosft createhelix createmshelix
 createnhelix ctoeplitz cweight deburst dijkstra dip2 dip3 dips div1 div2 divn
-edge expder2 explanesignoi expont2 slinint
+edge expder2 explanesignoi expont2 expont slinint
 '''
 
 for source in Split(src2):

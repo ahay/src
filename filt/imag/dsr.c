@@ -116,7 +116,7 @@ void dsr (bool inv /* modeling or migration */,
 		k = pshift(w,r,vt[iz],vt[iz+1])+
 		    pshift(w,s,vt[iz],vt[iz+1]);
 		
-		a = crealf(0.5*vt[iz]/w*csqrt(k*k-kx*kx));
+		a = crealf(0.5*vt[iz]/w*csqrtf(k*k-kx*kx));
 		if (a >= 0. && a <= 1.) {
 		    a = acosf(a)/da;
 		    ia = a;
