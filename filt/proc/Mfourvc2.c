@@ -169,6 +169,8 @@ int main(int argc, char* argv[])
 		    den += stack2[iv][ix][i2];
 		}
 
+		den *= nh;
+
 		trace[i1] = den > 0.? num/den: 0.;
 	    }
 	    sf_write (trace, sizeof(float), n1, out);

@@ -12,7 +12,6 @@ static float complex *pp;
 void gazdag_init (float eps1, int nt1, float dt1, 
 		  int nz1, float dz1, float *vt1, float *gt1)
 {
-    eps = eps1; 
     nt = nt1; dt = dt1; 
     nz = nz1; dz = dz1;
     vt = vt1; gt = gt1;
@@ -24,6 +23,9 @@ void gazdag_init (float eps1, int nt1, float dt1,
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
+
+    eps = eps1*dw; 
+    eps *= eps;
 }
 
 void gazdag_close ()
@@ -34,9 +36,9 @@ void gazdag_close ()
 
 void gazdag (bool inv, float k2, float complex *p, float complex *q)
 {
-    int it,iz,iw;
-    float complex cshift, w2, kz;
-    float gx, gz;
+    int it,iz,iw,ig;
+    float complex cshift;
+    float w, w2, kz, gz, add, kz2;
 	
     if (inv) { /* modeling */
 	for (iw=0; iw<nw; iw++) {
@@ -47,11 +49,13 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	for (iz=nz-2; iz>=0; iz--) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
-		w2 = eps*dw + I*(fw + iw*dw);
-		w2 = w2*w2 + vt[iz] * k2;
-	
-		cshift = cexpf(-csqrtf(w2)*dz);
-		pp[iw] = pp[iw]*cshift + q[iz];
+/*
+  w2 = eps*dw + I*(fw + iw*dw);
+  w2 = w2*w2 + vt[iz] * k2;
+  
+  cshift = cexpf(-csqrtf(w2)*dz);
+  pp[iw] = pp[iw]*cshift + q[iz];
+*/
 	    }
 	}
 
@@ -77,26 +81,39 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
       
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
+		w = fw + iw*dw;
+
+		w2 = w*w;
+		kz = w2 - vt[iz] * k2;
+
 		/* accumulate image (summed over frequency) */
 		q[iz] += pp[iw];
 
-		w2 = eps*dw + I*(fw + iw*dw);
-		w2 *= w2;
-		kz = w2 + vt[iz] * k2;
+		if ((nz-1)*(nz-1)*kz <= iz*iz*w2) {
+		    pp[iw] = 0.;
+		    continue;
+		}
+
+		kz /= w2;
 	
 		if (NULL != gt && 0. != gt[iz]) {
-		    gz = gt[iz] * vt[iz] * dz * sqrt(vt[iz]);
-		    gx = gz * sqrtf(k2 * vt[iz]/cabsf(kz));	
-		    kz = w2*(0.5-gx+sqrtf(fabsf(0.25-gx-gz*gz))) + 
-			vt[iz] * k2;
+		    gz = gt[iz] * vt[iz] * w2 * dz;		    
+		    kz2 = kz;
+		    for (ig=0; ig < 5; ig++) {
+			add = 0.25 * kz * kz + gz * vt[iz] *
+			    (2.*sqrtf(k2 * kz2) + gz);
+			if (add < 0.) break;
+			kz2 = 0.5 * kz + sqrtf(add);
+		    }
+		    kz = kz2;
 		}
 
 		/* extrapolate down one migrated time step */
-		cshift = conjf(cexpf(-csqrtf(kz)*dz));
+		cshift = cexpf(I*sqrtf(kz)*w*dz);	    
 		pp[iw] *= cshift;
 	    }
 	}
     }
 }
 
-/* 	$Id: gazdag.c,v 1.5 2003/11/22 22:42:28 fomels Exp $	 */
+/* 	$Id: gazdag.c,v 1.6 2003/12/04 16:06:20 fomels Exp $	 */
