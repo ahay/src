@@ -1,6 +1,6 @@
 /* FFT transform on extra axis.
 
-Input and output are complex data.
+Input and output are complex data. The input is padded by factor pad.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -27,6 +27,7 @@ int main (int argc, char **argv)
     int n1, nx, n3, axis, dim, n[SF_MAX_DIM];	/* dimensions */
     int i1, ix, i3, j;       /* loop counters 	*/
     int nk;		/* number of wavenumbers */	
+    int npad;           /* padding */
 
     float dx;		/* space sampling interval */
     float dk;	        /* wavenumber sampling interval */
@@ -105,8 +106,11 @@ int main (int argc, char **argv)
 	sprintf(varname,"c%d",axis);
 	sf_putfloat(out,varname,x0);
 
-	/* determine wavenumber sampling, pad by 2 */
-	nk = nx*2;
+	if (!sf_getint("pad",&npad)) npad=2;
+	/* padding factor */
+
+	/* determine wavenumber sampling */
+	nk = nx*npad;
 	dk = 1./(nk*dx);
 	k0 = -0.5/dx;
 
