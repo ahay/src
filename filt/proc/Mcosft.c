@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
 	
 	for (i=0; i <= dim1; i++) {
 	    if (!sign[i]) continue;
-	    cosft_init(n[i],o[i],d[i]);
+	    cosft_init(n[i] /* ,o[i],d[i] */);
 
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
@@ -87,5 +87,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mcosft.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mcosft.c,v 1.4 2003/12/04 05:13:21 fomels Exp $	 */
 

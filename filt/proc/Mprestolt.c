@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     /* padding on the time axis */
     nw=sf_npfar(2*(nw-1));
 
-    cosft_init(nw, w0, dw);
+    cosft_init(nw /* , w0, dw */);
     dw = SF_PI/(nw*dw);
     dh *= SF_PI;
     dx *= SF_PI;
