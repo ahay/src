@@ -1,8 +1,7 @@
 /* Convert a SEG-Y or SU dataset to RSF.
 
 Data headers and trace headers are separated from the data.
-*/
-/*
+
 SEGY key names:
 
 tracl: trace sequence number within line 0
@@ -461,4 +460,4 @@ int main(int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: segyread.c,v 1.3 2004/06/29 19:51:05 fomels Exp $	 */
+/* 	$Id$	 */

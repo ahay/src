@@ -39,7 +39,9 @@ except: # local version
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src2 = 'allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg'
+src2 = '''
+allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
+'''
 
 for source in Split(src2):
     env.Include(source,prefix='')

@@ -1,6 +1,37 @@
+/* Butterworth filtering. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+/* Implementation is inspired by D. Hale and J.F. Claerbout, 1983, Butterworth
+ * dip filters: Geophysics, 48, 1033-1038. */
+    
 #include <rsf.h>
+/*^*/
 
 #include "butter.h"
+
+#ifndef _butter_h
+
+typedef struct Butter *butter;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Butter {
     bool low;
@@ -9,7 +40,10 @@ struct Butter {
 };
 
 
-butter butter_init(bool low, float cutoff, int nn)
+butter butter_init(bool low     /* low-pass (or high-pass) */, 
+		   float cutoff /* cut off frequency */, 
+		   int nn       /* number of poles */)
+/*< initialize >*/
 {
     int j;
     float arg, ss, sinw, cosw, fact;
@@ -50,13 +84,15 @@ butter butter_init(bool low, float cutoff, int nn)
 }
 
 void butter_close(butter bw)
+/*< Free allocated storage >*/
 {
     free(bw->den[0]);
     free(bw->den);
     free(bw);
 }
 
-void butter_apply (const butter bw, int nx, float *x)
+void butter_apply (const butter bw, int nx, float *x /* data [nx] */)
+/*< filter the data (in place) >*/
 {
     int ix, j, nn;
     float d0, d1, d2, x0, x1, x2, y0, y1, y2;

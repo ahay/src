@@ -50,18 +50,27 @@ static void forw(int i2, const float* t1, float* t2)
     } else if (i2 > n2+rect-1) {
 	back(2*(n2+rect-1)-i2,t2,t1);
     } else if (i2 == rect-1 || i2 == n2+rect-1) {
-	for (i1=0; i1 < n1-1; i1++) {
+
+	sf_warning("forw *");
+
+	for (i1=0; i1 < n1; i1++) {
 	    t2[i1] += t1[i1];
 	}
     } else {
+	sf_warning("forw %d",i2-rect);
+
 	for (i1=0; i1 < n1; i1++) {
 	    t = i1 + p[i2-rect][i1];
 	    if (t < 0.) continue;
 	    it = t;
-	    t -= it;
-	    if (it >=0 && it < n1-1) {
-		t2[it]   += t1[i1]*(1.-t);
-		t2[it+1] += t1[i1]*t;
+	    if (it >=0 && it < n1) {
+		t -= it;
+		if (it < n1-1) {
+		    t2[it]   += t1[i1]*(1.-t);
+		    t2[it+1] += t1[i1]*t;
+		} else if (t==0.) {
+		    t2[it]   += t1[i1];
+		}
 	    }
 	}
     }
@@ -77,17 +86,27 @@ static void back(int i2, float* t1, const float* t2)
     } else if (i2 > n2+rect-1) {
 	forw(2*(n2+rect-1)-i2,t2,t1);
     } else if (i2 == rect-1 || i2 == n2+rect-1) {
-	for (i1=0; i1 < n1-1; i1++) {
+
+	sf_warning("back *");
+
+	for (i1=0; i1 < n1; i1++) {
 	    t1[i1] += t2[i1];
 	}	
     } else {
+	sf_warning("back %d",i2-rect);
+
 	for (i1=0; i1 < n1; i1++) {	    
 	    t = i1 + p[i2-rect][i1];
 	    if (t < 0.) continue;
 	    it = t;
-	    t -= it;
-	    if (it >=0 && it < n1-1) 
-		t1[i1] += t2[it]*(1.-t) + t2[it+1]*t;
+	    if (it >=0 && it < n1) {
+		t -= it;
+		if (it < n1-1) {
+		    t1[i1] += t2[it]*(1.-t) + t2[it+1]*t;
+		} else if (t==0.) {
+		    t1[i1] += t2[it];
+		}
+	    }
 	}
     }
 }
@@ -114,37 +133,37 @@ static void shift(bool adj, float** in)
     if (adj) {
 	for (i2=0; i2 < n2+rect; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace2[i1]=in[i2+rect][i1];
+		trace1[i1]=in[i2+rect][i1];
 	    }
 	    
 	    for (ir=i2+rect-1; ir >= i2; ir--) {
 		for (i1=0; i1 < n1; i1++) {
-		    trace1[i1] = trace2[i1];
-		    trace2[i1]=0.;
+		    trace2[i1] = trace1[i1];
+		    trace1[i1]=0.;
 		}
-		back(ir,trace2,trace1);
+		back(ir,trace1,trace2);
 	    }
 	    
 	    for (i1=0; i1 < n1; i1++) {
-		in[i2][i1] -= trace2[i1];
+		in[i2][i1] -= trace1[i1];
 	    }
 	}
     } else {
 	for (i2=n2+rect-1; i2 >= 0; i2--) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace2[i1]=in[i2][i1];
+		trace1[i1]=in[i2][i1];
 	    }
 	    
 	    for (ir=i2; ir < i2+rect; ir++) {
+		forw(ir,trace1,trace2);
 		for (i1=0; i1 < n1; i1++) {
 		    trace1[i1] = trace2[i1];
 		    trace2[i1]=0.;
 		}
-		forw(ir,trace1,trace2);
 	    }
 	    
 	    for (i1=0; i1 < n1; i1++) {
-		in[i2+rect][i1] -= trace2[i1];
+		in[i2+rect][i1] -= trace1[i1];
 	    }
 	}
     }
@@ -164,18 +183,18 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (i1=0; i1 < n1; i1++) {
 	    tmp[i2+rect][i1] = adj? y[i2*n1+i1]: x[i2*n1+i1];
 	}
-	if (!adj) smooth (tr,0,1,false,tmp[i2+rect]);
+	if (adj) smooth (tr,0,1,false,tmp[i2+rect]);
     }
 
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    if (adj) {
+/*	    if (adj) {
 		tmp[rect-1-i2][i1]  = tmp[rect+i2][i1];
 		tmp[n2+rect+i2][i1] = tmp[n2+rect-1-i2][i1];
-	    } else {
+		} else { */
 		tmp[rect-1-i2][i1]  = 0.;
 		tmp[n2+rect+i2][i1] = 0.;
-	    }
+/*	    } */
 	}
     }
     
@@ -190,7 +209,8 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 
     shift(true,tmp);
     roll(true,tmp);
-   
+
+/*   
     if (!adj) {
 	for (i2=0; i2 < rect; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
@@ -199,14 +219,16 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	    }
 	}
     } 
- 
+*/ 
+
     for (i2=0; i2 < n2; i2++) {
-	if (adj) smooth (tr,0,1,false,tmp[i2+rect]);
+	if (!adj) smooth (tr,0,1,false,tmp[i2+rect]);
 	for (i1=0; i1 < n1; i1++) {
 	    if (adj) {
 		x[i2*n1+i1] += tmp[i2+rect][i1];
 	    } else {
 		y[i2*n1+i1] += tmp[i2+rect][i1];
+		
 	    }
 	}
     }
