@@ -11,7 +11,7 @@ Takes: < warp1.rsf add=dwarp.rsf > warp2.rsf
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, n2, m2, order, i;
+    int i1, n1, i2, n2, m2, i3, n3, order, i;
     float *first, *second, o1, d1, x, f, f1, t;
     eno ent;
     sf_file in, sum, add;
@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"o1",&o1)) o1 = 0.;
 
     if(!sf_histint(in,"n2",&m2)) m2 = 1;
+    n3 = sf_leftsize(in,2);
 
     if(!sf_getint("accuracy",&order)) {
 	/* Interpolation accuracy order */
@@ -44,29 +45,31 @@ int main(int argc, char* argv[])
     first = sf_floatalloc (n1); 
     second = sf_floatalloc (n2);
 
-    for (i2=0; i2 < m2; i2++) {
-	sf_floatread(first,n1,add);
-	sf_floatread(second,n1,in);
+    for (i3=0; i3 < n3; i3++) {
+	for (i2=0; i2 < m2; i2++) {
+	    sf_floatread(first,n1,add);
+	    sf_floatread(second,n1,in);
+	    
+	    for (i1=n1; i1 < n2; i1++) {
+		second[i1] = (7.*second[i1-1]-5.*second[i1-2]+second[i1-3])/3.;
+	    }
 
-	for (i1=n1; i1 < n2; i1++) {
-	    second[i1] = (7.*second[i1-1]-5.*second[i1-2]+second[i1-3])/3.;
+	    eno_set (ent,second);
+	    
+	    for (i1=0; i1 < n1; i1++) {
+		t = (o1+i1*d1);
+		x = (first[i1] + t - o1)/d1;
+		i = floorf(x); x -= i;
+		eno_apply (ent, i, x, &f, &f1, FUNC);
+		first[i1] += f;
+	    }
+	    
+	    sf_floatwrite(first,n1,sum);
 	}
-
-	eno_set (ent,second);
-
-	for (i1=0; i1 < n1; i1++) {
-	    t = (o1+i1*d1);
-	    x = (first[i1] + t - o1)/d1;
-	    i = floorf(x); x -= i;
-	    eno_apply (ent, i, x, &f, &f1, FUNC);
-	    first[i1] += f;
-	}
-
-	sf_floatwrite(first,n1,sum);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarpadd.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */
+/* 	$Id: Mwarpadd.c,v 1.6 2004/05/11 14:10:22 fomels Exp $	 */

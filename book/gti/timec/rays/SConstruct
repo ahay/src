@@ -26,7 +26,7 @@ Combine('straight','const cell2','Overlay',result=1)
 Flow('cgrad',None,
           '''spike n1=601 d1=0.01 |
           headermath output="1/sqrt(1-N*0.00165)" |
-          spray n2=1201 d2=0.01 o2=0''')
+          spray axis=2 n=1201 d=0.01 o=0''')
 Plot('cgrad','cgrad',grey)
 Plot('ccell2','cgrad',rays)
 Combine('parab','cgrad ccell2','Overlay',result=1)

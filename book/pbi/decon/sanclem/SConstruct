@@ -99,7 +99,10 @@ for hz in freq:
     mod = 'clem%d' % hz
     Flow(mod,'ai','ai2refl f=%d' % hz)
     Plot(mod,mod,
-         'grey title="Seismic Model (%d-Hz Ricker)" color=G' % hz)
+         '''
+         grey title="Seismic Model (%d-Hz Ricker)" color=G
+         label1="Time (s)"
+         ''' % hz)
 Combine('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso',result=1)
 
 Flow('vel2','topvel vel','cat axis=1 ${SOURCES[1]} ${SOURCES[0]}')
@@ -111,6 +114,13 @@ Flow('mod','topai ai vel2',
      ai2refl f=120 |
      time2depth nz=578 dz=0.1 velocity=${SOURCES[2]}
      ''')
+Plot('mod','mod',
+     'grey title="Reflectivity Model" label1="Depth (m)" color=G')
+
+Flow('zof','mod vel2',
+     'sstep1 eps=0.01 nt=750 dt=0.0001 velocity=${SOURCES[1]} inv=1')
+Plot('zof','zof',
+     'grey title="Exploding Reflector Data" label1="Time (s)" color=G')
 
 ###########################################################################
 End()

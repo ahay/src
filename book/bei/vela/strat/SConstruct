@@ -34,7 +34,7 @@ for alpha in [0,0.5]:
     strat = 'strat%g' % alpha + sfsuffix
     Flow(nmo,['model',vel],
          '''
-         spray n2=20 o2=0.6 d2=0.16 |
+         spray axis=2 n=20 o=0.6 d=0.16 |
          inmo velocity=${SOURCES[1]} half=n
          ''')
     Flow(strat,[nmo+sfsuffix,vel],

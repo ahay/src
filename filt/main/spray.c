@@ -12,7 +12,7 @@ This operation is adjojnt to sfstack.
 
 int main(int argc, char* argv[])
 {
-    int j, n1, n2, n3, i2, i3, ni, esize;
+    int j, n1, n2, n3, i2, i3, ni, axis, esize;
     float f;
     size_t n;
     sf_file in, out;
@@ -25,18 +25,35 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"esize",&esize)) sf_error("No esize= in input");
 
-    n = (size_t) (n1*esize);
+    if (!sf_getint("axis",&axis)) axis=2;
+    /* which axis to spray */
 
-    if (!sf_getint("n2",&n2)) sf_error("Need n2=");
-    /* Size of the newly created dimension */ 
-    sf_putint(out,"n2",n2);
-    if (sf_getfloat("d2",&f)) sf_putfloat(out,"d2",f);
-    /* Sampling of the newly created dimension */ 
-    if (sf_getfloat("o2",&f)) sf_putfloat(out,"o2",f);
-    /* Origin of the newly created dimension */
+    n = (size_t) esize;
+    for (j=0; j < axis-1; j++) {
+	sprintf(key2,"n%d",j+1);
+	if (!sf_histint(in,key2,&ni)) break;
+	n *= ni;
+    }
+
+    if (!sf_getint("n",&n2)) sf_error("Need n=");
+    /* Size of the newly created dimension */    
+    sprintf(key1,"n%d",axis);
+    sf_putint(out,key1,n2);
+
+    if (sf_getfloat("d",&f)) {
+	/* Sampling of the newly created dimension */ 
+	sprintf(key1,"d%d",axis);
+	sf_putfloat(out,key1,f);
+    }
     
+    if (sf_getfloat("o",&f)) {
+	/* Origin of the newly created dimension */
+	sprintf(key1,"o%d",axis);
+	sf_putfloat(out,key1,f);
+    }
+
     n3 = 1;
-    for (j=2; j < SF_MAX_DIM; j++) {
+    for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j+1);
 	sprintf(key1,"n%d",j);
 	if (!sf_histint(in,key1,&ni)) break;
@@ -74,4 +91,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: spray.c,v 1.5 2004/04/19 21:51:36 fomels Exp $	 */
+/* 	$Id: spray.c,v 1.6 2004/05/11 14:10:22 fomels Exp $	 */

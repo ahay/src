@@ -94,13 +94,11 @@ Flow('khaled1','nails',
      headermath output="input-T"
      ''')
 
-Flow('khaled2','khaled1','spray n2=116 d2=1 o2=18')
-Flow('time2','khaled1','headermath output=T | spray n2=116 d2=1 o2=18')
+Flow('khaled2','khaled1','spray n=116 d=1 o=18')
+Flow('time2','khaled1','headermath output=T | spray n=116 d=1 o=18')
 
-Flow('khaled3','khaled2',
-     'spray n2=132 d2=1 o2=15 | transp plane=23')
-Flow('time3','time2',
-     'spray n2=132 d2=1 o2=15 | transp plane=23')
+Flow('khaled3','khaled2','spray axis=3 n=132 d=1 o=15')
+Flow('time3','time2',    'spray axis=3 n=132 d=1 o=15')
 
 warp2gamma = '''
 headermath output="input+T" |
@@ -524,9 +522,10 @@ Plot('pcube','pcube',plot3('PP'))
 Plot('wcube','wcube',plot3('Warped PS (Before)'))
 Combine('cube0','pcube wcube','SideBySideAniso',result=1)
 
-Flow('Warp','Warp5','spray n2=132 d2=1 o2=15 | transp plane=23')
+Flow('Warp','Warp5','spray axis=3 n=132 d=1 o=15')
 Flow('wcube2',['pscube','pcube','Warp'],
      warp0 + ' | costaper nw1=300')
+Plot('wcube2','wcube2',plot3('Warped PS (Before)'))
 
 ####################################################################
 # SPECTRAL BALANCING
@@ -590,10 +589,37 @@ def blindpick3(rect1=10,rect2=10,rect3=10):
     ''' % (rect1,rect2,rect3)
 
 Flow('ppick0',['sscan','mask2'],
-     'transp plane=24 | ' + blindpick3(64,64,64))
+     'transp plane=24 | %s | transp plane=23' % blindpick3(4,64,64))
+Flow('ppick1',['ppick0','time3'],'math T=${SOURCES[1]} output="(input-1)*T" ')
 
-Plot('wcube2','wcube2',plot3('Warped PS (After)'))
-Combine('cube2','pcube wcube2','SideBySideAniso',result=1)
+###################################################################
+# WARPING
+###################################################################
+
+#Flow(['wwarp','wcube3','ww','aa'],
+#     ['ssresh','ppresh','ppick1','Warp'],
+#     warp1(20,220,440,440))
+
+Plot('wcube3','wcube3',plot3('Warped and Balanced PS (After)'))
+Combine('cube3','ppresh wcube3','SideBySideAniso',result=1)
+
+def colorplot3(title):
+    return '''
+    window min1=0.5 max1=2.5 |
+    byte allpos=y |
+    grey3 flat=y frame3=%d frame2=%d frame1=527 title="%s"
+    point1=0.5 point2=0.5 color=j bias=1
+    label1="Time (s)" label2="In-line" label3="Cross-line"
+    ''' % (line-15,trace-18,title)
+
+Flow('ggamma',['wwarp','time3'],warp2gamma2)
+Result('ggamma','ggamma',colorplot3('Vp/Vs'))
+
+Flow('wcube4',['pscube','pcube','wwarp'],
+     warp0 + ' | costaper nw1=300')
+
+Plot('wcube4','wcube4',plot3('Warped PS (After)'))
+Combine('cube2','pcube wcube4','SideBySideAniso',result=1)
 
 ###########################################################################
 End()

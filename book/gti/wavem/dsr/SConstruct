@@ -102,22 +102,22 @@ Flow('noise','const',
           ''',stdin=0)
 Flow('vofz','const',
           '''
-          window n2=1 | headermath output='1+0.01*N' | spray n2=256 o2=0 d2=1
+          window n2=1 | headermath output='1+0.01*N' | spray n=256 o=0 d=1
           ''')
 Flow('vofx','const',
           '''
           window n1=1 | headermath output='1+0.01*N' |
-          spray n2=129 o2=0 d2=1 | transp
+          spray n=129 o=0 d=1 | transp
           ''')
 Flow('vofx2','const',
           '''
           window n1=1 | headermath output='1+0.01*N*(1+0.001*N)' | \
-          spray n2=129 o2=0 d2=1 | transp
+          spray n=129 o=0 d=1 | transp
           ''')
 Flow('vofx3','const',
           '''
           window n1=1 | headermath output='1/sqrt(1-0.00375*N)' | \
-          spray n2=129 o2=0 d2=1 | transp
+          spray n=129 o=0 d=1 | transp
           ''')
 Flow('pgauss',None,
           'spike n1=129 n2=400 d1=1 d2=1 mag=2 | gauss c1=33')
