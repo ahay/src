@@ -32,8 +32,8 @@ Makefile.dependencies:: *.c
 	$(CC) $(CFLAGS) $(DEPEND) $^ > Makefile.dependencies
 
 clean:
-	touch junk.o junk.x junk.H
-	rm *.o *.x *.H
+	touch junk.o junk.x junk.H junk.v
+	rm *.o *.x *.H *.v
 
 distclean:
 	${MAKE} clean
