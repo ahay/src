@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
     /* sampling */
 
-    sf_putstring(mod,"label1","Time (sec)");
+    sf_putstring(mod,"label1","Time (s)");
     sf_putstring(mod,"label2","Lateral (km)");
 
     imp1 = sf_floatalloc(large);
@@ -153,5 +153,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msigmoid.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
+/* 	$Id: Msigmoid.c,v 1.3 2004/04/14 13:44:55 fomels Exp $	 */
 
