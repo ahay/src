@@ -1,0 +1,57 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+##########################################################################
+Book()
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/chevron'
+
+def read_chevron(target=None,source=None,env=None):
+    inp = open(str(source[0]),'r')
+    file = str(target[0])
+    out = open(file,'w')
+    n2=0
+    for line in inp.readlines():
+        n2=n2+1
+        out.write(' '.join(line.split()[2:])+'\n')
+    out.write("n1=3 n2=%d esize=0 in=%s data_format=ascii_float\n" %
+              (n2,file))
+    out.close()
+    inp.close()
+
+Chevron = Builder(action=Action(read_chevron),src_suffix='.5',suffix='.T')
+env = Environment(BUILDERS={'Chevron':Chevron})
+
+sets = ['seismic','well']
+baseplate = -2782
+def grey(title):
+    return '''
+    grey allpos=y clip=2000 crowd=0.88 transp=n yreverse=n
+    title="%s" label1="X axis" label2="Y axis"
+    ''' % title
+
+for data in sets:
+    file = data[0]+'2000'
+    Fetch(file+'.5',datdir)
+    env.Chevron(file)
+    Flow(file,file+'.T','dd data_format=native_float')
+    Flow(data,file,
+         '''
+         window n1=1 f1=2 | headermath h=0 output=h-%g |
+         bin interp=1 nx=40 ny=40 xkey=0 ykey=1 head=$SOURCE
+         xmin=2000 xmax=28000 ymin=-25000 ymax=12000
+         ''' % baseplate)
+    Plot(data,data,grey('Binned %s data' % data))
+Combine('wellseis',sets,'SideBySideIso',result=1)
+
+Flow('sx',['seismic','s2000'],'frame xyz=${SOURCES[1]} base=%g' % baseplate)
+Plot('sx','sx',grey('Extended seismic'))
+
+###########################################################################
+End()
