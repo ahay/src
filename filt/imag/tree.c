@@ -201,24 +201,28 @@ void tree_build(void)
 
 		    if (3==order) {
 			if (ia == 0) {
-			    node->n1 = 2;
+			    if (node->n1 > 1) node->n1 = 2;
 			} else if (x != 1. && a != 0. && a != 1.) {
 				AddChild(Tree,i-1,0,2,node);
 			}
 
 			if (ix == 0) {
-			    node->n2 = 2;
+			    if (node->n2 > 1) node->n2 = 2;
 			} else if (x != 0. && x != 1. && a != 1.) {
 			    AddChild(Tree,i-na,2,0,node);
 			}
 
-			if (node->n1 == order && node->n2 == order &&
-			    x != 0. && a != 0.) {
-			    if (a != 1.) AddChild(Tree,i+na-1,1,2,node);
-			    if (x != 1.) AddChild(Tree,i-na+1,2,1,node);
-			    if (a != 1. && x != 1.) 
-				AddChild(Tree,i-na-1,2,2,node);
+			if (x != 0. && a != 0. && 
+			    node->n1 > 1 && node->n2 > 1) {
+			    if (node->n1 == 3 && a != 1.) { 
+				AddChild(Tree,i+na-1,1,2,node);
+				if (node->n2 == 3 && x != 1.)
+				    AddChild(Tree,i-na-1,2,2,node);
+			    }
+			    if (node->n2 == 3 && x != 1.) 
+				AddChild(Tree,i-na+1,2,1,node);
 			}
+
 		    }
 		} else { /* hits an x wall */
 		    node->w1 = a;
@@ -244,23 +248,26 @@ void tree_build(void)
 
 		    if (3==order) {
 			if (ia == 0) {
-			    node->n1 = 2;
+			    if (node->n1 > 1) node->n1 = 2;
 			} else if (z != 1. && a != 0. && a != 1.) {
 				AddChild(Tree,i-1,0,2,node);
 			}
 
 			if (iz == 0) {
-			    node->n2 = 2;
+			    if (node->n2 > 1) node->n2 = 2;
 			} else if (z != 0. && z != 1. && a != 1.) {
 			    AddChild(Tree,i-nax,2,0,node);
 			}
-
-			if (node->n1 == order && node->n2 == order &&
-			    z != 0. && a != 0.) {
-			    if (a != 1.) AddChild(Tree,i+nax-1,1,2,node);
-			    if (z != 1.) AddChild(Tree,i-nax+1,2,1,node);
-			    if (a != 1. && z != 1.) 
-				AddChild(Tree,i-nax-1,2,2,node);
+			
+			if (z != 0. && a != 0. && 
+			    node->n1 > 1 && node->n2 > 1) {
+			    if (node->n1 == 3 && a != 1.) { 
+				AddChild(Tree,i+nax-1,1,2,node);
+				if (node->n2 == 3 && z != 1.)
+				    AddChild(Tree,i-nax-1,2,2,node);
+			    }
+			    if (node->n2 == 3 && z != 1.) 
+				AddChild(Tree,i-nax+1,2,1,node);
 			}
 		    }
 		}

@@ -78,63 +78,104 @@ int main(int argc, char* argv[])
 
     dw *= SF_PI;
 
-/**********************/
-  vel = 0.5*vel
-  voff (:,:nx-1) = sqrt(vel(:,:nx-1)*vel(:,2:)) 
-  dx = 0.25/(dx*dx)
+    for (ix=0; ix < nx-1; ix++) {
+	for (iz=0; iz < nz; iz++) {
+	    vel[ix][iz] *= 0.5; /* post-stack exploding reflector */
+	    voff[ix][iz] = sqrtf(vel[ix][iz]*vel[ix+1][iz]);
+	}
+    }
+    for (iz=0; iz < nz; iz++) {
+	vel[nx-1][iz] *= 0.5;
+    }
+    dx = 0.25/(dx*dx);
 
-  allocate (depth (nz,nx))
-  allocate (time (nx), ctime (nx), tt (nx))
-  allocate (diag1 (nx), offd1 (nx), diag2 (nx), offd2 (nx))
-  if (inv) then
-     call sep_read (depth)
-  else
-     depth = 0.
-  end if
-  call ctridiagonal_init (nx, slv)
+    depth = sf_floatalloc2(nz,nx);
+    time = sf_floatalloc(nx);
+    ctime = sf_complexalloc (nx);
+    tt = sf_complexalloc (nx);
+    diag1 = sf_complexalloc (nx);
+    diag2 = sf_complexalloc (nx);
+    offd1 = sf_complexalloc (nx);
+    offd2 = sf_complexalloc (nx);
 
-!           (1. + k2*0.25*(1.-w*dz)/(w*w))/ &
-!           (1. + k2*0.25*(1.+w*dz)/(w*w))
+    if (inv) {
+	sf_read(depth[0],sizeof(float),nz*nx,in);
+    } else {
+	for (ix=0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		depth[ix][iz] = 0.;
+	    }
+	}
+    }
+    
+    slv = ctridiagonal_init (nx);
 
-  do iw = 1, nw
-     write (0,*) iw, nw
-     if (inv) then ! modeling
-        w = cmplx(eps*dw,(iw-1)*dw)
-        ctime (:) = depth (nz,:)
-        do iz = nz-1, 1, -1
-           diag1 =   -2.*(beta - (vel(iz,:)/w-dz)*vel(iz,:)*dx/w)
-           diag2 = 1.-2.*(beta - (vel(iz,:)/w+dz)*vel(iz,:)*dx/w)
-           
-           a = cexp(-0.5*w/(vel(iz,1)*sqrt(dx)))
+/*           (1. + k2*0.25*(1.-w*dz)/(w*w))/ & */
+/*           (1. + k2*0.25*(1.+w*dz)/(w*w))    */
 
-           diag1(1) =    (a-2.)*(beta - (vel(iz,1)/w-dz)*vel(iz,1)*dx/w)
-           diag2(1) = 1.+(a-2.)*(beta - (vel(iz,1)/w+dz)*vel(iz,1)*dx/w)
+    for (iw = 0; iw < nw; iw++) {
+	sf_warning("frequency %d of %d",iw+1, nw);
 
-           a = cexp(-0.5*w/(vel(iz,nx)*sqrt(dx)))
+	if (inv) { /* modeling */
+	    w = dw*(eps+I*(iw-1));
 
-           diag1(nx) =    (a-2.)*(beta - (vel(iz,nx)/w-dz)*vel(iz,nx)*dx/w)
-           diag2(nx) = 1.+(a-2.)*(beta - (vel(iz,nx)/w+dz)*vel(iz,nx)*dx/w)
+	    for (ix=0; ix < nx; ix++) {
+		ctime[ix] = depth[ix][nz-1];
+	    }
 
-           offd1 = beta - (voff(iz,:)/w-dz)*voff(iz,:)*dx/w
-           offd2 = beta - (voff(iz,:)/w+dz)*voff(iz,:)*dx/w
+	    for (iz = nz-2; iz >= 0; iz--) { /* step up */
 
-           tt(1) = diag1(1)*ctime(1) + offd1(1)*ctime(2)
-           tt(2:nx-1) = &
-                offd1(1:nx-2)*ctime(1:nx-2) + &
-                diag1(2:nx-1)*ctime(2:nx-1) + &
-                offd1(2:nx-1)*ctime(3:nx)
-           tt(nx) = offd1(nx-1)*ctime(nx-1) + diag1(nx)*ctime(nx)
+		for (ix=0; ix < nx; ix++) {
+		    vel0 = vel[ix][iz];
+		    diag1[ix] =   -2.*(beta - (vel0/w-dz)*vel0*dx/w);
+		    diag2[ix] = 1.-2.*(beta - (vel0/w+dz)*vel0*dx/w);
+		}           
+
+		vel0 = vel[0][iz];
+		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
+		
+		diag1[0] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
+		diag2[0] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
+
+		vel0 = vel[nx-1][iz];
+		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
+
+		diag1[nx-1] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
+		diag2[nx-1] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
+
+		for (ix=0; ix < nx-1; ix++) {
+		    vel0 = voff[ix][iz];
+		    offd1[ix] = beta - (vel0/w-dz)*vel0*dx/w;
+		    offd2[ix] = beta - (vel0/w+dz)*vel0*dx/w;
+		}
+
+		tt[0] = diag1[0]*ctime[0] + offd1[0]*ctime[1];
+		for (ix=1; ix < nx-1; ix++) {
+		    tt[ix] = 
+			offd1[ix-1]*ctime[ix-1] +
+			diag1[ix]*ctime[ix] + &
+			offd1[ix]*ctime[ix+1];
+		}
+		tt[nx-1] = offd1[nx-2]*ctime[nx-2] + diag1[nx-1]*ctime[nx-1];
  
-           ctime = ctime + tt
+		for (ix=0; ix < nx-1; ix++) {
+		    ctime[ix] += tt[ix];
+		}
 
-           call ctridiagonal_define (slv, diag2, offd2)
-           call ctridiagonal_solve (slv, ctime)
+		ctridiagonal_define (slv, diag2, offd2);
+		ctridiagonal_solve (slv, ctime);
 
-           ctime = ctime * cexp(-w*dz/vel(iz,:)) + depth (iz,:)     
-        end do
-        time = real (ctime)
-        call sep_write (time)
-     else ! migration
+		for (ix=0; ix < nx-1; ix++) {
+		    vel0 = vel[ix][iz];
+		    ctime[ix] = ctime[ix] * cexpf(-w*dz/vel0) + depth[ix][iz];
+		}
+	    }
+
+	    for (ix=0; ix < nx-1; ix++) {
+		time[ix] = crealf (ctime[ix]);
+	    }
+	    sf_write (time,sizeof(float),nx,out);
+	} else { /* migration */
         w = cmplx(eps*dw,-(iw-1)*dw)
         call sep_read (time)
         ctime = time
