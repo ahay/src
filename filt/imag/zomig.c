@@ -22,7 +22,7 @@
 #include <rsf.h>
 /*^*/
 
-#include "zom.h"
+#include "zomig.h"
 #include "fft2.h"
 #include "taper.h"
 #include "slowref.h"
@@ -91,11 +91,11 @@ void zom_init(bool verb_,
 	     ds);
 
     /* allocate storage */
-    ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
-    so = sf_floatalloc2(alx.n,aly.n); /* slowness */
-    sm = sf_floatalloc2 (nrmax,az.n); /* ref slowness squared*/
-    nr = sf_intalloc          (az.n); /* nr of ref slownesses */
-    wx = sf_complexalloc2(amx.n,amy.n);  /* x wavefield */
+    ss = sf_floatalloc2  (alx.n,aly.n); /* slowness */
+    so = sf_floatalloc2  (alx.n,aly.n); /* slowness */
+    sm = sf_floatalloc2   (nrmax,az.n); /* ref slowness squared*/
+    nr = sf_intalloc            (az.n); /* nr of ref slownesses */
+    wx = sf_complexalloc2(amx.n,amy.n); /* x wavefield */
 
     /* precompute taper */
     taper2_init(amy.n,amx.n,
@@ -120,14 +120,6 @@ void zom_init(bool verb_,
 
 /*------------------------------------------------------------*/
 
-void zomig_init()
-/*< allocate migration storage >*/
-{
-    qq = sf_floatalloc2   (amx.n,amy.n);  /* image */
-}
-
-/*------------------------------------------------------------*/
-
 void zom_close(void)
 /*< free allocated storage >*/
 {
@@ -140,11 +132,17 @@ void zom_close(void)
 
 /*------------------------------------------------------------*/
 
+void zomig_init()
+/*< allocate migration storage >*/
+{
+    qq = sf_floatalloc2(amx.n,amy.n);
+}
 void zomig_close()
 /*< free migration storage >*/
 {
     free( *qq); free( qq);
 }
+
 /*------------------------------------------------------------*/
 
 void zomig(bool inv  /* forward/adjoint flag */, 
@@ -180,7 +178,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		/* upward continuation */
 		slice_get(slow,iz-1,ss[0]);
 		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr(w,wx,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 
@@ -209,7 +207,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		/* downward continuation */
 		slice_get(slow,iz+1,ss[0]);
 		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr(w,wx,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 		slice_get(imag,iz+1,qq[0]); /* imaging */
@@ -247,7 +245,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 	    for (iz=az.n-1; iz>0; iz--) {
 		slice_get(slow,iz-1,ss[0]);
 		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr(w,wx,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
@@ -264,7 +262,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 	    for (iz=0; iz<az.n-1; iz++) {
 		slice_get(slow,iz+1,ss[0]);
 		SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-		ssr(w,wx,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
@@ -299,7 +297,7 @@ void zowfl(slice data /*      data [nw][nmy][nmx] */,
 	for (iz=0; iz<az.n-1; iz++) {	    
 	    slice_get(slow,iz+1,ss[0]);
 	    SOOP( ss[ily][ilx] *=2; ); /* 2-way time */
-	    ssr(w,wx,so,ss,nr[iz],sm[iz]);
+	    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 	    taper2(true,true,wx);

@@ -1,4 +1,4 @@
-/* 3-D zero-offset modeling/migration with extended split-step. */
+/* 3-D common-azimuth modeling/migration with extended split-step. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,7 +18,7 @@
 */
 
 #include <rsf.h>
-#include "zom.h"
+#include "camig.h"
 
 int main (int argc, char *argv[])
 {
@@ -29,11 +29,11 @@ int main (int argc, char *argv[])
 
     int   nr;             /* number of reference velocities */
     float dt;             /* time error */
-    int   pmx,pmy;        /* padding in the k domain */
-    int   tmx,tmy;        /* boundary taper size */
+    int   pmx,pmy,phx;    /* padding in the k domain */
+    int   tmx,tmy,thx;    /* boundary taper size */
 
 
-    axa az,amx,amy,aw,alx,aly;
+    axa az,amx,amy,aw,alx,aly,ahx;
 
     sf_file Fs;    /*  slowness file S(nlx,nly,    nz   ) */
     sf_file Fi;    /*     image file R(nmx,nmy,nhx,nz   ) */
@@ -57,9 +57,11 @@ int main (int argc, char *argv[])
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
     if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on i-line wavenumber */
     if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on x-line wavenumber */
+    if (!sf_getint(  "phx",&phx ))  phx =     0; /* padding on offset wavenumber */
 
     if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper size */
     if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper size */
+    if (!sf_getint(  "thx",&thx ))  thx =     0; /* taper size */
 
     /* slowness parameters */
     Fs = sf_input ("slowness");
@@ -76,11 +78,12 @@ int main (int argc, char *argv[])
  
 	    iaxa(Fd,&amx,1); oaxa(Fw,&amx,1);
 	    iaxa(Fd,&amy,2); oaxa(Fw,&amy,2);
-	    ;                oaxa(Fw,&az ,3);
-	    iaxa(Fd,&aw ,3); oaxa(Fw,&aw ,4);
+	    iaxa(Fd,&ahx,3); oaxa(Fw,&ahx,3);
+	    ;                oaxa(Fw,&az ,4);
+	    iaxa(Fd,&aw ,4); oaxa(Fw,&aw ,5);
 
-	    data = slice_init(Fd,amx.n,amy.n,     aw.n);
-	    wfld = slice_init(Fw,amx.n*amy.n,az.n,aw.n);
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,     aw.n);
+	    wfld = slice_init(Fw,amx.n*amy.n*ahx.n,az.n,aw.n);
 	    break;
 	case 'd':
 	    if (inv) { /*   upward continuation */
@@ -90,7 +93,8 @@ int main (int argc, char *argv[])
 
 		iaxa(Fe,&amx,1); oaxa(Fd,&amx,1);
 		iaxa(Fe,&amy,2); oaxa(Fd,&amy,2);
-		iaxa(Fe,&aw ,3); oaxa(Fd,&aw ,3);
+		iaxa(Fe,&ahx,3); oaxa(Fd,&ahx,3);
+		iaxa(Fe,&aw ,4); oaxa(Fd,&aw ,4);
 
 	    } else {   /* downward continuation */
 		Fd = sf_input ( "in");
@@ -99,10 +103,11 @@ int main (int argc, char *argv[])
 		
 		iaxa(Fd,&amx,1); oaxa(Fe,&amx,1);
 		iaxa(Fd,&amy,2); oaxa(Fe,&amy,2);
-		iaxa(Fd,&aw ,3); oaxa(Fe,&aw ,3);
+		iaxa(Fd,&ahx,3); oaxa(Fe,&ahx,3);
+		iaxa(Fd,&aw ,4); oaxa(Fe,&aw ,4);
 	    }
-	    data = slice_init(Fd,amx.n,amy.n,aw.n);
-	    wfld = slice_init(Fe,amx.n,amy.n,aw.n);
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
+	    wfld = slice_init(Fe,amx.n*amy.n,ahx.n,aw.n);
 	    break;
 	case 'm':
 	default:
@@ -117,7 +122,8 @@ int main (int argc, char *argv[])
 		
 		iaxa(Fi,&amx,1); oaxa(Fd,&amx,1);
 		iaxa(Fi,&amy,2); oaxa(Fd,&amy,2);
-		iaxa(Fi,&az ,3); oaxa(Fd,&aw ,3);
+		iaxa(Fi,&ahx,3); oaxa(Fd,&ahx,3);
+		iaxa(Fi,&az ,4); oaxa(Fd,&aw ,4);
 		
 	    } else { /* migration */
 		Fd = sf_input ( "in");
@@ -126,37 +132,38 @@ int main (int argc, char *argv[])
 		
 		iaxa(Fd,&amx,1); oaxa(Fi,&amx,1);
 		iaxa(Fd,&amy,2); oaxa(Fi,&amy,2);
-		iaxa(Fd,&aw ,3); oaxa(Fi,&az ,3);
+		iaxa(Fd,&ahx,3); oaxa(Fi,&ahx,3);
+		iaxa(Fd,&aw ,4); oaxa(Fi,&az ,4);
 	    }
-	    data = slice_init(Fd,amx.n,amy.n,aw.n);
-	    imag = slice_init(Fi,amx.n,amy.n,az.n);
+	    data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
+	    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
 	    break;
     }
     
-    zom_init (verb,eps,dt,
+    cam_init (verb,eps,dt,
 	      az,aw,
-	      amx,amy,
+	      amx,amy,ahx,
 	      alx,aly,
-	      tmx,tmy,
-	      pmx,pmy,
+	      tmx,tmy,thx,
+	      pmx,pmy,phx,
 	      nr,slow);
 
     switch(mode[0]) {
 	case 'w':
-	    zowfl(    data,wfld);
+	    cawfl(    data,wfld);
 	    break;
 	case 'd':
-	    zodtm(inv,data,wfld);
+	    cadtm(inv,data,wfld);
 	    break;
 	case 'm':
 	default:
-	    zomig_init();
-	    zomig(inv,data,imag);
-	    zomig_close();
+	    camig_init();
+	    camig(inv,data,imag);
+	    camig_close();
 	    break;
     }
 
-    zom_close();
+    cam_close();
     
     exit (0);
 }

@@ -22,7 +22,7 @@
 #include <rsf.h>
 /*^*/
 
-#include "cam.h"
+#include "camig.h"
 #include "fft3.h"
 #include "taper.h"
 #include "slowref.h"
@@ -193,14 +193,6 @@ void cam_init(bool verb_,
 
 /*------------------------------------------------------------*/
 
-void camig_init()
-/*< allocate migration storage >*/
-{
-    qq = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* image */
-}
-
-/*------------------------------------------------------------*/
-
 void cam_close(void)
 /*< free allocated storage >*/
 {
@@ -222,6 +214,12 @@ void cam_close(void)
 }
 
 /*------------------------------------------------------------*/
+
+void camig_init()
+/*< allocate migration storage >*/
+{
+    qq = sf_floatalloc3(amx.n,amy.n,ahx.n);
+}
 
 void camig_close()
 /*< free migration storage >*/

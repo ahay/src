@@ -154,7 +154,7 @@ void ssr_close(void)
 
 /*------------------------------------------------------------*/
 
-void ssr(
+void ssr_ssf(
     float complex    w /* frequency */,
     complex float **wx /* wavefield */,
     float         **so /* slowness  */, 
@@ -162,7 +162,7 @@ void ssr(
     int             nr /* nr. of ref slo */,
     float          *sm /* ref slo squared */
     )
-/*< Wavefield extrapolation by SSR >*/
+/*< Wavefield extrapolation by SSF >*/
 {
     float complex w2,co,cc;
     int ix,iy,jr;
