@@ -435,7 +435,7 @@ LaTeX = Scanner(name='LaTeX',function=latexscan,skeys=['.tex','.ltx'])
 #############################################################################
 
 class TeXPaper(Environment):
-    def __init__(self,paper='paper',**kw):
+    def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
@@ -469,13 +469,6 @@ class TeXPaper(Environment):
             self.Append(BUILDERS={'Math':Math})
         self.scons = []
         self.Dir()
-        if os.path.isfile(paper+'.tex'):
-            self.Paper(paper)
-            self.Alias('pdf',paper+'.pdf')
-            self.Alias('read',paper+'.read')
-            self.Alias('print',paper+'.print')
-            self.Alias('html',paper+'.html')
-            self.Default('pdf')
     def Dir(self,topdir='.',resdir='Fig',pstexpen=None):
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
              dir = os.path.dirname(scons)
@@ -568,13 +561,24 @@ class TeXPaper(Environment):
             docdir = os.path.join(self.docdir,dir)
             self.Command(os.path.join(docdir,'index.html'),html,
                          'cd $SOURCE.dir && cp -r * $TARGET.dir && cd ..')
-            self.Alias('install',docdir)
+            self.Alias(paper+'.install',docdir)
+    def End(self,paper='paper',**kw):
+        if os.path.isfile(paper+'.tex'):
+            apply(self.Paper,(paper,),kw)
+            self.Alias('pdf',paper+'.pdf')
+            self.Alias('read',paper+'.read')
+            self.Alias('print',paper+'.print')
+            self.Alias('html',paper+'.html')
+            self.Alias('install',paper+'install')
+            self.Default('pdf')
 
 default = TeXPaper()
 def Dir(**kw):
      return apply(default.Dir,[],kw)
 def Paper(paper,**kw):
     return apply(default.Paper,(paper,),kw)
+def End(paper='paper',**kw):
+    return apply(default.End,(paper,),kw)
 
 if __name__ == "__main__":
      import pydoc

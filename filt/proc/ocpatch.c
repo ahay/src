@@ -9,7 +9,7 @@ static long **table;
 
 void ocpatch_init(int dim, int nw, int np, int* npatch, int* nwall, int* nwind)
 {
-    int i, ip, i2, ff[SF_MAX_DIM], t2, t;
+    int i, ip, i2, ff[SF_MAX_DIM], gg[SF_MAX_DIM], t2, t;
     
     n1 = nwind[0];
     n2 = nw/n1;
@@ -39,13 +39,13 @@ void ocpatch_init(int dim, int nw, int np, int* npatch, int* nwall, int* nwind)
 	    t = i2;
 	    for (i = 1; i < dim-1; i++) {
 		/* cartesian coordinates in window */
-		ff[i] += t%nwind[i];
+		gg[i] = ff[i] + t%nwind[i];
 		t /= nwind[i];
 	    }
 	    t += ff[dim-1];
 	    for (i = dim-2; i >= 1; i--) {
 		/* line coordinates in input */
-		t = t*nwall[i] + ff[i];
+		t = t*nwall[i] + gg[i];
 	    }
 	    table[ip][i2] = (t*nwall[0] + ff[0])*sizeof(float); 
 	}

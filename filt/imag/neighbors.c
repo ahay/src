@@ -1,7 +1,27 @@
+/* Inner part of fast marching. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "neighbors.h"
 
@@ -21,8 +41,12 @@ static float *time, *vv, rdx[3];
 static double v1;
 static const float big_value = FLT_MAX;
 
-void neighbors_init (int *in1, float *rdx1, int *n1, 
-		     int order1, float *time1)
+void neighbors_init (int *in1     /* status flag [n[0]*n[1]*n[2]] */, 
+		     float *rdx1  /* grid sampling [3] */, 
+		     int *n1      /* grid samples [3] */, 
+		     int order1   /* accuracy order */, 
+		     float *time1 /* traveltime [n[0]*n[1]*n[2]] */)
+/*< Initialize >*/
 {
     in = in1; time = time1; 
     n = n1; order = order1;
@@ -33,6 +57,7 @@ void neighbors_init (int *in1, float *rdx1, int *n1,
 }
 
 int  neighbours(int i) 
+/*< Update neighbors of gridpoint i, return number of updated points >*/
 {
     int j, k, ix, npoints;
     
@@ -52,6 +77,7 @@ int  neighbours(int i)
 }
 
 static int update (float value, int i)
+/* update gridpoint i with new value */
 {
     if (value < time[i]) {
 	time[i]   = value;
@@ -66,6 +92,7 @@ static int update (float value, int i)
 }
 
 static float qsolve(int i)
+/* find new traveltime at gridpoint i */
 {
     int j, k, ix;
     float a, b, t, res;
@@ -145,14 +172,15 @@ static float qsolve(int i)
     return big_value;
 }
 
-/* second-order stencil */
 static void stencil (float t, struct Upd *x)
+/* second-order stencil */
 {
     x->delta *= 2.25;
     x->stencil = (4.0*x->value - t)/3.0;
 }
 
 static bool updaten (int m, float* res, struct Upd *v[]) 
+/* updating */
 {
     double a, b, c, discr, t;
     int j;
@@ -178,6 +206,7 @@ static bool updaten (int m, float* res, struct Upd *v[])
 }
 
 static void grid (int *i, const int *n)
+/* restrict i[3] to the grid n[3] */
 { 
     int j;
 
@@ -190,7 +219,12 @@ static void grid (int *i, const int *n)
     }
 }
 
-int nearsource(float* xs, int* b, float* d, float* vv1, bool *plane)
+int nearsource(float* xs   /* source location [3] */, 
+	       int* b      /* constant-velocity box around it [3] */, 
+	       float* d    /* grid sampling [3] */, 
+	       float* vv1  /* slowness [n[0]*n[1]*n[2] */, 
+	       bool *plane /* if plane-wave source */)
+/*< initialize the source >*/
 {
     int npoints, ic, i, j, is, start[3], endx[3], ix, iy, iz;
     double delta[3], delta2;
