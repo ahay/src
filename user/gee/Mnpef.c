@@ -27,14 +27,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "createnhelix.h"
 #include "nmisinput.h"
 #include "npef.h"
-#include "randn.h"
+#include "random.h"
  
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
     int *pch, *nh, dim, n123, nf, i, niter, nbf, nbp, id, ip, ig, np;
     int *kk, *pp;
-    float *dd, *noiz, eps, dabs, di;
+    float *dd, eps, dabs, di;
     nfilter aa, bb;
     char varname[6], *lagfile;
     sf_file in, flt, lag, mask, patch, reg;
@@ -77,8 +77,6 @@ int main(int argc, char* argv[])
     dd = sf_floatalloc(n123);
     kk = sf_intalloc(n123);
 
-    noiz = sf_floatalloc(n123);
-
     if (NULL != sf_getstring("maskin")) {
 	/* optional input mask file */
 	mask = sf_input("maskin");
@@ -113,10 +111,9 @@ int main(int argc, char* argv[])
 	if (di > dabs) dabs=di;
     }
 
-    random0(n123,noiz);
-
+    random_init(2004);
     for (i=0; i < n123; i++) {
-	dd[i] = dd[i]/dabs+ 100.*FLT_EPSILON*(noiz[i]-0.5);;
+	dd[i] = dd[i]/dabs+ 100.*FLT_EPSILON*(random0()-0.5);;
     }
 
     pp = sf_intalloc(n123);
@@ -238,4 +235,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mnpef.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

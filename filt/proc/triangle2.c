@@ -17,13 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "triangle.h"
 #include "triangle2.h"
 
 #include <rsf.h>
+/*^*/
 
 static int n1, n2, nd;
-static triangle tr1, tr2;
+static sf_triangle tr1, tr2;
 static float *tmp;
 
 void triangle2_init (int nbox1, int nbox2 /* triangle size */, 
@@ -33,8 +33,8 @@ void triangle2_init (int nbox1, int nbox2 /* triangle size */,
     n1 = ndat1;
     n2 = ndat2;
     nd = n1*n2;
-    tr1 = (nbox1>1)? triangle_init (nbox1,ndat1): NULL;
-    tr2 = (nbox2>1)? triangle_init (nbox2,ndat2): NULL;
+    tr1 = (nbox1>1)? sf_triangle_init (nbox1,ndat1): NULL;
+    tr2 = (nbox2>1)? sf_triangle_init (nbox2,ndat2): NULL;
     tmp = sf_floatalloc (nd);
 }
 
@@ -56,13 +56,13 @@ void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
   
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) {    
-		smooth (tr1, i2*n1, 1, false, tmp);
+		sf_smooth (tr1, i2*n1, 1, false, tmp);
 	    }
 	}
   
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) { 
-		smooth (tr2, i1, n1, false, tmp);
+		sf_smooth (tr2, i1, n1, false, tmp);
 	    }
 	}
 
@@ -76,13 +76,13 @@ void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
   
 	if (NULL != tr2) {
 	    for (i1=0; i1 < n1; i1++) { 
-		smooth (tr2, i1, n1, false, tmp);
+		sf_smooth (tr2, i1, n1, false, tmp);
 	    }
 	}
 
 	if (NULL != tr1) {
 	    for (i2=0; i2 < n2; i2++) {    
-		smooth (tr1, i2*n1, 1, false, tmp);
+		sf_smooth (tr1, i2*n1, 1, false, tmp);
 	    }
 	}
 
@@ -96,8 +96,8 @@ void triangle2_close(void)
 /*< free allocated storage >*/
 {
     free (tmp);
-    if (NULL != tr1) triangle_close (tr1);
-    if (NULL != tr2) triangle_close (tr2);
+    if (NULL != tr1) sf_triangle_close (tr1);
+    if (NULL != tr2) sf_triangle_close (tr2);
 }
 
 /* 	$Id$	 */

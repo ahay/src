@@ -3,8 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-autocorr burstnoise conv decon deburst despike frame helicon hole idempatch
-lapfill levint light lopef 
+autocorr burstnoise conflict conv decon deburst despike frame helicon hole
+idempatch lapfill levint light lopef losignoi lpef make misif miss miss1
+msmiss mspef nhelicon npef parcel pef qdome sigmoid signoi synmarine tentwt
+wilson 
 '''
 
 try:  # distributed version

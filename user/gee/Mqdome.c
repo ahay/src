@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <math.h>
 #include <rsf.h>
 
-#include "triangle.h"
 #include "random.h"
 
 int main (int argc, char* argv[])
@@ -35,7 +34,7 @@ int main (int argc, char* argv[])
     int large, n1, n2, n3, endtaper;
     int i1,  i2, i3, n1a, n1b, it1, it2, i,slicei;
     float *imp, *refl, *refl1, *refl2, ***earth;
-    triangle tr;
+    sf_triangle tr;
     sf_file mod;
 
     sf_init(argc, argv);
@@ -192,13 +191,13 @@ int main (int argc, char* argv[])
 
     /* temporal smoothing */
     for (i = 2; i <= 4; i++) {
-	tr = triangle_init (i, n1);
+	tr = sf_triangle_init (i, n1);
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		smooth(tr,0,1,false,earth[i3][i2]);
+		sf_smooth(tr,0,1,false,earth[i3][i2]);
 	    }
 	}
-	triangle_close (tr);
+	sf_triangle_close (tr);
     }
 
     f1 = (float) endtaper;
@@ -215,4 +214,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mqdome.c,v 1.4 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id$	 */

@@ -87,4 +87,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mconflict.c,v 1.2 2004/06/25 08:41:19 fomels Exp $	 */
+/* 	$Id$	 */

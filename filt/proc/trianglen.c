@@ -17,13 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "triangle.h"
 #include "trianglen.h"
 
 #include <rsf.h>
+/*^*/
 
 static int *n, s[SF_MAX_DIM], nd, dim;
-static triangle *tr;
+static sf_triangle *tr;
 static float *tmp;
 
 void trianglen_init (int ndim  /* number of dimensions */, 
@@ -36,11 +36,11 @@ void trianglen_init (int ndim  /* number of dimensions */,
     n = ndat;
     dim = ndim;
 
-    tr = (triangle*) sf_alloc(dim,sizeof(triangle));
+    tr = (sf_triangle*) sf_alloc(dim,sizeof(sf_triangle));
 
     nd = 1;
     for (i=0; i < dim; i++) {
-	tr[i] = (nbox[i] > 1)? triangle_init (nbox[i],ndat[i]): NULL;
+	tr[i] = (nbox[i] > 1)? sf_triangle_init (nbox[i],ndat[i]): NULL;
 	s[i] = nd;
 	nd *= ndat[i];
     }
@@ -73,7 +73,7 @@ void trianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	if (NULL != tr[i]) {
 	    for (j=0; j < nd/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim+1,n,s);
-		smooth2 (tr[i], i0, s[i], false, tmp);
+		sf_smooth2 (tr[i], i0, s[i], false, tmp);
 	    }
 	}
     }
@@ -97,7 +97,7 @@ void trianglen_close(void)
     free (tmp);
 
     for (i=0; i < dim; i++) {
-	if (NULL != tr[i]) triangle_close (tr[i]);
+	if (NULL != tr[i]) sf_triangle_close (tr[i]);
     }
 
     free(tr);

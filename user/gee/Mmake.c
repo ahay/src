@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "triangle.h"
 #include "random.h"
 
 int main(int argc, char* argv[])
@@ -30,7 +29,7 @@ int main(int argc, char* argv[])
     int i1, i2, i3, n1, n2, n3, n, ns, p, t1, t2;
     float **pp, *s1, *s2;
     bool second;
-    triangle tr1, tr2=NULL;
+    sf_triangle tr1, tr2=NULL;
     sf_file mod;
 
     sf_init (argc,argv);
@@ -66,14 +65,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("t1",&t1)) t1=4;
     /* triangle smoother for first wave */
-    tr1 = triangle_init (t1, ns);
-    smooth2(tr1,0,1,false,s1);
+    tr1 = sf_triangle_init (t1, ns);
+    sf_smooth2(tr1,0,1,false,s1);
 
     if (second) {
 	if (!sf_getint("t2",&t2)) t2=4;
 	/* triangle smoother for second wave */
-	tr2 = triangle_init (t2, ns);
-	smooth2(tr2,0,1,false,s2);
+	tr2 = sf_triangle_init (t2, ns);
+	sf_smooth2(tr2,0,1,false,s2);
     }	
 
     for (i2=0; i2 < n2; i2++) {

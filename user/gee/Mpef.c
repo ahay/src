@@ -1,4 +1,4 @@
-/* Multi-scale PEF estimation.
+/* Multi-dimensional PEF (prediction error filter) estimation.
 */
 /*
 Copyright (C) 2004 University of Texas at Austin
@@ -20,24 +20,27 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "mshelix.h"
-#include "createmshelix.h"
-#include "mspef.h"
+#include "helix.h"
+#include "bound.h"
 #include "misinput.h"
+#include "pef.h"
+#include "compress.h"
 #include "printfilter.h"
+#include "createhelix.h" 
 
 int main(int argc, char* argv[])
 {
-    int n123, is,ns, dim,i, niter, *jump, *kk, nh;
-    int n[SF_MAX_DIM], a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
+    int n[SF_MAX_DIM], n0[SF_MAX_DIM];
+    int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
+    int dim, n123, i, niter, na, *kk;
     float *dd;
-    msfilter msaa;
+    filter aa;   
     char varname[6], *lagfile;
-    sf_file in, pef, lag, mask;
+    sf_file in, filt, lag, mask;
 
-    sf_init(argc,argv);
+    sf_init (argc, argv);
     in = sf_input("in");
-    pef = sf_output("out");
+    filt = sf_output("out");
 
     if (NULL == (lagfile = sf_getstring("lag"))) sf_error("Need lag=");
     /* output file for filter lags */
@@ -45,13 +48,12 @@ int main(int argc, char* argv[])
     lag = sf_output(lagfile);
     sf_settype(lag,SF_INT);
 
-    sf_putstring(pef,"lag",lagfile);
+    sf_putstring(filt,"lag",lagfile);
 
     dim = sf_filedims(in,n);
     sf_putints (lag,"n",n,dim);
 
     if (!sf_getints("a",a,dim)) sf_error("Need a=");
-    sf_putints (pef,"a",a,dim);
 
     if (!sf_getints("center",center,dim)) {
 	for (i=0; i < dim; i++) {
@@ -59,9 +61,28 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!sf_getints("gap",gap,dim)) {
-	for (i=0; i < dim; i++) {
-	    gap[i] = 0;
+    if (!sf_getint("na",&na)) na=0;
+    /* filter size */
+
+    if (0 == na) {
+	if (!sf_getints("gap",gap,dim)) {
+	    for (i=0; i < dim; i++) {
+		gap[i] = 0;
+	    }
+	}
+
+	aa = createhelix(dim, n, center, gap, a); /* allocate PEF */
+	
+	for (i=0; i < dim; i++) {	    
+	    n0[i] = n[i];
+	}
+    } else {
+	aa =  allocatehelix (na);
+	if (!sf_getints ("lags", aa->lag, na)) sf_error("Need lags=");
+	if (!sf_getints ("n", n0, dim)) {
+	    for (i=0; i < dim; i++) {	    
+		n0[i] = n[i];
+	    }
 	}
     }
 
@@ -95,70 +116,47 @@ int main(int argc, char* argv[])
 	sf_fileclose (mask);
     } else {
 	for (i=0; i < n123; i++) {
-	    kk[i] = 1.;
+	    kk[i] = 1;
 	}
     }
 
     sf_floatread (dd,n123,in);
 
-    if (!sf_getint("ns",&ns)) sf_error("Need ns=");
-    /* number of scales */
-    jump = sf_intalloc(ns);
-
-    if (!sf_getints("jump",jump,ns)) sf_error("Need jump=");
-
-    msaa = createmshelix(dim, n, center, gap, ns, jump, a); /* allocate PEF */
-
-    nh = msaa->nh;
-    if (!sf_getint("niter",&niter)) niter=nh*2;
-
-    for (is=0; is < ns; is++) {
-	onescale (is, msaa);
-	find_mask(n123, kk, msaa->one); /* missing data */
-    }
+    bound (dim, n0, n, a, aa); 
+    find_mask(n123, kk, aa);   /* account for missing data */
 
     if (NULL != sf_getstring("maskout")) {
 	/* optional output mask file */
-	mask = sf_output("maskout");	
-	sf_settype(mask,SF_INT);
-	
-	sprintf(varname,"n%d",dim+1);
-	sf_putint(mask,varname,ns);
+	mask = sf_output("maskout");
 
-	for (is=0; is < ns; is++) {
-	    for (i=0; i < n123; i++) {
-		kk[i] = msaa->mis[is][i]? 0.: 1.;
-	    }
-	    sf_intwrite (kk,n123,mask);
+	for (i=0; i < n123; i++) {
+	    kk[i] = aa->mis[i]? 0.: 1.;
 	}
+	
+	sf_settype(mask,SF_INT);
+	sf_intwrite (kk,n123,mask);
     }
 
-    find_pef (n123, dd, msaa, niter);
+    if(!sf_getint("niter",&niter)) niter=2*(aa->nh);
+    /* number of iterations */
 
-    for (i=0; i < dim; i++) {
-	center[i] *= jump[0];
-	a[i] *= jump[0];
-    }
+    find_pef (n123, dd, aa, niter);         /* estimate aa */
+    aa = compress( aa, 1.e-6);              /* eliminate zeroes */
+    print(dim, n, center, a, aa);           /* print filter */
 
-    onescale (0, msaa);
-    print(dim, n, center, a, msaa->one);
+    sf_putint(filt,"n1",aa->nh);
+    sf_putint(lag,"n1",aa->nh);
 
-    sf_putint(pef,"n1",nh);
-    sf_putint(lag,"n1",nh);
-    
     for (i=1; i < dim; i++) {
 	sprintf(varname,"n%d",i+1);
-	sf_putint(pef,varname,1);
+	sf_putint(filt,varname,1);
 	sf_putint(lag,varname,1);
     }
 
-    sf_putint(lag,"n2",ns);
-    sf_putints(lag,"jump",jump,ns);
-
-    sf_intwrite(msaa->lag[0],nh*ns,lag);
-    sf_floatwrite(msaa->flt,nh,pef);
+    sf_intwrite(aa->lag,aa->nh,lag);
+    sf_floatwrite(aa->flt,aa->nh,filt);
 
     exit (0);
 }
 
-/* 	$Id: Mmspef.c,v 1.3 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

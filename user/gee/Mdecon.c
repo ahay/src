@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "tent.h"
 #include "patching.h"
 #include "loconvol.h"
-#include "triangle.h"
 
 int main(int argc, char* argv[])
 {
@@ -38,7 +37,7 @@ int main(int argc, char* argv[])
     char varname[6], *lagfile;
     bool predictive;
     filter aa, bb, cc;
-    triangle tr=NULL;
+    sf_triangle tr=NULL;
     sf_file in, out, filt, lag;
 
     sf_init(argc,argv);
@@ -137,9 +136,9 @@ int main(int argc, char* argv[])
 	}
 	sf_floatwrite(sign,n123,out);
     } else if (r1 > 0) {
-	tr = triangle_init(r1,n[0]);
+	tr = sf_triangle_init(r1,n[0]);
 	for (i=0; i < n123-n[0]+1; i += n[0]) {
-	    smooth(tr,0,1,false,resi+i);
+	    sf_smooth(tr,0,1,false,resi+i);
 	}
 	sf_floatwrite(resi,n123,out);
     } else {

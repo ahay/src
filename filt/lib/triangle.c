@@ -17,20 +17,22 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-/*^*/
-
 #include "triangle.h"
 
-#ifndef _triangle_h
+#include "_bool.h"
+/*^*/
 
-typedef struct Triangle *triangle;
+#include "alloc.h"
+
+#ifndef _sf_triangle_h
+
+typedef struct sf_Triangle *sf_triangle;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Triangle {
+struct sf_Triangle {
     float *tmp;
     int np, nb, nx;
 };
@@ -44,13 +46,13 @@ static void triple (int o, int d, int nx, int nb,
 		    float* x, const float* tmp);
 static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp);
 
-triangle triangle_init (int nbox /* triangle length */, 
-			int ndat /* data length */)
+sf_triangle sf_triangle_init (int nbox /* triangle length */, 
+			      int ndat /* data length */)
 /*< initialize >*/
 {
-    triangle tr;
+    sf_triangle tr;
 
-    tr = (triangle) sf_alloc(1,sizeof(*tr));
+    tr = (sf_triangle) sf_alloc(1,sizeof(*tr));
 
     tr->nx = ndat;
     tr->nb = nbox;
@@ -175,10 +177,10 @@ static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp)
     }
 }
 
-void smooth (triangle tr  /* smoothing object */, 
-	     int o, int d /* trace sampling */, 
-	     bool der     /* if derivative */, 
-	     float *x     /* data (smoothed in place) */)
+void sf_smooth (sf_triangle tr  /* smoothing object */, 
+		int o, int d    /* trace sampling */, 
+		bool der        /* if derivative */, 
+		float *x        /* data (smoothed in place) */)
 /*< apply triangle smoothing >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
@@ -186,10 +188,10 @@ void smooth (triangle tr  /* smoothing object */,
     triple (o,d,tr->nx,tr->nb,x,tr->tmp);
 }
 
-void smooth2 (triangle tr  /* smoothing object */, 
-	      int o, int d /* trace sampling */, 
-	      bool der     /* if derivative */, 
-	      float *x     /* data (smoothed in place) */)
+void sf_smooth2 (sf_triangle tr  /* smoothing object */, 
+		 int o, int d    /* trace sampling */, 
+		 bool der        /* if derivative */, 
+		 float *x        /* data (smoothed in place) */)
 /*< apply adjoint triangle smoothing >*/
 {
     triple2 (o,d,tr->nx,tr->nb,x,tr->tmp);
@@ -197,7 +199,7 @@ void smooth2 (triangle tr  /* smoothing object */,
     fold2 (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
 }
 
-void  triangle_close(triangle tr)
+void  sf_triangle_close(sf_triangle tr)
 /*< free allocated storage >*/
 {
     free (tr->tmp);

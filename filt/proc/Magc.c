@@ -25,8 +25,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 #include <rsf.h>
 
-#include "triangle.h"
-
 #include "matmult.h"
 #include "cmatmult.h"
 
@@ -36,7 +34,7 @@ int main (int argc, char* argv[])
     int nrep, irep, n1, n2, i2, i0;
     char key[6];
     float *data, *gain;
-    triangle tr;
+    sf_triangle tr;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -77,14 +75,14 @@ int main (int argc, char* argv[])
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
-	    tr = triangle_init (rect[i],n[i]);
+	    tr = sf_triangle_init (rect[i],n[i]);
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    smooth (tr,i0,s[i],false,gain);
+		    sf_smooth (tr,i0,s[i],false,gain);
 		}
 	    }
-	    triangle_close(tr);
+	    sf_triangle_close(tr);
 	}
 
 	for (i1=0; i1 < n1; i1++) {

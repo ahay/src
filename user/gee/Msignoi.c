@@ -110,4 +110,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msignoi.c,v 1.3 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

@@ -168,4 +168,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msigmoid.c,v 1.5 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id$	 */

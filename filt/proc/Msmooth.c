@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "triangle.h"
-
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
@@ -34,7 +32,7 @@ int main (int argc, char* argv[])
     bool diff[SF_MAX_DIM];
     char key[6];
     float* data;
-    triangle tr;
+    sf_triangle tr;
     sf_file in, out;
 
     sf_init (argc, argv);
@@ -73,15 +71,15 @@ int main (int argc, char* argv[])
 
 	for (i=0; i <= dim1; i++) {
 	    if (rect[i] <= 1) continue;
-	    tr = triangle_init (rect[i],n[i]);
+	    tr = sf_triangle_init (rect[i],n[i]);
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
-		    smooth (tr,i0,s[i],diff[i],data);
+		    sf_smooth (tr,i0,s[i],diff[i],data);
 		    /* smooth2 (tr,i0,s[i],diff[i],data); */
 		}
 	    }
-	    triangle_close(tr);
+	    sf_triangle_close(tr);
 	}
 	
 	sf_floatwrite(data,n1,out);
@@ -90,4 +88,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Msmooth.c,v 1.12 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */
