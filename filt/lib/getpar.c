@@ -30,6 +30,10 @@ void sf_init(int argc,char *argv[]) {
     prog = strrchr(argv[0],'/');
     prog = (NULL == prog)? argv[0]:prog+1;
 
+    /* no pars and input from terminal */
+    if (1==argc && isatty(fileno(stdin)))
+	execlp("sfdoc","sfdoc",prog,NULL); /* selfdoc and exit */
+	
     /* set user */
     user = getlogin();
     if (NULL == user) {
