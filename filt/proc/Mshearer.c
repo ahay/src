@@ -1,4 +1,4 @@
-/* Smooth estimate of instanteneous frequency. 
+/* Preconditioning for traveltime picking. 
 
 Takes: rect1=1 rect2=1 ... 
 
@@ -31,9 +31,10 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a,b,c, mean, d1;
+    int shrt, lng;
+    float *trace, *hilb, *num, *den, *phase, mean, c;
     char key[6];
-    bool hertz;
+    sf_triangle ts, tl;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -52,13 +53,6 @@ int main (int argc, char* argv[])
     }
     n2 = n12/n1;
 
-    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-
-    trace = sf_floatalloc(n1);
-    hilb = sf_floatalloc(n1);
-    dtrace = sf_floatalloc(n1);
-    dhilb = sf_floatalloc(n1);
-
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);
     phase = sf_floatalloc(n12);
@@ -71,32 +65,42 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("ref",&c)) c=1.;
     /* Hilbert transformer reference (0.5 < ref <= 1) */
 
-    if (!sf_getbool("hertz",&hertz)) hertz=false;
-    /* if y, convert output to Hertz */
-
     hilbert_init(n1, nh, c);
 
+    if (!sf_getint("short",&shrt)) shrt=1;
+    /* short smoothing radius */
+    if (!sf_getint("short",&lng)) lng=10;
+    /* long smoothing radius */
+
+    ts = sf_triangle_init(shrt,n1);
+    tl = sf_triangle_init(lng,n1);
+
     mean=0.;
-    for (i=i2=0; i2 < n2; i2++) {
+    for (i2=0; i2 < n2; i2++) {
+	trace = num+n1*i2;
+	hilb = den+n1*i2;
+
 	sf_floatread(trace,n1,in);
 	hilbert(trace,hilb);
-	deriv(trace,dtrace);
-	deriv(hilb,dhilb);
 
-	for (i1=0; i1 < nh; i1++, i++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = hypotf(trace[i1],hilb[i1]);
+	    hilb[i1] = trace[i1];
 	}
-	for (i1=nh; i1 < n1-nh; i1++, i++) {
-	    a = trace[i1];
-	    b = hilb[i1];
-	    num[i] = a*dhilb[i1]-b*dtrace[i1];
-	    den[i] = a*a+b*b;
-	    mean += den[i]*den[i];
+
+	sf_smooth (ts, 0, 1, false, trace);
+	sf_smooth (tl, 0, 1, false, hilb);
+	
+	for (i1=0; i1 < nh; i1++) {
+	    trace[i1] = 0.;
+	    hilb[i1] = 0.;
 	}
-	for (i1=n1-nh; i1 < n1; i1++, i++) {
-	    num[i] = 0.;
-	    den[i] = 0.;
+	for (i1=nh; i1 < n1-nh; i1++) {
+	    mean += hilb[i1]*hilb[i1];
+	}
+	for (i1=n1-nh; i1 < n1; i1++) {
+	    trace[i1] = 0.;
+	    hilb[i1] = 0.;
 	}
     }
     mean = sqrtf(n12/mean);
@@ -108,14 +112,6 @@ int main (int argc, char* argv[])
 
     divn_init(dim, n12, n, rect, niter);
     divn (num, den, phase);
-
-    if (hertz) {
-	/* convert to Hertz */    
-	d1 = 1./(2.*SF_PI*d1);
-	for (i=0; i < n12; i++) {
-	    phase[i] *= d1;
-	}
-    }
 
     sf_floatwrite(phase,n12,out);
 

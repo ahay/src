@@ -42,8 +42,8 @@ void sf_cgstep( bool forget     /* restart flag */,
 		const float* g  /* gradient [nx] */, 
 		float* rr       /* data residual [ny] */, 
 		const float* gg /* conjugate gradient [ny] */) 
-/*< Step of Claerbout's conjugate-gradient iteration for complex operators. 
-  The data residual is rr = dat - A x
+/*< Step of Claerbout's conjugate-gradient iteration. 
+  The data residual is rr = A x - dat
 >*/
 {
     double sds, gdg, gds, determ, gdr, sdr, alfa, beta;

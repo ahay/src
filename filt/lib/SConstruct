@@ -8,7 +8,7 @@ import configure
 src = 'kiss_fft kiss_fftr'
 
 src2 = '''
-adjnull alloc bigsolver c99 causint ccgstep cconjgrad cell cgstep chain
+adjnull alloc bigsolver c99 causint ccgstep cconjgrad cell cdstep cgstep chain
 conjgrad conjprec copy decart dottest eno eno2 error file files freqfilt getpar
 llist mask math1 pqueue quantile quadratic segy simtab stack tent2 triangle
 triangle1
