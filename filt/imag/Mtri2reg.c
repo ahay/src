@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     float **xyz, *e, *z;
     Node q;
     float zero, xi, xmax, xmin, ymin, ymax, dx, dy, dz;
-    sf_file in, out, edge, out2, edge2;
+    sf_file in, out, edge, out2, edge2, pattern;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -42,12 +42,26 @@ int main(int argc, char* argv[])
 	sf_error("Need n1=3 in input");
     if (!sf_histint(in,"n2",&nd)) sf_error("No n2= in input");
 
-    if (!sf_getint("n1",&n1)) sf_error("Need n1=");
-    if (!sf_getint("n2",&n2)) sf_error("Need n2=");
-    if (!sf_getfloat("d1",&d1)) d1=1.;
-    if (!sf_getfloat("d2",&d2)) d2=1.;
-    if (!sf_getfloat("o1",&o1)) o1=0.;
-    if (!sf_getfloat("o2",&o2)) o2=0.;
+    if (NULL != sf_getstring("pattern")) {
+	/* pattern file for output dimensions */
+	pattern = sf_input("pattern");
+	
+	if (!sf_histint(pattern,"n1",&n1)) sf_error("No n1= in pattern");
+	if (!sf_histint(pattern,"n2",&n2)) sf_error("No n2= in pattern");
+	if (!sf_histfloat(pattern,"d1",&d1)) d1=1.;
+	if (!sf_histfloat(pattern,"d2",&d2)) d2=1.;
+	if (!sf_histfloat(pattern,"o1",&o1)) o1=0.;
+	if (!sf_histfloat(pattern,"o2",&o2)) o2=0.;
+	
+	sf_fileclose(pattern);
+    } else {
+	if (!sf_getint("n1",&n1)) sf_error("Need n1=");
+	if (!sf_getint("n2",&n2)) sf_error("Need n2=");
+	if (!sf_getfloat("d1",&d1)) d1=1.;
+	if (!sf_getfloat("d2",&d2)) d2=1.;
+	if (!sf_getfloat("o1",&o1)) o1=0.;
+	if (!sf_getfloat("o2",&o2)) o2=0.;
+    }
 
     sf_putint(out,"n1",n1);
     sf_putint(out,"n2",n2);

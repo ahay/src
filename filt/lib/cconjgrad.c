@@ -1,16 +1,44 @@
+/* Conjugate-gradient with shaping regularization for complex numbers. */
+/*
+Copyright (C) 2004 University of Texas at Austin
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <math.h>
 
 #include "cconjgrad.h"
 #include "alloc.h"
-#include "c99.h"
 #include "error.h"
+
+#ifndef __cplusplus
+/*^*/
+
+#include "c99.h"
+#include "bigsolver.h"
+/*^*/
 
 static int np, nx, nr, nd;
 static float complex *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
-static double norm (int n, const float complex* x) {
+static double norm (int n, const float complex* x) 
+/* double-precision norm of a complex number */
+{
     double prod;
     double complex xi;
     int i;
@@ -23,8 +51,15 @@ static double norm (int n, const float complex* x) {
     return prod;
 }
 
-void sf_cconjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
-		       float tol1, bool verb1, bool hasp01) 
+void sf_cconjgrad_init(int np1    /* preconditioned size */, 
+		       int nx1    /* model size */, 
+		       int nd1    /* data size */, 
+		       int nr1    /* residual size */, 
+		       float eps1 /* scaling */,
+		       float tol1 /* tolerance */, 
+		       bool verb1 /* verbosity flag */, 
+		       bool hasp01 /* if has initial model */) 
+/*< solver constructor >*/
 {
     np = np1; 
     nx = nx1;
@@ -46,6 +81,7 @@ void sf_cconjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
 }
 
 void sf_cconjgrad_close(void) 
+/*< Free allocated space >*/
 {
     free (r);
     free (d);
@@ -57,9 +93,14 @@ void sf_cconjgrad_close(void)
     free (gr);
 }
 
-void sf_cconjgrad(sf_coperator prec, sf_coperator oper, sf_coperator shape, 
-		  float complex* p, float complex* x, float complex* dat, 
-		  int niter) 
+void sf_cconjgrad(sf_coperator prec        /* data preconditioning */, 
+		  sf_coperator oper        /* linear operator */, 
+		  sf_coperator shape       /* shaping operator */, 
+		  float complex* p         /* preconditioned model */, 
+		  float complex* x         /* estimated model */, 
+		  const float complex* dat /* data */, 
+		  int niter                /* number of iterations */)
+/*< Conjugate gradient solver with shaping >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0, b0;
     int i, iter;
@@ -189,4 +230,7 @@ void sf_cconjgrad(sf_coperator prec, sf_coperator oper, sf_coperator shape,
     }
 }
 
-/* 	$Id: cconjgrad.c,v 1.1 2004/05/13 22:26:56 fomels Exp $	 */
+#endif
+/*^*/
+
+/* 	$Id$	 */
