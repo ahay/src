@@ -22,7 +22,7 @@ static func functable[] = {
     fabsf
 };
 
-enum {GRP, NUM, INDX, FUN, POW, MULDIV, PLUSMIN};
+enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
 
 static sf_stack st1, st2;
 
@@ -57,6 +57,13 @@ void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst)
 		fun = functable[*indx];
 		farr = *fst;
 		for (i=0; i < nbuf; i++) { farr[i] = fun(farr[i]); }
+		break;
+	    case UNARY:
+		op = (char*) sf_pop(st2);
+		farr = *fst;
+		if ('-' == *op) {
+		    for (i=0; i < nbuf; i++) { farr[i] = -farr[i]; }
+		}
 		break;
 	    case POW:
 		sf_pop(st2);
@@ -96,11 +103,13 @@ int sf_math_parse (char* output, sf_file out)
     int i, j, keylen, *indx, type=-1, top, len;
     char *key, c, c2;
     float *num;
+    bool hasleft;
 
     len = strlen(output);
     st1 = sf_stack_init (len);
     st2 = sf_stack_init (len);
     
+    hasleft = false;
     for (i=0; i < len; i++) {
 	c = output[i];
 	
@@ -109,11 +118,13 @@ int sf_math_parse (char* output, sf_file out)
 	/* handle parentheses */
 
 	if ('(' == c) {
+	    hasleft = false;
 	    sf_push(st2,&c,GRP);
 	    continue;
 	}
 
 	if (')' == c) {
+	    hasleft = true;
 	    top = -1;
 	    while (sf_full(st2)) {
 		top = sf_top(st2);		
@@ -130,6 +141,7 @@ int sf_math_parse (char* output, sf_file out)
 	}
 	
 	if ('.' == c || isdigit(c)) { /* number */
+	    hasleft = true;
 	    for (j=i+1; j < len; j++) {
 		c2 = output[j];
 		if ('.' != c2 && !isdigit(c2)) break;
@@ -164,8 +176,10 @@ int sf_math_parse (char* output, sf_file out)
 	    indx = sf_intalloc(1);
 
 	    if (sf_histint(out,key,indx)) {
+		hasleft = true;
 		sf_push(st1,indx,INDX); 
 	    } else {
+		hasleft = false;
 		if (       0==strcmp(key,"cos"))  { *indx = 0;
 		} else if (0==strcmp(key,"sin"))  { *indx = 1;
 		} else if (0==strcmp(key,"tan"))  { *indx = 2;    
@@ -193,7 +207,8 @@ int sf_math_parse (char* output, sf_file out)
 	switch (c) {
 	    case '+': 
 	    case '-':
-		type = PLUSMIN;
+		top = sf_top (st1);
+		type = hasleft? PLUSMIN: UNARY;
 		break;
 	    case '*':
 	    case '/':
@@ -208,6 +223,8 @@ int sf_math_parse (char* output, sf_file out)
 		break;
 	}
 
+	hasleft=false;
+
 	while (sf_full(st2)) {
 	    top = sf_top (st2);
 	    if (GRP==top || top > type) break; /* compare precedence */
@@ -217,7 +234,7 @@ int sf_math_parse (char* output, sf_file out)
 	sf_push(st2,output+i,type);
     }
 	
-    /* push operators into output (reverse polish=) */
+    /* push operators into output (reverse polish) */
     while (sf_full(st2)) {
 	top = sf_top (st2);
 	if (GRP == top)
@@ -249,6 +266,7 @@ static void check (void)
 		sf_push(st1,sf_pop(st2),NUM);
 		break;
 	    case FUN:
+	    case UNARY:
 		sf_pop(st2);
 		top = sf_top (st1);
 		if (NUM != top && INDX != top) 

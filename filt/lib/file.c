@@ -337,7 +337,7 @@ void sf_fileflush (sf_file file, sf_file src)
 
     if (NULL == file->dataname) return;
     
-    (void) time (&tm);
+    tm = time (NULL);
     if (0 >= fprintf(file->stream,"%s:\t%s@%s\t%s\n",
 		     sf_getprog(),
 		     sf_getuser(),
