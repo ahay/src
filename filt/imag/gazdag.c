@@ -43,7 +43,6 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 
 	/* loop over migrated times z */
 	for (iz=nz-2; iz>=0; iz--) {
-      
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
 		w2 = eps*dw + I*(fw + iw*dw);
@@ -55,8 +54,8 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	}
 
 	sf_pfacc(1,nw,pp);
-	for (it=0; it<nt; it += 2) {
-	    pp[it] = -pp[it];
+	for (it=0; it<nt; it++) {
+	    p[it] = (it%2)? -pp[it] : pp[it];
 	}
     } else { /* migration */
 	/* pad with zeros and Fourier transform t to w, with w centered */

@@ -3,7 +3,7 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = cell2 eikonal gazdag rays2 sag shoot2 symes voft
+PROGS = cell2 eikonal gazdag rays2 sag shoot2 sstep1 symes voft
 
 cell2.OBJS = celltrace cell eno2 eno quadratic
 eikonal.OBJS = fastmarch pqueue neighbors
@@ -11,6 +11,7 @@ gazdag.OBJS = gazdag
 rays2.OBJS = raytracing atela grid3 grid2 eno3 eno2 eno
 sag.OBJS = empty 
 shoot2.OBJS = celltrace cell eno2 eno quadratic fzero
+sstep1.OBJS = split1
 symes.OBJS = symes
 voft.OBJS = empty
 
