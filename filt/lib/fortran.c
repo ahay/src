@@ -1,6 +1,6 @@
 #include <string.h>
 
-#include <cfortran.h>
+#include "cfortran.h"
 
 #include "getpar.h"
 #include "alloc.h"

@@ -1,7 +1,5 @@
 import os, sys, string
-
 sys.path.append('../..')
-from rsfdoc import merge
 import configure
 
 #############################################################################
@@ -12,12 +10,12 @@ src = 'alloc c99 decart error file files getpar math1 pfafft segy simtab stack'
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
 
-try:
+try: # distribution version
     Import('env')
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
-except:
+except: # local version
     root = None
     env = Environment()
     opts=Options('../../config.py')
@@ -29,11 +27,11 @@ except:
 # MAIN LIBRARY
 ##############################################################################
 lib = env.StaticLibrary('rsf',sources)
-env.Command('rsf.h',includes,Action(merge))
+inc = env.Command('../../include/rsf.h',includes,Action(configure.merge))
 
 if root:
     env.Install(libdir,lib)
-    env.Install(incdir,'rsf.h')
+    env.Install(incdir,inc)
 
 ##############################################################################
 # TESTING
@@ -41,13 +39,12 @@ if root:
 for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
-
+        
 ##############################################################################
 # FORTRAN BINDING
 ##############################################################################
 env.Object('fortran.o','fortran.c',
-           CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN',
-           CPPPATH='../..')
+           CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
 libf = env.StaticLibrary('rsff',sources+['fortran.o'])                         
 
 if root:
@@ -103,4 +100,3 @@ if ('swig' in env.get('TOOLS')):
         env.Install(libdir,'c_rsf.py')
         env.Install(libdir,'rsf.py')
     Clean(python,['c_rsf.py','c_rsf.pyc'])
-
