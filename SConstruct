@@ -106,17 +106,16 @@ for src in ('doc','proj','prog'):
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
-use = os.path.join(libdir,'rsfuse.py')
-env.Command(use,None,action=Action(rsfdoc.use))
-Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
-Depends(use,os.path.join(libdir,'sfplot.py'))
-Depends(use,os.path.join(libdir,'vpplot.py'))
-AlwaysBuild(use)
-
 ##########################################################################
 # INSTALLATION
 ##########################################################################
 
 env.Alias('install',[pydir,bindir,libdir,incdir])
 
-# 	$Id: SConstruct,v 1.27 2004/06/02 15:09:58 fomels Exp $	
+use = os.path.join(pydir,'rsfuse.py')
+env.Command(use,None,action=Action(rsfdoc.use))
+Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
+Depends(use,os.path.join(libdir,'sfplot.py'))
+Depends(use,os.path.join(libdir,'vpplot.py'))
+
+# 	$Id: SConstruct,v 1.28 2004/06/03 05:35:16 fomels Exp $	
