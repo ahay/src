@@ -45,8 +45,6 @@ struct Eno {
 };
 /* concrete data type */
 
-static const float big_number = FLT_MAX;
-
 sf_eno sf_eno_init (int order /* interpolation order */, 
 	      int n     /* data size */)
 /*< Initialize interpolation object. >*/

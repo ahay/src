@@ -142,6 +142,12 @@ bool sf_getfloat (const char* key,/*@out@*/ float* par)
     return sf_simtab_getfloat (pars,key,par);
 }
 
+bool sf_getdouble (const char* key,/*@out@*/ double* par) 
+/*< get a double parameter from the command line >*/
+{
+    return sf_simtab_getdouble (pars,key,par);
+}
+
 bool sf_getfloats (const char* key,/*@out@*/ float* par,size_t n) 
 /*< get a float array parameter from the command line >*/
 {
