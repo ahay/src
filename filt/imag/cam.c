@@ -24,14 +24,18 @@
 
 #include "fft3.h"
 #include "taper.h"
-#include "slowref.h"
 
 #include "slice.h"
 /*^*/
 
-#define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}}
-#define KOOP(a) for(ihx=0;ihx<bhx.n;ihx++){ for(imy=0;imy<bmy.n;imy++){ for(imx=0;imx<bmx.n;imx++){ {a} }}}
-#define SOOP(a)                             for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
+#define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ \
+                for(imy=0;imy<amy.n;imy++){ \
+                for(imx=0;imx<amx.n;imx++){ {a} }}}
+#define KOOP(a) for(ihx=0;ihx<bhx.n;ihx++){ \
+                for(imy=0;imy<bmy.n;imy++){ \
+		for(imx=0;imx<bmx.n;imx++){ {a} }}}
+#define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
+                for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
@@ -167,8 +171,8 @@ void cam_close(void)
     fft3_close();
     taper3_close();
 
-    ;           free( *ksx);free( ksx);
-    ;           free( *krx);free( krx);
+    ;           free( *ksx);free(ksx);
+    ;           free( *krx);free(krx);
     ;           free( *is); free( is);
     ;           free( *ir); free( ir);
     ;                       free( jx);
@@ -226,7 +230,8 @@ void cam_ssf(
 		  cs  = csqrtf(w2*sm[js] + kss);
 		  cr  = csqrtf(w2*sm[jr] + krr);
 		  wk[ihx][imy][imx] = 
-		  pk[ihx][imy][imx] * cexpf((co-cs-cr)*az.d); );
+		  pk[ihx][imy][imx] * cexpf((co-cs-cr)*az.d);
+		);
 	    
 	    /* IFT */
 	    fft3(true,wk);

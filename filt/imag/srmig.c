@@ -23,8 +23,6 @@
 /*^*/
 
 #include "srmig.h"
-
-#include "fft2.h"
 #include "taper.h"
 #include "slowref.h"
 #include "ssr.h"

@@ -23,7 +23,6 @@
 /*^*/
 
 #include "camig.h"
-#include "fft3.h"
 #include "taper.h"
 #include "slowref.h"
 #include "cam.h"
@@ -179,7 +178,7 @@ void camig(bool inv  /* forward/adjoint flag */,
 
 	    fslice_get(slow,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
-		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz,az.n);
+		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
 		fslice_get(imag,iz,qq[0][0]);
 		LOOP( wx[ihx][imy][imx] +=
 		      qq[ihx][imy][imx]; );
@@ -204,13 +203,13 @@ void camig(bool inv  /* forward/adjoint flag */,
 	    taper3(wx);
 
 	    fslice_get(imag,0,qq[0][0]);      /*     imaging @ iz=0 */
-	    LOOP(        qq[ihx][imy][imx] += 
-		  crealf(wx[ihx][imy][imx] ); );
+	    LOOP(;      qq[ihx][imy][imx] += 
+		 crealf(wx[ihx][imy][imx] ); );
 	    fslice_put(imag,0,qq[0][0]);
 
 	    fslice_get(slow,0,so[0]);
 	    for (iz=0; iz<az.n-1; iz++) {
-		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
+		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n-1);
 
 		/* downward continuation */
 		fslice_get(slow,iz+1,ss[0]);
