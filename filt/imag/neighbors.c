@@ -124,9 +124,9 @@ static float qsolve(int i)
 	if (x[0].value <= x[2].value) {
 	    v[0] = x+1; v[1] = x; v[2] = x+2;
 	} else if (x[2].value <= x[1].value) {
-	    v[0] = x+2; v[1] = x+1; v[3] = x;
+	    v[0] = x+2; v[1] = x+1; v[2] = x;
 	} else {
-	    v[0] = x+1; v[1] = x+2; v[3] = x;
+	    v[0] = x+1; v[1] = x+2; v[2] = x;
 	}
     }
     
@@ -254,5 +254,5 @@ int nearsource(float* xs, int* b, float* d, float* vv1, bool *plane)
     return npoints;
 }
 
-/* 	$Id: neighbors.c,v 1.3 2004/06/18 01:06:45 fomels Exp $	 */
+/* 	$Id$	 */
 
