@@ -5,21 +5,21 @@ Takes: w1=n1 w2=n2 w3=n3 p1=1 p2=1 p3=1
 w1,w2,w3 is window size, p1,p2,p3 is number of patches. 
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <stdio.h>
 
@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char *argv[])
 {
     int w123,p123,n123, niter, order, nj1,nj2, i,j, liter, mem,memsize, ip,iw;
-    int n[3], rect[3], nw[3], w[3]; 
+    int n[3], rect[3], nw[3], w[3], n4; 
     size_t nall;
     float p0, q0, *u, *p, win, *tent, *tmp;
     char key[3], *dipname, *wallname;
@@ -54,8 +54,9 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n3",&n[2])) n[2]=1;
     n123 = n[0]*n[1]*n[2];
 
-    /* two dips output in 3-D */
-    if (n[2] > 1) sf_putint(out,"n4",2); 
+    if (1 == n[2] || !sf_getint("n4",&n4)) n4=2;
+    /* what to compute: in-line, 1: cross-line, 2: both */ 
+    if (n4 > 1) sf_putint(out,"n4",n4);
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -150,59 +151,72 @@ int main (int argc, char *argv[])
 	sf_tent2 (3, w, tent);
 
 	ocpatch_init(3,w123,p123,nw,n,w);
-	oc_zero(nall,dip);
-	oc_zero(nall,wall);
 
-	/* loop over patches */
-	for (ip=0; ip < p123; ip++) {
-	    /* read data */
-	    ocpatch_flop (ip,false,in,u);
+	if (1 != n4) {
+	    oc_zero(nall,dip);
+	    oc_zero(nall,wall);
 	    
-	    /* initialize t-x dip */
-	    for(i=0; i < w123; i++) {
-		p[i] = p0;
+	    /* loop over patches */
+	    for (ip=0; ip < p123; ip++) {
+		/* read data */
+		ocpatch_flop (ip,false,in,u);
+		
+		/* initialize t-x dip */
+		for(i=0; i < w123; i++) {
+		    p[i] = p0;
+		}
+		
+		/* estimate t-x dip */
+		dip3(1, niter, order, nj1, verb, u, p, m1);
+		
+		/* write weight */
+		ocpatch_lop (ip,false,wall,tmp);
+		for (iw=0; iw < w123; iw++) {
+		    tmp[iw] += tent[iw];
+		}
+		ocpatch_lop (ip,true,wall,tmp);
+		
+		/* write dip */
+		ocpatch_lop (ip,false,dip,tmp);
+		for (iw=0; iw < w123; iw++) {
+		    tmp[iw] += tent[iw]*p[iw];
+		}
+		ocpatch_lop (ip,true,dip,tmp);
 	    }
 	    
-            /* estimate t-x dip */
-	    dip3(1, niter, order, nj1, verb, u, p, m1);
-
-	    /* write weight */
-	    ocpatch_lop (ip,false,wall,tmp);
-	    for (iw=0; iw < w123; iw++) {
-		tmp[iw] += tent[iw];
-	    }
-	    ocpatch_lop (ip,true,wall,tmp);
-
-	    /* write dip */
-	    ocpatch_lop (ip,false,dip,tmp);
-	    for (iw=0; iw < w123; iw++) {
-		tmp[iw] += tent[iw]*p[iw];
-	    }
-	    ocpatch_lop (ip,true,dip,tmp);
+	    oc_divide(nall,dip,wall,out);
 	}
 
-	oc_divide(nall,dip,wall,out);
-
-	if (1 == n[2]) { /* done if 2-D input */
+	if (1 == n[2] || 0 == n4) { /* done if only t-x dip */
 	    unlink(dipname);
 	    unlink(wallname);
 	    exit(0);
 	}
 
 	oc_zero(nall,dip);
-
+	oc_zero(nall,wall);
+	
         /* loop over patches */
 	for (ip=0; ip < p123; ip++) {
 	    /* read data */
 	    ocpatch_flop (ip,false,in,u);
 	    
-	    /* initialize t-x dip */
+	    /* initialize t-y dip */
 	    for(i=0; i < w123; i++) {
 		p[i] = q0;
 	    }
 	    
-            /* estimate t-x dip */
+            /* estimate t-y dip */
 	    dip3(2, niter, order, nj2, verb, u, p, m2);
+	    
+	    
+            /* write weight */
+	    ocpatch_lop (ip,false,wall,tmp);
+	    for (iw=0; iw < w123; iw++) {
+		tmp[iw] += tent[iw];
+	    }
+	    ocpatch_lop (ip,true,wall,tmp);
+
 
 	    /* write dip */
 	    ocpatch_lop (ip,false,dip,tmp);
@@ -221,24 +235,26 @@ int main (int argc, char *argv[])
 	/* read data */
 	sf_floatread(u,n123,in);
 	
-	/* initialize t-x dip */
-	if (NULL != sf_getstring("idip")) {
-	    dip0 = sf_input("idip");
-	    sf_floatread(p,n123,dip0);
-	    sf_fileclose(dip0);
-	} else {
-	    for(i=0; i < n123; i++) {
-		p[i] = p0;
+	if (1 != n4) {
+	    /* initialize t-x dip */
+	    if (NULL != sf_getstring("idip")) {
+		dip0 = sf_input("idip");
+		sf_floatread(p,n123,dip0);
+		sf_fileclose(dip0);
+	    } else {
+		for(i=0; i < n123; i++) {
+		    p[i] = p0;
+		}
 	    }
+	    
+	    /* estimate t-x dip */
+	    dip3(1, niter, order, nj1, verb, u, p, m1);
+	    
+	    /* write t-x dip */
+	    sf_floatwrite(p,n123,out);
 	}
-  
-	/* estimate t-x dip */
-	dip3(1, niter, order, nj1, verb, u, p, m1);
 
-	/* write t-x dip */
-	sf_floatwrite(p,n123,out);
-
-	if (1 == n[2]) exit(0); /* done if 2-D input */
+	if (1 == n[2] || 0 == n4) exit(0); /* done if only t-x dip */
 
 	/* initialize t-y dip */
 	if (NULL != sf_getstring("xdip")) {
