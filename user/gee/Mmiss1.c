@@ -26,6 +26,7 @@ int main(int argc, char* argv[])
 {
     int i1, i2, n1, n2, na;
     float *xx, *aa;
+    char *step;
     bool *known;
     sf_file in, out, filt;
 
@@ -48,6 +49,11 @@ int main(int argc, char* argv[])
 	aa[1] = -1.;
     }
 
+    if (NULL == (step = sf_getstring("step"))) step = "cg";
+    /* linear solver type */
+
+    sf_warning("got \"%s\"",step);
+
     xx = sf_floatalloc(n1);
     known = sf_boolalloc(n1);
 
@@ -60,7 +66,11 @@ int main(int argc, char* argv[])
 	    known[i1] = (xx[i1] != 0.);
 	}
 
-        mis1 (n1, xx, known);
+	sf_warning("got %d",i2);
+
+        mis1 (n1, xx, known, step);
+
+	sf_warning("got %d",i2);
 
 	sf_floatwrite (xx,n1,out);
     }

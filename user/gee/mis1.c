@@ -53,12 +53,28 @@ void mis1_close(void)
 
 void mis1(int niter         /* number of iterations */, 
 	  float *xx         /* data/model */, 
-	  const bool *known /* mask for known data */) 
+	  const bool *known /* mask for known data */,
+	  const char *step  /* solver */) 
 /*< interpolate >*/
 {
-    sf_solver (tcai1_lop, sf_cgstep, nx, ny, xx, zero, niter, 
-	       "x0", xx, "known", known, "end");
-    sf_cgstep_close();
+    sf_warning("have \"%s\"",step);
+
+    switch (step[1]) {
+	case 'g': /* conjugate gradients */
+	    sf_solver (tcai1_lop, sf_cgstep, nx, ny, xx, zero, niter, 
+		       "x0", xx, "known", known, "end");
+	    sf_cgstep_close();
+	    break;
+	case 'd': /* conjugate directions */
+	    sf_cdstep_init();
+	    sf_solver (tcai1_lop, sf_cdstep, nx, ny, xx, zero, niter, 
+		       "x0", xx, "known", known, "end");
+	    sf_cdstep_close();
+	    break;
+	default:
+	    sf_error("%s: unknown step %s",__FILE__,step);
+	    break;
+    }
 }
 
 /* 	$Id$	 */
