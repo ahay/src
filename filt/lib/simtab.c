@@ -294,23 +294,24 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
     cnum = (char*) alloca(strlen(val));
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
-	fvali = strpbrk(fval,"x*");
-	if (NULL != fvali) {
-	    strncpy(cnum,fval,(size_t) (fvali-fval));
-	    num = strtol(cnum,NULL,10);
-	    if (ERANGE == errno) 
-		sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
-	    fvali++;
-	    j = strtol(fvali,NULL,10);
-	    if (ERANGE == errno || i < INT_MIN || i > INT_MAX) 
-		sf_error ("%s: Wrong value in %s='%s':",__FILE__,key,fval);
-	    for (; i < n && i < (size_t) num; i++) {
-		par[i] = (int) j;
-	    }
-	    if (i == n) return true;
+	if (NULL==fval) {
+	    if (0==i) return false;
 	} else {
-	    if (NULL==fval) {
-		if (0==i) return false;
+	    fvali = strpbrk(fval,"x*");
+	    if (NULL != fvali) {
+		strncpy(cnum,fval,(size_t) (fvali-fval));
+		num = strtol(cnum,NULL,10);
+		if (ERANGE == errno) 
+		    sf_error ("%s: Wrong counter in %s='%s':",
+			      __FILE__,key,fval);
+		fvali++;
+		j = strtol(fvali,NULL,10);
+		if (ERANGE == errno || i < INT_MIN || i > INT_MAX) 
+		    sf_error ("%s: Wrong value in %s='%s':",__FILE__,key,fval);
+		for (; i < n && i < (size_t) num; i++) {
+		    par[i] = (int) j;
+		}
+		if (i == n) return true;
 	    } else {
 		j = strtol(fval,NULL,10);
 		if (ERANGE == errno || j < INT_MIN || j > INT_MAX) 
