@@ -33,8 +33,7 @@ int main(int argc, char* argv[])
     aa = allocatehelix (na);
 
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
-    if (!sf_histints(filt,"n",m,dim)) sf_error("No n= in filt");
-
+ 
     if (!sf_histints(filt,"a",a,dim)) {
 	for (j=0; j < dim; j++) {
 	    a[j]=1;
@@ -46,15 +45,23 @@ int main(int argc, char* argv[])
 		aa->lag[ia]=ia;
 	    }
 	    lag = NULL;
+	    if (!sf_getints("n",m,dim)) {
+		for (j=0; j < dim; j++) {
+		    m[j]=n[j];
+		}
+	    }
 	} else {
 	    lag = sf_input("lag");
 	}
+    } else {
 	lag = sf_input(lagfile);
     }
 
     if (NULL != lag) {
 	if (SF_INT != sf_gettype(lag)) 
 	    sf_error("Need int data in lag file '%s'",lagfile);
+	if (!sf_histints(lag,"n",m,dim)) sf_error("No n= in lag");
+
 	sf_read(aa->lag,sizeof(int),na,lag);
 	sf_fileclose(lag);
     }

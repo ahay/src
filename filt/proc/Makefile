@@ -14,7 +14,7 @@ PROGS = ai2refl bandpass bin bin1 blindpick depth2time dip dipfilter envelope \
 	fft1 fft2 fft3 helicon hole invbin1 invwarp logstretch miss nmo noise \
 	pef pwd randrefl reshape ricker sigmoid \
 	smooth smoothder smoothfix spectra stretch2 taup \
-	taupmo time2depth warp1 window1 window2 xcorr1
+	taupmo time2depth warp1 warpscan window1 window2 xcorr1
 
 ai2refl = empty
 bandpass = butterworth
@@ -54,6 +54,7 @@ taup = radon cadj ctoeplitz
 taupmo = fint1 tridiagonal spline interp_spline extend banded
 time2depth = fint1 tridiagonal spline interp_spline extend banded
 warp1 = divlap1 int1 interp_spline prefilter recfilt adjnull banded
+warpscan = int1 interp_spline prefilter recfilt adjnull
 window1 = window1
 window2 = window2
 xcorr1 = window1 xcorr stretch2 banded

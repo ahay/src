@@ -21,6 +21,7 @@ int main(void)
     banded_close(slv);
 
     printf("%g %g %g %g\n",x[0],x[1],x[2],x[3]);
+    /* 1,-1,2,-2 */
 
     return 0;
 }

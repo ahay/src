@@ -93,29 +93,29 @@ void banded_solve (bands slv, float* b)
     int k, m;
     float t;
     
-    for (k = 2; k <= slv->band; k++) {
-	t = b[k-1];
-	for (m = 1; m <= k - 1; m++)
-	    t -= (slv->o[m-1][k-m-1]) * b[k-m-1];
-	b[k-1] = t;
+    for (k = 1; k < slv->band; k++) {
+	t = b[k];
+	for (m = 1; m <= k; m++)
+	    t -= (slv->o[m-1][k-m]) * b[k-m];
+	b[k] = t;
     }
-    for (k = slv->band + 1; k <= slv->n; k++) { 
-	t = b[k-1];
+    for (k = slv->band; k < slv->n; k++) { 
+	t = b[k];
 	for (m = 1; m <= slv->band; m++) 
-	    t -= (slv->o[m-1][k-m-1]) * b[k-m-1];
-	b[k-1] = t;
+	    t -= (slv->o[m-1][k-m]) * b[k-m];
+	b[k] = t;
     }
-    for (k = slv->n; k >= slv->n - slv->band + 1; k--) {
-	t = b[k-1]/slv->d[k-1];
-	for (m = 1; m <= slv->n - k; m++)
-	    t -= slv->o[m-1][k-1] * b[k+m-1];
-	b[k-1] = t;
+    for (k = slv->n-1; k >= slv->n - slv->band; k--) {
+	t = b[k]/slv->d[k];
+	for (m = 0; m < slv->n - k - 1; m++)
+	    t -= slv->o[m][k] * b[k+m+1];
+	b[k] = t;
     }
-    for (k = slv->n - slv->band; k >= 1; k--) {
-	t = b[k-1]/slv->d[k-1];
-	for (m = 1; m <= slv->band; m++) 
-	    t -= (slv->o[m-1][k-1]) * b[k+m-1];
-	b[k-1] = t;
+    for (k = slv->n - slv->band -1; k >= 0; k--) {
+	t = b[k]/slv->d[k];
+	for (m = 0; m < slv->band; m++) 
+	    t -= (slv->o[m][k]) * b[k+m+1];
+	b[k] = t;
     }
 }
 
