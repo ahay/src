@@ -24,26 +24,22 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main (int argc, char *argv[])
 {
-    int nt;		/* number of time samples */
+    int nt, nt2;	/* number of time samples */
     int nz;		/* number of migrated time samples */
-    int nx;		/* number of midpoints 	*/
-    int ik,ix,it,iz;    /* loop counters 	*/
-    int nxfft;	        /* fft size		*/
-    int nk;		/* number of wave numbers */	
+    int nk;		/* number of wavenumbers */
+    int ik,iz;          /* loop counters 	*/
     
     float dt;		/* time sampling interval 	*/
     float dz;		/* migrated time sampling interval */
     float dk;	        /* wave number sampling interval */
-    float k2;             /* wave number squared */
-    float dx;		/* spatial sampling interval	*/
+    float k;            /* wave number */
+    float k0;           /* wave number origin */
     float *vt, v0;	/* velocity v(t)		*/
-    float **p,**q;	/* input, output data		*/
-
-    float complex **cp,**cq; /* complex input,output	*/
+    float *p,*q;	/* input, output data		*/
 
     bool inv;             /* modeling or migration        */
     bool depth;           /* time or depth migration      */
-    float eps;            /* dip filter constant          */               
+    float eps;            /* dip filter constant          */   
 
     sf_file in, out, vel;
 
@@ -56,9 +52,15 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
     /* Stabilization parameter */
 
-    if (!sf_histint(in,"n2",&nx)) nx = 1;
-    if (!sf_histfloat(in,"d2",&dx)) 
+    if (!sf_getbool("depth",&depth)) depth = false;
+    /* if true, depth migration */
+
+    if (!sf_histint(in,"n2",&nk)) nk = 1;
+    if (!sf_histfloat(in,"d2",&dk)) 
 	sf_error ("No d2= in input");
+    if (!sf_histfloat(in,"o2",&k0)) k0=0.;
+    dk *= 2.*SF_PI;
+    k0 *= 2.*SF_PI;
 
     if (inv) { /* modeling */
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
@@ -71,6 +73,7 @@ int main (int argc, char *argv[])
 
 	sf_putint(out,"n1",nt);
 	sf_putfloat(out,"d1",dt);
+	sf_putfloat(out,"o1",0.);
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1= in input");
@@ -88,8 +91,9 @@ int main (int argc, char *argv[])
 	}
 	sf_putint(out,"n1",nz);
 	sf_putfloat(out,"d1",dz);
+	sf_putfloat(out,"o1",0.);
     }
-
+    
     vt = sf_floatalloc(nz);
     if (NULL == sf_getstring("velocity")) {
 	/* file with velocity */
@@ -104,84 +108,42 @@ int main (int argc, char *argv[])
 	sf_fileclose(vel);
     }
 
-    if (!sf_getbool("depth",&depth)) depth = false;
-    /* if true, depth migration */
-
     /* vt -> 1/4 vt^2 */ 
     for (iz=0; iz < nz; iz++) {
 	vt[iz] *= 0.25*vt[iz];
 	if (depth) vt[iz] = 1./vt[iz];
     }
 
-    /* determine wavenumber sampling (for real to complex FFT) */
-    nxfft = sf_npfar(nx);
-    nk = nxfft/2+1;
-    dk = 2.0*SF_PI/(nxfft*dx);
+    /* determine frequency sampling */    
+    nt2 = nt;
+    if (nt%2) nt2++;
+
+    p = sf_floatalloc(nt2);
+    q = sf_floatalloc(nz);
+
+    gazdag_init (eps, nt2, dt, nz, dz, vt, depth);
+
+    for (ik=0; ik < nk; ik++) {
+	k = k0+ik*dk;
+	k *= k;
 	
-    /* allocate space */
-    p = sf_floatalloc2(nt,nxfft);
-    q = sf_floatalloc2(nz,nxfft);
-    cp = sf_complexalloc2(nt,nk);
-    cq = sf_complexalloc2(nz,nk);
-
-    if (inv) {
-	sf_floatread(q[0],nz*nx,in);
-    
-	/* pad with zeros and Fourier transform x to k */
-	for (ix=nx; ix<nxfft; ix++) {
-	    for (iz=0; iz<nz; iz++) {
-		q[ix][iz] = 0.0;
-	    }
-	}
-    
-	sf_pfa2rc(-1,2,nz,nxfft,q[0],cq[0]);
-    } else {
-	sf_floatread(p[0],nt*nx,in);
-    
-	/* pad with zeros and Fourier transform x to k */
-	for (ix=nx; ix<nxfft; ix++) {
-	    for (it=0; it<nt; it++) {
-		p[ix][it] = 0.0;
-	    }
-	}
-    
-	sf_pfa2rc(-1,2,nt,nxfft,p[0],cp[0]);
-    }
-
-    gazdag_init(eps,nt,dt,nz,dz,vt,depth); /* ,gt); */
-
-    /* migrate each wavenumber */
-    for (ik=0; ik<nk; ik++) {
-	k2 = ik*dk;
-	k2 *= k2;
-	gazdag(inv,k2,cp[ik],cq[ik]);
-    }	
-
-    gazdag_close();
-
-    if (inv) {
-	/* Fourier transform k to x (including FFT scaling) */
-	sf_pfa2cr(1,2,nt,nxfft,cp[0],p[0]);
-	for (ix=0; ix<nx; ix++) {
-	    for (it=0; it<nt; it++) {
-		p[ix][it] /= nxfft;
-	    }
-	}
-	
-	sf_floatwrite (p[0],nt*nx,out);
-    } else {
-	/* Fourier transform k to x (including FFT scaling) */
-	sf_pfa2cr(1,2,nz,nxfft,cq[0],q[0]);
-	for (ix=0; ix<nx; ix++) {
-	    for (iz=0; iz<nz; iz++) {
-		q[ix][iz] /= nxfft;
-	    }
+	if (inv) {
+	    sf_floatread(q,nz,in);
+	} else {
+	    sf_floatread(p,nt,in);
+	    if (nt != nt2) p[nt]=0.;
 	}
 
-	sf_floatwrite (q[0],nz*nx,out);
-    }
+	gazdag(inv,k,p,q);
 
+	if (inv) {
+	    sf_floatwrite(p,nt,out);
+	} else {
+	    sf_floatwrite(q,nz,out);
+	}
+    } 
+    
     exit (0);
 }
 
-/* 	$Id: Mgazdag.c,v 1.10 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

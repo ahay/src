@@ -213,4 +213,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft2.c,v 1.9 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

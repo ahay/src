@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nw, nk, iw, ik, nh, ih;
     float complex *oper;
-    float dw,dk, ow, k,w,h, h0, dh, eps,amp,phase;
+    float dw,dk, ow,ok, k,w,h, h0, dh, eps,amp,phase;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -38,9 +38,10 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nk)) sf_error("No n2= in input");
 
-    if (!sf_histfloat (in,"o1",&ow)) sf_error("No o1= in input");
     if (!sf_histfloat (in,"d1",&dw)) sf_error("No d1= in input");
+    if (!sf_histfloat (in,"o1",&ow)) sf_error("No o1= in input");
     if (!sf_histfloat (in,"d2",&dk)) sf_error("No d2= in input");
+    if (!sf_histfloat (in,"o2",&ok)) sf_error("No o2= in input");
 
     if (!sf_getfloat("h",&h)) sf_error("Need h=");
     /* final offset */
@@ -55,15 +56,14 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o3",(h0+dh)*2.);
 
     oper = sf_complexalloc (nw);
-    oper[0] = 0.; /* skip odd-ball frequency */
 
     for (ih = 0; ih < nh; ih++) {
 	h = h0 + (ih+1)*dh;
 
 	for (ik = 0; ik < nk; ik++) {
-	    k = ik*dk;
+	    k = ok+ik*dk;
   
-	    for (iw = 1; iw < nw; iw++) {
+	    for (iw = 0; iw < nw; iw++) {
 		w = ow + iw*dw;
 
 		if (fabsf (w) > FLT_EPSILON) {
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 		    amp = sqrtf(0.5*(1/eps+eps))*expf(0.5*(1-eps));
 		    phase = 1-eps+logf(0.5*(1+eps));
 
-		    oper[iw] = amp*cexpf(SF_PI*I*phase*w);
+		    oper[iw] = amp*cexpf(-SF_PI*I*phase*w);
 		} else {
 		    oper[iw] = 0.;
 		}
@@ -85,4 +85,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfkdmo.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

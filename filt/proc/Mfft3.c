@@ -34,11 +34,12 @@ int main (int argc, char **argv)
     float k0;             /* starting wavenumber */
     float wt;             /* Fourier scaling */
 
-    float complex **cp;	        /* frequency-wavenumber */
+    float complex **cp, *ctrace; /* frequency-wavenumber */
 
     bool inv;              /* forward or inverse */
 
     char varname[6]; /* variable name */
+    kiss_fft_cfg cfg;
     
     sf_file in, out;
 
@@ -83,6 +84,8 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dx);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,x0);
+
+	cfg = kiss_fft_alloc(nk,1,NULL,NULL);
     } else { 
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint(in,varname,&nx)) 
@@ -100,7 +103,6 @@ int main (int argc, char **argv)
 
 	/* determine wavenumber sampling, pad by 2 */
 	nk = nx*2;
-	nk = sf_npfao(nk,nk*2);
 	dk = 1./(nk*dx);
 	k0 = -0.5/dx;
 
@@ -110,23 +112,27 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dk);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,k0);
+
+	cfg = kiss_fft_alloc(nk,0,NULL,NULL);
     }
 
     cp = sf_complexalloc2(n1,nk);
+    ctrace = sf_complexalloc(nk);
 
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
 	    sf_complexread(cp[0],n1*nk,in);
-      
-	    /* Fourier transform k to x */
-	    sf_pfa2cc(1,2,n1,nk,cp[0]);
 
 	    /* FFT scaling */
 	    wt = -1./nk;
-	    for (ix=0; ix<nx; ix++) {
-		wt = -wt;
-		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] *= wt;
+
+	    for (i1=0; i1 < n1; i1++) {
+		/* Fourier transform k to x */
+		kiss_fft_stride(cfg,(kiss_fft_cpx *) (cp[0]+i1),
+				(kiss_fft_cpx *) ctrace,n1);
+		
+		for (ix=0; ix<nx; ix++) {
+		    cp[ix][i1] = ix%2? -ctrace[ix]*wt: ctrace[ix]*wt;
 		}
 	    }
       
@@ -148,16 +154,16 @@ int main (int argc, char **argv)
 		}
 	    }
     
-	    /* Fourier transform x to k */
-	    sf_pfa2cc(-1,2,n1,nk,cp[0]);
-      
-	    /* oddball negative nyquist 
-	    ix = nk/2+1; 
-	    for (i1=0; i1<n1; i1++) {
-		cp[ix][i1] = 0.;
+	    for (i1=0; i1 < n1; i1++) {
+		/* Fourier transform x to k */
+		kiss_fft_stride(cfg,(kiss_fft_cpx *) (cp[0]+i1),
+				(kiss_fft_cpx *) ctrace,n1);
+		/* Transpose */
+		for (ix=0; ix<nk; ix++) {
+		    cp[ix][i1] = ctrace[ix];
+		}
 	    }
-	    */
-
+	    
 	    sf_complexwrite(cp[0],n1*nk,out);
 	}
     }
@@ -165,4 +171,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.10 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

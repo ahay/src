@@ -139,7 +139,7 @@ int main (int argc, char *argv[])
     q = sf_floatalloc2(nz,nx);
     cp = sf_complexalloc2(nw,nx);
 
-    fft = kiss_fftr_alloc(ntfft,inv? 0: 1,NULL,NULL);
+    fft = kiss_fftr_alloc(ntfft,inv? 1: 0,NULL,NULL);
 
     for (ix=0; ix<nx; ix++) {
 	if (inv) {

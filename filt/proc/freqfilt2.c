@@ -4,21 +4,33 @@
 
 #include "freqfilt2.h"
 
-static int nfft, nw, nk, m1, m2;
-static float complex **cdata, *ctrace;
-static float **shape, **tmp;
+static int nfft, nw, m1, m2;
+static float complex *ctrace, *ctrace2, **fft;
+static float *trace, **shape;
+kiss_fftr_cfg tfor, tinv;
+kiss_fft_cfg  xfor, xinv;
 
-void freqfilt2_init(int n1, int n2, int nfft1, int nw1, int nk1)
+void freqfilt2_init(int n1, int n2, int nw1)
 {
     m1 = n1;
     nw = nw1;
     m2 = n2;
-    nfft = nfft1;
-    nk = nk1;
+    nfft = n1;
+    if (n1%2) nfft++;
 
-    cdata = sf_complexalloc2(n1,nk);
+    tfor = kiss_fftr_alloc(nfft,0,NULL,NULL);
+    tinv = kiss_fftr_alloc(nfft,1,NULL,NULL);
+    xfor = kiss_fft_alloc(n2,0,NULL,NULL);
+    xinv = kiss_fft_alloc(n2,1,NULL,NULL);
+    if (NULL == tfor || NULL == tinv || NULL == xfor || NULL == xinv)
+	sf_error("%s: KISS FFT allocation error",__FILE__);
+
+    trace = sf_floatalloc(nfft);
     ctrace = sf_complexalloc(nw);
-    tmp = sf_floatalloc2(n1,nfft);
+    ctrace2 = sf_complexalloc(n2);
+    fft = sf_complexalloc2(nw,n2);
+
+    if (n1%2) trace[n1]=0.;
 }
 
 void freqfilt2_set(float **filt)
@@ -27,11 +39,15 @@ void freqfilt2_set(float **filt)
 }
 
 void freqfilt2_close(void) {
-    free(cdata[0]);
-    free(cdata);
-    free(tmp[0]);
-    free(tmp);
-    free(ctrace);
+    free (tfor);
+    free (tinv);
+    free (xfor);
+    free (xinv);
+    free (trace);
+    free (ctrace);
+    free (ctrace2);
+    free (fft[0]);
+    free (fft);
 }
 
 void freqfilt2_spec (const float* x, float** y) {
@@ -39,30 +55,19 @@ void freqfilt2_spec (const float* x, float** y) {
 
     for (ik=0; ik < m2; ik++) {
 	for (iw=0; iw < m1; iw++) {
-	    tmp[ik][iw] = x[ik*m1+iw];
+	    trace[iw] = x[ik*m1+iw];
 	}
-    }
-
-    for (ik=m2; ik < nfft; ik++) {
-	for (iw=0; iw < m1; iw++) {
-	    tmp[ik][iw] = 0.;
-	}
-    }
-    	
-    sf_pfa2rc (1,2,m1,nfft,tmp[0],cdata[0]);
-
-    for (ik=0; ik < nk; ik++) {
-	for (iw=0; iw < m1; iw++) {
-	    ctrace[iw] = iw%2? -cdata[ik][iw]: cdata[ik][iw];
-	}
-	for (iw=m1; iw < nw; iw++) {
-	    ctrace[iw] = 0.;
-	}
-	
-	sf_pfacc (1,nw,ctrace);
-
+	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
-	    y[ik][iw] = cabsf(ctrace[iw]);
+	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
+	}
+    }
+
+    for (iw=0; iw < nw; iw++) {
+	kiss_fft_stride(xfor,(kiss_fft_cpx *) (fft[0]+iw),
+			(kiss_fft_cpx *) ctrace2,nw);
+	for (ik=0; ik < m2; ik++) {
+	    y[iw][ik] = cabsf(ctrace2[ik]); /* transpose */
 	}
     }
 }
@@ -75,50 +80,40 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 
     for (ik=0; ik < m2; ik++) {
 	for (iw=0; iw < m1; iw++) {
-	    tmp[ik][iw] = adj? y[ik*m1+iw]: x[ik*m1+iw];
+	    trace[iw] = adj? y[ik*m1+iw]: x[ik*m1+iw];
 	}
-    }
-
-    for (ik=m2; ik < nfft; ik++) {
-	for (iw=0; iw < m1; iw++) {
-	    tmp[ik][iw] = 0.;
-	}
-    }
-    	
-    sf_pfa2rc (1,2,m1,nfft,tmp[0],cdata[0]);
-
-    for (ik=0; ik < nk; ik++) {
-	for (iw=0; iw < m1; iw++) {
-	    ctrace[iw] = iw%2? -cdata[ik][iw]: cdata[ik][iw];
-	}
-	for (iw=m1; iw < nw; iw++) {
-	    ctrace[iw] = 0.;
-	}
-
-	sf_pfacc (1,nw,ctrace);
-
+	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
-	    ctrace[iw] *= shape[ik][iw];
-	}
-
-	sf_pfacc (-1,nw,ctrace);
-
-	for (iw=0; iw < m1; iw++) {
-	    cdata[ik][iw] = iw%2? -ctrace[iw]: ctrace[iw];
+	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
 	}
     }
 
-    sf_pfa2cr (-1,2,m1,nfft,cdata[0],tmp[0]);
+    for (iw=0; iw < nw; iw++) {
+	kiss_fft_stride(xfor,(kiss_fft_cpx *) (fft[0]+iw),
+			(kiss_fft_cpx *) ctrace2,nw);
+
+	for (ik=0; ik < m2; ik++) {
+	    ctrace2[ik] *= shape[iw][ik];
+	}
+
+	kiss_fft(xinv,(kiss_fft_cpx *) ctrace2,(kiss_fft_cpx *) ctrace2);
+
+	for (ik=0; ik < m2; ik++) {
+	    fft[ik][iw] = ik%2? -ctrace2[ik]: ctrace2[ik];
+	}
+    }
 
     for (ik=0; ik < m2; ik++) {
+	kiss_fftri (tinv,(kiss_fft_cpx *) fft[ik], trace);
+
 	for (iw=0; iw < m1; iw++) {	  
 	    if (adj) {
-		x[ik*m1+iw] += tmp[ik][iw];
+		x[ik*m1+iw] += trace[iw];
 	    } else {
-		y[ik*m1+iw] += tmp[ik][iw];
+		y[ik*m1+iw] += trace[iw];
 	    }
 	}
     }
 }
 
-/* 	$Id: freqfilt2.c,v 1.3 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id$	 */

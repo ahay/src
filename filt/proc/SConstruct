@@ -6,7 +6,7 @@ progs = '''
 ai2refl aliasp autocorr bandpass bin bin1 blindpick blindpick2 boxsmooth
 byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
 dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dix
-envelope extract fft1 fft2 fft3 fint1 flat fourvc fourvc2 frame helicon hole
+envelope extract fft1 fft3 fint1 flat fourvc fourvc2 frame helicon hole
 idempatch igrad imospray impl1 impl2 infill inmo intbin invbin1 kolmog
 lapfill levint light lopef losignoi lpad lpef make misif
 miss miss1 miss2 miss3 monof monof2 msmiss mspef nhelicon nmo noise npef parcel

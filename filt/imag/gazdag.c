@@ -4,105 +4,94 @@
 
 #include "gazdag.h"
 
-static float eps, dt, dz, *vt, dw, fw;
-static int nt, nz;
+static float eps, dz, *vt, dw;
+static int nz, nw;
 static float complex *pp;
 static bool depth;
-static kiss_fft_cfg forw, invs;
+static kiss_fftr_cfg forw, invs;
 
-void gazdag_init (float eps1, int nt1, float dt1, 
-		  int nz1, float dz1, float *vt1, bool depth1)
+void gazdag_init (float eps1, int nt, float dt, 
+                  int nz1, float dz1, float *vt1, bool depth1)
 {
+
+
     eps = eps1; 
-    nt = nt1; dt = dt1; 
     nz = nz1; dz = dz1;
     vt = vt1;
     depth = depth1;
 
     /* determine frequency sampling */
+    nw = nt/2+1;
     dw = 2.0*SF_PI/(nt*dt);
-    fw = -SF_PI/dt;
     
-    forw = kiss_fft_alloc(nt,0,NULL,NULL);
-    invs = kiss_fft_alloc(nt,1,NULL,NULL);
-    if (NULL == forw || NULL == invs) 
-	sf_error("%s: KISS FFT allocation error",__FILE__);
+    forw = kiss_fftr_alloc(nt,0,NULL,NULL);
+    invs = kiss_fftr_alloc(nt,1,NULL,NULL);
     
     /* allocate workspace */
-    pp = sf_complexalloc (nt);
+    pp = sf_complexalloc (nw);
 }
 
 void gazdag_close ()
 {    
     /* free workspace */
-    free (pp);	
+    free (pp);  
 }
 
-void gazdag (bool inv, float k2, float complex *p, float complex *q)
+void gazdag (bool inv, float k2, float *p, float *q)
 {
-    int it,iz,iw;
+    int iz,iw;
     float complex cshift, w2;
-	
+        
     if (inv) { /* modeling */
-	for (iw=0; iw<nt; iw++) {
-	    pp[iw] = q[nz-1];
-	}
+        for (iw=0; iw<nw; iw++) {
+            pp[iw] = q[nz-1];
+        }
 
-	/* loop over migrated times z */
-	for (iz=nz-2; iz>=0; iz--) {
-	    /* loop over frequencies w */
-	    for (iw=0; iw<nt; iw++) {
-		w2 = eps*dw + I*(fw + iw*dw);
+        /* loop over migrated times z */
+        for (iz=nz-2; iz>=0; iz--) {
+            /* loop over frequencies w */
+            for (iw=0; iw<nw; iw++) {
+                w2 = eps*dw + I*iw*dw;
 
-		if (depth) {
-		    w2 = w2*w2 * vt[iz] + k2;
-		} else {
-		    w2 = w2*w2 + vt[iz] * k2;
-		}
-	
-		cshift = cexpf(-csqrtf(w2)*dz);
-		pp[iw] = pp[iw]*cshift + q[iz];
-	    }
-	}
+                if (depth) {
+                    w2 = w2*w2 * vt[iz] + k2;
+                } else {
+                    w2 = w2*w2 + vt[iz] * k2;
+                }
+        
+                cshift = cexpf(-csqrtf(w2)*dz);
+                pp[iw] = pp[iw]*cshift + q[iz];
+            }
+        }
 
-	kiss_fft(forw,(const kiss_fft_cpx *) pp, 
-		 (kiss_fft_cpx *) pp);
-	for (it=0; it<nt; it++) {
-	    p[it] = (it%2)? -pp[it] : pp[it];
-	}
+        kiss_fftri(invs,(const kiss_fft_cpx *) pp, p);
     } else { /* migration */
-	/* pad with zeros and Fourier transform t to w, with w centered */
-	for (it=0; it<nt; it++) {
-	    /* scale accumulated image just as we would for an FFT */
-	    pp[it] = (it%2 ? -p[it] : p[it])/nt;
-	}
-	kiss_fft(invs,(const kiss_fft_cpx *) pp, 
-		 (kiss_fft_cpx *) pp);
+	kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
     
-	/* loop over migrated times z */
-	for (iz=0; iz<nz; iz++) {
-	    /* initialize migrated sample */
-	    q[iz] = 0.0;
+        /* loop over migrated times z */
+        for (iz=0; iz<nz; iz++) {
+            /* initialize migrated sample */
+            q[iz] = 0.0;
       
-	    /* loop over frequencies w */
-	    for (iw=0; iw<nt; iw++) {
-		/* accumulate image (summed over frequency) */
-		q[iz] += pp[iw];
+            /* loop over frequencies w */
+            for (iw=0; iw<nw; iw++) {
+                /* accumulate image (summed over frequency) */
+                q[iz] += pp[iw];
 
-		w2 = eps*dw + I*(fw + iw*dw);
+                w2 = eps*dw + I*iw*dw;
 
-		if (depth) { /* depth migration */
-		    w2 = w2*w2 * vt[iz] + k2;
-		} else { /* time migration */
-		    w2 = w2*w2 + vt[iz] * k2;
-		}
-	
-		/* extrapolate down one migrated time step */
-		cshift = conjf(cexpf(-csqrtf(w2)*dz));
-		pp[iw] *= cshift;
-	    }
-	}
+                if (depth) { /* depth migration */
+                    w2 = w2*w2 * vt[iz] + k2;
+                } else { /* time migration */
+                    w2 = w2*w2 + vt[iz] * k2;
+                }
+        
+                /* extrapolate down one migrated time step */
+                cshift = cexpf(-csqrtf(w2)*dz);
+                pp[iw] *= conjf(cshift);
+            }
+        }
     }
 }
 
-/* 	$Id$	 */
+/*      $Id$     */

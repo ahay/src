@@ -25,8 +25,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int nw,nh,nx, iw,ix,ih, k;
-    float dw, h0,dh,dx, w,w2, h,h2,dh2,hdh;
-    float complex diag, diag2, *in, *out, offd, offd2;
+    float dw, h0,dh,dx, w0,w,w2, h,h2,dh2;
+    float complex diag, diag2, *in, *out, offd, offd2, c1, c2;
     ctris slv;
     sf_file input, output;
 
@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(input,"n2",&nw)) sf_error("No n2= in input");
     if (!sf_histfloat(input,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(input,"d2",&dw)) sf_error("No d2= in input");
+    if (!sf_histfloat(input,"o2",&w0)) sf_error("No o2= in input");
+    w0 *= 2.*SF_PI;
     dw *= 2.*SF_PI;
 
     if (!sf_getint("nh",&nh)) sf_error("Need nh=");
@@ -61,29 +63,36 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	sf_warning("frequency %d of %d",iw+1,nw);
 
-	w = iw*dw; 
+	w = w0+iw*dw; 
 	w2 = w*w;
 
 	sf_complexread(out,nx,input);
+
+	if (fabsf(w) < dw) {
+	    for (ix=0; ix < nx; ix++) {
+		out[ix]=0.;
+	    }
+	    sf_complexwrite (out,nx,output);
+	    continue;
+	}
+		
+	c1 = 3.*(9. + w2 + 4.*w*I)/(w2*(3. - w*I));
+	c2 = 3.*(w2 - 27. + 8.*w*I)/(w2*(3. - w*I));
+
 	for (ih=0; ih < nh; ih++) {
 	    for (ix=0; ix < nx; ix++) {
 		in[ix] = out[ix];
 	    }
 
 	    h = h0 + ih*dh; 
-	    h2 = h*h; 
-	    hdh = 2.*dh*h;
+	    h2 = h+dh;
+	    h *= h;
+	    h2 *= h2; 
 
-	    diag  = 2.*(w*(12.*(h2 - dh2 - hdh) + 5.*w2) + 
-			I*(-27.*(dh2 + hdh + 4.*h2) - 
-			   3.*(5. + dh2 + hdh)*w2));       
-	    diag2 = 2.*(w*(12.*(h2 + 2.*dh2 + 2.*hdh) + 5.*w2) +
-			I*(-27.*(3.*dh2 + 3.*hdh + 4.*h2) + 
-			   3.*(-5. + dh2 + hdh)*w2));           
-	    offd  = w*(12.*(dh2 + hdh - h2) + w2) +
-		I*(27.*(dh2 + hdh + 4.*h2) + 3.*(-1. + dh2 + hdh)*w2);
-	    offd2 = w*(-12.*(2.*dh2 + 2.*hdh + h2) + w2) + 
-		I*(27.*(3.*dh2 + 3.*hdh + 4.*h2) - 3.*(1. + dh2 + hdh)*w2);
+	    offd  = 1. - c1*h2 + c2*h;
+	    offd2 = 1. - c1*h  + c2*h2;
+	    diag  = 12. - 2.*offd;
+	    diag2 = 12. - 2.*offd2;
 
 	    ctridiagonal_const_define (slv, diag2, offd2);
 
@@ -101,4 +110,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfincon.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

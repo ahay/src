@@ -7,9 +7,9 @@ static float *p /* , dt */;
 static float complex *pp;
 static kiss_fftr_cfg forw, invs;
 
-void cosft_init(int nw /*, float o1, float d1 */) {
+void cosft_init(int nw_in /*, float o1, float d1 */) {
+    nw = nw_in;
     nt = 2*(nw-1);
-    sf_warning("nw=%d",nw);
     p  = sf_floatalloc (nt);
     pp = sf_complexalloc(nw);
     forw = kiss_fftr_alloc(nt,0,NULL,NULL);

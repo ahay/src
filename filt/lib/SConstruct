@@ -7,7 +7,8 @@ import configure
 #############################################################################
 src = '''
 adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
-decart dottest error file files getpar kiss_fft kiss_fftr math1 pfafft segy simtab stack
+decart dottest error file files getpar kiss_fft kiss_fftr math1
+segy simtab stack
 '''
 
 sources  = map(lambda x: x+'.c',Split(src))

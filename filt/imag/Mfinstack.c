@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     for (iw=0; iw < nw; iw++) {
 	sf_warning("frequency %d of %d",iw+1,nw);
 
-	w = -2.*SF_PI*(w0 + iw*dw); 
+	w = 2.*SF_PI*(w0 + iw*dw); 
 	w2 = w*w;
 
 	sf_complexread(dat[0],nx*nh,cmp);
@@ -117,8 +117,8 @@ int main(int argc, char* argv[])
 
 	    h = h0 + ih*dh; 
 	    h2 = h+dh*ns; 
-	    h = h*h; 
-	    h2 = h2*h2;
+	    h *= h; 
+	    h2 *= h2;
 
 	    offd  = 1. - c1*h2 + c2*h;
 	    offd2 = 1. - c1*h  + c2*h2;
@@ -143,4 +143,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mfinstack.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

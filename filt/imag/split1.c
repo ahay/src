@@ -56,7 +56,6 @@ void split1 (bool verb, bool inv, float eps,
 	    for (iz=nz-2; iz>=0; iz--) {
 		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
 			 (kiss_fft_cpx *) pp);
-		pp[nk/2+1] = 0.; /* oddball negative nyquist */
 
 		for (ix=0; ix<nk; ix++) {
 		    jx = (ix < nk/2)? ix + nk/2: ix - nk/2;
@@ -102,7 +101,6 @@ void split1 (bool verb, bool inv, float eps,
 		
 		kiss_fft(forw,(const kiss_fft_cpx *) pp, 
 			 (kiss_fft_cpx *) pp);
-		pp[nk/2+1] = 0.0; /* oddball negative nyquist */
 
 		for (ix=0; ix<nk; ix++) {
 		    jx = (ix < nk/2)? ix + nk/2: ix - nk/2;
