@@ -375,6 +375,7 @@ Plot('inter1',['pstack','sstack'],
      '''
      interleave axis=2 other=${SOURCES[1]} |
      grey title='Interleaved (Before)'
+     label1='Time (s)' label2='In-line'
      ''')
 
 Plot('Presh','Presh',plot('Balanced PP'))
@@ -492,7 +493,7 @@ Combine('Warp5','Presh2 wline5 diff6 Gamma5','TwoByTwo',result=1)
 
 Plot('inter2',['Presh2','wline5'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 other=${SOURCES[1]} | 
      grey title='Interleaved (After)'
      ''')
 Combine('inter',['inter','inter2'],'OverUnderAniso',result=1)
@@ -509,6 +510,7 @@ Plot('inter3',['pstack2','sstack2'],
      '''
      interleave axis=2 other=${SOURCES[1]} |
      grey title='Interleaved (After)'
+     label1='Time (s)' label2='In-line'
      ''')
 
 #############################################################################
@@ -518,6 +520,7 @@ Plot('inter3',['pstack2','sstack2'],
 #############################################################################
 
 Flow('pcube','ppcube','window max1=3 | costaper nw1=300')
+Flow('scube','pscube','costaper nw1=300')
 
 Flow('wcube',['pscube','pcube','khaled3'],
      warp0 + ' | costaper nw1=300')
@@ -618,21 +621,35 @@ Combine('cube3','ppresh wcube3','SideBySideAniso',result=1)
 
 def colorplot3(title):
     return '''
-    window min1=1.5 max1=1.7 |
+    window min1=1 max1=2 |
     byte bias=1.8 |
-    grey3 flat=y frame3=%d frame2=%d frame1=50 title="%s"
-    point1=0.1 point2=0.5 color=j
+    grey3 flat=y frame3=%d frame2=%d frame1=100 title="%s"
+    point1=0.25 point2=0.5 color=j
     label1="Time (s)" label2="In-line" label3="Cross-line"
     ''' % (line-15,trace-18,title)
 
-Flow('ggamma',['wwarp','time3'],warp2gamma2)
+#Flow('ggamma',['wwarp','time3'],warp2gamma2)
 Result('ggamma','ggamma',colorplot3('Vp/Vs'))
 
-Flow('wcube4',['pscube','pcube','wwarp'],
-     warp0 + ' | costaper nw1=300')
+#Flow('wcube4',['pscube','pcube','wwarp'],
+#     warp0 + ' | costaper nw1=300')
 
 Plot('wcube4','wcube4',plot3('Warped PS (After)'))
 Combine('cube2','pcube wcube4','SideBySideAniso',result=1)
+
+def slice(title):
+    return '''
+    window n1=1 min1=1.588 |
+    grey verb=y color=j label1="In-line" label2="Cross-line" title="%s"
+    transp=n yreverse=n clip=4
+    ''' % title
+
+Plot('pslice','pcube',slice('PP'))
+Plot('wslice','wcube',slice('Warped PS (Before)'))
+Plot('wslice2','wcube4',slice('Warped PS (After)'))
+
+Combine('slice0','pslice wslice','SideBySideAniso',result=1)
+Combine('slice2','pslice wslice2','SideBySideAniso',result=1)
 
 ###########################################################################
 End()
