@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
     int   nop=2;       /* Laplacian operator size */
     float c0, c1, c2;  /* Laplacian operator coefficients */
 
-    int  nbz,nbx; // boundary size
-    float tz, tx; // sponge boundary decay coefficients
+    int  nbz,nbx; /* boundary size */
+    float tz, tx; /* sponge boundary decay coefficients */
     float dp;
 
 /*------------------------------------------------------------*/
