@@ -8,6 +8,8 @@ int main(int argc, char* argv[])
     int nsr, it, nt;
 
     sf_init (argc,argv);
+    vp_init ();
+
     if (!sf_getint("n1",&n1)) sf_error("Need n1=");
     if (!sf_getint("n2",&n2)) sf_error("Need n2=");
     if (!sf_getfloat("d1",&d1)) sf_error("Need d1=");
@@ -22,8 +24,9 @@ int main(int argc, char* argv[])
     /* transp and yreverse */
     vp_stdplot_init (o1,o1+(n1-1)*d1,o2,o2+(n2-1)*d2,
 		     true,false,true,false);
-    vp_frame();
-
+    vp_plot_init(1);
+    vp_plot_set(0);
+ 
     fread(&nsr,sizeof(int),1,stdin);
 
     for (ir=0; ir < nsr; ir++) {
@@ -35,6 +38,8 @@ int main(int argc, char* argv[])
 	    vp_udraw(traj[it][1],traj[it][0]);
 	}
     }
+
+    vp_frame();
 
     exit(0);
 }
