@@ -202,7 +202,7 @@ void split_cell (acell cell,
 	    cell->child[0]->level = cell->level+1;
 	    cell->child[1]->level = cell->level+1;
 	    cell->child[0]->offset = cell->offset;
-	    cell->child[1]->offset = cell->offset+pow(0.5,cell->level);
+	    cell->child[1]->offset = cell->offset+powf(0.5,cell->level);
 	    cell->child[0]->node[0] = cell->node[0];
 	    cell->child[0]->node[1] = sf_floatalloc (nd);
 	    cell->child[1]->node[0] = cell->child[0]->node[1];

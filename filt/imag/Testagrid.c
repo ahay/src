@@ -14,6 +14,8 @@ static void mysin (float q, void* v, float* f)
 
   f[0] = x;
   f[1] = sinf(x);
+
+  sf_warning("got %g %g\n",f[0],f[1]);
 }
 
 int main(int argc, char* argv[])
