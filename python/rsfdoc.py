@@ -43,7 +43,7 @@ def use(target=None,source=None,env=None):
                     if status:
                         print ('No uses found in book/%s/%s/%s/: %s' %
                                (book,chapter,project,progs))
-                    else:
+                    elif progs[:5] != 'scons':
                         for prog in string.split(progs):
                             doc.append(
                                 'rsfdoc.progs["%s"].use("%s","%s","%s")' %

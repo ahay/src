@@ -95,7 +95,8 @@ void pick0_step0 (float t0, float* t)
 
     t[0] = t0;
     for (i2 = 0; i2 < n2-1; i2++) {
-	i = floor(t0); sf_eno_apply (ent[i2], i, t0-i, &k1, NULL, FUNC);
+	i = floorf(t0); 
+	sf_eno_apply (ent[i2], i, t0-i, &k1, NULL, FUNC);
 	if (k1 < pmin) k1 = pmin;
 	if (k1 > pmax) k1 = pmax;
 	t0 += k1;
