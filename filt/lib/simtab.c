@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <alloca.h>
 #include <stdio.h>
 #include <limits.h>
 #include <float.h>
@@ -368,7 +369,8 @@ void sf_simtab_put (sf_simtab table, const char *keyval) {
 }
 
 void sf_simtab_input (sf_simtab table, FILE* fp) {
-    char line[LINELEN], word[LINELEN], c, *cl, *cw;
+    char line[LINELEN], word[LINELEN], *cl, *cw;
+    int c;
     enum {START, INAWORD, STRING} state;
     const char eol='\014', eot='\004';
     long pos;

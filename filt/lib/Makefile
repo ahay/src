@@ -1,9 +1,12 @@
+CC = cc
 CC = gcc
 CFLAGS = -Wall -pedantic -O3
 CFLAGS = -Wall -pedantic -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -g
+CFLAGS = -g
 CFLAGS = -std=gnu9x -Wall -pedantic -g
 
+DEPEND = -xM1
 DEPEND = -MM
 
 SRC = alloc c99 decart error file files getpar math1 pfafft segy simtab stack

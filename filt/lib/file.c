@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <alloca.h>
 #include <string.h>
 #include <time.h>
 
 #include <limits.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/param.h>
 #include <unistd.h>
 #include <dirent.h>
 #include <errno.h>
@@ -18,6 +20,11 @@
 #include "simtab.h"
 #include "alloc.h"
 #include "error.h"
+
+/* BSD - MAXNAMELEN, Posix - NAME_MAX */
+#ifndef NAME_MAX 
+#define	NAME_MAX MAXNAMELEN
+#endif
 
 struct sf_File {
     FILE *stream; 

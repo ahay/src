@@ -108,8 +108,8 @@ void sf_math_evaluate (int len, int nbuf, float** fbuf, float** fst)
 
 int sf_math_parse (char* output, sf_file out)
 {
-    int i, j, keylen, *indx, type=-1, top, len;
-    char *key, c, c2;
+    int i, j, keylen, *indx, type=-1, top, len, c, c2;
+    char *key;
     float *num;
     bool hasleft;
 
@@ -173,7 +173,7 @@ int sf_math_parse (char* output, sf_file out)
 
 	if (isalpha (c)) { /* identifier */
 	    for (j=i+1; j < len; j++) {
-		if (!isalnum(output[j])) break;
+		if (!isalnum((int) output[j])) break;
 	    }
 
 	    keylen = j-i;
