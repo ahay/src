@@ -23,16 +23,12 @@
 
 #include <rsf.h> 
 
-#include "int1.h"
-#include "interp_spline.h"
-#include "prefilter.h"
-#include "divn.h"
+#include "warpscan.h"
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, m[4], ntr, n2, order, ng, ig, rect[4], niter, n2g, i, dim;
-    float *coord, *inp, ***out, o1, d1, o2, d2, g0, dg, g, dout, doth, o, d;
-    float *rat1, *rat2, *num, *den, **oth;
+    int n1, m[4], ntr, n2, order, ng, rect[4], niter, n2g, dim;
+    float **inp, **oth, o1, d1, o2, d2, g0, dg, o, d, *rat1;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -114,92 +110,20 @@ int main(int argc, char* argv[])
 	sf_error ("accuracy must be between 1 and 4");
     }
     order *= 2;
-
-    coord = sf_floatalloc (n2); 
-    inp =   sf_floatalloc (n1);
-    out =   sf_floatalloc3 (n2,ng,ntr);
-    oth =   sf_floatalloc2 (n2,ntr);
-
+    
     n2g = n2*ng*ntr;
-
+    
+    inp = sf_floatalloc2 (n1,ntr);
+    oth = sf_floatalloc2 (n2,ntr);
     rat1 = sf_floatalloc (n2g);
-    rat2 = sf_floatalloc (n2g);
-    num = sf_floatalloc (n2g);
-    den = sf_floatalloc (n2g);
 
-    prefilter_init (order, n1, order*10);     
-    divn_init(dim, n2g, m, rect, niter);
+    warpscan_init(n1,o1,d1,n2,o2,d2,ng,g0,dg,ntr,order,dim,m,rect,niter);
+    
+    sf_floatread(inp[0],n1*ntr,in);
+    sf_floatread(oth[0],n2*ntr,other);
 
-    doth = 0.;
-    dout = 0.;
-    for (i2=0; i2 < ntr; i2++) {
-	sf_floatread(inp,n1,in);
-	prefilter_apply (n1, inp);
+    warpscan(inp,oth,rat1);
 
-	sf_floatread(oth[i2],n2,other);
-
-	for (i1=0; i1 < n2; i1++) {
-	    doth += oth[i2][i1]*oth[i2][i1];
-	}
-	
-	for (ig=0; ig < ng; ig++) {
-	    g = g0 + ig*dg;
-
-	    for (i1=0; i1 < n2; i1++) {
-		coord[i1] = (o2+i1*d2)*g;
-	    }
-
-	    int1_init (coord, o1, d1, n1, spline_int, order, n2);
-
-	    int1_lop (false,false,n1,n2,inp,out[i2][ig]);
-
-	    for (i1=0; i1 < n2; i1++) {
-		dout += out[i2][ig][i1]*out[i2][ig][i1];
-	    }
-	}
-    }
-    doth = sqrtf(ntr*n2/doth);
-    dout = sqrtf(n2g/dout);
-
-    for (i2=0; i2 < ntr; i2++) {
-	for (ig=0; ig < ng; ig++) {
-	    for (i1=0; i1 < n2; i1++) {
-		i = (i2*ng + ig)*n2+i1;
-		den[i] = out[i2][ig][i1]*dout;
-		num[i] = oth[i2][i1]*dout;
-	    }
-	}
-    }
-
-    divn(num,den,rat1);
-	
-    for (i2=0; i2 < ntr; i2++) {
-	for (ig=0; ig < ng; ig++) {
-	    for (i1=0; i1 < n2; i1++) {
-		i = (i2*ng+ig)*n2+i1;
-		num[i] = out[i2][ig][i1]*doth;
-		den[i] = oth[i2][i1]*doth;
-	    }
-	}
-    }
-    divn(num,den,rat2);
-	
-    for (i=0; i < n2g; i++) {
-	if (rat1[i] > 0.) {
-	    if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
-		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-	    } else {
-		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-	    }
-	} else {
-	    if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
-		rat1[i] = -sqrtf(fabsf(rat1[i]*rat2[i]));
-	    } else {
-		rat1[i] = sqrtf(fabsf(rat1[i]*rat2[i]));
-	    }
-	}
-    }
-	
     sf_floatwrite(rat1,n2g,warped);
 
     exit (0);
