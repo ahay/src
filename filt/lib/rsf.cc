@@ -7,6 +7,8 @@
 
 #include "rsf.hh"
 
+#include "_bool.h"
+
 // ***** Public methods ***********
 ///////////////////////////////////
 
@@ -100,13 +102,13 @@ iRSF::get (const char* name, int& value) const
 void 
 iRSF::get (const char* name, bool &value, bool defolt) const
 {
-    bool cvalue;
+    bool cvalue[4];
 
     if (file_)  {
-	if (sf_histbool (file_,name,&cvalue)) value=cvalue; 
+	if (sf_histbool (file_,name,cvalue)) value=cvalue[0]; 
 	else value = defolt;
     } else {
-	if (sf_getbool (name, &cvalue)) value=cvalue; 
+	if (sf_getbool (name,cvalue)) value=cvalue[0]; 
 	else value = defolt;
     }
 }
@@ -114,13 +116,17 @@ iRSF::get (const char* name, bool &value, bool defolt) const
 void 
 iRSF::get (const char* name, bool& value) const
 {
+    bool cvalue[4];	
+	
     if (file_)  {
-	if (!sf_histbool(file_,name,&value)) 
+	if (!sf_histbool(file_,name,cvalue)) 
 	    sf_error("missing history value: %s",name);
     } else {
-	if (!sf_getbool(name,&value)) 
+	if (!sf_getbool(name,cvalue)) 
 	    sf_error("missing parameter value: %s",name);
     }
+
+    value = cvalue[0];
 }
 
 void 
