@@ -25,9 +25,9 @@ Flow('ricker ricker1 ricker2','Ricker',
      ''')
 Flow('integr','ricker','causint')
 
-Result('spec','ricker integr',
+Result('spec','ricker integr minphase',
        '''
-       cat axis=2 ${SOURCES[1]} |
+       cat axis=2 ${SOURCES[1:3]} |
        pad n1=1024 |
        spectra |
        graph title=Spectrum label1="Frequency (Hz)" 

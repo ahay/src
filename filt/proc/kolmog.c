@@ -40,7 +40,7 @@ void kolmog2(int nfft, int nw, float *trace, float complex *fft)
     sf_pfarc (1,nfft,trace,fft);
 
     for (i1=0; i1 < nw; i1++) {
-	fft[i1] = cexp(fft[i1]);
+	fft[i1] = cexp(fft[i1])/nfft;
 	sf_warning("got %d: (%g,%g)",i1,crealf(fft[i1]),cimagf(fft[i1]));
     }
 
