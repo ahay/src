@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 /* The following from C99 - must define for C90 */
 #include <complex.h>
+#undef I
+#define I (1.0fi)
 /*^*/
 
 #else
