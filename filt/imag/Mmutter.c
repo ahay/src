@@ -1,14 +1,10 @@
+/* Muting.
 
-/*
-  Data is weighted by sine squared inside a mute zone.
-  The weight is zero above the line	t <       x * slope0
-  The weight is one after the line     t >  tp + x * slopep
-  Suggested defaults: slopep = slope0= 1./1.45 sec/km;  tp=.150 sec
-  
-  Defaults:
-  slope0 = 1./1.45 = .69	sec/km
-  slopep = slope0
-  tp     = .150		sec
+Takes: < cmp.rsf > muted.rsf
+
+Data is smoothly weighted inside the mute zone.
+The weight is zero for t <       (x-x0) * slope0
+The weight is one  for t >  tp + (x-x0) * slopep
 */
 
 #include <rsf.h>
@@ -18,7 +14,7 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype;
-    float tp,tm, slope0, slopep, slopem, o1,d1,o2,d2, x, x0, *data;
+    float tp, slope0, slopep, o1,d1,o2,d2, x,x0,x1, *data;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -37,17 +33,16 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&d2)) sf_error("No d2= in input");
     
     if (!sf_getfloat("tp",&tp)) tp=0.150;
-    if (!sf_getfloat("tm",&tm)) tm=0.150;
     if (!sf_getfloat("slope0",&slope0)) slope0=1./1.45;
     if (!sf_getfloat("slopep",&slopep)) slopep=slope0;
-    if (!sf_getfloat("slopem",&slopem)) slopem=0.; 
+    if (!sf_getfloat("x0",&x1)) x1=0.;
 
     data = sf_floatalloc(n1);
 
     mutter_init(n1,o1,d1);
 
     for (i3=0; i3 < n3; i3++) { 
-	x0= o2 + (d2/CDPtype)*(i3%CDPtype);
+	x0= o2 + (d2/CDPtype)*(i3%CDPtype) - x1;
 	for (i2=0; i2 < n2; i2++) { 
 	    x = x0+i2*d2;
 
@@ -60,3 +55,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
+/* 	$Id: Mmutter.c,v 1.2 2004/03/19 05:45:00 fomels Exp $	 */
