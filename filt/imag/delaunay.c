@@ -1,18 +1,35 @@
+/* Incremental Delaunay triangulation. */
 /*
- * File: delaunay.c
- * ----------------
- * Implementation of the incremental Delaunay triangulation.
- */
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "delaunay.h"
+
 #include "list_struct.h"
 #include "_basic_struct.h"
+/*^*/
+
 #include "predicates.h"
 
 /* private variables */
@@ -52,17 +69,14 @@ static void InTriangle (Triangle abc) {
 }
 */
 
-/* 
- * Function: DelaunayNew
- * ---------------------
- * Creates a big initial triangle, using the bounding box information.
+void DelaunayNew (double xmin, double xmax, 
+		  double ymin, double ymax, double zero)
+/*< Creates a big initial triangle, using the bounding box information.
  * Adds 3 nodes  and 3 edges. 
  * The nodes are placed at 
  * {(3*xmin-xmax)/2, ymin}, {(3*xmax-xmin)/2}, 
  * {(xmax+xmin)/2, 2*ymax-ymin}
- */
-void DelaunayNew (double xmin, double xmax, 
-		  double ymin, double ymax, double zero)
+ >*/
 {
     Edge ab;
     Node a[3];
@@ -89,12 +103,8 @@ void DelaunayNew (double xmin, double xmax,
 #endif
 }
 
-/*
- * Function: TestEdge
- * ------------------
- * The output > 0 if q is on the left of ab
- */
-double TestEdge (Edge ab, Node q)
+static double TestEdge (Edge ab, Node q)
+/* The output > 0 if q is on the left of ab */
 {
     double test;
 
@@ -106,8 +116,8 @@ double TestEdge (Edge ab, Node q)
     return test;
 }
 
-
-int GoodEdge (Edge ab)
+static int GoodEdge (Edge ab)
+/* test if an edge is good */
 {
     double test;
     Node near[2];
@@ -126,13 +136,10 @@ int GoodEdge (Edge ab)
     return (ab->type == BOUNDARY)? (test >= 0.) : (test > 0.);
 }
 
-/*
- * Function: LocateNode
- * --------------------
- * Starting from the bounding triangle abc, outputs
+static Triangle LocateNode (Triangle abc, Node q) 
+/* Starting from the bounding triangle abc, outputs
  * the triangle, containing the node q. 
  */
-Triangle LocateNode (Triangle abc, Node q) 
 {
     int i, k;
 
@@ -161,24 +168,15 @@ Triangle LocateNode (Triangle abc, Node q)
     return LocateNode (abc->child[k], q);
 }
 
-/*
- * Function: DelaunayFree
- * ----------------------
- * Frees the storage associated with the triangulation.
- * (Except nodes and edges.)
- */ 
 void DelaunayFree (void)
+/*<  * Frees the storage associated with the triangulation.
+ * (Except nodes and edges.)
+ >*/
 {
     FreeTriangle (BigTriangle);
 }
 
-/*
- * Function: FreeTriangle
- * ----------------------
- * Frees the storage associated with the triangle.
- * (Except nodes and edges.)
- */ 
-void FreeTriangle (Triangle abc)
+static void FreeTriangle (Triangle abc)
 {
     int i;
 
@@ -191,28 +189,21 @@ void FreeTriangle (Triangle abc)
     free (abc);
 }
 
-/* 
- * Function: DelaunayWrite
- * -----------------------
- * Writes the nodes of the triangulation
+void DelaunayWrite (sf_file file)
+/*< Writes the nodes of the triangulation
  * to file. The output format is
  *
  * a_0 b_0 c_0
  * a_1 b_1 c_1
- * ...
- */
-void DelaunayWrite (sf_file file)
+ >*/
 {
     WriteTriangle (file, BigTriangle);
 }
-  
-/* 
- * Function: WriteTriangle
- * -----------------------
- * Writes the nodes of triangle abc and all its descendants
+ 
+static void WriteTriangle (sf_file file, Triangle abc)
+/* Writes the nodes of triangle abc and all its descendants
  * to file. 
  */
-void WriteTriangle (sf_file file, Triangle abc)
 {
     int i, ends[3];
 
@@ -230,12 +221,7 @@ void WriteTriangle (sf_file file, Triangle abc)
     }
 }
 
-/* 
- * Function: InsertANode
- * ---------------------
- * Inserts node q to the given triangle.
- */ 
-void InsertANode (Node q, Triangle abc)
+static void InsertANode (Node q, Triangle abc)
 {
     int i;
     Edge ab;
@@ -254,13 +240,8 @@ void InsertANode (Node q, Triangle abc)
     }
 }
 
-
-/* 
- * Function: InsertNode
- * --------------------
- * Inserts node q to the triangulation.
- */ 
 void InsertNode (Node q)
+/*< Inserts node q to the triangulation. >*/
 {
     if (BBox != NULL) {
 	BBox[0] = BBox[1] = q->x[0];
@@ -269,7 +250,7 @@ void InsertNode (Node q)
     InsertANode (q, LocateNode (BigTriangle, q));
 }
 
-void InsertInternalNode (Node q, Triangle abc)
+static void InsertInternalNode (Node q, Triangle abc)
 {
     int i, j;
     Triangle child;
@@ -295,7 +276,8 @@ void InsertInternalNode (Node q, Triangle abc)
     }
 }
 
-void InsertEdgeNode (Node q, Edge ab)
+static void InsertEdgeNode (Node q, Edge ab)
+/* insert node to edge */
 {
     int i, j, k, l;
     Triangle abc, *child;
@@ -332,7 +314,7 @@ void InsertEdgeNode (Node q, Edge ab)
     }
 }
 
-Node CrossNode (Node* one, Node* two)
+static Node CrossNode (Node* one, Node* two)
 {
     int i;
     double da[3], db[3], step;
@@ -357,7 +339,8 @@ Node CrossNode (Node* one, Node* two)
     return node;
 }
 
-void Validate (Triangle abc)
+static void Validate (Triangle abc)
+/* validate triangle */
 {
     int i, j, k, l;
     Edge ab, qa, ac, ad;
@@ -400,7 +383,7 @@ void Validate (Triangle abc)
     Validate (child[0]);
 }
 
-int ThisEdge (Triangle abc, Edge ab)
+static int ThisEdge (Triangle abc, Edge ab)
 {
     int i;
     for (i = 0; i < 3; i++) {
@@ -409,7 +392,7 @@ int ThisEdge (Triangle abc, Edge ab)
     return -1;
 }
 
-void GetChild (Triangle abc, int n)
+static void GetChild (Triangle abc, int n)
 {
     int i;
 
@@ -422,20 +405,16 @@ void GetChild (Triangle abc, int n)
     abc->child[n] = NULL;
 }
 
-Node Near (Edge ab, Triangle abc) 
+static Node Near (Edge ab, Triangle abc) 
 {
     int k;
     k = 3 - ThisEdge (abc,ab);
     return (k == 3)? abc->edge[1]->ends[0] : abc->edge[k]->ends[1];
 }
 
-/* 
- * Function: InsertEdge;
- * --------------------
- * Inserts a boundary edge to the triangulation,
- * making the necessary adjustments.
- */ 
 void InsertEdge (Edge ab)
+/*< Inserts a boundary edge to the triangulation,
+ * making the necessary adjustments. >*/
 {
     Triangle abc;
     Edge old;
@@ -487,8 +466,7 @@ void InsertEdge (Edge ab)
     InsertEdge (AppendEdge (new, ab->ends[1],EMPTY));
 }
 
-
-Edge IsEdge (Triangle abc, Edge ab)
+static Edge IsEdge (Triangle abc, Edge ab)
 {
     int i;
     Edge test;
@@ -508,7 +486,7 @@ Edge IsEdge (Triangle abc, Edge ab)
     return NULL;
 }
 
-Edge IsNode (Triangle abc, Edge ab)
+static Edge IsNode (Triangle abc, Edge ab)
 {
     int i;
 
@@ -523,17 +501,13 @@ Edge IsNode (Triangle abc, Edge ab)
     return NULL;
 }
 
-/*
- * Function:BoundingBox
- * --------------------
- * Initializes a bounding box
- */
 void BoundingBox (double* box)
+/*< Initializes a bounding box >*/
 {
     BBox = box;
 }
 
-void Bounding (Node q)
+static void Bounding (Node q)
 {
     double x;
 
@@ -550,13 +524,9 @@ void Bounding (Node q)
     }
 }
 
-/*
- * Function:Interpolate
- * --------------------
- * Find a value at a certain point
- * by linear triangular interpolation
- */
 double Interpolate (Node q)
+/*< Find a value at a certain point
+ * by linear triangular interpolation >*/
 {
     double *a, *b, *c, abc, xbc, axc, abx, z;
     Triangle t;
@@ -576,20 +546,16 @@ double Interpolate (Node q)
     return z;
 }
 
-/* 
- * Function: DelaunayRefine
- * ------------------------
- * Refine triangulation by inserting nr nodes
- * Return the number left
- */
 int DelaunayRefine (int nr) 
+/*< Refine triangulation by inserting nr nodes
+ * Return the number left >*/
 {
     Mark (BigTriangle);
     Rivara (&nr, BigTriangle);
     return nr;
 }
 
-void Mark (Triangle abc)
+static void Mark (Triangle abc)
 {
     int i;
     Edge ab, ac, bc;
@@ -612,7 +578,8 @@ void Mark (Triangle abc)
     return;
 }
 
-void Rivara (int* nr, Triangle abc)
+static void Rivara (int* nr, Triangle abc)
+/* Rivara refinement algorithm */
 {
     int i;
     Edge ab;
@@ -638,7 +605,8 @@ void Rivara (int* nr, Triangle abc)
     return;
 }
 
-double DotProd (Edge one, Edge two)
+static double DotProd (Edge one, Edge two)
+/* dot product */
 {
     int i;
     double dotprod;
@@ -652,7 +620,7 @@ double DotProd (Edge one, Edge two)
     return (dotprod*dotprod);
 }
 
-Edge LongestEdge (Triangle abc)
+static Edge LongestEdge (Triangle abc)
 {
     Triangle abd;
     Edge ab, edge;
