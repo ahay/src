@@ -103,7 +103,6 @@ static size_t aline=8;
 static bool getfilename (FILE *fd, char *filename);
 static char* getdatapath (void);
 static bool readpathfile (const char* filename, char* datapath);
-static FILE *sf_tempfile(char** dataname);
 
 sf_file sf_input (/*@null@*/ const char* tag)
 /*< Create an input file structure >*/
@@ -951,8 +950,8 @@ long sf_tell (sf_file file)
     return ftell(file->stream);
 }
 
-static FILE *sf_tempfile(char** dataname)
-/* Create a temporary file with a unique name */
+FILE *sf_tempfile(char** dataname, const char* mode)
+/*< Create a temporary file with a unique name >*/
 {
     FILE *tmp;
     char *path;
@@ -962,7 +961,7 @@ static FILE *sf_tempfile(char** dataname)
 	sf_error ("%s: Cannot find datapath",__FILE__);
     *dataname = sf_charalloc (NAME_MAX+1);
     snprintf(*dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
-    tmp = fdopen(mkstemp(*dataname),"wb");
+    tmp = fdopen(mkstemp(*dataname),mode);
     if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,*dataname);
 
     return tmp;
@@ -985,7 +984,7 @@ void sf_unpipe (sf_file file, size_t size)
 
     if (!(file->pipe)) return;
 	
-    tmp = sf_tempfile(&dataname);
+    tmp = sf_tempfile(&dataname,"wb");
 
     while (size > 0) {
 	nbuf = (BUFSIZ < size)? BUFSIZ : size;

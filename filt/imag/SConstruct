@@ -29,10 +29,10 @@ env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = 'aastretch agrid'
+src = 'aastretch acell agrid atela'
 
 for source in Split(src):
-    env.Include(source,prefix='_')
+    env.Include(source,prefix='')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
 #    objects.append(obj)

@@ -48,7 +48,7 @@ void dsr (bool inv, float kx, float kh, float *p, float *q)
 
     if (inv) { /* modeling */
 	for (iw=0; iw<nw; iw++) {
-	    p[iw] = q[nz-1];
+	    pp[iw] = q[nz-1];
 	}
 	
 	/* loop over migrated times z */
@@ -65,10 +65,14 @@ void dsr (bool inv, float kx, float kh, float *p, float *q)
 		}
 	
 		cshift = cexpf(-0.5*w2*dz);
-		p[iw] = p[iw]*cshift+q[iz];
+		pp[iw] = pp[iw]*cshift+q[iz];
 	    }
 	}
+
+	kiss_fftri(invs,(const kiss_fft_cpx *) pp, p);
     } else { /* migration */
+	kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
+
 	/* loop over migrated times z */
 	for (iz=0; iz<nz; iz++) {
 	    /* initialize migrated sample */
@@ -90,7 +94,7 @@ void dsr (bool inv, float kx, float kh, float *p, float *q)
 		
 		/* extrapolate down one migrated time step */
 		cshift = cexpf(-0.5*w2*dz);
-		p[iw] *= conjf(cshift);
+		pp[iw] *= conjf(cshift);
 	    }
 	}
     }

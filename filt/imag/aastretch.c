@@ -21,7 +21,7 @@
 
 #include <rsf.h>
 
-#ifdef _aastretch_h
+#ifndef _aastretch_h
 
 typedef struct Aamap *aamap;
 /* abstract data type */

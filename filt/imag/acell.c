@@ -1,3 +1,22 @@
+/* Adaptive gridding. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <string.h>
 #include <stdio.h>
 #include <assert.h>
@@ -6,6 +25,14 @@
 #include <rsf.h>
 
 #include "acell.h"
+
+#ifndef _acell_h
+
+typedef struct ACell *acell;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct ACell {
     int parent, level;
@@ -18,10 +45,16 @@ static int nd, maxsplit, itmp;
 static float **tmp;
 
 static void interp_lin (acell cell, float x, float* f);
-static void free_children (acell cell);
-static void untree (acell cell, acell *flat);
+/* linear interpolation */
 
-acell acell_init (void) {
+static void free_children (acell cell);
+
+static void untree (acell cell, acell *flat);
+/* flatten the grid */
+
+acell acell_init (void) 
+/*< initialize an adaptive cell >*/
+{
     acell cell;
     
     cell = (acell) sf_alloc (1,sizeof(*cell));
@@ -33,29 +66,39 @@ acell acell_init (void) {
     return cell;
 }
 
-void acell_set (acell cell, float* dat1, float* dat2) {
+void acell_set (acell cell, float* dat1 /* left */, float* dat2 /* right */) 
+/*< set the left and right points in a cell >*/
+{
     cell->node[0] = dat1;
     cell->node[1] = dat2;
 }
 
-void free_acell (acell cell) {
+void free_acell (acell cell) 
+/*< free allocated storage >*/
+{
     free_children (cell);
     free (cell);
 }
 
-void acells_init (int n, int max) {
+void acells_init (int n   /* number of points */, 
+		  int max /* maximum splitting */) 
+/*< initialize a grid of adaptive cells >*/
+{
     nd=n;
     maxsplit=max;
     tmp = sf_floatalloc2(nd,maxsplit);
 }
 
 void free_acells (void)
+/*< free adaptive cells >*/
 {
   free (tmp[0]);
   free (tmp);
 }
 
-static void interp_lin (acell cell, float x, float* f) {
+static void interp_lin (acell cell, float x, float* f) 
+/* linear interpolation */
+{
     float f1, f2;
     int i;
 
@@ -68,7 +111,9 @@ static void interp_lin (acell cell, float x, float* f) {
     }
 }
 
-void interp_acell (acell cell, float x, float* f) {
+void interp_acell (acell cell, float x, float* f) 
+/*< interpolate from adaptive cell at position x >*/
+{
     int p, q, k, i;
     acell c;
 
@@ -103,7 +148,9 @@ void interp_acell (acell cell, float x, float* f) {
 }
 
 void fill_cell (acell cell, int i, void* dat, 
-		void (*fill)(float x, void* dat, float* f)) {
+		void (*fill)(float x, void* dat, float* f)) 
+/*< fill cell and children using fill function >*/
+{
     if (cell->parent == 0) {
 	fill(i+cell->offset,dat,cell->node[0]);
     } else {
@@ -112,7 +159,8 @@ void fill_cell (acell cell, int i, void* dat,
     }
 }
 
-static void free_children (acell cell) {
+static void free_children (acell cell) 
+{
     if (cell->parent > 0) {
 	free (cell->child[0]->node[1]);
 	free_children(cell->child[0]);
@@ -126,7 +174,9 @@ static void free_children (acell cell) {
 void split_cell (acell cell, 
 		 float min1, float max1, 
 		 float min2, float max2, int i, void* dat,
-		 void (*fill)(float x, void* dat, float* f)) {
+		 void (*fill)(float x, void* dat, float* f)) 
+/*< split adaptive cell >*/
+{
     float dx, dy, dp, dq;
 
     if (cell->parent>0) {
@@ -165,15 +215,21 @@ void split_cell (acell cell,
 }
 
 void fill_node (acell cell, int i, float x, void* dat,
-		void (*fill)(float x, void* dat, float* f)) {
+		void (*fill)(float x, void* dat, float* f)) 
+/*< fill node >*/
+{
     fill(x,dat,cell->node[i]);
 }
 
-float* get_node (acell cell, int i) { 
+float* get_node (acell cell, int i) 
+/*< extract node value >*/
+{ 
     return cell->node[i];
 }
 
-int cell_size (acell cell) {
+int cell_size (acell cell) 
+/*< return cell size >*/
+{
     int size;
     if (cell->parent == 0) {
 	size = 1;
@@ -186,7 +242,9 @@ int cell_size (acell cell) {
 }
 
 
-void flat_cell (acell cell, acell *flat, float** dat) {
+void flat_cell (acell cell, acell *flat, float** dat) 
+/*< flatten the grid >*/
+{
     int i;
 
     itmp=0;
@@ -197,6 +255,7 @@ void flat_cell (acell cell, acell *flat, float** dat) {
 }
 
 static void untree (acell cell, acell *flat)
+/* flatten the cell */
 {
     if (cell->parent == 0) {
 	flat[itmp] = cell;
@@ -207,4 +266,4 @@ static void untree (acell cell, acell *flat)
     }
 }
 
-/* 	$Id: acell.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */
