@@ -55,10 +55,10 @@ int smoothder_init(int ndim   /* number of dimensions */,
     tmp1 = tmp[0];
     tmp2 = sf_floatalloc(n);
 
-    sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, diff);    
-
     diff = diff1;
     dip = dip1;
+
+    sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, diff);    
 
     if (dip) {
 	trisl_init(n1,n2,rect[0],rect[1]);

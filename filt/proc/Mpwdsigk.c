@@ -93,10 +93,17 @@ int main(int argc, char* argv[])
 			    "verb",verb,"mwt",w,"xp",p,"end");
 	    sf_cgstep_close();
 
-	    for (i=0; i < n123; i++) {
-		w[i] *= p[i];
-	    }	    
+	    if (iter < nliter-1) {
+		for (i=0; i < n123; i++) {
+		    w[i] = fabsf(p[i]); /* "Cauchy" weight */
+		}	    
+	    } else {
+		for (i=0; i < n123; i++) {
+		    w[i] *= p[i];
+		}
+	    }
 	}
+	
 	if (NULL != weight) sf_floatwrite(w,n123,weight);
     }
 

@@ -1,9 +1,4 @@
-/* Convert RMS to interval velocity using LS and shaping regularization.
-
-Takes: rect1= rect2= ...
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-*/
+/* Convert RMS to interval velocity using LS and plane-wave construction. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,16 +21,14 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 #include <rsf.h>
 
-#include "smoothder.h"
+#include "smoothpwd.h"
 #include "repeat.h"
 
 int main(int argc, char* argv[])
 {
-    int i, ncycle, niter, nd, dim, n1, n2, i1, i2;
-    int n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float **vr, **vi, **wt, **v0, **p=NULL, wti;
-    char key[6];
-    bool diff, dip;
+    int ncycle, niter, n1, n2, n12, i1, i2, rect;
+    float **vr, **vi, **wt, **v0, **p=NULL, wti, eps;
+    bool verb;
     sf_file vrms, vint, weight, vout, slope;
 
     sf_init(argc,argv);
@@ -43,37 +36,22 @@ int main(int argc, char* argv[])
     vint = sf_output("out");
     weight = sf_input("weight");
 
-    dim = sf_filedims (vrms,n);
+    if (!sf_histint(vrms,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(vrms,"n2",&n2)) sf_error("No n2= in input");
+    n12 = n1*n2;
 
-    for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
-	if (!sf_getint(key,rect+i)) rect[i]=1;
-    }
-
-    if (!sf_getbool("diff",&diff)) diff=false;
-    /* if y, apply anisotropic diffusion */
-
-    if (!sf_getbool("dip",&dip)) dip=false;
-    /* if y, apply directional shaping */
-
-    nd = smoothder_init(dim, rect, n, diff, dip);
-    n1 = n[0];
-    n2 = nd/n1;
-
-    if (dip) {
-	slope = sf_input("slope");
-	p = sf_floatalloc2(n1,n2);
-	sf_floatread(p[0],nd,slope);
-	sf_fileclose(slope);
-    }
+    slope = sf_input("slope");
+    p = sf_floatalloc2(n1,n2);
+    sf_floatread(p[0],n12,slope);
+    sf_fileclose(slope);
     
     vr = sf_floatalloc2(n1,n2);
     vi = sf_floatalloc2(n1,n2);
     wt = sf_floatalloc2(n1,n2);
     v0 = sf_floatalloc2(n1,n2);
 
-    sf_floatread(vr[0],nd,vrms);
-    sf_floatread(wt[0],nd,weight);
+    sf_floatread(vr[0],n12,vrms);
+    sf_floatread(wt[0],n12,weight);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
@@ -81,6 +59,17 @@ int main(int argc, char* argv[])
     if (!sf_getint("ncycle",&ncycle)) ncycle=10;
     /* number of cycles for anisotropic diffusion */
 
+    if (!sf_getint("rect1",&rect)) rect=1;
+    /* vertical smoothing radius */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
+
+    if (!sf_getfloat("eps",&eps)) eps=0.;
+    /* regularization parameter */
+
+    smoothpwd_init(n1,n2,0.0001,rect,p);
+    
     wti = 0.;
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -91,21 +80,15 @@ int main(int argc, char* argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    vr[i2][i1] *= vr[i2][i1]*(i1+1.); /* vrms^2*t - data */
+	    vr[i2][i1] *= vr[i2][i1]*(i1+1.);
 	    wt[i2][i1] *= wti/(i1+1.); /* decrease weight with time */	 
 	    v0[i2][i1] = -vr[i2][0];
 	}
     }
     
-    repeat_lop(false,true,nd,nd,v0[0],vr[0]);
+    repeat_lop(false,true,n12,n12,v0[0],vr[0]);
 
-    if (dip) {
-	smoothdip(niter, p, wt[0], vr[0], vi[0]);
-    } else if (diff) {
-	smoothdiff(niter, ncycle, wt[0], vr[0], vi[0]);
-    } else {
-	smoothder(niter, wt[0], vr[0], vi[0]);
-    }
+    smoothpwd(niter, ncycle, wt[0], vr[0], vi[0], verb, eps);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -113,7 +96,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    repeat_lop(false,false,nd,nd,vi[0],vr[0]);
+    repeat_lop(false,false,n12,n12,vi[0],vr[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -122,16 +105,16 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_floatwrite(vi[0],nd,vint);
+    sf_floatwrite(vi[0],n12,vint);
 
     if (NULL != sf_getstring("vrmsout")) {
 	/* optionally, output predicted vrms */
 	vout = sf_output("vrmsout");
 
-	sf_floatwrite(vr[0],nd,vout);
+	sf_floatwrite(vr[0],n12,vout);
     }
 
     exit(0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Mdix.c 803 2004-09-18 12:32:15Z fomels $	 */
