@@ -38,15 +38,17 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 static void check_compat (size_t nin, sf_file *in, int dim, const int *n, 
-			  float *d, float* o);
+			  float *d, float* o, sf_datatype type);
 
 int main(int argc, char* argv[])
 {
     int nin, i, j, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf, nsiz;
     size_t len;
     sf_file *in, out;
-    char *eq, *output, *key, *arg, xkey[4];
+    char *eq, *output, *key, *arg, xkey[4], *ctype;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
+    float complex **cbuf, **cst;
+    sf_datatype type;
 
     sf_init (argc,argv);
     
@@ -66,6 +68,7 @@ int main(int argc, char* argv[])
 	eq =  strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
 	if (0 == strncmp(arg,"output",6) ||
+	    0 == strncmp(arg,"type",4)   ||
 	    (eq-arg == 2 &&
 	     (arg[0] == 'n' || arg[0] == 'd' || arg[0] == 'o') &&
 	     isdigit(arg[1]))) continue; /* not a file */
@@ -82,8 +85,9 @@ int main(int argc, char* argv[])
     }
 
     if (nin) {
-	if (SF_FLOAT != sf_gettype(in[0])) 
-	    sf_error("Need float input");
+	type = sf_gettype(in[0]);
+	if (SF_FLOAT != type && SF_COMPLEX != type) 
+	    sf_error("Need float or complex input");
 
 	dim = sf_filedims(in[0],n);
 	for (i=0; i < dim; i++) {
@@ -92,7 +96,16 @@ int main(int argc, char* argv[])
 	    (void) snprintf(xkey,3,"o%d",i+1);
 	    if (!sf_histfloat(in[0],xkey,o+i)) o[i] = 0.; 
 	}
-    } else { /* get size from parameters */
+    } else { /* get type and size from parameters */
+	
+	ctype = sf_getstring("type");
+	/* output data type [float,complex] */
+	if (NULL != ctype) {	    
+	    type = ('c'==ctype[0])? SF_COMPLEX:SF_FLOAT;
+	} else {
+	    type = SF_FLOAT;
+	}
+
 	dim = 1;
 	for (i=0; i < SF_MAX_DIM; i++) {
 	    (void) snprintf(xkey,3,"n%d",i+1);
@@ -117,48 +130,82 @@ int main(int argc, char* argv[])
 
 	nsiz *= n[i];
     }
+
+    if (SF_COMPLEX == type) sf_putint(out,"I",nin+dim);
     
-    if (nin) check_compat(nin,in,dim,n,d,o);
+    if (nin) check_compat(nin,in,dim,n,d,o,type);
 
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Mathematical description of the output */
 
     len = sf_math_parse (output,out);
     
-    nbuf = BUFSIZ/sizeof(float);
-
-    fbuf = sf_floatalloc2(nbuf,nin+dim);
-    fst  = sf_floatalloc2(nbuf,len+2);
+    if (SF_FLOAT == type) {
+	nbuf = BUFSIZ/sizeof(float);
+	
+	fbuf = sf_floatalloc2(nbuf,nin+dim);
+	fst  = sf_floatalloc2(nbuf,len+2);
+	cbuf = NULL;
+	cst  = NULL; 
+    } else {
+	nbuf = BUFSIZ/sizeof(float complex);
+	
+	fbuf = NULL;
+	fst  = NULL;
+	cbuf = sf_complexalloc2(nbuf,nin+dim+1);
+	cst  = sf_complexalloc2(nbuf,len+2);
+    }
 
     if (nin) {
 	sf_setformat(out,sf_histstring(in[0],"data_format"));    
 	sf_fileflush(out,in[0]);
     } else {
-	sf_setformat(out,"native_float");
+	sf_settype(out,type);
+	sf_setform(out,SF_NATIVE);
     }
 
-    for (j=0; nsiz > 0; nsiz -= nbuf) {
-	if (nbuf > nsiz) nbuf = nsiz;
-	for (i=0; i < nin; i++) {
-	    sf_floatread(fbuf[i],nbuf,in[i]);
-	}
-	for (k=0; k < nbuf; k++, j++) {
-	    sf_line2cart(dim,n,j,ii);
-	    for (i=0; i < dim; i++) {
-		fbuf[nin+i][k] = o[i]+ii[i]*d[i];
+    if (SF_FLOAT == type) {
+	for (j=0; nsiz > 0; nsiz -= nbuf) {
+	    if (nbuf > nsiz) nbuf = nsiz;
+	    for (i=0; i < nin; i++) {
+		sf_floatread(fbuf[i],nbuf,in[i]);
 	    }
+	    for (k=0; k < nbuf; k++, j++) {
+		sf_line2cart(dim,n,j,ii);
+		for (i=0; i < dim; i++) {
+		    fbuf[nin+i][k] = o[i]+ii[i]*d[i];
+		}
+	    }
+	    
+	    sf_math_evaluate (len, nbuf, fbuf, fst);
+	    
+	    sf_floatwrite(fst[1],nbuf,out);
 	}
-
-	sf_math_evaluate (len, nbuf, fbuf, fst);
-
-	sf_floatwrite(fst[1],nbuf,out);
+    } else {
+	for (j=0; nsiz > 0; nsiz -= nbuf) {
+	    if (nbuf > nsiz) nbuf = nsiz;
+	    for (i=0; i < nin; i++) {
+		sf_complexread(cbuf[i],nbuf,in[i]);
+	    }
+	    for (k=0; k < nbuf; k++, j++) {
+		sf_line2cart(dim,n,j,ii);
+		for (i=0; i < dim; i++) {
+		    cbuf[nin+i][k] = o[i]+ii[i]*d[i];
+		}
+		cbuf[nin+dim][k] = I;
+	    }
+	    
+	    sf_complex_math_evaluate (len, nbuf, cbuf, cst);
+	    
+	    sf_complexwrite(cst[1],nbuf,out);
+	}
     }
     
     exit(0);
 }
 
 static void check_compat (size_t nin, sf_file *in, int dim, const int *n, 
-			  float *d, float* o) 
+			  float *d, float* o, sf_datatype type) 
 {
     int ni, id;
     size_t i;
@@ -167,8 +214,8 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n,
     const float tol=1.e-5;
     
     for (i=1; i < nin; i++) {
-	if (SF_FLOAT != sf_gettype(in[i])) 
-	    sf_error("Need float input");
+	if (type != sf_gettype(in[i])) 
+	    sf_error("Need %s input",(type==SF_FLOAT)?"float":"complex");
 	for (id=0; id < dim; id++) {
 	    (void) snprintf(key,3,"n%d",id+1);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id])

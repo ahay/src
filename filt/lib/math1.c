@@ -52,17 +52,37 @@ static func functable[] = {
     fabsf
 };
 
+typedef float complex (*cfunc)(float complex);
+static cfunc cfunctable[] = {
+    ccosf,
+    csinf,
+    ctanf,
+    cacosf,
+    casinf,
+    catanf,
+    ccoshf,
+    csinhf,
+    ctanhf,
+    cacoshf,
+    casinhf,
+    catanhf,
+    cexpf,
+    clogf,
+    csqrtf
+};
+
 enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
 
 static sf_stack st1, st2;
 
 static void check (void);
 
+
 void sf_math_evaluate (int len /* stack length */, 
 		       int nbuf /* buffer length */, 
 		       float** fbuf /* number buffers */, 
 		       float** fst /* stack */)
-/*< Evaluate a mathematical expression from stack >*/
+/*< Evaluate a mathematical expression from stack (float numbers) >*/
 {
     char *op;
     int *indx, i;
@@ -112,6 +132,84 @@ void sf_math_evaluate (int len /* stack length */,
 			farr[i] = atan2f(farr[i],num[i]);
 		    }
 		}
+		break;
+	    case MULDIV:
+		op = (char*) sf_pop(st2);
+		num = *fst;
+		farr = *(--fst);
+		if ('*' == *op) {
+		    for (i=0; i < nbuf; i++) { farr[i] *= num[i]; }
+		} else {
+		    for (i=0; i < nbuf; i++) { farr[i] /= num[i]; }
+		}
+		break;
+	    case PLUSMIN:
+		op = (char*) sf_pop(st2);
+		num = *fst;
+		farr = *(--fst);
+		if ('+' == *op) {
+		    for (i=0; i < nbuf; i++) { farr[i] += num[i]; }
+		} else {
+		    for (i=0; i < nbuf; i++) { farr[i] -= num[i]; }
+		}
+		break;
+	    default:
+		sf_error ("%s: syntax error in output",__FILE__);
+		break;
+	}
+    }
+}
+
+void sf_complex_math_evaluate (int len              /* stack length */, 
+			       int nbuf             /* buffer length */, 
+			       float complex** fbuf /* number buffers */, 
+			       float complex** fst  /* stack */)
+/*< Evaluate a mathematical expression from stack (complex numbers) >*/
+{
+    char *op;
+    int *indx, i;
+    float complex *num, f, *farr;
+    cfunc fun;
+
+    sf_stack_set(st2,len);
+
+    while (sf_full (st2)) {
+	switch (sf_top (st2)) {
+	    case NUM: 
+		farr = *(++fst);
+		num = (float complex*) sf_pop(st2);
+		f = *num;
+		for (i=0; i < nbuf; i++) { farr[i] = f; }
+		break;
+	    case INDX:
+		farr = *(++fst);
+		indx = (int*) sf_pop(st2);
+		/* convert index to number */
+		num = *(fbuf + (*indx));
+		for (i=0; i < nbuf; i++) { farr[i] = num[i]; }
+		break;
+	    case FUN:
+		indx = (int*) sf_pop(st2);
+		fun = cfunctable[*indx];
+		farr = *fst;
+		for (i=0; i < nbuf; i++) { farr[i] = fun(farr[i]); }
+		break;
+	    case UNARY:
+		op = (char*) sf_pop(st2);
+		farr = *fst;
+		if ('-' == *op) {
+		    for (i=0; i < nbuf; i++) { farr[i] = -farr[i]; }
+		}
+		break;
+	    case POW:
+		op = (char*) sf_pop(st2);
+		num = *fst;
+		farr = *(--fst);
+		if ('^' == *op) {
+		    for (i=0; i < nbuf; i++) { 
+			farr[i] = cpowf(farr[i],num[i]);
+		    }
+		} 
 		break;
 	    case MULDIV:
 		op = (char*) sf_pop(st2);
