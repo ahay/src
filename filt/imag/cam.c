@@ -122,8 +122,8 @@ void cam_init(bool verb_,
     wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
     wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
 
-    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /*        k wavefield */
-    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded k wavefield */ 
+    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
+    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */ 
 
     ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
     krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
@@ -392,9 +392,9 @@ void camwex(float complex w,int iz)
     
     w2 = w*w;
 
-    LOOP( s = 0.5*(so[ jy[imy] ][ is[ihx][imx] ] + 
-		   so[ jy[imy] ][ ir[ihx][imx] ]);
-	  wx[ihx][imy][imx] *= cexpf(-w*s*az.d); );
+    LOOP( s = so[ jy[imy] ][ is[ihx][imx] ] 
+	  +   so[ jy[imy] ][ ir[ihx][imx] ];
+	  wx[ihx][imy][imx] *= cexpf(-w*s* az.d/2); );
 
     /* FFT */
     KOOP( pk[ihx][imy][imx] = 0.; );
@@ -440,9 +440,9 @@ void camwex(float complex w,int iz)
     } /* js loop */
     LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
 
-    LOOP( s = 0.5*(ss[ jy[imy] ][ is[ihx][imx] ] + 
-		   ss[ jy[imy] ][ ir[ihx][imx] ]);
-	  wx[ihx][imy][imx] *= cexpf(-w*s*az.d); );
+    LOOP( s = ss[ jy[imy] ][ is[ihx][imx] ] 
+	  +   ss[ jy[imy] ][ ir[ihx][imx] ];
+	  wx[ihx][imy][imx] *= cexpf(-w*s* az.d/2); );
 
     taper3(false,true,true,wx);
 }

@@ -143,10 +143,10 @@ int main (int argc, char *argv[])
 
     switch(mode[0]) {
 	case 'w':
-	    cawfl(    data,wfld);
+	    zowfl(    data,wfld);
 	    break;
 	case 'd':
-	    cadtm(inv,data,wfld);
+	    zodtm(inv,data,wfld);
 	    break;
 	case 'm':
 	default:
