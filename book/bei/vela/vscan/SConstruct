@@ -44,11 +44,9 @@ Combine('mutvel',sides,'SideBySideAniso',result=1,vppen='txscale=1.5')
 Flow('wgmutter','midpts.HH',
      'dd data_format=native_float | mutter half=n v0=1.4')
 
-Flow('wgfit','wgmutter',
-     '''
-     vscan slowness=y half=n v0=0.3 nv=81 dv=0.005 semblance=y |
-     blindpick2 eps=25 lam=25
-     ''')
+Flow('wgsmb','wgmutter',
+     'vscan slowness=y half=n v0=0.3 nv=81 dv=0.005 semblance=y')
+Flow('wgfit','wgsmb','blindpick2 eps=25 lam=25')
 
 def graph(col=7,fat=1):
     return '''
@@ -57,8 +55,8 @@ def graph(col=7,fat=1):
     ''' % (col,fat)
 
 Flow('fit','wgfit','window n3=1')
-Plot('slow','slowfit',graph(1,1))
-Plot('fatslow','slowfit',graph(0,7))
+Plot('slow',   'fit',graph(1,1))
+Plot('fatslow','fit',graph(0,7))
 Combine('fit','veltran fatslow slow','Overlay',result=1) 
 
 Flow('wgstack',['wgmutter','wgfit'],
@@ -72,6 +70,40 @@ Flow(['agcstack','ref'],'wgstack',
      add mode=d ${SOURCES[0]} ${TARGETS[1]}
      ''')
 Result('agcstack','agcstack','grey title="AGC Stack" ')
+
+Flow('weight',['wgsmb','wgfit'],'slice pick=${SOURCES[1]}')
+Flow('wgrms','wgfit','window | math output=1/input')
+Flow(['wgint','wgrms2'],['wgrms','weight'],
+     '''
+     dix weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
+     rect1=10 rect2=10
+     ''')
+
+def velplot(title):
+    return '''
+    grey color=j wantscalebar=y barlabel="%s (km/s)" allpos=y bias=1.4
+    bartype=h wherebarlabel=b wanttitle=n
+    ''' % title
+
+Plot('wgrms','wgrms',velplot("RMS velocity"))
+Plot('wgint','wgint',velplot("Interval velocity"))
+Combine('wgvel','wgrms wgint','SideBySideAniso',result=1)
+
+Plot('wgrms2','wgrms2',velplot("Predicted RMS velocity"))
+Combine('wgvel2','wgrms wgrms2','SideBySideAniso',result=1)
+
+def velgraph(title,max):
+    return '''
+    window n2=1 |
+    graph wanttitle=n transp=y yreverse=y label2="%s (km/s)"
+    min2=1.4 max2=%g
+    ''' % (title,max)
+
+Plot('rms1','wgrms',velgraph("RMS velocity",2.4))
+Plot('rms2','wgrms2',velgraph(" ",2.4) + ' dash=1 wantaxis=n')
+Combine('rms','rms1 rms2','Overlay')
+Plot('int','wgint',velgraph("Interval velocity",3))
+Combine('wgvel1','rms int','SideBySideAniso',result=1)
 
 ###########################################################################
 End()

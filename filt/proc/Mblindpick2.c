@@ -1,6 +1,6 @@
 /* Automatic picking from semblance-like panels using shaping regularization.
 
-Takes: < semblance.rsf > pick.rsf
+Takes: < semblance.rsf [ampl=ampl.rsf] > pick.rsf
 */
 #include <math.h>
 #include <float.h>
@@ -116,5 +116,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id: Mblindpick2.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */
 

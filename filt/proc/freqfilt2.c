@@ -67,17 +67,6 @@ void freqfilt2_spec (const float* x, float** y) {
     }
 }
 
-void twofreqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
-{
-    int n;
-    
-    n = nx/2;
-
-    sf_adjnull(adj,add,nx,ny,x,y);
-    freqfilt2_lop (adj,true,n,n,x,y);
-    freqfilt2_lop (adj,true,n,n,x+n,y+n);
-}
-
 void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 {
     int iw, ik;
@@ -132,4 +121,4 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: freqfilt2.c,v 1.2 2004/02/27 20:59:57 fomels Exp $	 */
+/* 	$Id: freqfilt2.c,v 1.3 2004/04/05 14:35:11 fomels Exp $	 */

@@ -5,8 +5,8 @@
 #include "c99.h"
 #include "error.h"
 
-static int np, nx, nr;
-static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
+static int np, nx, nr, nd;
+static float *r, *sp, *sx, *sr, *gp, *gx, *gr, *d;
 static float eps, tol;
 static bool verb, hasp0;
 
@@ -22,12 +22,13 @@ static double norm (int n, const float* x) {
     return prod;
 }
 
-void sf_conjgrad_init(int np1, int nx1, int nr1, float eps1,
+void sf_conjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
 		      float tol1, bool verb1, bool hasp01) 
 {
     np = np1; 
     nx = nx1;
     nr = nr1;
+    nd = nd1;
     eps = eps1*eps1;
     tol = tol1;
     verb = verb1;
@@ -52,20 +53,33 @@ void sf_conjgrad_close(void)
     free (sr);
     free (gr);
 }
-   
-void sf_conjgrad(sf_operator oper, sf_operator shape, 
-		 float* p, float* x, const float* dat, int niter) 
+
+/* if prec != NULL, destroys dat */   
+void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape, 
+		 float* p, float* x, float* dat, int niter) 
 {
     double gn, gnp, alpha, beta, g0, dg, r0, b0;
     int i, iter;
     
-    for (i=0; i < nr; i++) {
-	r[i] = - dat[i];
+    if (NULL != prec) {
+	prec(false,false,nd,nr,dat,r);
+	for (i=0; i < nr; i++) {
+	    r[i] = - r[i];
+	}
+    } else {
+	for (i=0; i < nr; i++) {
+	    r[i] = - dat[i];
+	}
     }
     
     if (hasp0) { /* initial p */
 	shape(false,false,np,nx,p,x);
-	oper(false,true,nx,nr,x,r);
+	if (NULL != prec) {
+	    oper(false,false,nx,nd,x,dat);
+	    prec(false,true,nd,nr,d,r);
+	} else {
+	    oper(false,true,nx,nr,x,r);
+	}
     } else {
 	for (i=0; i < np; i++) {
 	    p[i] = 0.;
@@ -85,10 +99,23 @@ void sf_conjgrad(sf_operator oper, sf_operator shape,
 	for (i=0; i < nx; i++) {
 	    gx[i] = -eps*x[i];
 	}
-	oper(true,true,nx,nr,gx,r);
+
+	if (NULL != prec) {
+	    prec(true,false,nd,nr,dat,r);
+	    oper(true,true,nx,nd,gx,dat);
+	} else {
+	    oper(true,true,nx,nr,gx,r);
+	}
+
 	shape(true,true,np,nx,gp,gx);
 	shape(false,false,np,nx,gp,gx);
-	oper(false,false,nx,nr,gx,gr);
+
+	if (NULL != prec) {
+	    oper(false,false,nx,nd,gx,dat);
+	    prec(false,false,nd,nr,dat,gr);
+	} else {
+	    oper(false,false,nx,nr,gx,gr);
+	}
 
 	gn = norm(np,gp);
 

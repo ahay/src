@@ -110,7 +110,7 @@ int main (int argc, char* argv[])
     } else {
 	triangle1_init ((int) filt, nx);
     }
-    sf_conjgrad_init(nx, nx, nd, eps, 1.e-9, true, false);
+    sf_conjgrad_init(nx, nx, nd, nd, eps, 1.e-9, true, false);
 
     if (pef) monofshape_init(nx);
 
@@ -118,14 +118,14 @@ int main (int argc, char* argv[])
 	sf_read (dd,sizeof(float),nd,in);
 
 	if (gauss) {
-	    sf_conjgrad(int1_lop, freqfilt_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, int1_lop, freqfilt_lop, pp, mm, dd, niter);
 	} else {
-	    sf_conjgrad(int1_lop, triangle1_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, int1_lop, triangle1_lop, pp, mm, dd, niter);
 	}
 
 	if (pef) {
 	    monofshape_set(0.1,nx,mm,100);
-	    sf_conjgrad(int1_lop, monofshape_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, int1_lop, monofshape_lop, pp, mm, dd, niter);
 	}
 	
     	sf_write (mm,sizeof(float),nx,out);
@@ -135,4 +135,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.4 2004/04/02 02:23:02 fomels Exp $	 */
+/* 	$Id: Mshapebin1.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */

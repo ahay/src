@@ -185,7 +185,7 @@ int main (int argc, char* argv[])
 	pp = NULL;
     }
 
-    sf_conjgrad_init(nm, nm, nd, eps, 1.e-9, true, false);
+    sf_conjgrad_init(nm, nm, nd, nd, eps, 1.e-9, true, false);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
@@ -199,9 +199,9 @@ int main (int argc, char* argv[])
 		}
 
 		/* inverse interpolation */
-		sf_conjgrad(int2_lop, freqfilt2_lop, pp, mm, dd, niter);
+		sf_conjgrad(NULL, int2_lop, freqfilt2_lop, pp, mm, dd, niter);
 	    } else {
-		sf_conjgrad(int2_lop, triangle2_lop, pp, mm, dd, niter);
+		sf_conjgrad(NULL, int2_lop, triangle2_lop, pp, mm, dd, niter);
 	    }
 	} else {
 	    sf_solver_reg(int2_lop,sf_cgstep,laplac2_lop,
@@ -216,4 +216,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin.c,v 1.4 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mshapebin.c,v 1.5 2004/04/05 14:35:11 fomels Exp $	 */
