@@ -290,8 +290,8 @@ void sf_settype (sf_file file, sf_datatype type)
 	    sf_putint(file,"esize",(int) sizeof(float complex));
 #else
 	    sf_putint(file,"esize",2 * (int) sizeof(float));
-	    break;
 #endif
+	    break;
 	case SF_CHAR:
 	default:
 	    sf_putint(file,"esize",(int) sizeof(char));

@@ -29,7 +29,7 @@ int main (int argc, char *argv[])
     int nx, ny;		/* number of midpoints 	*/
 
     float w0;		/* frequency origin 	*/
-    float dz;		/* migrated time sampling interval */
+    float z0, dz;		/* migrated time sampling interval */
     float dw;	        /* frequency sampling interval */
     float dx,dy;		/* spatial sampling interval	*/
 
@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
     /* stability parameter */
 
     if (!sf_histint(in,"n1",&ny)) ny = 1;
-    if (!sf_histfloat(in,"d1",&dy)) sf_error ("No d2= in input");
+    if (!sf_histfloat(in,"d1",&dy)) sf_error ("No d1= in input");
 
     if (!sf_histint(in,"n2",&nx)) nx = 1;
     if (!sf_histfloat(in,"d2",&dx)) dx=dy;
@@ -84,8 +84,10 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"o3",&w0)) sf_error ("No o3= in input");
 	if (!sf_histint(vel,"n3",&nz)) sf_error ("No n3= in slowness");
 	if (!sf_histfloat(vel,"d3",&dz)) sf_error ("No d3= in slowness");
+	if (!sf_histfloat(vel,"o3",&z0)) z0=0.; 
 	sf_putint(out,"n3",nz);
 	sf_putfloat(out,"d3",dz);
+	sf_putfloat(out,"o3",z0);
     }
     /* from hertz to radian */
     dw *= 2.*SF_PI; 
