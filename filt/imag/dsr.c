@@ -8,7 +8,7 @@ void dsr (int inv, float eps, float kx, float kh,
 	  float *vt, float complex *p, float complex *q)
 {
     int iz,iw;
-    float s2, vs2, vs, vr2, vr, s, r;
+    float vs2, vr2, s, r;
     float complex cshift,w2;
 
     s = 0.5*(kx-kh);

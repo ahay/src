@@ -14,7 +14,6 @@ int main (int argc, char **argv)
     int nh;               /* number of offsets */
     int ik,im,jm,iz;      /* loop counters 	*/
     int nk,nm;		/* number of wave numbers */	
-    int one=1;
 
     float dt;             /* time sampling interval */
     float dw;		/* frequency sampling interval 	*/

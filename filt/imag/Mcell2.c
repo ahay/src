@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
     bool velocity;
     int is, nz, nx, im, nm, order, nshot, ndim, nsr;
-    int nt, nt1, nr, ir, it, i;
+    int nt, nr, ir, it;
     float da, a0, amax, t;
     float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s, *a;
     celltrace ct;
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
     
     free (slow);
 
-    traj = sf_floatalloc2 (ndim,nt1);
+    traj = sf_floatalloc2 (ndim,nt);
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
 	/* initialize angles */
