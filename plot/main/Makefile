@@ -4,7 +4,7 @@ RSFPLOT = ../lib
 CFLAGS = -std=gnu9x -Wall -pedantic -I${RSF} -I${RSFPLOT} -g
 LDFLAGS = -L${RSF} -lrsf -L${RSFPLOT} -lrsfplot -lm
 
-PROGS = dots plas pldb
+PROGS = dots graph plas pldb
 
 MAINS = $(addprefix sf, $(PROGS))
 

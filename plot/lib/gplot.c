@@ -132,6 +132,7 @@ void vp_color_init (void)
 	backcol[0] = backcol[1] = backcol[2] = 0.;
     if (!sf_getfloats ("fillcol",fillcol,3))
 	fillcol[0] = fillcol[1] = fillcol[2] = 0.;
+    vp_coltab (0, backcol[0], backcol[1], backcol[2]);
 }
 
 void vp_coord_init (bool transp1, bool yreverse1)
@@ -548,15 +549,15 @@ void vp_massage (float *min, float *max, float *mid, float *dev)
     *dev = ldev;
 }
 
-void vp_minmax (void)
+void vp_minmax (float emin1, float emin2, float emax1, float emax2)
 {
     bool btmp;
     float ftmp;
 
-    fmin1 = (!sf_getfloat ("min1",&min1)); 
-    fmin2 = (!sf_getfloat ("min2",&min2));
-    fmax1 = (!sf_getfloat ("max1",&max1));
-    fmax2 = (!sf_getfloat ("max2",&max2));
+    fmin1 = (!sf_getfloat ("min1",&min1)); if(fmin1) min1=emin1;
+    fmin2 = (!sf_getfloat ("min2",&min2)); if(fmin2) min2=emin2;
+    fmax1 = (!sf_getfloat ("max1",&max1)); if(fmax1) max1=emax1;
+    fmax2 = (!sf_getfloat ("max2",&max2)); if(fmax2) max2=emax2;
 
     if (transp) {
 	ftmp=min1; min1=min2; min2=ftmp;
