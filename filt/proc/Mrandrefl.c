@@ -1,37 +1,97 @@
-program Randrefl
-  use randn
-  use cumsum
-  use synf
-  use quicksort
-  use sep
+#include <stdlib.h>
+#include <math.h>
 
-  implicit none
-  integer                          :: nr, nt, it
-  real                             :: t0, dt
-  real, dimension (3)              :: fo
-  real, dimension (:), allocatable :: t, pp, ps, ss, tpp, tss, tps
-  real, dimension (:), allocatable :: ts, dtpp, tm, p2ss, p2ps, dtss, dtps, rs
+#include <rsf.h>
 
-  call sep_init ()
-  call from_par ("nr",nr)
-  call from_par ("n1",nt,3501)
-  call from_par ("d1",dt,0.001)
-  call from_par ("o1",t0,0.)
-  call to_history ("n2",3)
-  call to_history ("esize",4)
-  call from_par ("fo",fo, (/20.,8.,5./))
-  call to_history ("n1",nr,"vpvs")
-  call to_history ("n2",2,"vpvs")
-  call to_history ("esize",4,"vpvs")
-  call sep_close ()
+#include "randn.h"
 
-  allocate (t (nt), pp (nt), ps (nt), ss (nt), ts (nr))
-  t = (/ (t0 + (it-1)*dt, it=1,nt) /)
+static const float pi = 3.1415926535898;
 
-  allocate (dtpp (nr), tm (nr), rs (nr), tpp (nr), tss (nr), tps (nr))
-  allocate (p2ss (nr), p2ps (nr), dtss (nr), dtps (nr))
+static void cumsum(int n, const float *a, float *b)
+{
+    float t;
+    int i;
 
-  ! ts - reflector positions
+    t = 0.;
+    for (i = 0; i < n; i++) {
+	t += a[i];
+	b[i] = t;
+    }
+}
+
+/* computes synthetic for Rs at Ts(sec) for times t */
+static void synf(float fo, int n, float* s, int ns, 
+		 const float* t, const float *ts, const float *rs)
+{
+    int i, is;
+    float rn, tn, a;
+    
+    for (i=0; i < n; i++) {
+	s[i]=0.;
+    }
+  
+    for (is=0; is < ns; is++) {
+	rn=rs[is];
+	tn=ts[is];
+	/* Ricker wavelet at tn with amplitude Rn */
+	/* accumulate the sum of all reflections */ 
+	for (i=0; i < n; i++) {
+	    a = pi*fo*(t-tn);
+	    a *= a;
+	    s[i] += rn*(1-2*a)*expf(-a);
+	}
+    }
+}
+
+int main (int argc, char* argv[])
+{
+    int nr, nt, it;
+    float t0, dt, fo[3]={20.,8.,5.};
+    float *t, *pp, *ps, *ss, *tpp, *tss, *tps;
+    float *ts, *dtpp, *tm, *p2ss, *p2ps, *dtss, *dtps, *rs;
+    sf_file mod, vpvs;
+
+    sf_init (argc,argv);
+    mod = sf_output("out");
+
+    if (!sf_getint("nr",&nr)) sf_error("Need nr=");
+    if (!sf_getint("n1",&nt))   nt=3501;  sf_putint(mod,"n1",nt);
+    if (!sf_getfloat("d1",&dt)) dt=0.001; sf_putfloat(mod,"d1",dt);
+    if (!sf_getfloat("o1",&t0)) dt=0.001; sf_putfloat(mod,"o1",t0);
+    sf_putint(mod,"n2",3);
+    sf_setformat(mod,"native_float");
+
+    sf_getfloats ("fo",3,fo); 
+
+    vpvs = sf_output("vpvs");
+    sf_putint(vpvs,"n1",nr);
+    sf_putint(vpvs,"n2",2);
+    sf_setformat(vpvs,"native_float");
+
+    t = sf_floatalloc (nt);
+    pp = sf_floatalloc (nt);
+    ps = sf_floatalloc (nt);
+    ss = sf_floatalloc (nt);
+    ts = sf_floatalloc (nt);
+
+    for (it=0; it < nt; it++) {
+	t[it] = t0 + it*dt;
+    }
+
+    dtpp = sf_floatalloc (nr);
+    tm = sf_floatalloc (nr);
+    rs = sf_floatalloc (nr);
+    tpp = sf_floatalloc (nr);
+    tss = sf_floatalloc (nr);
+    tps = sf_floatalloc (nr);
+    p2ss = sf_floatalloc (nr);
+    p2ps = sf_floatalloc (nr);
+    dtss = sf_floatalloc (nr);
+    dtps = sf_floatalloc (nr);
+
+    /* ts - reflector positions */
+    
+
   call random_number (ts)
   ts = 0.1+0.9*ts
   call qsort_init (ts)
