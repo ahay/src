@@ -9,6 +9,9 @@ void tree_init (int order,
 void tree_traverse(void);
 void tree_build(void);
 void tree_close(void);
+
+/*
 void tree_print (void);
+*/
 
 #endif

@@ -11,13 +11,14 @@ LDFLAGS = -L../rsf -lrsf -lm -lnsl
 DEPEND = -xM1
 DEPEND = -MM
 
-PROGS = cell2 dsr eikonal enoder1 gazdag gauss interp2 interpt mig45 \
+PROGS = cell2 dsr eikonal enoder1 fkdmo gazdag gauss interp2 interpt mig45 \
 	pick0 pickd rays2 remap1 sag shoot2 sstep1 symes trace2 tree voft vofz
 
 cell2 = celltrace cell eno2 eno quadratic
 dsr = dsr
 eikonal = fastmarch pqueue neighbors
 enoder1 = eno
+fkdmo = empty
 gazdag = gazdag
 gauss = empty
 interp2 = eno fzero

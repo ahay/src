@@ -81,8 +81,6 @@ int main(int argc, char* argv[])
 
     /* tree_print(); */
 
-    tree_traverse();
-
     sf_write(node[0],sizeof(float),4*naxz,out);
     
     exit (0);

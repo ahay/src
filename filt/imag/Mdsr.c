@@ -56,21 +56,21 @@ int main (int argc, char **argv)
 
 	/* determine frequency sampling */
 	nw = sf_npfa(nt);
-	dw = 2.0*SF_PI/(nw*dt);
-	w0 = -SF_PI/dt;
+	dw = 1./(nw*dt);
+	w0 = -0.5/dt;
 
 	sf_putint(out,"n1",nw);
 	sf_putfloat(out,"d1",dw);
 	sf_putfloat(out,"o1",w0);
-	
+
 	if (!sf_getint("nh",&nh)) sf_error ("Need nh=");
 	if (!sf_getfloat("dh",&dh)) sf_error ("Need dh=");
     
 	/* determine wavenumber sampling, pad by 2 */
 	nm = nh*2;
 	nm = sf_npfao(nm,nm*2);
-	dm = 2.0*SF_PI/(nm*dh);
-	m0 = -SF_PI/dh;
+	dm = 1./(nm*dh);
+	m0 = -0.5/dh;
 
 	sf_putint(out,"n2",nm);
 	sf_putfloat(out,"d2",dm);
@@ -116,6 +116,13 @@ int main (int argc, char **argv)
 
 	sf_putint(out,"n3",1);
     }
+
+    dw *= 2.0*SF_PI;
+    w0 *= 2.0*SF_PI;
+    dm *= 2.0*SF_PI;
+    m0 *= 2.0*SF_PI;
+    dk *= 2.0*SF_PI;
+    k0 *= 2.0*SF_PI;
 
     vt     = sf_floatalloc(nz);
 

@@ -143,7 +143,6 @@ int main(int argc, char* argv[])
 		    diag2[ix] = 1.-2.*(beta - (vel0/w+dz)*vel0*dx/w);
 		}           
 
-		/*
 		vel0 = vel[0][iz];
 		a = cexpf(-0.5*w/(vel0*sqrtf(dx)));
 
@@ -155,7 +154,6 @@ int main(int argc, char* argv[])
 
 		diag1[nx-1] =    (a-2.)*(beta - (vel0/w-dz)*vel0*dx/w);
 		diag2[nx-1] = 1.+(a-2.)*(beta - (vel0/w+dz)*vel0*dx/w);
-		*/
 
 		for (ix=0; ix < nx-1; ix++) {
 		    vel0 = voff[ix][iz];
@@ -183,6 +181,10 @@ int main(int argc, char* argv[])
 		    vel0 = vel[ix][iz];
 		    ctime[ix] = ctime[ix] * cexpf(-w*dz/vel0) + depth[ix][iz];
 		}
+
+		sf_warning("z=%d a=(%g,%g) ctime[0]=(%g,%g)",
+			   iz,crealf(a),cimagf(a),
+			   crealf(ctime[0]),cimagf(ctime[0]));
 	    }
 
 	    sf_write (ctime,sizeof(float complex),nx,out);

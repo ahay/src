@@ -12,7 +12,7 @@
 #endif
 
 static Node Tree;
-static NodeList Orphans;
+static NodeQueue Orphans;
 
 static eno2 cvel;
 
@@ -22,6 +22,9 @@ static const float eps = 1.e-5;
 static bool *accepted;
 
 static void psnap (float* p, float* q, int* iq);
+
+static void process_node (Node nd);
+static void process_child (Node child);
 
 void tree_init (int order1,
 		int nz1, int nx1, int na1, int nt1, 
@@ -41,7 +44,7 @@ void tree_init (int order1,
     val = value;
     accepted = sf_boolalloc(naxz);
 
-    Orphans = CreateNodeList(nax);
+    Orphans = CreateNodeQueue();
     Tree = CreateNodes(naxz,order);
 }
 
@@ -362,8 +365,11 @@ void tree_build(void)
 	    }
 	}
     }
+
+    TraverseQueue (Orphans,process_node);
 }
 
+/* print_node and print_queue 
 void tree_print (void) {
     int k, ic;
     Node node;
@@ -372,118 +378,112 @@ void tree_print (void) {
 	node = Tree+k;
 	fprintf(stderr,"Node %d, nparents=%d, children: ",k,node->nparents);
 	for (ic=0; ic < node->children->nitems; ic++) {
-	    fprintf(stderr,"%d ",node->children->list[ic]-Tree);
+	    fprintf(stderr,"%d ",node->children->queue[ic]-Tree);
 	}
 	fprintf(stderr,"\n");
     }
     fprintf(stderr,"Orphans: ");
     for (ic=0; ic < Orphans->nitems; ic++) {
-	fprintf(stderr,"%d ",Orphans->list[ic]-Tree);
+	fprintf(stderr,"%d ",Orphans->queue[ic]-Tree);
     }
     fprintf(stderr,"\n");
 } 
+*/
 
-
-void tree_traverse (void) {
-    Node node, child;
-    int k, i, j, k1, k2, n, nc, **parents;
-    /*** debug ***
-    int ia, ix, iz, ka, kx, kz;
-    *************/
+static void process_node (Node nd) {
+    static int n=0;
+    int k, i, j, k1, k2, **parents;
     float x, w1[3], w2[3], *fk;
 
-    for (n=0; n < Orphans->nitems; n++) {
-	if (0==n%nax) fprintf(stderr,"Got %d of %d\n",n+1,naxz);
+    if (0==n%nax) sf_warning("Got %d of %d",n+1,naxz);
+    n++;
 
-	node = Orphans->list[n];
-	k = node - Tree;
-	if (!accepted[k]) { /*evaluate node */      
-	    fk = val[k];
+    k = nd - Tree;
+    if (!accepted[k]) { /*evaluate node */      
+	fk = val[k];
 
-	    fk[0] = 0.;
-	    fk[1] = 0.;
-	    fk[2] = node->t;
-	    fk[3] = 0.;
+	fk[0] = 0.;
+	fk[1] = 0.;
+	fk[2] = nd->t;
+	fk[3] = 0.;
+	
+	parents = nd->parents;
+	
+	x = nd->w1; 
+	switch (nd->n1) {
+	    case 1:
+		w1[0] = 1;
+		break;
+	    case 2:
+		w1[0] = 1.-x; 
+		w1[1] = x;
+		break;
+	    case 3:
+		w1[0] = 1.-x*x; 
+		w1[1] = 0.5*x*(x+1.); 
+		w1[2] = 0.5*x*(x-1.);
+		break;
+	}
+	
+	x = nd->w2; 
+	switch (nd->n2) {
+	    case 1:
+		w2[0] = 1;
+		break;
+	    case 2:
+		w2[0] = 1.-x; 
+		w2[1] = x;
+		break;
+	    case 3:
+		w2[0] = 1.-x*x; 
+		w2[1] = 0.5*x*(x+1.); 
+		w2[2] = 0.5*x*(x-1.);
+		break;
+	}
+	
+	/**** debug ****
+	      kz = k/nax; 
+	      kx = (k-kz*nax)/na;
+	      ka = k-kz*nax-kx*na;
+	      sf_warning("node %d %d %d",ka,kx,kz);
+	***************/
+	
 
-	    parents = node->parents;
-
-	    x = node->w1; 
-	    switch (node->n1) {
-		case 1:
-		    w1[0] = 1;
-		    break;
-		case 2:
-		    w1[0] = 1.-x; 
-		    w1[1] = x;
-		    break;
-		case 3:
-		    w1[0] = 1.-x*x; 
-		    w1[1] = 0.5*x*(x+1.); 
-		    w1[2] = 0.5*x*(x-1.);
-		    break;
-	    }
-
-	    x = node->w2; 
-	    switch (node->n2) {
-		case 1:
-		    w2[0] = 1;
-		    break;
-		case 2:
-		    w2[0] = 1.-x; 
-		    w2[1] = x;
-		    break;
-		case 3:
-		    w2[0] = 1.-x*x; 
-		    w2[1] = 0.5*x*(x+1.); 
-		    w2[2] = 0.5*x*(x-1.);
-		    break;
-	    }
-
-	    
-	    /**** debug ****
-	    kz = k/nax; 
-	    kx = (k-kz*nax)/na;
-	    ka = k-kz*nax-kx*na;
-	    sf_warning("node %d %d %d",ka,kx,kz);
-	    ***************/
-
-
-	    for (k2=0; k2 < node->n2; k2++) {		  
-		for (k1=0; k1 < node->n1; k1++) {
-		    i = parents[k2][k1];
-		    if (i >= 0) {					
-			x = w2[k2]*w1[k1];
-
-			/**** debug ****
-			iz = i/nax; 
-			ix = (i-iz*nax)/na;
-			ia = i-iz*nax-ix*na;
-			sf_warning("weight %d %d %d: %g",ia,ix,iz,x);
-			***************/
-
-			for (j=0; j < 4; j++) {
-			    fk[j] += x*val[i][j];
-			}
+	for (k2=0; k2 < nd->n2; k2++) {		  
+	    for (k1=0; k1 < nd->n1; k1++) {
+		i = parents[k2][k1];
+		if (i >= 0) {					
+		    x = w2[k2]*w1[k1];
+		    
+		    /**** debug ****
+			  iz = i/nax; 
+			  ix = (i-iz*nax)/na;
+			  ia = i-iz*nax-ix*na;
+			  sf_warning("weight %d %d %d: %g",ia,ix,iz,x);
+		    ***************/
+		    
+		    for (j=0; j < 4; j++) {
+			fk[j] += x*val[i][j];
 		    }
 		}
 	    }
-      
-	    accepted[k] = true;
 	}
-
-	for (nc=0; nc < node->children->nitems; nc++) {
-	    child = node->children->list[nc]; 
-	    child->nparents--;
-	    if (0==child->nparents) AddNode(Orphans,child);
-	}
+	
+	accepted[k] = true;
     }
+    
+    TraverseQueue (nd->children,process_child);
+}
+
+static void process_child (Node child) {
+    child->nparents--;
+    if (0==child->nparents) AddNode(Orphans,child);
 }
 
 void tree_close (void)
 {
     FreeNodes(Tree,naxz);
-    free(Orphans->list);
-    free(Orphans);
+    FreeNodeQueue (Orphans);
 }
 
 static void psnap (float* p, float* q, int* iq) {
