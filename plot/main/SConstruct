@@ -1,0 +1,49 @@
+import os, sys
+sys.path.append('../..')
+import configure
+
+progs = 'box contour dots graph grey grey3 plas pldb plotrays thplot wiggle'
+
+try:
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    bindir = os.path.join(root,'bin')
+    incdir = os.path.join(root,'include')
+except:
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+    env.Append(CPPPATH=['../../include'],
+               LIBPATH=['../../filt/lib','../lib'],LIBS=['rsfplot','rsf','m'])
+    SConscript('../lib/SConstruct')
+
+mains = Split(progs)
+map(lambda prog: env.Program(prog + '.c'),mains)
+
+if root:
+    docmerge = configure.docmerge
+    sf = env.get('PROGPREFIX','')
+    
+    env.Install(bindir,map(lambda prog: sf + prog,mains))
+    for pair in [['byte','grey'],['cubeplot','grey3']]:
+        [copy,source] = map(lambda x: sf+x,pair)
+        env.InstallAs(os.path.join(bindir,copy),source)
+        docmerge = configure.docextra(docmerge,source,copy)
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    main = 'sfplot.py'
+    
+    docs = map(lambda prog: env.Doc(prog),mains)
+    doc = env.Command(main,docs,docmerge)
+    env.Install(libdir,doc)
+    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+#####################################################################
+
+# 	$Id: SConstruct,v 1.1 2004/06/11 10:47:34 fomels Exp $	
