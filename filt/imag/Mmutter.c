@@ -31,8 +31,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype;
-    bool abs, half, inner;
-    float tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, v0, *data;
+    bool abs, half, inner, hyper;
+    float t0, tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, v0, *data;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
     sf_warning("CDPtype=%d",CDPtype);
     
     if (!sf_getfloat("tp",&tp)) tp=0.150;
+    if (!sf_getfloat("t0",&t0)) t0=0.;
     if (!sf_getfloat("v0",&v0)) v0=1.45; 
     if (!sf_getfloat("slope0",&slope0)) slope0=1./v0;
     if (!sf_getfloat("slopep",&slopep)) slopep=slope0;
@@ -76,14 +77,23 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inner",&inner)) inner=false;
     /* if y, do inner muter */
 
+    if (!sf_getbool("hyper",&hyper)) hyper=false;
+    /* if y, do hyperbolic mute */
+
+    if (hyper) {
+	slope0 *= slope0;
+	slopep *= slopep;
+    }
+
     data = sf_floatalloc(n1);
 
-    mutter_init(n1,o1,d1,abs,inner);
+    mutter_init(n1,o1-t0,d1,abs,inner,hyper);
 
     for (i3=0; i3 < n3; i3++) { 
 	x0= o2 + (d2/CDPtype)*(i3%CDPtype) - x1;
 	for (i2=0; i2 < n2; i2++) { 
 	    x = x0+i2*d2;
+	    if (hyper) x *= x;
 
 	    sf_floatread (data,n1,in);
 	    mutter (tp,slope0,slopep, x, data);
@@ -94,4 +104,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.9 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

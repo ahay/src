@@ -1,7 +1,7 @@
 /* Create a header mask.
 
 Mask is an integer data with ones and zeros. 
-Ones correspond to header values between min and max.
+Ones correspond to input values between min and max.
 The output can be used with sfheaderwindow.
 */
 /*
@@ -60,4 +60,4 @@ int main(int argc, char* argv[]) {
     exit(0);
 }
 	    
-/* 	$Id: mask.c,v 1.7 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */

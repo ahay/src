@@ -1,14 +1,45 @@
+/* Conjugate-gradient with preconditioning. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "conjprec.h"
 #include "alloc.h"
-#include "c99.h"
 #include "error.h"
+
+#include "c99.h"
+#include "_solver.h"
+/*^*/
+
+#ifndef _sf_conjprec_h
+
+typedef void (*sf_operator2)(int,float*);
+/*^*/
+
+#endif
 
 static int nx, nr;
 static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
-static double norm (int n, const float* x) {
+static double norm (int n, const float* x) 
+/* double-precision L2 norm */
+{
     double prod, xi;
     int i;
 
@@ -20,8 +51,13 @@ static double norm (int n, const float* x) {
     return prod;
 }
 
-void sf_conjprec_init(int nx1, int nr1, float eps1,
-		      float tol1, bool verb1, bool hasp01) 
+void sf_conjprec_init(int nx1     /* preconditioned size */, 
+		      int nr1     /* residual size */, 
+		      float eps1  /* scaling */,
+		      float tol1  /* tolerance */, 
+		      bool verb1  /* verbosity flag */, 
+		      bool hasp01 /* if has initial model */)
+/*< solver constructor >*/ 
 {
     nx = nx1;
     nr = nr1;
@@ -39,7 +75,8 @@ void sf_conjprec_init(int nx1, int nr1, float eps1,
     gr = sf_floatalloc(nr);
 }
 
-void sf_conjprec_close(void) 
+void sf_conjprec_close(void)
+/*< Free allocated space >*/
 {
     free (r);
     free (sp);
@@ -49,9 +86,14 @@ void sf_conjprec_close(void)
     free (sr);
     free (gr);
 }
-   
-void sf_conjprec(sf_operator oper, sf_operator2 prec, 
-		 float* p, float* x, const float* dat, int niter)
+
+void sf_conjprec(sf_operator oper  /* linear operator */, 
+		 sf_operator2 prec /* preconditioning */, 
+		 float* p          /* preconditioned */, 
+		 float* x          /* model */, 
+		 const float* dat  /* data */, 
+		 int niter         /* number of iterations */)
+/*< Conjugate gradient solver with preconditioning >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0, b0;
     int i, iter;
