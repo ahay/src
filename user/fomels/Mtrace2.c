@@ -166,4 +166,4 @@ static void raytrace (float q, void* xv, float* xzt) {
     xzt[4] = cell_p2a(p)*180./SF_PI;
 }
 
-/* 	$Id: Mtrace2.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */
