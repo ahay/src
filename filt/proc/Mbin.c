@@ -93,14 +93,14 @@ int main (int argc, char* argv[])
     if (sf_histfloat(in,"d2",&dt)) sf_putfloat(out,"d3",dt);
 
     /* let user overwrite */
-    sf_getfloat ("xmin",&xmin);
     sf_getfloat ("xmax",&xmax);
+    sf_getfloat ("xmin",&xmin);
+    sf_getfloat ("ymax",&ymax);
     sf_getfloat ("ymin",&ymin);
     /* Grid dimensions */
-    sf_getfloat ("ymax",&ymax);
-
-    if (xmax <= xmin) sf_error ("xmax=%f <= xmin=%f",xmax,xmin);
-    if (ymax <= ymin) sf_error ("ymax=%f <= ymin=%f",xmax,xmin);
+    
+    if (xmax < xmin) sf_error ("xmax=%f < xmin=%f",xmax,xmin);
+    if (ymax < ymin) sf_error ("ymax=%f < ymin=%f",xmax,xmin);
 
     if (!sf_getfloat("x0",&x0)) x0=xmin; 
     if (!sf_getfloat("y0",&y0)) y0=ymin; 
@@ -201,4 +201,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mbin.c,v 1.9 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */

@@ -9,11 +9,11 @@ dip2 dipfilter dips dix envelope explanesignoi expsignoi extract fft1 fft3
 flat flat3 fourvc fourvc2 igrad imospray impl1 impl2 infill inmo intbin
 intshow inttest1 inttest2 iphase kolmog lapfill linefit lpad miss2 miss3 monof
 monof2 nmo noise nsmooth1 ofpwd ocparcel octentwt planemis2 planemis3
-planesignoi pnmo prestolt pwd radial radon randrefl refer reshape ricker
-shapebin shapebin1 shot2cmp shotholes slice smooth smoothder smoothreg
+planesignoi pmig pnmo prestolt pveltran pwd radial radon randrefl refer reshape
+ricker shapebin shapebin1 shot2cmp shotholes slice smooth smoothder smoothreg
 smoothreg2 spectra spectra2 spline splinefilter stolt stretch taupmo
-time2depth tomo tpow trismooth2 twodip2 twofreq2 vscan velmod warp1
-warpscan warpscan2 window1
+time2depth tomo tpow trismooth2 twodip2 twofreq2 vscan velmod warp1 warpscan
+warpscan2 window1
 '''
 
 try: # distributed version

@@ -30,13 +30,14 @@ int main (int argc, char* argv[])
     bool half;
     int it,ix,ih, nt,nx, nh, nw, CDPtype;
     float dt, t0, h, h0, t, f, g, dh, eps, dy;
-    float *trace, *p, *q, *off, *str, *out;
-    sf_file cmp, nmod, dip, offset, crv;
+    float *trace, *p, *q, *off, *str, *out, *vtr, *etr;
+    sf_file cmp, nmod, dip, offset, crv, vel, eta;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
     dip = sf_input("dip");
     nmod = sf_output("out");
+    vel = sf_output("vel");
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
     if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
@@ -84,13 +85,18 @@ int main (int argc, char* argv[])
     p = sf_floatalloc(nt);
     str = sf_floatalloc(nt);
     out = sf_floatalloc(nt);
-
+    vtr = sf_floatalloc(nt);
+    
     if (NULL != sf_getstring("crv")) {
 	crv = sf_input("crv");
+	eta = sf_output("eta");
 	q = sf_floatalloc(nt);
+	etr = sf_floatalloc(nt);
     } else {
 	crv = NULL;
+	eta = NULL;
 	q = NULL;
+	etr = NULL;
     }
 
     if (!sf_getint("extend",&nw)) nw=8;
@@ -112,12 +118,20 @@ int main (int argc, char* argv[])
 
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;
-		    f = p[it] - 0.5*q[it];
+		    f = fabsf(p[it]);
 		    g = q[it]*h*dh/(f+FLT_EPSILON);
 		    if (g < 0.) {
 			str[it]=t0-10.*dt;
+			vtr[it]=0.;
+			etr[it]=0.;
 		    } else {
-			str[it] = t - f*h*dt/(dh+sqrtf(g));
+			str[it] = t - f*h*dt/(sqrtf(g)+dh);
+			vtr[it] = 
+			    sqrtf(fabsf(sqrtf(g)*h/
+					(dt*(f*str[it]+FLT_EPSILON))));
+			etr[it] = 
+			    ((g-dh*dh)*t/(dt*(f*h+FLT_EPSILON*dh))+dh)/
+			    (8.*sqrtf(g)+FLT_EPSILON*dh);
 		    }
 		}
 	    } else {
@@ -125,18 +139,28 @@ int main (int argc, char* argv[])
 		    t = t0 + it*dt;
 		    f = t - p[it]*h*dt/dh;
 		    
-		    if (f < 0.) {
-			str[it]=t0-10.*dt;
+		    if (f < 0. || f > t) {
+			str[it] = t0-10.*dt;
+			vtr[it] = 0.;
 		    } else {
 			str[it] = sqrtf(t*f);
+			vtr[it] = h/sqrtf(t*(t-f)+FLT_EPSILON);
 		    }
 		}
 	    }		
 
 	    stretch4_define (nmo,str);
-	    stretch4_apply (nmo,trace,out);
-	    
+
+	    stretch4_apply (nmo,trace,out);	    
 	    sf_floatwrite (out,nt,nmod);
+
+	    stretch4_apply (nmo,vtr,vtr);	    
+	    sf_floatwrite (vtr,nt,vel);
+
+	    if (NULL != crv)  {
+		stretch4_apply (nmo,etr,etr);	    
+		sf_floatwrite (etr,nt,eta);
+	    }
 	}
     }
 	

@@ -17,6 +17,8 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <rsf.h>
+
 #include "spline.h"
 
 #include "banded.h"
@@ -66,6 +68,7 @@ bands spline_init (int nw /* interpolator length */,
 	    banded_const_define (slv, s8, flt8);
 	    break;
 	default:
+	    sf_error("%s: unsupported spline length  %d",__FILE__,nw);
 	    break;
     }
     
@@ -102,8 +105,62 @@ void spline4_post (int n, int n1, int n2, const float* inp, float* out)
     }
 }
 
+
+void spline_post (int nw, int o, int d, int n, float *modl, float *datr)
+/*< post-filtering to convert spline coefficients to model >*/
+{
+    const float *flt;
+    float t, a0;
+    int i, j, iw;
+
+    switch (nw) {
+	case -8:
+	    a0 = m8;
+	    flt = mom8;
+	    break;
+	case -6:
+	    a0 = m6;
+	    flt = mom6;
+	    break;
+	case -4:
+	    a0 = m4;
+	    flt = mom4;
+	    break;
+	case 3:
+	    a0 = s3;
+	    flt = flt3;
+	    break;
+	case 4:
+	    a0 = s4;
+	    flt = flt4;
+	    break;
+	case 6:
+	    a0 = s6;
+	    flt = flt6;
+	    break;
+	case 8:
+	    a0 = s8;
+	    flt = flt8;
+	    break;
+	default:
+	    sf_error("%s: unsupported spline length  %d",__FILE__,nw);
+	    break;
+    }
+    nw = (nw>0)?(nw-1)/2:(-nw-1)/2;
+
+    for (i=0; i < n; i++) {
+	j = o + i*d;
+	t = a0* modl[j];
+	for (iw=0; iw < nw; iw++) {
+	    if (i+iw+1 < n)  t += modl[j+(iw+1)*d]*flt[iw];
+	    if (i-iw-1 >= 0) t += modl[j-(iw+1)*d]*flt[iw];
+	}
+	datr[j] = t;
+    }
+}
+
 void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
-/*< 2-D spline post-filtering >*/
+/*< 2-D spline pre-filtering >*/
 {
     int i1, i2;
     for (i2 = 0; i2 < n2; i2++) {

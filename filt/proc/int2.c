@@ -36,7 +36,7 @@
 #endif
 
 static int nd, nf, m1, m2, **nxy;
-static bool *mask;
+static bool *mask, allocated=false;
 static float **w1, **w2;
 
 void  int2_init (float** coord       /* coordinates [nd][2] */, 
@@ -56,19 +56,21 @@ void  int2_init (float** coord       /* coordinates [nd][2] */,
     m1 = n1;
     m2 = n2;
 
-    nxy = sf_intalloc2(2,nd);
-    mask = sf_boolalloc(nd);
-    w1 = sf_floatalloc2(nf,nd);
-    w2 = sf_floatalloc2(nf,nd);
+    if (!allocated) {
+	nxy = sf_intalloc2(2,nd);
+	mask = sf_boolalloc(nd);
+	w1 = sf_floatalloc2(nf,nd);
+	w2 = sf_floatalloc2(nf,nd);
+    }
 
     for (id = 0; id < nd; id++) {
 	rx = (coord[id][0] - o1)/d1;
-	i1 = (int) floor(rx + 1. - 0.5*nf);
-	x1 = rx - floor(rx);
+	i1 = (int) floorf(rx + 1. - 0.5*nf);
+	x1 = rx - floorf(rx);
 	
 	rx = (coord[id][1] - o2)/d2;
-	i2 = (int) floor(rx + 1. - 0.5*nf);
-	x2 = rx - floor(rx);
+	i2 = (int) floorf(rx + 1. - 0.5*nf);
+	x2 = rx - floorf(rx);
    
 	if (i1 > - nf && i1 < n1 &&
 	    i2 > - nf && i2 < n2) {
@@ -114,13 +116,16 @@ void  int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 void int2_close (void)
 /*< free allocated storage >*/
 {
-    free (*nxy);
-    free (nxy);
-    free (mask);
-    free (*w1);
-    free (*w2);
-    free (w1);
-    free (w2);
+    if (allocated) {
+	allocated = false;
+	free (*nxy);
+	free (nxy);
+	free (mask);
+	free (*w1);
+	free (*w2);
+	free (w1);
+	free (w2);
+    }
 }
 
 /* 	$Id$	 */
