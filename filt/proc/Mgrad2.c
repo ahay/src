@@ -1,4 +1,4 @@
-/* 2-D anisotropic diffusion. */
+/* 2-D smooth gradient. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,17 +18,16 @@
 */
 
 #include <rsf.h>
-
-#include "impl2.h"
+#include "edge.h"
 
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i3;
-    float r1, r2, tau, pclip, **dat;
-    bool up;
+    float **pp, **qq;
     sf_file in, out;
 
-    sf_init (argc,argv);
+    sf_init(argc,argv);
+
     in = sf_input("in");
     out = sf_output("out");
 
@@ -36,28 +35,16 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
 
-    if (!sf_getfloat("rect1",&r1)) sf_error("Need rect1=");
-    /* vertical smoothing */
-    if (!sf_getfloat("rect2",&r2)) sf_error("Need rect2=");
-    /* horizontal smoothing */
-    if (!sf_getfloat("tau",&tau)) tau=0.1;
-    /* smoothing time */
-    if (!sf_getfloat("pclip",&pclip)) pclip=50.;
-    /* percentage clip for the gradient */
-    if (!sf_getbool ("up",&up)) up=false;
-    /* smoothing style */
-
-    impl2_init (r1, r2, n1, n2, tau, pclip, up);
-
-    dat = sf_floatalloc2(n1,n2);
+    pp = sf_floatalloc2(n1,n2);
+    qq = sf_floatalloc2(n1,n2);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread (dat[0],n1*n2,in);
-	impl2_apply (dat,true,false);
-	sf_floatwrite (dat[0],n1*n2,out);
+	sf_floatread(pp[0],n1*n2,in);
+	grad9(n1,n2,pp,qq);
+	sf_floatwrite(qq[0],n1*n2,out);
     }
 
     exit(0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Mgrad2.c 691 2004-07-04 19:28:08Z fomels $	 */

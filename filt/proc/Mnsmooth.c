@@ -1,4 +1,9 @@
-/* N-D non-stationary smoothing. */
+/* N-D non-stationary smoothing. 
+
+Takes: rect1=rect1.rsf rect2=rect2.rsf ... 
+
+rectN defines the sizes of the smoothing stencils in N-th dimension.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
 

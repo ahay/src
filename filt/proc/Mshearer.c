@@ -69,7 +69,7 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("short",&shrt)) shrt=1;
     /* short smoothing radius */
-    if (!sf_getint("short",&lng)) lng=10;
+    if (!sf_getint("long",&lng)) lng=10;
     /* long smoothing radius */
 
     ts = sf_triangle_init(shrt,n1);
