@@ -1,0 +1,33 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+lines = ('Inl20025-Xln2982-2988-Time.SEGY',
+         'Inl20025-Xln3370-3376-Time.SEGY',
+         'Inl20025-Xln2982-2988-Depth.SEGY',
+         'Inl20025-Xln3370-3376-Depth.SEGY',)
+
+for case in range(len(lines)):
+    line = 'line%d' % case
+    test = 'test%d' % case
+    head = 'head%d' % case
+    inpt = lines[case]
+    Fetch(inpt,'hydro')
+    Flow([line,'h'+head,'b'+head,head],inpt,
+         '''
+         segyread tape=$SOURCE
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         ''',stdin=0)
+    Flow(test,[line,head],'intbin head=${SOURCES[1]} xk=cdpt yk=cdp')
+     
+
+###########################################################################
+End()
