@@ -69,11 +69,12 @@ int main (int argc, char* argv[])
     /* depth */
 
     sf_putint(out,"n1",1);
-/*    
+ 
+    /*
       sf_putfloat(out,"d1",dw);
       sf_putfloat(out,"o1",w0); 
       sf_settype(out,SF_COMPLEX); 
-*/
+    */
 
     tx = sf_floatalloc(nt);
     px = sf_floatalloc(nt);
@@ -91,7 +92,7 @@ int main (int argc, char* argv[])
 	    for (iw = 0; iw < nw; iw++) {
 		w = w0 + iw*dw;
 		if (w < w1 || w > w2) continue;
-		
+
 		c = trace1[iw];
 		if (fabsf(w) < dw) c *= 2.;
 		w *= 2.*SF_PI;
@@ -106,10 +107,11 @@ int main (int argc, char* argv[])
 		} /* nt */
 	    } /* nw */
 	} /* nx */
+	sf_warning("lateral done");
 	sf_floatwrite (trace2,nx,out);
     } /* nz */
     
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

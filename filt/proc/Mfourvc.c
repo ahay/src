@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
     float *trace, *strace;
     float complex *ctrace, **cstack;
-    static kiss_fftr_cfg forw, invs;
+    kiss_fftr_cfg forw, invs;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -144,7 +144,7 @@ int main(int argc, char* argv[])
 			w = i2*SF_PI/(d2*n3);
  
 			cstack[iv][i2] += 
-			    ctrace[i2] * cexpf(-I*(v2/w+(v1-o2)*w));
+			    ctrace[i2] * cexpf(I*(v2/w+(v1-o2)*w));
 		    } /* w */
 		} /* v */
 	    } /* h */
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 	    for (iv=0; iv < nv; iv++) {
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*SF_PI/(d2*n3);
-		    ctrace[i2] = cstack[iv][i2] * cexpf(-I*o2*w);
+		    ctrace[i2] = cstack[iv][i2] * cexpf(I*o2*w);
 		}
 
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);

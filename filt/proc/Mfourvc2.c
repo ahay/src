@@ -149,7 +149,7 @@ int main(int argc, char* argv[])
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*SF_PI/(d2*n3);
  
-		    ctrace[i2] = ctrace0[i2] * cexpf(-I*(v2/w+(v1-o2)*w));
+		    ctrace[i2] = ctrace0[i2] * cexpf(I*(v2/w+(v1-o2)*w));
 		} /* w */
 
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);

@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     bool adj, inv;
-    int n1,n2,i2;
+    int nn,n1,n2,i2;
     float rho, *pp;
     sf_file in, out;
 
@@ -49,12 +49,15 @@ int main(int argc, char* argv[])
 	sf_warning("%s half-order integration",inv? "anticausal":"causal");
     }
 
-    pp = sf_floatalloc(n1);
+    nn = n1;
+    if (n1%2) nn++;
+    pp = sf_floatalloc(nn);
 
-    halfint_init (adj, inv, n1, rho);
+    halfint_init (adj, inv, nn, rho);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (pp,n1,in);
+	if (n1%2) pp[n1]=0.;
 	halfint (pp);
 	sf_floatwrite (pp,n1,out);
     }
@@ -62,4 +65,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mhalfint.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */
+/* 	$Id$	 */

@@ -108,7 +108,7 @@ int main (int argc, char *argv[])
 	    
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
-		    pp[i1] *= cexpf(I*2.0*SF_PI*i1*dw*o1);
+		    pp[i1] *= cexpf(-I*2.0*SF_PI*i1*dw*o1);
 		}
 	    }
 	    
@@ -132,7 +132,7 @@ int main (int argc, char *argv[])
 
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
-		    pp[i1] *= cexpf(-I*2.0*SF_PI*i1*dw*o1);
+		    pp[i1] *= cexpf(+I*2.0*SF_PI*i1*dw*o1);
 		}
 	    }
 
