@@ -2,14 +2,15 @@
 #define _node_h
 
 typedef struct CNodeList {
-  int nitems, ntotal;
-  struct CNode** list;
+    int nitems, ntotal;
+    struct CNode** list;
 } *NodeList;
  
 typedef struct CNode {
-  int nparents, **parents; /* number of alive parents, immediate parents */
-  float w1, w2, t;
-  struct CNodeList* children;
+    int nparents, **parents; /* number of alive parents, immediate parents */
+    int n1, n2;
+    float w1, w2, t;
+    struct CNodeList* children;
 } *Node;
 
 NodeList CreateNodeList (int n);

@@ -7,7 +7,7 @@
 int main(int argc, char* argv[])
 {
     bool velocity;
-    int nz,nx, i, iz, na, nt, ix, order, naxz, meth;
+    int nz,nx, i, iz, na, nt, ix, order, naxz;
     float **slow, **node;
     float dz,dx,da,x0,z0,a0;
     sf_file vel, out;
@@ -50,9 +50,7 @@ int main(int argc, char* argv[])
 
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
-    if(!sf_getint("method",&meth)) meth=1;
-    if(!sf_getint("order",&order)) order=meth;
-    order++;
+    if(!sf_getint("method",&order)) order=1; order++;
 
     slow  = sf_floatalloc2(nz,nx);
     sf_read(slow[0],sizeof(float),nz*nx,vel);
@@ -79,11 +77,11 @@ int main(int argc, char* argv[])
 
     /* build dependency graph */
     
-    tree_build(meth);
+    tree_build();
 
     /* tree_print(); */
 
-    tree_traverse(meth);
+    tree_traverse();
 
     sf_write(node[0],sizeof(float),4*naxz,out);
     
