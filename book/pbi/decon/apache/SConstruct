@@ -1,0 +1,59 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+from rsfproj import *
+Book()
+
+###########################################################################
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/apache'
+Fetch('abo40i.dat',datdir)
+
+Flow('apache','abo40i.dat',
+     '''echo n1=84 n2=515 o1=0 o2=0 d1=0.001 d2=0.01
+     data_format=ascii_float
+     label1="Time (s)" label2="Lateral (kft)" in=$SOURCE |
+     dd data_format=native_float''')
+Plot('ai','apache',
+     '''
+     grey color=j bias=6 allpos=y 
+     title="Apache Canyon Model" wantscalebar=y 
+     barlabel="Acoustic Impedance (ft/s)(g/cc)"
+     ''')
+Plot('gai','apache',
+     '''
+     grey bias=6 allpos=y 
+     title="Apache Canyon Model" wantscalebar=y 
+     barlabel="Acoustic Impedance (ft/s)(g/cc)"
+     ''')
+Plot('text1',None,
+     '''box x0=2.860000 y0=4.571667 label="Wolfcamp"
+     xt=1.000000 yt=1.000000 lab_fat=0 lab_color=7 boxit=1 size=0.250000
+     pointer=1 x_oval=0.000000 y_oval=0.000000
+     ''')
+Plot('text2',None,
+     '''box x0=8.341666 y0=3.636667 label="Base Abo"
+     xt=1.000000 yt=1.000000 lab_fat=0 lab_color=7 boxit=1 size=0.250000
+     pointer=1 x_oval=0.000000 y_oval=0.000000 out=$TARGET
+     ''')
+Plot('text3',None,
+     '''box x0=9.276667 y0=5.080000 label="Top Abo"
+     xt=1.000000 yt=1.000000 lab_fat=0 lab_color=7 boxit=1 size=0.250000 p
+     ointer=1 x_oval=0.000000 y_oval=0.000000 out=$TARGET
+     ''')
+Combine('ai',['ai','text1','text2','text3'],'Overlay',result=1)
+Combine('gai',['gai','text1','text2','text3'],'Overlay',result=1)
+
+for hz in (30,60,100):
+    mod = 'mod%d' % hz
+    Flow(mod,'apache','ai2refl f=%d' % hz)
+    Result(mod,mod,
+           'grey title="Seismic Model (%d-Hz Ricker)" color=G' % hz)
+    Result('g'+mod,mod,
+           'grey title="Seismic Model (%d-Hz Ricker)"' % hz)
+
+###########################################################################
+End()
