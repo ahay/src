@@ -27,19 +27,19 @@ int main (int argc, char *argv[])
 
     nx = sf_leftsize(in,1);
 
-    if (!sf_getint ("nz",&nz)) {
+    if (!sf_histint(velocity,"n1",&nz) && !sf_getint ("nz",&nz)) {
 	/* Number of depth samples (default: n1) */
 	nz = nt; 
     } else {
 	sf_putfloat(out,"n1",nz);
     }
-    if (!sf_getfloat ("dz",&dz)) {	
+    if (!sf_histfloat(velocity,"d1",&dz) && !sf_getfloat ("dz",&dz)) {	
 	/* Depth sampling (default: d1) */
 	dz = dt; 
     } else {
 	sf_putfloat(out,"d1",dz);
     }
-    if (!sf_getfloat ("z0",&z0)) z0 = 0.; 
+    if (!sf_histfloat(velocity,"o1",&z0) && !sf_getfloat ("z0",&z0)) z0 = 0.; 
     /* Depth origin */
 
     sf_putfloat(out,"o1",z0);
@@ -87,4 +87,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mtime2depth.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: Mtime2depth.c,v 1.5 2004/01/15 02:36:44 fomels Exp $	 */

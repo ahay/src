@@ -1,6 +1,6 @@
 /* 3-D plane wave destruction.
 
-Takes: < data.rsf > residual.rsf
+Takes: < data.rsf > residual.rsf dip=dip.rsf
 */
 
 #include <rsf.h>
@@ -80,4 +80,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mpwd.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mpwd.c,v 1.3 2004/01/15 02:36:44 fomels Exp $	 */
