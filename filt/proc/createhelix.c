@@ -15,7 +15,7 @@ filter createhelix(int ndim, int* nd, int* center, int* gap, int* na)
 	na123 *= na[i];
     }
 
-    lag = alloca(na123);
+    lag = (int*) alloca(na123*sizeof(int));
 
     lag0a = sf_cart2line (ndim, na, center); /* index pointing to the "1.0" */
 

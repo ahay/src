@@ -11,7 +11,7 @@ DEPEND = -xM1
 DEPEND = -MM
 
 PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
-	helicon invbin1 invwarp nmo noise pwd randrefl reshape ricker \
+	helicon invbin1 invwarp nmo noise pef pwd randrefl reshape ricker \
 	sigmoid smooth spectra stretch2 taup taupmo time2depth warp1 \
 	window1 window2 xcorr1
 
@@ -31,6 +31,8 @@ invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint \
 invwarp = stretch tridiagonal
 nmo = fint1 tridiagonal spline interp_spline extend banded
 noise = randn
+pef = pef printfilter boxfilter helix bound misinput regrid chain \
+	createhelix compress helicon hconest cgstep bigsolver adjnull
 pwd = allp3 apfilt
 randrefl = randn
 reshape = empty
