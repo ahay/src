@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int nt,ns, ny,nh, iy,ih,is,it, type, esize;
-    long pos;
+    off_t pos;
     bool sign;
     float ds, dy,dh, os, oy,oh;
     char *trace, *zero;

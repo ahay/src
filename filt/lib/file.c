@@ -17,7 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#include <sys/types.h>
 #include <stdio.h>
+/*^*/
+
+/* stupid stdio.h */
+extern int fseeko (FILE *,off_t,int);
+extern off_t ftello (FILE *);
 /*^*/
 
 #include <stdlib.h>
@@ -35,9 +41,6 @@
 #endif
 
 #include <limits.h>
-
-#include <sys/types.h>
-/*^*/
 
 #include <sys/stat.h>
 #include <sys/param.h>
@@ -152,7 +155,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     }
     free (filename);
 
-    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
+    file->pipe = (-1 == fseeko(file->stream,0,SEEK_CUR));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 
@@ -202,7 +205,7 @@ Should do output after sf_input. >*/
 
     file->pars = sf_simtab_init (tabsize);
 
-    file->pipe = (-1L == fseek(file->stream,0L,SEEK_CUR));
+    file->pipe = (-1 == fseeko(file->stream,0,SEEK_CUR));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 
@@ -982,10 +985,10 @@ off_t sf_bytes (sf_file file)
     return size;
 }
 
-long sf_tell (sf_file file)
+off_t sf_tell (sf_file file)
 /*< Find position in file >*/
 {
-    return ftell(file->stream);
+    return ftello(file->stream);
 }
 
 FILE *sf_tempfile(char** dataname, const char* mode)
@@ -1003,10 +1006,10 @@ FILE *sf_tempfile(char** dataname, const char* mode)
     return tmp;
 }
 
-void sf_seek (sf_file file, long offset, int whence)
+void sf_seek (sf_file file, off_t offset, int whence)
 /*< Seek to a position in file. Follows fseek convention. >*/
 {
-    if (0 > fseek(file->stream,offset,whence))
+    if (0 > fseeko(file->stream,offset,whence))
 	sf_error ("%s: seek problem:",__FILE__);
 }
 

@@ -26,7 +26,7 @@
 #include "ocpatch.h"
 
 static size_t n1, n2;
-static long **table; 
+static off_t **table; 
 
 void ocpatch_init(int dim     /* number of dimensions */, 
 		  int nw      /* total patch size */, 
@@ -41,8 +41,8 @@ void ocpatch_init(int dim     /* number of dimensions */,
     n1 = nwind[0];
     n2 = nw/n1;
 
-    table = (long**) sf_alloc(np,sizeof(long*));
-    table[0] = (long*) sf_alloc(np*n2,sizeof(long));
+    table = (off_t**) sf_alloc(np,sizeof(off_t*));
+    table[0] = (off_t*) sf_alloc(np*n2,sizeof(off_t));
 
     for (ip=0; ip < np; ip++) {
 	if (ip) table[ip] = table[0]+ip*n2;

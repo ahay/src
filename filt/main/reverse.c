@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int j, i, dim, dim1, dim2;
     int n[SF_MAX_DIM], esize, which, memsize;
-    long pos=0;
+    off_t pos=0;
     size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL, m;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;

@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
     int xmin, xmax, ymin, ymax, i, ix, iy, **map, esize;
-    long pos;
+    off_t pos;
     char *buf, *zero, *xk, *yk;
     sf_file in, out, head;
 

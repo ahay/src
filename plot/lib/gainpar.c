@@ -48,7 +48,7 @@ void vp_gainpar (sf_file in, float **data,
     buf = sf_floatalloc(nt*n2);
   
     if(panel >= 0) { /* gain from a particular panel */
-	if (panel > 0) sf_seek(in,panel*n1*n2*sizeof(float),SEEK_SET);
+	if (panel > 0) sf_seek(in,(off_t) panel*n1*n2*sizeof(float),SEEK_SET);
 	gain (in, data, n1, n2, step, pclip, phalf,
 	      clip, gpow, bias, nt, buf);
     } else { /* gainpanel=each */

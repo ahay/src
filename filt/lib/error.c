@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+#define __USE_LARGEFILE 1
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>

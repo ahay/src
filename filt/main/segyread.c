@@ -234,7 +234,7 @@ int main(int argc, char *argv[])
     char *headname, *filename, *trace, *read;
     sf_file out, hdr, msk=NULL;
     int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask;
-    long pos, nsegy;
+    off_t pos, nsegy;
     FILE *head, *file;
     float *ftrace, dt;
 
@@ -253,9 +253,9 @@ int main(int argc, char *argv[])
     if (NULL == (file = fopen(filename,"rb")))
 	sf_error("Cannot open \"%s\" for reading:",filename);
 
-    fseek(file,0,SEEK_END);
-    pos = ftell(file); /* pos is the filesize in bytes */
-    fseek(file,0,SEEK_SET);
+    fseeko(file,0,SEEK_END);
+    pos = ftello(file); /* pos is the filesize in bytes */
+    fseeko(file,0,SEEK_SET);
 
     if (NULL == (read = sf_getstring("read"))) read = "b";
     /* what to read: h - header, d - data, b - both (default) */
@@ -332,7 +332,7 @@ int main(int argc, char *argv[])
 	trace = sf_charalloc (SF_HDRBYTES);
 	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
 	    sf_error ("Error reading first trace header");
-	fseek(file,0,SEEK_SET);
+	fseeko(file,0,SEEK_SET);
 
 	sf_segy2head(trace, itrace, SF_NKEYS);
 	ns = itrace[sf_segykey("ns")];
@@ -399,12 +399,12 @@ int main(int argc, char *argv[])
 
 	    for (itr=0; itr < ntr; itr++) {
 		if (NULL != mask && !mask[itr]) {
-		    fseek(file,SF_HDRBYTES,SEEK_CUR);
+		    fseeko(file,SF_HDRBYTES,SEEK_CUR);
 		    continue;
 		} else if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file)) {
 			sf_error ("Error reading trace header %d",itr+1);
 		}
-		fseek(file,nsegy,SEEK_CUR);
+		fseeko(file,nsegy,SEEK_CUR);
 
 		sf_segy2head(trace, itrace, SF_NKEYS);
 		sf_intwrite(itrace,SF_NKEYS,hdr);
@@ -418,7 +418,7 @@ int main(int argc, char *argv[])
 	    for (itr=0; itr < ntr; itr++) {
 		fseek(file,SF_HDRBYTES,SEEK_CUR);
 		if (NULL != mask && !mask[itr]) {
-		    fseek(file,nsegy,SEEK_CUR);
+		    fseeko(file,nsegy,SEEK_CUR);
 		    continue;
 		} else if (nsegy != fread(trace, 1, nsegy, file)) {
 			sf_error ("Error reading trace data %d",itr+1);
@@ -438,7 +438,7 @@ int main(int argc, char *argv[])
 
 	    for (itr=0; itr < ntr; itr++) {
 		if (NULL != mask && !mask[itr]) {
-		    fseek(file,nsegy,SEEK_CUR);
+		    fseeko(file,nsegy,SEEK_CUR);
 		    continue;
 		} else if (nsegy != fread(trace, 1, nsegy, file)) {
 		    sf_error ("Error reading trace header %d",itr+1);

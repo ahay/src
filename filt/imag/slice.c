@@ -31,7 +31,7 @@ typedef struct Slice *slice;
 #endif
 
 struct Slice {
-    long start;
+    off_t start;
     sf_file file;
     int n12, n3;
 };

@@ -22,7 +22,7 @@
 
 struct skey {
     float key;
-    int pos;
+    off_t pos;
 };
 
 static int key_compare (const void *k1, const void *k2)
@@ -35,7 +35,7 @@ static int key_compare (const void *k1, const void *k2)
 int main(int argc, char* argv[])
 {
     int n1, n2, i2, esize;
-    long pos;
+    off_t pos;
     struct skey *sorted;
     float *unsorted;
     char *trace;

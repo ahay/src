@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
 	    vp_gainpar (in,data,n1,n2,gainstep,
 			pclip,phalf,&clip,&gpow,pbias,n3,panel);
 	    if (verb) sf_warning("panel=%d clip=%g gpow=%g",panel,clip,gpow);
-	    sf_seek(in,0L,SEEK_SET); /* rewind */
+	    sf_seek(in,0,SEEK_SET); /* rewind */
 	}
     }
 

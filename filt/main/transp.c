@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
 {
     int i, dim, n[SF_MAX_DIM], mem, memsize, n1, n2, n3;
     int dim1, dim2, esize, i2, i3, *map;
-    long pos;
+    off_t pos;
     char key1[7], key2[7], *val, **dat1, **dat2, *buf;
     sf_file in, out;
     float f;
