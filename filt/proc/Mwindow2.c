@@ -21,7 +21,9 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",n+1)) sf_error("No n2= in input");
 
     if (!sf_getints("nw",nw,2)) sf_error("Need nw=");
+    /* number of windows */
     if (!sf_getints("w",w,2)) sf_error("Need w=");
+    /* window size */
     if (!sf_getfloats ("h",h,2)) {
 	for (j=0; j < 2; j++) {
 	    h[j] = (nw[j]*w[j] - n[j])/(nw[j]-1.);
@@ -60,4 +62,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow2.c,v 1.3 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mwindow2.c,v 1.4 2004/04/13 06:02:53 fomels Exp $	 */

@@ -34,8 +34,7 @@ int main(int argc, char* argv[])
     if(!sf_histint(in,"n1",&n1)) sf_error ("No n1= in input");
     if(!sf_histfloat(in,"d1",&d1)) sf_error ("No d1= in input");
     if(!sf_histfloat(in,"o1",&o1)) o1 = 0.;
-
-    if(!sf_histint(in,"n2",&m2)) m2 = 1;
+    m2 = sf_leftsize(in,1);
 
     other = sf_input("other");
 
@@ -264,4 +263,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarp1.c,v 1.7 2004/04/07 00:57:23 fomels Exp $	 */
+/* 	$Id: Mwarp1.c,v 1.8 2004/04/13 06:02:53 fomels Exp $	 */
