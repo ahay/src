@@ -1,7 +1,7 @@
-program Miss
-  use sep
-  use helix
-  use mis2_mod
+#include <rsf.h>
+
+#include "helix.h"
+#include "mis2.h"
   use bound
 
   implicit none

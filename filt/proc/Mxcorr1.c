@@ -8,7 +8,7 @@ int main(int argc, char* argv[])
 {
     int n, nw, w, iw, i0, maxshift, i, order, i2, n2, nc;
     float dt,h, eps, lam;
-    bool verb;
+    bool verb, taper;
     float **dat, **dat2, **win, **win2, *coord, *shift, *warp, *xc;
     map2 str;
     sf_file in, out, other, xcr;
@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getfloat("lam",&lam)) lam=0.5;
     if (!sf_getbool("verb",&verb)) verb=false;
+    if (!sf_getbool("taper",&taper)) taper=true;
     if (!sf_getint("order",&order)) order=nw;
 
     dat = sf_floatalloc2(n,n2);
@@ -56,8 +57,8 @@ int main(int argc, char* argv[])
 
     for (iw=0; iw < nw; iw++) {
 	for (i2=0; i2 < n2; i2++) {
-	    i0 = window1_apply(iw,dat[i2] ,true,true,win[i2] );
-	    i0 = window1_apply(iw,dat2[i2],true,true,win2[i2]);
+	    i0 = window1_apply(iw,dat[i2] ,taper,taper,win[i2] );
+	    i0 = window1_apply(iw,dat2[i2],taper,taper,win2[i2]);
 	}
 	coord[iw] = i0 + 0.5*(w+1.);
 	shift[iw] = xcorr (w,n2,win[0], win2[0],nc,xc);

@@ -17,32 +17,10 @@ int main (int argc, char *argv[])
     
     if (cos || !inv) {  
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-	if (!cos) {
-	    switch (sf_getform(in)) {
-		case SF_NATIVE:
-		    sf_setformat(out,"native_complex");
-		    break;
-		case SF_XDR:
-		    sf_setformat(out,"xdr_complex");
-		    break;  
-		default:
-		    sf_error("Unsupported input data form");
-	    }
-	}
+	if (!cos) sf_settype (out,SF_COMPLEX);
     } else {
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-	if (!cos) {
-	    switch (sf_getform(in)) {
-		case SF_NATIVE:
-		    sf_setformat(out,"native_float");
-		    break;
-		case SF_XDR:
-		    sf_setformat(out,"xdr_float");
-		    break;  
-		default:
-		    sf_error("Unsupported input data form");
-	    }
-	}
+	if (!cos) sf_settype (out,SF_FLOAT);
     }
 
     n2 = sf_leftsize(in,1);
