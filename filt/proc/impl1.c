@@ -1,6 +1,26 @@
+/* Anisotropic diffusion, 1-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "impl1.h"
 #include "edge.h"
@@ -12,7 +32,12 @@ static int nstep, n, nclip;
 static bool up;
 static tris slv;
 
-void impl1_init (float r, int n1, float tau, float pclip, bool up_in)
+void impl1_init (float r     /* radius */, 
+		 int n1      /* data size */, 
+		 float tau   /* duration */, 
+		 float pclip /* percentage clip */, 
+		 bool up_in  /* weight version */)
+/*< initialize >*/
 {
     float q;
 
@@ -46,6 +71,7 @@ void impl1_init (float r, int n1, float tau, float pclip, bool up_in)
 }
 
 void impl1_close (void)
+/*< free allocated storage >*/
 {
     free(w);
     free(d1);
@@ -55,6 +81,7 @@ void impl1_close (void)
 }
 
 void impl1_apply (float *x)
+/*< apply diffusion >*/
 {
     int istep, i;
     float a, xsum, wsum;
@@ -105,10 +132,3 @@ void impl1_apply (float *x)
 	tridiagonal_solve (slv, x);
     }
 }
-
-
-
-
-
-
-

@@ -1,6 +1,9 @@
+/* Anisotropic diffusion, 2-D */
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "impl2.h"
 #include "edge.h"
@@ -12,8 +15,12 @@ static int nstep, n1, n2, n, nclip;
 static bool up;
 static tris slv1, slv2;
 
-void impl2_init (float r1, float r2, int n1_in, int n2_in, 
-		 float tau, float pclip, bool up_in)
+void impl2_init (float r1, float r2   /* radius */, 
+		 int n1_in, int n2_in /* data size */, 
+		 float tau            /* duration */, 
+		 float pclip          /* percentage clip */, 
+		 bool up_in           /* weighting case */)
+/*< initialize >*/
 {
     int i;
 
@@ -63,6 +70,7 @@ void impl2_init (float r1, float r2, int n1_in, int n2_in,
 }
 
 void impl2_close (void)
+/*< free allocated storage >*/
 {
     free(*y);
     free(y);
@@ -79,6 +87,7 @@ void impl2_close (void)
 }
 
 void impl2_set(float ** x)
+/*< compute weighting function >*/
 {
     int i;
     float a, xsum, wsum;
@@ -108,6 +117,7 @@ void impl2_set(float ** x)
 }
 
 void impl2_apply (float **x, bool set, bool adj)
+/*< apply diffusion >*/
 {
     int istep, i1, i2, i;
 
@@ -195,6 +205,7 @@ void impl2_apply (float **x, bool set, bool adj)
 }
 
 void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
+/*< linear operator >*/
 {
     int i1, i2;
 
@@ -219,5 +230,5 @@ void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: impl2.c,v 1.4 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id$	 */
 
