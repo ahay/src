@@ -6,12 +6,12 @@ import configure
 # MAIN LIBRARY
 #############################################################################
 src = '''
-adjnull alloc bigsolver c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
+c99 ccgstep cconjgrad cgstep chain conjgrad conjprec
 decart dottest error file files getpar kiss_fft kiss_fftr math1
 segy simtab stack
 '''
 
-src2 = 'adjnull alloc'
+src2 = 'adjnull alloc bigsolver'
 
 try: # distribution version
     Import('env')
@@ -26,25 +26,27 @@ except: # local version
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
 
-env.Append(BUILDERS={'Include':configure.Header})
+env['SCANNERS'].remove(CScan)
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
 
 ##############################################################################
 # INCLUDES
 ##############################################################################
 sources  = map(lambda x: x+'.c',Split(src))
-includes = map(lambda x: x+'.h',Split(src))
+includes = map(lambda x: x+'.h',Split(src)+Split(src2))
 
 objects = []
 for source in Split(src2):
-    env.Ignore(source+'.c',source+'.h')
     env.Include(source,prefix='sf_')
-#    obj = env.StaticObject(source+'.c')
-#    objects.append(obj)
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
 
 ##############################################################################
 # MAIN LIBRARY
 ##############################################################################
-lib = env.StaticLibrary('rsf',objects)
+lib = env.StaticLibrary('rsf',objects+sources)
 inc = env.Command('rsf.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
    

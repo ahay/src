@@ -1,9 +1,9 @@
 import sys, os
 import string, re
-from SCons.Util import WhereIs
-from SCons.Tool import createObjBuilders
-from SCons.Action import Action
-from SCons.Builder import Builder
+
+# The following adds all SCons SConscript API to the globals of this module.
+import SCons.Script.SConscript
+globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 toheader = re.compile(r'\n\n((?:[^\n]|\n[^\n])+)\n'
                       '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
@@ -14,7 +14,8 @@ def header(target=None,source=None,env=None):
     inp.close()
     file = str(target[0])
     prefix = env.get('prefix','')
-    define = prefix + string.translate(file,string.maketrans('.','_'))
+    define = prefix + string.translate(os.path.basename(file),
+                                       string.maketrans('.','_'))
     out = open(file,'w')    
     out.write('#ifndef _' + define + '\n')
     out.write('#define _' + define + '\n\n')
@@ -42,6 +43,17 @@ def depends(env,list,file):
                 list.append(inc)
                 depends(env,list,inc)
     fd.close()
+
+def included(node,env,path):
+    file = os.path.basename(str(node))
+    file = re.sub('\.[^\.]+$','',file)
+    contents = node.get_contents()
+    includes = include.findall(contents)
+    if file in includes:
+        includes.remove(file)
+    return map(lambda x: x + '.h',includes)
+
+Include = Scanner(name='Include',function=included,skeys=['.c'])
 
 def check_all(context):
     cc(context)

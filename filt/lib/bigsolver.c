@@ -1,37 +1,100 @@
+/* Solver functions for iterative least-squares optimization. */
+/*
+Copyright (C) 2004 University of Texas at Austin
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdarg.h>
 #include <string.h>
 #include <stdlib.h>
-#include "chain.h"
+
+#include "c99.h"
+/*^*/
+
 #include "bigsolver.h"
+#include "chain.h"
 #include "alloc.h"
 #include "error.h"
+
+#ifndef _sf_bigsolver_h
+
+typedef void (*sf_operator)(bool,bool,int,int,float*,float*);
+typedef void (*sf_solverstep)(bool,int,int,float*,
+			   const float*,float*,const float*);
+typedef void (*sf_weight)(int,const float*,float*);
+/*^*/
+
+#ifndef __cplusplus
+typedef void (*sf_coperator)(bool,bool,int,int,float complex*,float complex*);
+typedef void (*sf_csolverstep)(bool,int,int,float complex*,
+			       const float complex*,float complex*,
+			       const float complex*);
+typedef void (*sf_cweight)(int,const float complex*,float*);
+#endif 
+/*^*/
+
+#endif
 
 static const float TOLERANCE=1.e-12;
 
 static float norm (int n, const float* x);
 static float cnorm (int n, const float complex* x);
 
-/* solver_prec
-   -------------
-   Generic preconditioned linear solver.
-   Solves
-   oper{x} =~ dat
-   eps p   =~ 0
-   where x = prec{p}
+void sf_solver_prec (sf_operator oper   /* linear operator */, 
+		     sf_solverstep solv /* stepping function */, 
+		     sf_operator prec   /* preconditioning operator */, 
+		     int nprec          /* size of p */, 
+		     int nx             /* size of x */, 
+		     int ny             /* size of dat */, 
+		     float* x           /* estimated model */, 
+		     const float* dat   /* data */, 
+		     int niter          /* number of iterations */, 
+		     float eps          /* regularization parameter */, 
+		     ...                /* variable number of arguments */) 
+/*< Generic preconditioned linear solver.
 
-   oper - operator function
-   solv - solver step
-   prec - preconditioning operator
-   nprec - size of p (precondioned model)
-   nx - model size
-   ny - data size
-   x[nx] - model
-   dat[ny] - data
-   niter - number of iterations
-   eps - scaling factor */
-void sf_solver_prec (sf_operator oper, sf_solverstep solv, sf_operator prec, 
-		     int nprec, int nx, int ny, float* x, const float* dat, 
-		     int niter, float eps, ...) {
+  Solves
+  oper{x} =~ dat
+  eps p   =~ 0
+  where x = prec{p}
+
+  The last parameter in the call to this function should be "end".
+  Example: 
+
+  sf_solver_prec (oper_lop,sf_cgstep,prec_lop,
+  np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+
+  Parameters in ...:
+  
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator  
+  "mwt":    float*:         model weight
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  "xp":     float*:         preconditioned model
+  >*/
+{
     va_list args;
     char* par;
     float* wt = NULL;
@@ -283,26 +346,47 @@ void sf_solver_prec (sf_operator oper, sf_solverstep solv, sf_operator prec,
 
 }
 
-/* solver_reg
-   ----------
-   Generic regularized linear solver.
-   Solves
-   oper{x}    =~ dat
-   eps reg{x} =~ 0
+void sf_solver_reg (sf_operator oper   /* linear operator */, 
+		    sf_solverstep solv /* stepping function */,
+		    sf_operator reg    /* regularization operator */, 
+		    int nreg           /* size of reg{x} */, 
+		    int nx             /* size of x */, 
+		    int ny             /* size of dat */, 
+		    float* x           /* estimated model */, 
+		    const float* dat   /* data */, 
+		    int niter          /* number of iterations */, 
+		    float eps          /* regularization parameter */, 
+		    ...                /* variable number of arguments */) 
+/*< Generic regularized linear solver.
 
-   oper - operator function
-   solv - solver step
-   reg - regularization operator
-   nreg - size of reg{x}
-   nx - model size
-   ny - data size
-   x[nx] - model
-   dat[ny] - data
-   niter - number of iterations
-   eps - scaling factor */
-void sf_solver_reg (sf_operator oper, sf_solverstep solv, sf_operator reg, 
-		    int nreg, int nx, int ny, float* x, const float* dat, 
-		    int niter, float eps, ...) {
+  Solves
+  oper{x}    =~ dat
+  eps reg{x} =~ 0
+  
+  The last parameter in the call to this function should be "end".
+  Example: 
+
+  sf_solver_reg (oper_lop,sf_cgstep,reg_lop,
+  np,nx,ny,x,y,100,1.0,"x0",x0,"end");
+
+  Parameters in ...:
+  
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator  
+  "nlreg":  sf_operator:    nonlinear regularization operator
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  "resm":   float*:         final model residual
+  >*/
+{
 
     va_list args;
     char* par;
@@ -517,21 +601,40 @@ void sf_solver_reg (sf_operator oper, sf_solverstep solv, sf_operator reg,
     }
 }
 
-/* solver
-   ------
-   Generic linear solver.
-   Solves
-   oper{x} =~ dat
+void sf_solver (sf_operator oper   /* linear operator */, 
+		sf_solverstep solv /* stepping function */, 
+		int nx             /* size of x */, 
+		int ny             /* size of dat */, 
+		float* x           /* estimated model */, 
+		const float* dat   /* data */, 
+		int niter          /* number of iterations */, 
+		...                /* variable number of arguments */)
+/*< Generic linear solver.
 
-   oper - operator function
-   solv - solver step
-   nx - model size
-   ny - data size
-   x[nx] - model
-   dat[ny] - data
-   niter - number of iterations */
-void sf_solver (sf_operator oper, sf_solverstep solv, int nx, int ny, 
-		float* x, const float* dat, int niter, ...) {
+  Solves
+  oper{x}    =~ dat
+  
+  The last parameter in the call to this function should be "end".
+  Example: 
+
+  sf_solver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
+
+  Parameters in ...:
+  
+  "wt":     float*:         weight      
+  "wght":   sf_weight wght: weighting function
+  "x0":     float*:         initial model
+  "nloper": sf_operator:    nonlinear operator  
+  "verb":   bool:           verbosity flag
+  "known":  bool*:          known model mask
+  "nmem":   int:            iteration memory
+  "nfreq":  int:            periodic restart
+  "xmov":   float**:        model iteration
+  "rmov":   float**:        residual iteration
+  "err":    float*:         final error
+  "res":    float*:         final residual
+  >*/ 
+{
 
     va_list args;
     char* par;
@@ -726,7 +829,9 @@ void sf_solver (sf_operator oper, sf_solverstep solv, int nx, int ny,
     }
 }
   
-static float norm (int n, const float* x) {
+static float norm (int n, const float* x) 
+/* vector norm */
+{
     int i;
     float xn;
 
@@ -737,21 +842,43 @@ static float norm (int n, const float* x) {
     return xn;
 }
 
-/* csolver
-   ------
-   Generic linear solver for complex operators.
-   Solves
-   oper{x} =~ dat
+#ifndef __cplusplus
+/*^*/
 
-   oper - operator function
-   solv - solver step
-   nx - model size
-   ny - data size
-   x[nx] - model
-   dat[ny] - data
-   niter - number of iterations */
-void sf_csolver (sf_coperator oper, sf_csolverstep solv, int nx, int ny, 
-		 float complex* x, const float complex* dat, int niter, ...) {
+void sf_csolver (sf_coperator oper        /* linear operator */, 
+		 sf_csolverstep solv      /* stepping function */, 
+		 int nx                   /* size of x */, 
+		 int ny                   /* size of dat */, 
+		 float complex* x         /* estimated model */, 
+		 const float complex* dat /* data */, 
+		 int niter                /* number of iterations */, 
+		 ...                      /* variable number of arguments */) 
+/*< Generic linear solver for complex data.
+
+  Solves
+  oper{x}    =~ dat
+  
+  The last parameter in the call to this function should be "end".
+  Example: 
+
+  sf_csolver (oper_lop,sf_cgstep,nx,ny,x,y,100,"x0",x0,"end");
+
+  Parameters in ...:
+  
+  "wt":     float*:          weight      
+  "wght":   sf_cweight wght: weighting function
+  "x0":     float complex*:  initial model
+  "nloper": sf_coperator:    nonlinear operator  
+  "verb":   bool:            verbosity flag
+  "known":  bool*:           known model mask
+  "nmem":   int:             iteration memory
+  "nfreq":  int:             periodic restart
+  "xmov":   float complex**: model iteration
+  "rmov":   float complex**: residual iteration
+  "err":    float complex*:  final error
+  "res":    float complex*:  final residual
+  >*/ 
+{
 
     va_list args;
     char* par;
@@ -945,7 +1072,9 @@ void sf_csolver (sf_coperator oper, sf_csolverstep solv, int nx, int ny,
     }
 }
   
-static float cnorm (int n, const float complex* x) {
+static float cnorm (int n, const float complex* x) 
+/* norm of a complex vector */
+{
     int i;
     float xn;
 
@@ -956,4 +1085,7 @@ static float cnorm (int n, const float complex* x) {
     return xn;
 }
 
-/* 	$Id: bigsolver.c,v 1.1 2004/06/11 10:46:55 fomels Exp $	 */
+#endif
+/*^*/
+
+/* 	$Id$	 */

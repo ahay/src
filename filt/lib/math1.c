@@ -2,7 +2,7 @@
 #include <string.h>
 #include <ctype.h>
 
-#include "math.h"
+#include "math1.h"
 #include "stack.h"
 #include "error.h"
 #include "alloc.h"
@@ -308,4 +308,4 @@ static void check (void)
 		  __FILE__,__LINE__);
 }
 
-/* 	$Id: math1.c,v 1.6 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id$	 */
