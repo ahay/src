@@ -195,12 +195,13 @@ def pstexpen(target=None,source=None,env=None):
 #if WhereIs('dvips'):
 #    latex = WhereIs('latex')
 #else:
-latex = WhereIs('pdflatex')
+# latex = WhereIs('pdflatex')
 bibtex = WhereIs('bibtex')
 rerun = re.compile(r'\bRerun')
 
 def latex2dvi(target=None,source=None,env=None):
-    "Convert LaTeX to DVI"
+    "Convert LaTeX to DVI/PDF"
+    latex = env.get('latex',WhereIs('pdflatex'))
     tex = str(source[0])
     dvi = str(target[0])
     stem = re.sub('\.[^\.]+$','',dvi)    
@@ -257,7 +258,7 @@ Retrieve = Builder(action = Action(retrieve,varlist=['dir']))
 #    ressuffix = '.ps'
 #else:
 dvips = 0
-Pdf = Builder(action = Action(latex2dvi),
+Pdf = Builder(action = Action(latex2dvi,varlist=['latex']),
               src_suffix=['.tex','.ltx'],suffix='.pdf')
 
 Read = Builder(action = WhereIs('acroread') + " $SOURCES",
