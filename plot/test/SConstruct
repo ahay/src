@@ -1,33 +1,67 @@
-import sys
+import os, sys
 sys.path.append('../..')
 import configure
 
-env = Environment()
-opts=Options('../../config.py')
-configure.options(opts)
-opts.Update(env)
-env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
-env.Append(CPPPATH=['../../include'],
-	   LIBPATH=['../../filt/lib','../lib'],LIBS=['rsfplot','rsf','m'])
-SConscript('../lib/SConstruct')
+try:
+	Import('env')
+	root = env.get('RSFROOT')
+	libdir = os.path.join(root,'lib')
+	bindir = os.path.join(root,'bin')
+	incdir = os.path.join(root,'include')
+except:
+	root = None
+	env = Environment()
+	opts=Options('../../config.py')
+	configure.options(opts)
+	opts.Update(env)
+	env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
+	env.Append(CPPPATH=['../../include'],
+		   LIBPATH=['../../filt/lib','../lib'],
+		   LIBS=['rsfplot','rsf','m'])
+	SConscript('../lib/SConstruct')
 
-plots = '7ab cmp croshyp csp dc dcretard ellipse headray nmotraj vrms'
+plots = '7ab cmp croshyp csp dc dcretard headray nmotraj'
 
-vplot = Builder(action = './$SOURCE > $TARGET',
-		suffix='.vpl',src_suffix = '.x')
+# Fix \\ in ellipse vrms reflector
+
+vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
 env.Append(BUILDERS = {'Vplot' : vplot})
+env['PROGPREFIX'] = 'vp'
+
+mains = map(lambda x: x+'.c',Split(plots+' sg'))
 
 for plot in Split(plots):
-	env.Program(plot+'.c',PROGSUFFIX='.x',PROGPREFIX='')
-	env.Vplot(plot)
+	prog = env.Program(plot+'.c')
+	if root:
+		env.Install(bindir,prog)
+	else:
+		env.Vplot(plot,prog)
 
-for plot in ['reflexpt','reflkine']:
-	env.Object(plot+'.o','reflector.c',
-		   CCFLAGS=env.get('CCFLAGS','') + ' -D%s' % plot.upper())
-	env.Program(plot+'.o',PROGSUFFIX='.x',PROGPREFIX='')
-	env.Vplot(plot)
+#for plot in ['reflexpt','reflkine']:
+#	env.Object(plot+'.o','reflector.c',
+#		   CCFLAGS=env.get('CCFLAGS','') + ' -D%s' % plot.upper())
+#	prog = env.Program(plot+'.o')
+#	if not root:
+#		env.Vplot(plot,prog)
 
-env.Program('sg.c',PROGSUFFIX='.x',PROGPREFIX='')
-env.Command('geqs.vpl','sg.x','./$SOURCE 1 > $TARGET')
-env.Command('geq2s.vpl','sg.x','./$SOURCE 2 > $TARGET')
+prog = env.Program('sg.c')
+if root:
+	env.Install(bindir,prog)
+else:
+	env.Command('geqs.vpl', prog,'./$SOURCE 1 > $TARGET')
+	env.Command('geq2s.vpl',prog,'./$SOURCE 2 > $TARGET')
 
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+	main = 'vpplot.py'
+    
+	docs = map(lambda prog: env.Doc(prog,rsfprefix='vp'),mains)
+	doc = env.Command(main,docs,configure.docmerge)
+	env.Install(libdir,doc)
+	Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+#####################################################################
+
+
+# 	$Id: SConstruct,v 1.2 2004/03/30 02:07:10 fomels Exp $	

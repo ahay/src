@@ -114,6 +114,7 @@ int main (void)
 		vp_utext(xend-slop,  zend+0.8*slop,8,0,"\\F9 b");
 		vp_color(4);
 	    }
+
 /*					reflection point to geophone */
 	    x = xr;
 	    z = zr;
@@ -152,8 +153,9 @@ int main (void)
 /*					redraw ellipse */
 		vp_color(5);
 		vp_upline(xval,zval,NARRAY);
-	    }					    
+	    }					   
 	}				/* end loop on theta */
+
     } else {
 /*					Begin work for drawing dipping layer */
         theta *= acosf(-1.)/180.;
@@ -174,6 +176,7 @@ int main (void)
 	zstart = surface + d/costh + tanth * (xstart-y);
 	xend = 0.5*(xg + y);
 	zend = surface + d/costh + tanth * (xend-y);
+
 
 /* 					Draw dipping reflector */
 	vp_color(2);
@@ -197,6 +200,8 @@ int main (void)
 	vp_uarrow(xr,zr,xg,surface,0.02*zmax);
 	
 /* 					text */
+
+
         vp_color(5);
         vp_fat(plotfat);
         vp_tjust(4,6);

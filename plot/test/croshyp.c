@@ -14,6 +14,7 @@ int main (void)
     dx =  xmax / (nx-1);
     t0 = 0;         
     x0 = dx/2;
+    z = 0.; /* ?  */ 
 
     v = 1.01 * xmax/ sqrtf( tmax*tmax - z*z);
 
