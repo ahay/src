@@ -301,7 +301,7 @@ static void insert4(int y, char* buf)
 }
 
 /* Little-endianness test */
-void sf_endian (void)
+bool sf_endian (void)
 {
     union {
 	byte c[4];
@@ -313,6 +313,8 @@ void sf_endian (void)
     
     assert (2 == sizeof(short) && 4 == sizeof(long)); /* fix this later */
     little_endian = (0 != (test.i << 8));
+    
+    return little_endian;
 }
 
 void sf_ebc2asc (int narr, char* arr)
@@ -533,4 +535,3 @@ void sf_head2segy(char* buf, const int* trace, int nk)
     }
 }
  
-       

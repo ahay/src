@@ -1,6 +1,8 @@
 #ifndef _sf_segy_h
 #define _sf_segy_h
 
+#include "c99.h"
+
 /* SEGY standard */
 
 #define SF_SEGY_FORMAT  24
@@ -15,7 +17,7 @@ enum {
     SF_BHKEYS=27	/* Number of mandated binary fields	*/
 };
 
-void sf_endian (void);
+bool sf_endian (void);
 void sf_ebc2asc (int narr, char* arr);
 void sf_asc2ebc (int narr, char* arr);
 int sf_segyformat (const char* bhead);
