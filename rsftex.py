@@ -199,6 +199,7 @@ def colorize(target=None,source=None,env=None):
      "Colorize python source"
      py = str(source[0])
      html = str(target[0])
+     tgz = re.sub('\.html$','.tgz',html)
 
      src = open(py,'r').read()
      raw = string.strip(string.expandtabs(src))
@@ -225,9 +226,17 @@ def colorize(target=None,source=None,env=None):
      </style>
      </head>
      <body>
+     <div>
+     <a href="paper_html/paper.html"><img width="32" height="32"
+     align="bottom" border="0" alt="up" src="paper_html/icons/up.png"></a>
+     <a href="paper.pdf"><img src="paper_html/icons/pdf.png" alt="[pdf]"
+     width="32" height="32" border="0"></a>
+     <a href="%s"><img src="paper_html/icons/tgz.png" alt="[tgz]"
+     width="32" height="32" border="0"></a>
+     </div>
      <div class="scons">
      <table><tr><td>
-     ''' % py)
+     ''' % (py,tgz))
 
      # store line offsets in self.lines
      lines = [0, 0]
@@ -312,6 +321,20 @@ def colorize(target=None,source=None,env=None):
      ''')
      return 0
 
+
+plotoption = {}
+
+def eps2png(target=None,source=None,env=None):
+     png = str(target[0])
+     eps = str(source[0])
+     option = plotoption.get(os.path.basename(eps),'')
+     command =  'PAPERSIZE=ledger %s %s -out %s' \
+               + ' -type png -interlaced -antialias -crop a %s'
+     command = command % (pstoimg,eps,png,option)
+     print command
+     os.system(command)
+     return 0
+
 Latify = Builder(action = Action(latify,varlist=['lclass','options','use']),
                  src_suffix='.tex',suffix='.ltx')
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
@@ -335,10 +358,10 @@ if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
                    suffix='.pdf',src_suffix='.fig')
 
+
 if pstoimg:
-    PNGBuild = Builder(action = 'PAPERSIZE=ledger %s $SOURCE -out $TARGET'
-                       ' -type png -interlaced -antialias -crop a' % pstoimg,
-                       suffix='.png',src_suffix=pssuffix)
+     PNGBuild = Builder(action = Action(eps2png),
+                        suffix='.png',src_suffix=pssuffix)
 
 if pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
@@ -389,7 +412,10 @@ def latexscan(node,env,path):
                 figdir = os.path.join(dir.group(1),resdir)
             check = isplot.search(line)
             if check:
-                plots.append(os.path.join(figdir,check.group(1) + ressuffix))
+                 plot = check.group(1)
+                 plots.append(os.path.join(figdir,plot + ressuffix))
+                 if re.search('angle=90',line):
+                      plotoption[plot+pssuffix] = '-flip r90'
         inp.close()
     bibs = []
     for bib in isbib.findall(contents):
