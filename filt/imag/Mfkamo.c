@@ -54,16 +54,16 @@ int main(int argc, char* argv[])
 	y = oy + iy*dy;
 	for (ix=0; ix < nx; ix++) {
 	    x = ox + ix*dx;
-	    x1 = x*cos(f1) + y*sin(f1);
-	    x2 = x*cos(f2) + y*sin(f2);
+	    x1 = x*cosf(f1) + y*sinf(f1);
+	    x2 = x*cosf(f2) + y*sinf(f2);
 	    for (iw=0; iw < nw; iw++) {
 		w = ow + iw*dw;
 		if (fabsf (w) > FLT_EPSILON) {
 		    eps1 = 2.*fabsf(x1*h1/w);
 		    eps2 = 2.*fabsf(x2*h2/w);
 		    if (eps1 <= maxe && eps2 <= maxe) {
-			eps1 = sqrtf (1.+eps1*eps1);
-			eps2 = sqrtf (1.+eps2*eps2);
+			eps1 = hypotf (1.,eps1);
+			eps2 = hypotf (1.,eps2);
                  
 			amp1 = 1./eps1+eps1;
 			amp2 = 1./eps2+eps2;
@@ -86,5 +86,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mfkamo.c,v 1.2 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mfkamo.c,v 1.3 2003/09/30 02:39:53 fomels Exp $	 */
 
