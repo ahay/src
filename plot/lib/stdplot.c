@@ -436,7 +436,7 @@ static void make_title (sf_file in, char wheret)
 
 static void make_barlabel (void)
 {
-    float vs, xc, yc;
+    float vs;
     bool want;
     char* where;
 
@@ -453,45 +453,48 @@ static void make_barlabel (void)
 	barlabelsz /= 33.;
     }
     vs = 2.5*barlabelsz;
-    if (vertbar && labelrot) vs *= 1.7;
-
+    
     if (!sf_getint ("barlabelfat",&(barlabel->fat))) barlabel->fat=0;
     if (NULL == (barlabel->text=sf_getstring("barlabel"))) 
 	barlabel->text = blank;
 
     if (NULL != (where = sf_getstring("wherebarlabel"))) {
 	barlabel->where = *where;
+	if (vertbar) {
+	    if ('l' == barlabel->where) {
+		barmin += 1.2*vs;
+		barmax += 1.2*vs;
+	    } else if ('r' != barlabel->where) {
+		sf_error("For bartype=v, wherebarlabel must be 'l' or 'r'");
+	    }
+	} else {
+	    if ('t' == barlabel->where) {
+		barmin -= 1.2*vs;
+		barmax -= 1.2*vs;
+	    } else if ('b' != barlabel->where) {
+		sf_error("For bartype=h, wherebarlabel must be 't' or 'b'");
+	    }
+	}
     } else {
 	barlabel->where = vertbar? 'r':'b';
     }
 
     if (vertbar) {
-	barlabel->ypath = labelrot? -labelsz: labelsz;
+	if (labelrot) vs *= 1.7;
+
+	barlabel->ypath = labelrot? -barlabelsz: barlabelsz;
 	barlabel->yup = 0.;
 	barlabel->xpath = 0.;
-	barlabel->xup = labelrot? labelsz: -labelsz;
-
-	xc  = (barlabel->where == 'l')? min1: max1;
-	yc = 0.5*(min2 + max2);
-
-	vp_umove (xc, yc);
-	vp_where (&xc, &yc);
-
-	barlabel->y = yc;	
-	barlabel->x = (barlabel->where == 'l')? xc-vs: xc+vs;
+	barlabel->xup = labelrot? barlabelsz: -barlabelsz;
+	barlabel->y = orig2;	
+	barlabel->x = (barlabel->where == 'l')? barmin-vs: barmax+vs;
     } else {
-	barlabel->xpath = labelsz;
+	barlabel->xpath = barlabelsz;
 	barlabel->xup = 0.;
 	barlabel->ypath = 0.;
-	barlabel->yup = labelsz;
-
-	xc = 0.5*(max1 + min1);
-	yc = (barlabel->where == 't') ? max2: min2;
-	vp_umove (xc, yc);
-	vp_where (&xc, &yc);
-
-	barlabel->x = xc;
-	barlabel->y = (barlabel->where == 't')? yc+vs: yc-vs;
+	barlabel->yup = barlabelsz;
+	barlabel->x = orig1;
+	barlabel->y = (barlabel->where == 'b')? barmin-vs: barmax+vs;
     }
 }
 
@@ -529,8 +532,8 @@ void vp_simplebarframe (void)
 	min = orig2-0.5*inch2;
 	max = orig2+0.5*inch2;
 
-	vp_clip(barmin-0.1*inch1,min-0.1*inch2,
-		barmax+0.1*inch1,max+0.1*inch2);
+	vp_clip(barmin-0.5*inch1,min-0.5*inch2,
+		barmax+0.5*inch1,max+0.5*inch2);
 
 	vp_move(barmin,min);
 	vp_draw(barmax,min);
@@ -541,8 +544,8 @@ void vp_simplebarframe (void)
 	min = orig1-0.5*inch1;
 	max = orig1+0.5*inch1;
 
-	vp_clip(min-0.1*inch1,barmin-0.1*inch2,
-		max+0.1*inch1,barmax+0.1*inch2);
+	vp_clip(min-0.5*inch1,barmin-0.5*inch2,
+		max+0.5*inch1,barmax+0.5*inch2);
 
 	vp_move(min,barmin);
 	vp_draw(min,barmax);
@@ -706,3 +709,6 @@ void vp_barframe(void)
 	}
     }    
 }
+
+/* 	$Id: stdplot.c,v 1.15 2003/09/30 02:40:17 fomels Exp $	 */
+
