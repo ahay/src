@@ -87,7 +87,7 @@ Flow('time2',None,
      spray n=81 d=1 o=20
      ''')
 
-Flow('pick2',['scan2','time2','mask2'],blindpick2(2,64))
+Flow('pick2',['scan2','time2','mask2'],blindpick2(2,8))
 
 ###################################################################
 # WARPING
@@ -101,7 +101,7 @@ def warp1(niter,rect1=1,rect2=1,rect3=1):
 
 Flow(['wline','warp2'],
      ['s2line','s1line','pick2'],
-     warp1(2,220,440))
+     warp1(20,50,100))
 
 ####################################################################
 # GAMMA SCAN
@@ -109,7 +109,7 @@ Flow(['wline','warp2'],
 
 Flow('scan22','wline s1line',warpscan(31,0.985,1.015))
 Result('scan22','scan22',scanplot3(15))
-Flow('pick22',['scan22','time2','mask2'],blindpick2(2,64))
+Flow('pick22',['scan22','time2','mask2'],blindpick2(2,8))
 
 ###################################################################
 # FINAL WARPING
@@ -117,7 +117,7 @@ Flow('pick22',['scan22','time2','mask2'],blindpick2(2,64))
 
 Flow(['wline2','warp22'],
      ['wline','s1line','pick22'],
-     warp1(2,220,440))
+     warp1(20,50,100))
 Flow('Warp','warp2 warp22','warpadd add=${SOURCES[1]}')
 
 for file in Split('s1line s2line wline2'):
@@ -137,7 +137,7 @@ def interleave(title):
 
 Plot('inter0','s1line-2 s2line-2',interleave('Before'))
 Plot('inter2','s1line-2 wline2-2',interleave('After'))
-Combine('inter','inter0 inter2','OverUnderAniso',result=1)
+Combine('hinter','inter0 inter2','OverUnderAniso',result=1)
 
 #############################################################################
 #
@@ -171,7 +171,7 @@ def blindpick3(rect1=10,rect2=10,rect3=10):
 
 Flow('pick3',['scan3','time3','mask3'],
      'transp plane=24 | %s | transp plane=23' %
-     blindpick3(2,64,64))
+     blindpick3(2,8,8))
 
 ###################################################################
 # WARPING
@@ -179,19 +179,18 @@ Flow('pick3',['scan3','time3','mask3'],
 
 Flow(['wcube','warp3'],
      ['wcube0','s1cube','pick3'],
-     warp1(2,220,440,440))
+     warp1(2,50,100,100))
 Flow('wwarp','warp3 Warp3','warpadd add=${SOURCES[1]}')
 
-Flow('frac',['wwarp','time3'],
+Flow('frac','wwarp',
      '''
-     math T=${SOURCES[1]} output="input+T" |
      smoothder |
      math output="0.5*((input+1)*(input+1)-1)" 
      ''')
 Result('frac','frac',
        '''
-       window min1=1.8 max1=2.2 |
-       byte bias=1.5 |
+       window min1=1.7 max1=2.1 |
+       byte |
        grey3 flat=n frame3=40 frame2=40 frame1=50
        title="Fracture Intensity Attribute"
        point1=0.5 point2=0.5 color=j 
