@@ -8,7 +8,6 @@
 #include "node.h"
 #include "eno2.h"
 #include "cell.h"
-#include "pqueue.h"
 
 #ifndef MIN
 #define MIN(a,b) ((a)<(b))?(a):(b)
@@ -357,13 +356,13 @@ void tree_build(bool debug)
 
     sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
 	
-    pqueue_init (naxz);
-    pqueue_start ();
+    sf_pqueue_init (naxz);
+    sf_pqueue_start ();
 
     check_front();
 
     while (nacc < naxz) {
-	vk = pqueue_extract ();
+	vk = sf_pqueue_extract ();
 	if (NULL == vk) {
 	    sf_warning("Heap exhausted: %d accepted",nacc);
 	    tree_print();
@@ -474,7 +473,7 @@ static void orphanize (Node node)
 	    vk[2] = t;
 	    vk[3] = cell_p2a (p);
 	    accepted[k] = true;
-	    pqueue_insert(val[k]+2);
+	    sf_pqueue_insert(val[k]+2);
 /*	    TraverseQueue (node->children,process_child); */
 	    nacc++;
 	    return;
@@ -647,7 +646,7 @@ static void orphanize (Node node)
 	} /* hits a wall */
 	node->t = t;
 	process_node (node);
-	pqueue_insert(val[k]+2);
+	sf_pqueue_insert(val[k]+2);
 	return;
     } /* it */
 }
@@ -669,7 +668,7 @@ static void check_front (void) {
 		atfront = !accepted[i];
 		if (atfront) break;
 	    }
-	    if (atfront) pqueue_insert(val[k]+2);
+	    if (atfront) sf_pqueue_insert(val[k]+2);
 	}
     }
 }
@@ -734,7 +733,7 @@ static void postprocess_node (Node nd)
     
     infront = accepted[k];
     process_node (nd);
-    if (!infront) pqueue_insert(val[k]+2);
+    if (!infront) sf_pqueue_insert(val[k]+2);
 }
 
 static void process_node (Node nd) {
@@ -858,4 +857,4 @@ static void psnap (float* p, float* q, int* iq) {
     *iq = ia;
 }
 
-/* 	$Id: tree.c,v 1.14 2003/10/08 15:08:52 fomels Exp $	 */
+/* 	$Id$	 */

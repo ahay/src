@@ -1,4 +1,9 @@
-/* Kirchhoff 2-D modeling for linear slowness squared. */
+/* Kirchhoff 2.5-D modeling with analytical Green's functions. 
+
+Test:
+spike mag=2 n1=301 d1=0.01 o1=1 | 
+kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -16,6 +21,9 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <float.h>
+#include <math.h>
+
 #include <rsf.h>
 
 #include "kirmod.h"
@@ -23,8 +31,8 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix, it;
-    float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, slow2[5];
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0;
+    float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, vel[5], slow;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, t, a;
     maptype type = CONST;
     sf_file refl, curv, modl, shots, recvs;
 
@@ -133,29 +141,36 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /*** Initialize slowness ***/
+    /*** Initialize velocity ***/
 
-    if (!sf_getfloat("slow2",slow2)) {
-	/* slowness squared */
-	if (!sf_getfloat("vel",slow2)) sf_error("Need slow2= or vel=");
-	/* velocity (if no slow2=) */
-	slow2[0] = 1./(slow2[0]*slow2[0]);
-    } 
-
-    if (!sf_getfloat("refx",&slow2[4])) slow2[4]=x0;
-    if (!sf_getfloat("refz",&slow2[3])) slow2[3]=0.;
-    /* reference coordinates for slowness */
+    if (!sf_getfloat("vel",vel)) sf_error("Need vel=");
+    /* velocity */
     
-    if (!sf_getfloat("gradx",&slow2[2])) slow2[2]=0.;
-    if (!sf_getfloat("gradz",&slow2[1])) slow2[1]=0.;
-    /* gradient of slowness squared */
+    if (!sf_getfloat("gradx",&vel[2])) vel[2]=0.;
+    if (!sf_getfloat("gradz",&vel[1])) vel[1]=0.;
+    /* velocity gradient */
 
-    slow2[2] *= 0.5;
-    slow2[1] *= 0.5;
+    if (vel[2]==0. && vel[1]==0.) {
+	type = CONST; 
+        /* constant velocity */
+    } else {
+	type = S2LIN; 
+        /* linear slowness squared */
+
+	slow = 1./(vel[0]*vel[0]);
+	/* slowness squared */
+	vel[2] *= -slow/vel[0];
+	vel[1] *= -slow/vel[0];
+	vel[0] = slow;
+    }
+
+    if (!sf_getfloat("refx",&vel[4])) vel[4]=x0;
+    if (!sf_getfloat("refz",&vel[3])) vel[3]=0.;
+    /* reference coordinates for velocity */
     
     /*** Compute traveltime table ***/
 
-    kirmod_table (type, nx, x0, dx, crv, slow2);
+    kirmod_table (type, nx, x0, dx, crv, vel);
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
@@ -167,6 +182,12 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		ts = kirmod_map(is,nh,ix);
 		tg = kirmod_map(is,ih,ix);
+		t = ts[0] + tg[0];                   /* time */
+		it = 0.5+(t-t0)/dt;
+		if (it < 0 || it >= nt) continue;
+		a = sqrt(ts[1]*tg[1]*(ts[1]+tg[1])); /* 2.5-D amplitude */
+		if (a < FLT_MIN) continue;
+		trace[it] += 1./a;
 	    }
 
 	    sf_floatwrite(trace,nt,modl);

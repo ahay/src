@@ -20,8 +20,6 @@
 #include <stdlib.h>
 #include <rsf.h>
 
-#include "pqueue.h"
-
 static int RandomInteger(int low, int high);
 static void Shuffle(float **xyz, int n);
 
@@ -44,18 +42,18 @@ int main(int argc, char* argv[])
 
     sf_floatread(xyz[0],3*nd,in);
 
-    pqueue_init (3*nd);
-    pqueue_start();
+    sf_pqueue_init (3*nd);
+    sf_pqueue_start();
     for (i=0; i < nd; i++) {
-	pqueue_insert (xyz[i]);
+	sf_pqueue_insert (xyz[i]);
     }
 
-    id = pqueue_extract()-xyz[0];
+    id = sf_pqueue_extract()-xyz[0];
     xyz1[0][0] = xj = xyz[0][id];
     xyz1[0][1] = yj = xyz[0][id+1];
     xyz1[0][2] = xyz[0][id+2];
     for (j=1,i=1; i < nd; i++) {
-	id = pqueue_extract()-xyz[0];
+	id = sf_pqueue_extract()-xyz[0];
 	xi = xyz[0][id];
 	yi = xyz[0][id+1];
 	if (xi != xj || yi != yj) {
@@ -66,7 +64,7 @@ int main(int argc, char* argv[])
 	    j++;
 	}
     }
-    pqueue_close ();
+    sf_pqueue_close ();
 
     nd = j;
     sf_putint(out,"n2",nd);

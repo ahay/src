@@ -4,7 +4,6 @@
 #include <rsf.h>
 
 #include "neighbors.h"
-#include "pqueue.h"
 
 struct Upd {
     double stencil, value;
@@ -42,11 +41,11 @@ int  neighbours(int i)
 	ix = (i/s[j])%n[j];
 	if (ix+1 <= n[j]-1) {
 	    k = i+s[j]; 
-	    if (in[k] != FMM_IN) npoints += update(qsolve(k),k);
+	    if (in[k] != SF_IN) npoints += update(qsolve(k),k);
 	}
 	if (ix-1 >= 0  ) {
 	    k = i-s[j];
-	    if (in[k] != FMM_IN) npoints += update(qsolve(k),k);
+	    if (in[k] != SF_IN) npoints += update(qsolve(k),k);
 	}
     }
     return npoints;
@@ -56,9 +55,9 @@ static int update (float value, int i)
 {
     if (value < time[i]) {
 	time[i]   = value;
-	if (in[i] == FMM_OUT) { 
-	    in[i] = FMM_FRONT;      
-	    pqueue_insert (time+i);
+	if (in[i] == SF_OUT) { 
+	    in[i] = SF_FRONT;      
+	    sf_pqueue_insert (time+i);
 	    return 1;
 	}
     }
@@ -101,12 +100,12 @@ static float qsolve(int i)
 	if (order > 1) {
 	    if (a < b  && ix-2 >= 0) { 
 		k = i-2*s[j];
-		if (in[k] != FMM_OUT && a >= (t=time[k]))
+		if (in[k] != SF_OUT && a >= (t=time[k]))
 		    stencil(t,xj);
 	    }
 	    if (a > b && ix+2 <= n[j]-1) { 
 		k = i+2*s[j];
-		if (in[k] != FMM_OUT && b >= (t=time[k]))
+		if (in[k] != SF_OUT && b >= (t=time[k]))
 		    stencil(t,xj);
 	    }
 	}
@@ -199,7 +198,7 @@ int nearsource(float* xs, int* b, float* d, float* vv1, bool *plane)
 
     /* initialize everywhere */
     for (i=0; i < n[0]*n[1]*n[2]; i++) {
-	in[i] = FMM_OUT;
+	in[i] = SF_OUT;
 	time[i] = big_value;
     }
 
@@ -240,12 +239,12 @@ int nearsource(float* xs, int* b, float* d, float* vv1, bool *plane)
 
 		/* analytical formula (Euclid) */ 
 		time[i] = sqrtf(v1*delta2);
-		in[i] = FMM_IN;
+		in[i] = SF_IN;
 
 		if ((n[0] > 1 && (iz == start[0] || iz == endx[0])) ||
 		    (n[1] > 1 && (iy == start[1] || iy == endx[1])) ||
 		    (n[2] > 1 && (ix == start[2] || ix == endx[2]))) {
-		    pqueue_insert (time+i);
+		    sf_pqueue_insert (time+i);
 		}
 	    }
 	}

@@ -1,7 +1,6 @@
 #include <rsf.h>
 
 #include "fastmarch.h"
-#include "pqueue.h"
 #include "neighbors.h"
 
 void fastmarch_init (int n3,int n2,int n1) 
@@ -13,7 +12,7 @@ void fastmarch_init (int n3,int n2,int n1)
     if (n2 > 1) maxband += 2*n1*n3;
     if (n3 > 1) maxband += 2*n1*n2;
 
-    pqueue_init (10*maxband);
+    sf_pqueue_init (10*maxband);
 }
 
 void fastmarch (float* time, float* v, int* in, bool* plane,
@@ -31,7 +30,7 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
     n[1] = n2; xs[1] = s2-o2; b[1] = b2; d[1] = d2;
     n[2] = n3; xs[2] = s3-o3; b[2] = b3; d[2] = d3;
 
-    pqueue_start();
+    sf_pqueue_start();
     neighbors_init (in, d, n, order, time);
 
     for (npoints =  nearsource (xs, b, d, v, plane);
@@ -42,7 +41,7 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
 
 	/* sf_warning("npoints=%d",npoints); */
 
-	p = pqueue_extract();
+	p = sf_pqueue_extract();
 
 	if (p == NULL) {
 	    sf_warning("%s: heap exausted!",__FILE__);
@@ -51,13 +50,13 @@ void fastmarch (float* time, float* v, int* in, bool* plane,
 
 	i = p - time;
 
-	in[i] = FMM_IN;
+	in[i] = SF_IN;
     }
 }
 
 void fastmarch_close (void)
 {
-    pqueue_close();
+    sf_pqueue_close();
 }
 
 /* 	$Id$	 */

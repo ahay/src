@@ -1,3 +1,22 @@
+/* 1-D ENO interpolation */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -5,11 +24,23 @@
 
 #include "eno.h"
 
-/* concrete data type */
+#ifndef _eno_h
+
+typedef struct Eno *eno;
+/* abstract data type */
+/*^*/
+
+typedef enum {FUNC, DER, BOTH} der;
+/* flag values */
+/*^*/
+
+#endif
+
 struct Eno {
     int order, n;
     float** diff;
 };
+/* concrete data type */
 
 static const float big_number = FLT_MAX;
 
@@ -20,14 +51,9 @@ static const float big_number = FLT_MAX;
 #define MIN(a,b) ((a)<(b))?(a):(b)
 #endif
 
-/* 
-   Function: eno_init
-   ------------------
-   Initialize interpolation object
-   order - interpolation order
-   n     - data length
-*/
-eno eno_init (int order, int n)
+eno eno_init (int order /* interpolation order */, 
+	      int n     /* data size */)
+/*< Initialize interpolation object. >*/
 {
     eno ent;
     int i;
@@ -43,12 +69,8 @@ eno eno_init (int order, int n)
     return ent;
 }
 
-/* 
-   Function: eno_close
-   -------------------
-   Free internal storage
-*/
 void eno_close (eno ent)
+/*< Free internal storage >*/
 {
     int i;
 
@@ -59,15 +81,8 @@ void eno_close (eno ent)
     free (ent);
 }
 
-/* 
-   Function: eno_set
-   -----------------
-   Set the interpolation table
-   ent  - ENO object
-   c[n] - data
-   Note: c can be changed or freed afterwords
-*/
-void eno_set (eno ent, float* c)
+void eno_set (eno ent, float* c /* data [n] */)
+/*< Set the interpolation table. c can be changed or freed afterwords >*/
 {
     int i, j;
     
@@ -84,21 +99,13 @@ void eno_set (eno ent, float* c)
     }
 }
 
-/* 
-   Function: eno_apply
-   -------------------
-   Apply interpolation
-   ent  - ENO object
-   i    - grid location
-   x    - offset from grid
-   f    - data value (output)
-   f1   - derivative value (output)
-   what - flag of what to compute: 
-   FUNC - function value
-   DER  - derivative value
-   BOTH - both
-*/
-void eno_apply (eno ent, int i, float x, float *f, float *f1, der what) 
+void eno_apply (eno ent, 
+		int i     /* grid location */, 
+		float x   /* offset from grid */, 
+		float *f  /* output data value */, 
+		float *f1 /* output derivative */, 
+		der what  /* flag of what to compute */) 
+/*< Apply interpolation >*/
 {
     int j, k, i1, i2, n;
     float s, s1, y, w, g, g1;
@@ -134,5 +141,5 @@ void eno_apply (eno ent, int i, float x, float *f, float *f1, der what)
     if (what != FUNC) *f1 = g1/n;
 }
 
-/* 	$Id: eno.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */
 
