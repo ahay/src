@@ -553,9 +553,10 @@ class TeXPaper(Environment):
                     figdir = os.path.join(self.docdir,os.path.dirname(png))
                     self.Install(figdir,[png,pdf])
                     self.Alias('install',figdir)
-    def Paper(self,paper,lclass='geophysics',use=None,include=None):
+    def Paper(self,paper,lclass='geophysics',
+              use=None,include=None,options=None):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',
-                     use=use,lclass=lclass,include=include)
+                    use=use,lclass=lclass,options=options,include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
         pdfinstall = self.Install(self.docdir,paper+'.pdf')
