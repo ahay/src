@@ -44,12 +44,22 @@ void dix_close(void)
 void dix(int niter, float* weight, float* vrms, float* vint) 
 {
     int i1, i2, i;
+    float wt;
+
+    wt = 0.;
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    i = i2*n1+i1;
+	    wt += weight[i]*weight[i];
+	}
+    }
+    if (wt > 0.) wt = sqrtf(n1*n2/wt);
      
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    i = i2*n1+i1;
 	    vrms[i] *= vrms[i]*(i1+1.);
-	    weight[i] /= (i1+1.); /* decrease weight with time */	    
+	    weight[i] *= wt/(i1+1.); /* decrease weight with time */	    
 	}
     }
 

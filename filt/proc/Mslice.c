@@ -1,3 +1,10 @@
+/* Extract a slice using picked surface (usually from a stack or a semblance).
+
+Takes: < stack.rsf pick=pick.rsf > slice.rsf
+
+See also: sfblindpick.
+*/
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -45,7 +52,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mslice.c,v 1.2 2004/03/22 05:43:25 fomels Exp $	 */
-
-
-
+/* 	$Id: Mslice.c,v 1.3 2004/04/06 02:03:03 fomels Exp $	 */

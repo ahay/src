@@ -25,11 +25,11 @@ void mis2(int niter, int nx, float *xx, filter aa,
 
 	helicon_init(aa);
 	sf_solver (helicon_lop, sf_cgstep, nx, nx, xx, dd, niter, 
-		   "known", known, "end");
+		   "known", known, "x0", xx, "end");
 	free(dd);
     }
     sf_cgstep_close();
 }
 
-/* 	$Id: mis2.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: mis2.c,v 1.4 2004/04/06 02:03:03 fomels Exp $	 */
 

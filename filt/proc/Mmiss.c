@@ -13,7 +13,7 @@ int main(int argc, char* argv[])
 {
     int dim, na,ia, niter, n1, n2, maxlag, padin, padout, p1, p2, j, i;
     float a0, *mm, *kk;
-    bool prec, *known;
+    bool prec, exact, *known;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], a[SF_MAX_DIM];
     filter aa;
     char *lagfile;
@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
     /* If y, use preconditioning */
     if (!sf_getint("niter",&niter)) niter=100;
     /* Number of iterations */
+    if (!sf_getbool("exact",&exact)) exact=true;
+    /* If y, preserve the known data values (when prec=y) */
 
     if (!sf_getint("padin",&padin)) padin=0;
     /* Pad beginning */
@@ -132,7 +134,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (prec) {
+    if (prec && exact) {
 	for (i=p1; i < p1+p2; i++) {
 	    if (known[i]) kk[i]=mm[i];
 	}
@@ -140,7 +142,7 @@ int main(int argc, char* argv[])
 
     mis2 (niter, n2, mm, aa, known, prec);
 
-    if (prec) {
+    if (prec && exact) {
 	for (i=p1; i < p1+p2; i++) {
 	    if (known[i]) mm[i]=kk[i];
 	}
@@ -152,4 +154,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mmiss.c,v 1.6 2004/03/22 05:43:25 fomels Exp $	 */
+/* 	$Id: Mmiss.c,v 1.7 2004/04/06 02:03:03 fomels Exp $	 */
