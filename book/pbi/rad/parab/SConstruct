@@ -9,9 +9,6 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/rad'
-
 Flow('mod_spike',None,
      '''
      spike n1=1200 n2=40 o2=-0.2 d2=0.02
@@ -47,7 +44,7 @@ Flow('gulf','gulf.HH',
      'dd data_format=native_float | window min1=8 max1=13')
 
 for data in ('data','gulf'):
-    Fetch(data+'.HH',datdir)
+    Fetch(data+'.HH','rad')
     Plot(data,data,gdat)
 
 prange = {

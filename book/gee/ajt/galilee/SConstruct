@@ -10,8 +10,7 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/galilee'
-Fetch('galilee.H',datdir)
+Fetch('galilee.H','galilee')
 
 base = -212
 

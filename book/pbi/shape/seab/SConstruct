@@ -6,9 +6,7 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/seab'
-Fetch('apr18.H',datdir)
+Fetch('apr18.H','seab')
 
 Flow('data','apr18.H','dd data_format=native_float')
 Flow('depth','data',
@@ -72,4 +70,4 @@ for inp in ['bin','fill']:
 
 End()
 
-# 	$Id: SConstruct,v 1.1 2004/04/26 23:41:21 fomels Exp $	
+# 	$Id: SConstruct,v 1.2 2004/05/24 02:17:47 fomels Exp $	

@@ -10,10 +10,8 @@ from rsfproj import *
 ###########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
 data = 'wz.24.H'
-
-Fetch(data,datdir)
+Fetch(data,'wz')
 
 Flow('data',data,
      '''

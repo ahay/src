@@ -10,8 +10,7 @@ from rsfproj import *
 Book()
 ###########################################################################
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/marm'
-Fetch('marmrefl.HH',datdir)
+Fetch('marmrefl.HH','marm')
 
 Flow('marm','marmrefl.HH',
      '''dd data_format=native_float | reverse which=2 > $TARGET;

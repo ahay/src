@@ -9,9 +9,7 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/salt'
-Fetch('line19410.sgy',datdir)
+Fetch('line19410.sgy','salt')
 
 grey = '''
 grey label1="Time (s)" label2="Lateral (m)" wantscalebar=y

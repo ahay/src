@@ -10,9 +10,7 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/acig'
-
-Fetch(['acig10.HH','cmp.HH'],datdir)
+Fetch(['acig10.HH','cmp.HH'],'acig')
 
 Flow('acig','acig10.HH',
      'dd data_format=native_float | window n3=1')

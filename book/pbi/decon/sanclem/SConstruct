@@ -9,10 +9,9 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/sanclem'
 
 input = 'Sanclemente_r.rsf'
-Fetch(input,datdir)
+Fetch(input,'sanclem')
 Flow('r',input,'dd data_format=ascii_int out=$TARGET',stdout=0)
 
 colors = {

@@ -10,8 +10,7 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/seab'
-Fetch('seabin.HH',datdir)
+Fetch('seabin.HH','seab')
 
 Flow('mesh','seabin.HH',
      'dd data_format=native_float | pad n1=200 beg1=20')

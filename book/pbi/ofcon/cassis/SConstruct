@@ -10,8 +10,7 @@ from rsfproj import *
 Book()
 ###########################################################################
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/cassis'
-Fetch('datacassisAll.su.poscdp',datdir)
+Fetch('datacassisAll.su.poscdp','cassis')
 
 Flow(['all','head'],'datacassisAll.su.poscdp',
      'segyread tape=$SOURCE tfile=${TARGETS[1]} su=1 endian=0',

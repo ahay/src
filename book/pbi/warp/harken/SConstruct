@@ -13,16 +13,13 @@ Book()
 # Data
 #
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/harken'
-
 for case in (1,2):
     title = ['Fast','Slow'][case-1]
     output = 's%d' % case
     input = output + '_mig.sgy'
     cube = output + 'cube'
     line = output + 'line'
-    Fetch(input,datdir)
+    Fetch(input,'harken')
     Flow([output,output+'hhead',output+'bhead',output+'head'],input,
          '''segyread tape=$SOURCE
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

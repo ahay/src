@@ -9,13 +9,9 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/rain'
-
 Fetch(['border.HH','elevation.HH',
-            'alldata.HH','obsdata.HH',
-            'coord.HH','predict.HH'],
-           datdir)
+       'alldata.HH','obsdata.HH',
+       'coord.HH','predict.HH'],'rain')
 
 box = 'min1=-185.556 max1=193.18275 min2=-127.262 max2=127.25044'
 f2 = 0

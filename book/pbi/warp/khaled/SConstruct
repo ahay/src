@@ -13,9 +13,6 @@ Book()
 # Data
 #
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/fasken'
-
 data = {
     'pp': 'Pw.sgy',
     'ps': 'Cw.sgy'
@@ -40,7 +37,7 @@ Plot('line','line',
      ''')
 
 for mode in ['pp','ps']:
-    Fetch(data[mode],datdir)
+    Fetch(data[mode],'fasken')
     Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
          '''segyread tape=$SOURCE
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

@@ -10,9 +10,7 @@ Book()
 
 ###########################################################################
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/imgs'
-
-Fetch('mona.img',datdir)
+Fetch('mona.img','imgs')
 Flow('mona','mona.img','byte2rsf n1=512 n2=513')
 Plot('mona','mona',
      'grey transp=n allpos=y title="Mona Lisa" color=b screenratio=1')

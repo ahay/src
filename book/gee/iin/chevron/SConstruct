@@ -10,8 +10,6 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/chevron'
-
 def read_chevron(target=None,source=None,env=None):
     inp = open(str(source[0]),'r')
     file = str(target[0])
@@ -38,7 +36,7 @@ def grey(title,clip='allpos=y clip=2000'):
 
 for data in sets:
     file = data[0]+'2000'
-    Fetch(file+'.5',datdir)
+    Fetch(file+'.5','chevron')
     env.Chevron(file)
     Flow(file,file+'.T','dd data_format=native_float')
     Flow(data,file,

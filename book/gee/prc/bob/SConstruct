@@ -10,8 +10,7 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/cmp'
-Fetch('cmp.H',datdir)
+Fetch('cmp.H','cmp')
 
 Flow('cmp','cmp.H','dd data_format=native_float')
 Plot('cmp','cmp',

@@ -8,15 +8,13 @@ sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
 from rsfproj import *
 Book()
 ###########################################################################
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/cameron'
-
 data = {
     'pz': 'PZmig_nail.sgy',
     'ps': 'PSmig_nail.sgy'
     }
 
 for mode in ['pz','ps']:
-    Fetch(data[mode],datdir)
+    Fetch(data[mode],'cameron')
     Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
               '''segyread tape=$SOURCE
               hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

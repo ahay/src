@@ -6,9 +6,7 @@ from rsfproj import *
 Book()
 
 ###########################################################################
-
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/galilee'
-Fetch('galilee.H',datdir)
+Fetch('galilee.H','galilee')
 
 Flow('gal','galilee.H','dd data_format=native_float')
 Flow('clip','gal','window f1=2 | mask max=-212')
@@ -52,4 +50,4 @@ Combine('movie',fills,'Movie')
 
 End()
 
-# 	$Id: SConstruct,v 1.1 2004/04/20 05:00:16 fomels Exp $	
+# 	$Id: SConstruct,v 1.2 2004/05/24 02:17:47 fomels Exp $	

@@ -9,8 +9,7 @@ sys.path.append(os.path.join(root,'lib'))
 from rsfproj import *
 Book()
 ###########################################################################
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/french'
-Fetch('french.asc',datdir)
+Fetch('french.asc','french')
 
 Flow('french','french.asc',
      'dd data_format=native_float | transp | scale dscale=2')

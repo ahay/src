@@ -12,21 +12,16 @@ Book()
 # Data (change later)
 ##########################################################################
 
-datdir  = "ftp://begpc132.beg.utexas.edu/data/textures"
-datdir2 = "ftp://begpc132.beg.utexas.edu/data/book/iee"
-
-###########################################################################
-
 g = "grey color=I crowd1=0.96 crowd2=0.85 titlesz=20 wantaxis=0 title='%s'"
 
 textures = ['granite','wood','herr','brick','ridges','WGstack']
 
 
 for file in textures[0:5]:
-    Fetch(file + '.H',datdir)
+    Fetch(file + '.H','textures')
     Flow(file,file + '.H',"dd data_format=native_float")
 
-Fetch('WGstack.H',datdir2)
+Fetch('WGstack.H','iee')
 Flow('WGstack','WGstack.H',"window f2=500 j2=2 n2=125 n1=250 j1=2")
 
 makepef = 'pef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'

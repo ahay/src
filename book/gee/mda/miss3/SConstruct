@@ -10,8 +10,7 @@ from rsfproj import *
 ##########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/blast'
-Fetch('blast.46.H',datdir)
+Fetch('blast.46.H','blast')
 
 Flow('data','blast.46.H',
      'dd data_format=native_float | window f1=150 n1=150')

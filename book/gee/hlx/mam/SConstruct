@@ -14,10 +14,8 @@ from helderiv import Helderiv
 ###########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/mammogram'
-
 for case in [1,5]:
-    Fetch('jbreast%d.asci' % case,datdir)
+    Fetch('jbreast%d.asci' % case,'mammogram')
 
 Flow('mam1','jbreast1.asci',
      '''

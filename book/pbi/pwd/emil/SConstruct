@@ -9,8 +9,7 @@ sys.path.append(os.path.join(root,'lib'))
 from rsfproj import *
 Book()
 ###########################################################################
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/emil'
-Fetch('emil2.sht',datdir)
+Fetch('emil2.sht','emil')
 
 Flow('emil','emil2.sht','segyread tape=$SOURCE su=1 endian=0 data=1',stdin=0)
 Flow('emil1','emil','window n2=120')

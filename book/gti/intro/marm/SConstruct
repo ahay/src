@@ -9,9 +9,7 @@ from rsfproj import *
 ###########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/marm'
-
-Fetch(['marmrefl.HH','marmvel.HH'],datdir)
+Fetch(['marmrefl.HH','marmvel.HH'],'marm')
 
 Result('shot','marmrefl.HH',
        '''dd data_format=native_float |

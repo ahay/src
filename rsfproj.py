@@ -126,6 +126,8 @@ if not datapath:
         file.close()
     if not datapath:
         datapath = os.path.join(os.environ.get('HOME'),'')
+rdatapath = os.environ.get('RDATAPATH',
+                           'ftp://begpc132.beg.utexas.edu/data/')
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -266,17 +268,11 @@ def latex2dvi(target=None,source=None,env=None):
 
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
+    global rdatapath
     dir = env['dir']
     for file in map(str,target):
-        urllib.urlretrieve(string.join([dir,file],os.sep),file)
+        urllib.urlretrieve(string.join([rdatapath,dir,file],os.sep),file)
     return 0
-
-host = ''
-display = os.environ.get('DISPLAY')
-if display:
-    host = re.sub(':[\d\.]*$','',display)
-if host == '':
-    host = 'localhost'
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 # Klean = Builder(action = Action(clean,silent,['junk']))
@@ -362,7 +358,9 @@ class Project(Environment):
         if not os.path.exists(self.path):
             os.mkdir(self.path)
         self.Append(ENV={'DATAPATH':self.path,
-                         'DISPLAY':display,
+                         'XAUTHORITY':
+                         os.path.join(os.environ.get('HOME'),'.Xauthority'),
+                         'DISPLAY': os.environ.get('DISPLAY'),
                          'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
@@ -535,4 +533,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.27 2004/04/19 22:03:22 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.28 2004/05/24 02:17:47 fomels Exp $	
