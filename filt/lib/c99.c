@@ -46,6 +46,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #define cexpf expf
 #define cexp exp
 #define cabsf fabsf
+#define cabs fabs
 #define crealf sf_crealf
 #define cimagf sf_cimagf
 #define conjf sf_conjf
