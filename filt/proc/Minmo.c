@@ -75,7 +75,7 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&nw)) nw=8;
     /* trace extension */
 
-    nmo = stretch4_init (nt, t0, dt, nt, nw, eps);
+    nmo = stretch4_init (nt, t0, dt, nt, eps);
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
@@ -107,4 +107,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Minmo.c,v 1.7 2004/06/03 05:35:51 fomels Exp $	 */
