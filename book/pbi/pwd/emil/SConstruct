@@ -1,6 +1,11 @@
 from rsfproj import *
 
-Fetch('emil2.sht','emil')
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('emil2.sht','emil',private)
 
 Flow('emil','emil2.sht','segyread tape=$SOURCE su=1 endian=0 data=1',stdin=0)
 Flow('emil1','emil','window n2=120')

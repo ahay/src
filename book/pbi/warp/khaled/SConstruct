@@ -28,8 +28,13 @@ Plot('line','line',
      graph min2=0 max2=4 min1=17.05 max1=133.5 pad=n wantaxis=n wanttitle=n
      ''')
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
 for mode in ['pp','ps']:
-    Fetch(data[mode],'fasken')
+    Fetch(data[mode],'fasken',private)
     Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
          '''segyread tape=$SOURCE
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

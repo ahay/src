@@ -20,9 +20,14 @@ Plot('line','line',
      graph min2=0 max2=4 min1=-0.5 max1=471.5 pad=n wantaxis=n wanttitle=n
      ''')
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
 for mode in ['pp','ps']:
     data = 'bend_l1_%cmig_enhanc.sgy' % mode[1]
-    Fetch(data,datdir)
+    Fetch(data,datdir,private)
     Flow(mode,data,
          'segyread tape=$SOURCE read=data | window n2=471',stdin=0)
     Plot(mode,mode,

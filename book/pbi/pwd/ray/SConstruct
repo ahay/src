@@ -16,9 +16,14 @@ Result(dip,dip,'grey color=j wantscalebar=y pclip=100 title=Dip')
 Flow(res,dat,'dealias ' + opts)
 Plot(res,res,'grey title=Interpolated')
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
 for dat in ('curve','linear','random'):
     input = 'input.%s.segy' % dat
-    Fetch(input,'ray')
+    Fetch(input,'ray',private)
     Flow(dat,input,
          '''segyread tape=$SOURCE data=1
          hfile=head.A bfile=head.B tfile=head.T''',

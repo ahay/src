@@ -1,6 +1,11 @@
 from rsfproj import *
 
-Fetch(['acig10.HH','cmp.HH'],'acig')
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch(['acig10.HH','cmp.HH'],'acig',private)
 
 Flow('acig','acig10.HH',
      'dd data_format=native_float | window n3=1')

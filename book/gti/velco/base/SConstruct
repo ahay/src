@@ -5,11 +5,12 @@ Fetch('beinew.rsf','midpts')
 Flow('bei','beinew','dd data_format=native_float | transp plane=24')
 
 Flow('sig',None,
-     '''sigmoid par=kirsig.p par=3.p |
-     smooth par=kirsig.p diff1=1 |
-     pad beg1=25 | smooth par=kirsig.p | halfint inv=1 |
+     '''
+     sigmoid n1=200 d2=0.008 n2=200 |
+     smooth rect1=3 diff1=1 | pad beg1=25 | smooth rect1=3 | halfint inv=1 |
      preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 > $TARGET;
-     echo "n3=1" >> $TARGET''',stdout=-1)
+     echo "n3=1" >> $TARGET
+     ''',stdout=-1)
 
 par={
     'bei': {

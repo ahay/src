@@ -11,8 +11,13 @@ data = {
     'ps': '221_PS_PSTM_FullLine_STK_MSL_segy.sgy'
     }
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
 for mode in ['pp','ps']:
-    Fetch(data[mode],'haibin')
+    Fetch(data[mode],'haibin',private)
     Flow([mode,mode+'hhead',mode+'bhead'],data[mode],
          '''
          segyread tape=$SOURCE data=y

@@ -5,8 +5,13 @@ data = {
     'ps': 'PSmig_nail.sgy'
     }
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
 for mode in ['pz','ps']:
-    Fetch(data[mode],'cameron')
+    Fetch(data[mode],'cameron',private)
     Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
               '''segyread tape=$SOURCE
               hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

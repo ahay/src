@@ -1,5 +1,11 @@
 from rsfproj import *
 
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+
 ###########################################################################
 #
 # Data
@@ -11,7 +17,7 @@ for case in (1,2):
     input = output + '_mig.sgy'
     cube = output + 'cube'
     line = output + 'line'
-    Fetch(input,'harken')
+    Fetch(input,'harken',private)
     Flow([output,output+'hhead',output+'bhead',output+'head'],input,
          '''segyread tape=$SOURCE
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}

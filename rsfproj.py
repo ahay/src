@@ -1,4 +1,4 @@
-import os, stat, sys, types, commands, re, string, urllib
+import os, stat, sys, types, commands, re, string, urllib, ftplib
 import rsfdoc
 import rsfprog
 import rsfconf
@@ -154,6 +154,7 @@ rerun = re.compile(r'\bRerun')
 
 def latify(target=None,source=None,env=None):
     "Add header and footer to make a valid LaTeX file"
+    global resdir
     tex = open(str(source[0]),'r')
     ltx = open(str(target[0]),'w')
     lclass = env.get('lclass','geophysics')
@@ -171,12 +172,23 @@ def latify(target=None,source=None,env=None):
             else:
                 ltx.write('\\usepackage{%s}\n' % package)
         ltx.write('\n')
+    if lclass == 'geophysics':
+        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
     ltx.write('\\end{document}\n')
     ltx.close()
     return 0
+
+def latex_emit(target=None, source=None, env=None):
+    tex = str(source[0])    
+    stem = re.sub('\.[^\.]+$','',tex)
+    target.append(stem+'.aux')
+    target.append(stem+'.log')
+    target.append(stem+'.bbl')
+    target.append(stem+'.blg')
+    return target, source
 
 def latex2dvi(target=None,source=None,env=None):
     "Convert LaTeX to DVI/PDF"
@@ -215,9 +227,23 @@ def latex2dvi(target=None,source=None,env=None):
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
     global rdatapath
-    dir = env['dir']
-    for file in map(str,target):
-        urllib.urlretrieve(string.join([rdatapath,dir,file],os.sep),file)
+    folder = env['dir']
+    private = env.get('private')
+    if private:
+        login = private['login']
+        password = private['password']
+        server = private['server']
+        session = ftplib.FTP(server,login,password)
+        session.cwd(folder)
+        for file in map(str,target):
+            download = open(file,'wb')
+            session.retrbinary('RETR '+file,lambda x: download.write(x))
+            download.close()
+        session.quit()
+    else:
+        for file in map(str,target):
+            urllib.urlretrieve(string.join([rdatapath,folder,file],os.sep),
+                               file)
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
@@ -228,7 +254,7 @@ epstopdf = WhereIs('epstopdf')
 if epstopdf:
     PDFBuild = Builder(action = epstopdf + " $SOURCES",
 		       src_suffix=pssuffix,suffix='.pdf')
-Retrieve = Builder(action = Action(retrieve,varlist=['dir']))
+Retrieve = Builder(action = Action(retrieve,varlist=['dir','private']))
 
 Latify = Builder(action = Action(latify,varlist=['lclass','options','use']),
                  src_suffix='.tex',suffix='.ltx')
@@ -244,15 +270,16 @@ Latify = Builder(action = Action(latify,varlist=['lclass','options','use']),
 #    ressuffix = '.ps'
 #else:
 dvips = 0
-Pdf = Builder(action = Action(latex2dvi,varlist=['latex']),
-              src_suffix='.ltx',suffix='.pdf')
+Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
+              src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
 
 acroread = WhereIs('acroread')
 if acroread:
-    Read = Builder(action = acroread + " $SOURCES",src_suffix='.pdf')
+    Read = Builder(action = acroread + " $SOURCES",
+                   src_suffix='.pdf',suffix='.read')
     Print = Builder(action =
                     'cat $SOURCES | %s -toPostScript | lpr' % acroread,
-                    src_suffix='.pdf')
+                    src_suffix='.pdf',suffix='.print')
                     
 ressuffix = '.pdf'
 
@@ -466,15 +493,15 @@ class Project(Environment):
                 self.Latify(target='paper.ltx',source='paper.tex')
                 self.paper = self.Pdf(target='paper',source='paper.ltx')
                 self.Alias('pdf',self.paper)
-            self.paper.target_scanner = Plots
+#            self.paper[0].target_scanner = Plots
 	    if acroread:
 		self.Alias('read',self.Read('paper'))
                 self.Alias('print',self.Print('paper'))
         if record:
             self.Command('.sf_uses',None,'echo %s' %
                          string.join(self.coms,' '))
-    def Fetch(self,file,dir):
-        return self.Retrieve(file,None,dir=dir)
+    def Fetch(self,file,dir,private=None):
+        return self.Retrieve(file,None,dir=dir,private=private)
 
 # Default project
 project = Project()
@@ -484,8 +511,8 @@ def Plot (target,source,flow,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow,**kw):
     return apply(project.Result,(target,source,flow),kw)
-def Fetch(file,dir):
-    return project.Fetch(file,dir)
+def Fetch(file,dir,private=0):
+    return project.Fetch(file,dir,private)
 def XFig(file):
     return project.XFig(os.path.join(resdir,file),file)
 def Exe(source,**kw):
@@ -503,4 +530,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.35 2004/06/25 18:08:22 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.36 2004/06/27 22:22:05 fomels Exp $	

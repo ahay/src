@@ -1,6 +1,11 @@
 from rsfproj import *
 
-Fetch('datacassisAll.su.poscdp','cassis')
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('datacassisAll.su.poscdp','cassis',private)
 
 Flow(['all','head'],'datacassisAll.su.poscdp',
      'segyread tape=$SOURCE tfile=${TARGETS[1]} su=1 endian=0',
