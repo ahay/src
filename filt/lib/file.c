@@ -1095,12 +1095,12 @@ void sf_unpipe (sf_file file, size_t size)
 	size -= nbuf;
     }
 
-    if (NULL != file->dataname) {
-	if (unlink(file->dataname))
-	    sf_warning ("%s: trouble removing %s:",__FILE__,file->dataname);
+    if (NULL != file->dataname ) strcpy (file->dataname,dataname);
 
-	strcpy (file->dataname,dataname);
-    }    
+    /*
+      if (unlink(file->dataname))
+      sf_warning ("%s: trouble removing %s:",__FILE__,file->dataname);
+    */
 
     (void) fclose(file->stream);
     file->stream = freopen(dataname,"rb",tmp);
@@ -1146,5 +1146,5 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
 }
 */
 
-/* 	$Id: file.c,v 1.23 2004/07/02 11:54:28 fomels Exp $	 */
+/* 	$Id: file.c,v 1.24 2004/07/02 18:08:47 fomels Exp $	 */
 
