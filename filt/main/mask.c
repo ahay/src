@@ -4,7 +4,7 @@ Takes: < header.rsf > mask.rsf
 
 Mask is an integer data with ones and zeros. 
 Ones correspond to header values between min and max.
-The output can be used with sfheadermask.
+The output can be used with sfheaderwindow.
 */
 
 #include <float.h>
@@ -44,4 +44,4 @@ int main(int argc, char* argv[]) {
     }
 }
 	    
-/* 	$Id: mask.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: mask.c,v 1.3 2003/10/08 15:09:04 fomels Exp $	 */
