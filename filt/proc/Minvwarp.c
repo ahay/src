@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     inp = sf_floatalloc (n1);
     outp = sf_floatalloc (n2);
 
-    str = stretch_init (n2, o2, d2, n1, eps);
+    str = stretch_init (n2, o2, d2, n1, eps, false);
 
     for (i2=0; i2 < m2; i2++) {
 	sf_read (inp,sizeof(float),n1,in);
@@ -65,5 +65,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
     
-/* 	$Id: Minvwarp.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Minvwarp.c,v 1.3 2004/03/18 03:23:49 fomels Exp $	 */
 

@@ -1,4 +1,4 @@
-/* Convert CMPs to shots for regular 2-D geometry.
+/* Convert shots to CMPs for regular 2-D geometry.
 
 Takes: < cmps.rsf > shots.rsf
 
@@ -31,8 +31,8 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o3",&os)) sf_error("No o3= in input");
 
     dy = ds;
-    oy = os + oh + (nh-1)*dh;
-    ny = ns - nh;
+    oy = os + oh + (nh-2)*dh;
+    ny = ns - nh + 1;
 
     sf_putint(out,"n3",ny);
     sf_putfloat(out,"d3",dy);
@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
 
     for (iy=0; iy < ny; iy++) {
 	for (ih=0; ih < nh; ih++) {
-	    is = iy - ih + nh - 1;
+	    is = iy - ih + nh - 2;
 	    if (is >= 0 && is < ns) {
 		sf_seek(in,pos+(is*nh+ih)*tsize,SEEK_SET);
 		sf_read(trace,sizeof(float),nt,in);

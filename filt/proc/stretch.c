@@ -9,12 +9,12 @@ struct Map {
     int nt, nd, ib, ie;
     float t0,dt, eps;
     int *x; 
-    bool *m;
+    bool *m, narrow;
     float *w, *diag, *offd;
     tris slv;
 };
 
-map stretch_init (int n1, float o1, float d1, int nd, float eps)
+map stretch_init (int n1, float o1, float d1, int nd, float eps, bool narrow)
 {
     map str;
     
@@ -25,6 +25,7 @@ map stretch_init (int n1, float o1, float d1, int nd, float eps)
     str->dt = d1; 
     str->nd = nd; 
     str->eps = eps;
+    str->narrow = narrow;
     
     str->x = sf_intalloc (nd);
     str->m = sf_boolalloc (nd);
@@ -71,18 +72,22 @@ void stretch_define (map str, float* coord)
     }
     
     tridiagonal_define (str->slv, str->diag, str->offd);
-    str->ib = 0;
-    for (i1 = 0; i1 < str->nt; i1++) {
-	if (str->diag[i1] != str->eps) {
-	    str->ib = i1; 
-	    break;
+    
+    if (str->narrow) {
+	str->ib = -1;
+	for (i1 = 0; i1 < str->nt; i1++) {
+	    if (str->diag[i1] != str->eps) {
+		str->ib = i1-1; 
+		break;
+	    }
 	}
-    }
-    str->ie = str->nt;
-    for (i1 = str->nt-1; i1 >= 0; i1--) {
-	if (str->diag[i1] != str->eps) {
-	    str->ie = i1;
-	    break;
+
+	str->ie = str->nt;
+	for (i1 = str->nt-1; i1 >= 0; i1--) {
+	    if (str->diag[i1] != str->eps) {
+		str->ie = i1+1;
+		break;
+	    }
 	}
     }
 }
@@ -107,21 +112,16 @@ void stretch_apply (map str, float* ord, float* mod)
     }
     
     tridiagonal_solve (str->slv, mod);
-    
-    /*
-      if (str->ib+1 < str->nt) {
-      for (i1 = 0; i1 <= str->ib; i1++) {
-      mod[i1] = mod[str->ib+1];
-      }
-      }
+
+    if (str->narrow) {
+	for (i1 = 0; i1 <= str->ib; i1++) {
+	    mod[i1] = 0.;
+	}
       
-      if (str->ie-1 >= 0) {
-      for (i1 = str->ie; i1 < str->nt; i1++) {
-      mod[i1] = mod[str->ie-1];
-      }
-      }
-    */
-    
+	for (i1 = str->ie; i1 < str->nt; i1++) {
+	    mod[i1] = 0.;
+	}
+    }
 }
 
 void stretch_invert (map str, float* ord, float* mod)
@@ -151,5 +151,5 @@ void stretch_close (map str)
     free (str);
 }
 
-/* 	$Id: stretch.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: stretch.c,v 1.3 2004/03/18 03:23:49 fomels Exp $	 */
 

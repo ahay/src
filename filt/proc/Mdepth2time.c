@@ -1,17 +1,15 @@
 /* Conversion from depth to time in a V(z) medium.
 
 Takes: < indepth.rsf velocity=velocity.rsf > intime.rsf
+
+Transforms function of z to function of
+
+tau = Integral[2/v[x,n],{n,0,z}]
 */
 
 #include <rsf.h>
 
 #include "stretch.h"
-
-/* 
-   Transform function of z to function of
-
-   tau = Integral[1/v[x,n],{n,0,z}]
-*/
 
 int main (int argc, char *argv[])
 {
@@ -56,7 +54,7 @@ int main (int argc, char *argv[])
     if (!sf_getfloat ("eps",&eps)) eps = 0.01;
     /* smoothness parameter */
 
-    str = stretch_init (nt, t0, dt, nz, eps);
+    str = stretch_init (nt, t0, dt, nz, eps, false);
 
     time = sf_floatalloc (nt);
     depth = sf_floatalloc (nz);
@@ -71,7 +69,7 @@ int main (int argc, char *argv[])
 	    } else {
 		z += slow? vel[iz-1]: 1./vel[iz-1];
 	    }
-	    depth[iz] = 2.*dz*z; /* two because velocity is halfed? */
+	    depth[iz] = 2.*dz*z;
 	}
 
 	stretch_define (str, depth);
@@ -84,5 +82,5 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdepth2time.c,v 1.4 2003/10/01 23:41:07 fomels Exp $	 */
+/* 	$Id: Mdepth2time.c,v 1.5 2004/03/18 03:23:49 fomels Exp $	 */
 
