@@ -1,0 +1,19 @@
+CC = gcc 
+RSF = ../../seis/rsf
+RSFPLOT = ../lib
+CFLAGS = -std=gnu9x -Wall -pedantic -I${RSF} -I${RSFPLOT} -g
+LDFLAGS = -L${RSF} -lrsf -L${RSFPLOT} -lrsfplot -lm
+
+PROGS = dots plas pldb
+
+MAINS = $(addprefix sf, $(PROGS))
+
+all: ${MAINS}
+
+sf%: %.c ${RSF}/rsf.h ${RSF}/librsf.a \
+	${RSFPLOT}/rsfplot.h ${RSFPLOT}/librsfplot.a
+	${CC} ${CFLAGS} $*.c ${LDFLAGS} -o $@
+
+clean:
+	touch sfjunk junk.H junk.lint junklint 
+	rm sf* *.H *.lint junklint
