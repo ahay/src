@@ -151,7 +151,7 @@ int main (int argc, char **argv)
 	    }
 
 	    sf_write(p[0],sizeof(float),nt*nx,out);
-	} else {
+	} else { /* forward */
 	    sf_read(p[0],sizeof(float),nt*nx,in);
       
 	    /* pad with zeros */
@@ -198,4 +198,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft2.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mfft2.c,v 1.5 2004/02/14 06:52:41 fomels Exp $	 */
