@@ -1,0 +1,21 @@
+SEIS
+	documentation
+	splint
+	python interface
+	fortran interface
+	SU demos
+	books: BEI, IEE
+	MPI interface
+	windows port
+	solaris, SGI ports
+VPLOT
+	sepmains
+	vppen
+	filters: gtk, svg, pdf
+PROJ
+	scons
+	tk interface
+LATEX
+	SEG.bib
+	documentation
+	package
