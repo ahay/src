@@ -62,14 +62,12 @@ void hhfic_init(axa ah_)
 	h = ah.o+ih*ah.d;
 	for (iw=0; iw<aw.n; iw++) {
 	    w = aw.o+iw*aw.d;
-	    tt[ih][iw] = cexpf(2*I*w*h);
+	    tt[ih][iw] = cexpf(-2*I*w*h);
 	    
 /*	    tr[ih][iw] = cexpf(I*w*h);*/
 /*	    ts[ih][iw] = conjf(tr[ih][iw]);*/
 	}
     }
-
-
 }
 
 /*------------------------------------------------------------*/
