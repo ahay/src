@@ -27,6 +27,8 @@ int main (int argc, char *argv[])
     int nw;		/* number of frequencies */
     int nz;		/* number of migrated time samples */
     int nx, ny;		/* number of midpoints 	*/
+    int nt;             /* boundary taper size */
+    int nr;             /* number of reference velocities */
 
     float w0;		/* frequency origin 	*/
     float z0, dz;		/* migrated time sampling interval */
@@ -42,7 +44,7 @@ int main (int argc, char *argv[])
     slice imag, slow;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+    in  = sf_input ("in");
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
@@ -52,11 +54,17 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps = 0.01;
     /* stability parameter */
 
-    if (!sf_histint(in,"n1",&ny)) ny = 1;
+    if (!sf_histint  (in,"n1",&ny)) ny = 1;
     if (!sf_histfloat(in,"d1",&dy)) sf_error ("No d1= in input");
 
-    if (!sf_histint(in,"n2",&nx)) nx = 1;
+    if (!sf_histint  (in,"n2",&nx)) nx = 1;
     if (!sf_histfloat(in,"d2",&dx)) dx=dy;
+
+    if (!sf_getint("nt",&nt)) nt = 1;
+    /* taper size */
+
+    if (!sf_getint("nr",&nr)) nr = 1;
+    /* reference slownesses */
 
     vel = sf_input("slowness");
 
@@ -64,28 +72,29 @@ int main (int argc, char *argv[])
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 	sf_settype(out,SF_COMPLEX);
 
-	if (!sf_histint(in,"n3",&nz)) sf_error ("No n3= in input");
+	if (!sf_histint  (in,"n3",&nz)) sf_error ("No n3= in input");
 	if (!sf_histfloat(in,"d3",&dz)) sf_error ("No d3= in input");
-	if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
+	if (!sf_getint   (   "nw",&nw)) sf_error ("Need nw=");
 	/* Length of frequency axis (for modeling) */ 
-	if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
+	if (!sf_getfloat (   "dw",&dw)) sf_error ("Need dw=");
 	/* Frequency sampling (for modeling) */
-	if (!sf_getfloat("w0",&w0)) w0=0.;
+	if (!sf_getfloat (   "w0",&w0)) w0=0.;
 	/* Frequency origin (for modeling) */
-	sf_putint(out,"n3",nw);
+	sf_putint  (out,"n3",nw);
 	sf_putfloat(out,"d3",dw);
 	sf_putfloat(out,"o3",w0);
     } else { /* migration */
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
 	sf_settype(out,SF_FLOAT);
 
-	if (!sf_histint(in,"n3",&nw)) sf_error ("No n3= in input");
-	if (!sf_histfloat(in,"d3",&dw)) sf_error ("No d3= in input");
-	if (!sf_histfloat(in,"o3",&w0)) sf_error ("No o3= in input");
-	if (!sf_histint(vel,"n3",&nz)) sf_error ("No n3= in slowness");
+	if (!sf_histint  (in, "n3",&nw)) sf_error ("No n3= in input");
+	if (!sf_histfloat(in, "d3",&dw)) sf_error ("No d3= in input");
+	if (!sf_histfloat(in, "o3",&w0)) sf_error ("No o3= in input");
+	if (!sf_histint  (vel,"n3",&nz)) sf_error ("No n3= in slowness");
 	if (!sf_histfloat(vel,"d3",&dz)) sf_error ("No d3= in slowness");
+
 	if (!sf_histfloat(vel,"o3",&z0)) z0=0.; 
-	sf_putint(out,"n3",nz);
+	sf_putint  (out,"n3",nz);
 	sf_putfloat(out,"d3",dz);
 	sf_putfloat(out,"o3",z0);
     }
@@ -93,21 +102,23 @@ int main (int argc, char *argv[])
     dw *= 2.*SF_PI; 
     w0 *= 2.*SF_PI;
 
+    /* allocate space for slowness and image */
     slow = slice_init(vel,ny,nx,nz);
-    imag = slice_init(inv? in: out,ny,nx,nz);
+    imag = slice_init(inv? in:out,ny,nx,nz);
 
     /* allocate space for data */
     data = sf_complexalloc3(ny,nx,nw);
 
-    split2_init(nz,dz,ny,dy,nx,dx);
+    /* initialize split-step */
+    split2_init(nz,dz,ny,dy,nx,dx,nt,nr);
 
+    /* migration */
     if (!inv) sf_complexread(data[0][0],ny*nx*nw,in);
 
     split2 (verb, inv, eps,  nw, dw, w0, data, imag, slow);
 
-    if (inv) sf_complexwrite(data[0][0],ny*nx*nw,out);
+    /* modeling */
+    if ( inv) sf_complexwrite(data[0][0],ny*nx*nw,out);
 
     exit (0);
 }
-
-/* 	$Id: Msstep1.c 790 2004-09-10 18:51:51Z fomels $	 */
