@@ -1,10 +1,39 @@
+/* 1-D ubic spline interpolation interface */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "fint1.h"
 #include "extend.h"
 #include "spline.h"
 #include "interp_spline.h"
 #include "tridiagonal.h"
+
+#ifndef _fint1_h
+
+typedef struct Vint1 *vint1;
+typedef struct Fint1 *fint1;
+/* abstract data types */
+/*^*/
+
+#endif
 
 struct Vint1 {
     float** spl;
@@ -20,6 +49,7 @@ struct Fint1 {
 };
 
 float* fint1_coeff (fint1 fnt, int n)
+/*< extract n-th spline coefficient >*/
 {
     float* coeff;
     coeff = &(fnt->spl[n+fnt->nw]);
@@ -28,6 +58,7 @@ float* fint1_coeff (fint1 fnt, int n)
 }
 
 float* vint1_coeff (vint1 fnt, int n, int dim)
+/*< extract n-th spline coefficient for dimension dim >*/
 {
     float* coeff;
     coeff = &(fnt->spl[dim][n+fnt->nw]);
@@ -35,7 +66,10 @@ float* vint1_coeff (vint1 fnt, int n, int dim)
     return coeff;
 }
 
-vint1 vint1_init (int nw, int n1, int dim)
+vint1 vint1_init (int nw  /* trace extension */, 
+		  int n1  /* trace length */, 
+		  int dim /* number of functions */)
+/*< initialize multi-function interpolation >*/
 {
     vint1 fnt;
 
@@ -50,7 +84,9 @@ vint1 vint1_init (int nw, int n1, int dim)
     return fnt;
 }
 
-fint1 fint1_init (int nw, int n1)
+fint1 fint1_init (int nw /* trace extension */, 
+		  int n1 /* trace length */)
+/*< intialize single-function interpolation >*/
 {
     fint1 fnt;
     
@@ -64,7 +100,8 @@ fint1 fint1_init (int nw, int n1)
     return fnt;
 }
 
-void vint1_set (vint1 fnt, float** dat)
+void vint1_set (vint1 fnt, float** dat /* [dim][n1] */)
+/*< set multi-function grid >*/
 {
     int i;
     for (i = 0; i < fnt->dim; i++) {
@@ -76,6 +113,7 @@ void vint1_set (vint1 fnt, float** dat)
 }
 
 void fint1_set (fint1 fnt, float* dat)
+/*< set single-function grid >*/
 {
     extend (fnt->nw,fnt->n1,dat,fnt->spl);
     fnt->spl[0] *= (5./6.);
@@ -84,6 +122,7 @@ void fint1_set (fint1 fnt, float* dat)
 }
 
 void fint1_close (fint1 fnt)
+/*< free allocated storage >*/
 {
     free (fnt->spl);
     tridiagonal_close (fnt->slv);
@@ -91,6 +130,7 @@ void fint1_close (fint1 fnt)
 }
 
 void vint1_close (vint1 fnt)
+/*< free allocated storage >*/
 {
     free (fnt->spl[0]);
     free (fnt->spl);
@@ -98,7 +138,11 @@ void vint1_close (vint1 fnt)
     free (fnt);
 }
 
-float fint1_apply (fint1 fnt, int i, float x, bool der) 
+float fint1_apply (fint1 fnt /* interpolation object */, 
+		   int i     /* grid point */, 
+		   float x   /* offset */, 
+		   bool der  /* to compute derivative */) 
+/*< interpolate >*/
 {
     float f;
     int j, k;
@@ -117,7 +161,12 @@ float fint1_apply (fint1 fnt, int i, float x, bool der)
     return f;
 }
 
-void vint1_apply (vint1 fnt, int i, float x, bool der, float* f) 
+void vint1_apply (vint1 fnt /* interpolation object */, 
+		  int i     /* grid point */, 
+		  float x   /* offset */, 
+		  bool der  /* to compute derivative */, 
+		  float* f  /* output value [dim] */) 
+/*< interpolate >*/
 {
     int j, k, n;
     
@@ -136,11 +185,12 @@ void vint1_apply (vint1 fnt, int i, float x, bool der, float* f)
     }
 }
 
-void stretch(fint1 str, 
-	     float (*map)(float),
-	     int n1, float d1, float o1,
-	     int n2, float d2, float o2,
-	     float *trace)
+void stretch(fint1 str                  /* interpolation object */, 
+	     float (*map)(float)        /* mapping function */,
+	     int n1, float d1, float o1 /* old sampling */,
+	     int n2, float d2, float o2 /* new sampling */,
+	     float *trace               /* new trace [n2] */)
+/* trace interpolation */
 {
     int i2, it;
     float t;
@@ -158,4 +208,4 @@ void stretch(fint1 str,
     }
 }
 
-/* 	$Id: fint1.c,v 1.3 2004/04/01 02:12:42 fomels Exp $	 */
+/* 	$Id$	 */

@@ -15,8 +15,8 @@ parcel pef planemis2 planemis3 planesignoi pnmo prestolt pwd qdome radial
 radon randrefl refer reshape ricker signoi shapebin shapebin1 shot2cmp
 shotholes sigmoid slice smooth smoothder smoothdiv smoothreg smoothreg2 spectra
 spectra2 spline splinefilter stolt stretch synmarine taupmo tentwt time2depth
-tomo tpow trismooth2 twodip2 twofreq2 vscan velmod warp1 warpscan wilson
-window1 window2 window3
+tomo tpow trismooth2 twodip2 twofreq2 vscan velmod warp1 warpscan warpscan2
+wilson window1 window2 window3
 '''
 
 try: # distributed version
@@ -43,7 +43,7 @@ src2 = '''
 allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
 callp2 causint cbanded cmatmult compress copy cosft createhelix createmshelix
 createnhelix ctoeplitz cweight deburst dijkstra dip2 dip3 dips div1 div2 divn
-edge expder2 explanesignoi expont2 expont expsignoi2 extend slinint
+edge expder2 explanesignoi expont2 expont expsignoi2 extend fint1 slinint
 '''
 
 for source in Split(src2):
