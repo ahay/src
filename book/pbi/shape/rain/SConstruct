@@ -28,7 +28,7 @@ def border(name,n2):
               cmplx ${TARGETS[1]} ${TARGETS[2]}
               ''' % {'n2':n2,'f2':f2})
     Plot(name,name,
-              'graph %s title=" " plotcol=7 plotfat=2' % box)
+              'graph %s title=" " plotcol=6 plotfat=4' % box)
     f2 = f2 + n2
 
 border('border1',338)
@@ -52,16 +52,16 @@ cmplx ${TARGETS[1]} ${TARGETS[2]}
 
 Flow(['alldata','alldatax','alldatay'],'alldata.HH',select)
 Result('alldata','alldata',
-            'graph symbol=x title="All data locations" ' + box)
+            'graph symbol=x title="All data locations" plotcol=7 ' + box)
 
 Flow(['obs','obsx','obsy'],'obsdata.HH',select)
 Plot('obs','obs',
-          'graph symbol=o title="Observed data locations" plotcol=7 ' + box)
+          'graph symbol=o title="Observed data locations" plotcol=5 ' + box)
 Combine('obsdata',['obs','border'],'Overlay')
 
 Flow('coord','coord.HH','dd data_format=native_float')
 Flow(['coord2','coordx','coordy'],'coord',select)
-Plot('coord','coord2','graph symbol=x wanttitle=n ' + box)
+Plot('coord','coord2','graph symbol=x wanttitle=n plotcol=7 ' + box)
 Combine('data',['coord','border'],'Overlay')
 
 Combine('raindata',['obsdata','data'],'SideBySideIso',result=1)
@@ -85,11 +85,11 @@ for niter in cases:
     else:
         if (niter < 0):
             niter = -niter
-            name = "Gauss"
+            name = "Shaping Regularization"
             extra = 'shape=y'
         else:
             prec = 0
-            name = "Laplace"
+            name = "Laplacian Regularization"
             extra = 'shape=n'
         Flow([lapinter,pout],['raindata','obsdata'],
              '''shapebin head=${SOURCES[1]} pout=${TARGETS[1]}
@@ -132,7 +132,7 @@ for seed in range(2000,2005):
 Combine('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),
              'TwoByTwo',result=1)
 Combine('gaussinter',map(lambda x: 'lapinter%d' % x, [-10,-40]),
-             'SideBySideAniso',result=1)
+             'SideBySideIso',result=1)
 
 Flow('predict','predict.HH','dd data_format=native_float')
 for niter in [10000,-40,0]:
@@ -141,11 +141,17 @@ for niter in [10000,-40,0]:
     lapstat = 'lapstat%d' % niter
     Flow(lapdat,[lapinter,'coord'],
               'extract head=${SOURCES[1]} xkey=0 ykey=1')
-    Result(lapstat,['predict',lapdat],
-                '''cmplx ${SOURCES[0:2]} |
-                graph symbol="*" title="Laplace Correlation"
-                screenratio=1 min1=0 max1=500 min2=0 max2=500
-                ''',stdin=0)
+    if (niter < 0):
+        name = "Shaping Regularization"
+    else:
+        name = "Laplacian Regularization"
+    Plot(lapstat,['predict',lapdat],
+         '''cmplx ${SOURCES[0:2]} |
+         graph symbol="*" title="%s"
+         screenratio=1 min1=0 max1=500 min2=0 max2=500
+         ''' % name,stdin=0)
+Combine('stat','lapstat10000 lapstat-40','SideBySideIso',result=1)
+
 
 ###########################################################################
 
