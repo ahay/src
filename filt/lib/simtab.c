@@ -1,15 +1,49 @@
+/* Simbol Table for parameters. Implemented as a hash table. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <string.h>
 #include <stdlib.h>
-#include <stdio.h>
 #include <limits.h>
 #include <float.h>
 #include <errno.h>
 #include <ctype.h>
 
+#include <stdio.h>
+/*^*/
+
 #include "simtab.h"
-#include "_bool.h"
 #include "alloc.h"
 #include "error.h"
+
+#include "_bool.h"
+/*^*/
+
+#ifndef _sf_simtab_h
+
+#define SF_EOL '\014'
+#define SF_EOT '\004'
+/*^*/
+
+typedef struct sf_SimTab *sf_simtab; /* Simbol Table structure */
+/*^*/
+
+#endif
 
 #define LINELEN 1024
 
@@ -23,10 +57,9 @@ struct sf_SimTab {
     int size;
 };
 
-static int hash (const char *key, int size);
 
-/* Taken from Kernigan and Pike, "The practice of programming" */
 static int hash (const char *key, int size)
+/* Taken from Kernigan and Pike, "The practice of programming" */
 {
     unsigned int h;
     unsigned char *p;
@@ -38,9 +71,9 @@ static int hash (const char *key, int size)
     return (h % size);
 }
 
-/* portable strsep */
 static char *
 strsep1(char **stringp, char *delim)
+/* portable strsep */
 {
     char *start = *stringp;
     char *cp;
@@ -60,6 +93,7 @@ strsep1(char **stringp, char *delim)
 }
 
 sf_simtab sf_simtab_init(int size)
+/*< Create simbol table. >*/
 {
     sf_simtab table;
     int i;
@@ -77,6 +111,7 @@ sf_simtab sf_simtab_init(int size)
 }
 
 void sf_simtab_close(sf_simtab table)
+/*< Free allocated memory >*/
 {
     int i;
     struct entry *e, *next;
@@ -94,6 +129,7 @@ void sf_simtab_close(sf_simtab table)
 }
 
 void sf_simtab_enter(sf_simtab table, const char *key, const char* val)
+/*< Add an entry key=val to the table >*/
 {
     int h;
     struct entry *e;
@@ -130,7 +166,9 @@ void sf_simtab_enter(sf_simtab table, const char *key, const char* val)
     table->pars[h] = e;
 }
 
-char *sf_simtab_get(sf_simtab table, const char *key) {
+char *sf_simtab_get(sf_simtab table, const char *key) 
+/*< extract a value from the table >*/
+{
     int h;
     struct entry *e;
 
@@ -142,7 +180,8 @@ char *sf_simtab_get(sf_simtab table, const char *key) {
     return NULL;
 }
 
-bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par) 
+bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par)
+/*< extract an int parameter from the table >*/
 {
     char* val;
     long int i;
@@ -158,7 +197,8 @@ bool sf_simtab_getint (sf_simtab table, const char* key,/*@out@*/ int* par)
     return true;
 }
 
-bool sf_simtab_getfloat (sf_simtab table, const char* key,/*@out@*/ float* par) 
+bool sf_simtab_getfloat (sf_simtab table, const char* key,/*@out@*/ float* par)
+/*< extract a float parameter from the table >*/
 {
     char* val;
     double f;
@@ -175,7 +215,8 @@ bool sf_simtab_getfloat (sf_simtab table, const char* key,/*@out@*/ float* par)
 }
 
 bool sf_simtab_getfloats (sf_simtab table, const char* key,
-			  /*@out@*/ float* par,size_t n) 
+			  /*@out@*/ float* par,size_t n)
+/*< extract a float array parameter from the table >*/
 {
     size_t i;
     long num;
@@ -229,6 +270,7 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
 }
 
 char* sf_simtab_getstring (sf_simtab table, const char* key) 
+/*< extract a string parameter from the table >*/
 {
     char *val, *string, *qopen, *qclose;
     int iopen;
@@ -249,7 +291,8 @@ char* sf_simtab_getstring (sf_simtab table, const char* key)
     return string;
 }
 
-bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool *par) 
+bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool *par)
+/*< extract a bool parameter from the table >*/
 {
     char* val;
 
@@ -264,6 +307,7 @@ bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool *par)
 
 bool sf_simtab_getbools (sf_simtab table, const char* key,
 			 /*@out@*/bool *par,size_t n)
+/*< extract a bool array parameter from the table >*/
 {
     bool test=false;
     size_t i;
@@ -308,6 +352,7 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 
 bool sf_simtab_getints (sf_simtab table, const char* key,
 			/*@out@*/ int *par,size_t n)
+/*< extract an int array parameter from the table >*/
 {    
     size_t i;
     long num, j=0;
@@ -352,6 +397,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 
 bool sf_simtab_getstrings (sf_simtab table, const char* key,
 			   /*@out@*/ char **par,size_t n)
+/*< extract a string array parameter from the table >*/
 {    
     int i, iopen;
     size_t iclose;
@@ -377,7 +423,9 @@ bool sf_simtab_getstrings (sf_simtab table, const char* key,
     return true;
 }
 
-void sf_simtab_put (sf_simtab table, const char *keyval) {
+void sf_simtab_put (sf_simtab table, const char *keyval) 
+/*< put a key=val string to the table >*/
+{
     char *eq, *key;
     size_t keylen;
 
@@ -394,7 +442,9 @@ void sf_simtab_put (sf_simtab table, const char *keyval) {
     free(key);
 }
 
-void sf_simtab_input (sf_simtab table, FILE* fp) {
+void sf_simtab_input (sf_simtab table, FILE* fp) 
+/*< extract parameters from a file >*/
+{
     char line[LINELEN], word[LINELEN], *cl, *cw;
     int c;
     enum {START, INAWORD, STRING} state;
@@ -440,7 +490,9 @@ void sf_simtab_input (sf_simtab table, FILE* fp) {
     }
 }
 
-void sf_simtab_output (sf_simtab table, FILE* fp) {
+void sf_simtab_output (sf_simtab table, FILE* fp) 
+/*< output parameters to a file >*/
+{
     size_t i;
     struct entry *e;
 

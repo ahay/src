@@ -8,6 +8,6 @@ void dmo_init (float vel1, bool inv1, float t01, float dt1, float dx1,
 
 void dmo_close(void);
 
-void dmo_lop (bool adj, bool add, int n1, int n2, dat1, dat2);
+void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2);
 
 #endif

@@ -113,7 +113,7 @@ int main(int argc, char* argv[])
 	    /* data clip */
 	    clip = 0.;
 	    sf_getfloat("pclip",&pclip);
-	    /* data clip percentile */
+	    /* data clip percentile (default is 99) */
 	    if (pclip <=0. || pclip > 100.)
 		sf_error("pclip=%g should be > 0 and <= 100",pclip);
 	    panel = 0;

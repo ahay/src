@@ -24,7 +24,8 @@
 #include <stdlib.h>
 
 #include "error.h"
-#include "getpar.h"
+
+char* sf_getprog (void); /* provided by getpar */
 
 void sf_error( char *format, ... )
 /*< Outputs an error message to stderr and terminates the program. 

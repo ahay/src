@@ -37,7 +37,7 @@ void twodip2_close(void)
 }
 
 void twodip2(int niter, int nw, int nj1, int nj2, 
-	     bool verb, float **u, float*** pq)
+	     bool verb, float **u, float*** pq, bool *mask)
 {
     int i, iter;
     float mean, usum, psum, qsum, ui, dpi, pi;
@@ -85,6 +85,17 @@ void twodip2(int niter, int nw, int nj1, int nj2,
 
 	if (verb) sf_warning("%d %g %g %g", iter+1, 
 			     sqrt(usum/n), psum/n, qsum/n);
+
+	if (NULL != mask) {
+	    for(i=0; i < n; i++) {
+		if (mask[i]) {
+		    u1[0][0][i] = 0.;
+		    u1[1][0][i] = 0.;
+		    u2[0][i] = 0.;
+		}
+	    }
+	}
+
 	twodiv2(u2[0],dp[0][0]);
 
 	for(i=0; i < 2*n; i++) {

@@ -16,10 +16,8 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include <errno.h>
 
 #include <sys/utsname.h>
 #include <sys/types.h>
@@ -27,7 +25,9 @@
 #include <pwd.h>
 
 #include "getpar.h"
+#include "error.h"
 #include "simtab.h"
+#include "alloc.h"
 
 #include "_bool.h"
 /*^*/
@@ -61,7 +61,7 @@ void sf_init(int argc,char *argv[])
     if (NULL == user) {
 	pass = getpwuid(geteuid());
 	if (NULL == pass) {
-	    user = (char*) malloc(sizeof(char));
+	    user = sf_charalloc(1);
 	    user[0] = '\0';
 	} else {
 	    user = pass->pw_name;
@@ -69,23 +69,17 @@ void sf_init(int argc,char *argv[])
     }
 
     /* set host */
-    if (0 > uname (&uhost)) {
-	fprintf (stderr,"%s: Cannot get hostname: %s",__FILE__,
-		 strerror(errno));
-	exit(EXIT_FAILURE);
-    }
+    if (0 > uname (&uhost)) sf_error("%s: Cannot get hostname:",__FILE__);
+
     len = strlen(uhost.nodename)+1;
-    host = (char*) malloc(len*sizeof(char));
+    host = sf_charalloc(len);
     memcpy(host,uhost.nodename,len);
 
     for (ic=1; ic < argc; ic++) {
 	if (0 == strncmp(argv[ic],"par=",4)) {
 	    fp = fopen(argv[ic]+4,"r");
-	    if (NULL == fp) { 
-		fprintf (stderr,"%s: Cannot open par file %s: %s",
-			 __FILE__,argv[ic]+4,strerror(errno));
-		exit(EXIT_FAILURE);
-	    }
+	    if (NULL == fp) sf_error ("%s: Cannot open par file %s:",
+				      __FILE__,argv[ic]+4);
 	    sf_simtab_input(pars,fp);
 	    (void) fclose (fp);
 	} else {

@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-angle angle2 cell2 cup dsr eikonal fincon finstack fkamo fkdmo gazdag
+angle angle2 cell2 cup dmo dsr eikonal fincon finstack fkamo fkdmo gazdag
 green halfint interp2 interp3 interpt kirchnew mutter ofilp pick0
 preconstkirch rays2 reg2tri remap1 s2ofz shoot2 sstep1
 trace2 tree tri2reg trirand unif2 voft vofz warpadd ztrace

@@ -8,13 +8,14 @@ Takes: < data.rsf > dip.rsf
 #include <rsf.h>
 
 #include "twodip2.h"
+#include "mask6.h"
 
 int main (int argc, char *argv[])
 {
     int n1,n2, n12, niter, nw, nj1, nj2, i;
     float eps, lam, p0, q0, **u, ***p;
-    bool verb, sign, gauss;
-    sf_file in, out;
+    bool verb, sign, gauss, *m;
+    sf_file in, out, mask;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -65,17 +66,32 @@ int main (int argc, char *argv[])
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc3(n1,n2,2);
 
-    /* read data */
-    sf_floatread(u[0],n12,in);
-
     /* initialize dip */
     for(i=0; i < n12; i++) {
 	p[0][0][i] = p0;
 	p[1][0][i] = q0;
     }
   
+    if (NULL != sf_getstring("mask")) {
+	m = sf_boolalloc(n12);
+
+	mask = sf_input("mask");
+	sf_floatread(u[0],n12,mask);
+	sf_fileclose(mask);
+
+	mask6_apply (nw, nj1, nj2, n1, n2, u);
+	for(i=0; i < n12; i++) {
+	    m[i] = (u[0][i] != 0.);
+	}
+    } else {
+	m = NULL;
+    }
+
+    /* read data */
+    sf_floatread(u[0],n12,in);
+
     /* estimate dip */
-    twodip2(niter, nw, nj1, nj2, verb, u, p);
+    twodip2(niter, nw, nj1, nj2, verb, u, p, m);
 
     /* write dips */
     sf_floatwrite(p[0][0],n12*2,out);
