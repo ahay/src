@@ -1,3 +1,8 @@
+/* Graph plot.
+
+Takes: < data.rsf > plot.vpl
+*/
+
 #include <string.h>
 #include <float.h>
 
@@ -52,6 +57,7 @@ int main(int argc, char* argv[])
     vp_plot_init(n2);
 
     symbol = sf_getstring("symbol");
+    /* if set, plot with symbols instead of lines */
     if (NULL != symbol) {
 	len = strlen(symbol);
 	if (len < n2) {
@@ -72,6 +78,7 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getbool ("transp",&transp)) transp=false;
+    /* if y, transpose the axes */
  
     for (i3 = 0; i3 < n3; i3++) {
 	min2 = +FLT_MAX;
@@ -141,3 +148,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: graph.c,v 1.9 2003/10/01 23:41:18 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Contour plot.
+
+Takes: < data.rsf > plot.vpl
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -37,8 +42,10 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("min2",&min2)) min2=o2;
     if (!sf_getfloat("max1",&max1)) max1=o1+(n1-1)*d1;
     if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2;
+    /* data window to plot */
 
     if (!sf_getint("nc",&nc0)) nc0=50;
+    /* number of contours */
     nc=nc0;
 
     c = sf_floatalloc(nc);
@@ -46,10 +53,13 @@ int main (int argc, char* argv[])
 
     hasc = sf_getfloats("c",c,nc);
     hasdc = sf_getfloat("dc",&dc);
+    /* contour increment */
     hasc0 = sf_getfloat("c0",&c0);
+    /* first contour */
 
     if (!sf_getbool ("transp",&transp)) transp=true;
- 
+    /* if y, transpose the axes */
+
     z = sf_floatalloc2(n1,n2);
 
     for (i3=0; i3 < n3; i3++) {
@@ -338,3 +348,6 @@ static void draw (bool mask, float x, float y) {
 	}
     }
 }
+
+/* 	$Id: contour.c,v 1.4 2003/10/01 23:41:18 fomels Exp $	 */
+

@@ -1,3 +1,8 @@
+/* Plot rays.
+
+Takes: < rays.rsf > plot.vpl
+*/
+
 #include <rsf.h>
 #include <rsfplot.h>
 
@@ -12,12 +17,17 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("n1",&n1)) sf_error("Need n1=");
     if (!sf_getint("n2",&n2)) sf_error("Need n2=");
+    /* frame dimensions */
     if (!sf_getfloat("d1",&d1)) sf_error("Need d1=");
     if (!sf_getfloat("d2",&d2)) sf_error("Need d2=");
+    /* frame sampling */
     if (!sf_getfloat("o1",&o1)) sf_error("Need o1=");
     if (!sf_getfloat("o2",&o2)) sf_error("Need o2=");
+    /* frame origin */
     if (!sf_getint("nt",&nt)) nt=n1*n2;
+    /* maximum ray length */
     if (!sf_getint("jr",&jr)) jr=1;
+    /* skip rays */
 
     traj = sf_floatalloc2 (2,nt);
 
@@ -43,3 +53,6 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: plotrays.c,v 1.4 2003/10/01 23:41:18 fomels Exp $	 */
+

@@ -1,3 +1,8 @@
+/* Plot Assembler - convert ascii to vplot.
+
+Takes: < plot.asc > plot.vpl
+*/
+
 #include <stdio.h>
 #include <math.h>
 #include <string.h>
@@ -306,4 +311,6 @@ static void text (void)
     }
     putchar ('\0');
 }
+
+/* 	$Id: plas.c,v 1.5 2003/10/01 23:41:18 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* Plot signal with lollipops.
+
+Takes: < data.rsf > plot.vpl
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -21,7 +26,7 @@ int main (int argc, char* argv[])
 {
     int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
-    float epsilon, dd1, dd2, axis, hi, lo, av, maxab, range;
+    float epsilon, dd1, dd2, axis, hi=0., lo=0., av, maxab, range;
     float marginl, marginr, margint, marginb, x, y, radius;
     float tracehigh, overlap, zerosignal, o1,d1;
     float d, full, abs, sgn, signal, *cx, *cy;
@@ -41,6 +46,7 @@ int main (int argc, char* argv[])
     if(!sf_getfloat("d1",&d1) && !sf_histfloat(in,"d1",&d1)) d1=1.;
 
     if (NULL == (label1 = sf_getstring("label1"))) 
+	/* label for the axis */
 	label1 = sf_histstring(in,"label1");
     if (label1 != NULL &&
 	(*label1 == '\0' || (*label1 == ' ' && *(label1+1) == '\0'))) {
@@ -49,6 +55,7 @@ int main (int argc, char* argv[])
     }
  
     if (NULL == (title = sf_getstring("title")))
+	/* plot title */ 
 	title = sf_histstring(in,"title");
     if (title != NULL &&
 	(*title == '\0' || (*title == ' ' && *(title+1) == '\0'))) {
@@ -59,10 +66,15 @@ int main (int argc, char* argv[])
     data = sf_floatalloc2 (n1,n2);
  
     if (!sf_getint("dots",&dots)) dots = (n1 <= 130)? 1: 0;
+    /* type of dots: 1 - baloon, 0 - no dots, 2 - only for non-zero data */
     if (!sf_getbool("seemean",&seemean)) seemean = (n2 <= 30);
+    /* if y, draw axis lines */
     if (!sf_getbool("strings",&strings)) strings = (n1 <= 400);
+    /* if y, draw strings */
     if (!sf_getint("connect",&connect)) connect = 1; 
+    /* connection type: 1 - diagonal, 2 - bar, 4 - only for non-zero data */
     if (!sf_getint("corners",&corners)) {
+	/* number of polygon corners (default is 6) */
 	corners=7;
     } else {
 	corners++;
@@ -72,20 +84,31 @@ int main (int argc, char* argv[])
     cy = sf_floatalloc(corners);
 
     if (!sf_getbool("silk",&silk)) silk=false; 
-    if (!sf_getbool("gaineach",&gaineach)) gaineach=true; 
+    /* if y, silky plot */
+    if (!sf_getbool("gaineach",&gaineach)) gaineach=true;
+    /* if y, gain each trace independently */
     if (!sf_getint("labelsz",&labelsz)) labelsz=8;
+    /* label size */
     if (!sf_getbool("yreverse",&yreverse)) yreverse=false;
+    /* if y, reverse y axis */
     if (!sf_getbool("constsep",&constsep)) constsep=false;
+    /* if y, use constant trace separation */
     if (!sf_getbool("seedead",&seedead)) seedead=false;
+    /* if y, show zero traces */
     if (!sf_getbool("transp",&transp)) transp=false;
+    /*  if y, transpose the axis */
 
     labels = (char**) sf_alloc(n2,sizeof(char*));
     if (!sf_getstrings("labels",labels,n2)) labels[0] = NULL;
 
     if (!sf_getfloat("xxscale",&xxscale)) xxscale=1.;
+    /* x scaling */
     if (!sf_getfloat("yyscale",&yyscale)) yyscale=1.;
+    /* y scaling */
     if (!sf_getfloat("clip",&clip)) clip=-1.; 
+    /* data clip */
     if (!sf_getfloat("overlap",&overlap)) overlap=0.9; 
+    /* trace overlap */
 
     screenwide = VP_STANDARD_HEIGHT/VP_SCREEN_RATIO * xxscale;
     screenhigh = VP_STANDARD_HEIGHT  * yyscale;  
@@ -100,6 +123,7 @@ int main (int argc, char* argv[])
     dd2 = (screenhigh - marginb - margint) / ((n2-1) + overlap);
 
     if(!sf_getfloat("radius",&radius)) radius = dd1/3;
+    /* dot radius */
     if(radius > dd2/15) radius = dd2/15;
 
     tracehigh = overlap * (dots? dd2 - 3*radius: dd2);
@@ -316,3 +340,6 @@ static void circle(int corners,
     vp_color(3);
     vp_area(vx,vy,corners,1,1,1);
 }
+
+/* 	$Id: dots.c,v 1.5 2003/10/01 23:41:18 fomels Exp $	 */
+

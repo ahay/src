@@ -1,3 +1,8 @@
+/* Plot Debugger - convert vplot to ascii.
+
+Takes: < plot.vpl > plot.asc
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
@@ -256,4 +261,5 @@ static void text (void)
     putchar ('\n');
 }
 
+/* 	$Id: pldb.c,v 1.5 2003/10/01 23:41:18 fomels Exp $	 */
 

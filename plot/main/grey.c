@@ -71,8 +71,10 @@ int main(int argc, char* argv[])
 
     pclip=99.;
     if (!sf_getfloat("clip",&clip)) {
+	/* data clip */
 	clip = 0.;
 	sf_getfloat("pclip",&pclip);
+	/* data clip percentile */
 	if (pclip <=0. || pclip > 100.)
 	    sf_error("pclip=%g should be > 0 and <= 100",pclip);
 	panel = 0;
@@ -83,9 +85,11 @@ int main(int argc, char* argv[])
 
     if (0==panel) {
 	if (!sf_getint("gainstep",&gainstep)) gainstep=0.5+n1/256.;
+	/* subsampling for gpow and clip estimation */
 	if (gainstep <= 0) gainstep=1;
 
 	gainpanel = sf_getstring("gainpanel");
+	/* gain reference: 'a' for all, 'e' for each, or number */
 	if (NULL != gainpanel) {
 	    switch (gainpanel[0]) {
 		case 'a': 
@@ -109,9 +113,13 @@ int main(int argc, char* argv[])
     } 
 
     if (!sf_getbool("allpos",&allpos)) allpos=false;
-    if (!sf_getfloat("bias",&pbias)) pbias=0.; 
+    /* if y, assume positive data */
+    if (!sf_getfloat("bias",&pbias)) pbias=0.;
+    /* subtract bias from data */
     if (!sf_getbool("polarity",&polarity)) polarity=false;
+    /* if y, reverse polarity (white is high by default) */
     if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     x1 = o1-0.5*d1;
     x2 = o1+(n1-1)*d1+0.5*d1;
@@ -146,7 +154,9 @@ int main(int argc, char* argv[])
 
     /* initialize color table */
     if (NULL == (color = sf_getstring("color"))) color="I";
+    /* color scheme */
     if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
+    /* reserved colors */
     vp_rascoltab (nreserve, color);
 
     for (i3=0; i3 < n3; i3++) {	
@@ -226,3 +236,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: grey.c,v 1.11 2003/10/01 23:41:18 fomels Exp $	 */
