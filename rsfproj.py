@@ -241,25 +241,31 @@ def retrieve(target=None,source=None,env=None):
                                                                     folder)
             return 3
         for file in map(str,target):
+            remote = os.path.basename(file)
             try:
                  download = open(file,'wb')
-                 session.retrbinary('RETR '+file,lambda x: download.write(x))
+                 session.retrbinary('RETR '+remote,
+                                    lambda x: download.write(x))
                  download.close()
             except:
                  print 'Could not download file "%s" ' % file
                  return 1
+            if not os.stat(file)[6]:
+                print 'Could not download file "%s" ' % file
+                os.unlink(file)
+                return 4
         session.quit()
     else:
         for file in map(str,target):
-            urllib.urlretrieve(string.join([dataserver,folder,file],'/'),
+            remote = os.path.basename(file)
+            urllib.urlretrieve(string.join([dataserver,folder,remote],'/'),
                                file)
 
-    if os.stat(file)[6]:
-        return 0
-    else:
-        print 'Could not download file "%s" ' % file
-        os.unlink(file)
-        return 2
+            if not os.stat(file)[6]:
+                print 'Could not download file "%s" ' % file
+                os.unlink(file)
+                return 2
+    return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 # Klean = Builder(action = Action(clean,silent,['junk']))
@@ -355,7 +361,6 @@ combine ={
     }
 
 #############################################################################
-
 class Project(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
@@ -363,10 +368,7 @@ class Project(Environment):
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
-        dir = os.path.basename(os.getcwd())
-        self.path = datapath + dir + os.sep
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
+        self.Dir(os.path.basename(os.getcwd()))
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'XAUTHORITY':
@@ -397,6 +399,10 @@ class Project(Environment):
         self.figs = []
         self.pdfs = []
         self.coms = []
+    def Dir(self,dir):
+        self.path = datapath + dir + os.sep
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
     def Exe(self,source,**kw):
          target = source.replace('.c','.x')
          return apply(self.Program,(target,source),kw)
@@ -526,6 +532,8 @@ class Project(Environment):
 project = Project()
 def Flow(target,source,flow,**kw):
     return apply(project.Flow,(target,source,flow),kw)
+def Dir(dir):
+    return project.Dir(dir)
 def Plot (target,source,flow,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow,**kw):
