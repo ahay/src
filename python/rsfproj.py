@@ -181,7 +181,7 @@ class Project(Environment):
             self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-        self.SConsignFile(self.path+'.sconsign.db')
+        self.SConsignFile(self.path+'.sconsign')
         self.resdir = resdir
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,

@@ -1,5 +1,4 @@
-/* Window a portion of the dataset.
-*/
+/* Window a portion of the dataset. */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
