@@ -1,6 +1,7 @@
 /**************** System includes **************/
 #include <string.h>
 #include <math.h>
+#include <float.h>
 
 /**************** RSF includes *****************/
 #include <rsf.h> 
@@ -9,12 +10,14 @@
 #include "int1.h"
 #include "interp_spline.h"
 #include "prefilter.h"
+#include "window1.h"
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, m2, n2, n, order, ng, ig;
+    int i1, n1, i2, m2, n2, n, order, ng, ig, i0, w, nw, iw;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
-    bool verb, noamp;
+    float *corr, *win1, *win2, a, b, a2, b2, ab, h;
+    bool taper;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -38,18 +41,11 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(other,"d1",&d2)) sf_error ("No d1= in other");
     if(!sf_histfloat(other,"o1",&o2)) o2 = 0.;
 
-    sf_putint  (warped,"n1",n2);
-    sf_putfloat(warped,"d1",d2);
-    sf_putfloat(warped,"o1",o2);
-
     sf_putint  (warped,"n3",ng);
     sf_putfloat(warped,"d3",dg);
     sf_putfloat(warped,"o3",g0);
 
     n = n2*m2;
-
-    if(!sf_getbool("verb",&verb)) verb = false;
-    if(!sf_getbool("noamp",&noamp)) noamp = false;
 
     if(!sf_getint("accuracy",&order)) {
 	order = 2;
@@ -58,10 +54,24 @@ int main(int argc, char* argv[])
     }
     order *= 2;
 
+    if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
+    if (!sf_getint("w",&w)) sf_error ("Need w=");
+    if (!sf_getfloat("h",&h)) h=0.5*(w-1);
+    if (!sf_getbool("taper",&taper)) taper=true;
+
+    sf_putint(warped,"n1",nw);
+    sf_putfloat(warped,"o1",(0.5*w+1.)*d1);
+    sf_putfloat(warped,"d1",(n2-w)*d1/(nw-1.));
+
+    window1_init (w,nw,n2,h);
+
     coord = sf_floatalloc (n2); 
     inp =   sf_floatalloc2 (n1,m2);
     out =   sf_floatalloc (n2);
     oth =   sf_floatalloc2 (n2,m2);
+    corr =  sf_floatalloc (nw);
+    win1 = sf_floatalloc (w);
+    win2 = sf_floatalloc (w);
 
     prefilter_init (order, n1, order*10);     
     for (i2=0; i2 < m2; i2++) {
@@ -84,10 +94,20 @@ int main(int argc, char* argv[])
 
 	for (i2=0; i2 < m2; i2++) {
 	    int1_lop (false,false,n1,n2,inp[i2],out);
-	    for (i1=0; i1 < n2; i1++) {
-		out[i1] -= oth[i2][i1];
+	    for (iw=0; iw < nw; iw++) {
+		i0 = window1_apply(iw,out,taper,taper,win1);
+		i0 = window1_apply(iw,oth[i2],taper,taper,win2);
+		a2 = b2 = ab = 0.;
+		for (i1=0; i1 < w; i1++) {
+		    a = win1[i1];
+		    b = win2[i1];
+		    ab += a*b;
+		    a2 += a*a;
+		    b2 += b*b;
+		}
+		corr[iw] = ab/sqrtf(a2*b2+FLT_EPSILON);
 	    }
-	    sf_write(out,sizeof(float),n2,warped);
+	    sf_write(corr,sizeof(float),nw,warped);
 	}
     }
 

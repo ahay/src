@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&d1))  sf_error("No d1= in input");
     if (!sf_getfloat ("t1", &t0) && 
 	!sf_histfloat(in,"t1",&t0)) t0=o1;
+    sf_putfloat(out,"t1",t0);
 
     if (!inv) {
 	if (!sf_getint("nout",&n)) n=dens*n1;

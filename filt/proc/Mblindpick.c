@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getfloat("lam",&lam)) lam=0.01;
-    if (!sf_getint("niter",&niter)) niter=5;
+    if (!sf_getint("niter",&niter)) niter=1;
 
     slice = sf_floatalloc2(nt,ns);
     pick = sf_floatalloc(nt);
