@@ -23,7 +23,7 @@
 #include "alloc.h"
 #include "error.h"
 
-#include "c99.h"
+#include "_bool.h"
 #include "_solver.h"
 /*^*/
 

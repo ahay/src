@@ -5,6 +5,7 @@
 
 #include <stdlib.h>
 
+#include "_bool.h"
 #include "c99.h"
 
     /*@out@*/ void *sf_alloc (size_t n    /* number of elements */, 

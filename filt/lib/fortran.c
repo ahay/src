@@ -5,7 +5,7 @@
 #include "getpar.h"
 #include "alloc.h"
 #include "error.h"
-#include "c99.h"
+#include "_bool.h"
 #include "file.h"
 #include "files.h"
 

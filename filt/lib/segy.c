@@ -5,7 +5,7 @@
 
 #include "segy.h"
 #include "getpar.h"
-#include "c99.h"
+#include "_bool.h"
 #include "error.h"
 
 typedef unsigned char byte;
@@ -537,4 +537,4 @@ void sf_head2segy(char* buf, const int* trace, int nk)
     }
 }
  
-/* 	$Id: segy.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id$	 */

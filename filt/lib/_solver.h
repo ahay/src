@@ -20,6 +20,7 @@
 #ifndef _sf__solver_h
 #define _sf__solver_h
 
+#include "_bool.h"
 #include "c99.h"
 
 typedef void (*sf_operator)(bool,bool,int,int,float*,float*);

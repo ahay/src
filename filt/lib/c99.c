@@ -32,17 +32,12 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 /*^*/
 
 /* The following from C99 - must define for C90 */
-#include <stdbool.h>       /* define bool, true, false */
 #include <complex.h>
 /*^*/
 
 #else
 /*^*/
 
-typedef enum {false, true} bool;
-/*^*/
-
-/* What do we do with complex? */
 #define complex  
 #define I 0.0
 #define csqrtf sqrtf

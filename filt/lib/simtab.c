@@ -7,7 +7,7 @@
 #include <ctype.h>
 
 #include "simtab.h"
-#include "c99.h"
+#include "_bool.h"
 #include "alloc.h"
 #include "error.h"
 
@@ -452,4 +452,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.15 2004/07/02 11:54:29 fomels Exp $	 */
+/* 	$Id$	 */

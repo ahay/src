@@ -1,7 +1,7 @@
 #ifndef _sf_segy_h
 #define _sf_segy_h
 
-#include "c99.h"
+#include "_bool.h"
 
 /* SEGY standard */
 
@@ -32,4 +32,4 @@ char* sf_segykeyword (int k);
 
 #endif
 
-/* 	$Id: segy.h,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id$	 */

@@ -66,13 +66,28 @@ int main (int argc, char *argv[])
 	if (!sf_histint(in,"n1",&nz)) sf_error ("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dz)) sf_error ("No d1= in input");
 
-	if (!sf_getint("nt",&nt)) sf_error ("nt= must be supplied");
-	/* Length of time axis (for modeling) */
-	if (!sf_getfloat("dt",&dt)) sf_error ("dt= must be supplied");
-        /* Sampling of time axis (for modeling) */
+	if (!sf_getint("nt",&nt)) {
+	    /* Length of time axis (for modeling) */
+	    if (depth) {
+		sf_error ("nt= must be supplied");
+	    } else {
+		nt=nz;
+	    }
+	} else {
+	    sf_putint(out,"n1",nt);
+	}
 
-	sf_putint(out,"n1",nt);
-	sf_putfloat(out,"d1",dt);
+	if (!sf_getfloat("dt",&dt)) {
+	    /* Sampling of time axis (for modeling) */
+	    if (depth) {
+		sf_error ("dt= must be supplied");
+	    } else {
+		dt=dz;
+	    }
+	} else {
+	    sf_putfloat(out,"d1",dt);
+	}
+
 	sf_putfloat(out,"o1",0.);
     } else { /* migration */
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1= in input");

@@ -6,6 +6,7 @@
 #ifndef __cplusplus
 /*^*/
 
+#include "_bool.h"
 #include "c99.h"
 /*^*/
 

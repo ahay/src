@@ -22,7 +22,7 @@
 #include "cgstep.h"
 #include "alloc.h"
 
-#include "c99.h"
+#include "_bool.h"
 /*^*/
 
 /* precision */

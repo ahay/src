@@ -3,7 +3,7 @@
 #include <assert.h>
 
 #include "getpar.h"
-#include "c99.h"
+#include "_bool.h"
 
 int main (void)
 {
@@ -33,5 +33,5 @@ int main (void)
     exit (0);
 }
 
-/* 	$Id: Testgetpar.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id$	 */
 

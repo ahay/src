@@ -3,7 +3,7 @@
 #ifndef _sf_conjgrad_h
 #define _sf_conjgrad_h
 
-#include "c99.h"
+#include "_bool.h"
 #include "_solver.h"
 
 void sf_conjgrad_init(int np1     /* preconditioned size */, 

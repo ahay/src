@@ -3,7 +3,7 @@
 #ifndef _sf_cgstep_h
 #define _sf_cgstep_h
 
-#include "c99.h"
+#include "_bool.h"
 
 void sf_cgstep( bool forget     /* restart flag */, 
 		int nx          /* model size */, 

@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #ifndef __cplusplus
 /*^*/
 
+#include "_bool.h"
 #include "c99.h"
 #include "_solver.h"
 /*^*/

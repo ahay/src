@@ -1,7 +1,7 @@
 #ifndef _sf_stack_h
 #define _sf_stack_h
 
-#include "c99.h"
+#include "_bool.h"
 
 typedef struct sf_Stack *sf_stack;
 
@@ -17,4 +17,4 @@ void sf_stack_print (sf_stack s);
 
 #endif
 
-/* 	$Id: stack.h,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id$	 */
