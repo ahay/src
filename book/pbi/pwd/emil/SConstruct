@@ -1,0 +1,26 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+Book()
+###########################################################################
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/emil'
+Fetch('emil2.sht',datdir)
+
+Flow('emil','emil2.sht','segyread tape=$SOURCE su=1 endian=0 data=1',stdin=0)
+Flow('emil1','emil','window n2=120')
+Flow('emil2','emil','window f2=120')
+
+grey = 'grey label1="Time (s)" label2=Trace wanttitle=n'
+
+Plot('emil1','emil1',grey)
+Plot('emil2','emil2',grey)
+Combine('emil','emil1 emil2','SideBySideAniso',result=1)
+    
+###########################################################################
+End()
