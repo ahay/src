@@ -1,3 +1,8 @@
+/* 3-D plane wave destruction.
+
+Takes: < data.rsf > residual.rsf
+*/
+
 #include <rsf.h>
 
 #include "allp3.h"
@@ -33,10 +38,13 @@ int main (int argc, char *argv[])
     if (n3 > 1) sf_putint(out,"n4",2); 
 
     if (!sf_getint("order",&nw)) nw=1;
+    /* [1,2,3] accuracy */
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
     if (!sf_getint("nj1",&nj1)) nj1=1;
+    /* in-line aliasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
+    /* cross-line aliasing */
 
     u1 = sf_floatalloc3(n1,n2,n3);
     u2 = sf_floatalloc3(n1,n2,n3);
@@ -71,3 +79,5 @@ int main (int argc, char *argv[])
     
     exit (0);
 }
+
+/* 	$Id: Mpwd.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */

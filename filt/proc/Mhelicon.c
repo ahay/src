@@ -1,3 +1,8 @@
+/* Multidimensional convolution and deconvolution by helix transform.
+
+Takes: < input.rsf filt=filter.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 #include "helix.h"
@@ -30,7 +35,8 @@ int main(int argc, char* argv[])
 	aa->flt[ia] /= a0;
     }
 
-    if (NULL != (lagfile = sf_getstring("lag")) || 
+    if (NULL != (lagfile = sf_getstring("lag")) /* file with filter lags */
+	|| 
 	NULL != (lagfile = sf_histstring(filt,"lag"))) {
 	lag = sf_input(lagfile);
 
@@ -56,7 +62,9 @@ int main(int argc, char* argv[])
     regrid (dim, m, n, aa);
 
     if (!sf_getbool ("adj",&adj)) adj=false;
+    /* if y, do adjoint operation */
     if (!sf_getbool ("div",&inv)) inv=false;
+    /* if y, do inverse operation (deconvolution) */
 
     nx = 1;
     for( i=0; i < dim; i++) {
@@ -90,5 +98,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-
+/* 	$Id: Mhelicon.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* Automatic picking from semblance-like panels.
+
+Takes: < semblance.rsf > pick.rsf
+*/
+
 #include <rsf.h>
 
 #include "tridiagonal.h"
@@ -23,8 +28,11 @@ int main(int argc, char* argv[])
     sf_putint(out,"n2",1);
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* Vertical smoothness parameter */
     if (!sf_getfloat("lam",&lam)) lam=0.01;
+    /* Horizontal smoothness parameter */
     if (!sf_getint("niter",&niter)) niter=1;
+    /* Number of picking iterations */
 
     slice = sf_floatalloc2(nt,ns);
     pick = sf_floatalloc(nt);
@@ -113,4 +121,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mblindpick.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* 2-D Fast Fourier Transform.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 int main (int argc, char **argv)
@@ -31,7 +36,9 @@ int main (int argc, char **argv)
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
+    /* if y, perform inverse transform */
     if (!sf_getbool("both",&both)) both = false;
+    /* if y, transform both axes */
 
     n3 = sf_leftsize(in,2);
 
@@ -191,3 +198,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
+/* 	$Id: Mfft2.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */

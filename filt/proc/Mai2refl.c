@@ -1,3 +1,8 @@
+/* 1-D convolution modeling.
+
+Takes: < ai.rsf > reflectivity.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -18,7 +23,8 @@ int main (int argc, char* argv[])
 
     n2 = sf_leftsize(ai,1);
 
-    if (!sf_getfloat ("f",&f)) f=40.; 
+    if (!sf_getfloat ("f",&f)) f=40.;
+    /* Peak frequency of Ricker wavelet */
     f *= SF_PI*dt;
 
     imp = sf_floatalloc (nt);
@@ -49,6 +55,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-
-
-
+/* 	$Id: Mai2refl.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */

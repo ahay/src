@@ -1,3 +1,8 @@
+/* Compute data envelope.
+
+Takes: < data.rsf > envelope.rsf
+*/
+
 #include <rsf.h>
 
 #include "triangle.h"
@@ -24,6 +29,7 @@ int main (int argc, char* argv[])
     nw = sf_npfa(n1);
      
     if (!sf_getbool("freq",&freq)) freq=false;
+    /* if y, compute instantenous frequency */
 
     data = sf_floatalloc(n1);
     cdat = sf_complexalloc (nw);
@@ -35,6 +41,7 @@ int main (int argc, char* argv[])
 
 	if (!sf_getint("tc1",&tc1)) tc1=1;
 	if (!sf_getint("tc2",&tc2)) tc2=1;
+	/* smoothing triangle size for instanteneous frequency (if freq=y) */
     
 	tr1 = triangle_init (tc1,n1);
 	tr2 = triangle_init (tc2,n2);
@@ -90,3 +97,5 @@ int main (int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: Menvelope.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */

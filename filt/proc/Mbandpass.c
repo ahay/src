@@ -1,3 +1,8 @@
+/* Bandpass filtering.
+
+Takes: < input.rsf > filtered.rsf
+*/
+
 #include <rsf.h>
 
 #include "butterworth.h"
@@ -24,6 +29,7 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (!sf_getfloat("flo",&flo)) {
+	/* Low frequency in band, default is 0 */
 	flo=0.;
     } else if (0. > flo) {
 	sf_error("Negative flo=%g",flo);
@@ -32,6 +38,7 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getfloat("fhi",&fhi)) {
+	/* High frequency in band, default is Nyquist */	
 	fhi=0.5;
     } else {
 	fhi *= d1;	
@@ -44,15 +51,19 @@ int main (int argc, char* argv[])
     }
 	   
     if (!sf_getint("nplo",&nplo)) nplo = 3;
+    /* number of poles for low cutoff */
     else if (nplo < 1)            nplo = 1;
     else if (nphi > 1)            nphi /= 2; 
 
     if (!sf_getint("nphi",&nphi)) nphi = 3;
+    /* number of poles for high cutoff */
     else if (nphi < 1)            nphi = 1;
     else if (nphi > 1)            nphi /= 2; 
 
     if (!sf_getbool("phase",&phase)) phase=false;    
+    /* y: minimum phase, n: zero phase */
     if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     if (verb) sf_warning("flo=%g fhi=%g nplo=%d nphi=%d",
 			 flo,fhi,nplo,nphi);
@@ -99,3 +110,5 @@ static void reverse (int n1, float* trace) {
 	trace[n1-1-i1]=t;
     }
 }
+
+/* 	$Id: Mbandpass.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Log stretch of the time axis (for use in F-K DMO and AMO).
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <math.h>
 #include <float.h>
 
@@ -20,9 +25,12 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_getbool("inv",&inv)) inv=false;    
+    if (!sf_getbool("inv",&inv)) inv=false;
+    /* if y, do inverse stretching */
     if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* smoothness parameter */
     if (!sf_getint("dens",&dens)) dens=1;
+    /* axis stretching factor */
 
     if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
     if (o1 < FLT_EPSILON) o1=FLT_EPSILON;
@@ -34,6 +42,7 @@ int main(int argc, char* argv[])
 
     if (!inv) {
 	if (!sf_getint("nout",&n)) n=dens*n1;
+	/* output axis length (if inv=n) */
 	sf_putint(out,"nin",n1);
 
 	o2 = logf (o1/t0);
@@ -70,6 +79,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-
-
+/* 	$Id: Mlogstretch.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
 

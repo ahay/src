@@ -87,3 +87,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mcosft.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+

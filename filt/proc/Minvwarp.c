@@ -1,3 +1,8 @@
+/* Invert a warping function.
+
+Takes: < warp.rsf > invwarp.rsf
+*/
+
 #include <rsf.h>
 
 #include "stretch.h"
@@ -30,6 +35,7 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o1",o2);
 
     if (!sf_getfloat("eps",&eps)) eps=0.01; 
+    /* Smoothness parameter */
 
     inp = sf_floatalloc (n1);
     outp = sf_floatalloc (n2);
@@ -59,3 +65,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
     
+/* 	$Id: Minvwarp.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */
+

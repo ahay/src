@@ -1,3 +1,8 @@
+/* Add random noise to the data.
+
+Takes: data.rsf > noisy,rsf
+*/
+
 #include <math.h>
 #include <time.h>
 
@@ -18,13 +23,16 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_getint("seed",&seed)) 
-	seed = time(NULL);
+    if (!sf_getint("seed",&seed)) seed = time(NULL);
+    /* random seed */
     srand(seed);
 
     if (!sf_getbool("type",&normal)) normal=true;
+    /* noise distribution, y: normal, n: uniform */
     if (!sf_getfloat("var",&var)) {
+	/* noise variance */
 	if (!sf_getfloat("range",&range)) {
+	    /* noise range (default=1) */
 	    a = 1.;
 	} else {
 	    a = normal? 2.*range/9. : 2.*range;
@@ -34,9 +42,11 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getfloat("mean",&mean)) mean=0;
+    /* noise mean */
     b = normal? mean: mean - 0.5*a;
 
     if (!sf_getbool("rep",&rep)) rep=false;
+    /* if y, replace data with noise */
 
     nbuf = BUFSIZ/sizeof(float);
     dat = sf_floatalloc (nbuf);
@@ -73,3 +83,5 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mnoise.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */

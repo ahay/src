@@ -1,3 +1,8 @@
+/* Fast Fourier Transform along the first axis.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 int main (int argc, char *argv[])
@@ -13,7 +18,9 @@ int main (int argc, char *argv[])
     out = sf_output("out");
 
     if (!sf_getbool("cos",&cos)) cos=false;
+    /* if y, perform cosine transform */
     if (!sf_getbool("inv",&inv)) inv=false;
+    /* if y, perform inverse transform */
     
     if (cos) {  
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -110,3 +117,5 @@ int main (int argc, char *argv[])
     
     exit (0);
 }
+
+/* 	$Id: Mfft1.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */

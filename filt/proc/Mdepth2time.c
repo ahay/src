@@ -1,3 +1,8 @@
+/* Comversion from depth to time in a V(z) medium.
+
+Takes: < indepth.rsf velocity=velocity.rsf > intime.rsf
+*/
+
 #include <rsf.h>
 
 #include "stretch.h"
@@ -29,22 +34,27 @@ int main (int argc, char *argv[])
     nx = sf_leftsize(in,1);
     
     if (!sf_getint ("nt",&nt)) {
+	/* Number of points in time (default is n1) */
 	nt = nz; 
     } else {
 	sf_putfloat(out,"n1",nt);
     }
     if (!sf_getfloat ("dt",&dt)) {
+	/* Time sampling (default is d1) */
 	dt = dz; 
     } else {
 	sf_putfloat(out,"d1",dt);
     }
     if (!sf_getfloat ("t0",&t0)) {
+	/* Time origin (default is 0) */
 	t0 = 0.; 
     } 
     sf_putfloat(out,"o1",t0);
 
     if (!sf_getbool ("slow",&slow)) slow = false;
+    /* y: slowness, n: velocity */
     if (!sf_getfloat ("eps",&eps)) eps = 0.01;
+    /* smoothness parameter */
 
     str = stretch_init (nt, t0, dt, nz, eps);
 
@@ -73,4 +83,6 @@ int main (int argc, char *argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mdepth2time.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* Multi-dimensional missing data interpolation.
+
+Takes: < input.rsf filt=filter.rsf > interpolated.rsf
+*/
+
 #include <rsf.h>
 
 #include "helix.h"
@@ -23,10 +28,14 @@ int main(int argc, char* argv[])
     sf_putint (out,"dim",dim);
 
     if (!sf_getbool("prec",&prec)) prec=true;
+    /* If y, use preconditioning */
     if (!sf_getint("niter",&niter)) niter=100;
+    /* Number of iterations */
 
-    if (!sf_getint("padin",&padin)) padin=0;   
+    if (!sf_getint("padin",&padin)) padin=0;
+    /* Pad beginning */
     if (!sf_getint("padout",&padout)) padout=0;
+    /* Pad end */
     n[dim-1] += padin + padout;
 
     if (!sf_histint(filt,"n1",&na)) sf_error("No n1= in filt");
@@ -41,6 +50,7 @@ int main(int argc, char* argv[])
     }
     if (NULL == (lagfile = sf_histstring(filt,"lag"))) {
 	if (NULL == (lagfile = sf_getstring("lag"))) {
+	    /* optional input file with filter lags */
 	    for (ia=0; ia < na; ia++) {
 		aa->lag[ia]=ia;
 	    }
@@ -97,6 +107,7 @@ int main(int argc, char* argv[])
     sf_read(mm+p1,sizeof(float),p2,in);
 
     if (NULL != sf_getstring("mask")) {
+	/* optional input mask file for known data */
 	mask = sf_input("mask");
 	sf_read(kk+p1,sizeof(float),p2,mask);
 	sf_fileclose(mask);
@@ -140,3 +151,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mmiss.c,v 1.5 2003/10/01 14:38:31 fomels Exp $	 */

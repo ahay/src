@@ -1,3 +1,8 @@
+/* FFT transform on the extra axis.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <rsf.h>
 
 int main (int argc, char **argv)
@@ -23,6 +28,7 @@ int main (int argc, char **argv)
     out = sf_output("out");
 
     if (!sf_getbool("inv",&inv)) inv = false;
+    /* if y, perform inverse transform */
 
     if (!sf_histint(in,"n1",&n1)) n1=1; 
     n3 = sf_leftsize(in,2);
@@ -102,3 +108,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
+/* 	$Id: Mfft3.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */

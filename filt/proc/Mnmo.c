@@ -1,3 +1,8 @@
+/* Normal moveout.
+
+Takes: < gather.rsf velocity=velocity.rsf offset=offset.rsf > nmod.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -26,7 +31,9 @@ int main (int argc, char* argv[])
     nx = sf_leftsize(cmp,1);
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
+    /* reference offset */
     if (!sf_getint("extend",&nw)) nw=4;
+    /* interpolation accuracy */
 
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
@@ -60,4 +67,6 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mnmo.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* 3-D dip estimation by plane wave destruction.
+
+Takes: < data.rsf > dip.rsf
+*/
+
 #include <rsf.h>
 
 #include "dip3.h"
@@ -24,21 +29,30 @@ int main (int argc, char *argv[])
     if (n3 > 1) sf_putint(out,"n4",2); 
 
     if (!sf_getint("niter",&niter)) niter=5;
+    /* number of iterations */
     if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps; 
+    /* vertical smoothness */
     if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
+    /* horizontal smoothness */
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
+    /* initial in-line dip */
     if (!sf_getfloat("q0",&q0)) q0=0.;
+    /* initial cross-line dip */
 
     if (!sf_getint("order",&nw)) nw=1;
+    /* [1,2,3] accuracy order */
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
     if (!sf_getint("nj1",&nj1)) nj1=1;
+    /* in-line antialiasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
-
+    /* cross-line antialiasing */
 
     if (!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
     if (!sf_getbool("sign",&sign)) sign = false;
+    /* if y, keep dip sign constant */
     
     /* initialize dip estimation */
     dip3_init(n1, n2, n3, eps, lam, sign);
@@ -75,3 +89,5 @@ int main (int argc, char *argv[])
     
     exit (0);
 }
+
+/* 	$Id: Mdip.c,v 1.2 2003/10/01 14:38:31 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Data binning in 2-D slices.
+
+Takes: < input.rsf head=header.rsf > binned.rsf
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -23,13 +28,17 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (NULL != (xk = sf_getstring("xk"))) {
+	/* x key name */
 	xkey = sf_segykey(xk);
     }  else if (!sf_getint("xkey",&xkey)) {
+	/* x key number (if no xk), default is sx */
 	xkey = sf_segykey("sx");
     }
     if (NULL != (yk = sf_getstring("yk"))) {
+	/* y key name */
 	ykey = sf_segykey(yk);
     }  else if (!sf_getint("ykey",&ykey)) {
+	/* y key number (if no yk), default is sy */
 	ykey = sf_segykey("sy");
     }
 
@@ -62,7 +71,9 @@ int main (int argc, char* argv[])
 
     /* create model */
     if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
+    /* Number of bins in x */
     if (!sf_getint ("ny",&ny)) sf_error("Need ny=");
+    /* Number of bins in y */
 
     sf_putint(out,"n1",nx);
     sf_putint(out,"n2",ny);
@@ -75,6 +86,7 @@ int main (int argc, char* argv[])
     sf_getfloat ("xmin",&xmin);
     sf_getfloat ("xmax",&xmax);
     sf_getfloat ("ymin",&ymin);
+    /* Grid dimensions */
     sf_getfloat ("ymax",&ymax);
 
     if (xmax <= xmin) sf_error ("xmax=%f <= xmin=%f",xmax,xmin);
@@ -82,16 +94,19 @@ int main (int argc, char* argv[])
 
     if (!sf_getfloat("x0",&x0)) x0=xmin; 
     if (!sf_getfloat("y0",&y0)) y0=ymin; 
+    /* grid origin */
 
     sf_putfloat (out,"o1",x0);
     sf_putfloat (out,"o2",y0);
 
     if (!sf_getfloat("dx",&dx)) {
+	/* bin size in x */
 	if (1 >= nx) sf_error("Need dx=");
 	dx = (xmax-xmin)/(nx-1);
     }
 
     if (!sf_getfloat("dy",&dy)) {
+	/* bin size in y */
 	if (1 >= nx) {
 	    dy = dx;
 	} else {
@@ -104,6 +119,7 @@ int main (int argc, char* argv[])
     
     /* initialize interpolation */
     if (!sf_getint("interp",&interp)) interp=1;
+    /* [1,2] interpolation method, 1: nearest neighbor, 2: bi-linear */
 
     switch (interp) {
 	case 1:
@@ -132,6 +148,7 @@ int main (int argc, char* argv[])
     int2_lop (true, false,nm,nd,count,dd);
  
     if (NULL != sf_getstring("fold")) {
+	/* output file for fold (optional) */ 
 	fold = sf_output("fold");
 	sf_putint(fold,"n1",nx);
 	sf_putint(fold,"n2",ny);
@@ -145,6 +162,7 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
+    /* clip for fold normalization */
 
     for (im=0; im<nm; im++) {
 	if (clip < count[im]) count[im]=1./fabsf(count[im]);
@@ -163,4 +181,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-
+/* 	$Id: Mbin.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */

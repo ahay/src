@@ -1,3 +1,8 @@
+/* 1-D inverse interpolation.
+
+Takes: < irregular.rsf head=header.rsf > regular.rsf
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -48,18 +53,22 @@ int main (int argc, char* argv[])
  
     /* create model */
     if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
+    /* number of bins */
 
     sf_putint(out,"n1",nx);
 
     /* let user overwrite */
     sf_getfloat ("xmin",&xmin);
+    /* grid size */
     sf_getfloat ("xmax",&xmax);
     if (xmax <= xmin) sf_error ("xmax=%f <= xmin=%f",xmax,xmin);
 
     if (!sf_getfloat("x0",&x0)) x0=xmin; 
+    /* grid origin */
     sf_putfloat (out,"o1",x0);
 
     if (!sf_getfloat("dx",&dx)) {
+	/* grid sampling */
 	if (1 >= nx) sf_error("Need dx=");
 	dx = (xmax-xmin)/(nx-1);
     }
@@ -67,6 +76,7 @@ int main (int argc, char* argv[])
     
     /* initialize interpolation */
     if (!sf_getint("interp",&interp)) interp=2;
+    /* [1,2] forward interpolation method, 1: nearest neighbor, 2: linear */
 
     switch (interp) {
 	case 1:
@@ -83,7 +93,9 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getint("filter",&filt)) filt=1;
+    /* filter type */
     if (!sf_getbool("prec",&prec)) prec=true;
+    /* if y, use preconditioning */
 
     if (!prec) {
 	filt++;
@@ -106,8 +118,11 @@ int main (int argc, char* argv[])
     dd = sf_floatalloc(nd);
 
     if (!sf_getint("niter",&niter)) niter=nx;
+    /* number of conjugate-gradient iterations */
     if (!sf_getfloat("eps",&eps)) eps=0.2;
+    /* regularization parameter */
     if (!sf_getbool("pef",&pef)) pef=false;
+    /* if y, use PEF for regularization */
  
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
@@ -155,4 +170,5 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
+/* 	$Id: Minvbin1.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */
 

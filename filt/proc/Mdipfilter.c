@@ -1,4 +1,4 @@
-/* Filter data based on dip.
+/* Filter data based on dip in 2-D or 3-D.
 
 Takes: < input.rsf > filtered.rsf
 */
@@ -121,4 +121,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mdipfilter.c,v 1.5 2003/09/30 02:40:02 fomels Exp $	 */
+/* 	$Id: Mdipfilter.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */

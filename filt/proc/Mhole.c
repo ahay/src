@@ -1,3 +1,8 @@
+/* Cut an elliptic hole in data (for interpolation tests).
+
+Takes: < data.rsf > punched.rsf maskout=mask.rsf
+*/
+
 #include <rsf.h>
 
 int main (int argc, char* argv[])
@@ -45,4 +50,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mhole.c,v 1.5 2003/10/01 14:38:31 fomels Exp $	 */
 

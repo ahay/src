@@ -1,3 +1,8 @@
+/* Data binning in 1-D slices.
+
+Takes: < input.rsf head=header.rsf > binned.rsf
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -38,18 +43,23 @@ int main (int argc, char* argv[])
  
     /* create model */
     if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
+    /* Number of bins */
 
     sf_putint(out,"n1",nx);
 
     /* let user overwrite */
     sf_getfloat ("xmin",&xmin);
+    /* grid dimensions */
     sf_getfloat ("xmax",&xmax);
+
     if (xmax <= xmin) sf_error ("xmax=%f <= xmin=%f",xmax,xmin);
 
     if (!sf_getfloat("x0",&x0)) x0=xmin; 
+    /* grid origin */
     sf_putfloat (out,"o1",x0);
 
     if (!sf_getfloat("dx",&dx)) {
+	/* grid spacing */
 	if (1 >= nx) sf_error("Need dx=");
 	dx = (xmax-xmin)/(nx-1);
     }
@@ -57,6 +67,7 @@ int main (int argc, char* argv[])
     
     /* initialize interpolation */
     if (!sf_getint("interp",&interp)) interp=1;
+    /* [1,2] interpolation method, 1: nearest neighbor, 2: linear */
 
     switch (interp) {
 	case 1:
@@ -84,6 +95,7 @@ int main (int argc, char* argv[])
     int1_lop (true, false,nx,nd,count,dd);
  
     if (NULL != sf_getstring("fold")) {
+	/* output fold file (optional) */
 	fold = sf_output("fold");
 	sf_putint(fold,"n1",nx);
 	sf_putint(fold,"n2",1);
@@ -94,6 +106,7 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
+    /* clip for fold normalization */
 
     for (ix=0; ix<nx; ix++) {
 	if (clip < count[ix]) count[ix]=1./fabsf(count[ix]);
@@ -112,4 +125,5 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
+/* 	$Id: Mbin1.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
 
