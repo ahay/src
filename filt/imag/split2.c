@@ -45,11 +45,11 @@ void split2_init(int nz1, float dz1 /* depth */,
 
     nx = nx1;
     dx = 2.0*SF_PI/(nx*dx1);
-    x0 = -SF_PI/dx1;
+    x0 = (1==nx)?0:-SF_PI/dx1;
 
     ny = ny1;
     dy = 2.0*SF_PI/(ny*dy1);
-    y0 = -SF_PI/dy1;
+    y0 = (1==ny)?0:-SF_PI/dy1;
 
     /* allocate workspace */
     pp  = sf_complexalloc2 (ny,nx);

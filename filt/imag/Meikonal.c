@@ -51,7 +51,7 @@ int main (int argc,char* argv[])
     if(!sf_histfloat(vel,"o3",&o3)) o3=0.;
 
     if(!sf_getbool("vel",&isvel)) isvel=true;
-    /* if y, the input is velocity; n, slowness */
+    /* if y, the input is velocity; n, slowness squared */
 
     if(!sf_getint("order",&order)) order=2;
     /* [1,2] Accuracy order */
