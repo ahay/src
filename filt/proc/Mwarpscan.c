@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
     sf_putfloat(warped,"o1",(0.5*w+1.)*d1);
     sf_putfloat(warped,"d1",(n2-w)*d1/(nw-1.));
 
-    window1_init (w,nw,n2,h);
+    window1_init (w,nw,n2,h,(n2-w)/(nw-1.));
 
     coord = sf_floatalloc (n2); 
     inp =   sf_floatalloc2 (n1,m2);
@@ -124,4 +124,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: Mwarpscan.c,v 1.4 2003/10/08 15:09:25 fomels Exp $	 */

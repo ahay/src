@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     win = sf_floatalloc (w);
     dat2 = sf_floatalloc (n);
   
-    window1_init (w,nw,n,h);
+    window1_init (w,nw,n,h,w-h);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_read (dat, sizeof(float), n, in);
@@ -70,4 +70,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow1.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: Mwindow1.c,v 1.5 2003/10/08 15:09:25 fomels Exp $	 */

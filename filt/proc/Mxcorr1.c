@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     warp = sf_floatalloc(n);
     xc = sf_floatalloc(nc);
   
-    window1_init (w,nw,n,h);
+    window1_init (w,nw,n,h,w-h);
     str = stretch2_init (n,1.,1.,nw,eps,lam);
 
     sf_read (dat[0],sizeof(float),n*n2,in);
@@ -92,4 +92,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mxcorr1.c,v 1.7 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: Mxcorr1.c,v 1.8 2003/10/08 15:09:25 fomels Exp $	 */
