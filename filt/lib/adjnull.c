@@ -23,6 +23,7 @@ void sf_adjnull (bool adj, bool add, int nx, int ny, float* x, float* y) {
     }
 }
 
+/* test */
 void sf_cadjnull (bool adj, bool add, int nx, int ny, 
 		  float complex* x, float complex* y) {
     int i;
