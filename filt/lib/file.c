@@ -133,10 +133,11 @@ sf_file sf_output (/*@null@*/ char* tag)
 	    sf_error ("%s: Cannot write to header file %s:",__FILE__,headname);
     }
 /*    setbuf(file->stream,file->buf); */
-    
+
     file->pars = sf_simtab_init (tabsize);
 
     dataname = sf_getstring("out");
+
     if (NULL == dataname) {
 	path = getdatapath();
 	if (NULL == path) 
@@ -160,7 +161,6 @@ sf_file sf_output (/*@null@*/ char* tag)
 		sf_error ("%s: Cannot make a pipe %s:",
 			  __FILE__,file->dataname);
 	} 
-	
     } else {
 	namelen = strlen(dataname)+1;
 	file->dataname = sf_charalloc (namelen);

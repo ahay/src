@@ -1,6 +1,46 @@
 import pydoc
 import re, sys, os, string
 
+progs = {}
+
+docmerge = '''echo "import os, sys" > $TARGET
+echo "sys.path.append(os.environ.get('RSFROOT'))" >> $TARGET
+echo "import rsfdoc" >> $TARGET
+echo "" >> $TARGET
+cat $SOURCES >> $TARGET'''
+
+def merge(target=None,source=None,env=None):
+    sources = map(str,source)
+    local_include = re.compile(r'\s*\#include\s*\"([\w\.]+)')
+    includes = []
+    for src in sources:
+        if src in includes:
+            continue
+        inp = open(src,'r')
+        for line in inp.readlines():
+            match = local_include.match(line)            
+            if match:
+                other = match.group(1)
+                if not other in includes:
+                    includes.append(os.path.join(os.path.dirname(src),other))
+        inp.close()
+        includes.append(src)
+    out = open(str(target[0]),'w')
+    for src in includes:
+        inp = open(src,'r')
+        for line in inp.readlines():
+            if not local_include.match(line):
+                out.write(line)
+        inp.close()
+    out.close()
+    return 0
+
+def selfdoc(target=None,source=None,env=None):
+    src = str(source[0])
+    doc = open(str(target[0]),"w")
+    getprog(src,doc)
+    doc.close()
+
 def bold(text):
     """Format a string in bold by overstriking."""
     return string.join(map(lambda ch: ch + "\b" + ch, text),'')
@@ -132,7 +172,7 @@ def getprog(file,out):
             cmts = string.lstrip(info.group(2))
             prog.synopsis(snps,cmts)
             out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,cmts))
-    out.write("rsfprog['%s']=%s\n\n" % (name,name))
+    out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
 
 if __name__ == "__main__":
     junk = open('junk.py',"w")

@@ -1,29 +1,43 @@
+import os, sys
+
 progs = """
 add attr cat cmplx cp dd disfil get headermath headersort
 imag in interleave log mask math merge mv pad real reverse rm 
 rtoc scale segyread segywrite spike spray stack transp window
 """
+root = os.environ.get('RSFROOT') or '../..'
+bindir = os.path.join(root,'bin')
+libdir = os.path.join(root,'lib')
+incdir = os.path.join(root,'include')
 
-env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g',
-                  CPPPATH='../rsf',
-                  LIBPATH='../rsf',
-                  LIBS=['rsf','m'],
-                  PROGPREFIX='sf')
-
-bindir = '../../bin'
+try:
+    Import('env')
+except:
+    env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g',
+                      CPPPATH=incdir,
+                      LIBPATH=libdir,
+                      LIBS=['rsf','m'],
+                      PROGPREFIX='sf')
+    env.Alias('install',[bindir,libdir])
 
 mains = Split(progs)
 map(lambda prog: env.Program(prog + '.c'),mains)
 
 env.Install(bindir,map(lambda prog: 'sf' + prog,mains))
-Default(bindir)
 
-try:
-    Import('env')
-    
-    docs = map(lambda prog: env.Doc(prog),mains)
-    env.Command('RSFdoc',docs,"cat $SOURCES > $TARGET")
-except:
-    pass
-    
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+sys.path.append(libdir)
+from rsfdoc import selfdoc, docmerge
 
+Doc = Builder (action = Action(selfdoc),src_suffix='.c',suffix='.py')
+env.Append(BUILDERS = {'Doc' : Doc})
+
+main = 'sfmain.py'
+    
+docs = map(lambda prog: env.Doc(prog),mains)
+doc = env.Command(main,docs,docmerge)
+env.Install(libdir,doc)
+Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+#####################################################################

@@ -6,7 +6,6 @@ DOCUMENTATION
 	manual
 SEIS
 	splint
-	python interface
 	fortran interface
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
