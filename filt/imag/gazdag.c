@@ -3,7 +3,6 @@
 #include <rsf.h>
 
 #include "gazdag.h"
-#include "pfafft.h"
 
 static float eps, dt, dz, *vt, dw, fw;
 static int nt, nz, nw;
@@ -18,9 +17,9 @@ void gazdag_init (float eps1, int nt1, float dt1,
     vt = vt1;
 
     /* determine frequency sampling */
-    nw = npfa(nt);
-    dw = 2.0*PI/(nw*dt);
-    fw = -PI/dt;
+    nw = sf_npfa(nt);
+    dw = 2.0*SF_PI/(nw*dt);
+    fw = -SF_PI/dt;
     
     /* allocate workspace */
     pp = sf_complexalloc (nw);
@@ -55,9 +54,9 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	    }
 	}
 
-	pfacc(1,nw,pp);
-	for (it=0; it<nt; it++) {
-	    p[it] = (it%2 ? -pp[it] : pp[it]);
+	sf_pfacc(1,nw,pp);
+	for (it=0; it<nt; it += 2) {
+	    pp[it] = -pp[it];
 	}
     } else { /* migration */
 	/* pad with zeros and Fourier transform t to w, with w centered */
@@ -68,7 +67,7 @@ void gazdag (bool inv, float k2, float complex *p, float complex *q)
 	for (it=nt; it<nw; it++) {
 	    pp[it] = 0.0;
 	}
-	pfacc(-1,nw,pp);
+	sf_pfacc(-1,nw,pp);
     
 	/* loop over migrated times z */
 	for (iz=0; iz<nz; iz++) {

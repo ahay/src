@@ -1,6 +1,5 @@
 #include <rsf.h>
 
-#include "pfafft.h"
 #include "gazdag.h"
 
 int main (int argc, char *argv[])
@@ -86,9 +85,9 @@ int main (int argc, char *argv[])
     }
 
     /* determine wavenumber sampling (for real to complex FFT) */
-    nxfft = npfar(nx);
+    nxfft = sf_npfar(nx);
     nk = nxfft/2+1;
-    dk = 2.0*PI/(nxfft*dx);
+    dk = 2.0*SF_PI/(nxfft*dx);
 	
     /* allocate space */
     p = sf_floatalloc2(nt,nxfft);
@@ -106,7 +105,7 @@ int main (int argc, char *argv[])
 	    }
 	}
     
-	pfa2rc(-1,2,nz,nxfft,q[0],cq[0]);
+	sf_pfa2rc(-1,2,nz,nxfft,q[0],cq[0]);
     } else {
 	sf_read(p[0],sizeof(float),nt*nx,in);
     
@@ -117,7 +116,7 @@ int main (int argc, char *argv[])
 	    }
 	}
     
-	pfa2rc(-1,2,nt,nxfft,p[0],cp[0]);
+	sf_pfa2rc(-1,2,nt,nxfft,p[0],cp[0]);
     }
 
     gazdag_init(eps,nt,dt,nz,dz,vt);
@@ -133,7 +132,7 @@ int main (int argc, char *argv[])
 
     if (inv) {
 	/* Fourier transform k to x (including FFT scaling) */
-	pfa2cr(1,2,nt,nxfft,cp[0],p[0]);
+	sf_pfa2cr(1,2,nt,nxfft,cp[0],p[0]);
 	for (ix=0; ix<nx; ix++) {
 	    for (it=0; it<nt; it++) {
 		p[ix][it] /= nxfft;
@@ -143,7 +142,7 @@ int main (int argc, char *argv[])
 	sf_write (p[0],sizeof(float),nt*nx,out);
     } else {
 	/* Fourier transform k to x (including FFT scaling) */
-	pfa2cr(1,2,nz,nxfft,cq[0],q[0]);
+	sf_pfa2cr(1,2,nz,nxfft,cq[0],q[0]);
 	for (ix=0; ix<nx; ix++) {
 	    for (iz=0; iz<nz; iz++) {
 		q[ix][iz] /= nxfft;

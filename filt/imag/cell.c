@@ -213,13 +213,13 @@ float cell_p2a (float* p)
 	    if (p[1] >= 1.) {
 		a = asinf(1.);
 	    } else {
-		a = acosf(-1.) - asinf(p[1]);
+		a = SF_PI - asinf(p[1]);
 	    }
 	} else {
 	    if (p[1] <= -1.) {
 		a = asinf(-1.);
 	    } else {
-		a = -acosf(-1.) - asinf(p[1]);
+		a = -SF_PI - asinf(p[1]);
 	    }
 	}
     }

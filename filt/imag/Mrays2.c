@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
     bool velocity;
     int is, n[2], im, nm, order, nshot, ndim;
     int nt, nt1, nr, ir, it, i;
-    float dt, da, a0, amax, pi, v0;
+    float dt, da, a0, amax, v0;
     float x[2], p[2], d[2], o[2], **traj, *slow, **s, *a;
     raytrace rt;
     sf_file shots, vel, rays, angles;
@@ -68,9 +68,8 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("amax",&amax)) amax=360.;
 
 	/* convert degrees to radians */
-	pi = acosf (-1.);
-	a0 = a0*pi/180.;
-	amax = amax*pi/180.;
+	a0 = a0*SF_PI/180.;
+	amax = amax*SF_PI/180.;
 
 	/* figure out angle spacing */
 	da = (nr > 1)? (amax - a0)/(nr-1) : 0.;
