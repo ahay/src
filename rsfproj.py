@@ -437,11 +437,7 @@ class Project(Environment):
                 pars.insert(0,command)
                 substeps.append(string.join(pars,' '))
             #<-
-            if sys.platform[:6] == 'cygwin':
-                # cygwin cannot handle named pipes
-                steps.append(string.join(substeps," out=stdout | "))
-            else:
-                steps.append(string.join(substeps," | "))
+            steps.append(string.join(substeps," | "))
         #<- assemble the pipeline
         command = string.join(steps," ;\n")
         if stdout==1:
@@ -548,4 +544,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.40 2004/07/02 10:05:32 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.41 2004/07/02 11:54:02 fomels Exp $	
