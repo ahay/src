@@ -30,7 +30,7 @@ static char buf[BUFSIZ], buf2[BUFSIZ];
 void oc_invert(size_t n, FILE *wall)
 /*< write out 1/wall >*/
 {
-    int i, nleft;
+    size_t i, nleft;
     float *fbuf;
 
     fbuf = (float *) buf;
@@ -51,7 +51,7 @@ void oc_invert(size_t n, FILE *wall)
 void oc_zero (size_t n, FILE *wall) 
 /*< set wall=0 >*/
 {
-    int nleft;
+    size_t nleft;
 
     memset(buf,0,BUFSIZ);
     if (0 != fseek(wall,0L,SEEK_SET))
@@ -66,7 +66,7 @@ void oc_zero (size_t n, FILE *wall)
 void oc_dump (size_t n, FILE *wall, sf_file out) 
 /*< write wall to out >*/
 {
-    int nleft;
+    size_t nleft;
     float *fbuf;
     
     fbuf = (float *) buf;
@@ -84,7 +84,7 @@ void oc_dump (size_t n, FILE *wall, sf_file out)
 void oc_divide (size_t n, FILE *data, FILE *wall, sf_file out) 
 /*< write data/wall to out >*/
 {
-    int nleft, i, nfloat;
+    size_t nleft, i, nfloat;
     float *fbuf, *fbuf2;
     
     fbuf = (float *) buf;
@@ -108,4 +108,3 @@ void oc_divide (size_t n, FILE *data, FILE *wall, sf_file out)
 	sf_floatwrite(fbuf2,nfloat,out);
     }
 }
-
