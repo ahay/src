@@ -21,9 +21,6 @@ int main (void)
     vp_umove(   0., 9.5);       
     vp_udraw( 0., 9.5-tmax);
 
-    vp_umove(   0., 9.5);       
-    vp_udraw( 0., 9.5-tmax);
-
     vp_color(5);
     vp_utext( xmax-.35, 9.5-.45, 12, 0, "x");
     vp_utext( .25     ,  .2    , 12, 0, "t");
@@ -38,7 +35,7 @@ int main (void)
 	    it = t / dt;
 	    t = t0+it*dt;
       
-	    for (i = (it< itlast)? it: itlast; i < it; i++) {
+	    for (i = (it< itlast+1)? it: itlast+1; i <= it; i++) {
 		t = t0+i*dt;
 		if( t < tmax ) {
 		    onebox(  x, 9.5-t, dx/2, dt/2 );
