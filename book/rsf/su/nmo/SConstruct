@@ -1,0 +1,15 @@
+from rsfproj import *
+
+Flow('model',None,
+     '''
+     spike n1=100 d1=80 n2=4 nsp=4 k2=1,2,3,4 mag=1000,2200,3500,5000 |
+     unif2 n1=110 d1=50 v00=5000,6000,8000,10000,15000
+     ''')
+Result('model','model',
+       '''
+       grey color=j allpos=y title="Model" wantscalebar=y
+       barlabel="Velocity (ft/s)" label1="Depth (ft)" label2="Lateral (ft)"
+       barreverse=y pclip=100
+       ''')
+
+End()
