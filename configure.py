@@ -142,9 +142,15 @@ def intel(context):
 def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('CC','The C compiler')
-    opts.Add('CCFLAGS','General options that are passed to the C compiler','-O2')
+    opts.Add('CCFLAGS','General options that are passed to the C compiler',
+             '-O2')
     opts.Add('CPPPATH',
              'The list of directories that the C preprocessor will search')
+    opts.Add('LIBPATH',
+             'The list of directories that will be searched for libraries')
+    opts.Add('LIBS',
+             'The list of libraries that will be linked with executables')
+    opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
     opts.Add('F77','The Fortran-77 compiler')
     opts.Add('F77FLAGS','General options that are passed to the F77 compiler',
              '-O2')
@@ -154,4 +160,36 @@ def options(opts):
              '-O2')
     opts.Add('CFORTRAN90','Type of the Fortran-90 compiler (for cfortran.h)')
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
-    opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
+
+def merge(target=None,source=None,env=None):
+    sources = map(str,source)
+    local_include = re.compile(r'\s*\#include\s*\"([\w\.]+)')
+    includes = []
+    for src in sources:
+        if src in includes:
+            continue
+        inp = open(src,'r')
+        for line in inp.readlines():
+            match = local_include.match(line)            
+            if match:
+                other = match.group(1)
+                if not other in includes:
+                    includes.append(os.path.join(os.path.dirname(src),other))
+        inp.close()
+        includes.append(src)
+    out = open(str(target[0]),'w')
+    for src in includes:
+        inp = open(src,'r')
+        for line in inp.readlines():
+            if not local_include.match(line):
+                out.write(line)
+        inp.close()
+    out.close()
+    return 0
+
+docmerge = '''echo "import os, sys" > $TARGET
+echo "sys.path.append(os.environ.get('RSFROOT'))" >> $TARGET
+echo "import rsfdoc" >> $TARGET
+echo "" >> $TARGET
+cat $SOURCES >> $TARGET'''
+

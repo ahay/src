@@ -1,5 +1,5 @@
-import os, sys
-import configure
+import os, sys, string
+import configure, rsfdoc
 
 here = os.getcwd()
 root = os.environ.setdefault('RSFROOT',here)
@@ -10,6 +10,10 @@ incdir = os.path.join(root,'include')
 
 env = Environment()
 
+##########################################################################
+# CONFIGURATION
+##########################################################################
+
 opts = Options('config.py')
 configure.options(opts)
 opts.Add('RSFROOT','RSF installation root',root)
@@ -19,36 +23,46 @@ if not os.path.isfile('config.py'):
     conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
     conf.CheckAll()
     env = conf.Finish()
-
+    
 Help(opts.GenerateHelpText(env))
 opts.Save('config.py',env)
 
 config = env.Command('config.py','configure.py',"")
 env.Precious(config)
-env.Alias('config',config)
 env.InstallAs(os.path.join(libdir,'rsfconfig.py'),'config.py')
 Clean(config,['#/config.log','#/.sconf_temp'])
+env.Alias('config',config)
 
 ##########################################################################
-# DOCUMENTATION
+# PYTHON MODULES
 ##########################################################################
 for src in ('doc','proj','prog'):
     py = "rsf%s.py"% src
     env.Install(libdir,py)
     Clean(os.path.join(libdir,py),os.path.join(libdir,py+'c'))
 env.Install(bindir,'sfdoc')
+
 ##########################################################################
+# SELF DOCUMENTATION
+##########################################################################
+Doc = Builder (action = Action(rsfdoc.selfdoc),src_suffix='.c',suffix='.py')
+env.Append(BUILDERS = {'Doc' : Doc})
+
+##########################################################################
+# MAIN BUILD
+##########################################################################
+env.Append(CPPPATH=['../../include'],
+           LIBPATH=['../../seis/rsf','../../vplot/lib'],
+           LIBS=['rsfplot','rsf','m'])
 
 Export('env')
 libdirs = ['seis/rsf','vplot/lib']
-libdirs = ['seis/rsf']
 progdirs = ['seis/main','seis/proc','seis/imag','vplot/main']
 
-BuildDir('seisrsf','seis/rsf')
-SConscript(dirs='seisrsf',name='SConstruct')
-#SConscript(dirs=libdirs,name='SConstruct')
-#SConscript(dirs=progdirs,name='SConstruct')
+for dir in libdirs+progdirs:
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
 
 env.Alias('install',[bindir,libdir,incdir])
-Default(libdirs+progdirs)
-

@@ -3,38 +3,6 @@ import re, sys, os, string
 
 progs = {}
 
-docmerge = '''echo "import os, sys" > $TARGET
-echo "sys.path.append(os.environ.get('RSFROOT'))" >> $TARGET
-echo "import rsfdoc" >> $TARGET
-echo "" >> $TARGET
-cat $SOURCES >> $TARGET'''
-
-def merge(target=None,source=None,env=None):
-    sources = map(str,source)
-    local_include = re.compile(r'\s*\#include\s*\"([\w\.]+)')
-    includes = []
-    for src in sources:
-        if src in includes:
-            continue
-        inp = open(src,'r')
-        for line in inp.readlines():
-            match = local_include.match(line)            
-            if match:
-                other = match.group(1)
-                if not other in includes:
-                    includes.append(os.path.join(os.path.dirname(src),other))
-        inp.close()
-        includes.append(src)
-    out = open(str(target[0]),'w')
-    for src in includes:
-        inp = open(src,'r')
-        for line in inp.readlines():
-            if not local_include.match(line):
-                out.write(line)
-        inp.close()
-    out.close()
-    return 0
-
 def selfdoc(target=None,source=None,env=None):
     src = str(source[0])
     doc = open(str(target[0]),"w")
