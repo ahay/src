@@ -15,5 +15,5 @@ sf%: %.c ${RSF}/rsf.h ${RSF}/librsf.a \
 	${CC} ${CFLAGS} $*.c ${LDFLAGS} -o $@
 
 clean:
-	touch sfjunk junk.H junk.lint junklint 
-	rm sf* *.H *.lint junklint
+	touch sfjunk junk.H junk.v junk.lint junklint 
+	rm sf* *.H *.v *.lint junklint
