@@ -3,8 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-angle angle2 green ofilp pick0 tree warpadd ztrace warp1 warpscan warpscan2
-window1 window2 window3
+angle angle2 green ofilp pick0 tree warpadd ztrace window1 window2 window3
 '''
 
 try:  # distributed version
