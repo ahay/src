@@ -9,8 +9,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 #include "triangle.h"
 
-static int first_index (int i, int j, int dim, const int *n, const int *s);
-
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
@@ -59,7 +57,7 @@ int main (int argc, char* argv[])
 	    if (rect[i] <= 1) continue;
 	    tr = triangle_init (rect[i],n[i]);
 	    for (j=0; j < n1/n[i]; j++) {
-		i0 = first_index (i,j,dim1+1,n,s);
+		i0 = sf_first_index (i,j,dim1+1,n,s);
 		for (irep=0; irep < nrep; irep++) {
 		    smooth (tr,i0,s[i],diff[i],data);
 		}
@@ -71,20 +69,4 @@ int main (int argc, char* argv[])
     }    
 
     exit (0);
-}
-
-static int first_index (int i, int j, int dim, const int *n, const int *s)
-{
-    int i0, n123, k, ii;
-
-    n123 = 1;
-    i0 = 0;
-    for (k=0; k < dim; k++) {
-	if (k == i) continue;
-	ii = (j/n123)%n[k]; /* to cartesian */
-	n123 *= n[k];	
-	i0 += ii*s[k];      /* back to line */
-    }
-
-    return i0;
 }

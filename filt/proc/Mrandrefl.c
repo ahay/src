@@ -117,12 +117,18 @@ int main (int argc, char* argv[])
     for (it=0; it < nr; it++) {
 	tmean[it]=ts[it]-0.5*dtpp[it];
 	switch (func[0]) {
-	    case 'h':
+	    case 'h': /* Hamilton */
 		p2ss[it]=1./(0.12+(0.5*tmean[it]));
 		break;
-	    case 'c':
-	    default:
+	    case 's': /* sinusoid */
+		p2ss[it]=2.+0.2*cosf(2.*SF_PI*tmean[it]);
+		break;
+	    case 'c': /* constant */
 		p2ss[it]=2.;
+		break;
+	    default:
+		sf_error("Unknown case %s",func);
+		break;
 	}
     }
 

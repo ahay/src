@@ -6,10 +6,10 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2, i3, iw, n, nfft, nw, dim;
-    float o1, d1, *data, *data2, m1, a1, m2, a2, dw, f;
-    float complex *cdata, *cdata2;
+    float o1, d1, *data, *data2=NULL, m1, a1, m2, a2, dw, f;
+    float complex *cdata, *cdata2=NULL;
     char key[5];
-    sf_file in, in2, ma, ma2, out, out2;
+    sf_file in, in2, ma, ma2, out, out2=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");

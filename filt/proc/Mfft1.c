@@ -15,12 +15,14 @@ int main (int argc, char *argv[])
     if (!sf_getbool("cos",&cos)) cos=false;
     if (!sf_getbool("inv",&inv)) inv=false;
     
-    if (cos || !inv) {  
+    if (cos) {  
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-	if (!cos) sf_settype (out,SF_COMPLEX);
-    } else {
+    } else if (inv) {
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-	if (!cos) sf_settype (out,SF_FLOAT);
+	sf_settype (out,SF_FLOAT);
+    } else {
+	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    	sf_settype (out,SF_COMPLEX);
     }
 
     n2 = sf_leftsize(in,1);
@@ -98,7 +100,7 @@ int main (int argc, char *argv[])
 
 	    sf_pfacr(-1,nt,pp,p);
 
-	    for (i1=0; i1 < nt; i1++) {
+	    for (i1=0; i1 < n1; i1++) {
 		p[i1] /= nt;
 	    }
 

@@ -2,8 +2,8 @@
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, n2, i, nf, *fix1, *fix2;
-    float **dat, **old, *fix;
+    int i1, n1, i2, n2, i, nf, *fix1=NULL, *fix2=NULL;
+    float **dat, **old, *fix=NULL;
     sf_file in, out;
 
     sf_init (argc, argv);
