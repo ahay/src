@@ -152,6 +152,8 @@ void dip3(int dip    /* 1 - inline, 2 - crossline */,
 	    lam *= 0.5;
 	}
     } /* iter */
+
+    free(ap);
 }
 
 /* 	$Id$	 */

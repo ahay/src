@@ -1013,10 +1013,10 @@ void sf_seek (sf_file file, off_t offset, int whence)
 	sf_error ("%s: seek problem:",__FILE__);
 }
 
-void sf_unpipe (sf_file file, size_t size) 
+void sf_unpipe (sf_file file, off_t size) 
 /*< Redirect a pipe input to a direct access file >*/
 {
-    size_t nbuf, len;
+    off_t nbuf, len;
     char *dataname=NULL;
     FILE* tmp;
     char buf[BUFSIZ];

@@ -36,7 +36,7 @@ int main (int argc, char *argv[])
 {
     int w123,p123,n123, niter, order, nj1,nj2, i,j, liter, mem,memsize, ip,iw;
     int n[3], rect[3], nw[3], w[3], n4; 
-    size_t nall;
+    off_t nall;
     float p0, q0, *u, *p, win, *tent, *tmp;
     char key[3], *dipname, *wallname;
     bool verb, sign, *m1, *m2;

@@ -37,7 +37,7 @@ void ocmkwallwt(bool inv      /* if compute 1/weight */,
 /*< make wall weight >*/
 {
     int j, iw, ip, np, nw;
-    size_t n;
+    off_t n;
     float *tmp;
     
     np = 1; 
