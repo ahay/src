@@ -1,0 +1,39 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+Book()
+
+midpts = 'ftp://begpc132.beg.utexas.edu/data/midpts'
+Fetch('midpts.HH',midpts)
+
+Flow('cdp','midpts.HH','window n3=1 j1=2 | dd data_format=native_float')
+Flow('mutter','cdp','mutter half=n v0=1.4') 
+
+Flow('vscan','mutter','vscan half=n v0=1.3 nv=81 dv=0.02 semblance=y')
+Flow('vrms','vscan','blindpick eps=0.5')
+
+cases = ['cdp','mutter']
+nmos = []
+
+clip=4141100
+
+for case in cases:
+    nmo = 'nmo'+case
+    nmos.append(nmo)
+    
+    Plot(case,case,'window n1=300 | grey wanttitle=n')
+    Flow(nmo,[case,'vrms'],'nmo half=n velocity=${SOURCES[1]}')
+    Plot(nmo,nmo,'grey wanttitle=n clip=%g' % clip)
+        
+Combine('mutter',cases,'SideBySideAniso',result=1,vppen='txscale=1.5')
+Combine('nmogath',nmos,'SideBySideAniso',result=1,vppen='txscale=1.5')
+
+###########################################################################
+End()
