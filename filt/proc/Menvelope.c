@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
 {
     bool hlb;
     int n1,n2, i1,i2, n;
-    float *data, *hilb, c;
+    float *data, *hilb, c, a;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -46,6 +46,10 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("hilb",&hlb)) hlb=false;
     /* if y, compute Hilbert transform */
+    
+    if (hlb && !sf_getfloat("phase",&a)) a=90.;
+    /* phase shift (in degrees) to use with hilb=y */
+    a *= SF_PI/180.;
 
     hilbert_init(n1, n, c);
 
@@ -56,6 +60,10 @@ int main (int argc, char* argv[])
 	if (!hlb) {
 	    for (i1=0; i1 < n1; i1++) {
 		hilb[i1] = hypotf(data[i1],hilb[i1]);
+	    }
+	} else {
+	    for (i1=0; i1 < n1; i1++) {
+		hilb[i1] = data[i1]*cosf(a) + hilb[i1]*sinf(a);
 	    }
 	}
 
