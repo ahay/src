@@ -1,6 +1,11 @@
 grey:
+	min-max window
 	multipanel files
 	gainpanel=number
 	m's in the beginning
 	scalebar
 	grid
+wiggle
+cubeplot
+thplot
+

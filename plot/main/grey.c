@@ -10,7 +10,7 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias;
-    float pbias, gain, xll, yll, xur, yur, **data;
+    float pbias, gain, x1, y1, x2, y2, **data, f;
     bool transp, yreverse, xreverse, allpos, polarity;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp;
@@ -86,10 +86,26 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("bias",&pbias)) pbias=0.; 
     if (!sf_getbool("polarity",&polarity)) polarity=false;
 
-    vp_stdplot_init (o1-0.5*d1, o1+(n1-1)*d1+0.5*d1, 
-		     o2-0.5*d2, o2+(n2-1)*d2+0.5*d2,
-		     transp, false, yreverse, false);
+    x1 = o1-0.5*d1;
+    x2 = o1+(n1-1)*d1+0.5*d1;
+    y1 = o2-0.5*d2;
+    y2 = o2+(n2-1)*d2+0.5*d2;
+
+    vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
     vp_frame_init(in,"tlb");
+
+    if (transp) {
+	f=x1; x1=y1; y1=f;
+	f=x2; x2=y2; y2=f;
+    }
+
+    if (yreverse) {
+	f=y1; y1=y2; y2=f;
+    }
+
+    if (xreverse) {
+	f=x1; x1=x2; x2=f;
+    }
 
     data = sf_floatalloc2(n1,n2);
     buf = sf_ucharalloc2(n1,n2);
@@ -172,12 +188,10 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	vp_minmax (&xll,&yll,&xur,&yur);
-
+	vp_frame(); 
 	vp_uraster (buf, false, 256, n1, n2, 
-		    xll, yll, xur, yur, orient);
-  
-	vp_frame();
+		    x1, y1, x2, y2, orient);
+	vp_simpleframe();
 	vp_purge(); 
     } 
 
