@@ -141,8 +141,8 @@ Result('hinter','inter0 inter2','OverUnderAniso')
 #
 #############################################################################
 
-Flow('Warp3','Warp','spray axis=3 n=81 o=20 d=1')
-Flow('wcube0',['s2cube','s1cube','Warp3'],
+Flow('Wwarp3','Warp','spray axis=3 n=81 o=20 d=1')
+Flow('wcube0',['s2cube','s1cube','Wwarp3'],
      'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} verb=1 nliter=0')
 
 ####################################################################
@@ -176,7 +176,7 @@ Flow('pick3',['scan3','time3','mask3'],
 Flow(['wcube','warp3'],
      ['wcube0','s1cube','pick3'],
      warp1(2,50,100,100))
-Flow('wwarp','warp3 Warp3','warpadd add=${SOURCES[1]}')
+Flow('wwarp','warp3 Wwarp3','warpadd add=${SOURCES[1]}')
 
 Flow('frac','wwarp',
      '''
