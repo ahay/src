@@ -1,6 +1,34 @@
+/* Basic interpolation functions */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include "interp.h"
 
+#ifndef _interp_h
+
+typedef void (*interpolator)(float,int,float*);
+/* generic interpolation interface */
+/*^*/
+
+#endif
+
 void bin_int (float x, int n, float* w) 
+/*< nearest neighbor >*/
 {
   int i;
 
@@ -9,8 +37,9 @@ void bin_int (float x, int n, float* w)
   for (i = 1; i < n; i++)
       w[i] = 0.;
 }
-    
+
 void lin_int (float x, int n, float* w) 
+/*< linear >*/
 {
     int i;
     
@@ -25,6 +54,7 @@ void lin_int (float x, int n, float* w)
 }
 
 void lg_int (float x, int n, float* w) 
+/*< Lagrangian >*/
 {
     int i, j, nc;
     float f, xi;
@@ -40,6 +70,4 @@ void lg_int (float x, int n, float* w)
     }
 }
 
-  
 /* 	$Id$	 */
-
