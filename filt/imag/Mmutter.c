@@ -14,6 +14,7 @@ The weight is one  for t >  tp + (x-x0) * slopep
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i2,i3, CDPtype;
+    bool abs;
     float tp, slope0, slopep, o1,d1,o2,d2,d3, x,x0,x1, *data;
     sf_file in, out;
 
@@ -42,9 +43,12 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("slopep",&slopep)) slopep=slope0;
     if (!sf_getfloat("x0",&x1)) x1=0.;
 
+    if (!sf_getbool("abs",&abs)) abs=true;
+    /* if y, use absolute value |x-x0| */
+
     data = sf_floatalloc(n1);
 
-    mutter_init(n1,o1,d1);
+    mutter_init(n1,o1,d1,abs);
 
     for (i3=0; i3 < n3; i3++) { 
 	x0= o2 + (d2/CDPtype)*(i3%CDPtype) - x1;
@@ -61,4 +65,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mmutter.c,v 1.4 2004/03/27 03:29:18 fomels Exp $	 */
