@@ -1,0 +1,34 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+Book()
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
+data = 'wz.24.H'
+
+Fetch(data,datdir)
+
+Flow('data',data,
+     '''
+     dd data_format=native_float |
+     window n1=400 n2=24 j1=2 |
+     tpow tpow=2 |
+     reverse which=2
+     ''')
+Flow('nmo','data','nmostretch v0=1.44 half=n')
+
+Plot('data','data','grey wanttitle=n labelsz=12')
+Plot('nmo','nmo','grey wanttitle=n labelsz=12')
+Combine('stretch','data nmo','SideBySideAniso',result=1)
+
+###########################################################################
+End()
+
+

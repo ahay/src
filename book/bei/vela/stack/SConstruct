@@ -1,0 +1,31 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+Book()
+
+Flow('model',None,
+     '''
+     spike n1=200 k1=50 n2=1 |
+     boxsmooth rect1=20
+     ''')
+Flow('empty','model','scale dscale=0')
+Flow('data','model','imospray n2=20 d2=0.1 o2=-1. v=1.5')
+Flow('stack','data','imospray inv=y niter=0 v=1.5')
+
+images = ['model','empty','data','empty','stack']
+labels = "Model:::::::Synthe-:tic data:::::::::::::::Stack"
+
+Result('stack',images,
+       '''cat axis=2 ${SOURCES[1:%d]} |
+       dots dots=0 yreverse=1 gaineach=0 labels="%s" overlap=1.85
+       ''' % (len(images),labels))
+
+###########################################################################
+End()

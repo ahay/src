@@ -1,0 +1,53 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+Book()
+
+Flow('model',None,
+     '''
+     spike n1=201 d1=0.02 k1=20,40,60,80,121,141,161,181
+     mag=1,-1,1,-1,-1,1,-1,1 nsp=8 |
+     boxsmooth rect1=6
+     ''')
+
+Flow('vel0','model','math output=1.5')
+Flow('vel0.5','model',
+     '''
+     headermath output="0.5*(T+0.01)" |
+     math output="1.5*(exp(input)-1)/input"
+     ''')
+
+Flow('empty','model','scale dscale=0')
+
+labels = "Model:::::::::::Synthe-:tic data:::::::::::Stack"
+
+for alpha in [0,0.5]:
+    vel = 'vel%g' % alpha + sfsuffix
+    nmo = 'nmoalfa%g' % alpha
+    strat = 'strat%g' % alpha + sfsuffix
+    print vel, nmo, strat
+    Flow(nmo,['model',vel],
+         '''
+         spray n2=20 o2=0.6 d2=0.16 |
+         inmo velocity=${SOURCES[1]} half=n
+         ''')
+    Flow(strat,[nmo+sfsuffix,vel],
+         '''
+         nmo velocity=${SOURCES[1]} half=n |
+         stack
+         ''')
+    Result(nmo,['model','empty',nmo+sfsuffix,'empty',strat],
+           '''cat axis=2 ${SOURCES[1:5]} |
+           dots dots=0 yreverse=1 gaineach=0 labels="%s" overlap=1.85
+           title="alpha=%g"
+           ''' % (labels,alpha))
+    
+###########################################################################
+End()
