@@ -112,8 +112,7 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(node[0],4*naxz,out);
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtree.c,v 1.10 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: Mtree.c,v 1.11 2004/07/02 11:54:20 fomels Exp $	 */

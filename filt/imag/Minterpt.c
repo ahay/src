@@ -116,7 +116,6 @@ int main (int argc, char* argv[])
   
     sf_warning("number of branches = %d", ng);
 
-    sf_close();
     exit (0);
 }
 
@@ -139,4 +138,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterpt.c,v 1.7 2004/06/23 23:31:42 fomels Exp $	 */
+/* 	$Id: Minterpt.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */

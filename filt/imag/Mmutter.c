@@ -91,8 +91,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.8 2004/06/23 23:31:42 fomels Exp $	 */
+/* 	$Id: Mmutter.c,v 1.9 2004/07/02 11:54:20 fomels Exp $	 */

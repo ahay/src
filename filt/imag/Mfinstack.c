@@ -140,9 +140,7 @@ int main(int argc, char* argv[])
 	if (stack) sf_complexwrite (out,nx,stk);
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mfinstack.c,v 1.5 2004/06/23 23:31:42 fomels Exp $	 */
-
+/* 	$Id: Mfinstack.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */

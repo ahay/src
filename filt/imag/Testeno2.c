@@ -40,9 +40,7 @@ int main(int argc, char* argv[])
     sf_floatwrite(dat[0],   n1*n2,out);
     sf_floatwrite(der[0][0],n1*n2*2,deriv);
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Testeno2.c,v 1.3 2004/04/19 21:51:16 fomels Exp $	 */
-
+/* 	$Id: Testeno2.c,v 1.4 2004/07/02 11:54:20 fomels Exp $	 */

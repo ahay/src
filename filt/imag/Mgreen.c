@@ -109,8 +109,7 @@ int main (int argc, char* argv[])
 	sf_floatwrite (trace2,nx,out);
     } /* nz */
     
-    sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.7 2004/06/23 23:31:42 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.8 2004/07/02 11:54:20 fomels Exp $	 */

@@ -210,8 +210,7 @@ int main(int argc, char* argv[])
     if (!inv && zero) 
 	sf_floatwrite (stack[0][0],n123,out);
  
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mpreconstkirch.c,v 1.6 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: Mpreconstkirch.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */

@@ -98,8 +98,7 @@ int main(int argc, char **argv)
 	sf_floatwrite(trace,n1,model);
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Munif2.c,v 1.6 2004/06/23 23:31:43 fomels Exp $	 */
+/* 	$Id: Munif2.c,v 1.7 2004/07/02 11:54:20 fomels Exp $	 */

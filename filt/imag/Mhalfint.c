@@ -59,8 +59,7 @@ int main(int argc, char* argv[])
 	sf_floatwrite (pp,n1,out);
     }
 
-    sf_close();
     exit(0);
 }
 
-/* 	$Id: Mhalfint.c,v 1.5 2004/06/23 23:31:42 fomels Exp $	 */
+/* 	$Id: Mhalfint.c,v 1.6 2004/07/02 11:54:20 fomels Exp $	 */
