@@ -1,4 +1,4 @@
-module rsf
+module RSF
   implicit none
 
   type file
@@ -726,5 +726,4 @@ contains
     
     call rsf_write_complex_1d_n(hist,array,size(array))
   end subroutine rsf_write_complex_5d
-end module rsf
-  
+end module RSF
