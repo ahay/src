@@ -25,7 +25,7 @@ void find_pef(int nd, float *dd, nfilter aa, nfilter rr,
     for (ip=0; ip < np; ip++) {
 	na = aa->hlx[ip]->nh;
 	for (ih=0; ih < na; ih++) {
-	    aa->hlx[ip]->flt[ih] = flt[ip*nh + ih];
+	    aa->hlx[ip]->flt[ih] = -flt[ip*nh + ih];
 	}
     }
 

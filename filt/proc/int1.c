@@ -79,6 +79,7 @@ void int1_close (void)
 	free (*w1);
 	free (w1);
     }
+    allocated = false;
 }
 
-/* 	$Id: int1.c,v 1.6 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id: int1.c,v 1.7 2004/06/21 22:49:44 fomels Exp $	 */
