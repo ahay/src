@@ -21,8 +21,12 @@ w1,w2,w3 is window size, p1,p2,p3 is number of patches.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <rsf.h>
 
