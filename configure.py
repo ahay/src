@@ -108,6 +108,7 @@ def libs(context):
 def ar(context):
     context.Message("checking ar ... ")
     AR = context.env.get('AR',WhereIs('ar'))
+    print "what about %s?" % AR
     if AR:
         context.Result(AR)
         context.env['AR'] = AR
