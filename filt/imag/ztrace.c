@@ -182,15 +182,15 @@ static void psnap (float* p, float* q, int* iq) {
     int ia;
     float a2, a;
 
-    a2 = (cell_p2a(p)-a0)/da;
-    ia = floor (a2); a2 -= ia;
+    a = (cell_p2a(p)-a0)/da;
+    ia = floor (a); a2 = a-ia;
     cell_snap (&a2, &ia, eps);
 
     if (ia < 0) {
 	ia=0; a2=0.; a=a0; 
     } else if (ia >= na || (ia == na-1 && a2 > 0.)) {
 	ia=na-1; a2=0.; a=a0+(na-1)*da; 
-    }
+    } 
 
     p[1] = sin(a);
     p[0] = -cos(a);

@@ -17,7 +17,7 @@ int main(int argc, char* argv[])
     bool inv, stack, depth;
     int nt,nw,nx,ny,nh,nf, it,iw,ix,iy,ih;
     float dw,dx,dy,dh, x,y,h,xh, vel, w0, wh, w2, sq;
-    float *str, *trace2, *trace, *keep;
+    float *str, *trace2, *trace, *keep=NULL;
     sf_file in, out;
 
     sf_init (argc,argv);
