@@ -346,6 +346,26 @@ Plot('spec1','Pspec Sspec',
      ''')
 Combine('spec1','spec0 spec1','SideBySideAniso',result=1)
 
+Plot('inter',['Presh','Sresh'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |
+     grey title='Interleaved (Before)'
+     ''')
+
+Flow(['pstack','pshift'],'Presh',
+     '''pad end2=1 > ${TARGETS[1]};
+     pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
+     ''')
+Flow(['sstack','sshift'],'Sresh',
+     '''pad end2=1 > ${TARGETS[1]};
+     pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
+     ''')
+Plot('inter1',['pstack','sstack'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |
+     grey title='Interleaved (Before)'
+     ''')
+
 Plot('Presh','Presh',plot('Balanced PP'))
 Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
 Plot('diff2','Sresh Presh',
@@ -378,7 +398,7 @@ def blindpick2(eps=10,lam=10):
     spline o1=0.5 d1=0.002 n1=1001 |
     window |
     pad n1=1501 beg1=250 |
-    miss2 eps=0 mask=${SOURCES[1]} niter=50 filt1=100 filt2=10 scons |
+    miss2 eps=0 mask=${SOURCES[1]} niter=50 filt1=100 filt2=10 |
     math output=input+1
     ''' % (eps,lam)
 
@@ -459,6 +479,27 @@ Plot('Gamma5','Gamma5',
      ' wantscalebar=y color=j allpos=y bias=1 minval=1 maxval=2.5')
 Combine('Warp5','Presh2 wline5 diff6 Gamma5','TwoByTwo',result=1)
 
+Plot('inter2',['Presh2','wline5'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |
+     grey title='Interleaved (After)'
+     ''')
+Combine('inter',['inter','inter2'],'OverUnderAniso',result=1)
+
+Flow(['pstack2','pshift2'],'Presh2',
+     '''pad end2=1 > ${TARGETS[1]};
+     pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
+     ''')
+Flow(['sstack2','sshift2'],'wline5',
+     '''pad end2=1 > ${TARGETS[1]};
+     pad < $SOURCE beg2=1 | add ${TARGETS[1]} | window f2=1 j2=2 min1=1 max1=2
+     ''')
+Plot('inter3',['pstack2','sstack2'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |
+     grey title='Interleaved (After)'
+     ''')
+
 #############################################################################
 #
 # Cube processing
@@ -483,12 +524,15 @@ Plot('pcube','pcube',plot3('PP'))
 Plot('wcube','wcube',plot3('Warped PS (Before)'))
 Combine('cube0','pcube wcube','SideBySideAniso',result=1)
 
+Flow('Warp','Warp5','spray n2=132 d2=1 o2=15 | transp plane=23')
+Flow('wcube2',['pscube','pcube','Warp'],
+     warp0 + ' | costaper nw1=300')
 
 ####################################################################
 # SPECTRAL BALANCING
 ####################################################################
 Flow('ppwin','pcube','window3 nw=4,2,2 w=800,100,100')
-Flow('sswin','wcube','window3 nw=4,2,2 w=800,100,100')
+Flow('sswin','wcube2','window3 nw=4,2,2 w=800,100,100')
 
 rick3 = '''
 spectra | stack norm=y | stack norm=y | ricker niter=1000 ma=$TARGET m=20
@@ -511,14 +555,14 @@ Flow('sspec','wcube','spectra all=y')
 Plot('spec','pspec sspec',
      '''
      cat axis=2 ${SOURCES[1]} |
-     graph title=Before max1=150 max2=5.5 label1="Frequency (Hz)"
+     graph title=Before max1=150 max2=5 label1="Frequency (Hz)"
      ''')
 Flow('ppspec','ppresh','spectra all=y')
 Flow('ssspec','ssresh','spectra all=y')
 Plot('sspec','ppspec ssspec',
      '''
      cat axis=2 ${SOURCES[1]} |
-     graph title=After max1=150 max2=5.5 label1="Frequency (Hz)"
+     graph title=After max1=150 max2=5 label1="Frequency (Hz)"
      ''')
 Combine('spec','spec sspec','SideBySideAniso',result=1)
 
@@ -530,14 +574,23 @@ Combine('cube1','ppresh ssresh','SideBySideAniso',result=1)
 # GAMMA SCAN
 ####################################################################
 
-Flow('sscan',['ssresh','ppresh'],warpscan(51,0.95,1.05))
+Flow('sscan',['ssresh','ppresh'],warpscan(21,0.98,1.02))
 
+Flow('mask2',None,'spike n3=132 n2=116 n1=1001 | pad n1=1501 beg1=250')
 
+def blindpick3(rect1=10,rect2=10,rect3=10):
+    return '''
+    blindpick rect1=%g rect2=%g rect3=%g |
+    math output=input-1 |
+    spline o1=0.5 d1=0.002 n1=1001 |
+    window |
+    pad n1=1501 beg1=250 |
+    miss3 eps=0 mask=${SOURCES[1]} niter=50 rect1=100 rect2=10 rect3=10 |
+    math output=input+1
+    ''' % (rect1,rect2,rect3)
 
-
-Flow('Warp','Warp5','spray n2=132 d2=1 o2=15 | transp plane=23')
-Flow('wcube2',['pscube','pcube','Warp'],
-     warp0 + ' | costaper nw1=300')
+Flow('ppick0',['sscan','mask2'],
+     'transp plane=24 | ' + blindpick3(64,64,64))
 
 Plot('wcube2','wcube2',plot3('Warped PS (After)'))
 Combine('cube2','pcube wcube2','SideBySideAniso',result=1)
