@@ -330,6 +330,22 @@ stack axis=3 norm=no
 Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
 Flow('Sresh','Resh','stack axis=3 norm=no')
 
+Flow('Pspec0','pline','spectra all=y')
+Flow('Sspec0','wline','spectra all=y')
+Plot('spec0','Pspec0 Sspec0',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=Before max1=150 max2=6 label1="Frequency (Hz)"
+     ''')
+Flow('Pspec','Presh','spectra all=y')
+Flow('Sspec','Sresh','spectra all=y')
+Plot('spec1','Pspec Sspec',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=After max1=150 max2=6 label1="Frequency (Hz)"
+     ''')
+Combine('spec1','spec0 spec1','SideBySideAniso',result=1)
+
 Plot('Presh','Presh',plot('Balanced PP'))
 Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
 Plot('diff2','Sresh Presh',
