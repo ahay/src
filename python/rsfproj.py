@@ -300,9 +300,9 @@ class Project(Environment):
         return plot
     def End(self):
         if self.view: # if any results
-            view = self.Alias('view',self.view)
-            lock = self.Alias('lock',self.lock)
-            test = self.Alias('test',self.test)
+            self.Alias('view',self.view)
+            self.Alias('lock',self.lock)
+            self.Alias('test',self.test)
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
     def Fetch(self,file,dir,private=None):
         return self.Retrieve(file,None,dir=dir,private=private)

@@ -27,12 +27,13 @@ suplots = []
 for prog in suprogs:
     if prog[0] == 'x' and 'ps'+prog[1:] in suprogs:
         suplots.append(prog[1:])
-re_plots = re.compile(r'\b(%s)\b' % string.join(suplots,'|'))
+re_plots = re.compile(r'\b(su|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
 
 class SUProject(rsfproj.Project):
     def __init__(self,**kw):
         apply(rsfproj.Project.__init__,(self,),kw)
         self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
+        self['ENV']['CWPROOT'] = topdir
         self.plots = []
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsf':0,'suffix': suffix,'src_suffix':src_suffix})
@@ -42,11 +43,11 @@ class SUProject(rsfproj.Project):
             flow = source
             source = target
         # X output
-        xflow  = re_plots.sub('x\\1',flow)
+        xflow  = re_plots.sub('\\1x\\2',flow)
         kw.update({'suffix':'.x','stdout':-1})
         apply(self.Flow,(target,source,xflow),kw)
         # Postscript output
-        psflow = re_plots.sub('ps\\1',flow)
+        psflow = re_plots.sub('\\1ps\\2',flow)
         kw.update({'suffix': pssuffix,'stdout':1})
         apply(self.Flow,(target,source,psflow),kw)
     def Result(self,target,source,flow=None,**kw):
@@ -58,9 +59,18 @@ class SUProject(rsfproj.Project):
         self.Default (target2+pssuffix)
         self.Alias(target+'.view',target2+'.x')
         self.plots.append(target)
+        lock = self.InstallAs(os.path.join(self.resdir,'.'+target+pssuffix),
+                              target2+pssuffix)
+        self.lock.append(lock)
+        self.Alias(target + '.lock',lock)
+        test = self.Test('.test_'+target,target2+pssuffix)
+        self.test.append(test)
+        self.Alias(target + '.test',test)
     def End(self):
         if self.plots: # if any results
             self.Alias('view',map(lambda x: x+'.view',self.plots))
+            self.Alias('lock',self.lock)
+            self.Alias('test',self.test)
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
 
 # Default project
