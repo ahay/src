@@ -105,13 +105,14 @@ void divlap1 (divlap div, float* num, float* den, float* ref,
 	}
     }
 
-    /* absorbing b.c. */
+    /* absorbing b.c. 
     div->diag[0] -= 5.*(div->eps);
     div->diag[1] -= (div->eps);
     div->diag[div->n-2] -= (div->eps);
     div->diag[div->n-1] -= 5.*(div->eps);
     div->offd[0][0] = -2.*(div->eps);
     div->offd[0][div->n-2] = -2.*(div->eps);
+    */
 
     if (ref != NULL) {
 	rat[0] += (div->eps)*(ref[0]-2.*ref[1]+ref[2]);

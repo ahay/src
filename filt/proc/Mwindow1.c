@@ -1,3 +1,14 @@
+/* Divide a dataset into smooth overlapping windows.
+
+Takes: < input.rsf > window.rsf
+
+The input dimensions n1,... become n1,nw,...
+
+If no taper parameter is present, running 
+< window.rsf sfstack norm=no > input.rsf 
+should reconstruct the original input.
+*/
+
 #include <rsf.h>
 
 #include "window1.h"
@@ -6,6 +17,7 @@ int main(int argc, char* argv[])
 {
     int n2, i2, i1, n, nw, w, iw, i0;
     float h, *dat, *win, *dat2;
+    bool taper, hastaper;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -16,8 +28,14 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getint ("nw",&nw)) sf_error("Need nw=");
+    /* Number of windows */
     if (!sf_getint ("w",&w)) sf_error("Need w=");
+    /* Window length */
     if (!sf_getfloat ("h",&h)) h = (nw*w - n)/(nw-1.);
+    /* Window separation */
+
+    hastaper = sf_getbool("taper",&taper);
+    /* Window tapering */
 
     sf_putint(out,"n2",nw);
     sf_putint(out,"n3",n2);
@@ -31,7 +49,11 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_read (dat, sizeof(float), n, in);
 	for (iw=0; iw < nw; iw++) {
-	    i0 = window1_apply(iw,dat,(iw > 0),(iw < nw-1),win);
+	    if (hastaper) {
+		i0 = window1_apply(iw,dat,taper,taper,win);
+	    } else {
+		i0 = window1_apply(iw,dat,(iw > 0),(iw < nw-1),win);
+	    }
 	    for (i1=0; i1 < i0; i1++) {
 		dat2[i1] = 0.;
 	    }
