@@ -12,7 +12,7 @@ int main (int argc, char* argv[])
     int c, a, ix, iy, iz, npts, mtype, key, col_tab_no, byte, i;
     int ii, num_byte, nmul, nx, ny, xmask, ymask, orient;
     int ras_orient, ras_offset, xpix, ypix, num_rep, num_pat, pos;
-    int ibyte, ipat, col, j, bit;
+    int ibyte=0, ipat, col, j, bit;
     float x, y, xcor, ycor, red, green, blue, fat, msize, size;
     float xmin, ymin, xmax, ymax, xvplot, yvplot, off, rep;
     float fatscale, txvecscale, txscale, scale, colscale, hscale;
