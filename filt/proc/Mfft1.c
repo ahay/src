@@ -53,7 +53,7 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nt = sf_npfar(n1);
+	nt = sf_npfar(cos? 2*(n1-1): n1);
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
 
@@ -63,11 +63,12 @@ int main (int argc, char *argv[])
     } else {
 	if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
-
+	
 	nt = 2*(nw-1);
 	d1 = 1./(nt*dw);
+	n1 = cos? 1+nt/2:nt;
 
-	sf_putint(out,"n1",nt);
+	sf_putint(out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
     }	
     
@@ -78,8 +79,17 @@ int main (int argc, char *argv[])
     for (i2=0; i2 < n2; i2++) {
 	if (!inv) {
 	    sf_read (p,sizeof(float),n1,in);
-	    for (i1=n1; i1 < nt; i1++) {
-		p[i1]=0.0;
+	    if (!cos) {
+		for (i1=n1; i1 < nt; i1++) {
+		    p[i1]=0.0;
+		}
+	    } else {
+		for (i1=n1; i1 <= nt/2; i1++) {
+		    p[i1]=0.0;
+		}
+		for (i1=nt/2+1; i1 < nt; i1++) {
+		    p[i1] = p[nt-i1];
+		}
 	    }
 	    
 	    sf_pfarc(1,nt,p,pp);
@@ -104,7 +114,7 @@ int main (int argc, char *argv[])
 		for (i1=0; i1 < nw; i1++) {
 		    pp[i1] = cc[i1];
 		}
-	    } else {
+	    } else {	    
 		sf_read(pp,sizeof(float complex),nw,in);
 	    }
 
@@ -113,7 +123,8 @@ int main (int argc, char *argv[])
 	    for (i1=0; i1 < nt; i1++) {
 		p[i1] /= nt;
 	    }
-	    sf_write (p,sizeof(float),nt,out);
+
+	    sf_write (p,sizeof(float),n1,out);
 	}
     }
     
