@@ -9,6 +9,7 @@ else:
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
+docdir = os.path.join(root,'doc')
 
 pydir = libdir
 #for path in sys.path:
@@ -112,7 +113,7 @@ env.Install(bindir,'sftour')
 # INSTALLATION
 ##########################################################################
 
-env.Alias('install',[pydir,bindir,libdir,incdir])
+env.Alias('install',[bindir,pydir,libdir,incdir,docdir])
 
 use = os.path.join(pydir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use))
@@ -120,4 +121,7 @@ Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
 Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 
-# 	$Id: SConstruct,v 1.29 2004/06/16 17:55:15 fomels Exp $	
+env.Command(docdir,None,'RSFROOT=%s ./sfdoc -w $TARGET' % root)
+Depends(docdir,use)
+
+# 	$Id: SConstruct,v 1.30 2004/06/23 18:29:51 fomels Exp $	

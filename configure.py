@@ -261,9 +261,7 @@ def merge(target=None,source=None,env=None):
     out.close()
     return 0
 
-docmerge = '''echo "import os, sys" > $TARGET
-echo "sys.path.append(os.environ.get('RSFROOT'))" >> $TARGET
-echo "import rsfdoc" >> $TARGET
+docmerge = '''echo "import rsfdoc" > $TARGET
 echo "" >> $TARGET
 cat $SOURCES >> $TARGET'''
 
@@ -271,4 +269,4 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.15 2004/06/23 08:54:31 fomels Exp $	
+#	$Id: configure.py,v 1.16 2004/06/23 18:29:51 fomels Exp $	

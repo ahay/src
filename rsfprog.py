@@ -1,7 +1,3 @@
-import sys, os
-
-sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
-
 import rsfdoc
 
 import sfmain
@@ -11,3 +7,5 @@ import sfplot
 import vpplot
 
 import rsfuse
+
+# 	$Id: rsfprog.py,v 1.4 2004/06/23 18:29:51 fomels Exp $	

@@ -37,7 +37,8 @@ def selfdoc(target=None,source=None,env=None):
     src = str(source[0])
     doc = open(str(target[0]),"w")
     rsfprefix = env.get('rsfprefix','sf')
-    getprog(src,doc,rsfprefix)
+    rsfsuffix = env.get('rsfsuffix','rsf')
+    getprog(src,doc,rsfprefix,rsfsuffix)
     doc.close()
 
 def bold(text):
@@ -71,15 +72,71 @@ def page(title, contents):
     %s
     </body></html>''' % (title, contents)
 
+def heading(title, fgcol, bgcol,extras='',add='&nbsp;<br>'):
+    """Format a page heading."""
+    return '''
+    <table width="100%%" cellspacing=0 cellpadding=2 border=0
+    summary="heading">
+    <tr bgcolor="%s">
+    <td valign=bottom>%s
+    <font color="%s" face="helvetica, arial">&nbsp;<br>%s</font></td
+    ><td align=right valign=bottom
+    ><font color="%s" face="helvetica, arial">%s</font></td></tr></table>
+    ''' % (bgcol, add,fgcol, title, fgcol, extras or '&nbsp;')
+
+def html_section(title, fgcol, bgcol, contents, width=6,
+                 prelude='', marginalia=None, gap='&nbsp;'):
+    """Format a section with a heading."""
+    if marginalia is None:
+        marginalia = '<tt>' + '&nbsp;' * width + '</tt>'
+    result = '''
+    <p>
+    <table width="100%%" cellspacing=0 cellpadding=2 border=0 summary="section">
+    <tr bgcolor="%s">
+    <td colspan=3 valign=bottom>&nbsp;<br>
+    <font color="%s" face="helvetica, arial">%s</font></td></tr>
+    ''' % (bgcol, fgcol, title)
+    if prelude:
+        result = result + '''
+        <tr bgcolor="%s"><td rowspan=2>%s</td>
+        <td colspan=2>%s</td></tr>
+        <tr><td>%s</td>''' % (bgcol, marginalia, prelude, gap)
+    else:
+        result = result + '''
+        <tr><td bgcolor="%s">%s</td><td>%s</td>''' % (bgcol, marginalia, gap)
+    return result + '\n<td width="100%%">%s</td></tr></table>' % contents
+
+def bigsection(title, *args):
+    """Format a section with a big heading."""
+    title = '<big><strong>%s</strong></big>' % title
+    return html_section(title, *args)
+
+def multicolumn(list, format, cols=4):
+    """Format a list of items into a multi-column list."""
+    result = ''
+    rows = (len(list)+cols-1)/cols
+    for col in range(cols):
+        result = result + '<td width="%d%%" valign=top>' % (100/cols)
+        for i in range(rows*col, rows*col+rows):
+            if i < len(list):
+                result = result + format(list[i]) + '<br>\n'
+        result = result + '</td>'
+    return '<table width="100%%" summary="list"><tr>%s</tr></table>' % result
+
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
-        self.type = underline(type) + " "
+        self.type = type
         self.default = "=" + str(default)
         self.range = " " + range
         self.desc = "\t" + desc + "\n"
     def show(self,name):
-        return self.type + bold(name + self.default) + self.range + self.desc
-
+        return underline(self.type) + " " + \
+               bold(name + self.default) + self.range + self.desc
+    def html(self,name):
+        return self.type + " " + \
+               "<strong>" + name + self.default + \
+               "</strong>" + self.range
+        
 class rsfprog:
     def __init__(self,name,file,desc=None):
         self.name = name
@@ -88,8 +145,11 @@ class rsfprog:
         self.snps = None
         self.cmts = None
         self.also = None
+        self.vers = None
         self.uses = {}
         self.pars = {}
+    def version(self,vers):
+        self.vers = vers
     def synopsis (self,snps,cmts):
         self.snps = snps
         self.cmts = cmts
@@ -130,10 +190,57 @@ class rsfprog:
                         usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
             doc = doc + section('used in',string.rstrip(usedoc))
         doc = doc + section('source',self.file)
+        doc = doc + section('version',self.vers)
         pydoc.pager(doc)
     def html(self,dir):
         file = open (os.path.join(dir,self.name + '.html'),'w')
-        file.write(page(self.name,'Test'))
+        name = '<big><big><strong>%s</strong></big></big>' % self.name
+        if self.vers:
+            name = name + " (%s)" % self.vers
+        contents = heading(name,'#ffffff','#7799ee',
+                           '<a href="./index.html">index</a><br>'+self.file)
+        if self.desc:
+            contents = contents + self.desc
+        if self.snps:
+            contents = contents + \
+                       bigsection('Synopsis','#fffff', '#aa55cc',self.snps)
+        if self.cmts:
+            contents = contents + string.replace(self.cmts,'\n','<br>\n')
+        pars =  self.pars.keys()
+        if pars:
+            pars.sort()
+            pardoc = ''
+            bgcol = '#ffc8d8'
+            for par in pars:
+                pardoc = pardoc + \
+                         heading(self.pars[par].html(par),
+                                 '#000000', bgcol,
+                                 string.replace(self.pars[par].desc,
+                                                '\n','<br>\n'),add='') + '\n'
+                if bgcol=='#ffc8d8':
+                    bgcol ='#f0f0f8'
+                else:
+                    bgcol = '#ffc8d8'
+            contents = contents + \
+                       bigsection('Parameters','#ffffff', '#ee77aa',pardoc)
+        books = self.uses.keys()
+        if books:
+            usedoc = '' 
+            books.sort()
+            for book in books:
+                bookdoc = ''
+                chapters = self.uses[book].keys()
+                chapters.sort()
+                for chapter in chapters:
+                    for project in self.uses[book][chapter]:
+                        bookdoc = bookdoc + \
+                                 '%s/%s<br>\n' % (chapter,project)
+                usedoc = usedoc + \
+                         bigsection(string.upper(book),
+                                    '#000000','#ffd8c8',bookdoc)
+            contents = contents + \
+                       bigsection('Used In','#ffffff', '#eeaa77',usedoc)
+        file.write(page(self.name,contents))
         file.close()
 
 comment = None
@@ -141,8 +248,32 @@ param = None
 stringpar = None
 synopsis = None
 
-def getprog(file,out,rsfprefix = 'sf'):
-    global comment, param, synopsis, stringpar
+def link(name):
+    return '<a href="%s.html">%s</a>' % (progs[name].name, name)
+
+def html(dir):
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
+    file = open (os.path.join(dir,'index.html'),'w')
+    name = '<big><big><strong>RSF Programs</strong></big></big>'
+    content = heading(name,'#ffffff','#7799ee')
+    content = content + 'Add a search feature later.'
+    dirs = {}
+    for prog in progs.keys():
+        dir = os.path.dirname(progs[prog].file)
+        if not dirs.has_key(dir):
+            dirs[dir] = []
+        dirs[dir].append(prog)
+    for dir in dirs.keys():
+        names = dirs[dir]
+        names.sort()
+        content = content + bigsection(dir,'#ffffff', '#ee77aa',
+                                       multicolumn(names,link))
+    file.write(page('RSF Programs',content))
+    file.close()
+
+def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf'):
+    global comment, param, synopsis, stringpar, inpout, version
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
         param = re.compile(r'(?:if\s*\(\!)?sf_get(?P<type>bool|int|float)\s*'
@@ -159,6 +290,9 @@ def getprog(file,out,rsfprefix = 'sf'):
                                '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
         synopsis = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                               '((?:.|\n)*)$')
+        inpout = re.compile(r'\s*(?P<name>\w+)\s*=\s*sf_(?P<io>input|output)'
+                            '\s*\(\s*\"(?P<tag>\w+)\"')
+        version = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*Exp\s*\$\s*\*\/')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
     name = re.sub('.c$','',name)
     src = open(file,"r")   # open source
@@ -207,15 +341,34 @@ def getprog(file,out,rsfprefix = 'sf'):
         out.write("%s.par('%s',rsfdoc.rsfpar('string',desc='''%s'''))\n" %
                   (name,parname,desc))
         parline = parline + " %s=" % (parname)
-    if first:
+    files = inpout.findall(text)
+    snps = name
+    for par in files:
+        filename = par[0]
+        io = par[1]
+        tag = par[2]
+        if tag == 'in':
+            iostring = ' < %s.%s' % (filename,rsfsuffix)
+        elif tag == 'out':
+            iostring = ' > %s.%s' % (filename,rsfsuffix)
+        else:
+            iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
+        snps = snps + iostring
+    snps = snps + parline
+    vers = version.search(text)
+    if vers:
+        prog.version(vers.group(1))
+        out.write("%s.version('''%s''')\n" % (name,vers.group(1)))
+    if not first:
+        first = ''
+    else:
         info = synopsis.match(first)
         if info:
-            snps = name + " " + string.lstrip(info.group(1)) + parline
-            cmts = string.lstrip(info.group(2))
-            prog.synopsis(snps,cmts)
-            out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,cmts))
+            snps = snps + ' ' + string.lstrip(info.group(1))
+            first = string.lstrip(info.group(2))
+    prog.synopsis(snps,first)
+    out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,first))
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
-
 
 def cli(rsfprefix = 'sf'):
     import getopt
@@ -241,7 +394,15 @@ def cli(rsfprefix = 'sf'):
                 return
     
         if not args:
-            raise BadUsage
+            if dir:
+                html(dir)
+                for prog in progs.keys():
+                    main = progs.get(prog)
+                    if main:
+                        print main.name
+                        main.html(dir)
+            else:
+                raise BadUsage
 
         for prog in args:
             if not re.match(rsfprefix,prog):
@@ -261,7 +422,7 @@ def cli(rsfprefix = 'sf'):
 %(prog)s <prog1> <prog2> ... 
     Show documentation on programs.
 
-%(prog)s <prog1> <prog2> ... -w <dir>
+%(prog)s -w <dir> <prog1> <prog2> ... 
     Write program documentaton in <dir> directory.
 
 %(prog)s -k <keyword>
@@ -281,4 +442,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.13 2004/04/19 22:03:22 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.14 2004/06/23 18:29:51 fomels Exp $	
