@@ -42,10 +42,10 @@ Plot('line','line',
 for mode in ['pp','ps']:
     Fetch(data[mode],datdir)
     Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
-              '''segyread tape=$SOURCE
-              hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
-              fldr=180 tracf=184 sx=188 sy=193
-              ''',stdin=0)
+         '''segyread tape=$SOURCE
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         fldr=180 tracf=184 sx=188 sy=193
+         ''',stdin=0)
     Flow(mode+'cube',[mode,mode+'head'],
               '''
               intbin head=${SOURCES[1]} |
@@ -324,12 +324,11 @@ Flow('Srick','Swin',rick2,stdout=0)
 reshape2 = '''
 reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
 ma2=${SOURCES[3]} out2=${TARGETS[1]} |
-transp plane=23 |
-stack norm=no
+stack axis=3 norm=no
 '''
 
 Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
-Flow('Sresh','Resh','transp plane=23 | stack norm=no')
+Flow('Sresh','Resh','stack axis=3 norm=no')
 
 Plot('Presh','Presh',plot('Balanced PP'))
 Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
@@ -407,7 +406,7 @@ Flow('Swin2','wline3','window2 nw=4,2 w=800,100')
 Flow('Srick2','Swin2',rick2,stdout=0)
 
 Flow(['Presh2','Resh2'],['Pwin','Swin2','Prick','Srick2'],reshape2)
-Flow('Sresh2','Resh2','transp plane=23 | stack norm=no')
+Flow('Sresh2','Resh2','stack axis=3 norm=no')
 
 Plot('Presh2','Presh2',plot('Balanced PP'))
 Plot('Sresh2','Sresh2',plot('Warped and Balanced PS'))
@@ -472,29 +471,51 @@ Combine('cube0','pcube wcube','SideBySideAniso',result=1)
 ####################################################################
 # SPECTRAL BALANCING
 ####################################################################
-Flow('ppwin','pline','window2 nw=4,2 w=800,100')
-Flow('Swin','wline','window2 nw=4,2 w=800,100')
+Flow('ppwin','pcube','window3 nw=4,2,2 w=800,100,100')
+Flow('sswin','wcube','window3 nw=4,2,2 w=800,100,100')
 
-rick2 = 'spectra | stack norm=y | ricker niter=1000 ma=$TARGET m=20'
-
-Flow('Prick','Pwin',rick2,stdout=0)
-Flow('Srick','Swin',rick2,stdout=0)
-
-reshape2 = '''
-reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
-ma2=${SOURCES[3]} out2=${TARGETS[1]} |
-transp plane=23 |
-stack norm=no
+rick3 = '''
+spectra | stack norm=y | stack norm=y | ricker niter=1000 ma=$TARGET m=20
 '''
 
-Flow(['Presh','Resh'],['Pwin','Swin','Prick','Srick'],reshape2)
-Flow('Sresh','Resh','transp plane=23 | stack norm=no')
+Flow('pprick','ppwin',rick3,stdout=0)
+Flow('ssrick','sswin',rick3,stdout=0)
 
-Plot('Presh','Presh',plot('Balanced PP'))
-Plot('Sresh','Sresh',plot('Warped and Balanced PS'))
-Plot('diff2','Sresh Presh',
-     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
-Combine('Warp1','Presh Sresh diff2 Gamma1','TwoByTwo',result=1)
+reshape3 = '''
+reshape dim=3 in2=${SOURCES[1]} ma=${SOURCES[2]}
+ma2=${SOURCES[3]} out2=${TARGETS[1]} |
+stack axis=4 norm=no
+'''
+
+Flow(['ppresh','rresh'],['ppwin','sswin','pprick','ssrick'],reshape3)
+Flow('ssresh','rresh','stack axis=4 norm=no')
+
+Flow('pspec','pcube','spectra all=y')
+Flow('sspec','wcube','spectra all=y')
+Plot('spec','pspec sspec',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=Before max1=150 max2=5.5 label1="Frequency (Hz)"
+     ''')
+Flow('ppspec','ppresh','spectra all=y')
+Flow('ssspec','ssresh','spectra all=y')
+Plot('sspec','ppspec ssspec',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=After max1=150 max2=5.5 label1="Frequency (Hz)"
+     ''')
+Combine('spec','spec sspec','SideBySideAniso',result=1)
+
+Plot('ppresh','ppresh',plot3('Balanced PP'))
+Plot('ssresh','ssresh',plot3('Warped and Balanced PS (Before)'))
+Combine('cube1','ppresh ssresh','SideBySideAniso',result=1)
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('sscan',['ssresh','ppresh'],warpscan(51,0.95,1.05))
+
 
 
 
@@ -503,7 +524,7 @@ Flow('wcube2',['pscube','pcube','Warp'],
      warp0 + ' | costaper nw1=300')
 
 Plot('wcube2','wcube2',plot3('Warped PS (After)'))
-Combine('cube1','pcube wcube2','SideBySideAniso',result=1)
+Combine('cube2','pcube wcube2','SideBySideAniso',result=1)
 
 ###########################################################################
 End()

@@ -16,7 +16,7 @@ Takes: < data.rsf > scan.rsf
 
 int main(int argc, char* argv[])
 { 
-    int i1, n1, i2, m2, n2, n, order, ng, ig, i0, w, nw, iw;
+    int i1, n1, i2, m2, m3, n2, n, order, ng, ig, i0, w, nw, iw;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
     float *corr, *win1, *win2, a, b, a2, b2, ab, h;
     bool taper;
@@ -32,6 +32,7 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(in,"o1",&o1)) o1 = 0.;
 
     if(!sf_histint(in,"n2",&m2)) m2 = 1;
+    if(!sf_histint(in,"n3",&m3)) m3 = 1;
 
     if (!sf_getint("ng",&ng)) ng=1;
     /* number of gamma values */
@@ -46,10 +47,21 @@ int main(int argc, char* argv[])
     if(!sf_histfloat(other,"d1",&d2)) sf_error ("No d1= in other");
     if(!sf_histfloat(other,"o1",&o2)) o2 = 0.;
 
-    sf_putint  (warped,"n3",ng);
-    sf_putfloat(warped,"d3",dg);
-    sf_putfloat(warped,"o3",g0);
+    if (m3 > 1) {
+	sf_putint  (warped,"n4",ng);
+	sf_putfloat(warped,"d4",dg);
+	sf_putfloat(warped,"o4",g0);
+    } else if (m2 > 1) {
+	sf_putint  (warped,"n3",ng);
+	sf_putfloat(warped,"d3",dg);
+	sf_putfloat(warped,"o3",g0);
+    } else {
+	sf_putint  (warped,"n2",ng);
+	sf_putfloat(warped,"d2",dg);
+	sf_putfloat(warped,"o2",g0);
+    }
 
+    m2 *= m3;
     n = n2*m2;
 
     if(!sf_getint("accuracy",&order)) {
@@ -135,4 +147,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarpscan.c,v 1.8 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mwarpscan.c,v 1.9 2004/05/06 04:43:06 fomels Exp $	 */

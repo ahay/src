@@ -9,7 +9,7 @@ Takes: < input.rsf > window.rsf
 
 int main(int argc, char* argv[])
 {
-    int n[3], nw[3], w[3], i0[3], i[3], i1, i2, j;
+    int n[3], nw[3], w[3], i0[3], i[3], i1, i2, i3, j;
     float h[3], ***dat, ***win, ***dat2;
     sf_file in, out;
 
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
 			for (i1=0; i1 < n[0]; i1++) {
 			    if (i1 >= i0[0] && i1 < i0[0]+w[0] &&
 				i2 >= i0[1] && i2 < i0[1]+w[1] &&
-				i3 >= i0[2] && i3 < i0[2]+w[3]) {
+				i3 >= i0[2] && i3 < i0[2]+w[2]) {
 				dat2[i3][i2][i1] = 
 				    win[i3-i0[2]][i2-i0[1]][i1-i0[0]];
 			    } else {
@@ -70,4 +70,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwindow3.c,v 1.1 2004/05/06 00:36:36 fomels Exp $	 */
+/* 	$Id: Mwindow3.c,v 1.2 2004/05/06 04:43:06 fomels Exp $	 */

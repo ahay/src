@@ -1,4 +1,4 @@
-/* Stack a dataset over the second dimension.
+/* Stack a dataset over one of the dimensions.
 
 Takes < gather.rsf > stack.rsf
 
@@ -13,7 +13,7 @@ This operation is adjoint to sfspray.
 
 int main(int argc, char* argv[])
 {
-    int j, n1, n2, n3, i2, i3, ni, *fold = NULL;
+    int j, n1, n2, n3, i2, i3, ni, *fold = NULL, axis;
     size_t i, n;
     sf_file in, out;
     char key1[7], key2[7], *val;
@@ -25,7 +25,16 @@ int main(int argc, char* argv[])
     in = sf_input ("in");
     out = sf_output ("out");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_getint("axis",&axis)) axis=2;
+    /* which axis to stack */
+
+    n1 = 1;
+    for (j=0; j < axis-1; j++) {
+	sprintf(key1,"n%d",j+1);
+	if (!sf_histint(in,key1,&ni)) break;
+	n1 *= ni;
+    }
+
     n = (size_t) n1;
 
     type = sf_gettype (in);
@@ -38,10 +47,11 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-
+    sprintf(key1,"n%d",axis);
+    if (!sf_histint(in,key1,&n2)) sf_error("No %s= in input",key1);
+    
     n3 = 1;
-    for (j=2; j < SF_MAX_DIM; j++) {
+    for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key1,"n%d",j+1);
 	sprintf(key2,"n%d",j);
 	if (!sf_histint(in,key1,&ni)) {
@@ -100,4 +110,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: stack.c,v 1.7 2004/04/19 21:51:36 fomels Exp $	 */
+/* 	$Id: stack.c,v 1.8 2004/05/06 04:43:06 fomels Exp $	 */

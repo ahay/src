@@ -41,7 +41,7 @@ for scale in scales:
                   '''
                   add scale=1,-1 ${SOURCES[1]} |
                   math output='input*input' |
-                  transp | stack norm=no |
+                  stack axis=1 norm=no |
                   math output='sqrt(input*%d/10001)'
                   ''' % scale)
     
@@ -102,7 +102,7 @@ for order in orders:
                   '''
                   add scale=1,-1 ${SOURCES[1]} |
                   headermath err=0 output='err*err' |
-                  transp | stack norm=no |
+                  stack axis=1 norm=no |
                   math output='sqrt(input*%d/10001)'
                   ''' % scale)
     error = 'error%d' % order
