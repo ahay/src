@@ -16,8 +16,8 @@ int main (int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    if (!sf_histint(in,"n1",&nd)) sf_error("Need n1= in in");
-    if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
+    if (!sf_histint(in,"n1",&nd)) nd=1;
+    if (!sf_histint(in,"n2",&nt)) nt=1;
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     /* create coordinates */

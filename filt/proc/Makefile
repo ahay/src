@@ -4,7 +4,7 @@ LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
 PROGS = bandpass bin bin1 depth2time dip envelope nmo noise \
-	pwd randrefl sigmoid smooth spectra taup time2depth
+	pwd randrefl sigmoid smooth spectra taup time2depth warp1
 
 bandpass.OBJS = butterworth
 bin.OBJS = int2 interp adjnull
@@ -21,6 +21,7 @@ smooth.OBJS = triangle
 spectra.OBJS = empty
 taup.OBJS = radon cadj ctoeplitz
 time2depth.OBJS = fint1 tridiagonal spline interp_spline extend banded
+warp1.OBJS = divlap1 int1 interp_spline prefilter recfilt adjnull banded
 
 MAINS = $(addprefix sf, $(PROGS))
 OBJS = $(addsuffix .o, ${$*.OBJS})
