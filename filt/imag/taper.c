@@ -22,7 +22,9 @@
 #include "taper.h"
 
 static int nt1, nt2, nt3;
+static int  n1,  n2,  n3;
 static float *tap1=NULL, *tap2=NULL, *tap3=NULL;
+
 
 void taper2_init(int n2, int n1 /* taper lengths */)
 /*< 2-D initialize >*/
@@ -55,15 +57,22 @@ void taper2_close(void)
     free(tap2);
 }
 
-void taper3_init(int n3, int n2, int n1 /* taper lengths */)
+void taper3_init(
+    int n3_, int n2_, int n1_ /* cube dimensions */,
+    int m3_, int m2_, int m1_ /* taper lengths */)
 /*< 3-D initialize >*/
 {
     int it;
     float gain;
 
-    nt1=n1;
-    nt2=n2;
-    nt3=n3;
+    nt1=m1_;
+    nt2=m2_;
+    nt3=m3_;
+
+    n1 = n1_;
+    n2 = n2_;
+    n3 = n3_;
+
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
 	for (it=0; it < nt1; it++) {
@@ -121,7 +130,6 @@ void taper2(bool beg2, bool beg1  /* taper in the beginning  */,
 }
 
 void taper3(bool b3, bool b2, bool b1 /* taper in the beginning  */, 
-	    int n3, int n2, int n1    /* dimensions */, 
 	    float complex*** tt       /* [n3][n2][n1] tapered array (inout) */)
 /*< 3-D taper >*/
 {
