@@ -24,78 +24,57 @@ static struct Axis {
     float or, dnum, num0;
 } *axis1=NULL, *axis2=NULL;
 
-static void stdplot_init (float umin1, float umax1, float umin2, float umax2);
 static void make_title (sf_file in, char wheret);
 static void make_labels (sf_file in, char where1, char where2);
 static void make_axes (void);
+static void swap(float*a,float*b);
 
-void vp_stdplot_init (float min1, float max1, float min2, float max2,
+static void swap(float*a,float*b)
+{
+    float f;
+
+    f = *a; *a = *b; *b=f;
+}
+
+void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
 		      bool transp1, bool xreverse1, bool yreverse1, bool pad1)
 {
-    bool xreverse, yreverse, pad;
-    float mid, off;
+    bool pad, set, xreverse, yreverse;
+    float mid, off, scale1, scale2, orig1, orig2, uorig1, uorig2, crowd;
+    float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
 
-    if (!sf_getbool ("transp",&transp)) transp=transp1;
+    transp = transp1;
     if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
     if (!sf_getbool ("yreverse",&yreverse)) yreverse = yreverse1;
     if (!sf_getbool ("pad",&pad)) pad = pad1;
 
     if (pad) { /* 4% stretch */
-	mid = 0.5*(min1+max1);
-	off = 1.04*0.5*(max1-min1);
-	min1 = mid-off;
-	max1 = mid+off;
+	mid = 0.5*(umin1+umax1);
+	off = 1.04*0.5*(umax1-umin1);
+	umin1 = mid-off;
+	umax1 = mid+off;
 	
-	mid = 0.5*(min2+max2);
-	off = 1.04*0.5*(max2-min2);
-	min2 = mid-off;
-	max2 = mid+off;
+	mid = 0.5*(umin2+umax2);
+	off = 1.04*0.5*(umax2-umin2);
+	umin2 = mid-off;
+	umax2 = mid+off;
     }
  
-    if (transp) {
-	if (yreverse) {
-	    if (xreverse) {
-		stdplot_init (max2, min2, max1, min1);
-	    } else {
-		stdplot_init (min2, max2, max1, min1);
-	    }
-	} else {
-	    if (xreverse) {
-		stdplot_init (max2, min2, min1, max1);
-	    } else {
-		stdplot_init (min2, max2, min1, max1);
-	    }
-	}
-    } else {
-	if (yreverse) {
-	    if (xreverse) {
-		stdplot_init (max1, min1, max2, min2);
-	    } else {
-		stdplot_init (min1, max1, max2, min2);
-	    }
-	} else {	    
-	    if (xreverse) {
-		stdplot_init (max1, min1, min2, max2);
-	    } else {
-		stdplot_init (min1, max1, min2, max2);
-	    }
-	}
-    }
-}
-
-static void stdplot_init (float umin1, float umax1, float umin2, float umax2)
-{
-    float scale1, scale2, orig1, orig2, uorig1, uorig2, crowd;
-    float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
-    bool set;
-
-    vp_style (STANDARD);
-
     /* get max and min */
     if (!sf_getfloat ("min1",&min1)) min1=umin1;
     if (!sf_getfloat ("min2",&min2)) min2=umin2;
     if (!sf_getfloat ("max1",&max1)) max1=umax1;
     if (!sf_getfloat ("max2",&max2)) max2=umax2;
+
+    if (transp) {
+	swap(&min1,&min2);
+	swap(&max1,&max2);
+    }
+
+    if (xreverse) swap(&min1,&max1);
+    if (yreverse) swap(&min2,&max2);
+    
+    vp_style (STANDARD);
 
     /* get screen size */
     if (!sf_getfloat ("screenratio",&screenratio))
