@@ -6,3 +6,6 @@ void divide_close (void);
 void divide (const float* num, float* den,  float* rat);
 
 #endif
+
+/* 	$Id: divide.h,v 1.3 2004/02/27 20:59:57 fomels Exp $	 */
+

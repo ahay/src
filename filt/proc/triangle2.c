@@ -17,15 +17,27 @@ void triangle2_init (int nbox1, int nbox2, int ndat1, int ndat2)
   tmp = sf_floatalloc (nd);
 }
 
+void twotriangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+{
+    int n;
+    
+    n = nx/2;
+
+    sf_adjnull(adj,add,nx,ny,x,y);
+    triangle2_lop (adj,true,n,n,x,y);
+    triangle2_lop (adj,true,n,n,x+n,y+n);
+}
+
 void triangle2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 {
   int i, i1, i2;
 
-  if (nx != ny || nx != nd) sf_error("%s: Wrong data dimensions: nx=%d, ny=%d, nd=%d",
-				     __FILE__,nx,ny,nd);
+  if (nx != ny || nx != nd) 
+      sf_error("%s: Wrong data dimensions: nx=%d, ny=%d, nd=%d",
+	       __FILE__,nx,ny,nd);
 
   sf_adjnull (adj,add,nx,ny,x,y);
-
+  
   if (adj) {
     for (i=0; i < nd; i++) {
       tmp[i] = y[i];
@@ -68,4 +80,4 @@ void triangle2_close(void)
     triangle_close (tr2);
 }
 
-/* 	$Id: triangle2.c,v 1.1 2004/02/24 16:13:58 fomels Exp $	 */
+/* 	$Id: triangle2.c,v 1.2 2004/02/27 20:59:57 fomels Exp $	 */
