@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
 	nk=0;
 	for (ix=0; ix<ax.n; ix++) {
 	    for (iz=0; iz<az.n; iz++) {
-		if( abs(cube[ix][iz]) > clip) {
+		if( fabs(cube[ix][iz]) > clip) {
 		    nk++;
 		}
 	    }
@@ -91,14 +91,14 @@ int main(int argc, char* argv[])
 	    jk=0;
 	    for (ix=0; ix<ax.n; ix++) {
 		for (iz=0; iz<az.n; iz++) {
-		    if( abs(cube[ix][iz]) > clip) {
+		    if( fabs(cube[ix][iz]) > clip) {
 			t3[0] = ax.o + ix * ax.d;
 			t3[1] = ay.o + iy * ay.d;
 			t3[2] = az.o + iz * az.d;
 			t3[3] = cube[ix][iz];
 			
-			fseeko(tfile,jk*4*SF_FLOAT,SEEK_SET);
-			fwrite(   t3,   4*SF_FLOAT,1,tfile);
+			fseeko(tfile,jk*4*sizeof(float),SEEK_SET);
+			fwrite(   t3,     sizeof(float),4,tfile);
 			jk++;
 		    }
 		}
@@ -107,14 +107,13 @@ int main(int argc, char* argv[])
 	    jk=0;
 	    for (ix=0; ix<ax.n; ix++) {
 		for (iz=0; iz<az.n; iz++) {
-		    if( abs(cube[ix][iz]) > clip) {
+		    if( fabs(cube[ix][iz]) > clip) {
 			t2[0] = ax.o + ix * ax.d;
 			t2[1] = az.o + iz * az.d;
 			t2[2] = cube[ix][iz];
-			
-			fseeko(tfile,jk*3*SF_FLOAT,SEEK_SET);
-			fwrite(   t2,   3*SF_FLOAT,1,tfile);
-			
+
+			fseeko(tfile,jk*3*sizeof(float),SEEK_SET);
+			fwrite(   t2,     sizeof(float),3,tfile);
 			jk++;
 		    }
 		}
@@ -131,16 +130,16 @@ int main(int argc, char* argv[])
 
     if( ay.n>1) {
 	for( jk=0; jk<nk; jk++) {
-	    fseeko(tfile,jk*4*SF_FLOAT,SEEK_SET);
-	    fread(    t3,   4*SF_FLOAT,1,tfile);
+	    fseeko(tfile,jk*4*sizeof(float),SEEK_SET);
+	    fread(    t3,     sizeof(float),4,tfile);
 	    if(verb) sf_warning("%d, %g %g %g %g",jk,t3[0],t3[1],t3[2],t3[3]);
 	    
 	    sf_floatwrite(t3,4,Fl);
 	}
     } else {
 	for( jk=0; jk<nk; jk++) {
-	    fseeko(tfile,jk*3*SF_FLOAT,SEEK_SET);
-	    fread(    t2,   3*SF_FLOAT,1,tfile);
+	    fseeko(tfile,jk*3*sizeof(float),SEEK_SET);
+	    fread(    t2,     sizeof(float),3,tfile);
 	    if(verb) sf_warning("%d, %g %g %g",jk,t2[0],t2[1],t2[2]);
 	    
 	    sf_floatwrite(t2,3,Fl);
