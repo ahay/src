@@ -19,7 +19,7 @@ void triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 {
     int i;
 
-    if (nx != ny || nx != nd) sf_error("%s: Wrong data dimensions");
+    if (nx != ny || nx != nd) sf_error("%s: Wrong data dimensions",__FILE__);
 
     adjnull (adj,add,nx,ny,x,y);
     if (adj) {

@@ -18,13 +18,13 @@ void print (int dim, const int *nd, const int *center, const int *na,
     for (j=0; j < dim; j++) {
 	nf *= na[j];
     }
-    filt = (float*) alloca(nf*sizeof(float));
+    filt = sf_floatalloc(nf);
 
     box (dim, nd, center, na, aa, nf, filt); 
     fprintf(stderr,"-----------------------------------------\n");
 
     for (j=0; j < dim; j++) {
-	ii0[j] = 1;
+	ii0[j] = 0;
     }
 
     for (ia = 0; ia < nf - na[0]+1; ia += na[0]) {
@@ -35,15 +35,17 @@ void print (int dim, const int *nd, const int *center, const int *na,
 	    ii0[j] = ii[j];
 	}
 
-        for (i=0; i < br-1; i++) {
+        for (i=0; i < br-1; i++)
 	    fprintf (stderr,"+++++++++++++++++++++++++++++++++++++++++\n");
-	    for (k=ia; k < ia+na[0]-1; k++) {
-		fprintf(stderr,"%7.3f",filt[k]);
-	    }
-	    fprintf (stderr,"\n");
+
+	for (k=0; k < na[0]; k++) {
+	    fprintf(stderr,"%7.3f",filt[k+ia]);
 	}
+	fprintf (stderr,"\n");
     }
     
     fprintf (stderr,"-----------------------------------------\n");
+
+    free (filt);
 }
 

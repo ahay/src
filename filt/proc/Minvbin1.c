@@ -107,7 +107,8 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=nx;
     if (!sf_getfloat("eps",&eps)) eps=0.2;
-
+    if (!sf_getbool("pef",&pef)) pef=false;
+ 
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_read (dd,sizeof(float),nd,in);
 	if (prec) {
@@ -123,32 +124,32 @@ int main (int argc, char* argv[])
 		       mm, dd, niter, eps, "end");
 	}
 	cgstep_close();
-	sf_write (mm,sizeof(float),nx,out);
-    }
-    
-    if (!sf_getbool("pef",&pef)) pef=false;
-    if (pef) {
-	bb = allocatehelix (2);
-	aa = sf_floatalloc (3);
-	aa[0] = 1.;
-	bb->lag[0] = 1;
-	bb->lag[1] = 2;
-	bound(1, &nx, &nx, &three, bb); 
-	for (i=0; i < 3; i++) {
-	    find_pef (nx, mm, bb, 3);
-	    aa[1] = bb->flt[0];
-	    aa[2] = bb->flt[1];
-	    if (prec) {
-		polydiv_init (nx, bb);
-		solver_prec(int1_lop, cgstep, polydiv_lop, nx, nx, nd,
-			    mm, dd, niter, eps, "end");
-	    } else {
-		tcai1_init (3, aa);
-		solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
-			   mm, dd, niter, eps, "end");
+
+	if (pef) {
+	    bb = allocatehelix (2);
+	    aa = sf_floatalloc (3);
+	    aa[0] = 1.;
+	    bb->lag[0] = 1;
+	    bb->lag[1] = 2;
+	    bound(1, &nx, &nx, &three, bb); 
+	    for (i=0; i < 3; i++) {
+		find_pef (nx, mm, bb, 3);
+		aa[1] = bb->flt[0];
+		aa[2] = bb->flt[1];
+		if (prec) {
+		    polydiv_init (nx, bb);
+		    solver_prec(int1_lop, cgstep, polydiv_lop, nx, nx, nd,
+				mm, dd, niter, eps, "end");
+		} else {
+		    tcai1_init (3, aa);
+		    solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
+			       mm, dd, niter, eps, "end");
+		}
+		cgstep_close();
 	    }
-	    cgstep_close();
 	}
+	
+    	sf_write (mm,sizeof(float),nx,out);
     }
 
     exit(0);

@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	    r2 = d2 - 2.*rd*a + r2*a*a;
 	    rp2 = dm*dm;
 
-	    if (verb) sf_warning("iter=% r2=%g rp2=%g m=%g a=%g",
+	    if (verb) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
 				 iter,r2,rp2,m,a);
 
 	    m += dm;
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 	}
         
 	if (verb) sf_warning("m=%g a=%g",m,a*m*sqrtf(SF_PI)*0.5);
-	if (verb) sf_warning ("%d of %d, %d iterations", i2, n2, iter);
+	if (verb) sf_warning ("%d of %d, %d iterations", i2+1, n2, iter);
         
 	sf_write (data,sizeof(float),na,out);
     }

@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_read (dat, sizeof(float), n, in);
 	for (iw=0; iw < nw; iw++) {
-	    i0 = window1_apply(iw,dat,(iw > 1),(iw < nw),win);
+	    i0 = window1_apply(iw,dat,(iw > 0),(iw < nw-1),win);
 	    for (i1=0; i1 < i0; i1++) {
 		dat2[i1] = 0.;
 	    }
