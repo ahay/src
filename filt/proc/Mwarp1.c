@@ -82,7 +82,6 @@ int main(int argc, char* argv[])
     warpout = sf_output("warpout");
     sf_putint(warpout,"n1",n2);
     sf_putfloat(warpout,"d1",d2);
-    sf_putint(warpout,"n2",m2);
 
     if (!noamp) {
 	amplout = sf_output("amplout");
@@ -230,4 +229,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mwarp1.c,v 1.9 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mwarp1.c,v 1.10 2004/05/13 22:27:10 fomels Exp $	 */
