@@ -1,5 +1,6 @@
 PROJ
-	get rid of the clean rule
+	Licensing
+	get rid of the clean rule / emitter
 	parameter checking
 	Tkinter interface
 DOCUMENTATION
