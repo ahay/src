@@ -359,12 +359,13 @@ def dummy(target=None,source=None,env=None):
      for src in source:
          fig = str(src)
          plt = os.path.splitext(os.path.basename(fig))[0]
+         plt2 = string.replace(plt,'_','\_')
          dir = os.path.split(os.path.split(fig)[0])[0]
          if dir != dirold:
              tex.write('\n\\section{%s}\n' % dir)
              tex.write('\\inputdir{%s}\n\n' % dir)
              dirold = dir
-         tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,dir,plt))
+         tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,dir,plt2))
          tex.write('\\clearpage\n')
      tex.close()    
      return 0
@@ -462,6 +463,7 @@ def latexscan(node,env,path):
             check = isplot.search(line)
             if check:
                  plot = check.group(1)
+                 plot = string.replace(plot,'\_','_')
                  plots.append(os.path.join(figdir,plot + ressuffix))
                  if re.search('angle=90',line):
                       plotoption[plot+pssuffix] = '-flip r90'
