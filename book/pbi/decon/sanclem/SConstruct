@@ -105,22 +105,36 @@ for hz in freq:
          ''' % hz)
 Combine('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso',result=1)
 
-Flow('vel2','topvel vel','cat axis=1 ${SOURCES[1]} ${SOURCES[0]}')
+Flow('vel2','topvel vel',
+     'cat axis=1 ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[0]}')
 Flow('topai','ai','math output=7.2')
 Flow('topvel','vel','math output=3000')
 Flow('mod','topai ai vel2',
      '''
-     cat axis=1 ${SOURCES[1]} ${SOURCES[0]} |
-     ai2refl f=120 |
-     time2depth nz=578 dz=0.1 velocity=${SOURCES[2]}
+     cat axis=1 ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[0]} |
+     ai2refl f=60 |
+     time2depth nz=1156 dz=0.1 velocity=${SOURCES[2]}
      ''')
-Plot('mod','mod',
-     'grey title="Reflectivity Model" label1="Depth (m)" color=G')
+Result('mod','mod',
+       '''
+       window min1=60 j1=5 |
+       grey title="Reflectivity Model" label1="Depth (m)" color=G
+       ''')
 
 Flow('zof','mod vel2',
-     'sstep1 eps=0.01 nt=750 dt=0.0001 velocity=${SOURCES[1]} inv=1')
-Plot('zof','zof',
-     'grey title="Exploding Reflector Data" label1="Time (s)" color=G')
+     'sstep1 eps=0.01 nt=100 dt=0.002 velocity=${SOURCES[1]} inv=1')
+Result('zof','zof',
+       'grey title="Exploding Reflector Data" label1="Time (s)" color=G')
+
+Flow('vel1','vel2','smooth rect1=5 | window j1=5')
+
+Flow('mig','zof vel1',
+     'sstep1 eps=0.01 velocity=${SOURCES[1]}')
+Result('mig','mig',
+       '''
+       window min1=60 |
+       grey title="Migrated Image" label1="Depth (m)" color=G
+       ''')
 
 ###########################################################################
 End()
