@@ -40,8 +40,8 @@ int main(int argc, char* argv[])
     second = sf_floatalloc (n2);
 
     for (i2=0; i2 < m2; i2++) {
-	sf_read(first,sizeof(float),n1,in);
-	sf_read(second,sizeof(float),n1,add);
+	sf_read(first,sizeof(float),n1,add);
+	sf_read(second,sizeof(float),n1,in);
 
 	for (i1=n1; i1 < n2; i1++) {
 	    second[i1] = (7.*second[i1-1]-5.*second[i1-2]+second[i1-3])/3.;
