@@ -61,7 +61,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
 
     /* slowness parameters */
-    Fs = sf_input ("slowness");
+    Fs = sf_input ("slo");
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";

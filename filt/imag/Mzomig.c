@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper size */
 
     /* slowness parameters */
-    Fs = sf_input ("slowness");
+    Fs = sf_input ("slo");
     iaxa(Fs,&alx,1); alx.l="lx";
     iaxa(Fs,&aly,2); aly.l="ly";
     iaxa(Fs,&az ,3);  az.l= "z";
@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
 		
 		if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
 		if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
-		if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
+		if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
 		
 		iaxa(Fi,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
 		iaxa(Fi,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
