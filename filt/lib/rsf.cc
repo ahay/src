@@ -97,10 +97,10 @@ iRSF::get (const char* name, int& value) const
     }
 }
 
- void 
+void 
 iRSF::get (const char* name, bool &value, bool defolt) const
 {
-    _Bool cvalue;
+    bool cvalue;
 
     if (file_)  {
 	if (sf_histbool (file_,name,&cvalue)) value=cvalue; 
