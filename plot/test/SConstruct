@@ -4,7 +4,7 @@ import configure
 
 plots = '''
 7ab cmp croshyp csp dc dcretard ellipse
-headray nmotraj reflector reflexpt reflkine sg vrms
+headray nmotraj reflector reflexpt reflkine sg vrms whitepruf
 '''
 
 try:
@@ -64,4 +64,4 @@ if root:
 #####################################################################
 
 
-# 	$Id: SConstruct,v 1.5 2004/04/19 22:03:22 fomels Exp $	
+# 	$Id: SConstruct,v 1.6 2004/06/02 15:09:58 fomels Exp $	

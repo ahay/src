@@ -3,100 +3,9 @@ import rsfdoc
 import rsfprog
 import rsfconf
 
-##############################################################################
-# BEGIN STANDARD SCons SCRIPT HEADER
-#
-# This is the cut-and-paste logic so that a self-contained script can
-# interoperate correctly with different SCons versions and installation
-# locations for the engine.  If you modify anything in this section, you
-# should also change other scripts that use this same header.
-##############################################################################
-
-# Strip the script directory from sys.path() so on case-insensitive
-# (WIN32) systems Python doesn't think that the "scons" script is the
-# "SCons" package.  Replace it with our own library directories
-# (version-specific first, in case they installed by hand there,
-# followed by generic) so we pick up the right version of the build
-# engine modules if they're in either directory.
-
-script_dir = sys.path[0]
-
-if script_dir in sys.path:
-    sys.path.remove(script_dir)
-
-libs = []
-
-if os.environ.has_key("SCONS_LIB_DIR"):
-    libs.append(os.environ["SCONS_LIB_DIR"])
-
-prefs = []
-
-if sys.platform == 'win32':
-    # sys.prefix is (likely) C:\Python*;
-    # check only C:\Python*.
-    prefs.append(sys.prefix)
-else:
-    # On other (POSIX) platforms, things are more complicated due to
-    # the variety of path names and library locations.  Try to be smart
-    # about it.
-    if script_dir == 'bin':
-        # script_dir is `pwd`/bin;
-        # check `pwd`/lib/scons*.
-        prefs.append(os.getcwd())
-    else:
-        if script_dir == '.' or script_dir == '':
-            script_dir = os.getcwd()
-        head, tail = os.path.split(script_dir)
-        if tail == "bin":
-            # script_dir is /foo/bin;
-            # check /foo/lib/scons*.
-            prefs.append(head)
-
-    head, tail = os.path.split(sys.prefix)
-    if tail == "usr":
-        # sys.prefix is /foo/usr;
-        # check /foo/usr/lib/scons* first,
-        # then /foo/usr/local/lib/scons*.
-        prefs.append(sys.prefix)
-        prefs.append(os.path.join(sys.prefix, "local"))
-    elif tail == "local":
-        h, t = os.path.split(head)
-        if t == "usr":
-            # sys.prefix is /foo/usr/local;
-            # check /foo/usr/local/lib/scons* first,
-            # then /foo/usr/lib/scons*.
-            prefs.append(sys.prefix)
-            prefs.append(head)
-        else:
-            # sys.prefix is /foo/local;
-            # check only /foo/local/lib/scons*.
-            prefs.append(sys.prefix)
-    else:
-        # sys.prefix is /foo (ends in neither /usr or /local);
-        # check only /foo/lib/scons*.
-        prefs.append(sys.prefix)
-
-    prefs = map(lambda x: os.path.join(x, 'lib'), prefs)
-
-libs.extend(map(lambda x: os.path.join(x, 'scons'), prefs))
-
-sys.path = libs + sys.path
-
-##############################################################################
-# END STANDARD SCons SCRIPT HEADER
-##############################################################################
-
 # The following adds all SCons SConscript API to the globals of this module.
 import SCons.Script.SConscript
 globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
-
-#from SCons.Environment import Environment
-#from SCons.Util import WhereIs
-#from SCons.Builder import Builder
-#from SCons.Action import Action
-#from SCons.Scanner import Base
-#from SCons.Options import Options
-#from SCons.Node.FS import default_fs 
 
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES
@@ -531,4 +440,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.31 2004/06/01 21:08:07 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.32 2004/06/02 15:09:58 fomels Exp $	

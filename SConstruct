@@ -10,6 +10,11 @@ bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 incdir = os.path.join(root,'include')
 
+pydir = libdir
+#for path in sys.path:
+#    if os.path.isdir(os.path.join(path,'SCons')):
+#        pydir = path
+
 env = Environment()
 
 ##########################################################################
@@ -96,8 +101,8 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 for src in ('doc','proj','prog'):
     py = "rsf%s.py"% src
     pyc = py + 'c'
-    env.Install(libdir,py)
-    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
+    env.Install(pydir,py)
+    Clean(os.path.join(pydir,py),[os.path.join(pydir,pyc),pyc])
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
@@ -112,6 +117,6 @@ AlwaysBuild(use)
 # INSTALLATION
 ##########################################################################
 
-env.Alias('install',[bindir,libdir,incdir])
+env.Alias('install',[pydir,bindir,libdir,incdir])
 
-# 	$Id: SConstruct,v 1.26 2004/04/02 15:46:41 fomels Exp $	
+# 	$Id: SConstruct,v 1.27 2004/06/02 15:09:58 fomels Exp $	
