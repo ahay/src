@@ -172,15 +172,15 @@ int main(int argc, char* argv[])
 	if(ss[is].z >= bz.o && 
 	   ss[is].z <  bz.o + (bz.n-1)*bz.d &&
 	   ss[is].x >= bx.o && 
-	   ss[is].x < bx.o + (bx.n-1)*bx.d) {
+	   ss[is].x <  bx.o + (bx.n-1)*bx.d) {
 	    
 	    jzs[is] = (int)( (ss[is].z-bz.o)/bz.d);
 	    fzs[is] =        (ss[is].z-bz.o)/bz.d - jzs[is];	    
 	    jxs[is] = (int)( (ss[is].x-bx.o)/bx.d);
 	    fxs[is] =        (ss[is].x-bx.o)/bx.d - jxs[is];
 	} else {
-	    jzs[is] = 0;
-	    fzs[is] = 1;
+	    jzs[is] = 0; jxs[is] = 0;
+	    fzs[is] = 1; fxs[is] = 0;
 	    ss[is].v= 0;
 	}
 

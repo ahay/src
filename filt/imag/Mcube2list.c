@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     tfile = sf_tempfile(&(tname), "w+b");
 
     for (iy=0;iy<ay.n;iy++) {
-	if(verb) sf_warning("iy=%d",iy);
+/*	if(verb) sf_warning("iy=%d",iy);*/
 	
 	sf_floatread(cube[0],az.n*ax.n,Fc);
 	
@@ -132,7 +132,7 @@ int main(int argc, char* argv[])
 	for( jk=0; jk<nk; jk++) {
 	    fseeko(tfile,jk*4*sizeof(float),SEEK_SET);
 	    fread(    t3,     sizeof(float),4,tfile);
-	    if(verb) sf_warning("%d, %g %g %g %g",jk,t3[0],t3[1],t3[2],t3[3]);
+/*	    if(verb) sf_warning("%d, %g %g %g %g",jk,t3[0],t3[1],t3[2],t3[3]);*/
 	    
 	    sf_floatwrite(t3,4,Fl);
 	}
@@ -140,7 +140,7 @@ int main(int argc, char* argv[])
 	for( jk=0; jk<nk; jk++) {
 	    fseeko(tfile,jk*3*sizeof(float),SEEK_SET);
 	    fread(    t2,     sizeof(float),3,tfile);
-	    if(verb) sf_warning("%d, %g %g %g",jk,t2[0],t2[1],t2[2]);
+/*	    if(verb) sf_warning("%d, %g %g %g",jk,t2[0],t2[1],t2[2]);*/
 	    
 	    sf_floatwrite(t2,3,Fl);
 	}
