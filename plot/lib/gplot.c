@@ -4,14 +4,13 @@
 #include <rsf.h>
 
 #include "gplot.h"
+#include "axis.h"
 #include "vplot.h"
 
 static int axisfat, axiscol, labelfat, *fat, *symbolsz, *col, titlefat;
 static float labelsz, min1, max1, min2, max2, inch1, inch2, titlesz; 
 static float backcol[3],fillcol[3], xur, xll, yur, yll, *dashtype;
 static float screenratio, screenht, screenwd;
-static const float sqr[3] = {1.414214, 3.162278, 7.071068};
-static const float vint[4] = {1., 2., 5., 10.};
 static char *symbol, *title, blank[]=" ";
 static bool transp, yreverse, xreverse, where1, where2, labelrot, wheretics;
 static bool fmin1, fmax1, fmin2, fmax2, wheretitle, verttitle, wanttitle;
@@ -26,7 +25,6 @@ struct Axis {
 static void getscl(struct Axis *axis);
 static void labelaxis(struct Axis *axis);
 static void tjust(bool where);
-static float opttic(float min, float max, float inch, float num0, float size);
 static void makelabel (float num, float num2, struct Axis *axis);
 static void maketic (float num, struct Axis *axis);
 
@@ -206,81 +204,82 @@ void vp_coord_init (bool transp1, bool yreverse1)
 void vp_dash_fig (int type)
 {
     float size;
-    float dash0, dash1, gap0, gap1;
+    float dash[2], gap[2];
     
     switch (type) {
 	case 1:
 	    size = .3;
-	    dash0 = dash1 = 1.;
-	    gap0 = gap1 = 2.;
+	    dash[0] = dash[1] = 1.;
+	    gap[0] = gap[1] = 2.;
 	    break;
 	case 2:
 	    size = .2;
-	    dash0 = dash1 = 1.;
-	    gap0 = gap1 = 6.;
+	    dash[0] = dash[1] = 1.;
+	    gap[0] = gap[1] = 6.;
 	    break;
 	case 3:
 	    size = .4;
-	    dash0 = dash1 = 4.;
-	    gap0 = gap1 = 2.;
+	    dash[0] = dash[1] = 4.;
+	    gap[0] = gap[1] = 2.;
 	    break;
 	case 4:
 	    size = .6;
-	    dash0 = dash1 = 3.;
-	    gap0 = gap1 = 2.;
+	    dash[0] = dash[1] = 3.;
+	    gap[0] = gap[1] = 2.;
 	    break;
 	case 5:
 	    size = .5;
-	    dash0 = .3;
-	    dash1 = 3.;
-	    gap0 = gap1 = 1.;
+	    dash[0] = .3;
+	    dash[1] = 3.;
+	    gap[0] = gap[1] = 1.;
 	    break;
 	case 6:
 	    size = .6;
-	    dash0 = 4.;
-	    dash1 = 2.;
-	    gap0 = gap1 = 1.;
+	    dash[0] = 4.;
+	    dash[1] = 2.;
+	    gap[0] = gap[1] = 1.;
 	    break;
 	case 7:
 	    size = .4;
-	    dash0 = dash1 = 1.;
-	    gap0 = 2.;
-	    gap1 = 4.;
+	    dash[0] = dash[1] = 1.;
+	    gap[0] = 2.;
+	    gap[1] = 4.;
 	    break;
 	case 8:
 	    size = .8;
-	    dash0 = dash1 = 5.;
-	    gap0 = 2.;
-	    gap1 = 4.;
+	    dash[0] = dash[1] = 5.;
+	    gap[0] = 2.;
+	    gap[1] = 4.;
 	    break;
 	case 9:
 	    size = .6;
-	    dash0 = dash1 = 1.;
-	    gap0 = gap1 = 1.;
+	    dash[0] = dash[1] = 1.;
+	    gap[0] = gap[1] = 1.;
 	    break;
 	case 0:
-	    dash0 = 0.;
-	    gap0 = 0.;
-	    dash1 = 0.;
-	    gap1 = 0.;
+	    dash[0] = 0.;
+	    gap[0] = 0.;
+	    dash[1] = 0.;
+	    gap[1] = 0.;
 	    break;
 	default:
-	    dash0 = 0.;
-	    gap0 = 0.;
-	    dash1 = 0.;
-	    gap1 = 0.;
+	    dash[0] = 0.;
+	    gap[0] = 0.;
+	    dash[1] = 0.;
+	    gap[1] = 0.;
 	    break;
     }
-    if (dash0 + dash1 + gap0 + gap1 != 0.) {
+    if (dash[0] + dash[1] + gap[0] + gap[1] != 0.) {
 	/*If not default case then find the decimal part of dash->dashtype*/
 	type = fmodf(type,1.);
 	if (type == 0.) type = .4;
-	size *= type / (.4 * (dash0 + dash1 + gap0 + gap1));
-	dash0 *= size;
-	dash1 *= size;
-	gap0 *= size;
-	gap1 *= size;
+	size *= type / (.4 * (dash[0] + dash[1] + gap[0] + gap[1]));
+	dash[0] *= size;
+	dash[1] *= size;
+	gap[0] *= size;
+	gap[1] *= size;
     }
+    vp_setdash (dash, gap, 2);
 }
 
 void vp_fillin (void)
@@ -332,7 +331,7 @@ static void getscl(struct Axis *axis)
 
     if (inch <= 0) sf_error("%s: negative inch %g",__FILE__,inch);
 
-    axis->dnum = opttic(min,max,inch,axis->num0,labelsz);
+    axis->dnum = vp_opttic(min,max,inch,axis->num0,labelsz);
 }
 
 void vp_invmassage (float* min, float* max, float mid, float dev)
@@ -566,43 +565,6 @@ void vp_minmax (float emin1, float emin2, float emax1, float emax2)
 	ftmp=max1; max1=max2; max2=ftmp;
 	btmp=fmax1; fmax1=fmax2; fmax2=btmp;
     }
-}
-
-static float opttic(float min, float max, float inch, float num0, float size) 
-{
-    const float eps=.000001, bignum=10000.;
-    float num, dnum, dmax, div, b;
-    int length, counter, len, i, div2;
-    char string[100];
-
-    if (fabsf(max - min) < eps) return 0.5;
-    
-    div = fabsf(max-min)/inch;
-
-    if (div < eps) return (max > min)? 0.5: -0.5;
-    
-    div2 = log10f (div);
-    if (div < 1.) div2--;
-    b = div / powf (10.,(float) div2);
-    
-    for (i = 0; i < 3; i++) {
-	if (sqr[i] > b) break;
-    }
-    
-    for (dnum = vint[i] * powf (10.,div2); dnum < dmax; dnum *= 2.) {
-	length = 0;
-	counter = (int) (fabsf(max - min)/dnum);
-	for (i= 0; i < counter; i++) {
-	    num = num0 + i * dnum;
-	    if (fabsf(num) < fabsf(max - min)/bignum) num = 0.;
-	    sprintf (string, "%1.5g", num);
-	    len = strlen (string);
-	    if (len > length) length = len;
-	}
-	dmax = (length + 1.5) * fabsf(max - min)*size/(33.* inch);
-    }
-
-    return dnum;
 }
 
 void vp_pad_init(bool pad, bool npad)
@@ -907,70 +869,6 @@ void vp_plottitle(void)
     vp_gtext(x, y, xpath, ypath, xup, yup ,title);
 }
 
-void vp_simpleaxis (float x1, float y1, 
-		    float x2, float y2, 
-		    float num1, float num2,
-		    float dnum, float ltic, char* label, float size)
-{
-    float ch, xpath, ypath, xup, yup, dist, costh, sinth, dtic, xpos, ypos;
-    float dxtic, dytic, loc, num, pad, dnumtic;
-    char string[10];
-
-    /* pad is the space skipped between tic and number, and number and label */
-    pad = 0.15;
-    ch = size / 33.;
-
-    vp_color (7);
-    vp_move(x1,y1);
-    vp_draw(x2,y2);
-
-    /* compute sines and cosines of axis angle */
-    dist = hypotf(x2-x1,y2-y1);
-    costh = (x2-x1)/dist;
-    sinth = (y2-y1)/dist;
-    /* x and y sizes of tic marks */
-    dxtic = ltic * sinth;
-    dytic = -ltic * costh;
-
-    if (x1 <= x2) {
-        vp_tjust(TH_CENTER,TV_TOP);
-        xpath = ch * costh;
-        ypath = ch * sinth;
-        xup = -ch * sinth;
-        yup = ch * costh;
-    } else {	
-        vp_tjust(TH_CENTER,TV_BOTTOM);
-        xpath = -ch * costh;
-        ypath = -ch * sinth;
-        xup = ch * sinth;
-        yup = -ch * costh;
-    } 
-
-    dnumtic = dnum;
-    if (0. == dnumtic) dnumtic = opttic(num1,num2,dist,num1,size);
-    if (num1 > num2) dnumtic = -dnumtic;
-
-    /* figure out the tic mark spacing */
-    dtic = dnumtic/(num2-num1) * dist; 
-    if (dtic < 0.) dtic *= -1.;
-
-    /* move to each tic mark location, draw the tic and the number */
-    for (loc=0., num=num1; loc < dist; loc+=dtic, num+=dnumtic) {
-        sprintf(string,"%1.5g",num);
-	xpos = x1 + loc * costh;
-	ypos = y1 + loc * sinth;
-        vp_move(xpos,ypos);
-	vp_draw(xpos+dxtic,ypos+dytic);
-	vp_gtext(xpos+dxtic+pad*sinth,
-		 ypos+dytic-pad*costh,xpath,ypath,xup,yup,string);
-    }
-
-    /* now the axis label */
-    xpos = x1 + loc/2. * costh + dxtic + ch * sinth + 2. * pad * sinth;
-    ypos = y1 + loc/2. * sinth + dytic - ch * costh - 2. * pad * costh;
-    vp_gtext(xpos,ypos,xpath,ypath,xup*1.5,yup*1.5,label);
-}
-
 void vp_stdplot (int fastplt, bool wantframe, bool wantframenum,
 		 int n3, float o3, float d3)
 {
@@ -1073,5 +971,23 @@ void vp_vplot_init (void)
     vp_scale (scale1, scale2);
     vp_orig (orig1, orig2);
     vp_uorig (uorig1, uorig2);
+
     vp_uclip (min1, min2, max1, max2);
+}
+
+void vp_rotate (int n, float* x, float* y)
+{
+    int i;
+
+    if (yreverse) {
+	for (i=0; i < n; i++) {
+	    y[i] = (min2 + max2) - y[i];
+	}
+    } 
+
+    if (xreverse) {
+	for (i=0; i < n; i++) {
+	    x[i] = (min1 + max1) - x[i];
+	}
+    } 
 }

@@ -14,5 +14,9 @@ void vp_title_init(sf_file file);
 void vp_color_init (void);
 void vp_minmax (float min1, float min2, float max1, float max2);
 void vp_pad_init(bool pad, bool npad);
+void vp_rotate (int n, float* x, float* y);
+void vp_axis_init (const sf_file in);
+void vp_vplot_init (void);
+void vp_dash_fig (int type);
 
 #endif

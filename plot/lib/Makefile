@@ -3,10 +3,11 @@ CFLAGS = -Wall -pedantic -O3
 CFLAGS = -Wall -pedantic -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -g
 CFLAGS = -std=gnu9x -Wall -pedantic -g -I../../seis/rsf
+LDFLAGS = -L../../seis/rsf -lrsf
 
 DEPEND = -MM
 
-SRC = coltab gplot vplot
+SRC = axis coltab gplot stdplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 
@@ -23,7 +24,7 @@ rsfplot.h: ${INCS}
 	${CC} -c ${CFLAGS} $<
 
 %.x: %.o ${OBJS}
-	${CC} ${CFLAGS} $< ${OBJS} -lm -o $@
+	${CC} ${CFLAGS} $< ${OBJS} ${LDFLAGS} -lm -o $@ 
 
 -include Makefile.dependencies
 
