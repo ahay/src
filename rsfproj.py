@@ -292,6 +292,12 @@ combine ={
     }
 
 #############################################################################
+# FORTRAN-90 TOOL
+############################################################################
+
+import f90
+
+#############################################################################
 
 class Project(Environment):
     def __init__(self,**kw):
@@ -308,7 +314,9 @@ class Project(Environment):
                               'Pdf':Pdf,
                               'Read':Read,
                               'Retrieve':Retrieve},
-                    SCANNERS=[Plots]);
+                    SCANNERS=[Plots])
+        if self.Detect(f90.compilers):
+            self.Append(TOOLS=[f90.tool])
         self.view = []
         self.figs = []
         self.pdfs = []

@@ -116,7 +116,7 @@ sf_file sf_output (/*@null@*/ char* tag)
     size_t namelen;
 
     file = (sf_file) sf_alloc(1,sizeof(*file));
-    
+
     if (NULL == tag || 0 == strcmp(tag,"out")) {
 	file->stream = stdout;
 	headname = NULL;

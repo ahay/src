@@ -19,5 +19,4 @@ bool sf_getstrings (const char* key,/*@out@*/ char** par,size_t n);
 bool sf_getbool (const char* key,/*@out@*/ bool* par);
 bool sf_getbools (const char* key,/*@out@*/ bool* par,size_t n);
 
-
 #endif

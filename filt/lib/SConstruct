@@ -1,34 +1,87 @@
 import os, sys, string
 
+sys.path.append('../..')
+from rsfdoc import merge
+import configure
+
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = "alloc c99 decart error file files getpar math1 pfafft segy simtab stack"
+src = 'alloc c99 decart error file files getpar math1 pfafft segy simtab stack'
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
 
-root = os.environ.get('RSFROOT') or '../..'
-libdir = os.path.join(root,'lib')
-incdir = os.path.join(root,'include')
-
 try:
     Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
 except:
-    env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g')
-    env.Alias('install',[libdir,incdir])
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env.Append(CCFLAGS=' -g')
 
-sys.path.append(libdir)
-from rsfdoc import merge
-
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
 lib = env.StaticLibrary('rsf',sources)
 env.Command('rsf.h',includes,Action(merge))
 
-env.Install(libdir,lib)
-env.Install(incdir,'rsf.h')
+if root:
+    env.Install(libdir,lib)
+    env.Install(incdir,'rsf.h')
 
 ##############################################################################
-# PYTHON BINDINGS
+# TESTING
+##############################################################################
+for file in ['file','getpar','simtab']:
+    test = 'Test' + file + '.c'
+    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
+
+##############################################################################
+# FORTRAN BINDING
+##############################################################################
+env.Object('fortran.o','fortran.c',
+           CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN',
+           CPPPATH='../..')
+libf = env.StaticLibrary('rsff',sources+['fortran.o'])                         
+
+if root:
+    env.Install(libdir,libf)
+
+for file in ['getpar','file']:
+    test = 'Test' + file + '.f'
+    env.Program([test,libf],PROGSUFFIX='.x',PROGPREFIX='',
+                OBJSUFFIX='f.o',
+                LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
+
+##############################################################################
+# FORTRAN-90 BINDING
+##############################################################################
+import configure
+
+if env.has_key('F90'):
+    configure.load_f90(env)
+    env.Object('fortran90.o','fortran.c',
+               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN90')
+    env.Object('rsf.o','rsf.f90')
+    libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o']+sources)
+
+    if root:
+        env.Install(libdir,libf90)
+
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f90'
+        env.Program([test,libf90],PROGSUFFIX='f90.x',PROGPREFIX='',
+                    OBJSUFFIX='f90.o',
+                    LINK=env.get('F90'),LINKFLAGS=env.get('F90FLAGS'))
+    
+##############################################################################
+# PYTHON BINDING
 ##############################################################################
 
 if ('swig' in env.get('TOOLS')):
@@ -44,16 +97,10 @@ if ('swig' in env.get('TOOLS')):
                                SWIGFLAGS='-python',
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
-    env.Install(libdir,python)
-    env.Install(libdir,'c_rsf.py')
-    env.Install(libdir,'rsf.py')
-    Clean(python,['c_rsf.py','c_rsf.pyc'])
 
-##############################################################################
-# TESTING
-##############################################################################
-for file in ('file','getpar','simtab'):
-    test = 'Test' + file + '.c'
-    env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
-##############################################################################
+    if root:
+        env.Install(libdir,python)
+        env.Install(libdir,'c_rsf.py')
+        env.Install(libdir,'rsf.py')
+    Clean(python,['c_rsf.py','c_rsf.pyc'])
 
