@@ -1,0 +1,72 @@
+#include <math.h>
+#include <float.h>
+
+#include <rsf.h>
+
+#include "wilson.h"
+#include "helicon.h"
+#include "polydiv.h"
+
+static int n, n2;
+static float *au, *bb, *cc, *b, *c;    
+
+/* Wilson-Burg spectral factorization */
+void wilson_init( int nmax) 
+{
+    n = nmax;
+    n2 = 2*n-1;
+    au = sf_floatalloc (n2);
+    bb = sf_floatalloc (n2);
+    cc = sf_floatalloc (n2);
+    b = sf_floatalloc (n);
+    c = sf_floatalloc (n);
+}
+
+float wilson_factor(int niter, float s0, filter ss, 
+		    filter aa, bool verb, float tol) 
+{
+    float eps;
+    int i, iter;
+
+    for(i=0; i < n2; i++) {
+	au[i] = 0.;
+    }
+    au[n-1] = s0;
+    b[0] = 1.;       /* initialize */
+		     
+    for(i=0; i < ss->nh; i++) {  /* symmetrize input auto */
+	au[n+ss->lag[i]-1] =  ss->flt[i];        
+	au[n-ss->lag[i]-1] =  ss->flt[i];
+    }                   
+
+    helicon_init( aa);                      /* multiply polynoms */
+    polydiv_init( n2, aa);                  /* divide   polynoms */
+    for(iter=0; iter < niter; iter++) {
+	polydiv_lop(false,false, n2, n2, au, bb);  /* bb = S/A */
+	polydiv_lop(true,false, n2, n2, cc,   bb);   /* cc = S/(AA') */
+	eps = 0.;
+	for(i=1; i < n; i++) {      
+	    /* b = plusside(1+cc) */
+	    b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
+	    if (fabs(b[i]) > eps) eps = fabs(b[i]);
+	}
+	if (verb) sf_warning("wilson %d %f",iter,eps);
+	if (eps < tol) break;
+
+	helicon_lop( false, false, n, n, b, c);   /* c = A b */
+      
+	for(i=0; i < aa->nh; i++) {              /* put on helix */
+	    aa->flt[i] = c[aa->lag[i]];
+	}                
+    } 
+    return sqrtf(cc[n-1]);
+}
+
+void wilson_close( void) {
+    polydiv_close();
+    free (au);
+    free (bb);
+    free (cc);
+    free (b);
+    free (c);
+}
