@@ -6,7 +6,6 @@ Takes: < input.rsf dip=dip.rsf > smooth.rsf
 #include <rsf.h>
 
 #include "trisl.h"
-#include "freqfilt2.h"
 
 int main(int argc, char* argv[])
 {
@@ -56,5 +55,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mtrismooth2.c,v 1.2 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mtrismooth2.c,v 1.3 2004/05/18 18:21:00 fomels Exp $	 */
 

@@ -106,6 +106,7 @@ for niter in cases:
              %s''' % (niter,extra))
     Plot('g'+lapinter,lapinter,
               '''grey wantscalebar=y yreverse=n transp=n allpos=y
+              minval=0 maxval=525
               color=j clip=500 title="%s %d" ''' % (name,niter))
     for cont in range(2):
         Plot('c'+str(cont)+lapinter,lapinter,contour(cont))
