@@ -65,18 +65,21 @@ def latify(target=None,source=None,env=None):
     ltx.write('\\documentclass[%s]{%s}\n\n' % (options,lclass))
     use = env.get('use')
     resdir = env.get('resdir','Fig')
+    include = env.get('include')
     if use:
-        if type(use) is not types.ListType:
-            use = [use]
-        for package in use:
-            options = re.match(r'(\[[^\]]*\])\s*(\S+)',package)
-            if options:
-                ltx.write('\\usepackage%s{%s}\n' % options.groups())
-            else:
-                ltx.write('\\usepackage{%s}\n' % package)
-        ltx.write('\n')
+         if type(use) is not types.ListType:
+              use = [use]
+         for package in use:
+              options = re.match(r'(\[[^\]]*\])\s*(\S+)',package)
+              if options:
+                   ltx.write('\\usepackage%s{%s}\n' % options.groups())
+              else:
+                   ltx.write('\\usepackage{%s}\n' % package)
+         ltx.write('\n')
     if lclass == 'geophysics':
         ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
+    if include:
+         ltx.write(include+'\n\n')
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)
@@ -343,7 +346,8 @@ def eps2png(target=None,source=None,env=None):
      return 0
 
 Latify = Builder(action = Action(latify,
-                                 varlist=['lclass','options','use','resdir']),
+                                 varlist=['lclass','options','use',
+                                          'include','resdir']),
                  src_suffix='.tex',suffix='.ltx')
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
@@ -549,9 +553,9 @@ class TeXPaper(Environment):
                     figdir = os.path.join(self.docdir,os.path.dirname(png))
                     self.Install(figdir,[png,pdf])
                     self.Alias('install',figdir)
-    def Paper(self,paper,lclass='geophysics',use=None):
+    def Paper(self,paper,lclass='geophysics',use=None,include=None):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',
-                     use=use,lclass=lclass)
+                     use=use,lclass=lclass,include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
         pdfinstall = self.Install(self.docdir,paper+'.pdf')

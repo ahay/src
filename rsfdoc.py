@@ -231,6 +231,18 @@ class rsfprog:
         if pars:
             pars.sort()
             pardoc = ''
+            for par in pars:
+                pardoc = pardoc + par
+#                heading(self.pars[par].html(par),
+#                        '#000000', bgcol,
+#                        string.replace(self.pars[par].desc,
+#                                       '\n','<br>\n'),add='')
+            contents = contents + '''
+            \par\noindent
+            \begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}
+            %s
+            \end{tabular}
+            ''' % pardoc
     def html(self,dir):
         file = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
