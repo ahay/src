@@ -25,7 +25,7 @@ for slice in range(3):
     Flow(angle,'angles','window n3=1 f3=%d' % slice)
     Plot(grey,angle,
          '''
-         grey allpos=y transp=n yreverse=n color=j 
+         grey allpos=y transp=n yreverse=n Xcolor=j 
          wantscalebar=y barlabel="Reflection Angle (degrees)"
          title="Frequency=%d Hz"
          ''' % (25,50,75)[slice])
