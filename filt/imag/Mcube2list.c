@@ -18,6 +18,11 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -30,13 +35,14 @@ int main(int argc, char* argv[])
     axa   ax,ay,az; 
     axa   aa;       /* elements in the list */
     axa   aj;
-    float  x, y, z;
     int   ix,iy,iz;
-    int   nk,ik;
+    int   nk,jk;
     
     float **cube;
-    pt2d  *list2, p2;
-    pt3d  *list3, p3;
+
+    FILE* tfile;
+    char* tname;
+    float t2[3],t3[4];
 
     /*------------------------------------------------------------*/
 
@@ -61,22 +67,17 @@ int main(int argc, char* argv[])
 	if(verb) sf_warning("initiating 2D points");
 	aj.n=3;aj.o=0;aj.d=1;aj.l=" ";
     }
-    oaxa(Fl,&aj,1); if(verb) raxa(aj);
-
-    p2.x=0;         p2.z=0; p2.v=0;
-    p3.x=0; p3.y=0; p3.z=0; p3.v=0;
-
     /*------------------------------------------------------------*/
 
     cube = sf_floatalloc2(az.n,ax.n);
 
-/*
+    tfile = sf_tempfile(&(tname), "w+b");
+
     for (iy=0;iy<ay.n;iy++) {
-	y = ay.o + iy * ay.d;
 	if(verb) sf_warning("iy=%d",iy);
-
+	
 	sf_floatread(cube[0],az.n*ax.n,Fc);
-
+	
 	nk=0;
 	for (ix=0; ix<ax.n; ix++) {
 	    for (iz=0; iz<az.n; iz++) {
@@ -84,62 +85,69 @@ int main(int argc, char* argv[])
 		    nk++;
 		}
 	    }
-	}			   
-	aa.n+=nk;
+	}
 
 	if(ay.n>1) {
-	    list3 = (pt3d*) sf_alloc(nk,sizeof(*list3)); 
-	    for( ik=0;ik<nk;ik++) {
-		list3[ik] = p3;
-	    }
-	    nk=0;
+	    jk=0;
 	    for (ix=0; ix<ax.n; ix++) {
-		x = ax.o + ix * ax.d;
 		for (iz=0; iz<az.n; iz++) {
-		    z = az.o + iz * az.d;
 		    if( abs(cube[ix][iz]) > clip) {
-			list3[nk].x = x;
-			list3[nk].y = y;
-			list3[nk].z = z;
-			list3[nk].v = cube[ix][iz];
-			nk++;
+			t3[0] = ax.o + ix * ax.d;
+			t3[1] = ay.o + iy * ay.d;
+			t3[2] = az.o + iz * az.d;
+			t3[3] = cube[ix][iz];
+			
+			fseeko(tfile,jk*4*SF_FLOAT,SEEK_SET);
+			fwrite(   t3,   4*SF_FLOAT,1,tfile);
+			jk++;
 		    }
 		}
 	    }
-	    writept3d(Fl,list3,nk,4);
-	    free(list3);
 	} else {
-	    list2 = (pt2d*) sf_alloc(nk,sizeof(*list2));
-	    for( ik=0;ik<nk;ik++) {
-		list2[ik] = p2;
-	    }
-	    nk=0;
+	    jk=0;
 	    for (ix=0; ix<ax.n; ix++) {
-		x = ax.o + ix * ax.d;
 		for (iz=0; iz<az.n; iz++) {
-		    z = az.o + iz * az.d;
 		    if( abs(cube[ix][iz]) > clip) {
-			list2[nk].x = x;
-			list2[nk].z = z;
-			list2[nk].v = cube[ix][iz];
-			nk++;
+			t2[0] = ax.o + ix * ax.d;
+			t2[1] = az.o + iz * az.d;
+			t2[2] = cube[ix][iz];
+			
+			fseeko(tfile,jk*3*SF_FLOAT,SEEK_SET);
+			fwrite(   t2,   3*SF_FLOAT,1,tfile);
+			
+			jk++;
 		    }
 		}
 	    }
-	    writept2d(Fl,list2,nk,3);
-	    free(list2);
-       }	
-    }
-*/
+	} /* else ay.n=1 */
 
-    sf_floatread (cube[0],az.n*ax.n,Fc);
-
+	aa.n+=nk;
+	if(verb) raxa(aa);
+    } /* iy */
+    
     /* output axes */
-    aa.n=1;
+    oaxa(Fl,&aj,1); if(verb) raxa(aj);
     oaxa(Fl,&aa,2); if(verb) raxa(aa);
 
-    sf_floatwrite(cube[0],az.n*ax.n,Fl);
+    if( ay.n>1) {
+	for( jk=0; jk<nk; jk++) {
+	    fseeko(tfile,jk*4*SF_FLOAT,SEEK_SET);
+	    fread(    t3,   4*SF_FLOAT,1,tfile);
+	    if(verb) sf_warning("%d, %g %g %g %g",jk,t3[0],t3[1],t3[2],t3[3]);
+	    
+	    sf_floatwrite(t3,4,Fl);
+	}
+    } else {
+	for( jk=0; jk<nk; jk++) {
+	    fseeko(tfile,jk*3*SF_FLOAT,SEEK_SET);
+	    fread(    t2,   3*SF_FLOAT,1,tfile);
+	    if(verb) sf_warning("%d, %g %g %g",jk,t2[0],t2[1],t2[2]);
+	    
+	    sf_floatwrite(t2,3,Fl);
+	}
+    }
 
     free(cube);
+    unlink(tname);
     exit (0);
 }
