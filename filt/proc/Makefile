@@ -37,5 +37,5 @@ Makefile.dependencies:: *.c
 	$(CC) $(CFLAGS) $(DEPEND) $^ > Makefile.dependencies
 
 clean:
-	touch sfjunk junk.H junk.lint junk.o junklint 
-	rm sf* *.H *.lint *.o junklint
+	touch sfjunk junk.H junk.lint junk.o junklint Makefile.dependencies
+	rm sf* *.H *.lint *.o junklint Makefile.dependencies
