@@ -486,8 +486,8 @@ void sf_fileflush (sf_file file, sf_file src)
     sf_simtab_output(file->pars,file->stream);
     
     if (0==strcmp(file->dataname,"stdout")) { 
-/* keep stream, write the header end code */
-	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",eol,eol,eot);
+        /* keep stream, write the header end code */
+	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c\n",eol,eol,eot);
     } else {
 	file->stream = freopen(file->dataname,"wb",file->stream);
 	if (NULL == file->stream) 
@@ -1107,7 +1107,7 @@ void sf_close(void)
 {
     if (NULL == infile || NULL == infile->dataname || !(infile->pipe)) return;
 
-    if (unlink(infile->dataname))
+    if (strcmp("stdin",infile->dataname) && unlink(infile->dataname))
 	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
 }
 
@@ -1138,4 +1138,5 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.21 2004/06/30 18:28:41 fomels Exp $	 */
+/* 	$Id: file.c,v 1.22 2004/07/02 10:06:07 fomels Exp $	 */
+
