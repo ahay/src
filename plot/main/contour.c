@@ -73,7 +73,7 @@ int main (int argc, char* argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
-	sf_read(z[0],sizeof(float),n12,in);
+	sf_floatread(z[0],n12,in);
 	
 	if (!hasc) {
 	    if (!hasdc || !hasc0) {
@@ -382,5 +382,5 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.8 2004/04/01 15:38:21 fomels Exp $	 */
+/* 	$Id: contour.c,v 1.9 2004/04/19 21:52:05 fomels Exp $	 */
 

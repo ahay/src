@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 
 	if (0 == iframe || 3 == movie) { 
 	    sf_seek(in,(long) frame3*n1*n2,SEEK_SET);
-	    sf_read(front[0],sizeof(unsigned char),n1*n2,in);
+	    sf_charread((char*) front[0],n1*n2,in);
 	    
 	    for (i=0; i < n2front; i++) {
 		i2 = n2*i/(float) n2front;
@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 	if (0 == iframe || 2 == movie) {
 	    for (i3=0; i3 < n3; i3++) {
 		sf_seek(in,(long) i3*n1*n2+frame2*n1,SEEK_SET);
-		sf_read(side[i3],sizeof(unsigned char),n1,in);
+		sf_charread((char*) side[i3],n1,in);
 	    }
 
 	    for (i=n2front; i < n2pix; i++) {
@@ -181,7 +181,7 @@ int main(int argc, char* argv[])
 	    for (i3=0; i3 < n3; i3++) {
 		for (i2=0; i2 < n2; i2++) {
 		    sf_seek(in,(long) i3*n1*n2+i2*n1+frame1,SEEK_SET);
-		    sf_read(&top[i2][i3],sizeof(unsigned char),1,in);
+		    sf_charread((char*) (&top[i2][i3]),1,in);
 		}
 	    }
 

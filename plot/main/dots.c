@@ -140,7 +140,7 @@ int main (int argc, char* argv[])
     tracehigh = overlap * (dots? dd2 - 3*radius: dd2);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_read(data[0],sizeof(float),n1*n2,in);
+	sf_floatread(data[0],n1*n2,in);
 	
 	vp_erase();
     
@@ -353,5 +353,5 @@ static void circle(int corners,
     vp_area(vx,vy,corners,1,1,1);
 }
 
-/* 	$Id: dots.c,v 1.8 2004/04/01 02:13:03 fomels Exp $	 */
+/* 	$Id: dots.c,v 1.9 2004/04/19 21:52:05 fomels Exp $	 */
 

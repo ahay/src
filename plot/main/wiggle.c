@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 
 	xpos = sf_input("xpos");
 	if (SF_FLOAT != sf_gettype(xpos)) sf_error("Need float xpos");
-	sf_read(xp,sizeof(float),n2,xpos);
+	sf_floatread(xp,n2,xpos);
 	sf_fileclose(xpos);
     } else { 
 	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
 		if (scale > 0.) scale=zplot*n1*n2/scale;
 	    }
 	} else {	    
-	    sf_read(pdata[0],sizeof(float),n1*n2,in);
+	    sf_floatread(pdata[0],n1*n2,in);
 	}
 
 	if (i3 > 0) vp_erase();
@@ -237,3 +237,6 @@ static void check(float *x, float *y)
     
     if (transp) { t=*x; *x=*y; *y=t; }
 }
+
+/* 	$Id: wiggle.c,v 1.4 2004/04/19 21:52:05 fomels Exp $	 */
+

@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	if (SF_COMPLEX == type) {
 	    min1 = min2;
 	    max1 = max2;
-	    sf_read(data[0],sizeof(float complex),n1*n2,in);
+	    sf_complexread(data[0],n1*n2,in);
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    f = crealf(data[i2][i1]);
@@ -100,7 +100,7 @@ int main(int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_read(y[0],sizeof(float),n1*n2,in);
+	    sf_floatread(y[0],n1*n2,in);
 	    min1=o1;
 	    max1=o1+(n1-1)*d1;
 	    for (i2=0; i2 < n2; i2++) {
@@ -149,4 +149,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: graph.c,v 1.11 2004/04/01 15:38:21 fomels Exp $	 */
+/* 	$Id: graph.c,v 1.12 2004/04/19 21:52:05 fomels Exp $	 */

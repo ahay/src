@@ -213,7 +213,7 @@ int main(int argc, char* argv[])
 			 pclip,phalf,&clip,&gpow,pbias,n3,0);
 		if (verb) sf_warning("clip=%g gpow=%g",clip,gpow);
 	    } else {
-		sf_read(data[0],sizeof(float),n1*n2,in);
+		sf_floatread(data[0],n1*n2,in);
 	    }
 	    
 	    if (1 == panel || GAIN_EACH == panel || 0==i3) { 
@@ -253,11 +253,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_read(buf[0],sizeof(unsigned char),n1*n2,in);
+	    sf_charread((char*) buf[0],n1*n2,in);
 	}
 
 	if (byte) {
-	    sf_write(buf[0],sizeof(unsigned char),n1*n2,out);
+	    sf_charwrite((char*) buf[0],n1*n2,out);
 	    continue;
 	}
 
@@ -321,4 +321,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.19 2004/04/12 15:40:43 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.20 2004/04/19 21:52:05 fomels Exp $	 */
