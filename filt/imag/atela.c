@@ -65,7 +65,7 @@ int atela_step (int dim     /* dimensionality */,
   p[0] = cos(b); p[1] = sin(b)*cos(a); p[2] = sin(b)*sin(a) in 3-D
   b is inclination between 0 and   pi radians
   a is azimuth     between 0 and 2*pi radians
-  4. The output code for it = trace_ray(...)
+  4. The output code for it = atela_step(...)
   it=0 - ray traced to the end without termination
   it>0 - ray terminated
   The total traveltime along the ray is 
