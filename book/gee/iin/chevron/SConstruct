@@ -43,7 +43,7 @@ for data in sets:
     Flow(file,file+'.T','dd data_format=native_float')
     Flow(data,file,
          '''
-         window n1=1 f1=2 | headermath h=0 output=h-%g |
+         window n1=1 f1=2 | math output="input-(%g)" |
          bin interp=1 nx=40 ny=40 xkey=0 ykey=1 head=$SOURCE
          xmin=2000 xmax=28000 ymin=-25000 ymax=12000
          ''' % baseplate)
