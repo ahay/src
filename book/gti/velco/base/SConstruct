@@ -1,0 +1,189 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+Book()
+###########################################################################
+
+Fetch('beinew.rsf','midpts')
+
+Flow('bei','beinew','dd data_format=native_float | transp plane=24')
+
+Flow('sig',None,
+     '''sigmoid par=kirsig.p par=3.p |
+     smooth par=kirsig.p diff1=1 |
+     pad beg1=25 | smooth par=kirsig.p | halfint inv=1 |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 > $TARGET;
+     echo "n3=1" >> $TARGET''',stdout=-1)
+
+par={
+    'bei': {
+    'minvel': 1.3,
+    'vel1': 1.8,
+    'n1': 990,
+    'tp': 0,
+    'slope': 0.385,
+    'padx': 521,
+    'nv': 48,
+    'v0': 1.3,
+    'dv': 0.025,
+    'nx': 250,
+    'padt': 1024,
+    'padt2': 2048,
+    'lam': 80,
+    'eps': 20,
+    'vslope': 1.5,
+    'vx0': 1.5
+    },
+    'sig': {
+    'minvel': 2,
+    'vel1': 1.5,
+    'n1': 225,
+    'padx': 421,
+    'nv': 100,
+    'v0': 2,
+    'dv': -0.01,
+    'nx': 200,
+    'padt': 1024,
+    'padt2': 2048,
+    'lam': 100,
+    'eps': 100,
+    }
+    }
+
+for test in ['bei','sig']:
+    mig = test+'-mig'
+    cip = test+'-cip'
+    migr = test+'-migr'
+    pad = test+'-pad'
+    ckx = test+'-ckx'
+    vlf = test+'-vlf'
+    vlf2 = test+'-vlf2'
+    vlfr = test+'-vlfr'
+    npk = test+'-npk'
+    fmg = test+'-fmg'
+    fnm = test+'-fnm'
+    smo = test+'-smo'
+    agc = test+'-agc'
+    dix = test+'-dix'
+    adx = test + '-adx'
+
+    def run(string):
+        return string % par[test]
+    
+    Flow(mig,test,run('preconstkirch vel=%(minvel)g'))
+    Flow(mig+'1',test,run('preconstkirch vel=%(vel1)g'))
+
+    mig2cip = run('transp plane=24 | halfint inv=1 adj=1 | window n1=%(n1)d')
+    Flow(cip,mig,mig2cip)
+    Flow(cip+'1',mig+'1',mig2cip)
+
+    Flow(migr,cip,'stack norm=y')
+    Plot(migr,migr,'grey title=Migration0')
+
+    Flow(migr+'1',cip+'1','stack norm=y')
+    Plot(migr+'1',migr+'1','grey title=Migration1')
+    
+    Flow(pad,cip,run('pad n3=%(padx)d'))
+    Flow(ckx,pad,'cosft sign3=1')
+    Flow(vlf,ckx,
+         run('''fourvc nv=%(nv)d dv=%(dv)g v0=%(v0)g
+         pad=%(padt)d pad2=%(padt2)d |
+         cosft sign3=-1 | window n3=%(nx)d'''))
+    Flow(vlf2,pad,
+         run('''transp plane=23 |
+         fourvc2 nv=%(nv)d dv=%(dv)g v0=%(v0)g
+         pad=%(padt)d pad2=%(padt2)d |
+         window n2=%(nx)d'''))
+
+    Flow(vlfr,vlf,run('window n2=1 min2=%(vel1)g'))
+    Plot(vlfr,vlfr,'grey title=VelCon')
+
+    Result(migr,[migr,migr+'1',vlfr],'SideBySideAniso')
+
+    if test in ['bei']:
+        pick = run('''transp plane=23 |
+        mutter slope0=%(vslope)g x0=%(vx0)g half=n | 
+        blindpick2 eps=%(eps)g lam=%(lam)g | 
+        transp plane=23''')
+    else:
+        pick = run('''transp plane=23 |
+        blindpick2 eps=%(eps)g lam=%(lam)g | 
+        transp plane=23''')
+
+    Flow(npk,vlf2,pick)
+    Plot(npk,npk,
+         run('''grey allpos=y pclip=100 Xcolor=j bias=%(v0)g 
+         wantscalebar=y title="Picked RMS Velocity"
+         label1="Time (s)" label2="Lateral (km)"
+         '''))
+    Plot(npk+'1',npk,
+         '''contour nc=20 wanttitle=n plotcol=0 plotfat=10
+         wantscalebar=y wantaxis=n barlabel="Velocity (km/s)"
+         ''')
+    Plot(npk+'2',npk,
+         '''contour nc=20 wanttitle=n plotcol=7 plotfat=1
+         wantscalebar=y wantaxis=n barlabel="Velocity (km/s)"
+         ''')
+    Result(npk,[npk,npk+'2'],'Overlay')
+    Plot(npk+'0',[npk,npk+'1',npk+'2'],'Overlay')
+
+    Flow(fmg,[vlf,npk],'slice pick=${SOURCES[1]} | transp plane=23')
+    Result(fmg,fmg,'grey title=Slice label1="Time (s)" label2="Lateral (km)" ')
+
+    Plot(fmg,agc,
+         '''
+         grey title="Time-Migrated Image"
+         label1="Time (s)" label2="Lateral (km)"
+         ''')
+    Result(fmg+'1',[fmg,npk+'0'],'SideBySideAniso',vppen='txscale=1.5')
+
+    Flow(fmg+'2',[vlf2,npk],'transp plane=23 | slice pick=${SOURCES[1]}')
+
+    Flow([dix,dix+'0'],[npk,fmg+'2'],
+         'dix rect1=10 rect2=10 weight=${SOURCES[1]} vrmsout=${TARGETS[1]}')
+    Plot(dix,dix,
+         run('''grey allpos=y pclip=100 color=j bias=%(v0)g 
+         wantscalebar=y title="Estimated Interval Velocity"
+         label1="Time (s)" label2="Lateral (km)"
+         '''))
+    Plot(dix+'0',dix+'0',
+         run('''grey allpos=y pclip=100 color=j bias=%(v0)g 
+         wantscalebar=y title="Predicted RMS Velocity"
+         label1="Time (s)" label2="Lateral (km)"
+         '''))
+    Result(dix,[dix,dix+'0'],'SideBySideAniso')
+    
+    Flow([adx,adx+'0'],[npk,fmg+'2'],
+         '''
+         dix diff=y rect1=10 rect2=10
+         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
+         ''')
+    Plot(adx,adx,
+         run('''grey allpos=y pclip=100 color=j bias=%(v0)g 
+         wantscalebar=y title="Estimated Interval Velocity"
+         label1="Time (s)" label2="Lateral (km)"
+         '''))
+    Plot(adx+'0',adx+'0',
+         run('''grey allpos=y pclip=100 color=j bias=%(v0)g 
+         wantscalebar=y title="Predicted RMS Velocity"
+         label1="Time (s)" label2="Lateral (km)"
+         '''))
+    Result(adx,[adx,adx+'0'],'SideBySideAniso')
+    
+    Flow(smo,fmg,'math output="abs(input)" | smooth rect1=500')
+    Flow(agc,[fmg,smo],'add mode=d ${SOURCES[1]}')
+    Result(agc,agc,
+           'grey title="Slice (AGC)" label1="Time (s)" label2="Lateral (km)" ')
+
+    Flow(fnm,[vlf2,vlf],
+         'transp plane=23 | add mode=p ${SOURCES[1]} | stack')
+    Result(fnm,fnm,'grey title=Feynman')
+
+###########################################################################
+End()
