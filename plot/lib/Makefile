@@ -12,7 +12,7 @@ LDFLAGS = -L../../seis/rsf -lrsf
 DEPEND = -xM1
 DEPEND = -MM
 
-SRC = axis coltab plot stdplot vplot
+SRC = axis coltab gainpar plot stdplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
 INCS = $(addsuffix .h, $(SRC)) 
 

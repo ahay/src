@@ -1,12 +1,18 @@
+#include <math.h>
+
 #include <rsf.h>
 #include <rsfplot.h>
 
+#define TSIZE 4096
+
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, gainstep, panel;
-    float o1, o2, o3, d1, d2, d3, tpow, gpow, clip, pclip, phalf, bias;
-    bool transp, yreverse, gain=false, allpos, coltab, polarity;
-    char *gainpanel, *color;
+    int n1, n2, n3, gainstep, panel, it;
+    float o1, o2, o3, d1, d2, d3, tpow, gpow, clip, pclip, phalf, bias, t;
+    float pbias;
+    bool transp, yreverse, gain, allpos, coltab, polarity, blast;
+    char *gainpanel, *color, **data2, tbl[TSIZE+1];
+    float **data, *tgain;
     sf_file in;
 
     sf_init(argc,argv);
@@ -30,24 +36,25 @@ int main(int argc, char* argv[])
     if (!sf_getbool("yreverse",&yreverse)) yreverse=true;
 
     if (!sf_getfloat("tpow",&tpow)) tpow=0.;
+    
+    gain = false;
+
+    phalf=85.;
     if (!sf_getfloat("gpow",&gpow)) {
 	gpow=1.;
     } else if (gpow <= 0.) {
 	gpow=0.;
-	if (!sf_getfloat("phalf",&phalf)) {
-	    phalf=85.;
-	} else if (phalf <=0. || phalf > 100.) {
+	sf_getfloat("phalf",&phalf);
+	if (phalf <=0. || phalf > 100.)
 	    sf_error("phalf=%g should be > 0 and <= 100",phalf);
-	}
 	gain = true;
     }
 
+    pclip=99.;
     if (!sf_getfloat("clip",&clip)) {
-	if (!sf_getfloat("pclip",&pclip)) {
-	    pclip=99.;
-	} else if (pclip <=0. || pclip > 100.) {
+	sf_getfloat("pclip",&pclip);
+	if (pclip <=0. || pclip > 100.)
 	    sf_error("pclip=%g should be > 0 and <= 100",pclip);
-	}
 	gain = true;
     }
 
@@ -70,8 +77,9 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getbool("allpos",&allpos)) allpos=false;
-    if (!sf_getfloat("bias",&bias)) bias=0.; 
+    if (!sf_getfloat("bias",&pbias)) pbias=0.; 
     if (!sf_getbool("polarity",&polarity)) polarity=false;
+    if (!sf_getbool("hurry",&blast)) blast=true;
 
     if (!sf_getbool("coltab",&coltab)) coltab=true;
     if (NULL == (color = sf_getstring("color"))) color="I";
@@ -80,51 +88,129 @@ int main(int argc, char* argv[])
 		     o2-0.5*d2, o2+(n2-1)*d2+0.5*d2,
 		     transp, false, yreverse, false);
 
+    data = sf_floatalloc2(n1,n2);
+    data2 = sf_charalloc2(n1,n2);
+
+    if (gain) {
+	sf_unpipe(in,sf_filesize(in)*sizeof(float));
+	gainpar (in,data,n1,n2,gainstep,tpow,
+		 o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,panel);
+	sf_seek(in,0L,SEEK_SET); /* rewind */
+    }
+
+    sf_read(data[0],sizeof(float),n1*n2,in);
+
+    /* initialize the conversion table */
+    if(!allpos) { /* negative and positive values */
+	for (it=1; it<=TSIZE/2; it++) {
+	    tbl[TSIZE-it] = (gpow != 1.)?
+		252*(pow(((TSIZE-2.0*it)/TSIZE),gpow)+1.)/2.+3.:
+		252*(    ((TSIZE-2.0*it)/TSIZE)      +1.)/2.+3.;
+	    tbl[it] = 255 - tbl[TSIZE-it] + 2.0;
+	}
+    } else { /* all positive */
+	for (it=1; it < TSIZE ; it++) {
+	    tbl[it] = 256*((it-1.0)/TSIZE);
+	}
+    }
+    tbl[0] = tbl[1];
+    tbl[TSIZE] = tbl[TSIZE-1];
+
+    /* initialize the gain vector */
+    tgain = sf_floatalloc(n1);
+    for (it=0; it<n1; it++) {
+	t=(it+1)*d1+o1;
+	if (tpow != 0.) tgain[it] = powf (fabsf(t),tpow);
+	tgain[it] *= TSIZE/clip;
+	if (!allpos) tgain[it] *= 0.5;
+    }
+
+    bias = allpos? 0.: TSIZE/2.;
+    
+ vp_erase ();
+ vp_color (axis1.col[0]);
+ if (coltab) {
+  if (color[0] >= '0' && color[0] <= '9') {
+    redbit = color[0] - '0';
+    greenbit = color[1] - '0';
+    bluebit = color[2] - '0';
+    if (redbit + greenbit + bluebit != 8)
+      seperr ("You must use exactly 8 bits!\n");
+
+    redoff = 0;
+    greenoff = redbit;
+    blueoff = redbit + greenbit;
+
+    for (i3 = 0; i3 < 256; i3++) {
+      ii = ~(~0 << redbit);
+      if (ii > 0) red[i3] = (float) ((i3 >> redoff) & ii) / (float) (ii);
+      else red[i3] = 0.;
+      ii = ~(~0 << greenbit);
+
+       if (ii > 0) green[i3] = (float) ((i3 >> greenoff) & ii) / (float) (ii);
+      else green[i3] = 0.;
+
+      ii = ~(~0 << bluebit);
+      if (ii > 0)
+         blue[i3] = (float) ((i3 >> blueoff) & ii) / (float) (ii);
+      else blue[i3] = 0.;
+    }
+    for (jj = 0; jj < 256; jj++) {
+      ii = 0;
+      greenbit2 = greenbit;
+      bluebit2 = bluebit;
+      redbit2 = redbit;
+      kk = 0;
+      while (kk < 8) {
+        greenbit2--;
+        if (greenbit2 >= 0) {
+          if (jj & (1 << (greenbit2 + greenoff))) ii |= 1 << kk;
+          kk++;
+        }
+        redbit2--;
+        if (redbit2 >= 0) {
+          if (jj & (1 << (redbit2 + redoff))) ii |= 1 << kk;
+          kk++;
+        }
+        bluebit2--;
+        if (bluebit2 >= 0) {
+          if (jj & (1 << (bluebit2 + blueoff))) ii |= 1 << kk;
+          kk++;
+        }
+      }
+      map[ii] = jj;
+    }
+    for (i3 = nreserve; i3 < 256; i3++) {
+      jj = i3 - nreserve;
+      vp_coltab (i3, red[map[jj]], green[map[jj]], blue[map[jj]]);
+    }
+  }
+  else { 
+		vp_rascoltab (nreserve, color);}
+ }
+
+ /* Set the coordinate transformation */
+ gl_vplotint (&position, &coordinate, &axis1, &axis2);
+ gl_plotpram (&colorin, &coordinate);
+	 multi_t=getch("titles","s",titles);
+	 if(0==fetch("title","s",title_temp)) sprintf(title_temp,"%s"," ");
+/* fastplt = fastplot ();*/
+  fastplt=0;
+
+
     exit (0);
 }
 
 #ifdef jhvkjhvb
 
-if(datain. esize==4) make_unpipe("in");
-
 if (!getch ("nreserve", "d", &nreserve)) nreserve = 8;
+numorient = getch ("orient", "d", &orient);
+numinvert = getch ("invert", "1", &invert);
 
-   numorient = getch ("orient", "d", &orient);
-   numinvert = getch ("invert", "1", &invert);
-   blast = 1;
-   getch ("hurry", "1", &blast);
-	return(0);
-}
-
-/*------------------------------------------------------------------------*/
-/*----------    TIME TO DO SOME INITIALIZING STUFF    --------------------*/
-/*------------------------------------------------------------------------*/
-
-  if(datain.esize==4){
-    data = (float*) alloc( datain.n1[0]* datain.n2* sizeof(float) );
-    tgain = (float*) alloc( datain.n1[0]*sizeof(float) );
-    buf = ( char*) alloc( nslow*nfast*sizeof(float) );
-    data2 = ( unsigned char*) alloc( nslow*nfast*sizeof(float) );
-    tbl = ( char*) alloc( TSIZE +1); te=tbl;
-	
-    ierr=init_esize_4(data,tgain,tbl,buf,garg,te);
-  }
-  else {
-		buf = ( char *) alloc (datain.n1[0] * datain.n2 * datain.esize);
-		data2 = ( unsigned  char *) alloc (datain.n1[0] * datain.n2 * datain.esize);
-	}
-
-  if(dataout.esize==1) ierr=rite_eout_1_head ();
-  else  ierr=rite_vplot_head();
-
-  if(dataout.esize !=1){  
-    if(wantscalebar) bdata = (unsigned char *) malloc (datain.esize * 256);
-    ierr=init_vplot_out();
-  }
-
-
-
-
+buf = ( char*) alloc( nslow*nfast*sizeof(float) );
+    
+  if (numorient || numinvert) setcoordinate (orient, invert, &coordinate);
+  else setorient (&orient, &invert, coordinate);
 
 /*------------------------------------------------------------------------*/
 /*-------------    LOOP OVER PLANES DOING WORK    ------------------------*/
@@ -134,128 +220,19 @@ if (!getch ("nreserve", "d", &nreserve)) nreserve = 8;
   for (i3=0; i3<datain.n3; i3++) {
 
   /* convert from esize =4 to esize =1 */
-    if(datain.esize==4) ierr=convert_4_to_1(data,tgain,tbl,buf,i3,te);
-    else ierr=read_in_byte(buf,i3);
-    
-    if(dataout.esize ==1) ierr=rite_byte_frame(buf);
-    else ierr=rite_vplot_frame(buf,data2,bdata,i3);
-    }  
-    if(dataout.esize==1) ierr=finish_byte_plot();
-    else ierr=finish_vplot_plot();
+    ierr=convert_4_to_1(data,tgain,tbl,buf,i3,te);
+
+    ierr=rite_vplot_frame(buf,data2,bdata,i3);
+ 
+    ierr=finish_vplot_plot();
 	return(0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*----------------  Begining of old Taplot subroutines   --------------------*/
 /*---------------------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
-
-/*  Function initializes the conversion table, the gain vector,
-  and sets fastinc and slowinc.
-*/
-#if defined(__STDC__) || defined(__stdc__)
-tbinit (float gpow,float tpow,float clp,register char *tbl,float *tgain,
-float t0,int nt,int *fastinc,int *slowinc,int nfast,float dt)
-#else
-tbinit (gpow,tpow,clp,tbl,tgain,t0,nt,fastinc,slowinc,nfast,dt)
-register char *tbl;
-float gpow,tpow,clp,*tgain,t0,dt;
-int nt,*fastinc,*slowinc,nfast;
-#endif
-{
-int it;
-double t;
-
-/* initialize the conversion table */
-if ( gpow != 1.)
-  {
-  if      ( allpos == NO ) 
-  for (it=1; it<=TSIZE/2; it++)
-    {
-    tbl[TSIZE-it] =
-    (252*(pow((double)((TSIZE-2.*it)/TSIZE),gpow)+1.))/2.+3.;
-    tbl[it] = 255 - tbl[TSIZE-it] + 2.;
-    }
-  else if ( allpos == YES )
-  for( it=1; it < TSIZE ; it++ )
-    tbl[it] = 256*( (double) (it-1)/TSIZE );
-  }
-else
-  {
-  if      ( allpos == NO ) 
-  for (it=1; it<=TSIZE/2; it++)
-
-    {
-    tbl[TSIZE-it] =
-    (252*((double)((TSIZE-2.*it)/TSIZE)+1.))/2.+3.;
-    tbl[it] = 255 - tbl[TSIZE-it] + 2.;
-    }
-  else if ( allpos == YES ){
-  for( it=1; it < TSIZE ; it++ ){
-    tbl[it] = 256*( (double) (it-1)/TSIZE );
-	}
-	}
-  }
-tbl[0] = tbl[1];
-tbl[TSIZE] = tbl[TSIZE-1];
-
-/* initialize the gain vector */
-if ( tpow != 0.)
-  {
-  if( allpos == NO )
-  for (it=0; it<nt; it++)
-    {
-    t=(it+1)*dt+t0;
-  tgain[it] = ((t == 0.0) && (tpow == 0.0)) ? 1.0 : pow (fabs(t),tpow);
-    tgain[it] *= TSIZE/(2.*clp);
-    }
-
-  else if ( allpos == YES )
-       for (it=0; it<nt; it++)
-              {
-              t=(it+1)*dt+t0;
-       tgain[it] = ((t == 0.0) && (tpow == 0.0)) ? 1.0 : pow (fabs(t),tpow);
-              tgain[it] *= TSIZE/(clp);
-              }
-  } 
-else {
-  if( allpos == NO ) tgain[0] = TSIZE/(2.*clp);
-  else         tgain[0] = TSIZE/(clp);
-      }
-
-/*Put here to duplicate Taplot behavior for backward compatibility*/
-/*if (*transp!='y' && dataout.esize==1)*/
-/*if (*transp=='y')*/
- /*the only time the fastinc will not be 1 is when
-   we are doing old sytle Taplot behavior which did
-   a transpose on the fly */
-if (*transp=='y' && dataout.esize==1 )
-  {
-  *fastinc = nfast;
-  *slowinc = 1;
-  }
-else
-  {
-  *fastinc = 1;
-  *slowinc = nfast;
-  }
-		return(0);
-}
-
 
 #if defined(__STDC__) || defined(__stdc__)
 int cnvrt(int i3,float bias,float qclp,int np,int nx,int nt,float *data,char 
@@ -279,44 +256,7 @@ float tmp;
 char *min,*max;
 
 
- if(i3 != 0 || qclp == 0.) sreed("in",data,nt*nx*4);
-/*	minval[i3]=*data; maxval[i3]=*data;*/
 
-/* convert each panel */
-min=te;
-max=tbl;
-
-if (tpow != 0.)
-  {
-  for (ix=0, bs=buf; ix<nx; ix++,bs += slowinc)
-    {
-    sp = tgain; bp = bs;
-    for (dp=data+ix*nt, de=dp+nt; dp<de; dp++,sp++,bp += fastinc)
-      {
-      tp = tbl + (int)((*dp - pbias)*(*sp)+bias);
-      if (tp>te) tp = te;
-      else if (tp<tbl) tp = tbl;
-      *bp = *tp;
-      }
-    }
-   } 
-else 
-  {
-  tmp = tgain[0];
-  for (ix=0, bs=buf; ix<nx; ix++,bs += slowinc)
-    {
-    bp = bs;
-    for (dp=data+ix*nt, de=dp+nt; dp<de; dp++,bp += fastinc)
-      {
-      tp = tbl + (int)((*dp - pbias)*tmp+bias);
-      if (tp>te) tp = te;
-      else if (tp<tbl) tp = tbl;
-      *bp = *tp;
-			if(tp < min) min=tp;
-			else if(tp > max) max=tp;
-      }
-    }
-  } 
 	minval[i3]=((float)(min-tbl)-bias)/tmp + pbias;
 	maxval[i3]=((float)(max-tbl)-bias)/tmp + pbias;
 
@@ -383,62 +323,6 @@ int garg;
 {
 int it;
 
-    /* gain and clip parameters, initialize the gain table, tgain, */
-    /*  fastinc and slowinc */
-    if (garg) {
-      /*   gainpar is called if user does not specify clip or gpow. */
-  
-  
-  sgainpar ("in",data,datain.n1,&hbytes,&datain.n2,&gainstep,&tpow,
-            datain.o1,&qclp,&phalf,&clp,&gpow,&pbias,datain.d1,&datain.n3,&gainip);
-
-  if ((gainpanel[0] != 'e') && (clp == 0)) {
-      if (clp==0) {
-      }
-  }
-  if ((gainpanel[0] == 'e') && (clp == 0)) { clp = 1.e-10; }
-
-    }
-    sseek("in",0,0);
-    sreed("in",(char *)data,datain.n1[0]*datain.n2*4);
-    te = tbl + TSIZE;
-    tbinit (gpow,tpow,clp,tbl,tgain,datain.d1[0],datain.n1[0],&fastinc,&slowinc,nfast,datain.d1[0]);
-    if( allpos == NO )  bias = TSIZE/2.;
-    else          bias = 0;
-
-    /* print parameters */
-    
-    /* set the correct format in the output */
-    set_format("out","native_byte");
-/*		putch("data_format","s","native_byte");*/
-
-    /* Compute maximum and minimum of data (first panel only) */
-    max = min = data[0];
-    for (it=1; it<datain.n1[0]*datain.n2; it++) {
-  if(max < data[it]) max=data[it];
-  if(min > data[it]) min=data[it];
-    }
-    /* Compute maximum and minimum value that will be displayed on plot */
-    /* Values are used by Ta2vplot, when wantscalebar option is on */
-  minval[0]=maxval[0]=0.;
-    if(max <=0. && min < 0.) {
-  /* Case all data values are negative */
-  maxval[1] = MIN (max, clp + pbias);
-  minval[1] = MAX (-clp + pbias, min);
-    } else if(min >=0. && max > 0.) {
-  /* Case all data values are positive */
-  maxval[1] = MIN (max, clp + pbias);
-  minval[1] = MAX (pbias, min);
-    } else {
-  /* Both positive and negative data values */
-  maxval[1] = MIN (max, clp + pbias);
-  minval[1] = MAX (-clp + pbias, min);
-    }
-/*		minval[1]=-clp+pbias; maxval[1]=clp+pbias;*/
-    /* done processing header */
-		return(0);
-}
-
 #if defined(__STDC__) || defined(__stdc__)
 int convert_4_to_1(float *data,float *tgain,register char *tbl,char *buf,int i3,char *tm)
 #else
@@ -487,29 +371,6 @@ float *data,*tgain;
 /*-------------------  BEGINING OF OLD TA2VPLOT PARMS  -------------------*/
 /*------------------------------------------------------------------------*/
 /*------------------------------------------------------------------------*/
-
-
-
-#if defined(__STDC__) || defined(__stdc__)
-int get_to_vplot_params()
-#else
-int get_to_vplot_params()
-#endif
-
-
-#if defined(__STDC__) || defined(__stdc__)
-int rite_vplot_head()
-#else
-int rite_vplot_head()
-#endif
-{
-  putch ("movish", "d", &movish);
-  puthead ("\tn1=-1\n");
-  putch ("polarity", "d", &polarity);
-  set_output_data_format("vplot");
-  hclose();
-	return(0);
-}
 
 
 #if defined(__STDC__) || defined(__stdc__)
@@ -603,108 +464,6 @@ void setorient (orient, invert, coordinate)
   }
 
 }
-
-#if defined(__STDC__) || defined(__stdc__)
-int init_vplot_out()
-#else
-int init_vplot_out()
-#endif
-{
-  int i3;
-
-  if(wantscalebar) gl_barint (&position, &axis1, &barposit, &baraxis, minval, 
-    maxval, bartype, &barreverse, dataout.n3,0);
-
-  if (numorient || numinvert) setcoordinate (orient, invert, &coordinate);
-  else setorient (&orient, &invert, coordinate);
- vp_erase ();
- vp_color (axis1.col[0]);
- if (coltab) {
-  if (color[0] >= '0' && color[0] <= '9') {
-    redbit = color[0] - '0';
-    greenbit = color[1] - '0';
-    bluebit = color[2] - '0';
-    if (redbit + greenbit + bluebit != 8)
-      seperr ("You must use exactly 8 bits!\n");
-
-    redoff = 0;
-    greenoff = redbit;
-    blueoff = redbit + greenbit;
-
-    for (i3 = 0; i3 < 256; i3++) {
-      ii = ~(~0 << redbit);
-      if (ii > 0) red[i3] = (float) ((i3 >> redoff) & ii) / (float) (ii);
-      else red[i3] = 0.;
-      ii = ~(~0 << greenbit);
-
-       if (ii > 0) green[i3] = (float) ((i3 >> greenoff) & ii) / (float) (ii);
-      else green[i3] = 0.;
-
-      ii = ~(~0 << bluebit);
-      if (ii > 0)
-         blue[i3] = (float) ((i3 >> blueoff) & ii) / (float) (ii);
-      else blue[i3] = 0.;
-    }
-    for (jj = 0; jj < 256; jj++) {
-      ii = 0;
-      greenbit2 = greenbit;
-      bluebit2 = bluebit;
-      redbit2 = redbit;
-      kk = 0;
-      while (kk < 8) {
-        greenbit2--;
-        if (greenbit2 >= 0) {
-          if (jj & (1 << (greenbit2 + greenoff))) ii |= 1 << kk;
-          kk++;
-        }
-        redbit2--;
-        if (redbit2 >= 0) {
-          if (jj & (1 << (redbit2 + redoff))) ii |= 1 << kk;
-          kk++;
-        }
-        bluebit2--;
-        if (bluebit2 >= 0) {
-          if (jj & (1 << (bluebit2 + blueoff))) ii |= 1 << kk;
-          kk++;
-        }
-      }
-      map[ii] = jj;
-    }
-    for (i3 = nreserve; i3 < 256; i3++) {
-      jj = i3 - nreserve;
-      vp_coltab (i3, red[map[jj]], green[map[jj]], blue[map[jj]]);
-    }
-  }
-  else { 
-		vp_rascoltab (nreserve, color);}
- }
-
- /* Set the coordinate transformation */
- gl_vplotint (&position, &coordinate, &axis1, &axis2);
- gl_plotpram (&colorin, &coordinate);
-	 multi_t=getch("titles","s",titles);
-	 if(0==fetch("title","s",title_temp)) sprintf(title_temp,"%s"," ");
-/* fastplt = fastplot ();*/
-  fastplt=0;
- return(0);
-}
-
-
-
-int read_in_byte(data,i3)
-char *data;
-int i3;
-{
-if(datain.n1[0] * datain.esize * datain.n2 != sreed ("in", data, 
-  datain.n1[0] * datain.n2 * datain.esize)) seperr("trouble reading in data \n");
-
-return(0);
-}
-
-
-
-
-
 
 #if defined(__STDC__) || defined(__stdc__)
 int rite_vplot_frame(char *data,unsigned char *data2,unsigned char *bdata,int i3)
@@ -846,66 +605,8 @@ else esize=1;
 
   /* * Draw a scale bar with axis */
 
-  if(wantscalebar) {
-    barmn = data2[0];
-    barmx = data2[0];
-    for (ii = 0; ii < dataout.n1[0] * dataout.n2 * esize; ii++) {
-      if(barmx < data2[ii]) barmx = data2[ii];
-      if(barmn > data2[ii]) barmn = data2[ii];
-    }
-     numbcol = barmx - barmn;
-		/* hack  for when all data2 values are the same*/
-		if(numbcol==0) numbcol=1;
-    for (ii = 0; ii < numbcol; ii++)  bdata[ii] = barmn + ii;
-    /* Figure out orientation of scale */
-    if (bartype[0] == 'h') {
-      if (barreverse == 0) {
-        barorient = 0;
-        if (polarity < 0) barorient = 2;
-       } 
-      else {
-        barorient = 2;
-        if (polarity < 0) barorient = 0;
-      } 
-    } 
-    else {
-      if (barreverse == 0) {
-        barorient = 3;
-        if (polarity < 0) barorient = 1;
-      } 
-      else {
-        barorient = 1;
-        if (polarity < 0) barorient = 3;
-      } 
-    }
-
-    /* Make scale bar */
-    vp_raster(bdata,blast,bit,offset,numbcol,1,barposit.xll,barposit.yll,ppi,
-      &barposit.xur,&barposit.yur,barorient,1);
-    /* Plot axis for scale bar */
-    gl_barplot(&barposit, &baraxis, minval, maxval, bartype, barreverse, 
-      counter);
-  }
 return(0);
 
-}
-
-
-
-
-
-#if defined(__STDC__) || defined(__stdc__)
-int rite_byte_frame( char *buf)
-#else
-int rite_byte_frame(buf)
-char *buf;
-#endif
-{
-
-    if(datain.n1[0] * datain.n2 != srite("out",buf,datain.n1[0] * datain.n2))
-      seperr("trouble writing out byte data \n");
-
-return(0);
 }
 
 #if defined(__STDC__) || defined(__stdc__)
@@ -917,17 +618,6 @@ int finish_vplot_plot()
 vp_purge();
 return(0);
 }
-
-#if defined(__STDC__) || defined(__stdc__)
-int finish_byte_plot()
-#else
-int finish_byte_plot()
-#endif
-{
-return(0);
-}
-
-
 
 #if defined(__STDC__) || defined(__stdc__)
 int search_title(int i2,char *title_out)
