@@ -132,8 +132,8 @@ def f90(context):
     main = '''program Test
     end program Test
     '''
-    module = '''module test
-    end module test
+    module = '''module testf90
+    end module testf90
     '''
     context.Message("checking if %s works ... " % F90)
     oldlink = context.env.get('LINK')
@@ -147,10 +147,21 @@ def f90(context):
         del context.env['F90']
         return
     base = os.path.basename(F90)
+    context.Message("checking %s type for cfortran.h ... " % base)
     cfortran = fortran.get(base,'NAGf90Fortran')
     context.env['CFORTRAN90'] = cfortran 
-    context.Message("checking %s type for cfortran.h ... " % base)
     context.Result(cfortran)
+    context.Message("checking F90 module extension ... ")
+    f90module = re.compile(r'(?:testf90|TESTF90)(\.\w+)$')
+    suffix = ''
+    for file in os.listdir(os.getcwd()):
+        gotit = f90module.match(file)
+        if gotit:
+            suffix = gotit.group(1)
+            os.remove(file)
+            break
+    context.env['F90MODSUFFIX'] = suffix
+    context.Result(suffix)
 
 def load_f90(env):
     env['F90COM']   = '$F90 $F90FLAGS $_F90INCFLAGS -c -o $TARGET $SOURCES'

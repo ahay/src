@@ -1,4 +1,4 @@
-import os, sys, string
+import os, sys, string, re
 import configure, rsfdoc
 
 here = os.getcwd()
@@ -67,8 +67,12 @@ for dir in map(lambda x: os.path.join('filt',x), dirs):
     SConscript(dirs=build,name='SConstruct')
     Default(build)
 
-env.Install(incdir,'rsf.d')
-env.InstallAs(os.path.join(incdir,'rsf.pc'),'work.pc')
+if env.has_key('F90'):
+    modsuffix = env.get('F90MODSUFFIX')
+    env.Install(incdir,'RSF'+modsuffix)
+    if re.search(r'ifc$',env.get('F90')) and modsuffix == '.d':
+        # old Intel compiler quirks
+        env.InstallAs(os.path.join(incdir,'rsf.pc'),'work.pc')
 
 ##########################################################################
 # PLOT BUILD

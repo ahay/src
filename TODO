@@ -1,5 +1,7 @@
 PROJ
 	Licensing
+	organize build/local better
+	separate APIs from main tree
 	get rid of the clean rule / emitter
 	interrupt signal in latex2dvi (->latex2pdf)
 	parameter checking
@@ -8,19 +10,29 @@ DOCUMENTATION
 	demos: SU/SEPlib/Claerbout
 	       move up, document
 	manual...
-	sfdoc -k keyword
-	interface examples: F77, F90, Python, C++
-		  install/clean f90 .mod files
+	sfdoc 
+	      -k keyword
+	      fix parameter extration
+	      expand	
 FILT
 	splint
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
 PLOT
+	scalebar
+	grid	
 	check test dir
 	vppen
-	filters: gtk, svg, pdf	
+	filters
+		ps
+		gtk
+		svg
+		pdf	
 	finish sepmains
+	       wiggle
+	       cubeplot
+	       thplot
 LATEX
-	finish SEG.bib
+	test SEG.bib
 	documentation
 	package
