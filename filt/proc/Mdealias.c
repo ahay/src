@@ -15,8 +15,9 @@ max(jx,jy)=N, the temporal bandwidth should be 1/N of Nyquist.
 int main (int argc, char *argv[])
 {
     int n1, n2, n3, n12, niter, nf, i, i2, i1, m1, m2, m3, m12, nj1, nj2;
+    int rect[3], liter;
     bool verb, sign;
-    float eps, lam, d2, d3, p0, q0, *t, *tt;
+    float d2, d3, p0, q0, *t, *tt;
     float ***u1, ***uu1, ***p, ***q, ***uu, ***u2, ***uu2, ***q2;
     sf_file in, out;
 
@@ -32,10 +33,12 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of dip-estimation iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps;
-    /* vertical dip smoothness */
-    if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
-    /* horizontal dip smoothness */
+    if (!sf_getint("liter",&liter)) liter=100;
+    /* number of linear iterations */
+    if (!sf_getint("rect1",&rect[0])) rect[0]=1;
+    if (!sf_getint("rect2",&rect[1])) rect[1]=1;
+    if (!sf_getint("rect3",&rect[2])) rect[2]=1;
+    /* dip smoothness */
 
     if (!sf_getint("order",&nf)) nf=1;
     /* [1,2,3] dip filter accuracy */
@@ -98,7 +101,7 @@ int main (int argc, char *argv[])
 	}
     }
  
-    dip3_init(n1, n2, n3, eps, lam, sign);
+    dip3_init(n1, n2, n3, rect, liter, sign);
     interp_init (n1, 0.0001, verb);
 
     sf_floatread(u1[0][0],n12,in);
@@ -159,5 +162,5 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdealias.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mdealias.c,v 1.6 2004/05/22 00:13:24 fomels Exp $	 */
 

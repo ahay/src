@@ -5,22 +5,30 @@
 #include <rsf.h>
 
 #include "dip3.h"
-#include "divide1.h"
+#include "divn.h"
 #include "allp3.h"
 
 static float ***u1, ***u2, ***dp;
-static int n1, n2, n3, n;
+static int n, n1, n2, n3, nn[4];
 static bool sign;
-static div1 div0;
 
-void dip3_init(int nx, int ny, int nz, float eps, float lam, bool sign1)
+void dip3_init(int m1, int m2, int m3, int* rect, int niter, bool sign1)
 {
-    n1=nx; n2=ny; n3=nz; n=n1*n2*n3;
+    n1=m1;
+    n2=m2;
+    n3=m3;
+    n = n1*n2*n3;
+
     u1 = sf_floatalloc3(n1,n2,n3);
     u2 = sf_floatalloc3(n1,n2,n3);
     dp = sf_floatalloc3(n1,n2,n3);
 
-    div0 = divide1_init (n1,eps,lam);
+    nn[0]=n1;
+    nn[1]=n2;
+    nn[2]=n3;
+    nn[3]=1;
+
+    divn_init (3, n, nn, rect, niter);
     sign = sign1;
 }
 
@@ -29,7 +37,7 @@ void dip3_close(void)
     free (u1[0][0]); free (u1[0]); free (u1);
     free (u2[0][0]); free (u2[0]); free (u2);
     free (dp[0][0]); free (dp[0]); free (dp);
-    divide1_close(div0);
+    divn_close();
 }
 
 void dip3(int dip, int niter, int nw, int nj, bool verb, 
@@ -73,7 +81,7 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
 
 	if (verb) sf_warning("%d %g %g", iter+1, sqrt(usum/n), psum/n);
 
-	divide3 (div0, n3, n2, u2, u1, dp);
+	divn (u2[0][0], u1[0][0], dp[0][0]);
 
 	for(i=0; i < n; i++) {
 	    dpi = dp[0][0][i];
@@ -89,4 +97,4 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
     } /* iter */
 }
 
-/* 	$Id: dip3.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: dip3.c,v 1.4 2004/05/22 00:13:24 fomels Exp $	 */

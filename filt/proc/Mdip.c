@@ -9,8 +9,8 @@ Takes: < data.rsf > dip.rsf
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3, n123, niter, nw, nj1, nj2, i;
-    float eps, lam, p0, q0, ***u, ***p;
+    int n1,n2,n3, n123, niter, nw, nj1, nj2, i, rect[3], liter;
+    float p0, q0, ***u, ***p;
     bool verb, sign;
     sf_file in, out;
 
@@ -30,12 +30,13 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1.; 
-    /* vertical smoothness */
-    eps = eps*eps; 
-    if (!sf_getfloat("lam",&lam)) lam=1.; 
-    /* horizontal smoothness */
-    lam = lam*lam;
+    if (!sf_getint("liter",&liter)) liter=20;
+    /* number of linear iterations */
+
+    if (!sf_getint("rect1",&rect[0])) rect[0]=1;
+    if (!sf_getint("rect2",&rect[1])) rect[1]=1;
+    if (!sf_getint("rect3",&rect[2])) rect[2]=1;
+    /* dip smoothness */
 
     if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */
@@ -57,7 +58,7 @@ int main (int argc, char *argv[])
     /* if y, keep dip sign constant */
     
     /* initialize dip estimation */
-    dip3_init(n1, n2, n3, eps, lam, sign);
+    dip3_init(n1, n2, n3, rect, liter, sign);
 
     u = sf_floatalloc3(n1,n2,n3);
     p = sf_floatalloc3(n1,n2,n3);
@@ -93,4 +94,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdip.c,v 1.5 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mdip.c,v 1.6 2004/05/22 00:13:24 fomels Exp $	 */

@@ -11,7 +11,7 @@ Takes: < data.rsf > dip.rsf
 
 int main (int argc, char *argv[])
 {
-    int n1,n2, n12, niter, nw, nj, i;
+    int n1,n2, n3, i3, n12, niter, nw, nj, i;
     float eps, lam, p0, **u, **p;
     bool verb, sign, gauss;
     sf_file in, out;
@@ -25,6 +25,7 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("Need n2= in input");
     n12 = n1*n2;
+    n3 = sf_leftsize(in,2);
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -59,22 +60,24 @@ int main (int argc, char *argv[])
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
 
-    /* read data */
-    sf_floatread(u[0],n12,in);
+    for (i3=0; i3 < n3; i3++) {
+	/* read data */
+	sf_floatread(u[0],n12,in);
+	
+	/* initialize dip */
+	for(i=0; i < n12; i++) {
+	    p[0][i] = p0;
+	}
+	
+	/* estimate dip */
+	dip2(niter, nw, nj, verb, u, p);
 
-    /* initialize dip */
-    for(i=0; i < n12; i++) {
-	p[0][i] = p0;
-    }
-  
-    /* estimate dip */
-    dip2(niter, nw, nj, verb, u, p);
+	/* write dip */
+	sf_floatwrite(p[0],n12,out);
+    }    
 
-    /* write dip */
-    sf_floatwrite(p[0],n12,out);
-    
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mdip2.c,v 1.6 2004/04/19 21:51:46 fomels Exp $	 */
+/* 	$Id: Mdip2.c,v 1.7 2004/05/22 00:13:24 fomels Exp $	 */
