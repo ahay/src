@@ -28,12 +28,17 @@ static void psnap (float* p, float* q, int* iq);
 static void process_node (Node nd);
 static void process_child (Node child);
 static void check_front (void);
+static void orphanize (Node node);
+static void postprocess_node (Node nd);
 
 void tree_init (int order1,
 		int nz1, int nx1, int na1, int nt1, 
 		float dz1, float dx1, float da1, 
 		float z01, float x01, float a01, 
-		float** vel, float** value) {
+		float** vel, float** value) 
+{
+    int i;
+
     nx = nx1; nz = nz1; na = na1; nt = nt1;
     dx = dx1; dz = dz1; da = da1;
     x0 = x01; z0 = z01; a0 = a01;
@@ -46,6 +51,9 @@ void tree_init (int order1,
 
     val = value;
     accepted = sf_boolalloc(naxz);
+    for (i=0; i < naxz; i++) {
+	accepted[i] = false;
+    }
     nacc = 0;
 
     Orphans = CreateNodeQueue();
@@ -340,19 +348,301 @@ void tree_build(void)
 
 /*    tree_print(); */
 
-    TraverseQueue (Orphans,process_node);
+    TraverseDeleteQueue (Orphans,process_node);
 	
     if (nacc == naxz) return;
 
     sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
-
-    FreeNodeQueue (Orphans);
-    Orphans = CreateNodeQueue();
 	
     pqueue_init (naxz-nacc);
     pqueue_start ();
 
     check_front();
+
+    while (nacc < naxz) {
+	vk = pqueue_extract ();
+	if (NULL == vk) sf_error("Heap exhausted: %d accepted",nacc);
+	node = Tree + ((vk-val[0]-2)/4);
+	TraverseDeleteQueue(node->children,orphanize);
+	TraverseDeleteQueue(Orphans,postprocess_node);
+    }
+}
+
+static void orphanize (Node node)
+{
+    int i, k, iz, ix, ia, jx, jz, it, kz, kx, ka;
+    float x, z, p[2], a, v, g[2], s, sx, sz, t=0., *vk;
+    bool onx, onz=false;
+
+    k = node - Tree;
+    if (accepted[k]) return;
+
+    node->nparents = 0;
+    kz = k/nax; k -= nax*kz;
+    kx = k/na;  k -= na*kx;
+    ka = k;
+
+    eno2_apply(cvel,kz,kx,0.,0.,&v,g,BOTH);
+    g[1] /= dx;
+    g[0] /= dz;
+
+    a = a0 + ka*da;
+    p[0] = -cos(a);
+    p[1] = sin(a);
+
+    ia = ka;  
+    x = 0.; ix=kx;
+    z = 0.; iz=kz;		
+ 
+    if (order==2) {
+	t = cell1_update2 (2, 0., v, p, g);
+    } else {
+	t = cell_update2 (2, 0., v, p, g);
+    }    
+    /* p is normal vector now ||p|| = 1 */
+
+    for (it=0; it < nx*nz; it++) {
+	if (order==2) {
+	    cell1_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+	    cell1_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+	    
+	    s = MIN(sx,sz);
+	    
+	    t += cell1_update1 (2, s, v, p, g);
+	    /* p is slowness vector now ||p||=v */
+	    
+	    if (s == sz) {
+		z = 0.; iz += jz;
+		x += p[1]*s/dx;
+	    } else {
+		x = 0.; ix += jx;
+		z += p[0]*s/dz;
+	    }
+	    
+	    onz = cell_snap (&z,&iz,eps);
+	    onx = cell_snap (&x,&ix,eps);
+	    
+	    eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+	    g[1] /= dx;
+	    g[0] /= dz;
+	    
+	    t += cell1_update2 (2, s, v, p, g);
+	    /* p is normal vector now ||p||=1 */
+	} else {
+	    cell_intersect (g[1],x,dx/v,p[1],&sx,&jx);
+	    cell_intersect (g[0],z,dz/v,p[0],&sz,&jz);
+	    
+	    s = MIN(sx,sz);
+	    
+	    t += cell_update1 (2, s, v, p, g);
+	    /* p is slowness vector now ||p||=v */
+	    
+	    if (s == sz) {
+		z = 0.; iz += jz;
+		x += p[1]*s/dx;
+	    } else {
+		x = 0.; ix += jx;
+		z += p[0]*s/dz;
+	    }
+	    
+	    onz = cell_snap (&z,&iz,eps);
+	    onx = cell_snap (&x,&ix,eps);
+	    
+	    eno2_apply(cvel,iz,ix,z,x,&v,g,BOTH);
+	    g[1] /= dx;
+	    g[0] /= dz;
+	    
+	    t += cell_update2 (2, s, v, p, g);
+	    /* p is normal vector now ||p||=1 */
+	}
+	psnap (p,&a,&ia);
+
+	/* pathological exits */
+	if (ix < 0 || ix > nx-1 ||
+	    iz < 0 || iz > nz-1) {
+	    
+	    vk = val[k];
+	    vk[0] = x0 + kx*dx;
+	    vk[1] = z0 + kz*dz;
+	    vk[2] = t;
+	    vk[3] = cell_p2a (p);
+	    accepted[k] = true;
+	    pqueue_insert(val[k]+2);
+	    TraverseQueue (node->children,process_child);
+	    nacc++;
+	    return;
+	} 
+
+	i = ia + ix*na + iz*nax;
+	assert (i != k);
+	
+	node->t = t;
+	
+	if (onz) { /* hits a z wall */
+	    if (x != 1. && a != 1.) {
+		if (!accepted[i]) continue;
+		node->parents[0][0] = i;
+	    }
+		    
+	    if (ia == na-1 || k == i+1) {
+		node->n1 = 1;
+	    } else {
+		node->n1 = order;
+		if (x != 1. && a != 0.) {
+		    if (!accepted[i+1]) continue;
+		    node->parents[0][1] = i+1;
+		}
+	    }
+
+	    if (ix == nx-1 || k == i+na) {
+		node->n2 = 1;
+	    } else {
+		node->n2 = order;
+		if (x != 0. && a != 1.) {
+		    if (!accepted[i+na]) continue;
+		    node->parents[1][0] = i+na;
+		}
+	    }
+
+	    if (node->n1 == order && 
+		node->n2 == order && 
+		x != 0. && a != 0.) {
+		if (!accepted[i+na+1]) continue;
+		node->parents[1][1] = i+na+1;
+	    }
+
+	    if (3==order) {
+		if (ia == 0 || k == i-1) {
+		    if (node->n1 > 1) node->n1 = 2;
+		} else if (x != 1. && a != 0. && a != 1.) {
+		    if (!accepted[i-1]) continue;
+		    node->parents[0][2] = i-1;
+		}
+
+		if (ix == 0 || k == i-na) {
+		    if (node->n2 > 1) node->n2 = 2;
+		} else if (x != 0. && x != 1. && a != 1.) {
+		    if (!accepted[i-na]) continue;
+		    node->parents[2][0] = i-na;
+		}
+
+		if (x != 0. && a != 0. && 
+		    node->n1 > 1 && node->n2 > 1) {
+		    if (node->n1 == 3 && a != 1.) {
+			if (k == i+na-1) {
+			    node->n1 = 2;
+			} else {
+			    if (!accepted[i+na-1]) continue;
+			    node->parents[1][2] = i+na-1;
+
+			    if (node->n2 == 3 && x != 1.) {
+				if (k == i-na-1) {
+				    node->n2 = 2;
+				} else {
+				    if (!accepted[i-na-1]) continue;
+				    node->parents[2][2] = i-na-1;
+				}
+			    }
+			}
+		    }
+
+		    if (node->n2 == 3 && x != 1.) {
+			if (k == i-na+1) {
+			    node->n2 = 2;
+			} else {
+			    if (!accepted[i-na+1]) continue;
+			    node->parents[2][1] = i-na+1;
+			}
+		    }
+		}			
+	    }
+	    node->w1 = a;
+	    node->w2 = x;
+	} else { /* hits an x wall */
+	    if (z != 1. && a != 1.) {
+		if (!accepted[i]) continue;
+		node->parents[0][0] = i;
+	    }
+
+	    if (ia == na-1 || k == i+1) {
+		node->n1 = 1;
+	    } else {
+		node->n1 = order;
+		if (z != 1. && a != 0.) {
+		    if (!accepted[i+1]) continue;
+		    node->parents[0][1] = i+1;
+		}
+	    }
+
+	    if (iz == nz-1 || k == i+nax) {
+		node->n2 = 1;
+	    } else {
+		node->n2 = order;
+		if (z != 0. && a != 1.) {
+		    if (!accepted[i+nax]) continue;
+		    node->parents[1][0] = i+nax;
+		}
+	    }
+
+	    if (node->n1 == order && node->n2 == order && 
+		z != 0. && a != 0.) {
+		if (!accepted[i+nax+1]) continue;
+		    node->parents[1][1] = i+nax+1;
+	    }
+            
+	    if (3==order) {
+		if (ia == 0 || k == i-1) {
+		    if (node->n1 > 1) node->n1 = 2;
+		} else if (z != 1. && a != 0. && a != 1.) {
+		    if (!accepted[i-1]) continue;
+		    node->parents[0][2] = i-1;
+		}
+
+		if (iz == 0 || k == i-nax) {
+		    if (node->n2 > 1) node->n2 = 2;
+		} else if (z != 0. && z != 1. && a != 1.) {
+		    if (!accepted[i-nax]) continue;
+		    node->parents[2][0] = i-nax;
+		}
+			
+		if (z != 0. && a != 0. && 
+		    node->n1 > 1 && node->n2 > 1) {
+		    if (node->n1 == 3 && a != 1.) { 
+			if (k == i+nax-1) {
+			    node->n1 = 2;
+			} else {
+			    if (!accepted[i+nax-1]) continue;
+			    node->parents[1][2] = i+nax-1;
+
+			    if (node->n2 == 3 && z != 1.) {
+				if (k == i-nax-1) {
+				    node->n2 = 2;
+				} else {
+				    if (!accepted[i-nax-1]) continue;
+				    node->parents[2][2] = i-nax-1;
+				}
+			    }
+			}
+		    }
+
+		    if (node->n2 == 3 && z != 1.) { 
+			if (k == i-nax+1) {
+			    node->n2 = 2;
+			} else {
+			    if (!accepted[i-nax+1]) continue;
+			    node->parents[2][1] = i-nax+1;
+			}
+		    }
+		} /* z != 0 */
+	    } /* 3 == order */
+	    node->w1 = a;
+	    node->w2 = z;
+	} /* hits a wall */
+	node->t = t;
+	process_node (node);
+	pqueue_insert(val[k]+2);
+	return;
+    } /* it */
 }
 
 static void check_front (void) {
@@ -370,10 +660,7 @@ static void check_front (void) {
 		atfront = (cell->node->nparents > 0);
 		if (atfront) break;
 	    }
-	    if (atfront) {
-		pqueue_insert(val[k]+2);
-		sf_warning("%d",k);
-	    }
+	    if (atfront) pqueue_insert(val[k]+2);
 	}
     }
 }
@@ -424,6 +711,18 @@ void tree_print (void) {
     TraverseQueue (Orphans,print_node);
     fprintf(stderr,"\n");
 } 
+
+static void postprocess_node (Node nd)
+{
+    int k;
+    bool infront;
+
+    k = nd - Tree;
+    
+    infront = accepted[k];
+    process_node (nd);
+    if (!infront) pqueue_insert(val[k]+2);
+}
 
 static void process_node (Node nd) {
     static int n=0;

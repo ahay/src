@@ -98,3 +98,14 @@ void TraverseQueue (NodeQueue queue, void (*apply)(Node nd)) {
 	apply (cell->node);
     }
 }
+
+void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd)) {
+    NodeCell cell, next;
+
+    for (cell = queue->head; NULL != cell; cell = next) {
+	apply (cell->node);
+	next = cell->link;
+	free (cell);
+    }
+    queue->head = NULL;
+}

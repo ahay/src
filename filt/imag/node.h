@@ -32,6 +32,8 @@ void AddChild (Node parent, int i, int j, int k, Node child);
 
 void TraverseQueue (NodeQueue queue, void (*apply)(Node nd));
 
+void TraverseDeleteQueue (NodeQueue queue, void (*apply)(Node nd));
+
 Node ExtractNode (NodeQueue queue);
 
 #endif
