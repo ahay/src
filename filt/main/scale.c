@@ -49,6 +49,7 @@ int main (int argc, char* argv[])
 			f = fabsf(fbuf[i]);
 			if (f > dscale) dscale=f;
 		    }
+		    if (dscale > 0.) dscale=1./dscale;
 		    for (i=0; i < n1; i++) {
 			fbuf[i] *= dscale;
 		    }
@@ -65,6 +66,7 @@ int main (int argc, char* argv[])
 			f = cabsf(cbuf[i]);
 			if (f > dscale) dscale=f;
 		    }
+		    if (dscale > 0.) dscale=1./dscale;
 		    for (i=0; i < n1; i++) {
 			cbuf[i] *= dscale;
 		    }
@@ -110,4 +112,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: scale.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: scale.c,v 1.4 2004/04/06 02:02:54 fomels Exp $	 */
