@@ -1,6 +1,8 @@
 #include <math.h>
 #include <ctype.h>
 
+#include <rsf.h>
+
 #include "coltab.h"
 
 static void hue2rgb (float hue,float *red, float *green, float *blue);
@@ -31,10 +33,8 @@ void name2coltab (char *colname, int nocol,
     for (i = 0; i < nocol; i++) {
 	if (isupper(c)) {
 	    ic = nocol - 1 - i; /* reverse color table */
-	    break;
 	} else {
 	    ic = i;
-	    break;
 	}
 	gray = ((float) ic)/(nocol - 1.);
 	switch (tolower(c)) {

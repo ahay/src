@@ -1,7 +1,7 @@
 #ifndef _vp_vplot_h
 #define _vp_vplot_h
 
-#include <stdbool.h>
+#include <rsf.h>
 
 /* aspect ratio, default window */
 #define VP_SCREEN_RATIO 0.75 

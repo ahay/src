@@ -3,6 +3,8 @@
 #include <string.h>
 #include <float.h>
 
+#include <rsf.h>
+
 #include "axis.h"
 #include "vplot.h"
 

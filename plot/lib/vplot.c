@@ -1,6 +1,7 @@
 #include <math.h>
 #include <stdio.h>
-#include <stdbool.h>
+
+#include <rsf.h>
 
 #include "vplot.h"
 #include "coltab.h"

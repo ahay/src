@@ -1,11 +1,14 @@
 CC = gcc
+CC = cc
 CFLAGS = -Wall -pedantic -O3
 CFLAGS = -Wall -pedantic -g -pg
 CFLAGS = -std=gnu99 -Wall -pedantic -g
 CFLAGS = -std=gnu9x -Wall -pedantic -g -I../../seis/rsf
+CFLAGS = -g -I../../seis/rsf
 LDFLAGS = -L../../seis/rsf -lrsf
 
 DEPEND = -MM
+DEPEND = -xM1
 
 SRC = axis coltab plot stdplot vplot
 OBJS = $(addsuffix .o, $(SRC))	 
