@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) { /* half-offset */
 	for (i2=0; i2 < n2; i2++) { /* midpoint */
-	    is = i2 + i3; /* shot */
+	    is = i2 - i3 + n3-1; /* shot */
 	    rand = chance[is];
 
 	    sf_read (trace,sizeof(float),n1,in);

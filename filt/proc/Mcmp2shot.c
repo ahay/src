@@ -2,14 +2,13 @@
 
 Takes: < cmps.rsf > shots.rsf
 
-Assumes dy = dh!
 */
 
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
-    int nt,ns, ny,nh, iy,ih,is,it;
+    int nt,ns, ny,nh, iy,ih,is,it, CDPtype;
     long pos, tsize;
     float ds, dy,dh, os, oy,oh;
     float *trace, *zero;
@@ -30,9 +29,24 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&oh)) sf_error("No o2= in input");
     if (!sf_histfloat(in,"o3",&oy)) sf_error("No o3= in input");
 
-    ds = dy;
-    os = oy + oh;
-    ns = ny + nh - 1;
+    if (!sf_histint(in,"CDPtype",&CDPtype)) CDPtype=1;
+
+    switch (CDPtype) {
+	case 2:
+	    ds = 2.*dy;
+	    os = oy - oh - (nh-1)*dh;
+	    ns = ny/2 + nh;
+
+	    sf_putint(out,"n2",2*nh);
+	    sf_putfloat(out,"d2",0.5*dh);
+
+	    break;
+	default: /* dy = dh */
+	    ds = dy;
+	    os = oy - oh - (nh-1)*dh;
+	    ns = ny + nh;
+	    break;
+    }
 
     sf_putint(out,"n3",ns);
     sf_putfloat(out,"d3",ds);
@@ -50,15 +64,36 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
 
     for (is=0; is < ns; is++) {
-	sf_warning("shot %d of %d",is+1,ns);
 	for (ih=0; ih < nh; ih++) {
-	    iy = is - ih;
-	    if (iy >= 0 && iy < ny) {
-		sf_seek(in,pos+(iy*nh+ih)*tsize,SEEK_SET);
-		sf_read(trace,sizeof(float),nt,in);
-		sf_write(trace,sizeof(float),nt,out);
-	    } else {
-		sf_write(zero,sizeof(float),nt,out);
+	    switch (CDPtype) {
+		case 2:
+		    iy = 2*(is + ih - nh + 1);
+		    if (iy >= 0 && iy < ny) {
+			sf_seek(in,pos+(iy*nh+ih)*tsize,SEEK_SET);
+			sf_read(trace,sizeof(float),nt,in);
+			sf_write(trace,sizeof(float),nt,out);
+		    } else {
+			sf_write(zero,sizeof(float),nt,out);
+		    }
+		    iy++;
+		    if (iy >= 0 && iy < ny) {
+			sf_seek(in,pos+(iy*nh+ih)*tsize,SEEK_SET);
+			sf_read(trace,sizeof(float),nt,in);
+			sf_write(trace,sizeof(float),nt,out);
+		    } else {
+			sf_write(zero,sizeof(float),nt,out);
+		    }
+		    break;
+		default:
+		    iy = is + ih - nh + 1;
+		    if (iy >= 0 && iy < ny) {
+			sf_seek(in,pos+(iy*nh+ih)*tsize,SEEK_SET);
+			sf_read(trace,sizeof(float),nt,in);
+			sf_write(trace,sizeof(float),nt,out);
+		    } else {
+			sf_write(zero,sizeof(float),nt,out);
+		    }
+		    break;
 	    }
 	}
     }

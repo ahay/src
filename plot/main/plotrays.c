@@ -11,18 +11,37 @@ int main(int argc, char* argv[])
     int n1, n2, ir, jr;
     float o1, d1, o2, d2, **traj;
     int nsr, it, nt;
+    sf_file frame;
 
     sf_init (argc,argv);
     vp_init ();
 
-    if (!sf_getint("n1",&n1)) sf_error("Need n1=");
-    if (!sf_getint("n2",&n2)) sf_error("Need n2=");
+    if (NULL != sf_getstring("frame")) {
+	frame = sf_input("frame");
+    } else {
+	frame = NULL;
+    }
+
+    if (!sf_getint("n1",&n1) && 
+	(NULL == frame || 
+	 !sf_histint(frame,"n1",&n1))) sf_error("Need n1=");
+    if (!sf_getint("n2",&n2) &&
+	(NULL == frame || 
+	 !sf_histint(frame,"n2",&n2))) sf_error("Need n2=");
     /* frame dimensions */
-    if (!sf_getfloat("d1",&d1)) sf_error("Need d1=");
-    if (!sf_getfloat("d2",&d2)) sf_error("Need d2=");
+    if (!sf_getfloat("d1",&d1) &&
+	(NULL == frame || 
+	 !sf_histfloat(frame,"d1",&d1))) sf_error("Need d1=");
+    if (!sf_getfloat("d2",&d2) &&
+	(NULL == frame || 
+	 !sf_histfloat(frame,"d2",&d2))) sf_error("Need d2=");
     /* frame sampling */
-    if (!sf_getfloat("o1",&o1)) sf_error("Need o1=");
-    if (!sf_getfloat("o2",&o2)) sf_error("Need o2=");
+    if (!sf_getfloat("o1",&o1) &&
+	(NULL == frame || 
+	 !sf_histfloat(frame,"o1",&o1))) sf_error("Need o1=");
+    if (!sf_getfloat("o2",&o2) &&
+	(NULL == frame || 
+	 !sf_histfloat(frame,"o2",&o2))) sf_error("Need o2=");
     /* frame origin */
     if (!sf_getint("nt",&nt)) nt=n1*n2;
     /* maximum ray length */
@@ -54,5 +73,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: plotrays.c,v 1.4 2003/10/01 23:41:18 fomels Exp $	 */
+/* 	$Id: plotrays.c,v 1.5 2004/03/15 06:57:59 fomels Exp $	 */
 

@@ -38,8 +38,13 @@ int main (int argc, char* argv[])
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
+	
+	h0 *= 2.;
+	dh *= 2.;
+	/* full offset */
+
 	for (ih = 0; ih < nh; ih++) {
-	    off[ih] = 2.*(h0 + ih*dh); /* full offset? */
+	    off[ih] = h0 + ih*dh; 
 	}
     }
 
@@ -90,5 +95,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mnmo.c,v 1.4 2004/03/13 06:00:33 fomels Exp $	 */
+/* 	$Id: Mnmo.c,v 1.5 2004/03/15 06:57:59 fomels Exp $	 */
 

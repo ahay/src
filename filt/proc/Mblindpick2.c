@@ -3,6 +3,7 @@
 Takes: < semblance.rsf > pick.rsf
 */
 #include <math.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -10,9 +11,9 @@ Takes: < semblance.rsf > pick.rsf
 
 int main(int argc, char* argv[])
 {
-    int nt, ns, nx, n, i, ix, is, it, niter;
+    int nt, ns, nx, n, i, ix, is, it, niter, imax;
     float **slice, *pick0, *pick, *ampl;
-    float s0, ds, eps, lam, t, asum, ai;
+    float s0, ds, eps, lam, t, asum, ai, amax, ap, am, num, den, dx;
     bool gauss;
     sf_file in, out;
 
@@ -56,15 +57,31 @@ int main(int argc, char* argv[])
 	/* pick blind maximum */
 	for (it = 0; it < nt; it++) {
 	    i = ix*nt+it;
-	    ampl[i] = 0.;
-	    pick0[i] = s0+0.5*(ns-1)*ds;
 
+	    imax = 0;
+	    amax = 0.;
 	    for (is = 0; is < ns; is++) {
 		t = slice[is][it];
-		if (t > ampl[i]) {
-		    ampl[i] = t;
-		    pick0[i] = s0+is*ds;
+		if (t > amax) {
+		    amax = t;
+		    imax = is;
 		}
+	    }
+
+	    /* quadratic interpolation for sub-pixel accuracy */
+	    if (imax > 0 && imax < ns-1) {
+		am = slice[imax-1][it];
+		ap = slice[imax+1][it];
+		num = 0.5*(am-ap);
+		den = am+ap-2.*amax;
+		dx = num*den/(den*den + FLT_EPSILON);
+		if (fabsf(dx) >= 1.) dx=0.;
+
+		ampl[i] = amax - 0.5*dx*dx*den;
+		pick0[i] = s0+(imax+dx)*ds;
+	    } else {
+		ampl[i] = amax;
+		pick0[i] = s0+imax*ds;
 	    }
 	}
     }
@@ -88,5 +105,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.1 2004/03/13 06:11:12 fomels Exp $	 */
+/* 	$Id: Mblindpick2.c,v 1.2 2004/03/15 06:57:59 fomels Exp $	 */
 
