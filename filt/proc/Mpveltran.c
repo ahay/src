@@ -29,11 +29,11 @@
 
 int main (int argc, char* argv[])
 {
-    bool half;
+    bool half, inter;
     int it,ix,ih,iv, nt,nx, nh, CDPtype, nv, ntv, nw;
-    float dt, t0, h, h0, t, f, dh, dy, v0, dv;
-    float *p, **coord, *ord, *vtr, *vtr2;
-    sf_file cmp, vel, dip;
+    float dt, t0, h, h0, t, f, g, dh, dy, v0, dv;
+    float *p, *pt, **coord, *ord, *vtr, *vtr2;
+    sf_file cmp, vel, dip, dipt;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -88,6 +88,17 @@ int main (int argc, char* argv[])
     vtr = sf_floatalloc(ntv);
     vtr2 = sf_floatalloc(ntv);
 
+    if (!sf_getbool("interval",&inter)) inter=false;
+    /* if y, compute interval velocity */
+
+    if (inter) {
+	dipt = sf_input("dipt");
+	pt = sf_floatalloc(nt);
+    } else {
+	dipt = NULL;
+	pt = NULL;
+    }
+
     for (ix = 0; ix < nx; ix++) {
 
 	for (iv=0; iv < ntv; iv++) {
@@ -99,7 +110,7 @@ int main (int argc, char* argv[])
 	    	
 	    sf_floatread (ord, nt, cmp);
 	    sf_floatread (p, nt, dip);
-	    
+	    if (inter) sf_floatread (pt, nt, dipt);
 
 	    for (it=0; it < nt; it++) {
 		t = t0 + it*dt;
@@ -110,7 +121,16 @@ int main (int argc, char* argv[])
 		    coord[it][1]=0.;
 		} else {
 		    coord[it][0] = sqrtf(t*f);
-		    coord[it][1] = h/sqrtf(t*(t-f)+FLT_EPSILON);
+		    if (inter) {
+			g = dt*p[it]+t*pt[it];
+			coord[it][1] = 
+			    sqrtf(fabsf(
+				      h*dh*(p[it]*h*g*dt - 2*pt[it]*t*t*dh)/
+				      (p[it]*p[it]*t*(2*t*dh-h*g)+FLT_EPSILON)
+				      ))/dt;
+		    } else {
+			coord[it][1] = h/sqrtf(t*(t-f)+FLT_EPSILON);
+		    }
 		}
 	    }
 

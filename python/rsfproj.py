@@ -245,10 +245,6 @@ class Project(Environment):
                             self.coms.append(rsfprog)
                 elif re.match(r'[^/]+\.exe$',command): # local program
                     command = os.path.join('.',command)                    
-                #<- check for par files and add to the sources
-                for par in pars:
-                    if re.match("^par=",par):
-                        sources.append(File(par[4:]))
                 #<- assemble the command line
                 pars.insert(0,command)
                 substeps.append(string.join(pars,' '))

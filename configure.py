@@ -185,6 +185,16 @@ fortran = {'g77':'f2cFortran',
 def f77(context):
     context.Message("checking F77 compiler ... ")
     F77 = context.env.get('F77')
+    if not F77:
+        compilers = ['g77','f77','f90','f95','xlf90','pgf90',
+                     'ifort','ifc','pghpf']
+        F77 = context.env.Detect(compilers)
+        if not F77:
+            for comp in compilers:
+                F77 = WhereIs(comp)
+                if F77:
+                    break
+        context.env['F77'] = F77
     if F77:
         context.Result(F77)
     else:

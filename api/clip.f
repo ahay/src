@@ -9,18 +9,18 @@
 	in = sf_input("in")
 	out = sf_output("out")
 
-	if (2 .ne. sf_gettype(in)) then
-	   call sf_error("Need float input")
-	end if
+	if (2 .ne. sf_gettype(in)) 
+     &  call sf_error("Need float input")
 
 	if (.not. sf_histint(in,"n1",n1)) then
 	   call sf_error("No n1= in input")
+	else if (n1 > 1000) then
+	   call sf_error("n1 is too long")
 	end if
 	n2 = sf_leftsize(in,1)
 
-	if (.not. sf_getfloat("clip",clip)) then
-	   call sf_error("Need clip=")
-	end if
+	if (.not. sf_getfloat("clip",clip)) 
+     &  call sf_error("Need clip=")
 
 	do 10 i2=1, n2
 	   call sf_floatread(trace,n1,in)
