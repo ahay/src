@@ -1,4 +1,4 @@
-import os, stat, sys, types, commands, re, string, urllib, ftplib
+import os, stat, sys, types, commands, re, string, urllib, ftplib, filecmp
 import rsfdoc
 import rsfprog
 import rsfconf
@@ -53,9 +53,10 @@ resdir = None
 record = 0
 
 def set_dir(ref='..',dir='Fig'):
-     global figdir, resdir
+     global figdir, resdir, record
      figdir = dir
      resdir = os.path.join(ref,dir)
+     record = ref == '..'
 
 set_dir()
 
@@ -87,17 +88,18 @@ def collect_exe(dir):
 # CUSTOM BUILDERS
 #############################################################################
 
-#def clean(target=None,source=None,env=None):
-#    for junk in env['junk']:
-#        if (os.path.isfile (junk)):
-#            try:
-#                os.unlink(junk)
-#            except:
-#                pass
-#    return 0
-
 def silent(target=None,source=None,env=None):
     return None
+
+def test(target=None,source=None,env=None):
+    src = str(source[0])
+    locked = re.sub('\/([^\/]+)$','/.\\1',src)
+    if os.path.isfile(locked):
+        if not filecmp.cmp(locked,src,shallow=0):
+            return 1
+    else:
+        print 'No locked file "%s" ' % locked
+    return 0
 
 ppi = 72 # points per inch resolution
 def pstexpen(target=None,source=None,env=None):
@@ -294,18 +296,19 @@ if acroread:
                     'cat $SOURCES | %s -toPostScript | lpr' % acroread,
                     src_suffix='.pdf',suffix='.print')
                     
-ressuffix = '.pdf'
-
 fig2dev = WhereIs('fig2dev')
 if fig2dev:
     XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
                    suffix='.pdf',src_suffix='.fig')
+
+Test = Builder(action=Action(test),src_suffix='.pdf')
 
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
 
 isplot = None
+ressuffix = '.pdf'
 def getplots(node,env,path):
     global isplot, ressufix
     if not isplot:
@@ -370,7 +373,8 @@ class Project(Environment):
                          'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Build':Build,
-                              'Retrieve':Retrieve},
+                              'Retrieve':Retrieve,
+                              'Test':Test},
                     SCANNERS=[Plots,Bibs],
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
@@ -390,11 +394,14 @@ class Project(Environment):
         self.view = []
         self.figs = []
         self.pdfs = []
+        self.lock = []
+        self.test = []
         self.coms = []
     def Dir(self,dir):
         self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
+        self.SConsignFile(self.path+'.sconsign.db')
     def Exe(self,source,**kw):
          target = source.replace('.c','.x')
          return apply(self.Program,(target,source),kw)
@@ -493,6 +500,13 @@ class Project(Environment):
 	    buildPDF = self.PDFBuild(target2,build)
 	    self.pdfs.append(buildPDF)
 	    self.Alias(target + '.buildPDF',buildPDF)
+            lock = self.InstallAs(os.path.join(resdir,'.'+target+'.pdf'),
+                                  target2+'.pdf')
+            self.lock.append(lock)
+            self.Alias(target + '.lock',lock)
+            test = self.Test('.test_'+target,target2)
+            self.test.append(test)
+            self.Alias(target + '.test',test)
         return plot
     def End(self,use=None):
         self.Alias('view',self.view)
@@ -500,6 +514,8 @@ class Project(Environment):
             build = self.Alias('build',self.figs)
         if self.pdfs:
             buildPDF = self.Alias('buildPDF',self.pdfs)
+            lock = self.Alias('lock',self.lock)
+            test = self.Alias('test',self.test)
         if os.path.isfile('paper.tex'): # if there is a paper
             if dvips:
                 self.paper = self.Dvi(target='paper',source='paper.ltx')

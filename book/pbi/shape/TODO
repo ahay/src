@@ -1,6 +1,0 @@
-1. Fix inmo for t < 0
-2. Recompute beinew + velcon
-3. Fix impl
-4. Prove that trisl is triangle
-5. Reflecting b.c. in trisl
-6. High-resolution trisl with PWD

@@ -9,27 +9,32 @@ def subdirs():
 def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     doc = ['import rsfdoc\n']
-    os.chdir('book')
-    for book in subdirs():
-        os.chdir(book)
-        print "%s..." % book
-        for chapter in subdirs():
-            os.chdir(chapter)
-            print "...%s" % chapter
-            for project in subdirs():
-                os.chdir(project)
-                (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
-                if status:
-                    print ('No uses found in book/%s/%s/%s/: %s' %
-                           (book,chapter,project,progs))
-                else:
-                    for prog in string.split(progs):
-                        doc.append('rsfdoc.progs["%s"].use("%s","%s","%s")' %
-                                   (prog,book,chapter,project))
+    cwd = os.getcwd()
+    bookdir = os.path.join(os.environ.get('RSFROOT',cwd),'book')
+    if os.path.isdir(bookdir):
+        os.chdir(bookdir)
+        for book in subdirs():
+            os.chdir(book)
+            print "%s..." % book
+            for chapter in subdirs():
+                os.chdir(chapter)
+                print "...%s" % chapter
+                for project in subdirs():
+                    os.chdir(project)
+                    (status,progs) = \
+                    commands.getstatusoutput('scons -s .sf_uses')
+                    if status:
+                        print ('No uses found in book/%s/%s/%s/: %s' %
+                               (book,chapter,project,progs))
+                    else:
+                        for prog in string.split(progs):
+                            doc.append(
+                                'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+                                (prog,book,chapter,project))
+                    os.chdir('..')
                 os.chdir('..')
             os.chdir('..')
-        os.chdir('..')
-    os.chdir('..')
+        os.chdir(cwd)
     out.write(string.join(doc,'\n') + '\n')
     out.close()
 
@@ -200,7 +205,9 @@ class rsfprog:
         if self.vers:
             name = name + " (%s)" % self.vers
         contents = heading(name,'#ffffff','#7799ee',
-                           '<a href="./index.html">index</a><br>'+self.file)
+                           '<a href="./index.html">index</a><br>'+
+                           '<a href="/viewcvs/trunk/%s">%s</a>' %
+                           (self.file,self.file))
         if self.desc:
             contents = contents + self.desc
         if self.snps:
@@ -295,7 +302,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
                               '((?:.|\n)*)$')
         inpout = re.compile(r'\s*(?P<name>\w+)\s*=\s*sf_(?P<io>input|output)'
                             '\s*\(\s*\"(?P<tag>\w+)\"')
-        version = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*Exp\s*\$\s*\*\/')
+        version = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
     name = re.sub('.c$','',name)
     src = open(file,"r")   # open source
@@ -447,4 +454,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.21 2004/07/02 10:05:32 fomels Exp $
+# 	$Id$

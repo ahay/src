@@ -1,10 +1,7 @@
 import os, sys, string, re
 import configure, rsfdoc
 
-if os.environ.has_key('RSFROOT'):
-    root = os.environ['RSFROOT']
-else:
-    root = os.getcwd()
+root = os.environ.get('RSFROOT',os.getcwd())
 
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
@@ -120,5 +117,5 @@ env.Command(index,None,'PYTHONPATH=%s %s sfdoc -w %s' %
            (libdir,WhereIs('python'),docdir))
 Depends(index,use)
 
-# 	$Id: SConstruct,v 1.36 2004/07/01 11:36:26 fomels Exp $
+# 	$Id$
 
