@@ -4,8 +4,16 @@
 #include <rsf.h>
 
 #include "randn.h"
+#include "random.h"
 
 static const float pi = 3.1415926535898;
+
+static int compare_float (const void *a, const void *b)
+{
+    float fa = * ((float*) a);
+    float fb = * ((float*) b);
+    return (fa < fb)? -1: (fa > fb)? 1: 0;
+}
 
 static void cumsum(int n, const float *a, float *b)
 {
@@ -36,7 +44,7 @@ static void synf(float fo, int n, float* s, int ns,
 	/* Ricker wavelet at tn with amplitude Rn */
 	/* accumulate the sum of all reflections */ 
 	for (i=0; i < n; i++) {
-	    a = pi*fo*(t-tn);
+	    a = pi*fo*(t[i]-tn);
 	    a *= a;
 	    s[i] += rn*(1-2*a)*expf(-a);
 	}
@@ -61,7 +69,7 @@ int main (int argc, char* argv[])
     sf_putint(mod,"n2",3);
     sf_setformat(mod,"native_float");
 
-    sf_getfloats ("fo",3,fo); 
+    sf_getfloats ("fo",fo,3); 
 
     vpvs = sf_output("vpvs");
     sf_putint(vpvs,"n1",nr);
@@ -72,7 +80,7 @@ int main (int argc, char* argv[])
     pp = sf_floatalloc (nt);
     ps = sf_floatalloc (nt);
     ss = sf_floatalloc (nt);
-    ts = sf_floatalloc (nt);
+    ts = sf_floatalloc (nr);
 
     for (it=0; it < nt; it++) {
 	t[it] = t0 + it*dt;
@@ -91,47 +99,55 @@ int main (int argc, char* argv[])
 
     /* ts - reflector positions */
     
+    for (it=0; it < nr; it++) {
+	ts[it] = 0.1+0.9*random0();
+    }
+    qsort(ts,nt,sizeof(float),compare_float);
 
-  call random_number (ts)
-  ts = 0.1+0.9*ts
-  call qsort_init (ts)
-  call qsort ()
+    /* dtpp - layer thickness in PP time */    
+    dtpp[0] = ts[0];
+    for (it=1; it < nr; it++) {
+	dtpp[it] = ts[it] - ts[it-1];
+    }
 
-  ! dtpp - layer thickness in PP time
-  dtpp(1) = ts(1)
-  dtpp(2:nr) = ts(2:nr) - ts(1:nr-1)
+    /* tm - time in the middle of the layer */
+    /* p2ss - Vp/Vs ratio as a function of time */
+    for (it=0; it < nr; it++) {
+	tm[it]=ts[it]-0.5*dtpp[it];
+	p2ss[it]=1./(0.12+(0.5*tm[it]));
+    }
 
-  ! tm - time in the middle of the layer
-  tm=ts-0.5*dtpp
-  ! p2ss - Vp/Vs ratio as a function of time
-  p2ss=1./(0.12+(0.5*tm))
+    sf_write(tm,sizeof(float),nr,vpvs);
+    sf_write(p2ss,sizeof(float),nr,vpvs);
+    sf_fileclose(vpvs);
 
-  call sep_write (tm,"vpvs")
-  call sep_write (p2ss,"vpvs")
+    for (it=0; it < nr; it++) {
+	p2ps[it]=0.5*(1+p2ss[it]);
+	dtss[it]=p2ss[it]*dtpp[it]; /* SS thickness */
+	dtps[it]=p2ps[it]*dtpp[it]; /* PS thickness */
+    }
 
-  p2ps=0.5*(1+p2ss)
+    /* rs - reflection coefficient */
+    randn (nr, rs);
+    for (it=0; it < nr; it++) {
+	rs[it] = 0.1/nr + 0.05*rs[it];
+    }
 
-  dtss=p2ss*dtpp ! SS thickness
-  dtps=p2ps*dtpp ! PS thickness
+    cumsum(nr,dtpp,tpp);
+    cumsum(nr,dtps,tps);
+    cumsum(nr,dtss,tss);
 
-  ! rs - reflection coefficient
-  call randn_number (nr, rs)
-  rs = 0.1/nr + 0.05*rs
+    synf(fo[0],nt,pp,nr,t,tpp,rs);
+    synf(fo[1],nt,ps,nr,t,tps,rs);
+    synf(fo[2],nt,ss,nr,t,tss,rs);
 
-  call cum_sum(dtpp,tpp)
-  call cum_sum(dtps,tps)
-  call cum_sum(dtss,tss)
+    sf_write(pp,sizeof(float),nt,mod);
+    sf_write(ps,sizeof(float),nt,mod);
+    sf_write(ss,sizeof(float),nt,mod);
 
-  call synf1(pp,t,fo(1),tpp,rs)
-  call synf1(ps,t,fo(2),tps,rs)
-  call synf1(ss,t,fo(3),tss,rs)
+    exit (0);
+}
 
-  call sep_write (pp)
-  call sep_write (ps)
-  call sep_write (ss)
-
-  call exit (0)
-end program Randrefl
 
 
 

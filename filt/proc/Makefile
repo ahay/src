@@ -3,13 +3,14 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = bandpass bin bin1 dip pwd sigmoid smooth
+PROGS = bandpass bin bin1 dip pwd randrefl sigmoid smooth
 
 bandpass.OBJS = butterworth
 bin.OBJS = int2 interp adjnull
 bin1.OBJS = int1 interp adjnull
 dip.OBJS = dip3 divide1 allp3 tridiagonal apfilt
 pwd.OBJS = allp3 apfilt
+randrefl.OBJS = random randn
 sigmoid.OBJS = random
 smooth.OBJS = triangle
 
