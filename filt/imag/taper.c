@@ -67,22 +67,22 @@ void taper3_init(int n3, int n2, int n1 /* taper lengths */)
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
 	for (it=0; it < nt1; it++) {
-	    gain = sinf(0.5*SF_PI*it/nt1);
+	    gain = sinf(0.5*SF_PI*(it+1)/nt1);
 	    tap1[it]=gain*gain;
 	}
     }
     if (nt2 > 0) {
 	tap2 = sf_floatalloc(nt2);
 	for (it=0; it < nt2; it++) {
-	    gain = sinf(0.5*SF_PI*it/nt2);
+	    gain = sinf(0.5*SF_PI*(it+1)/nt2);
 	    tap2[it]=gain*gain;
 	}
     }
     if (nt3 > 0) {
 	tap3 = sf_floatalloc(nt3);
 	for (it=0; it < nt3; it++) {
-	    gain = sinf(0.5*SF_PI*it/nt3);
-	    tap2[it]=gain*gain;
+	    gain = sinf(0.5*SF_PI*(it+1)/nt3);
+	    tap3[it]=gain*gain;
 	}
     }
 }
@@ -106,16 +106,16 @@ void taper2(bool beg2, bool beg1  /* taper in the beginning  */,
     for (it=0; it < nt2; it++) {
 	gain = tap2[it];
 	for (i1=0; i1 < n1; i1++) {
-	    if (beg2) tt[it][i1] *= gain;
-	    tt[n2-it-1][i1] *= gain;
+	    if (beg2) tt[   it  ][i1] *= gain;
+	    ;         tt[n2-it-1][i1] *= gain;
 	}
     }
 
     for (it=0; it < nt1; it++) {
 	gain = tap1[it];
 	for (i2=0; i2 < n2; i2++) {
-	    if (beg1) tt[i2][it] *= gain;
-	    tt[i2][n1-it-1] *= gain;
+	    if (beg1) tt[i2][   it  ] *= gain;
+	    ;         tt[i2][n1-it-1] *= gain;
 	}
     }
 }

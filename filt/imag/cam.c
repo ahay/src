@@ -32,7 +32,7 @@
 
 #define LOOPhmm(a) for(ihx=0;ihx<ahx.n;ihx++){ for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}}
 #define KOOPhmm(a) for(ihx=0;ihx<bhx.n;ihx++){ for(imy=0;imy<bmy.n;imy++){ for(imx=0;imx<bmx.n;imx++){ {a} }}}
-#define LOOPhll(a) for(ihx=0;ihx<ahx.n;ihx++){ for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}}
+/*#define LOOPhll(a) for(ihx=0;ihx<ahx.n;ihx++){ for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}}*/
 
 #define BOUND(i,n) (i<0) ? 0 : ( (i>=n) ? n : i );
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
@@ -115,16 +115,17 @@ void cam_init(bool verb_,
     nrmax = nr1;
 
     /* allocate workspace */
-    qq = sf_floatalloc3   (alx.n,aly.n,ahx.n);  /* image */
     ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
     sz = sf_floatalloc2          (nrmax,az.n);  /* reference slowness */
     sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
     nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
 
-    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
-    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
+    qq = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* image */
     wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
     wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
+
+    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
+    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
 
     ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
     krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
@@ -150,7 +151,7 @@ void cam_init(bool verb_,
 	jx[imx] = ilx;                     /* i-line index */
 
 	for (ihx=0; ihx<ahx.n; ihx++) {
-	    hx = ahx.d + ihx*ahx.d;
+	    hx = ahx.o + ihx*ahx.d;
 	    
 	    ilx = 0.5+(mx-hx-alx.o)/alx.d;
 	    ilx = BOUND(ilx,alx.n);
@@ -222,14 +223,14 @@ void cam( bool inv   /* migration/modeling flag */,
 	  slice slow /* slowness   [nz]     [nly][nlx]     */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,imy,imx,ihx,ilx,ily, js,jr;
+    int iz,iw,imy,imx,ihx,js,jr;
     int       jmy;
     float sy, kmy;
     float complex cshift=0, cref=0, w, w2, cs, cr, khy, kss, krr;
     float d, dsc,drc;
 
     if (!inv) { /* prepare image for migration */
-	LOOPhll( qq[ihx][ily][ilx] = 0.0; );
+	LOOPhmm( qq[ihx][imy][imx] = 0.0; );
 	for (iz=0; iz<az.n; iz++) {
 	    slice_put(imag,iz,qq[0][0]);
 	}
@@ -247,7 +248,7 @@ void cam( bool inv   /* migration/modeling flag */,
 
 	    /* imaging condition @ bottom */
 	    slice_get(imag,az.n-1,qq[0][0]);
-	    LOOPhmm( wx[ihx][imy][imx] = qq[ihx][ jy[imy] ][ jx[imx] ]; );
+	    LOOPhmm( wx[ihx][imy][imx] = qq[ihx][imy][imx]; );
 	  
 	    /* loop over migrated depths z */
 	    for (iz=az.n-2; iz>=0; iz--) {
@@ -313,8 +314,8 @@ void cam( bool inv   /* migration/modeling flag */,
 
 		/* imaging condition */
 		slice_get(imag,iz,qq[0][0]);
-		LOOPhmm( wx[ihx]   [imy]    [imx]  +=
-			 qq[ihx][jy[imy]][jx[imx]]; );
+		LOOPhmm( wx[ihx][imy][imx]  +=
+			 qq[ihx][imy][imx]; );
 
 	    } /* iz */
 
@@ -332,8 +333,8 @@ void cam( bool inv   /* migration/modeling flag */,
 
 		/* imaging condition */
 		slice_get(imag,iz,qq[0][0]);
-		LOOPhmm(        qq[ihx][jy[imy]][jx[imx]] += 
-			 crealf(wx[ihx]   [imy]    [imx] ); );
+		LOOPhmm(        qq[ihx][imy][imx] += 
+			 crealf(wx[ihx][imy][imx] ); );
 		slice_put(imag,iz,qq[0][0]);
 
 		/* w-x @ top */
@@ -398,7 +399,7 @@ void cam( bool inv   /* migration/modeling flag */,
 	    
 	    /* imaging condition @ bottom */
 	    slice_get(imag,az.n-1,qq[0][0]);
-	    LOOPhmm(qq[ihx][jy[imy]][jx[imx]] +=  crealf(wx[ihx][imy][imx]); );
+	    LOOPhmm(qq[ihx][imy][imx] +=  crealf(wx[ihx][imy][imx]); );
 	    slice_put(imag,az.n-1,qq[0][0]);
 	} /* else */
     } /* iw */

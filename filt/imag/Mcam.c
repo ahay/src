@@ -54,7 +54,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("padmy",&padmy))padmy=     0; /* padding on x-line wavenumber */
     if (!sf_getint("padhx",&padhx))padhx=     0; /* padding on offset wavenumber */
 
-    if (!sf_getint(   "nt",&nt  ))   nt =     1; /* taper size */
+    if (!sf_getint(   "nt",&nt  ))   nt =     0; /* taper size */
     
     Fi = inv ? sf_input ( "in"): sf_output("out");
     Fd = inv ? sf_output("out"): sf_input ( "in"); 
@@ -64,6 +64,11 @@ int main (int argc, char *argv[])
     /*    image[nlx][nly][nhx][nz] */
     /* slowness[nlx][nly]     [nz] */
 
+    
+    iaxa(Fs,&alx,1);
+    iaxa(Fs,&aly,2);
+    iaxa(Fs,&az ,3);
+
     if (inv) { /* modeling */
 	if (SF_FLOAT != sf_gettype(Fi)) sf_error("Need float image");
 	sf_settype(Fd,SF_COMPLEX);
@@ -72,24 +77,19 @@ int main (int argc, char *argv[])
 	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 	if (!sf_getfloat("w0",&aw.o)) aw.o=0.;
 
-	iaxa(Fi,&alx,1); amx=alx; oaxa(Fd,&amx,1);
-	iaxa(Fi,&aly,2); amy=aly; oaxa(Fd,&amy,2);
-	iaxa(Fi,&ahx,3);          oaxa(Fd,&ahx,3);
-	iaxa(Fi,&az ,4);          oaxa(Fd,&aw ,4);
+	iaxa(Fi,&amx,1); oaxa(Fd,&amx,1);
+	iaxa(Fi,&amy,2); oaxa(Fd,&amy,2);
+	iaxa(Fi,&ahx,3); oaxa(Fd,&ahx,3);
+	iaxa(Fi,&az ,4); oaxa(Fd,&aw ,4);
 
     } else { /* migration */
 	if (SF_COMPLEX != sf_gettype(Fd)) sf_error("Need complex data");
 	sf_settype(Fi,SF_FLOAT);
 
-	iaxa(Fd,&amx,1);
-	iaxa(Fd,&amy,2);
-	iaxa(Fd,&ahx,3); 
-	iaxa(Fd,&aw ,4);
-
-	iaxa(Fs,&alx,1); oaxa(Fi,&alx,1);
-	iaxa(Fs,&aly,2); oaxa(Fi,&aly,2);
-	;                oaxa(Fi,&ahx,3);
-	iaxa(Fs,&az ,3); oaxa(Fi,&az ,4);
+	iaxa(Fd,&amx,1); oaxa(Fi,&amx,1);
+	iaxa(Fd,&amy,2); oaxa(Fi,&amy,2);
+	iaxa(Fd,&ahx,3); oaxa(Fi,&ahx,3);
+	iaxa(Fd,&aw ,4); oaxa(Fi,&az ,4);
     }
 
     /* taper */
@@ -102,7 +102,7 @@ int main (int argc, char *argv[])
     aw.o *= 2.*SF_PI;
 
     slow = slice_init(Fs,alx.n,aly.n,      az.n);
-    imag = slice_init(Fi,alx.n*aly.n,ahx.n,az.n);
+    imag = slice_init(Fi,amx.n*amy.n,ahx.n,az.n);
     data = slice_init(Fd,amx.n*amy.n,ahx.n,aw.n);
 
     cam_init (verb,eps,dt,
