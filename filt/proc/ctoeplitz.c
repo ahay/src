@@ -1,12 +1,34 @@
+/* Complex Toeplitz solver */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "ctoeplitz.h"
+/*^*/
 
 static int n;
 static float complex *a;
 
 static float complex cdprod (int j, 
 			     const float complex* a, const float complex* b) 
+/* complex dot product */
 {
     int i;
     float complex c;
@@ -17,17 +39,17 @@ static float complex cdprod (int j,
     return c;
 }
 
-void ctoeplitz_init (int n_in)
+void ctoeplitz_init (int n_in /* matrix size */)
+/*< initialize >*/
 {
     n = n_in;
     a = sf_complexalloc (n);
     a[0] = 1.;
 }
 
-  
-/* r - top row of toeplitz matrix */
-/* f - right-hand side overwritten with solution */
-void ctoeplitz_solve (const float complex *r, float complex *f)
+void ctoeplitz_solve (const float complex *r /* top row of the matrix */, 
+		      float complex *f       /* inverted in place */)
+/*< apply the solver >*/
 {    
     int i,j;
     float complex e,c,w, bot;
@@ -58,11 +80,12 @@ void ctoeplitz_solve (const float complex *r, float complex *f)
 	f[j] = c;
     }
 }
-  
+
 void ctoeplitz_close()
+/*< free allocated storage >*/
 {
     free (a);
 }
 
-/* 	$Id: ctoeplitz.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */
 

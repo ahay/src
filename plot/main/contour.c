@@ -3,32 +3,31 @@
 Takes: > plot.vpl
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 
 #include <math.h>
 
 #include <rsf.h>
 #include <rsfplot.h>
 
-static void contour (float **z, int n1, int n2, float c);
+static void contour (bool pos, float **z, int n1, int n2, float c);
 static float delta (float a, float b, float  c);
-static bool cconnect (bool **south, bool** west, float** z,
+static bool cconnect (bool pos, bool **south, bool** west, float** z,
 		      int n1, int n2, float  c, int *ix, int *iy);
 static void draw (bool mask, float x, float y);
 
@@ -40,7 +39,7 @@ int main (int argc, char* argv[])
     int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2;
     float **z, zi, dc, c0, zmin=0., zmax=0., *c;
     float  min1, min2, max1, max2, bmin, bmax;
-    bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false;
+    bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false, pos;
     sf_file in;
     
     sf_init(argc,argv);
@@ -90,6 +89,9 @@ int main (int argc, char* argv[])
 	/* maximum value for scalebar (default is the data maximum) */
     }
 
+    if (!sf_getbool("allpos",&pos)) pos=true;
+    /* contour positive values only */
+
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(z[0],n12,in);
 	
@@ -126,7 +128,7 @@ int main (int argc, char* argv[])
 
 	for (ic = 0; ic < nc; ic++) {
 	    vp_plot_set (ic);
-	    contour (z,n1,n2,c[ic]);
+	    contour (pos, z,n1,n2,c[ic]);
 	} 
 
 	if (scalebar) {
@@ -165,7 +167,7 @@ int main (int argc, char* argv[])
   (ix,iy)   --------- (ix+1,iy)
             south (2)
 */
-static void contour (float **z, int n1, int n2, float c)
+static void contour (bool pos, float **z, int n1, int n2, float c)
 {
     int ix, iy, non, jx, jy;
     float  zxy, ze, zn, x, y;
@@ -237,7 +239,7 @@ static void contour (float **z, int n1, int n2, float c)
 
 	    jx = ix;
 	    jy = iy - 1;
-	    while (cconnect (south, west, z, n1, n2, c, &jx, &jy))
+	    while (cconnect (pos, south, west, z, n1, n2, c, &jx, &jy))
 		non--;
 	}
     }
@@ -253,7 +255,7 @@ static void contour (float **z, int n1, int n2, float c)
 
 	    jx = ix - 1;
 	    jy = iy;
-	    while (cconnect (south, west, z, n1, n2, c, &jx, &jy))
+	    while (cconnect (pos, south, west, z, n1, n2, c, &jx, &jy))
 		non--;
 	}
     }
@@ -269,7 +271,7 @@ static void contour (float **z, int n1, int n2, float c)
 
 	    jx = ix;
 	    jy = iy;
-	    while (cconnect (south, west, z, n1, n2, c, &jx, &jy))
+	    while (cconnect (pos, south, west, z, n1, n2, c, &jx, &jy))
 		non--;
 	}
     }
@@ -285,7 +287,7 @@ static void contour (float **z, int n1, int n2, float c)
 
 	    jx = ix;
 	    jy = iy;
-	    while (cconnect (south, west, z, n1, n2, c, &jx, &jy))
+	    while (cconnect (pos, south, west, z, n1, n2, c, &jx, &jy))
 		non--;
 	}
     }
@@ -303,8 +305,9 @@ static void contour (float **z, int n1, int n2, float c)
 
 		jx = ix;
 		jy = iy;
-		south[iy][ix] = cconnect (south, west, z, n1, n2, c, &jx, &jy);
-		while (cconnect (south, west, z, n1, n2, c, &jx, &jy))
+		south[iy][ix] = 
+		    cconnect (pos, south, west, z, n1, n2, c, &jx, &jy);
+		while (cconnect (pos, south, west, z, n1, n2, c, &jx, &jy))
 		    non--;
 	    }
 	}
@@ -319,7 +322,7 @@ static void contour (float **z, int n1, int n2, float c)
    cconnect returns false if the latter intersection does not exist or if the 
    latter intersection is a grid boundary; otherwise returns true.
 */
-static bool cconnect (bool **south, bool** west, float** z,
+static bool cconnect (bool pos, bool **south, bool** west, float** z,
 		      int n1, int n2, float  c, int *ix, int *iy)
 {
     bool mask; 
@@ -330,8 +333,8 @@ static bool cconnect (bool **south, bool** west, float** z,
     jy = (*iy);
 
     /**** mask ****/
-    mask = (z[jy][jx] >= 0.   && z[jy][jx+1] >= 0. && 
-	    z[jy+1][jx] >= 0. && z[jy+1][jx+1] >= 0.);
+    mask = !pos || (z[jy][jx] >= 0.   && z[jy][jx+1] >= 0. && 
+		    z[jy+1][jx] >= 0. && z[jy+1][jx+1] >= 0.);
 
     if (south[jy + 1][jx]) {  /* if exiting north */
 	jy++;
@@ -399,4 +402,4 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.11 2004/07/02 11:54:57 fomels Exp $	 */
+/* 	$Id$	 */
