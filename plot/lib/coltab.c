@@ -8,13 +8,15 @@
 static void hue2rgb (float hue,float *red, float *green, float *blue);
 
 /* nocol is >=2 and <= 256 */
-void name2coltab (const char *colname, int nocol, 
+void vp_name2coltab (const char *colname, int nocol, 
 		  float *red, float *green, float *blue)
 {
     int i, ic, c;
     float h, redsave, gray, hnocol;
  
     c = *colname;
+    if ('F'==c) c='e'; /* not to confuse 'F' with 'f' */
+
     switch (tolower(c)) {
 	case 'j':
 	case 't':
@@ -80,6 +82,15 @@ void name2coltab (const char *colname, int nocol,
 		green[ic] = 0.7812 * gray;
 		blue[ic] = 0.4975 * gray;
 		break;
+	    case 'e': /* blue-white-red */
+		if (i < hnocol) {
+		    red[ic] = 1.;
+		    green[ic] = blue[ic] = i/hnocol;
+		} else {
+		    red[ic] = green[ic] = (nocol-1-i)/hnocol;
+		    blue[ic] = 1.;
+		}
+		break;
 	    case 'f': /* flag */
 		switch (i%4) {
 		    case 0: /* red */
@@ -104,6 +115,14 @@ void name2coltab (const char *colname, int nocol,
 			break;
 		    default:
 			break;
+		}
+		break;
+	    case 'g': /* black-white-red */
+		if (i < hnocol) {
+		    red[ic] = 1.;
+		    green[ic] = blue[ic] = i/hnocol;
+		} else {
+		    red[ic] = green[ic] = blue[ic] = (nocol-1-i)/hnocol;
 		}
 		break;
 	    case 'j': /* jet */

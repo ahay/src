@@ -9,6 +9,7 @@
 #include "vplot.h"
 
 static float min1, min2, max1, max2, labelsz, inch1, inch2;
+static int framecol;
 static bool labelrot, transp, wheretics;
 static char blank[]=" ";
 
@@ -164,6 +165,8 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     vp_scale (scale1, scale2);
     vp_orig (orig1, orig2);
     vp_uorig (uorig1, uorig2);
+
+    if (!sf_getint ("axiscol",&framecol)) framecol=7;
 }
 
 static void make_labels (sf_file in, char where1, char where2)
@@ -375,28 +378,23 @@ void vp_frame_init (sf_file in, const char* where)
     make_title(in,where[2]);
 }
 
-void vp_minmax(float *x1, float* y1, float* x2, float* y2)
+void vp_simpleframe(void)
 {
-    *x1 = min1;
-    *x2 = max1;
-    *y1 = min2;
-    *y2 = max2;
-}
-
-void vp_frame(void)
-{
-    int i, framecol;
-    float num, xc, yc, vs;
-    char string[32];
-    
-    if (!sf_getint ("axiscol",&framecol)) framecol=7;
-
     vp_color(framecol);
     vp_umove(min1, min2);
     vp_udraw(min1, max2);
     vp_udraw(max1, max2);
     vp_udraw(max1, min2);
     vp_udraw(min1, min2);
+}
+
+void vp_frame(void)
+{
+    int i;
+    float num, xc, yc, vs;
+    char string[32];
+
+    vp_simpleframe();
     
     if (NULL != label1) {
 	vp_fat (label1->fat);

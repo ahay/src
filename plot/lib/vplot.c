@@ -375,7 +375,7 @@ void vp_rascoltab (int nreserve, const char *colname)
  * This call makes a color table given its name. We ask for
  * a color table 256 long.
  */
-    name2coltab (colname, 256, red, green, blue);
+    vp_name2coltab (colname, 256, red, green, blue);
 
     /*
      * In colors 256 through 512, we define our "raster" color table,
