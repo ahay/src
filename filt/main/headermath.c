@@ -1,7 +1,6 @@
 /* Mathematical operations, possibly on header keys.
 
 Takes: < input.rsf > output.rsf
-
 */
 
 #include <string.h>
@@ -88,5 +87,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: headermath.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: headermath.c,v 1.6 2004/03/19 05:45:11 fomels Exp $	 */
 
