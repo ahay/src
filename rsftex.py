@@ -194,8 +194,8 @@ if fig2dev:
                    suffix='.pdf',src_suffix='.fig')
 
 if pstoimg:
-    PNGBuild = Builder(action = pstoimg + \
-                       ' $SOURCE -out $TARGET -type png -interlaced',
+    PNGBuild = Builder(action = 'PAPERSIZE=ledger %s $SOURCE -out $TARGET'
+                       ' -type png -interlaced -antialias -crop a' % pstoimg,
                        suffix='.png',src_suffix=pssuffix)
 
 if pdf2ps:
@@ -203,21 +203,22 @@ if pdf2ps:
                       suffix=pssuffix,src_suffix='.pdf')
 
 if latex2html:
-    styles = os.environ.get('LATEX2HTMLSTYLES','')
+    l2hdir = os.environ.get('LATEX2HTML','')
     inputs = os.environ.get('TEXINPUTS','')
-    if styles:
-        init = '-init_file ' + os.path.join(styles,'.latex2html-init')
+    if l2hdir:
+        init = '-init_file ' + os.path.join(l2hdir,'.latex2html-init')
+        css0 = os.path.join(l2hdir,'style.css')
     else:
         init = ''
-    HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s %s '
+    HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
                    '-debug $SOURCE -dir $TARGET.dir %s' %
-                   (inputs,styles,latex2html,init),src_suffix='.ltx')
+                   (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
                    
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
 
-isplot = re.compile(r'\\(?:side)?plot\s*\{([^\}]+)')
+isplot = re.compile(r'[^%]\\(?:side)?plot\s*\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'\\input\{([^\}]+)')
 
@@ -253,7 +254,8 @@ class TeXPaper(Environment):
         opts.Update(self)
         self.Append(ENV={'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
-                         'DISPLAY': os.environ.get('DISPLAY')},
+                         'DISPLAY': os.environ.get('DISPLAY'),
+                         'HOME': os.environ.get('HOME')},
                     SCANNERS=[LaTeX],
                     BUILDERS={'Latify':Latify,'Pdf':Pdf,'Build':Build})
         if acroread:
@@ -309,11 +311,13 @@ class TeXPaper(Environment):
             dir = paper+'_html'
             if not os.path.exists(dir):
                 os.mkdir(dir)
+            css  = os.path.join(dir,paper+'.css')
             html = os.path.join(dir,'index.html')
+            self.Command(css,css0,'cp $SOURCE $TARGET') 
             self.HTML(html,paper+'.ltx')
-            print self.imgs
             self.Depends(html,self.imgs)
             self.Depends(html,pdf)
+            self.Depends(html,css)
             self.Alias(paper+'.html',html)
 
 default = TeXPaper()

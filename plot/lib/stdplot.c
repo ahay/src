@@ -1,8 +1,28 @@
+/* Setting up frames for a generic plot. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "stdplot.h"
 #include "axis.h"
@@ -46,8 +66,13 @@ static void swap(float*a,float*b)
     f = *a; *a = *b; *b=f;
 }
 
-void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
-		      bool transp1, bool xreverse1, bool yreverse1, bool pad1)
+void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */, 
+		      float umin2, float umax2 /* user's frame for axis 2 */,
+		      bool transp1             /* default transpose flag */, 
+		      bool xreverse1           /* default x reverse flag */, 
+		      bool yreverse1           /* default y reverse flag */, 
+		      bool pad1                /* default padding */)
+/*< Initializing standard plot >*/
 {
     bool pad, set, xreverse, yreverse;
     float mid, off, scale1, scale2, uorig1, uorig2, crowd, barwd;
@@ -198,8 +223,10 @@ void vp_stdplot_init (float umin1, float umax1, float umin2, float umax2,
     if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
 }
 
-void vp_cubeplot_init (int n1pix, int n2pix, int n1front, int n2front, 
-		       bool flat1) 
+void vp_cubeplot_init (int n1pix, int n2pix,      /* total pixels */ 
+		       int n1front, int n2front,  /* front face pixels */
+		       bool flat1                 /* flat flag */) 
+/*< Initializing 3-D cube plot. >*/
 {
     min1 = -0.5;
     max1 = n1pix-0.5;
@@ -700,7 +727,10 @@ static void make_barlabel (void)
     }
 }
 
-void vp_frame_init (sf_file in, const char* where, bool grid)
+void vp_frame_init (sf_file in        /* input file */, 
+		    const char* where /* three chars: label1, label2, title */,
+		    bool grid         /* grid flag */)
+/*< Initializing generic frame >*/
 {
     make_labels(in,where[0],where[1]);
     make_axes();
@@ -709,12 +739,14 @@ void vp_frame_init (sf_file in, const char* where, bool grid)
 }
 
 void vp_barframe_init (float min, float max)
+/*< Initializing bar label frame >*/
 {
     make_barlabel();
     make_baraxis(min,max);
 }
 
 void vp_simpleframe(void)
+/*< Drawing simple frame >*/
 {
     int i;
     float xc, yc, num;
@@ -796,6 +828,7 @@ void vp_simpleframe(void)
 }
 
 void vp_framenum(float num)
+/*< Outputting frame number >*/
 {
     char string[80];
     float x, y;
@@ -809,6 +842,7 @@ void vp_framenum(float num)
 }
 
 void vp_simplebarframe (void)
+/*< Drawing simple frame for the bar label >*/
 {
     float min, max;
 
@@ -845,6 +879,7 @@ void vp_simplebarframe (void)
 }
 
 void vp_frame(void)
+/*< Drawing frame >*/
 {
     int i;
     float num, xc, yc, vs, xp[4], yp[4];
@@ -1110,6 +1145,7 @@ void vp_frame(void)
 }
 
 void vp_barframe(void)
+/*< Drawing bar label frame >*/
 {
     int i;
     float num, xc, yc, vs;
@@ -1172,7 +1208,8 @@ void vp_barframe(void)
     }    
 }
 
-void vp_barraster (int nbuf, unsigned char** buf)
+void vp_barraster (int nbuf, unsigned char** buf /* buf[1][nbuf] */)
+/*< Filling bar label with rasters >*/
 {
     vp_barframe();
     if (vertbar) {
@@ -1185,8 +1222,11 @@ void vp_barraster (int nbuf, unsigned char** buf)
     vp_simplebarframe();
 }
 
-void vp_cuberaster(int n1, int n2, unsigned char** buf, 
-		   int f1, int f2, int f3) {
+void vp_cuberaster(int n1, int n2, 
+		   unsigned char** buf      /* buf[n2][n1] */ , 
+		   int f1, int f2, int f3   /* frame numbers */) 
+/*< Filling 3-D cube with rasters >*/
+{
     vp_uraster (buf, false, 256, n1, n2, min1,min2,max1,max2, 3);
     frame1 = f1;
     frame2 = f2;
@@ -1194,7 +1234,11 @@ void vp_cuberaster(int n1, int n2, unsigned char** buf,
     vp_frame();    
 }
 
-void vp_barline (int nc, float *c, float cmin, float cmax)
+void vp_barline (int nc     /* number of contours */, 
+		 float *c   /* contours [nc] */, 
+		 float cmin /* minimum value */, 
+		 float cmax /* maximum value */)
+/*< Drawing contour lines in a bar label >*/
 {
     int ic;
     float level, c0, dc, ci;
@@ -1221,4 +1265,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.24 2004/05/18 11:41:27 fomels Exp $	 */
+/* 	$Id$	 */

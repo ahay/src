@@ -185,7 +185,12 @@ class Project(Environment):
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Update(self)
-        self.Dir(os.path.basename(os.getcwd()))
+        dir = os.path.basename(os.getcwd())
+        self.path = datapath + dir + os.sep
+        if not os.path.exists(self.path):
+            os.mkdir(self.path)
+        self.SConsignFile(self.path+'.sconsign.db')
+        self.resdir = os.path.join(resdir,dir)
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'XAUTHORITY':
@@ -208,11 +213,6 @@ class Project(Environment):
         self.lock = []
         self.test = []
         self.coms = []
-    def Dir(self,dir):
-        self.path = datapath + dir + os.sep
-        if not os.path.exists(self.path):
-            os.mkdir(self.path)
-        self.SConsignFile(self.path+'.sconsign.db')
     def Exe(self,source,**kw):
          target = source.replace('.c','.x')
          return apply(self.Program,(target,source),kw)
@@ -295,14 +295,14 @@ class Project(Environment):
         kw.update({'suffix':suffix})
         return apply(self.Flow,(target,source,flow),kw)
     def Result(self,target,source,flow,suffix=vpsuffix,**kw):
-        target2 = os.path.join(resdir,target)
+        target2 = os.path.join(self.resdir,target)
         if flow:
             plot = apply(self.Plot,(target2,source,flow),kw)
             self.Default (plot)
             self.view.append(self.View(target + '.view',plot))
         else:
             plot = None
-        lock = self.InstallAs(os.path.join(resdir,'.'+target+suffix),
+        lock = self.InstallAs(os.path.join(self.resdir,'.'+target+suffix),
                               target2+suffix)
         self.lock.append(lock)
         self.Alias(target + '.lock',lock)

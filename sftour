@@ -22,7 +22,8 @@ comm = string.join(sys.argv,' ')
 
 sys.stderr.write('Executing "%s"...\n' % comm)
 
-dirs = filter(os.path.isdir,glob.glob('[a-z]*'))
+dirs = filter(lambda x: x[-5:] != '_html',
+              filter(os.path.isdir,glob.glob('[a-z]*')))
 
 sys.stderr.write(string.join(dirs,'::') + '\n')
 
