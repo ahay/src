@@ -44,7 +44,6 @@ epep -> ep.ep
 
 void monof2(float **data               /* input [ny][nx] */,
 	    float **pred               /* prediction [ny][nx] */,
-	    float **error              /* prediction error [ny][nx] */,
 	    int nliter                 /* number of reweighting iterations */,
 	    int niter                  /* number of iterations */, 
 	    float* a                   /* estimated parameters [3] */, 
@@ -191,19 +190,9 @@ void monof2(float **data               /* input [ny][nx] */,
 		xy = x*y;
 		e = expf(-a[0]*x2-a[1]*xy-a[2]*y2);
 		pred[iy][ix] = aa*e;
-		weight[iy][ix] = fabsf(pred[iy][ix]-data[iy][ix]);
 	    }
 	}
-
-	rbar = sf_quantile(nx*ny/2,nx*ny,error[0]);
- 
-	for (iy=0; iy < ny; iy++) {
-	    for (ix=0; ix < nx; ix++) {
-		weight[iy][ix] = 1./(1.+weight[iy][ix]/rbar);
-	    }
-	}
-
-
+	
 	if (verb) sf_warning ("%d iterations", iter);
     } /* reweighting iterations */
 }

@@ -485,10 +485,10 @@ static bool readpathfile (const char* filename, char* datapath)
     fp = fopen(filename,"r");
     if (NULL == fp) return false;
 
-    if (0 >= fscanf(fp,"datapath=%s",datapath))
+    if (0 >= fscanf(fp,"datapath=%s\n",datapath))
 	sf_error ("No datapath found in file %s",filename);
 
-    (void) snprintf(format,PATH_MAX,"%s datapath=%%s",sf_gethost());
+    (void) snprintf(format,PATH_MAX,"%s datapath=%%s\n",sf_gethost());
     (void) fscanf(fp,format,datapath);
 
     (void) fclose (fp);
