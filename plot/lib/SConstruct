@@ -5,7 +5,7 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = "axis coltab device gainpar genpen plot polygon stdplot vplot"
+src = "axis coltab device gainpar plot polygon stdplot vplot"
 
 sources  = map(lambda x: x+'.c',Split(src)) 
 includes = map(lambda x: x+'.h',Split(src))
@@ -44,6 +44,8 @@ for file in ('axis','stdplot'):
     libs = ['rsf','m']
     if sys.platform[:5] == 'sunos':
 	libs.append('nsl')
+    elif sys.platform[:6] == 'cygwin':
+        libs.append('rpc')
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',
                 LIBS=libs,LIBPATH='../../filt/lib')
 ##############################################################################
