@@ -1,21 +1,20 @@
-/* 3-D synthetic image from Jon Claerbout.
-*/
+/* 3-D synthetic image from Jon Claerbout. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -35,7 +34,7 @@ int main (int argc, char* argv[])
     int i1,  i2, i3, n1a, n1b, it1, it2, i,slicei;
     float *imp, *refl, *refl1, *refl2, ***earth;
     sf_triangle tr;
-    sf_file mod;
+    sf_file mod, trace;
 
     sf_init(argc, argv);
     mod = sf_output("out");
@@ -68,6 +67,17 @@ int main (int argc, char* argv[])
     sf_putstring(mod,"label2","West-East (km)");
     sf_putstring(mod,"label3","South-North (km)");
 
+    if (NULL != sf_getstring("trace")) {
+	/* file to optionally output the master trace */
+	trace = sf_output("trace");
+	sf_putint(trace,"n1",large);
+	sf_putfloat(trace,"d1",d1);
+	sf_putfloat(trace,"o1",o1);
+	sf_setformat(trace,"native_float");
+    } else {
+	trace = NULL;
+    }
+
     imp = sf_floatalloc (large);
     earth = sf_floatalloc3 (n1,n2,n3);
     refl = sf_floatalloc (n1);
@@ -88,6 +98,9 @@ int main (int argc, char* argv[])
     for (i1=1; i1 < large; i1++) {
 	imp[i1] += imp[i1-1];
     }
+
+    /* optionally output the master trace */
+    if (NULL != trace) sf_floatwrite(imp,large,trace);
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {

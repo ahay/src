@@ -97,8 +97,8 @@ int main (int argc, char *argv[])
 		m[i] = 1.5 + (n[i] - 1 - f[i]) / j[i];
 	    }
 	}
-	if (1+(m[i]-1)*j[i] > n[i]) 
-	    sf_error ("n%d=%d is too big",i+1,m[i]);
+	if (f[i]+(m[i]-1)*j[i] > n[i]) 
+	    sf_error ("m%d=%d is too big",i+1,m[i]);
 
 	/* get label's */
 	snprintf(key,7,"label%d",i+1);

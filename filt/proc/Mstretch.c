@@ -1,21 +1,20 @@
-/* Stretch of the time axis.
-*/
+/* Stretch of the time axis. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -26,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "fint1.h"
 
-static float t0, h=0.;
+static float t0, x0, h=0.;
 
 static float t2(float t) { return t*t; }
 static float log_frw(float t) { return logf(t/t0); }
@@ -37,6 +36,8 @@ static float nmo(float t)
     return (t > 0.)? sqrtf(t): 0.; 
 } 
 static float lmo(float t) { return t + h; } 
+static float rad_inv(float t) { return (t-t0)*(h+x0)/x0; }
+static float rad_frw(float t) { return t0-t*x0/(h-x0); }
 
 int main(int argc, char* argv[])
 {
@@ -78,11 +79,12 @@ int main(int argc, char* argv[])
 	   l - linear moveout
 	   L - logstretch
 	   2 - t^2 stretch
+	   r - radial moveout
 	*/
 	rule="nmo";
     }
 
-    if ('n'==rule[0] || 'l'==rule[0]) {
+    if ('n'==rule[0] || 'l'==rule[0] || 'r'==rule[0]) {
 	if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input"); 
 	if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input"); 
 	if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");
@@ -134,6 +136,15 @@ int main(int argc, char* argv[])
 	    
 	    if (o1 < FLT_EPSILON) o1=FLT_EPSILON;
 	    break;
+	case 'r':
+	    if (!sf_getfloat("tdelay",&t0)) sf_error("Need tdelay=");
+	    /* time delay for rule=rad */
+	    if (!sf_getfloat("hdelay",&x0)) sf_error("Need hdelay=");
+	    /* offset delay for rule=rad */
+
+	    forward = rad_frw;
+	    inverse = rad_inv;
+	    break;
 	default:
 	    sf_error("rule=%s is not implemented",rule);
 	    break;
@@ -167,7 +178,7 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    if ('l' == rule[0] || 'n' == rule[0]) {
+	    if ('l' == rule[0] || 'n' == rule[0] || 'r' == rule[0]) {
 		h = h0+i2*dh + (dh/CDPtype)*(i3%CDPtype);
 		if ('n' == rule[0]) h *= h;
 		if (inv) h = -h;
