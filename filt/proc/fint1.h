@@ -18,3 +18,5 @@ float fint1_apply (fint1 fnt, int i, float x, bool der);
 void vint1_apply (vint1 fnt, int i, float x, bool der, float* f);
 
 #endif
+
+/* 	$Id: fint1.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -14,3 +14,5 @@ filter allocatehelix( int nh);
 void deallocatehelix( filter aa);
 
 #endif
+
+/* 	$Id: helix.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

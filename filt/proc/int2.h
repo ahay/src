@@ -13,3 +13,5 @@ void  int2_lop (bool adj, bool add, int nm, int nd, float* x, float* ord);
 void int2_close (void);
 
 #endif
+
+/* 	$Id: int2.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

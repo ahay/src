@@ -90,3 +90,5 @@ void tridiagonal_close (tris slv)
     free (slv->x[0]); free (slv->x[1]); 
     free (slv);
 }
+
+/* 	$Id: tridiagonal.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -51,6 +51,5 @@ void bandpass (int n1, float* trace)
     }
 }
 
+/* 	$Id: bandpass.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
 
-
- 

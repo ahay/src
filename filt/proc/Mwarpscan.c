@@ -1,12 +1,14 @@
-/**************** System includes **************/
+/* Multicomponent data registration analysis.
+
+Takes: < data.rsf > scan.rsf
+*/
+
 #include <string.h>
 #include <math.h>
 #include <float.h>
 
-/**************** RSF includes *****************/
 #include <rsf.h> 
 
-/**************** Local includes ***************/
 #include "int1.h"
 #include "interp_spline.h"
 #include "prefilter.h"
@@ -32,8 +34,11 @@ int main(int argc, char* argv[])
     if(!sf_histint(in,"n2",&m2)) m2 = 1;
 
     if (!sf_getint("ng",&ng)) ng=1;
+    /* number of gamma values */
     if (!sf_getfloat("g0",&g0)) sf_error("Need g0=");
+    /* gamma origin */
     if (!sf_getfloat("dg",&dg)) dg=g0;
+    /* gamma sampling */
 
     other = sf_input("other");
 
@@ -48,6 +53,7 @@ int main(int argc, char* argv[])
     n = n2*m2;
 
     if(!sf_getint("accuracy",&order)) {
+	/* [1-4] interpolation accuracy */
 	order = 2;
     } else if (order < 1 || order > 4) {
 	sf_error ("accuracy must be between 1 and 4");
@@ -55,9 +61,13 @@ int main(int argc, char* argv[])
     order *= 2;
 
     if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
+    /* number of windows */
     if (!sf_getint("w",&w)) sf_error ("Need w=");
+    /* window size */
     if (!sf_getfloat("h",&h)) h=0.5*(w-1);
+    /* window overlap */
     if (!sf_getbool("taper",&taper)) taper=true;
+    /* window tapering */
 
     sf_putint(warped,"n1",nw);
     sf_putfloat(warped,"o1",(0.5*w+1.)*d1);
@@ -113,3 +123,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mwarpscan.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

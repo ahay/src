@@ -129,3 +129,6 @@ void stretch2_close (map2 str)
     banded_close (str->slv);
     free (str);
 }
+
+/* 	$Id: stretch2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

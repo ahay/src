@@ -94,3 +94,5 @@ void int2_close (void)
     free (w1);
     free (w2);
 }
+
+/* 	$Id: int2.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

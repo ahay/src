@@ -47,3 +47,4 @@ filter createhelix(int ndim, int* nd, int* center, int* gap, int* na)
     return aa;
 }
 
+/* 	$Id: createhelix.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */

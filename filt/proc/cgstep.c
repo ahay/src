@@ -90,3 +90,6 @@ static double dotprod (int n, const float* x, const float* y) {
   }
   return prod;
 }
+
+/* 	$Id: cgstep.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

@@ -1,3 +1,8 @@
+/* Frequency spectra.
+
+Takes: < data.rsf > spectra.rsf
+*/
+
 #include <stdio.h>
 #include <math.h>
 
@@ -22,6 +27,7 @@ int main (int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getbool("all",&sum)) sum=false;
+    /* if y, compute average spectrum for all traces */
 
     if (!sf_histfloat(in,"d1",&d1)) d1=0.004;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
@@ -51,6 +57,7 @@ int main (int argc, char* argv[])
     }
 
     if (!sf_getbool("phase",&isphase)) isphase=false;
+    /* if y, compute phase spectra */
     
     for (i1=n1; i1 < nfft; i1++) { /* pad with zeros */
 	trace[i1]=0.;
@@ -100,6 +107,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-
-
+/* 	$Id: Mspectra.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
 

@@ -1,3 +1,8 @@
+/* Smooth inverse interpolation.
+
+Takes: < data.rsf head=header.rsf > stretched.rsf
+*/
+
 #include <rsf.h>
 
 #include "stretch2.h"
@@ -24,15 +29,20 @@ int main(int argc, char* argv[])
     sf_read (coord,sizeof(float),nd,head);
     
     if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
+    /* number of output samples */
     if (!sf_getfloat("x0",&x0)) x0=coord[0];
+    /* output origin */
     if (!sf_getfloat("dx",&dx)) dx=(coord[nd-1]-x0)/(nd-1);
+    /* output sampling */
 
     sf_putint(out,"n1",nx);
     sf_putfloat(out,"d1",dx);
     sf_putfloat(out,"o1",x0);
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* vertical smoothness */
     if (!sf_getfloat("lam",&lam)) lam=0.5;
+    /* horizontal smoothness */
 
     mod = sf_floatalloc(nx);
 
@@ -44,4 +54,6 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: Mstretch2.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
 

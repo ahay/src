@@ -9,3 +9,5 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
 	  float ***u, float*** p);
 
 #endif
+
+/* 	$Id: dip3.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

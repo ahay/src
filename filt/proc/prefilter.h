@@ -45,3 +45,5 @@ void prefilter (int dim, int* n, float* dat);
 void prefilter_close( void);
 
 #endif
+
+/* 	$Id: prefilter.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -111,3 +111,5 @@ void  triangle_close(triangle tr)
     free (tr);
 }
 
+/* 	$Id: triangle.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+

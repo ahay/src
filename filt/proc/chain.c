@@ -54,3 +54,6 @@ void chain3 (operator oper1, operator oper2, operator oper3,
 	oper1 (false, add, nt2, nd, tmp2, dat);
     }
 }
+
+/* 	$Id: chain.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

@@ -81,3 +81,5 @@ void int1_close (void)
 	free (w1);
     }
 }
+
+/* 	$Id: int1.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */

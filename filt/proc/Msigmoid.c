@@ -1,3 +1,8 @@
+/* 2-D synthetic model from J.F.Claerbout.
+
+Takes > model.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -16,18 +21,23 @@ int main (int argc, char* argv[])
     mod = sf_output("out");
 
     if (!sf_getint ("n1",&n1)) n1=400;
+    /* vertical axis */
     if (!sf_getint ("n2",&n2)) n2=100;
+    /* horizontal axis */
     sf_putint(mod,"n1",n1);
     sf_putint(mod,"n2",n2);
     sf_setformat(mod,"native_float");
 
     if (!sf_getint ("large",&large)) large=5*n1;
+    /* reflectivity series */
 
     if (!sf_getfloat("o1",&o1)) o1=0.; sf_putfloat(mod,"o1",o1);
     if (!sf_getfloat("o2",&o2)) o2=0.; sf_putfloat(mod,"o2",o2);
+    /* origin */
     
     if (!sf_getfloat("d1",&d1)) d1=0.004; sf_putfloat(mod,"d1",d1);
     if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
+    /* sampling */
 
     sf_putstring(mod,"label1","Time (sec)");
     sf_putstring(mod,"label2","Lateral (km)");
@@ -143,4 +153,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Msigmoid.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */
 

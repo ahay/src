@@ -12,3 +12,5 @@ void spline_coeffs1(float* table);
 float spline_eval1(float y);
 
 #endif
+
+/* 	$Id: spline3.h,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */

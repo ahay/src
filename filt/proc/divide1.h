@@ -13,3 +13,5 @@ void divide3 (div1 div, int n3, int n2,
 	      float*** num, float*** den,  float*** rat);
 
 #endif
+
+/* 	$Id: divide1.h,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

@@ -75,3 +75,5 @@ void spline2 (bands slv1, bands slv2, int n1, int n2, float** dat, float* tmp)
 	}
     }
 }
+
+/* 	$Id: spline.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

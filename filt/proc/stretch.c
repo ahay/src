@@ -150,3 +150,6 @@ void stretch_close (map str)
     tridiagonal_close (str->slv);
     free (str);
 }
+
+/* 	$Id: stretch.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

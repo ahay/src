@@ -14,3 +14,5 @@ void polydiv_lop( bool adj, bool add, int nx, int ny, float* x, float*y);
 void polydiv_close( void);
 
 #endif
+
+/* 	$Id: polydiv.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Normal moveout in tau-p domain.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -32,6 +37,7 @@ int main (int argc, char* argv[])
     nx = sf_leftsize(taup,2);
 
     if (!sf_getint("extend",&nw)) nw=4;
+    /* interpolation accuracy */
 
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
@@ -70,3 +76,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mtaupmo.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */

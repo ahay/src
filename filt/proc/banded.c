@@ -131,3 +131,4 @@ void banded_close (bands slv)
     free (slv);
 }
 
+/* 	$Id: banded.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

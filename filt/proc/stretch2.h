@@ -12,3 +12,5 @@ void stretch2_invert (map2 str, float* ord, float* mod);
 void stretch2_close (map2 str);
 
 #endif
+
+/* 	$Id: stretch2.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

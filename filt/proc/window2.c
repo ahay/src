@@ -50,3 +50,5 @@ void window2_apply (const int* i, float** dat,
 	}
     }
 }
+
+/* 	$Id: window2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

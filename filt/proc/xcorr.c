@@ -52,3 +52,6 @@ float xcorr (int n1, int n2, const float *x1, const float *x2,
 
     return shift;
 }
+
+/* 	$Id: xcorr.c,v 1.5 2003/10/01 22:45:56 fomels Exp $	 */
+

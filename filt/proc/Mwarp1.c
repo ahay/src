@@ -1,11 +1,13 @@
-/**************** System includes **************/
+/* Multicomponent data registration by 1-D warping.
+
+Takes: < input.rsf > warped.rsf
+*/
+
 #include <string.h>
 #include <math.h>
 
-/**************** RSF includes *****************/
 #include <rsf.h> 
 
-/**************** Local includes ***************/
 #include "int1.h"
 #include "interp_spline.h"
 #include "prefilter.h"
@@ -47,9 +49,12 @@ int main(int argc, char* argv[])
     n = n2*m2;
 
     if(!sf_getbool("verb",&verb)) verb = false;
+    /* verbosity flag */
     if(!sf_getbool("noamp",&noamp)) noamp = false;
+    /* if y, don't correct amplitudes */
 
     if(!sf_getint("accuracy",&order)) {
+	/* [1-4] interpolation accuracy */
 	order = 2;
     } else if (order < 1 || order > 4) {
 	sf_error ("accuracy must be between 1 and 4");
@@ -57,12 +62,17 @@ int main(int argc, char* argv[])
     order *= 2;
 
     if (!sf_getint("nliter",&nliter)) nliter = 10;
+    /* number of iterations */
     if (!sf_getfloat("eps",&eps)) eps=1.; eps = eps*eps;
+    /* vertical smoothness */
     if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
-    
+    /* horizontal smoothness */
+
     if (!noamp) {
 	if (!sf_getfloat("eps2",&eps2)) eps2=10.; eps2 = eps2*eps2;
+	/* vertical smoothness for amplitudes (if noamp=n) */
 	if (!sf_getfloat("lam2",&lam2)) lam2=10.; lam2 = lam2*lam2;
+	/* horizontal smoothness for amplitudes (if noamp=n) */
     }
 
     warpout = sf_output("warpout");
@@ -102,6 +112,7 @@ int main(int argc, char* argv[])
     sf_fileclose(other);
 
     if (NULL != sf_getstring ("warpin")) {
+	/* optional initial warp file */
 	warpin = sf_input("warpin");
 	sf_read(coord[0],sizeof(float),m2*n2,warpin);
 	sf_fileclose(warpin);
@@ -239,3 +250,5 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Mwarp1.c,v 1.5 2003/10/01 22:45:56 fomels Exp $	 */

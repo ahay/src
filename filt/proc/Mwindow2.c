@@ -1,3 +1,8 @@
+/* Divide a dataset into 2-D smooth overlapping windows.
+
+Takes: < input.rsf > window.rsf
+*/
+
 #include <rsf.h>
 
 #include "window2.h"
@@ -54,3 +59,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mwindow2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

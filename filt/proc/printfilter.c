@@ -49,3 +49,4 @@ void print (int dim, const int *nd, const int *center, const int *na,
     free (filt);
 }
 
+/* 	$Id: printfilter.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

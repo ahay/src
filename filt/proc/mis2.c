@@ -33,5 +33,5 @@ void mis2(int niter, int nx, float *xx, filter aa,
     cgstep_close();
 }
 
-
+/* 	$Id: mis2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
 

@@ -30,3 +30,5 @@ void hconest_lop(bool adj, bool add, int na, int ny, float *a, float *y)
 	}
     }
 }
+
+/* 	$Id: hconest.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

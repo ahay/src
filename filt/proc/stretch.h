@@ -10,3 +10,5 @@ void stretch_invert (map str, float* ord, float* mod);
 void stretch_close (map str);
 
 #endif
+
+/* 	$Id: stretch.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

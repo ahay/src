@@ -1,3 +1,8 @@
+/* Cross-correlation analysis.
+
+Takes: < data.rsf other=other.rsf > out.rsf xcorr=xcorr.rsf
+*/
+
 #include <rsf.h>
 
 #include "xcorr.h"
@@ -6,7 +11,7 @@
 
 int main(int argc, char* argv[]) 
 {
-    int n, nw, w, iw, i0=0, maxshift, i, order, i2, n2, nc;
+    int n, nw, w, iw, i0=0, maxshift, i, i2, n2, nc;
     float dt,h, eps, lam;
     bool verb, taper;
     float **dat, **dat2, **win, **win2, *coord, *shift, *warp, *xc;
@@ -25,14 +30,21 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
+    /* number of windows */
     if (!sf_getint("w",&w)) sf_error ("Need w=");
+    /* window size */
     if (!sf_getfloat("h",&h)) h=0.5*(w-1);
+    /* window overlap */
     if (!sf_getint("maxshift",&maxshift)) maxshift=w/2; nc=2*maxshift-1;
+    /* maximum correlation lag */
     if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* vertical smoothness (for picking) */
     if (!sf_getfloat("lam",&lam)) lam=0.5;
+    /* horizontal smoothness (for picking) */
     if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
     if (!sf_getbool("taper",&taper)) taper=true;
-    if (!sf_getint("order",&order)) order=nw;
+    /* window tapering */
 
     dat = sf_floatalloc2(n,n2);
     dat2 = sf_floatalloc2(n,n2);
@@ -79,3 +91,5 @@ int main(int argc, char* argv[])
 
     exit(0);
 }
+
+/* 	$Id: Mxcorr1.c,v 1.7 2003/10/01 22:45:56 fomels Exp $	 */

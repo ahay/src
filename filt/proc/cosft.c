@@ -62,3 +62,5 @@ void cosft_inv (float *q, int o1, int d1) {
 	q[o1+i*d1] = p[i]/nt;
     }
 }
+
+/* 	$Id: cosft.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

@@ -70,3 +70,5 @@ int main (int argc, char* argv[])
 
     exit (0);
 }
+
+/* 	$Id: Msmooth.c,v 1.5 2003/10/01 22:45:55 fomels Exp $	 */

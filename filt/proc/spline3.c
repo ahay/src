@@ -155,3 +155,4 @@ float spline_eval1(float y)
     return s;
 }
 
+/* 	$Id: spline3.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */

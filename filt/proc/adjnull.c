@@ -23,6 +23,5 @@ void adjnull (bool adj, bool add, int nx, int ny, float* x, float* y) {
   }
 }
 
-
-
+/* 	$Id: adjnull.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
 

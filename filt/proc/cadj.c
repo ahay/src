@@ -18,3 +18,6 @@ void adjnull(bool adj, bool add, int nx, int ny,
 	}
     }
 }
+
+/* 	$Id: cadj.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

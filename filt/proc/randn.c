@@ -50,3 +50,5 @@ void random0 (int nr, float *r)
 	r[i] = random_one ();
     }
 }
+
+/* 	$Id: randn.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

@@ -32,3 +32,5 @@ void find_mask(int n, const int *known, filter aa)
     free (rr);
     free (dfre);
 }
+
+/* 	$Id: misinput.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

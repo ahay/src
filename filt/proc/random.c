@@ -32,3 +32,5 @@ float random0 (void)
     rand = ((float) seed - 0.5)/((float) (im - 1));
     return rand;
 }
+
+/* 	$Id: random.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

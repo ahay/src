@@ -36,3 +36,4 @@ int window1_apply (int iw, float* dat, bool left, bool right, float *win)
     return i0;
 }
 
+/* 	$Id: window1.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

@@ -135,3 +135,5 @@ void vint1_apply (vint1 fnt, int i, float x, bool der, float* f)
 	}
     }
 }
+
+/* 	$Id: fint1.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

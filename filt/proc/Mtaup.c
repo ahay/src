@@ -1,8 +1,12 @@
+/* 2-D tau-p transform.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
 
-/************* Local includes ***********/
 #include "radon.h"       
 #include "ctoeplitz.h"
 
@@ -23,7 +27,7 @@ int main (int argc, char **argv)
     float x0;                 /* reference offset */
     float complex *dd;        /* data (CMP gather)    */
     float complex *mm;        /* model (Radon gather) */
-    float complex *qq;        /* work array */
+    float complex *qq=NULL;   /* work array */
     float complex **cm, **cd; /* model and data storage */
     float *xx;                /* offset header */
     float *tt;                /* trace */
@@ -35,7 +39,9 @@ int main (int argc, char **argv)
     out = sf_output("out");
 
     if (!sf_getbool("adj",&adj)) adj=true;
+    /* if y, perform adjoint operation */
     if (!sf_getbool("inv",&inv)) inv=adj;
+    /* if y, perform inverse operation */
 
     /* read input file parameters */
     if (!sf_histint  (in,"n1",&nt)) sf_error("No n1= in input");
@@ -49,8 +55,11 @@ int main (int argc, char **argv)
 
 	/* specify slope axis */
 	if (!sf_getint  ("np",&np)) sf_error("Need np");
+	/* number of p values (if adj=y) */
 	if (!sf_getfloat("dp",&dp)) sf_error("Need dp");
+	/* p sampling (if adj=y) */
 	if (!sf_getfloat("p0",&p0)) sf_error("Need p0");
+	/* p origin (if adj=y) */
 
 	sf_putint(out,"n2",np);
 	sf_putfloat(out,"d2",dp);
@@ -71,7 +80,9 @@ int main (int argc, char **argv)
     dw = 2.0*SF_PI/(nt2*dt);
 
     if (adj && inv && !sf_getfloat("eps",&eps)) eps=1.;
+    /* smoothness for inversion (if adj=inv=y) */
     if (!sf_getfloat("x0",&x0)) x0=1.;
+    /* reference offset */
 
     dd = sf_complexalloc(nx);    
     mm = sf_complexalloc(np);
@@ -164,3 +175,5 @@ int main (int argc, char **argv)
     
     exit (0);
 }
+
+/* 	$Id: Mtaup.c,v 1.2 2003/10/01 22:45:55 fomels Exp $	 */

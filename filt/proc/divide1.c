@@ -98,3 +98,5 @@ void divide1 (div1 div, float* num, float* den,
     tridiagonal_define (div->slv, div->diag, div->offd);
     tridiagonal_solve  (div->slv, rat);
 }
+
+/* 	$Id: divide1.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

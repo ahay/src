@@ -87,3 +87,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
+/* 	$Id: Mtime2depth.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */

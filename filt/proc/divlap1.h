@@ -14,3 +14,5 @@ void divlap3 (divlap div, int n3, int n2,
 	      float*** num, float*** den, float*** ref, float*** rat);
 
 #endif
+
+/* 	$Id: divlap1.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

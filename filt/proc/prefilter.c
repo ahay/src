@@ -167,4 +167,5 @@ void prefilter_close( void)
     recfilt_close();
 }
       
-   
+/* 	$Id: prefilter.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+

@@ -1,3 +1,8 @@
+/* Non-stationary spectral balancing.
+
+Takes: < input.rsf ma=ma.rsf ma2=ma2.rsf > output.rsf
+*/
+
 #include <stdio.h>
 #include <math.h>
 
@@ -15,6 +20,7 @@ int main(int argc, char* argv[])
     in = sf_input("in");
 
     if (NULL != sf_getstring("in2")) {
+	/* optional second input file */
 	in2 = sf_input("in2");
     } else {
 	in2 = NULL;
@@ -37,6 +43,7 @@ int main(int argc, char* argv[])
 	sf_error("Size mismatch in in2: %d != %d",n,n1);
 
     if (!sf_getint("dim",&dim)) dim=1;
+    /* data dimensionality */
     sprintf(key,"n%d",dim+1);
 
     if (!sf_histint(in,key,&n3)) n3=1;
@@ -115,3 +122,5 @@ int main(int argc, char* argv[])
 	
     exit(0);
 }
+
+/* 	$Id: Mreshape.c,v 1.5 2003/10/01 22:45:55 fomels Exp $	 */

@@ -10,3 +10,6 @@ void find_pef(int nd, float* dd, filter aa, int niter)
 	   "x0", aa->flt, "end");
     cgstep_close();
 }
+
+/* 	$Id: pef.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+

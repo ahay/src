@@ -10,3 +10,5 @@ void banded_solve (bands slv, float* b);
 void banded_close (bands slv);
 
 #endif
+
+/* 	$Id: banded.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Ricker wavelet estimation.
+
+Takes: < data.rsf ma=ma.rsf > ricker.rsf
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -24,8 +29,11 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
 
     if (!sf_getfloat("m",&m0)) m0=f0+0.25*(na-1)*df;
+    /* initial frequency */
     if (!sf_getint("niter",&niter)) niter=100;
+    /* number of iterations */
     if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     sf_putint(ma,"n1",2);
     sf_putint(ma,"nf",na);
@@ -110,3 +118,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mricker.c,v 1.3 2003/10/01 22:45:55 fomels Exp $	 */

@@ -88,3 +88,5 @@ void dip3(int dip, int niter, int nw, int nj, bool verb,
 	}
     } /* iter */
 }
+
+/* 	$Id: dip3.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Post-stack Stolt modeling/migration.
+
+Takes: < input.rsf > output.rsf
+*/
+
 #include <math.h>
 
 #include <rsf.h>
@@ -22,6 +27,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n3",&ny)) ny=1;
 
     if (!sf_getfloat("vel",&vel)) sf_error("Need vel=");
+    /* Constant velocity (use negative velocity for modeling) */
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(in,"o1",&t0)) sf_error("No o1= in input");
 
@@ -34,9 +40,11 @@ int main(int argc, char* argv[])
     dy *= SF_PI * fabsf (vel) * 0.5;	
 
     if (!sf_getfloat("stretch", &st)) st=1.;
+    /* Stolt stretch parameter */
     if (vel < 0) st = 2.-st;
 
     if (!sf_getint("nf",&nf)) nf=2;
+    /* Interpolation accuracy */
 
     trace = sf_floatalloc(nt);
     trace2 = sf_floatalloc(nt);
@@ -69,3 +77,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/* 	$Id: Mstolt.c,v 1.4 2003/10/01 22:45:55 fomels Exp $	 */

@@ -40,3 +40,5 @@ void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
 	}
     }
 }
+
+/* 	$Id: helicon.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

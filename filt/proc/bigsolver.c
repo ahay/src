@@ -741,3 +741,5 @@ static float norm (int n, const float* x) {
     }
     return xn;
 }
+
+/* 	$Id: bigsolver.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -176,4 +176,4 @@ static void spline8_der (float x, float* w)
     w[7] = x2*x2*x2/720.;
 }
 
-
+/* 	$Id: interp_spline.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

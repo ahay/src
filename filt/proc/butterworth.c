@@ -245,3 +245,5 @@ Author:  Dave Hale, Colorado School of Mines, 06/02/89
     }
 }
 
+/* 	$Id: butterworth.c,v 1.4 2003/10/01 22:45:56 fomels Exp $	 */
+

@@ -24,3 +24,5 @@ void array( operator oper1, operator oper2, bool adj, bool add,
 void normal (operator oper, bool add, 
 	     int nm, int nd, float *mod, float *dat, float *tmp);
 #endif
+
+/* 	$Id: chain.h,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

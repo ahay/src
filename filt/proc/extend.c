@@ -42,3 +42,5 @@ void extend2 (int ne, int n1, int n2, float** dat, float** ext,
 	} 
     }
 }
+
+/* 	$Id: extend.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */

@@ -1,3 +1,8 @@
+/* Simple synthetics with random reflectivity.
+
+Takes: > model.rsf vpvs=vpvs.rsf
+*/
+
 #include <math.h>
 #include <stdio.h>
 
@@ -62,9 +67,16 @@ int main (int argc, char* argv[])
     mod = sf_output("out");
 
     if (!sf_getint("nr",&nr)) sf_error("Need nr=");
-    if (!sf_getint("n1",&nt))   nt=3501;  sf_putint(mod,"n1",nt);
-    if (!sf_getfloat("d1",&dt)) dt=0.001; sf_putfloat(mod,"d1",dt);
-    if (!sf_getfloat("o1",&t0)) t0=0.0;   sf_putfloat(mod,"o1",t0);
+    /* number of reflectors */
+    if (!sf_getint("n1",&nt))   nt=3501;  
+    /* time length */
+    sf_putint(mod,"n1",nt);
+    if (!sf_getfloat("d1",&dt)) dt=0.001; 
+    /* time sampling */
+    sf_putfloat(mod,"d1",dt);
+    if (!sf_getfloat("o1",&t0)) t0=0.0;   
+    /* time origin */
+    sf_putfloat(mod,"o1",t0);
     sf_putint(mod,"n2",3);
     sf_setformat(mod,"native_float");
 
@@ -97,7 +109,8 @@ int main (int argc, char* argv[])
     dtps = sf_floatalloc (nr);
 
     if (NULL == (func = sf_getstring("func"))) func="const";
- 
+    /* type of vpvs function */
+
     /* ts - reflector positions */    
     srand(2003);
 
@@ -167,6 +180,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-
-
+/* 	$Id: Mrandrefl.c,v 1.7 2003/10/01 22:45:55 fomels Exp $	 */
 
