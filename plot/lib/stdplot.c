@@ -522,6 +522,19 @@ void vp_simpleframe(void)
     vp_udraw(min1, min2);
 }
 
+void vp_framenum(float num)
+{
+    char string[80];
+    float x, y;
+
+    vp_umove(min1,min2);
+    vp_where(&x,&y);
+
+    sprintf (string, "%g", num);
+    vp_tjust (TH_CENTER, TV_TOP);
+    vp_gtext (x, y-4.*labelsz, labelsz, 0., 0., labelsz, string);
+}
+
 void vp_simplebarframe (void)
 {
     float min, max;
@@ -748,4 +761,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.17 2003/10/14 21:53:43 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.18 2003/10/18 18:21:45 fomels Exp $	 */

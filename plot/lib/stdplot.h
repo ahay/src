@@ -13,7 +13,8 @@ void vp_barraster (int nbuf, unsigned char** buf);
 void vp_simplebarframe (void);
 void vp_barframe(void);
 void vp_barline (int nc, float *c, float cmin, float cmax);
+void vp_framenum(float num);
 
 #endif
 
-/* 	$Id: stdplot.h,v 1.10 2003/10/14 21:53:43 fomels Exp $	 */
+/* 	$Id: stdplot.h,v 1.11 2003/10/18 18:21:45 fomels Exp $	 */
