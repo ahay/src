@@ -31,16 +31,14 @@ stack norm=no
 '''
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} 
-warpout=${TARGETS[1]} amplout=${TARGETS[2]}
 verb=1 nliter=0
 '''
 
-def warp1(**kw):
+def warp1(niter,rect):
     return '''warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
-    warpout=${TARGETS[2]} amplout=${TARGETS[3]}
-    verb=1 nliter=%(niter)d noamp=%(noamp)d
-    eps=%(eps)g eps2=%(eps2)g > ${TARGETS[1]};
-    warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % kw
+    warpout=${TARGETS[2]} amplout=${TARGETS[3]} noamp=1
+    verb=1 nliter=%d rect1=%d > ${TARGETS[1]};
+    warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % (niter,rect)
 
 def warpscan(ng,gmin):
     return '''warpscan other=${SOURCES[1]}
@@ -207,7 +205,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         ##################################################################
         pp = sized('pp')
         morph = sized('morph')
-        Flow([morph,'varp1','ampl1'],[sized('ps'),pp,f+'swrp'],warp0)
+        Flow(morph,[sized('ps'),pp,f+'swrp'],warp0)
 
         Plot(sized('morph-bot'),f + 'swrp',
                   '''math output=0 |
@@ -285,7 +283,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
         warp = sized('warp1-')
         morph1 = sized('morph1-')
         Flow([warp,morph1,'varp6','ampl6'],[morph,pp,pick,f+'swrp'],
-                  warp1(niter=2,noamp=1,eps=100,eps2=1))
+                  warp1(2,350))
         Plot(warp,warp,warp2gamma + ' | ' + graph2)
         Combine(sized('morph2-top'),[vpvs,warp],'Overlay')
         def botplot(min,max):
@@ -314,7 +312,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             # WRONG START
             pp = sized('pp')
             morph = start('morphl')
-            Flow([morph,'varp2','ampl2'],[sized('ps'),pp,swrp],warp0)
+            Flow(morph,[sized('ps'),pp,swrp],warp0)
 
             Plot(start('morphl-bot'),[swrp,f + 'swrp'],botplot(-100,100))
                       
@@ -358,7 +356,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             warp = start('warpl1-')
             morph1 = start('morphl1-')
             Flow([warp,morph1,'varp7','ampl7'],[morph,pp,pick,swrp],
-                      warp1(niter=1,noamp=1,eps=100000,eps2=1))
+                 warp1(1,500))
             Plot(warp,warp,warp2gamma + '| ' + graph2)
             Combine(start('morphl2-top'),[vpvs,warp],'Overlay')
 
@@ -373,7 +371,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             # MOVE CLOSER
             pp = sized('pp')
             morph = start('morphr')
-            Flow([morph,'warp3','ampl3'],[sized('ps'),pp,warp],warp0)
+            Flow(morph,[sized('ps'),pp,warp],warp0)
             Plot(start('morphr-bot'),[morph,pp],difplot)
             Combine(morph,map(start, ['morphl2-top','morphr-bot']),
                          'OverUnderAniso',result=1)
@@ -416,7 +414,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             warp = start('warpr1-')
             morph1 = start('morphr1-')
             Flow([warp,morph1,'varp8','ampl8'],[morph,pp,pick,init],
-                      warp1(niter=2,noamp=1,eps=100000,eps2=1))
+                 warp1(2,500))
             Plot(warp,warp,warp2gamma + ' | ' + graph2)
             Combine(start('morphr2-top'),[vpvs,warp],'Overlay')
             Plot(start('morphr2-bot'),[morph1,pp],difplot)
@@ -427,7 +425,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             # MOVE CLOSER
             pp = sized('pp')
             morph = start('morphq')
-            Flow([morph,'varp4','ampl4'],[sized('ps'),pp,warp],warp0)
+            Flow(morph,[sized('ps'),pp,warp],warp0)
             Plot(start('morphq-bot'),[morph,pp],difplot)
             Combine(morph,map(start, ['morphr2-top','morphq-bot']),
                          'OverUnderAniso',result=1)
@@ -469,7 +467,7 @@ for f in ['h']: # ['h']: # ['c','s']: # ['h']
             warp = start('warpq1-')
             morph1 = start('morphq1-')
             Flow([warp,morph1,'varp9','ampl9'],[morph,pp,pick,init],
-                      warp1(niter=2,noamp=1,eps=100000,eps2=1))
+                      warp1(2,500))
             Plot(warp,warp,warp2gamma + ' | ' + graph2)
 
             Plot(start('morphq2-bot'),[warp,f + 'swrp'],botplot(-5,5))
