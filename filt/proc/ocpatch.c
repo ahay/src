@@ -25,7 +25,7 @@
 
 #include "ocpatch.h"
 
-static int n1, n2;
+static size_t n1, n2;
 static long **table; 
 
 void ocpatch_init(int dim     /* number of dimensions */, 
@@ -92,7 +92,7 @@ void ocpatch_lop (int ip      /* patch number */,
 		  float* wind /* patch */)
 /*< apply patching >*/
 {
-    int i2;
+    size_t i2;
 
     for (i2=0; i2 < n2; i2++, wind += n1) {
 	if (0 != fseek(wall,table[ip][i2],SEEK_SET))
@@ -114,7 +114,7 @@ void ocpatch_flop (int ip       /* patch number */,
 		   float* wind  /* patch */)
 /*< apply patching with RSF files >*/
 {
-    int i2;
+    size_t i2;
 
     for (i2=0; i2 < n2; i2++, wind += n1) {
 	sf_seek(wall,table[ip][i2],SEEK_SET);
