@@ -164,14 +164,16 @@ def pstexpen(target=None,source=None,env=None):
     vplot = str(source[0])
     eps = str(target[0])
     space = os.environ.get('PSBORDER')
-    if (not space):
+    if not space:
         space=0.
     else:
         space=float(space)
     opts = os.environ.get('PSTEXPENOPTS')
-    if (not opts):
+    if not opts:
         opts = ''
-    pstexpenopts = env.get('opts','color=n fat=1 fatmult=1.5 invras=y')
+    pstexpenopts = env.get('opts')
+    if not pstexpenopts:
+        pstexpenopts = 'color=n fat=1 fatmult=1.5 invras=y'
     opts = ' '.join([opts,pstexpenopts])
     print opts
     head = string.split(
