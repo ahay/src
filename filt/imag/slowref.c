@@ -29,7 +29,7 @@ int slowref(int nr           /* maximum number of references */,
 /*< compute reference slownesses, return their number >*/
 {
     int is,jr,ir;
-    float smin, smax, s, s2, qr, *ss2;
+    float smin, smax, s, s2=0., qr, *ss2;
 
     ss2 = sf_floatalloc(ns);
     for (is=0; is<ns; is++) {
@@ -40,7 +40,7 @@ int slowref(int nr           /* maximum number of references */,
     smin = sf_quantile(   0,ns,ss2);
     nr = SF_MIN(nr,1+(smax-smin)/ds);
 
-    jr=0;	
+    jr=0;
     for (ir=0; ir<nr; ir++) {
 	qr = (ir+1.0)/nr - 0.5 * 1./nr;
 	s = sf_quantile(qr*ns,ns,ss2);

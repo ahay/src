@@ -36,7 +36,7 @@ int main(int argc, char* argv[])
     axa   aa;       /* elements in the list */
     axa   aj;
     int   ix,iy,iz;
-    int   nk,jk;
+    int   nk=0,jk;
     
     float **cube;
 

@@ -33,11 +33,11 @@ int main (int argc, char *argv[])
 
     axa az,amx,amy,aw,alx,aly,ahx,ae;
 
-    sf_file Fs;    /*  slowness file S(nlx,nly,    nz   ) */
-    sf_file Fi;    /*     image file R(nmx,nmy,nhx,nz   ) */
-    sf_file Fd,Fw; /*      data file D(nmx,nmy,nhx,   nw) */
+    sf_file Fs;           /*  slowness file S(nlx,nly,    nz   ) */
+    sf_file Fi=NULL;      /*     image file R(nmx,nmy,nhx,nz   ) */
+    sf_file Fd,Fw=NULL;   /*      data file D(nmx,nmy,nhx,   nw) */
 
-    fslice slow,imag,data,wfld;
+    fslice slow,imag=NULL,data,wfld=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

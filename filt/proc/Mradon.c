@@ -50,7 +50,7 @@ int main (int argc, char **argv)
     float *xx;                /* offset header */
     float *ww=NULL;                /* weight */
     float *tt;                /* trace */
-    static kiss_fftr_cfg forw, invs;
+    kiss_fftr_cfg forw, invs;
     sf_file in, out, offset;
 
     sf_init(argc,argv);
