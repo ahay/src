@@ -40,6 +40,12 @@ static func functable[] = {
     acosf,
     asinf,
     atanf,
+    coshf,
+    sinhf,
+    tanhf,
+    acoshf,
+    asinhf,
+    atanhf,
     expf,
     logf,
     sqrtf,
@@ -219,16 +225,22 @@ size_t sf_math_parse (char* output /* expression */,
 		sf_push(st1,indx,INDX); 
 	    } else {
 		hasleft = false;
-		if (       0==strcmp(key,"cos"))  { *indx = 0;
-		} else if (0==strcmp(key,"sin"))  { *indx = 1;
-		} else if (0==strcmp(key,"tan"))  { *indx = 2;    
-		} else if (0==strcmp(key,"acos")) { *indx = 3;
-		} else if (0==strcmp(key,"asin")) { *indx = 4;
-		} else if (0==strcmp(key,"atan")) { *indx = 5;
-		} else if (0==strcmp(key,"exp"))  { *indx = 6;
-		} else if (0==strcmp(key,"log"))  { *indx = 7;
-		} else if (0==strcmp(key,"sqrt")) { *indx = 8;
-		} else if (0==strcmp(key,"abs"))  { *indx = 9;
+		if (       0==strcmp(key,"cos"))   { *indx =  0;
+		} else if (0==strcmp(key,"sin"))   { *indx =  1;
+		} else if (0==strcmp(key,"tan"))   { *indx =  2;    
+		} else if (0==strcmp(key,"acos"))  { *indx =  3;
+		} else if (0==strcmp(key,"asin"))  { *indx =  4;
+		} else if (0==strcmp(key,"atan"))  { *indx =  5;
+		} else if (0==strcmp(key,"cosh"))  { *indx =  6;
+		} else if (0==strcmp(key,"sinh"))  { *indx =  7;
+		} else if (0==strcmp(key,"tanh"))  { *indx =  8;    
+		} else if (0==strcmp(key,"acosh")) { *indx =  9;
+		} else if (0==strcmp(key,"asinh")) { *indx = 10;
+		} else if (0==strcmp(key,"atanh")) { *indx = 11;
+		} else if (0==strcmp(key,"exp"))   { *indx = 12;
+		} else if (0==strcmp(key,"log"))   { *indx = 13;
+		} else if (0==strcmp(key,"sqrt"))  { *indx = 14;
+		} else if (0==strcmp(key,"abs"))   { *indx = 15;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",

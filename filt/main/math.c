@@ -5,7 +5,9 @@ Example:
 sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
 sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
 
-Known functions: cos, sin, tan, acos, asin, atan, exp, log, sqrt, abs.
+Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
+                 cosh, sinh, tanh, acosh, asinh, atanh,
+                 exp,  log,  sqrt, abs.
 
 See also: sfheadermath.
 */
