@@ -11,9 +11,10 @@ int main(int argc, char* argv[])
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias;
     float pbias, gain, x1, y1, x2, y2, **data, f;
-    bool transp, yreverse, xreverse, allpos, polarity;
+    bool transp, yreverse, xreverse, allpos, polarity, verb;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp;
+    enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     sf_file in;
 
     sf_init(argc,argv);
@@ -44,7 +45,7 @@ int main(int argc, char* argv[])
 	orient = (xreverse==yreverse)? 0:2;
     }
  
-    panel = 0;
+    panel = NO_GAIN; /* no need for gain */
 
     phalf=85.;
     if (!sf_getfloat("gpow",&gpow)) {
@@ -54,7 +55,7 @@ int main(int argc, char* argv[])
 	sf_getfloat("phalf",&phalf);
 	if (phalf <=0. || phalf > 100.)
 	    sf_error("phalf=%g should be > 0 and <= 100",phalf);
-	panel = 1;
+	panel = 0;
     }
 
     pclip=99.;
@@ -63,21 +64,35 @@ int main(int argc, char* argv[])
 	sf_getfloat("pclip",&pclip);
 	if (pclip <=0. || pclip > 100.)
 	    sf_error("pclip=%g should be > 0 and <= 100",pclip);
-	panel = 1;
+	panel = 0;
     } else if (clip <= 0.) {
 	sf_warning("clip=%g <= 0",clip);
 	clip = FLT_EPSILON;
     }
 
-    if (1==panel) {
+    if (0==panel) {
 	if (!sf_getint("gainstep",&gainstep)) gainstep=0.5+n1/256.;
 	if (gainstep <= 0) gainstep=1;
 
 	gainpanel = sf_getstring("gainpanel");
 	if (NULL != gainpanel) {
-	    if ('a' == gainpanel[0]) panel=-1; /* gain all */
+	    switch (gainpanel[0]) {
+		case 'a': 
+		    panel=GAIN_ALL; 
+		    break;
+		case 'e': 
+		    panel=GAIN_EACH;
+		    break;
+		default:
+		    if (0 ==sscanf(gainpanel,"%d",&panel) || 
+			panel < 1 || panel > n3) 
+			sf_error("gainpanel= should be all, each, or a number"
+				 " between 1 and %d",n3);
+		    panel--;
+		    break;
+	    }
 	    free (gainpanel);
-	}
+	} 
 
 	sf_unpipe(in,sf_filesize(in)*sizeof(float));
     } 
@@ -85,6 +100,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("allpos",&allpos)) allpos=false;
     if (!sf_getfloat("bias",&pbias)) pbias=0.; 
     if (!sf_getbool("polarity",&polarity)) polarity=false;
+    if (!sf_getbool("verb",&verb)) verb=false;
 
     x1 = o1-0.5*d1;
     x2 = o1+(n1-1)*d1+0.5*d1;
@@ -110,9 +126,10 @@ int main(int argc, char* argv[])
     data = sf_floatalloc2(n1,n2);
     buf = sf_ucharalloc2(n1,n2);
 
-    if (-1==panel) { /* gain all */ 
+    if (GAIN_ALL==panel || panel >= 0) {
 	gainpar (in,data,n1,n2,gainstep,
 		 o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,panel);
+	if (verb) sf_warning("panel=%d clip=%g gpow=%g",panel,clip,gpow);
 	sf_seek(in,0L,SEEK_SET); /* rewind */
     }
 
@@ -123,10 +140,10 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {	
 	if (i3 > 0) vp_erase (); 	
-	if (1 == panel) { /* gain each */
+	if (GAIN_EACH == panel) {
 	    gainpar (in,data,n1,n2,gainstep,
-		     o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,i3);
-	    sf_warning("clip=%g gpow=%g",clip,gpow);
+		     o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,0);
+	    if (verb) sf_warning("clip=%g gpow=%g",clip,gpow);
 	} else {
 	    sf_read(data[0],sizeof(float),n1*n2,in);
 	}
