@@ -27,6 +27,7 @@ int main(int argc, char* argv[])
 {
     int nt, i, j, k, niter, np, ip, *nh, n2[2];
     float s0, p, a0, dp, p2, pmax, p0, eps, p21;
+    char *lagname, *nhname;
     filter ss, aa;
     sf_file out, nhh, lag;
 
@@ -34,10 +35,18 @@ int main(int argc, char* argv[])
     out = sf_output("out");
     sf_setformat(out,"native_float");
 
-    nhh = sf_output("nh");
+    nhname = sf_getstring("nh");
+    if (NULL == nhname) sf_error("Need nh=");
+    sf_putstring(out,"nh",nhname);
+
+    nhh = sf_output(nhname);
     sf_setformat(nhh,"native_int");
 
-    lag = sf_output("lag");
+    lagname = sf_getstring("lag");
+    if (NULL == lagname) sf_error("Need lag=");
+    sf_putstring(out,"lag",lagname);
+
+    lag = sf_output(lagname);
     sf_setformat(lag,"native_int");
 
     if (!sf_getint("nt",&nt)) nt=40;
@@ -52,7 +61,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!sf_getint("nt",&np)) sf_error("Need np=");
+    if (!sf_getint("np",&np)) sf_error("Need np=");
     /* number of dips */
     if (!sf_getfloat("pmax",&pmax)) pmax=2.;
     /* maximum dip */
@@ -68,7 +77,7 @@ int main(int argc, char* argv[])
     sf_putint(nhh,"n1",np);
     n2[0]=nt;
     n2[1]=20;
-    sf_putints(nhh,"n",n2,2);
+    sf_putints(lag,"n",n2,2);
 
     wilson_init (20*nt);
     for (ip=0; ip < np; ip++) {

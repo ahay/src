@@ -23,17 +23,20 @@
 #include <rsf.h>
 
 #include "polydiv.h"
+#include "npolydiv.h"
 #include "regrid.h"
 
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nm, nt, it, nx, ny, n2, xkey, ykey, na, ia, niter;
-    int n[2], m[2];
+    int n[2], m[2], interp, np, *nh, *ph, ip;
     float *mm, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, a0, eps;
-    char *xk, *yk, *lagfile;
+    char *xk, *yk, *lagfile, *nhfile;
+    bool stat;
     filter aa;
-    sf_file in, out, head, flt, lag;
+    nfilter naa;
+    sf_file in, out, head, flt, lag, nhh, pch;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -138,36 +141,27 @@ int main (int argc, char* argv[])
     sf_putfloat (out,"d1",dx);
     sf_putfloat (out,"d2",dy);
 
-    sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_lin_int, 2, nd);
+    if (!sf_getint("interp",&interp)) interp=2;
+    /* interpolation length */
+
+    sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_spline_int, interp, nd);
 
     nm = nx*ny;
     mm = sf_floatalloc(nm);
     dd = sf_floatalloc(nd);
 
-    flt = sf_input("filt");
-    if (!sf_histint(flt,"n1",&na)) sf_error("No n1= in filt");
-    aa = allocatehelix (na);
+    if (!sf_getbool("stat",&stat)) stat=true;
+    /* stationary or nonstationary filter */
 
-    if (!sf_histfloat(flt,"a0",&a0)) a0=1.;
-    sf_floatread (aa->flt,na,flt);
-    for( ia=0; ia < na; ia++) {
-	aa->flt[ia] /= a0;
-    }
+    flt = sf_input("filt");
 
     if (NULL != (lagfile = sf_getstring("lag")) /* file with filter lags */
 	|| 
 	NULL != (lagfile = sf_histstring(flt,"lag"))) {
 	lag = sf_input(lagfile);
-
-	sf_intread(aa->lag,na,lag);
     } else {
 	lag = NULL;
-	for( ia=0; ia < na; ia++) {
-	    aa->lag[ia] = ia+1;
-	}
     }
-
-    sf_fileclose(flt);
 
     n[0] = nx;
     n[1] = ny;
@@ -176,11 +170,69 @@ int main (int argc, char* argv[])
 	m[0] = nx;
 	m[1] = ny;
     }
-    
-    if (NULL != lag) sf_fileclose(lag);
 
-    regrid (2, m, n, aa);
-    polydiv_init (nm, aa);
+    if (stat) {
+	if (!sf_histint(flt,"n1",&na)) sf_error("No n1= in filt");
+	aa = allocatehelix (na);
+
+	if (!sf_histfloat(flt,"a0",&a0)) a0=1.;
+	sf_floatread (aa->flt,na,flt);
+
+	for( ia=0; ia < na; ia++) {
+	    aa->flt[ia] /= a0;
+	}
+	
+	if (NULL != lag) {	    
+	    sf_intread(aa->lag,na,lag);
+	    sf_fileclose(lag);
+	} else {
+	    for( ia=0; ia < na; ia++) {
+		aa->lag[ia] = ia+1;
+	    }
+	}
+	
+	sf_fileclose(flt);
+
+	regrid (2, m, n, aa);
+	polydiv_init (nm, aa);
+    } else {
+	if (NULL == (nhfile = sf_getstring("nh")) /* file with filter sizes */
+	    &&
+	    NULL == (nhfile = sf_histstring(flt,"nh")))
+	    sf_error("Need nh=");
+
+	nhh = sf_input(nhfile);
+
+	if (SF_INT != sf_gettype(nhh)) sf_error("Need int nh");
+	if (!sf_histint(nhh,"n1",&np)) sf_error("No n1= in nh");
+
+	ph = sf_intalloc(nm);
+	nh = sf_intalloc(np);
+
+	sf_intread(nh,np,nhh);
+	sf_fileclose(nhh);
+
+	naa = nallocate(np,nm,nh,ph);
+	free(ph);
+
+	pch = sf_input("pch");
+
+	if (NULL == lag || SF_INT != sf_gettype(lag)) 
+	    sf_error("Need int lag=");
+
+	for (ip=0; ip < np; ip++) {
+	    na = nh[ip];
+	    aa = naa->hlx[ip];
+	    sf_intread(aa->lag,na,lag);
+	    sf_floatread(aa->flt,na,flt);
+	    regrid (2, m, n, aa);
+	}
+	free (nh);
+	sf_fileclose(lag);
+	sf_fileclose(flt);
+
+	npolydiv_init(nm, naa);
+    }
 
     if (!sf_getint("niter",&niter)) niter=20;
     /* number of iterations */
@@ -192,8 +244,17 @@ int main (int argc, char* argv[])
 	sf_warning("%d of %d",it+1,nt);
 	
 	sf_floatread (dd,nd,in);
-	sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
-			nm, nm, nd, mm, dd, niter, eps, "end");
+
+	if (stat) {
+	    sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
+			    nm, nm, nd, mm, dd, niter, eps, "end");
+	} else {
+	    sf_intread(naa->pch,nm,pch);
+
+	    sf_solver_prec (sf_int2_lop, sf_cgstep, npolydiv_lop,
+			    nm, nm, nd, mm, dd, niter, eps, "end");
+	}
+
 	sf_cgstep_close();
 	sf_floatwrite (mm,nm,out);
     }
