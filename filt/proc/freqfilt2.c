@@ -1,6 +1,26 @@
+/* Frequency-domain filtering in 2-D */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "freqfilt2.h"
 
@@ -10,7 +30,9 @@ static float *trace, **shape;
 kiss_fftr_cfg tfor, tinv;
 kiss_fft_cfg  xfor, xinv;
 
-void freqfilt2_init(int n1, int n2, int nw1)
+void freqfilt2_init(int n1, int n2 /* data dimensions */, 
+		    int nw1        /* number of frequencies */)
+/*< initialize >*/
 {
     m1 = n1;
     nw = nw1;
@@ -32,11 +54,14 @@ void freqfilt2_init(int n1, int n2, int nw1)
 }
 
 void freqfilt2_set(float **filt)
+/*< set the filter >*/
 {
     shape = filt;
 }
 
-void freqfilt2_close(void) {
+void freqfilt2_close(void) 
+/*< free allocated storage >*/
+{
     free (tfor);
     free (tinv);
     free (xfor);
@@ -48,7 +73,9 @@ void freqfilt2_close(void) {
     free (fft);
 }
 
-void freqfilt2_spec (const float* x, float** y) {
+void freqfilt2_spec (const float* x /* input */, float** y /* spectrum */) 
+/*< compute 2-D spectrum >*/
+{
     int ik, iw;
 
     for (ik=0; ik < m2; ik++) {
@@ -73,6 +100,7 @@ void freqfilt2_spec (const float* x, float** y) {
 }
 
 void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+/*< linear filtering operator >*/
 {
     int iw, ik;
 
