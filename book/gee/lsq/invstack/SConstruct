@@ -13,7 +13,7 @@ Book()
 Flow('model',None,
      '''
      spike n1=256 d1=.016 nsp=2 k1=24,140 n2=1 |
-     box rect1=20
+     boxsmooth rect1=20
      ''')
 Flow('empty','model','scale dscale=0')
 Flow('data','model','imospray n2=11 d2=.60 o2=0. v=1.5')
