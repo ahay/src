@@ -25,7 +25,7 @@ filter createhelix(int ndim, int* nd, int* center, int* gap, int* na)
 	
 	skip = false;
 	for (i=0; i < ndim; i++) {
-	    if (ii[i] <= gap[i]) {
+	    if (ii[i] < gap[i]) {
 		skip = true;
 		break;
 	    }

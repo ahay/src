@@ -6,17 +6,18 @@
 
 int main(int argc, char* argv[]) 
 {
-    int n, nw, w, iw, i0, maxshift, i, order, i2, n2;
+    int n, nw, w, iw, i0, maxshift, i, order, i2, n2, nc;
     float dt,h, eps, lam;
     bool verb;
-    float **dat, **dat2, **win, **win2, *coord, *shift, *warp;
+    float **dat, **dat2, **win, **win2, *coord, *shift, *warp, *xc;
     map2 str;
-    sf_file in, out, other;
+    sf_file in, out, other, xcr;
 
     sf_init(argc,argv);
     in = sf_input("in");
     other = sf_input("other");
     out = sf_output("out");
+    xcr = sf_output("xcorr");
 
     if (!sf_histint(in,"n1",&n)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dt)) sf_error("No d1= in input");
@@ -26,7 +27,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nw",&nw)) sf_error ("Need nw=");
     if (!sf_getint("w",&w)) sf_error ("Need w=");
     if (!sf_getfloat("h",&h)) h=0.5*(w-1);
-    if (!sf_getint("maxshift",&maxshift)) maxshift=w/2;
+    if (!sf_getint("maxshift",&maxshift)) maxshift=w/2; nc=2*maxshift-1;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getfloat("lam",&lam)) lam=0.5;
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -39,21 +40,28 @@ int main(int argc, char* argv[])
     coord = sf_floatalloc(nw);
     shift = sf_floatalloc(nw);
     warp = sf_floatalloc(n);
+    xc = sf_floatalloc(nc);
   
     window1_init (w,nw,n,h);
-    xcorr_init (w, n2, maxshift);
     str = stretch2_init (n,1.,1.,nw,eps,lam);
 
     sf_read (dat[0],sizeof(float),n*n2,in);
     sf_read (dat2[0],sizeof(float),n*n2,other);
   
+    sf_putint(xcr,"n1",nc);
+    sf_putint(xcr,"n2",nw);
+    sf_putfloat(xcr,"o2",(0.5*w+1.)*dt);
+    sf_putfloat(xcr,"d2",(n-w)*dt/(nw-1.));
+    sf_putfloat(xcr,"o1",-maxshift*dt);
+
     for (iw=0; iw < nw; iw++) {
 	for (i2=0; i2 < n2; i2++) {
-	    i0 = window1_apply(iw,dat[i2] ,true,true,win[i2] );
-	    i0 = window1_apply(iw,dat2[i2],true,true,win2[i2]);
+	    i0 = window1_apply(iw,dat[i2] ,false,false,win[i2] );
+	    i0 = window1_apply(iw,dat2[i2],false,false,win2[i2]);
 	}
 	coord[iw] = i0 + 0.5*(w+1.);
-	shift[iw] = xcorr (win[0], win2[0]);
+	shift[iw] = xcorr (w,n2,win[0], win2[0],nc,xc);
+	sf_write(xc,sizeof(float),nc,xcr);
 	if (verb) sf_warning("shift[%d]=%g",iw,shift[iw]);
     }
   

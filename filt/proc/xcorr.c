@@ -5,36 +5,27 @@
 
 #include "xcorr.h"
 
-static int nc, nx, n2;
-static float *xc;
-
-void xcorr_init (int nx_in, int n2_in, int maxshift)
-{
-    nx = nx_in;
-    n2 = n2_in;
-    nc = 2*maxshift-1;
-    xc = sf_floatalloc(nc);
-}
-  
-void xcorr_close (void)
-{
-    free (xc);
-}
-
-float xcorr (const float *x1, const float *x2)
+float xcorr (int n1, int n2, const float *x1, const float *x2, 
+	     int nc, float *xc)
 {
     int is, ix, iy, imax, i2;
-    float xmax, xp, xm, num, den, ds, shift;
+    float xmax, xp, xm, num, den, ds, shift, a1, a2;
 
     for (is = 0; is < nc; is++) {
-	xc[is] = 0.;
+	xc[is] = 0.; 
+	a1 = 0.;
+	a2 = 0.;
 	for (i2=0; i2 < n2; i2++) {
-	    for (ix=0; ix < nx; ix++) {
+	    for (ix=0; ix < n1; ix++) {
 		iy = ix + (nc+1)/2 - is -1;
-		if (iy >= 0 && iy < nx) 
-		    xc[is] += x1[ix+i2*nx]*x2[iy+i2*nx];
+		if (iy >= 0 && iy < n1) {
+		    xc[is] += x1[ix+i2*n1]*x2[iy+i2*n1];
+		    a1 += x1[ix+i2*n1]*x1[ix+i2*n1];
+		    a2 += x2[iy+i2*n1]*x2[iy+i2*n1];
+		}
 	    }
 	}
+	xc[is] /= sqrtf(a1*a2+FLT_EPSILON);
     }
 
     imax=(nc+1)/2;
