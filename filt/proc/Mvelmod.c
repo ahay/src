@@ -1,0 +1,126 @@
+/* Velocity transform.
+
+Takes: < scan.rsf > cmp.rsf
+
+Inverse of sfvscan.
+*/
+
+#include <math.h>
+
+#include <rsf.h>
+
+#include "fint1.h"
+
+static float h;
+
+static float hyperb(float t) 
+{ 
+    if (t > h) {
+	return sqrtf(t*t-h*h);
+    } else {
+	return 0.;
+    }
+} 
+
+int main(int argc, char* argv[])
+{
+    fint1 nmo;
+    bool half, slow;
+    int it,ih,ix,iv, nt,nh,nx,nv, nw, CDPtype;
+    float dt, dh, t0, h0, v0, dv, v, dy;
+    float *trace, **stack;
+    sf_file cmp, scan;
+
+    sf_init (argc,argv);
+    scan = sf_input("in");
+    cmp = sf_output("out");
+
+    if (!sf_histint(scan,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(scan,"n2",&nv)) sf_error("No n2= in input");
+    nx = sf_leftsize(scan,2);
+
+    if (!sf_histfloat(scan,"o1",&t0)) sf_error("No o1= in input");
+    if (!sf_histfloat(scan,"d1",&dt)) sf_error("No d1= in input");
+    if (!sf_histfloat(scan,"o2",&v0)) sf_error("No o2= in input");
+    if (!sf_histfloat(scan,"d2",&dv)) sf_error("No d2= in input");
+
+    if (!sf_getfloat("h0",&h0) && !sf_histfloat(scan,"h0",&h0)) 
+	sf_error("Need h0=");
+    if (!sf_getfloat("dh",&dh) && !sf_histfloat(scan,"dh",&dh)) 
+	sf_error("Need dh=");
+    if (!sf_getint("nh",&nh) && !sf_histint(scan,"nh",&nh)) 
+	sf_error("Need nh=");
+
+    sf_putfloat(cmp,"o2",h0);
+    sf_putfloat(cmp,"d2",dh);
+    sf_putint(cmp,"n2",nh);
+
+    sf_putfloat(cmp,"v0",v0);
+    sf_putfloat(cmp,"dv",dv);
+    sf_putint(cmp,"nv",nv);
+
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
+    sf_putstring(cmp,"label2",half? "half-offset": "offset");
+
+    if (half) {
+	dh *= 2.;
+	h0 *= 2.;
+    }
+
+    CDPtype=1;
+    if (sf_histfloat(scan,"d3",&dy)) {
+	CDPtype=0.5+0.5*dh/dy;
+	if (1 != CDPtype) sf_histint(scan,"CDPtype",&CDPtype);
+    } 	    
+    sf_warning("CDPtype=%d",CDPtype);
+
+    trace = sf_floatalloc(nt);
+    stack =  sf_floatalloc2(nt,nh);
+
+    if (!sf_getint("extend",&nw)) nw=4;
+    /* trace extension */
+
+    trace = sf_floatalloc(nt);
+    nmo = fint1_init(nw,nt);
+
+    if (!sf_getbool("slowness",&slow)) slow=false;
+    /* if y, use slowness instead of velocity */
+
+    for (ix=0; ix < nx; ix++) {
+	sf_warning("scan %d of %d",ix+1,nx);
+
+	for (it=0; it < nt*nh; it++) {
+	    stack[0][it] = 0.;
+	}
+
+	for (iv=0; iv < nv; iv++) {
+	    v = v0 + iv * dv;
+	    sf_read(trace,sizeof(float),nt,scan); 
+
+	    for (it=0; it < nt; it++) {
+		trace[it] /= nt*nh;
+	    }
+	    fint1_set(nmo,trace);
+
+	    for (ih=0; ih < nh; ih++) {
+		h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
+		h = slow? h*v: h/v;
+
+		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace);
+
+		for (it=0; it < nt; it++) {
+		    stack[ih][it] += trace[it];
+		}
+	    } /* h */
+	} /* v */
+	
+	sf_write (stack[0],sizeof(float),nt*nh,cmp);
+    } /* x */
+
+    sf_close();
+    exit(0);
+}
+
+/* 	$Id: Mvelmod.c,v 1.1 2004/04/03 03:08:28 fomels Exp $	 */
