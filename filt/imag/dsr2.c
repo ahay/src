@@ -1,4 +1,4 @@
-/* 3-D split-step migration/modeling */
+/* 2-D prestack migration/modeling by split-step DSR */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -22,23 +22,24 @@
 #include <rsf.h>
 /*^*/
 
-#include "split2.h"
+#include "dsr2.h"
 #include "fft2.h"
 
 #include "slice.h"
 /*^*/
 
-static int nx, ny, nz;
-static float dz, **ss, **qq, **kk, *s;
+static int nx, nh, nz, ny, **is, **ir;
+static float dz, **qq, **ks, **kr, *s;
 static float complex **pp;
 
-void split2_init(int nz1, float dz1 /* depth */,
-		 int ny1, float dy1  /* in-line midpoint */,
-		 int nx1, float dx1  /* cross-line midpoint */)
+void dsr2_init(int nz1, float dz1            /* depth */,
+	       int nh1, float dh1, float h01 /* half-offset */,
+	       int nx1, float dx1, float x01 /* midpoint */,
+	       int ny1, float dy, float y0   /* slowness grid */)
 /*< initialize >*/
 {
-    int ix, iy, jx, jy;
-    float x0, y0, dx, dy, kx, ky;
+    int ix, ih, jx, jh, iy;
+    float x, h, x0, h0, dx, dh, kx, kh, k;
 
     nz = nz1;
     dz = dz1;
@@ -47,29 +48,49 @@ void split2_init(int nz1, float dz1 /* depth */,
     dx = 2.0*SF_PI/(nx*dx1);
     x0 = -SF_PI/dx1;
 
+    nh = nh1;
+    dh = 2.0*SF_PI/(nh*dh1);
+    h0 = -SF_PI/dh1;
+
     ny = ny1;
-    dy = 2.0*SF_PI/(ny*dy1);
-    y0 = -SF_PI/dy1;
 
     /* allocate workspace */
-    pp  = sf_complexalloc2 (ny,nx);
-    fft2_init(ny,nx);
+    pp  = sf_complexalloc2 (nh,nx);
+    fft2_init(nh,nx);
 
-    ss = sf_floatalloc2 (ny,nx); /* slowness */
-    s = sf_floatalloc (nz); /* reference slowness */
-    qq = sf_floatalloc2 (ny,nx); /* image */
-    kk = sf_floatalloc2 (ny,nx); /* wavenumber */
+    s = sf_floatalloc (nz);      /* reference slowness */
+    qq = sf_floatalloc2 (nh,nx); /* image */
+    ks = sf_floatalloc2 (nh,nx); /* source wavenumber */
+    kr = sf_floatalloc2 (nh,nx); /* receiver wavenumber */
+    is = sf_intalloc2(nh,nx);    /* source reference */
+    ir = sf_intalloc2(nh,nx);    /* receiver reference */
 
     /* precompute wavenumbers */
     for (ix=0; ix<nx; ix++) {
 	jx = (ix < nx/2)? ix + nx/2: ix - nx/2;
 	kx = x0 + jx*dx;
-	kx *= kx;
-	
-	for (iy=0; iy<ny; iy++) {
-	    jy = (iy < ny/2)? iy + ny/2: iy - ny/2;
-	    ky = y0 + jy*dy;
-	    kk[ix][iy] = ky*ky + kx;
+	x = x01 + ix*dx1;
+
+	for (ih=0; ih<nh; ih++) {
+	    jh = (ih < nh/2)? ih + nh/2: ih - nh/2;
+	    kh = h0 + jh*dh;
+	    h = h01 + ih*dh1;
+
+	    k = 0.5*(kx-kh);
+	    ks[ix][ih] = k*k;
+
+	    k = 0.5*(kx+kh);
+	    kr[ix][ih] = k*k;
+
+	    iy = 0.5+(x-h-y0)/dy;
+	    if (iy < 0) iy=0;
+	    else if (iy >= ny) iy=ny-1;
+	    is[ix][ih] = iy;
+
+	    iy = 0.5+(x+h-y0)/dy;
+	    if (iy < 0) iy=0;
+	    else if (iy >= ny) iy=ny-1;
+	    ir[ix][ih] = iy;
 	}
     }    
 }
@@ -79,31 +100,36 @@ void split2_close(void)
 {
     free(*pp);
     free(pp);
-    free(*ss);
-    free(ss);
     free(s);
     free(*qq);
     free(qq);
-    free(*kk);
-    free(kk);
+    free(*ks);
+    free(ks);
+    free(*kr);
+    free(kr);
+    free(*is);
+    free(is);
+    free(*ir);
+    free(ir);
 }
 
 void split2(bool verb                   /* verbosity flag */, 
 	    bool inv                    /* migration/modeling flag */, 
 	    float eps                   /* stability factor */,  
 	    int nw, float dw, float w0  /* frequency (radian) */,
-	    float complex *** cp        /* data [nw][nx][ny] */,
-	    slice imag                  /* image [nz][nx][ny] */,
-	    slice slow                  /* file with slowness */)
+	    float complex *** cp        /* data [nw][nx][nh] */,
+	    slice imag                  /* image file [nz][nx][nh] */,
+	    float **slow                /* slowness [nz][nx] */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,iy;
-    float complex cshift, cref, w, w2, **pp;
+    int iz,iw,ix,ih;
+    float sy, *si;
+    float complex cshift, cref, w, w2, **pp, cs, cr;
 
     if (!inv) { /* prepare image for migration */
 	for (ix=0; ix<nx; ix++) {      
-	    for (iy=0; iy<ny; iy++) {
-		qq[ix][iy] = 0.0;
+	    for (ih=0; ih<nh; ih++) {
+		qq[ix][ih] = 0.0;
 	    }
 	}
 	for (iz=0; iz<nz; iz++) {
@@ -111,12 +137,10 @@ void split2(bool verb                   /* verbosity flag */,
 	}
     }
 
-    
+    /* compute reference slowness squared */
     for (iz=0; iz<nz; iz++) {
-	/* compute reference slowness squared */
-	slice_get(slow,iz,ss[0]);
 	/* median */
-	s[iz] = sf_quantile(0.5*nx*ny,nx*ny,ss[0]);
+	s[iz] = sf_quantile(0.5*ny,ny,slow[iz]);
 	s[iz] *= s[iz];
     }	
     /* take average in layer */
@@ -136,11 +160,11 @@ void split2(bool verb                   /* verbosity flag */,
 	if (inv) { /* modeling */
 	    /* start from bottom */
 	    slice_get(imag,nz-1,qq[0]);
-	    slice_get(slow,nz-1,ss[0]);
+	    si = slow[nz-1];
 	    
 	    for (ix=0; ix<nx; ix++) {
-		for (iy=0; iy<ny; iy++) {
-		    pp[ix][iy] = qq[ix][iy];
+		for (ih=0; ih<nh; ih++) {
+		    pp[ix][ih] = qq[ix][ih];
 		}
 	    }
 
@@ -149,84 +173,90 @@ void split2(bool verb                   /* verbosity flag */,
 
 		/* space-domain, part 1 */
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] *= cshift; /* add tapering later */
+		    for (ih=0; ih<nh; ih++) {
+			sy = si[is[ix][ih]]+si[ir[ix][ih]];
+			cshift = cexpf(-0.5*w*sy*dz);
+			pp[ix][ih] *= cshift; /* add tapering later */
 		    }
 		}
 
 		fft2(false,pp);		
 
 		/* phase shift */
-		cref = csqrtf(w2*s[iz]);
+		cref = 2.*csqrtf(w2*s[iz]);
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			cshift = cexpf((cref-csqrtf(w2*s[iz]+kk[ix][iy]))*dz); 
-			pp[ix][iy] *= cshift; 
+		    for (ih=0; ih<nh; ih++) {
+			cs = csqrtf(w2*s[iz]+ks[ix][ih]);
+			cr = csqrtf(w2*s[iz]+kr[ix][ih]);
+			cshift = cexpf((cref-cs-cr)*dz); 
+			pp[ix][ih] *= cshift; 
 		    }
 		}
-
 		
 		fft2(true,pp);
-
 		
 		slice_get(imag,iz,qq[0]);
-		slice_get(slow,iz,ss[0]);
+		si = slow[iz];
 		
 		/* space-domain, part 1 */
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] = qq[ix][iy] + pp[ix][iy]*cshift; 
+		    for (ih=0; ih<nh; ih++) {
+			sy = si[is[ix][ih]]+si[ir[ix][ih]];
+			cshift = cexpf(-0.5*w*sy*dz);
+			pp[ix][ih] = qq[ix][ih] + pp[ix][ih]*cshift; 
                         /* add tapering later */
 		    }
 		}
 	    } /* iz */
 	} else {
-	    slice_get(slow,0,ss[0]);
-
 	    /* loop over migrated depths z */
+	    si = slow[0];
+
 	    for (iz=0; iz< nz-1; iz++) {
 		slice_get(imag,iz,qq[0]);
+
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			qq[ix][iy] += crealf(pp[ix][iy]); /* imaging cond. */
-			cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] *= conjf(cshift);
+		    for (ih=0; ih<nh; ih++) {
+			qq[ix][ih] += crealf(pp[ix][ih]); /* imaging cond. */
+			sy = si[is[ix][ih]]+si[ir[ix][ih]];
+			cshift = conjf(cexpf(-0.5*w*sy*dz));
+			pp[ix][ih] *= cshift;
 		    }
 		}
 		slice_put(imag,iz,qq[0]);
-		
 
 		fft2(false,pp);
-
+		
 		/* phase shift */
 		cref = csqrtf(w2*s[iz]);
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			cshift = cexpf((cref-csqrtf(w2*s[iz]+kk[ix][iy]))*dz); 
-			pp[ix][iy] *= conjf(cshift); 
+		    for (ih=0; ih<nh; ih++) {
+			cs = csqrtf(w2*s[iz]+ks[ix][ih]);
+			cr = csqrtf(w2*s[iz]+kr[ix][ih]);
+			cshift = conjf(cexpf((cref-cs-cr)*dz)); 
+			pp[ix][ih] *= cshift; 
 		    }
 		}
 		
 		fft2(true,pp);
-		
-		slice_get(slow,iz+1,ss[0]);
+
+		si = slow[iz+1];
 
 		for (ix=0; ix<nx; ix++) {
-		    for (iy=0; iy<ny; iy++) {
-			cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
-			pp[ix][iy] *= conjf(cshift);
+		    for (ih=0; ih<nh; ih++) {
+			sy = si[is[ix][ih]]+si[ir[ix][ih]];
+			cshift = conjf(cexpf(-0.5*w*sy*dz));
+			pp[ix][ih] *= cshift;
 		    }
 		}
 	    } /* iz */
-
 	    
 	    /* arrive to bottom */
 	    slice_get(imag,nz-1,qq[0]);
+	    
 	    for (ix=0; ix<nx; ix++) {
-		for (iy=0; iy<ny; iy++) {
-		    qq[ix][iy] += crealf(pp[ix][iy]); /* imaging condition */ 
+		for (ih=0; ih<nh; ih++) {
+		    qq[ix][ih] += crealf(pp[ix][ih]); /* imaging condition */ 
 		}
 	    }	    
 	    slice_put(imag,nz-1,qq[0]);
