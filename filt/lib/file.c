@@ -707,6 +707,22 @@ long sf_tell (sf_file file)
     return ftell(file->stream);
 }
 
+FILE *sf_tempfile(char* dataname)
+{
+    FILE *tmp;
+    char *path;
+    
+    path = getdatapath();
+    if (NULL == path) 
+	sf_error ("%s: Cannot find datapath",__FILE__);
+    dataname = sf_charalloc (NAME_MAX+1);
+    snprintf(dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
+    tmp = fdopen(mkstemp(dataname),"wb");
+    if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,dataname);
+
+    return tmp;
+}
+
 void sf_seek (sf_file file, long offset, int whence)
 {
     if (0 > fseek(file->stream,offset,whence))
@@ -716,20 +732,14 @@ void sf_seek (sf_file file, long offset, int whence)
 void sf_unpipe (sf_file file, size_t size) 
 {
     size_t nbuf;
-    char *path, *dataname;
+    char *dataname=NULL;
     FILE* tmp;
     char buf[BUFSIZ];
 
     if (-1L != fseek(file->stream,0L,SEEK_CUR)) return;
     if (ESPIPE != errno) sf_error ("%s: pipe problem:",__FILE__);
 	
-    path = getdatapath();
-    if (NULL == path) 
-	sf_error ("%s: Cannot find datapath",__FILE__);
-    dataname = sf_charalloc (NAME_MAX+1);
-    snprintf(dataname,NAME_MAX,"%s%sXXXXXX",path,sf_getprog());
-    tmp = fdopen(mkstemp(dataname),"wb");
-    if (NULL == tmp) sf_error ("%s: cannot open %s:",__FILE__,dataname);
+    tmp = sf_tempfile(dataname);
 
     while (size > 0) {
 	nbuf = (BUFSIZ < size)? BUFSIZ : size;
@@ -739,9 +749,40 @@ void sf_unpipe (sf_file file, size_t size)
 	size -= nbuf;
     }
     (void) fclose(file->stream);
+	
     file->stream = freopen(dataname,"rb",tmp);
     if (NULL == file->stream)
 	sf_error ("%s: Trouble reading data file %s:",__FILE__,dataname);
 } 
 
-/* 	$Id: file.c,v 1.13 2003/09/29 14:34:55 fomels Exp $	 */
+FILE* sf_direct (const sf_file file)
+{
+    if (-1L != fseek(file->stream,0L,SEEK_CUR)) return file->stream;
+    if (ESPIPE != errno) sf_error ("%s: pipe problem:",__FILE__);
+
+    return sf_tempfile(file->dataname);
+}
+
+void sf_pipe (sf_file file, FILE* tmp, size_t size) 
+{
+    char buf[BUFSIZ];
+    size_t nbuf;
+
+    if (tmp == file->stream) return;
+
+    tmp = freopen(file->dataname,"rb",tmp);
+    if (NULL == tmp)
+	sf_error ("%s: Trouble reading data file %s:",__FILE__,file->dataname);
+
+    while (size > 0) {
+	nbuf = (BUFSIZ < size)? BUFSIZ : size;
+	if (nbuf != fread(buf,1,nbuf,tmp) ||
+	    nbuf != fwrite(buf,1,nbuf,file->stream))
+	    sf_error ("%s: trouble piping from %s:",__FILE__,file->dataname);
+	size -= nbuf;
+    }
+
+    (void) fclose(tmp);
+}
+
+/* 	$Id: file.c,v 1.14 2003/10/18 18:21:15 fomels Exp $	 */
