@@ -1,7 +1,12 @@
 #ifndef _butter_h
 #define _butter_h
 
-void butter_set(bool low, float cutoff, int na, float *num, float *den);
-void butter (bool adj, int na, float *num, float *den, 
-	     int nx, int ny, float *xx, float *yy);
+#include <rsf.h>
+
+typedef struct Butter *butter;
+
+butter butter_init(bool low, float cutoff, int nn);
+void butter_close(butter bw);
+void butter_apply (const butter bw, int nx, float *x);
+
 #endif

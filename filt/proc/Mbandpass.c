@@ -22,13 +22,15 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include "butter.h"
 
+    static void reverse (int n1, float* trace);
+
 int main (int argc, char* argv[]) 
 {
     bool phase, verb;
-    int i1, i2, n1, n2, nplo, nphi;
-    float d1, flo, fhi;
-    float *trace, *trace2, *numlo=NULL, *numhi=NULL, *denlo=NULL, *denhi=NULL;
+    int i2, n1, n2, nplo, nphi;
+    float d1, flo, fhi, *trace;
     const float eps=0.0001;
+    butter blo=NULL, bhi=NULL;
     sf_file in, out;
 
     sf_init (argc, argv); 
@@ -83,45 +85,30 @@ int main (int argc, char* argv[])
 			 flo,fhi,nplo,nphi);
     
     trace = sf_floatalloc(n1);
-    trace2 = sf_floatalloc(n1);
 
-    if (flo > eps) {
-	nplo++;
-	numlo = sf_floatalloc(nplo);
-	denlo = sf_floatalloc(nplo);
-	butter_set(false, flo, nplo, numlo, denlo);
-    }
-    if (fhi < 0.5-eps) {
-	nphi++;
-	numhi = sf_floatalloc(nphi);
-	denhi = sf_floatalloc(nphi);
-	butter_set(true, fhi, nphi, numhi, denhi);
-    }
-
+    if (flo > eps)     blo = butter_init(false, flo, nplo);
+    if (fhi < 0.5-eps) bhi = butter_init(true,  fhi, nphi);
+    
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
-	if (NULL != numlo) {
-	    butter (false, nplo, numlo, denlo, n1, n1, trace, trace2); 
+	if (NULL != blo) {
+	    butter_apply (blo, n1, trace); 
 
-	    if (phase) {
-		for (i1=0; i1 < n1; i1++) {
-		    trace[i1] = trace2[i1];
-		}
-	    } else {
-		butter (true, nplo, numlo, denlo, n1, n1, trace, trace2); 
+	    if (!phase) {
+		reverse (n1, trace);
+		butter_apply (blo, n1, trace); 
+		reverse (n1, trace);	
 	    }
 	}
 
-	if (NULL != numhi) {
-	    butter (false, nphi, numhi, denhi, n1, n1, trace, trace2); 
+	if (NULL != bhi) {
+	    butter_apply (bhi, n1, trace); 
 
-	    if (phase) {
-		for (i1=0; i1 < n1; i1++) {
-		    trace[i1] = trace2[i1];
-		}
-	    } else {
-		butter (true, nphi, numhi, denhi, n1, n1, trace, trace2); 
+	    if (!phase) {
+		reverse (n1, trace);
+		butter_apply (bhi, n1, trace); 
+		reverse (n1, trace);		
 	    }
 	}
  
@@ -129,6 +116,17 @@ int main (int argc, char* argv[])
     }
 
     exit (0);
+}
+
+static void reverse (int n1, float* trace) {
+    int i1;
+    float t;
+
+    for (i1=0; i1 < n1/2; i1++) { 
+        t=trace[i1];
+        trace[i1]=trace[n1-1-i1];
+        trace[n1-1-i1]=t;
+    }
 }
 
 /* 	$Id$	 */
