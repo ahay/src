@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, i2;
-    float freq, *trace;
+    float d1, freq, *trace;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -34,8 +34,14 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_getfloat("freq",&freq)) freq=0.2;
-    /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+    if (!sf_getfloat("frequency",&freq)) {
+      /* peak frequency for Ricker wavelet (in Hz) */
+      if (!sf_getfloat("freq",&freq)) freq=0.2;
+      /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+    } else {
+      if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+      freq *= 2.*d1;
+    }
 
     trace = sf_floatalloc(n1);
     ricker_init(2*n1,0.5*freq,0);
