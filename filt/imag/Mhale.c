@@ -60,12 +60,12 @@ int main(int argc, char* argv[])
 	    z = z*z + x;
 	    trace[iz] = v + a*exp(-z/d);
 	}
-	sf_write (trace,sizeof(float),nz,mod);
+	sf_floatwrite (trace,nz,mod);
     }
 
     exit (0);
 }
 
-/* 	$Id: Mhale.c,v 1.1 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: Mhale.c,v 1.2 2004/04/19 21:51:16 fomels Exp $	 */
 
 

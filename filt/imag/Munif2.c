@@ -43,7 +43,7 @@ int main(int argc, char **argv)
     sf_putfloat(model,"o1",o1);
 
     inter = sf_floatalloc2(n2,ninf);
-    sf_read(inter[0],sizeof(float),n2*ninf,surface);
+    sf_floatread(inter[0],n2*ninf,surface);
 
     ninf++; /* more layers than interfaces */
     v0 = sf_floatalloc(ninf);
@@ -80,11 +80,11 @@ int main(int argc, char **argv)
 	    if (i == ninf-1) /* bottom layer */
 		trace[i1] = v0[i] + (x-x0[i])*dvdx[i] + (z-z0[i])*dvdz[i];
 	}
-	sf_write(trace,sizeof(float),n1,model);
+	sf_floatwrite(trace,n1,model);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Munif2.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Munif2.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */

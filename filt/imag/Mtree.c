@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     /* debugging flag */
 
     slow  = sf_floatalloc2(nz,nx);
-    sf_read(slow[0],sizeof(float),nz*nx,vel);
+    sf_floatread(slow[0],nz*nx,vel);
 
     if (velocity) { /* transform velocity to slowness */
 	for(ix = 0; ix < nx; ix++){
@@ -96,10 +96,10 @@ int main(int argc, char* argv[])
 
 /*    tree_print(); */
 
-    sf_write(node[0],sizeof(float),4*naxz,out);
+    sf_floatwrite(node[0],4*naxz,out);
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mtree.c,v 1.8 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mtree.c,v 1.9 2004/04/19 21:51:16 fomels Exp $	 */

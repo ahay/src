@@ -41,17 +41,17 @@ int main(int argc, char** argv)
     for (i2=0; i2 < n2; i2++) {
 	x2 = o2+i2*d2 - c2;
 	x2 *= x2;
-	sf_read (vint,sizeof(float),n1,in);
+	sf_floatread (vint,n1,in);
 	for (i1=0; i1 < n1; i1++) {
 	    x1 = o1+i1*d1 - c1;
 	    x1 = (x1*x1 + x2)*r;
 	    vint[i1] += a * exp(-x1);
 	}
-	sf_write (vint,sizeof(float),n1,out);
+	sf_floatwrite (vint,n1,out);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgauss.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mgauss.c,v 1.6 2004/04/19 21:51:16 fomels Exp $	 */

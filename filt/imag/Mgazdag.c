@@ -85,7 +85,7 @@ int main (int argc, char *argv[])
 	}
     } else {
 	vel = sf_input("velocity");
-	sf_read(vt,sizeof(float),nz,vel);
+	sf_floatread(vt,nz,vel);
 	sf_fileclose(vel);
     }
 
@@ -110,7 +110,7 @@ int main (int argc, char *argv[])
     cq = sf_complexalloc2(nz,nk);
 
     if (inv) {
-	sf_read(q[0],sizeof(float),nz*nx,in);
+	sf_floatread(q[0],nz*nx,in);
     
 	/* pad with zeros and Fourier transform x to k */
 	for (ix=nx; ix<nxfft; ix++) {
@@ -121,7 +121,7 @@ int main (int argc, char *argv[])
     
 	sf_pfa2rc(-1,2,nz,nxfft,q[0],cq[0]);
     } else {
-	sf_read(p[0],sizeof(float),nt*nx,in);
+	sf_floatread(p[0],nt*nx,in);
     
 	/* pad with zeros and Fourier transform x to k */
 	for (ix=nx; ix<nxfft; ix++) {
@@ -153,7 +153,7 @@ int main (int argc, char *argv[])
 	    }
 	}
 	
-	sf_write (p[0],sizeof(float),nt*nx,out);
+	sf_floatwrite (p[0],nt*nx,out);
     } else {
 	/* Fourier transform k to x (including FFT scaling) */
 	sf_pfa2cr(1,2,nz,nxfft,cq[0],q[0]);
@@ -163,11 +163,11 @@ int main (int argc, char *argv[])
 	    }
 	}
 
-	sf_write (q[0],sizeof(float),nz*nx,out);
+	sf_floatwrite (q[0],nz*nx,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgazdag.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mgazdag.c,v 1.8 2004/04/19 21:51:16 fomels Exp $	 */

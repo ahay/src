@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
 		    trace[ih] = -dh;
 		}
 	    }
-	    sf_write(trace,sizeof(float),nh,angle);
+	    sf_floatwrite(trace,nh,angle);
 	}
     }
 

@@ -88,14 +88,14 @@ int main(int argc, char* argv[])
 
     nmo = aastretch_init (nt, t0, dt, nt);
 
-    if (inv && zero) sf_read (cinp[0][0],sizeof(float),n123,in);
+    if (inv && zero) sf_floatread (cinp[0][0],n123,in);
 
     for (ih=0; ih < nh; ih++) {
 	h = h0 + ih*dh;
 	h *= h;
 	sf_warning("offset %d of %d",ih+1, nh);
 
-	if (!inv || !zero) sf_read (cinp[0][0],sizeof(float),n123,in);
+	if (!inv || !zero) sf_floatread (cinp[0][0],n123,in);
 	
 	for (it=0; it<n123; it++) {
 	    cout[0][0][it] = 0.;
@@ -188,17 +188,15 @@ int main(int argc, char* argv[])
 		stack[0][0][it] += cout[0][0][it];
 	    }
 	} else {
-	    sf_write (cout[0][0],sizeof(float),n123,out);
+	    sf_floatwrite (cout[0][0],n123,out);
 	}
     } /* h */
 
     if (!inv && zero) 
-	sf_write (stack[0][0],sizeof(float),n123,out);
+	sf_floatwrite (stack[0][0],n123,out);
  
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mpreconstkirch.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
-
-
+/* 	$Id: Mpreconstkirch.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */

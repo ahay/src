@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 		    oper[iw] = 0.;
 		}
 	    }
-	    sf_write (oper,sizeof(float complex),nw,out);
+	    sf_complexwrite (oper,nw,out);
 	}
     }
 
@@ -87,5 +87,5 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mfkamo.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mfkamo.c,v 1.7 2004/04/19 21:51:16 fomels Exp $	 */
 

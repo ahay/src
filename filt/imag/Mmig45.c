@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     voff = sf_floatalloc2(nz,nx);
 
     if (NULL != velocity) {
-	sf_read (vel[0],sizeof(float),nz*nx,velocity);
+	sf_floatread (vel[0],nz*nx,velocity);
     } else { /* constant velocity */
 	if (!sf_getfloat ("vel", &vel0)) sf_error("Need vel0=");
 	/* Constant velocity (if no velocity file) */
@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
     offd2 = sf_complexalloc (nx);
 
     if (inv) {
-	sf_read(depth[0],sizeof(float),nz*nx,in);
+	sf_floatread(depth[0],nz*nx,in);
     } else {
 	for (ix=0; ix < nx; ix++) {
 	    for (iz=0; iz < nz; iz++) {
@@ -237,10 +237,10 @@ int main(int argc, char* argv[])
 */
 	    }
 
-	    sf_write (ctime,sizeof(float complex),nx,out);
+	    sf_complexwrite (ctime,nx,out);
 	} else { /* migration */
 	    w = dw*(eps-iw*I);
-	    sf_read (ctime,sizeof(float complex),nx,in);
+	    sf_complexread (ctime,nx,in);
 
 	    for (iz=0; iz < nz; iz++) {
 		for (ix=0; ix < nx-1; ix++) {
@@ -293,10 +293,10 @@ int main(int argc, char* argv[])
 	} /* if inverse */
     } /* iw frequency loop */
   
-    if (!inv) sf_write (depth[0],sizeof(float),nz*nx,out);
+    if (!inv) sf_floatwrite (depth[0],nz*nx,out);
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mmig45.c,v 1.9 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mmig45.c,v 1.10 2004/04/19 21:51:16 fomels Exp $	 */

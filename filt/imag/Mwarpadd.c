@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
     second = sf_floatalloc (n2);
 
     for (i2=0; i2 < m2; i2++) {
-	sf_read(first,sizeof(float),n1,add);
-	sf_read(second,sizeof(float),n1,in);
+	sf_floatread(first,n1,add);
+	sf_floatread(second,n1,in);
 
 	for (i1=n1; i1 < n2; i1++) {
 	    second[i1] = (7.*second[i1-1]-5.*second[i1-2]+second[i1-3])/3.;
@@ -62,11 +62,11 @@ int main(int argc, char* argv[])
 	    first[i1] += f;
 	}
 
-	sf_write(first,sizeof(float),n1,sum);
+	sf_floatwrite(first,n1,sum);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mwarpadd.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mwarpadd.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */

@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 	    sf_error("No n2= in shotfile");
   
 	s = sf_floatalloc2 (ndim,nshot);
-	sf_read(s[0],sizeof(float),ndim*nshot,shots);
+	sf_floatread(s[0],ndim*nshot,shots);
 	sf_fileclose (shots);
     } else {
 	nshot = 1;
@@ -118,7 +118,7 @@ int main(int argc, char* argv[])
     nm = n[0]*n[1];
     slow = sf_floatalloc(nm);
 
-    sf_read(slow,sizeof(float),nm,vel);
+    sf_floatread(slow,nm,vel);
 
     for(im = 0; im < nm; im++){
 	v0 = slow[im];
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
     for( is = 0; is < nshot; is++) { /* loop over shots */
 	/* initialize angles */
 	if (NULL != angles) {
-	    sf_read(a,sizeof(float),nr,angles);
+	    sf_floatread(a,nr,angles);
 	} else {
 	    for (ir = 0; ir < nr; ir++) {
 		a[ir] = a0+da*ir;
@@ -161,7 +161,7 @@ int main(int argc, char* argv[])
 		}
 	    }
       
-	    sf_write (traj[0],sizeof(float),nt1*ndim,rays); 
+	    sf_floatwrite (traj[0],nt1*ndim,rays); 
 	}
     }
 
@@ -169,4 +169,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrays2.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mrays2.c,v 1.8 2004/04/19 21:51:16 fomels Exp $	 */

@@ -39,13 +39,13 @@ int main (int argc, char *argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    sf_read(dip,sizeof(float),n1,in);
+	    sf_floatread(dip,n1,in);
 	    pick0_set (i2, dip);
 	}
 
 	for (i1=0; i1 < n1; i1++) {
 	    pick0_step0 ((float) i1, pik);
-	    sf_write(pik,sizeof(float),n2,out);
+	    sf_floatwrite(pik,n2,out);
 	}
     }
 
@@ -53,4 +53,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mpick0.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mpick0.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */

@@ -70,7 +70,7 @@ int main(int argc, char* argv[])
 	w = -2.*SF_PI*(w0 + iw*dw); 
 	w2 = w*w;
 
-	sf_read(dat[0],sizeof(float complex),nx*nh,cmp);
+	sf_complexread(dat[0],nx*nh,cmp);
 
 	for (ix=0; ix < nx; ix++) {
 	    out[ix] = 0.;
@@ -78,10 +78,10 @@ int main(int argc, char* argv[])
 
 	if (fabsf(w) < dw) {	    
 	    if (stack) {
-		sf_write(out,sizeof(float complex),nx,stk);
+		sf_complexwrite(out,nx,stk);
 	    } else {
 		for (ih=n1; ih != n2; ih += ns) {
-		    sf_write(out,sizeof(float complex),nx,stk);
+		    sf_complexwrite(out,nx,stk);
 		}
 	    }
 	    continue;
@@ -119,9 +119,9 @@ int main(int argc, char* argv[])
 
 	    ctridiagonal_solve (slv,out);
 
-	    if (!stack) sf_write (out,sizeof(float complex),nx,stk);
+	    if (!stack) sf_complexwrite (out,nx,stk);
 	}
-	if (stack) sf_write (out,sizeof(float complex),nx,stk);
+	if (stack) sf_complexwrite (out,nx,stk);
     }
 
     sf_close();

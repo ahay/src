@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 	    sf_error("No n2= in shotfile");
   
 	shot = sf_floatalloc2 (ndim,nshot);
-	sf_read(shot[0],sizeof(float),ndim*nshot,shots);
+	sf_floatread(shot[0],ndim*nshot,shots);
 	sf_fileclose (shots);
     } else {
 	nshot = 1;
@@ -96,7 +96,7 @@ int main(int argc, char* argv[])
     nm = nz*nx;
     slow = sf_floatalloc(nm);
 
-    sf_read(slow,sizeof(float),nm,vel);
+    sf_floatread(slow,nm,vel);
 
     if (vel) { /* convert to slowness */
 	for(im = 0; im < nm; im++){
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 	    }
 	    r1 = r2;
       	}
-	sf_write(angle,sizeof(float),nr,out);
+	sf_floatwrite(angle,nr,out);
     }
     
     sf_close();
@@ -196,4 +196,4 @@ static float shooting(float a)
     return (x[1]-xr);
 }
 
-/* 	$Id: Mshoot2.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mshoot2.c,v 1.8 2004/04/19 21:51:16 fomels Exp $	 */

@@ -157,7 +157,7 @@ int main (int argc, char **argv)
 	    vt[iz] = v0;
 	}
     } else {
-	sf_read(vt,sizeof(float),nz,vel);
+	sf_floatread(vt,nz,vel);
     }
 
     /* allocate space */
@@ -171,12 +171,12 @@ int main (int argc, char **argv)
 	k = ik*dk;
 
 	if (inv) { /* modeling */
-	    sf_read(cq,sizeof(float complex),nz,in);
+	    sf_complexread(cq,nz,in);
 	} else {
 	    for (iz=0; iz<nz; iz++) {
 		cq[iz] = 0.0;
 	    }
-	    sf_read(cp[0],sizeof(float complex),nw*nm,in);
+	    sf_complexread(cp[0],nw*nm,in);
 	}
 
 	for (im=0; im<nm; im++) {
@@ -187,9 +187,9 @@ int main (int argc, char **argv)
 	}
  
 	if (inv) {
-	    sf_write(cp[0],sizeof(float complex),nw*nm,out);
+	    sf_complexwrite(cp[0],nw*nm,out);
 	} else {
-	    sf_write(cq,sizeof(float complex),nz,out);
+	    sf_complexwrite(cq,nz,out);
 	}
     }
 
@@ -197,4 +197,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mdsr.c,v 1.9 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mdsr.c,v 1.10 2004/04/19 21:51:16 fomels Exp $	 */

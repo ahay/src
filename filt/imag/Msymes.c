@@ -45,10 +45,10 @@ int main(int argc, char* argv[])
 	    x[0] = iz*dz;
 	    trace[iz] = 1./sqrtf(symes_vel(NULL,x));
 	}
-	sf_write(trace,sizeof(float),nz,mod);
+	sf_floatwrite(trace,nz,mod);
     }
 
     exit (0);
 }
 
-/* 	$Id: Msymes.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Msymes.c,v 1.3 2004/04/19 21:51:16 fomels Exp $	 */

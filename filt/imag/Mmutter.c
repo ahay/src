@@ -70,9 +70,9 @@ int main(int argc, char* argv[])
 	for (i2=0; i2 < n2; i2++) { 
 	    x = x0+i2*d2;
 
-	    sf_read (data,sizeof(float),n1,in);
+	    sf_floatread (data,n1,in);
 	    mutter (tp,slope0,slopep, x, data);
-	    sf_write (data,sizeof(float),n1,out);
+	    sf_floatwrite (data,n1,out);
 	}
     }
 
@@ -80,4 +80,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mmutter.c,v 1.6 2004/04/13 01:40:48 fomels Exp $	 */
+/* 	$Id: Mmutter.c,v 1.7 2004/04/19 21:51:16 fomels Exp $	 */

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 	w = iw*dw; 
 	w2 = w*w;
 
-	sf_read(out,sizeof(float complex),nx,input);
+	sf_complexread(out,nx,input);
 	for (ih=0; ih < nh; ih++) {
 	    for (ix=0; ix < nx; ix++) {
 		in[ix] = out[ix];
@@ -81,12 +81,12 @@ int main(int argc, char* argv[])
 
 	    ctridiagonal_solve (slv, out);
 	}
-	sf_write (out,sizeof(complex float),nx,output);
+	sf_complexwrite (out,nx,output);
     }
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Mfincon.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mfincon.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */
 

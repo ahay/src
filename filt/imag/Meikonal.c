@@ -70,7 +70,7 @@ int main (int argc,char* argv[])
 	    sf_error("Need n1=3 in shotfile");
   
 	s = sf_floatalloc2 (ndim,nshot);
-	sf_read(s[0],sizeof(float),nshot*ndim,shots);
+	sf_floatread(s[0],nshot*ndim,shots);
     
 	sf_putint (time,"n4",nshot);
 	free (sfile);
@@ -95,7 +95,7 @@ int main (int argc,char* argv[])
     v  = sf_floatalloc (n123);
     p  = sf_intalloc (n123);
 
-    sf_read(v,sizeof(float),n123,vel);
+    sf_floatread(v,n123,vel);
    /* transform velocity to slowness squared */
     if (isvel) {
 	for(i = 0; i < n123; i++) {
@@ -116,12 +116,12 @@ int main (int argc,char* argv[])
 		  b3,b2,b1,
 		  order); 
 	
-	sf_write (t,sizeof(float),n123,time);
+	sf_floatwrite (t,n123,time);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Meikonal.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Meikonal.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */
 

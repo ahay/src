@@ -57,10 +57,10 @@ int main (int argc, char* argv[])
 	}
     }
 
-    sf_write(vel[0],sizeof(float),n1*n2,out);
-    sf_write(time[0],sizeof(float),n1*n2,out);
+    sf_floatwrite(vel[0], n1*n2,out);
+    sf_floatwrite(time[0],n1*n2,out);
     
     exit (0);
 }
 
-/* 	$Id: Ms2ofz.c,v 1.1 2003/10/18 18:34:24 fomels Exp $	 */
+/* 	$Id: Ms2ofz.c,v 1.2 2004/04/19 21:51:16 fomels Exp $	 */

@@ -50,7 +50,7 @@ int main(int argc, char* argv[])
 	trace[iz] = 0.;
 	iz = nz/9.0*(3.+cosf((ix/x0-1.0)*SF_PI));
 	trace[iz] = 1.;
-	sf_write (trace,sizeof(float),nz,cup);
+	sf_floatwrite (trace,nz,cup);
     }
 
     exit(0);

@@ -101,7 +101,7 @@ int main (int argc, char *argv[])
 	    }
 	}
     } else {
-	sf_read(vt[0],sizeof(float),nx*nz,vel);
+	sf_floatread(vt[0],nx*nz,vel);
 	sf_fileclose(vel);
     }
     for (iz=0; iz < nz; iz++) {
@@ -125,9 +125,9 @@ int main (int argc, char *argv[])
 
     for (ix=0; ix<nx; ix++) {
 	if (inv) {
-	    sf_read(q[ix],sizeof(float),nz,in);
+	    sf_floatread(q[ix],nz,in);
 	} else {    
-	    sf_read(p[ix],sizeof(float),nt,in);
+	    sf_floatread(p[ix],nt,in);
 
 	    /* pad with zeros and Fourier transform t to w */
 	    for (it=nt; it<ntfft; it++) {
@@ -153,9 +153,9 @@ int main (int argc, char *argv[])
 	    sf_pfacr(1,ntfft,cp[ix],p[ix]);
 	    for (it=0; it<nt; it++)
 		p[ix][it] /= ntfft;
-	    sf_write (p[ix],sizeof(float),nt,out);
+	    sf_floatwrite (p[ix],nt,out);
 	} else {
-	    sf_write (q[ix],sizeof(float),nz,out);
+	    sf_floatwrite (q[ix],nz,out);
 	}
     }
     
@@ -163,4 +163,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Msstep1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Msstep1.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */

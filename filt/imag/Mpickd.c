@@ -32,13 +32,13 @@ int main (int argc, char *argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    sf_read(trace,sizeof(float),n1,in);
+	    sf_floatread(trace,n1,in);
 	    pick0_set (i2, trace);
 	}
 
 	for (i2=0; i2 < n2; i2++) {
 	    pick0_delta (i2, trace);
-	    sf_write(trace,sizeof(float),n1,out);
+	    sf_floatwrite(trace,n1,out);
 	}
     }
     
@@ -46,4 +46,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mpickd.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mpickd.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */

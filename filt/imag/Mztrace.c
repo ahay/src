@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     /* interpolation accuracy for grid */
 
     slow  = sf_floatalloc2(nz,nx);
-    sf_read(slow[0],sizeof(float),nz*nx,in);
+    sf_floatread(slow[0],nz*nx,in);
     if (vel) { /* convert to slowness */
 	for(ix = 0; ix < nx; ix++){
 	    for (iz = 0; iz < nz; iz++) {
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	ztrace_step (iz);
 
 	for (is=0; is < NS; is++) {
-	    sf_write (slice[is],sizeof(float),nax,out[is]);
+	    sf_floatwrite (slice[is],nax,out[is]);
 	}
     }
 
@@ -105,4 +105,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mztrace.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mztrace.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */

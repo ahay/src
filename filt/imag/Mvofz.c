@@ -73,11 +73,11 @@ int main (int argc, char* argv[])
 	}
     }
 
-    sf_write(vel[0],sizeof(float),n1*n2,out);
-    sf_write(time[0],sizeof(float),n1*n2,out);
+    sf_floatwrite(vel[0], n1*n2,out);
+    sf_floatwrite(time[0],n1*n2,out);
     
     exit (0);
 }
 
-/* 	$Id: Mvofz.c,v 1.4 2004/01/15 02:36:32 fomels Exp $	 */
+/* 	$Id: Mvofz.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */
 

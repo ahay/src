@@ -61,9 +61,9 @@ int main (int argc, char* argv[])
 	sf_warning("depth %d of %d",iz+1, nz);
 
 	for (ix=0; ix<nx; ix++) {
-	    sf_read(tx,sizeof(float),nt,in);
-	    sf_read(px,sizeof(float),nt,place);
-	    sf_read(zx,sizeof(float),nt,depth);
+	    sf_floatread(tx,nt,in);
+	    sf_floatread(px,nt,place);
+	    sf_floatread(zx,nt,depth);
 
 	    eno_set (tfnt, tx);
 	    eno_set (pfnt, px);
@@ -118,7 +118,7 @@ int main (int argc, char* argv[])
 		    }
 		}
 	    }
-	    sf_write (tx,sizeof(float),nt,out);
+	    sf_floatwrite (tx,nt,out);
 	}
     }
   
@@ -148,4 +148,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterp3.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minterp3.c,v 1.3 2004/04/19 21:51:16 fomels Exp $	 */

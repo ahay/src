@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     trace1 = sf_complexalloc(nw);
     trace2 = sf_floatalloc(nx);
  
-    sf_read(trace1,sizeof(float complex),nw,wave);
+    sf_complexread(trace1,nw,wave);
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -67,9 +67,9 @@ int main (int argc, char* argv[])
     for (iz=0; iz<nz; iz++) {
 	sf_warning("depth %d of %d",iz+1, nz);
 	for (ix=0; ix<nx; ix++) {
-	    sf_read(tx,sizeof(float),nt,in);
-	    sf_read(px,sizeof(float),nt,place);
-	    sf_read(zx,sizeof(float),nt,depth);
+	    sf_floatread(tx,nt,in);
+	    sf_floatread(px,nt,place);
+	    sf_floatread(zx,nt,depth);
 	    
 	    trace2[ix] = 0.;
 
@@ -91,11 +91,11 @@ int main (int argc, char* argv[])
 		} /* nt */
 	    } /* nw */
 	} /* nx */
-	sf_write (trace2,sizeof(float),nx,out);
+	sf_floatwrite (trace2,nx,out);
     } /* nz */
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.6 2004/04/19 21:51:16 fomels Exp $	 */

@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     dat = sf_floatalloc2(n1,n2);
     der = sf_floatalloc3(2,n1,n2);
 
-    sf_read(dat[0],sizeof(float),n1*n2,in);
+    sf_floatread(dat[0],n1*n2,in);
 
     if (!sf_getint("order",&order)) sf_error("Need order=");
 
@@ -37,12 +37,12 @@ int main(int argc, char* argv[])
 	}
     }
 
-    sf_write(dat[0],sizeof(float),n1*n2,out);
-    sf_write(der[0][0],sizeof(float),n1*n2*2,deriv);
+    sf_floatwrite(dat[0],   n1*n2,out);
+    sf_floatwrite(der[0][0],n1*n2*2,deriv);
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: Testeno2.c,v 1.2 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Testeno2.c,v 1.3 2004/04/19 21:51:16 fomels Exp $	 */
 

@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     zero = sf_intalloc(nhx);
     dat = sf_complexalloc(nhx);
 
-    sf_read(zero,sizeof(int),nhx,known);
+    sf_intread(zero,nhx,known);
     for (i=0; i < nhx; i++) {
 	dat[i] = 0.;
 	mask[i] = (zero[i] != 0);
@@ -58,17 +58,17 @@ int main(int argc, char* argv[])
 	sf_warning("frequency %d of %d",iw+1,nw);
      
 	w = w0 + iw*dw;
-	sf_read (slice,sizeof(float complex),nhx,in);
+	sf_complexread (slice,nhx,in);
 
 	if (fabsf(w) < dw) {
-	    sf_write(dat,sizeof(float complex),nhx,out);
+	    sf_complexwrite(dat,nhx,out);
 	} else {
 	    offruffp_init (h0, nh, dh, nx, dx, w, 0);
 	    sf_csolver (simple? hderp_lop : offruffp_lop, sf_ccgstep, nhx, nhx,
 			slice, dat, niter, "x0", slice, "known", mask, "end");
 	    sf_ccgstep_close();
 
-	    sf_write(slice,sizeof(float complex),nhx,out);
+	    sf_complexwrite(slice,nhx,out);
 	}
     }
 

@@ -39,9 +39,9 @@ int main(int argc, char* argv[])
     halfint_init (adj, inv, n1, rho);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read (pp,sizeof(float),n1,in);
+	sf_floatread (pp,n1,in);
 	halfint (pp);
-	sf_write (pp,sizeof(float),n1,out);
+	sf_floatwrite (pp,n1,out);
     }
 
     sf_close();

@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
 	if(ix < nx && it < nt) datr[ix][it] += 1.;
     }
 
-    sf_write (datr[0],sizeof(float),nt*nx,sag);
+    sf_floatwrite (datr[0],nt*nx,sag);
 
     exit (0);
 }
@@ -84,4 +84,4 @@ int main(int argc, char* argv[])
  *	v0 * (exp( alpha * tmax/2.) - 1) /alpha =  zmax = dz * (nz+1)
  */
 
-/* 	$Id: Msag.c,v 1.2 2003/09/29 14:34:55 fomels Exp $	 */
+/* 	$Id: Msag.c,v 1.3 2004/04/19 21:51:16 fomels Exp $	 */

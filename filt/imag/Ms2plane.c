@@ -56,7 +56,7 @@ int main (int argc, char* argv[])
 	    z = s0*sin2a - 4.*g*y*sina4;
 
 	    if (s0*s0+g*y*z < 0.) {
-		sf_write(trace,sizeof(float),n1,out);
+		sf_floatwrite(trace,n1,out);
 		continue;
 	    }
 	    
@@ -69,12 +69,12 @@ int main (int argc, char* argv[])
 	sf_warning("depth=%g slowness=%g",z,s);
 
 	if (z < z0) {
-	    sf_write(trace,sizeof(float),n1,out);
+	    sf_floatwrite(trace,n1,out);
 	    continue;
 	}
 
 	if (s*s*cosa2 - 2.*g*z < 0.) {
-	    sf_write(trace,sizeof(float),n1,out);
+	    sf_floatwrite(trace,n1,out);
 	    continue;
 	}
 
@@ -91,10 +91,10 @@ int main (int argc, char* argv[])
 	    trace[i1+1] = w/t;
 	}
 
-	sf_write(trace,sizeof(float),n1,out);
+	sf_floatwrite(trace,n1,out);
     }
 
     exit(0);
 }
 
-    
+/* 	$Id: Ms2plane.c,v 1.2 2004/04/19 21:51:16 fomels Exp $	 */

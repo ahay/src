@@ -42,7 +42,7 @@ int main (int argc, char* argv[])
 
   size = sf_input("size");
   siz = sf_intalloc2 (nx,nz);
-  sf_read(siz[0],sizeof(int),nx*nz,size);
+  sf_intread(siz[0],nx*nz,size);
   sf_fileclose(size);
 
   nt = 0;
@@ -72,10 +72,10 @@ int main (int argc, char* argv[])
       nt2 = siz[iz][ix];
 
       for (it=0; it < nt2; it++) {
-	sf_read(xztp, sizeof(float), four, grid);
-	tx[it] = xztp[2];
-	px[it] = xztp[plane];
-	zx[it] = xztp[1];
+	  sf_floatread(xztp, four, grid);
+	  tx[it] = xztp[2];
+	  px[it] = xztp[plane];
+	  zx[it] = xztp[1];
       }
 
       tfnt = eno_init (nw, nt2);
@@ -112,7 +112,7 @@ int main (int argc, char* argv[])
 	  tx[it] = -1.;
 	}
       }
-      sf_write (tx,sizeof(float),nt,out);
+      sf_floatwrite (tx,nt,out);
       
       eno_close (tfnt);
       eno_close (pfnt);
@@ -145,4 +145,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterp2.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Minterp2.c,v 1.6 2004/04/19 21:51:16 fomels Exp $	 */

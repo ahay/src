@@ -53,10 +53,11 @@ int main(int argc, char* argv[])
 		trace[ix+nx-1] = -1.;
 	    }
 	}
-	sf_write(trace,sizeof(float),2*nx-1,angle);
+	sf_floatwrite(trace,2*nx-1,angle);
     }
 
     exit(0);
 }
 
-    
+/* 	$Id: Mangle2.c,v 1.2 2004/04/19 21:51:16 fomels Exp $	 */
+

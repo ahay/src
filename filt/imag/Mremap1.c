@@ -64,18 +64,18 @@ int main(int argc, char* argv[])
     map = eno_init (order,n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(tin,sizeof(float),n1,in);
+	sf_floatread(tin,n1,in);
 	eno_set (map,tin);
 
 	for (i1=0; i1 < nn1; i1++) {
 	    f = (oo1+i1*dd1-o1)/d1; i=f; f -= i;
 	    eno_apply(map, i, f, tout+i1, &f1, FUNC);
 	}
-	sf_write(tout,sizeof(float),nn1,out);
+	sf_floatwrite(tout,nn1,out);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Mremap1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mremap1.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */

@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     ent = eno_init (order, n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_read(trace,sizeof(float),n1,in);
+	sf_floatread(trace,n1,in);
 
 	eno_set (ent, trace); 
 	for (i1=0; i1 < n1; i1++) {
@@ -39,12 +39,12 @@ int main(int argc, char* argv[])
 	    trace[i1] = f1/d1; 
 	}
 
-	sf_write(trace,sizeof(float),n1,der);
+	sf_floatwrite(trace,n1,der);
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: Menoder1.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Menoder1.c,v 1.5 2004/04/19 21:51:16 fomels Exp $	 */
 

@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     place = sf_floatalloc2(5,na);
     siz  = sf_intalloc(nx);
 
-    sf_read(slow,sizeof(float),nx*nz,vel);
+    sf_floatread(slow,nx*nz,vel);
 
     if (isvel) {
       for(ix = 0; ix < nx*nz; ix++){
@@ -120,14 +120,14 @@ int main(int argc, char* argv[])
 	
 	    for (ia=0; ia < na2; ia++) {
 	      if (ia < na)
-		sf_write (place[ia],sizeof(float),5,outp);
+		  sf_floatwrite (place[ia], 5, outp);
 
-	      sf_write(out[ia], sizeof(float), 5, grid);
+	      sf_floatwrite(out[ia], 5, grid);
 	    }
 	    free (out);
 	}
 	
-	sf_write (siz,sizeof(int),nx,size);
+	sf_intwrite (siz,nx,size);
     }
 
     sf_close();
@@ -153,4 +153,4 @@ static void raytrace (float q, void* xv, float* xzt) {
     xzt[4] = cell_p2a(p)*180./SF_PI;
 }
 
-/* 	$Id: Mtrace2.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: Mtrace2.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */
