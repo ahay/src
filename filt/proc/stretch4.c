@@ -46,10 +46,11 @@ map4 stretch4_init (int n1, float o1, float d1, int nd, int nw, float eps)
 
 void stretch4_define (map4 str, float* coord)
 {
-    int id, ix, i1, n1, i, j;
+    int id, ix, i1, n1, nw, i, j, k;
     float rx, d, o[3], *w;
     
-    n1=str->nt;
+    n1 = str->nt;
+    nw = str->nw;
 
     d = str->eps*2./3.;
     o[0] = -str->eps/8.;
@@ -68,39 +69,42 @@ void stretch4_define (map4 str, float* coord)
 	rx = (coord[id] - str->t0)/str->dt; 
 	ix = floorf(rx); 
 	rx -= ix;
-	if (ix < -1 - str->nw/2 || ix > n1 - str->nw/2 - 4) {
+	if (ix < -1 - nw/2 || ix > n1 - nw/2 - 4) {
 	    str->m[id] = true; 
 	    continue;
 	}
-	str->x[id] = ix; 
+
+	str->x[id] = ix + nw + ; 
 	str->m[id] = false; 
 	w = str->w[id];
 
 	spline4_int(rx,w);
+
+	k = ix + nw + 1;
 	
 	for (i=0; i < 4; i++) {
-	    str->diag[ix+i] += w[i] * w[i];
+	    str->diag[k+i] += w[i] * w[i];
 	    for (j=0; j < 3-i; j++) {
-		str->offd[j][ix+i] += w[i] * w[i+j+1];
+		str->offd[j][k+i] += w[i] * w[i+j+1];
 	    }
 	}
     }
 
     banded_define (str->slv, str->diag, str->offd);
     
-    str->ib = -1;
+    str->ib = -2;
     for (i1 = 0; i1 < n1; i1++) {
 	if (str->diag[i1] != d) {
-	    str->ib = i1-1; 
+	    str->ib = i1-2; 
 	    break;
 	}
     }
     
 
-    str->ie = n1;
+    str->ie = n1+2;
     for (i1 = n1-1; i1 >= 0; i1--) {
 	if (str->diag[i1] != d) {
-	    str->ie = i1+1;
+	    str->ie = i1+3;
 	    break;
 	}
     }
@@ -126,7 +130,7 @@ void stretch4_apply (map4 str, float* ord, float* mod)
 	w = str->w[id]; 
 	
 	for (i=0; i < 4; i++) {
-	    k = it + nw/2 + i + 1;
+	    k = it + nw + i + 1;
 	    mm[k] += w[i]*ord[id];
 	}
     }    
@@ -162,5 +166,5 @@ void stretch4_close (map4 str)
     free (str);
 }
 
-/* 	$Id: stretch4.c,v 1.2 2004/04/03 02:41:17 fomels Exp $	 */
+/* 	$Id: stretch4.c,v 1.3 2004/04/12 15:40:43 fomels Exp $	 */
 

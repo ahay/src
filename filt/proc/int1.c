@@ -35,7 +35,7 @@ void  int1_init (float* coord, float o1, float d1, int n1,
 
     for (id = 0; id < nd; id++) {
 	rx = (coord[id] - o1)/d1;
-	i1 = (int) floor(rx + 1. - 0.5*nf);
+	i1 = (int) floorf(rx + 1. - 0.5*nf);
 	rx -= floorf(rx);
    
 	if (i1 > - nf && i1 < n1) {
@@ -81,4 +81,4 @@ void int1_close (void)
     }
 }
 
-/* 	$Id: int1.c,v 1.5 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: int1.c,v 1.6 2004/04/12 15:40:43 fomels Exp $	 */

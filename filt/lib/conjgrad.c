@@ -6,7 +6,7 @@
 #include "error.h"
 
 static int np, nx, nr, nd;
-static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
+static float *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
@@ -34,7 +34,8 @@ void sf_conjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
     verb = verb1;
     hasp0 = hasp01;
 
-    r = sf_floatalloc(nr);    
+    r = sf_floatalloc(nr);  
+    d = sf_floatalloc(nd); 
     sp = sf_floatalloc(np);
     gp = sf_floatalloc(np);
     sx = sf_floatalloc(nx);
@@ -46,6 +47,7 @@ void sf_conjgrad_init(int np1, int nx1, int nd1, int nr1, float eps1,
 void sf_conjgrad_close(void) 
 {
     free (r);
+    free (d);
     free (sp);
     free (gp);
     free (sx);
@@ -54,7 +56,6 @@ void sf_conjgrad_close(void)
     free (gr);
 }
 
-/* if prec != NULL, destroys dat */   
 void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape, 
 		 float* p, float* x, float* dat, int niter) 
 {
@@ -62,10 +63,10 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
     int i, iter;
     
     if (NULL != prec) {
-	prec(false,false,nd,nr,dat,r);
-	for (i=0; i < nr; i++) {
-	    r[i] = - r[i];
+	for (i=0; i < nd; i++) {
+	    d[i] = - dat[i];
 	}
+	prec(false,false,nd,nr,d,r);
     } else {
 	for (i=0; i < nr; i++) {
 	    r[i] = - dat[i];
@@ -75,8 +76,8 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
     if (hasp0) { /* initial p */
 	shape(false,false,np,nx,p,x);
 	if (NULL != prec) {
-	    oper(false,false,nx,nd,x,dat);
-	    prec(false,true,nd,nr,dat,r);
+	    oper(false,false,nx,nd,x,d);
+	    prec(false,true,nd,nr,d,r);
 	} else {
 	    oper(false,true,nx,nr,x,r);
 	}
@@ -101,8 +102,8 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
 	}
 
 	if (NULL != prec) {
-	    prec(true,false,nd,nr,dat,r);
-	    oper(true,true,nx,nd,gx,dat);
+	    prec(true,false,nd,nr,d,r);
+	    oper(true,true,nx,nd,gx,d);
 	} else {
 	    oper(true,true,nx,nr,gx,r);
 	}
@@ -111,8 +112,8 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
 	shape(false,false,np,nx,gp,gx);
 
 	if (NULL != prec) {
-	    oper(false,false,nx,nd,gx,dat);
-	    prec(false,false,nd,nr,dat,gr);
+	    oper(false,false,nx,nd,gx,d);
+	    prec(false,false,nd,nr,d,gr);
 	} else {
 	    oper(false,false,nx,nr,gx,gr);
 	}
@@ -185,3 +186,5 @@ void sf_conjgrad(sf_operator prec, sf_operator oper, sf_operator shape,
 	gnp = gn;
     }
 }
+
+/* 	$Id: conjgrad.c,v 1.4 2004/04/12 15:40:43 fomels Exp $	 */

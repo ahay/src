@@ -11,5 +11,5 @@ def Bay(name,f2=500,n2=1600,f1=400,n1=700):
          dd data_format=native_float |
          window f2=%d n2=%d f1=%d n1=%d |
          reverse which=1 |
-         costaper nw=50
+         costaper nw1=50 nw2=50
          ''' % (f2,n2,f1,n1))

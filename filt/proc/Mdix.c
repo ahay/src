@@ -13,11 +13,12 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nd, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM], n1, n2, i1, i2;
-    float **vr, **vi, **wt, wti;
+    int i, ncycle, niter, nd, dim, n1, n2, i1, i2;
+    int n[SF_MAX_DIM], rect[SF_MAX_DIM];
+    float **vr, **vi, **wt, **p=NULL, wti;
     char key[6];
-    bool diff;
-    sf_file vrms, vint, weight, vout;
+    bool diff, dip;
+    sf_file vrms, vint, weight, vout, slope;
 
     sf_init(argc,argv);
     vrms = sf_input("in");
@@ -34,9 +35,19 @@ int main(int argc, char* argv[])
     if (!sf_getbool("diff",&diff)) diff=false;
     /* if y, apply anisotropic diffusion */
 
-    nd = smoothder_init(dim, rect, n, diff);
+    if (!sf_getbool("dip",&dip)) dip=false;
+    /* if y, apply directional shaping */
+
+    nd = smoothder_init(dim, rect, n, diff, dip);
     n1 = n[0];
     n2 = nd/n1;
+
+    if (dip) {
+	slope = sf_input("slope");
+	p = sf_floatalloc2(n1,n2);
+	sf_read(p[0],sizeof(float),nd,slope);
+	sf_fileclose(slope);
+    }
     
     vr = sf_floatalloc2(n1,n2);
     vi = sf_floatalloc2(n1,n2);
@@ -47,6 +58,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
+
+    if (!sf_getint("ncycle",&ncycle)) ncycle=10;
+    /* number of cycles for anisotropic diffusion */
 
     wti = 0.;
     for (i2=0; i2 < n2; i2++) {
@@ -63,7 +77,13 @@ int main(int argc, char* argv[])
 	}
     }
     
-    smoothder(niter, wt[0], vr[0], vi[0]);
+    if (dip) {
+	smoothdip(niter, p, wt[0], vr[0], vi[0]);
+    } else if (diff) {
+	smoothdiff(niter, ncycle, wt[0], vr[0], vi[0]);
+    } else {
+	smoothder(niter, wt[0], vr[0], vi[0]);
+    }
 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {

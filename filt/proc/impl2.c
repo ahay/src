@@ -7,7 +7,7 @@
 #include "tridiagonal.h"
 #include "quantile.h"
 
-static float a, t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
+static float t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
 static int nstep, n1, n2, n, nclip;
 static bool up;
 static tris slv1, slv2;
@@ -15,6 +15,8 @@ static tris slv1, slv2;
 void impl2_init (float r1, float r2, int n1_in, int n2_in, 
 		 float tau, float pclip, bool up_in)
 {
+    int i;
+
     t1 = (r1*r1-1.)/12.;
     t2 = (r2*r2-1.)/12.;
 
@@ -54,6 +56,10 @@ void impl2_init (float r1, float r2, int n1_in, int n2_in,
 
     sf_warning("%s: nstep=%d tau=(%g,%g) nclip=%d",
 	       __FILE__,nstep,t1, t2,nclip);
+
+    for (i=0; i < n; i++) {
+	w[0][i] = 1.;
+    }
 }
 
 void impl2_close (void)
@@ -75,7 +81,7 @@ void impl2_close (void)
 void impl2_set(float ** x)
 {
     int i;
-    float xsum, wsum;
+    float a, xsum, wsum;
 
     grad9(n1,n2,x,w);
 
@@ -213,5 +219,5 @@ void impl2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
     }
 }
 
-/* 	$Id: impl2.c,v 1.3 2004/04/10 01:23:51 fomels Exp $	 */
+/* 	$Id: impl2.c,v 1.4 2004/04/12 15:40:43 fomels Exp $	 */
 

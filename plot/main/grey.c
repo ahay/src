@@ -23,6 +23,7 @@ int main(int argc, char* argv[])
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
     float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
     bool transp, yreverse, xreverse, allpos, polarity, verb;
+    bool eclip=false, egpow=false;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
     char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
@@ -75,11 +76,13 @@ int main(int argc, char* argv[])
 	panel = NO_GAIN; /* no need for gain */
 	
 	phalf=85.;
+	egpow = false;
 	if (!sf_getfloat("gpow",&gpow)) {
 	    gpow=1.;
 	    /* raise data to gpow power for display */
 	} else if (gpow <= 0.) {
 	    gpow=0.;
+	    egpow = true;
 	    sf_getfloat("phalf",&phalf);
 	    /* percentage for estimating gpow */
 	    if (phalf <=0. || phalf > 100.)
@@ -88,7 +91,8 @@ int main(int argc, char* argv[])
 	}
 	
 	pclip=99.;
-	if (!sf_getfloat("clip",&clip)) {
+	eclip = !sf_getfloat("clip",&clip);
+	if (eclip) {
 	    /* data clip */
 	    clip = 0.;
 	    sf_getfloat("pclip",&pclip);
@@ -203,6 +207,8 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {	
 	if (!charin) {
 	    if (GAIN_EACH == panel) {
+		if (eclip) clip=0.;
+		if (egpow) gpow=0.;
 		gainpar (in,data,n1,n2,gainstep,
 			 pclip,phalf,&clip,&gpow,pbias,n3,0);
 		if (verb) sf_warning("clip=%g gpow=%g",clip,gpow);
@@ -210,7 +216,7 @@ int main(int argc, char* argv[])
 		sf_read(data[0],sizeof(float),n1*n2,in);
 	    }
 	    
-	    if (1 == panel || 0==i3) { 
+	    if (1 == panel || GAIN_EACH == panel || 0==i3) { 
 		/* initialize the conversion table */
 		if(!allpos) { /* negative and positive values */
 		    for (it=1; it<=TSIZE/2; it++) {
@@ -315,4 +321,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.18 2004/04/02 02:23:22 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.19 2004/04/12 15:40:43 fomels Exp $	 */

@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
     gaussshape2_init(n1,n2);
     sf_conjgrad_init(n12, n12, n12, n12, eps, 1.e-9, true, false);
 
-    if (!shape) gaussshape2_set2(a);
+    gaussshape2_set2(a);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_read(mm,sizeof(float),n12,in);
@@ -84,8 +84,12 @@ int main(int argc, char* argv[])
 	    }
 	}
  
-	if (shape) gaussshape2_set(a, mm, 100);
 	sf_conjgrad(NULL, mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+
+	if (shape) {
+	    gaussshape2_set(a, mm, 100);
+	    sf_conjgrad(NULL, mask_lop, freqfilt2_lop, pp, mm, mm, niter);
+	}
 
 	if (force) {
 	    for (i=0; i < n12; i++) {
@@ -100,4 +104,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mmiss2.c,v 1.4 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id: Mmiss2.c,v 1.5 2004/04/12 15:40:43 fomels Exp $	 */

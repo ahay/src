@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     /* trace extension */
     n[0] += 2*nw;
 
-    nd = smoothder_init(dim, rect,n,false);
+    nd = smoothder_init(dim, rect,n,false,false);
     n1 = n[0];
     n2 = nd/n1;
 
