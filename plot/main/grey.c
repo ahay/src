@@ -125,7 +125,7 @@ int main(int argc, char* argv[])
 	if (i3 > 0) vp_erase (); 	
 	if (1 == panel) { /* gain each */
 	    gainpar (in,data,n1,n2,gainstep,
-		     o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,i3+1);
+		     o1,pclip,phalf,&clip,&gpow,pbias,d1,n3,i3);
 	    sf_warning("clip=%g gpow=%g",clip,gpow);
 	} else {
 	    sf_read(data[0],sizeof(float),n1*n2,in);
