@@ -177,7 +177,7 @@ int main (int argc, char **argv)
 
 	    for(ik=0; ik<nk; ik++) {
 		if (ik==0) {
-		    for (it=0; it<nt; it++) {
+		    for (it=0; it<nw; it++) {
 			cq[it] = 0.;
 		    }
 		} else if (both) {
@@ -186,16 +186,20 @@ int main (int argc, char **argv)
 			/* include FFT scaling */
 			cq[it] = (it%2 ? -cp[ik][it] : cp[ik][it])/nw;
 		    }
+		    /* Pad with zeros */
+		    for (it=nt; it<nw; it++) {
+			cq[it] = 0.;
+		    }  
 		    sf_pfacc(1,nw,cq);
 		} else {
 		    for (it=0; it<nt; it++) {
 			cq[it] = cp[ik][it];
 		    }
+		    /* Pad with zeros */
+		    for (it=nt; it<nw; it++) {
+			cq[it] = 0.;
+		    }  
 		}
-		/* Pad with zeros */
-		for (it=nt; it<nw; it++) {
-		    cq[it] = 0.;
-		}  
 	
 		sf_write(cq,sizeof(float complex),nw,out); 
 	    }

@@ -5,8 +5,9 @@
 int main(int argc, char* argv[])
 {
     tris slv;
-    int nt, ns, nx, ix, is, it, *ipick;
-    float *trace, *pick, *ampl, *diag, *offd, s0, ds, eps, lam, t, asum;
+    int nt, ns, nx, ix, is, it, iter, niter;
+    float **slice, *pick, *pick0, *ampl, *diag, *offd;
+    float s0, ds, eps, lam, t, asum;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -23,10 +24,11 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getfloat("lam",&lam)) lam=0.01;
+    if (!sf_getint("niter",&niter)) niter=5;
 
-    trace = sf_floatalloc(nt);
+    slice = sf_floatalloc2(nt,ns);
     pick = sf_floatalloc(nt);
-    ipick = sf_intalloc(nt);
+    pick0 = sf_floatalloc(nt);
     offd = sf_floatalloc(nt);
     diag = sf_floatalloc(nt);
     ampl = sf_floatalloc(nt);
@@ -38,47 +40,74 @@ int main(int argc, char* argv[])
     }
 
     for (ix = 0; ix < nx; ix++) {
-	for (it = 0; it < nt; it++) {
-	    ampl[it] = 0.;
-	    ipick[it] = 0;
-	}
-	for (is = 0; is < ns; is++) {
-	    sf_read (trace,sizeof(float),nt,in);
+	sf_read (slice[0],sizeof(float),nt*ns,in);
 
-	    for (it = 0; it < nt; it++) {
-		t = trace[it]*trace[it];
-		if (t > ampl[it]) {
-		    ampl[it] = t;
-		    ipick[it] = is;
+	if (ix > 0) {
+	    for (it = 0; it < nt; it++) { /* previous trace */
+		pick0[it] = pick[it];
+	    }
+	}
+
+	for (iter=0; iter < niter; iter++) {
+	    if (0==iter) { /* pick blind maximum */
+		for (it = 0; it < nt; it++) {
+		    ampl[it] = 0.;
+		    pick[it] = s0+0.5*(ns-1)*ds;
+		}
+
+		for (is = 0; is < ns; is++) {
+		    for (it = 0; it < nt; it++) {
+			t = slice[is][it];
+			t *= t;
+			if (t > ampl[it]) {
+			    ampl[it] = t;
+			    pick[it] = s0+is*ds;
+			}
+		    }
+		}
+	    } else {
+		for (it = 0; it < nt; it++) {
+		    /* nearest neighbor interpolation */
+		    is = 0.5+(pick[it]-s0)/ds;
+		    if (is < 0) {
+			is=0;
+			pick[it]=s0;
+		    } else if (is > ns-1) {
+			is=ns-1;
+			pick[it] = s0 + (ns-1)*ds;
+		    }
+		    t = slice[is][it];
+		    ampl[it] = t*t;
 		}
 	    }
-	}
-	    
-	/* normalize */
-	asum = 0.;
-	for (it = 0; it < nt; it++) {
-	    ampl[it] *= ampl[it];
-	    asum += ampl[it];
-	}
-	for (it = 0; it < nt; it++) {
-	    t = ampl[it]/asum;
-	    diag[it] = 2.*eps + t;
-	    pick[it] = t*(s0+ipick[it]*ds);
-	}
-	/* boundary conditions */
-	diag[0] -= eps;
-	diag[nt-1] -= eps;
 
-	if (ix > 0) { /* lateral smoothing */
+	    /* normalize amplitudes */
+	    asum = 0.;
 	    for (it = 0; it < nt; it++) {
-		diag[it] += lam;
-		pick[it] += lam*pick[it];
+		ampl[it] *= ampl[it];
+		asum += ampl[it];
 	    }
-	}
-	
-	tridiagonal_define (slv,diag,offd);
-	tridiagonal_solve (slv, pick);    
-	sf_write (pick,sizeof(float),nt,out);
+	    for (it = 0; it < nt; it++) {
+		t = ampl[it]/asum;
+		diag[it] = 2.*eps + t;
+		pick[it] *= t;
+	    }
+	    /* boundary conditions */
+	    diag[0] -= eps;
+	    diag[nt-1] -= eps;
+	    
+	    if (ix > 0) { /* lateral smoothing */
+		for (it = 0; it < nt; it++) {
+		    diag[it] += lam;
+		    pick[it] += lam*pick0[it];
+		}
+	    }
+	    
+	    tridiagonal_define (slv,diag,offd);
+	    tridiagonal_solve (slv, pick);    
+	} /* iterations */
+
+	sf_write (pick,sizeof(float),nt,out);	
     }
 
     exit (0);

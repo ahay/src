@@ -10,7 +10,7 @@ LDFLAGS = -L../rsf -lrsf -lm -lnsl
 DEPEND = -xM1
 DEPEND = -MM
 
-PROGS = ai2refl bandpass bin bin1 blindpick depth2time dip envelope \
+PROGS = ai2refl bandpass bin bin1 blindpick depth2time dip dipfilter envelope \
 	fft1 fft2 fft3 helicon hole invbin1 invwarp nmo noise \
 	pef pwd randrefl reshape ricker sigmoid \
 	smooth smoothder smoothfix spectra stretch2 taup \
@@ -23,6 +23,7 @@ bin1 = int1 interp adjnull
 blindpick = tridiagonal
 depth2time = stretch tridiagonal
 dip = dip3 divide1 allp3 tridiagonal apfilt
+dipfilter = empty
 envelope = triangle
 fft1 = empty
 fft2 = empty
