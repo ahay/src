@@ -288,7 +288,7 @@ bool sf_simtab_getints (sf_simtab table, const char* key,
 			/*@out@*/ int *par,size_t n)
 {    
     size_t i;
-    long num, j;
+    long num, j=0;
     char *val, *cnum, *fval, *fvali;
 
     val = sf_simtab_get(table,key);
