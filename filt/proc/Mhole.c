@@ -1,31 +1,4 @@
 program Hole
-!!$=head1 NAME
-!!$
-!!$Hole - Punch ellipsoidal hole in 2-D data
-!!$
-!!$=head1 SYNOPSIS
-!!$
-!!$Hole < data.H > hole.H
-!!$
-!!$=head1 DESCRIPTION
-!!$
-!!$Hole's dimensions and orientation are currently fixed
-!!$
-!!$=head1 PARAMETERS 
-!!$
-!!$=over 3
-!!$
-!!$=item from history
-!!$
-!!$B<integer> I<n1, n2>
-!!$
-!!$=back
-!!$
-!!$=head1 SEE ALSO
-!!$
-!!$L<Make>
-!!$
-!!$=cut
   use sep
 
   implicit none

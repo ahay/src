@@ -1,4 +1,5 @@
 #include <math.h>
+#include <stdio.h>
 
 #include <rsf.h>
 
@@ -54,6 +55,7 @@ int main (int argc, char* argv[])
     float t0, dt, fo[3]={20.,8.,5.};
     float *tim, *pp, *ps, *ss, *tpp, *tss, *tps;
     float *ts, *dtpp, *tmean, *p2ss, *p2ps, *dtss, *dtps, *rs;
+    char* func;
     sf_file mod, vpvs;
 
     sf_init (argc,argv);
@@ -94,6 +96,8 @@ int main (int argc, char* argv[])
     dtss = sf_floatalloc (nr);
     dtps = sf_floatalloc (nr);
 
+    if (NULL == (func = sf_getstring("func"))) func="const";
+ 
     /* ts - reflector positions */    
     srand(2003);
 
@@ -112,8 +116,17 @@ int main (int argc, char* argv[])
     /* p2ss - Vp/Vs ratio as a function of time */
     for (it=0; it < nr; it++) {
 	tmean[it]=ts[it]-0.5*dtpp[it];
-	p2ss[it]=1./(0.12+(0.5*tmean[it]));
+	switch (func[0]) {
+	    case 'h':
+		p2ss[it]=1./(0.12+(0.5*tmean[it]));
+		break;
+	    case 'c':
+	    default:
+		p2ss[it]=2.;
+	}
     }
+
+    free (func);
 
     sf_write(tmean,sizeof(float),nr,vpvs);
     sf_write(p2ss,sizeof(float),nr,vpvs);
@@ -129,7 +142,9 @@ int main (int argc, char* argv[])
     randn (nr, rs);
     for (it=0; it < nr; it++) {
 	rs[it] = 0.1/nr + 0.05*rs[it];
+/*	fprintf(stderr,"%g ",rs[it]); */
     }
+/*    fprintf(stderr,"\n"); */
 
     cumsum(nr,dtpp,tpp);
     cumsum(nr,dtps,tps);
