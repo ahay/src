@@ -48,7 +48,8 @@ for prog in mains:
 	    for stretch in ('log','t2','lmo','nmo','rad'):
                 copy = string.replace(str(main[0]),'stretch',stretch+'stretch')
                 env.InstallAs(os.path.join(bindir,copy),main[0])
-	        docmerge = configure.docextra(docmerge,'sf'+prog,copy)
+		doc = os.path.splitext(copy)[0]
+	        docmerge = configure.docextra(docmerge,'sf'+prog,doc)
 
 for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',
              'matmult','cmatmult','cburg','impl2','trisl']:
