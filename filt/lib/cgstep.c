@@ -14,7 +14,7 @@ static double dotprod (int n, const float* x, const float* y);
 
 /* cgstep
    --------
-   A step of Claerbout's conjugate-gradient interation.
+   A step of Claerbout's conjugate-gradient iteration.
    nx - model size
    ny - data size
    x[nx] - current model
@@ -90,5 +90,5 @@ static double dotprod (int n, const float* x, const float* y) {
     return prod;
 }
 
-/* 	$Id: cgstep.c,v 1.1 2003/10/21 15:12:39 fomels Exp $	 */
+/* 	$Id: cgstep.c,v 1.2 2004/03/13 06:00:15 fomels Exp $	 */
 
