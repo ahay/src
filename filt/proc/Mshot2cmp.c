@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     oy = os + oh;
     ny = ns + nh - 1;
 
-    sf_putint(out,"n2",(nh+1)/type);
+    sf_putint(out,"n2",(nh+type-1)/type);
     sf_putfloat(out,"d2",type*dh);
 
     sf_putint(out,"n3",ny);

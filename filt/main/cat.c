@@ -135,7 +135,7 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 {
     size_t i;
     int ni, id;
-    float f, fi;
+    float o, d, di, oi;
     char key[3];
     const float tol=1.e-5;
     
@@ -149,19 +149,22 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
 		sf_error("%s mismatch: need %d",key,n[id-1]);
 	    if (id == axis) naxis[i] = ni;
 	    (void) snprintf(key,3,"d%d",id);
-	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || 
-		 (id != axis && fabsf(fi-f) > tol*fabsf(f))))
-		sf_warning("%s mismatch: need %g",key,f);
+	    if (sf_histfloat(in[0],key,&d)) {
+		if (!sf_histfloat(in[i],key,&di) || 
+		    (id != axis && fabsf(di-d) > tol*fabsf(d)))
+		    sf_warning("%s mismatch: need %g",key,d);
+	    } else {
+		d = 1.;
+	    }
 	    (void) snprintf(key,3,"o%d",id);
-	    if (sf_histfloat(in[0],key,&f) && 
-		(!sf_histfloat(in[i],key,&fi) || 
-		 (id != axis && fabsf(fi-f) > tol*fabsf(f))))
-		sf_warning("%s mismatch: need %g",key,f);
+	    if (sf_histfloat(in[0],key,&o) && 
+		(!sf_histfloat(in[i],key,&oi) || 
+		 (id != axis && fabsf(oi-o) > tol*fabsf(d))))
+		sf_warning("%s mismatch: need %g",key,o);
 	}
 	if (axis > dim) naxis[i]=1;
     }
 }
 
-/* 	$Id: cat.c,v 1.5 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: cat.c,v 1.6 2004/03/19 06:10:54 fomels Exp $	 */
 
