@@ -27,7 +27,7 @@ The program works with 2-D data.
 
 int main(int argc, char* argv[])
 {
-    int i, n1, n2, n12, n3, n123, niter, nliter, iter;
+    int i, n1, n2, n12, n3, nk, n12k, niter, nliter, iter, i3;
     float eps, *d, *s, ***pp, *w=NULL, *p=NULL;
     bool verb;
     sf_file in, out, dips, weight=NULL;
@@ -39,15 +39,19 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
+    n3 = sf_leftsize(in,2);
 
     if (!sf_histint(dips,"n1",&i) || i != n1) sf_error("Wrong n1= in dips");
     if (!sf_histint(dips,"n2",&i) || i != n2) sf_error("Wrong n2= in dips");
-    if (!sf_histint(dips,"n3",&n3)) sf_error("No n3= in dips");
+    if (sf_histint(dips,"n4",&i) && i != n3) sf_error("Wrong n4= in dips");
 
+    if (!sf_histint(dips,"n3",&nk)) sf_error("No n3= in dips");
+    sf_putint (out,"n3",nk);
+    sf_putint (out,"n4",n3);
+    
     n12 = n1*n2;
-    n123 = n12*n3;
-    sf_putint (out,"n3",n3);
-
+    n12k = n12*nk;
+    
     if (!sf_getint ("niter",&niter)) niter=50;
     /* maximum number of iterations */
 
@@ -60,54 +64,60 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
 
-    s = sf_floatalloc(n123);
+    s = sf_floatalloc(n12k);
     d = sf_floatalloc(n12);
-    pp = sf_floatalloc3(n1,n2,n3);
+    pp = sf_floatalloc3(n1,n2,nk);
 
     if (nliter > 1) {
-	w = sf_floatalloc(n123);
-	p = sf_floatalloc(n123);
+	w = sf_floatalloc(n12k);
+	p = sf_floatalloc(n12k);
 
 	if (NULL != sf_getstring("weight")) {
 	    weight = sf_output("weight"); 
-	    sf_putint(weight,"n3",n3);
+	    sf_putint(weight,"n3",nk);
+	    sf_putint(weight,"n4",n3);
 	}
     }
 
-    sf_floatread (d,n12,in);
-    sf_floatread (pp[0][0],n123,dips);
-    
-    predk_init(n3,n1,n2,0.0001,pp);
-    copyk_init(n3,n12);
+    predk_init(nk,n1,n2,0.0001,pp);
+    copyk_init(nk,n12);
 
-    if (1 == nliter) {
-	sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
-			n123,n123,n12,s,d,niter,eps,"verb",verb,"end");
-    } else {
-	for (i=0; i < n123; i++) {
-	    w[i] = 1.;
-	}
-	for (iter=0; iter < nliter; iter++) {
+    for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("slice %d of %d",i3+1,n3);
+
+	sf_floatread (d,n12,in);
+	sf_floatread (pp[0][0],n12k,dips);
+	
+	if (1 == nliter) {
 	    sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
-			    n123,n123,n12,s,d,niter,eps,
-			    "verb",verb,"mwt",w,"xp",p,"end");
+			    n12k,n12k,n12,s,d,niter,eps,"verb",verb,"end");
 	    sf_cgstep_close();
-
-	    if (iter < nliter-1) {
-		for (i=0; i < n123; i++) {
-		    w[i] = fabsf(p[i]); /* "Cauchy" weight */
-		}	    
-	    } else {
-		for (i=0; i < n123; i++) {
-		    w[i] *= p[i];
+	} else {
+	    for (i=0; i < n12k; i++) {
+		w[i] = 1.;
+	    }
+	    for (iter=0; iter < nliter; iter++) {
+		sf_solver_prec (copyk_lop,sf_cgstep,predk_lop,
+				n12k,n12k,n12,s,d,niter,eps,
+				"verb",verb,"mwt",w,"xp",p,"end");
+		sf_cgstep_close();
+		
+		if (iter < nliter-1) {
+		    for (i=0; i < n12k; i++) {
+			w[i] = fabsf(p[i]); /* "Cauchy" weight */
+		    }	    
+		} else {
+		    for (i=0; i < n12k; i++) {
+			w[i] *= p[i];
+		    }
 		}
 	    }
+	    
+	    if (NULL != weight) sf_floatwrite(w,n12k,weight);
 	}
 	
-	if (NULL != weight) sf_floatwrite(w,n123,weight);
+	sf_floatwrite(s,n12k,out);
     }
-
-    sf_floatwrite(s,n123,out);
 
     exit(0);
 }

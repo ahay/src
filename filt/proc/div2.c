@@ -32,7 +32,8 @@ static bool gauss;
 void div2_init(int n1, int n2     /* data dimensions */, 
 	       float f1, float f2 /* smoothing */, 
 	       int niter1         /* number of iterations */, 
-	       bool gauss1        /* if exact gaussian */)
+	       bool gauss1        /* if exact gaussian */,
+	       bool verb          /* verbosity flag */)
 /*< initialize >*/ 
 {
     n = n1*n2;
@@ -44,7 +45,7 @@ void div2_init(int n1, int n2     /* data dimensions */,
     } else {
 	triangle2_init((int) f1, (int) f2, n1, n2);
     }
-    sf_conjgrad_init(n, n, n, n, 1., 1.e-6, true, false);
+    sf_conjgrad_init(n, n, n, n, 1., 1.e-6, verb, false);
     p = sf_floatalloc (n);
 }
 

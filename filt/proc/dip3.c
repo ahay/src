@@ -29,12 +29,10 @@
 
 static float *u1, *u2, *dp, *p0;
 static int n, n1, n2, n3, nn[3];
-static bool sign;
 
-void dip3_init(int m1, int m2, int m3 /* dimensions */, 
-	       int* rect              /* smoothing radius [3] */, 
-	       int niter              /* number of iterations */, 
-	       bool sign1             /* to keep sign */)
+void dip3_init(int m1, int m2, int m3       /* dimensions */, 
+	       int* rect                    /* smoothing radius [3] */, 
+	       int niter                    /* number of iterations */)
 /*< initialize >*/
 {
     n1=m1;
@@ -52,7 +50,6 @@ void dip3_init(int m1, int m2, int m3 /* dimensions */,
     nn[2]=n3;
 
     divn_init (3, n, nn, rect, niter);
-    sign = sign1;
 }
 
 void dip3_close(void)
@@ -64,18 +61,19 @@ void dip3_close(void)
     divn_close();
 }
 
-void dip3(int dip    /* 1 - inline, 2 - crossline */, 
-	  int niter  /* number of nonlinear iterations */, 
-	  int nw     /* filter size */, 
-	  int nj     /* filter stretch for aliasing */, 
-	  bool verb  /* verbosity */, 
-	  float *u   /* input data */, 
-	  float* p   /* output dip */, 
-	  bool* mask /* input mask for known data */)
+void dip3(int dip                 /* 1 - inline, 2 - crossline */, 
+	  int niter               /* number of nonlinear iterations */, 
+	  int nw                  /* filter size */, 
+	  int nj                  /* filter stretch for aliasing */, 
+	  bool verb               /* verbosity */, 
+	  float *u                /* input data */, 
+	  float* p                /* output dip */, 
+	  bool* mask              /* input mask for known data */,
+	  float pmin, float pmax  /* minimum and maximum dip */)
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float mean, usum, usum2, psum, ui, dpi, pi, lam;
+    float mean, usum, usum2, psum, ui, pi, lam;
     allpass ap;
  
     ap = allpass_init (nw,nj,n1,n2,n3,p);
@@ -129,16 +127,10 @@ void dip3(int dip    /* 1 - inline, 2 - crossline */,
 	lam = 1.;
 	for (k=0; k < 8; k++) {
 	    for(i=0; i < n; i++) {
-		dpi = lam*dp[i];
-		if (sign) {
-		    pi = p0[i];
-		    /* dip is nonzero and we keep its sign */ 
-		    if (fabsf(pi) > FLT_EPSILON && dpi/pi >= -1.) 
-			p[i] = p0[i]*(1.+dpi/pi);
-		    /* otherwise we don't change it */
-		} else {			
-		    p[i] = p0[i]+dpi;
-		}		
+		pi = p0[i]+lam*dp[i];
+		if (pi < pmin) pi=pmin;
+		if (pi > pmax) pi=pmax;
+		p[i] = pi;
 	    }
 	    if (dip == 1) {
 		allpass1 (false, ap, u,u2);

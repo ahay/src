@@ -181,6 +181,7 @@ int main(int argc, char* argv[])
 	    if ('l' == rule[0] || 'n' == rule[0] || 'r' == rule[0]) {
 		h = h0+i2*dh + (dh/CDPtype)*(i3%CDPtype);
 		if ('n' == rule[0]) h *= h;
+		if ('l' == rule[0]) h = fabsf(h);
 		if (inv) h = -h;
 	    } 
 

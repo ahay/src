@@ -22,7 +22,6 @@ w1,w2,w3 is window size, p1,p2,p3 is number of patches.
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <stdio.h>
-
 #include <unistd.h>
 
 #include <rsf.h>
@@ -37,9 +36,9 @@ int main (int argc, char *argv[])
     int w123,p123,n123, niter, order, nj1,nj2, i,j, liter, mem,memsize, ip,iw;
     int n[3], rect[3], nw[3], w[3], n4; 
     off_t nall;
-    float p0, q0, *u, *p, win, *tent, *tmp;
+    float p0, q0, *u, *p, win, *tent, *tmp, pmin, pmax, qmin, qmax;
     char key[3], *dipname, *wallname;
-    bool verb, sign, *m1, *m2;
+    bool verb, *m1, *m2;
     sf_file in, out, mask, dip0;
     FILE *wall, *dip;
 
@@ -117,11 +116,17 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
-    if (!sf_getbool("sign",&sign)) sign = false;
-    /* if y, keep dip sign constant */
-    
+    if (!sf_getfloat("pmin",&pmin)) pmin = -FLT_MAX;
+    /* minimum inline dip */
+    if (!sf_getfloat("pmax",&pmax)) pmax = +FLT_MAX;
+    /* maximum inline dip */
+    if (!sf_getfloat("qmin",&qmin)) qmin = -FLT_MAX;
+    /* minimum cross-line dip */
+    if (!sf_getfloat("qmax",&qmax)) qmax = +FLT_MAX;
+    /* maximum cross-line dip */
+
     /* initialize dip estimation */
-    dip3_init(w[0], w[1], w[2], rect, liter, sign);
+    dip3_init(w[0], w[1], w[2], rect, liter);
 
     u = sf_floatalloc(w123);
     p = sf_floatalloc(w123);
@@ -171,7 +176,7 @@ int main (int argc, char *argv[])
 		}
 		
 		/* estimate t-x dip */
-		dip3(1, niter, order, nj1, verb, u, p, m1);
+		dip3(1, niter, order, nj1, verb, u, p, m1, pmin, pmax);
 		
 		/* write weight */
 		ocpatch_lop (ip,false,wall,tmp);
@@ -211,7 +216,7 @@ int main (int argc, char *argv[])
 	    }
 	    
             /* estimate t-y dip */
-	    dip3(2, niter, order, nj2, verb, u, p, m2);
+	    dip3(2, niter, order, nj2, verb, u, p, m2, qmin, qmax);
 	    
 	    
             /* write weight */
@@ -252,7 +257,7 @@ int main (int argc, char *argv[])
 	    }
 	    
 	    /* estimate t-x dip */
-	    dip3(1, niter, order, nj1, verb, u, p, m1);
+	    dip3(1, niter, order, nj1, verb, u, p, m1, pmin, pmax);
 	    
 	    /* write t-x dip */
 	    sf_floatwrite(p,n123,out);
@@ -272,7 +277,7 @@ int main (int argc, char *argv[])
 	}	
 
 	/* estimate t-y dip */
-	dip3(2, niter, order, nj2, verb, u, p, m2);
+	dip3(2, niter, order, nj2, verb, u, p, m2, pmin, pmax);
 	
 	/* write t-y dip */
 	sf_floatwrite(p,n123,out);

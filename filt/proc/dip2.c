@@ -29,13 +29,14 @@
 
 static float **u1, **u2, **dp;
 static int n1, n2, n;
-static const int niter=100;
 static bool sign;
 
-void dip2_init(int nx, int ny     /* dimensions */, 
+void dip2_init(int niter          /* number of linear iterations */,
+	       int nx, int ny     /* dimensions */, 
 	       float fx, float fy /* smoothing */, 
 	       bool sign1         /* to keep sign */, 
-	       bool gauss         /* to use Gaussian smoothing */)
+	       bool gauss         /* to use Gaussian smoothing */,
+	       bool verb          /* verbosity flag */)
 /*< initialize >*/
 {
     n1=nx; n2=ny; n=n1*n2;
@@ -43,7 +44,7 @@ void dip2_init(int nx, int ny     /* dimensions */,
     u2 = sf_floatalloc2(n1,n2);
     dp = sf_floatalloc2(n1,n2);
 
-    div2_init(n1,n2,fx,fy,niter,gauss);
+    div2_init(n1,n2,fx,fy,niter,gauss,verb);
     sign = sign1;
 }
 

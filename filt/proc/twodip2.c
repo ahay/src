@@ -56,7 +56,7 @@ void twodip2_init(int nx, int ny     /* data size */,
 	u1 = sf_floatalloc2(n,1);
 	dp = sf_floatalloc(n);
 	p0 = sf_floatalloc(n);
-	div2_init(n1,n2,fx,fy,niter,gauss);
+	div2_init(n1,n2,fx,fy,niter,gauss,true);
     }
     
     sign = sign1;

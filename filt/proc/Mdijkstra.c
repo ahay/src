@@ -22,9 +22,11 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,ref1,ref2,n12;
+    int n1,n2,ref1,ref2,n12,j,j1,j2,ud,lr,i,nf;
+    int *fin1,*fin2,**jj;
     float **p,**q;
-    sf_file out, cost;
+    char **paths;
+    sf_file out, cost, path;
 
     sf_init(argc,argv);
     cost = sf_input("in");
@@ -36,7 +38,7 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("ref1",&ref1)) ref1=0;
     if (!sf_getint("ref2",&ref2)) ref2=0;
-    /* reference trace */
+    /* source point */
 
     p = sf_floatalloc2(n1,n2);
     q = sf_floatalloc2(n1,n2);
@@ -50,6 +52,57 @@ int main (int argc, char *argv[])
     dijkstra(ref1,ref2,p,q);
 
     sf_floatwrite(dijsktra_cost(),n12,out);
+
+    if (!sf_getint("nf",&nf)) nf=0;
+    /* number of final points */
+
+    if (0 == nf) exit(0);
+ 
+    fin1 = sf_intalloc(nf);
+    fin2 = sf_intalloc(nf);
+    
+    if (!sf_getints("fin1",fin1,nf)) sf_error("Need fin1=");
+    if (!sf_getints("fin2",fin2,nf)) sf_error("Need fin2=");
+    /* final points */
+
+    jj = sf_intalloc2(2,n12);
+
+    paths = (char**) sf_alloc(nf,sizeof(char*));
+    if (!sf_getstrings("paths",paths,nf)) sf_error("Need paths=");
+    
+    for (i=0; i < nf; i++) {
+	dijkstra_start(fin1[i],fin2[i]);
+	j1 = fin1[i];
+	j2 = fin2[i];
+	jj[0][0]=j1;
+	jj[0][1]=j2;
+	for (j=1; dijkstra_next(&ud,&lr); j++) {
+	    if (0==lr) {
+		if (ud > 0) {
+		    j1 -= ud;
+		} else {
+		    j1 -= ud;
+		}
+	    } else if (0==ud) {
+		if (lr > 0) {
+		    j2 -= lr;
+		} else {
+		    j2 -= lr;
+		}
+	    }
+	    jj[j][0]=j1;
+	    jj[j][1]=j2;
+	}
+
+	path = sf_output(paths[i]);
+	sf_settype(path,SF_INT);
+	sf_putint(path,"n1",2);
+	sf_putint(path,"n2",j);
+	sf_putint(path,"n3",1);
+    
+	sf_intwrite(jj[0],j*2,path);
+	sf_fileclose(path);
+    }
 
     exit(0);
 }

@@ -1,21 +1,20 @@
-/* 2-D dip estimation by plane wave destruction.
-*/
+/* 2-D dip estimation by plane wave destruction. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -27,9 +26,9 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main (int argc, char *argv[])
 {
-    int n1,n2, n3, i3, n12, niter, nw, nj, i;
+    int n1,n2, n3, i3, n12, niter, nw, nj, i, liter;
     float eps, lam, p0, **u, **p;
-    bool verb, sign, gauss, **m;
+    bool verb, lverb, sign, gauss, **m;
     sf_file in, out, mask, dip;
 
     sf_init(argc,argv);
@@ -45,13 +44,18 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
+    if (!sf_getint("niter",&liter)) liter=20;
+    /* number of linear iterations */
+
     if (!sf_getfloat("eps",&eps)) eps=1.; 
     /* vertical smoothness */
     if (!sf_getfloat("lam",&lam)) lam=1.; 
     /* horizontal smoothness */
 
-    eps = sqrtf(12*eps+1.);
-    lam = sqrtf(12*lam+1.);
+    if (!sf_getfloat("rect1",&eps)) eps=sqrtf(12*eps+1.); 
+    /* vertical smoothness (overrides eps) */
+    if (!sf_getfloat("rect2",&lam)) lam=sqrtf(12*lam+1.);
+    /* horizontal smoothness (overrides lam) */
 
     if (NULL != sf_getstring("dip0")) {
 	p0 = 0.;
@@ -71,13 +75,15 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
+    if (!sf_getbool("lverb",&lverb)) lverb = false;
+    /* verbosity flag for linear iterations */
     if (!sf_getbool("sign",&sign)) sign = false;
     /* if y, keep dip sign constant */
     if (!sf_getbool("gauss",&gauss)) gauss = true;
     /* if y, use exact Gaussian for smoothing */
 
     /* initialize dip estimation */
-    dip2_init(n1, n2, eps, lam, sign, gauss);
+    dip2_init(liter, n1, n2, eps, lam, sign, gauss, lverb);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
@@ -91,6 +97,8 @@ int main (int argc, char *argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
+	if (verb) sf_warning("cmp %d of %d",i3+1,n3);
+
 	if (NULL != m) {
 	    sf_floatread(u[0],n12,mask);
 	    mask3 (nw, nj, n1, n2, u, m);

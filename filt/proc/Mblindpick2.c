@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     /* if y, use exact Gaussian for smoothing */
 
     if (nx > 1) {
-	div2_init(nt,nx,eps,lam,niter,gauss);
+	div2_init(nt,nx,eps,lam,niter,gauss,true);
     } else {
 	div1_init(nt,eps,niter,gauss);
     }
@@ -131,4 +131,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mblindpick2.c,v 1.8 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
