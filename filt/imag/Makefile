@@ -3,10 +3,12 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = gazdag rays2 symes
+PROGS = cell2 gazdag rays2 sag symes
 
+cell2.OBJS = celltrace cell eno2 eno quadratic
 gazdag.OBJS = gazdag pfafft
-rays2.OBJS = raytracing atela grid3 grid2 eno3 eno2 eno 
+rays2.OBJS = raytracing atela grid3 grid2 eno3 eno2 eno
+sag.OBJS = empty 
 symes.OBJS = symes
 
 MAINS = $(addprefix sf, $(PROGS))
@@ -33,5 +35,5 @@ Makefile.dependencies:: *.c
 	$(CC) $(CFLAGS) $(DEPEND) $^ > Makefile.dependencies
 
 clean:
-	touch sfjunk junk.H junk.lint junk.o junklint 
-	rm sf* *.H *.lint *.o junklint
+	touch sfjunk junk.H junk.lint junk.o junklint Makefile.dependencies
+	rm sf* *.H *.lint *.o junklint Makefile.dependencies
