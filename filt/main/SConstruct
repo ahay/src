@@ -1,4 +1,4 @@
-import os, sys
+import os, sys, string
 sys.path.append('../..')
 import configure
 
@@ -13,6 +13,8 @@ try: # distributed version
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
+    docmerge = configure.docmerge
+    alias = {'cat':'merge','real':'imag','cp':'mv'}
 except: # local version
     root = None
     env = Environment()
@@ -26,18 +28,16 @@ except: # local version
     SConscript('../lib/SConstruct')
 
 mains = Split(progs)
-map(lambda prog: env.Program(prog + '.c'),mains)
 
-if root:
-    docmerge = configure.docmerge
-    sf = env.get('PROGPREFIX','')
+for prog in mains:
+    main = env.Program(prog + '.c')
     
-    env.Install(bindir,map(lambda prog: sf + prog,mains))
-
-    for pair in [['merge','cat'],['imag','real'],['mv','cp']]:
-        [copy,source] = map(lambda x: sf+x,pair)
-        env.InstallAs(os.path.join(bindir,copy),source)
-        docmerge = configure.docextra(docmerge,source,copy)
+    if root:
+        env.Install(bindir,main)
+        if prog in alias.keys():
+	       copy = string.replace(str(main),prog,alias[prog])
+               env.InstallAs(os.path.join(bindir,copy),main)
+#	       docmerge = configure.docextra(docmerge,prog,copy)
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -46,11 +46,13 @@ if root:
     main = 'sfmain.py'
     
     docs = map(lambda prog: env.Doc(prog),mains)
+    env.Depends(docs,'#/rsfdoc.py')
 
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
+ 
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 
 #####################################################################
 
-# 	$Id: SConstruct,v 1.14 2004/06/23 18:30:00 fomels Exp $	
+# 	$Id: SConstruct,v 1.15 2004/06/30 18:28:50 fomels Exp $	
