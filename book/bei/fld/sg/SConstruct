@@ -10,10 +10,8 @@ from rsfproj import *
 ###########################################################################
 set_resdir('../Fig')
 
-Exe('sg.c',LIBS=['rsfplot','rsf','m'])
-Result('geqs', 'sg.exe','./$SOURCE 1 > $TARGET',stdin=0)
-Result('geq2s','sg.exe','./$SOURCE 2 > $TARGET',stdin=0)
-
+Result('geqs', None,'sg 1',prefix=plprefix)
+Result('geq2s',None,'sg 2',prefix=plprefix)
 
 ###########################################################################
 End()
