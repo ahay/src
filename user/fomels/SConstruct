@@ -2,7 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../..')
 import configure
 
-progs = 'angle angle2 green ofilp pick0 tree'
+progs = 'angle angle2 green ofilp pick0 tree warpadd ztrace'
 
 try:  # distributed version
     Import('env')

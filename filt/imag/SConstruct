@@ -3,10 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-cell2 constfdmig2 cup dmo dsr eikonal fincon finstack
-fkamo fkdmo gazdag halfint interp2 interp3 interpt kirchnew kirmod mutter
-preconstkirch rays2 reg2tri remap1 s2ofz shoot2 sstep1
-trace2 tri2reg trirand unif2 voft vofz warpadd ztrace
+cell2 constfdmig2 cup dmo dsr eikonal fincon finstack fkamo fkdmo gazdag
+halfint interp2 interp3 interpt kirchnew kirmod mutter preconstkirch rays2
+reg2tri remap1 s2ofz shoot2 sstep1 trace2 tri2reg trirand unif2 voft vofz
 '''
 
 try:  # distributed version
