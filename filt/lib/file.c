@@ -208,7 +208,7 @@ Should do output after sf_input. >*/
 
     file->pars = sf_simtab_init (tabsize);
 
-    file->pipe = (-1L == ftello(file->stream));
+    file->pipe = (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 
@@ -1047,7 +1047,7 @@ off_t sf_bytes (sf_file file)
     off_t size;
     struct stat buf;
     
-    if (0 == strcmp(file->dataname,"stdin")) return -1L;
+    if (0 == strcmp(file->dataname,"stdin")) return ((off_t) -1);
 
     if (NULL == file->dataname) {
 	st = fstat(fileno(file->stream),&buf);
