@@ -44,8 +44,8 @@ sf_list sf_llist_init(void)
 {
     sf_list l;
 
-    l = sf_alloc(1,sizeof(*l));
-    l->current = sf_alloc(1,sizeof(struct Entry));
+    l = (sf_list) sf_alloc(1,sizeof(*l));
+    l->current = (struct Entry *) sf_alloc(1,sizeof(struct Entry));
     l->depth = 0;
     sf_llist_rewind(l);
 
@@ -69,7 +69,7 @@ void sf_llist_add(sf_list l, float *g, double gn)
 {    
     l->current->g = g;
     l->current->gn = gn;
-    l->current->next = sf_alloc(1,sizeof(struct Entry));
+    l->current->next = (struct Entry *) sf_alloc(1,sizeof(struct Entry));
     l->depth++;
 }
 

@@ -146,9 +146,6 @@ def multicolumn(list, format, cols=4):
         result = result + '</td>'
     return '<table width="100%%" summary="list"><tr>%s</tr></table>' % result
 
-def verbatim(text):
-    return '\\begin{verbatim}%s\\end{verbatim}\n' % string.strip(text)
-
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
         self.type = type
@@ -165,7 +162,7 @@ class rsfpar:
     def latex(self,name):
         tex = '\\underline{%s} & \\textbf{%s%s} & %s & ' % \
               (self.type,name,self.default,self.range)
-        return tex + string.replace(self.desc,'\n','\\newline') + '\\\\ \n'
+        return tex + self.desc + '\\\\ \n'
         
 class rsfprog:
     def __init__(self,name,file,desc=None):
@@ -229,9 +226,10 @@ class rsfprog:
         name = '\\subsection{%s: %s}\n' % (self.name,self.desc)
         contents = contents + name
         if self.snps:
-            contents = contents + verbatim(self.snps)
-        if self.cmts:
-            contents = contents + '\\vspace{-15pt}\n' + verbatim(self.cmts)
+            contents = contents + '\\texttt{%s}\n' % self.snps
+        if self.cmts:            
+            contents = contents + '\\begin{verbatim}%s\\end{verbatim}\n' % \
+                       self.cmts
         pars =  self.pars.keys()
         if pars:
             pars.sort()

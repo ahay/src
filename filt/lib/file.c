@@ -297,7 +297,11 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
 	sf_putint(file,"esize",(int) sizeof(int));
     } else if (NULL != strstr(format,"complex")) {
 	file->type = SF_COMPLEX;
+#ifndef __cplusplus
 	sf_putint(file,"esize",(int) sizeof(float complex));
+#else
+	sf_putint(file,"esize",2 * (int) sizeof(float));
+#endif
     } else {
 	file->type = SF_CHAR;
 	sf_putint(file,"esize",(int) sizeof(char));

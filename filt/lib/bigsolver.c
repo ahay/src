@@ -36,7 +36,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 static const float TOLERANCE=1.e-12;
 
 static float norm (int n, const float* x);
-static float cnorm (int n, const float complex* x);
 
 void sf_solver_prec (sf_operator oper   /* linear operator */, 
 		     sf_solverstep solv /* stepping function */, 
@@ -829,6 +828,8 @@ static float norm (int n, const float* x)
 
 #ifndef __cplusplus
 /*^*/
+
+static float cnorm (int n, const float complex* x);
 
 void sf_csolver (sf_coperator oper        /* linear operator */, 
 		 sf_csolverstep solv      /* stepping function */, 

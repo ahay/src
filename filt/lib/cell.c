@@ -100,7 +100,7 @@ void sf_cell11_intersect2 (float a, float da,
     s1 = (p1[0]*g[0]+p1[1]*g[1])/den;
     if (s1 > 0. && s1 < *sp) {
 	*sp = s1;
-	*jp = 1.;
+	*jp = 1;
     }
     
     p1[0] = -cosf(a-da)-p[0];
@@ -108,7 +108,7 @@ void sf_cell11_intersect2 (float a, float da,
     s1 = (p1[0]*g[0]+p1[1]*g[1])/den;
     if (s1 > 0. && s1 < *sp) {
 	*sp = s1;
-	*jp = -1.;
+	*jp = -1;
     }
 }
 

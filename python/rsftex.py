@@ -599,7 +599,7 @@ def Dir(**kw):
      return apply(default.Dir,[],kw)
 def Paper(paper,**kw):
     return apply(default.Paper,(paper,),kw)
-def Command(target,source,command):
+def Command2(target,source,command):
     return default.Command(target,source,command)
 def End(paper='paper',**kw):
     return apply(default.End,(paper,),kw)

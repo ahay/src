@@ -31,6 +31,9 @@
 #include "adjnull.h"
 #include "kiss_fftr.h"
 
+#ifndef __cplusplus
+/*^*/
+
 static int nfft, nw;
 static float complex *cdata, *shape=NULL;
 static float *tmp;
@@ -135,5 +138,8 @@ void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	}
     } 
 }
+
+#endif
+/*^*/
 
 /* 	$Id$	 */
