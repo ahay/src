@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -145,4 +146,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: 7ab.c,v 1.6 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: 7ab.c,v 1.7 2004/06/30 18:29:26 fomels Exp $	 */

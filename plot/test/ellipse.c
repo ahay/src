@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -243,4 +244,4 @@ int main (void)
     return 0;
 }
 
-/* 	$Id: ellipse.c,v 1.5 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: ellipse.c,v 1.6 2004/06/30 18:29:26 fomels Exp $	 */

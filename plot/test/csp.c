@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -71,4 +72,4 @@ float rand01(void)
     return ((float) iseed - 0.5)/((float) im - 1.);
 }
 
-/* 	$Id: csp.c,v 1.3 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: csp.c,v 1.4 2004/06/30 18:29:26 fomels Exp $	 */

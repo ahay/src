@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -73,4 +74,4 @@ static void doit(float wide, int job)
     }
 }
 
-/* 	$Id: dcretard.c,v 1.4 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: dcretard.c,v 1.5 2004/06/30 18:29:26 fomels Exp $	 */

@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -125,4 +126,4 @@ static void arrow(float x1, float y1, float x2, float y2)
     vp_udraw( tipx, tipy);
 }
 
-/* 	$Id: whitepruf.c,v 1.2 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: whitepruf.c,v 1.3 2004/06/30 18:29:26 fomels Exp $	 */

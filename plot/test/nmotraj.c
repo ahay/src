@@ -1,3 +1,4 @@
+/* */
 /*
 Copyright (C) 2004 University of Texas at Austin
 
@@ -95,4 +96,4 @@ static void onebox(float x, float y, float dx, float dy )
     vp_udraw( vx[3], vy[3]);
 }
 
-/* 	$Id: nmotraj.c,v 1.5 2004/06/25 18:09:01 fomels Exp $	 */
+/* 	$Id: nmotraj.c,v 1.6 2004/06/30 18:29:26 fomels Exp $	 */
