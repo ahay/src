@@ -87,7 +87,7 @@ sys.path = libs + sys.path
 ##############################################################################
 
 from SCons.Environment import Environment
-from SCons.Script.SConscript import Default, Clean
+#from SCons.Script.SConscript import Default, Clean
 from SCons.Util import WhereIs
 from SCons.Builder import Builder
 from SCons.Action import Action
@@ -417,7 +417,7 @@ class Project(Environment):
         if flow:
             plot = self.Plot(target2,source,flow,
                              clean=clean,suffix=suffix,**kw)
-            Default (plot)
+            self.Default (plot)
             self.view.append(self.View(target + '.view',plot))
             build = self.Build(target2 + pssuffix,plot,opts=pstexpen)
             self.figs.append(build)
@@ -451,8 +451,22 @@ class Project(Environment):
     def Fetch(self,file,dir):
         return self.Retrieve(file,None,dir=dir)
 
+# Default project
+project = Project()
+def Flow(target,source,flow,**kw):
+    return project.Flow(target,source,flow,**kw)
+def Plot (target,source,flow,**kw):
+    return project.Plot(target,source,flow,**kw)
+def Result(target,source,flow,**kw):
+    return project.Result(target,source,flow,**kw)
+def Combine(target,source,how,**kw):
+    return project.Combine(target,source,how,**kw)
+def Fetch(file,dir):
+    return project.Fetch(file,dir)
+def End():
+    project.End()
+
 if __name__ == "__main__":
-     proj = Project()
      import pydoc
      pydoc.help(Project)
      

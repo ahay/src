@@ -36,12 +36,12 @@ int main(int argc, char* argv[])
     nw=sf_npfar(2*(nw-1));
 
     cosft_init(nw, t0, dt);
-    dw = SF_PI/(nw*dt);
+    dw = 2.*SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
-    dx *= SF_PI * fabsf (vel) * 0.5;
-    dy *= SF_PI * fabsf (vel) * 0.5;	
+    dx *= SF_PI * fabsf (vel);
+    dy *= SF_PI * fabsf (vel);	
 
     if (!sf_getfloat("stretch", &st)) st=1.;
     /* Stolt stretch parameter */
@@ -85,4 +85,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mstolt.c,v 1.6 2003/10/18 18:21:31 fomels Exp $	 */
+/* 	$Id: Mstolt.c,v 1.7 2003/11/13 16:32:37 fomels Exp $	 */

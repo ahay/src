@@ -4,7 +4,6 @@ PROJ
 		bandpass
 		Joe?
 	? get rid of the clean rule / emitter
-	default proj
 	interrupt signal in latex2dvi (->latex2pdf)
 	parameter checking
 	Tkinter interface
@@ -22,7 +21,6 @@ FILT
 	MPI interface
 	Solaris, SGI, Mac, Windows ports
 PLOT
-	scalebar
 	grid	
 	check test dir
 	vppen
@@ -37,6 +35,5 @@ PLOT
 	       thplot
 	       box
 LATEX
-	test SEG.bib
 	documentation
 	package
