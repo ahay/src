@@ -1,10 +1,11 @@
 #include "axa.h"
 
-#include "files.h"
+#include "file.h"
 /*^*/
 
+#include "error.h"
+
 #ifndef _sf_axa_h
-#define _sf_axa_h
 
 typedef struct {
     int     n;
@@ -52,5 +53,5 @@ void oaxa(sf_file FF, axa *AA, const int i)
 void raxa(axa AA) 
 /*< report [n,o,d] for axis AA >*/
 {    
-    fprintf(stderr,"n=%d o=%f d=%f \n",AA.n,AA.o,AA.d);
+    sf_warning("n=%d o=%f d=%f",AA.n,AA.o,AA.d);
 }

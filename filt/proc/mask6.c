@@ -35,7 +35,7 @@ void mask32 (int nw                 /* filter size */,
 
     n = nx*ny*nz;
 
-    xx = sf_boolalloc(nx);
+    xx = sf_boolalloc(n);
 
     for (i=0; i < n; i++) {
 	xx[i] = (yy[i] == 0.);
