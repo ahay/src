@@ -12,7 +12,7 @@ DEPEND = -xM1
 DEPEND = -MM
 
 PROGS = cell2 dsr eikonal enoder1 gazdag gauss interp2 interpt mig45 \
-	pick0 pickd rays2 sag shoot2 sstep1 symes trace2 tree voft vofz
+	pick0 pickd rays2 remap1 sag shoot2 sstep1 symes trace2 tree voft vofz
 
 cell2 = celltrace cell eno2 eno quadratic
 dsr = dsr
@@ -26,6 +26,7 @@ mig45 = ctridiagonal
 pick0 = pick0 eno
 pickd = pick0 eno
 rays2 = raytracing atela grid3 grid2 eno3 eno2 eno
+remap1 = eno
 sag = empty 
 shoot2 = celltrace cell eno2 eno quadratic fzero
 sstep1 = split1
