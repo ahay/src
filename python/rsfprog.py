@@ -15,5 +15,3 @@ import sfplot
 import vpplot
 
 import rsfuse
-
-# 	$Id$	

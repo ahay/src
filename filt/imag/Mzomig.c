@@ -49,7 +49,7 @@ int main (int argc, char *argv[])
     if (NULL == (mode = sf_getstring("mode"))) mode = "m";
 
     if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
-    if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
+    if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
     if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
