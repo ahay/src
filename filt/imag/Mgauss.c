@@ -33,8 +33,8 @@ int main(int argc, char** argv)
     if (!sf_getfloat ("r",&r)) r = 25.;
     /* Radius of the anomaly */
     r = 1./(r*r);
-    if (!sf_getfloat ("c1",&c1)) c1 = o1+(n1/2-1)*d1;
-    if (!sf_getfloat ("c2",&c2)) c2 = o2+(n2/2-1)*d2;
+    if (!sf_getfloat ("c1",&c1)) c1 = o1+0.5*(n1-1)*d1;
+    if (!sf_getfloat ("c2",&c2)) c2 = o2+0.5*(n2-1)*d2;
     /* Anomaly center coordinates */
 
     vint = sf_floatalloc(n1);
@@ -53,4 +53,4 @@ int main(int argc, char** argv)
     exit (0);
 }
 
-/* 	$Id: Mgauss.c,v 1.3 2003/09/29 14:34:54 fomels Exp $	 */
+/* 	$Id: Mgauss.c,v 1.4 2003/10/01 22:45:37 fomels Exp $	 */

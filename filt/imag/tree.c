@@ -349,22 +349,28 @@ void tree_build(void)
 /*    tree_print(); */
 
     TraverseDeleteQueue (Orphans,process_node);
+
+/*    tree_print(); */
 	
     if (nacc == naxz) return;
 
     sf_warning("Found %d < %d, entering cycle resolution",nacc,naxz);
 	
-    pqueue_init (naxz-nacc);
+    pqueue_init (naxz);
     pqueue_start ();
 
     check_front();
 
     while (nacc < naxz) {
 	vk = pqueue_extract ();
-	if (NULL == vk) sf_error("Heap exhausted: %d accepted",nacc);
+	if (NULL == vk) {
+	    sf_warning("Heap exhausted: %d accepted",nacc);
+	    tree_print();
+	    return;
+	}
 	node = Tree + ((vk-val[0]-2)/4);
 	TraverseDeleteQueue(node->children,orphanize);
-	TraverseDeleteQueue(Orphans,postprocess_node);
+/*	TraverseDeleteQueue(Orphans,postprocess_node); */
     }
 }
 
@@ -378,9 +384,9 @@ static void orphanize (Node node)
     if (accepted[k]) return;
 
     node->nparents = 0;
-    kz = k/nax; k -= nax*kz;
-    kx = k/na;  k -= na*kx;
     ka = k;
+    kz = ka/nax; ka -= nax*kz;
+    kx = ka/na;  ka -= na*kx;
 
     eno2_apply(cvel,kz,kx,0.,0.,&v,g,BOTH);
     g[1] /= dx;
@@ -468,7 +474,7 @@ static void orphanize (Node node)
 	    vk[3] = cell_p2a (p);
 	    accepted[k] = true;
 	    pqueue_insert(val[k]+2);
-	    TraverseQueue (node->children,process_child);
+/*	    TraverseQueue (node->children,process_child); */
 	    nacc++;
 	    return;
 	} 
@@ -646,18 +652,20 @@ static void orphanize (Node node)
 }
 
 static void check_front (void) {
-    int k;
-    bool atfront=false;
+    int k, i;
+    bool atfront;
     NodeCell cell;
     Node node;
 
     for (k=0; k < naxz; k++) {
 	if (accepted[k]) {
 	    node = Tree+k;
+	    atfront = false;
 	    for (cell = node->children->head; 
 		 NULL != cell; 
 		 cell = cell->link) {
-		atfront = (cell->node->nparents > 0);
+		i = cell->node - Tree;
+		atfront = !accepted[i];
 		if (atfront) break;
 	    }
 	    if (atfront) pqueue_insert(val[k]+2);
@@ -682,13 +690,17 @@ static void catch(int k) {
 
 static void print_node (Node node) {
     int k, kx, kz, ka;
-    
-    k = node-Tree;
-    kz = k/nax; k -= nax*kz;
-    kx = k/na;  k -= na*kx;
-    ka = k;
 
-    fprintf(stderr,"[%d %d %d] ",ka+1,kx+1,kz+1);
+    k = node-Tree;
+    ka = k;
+    kz = ka/nax; ka -= nax*kz;
+    kx = ka/na;  ka -= na*kx;
+
+    if (accepted[k]) {
+	fprintf(stderr,"[%d %d %d] ",ka+1,kx+1,kz+1);
+    } else {
+	fprintf(stderr,"{%d %d %d} ",ka+1,kx+1,kz+1);
+    }
 }
 
 /* print_queue */
@@ -845,4 +857,4 @@ static void psnap (float* p, float* q, int* iq) {
     *iq = ia;
 }
 
-/* 	$Id: tree.c,v 1.12 2003/09/30 14:30:53 fomels Exp $	 */
+/* 	$Id: tree.c,v 1.13 2003/10/01 22:45:37 fomels Exp $	 */
