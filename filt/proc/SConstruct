@@ -41,7 +41,7 @@ env.Append(BUILDERS={'Include':configure.Header},
 
 src2 = '''
 allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
-callp2 causint cbanded
+callp2 causint cbanded cmatmult
 '''
 
 for source in Split(src2):
@@ -65,7 +65,7 @@ for prog in mains:
 	        docmerge = configure.docextra(docmerge,'sf'+prog,doc)
 
 for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',
-             'matmult','cmatmult','cburg','impl2','trisl','trianglen']:
+             'matmult','cmatmult','impl2','trisl','trianglen']:
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

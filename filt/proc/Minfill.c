@@ -22,9 +22,6 @@
 #include <rsf.h>
 
 #include "shotfill.h"
-/*
-#include "cburg.h"
-*/
 
 int main(int argc, char* argv[])
 {
