@@ -401,9 +401,9 @@ class Project(Environment):
             steps.append(string.join(substeps," | "))
         #<- assemble the pipeline
         command = string.join(steps," ;\n")
-        if stdout:
+        if stdout==1:
             command = command + " > $TARGET"
-        else:
+        elif stdout==0:
             command = command + " >/dev/null"
         if stdin:
             command = "< $SOURCE " + command
