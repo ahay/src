@@ -1,5 +1,6 @@
 #include <math.h>
 #include <assert.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -60,7 +61,7 @@ void tree_init (int order1,
     Tree = CreateNodes(naxz,order);
 }
 
-void tree_build(void)
+void tree_build(bool debug)
 {
     int i, k, iz, ix, ia, kx, kz, ka, jx, jz;
     float x, z, p[2], a, v, v0, g0[2], g[2], s, sx, sz, t=0., *vk;
@@ -89,10 +90,10 @@ void tree_build(void)
 		p[1] = sin(a);
 
 		/* get boundary conditions */
-		if ((kx==0    && p[1] < 0.) ||
-		    (kx==nx-1 && p[1] > 0.) ||
-		    (kz==0    && p[0] < 0.) ||
-		    (kz==nz-1 && p[0] > 0.)) {
+		if ((kx==0    && p[1] <  FLT_EPSILON) ||
+		    (kx==nx-1 && p[1] > -FLT_EPSILON) ||
+		    (kz==0    && p[0] <  FLT_EPSILON) ||
+		    (kz==nz-1 && p[0] > -FLT_EPSILON)) {
 		    AddNode(Orphans,node);
 
 		    /*** debug ***
@@ -346,11 +347,11 @@ void tree_build(void)
 	}
     }
 
-/*    tree_print(); */
+    if (debug) tree_print();
 
     TraverseDeleteQueue (Orphans,process_node);
 
-/*    tree_print(); */
+    if (debug) tree_print();
 	
     if (nacc == naxz) return;
 
@@ -708,7 +709,7 @@ void tree_print (void) {
     int k;
     Node node;
 
-    catch(0);
+/*    catch(0); */
 
     for (k=0; k < naxz; k++) {
 	node = Tree+k;
@@ -840,7 +841,7 @@ static void psnap (float* p, float* q, int* iq) {
     a = cell_p2a(p);
     a2 = (a-a0)/da;
     ia = floor (a2); a2 -= ia;
-    cell_snap (&a2, &ia, eps);
+    cell_snap (&a2, &ia, 10.*eps);
 
     if (ia < 0) {
 	ia=0.; a2=0.; 
@@ -857,4 +858,4 @@ static void psnap (float* p, float* q, int* iq) {
     *iq = ia;
 }
 
-/* 	$Id: tree.c,v 1.13 2003/10/01 22:45:37 fomels Exp $	 */
+/* 	$Id: tree.c,v 1.14 2003/10/08 15:08:52 fomels Exp $	 */

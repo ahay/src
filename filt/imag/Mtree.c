@@ -12,7 +12,7 @@ Takes: < velocity.rsf > arrivals.rsf
 
 int main(int argc, char* argv[])
 {
-    bool velocity;
+    bool velocity, debug;
     int nz,nx, i, iz, na, nt, ix, order, naxz;
     float **slow, **node;
     float dz,dx,da,x0,z0,a0;
@@ -64,6 +64,9 @@ int main(int argc, char* argv[])
     if(!sf_getint("method",&order)) order=1; order++;
     /* accuracy order */
 
+    if (!sf_getbool("debug",&debug)) debug=false;
+    /* debugging flag */
+
     slow  = sf_floatalloc2(nz,nx);
     sf_read(slow[0],sizeof(float),nz*nx,vel);
 
@@ -89,7 +92,7 @@ int main(int argc, char* argv[])
 
     /* build dependency graph */
     
-    tree_build();
+    tree_build(debug);
 
 /*    tree_print(); */
 
@@ -98,4 +101,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mtree.c,v 1.6 2003/09/30 14:30:51 fomels Exp $	 */
+/* 	$Id: Mtree.c,v 1.7 2003/10/08 15:08:52 fomels Exp $	 */

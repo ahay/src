@@ -201,22 +201,22 @@ float cell_p2a (float* p)
     float a;
     
     if (p[0] <= 0.) {
-	if (p[1] >= 1.) {
+	if (p[1] >= 1.-10.*FLT_EPSILON) {
 	    a = asinf(1.);
-	} else if (p[1] <= -1.) {
+	} else if (p[1] <= -1.+10.*FLT_EPSILON) {
 	    a = asinf(-1.);
 	} else {
 	    a = asinf(p[1]);
 	}
     } else {
 	if (p[1] >= 0.) {
-	    if (p[1] >= 1.) {
+	    if (p[1] >= 1.-10.*FLT_EPSILON) {
 		a = asinf(1.);
 	    } else {
 		a = SF_PI - asinf(p[1]);
 	    }
 	} else {
-	    if (p[1] <= -1.) {
+	    if (p[1] <= -1.+10.*FLT_EPSILON) {
 		a = asinf(-1.);
 	    } else {
 		a = -SF_PI - asinf(p[1]);
@@ -227,5 +227,4 @@ float cell_p2a (float* p)
     return a;
 }
 
-/* 	$Id: cell.c,v 1.3 2003/09/30 14:30:52 fomels Exp $	 */
-
+/* 	$Id: cell.c,v 1.4 2003/10/08 15:08:52 fomels Exp $	 */
