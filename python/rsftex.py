@@ -28,7 +28,7 @@ globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 latex       = WhereIs('pdflatex')
 bibtex      = WhereIs('bibtex')
-acroread    = WhereIs('acroread')
+acroread    = WhereIs('acroread') or WhereIs('xpdf')
 epstopdf    = WhereIs('epstopdf')
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
