@@ -1,11 +1,14 @@
-CC = gcc 
 CC = cc
+CC = gcc 
+
 RSF = ../../seis/rsf
 RSFPLOT = ../lib
-CFLAGS = -std=gnu9x -Wall -pedantic -I${RSF} -I${RSFPLOT} -g
+
 CFLAGS = -I${RSF} -I${RSFPLOT} -g
-LDFLAGS =  -L${RSFPLOT} -lrsfplot -L${RSF} -lrsf -lm
+CFLAGS = -std=gnu9x -Wall -pedantic -I${RSF} -I${RSFPLOT} -g
+
 LDFLAGS =  -L${RSFPLOT} -lrsfplot -L${RSF} -lrsf -lm -lnsl
+LDFLAGS =  -L${RSFPLOT} -lrsfplot -L${RSF} -lrsf -lm
 
 PROGS = contour dots graph plas pldb plotrays
 
