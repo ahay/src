@@ -19,25 +19,25 @@
 
 #include <math.h>
 
-#include <rsf.h>
-
 #include "irls.h"
+#include "quantile.h"
+#include "alloc.h"
 
 static float *abs1;
 
-void irls_init(int n) 
+void sf_irls_init(int n) 
 /*< Initialize with data size >*/
 {
     abs1 = sf_floatalloc(n);
 }
 
-void irls_close(void) 
+void sf_irls_close(void) 
 /*< free allocated storage >*/
 {
     free (abs1);
 }
 
-void l1 (int n, const float *res, float *weight)  
+void sf_l1 (int n, const float *res, float *weight)  
 /*< weighting for L1 norm >*/
 {
     float rbar;
@@ -54,7 +54,7 @@ void l1 (int n, const float *res, float *weight)
     }
 }
 
-void cauchy (int n, const float *res, float *weight)  
+void sf_cauchy (int n, const float *res, float *weight)  
 /*< weighting for Cauchy norm >*/
 {
     float rbar;

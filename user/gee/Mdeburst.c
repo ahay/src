@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "irls.h"
 #include "deburst.h"
 
 int main(int argc, char* argv[])
@@ -46,16 +45,16 @@ int main(int argc, char* argv[])
     /* regularization parameter */
     if (NULL == (norm = sf_getstring("norm"))) {
 	/* norm to use in IRLS (cauchy,l1) */
-	weight=cauchy;
+	weight=sf_cauchy;
     } else {
 	sf_warning("got %s",norm);
 
 	switch(norm[0]) {
 	    case 'c': case 'C':
-		weight=cauchy;
+		weight=sf_cauchy;
 		break;
 	    case 'l': case 'L':
-		weight=l1;
+		weight=sf_l1;
 		break;
 	    default:
 		sf_error("unknown norm %s",norm);
@@ -63,7 +62,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    irls_init(n1);
+    sf_irls_init(n1);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (data,n1,in);

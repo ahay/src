@@ -48,11 +48,11 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dy)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&y0)) sf_error("No o2= in input");
 
-    if (!sf_getfloat("a0",a)) a[0]=1.;
+    if (!sf_getfloat("a0",&a[0])) a[0]=1.;
     /* starting sharpness in xx */
-    if (!sf_getfloat("b0",a+1)) a[1]=0.;
+    if (!sf_getfloat("b0",&a[1])) a[1]=0.;
     /* starting sharpness in xy */
-    if (!sf_getfloat("c0",a+2)) a[2]=1.;
+    if (!sf_getfloat("c0",&a[2])) a[2]=1.;
     /* starting sharpness in yy */
 
     if (!sf_getint("niter",&niter)) niter=100;
