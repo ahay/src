@@ -9,7 +9,7 @@
 #include "vplot.h"
 
 static float min1, min2, max1, max2, inch1, inch2, orig1, orig2;
-static float labelsz, barlabelsz, barmin, barmax;
+static float labelsz, barlabelsz, barmin, barmax, bar0, dbar;
 static int framecol;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static char blank[]=" ";
@@ -306,10 +306,21 @@ static void make_baraxis (float min, float max)
     if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
     if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
 	!sf_getfloat ("obarnum", &(baraxis->num0))) 
-	baraxis->ntic = vp_optimal_scale(inch1/(aspect*labelsz), 
+	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
+					 (aspect*labelsz), 
 					 min, max, 
 					 &(baraxis->num0), 
 					 &(baraxis->dnum));
+    bar0 = (baraxis->num0-0.5*(min+max))/(max-min+FLT_EPSILON);
+    dbar = (baraxis->dnum)/(max-min+FLT_EPSILON);
+
+    if (vertbar) {
+	bar0 = orig2 + inch2*bar0;
+	dbar *= inch2;
+    } else {
+	bar0 = orig1 + inch1*bar0;
+	dbar *= inch1;
+    }
 
     wherebartics = (NULL != (where = sf_getstring ("wherebartics"))) &&
 	('a' == *where);
@@ -487,9 +498,14 @@ static void make_barlabel (void)
 void vp_frame_init (sf_file in, const char* where)
 {
     make_labels(in,where[0],where[1]);
-    if (scalebar) make_barlabel();
     make_axes();
     make_title(in,where[2]);
+}
+
+void vp_barframe_init (float min, float max)
+{
+    make_barlabel();
+    make_baraxis(min,max);
 }
 
 void vp_simpleframe(void)
@@ -502,7 +518,7 @@ void vp_simpleframe(void)
     vp_udraw(min1, min2);
 }
 
-void vp_barframe (void)
+void vp_simplebarframe (void)
 {
     float min, max;
 
@@ -628,4 +644,65 @@ void vp_frame(void)
     }
     
     vp_uclip (min1, min2, max1, max2);
+}
+
+void vp_barframe(void)
+{
+    int i;
+    float num, xc, yc, vs;
+    char string[32];
+
+    vp_simplebarframe();
+    
+    if (NULL != barlabel) {
+	vp_fat (barlabel->fat);
+
+	if (barlabel->where == 't' || 
+	    barlabel->where == 'l') { 
+	    vp_tjust (TH_CENTER, TV_BOTTOM);
+	} else {
+	    vp_tjust (TH_CENTER, TV_TOP);
+	}
+
+	vp_gtext(barlabel->x, barlabel->y, 
+		 barlabel->xpath, barlabel->ypath, 
+		 barlabel->xup, barlabel->yup, barlabel->text);
+
+	/* plot tics */
+	if (vertbar) {
+	    vs = barlabel->where == 'l'? -0.5*labelsz: 0.5*labelsz;
+	} else {
+	    vs = barlabel->where == 't'? 0.5*labelsz: -0.5*labelsz;
+	}
+
+	for (i=0; i < baraxis->ntic; i++) {
+	    num = baraxis->num0 + i*(baraxis->dnum);
+	    if (fabsf(baraxis->dnum) > FLT_EPSILON && 
+		fabsf(num) < FLT_EPSILON) num=0.;
+
+	    sprintf (string, "%1.5g", num);	    
+	    
+	    if (vertbar) {
+		yc = bar0 + i*dbar;
+		xc = baraxis->or;
+		
+		vp_move (xc, yc);
+		vp_draw (xc+vs, yc);
+
+		if (labelrot) {
+		    vp_gtext(xc+5.0*vs, yc, 0., -labelsz, labelsz, 0., string);
+		} else {
+		    vp_gtext(xc+1.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		}
+	    } else {
+		xc = bar0 + i*dbar;
+		yc = baraxis->or;
+
+		vp_move (xc, yc);
+		vp_draw (xc, yc+vs);
+		
+		vp_gtext(xc, yc+1.5*vs, labelsz, 0., 0., labelsz, string);
+	    }
+	}
+    }    
 }

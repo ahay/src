@@ -23,7 +23,9 @@ int main(int argc, char* argv[])
 		     true,false,true,false);    
     vp_frame_init(in,"tlb");
     vp_frame();
-    vp_barframe();
+
+    vp_barframe_init (0.,1.);
+    vp_barframe ();
 
     exit(0);
 }
