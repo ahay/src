@@ -26,7 +26,7 @@
 
 static int n1, n2, nb;
 static bands slv;
-static float *diag, **offd, eps;
+static float *diag, **offd, eps, **dip, *tt;
 static pwd w;
 
 void predict_init (int nx, int ny /* data size */, 
@@ -46,6 +46,7 @@ void predict_init (int nx, int ny /* data size */,
     offd = sf_floatalloc2 (n1,nb);
 
     w = pwd_init (n1, nw);
+    tt = NULL;
 }
 
 void predict_close (void)
@@ -56,6 +57,7 @@ void predict_close (void)
     free (*offd);
     free (offd);
     pwd_close (w);
+    if (NULL != tt) free(tt);
 }
 
 void predict_step(bool forw    /* forward or backward */, 
@@ -78,6 +80,45 @@ void predict_step(bool forw    /* forward or backward */,
     banded_define (slv, diag, offd);
     pwd_set (w, trace, trace, diag);
     banded_solve (slv, trace);
+}
+
+void predict_set(float **dip1 /* dip field [n2][n1] */)
+{
+    dip=dip1;
+    tt = sf_floatalloc(n1);
+}
+
+void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+{
+    int i1, i2, i;
+
+    if (nx != ny || nx != n1*n2) sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    for (i1=0; i1 < n1; i1++) {
+	tt[i1] = 0.;
+    }
+
+    if (adj) {
+	for (i2=n2-1; i2 >= 0; i2--) {
+	    for (i1=0; i1 < n1; i1++) {
+		tt[i1] += yy[i1+i2*n1];
+	    }
+	    for (i1=0; i1 < n1; i1++) {
+		xx[i1+i2*n1] += tt[i1];
+	    }
+	}
+    } else {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		tt[i1] += xx[i1+i2*n1];
+	    }
+	    for (i1=0; i1 < n1; i1++) {
+		yy[i1+i2*n1] += tt[i1];
+	    }
+	}
+    }
 }
 
 void predict_flat(int i0     /* reference trace number */, 

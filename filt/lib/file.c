@@ -480,16 +480,22 @@ static bool readpathfile (const char* filename, char* datapath)
 /* find datapath from the datapath file */
 {
     FILE *fp;
-    char format[PATH_MAX];
+    char host[PATH_MAX], *thishost, path[PATH_MAX];
 
     fp = fopen(filename,"r");
     if (NULL == fp) return false;
 
-    if (0 >= fscanf(fp,"datapath=%s\n",datapath))
+    if (0 >= fscanf(fp,"datapath=%s",datapath))
 	sf_error ("No datapath found in file %s",filename);
 
-    (void) snprintf(format,PATH_MAX,"%s datapath=%%s\n",sf_gethost());
-    (void) fscanf(fp,format,datapath);
+    thishost = sf_gethost();
+
+    while (0 < fscanf(fp,"%s datapath=%s",host,path)) {
+	if (0 == strcmp(host,thishost)) {
+	    strcpy(datapath,path);
+	    break;
+	}
+    }
 
     (void) fclose (fp);
     return true;
