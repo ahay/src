@@ -1,3 +1,9 @@
+/* Window a portion of the dataset.
+
+Takes: < file.rsf > window.rsf
+
+*/
+
 #include <stdio.h>
 
 #include <rsf.h>
@@ -77,8 +83,8 @@ int main (int argc, char *argv[])
 	label[i] = sf_histstring(in,key);
     }
 
-    /* feedback */
     if (!sf_getbool("verb",&verb)) verb=true;
+    /* if y, provide feedback information */
 
     if (verb) {
 	for (i=0; i < dim; i++) {
@@ -88,10 +94,9 @@ int main (int argc, char *argv[])
 			   i+1,o[i],i+1,o[i]+(m[i]-1)*d[i]);
 	}
     }
-    
-    /* set parameters, squeeze if necessary */
 
     if (!sf_getbool("squeeze",&squeeze)) squeeze=true;
+    /* if y, squeeze dimensions equal to 1 to the end */
 
     for (i=i0=0; i0 < dim; i0++) {
 	if (squeeze && 1==m[i0]) continue;

@@ -1,3 +1,9 @@
+/* Convert between different formats.
+
+Takes: < in.rsf > out.rsf
+
+*/
+
 #include <stdio.h>
 
 #include <rsf.h>
@@ -22,6 +28,9 @@ int main(int argc, char *argv[])
     size = setfiledims(in,out);
     
     format = sf_getstring("data_format");
+    /* format is type_form
+       type is int, bool, float
+       form is ascii, native, xdr */
     if (NULL == format) sf_error("Specify data_format=");
 	
     sf_setformat(out,format);
@@ -34,7 +43,9 @@ int main(int argc, char *argv[])
 	
     if (SF_ASCII == sf_getform(out)) {
 	if (!sf_getint("line",&line)) line=8;
+	/* Number of numbers per line (for conversion to ASCII) */
 	format = sf_getstring("format");
+	/* Element format (for conversion to ASCII) */ 
 	sf_setaformat(format,line);
     }
     

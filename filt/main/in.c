@@ -1,3 +1,13 @@
+/* Display basic information about RSF files.
+   
+Takes: file1.rsf file2.rsf file3.rsf
+
+n1,n2,... are data dimensions
+o1,o2,... are axis origins
+d1,d2,... are axis sampling intervals
+label1,label2,... are axis labels
+*/
+
 #include <string.h>
 
 #include <rsf.h>
@@ -17,7 +27,9 @@ int main (int argc, char* argv[])
 
     sf_init (argc,argv);
     if (!sf_getbool ("info",&info)) info = true;
+    /* If n, only display the name of the data file. */
     if (!sf_getfloat ("check",&check)) check = 2.;
+    /* Portion of the data (in Mb) to check for zero values. */
     check *= (1024. * 1024.); /* convert Mb to b */
     ncheck = (int) check;
 
