@@ -1,0 +1,69 @@
+###########################################################################
+import sys, os
+
+sys.path.append(os.path.join(os.environ.get('RSFROOT'),'lib'))
+
+###########################################################################
+
+from rsfproj import *
+Book()
+
+###########################################################################
+
+grey = "grey label1='Time (s)' label2='Midpoint (km)' pclip=99.5"
+
+Flow('taper',None,
+     '''
+     spike
+     n1=256 o1=0.004 d1=0.004
+     n2=256 o2=0     d2=0.008
+     nsp=3
+     k1=100,150,200
+     k2=100,150,200
+     o3=1 |
+     fft2 both=y |
+     dipfilter v1=-1.5 v2=-1 v3=1 v4=1.5 taper=2 pass=0 |
+     fft2 both=y inv=y |
+     bandpass flo=10 fhi=50
+     ''')
+Flow('log','taper',"stretch rule=L dens=2")
+Flow('fft0','log',"fft2 both=y")
+Flow('oper','fft0',"fkdmo h=0.5")
+Flow('imp',['fft0','oper'],
+     '''add mode=prod ${SOURCES[1]} |
+     fft2 both=y inv=y |
+     stretch dens=2 inv=y rule=L''')
+Plot('imp','imp',grey +  ' title="Omega-K IDMO impulse response"')
+Flow('fft1','log',"fft1 | transp")
+Flow('con','fft1',"fincon h0=0 dh=0.004 nh=125")
+Flow('imp2','con',
+     "transp | fft1 inv=y | window n1=512 | stretch dens=2 inv=y rule=L")
+Plot('imp2','imp2',grey +  ' title="FinDif OC impulse response"')
+Combine('off-imp','imp imp2','SideBySideAniso',result=1)
+
+fft3 = 'fft1 | fft3 axis=2 | fft3 axis=3'
+ifft3 = 'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y'
+
+Flow('taper3',None,
+     '''spike
+     n1=128 o1=0.008 d1=0.008
+     n2=128 o2=0     d2=0.016
+     n3=128 o3=0     d3=0.016
+     k1=64 k2=64 k3=64 nsp=1
+     | %s | dipfilter v1=-1.5 v2=-1 v3=1 v4=1.5 taper=2 pass=0 dim=3 | %s |
+     bandpass flo=5 fhi=25''' % (fft3,ifft3))
+Flow('fft3','taper3','stretch rule=L dens=4 | %s' % fft3)
+Flow('oper3','fft3','fkamo h1=1 h2=1 f1=45 f2=90')
+Flow('imp3',['fft3','oper3'],
+     '''add mode=prod ${SOURCES[1]} | %s |
+     stretch rule=L dens=4 inv=y''' % ifft3)
+Result('fk-imp','imp3',
+       '''byte gainpanel=all |
+       grey3 wanttitle=n
+       frame1=71 frame2=64 frame3=64
+       label1="Time (s)" label2="X Midpoint (km)" label3="Y midpoint (km)"
+       ''')
+
+###########################################################################
+
+End()
