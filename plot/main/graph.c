@@ -82,12 +82,12 @@ int main(int argc, char* argv[])
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    f = crealf(data[i2][i1]);
-		    if      (f > max1) max1=f;
-		    else if (f < min1) min1=f;
+		    if (f > max1) max1=f;
+		    if (f < min1) min1=f;
 		    x[i2][i1] = f;
 		    f = cimagf(data[i2][i1]);
-		    if      (f > max2) max2=f;
-		    else if (f < min2) min2=f;
+		    if (f > max2) max2=f;
+		    if (f < min2) min2=f;
 		    y[i2][i1] = f;
 		}
 	    }
@@ -98,8 +98,8 @@ int main(int argc, char* argv[])
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
 		    f = y[i2][i1];
-		    if      (f > max2) max2=f;
-		    else if (f < min2) min2=f;
+		    if (f > max2) max2=f;
+		    if (f < min2) min2=f;
 		}
 	    }
 	}
