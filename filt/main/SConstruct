@@ -41,3 +41,5 @@ if root:
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
+
+# 	$Id: SConstruct,v 1.9 2003/10/01 23:40:57 fomels Exp $	

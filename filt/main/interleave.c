@@ -1,4 +1,4 @@
-/* Combine two datasets by inetrleaving.
+/* Combine two datasets by interleaving.
 
 Takes: [< file.rsf | file.rsf] [other=other.rsf | other.rsf] > out.rsf
 */ 
@@ -108,4 +108,4 @@ static void check_compat (sf_file other, int esize, int dim, const int *n)
     }
 }
 
-/* 	$Id: interleave.c,v 1.2 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: interleave.c,v 1.3 2003/10/01 23:40:57 fomels Exp $	 */
