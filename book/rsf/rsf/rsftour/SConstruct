@@ -1,5 +1,4 @@
 from rsfproj import *
-import string
 
 Fetch('Txx.HH','septour')
 
@@ -10,7 +9,7 @@ Flow('Txx_windowed','Txx.HH','window n2=10 n1=200 f1=200')
 plotpar = ' transp=y poly=y yreverse=y pclip=100'
 
 for program in ('wiggle','contour nc=200','grey'):
-    Result(string.capitalize(program),'Txx_windowed',program + plotpar)
+    Result(program,'Txx_windowed',program + plotpar)
 
 Flow('resamp','Txx.HH',
      '''
