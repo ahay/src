@@ -3,7 +3,6 @@ import string, re
 from SCons.Util import WhereIs
 from SCons.Tool import createObjBuilders
 from SCons.Action import Action
-from SCons.Defaults import StaticCheckSet, SharedCheckSet
 
 def check_all(context):
     cc(context)
@@ -181,8 +180,8 @@ def load_f90(env):
     env['F90COM']   = '$F90 $F90FLAGS $_F90INCFLAGS -c -o $TARGET $SOURCES'
     env['SHF90COM'] = '$F90 $F90FLAGS $_F90INCFLAGS -c -o $TARGET $SOURCES'
     static_obj, shared_obj = createObjBuilders(env)    
-    F90Action = Action([StaticCheckSet,"$F90COM"])
-    ShF90Action = Action([SharedCheckSet,"$SHF90COM"])
+    F90Action = Action("$F90COM")
+    ShF90Action = Action("$SHF90COM")
     static_obj.add_action('.f90', F90Action)
     shared_obj.add_action('.f90', ShF90Action)
 
