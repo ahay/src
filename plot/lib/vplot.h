@@ -90,5 +90,6 @@ void vp_upline (const float *xp, const float *yp, int np);
 void vp_penup (void);
 void vp_pendn (float x, float y);
 void vp_upendn (float x, float y);
+void vp_erase (void);
 
 #endif

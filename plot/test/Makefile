@@ -2,7 +2,8 @@ CC = gcc
 CFLAGS = -std=gnu9x -Wall -pedantic -I../lib -g
 LDFLAGS = -L../lib -lrsfplot -lm
 
-PLOTS = 7ab dc dcretard geqs geq2s headray vrms reflexpt reflkine
+PLOTS = 7ab cmp csp dc dcretard ellipse geqs geq2s headray \
+	nmotraj reflexpt reflkine vrms 
 
 all: $(addsuffix .v, $(PLOTS))
 

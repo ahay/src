@@ -51,12 +51,12 @@ void vp_putfloat (float w)
     vp_putint((int) (w < 0.0)? w-0.5 : w+0.5);
 }
 
-void vp_egroup ()
+void vp_egroup (void)
 {
     putchar (VP_END_GROUP);
 }
 
-void vp_erase ()
+void vp_erase (void)
 {
     putchar (VP_ERASE);
 }
