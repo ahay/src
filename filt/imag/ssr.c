@@ -41,7 +41,6 @@
 static axa az,aw,axx,ayy;
 static axa       bxx,byy;
 static axa       alx,aly;
-static int       px,py;
 static float ds2;
 
 static float         **kk; /* wavenumber  */
@@ -60,8 +59,8 @@ void ssr_init(
     axa ay_,
     axa lx_,
     axa ly_,
-    int px_,
-    int py_,
+    int px,
+    int py,
     int tx,
     int ty,
     float ds
@@ -80,9 +79,6 @@ void ssr_init(
     ayy = ay_;
     alx = lx_;
     aly = ly_;
-
-    px  = px_;
-    py  = py_;
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 

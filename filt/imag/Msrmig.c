@@ -1,0 +1,112 @@
+/* 3-D S/R migration with extended split-step. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+#include "srmig.h"
+
+int main (int argc, char *argv[])
+{
+    bool inv;             /* forward or adjoint */
+    bool verb;            /* verbosity */
+    float eps;            /* dip filter constant   */  
+
+    int   nr;             /* number of reference velocities */
+    float dt;             /* time error */
+    int   px,py;          /* padding in the k domain */
+    int   tx,ty;          /* boundary taper size */
+
+    axa az,ax,ay,aw,alx,aly;
+
+    sf_file Fs;     /*           slowness file S (nlx,nly,nz) */
+    sf_file Fi;     /*              image file R ( nx, ny,nz) */
+    sf_file Fus;    /*   source wavefield file Us( nx, ny,nw) */
+    sf_file Fur;    /* receiver wavefield file Us( nx, ny,nw) */
+
+/*    sf_file Fws;*/
+/*    sf_file Fwr;*/
+
+    slice slow;
+    slice imag;
+    slice sdat,rdat;
+/*    slice swfl,rwfl;*/
+
+    /*------------------------------------------------------------*/
+    sf_init(argc,argv);
+
+    if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
+    if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
+    if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
+    if (!sf_getint(   "nr",&nr  ))   nr =     1; /* maximum number of references */
+    if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
+    if (!sf_getint(   "px",&px  ))   px =     0; /* padding on i-line wavenumber */
+    if (!sf_getint(   "py",&py  ))   py =     0; /* padding on x-line wavenumber */
+    if (!sf_getint(   "tx",&tx  ))   tx =     0; /* taper size */
+    if (!sf_getint(   "ty",&ty  ))   ty =     0; /* taper size */
+
+    /* slowness parameters */
+    Fs = sf_input ("slowness");
+    iaxa(Fs,&alx,1);
+    iaxa(Fs,&aly,2);
+    iaxa(Fs,&az ,3);
+    slow = slice_init(Fs,alx.n,aly.n,az.n);
+    
+    Fus = sf_input ( "in");
+    Fur = sf_input ("rwf");
+    Fi  = sf_output("out"); sf_settype(Fi,SF_FLOAT);
+
+/*    Fws = sf_output("wws"); sf_settype(Fws,SF_COMPLEX);*/
+/*    Fwr = sf_output("wwr"); sf_settype(Fwr,SF_COMPLEX);*/
+
+    if (SF_COMPLEX != sf_gettype(Fus)) sf_error("Need complex   source data");
+    if (SF_COMPLEX != sf_gettype(Fur)) sf_error("Need complex receiver data");
+    
+    iaxa(Fus,&ax,1); oaxa(Fi,&ax,1);
+    iaxa(Fus,&ay,2); oaxa(Fi,&ay,2);
+    iaxa(Fus,&aw,3); oaxa(Fi,&az,3);
+
+/*    oaxa(Fws,&ax,1); oaxa(Fwr,&ax,1);*/
+/*    oaxa(Fws,&ay,2); oaxa(Fwr,&ay,2);*/
+/*    oaxa(Fws,&az,3); oaxa(Fwr,&az,3);*/
+/*    oaxa(Fws,&aw,4); oaxa(Fwr,&aw,4);*/
+
+    sdat = slice_init(Fus,ax.n,ay.n,aw.n);
+    rdat = slice_init(Fur,ax.n,ay.n,aw.n);
+    imag = slice_init( Fi,ax.n,ay.n,az.n);
+
+/*    swfl = slice_init(Fws,ax.n,ay.n,az.n*aw.n);*/
+/*    rwfl = slice_init(Fwr,ax.n,ay.n,az.n*aw.n);*/
+
+    srmig_init (verb,eps,dt,
+		az,aw,
+		ax,ay,
+		alx,aly,
+		tx,ty,
+		px,py,
+		nr,slow);
+
+    srmig_aloc();
+/*    srmig(inv,sdat,rdat,imag,swfl,rwfl);*/
+    srmig(inv,sdat,rdat,imag);
+
+    srmig_free();
+
+    srmig_close();
+	
+    exit (0);
+}

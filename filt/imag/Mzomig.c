@@ -32,13 +32,12 @@ int main (int argc, char *argv[])
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
 
-
     axa az,amx,amy,aw,alx,aly;
 
-    sf_file Fs;    /*  slowness file S(nlx,nly,    nz   ) */
-    sf_file Fi;    /*     image file R(nmx,nmy,nhx,nz   ) */
-    sf_file Fd,Fe; /*      data file D(nmx,nmy,nhx,   nw) */
-    sf_file Fw;    /* wavefield file W(nmx,nmy,nhx,nz,nw) */
+    sf_file Fs;    /*  slowness file S(nlx,nly,nz   ) */
+    sf_file Fi;    /*     image file R(nmx,nmy,nz   ) */
+    sf_file Fd,Fe; /*      data file D(nmx,nmy,   nw) */
+    sf_file Fw;    /* wavefield file W(nmx,nmy,nz,nw) */
 
     slice slow;
     slice imag;
@@ -86,7 +85,7 @@ int main (int argc, char *argv[])
 	    if (inv) { /*   upward continuation */
 		Fe = sf_input ( "in");
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
-		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");		
+		if (SF_COMPLEX != sf_gettype(Fe)) sf_error("Need complex data");
 
 		iaxa(Fe,&amx,1); oaxa(Fd,&amx,1);
 		iaxa(Fe,&amy,2); oaxa(Fd,&amy,2);
@@ -133,7 +132,7 @@ int main (int argc, char *argv[])
 	    break;
     }
     
-    zom_init (verb,eps,dt,
+    zomig_init (verb,eps,dt,
 	      az,aw,
 	      amx,amy,
 	      alx,aly,
@@ -150,13 +149,13 @@ int main (int argc, char *argv[])
 	    break;
 	case 'm':
 	default:
-	    zomig_init();
+	    zomig_aloc();
 	    zomig(inv,data,imag);
-	    zomig_close();
+	    zomig_free();
 	    break;
     }
 
-    zom_close();
+    zomig_close();
     
     exit (0);
 }

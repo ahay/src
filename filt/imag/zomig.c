@@ -40,6 +40,7 @@ static float eps;
 
 static float         **qq; /* image */
 static float complex **wx; /* wavefield x */
+
 static float         **sm; /* reference slowness squared */
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
@@ -48,19 +49,19 @@ static slice         slow; /* slowness slice */
 
 /*------------------------------------------------------------*/
 
-void zom_init(bool verb_,
-	      float eps_,
-	      float  dt,
-	      axa az_          /* depth */,
-	      axa aw_          /* frequency */,
-	      axa amx_         /* i-line (data) */,
-	      axa amy_         /* x-line (data) */,
-	      axa alx_         /* i-line (slowness/image) */,
-	      axa aly_         /* x-line (slowness/image) */,
-	      int tmx, int tmy /* taper size */,
-	      int pmx, int pmy /* padding in the k domain */,
-	      int nrmax        /* maximum number of references */,
-	      slice slow_)
+void zomig_init(bool verb_,
+		float eps_,
+		float  dt,
+		axa az_          /* depth */,
+		axa aw_          /* frequency */,
+		axa amx_         /* i-line (data) */,
+		axa amy_         /* x-line (data) */,
+		axa alx_         /* i-line (slowness/image) */,
+		axa aly_         /* x-line (slowness/image) */,
+		int tmx, int tmy /* taper size */,
+		int pmx, int pmy /* padding in the k domain */,
+		int nrmax        /* maximum number of references */,
+		slice slow_)
 /*< initialize >*/
 {
     int   ilx, ily, iz, jj;
@@ -90,19 +91,16 @@ void zom_init(bool verb_,
 	     tmx ,tmy,
 	     ds);
 
-    /* allocate storage */
-    ss = sf_floatalloc2  (alx.n,aly.n); /* slowness */
-    so = sf_floatalloc2  (alx.n,aly.n); /* slowness */
-    sm = sf_floatalloc2   (nrmax,az.n); /* ref slowness squared*/
-    nr = sf_intalloc            (az.n); /* nr of ref slownesses */
-    wx = sf_complexalloc2(amx.n,amy.n); /* x wavefield */
-
     /* precompute taper */
     taper2_init(amy.n,amx.n,
 		SF_MIN(tmy,amy.n-1),
 		SF_MIN(tmx,amx.n-1) );
     
     /* compute reference slowness */
+    ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
+    so = sf_floatalloc2(alx.n,aly.n); /* slowness */
+    sm = sf_floatalloc2 (nrmax,az.n); /* ref slowness squared*/
+    nr = sf_intalloc          (az.n); /* nr of ref slownesses */
     slow = slow_;
     for (iz=0; iz<az.n; iz++) {
 	slice_get(slow,iz,ss[0]);
@@ -116,13 +114,18 @@ void zom_init(bool verb_,
 	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
 	}
     }
+
+    /* allocate wavefield storage */
+    wx = sf_complexalloc2(amx.n,amy.n);
 }
 
 /*------------------------------------------------------------*/
 
-void zom_close(void)
+void zomig_close(void)
 /*< free allocated storage >*/
 {
+    ssr_close();
+
     free( *wx); free( wx);
     free( *ss); free( ss);
     free( *so); free( so);
@@ -132,12 +135,13 @@ void zom_close(void)
 
 /*------------------------------------------------------------*/
 
-void zomig_init()
+void zomig_aloc()
 /*< allocate migration storage >*/
 {
     qq = sf_floatalloc2(amx.n,amy.n);
 }
-void zomig_close()
+
+void zomig_free()
 /*< free migration storage >*/
 {
     free( *qq); free( qq);
@@ -196,8 +200,8 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	    taper2(true,true,wx);
 
 	    slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
-	    LOOP(        qq[imy][imx] += 
-		  crealf(wx[imy][imx] ); );
+	    LOOP(;      qq[imy][imx] += 
+		 crealf(wx[imy][imx] ); );
 	    slice_put(imag,0,qq[0]);
 
 	    slice_get(slow,0,so[0]);	    

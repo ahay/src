@@ -32,7 +32,6 @@ int main (int argc, char *argv[])
     int   pmx,pmy,phx;    /* padding in the k domain */
     int   tmx,tmy,thx;    /* boundary taper size */
 
-
     axa az,amx,amy,aw,alx,aly,ahx;
 
     sf_file Fs;    /*  slowness file S(nlx,nly,    nz   ) */
@@ -140,7 +139,7 @@ int main (int argc, char *argv[])
 	    break;
     }
     
-    cam_init (verb,eps,dt,
+    camig_init(verb,eps,dt,
 	      az,aw,
 	      amx,amy,ahx,
 	      alx,aly,
@@ -157,13 +156,13 @@ int main (int argc, char *argv[])
 	    break;
 	case 'm':
 	default:
-	    camig_init();
+	    camig_aloc();
 	    camig(inv,data,imag);
-	    camig_close();
+	    camig_free();
 	    break;
     }
 
-    cam_close();
+    camig_close();
     
     exit (0);
 }
