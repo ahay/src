@@ -161,4 +161,4 @@ if __name__ == "__main__":
         output.write(trace)
     os.system("sfrm junk.rsf")
     
-# 	$Id: rsf.py,v 1.5 2004/06/23 08:54:31 fomels Exp $	
+# 	$Id$	

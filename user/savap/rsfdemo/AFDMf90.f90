@@ -1,35 +1,22 @@
-! 
 ! time-domain acoustic FD modeling
-! 
-
 program AFDMf90
   use rsf
-!  use axa
 
   implicit none
 
-  logical    :: verb ! verbose flag
-
-  ! I/O files
-  type(file) :: Fw,Fv,Fr
-  type(file) :: Fo
-
-  ! cube axes
-  type(axa) :: at,az,ax
-  integer   :: it,iz,ix
-  real      :: idx,idz,dt2
-
-  ! arrays
-  real, allocatable :: ww(:), vv(:,:), rr(:,:)
-  real, allocatable :: um(:,:), uo(:,:), up(:,:), ud(:,:)
-
   ! Laplacian coefficients
-  real :: c0=-30./12.
-  real :: c1=+16./12.
-  real :: c2=- 1./12.
+  real :: c0=-30./12.,c1=+16./12.,c2=- 1./12.
 
-  ! init RSF
-  call sf_init()
+  logical    :: verb         ! verbose flag
+  type(file) :: Fw,Fv,Fr,Fo  ! I/O files
+  type(axa)  :: at,az,ax     ! cube axes
+  integer    :: it,iz,ix     ! index variables
+  real       :: idx,idz,dt2
+
+  real, allocatable :: vv(:,:),rr(:,:),ww(:)           ! I/O arrays
+  real, allocatable :: um(:,:),uo(:,:),up(:,:),ud(:,:) ! tmp arrays
+
+  call sf_init() ! init RSF
   call from_par("verb",verb,.false.)
 
   ! setup I/O files
@@ -38,28 +25,18 @@ program AFDMf90
   Fr=rsf_input ("ref")
   Fo=rsf_output("out")
 
-  ! read axes
-  call iaxa(Fw,at,1)
-  call iaxa(Fv,az,1)
-  call iaxa(Fv,ax,2)
-
-  ! setup output header
-  call oaxa(Fo,az,1)
-  call oaxa(Fo,ax,2)
-  call oaxa(Fo,at,3)
+  ! Read/Write axes
+  call iaxa(Fw,at,1); call iaxa(Fv,az,1); call iaxa(Fv,ax,2)
+  call oaxa(Fo,az,1); call oaxa(Fo,ax,2); call oaxa(Fo,at,3)
 
   dt2 =    at%d*at%d
   idz = 1/(az%d*az%d)
   idx = 1/(ax%d*ax%d) 
 
   ! read wavelet, velocity & reflectivity
-  allocate(ww(at%n     )); ww=0.
-  allocate(vv(az%n,ax%n)); vv=0.
-  allocate(rr(az%n,ax%n)); rr=0.
-
-  call rsf_read(Fw,ww)
-  call rsf_read(Fv,vv)
-  call rsf_read(Fr,rr)
+  allocate(ww(at%n     )); ww=0.; call rsf_read(Fw,ww)
+  allocate(vv(az%n,ax%n)); vv=0.; call rsf_read(Fv,vv)
+  allocate(rr(az%n,ax%n)); rr=0.; call rsf_read(Fr,rr)
 
   ! allocate temporary arrays
   allocate(um(az%n,ax%n)); um=0.
@@ -67,9 +44,7 @@ program AFDMf90
   allocate(up(az%n,ax%n)); up=0.
   allocate(ud(az%n,ax%n)); ud=0.
 
-  ! 
   ! MAIN LOOP
-  ! 
   do it=1,at%n
      if(verb) write (0,*) it
 
@@ -85,10 +60,11 @@ program AFDMf90
         end do
      end do
 
-     ud= ud *vv*vv
-
      ! inject wavelet
      ud = ud - ww(it) * rr
+
+     ! scale by velocity
+     ud= ud *vv*vv
 
      ! time step
      up = 2*uo - um + ud * dt2

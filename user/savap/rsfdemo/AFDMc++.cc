@@ -1,43 +1,30 @@
-// 
 // time-domain acoustic FD modeling
-// 
-
 #include <valarray>
 #include <iostream>
 #include <rsf.hh>
-#include "cub.hh"
-#include "vai.hh"
+#include <cub.hh>
+#include <vai.hh>
 using namespace std;
 
 int main(int argc, char* argv[])
 {
     // Laplacian coefficients
-    float c0=-30./12.;
-    float c1=+16./12.;
-    float c2=- 1./12.;
+    float c0=-30./12.,c1=+16./12.,c2=- 1./12.;
 
-    // init RSF
-    sf_init(argc,argv);
-
-    bool verb; // vebose flag
+    sf_init(argc,argv);// init RSF
+    bool verb;         // vebose flag
     if(! sf_getbool("verb",&verb)) verb=0;
 
+    // setup I/O files
     CUB Fw("in", "i"); Fw.headin(); //Fw.report();
     CUB Fv("vel","i"); Fv.headin(); //Fv.report();
     CUB Fr("ref","i"); Fr.headin(); //Fr.report();
-    
-    // cube axes
-    axa at,az,ax;
-    Fw.getax(0,&at);
-    Fv.getax(0,&az);
-    Fv.getax(1,&ax);
+    CUB Fo("out","o"); Fo.setup(3,Fv.esize()); 
 
-    // setup output header
-    CUB Fo("out","o");
-    Fo.setup(3,Fv.esize());
-    Fo.putax(0,&az);
-    Fo.putax(1,&ax);
-    Fo.putax(2,&at); //Fo.report();
+    // Read/Write axes
+    axa at,az,ax;
+    Fw.getax(0,&at); Fv.getax(0,&az); Fv.getax(1,&ax);
+    Fo.putax(0,&az); Fo.putax(1,&ax); Fo.putax(2,&at);
     Fo.headou();
 
     float idx,idz,dt2;
@@ -46,14 +33,10 @@ int main(int argc, char* argv[])
     idx = 1/(ax.d*ax.d);
 
     // read wavelet, velocity and reflectivity
-    valarray<float> ww( at.n      ); ww=0;
-    valarray<float> vv( az.n*ax.n ); vv=0;
-    valarray<float> rr( az.n*ax.n ); rr=0;
+    valarray<float> ww( at.n      ); ww=0; Fw >> ww;
+    valarray<float> vv( az.n*ax.n ); vv=0; Fv >> vv;
+    valarray<float> rr( az.n*ax.n ); rr=0; Fr >> rr;
    
-    Fw >> ww;
-    Fr >> rr;
-    Fv >> vv;
-
     // allocate temporary arrays
     valarray<float> um(az.n*ax.n); um=0;
     valarray<float> uo(az.n*ax.n); uo=0;
@@ -63,9 +46,7 @@ int main(int argc, char* argv[])
     // init ValArray Index counter
     VAI k(az.n,ax.n);
 
-    // 
     // MAIN LOOP
-    // 
     if(verb) cerr << endl;
     for (int it=0; it<at.n; it++) {
 	if(verb) cerr << "\b\b\b\b\b" << it;
@@ -82,10 +63,11 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	ud *= vv*vv;
-	
 	// inject wavelet
 	ud -= ww[it] * rr;
+	
+	// scale by velocity
+	ud *= vv*vv;
 	
 	// time step
 	up=(float)2 * uo - um + ud * dt2;

@@ -71,11 +71,11 @@ api = string.split(string.lower(str(env.get('API',''))),',')
 # C++ BINDING
 ##############################################################################
 if 'c++' in api:
-    libcc = env.StaticLibrary('rsf++','rsf.cc',
+    libcc = env.StaticLibrary('rsf++',Split('rsf.cc cub.cc vai.cc'),
                               OBJSUFFIX='++.o',CPPPATH='../../include')
     if root:
         env.Install(libdir,libcc)
-        env.Install(incdir,'rsf.hh')
+        env.Install(incdir,Split('rsf.hh cub.hh vai.hh'))
 
     for file in ['getpar','file']:
         test = 'Test' + file + '.cc'

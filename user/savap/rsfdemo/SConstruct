@@ -23,7 +23,7 @@ penv=Environment(LIBPATH=[libdir],
                  CCFLAGS='-O2 -std=gnu99 -Wall -pedantic -D_FILE_OFFSET_BITS=64',
                  CXXFLAGS = '-O2 -Wall -pedantic')
 penv.Program('AFDMc++.x',
-             Split('AFDMc++.cc cub.cc'),
+             Split('AFDMc++.cc'),
              LIBS=['rsf++','rsf','m'])
 
 # F90 environment

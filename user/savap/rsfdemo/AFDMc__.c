@@ -1,35 +1,20 @@
-/* 
- * time-domain acoustic FD modeling
- */
-
+/* time-domain acoustic FD modeling */
 #include <rsf.h>
-/*#include "cub.h"*/
-
 int main(int argc, char* argv[])
 {
-    bool verb; /* verbose flag */
+    /* Laplacian coefficients */
+    float c0=-30./12.,c1=+16./12.,c2=- 1./12.;
 
-    /* I/O files */
-    sf_file Fw,Fv,Fr;
-    sf_file Fo;
-
-    /* cube axes */
-    axa at,az,ax;
-    int it,iz,ix;
+    bool verb;           /* verbose flag */
+    sf_file Fw,Fv,Fr,Fo; /* I/O files */
+    axa at,az,ax;        /* cube axes */
+    int it,iz,ix;        /* index variables */
     float idx,idz,dt2;
 
-    /* arrays */
-    float  *ww, **vv, **rr;    
-    float **um, **uo, **up, **ud;
+    float  *ww,**vv,**rr;     /* I/O arrays*/
+    float **um,**uo,**up,**ud;/* tmp arrays */
 
-    /* Laplacian coefficients */
-    float c0=-30./12.;
-    float c1=+16./12.;
-    float c2=- 1./12.;
-
-    /* init RSF */
     sf_init(argc,argv);
-
     if(! sf_getbool("verb",&verb)) verb=0;
 
     /* setup I/O files */
@@ -38,28 +23,18 @@ int main(int argc, char* argv[])
     Fv = sf_input ("vel");
     Fr = sf_input ("ref");
 
-    /* read axes*/
-    iaxa(Fw,&at,1);
-    iaxa(Fv,&az,1);
-    iaxa(Fv,&ax,2);
-
-    /* setup output header */
-    oaxa(Fo,&az,1);
-    oaxa(Fo,&ax,2);
-    oaxa(Fo,&at,3);
+    /* Read/Write axes */
+    iaxa(Fw,&at,1); iaxa(Fv,&az,1); iaxa(Fv,&ax,2);
+    oaxa(Fo,&az,1); oaxa(Fo,&ax,2); oaxa(Fo,&at,3);
 
     dt2 =    at.d*at.d;
     idz = 1/(az.d*az.d);
     idx = 1/(ax.d*ax.d);
      
     /* read wavelet, velocity & reflectivity */
-    ww=sf_floatalloc(at.n);
-    vv=sf_floatalloc2(az.n,ax.n);
-    rr=sf_floatalloc2(az.n,ax.n);
-
-    sf_floatread(ww   ,at.n     ,Fw);    
-    sf_floatread(vv[0],az.n*ax.n,Fv);
-    sf_floatread(rr[0],az.n*ax.n,Fr);
+    ww=sf_floatalloc(at.n);       sf_floatread(ww   ,at.n     ,Fw);
+    vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
+    rr=sf_floatalloc2(az.n,ax.n); sf_floatread(rr[0],az.n*ax.n,Fr);
 
     /* allocate temporary arrays */
     um=sf_floatalloc2(az.n,ax.n);
@@ -76,9 +51,7 @@ int main(int argc, char* argv[])
 	}
     }
     
-    /* 
-     *  MAIN LOOP
-     */
+    /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<at.n; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
@@ -94,13 +67,7 @@ int main(int argc, char* argv[])
 		    c2*(uo[ix  ][iz-2] + uo[ix  ][iz+2])*idz;	  
 	    }
 	}
-	
-	for (iz=0; iz<az.n; iz++) {
-	    for (ix=0; ix<ax.n; ix++) {
-		ud[ix][iz] *= vv[ix][iz]*vv[ix][iz];
-	    }
-	}
-	
+
 	/* inject wavelet */
 	for (iz=0; iz<az.n; iz++) {
 	    for (ix=0; ix<ax.n; ix++) {
@@ -108,6 +75,13 @@ int main(int argc, char* argv[])
 	    }
 	}
 
+	/* scale by velocity */
+	for (iz=0; iz<az.n; iz++) {
+	    for (ix=0; ix<ax.n; ix++) {
+		ud[ix][iz] *= vv[ix][iz]*vv[ix][iz];
+	    }
+	}
+	
 	/* time step */
 	for (iz=0; iz<az.n; iz++) {
 	    for (ix=0; ix<ax.n; ix++) {

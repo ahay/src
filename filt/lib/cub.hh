@@ -2,6 +2,7 @@
 #include <iostream>
 #include <rsf.h>
 using namespace std;
+
 class CUB {
 public:
     // constructor

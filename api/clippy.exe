@@ -4,7 +4,7 @@ import numarray
 import rsf
 
 par = rsf.Par()
-input = rsf.Input()
+input  = rsf.Input()
 output = rsf.Output()
 assert 'float' == input.type
 
