@@ -24,7 +24,7 @@
 #include <rsf.h>
 /*^*/
 
-static int nn, nw;
+static int nw;
 static float complex *cx, *cf;
 static kiss_fftr_cfg forw, invs;
 
@@ -38,26 +38,25 @@ void halfint_init (bool adj  /* causal or anticausal */,
     float om;
     float complex cz;
 
-    nn = n;
-    nw = nn/2+1;
+    nw = n/2+1;
 
     cx = sf_complexalloc(nw);
     cf = sf_complexalloc(nw);
 
-    forw = kiss_fftr_alloc(nn,0,NULL,NULL);
-    invs = kiss_fftr_alloc(nn,1,NULL,NULL);
+    forw = kiss_fftr_alloc(n,0,NULL,NULL);
+    invs = kiss_fftr_alloc(n,1,NULL,NULL);
     if (NULL == forw || NULL == invs) 
 	sf_error("%s: KISS FFT allocation error");
 
     for (i=0; i < nw; i++) {
-	om = 2.*SF_PI*i/nn;
+	om = 2.*SF_PI*i/n;
         if (!adj) om = - om;
 
 	cz = cexpf(I*om);
 	if (inv) {
-	    cf[i] = csqrtf(1.-rho*cz);
+	    cf[i] = csqrtf(1.-rho*cz)/n;
 	} else {
-	    cf[i] = csqrtf(0.5*(1.+rho*cz)/(1.-rho*cz));
+	    cf[i] = csqrtf(0.5*(1.+rho*cz)/(1.-rho*cz))/n;
 	}
     }
 }
@@ -69,7 +68,7 @@ void halfint (float* x /* [n] */)
 
     kiss_fftr(forw,x, (kiss_fft_cpx *) cx);
     for (i=0; i < nw; i++) {
-	cx[i] *= cf[i]/nn;
+	cx[i] *= cf[i];
     }
     kiss_fftri(invs,(const kiss_fft_cpx *) cx, x);
 }

@@ -15,14 +15,13 @@ void ricker_init(int nfft /* time samples */,
 
     /* determine frequency sampling (for real to complex FFT) */
     nw = nfft/2+1;
-    dw = 2.*SF_PI/nfft;
+    dw = 1./(nfft*freq);
+    a = dw/powf(SF_PI,0.375);
 
     shape = sf_floatalloc(nw);
 
-    a = sqrtf(SF_PI)/(2*nfft*freq);
-
     for (iw=0; iw < nw; iw++) {
-	w = iw*dw*freq;
+	w = iw*dw;
 	w *= w;
 	shape[iw] = a*w*expf(-w);
     }

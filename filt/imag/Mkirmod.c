@@ -61,7 +61,9 @@ int main(int argc, char* argv[])
     trace = sf_floatalloc(nt+1);
 
     sf_putint(modl,"n1",nt);
-    
+    sf_putfloat(modl,"d1",dt);
+    sf_putfloat(modl,"o1",t0);
+
     /*** Initialize shots ***/
 
     if (NULL != sf_getstring("shots")) {
@@ -180,7 +182,7 @@ int main(int argc, char* argv[])
     delt = sf_floatalloc(nx);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
-    /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+    /* peak frequency for Ricker wavelet */
     ricker_init(nt*2,freq*dt);
     halfint_init(false,true,2*(nt/2),1.-1./nt);
 
@@ -200,8 +202,9 @@ int main(int argc, char* argv[])
 		tg = kirmod_map(is,ih,ix);
 		time[ix] = ts[0] + tg[0];
 		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt);
-		delt[ix] = tg[2];
+		/* delt[ix] = tg[2]; */
                 /* 2.5-D amplitude? */
+		delt[ix] = 0.;
 	    }
 
 	    aastretch_define (map,time,delt,ampl);
@@ -211,7 +214,7 @@ int main(int argc, char* argv[])
 	    sf_freqfilt(nt,trace);
 
 	    /* Half-order differentiation */
-	    halfint(trace);
+	    /* halfint(trace); */
 
 	    sf_floatwrite(trace,nt,modl);
 	}
