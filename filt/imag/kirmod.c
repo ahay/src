@@ -134,6 +134,7 @@ void kirmod_table (maptype type               /* velocity distribution */,
 		    case CONST:	
 			a = hypotf(x-x1,curve[ix]);
 			t = a/veloc[0];
+			p = fabsf(x-x1)/(a*veloc[0]);
 			break;		    
 		    default:
 			sf_error("__FILE__: case %d is not implemented",type);
@@ -141,6 +142,7 @@ void kirmod_table (maptype type               /* velocity distribution */,
 		}
 		ta[ix][0] = t;
 		ta[ix][1] = a;
+		ta[ix][2] = p;
 	    }
 	}
 	y[iy].ta = ta;

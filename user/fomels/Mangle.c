@@ -96,5 +96,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mangle.c,v 1.3 2004/06/23 23:31:42 fomels Exp $	 */
+/* 	$Id$	 */
 

@@ -8,7 +8,7 @@ byte2rsf burstnoise causint clip conflict conv costaper cmp2shot cosft
 dealias dealias2 decon deburst depth2time despike dip dip2 dipfilter dips dix
 envelope explanesignoi expsignoi extract fft1 fft3 fint1 flat flat3
 fourvc fourvc2 frame helicon hole idempatch igrad imospray impl1 impl2 infill
-inmo intbin intshow inttest1 inttest2 invbin1 iphase kirmod kolmog lapfill
+inmo intbin intshow inttest1 inttest2 invbin1 iphase kolmog lapfill
 levint light linefit lopef losignoi lpad lpef make misif miss miss1 miss2 miss3
 monof monof2 msmiss mspef nhelicon nmo noise npef ofpwd ocparcel octentwt
 parcel pef planemis2 planemis3 planesignoi pnmo prestolt pwd qdome radial radon

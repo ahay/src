@@ -27,15 +27,15 @@ kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0
 #include <rsf.h>
 
 #include "kirmod.h"
-#include "stretch4.h"
+#include "aastretch.h"
 
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix, it;
     float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, vel[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, eps, *time, *ampl;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt;
     maptype type = CONST;
-    map4 map;
+    aamap map;
     sf_file refl, curv, modl, shots, recvs;
 
     sf_init(argc,argv);
@@ -171,13 +171,11 @@ int main(int argc, char* argv[])
     /* reference coordinates for velocity */
 
     /*** Initialize stretch ***/
-
-    if (!sf_getfloat("eps",&eps)) eps=0.01;
-    /* stretch regularization */
-    map = stretch4_init (nt, t0, dt, nx, eps);
+    map = aastretch_init (nt, t0, dt, nx);
 
     time = sf_floatalloc(nx);
     ampl = sf_floatalloc(nx);
+    delt = sf_floatalloc(nx);
 
     /*** Compute traveltime table ***/
 
@@ -194,12 +192,13 @@ int main(int argc, char* argv[])
 		ts = kirmod_map(is,nh,ix);
 		tg = kirmod_map(is,ih,ix);
 		time[ix] = ts[0] + tg[0];
-		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+eps); 
+		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt);
+		delt[ix] = tg[2];
                 /* 2.5-D amplitude? */
 	    }
 
-	    stretch4_define (map,time);
-	    stretch4_apply (map,ampl,trace);
+	    aastretch_define (map,time,delt,ampl);
+	    aastretch_apply (map,rfl,trace);
 
 	    sf_floatwrite(trace,nt,modl);
 	}

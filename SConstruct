@@ -55,9 +55,12 @@ env.Prepend(CPPPATH=['../../include'],
 
 Export('env')
 dirs = ('lib','main','proc','imag')
+user = ('fomels',)
 
 Default('build/include')
-for dir in map(lambda x: os.path.join('filt',x), dirs):
+subdirs = map(lambda x: os.path.join('filt',x), dirs) + \
+          map(lambda x: os.path.join('user',x), user)
+for dir in subdirs:
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')
@@ -123,4 +126,3 @@ env.Command(index,None,'PYTHONPATH=%s %s sfdoc -w %s' %
 Depends(index,use)
 
 # 	$Id$
-

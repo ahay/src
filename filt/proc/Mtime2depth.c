@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char *argv[])
 {
     int nt, nz, nx, iz, it, ix, nw;
-    bool slow;
+    bool slow, twoway;
     float t0, dt, z0, dz, t, z=0.;
     float *time, *depth, *vel;
     fint1 fnt;
@@ -70,6 +70,10 @@ int main (int argc, char *argv[])
     depth = sf_floatalloc (nz);
     vel = sf_floatalloc (nz);
 
+    if (!sf_getbool ("twoway",&twoway)) twoway = true;
+    /* if y, two-way traveltime */
+    if (twoway) dz *= 2.;
+
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (time,nt,in);
 	sf_floatread (vel,nz,velocity);
@@ -83,7 +87,7 @@ int main (int argc, char *argv[])
 		z += slow? vel[iz-1]: 1./vel[iz-1];
 	    }
   
-	    t = (2.*z*dz-t0)/dt;
+	    t = (z*dz-t0)/dt;
 	    it = t;
 	    t = t - it;
 
@@ -102,4 +106,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mtime2depth.c,v 1.9 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

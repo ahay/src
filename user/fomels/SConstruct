@@ -2,12 +2,7 @@ import os, sys, re, string, glob
 sys.path.append('../..')
 import configure
 
-progs = '''
-cell2 constfdmig2 cup dmo dsr eikonal fincon finstack
-fkamo fkdmo gazdag green halfint interp2 interp3 interpt kirchnew kirmod mutter
-ofilp pick0 preconstkirch rays2 reg2tri remap1 s2ofz shoot2 sstep1
-trace2 tree tri2reg trirand unif2 voft vofz warpadd ztrace
-'''
+progs = 'angle angle2'
 
 try:  # distributed version
     Import('env')
@@ -22,15 +17,14 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    env.Prepend(CPPPATH=['../../include'],LIBPATH=['../lib'],LIBS=['rsf'])
-    SConscript('../lib/SConstruct')
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../filt/lib'],LIBS=['rsf'])
+    SConscript('../../filt/lib/SConstruct')
 
-# env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
 src = glob.glob('[a-z]*.c')
-src.remove('predicates.c')
 
 for source in src:
     inc = env.Include(source,prefix='')
@@ -38,7 +32,6 @@ for source in src:
     env.Depends(obj,inc)
 
 mains = Split(progs)
-
 for prog in mains:
     sources = ['M' + prog]
     configure.depends(env,sources,'M'+prog)
@@ -46,18 +39,11 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-for prog in ['eno2','ctridiagonal']:
-    sources = ['Test' + prog,prog]
-    configure.depends(env,sources,prog)
-    sources = map(lambda x: x + '.o',sources)
-    env.Object('Test' + prog + '.c')
-    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
- 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    main = 'sfimag.py'
+    main = 'sffomels.py'
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/rsfdoc.py')	
@@ -68,7 +54,6 @@ if root:
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)
-# env.Append(SCANNERS=CScan)
 
-# 	$Id$
+# 	$Id: SConstruct 777 2004-09-07 09:40:19Z fomels $
 
