@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     int wi;
     float *coord, **inp, *out, **oth, o1, d1, o2, d2, g0, dg, g;
     float *corr, *win1, *win2, a, b, a2, b2, ab, h, dw;
-    bool taper;
+    bool taper, diff;
     sf_file in, warped, other;
 
     sf_init (argc, argv);
@@ -96,6 +96,8 @@ int main(int argc, char* argv[])
     /* window overlap */
     if (!sf_getbool("taper",&taper)) taper=true;
     /* window tapering */
+    if (!sf_getbool("diff",&diff)) diff=false;
+    /* if y, compute difference power insted of correlation */
 
     dw = (n2-w)/(nw-1.);
     nw1 = (0.5*w+1.)/dw;
@@ -169,7 +171,9 @@ int main(int argc, char* argv[])
 		    b2 += b*b;
 		}
 
-		corr[iw] = ab/sqrtf(a2*b2+FLT_EPSILON);
+		corr[iw] = diff? 
+		    a2 + b2 - 2.*ab:
+		    ab/sqrtf(a2*b2+FLT_EPSILON);
 	    }
 
 	    sf_floatwrite(corr,nw,warped);

@@ -29,7 +29,7 @@ env['SCANNERS'].remove(CScan)
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
-src = 'aastretch'
+src = 'aastretch agrid'
 
 for source in Split(src):
     env.Include(source,prefix='_')

@@ -1,7 +1,35 @@
+/* Adaptive grid. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+
 #include <rsf.h>
 
 #include "agrid.h"
 #include "acell.h"
+
+#ifndef _acell_h
+
+typedef struct AGrid *agrid;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct AGrid {
     int n;
@@ -9,7 +37,10 @@ struct AGrid {
     int maxchild;
 };
 
-agrid agrid_init (int n, int nd, int max)
+agrid agrid_init (int n   /* number of grid points */, 
+		  int nd  /* number of data values */, 
+		  int max /* maximum split */)
+/*< Constructor >*/
 {
     int i;
     agrid grid;
@@ -28,7 +59,8 @@ agrid agrid_init (int n, int nd, int max)
     return grid;
 }
 
-void agrid_set (agrid grid, float** dat) 
+void agrid_set (agrid grid, float** dat /* [n][nd] */) 
+/*< Set the data values >*/
 {
     int i;
 
@@ -38,6 +70,7 @@ void agrid_set (agrid grid, float** dat)
 }
 
 void agrid_close (agrid grid)
+/*< Free allocated storage >*/
 {
     int i;
 
@@ -49,13 +82,17 @@ void agrid_close (agrid grid)
     free (grid);
 }
 
-void agrid_interp (agrid grid, int i, float x, float* f) {
+void agrid_interp (agrid grid, int i, float x, float* f) 
+/*< Interpolate from a grid >*/
+{
     interp_acell (grid->cells[i],x, f);
 }
 
-/* x is relative to the start of the grid */
+
 void fill_grid (agrid grid, float min1, float max1, float min2, float max2,
-		void* dat, void (*fill)(float x, void* dat, float* f)) {
+		void* dat, void (*fill)(float x, void* dat, float* f)) 
+/*< Populate the grid. x is relative to the start of the grid >*/
+{
     int i, n;
 
     n = grid->n-1;
@@ -68,7 +105,9 @@ void fill_grid (agrid grid, float min1, float max1, float min2, float max2,
     }
 }
 
-int grid_size (agrid grid) {
+int grid_size (agrid grid) 
+/*< return grid size >*/
+{
     int i, n, size;
 
     n = grid->n-1;
@@ -81,7 +120,9 @@ int grid_size (agrid grid) {
     return size;
 }
 
-float** write_grid (agrid grid) {
+float** write_grid (agrid grid) 
+/*< dump the grid in an array >*/
+{
     acell* flat;
     float** dat;
     int i, k, n, *size, maxsize, totsize;
@@ -111,5 +152,4 @@ float** write_grid (agrid grid) {
     return dat;
 }
 
-/* 	$Id: agrid.c,v 1.2 2003/09/30 14:30:52 fomels Exp $	 */
-
+/* 	$Id$	 */
