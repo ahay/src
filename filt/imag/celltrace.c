@@ -23,10 +23,6 @@
 
 #include "celltrace.h"
 
-#ifndef MIN
-#define MIN(a,b) ((a)<(b))?(a):(b)
-#endif
-
 #ifndef _celltrace_h
 
 typedef struct CellTrace *celltrace;
@@ -115,7 +111,7 @@ float cell_trace (celltrace ct,
 	sf_cell_intersect (g[1],x,ct->dx/v,p[1],&sx,&jx);
 	sf_cell_intersect (g[0],z,ct->dz/v,p[0],&sz,&jz);
 
-	s = MIN(sx,sz);
+	s = SF_MIN(sx,sz);
 
 	t += sf_cell_update1 (2, s, v, p, g);
 	/* p is slowness vector now ||p||=v */
