@@ -28,12 +28,12 @@ except: # local version
 ##############################################################################
 lib = env.StaticLibrary('rsf',sources)
 inc = env.Command('rsf.h',includes,Action(configure.merge))
-
+install = env.Install('../../include',inc)
+   
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
 else:
-    install = env.Install('../../include',inc)
     env.Alias('install',install)
 
 ##############################################################################

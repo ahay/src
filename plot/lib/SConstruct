@@ -24,11 +24,14 @@ except: # local version
     env.Append(CCFLAGS=' -g',CPPPATH=['../../filt/lib'])
 
 lib = env.StaticLibrary('rsfplot',sources)
-inc = env.Command('../../include/rsfplot.h',includes,Action(configure.merge))
+inc = env.Command('rsfplot.h',includes,Action(configure.merge))
+install = env.Install('../../include',inc)
 
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
+else:
+    env.Alias('install',install)
 
 ##############################################################################
 # TESTING

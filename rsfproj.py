@@ -409,6 +409,8 @@ class Project(Environment):
         self.Alias(target + '.buildPDF',buildPDF)
         return plot
     def Combine(self,target,source,how,result=0):
+        if not type(source) is types.ListType:
+            source = string.split(source)
         flow = apply(combine[how],[len(source)])
         if result:
             return self.Result(target,source,flow,src_suffix=vpsuffix,stdin=0)

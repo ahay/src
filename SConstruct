@@ -59,6 +59,7 @@ Export('env')
 libdirs = ['filt/lib','plot/lib']
 prgdirs = ['filt/main','filt/proc','filt/imag','plot/main']
 
+Default('build/include')
 for dir in libdirs+prgdirs:
     build = os.path.join('build',dir)
     BuildDir(build,dir)
