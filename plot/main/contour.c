@@ -20,8 +20,8 @@ static float o1, o2, d1, d2;
 int main (int argc, char* argv[])
 {
     int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2;
-    float **z, zi, dc, c0, zmin, zmax, *c, min1, min2, max1, max2;
-    bool hasc, hasdc, hasc0;
+    float **z, zi, dc, c0, zmin, zmax, *c, min1, min2, max1, max2, bmin, bmax;
+    bool hasc, hasdc, hasc0, scalebar, nomin, nomax;
     sf_file in;
     
     sf_init(argc,argv);
@@ -62,6 +62,15 @@ int main (int argc, char* argv[])
 
     z = sf_floatalloc2(n1,n2);
 
+    if (!sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
+    /* if y, draw scalebar */
+    if (scalebar) {
+	nomin = !sf_getfloat("minval",&bmin);
+	/* minimum value for scalebar (default is the data minimum) */
+	nomax = !sf_getfloat("maxval",&bmax);
+	/* maximum value for scalebar (default is the data maximum) */
+    }
+
     for (i3=0; i3 < n3; i3++) {
 	sf_read(z[0],sizeof(float),n12,in);
 	
@@ -100,6 +109,28 @@ int main (int argc, char* argv[])
 	    vp_plot_set (ic);
 	    contour (z,n1,n2,c[ic]);
 	} 
+
+	if (scalebar) {
+	    if (nomin || nomax) {
+		if (!hasc && (!hasdc || !hasc0)) {
+		    if (nomin) bmin=zmin;
+		    if (nomax) bmax=zmax;
+		} else {
+		    if (nomin) bmin = z[0][0];
+		    if (nomax) bmax = z[0][0];
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    zi= z[i2][i1];
+			    if      (nomin && zi < bmin) bmin=zi;
+			    else if (nomax && zi > bmax) bmax=zi;
+			}
+		    }
+		}
+	    }
+	    
+	    vp_barframe_init (bmin,bmax);
+	    vp_barline(nc,c,bmin,bmax);
+	}
 
     } /* i3 */
 
@@ -349,5 +380,5 @@ static void draw (bool mask, float x, float y) {
     }
 }
 
-/* 	$Id: contour.c,v 1.4 2003/10/01 23:41:18 fomels Exp $	 */
+/* 	$Id: contour.c,v 1.5 2003/10/14 21:53:54 fomels Exp $	 */
 

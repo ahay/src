@@ -10,6 +10,7 @@ Takes: < data.rsf > plot.vpl
 #include <rsfplot.h>
 
 #define TSIZE 4096
+#define BSIZE 256
 
 int main(int argc, char* argv[])
 {
@@ -19,7 +20,7 @@ int main(int argc, char* argv[])
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     bool scalebar, nomin=true, nomax=true;
     char *gainpanel, *color;
-    unsigned char tbl[TSIZE+1], **buf, tmp, mincol, maxcol;
+    unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     sf_file in;
     
@@ -129,6 +130,7 @@ int main(int argc, char* argv[])
 	/* minimum value for scalebar (default is the data minimum) */
 	nomax = !sf_getfloat("maxval",&barmax);
 	/* maximum value for scalebar (default is the data maximum) */
+	barbuf[0] = (unsigned char*) sf_alloc(BSIZE,sizeof(unsigned char));
     }
 
     x1 = o1-0.5*d1;
@@ -256,16 +258,15 @@ int main(int argc, char* argv[])
 		vp_barframe_init (barmin,barmax);
 	    }
 
-	    j = (barmin-pbias)*gain + bias;
-	    if      (j < 0) j=0;
-	    else if (j > TSIZE) j=TSIZE;
-	    mincol = tbl[j];
-	    j = (barmax-pbias)*gain + bias;
-	    if      (j < 0) j=0;
-	    else if (j > TSIZE) j=TSIZE;
-	    maxcol = tbl[j];
+	    for (it=0; it < BSIZE; it++) {
+		dat = (barmax*it + barmin*(BSIZE-1-it))/(BSIZE-1);
+		j = (dat-pbias)*gain + bias;
+		if      (j < 0) j=0;
+		else if (j > TSIZE) j=TSIZE;
+		barbuf[0][it] = tbl[j];
+	    }
 
-	    vp_barraster(mincol,maxcol);
+	    vp_barraster(BSIZE, barbuf);
 	}
 
 	vp_purge(); 
@@ -274,4 +275,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: grey.c,v 1.12 2003/10/06 20:19:45 fomels Exp $	 */
+/* 	$Id: grey.c,v 1.13 2003/10/14 21:53:54 fomels Exp $	 */
