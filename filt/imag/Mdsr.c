@@ -148,7 +148,7 @@ int main (int argc, char **argv)
     dk *= 2.0*SF_PI;
     k0 *= 2.0*SF_PI;
 
-    vt     = sf_floatalloc(nz);
+    vt = sf_floatalloc(nz);
 
     if (NULL == vel) {
 	if (!sf_getfloat("vel",&v0)) sf_error ("Need vel=");
@@ -196,4 +196,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mdsr.c,v 1.7 2003/10/14 21:53:21 fomels Exp $	 */
+/* 	$Id: Mdsr.c,v 1.8 2004/03/18 15:43:06 fomels Exp $	 */

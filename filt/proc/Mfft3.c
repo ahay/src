@@ -1,4 +1,4 @@
-/* FFT transform on on extra axis.
+/* FFT transform on extra axis.
 
 Takes: < input.rsf > output.rsf
 
@@ -49,12 +49,14 @@ int main (int argc, char **argv)
     
     if (inv) { 
 	sprintf(varname,"n%d",axis);
-	if (!sf_histint(in,varname,&nk)) sf_error ("No n2= in input");
+	if (!sf_histint(in,varname,&nk)) 
+	    sf_error ("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dk)) sf_error ("No d2= in input");
+	if (!sf_histfloat(in,varname,&dk)) 
+	    sf_error ("No %s= in input",varname);
 
 	sprintf(varname,"m%d",axis);
-	if (!sf_histint(in,varname,&nx)) sf_error ("No %s= in input",varname);
+	if (!sf_histint(in,varname,&nx)) nx=nk;
 	sprintf(varname,"c%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
 
@@ -68,9 +70,11 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,x0);
     } else { 
 	sprintf(varname,"n%d",axis);
-	if (!sf_histint(in,varname,&nx)) sf_error ("No n2= in input");
+	if (!sf_histint(in,varname,&nx)) 
+	    sf_error ("No %s= in input",varname);
 	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dx)) sf_error ("No d2= in input");
+	if (!sf_histfloat(in,varname,&dx)) 
+	    sf_error ("No %s= in input",varname);
 	sprintf(varname,"o%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
 
@@ -146,4 +150,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mfft3.c,v 1.5 2003/10/18 18:21:31 fomels Exp $	 */
+/* 	$Id: Mfft3.c,v 1.6 2004/03/18 15:43:06 fomels Exp $	 */

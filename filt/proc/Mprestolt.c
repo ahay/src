@@ -7,17 +7,16 @@ Takes: < input.rsf > output.rsf
 
 #include <rsf.h>
 
-#include "int1.h"
-#include "interp_spline.h"
-#include "prefilter.h"
+#include "fint1.h"
 #include "cosft.h"
 
 int main(int argc, char* argv[])
 {
+    fint1 str;
     bool inv, stack, depth;
-    int nt,nw,nx,ny,nh,nf, it,iw,ix,iy,ih;
+    int nt,nw,nx,ny,nh,nf, it,iw,ix,iy,ih, iw2;
     float dw,dx,dy,dh, x,y,h,xh, vel, w0, wh, w2, sq;
-    float *str, *trace2, *trace, *keep=NULL;
+    float *trace, *keep=NULL;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -81,34 +80,33 @@ int main(int argc, char* argv[])
     nw=sf_npfar(2*(nw-1));
 
     cosft_init(nw /* , w0, dw */);
-    dw = SF_PI/(nw*dw);
-    dh *= SF_PI;
-    dx *= SF_PI;
-    dy *= SF_PI;
+    dw = 2.*SF_PI/(nw*dw);
+    dh *= 2.*SF_PI;
+    dx *= 2.*SF_PI;
+    dy *= 2.*SF_PI;
 
     if (depth) {
 	if (inv) {
-	    dw *= vel * 0.5;
+	    dw *= vel;
 	} else {
-	    dw *= 2./vel;
+	    dw *= 1./vel;
 	}
     } else {
-	dh *= vel * 0.5;
-	dx *= vel * 0.5;
-	dy *= vel * 0.5;
+	dh *= vel;
+	dx *= vel;
+	dy *= vel;
     }
 
-    trace2 = sf_floatalloc(nw);
     trace = sf_floatalloc(nw);
-    str = sf_floatalloc(nw);
 
     if (stack) keep = sf_floatalloc(nw);
 
 /*  w2 = (/ (((iw-1)*dw)**2, iw = 1, nw) /) */
 
-    if (!sf_getint("nf",&nf)) nf=4;
-    /* [2,4,6,8] Interpolation accuracy */
-    prefilter_init (nf, nw, 3*nw);
+    if (!sf_getint("extend",&nf)) nf=4;
+    /* trace extension */
+
+    str = fint1_init(nf,nw);
 
     for (iy = 0; iy < ny; iy++) {
 	y = iy*dy;
@@ -124,6 +122,7 @@ int main(int argc, char* argv[])
 		}
 		
 		cosft_frw (trace,0,1);
+		fint1_set(str,trace);
 	    } else if (stack) {
 		for (it=0; it < nw; it++) {
 		    keep[it] = 0.;
@@ -136,51 +135,50 @@ int main(int argc, char* argv[])
 		xh = x*h;
 		h += x + y;
 
-		for (iw = 0; iw < nw; iw++) {
-		    w2 = iw*dw;
-		    w2 *= w2;
-
-		    if (inv) { /* modeling */
-			if (xh == 0.) {
-			    str[iw] = sqrtf (w2 + h);
-			} else { 
-			    if (w2 == 0.) {
-				str[iw] = -2.*dw;
-			    } else {
-				str[iw] = sqrtf (w2 + h + xh/w2);
-			    }
-			}
-		    } else { /* migration */
-			wh = w2-h;
-			sq = wh*wh - 4.*xh;
-
-			if (wh > 0. && sq > 0.) {
-			    str[iw] = sqrtf(0.5*(wh + sqrtf (sq)));
-			} else {
-			    str[iw] = - 2.*dw;
-			}
-		    }
-		}
-
-		int1_init (str, 0., dw, nw, spline_int, nf, nw);
-
 		if (!inv) {
 		    sf_read(trace,sizeof(float),nt,in);
 		    for (it=nt; it < nw; it++) { /* pad */
 			trace[it]=0.;
 		    }		
+
 		    cosft_frw (trace,0,1);
+		    fint1_set(str,trace);
 		}
 
-		prefilter_apply (nw, trace);
-		int1_lop (false,false,nw,nw,trace,trace2);   
+		for (iw = 0; iw < nw; iw++) {
+		    w2 = iw*dw;
+		    w2 *= w2;
+
+		    if (inv) { /* modeling */
+			wh = w2-h;
+			sq = wh*wh - 4.*xh;
+
+			if (wh > 0. && sq > 0.) {
+			    w2 = sqrtf(0.5*(wh + sqrtf (sq)))/dw;
+			    iw2 = w2;
+			    trace[iw] = (iw2 < nw)? 
+				fint1_apply(str,iw2,w2-iw2,false):0.;
+			} else {
+			    trace[iw] = 0.;
+			}
+		    } else { /* migration */
+			if (w2 == 0.) {
+			    trace[iw] = 0.;
+			} else {
+			    w2 = sqrtf (w2 + h + xh/w2)/dw;
+			    iw2 = w2;
+			    trace[iw] = (iw2 < nw)? 
+				fint1_apply(str,iw2,w2-iw2,false):0.;
+			}
+		    }
+		}
 
 		if (inv || !stack) {
-		    cosft_inv (trace2,0,1);
-		    sf_write(trace2,sizeof(float),nt,out);
+		    cosft_inv (trace,0,1);
+		    sf_write(trace,sizeof(float),nt,out);
 		} else {
 		    for (iw=0; iw < nw; iw++) {
-			keep[iw] += trace2[iw];
+			keep[iw] += trace[iw];
 		    }
 		}
 	    } /* h */
