@@ -40,6 +40,7 @@ def selfdoc(target=None,source=None,env=None):
     rsfsuffix = env.get('rsfsuffix','rsf')
     getprog(src,doc,rsfprefix,rsfsuffix)
     doc.close()
+    return 0
 
 def bold(text):
     """Format a string in bold by overstriking."""
@@ -447,4 +448,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.17 2004/06/29 17:43:33 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.18 2004/06/29 19:51:05 fomels Exp $	

@@ -3,8 +3,15 @@
 #include <string.h>
 #include <time.h>
 
-/* Solaris? */
+#ifdef __GNUC__
+#ifndef alloca
+#define alloca __builtin_alloca
+#endif
+#else /* not GNU C  */
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
 #include <alloca.h>
+#endif
+#endif
 
 #include <limits.h>
 
@@ -1125,4 +1132,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.19 2004/06/15 16:27:42 fomels Exp $	 */
+/* 	$Id: file.c,v 1.20 2004/06/29 19:51:05 fomels Exp $	 */
