@@ -216,6 +216,21 @@ class rsfprog:
         if self.vers:
             doc = doc + section('version',self.vers)
         pydoc.pager(doc)
+    def latex(self,dir):
+        file = open (os.path.join(dir,self.name + '.tex'),'w')
+        contents = '\\footnotesize\n'
+        name = '\\subsection{%s}\n' % self.name
+        contents = contents + name
+        if self.desc:
+            contents = contents + self.desc
+        if self.snps:
+            contents = contents + self.snps
+        if self.cmts:
+            contents = contents + self.cmts
+        pars =  self.pars.keys()
+        if pars:
+            pars.sort()
+            pardoc = ''
     def html(self,dir):
         file = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name

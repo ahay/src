@@ -27,6 +27,7 @@ kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0
 #include <rsf.h>
 
 #include "kirmod.h"
+#include "ricker.h"
 #include "aastretch.h"
 
 int main(int argc, char* argv[]) 
@@ -176,6 +177,8 @@ int main(int argc, char* argv[])
     time = sf_floatalloc(nx);
     ampl = sf_floatalloc(nx);
     delt = sf_floatalloc(nx);
+
+    ricker_init(nt*2,freq);
 
     /*** Compute traveltime table ***/
 

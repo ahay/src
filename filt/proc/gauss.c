@@ -3,7 +3,6 @@
 #include <rsf.h>
 
 #include "gauss.h"
-#include "freqfilt.h"
 
 static float *shape;
 
@@ -26,13 +25,13 @@ void gauss_init(int nfft, float rect)
 	shape[iw] = expf(-w)/nfft;
     }
 
-    freqfilt_init(nfft,nw);
-    freqfilt_set(shape);
+    sf_freqfilt_init(nfft,nw);
+    sf_freqfilt_set(shape);
 }
 
 void gauss_close(void) {
     free(shape);
-    freqfilt_close();
+    sf_freqfilt_close();
 }
 
 /* 	$Id$	 */

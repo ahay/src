@@ -20,7 +20,7 @@
 #include <cairo.h>
 
 #include <gtk/gtk.h>
-#include <gtkcairo/gtkcairo.h>
+#include <gtkcairo.h>
 
 #include <rsf.h>
 
@@ -33,7 +33,7 @@ void cr_init(void)
     GtkWidget *win, *vbox, *frame, *gtkcairo;
 
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
-    gtk_window_set_title (GTK_WINDOW (win), sf_prog());
+    gtk_window_set_title (GTK_WINDOW (win), sf_getprog());
     g_signal_connect (G_OBJECT (win), "delete-event",
                       G_CALLBACK (gtk_main_quit), NULL);
 

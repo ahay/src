@@ -1,7 +1,34 @@
+/* 3-D Plane-wave destruction filter. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "allp3.h"
 #include "apfilt.h"
+
+#ifndef _allp3_h
+
+typedef struct Allpass *allpass;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct Allpass {
     int nx, ny, nz, nw, nj;
@@ -10,7 +37,11 @@ struct Allpass {
 
 static allpass ap1, ap2;
 
-allpass allpass_init(int nw, int nj, int nx, int ny, int nz, float ***pp)
+allpass allpass_init(int nw                 /* filter size (1,2,3) */, 
+		     int nj                 /* filter step */, 
+		     int nx, int ny, int nz /* data size */, 
+		     float ***pp            /* data [nz][ny][nx] */)
+/*< Initialize >*/
 {
     allpass ap;
 
@@ -26,7 +57,11 @@ allpass allpass_init(int nw, int nj, int nx, int ny, int nz, float ***pp)
     return ap;
 }
 
-void allpass1 (bool der, const allpass ap, float*** xx, float*** yy)
+void allpass1 (bool der         /* derivative flag */, 
+	       const allpass ap /* PWD object */, 
+	       float*** xx      /* input */, 
+	       float*** yy      /* output */)
+/*< in-line plane-wave destruction >*/
 {
     int ix, iy, iz, iw, is;
     float a[7];
@@ -59,7 +94,11 @@ void allpass1 (bool der, const allpass ap, float*** xx, float*** yy)
     }
 }
 
-void allpass2 (bool der, const allpass ap, float*** xx, float*** yy)
+void allpass2 (bool der         /* derivative flag */, 
+	       const allpass ap /* PWD object */, 
+	       float*** xx      /* input */, 
+	       float*** yy      /* output */)
+/*< cross-line plane-wave destruction >*/
 {
     int ix, iy, iz, iw, is;
     float a[7];
@@ -92,14 +131,15 @@ void allpass2 (bool der, const allpass ap, float*** xx, float*** yy)
     }
 }
 
-
 void allpass3_init (allpass ap, allpass aq)
+/*< Initialize linear operator >*/
 {
     ap1 = ap;
     ap2 = aq;
 }
 
 void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
+/*< PWD as linear operator >*/
 {
     int i, ix, iy, iz, iw, is, nx, ny, nz, nw, nj;
     float a[7];
@@ -166,6 +206,5 @@ void allpass3_lop (bool adj, bool add, int n1, int n2, float* xx, float* yy)
 	}
     }
 }
-
 
 /* 	$Id$	 */

@@ -1,4 +1,4 @@
-/* Plane-wave destruction filter. */
+/* 2-D Plane-wave destruction filter. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

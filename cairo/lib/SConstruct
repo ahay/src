@@ -22,7 +22,11 @@ except: # local version
     env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
 
-env.ParseConfig('pkg-config --cflags --libs "gtk+-2.0 cairo >= 0.1.1" ') 
+ccflags = ' ' + env.get('CCFLAGS','')
+del env['CCFLAGS']
+libs = 'gtk+-2.0 cairo >= 0.1.1 gtkcairo'
+env.ParseConfig('pkg-config --cflags --libs "%s" ' % libs)
+env['CCFLAGS'] = ccflags
 
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])

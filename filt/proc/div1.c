@@ -2,7 +2,6 @@
 
 #include "div1.h"
 #include "gauss.h"
-#include "freqfilt.h"
 #include "triangle1.h"
 #include "weight.h"
 
@@ -39,10 +38,10 @@ void div1 (float* num, float* den,  float* rat)
 {
     weight_init(den);
     if (gauss) {
-	sf_conjgrad(NULL, weight_lop,freqfilt_lop,p,rat,num,niter);
+	sf_conjgrad(NULL, weight_lop,sf_freqfilt_lop,p,rat,num,niter);
     } else {
 	sf_conjgrad(NULL, weight_lop,triangle1_lop,p,rat,num,niter); 
     }
 }
 
-/* 	$Id: div1.c,v 1.2 2004/04/05 14:35:11 fomels Exp $	 */
+/* 	$Id$	 */

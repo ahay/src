@@ -178,8 +178,13 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 
     for (i2=0; i2 < rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
-	    tmp1[rect-1-i2][i1]  = tmp1[rect+i2][i1];
-	    tmp1[n2+rect+i2][i1] = tmp1[n2+rect-1-i2][i1];
+	    if (adj) {
+		tmp1[rect-1-i2][i1]  = tmp1[rect+i2][i1];
+		tmp1[n2+rect+i2][i1] = tmp1[n2+rect-1-i2][i1];
+	    } else {
+		tmp1[rect-1-i2][i1]  = 0.;
+		tmp1[n2+rect+i2][i1] = 0.;
+	    }
 	}
     }
     
@@ -187,12 +192,14 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     shifts(tmp1,tmp2);
     roll(true,tmp2);
    
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    tmp2[rect+i2][i1]      += tmp2[rect-1-i2][i1];
-	    tmp2[n2+rect-1-i2][i1] += tmp2[n2+rect+i2][i1];
+    if (!adj) {
+	for (i2=0; i2 < rect; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		tmp2[rect+i2][i1]      += tmp2[rect-1-i2][i1];
+		tmp2[n2+rect-1-i2][i1] += tmp2[n2+rect+i2][i1];
+	    }
 	}
-    }
+    } 
  
     for (i2=0; i2 < n2; i2++) {
 	if (adj) smooth (tr,0,1,false,tmp2[i2+rect]);

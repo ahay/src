@@ -2,11 +2,6 @@
 
 Takes: < ai.rsf > reflectivity.rsf
 */
-
-/* extra */
-#include "cmatmult.h"
-#include "matmult.h"
-
 #include <math.h>
 
 #include <rsf.h>
@@ -59,4 +54,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mai2refl.c,v 1.6 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
