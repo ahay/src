@@ -54,7 +54,7 @@ def cc(context):
     context.Result(res[0])
     if not res:
         sys.exit(1)
-    if CC == 'gcc':
+    if CC.endswith('gcc'):
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
                      '-std=gnu9x -Wall -pedantic',
@@ -271,4 +271,4 @@ def docextra(docmerge,source,copy):
     return docmerge + '''
     echo rsfdoc.progs[\\'%s\\']=%s >> $TARGET''' % (copy,source)
 
-#	$Id: configure.py,v 1.13 2004/04/19 22:03:22 fomels Exp $	
+#	$Id: configure.py,v 1.14 2004/06/16 17:55:15 fomels Exp $	

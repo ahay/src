@@ -57,7 +57,9 @@ env.Append(CPPPATH=['../../include'],
 
 if sys.platform[:5] == 'sunos':
     env.Append(LIBS=['nsl'])
-    env['CCFLAGS']='-xO2'
+    if not env['CC'].endswith('gcc'):
+        # Sun's native compiler 
+        env['CCFLAGS']='-xO2'
 
 Export('env')
 dirs = ('lib','main','proc','imag')
@@ -118,4 +120,4 @@ Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs[1:]))
 Depends(use,os.path.join(libdir,'sfplot.py'))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 
-# 	$Id: SConstruct,v 1.28 2004/06/03 05:35:16 fomels Exp $	
+# 	$Id: SConstruct,v 1.29 2004/06/16 17:55:15 fomels Exp $	

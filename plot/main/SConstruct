@@ -19,6 +19,8 @@ except:
     env['CCFLAGS'] = env.get('CCFLAGS','').replace('-O2','-g')
     env.Append(CPPPATH=['../../include'],
                LIBPATH=['../../filt/lib','../lib'],LIBS=['rsfplot','rsf','m'])
+    if sys.platform[:5] == 'sunos':
+        env.Append(LIBS=['nsl'])
     SConscript('../lib/SConstruct')
 
 mains = Split(progs)
@@ -46,4 +48,4 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.1 2004/06/11 10:47:34 fomels Exp $	
+# 	$Id: SConstruct,v 1.2 2004/06/16 17:55:15 fomels Exp $	

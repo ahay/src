@@ -21,6 +21,8 @@ except: # local version
     opts.Update(env)
     env.Append(CCFLAGS=' -g',CPPPATH=['../../include'],
                LIBPATH=['../lib'],LIBS=['rsf','m'])
+    if sys.platform[:5] == 'sunos':
+        env.Append(LIBS=['nsl'])
     SConscript('../lib/SConstruct')
 
 mains = Split(progs)
@@ -50,4 +52,4 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-# 	$Id: SConstruct,v 1.12 2004/04/01 02:12:29 fomels Exp $	
+# 	$Id: SConstruct,v 1.13 2004/06/16 17:55:15 fomels Exp $	

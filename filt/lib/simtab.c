@@ -48,7 +48,7 @@ strsep1(char **stringp, char *delim)
 
     if (start == NULL) return NULL;
 
-    for (cp = start; ch = *cp; cp++) {
+    for (cp = start; (ch = *cp); cp++) {
         if (strchr(delim, ch)) {
             *cp++ = 0;
             *stringp = cp;
@@ -458,4 +458,4 @@ void sf_simtab_output (sf_simtab table, FILE* fp) {
     }
 }
 
-/* 	$Id: simtab.c,v 1.12 2004/06/15 16:27:42 fomels Exp $	 */
+/* 	$Id: simtab.c,v 1.13 2004/06/16 17:55:15 fomels Exp $	 */

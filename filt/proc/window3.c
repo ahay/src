@@ -31,7 +31,7 @@ void window3_apply (const int* i, float*** dat,
     for (i3=0; i3 < w[2]; i3++) {
 	if (near && i3+1 <= h[2]) {
 	    gain3 = sinf(0.5*SF_PI*i3/h[2]);
-	} else if (far && i2 >= w[2]-h[2]) {
+	} else if (far && i3 >= w[2]-h[2]) {
 	    gain3 = sinf(0.5*SF_PI*(w[2]-i3-1)/h[2]);
 	} else {
 	    gain3 = 1.;
@@ -65,4 +65,4 @@ void window3_apply (const int* i, float*** dat,
     }
 }
 
-/* 	$Id: window3.c,v 1.1 2004/05/06 00:03:13 fomels Exp $	 */
+/* 	$Id: window3.c,v 1.2 2004/06/16 17:55:15 fomels Exp $	 */

@@ -7,12 +7,13 @@ ai2refl aliasp autocorr bandpass bin bin1 blindpick blindpick2 boxsmooth
 byte2rsf burstnoise causint clip conv costaper cmp2shot cosft dealias dealias2
 deburst depth2time despike dip dip2 dipfilter dix envelope extract
 fft1 fft2 fft3 fint1 flat fourvc frame helicon hole idempatch igrad imospray
-impl1 impl2 infill inmo intbin invbin1 kolmog lapfill levint light lpad lpef
-make misif miss miss1 miss2 miss3 monof monof2 msmiss mspef nmo noise parcel
-pef prestolt pwd radon randrefl reshape ricker shapebin shapebin1 shot2cmp
-shotholes sigmoid slice smooth smoothder smoothreg smoothreg2
-spectra spectra2 spline stolt stretch synmarine taupmo tentwt time2depth tpow
-trismooth2 vscan velmod warp1 warpscan wilson window1 window2 window3
+impl1 impl2 infill inmo intbin invbin1 kolmog lapfill levint light
+lopef losignoi lpad lpef make misif miss miss1 miss2 miss3 monof monof2
+msmiss mspef nmo noise parcel pef prestolt pwd radon randrefl reshape ricker
+shapebin shapebin1 shot2cmp shotholes sigmoid slice smooth smoothder
+smoothreg smoothreg2 spectra spectra2 spline stolt stretch synmarine taupmo
+tentwt time2depth tpow trismooth2 vscan velmod warp1 warpscan wilson
+window1 window2 window3
 '''
 
 try: # distributed version
@@ -74,4 +75,4 @@ if root:
     
 #####################################################################
 
-# 	$Id: SConstruct,v 1.2 2004/06/15 16:27:42 fomels Exp $	
+# 	$Id: SConstruct,v 1.3 2004/06/16 17:55:15 fomels Exp $	
