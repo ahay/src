@@ -26,6 +26,8 @@ int main (int argc, char *argv[])
     /* transpose */
     sf_putint(out,"n1",n2);
     sf_putint(out,"n2",n1);
+    sf_putfloat(out,"o1",0.);
+    sf_putfloat(out,"d1",1.);
     sf_putfloat(out,"o2",0.);
     sf_putfloat(out,"d2",1.);
 
@@ -53,4 +55,4 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mpick0.c,v 1.4 2004/04/19 21:51:16 fomels Exp $	 */
+/* 	$Id: Mpick0.c,v 1.5 2004/04/20 01:32:07 fomels Exp $	 */
