@@ -23,7 +23,8 @@
 #include <errno.h>
 #include <fcntl.h>
 
-#include <rpc/rpc.h>
+#include <rpc/types.h>
+/* #include <rpc/rpc.h> */
 #include <rpc/xdr.h>
 
 #include "file.h"
@@ -34,8 +35,13 @@
 #include "error.h"
 
 /* BSD - MAXNAMELEN, Posix - NAME_MAX */
-#ifndef NAME_MAX 
+#ifndef NAME_MAX
+#ifdef MAXNAMELEN
 #define	NAME_MAX MAXNAMELEN
+#endif
+#ifdef FILENAME_MAX
+#define NAME_MAX FILENAME_MAX
+#endif
 #endif
 
 struct sf_File {
@@ -1132,4 +1138,4 @@ void sf_pipe (sf_file file, FILE* tmp, size_t size)
     (void) fclose(tmp);
 }
 
-/* 	$Id: file.c,v 1.20 2004/06/29 19:51:05 fomels Exp $	 */
+/* 	$Id: file.c,v 1.21 2004/06/30 18:28:41 fomels Exp $	 */

@@ -8,7 +8,7 @@ void cprint (float complex c)
     sf_warning("%g+%gi",crealf(c),cimagf(c));
 }
 
-#if !defined(__APPLE__) && defined (__STDC__) && (__STDC_VERSION__ >= 199901L)
+#if !defined(__APPLE__) && !defined(__CYGWIN__) && defined (__STDC__) && (__STDC_VERSION__ >= 199901L)
 
 #else
 
@@ -85,4 +85,4 @@ float hypotf(float x, float y) { return (float) hypot(x,y);}
 
 #endif
 
-/* 	$Id: c99.c,v 1.5 2004/03/30 08:00:26 fomels Exp $	 */
+/* 	$Id: c99.c,v 1.6 2004/06/30 18:28:41 fomels Exp $	 */

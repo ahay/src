@@ -5,7 +5,7 @@
 
 #ifndef __cplusplus
 
-#if !defined(__APPLE__) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+#if !defined(__APPLE__) && !defined(__CYGWIN__) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
 
 /* The following from C99 - must define for C90 */
 #include <stdbool.h>       /* define bool, true, false */
@@ -72,4 +72,4 @@ void cprint (float complex c);
 
 #endif
 
-/* 	$Id: c99.h,v 1.8 2004/06/15 16:27:42 fomels Exp $	 */
+/* 	$Id: c99.h,v 1.9 2004/06/30 18:28:41 fomels Exp $	 */

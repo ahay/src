@@ -43,11 +43,13 @@ else:
 ##############################################################################
 # TESTING
 ##############################################################################
+libs = ['m']	
+if sys.platform[:5] == 'sunos':
+    libs.append('nsl')
+elif sys.platform[:6] == 'cygwin':
+    libs.append('rpc')
 for file in ['file','getpar','simtab']:
     test = 'Test' + file + '.c'
-    libs = ['m']
-    if sys.platform[:5] == 'sunos':
-	libs.append('nsl')
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='',LIBS=libs)
 
 api = string.split(string.lower(env.get('API','')),',')
@@ -64,9 +66,10 @@ if 'c++' in api:
 
     for file in ['getpar','file']:
         test = 'Test' + file + '.cc'
+        
         env.Program([test,libcc,lib],
                     OBJSUFFIX='++.o',CPPPATH='../../include',
-                    PROGSUFFIX='.x',PROGPREFIX='',LIBS='m')
+                    PROGSUFFIX='.x',PROGPREFIX='',LIBS=libs)
         
 ##############################################################################
 # FORTRAN-77 BINDING
