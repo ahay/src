@@ -52,7 +52,7 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("lam",&lam)) lam=1.; lam = lam*lam;
     /* horizontal dip smoothness */
 
-    if (!sf_getint("accuracy",&nf)) nf=1;
+    if (!sf_getint("order",&nf)) nf=1;
     /* [1,2,3] dip filter accuracy */
     if (nf < 1 || nf > 3) sf_error ("accuracy must be between 1 and 3");
 
@@ -63,14 +63,14 @@ int main (int argc, char *argv[])
     if(!sf_getbool("sign",&sign)) sign = false;
     /* if y, keep dip sign constant */
 
-    if (!sf_getfloat("dip2",&p0)) p0=0.;
+    if (!sf_getfloat("p0",&p0)) p0=0.;
     /* initial in-line dip */
-    if (!sf_getfloat("dip3",&q0)) q0=0.;
+    if (!sf_getfloat("q0",&q0)) q0=0.;
     /* initial cross-line dip */
 
-    if (!sf_getint("nj1",&nj1)) nj1=1;
+    if (!sf_getint("nj1",&nj1)) nj1=2;
     /* in-line antialiasing */
-    if (!sf_getint("nj2",&nj2)) nj2=1;
+    if (!sf_getint("nj2",&nj2)) nj2=2;
     /* cross-line antialiasing */
 
     m1 = n1;
@@ -129,11 +129,12 @@ int main (int argc, char *argv[])
 	}
     }
 
-    dip3(1, niter, nf, 2*nj1, verb, u1, p);
-    dip3(2, niter, nf, 2*nj2, verb, u1, q);
+    dip3(1, niter, nf, nj1, verb, u1, p);
+    dip3(2, niter, nf, nj2, verb, u1, q);
 
     if (verb) sf_warning("Expanding slopes...");
 
+/*
     if (nj1 > 1) {
 	for (i=0; i < n12; i++) {
 	    p[0][0][i] /= nj1;
@@ -145,7 +146,8 @@ int main (int argc, char *argv[])
 	    q[0][0][i] /= nj2;
 	}
     }
- 
+*/ 
+
     for (i2=0; i2 < n3; i2++) {
 	for (i1=0; i1 < n2-1; i1++) {
 	    q2[2*i1][i2] = q[i2][i1];
