@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ns, nh, is, ih, ix, it;
     float *rfl, *crv, *recv, *shot, *trace, *ts, *tg, vel[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq;
     maptype type = CONST;
     aamap map;
     sf_file refl, curv, modl, shots, recvs;
@@ -178,7 +178,9 @@ int main(int argc, char* argv[])
     ampl = sf_floatalloc(nx);
     delt = sf_floatalloc(nx);
 
-    ricker_init(nt*2,freq);
+    if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
+    /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+    ricker_init(nt*2,freq*dt);
 
     /*** Compute traveltime table ***/
 
@@ -202,6 +204,9 @@ int main(int argc, char* argv[])
 
 	    aastretch_define (map,time,delt,ampl);
 	    aastretch_apply (map,rfl,trace);
+
+	    /* convolve with Ricker wavelet */
+	    sf_freqfilt(nt,trace);
 
 	    sf_floatwrite(trace,nt,modl);
 	}

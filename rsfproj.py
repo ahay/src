@@ -176,6 +176,7 @@ class Project(Environment):
         self.resdir = resdir
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
+                         'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
                          'XAUTHORITY':
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),

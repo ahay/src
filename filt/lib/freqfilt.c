@@ -65,6 +65,29 @@ void sf_freqfilt_close(void)
     free(invs);
 }
 
+void sf_freqfilt(int nx, float* x)
+/*< Filtering in place >*/
+{
+    int iw;
+
+    for (iw=0; iw < nx; iw++) {
+	tmp[iw] = x[iw];
+    }
+    for (iw=nx; iw < nfft; iw++) {
+	tmp[iw] = 0.;
+    }
+
+    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
+    for (iw=0; iw < nw; iw++) {
+	cdata[iw] *= shape[iw];
+    }
+    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, tmp);
+
+    for (iw=0; iw < nx; iw++) {
+	x[iw] = tmp[iw];
+    } 
+}
+
 void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< Filtering as linear operator >*/
 {

@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "int1.h"
 #include "interp.h"
 #include "gauss.h"
-#include "freqfilt.h"
 #include "triangle1.h"
 #include "monofshape.h"
 
@@ -133,7 +132,7 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 
 	if (gauss) {
-	    sf_conjgrad(NULL, int1_lop, freqfilt_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, int1_lop, sf_freqfilt_lop, pp, mm, dd, niter);
 	} else {
 	    sf_conjgrad(NULL, int1_lop, triangle1_lop, pp, mm, dd, niter);
 	}
@@ -149,4 +148,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mshapebin1.c,v 1.8 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

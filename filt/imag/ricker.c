@@ -3,7 +3,6 @@
 #include <rsf.h>
 
 #include "ricker.h"
-#include "freqfilt.h"
 
 static float *shape;
 
@@ -28,15 +27,15 @@ void ricker_init(int nfft /* time samples */,
 	shape[iw] = a*w*expf(-w);
     }
 
-    freqfilt_init(nfft,nw);
-    freqfilt_set(shape);
+    sf_freqfilt_init(nfft,nw);
+    sf_freqfilt_set(shape);
 }
 
 void ricker_close(void) 
 /*< free allocated storage >*/
 {
     free(shape);
-    freqfilt_close();
+    sf_freqfilt_close();
 }
 
 /* 	$Id: ricker.c 694 2004-07-06 21:04:46Z fomels $	 */

@@ -209,7 +209,7 @@ free ((char*) $1);
         case tFloat64: case tFloat32:
 	     break;
         default:
-	     PyErr_SetString(PyExc_TypeError,"wrong data type");
+	     PyErr_SetString(PyExc_TypeError,"so wrong data type");
              break;	
      }
      $1 = NA_OFFSETDATA(NA_InputArray($input,type,C_ARRAY));    
@@ -247,7 +247,7 @@ void sf_putline (sf_file file, const char* line);
 long sf_bytes (sf_file file);
 
 void sf_floatwrite (float* arr, size_t size, sf_file file);
-void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file);
+void sf_floatread (float* arr, size_t size, sf_file file);
 
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);
