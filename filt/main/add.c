@@ -110,35 +110,39 @@ int main (int argc, char* argv[])
 	if (nbuf > nsiz) nbuf=nsiz;
 
 	for (j=0; j < nin; j++) {
-	    sf_read(bufi,(size_t) esize,nbuf,in[j]);	    
 	    switch(type) {
 		case SF_FLOAT:
+		    sf_floatread((float*) bufi,nbuf,in[j]);	    
 		    add_float(j != 0, nbuf,
 			      (float*) buf,(float*) bufi, 
 			      cmode, scale[j], add[j], 
 			      abs_flag[j], log_flag[j], 
 			      sqrt_flag[j], exp_flag[j]);
+		    sf_floatwrite((float*) buf,nbuf,out);
 		    break;
 		case SF_COMPLEX:		    
+		    sf_complexread((float complex*) bufi,nbuf,in[j]);
 		    add_complex(j != 0, nbuf,
 				(float complex*) buf,(float complex*) bufi, 
 				cmode, scale[j], add[j], 
 				abs_flag[j], log_flag[j], 
 				sqrt_flag[j], exp_flag[j]);
+		    sf_complexwrite((float complex*) buf,nbuf,out);
 		    break;
 		case SF_INT:
+		    sf_intread((int*) bufi,nbuf,in[j]);
 		    add_int(j != 0, nbuf,
 			    (int*) buf,(int*) bufi, 
 			    cmode, scale[j], add[j], 
 			    abs_flag[j], log_flag[j], 
 			    sqrt_flag[j], exp_flag[j]);
+		    sf_intwrite((int*) buf,nbuf,out);
 		    break;
 		default:
 		    sf_error("wrong type");
 		    break;
 	    }
 	}
-	sf_write(buf,(size_t) esize,nbuf,out);
     }
     
     sf_close();
@@ -283,5 +287,5 @@ static void check_compat (int esize,
     }
 }
 
-/* 	$Id: add.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: add.c,v 1.8 2004/04/19 21:51:35 fomels Exp $	 */
 

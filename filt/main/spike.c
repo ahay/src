@@ -101,10 +101,10 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-	sf_write(trace,sizeof(float),n1,spike);
+	sf_floatwrite(trace,n1,spike);
     }
 
     exit (0);
 }
 
-/* 	$Id: spike.c,v 1.4 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: spike.c,v 1.5 2004/04/19 21:51:36 fomels Exp $	 */

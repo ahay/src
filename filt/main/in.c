@@ -132,7 +132,7 @@ static void check_zeros (sf_file file, int esize, int size, int ncheck,
 	     nzero < ncheck && nleft > 0; 
 	     nleft -= nbuf, nzero += nbuf) {
 	    if (nbuf > nleft) nbuf = nleft;
-	    sf_read(buf,1,nbuf,file);
+	    sf_charread(buf,nbuf,file);
 	    
 	    if (0 != memcmp(buf,zero,nbuf)) break;
 	}
@@ -150,5 +150,5 @@ static void check_zeros (sf_file file, int esize, int size, int ncheck,
     }
 }
 
-/* 	$Id: in.c,v 1.4 2004/02/14 07:20:09 fomels Exp $	 */
+/* 	$Id: in.c,v 1.5 2004/04/19 21:51:35 fomels Exp $	 */
 

@@ -49,7 +49,7 @@ int main (int argc, char* argv[])
 	    buf = sf_charalloc (bufsiz);
 	    for (i=0; size > 0; size -= nbuf) {
 		nbuf = (bufsiz < size)? bufsiz: size;
-		sf_read (buf,sizeof(char),nbuf,in);
+		sf_charread (buf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
 		    if (number && 0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
 		    printf(format,buf[j]);
@@ -63,7 +63,7 @@ int main (int argc, char* argv[])
 	    ibuf = sf_intalloc (bufsiz);
 	    for (i=0; size > 0; size -= nbuf) {
 		nbuf = (bufsiz < size)? bufsiz: size;
-		sf_read (ibuf,sizeof(int),nbuf,in);
+		sf_intread (ibuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
 		    if (number && 0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
 		    printf(format,ibuf[j]);
@@ -77,7 +77,7 @@ int main (int argc, char* argv[])
 	    fbuf = sf_floatalloc (bufsiz);
 	    for (i=0; size > 0; size -= nbuf) {
 		nbuf = (bufsiz < size)? bufsiz: size;
-		sf_read (fbuf,sizeof(float),nbuf,in);
+		sf_floatread (fbuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
 		    if (0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
 		    printf(format,fbuf[j]);
@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 	    cbuf = sf_complexalloc (bufsiz);
 	    for (i=0; size > 0; size -= nbuf) {
 		nbuf = (bufsiz < size)? bufsiz: size;
-		sf_read (cbuf,sizeof(float complex),nbuf,in);
+		sf_complexread (cbuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
 		    if (0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
 		    printf(format,crealf(cbuf[j]),cimagf(cbuf[j]));
@@ -108,5 +108,5 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: disfil.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: disfil.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */
 

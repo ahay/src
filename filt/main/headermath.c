@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
     fbuf = sf_floatalloc2(n2,n1+3);
     fst  = sf_floatalloc2(n2,len+3);
     
-    sf_read(ftra[0],sizeof(float),n1*n2,in);
+    sf_floatread(ftra[0],n1*n2,in);
 
     for (i2=0; i2 < n2; i2++) {
 	fbuf[0][i2]=(float) i2;  /* N */
@@ -84,11 +84,11 @@ int main(int argc, char* argv[])
     free (ftra);
 
     sf_math_evaluate (len, n2, fbuf, fst);
-    sf_write(fst[1],sizeof(float),n2,out);
+    sf_floatwrite(fst[1],n2,out);
 
     sf_close();
     exit(0);
 }
 
-/* 	$Id: headermath.c,v 1.8 2004/04/13 01:40:59 fomels Exp $	 */
+/* 	$Id: headermath.c,v 1.9 2004/04/19 21:51:35 fomels Exp $	 */
 

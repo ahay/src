@@ -77,8 +77,8 @@ int main (int argc, char* argv[])
     }
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     n[0]   *= esize; n0   = (size_t) n[0];
     n2[0]  *= esize; n20  = (size_t) n2[0];
@@ -102,10 +102,10 @@ int main (int argc, char* argv[])
 	    }
 	}
 	if (inside) {
-	    sf_read (tr+beg0,1,n0,in);
-	    sf_write(tr,1,n20,out);
+	    sf_charread (tr+beg0,n0,in);
+	    sf_charwrite(tr,n20,out);
 	} else {
-	    sf_write(zero,1,n20,out);
+	    sf_charwrite(zero,n20,out);
 	}
     }
 
@@ -113,4 +113,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: pad.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: pad.c,v 1.6 2004/04/19 21:51:35 fomels Exp $	 */

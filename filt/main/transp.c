@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
     if (NULL != (val= sf_histstring(in,key2))) sf_putstring(out,key1,val);
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
     
     n1=esize;
     n2=n3=1;
@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
 	dat2 = sf_charalloc2 (n1,n2);
 	
 	for (i3=0; i3 < n3; i3++) {
-	    sf_read(dat1[0],1,n1*n2,in);
+	    sf_charread(dat1[0],n1*n2,in);
 	    for (i2=0; i2 < n2; i2++) {
 		memcpy(dat2[i2],dat1[map[i2]],n1); 
 	    }
-	    sf_write(dat2[0],1,n1*n2,out);
+	    sf_charwrite(dat2[0],n1*n2,out);
 	}
     } else {
 	sf_warning("Going out of core... "
@@ -127,8 +127,8 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		sf_seek(in,pos+map[i2]*n1,SEEK_SET);
-		sf_read (buf,1,n1,in);
-		sf_write(buf,1,n1,out);
+		sf_charread (buf,n1,in);
+		sf_charwrite(buf,n1,out);
 	    }
 	}
     }
@@ -163,4 +163,4 @@ static void make_map (int dim1, int dim2,
     }
 }
 
-/* 	$Id: transp.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: transp.c,v 1.4 2004/04/19 21:51:36 fomels Exp $	 */

@@ -58,15 +58,15 @@ int main(int argc, char* argv[])
     }
     
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     trace = sf_charalloc (n);
     
     for (i3=0; i3 < n3; i3++) {
-	sf_read (trace, 1, n, in);
+	sf_charread (trace, n, in);
 	for (i2=0; i2 < n2; i2++) {
-	    sf_write(trace, 1, n, out);
+	    sf_charwrite(trace, n, out);
 	} 
     }
 
@@ -74,4 +74,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: spray.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: spray.c,v 1.5 2004/04/19 21:51:36 fomels Exp $	 */

@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     unsorted = sf_floatalloc(n2);
     sorted = (struct skey*) sf_alloc(n2,sizeof(struct skey));
     
-    sf_read(unsorted,sizeof(float),n2,head);
+    sf_floatread(unsorted,n2,head);
     for (i2 = 0; i2 < n2; i2++) {
 	sorted[i2].key = unsorted[i2];
 	sorted[i2].pos = i2;
@@ -60,18 +60,18 @@ int main(int argc, char* argv[])
 
     sf_unpipe(in,n1*n2);
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     pos = sf_tell(in);
     for (i2=0; i2<n2; i2++) {
 	sf_seek(in,pos+(sorted[i2].pos)*n1,SEEK_SET);
-	sf_read(trace,1,n1,in);
-	sf_write(trace,1,n1,out);
+	sf_charread(trace,n1,in);
+	sf_charwrite(trace,n1,out);
     }
 
     sf_close();
     exit(0);
 }
     
-/* 	$Id: headersort.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: headersort.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */

@@ -104,24 +104,24 @@ int main (int argc, char* argv[])
     
     sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
-    sf_setformat(out,"raw");
+    sf_setform(out,SF_NATIVE);
     for (j=0; j < nin; j++) {
-    	sf_setformat(in[j],"raw");
+    	sf_setform(in[j],SF_NATIVE);
     }
 
     for (i2=0; i2 < n2; i2++) {
 	for (j=0; j < nin; j++) {
 	    for (ni = (size_t) n1*naxis[j]*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
-		sf_read (buf,1,nbuf,in[j]);
-		sf_write (buf,1,nbuf,out);
+		sf_charread (buf,nbuf,in[j]);
+		sf_charwrite (buf,nbuf,out);
 	    }
 	    if (!space || j == nin-1) continue;
 	    /* Add spaces */
 	    memset(buf,0,BUFSIZ);
 	    for (ni = (size_t) n1*nspace*esize; ni > 0; ni -= nbuf) {
 		nbuf = (BUFSIZ < ni)? BUFSIZ: ni;
-		sf_write (buf,1,nbuf,out);
+		sf_charwrite (buf,nbuf,out);
 	    }
 	}
     }
@@ -169,5 +169,5 @@ static void check_compat (int esize, size_t nin, sf_file *in, int axis, int dim,
     }
 }
 
-/* 	$Id: cat.c,v 1.8 2004/03/26 15:46:50 fomels Exp $	 */
+/* 	$Id: cat.c,v 1.9 2004/04/19 21:51:35 fomels Exp $	 */
 

@@ -35,8 +35,8 @@ int main(int argc, char* argv[])
     size = sf_filesize (cmplx);
     
     sf_fileflush(real,cmplx);
-    sf_setformat(real,"raw");
-    sf_setformat(cmplx,"raw");
+    sf_setform(real,SF_NATIVE);
+    sf_setform(cmplx,SF_NATIVE);
 
     prog = sf_getprog();
     if (NULL != strstr(prog,"real")) {
@@ -52,11 +52,11 @@ int main(int argc, char* argv[])
     
     for (nleft=size*e_size; nleft > 0; nleft -= nbuf) {
 	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	sf_read(cbuf,1,2*nbuf,cmplx);
+	sf_charread(cbuf,2*nbuf,cmplx);
 	for (i=0; i < nbuf; i += e_size) {
 	    memcpy(rbuf+i,cbuf+2*i+shift,e_size);
 	}
-	sf_write(rbuf,1,nbuf,real);
+	sf_charwrite(rbuf,nbuf,real);
     }
     sf_fileclose(real);
 
@@ -64,4 +64,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: real.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: real.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */

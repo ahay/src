@@ -79,12 +79,12 @@ int main(int argc, char* argv[])
     for (; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf = nsiz;
 	for (i=0; i < nin; i++) {
-	    sf_read(fbuf[i],sizeof(float),nbuf,in[i]);
+	    sf_floatread(fbuf[i],nbuf,in[i]);
 	}
 
 	sf_math_evaluate (len, nbuf, fbuf, fst);
 
-	sf_write(fst[1],sizeof(float),nbuf,out);
+	sf_floatwrite(fst[1],nbuf,out);
     }
     
     exit(0);
@@ -119,4 +119,4 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n)
     }
 }
 
-/* 	$Id: math.c,v 1.6 2004/04/02 02:22:52 fomels Exp $	 */
+/* 	$Id: math.c,v 1.7 2004/04/19 21:51:35 fomels Exp $	 */

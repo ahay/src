@@ -131,8 +131,8 @@ int main (int argc, char *argv[])
     }
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
     
     /* Now do the actual work */
     n2 = sf_filesize(out)/m[0];
@@ -151,7 +151,7 @@ int main (int argc, char *argv[])
 
     for (i2=0; i2 < n2; i2++) {
 	if (table[i2]) sf_seek(in,table[i2],SEEK_CUR);
-	sf_read(buf,1,n1,in);
+	sf_charread(buf,n1,in);
 	if (jump) {
 	    for (i1=j1=0; i1 < m1; j1 += jump) {
 		for (i=0; i < esize; i++, i1++, j1++) {
@@ -159,7 +159,7 @@ int main (int argc, char *argv[])
 		}
 	    }
 	}
-	sf_write(buf,1,m1,out);
+	sf_charwrite(buf,m1,out);
     }
 
     sf_close();
@@ -191,4 +191,4 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
     }
 }
 
-/* 	$Id: window.c,v 1.7 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: window.c,v 1.8 2004/04/19 21:51:36 fomels Exp $	 */

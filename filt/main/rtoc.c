@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
     size = sf_filesize (real);
 
     sf_fileflush(cmplx,real);
-    sf_setformat(real,"raw");
-    sf_setformat(cmplx,"raw");
+    sf_setform(real,SF_NATIVE);
+    sf_setform(cmplx,SF_NATIVE);
 
     cbuf = sf_charalloc(2*BUFSIZ);
     for (i=0; i < BUFSIZ; i += e_size) {
@@ -52,15 +52,15 @@ int main(int argc, char* argv[])
 
     for (nleft=size*e_size; nleft > 0; nleft -= nbuf) {
 	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	sf_read(rbuf,1,nbuf,real);
+	sf_charread(rbuf,nbuf,real);
 	for (i=0; i < nbuf; i += e_size) {
 	    memcpy(cbuf+2*i,rbuf+i,e_size);
 	}
-	sf_write(cbuf,1,2*nbuf,cmplx);
+	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
     
     sf_close();
     exit (0);
 }
 
-/* 	$Id: rtoc.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: rtoc.c,v 1.4 2004/04/19 21:51:36 fomels Exp $	 */

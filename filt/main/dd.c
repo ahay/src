@@ -64,61 +64,66 @@ int main(int argc, char *argv[])
     while (size > 0) {
 	nin = (bufsiz < size)? bufsiz:size;
 	nout = (0==eout || 0==ein)? nin : nin*ein/eout;
-	sf_read(bufin,ein,nin,in);
-	if (itype != otype) {
-	    switch (itype) {
-		case SF_INT:
-		    switch (otype) {
-			case SF_FLOAT:
-			    fbuf = (float*) bufout;
-			    ibuf = (int*) bufin;
-			    for (i=j=0; i < nin && j < nout; i++, j++) {
-				fbuf[j] = ibuf[i]; 
-			    }
-			    break;
-			case SF_COMPLEX:
-			    cbuf = (float complex*) bufout;
-			    ibuf = (int*) bufin;
-			    for (i=j=0; i < nin && j < nout; i+=2, j++) {
-				cbuf[j] = ibuf[i]+I*ibuf[i+1]; 
-			    }
-			    break;
-			case SF_CHAR:
-			case SF_INT:
-			default:
-			    ddbreak (itype,otype);
-		    }
-		    break;
-		case SF_FLOAT:
-		    switch (otype) {
-			case SF_INT:
-			    fbuf = (float*) bufin;
-			    ibuf = (int*) bufout;
-			    for (i=j=0; i < nin && j < nout; i++, j++) {
-				ibuf[i] = fbuf[j]; 
-			    }
-			    break;
-			case SF_COMPLEX:
-			    cbuf = (float complex*) bufout;
-			    fbuf = (float*) bufin;
-			    for (i=j=0; i < nin && j < nout; i+=2, j++) {
-				cbuf[j] = fbuf[i] + I*fbuf[i+1];
-			    }
-			    break;
-			case SF_CHAR:
-			case SF_FLOAT:
-			default:
-			    ddbreak (itype,otype);
-		    }
-		    break;
-		case SF_COMPLEX:
-		case SF_CHAR:
-		default:
-		    ddbreak (itype,otype);
-	    }
-	    sf_write(bufout,eout,nout,out);
-	} else {	    
-	    sf_write(bufin,eout,nout,out);
+	switch (itype) {
+	    case SF_INT:
+		ibuf = (int*) bufin;
+		sf_intread(ibuf,nin,in);
+		switch (otype) {
+		    case SF_INT:
+			sf_intwrite(ibuf,nout,out);
+			break;
+		    case SF_FLOAT:
+			fbuf = (float*) bufout;
+			for (i=j=0; i < nin && j < nout; i++, j++) {
+			    fbuf[j] = ibuf[i]; 
+			}
+			sf_floatwrite(fbuf,nout,out);
+			break;
+		    case SF_COMPLEX:
+			cbuf = (float complex*) bufout;
+			for (i=j=0; i < nin && j < nout; i+=2, j++) {
+			    cbuf[j] = ibuf[i]+I*ibuf[i+1]; 
+			}
+			sf_complexwrite(cbuf,nout,out);
+			break;
+		    case SF_CHAR:
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
+	    case SF_FLOAT:
+		fbuf = (float*) bufin;
+		sf_floatread(fbuf,nin,in);
+		switch (otype) {
+		    case SF_FLOAT:
+			sf_floatwrite(fbuf,nout,out);
+			break;
+		    case SF_INT:
+			ibuf = (int*) bufout;
+			for (i=j=0; i < nin && j < nout; i++, j++) {
+			    ibuf[i] = fbuf[j]; 
+			}
+			sf_intwrite(ibuf,nout,out);
+			break;
+		    case SF_COMPLEX:
+			cbuf = (float complex*) bufout;
+			for (i=j=0; i < nin && j < nout; i+=2, j++) {
+			    cbuf[j] = fbuf[i] + I*fbuf[i+1];
+			}
+			sf_complexwrite(cbuf,nout,out);
+			break;			    
+		    case SF_CHAR:
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
+	    case SF_COMPLEX:
+	    case SF_CHAR:
+	    default:
+		ddbreak (itype,otype);
+		break;
 	}
 	size -= nin;
     }
@@ -152,4 +157,4 @@ static size_t setfiledims (sf_file in, sf_file out)
     return size;
 }
 
-/* 	$Id: dd.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: dd.c,v 1.6 2004/04/19 21:51:35 fomels Exp $	 */

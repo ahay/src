@@ -77,20 +77,20 @@ int main (int argc, char* argv[])
     sf_setformat(out,sf_histstring(in,"data_format"));
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(other,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(other,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     for (i2=0; i2 < n2; i2++) {
 	for (nleft=(size_t) n1; nleft > 0; nleft -= nbuf) {
 	    nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	    sf_read  (buf,1,nbuf,in);
-	    sf_write (buf,1,nbuf,out);
+	    sf_charread  (buf,nbuf,in);
+	    sf_charwrite (buf,nbuf,out);
 	}
 	for (nleft=(size_t) n1; nleft > 0; nleft -= nbuf) {
 	    nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	    sf_read  (buf,1,nbuf,other);
-	    sf_write (buf,1,nbuf,out);
+	    sf_charread  (buf,nbuf,other);
+	    sf_charwrite (buf,nbuf,out);
 	}
     }
     
@@ -112,4 +112,4 @@ static void check_compat (sf_file other, int esize, int dim, const int *n)
     }
 }
 
-/* 	$Id: interleave.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: interleave.c,v 1.6 2004/04/19 21:51:35 fomels Exp $	 */

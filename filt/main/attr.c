@@ -68,7 +68,20 @@ int main(int argc, char* argv[])
 
     for (nleft=nsiz; nleft > 0; nleft -= nbuf) {
 	nbuf = (bufsiz < nleft)? bufsiz: nleft;
-	sf_read(buf,(size_t) esize,nbuf,in);
+	switch (type) {
+	    case SF_FLOAT: 
+		sf_floatread((float*) buf,nbuf,in);
+		break;
+	    case SF_INT:
+		sf_intread((int*) buf,nbuf,in);
+		break;
+	    case SF_COMPLEX:
+		sf_complexread((float complex*) buf,nbuf,in);
+		break;
+	    default:
+		sf_charread(buf,nbuf,in);
+		break;
+	}
 	for (i=0; i < nbuf; i++) {
 	    switch (type) {
 		case SF_FLOAT: 
@@ -185,5 +198,5 @@ static void location(size_t loc, size_t dim, const int *n)
     printf("\n");
 }
 
-/* 	$Id: attr.c,v 1.4 2004/03/30 08:00:27 fomels Exp $	 */
+/* 	$Id: attr.c,v 1.5 2004/04/19 21:51:35 fomels Exp $	 */
 

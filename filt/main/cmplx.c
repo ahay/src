@@ -56,26 +56,26 @@ int main(int argc, char* argv[])
     if (rsize != isize) sf_error("size mismatch: %d != %d",rsize,isize);
 
     sf_fileflush(cmplx,real);
-    sf_setformat(real,"raw");
-    sf_setformat(imag,"raw");
-    sf_setformat(cmplx,"raw");
+    sf_setform(real,SF_NATIVE);
+    sf_setform(imag,SF_NATIVE);
+    sf_setform(cmplx,SF_NATIVE);
 
     cbuf = sf_charalloc(2*BUFSIZ);
 
     for (nleft= (size_t) (rsize*resize); nleft > 0; nleft -= nbuf) {
 	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
-	sf_read(rbuf,1,nbuf,real);
-	sf_read(ibuf,1,nbuf,imag);
+	sf_charread(rbuf,nbuf,real);
+	sf_charread(ibuf,nbuf,imag);
 	for (i=0; i < nbuf; i += resize) {
 	    memcpy(cbuf+2*i,       rbuf+i,(size_t) resize);
 	    memcpy(cbuf+2*i+resize,ibuf+i,(size_t) resize);
 	}
-	sf_write(cbuf,1,2*nbuf,cmplx);
+	sf_charwrite(cbuf,2*nbuf,cmplx);
     }
 
     exit (0);
 }
 
-/* 	$Id: cmplx.c,v 1.3 2003/09/29 14:34:56 fomels Exp $	 */
+/* 	$Id: cmplx.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */
 
 

@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
     dim2++;
 
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     n1=n2=n3=1;
     dim1=0;
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
 	    if (n2 > 1) sf_seek(in,pos+k2[i2]*n1*esize,SEEK_SET);
-	    sf_read(buf,(size_t) esize,n1,in);
+	    sf_charread(buf,n1*esize,in);
 	    for (i1=0; i1 < n1/2; i1++) {
 		m = k1[i1];
 		for (j=0; j<esize; j++) {
@@ -131,7 +131,7 @@ int main(int argc, char* argv[])
 		    buf[m*esize+j] = byte;
 		}
 	    }
-	    sf_write(buf,(size_t) esize,n1,out);
+	    sf_charwrite(buf,n1*esize,out);
 	}
     }
     
@@ -158,4 +158,4 @@ static void mirror (size_t n1, int dim,
     if (0 != n1%2) k[n1/2]=n1/2; /* Take care of odd n1 */
 }
 
-/* 	$Id: reverse.c,v 1.5 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: reverse.c,v 1.6 2004/04/19 21:51:36 fomels Exp $	 */

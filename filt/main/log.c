@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
     /* Smallest allowed value */
 
     data = sf_floatalloc(size);
-    sf_read (data,sizeof(float),size,in);
+    sf_floatread (data,size,in);
 
     big = (float) FLT_MIN_10_EXP;
     for (i=0; i< size; i++) {
@@ -72,10 +72,10 @@ int main (int argc, char* argv[])
 	data[i] -= avg;
     }
 
-    sf_write (data,sizeof(float),size,out);
+    sf_floatwrite (data,size,out);
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: log.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: log.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */

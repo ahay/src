@@ -25,7 +25,7 @@ int main(int argc, char* argv[])
  
     mask = sf_intalloc(n2);
     
-    sf_read(mask,sizeof(int),n2,head);
+    sf_intread(mask,n2,head);
     sf_fileclose(head);
 
     in = sf_input ("in");
@@ -47,15 +47,15 @@ int main(int argc, char* argv[])
 
     sf_unpipe(in,n1*n2);
     sf_fileflush(out,in);
-    sf_setformat(in,"raw");
-    sf_setformat(out,"raw");
+    sf_setform(in,SF_NATIVE);
+    sf_setform(out,SF_NATIVE);
 
     pos = sf_tell(in);
     for (i2=0; i2<n2; i2++) {
 	if (mask[i2]) {
 	    sf_seek(in,pos+i2*n1,SEEK_SET);
-	    sf_read(trace,1,n1,in);
-	    sf_write(trace,1,n1,out);
+	    sf_charread(trace,n1,in);
+	    sf_charwrite(trace,n1,out);
 	}
     }
 
@@ -63,4 +63,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
     
-/* 	$Id: headerwindow.c,v 1.3 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: headerwindow.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */

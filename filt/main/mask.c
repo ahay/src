@@ -36,15 +36,15 @@ int main(int argc, char* argv[]) {
     for (nsiz = sf_filesize (in); nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
-	sf_read(fbuf,sizeof(float),nbuf,in);
+	sf_floatread(fbuf,nbuf,in);
 	for (j=0; j < nbuf; j++) {
 	    ibuf[j] = (fbuf[j] <= max && fbuf[j] >= min);
 	}
-	sf_write(ibuf,sizeof(int),nbuf,out);
+	sf_intwrite(ibuf,nbuf,out);
     }
 
     sf_close();
     exit(0);
 }
 	    
-/* 	$Id: mask.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: mask.c,v 1.5 2004/04/19 21:51:35 fomels Exp $	 */

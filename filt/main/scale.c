@@ -44,7 +44,7 @@ int main (int argc, char* argv[])
 
 		for (i2=0; i2 < n2; i2++) {
 		    dscale = 0.;
-		    sf_read (fbuf,sizeof(float),n1,in);
+		    sf_floatread (fbuf,n1,in);
 		    for (i=0; i < n1; i++) {
 			f = fabsf(fbuf[i]);
 			if (f > dscale) dscale=f;
@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
 		    for (i=0; i < n1; i++) {
 			fbuf[i] *= dscale;
 		    }
-		    sf_write (fbuf,sizeof(float),n1,out);
+		    sf_floatwrite (fbuf,n1,out);
 		}
 		break;
 	    case SF_COMPLEX:
@@ -61,7 +61,7 @@ int main (int argc, char* argv[])
 
 		for (i2=0; i2 < n2; i2++) {
 		    dscale = 0.;
-		    sf_read (cbuf,sizeof(float complex),n1,in);
+		    sf_complexread (cbuf,n1,in);
 		    for (i=0; i < n1; i++) {
 			f = cabsf(cbuf[i]);
 			if (f > dscale) dscale=f;
@@ -70,7 +70,7 @@ int main (int argc, char* argv[])
 		    for (i=0; i < n1; i++) {
 			cbuf[i] *= dscale;
 		    }
-		    sf_write (cbuf,sizeof(float complex),n1,out);
+		    sf_complexwrite (cbuf,n1,out);
 		}
 		break;
 	    default:
@@ -94,11 +94,11 @@ int main (int argc, char* argv[])
 	
 		while (nsize > 0) {
 		    if (nsize < nbuf) nbuf = nsize;
-		    sf_read (fbuf,sizeof(float),nbuf,in);
+		    sf_floatread (fbuf,nbuf,in);
 		    for (i=0; i < nbuf; i++) {
 			fbuf[i] *= dscale;
 		    }
-		    sf_write (fbuf,sizeof(float),nbuf,out);
+		    sf_floatwrite (fbuf,nbuf,out);
 		    nsize -= nbuf;
 		}	
 		break;
@@ -108,11 +108,11 @@ int main (int argc, char* argv[])
 	
 		while (nsize > 0) {
 		    if (nsize < nbuf) nbuf = nsize;
-		    sf_read (ibuf,sizeof(int),nbuf,in);
+		    sf_intread (ibuf,nbuf,in);
 		    for (i=0; i < nbuf; i++) {
 			ibuf[i] *= dscale;
 		    }
-		    sf_write (ibuf,sizeof(int),nbuf,out);
+		    sf_intwrite (ibuf,nbuf,out);
 		    nsize -= nbuf;
 		}	
 		break;
@@ -126,4 +126,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: scale.c,v 1.5 2004/04/06 13:19:17 fomels Exp $	 */
+/* 	$Id: scale.c,v 1.6 2004/04/19 21:51:36 fomels Exp $	 */

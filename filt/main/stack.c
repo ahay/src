@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 	if (norm) memset (fold,0,n*sizeof(int));
 	
 	for (i2=0; i2 < n2; i2++) {
-	    sf_read (trace, sizeof(float), n, in);
+	    sf_floatread (trace, n, in);
 	    for (i=0; i < n; i++) {
 	      sum[i] += rms? trace[i]*trace[i]: trace[i];
 		if (norm && (0.0 != trace[i])) fold[i]++; 
@@ -93,11 +93,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
-	sf_write(sum, sizeof(float), n, out); 
+	sf_floatwrite(sum, n, out); 
     }
 
     sf_close();
     exit (0);
 }
 
-/* 	$Id: stack.c,v 1.6 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: stack.c,v 1.7 2004/04/19 21:51:36 fomels Exp $	 */

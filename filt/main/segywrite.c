@@ -97,7 +97,7 @@ int main(int argc, char *argv[])
 	} else {
 	    if (SF_NATIVE != sf_getform(in)) sf_error("Need native input");
 	}
-	sf_setformat(in,"raw");
+	sf_setform(in,SF_NATIVE);
     }
     if (verbose) sf_warning("Detected trace length of %d",ns);
     
@@ -118,13 +118,13 @@ int main(int argc, char *argv[])
     itrace = sf_intalloc (SF_NKEYS); 
 
     for (itr=0; itr < ntr; itr++) {
-	sf_read(itrace,sizeof(int),SF_NKEYS,hdr);	
+	sf_intread(itrace,SF_NKEYS,hdr);	
 	sf_head2segy(trace, itrace, SF_NKEYS);
 	
 	if (su) {
-	    sf_read(trace + SF_HDRBYTES,1,ns*sizeof(float),in);
+	    sf_charread(trace + SF_HDRBYTES,ns*sizeof(float),in);
 	} else {
-	    sf_read (ftrace,sizeof(float),ns,in);
+	    sf_floatread (ftrace,ns,in);
 	    sf_trace2segy(trace + SF_HDRBYTES, ftrace, ns,format);
 	}
 
@@ -136,4 +136,4 @@ int main(int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: segywrite.c,v 1.4 2004/03/22 05:43:24 fomels Exp $	 */
+/* 	$Id: segywrite.c,v 1.5 2004/04/19 21:51:36 fomels Exp $	 */
