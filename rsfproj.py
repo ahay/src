@@ -426,7 +426,7 @@ class Project(Environment):
                 #<- check for par files and add to the sources
                 for par in pars:
                     if re.match("^par=",par):
-                        sources.append(default_fs.File(par[4:]))
+                        sources.append(File(par[4:]))
                 #<<- assemble the command line
                 pars.insert(0,command)
                 substeps.append(string.join(pars,' '))
@@ -531,4 +531,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.30 2004/05/27 01:21:54 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.31 2004/06/01 21:08:07 fomels Exp $	
