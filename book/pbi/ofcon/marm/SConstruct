@@ -29,8 +29,7 @@ Result('vrms','vrms',
        label1="Time (s)" label2="Midpoint (m)"
        bias=1500''')
 
-Flow('nmo',['cmp','vrms'],
-     'mutter %s | nmo velocity=${SOURCES[1]}' % mutter)
+Flow('nmo',['cmp','vrms'],'nmo velocity=${SOURCES[1]}')
 Flow('stack','nmo','stack')
 Result('stack','stack',
        '''
