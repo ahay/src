@@ -3,21 +3,21 @@
 Inverse of sfvelmod
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -39,8 +39,8 @@ int main(int argc, char* argv[])
     bool sembl, half, slow;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype;
     float amp, dt, dh, t0, h0, v0, dv, h, num, den, dy;
-    float *trace, **stack, **stack2;
-    sf_file cmp, scan;
+    float *trace, **stack, **stack2, *hh;
+    sf_file cmp, scan, offset;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -57,8 +57,30 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
-    if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
-    if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
+
+    if (NULL != sf_getstring("offset")) {
+	offset = sf_input("offset");
+	h0 = dh = 0.;
+	hh = sf_floatalloc(nh);
+    } else {
+	offset = NULL;
+	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
+	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
+	
+	sf_putfloat(scan,"h0",h0);
+	sf_putfloat(scan,"dh",dh);
+	sf_putint(scan,"nh",nh);
+
+	if (!sf_getbool("half",&half)) half=true;
+	/* if y, the second axis is half-offset instead of full offset */
+	
+	if (half) {
+	    dh *= 2.;
+	    h0 *= 2.;
+	}
+
+	hh = NULL;
+    }
 
     if (!sf_getfloat("v0",&v0) && !sf_histfloat(cmp,"v0",&v0)) 
 	sf_error("Need v0=");
@@ -70,18 +92,6 @@ int main(int argc, char* argv[])
     sf_putfloat(scan,"o2",v0);
     sf_putfloat(scan,"d2",dv);
     sf_putint(scan,"n2",nv);
-
-    sf_putfloat(scan,"h0",h0);
-    sf_putfloat(scan,"dh",dh);
-    sf_putint(scan,"nh",nh);
-
-    if (!sf_getbool("half",&half)) half=true;
-    /* if y, the second axis is half-offset instead of full offset */
-
-    if (half) {
-	dh *= 2.;
-	h0 *= 2.;
-    }
 
     CDPtype=1;
     if (sf_histfloat(cmp,"d3",&dy)) {
@@ -113,8 +123,11 @@ int main(int argc, char* argv[])
 	    if (sembl) stack2[0][it] = 0.;
 	}
 
+	if (NULL != offset) sf_floatread(hh,nh,offset);
+
 	for (ih=0; ih < nh; ih++) {
-	    h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
+	    h = (NULL != offset)? hh[ih]: 
+		h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
 	    sf_floatread(trace,nt,cmp); 
 
 	    for (it=0; it < nt; it++) {
@@ -161,4 +174,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mvscan.c,v 1.7 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

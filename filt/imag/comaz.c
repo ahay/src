@@ -21,5 +21,13 @@ void comaz(float w              /* frequency */,
 	   float dy             /* midpoint cross-line sampling */,
 	   int jx               /* inline subsampling for gathers */,
 	   int jy               /* cross-line subsampling for gathers */,
-	   float complex ***data      /* frequency slice [ny][nx][nh] */);
+	   float complex ***data      /* frequency slice [ny][nx][nh] */)
 /*< common-azimuth migration >*/
+{
+    int iz;
+
+    /* loop over migrated depths z */
+    for (iz=0; iz<nz-1; iz++) {
+	/* accumulate image (summed over frequency and offset) */
+    }
+}
