@@ -26,7 +26,7 @@ for a in [0,45]:
         Flow(angl,None,angle(a,b))
         Plot(grey,angl,
              '''
-             grey allpos=y transp=n yreverse=n color=j 
+             grey allpos=y transp=n yreverse=n Xcolor=j 
              wantscalebar=y barlabel="Reflection Angle (degrees)"
              title="In-line dip: %d, Cross-line dip: %d"
              ''' % (a,b))
