@@ -34,7 +34,7 @@
 #define KOOP(a) for(ihx=0;ihx<bhx.n;ihx++){ for(imy=0;imy<bmy.n;imy++){ for(imx=0;imx<bmx.n;imx++){ {a} }}}
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
-#define BOUND(i,n) (i<0) ? 0 : ( (i>=n) ? n : i );
+#define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
@@ -72,7 +72,7 @@ void cam_init(bool verb_,
 	      axa aly_  /* x-line (slowness/image) */,
 	      int ntx, int nty, int nth      /* taper size */,
 	      int nrmax                      /* maximum number of references */,
-	      int padmx,int padmy,int padhx  /* padding in the k domain */,
+	      int pmx, int pmy, int phx      /* padding in the k domain */,
 	      slice slow)
 /*< initialize >*/
 {
@@ -94,34 +94,16 @@ void cam_init(bool verb_,
 
     ds  = dt/az.d;
     ds2 = ds*ds;
-    ds2 *= ds2;
+    ds2*= ds2;
 
     /* construct K-domain axes */
-    X2K(amx,bmx,padmx);
-    X2K(amy,bmy,padmy);
-    X2K(ahx,bhx,padhx);
+    X2K(amx,bmx,pmx);
+    X2K(amy,bmy,pmy);
+    X2K(ahx,bhx,phx);
     fft3_init(bmx.n,bmy.n,bhx.n);
 
-    /* allocate workspace */
-    ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
-    sz = sf_floatalloc2          (nrmax,az.n);  /* reference slowness */
-    sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
-    nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
-
-    qq = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* image */
-    wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
-    wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
-
-    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
-    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
-
-    ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
-    krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
-
-    jy = sf_intalloc      (      amy.n      );  /* midpoint index */
-    jx = sf_intalloc      (amx.n            );  /* midpoint index */
-    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
-    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
+    /* allocate storage */
+    cam_alloc(nrmax);
 
     /* precompute indices */
     for (imy=0; imy<amy.n; imy++) {
@@ -176,6 +158,30 @@ void cam_init(bool verb_,
 	    sm[iz][j] = 0.5*(sm[iz][j]+sm[iz+1][j]);
 	}
     }
+}
+
+void cam_alloc(int nrmax)
+/*< allocate storage >*/
+{
+    ss = sf_floatalloc2   (alx.n,aly.n      );  /* slowness */
+    sz = sf_floatalloc2          (nrmax,az.n);  /* reference slowness */
+    sm = sf_floatalloc2          (nrmax,az.n);  /* reference slowness squared*/
+    nr = sf_intalloc                   (az.n);  /* number of reference slownesses */
+
+    qq = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* image */
+    wx = sf_complexalloc3 (amx.n,amy.n,ahx.n);  /* x wavefield */
+    wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);  /* interpolation weight */
+
+    wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* k wavefield */
+    pk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);  /* padded wavefield */ 
+
+    ksx= sf_floatalloc2   (bmx.n,      bhx.n);  /* source   wavenumber */
+    krx= sf_floatalloc2   (bmx.n,      bhx.n);  /* receiver wavenumber */
+
+    jy = sf_intalloc      (      amy.n      );  /* midpoint index */
+    jx = sf_intalloc      (amx.n            );  /* midpoint index */
+    is = sf_intalloc2     (amx.n,      ahx.n);  /* source   index */
+    ir = sf_intalloc2     (amx.n,      ahx.n);  /* receiver index */
 }
 
 void cam_close(void)
@@ -240,7 +246,7 @@ void cam( bool inv   /* migration/modeling flag */,
 				   ss[ jy[imy] ][ ir[ihx][imx] ]);
 			 cshift = cexpf(-w*sy*az.d);
 			 wx[ihx][imy][imx] *= cshift; );
-		taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
+		taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
 
 		/* FFT */
 		KOOP( pk[ihx][imy][imx] = 0.;);
@@ -300,14 +306,14 @@ void cam( bool inv   /* migration/modeling flag */,
 
 	    } /* iz */
 
-	    taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
 	    cslice_put(data,iw,wx[0][0]);    /* put wavefield = data on file */
 	    
 	} else { /* MIGRATION */
 	    slice_get(slow,0,ss[0]);                      /* slowness at top */
 
 	    cslice_get(data,iw,wx[0][0]);    /* get wavefield = data on file */
-	    taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
+	    taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< az.n-1; iz++) {
@@ -375,7 +381,7 @@ void cam( bool inv   /* migration/modeling flag */,
 				ss[ jy[imy] ][ ir[ihx][imx] ]);
 			 cshift = conjf(cexpf(-w*sy*az.d));
 			 wx[ihx][imy][imx] *= cshift; );
-		taper3(true,true,false,ahx.n,amy.n,amx.n,wx);
+		taper3(false,true,true,ahx.n,amy.n,amx.n,wx);
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */

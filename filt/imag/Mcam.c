@@ -28,9 +28,9 @@ int main (int argc, char *argv[])
 
     int nt,ntx,nty,nth;   /* boundary taper size */
     int nr;               /* number of reference velocities */
-    int padmx;            /* padding in the k domain */
-    int padmy;            /* padding in the k domain */
-    int padhx;            /* padding in the k domain */
+    int pmx;              /* padding in the k domain */
+    int pmy;              /* padding in the k domain */
+    int phx;              /* padding in the k domain */
     float dt;             /* time error */
 
     slice imag;
@@ -50,9 +50,9 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
     if (!sf_getint  ( "nr",&nr  ))   nr =     1; /* maximum number of references */
     if (!sf_getfloat( "dt",&dt  ))   dt = 0.004; /* time error */
-    if (!sf_getint("padmx",&padmx))padmx=     0; /* padding on i-line wavenumber */
-    if (!sf_getint("padmy",&padmy))padmy=     0; /* padding on x-line wavenumber */
-    if (!sf_getint("padhx",&padhx))padhx=     0; /* padding on offset wavenumber */
+    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on i-line wavenumber */
+    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on x-line wavenumber */
+    if (!sf_getint(  "phx",&phx ))  phx =     0; /* padding on offset wavenumber */
 
     if (!sf_getint(   "nt",&nt  ))   nt =     0; /* taper size */
     
@@ -108,7 +108,7 @@ int main (int argc, char *argv[])
     cam_init (verb,eps,dt,
 	      az,aw,ahx,amx,amy,alx,aly,
 	      ntx,nty,nth,nr,
-	      padmx,padmy,padhx,
+	      pmx,pmy,phx,
 	      slow);
     cam      (inv,data,imag,slow);
     cam_close();
