@@ -1,8 +1,13 @@
+	scalebar
 	framenum
-	grid, legend, scalebar
+	grid
+	legend
 sepvplot
-	Graph
-	Contour
-	Grey
+	Wiggle
+	Thplot
+	Cubeplot
 filters
+	vppen
+	pspen, xtpen
+	pdfpen, gtkpen, svgpen
  
