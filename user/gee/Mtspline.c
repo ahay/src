@@ -25,8 +25,8 @@
 
 int main(int argc, char* argv[])
 {
-    const int n1=100, nn[2] = {100,100};
-    int i, j, niter;
+    const int n1=100, n[2] = {100,100};
+    int i, j, na, niter;
     float s0, a0, t, eps;
     char *file;
     filter ss, aa;
