@@ -1151,9 +1151,11 @@ void vp_barframe(void)
 		vp_draw (xc+vs, yc);
 
 		if (labelrot) {
-		    vp_gtext(xc+5.0*vs, yc, 0., -labelsz, labelsz, 0., string);
+		    vp_gtext(xc+5.0*vs, yc, 0., 
+			     -labelsz, labelsz, 0., string);
 		} else {
-		    vp_gtext(xc+1.5*vs, yc, 0., labelsz, -labelsz, 0., string);
+		    vp_gtext(xc+1.5*vs, yc, 0.,
+			     labelsz, -labelsz, 0., string);
 		}
 	    } else {
 		xc = bar0 + i*dbar;
@@ -1193,25 +1195,28 @@ void vp_cuberaster(int n1, int n2, unsigned char** buf,
 void vp_barline (int nc, float *c, float cmin, float cmax)
 {
     int ic;
-    float level, c0, dc;
+    float level, c0, dc, ci;
 
     c0 = 0.5*(cmax+cmin);
     dc = cmax-cmin+FLT_EPSILON;
 
     vp_barframe();
     for (ic = 0; ic < nc; ic++) {
-	    vp_plot_set (ic);
-	    if (vertbar) {
-		level = orig2 + inch2*(c[ic]-c0)/dc;
-		vp_move(barmin,level);
-		vp_draw(barmax,level);
-	    } else {
-		level = orig1 + inch1*(c[ic]-c0)/dc;
-		vp_move(level,barmin);
-		vp_draw(level,barmax);
-	    }
+	ci = (c[ic]-c0)/dc;
+	if (fabsf(ci) > 0.5) continue;
+	
+	vp_plot_set (ic);
+	if (vertbar) {
+	    level = orig2 + inch2*ci;
+	    vp_move(barmin,level);
+	    vp_draw(barmax,level);
+	} else {
+	    level = orig1 + inch1*ci;
+	    vp_move(level,barmin);
+	    vp_draw(level,barmax);
+	}
     }
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.22 2004/04/02 02:23:11 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.23 2004/04/09 04:07:42 fomels Exp $	 */
