@@ -69,6 +69,14 @@ Combine('raindata',['obsdata','data'],'SideBySideIso',result=1)
 Flow('obsdata','obsdata.HH','dd data_format=native_float')
 Flow('raindata','obsdata','window f1=2')
 
+def contour(cont):
+    return '''
+    contour nc=6 c0=-0.001 dc=100
+    minval=0 maxval=525
+    wantscalebar=y yreverse=n transp=n barlabel=' '
+    wanttitle=n plotcol=%d plotfat=%d wantframe=y wantaxis=n
+    ''' % (((0,10),(7,1))[cont])
+
 cases = [10,100,1000,10000,-10,-20,-40,0]
 for niter in cases:
     lapinter = 'lapinter%d' % niter
@@ -99,11 +107,9 @@ for niter in cases:
     Plot('g'+lapinter,lapinter,
               '''grey wantscalebar=y yreverse=n transp=n allpos=y
               color=j clip=500 title="%s %d" ''' % (name,niter))
-    Plot('c'+lapinter,lapinter,
-              '''contour nc=6 c0=-0.001 dc=100
-              wantscalebar=y yreverse=n transp=n barlabel=' '
-              wanttitle=n plotcol=7 wantframe=y wantaxis=n''')
-    Combine(lapinter,['g'+lapinter,'c'+lapinter],'Overlay')
+    for cont in range(2):
+        Plot('c'+str(cont)+lapinter,lapinter,contour(cont))
+    Combine(lapinter,['g'+lapinter,'c0'+lapinter,'c1'+lapinter],'Overlay')
 
 reals = []
 for seed in range(2000,2005):
@@ -112,7 +118,7 @@ for seed in range(2000,2005):
     reals.append(real)
     Flow(rand,'pout-40',
          '''
-         noise mean=152.776 var=1e5 rep=y seed=%d
+         noise mean=152.776 var=1e6 rep=y seed=%d
           ''' % seed)
     Flow(real,['raindata','obsdata',rand],
          '''
@@ -124,12 +130,11 @@ for seed in range(2000,2005):
          '''grey wantscalebar=y yreverse=n transp=n allpos=y
          minval=0 maxval=525
          color=j clip=500 title="Realization %d" ''' % (seed-1999))
-    Plot('c'+real,real,
-         '''contour nc=6 c0=-0.001 dc=100
-         minval=0 maxval=525
-         wantscalebar=y yreverse=n transp=n barlabel=' '
-         wanttitle=n plotcol=7 wantframe=y wantaxis=n''')
-    Combine(real,['g'+real,'c'+real],'Overlay',result=1)
+    for cont in range(2): 
+        Plot('c'+str(cont)+real,real,contour(cont))
+    Combine(real,['g'+real,'c0'+real,'c1'+real],'Overlay')
+Combine('real',map(lambda seed: 'real%d' % seed,range(2000,2005)),
+        'TwoByTwo',result=1)
 
 Combine('lapinter',map(lambda x: 'lapinter%d' % x, cases[:4]),
              'TwoByTwo',result=1)

@@ -12,7 +12,7 @@
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3;
-static int framecol, frame1, frame2, frame3, gridcol, gridfat;
+static int framecol, frame1, frame2, frame3, gridcol, gridfat=1;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat;
 static char blank[]=" ";
@@ -815,6 +815,8 @@ void vp_simplebarframe (void)
 /*    vp_clip(orig1+0.5*inch1,orig2-inch2,orig1+inch1,orig2+inch2); */
 
     vp_color(framecol);
+    vp_fat (gridfat);
+
     if (vertbar) {
 	min = orig2-0.5*inch2;
 	max = orig2+0.5*inch2;
@@ -1219,4 +1221,4 @@ void vp_barline (int nc, float *c, float cmin, float cmax)
     /*   vp_simplebarframe(); */
 }
 
-/* 	$Id: stdplot.c,v 1.23 2004/04/09 04:07:42 fomels Exp $	 */
+/* 	$Id: stdplot.c,v 1.24 2004/05/18 11:41:27 fomels Exp $	 */

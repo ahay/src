@@ -36,6 +36,25 @@ Plot('tri1',tris,graph('Spectrum of triangle smoothing'))
 
 for case in ['exp','tri']:
     Combine(case,[case,case+'1'],'SideBySideAniso',result=1)
+
+def contour(title):
+    return '''
+    contour transp=n yreverse=n title="%s" wantscalebar=y
+    barlabel=' ' label1=' ' label2=' ' c0=0.0005 dc=0.0005 nc=100 
+    screenratio=1
+    ''' % title
+
+Flow('spike2',None,'spike n1=41 n2=41 k1=21 k2=21 d1=1 d2=1')
+
+for rep in (1,3):
+    exp = 'exp2-%d' % rep 
+    tri = 'tri2-%d' % rep
+    all = 'all2-%d' % rep
+    Flow(exp,'spike2','smoothreg2 eps=17 repeat=%d' % rep)
+    Plot(exp,exp,contour('Regularized Smoothing'))
+    Flow(tri,'spike2','smooth rect1=17 rect2=17 repeat=%d' % rep)
+    Plot(tri,tri,contour('Triangle Smoothing'))
+    Combine(all,[exp,tri],'SideBySideIso',result=1)
     
 ###########################################################################
 End()

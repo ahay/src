@@ -218,8 +218,6 @@ int main (int argc, char **argv)
 
 			sf_cconjgrad(NULL, radon_lop, cweight_lop, 
 				     pp, mm, dd, niter);
-
-			/* cg (radon_lop, ww, mm, dd, nx, eps); CG inversion */
 		    }
 		}
 	    }
@@ -254,4 +252,4 @@ int main (int argc, char **argv)
     exit (0);
 }
 
-/* 	$Id: Mradon.c,v 1.2 2004/05/14 03:06:55 fomels Exp $	 */
+/* 	$Id: Mradon.c,v 1.3 2004/05/18 11:41:27 fomels Exp $	 */
