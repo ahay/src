@@ -11,6 +11,7 @@ int main(int argc, char* argv[])
     char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf, *rformat, *cformat;
 
     sf_init(argc,argv);
+    
     if (3 != argc) 
 	sf_error("wrong number of inputs: %d",argc-1);
 
