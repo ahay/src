@@ -1,3 +1,22 @@
+/* Fit a Gaussian to 2-D spectrum by nonlinear least squares */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -23,11 +42,13 @@ epep -> ep.ep
 
 */
 
-/* destroys data */
-void monof2(float **data, int niter, float* a, 
-	    int nx, float dx, float x0, 
-	    int ny, float dy, float y0, 
-	    bool verb)
+void monof2(float **data               /*input [ny][nx] */,
+	    int niter                  /* number of iterations */, 
+	    float* a                   /* estimated parameters [3] */, 
+	    int nx, float dx, float x0 /* first axis */, 
+	    int ny, float dy, float y0 /* second axis */, 
+	    bool verb                  /* verbosity flag */)
+/*< Estimate shape. (Caution: data gets corrupted) >*/ 
 {
     int ix, iy, iter, j;
     float f2, fe, ee, fep[3], eep[3], epep[6], x, y, da[3], aa, f, e2;
@@ -160,4 +181,4 @@ void monof2(float **data, int niter, float* a,
     if (verb) sf_warning ("%d iterations", iter);
 }
 
-/* 	$Id: monof2.c,v 1.2 2004/02/26 05:16:08 fomels Exp $	 */
+/* 	$Id$	 */

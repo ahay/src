@@ -1,10 +1,34 @@
+/* out-of-core helpers */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <stdio.h>
+/*^*/
+
 #include <rsf.h>
+/*^*/
 
 #include "oc.h"
 
 static char buf[BUFSIZ], buf2[BUFSIZ];
 
 void oc_invert(size_t n, FILE *wall)
+/*< write out 1/wall >*/
 {
     int i, nleft;
     float *fbuf;
@@ -25,6 +49,7 @@ void oc_invert(size_t n, FILE *wall)
 } 
 
 void oc_zero (size_t n, FILE *wall) 
+/*< set wall=0 >*/
 {
     int nleft;
 
@@ -39,6 +64,7 @@ void oc_zero (size_t n, FILE *wall)
 }
 
 void oc_dump (size_t n, FILE *wall, sf_file out) 
+/*< write wall to out >*/
 {
     int nleft;
     float *fbuf;
@@ -56,6 +82,7 @@ void oc_dump (size_t n, FILE *wall, sf_file out)
 }
 
 void oc_divide (size_t n, FILE *data, FILE *wall, sf_file out) 
+/*< write data/wall to out >*/
 {
     int nleft, i, nfloat;
     float *fbuf, *fbuf2;

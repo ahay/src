@@ -1,6 +1,26 @@
+/* Frequency-domain 1-D Gaussian shaper */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "monofshape.h"
 #include "monof.h"
@@ -11,6 +31,7 @@ static float *shape, *tmp, dw;
 static kiss_fftr_cfg forw, invs;
 
 void monofshape_init(int n1)
+/*< initialize with data length >*/
 {
     /* determine frequency sampling (for real to complex FFT) */
     nfft = n1;
@@ -27,7 +48,11 @@ void monofshape_init(int n1)
 	sf_error("%s: KISS FFT allocation problem",__FILE__);
 }
 
-void monofshape_set(float a0, int n, float* pattern, int niter)
+void monofshape_set(float a0       /* initial value for Gaussian */, 
+		    int n          /* pattern length */, 
+		    float* pattern /* data pattern [n] */, 
+		    int niter      /* number of iterations */)
+/*< set the shape >*/
 {
     int iw, i0;
     float f, w, max, scale;
@@ -65,7 +90,9 @@ void monofshape_set(float a0, int n, float* pattern, int niter)
     
 }
 
-void monofshape_close(void) {
+void monofshape_close(void) 
+/*< free allocated storage >*/
+{
     free(cdata);
     free(shape);
     free(tmp);
@@ -74,6 +101,7 @@ void monofshape_close(void) {
 }
 
 void monofshape_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
+/*< linear operator for shaping >*/
 {
     int iw;
 

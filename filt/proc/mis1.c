@@ -1,4 +1,24 @@
+/* 1-D missing data interpolation with known filter */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "mis1.h"
 
@@ -7,7 +27,10 @@
 static int nx, ny;
 static float *zero;
 
-void mis1_init(int n1, int na, float *aa)
+void mis1_init(int n1    /* data length */, 
+	       int na    /* filter length */, 
+	       float *aa /* filter [na] */)
+/*< initialize >*/
 {
     int iy;
 
@@ -23,16 +46,19 @@ void mis1_init(int n1, int na, float *aa)
 }
 
 void mis1_close(void)
+/*< free allocated storage >*/
 {
     free(zero);
 }
 
-void mis1(int niter, float *xx, const bool *known) 
+void mis1(int niter         /* number of iterations */, 
+	  float *xx         /* data/model */, 
+	  const bool *known /* mask for known data */) 
+/*< interpolate >*/
 {
     sf_solver (tcai1_lop, sf_cgstep, nx, ny, xx, zero, niter, 
 	       "x0", xx, "known", known, "end");
     sf_cgstep_close();
 }
 
-/* 	$Id: mis1.c,v 1.1 2004/04/01 15:41:54 fomels Exp $	 */
-
+/* 	$Id$	 */

@@ -1,4 +1,24 @@
+/* Trace prediction with plane-wave destruction */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "predict.h"
 #include "banded.h"
@@ -9,7 +29,9 @@ static bands slv;
 static float *diag, **offd, eps;
 static pwd w;
 
-void predict_init (int nx, int ny, float e)
+void predict_init (int nx, int ny /* data size */, 
+		   float e        /* regularization parameter */)
+/*< initialize >*/
 {
     const int nw=1;
 
@@ -27,6 +49,7 @@ void predict_init (int nx, int ny, float e)
 }
 
 void predict_close (void)
+/*< free allocated storage >*/
 {
     banded_close (slv);
     free (diag);
@@ -35,7 +58,10 @@ void predict_close (void)
     pwd_close (w);
 }
 
-void predict_step(bool forw, float* trace, float* pp)
+void predict_step(bool forw    /* forward or backward */, 
+		  float* trace /* trace */, 
+		  float* pp    /* slope */)
+/*< prediction step >*/
 {
     int i1;
 
@@ -54,7 +80,11 @@ void predict_step(bool forw, float* trace, float* pp)
     banded_solve (slv, trace);
 }
 
-void predict_flat(int i0, float** d, float** m, float** pp)
+void predict_flat(int i0     /* reference trace number */, 
+		  float** d  /* input */, 
+		  float** m  /* output */, 
+		  float** pp /* slope */)
+/*< predictive flattening >*/
 {
     int i1, i2, k2;
     float *trace;

@@ -1,12 +1,21 @@
+/* Missing data interpolation with helical filters */
+
 #include <rsf.h>
+#include "helix.h"
+/*^*/
 
 #include "mis2.h"
 #include "mask.h"
 #include "helicon.h" 
 #include "polydiv.h" 
 
-void mis2(int niter, int nx, float *xx, filter aa, 
-	  const bool *known, bool doprec) 
+void mis2(int niter         /* number of iterations */, 
+	  int nx            /* model size */, 
+	  float *xx         /* model */, 
+	  filter aa         /* helix filter */, 
+	  const bool *known /* mask for known data */, 
+	  bool doprec       /* to apply preconditioning */) 
+/*< interpolate >*/
 {
     int ix;
     float *dd;
@@ -31,5 +40,5 @@ void mis2(int niter, int nx, float *xx, filter aa,
     sf_cgstep_close();
 }
 
-/* 	$Id: mis2.c,v 1.4 2004/04/06 02:03:03 fomels Exp $	 */
+/* 	$Id$	 */
 

@@ -1,3 +1,22 @@
+/* Fitting a Gaussian to 1-D spectrum by nonlinear least squares */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <float.h>
 #include <math.h>
 
@@ -23,9 +42,14 @@ epep -> ep.ep
 
 */
 
-/* destroys data */
-float monof(float *data, int i0, int niter, float a0, int nk, 
-	    float dk, bool verb)
+float monof(float *data /*input [nk] */, 
+	    int i0      /* maximum location */, 
+	    int niter   /* number of iterations */, 
+	    float a0    /* initial value */, 
+	    int nk      /* data length */, 
+	    float dk    /* data sampling */, 
+	    bool verb   /* verbosity flag */)
+/*< Estimate shape. (Caution: data gets corrupted) >*/ 
 {
     int ik, iter;
     float f2, fe, ee, fep, eep, epep, k, da, aa, f, e2;
@@ -91,4 +115,4 @@ float monof(float *data, int i0, int niter, float a0, int nk,
     return a;
 }
 
-/* 	$Id: monof.c,v 1.2 2004/02/25 16:15:10 fomels Exp $	 */
+/* 	$Id$	 */

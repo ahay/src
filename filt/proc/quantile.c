@@ -1,7 +1,12 @@
+/* Computing quantiles by Hoar's algorithm */
+
 #include "quantile.h"
 
-/* changes a */
-float quantile(int q, int n, float* a) {
+float quantile(int q    /* quantile */, 
+	       int n    /* array length */, 
+	       float* a /* array [n] */) 
+/*< find quantile (caution: a is changed) >*/ 
+{
     float *i, *j, ak, *low, *hi, buf, *k;
 
     low=a;

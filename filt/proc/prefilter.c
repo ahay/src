@@ -1,8 +1,20 @@
-/* 
-   File: prefilter.c
-   -----------------
-   Convert data to B-spline coefficients
-   by fast B-spline transform
+/* Convert data to B-spline coefficients by fast B-spline transform */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
@@ -26,15 +38,10 @@ static float *tmp1, *tmp2 /* temporary storage */;
 static float a0 /* normalization */;
 static int nt, pad;
 
-/*
-  Function: prefilter_init
-  ------------------------
-  Initialize internal storage
-  nw  - spline order (interpolator length)
-  nt  - length for temporary storage
-  pad - length for padding
-*/
-void prefilter_init (int nw, int nt_in, int pad_in)
+void prefilter_init (int nw     /* spline order */, 
+		     int nt_in  /* temporary storage length */, 
+		     int pad_in /* padding */)
+/*< initialize >*/
 {
     pad = pad_in;
     nt = nt_in + 2*pad;
@@ -69,14 +76,9 @@ void prefilter_init (int nw, int nt_in, int pad_in)
     }
 }
 
-/*
-  Function: prefilter_apply
-  -------------------------
-  Convert 1-D data to spline coefficients
-  nd      - data length
-  dat[nd] - data/coefficients (input/output)
-*/
-void prefilter_apply (int nd, float* dat)
+void prefilter_apply (int nd     /* data length */, 
+		      float* dat /* in - data, out - coefficients */)
+/*< Convert 1-D data to spline coefficients >*/
 {
     int i;
 
@@ -98,15 +100,10 @@ void prefilter_apply (int nd, float* dat)
     }
 }
 
-/*
-  Function: prefilter
-  -------------------
-  Convert N-D data to spline coefficients
-  dim    - dimensionality
-  n[dim] - data dimensions
-  dat    - data/coefficients as 1-D array (input/output)
-*/
-void prefilter (int dim, int* n, float* dat)
+void prefilter (int dim    /* number of dimensions */, 
+		int* n     /* data size [dim] */, 
+		float* dat /* in - data, out - coefficients */)
+/*< Convert N-D data to spline coefficients >*/
 {
     int i, i2, j, kk, k, n12;
     int m[SF_MAX_DIM], m1[SF_MAX_DIM], n1[SF_MAX_DIM];
@@ -155,17 +152,12 @@ void prefilter (int dim, int* n, float* dat)
     }
 }
 
-/*
-  Function: prefilter_close
-  -------------------------
-  Free temporary storage
-*/
 void prefilter_close( void)
+/*< free allocated storage >*/
 {
     free (tmp1);
     free (tmp2);
     recfilt_close();
 }
       
-/* 	$Id: prefilter.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
-
+/* 	$Id$	 */

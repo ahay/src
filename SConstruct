@@ -19,10 +19,10 @@ configure.options(opts)
 opts.Add('RSFROOT','RSF installation root',root)
 opts.Update(env)
 
-if not os.path.isfile('config.py'):
-    conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
-    conf.CheckAll()
-    env = conf.Finish()
+#if not os.path.isfile('config.py'):
+conf = Configure(env,custom_tests={'CheckAll':configure.check_all})
+conf.CheckAll()
+env = conf.Finish()
     
 Help(opts.GenerateHelpText(env))
 opts.Save('config.py',env)

@@ -1,4 +1,24 @@
+/* Frequency-domain Radon transform */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "radon.h"
 
@@ -6,7 +26,9 @@ static float dp, p0;
 static int nx, np;
 static float complex *c0, *dc, czero;
 
-void radon_init (int nx_in, int np_in, float dp_in, float p0_in) 
+void radon_init (int nx_in                            /* number of offsets */, 
+		 int np_in , float dp_in, float p0_in /* slope axis */) 
+/*< initialize >*/
 {
     nx = nx_in; np = np_in;
     dp = dp_in; p0 = p0_in;
@@ -16,12 +38,15 @@ void radon_init (int nx_in, int np_in, float dp_in, float p0_in)
 }
 
 void radon_close () 
+/*< free allocated storage >*/
 {
     free (c0);
     free (dc);
 }
 
-void radon_set (float w, float* xx)
+void radon_set (float w   /* frequency */, 
+		float* xx /* offset [nx] */)
+/*< set the matrix >*/
 {
     int ix;
 
@@ -31,7 +56,9 @@ void radon_set (float w, float* xx)
     }
 }
 
-void radon_toep (float complex *qq, float eps)
+void radon_toep (float complex *qq /* Toeplitz row */, 
+		 float eps         /* regularization */)
+/*< fill Toeplitz matrix for inversion >*/
 {
     int ix, ip;
     float complex c, q;
@@ -54,6 +81,7 @@ void radon_toep (float complex *qq, float eps)
 
 void radon_lop (bool adj, bool add, int nm, int nd, 
 		float complex *mm, float complex *dd)
+/*< linear operator >*/
 {
     int ix, ip;
     float complex c, d;

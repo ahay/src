@@ -1,11 +1,38 @@
+/* Find 1-D missing data together with a prediction-error filter */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "misif.h"
 
 #include "peftc.h"
 #include "tcai2.h"
 
-void misif1 (int niter, int na, int nx, float *xx, float *aa, bool *mm) {
+void misif1 (int niter /* number of iterations */, 
+	     int na    /* filter length */, 
+	     int nx    /* data length */, 
+	     float *xx /* data */, 
+	     float *aa /* filter */, 
+	     bool *mm  /* mask for knowh data */) 
+/*< interpolate >*/
+{
     float *bb, *dat, *x;
     int id, nd;
 

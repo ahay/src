@@ -1,9 +1,29 @@
+/* Non-stationary helical filter */
+
 #include <rsf.h>
 
-#include "helix.h"
 #include "nhelix.h"
 
-nfilter nallocate(int np, int nd, int *nh, int *pch) 
+#include "helix.h"
+/*^*/
+
+#ifndef _nhelix_h
+
+typedef struct nhelixfilter {
+    int np;    
+    filter* hlx;
+    bool* mis;
+    int *pch;
+} *nfilter;
+/*^*/
+
+#endif
+
+nfilter nallocate(int np   /* number of patches */, 
+		  int nd   /* data size */, 
+		  int *nh  /* filter size [np] */, 
+		  int *pch /* patching [nd] */) 
+/*< allocate >*/
 {
     nfilter aa;
     int ip, id;
@@ -26,7 +46,8 @@ nfilter nallocate(int np, int nd, int *nh, int *pch)
     return aa;
 }
 
-void ndeallocate(nfilter aa) 
+void ndeallocate(nfilter aa)
+/*< free >*/ 
 {
     int ip;
     

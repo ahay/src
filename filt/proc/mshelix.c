@@ -1,9 +1,46 @@
+/* Multiscale helical filter */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "mshelix.h"
-#include "helix.h"
 
-msfilter msallocate(int nh, int ns) {
+#include "helix.h"
+/*^*/
+
+#ifndef _mshelix_h
+
+typedef struct mshelixfilter {
+    int nh, ns;
+    float* flt;
+    int** lag;
+    bool** mis;
+    filter one;
+} *msfilter;
+/*^*/
+
+#endif
+
+msfilter msallocate(int nh /* filter size */, 
+		    int ns /* number of scales */) 
+/*< allocate filter >*/
+{
     msfilter aa;
 
     aa = (msfilter) sf_alloc(1,sizeof(*aa));
@@ -19,7 +56,9 @@ msfilter msallocate(int nh, int ns) {
     return aa;
 }
 
-void msdeallocate( msfilter aa) {
+void msdeallocate( msfilter aa) 
+/*< free allocated storage >*/
+{
     free( aa->flt);
     free( aa->lag[0]);
     free( aa->lag);
@@ -31,9 +70,11 @@ void msdeallocate( msfilter aa) {
     free( aa);
 }
 
-void onescale(int i, msfilter aa) {
+void onescale(int i, msfilter aa) 
+/*< select one scale from multiple scales >*/
+{
     aa->one->lag = aa->lag[i];
     if (NULL != aa->mis) aa->one->mis = aa->mis[i];
 }
 
-/* 	$Id: mshelix.c,v 1.1 2004/06/11 10:51:34 fomels Exp $	 */
+/* 	$Id$	 */

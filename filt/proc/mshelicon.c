@@ -1,21 +1,25 @@
+/* Multi-scale helical convolution */
+
 #include <rsf.h>
+/*^*/
 
 #include "mshelicon.h"
-#include "mshelix.h"
 #include "helicon.h"
+
+#include "mshelix.h"
+/*^*/
 
 static msfilter aa;
 
-/*
-  Helicon
-  -------
-  Helical convolution. 
-  Initialized with the filter. */
-void mshelicon_init( msfilter bb) {
+void mshelicon_init( msfilter bb) 
+/*< initialize with the filter >*/
+{
     aa = bb;
 }
 
-void mshelicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
+void mshelicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
+/*< linear operator >*/
+{
     int is;
     
     sf_adjnull( adj, add, nx, ny, xx, yy);
@@ -27,4 +31,4 @@ void mshelicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
     }
 }
 
-/* 	$Id: mshelicon.c,v 1.1 2004/06/11 10:51:33 fomels Exp $	 */
+/* 	$Id$	 */

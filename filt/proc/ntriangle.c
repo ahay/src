@@ -1,6 +1,33 @@
+/* Non-stationary triangle smoothing */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
 
 #include "ntriangle.h"
+
+#ifndef _ntriangle_h
+
+typedef struct NTriangle *ntriangle;
+/* abstract data type */
+/*^*/
+
+#endif
 
 struct NTriangle {
     float *tmp;
@@ -17,12 +44,9 @@ static void triple (int o, int d, int nx, int nb,
 static void triple2 (int o, int d, int nx, int nb, 
 		     const int* t, const float* x, float* tmp);
 
-/* 
-   Triangle smoothing in 1-D 
-   nbox - triangle length
-   ndat - data length
-*/
-ntriangle ntriangle_init (int nbox, int ndat)
+ntriangle ntriangle_init (int nbox /* triangle length */, 
+			  int ndat /* data length */)
+/*< initialize >*/
 {
     ntriangle tr;
 
@@ -147,14 +171,24 @@ static void triple2 (int o, int d, int nx, int nb, const int* t,
     }
 }
 
-void nsmooth (ntriangle tr, int o, int d, bool der, const int *t, float *x)
+void nsmooth (ntriangle tr /* smoothing object */, 
+	      int o, int d /* sampling */, 
+	      bool der     /* derivative flag */, 
+	      const int *t /* triangle lengths */, 
+	      float *x     /* data (smoothed in place) */)
+/*< smooth >*/
 {
     fold (o,d,tr->nx,tr->nb,tr->np,x,tr->tmp);
     doubint (tr->np,tr->tmp,der);
     triple (o,d,tr->nx,tr->nb,t,x,tr->tmp);
 }
 
-void nsmooth2 (ntriangle tr, int o, int d, bool der, const int *t, float *x)
+void nsmooth2 (ntriangle tr /* smoothing object */, 
+	       int o, int d /* sampling */, 
+	       bool der     /* derivative flag */, 
+	       const int *t /* triangle lengths */, 
+	       float *x     /* data (smoothed in place) */)
+/*< alternative smooth >*/
 {
     triple2 (o,d,tr->nx,tr->nb,t,x,tr->tmp);
     doubint (tr->np,tr->tmp,der);
@@ -162,10 +196,10 @@ void nsmooth2 (ntriangle tr, int o, int d, bool der, const int *t, float *x)
 }
 
 void  ntriangle_close(ntriangle tr)
+/*< free allocated storage >*/
 {
     free (tr->tmp);
     free (tr);
 }
 
 /* 	$Id: ntriangle.c 691 2004-07-04 19:28:08Z fomels $	 */
-

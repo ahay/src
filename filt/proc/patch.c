@@ -1,19 +1,35 @@
+/* Patch operation (in core) */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "patch.h"
 
 static int dim, ipatch;
 static int *npatch, *nwind, *nwall, ii[SF_MAX_DIM], jj[SF_MAX_DIM]; 
 
-/* patch_init
-   ----------
-   Initialize patch parameters.
-   dim - dimensionality
-   npatch - number of patches
-   nwall - data size
-   nwind - patch size
-*/
-void patch_init(int dim_in, int* npatch_in, int* nwall_in, int* nwind_in)
+void patch_init(int dim_in     /* number of dimensions */, 
+		int* npatch_in /* number of patches [dim] */, 
+		int* nwall_in  /* data size [dim] */, 
+		int* nwind_in  /* patch size [dim] */)
+/*< initialize >*/
 {
     dim = dim_in;
     npatch = npatch_in; 
@@ -22,14 +38,8 @@ void patch_init(int dim_in, int* npatch_in, int* nwall_in, int* nwind_in)
     ipatch = 0;
 }
 
-/* patch_lop
-   ---------
-   Patch operation. 
-   if (!adj) extract a patch (wind from wall)
-   if (adj)  insert  a patch (wind to wall)
-*/
-void patch_lop (bool adj, bool add, 
-		int nx, int ny, float* wall, float* wind)
+void patch_lop (bool adj, bool add, int nx, int ny, float* wall, float* wind)
+/*< patch operator >*/
 {
     int i, j, shift;
  
@@ -55,11 +65,8 @@ void patch_lop (bool adj, bool add,
     }
 }
 
-/* patch_close
-   -----------
-   Move to the next patch.
-*/
 void patch_close(void)
+/*< Move to next patch. >*/
 {
     ipatch++; /* increase patch counter */
 }

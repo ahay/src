@@ -1,3 +1,25 @@
+/* Signal and noise separation with plane-wave destruction */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <rsf.h>
+/*^*/
+
 #include "planesignoi.h"
 
 #include "allp2.h"
@@ -5,8 +27,13 @@
 static float eps, *tmp;
 static allpass2 noi, sig;
 
-void planesignoi_init (int nw, int nj1, int nj2, int nx, int ny, 
-		       float **nn, float **ss, float eps1)
+void planesignoi_init (int nw           /* filter size */, 
+		       int nj1, int nj2 /* dealiasing stretch */, 
+		       int nx, int ny   /* data size */, 
+		       float **nn       /* noise slope */, 
+		       float **ss       /* signal slope */, 
+		       float eps1       /* regularization parameter */)
+/*< initialize >*/
 {
     eps = eps1;
     noi = allpass2_init(nw,nj1,nx,ny,nn);
@@ -15,6 +42,7 @@ void planesignoi_init (int nw, int nj1, int nj2, int nx, int ny,
 }
 
 void planesignoi_lop (bool adj, bool add, int ns, int nd, float *s, float *d)
+/*< linear operator >*/
 {
     int is;
 
@@ -40,6 +68,7 @@ void planesignoi_lop (bool adj, bool add, int ns, int nd, float *s, float *d)
 }
 
 void planesignoi_close(void)
+/*< free allocated storage >*/
 {
     free(noi);
     free(sig);
