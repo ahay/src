@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
 
     n = sf_filesize(in);
 
-    /* parameter from the command line (i.e. clip=1.5 ) */
     if (!sf_getfloat("clip",&clip)) sf_error("Need clip=");
+    /* clip value */
 
     /* allocate floating point array */
     nbuf = BUFSIZ/sizeof(float);
@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
 	sf_floatread(trace,nbuf,in);
 
 	/* loop over samples */
-	for (i=0; i < n; i++) {
+	for (i=0; i < nbuf; i++) {
 	    if      (trace[i] >  clip) trace[i]= clip;
 	    else if (trace[i] < -clip) trace[i]=-clip;
 	}
@@ -65,5 +65,5 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mclip.c,v 1.4 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
       

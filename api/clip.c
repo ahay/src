@@ -1,7 +1,5 @@
-/* Clip the data.
+/* Clip the data. */
 
-Takes: < input.rsf > output.rsf 
-*/
 #include <rsf.h>
 
 int main(int argc, char* argv[])

@@ -26,7 +26,7 @@
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *trace2, *hilb2, *num, *den, *rat, *org, c;
+    float *trace, *hilb, *trace2, *hilb2, *num, *den, *rat, *org, c, mean;
     char key[6];
     sf_file in, out, ref;
 
@@ -67,6 +67,7 @@ int main (int argc, char* argv[])
 
     hilbert_init(n1, nh, c);
 
+    mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 	hilbert(trace,hilb);
@@ -83,6 +84,7 @@ int main (int argc, char* argv[])
 	    num[i] = hypotf(trace[i1],hilb[i1]);
 	    den[i] = hypotf(trace2[i1],hilb2[i1]);
 	    org[i] = trace[i1];
+	    mean += den[i];
 	}
 	for (i1=n1-nh; i1 < n1; i1++, i++) {
 	    num[i] = 0.;
@@ -90,11 +92,17 @@ int main (int argc, char* argv[])
 	    org[i] = trace[i1];
 	}
     }
+    mean = sqrtf(n12/mean);
+
+    for (i=0; i < n12; i++) {
+	num[i] *= mean;
+	den[i] *= mean;
+    }
 
     divn_init(dim, n12, n, rect, niter);
     divn (num, den, rat);
 
-    for (i=0; i < n1*n2; i++) {
+    for (i=0; i < n12; i++) {
 	if (rat[i] != 0.) org[i] /= rat[i];
     }
     

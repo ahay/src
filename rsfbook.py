@@ -51,12 +51,14 @@ def report_toc(target=None,source=None,env=None):
          '\\title{\REPORT\ --- TABLE OF CONTENTS}',
          '\\maketitle',
          '%% start entries\n'],'\n'))
-    ### Do sections later
+    sections = env.get('sections',{})
     for src in source:
         dir = os.path.basename(os.path.dirname(str(src)))
         paper = src.get_contents()
         author = re_author.search(paper)
         title = re_title.search(paper)
+        if sections.has_key(dir):
+            toc.write('\n\\TOCsection{%s}\n' % sections[dir])
         if author and title:
             title = re.sub(r'\\',' ',title.group(1)) # remove line breaks 
             toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
@@ -78,14 +80,15 @@ def report_toc(target=None,source=None,env=None):
     toc.close()
     return 0
 
-Toc = Builder(action = Action(report_toc), varlist=['year'])
+Toc = Builder(action = Action(report_toc), varlist=['year','sections'])
 
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
         self.Append(BUILDERS={'Toc':Toc})        
-    def Papers(self,papers=glob.glob('[a-z]*/paper.tex'),year=None):
-        self.Toc('toc.tex',papers,year=year)
+    def Papers(self,papers=glob.glob('[a-z]*/paper.tex'),
+               year=None,sections={}):
+        self.Toc('toc.tex',papers,year=year,sections=sections)
         map(lambda tex: self.Depends('toc.tex',tex),
             filter(os.path.isfile,misc.keys()))
 

@@ -24,7 +24,7 @@ void trisl_init(int m1, int m2, int rect1, int rect2)
     trace2 = sf_floatalloc(n1);
 
     tr = triangle_init (rect1,n1);
-    amp = 1./(rect*rect);
+    amp = 1./rect;
 }
 
 void trisl_set(float** p1)
@@ -194,18 +194,23 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	}
     }
 
-    roll(false,tmp);
-    shift(false,tmp); 
-
     for (i2=0; i2 < n2+2*rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    tmp[i2][i1] *= amp;
 	}
     }
 
+    roll(false,tmp);
+    shift(false,tmp);
     shift(true,tmp);
     roll(true,tmp);
-
+    
+    for (i2=0; i2 < n2+2*rect; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    tmp[i2][i1] *= amp;
+	}
+    }
+    
     if (adj) {
 	for (i2=0; i2 < rect; i2++) {
 	    for (i1=0; i1 < n1; i1++) {

@@ -1,4 +1,24 @@
+/* Complex banded (Hermitian positive definite) matrix inversion */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <rsf.h>
+/*^*/
 
 #include "cbanded.h"
 
@@ -6,7 +26,9 @@ static int n, band;
 static float *d;
 static float complex **o;
 
-void cbanded_init (int n_in, int band_in)
+void cbanded_init (int n_in    /* matrix size */, 
+		   int band_in /* band width */)
+/*< Initialize >*/
 {
     int i;
 
@@ -19,7 +41,9 @@ void cbanded_init (int n_in, int band_in)
     d = sf_floatalloc(n);
 }
 
-void cbanded_const_define (float diag, const float complex *offd)
+void cbanded_const_define (float diag                /* diagonal */, 
+			   const float complex *offd /* lower off-diagonal */)
+/*< set matrix coefficients (constant along diagonals) >*/
 {
     int k, m, j;
     float complex ct;
@@ -56,7 +80,9 @@ void cbanded_const_define (float diag, const float complex *offd)
     }
 }
 
-void cbanded_define (const float *diag, float complex **offd)
+void cbanded_define (const float *diag    /* diagonal */, 
+		     float complex **offd /* lower subdiagonals */)
+/*< set matrix coefficients >*/
 {
     int k, m, j;
     float complex ct;
@@ -94,6 +120,7 @@ void cbanded_define (const float *diag, float complex **offd)
 }
 
 void cbanded_solve (float complex *b)
+/*< multiply by inverse (in place) >*/
 {
     int k, m;
     float complex t;
@@ -129,6 +156,7 @@ void cbanded_solve (float complex *b)
 }
 
 void cbanded_close (void)
+/*< free allocated storage >*/
 {
     int i;
 
@@ -139,4 +167,4 @@ void cbanded_close (void)
     free (o);
 }
 
-/* 	$Id: cbanded.c,v 1.1 2004/03/13 06:11:12 fomels Exp $	 */
+/* 	$Id$	 */

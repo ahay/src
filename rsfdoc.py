@@ -219,14 +219,14 @@ class rsfprog:
     def latex(self,dir):
         file = open (os.path.join(dir,self.name + '.tex'),'w')
         contents = '\\footnotesize\n'
-        name = '\\subsection{%s}\n' % self.name
+        name = '\\subsection{%s: %s}\n' % (self.name,self.desc)
         contents = contents + name
-        if self.desc:
-            contents = contents + self.desc
         if self.snps:
-            contents = contents + self.snps
+            snps = '\\begin{verbatim}\n%s\n\\end{verbatim}\n' % self.snps
+            contents = contents + snps
         if self.cmts:
-            contents = contents + self.cmts
+            cmts = '\\vspace{-12pt}\n%s\n' % self.cmts
+            contents = contents + cmts
         pars =  self.pars.keys()
         if pars:
             pars.sort()
@@ -238,10 +238,10 @@ class rsfprog:
 #                        string.replace(self.pars[par].desc,
 #                                       '\n','<br>\n'),add='')
             contents = contents + '''
-            \par\noindent
-            \begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}
+            \\par\\noindent
+            \\begin{tabular}{p{1in}p{1in}p{1in}p{2.5in}}
             %s
-            \end{tabular}
+            \\end{tabular}
             ''' % pardoc
         file.write(contents)
         file.close()

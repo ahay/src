@@ -1,21 +1,20 @@
-/* Simple synthetics with random reflectivity.
-*/
+/* Simple synthetics with random reflectivity. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -72,7 +71,7 @@ static void synf(float fo, int n, float* s, int ns,
 int main (int argc, char* argv[])
 {
     int nr, nt, it;
-    float t0, dt, fo[3]={20.,8.,5.};
+    float t0, dt, fo[3]={20.,8.,5.}, tscale;
     float *tim, *pp, *ps, *ss, *tpp, *tss, *tps;
     float *ts, *dtpp, *tmean, *p2ss, *p2ps, *dtss, *dtps, *rs;
     char* func;
@@ -94,6 +93,9 @@ int main (int argc, char* argv[])
     sf_putfloat(mod,"o1",t0);
     sf_putint(mod,"n2",3);
     sf_setformat(mod,"native_float");
+
+    if (!sf_getfloat("tscale",&tscale)) tscale=1.;
+    /* maximum time */
 
     sf_getfloats ("fo",fo,3); 
 
@@ -130,7 +132,7 @@ int main (int argc, char* argv[])
     srand(2003);
 
     for (it=0; it < nr; it++) {
-	ts[it] = 0.05+0.95*random_one();
+	ts[it] = tscale*(0.05+0.95*random_one());
     }
     qsort(ts,nr,sizeof(float),compare_float);
 
@@ -146,16 +148,19 @@ int main (int argc, char* argv[])
 	tmean[it]=ts[it]-0.5*dtpp[it];
 	switch (func[0]) {
 	    case 'h': /* Hamilton */
-		p2ss[it]=1./(0.12+(0.5*tmean[it]));
+		p2ss[it]=1./(0.12+(0.5*tmean[it]/tscale));
 		break;
 	    case 's': /* sinusoid */
-		p2ss[it]=2.+0.2*cosf(4.*SF_PI*tmean[it]);
+		p2ss[it]=2.+0.2*cosf(4.*SF_PI*tmean[it]/tscale);
 		break;
 	    case 'c': /* constant */
 		p2ss[it]=2.;
 		break;
 	    case 'l': /* linear */
 		p2ss[it]=3.-tmean[it];
+		break;
+	    case 'm': /* medium */
+		p2ss[it]=1.+0.5/(0.12+(0.5*tmean[it]/tscale));
 		break;
 	    default:
 		sf_error("Unknown case %s",func);
@@ -198,4 +203,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mrandrefl.c,v 1.11 2004/06/25 18:08:42 fomels Exp $	 */
+/* 	$Id$	 */

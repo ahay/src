@@ -1,4 +1,4 @@
-/* Split-step migration/modeling */
+/* 2-D split-step migration/modeling */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

@@ -33,6 +33,7 @@ class SUProject(rsfproj.Project):
     def __init__(self,**kw):
         apply(rsfproj.Project.__init__,(self,),kw)
         self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
+        self.plots = []
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsf':0,'suffix': suffix,'src_suffix':src_suffix})
         return apply(rsfproj.Project.Flow,(self,target,source,flow),kw)
@@ -40,14 +41,26 @@ class SUProject(rsfproj.Project):
         if not flow: # two arguments
             flow = source
             source = target
-
+        # X output
         xflow  = re_plots.sub('x\\1',flow)
-        kw.update({'suffix':'.view','stdout':-1})
+        kw.update({'suffix':'.x','stdout':-1})
         apply(self.Flow,(target,source,xflow),kw)
-        
+        # Postscript output
         psflow = re_plots.sub('ps\\1',flow)
         kw.update({'suffix': pssuffix,'stdout':1})
         apply(self.Flow,(target,source,psflow),kw)
+    def Result(self,target,source,flow=None,**kw):
+        if not flow: # two arguments
+            flow = source
+            source = target
+        target2 = os.path.join(self.resdir,target)
+        apply(self.Plot,(target2,source,flow),kw)
+        self.Default (target2+pssuffix)
+        self.Alias(target+'.view',target2+'.x')
+        self.plots.append(target)
+    def End(self):
+        if self.plots: # if any results
+            self.Alias('view',map(lambda x: x+'.view',self.plots))
 
 # Default project
 project = SUProject()
@@ -55,5 +68,7 @@ def Flow(target,source,flow,**kw):
     return apply(project.Flow,(target,source,flow),kw)
 def Plot(target,source,flow=None,**kw):
     return apply(project.Plot,(target,source,flow),kw)
-def End(**kw):
-    return apply(project.End,[],kw)
+def Result(target,source,flow=None,**kw):
+    return apply(project.Result,(target,source,flow),kw)
+def End():
+    return project.End()

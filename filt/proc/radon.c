@@ -1,7 +1,6 @@
 #include <rsf.h>
 
 #include "radon.h"
-#include "cadj.h"
 
 static float dp, p0;
 static int nx, np;
@@ -62,7 +61,7 @@ void radon_lop (bool adj, bool add, int nm, int nd,
     if (nm != np || nd != nx) 
 	sf_error("%s: mismatched data sizes",__FILE__);
 
-    adjnull(adj, add, nm, nd, mm, dd);
+    sf_cadjnull(adj, add, nm, nd, mm, dd);
     
     for (ix=0; ix < nx; ix++) {
 	if (adj == true) {
@@ -84,5 +83,5 @@ void radon_lop (bool adj, bool add, int nm, int nd,
     }
 }
 
-/* 	$Id: radon.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id$	 */
 

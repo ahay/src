@@ -16,6 +16,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <math.h>
 
 #include <rsf.h>
 
@@ -25,7 +26,7 @@
 int main (int argc, char* argv[])
 {
     int nh, n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a, b, c;
+    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, a, b, c, mean;
     char key[6];
     sf_file in, out;
 
@@ -64,6 +65,7 @@ int main (int argc, char* argv[])
 
     hilbert_init(n1, nh, c);
 
+    mean=0.;
     for (i=i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 	hilbert(trace,hilb);
@@ -79,11 +81,18 @@ int main (int argc, char* argv[])
 	    b = hilb[i1];
 	    num[i] = a*dhilb[i1]-b*dtrace[i1];
 	    den[i] = a*a+b*b;
+	    mean += num[i];
 	}
 	for (i1=n1-nh; i1 < n1; i1++, i++) {
 	    num[i] = 0.;
 	    den[i] = 0.;
 	}
+    }
+    mean = sqrtf(n12/mean);
+
+    for (i=0; i < n12; i++) {
+	num[i] *= mean;
+	den[i] *= mean;
     }
 
     divn_init(dim, n12, n, rect, niter);

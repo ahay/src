@@ -40,7 +40,7 @@ static allpass2 ap2;
 allpass2 allpass2_init(int nw         /* filter size (1,2,3) */, 
 		       int nj         /* filter step */, 
 		       int nx, int ny /* data size */, 
-		       float **pp     /* data [ny][nx] */)
+		       float **pp     /* dip [ny][nx] */)
 /*< Initialize >*/
 {
     allpass2 ap;

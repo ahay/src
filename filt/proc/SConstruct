@@ -41,6 +41,7 @@ env.Append(BUILDERS={'Include':configure.Header},
 
 src2 = '''
 allp2 allp3 apfilt autocorr banded bandpass bound box boxfilter burg butter
+callp2 causint cbanded
 '''
 
 for source in Split(src2):
