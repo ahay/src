@@ -86,6 +86,7 @@ def image(imag,slow,swlf,rwfl,par):
 def cimage(imag,slow,swlf,rwfl,par):
     Flow(imag,[swlf,slow,rwfl],
          '''
+         %(SPM)s
          slo=${SOURCES[1]}
          <   ${SOURCES[0]}
          rwf=${SOURCES[2]}
