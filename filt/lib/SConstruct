@@ -1,0 +1,14 @@
+src = "alloc c99 decart error file files getpar math1 pfafft segy simtab stack"
+
+sources = map(lambda x: x+'.c',src.split()) 
+includes = map(lambda x: x+'.h',src.split())
+
+env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g')
+
+lib = env.StaticLibrary('librsf',sources)
+env.Command('rsf.h',includes,"cat $SOURCES > $TARGET")
+
+for file in ('file','getpar','simtab'):
+    test = 'Test' + file + '.c'
+    env.Program([test,lib],PROGSUFFIX='.x')
+
