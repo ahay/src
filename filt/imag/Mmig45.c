@@ -1,55 +1,84 @@
-program FinDif
-  use ctridiagonal
-  use sep
+#include <rsf.h>
 
-  implicit none
-  logical                               :: inv
-  integer                               :: nw,nz,nx, iw,ix,iz
-  real                                  :: dw,dz,dx, vel0,pi, eps, den, beta
-  complex                               :: w, a
-  real,    dimension (:,:), allocatable :: depth, vel, voff
-  real,    dimension (:),   allocatable :: time
-  complex, dimension (:),   allocatable :: ctime, tt, diag1,diag2, offd1,offd2
-  type (ctris)                          :: slv
+#include "ctridiagonal.h"
 
-  call sep_init ()
-  call from_par("inv",inv,.false.)
-  call from_par("eps",eps,0.01)
-  call from_par("beta",beta,1./12.)
-  if (inv) then ! modeling
-     call from_history (nz,nx)
-     call from_history ("d1",dz)
-     call from_history ("d2",dx) 
-     call from_par ("nt",nw)
-     call from_par ("dt",dw)
-     dw = 1./(dw*(nw-1))
-     call to_history ("n2",nw); call to_history ("d2",dw)
-     call to_history ("n1",nx); call to_history ("d1",dx)
-  else          ! migration
-     call from_history (nx,nw)
-     call from_history ("d2",dw) 
-     call from_history ("d1",dx) 
-     if (exist_file ("velocity")) then
-        call from_aux ("velocity", "n1", nz)
-        call from_aux ("velocity", "d1", dz)
-     else
-        call from_par ("nz",nz) 
-        call from_par ("dz",dz)
-     end if
-     call to_history ("n1",nz); call to_history ("d1",dz)
-     call to_history ("n2",nx); call to_history ("d2",dx)
-  end if
+int main(int argc, char* argv[])
+{
+    bool inv;
+    int nw,nz,nx, iw,ix,iz;
+    float dw,dz,dx, vel0,pi, eps, den, beta;
+    float complex w, a, *ctime, *tt, *diag1, *diag2, *offd1, *offd2;
+    float **depth, **vel, **voff, *time;
+    ctris slv;
+    sf_file in, out, velocity;
 
-  allocate (vel (nz,nx), voff(nz,nx))
-  if (exist_file ("velocity")) then
-     call sep_read (vel, "velocity")
-  else ! constant velocity
-     call from_par ("vel", vel0)
-     vel = vel0
-  end if
-  call sep_close ()
-  pi = acos (-1.)
-  dw = dw*pi
+    sf_init ();
+    in = sf_input("in");
+    out = sf_output("out");
+
+    if (!sf_getbool("inv",&inv)) inv=false;
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    if (!sf_getfloat("beta",&beta)) beta=1./12.;
+
+    if (NULL != sf_getstring ("velocity")) {
+	velocity = sf_input("velocity");
+    } else {
+	velocity = NULL;
+    }
+
+    if (inv) { /* modeling */
+	if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
+	if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
+	if (!sf_histfloat(in,"d1",&dz)) sf_error("No d1= in input");
+	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
+
+	if (!sf_getint("nt",&nw)) sf_error("Need nt=");
+	if (!sf_getfloat("dt",&dw)) sf_error("Need dt=");
+	dw = 1./(dw*(nw-1));
+
+	sf_putint (out,"n2",nw); 
+	sf_putfloat (out,"d2",dw);
+	sf_putint (out,"n1",nx); 
+	sf_putfloat (out,"d1",dx);
+    } else { /* migration */
+	f (!sf_histint(in,"n1",&nx)) sf_error("No n1= in input");
+	if (!sf_histint(in,"n2",&nw)) sf_error("No n2= in input");
+	if (!sf_histfloat(in,"d1",&dx)) sf_error("No d1= in input");
+	if (!sf_histfloat(in,"d2",&dw)) sf_error("No d2= in input");
+
+	if (NULL != velocity) {
+	    if (!sf_histint(velocity,"n1",&nz)) 
+		sf_error("No n1= in velocity");
+	    if (!sf_hisfloat(velocity,"d1",&dz)) 
+		sf_error("No d1= in velocity");
+	} else {
+	    if (!sf_getint("nz",&nz)) sf_error("Need nz=");
+	    if (!sf_getfloat("dz",&dz)) sf_error("Need dz=");
+	}
+
+	sf_putint (out,"n2",nx); 
+	sf_putfloat (out,"d2",dx);
+	sf_putint (out,"n1",nz); 
+	sf_putfloat (out,"d1",dz);
+    }
+
+    vel = sf_floatalloc2(nz,nx);
+    voff = sf_floatalloc2(nz,nx);
+
+    if (NULL != velocity) {
+	sf_read (vel[0],sizeof(float),nz*nx,velocity);
+    } else { /* constant velocity */
+	if (!sf_getfloat ("vel", &vel0)) sf_error("Need vel0=");
+	for (ix=0; ix < nx; ix++) {
+	    for (iz=0; iz < nz; iz++) {
+		vel[ix][iz] = vel0;
+	    }
+	}
+    }
+
+    dw *= SF_PI;
+
+/**********************/
   vel = 0.5*vel
   voff (:,:nx-1) = sqrt(vel(:,:nx-1)*vel(:,2:)) 
   dx = 0.25/(dx*dx)
