@@ -4,8 +4,9 @@ LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
 PROGS = ai2refl bandpass bin bin1 depth2time dip envelope fft1 fft2 fft3 \
-	helicon invbin1 nmo noise pwd randrefl reshape ricker sigmoid smooth \
-	spectra stretch2 taup taupmo time2depth warp1 window1 xcorr1
+	helicon invbin1 invwarp nmo noise pwd randrefl reshape ricker \
+	sigmoid smooth spectra stretch2 taup taupmo time2depth warp1 \
+	window1 window2 xcorr1
 
 ai2refl = empty
 bandpass = butterworth
@@ -20,6 +21,7 @@ fft3 = empty
 helicon = polydiv regrid helicon helix adjnull
 invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep causint \
 	triangle1 triangle polydiv pef bound helix hconest helicon regrid
+invwarp = stretch tridiagonal
 nmo = fint1 tridiagonal spline interp_spline extend banded
 noise = randn
 pwd = allp3 apfilt
@@ -35,6 +37,7 @@ taupmo = fint1 tridiagonal spline interp_spline extend banded
 time2depth = fint1 tridiagonal spline interp_spline extend banded
 warp1 = divlap1 int1 interp_spline prefilter recfilt adjnull banded
 window1 = window1
+window2 = window2
 xcorr1 = window1 xcorr stretch2 banded
 
 MAINS = $(addprefix sf, $(PROGS))
