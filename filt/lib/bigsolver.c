@@ -98,7 +98,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
     float* wht = NULL;
     float *p, *g, *rr, *gg, *tp = NULL, *td = NULL;
     int i, iter;
-    double dprr, dppd, dppm, dpgm, dprr0, dpgm0;
+    double dprr, dppd, dppm, dpgm, dprr0=1., dpgm0=1.;
     bool forget = false;
 
     va_start (args, eps);

@@ -111,11 +111,7 @@ int main (int argc, char* argv[])
 	nsiz *= n[i];
     }
 
-    if (!sf_histint(in[0],"esize",&esize)) {
-	esize=4;
-    } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
-    }
+    esize = (int) sf_esize(in[0]);
     check_compat(esize,nin,in,dim,n);
 
     sf_setformat(out,sf_histstring(in[0],"data_format"));
@@ -294,7 +290,7 @@ static void check_compat (int esize,
     const float tol=1.e-5;
     
     for (i=1; i < nin; i++) {
-	if (!sf_histint(in[i],"esize",&ni) || ni != esize)
+	if ((int) sf_esize(in[i]) != esize) 
 	    sf_error ("esize mismatch: need %d",esize);
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);

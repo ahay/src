@@ -280,29 +280,38 @@ sf_dataform sf_getform (sf_file file)
     return file->form;
 }
 
+size_t sf_esize(sf_file file)
+/*< return element size >*/
+{
+    sf_datatype type;
+
+    type = sf_gettype (file);
+    switch (type) {
+	case SF_FLOAT: 
+	    return sizeof(float);
+	    break;
+	case SF_INT:
+	    return sizeof(int);
+	    break;
+	case SF_COMPLEX:
+#ifndef __cplusplus
+	    return sizeof(float complex);
+#else
+	    return 2*sizeof(float);
+#endif
+	    break;
+	default:
+	    return sizeof(char);
+	    break;
+    }
+}
+
+
 void sf_settype (sf_file file, sf_datatype type)
 /*< set file type >*/
 {
     file->type = type;
-    switch(type) {
-	case SF_FLOAT:
-	    sf_putint(file,"esize",(int) sizeof(float));
-	    break;
-	case SF_INT:
-	    sf_putint(file,"esize",(int) sizeof(int));
-	    break;
-	case SF_COMPLEX:
-#ifndef __cplusplus
-	    sf_putint(file,"esize",(int) sizeof(float complex));
-#else
-	    sf_putint(file,"esize",2 * (int) sizeof(float));
-#endif
-	    break;
-	case SF_CHAR:
-	default:
-	    sf_putint(file,"esize",(int) sizeof(char));
-	    break;
-    }
+    sf_putint(file,"esize",(int) sf_esize(file));
 }
 
 void sf_setpars (sf_file file)
@@ -331,7 +340,7 @@ void sf_setform (sf_file file, sf_dataform form)
 		free (file->buf);
 		file->buf = NULL;
 	    }
-	    sf_putint(file,"esize",0);
+	    sf_putint(file,"esize",0); /* for compatibility with SEPlib */
 	    break;
 	case SF_XDR:
 	    if (NULL == file->buf) {

@@ -71,7 +71,7 @@ int main (int argc, char* argv[])
 	if (sf_histint(file,"esize",&esize)) {
 	    printf ("%sesize=%d ",pad+10,esize);
 	} else {
-	    esize = 4;
+	    esize = sf_esize(file);
 	    printf ("%sesize=%d? ",pad+10,esize);
 	}
 	printf("type=%s form=%s\n",

@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"esize",&esize)) {
 	esize=4;
     } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
+	sf_error("cannot handle esize=%d",esize);
     }
 
     sf_fileflush(out,in);

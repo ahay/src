@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
 {
     sf_file in;
     char *want, buf[BUFSIZ];
-    int n[SF_MAX_DIM], nzero, esize;
+    int n[SF_MAX_DIM], nzero;
     size_t i, nsiz, nbuf, nleft, dim, minloc=0, maxloc=0;
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float fmean, fsqr, fnorm, f, fmin, fmax;
@@ -61,13 +61,7 @@ int main(int argc, char* argv[])
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }
-
-    if (!sf_histint(in,"esize",&esize)) {
-	esize=4;
-    } else if (0 >= esize) {
-	sf_error("wrong esize=%d",esize);
-    }
-    bufsiz /= esize;
+    bufsiz /= sf_esize(in);
 
     type = sf_gettype (in);
     if (SF_COMPLEX==type) {

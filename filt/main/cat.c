@@ -96,12 +96,13 @@ int main (int argc, char* argv[])
     }
 
     naxis = sf_intalloc(nin);
-    
+
     if (!sf_histint(in[0],"esize",&esize)) {
 	esize=4;
     } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
+	sf_error("cannot handle esize=%d",esize);
     }
+    esize = sf_esize(in[0]);
     check_compat(esize,nin,in,axis,dim1,n,naxis);
 
     /* figure out the length of extended axis */
