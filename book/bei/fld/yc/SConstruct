@@ -1,0 +1,30 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+set_resdir('../Fig')
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
+
+tpow = {'02':2.0,'20':1.0} # doubled because there is no tpow in grey
+gpow = {'02':0.5,'20':0.8}
+
+for case in ('02','20'):
+    data = 'wz.%s.H' % case
+    Fetch(data,datdir)
+    Result('yc'+case,data,
+           '''
+           dd data_format=native_float |
+           window n1=625 |
+           tpow tpow=%g |
+           grey gpow=%g 
+           ''' % (tpow[case],gpow[case]))
+
+###########################################################################
+End()
