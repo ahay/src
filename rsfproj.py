@@ -332,6 +332,8 @@ class Project(Environment):
             self.junk = []
     def Flow(self,target,input,flow,source=None,clean=1,
              suffix=sfsuffix,prefix=sfprefix):
+        if not flow:
+            return None
         sources = []
         if source:
             if type(source) is types.ListType:
@@ -342,8 +344,8 @@ class Project(Environment):
                 if ('.' not in file):
                     file = file + sfsuffix
                 sources.append(file)
+        lines = string.split(flow,';')
         steps = []
-        lines = string.split(flow,';')    
         for line in lines:
             substeps = []
             sublines = string.split(line,'|')
@@ -356,15 +358,16 @@ class Project(Environment):
                 if rsfdoc.progs.has_key(rsfprog):
                     command = os.path.join(bindir,rsfprog)
                     sources.append(command)
-                # check for par files and add to the sources
+                #<- check for par files and add to the sources
                 for par in pars:
                     if re.match("^par=",par):
                         sources.append(par[4:])
-                # assemble the command line
+                #<<- assemble the command line
                 pars.insert(0,command)
                 substeps.append(string.join(pars,' '))
+            #<-
             steps.append(string.join(substeps," | "))
-        # assemble the pipeline
+        #<- assemble the pipeline
         command = string.join(steps,";\n") + " > $TARGET"
         if input:
             if ('.' not in input):
@@ -380,14 +383,18 @@ class Project(Environment):
               suffix=vpsuffix,**kw):
         return self.Flow(target,input,flow,source,clean,suffix)
     def Result(self,target,input,flow,source=None,clean=0,
-               suffix=vpsuffix,**kw):
+               suffix=vpsuffix,repr=1,**kw):
         target2 = os.path.join(resdir,target)
-        plot = self.Plot(target2,input,flow,source,clean,suffix)
-        Default (plot)
-        self.view.append(self.View(target + '.view',plot))
-        build = self.Build(target2 + pssuffix,plot)
-        self.figs.append(build)
-        self.Alias(target + '.build',build)
+        if flow:
+            plot = self.Plot(target2,input,flow,source,clean,suffix)
+            Default (plot)
+            self.view.append(self.View(target + '.view',plot))
+            build = self.Build(target2 + pssuffix,plot)
+            self.figs.append(build)
+            self.Alias(target + '.build',build)
+        else:
+            plot = None
+            build = target2 + pssuffix
         buildPDF = self.PDFBuild(target2,build)
         self.pdfs.append(buildPDF)
         self.Alias(target + '.buildPDF',buildPDF)
