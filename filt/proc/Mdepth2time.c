@@ -1,4 +1,4 @@
-/* Comversion from depth to time in a V(z) medium.
+/* Conversion from depth to time in a V(z) medium.
 
 Takes: < indepth.rsf velocity=velocity.rsf > intime.rsf
 */
@@ -84,5 +84,5 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-/* 	$Id: Mdepth2time.c,v 1.3 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mdepth2time.c,v 1.4 2003/10/01 23:41:07 fomels Exp $	 */
 
