@@ -1,3 +1,22 @@
+/* Zero finder. */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
 #include <stdio.h>
 #include <string.h>
 #include <math.h>
@@ -5,15 +24,20 @@
 #include "fzero.h"
 
 #include <rsf.h>
+/*^*/
 
 #define SIGN(a) ((a)>= 0.) 
 #ifndef MAX
 #define MAX(a,b) (((a)>(b))?(a):(b))
 #endif
 
-float fzero (float (*func)(float), 
-	     float a, float b, float fa, float fb,
-	     float toler, bool verb)
+float fzero (float (*func)(float) /* function f(x) */, 
+	     float a, float b     /* interval */, 
+	     float fa, float fb   /* f(a) and f(b) */,
+	     float toler          /* tolerance */, 
+	     bool verb            /* verbosity flag */)
+/*< Return c such that f(c)=0 (within tolerance). 
+  fa and fb should have different signs. >*/
 {
     float c, fc, m, s, p, q, r, e, d;
     char method[256];
@@ -99,4 +123,4 @@ float fzero (float (*func)(float),
     return b;
 }
 
-/* 	$Id: fzero.c,v 1.4 2003/09/30 14:30:52 fomels Exp $	 */
+/* 	$Id$	 */

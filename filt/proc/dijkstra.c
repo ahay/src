@@ -5,10 +5,8 @@
 #include "dijkstra.h"
 #include "pqueue.h"
 
-typedef enum {L, R, U, D} dir;
-
 typedef struct Step {
-    dir d;
+    int ud, lr;
     Step* next;
 } *step;
 
@@ -42,7 +40,16 @@ void dijkstra_init(int m1, int m2)
 
 void dijkstra_close(void)
 {
+    int i2, i1;
+
     sf_pqueue_close ();
+    for (i2=0; i2 < n2; i2++) {
+	for (i1=0; i1 < n1; i1++) {
+	    if (NULL != path[i2][i1]) free (path[i2][i1]);
+	}
+    }
+    free (path[0]);
+    free (path);
     free(cost[0]);
     free(cost);
     free(status[0]);
@@ -54,7 +61,7 @@ void dijkstra_close(void)
 static void fix_neighbor(int s1, int s2, int ud, int lr, float shift)
 {
     float *neighbor, newcost, oldstatus;
-
+    step st;
 
     oldstatus = status[s2+lr][s1+ud];
 
@@ -68,9 +75,17 @@ static void fix_neighbor(int s1, int s2, int ud, int lr, float shift)
 	status[s2+lr][s1+ud] = SF_FRONT;
 	sf_pqueue_insert (neighbor);
 	np++;
+	st = path[s2+lr][s1+ud] = sf_alloc(1,sizeof(struct Step));	
     } else if (newcost < *neighbor) {
 	*neighbor = newcost;
+	st = path[s2+lr][s1+ud];
+    } else {
+	return;
     }
+
+    st->ud=ud;
+    st->lr=lr;
+    st->next = path[s2][s1];
 }
 
 static void neighbors(int s1, int s2, float **ud, float **lr)
