@@ -4,6 +4,18 @@ from SCons.Util import WhereIs
 from SCons.Tool import createObjBuilders
 from SCons.Action import Action
 
+include = re.compile(r'#include\s*\"([^\"]+)\.h\"')
+
+def depends(env,list,file):
+    filename = env.File(file+'.c').abspath.replace('build/','',1)
+    fd = open(filename,'r')
+    for line in fd.readlines():
+        for inc in include.findall(line):
+            if inc not in list:
+                list.append(inc)
+                depends(env,list,inc)
+    fd.close()
+
 def check_all(context):
     cc(context)
     ar(context)

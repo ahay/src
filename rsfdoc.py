@@ -6,7 +6,8 @@ progs = {}
 def selfdoc(target=None,source=None,env=None):
     src = str(source[0])
     doc = open(str(target[0]),"w")
-    getprog(src,doc)
+    rsfprefix = env.get('rsfprefix','sf')
+    getprog(src,doc,rsfprefix)
     doc.close()
 
 def bold(text):
@@ -92,9 +93,7 @@ param = None
 stringpar = None
 synopsis = None
 
-rsfprefix = 'sf'
-
-def getprog(file,out):
+def getprog(file,out,rsfprefix = 'sf'):
     global comment, param, synopsis, stringpar
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
@@ -169,7 +168,7 @@ def getprog(file,out):
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
 
 
-def cli():
+def cli(rsfprefix = 'sf'):
     import getopt
     import rsfprog
 
@@ -233,4 +232,4 @@ if __name__ == "__main__":
     os.unlink("junk.py")
     os.unlink("junk.pyc")
 
-# 	$Id: rsfdoc.py,v 1.9 2003/10/18 18:19:58 fomels Exp $	
+# 	$Id: rsfdoc.py,v 1.10 2004/03/30 02:06:30 fomels Exp $	

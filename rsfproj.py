@@ -98,8 +98,10 @@ from SCons.Node.FS import default_fs
 # BEGIN CONFIGURATION VARIABLES
 ##############################################################################
 
-#prefix for sf commands
+#prefix for rsf commands
 sfprefix = 'sf'
+#prefix for vpl commands
+plprefix = 'vp'
 #suffix for rsf files
 sfsuffix = '.rsf'
 # suffix for vplot files
@@ -292,6 +294,11 @@ if acroread:
     Read = Builder(action = acroread + " $SOURCES",src_suffix='.pdf')
 ressuffix = '.pdf'
 
+fig2dev = WhereIs('fig2dev')
+if fig2dev:
+    XFig = Builder(action = fig2dev + ' -L pdf -p dummy $SOURCES $TARGETS',
+                   suffix='.pdf',src_suffix='.fig')
+
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
@@ -352,12 +359,7 @@ class Project(Environment):
                          'DISPLAY':display,
                          'RSFROOT':top},
                     BUILDERS={'View':View,
-#                              'Clean':Klean,
                               'Build':Build,
-#                              'PDFBuild':PDFBuild,
-                              #                              'Dvi':Dvi,
-                              #                              'Ps':Ps,
-#                              'Read':Read,
                               'Retrieve':Retrieve},
                     SCANNERS=[Plots],
                     LIBPATH=[libdir],
@@ -368,6 +370,8 @@ class Project(Environment):
 	    self.Append(BUILDERS={'Read':Read})
 	if epstopdf:
 	    self.Append(BUILDERS={'PDFBuild':PDFBuild})
+        if fig2dev:
+            self.Append(BUILDERS={'XFig':XFig})
         self['PROGPREFIX']=''
         self.view = []
         self.figs = []
@@ -448,7 +452,6 @@ class Project(Environment):
                pstexpen=None,**kw):
         target2 = os.path.join(resdir,target)
         if flow:
-#            kw.update({'clean':clean,'suffix':suffix})
             plot = apply(self.Plot,(target2,source,flow),kw)
             self.Default (plot)
             self.view.append(self.View(target + '.view',plot))
@@ -476,7 +479,6 @@ class Project(Environment):
             return apply(self.Plot,(target,source,flow),kw)
     def End(self):
         self.Alias('view',self.view)
-#        self.Alias('clean',self.Clean('clean',None,junk=self.junk))
         if self.figs: # if any results
             build = self.Alias('build',self.figs)
         if self.pdfs:
@@ -509,6 +511,8 @@ def Combine(target,source,how,**kw):
     return apply(project.Combine,(target,source,how),kw)
 def Fetch(file,dir):
     return project.Fetch(file,dir)
+def XFig(file):
+    return project.XFig(os.path.join(resdir,file),file)
 def Exe(source,**kw):
      return apply(project.Exe,[source],kw)
 def End():
@@ -518,4 +522,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id: rsfproj.py,v 1.23 2004/03/29 08:00:12 fomels Exp $	
+# 	$Id: rsfproj.py,v 1.24 2004/03/30 02:06:30 fomels Exp $	

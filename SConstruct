@@ -50,7 +50,8 @@ env.Install(bindir,'sftour')
 ##########################################################################
 # SELF DOCUMENTATION
 ##########################################################################
-Doc = Builder (action = Action(rsfdoc.selfdoc),src_suffix='.c',suffix='.py')
+Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix']),
+               src_suffix='.c',suffix='.py')
 env.Append(BUILDERS = {'Doc' : Doc})
 
 ##########################################################################
@@ -90,7 +91,7 @@ if env.has_key('F90'):
 env.Prepend(LIBPATH=['../../plot/lib'],LIBS=['rsfplot'])
 
 Export('env')
-dirs = ('lib','main')
+dirs = ('lib','main','test')
 
 Default('build/include')
 for dir in map(lambda x: os.path.join('plot',x), dirs):
