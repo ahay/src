@@ -1,0 +1,40 @@
+###########################################################################
+# STANDARD HEADER
+###########################################################################
+import sys, os
+
+root = os.environ.get('RSFROOT')
+sys.path.append(os.path.join(root,'lib'))
+
+from rsfproj import *
+###########################################################################
+Book()
+
+datdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
+
+n1 = {
+    '34': 400,
+    '32': 400,
+    '20': 450
+    }
+
+for case in ('34','32','20'):
+    data = 'wz.%s.H' % case
+    Fetch(data,datdir)
+    Flow(case,data,'dd data_format=native_float')
+    
+    window = 'window n1=%d | tpow xpow=1 tpow=0' % n1[case]
+    raw = 'raw'+case
+    lmo = 'lmo'+case
+    
+    Flow(raw,case,window)
+    Plot(raw,raw,'grey wanttitle=n')
+    
+    Flow(lmo,case,'lmostretch delay=1 v0=1.47 half=n | ' + window)
+    Plot(lmo,lmo,'grey wanttitle=n')
+
+    Combine('wzl.'+case,[raw,lmo],'SideBySideAniso',result=1,
+            vppen='txscale=1.5')
+
+###########################################################################
+End()
