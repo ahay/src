@@ -1,7 +1,7 @@
 src = "alloc c99 decart error file files getpar math1 pfafft segy simtab stack"
 
-sources = map(lambda x: x+'.c',src.split()) 
-includes = map(lambda x: x+'.h',src.split())
+sources = map(lambda x: x+'.c',Split(src)) 
+includes = map(lambda x: x+'.h',Split(src))
 
 env = Environment(CCFLAGS='-std=gnu9x -Wall -pedantic -g')
 

@@ -1,17 +1,18 @@
 import pydoc
-import re, sys, os
+import re, sys, os, string
 
 def bold(text):
     """Format a string in bold by overstriking."""
-    return ''.join(map(lambda ch: ch + "\b" + ch, text))
+    return string.join(map(lambda ch: ch + "\b" + ch, text),'')
 
 def underline(text):
     """Format a string in underline by overstriking."""
-    return ''.join(map(lambda ch: ch + "\b_", text))
+    return string.join(map(lambda ch: ch + "\b_", text),'')
 
 def section(head,body):
-    text = "\n".join(map(lambda line: "\t" + line, body.split("\n")))
-    return bold(head.upper()) + "\n" + text + "\n"
+    text = string.join(map(lambda line: "\t" + line,
+                           string.split(body,"\n")),"\n")
+    return bold(string.upper(head)) + "\n" + text + "\n"
 
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
@@ -39,32 +40,32 @@ class rsfprog:
     def document(self):
         doc = section('name',self.name)
         if self.desc:
-            doc += section('description',self.desc)
+            doc = doc + section('description',self.desc)
         if self.snps:
-            doc += section('synopsis',self.snps)
+            doc = doc + section('synopsis',self.snps)
         if self.cmts:
-            doc += section('comments',self.cmts)
+            doc = doc + section('comments',self.cmts)
         pars =  self.pars.keys()
         if pars:
             pars.sort()
             pardoc = ''
             for par in pars:
-                pardoc += self.pars[par].show(par)
-            doc += section('parameters',pardoc.rstrip())
+                pardoc = pardoc + self.pars[par].show(par)
+            doc = doc + section('parameters',string.rstrip(pardoc))
         if self.also:
-            doc += section('see also',self.also)
-        doc += section('source',self.file)
+            doc = doc + section('see also',self.also)
+        doc = doc + section('source',self.file)
         pydoc.pager(doc)
 
 comment = None
 param = None
-string = None
+stringpar = None
 synopsis = None
 
 rsfprefix = 'sf'
 
 def getprog(file,out):
-    global comment, param, synopsis, string
+    global comment, param, synopsis, stringpar
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
         param = re.compile(r'if\s*\(\!sf_get(?P<type>bool|int|float)\s*'
@@ -73,20 +74,20 @@ def getprog(file,out):
                            '\)\s*\)\s*[\{]?\s*'
                            '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+))?'
                            '\;\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
-        string = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"[^\;]*\;'
+        stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"[^\;]*\;'
                             '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
         synopsis = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                               '((?:.|\n)*)$')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
     name = re.sub('.c$','',name)
     src = open(file,"r")   # open source
-    text = ''.join(src.readlines())
+    text = string.join(src.readlines(),'')
     src.close()
     first = comment.match(text)
     if first:
-        tops = first.group(1).split("\n")
-        desc = tops.pop(0).lstrip()
-        first = "\n".join(tops)
+        tops = string.split(first.group(1),"\n")
+        desc = string.lstrip(tops.pop(0))
+        first = string.join(tops,"\n")
     else:
         desc = None
     prog = rsfprog(name,file,desc)
@@ -114,8 +115,8 @@ def getprog(file,out):
         prog.par(parname,rsfpar(type,default,range,desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                   (name,parname,type,default,range,desc))
-        parline += " %s=%s" % (parname,default)
-    pars = string.findall(text)
+        parline = parline + " %s=%s" % (parname,default)
+    pars = stringpar.findall(text)
     for par in pars:
         type = 'string'
         parname = par[0]
@@ -123,12 +124,12 @@ def getprog(file,out):
         prog.par(parname,rsfpar("string",desc=desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('string',desc='''%s'''))\n" %
                   (name,parname,desc))
-        parline += " %s=" % (parname)
+        parline = parline + " %s=" % (parname)
     if first:
         info = synopsis.match(first)
         if info:
-            snps = name + " " + info.group(1).lstrip() + parline
-            cmts = info.group(2).lstrip()
+            snps = name + " " + string.lstrip(info.group(1)) + parline
+            cmts = string.lstrip(info.group(2))
             prog.synopsis(snps,cmts)
             out.write("%s.synopsis('''%s''','''%s''')\n" % (name,snps,cmts))
     out.write("rsfprog['%s']=%s\n\n" % (name,name))
