@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
   if (!sf_getint ("nw",&nw)) nw=4;
   /* Interpolation accuracy */
   if (!sf_getint ("plane",&plane)) plane=0;
-  /* Point-source or plane-wave */
+  /* 0: point-source, 4: plane-wave */
 
   size = sf_input("size");
   siz = sf_intalloc2 (nx,nz);
@@ -144,4 +144,4 @@ static float func_eno(float t)
     return (f-sx);
 }
 
-/* 	$Id: Minterp2.c,v 1.3 2003/10/18 18:20:58 fomels Exp $	 */
+/* 	$Id: Minterp2.c,v 1.4 2003/10/23 02:21:15 fomels Exp $	 */

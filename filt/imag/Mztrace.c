@@ -16,13 +16,14 @@ int main(int argc, char* argv[])
     int nz,nx, iz, na, nt, nax, ix, order, is, iorder, k;
     float **slow, *slice[NS];
     float dz,dx,da,x0,z0,a0;
-    sf_file in, time, place, depth;
+    sf_file in, out[NS];
 
     sf_init(argc,argv);
     in = sf_input("in");
-    time = sf_output("out");
-    place = sf_output("place");
-    depth = sf_output("depth");
+    out[0] = sf_output("out");
+    out[1] = sf_output("place");
+    out[2] = sf_output("depth");
+    out[3] = sf_output("angle");
 
     if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -36,14 +37,6 @@ int main(int argc, char* argv[])
     if (!sf_getint("nt",&nt)) nt=nx*nz;
     /* ray length bound */
 
-    sf_putint(time,"n3",nz);
-    sf_putfloat(time,"d3",dz);
-    sf_putfloat(time,"o3",z0);
-
-    sf_putint(time,"n2",nx);
-    sf_putfloat(time,"d2",dx);
-    sf_putfloat(time,"o2",x0);
-
     if (!sf_getint("na",&na)) na=362;
     /* number of angles */
     if (!sf_getfloat("da",&da)) da=0.5;
@@ -51,39 +44,25 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("a0",&a0)) a0=-90.;
     /* starting angle (in degrees) */
 
-    sf_putint(time,"n1",na);
-    sf_putfloat(time,"d1",da);
-    sf_putfloat(time,"o1",a0);
+    for (is=0; is < NS; is++) {
+	sf_putint(out[is],"n3",nz);
+	sf_putfloat(out[is],"d3",dz);
+	sf_putfloat(out[is],"o3",z0);
 
-    sf_putint(place,"n1",na);
-    sf_putfloat(place,"d1",da);
-    sf_putfloat(place,"o1",a0);
+	sf_putint(out[is],"n2",nx);
+	sf_putfloat(out[is],"d2",dx);
+	sf_putfloat(out[is],"o2",x0);
 
-    sf_putint(depth,"n1",na);
-    sf_putfloat(depth,"d1",da);
-    sf_putfloat(depth,"o1",a0);
+	sf_putint(out[is],"n1",na);
+	sf_putfloat(out[is],"d1",da);
+	sf_putfloat(out[is],"o1",a0);
+    }
 
     da *= (SF_PI/180.);
     a0 *= (SF_PI/180.);
 
     nax = na*nx;
 
-    sf_putint(place,"n3",nz);
-    sf_putfloat(place,"d3",dz);
-    sf_putfloat(place,"o3",z0);
-
-    sf_putint(place,"n2",nx);
-    sf_putfloat(place,"d2",dx);
-    sf_putfloat(place,"o2",x0);
-
-    sf_putint(depth,"n3",nz);
-    sf_putfloat(depth,"d3",dz);
-    sf_putfloat(depth,"o3",z0);
-
-    sf_putint(depth,"n2",nx);
-    sf_putfloat(depth,"d2",dx);
-    sf_putfloat(depth,"o2",x0);
-    
     /* additional parameters */
     if(!sf_getbool("vel",&vel)) vel=true;
     /* y, input is velocity; n, slowness */
@@ -117,12 +96,12 @@ int main(int argc, char* argv[])
 
 	ztrace_step (iz);
 
-	sf_write (slice[0],sizeof(float),nax,time);
-	sf_write (slice[1],sizeof(float),nax,place);
-	sf_write (slice[2],sizeof(float),nax,depth);
+	for (is=0; is < NS; is++) {
+	    sf_write (slice[is],sizeof(float),nax,out[is]);
+	}
     }
 
     exit (0);
 }
 
-/* 	$Id: Mztrace.c,v 1.1 2003/10/21 15:09:08 fomels Exp $	 */
+/* 	$Id: Mztrace.c,v 1.2 2003/10/23 02:21:15 fomels Exp $	 */

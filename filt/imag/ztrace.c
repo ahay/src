@@ -107,6 +107,7 @@ void ztrace_step (int kz) {
 		slice[0][k] = 0.;
 		slice[1][k] = x0+ix*dx;
 		slice[2][k] = z0+iz*dz;
+		slice[3][k] = cell_p2a(p)*180./SF_PI;
 		known[k] = true;
 		nk++;
 		continue;
@@ -150,6 +151,7 @@ void ztrace_step (int kz) {
 		    slice[0][k] = t;
 		    slice[1][k] = x0+(x+ix)*dx;
 		    slice[2][k] = z0+(z+iz)*dz;
+		    slice[3][k] = cell_p2a(p)*180./SF_PI;
 		    known[k] = true;
 		    nk++;
 		    break;

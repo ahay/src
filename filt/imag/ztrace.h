@@ -1,7 +1,7 @@
 #ifndef _ztrace_h
 #define _ztrace_h
 
-#define NS 3
+#define NS 4
 
 void ztrace_init (int order, int iorder,
 		  int nx, int nz, int np, int nt,
