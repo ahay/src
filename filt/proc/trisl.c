@@ -50,15 +50,10 @@ static void forw(int i2, const float* t1, float* t2)
     } else if (i2 > n2+rect-1) {
 	back(2*(n2+rect-1)-i2,t2,t1);
     } else if (i2 == rect-1 || i2 == n2+rect-1) {
-
-	sf_warning("forw *");
-
 	for (i1=0; i1 < n1; i1++) {
 	    t2[i1] += t1[i1];
 	}
     } else {
-	sf_warning("forw %d",i2-rect);
-
 	for (i1=0; i1 < n1; i1++) {
 	    t = i1 + p[i2-rect][i1];
 	    if (t < 0.) continue;
@@ -86,15 +81,10 @@ static void back(int i2, float* t1, const float* t2)
     } else if (i2 > n2+rect-1) {
 	forw(2*(n2+rect-1)-i2,t2,t1);
     } else if (i2 == rect-1 || i2 == n2+rect-1) {
-
-	sf_warning("back *");
-
 	for (i1=0; i1 < n1; i1++) {
 	    t1[i1] += t2[i1];
 	}	
     } else {
-	sf_warning("back %d",i2-rect);
-
 	for (i1=0; i1 < n1; i1++) {	    
 	    t = i1 + p[i2-rect][i1];
 	    if (t < 0.) continue;
@@ -133,7 +123,7 @@ static void shift(bool adj, float** in)
     if (adj) {
 	for (i2=0; i2 < n2+rect; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace1[i1]=in[i2+rect][i1];
+		trace1[i1] = -in[i2+rect][i1];
 	    }
 	    
 	    for (ir=i2+rect-1; ir >= i2; ir--) {
@@ -145,13 +135,13 @@ static void shift(bool adj, float** in)
 	    }
 	    
 	    for (i1=0; i1 < n1; i1++) {
-		in[i2][i1] -= trace1[i1];
+		in[i2][i1] += trace1[i1];
 	    }
 	}
     } else {
-	for (i2=n2+rect-1; i2 >= 0; i2--) {
+	for (i2=n2+rect-1; i2 >=0; i2--) {
 	    for (i1=0; i1 < n1; i1++) {
-		trace1[i1]=in[i2][i1];
+		trace1[i1] = in[i2][i1];
 	    }
 	    
 	    for (ir=i2; ir < i2+rect; ir++) {
@@ -173,6 +163,7 @@ static void shift(bool adj, float** in)
 void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 {
     int i1, i2;
+    float *trace;
 
     if (nx != n1*n2 || ny != nx) 
 	sf_error("%s: wrong dimensions",__FILE__);
@@ -180,26 +171,31 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     sf_adjnull(adj, add, nx, ny, x, y);
 
     for (i2=0; i2 < n2; i2++) {
+	trace = tmp[i2+rect];
 	for (i1=0; i1 < n1; i1++) {
-	    tmp[i2+rect][i1] = adj? y[i2*n1+i1]: x[i2*n1+i1];
+	    trace[i1] = adj? y[i2*n1+i1]: x[i2*n1+i1];
 	}
-	if (adj) smooth (tr,0,1,false,tmp[i2+rect]);
+	if (!adj) smooth (tr,0,1,false,trace);
     }
 
-    for (i2=0; i2 < rect; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-/*	    if (adj) {
-		tmp[rect-1-i2][i1]  = tmp[rect+i2][i1];
-		tmp[n2+rect+i2][i1] = tmp[n2+rect-1-i2][i1];
-		} else { */
-		tmp[rect-1-i2][i1]  = 0.;
+    if (adj) {
+	for (i2=0; i2 < rect; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
 		tmp[n2+rect+i2][i1] = 0.;
-/*	    } */
+		tmp[rect-1-i2][i1]  = 0.;
+	    }
+	}
+    } else {
+	for (i2=0; i2 < rect; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		tmp[n2+rect+i2][i1] = tmp[n2+rect-1-i2][i1];
+		tmp[rect-1-i2][i1]  = tmp[rect+i2][i1];
+	    }
 	}
     }
-    
+
     roll(false,tmp);
-    shift(false,tmp);
+    shift(false,tmp); 
 
     for (i2=0; i2 < n2+2*rect; i2++) {
 	for (i1=0; i1 < n1; i1++) {
@@ -210,24 +206,23 @@ void trisl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     shift(true,tmp);
     roll(true,tmp);
 
-/*   
-    if (!adj) {
+    if (adj) {
 	for (i2=0; i2 < rect; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		tmp[rect+i2][i1]      += tmp[rect-1-i2][i1];
 		tmp[n2+rect-1-i2][i1] += tmp[n2+rect+i2][i1];
+		tmp[rect+i2][i1]      += tmp[rect-1-i2][i1];
 	    }
 	}
-    } 
-*/ 
+    }
 
     for (i2=0; i2 < n2; i2++) {
-	if (!adj) smooth (tr,0,1,false,tmp[i2+rect]);
+	trace = tmp[i2+rect];
+	if (adj) smooth2 (tr,0,1,false,trace);
 	for (i1=0; i1 < n1; i1++) {
 	    if (adj) {
-		x[i2*n1+i1] += tmp[i2+rect][i1];
+		x[i2*n1+i1] += trace[i1];
 	    } else {
-		y[i2*n1+i1] += tmp[i2+rect][i1];
+		y[i2*n1+i1] += trace[i1];
 		
 	    }
 	}
