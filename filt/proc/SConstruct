@@ -1,0 +1,75 @@
+import os, sys, re, string
+sys.path.append('../..')
+import configure
+
+progs = '''
+ai2refl aliasp autocorr bandpass bin bin1 blindpick blindpick2 boxsmooth
+byte2rsf burstnoise causint clip conv costaper cmp2shot cosft dealias dealias2
+deburst depth2time despike dip dip2 dipfilter dix envelope extract
+fft1 fft2 fft3 fint1 flat fourvc frame helicon hole idempatch igrad imospray
+impl1 impl2 infill inmo intbin invbin1 kolmog lapfill levint light lpad lpef
+make misif miss miss1 miss2 miss3 monof monof2 msmiss mspef nmo noise parcel
+pef prestolt pwd radon randrefl reshape ricker shapebin shapebin1 shot2cmp
+shotholes sigmoid slice smooth smoothder smoothreg smoothreg2
+spectra spectra2 spline stolt stretch synmarine taupmo tentwt time2depth tpow
+trismooth2 vscan velmod warp1 warpscan wilson window1 window2 window3
+'''
+
+try: # distributed version
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    bindir = os.path.join(root,'bin')
+    incdir = os.path.join(root,'include')
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    env.Append(CPPPATH=['../../include'],
+               LIBPATH=['../lib'],LIBS=['rsf','m'])
+    SConscript('../lib/SConstruct')
+
+mains = Split(progs)
+
+for prog in mains:
+    sources = ['M' + prog]
+    configure.depends(env,sources,'M'+prog)
+    prog = env.Program(prog,map(lambda x: x + '.c',sources))
+    if root:
+        env.Install(bindir,prog)
+
+if root:
+    docmerge = configure.docmerge
+    prefix = env.get('PROGPREFIX','')
+    for stretch in ['log','t2','lmo','nmo']:
+        stretch = prefix + stretch + 'stretch'
+        stretch0 = prefix + 'stretch'
+        env.InstallAs(os.path.join(bindir,stretch),stretch0)
+        docmerge = configure.docextra(docmerge,stretch0,stretch)
+
+for prog in ['banded','cbanded','gauss2','gaussshape2','triangle2','quantile',
+             'matmult','cmatmult','cburg','impl2','trisl']:
+    build = []
+    configure.depends(env,build,'Test'+prog)
+    env.Program(prog,['Test'+prog+'.c']+map(lambda x: x + '.o',build),
+                PROGPREFIX='Test',PROGSUFFIX='.x')
+                
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+
+if root:
+    main = 'sfproc.py'
+    
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    doc = env.Command(main,docs,docmerge)
+    env.Install(libdir,doc)
+    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
+    
+#####################################################################
+
+# 	$Id: SConstruct,v 1.1 2004/06/11 10:47:16 fomels Exp $	
