@@ -28,7 +28,7 @@ int main (int argc, char *argv[])
     int nx;		/* number of midpoints 	*/
     int nh;             /* number of offsets */
     int nw;		/* number of frequencies */	
-    int nt;             /* boundary taper size */
+    int nt, ntx, nth;   /* boundary taper size */
     int nr;             /* number of reference velocities */
 
     float z0, dz;	/* depth origin, sampling interval */
@@ -39,7 +39,6 @@ int main (int argc, char *argv[])
     float dt;           /* time error */
 
     float          **slow;
-    float complex ***data;
 
     bool inv;             /* modeling or migration        */
     bool verb;            /* verbosity */
@@ -69,6 +68,8 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("nt",&nt)) nt = 1;
     /* taper size */
+    ntx = SF_MIN(nt,nx-1);
+    nth = SF_MIN(nt,nh-1);
     
     if (!sf_getint("nr",&nr)) nr = 1;
     /* maximum number of references */
@@ -125,15 +126,9 @@ int main (int argc, char *argv[])
     sf_fileclose(vel);
 
     imag = slice_init(inv? in:out,nh,ny,nz);
-    data = sf_complexalloc3(nh,nx,nw);
 
-    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, nt,nr);
-
-    if (!inv) sf_complexread(data[0][0],nh*nx*nw,in);
-
-    dsr2 (verb, inv, eps,  nw, dw, w0, data, imag, slow, dt);
-
-    if (inv) sf_complexwrite(data[0][0],nh*nx*nw,out);
+    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, ntx,nth,nr);
+    dsr2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow, dt);
     
     exit (0);
 }

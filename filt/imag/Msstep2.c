@@ -27,7 +27,7 @@ int main (int argc, char *argv[])
     int nw;		/* number of frequencies */
     int nz;		/* number of migrated time samples */
     int nx, ny;		/* number of midpoints 	*/
-    int nt;             /* boundary taper size */
+    int nt, ntx, nty;   /* boundary taper size */
     int nr;             /* number of reference velocities */
 
     float w0;		/* frequency origin 	*/
@@ -35,8 +35,6 @@ int main (int argc, char *argv[])
     float dw;	        /* frequency sampling interval */
     float dx,dy;	/* spatial sampling interval	*/
     float dt;           /* time error */
-
-    float complex ***data;
 
     bool inv;             /* modeling or migration        */
     bool verb;            /* verbosity */
@@ -63,6 +61,8 @@ int main (int argc, char *argv[])
 
     if (!sf_getint("nt",&nt)) nt = 1;
     /* taper size */
+    ntx = SF_MIN(nt,nx-1);
+    nty = SF_MIN(nt,ny-1);
 
     if (!sf_getint("nr",&nr)) nr = 1;
     /* maximum number of references */
@@ -109,20 +109,10 @@ int main (int argc, char *argv[])
     /* allocate space for slowness and image */
     slow = slice_init(vel,ny,nx,nz);
     imag = slice_init(inv? in:out,ny,nx,nz);
-
-    /* allocate space for data */
-    data = sf_complexalloc3(ny,nx,nw);
-
+    
     /* initialize split-step */
-    split2_init(nz,dz,ny,dy,nx,dx,nt,nr);
-
-    /* migration */
-    if (!inv) sf_complexread(data[0][0],ny*nx*nw,in);
-
-    split2 (verb, inv, eps,  nw, dw, w0, data, imag, slow, dt);
-
-    /* modeling */
-    if ( inv) sf_complexwrite(data[0][0],ny*nx*nw,out);
+    split2_init(nz,dz,ny,dy,nx,dx,ntx,nty,nr);
+    split2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow, dt);
 
     exit (0);
 }

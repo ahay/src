@@ -24,13 +24,15 @@
 
 #include "split2.h"
 #include "fft2.h"
-
-#define LOOPxy(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ {a} }}
+#include "taper.h"
+#include "slowref.h"
 
 #include "slice.h"
 /*^*/
 
-static int nx,ny,nz,nt,nrmax;
+#define LOOPxy(a) for(ix=0;ix<nx;ix++){ for(iy=0;iy<ny;iy++){ {a} }}
+
+static int nx,ny,nz,nrmax;
 static float dz;
 static float         **ss; /* slowness */
 static float         **sz; /* reference slowness */
@@ -51,7 +53,7 @@ static float         **ma; /* multi-reference slowness mask */
 void split2_init(int nz1, float dz1  /* depth */,
 		 int ny1, float dy1  /* in-line midpoint */,
 		 int nx1, float dx1  /* cross-line midpoint */,
-		 int nt1             /* taper size */,
+		 int ntx, int nty    /* taper size */,
 		 int nr1             /* maximum number of references */) 
 /*< initialize >*/
 {
@@ -69,7 +71,6 @@ void split2_init(int nz1, float dz1  /* depth */,
     dy =        2.0*SF_PI/(ny*dy1);
     y0 = (1==ny)?0:-SF_PI/dy1;
 
-    nt = nt1;
     nrmax = nr1;
 
     fft2_init(ny,nx);
@@ -105,7 +106,8 @@ void split2_init(int nz1, float dz1  /* depth */,
     }    
 
     /* precompute taper array */
-    taper_init(nt);
+    LOOPxy(tt[ix][iy]=1.;);
+    taper2(ntx,nty,true,true,nx,ny,tt);
 }
 
 void split2_close(void)
@@ -132,15 +134,14 @@ void split2(bool verb                   /* verbosity flag */,
 	    bool inv                    /* migration/modeling flag */, 
 	    float eps                   /* stability factor */,  
 	    int nw, float dw, float w0  /* frequency (radian) */,
-	    float complex *** cp        /* data  [nw][nx][ny] */,
-	    slice imag                  /* imag  [nz][nx][ny] */,
-	    slice slow                  /* slow  [nz][nx][ny] */,
+	    sf_file data                /* data  [nw][nx][ny] */,
+	    slice imag                  /* image  [nz][nx][ny] */,
+	    slice slow                  /* slowness  [nz][nx][ny] */,
 	    float dt                    /* time error */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,iy,ir, nxy;
-    float complex cshift, cref, w, w2, **pp;
-    float qr, smax, smin;
+    int iz,iw,ix,iy,ir,nxy;
+    float complex cshift, cref, w, w2;
 
     if (!inv) { /* prepare image for migration */
 	LOOPxy( qq[ix][iy] = 0.0; );
@@ -153,21 +154,12 @@ void split2(bool verb                   /* verbosity flag */,
     nxy = nx*ny;
     for (iz=0; iz<nz; iz++) {
 	slice_get(slow,iz,  ss[0]);
-
-	smax = sf_quantile(nxy-1,nxy,ss[0]);
-	smin = sf_quantile(    0,nxy,ss[0]);
-	nr[iz] = SF_MIN(nrmax,1+(smax-smin)*dz/dt);
+	nr[iz] = slowref(nrmax,dt/dz,nxy,ss[0],sz[iz],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
-
-	for (ir=0; ir<nr[iz]; ir++) {
-	    qr = (ir+1.0)/nr[iz] - 0.5 * 1./nr[iz];
-	    sz[iz][ir] = sf_quantile(qr*nxy,nxy,ss[0]);
-	    sm[iz][ir] = sz[iz][ir]*sz[iz][ir];
-	}
     }
     for (iz=0; iz<nz-1; iz++) {
 	for (ir=0; ir<nr[iz]; ir++) {
-	    sm[iz][ir] = 0.5*(sm[iz][ir]+sm[iz+1][ir]);
+	    sm[iz][ir] = 2*(sm[iz][ir]+sm[iz+1][ir]);
 	}
     }
 
@@ -177,8 +169,6 @@ void split2(bool verb                   /* verbosity flag */,
 
 	w = eps*dw + I*(w0+iw*dw);
 	w2 = w*w;
-
-	pp = cp[iw];
 
 	if (inv) { /* MODELING */
 	    /* start from bottom */
@@ -192,7 +182,7 @@ void split2(bool verb                   /* verbosity flag */,
 	    for (iz=nz-2; iz>=0; iz--) {
 		
 		/* w-x @ bottom */
-		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz)*tt[ix][iy];
+		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz)*tt[ix][iy];
 			pp[ix][iy] *= cshift; );
 		
 		/* FFT */
@@ -217,9 +207,8 @@ void split2(bool verb                   /* verbosity flag */,
 		    fft2(true,wb);
 
 		    /* create MRS mask */
-		    LOOPxy(                     ma[ix][iy]=0.; );
-		    LOOPxy( if( mm[ix][iy]==ir) ma[ix][iy]=1.; );
-		    
+		    LOOPxy( ma[ix][iy]= (mm[ix][iy]==ir)?1.:0.; );
+
 		    /* accumulate wavefield */
 		    LOOPxy( wt[ix][iy] += wb[ix][iy] * ma[ix][iy]; );
 		    
@@ -228,18 +217,24 @@ void split2(bool verb                   /* verbosity flag */,
 		slice_get(imag,iz,qq[0]);
 		
 		/* w-x at top */
-		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz);
+		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz);
 			pp[ix][iy] = qq[ix][iy] + wt[ix][iy]*cshift; );
 	    } /* iz */
 
 	    /* taper */
 	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
 
+	    sf_complexwrite(pp[0],nxy,data);
+
 	} else { /* MIGRATION */
-	    slice_get(slow,0,ss[0]);
+
+	    sf_complexread(pp[0],nxy,data);
 
 	    /* taper */
 	    LOOPxy( pp[ix][iy] *= tt[ix][iy]; );
+
+	    slice_get(slow,0,ss[0]);
+
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
@@ -250,7 +245,7 @@ void split2(bool verb                   /* verbosity flag */,
 		slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
-		LOOPxy( cshift= cexpf(-0.5*w*ss[ix][iy]*dz);
+		LOOPxy( cshift= cexpf(-w*ss[ix][iy]*dz);
 			pp[ix][iy] *= conjf(cshift); );
 
 		/* FFT */
@@ -276,8 +271,7 @@ void split2(bool verb                   /* verbosity flag */,
 		    fft2(true,wt);
 
 		    /* create MRS mask */
-		    LOOPxy(                     ma[ix][iy]=0.; );
-		    LOOPxy( if( mm[ix][iy]==ir) ma[ix][iy]=1.; );
+		    LOOPxy( ma[ix][iy]=(mm[ix][iy]==ir)?1.:0.; );
 
 		    /* accumulate wavefield */
 		    LOOPxy( wb[ix][iy] += wt[ix][iy] * ma[ix][iy]; );
@@ -285,7 +279,7 @@ void split2(bool verb                   /* verbosity flag */,
 		} /* ir loop */
 		
 		/* w-x @ bottom */
-		LOOPxy( cshift = cexpf(-0.5*w*ss[ix][iy]*dz)*tt[ix][iy];
+		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz)*tt[ix][iy];
 			pp[ix][iy] = wb[ix][iy]*conjf(cshift); );
 	    } /* iz */
 
@@ -298,33 +292,3 @@ void split2(bool verb                   /* verbosity flag */,
     } /* iw */
 }
 
-void taper_init(int nt)
-/*< Initialize boundary taper >*/
-{
-    int it,ix,iy;
-
-    LOOPxy( tt[ix][iy] = 1; );
-    
-    if(nt>=1) {
-	
-	if(nx>=nt) {
-	    for(it=0; it<nt; it++) {
-		for(iy=0; iy<ny; iy++) {
-		    tt[   it  ][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		    tt[nx-it-1][iy] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		}
-	    }
-	}
-	
-	if(ny>=nt) {
-	    for(it=0; it<nt; it++) {
-		for(ix=0; ix<nx; ix++) {
-		    tt[ix][   it  ] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		    tt[ix][ny-it-1] *= cos(SF_PI/2* (float)SF_ABS(nt-it-1)/nt);
-		}
-	    }
-	}
-	
-    } /* nt>1 */
-    
-}
