@@ -1,4 +1,4 @@
-/* 3-D common-azimuth prestack modeling/migration with split-step DSR. */
+/* 3-D common-azimuth modeling/migration with extended split-step. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

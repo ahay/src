@@ -137,7 +137,7 @@ void allpass2 (bool der         /* derivative flag */,
 		for (iw = 0; iw <= 2*ap->nw; iw++) {
 		    is = (iw-ap->nw)*ap->nj;
 		    
-		    yy[i] += (xx[ix+is+nx*ny] - xx[i-is]) * a[iw];
+		    yy[i] += (xx[i+is+nx*ny] - xx[i-is]) * a[iw];
 		}
 	    }
 	}
