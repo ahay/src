@@ -23,11 +23,12 @@
 
 static int nt1, nt2, nt3;
 static int  n1,  n2,  n3;
+static bool b1,  b2,  b3;
 static float *tap1=NULL, *tap2=NULL, *tap3=NULL;
 
-
 void taper2_init(int n2_, int n1_ /* cube dimensions */,
-		 int m2_, int m1_ /* taper lengths */)
+		 int m2_, int m1_ /* taper lengths */,
+		 bool b2_, bool b1_)
 /*< 2-D initialize >*/
 {
 
@@ -39,6 +40,9 @@ void taper2_init(int n2_, int n1_ /* cube dimensions */,
     
     n1 =n1_;
     n2 =n2_;
+
+    b1 =b1_;
+    b2 =b2_;
 
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
@@ -64,8 +68,15 @@ void taper2_close(void)
 }
 
 void taper3_init(
-    int n3_, int n2_, int n1_ /* cube dimensions */,
-    int m3_, int m2_, int m1_ /* taper lengths */)
+    int n3_, 
+    int n2_, 
+    int n1_ /* cube dimensions */,
+    int m3_, 
+    int m2_, 
+    int m1_ /* taper lengths */,
+    bool b3_,
+    bool b2_,
+    bool b1_)
 /*< 3-D initialize >*/
 {
     int it;
@@ -78,6 +89,10 @@ void taper3_init(
     n1 =n1_;
     n2 =n2_;
     n3 =n3_;
+
+    b1 =b1_;
+    b2 =b2_;
+    b3 =b3_;
 
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
@@ -110,8 +125,7 @@ void taper3_close(void)
     if (nt3 > 0) free(tap3);
 }
 
-void taper2(bool beg2, bool beg1  /* taper in the beginning  */, 
-	    float complex** tt    /* [n2][n1] tapered array (in and out) */)
+void taper2(float complex** tt  /* [n2][n1] tapered array (in and out) */)
 /*< 2-D taper >*/
 {
     int it,i2,i1;
@@ -120,22 +134,21 @@ void taper2(bool beg2, bool beg1  /* taper in the beginning  */,
     for (it=0; it < nt2; it++) {
 	gain = tap2[it];
 	for (i1=0; i1 < n1; i1++) {
-	    if (beg2) tt[   it  ][i1] *= gain;
-	    ;         tt[n2-it-1][i1] *= gain;
+	    if (b2) tt[   it  ][i1] *= gain;
+	    ;       tt[n2-it-1][i1] *= gain;
 	}
     }
 
     for (it=0; it < nt1; it++) {
 	gain = tap1[it];
 	for (i2=0; i2 < n2; i2++) {
-	    if (beg1) tt[i2][   it  ] *= gain;
-	    ;         tt[i2][n1-it-1] *= gain;
+	    if (b1) tt[i2][   it  ] *= gain;
+	    ;       tt[i2][n1-it-1] *= gain;
 	}
     }
 }
 
-void taper3(bool b3, bool b2, bool b1 /* taper in the beginning  */, 
-	    float complex*** tt       /* [n3][n2][n1] tapered array (inout) */)
+void taper3(float complex*** tt /* [n3][n2][n1] tapered array (inout) */)
 /*< 3-D taper >*/
 {
     int it,i1,i2,i3;

@@ -118,7 +118,9 @@ void ssr_init(
     /* precompute taper */
     taper2_init(ayy.n,axx.n,
 		SF_MIN(ty,ayy.n-1),
-		SF_MIN(tx,axx.n-1) );
+		SF_MIN(tx,axx.n-1),
+		true,
+		true);
 
     /* allocate K-domain storage */
     wk = sf_complexalloc2 (bxx.n,byy.n);
@@ -200,7 +202,7 @@ void ssr_ssf(
     LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
 
-    taper2(true,true,wx);
+    taper2(wx);
 }
 
 /*------------------------------------------------------------*/

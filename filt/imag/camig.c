@@ -32,7 +32,7 @@
 /*^*/
 
 #define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}}
-#define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
+#define SOOP(a)                             for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 static axa az,aw,alx,aly,amx,amy,ahx;
 static bool verb;
@@ -98,13 +98,14 @@ void camig_init(bool verb_,
 		amx.n,
 		SF_MIN(thx,ahx.n-1),
 		SF_MIN(tmy,amy.n-1),
-		SF_MIN(tmx,amx.n-1) );
+		SF_MIN(tmx,amx.n-1),
+		false,true,true);
 		
     /* compute reference slowness */
-    ss = sf_floatalloc2(alx.n,aly.n      );  /* slowness */
-    so = sf_floatalloc2(alx.n,aly.n      );  /* slowness */
-    sm = sf_floatalloc2       (nrmax,az.n);  /* reference slowness squared*/
-    nr = sf_intalloc                (az.n);  /* number of reference slownesses */
+    ss = sf_floatalloc2(alx.n,aly.n);  /* slowness */
+    so = sf_floatalloc2(alx.n,aly.n);  /* slowness */
+    sm = sf_floatalloc2 (nrmax,az.n);  /* reference slowness squared*/
+    nr = sf_intalloc          (az.n);  /* number of reference slownesses */
     slow = slow_;
     for (iz=0; iz<az.n; iz++) {
 	slice_get(slow,iz,ss[0]);
@@ -190,14 +191,14 @@ void camig(bool inv  /* forward/adjoint flag */,
 	    LOOP( wx[ihx][imy][imx]  += 
 		  qq[ihx][imy][imx]; );		
 	    
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 	    cslice_put(data,iw,wx[0][0]);    /* output data @ iz=0 */
 	    
 	} else { /* MIGRATION */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* -1 for downward continuation */
 
 	    cslice_get(data,iw,wx[0][0]);    /*  input data @ iz=0 */
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 
 	    slice_get(imag,0,qq[0][0]);      /*     imaging @ iz=0 */
 	    LOOP(        qq[ihx][imy][imx] += 
@@ -240,7 +241,7 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 	    w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	    cslice_get(botdata,iw,wx[0][0]);
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 
 	    slice_get(slow,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
@@ -249,13 +250,13 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 	    cslice_put(topdata,iw,wx[0][0]);
 	} else { /* DOWNWARD DATUMING */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d);
 
 	    cslice_get(topdata,iw,wx[0][0]);
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 	    
 	    slice_get(slow,0,so[0]);
 	    for (iz=0; iz<az.n-1; iz++) {
@@ -264,7 +265,7 @@ void cadtm(bool inv     /* forward/adjoint flag */,
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 	    cslice_put(botdata,iw,wx[0][0]);
 	} /* else */
     } /* iw */
@@ -285,9 +286,9 @@ void cawfl(slice data /*      data [nw][nhx][nmy][nmx] */,
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	cslice_get(data,iw,wx[0][0]);
-	taper3(false,true,true,wx);
+	taper3(wx);
 	
-	taper3(false,true,true,wx);
+	taper3(wx);
 	cslice_put(wfld,iw*az.n,wx[0][0]);
 
 	slice_get(slow,0,so[0]);
@@ -296,7 +297,7 @@ void cawfl(slice data /*      data [nw][nhx][nmy][nmx] */,
 	    cam_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
-	    taper3(false,true,true,wx);
+	    taper3(wx);
 	    cslice_put(wfld,iw*az.n+iz+1,wx[0][0]);
 	}	    
     } /* iw */

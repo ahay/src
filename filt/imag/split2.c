@@ -111,7 +111,7 @@ void split2_init(int nz1, float dz1  /* depth */,
     }    
 
     /* tapering */
-    taper2_init(nx,ny,ntx,nty);
+    taper2_init(nx,ny,ntx,nty,true,true);
 }
 
 void split2_close(void)
@@ -189,7 +189,7 @@ void split2(bool verb                   /* verbosity flag */,
 		
 		/* w-x @ bottom */
 		LOOPxy2( pp[ix][iy] = 0.;);
-		taper2(true,true,wx);
+		taper2(wx);
 		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz);
 			pp[ix][iy] = wx[ix][iy]*cshift; 
 			wt[ix][iy] = 0.; 
@@ -223,13 +223,13 @@ void split2(bool verb                   /* verbosity flag */,
 			wx[ix][iy] = qq[ix][iy] + wx[ix][iy]*cshift; );
 	    } /* iz */
 
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    sf_complexwrite(wx[0],nxy,data);
 
 	} else { /* MIGRATION */
 
 	    sf_complexread(wx[0],nxy,data);
-	    taper2(true,true,wx);
+	    taper2(wx);
 
 	    slice_get(slow,0,ss[0]);
 
@@ -271,7 +271,7 @@ void split2(bool verb                   /* verbosity flag */,
 		    cshift = conjf(cexpf(-w*ss[ix][iy]*dz))/wt[ix][iy];
 		    wx[ix][iy] *= cshift; 
 		    );
-		taper2(true,true,wx);
+		taper2(wx);
 	    } /* iz */
 
 	    /* imaging condition @ bottom */ 

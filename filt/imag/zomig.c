@@ -40,7 +40,6 @@ static float eps;
 
 static float         **qq; /* image */
 static float complex **wx; /* wavefield x */
-
 static float         **sm; /* reference slowness squared */
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
@@ -95,7 +94,9 @@ void zomig_init(bool verb_,
     taper2_init(amy.n,
 		amx.n,
 		SF_MIN(tmy,amy.n-1),
-		SF_MIN(tmx,amx.n-1) );
+		SF_MIN(tmx,amx.n-1), 
+		true,
+		true);
     
     /* compute reference slowness */
     ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
@@ -191,14 +192,14 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	    LOOP( wx[imy][imx]  += 
 		  qq[imy][imx]; );		
 	    
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    cslice_put(data,iw,wx[0]);    /* output data @ iz=0 */
 	    
 	} else { /* MIGRATION */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* -1 for downward continuation */
 
 	    cslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
-	    taper2(true,true,wx);
+	    taper2(wx);
 
 	    slice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 	    LOOP(;      qq[imy][imx] += 
@@ -243,7 +244,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 	    w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	    cslice_get(botdata,iw,wx[0]);
-	    taper2(true,true,wx);
+	    taper2(wx);
 
 	    slice_get(slow,az.n-1,so[0]);
 	    SOOP( so[ily][ilx] *=2; ); /* 2-way time */
@@ -254,13 +255,13 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    cslice_put(topdata,iw,wx[0]);
 	} else { /* DOWNWARD DATUMING */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d);
 
 	    cslice_get(topdata,iw,wx[0]);
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    
 	    slice_get(slow,0,so[0]);
 	    SOOP( so[ily][ilx] *=2; ); /* 2-way time */
@@ -271,7 +272,7 @@ void zodtm(bool inv     /* forward/adjoint flag */,
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    cslice_put(botdata,iw,wx[0]);
 	} /* else */
     } /* iw */
@@ -292,9 +293,9 @@ void zowfl(slice data /*      data [nw][nmy][nmx] */,
 	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
 	cslice_get(data,iw,wx[0]);
-	taper2(true,true,wx);
+	taper2(wx);
 	
-	taper2(true,true,wx);
+	taper2(wx);
 	cslice_put(wfld,iw*az.n,wx[0]);
 
 	slice_get(slow,0,so[0]);
@@ -305,7 +306,7 @@ void zowfl(slice data /*      data [nw][nmy][nmx] */,
 	    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
-	    taper2(true,true,wx);
+	    taper2(wx);
 	    cslice_put(wfld,iw*az.n+iz+1,wx[0]);
 	}
     } /* iw */

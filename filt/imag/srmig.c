@@ -97,7 +97,9 @@ void srmig_init(bool verb_,
     taper2_init(ay.n,
 		ax.n,
 		SF_MIN(ty,ay.n-1),
-		SF_MIN(tx,ax.n-1) );
+		SF_MIN(tx,ax.n-1),
+		true,
+		true);
 
     /* compute reference slowness */
     ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
@@ -177,8 +179,8 @@ void srmig(bool inv  /* forward/adjoint flag */,
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d);
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d);
 	    
-	    cslice_get(sdat,ie*aw.n+iw,us[0]); taper2(true,true,us);
-	    cslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(true,true,ur);
+	    cslice_get(sdat,ie*aw.n+iw,us[0]); taper2(us);
+	    cslice_get(rdat,ie*aw.n+iw,ur[0]); taper2(ur);
 	    
 /*	iz=0;*/
 /*	cslice_put(swfl,iw*az.n+iz,us[0]);*/

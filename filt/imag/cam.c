@@ -31,7 +31,7 @@
 
 #define LOOP(a) for(ihx=0;ihx<ahx.n;ihx++){ for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}}
 #define KOOP(a) for(ihx=0;ihx<bhx.n;ihx++){ for(imy=0;imy<bmy.n;imy++){ for(imx=0;imx<bmx.n;imx++){ {a} }}}
-#define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
+#define SOOP(a)                             for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
@@ -115,8 +115,8 @@ void cam_init(
     }
     
     /* precompute indices */
-    jy = sf_intalloc(amy.n);
     jx = sf_intalloc(amx.n);
+    jy = sf_intalloc(amy.n);
     is = sf_intalloc2(amx.n,ahx.n);  /* source   index */
     ir = sf_intalloc2(amx.n,ahx.n);  /* receiver index */
 
@@ -145,7 +145,8 @@ void cam_init(
     taper3_init(ahx.n,amy.n,amx.n,
 		SF_MIN(thx,ahx.n-1),
 		SF_MIN(tmy,amy.n-1),
-		SF_MIN(tmx,amx.n-1) );
+		SF_MIN(tmx,amx.n-1),
+		false,true,true);
 
     /* allocate K-domain storage */
     wk = sf_complexalloc3 (bmx.n,bmy.n,bhx.n);
@@ -248,5 +249,5 @@ void cam_ssf(
 	  +   ss[ jy[imy] ][ ir[ihx][imx] ];
 	  wx[ihx][imy][imx] *= cexpf(-w*s* az.d/2); );
 
-    taper3(false,true,true,wx);
+    taper3(wx);
 }
