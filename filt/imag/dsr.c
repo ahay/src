@@ -72,10 +72,10 @@ void dsr (bool inv /* modeling or migration */,
 	  float kx /* midpoint wavenumber */, 
 	  float kh /* half-offset wavenumber */, 
 	  float *p /* time trace */, 
-	  float **q /* depth trace */)
+	  float **q /* angle gathers */)
 /*< apply >*/
 {
-    int iz,iw;
+    int iz,iw, ia;
     float s, r, a;
     float complex w, k;
 
@@ -94,9 +94,11 @@ void dsr (bool inv /* modeling or migration */,
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
 		w = (eps + I*iw)*dw;
-		pp[iw] = q[iz][0] + pp[iw]*
-		    cexpf(-(pshift(w,r,vt[iz],vt[iz+1])+
-			    pshift(w,s,vt[iz],vt[iz+1]))*dz);
+
+		k = pshift(w,r,vt[iz],vt[iz+1])+
+		    pshift(w,s,vt[iz],vt[iz+1]);
+
+		pp[iw] = q[iz][0] + pp[iw]*cexpf(-k*dz);
 	    }
 	}
 
@@ -111,16 +113,29 @@ void dsr (bool inv /* modeling or migration */,
 		w = (eps+I*iw)*dw;
 
 		/* find angle */
+		k = pshift(w,r,vt[iz],vt[iz+1])+
+		    pshift(w,s,vt[iz],vt[iz+1]);
 		
-		/* accumulate image (summed over frequency) */
-		q[iz][0] += crealf(pp[iw]);
-		pp[iw] *= conjf(cexpf(-(pshift(w,r,vt[iz],vt[iz+1])+
-					pshift(w,s,vt[iz],vt[iz+1]))*dz));
+		a = crealf(0.5*vt[iz]/w*csqrt(k*k-kx*kx));
+		if (a >= 0. && a <= 1.) {
+		    a = acosf(a)/da;
+		    ia = a;
+		    a -= ia;
+		    if (ia >=0 && ia < na-1) {
+			/* accumulate image (summed over frequency) */
+			q[iz][ia] += (1.-a)*crealf(pp[iw]);
+			q[iz][ia+1] += a*crealf(pp[iw]);
+		    }
+		}
+
+		pp[iw] *= conjf(cexpf(-k*dz));
 	    }
 	}
 
 	for (iw=0; iw<nw; iw++) {
-	    q[nz-1][0] += crealf(pp[iw]);
+	    for (ia=0; ia < na; ia++) {
+		q[nz-1][ia] += crealf(pp[iw]);
+	    }
 	}
     }
 }

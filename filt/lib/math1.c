@@ -190,7 +190,7 @@ size_t sf_math_parse (char* output /* expression */,
 	    hasleft = true;
 	    for (j=i+1; j < len; j++) {
 		c2 = output[j];
-		if ('.' != c2 && !isdigit(c2)) break;
+		if ('.' != c2 && !isdigit(c2) && 'e' != c2) break;
 	    }
 	    keylen = j-i;
 	    key = sf_charalloc(keylen+1);
