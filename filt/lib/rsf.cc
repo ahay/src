@@ -97,7 +97,7 @@ iRSF::get (const char* name, int& value) const
     }
 }
 
- void 
+void 
 iRSF::get (const char* name, bool &value, bool defolt) const
 {
     if (file_)  {
@@ -313,4 +313,4 @@ oRSF::put (const char* name, int size, const int*   value) const
 //     sf_putfloats(file_,name,value,size);
 // }
 
-// 	$Id: rsf.cc,v 1.5 2004/06/23 08:54:31 fomels Exp $	
+// 	$Id$	

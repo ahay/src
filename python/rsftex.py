@@ -601,6 +601,8 @@ def Command2(target,source,command):
     return default.Command(target,source,command)
 def End(paper='paper',**kw):
     return apply(default.End,(paper,),kw)
+def Depends2(target,source):
+    return default.Depends(target,source)
 
 if __name__ == "__main__":
      import pydoc
