@@ -5,8 +5,9 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int taglen, status;
-    char *tag;
+    int taglen, status, argc=2, dim, n[SF_MAX_DIM], i;
+    char *tag, *argv[] = {"matlab","-"};
+    double *p;
     sf_file file;
 
     /* Check for proper number of arguments. */
@@ -35,9 +36,15 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
-    /* Output */
-    plhs[0] = mxCreateDoubleMatrix(1,1,mxREAL);
-    /* file = (sf_file*) mxGetPr(plhs[0]); */
-
+    sf_init(argc,argv);
     file = sf_input(tag);
+    dim = sf_filedims(file,n);
+    
+    /* Output */
+    plhs[0] = mxCreateDoubleMatrix(dim,1,mxREAL);
+    p = mxGetPr(plhs[0]);
+
+    for (i=0; i < dim; i++) {
+	p[i] = n[i];
+    }
 }

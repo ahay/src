@@ -61,6 +61,7 @@ class SUProject(rsfproj.Project):
     def End(self):
         if self.plots: # if any results
             self.Alias('view',map(lambda x: x+'.view',self.plots))
+        self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
 
 # Default project
 project = SUProject()
