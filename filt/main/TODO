@@ -2,9 +2,6 @@ pad - does not do expand
 add - slower than Add
 dd - requires 'data_format'
 math - requires 'output', flexible syntax
-----------------
-SU demos
-Documentation
-----------------
+
 
 

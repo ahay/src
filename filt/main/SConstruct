@@ -50,6 +50,7 @@ if root:
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
 #####################################################################
 
-# 	$Id: SConstruct,v 1.13 2004/06/16 17:55:15 fomels Exp $	
+# 	$Id: SConstruct,v 1.14 2004/06/23 18:30:00 fomels Exp $	

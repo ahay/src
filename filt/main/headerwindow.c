@@ -1,12 +1,26 @@
 /* Window a data set based on a header mask.
 
-Takes: < input.rsf mask=mask.rsf > windowed.rsf
-
 The input data is 2-D collection of traces n1xn2,
 mask is a 1-D integer array n2, windowed is n1xm2,
 where m2 is the number of nonzero elements in mask.
 */
+/*
+Copyright (C) 2004 University of Texas at Austin
 
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
 #include <rsf.h>
 
 int main(int argc, char* argv[])
@@ -63,4 +77,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
     
-/* 	$Id: headerwindow.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */
+/* 	$Id: headerwindow.c,v 1.5 2004/06/23 18:30:00 fomels Exp $	 */

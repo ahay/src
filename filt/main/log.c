@@ -1,7 +1,5 @@
 /* Take the base-10 logarithm of input data.
 
-Takes < in.rsf > log.rsf
-
 Alternatively, use sfmath or sfheadermath.
 */
 
@@ -78,4 +76,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: log.c,v 1.4 2004/04/19 21:51:35 fomels Exp $	 */
+/* 	$Id: log.c,v 1.5 2004/06/23 18:30:00 fomels Exp $	 */

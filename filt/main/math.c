@@ -1,10 +1,11 @@
 /* Mathematical operations on data files.
 
-Takes: > out.rsf
-
 Example:
 
-sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)'
+sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
+sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
+
+Known functions: cos, sin, tan, acos, asin, atan, exp, log, sqrt, abs.
 
 See also: sfheadermath.
 */
@@ -123,4 +124,4 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n)
     }
 }
 
-/* 	$Id: math.c,v 1.8 2004/05/11 14:10:22 fomels Exp $	 */
+/* 	$Id: math.c,v 1.9 2004/06/23 18:30:00 fomels Exp $	 */
