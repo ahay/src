@@ -302,6 +302,8 @@ bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool *par)
     *par = (('y' == val[0]) || 
 	    ('Y' == val[0]) || 
 	    ('1' == val[0]));
+
+    free(val);
     return true;
 }
 
