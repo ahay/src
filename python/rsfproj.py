@@ -216,7 +216,7 @@ class Project(Environment):
                 sources.append(file)
         else:
             stdin=0
-        lines = string.split(flow,';')
+        lines = string.split(flow,'&&')
         steps = []
         for line in lines:
             substeps = []
@@ -245,7 +245,7 @@ class Project(Environment):
             #<-
             steps.append(string.join(substeps," | "))
         #<- assemble the pipeline
-        command = string.join(steps," ;\n")
+        command = string.join(steps," && ")
         if stdout==1:
             command = command + " > $TARGET"
         elif stdout==0:

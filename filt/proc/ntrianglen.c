@@ -30,7 +30,8 @@ static float *tmp;
 
 void ntrianglen_init (int ndim  /* number of dimensions */, 
 		      int *nbox /* triangle radius [ndim] */, 
-		      int *ndat /* data dimensions [ndim] */)
+		      int *ndat /* data dimensions [ndim] */,
+		      int **len /* triangle lengths [ndim][nd] */)
 /*< initialize >*/
 {
     int i;
@@ -39,23 +40,14 @@ void ntrianglen_init (int ndim  /* number of dimensions */,
     dim = ndim;
 
     tr = (ntriangle*) sf_alloc(dim,sizeof(ntriangle));
-
-
+    
     nd = 1;
     for (i=0; i < dim; i++) {
 	tr[i] = (nbox[i] > 1)? ntriangle_init (nbox[i],ndat[i]): NULL;
 	s[i] = nd;
 	nd *= ndat[i];
     }
-    tmp = sf_floatalloc (nd);
-    tlen = (int**) sf_alloc(dim,sizeof(int*)); 
-}
-
-void ntrianglen_set (int dim /* dimension number */, 
-		     int *len /* triangle length [nd] */)
-/*< set triangle length for the specified dimension >*/
-{
-  tlen[dim] = len;
+    tlen = len; 
 }
 
 void ntrianglen_lop (bool adj, bool add, int nx, int ny, float* x, float* y)

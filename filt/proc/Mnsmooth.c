@@ -1,10 +1,4 @@
-/* Multi-dimensional smoothing.
-
-Takes: rect1=1 rect2=1 ... diff1=n diff2=n ... 
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-diffN is a flag for differentiating
-*/
+/* N-D non-stationary smoothing. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -25,30 +19,35 @@ diffN is a flag for differentiating
 
 #include <rsf.h>
 
+#include "ntrianglen.h"
+
 int main (int argc, char* argv[]) 
 {
-    int dim, dim1, i, j, n[SF_MAX_DIM], rect[SF_MAX_DIM], s[SF_MAX_DIM];
-    int nrep, irep, n1, n2, i2, i0;
-    bool diff[SF_MAX_DIM];
+    int *rct[SF_MAX_DIM], box[SF_MAX_DIM], n[SF_MAX_DIM], s[SF_MAX_DIM];
+    int dim, dim1, i, n1, n2, i1, i2;
+    float *data, *smoo;
     char key[6];
-    float* data;
-    sf_triangle tr;
-    sf_file in, out;
+    sf_file in, out, rect[SF_MAX_DIM];
 
     sf_init (argc, argv);
     in = sf_input ("in");
     out = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-
+ 
     dim = sf_filedims (in,n);
+
     dim1 = -1;
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
-	if (!sf_getint(key,rect+i)) rect[i]=1;
-	if (rect[i] > 1) dim1 = i;
-	snprintf(key,6,"diff%d",i+1);
-	if (!sf_getbool(key,diff+i)) diff[i]=false;
+	if (NULL != sf_getstring(key)) {
+	    rect[i] = sf_input(key);
+	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
+
+	    dim1 = i;
+	} else {
+	    rect[i] = NULL;
+	}
     }
 
     n1 = n2 = 1;
@@ -62,30 +61,34 @@ int main (int argc, char* argv[])
     }
 
     data = sf_floatalloc (n1);
+    smoo = sf_floatalloc (n1);
 
-    if (!sf_getint("repeat",&nrep)) nrep=1;
-    /* repeat filtering several times */
+    for (i=0; i < dim1; i++) {
+	box[i] = 1;
+	if (NULL != rect[i]) {
+	    rct[i] = sf_intalloc (n1);
+	    sf_intread(rct[i],n1,rect[i]);
+	    sf_fileclose(rect[i]);
+
+	    for (i1=0; i1 < n1; i1++) {
+		if (rct[i][i1] > box[i]) box[i] = rct[i][i1];
+	    }
+	} else {
+	    rct[i] = NULL;
+	}
+    }
+
+    ntrianglen_init(dim1,box,n,rct);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
 
-	for (i=0; i <= dim1; i++) {
-	    if (rect[i] <= 1) continue;
-	    tr = sf_triangle_init (rect[i],n[i]);
-	    for (j=0; j < n1/n[i]; j++) {
-		i0 = sf_first_index (i,j,dim1+1,n,s);
-		for (irep=0; irep < nrep; irep++) {
-		    sf_smooth (tr,i0,s[i],diff[i],data);
-		    /* smooth2 (tr,i0,s[i],diff[i],data); */
-		}
-	    }
-	    sf_triangle_close(tr);
-	}
+	ntrianglen_lop(false,false,n1,n1,data,smoo);
 	
-	sf_floatwrite(data,n1,out);
+	sf_floatwrite(smoo,n1,out);
     }    
 
     exit (0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Msmooth.c 691 2004-07-04 19:28:08Z fomels $	 */
