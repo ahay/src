@@ -3,28 +3,29 @@ CFLAGS = -std=gnu99 -Wall -g -pedantic -I../rsf
 LDFLAGS = -L../rsf -lrsf -lm
 DEPEND = -MM
 
-PROGS = bandpass bin bin1 depth2time dip envelope nmo noise \
+PROGS = bandpass bin bin1 depth2time dip envelope invbin1 nmo noise \
 	pwd randrefl sigmoid smooth spectra taup time2depth warp1
 
-bandpass.OBJS = butterworth
-bin.OBJS = int2 interp adjnull
-bin1.OBJS = int1 interp adjnull
-depth2time.OBJS = stretch tridiagonal
-dip.OBJS = dip3 divide1 allp3 tridiagonal apfilt
-envelope.OBJS = triangle
-nmo.OBJS = stretch tridiagonal
-noise.OBJS = randn
-pwd.OBJS = allp3 apfilt
-randrefl.OBJS = randn
-sigmoid.OBJS = random
-smooth.OBJS = triangle
-spectra.OBJS = empty
-taup.OBJS = radon cadj ctoeplitz
-time2depth.OBJS = fint1 tridiagonal spline interp_spline extend banded
-warp1.OBJS = divlap1 int1 interp_spline prefilter recfilt adjnull banded
+bandpass = butterworth
+bin = int2 interp adjnull
+bin1 = int1 interp adjnull
+depth2time = stretch tridiagonal
+dip = dip3 divide1 allp3 tridiagonal apfilt
+envelope = triangle
+invbin1 = int1 interp adjnull chain bigsolver tcai1 cgstep
+nmo = stretch tridiagonal
+noise = randn
+pwd = allp3 apfilt
+randrefl = randn
+sigmoid = random
+smooth = triangle
+spectra = empty
+taup = radon cadj ctoeplitz
+time2depth = fint1 tridiagonal spline interp_spline extend banded
+warp1 = divlap1 int1 interp_spline prefilter recfilt adjnull banded
 
 MAINS = $(addprefix sf, $(PROGS))
-OBJS = $(addsuffix .o, ${$*.OBJS})
+OBJS = $(addsuffix .o, ${$*})
 
 all: ${MAINS}
 

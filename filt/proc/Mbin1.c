@@ -67,7 +67,7 @@ int main (int argc, char* argv[])
 	    int1_init (offset, x0,dx,nx, lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
-	case 3:
+	default:
 	    sf_error("Unsupported interp=%d",interp);
 	    break;
     }

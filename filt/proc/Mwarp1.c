@@ -116,10 +116,10 @@ int main(int argc, char* argv[])
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
-	    int1_init (coord[i2], o1, d1, n1, spline_int, n2, order);
+	    int1_init (coord[i2], o1, d1, n1, spline_int, order, n2);
 	    int1_lop (false,false,n1,n2,inp[i2],out[i2]);
 	    
-	    int1_init (coord[i2], o1, d1, n1, spline_der, n2, order);
+	    int1_init (coord[i2], o1, d1, n1, spline_der, order, n2);
 	    int1_lop (false,false,n1,n2,inp[i2],der[i2]);
 	}
 
@@ -193,7 +193,7 @@ int main(int argc, char* argv[])
     divlap1_close(divw);
 
     for (i2=0; i2 < m2; i2++) {
-	int1_init (coord[i2], o1, d1, n1, spline_int, n2, order);
+	int1_init (coord[i2], o1, d1, n1, spline_int, order, n2);
 	int1_lop (false,false,n1,n2,inp[i2],out[i2]);
 
 	if (nliter > 0) {
