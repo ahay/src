@@ -1,4 +1,4 @@
-/* Phase-space Green's function from down-marching.
+/* Phase-space Green\'s function from down-marching.
 
 Takes < input.rsf place=place.rsf depth=depth.rsf wave=wave.rsf > output.rsf
 */
@@ -90,4 +90,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mgreen.c,v 1.1 2003/10/23 03:28:25 fomels Exp $	 */
+/* 	$Id: Mgreen.c,v 1.2 2003/10/23 03:34:47 fomels Exp $	 */
