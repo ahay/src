@@ -2,7 +2,6 @@
 
 #include "helicon.h"
 #include "helix.h"
-#include "adjnull.h"
 
 static filter aa;
 
@@ -18,7 +17,7 @@ void helicon_init( filter bb) {
 void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
     int ia, iy, ix;
     
-    adjnull( adj, add, nx, ny, xx, yy);
+    sf_adjnull( adj, add, nx, ny, xx, yy);
     
     for (iy = 0; iy < ny; iy++) { /* zero lag */
 	if (adj) { 
@@ -41,4 +40,4 @@ void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
     }
 }
 
-/* 	$Id: helicon.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: helicon.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */

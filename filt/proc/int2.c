@@ -3,7 +3,6 @@
 #include <rsf.h>
 
 #include "int2.h"
-#include "adjnull.h"
 
 #ifndef MAX
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
@@ -64,7 +63,7 @@ void  int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 
     if (ny != nd) sf_error("%s: wrong dimensions: %d != %d",__FILE__,ny,nd);
 
-    adjnull (adj,add,nm,nd,x,ord);
+    sf_adjnull (adj,add,nm,nd,x,ord);
 
     for (id=0; id < nd; id++) {
 	if (mask[id]) continue;
@@ -95,4 +94,4 @@ void int2_close (void)
     free (w2);
 }
 
-/* 	$Id: int2.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: int2.c,v 1.4 2003/10/21 15:09:08 fomels Exp $	 */

@@ -1,4 +1,3 @@
-#include "adjnull.h"
 #include "triangle.h"
 #include "triangle1.h"
 
@@ -21,7 +20,7 @@ void triangle1_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 
     if (nx != ny || nx != nd) sf_error("%s: Wrong data dimensions",__FILE__);
 
-    adjnull (adj,add,nx,ny,x,y);
+    sf_adjnull (adj,add,nx,ny,x,y);
     if (adj) {
 	for (i=0; i < nd; i++) {
 	    tmp[i] = y[i];
@@ -47,4 +46,4 @@ void triangle1_close(void)
     triangle_close (tr);
 }
 
-/* 	$Id: triangle1.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: triangle1.c,v 1.4 2003/10/21 15:09:08 fomels Exp $	 */

@@ -1,7 +1,6 @@
 #include <rsf.h>
 
 #include "tcai1.h"
-#include "adjnull.h"
 
 static int nb;
 static float* bb;
@@ -21,7 +20,7 @@ void tcai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) {
 
     if(ny < nx+nb) sf_error("%s: size problem: %d < %d+%d",
 			    __FILE__,ny,nx,nb);
-    adjnull (adj, add, nx, ny, xx, yy);
+    sf_adjnull (adj, add, nx, ny, xx, yy);
     
     for( b=0; b < nb; b++) {
 	for( x=0; x < nx; x++) {
@@ -32,4 +31,4 @@ void tcai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy) {
     }
 }
 
-/* 	$Id: tcai1.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: tcai1.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */

@@ -13,8 +13,6 @@ Takes: < irregular.rsf head=header.rsf > regular.rsf
 #include "tcai1.h"
 #include "triangle1.h"
 #include "causint.h"
-#include "cgstep.h"
-#include "bigsolver.h"
 #include "pef.h"
 #include "bound.h"
 #include "polydiv.h"
@@ -128,17 +126,17 @@ int main (int argc, char* argv[])
 	sf_read (dd,sizeof(float),nd,in);
 	if (prec) {
 	    if (filt==1) {
-		solver_prec(int1_lop, cgstep, causint_lop, nx, nx, nd,
-			    mm, dd, niter, eps, "end");
+		sf_solver_prec(int1_lop, sf_cgstep, causint_lop, nx, nx, nd,
+			       mm, dd, niter, eps, "end");
 	    } else {
-		solver_prec(int1_lop, cgstep, triangle1_lop, nx, nx, nd,
-			    mm, dd, niter, eps, "verb", false, "end");
+		sf_solver_prec(int1_lop, sf_cgstep, triangle1_lop, nx, nx, nd,
+			       mm, dd, niter, eps, "verb", false, "end");
 	    }
 	} else {
-	    solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
-		       mm, dd, niter, eps, "end");
+	    sf_solver_reg(int1_lop, sf_cgstep, tcai1_lop, nx+filt, nx, nd, 
+			  mm, dd, niter, eps, "end");
 	}
-	cgstep_close();
+	sf_cgstep_close();
 
 	if (pef) {
 	    bb = allocatehelix (2);
@@ -153,14 +151,14 @@ int main (int argc, char* argv[])
 		aa[2] = bb->flt[1];
 		if (prec) {
 		    polydiv_init (nx, bb);
-		    solver_prec(int1_lop, cgstep, polydiv_lop, nx, nx, nd,
-				mm, dd, niter, eps, "end");
+		    sf_solver_prec(int1_lop, sf_cgstep, polydiv_lop, nx, nx, nd,
+				   mm, dd, niter, eps, "end");
 		} else {
 		    tcai1_init (3, aa);
-		    solver_reg(int1_lop, cgstep, tcai1_lop, nx+filt, nx, nd, 
-			       mm, dd, niter, eps, "end");
+		    sf_solver_reg(int1_lop, sf_cgstep, tcai1_lop, nx+filt,nx,nd,
+				  mm, dd, niter, eps, "end");
 		}
-		cgstep_close();
+		sf_cgstep_close();
 	    }
 	}
 	
@@ -170,5 +168,5 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Minvbin1.c,v 1.6 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Minvbin1.c,v 1.7 2003/10/21 15:09:08 fomels Exp $	 */
 

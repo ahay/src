@@ -1,7 +1,6 @@
 #include <rsf.h>
 
 #include "mask.h"
-#include "adjnull.h"
 
 static const bool *m;
 
@@ -14,7 +13,7 @@ void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 {
     int ix;
 
-    adjnull (adj,add,nx,ny,x,y);
+    sf_adjnull (adj,add,nx,ny,x,y);
 
     for (ix=0; ix < nx; ix++) {
 	if (m[ix]) {
@@ -24,5 +23,5 @@ void mask_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
     }
 }
 
-/* 	$Id: mask.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: mask.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
 

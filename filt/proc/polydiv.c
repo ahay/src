@@ -2,7 +2,6 @@
 
 #include "polydiv.h"
 #include "helix.h"
-#include "adjnull.h"
 
 static filter aa;
 static float* tt;
@@ -20,7 +19,7 @@ void polydiv_init( int nd, filter bb) {
 void polydiv_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) {
     int ia, iy, ix;
     
-    adjnull( adj, add, nx, ny, xx, yy);
+    sf_adjnull( adj, add, nx, ny, xx, yy);
     
     for (ix=0; ix < nx; ix++) {
 	tt[ix] = 0.;
@@ -57,5 +56,5 @@ void polydiv_close (void) {
     free (tt);
 }
 
-/* 	$Id: polydiv.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: polydiv.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
 

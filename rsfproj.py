@@ -171,7 +171,9 @@ def pstexpen(target=None,source=None,env=None):
     opts = os.environ.get('PSTEXPENOPTS')
     if (not opts):
         opts = ''
-    opts = opts + "color=n fat=1 fatmult=1.5 invras=y"
+    pstexpenopts = env.get('opts','color=n fat=1 fatmult=1.5 invras=y')
+    opts = ' '.join([opts,pstexpenopts])
+    print opts
     head = string.split(
         commands.getoutput(sep +
                            "vppen big=n stat=l %s < %s | %s -1" %
@@ -242,7 +244,8 @@ def retrieve(target=None,source=None,env=None):
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
 Klean = Builder(action = Action(clean,silent,['junk']))
-Build = Builder(action = Action(pstexpen),src_suffix=vpsuffix,suffix=pssuffix)
+Build = Builder(action = Action(pstexpen,varlist=['opts']),
+                src_suffix=vpsuffix,suffix=pssuffix)
 PDFBuild = Builder(action = WhereIs('epstopdf') + " $SOURCES",
                    src_suffix=pssuffix,suffix='.pdf')
 Retrieve = Builder(action = Action(retrieve,varlist=['dir']))
@@ -406,14 +409,15 @@ class Project(Environment):
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow,suffix=vpsuffix,**kw):
         return self.Flow(target,source,flow,suffix=suffix,**kw)
-    def Result(self,target,source,flow,clean=0,suffix=vpsuffix,**kw):
+    def Result(self,target,source,flow,clean=0,suffix=vpsuffix,
+               pstexpen=None,**kw):
         target2 = os.path.join(resdir,target)
         if flow:
             plot = self.Plot(target2,source,flow,
                              clean=clean,suffix=suffix,**kw)
             Default (plot)
             self.view.append(self.View(target + '.view',plot))
-            build = self.Build(target2 + pssuffix,plot)
+            build = self.Build(target2 + pssuffix,plot,opts=pstexpen)
             self.figs.append(build)
             self.Alias(target + '.build',build)
         else:
@@ -423,16 +427,18 @@ class Project(Environment):
         self.pdfs.append(buildPDF)
         self.Alias(target + '.buildPDF',buildPDF)
         return plot
-    def Combine(self,target,source,how,result=0,vppen=None):
+    def Combine(self,target,source,how,result=0,vppen=None,**kw):
         if not type(source) is types.ListType:
             source = string.split(source)
         flow = apply(combine[how],[len(source)])
         if vppen:
             flow = flow + ' ' + vppen
         if result:
-            return self.Result(target,source,flow,src_suffix=vpsuffix,stdin=0)
+            return self.Result(target,source,flow,src_suffix=vpsuffix,
+                               stdin=0,**kw)
         else:
-            return self.Plot(target,source,flow,src_suffix=vpsuffix,stdin=0)  
+            return self.Plot(target,source,flow,src_suffix=vpsuffix,
+                             stdin=0,**kw)  
     def End(self):
         self.Alias('view',self.view)
 #        self.Alias('clean',self.Clean('clean',None,junk=self.junk))

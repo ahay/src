@@ -3,7 +3,6 @@
 #include <rsf.h>
 
 #include "tomo2.h"
-#include "adjnull.h"
 
 #ifndef MAX
 #define MAX(x,y) ((x) > (y) ? (x) : (y))
@@ -72,7 +71,7 @@ void  tomo2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 
     if (ny != nr) sf_error("%s: wrong dimensions: %d != %d",__FILE__,ny,nr);
 
-    adjnull (adj,add,nm,nd,x,ord);
+    sf_adjnull (adj,add,nm,nd,x,ord);
 
     for (ir = 0; ir < nr; ir++) {
 	nd = rl[ir];
@@ -114,4 +113,4 @@ void tomo2_close (void)
     free (w2);
 }
 
-/* 	$Id: tomo2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: tomo2.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */

@@ -4,8 +4,6 @@
 #include "mask.h"
 #include "helicon.h" 
 #include "polydiv.h" 
-#include "cgstep.h"
-#include "bigsolver.h"
 
 void mis2(int niter, int nx, float *xx, filter aa, 
 	  const bool *known, bool doprec) 
@@ -16,8 +14,8 @@ void mis2(int niter, int nx, float *xx, filter aa,
     if (doprec) {                          /*  preconditioned */
 	mask_init(known);
 	polydiv_init(nx, aa);
-	solver_prec(mask_lop, cgstep, polydiv_lop, nx, nx, nx, xx, xx, 
-		    niter, 0., "end");
+	sf_solver_prec(mask_lop, sf_cgstep, polydiv_lop, nx, nx, nx, xx, xx, 
+		       niter, 0., "end");
 	polydiv_close();
     } else {                               /*  regularized */
 	dd = sf_floatalloc(nx);
@@ -26,12 +24,12 @@ void mis2(int niter, int nx, float *xx, filter aa,
 	}
 
 	helicon_init(aa);
-	solver (helicon_lop, cgstep, nx, nx, xx, dd, niter, 
-		"known", known, "end");
+	sf_solver (helicon_lop, sf_cgstep, nx, nx, xx, dd, niter, 
+		   "known", known, "end");
 	free(dd);
     }
-    cgstep_close();
+    sf_cgstep_close();
 }
 
-/* 	$Id: mis2.c,v 1.2 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: mis2.c,v 1.3 2003/10/21 15:09:08 fomels Exp $	 */
 

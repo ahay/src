@@ -1,5 +1,6 @@
+#include <rsf.h>
+
 #include "hconest.h"
-#include "adjnull.h"
 #include "helix.h"
 
 static float *x;
@@ -17,7 +18,7 @@ void hconest_lop(bool adj, bool add, int na, int ny, float *a, float *y)
     
     if (na != aa->nh) sf_error("%s: Wrong data dimensions",__FILE__);
 
-    adjnull(adj, add, na, ny, a, y);
+    sf_adjnull(adj, add, na, ny, a, y);
 
     for (ia = 0; ia < na; ia++) {
 	for (iy = aa->lag[ia]; iy < ny; iy++) {  
@@ -31,4 +32,4 @@ void hconest_lop(bool adj, bool add, int na, int ny, float *a, float *y)
     }
 }
 
-/* 	$Id: hconest.c,v 1.3 2003/10/01 22:45:56 fomels Exp $	 */
+/* 	$Id: hconest.c,v 1.4 2003/10/21 15:09:08 fomels Exp $	 */

@@ -5,7 +5,8 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-src = 'alloc c99 decart error file files getpar math1 pfafft segy simtab stack'
+src = '''adjnull alloc bigsolver c99 cgstep chain decart error file files
+getpar math1 pfafft segy simtab stack'''
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
