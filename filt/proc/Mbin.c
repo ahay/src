@@ -27,21 +27,6 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n2",&nt)) sf_error("Need n2= in in");
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (NULL != (xk = sf_getstring("xk"))) {
-	/* x key name */
-	xkey = sf_segykey(xk);
-    }  else if (!sf_getint("xkey",&xkey)) {
-	/* x key number (if no xk), default is sx */
-	xkey = sf_segykey("sx");
-    }
-    if (NULL != (yk = sf_getstring("yk"))) {
-	/* y key name */
-	ykey = sf_segykey(yk);
-    }  else if (!sf_getint("ykey",&ykey)) {
-	/* y key number (if no yk), default is sy */
-	ykey = sf_segykey("sy");
-    }
-
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);
     head = sf_input("head");
@@ -50,6 +35,26 @@ int main (int argc, char* argv[])
     if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");
     if (!sf_histint(head,"n2",&n2) || n2 != nd) 
 	sf_error("Wrong n2= in head");
+
+    if (NULL != (xk = sf_getstring("xk"))) {
+	/* x key name */
+	xkey = sf_segykey(xk);
+    }  else if (!sf_getint("xkey",&xkey)) {
+	/* x key number (if no xk), default is fldr */
+	xkey = sf_segykey("fldr");
+    }
+    if (NULL != (yk = sf_getstring("yk"))) {
+	/* y key name */
+	ykey = sf_segykey(yk);
+    }  else if (!sf_getint("ykey",&ykey)) {
+	/* y key number (if no yk), default is tracf */
+	ykey = sf_segykey("tracf");
+    }
+
+    if (xkey < 0 || xkey >= nk) 
+	sf_error("xkey=%d is out of the range [0,%d]",xkey,nk-1);
+    if (ykey < 0 || ykey >= nk) 
+	sf_error("ykey=%d is out of the range [0,%d]",ykey,nk-1);
 
     hdr = sf_floatalloc(nk);
 
@@ -68,16 +73,6 @@ int main (int argc, char* argv[])
     }
 
     sf_fileclose (head);
-
-    /* create model */
-    if (!sf_getint ("nx",&nx)) sf_error("Need nx=");
-    /* Number of bins in x */
-    if (!sf_getint ("ny",&ny)) sf_error("Need ny=");
-    /* Number of bins in y */
-
-    sf_putint(out,"n1",nx);
-    sf_putint(out,"n2",ny);
-    sf_putint(out,"n3",nt);
 
     if (sf_histfloat(in,"o2",&t0)) sf_putfloat(out,"o3",t0);
     if (sf_histfloat(in,"d2",&dt)) sf_putfloat(out,"d3",dt);
@@ -98,6 +93,16 @@ int main (int argc, char* argv[])
 
     sf_putfloat (out,"o1",x0);
     sf_putfloat (out,"o2",y0);
+
+    /* create model */
+    if (!sf_getint ("nx",&nx)) nx = (int) (xmax - xmin + 1.);
+    /* Number of bins in x */
+    if (!sf_getint ("ny",&ny)) ny = (int) (ymax - ymin + 1.);
+    /* Number of bins in y */
+
+    sf_putint(out,"n1",nx);
+    sf_putint(out,"n2",ny);
+    sf_putint(out,"n3",nt);
 
     if (!sf_getfloat("dx",&dx)) {
 	/* bin size in x */
@@ -181,4 +186,4 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mbin.c,v 1.4 2003/10/01 14:38:31 fomels Exp $	 */
+/* 	$Id: Mbin.c,v 1.5 2004/03/19 05:45:23 fomels Exp $	 */
