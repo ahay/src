@@ -251,7 +251,8 @@ int main(int argc, char* argv[])
 		f2 = -fff[i3][i2][0];
 		x2 = 0.;
 		vp_umove (f2, x2);
-
+		
+		old = f2;
 		for (i1 = 1; i1 < nx; i1++) {
 		    x1 = x2;
 		    f1 = f2;
@@ -303,13 +304,14 @@ int main(int argc, char* argv[])
 		f2 = -fff[i3][i2][0];
 		x2 = 0.; 
 		vp_umove (f2,x2);
-
+			
+		old = f2;
 		for (i1 = 1; i1 < nx; i1++) {
 		    f1 = f2;
 		    x1 = x2;
 		    x2 = dx * i1;
 		    f2 = -fff[i3][i2][i1];
-	
+
 		    if (f1 < max[i1-1] + eps && 
 			f2 < max[i1] + eps) {
 			/* see both */

@@ -119,10 +119,10 @@ void kirmod_table (maptype type               /* velocity distribution */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy;
-    float x, x1, x2, **ta, t, a, p;
+    float x, x1, x2, **ta=NULL, t, a, p;
 
     for (iy=0; iy < ny; iy++) {	
-	x1 = y[iy].x;
+	x2 = x1 = y[iy].x;
 	if (0==iy || x1 != x2) {
 	    ta = sf_floatalloc2(3,nx);
 
@@ -135,6 +135,9 @@ void kirmod_table (maptype type               /* velocity distribution */,
 			p = fabsf(x)/(a*veloc[0]);
 			break;		    
 		    default:
+			a = 0.;
+			t = 0.;
+			p = 0.;
 			sf_error("__FILE__: case %d is not implemented",type);
 			break;
 		}

@@ -43,7 +43,7 @@ int slowref(int nr     /* maximum number of references */,
     jr=0;	
     for (ir=0; ir<nr; ir++) {
 	qr = (ir+1.0)/nr - 0.5 * 1./nr;
-	s = sf_quantile(qr*ns,ns,ss2);
+	s2 = s = sf_quantile(qr*ns,ns,ss2);
 	if (0==ir || SF_ABS(s-s2) > ds) {
 	    sr [jr] = s*s;
 	    s2 = s;

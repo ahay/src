@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     int m[2], n, n3, nd1, nd2, nd, nw, i3, two;
     float *mm, **coord, *z, o1,o2, oo1,oo2, d1,d2, dd1,dd2, kai;
     char *intp;
-    interpolator interp;
+    interpolator interp=NULL;
     sf_file in, out, crd;
 
     sf_init (argc,argv);
@@ -115,7 +115,6 @@ int main(int argc, char* argv[])
 	    interp = spline_int;
 	    break;
 	default:
-	    interp = NULL;
 	    sf_error("%s interpolator is not implemented",intp);
 	    break;
     }
