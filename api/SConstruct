@@ -14,7 +14,9 @@ proj['CXXFLAGS'] = string.replace(proj.get('CXXFLAGS',''),'-O2','-g')
 
 ############################################################################
 
-test = 'spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr'
+test = '''
+spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
+'''
 
 ############################################################################
 # C API
@@ -37,9 +39,11 @@ if 'c++' in api:
     cctest = proj.Flow('cc','clip++.exe',test % 'clip++',suffix='.attr',stdin=0)
     Default(cctest)
 
-    test = proj.Program('matmult_test',
-                        ['matmult_test.cc','matmult.cc','matmult_wrap.cc'])
-    Default(test)
+    cctest2 = proj.Program('matmult_test',
+                          ['matmult_test.cc',
+                           'matmult.cc',
+                           'matmult_wrap.cc'])
+    Default(cctest2)
 
 ############################################################################
 # Fortran-77 API
@@ -56,9 +60,11 @@ if 'fortran' in api:
 ############################################################################
 
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
-    proj.Program('clip.f90',OBJSUFFIX='f90.o',LIBS=['rsff90','rsf','m'],
+    proj.Program('clip.f90',OBJSUFFIX='f90.o',
+                 LIBS=['rsff90','rsf','m'],
                  F90PATH=[incdir],
-                 LINK=proj.get('F90'),LINKFLAGS=proj.get('F90FLAGS'))
+                 LINK=proj.get('F90'),
+                 LINKFLAGS=proj.get('F90FLAGS'))
     f90test = proj.Flow('f90','clipf90.exe',test % 'clipf90',
                         suffix='.attr',stdin=0)
     Default(f90test)

@@ -274,7 +274,8 @@ class Project(Environment):
                     datafiles.append(datafile)
             targets = targets + datafiles
         return self.Command(targets,sources,command)
-    def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,**kw):
+    def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
+              view=None,**kw):
         if not flow: # two arguments
             flow = source
             source = target
@@ -285,7 +286,10 @@ class Project(Environment):
             if vppen:
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
-        kw.update({'suffix':suffix})
+        if view:
+            flow = flow + ' | %s pixmaps=y' % (sep+'xtpen')
+            kw.update({'stdout':-1})
+        kw.update({'suffix':suffix})        
         return apply(self.Flow,(target,source,flow),kw)
     def Result(self,target,source,flow=None,suffix=vpsuffix,**kw):
         if not flow: # two arguments
@@ -326,6 +330,19 @@ def Exe(source,**kw):
     return apply(project.Exe,[source],kw)
 def End(**kw):
     return apply(project.End,[],kw)
+def Program(*arg,**kw):
+    return apply(project.Program,arg,kw)
+def Get(name):
+    return project.get(name)
+def Program90(prog):
+    sources = [prog]
+    rsfconf.depends90(project,sources,prog)
+    return project.Program(prog,
+                           map(lambda x: x + '.f90',sources),
+                           F90PATH=[incdir],
+                           LIBS=['rsff90','rsf','m'],
+                           LINK=Get('F90'),
+                           LINKFLAGS=Get('F90FLAGS'))
 
 if __name__ == "__main__":
      import pydoc
