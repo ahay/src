@@ -25,12 +25,12 @@ static float *tt, **pp, dw, dp, p0, dx, x0;
 static float complex **cd, **cm, *dd;
 static kiss_fftr_cfg forw, invs;
 
-void off2ang_init(int nz   /* depth samples */,
+void off2ang_init(int   nz /* depth samples */,
 		  float dz /* depth sampling */,
-		  int na   /* angle samples */,
+		  int   na /* angle samples */,
                   float da /* angle sampling (in radians) */,
 		  float a0 /* first angle (in radians) */,
-		  int nh   /* offset sampling */,
+		  int   nh /* offset sampling */,
 		  float dh /* offset sampling */,
 		  float h0 /* first offset */)
 /*< initialize >*/

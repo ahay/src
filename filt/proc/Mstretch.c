@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 	d2 = (forward(d2) - o2)/(n-1);
     }
 
-    sf_putint(out,"n1",n);
+    sf_putint  (out,"n1",n);
     sf_putfloat(out,"o1",o2);
     sf_putfloat(out,"d1",d2);
 

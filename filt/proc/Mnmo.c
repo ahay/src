@@ -36,16 +36,15 @@ int main (int argc, char* argv[])
     sf_file cmp, nmod, velocity, offset;
 
     sf_init (argc,argv);
-    cmp = sf_input("in");
+    cmp      = sf_input("in");
     velocity = sf_input("velocity");
-    nmod = sf_output("out");
+    nmod     = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(cmp)) sf_error("Need float input");
-    if (!sf_histint(cmp,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint  (cmp,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
-
-    if (!sf_histint(cmp,"n2",&nh)) sf_error("No n2= in input");
+    if (!sf_histint  (cmp,"n2",&nh)) sf_error("No n2= in input");
     nx = sf_leftsize(cmp,2);
 
     CDPtype=1;
@@ -92,7 +91,7 @@ int main (int argc, char* argv[])
     /* trace extension */
 
     trace = sf_floatalloc(nt);
-    vel = sf_floatalloc(nt);
+    vel   = sf_floatalloc(nt);
 
     nmo = fint1_init (nw, nt);
     

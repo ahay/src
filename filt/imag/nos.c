@@ -142,15 +142,15 @@ void nos(float            w,
 /*		uk[ih][im] += wk[jh][im] * cexpf(-cc) * aa;*/
 /*		fold += aa;*/
 
-		cc = -I*w_*sqrtf(1.+h_)*az.d;
-		aa = sqrtf(cabsf(cc)) / ((1+h_)*az.d);
+		cc = -I*2*w*sz*sqrtf(1.+h_)*az.d;
+		aa = sqrtf(cabsf(cc)) / (1+h_);
 
 		uk[ih][im] += wk[jh][im] * cexpf(-cc - I*SF_PI/4.) * aa;
 		fold += aa;
 
 	    } /* ho */	
 	    
-	    if (fold > 0.) uk[ih][im] /= fold;
+	    if (fold > 0.) uk[ih][im] *= sqrtf(2.*w*sz*az.d)/fold;
 
 	} /* hh */	
     } /* km */    
