@@ -10,7 +10,8 @@ from rsfproj import *
 ###########################################################################
 Book()
 
-datdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
+wzdir  = 'ftp://begpc132.beg.utexas.edu/data/wz'
+midpts = 'ftp://begpc132.beg.utexas.edu/data/midpts'
 
 n1 = {
     '34': 400,
@@ -20,7 +21,7 @@ n1 = {
 
 for case in ('34','32','20'):
     data = 'wz.%s.H' % case
-    Fetch(data,datdir)
+    Fetch(data,wzdir)
     Flow(case,data,'dd data_format=native_float')
     
     window = 'window n1=%d | tpow xpow=1 tpow=0' % n1[case]
@@ -35,6 +36,20 @@ for case in ('34','32','20'):
 
     Combine('wzl.'+case,[raw,lmo],'SideBySideAniso',result=1,
             vppen='txscale=1.5')
+
+Fetch('midpts.HH',midpts)
+Flow('cdp','midpts.HH','window n3=1 n1=300 j1=2 | dd data_format=native_float')
+Flow('lmo','cdp','lmostretch delay=0.4 v0=1.47 half=n')
+
+wiggle = '''
+wiggle pclip=100 zplot=1.
+title="%s" transp=y yreverse=y
+label1="Time (s)" label2="Offset (km)"
+'''
+
+Plot('cdp','cdp',wiggle % ' ')
+Plot('lmo','lmo',wiggle % 'LMO')
+Combine('wglmo','cdp lmo','SideBySideAniso',result=1,vppen='txscale=1.5')
 
 ###########################################################################
 End()
