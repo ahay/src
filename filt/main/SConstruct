@@ -20,7 +20,7 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env.Append(CCFLAGS=' -g',CPPPATH=['../../include'],
-               LIBPATH=['../rsf'],LIBS=['rsf','m'])
+               LIBPATH=['../lib'],LIBS=['rsf','m'])
 
 mains = Split(progs)
 map(lambda prog: env.Program(prog + '.c'),mains)
