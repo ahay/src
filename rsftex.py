@@ -167,19 +167,34 @@ _KEYWORD = token.NT_OFFSET + 1
 _TEXT    = token.NT_OFFSET + 2
 
 _colors = {
-    token.NUMBER:       '#0080C0',
-    token.OP:           '#0000C0',
-    token.STRING:       '#004080',
-    tokenize.COMMENT:   '#008000',
-    token.NAME:         '#000000',
-    token.ERRORTOKEN:   '#FF8080',
-    _KEYWORD:           '#C00000',
-    _TEXT:              '#000000',
-    'Fetch':            '#0000C0',
-    'Flow':             '#0000C0',
-    'Plot':             '#0000C0',
-    'Result':           '#C00000'
-}
+     token.NUMBER:       '#0080C0',
+     token.OP:           '#0000C0',
+     token.STRING:       '#004080',
+     tokenize.COMMENT:   '#008000',
+     token.NAME:         '#000000',
+     token.ERRORTOKEN:   '#FF8080',
+     _KEYWORD:           '#C00000',
+     _TEXT:              '#000000',
+     'Fetch':            '#0000C0',
+     'Flow':             '#0000C0',
+     'Plot':             '#0000C0',
+     'Result':           '#C00000'
+     }
+
+_styles = {
+     token.NUMBER:       'number',
+     token.OP:           'op',
+     token.STRING:       'string',
+     tokenize.COMMENT:   'comment',
+     token.NAME:         'name',
+     token.ERRORTOKEN:   'error',
+     _KEYWORD:           'keyword',
+     _TEXT:              'text',
+     'Fetch':            'fetch',
+     'Flow':             'flow',
+     'Plot':             'plot',
+     'Result':           'result'
+     }
 
 _pos = 0
 
@@ -216,6 +231,10 @@ def colorize(target=None,source=None,env=None):
      padding: 1em;
      margin-left: 2em;
      margin-right: 2em; }
+     ''' % py)
+     for style in _styles.keys():
+          out.write('.%s: { color: %s; }\n' % (_styles[style],_colors[style])) 
+     out.write('''
      </style>
      </head>
      <body>
@@ -229,7 +248,7 @@ def colorize(target=None,source=None,env=None):
      </div>
      <div class="scons">
      <table><tr><td>
-     ''' % (py,tgz))
+     ''' % tgz)
 
      # store line offsets in self.lines
      lines = [0, 0]
@@ -276,17 +295,12 @@ def colorize(target=None,source=None,env=None):
           elif toktype == token.NAME and toktext in _colors.keys():
                toktype = toktext
                
-          color = _colors.get(toktype, _colors[_TEXT])
-
-          style = ''
-          if toktype == token.ERRORTOKEN:
-               style = ' style="border: solid 1.5pt #FF0000;"'
-
+          style = _styles.get(toktype, _styles[_TEXT])
  
           # send text
-          out.write('<font color="%s"%s>' % (color, style))
+          out.write('<span class="%s">' % style)
           out.write(cgi.escape(toktext))
-          out.write('</font>')
+          out.write('</span>')
 
      try:
           tokenize.tokenize(text.readline, call)
