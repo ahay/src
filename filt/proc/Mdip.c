@@ -54,9 +54,13 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n3",&n[2])) n[2]=1;
     n123 = n[0]*n[1]*n[2];
 
-    if (1 == n[2] || !sf_getint("n4",&n4)) n4=2;
-    /* what to compute: in-line, 1: cross-line, 2: both */ 
-    if (n4 > 1) sf_putint(out,"n4",n4);
+    if (1 == n[2]) {
+      n4=0; 
+    } else {
+      if (!sf_getint("n4",&n4)) n4=2;
+      /* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */ 
+      if (n4 > 1) sf_putint(out,"n4",n4);
+    }
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -187,7 +191,7 @@ int main (int argc, char *argv[])
 	    oc_divide(nall,dip,wall,out);
 	}
 
-	if (1 == n[2] || 0 == n4) { /* done if only t-x dip */
+	if (0 == n4) { /* done if only t-x dip */
 	    unlink(dipname);
 	    unlink(wallname);
 	    exit(0);
@@ -254,7 +258,7 @@ int main (int argc, char *argv[])
 	    sf_floatwrite(p,n123,out);
 	}
 
-	if (1 == n[2] || 0 == n4) exit(0); /* done if only t-x dip */
+	if (0 == n4) exit(0); /* done if only t-x dip */
 
 	/* initialize t-y dip */
 	if (NULL != sf_getstring("xdip")) {
