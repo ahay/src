@@ -16,6 +16,11 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#define _LARGEFILE_SOURCE
+#include <sys/types.h>
+#include <unistd.h>
+
+#include <stdio.h>
 
 #include <rsf.h>
 /*^*/
@@ -28,6 +33,10 @@ typedef struct Slice *slice;
 /* abstract data type */
 /*^*/
 
+typedef struct FSlice *fslice;
+/* abstract data type */
+/*^*/
+
 #endif
 
 struct Slice {
@@ -35,6 +44,14 @@ struct Slice {
     sf_file file;
     int n12, n3;
 };
+
+struct FSlice {
+    FILE* file;
+    char* name;
+    off_t n12;
+    int n3;
+};
+
 
 slice slice_init(sf_file file, int n1, int n2, int n3)
 /*< initialize a sliceable file object >*/
@@ -66,5 +83,36 @@ void slice_put(slice sl, int i3, float* data)
     sf_floatwrite(data,sl->n12,sl->file);
 }
 
+fslice fslice_init(int n1, int n2, int n3, size_t size)
+/*< initialize a sliceable file object >*/
+{
+    fslice sl;
 
+    sl = (fslice) sf_alloc(1,sizeof(*sl));
+    sl->file = sf_tempfile(&(sl->name), "w+b");
+    sl->n12 = n1*n2*size;
+    sl->n3 = n3;
+    
+    return sl;
+}
 
+void fslice_get(fslice sl, int i3, void* data)
+/*< get a slice at level i3 >*/
+{
+    fseeko(sl->file,i3*(sl->n12),SEEK_SET);
+    fread(data,sl->n12,1,sl->file);
+}
+
+void fslice_put(fslice sl, int i3, void* data)
+/*< put a slice at level i3 >*/
+{
+    fseeko(sl->file,i3*(sl->n12),SEEK_SET);
+    fwrite(data,sl->n12,1,sl->file);
+}
+
+void fslice_close(fslice sl)
+/*< remove the file and free allocated storage >*/
+{
+    unlink(sl->name);
+    free(sl);
+}

@@ -28,16 +28,17 @@
 #include "slowref.h"
 
 #define LOOPxh(a) for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh;ih++){ {a} }}
+#define LOOPxh2(a) for(ix=0;ix<nx;ix++){ for(ih=0;ih<nh2;ih++){ {a} }}
 #define LOOPuh(a) for(iu=0;iu<nu;iu++){ for(ih=0;ih<nh;ih++){ {a} }}
 
 #include "slice.h"
 /*^*/
 
-static int nx,nh,nz,nu,nrmax;
+static int nx,nh,nh2,nz,nu,nrmax;
 static float dz;
 
 static float         **qq;             /* image */
-static int     **is, **ir, **ii;       /* indices */
+static int     **is, **ir, *ii;        /* indices */
 static float   **ks, **kr;             /* wavenumber */
 static float         **tt;             /* taper */
 
@@ -45,19 +46,22 @@ static float         **sz;             /* reference slowness */
 static float         **sm;             /* reference slowness squared */
 static int            *nr;             /* number of references */
 
-static float complex **pp; /* wavefield */
-static float complex **wt; /* wavefield top */
-static float complex **wb; /* wavefield bot */
+static float complex **pk;   /* wavefield */
+static float complex **wk;   /* wavefield k */
+static float complex **wx;   /* wavefield x */
 
-static int           **mm; /* multi-reference slowness map  */
+static int           **ms, **mr; /* multi-reference slowness map  */
+static bool          ***skip;
 static float         **ma; /* multi-reference slowness mask */
+static fslice mms, mmr;
 
 void dsr2_init(int nz1, float dz1             /* depth */,
 	       int nh1, float dh1, float h01  /* half-offset */,
 	       int nx1, float dx1, float x01  /* midpoint */,
 	       int nu1, float du,  float u0   /* slowness grid */,
 	       int ntx, int nth               /* taper size */,
-	       int nr1                        /* maximum number of references */)
+	       int nr1                        /* maximum number of references */,
+	       int npad                       /* padding on nh */)
 /*< initialize >*/
 {
     int ix, ih, jx, jh, iu;
@@ -71,14 +75,16 @@ void dsr2_init(int nz1, float dz1             /* depth */,
     x0 =    -SF_PI/dx1;
 
     nh = nh1;
-    dh = 2.0*SF_PI/(nh*dh1);
+    nh2 = nh+npad;
+
+    dh = 2.0*SF_PI/(nh2*dh1);
     h0 =    -SF_PI/dh1;
 
     nu = nu1;
 
     nrmax = nr1;
 
-    fft2_init(nh,nx);
+    fft2_init(nh2,nx);
 
     /* allocate workspace */
     sz = sf_floatalloc2  (nrmax,nz); /* reference slowness */
@@ -87,19 +93,21 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 
     qq = sf_floatalloc2   (nh,nu);   /* image */
 
-    ks = sf_floatalloc2   (nh,nx);   /* source wavenumber */
-    kr = sf_floatalloc2   (nh,nx);   /* receiver wavenumber */
-    is = sf_intalloc2     (nh,nx);   /* source reference */
-    ir = sf_intalloc2     (nh,nx);   /* receiver reference */
-    ii = sf_intalloc2     (nh,nx);   /* midpoint reference */
+    ks = sf_floatalloc2   (nh2,nx);   /* source wavenumber */
+    kr = sf_floatalloc2   (nh2,nx);   /* receiver wavenumber */
+    is = sf_intalloc2     (nh,nx);    /* source reference */
+    ir = sf_intalloc2     (nh,nx);    /* receiver reference */
+    ii = sf_intalloc     (nx);        /* midpoint reference */
 
     tt = sf_floatalloc2   (nh,nx);   /* taper */
 
-    pp = sf_complexalloc2 (nh,nx);   /* wavefield */ 
-    wt = sf_complexalloc2 (nh,nx);  /* wavefield top */
-    wb = sf_complexalloc2 (nh,nx);  /* wavefield bot */
+    pk = sf_complexalloc2 (nh2,nx);   /* padded wavefield */ 
+    wx = sf_complexalloc2 (nh,nx);  /* x wavefield */
+    wk = sf_complexalloc2 (nh2,nx);  /* k wavefield */
 
-    mm = sf_intalloc2     (nh,nx);  /* MRS map */
+    ms = sf_intalloc2     (nh,nx);  /* MRS map */
+    mr = sf_intalloc2     (nh,nx);
+    skip = sf_boolalloc3 (nrmax,nrmax,nz);
     ma = sf_floatalloc2   (nh,nx);  /* MRS mask */
 
     /* precompute wavenumbers */
@@ -107,18 +115,15 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 	jx = (ix < nx/2)? ix + nx/2: ix - nx/2;
 	kx = x0 + jx*dx;
 	x = x01 + ix*dx1;
+	
+	iu = 0.5+(x-u0)/du;
+	if      (iu <   0) iu=0;
+	else if (iu >= nu) iu=nu-1;
+	ii[ix] = iu;
 
 	for (ih=0; ih<nh; ih++) {
-	    jh = (ih < nh/2)? ih + nh/2: ih - nh/2;
-	    kh = h0 + jh*dh;
 	    h = h01 + ih*dh1;
-
-	    k = 0.5*(kx-kh);
-	    ks[ix][ih] = k*k;
-
-	    k = 0.5*(kx+kh);
-	    kr[ix][ih] = k*k;
-
+	    
 	    iu = 0.5+(x-h-u0)/du;
 	    if      (iu <   0) iu=0;
 	    else if (iu >= nu) iu=nu-1;
@@ -128,25 +133,34 @@ void dsr2_init(int nz1, float dz1             /* depth */,
 	    if      (iu <   0) iu=0;
 	    else if (iu >= nu) iu=nu-1;
 	    ir[ix][ih] = iu;
-
-	    iu = 0.5+(x-u0)/du;
-	    if      (iu <   0) iu=0;
-	    else if (iu >= nu) iu=nu-1;
-	    ii[ix][ih] = iu;
 	}
-    }    
+
+	for (ih=0; ih<nh2; ih++) {
+	    jh = (ih < nh2/2)? ih + nh2/2: ih - nh2/2;
+	    kh = h0 + jh*dh;
+
+	    k = 0.5*(kx-kh);
+	    ks[ix][ih] = k*k;
+
+	    k = 0.5*(kx+kh);
+	    kr[ix][ih] = k*k;
+	}
+    }
 
     /* precompute taper array */
     LOOPxh(tt[ix][ih]=1.;);
     taper2(ntx,nth,true,false,nx,nh,tt);
+
+    mms = fslice_init(nh,nx,nz,sizeof(int));
+    mmr = fslice_init(nh,nx,nz,sizeof(int));
 }
 
 void dsr2_close(void)
 /*< free allocated storage >*/
 {
-    free(*pp); free(pp);
-    free(*wt); free(wt);
-    free(*wb); free(wb);
+    free(*pk); free(pk);
+    free(*wk); free(wk);
+    free(*wx); free(wx);
 
     free(*sz); free(sz);
     free(*sm); free(sm);
@@ -157,12 +171,17 @@ void dsr2_close(void)
     free(*kr); free(kr);
     free(*is); free(is);
     free(*ir); free(ir);
+    free(ii);
     
     free(*tt); free(tt);
 
-    free(*mm); free(mm);
+    free(*ms); free(ms);
+    free(*mr); free(mr);
     free(*ma); free(ma);
     
+    free(**skip); free(*skip); free(skip);
+    fslice_close(mms);
+    fslice_close(mmr);
 }
 
 void dsr2(bool verb                   /* verbosity flag */, 
@@ -175,9 +194,9 @@ void dsr2(bool verb                   /* verbosity flag */,
 	  float dt                    /* time error */)
 /*< Apply migration/modeling >*/
 {
-    int iz,iw,ix,ih,iu, jr;
+    int iz,iw,ix,ih,iu, j,k;
     float sy, *si;
-    float complex cshift, cref, w, w2, cs, cr;
+    float complex cshift, w, w2, cs, cr, cref;
 
     if (!inv) { /* prepare image for migration */
 	LOOPuh( qq[iu][ih] = 0.0; );
@@ -188,16 +207,31 @@ void dsr2(bool verb                   /* verbosity flag */,
 
     /* compute reference slowness */
     for (iz=0; iz<nz; iz++) {
-	nr[iz] = slowref(nrmax,dt/dz,nu,slow[iz],sz[iz],sm[iz]);
+	si = slow[iz];
+	nr[iz] = slowref(nrmax,dt/dz,nu,si,sz[iz],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
+	/* create MRS map */
+	LOOPxh( ms[ix][ih] = 0; mr[ix][ih] = 0.;);
+	for (j=0; j<nr[iz]-1; j++) {
+	    sy = 0.5*(sz[iz][j]+sz[iz][j+1]);
+	    LOOPxh( if(si[ is[ix][ih] ] > sy) ms[ix][ih]++;
+		    if(si[ ir[ix][ih] ] > sy) mr[ix][ih]++; );
+	}
+	fslice_put(mms,iz,ms[0]);
+	fslice_put(mmr,iz,mr[0]);
+	for (j=0; j<nr[iz]; j++) {
+	    for (k=0; k<nr[iz]; k++) {
+		skip[iz][j][k] = true;
+	    }
+	}
+	LOOPxh( skip[iz][ms[ix][ih]][mr[ix][ih]] = false; );
     }
     for (iz=0; iz<nz-1; iz++) {
-	for (jr=0; jr<nr[iz]; jr++) {
-	    sm[iz][jr] = 0.5*(sm[iz][jr]+sm[iz+1][jr]);
+	for (j=0; j<nr[iz]; j++) {
+	    sm[iz][j] = 0.5*(sm[iz][j]+sm[iz+1][j]);
 	}
     }
-
-
+    
     /* loop over frequencies w */
     for (iw=0; iw<nw; iw++) {
 	if (verb) sf_warning ("frequency %d of %d",iw+1,nw);
@@ -211,127 +245,123 @@ void dsr2(bool verb                   /* verbosity flag */,
 
 	    /* imaging condition */
 	    slice_get(imag,nz-1,qq[0]);	    
-	    LOOPxh( pp[ix][ih] = qq[ii[ix][ih]][ih];  );
+	    LOOPxh( wx[ix][ih] = qq[ii[ix]][ih];  );
 
 	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
 		/* w-x @ bottom */
+		LOOPxh2( pk[ix][ih] = 0.;);
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
-			cshift = cexpf(-w*sy*dz);
-			pp[ix][ih] *= cshift; );
+			cshift = cexpf(-w*sy*dz)*tt[ix][ih];
+			pk[ix][ih] = wx[ix][ih]*cshift; );
 		
 		/* FFT */
-		fft2(false,pp);		
+		fft2(false,pk);		
 		
 		si = slow[iz];
-		
-		/* create MRS map */
-		LOOPxh( mm[ix][ih] = 0; );
-		for (jr=0; jr<nr[iz]-1; jr++) {
-		    LOOPxh( if(si[ ii [ix][ih] ] > 0.5*(sz[iz][jr]+sz[iz][jr+1])) 
-			    mm[ix][ih]++; );
-		}
-		
+		fslice_get(mms,iz,ms[0]);
+		fslice_get(mmr,iz,mr[0]);
 
-		LOOPxh( wt[ix][ih] = 0; );
+		LOOPxh( wx[ix][ih] = 0; );
+		for (j=0; j<nr[iz]; j++) {
+		    for (k=0; k<nr[iz]; k++) {
+			if (skip[iz][j][k]) continue;
 
-		for (jr=0; jr<nr[iz]; jr++) {
-		    /* w-k phase shift */
-		    cref = 2.*csqrtf(   w2*sm[iz][jr]);
-		    LOOPxh(	cs = csqrtf(w2*sm[iz][jr]+ks[ix][ih]);
-				cr = csqrtf(w2*sm[iz][jr]+kr[ix][ih]);
+			/* w-k phase shift */
+			cref =       csqrtf(w2*sm[iz][j])
+			    +        csqrtf(w2*sm[iz][k]);
+			LOOPxh2(cs = csqrtf(w2*sm[iz][j]+ks[ix][ih]);
+				cr = csqrtf(w2*sm[iz][k]+kr[ix][ih]);
 				cshift = cexpf((cref-cs-cr)*dz); 
-				wb[ix][ih] = pp[ix][ih]*cshift; ); 
+				wk[ix][ih] = pk[ix][ih]*cshift; ); 
 		
-		    /* IFT */
-		    fft2(true,wb);
+			/* IFT */
+			fft2(true,wk);
 
-		    /* create MRS mask */
-		    LOOPxh( ma[ix][ih]= (mm[ix][ih]==jr)?1.:0.; );
+			/* create MRS mask */
+			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && mr[ix][ih]==k)?1.:0.; );
 
-		    /* accumulate wavefield */
-		    LOOPxh( wt[ix][ih] += wb[ix][ih] * ma[ix][ih]; );
+			/* accumulate wavefield */
+			LOOPxh( wx[ix][ih] += wk[ix][ih] * ma[ix][ih]; );
+		    }
 		}
-
 		
 		slice_get(imag,iz,qq[0]);
 
 		/* w-x at top */
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
 			cshift = cexpf(-w*sy*dz);
-			pp[ix][ih] = qq[ii[ix][ih]][ih] + wt[ix][ih]*cshift; );
+			wx[ix][ih] = qq[ii[ix]][ih] + wx[ix][ih]*cshift; );
 	    } /* iz */
 	    
 	    /* taper */
-	    LOOPxh( pp[ix][ih] *= tt[ix][ih]; );
+	    LOOPxh( wx[ix][ih] *= tt[ix][ih]; );
 
-	    sf_complexwrite(pp[0],nx*nh,data);
+	    sf_complexwrite(wx[0],nx*nh,data);
 
 	} else { /* MIGRATION */
 	    si = slow[0];
 
-	    sf_complexread(pp[0],nx*nh,data);
+	    sf_complexread(wx[0],nx*nh,data);
 
 	    /* taper */
-	    LOOPxh( pp[ix][ih] *= tt[ix][ih]; );
+	    LOOPxh( wx[ix][ih] *= tt[ix][ih]; );
 
 	    /* loop over migrated depths z */
 	    for (iz=0; iz< nz-1; iz++) {
 
 		/* imaging condition */
 		slice_get(imag,iz,qq[0]);
-		LOOPxh( qq[ii[ix][ih]][ih] += crealf(pp[ix][ih]); );
+		LOOPxh( qq[ii[ix]][ih] += crealf(wx[ix][ih]); );
 		slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
+		LOOPxh2( pk[ix][ih] = 0.;);
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
 			cshift = conjf(cexpf(-w*sy*dz));
-			pp[ix][ih] *= cshift; );
+			pk[ix][ih] = wx[ix][ih]*cshift; );
 
 		/* FFT */
-		fft2(false,pp);
+		fft2(false,pk);
 
 		si = slow[iz+1];
+		fslice_get(mms,iz,ms[0]);
+		fslice_get(mmr,iz,mr[0]);
 		
-		/* create MRS map */
-		LOOPxh( mm[ix][ih] = 0; );
-		for (jr=0; jr<nr[iz]-1; jr++) {
-		    LOOPxh( if(si[ ii[ix][ih] ] > 0.5*(sz[iz+1][jr]+sz[iz+1][jr+1])) 
-			    mm[ix][ih]++; );
-		}
-
-		LOOPxh( wb[ix][ih] = 0; );
-		for (jr=0; jr<nr[iz]; jr++) {
+		LOOPxh( wx[ix][ih] = 0; );
+		for (j=0; j<nr[iz]; j++) {
+		    for (k=0; k<nr[iz]; k++) {
+			if (skip[iz][j][k]) continue;
 		
-		    /* w-k phase shift */
-		    cref = 2.*csqrtf(   w2*sm[iz][jr]);
-		    LOOPxh( cs = csqrtf(w2*sm[iz][jr]+ks[ix][ih]);
-			    cr = csqrtf(w2*sm[iz][jr]+kr[ix][ih]);
-			    cshift = conjf(cexpf((cref-cs-cr)*dz)); 
-			    wt[ix][ih] = pp[ix][ih]*cshift; ); 
+			/* w-k phase shift */
+			cref = csqrtf(w2*sm[iz][j])+csqrtf(w2*sm[iz][k]);
+			LOOPxh2( cs = csqrtf(w2*sm[iz][j]+ks[ix][ih]);
+				 cr = csqrtf(w2*sm[iz][k]+kr[ix][ih]);
+				 cshift = conjf(cexpf((cref-cs-cr)*dz)); 
+				 wk[ix][ih] = pk[ix][ih]*cshift; ); 
 		    
+			
+			/* IFT */
+			fft2(true,wk);
 
-		    /* IFT */
-		    fft2(true,wt);
+			/* create MRS mask */
+			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && mr[ix][ih]==k)?1.:0.; );
 
-		    /* create MRS mask */
-		    LOOPxh( ma[ix][ih]= (mm[ix][ih]==jr)?1.:0.; );
-
-		    /* accumulate wavefield */
-		    LOOPxh( wb[ix][ih] += wt[ix][ih] * ma[ix][ih]; );
-		    
-		} /* jr loop */
+			/* accumulate wavefield */
+			LOOPxh( wx[ix][ih] += wk[ix][ih] * ma[ix][ih]; );
+		    }
+		} /* j loop */
 
 
 		/* w-x @ bottom */
 		LOOPxh( sy = 0.5*(si[ is[ix][ih] ] + si[ ir[ix][ih] ]);
-			cshift = conjf(cexpf(-w*sy*dz));
-			pp[ix][ih] = wb[ix][ih]*cshift; );
+			cshift = conjf(cexpf(-w*sy*dz))*tt[ix][ih];
+			wx[ix][ih] *= cshift; );
 	    } /* iz */
 	    
 	    /* imaging condition @ bottom */
 	    slice_get(imag,nz-1,qq[0]);
-	    LOOPxh( qq[ii[ix][ih]][ih] += crealf(pp[ix][ih]); );
+	    LOOPxh( qq[ii[ix]][ih] += crealf(wx[ix][ih]); );
 	    slice_put(imag,nz-1,qq[0]);
 	} /* else */
     } /* iw */

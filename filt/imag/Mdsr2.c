@@ -30,6 +30,7 @@ int main (int argc, char *argv[])
     int nw;		/* number of frequencies */	
     int nt, ntx, nth;   /* boundary taper size */
     int nr;             /* number of reference velocities */
+    int npad;           /* padding on offset wavenumber */
 
     float z0, dz;	/* depth origin, sampling interval */
     float w0, dw;	/* frequency origin, sampling interval */
@@ -76,6 +77,9 @@ int main (int argc, char *argv[])
 
     if (!sf_getfloat("dt",&dt)) dt=0.004;
     /* time error */
+
+    if (!sf_getint("npad",&npad)) npad = 0;
+    /* padding on offset wavenumber */
 
     if (inv) { /* modeling */
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -127,8 +131,9 @@ int main (int argc, char *argv[])
 
     imag = slice_init(inv? in:out,nh,ny,nz);
 
-    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, ntx,nth,nr);
+    dsr2_init (nz,dz, nh,dh,h0, nx,dx,x0, ny,dy,y0, ntx,nth,nr,npad);
     dsr2 (verb, inv, eps,  nw, dw, w0, inv? out:in, imag, slow, dt);
+    dsr2_close ();
     
     exit (0);
 }
