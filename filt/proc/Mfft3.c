@@ -36,7 +36,7 @@ int main (int argc, char **argv)
 	if (!sf_histint(in,"ny",&nx)) sf_error ("No nx= in input");
 	if (!sf_histfloat(in,"y0",&x0)) x0 = 0.; 
 
-	dx = 2.0*SF_PI/(nk*dk);
+	dx = 1./(nk*dk);
 
 	sf_putint (out,"n2",nx);
 	sf_putfloat (out,"d2",dx);
@@ -52,8 +52,8 @@ int main (int argc, char **argv)
 	/* determine wavenumber sampling, pad by 2 */
 	nk = nx*2;
 	nk = sf_npfao(nk,nk*2);
-	dk = 2.0*SF_PI/(nk*dx);
-	k0 = -SF_PI/dx;
+	dk = 1./(nk*dx);
+	k0 = -0.5/dx;
 
 	sf_putint (out,"n2",nk);
 	sf_putfloat (out,"d2",dk);

@@ -48,7 +48,7 @@ int main (int argc, char **argv)
 	    if (!sf_histint(in,"nt",&nt)) sf_error ("No nt in input");
 	    if (!sf_histfloat(in,"t0",&t0)) t0 = 0.; 
 
-	    dt = 2.0*SF_PI/(nw*dw);
+	    dt = 1./(nw*dw);
       
 	    sf_putint(out,"n1",nt);
 	    sf_putfloat(out,"d1",dt);
@@ -58,23 +58,14 @@ int main (int argc, char **argv)
 	}
 
 	nxfft = 2*(nk-1);
-	dx = 2.0*SF_PI/(nxfft*dk);
+	dx = 1./(nxfft*dk);
 
 	sf_putint(out,"n2",nx);
 	sf_putfloat(out,"d2",dx);
 	sf_putfloat(out,"o2",x0);
 	
 	if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
-	switch (sf_getform(in)) {
-	    case SF_XDR:
-		sf_setformat(out,"xdr_float");
-		break;		
-	    case SF_NATIVE:
-		sf_setformat(out,"native_float");
-		break;
-	    default:
-		sf_setformat(out,"ascii_float");
-	}
+	sf_settype(out,SF_FLOAT);
     } else { 
 	if (!sf_histint(in,"n1",&nt)) sf_error ("No n1 in input");
 	if (!sf_histfloat(in,"d1",&dt)) sf_error ("No d1 in input");
@@ -89,8 +80,8 @@ int main (int argc, char **argv)
 
 	    /* determine frequency sampling */
 	    nw = sf_npfa(nt);
-	    dw = 2.0*SF_PI/(nw*dt);
-	    w0 = -SF_PI/dt;
+	    dw = 1./(nw*dt);
+	    w0 = -0.5/dt;
 
 	    sf_putint(out,"n1",nw);
 	    sf_putfloat(out,"d1",dw);
@@ -106,23 +97,14 @@ int main (int argc, char **argv)
 	nxfft = nx*2;
 	nxfft = sf_npfaro(nxfft,2*nxfft);
 	nk = nxfft/2+1;
-	dk = 2.0*SF_PI/(nxfft*dx);
+	dk = 1./(nxfft*dx);
 
 	sf_putint(out,"n2",nk);
 	sf_putfloat(out,"d2",dk);
 	sf_putfloat(out,"o2",k0);
 
 	if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-	switch (sf_getform(in)) {
-	    case SF_XDR:
-		sf_setformat(out,"xdr_complex");
-		break;		
-	    case SF_NATIVE:
-		sf_setformat(out,"native_complex");
-		break;
-	    default:
-		sf_setformat(out,"ascii_complex");
-	}
+	sf_settype(out,SF_COMPLEX);
     }
 
     p = sf_floatalloc2(nt,nxfft);
