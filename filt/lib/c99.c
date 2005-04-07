@@ -46,20 +46,33 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #define complex  
 #define I 0.0
-#define csqrtf sqrtf
-#define clogf logf
-#define clog log
-#define cexpf expf
-#define cexp exp
-#define cabsf fabsf
-#define cabs fabs
-#define crealf sf_crealf
-#define cimagf sf_cimagf
-#define conjf sf_conjf
-#define cargf sf_cargf
-#define creal sf_creal
-#define cimag sf_cimag
-#define conj sf_conj
+#define csqrtf  sqrtf
+#define clogf   logf
+#define clog    log
+#define cexpf   expf
+#define cexp    exp
+#define cpowf   powf
+#define cabsf   fabsf
+#define cabs    fabs
+#define ccosf   cosf
+#define csinf   sinf
+#define ctanf   tanf
+#define cacosf  acosf
+#define casinf  asinf
+#define catanf  atanf
+#define ccoshf  coshf
+#define csinhf  sinhf
+#define ctanhf  tanhf
+#define cacoshf acoshf
+#define casinhf asinhf
+#define catanhf atanhf
+#define crealf  sf_crealf
+#define cimagf  sf_cimagf
+#define conjf   sf_conjf
+#define cargf   sf_cargf
+#define creal   sf_creal
+#define cimag   sf_cimag
+#define conj    sf_conj
 /*^*/
 
 #endif
