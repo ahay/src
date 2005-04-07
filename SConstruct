@@ -92,6 +92,19 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
     Default(build)
 
 ##########################################################################
+# VPLOT BUILD
+##########################################################################
+Export('env')
+pdirs = ('fonts',)
+
+Default('build/include')
+for dir in map(lambda x: os.path.join('vplot',x), pdirs):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
+
+##########################################################################
 # INSTALLATION
 ##########################################################################
 

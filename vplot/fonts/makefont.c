@@ -97,7 +97,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 
-#include "../include/params.h"
+#define FONTCHECK -1990 /* Magic number that identifies font files */
 
 #define EOCBIT 0x8000	/* END OF CHARACTER MARK OR POLYGON BIT */
 #define DRAWBIT 0x4000	/* DRAW BIT */

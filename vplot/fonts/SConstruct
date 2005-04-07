@@ -1,5 +1,5 @@
-import os, sys, glob
-sys.path.append('/home/fomels/RSF')
+import os, sys, glob, string
+sys.path.append('../..')
 import configure
 
 try: # distributed version
@@ -11,7 +11,7 @@ try: # distributed version
 except: # local version
     root = None
     env = Environment()
-    opts=Options('/home/fomels/RSF/config.py')
+    opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
     src = glob.glob('[a-z]*.vplot_font')
@@ -22,10 +22,16 @@ for font in src:
     base = os.path.splitext(font)[0]
     include = base+'.include'
     bin = base+'.bin'
-    aux = map(lambda x: base+'_'+x,
-              ('check','header','dim','addr','widthl','widthr','symbol','svec','lig'))
+    if root:
+        top = os.path.join(dir,'../../')
+    else:
+        top = ''
+        
+    aux = map(lambda x: '%s%s_%s' % (top,base,x),
+                  ('check','header','dim','addr','widthl','widthr','symbol','svec','lig'))
     env.Command([include,]+aux,[prog,font],
                 './${SOURCES[0]} %s < ${SOURCES[1]} > ${TARGETS[0]}' % base)
     env.Command(bin,aux,'cat $SOURCES > $TARGET')
     if root:
-        env.Install(incdir,[include,bin])
+        env.Install(incdir,include)
+        env.Install(incdir,bin)
