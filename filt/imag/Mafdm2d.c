@@ -1,6 +1,4 @@
-/* 
- * exploding reflector time-domain acoustic FD modeling
- */
+/* Exploding reflector time-domain acoustic FD modeling */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

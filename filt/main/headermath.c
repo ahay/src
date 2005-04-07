@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Describes the output in a mathematical notation. */
 
-    len = sf_math_parse (output,out);
+    len = sf_math_parse (output,out,SF_FLOAT);
     
     ftra = sf_floatalloc2(n1,n2);
     fbuf = sf_floatalloc2(n2,n1+3);

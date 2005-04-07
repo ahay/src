@@ -70,7 +70,8 @@ static cfunc cfunctable[] = {
     catanhf,
     cexpf,
     clogf,
-    csqrtf
+    csqrtf,
+    conjf
 };
 
 #endif
@@ -249,7 +250,8 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 /*^*/
 
 size_t sf_math_parse (char* output /* expression */, 
-		      sf_file out  /* parameter file */)
+		      sf_file out  /* parameter file */,
+		      sf_datatype datatype)
 /*< Parse a mathematical expression, returns stack length >*/ 
 {
     int *indx, type=-1, top, c, c2;
@@ -348,7 +350,8 @@ size_t sf_math_parse (char* output /* expression */,
 		} else if (0==strcmp(key,"exp"))   { *indx = 12;
 		} else if (0==strcmp(key,"log"))   { *indx = 13;
 		} else if (0==strcmp(key,"sqrt"))  { *indx = 14;
-		} else if (0==strcmp(key,"abs"))   { *indx = 15;
+		} else if (SF_FLOAT  ==datatype && 0==strcmp(key,"abs"))  { *indx = 15;
+		} else if (SF_COMPLEX==datatype && 0==strcmp(key,"conj")) { *indx = 15;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",

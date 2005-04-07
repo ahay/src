@@ -2,7 +2,7 @@
 
 Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
                  cosh, sinh, tanh, acosh, asinh, atanh,
-                 exp,  log,  sqrt, abs.
+                 exp,  log,  sqrt, abs (for real data), conj (for complex data).
                  
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Mathematical description of the output */
 
-    len = sf_math_parse (output,out);
+    len = sf_math_parse (output,out,type);
     
     if (SF_FLOAT == type) {
 	nbuf = BUFSIZ/sizeof(float);
