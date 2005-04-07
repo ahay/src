@@ -1,6 +1,19 @@
-/* Add, divide, or multiple RSF datasets.
+/* Add, multiply, or divide  RSF datasets.
 
 Takes: [< file0.rsf] file1.rsf file2.rsf ...
+
+The various operations, if selected, occur in the following order:
+
+(1) Take absolute value, abs=
+(2) Add a scalar, add=
+(3) Take the natural logarithm, log=
+(4) Take the square root, sqrt=
+(5) Multiply by a scalar, scale=
+(6) Compute the base-e exponential, exp=
+(7) Add, multiply, or divide the data sets, mode=
+
+sfadd operates on integer, float, or complex data, but all the input
+and output files must be of the same data type.
 
 An alternative is to use sfmath, which is more versatile.
 */
@@ -94,13 +107,13 @@ int main (int argc, char* argv[])
     /* Scalar values to add to each dataset */
 
     (void) sf_getbools("sqrt",sqrt_flag,nin);
-    /* If take square root */
+    /* If true (1) take square root */
     (void) sf_getbools("abs",abs_flag,nin);
-    /* If take absolute value */
+    /* If true (1) take absolute value */
     (void) sf_getbools("log",log_flag,nin);
-    /* If take logarithm */
+    /* If true (1) take logarithm */
     (void) sf_getbools("exp",exp_flag,nin);
-    /* If take exponent */
+    /* If true (1) compute exponential */
 
     mode = sf_getstring("mode");
     /* 'a' means add (default), 'p' or 'm' means multiply, 'd' means divide */

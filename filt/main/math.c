@@ -1,16 +1,21 @@
 /* Mathematical operations on data files.
 
-Example:
-
-sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
-sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
-
 Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
                  cosh, sinh, tanh, acosh, asinh, atanh,
                  exp,  log,  sqrt, abs.
+                 
+sfmath will work on float or complex data, but all the input and output
+files must be of the same data type.
+
+Examples:
+
+sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
+sfmath < file1.rsf tau=file2.rsf output='exp(tau*input)' > out.rsf
+sfmath n1=100 type=complex output="exp(I*x1)"
 
 See also: sfheadermath.
 */
+
 /*
 Copyright (C) 2004 University of Texas at Austin
 
