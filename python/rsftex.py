@@ -78,7 +78,7 @@ def latify(target=None,source=None,env=None):
               else:
                    ltx.write('\\usepackage{%s}\n' % package)
          ltx.write('\n')
-    if lclass == 'geophysics' || lclass == 'segabs':
+    if lclass == 'geophysics' or lclass == 'segabs':
         ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
     if include:
          ltx.write(include+'\n\n')

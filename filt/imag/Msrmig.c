@@ -185,12 +185,18 @@ int main (int argc, char *argv[])
 	switch(itype[0]) {
 	    case 't':          srmig_pw(wfl_s,wfl_r,imag, &imgt); break;
 	    case 'x':          srmig_pw(wfl_s,wfl_r,imag, &imgx); break;
-	    case 'o': default: srmig_pw(wfl_s,wfl_r,imag, &imgo); break; 
+	    case 'o': default: srmig_pw(wfl_s,wfl_r,imag, &imgo); break;
 	}
 	srmig_pw_close();
     }
     
     srmig_close();
+
+    switch(itype[0]) {
+	case 't':          imgt_close(); break;
+	case 'x':          imgx_close(); break;
+	case 'o': default: imgo_close(); break;
+    }
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */

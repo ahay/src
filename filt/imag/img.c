@@ -41,14 +41,14 @@
                  }}}
 
 #define CLOOP(a) for(imz  = abs(ihz); imz<amz.n-abs(ihz) ; imz++){ \
-                     imzs = imz + ihz; \
-                     imzr = imz - ihz; \
+                     imzs = imz - ihz; \
+                     imzr = imz + ihz; \
                  for(imy  = abs(ihy); imy<amy.n-abs(ihy) ; imy++){ \
-                     imys = imy + ihy; \
-                     imyr = imy - ihy; \
+                     imys = imy - ihy; \
+                     imyr = imy + ihy; \
                  for(imx  = abs(ihx); imx<amx.n-abs(ihx) ; imx++){ \
-                     imxs = imx + ihx; \
-                     imxr = imx - ihx; \
+                     imxs = imx - ihx; \
+                     imxr = imx + ihx; \
                     {a} \
                  }}}
 
@@ -259,15 +259,26 @@ void imgt( fslice imag,
 void imgo_close()
 /*< deallocate >*/
 {
+    img_close();
 }
 
 void imgt_close()
 /*< deallocate >*/
 {
-    free( *tt); free( tt);
+    img_close();
+    free(*tt); free(tt);
 }
 
 void imgx_close()
 /*< deallocate >*/
 {
+    img_close();
+}
+
+void img_close()
+/*< deallocate >*/
+{
+    free(**qs); free(*qs); free(qs);
+    free(**qr); free(*qr); free(qr);
+    free(**qi); free(*qi); free(qi);
 }
