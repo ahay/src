@@ -3,23 +3,25 @@
 Alternatively, use sfdd and convert to ASCII form.
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
+static void head(int i, int cols, bool number);
 
 int main (int argc, char* argv[])
 {
@@ -65,7 +67,7 @@ int main (int argc, char* argv[])
 		nbuf = (bufsiz < size)? bufsiz: size;
 		sf_charread (buf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
-		    if (number && 0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
+		    head(i,cols,number);
 		    printf(format,buf[j]);
 		}
 	    }
@@ -79,7 +81,7 @@ int main (int argc, char* argv[])
 		nbuf = (bufsiz < size)? bufsiz: size;
 		sf_intread (ibuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
-		    if (number && 0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
+		    head(i,cols,number);
 		    printf(format,ibuf[j]);
 		}
 	    }
@@ -93,7 +95,7 @@ int main (int argc, char* argv[])
 		nbuf = (bufsiz < size)? bufsiz: size;
 		sf_floatread (fbuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
-		    if (0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
+		    head(i,cols,number);
 		    printf(format,fbuf[j]);
 		}
 	    }
@@ -107,7 +109,7 @@ int main (int argc, char* argv[])
 		nbuf = (bufsiz < size)? bufsiz: size;
 		sf_complexread (cbuf,nbuf,in);
 		for (j=0; j < nbuf; j++, i++) {
-		    if (0 == i%cols) printf(i? "\n%4d: ":"%4d: ",i);
+		    head(i,cols,number);
 		    printf(format,crealf(cbuf[j]),cimagf(cbuf[j]));
 		}
 	    }
@@ -121,4 +123,15 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: disfil.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */
+static void head(int i, int cols, bool number) 
+{
+    if (0 == i%cols) {
+	if (number) {
+	    printf(i? "\n%4d: ":"%4d: ",i);
+	} else if (i) {
+	    printf("\n");
+	}
+    }
+}
+
+/* 	$Id$	 */

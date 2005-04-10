@@ -3,11 +3,11 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-afdm2d camig cell2 constfdmig2 distance dmo dsr dsr2 eikonal fincon finstack
-fkamo fkdmo gazdag halfint hwt2d hwtex interp2 interp3 interpt kirchnew kirmod
-mig45 mutter preconstkirch rays2 reg2tri remap1 ricker1 rwemete2d s2ofz shoot2
-srsyn srmod srmig sstep2 trace2 tri2reg trirand unif2 unif3 voft vofz zomig
-cube2list fft2 phmig wefic weimc
+afdm2d camig cell2 cgscan constfdmig2 distance dmo dsr dsr2 eikonal fincon 
+finstack fkamo fkdmo gazdag halfint hwt2d hwtex interp2 interp3 interpt
+kirchnew kirmod mig45 mutter preconstkirch rays2 reg2tri remap1 ricker1
+rwemete2d s2ofz shoot2 srsyn srmod srmig sstep2 trace2 tri2reg trirand unif2
+unif3 voft vofz zomig cube2list fft2 phmig wefic weimc
 '''
 
 try:  # distributed version
@@ -48,7 +48,7 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-for prog in ('ctridiagonal','agrid'):
+for prog in ('agrid','ctridiagonal','veltran'):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

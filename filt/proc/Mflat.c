@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
     if (!sf_getint("i0",&i0)) i0=0;
     /* reference trace */
 
-    predict_init (n1, n2, eps*eps);
+    predict_init (n1, n2, eps*eps, 1);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);

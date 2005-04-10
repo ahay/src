@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     float *rfl, *crv, *shot, *trace, *ts, *tg, vel[5], slow;
     float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq;
     maptype type = CONST;
-    aamap map;
     sf_file refl, curv, modl, shots;
 
     sf_init(argc,argv);
@@ -155,7 +154,7 @@ int main(int argc, char* argv[])
     /* reference coordinates for velocity */
 
     /*** Initialize stretch ***/
-    map = aastretch_init (nt, t0, dt, nx);
+    aastretch_init (nt, t0, dt, nx);
 
     time = sf_floatalloc(nx);
     ampl = sf_floatalloc(nx);
@@ -185,8 +184,8 @@ int main(int argc, char* argv[])
 		/* 2.5-D amplitude? */
 	    }
 
-	    aastretch_define (map,time,delt,ampl);
-	    aastretch_apply (map,rfl,trace);
+	    aastretch_define (time,delt,ampl);
+	    aastretch_lop (false,false,nx,nt,rfl,trace);
 
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);

@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("adj",&adj)) adj=false;
 
-    predict_init(n1, n2, 0.01);
+    predict_init(n1, n2, 0.01, 1);
 
     input = sf_floatalloc(n12);
     smooth = sf_floatalloc(n12);

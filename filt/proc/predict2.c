@@ -32,7 +32,7 @@ void predict2_init(int m1, int m2           /* data dimensions */,
     q=qq;
     n12=m1*m2;
 
-    predict_init(m1,m2,eps);
+    predict_init(m1,m2,eps,1);
     tmp = sf_floatalloc(n12);
 }
 

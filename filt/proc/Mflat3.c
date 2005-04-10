@@ -75,7 +75,7 @@ int main (int argc, char *argv[])
     dijkstra(ref2,ref3,p2,q2);
 
     trace = sf_floatalloc(n1);
-    predict_init(n1,0,eps);
+    predict_init(n1,0,eps,1);
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {

@@ -25,7 +25,6 @@
 
 int main(int argc, char* argv[])
 {
-    aamap nmo;
     bool inv, zero;
     int nt,nx,ny, nh, ix,iy,it,ih, ixin,iyin, n123, ix1, ix2, iy1, iy2;
     float dt,dx,dy, t0,x,y, vel0, rx,ry, dh, h0, h, hx, t, sq, ti, t1,t2;
@@ -100,7 +99,7 @@ int main(int argc, char* argv[])
 	time[it] = t*t;
     }
 
-    nmo = aastretch_init (nt, t0, dt, nt);
+    aastretch_init (nt, t0, dt, nt);
 
     if (inv && zero) sf_floatread (cinp[0][0],n123,in);
 
@@ -183,11 +182,12 @@ int main(int argc, char* argv[])
 		    } /* modeling - migration */ 
 		}  /* it */
 
-		aastretch_define (nmo, str, tx, amp);
+		aastretch_define (str, tx, amp);
 		
 		for (iyin=iy1; iyin < iy2; iyin++) {
 		    for (ixin=ix1; ixin < ix2; ixin++) {
-			aastretch_apply (nmo, cinp[iyin][ixin], add);
+			aastretch_lop (false,false,nt,nt,
+				       cinp[iyin][ixin], add);
 			for (it=0; it < nt; it++) {
 			    cout[iyin+iy][ixin+ix][it] += add[it];
 			}

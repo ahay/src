@@ -24,13 +24,13 @@
 #include <rsf.h>
 /*^*/
 
-static int nw;
+static int nw, n;
+static float *tmp;
 static float complex *cx, *cf;
 static kiss_fftr_cfg forw, invs;
 
-void halfint_init (bool adj  /* causal or anticausal */, 
-		   bool inv  /* differentiation or integration */, 
-		   int n     /* trace length */, 
+void halfint_init (bool inv  /* differentiation or integration */, 
+		   int n1    /* trace length */, 
 		   float rho /* regularization */)
 /*< Initialize >*/
 {
@@ -38,6 +38,7 @@ void halfint_init (bool adj  /* causal or anticausal */,
     float om;
     float complex cz;
 
+    n = n1;
     nw = n/2+1;
 
     cx = sf_complexalloc(nw);
@@ -50,25 +51,50 @@ void halfint_init (bool adj  /* causal or anticausal */,
 
     for (i=0; i < nw; i++) {
 	om = 2.*SF_PI*i/n;
-        if (!adj) om = - om;
-
-	cz = cexpf(I*om);
+	cz = cexpf(-I*om);
 	if (inv) {
 	    cf[i] = csqrtf(1.-rho*cz)/n;
 	} else {
 	    cf[i] = csqrtf(0.5*(1.+rho*cz)/(1.-rho*cz))/n;
 	}
     }
+
+    tmp = sf_floatalloc(n);
 }
 
-void halfint (float* x /* [n] */)
+void halfint_lop(bool adj, bool add, int n1, int n2, float *xx, float *yy)
+/*< linear operator >*/
+{
+    int i;
+
+    sf_adjnull (adj,add,n1,n2,xx,yy);
+    
+    for (i=0; i < n1; i++) {
+	tmp[i] = adj? yy[i]: xx[i];
+    }
+    for (i=n1; i < n; i++) {
+	tmp[i] = 0.;
+    }
+
+    halfint (adj,tmp);
+
+    for (i=0; i < n1; i++) {
+	if (adj) {
+	    xx[i] += tmp[i];
+	} else {
+	    yy[i] += tmp[i];
+	}
+    }
+}
+
+void halfint (bool adj, float* x /* [n] */)
 /*< Integrate in place >*/
 {
     int i;
 
     kiss_fftr(forw,x, (kiss_fft_cpx *) cx);
     for (i=0; i < nw; i++) {
-	cx[i] *= cf[i];
+	cx[i] *= adj? conjf(cf[i]): cf[i];
     }
     kiss_fftri(invs,(const kiss_fft_cpx *) cx, x);
 }
@@ -80,5 +106,6 @@ void halfint_close(void)
     free (cf);
     free (forw);
     free (invs);
+    free (tmp);
 }
 

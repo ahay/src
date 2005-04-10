@@ -24,13 +24,14 @@
 #include "banded.h"
 #include "pwd.h"
 
-static int n1, n2, nb;
+static int n1, n2, nb, k2;
 static bands slv;
 static float *diag, **offd, eps, **dip, *tt;
 static pwd w;
 
 void predict_init (int nx, int ny /* data size */, 
-		   float e        /* regularization parameter */)
+		   float e        /* regularization parameter */,
+		   int k          /* radius */)
 /*< initialize >*/
 {
     const int nw=1;
@@ -47,6 +48,8 @@ void predict_init (int nx, int ny /* data size */,
 
     w = pwd_init (n1, nw);
     tt = NULL;
+
+    k2 = k;
 }
 
 void predict_close (void)
@@ -132,19 +135,69 @@ void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
     }
 }
 
+void subtract_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
+{
+    int i1, i2, j2, m2;
+
+    if (nx != ny || nx != n1*n2) sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    if (adj) {
+	for (j2=0; j2 < n2; j2++) {
+	    i2=j2+k2;
+	    if (i2 < n2) {
+		for (i1=0; i1 < n1; i1++) {
+		    tt[i1] = yy[i1+i2*n1];
+		}
+		for (m2=i2-1; m2 >= j2; m2--) {
+		    predict_step(true,true,tt,dip[m2]);
+		}
+		for (i1=0; i1 < n1; i1++) {
+		    xx[i1+j2*n1] += yy[i1+j2*n1]-tt[i1];
+		}
+	    } else {
+		for (i1=0; i1 < n1; i1++) {
+		    xx[i1+j2*n1] += yy[i1+j2*n1];
+		}
+	    }
+	}
+    } else {
+	for (i2=0; i2 < n2; i2++) { 
+	    j2=i2-k2;
+	    if (j2 >=0) {
+		for (i1=0; i1 < n1; i1++) {
+		    tt[i1] = xx[i1+j2*n1];
+		}
+		for (m2=j2; m2 < i2; m2++) {
+		    predict_step(false,true,tt,dip[m2]);
+		}
+		for (i1=0; i1 < n1; i1++) {
+		    yy[i1+i2*n1] += xx[i1+i2*n1]-tt[i1];
+		}
+	    } else {
+		for (i1=0; i1 < n1; i1++) {
+		    yy[i1+i2*n1] += xx[i1+i2*n1];
+		}
+	    }
+	}
+    }
+}
+
 void predict_flat(int i0     /* reference trace number */, 
 		  float** d  /* input */, 
-		  float** m  /* output */, 
+		  float** mm /* output */, 
 		  float** pp /* slope */)
 /*< predictive flattening >*/
 {
-    int i1, i2, k2;
+    int i1, i2, m2;
     float *trace;
 
     /* prediction from the left */
     for (i2=0; i2 <= i0; i2++) {
         for (i1=0; i1 < n1; i1++) {
-            m[i2][i1] = d[i2][i1];
+            mm[i2][i1] = d[i2][i1];
         }
 
         if (i2 == i0) break;
@@ -161,8 +214,8 @@ void predict_flat(int i0     /* reference trace number */,
         pwd_define (true, w, pp[i2], diag, offd);
         banded_define (slv, diag, offd);
 
-        for (k2=0; k2 <= i2; k2++) {
-            trace = m[k2];
+        for (m2=0; m2 <= i2; m2++) {
+            trace = mm[m2];
 
             pwd_set (false, w, trace, trace, diag);
             banded_solve (slv, trace);
@@ -172,7 +225,7 @@ void predict_flat(int i0     /* reference trace number */,
     /* prediction from the right */
     for (i2=n2-1; i2 > i0; i2--) {
         for (i1=0; i1 < n1; i1++) {
-            m[i2][i1] = d[i2][i1];
+            mm[i2][i1] = d[i2][i1];
         }
 
 	for (i1=0; i1 < n1; i1++) {
@@ -187,8 +240,8 @@ void predict_flat(int i0     /* reference trace number */,
         pwd_define (false, w, pp[i2-1], diag, offd);
         banded_define (slv, diag, offd);
 
-        for (k2=n2-1; k2 >= i2; k2--) {
-            trace = m[k2];
+        for (m2=n2-1; m2 >= i2; m2--) {
+            trace = mm[m2];
 
             pwd_set (false, w, trace, trace, diag);
             banded_solve (slv, trace);

@@ -52,12 +52,12 @@ int main(int argc, char* argv[])
     if (n1%2) nn++;
     pp = sf_floatalloc(nn);
 
-    halfint_init (adj, inv, nn, rho);
+    halfint_init (inv, nn, rho);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (pp,n1,in);
 	if (n1%2) pp[n1]=0.;
-	halfint (pp);
+	halfint (adj, pp);
 	sf_floatwrite (pp,n1,out);
     }
 

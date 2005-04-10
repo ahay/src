@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     data = sf_floatalloc2(n1,n2);
     modl = sf_floatalloc2(n1,n2);
 
-    if (hd) halfint_init(adj,true,n1,1.-1./n1);
+    if (hd) halfint_init(true,n1,1.-1./n1);
     kirchnew_init (vrms, o1, d1, d2, n1, n2, sw);
 
     for (i3=0; i3 < n3; i3++) {
@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
 
 	    if (hd) {
 		for (i2=0; i2 < n2; i2++) {
-		    halfint (data[i2]);
+		    halfint (adj, data[i2]);
 		}
 	    }
 	} else {
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	} else {
 	    if (hd) {
 		for (i2=0; i2 < n2; i2++) {
-		    halfint (data[i2]);
+		    halfint (adj, data[i2]);
 		}
 	    }
 

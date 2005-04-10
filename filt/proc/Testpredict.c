@@ -18,13 +18,18 @@ int main(void) {
 	}
     }
 
-    predict_init(n1, n2, 0.01);
+    predict_init(n1, n2, 0.01, 3);
     predict_set(p);
     sf_dot_test(predict_lop, n1*n2, n1*n2, dot1, dot2);
-    predict_close();
 
     printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
     printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
 
+    sf_dot_test(subtract_lop, n1*n2, n1*n2, dot1, dot2);
+    
+    printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
+    printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
+
+    predict_close();
     exit(0);
 }
