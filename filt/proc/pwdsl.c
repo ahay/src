@@ -93,11 +93,10 @@ void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     predicter_lop  (true,  false, n, n, tmp2, tmp1);
     subtracter_lop (true,  false, n, n, tmp1, tmp2);
     repeat_lop     (true,  false, n, n, tmp2, tmp1);
-    repeat_lop     (false, false, n, n, tmp2, tmp1);
-    subtracter_lop (false, false, n, n, tmp1, tmp2);
-    predicter_lop  (false, false, n, n, tmp2, tmp1);
+    subtracter_lop (false, false, n, n, tmp2, tmp1);
+    predicter_lop  (false, false, n, n, tmp1, tmp2);
 
     for (i=0; i < n2*n1; i++) {
-	out[i] += tmp1[i+k2*n1];
+	out[i] += tmp2[i+k2*n1];
     }
 }
