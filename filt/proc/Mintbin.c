@@ -148,7 +148,7 @@ int main (int argc, char* argv[])
 	    if (id < 0) {
 		sf_charwrite (zero,nt,out);
 	    } else {
-		sf_seek(in,pos + (long) id*nt,SEEK_SET);		
+		sf_seek(in,pos + (off_t) id*nt,SEEK_SET);		
 		sf_charread (buf,nt,in);
 		sf_charwrite (buf,nt,out);
 	    }

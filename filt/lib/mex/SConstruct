@@ -19,7 +19,7 @@ except: # local version
 
 suffix = '.mexglx'
 
-for inp in Split('par dim read'):
+for inp in Split('par dim read write'):
     file = 'rsf_'+inp
     env.Command(file+suffix,file+'.c',
                 '%s CFLAGS="%s %s" $SOURCE %s %s' %

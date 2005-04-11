@@ -29,6 +29,9 @@ static bands slv;
 static float *diag, **offd, eps, **dip, *tt;
 static pwd w;
 
+static void stepper(bool adj /* adjoint flag */,
+		    int i2   /* trace number */);
+
 void predict_init (int nx, int ny /* data size */, 
 		   float e        /* regularization parameter */,
 		   int k          /* radius */)
@@ -50,6 +53,7 @@ void predict_init (int nx, int ny /* data size */,
     tt = NULL;
 
     k2 = k;
+    if (k2 > n2-1) sf_error("%s: k2=%d > n2-1=%d",__FILE__,k2,n2-1);
 }
 
 void predict_close (void)
@@ -99,6 +103,18 @@ void predict_set(float **dip1 /* dip field [n2][n1] */)
     if (NULL == tt) tt = sf_floatalloc(n1);
 }
 
+static void stepper(bool adj /* adjoint flag */,
+		    int i2   /* trace number */)
+{
+    if (i2 < k2) {
+	predict_step(adj,false,tt,dip[k2-1-i2]);
+    } else if (i2 < n2+k2-1) {
+	predict_step(adj,true,tt,dip[i2-k2]);
+    } else {
+	predict_step(adj,false,tt,dip[2*n2+k2-3-i2]);
+    }
+}
+
 void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 /*< linear operator >*/
 {
@@ -131,6 +147,92 @@ void predict_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 		yy[i1+i2*n1] += tt[i1];
 	    }
 	    predict_step(false,true,tt,dip[i2]);
+	}
+    }
+}
+
+void predicter_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
+{
+    int i1, i2;
+
+    if (nx != ny || nx != n1*(n2+2*k2)) sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    for (i1=0; i1 < n1; i1++) {
+	tt[i1] = 0.;
+    }
+
+    if (adj) {
+	for (i2=n2+2*k2-1; i2 >= 0; i2--) {
+	    stepper(true,i2);
+	    for (i1=0; i1 < n1; i1++) {
+		tt[i1] += yy[i1+i2*n1];
+	    }
+	    for (i1=0; i1 < n1; i1++) {
+		xx[i1+i2*n1] += tt[i1];
+	    }
+	}
+    } else {
+	for (i2=0; i2 < n2+2*k2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		tt[i1] += xx[i1+i2*n1];
+	    }
+	    for (i1=0; i1 < n1; i1++) {
+		yy[i1+i2*n1] += tt[i1];
+	    }
+	    stepper(false,i2);
+	}
+    }
+}
+
+void subtracter_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
+{
+    int i1, i2, j2, m2;
+
+    if (nx != ny || nx != n1*(n2+2*k2)) sf_error("%s: Wrong dimensions",__FILE__);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    if (adj) {
+	for (j2=0; j2 < n2+2*k2; j2++) {
+	    i2=j2+k2;
+	    if (i2 < n2+2*k2) {
+		for (i1=0; i1 < n1; i1++) {
+		    tt[i1] = yy[i1+i2*n1];
+		}
+		for (m2=i2-1; m2 >= j2; m2--) {
+		    stepper(true,m2);
+		}
+		for (i1=0; i1 < n1; i1++) {
+		    xx[i1+j2*n1] += yy[i1+j2*n1]-tt[i1];
+		}
+	    } else {
+		for (i1=0; i1 < n1; i1++) {
+		    xx[i1+j2*n1] += yy[i1+j2*n1];
+		}
+	    }
+	}
+    } else {
+	for (i2=0; i2 < n2+2*k2; i2++) { 
+	    j2=i2-k2;
+	    if (j2 >=0) {
+		for (i1=0; i1 < n1; i1++) {
+		    tt[i1] = xx[i1+j2*n1];
+		}
+		for (m2=j2; m2 < i2; m2++) {
+		    stepper(false,m2);
+		}
+		for (i1=0; i1 < n1; i1++) {
+		    yy[i1+i2*n1] += xx[i1+i2*n1]-tt[i1];
+		}
+	    } else {
+		for (i1=0; i1 < n1; i1++) {
+		    yy[i1+i2*n1] += xx[i1+i2*n1];
+		}
+	    }
 	}
     }
 }

@@ -26,6 +26,7 @@
 #include "predict.h"
 #include "repeat.h"
 
+static int n2, n1, n, k2;
 static float *tmp1, *tmp2;
 
 void pwdsl_init(int m1, int m2       /* data dimensions */, 
@@ -35,10 +36,18 @@ void pwdsl_init(int m1, int m2       /* data dimensions */,
 {
     predict_init (m1,m2,eps,rect2);
     sf_triangle1_init(rect1,m1);
-    repeat_init(m1,m2,sf_triangle1_lop);
 
-    tmp1 = sf_floatalloc(m1*m2);
-    tmp2 = sf_floatalloc(m1*m2);
+    n2 = m2+2*rect2;
+    n = m1*n2;
+
+    repeat_init(m1,n2,sf_triangle1_lop);
+
+    tmp1 = sf_floatalloc(n);
+    tmp2 = sf_floatalloc(n);
+
+    n2 = m2;
+    n1 = m1;
+    k2 = rect2;
 }
 
 void pwdsl_set(float **dip /* dip field [n2][n1] */)
@@ -60,7 +69,10 @@ void pwdsl_close(void)
 void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 /*< linear operator >*/
 {
+    int i;
     float *inp, *out;
+
+    sf_adjnull(adj,add,nx,ny,x,y);
 
     if (adj) {
 	inp = y;
@@ -70,10 +82,22 @@ void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	out = y;
     }
 
-    predict_lop  (true,  false, nx, nx, tmp1, inp);
-    subtract_lop (true,  false, nx, nx, tmp2, tmp1);
-    repeat_lop   (true,  false, nx, nx, tmp1, tmp2);
-    repeat_lop   (false, false, nx, nx, tmp1, tmp2);
-    subtract_lop (false, false, nx, nx, tmp2, tmp1);
-    predict_lop  (false, add,   nx, nx, tmp1, out);
+    for (i=0; i < k2*n1; i++) {
+	tmp1[i] = 0.;
+	tmp1[i+(k2+n2)*n1] = 0.;
+    }
+    for (i=0; i < n2*n1; i++) {
+	tmp1[i+k2*n1] = inp[i];
+    }
+
+    predicter_lop  (true,  false, n, n, tmp2, tmp1);
+    subtracter_lop (true,  false, n, n, tmp1, tmp2);
+    repeat_lop     (true,  false, n, n, tmp2, tmp1);
+    repeat_lop     (false, false, n, n, tmp2, tmp1);
+    subtracter_lop (false, false, n, n, tmp1, tmp2);
+    predicter_lop  (false, false, n, n, tmp2, tmp1);
+
+    for (i=0; i < n2*n1; i++) {
+	out[i] += tmp1[i+k2*n1];
+    }
 }

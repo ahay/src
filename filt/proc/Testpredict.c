@@ -6,7 +6,7 @@
 
 int main(void) {
     float dot1[2], dot2[2];
-    static int n1=100, n2=100; 
+    static int n1=100, n2=100, rect=3; 
     int i1, i2;
     float **p;
 
@@ -18,7 +18,7 @@ int main(void) {
 	}
     }
 
-    predict_init(n1, n2, 0.01, 3);
+    predict_init(n1, n2, 0.01, rect);
     predict_set(p);
     sf_dot_test(predict_lop, n1*n2, n1*n2, dot1, dot2);
 
@@ -26,7 +26,19 @@ int main(void) {
     printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
 
     sf_dot_test(subtract_lop, n1*n2, n1*n2, dot1, dot2);
+
+    printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
+    printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
+
+    n2 += 2*rect;
     
+    sf_dot_test(predicter_lop, n1*n2, n1*n2, dot1, dot2);
+
+    printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
+    printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
+
+    sf_dot_test(subtracter_lop, n1*n2, n1*n2, dot1, dot2);
+
     printf ("%12.8f ? %12.8f\n",dot1[0],dot1[1]);
     printf ("%12.8f ? %12.8f\n",dot2[0],dot2[1]);
 
