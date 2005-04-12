@@ -33,6 +33,10 @@ void mexFunction(int nlhs, mxArray *plhs[],
     char *tag, *argv[] = {"matlab","-"};
     double *p;
     char buf[BUFSIZ];
+    off_t pos;
+    static off_t shift=0;
+    static char *name=NULL;
+    bool same;
     sf_datatype type;
     sf_file file;
 
@@ -62,11 +66,21 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
+    if (NULL == name || strncmp(tag,name,taglen)) {
+	same = false;
+
+	name = mxCalloc(taglen, sizeof(char));
+	strncpy(name,tag,taglen);
+    } else {
+	same = true;
+    }
+
     sf_init(argc,argv);
     file = sf_input(tag);
-
+    
     dim = sf_filedims(file,n);
     type = sf_gettype (file);
+    pos = sf_tell(file);
 
     if (!sf_histint(file,"esize",&esize)) esize=sizeof(float);
 
@@ -78,35 +92,41 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	}
 
 	plhs[0] = mxCreateNumericArray(dim,n,mxDOUBLE_CLASS,mxREAL);
-	p = mxGetPr(plhs[0]);
-
-	for (j=0, nbuf /= esize; nd > 0; nd -= nbuf) {
-	    if (nbuf > nd) nbuf=nd;
-
-	    switch(type) {
-		case SF_FLOAT:
-		    sf_floatread((float*) buf,nbuf,file);
-		    for (i=0; i < nbuf; i++, j++) {
-			p[j] = (double) ((float*) buf)[i];
-		    }
-		    break;
-		case SF_INT:
-		    sf_intread((int*) buf,nbuf,file);
-		    for (i=0; i < nbuf; i++, j++) {
-			p[j] = (double) ((int*) buf)[i];
-		    }
-		    break;
-		default:
-		    mexErrMsgTxt("Unsupported file type.");
-		    break;  
-	    }
-	}
-    } else if (1+dim != nrhs) {
+    } else if (2 != nrhs) {
 	mexErrMsgTxt("Wrong number of arguments.");
+	nd = 0.;
     } else {
-	for (i=0; i < dim; i++) {
-	    if (mxGetM(prhs[1+i]) != 1 || !mxIsNumeric(prhs[1+i]))
-		mexErrMsgTxt("Input must be a row vector.");
+	if (mxGetN(prhs[1]) != 1 || mxGetM(prhs[1]) !=1) 
+	    mexErrMsgTxt("Second input must be a scalar value.\n");
+	nd = (int) mxGetScalar(prhs[1]);
+
+	if (same) sf_seek(file,shift,SEEK_CUR);
+
+	plhs[0] = mxCreateDoubleMatrix(nd,1,mxREAL);
+    }
+
+    p = mxGetPr(plhs[0]);
+    for (j=0, nbuf /= esize; nd > 0; nd -= nbuf) {
+	if (nbuf > nd) nbuf=nd;
+	
+	switch(type) {
+	    case SF_FLOAT:
+		sf_floatread((float*) buf,nbuf,file);
+		for (i=0; i < nbuf; i++, j++) {
+		    p[j] = (double) ((float*) buf)[i];
+		}
+		break;
+	    case SF_INT:
+		sf_intread((int*) buf,nbuf,file);
+		for (i=0; i < nbuf; i++, j++) {
+		    p[j] = (double) ((int*) buf)[i];
+		}
+		break;
+	    default:
+		mexErrMsgTxt("Unsupported file type.");
+		break;  
 	}
     }
+
+    if (same) shift = sf_tell(file) - pos;
 }
