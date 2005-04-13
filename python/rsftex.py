@@ -431,7 +431,7 @@ Color = Builder(action = Action(colorize),suffix='.html')
 # CUSTOM SCANNERS
 #############################################################################
 
-isplot = re.compile(r'^[^%]*\\(?:side)?plot\s*\{([^\}]+)')
+isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'[^%]\\input\s*\{([^\}]+)')

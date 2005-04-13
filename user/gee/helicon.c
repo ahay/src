@@ -38,10 +38,10 @@ void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
 {
     int ia, iy, ix;
     
-    sf_copy_lop(adj, add, nx, ny, xx, yy);
+    sf_copy_lop(adj, add, nx, nx, xx, yy);
 
     for (ia = 0; ia < aa->nh; ia++) {
-	for (iy = aa->lag[ia]; iy < ny; iy++) {
+	for (iy = aa->lag[ia]; iy < nx; iy++) {
 	    if( aa->mis != NULL && aa->mis[iy]) continue;
 	    ix = iy - aa->lag[ia];
 	    if(adj) {

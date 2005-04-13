@@ -4,9 +4,9 @@ import configure
 
 progs = '''
 autocorr burstnoise conflict conv decon deburst despike frame helicon hole
-idempatch invbin invbin1 levint light lopef losignoi lpef make misif miss miss1
-msmiss mspef nhelicon npef parcel pef tspline qdome sigmoid signoi splinebank
-synmarine tentwt wilson 
+idempatch invbin invbin1 levint levint2 light lopef losignoi lpef make misif
+miss miss1 msmiss mspef nhelicon npef parcel pef tspline qdome sigmoid signoi
+splinebank synmarine tentwt wilson 
 '''
 
 try:  # distributed version

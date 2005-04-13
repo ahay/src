@@ -36,7 +36,6 @@ void levint2 (int niter                  /* number of iterations */,
 	      float o1, float d1, int n1 /* inline */, 
 	      float o2, float d2, int n2 /* crossline */, 
 	      filter aa                  /* PEF */, 
-	      float *mm                  /* model */, 
 	      float *rr                  /* residual */, 
 	      float eps                  /* regularization parameter */) 
 /*< 2-D inverse interpolation with PEF estimation >*/
@@ -47,12 +46,12 @@ void levint2 (int niter                  /* number of iterations */,
     nr = nm+aa->nh;
 
     lint2_init (n1,o1,d1, n2,o2,d2, x, y);
-    pefhel_init (aa, nm, mm);
+    pefhel_init (aa, nm, rr);
 
-    sf_solver_reg (lint2_lop, sf_cgstep, helicon_lop, nm, nm, nd, rr, dd, warmup, eps, 
-		   "x0",rr,"end");
+    sf_solver_reg (lint2_lop, sf_cgstep, helicon_lop, nm, nm, nd, rr, dd, 
+		   warmup, eps, "x0", rr,"end");
     sf_cgstep_close();
-    sf_solver_reg (lint2_lop, sf_cgstep, pefhel_lop, nm, nr, nd, rr, dd, niter, eps, 
-		   "x0",rr,"nlreg",helicon_lop,"end");
+    sf_solver_reg (lint2_lop, sf_cgstep, pefhel_lop, 2*nm, nr, nd, rr, dd, 
+		   niter, eps, "x0", rr, "nlreg", helicon_lop,"end");
     sf_cgstep_close();
 }
