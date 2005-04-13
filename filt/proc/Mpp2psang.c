@@ -26,12 +26,13 @@ int main(int argc, char* argv[])
     bool inv;
     int nt, na, it, ia, nw, n3, i3;
     float **gather, *trace, *modl, *coord, *gamma; 
-    float da, a0, r;
+    float da, a0, r, t;
     sf_file in, out, vpvs;
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
+    vpvs = sf_input("vpvs");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -41,15 +42,15 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&da)) sf_error("No d2= in input"); 
     if (!sf_histfloat(in,"o2",&a0)) sf_error("No o2= in input"); 
 
+    if (!sf_getint("nw",&nw)) nw=4;
+    /* accuracy level */
+
     prefilter_init (nw,na,2*na);
 
     n3 = sf_leftsize(in,2);
 
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
-
-    if (!sf_getint("nw",&nw)) nw=4;
-    /* accuracy level */
 
     gather = sf_floatalloc2(nt,na);
     trace = sf_floatalloc(na);
@@ -62,11 +63,13 @@ int main(int argc, char* argv[])
 	sf_floatread(gather[0],nt*na,in);
 
 	for (it=0; it < nt; it++) {
-	    r = 0.5*(gamma[it]+1./gamma[it]);
-	    if (inv) r = 1./r;
+	    r = (1.-gamma[it])/(1.+gamma[it]);
+	    r *= r;
+	    if (inv) r = -r;
 
 	    for (ia=0; ia < na; ia++) {
-		coord[ia] = 0.5*acos(r*cos((a0+ia*da)*SF_PI/90.));
+		t = a0+ia*da;
+		coord[ia] = sqrtf((t*t+r)/(1+r*t*t))*SF_SIG(t); /* t0 */
 		trace[ia] = gather[ia][it];
 	    }
 	    prefilter_apply (na,trace);

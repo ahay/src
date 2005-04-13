@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
 {
     fint1 sft;
     int it,ix,iz,ih, nt,nx,nw, nh;
-    float dt, h0, f, dh, v;
+    float h0, f, dh, v;
     float **gath, *vel, *trace;
     sf_file in, out, velocity;
 
@@ -67,9 +67,9 @@ int main (int argc, char* argv[])
 	    v = vel[it];
 	    
 	    for (ih=0; ih < nh; ih++) {
-		f = (h0 + ih*dh - v)/dt;
+		f = (ih*dh + v - h0)/dh;
 		iz = f;
-		if (iz >= 0 && iz < nt) {
+		if (iz >= 0 && iz < nh) {
 		    gath[ih][it] = fint1_apply(sft,iz,f-iz,false);
 		} else {
 		    gath[ih][it] = 0.;
