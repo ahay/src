@@ -27,11 +27,12 @@
 
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, ns, nh, is, ih, ix, it;
-    float *rfl, *crv, *shot, *trace, *ts, *tg, vel[5], slow;
+    int nx, nt, ns, nh, is, ih, ix;
+    float *rfl, *crv, *dip, *shot, *trace, **ts, *tg, vel[5], vel2[5], slow;
     float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq;
-    maptype type = CONST;
-    sf_file refl, curv, modl, shots;
+    maptype type = CONST, type2 = CONST;
+    surface inc, ref;
+    sf_file refl, curv, dips, modl, shots;
 
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -103,14 +104,11 @@ int main(int argc, char* argv[])
     sf_putfloat(modl,"o2",h0);
     sf_putfloat(modl,"d2",dh);
 
-    /*** Allocate space ***/
-    
-    kirmod_init(ns, s0, ds, nh, h0, dh);
-
     /*** Initialize reflector ***/
 
     crv = sf_floatalloc(nx);
     rfl = sf_floatalloc(nx);
+    dip = sf_floatalloc(nx);
 
     sf_floatread(crv,nx,curv);
 
@@ -126,9 +124,19 @@ int main(int argc, char* argv[])
 	}
     }
 
+    if (NULL != sf_getstring("dips")) {
+	dips = sf_input("dips");
+	sf_floatread(dip,nx,dips);
+	sf_fileclose(dips);
+    } else {
+	for (ix=0; ix < nx; ix++) {
+	    dip[ix] = 0.;
+	}
+    }
+
     /*** Initialize velocity ***/
 
-    if (!sf_getfloat("vel",vel)) sf_error("Need vel=");
+    if (!sf_getfloat("vel",&vel[0])) sf_error("Need vel=");
     /* velocity */
     
     if (!sf_getfloat("gradx",&vel[2])) vel[2]=0.;
@@ -153,6 +161,45 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("refz",&vel[3])) vel[3]=0.;
     /* reference coordinates for velocity */
 
+    if (!sf_getfloat("vel2",&vel2[0])) vel2[0]=vel[0];
+    /* converted velocity */
+    
+    if (!sf_getfloat("gradx2",&vel2[2])) vel2[2]=0.;
+    if (!sf_getfloat("gradz2",&vel2[1])) vel2[1]=0.;
+    /* converted velocity gradient */
+
+    if (vel2[2]==0. && vel2[1]==0.) {
+	type2 = CONST; 
+        /* constant velocity */
+    } else {
+	type2 = S2LIN; 
+        /* linear slowness squared */
+
+	slow = 1./(vel2[0]*vel2[0]);
+	/* slowness squared */
+	vel2[2] *= -slow/vel2[0];
+	vel2[1] *= -slow/vel2[0];
+	vel2[0] = slow;
+    }
+
+    if (!sf_getfloat("refx2",&vel2[4])) vel2[4]=x0;
+    if (!sf_getfloat("refz2",&vel2[3])) vel2[3]=0.;
+    /* reference coordinates for converted velocity */
+
+    
+    /*** Allocate space ***/
+    
+    inc = kirmod_init(ns, s0, ds, nh, h0, dh);
+    ref = (vel2[0] != vel[0] || 
+	   vel2[1] != vel[1] ||
+	   vel2[2] != vel[2] ||
+	   vel2[3] != vel[3] ||
+	   vel2[4] != vel[4])?
+	kirmod_init(ns, s0, ds, nh, h0, dh):
+	inc;
+
+    ts = (float**) sf_alloc(nx,sizeof(float*)); 
+    
     /*** Initialize stretch ***/
     aastretch_init (nt, t0, dt, nx);
 
@@ -166,22 +213,20 @@ int main(int argc, char* argv[])
 
     /*** Compute traveltime table ***/
 
-    kirmod_table (type, nx, x0, dx, crv, vel);
+    kirmod_table (inc, type, nx, x0, dx, crv, dip, vel);
+    if (ref != inc) kirmod_table (ref, type, nx, x0, dx, crv, dip, vel2);
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
+	for (ix=0; ix < nx; ix++) {
+	    ts[ix] = kirmod_map(inc,is,nh,ix);
+	}
 	for (ih=0; ih < nh; ih++) {
-	    for (it=0; it < nt; it++) {
-		trace[it] = 0.;
-	    }
-
 	    for (ix=0; ix < nx; ix++) {
-		ts = kirmod_map(is,nh,ix);
-		tg = kirmod_map(is,ih,ix);
-		time[ix] = ts[0] + tg[0];
-		ampl[ix] = 1./sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt);
-		delt[ix] = tg[2]*dh; 
-		/* 2.5-D amplitude? */
+		tg = kirmod_map(ref,is,ih,ix);
+		time[ix] = ts[ix][0] + tg[0];
+		ampl[ix] = 1./sqrt(ts[ix][1]*tg[1]*(ts[ix][1]+tg[1])+0.001*dt); /* 2.5-D amplitude? */
+		delt[ix] = fabsf(ts[ix][2]+tg[2])*dx; 
 	    }
 
 	    aastretch_define (time,delt,ampl);
@@ -189,7 +234,7 @@ int main(int argc, char* argv[])
 
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);
-
+	    
 	    sf_floatwrite(trace,nt,modl);
 	}
     }

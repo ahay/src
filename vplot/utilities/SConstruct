@@ -1,0 +1,32 @@
+import os, sys, string
+sys.path.append('../..')
+import configure
+
+src = 'clip solve'
+
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
+includes = map(lambda x: x+'.h',Split(src))
+
+objects = []
+for source in Split(src):
+    env.Include(source,prefix='sf_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+

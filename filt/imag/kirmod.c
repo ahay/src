@@ -28,15 +28,19 @@ typedef enum {CONST, S2LIN, VLIN} maptype;
 /* type of velocity distribution */
 /*^*/
 
+typedef struct Surface *surface;
+/* abstract data type */
+/*^*/
+
 #endif
 
-typedef struct Surface {
+struct Surface {
     int is, ih;
     float x, **ta;
-} *surface;
+};
+
 
 static int ny, **map;
-static surface y;
 
 static int surface_comp(const void *a, const void *b)
 /* compare by the surface coordinate */
@@ -51,13 +55,13 @@ static int surface_comp(const void *a, const void *b)
     return 1;
 }
 
-void kirmod_init(int ns, float s0, float ds /* source axis */,
-		 int nh, float h0, float dh /* offset axis */)
+surface kirmod_init(int ns, float s0, float ds /* source axis */,
+		    int nh, float h0, float dh /* offset axis */)
 /*< Initialize surface locations >*/ 
 {
     int is, ih, iy;
     float s;
-    surface yi;
+    surface yi, y;
 
     ny = ns*(nh+1);
     y = (surface) sf_alloc(ny,sizeof(*y));
@@ -82,9 +86,11 @@ void kirmod_init(int ns, float s0, float ds /* source axis */,
 	yi = y+iy;
 	map[yi->is][yi->ih] = iy;
     }
+
+    return y;
 }
 
-void kirmod_close(void) 
+void kirmod_close(surface y) 
 /*< Free allocated storage >*/
 {
     int iy;
@@ -112,27 +118,30 @@ void kirmod_close(void)
     free (map);
 }
 
-void kirmod_table (maptype type               /* velocity distribution */, 
+void kirmod_table (surface y                  /* surface structure */,
+		   maptype type               /* velocity distribution */, 
 		   int nx, float x0, float dx /* reflector axis */,
-		   float *curve               /* reflector */, 
+		   float *curve               /* reflector */,
+		   float *dip                 /* reflector dip */,
 		   float *veloc               /* velocity attributes */) 
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy;
-    float x, x1, x2, **ta=NULL, t, a, p;
+    float x, z, x1, x2=0., **ta=NULL, t, a, p;
 
     for (iy=0; iy < ny; iy++) {	
-	x2 = x1 = y[iy].x;
+	x1 = y[iy].x;
 	if (0==iy || x1 != x2) {
 	    ta = sf_floatalloc2(3,nx);
 
 	    for (ix=0; ix < nx; ix++) {
 		x = x0-x1 + ix*dx;
+		z = curve[ix];
 		switch (type) {
 		    case CONST:	
-			a = hypotf(x,curve[ix]);
+			a = hypotf(x,z);
 			t = a/veloc[0];
-			p = fabsf(x)/(a*veloc[0]);
+			p = (x+z*dip[ix])/(a*veloc[0]);
 			break;		    
 		    default:
 			a = 0.;
@@ -151,7 +160,7 @@ void kirmod_table (maptype type               /* velocity distribution */,
     }
 }
 
-float *kirmod_map(int is, int ih, int ix) 
+float *kirmod_map(surface y, int is, int ih, int ix) 
 /*< Extract from traveltime/amplitude map >*/
 {
     return y[map[is][ih]].ta[ix];
