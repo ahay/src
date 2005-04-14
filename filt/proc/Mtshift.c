@@ -1,4 +1,4 @@
-/* Compute shift  x -= v(t,x) */
+/* Compute shift from pseudo-v to pseudo-tan(theta) */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,9 +26,9 @@
 int main (int argc, char* argv[])
 {
     fint1 sft;
-    int it,ix,iz,ih, nt,nx,nw, nh;
-    float h0, f, dh, v;
-    float **gath, *vel, *trace;
+    int it,ix,iz,ih,ia, nt,nx,nw, nh,na;
+    float h0, f, dh, v, da, a0;
+    float **gath, **gath2, *vel, *trace;
     sf_file in, out, velocity;
 
     sf_init (argc,argv);
@@ -44,12 +44,24 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
 
-    sf_putfloat(out,"o2",0.);
+    if (!sf_getint("na",&na)) na=nh;
+    /* tangent samples */
+    if (!sf_getfloat("da",&da)) da=1./(nh-1);
+    /* tangent sampling */
+    if (!sf_getfloat("a0",&a0)) a0=0.;
+    /* tangent origin */
+
+/*    sf_putfloat(out,"o2",0.);*/
+
+    sf_putfloat(out,"o2",a0);
+    sf_putfloat(out,"d2",da);
+    sf_putint  (out,"n2",na);
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
 
     gath = sf_floatalloc2(nt,nh);
+    gath2 = sf_floatalloc2(nt,na);
     trace = sf_floatalloc(nh);
     vel   = sf_floatalloc(nt);
 
@@ -66,18 +78,18 @@ int main (int argc, char* argv[])
 	    fint1_set(sft,trace);
 	    v = vel[it];
 	    
-	    for (ih=0; ih < nh; ih++) {
-		f = (ih*dh + v - h0)/dh;
+	    for (ia=0; ia < na; ia++) {
+		f = (v*hypotf(a0+ia*da,1.) - h0)/dh;
 		iz = f;
 		if (iz >= 0 && iz < nh) {
-		    gath[ih][it] = fint1_apply(sft,iz,f-iz,false);
+		    gath2[ia][it] = fint1_apply(sft,iz,f-iz,false);
 		} else {
-		    gath[ih][it] = 0.;
+		    gath2[ia][it] = 0.;
 		}
 	    }
 	}
 	    
-	sf_floatwrite (gath[0],nt*nh,out);
+	sf_floatwrite (gath2[0],nt*na,out);
     }
 	
     exit (0);
