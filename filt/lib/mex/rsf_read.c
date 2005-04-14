@@ -1,6 +1,6 @@
 /* Read data from an RSF file.
  *
- * MATLAB usage: array = rsf_read(file,dims)
+ * MATLAB usage: array = rsf_read(file[,size][,same])
  *
  */
 /*
@@ -25,17 +25,27 @@
 
 #include <rsf.h>
 
+/* BSD - MAXNAMELEN, Posix - NAME_MAX */
+#ifndef NAME_MAX
+#ifdef MAXNAMELEN
+#define	NAME_MAX MAXNAMELEN
+#else
+#ifdef FILENAME_MAX
+#define NAME_MAX FILENAME_MAX
+#endif
+#endif
+#endif
+
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int taglen, status, argc=2, dim, n[SF_MAX_DIM], i, esize;
+    int taglen, status, argc=2, dim, n[SF_MAX_DIM], i, esize, len;
     size_t nbuf = BUFSIZ, nd, j;
-    char *tag, *argv[] = {"matlab","-"};
+    char *tag, *argv[] = {"matlab","-"}, *par;
     double *p;
     char buf[BUFSIZ];
     off_t pos;
     static off_t shift=0;
-    static char *name=NULL;
     bool same;
     sf_datatype type;
     sf_file file;
@@ -43,6 +53,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* Check for proper number of arguments. */
     if (nrhs < 1) {
 	mexErrMsgTxt("One or more inputs required.");
+    } else if (nrhs > 3) {
+	mexErrMsgTxt("Too many inputs.");
     } else if (nlhs > 1) { 
 	mexErrMsgTxt("Too many output arguments.");
     }
@@ -66,13 +78,29 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
-    if (NULL == name || strncmp(tag,name,taglen)) {
-	same = false;
+    if (3 == nrhs) {
+        /* Input 3 must be a string. */
+	if (!mxIsChar(prhs[2]))
+	    mexErrMsgTxt("Input 3 must be a string.");
 
-	name = mxCalloc(taglen, sizeof(char));
-	strncpy(name,tag,taglen);
+	/* Input 3 must be a row vector. */
+	if (mxGetM(prhs[2]) != 1)
+	    mexErrMsgTxt("Input 3 must be a row vector.");
+	
+	/* Get the length of the input string. */
+	len = mxGetN(prhs[2]) + 1;
+	
+	/* Allocate memory for input string. */
+	par = mxCalloc(len, sizeof(char));
+
+	/* Copy the string data from prhs[2] into a C string. */
+	status = mxGetString(prhs[2], par, len);
+	if (status != 0) 
+	    mexWarnMsgTxt("Not enough space. String is truncated.");
+
+	same = (0 == (strncmp(par,"same",4)));
     } else {
-	same = true;
+	same = false;
     }
 
     sf_init(argc,argv);
@@ -92,9 +120,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	}
 
 	plhs[0] = mxCreateNumericArray(dim,n,mxDOUBLE_CLASS,mxREAL);
-    } else if (2 != nrhs) {
-	mexErrMsgTxt("Wrong number of arguments.");
-	nd = 0.;
     } else {
 	if (mxGetN(prhs[1]) != 1 || mxGetM(prhs[1]) !=1) 
 	    mexErrMsgTxt("Second input must be a scalar value.\n");
@@ -128,5 +153,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	}
     }
 
-    if (same) shift = sf_tell(file) - pos;
+    shift = sf_tell(file) - pos;
 }

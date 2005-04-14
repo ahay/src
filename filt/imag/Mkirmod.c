@@ -28,11 +28,11 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, is, ih, ix;
-    float *rfl, *crv, *dip, *shot, *trace, **ts, *tg, vel[5], vel2[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq;
+    float *rfl, *rgd, *crv, *dip, *shot, *trace, *ts, *tg, vel[5], vel2[5], slow;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq, theta, ava;
     maptype type = CONST, type2 = CONST;
     surface inc, ref;
-    sf_file refl, curv, dips, modl, shots;
+    sf_file refl, curv, modl, shots;
 
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -108,26 +108,39 @@ int main(int argc, char* argv[])
 
     crv = sf_floatalloc(nx);
     rfl = sf_floatalloc(nx);
+    rgd = sf_floatalloc(nx);
     dip = sf_floatalloc(nx);
 
     sf_floatread(crv,nx,curv);
 
+    /* reflectivity (A) */
     if (NULL != sf_getstring("refl")) {
 	refl = sf_input("refl");
 	sf_floatread(rfl,nx,refl);
 	sf_fileclose(refl);
     } else {
 	if (!sf_getfloat("r0",&r0)) r0=1.;
-	/* reflectivity */
 	for (ix=0; ix < nx; ix++) {
 	    rfl[ix] = r0;
 	}
     }
 
-    if (NULL != sf_getstring("dips")) {
-	dips = sf_input("dips");
-	sf_floatread(dip,nx,dips);
-	sf_fileclose(dips);
+    /* AVO gradient (B/A) */
+    if (NULL != sf_getstring("rgrad")) {
+	refl = sf_input("rgrad");
+	sf_floatread(rgd,nx,refl);
+	sf_fileclose(refl);
+    } else {
+	for (ix=0; ix < nx; ix++) {
+	    rgd[ix] = 0.;
+	}
+    }
+
+    /* reflector dip */
+    if (NULL != sf_getstring("dip")) {
+	refl = sf_input("dip");
+	sf_floatread(dip,nx,refl);
+	sf_fileclose(refl);
     } else {
 	for (ix=0; ix < nx; ix++) {
 	    dip[ix] = 0.;
@@ -197,8 +210,6 @@ int main(int argc, char* argv[])
 	   vel2[4] != vel[4])?
 	kirmod_init(ns, s0, ds, nh, h0, dh):
 	inc;
-
-    ts = (float**) sf_alloc(nx,sizeof(float*)); 
     
     /*** Initialize stretch ***/
     aastretch_init (nt, t0, dt, nx);
@@ -218,15 +229,17 @@ int main(int argc, char* argv[])
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
-	for (ix=0; ix < nx; ix++) {
-	    ts[ix] = kirmod_map(inc,is,nh,ix);
-	}
 	for (ih=0; ih < nh; ih++) {
 	    for (ix=0; ix < nx; ix++) {
+		ts = kirmod_map(inc,is,nh,ix);
 		tg = kirmod_map(ref,is,ih,ix);
-		time[ix] = ts[ix][0] + tg[0];
-		ampl[ix] = 1./sqrt(ts[ix][1]*tg[1]*(ts[ix][1]+tg[1])+0.001*dt); /* 2.5-D amplitude? */
-		delt[ix] = fabsf(ts[ix][2]+tg[2])*dx; 
+
+		time[ix] = ts[0] + tg[0];
+		theta = sinf(0.5*(tg[3]-ts[3]));
+		ava = 1.+rgd[ix]*theta*theta;
+		if (ref != inc) ava *= -theta;
+		ampl[ix] = ava*dx/sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt); /* 2.5-D amplitude? */
+		delt[ix] = fabsf(ts[2]+tg[2])*dx; 
 	    }
 
 	    aastretch_define (time,delt,ampl);

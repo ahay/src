@@ -127,32 +127,36 @@ void kirmod_table (surface y                  /* surface structure */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy;
-    float x, z, x1, x2=0., **ta=NULL, t, a, p;
+    float x, z, zx, x1, x2=0., **ta=NULL, t, a, p, q;
 
     for (iy=0; iy < ny; iy++) {	
 	x1 = y[iy].x;
 	if (0==iy || x1 != x2) {
-	    ta = sf_floatalloc2(3,nx);
+	    ta = sf_floatalloc2(4,nx);
 
 	    for (ix=0; ix < nx; ix++) {
 		x = x0-x1 + ix*dx;
 		z = curve[ix];
+		zx = dip[ix];
 		switch (type) {
 		    case CONST:	
 			a = hypotf(x,z);
 			t = a/veloc[0];
-			p = (x+z*dip[ix])/(a*veloc[0]);
+			p = (x+z*zx)/(a*veloc[0]);
+			q = acosf((z+x*zx)/(a*hypotf(1.,zx)))*SF_SIG(x);
 			break;		    
 		    default:
 			a = 0.;
 			t = 0.;
 			p = 0.;
+			q = 0.;
 			sf_error("__FILE__: case %d is not implemented",type);
 			break;
 		}
 		ta[ix][0] = t; /* traveltime */
 		ta[ix][1] = a; /* amplitude */
 		ta[ix][2] = p; /* slope */
+		ta[ix][3] = q; /* angle from the normal */
 	    }
 	}
 	y[iy].ta = ta;

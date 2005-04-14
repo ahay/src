@@ -1,6 +1,6 @@
 /* Read data from an RSF file.
  *
- * MATLAB usage: rsf_write(file,data)
+ * MATLAB usage: rsf_write(file,data[,same])
  *
  */
 /*
@@ -28,17 +28,19 @@
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {
-    int taglen, status, argc=2, i, ndim;
+    int taglen, status, argc=2, i, ndim, len;
     const int *dim;
     size_t nbuf = BUFSIZ, nd, j;
-    char *tag, *argv[] = {"matlab","-"};
+    char *tag, *argv[] = {"matlab","-"}, *par, *filename;
     double *dr, *di;
     float *p;
     char buf[BUFSIZ], key[5];
+    bool same;
+    FILE *file2;
     sf_file file;
 
     /* Check for proper number of arguments. */
-    if (nrhs != 2) mexErrMsgTxt("Two inputs required.");
+    if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
     
     /* First input must be a string. */
     if (!mxIsChar(prhs[0]))
@@ -59,12 +61,48 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
+    if (3 == nrhs) {
+        /* Input 3 must be a string. */
+	if (!mxIsChar(prhs[2]))
+	    mexErrMsgTxt("Input 3 must be a string.");
+
+	/* Input 3 must be a row vector. */
+	if (mxGetM(prhs[2]) != 1)
+	    mexErrMsgTxt("Input 3 must be a row vector.");
+	
+	/* Get the length of the input string. */
+	len = mxGetN(prhs[2]) + 1;
+	
+	/* Allocate memory for input string. */
+	par = mxCalloc(len, sizeof(char));
+
+	/* Copy the string data from prhs[2] into a C string. */
+	status = mxGetString(prhs[2], par, len);
+	if (status != 0) 
+	    mexWarnMsgTxt("Not enough space. String is truncated.");
+
+	same = (0 == (strncmp(par,"same",4)));
+    } else {
+	same = false;
+    }
+
     sf_init(argc,argv);
-    file = sf_output(tag);
+
+    if (same) {
+	file = sf_input(tag);
+	filename = sf_histstring(file,"in");
+	if (NULL == filename) mexErrMsgTxt("No in= in file.");
+	file2 = fopen(filename,"wb");
+	if (NULL == file2) 
+	    mexErrMsgTxt("Could not open binary file for writing.");
+    } else {
+	file = sf_output(tag);
+	file2 = NULL;
+    }
 
     /* Input 2 must be a number. */
     if (!mxIsDouble(prhs[1])) mexErrMsgTxt("Input 2 must be double.");
-
+    
     /* data pointers */
     dr = mxGetPr(prhs[1]);
     di = mxGetPr(prhs[1]);
@@ -76,14 +114,16 @@ void mexFunction(int nlhs, mxArray *plhs[],
     /* get data size */
     nd = mxGetNumberOfElements(prhs[1]);
 
-    sf_setformat(file,mxIsComplex(prhs[1])?"native_complex":"native_float");
+    if (!same) {
+	sf_setformat(file,mxIsComplex(prhs[1])?"native_complex":"native_float");
    
-    /* Output */
-    for (i=0; i < ndim; i++) {
-	sprintf(key,"n%d",i+1);
-	sf_putint(file,key,dim[i]);
+	/* Output */
+	for (i=0; i < ndim; i++) {
+	    sprintf(key,"n%d",i+1);
+	    sf_putint(file,key,dim[i]);
+	}
     }
-
+	
     p = (float*) buf;
 
     for (j=0, nbuf /= sizeof(float); nd > 0; nd -= nbuf) {
@@ -93,7 +133,12 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	    p[i] = (float) dr[j];
 	}
 
-	sf_floatwrite(p,nbuf,file);
+	if (same) {
+	    if (nbuf != fwrite(p,sizeof(float),nbuf,file2)) 
+		mexWarnMsgTxt("Writing problems.");
+	} else {
+	    sf_floatwrite(p,nbuf,file);
+	}
     }
 
     sf_fileclose(file);

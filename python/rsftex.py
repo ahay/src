@@ -432,6 +432,7 @@ Color = Builder(action = Action(colorize),suffix='.html')
 #############################################################################
 
 isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*\{([^\}]+)')
+ismplot = re.compile(r'^[^%]*\\multiplot\*?\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 input = re.compile(r'[^%]\\input\s*\{([^\}]+)')
@@ -467,6 +468,16 @@ def latexscan(node,env,path):
                  plots.append(os.path.join(figdir,plot + ressuffix))
                  if re.search('angle=90',line):
                       plotoption[plot+pssuffix] = '-flip r90'
+
+            
+            check = ismplot.search(line)
+            if check:
+                 mplot = check.group(1)
+                 mplot = string.replace(mplot,'\_','_')
+                 for plot in string.split(mplot,','):
+                     plots.append(os.path.join(figdir,plot + ressuffix))
+                     if re.search('angle=90',line):
+                         plotoption[plot+pssuffix] = '-flip r90'
 
             check = isfig.search(line)
             if check:
