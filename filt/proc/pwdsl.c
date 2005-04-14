@@ -27,7 +27,7 @@
 #include "repeat.h"
 
 static int n2, n1, n, k2;
-static float *tmp1, *tmp2;
+static float *tmp1, *tmp2, amp;
 
 void pwdsl_init(int m1, int m2       /* data dimensions */, 
 		int rect1, int rect2 /* triangle radius */,
@@ -48,6 +48,7 @@ void pwdsl_init(int m1, int m2       /* data dimensions */,
     n2 = m2;
     n1 = m1;
     k2 = rect2;
+    amp = 1./rect2;
 }
 
 void pwdsl_set(float **dip /* dip field [n2][n1] */)
@@ -87,7 +88,7 @@ void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 	tmp1[i+(k2+n2)*n1] = 0.;
     }
     for (i=0; i < n2*n1; i++) {
-	tmp1[i+k2*n1] = inp[i];
+	tmp1[i+k2*n1] = amp*inp[i];
     }
 
     predicter_lop  (true,  false, n, n, tmp2, tmp1);
@@ -97,6 +98,6 @@ void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
     predicter_lop  (false, false, n, n, tmp1, tmp2);
 
     for (i=0; i < n2*n1; i++) {
-	out[i] += tmp2[i+k2*n1];
+	out[i] += amp*tmp2[i+k2*n1];
     }
 }

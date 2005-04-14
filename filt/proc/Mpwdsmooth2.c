@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* adjoint flag */
 
-    if (!sf_getfloat("eps",&eps)) eps=0.0001;
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
     pwdsl_init(n1, n2, rect1, rect2, eps);
