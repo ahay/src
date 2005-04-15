@@ -33,6 +33,7 @@ int main (int argc, char *argv[])
     char *itype;          /* imaging type 
 			     o = zero offset (default)
 			     x = space offset
+			     h = absolut offset
 			     t = time offset
 			  */
     bool hsym;
@@ -43,6 +44,7 @@ int main (int argc, char *argv[])
     axa ahx,ahy,ahz,aht;
     axa acx,acy,acz;
     int jcx,jcy,jcz;
+    axa ahh,aha,ahb; /* |h|,alpha,beta */
 
     /* I/O files */
     sf_file Fw_s,Fw_r; /* wavefield file W ( nx, ny,nw) */
@@ -147,7 +149,8 @@ int main (int argc, char *argv[])
     /* init output files */
 
     switch(itype[0]) {
-	case 't': /* time offset imaging condition */
+	case 't':
+	    if(verb) sf_warning("Time-offset imaging condition");
 	    if(!sf_getint  ("nht",&aht.n)) aht.n=1;
 	    if(!sf_getfloat("oht",&aht.o)) aht.o=0;
 	    if(!sf_getfloat("dht",&aht.d)) aht.d=0.1;
@@ -158,7 +161,8 @@ int main (int argc, char *argv[])
 
 	    img2t_init(amx,amy,amz,jcx,jcy,jcz,aht,aw,imag);
 	    break;
-	case 'x': /* space offset imaging condition */
+	case 'x':
+	    if(verb) sf_warning("Space offset imaging condition");
 	    if(!sf_getint("nhx",&ahx.n)) ahx.n=1;
 	    if(!sf_getint("nhy",&ahy.n)) ahy.n=1;
 	    if(!sf_getint("nhz",&ahz.n)) ahz.n=1;
@@ -180,9 +184,44 @@ int main (int argc, char *argv[])
 
 	    img2x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag);
 	    break;
-	case 'o': /* zero offset imaging condition */
-	default:
+	case 'h':
+	    if(verb) sf_warning("absolute offset imaging condition");
 
+	    if(!sf_getint  ("nhh",&ahh.n)) ahh.n=1;
+	    if(!sf_getfloat("ohh",&ahh.o)) ahh.o=0;
+	    if(!sf_getfloat("dhh",&ahh.d)) ahh.d=0.1;
+	    ahh.l="hh";
+	    
+	    /* longitude */
+	    if(!sf_getint  ("nha",&aha.n)) aha.n=180;
+	    if(!sf_getfloat("oha",&aha.o)) aha.o=0;   aha.o *= SF_PI/180;
+	    if(!sf_getfloat("dha",&aha.d)) aha.d=2.0; aha.d *= SF_PI/180;
+	    aha.l="ha";
+
+	    /* latitude */
+	    if(!sf_getint  ("nhb",&ahb.n)) ahb.n=180;
+	    if(!sf_getfloat("ohb",&ahb.o)) ahb.o=0;   ahb.o *= SF_PI/180;
+	    if(!sf_getfloat("dhb",&ahb.d)) ahb.d=2.0; ahb.d *= SF_PI/180;
+	    ahb.l="hb";
+
+	    if(amx.n==1) { ahb.n=1; ahb.o=SF_PI/2.; ahb.d=SF_PI;}
+	    if(amy.n==1) { ahb.n=1; ahb.o=0.;       ahb.d=SF_PI;}
+	    if(amz.n==1) { aha.n=1; aha.o=0.;       aha.d=SF_PI;}
+
+	    raxa(ahh);
+	    raxa(aha);
+	    raxa(ahb);
+
+
+	    oaxa(Fc,&ahh,4);
+	    cigs = fslice_init( acx.n*acy.n*acz.n*ahh.n,1,sizeof(float));
+
+	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag);
+
+	    break;
+	case 'o':
+	default:
+	    if(verb) sf_warning("zero offset imaging condition");
 	    cigs = fslice_init( acx.n*acy.n*acz.n,1,sizeof(float));
 
 	    img2o_init(amx,amy,amz,jcx,jcy,jcz,imag);
@@ -208,6 +247,7 @@ int main (int argc, char *argv[])
 	switch(itype[0]) {
 	    case 't':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2t); break;
 	    case 'x':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2x); break;
+	    case 'h':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2h); break;
 	    case 'o': default: srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2o); break;
 	}
 	srmig2_cw_close();
@@ -216,6 +256,7 @@ int main (int argc, char *argv[])
 	switch(itype[0]) {
 	    case 't':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2t); break;
 	    case 'x':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2x); break;
+	    case 'h':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2h); break;
 	    case 'o': default: srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2o); break;
 	}
 	srmig2_pw_close();
@@ -226,6 +267,7 @@ int main (int argc, char *argv[])
     switch(itype[0]) {
 	case 't':          img2t_close(imag,cigs); break;
 	case 'x':          img2x_close(imag,cigs); break;
+	case 'h':          img2h_close(imag,cigs); break;
 	case 'o': default: img2o_close(imag,cigs); break;
     }
 

@@ -58,11 +58,14 @@
                          (ihy-LOy)* ahx.n        + \
                          (ihx-LOx);
 
+#define MM(i,a) SF_MIN(SF_MAX(i,0),a.n-1)
+
 static axa amx,amy,amz;
 static axa acx,acy,acz;
 static int jcx,jcy,jcz;
 static axa ahx,ahy,ahz;
 static axa aht;
+static axa ahh,aha,ahb;
 static axa aw;
 
 static float complex  **tt; /* phase shift for time offset */
@@ -72,6 +75,7 @@ static float         ***qi;
 static float         ***qo;
 static float      ******qx;
 static float        ****qt;
+static float        ****qh;
 
 static int LOx,HIx;
 static int LOy,HIy;
@@ -87,10 +91,8 @@ void img2store( int imz,
 {
     int imx,imy;
 
-    LOOP( 
-	qs[imz][imy][imx] = ww_s[imy][imx];
-	qr[imz][imy][imx] = ww_r[imy][imx];
-	);
+    LOOP( qs[imz][imy][imx] = ww_s[imy][imx];
+	  qr[imz][imy][imx] = ww_r[imy][imx]; );
 }
 
 /*------------------------------------------------------------*/
@@ -171,7 +173,6 @@ void img2x_init(axa amx_,
 
     /* allocate image storage */
     qi = sf_floatalloc3(amx.n,amy.n,amz.n);
-    qo = sf_floatalloc3(amx.n,amy.n,amz.n); /* tmp for crosscorrelation */
     MLOOP( qi[imz][imy][imx] = 0.0; );
 
     /* allocate cigs storage */
@@ -218,7 +219,7 @@ void img2t_init(axa amx_,
 	   qr[imz][imy][imx] = 0.0; );
 
     /* allocate image storage */
-    qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
+    qi = sf_floatalloc3(amx.n,amy.n,amz.n);
     MLOOP( qi[imz][imy][imx] = 0.0; );
     
     /* allocate cigs storage */
@@ -241,6 +242,55 @@ void img2t_init(axa amx_,
 	}
     }
 }
+
+void img2h_init(axa amx_,
+		axa amy_,
+		axa amz_,
+		int jcx_,
+		int jcy_,
+		int jcz_,
+		axa ahh_,
+		axa aha_,
+		axa ahb_,
+		axa aw_,
+		fslice imag
+    )
+/*< initialize h-offset imaging condition >*/
+{
+    int imx,imy,imz;
+    int icx,icy,icz;
+    int  ihh;
+
+    amx = amx_;
+    amy = amy_;
+    amz = amz_;
+
+    jcx = jcx_; acx.n = amx.n / jcx;
+    jcy = jcy_; acy.n = amy.n / jcy;
+    jcz = jcz_; acz.n = amz.n / jcz;
+    
+    ahh = ahh_;
+    aha = aha_;
+    ahb = ahb_;
+    aw  = aw_;
+
+    /* allocate wavefield storage */
+    qs = sf_complexalloc3(amx.n,amy.n,amz.n);
+    qr = sf_complexalloc3(amx.n,amy.n,amz.n);
+    MLOOP( qs[imz][imy][imx] = 0.0; 
+	   qr[imz][imy][imx] = 0.0; );
+
+    /* allocate image storage */
+    qi = sf_floatalloc3(amx.n,amy.n,amz.n);
+    MLOOP( qi[imz][imy][imx] = 0.0; );
+    
+    /* allocate cigs storage */
+    qh = sf_floatalloc4(acx.n,acy.n,acz.n,ahh.n);
+    for( ihh=0; ihh<ahh.n; ihh++) {
+	CLOOP( qh[ihh][icz][icy][icx] = 0.0; );
+    }
+}
+
 /*------------------------------------------------------------*/
 
 void img2o( fslice imag,
@@ -273,7 +323,7 @@ void img2x( fslice imag,
 {
     int imx, imy, imz;
     int icx, icy, icz;
-    int ihx, ihy, ihz, ih;
+    int ihx, ihy, ihz;
     int imys,imyr,imzs;
     int imxs,imxr,imzr;
 
@@ -285,17 +335,51 @@ void img2x( fslice imag,
 	);
 
     /* cigs */
-    HLOOP( ih = IND(ihx,ihy,ihz);
-	   XLOOP(
-	       ;             qo[imz ][imy ][imx ] =
-	       crealf( conjf(qs[imzs][imys][imxs]) 
-		       *     qr[imzr][imyr][imxr]);
-	       );
-	   CLOOP(
-	       qx[ihz-LOz][ihy-LOy][ihx-LOx][icz][icy][icx] +=
-	       qo                           [icz][icy][icx];
-	       );
-	);
+/*    HLOOP(*/
+/*	   XLOOP(*/
+/*	       ;             qo[imz ][imy ][imx ] =*/
+/*	       crealf( conjf(qs[imzs][imys][imxs]) */
+/*		       *     qr[imzr][imyr][imxr]);*/
+/*	       );*/
+/*	   CLOOP(*/
+/*	       qx[ihz-LOz][ihy-LOy][ihx-LOx][icz    ][icy    ][icx    ] +=*/
+/*	       qo                           [icz*jcz][icy*jcy][icx*jcx];*/
+/*	       );*/
+/*	);*/
+
+    
+    for( ihz=LOz; ihz<HIz; ihz++){ 
+	for( ihy=LOy; ihy<HIy; ihy++){
+	    for( ihx=LOx; ihx<HIx; ihx++){
+
+		for( icz=0; icz< acz.n; icz++){ 
+		    imzs = icz*jcz - ihz,amz;
+		    imzr = icz*jcz + ihz,amz;
+		    if(imzs>=0 && imzs<amz.n && imzr>=0 && imzr<amz.n) {
+
+			for( icy=0; icy< acy.n; icy++){
+			    imys = icy*jcy - ihy,amy;
+			    imyr = icy*jcy + ihy,amy;
+			    if(imys>=0 && imys<amy.n && imyr>=0 && imyr<amy.n) {
+
+				for( icx=0; icx< acx.n; icx++){
+				    imxs = icx*jcx - ihx,amx;
+				    imxr = icx*jcx + ihx,amx;
+				    if(imxs>=0 && imxs<amx.n && imxr>=0 && imxr<amx.n) {
+
+					qx[ihz-LOz][ihy-LOy][ihx-LOx][icz][icy][icx] +=
+					    crealf( conjf(qs[imzs][imys][imxs]) 
+						    *     qr[imzr][imyr][imxr]);
+
+				    }
+				}
+			    }
+			}
+		    }
+		}		
+	    }
+	}
+    }
 }
 
 void img2t( fslice imag,
@@ -323,6 +407,80 @@ void img2t( fslice imag,
 		      *     qr     [icz*jcz][icy*jcy][icx*jcx] * wt ); 
 	    );
     }
+}
+
+void img2h( fslice imag,
+	    fslice cigs,
+	    int      iw)
+/*< Apply h-offset imaging condition >*/
+{
+    int imx,imy,imz;
+    int ihh,iha,ihb;
+    int icx,icy,icz;
+
+    int idx,idy,idz;
+    int isx,isy,isz;
+    int irx,iry,irz;
+
+    float hh,aa,bb; /* aa,bb in radians */
+    float hx,hy,hz;
+    complex float cs,cr;
+    float hscale;
+
+    /* imag */
+    MLOOP(
+	;             qi[imz][imy][imx] +=
+	crealf( conjf(qs[imz][imy][imx]) 
+		*     qr[imz][imy][imx] );
+	);
+
+    /* cigs */
+    for(ihh=0; ihh<ahh.n; ihh++) {                /* absolute offset */
+	hh = ahh.o + ihh * ahh.d;
+
+	hscale=1.;
+	if(ihh>0) {
+	    hscale=(hh+ahh.d)*aha.d;
+	}
+
+	for(ihb=0; ihb<ahb.n; ihb++) {        /* latitude  */
+	    bb = ahb.o + ihb*ahb.d;
+	    for(iha=0; iha<aha.n; iha++) {    /* longitude */
+		aa = aha.o + iha*aha.d;
+		
+		hz = hh * sin(aa);
+		hx = hh * cos(aa) * cos(bb);
+		hy = hh * sin(aa) * sin(bb);
+
+		/* nearest neighbour */
+		idx = (int)(hx / amx.d);
+		idy = (int)(hy / amy.d);
+		idz = (int)(hz / amz.d);
+
+		CLOOP(
+		    isx=MM(icx*jcx-idx,amx); 
+		    isy=MM(icy*jcy-idy,amy);
+		    isz=MM(icz*jcz-idz,amz);
+		    cs = qs[isz][isy][isx];
+
+		    irx=MM(icx*jcx+idx,amx);
+		    iry=MM(icy*jcy+idy,amy);
+		    irz=MM(icz*jcz+idz,amz);
+		    cr = qr[irz][iry][irx];
+
+		    /* 
+		       cs = qs @ x-hx,y-hy,z-hz
+		       cr = qr @ x+hx,y+hy,z+hz
+		    */
+
+/*		    qh[ihh][icz][icy][icx] += (sqrtf(hh)/ahh.d) * crealf( conjf(cs) * cr);    */
+
+		    qh[ihh][icz][icy][icx] += hscale * crealf( conjf(cs) * cr);    
+		    ); /* cx,cy,cz */
+
+	    } /* aa */
+	}     /* bb */	
+    }         /* hh */
 }
 
 /*------------------------------------------------------------*/
@@ -357,6 +515,21 @@ void img2t_close(fslice imag,
 
     free(*tt); 
     free( tt);
+}
+
+void img2h_close(fslice imag,
+		 fslice cigs)
+/*< deallocate >*/
+{
+    fslice_put(imag,0,qi[0][0]);
+    fslice_put(cigs,0,qh[0][0][0]);
+
+    img2_close();
+
+    free(***qh); 
+    free( **qh); 
+    free(  *qh); 
+    free(   qh);
 }
 
 void img2x_close(fslice imag,
