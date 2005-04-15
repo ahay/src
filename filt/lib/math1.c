@@ -54,6 +54,18 @@ static func functable[] = {
 
 #ifndef __cplusplus
 
+static float complex myabs(float complex c)
+{
+    c = cabsf(c);
+    return c;
+}
+
+static float complex myconj(float complex c)
+{
+    c = conjf(c);
+    return c;
+}
+
 typedef float complex (*cfunc)(float complex);
 static cfunc cfunctable[] = {
     ccosf,
@@ -71,7 +83,8 @@ static cfunc cfunctable[] = {
     cexpf,
     clogf,
     csqrtf,
-    conjf
+    myabs,
+    myconj
 };
 
 #endif
@@ -350,8 +363,8 @@ size_t sf_math_parse (char* output /* expression */,
 		} else if (0==strcmp(key,"exp"))   { *indx = 12;
 		} else if (0==strcmp(key,"log"))   { *indx = 13;
 		} else if (0==strcmp(key,"sqrt"))  { *indx = 14;
-		} else if (SF_FLOAT  ==datatype && 0==strcmp(key,"abs"))  { *indx = 15;
-		} else if (SF_COMPLEX==datatype && 0==strcmp(key,"conj")) { *indx = 15;
+		} else if (0==strcmp(key,"abs"))   { *indx = 15;
+		} else if (SF_COMPLEX==datatype && 0==strcmp(key,"conj")) { *indx = 16;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",

@@ -115,7 +115,7 @@ void eno3_apply (eno3 pnt,
 		 int i, int j, int k       /* grid location */, 
 		 float x, float y, float z /* offsets from grid */,
 		 float* f                  /* output data */, 
-		 float* f1                 /* output derivative */, 
+		 float* f1                 /* output derivative [3] */, 
 		 der what                  /* to compute [FUNC|DER|BOTH] */)
 /*< Apply interpolation. >*/
 {

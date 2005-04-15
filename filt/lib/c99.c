@@ -166,9 +166,6 @@ float fabsf(float x)
 /*< float fabs >*/
 { return (float) fabs(x);}
 
-#ifndef __APPLE__
-/*^*/
-
 float floorf(float x)
 /*< float floor >*/
 { return (float) floor(x);}
@@ -180,9 +177,6 @@ float ceilf(float x)
 float fmodf(float x, float y) 
 /*< float fmod >*/
 { return (float) fmod(x,y);}
-
-#endif
-/*^*/
 
 float cosf(float x) 
 /*< float cos >*/
