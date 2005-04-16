@@ -516,7 +516,10 @@ class TeXPaper(Environment):
                               'Color':Color},
                     TARFLAGS = '-cvz',
                     TARSUFFIX = '.tgz')
-        self.docdir = string.replace(os.getcwd(),'book','doc/book',1)
+        dir = os.getcwd()
+        self.docdir = string.replace(dir,'book','doc/book',1)
+        if self.docdir == dir:
+            self.docdir = os.path.join(dir,'doc')
         if acroread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:

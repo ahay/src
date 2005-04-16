@@ -25,23 +25,19 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "../include/extern.h"
-#include "../include/round.h"
 
-/*
- * dash1, gap1, dash2, gap2
- * in inches.
- */
+#include "_round.h"
+#include "device.h"
 
-dashvec (x1, y1, x2, y2, nfat, dashon)
-    int             x1, y1, x2, y2;
-    int             nfat, dashon;
+static double mod (double a, double b);
+
+void dashvec (device dev,
+	      int x1, int y1, int x2, int y2, int nfat, int dashon)
 {
-double          dash_ahead, dash_behind, dashdist, dist, sine, cosine;
-double          deltax, deltay, lambda1, lambda2;
-int             i, nextdash;
-double          dashmod ();
-int             xv1, xv2, yv1, yv2;
+    double  dash_ahead, dash_behind, dashdist, dist, sine, cosine;
+    double  deltax, deltay, lambda1, lambda2;
+    int i, nextdash;
+    int xv1, xv2, yv1, yv2;
 
 /*
  * If not a dashed line, should never have even been called.
@@ -53,14 +49,14 @@ int             xv1, xv2, yv1, yv2;
 /*
  * find current position in dashes
  */
-    dashpos = (float) dashmod ((double) dashpos, (double) dashsum);
-    dash_behind = dashpos;
+    dev->dashpos = (float) mod ((double) dev->dashpos, (double) dev->dashsum);
+    dash_behind = dev->dashpos;
 
     i = 0;
     dash_ahead = 0.;
     while (dash_ahead < dash_behind)
     {
-	dash_ahead += dashes[i];
+	dash_ahead += dev->dashes[i];
 	i++;
     }
     nextdash = i - 1;
@@ -69,9 +65,9 @@ int             xv1, xv2, yv1, yv2;
  */
     deltax = x2 - x1;
     deltay = y2 - y1;
-    lambda1 = 1. / pixels_per_inch;
-    lambda2 = aspect_ratio / pixels_per_inch;
-    dist = sqrt (lambda1 * lambda1 * deltax * deltax + lambda2 * lambda2 * deltay * deltay);
+    lambda1 = 1. / dev->pixels_per_inch;
+    lambda2 = dev->aspect_ratio / dev->pixels_per_inch;
+    dist = hypot (lambda1 * deltax, lambda2 * deltay);
     sine = deltay / dist;
     cosine = deltax / dist;
 
@@ -79,11 +75,11 @@ int             xv1, xv2, yv1, yv2;
  * draw the dashed line
  */
     for (dashdist = 0.;
-	 dash_ahead - dashpos < dist;
+	 dash_ahead - dev->dashpos < dist;
 	 dashdist += dash_ahead - dash_behind,
-	 dash_behind = dash_ahead,
-	 nextdash++,
-	 dash_ahead += dashes[nextdash % (dashon * 2)])
+	     dash_behind = dash_ahead,
+	     nextdash++,
+	     dash_ahead += dev->dashes[nextdash % (dashon * 2)])
     {
 	if (nextdash % 2 == 0)
 	{
@@ -91,31 +87,23 @@ int             xv1, xv2, yv1, yv2;
 	    yv1 = ROUND (y1 + sine * (dashdist));
 	    xv2 = ROUND (x1 + cosine * (dashdist + (dash_ahead - dash_behind)));
 	    yv2 = ROUND (y1 + sine * (dashdist + (dash_ahead - dash_behind)));
-
-	    dev.vector (xv1, yv1, xv2, yv2, nfat, 0);
+	    
+	    dev->vector (xv1, yv1, xv2, yv2, nfat, 0);
 	}
     }
-
+    
     if (nextdash % 2 == 0)
     {
 	xv1 = ROUND (x1 + cosine * (dashdist));
 	yv1 = ROUND (y1 + sine * (dashdist));
-
-	dev.vector (xv1, yv1, x2, y2, nfat, 0);
+	
+	dev->vector (xv1, yv1, x2, y2, nfat, 0);
     }
 
-/*
- * Increment to new position in dash pattern.
- */
-    dashpos += dashmod (dist, (double) dashsum);
+    dev->dashpos += mod (dist, (double) dev->dashsum);
 }
 
-/*
- * mod subroutine
- */
-double
-dashmod (a, b)
-    double          a, b;
+static double mod (double a, double b)
 {
     return (a - floor (a / b) * b);
 }

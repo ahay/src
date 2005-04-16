@@ -2,7 +2,7 @@ import os, sys, string
 sys.path.append('../..')
 import configure
 
-src = 'clip solve'
+src = 'clip dashvec device solve'
 
 try: # distribution version
     Import('env')
@@ -24,7 +24,7 @@ includes = map(lambda x: x+'.h',Split(src))
 
 objects = []
 for source in Split(src):
-    env.Include(source,prefix='sf_')
+    env.Include(source,prefix='vp_')
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
     objects.append(obj)
