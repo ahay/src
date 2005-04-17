@@ -42,17 +42,6 @@
  */
 #include <stdio.h>
 
-#if defined (HAVE_STDLIB_H)
-#include <stdlib.h>
-#else
-char           *malloc ();
-void            free ();
-#endif
-
-#include "../include/err.h"
-#include "../include/params.h"
-#include "../include/extern.h"
-
 static int      pix_on = 0, pix_off = 7;
 static float   *errline = NULL;
 static int      ialloc = 0;
@@ -62,7 +51,7 @@ static float    beta = 0.1875;
 static float    gamma = 0.3125;
 static float    delta = 0.0625;
 
-static int      dith256[256] = {
+static const int dith256[256] = {
     1, 128, 32, 160, 8, 136, 40, 168, 2, 130, 34, 162, 10, 138, 42, 170,
     192, 64, 224, 96, 200, 72, 232, 104, 194, 66, 226, 98, 202, 74, 234, 106,
     48, 176, 16, 144, 56, 184, 24, 152, 50, 178, 18, 146, 58, 186, 26, 154,
@@ -80,7 +69,7 @@ static int      dith256[256] = {
     63, 191, 31, 159, 55, 183, 23, 151, 61, 189, 29, 157, 53, 181, 21, 149,
     254, 127, 223, 95, 247, 119, 215, 87, 253, 125, 221, 93, 245, 117, 213, 85
 };
-static int      halftone32[64] = {
+static const int halftone32[64] = {
     92, 100, 124, 148, 164, 156, 132, 108,
     28, 20, 76, 220, 228, 236, 180, 36,
     4, 12, 84, 212, 252, 244, 172, 44,
@@ -91,129 +80,105 @@ static int      halftone32[64] = {
     204, 196, 140, 68, 52, 60, 116, 188
 };
 
-
-void
-dithline (inpline, outline, npixels, linenum, imethod)
-    unsigned char  *inpline, *outline;
-    int             npixels, linenum, imethod;
+void dithline (unsigned char  *inpline, 
+	       unsigned char  * outline, 
+	       int npixels, int linenum, int imethod)
 {
-int             greydata;
-int             i1, ipoint, jpoint;
-float           pixel, pixerr, nexterr;
-int             irand;
+    int   greydata, i1, ipoint, jpoint, irand;
+    float pixel, pixerr, nexterr;
 
-    switch (imethod)
-    {
-/* Random Dither */
-    case 1:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-#ifdef USG
-	    irand = (rand () & 255);
-#else				/* USG */
-	    irand = (random () & 255);
-#endif				/* USG */
-	    if (greydata > irand)
+    switch (imethod) {
+	case 1: /* Random Dither */
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_off;
-	    }
-	    else
-	    {
-		outline[i1] = pix_on;
-	    }
-	}
-	break;
+		greydata = inpline[i1];
+		irand = (random () & 255);
 
-/* Ordered Dither */
-    case 2:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-	    ipoint = i1 % 16;
-	    jpoint = linenum % 16;
-	    ipoint = ipoint * 16 + jpoint;
-	    if (greydata > dith256[ipoint])
-	    {
-		outline[i1] = pix_off;
+		if (greydata > irand) {
+		    outline[i1] = pix_off;
+		} else {
+		    outline[i1] = pix_on;
+		}
 	    }
-	    else
+	    break;
+	case 2: /* Ordered Dither */
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_on;
+		greydata = inpline[i1];
+		ipoint = i1 % 16;
+		jpoint = linenum % 16;
+		ipoint = ipoint * 16 + jpoint;
+		if (greydata > dith256[ipoint]) {
+		    outline[i1] = pix_off;
+		} else {
+		    outline[i1] = pix_on;
+		}
 	    }
-	}
-	break;
-
-/* Floyd-Steinberg */
-    case 3:
-	if (ialloc < npixels)
-	{
-	    if (ialloc > 0)
+	    break;
+	case 3: /* Floyd-Steinberg */
+	    if (ialloc < npixels)
 	    {
-		free ((void *) errline);
-		ialloc = 0;
-	    }
-	    if ((errline = (float *) malloc ((unsigned) npixels * sizeof (float))) == NULL)
-	    {
-		ERR (FATAL, name, "Can't allocate space for Floyd-Steinberg\n");
-		return;
+		if (ialloc > 0)
+		{
+		    free (errline);
+		    ialloc = 0;
+		}
+		
+		errline = sf_floatalloc(npixels);
 	    }
 	    ialloc = npixels;
 	    for (i1 = 0; i1 < npixels; i1++)
 	    {
 		errline[i1] = 0.;
 	    }
-	}
-	nexterr = errline[0];
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    pixel = inpline[i1];
-	    pixel += nexterr;
-	    if (pixel < 128)
-	    {
-		outline[i1] = pix_on;
-		pixerr = pixel;
-	    }
-	    else
-	    {
-		outline[i1] = pix_off;
-		pixerr = pixel - 255;
-	    }
-	    if (i1 < npixels - 1)
-	    {
-		nexterr = errline[i1 + 1] + pixerr * alpha;
-		errline[i1 + 1] = pixerr * delta;
-	    }
-	    if (i1 > 0)
-	    {
-		errline[i1 - 1] += pixerr * beta;
-	    }
-	    if (i1 == 0)
-		errline[i1] = pixerr * gamma;
-	    else
-		errline[i1] += pixerr * gamma;
-	}
-	break;
 
-/* 32 element halftone at 45 degrees */
-    case 4:
-    default:
-	for (i1 = 0; i1 < npixels; i1++)
-	{
-	    greydata = inpline[i1];
-	    ipoint = i1 % 8;
-	    jpoint = linenum % 8;
-	    ipoint = ipoint * 8 + jpoint;
-	    if (greydata > halftone32[ipoint])
+	    nexterr = errline[0];
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_off;
+		pixel = inpline[i1];
+		pixel += nexterr;
+		if (pixel < 128)
+		{
+		    outline[i1] = pix_on;
+		    pixerr = pixel;
+		}
+		else
+		{
+		    outline[i1] = pix_off;
+		    pixerr = pixel - 255;
+		}
+		if (i1 < npixels - 1)
+		{
+		    nexterr = errline[i1 + 1] + pixerr * alpha;
+		    errline[i1 + 1] = pixerr * delta;
+		}
+		if (i1 > 0)
+		{
+		    errline[i1 - 1] += pixerr * beta;
+		}
+		if (i1 == 0)
+		    errline[i1] = pixerr * gamma;
+		else
+		    errline[i1] += pixerr * gamma;
 	    }
-	    else
+	    break;
+	case 4: /* 32 element halftone at 45 degrees */
+	default:
+	    for (i1 = 0; i1 < npixels; i1++)
 	    {
-		outline[i1] = pix_on;
+		greydata = inpline[i1];
+		ipoint = i1 % 8;
+		jpoint = linenum % 8;
+		ipoint = ipoint * 8 + jpoint;
+		if (greydata > halftone32[ipoint])
+		{
+		    outline[i1] = pix_off;
+		}
+		else
+		{
+		    outline[i1] = pix_on;
+		}
 	    }
-	}
-	break;
+	    break;
     }
-    return;
 }

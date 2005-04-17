@@ -2,7 +2,7 @@ import os, sys, string
 sys.path.append('../..')
 import configure
 
-src = 'clip dashvec device solve'
+src = 'clip dashvec device dither solve'
 
 try: # distribution version
     Import('env')
