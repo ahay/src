@@ -31,12 +31,12 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main(int argc, char* argv[])
 {
-    int i, ncycle, niter, nd, dim, n1, n2, i1, i2;
-    int n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float **vr, **vi, **wt, **v0, **p=NULL, wti;
+    int i, j, niter, nd, dim, n1, n2, i1, i2;
+    int n[SF_MAX_DIM], box[SF_MAX_DIM], **rct;
+    float **vr, **vi, **wt, **v0, wti;
     char key[6];
-    bool diff, dip;
-    sf_file vrms, vint, weight, vout, slope;
+    bool nonstat;
+    sf_file vrms, vint, weight, vout, rect[SF_MAX_DIM];
 
     sf_init(argc,argv);
     vrms = sf_input("in");
@@ -45,28 +45,43 @@ int main(int argc, char* argv[])
 
     dim = sf_filedims (vrms,n);
 
+    nd = 1;
     for (i=0; i < dim; i++) {
-	snprintf(key,6,"rect%d",i+1);
-	if (!sf_getint(key,rect+i)) rect[i]=1;
+	nd *= n[i];
     }
-
-    if (!sf_getbool("diff",&diff)) diff=false;
-    /* if y, apply anisotropic diffusion */
-
-    if (!sf_getbool("dip",&dip)) dip=false;
-    /* if y, apply directional shaping */
-
-    nd = smoothder_init(dim, rect, n, diff, dip);
     n1 = n[0];
     n2 = nd/n1;
-
-    if (dip) {
-	slope = sf_input("slope");
-	p = sf_floatalloc2(n1,n2);
-	sf_floatread(p[0],nd,slope);
-	sf_fileclose(slope);
-    }
     
+    if (!sf_getbool("nonstat",&nonstat)) nonstat=false;
+    /* if y, use nonstationary smoothing */
+
+    rct = nonstat? sf_intalloc2(nd,dim): NULL;
+
+    for (i=0; i < dim; i++) {
+	snprintf(key,6,"rect%d",i+1);
+	if (nonstat) {
+	    box[i]=1;
+	    if (NULL != sf_getstring(key)) {
+		rect[i] = sf_input(key);
+		if (SF_INT != sf_gettype(rect[i])) 
+		    sf_error("Need int %s",key);
+		sf_intread(rct[i],nd,rect[i]);
+		sf_fileclose(rect[i]);
+		for (j=0; j < nd; j++) {
+		    if (rct[i][j] > box[i]) box[i] = rct[i][j];
+		}
+	    } else {
+		for (j=0; j < nd; j++) {
+		    rct[i][j]=1;
+		}
+	    }
+	} else {		
+	    if (!sf_getint(key,box+i)) box[i]=1;
+	}
+    }
+
+    smoothder_init(nd, dim, box, n, rct);
+
     vr = sf_floatalloc2(n1,n2);
     vi = sf_floatalloc2(n1,n2);
     wt = sf_floatalloc2(n1,n2);
@@ -77,9 +92,6 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
-
-    if (!sf_getint("ncycle",&ncycle)) ncycle=10;
-    /* number of cycles for anisotropic diffusion */
 
     wti = 0.;
     for (i2=0; i2 < n2; i2++) {
@@ -98,15 +110,8 @@ int main(int argc, char* argv[])
     }
     
     repeat_lop(false,true,nd,nd,v0[0],vr[0]);
-
-    if (dip) {
-	smoothdip(niter, p, wt[0], vr[0], vi[0]);
-    } else if (diff) {
-	smoothdiff(niter, ncycle, wt[0], vr[0], vi[0]);
-    } else {
-	smoothder(niter, wt[0], vr[0], vi[0]);
-    }
-
+    smoothder(niter, wt[0], vr[0], vi[0]);
+ 
     for (i2=0; i2 < n2; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    vi[i2][i1] -= v0[i2][i1];

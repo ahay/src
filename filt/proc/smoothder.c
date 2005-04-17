@@ -23,62 +23,51 @@
 
 #include "repeat.h"
 #include "trianglen.h"
-#include "trisl.h"
+#include "ntrianglen.h"
 #include "weight.h"
-#include "impl2.h"
 
-static int n, n2;
-static float **tmp, *tmp1, *tmp2;
-static bool diff, dip;
+static float *tmp;
+static bool nonstat;
+static sf_operator oper;
 
-int smoothder_init(int ndim   /* number of dimensions */, 
-		   int *rect  /* smoothing radius [ndim] */, 
-		   int *ndat  /* data size [ndim] */, 
-		   bool diff1 /* use anisotropic diffusion */, 
-		   bool dip1  /* use slope */) 
+void smoothder_init(int n     /* data size */, 
+		    int ndim  /* number of dimensions */, 
+		    int *rect /* smoothing radius [ndim] */, 
+		    int *ndat /* data size [ndim] */,
+		    int **len /* radius for nonstat smoothing [ndim][nd] */)
 /*< initialize >*/
 {
-    int i, n1;
+    int n1, n2;
     
-    n=1;
-    for (i=0; i <ndim; i++) {
-	n *= ndat[i];
-    }
-
     n1 = ndat[0];
     n2 = n/n1;
     
     repeat_init(n1,n2,sf_causint_lop);
-    trianglen_init(ndim,rect,ndat);
 
-    tmp = sf_floatalloc2(n1,n2);
-    tmp1 = tmp[0];
-    tmp2 = sf_floatalloc(n);
+    nonstat = (NULL != len);
 
-    diff = diff1;
-    dip = dip1;
-
-    sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, diff);    
-
-    if (dip) {
-	trisl_init(n1,n2,rect[0],rect[1]);
-    } else if (diff) {
-	impl2_init ((float) rect[0], (float) rect[1], 
-		    n1, n2, 1., 50., false);
+    if (nonstat) {
+	ntrianglen_init(ndim,rect,ndat,len);
+	oper = ntrianglen_lop;
+    } else {
+	trianglen_init(ndim,rect,ndat);
+	oper = trianglen_lop;
     }
 
-    return n;
+    tmp = sf_floatalloc(n);
+    sf_conjgrad_init(n, n, n, n, 1., 1.e-8, true, false);    
 }
 
 void smoothder_close(void)
 /*< free allocated storage >*/
 {
-    free(tmp1);
     free(tmp);
     sf_conjgrad_close();
-    trianglen_close();
-    if (diff) impl2_close();
-    if (dip) trisl_close();
+    if (nonstat) {
+	ntrianglen_close();
+    } else {
+	trianglen_close();
+    }
 }
 
 void smoothder(int niter     /* number of iterations */, 
@@ -86,63 +75,11 @@ void smoothder(int niter     /* number of iterations */,
 	       float* data   /* input data */, 
 	       float* der    /* output derivative */) 
 /*< find the derivative >*/
-{
- 
+{ 
     if (NULL != weight) {
 	weight_init(weight);
-	sf_conjgrad(weight_lop,repeat_lop,trianglen_lop,tmp2,der,data,niter);
+	sf_conjgrad(weight_lop,repeat_lop,oper,tmp,der,data,niter);
     } else {
-	sf_conjgrad(NULL,repeat_lop,trianglen_lop,tmp2,der,data,niter);
+	sf_conjgrad(NULL,repeat_lop,oper,tmp,der,data,niter);
     }
 }
-
-void smoothdip(int niter     /* number of iterations */, 
-	       float** dip   /* slope */, 
-	       float* weight /* data weighting */, 
-	       float* data   /* input data */, 
-	       float* der    /* output derivative */) 
-/*< find the derivative along slope >*/
-{
-    trisl_set(dip);
-
-    if (NULL != weight) {
-	weight_init(weight);
-	sf_conjgrad(weight_lop,repeat_lop,trisl_lop,tmp2,der,data,niter);
-    } else {
-	sf_conjgrad(NULL,repeat_lop,trisl_lop,tmp2,der,data,niter);
-    }
-}
-
-
-void smoothdiff(int niter     /* number of iterations */, 
-		int ncycle    /* number of cycles */, 
-		float* weight /* data weighting */, 
-		float* data   /* input data */, 
-		float* der    /* output derivative */) 
-/*< find the derivative using anisotropic diffusion >*/
-{
-    int i, iter;
-
-    for (i=0; i < n; i++) {
-	tmp2[i] = 0.;
-    }
-
-    if (NULL != weight) {
-	weight_init(weight);
-	sf_conjgrad(weight_lop,repeat_lop,impl2_lop,tmp2,der,data,niter);
-    } else {
-	sf_conjgrad(NULL,repeat_lop,impl2_lop,tmp2,der,data,niter);
-    }
-	
-    for (iter=0; iter < ncycle; iter++) {
-	/*
-	for (i=0; i < n; i++) {
-	    tmp1[i] = der[i];
-	}
-	impl2_set(tmp);
-	*/
-	sf_conjgrad((NULL!=weight)? weight_lop: NULL,
-		    repeat_lop,impl2_lop,tmp2,der,data,niter/ncycle);
-    }    
-}
-
