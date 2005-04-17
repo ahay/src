@@ -40,7 +40,9 @@
  * Steve Cole, April 1987
  *
  */
-#include <stdio.h>
+#include <stdlib.h>
+
+#include "alloc.h"
 
 static int      pix_on = 0, pix_off = 7;
 static float   *errline = NULL;
