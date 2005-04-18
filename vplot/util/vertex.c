@@ -16,10 +16,20 @@
  *	Please log any further modifications made to this file:
  */
 
+struct vertex
+{
+    int x;
+    int y;
+    struct vertex *next;		/* pointer to next vertex */
+    struct vertex *last;		/* pointer to last vertex */
+    struct vertex *soft;		/* pointer to some other vertex */
+};
+/*^*/
+
 int dupside (struct vertex *base)
-/* Determine if other sides in the polygon are
+/*< Determine if other sides in the polygon are
  * identical to the side specified by the
- * vertices v and v->b. */
+ * vertices v and v->b. >*/
 {
     struct vertex *v;
     int    x1, x2, y1, y2;
