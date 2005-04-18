@@ -37,6 +37,7 @@ int main (int argc, char *argv[])
 			     t = time offset
 			  */
     bool hsym;
+    float vpvs;
 
     axa amx,amy,amz;
     axa alx,aly;
@@ -79,6 +80,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(    "tmx",&tmx  ))   tmx =     0; /* taper on x   */
     if (!sf_getint(    "tmy",&tmy  ))   tmy =     0; /* taper on y   */
 
+    if (!sf_getfloat( "vpvs",&vpvs))   vpvs = 1.;
     /*------------------------------------------------------------*/
     /* SLOWNESS */
 
@@ -184,6 +186,7 @@ int main (int argc, char *argv[])
 
 	    img2x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag);
 	    break;
+	case 'g':
 	case 'h':
 	    if(verb) sf_warning("absolute offset imaging condition");
 
@@ -216,7 +219,7 @@ int main (int argc, char *argv[])
 	    oaxa(Fc,&ahh,4);
 	    cigs = fslice_init( acx.n*acy.n*acz.n*ahh.n,1,sizeof(float));
 
-	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag);
+	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag,vpvs);
 
 	    break;
 	case 'o':
@@ -248,6 +251,7 @@ int main (int argc, char *argv[])
 	    case 't':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2t); break;
 	    case 'x':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2x); break;
 	    case 'h':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2h); break;
+	    case 'g':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2g); break;
 	    case 'o': default: srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2o); break;
 	}
 	srmig2_cw_close();
@@ -257,6 +261,7 @@ int main (int argc, char *argv[])
 	    case 't':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2t); break;
 	    case 'x':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2x); break;
 	    case 'h':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2h); break;
+	    case 'g':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2g); break;
 	    case 'o': default: srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2o); break;
 	}
 	srmig2_pw_close();
@@ -268,6 +273,7 @@ int main (int argc, char *argv[])
 	case 't':          img2t_close(imag,cigs); break;
 	case 'x':          img2x_close(imag,cigs); break;
 	case 'h':          img2h_close(imag,cigs); break;
+	case 'g':          img2h_close(imag,cigs); break;
 	case 'o': default: img2o_close(imag,cigs); break;
     }
 

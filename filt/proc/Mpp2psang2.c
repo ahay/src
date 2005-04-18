@@ -26,7 +26,8 @@ int main(int argc, char* argv[])
     bool inv;
     int nt, na, it, ia, nw, n3, i3;
     float **gather, *trace, *modl, *coord, *gamma; 
-    float da, a0, r, t;
+    float da, a0, t,g,gg;
+/*    float r;*/
     sf_file in, out, vpvs;
 
     sf_init (argc,argv);
@@ -63,16 +64,19 @@ int main(int argc, char* argv[])
 	sf_floatread(gather[0],nt*na,in);
 
 	for (it=0; it < nt; it++) {
-	    r = (1.-gamma[it])/(1.+gamma[it]);
-	    r *= r;
-	    if (inv) r = -r;
+/*	    r = (1.-gamma[it])/(1.+gamma[it]);*/
+/*	    r *= r;*/
+	    g = gamma[it];
+	    gg=g*g;
+/*	    if (inv) r = -r;*/
 
 	    for (ia=0; ia < na; ia++) {
 		t = a0+ia*da;
-		/* t0 */
-/*		coord[ia] = sqrtf((t*t+r)/(1+r*t*t))*SF_SIG(t);*/
+/*		coord[ia] = sqrtf((t*t+r)/(1+r*t*t))*SF_SIG(t); */
+/*		coord[ia] = (1+g)*(1+g)*t / (2*g + sqrtf( 4*gg - (gg-1)*(gg-1) *t*t));*/
 		
-		coord[ia] = sqrtf((t*t+r)/(1+r*t*t));
+		coord[ia] = 4*g*t / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
+
 		trace[ia] = gather[ia][it];
 	    }
 	    prefilter_apply (na,trace);

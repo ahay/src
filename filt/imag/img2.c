@@ -81,6 +81,7 @@ static int LOx,HIx;
 static int LOy,HIy;
 static int LOz,HIz;
 
+static float vpvs;
 /*------------------------------------------------------------*/
 
 void img2store( int imz,
@@ -253,7 +254,8 @@ void img2h_init(axa amx_,
 		axa aha_,
 		axa ahb_,
 		axa aw_,
-		fslice imag
+		fslice imag,
+		float vpvs_
     )
 /*< initialize h-offset imaging condition >*/
 {
@@ -273,6 +275,8 @@ void img2h_init(axa amx_,
     aha = aha_;
     ahb = ahb_;
     aw  = aw_;
+
+    vpvs = vpvs_;
 
     /* allocate wavefield storage */
     qs = sf_complexalloc3(amx.n,amy.n,amz.n);
@@ -418,7 +422,9 @@ void img2h( fslice imag,
     int ihh,iha,ihb;
     int icx,icy,icz;
 
-    int idx,idy,idz;
+    int dsx,dsy,dsz;
+    int drx,dry,drz;
+
     int isx,isy,isz;
     int irx,iry,irz;
 
@@ -439,9 +445,7 @@ void img2h( fslice imag,
 	hh = ahh.o + ihh * ahh.d;
 
 	hscale=1.;
-	if(ihh>0) {
-	    hscale=(hh+ahh.d)*aha.d;
-	}
+	if(ihh>0) hscale=(hh+ahh.d)*aha.d;
 
 	for(ihb=0; ihb<ahb.n; ihb++) {        /* latitude  */
 	    bb = ahb.o + ihb*ahb.d;
@@ -452,28 +456,31 @@ void img2h( fslice imag,
 		hx = hh * cos(aa) * cos(bb);
 		hy = hh * sin(aa) * sin(bb);
 
-		/* nearest neighbour */
-		idx = (int)(hx / amx.d);
-		idy = (int)(hy / amy.d);
-		idz = (int)(hz / amz.d);
+		/* nearest neighbour - source dh */
+		dsx = (int)( (2.*vpvs/(1.+vpvs))*hx / amx.d);
+		dsy = (int)( (2.*vpvs/(1.+vpvs))*hy / amy.d);
+		dsz = (int)( (2.*vpvs/(1.+vpvs))*hz / amz.d);
+
+		/* nearest neighbour - receiver dh */
+		drx = (int)( (2.*  1./(1.+vpvs))*hx / amx.d);
+		dry = (int)( (2.*  1./(1.+vpvs))*hy / amy.d);
+		drz = (int)( (2.*  1./(1.+vpvs))*hz / amz.d);
 
 		CLOOP(
-		    isx=MM(icx*jcx-idx,amx); 
-		    isy=MM(icy*jcy-idy,amy);
-		    isz=MM(icz*jcz-idz,amz);
+		    isx=MM(icx*jcx-dsx,amx); 
+		    isy=MM(icy*jcy-dsy,amy);
+		    isz=MM(icz*jcz-dsz,amz);
 		    cs = qs[isz][isy][isx];
 
-		    irx=MM(icx*jcx+idx,amx);
-		    iry=MM(icy*jcy+idy,amy);
-		    irz=MM(icz*jcz+idz,amz);
+		    irx=MM(icx*jcx+dsx,amx);
+		    iry=MM(icy*jcy+dsy,amy);
+		    irz=MM(icz*jcz+dsz,amz);
 		    cr = qr[irz][iry][irx];
 
 		    /* 
 		       cs = qs @ x-hx,y-hy,z-hz
 		       cr = qr @ x+hx,y+hy,z+hz
 		    */
-
-/*		    qh[ihh][icz][icy][icx] += (sqrtf(hh)/ahh.d) * crealf( conjf(cs) * cr);    */
 
 		    qh[ihh][icz][icy][icx] += hscale * crealf( conjf(cs) * cr);    
 		    ); /* cx,cy,cz */
@@ -483,6 +490,82 @@ void img2h( fslice imag,
     }         /* hh */
 }
 
+void img2g( fslice imag,
+	    fslice cigs,
+	    int      iw)
+/*< Apply h-offset imaging condition >*/
+{
+    int imx,imy,imz;
+    int ihh,iha,ihb;
+    int icx,icy,icz;
+
+    int dsx,dsy,dsz;
+    int drx,dry,drz;
+
+    int isx,isy,isz;
+    int irx,iry,irz;
+
+    float hh,aa,bb; /* aa,bb in radians */
+    float hx,hy,hz;
+    complex float cs,cr;
+    float hscale;
+
+    /* imag */
+    MLOOP(
+	;             qi[imz][imy][imx] +=
+	crealf( conjf(qs[imz][imy][imx]) 
+		*     qr[imz][imy][imx] );
+	);
+
+    /* cigs */
+    for(ihh=0; ihh<ahh.n; ihh++) {                /* absolute offset */
+	hh = ahh.o + ihh * ahh.d;
+
+	hscale=1.;
+	if(ihh>0) hscale=(hh+ahh.d)*aha.d;
+
+	for(ihb=0; ihb<ahb.n; ihb++) {        /* latitude  */
+	    bb = ahb.o + ihb*ahb.d;
+	    for(iha=0; iha<aha.n; iha++) {    /* longitude */
+		aa = aha.o + iha*aha.d;
+		
+		hz = hh * sin(aa);
+		hx = hh * cos(aa) * cos(bb);
+		hy = hh * sin(aa) * sin(bb);
+
+		/* nearest neighbour - source dh */
+		dsx = (int)( (2.*vpvs/(1.+vpvs))*hx / amx.d);
+		dsy = (int)( (2.*vpvs/(1.+vpvs))*hy / amy.d);
+		dsz = 0;
+
+		/* nearest neighbour - receiver dh */
+		drx = (int)( (2.*  1./(1.+vpvs))*hx / amx.d);
+		dry = (int)( (2.*  1./(1.+vpvs))*hy / amy.d);
+		drz = 0;
+
+		CLOOP(
+		    isx=MM(icx*jcx-dsx,amx); 
+		    isy=MM(icy*jcy-dsy,amy);
+		    isz=MM(icz*jcz-dsz,amz);
+		    cs = qs[isz][isy][isx];
+
+		    irx=MM(icx*jcx+dsx,amx);
+		    iry=MM(icy*jcy+dsy,amy);
+		    irz=MM(icz*jcz+dsz,amz);
+		    cr = qr[irz][iry][irx];
+
+		    /* 
+		       cs = qs @ x-hx,y-hy,z-hz
+		       cr = qr @ x+hx,y+hy,z+hz
+		    */
+
+		    qh[ihh][icz][icy][icx] += hscale * crealf( conjf(cs) * cr);    
+		    ); /* cx,cy,cz */
+
+	    } /* aa */
+	}     /* bb */	
+    }         /* hh */
+}
 /*------------------------------------------------------------*/
 
 void img2o_close(fslice imag,
