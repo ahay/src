@@ -22,8 +22,10 @@
 */
 
 #include <mex.h>
-
 #include <rsf.h>
+
+extern __off_t ftello (FILE *__stream);
+extern int fseeko (FILE *__stream, __off_t __off, int __whence);
 
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
@@ -36,6 +38,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     float *p;
     char buf[BUFSIZ], key[5];
     bool same;
+    off_t pos=0;
+    static off_t shift=0;
     FILE *file2;
     sf_file file;
 
@@ -92,9 +96,11 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	file = sf_input(tag);
 	filename = sf_histstring(file,"in");
 	if (NULL == filename) mexErrMsgTxt("No in= in file.");
-	file2 = fopen(filename,"wb");
+	file2 = fopen(filename,"w+b");
 	if (NULL == file2) 
 	    mexErrMsgTxt("Could not open binary file for writing.");
+	pos = ftello(file2);
+	fseeko(file2,shift,SEEK_CUR);
     } else {
 	file = sf_output(tag);
 	file2 = NULL;
@@ -141,5 +147,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	}
     }
 
+    if (same) {
+	shift = ftello(file2) - pos;
+	fclose(file2);
+    }
     sf_fileclose(file);
 }
