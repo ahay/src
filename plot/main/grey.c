@@ -163,7 +163,8 @@ int main(int argc, char* argv[])
 	/* verbosity flag */
     } /* if !charin */
 
-    if (charin || !sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
+    if (charin || (!sf_getbool ("wantscalebar",&scalebar) && 
+		   !sf_getbool ("scalebar",&scalebar))) scalebar = false;
     /* if y, draw scalebar */
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&barmin);

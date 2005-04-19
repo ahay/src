@@ -80,7 +80,8 @@ int main (int argc, char* argv[])
 
     z = sf_floatalloc2(n1,n2);
 
-    if (!sf_getbool ("wantscalebar",&scalebar) ||
+    if ((!sf_getbool ("wantscalebar",&scalebar) &&
+	 !sf_getbool ("scalebar",&scalebar)) ||
 	NULL == sf_getstring("barlabel")) scalebar = false;
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&bmin);

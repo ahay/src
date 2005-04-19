@@ -92,7 +92,8 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
     if (!sf_getbool ("yreverse",&yreverse)) yreverse = yreverse1;
     if (!sf_getbool ("pad",&pad)) pad = pad1;
-    if (!sf_getbool ("wantscalebar",&scalebar)) scalebar = false;
+    if (!sf_getbool ("wantscalebar",&scalebar) && 
+	!sf_getbool ("scalebar",&scalebar)) scalebar = false;
 
     if (pad) { /* 4% stretch */
 	mid = 0.5*(umin1+umax1);
