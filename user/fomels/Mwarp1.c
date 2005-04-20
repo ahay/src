@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h> 
 
-#include "int1.h"
 #include "prefilter.h"
 #include "divn.h"
 
@@ -149,11 +148,11 @@ int main(int argc, char* argv[])
 
     for (iter=0; iter < nliter; iter++) {
 	for (i2=0; i2 < m2; i2++) {
-	    int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
-	    int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
+	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
+	    sf_int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
 	    
-	    int1_init (coord+i2*n2, o1, d1, n1, sf_spline_der, order, n2);
-	    int1_lop (false,false,n1,n2,inp+i2*n1,der+i2*n2);
+	    sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_der, order, n2);
+	    sf_int1_lop (false,false,n1,n2,inp+i2*n1,der+i2*n2);
 	}
 
 	if (!noamp) {
@@ -220,8 +219,8 @@ int main(int argc, char* argv[])
     }
 
     for (i2=0; i2 < m2; i2++) {
-	int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
-	int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
+	sf_int1_init (coord+i2*n2, o1, d1, n1, sf_spline_int, order, n2);
+	sf_int1_lop (false,false,n1,n2,inp+i2*n1,out+i2*n2);
 
 	for (i1=0; i1 < n2; i1++) {
 	    warp[i2*n2+i1] = coord[i2*n2+i1] - (o2+i1*d2);

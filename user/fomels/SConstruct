@@ -4,9 +4,9 @@ import configure
 
 progs = '''
 
-abalance angle angle2 approx bandpass bin1 blindpick blindpick2 dealias2
+abalance angle angle2 approx bandpass blindpick blindpick2 dealias2
 deblur deriv dijkstra dip dip2 dips dix envelope explanesignoi expsignoi flat
-flat3 focus green miss2 modrefl ofilp pick0 pwd shapebin smoothder 
+flat3 focus green miss2 ofilp pick0 pwd shapebin smoothder 
 tree warp1 warpadd window3 ztrace
 
 '''

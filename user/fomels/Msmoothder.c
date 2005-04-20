@@ -22,13 +22,11 @@ Applies D/(I + eps*D'D)
 
 #include <rsf.h>
 
-#include "banded.h"
-
 int main(int argc, char* argv[])
 { 
     int i1, n1, i2, n2;
     float *trace, *dtrace, d1, eps, *diag, **offd;
-    bands slv;
+    sf_bands slv;
     sf_file in, der;
 
     sf_init (argc, argv);
@@ -57,14 +55,14 @@ int main(int argc, char* argv[])
     diag[1] = diag[n1-2] = 1.+5.*eps;
     offd[0][0] = offd[0][n1-2] = -2.*eps;
 
-    slv = banded_init(n1,2);
-    banded_define (slv,diag,offd);
+    slv = sf_banded_init(n1,2);
+    sf_banded_define (slv,diag,offd);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
 	/* smooth */
-	banded_solve(slv,trace);
+	sf_banded_solve(slv,trace);
 
 	/* differentiate */
 	for (i1=0; i1 < n1-1; i1++) {

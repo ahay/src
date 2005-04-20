@@ -17,31 +17,31 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-
 #include "banded.h"
 
-#ifndef _banded_h
+#include "alloc.h"
 
-typedef struct Bands *bands;
+#ifndef _sf_banded_h
+
+typedef struct sf_Bands *sf_bands;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Bands {
+struct sf_Bands {
     int n, band;
     float *d, **o;
 };
 
-bands banded_init (int n    /* matrix size */, 
+sf_bands sf_banded_init (int n    /* matrix size */, 
 		   int band /* band size */)
 /*< initialize >*/
 {
-    bands slv;
+    sf_bands slv;
     int i;
     
-    slv = (bands) sf_alloc (1,sizeof(*slv));
+    slv = (sf_bands) sf_alloc (1,sizeof(*slv));
     slv->o = (float**) sf_alloc (band,sizeof(float*));
     for (i = 0; i < band; i++) {
 	slv->o[i] = sf_floatalloc (n-1-i);
@@ -53,7 +53,7 @@ bands banded_init (int n    /* matrix size */,
     return slv;
 }
 
-void banded_define (bands slv, 
+void sf_banded_define (sf_bands slv, 
 		    float* diag  /* diagonal [n] */, 
 		    float** offd /* off-diagonal [band][n] */)
 /*< define the matrix >*/
@@ -88,7 +88,7 @@ void banded_define (bands slv,
     }
 }
 
-void banded_const_define (bands slv, 
+void sf_banded_const_define (sf_bands slv, 
 			  float diag        /* diagonal */, 
 			  const float* offd /* off-diagonal [band] */)
 /*< define matrix with constant diagonal coefficients >*/
@@ -123,7 +123,7 @@ void banded_const_define (bands slv,
     }
 }
 
-void banded_solve (bands slv, float* b)
+void sf_banded_solve (sf_bands slv, float* b)
 /*< invert (in place) >*/
 {
     int k, m;
@@ -155,7 +155,7 @@ void banded_solve (bands slv, float* b)
     }
 }
 
-void banded_close (bands slv)
+void sf_banded_close (sf_bands slv)
 /*< free allocated storage >*/
 {
     int i;

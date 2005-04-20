@@ -20,13 +20,12 @@
 #include <rsf.h>
 
 #include "interpd.h"
-#include "banded.h"
 #include "bandpass.h"
 #include "burg.h"
 #include "pwd.h"
 
 static int n1, nb;
-static bands slv;
+static sf_bands slv;
 static float **offd, eps;
 static pwd w1, w2;
 
@@ -41,7 +40,7 @@ void interp_init (int n   /* trace length */,
 
     eps = e;
   
-    slv = banded_init (n1, nb);
+    slv = sf_banded_init (n1, nb);
     offd = sf_floatalloc2 (n1,nb);
 
     bandpass_init();
@@ -52,7 +51,7 @@ void interp_init (int n   /* trace length */,
 void interp_close (void)
 /*< free allocated storage >*/
 {
-    banded_close (slv);
+    sf_banded_close (slv);
     free (*offd);
     free (offd);
     pwd_close (w1);
@@ -81,7 +80,7 @@ void interp2(int n2      /* number of traces */,
 	pwd_define (true,  w1, pp[i2  ], diag, offd);
 	pwd_define (false, w2, pp[i2+1], diag, offd);
 
-	banded_define (slv, diag, offd);
+	sf_banded_define (slv, diag, offd);
 
 	pwd_set (false, w1, in[i2],   offd[0], diag);
 	pwd_set (false, w2, in[i2+1], offd[1], diag);
@@ -89,7 +88,7 @@ void interp2(int n2      /* number of traces */,
 	    diag[i1] = offd[0][i1] + offd[1][i1];
 	}
 
-	banded_solve (slv, diag);
+	sf_banded_solve (slv, diag);
 	bandpass (n1, diag); 
     }
     for (i1=0; i1 < n1; i1++) {
