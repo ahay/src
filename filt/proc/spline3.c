@@ -20,11 +20,10 @@
 #include <rsf.h> 
 
 #include "spline3.h"
-#include "tridiagonal.h"
 
 static int n;
 static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx;
-static tris slv;
+static sf_tris slv;
 
 void spine3_init(int n1 /*< trace length >*/) 
 /*< initialize >*/
@@ -39,7 +38,7 @@ void spine3_init(int n1 /*< trace length >*/)
     c = coeff[2];
     d = coeff[3];
 
-    slv = tridiagonal_init (n-2);
+    slv = sf_tridiagonal_init (n-2);
 }
 
 void spine3_init1(int n1, float o1, float d1)
@@ -55,8 +54,8 @@ void spine3_init1(int n1, float o1, float d1)
     c = coeff[2];
     d = coeff[3];
 
-    slv = tridiagonal_init (n-2);
-    tridiagonal_const_define (slv,4.*d1,d1);
+    slv = sf_tridiagonal_init (n-2);
+    sf_tridiagonal_const_define (slv,4.*d1,d1);
 }
 
 void spline3_close (void) 
@@ -66,7 +65,7 @@ void spline3_close (void)
     free (a);
     free (*coeff);
     free (coeff);
-    tridiagonal_close (slv);
+    sf_tridiagonal_close (slv);
 }
 
 void spline3_close1 (void) 
@@ -74,7 +73,7 @@ void spline3_close1 (void)
 {
     free (*coeff);
     free (coeff);
-    tridiagonal_close (slv);
+    sf_tridiagonal_close (slv);
 }
 
 void spline_coeffs(float** table)
@@ -96,8 +95,8 @@ void spline_coeffs(float** table)
     c[0] = 0;
 
     /* solve the tridiagonal system */
-    tridiagonal_define (slv,a,h);
-    tridiagonal_solve(slv,c+1);
+    sf_tridiagonal_define (slv,a,h);
+    sf_tridiagonal_solve(slv,c+1);
 
     for (k=0; k < n-1; k++) {
 	if (k < n-2) {
@@ -127,7 +126,7 @@ void spline_coeffs1(float* table1)
     c[0] = 0;
 
     /* solve the tridiagonal system */
-    tridiagonal_solve(slv,c+1);
+    sf_tridiagonal_solve(slv,c+1);
 
     for (k=0; k < n-1; k++) {
 	if (k < n-2) {

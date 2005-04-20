@@ -17,29 +17,29 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "alloc.h"
 
 #include "tridiagonal.h"
 
-#ifndef _tridiagonal_h
+#ifndef _sf_tridiagonal_h
 
-typedef struct Tris *tris;
+typedef struct sf_Tris *sf_tris;
 /* abstract data type */
 /*^*/
 
 #endif
 
-struct Tris {
+struct sf_Tris {
     int n;
     float *d[2], *o[2], *x[2];  
 };
 
-tris tridiagonal_init (int n /* matrix size */)
+sf_tris sf_tridiagonal_init (int n /* matrix size */)
 /*< initialize >*/
 {
-    tris slv;
+    sf_tris slv;
     
-    slv = (tris) sf_alloc (1, sizeof(*slv));
+    slv = (sf_tris) sf_alloc (1, sizeof(*slv));
     
     slv->n = n;
     slv->d[0] = sf_floatalloc (n);
@@ -54,7 +54,7 @@ tris tridiagonal_init (int n /* matrix size */)
     return slv;
 }
 
-void tridiagonal_define (tris slv    /* solver object */, 
+void sf_tridiagonal_define (sf_tris slv    /* solver object */, 
 			 float* diag /* diagonal */, 
 			 float* offd /* off-diagonal */)
 /*< fill the matrix >*/
@@ -76,7 +76,7 @@ void tridiagonal_define (tris slv    /* solver object */,
     }
 }
 
-void tridiagonal_const_define (tris slv   /* solver object */, 
+void sf_tridiagonal_const_define (sf_tris slv   /* solver object */, 
 			       float diag /* diagonal */, 
 			       float offd /* off-diagonal */)
 /*< fill the matrix for the Toeplitz case >*/
@@ -95,7 +95,7 @@ void tridiagonal_const_define (tris slv   /* solver object */,
     }
 }
 
-void tridiagonal_solve (tris slv /* solver object */, 
+void sf_tridiagonal_solve (sf_tris slv /* solver object */, 
 			float* b /* in - right-hand side, out - solution */)
 /*< invert the matrix >*/
 {
@@ -119,7 +119,7 @@ void tridiagonal_solve (tris slv /* solver object */,
     }
 }
 
-void tridiagonal_close (tris slv)
+void sf_tridiagonal_close (sf_tris slv)
 /*< free allocated storage >*/
 {
     free (slv->d[0]); free (slv->d[1]); 

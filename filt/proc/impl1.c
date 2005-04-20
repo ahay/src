@@ -24,12 +24,11 @@
 
 #include "impl1.h"
 #include "edge.h"
-#include "tridiagonal.h"
 
 static float t, *w, *d1, *w1;
 static int nstep, n, nclip;
 static bool up;
-static tris slv;
+static sf_tris slv;
 
 void impl1_init (float r     /* radius */, 
 		 int n1      /* data size */, 
@@ -56,7 +55,7 @@ void impl1_init (float r     /* radius */,
     d1 = sf_floatalloc(n);
     w1 = sf_floatalloc(n);
 
-    slv = tridiagonal_init (n);
+    slv = sf_tridiagonal_init (n);
 
     nclip = (int) n*pclip*0.01;
     if (nclip < 1) {
@@ -76,7 +75,7 @@ void impl1_close (void)
     free(d1);
     free(w1);
 
-    tridiagonal_close (slv);
+    sf_tridiagonal_close (slv);
 }
 
 void impl1_apply (float *x)
@@ -134,7 +133,7 @@ void impl1_apply (float *x)
 	}
 	d1[n-1] -= w1[n-2];
 
-	tridiagonal_define (slv, d1, w1); 
-	tridiagonal_solve (slv, x);
+	sf_tridiagonal_define (slv, d1, w1); 
+	sf_tridiagonal_solve (slv, x);
     }
 }

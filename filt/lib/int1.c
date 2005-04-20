@@ -19,8 +19,12 @@
 
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
+#include "_bool.h"
+#include "_defs.h"
+#include "alloc.h"
+#include "error.h"
+#include "adjnull.h"
+#include "interp.h"
 
 #include "int1.h"
 
@@ -28,7 +32,7 @@ static int nd, nf, m1, *nx;
 static bool *mask, allocated=false;
 static float **w1;
 
-void  int1_init (float* coord               /* cooordinates [nd] */, 
+void  sf_int1_init (float* coord               /* cooordinates [nd] */, 
 		 float o1, float d1, int n1 /* axis */, 
 		 sf_interpolator interp     /* interpolation function */, 
 		 int nf_in                  /* interpolator length */, 
@@ -64,7 +68,7 @@ void  int1_init (float* coord               /* cooordinates [nd] */,
     }
 }
 
-void  int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
+void  sf_int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
 /*< linear operator >*/
 { 
     int id, i0, i, im;
@@ -88,7 +92,7 @@ void  int1_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
     }
 }
 
-void int1_close (void)
+void sf_int1_close (void)
 /*< free allocated storage >*/
 {
     if (allocated) {

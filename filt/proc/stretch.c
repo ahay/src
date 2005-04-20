@@ -23,7 +23,6 @@
 /*^*/
 
 #include "stretch.h"
-#include "tridiagonal.h"
 
 #ifndef _stretch_h
 
@@ -40,7 +39,7 @@ struct Map {
     int *x; 
     bool *m, narrow;
     float *w, *diag, *offd;
-    tris slv;
+    sf_tris slv;
 };
 
 map stretch_init (int n1, float o1, float d1 /* regular axis */, 
@@ -66,7 +65,7 @@ map stretch_init (int n1, float o1, float d1 /* regular axis */,
     str->diag = sf_floatalloc (n1);
     str->offd = sf_floatalloc (n1-1);
   
-    str->slv = tridiagonal_init (n1);
+    str->slv = sf_tridiagonal_init (n1);
 
     return str;
 }
@@ -106,7 +105,7 @@ void stretch_define (map str, const float* coord)
 	str->offd[ix]   += r1 * rx;
     }
     
-    tridiagonal_define (str->slv, str->diag, str->offd);
+    sf_tridiagonal_define (str->slv, str->diag, str->offd);
     
     if (str->narrow) {
 	str->ib = -1;
@@ -147,7 +146,7 @@ void stretch_apply (map str, const float* ord, float* mod)
 	mod[i2] += w2 * ord[id];
     }
     
-    tridiagonal_solve (str->slv, mod);
+    sf_tridiagonal_solve (str->slv, mod);
 
     if (str->narrow) {
 	for (i1 = 0; i1 <= str->ib; i1++) {
@@ -185,7 +184,7 @@ void stretch_close (map str)
     free (str->diag);
     free (str->offd);
     
-    tridiagonal_close (str->slv);
+    sf_tridiagonal_close (str->slv);
     free (str);
 }
 

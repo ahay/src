@@ -23,7 +23,6 @@
 #include "fint1.h"
 #include "extend.h"
 #include "spline.h"
-#include "tridiagonal.h"
 
 #ifndef _fint1_h
 
@@ -38,13 +37,13 @@ struct Vint1 {
     float** spl;
     float w[4];
     int n1, nw, dim;
-    tris slv;
+    sf_tris slv;
 };
 
 struct Fint1 {
     float *spl, w[4];
     int n1, nw;
-    tris slv;
+    sf_tris slv;
 };
 
 float* fint1_coeff (fint1 fnt, int n)
@@ -107,7 +106,7 @@ void vint1_set (vint1 fnt, float** dat /* [dim][n1] */)
 	extend (fnt->nw,fnt->n1,dat[i],fnt->spl[i]);
 	fnt->spl[i][0] *= (5./6.);
 	fnt->spl[i][fnt->n1+2*fnt->nw-1] *= (5./6.);
-	tridiagonal_solve (fnt->slv,fnt->spl[i]);
+	sf_tridiagonal_solve (fnt->slv,fnt->spl[i]);
     }
 }
 
@@ -117,14 +116,14 @@ void fint1_set (fint1 fnt, float* dat)
     extend (fnt->nw,fnt->n1,dat,fnt->spl);
     fnt->spl[0] *= (5./6.);
     fnt->spl[fnt->n1+2*fnt->nw-1] *= (5./6.);
-    tridiagonal_solve (fnt->slv,fnt->spl);
+    sf_tridiagonal_solve (fnt->slv,fnt->spl);
 }
 
 void fint1_close (fint1 fnt)
 /*< free allocated storage >*/
 {
     free (fnt->spl);
-    tridiagonal_close (fnt->slv);
+    sf_tridiagonal_close (fnt->slv);
     free (fnt);
 }
 
@@ -133,7 +132,7 @@ void vint1_close (vint1 fnt)
 {
     free (fnt->spl[0]);
     free (fnt->spl);
-    tridiagonal_close (fnt->slv);
+    sf_tridiagonal_close (fnt->slv);
     free (fnt);
 }
 

@@ -11,9 +11,10 @@ kolmog lapfill linefit lpad miss2 miss3 monof monof2 nmo noise nsmooth
 nsmooth1 ofpwd ofpwd2 ofsemb ocparcel octentwt patch planemis2 planemis3
 planesignoi pmig pnmo postfilter2 pp2psang pp2psang2 predict prestolt pveltran
 pwdix pwdsigk pwdsmooth2 radial radon randrefl refer reshape ricker shapebin
-shapebin1 shapesigk shearer shot2cmp shotholes slice smooth smoothreg2 spectra
-spectra2 spline splinefilter stolt stretch taupmo time2depth tomo tpow
-trismooth2 tshift twodip2 twofreq2 vscan velmod warpscan warpscan2 window1
+shapebin1 shapesigk shearer shot2cmp shotholes slice smooth smoothreg
+smoothreg2 spectra spectra2 spline splinefilter stolt stretch taupmo
+time2depth tomo tpow trismooth2 tshift twodip2 twofreq2 vscan velmod warpscan
+warpscan2 window1
 
 '''
 

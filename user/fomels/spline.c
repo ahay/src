@@ -22,7 +22,6 @@
 #include "spline.h"
 
 #include "banded.h"
-#include "tridiagonal.h"
 /*^*/
 
 static const float s3 = 0.75, s4 = 2./3., s6 = 11./20., s8 = 151./315.;
@@ -75,13 +74,13 @@ bands spline_init (int nw /* interpolator length */,
     return slv;
 }
 
-tris spline4_init (int nd /* data length */)
+sf_tris spline4_init (int nd /* data length */)
 /*< initialize a tridiagonal matrix for cubic splines >*/
 {
-    tris slv;
+    sf_tris slv;
     
-    slv = tridiagonal_init(nd);
-    tridiagonal_const_define (slv, s4, flt4[0]);
+    slv = sf_tridiagonal_init(nd);
+    sf_tridiagonal_const_define (slv, s4, flt4[0]);
     
     return slv;
 }

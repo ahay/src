@@ -20,13 +20,11 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "tridiagonal.h"
-
 int main(int argc, char* argv[])
 { 
     int i1, n1, i2, n2, ir, nr;
     float *trace, eps,*diag, *offd;
-    tris slv;
+    sf_tris slv;
     sf_file in, smooth;
 
     sf_init (argc, argv);
@@ -55,14 +53,14 @@ int main(int argc, char* argv[])
     }
     diag[0] = diag[n1-1] = 1.+eps;
 
-    slv = tridiagonal_init(n1);
-    tridiagonal_define (slv,diag,offd);
+    slv = sf_tridiagonal_init(n1);
+    sf_tridiagonal_define (slv,diag,offd);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
 	for (ir=0; ir < nr; ir++){
-	    tridiagonal_solve(slv,trace);
+	    sf_tridiagonal_solve(slv,trace);
 	}
 
 	sf_floatwrite(trace,n1,smooth);

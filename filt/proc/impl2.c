@@ -7,12 +7,11 @@
 
 #include "impl2.h"
 #include "edge.h"
-#include "tridiagonal.h"
 
 static float t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
 static int nstep, n1, n2, n, nclip;
 static bool up;
-static tris slv1, slv2;
+static sf_tris slv1, slv2;
 
 void impl2_init (float r1, float r2   /* radius */, 
 		 int n1_in, int n2_in /* data size */, 
@@ -49,8 +48,8 @@ void impl2_init (float r1, float r2   /* radius */,
     d2 = sf_floatalloc(n2);
     w2 = sf_floatalloc(n2);
 
-    slv1 = tridiagonal_init (n1);
-    slv2 = tridiagonal_init (n2);
+    slv1 = sf_tridiagonal_init (n1);
+    slv2 = sf_tridiagonal_init (n2);
 
     nclip = (int) n*pclip*0.01;
     if (nclip < 1) {
@@ -81,8 +80,8 @@ void impl2_close (void)
     free(d2);
     free(w2);
 
-    tridiagonal_close (slv1);
-    tridiagonal_close (slv2);
+    sf_tridiagonal_close (slv1);
+    sf_tridiagonal_close (slv2);
 }
 
 void impl2_set(float ** x)
@@ -143,8 +142,8 @@ void impl2_apply (float **x, bool set, bool adj)
 		d2[i2] -= w2[i2] + w2[i2-1];
 	    }
 	    d2[n2-1] -= w2[n2-2];
-	    tridiagonal_define (slv2, d2, w2);
-	    tridiagonal_solve (slv2, tmp);
+	    sf_tridiagonal_define (slv2, d2, w2);
+	    sf_tridiagonal_solve (slv2, tmp);
 	    for (i2=0; i2 < n2; i2++) {
 		x[i2][i1] = tmp[i2];
 	    }
@@ -167,9 +166,9 @@ void impl2_apply (float **x, bool set, bool adj)
 		d1[i1] -= w1[i1] + w1[i1-1];
 	    }
 	    d1[n1-1] -= w1[n1-2];
-	    tridiagonal_define (slv1, d1, w1); 
-	    tridiagonal_solve (slv1, x[i2]);
-	    tridiagonal_solve (slv1, y[i2]);
+	    sf_tridiagonal_define (slv1, d1, w1); 
+	    sf_tridiagonal_solve (slv1, x[i2]);
+	    sf_tridiagonal_solve (slv1, y[i2]);
 	}
 	for (i=0; i < n; i++) {
 	    y[0][i] *= w[0][i];
@@ -190,8 +189,8 @@ void impl2_apply (float **x, bool set, bool adj)
 		d2[i2] -= w2[i2] + w2[i2-1];
 	    }
 	    d2[n2-1] -= w2[n2-2];
-	    tridiagonal_define (slv2, d2, w2);
-	    tridiagonal_solve (slv2, tmp);
+	    sf_tridiagonal_define (slv2, d2, w2);
+	    sf_tridiagonal_solve (slv2, tmp);
 	    for (i2=0; i2 < n2; i2++) {
 		y[i2][i1] = tmp[i2];
 	    }
