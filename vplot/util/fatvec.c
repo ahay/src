@@ -26,25 +26,24 @@
 
 #include <stdio.h>
 #include <math.h>
-#include "../include/extern.h"
 
-fatvec (x1, y1, x2, y2, nfat, dashon)
-    int             x1, y1, x2, y2;
-    int             nfat, dashon;
+#include "device.h"
+
+void fatvec (device dev, int x1, int y1, int x2, int y2, int nfat, int dashon)
 {
-register int    i;
-register int    fplus, fminus;
-static int      lastdir = 0;
+    register int    i;
+    register int    fplus, fminus;
+    static int      lastdir = 0;
 
     lastdir = 1 - lastdir;
 
-    if (aspect_ratio != 1. && (y2 != y1 || x2 != x1) && nfat)
+    if (dev->aspect_ratio != 1. && (y2 != y1 || x2 != x1) && nfat)
     {
-nfat = (float) nfat *sqrt (
-	                    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1))
-			     /               (aspect_ratio * aspect_ratio)) /
-	                   ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1)))
-	);
+	nfat = (float) nfat *sqrt (
+	    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1))
+	     /               (dev->aspect_ratio * dev->aspect_ratio)) /
+	    ((y2 - y1) * (y2 - y1) + ((x2 - x1) * (x2 - x1)))
+	    );
     }
 
     fminus = (nfat / 2);
@@ -57,7 +56,7 @@ nfat = (float) nfat *sqrt (
 	    if (x1 == x2)
 	    {
 		for (i = -fminus; i <= fplus; i++)
-		    dev.vector (x1 + i, y1 - fminus, x2 + i, y2 + fplus, 0, 0);
+		    dev->vector (x1 + i, y1 - fminus, x2 + i, y2 + fplus, 0, 0);
 	    }
 	    else
 	    {
@@ -66,13 +65,13 @@ nfat = (float) nfat *sqrt (
 		{
 		    for (i = (fminus + fplus); i > 0; i--)
 		    {
-			dev.vector (x1 - fminus + i, y1 - fminus, x2 + fplus,
+			dev->vector (x1 - fminus + i, y1 - fminus, x2 + fplus,
 				    y2 + fplus - i, 0, 0);
 		    }
-		    dev.vector (x1 - fminus, y1 - fminus, x2 + fplus, y2 + fplus, 0, 0);
+		    dev->vector (x1 - fminus, y1 - fminus, x2 + fplus, y2 + fplus, 0, 0);
 		    for (i = 1; i < (fminus + fplus + 1); i++)
 		    {
-			dev.vector (x1 - fminus, y1 - fminus + i, x2 + fplus - i,
+			dev->vector (x1 - fminus, y1 - fminus + i, x2 + fplus - i,
 				    y2 + fplus, 0, 0);
 		    }
 		}
@@ -80,13 +79,13 @@ nfat = (float) nfat *sqrt (
 		{
 		    for (i = (fminus + fplus); i > 0; i--)
 		    {
-			dev.vector (x1 - fminus, y1 - fminus + i, x2 + fplus - i,
+			dev->vector (x1 - fminus, y1 - fminus + i, x2 + fplus - i,
 				    y2 + fplus, 0, 0);
 		    }
-		    dev.vector (x1 - fminus, y1 - fminus, x2 + fplus, y2 + fplus, 0, 0);
+		    dev->vector (x1 - fminus, y1 - fminus, x2 + fplus, y2 + fplus, 0, 0);
 		    for (i = 1; i < (fminus + fplus + 1); i++)
 		    {
-			dev.vector (x1 - fminus + i, y1 - fminus, x2 + fplus,
+			dev->vector (x1 - fminus + i, y1 - fminus, x2 + fplus,
 				    y2 + fplus - i, 0, 0);
 		    }
 		}
@@ -96,14 +95,14 @@ nfat = (float) nfat *sqrt (
 	if (y2 == y1)
 	{
 	    for (i = -fminus; i <= fplus; i++)
-		dev.vector (x1 - fminus, y1 + i, x2 + fplus, y2 + i, 0, 0);
+		dev->vector (x1 - fminus, y1 + i, x2 + fplus, y2 + i, 0, 0);
 	}
 	else
 	{
 	    if (x1 == x2)
 	    {
 		for (i = -fminus; i <= fplus; i++)
-		    dev.vector (x1 + i, y1 + fplus, x2 + i, y2 - fminus, 0, 0);
+		    dev->vector (x1 + i, y1 + fplus, x2 + i, y2 - fminus, 0, 0);
 	    }
 	    else
 	    {
@@ -112,13 +111,13 @@ nfat = (float) nfat *sqrt (
 		{
 		    for (i = (fminus + fplus); i > 0; i--)
 		    {
-			dev.vector (x1 - fminus + i, y1 + fplus, x2 + fplus,
+			dev->vector (x1 - fminus + i, y1 + fplus, x2 + fplus,
 				    y2 - fminus + i, 0, 0);
 		    }
-		    dev.vector (x1 - fminus, y1 + fplus, x2 + fplus, y2 - fminus, 0, 0);
+		    dev->vector (x1 - fminus, y1 + fplus, x2 + fplus, y2 - fminus, 0, 0);
 		    for (i = 1; i < (fminus + fplus + 1); i++)
 		    {
-			dev.vector (x1 - fminus, y1 + fplus - i, x2 + fplus - i,
+			dev->vector (x1 - fminus, y1 + fplus - i, x2 + fplus - i,
 				    y2 - fminus, 0, 0);
 		    }
 		}
@@ -126,13 +125,13 @@ nfat = (float) nfat *sqrt (
 		{
 		    for (i = (fminus + fplus); i > 0; i--)
 		    {
-			dev.vector (x1 - fminus, y1 + fplus - i, x2 + fplus - i,
+			dev->vector (x1 - fminus, y1 + fplus - i, x2 + fplus - i,
 				    y2 - fminus, 0, 0);
 		    }
-		    dev.vector (x1 - fminus, y1 + fplus, x2 + fplus, y2 - fminus, 0, 0);
+		    dev->vector (x1 - fminus, y1 + fplus, x2 + fplus, y2 - fminus, 0, 0);
 		    for (i = 1; i < (fminus + fplus + 1); i++)
 		    {
-			dev.vector (x1 - fminus + i, y1 + fplus, x2 + fplus,
+			dev->vector (x1 - fminus + i, y1 + fplus, x2 + fplus,
 				    y2 - fminus + i, 0, 0);
 		    }
 		}
@@ -147,24 +146,24 @@ nfat = (float) nfat *sqrt (
 	    {
 		for (i = (fminus + fplus); i > 0; i--)
 		{
-		    dev.vector (x1 + fplus, y1 - fminus + i, x2 - fminus + i, y2 + fplus, 0, 0);
+		    dev->vector (x1 + fplus, y1 - fminus + i, x2 - fminus + i, y2 + fplus, 0, 0);
 		}
-		dev.vector (x1 + fplus, y1 - fminus, x2 - fminus, y2 + fplus, 0, 0);
+		dev->vector (x1 + fplus, y1 - fminus, x2 - fminus, y2 + fplus, 0, 0);
 		for (i = 1; i < (fminus + fplus + 1); i++)
 		{
-		    dev.vector (x1 + fplus - i, y1 - fminus, x2 - fminus, y2 + fplus - i, 0, 0);
+		    dev->vector (x1 + fplus - i, y1 - fminus, x2 - fminus, y2 + fplus - i, 0, 0);
 		}
 	    }
 	    else
 	    {
 		for (i = (fminus + fplus); i > 0; i--)
 		{
-		    dev.vector (x1 + fplus - i, y1 - fminus, x2 - fminus, y2 + fplus - i, 0, 0);
+		    dev->vector (x1 + fplus - i, y1 - fminus, x2 - fminus, y2 + fplus - i, 0, 0);
 		}
-		dev.vector (x1 + fplus, y1 - fminus, x2 - fminus, y2 + fplus, 0, 0);
+		dev->vector (x1 + fplus, y1 - fminus, x2 - fminus, y2 + fplus, 0, 0);
 		for (i = 1; i < (fminus + fplus + 1); i++)
 		{
-		    dev.vector (x1 + fplus, y1 - fminus + i, x2 - fminus + i, y2 + fplus, 0, 0);
+		    dev->vector (x1 + fplus, y1 - fminus + i, x2 - fminus + i, y2 + fplus, 0, 0);
 		}
 	    }
 	}
@@ -172,7 +171,7 @@ nfat = (float) nfat *sqrt (
 	if (y2 == y1)
 	{
 	    for (i = -fminus; i <= fplus; i++)
-		dev.vector (x1 + fplus, y1 + i, x2 - fminus, y2 + i, 0, 0);
+		dev->vector (x1 + fplus, y1 + i, x2 - fminus, y2 + i, 0, 0);
 	}
 	else
 	{
@@ -180,24 +179,24 @@ nfat = (float) nfat *sqrt (
 	    {
 		for (i = (fminus + fplus); i > 0; i--)
 		{
-		    dev.vector (x1 + fplus, y1 + fplus - i, x2 - fminus + i, y2 - fminus, 0, 0);
+		    dev->vector (x1 + fplus, y1 + fplus - i, x2 - fminus + i, y2 - fminus, 0, 0);
 		}
-		dev.vector (x1 + fplus, y1 + fplus, x2 - fminus, y2 - fminus, 0, 0);
+		dev->vector (x1 + fplus, y1 + fplus, x2 - fminus, y2 - fminus, 0, 0);
 		for (i = 1; i < (fminus + fplus + 1); i++)
 		{
-		    dev.vector (x1 + fplus - i, y1 + fplus, x2 - fminus, y2 - fminus + i, 0, 0);
+		    dev->vector (x1 + fplus - i, y1 + fplus, x2 - fminus, y2 - fminus + i, 0, 0);
 		}
 	    }
 	    else
 	    {
 		for (i = (fminus + fplus); i > 0; i--)
 		{
-		    dev.vector (x1 + fplus - i, y1 + fplus, x2 - fminus, y2 - fminus + i, 0, 0);
+		    dev->vector (x1 + fplus - i, y1 + fplus, x2 - fminus, y2 - fminus + i, 0, 0);
 		}
-		dev.vector (x1 + fplus, y1 + fplus, x2 - fminus, y2 - fminus, 0, 0);
+		dev->vector (x1 + fplus, y1 + fplus, x2 - fminus, y2 - fminus, 0, 0);
 		for (i = 1; i < (fminus + fplus + 1); i++)
 		{
-		    dev.vector (x1 + fplus, y1 + fplus - i, x2 - fminus + i, y2 - fminus, 0, 0);
+		    dev->vector (x1 + fplus, y1 + fplus - i, x2 - fminus + i, y2 - fminus, 0, 0);
 		}
 	    }
 	}

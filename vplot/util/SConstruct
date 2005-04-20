@@ -2,7 +2,7 @@ import os, sys, string
 sys.path.append('../..')
 import configure
 
-src = 'alloc clip dashvec device dither error solve vertex'
+src = 'alloc clip dashvec device dither error fatvec solve vertex'
 
 try: # distribution version
     Import('env')
