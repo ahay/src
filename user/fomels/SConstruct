@@ -3,14 +3,12 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-
 abalance angle angle2 approx bandpass blindpick blindpick2 dealias2 deblur
 deriv dijkstra dip dip2 dips dix envelope explanesignoi expsignoi flat flat3
-focus green iphase lapfill miss2 miss3 monof2 nsmooth nsmooth1 ocparcel
+focus green iphase lapfill miss2 miss3 monof monof2 nsmooth nsmooth1 ocparcel
 octentwt ofilp ofpwd ofpwd2 patch pick0 planemis2 planemis3 planesignoi
-predict pwd pwdix pwdsigk pwdsmooth2 shapebin tree warp1 warpadd window3
-ztrace
-
+predict pwd pwdix pwdsigk pwdsmooth2 shapebin shapebin1 shapesigk shearer tomo
+tree trismooth2 twodip2 twofreq2 warp1 warpadd warpscan2 window3 ztrace
 '''
 
 try:  # distributed version
@@ -49,7 +47,11 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('gauss2 gaussshape2 matmult'):
+for prog in Split(
+    '''
+    gauss2 gaussshape2 matmult ntriangle1 predict predict2 pwdsl triangle2
+    trianglen trisl 
+    '''):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)
