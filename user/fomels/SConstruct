@@ -4,10 +4,12 @@ import configure
 
 progs = '''
 
-abalance angle angle2 approx bandpass blindpick blindpick2 dealias2
-deblur deriv dijkstra dip dip2 dips dix envelope explanesignoi expsignoi flat
-flat3 focus green miss2 ofilp pick0 pwd shapebin smoothder 
-tree warp1 warpadd window3 ztrace
+abalance angle angle2 approx bandpass blindpick blindpick2 dealias2 deblur
+deriv dijkstra dip dip2 dips dix envelope explanesignoi expsignoi flat flat3
+focus green iphase lapfill miss2 miss3 monof2 nsmooth nsmooth1 ocparcel
+octentwt ofilp ofpwd ofpwd2 patch pick0 planemis2 planemis3 planesignoi
+predict pwd pwdix pwdsigk pwdsmooth2 shapebin tree warp1 warpadd window3
+ztrace
 
 '''
 
@@ -47,7 +49,7 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
-for prog in Split('banded gauss2 gaussshape2 matmult'):
+for prog in Split('gauss2 gaussshape2 matmult'):
     sources = ['Test' + prog,prog]
     configure.depends(env,sources,prog)
     sources = map(lambda x: x + '.o',sources)

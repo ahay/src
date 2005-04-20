@@ -22,7 +22,6 @@
 
 #include "interp_cube.h"
 #include "interp_sinc.h"
-#include "prefilter.h"
 
 int main(int argc, char* argv[])
 {
@@ -108,7 +107,7 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-	    prefilter_init (nw, n, 3*n);
+	    sf_prefilter_init (nw, n, 3*n);
 	    interp = sf_spline_int;
 	    break;
 	default:
@@ -123,7 +122,7 @@ int main(int argc, char* argv[])
  
     for (i3=0; i3 < n3; i3++) {
         sf_floatread (mm,n,in);
-        if ('s' == intp[0]) prefilter(2,m,mm);
+        if ('s' == intp[0]) sf_prefilter(2,m,mm);
 	
 	sf_int2_lop (false,false,n,nd,mm,z);
      

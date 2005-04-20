@@ -17,10 +17,12 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
-
 #include "prefilter.h"
 #include "recfilt.h"
+#include "alloc.h"
+#include "error.h"
+#include "decart.h"
+#include "file.h"
 
 static float flt2[1] = {0.0};
 static float flt3[1] = {0.1715729};
@@ -38,9 +40,9 @@ static float *tmp1, *tmp2 /* temporary storage */;
 static float a0 /* normalization */;
 static int nt, pad;
 
-void prefilter_init (int nw     /* spline order */, 
-		     int nt_in  /* temporary storage length */, 
-		     int pad_in /* padding */)
+void sf_prefilter_init (int nw     /* spline order */, 
+			int nt_in  /* temporary storage length */, 
+			int pad_in /* padding */)
 /*< initialize >*/
 {
     pad = pad_in;
@@ -52,23 +54,23 @@ void prefilter_init (int nw     /* spline order */,
     switch (nw) {    
 	case 8: 
 	    a0 = a8;
-	    recfilt_init (nt, 3, flt8);
+	    sf_recfilt_init (nt, 3, flt8);
 	    break;
 	case 6:
 	    a0 = a6;
-	    recfilt_init (nt, 2, flt6);
+	    sf_recfilt_init (nt, 2, flt6);
 	    break;
 	case 4:
 	    a0 = a4;
-	    recfilt_init (nt, 1, flt4);
+	    sf_recfilt_init (nt, 1, flt4);
 	    break;
 	case 3:
 	    a0 = a3;
-	    recfilt_init (nt, 1, flt3);
+	    sf_recfilt_init (nt, 1, flt3);
 	    break;
 	case 2:
 	    a0 = a2;
-	    recfilt_init (nt, 1, flt2);
+	    sf_recfilt_init (nt, 1, flt2);
 	    break;
 	default:
 	    sf_error ("%s: spline length %d not implemented",__FILE__,nw); 
@@ -76,7 +78,7 @@ void prefilter_init (int nw     /* spline order */,
     }
 }
 
-void prefilter_apply (int nd     /* data length */, 
+void sf_prefilter_apply (int nd     /* data length */, 
 		      float* dat /* in - data, out - coefficients */)
 /*< Convert 1-D data to spline coefficients >*/
 {
@@ -91,8 +93,8 @@ void prefilter_apply (int nd     /* data length */,
     }
 
     /* recursive filtering in two directions */
-    recfilt_lop (false,false,nt,nt,tmp1,tmp2);
-    recfilt_lop (true, false,nt,nt,tmp1,tmp2);
+    sf_recfilt_lop (false,false,nt,nt,tmp1,tmp2);
+    sf_recfilt_lop (true, false,nt,nt,tmp1,tmp2);
 
     /* extract the output */
     for (i = pad; i < nd+pad; i++) {
@@ -100,7 +102,7 @@ void prefilter_apply (int nd     /* data length */,
     }
 }
 
-void prefilter (int dim    /* number of dimensions */, 
+void sf_prefilter (int dim    /* number of dimensions */, 
 		int* n     /* data size [dim] */, 
 		float* dat /* in - data, out - coefficients */)
 /*< Convert N-D data to spline coefficients >*/
@@ -109,7 +111,7 @@ void prefilter (int dim    /* number of dimensions */,
     int m[SF_MAX_DIM], m1[SF_MAX_DIM], n1[SF_MAX_DIM];
 
     if (dim == 1) {
-	prefilter_apply (n[0], dat);
+	sf_prefilter_apply (n[0], dat);
 	return;
     }
   
@@ -139,8 +141,8 @@ void prefilter (int dim    /* number of dimensions */,
 		}
 	    }
 
-	    recfilt_lop (false,false,nt,nt,tmp1,tmp2);
-	    recfilt_lop (true, false,nt,nt,tmp1,tmp2);
+	    sf_recfilt_lop (false,false,nt,nt,tmp1,tmp2);
+	    sf_recfilt_lop (true, false,nt,nt,tmp1,tmp2);
     
 	    for (i = 0; i < nt; i++) {
 		if (i-pad >= 0 && i -pad < n[j]) {
@@ -152,12 +154,12 @@ void prefilter (int dim    /* number of dimensions */,
     }
 }
 
-void prefilter_close( void)
+void sf_prefilter_close( void)
 /*< free allocated storage >*/
 {
     free (tmp1);
     free (tmp2);
-    recfilt_close();
+    sf_recfilt_close();
 }
       
 /* 	$Id$	 */

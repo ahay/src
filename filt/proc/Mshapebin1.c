@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "int1.h"
 #include "gauss.h"
 #include "monofshape.h"
 
@@ -87,11 +86,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
 	default:
@@ -134,14 +133,16 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 
 	if (gauss) {
-	    sf_conjgrad(NULL, int1_lop, sf_freqfilt_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, sf_int1_lop, sf_freqfilt_lop, 
+			pp, mm, dd, niter);
 	} else {
-	    sf_conjgrad(NULL, int1_lop, sf_triangle1_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, sf_int1_lop, sf_triangle1_lop, 
+			pp, mm, dd, niter);
 	}
 
 	if (pef) {
 	    monofshape_set(0.1,nx,mm,100);
-	    sf_conjgrad(NULL, int1_lop, monofshape_lop, pp, mm, dd, niter);
+	    sf_conjgrad(NULL, sf_int1_lop, monofshape_lop, pp, mm, dd, niter);
 	}
 	
     	sf_floatwrite (mm,nx,out);

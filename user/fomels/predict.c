@@ -21,11 +21,10 @@
 /*^*/
 
 #include "predict.h"
-#include "banded.h"
 #include "pwd.h"
 
 static int n1, n2, nb, k2;
-static bands slv;
+static sf_bands slv;
 static float *diag, **offd, eps, **dip, *tt;
 static pwd w;
 
@@ -45,7 +44,7 @@ void predict_init (int nx, int ny /* data size */,
 
     eps = e;
 
-    slv = banded_init (n1, nb);
+    slv = sf_banded_init (n1, nb);
     diag = sf_floatalloc (n1);
     offd = sf_floatalloc2 (n1,nb);
 
@@ -59,7 +58,7 @@ void predict_init (int nx, int ny /* data size */,
 void predict_close (void)
 /*< free allocated storage >*/
 {
-    banded_close (slv);
+    sf_banded_close (slv);
     free (diag);
     free (*offd);
     free (offd);
@@ -85,14 +84,14 @@ void predict_step(bool adj     /* adjoint flag */,
     offd[0][0] = offd[0][n1-2] = -2.*eps;
 
     pwd_define (forw, w, pp, diag, offd);
-    banded_define (slv, diag, offd);
+    sf_banded_define (slv, diag, offd);
 
     if (adj) {
-	banded_solve (slv, trace);
+	sf_banded_solve (slv, trace);
 	pwd_set (true, w, trace, trace, diag);
     } else {
 	pwd_set (false, w, trace, trace, diag);
-	banded_solve (slv, trace);
+	sf_banded_solve (slv, trace);
     }
 }
 
@@ -314,13 +313,13 @@ void predict_flat(int i0     /* reference trace number */,
 	offd[0][0] = offd[0][n1-2] = -2.*eps;
 
         pwd_define (true, w, pp[i2], diag, offd);
-        banded_define (slv, diag, offd);
+        sf_banded_define (slv, diag, offd);
 
         for (m2=0; m2 <= i2; m2++) {
             trace = mm[m2];
 
             pwd_set (false, w, trace, trace, diag);
-            banded_solve (slv, trace);
+            sf_banded_solve (slv, trace);
         }
     }
     
@@ -340,13 +339,13 @@ void predict_flat(int i0     /* reference trace number */,
 	offd[0][0] = offd[0][n1-2] = -2.*eps;
 
         pwd_define (false, w, pp[i2-1], diag, offd);
-        banded_define (slv, diag, offd);
+        sf_banded_define (slv, diag, offd);
 
         for (m2=n2-1; m2 >= i2; m2--) {
             trace = mm[m2];
 
             pwd_set (false, w, trace, trace, diag);
-            banded_solve (slv, trace);
+            sf_banded_solve (slv, trace);
         }
     }
 }

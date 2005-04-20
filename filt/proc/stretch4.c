@@ -23,7 +23,6 @@
 
 #include "stretch4.h"
 #include "spline.h"
-#include "banded.h"
 
 #ifndef _stretch4_h
 
@@ -39,7 +38,7 @@ struct Map4 {
     int *x; 
     bool *m;
     float **w, *diag, *offd[3];
-    bands slv;
+    sf_bands slv;
 };
 
 map4 stretch4_init (int n1, float o1, float d1 /* regular axis */, 
@@ -67,7 +66,7 @@ map4 stretch4_init (int n1, float o1, float d1 /* regular axis */,
 	str->offd[i] = sf_floatalloc (str->nt-1-i);
     }
   
-    str->slv = banded_init (str->nt,3);
+    str->slv = sf_banded_init (str->nt,3);
 
     return str;
 }
@@ -120,7 +119,7 @@ void stretch4_define (map4 str, const float* coord)
 	}
     }
 
-    banded_define (str->slv, str->diag, str->offd);
+    sf_banded_define (str->slv, str->diag, str->offd);
     
     str->ib = -1;
     for (i1 = 0; i1 < n1; i1++) {
@@ -166,7 +165,7 @@ void stretch4_apply (map4 str, const float* ord, float* mod)
 	}
     }    
 
-    banded_solve (str->slv, mm);
+    sf_banded_solve (str->slv, mm);
 
     for (it = 0; it <= str->ib; it++) {
 	mm[it] = 0.;
@@ -202,7 +201,7 @@ void stretch4_close (map4 str)
 	free (str->offd[i]);
     }
     
-    banded_close (str->slv);
+    sf_banded_close (str->slv);
     free (str);
 }
 

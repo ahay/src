@@ -18,10 +18,7 @@
 */
 #include <rsf.h>
 
-#include "int1.h"
-#include "prefilter.h"
 #include "divn.h"
-
 
 static float *coord, ***out, *rat2, *num, *den, g0, dg, o1, d1, o2, d2;
 static int n2g, ntr, n1, n2, ng, order;
@@ -63,7 +60,7 @@ void warpscan_init(int m1     /* input trace length */,
     num = sf_floatalloc (n2g);
     den = sf_floatalloc (n2g);
 
-    prefilter_init (order, n1, order*10);     
+    sf_prefilter_init (order, n1, order*10);     
     divn_init(dim, n2g, m, rect, niter);
 }
 
@@ -78,7 +75,7 @@ void warpscan(float** inp /* input data [ntr][n1] */,
     doth = 0.;
     dout = 0.;
     for (i2=0; i2 < ntr; i2++) {
-	prefilter_apply (n1, inp[i2]);
+	sf_prefilter_apply (n1, inp[i2]);
 
 	for (i1=0; i1 < n2; i1++) {
 	    doth += oth[i2][i1]*oth[i2][i1];
@@ -91,9 +88,9 @@ void warpscan(float** inp /* input data [ntr][n1] */,
 		coord[i1] = (o2+i1*d2)*g;
 	    }
 
-	    int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
+	    sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
 
-	    int1_lop (false,false,n1,n2,inp[i2],out[i2][ig]);
+	    sf_int1_lop (false,false,n1,n2,inp[i2],out[i2][ig]);
 
 	    for (i1=0; i1 < n2; i1++) {
 		dout += out[i2][ig][i1]*out[i2][ig][i1];

@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h> 
 
-#include "prefilter.h"
 #include "divn.h"
 
 int main(int argc, char* argv[])
@@ -116,12 +115,12 @@ int main(int argc, char* argv[])
     num =   sf_floatalloc (nd);
     den =   sf_floatalloc (nd);
 
-    prefilter_init (order, n1, order*10);     
+    sf_prefilter_init (order, n1, order*10);     
     for (i2=0; i2 < m2; i2++) {
 	sf_floatread(inp+i2*n1,n1,in);
-	prefilter_apply (n1, inp+i2*n1);
+	sf_prefilter_apply (n1, inp+i2*n1);
     }
-    prefilter_close();
+    sf_prefilter_close();
 
     sf_floatread(oth,nd,other);
     sf_fileclose(other);

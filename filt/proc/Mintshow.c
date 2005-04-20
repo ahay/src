@@ -25,7 +25,6 @@ See also: inttest1.
 
 #include "interp_cube.h"
 #include "interp_sinc.h"
-#include "prefilter.h"
 
 int main(int argc, char* argv[])
 {
@@ -84,7 +83,7 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-/*	    prefilter_init (nw, n, 3*n); */
+/*	    sf_prefilter_init (nw, n, 3*n); */
 	    interp = sf_spline_int;
 	    break;
 	default:

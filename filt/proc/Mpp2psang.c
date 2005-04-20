@@ -18,9 +18,6 @@
 */
 #include <rsf.h>
 
-#include "int1.h"
-#include "prefilter.h"
-
 int main(int argc, char* argv[])
 {
     bool inv;
@@ -45,7 +42,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nw",&nw)) nw=4;
     /* accuracy level */
 
-    prefilter_init (nw,na,2*na);
+    sf_prefilter_init (nw,na,2*na);
 
     n3 = sf_leftsize(in,2);
 
@@ -75,9 +72,9 @@ int main(int argc, char* argv[])
 		coord[ia] = sqrtf((t*t+r)/(1+r*t*t));
 		trace[ia] = gather[ia][it];
 	    }
-	    prefilter_apply (na,trace);
-	    int1_init (coord, a0, da, na, sf_spline_int, nw, na);
-	    int1_lop (false,false,na,na,trace,modl);
+	    sf_prefilter_apply (na,trace);
+	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
+	    sf_int1_lop (false,false,na,na,trace,modl);
 
 	    for (ia=0; ia < na; ia++) {
 		gather[ia][it] = modl[ia];

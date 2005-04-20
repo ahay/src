@@ -17,15 +17,18 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "recfilt.h"
 
+#include "adjnull.h"
+#include "alloc.h"
+
 static float *tt, *aa;
 static int na;
 
-void recfilt_init( int nd    /* data size */, 
+void sf_recfilt_init( int nd    /* data size */, 
 		   int nb    /* filter size */, 
 		   float* bb /* filter [nb] */) 
 /*< initialize >*/
@@ -35,7 +38,7 @@ void recfilt_init( int nd    /* data size */,
     tt = sf_floatalloc (nd);
 }
 
-void recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
+void sf_recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
 /*< linear operator >*/
 {
     int ia, iy, ix;
@@ -73,7 +76,7 @@ void recfilt_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
     }
 }
 
-void recfilt_close (void) 
+void sf_recfilt_close (void) 
 /*< free allocated storage >*/
 {
     free (tt);

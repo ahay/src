@@ -23,8 +23,6 @@
 
 #include <rsf.h> 
 
-#include "int1.h"
-#include "prefilter.h"
 #include "window1.h"
 
 int main(int argc, char* argv[])
@@ -119,12 +117,12 @@ int main(int argc, char* argv[])
     win2 = sf_floatalloc (w);
     win2 = sf_floatalloc (w);
 
-    prefilter_init (order, n1, order*10);     
+    sf_prefilter_init (order, n1, order*10);     
     for (i2=0; i2 < m2; i2++) {
 	sf_floatread(inp[i2],n1,in);
-	prefilter_apply (n1, inp[i2]);
+	sf_prefilter_apply (n1, inp[i2]);
     }
-    prefilter_close();
+    sf_prefilter_close();
 
     sf_floatread(oth[0],m2*n2,other);
     sf_fileclose(other);
@@ -138,10 +136,10 @@ int main(int argc, char* argv[])
 	    coord[i1] = (o2+i1*d2)*g;
 	}
 
-	int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
+	sf_int1_init (coord, o1, d1, n1, sf_spline_int, order, n2);
 
 	for (i2=0; i2 < m2; i2++) {
-	    int1_lop (false,false,n1,n2,inp[i2],out);
+	    sf_int1_lop (false,false,n1,n2,inp[i2],out);
 
 	    for (iw=0; iw < nw; iw++) {
 		a2=0.;

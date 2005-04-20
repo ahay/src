@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "prefilter.h"
-
 int main(int argc, char* argv[])
 {
     int n1, n2, i2, pad, nw;
@@ -41,12 +39,12 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
 
-    prefilter_init (nw,n1,pad);
+    sf_prefilter_init (nw,n1,pad);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
 
-	prefilter_apply (n1,trace);
+	sf_prefilter_apply (n1,trace);
 
 	sf_floatwrite(trace,n1,out);
     }

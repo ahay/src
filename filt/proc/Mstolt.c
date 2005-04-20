@@ -22,8 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "int1.h"
-#include "prefilter.h"
 #include "cosft.h"
 
 int main(int argc, char* argv[])
@@ -68,7 +66,7 @@ int main(int argc, char* argv[])
     trace2 = sf_floatalloc(nw);
     str = sf_floatalloc(nw);
 
-    prefilter_init (nf, nw, 3*nw);
+    sf_prefilter_init (nf, nw, 3*nw);
     for (iy = 0; iy < ny; iy++) {
 	sf_warning("%d of %d",iy+1,ny);
 	y = iy*dy;
@@ -82,15 +80,15 @@ int main(int argc, char* argv[])
 		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
 	    }
        
-	    int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
+	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
 
 	    sf_floatread(trace,nt,in);
 	    for (iw = nt; iw < nw; iw++) { /* pad */
 		trace[iw]=0.;
 	    }
 	    cosft_frw (trace,0,1);
-	    prefilter_apply (nw, trace);
-	    int1_lop (false,false,nw,nw,trace,trace2);
+	    sf_prefilter_apply (nw, trace);
+	    sf_int1_lop (false,false,nw,nw,trace,trace2);
 	    cosft_inv (trace2,0,1);
 	    sf_floatwrite(trace2,nt,out);
 	}

@@ -20,10 +20,8 @@
  
 #include <rsf.h>
 
-#include "int1.h"
 #include "interp_cube.h"
 #include "interp_sinc.h"
-#include "prefilter.h"
 
 int main(int argc, char* argv[])
 {
@@ -94,7 +92,7 @@ int main(int argc, char* argv[])
 	    interp = sinc_int;
 	    break;
 	case 's':
-	    prefilter_init (nw, n, 3*n);
+	    sf_prefilter_init (nw, n, 3*n);
 	    interp = sf_spline_int;
 	    break;
 	default:
@@ -102,16 +100,16 @@ int main(int argc, char* argv[])
 	    break;
     }
 
-    int1_init (coord, o, d, n, interp, nw, nd);
+    sf_int1_init (coord, o, d, n, interp, nw, nd);
     
     z = sf_floatalloc(nd);
     mm = sf_floatalloc(n);
  
     for (i2=0; i2 < n2; i2++) {
         sf_floatread (mm,n,in);
-        if ('s' == intp[0]) prefilter_apply (n,mm);
+        if ('s' == intp[0]) sf_prefilter_apply (n,mm);
 	
-	int1_lop (false,false,n,nd,mm,z);
+	sf_int1_lop (false,false,n,nd,mm,z);
      
 	sf_floatwrite (z,nd,out);
     }

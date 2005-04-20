@@ -18,9 +18,6 @@
 */
 #include <rsf.h>
 
-#include "int1.h"
-#include "prefilter.h"
-
 int main(int argc, char* argv[])
 {
     bool inv;
@@ -67,7 +64,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"o1",x0);
 	sf_putstring(out,"label1","Offset");
 
-	prefilter_init (nw, nv, 2*nv);
+	sf_prefilter_init (nw, nv, 2*nv);
 
 	ntr = nv;
 	ntm = nx;
@@ -96,7 +93,7 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"x0",x0);
 	sf_putfloat(out,"dx",dx);
 
-	prefilter_init (nw, nx, 2*nx);
+	sf_prefilter_init (nw, nx, 2*nx);
 
 	ntr = nx;
 	ntm = nv;
@@ -112,7 +109,7 @@ int main(int argc, char* argv[])
 	    t = t0 + it*dt;
 
 	    sf_floatread (trace,ntr,in);
-	    prefilter_apply (ntr,trace);
+	    sf_prefilter_apply (ntr,trace);
 
 	    if (t > tp) {
 		if (inv) {
@@ -120,16 +117,16 @@ int main(int argc, char* argv[])
 			r[ix] = (x0+ix*dx)/(t-tp);
 		    }
 
-		    int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
+		    sf_int1_init (r, vmin, dv, nv, sf_spline_int, nw, nx);
 		} else {
 		    for (iv=0; iv < nv; iv++) {
 			r[iv] = (vmin+iv*dv)*(t-tp);
 		    }
 
-		    int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
+		    sf_int1_init (r, x0,   dx, nx, sf_spline_int, nw, nv);
 		}
 
-		int1_lop (false,false,ntr,ntm,trace,modl);
+		sf_int1_lop (false,false,ntr,ntm,trace,modl);
 	    } else {
 		for (im=0; im < ntm; im++) {
 		    modl[im] = 0.;
