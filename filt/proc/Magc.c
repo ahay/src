@@ -25,7 +25,6 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 #include <rsf.h>
 
-#include "matmult.h"
 #include "cmatmult.h"
 
 int main (int argc, char* argv[]) 

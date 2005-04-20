@@ -3,7 +3,12 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-angle angle2 approx green ofilp pick0 tree warpadd ztrace window3
+
+abalance angle angle2 approx bandpass bin1 blindpick blindpick2 dealias2
+deblur deriv dijkstra dip dip2 dips dix envelope explanesignoi expsignoi flat
+flat3 focus green miss2 modrefl ofilp pick0 pwd shapebin smoothder smoothreg
+tree warp1 warpadd window3 ztrace
+
 '''
 
 try:  # distributed version
@@ -42,6 +47,13 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+for prog in Split('banded gauss2 gaussshape2 matmult'):
+    sources = ['Test' + prog,prog]
+    configure.depends(env,sources,prog)
+    sources = map(lambda x: x + '.o',sources)
+    env.Object('Test' + prog + '.c')
+    env.Program(sources,PROGPREFIX='',PROGSUFFIX='.x')
+ 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
