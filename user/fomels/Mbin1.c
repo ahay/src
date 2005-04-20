@@ -23,8 +23,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "int1.h"
-
 int main (int argc, char* argv[])
 {
     int id, nd, nt, it, ix, nx, interp;
@@ -99,11 +97,11 @@ int main (int argc, char* argv[])
 
     switch (interp) {
 	case 1:
-	    int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_bin_int, 1, nd);
 	    sf_warning("Using nearest-neighbor interpolation");
 	    break;
 	case 2:
-	    int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
+	    sf_int1_init (offset, x0,dx,nx, sf_lin_int, 2, nd);
 	    sf_warning("Using linear interpolation");
 	    break;
 	default:
@@ -120,7 +118,7 @@ int main (int argc, char* argv[])
 	dd[id]=1.;
     }
 
-    int1_lop (true, false,nx,nd,count,dd);
+    sf_int1_lop (true, false,nx,nd,count,dd);
  
     if (NULL != sf_getstring("fold")) {
 	/* output fold file (optional) */
@@ -143,7 +141,7 @@ int main (int argc, char* argv[])
 
     for (it=0; it < nt; it++) { /* loop over time slices */
 	sf_floatread (dd,nd,in);
-	int1_lop (true,false,nx,nd,mm,dd);
+	sf_int1_lop (true,false,nx,nd,mm,dd);
 	for (ix=0; ix<nx; ix++) {
 	    mm[ix] *= count[ix];
 	}
