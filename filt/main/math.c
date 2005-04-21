@@ -2,7 +2,7 @@
 
 Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
                  cosh, sinh, tanh, acosh, asinh, atanh,
-                 exp,  log,  sqrt, abs (for real data), conj (for complex data).
+                 exp,  log,  sqrt, abs, conj (for complex data).
                  
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
@@ -45,7 +45,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 static void check_compat (size_t nin, sf_file *in, int dim, const int *n, 
 			  float *d, float* o, sf_datatype type);
 
-int main(int argc, char* argv[])
+int main (int argc, char* argv[])
 {
     int nin, i, j, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf, nsiz;
     size_t len;
