@@ -31,6 +31,7 @@ int main(int argc, char* argv[])
     float *rr, *dd, *xx, *yy, o1, d1, o2, d2, eps;
     float vmin, xmin, ymin, vmax, xmax, ymax, vrange, vaver;
     filter aa;
+    bool cdstep;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -38,7 +39,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     /* create model */
-    if (!sf_getint ("m1",&m[0])) sf_error("Need m2=");
+    if (!sf_getint ("m1",&m[0])) sf_error("Need m1=");
     if (!sf_getint ("m2",&m[1])) sf_error("Need m2=");
     /* number of bins */
     sf_putint(out,"n1",m[0]);
@@ -46,7 +47,7 @@ int main(int argc, char* argv[])
 
     /* create filter */
     if (!sf_getint("a1",&a[0])) a[0]=5;
-    if (!sf_getint("a1",&a[1])) a[1]=3;
+    if (!sf_getint("a2",&a[1])) a[1]=3;
     /* filter size */
     center[0] = a[0]/2;
     center[1] = 0;
@@ -78,6 +79,8 @@ int main(int argc, char* argv[])
     /* number of initial iterations */
     if (!sf_getfloat("eps",&eps)) eps=1.;
     /* regularization parameter */
+    if (!sf_getbool("cdstep",&cdstep)) cdstep=false;
+    /* if y, use conjugate directions */
 
     if (!sf_histint(in,"n1",&nd)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2) || 3 != n2) sf_error("Need n2=3 in input");
@@ -114,7 +117,7 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d1",d1);
     sf_putfloat(out,"d2",d2);
 
-    levint2 (niter, warmup, nd, xx, yy, dd, 
+    levint2 (cdstep, niter, warmup, nd, xx, yy, dd, 
 	     o1, d1, m[0], o2, d2, m[1], aa, rr, eps);
     
     sf_floatwrite (rr,nm,out);

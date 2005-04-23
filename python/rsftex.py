@@ -68,6 +68,8 @@ def latify(target=None,source=None,env=None):
     use = env.get('use')
     resdir = env.get('resdir','Fig')
     include = env.get('include')
+    if include:
+         ltx.write(include+'\n\n')
     if use:
          if type(use) is not types.ListType:
               use = [use]
@@ -80,8 +82,6 @@ def latify(target=None,source=None,env=None):
          ltx.write('\n')
     if lclass == 'geophysics' or lclass == 'segabs':
         ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
-    if include:
-         ltx.write(include+'\n\n')
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)

@@ -28,7 +28,8 @@
 #include "pefhel.h"
 #include "lint2.h"
 
-void levint2 (int niter                  /* number of iterations */, 
+void levint2 (bool cdstep                /* if use conj. directions */,
+	      int niter                  /* number of iterations */, 
 	      int warmup                 /* initial iterations */,
 	      int nd                     /* data size */,
 	      float *x, float *y         /* data coordinates */, 
@@ -48,10 +49,24 @@ void levint2 (int niter                  /* number of iterations */,
     lint2_init (n1,o1,d1, n2,o2,d2, x, y);
     pefhel_init (aa, nm, rr);
 
-    sf_solver_reg (lint2_lop, sf_cgstep, helicon_lop, nm, nm, nd, rr, dd, 
-		   warmup, eps, "x0", rr,"end");
-    sf_cgstep_close();
-    sf_solver_reg (lint2_lop, sf_cgstep, pefhel_lop, 2*nm, nr, nd, rr, dd, 
-		   niter, eps, "x0", rr, "nlreg", helicon_lop,"end");
-    sf_cgstep_close();
+    if (cdstep) {
+	sf_cdstep_init();
+	sf_solver_reg (lint2_lop, sf_cdstep, helicon_lop, nm, nm, nd, rr, dd, 
+		       warmup, eps, "x0", rr, "nmem", warmup, "end");
+	sf_cdstep_close();
+	/*
+	  sf_solver_reg (lint2_lop, sf_cdstep, pefhel_lop, nm, nr, nd, rr, dd, 
+	  niter, eps, "x0", rr, "nlreg", helicon_lop, "nmem", 3, "end");
+	  sf_cdstep_close();
+	*/
+    } else {
+	sf_solver_reg (lint2_lop, sf_cgstep, helicon_lop, nm, nm, nd, rr, dd, 
+		       warmup, eps, "x0", rr, "end");
+	sf_cgstep_close();
+	/*
+	  sf_solver_reg (lint2_lop, sf_cgstep, pefhel_lop, nm, nr, nd, rr, dd, 
+	  niter, eps, "x0", rr, "nlreg", helicon_lop,"end");
+	  sf_cgstep_close();
+	*/
+    }
 }
