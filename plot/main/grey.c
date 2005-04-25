@@ -55,12 +55,12 @@ int main(int argc, char* argv[])
 
     if (byte) {
 	out = sf_output("out");
-	sf_settype(out,SF_CHAR);
+	sf_settype(out,SF_UCHAR);
     } else {
 	vp_init();
     }
 
-    charin = (SF_CHAR == sf_gettype(in));
+    charin = (SF_UCHAR == sf_gettype(in));
 
     if (!charin && SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -276,11 +276,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	} else {
-	    sf_charread((char*) buf[0],n1*n2,in);
+	    sf_ucharread(buf[0],n1*n2,in);
 	}
 
 	if (byte) {
-	    sf_charwrite((char*) buf[0],n1*n2,out);
+	    sf_ucharwrite(buf[0],n1*n2,out);
 	    continue;
 	}
 

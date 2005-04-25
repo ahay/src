@@ -89,5 +89,31 @@ float* sf_pqueue_extract (void)
   return v;
 }
 
+void sf_pqueue_update (float **v)
+/*< restore the heap: the value has been altered >*/
+{
+  unsigned int c;
+  int n;
+  float **xc, **xi;
+
+  xi = v; 
+  n = (int) (xn-x); c = (unsigned int) (xi-x);
+  for (c <<= 1; c <= n; c <<= 1) {
+      xc = x + c;
+      if (c < n && **xc > **(xc+1)) {
+	  c++; xc++;
+      }
+      if (**v <= **xc) break;
+      *xi = *xc; xi = xc;
+  }
+  xi = v; c = (unsigned int) (xi-x);
+  for (c >>= 1; c > 0; c >>= 1) {
+      xc = x + c;
+      if (**v > **xc) break;
+      *xi = *xc; xi = xc; 
+  }
+  *xi = *v; 
+}
+
 /* 	$Id$	 */
 

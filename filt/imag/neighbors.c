@@ -86,6 +86,7 @@ static int update (float value, int i)
 	    sf_pqueue_insert (ttime+i);
 	    return 1;
 	}
+/*	sf_pqueue_update (&(ttime+i)); */
     }
     
     return 0;

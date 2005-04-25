@@ -1,4 +1,4 @@
-/* Generate 3-D cube plot.
+/* Generate 3-D cube plot for surfaces.
    
 Takes: > plot.vpl
 */
@@ -25,11 +25,10 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
+    int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
-    float point1, point2;
-    char *color;
-    unsigned char **front, **top, **side, **buf, b;
+    float point1, point2, **front, **top, **side, b;
+    off_t esize;
     bool flat;
     sf_file in;
 
@@ -37,18 +36,11 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     vp_init();
 
-    if (SF_UCHAR != sf_gettype(in)) sf_error("Need uchar input");
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n3 = sf_leftsize(in,2);
-
-    /* initialize color table */
-    if (NULL == (color = sf_getstring("color"))) color="I";
-    /* color scheme */
-    if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
-    /* reserved colors */
-    vp_rascoltab (nreserve, color);
 
     if (!sf_getfloat("point1",&point1)) point1=0.5;
     /* fraction of the vertical axis for front face */
@@ -116,52 +108,22 @@ int main(int argc, char* argv[])
     if (n1front >= n1pix) n1front=n1pix-1;
     if (n2front >= n2pix) n2front=n2pix-1;
 
-    front = sf_ucharalloc2(n1,n2);
-    top = sf_ucharalloc2(n3,n2);
-    side = sf_ucharalloc2(n1,n3);
-    buf = sf_ucharalloc2(n1pix,n2pix);
-
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
 
-    sf_unpipe(in,n1*n2*n3);
+    esize = sizeof(float);
+    sf_unpipe(in,n1*n2*n3*esize);
 
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
 
-    /* fill empty areas */
-    b = '\0';
-
-    if (flat) {
-	/* rectangle */
-	for (i=n2front; i < n2pix; i++) {
-	    for (j=n1front; j < n1pix; j++) {
-		buf[i][j] = b;
-	    }
-	}
-    } else {
-	/* two triangles */
-	for (i=n2front; i < n2pix; i++) {
-	    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
-	    for (j=0; j < j0; j++) {
-		buf[i][j] = b;
-	    }
-	}
-	for (j=n1front; j < n1pix; j++) {
-	    i0 = (j-n1front)*(n2pix-n2front)/(float) (n1pix-n1front);
-	    for (i=0; i < i0; i++) {
-		buf[i][j] = b;
-	    }
-	}
-    }
-
     for (iframe=0; iframe < nframe; iframe++) {
-	/* read data  and fill display buffer */
 
 	if (0 == iframe || 3 == movie) { 
-	    sf_seek(in,(off_t) frame3*n1*n2,SEEK_SET);
-	    sf_ucharread(front[0],n1*n2,in);
-	    
+	    sf_seek(in,(off_t) frame3*n1*n2*esize,SEEK_SET);
+	    sf_floatread(front[0],n1*n2,in);
+
+	    /*
 	    for (i=0; i < n2front; i++) {
 		i2 = n2*i/(float) n2front;
 		for (j=0; j < n1front; j++) {
@@ -169,14 +131,16 @@ int main(int argc, char* argv[])
 		    buf[i][j] = front[i2][i1];
 		}
 	    }
+	    */
 	}
 
 	if (0 == iframe || 2 == movie) {
 	    for (i3=0; i3 < n3; i3++) {
-		sf_seek(in,(off_t) i3*n1*n2+frame2*n1,SEEK_SET);
-		sf_ucharread(side[i3],n1,in);
+		sf_seek(in,(off_t) (i3*n1*n2+frame2*n1)*esize,SEEK_SET);
+		sf_floatread(side[i3],n1,in);
 	    }
 
+	    /*
 	    for (i=n2front; i < n2pix; i++) {
 		i3 = n3*(i-n2front)/(float) (n2pix-n2front);
 		if (flat) {
@@ -193,16 +157,18 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
+	    */
 	}
 
 	if (0 == iframe || 1 == movie) {
 	    for (i3=0; i3 < n3; i3++) {
 		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,(off_t) i3*n1*n2+i2*n1+frame1,SEEK_SET);
-		    sf_ucharread(&top[i2][i3],1,in);
+		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame1)*esize,SEEK_SET);
+		    sf_floatread(&top[i2][i3],1,in);
 		}
 	    }
 
+	    /*
 	    if (flat) {
 		for (i=0; i < n2front; i++) {
 		    i2 = n2*i/(float) n2front;
@@ -212,8 +178,10 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    } 
+	    */
 	}
 
+	/*
 	if ((0 == iframe || 1 == movie || 2 == movie) && !flat) {
 	    for (j=n1front; j < n1pix; j++) {
 		i3 = n3*(j-n1front)/(float) (n1pix-n1front);
@@ -225,10 +193,11 @@ int main(int argc, char* argv[])
 		}
 	    }
 	}
+	*/
 
 	if (iframe > 0) vp_erase (); 
-
-	vp_cuberaster(n1pix,n2pix,buf,frame1,frame2,frame3);
+	
+/*	vp_cuberaster(n1pix,n2pix,buf,frame1,frame2,frame3); */
 	
 	switch (movie) {
 	    case 1:
@@ -251,4 +220,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: grey3.c 1055 2005-03-16 21:18:43Z savap $	 */

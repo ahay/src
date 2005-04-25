@@ -82,7 +82,7 @@
 typedef struct sf_File *sf_file;
 /*^*/
 
-typedef enum {SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
+typedef enum {SF_UCHAR, SF_CHAR, SF_INT, SF_FLOAT, SF_COMPLEX} sf_datatype;
 typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 /*^*/
 
@@ -370,6 +370,9 @@ format has a form "form_type", i.e. native_float, ascii_int, etc.
 	sf_settype(file,SF_INT);
     } else if (NULL != strstr(format,"complex")) {
 	sf_settype(file,SF_COMPLEX);
+    } else if (NULL != strstr(format,"uchar") || 
+	       NULL != strstr(format,"byte")) {
+	sf_settype(file,SF_UCHAR);	
     } else {
 	sf_settype(file,SF_CHAR);
     }
@@ -632,6 +635,32 @@ Prepares file for writing binary data >*/
 		    break;
 	    }
 	    break;
+	case SF_UCHAR:
+	    switch (file->form) {
+		case SF_ASCII:		    
+		    sf_putstring(file,"data_format","ascii_uchar");
+		    break;
+		case SF_XDR:
+		    sf_putstring(file,"data_format","xdr_uchar");
+		    break;
+		default:
+		    sf_putstring(file,"data_format","native_uchar");
+		    break;
+	    }
+	    break;
+	case SF_CHAR:
+	    switch (file->form) {
+		case SF_ASCII:		    
+		    sf_putstring(file,"data_format","ascii_char");
+		    break;
+		case SF_XDR:
+		    sf_putstring(file,"data_format","xdr_char");
+		    break;
+		default:
+		    sf_putstring(file,"data_format","native_char");
+		    break;
+	    }
+	    break;
 	default:
 	    sf_putstring(file,"data_format",
 			 (NULL==file->buf)? "native_byte":"xdr_byte");
@@ -851,8 +880,47 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
     }
 }
 
+void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
+/*< write an unsigned char array arr[size] to file >*/
+{
+    char* buf;
+    size_t i, left, nbuf;
+
+    if (NULL != file->dataname) sf_fileflush (file,infile);
+
+    switch(file->form) {
+	case SF_ASCII:
+	    for (left = size; left > 0; left-=nbuf) {
+		nbuf = (aline < left)? aline: left;
+		for (i=size-left; i < size-left+nbuf; i++) {
+		    if (EOF==fputc(arr[i],file->stream))
+			sf_error ("%s: trouble writing ascii",__FILE__);
+		}
+		if (EOF==fprintf(file->stream,"\n"))
+		    sf_error ("%s: trouble writing ascii",__FILE__);
+	    }
+	    break;
+	case SF_XDR:
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(&(file->xdr),0);
+		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
+				(xdrproc_t) xdr_u_char))
+		    sf_error ("sf_file: trouble writing xdr");
+		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
+		    sf_error ("%s: trouble writing:",__FILE__);
+	    }
+	    break;
+	default:
+	    if (size != fwrite(arr,sizeof(unsigned char),size,file->stream)) 
+		sf_error ("%s: trouble writing:",__FILE__);
+	    break;
+    }
+}
+
 void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
-/*< read a char array arr[size] fromfile >*/
+/*< read a char array arr[size] from file >*/
 {
     char* buf;
     size_t i, left, nbuf, got;
@@ -880,6 +948,42 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    break;
 	default:
 	    got = fread(arr,sizeof(char),size,file->stream);
+	    if (got != size) 
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
+	    break;
+    }
+}
+
+void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
+/*< read a uchar array arr[size] from file >*/
+{
+    char* buf;
+    size_t i, left, nbuf, got;
+    int c;
+
+    switch (file->form) {
+	case SF_ASCII:
+	    for (i = 0; i < size; i++) {
+		c=fgetc(file->stream);
+		if (EOF==c)
+		    sf_error ("%s: trouble reading ascii:",__FILE__);
+		arr[i]= (unsigned char) c;
+	    }
+	    break;
+	case SF_XDR:
+	    buf = (char*)arr+size;
+	    for (left = size; left > 0; left -= nbuf) {
+		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		(void) xdr_setpos(&(file->xdr),0);
+		if (nbuf != fread(file->buf,1,nbuf,file->stream))
+		    sf_error ("%s: trouble reading:",__FILE__);
+		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
+				(xdrproc_t) xdr_u_char))
+		    sf_error ("%s: trouble reading xdr",__FILE__);
+	    }
+	    break;
+	default:
+	    got = fread(arr,sizeof(unsigned char),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
 	    break;

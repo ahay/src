@@ -2,7 +2,9 @@ import os, sys, string
 sys.path.append('../..')
 import configure
 
-progs = 'box contour dots graph grey grey3 plas pldb plotrays thplot wiggle'
+progs = '''
+box contour dots graph graph3 grey grey3 plas pldb plotrays thplot wiggle
+'''
 
 try:
     Import('env')

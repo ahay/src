@@ -30,6 +30,7 @@ int main (int argc, char* argv[])
     char* format, *buf;
     float *fbuf;
     float complex *cbuf;
+    unsigned char *ubuf;
     sf_file in;
     sf_datatype type;
     bool number;
@@ -59,6 +60,20 @@ int main (int argc, char* argv[])
     size = (size_t) sf_filesize(in);
 
     switch (type) {
+	case SF_UCHAR:
+	    if (0==cols) cols=10;
+	    if (NULL==format) format = "%4d ";
+	    ubuf = sf_ucharalloc (bufsiz);
+	    for (i=0; size > 0; size -= nbuf) {
+		nbuf = (bufsiz < size)? bufsiz: size;
+		sf_ucharread (ubuf,nbuf,in);
+		for (j=0; j < nbuf; j++, i++) {
+		    head(i,cols,number);
+		    printf(format,ubuf[j]);
+		}
+	    }
+	    printf("\n");
+	    break;
 	case SF_CHAR:
 	    if (0==cols) cols=10;
 	    if (NULL==format) format = "%4d ";

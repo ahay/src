@@ -130,23 +130,25 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
     if (0 != remove(filename)) 
 	sf_error ("%s: Trouble removing header file %s:",__FILE__,filename);
 	    
-    if (verb) sf_warning("sf_rm: Removing data %s",in);
-    if (!force) {
-	if (0 != stat(in,&buf)) 
-	    sf_error ("%s: Trouble with file %s:",__FILE__,in);
-	/* (owner and can write) or (not-owner and others can write) */
-	mod = (buf.st_uid == getuid())? S_IWUSR:S_IWOTH;
-	if (0 == (buf.st_mode & mod)) {		    
-	    fprintf (query,"sf_rm: Remove protected file '%s'? ",in);
-	    c2 = c = getc (query);
-	    while (c2 != EOF && (cc = (char) c2) != '\n' && cc != '\0') 
-		c2 = getc(query);
-	    cc = (char) c;
-	    if ('y' != cc && 'Y' != cc) return;
+    if (0 != strcmp(in,"stdin")) {
+	if (verb) sf_warning("sf_rm: Removing data %s",in);
+	if (!force) {
+	    if (0 != stat(in,&buf)) 
+		sf_error ("%s: Trouble with file %s:",__FILE__,in);
+	    /* (owner and can write) or (not-owner and others can write) */
+	    mod = (buf.st_uid == getuid())? S_IWUSR:S_IWOTH;
+	    if (0 == (buf.st_mode & mod)) {		    
+		fprintf (query,"sf_rm: Remove protected file '%s'? ",in);
+		c2 = c = getc (query);
+		while (c2 != EOF && (cc = (char) c2) != '\n' && cc != '\0') 
+		    c2 = getc(query);
+		cc = (char) c;
+		if ('y' != cc && 'Y' != cc) return;
+	    }
 	}
+	if (0 != remove(in)) 
+	    sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
     }
-    if (0 != remove(in)) 
-	sf_error ("%s: Trouble removing data file %s:",__FILE__,in);
     sf_simtab_close (tab);
 }
 

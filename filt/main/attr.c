@@ -87,6 +87,10 @@ int main(int argc, char* argv[])
 	    case SF_COMPLEX:
 		sf_complexread((float complex*) buf,nbuf,in);
 		break;
+	    case SF_UCHAR:
+		sf_ucharread((unsigned char*) buf,nbuf,in);
+		break;
+	    case SF_CHAR:
 	    default:
 		sf_charread(buf,nbuf,in);
 		break;
@@ -103,6 +107,10 @@ int main(int argc, char* argv[])
 		    c=((float complex*)buf)[i];  
 		    f=cabsf(c); 
 		    break;
+		case SF_UCHAR:
+		    f=(float) ((unsigned char*) buf)[i]; 
+		    break;
+		case SF_CHAR:
 		default: 
 		    f=(float) buf[i]; 
 		    break;

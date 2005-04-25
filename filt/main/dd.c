@@ -123,6 +123,7 @@ int main(int argc, char *argv[])
 			}
 			sf_complexwrite(cbuf,nout,out);
 			break;
+		    case SF_UCHAR:
 		    case SF_CHAR:
 		    default:
 			ddbreak (itype,otype);
@@ -149,7 +150,8 @@ int main(int argc, char *argv[])
 			    cbuf[j] = fbuf[i] + I*fbuf[i+1];
 			}
 			sf_complexwrite(cbuf,nout,out);
-			break;			    
+			break;		
+		    case SF_UCHAR:
 		    case SF_CHAR:
 		    default:
 			ddbreak (itype,otype);
@@ -168,6 +170,7 @@ int main(int argc, char *argv[])
 			break;
 		}
 		break;
+	    case SF_UCHAR:
 	    case SF_CHAR:
 	    default:
 		ddbreak (itype,otype);

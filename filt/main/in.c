@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
     char *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info;
-    char *type[] = {"char","int","float","complex"};
+    char *type[] = {"uchar","char","int","float","complex"};
     char *form[] = {"ascii","xdr","native"};
     char pad[] = "              ", out[15];
 

@@ -18,20 +18,24 @@ except: # local version
 
 prog = env.Program('makefont','makefont.c',PROGSUFFIX='.x',PROGPREFIX='')
 
+attr = ('check','header','dim','addr','widthl','widthr','symbol','svec','lig')
+
+if root:
+    top = os.path.join(dir,'../../')
+else:
+    top = ''
+  
 for font in src:
     base = os.path.splitext(font)[0]
     include = base+'.include'
     bin = base+'.bin'
-    if root:
-        top = os.path.join(dir,'../../')
-    else:
-        top = ''
-        
-    aux = map(lambda x: '%s%s_%s' % (top,base,x),
-                  ('check','header','dim','addr','widthl','widthr','symbol','svec','lig'))
-    env.Command([include,]+aux,[prog,font],
-                './${SOURCES[0]} %s < ${SOURCES[1]} > ${TARGETS[0]}' % base)
-    env.Command(bin,aux,'cat $SOURCES > $TARGET')
+       
+    aux = string.join(map(lambda x: '%s%s_%s' % (top,base,x),attr))
+                          
+    env.Command([include,bin],[prog,font],
+                './${SOURCES[0]} %s < ${SOURCES[1]} > ${TARGETS[0]} && '
+                'cat %s > ${TARGETS[1]} && '
+                'rm %s' % (base,aux,aux))
     if root:
         env.Install(incdir,include)
         env.Install(incdir,bin)
