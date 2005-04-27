@@ -27,7 +27,8 @@ def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     doc = ['import rsfdoc\n']
     cwd = os.getcwd()
-    bookdir = os.path.join(os.environ.get('RSFROOT',cwd),'book')
+    bookdir = os.environ.get('RSFBOOK',
+	os.path.join(os.environ.get('RSFROOT',cwd),'book'))
     if os.path.isdir(bookdir):
         os.chdir(bookdir)
         for book in subdirs():
