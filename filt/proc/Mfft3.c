@@ -87,8 +87,6 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dx);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,x0);
-
-	cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
     } else { 
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
@@ -116,9 +114,9 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dk);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,k0);
-
-	cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
     }
+    
+    cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 
     cp = sf_complexalloc2(n1,nk);
     ctrace = sf_complexalloc(nk);
@@ -128,7 +126,7 @@ int main (int argc, char **argv)
 	    sf_complexread(cp[0],n1*nk,in);
 
 	    /* FFT scaling */
-	    wt = -1./nk;
+	    wt = 1./nk;
 
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform k to x */
