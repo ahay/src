@@ -62,11 +62,11 @@ int main (int argc, char* argv[])
     for (i=0; i < n12; i++) {
 	mean += den[i]*den[i];
     }
-    mean = sqrtf(n12/mean);
+    mean = sqrtf(mean/n12);
 
     for (i=0; i < n12; i++) {
-	num[i] = den[i]*den[i]*den[i]*mean;
-	den[i] *= mean;
+	num[i] = den[i]*den[i]*den[i]*mean*n12;
+	den[i] /= mean;
     }
     
     divn_init(dim, n12, n, rect, niter);

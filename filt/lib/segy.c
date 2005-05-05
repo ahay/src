@@ -390,7 +390,7 @@ static int convert4(const char* buf)
 {
     union {
 	byte b[4];
-	long s;
+	int s;
     } x;
 
     memcpy(x.b,buf,4);
@@ -400,7 +400,7 @@ static int convert4(const char* buf)
 	swapb(x.b+1,x.b+2);
     }
 
-    return (int) x.s;
+    return x.s;
 }
 
 static float fconvert4(const char* buf)
@@ -426,7 +426,7 @@ static void insert4(int y, char* buf)
 {
     union {
 	byte b[4];
-	long s;
+	int s;
     } x;
 
     x.s=y;
@@ -444,13 +444,13 @@ bool sf_endian (void)
 {
     union {
 	byte c[4];
-	long i;
+	int i;
     } test;
 
     test.i=0;
     test.c[0] = (byte) 1;
     
-    assert (2 == sizeof(short) && 4 == sizeof(long)); /* fix this later */
+    assert (2 == sizeof(short) && 4 == sizeof(int)); /* fix this later */
     little_endian = (0 != (test.i << 8));
     
     return little_endian;
@@ -502,9 +502,9 @@ float sf_segydt (const char* bhead)
 static void float2ibm (float y, char* num)
 /* floating-point conversion to IBM format */
 {
-    unsigned long x, s, f;
-    long e;
-    const unsigned long fMAXIBM = 0x7FFFFFFF;
+    unsigned int x, s, f;
+    int e;
+    const unsigned int fMAXIBM = 0x7FFFFFFF;
 
     memcpy (&x,&y,4);
 
@@ -553,9 +553,9 @@ static void float2ibm (float y, char* num)
 static float ibm2float (const char* num)
 /* floating point conversion from IBM format */
 {
-    unsigned long x, s, f;
-    const unsigned long fMAXIEEE = 0x7F7FFFFF;
-    long e;         
+    unsigned int x, s, f;
+    const unsigned int fMAXIEEE = 0x7F7FFFFF;
+    int e;         
     float y;
                                                                      
     x = convert4 (num);
