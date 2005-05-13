@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     sf_file in, out;
 
     sf_init (argc,argv);
-    in = sf_input("in");
+    in  = sf_input ( "in");
     out = sf_output("out");
 
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
