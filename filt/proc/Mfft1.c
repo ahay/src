@@ -21,9 +21,9 @@
 
 int main (int argc, char *argv[])
 {
-    bool cos, inv;
+    bool cos, inv, sym;
     int n1, nt, nw, i1, i2, n2;
-    float dw, *p, *cc=NULL, d1, o1;
+    float dw, *p, *cc=NULL, d1, o1, wt;
     float complex *pp;
     sf_file in, out;
     kiss_fftr_cfg cfg;
@@ -37,7 +37,9 @@ int main (int argc, char *argv[])
     /* if y, perform cosine transform */
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, perform inverse transform */
-    
+    if (!sf_getbool("sym",&sym)) sym=false;
+    /* if y, apply symmetric scaling to make the FFT operator Hermitian */
+
     if (cos) {  
 	if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
     } else if (inv) {
@@ -85,10 +87,18 @@ int main (int argc, char *argv[])
     if (cos) cc = sf_floatalloc(nw);
 
     cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
+    wt = sym? 1./sqrtf((float) nt): 1.0/nt;
 
     for (i2=0; i2 < n2; i2++) {
 	if (!inv) {
 	    sf_floatread (p,n1,in);
+
+	    if (sym) {
+		for (i1=0; i1 < n1; i1++) {
+		    p[i1] *= wt;
+		}
+	    }
+	    
 	    if (!cos) {
 		for (i1=n1; i1 < nt; i1++) {
 		    p[i1]=0.0;
@@ -96,7 +106,7 @@ int main (int argc, char *argv[])
 	    } else {
 		for (i1=n1; i1 <= nt/2; i1++) {
 		    p[i1]=0.0;
-		}
+		}		
 		for (i1=nt/2+1; i1 < nt; i1++) {
 		    p[i1] = p[nt-i1];
 		}
@@ -137,7 +147,7 @@ int main (int argc, char *argv[])
 	    kiss_fftri(cfg,(const kiss_fft_cpx *) pp,p);
 
 	    for (i1=0; i1 < n1; i1++) {
-		p[i1] /= nt;
+		p[i1] *= wt;
 	    }
 
 	    sf_floatwrite (p,n1,out);

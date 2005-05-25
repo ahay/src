@@ -38,6 +38,7 @@ int main (int argc, char **argv)
     float complex **cp, *ctrace; /* frequency-wavenumber */
 
     bool inv;                /* forward or inverse */
+    bool sym;                /* symmetric scaling */
     int sign;                /* transform sign */
 
     char varname[6];         /* variable name */
@@ -53,6 +54,9 @@ int main (int argc, char **argv)
 
     if (!sf_getbool("inv",&inv)) inv = false;
     /* if y, perform inverse transform */
+
+    if (!sf_getbool("sym",&sym)) sym=false;
+    /* if y, apply symmetric scaling to make the FFT operator Hermitian */
 
     if (!sf_getint("sign",&sign)) sign = inv? 1: 0;
     /* transform sign (0 or 1) */
@@ -120,13 +124,13 @@ int main (int argc, char **argv)
 
     cp = sf_complexalloc2(n1,nk);
     ctrace = sf_complexalloc(nk);
-
+    
+    /* FFT scaling */
+    wt = sym? 1./sqrtf((float) nk): 1./nk;
+    
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
 	    sf_complexread(cp[0],n1*nk,in);
-
-	    /* FFT scaling */
-	    wt = 1./nk;
 
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform k to x */
@@ -146,6 +150,14 @@ int main (int argc, char **argv)
 	    for (ix=1; ix<nx; ix+=2) {
 		for (i1=0; i1<n1; i1++) {
 		    cp[ix][i1] = -cp[ix][i1];
+		}
+	    }
+
+	    if (sym) {
+		for (ix=0; ix<nx; ix++) {
+		    for (i1=0; i1 < n1; i1++) {
+			cp[ix][i1] *= wt;
+		    }
 		}
 	    }
 

@@ -31,7 +31,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main (int argc, char* argv[])
 {
     int i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *num, *den, *rat, mean;
+    float *num, *den, *rat1, *rat2, *dat, mean;
     char key[6];
     sf_file in, out;
 
@@ -49,30 +49,64 @@ int main (int argc, char* argv[])
 	n12 *= n[i];
     }
 
+    dat = sf_floatalloc(n12);
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);
-    rat = sf_floatalloc(n12);
+    rat1 = sf_floatalloc(n12);
+    rat2 = sf_floatalloc(n12);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    sf_floatread(den,n12,in);
+    sf_floatread(dat,n12,in);
+    divn_init(dim, n12, n, rect, niter);
 
     mean=0.;
     for (i=0; i < n12; i++) {
-	mean += den[i]*den[i];
+	dat[i] *= dat[i];
+	mean += dat[i]*dat[i];
     }
-    mean = sqrtf(mean/n12);
+    mean = sqrtf(n12/mean);
 
     for (i=0; i < n12; i++) {
-	num[i] = den[i]*den[i]*den[i]*mean*n12;
-	den[i] /= mean;
+	num[i] = mean;
+	den[i] = dat[i]*mean;
     }
     
-    divn_init(dim, n12, n, rect, niter);
-    divn (num, den, rat);
+    divn (num, den, rat1);
+    
+    for (i=0; i < n12; i++) {
+	den[i] = 1.;
+	num[i] = dat[i];
+    }
+    
+    divn (num, den, rat2);
 
-    sf_floatwrite(rat,n12,out);
+    for (i=0; i < n12; i++) {
+	rat1[i] *= rat2[i];
+    }
+    
+    /*
+
+    for (i=0; i < n12; i++) {
+	if (rat1[i] > 0.) {
+	    if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
+		rat1[i] = fabsf(rat1[i]*rat2[i]);
+	    } else {
+		rat1[i] = -fabsf(rat1[i]*rat2[i]);
+	    }
+	} else {
+	    if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
+		rat1[i] = -fabsf(rat1[i]*rat2[i]);
+	    } else {
+		rat1[i] = fabsf(rat1[i]*rat2[i]);
+	    }
+	}
+    }
+    
+    */
+
+    sf_floatwrite(rat1,n12,out);
 
     exit(0);
 }
