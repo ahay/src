@@ -34,7 +34,7 @@
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 static axa az,aw,alx,aly,amx,amy,ae;
-static bool verb;
+static bool verb, incore;
 static float eps;
 static float twoway;
 
@@ -46,12 +46,16 @@ static float         **so; /* slowness */
 static int            *nr; /* number of references */
 static fslice        slow; /* slowness slice */
 
+static float       ***rrr;
+static float       ***sss;
+
 /*------------------------------------------------------------*/
 
 void zomig_init(bool verb_,
+		bool incore_,  /* keep shot wavefield in core */
 		float eps_,
 		bool twoway_,
-		float  dt,
+		float dtmax,
 		axa az_          /* depth */,
 		axa aw_          /* frequency */,
 		axa ae_          /* experiment */,
@@ -66,9 +70,10 @@ void zomig_init(bool verb_,
 /*< initialize >*/
 {
     int   ilx, ily, iz, jj;
-    float ds;
+    float dsmax;
 
     verb=verb_;
+    incore = incore_;
     eps = eps_;
 
     az = az_;
@@ -83,7 +88,7 @@ void zomig_init(bool verb_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    ds  = dt/az.d;
+    dsmax  = dtmax/az.d;
 
     /* SSR */
     ssr_init(az_ ,
@@ -91,7 +96,7 @@ void zomig_init(bool verb_,
 	     alx_,aly_,
 	     pmx ,pmy,
 	     tmx ,tmy,
-	     ds);
+	     dsmax);
 
     /* precompute taper */
     taper2_init(amy.n,
@@ -102,10 +107,8 @@ void zomig_init(bool verb_,
 		true);
     
     /* compute reference slowness */
-    if(twoway_) {
-	twoway = 2;
-    } else {
-	twoway = 1;
+    if(twoway_) { twoway = 2;
+    } else {      twoway = 1;
     }
 
     ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
@@ -117,13 +120,17 @@ void zomig_init(bool verb_,
 	fslice_get(slow,iz,ss[0]);
 	SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 
-	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
+	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
 	for (jj=0; jj<nr[iz]; jj++) {
 	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
 	}
+    }
+
+    if(incore) {
+	sss = sf_floatalloc3  (alx.n,aly.n,az.n);
     }
 
     /* allocate wavefield storage */
@@ -142,6 +149,10 @@ void zomig_close(void)
     free( *so); free( so);
     free( *sm); free( sm);
     ;           free( nr);
+
+    if(incore) {
+	free(**sss); free(*sss); free(sss);
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -150,12 +161,18 @@ void zomig_aloc()
 /*< allocate migration storage >*/
 {
     qq = sf_floatalloc2(amx.n,amy.n);
+    if(incore) {
+	rrr = sf_floatalloc3(amx.n,amy.n,az.n);
+    }
 }
 
 void zomig_free()
 /*< free migration storage >*/
 {
     free( *qq); free( qq);
+    if(incore) {
+	free(**rrr); free( *rrr); free( rrr);
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -174,65 +191,123 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	    fslice_put(imag,iz,qq[0]);
 	}
     }
-    
-    /* loop over frequencies w */
-    for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 
+    if(incore) {
+	for( iz=0; iz<az.n; iz++) {
+	    LOOP( rrr[iz][imy][imx] = 0;);
+
+	    fslice_get(slow,iz,so[0]);
+	    SOOP( sss[iz][ily][ilx] = so[ily][ilx]*twoway;);
+	}
+
+	/* loop over frequencies w */
 	if (inv) { /* MODELING */
-	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
-	    LOOP( wx[imy][imx] = 0; );  
-
-	    fslice_get(slow,az.n-1,so[0]);
-	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
-	    for (iz=az.n-1; iz>0; iz--) {
-		fslice_get(imag,iz,qq[0]);
-		LOOP( wx[imy][imx] +=
-		      qq[imy][imx]; );
-		
-		/* upward continuation */
-		fslice_get(slow,iz-1,ss[0]);
-		SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
-		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
-	    }
-
-	    fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
-	    LOOP( wx[imy][imx]  += 
-		  qq[imy][imx]; );		
 	    
-	    taper2(wx);
-	    fslice_put(data,iw,wx[0]);    /* output data @ iz=0 */
-	    
-	} else { /* MIGRATION */
-	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
-
-	    fslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
-	    taper2(wx);
-
-	    fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
-	    LOOP(;      qq[imy][imx] += 
-		 crealf(wx[imy][imx] ); );
-	    fslice_put(imag,0,qq[0]);
-
-	    fslice_get(slow,0,so[0]);	    
-	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 	    for (iz=0; iz<az.n-1; iz++) {
+		fslice_get(imag,iz,qq[0]);
+		LOOP( rrr[iz][imy][imx] = qq[imy][imx]; );
+	    }
+	    for (iw=0; iw<aw.n; iw++) {
+		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
+		w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
+		
+		LOOP( wx[imy][imx] = 0; );		
+		for (iz=az.n-1; iz>0; iz--) {
+		    /* imaging */
+		    LOOP( wx[imy][imx] += rrr[iz][imy][imx];);
+		    /* upward continuation */
+		    ssr_ssf(w,wx,sss[iz],sss[iz-1],nr[iz],sm[iz]);
+		}
+		
+		LOOP(    wx[imy][imx] += 
+		     rrr[0][imy][imx]; );	
+		taper2(wx);
+		fslice_put(data,iw,wx[0]);
+	    }
+	} else { /* MIGRATION */
+	    for (iw=0; iw<aw.n; iw++) {
+		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
+		w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+		
+		fslice_get(data,iw,wx[0]); 
+		taper2(wx);
+		LOOP(   rrr[0][imy][imx] += 
+		     crealf(wx[imy][imx]); );
+		
+		for (iz=0; iz<az.n-1; iz++) {		    
+		    /* downward continuation */
+		    ssr_ssf(w,wx,sss[iz],sss[iz+1],nr[iz],sm[iz]);
+		    /* imaging */
+		    LOOP(rrr[iz+1][imy][imx] += 
+			 crealf(wx[imy][imx]); );
+		}
+	    }
+	    for (iz=0; iz<az.n-1; iz++) {
+		LOOP(qq[imy][imx] = rrr[iz][imy][imx]; );
+		fslice_put(imag,iz,qq[0]);
+	    }
+	} /* else */
 
-		/* downward continuation */
-		fslice_get(slow,iz+1,ss[0]);
-		SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
-		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
-
-		fslice_get(imag,iz+1,qq[0]); /* imaging */
+    } else {
+	/* loop over frequencies w */
+	for (iw=0; iw<aw.n; iw++) {
+	    if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+	    
+	    if (inv) { /* MODELING */
+		w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
+		LOOP( wx[imy][imx] = 0; );  
+		
+		fslice_get(slow,az.n-1,so[0]);
+		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+		for (iz=az.n-1; iz>0; iz--) {
+		    fslice_get(imag,iz,qq[0]);
+		    LOOP( wx[imy][imx] +=
+			  qq[imy][imx]; );
+		    
+		    /* upward continuation */
+		    fslice_get(slow,iz-1,ss[0]);
+		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
+		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
+		
+		fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
+		LOOP( wx[imy][imx]  += 
+		      qq[imy][imx]; );		
+		
+		taper2(wx);
+		fslice_put(data,iw,wx[0]);    /* output data @ iz=0 */
+		
+	    } else { /* MIGRATION */
+		w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+		
+		fslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
+		taper2(wx);
+		
+		fslice_get(imag,0,qq[0]);      /*     imaging @ iz=0 */
 		LOOP(;      qq[imy][imx] += 
 		     crealf(wx[imy][imx] ); );
-		fslice_put(imag,iz+1,qq[0]);
-	    }
-
-	} /* else */
-    } /* iw */
+		fslice_put(imag,0,qq[0]);
+		
+		fslice_get(slow,0,so[0]);	    
+		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+		for (iz=0; iz<az.n-1; iz++) {
+		    
+		    /* downward continuation */
+		    fslice_get(slow,iz+1,ss[0]);
+		    SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
+		    ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		    
+		    fslice_get(imag,iz+1,qq[0]); /* imaging */
+		    LOOP(;      qq[imy][imx] += 
+			 crealf(wx[imy][imx] ); );
+		    fslice_put(imag,iz+1,qq[0]);
+		}
+		
+	    } /* else */
+	} /* iw */
+    } /* incore */
 }
 
 /*------------------------------------------------------------*/

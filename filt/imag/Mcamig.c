@@ -45,18 +45,18 @@ int main (int argc, char *argv[])
     /* default mode is migration/modeling */
     if (NULL == (mode = sf_getstring("mode"))) mode = "m";
 
-    if (!sf_getbool( "inv",&inv ))  inv = false; /* y=modeling; n=migration */
-    if (!sf_getbool("verb",&verb)) verb = false; /* verbosity flag */
-    if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nrmax",&nrmax  ))   nrmax =     1; /* maximum number of refs */
-    if (!sf_getfloat( "dtmax",&dtmax  ))   dtmax = 0.004; /* time error */
-    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding mx*/
-    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding my*/
-    if (!sf_getint(  "phx",&phx ))  phx =     0; /* padding hx*/
+    if (!sf_getbool( "inv",  &inv  ))   inv = false; /* y=modeling; n=migration */
+    if (!sf_getbool( "verb", &verb ))  verb = false; /* verbosity flag */
+    if (!sf_getfloat("eps",  &eps  ))   eps =  0.01; /* stability parameter */
+    if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* maximum number of refs */
+    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* time error */
+    if (!sf_getint(  "pmx",  &pmx  ))   pmx =     0; /* padding mx*/
+    if (!sf_getint(  "pmy",  &pmy  ))   pmy =     0; /* padding my*/
+    if (!sf_getint(  "phx",  &phx  ))   phx =     0; /* padding hx*/
 
-    if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper mx */
-    if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper my */
-    if (!sf_getint(  "thx",&thx ))  thx =     0; /* taper hx */
+    if (!sf_getint(  "tmx",  &tmx  ))   tmx =     0; /* taper mx */
+    if (!sf_getint(  "tmy",  &tmy  ))   tmy =     0; /* taper my */
+    if (!sf_getint(  "thx",  &thx  ))   thx =     0; /* taper hx */
 
     /* slowness parameters */
     Fs = sf_input ("slo");

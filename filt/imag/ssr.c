@@ -1,4 +1,4 @@
-/* 3-D SSR migration/modeling using extended split-step */
+/* 3-D SSR */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -25,7 +25,7 @@
 #include "fft2.h"
 #include "taper.h"
 
-#include "slice.h"
+/*#include "slice.h"*/
 /*^*/
 
 #define LOOP(a) for(iy=0;iy<ayy.n;iy++){ for(ix=0;ix<axx.n;ix++){ {a} }}
@@ -40,7 +40,7 @@
 static axa az,axx,ayy;
 static axa    bxx,byy;
 static axa    alx,aly;
-static float ds2;
+static float dsmax2;
 
 static float         **kk; /* wavenumber  */
 static int            *lx;
@@ -60,7 +60,7 @@ void ssr_init( axa az_,
 	       int py,
 	       int tx,
 	       int ty,
-	       float ds
+	       float dsmax
     )
 /*< initialize >*/
 {
@@ -121,8 +121,8 @@ void ssr_init( axa az_,
     /* allocate X-domain storage */
     wt = sf_floatalloc2   (axx.n,ayy.n);
 
-    ds2 = ds*ds;
-    ds2*= ds2;
+    dsmax2 = dsmax*dsmax;
+    dsmax2*= dsmax2;
 }
 
 /*------------------------------------------------------------*/
@@ -184,7 +184,7 @@ void ssr_ssf(
 	/* accumulate wavefield */
 	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
 			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
-	      d = ds2/(d*d+ds2);
+	      d = dsmax2/(d*d+dsmax2);
 	      wx[iy][ix] += wk[iy][ix]*d;
 	      wt[iy][ix] += d; );
     }

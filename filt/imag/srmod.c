@@ -36,12 +36,8 @@
                 for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
 static axa az,aw,alx,aly,ax,ay,ae;
-static bool verb;
+static bool verb, incore;
 static float eps;
-
-static float         **rr;
-static float complex **ww_s;
-static float complex **ww_r;
 
 static float         **ss; /* slowness */
 static float         **so; /* slowness */
@@ -51,7 +47,19 @@ static float         **sm_s,**sm_r,**sm; /* ref slo squared */
 static fslice        slow_s,slow_r,slow; /* slowness slice */
 static fslice        wtmp;
 
+/* read one depth level in memory */
+static float         **rr;
+static float complex **ww_s;
+static float complex **ww_r;
+
+/* read all depth levels in memory */
+static float         ***rrr;
+static float complex ***www;
+static float         ***ssp;
+static float         ***sss;
+
 void srmod_init(bool verb_,
+		bool incore_,  /* keep shot wavefield in core */
 		float eps_,
 		float dtmax,
 		axa ae_        /* experiments (e.g. shots) */,
@@ -66,10 +74,11 @@ void srmod_init(bool verb_,
     )
 /*< initialize S/R modeling >*/
 {
-    float ds;
+    float dsmax;
 
-    verb=verb_;
-    eps = eps_;
+    verb   = verb_;
+    incore = incore_;
+    eps    = eps_;
     
     az = az_;
     aw = aw_;
@@ -83,7 +92,7 @@ void srmod_init(bool verb_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    ds  = dtmax/az.d;
+    dsmax  = dtmax/az.d;
 
     /* SSR */
     ssr_init(az_ ,
@@ -91,7 +100,7 @@ void srmod_init(bool verb_,
 	     alx_,aly_,
 	     px  ,py,
 	     tx  ,ty,
-	     ds);
+	     dsmax);
 
     /* precompute taper */
     taper2_init(ay.n,
@@ -105,14 +114,16 @@ void srmod_init(bool verb_,
     ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
     so = sf_floatalloc2(alx.n,aly.n); /* slowness */
 
-    /* allocate wavefield storage */
-    ww_s = sf_complexalloc2(ax.n,ay.n);
+    ww_s = sf_complexalloc2(ax.n,ay.n); /* wavefield storage */
     ww_r = sf_complexalloc2(ax.n,ay.n);
-
-    /*< allocate reflectivity storage >*/
-    rr = sf_floatalloc2(ax.n,ay.n);
-
-    wtmp  = fslice_init( ax.n* ay.n, az.n,sizeof(float complex));
+    rr   = sf_floatalloc2  (ax.n,ay.n); /* reflectivity storage */
+    
+    if(incore) {
+	www = sf_complexalloc3(ax.n,ay.n,az.n);
+	rrr = sf_floatalloc3  (ax.n,ay.n,az.n);
+    } else {
+	wtmp  = fslice_init( ax.n * ay.n, az.n,sizeof(float complex));
+    }
 }
 
 void srmod_pw_init( float dtmax,
@@ -121,9 +132,9 @@ void srmod_pw_init( float dtmax,
 /*< initialize P-wave S/R modeling >*/
 {
     int   iz, jj;
-    float ds;
+    float dsmax;
 
-    ds  = dtmax/az.d;
+    dsmax  = dtmax/az.d;
 
     sm= sf_floatalloc2 (nrmax,az.n); /* ref slowness squared*/
     nr= sf_intalloc          (az.n); /* nr of ref slownesses */
@@ -131,7 +142,7 @@ void srmod_pw_init( float dtmax,
     for (iz=0; iz<az.n; iz++) {
 	fslice_get(slow,iz,ss[0]);
 	
-	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
+	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
@@ -139,6 +150,11 @@ void srmod_pw_init( float dtmax,
 	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
 	}
     }
+
+    if(incore) {
+	ssp = sf_floatalloc3  (alx.n,aly.n,az.n);
+    }
+
 }
 
 void srmod_cw_init( float dtmax,
@@ -148,9 +164,9 @@ void srmod_cw_init( float dtmax,
 /*< initialize C-wave S/R modeling >*/
 {
     int   iz, jj;
-    float ds;
+    float dsmax;
 
-    ds  = dtmax/az.d;
+    dsmax  = dtmax/az.d;
 
     /*------------------------------------------------------------*/
     /* slowness: downgoing wavefield */
@@ -160,7 +176,7 @@ void srmod_cw_init( float dtmax,
     for (iz=0; iz<az.n; iz++) {
 	fslice_get(slow_s,iz,ss[0]);
 	
-	nr_s[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm_s[iz]);
+	nr_s[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm_s[iz]);
 	if (verb) sf_warning("nr_s[%d]=%d",iz,nr_s[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
@@ -176,7 +192,7 @@ void srmod_cw_init( float dtmax,
     for (iz=0; iz<az.n; iz++) {
 	fslice_get(slow_r,iz,ss[0]);
 	
-	nr_r[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm_r[iz]);
+	nr_r[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm_r[iz]);
 	if (verb) sf_warning("nr_r[%d]=%d",iz,nr_r[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
@@ -185,6 +201,11 @@ void srmod_cw_init( float dtmax,
 	}
     }
     /*------------------------------------------------------------*/
+
+    if(incore) {
+	ssp = sf_floatalloc3  (alx.n,aly.n,az.n);
+	sss = sf_floatalloc3  (alx.n,aly.n,az.n);
+    }
 }
 
 
@@ -194,6 +215,10 @@ void srmod_pw_close(void)
 {
     free( *sm); free( sm);
     ;           free( nr);
+
+    if(incore) {
+	free(**ssp); free(*ssp); free(ssp);
+    }
 }
 
 void srmod_cw_close(void)
@@ -203,22 +228,31 @@ void srmod_cw_close(void)
     ;             free( nr_s);
     free( *sm_r); free( sm_r);
     ;             free( nr_r);
+
+    if(incore) {
+	free(**ssp); free(*ssp); free(ssp);
+	free(**sss); free(*sss); free(sss);
+    }
 }
 
 void srmod_close(void)
 /*< free allocated storage >*/
 {
     ssr_close();
-    
-    free( *ww_s); free( ww_s);
-    free( *ww_r); free( ww_r);
 
     free( *ss); free( ss);
     free( *so); free( so);
+    
+    free( *ww_s); free( ww_s);
+    free( *ww_r); free( ww_r);
+    free( *rr  ); free( rr  );
 
-    free( *rr); free( rr);
-
-    fslice_close(wtmp);
+    if(incore) {
+	free(**www); free( *www); free( www);
+	free(**rrr); free( *rrr); free( rrr);
+    } else {
+	fslice_close(wtmp);
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -230,43 +264,78 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 {
     int iz,iw,ix,iy,ilx,ily;
     float complex w;
-    
-    for (iw=0; iw<aw.n; iw++) {
-	if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
-	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
-	/* downgoing wavefield */
-	fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
-	fslice_put(wtmp, 0,ww_s[0]);
+    if(incore) {
 
-	fslice_get(slow,0,so[0]);
-	for (iz=0; iz<az.n-1; iz++) {
-	    fslice_get(slow,iz+1,ss[0]);
+	/* read reflectivity */
+	for( iz=0; iz<az.n; iz++) {
+	    fslice_get(refl,iz,rr[0]);
+	    LOOP( rrr[iz][ iy][ ix] = rr[iy][ix];);
 
-	    ssr_ssf(w,ww_s,so,ss,nr[iz],sm[iz]);
-	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-
-	    fslice_put(wtmp,iz+1,ww_s[0]);
+	    fslice_get(slow,iz,so[0]);
+	    SOOP( ssp[iz][ily][ilx] = so[ily][ilx];);
 	}
-	
-	/* upgoing wavefield */
-	LOOP( ww_r[iy][ix] = 0; );
 
-	fslice_get(slow,az.n-1,so[0]);
-	for (iz=az.n-1; iz>0; iz--) {
-	    fslice_get(slow,iz-1,ss[0]);
+	for (iw=0; iw<aw.n; iw++) {
+	    if(verb) sf_warning("iw=%3d of %3d (in core)",iw+1,aw.n);
+	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    
+	    /* downgoing wavefield */
+	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
+	    LOOP( www[0][iy][ix] = ww_s[iy][ix]; );
+	    for (iz=0; iz<az.n-1; iz++) {
+		ssr_ssf(w,ww_s,ssp[iz],ssp[iz+1],nr[iz],sm[iz]);
+		LOOP( www[iz+1][iy][ix] = ww_s[iy][ix]; );
+	    }
+	    
+	    /* upgoing wavefield */
+	    LOOP( ww_r[iy][ix] = 0; );	    
+	    for (iz=az.n-1; iz>0; iz--) {
+		LOOP( ww_r[iy][ix] += www[iz][iy][ix]*rrr[iz][iy][ix]; );
+		ssr_ssf(w,ww_r,ssp[iz],ssp[iz-1],nr[iz],sm[iz]);
+	    }
 
-	    fslice_get(wtmp,iz,ww_s[0]); 
-	    fslice_get(refl,iz,rr[0]); /* reflectivity */
+	    fslice_put(uwfl,iw,ww_r[0]);
+	} /* iw */
 
-	    LOOP( ww_s[iy][ix] *= rr  [iy][ix]; );
-	    LOOP( ww_r[iy][ix] += ww_s[iy][ix]; );
+    } else {
 
-	    ssr_ssf(w,ww_r,so,ss,nr[iz],sm[iz]);
-	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-	}
-	fslice_put(uwfl,iw,ww_r[0]);
-    } /* iw */
+	for (iw=0; iw<aw.n; iw++) {
+	    if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
+	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    
+	    /* downgoing wavefield */
+	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
+	    fslice_put(wtmp, 0,ww_s[0]);
+	    
+	    fslice_get(slow,0,so[0]);
+	    for (iz=0; iz<az.n-1; iz++) {
+		fslice_get(slow,iz+1,ss[0]);
+		ssr_ssf(w,ww_s,so,ss,nr[iz],sm[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		
+		fslice_put(wtmp,iz+1,ww_s[0]);
+	    }
+	    
+	    /* upgoing wavefield */
+	    LOOP( ww_r[iy][ix] = 0; );
+	    
+	    fslice_get(slow,az.n-1,so[0]);
+	    for (iz=az.n-1; iz>0; iz--) {
+		fslice_get(slow,iz-1,ss[0]);
+		
+		fslice_get(wtmp,iz,ww_s[0]); 
+		fslice_get(refl,iz,rr[0]); /* reflectivity */
+		
+		LOOP( ww_s[iy][ix] *= rr  [iy][ix];
+		      ww_r[iy][ix] += ww_s[iy][ix]; );
+		
+		ssr_ssf(w,ww_r,so,ss,nr[iz],sm[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+	    }
+	    fslice_put(uwfl,iw,ww_r[0]);
+	} /* iw */
+    } /* in core */
 }
 
 /*------------------------------------------------------------*/
@@ -279,41 +348,79 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 {
     int iz,iw,ix,iy,ilx,ily;
     float complex w;
-    
-    for (iw=0; iw<aw.n; iw++) {
-	if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
-	w = eps*aw.d + I*(aw.o+iw*aw.d);
 
-	/* downgoing wavefield */
-	fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
+    if(incore) {
 
-	fslice_put(wtmp,0,ww_s[0]);
+	/* read reflectivity */
+	for( iz=0; iz<az.n; iz++) {
+	    fslice_get(refl,iz,rr[0]);
+	    LOOP( rrr[iz][iy][ix] = rr[iy][ix];);
 
-	fslice_get(slow_s,0,so[0]);
-	for (iz=0; iz<az.n-1; iz++) {
-	    fslice_get(slow_s,iz+1,ss[0]);
+	    fslice_get(slow_s,iz,so[0]);
+	    SOOP( ssp[iz][ily][ilx] = so[ily][ilx];);
 
-	    ssr_ssf(w,ww_s,so,ss,nr_s[iz],sm_s[iz]);
-	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-
-	    fslice_put(wtmp,iz+1,ww_s[0]);
+	    fslice_get(slow_r,iz,so[0]);
+	    SOOP( sss[iz][ily][ilx] = so[ily][ilx];);
 	}
 	
-	/* upgoing wavefield */
-	LOOP( ww_r[iy][ix] = 0; );
+	for (iw=0; iw<aw.n; iw++) {
+	    if(verb) sf_warning("iw=%3d of %3d (in core)",iw+1,aw.n);
+	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    
+	    /* downgoing wavefield */
+	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
+	    LOOP( www[0][iy][ix] = ww_s[iy][ix]; );	    
+	    for (iz=0; iz<az.n-1; iz++) {
+		ssr_ssf(w,ww_s,ssp[iz],ssp[iz+1],nr_s[iz],sm_s[iz]);
+		LOOP( www[iz+1][iy][ix] = ww_s[iy][ix]; );
+	    }
+	    
+	    /* upgoing wavefield */
+	    LOOP( ww_r[iy][ix] = 0; );
+	    for (iz=az.n-1; iz>0; iz--) {
+		LOOP( ww_r[iy][ix] += www[iz][iy][ix]*rrr[iz][iy][ix]; );
+		ssr_ssf(w,ww_r,sss[iz],sss[iz-1],nr[iz],sm[iz]);
+	    }
+	    fslice_put(uwfl,iw,ww_r[0]);
+	} /* iw */
 
-	fslice_get(slow_r,az.n-1,so[0]);
-	for (iz=az.n-1; iz>0; iz--) {
-	    fslice_get(slow_r,iz-1,ss[0]);
+    } else {
 
-	    fslice_get(wtmp,iz,ww_s[0]); 
-	    fslice_get(refl,iz,rr[0]); /* reflectivity */
-	    LOOP( ww_s[iy][ix] *= rr  [iy][ix]; );
-	    LOOP( ww_r[iy][ix] += ww_s[iy][ix]; );
+	for (iw=0; iw<aw.n; iw++) {
+	    if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
+	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    
+	    /* downgoing wavefield */
+	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
+	    
+	    fslice_put(wtmp,0,ww_s[0]);
+	    
+	    fslice_get(slow_s,0,so[0]);
+	    for (iz=0; iz<az.n-1; iz++) {
+		fslice_get(slow_s,iz+1,ss[0]);
+		ssr_ssf(w,ww_s,so,ss,nr_s[iz],sm_s[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		
+		fslice_put(wtmp,iz+1,ww_s[0]);
+	    }
+	    
+	    /* upgoing wavefield */
+	    LOOP( ww_r[iy][ix] = 0; );
+	    
+	    fslice_get(slow_r,az.n-1,so[0]);
+	    for (iz=az.n-1; iz>0; iz--) {
+		fslice_get(slow_r,iz-1,ss[0]);
+		
+		fslice_get(wtmp,iz,ww_s[0]); 
+		fslice_get(refl,iz,rr[0]); /* reflectivity */
+		LOOP( ww_s[iy][ix] *= rr  [iy][ix];
+		      ww_r[iy][ix] += ww_s[iy][ix]; );
+		
+		ssr_ssf(w,ww_r,so,ss,nr_r[iz],sm_r[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+	    }
+	    fslice_put(uwfl,iw,ww_r[0]);
+	} /* iw */
+    } /* in core */
 
-	    ssr_ssf(w,ww_r,so,ss,nr_r[iz],sm_r[iz]);
-	    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-	}
-	fslice_put(uwfl,iw,ww_r[0]);
-    } /* iw */
 }

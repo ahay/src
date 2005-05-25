@@ -52,7 +52,7 @@ static fslice         slow; /* slowness slice */
 
 void camig_init(bool verb_,
 		float eps_,
-		float  dt,
+		float dtmax,
 		axa az_                   /* depth */,
 		axa aw_                   /* frequency */,
 		axa ae_                   /* experiment */,
@@ -68,7 +68,7 @@ void camig_init(bool verb_,
 /*< initialize >*/
 {
     int   iz, j;
-    float ds;
+    float dsmax;
 
     verb=verb_;
     eps = eps_;
@@ -86,7 +86,7 @@ void camig_init(bool verb_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    ds  = dt/az.d;
+    dsmax  = dtmax/az.d;
 
     /* CAM */
     cam_init(az_ ,aw_,
@@ -94,7 +94,7 @@ void camig_init(bool verb_,
 	     alx_,aly_,
 	     pmx ,pmy, phx,
 	     tmx ,tmy, thx,
-	     ds);
+	     dsmax);
 
     /* precompute taper */
     taper3_init(ahx.n,
@@ -114,7 +114,7 @@ void camig_init(bool verb_,
     for (iz=0; iz<az.n; iz++) {
 	fslice_get(slow,iz,ss[0]);
 	
-	nr[iz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[iz]);
+	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {

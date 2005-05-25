@@ -61,7 +61,7 @@ void srmig_init(bool verb_,
     )
 /*< initialize SR migration >*/
 {
-    float ds;
+    float dsmax;
 
     verb=verb_;
     eps = eps_;
@@ -78,7 +78,7 @@ void srmig_init(bool verb_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    ds  = dtmax/amz.d;
+    dsmax = dtmax/amz.d;
 
     /* SSR */
     ssr_init(amz_ ,
@@ -86,7 +86,7 @@ void srmig_init(bool verb_,
 	     alx_,aly_,
 	     pmx ,pmy,
 	     tmx ,tmy,
-	     ds);
+	     dsmax);
 
     /* precompute taper */
     taper2_init(amy.n,
@@ -108,9 +108,9 @@ void srmig_pw_init(float  dtmax,
 /*< initialize P-wave slowness >*/
 {
     int   imz, jj;
-    float ds;
+    float dsmax;
 
-    ds  = dtmax/amz.d;
+    dsmax = dtmax/amz.d;
 
     /*------------------------------------------------------------*/
     /* slowness: downgoing wavefield */
@@ -122,7 +122,7 @@ void srmig_pw_init(float  dtmax,
     for (imz=0; imz<amz.n; imz++) {
 	fslice_get(slow,imz,ss[0]);
 	
-	nr[imz] = slowref(nrmax,ds,alx.n*aly.n,ss[0],sm[imz]);
+	nr[imz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[imz]);
 	if (verb) sf_warning("nr[%d]=%d",imz,nr[imz]);
     }
     for (imz=0; imz<amz.n-1; imz++) {
@@ -141,9 +141,9 @@ void srmig_cw_init(float  dtmax,
 /*< initialize C-wave slowness >*/
 {
     int   imz, jj;
-    float ds;
+    float dsmax;
 
-    ds  = dtmax/amz.d;
+    dsmax = dtmax/amz.d;
 
     /*------------------------------------------------------------*/
     /* slowness: downgoing wavefield */
@@ -155,7 +155,7 @@ void srmig_cw_init(float  dtmax,
     for (imz=0; imz<amz.n; imz++) {
 	fslice_get(slow_s,imz,ss_s[0]);
 	
-	nr_s[imz] = slowref(nrmax,ds,alx.n*aly.n,ss_s[0],sm_s[imz]);
+	nr_s[imz] = slowref(nrmax,dsmax,alx.n*aly.n,ss_s[0],sm_s[imz]);
 	if (verb) sf_warning("nr_s[%d]=%d",imz,nr_s[imz]);
     }
     for (imz=0; imz<amz.n-1; imz++) {
@@ -173,7 +173,7 @@ void srmig_cw_init(float  dtmax,
     for (imz=0; imz<amz.n; imz++) {
 	fslice_get(slow_r,imz,ss_r[0]);
 	
-	nr_r[imz] = slowref(nrmax,ds,alx.n*aly.n,ss_r[0],sm_r[imz]);
+	nr_r[imz] = slowref(nrmax,dsmax,alx.n*aly.n,ss_r[0],sm_r[imz]);
 	if (verb) sf_warning("nr_r[%d]=%d",imz,nr_r[imz]);
     }
     for (imz=0; imz<amz.n-1; imz++) {

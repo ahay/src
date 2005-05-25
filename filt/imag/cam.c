@@ -45,7 +45,7 @@
 static axa az,aw,amx,amy,ahx;
 static axa       bmx,bmy,bhx;
 static axa       alx,aly;
-static float ds2;
+static float dsmax2;
 
 static float          **ksx;/* source   wavenumber  */
 static float          **krx;/* receiver wavenumber  */
@@ -72,7 +72,7 @@ void cam_init(
     int tmx,
     int tmy,
     int thx,
-    float ds
+    float dsmax
     )
 /*< initialize >*/
 {
@@ -159,8 +159,8 @@ void cam_init(
     /* allocate X-domain storage */
     wt = sf_floatalloc3   (amx.n,amy.n,ahx.n);
 
-    ds2 = ds*ds;
-    ds2*= ds2;
+    dsmax2 = dsmax*dsmax;
+    dsmax2*= dsmax2;
 }
 
 /*------------------------------------------------------------*/
@@ -243,7 +243,7 @@ void cam_ssf(
 		drc = fabsf( so[ jy[imy] ][ ir[ihx][imx] ] *
 			     so[ jy[imy] ][ ir[ihx][imx] ] - sm[jr]);
 		d = sqrt(dsc*dsc + drc*drc);
-		d = ds2/(d*d+ds2);
+		d = dsmax2/(d*d+dsmax2);
 		wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
 		wt[ihx][imy][imx] += d; );
 	} /* jr loop */

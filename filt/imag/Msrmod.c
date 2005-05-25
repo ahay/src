@@ -23,6 +23,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;            /* verbosity */
+    bool incore;          /* in core execution */
     float eps;            /* dip filter constant */  
     int   nrmax;          /* number of reference velocities */
     float dtmax;          /* time error */
@@ -49,14 +50,15 @@ int main (int argc, char *argv[])
 	cw=false;
     }
 
-    if (!sf_getbool("verb",&verb)) verb =  true; /* verbosity flag */
-    if (!sf_getfloat("eps",&eps ))  eps =  0.01; /* stability parameter */
-    if (!sf_getint(   "nrmax",&nrmax  ))   nrmax =     1; /* maximum number of refs */
-    if (!sf_getfloat( "dtmax",&dtmax  ))   dtmax = 0.004; /* time error */
-    if (!sf_getint(  "pmx",&pmx ))  pmx =     0; /* padding on x */
-    if (!sf_getint(  "pmy",&pmy ))  pmy =     0; /* padding on y */
-    if (!sf_getint(  "tmx",&tmx ))  tmx =     0; /* taper on x   */
-    if (!sf_getint(  "tmy",&tmy ))  tmy =     0; /* taper on y   */
+    if (!sf_getbool("verb",  &verb))    verb =  true; /* verbosity flag */
+    if (!sf_getbool("incore",&incore))incore = false; /* in core execution */
+    if (!sf_getfloat("eps",  &eps ))     eps =  0.01; /* stability parameter */
+    if (!sf_getint(  "nrmax",&nrmax))  nrmax =     1; /* maximum number of refs */
+    if (!sf_getfloat("dtmax",&dtmax))  dtmax = 0.004; /* time error */
+    if (!sf_getint(  "pmx",  &pmx ))     pmx =     0; /* padding on x */
+    if (!sf_getint(  "pmy",  &pmy ))     pmy =     0; /* padding on y */
+    if (!sf_getint(  "tmx",  &tmx ))     tmx =     0; /* taper on x   */
+    if (!sf_getint(  "tmy",  &tmy ))     tmy =     0; /* taper on y   */
     
     /*------------------------------------------------------------*/
     /* SLOWNESS */
@@ -94,7 +96,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* MODELING */
-    srmod_init (verb,eps,dtmax,
+    srmod_init (verb,incore,eps,dtmax,
 		ae,az,aw,ax,ay,alx,aly,
 		tmx,tmy,pmx,pmy);
     
