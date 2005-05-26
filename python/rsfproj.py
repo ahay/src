@@ -26,9 +26,14 @@ import rsfdoc
 import rsfprog
 import rsfconf
 
+import SCons
+
 # The following adds all SCons SConscript API to the globals of this module.
-import SCons.Script.SConscript
-globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+if SCons.__version__ == '0.96.90':
+    from SCons.Script import *
+else:
+    import SCons.Script.SConscript
+    globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 ##############################################################################
 # BEGIN CONFIGURATION VARIABLES

@@ -1,3 +1,5 @@
+EnsureSConsVersion(0, 96)
+
 import os, sys, string, re
 import configure
 

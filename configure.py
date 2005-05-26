@@ -1,8 +1,13 @@
 import sys, os, string, re, commands, types
 
+import SCons
+
 # The following adds all SCons SConscript API to the globals of this module.
-import SCons.Script.SConscript
-globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+if SCons.__version__ == '0.96.90':
+    from SCons.Script import *
+else:
+    import SCons.Script.SConscript
+    globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 toheader = re.compile(r'\n\n((?:[^\n]|\n[^\n])+)\n'
                       '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')

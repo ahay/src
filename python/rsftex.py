@@ -18,9 +18,15 @@ import os, re, glob, string, commands, types
 import cStringIO, token, tokenize, cgi, sys, keyword
 import rsfconf, rsfdoc, rsfprog
 
+import SCons
+
 # The following adds all SCons SConscript API to the globals of this module.
-import SCons.Script.SConscript
-globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+if SCons.__version__ == '0.96.90':
+    from SCons.Script import *
+else:
+    import SCons.Script.SConscript
+    globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+
 
 #############################################################################
 # CONFIGURATION VARIABLES

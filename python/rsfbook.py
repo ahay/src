@@ -15,9 +15,14 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 import os, string, re, glob, time
 
+import SCons
+
 # The following adds all SCons SConscript API to the globals of this module.
-import SCons.Script.SConscript
-globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
+if SCons.__version__ == '0.96.90':
+    from SCons.Script import *
+else:
+    import SCons.Script.SConscript
+    globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 import rsftex
 
