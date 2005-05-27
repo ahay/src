@@ -238,8 +238,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		    /* downward continuation */
 		    ssr_ssf(w,wx,sss[iz],sss[iz+1],nr[iz],sm[iz]);
 		    /* imaging */
-		    LOOP(rrr[iz+1][imy][imx] += 
-			 crealf(wx[imy][imx]); );
+		    LOOP(rrr[iz+1][imy][imx] += crealf(wx[imy][imx]); );
 		}
 	    }
 	    for (iz=0; iz<az.n-1; iz++) {
@@ -280,7 +279,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		
 	    } else { /* MIGRATION */
 		w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
-		
+
 		fslice_get(data,iw,wx[0]);    /*  input data @ iz=0 */
 		taper2(wx);
 		
@@ -303,8 +302,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		    LOOP(;      qq[imy][imx] += 
 			 crealf(wx[imy][imx] ); );
 		    fslice_put(imag,iz+1,qq[0]);
-		}
-		
+		} /* iz */
 	    } /* else */
 	} /* iw */
     } /* incore */
@@ -420,13 +418,12 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 	    } else {
 		w = eps*aw.d - I*(aw.o+iw*aw.d);
 	    }
-	    
+
 	    fslice_get(data,iw,wx[0]);
 	    taper2(wx);
-	    
-	    taper2(wx);
+
 	    fslice_put(wfld,iw*az.n,wx[0]);
-	    
+
 	    fslice_get(slow,0,so[0]);
 	    SOOP( so[ily][ilx] *= twoway; );     /* 2-way time */
 	    for (iz=0; iz<az.n-1; iz++) {	    
@@ -435,7 +432,6 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 		ssr_ssf(w,wx,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		
-		taper2(wx);
 		fslice_put(wfld,iw*az.n+iz+1,wx[0]);
 	    } /* iz */
 	} /* else */

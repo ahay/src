@@ -18,6 +18,7 @@
 */
 
 #include <math.h>
+#include <rsf.h>
 
 #include "fft2.h"
 
@@ -31,6 +32,8 @@ static axa az,axx,ayy;
 static axa    bxx,byy;
 
 static float         **kk; /* wavenumber  */
+static float         **kw; /* wavenumber weight */
+
 static float complex **wk;
 static float complex **wt;
 
@@ -62,6 +65,7 @@ void lsr_init( axa az_,
 
     /* precompute wavenumbers */
     kk = sf_floatalloc2(bxx.n,byy.n);
+    kw = sf_floatalloc2(bxx.n,byy.n);
     for (iy=0; iy<byy.n; iy++) {
 	jy = KMAP(iy,byy.n);
 	ky = byy.o + jy*byy.d;
@@ -69,6 +73,8 @@ void lsr_init( axa az_,
 	    jx = KMAP(ix,bxx.n);
 	    kx = bxx.o + jx*bxx.d;  
 	    kk[iy][ix] = kx*kx+ky*ky;
+
+	    kw[iy][ix] = 1.;
 	}
     }    
 
@@ -90,83 +96,45 @@ void lsr_init( axa az_,
 void lsr_close(void)
 /*< free allocated storage >*/
 {
+    free(*kk); free(kk);
+    free(*kw); free(kw);
+
+    free(*wk); free(wk);
+    free(*wt); free(wt);
+}
+
+/*------------------------------------------------------------*/
+
+void kweight( float **bs, /* slowness */
+	      float   wo  /* frequency */
+)
+/*< k-domain weight >*/
+{
+    int ix,iy,ii,nn;
+    float *ss, smin, ko;
+
+    nn = axx.n*ayy.n;
+    ss = sf_floatalloc(nn);
+    ii=0;
+    LOOP( ss[ii] = bs[iy][ix];
+	  ii++; );
+    smin = sf_quantile(0,nn,ss);
+    free(ss);
+
+    ko = wo * smin;
+
+    KOOP( 
+	if(kk[iy][ix] < ko) {
+	    kw[iy][ix]=1.;
+	} else {
+	    kw[iy][ix]=0.;
+	} );
 
 }
 
 /*------------------------------------------------------------*/
 
-
-void lsr_one(
-    float complex    w /* frequency */,
-    complex float **bw /* background wavefield */,
-    complex float **ps /* perturbation slowness */,
-    complex float **pw /* perturbation wavefield */,
-    float          *sm /* ref slo squared */
-    )
-/*< linear scattering operator >*/
-{
-    float complex w2,cc;
-    int ix,iy;
-
-    w2 = w*w;
-
-    LOOP( wk[iy][ix] = bw[iy][ix] * ps[iy][ix]; );
-
-    fft2(false,wk);
-
-    KOOP(
-	cc = w / csqrtf(1+ kk[iy][ix] / (w2*sm[0]) );
-	wk[iy][ix] *= cc;
-	);
-
-    fft2(true,wk);
-
-    LOOP( pw[iy][ix] = wk[iy][ix]; );
-
-}
-
-void lsr_tst(
-    float complex    w /* frequency */,
-    complex float **bw /* background wavefield */,
-    complex float **ps /* perturbation slowness */,
-    complex float **pw /* perturbation wavefield */,
-    float          *sm /* ref slo squared */
-    )
-/*< linear scattering operator >*/
-{
-    int ix,iy;
-
-    float wo;
-/*    float ko;*/
-/*    float co;*/
-/*    float xx;*/
-
-    wo = cimagf(w);
-/*    ko = wo*wo * sm[0];*/
-
-    LOOP( wk[iy][ix] =
-	  bw[iy][ix] * 
-	  ps[iy][ix] * I * wo * az.d; );
-
-/*    fft2(false,wk);*/
-/*    */
-/*    KOOP( xx = kk[iy][ix]/ko;*/
-/*	  if(xx<0.5) {*/
-/*	      co = 1/sqrtf(1-xx);*/
-/*	      co = 1 + 0.5 * xx;*/
-/*	  } else {*/
-/*	      co = 0;*/
-/*	  }*/
-/*	  wk[iy][ix] *= co;*/
-/*	  fprintf(stderr,"%g %g %g %g\n",kk[iy][ix],ko,xx,co);*/
-/*	);*/
-/**/
-/*    fft2(true,wk);*/
-
-    LOOP( pw[iy][ix] = wk[iy][ix]; );
-}
-
-void lsr_exp(
+void lsr_s2w(
     complex float    w /* frequency */,
     complex float **bw /* background wavefield   */,
     float         **bs /* background slowness    */,
@@ -178,32 +146,65 @@ void lsr_exp(
     int ix,iy;
     float wo;
     int  isc;
+    float complex iwdz;
 
-    wo = cimagf(w);
+    wo = cimagf(w);     /* real frequency */
+    iwdz = 2 * I * wo * az.d;
+
+    kweight(bs,wo);     /* k-domain weight */
 
     KOOP( wk[iy][ix]=0.;
-	  wt[iy][ix]=0.;
-	);
+	  wt[iy][ix]=0.; );
 
-    LOOP( pw[iy][ix] = 0.;
-	  wk[iy][ix] =
+    /* 0th order term */
+    LOOP( pw[iy][ix] =
+	  ( iwdz ) * 
 	  bw[iy][ix] * 
-	  ps[iy][ix] * I * wo * az.d; 
-	);
+	  ps[iy][ix]; );
 
-    fft2(false,wk);
+    /* higher order terms */
+    LOOP( wk[iy][ix] = pw[iy][ix]; );
+    if(nsc>0) {
+	fft2(false,wk);	
+	for( isc=1; isc<=nsc; isc++) {
+	    KOOP( wt[iy][ix] = 
+		  kw[iy][ix] * 
+		  wk[iy][ix] * pow(kk[iy][ix],isc); );
+
+	    fft2(true,wt);
+	    
+	    LOOP( wt[iy][ix] /=  pow(wo*bs[iy][ix],2*isc); );
+	    
+	    LOOP( pw[iy][ix] +=
+		  wt[iy][ix] * csc[isc]; );
+	}
+    } /* series summation */
+}
+
+void lsr_w2s(
+    complex float    w /* frequency */,
+    complex float **bw /* background   wavefield   */,
+    float         **bs /* background   slowness    */,
+    complex float **pw /* perturbation wavefield */,
+    complex float **ps /* perturbation slowness  */
+    )
+/*< linear scattering operator >*/
+{
+    int ix,iy;
+    float wo;
+    float complex iwdz;
+
+    wo = cimagf(w);     /* real frequency */
+    iwdz = 2 * I * wo * az.d;
+
+    kweight(bs,wo);     /* k-domain weight */
+
+    /* 0th order term */
+    LOOP( ps[iy][ix] =
+	  conjf( bw[iy][ix] ) * 
+	  conjf( iwdz ) * 
+	  pw[iy][ix]; );
+
+    /* higher order terms */
     
-/*    fprintf(stderr,"nsc=%d\n",nsc);*/
-    for( isc=0; isc<nsc; isc++) {
-	KOOP( wt[iy][ix] = 
-	      wk[iy][ix] * pow(kk[iy][ix],isc); 
-	    );
-    
-	fft2(true,wt);
-    
-	LOOP( pw[iy][ix] +=
-	      wt[iy][ix] * 
-	      csc[isc] / pow(wo*bs[iy][ix],2*isc);
-	);
-    }
 }

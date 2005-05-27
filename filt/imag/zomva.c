@@ -48,10 +48,14 @@ static fslice       Bslow; /* slowness slice */
 static fslice       Bwfld; /* wavefield slice */
 
 static float complex **bw; /* wavefield */
+
 static float complex **dw; /* wavefield */
-static float complex **ps;
 static float complex **pw;
-static float complex **pi;
+static float complex **pwsum;
+
+static float complex **ds; /* slowness */
+static float complex **ps;
+static float complex **pssum;
 
 void zomva_init(bool verb_,
 		float eps_,
@@ -138,7 +142,9 @@ void zomva_init(bool verb_,
 
     /* allocate wavefield storage */
     bw = sf_complexalloc2(amx.n,amy.n);
+
     dw = sf_complexalloc2(amx.n,amy.n);
+    ds = sf_complexalloc2(amx.n,amy.n);
 }
 
 /*------------------------------------------------------------*/
@@ -147,9 +153,13 @@ void zomva_close(void)
 /*< free allocated storage >*/
 {
     ssr_close();
+    lsr_close();
 
     free( *bw); free( bw);
+
     free( *dw); free( dw);
+    free( *ds); free( ds);
+
     free( *ss); free( ss);
     free( *so); free( so);
     free( *sm); free( sm);
@@ -163,7 +173,9 @@ void zomva_aloc()
 {
     ps = sf_complexalloc2(amx.n,amy.n);
     pw = sf_complexalloc2(amx.n,amy.n);
-    pi = sf_complexalloc2(amx.n,amy.n);
+
+    pwsum = sf_complexalloc2(amx.n,amy.n);
+    pssum = sf_complexalloc2(amx.n,amy.n);
 }
 
 void zomva_free()
@@ -171,12 +183,14 @@ void zomva_free()
 {
     free( *ps); free( ps);
     free( *pw); free( pw);
-    free( *pi); free( pi);
+
+    free( *pwsum); free( pwsum);
+    free( *pssum); free( pssum);
 }
 
 /*------------------------------------------------------------*/
 
-void zomva(bool inv  /* forward/adjoint flag */, 
+void zomva(bool inv     /* forward/adjoint flag */, 
 	   fslice Pslow /* slowness perturbation [nz][nmy][nmx] */,
 	   fslice Pimag /*    image perturbation [nz][nmy][nmx] */)
 /*< Apply forward/adjoint ZO MVA >*/
@@ -190,9 +204,9 @@ void zomva(bool inv  /* forward/adjoint flag */,
 	    fslice_put(Pslow,iz,ps[0]);
 	}
     } else {
-	LOOP( pi[imy][imx] = 0.0; );
+	LOOP( pwsum[imy][imx] = 0.0; );
 	for (iz=0; iz<az.n; iz++) {
-	    fslice_put(Pimag,iz,pi[0]);
+	    fslice_put(Pimag,iz,pwsum[0]);
 	}
     }
     
@@ -202,30 +216,67 @@ void zomva(bool inv  /* forward/adjoint flag */,
 	
 	if (inv) { /* adjoint: image -> slowness */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
-	    
+
+	    LOOP( dw[imy][imx]=0.; );
+
 	    for (iz=az.n-1; iz>0; iz--) {
-		fslice_get(Bwfld,iw*az.n+iz-1,bw[0]);
+
+		/* imaging */
+		fslice_get(Pimag,iz,pwsum[0]);
+		LOOP(dw[imy][imx] += pwsum[imy][imx]; );
+
+		/* scattering */
+		fslice_get(Bwfld,iw*az.n+iz,bw[0]);
+		lsr_w2s(w,bw,so,dw,ps);
+
+		fslice_get(Pslow,        iz,pssum[0]);
+		LOOP(pssum[imy][imx] += ps[imy][imx];)
+		fslice_put(Pslow,        iz,pssum[0]);
+
+		/* continuation */
+		fslice_get(Bslow,iz-1,ss[0]);
+		SOOP( ss[ily][ilx] *= twoway; );
+		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
+
+	    iz=0;
+	    fslice_get(Bslow,iz,so[0]);	    
+	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+
+	    /* imaging */
+	    fslice_get(Pimag,iz,pwsum[0]);
+	    LOOP(dw[imy][imx] += pwsum[imy][imx]; );
+
+	    /* scattering */
+	    fslice_get(Bwfld,iw*az.n+iz,bw[0]);
+	    lsr_w2s(w,bw,so,dw,ps);
+
+	    fslice_get(Pslow,        iz,pssum[0]);
+	    LOOP(pssum[imy][imx] += ps[imy][imx];)
+	    fslice_put(Pslow,        iz,pssum[0]);
 
 
 	} else {   /* forward: slowness -> image */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 
+	    LOOP( dw[imy][imx]=0.; );
+
 	    iz = 0;
-	    fslice_get(Bslow,0,so[0]);	    
+	    fslice_get(Bslow,iz,so[0]);	    
 	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 
 	    /* scattering */
 	    fslice_get(Bwfld,iw*az.n+iz,bw[0]);
 	    fslice_get(Pslow,        iz,ps[0]);
-	    lsr_exp(w,bw,so,pw,ps);
-/*	    lsr_tst(w,bw,ps,pw,sm[0]);*/
+	    lsr_s2w(w,bw,so,pw,ps);
+
 	    LOOP(dw[imy][imx] = pw[imy][imx]; );
 
 	    /* imaging */
-	    fslice_get(Pimag,iz,pi[0]);      /* add to image @ iz=0 */
-	    LOOP(pi[imy][imx] += dw[imy][imx]; );
-	    fslice_put(Pimag,iz,pi[0]);
+	    fslice_get(Pimag,iz,pwsum[0]);
+	    LOOP(pwsum[imy][imx] += dw[imy][imx]; );
+	    fslice_put(Pimag,iz,pwsum[0]);
 
 	    for (iz=0; iz<az.n-1; iz++) {
 
@@ -233,20 +284,18 @@ void zomva(bool inv  /* forward/adjoint flag */,
 		fslice_get(Bslow,iz+1,ss[0]);
 		SOOP( ss[ily][ilx] *= twoway; );
 		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 		/* scattering */
 		fslice_get(Bwfld,iw*az.n+iz+1,bw[0]);
 		fslice_get(Pslow,        iz+1,ps[0]);
-		lsr_exp(w,bw,so,pw,ps);
-/*		lsr_tst(w,bw,ps,pw,sm[iz]);*/
+		lsr_s2w(w,bw,so,pw,ps);
 		LOOP(dw[imy][imx] += pw[imy][imx]; );
-
+		
 		/* imaging */
-		fslice_get(Pimag,iz+1,pi[0]);
-		LOOP(pi[imy][imx] += dw[imy][imx]; );
-		fslice_put(Pimag,iz+1,pi[0]);
-
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		fslice_get(Pimag,iz+1,pwsum[0]);
+		LOOP(pwsum[imy][imx] += dw[imy][imx]; );
+		fslice_put(Pimag,iz+1,pwsum[0]);
 	    }
 	}
     }
