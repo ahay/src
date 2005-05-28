@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp[0],n12,in);
 	/* gradient computation */
-	grad3(n1,n2,pp,w1,w2);
+	sobel(n1,n2,pp,w1,w2);
 
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {

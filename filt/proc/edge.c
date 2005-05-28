@@ -64,10 +64,10 @@ void grad31 (int n1, int n2         /* data size */,
     }
 }
 
-void grad3 (int n1, int n2         /* data size */, 
+void sobel (int n1, int n2         /* data size */, 
 	    float **x              /* input data [n2][n1] */, 
 	    float **w1, float **w2 /* output gradient components [n2][n1] */)
-/*< smooth 9-point gradient >*/
+/*< Sobel's 9-point gradient >*/
 {
     int i1, i2;
 
@@ -78,15 +78,13 @@ void grad3 (int n1, int n2         /* data size */,
 		w2[i2][i1] = 0.;
 	    } else {
 		w1[i2][i1] =
-		    b*(x[i2-1][i1-1] + x[i2+1][i1-1] + 
-		       x[i2+1][i1+1] + x[i2-1][i1+1]) +
-		    a*(x[i2-1][i1] + x[i2+1][i1] - 2.*x[i2][i1]) +
-		    (0.5-2.*b)*x[i2][i1+1] - (0.5+2.*b)*x[i2][i1-1];
+		    x[i2+1][i1+1] - x[i2+1][i1-1] +
+		    2*(x[i2][i1+1] - x[i2][i1-1]) +
+		    x[i2-1][i1+1] - x[i2-1][i1-1];
 		w2[i2][i1] =
-		    b*(x[i2-1][i1-1] + x[i2+1][i1-1] +
-		       x[i2+1][i1+1] + x[i2-1][i1+1]) +
-		    a*(x[i2][i1-1] + x[i2][i1+1] - 2.*x[i2][i1]) +
-		    (0.5-2.*b)*x[i2+1][i1] - (0.5+2.*b)*x[i2-1][i1];
+		    x[i2+1][i1+1] - x[i2-1][i1+1] +
+		    2*(x[i2+1][i1] - x[i2-1][i1]) +
+		    x[i2+1][i1-1] - x[i2-1][i1-1]; 
 	    }
 	}
     }
