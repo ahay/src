@@ -152,6 +152,7 @@ def pstexpen(target=None,source=None,env=None):
         opts = os.environ.get('PSTEXPENOPTS',
                               'color=n fat=1 fatmult=1.5 invras=y')
     print opts
+    # bounding box
     head = string.split(
         commands.getoutput(sep +
                            "vppen big=n stat=l %s < %s | %s -1" %
