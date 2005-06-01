@@ -1,21 +1,20 @@
-/* Offset continuation by finite differences 
-*/
+/* Offset continuation by finite differences */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
@@ -27,6 +26,7 @@ int main(int argc, char* argv[])
     int nw,nh,nx, iw,ix,ih, k;
     float dw, h0,dh,dx, w0,w,w2, h,h2,dh2;
     float complex diag, diag2, *in, *out, offd, offd2, c1, c2;
+    bool all;
     ctris slv;
     sf_file input, output;
 
@@ -41,8 +41,6 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(input,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(input,"d2",&dw)) sf_error("No d2= in input");
     if (!sf_histfloat(input,"o2",&w0)) sf_error("No o2= in input");
-    w0 *= 2.*SF_PI;
-    dw *= 2.*SF_PI;
 
     if (!sf_getint("nh",&nh)) sf_error("Need nh=");
     /* Number of steps in offset */
@@ -51,9 +49,24 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("h0",&h0)) sf_error("Need h0=");
     /* Initial offset */
 
+    if (!sf_getbool("all",&all)) all=false;
+    /* if y, output all offsets */
+
+    if (all) {
+	sf_putint(output,"n2",nh+1);
+	sf_putfloat(output,"d2",dh);
+	sf_putfloat(output,"o2",h0);
+	sf_putint(output,"n3",nw);
+	sf_putfloat(output,"d3",dw);
+	sf_putfloat(output,"o3",w0);
+    }
+    
     dh /= dx;
     h0 /= dx;
     dh2 = dh*dh;
+
+    w0 *= 2.*SF_PI;
+    dw *= 2.*SF_PI;
 
     in = sf_complexalloc(nx);
     out = sf_complexalloc(nx);
@@ -72,6 +85,11 @@ int main(int argc, char* argv[])
 	    for (ix=0; ix < nx; ix++) {
 		out[ix]=0.;
 	    }
+	    if (all) {
+		for (ih=0; ih < nh; ih++) {
+		    sf_complexwrite (out,nx,output);
+		}
+	    } 
 	    sf_complexwrite (out,nx,output);
 	    continue;
 	}
@@ -80,6 +98,8 @@ int main(int argc, char* argv[])
 	c2 = 3.*(w2 - 27. + 8.*w*I)/(w2*(3. - w*I));
 
 	for (ih=0; ih < nh; ih++) {
+	    if (all) sf_complexwrite (out,nx,output);
+
 	    for (ix=0; ix < nx; ix++) {
 		in[ix] = out[ix];
 	    }
