@@ -183,6 +183,7 @@ class Project(Environment):
         self.EnsureSConsVersion(0,96)
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
+        opts.Add('TIMER','Whether to time execution')
         opts.Update(self)
         dir = os.path.basename(os.getcwd())
         if datapath[:2] == './':
@@ -268,6 +269,9 @@ class Project(Environment):
             command = command + " >/dev/null"
         if stdin:
             command = "< $SOURCE " + command
+        timer = self.get('TIMER')
+        if timer and timer[0] != 'n' and timer[0] != '0':
+            command = WhereIs('time') + ' ' + command
         targets = []
         if type(target) is types.ListType:
             files = target
