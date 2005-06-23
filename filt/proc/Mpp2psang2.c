@@ -21,20 +21,20 @@
 int main(int argc, char* argv[])
 {
     bool inv;
-    int nt, na, it, ia, nw, n3, i3;
-    float **gather, *trace, *modl, *coord, *gamma; 
-    float da, a0, t,g,gg;
-/*    float r;*/
-    sf_file in, out, vpvs;
+    int nz, na, iz, ia, nw, n3, i3;
+    float **gather, *trace, *modl, *coord, *gamma, *dzdx; 
+    float da, a0, t,g,d;
+    sf_file in, out, vpvs, dip;
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
     vpvs = sf_input("vpvs");
+    dip = sf_input("dip");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
+    if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
 
     if (!sf_histint(in,"n2",&na)) sf_error("No n2= in input");
     if (!sf_histfloat(in,"d2",&da)) sf_error("No d2= in input"); 
@@ -50,41 +50,40 @@ int main(int argc, char* argv[])
     if (!sf_getbool("inv",&inv)) inv=false;
     /* if y, do inverse transform */
 
-    gather = sf_floatalloc2(nt,na);
+    gather = sf_floatalloc2(nz,na);
     trace = sf_floatalloc(na);
     coord = sf_floatalloc(na);
     modl =  sf_floatalloc(na);
-    gamma = sf_floatalloc(nt);
+    gamma = sf_floatalloc(nz);
+    dzdx = sf_floatalloc(nz);
 
-    for (i3=0; i3 < n3; i3++) {
-	sf_floatread(gamma,nt,vpvs);
-	sf_floatread(gather[0],nt*na,in);
+    for (i3=0; i3 < n3; i3++) { /* loop over CIG */
+	sf_floatread(gamma,nz,vpvs);
+	sf_floatread(dzdx,nz,dip);
+	
+	sf_floatread(gather[0],nz*na,in);
 
-	for (it=0; it < nt; it++) {
-/*	    r = (1.-gamma[it])/(1.+gamma[it]);*/
-/*	    r *= r;*/
-	    g = gamma[it];
-	    gg=g*g;
-/*	    if (inv) r = -r;*/
+	for (iz=0; iz < nz; iz++) { /* loop over depth */
+	    g = gamma[iz];
+	    d = dzdx[iz]*(g*g-1.);
 
-	    for (ia=0; ia < na; ia++) {
+	    for (ia=0; ia < na; ia++) { /* loop over tan(theta) */
 		t = a0+ia*da;
-/*		coord[ia] = sqrtf((t*t+r)/(1+r*t*t))*SF_SIG(t); */
-/*		coord[ia] = (1+g)*(1+g)*t / (2*g + sqrtf( 4*gg - (gg-1)*(gg-1) *t*t));*/
-		
-		coord[ia] = 4*g*t / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
 
-		trace[ia] = gather[ia][it];
+		/* formula for flat reflector */
+		coord[ia] = (4*g*t+d*(t*t+1.)) / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
+
+		trace[ia] = gather[ia][iz];
 	    }
 	    sf_prefilter_apply (na,trace);
 	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
 	    sf_int1_lop (false,false,na,na,trace,modl);
 
 	    for (ia=0; ia < na; ia++) {
-		gather[ia][it] = modl[ia];
+		gather[ia][iz] = modl[ia];
 	    }
 	}
-	sf_floatwrite(gather[0],nt*na,out);
+	sf_floatwrite(gather[0],nz*na,out);
     }
     
     exit(0);
