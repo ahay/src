@@ -15,7 +15,8 @@ The various operations, if selected, occur in the following order:
 sfadd operates on integer, float, or complex data, but all the input
 and output files must be of the same data type.
 
-An alternative is to use sfmath, which is more versatile.
+An alternative to sfadd is sfmath, which is more versatile, but may be
+less efficient.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

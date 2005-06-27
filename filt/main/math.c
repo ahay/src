@@ -7,6 +7,9 @@ Known functions: cos,  sin,  tan,  acos,  asin,  atan,
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
 
+An alternative to sfmath is sfadd, which may be more efficient, but is
+less versatile.
+
 Examples:
 
 sfmath x=file1.rsf y=file2.rsf power=file3.rsf output='sin((x+2*y)^power)' > out.rsf
@@ -115,7 +118,7 @@ int main (int argc, char* argv[])
 	for (i=0; i < SF_MAX_DIM; i++) {
 	    (void) snprintf(xkey,3,"n%d",i+1);
 	    if (!sf_getint(xkey,n+i)) break;
-	    if (n[i] > 1) dim=i+1;
+	    if (n[i] > 0) dim=i+1;
 	    sf_putint(out,xkey,n[i]);
 	    (void) snprintf(xkey,3,"d%d",i+1);
 	    if (!sf_getfloat(xkey,d+i)) d[i] = 1.;
