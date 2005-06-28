@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <stdlib.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -140,10 +141,10 @@ void kirmod_table (surface y                  /* surface structure */,
 		zx = dip[ix];
 		switch (type) {
 		    case CONST:	
-			a = hypotf(x,z);
+			a = hypotf(x,z)+FLT_EPSILON*dx;
 			t = a/veloc[0];
 			p = (x+z*zx)/(a*veloc[0]);
-			q = acosf((z+x*zx)/(a*hypotf(1.,zx)))*SF_SIG(x);
+			q = acosf(SF_MIN(1.,fabsf(z+x*zx)/(a*hypotf(1.,zx))))*SF_SIG(x-z*zx);
 			break;		    
 		    default:
 			a = 0.;

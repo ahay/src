@@ -22,23 +22,26 @@
 #include "spline3.h"
 
 static int n;
-static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx;
+static float *h, *a, *b, *c, *d, **coeff, *x, x0, dx, *fp;
 static sf_tris slv;
 
-void spine3_init(int n1 /*< trace length >*/) 
+void spine3_init(int n1     /* trace length */,
+		 float *fp1 /* end-point derivatives */) 
 /*< initialize >*/
 {
     n = n1;
     h = sf_floatalloc(n-1);
     x = sf_floatalloc(n-1);
-    a = sf_floatalloc(n-2);
-    coeff = sf_floatalloc2(n-1,4);
+    a = sf_floatalloc(n);
+    coeff = sf_floatalloc2(n,4);
     /* rename for convenience */
     b = coeff[1];
     c = coeff[2];
     d = coeff[3];
 
-    slv = sf_tridiagonal_init (n-2);
+    fp = fp1;
+
+    slv = sf_tridiagonal_init (NULL==fp? n-2: n);
 }
 
 void spine3_init1(int n1, float o1, float d1)
@@ -53,6 +56,8 @@ void spine3_init1(int n1, float o1, float d1)
     b = coeff[1];
     c = coeff[2];
     d = coeff[3];
+    
+    fp = NULL;
 
     slv = sf_tridiagonal_init (n-2);
     sf_tridiagonal_const_define (slv,4.*d1,d1);
@@ -89,23 +94,28 @@ void spline_coeffs(float** table)
 	b[k] = (table[k+1][1]-fk)/h[k];  /* divided difference */
     }
     for (k=0; k < n-2; k++) {
-	a[k] = 2.*(h[k+1] + h[k]);         /* diagonal */
+	a[k+1] = 2.*(h[k+1] + h[k]);         /* diagonal */
 	c[k+1] = b[k+1] - b[k];            /* right-hand side */
     }
-    c[0] = 0;
 
     /* solve the tridiagonal system */
-    sf_tridiagonal_define (slv,a,h);
-    sf_tridiagonal_solve(slv,c+1);
+    if (NULL == fp) {
+	c[0] = 0.;
+	c[n-1] = 0.;
+	sf_tridiagonal_define (slv,a+1,h+1);
+	sf_tridiagonal_solve(slv,c+1);
+    } else {
+	a[0] = 2*h[0];
+	a[n-1] = 2*h[n-2];
+	c[0] = b[0] - fp[0];
+	c[n-1] = fp[1] - b[n-2];
+	sf_tridiagonal_define (slv,a,h);
+	sf_tridiagonal_solve(slv,c);
+    }
 
     for (k=0; k < n-1; k++) {
-	if (k < n-2) {
-	    d[k] = (c[k+1]-c[k])/h[k];
-	    b[k] -= (c[k+1]+2.*c[k])*h[k];
-	} else {
-	    d[k] = -c[k]/h[k];
-	    b[k] -= 2.*c[k]*h[k];
-	}
+	d[k] = (c[k+1]-c[k])/h[k];
+	b[k] -= (c[k+1]+2.*c[k])*h[k];
 	c[k] *= 3.;
     }
 }

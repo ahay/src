@@ -1,23 +1,23 @@
-/* 1-D spline interpolation.
+/* 1-D cubic spline interpolation.
 
-Takes: n1= o1= d1=
+Specify either n1= o1= d1= or pattern=
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int nd, n1, i1, n2, i2, two;
-    float x, o1, d1, *table1=NULL, **table=NULL, *trace, x0, dx;
+    float x, o1, d1, *table1=NULL, **table=NULL, *trace, x0, dx, *fp;
     bool reginput;
     sf_file in, out, pattern;
 
@@ -44,11 +44,20 @@ int main(int argc, char* argv[])
 	if (!sf_histfloat(in,"d1",&dx)) sf_error("Need d1= in input");
 	if (!sf_histfloat(in,"o1",&x0)) sf_error("Need o1= in input");
 	n2 = sf_leftsize(in,1);
+
+	fp = NULL;
     } else {
 	reginput = false;
 	if (!sf_histint(in,"n2",&nd)) sf_error ("Need n2= in input");
 	sf_putint(out,"n2",1);
 	n2 = sf_leftsize(in,2);
+	
+	fp = sf_floatalloc(2);
+	if (!sf_getfloats("fp",fp,2)) {
+	    /* end-point derivatives */
+	    free(fp);
+	    fp = NULL;
+	}
     }
     
     if (NULL != sf_getstring("pattern")) {
@@ -80,7 +89,7 @@ int main(int argc, char* argv[])
 	spine3_init1(nd,x0,dx);
 	table1 = sf_floatalloc(nd);
     } else {
-	spine3_init(nd);
+	spine3_init(nd,fp);
 	table = sf_floatalloc2(2,nd);
     }
 
