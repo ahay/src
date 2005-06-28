@@ -144,7 +144,12 @@ void kirmod_table (surface y                  /* surface structure */,
 			a = hypotf(x,z)+FLT_EPSILON*dx;
 			t = a/veloc[0];
 			p = (x+z*zx)/(a*veloc[0]);
-			q = acosf(SF_MIN(1.,fabsf(z+x*zx)/(a*hypotf(1.,zx))))*SF_SIG(x-z*zx);
+			q = fabsf(z+x*zx)/(a*hypotf(1.0,zx));
+			if (q >= 1.0) {
+			    q = 0.;
+			} else {
+			    q = acosf(q)*SF_SIG(x-z*zx);
+			}
 			break;		    
 		    default:
 			a = 0.;
