@@ -102,7 +102,6 @@ int main(int argc, char* argv[])
 
     sf_putstring(scan,"label2",slow? "slowness": "velocity");
 
-    trace = sf_floatalloc(nt);
     stack =  sf_floatalloc2(nt,nv);
     stack2 = sembl? sf_floatalloc2(nt,nv) : NULL;
 
