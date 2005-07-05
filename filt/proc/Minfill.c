@@ -38,13 +38,18 @@ int main(int argc, char* argv[])
     if (SF_COMPLEX != sf_gettype(in)) sf_error("Need complex input");
 
     if (!sf_histint(in,"n1",&nh)) sf_error("No n1= in input");
+    /* offsets */
     if (!sf_histint(in,"n2",&ns)) sf_error("No n2= in input");
+    /* shots */
 
     if (!sf_histint(in,"n3",&nw)) sf_error("No n3= in input");
+    /* frequency */
 
     if (!sf_histfloat(in,"o1",&h0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"d1",&dh)) sf_error("No d1= in input");
+
     if (!sf_histfloat(in,"d2",&ds)) sf_error("No d2= in input");
+
     if (!sf_histfloat(in,"o3",&w0)) sf_error("No o3= in input");
     if (!sf_histfloat(in,"d3",&dw)) sf_error("No d3= in input");
 
@@ -57,22 +62,26 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"n2",2*ns-1);
     sf_putfloat(out,"d2",0.5*ds);
+    /* make the shot spacing denser */
 
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
+    /* convert Hertz to radian */
 
     ss = sf_complexalloc2(nh,ns);
     s = sf_complexalloc(nh);
+    /* allocate space for shots at one frequency slice */
 
     shotfill_init(nh,h0,dh,sign? ds: -ds, eps);
-/*    cburg_init(nh,ns,3); */
 
     for (iw=0; iw < nw; iw++) {
+	/* loop over frequency slices */
 	w = w0 + iw*dw;
 
 	sf_complexread (ss[0],nh*ns,in);
 
 	if(fabsf(w) < dw) { /* dc */
+	    /* write out zeroes */
 	    for (ih=0; ih < nh; ih++) {
 		s[ih] = 0.;
 	    }
@@ -84,19 +93,17 @@ int main(int argc, char* argv[])
 	    continue;
 	}
 
-/*
-	cburg_apply (ss, a);
-	a[0] *= eps;
-	a[1] *= eps;
-	a[2] *= eps;
-*/
-
 	shotfill_define(w);
+	/* set coefficients */
 
 	sf_complexwrite(ss[0],nh,out);
+	/* write first shot */
 
 	for (is=1; is < ns; is++) {
+	    /* loop over shots */
+
 	    shotfill_apply(ss[is-1],ss[is],s);
+	    /* insert shot between is-1 and is */
 
 	    sf_complexwrite(s,nh,out);
 	    sf_complexwrite(ss[is],nh,out);

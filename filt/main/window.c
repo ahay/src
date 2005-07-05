@@ -29,14 +29,14 @@ minN and maxN is the maximum and minimum in N-th dimension
 
 #include <rsf.h>
 
-static void seektable (int dim, int *n, int *m, int *f, int *j, 
-		       int n1, int n2, off_t *table);
+static off_t seektable (int dim, int *n, int *m, int *f, int *j, 
+			int n1, int n2, off_t *table);
 
 int main (int argc, char *argv[])
 {
     int i, esize, dim, n1, n2, m1, i2, i1, j1, jump;
     int i0, n[SF_MAX_DIM], m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
-    off_t *table;
+    off_t *table, maxsize;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *label[SF_MAX_DIM], *buf;
     bool squeeze, verb;
@@ -164,12 +164,14 @@ int main (int argc, char *argv[])
     n[0] *= esize;
     f[0] *= esize;
 
-    sf_unpipe(in,sf_filesize(in)*esize);
-
     buf = sf_charalloc (n1);
     table = (off_t*) sf_alloc (n2,sizeof(off_t));
 
-    seektable(dim,n,m,f,j,n1,n2,table);
+    maxsize = seektable(dim,n,m,f,j,n1,n2,table);
+
+    if (verb) sf_warning("maxsize=%lld",maxsize);
+
+    sf_unpipe(in,maxsize);
 
     for (i2=0; i2 < n2; i2++) {
 	if (table[i2]) sf_seek(in,table[i2],SEEK_CUR);
@@ -189,10 +191,11 @@ int main (int argc, char *argv[])
     exit (0);
 }
 
-static void seektable(int dim, int *n, int *m, int *f, int *j, 
-		      int n1, int n2, off_t *table)
+static off_t seektable(int dim, int *n, int *m, int *f, int *j, 
+		       int n1, int n2, off_t *table)
 {
-    int i2, t, t2, i, ii[SF_MAX_DIM];
+    int i2, i, ii[SF_MAX_DIM];
+    off_t t, t2;
 
     t2 = sf_cart2line (dim-1, n+1, f+1);
     table[0] = t2*n[0] + f[0];
@@ -212,6 +215,8 @@ static void seektable(int dim, int *n, int *m, int *f, int *j,
 	table[i2] = (t-t2)*n[0]-n1; 
 	t2 = t;
     }
+
+    return (t2*n[0]+n1);
 }
 
 /* 	$Id$	 */

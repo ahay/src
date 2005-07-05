@@ -37,23 +37,31 @@ void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */,
 /*< initialize >*/
 {
     nh = nh_in;
+
     offd[0] = sf_complexalloc(nh-1);
     offd[1] = sf_complexalloc(nh-2);
     diag = sf_floatalloc(nh);
+    /* allocate the pentadiagonal matrix diagonals */
 
     a = sf_complexalloc2(3,nh);
+    /* filter coefficients */
+
     c = sf_floatalloc2(3,nh);
     cc = sf_complexalloc2(3,nh);
+
     s0 = sf_complexalloc(nh);
 
     cbanded_init(nh, 2);
-    
+    /* initialize complex banded matrix inversion */
+
     s = -0.5*ds/dh;
     h1 = h0/dh;
+    /* normalize by dh */
 
     b0[0] = (2.-s)*(1.-s)/12.;
     b0[1] = (2.-s)*(2.+s)/6.;
     b0[2] = (2.+s)*(1.+s)/12.;
+    /* h-independent part of the filter */
 
     eps = eps1;
 }
@@ -92,12 +100,10 @@ void shotfill_define (float w /* log-stretch frequency */)
     float complex *b;
     int ih;
 
-/*
-    filt2matrix(pef,d,dd);
-*/  
-
     for (ih=1; ih < nh-1; ih++) {
+	/* loop over offsets, skip first and last */
 	h = h1 + ih;
+	/* offset normalized by dh */
 
 	den = 12.*h*h + (s-1.)*(s+1.)*w*w;
 	
@@ -130,6 +136,7 @@ void shotfill_define (float w /* log-stretch frequency */)
     offd[0][nh-2] = cc[nh-2][0] + cc[nh-2][1];
     
     cbanded_define(diag,offd);
+    /* define the pentadiagonal matrix */
 }
 
 void shotfill_apply (const float complex *s1, 
@@ -145,6 +152,7 @@ void shotfill_apply (const float complex *s1,
 	s0[ih] = 0.5*(s1[ih]+s2[ih]);
     }
 
+    /** Compute right-hand side: s=M2'*M1*s1 + M1'*M2*s2 **/
     for (ih=1; ih < nh-1; ih++) {
 	b = a[ih];
 	sum1 = s1[ih-1]*b[2] + s1[ih]*b[1] + s1[ih+1]*b[0];
@@ -157,6 +165,7 @@ void shotfill_apply (const float complex *s1,
 	s[ih+1] += sum1*b[2] + sum2*conjf(b[0]);
     }
 
+    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 **/
     s[0] -= (diag[0]-eps)*s0[0] + 
 	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
     s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
@@ -172,6 +181,7 @@ void shotfill_apply (const float complex *s1,
 	(diag[nh-1]-eps)*s0[nh-1];
 
     cbanded_solve(s);
+    /* inversion in place */
 
     for (ih=0; ih < nh; ih++) {
 	s[ih] += s0[ih];

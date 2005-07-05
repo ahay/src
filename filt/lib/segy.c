@@ -606,9 +606,11 @@ void sf_segy2trace(const char* buf, float* trace, int ns, int format)
 format: 1: IBM, 2: int4, 3: int2
 >*/
 {
-    int i;
+    int i, nb;
 
-    for (i=0; i < ns; i++, buf += 4) {
+    nb = (3==format)? 2:4;
+
+    for (i=0; i < ns; i++, buf += nb) {
 	switch (format) {
 	    case 1: trace[i] = ibm2float (buf);       break; /* IBM float */
 	    case 2: trace[i] = (float) convert4(buf); break; /* int4 */
@@ -625,9 +627,11 @@ void sf_trace2segy(char* buf, const float* trace, int ns, int format)
 format: 1: IBM, 2: int4, 3: int2
 >*/
 {
-    int i;
+    int i, nb;
 
-    for (i=0; i < ns; i++, buf += 4) {
+    nb = (3==format)? 2:4;
+
+    for (i=0; i < ns; i++, buf += nb) {
 	switch (format) {
 	    case 1: float2ibm(trace[i],buf);     break; /* IBM float */
 	    case 2: insert4((int) trace[i],buf); break; /* int4 */
