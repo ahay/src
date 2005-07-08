@@ -5,6 +5,7 @@ Takes:  > (plot.vpl | char.rsf)
 Can input char values.
 If called "byte", outputs char values.
 
+Run "sfdoc stdplot" for more parameters.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -32,7 +33,6 @@ If called "byte", outputs char values.
 #include <rsfplot.h>
 
 #define TSIZE 4096
-#define BSIZE 256
 
 int main(int argc, char* argv[])
 {
@@ -42,11 +42,11 @@ int main(int argc, char* argv[])
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     bool eclip=false, egpow=false, barreverse;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
-    char *gainpanel, *color;
+    char *gainpanel, *color, mink[100], maxk[100];
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     off_t pos;
-    sf_file in, out=NULL;
+    sf_file in, out=NULL, bar=NULL;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
     }
 
     charin = (SF_UCHAR == sf_gettype(in));
+
+    if (charin && byte) sf_error("Cannot input uchar to byte");
 
     if (!charin && SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
@@ -163,17 +165,38 @@ int main(int argc, char* argv[])
 	/* verbosity flag */
     } /* if !charin */
 
-    if (charin || (!sf_getbool ("wantscalebar",&scalebar) && 
-		   !sf_getbool ("scalebar",&scalebar))) scalebar = false;
+    if (byte) {
+	scalebar = (NULL != sf_getstring("bar"));
+    } else {
+	if (!sf_getbool ("wantscalebar",&scalebar) && 
+	    !sf_getbool ("scalebar",&scalebar)) scalebar = false;
+    }
     /* if y, draw scalebar */
     if (scalebar) {
 	nomin = !sf_getfloat("minval",&barmin);
 	/* minimum value for scalebar (default is the data minimum) */
 	nomax = !sf_getfloat("maxval",&barmax);
 	/* maximum value for scalebar (default is the data maximum) */
-	barbuf[0] = (unsigned char*) sf_alloc(BSIZE,sizeof(unsigned char));
+	barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
 	/* if y, go from small to large on the bar scale */
+
+	if (byte) {
+	    bar = sf_output("bar");
+	    sf_settype(bar,SF_UCHAR);
+	    sf_putint(bar,"n1",VP_BSIZE);
+	    sf_putint(bar,"n2",1);
+	    sf_putint(bar,"n3",n3);
+
+	    if (!nomin) sf_putfloat(bar,"minval",barmin);
+	    if (!nomax) sf_putfloat(bar,"maxval",barmax);
+	} else if (charin) {
+	    bar = sf_input("bar");
+	    if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
+
+	    if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);
+	    if (nomax) nomax = !sf_histfloat(bar,"maxval",&barmax);
+	}
     }
 
     if (!sf_getbool("wantframenum",&framenum)) framenum = (n3 > 1);
@@ -279,73 +302,90 @@ int main(int argc, char* argv[])
 	    sf_ucharread(buf[0],n1*n2,in);
 	}
 
-	if (byte) {
-	    sf_ucharwrite(buf[0],n1*n2,out);
-	    continue;
-	}
-
-	if (yreverse) {
-	    for (i2=0; i2 < n2; i2++) {
-		for (i1=0; i1 < n1/2; i1++) {			
-		    tmp = buf[i2][i1];
-		    buf[i2][i1] = buf[i2][n1-1-i1];
-		    buf[i2][n1-1-i1] = tmp;
-		}
-	    }
-	} 
-
-	if ((xreverse && transp) || (!xreverse && !transp)) {
-	    for (i2=0; i2 < n2/2; i2++) {
-		for (i1=0; i1 < n1; i1++) {
-		    tmp = buf[i2][i1];
-		    buf[i2][i1] = buf[n2-1-i2][i1];
-		    buf[n2-1-i2][i1] = tmp;
-		}
-	    }
-	}
-	
-	if (i3 > 0) vp_erase (); 	
-
-	if (framenum) vp_framenum(o3+i3*d3);
-	vp_frame(); 
-	vp_uraster (buf, false, 256, n1, n2, 
-		    x1, y1, x2, y2, orient);
-	vp_simpleframe();
-	
-	if (scalebar) {
-	    if (nomin) barmin = data[0][0];
-	    if (nomax) barmax = data[0][0];
-	    if (nomin || nomax) {
+	if (!byte) {
+	    if (yreverse) {
 		for (i2=0; i2 < n2; i2++) {
-		    for (i1=0; i1 < n1; i1++) {
-			dat = data[i2][i1];
-			if (nomin && barmin > dat) barmin = dat;
-			if (nomax && barmax < dat) barmax = dat;
+		    for (i1=0; i1 < n1/2; i1++) {			
+			tmp = buf[i2][i1];
+			buf[i2][i1] = buf[i2][n1-1-i1];
+			buf[i2][n1-1-i1] = tmp;
 		    }
 		}
+	    } 
+	    
+	    if ((xreverse && transp) || (!xreverse && !transp)) {
+		for (i2=0; i2 < n2/2; i2++) {
+		    for (i1=0; i1 < n1; i1++) {
+			tmp = buf[i2][i1];
+			buf[i2][i1] = buf[n2-1-i2][i1];
+			buf[n2-1-i2][i1] = tmp;
+		    }
+		}
+	    }
+	
+	    if (i3 > 0) vp_erase (); 	
+
+	    if (framenum) vp_framenum(o3+i3*d3);
+	    vp_frame(); 
+	    vp_uraster (buf, false, 256, n1, n2, 
+			x1, y1, x2, y2, orient);
+	    vp_simpleframe();
+	}
+	
+	if (scalebar) {
+	    if (nomin) sprintf(mink,"minval%d",i3);
+	    if (nomax) sprintf(maxk,"maxval%d",i3);
+
+	    if (!charin) {
+		if (nomin) barmin = data[0][0];
+		if (nomax) barmax = data[0][0];
+		if (nomin || nomax) {
+		    for (i2=0; i2 < n2; i2++) {
+			for (i1=0; i1 < n1; i1++) {
+			    dat = data[i2][i1];
+			    if (nomin && barmin > dat) barmin = dat;
+			    if (nomax && barmax < dat) barmax = dat;
+			}
+		    }
+		}
+		
+		for (it=0; it < VP_BSIZE; it++) {
+		    if (barreverse) {
+			dat = (barmin*it + barmax*(VP_BSIZE-1-it))/(VP_BSIZE-1);
+		    } else {
+			dat = (barmax*it + barmin*(VP_BSIZE-1-it))/(VP_BSIZE-1);
+		    }
+		    j = (dat-pbias)*gain + bias;
+		    if      (j < 0) j=0;
+		    else if (j > TSIZE) j=TSIZE;
+		    barbuf[0][it] = tbl[j];
+		} 
+	    } else {
+		if (nomin) sf_histfloat(bar,mink,&barmin);
+		if (nomax) sf_histfloat(bar,maxk,&barmax);
+
+		sf_ucharread(barbuf[0],VP_BSIZE,bar);
+	    }
+
+	    if (byte) {
+		if (nomin) sf_putfloat(bar,mink,barmin);
+		if (nomax) sf_putfloat(bar,maxk,barmax);
+		sf_ucharwrite(barbuf[0],VP_BSIZE,bar);
+	    } else {
 		if (barreverse) {
 		    vp_barframe_init (barmax,barmin);
 		} else {
 		    vp_barframe_init (barmin,barmax);
 		}
+		vp_barraster(VP_BSIZE, barbuf);
 	    }
+	} /* if scalebar */
 
-	    for (it=0; it < BSIZE; it++) {
-		if (barreverse) {
-		    dat = (barmin*it + barmax*(BSIZE-1-it))/(BSIZE-1);
-		} else {
-		    dat = (barmax*it + barmin*(BSIZE-1-it))/(BSIZE-1);
-		}
-		j = (dat-pbias)*gain + bias;
-		if      (j < 0) j=0;
-		else if (j > TSIZE) j=TSIZE;
-		barbuf[0][it] = tbl[j];
-	    }
-
-	    vp_barraster(BSIZE, barbuf);
-	}
-
-	vp_purge(); 
+	if (byte) {
+	    sf_ucharwrite(buf[0],n1*n2,out);
+	} else {	    
+	    vp_purge();
+	} 
     } /* i3 loop */
 
     sf_close();

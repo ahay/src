@@ -54,7 +54,7 @@ void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */,
     cbanded_init(nh, 2);
     /* initialize complex banded matrix inversion */
 
-    s = -0.5*ds/dh;
+    s = 0.5*ds/dh;
     h1 = h0/dh;
     /* normalize by dh */
 

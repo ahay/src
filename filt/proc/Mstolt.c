@@ -29,7 +29,7 @@ Requires the input to be cosine-transformed over the lateral axes.
 int main(int argc, char* argv[])
 {
     int nt,nx,ny, iw,ix,iy, nf, nw;
-    float dw, dt, dx,dy, t0, vel, x,y, w,st,sq, *str, *trace2, *trace;
+    float dw, dt, dx,dy, t0, vel, x,y, w,st,sq, *str, *trace2, *trace, a, b;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -60,6 +60,8 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("stretch", &st)) st=1.;
     /* Stolt stretch parameter */
     if (vel < 0) st = 2.-st;
+    a = (1.-1./st);
+    b = 1./st;
 
     if (!sf_getint("nf",&nf)) nf=2;
     /* Interpolation accuracy */
@@ -76,18 +78,27 @@ int main(int argc, char* argv[])
 	for (ix = 0; ix < nx; ix++) {
 	    x = ix*dx;
 	    x = st*(x*x + y);  
-	    for (iw = 0; iw < nw; iw++) {
-		w = iw*dw;
-		sq = (vel < 0)? w*w - x: w*w + x;
-		str[iw] = (sq > 0.)? w*(1.-1./st) + sqrtf(sq)/st : - 2.*dw;
-	    }
-       
-	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
 
 	    sf_floatread(trace,nt,in);
 	    for (iw = nt; iw < nw; iw++) { /* pad */
 		trace[iw]=0.;
 	    }
+
+	    for (iw = 0; iw < nw; iw++) {
+		w = iw*dw;
+		sq = (vel < 0)? w*w - x: w*w + x;
+		if (sq > 0.) {
+		    sq = sqrtf(sq);
+		    str[iw] = a*w + b*sq;
+		    trace[iw] *= (a + b*w/sq); /* Jacobian */
+		} else {
+		    str[iw] = - 2.*dw;
+		    trace[iw] = 0.;
+		}
+	    }
+       
+	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
+	    
 	    cosft_frw (trace,0,1);
 	    sf_prefilter_apply (nw, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);

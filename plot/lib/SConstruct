@@ -12,6 +12,7 @@ try: # distribution version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
+    docmerge = configure.docmerge
 except: # local version
     root = None
     env = Environment()
@@ -72,5 +73,15 @@ env.Alias('plint','../plint')
 env['SCANNERS'].remove(configure.Include)
 # env.Append(SCANNERS=CScan)
 
+if root:
+    main = 'sflibplot.py'
+
+    docs = map(lambda prog: env.Doc(prog),('stdplot.c',))
+    env.Depends(docs,'#/python/rsfdoc.py')
+
+    doc = env.Command(main,docs,docmerge)
+    env.Install(libdir,doc)
+    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+        
 # 	$Id$	
 

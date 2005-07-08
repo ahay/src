@@ -236,6 +236,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     vp_uorig (uorig1, uorig2);
 
     if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
+    /* axes color */
 }
 
 void vp_cubeplot_init (int n1pix, int n2pix,      /* total pixels */ 

@@ -1,6 +1,8 @@
 /* Plot rays.
    
 Takes: < rays.rsf > plot.vpl
+
+Run "sfdoc stdplot" for more parameters.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin

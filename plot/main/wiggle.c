@@ -1,4 +1,9 @@
-/* Plot data with wiggly traces. */ 
+/* Plot data with wiggly traces. 
+
+Takes: > plot.vpl
+
+Run "sfdoc stdplot" for more parameters.
+*/ 
 /*
   Copyright (C) 2004 University of Texas at Austin
   

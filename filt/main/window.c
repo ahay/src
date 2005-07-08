@@ -216,7 +216,7 @@ static off_t seektable(int dim, int *n, int *m, int *f, int *j,
 	t2 = t;
     }
 
-    return (t2*n[0]+n1);
+    return (t2*n[0]+f[0]+n1);
 }
 
 /* 	$Id$	 */

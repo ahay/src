@@ -37,6 +37,8 @@
 /* height in inches, default device */ 
 #define VP_MAX 54.6           
 /* absolute maximum x or y in inches */
+#define VP_BSIZE 256
+/* number of pixels for scalebars */
 /*^*/
 
 enum {

@@ -1,6 +1,8 @@
 /* Generate 3-D cube plot.
    
 Takes: > plot.vpl
+
+Requires an "unsigned char" input (the output of sfbyte).
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -27,11 +29,11 @@ int main(int argc, char* argv[])
 {
     int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
-    float point1, point2;
-    char *color;
-    unsigned char **front, **top, **side, **buf, b;
-    bool flat;
-    sf_file in;
+    float point1, point2, barmin, barmax;
+    bool flat, scalebar, nomin, nomax, barreverse;
+    char *color, maxk[100], mink[100];
+    unsigned char **front, **top, **side, **buf, b, *barbuf[1];
+    sf_file in, bar=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -124,10 +126,30 @@ int main(int argc, char* argv[])
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
 
+    if (!sf_getbool ("wantscalebar",&scalebar) && 
+	!sf_getbool ("scalebar",&scalebar)) scalebar = false;
+    /* if y, draw scalebar */
+    if (scalebar) {
+	nomin = !sf_getfloat("minval",&barmin);
+	/* minimum value for scalebar (default is the data minimum) */
+	nomax = !sf_getfloat("maxval",&barmax);
+	/* maximum value for scalebar (default is the data maximum) */
+	barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
+	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
+	/* if y, go from small to large on the bar scale */
+
+	bar = sf_input("bar");
+	if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
+	
+	if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);
+	if (nomax) nomax = !sf_histfloat(bar,"maxval",&barmax);
+    }
+
     sf_unpipe(in,n1*n2*n3);
 
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
+    if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
 
     /* fill empty areas */
     b = '\0';
@@ -168,6 +190,19 @@ int main(int argc, char* argv[])
 		    i1 = n1*(n1front-j)/(float) n1front;
 		    buf[i][j] = front[i2][i1];
 		}
+	    }
+	    
+	    if (scalebar) {
+		if (nomin) {
+		    sprintf(mink,"minval%d",frame3);
+		    sf_histfloat(bar,mink,&barmin);
+		} 		    
+		if (nomax) {
+		    sprintf(maxk,"maxval%d",frame3);
+		    sf_histfloat(bar,maxk,&barmax);
+		}
+		sf_seek(bar,(off_t) frame3*VP_BSIZE,SEEK_SET);
+		sf_ucharread(barbuf[0],VP_BSIZE,bar);
 	    }
 	}
 
@@ -230,6 +265,15 @@ int main(int argc, char* argv[])
 
 	vp_cuberaster(n1pix,n2pix,buf,frame1,frame2,frame3);
 	
+	if (scalebar) {
+	    if (barreverse) {
+		vp_barframe_init (barmax,barmin);
+	    } else {
+		vp_barframe_init (barmin,barmax);
+	    }
+	    vp_barraster(VP_BSIZE, barbuf);
+	}	    
+
 	switch (movie) {
 	    case 1:
 		frame1 += dframe;

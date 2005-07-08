@@ -12,6 +12,7 @@ import sfsavap
 import sfjennings
 
 # plot
+import sflibplot
 import sfplot
 import vpplot
 
