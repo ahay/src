@@ -1,4 +1,4 @@
-/* Shot interpolation. */
+/* Shot propagation. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int ns, nh, nw, iw, ih, is;
     bool sign;
     float ds, h0, dh, w0, dw, w, eps;
-    float complex *s, **ss; /* a[3]; */
+    float complex *s, *s2;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -39,19 +39,22 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&nh)) sf_error("No n1= in input");
     /* offsets */
-    if (!sf_histint(in,"n2",&ns)) sf_error("No n2= in input");
-    /* shots */
-
-    if (!sf_histint(in,"n3",&nw)) sf_error("No n3= in input");
+    if (!sf_histint(in,"n3",&nw)) sf_error("No n2= in input");
     /* frequency */
 
     if (!sf_histfloat(in,"o1",&h0)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"d1",&dh)) sf_error("No d1= in input");
 
-    if (!sf_histfloat(in,"d2",&ds)) sf_error("No d2= in input");
-
     if (!sf_histfloat(in,"o3",&w0)) sf_error("No o3= in input");
     if (!sf_histfloat(in,"d3",&dw)) sf_error("No d3= in input");
+
+    if (!sf_getint("ns",&ns)) sf_error("Need ns=");
+    /* number of shots */
+    if (!sf_getfloat("ds",&ds)) sf_error("Need ds=");
+    /* shot sampling */
+
+    sf_putint(out,"n2",ns);
+    sf_putfloat(out,"d2",ds);
 
     if (!sf_getfloat("eps",&eps)) eps=0.1;
     /* regularization parameter */
@@ -60,57 +63,51 @@ int main(int argc, char* argv[])
     if (!sf_getbool("positive",&sign)) sign=true;
     /* initial offset orientation */
 
-    sf_putint(out,"n2",2*ns-1);
-    sf_putfloat(out,"d2",0.5*ds);
-    /* make the shot spacing denser */
-
     dw *= 2.*SF_PI;
     w0 *= 2.*SF_PI;
     /* convert Hertz to radian */
 
-    ss = sf_complexalloc2(nh,ns);
+    s2 = sf_complexalloc(nh);
     s = sf_complexalloc(nh);
     /* allocate space for shots at one frequency slice */
 
-    shotfill_init(nh,h0,dh,sign? 0.5*ds: -0.5*ds, eps);
+    shotfill_init(nh,h0,dh,sign? ds: -ds, eps);
 
     for (iw=0; iw < nw; iw++) {
 	/* loop over frequency slices */
 	w = w0 + iw*dw;
 
-	sf_complexread (ss[0],nh*ns,in);
+	sf_complexread (s,nh,in);
 
 	if(fabsf(w) < dw) { /* dc */
 	    /* write out zeroes */
 	    for (ih=0; ih < nh; ih++) {
-		s[ih] = 0.;
+		s2[ih] = 0.;
 	    }
-	    sf_complexwrite(s,nh,out);
-	    for (is=1; is < ns; is++) {
-		sf_complexwrite(s,nh,out);
-		sf_complexwrite(s,nh,out);
+	    for (is=0; is < ns; is++) {
+		sf_complexwrite(s2,nh,out);
 	    }
 	    continue;
 	}
 
-	shotfill_define(w);
+	shotprop_define(w);
 	/* set coefficients */
-
-	sf_complexwrite(ss[0],nh,out);
-	/* write first shot */
+	sf_complexwrite(s,nh,out);
 
 	for (is=1; is < ns; is++) {
 	    /* loop over shots */
 
-	    shotfill_apply(ss[is-1],ss[is],s);
-	    /* insert shot between is-1 and is */
+	    shotprop_apply(s,s2);
+	    /* extrapolate shot */
+	    for (ih=0; ih < nh; ih++) {
+		s[ih] = s2[ih];
+	    }
 
 	    sf_complexwrite(s,nh,out);
-	    sf_complexwrite(ss[is],nh,out);
 	} /* s */
     } /* w */
   
     exit(0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Minfill.c 1165 2005-07-05 11:32:11Z fomels $	 */

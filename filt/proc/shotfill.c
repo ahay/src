@@ -30,6 +30,7 @@ static float complex **a, *offd[2], **cc, *s0;
 static float **c, *diag, s, h1, b0[3], eps;
 static void filt2matrix(const float complex *filt,
 			float* d, float complex *dd);
+static void predefine (float w /* log-stretch frequency */);
 
 void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */, 
 		    float ds                      /* shot sampling */, 
@@ -54,7 +55,7 @@ void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */,
     cbanded_init(nh, 2);
     /* initialize complex banded matrix inversion */
 
-    s = 0.5*ds/dh;
+    s = -ds/dh;
     h1 = h0/dh;
     /* normalize by dh */
 
@@ -93,8 +94,7 @@ static void filt2matrix(const float complex *filt,
     dd[2] = filt[2] * conjf (filt[0]);
 }
 
-void shotfill_define (float w /* log-stretch frequency */)
-/*< Fill the shot continuation matrix >*/
+static void predefine (float w /* log-stretch frequency */)
 {
     float den, h;
     float complex *b;
@@ -115,9 +115,17 @@ void shotfill_define (float w /* log-stretch frequency */)
 
 	filt2matrix(b,c[ih],cc[ih]);
     }
+}
+
+void shotfill_define (float w /* log-stretch frequency */)
+/*< Fill the shot continuation matrix >*/
+{
+    int ih;
+
+    predefine(w);
 
     diag[0] = c[1][0] + c[1][2] + eps;
-    diag[1] = 2.*c[1][1] + c[2][0] + eps;
+    diag[1] = 2.*c[1][1] + c[2][0] + c[2][2] + eps;
     for (ih=2; ih < nh-2; ih++) {
 	diag[ih] = c[ih-1][0] + c[ih-1][2] + 2.*c[ih][1]
 	    +      c[ih+1][0] + c[ih+1][2] + eps;
@@ -139,6 +147,33 @@ void shotfill_define (float w /* log-stretch frequency */)
     /* define the pentadiagonal matrix */
 }
 
+void shotprop_define (float w /* log-stretch frequency */)
+/*< Fill the shot propagation matrix >*/
+{
+    int ih;
+
+    predefine(w);
+
+    diag[0] = c[1][0] + eps;
+    diag[1] = c[1][1] + c[2][0] + eps;
+    for (ih=2; ih < nh-2; ih++) {
+	diag[ih] = c[ih-1][2] + c[ih][1] + c[ih+1][0] + eps;
+    }
+    diag[nh-2] = c[nh-3][2] + c[nh-2][1] + eps;
+    diag[nh-1] = c[nh-2][2] + eps;
+
+    offd[0][0] = cc[1][0];
+    offd[1][0] = cc[1][2];
+    for (ih=1; ih < nh-2; ih++) {
+	offd[0][ih] = cc[ih+1][0] + cc[ih][1];
+	offd[1][ih] = cc[ih+1][2];
+    }
+    offd[0][nh-2] = cc[nh-2][1];
+    
+    cbanded_define(diag,offd);
+    /* define the pentadiagonal matrix */
+}
+
 void shotfill_apply (const float complex *s1, 
 		     const float complex *s2 /* input shots [nh] */, 
 		     float complex *s        /* interpolated shot [nh] */)
@@ -153,6 +188,8 @@ void shotfill_apply (const float complex *s1,
     }
 
     /** Compute right-hand side: s=M2'*M1*s1 + M1'*M2*s2 **/
+
+    /*** ih-1 <-> ih+1 ??? ***/
     for (ih=1; ih < nh-1; ih++) {
 	b = a[ih];
 	sum1 = s1[ih-1]*b[2] + s1[ih]*b[1] + s1[ih+1]*b[0];
@@ -165,7 +202,8 @@ void shotfill_apply (const float complex *s1,
 	s[ih+1] += sum1*b[2] + sum2*conjf(b[0]);
     }
 
-    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 **/
+
+    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 
     s[0] -= (diag[0]-eps)*s0[0] + 
 	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
     s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
@@ -179,12 +217,64 @@ void shotfill_apply (const float complex *s1,
 	(diag[nh-2]-eps)*s0[nh-2] + conjf(offd[0][nh-2])*s0[nh-1];
     s[nh-1] -= offd[1][nh-3]*s0[nh-3]+offd[0][nh-2]*s0[nh-2] + 
 	(diag[nh-1]-eps)*s0[nh-1];
+    **/
 
     cbanded_solve(s);
     /* inversion in place */
 
+    /*
     for (ih=0; ih < nh; ih++) {
 	s[ih] += s0[ih];
     }
+    */
 }
 
+void shotprop_apply (const float complex *s1 /* input shot [nh] */,  
+		     float complex *s        /* propagated shot [nh] */)
+/*< propagate a shot gather >*/
+{
+    float complex *b, sum1; 
+    int ih;
+
+    for (ih=0; ih < nh; ih++) {
+	s[ih] = 0.;
+	s0[ih] = s1[ih];
+    }
+
+    /** Compute right-hand side: s=M2'*M1*s1 **/
+
+    /*** ih-1 <-> ih+1 ??? ***/
+    for (ih=1; ih < nh-1; ih++) {
+	b = a[ih];
+	sum1 = s1[ih-1]*b[2] + s1[ih]*b[1] + s1[ih+1]*b[0];
+	s[ih-1] += sum1*b[0];
+	s[ih  ] += sum1*b[1];
+	s[ih+1] += sum1*b[2];
+    }
+
+
+    /** Subtract reference: s -= (M1'*M1+M2'*M2)*s0 
+    s[0] -= (diag[0]-eps)*s0[0] + 
+	conjf(offd[0][0])*s0[1] + conjf(offd[1][0])*s0[2];
+    s[1] -= offd[0][0]*s0[0] + (diag[1]-eps)*s0[1] + 
+	conjf(offd[0][1])*s0[2] + conjf(offd[1][1])*s0[3];
+    for (ih=2; ih < nh-2; ih++) {
+	s[ih] -= offd[1][ih-2]*s0[ih-2]+offd[0][ih-1]*s0[ih-1] + 
+	    (diag[ih]-eps)*s0[ih] + 
+	    conjf(offd[0][ih])*s0[ih+1] + conjf(offd[1][ih])*s0[ih+2];
+    }
+    s[nh-2] -= offd[1][nh-4]*s0[nh-4]+offd[0][nh-3]*s0[nh-3] + 
+	(diag[nh-2]-eps)*s0[nh-2] + conjf(offd[0][nh-2])*s0[nh-1];
+    s[nh-1] -= offd[1][nh-3]*s0[nh-3]+offd[0][nh-2]*s0[nh-2] + 
+	(diag[nh-1]-eps)*s0[nh-1];
+    **/
+
+    cbanded_solve(s);
+    /* inversion in place */
+
+    /*
+    for (ih=0; ih < nh; ih++) {
+	s[ih] += s0[ih];
+    }
+    */
+}
