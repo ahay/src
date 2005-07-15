@@ -43,7 +43,7 @@ class Par:
     def bools(self,key,num,default=None):
         return self.__gets(c_rsf.getbools,key,num,default)
 
-datatype = ('char','int','float','complex')
+datatype = ('uchar','char','int','float','complex')
 dataform = ('ascii','xdr','native')
 
 class File:

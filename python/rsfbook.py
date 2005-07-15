@@ -46,6 +46,17 @@ misc = {'pub.tex': 'Articles published or in press',
         'bio.tex': 'Research personnel',
         'spons.tex': 'Sponsors'}
 
+full = {
+    'SEP': 'Stanford Exploration Project'
+    }
+
+def get_year(default):
+    year = default
+    if not year:
+        year = time.localtime(time.time())[0]
+    year = str(year)
+    year = string.join([str(int(year)-1),year[-2:]],'-')
+    
 def report_toc(target=None,source=None,env=None):
     "Build a table of contents from a collection of papers"
     toc = open(str(target[0]),'w')
@@ -70,11 +81,7 @@ def report_toc(target=None,source=None,env=None):
                       (author.group(1),title,dir))
         else:
             print "Could not find author or title"
-    year = env.get('year')
-    if not year:
-        year = time.localtime(time.time())[0]
-    year = str(year)
-    year = string.join([str(int(year)-1),year[-2:]],'-')
+    year = get_year(env.get('year'))
     misc['pub.tex'] = '%s article published or in press, %s' % (group,year),
     misc['spons.tex'] = '%s sponsors for %s' % (group,year)
     map(lambda x:
@@ -85,17 +92,86 @@ def report_toc(target=None,source=None,env=None):
     toc.close()
     return 0
 
+def get_authors(source,default):
+    authors = {}
+    for src in source:
+        dir = os.path.basename(os.path.dirname(str(src)))
+        author = default.get(dir)
+        if not author:
+            paper = src.get_contents()
+            author = re_author.search(paper)
+            if author:
+                author = author.group(1)
+        if author:
+            author = re.sub(r'(?:\,|\;|\\\&)',' and ',author)
+            author = re.sub(r'\s+and\s+and\s+',' and ',author)
+            author = re.sub(r'^\s+','',author)
+            author = re.sub(r'\s+$','',author)
+            print "%s: %s" % (dir,author)
+            for person in re.split(r'\s*\band\b\s*',author):
+                names = string.split(person)
+                if names:
+                    person = names.pop(0)
+                    if names:
+                        last = names.pop()
+                        person = string.join((person,last),'~')
+                        authors[person]=last
+    all = map(lambda k: (authors[k],k),authors.keys())
+    all.sort()
+    lastone = all.pop()
+    if len(all) == 0:
+        author = lastone(1)
+        print "The author is " + lastone
+    elif len(all) == 1:
+        author = '%s and %s' % (author,lastone[1])
+        print "The authors are " + author
+    else:                
+        author = string.join(map(lambda k: k[1],all),', ')
+        author = '%s, and %s' % (author,lastone[1])
+        print "The authors are " + author
+    return author
+
+def report_tpg(target=None,source=None,env=None):
+    "Build the title page"
+    tpg = open(str(target[0]),'w')
+    tpg.write('%% This file is automatocally generated, DO NOT EDIT\n\n')
+    tpg.write('\\title{%s}\n' % env.get('group',full.get(group)))
+    title = env.get('title1')
+    if title:
+        tpg.write('\\vfill\n\title{%s}\n' % title)
+    authors = env.get('authors',{})
+    tpg.write('\\author{%s}\n' % get_authors(source,authors))
+    title = env.get('title2')
+    if title:
+        tpg.write('\\vfill\n\title{%s}\n' % title)
+    line = env.get('line')
+    if line:
+        tpg.write('\\vfill\n\\begin{center}\n\\bfseries%\n%s\n\\end{center}\n' % line)
+    fig = env.get('fig')
+    if fig:
+        dir = env.get('dir','.')
+        size = env.get('size','')
+        tpg.write('\\renewcommand{\\plotdir}{%s}\n'
+                  '\\vfill\n\\begin{center}\n\\plotbox{%s}{%s}\n\\end{center}\n' %
+                  (dir,fig,size))
+    year = get_year(env.get('year'))
+    tpg.write('\n\\newpage\\GEOcopyr{%s}\n' % year)
+
 Toc = Builder(action = Action(report_toc), varlist=['year','sections'])
+Tpg = Builder(action = Action(report_tpg),
+              varlist=['group','title1','authors','title2','line','fig','dir','size','year'])
 
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
-        self.Append(BUILDERS={'Toc':Toc})        
-    def Papers(self,papers=glob.glob('[a-z]*/paper.tex'),
-               year=None,sections={}):
-        self.Toc('toc.tex',papers,year=year,sections=sections)
-        map(lambda tex: self.Depends('toc.tex',tex),
-            filter(os.path.isfile,misc.keys()))
+        self.Append(BUILDERS={'Toc':Toc,
+                              'Tpg':Tpg})        
+    def Papers(self,papers,**kw):
+        apply(self.Toc,('toc.tex',papers),kw)
+        apply(self.Tpg,('tpg.tex',papers),kw)
+        for file in ('tpg.tex','toc.tex'):
+            map(lambda tex: self.Depends(file,tex),
+                filter(os.path.isfile,misc.keys()))
 
 # Default report
 book = RSFReport()

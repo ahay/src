@@ -31,6 +31,7 @@ opts.Save('config.py',env)
 
 config = env.Command('config.py','configure.py','')
 env.Precious(config)
+
 env.InstallAs(os.path.join(libdir,'rsfconfig.py'),'config.py')
 env.InstallAs(os.path.join(libdir,'rsfconf.py'),'configure.py')
 Clean(config,['#/config.log','#/.sconf_temp','configure.pyc'])

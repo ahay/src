@@ -12,7 +12,7 @@
 #include "files.h"
 %}
 
-%include "typemaps.i"
+%include typemaps.i
 %apply int *OUTPUT { int *par };
 %apply float *OUTPUT { float *par };
 
