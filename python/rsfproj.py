@@ -15,7 +15,7 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import os, stat, sys, types 
-import re, string, urllib, ftplib
+import re, string, urllib, ftplib, anydbm
 
 try:
     import filecmp
@@ -192,7 +192,7 @@ class Project(Environment):
             self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-        self.SConsignFile(self.path+'.sconsign')
+        self.SConsignFile(self.path+'.sconsign',anydbm)
         self.resdir = resdir
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
