@@ -22,13 +22,11 @@ spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
 # C API
 ############################################################################
 
-proj.Program('clip.c')
+#proj.Program('clip.c')
 ctest = proj.Flow('c','clip.exe',test % 'clip',suffix='.attr',stdin=0)
 Default(ctest)
 
 api = string.split(string.lower(proj.get('API','')),',')
-
-print api
 
 ############################################################################
 # C++ API

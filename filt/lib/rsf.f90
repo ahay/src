@@ -3,6 +3,8 @@
 module RSF
   implicit none
 
+  integer, parameter :: sf_uchar=0, sf_char=1, sf_int=2, sf_float=3, sf_complex=4
+
   type file
      private
      integer tag
