@@ -39,7 +39,7 @@ int main(int argc, char* argv[])
     modl = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(curv)) sf_error("Need float input");
-    if (!sf_histint(curv,"n1",&nx)) sf_error("No n1= in input");
+    if (!sf_histint  (curv,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(curv,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(curv,"o1",&x0)) sf_error("No o1= in input");
 
@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(nt+1);
 
-    sf_putint(modl,"n1",nt);
+    sf_putint  (modl,"n1",nt);
     sf_putfloat(modl,"d1",dt);
     sf_putfloat(modl,"o1",t0);
 
@@ -93,14 +93,14 @@ int main(int argc, char* argv[])
 
     /*** Initialize offsets ***/
 
-    if (!sf_getint("nh",&nh)) nh=nx;
+    if (!sf_getint  ("nh",&nh)) nh=nx;
     /* number of offsets */
     if (!sf_getfloat("h0",&h0)) h0=0.;
     /* first offset */
     if (!sf_getfloat("dh",&dh)) dh=dx;
     /* offset increment */
 
-    sf_putint(modl,"n2",nh);
+    sf_putint  (modl,"n2",nh);
     sf_putfloat(modl,"o2",h0);
     sf_putfloat(modl,"d2",dh);
 
