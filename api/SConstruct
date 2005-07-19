@@ -22,7 +22,7 @@ spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
 # C API
 ############################################################################
 
-#proj.Program('clip.c')
+proj.Program('clip.c')
 ctest = proj.Flow('c','clip.exe',test % 'clip',suffix='.attr',stdin=0)
 Default(ctest)
 
@@ -58,7 +58,9 @@ if 'fortran' in api:
 ############################################################################
 
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
-    proj.Program('clip.f90',OBJSUFFIX='f90.o',
+    proj.Program('clip.f90',
+                 PROGSUFFIX='f90.exe',
+                 OBJSUFFIX='f90.o',
                  LIBS=['rsff90','rsf','m'],
                  F90PATH=[incdir],
                  LINK=proj.get('F90'),

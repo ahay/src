@@ -77,6 +77,23 @@ module RSF
   end interface
 
 contains
+  function gettype (f) result (t)
+    integer                  :: t
+    type (file), intent (in) :: f
+
+    integer sf_gettype
+    external sf_gettype
+
+    t = sf_gettype(f%tag)
+  end function gettype
+
+  subroutine settype (f,t)
+    integer,     intent (in) :: t
+    type (file), intent (in) :: f
+
+    call sf_settype(f%tag,t)
+  end subroutine settype
+
   function filesize (f, dim) result (s)
     integer                  :: s 
     type (file), intent (in) :: f
