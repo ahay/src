@@ -52,7 +52,7 @@ env.Prepend(CPPPATH=['../../include'],
             LIBS=['rsf'])
 
 Export('env')
-dirs = ('lib','main','proc','imag')
+dirs = ('lib','main','proc','imag','c++')
 user = ('fomels','gee','savap','jennings') # ,'mirandaf')
 
 Default('build/include')

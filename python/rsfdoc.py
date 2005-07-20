@@ -358,7 +358,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
                             '\s*\(\s*\"(?P<tag>\w+)\"')
         version = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
-    name = re.sub('.c$','',name)
+    name = re.sub('\.cc?$','',name)
     src = open(file,"r")   # open source
     text = string.join(src.readlines(),'')
     src.close()

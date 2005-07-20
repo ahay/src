@@ -76,6 +76,8 @@ api = string.split(string.lower(str(env.get('API',''))),',')
 if 'c++' in api:
     libcc = env.StaticLibrary('rsf++',Split('rsf.cc cub.cc vai.cc'),
                               OBJSUFFIX='++.o',CPPPATH='../../include')
+    env.Install('../../include','rsf.hh')
+
     if root:
         env.Install(libdir,libcc)
         env.Install(incdir,Split('rsf.hh cub.hh vai.hh'))
