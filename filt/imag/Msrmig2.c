@@ -215,7 +215,6 @@ int main (int argc, char *argv[])
 	    raxa(aha);
 	    raxa(ahb);
 
-
 	    oaxa(Fc,&ahh,4);
 	    cigs = fslice_init( acx.n*acy.n*acz.n*ahh.n,1,sizeof(float));
 
