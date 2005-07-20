@@ -1,4 +1,4 @@
-/* Riemannian Wavefield extrapolation a,b coefficients */
+/* Riemannian Wavefield Extrapolation a,b coefficients */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -134,7 +134,6 @@ int main(int argc, char* argv[])
 	sf_quantile(          0,at.n*ag.n,qq) + 
 	sf_quantile(at.n*ag.n-1,at.n*ag.n,qq)
 	) /2.;
-    sf_warning("eps=%g",eps);
     LOOPRC( if(SF_ABS(h2[ig][it]) < eps) h2[ig][it]=eps; );
 
     LOOPRC( 
@@ -156,7 +155,6 @@ int main(int argc, char* argv[])
 	mina = sf_quantile(     0,ag.n,gg);
 	maxa = sf_quantile(ag.n-1,ag.n,gg);
 	dela = (maxa-mina)/naref;
-/*	sf_warning("%d mina=%g maxa=%g dela=%g",it,mina,maxa,dela);*/
 
 	for(ig=0;ig<ag.n;ig++){
 	    gg[ig] = bb[ig][it];
@@ -164,7 +162,6 @@ int main(int argc, char* argv[])
 	minb = sf_quantile(     0,ag.n,gg);
 	maxb = sf_quantile(ag.n-1,ag.n,gg);
 	delb = (maxb-minb)/nbref;
-/*	sf_warning("%d minb=%g maxb=%g delb=%g",it,minb,maxb,delb);*/
 
 	/* reference a and b */
 	ii=0;
@@ -172,9 +169,7 @@ int main(int argc, char* argv[])
 	    a0 = mina + 0.5*dela + ia*dela;
 	    for(ib=0;ib<nbref;ib++) {
 		b0 = minb + 0.5*delb + ib*delb;
-
 		ab[ii][it] = a0+I*b0;
-/*		sf_warning("it=%d ii=%d a0=%g b0=%g",it,ii,a0,b0);*/
 		ii++;
 	    }
 	}
