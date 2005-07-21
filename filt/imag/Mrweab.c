@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
 
-    sf_file Fi, Fo, Fr, Fs; /* I/O files */
+    sf_file Fi, Fo, Fr, Fs; /*  I/O files  */
 
     complex float **rays;
     complex float **ab;
