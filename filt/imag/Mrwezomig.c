@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
-    iaxa(Fm,&at,1);       /* 'extrapolation axis' (can be time) */
-    iaxa(Fr,&ar,2);       /* a,b reference */
+    iaxa(Fm,&at,1); at.l="t"; /* 'extrapolation axis' (can be time) */
+    iaxa(Fr,&ar,2); ar.l="r"; /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
 
     if(inv) {  /* modeling */
@@ -61,8 +61,8 @@ int main(int argc, char* argv[])
 	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 	if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
 
-	iaxa(Fi,&ag,1);
-	iaxa(Fi,&at,2);
+	iaxa(Fi,&ag,1); ag.l="g";
+	iaxa(Fi,&at,2); at.l="t";
 
 	oaxa(Fd,&ag,1);
 	oaxa(Fd,&aw,2);
@@ -75,8 +75,8 @@ int main(int argc, char* argv[])
 	Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 	if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
 
-	iaxa(Fd,&ag,1);       /* 'position axis' (can be angle) */
-	iaxa(Fd,&aw,2);       /* frequency */
+	iaxa(Fd,&ag,1); ag.l="g"; /* 'position axis' (can be angle) */
+	iaxa(Fd,&aw,2); aw.l="w"; /* frequency */
 
 	oaxa(Fi,&ag,1);
 	oaxa(Fi,&at,2);

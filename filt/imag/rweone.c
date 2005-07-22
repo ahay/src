@@ -151,7 +151,7 @@ void rweone_main(
 	case 2:
 	case 1:
 	    for(iw=0;iw<aw.n;iw++) {
-		if(method==3)      { sf_warning("PSC %d %d",iw,aw.n); }
+		if     (method==3) { sf_warning("PSC %d %d",iw,aw.n); }
 		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
 		else               { sf_warning("SSF %d %d",iw,aw.n); }
 
@@ -451,9 +451,9 @@ void rweone_phs(
 	arg = 1.0 - tt*tt;
 
 	if(arg<0.) {
-	    ikz =     ta * sqrtf(-arg);
+	    ikz = SF_ABS(ta) * sqrtf(-arg);
 	} else {
-	    ikz = I * ta * sqrtf(+arg);
+	    ikz =    I * ta  * sqrtf(+arg);
 	}
 
 	v[ig] *= cexp( ikz * (-at.d));
@@ -667,8 +667,7 @@ void rweone_mrs(
     }
 
     for(iloop=0;iloop<nloop;iloop++) {
-
-	msk[0] = mtt[0];
+	msk[0] = mtt[1];
 	for(ig=1;ig<ag.n-1;ig++) {
 	    msk[ig] = 0.5 * (mtt[ig-1] + mtt[ig+1] );
 	}
