@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
 {
 
     sf_file Fi, Fo, Fm, Fr;
-    axa ax,az,aw,ar;
-    int ix,iz,   ir;
+    axa ag,at,aw,ar;
+    int ig,it,   ir;
 
     int method;
     bool verb;
@@ -47,73 +47,73 @@ int main(int argc, char* argv[])
     if(! sf_getbool("verb",&verb)) verb=false;
     if(! sf_getint("method",&method)) method=0;
 
-    iaxa(Fi,&ax,1);       /* x='position' (can be angle) */
+    iaxa(Fi,&ag,1);       /* x='position' (can be angle) */
     iaxa(Fi,&aw,2);       /* w=frequency */
-    iaxa(Fm,&az,1);       /* z=extrapolation (can be time) */
+    iaxa(Fm,&at,1);       /* z=extrapolation (can be time) */
     iaxa(Fr,&ar,2);       /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
 
     if(verb) {
-	raxa(ax);
-	raxa(az);
+	raxa(ag);
+	raxa(at);
 	raxa(aw);
 	raxa(ar);
     }
 
-    oaxa(Fo,&az,1);
-    oaxa(Fo,&ax,2);
+    oaxa(Fo,&at,1);
+    oaxa(Fo,&ag,2);
     sf_settype(Fo,SF_FLOAT);
 
     /* read data */
     sf_warning("read data");
-    dat = sf_complexalloc2(ax.n,aw.n);
-    sf_complexread(dat[0],ax.n*aw.n,Fi);
+    dat = sf_complexalloc2(ag.n,aw.n);
+    sf_complexread(dat[0],ag.n*aw.n,Fi);
 
     /* read ABM */
     sf_warning("read ABM");
-    aa = sf_floatalloc2  (az.n,ax.n);
-    bb = sf_floatalloc2  (az.n,ax.n);
-    mm = sf_floatalloc2  (az.n,ax.n);
+    aa = sf_floatalloc2  (at.n,ag.n);
+    bb = sf_floatalloc2  (at.n,ag.n);
+    mm = sf_floatalloc2  (at.n,ag.n);
 
-    sf_floatread(aa[0],az.n*ax.n,Fm); /* a coef */
-    sf_floatread(bb[0],az.n*ax.n,Fm); /* b coef */
-    sf_floatread(mm[0],az.n*ax.n,Fm); /* mask */
+    sf_floatread(aa[0],at.n*ag.n,Fm); /* a coef */
+    sf_floatread(bb[0],at.n*ag.n,Fm); /* b coef */
+    sf_floatread(mm[0],at.n*ag.n,Fm); /* mask */
     sf_warning("read ABM ok");
 
     /* read ABr */
     sf_warning("read ABr");
-    ab = sf_complexalloc2(az.n,ar.n);
-    a0 = sf_floatalloc2  (az.n,ar.n);
-    b0 = sf_floatalloc2  (az.n,ar.n);
+    ab = sf_complexalloc2(at.n,ar.n);
+    a0 = sf_floatalloc2  (at.n,ar.n);
+    b0 = sf_floatalloc2  (at.n,ar.n);
 
-    sf_complexread(ab[0],az.n*ar.n,Fr);
+    sf_complexread(ab[0],at.n*ar.n,Fr);
     for(ir=0;ir<ar.n;ir++) {
-	for(iz=0;iz<az.n;iz++) {
-	    a0[ir][iz] = crealf(ab[ir][iz]);
-	    b0[ir][iz] = cimagf(ab[ir][iz]);
+	for(it=0;it<at.n;it++) {
+	    a0[ir][it] = crealf(ab[ir][it]);
+	    b0[ir][it] = cimagf(ab[ir][it]);
 	}
     }
     sf_warning("read ABr ok");
 
     /* allocate image */
     sf_warning("allocate image");
-    img = sf_floatalloc2  (az.n,ax.n);
-    for(ix=0;ix<ax.n;ix++) {
-	for(iz=0;iz<az.n;iz++) {
-	    img[ix][iz] = 0.;
+    img = sf_floatalloc2  (at.n,ag.n);
+    for(ig=0;ig<ag.n;ig++) {
+	for(it=0;it<at.n;it++) {
+	    img[ig][it] = 0.;
 	}
     }
 
     /* model */
     sf_warning("init modeling");
-    rweone_init(ax,az,aw,ar,method);
+    rweone_init(ag,at,aw,ar,method);
 
     sf_warning("run modeling");
     rweone_main(dat,img,aa,bb,mm,a0,b0);
 
     /* write image */
     sf_warning("write image");
-    sf_floatwrite(img[0],ax.n*az.n,Fo);
+    sf_floatwrite(img[0],ag.n*at.n,Fo);
 
     sf_warning("OK");
 }
