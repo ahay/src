@@ -1,4 +1,6 @@
-/* Riemannian Wavefield Extrapolation: modeling */
+/* Riemannian Wavefield Extrapolation: 
+   zero-offset modeling/migration 
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,11 +26,11 @@ int main(int argc, char* argv[])
 {
     sf_file Fd, Fi, Fm, Fr;
     axa ag,at,aw,ar;
-    int ig,it,   ir;
+    int ig,it,iw,ir;
 
     int method;
     bool verb;
-    bool mod;
+    bool inv;
 
     complex float **dat;
     float         **img;
@@ -41,21 +43,47 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb",&verb)) verb=false;
     if(! sf_getint("method",&method)) method=0; /* extrapolation method */
-    if(! sf_getbool("mod",&mod)) mod=false;     /* mod=y modeling
-						   mod=n migration */
-
-    Fd = sf_input("in");
-    Fi = sf_output("out");
-
+    if(! sf_getbool("inv",&inv)) inv=false;     /* y=modeling; n=migration */
+						
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
-    iaxa(Fd,&ag,1);       /* x='position' (can be angle) */
-    iaxa(Fd,&aw,2);       /* w=frequency */
-
-    iaxa(Fm,&at,1);       /* z=extrapolation (can be time) */
+    iaxa(Fm,&at,1);       /* 'extrapolation axis' (can be time) */
     iaxa(Fr,&ar,2);       /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
+
+    if(inv) {  /* modeling */
+	Fi = sf_input ( "in");
+	Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
+	if (SF_FLOAT !=sf_gettype(Fi)) sf_error("Need float image");
+
+	if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
+	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
+	if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
+
+	iaxa(Fi,&ag,1);
+	iaxa(Fi,&at,2);
+
+	oaxa(Fd,&ag,1);
+	oaxa(Fd,&aw,2);
+
+	dat = sf_complexalloc2(ag.n,aw.n);
+	img = sf_floatalloc2  (ag.n,at.n);
+
+    } else {   /* migration */
+	Fd = sf_input("in");
+	Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
+	if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
+
+	iaxa(Fd,&ag,1);       /* 'position axis' (can be angle) */
+	iaxa(Fd,&aw,2);       /* frequency */
+
+	oaxa(Fi,&ag,1);
+	oaxa(Fi,&at,2);
+
+	dat = sf_complexalloc2(ag.n,aw.n);
+	img = sf_floatalloc2  (ag.n,at.n);
+    }
 
     if(verb) {
 	raxa(ag);
@@ -63,14 +91,6 @@ int main(int argc, char* argv[])
 	raxa(aw);
 	raxa(ar);
     }
-
-    oaxa(Fi,&at,1);
-    oaxa(Fi,&ag,2);
-    sf_settype(Fi,SF_FLOAT);
-
-    /* read data */
-    dat = sf_complexalloc2(ag.n,aw.n);
-    sf_complexread(dat[0],ag.n*aw.n,Fd);
 
     /* read ABM */
     aa = sf_floatalloc2  (at.n,ag.n);
@@ -94,18 +114,36 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /* allocate image */
-    img = sf_floatalloc2  (at.n,ag.n);
-    for(ig=0;ig<ag.n;ig++) {
+    if(inv) { /* modeling */
+	sf_floatread  (img[0],ag.n*at.n,Fi);
+
+	for(iw=0;iw<aw.n;iw++) {
+	    for(ig=0;ig<ag.n;ig++) {
+		dat[iw][ig] = 0.;
+	    }
+	}
+
+    } else {  /* migration */
+	sf_complexread(dat[0],ag.n*aw.n,Fd);
+	
 	for(it=0;it<at.n;it++) {
-	    img[ig][it] = 0.;
+	    for(ig=0;ig<ag.n;ig++) {
+		img[it][ig] = 0.;
+	    }
 	}
     }
 
-    /* model */
+    /*------------------------------------------------------------*/
+    /* execute */
     rweone_init(ag,at,aw,ar,method);
-    rweone_main(dat,img,aa,bb,mm,a0,b0);
 
-    /* write image */
-    sf_floatwrite(img[0],ag.n*at.n,Fi);
+    rweone_main(inv,dat,img,aa,bb,mm,a0,b0);
+    /* execute */
+    /*------------------------------------------------------------*/
+
+    if(inv) { /* modeling */
+	sf_complexwrite(dat[0],ag.n*aw.n,Fd);
+    } else {  /* migration */
+	sf_floatwrite  (img[0],ag.n*at.n,Fi);
+    }
 }

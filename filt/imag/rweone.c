@@ -36,8 +36,6 @@ static complex float *a,*b,*c,*u;
 static float c1,c2,sixth;
 static float kmu,knu,kro;
 
-static complex float *dax; /* pointer to frequency slice */
-
 static float *tap;
 static int   ntap;
 
@@ -118,6 +116,7 @@ void rweone_init(
 }
 
 void rweone_main(
+    bool            inv,
     complex float **dat,
     float         **img,
     float         ** aa,
@@ -127,7 +126,7 @@ void rweone_main(
     float         ** b0)
 /*< run one-way extrapolation >*/
 {
-    int iw,it,ig,ir;
+    int iw,it;
     float w;
 
     switch(method) {
@@ -152,32 +151,25 @@ void rweone_main(
 	case 2:
 	case 1:
 	    for(iw=0;iw<aw.n;iw++) {
-		w=aw.o+iw*aw.d; w*=2;
 		if(method==3)      { sf_warning("PSC %d %d",iw,aw.n); }
 		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
 		else               { sf_warning("SSF %d %d",iw,aw.n); }
-		dax = dat[iw];
 
-		for(it=0;it<at.n;it++) {
-		    rweone_tap(dax);
-		    for(ig=0;ig<ag.n;ig++) {
-			img[ig][it] += crealf(dax[ig]);
+		if(inv) { /* modeling */
+		    w=aw.o+iw*aw.d; w*=2;
+		    w*=-1; /* causal */
+
+		    for(it=at.n-1;it>=0;it--) {
+			rweone_fk(w,dat[iw],it,aa,a0,b0,mm);
+			rweone_img(inv,dat[iw],img[it]);
 		    }
-		    
-		    for(ig=0;ig<ag.n;ig++) {
-			wtt[ig] = dax[ig];
-			dax[ig] = 0.;
-		    }
-		    for(ir=0;ir<ar.n;ir++) {
-			for(ig=0;ig<ag.n;ig++) {
-			    wfl[ig] = wtt[ig];
-			}
-			
-			rweone_phs(wfl,w,it,ir,a0,b0);
-			rweone_ssf(wfl,w,it,ir,aa,a0);
-			/* skip F-D for SSF */
-			if(method!=1) { rweone_fds(wfl,w,it,ir); } 
-			rweone_mrs(wfl,  it,ir,mm,dax);
+		} else {  /* migration */
+		    w=aw.o+iw*aw.d; w*=2;
+		    w*=+1; /* anti-causal */
+
+		    for(it=0;it<at.n;it++) {
+			rweone_img(inv,dat[iw],img[it]);
+			rweone_fk(w,dat[iw],it,aa,a0,b0,mm);
 		    }
 		}
 	    }
@@ -185,23 +177,95 @@ void rweone_main(
 	case 0:
 	default:
 	    for(iw=0;iw<aw.n;iw++) {
-		w=aw.o+iw*aw.d; w*=2;
 		sf_warning("XFD %d %d",iw,aw.n);
-		dax = dat[iw];
+		
+		if(inv) { /* modeling */
+		    w=aw.o+iw*aw.d; w*=2;    
+		    w*=-1; /* causal */
 
-		for(it=0;it<at.n;it++) {
-		    rweone_tap(dax);
-		    for(ig=0;ig<ag.n;ig++) {
-			img[ig][it] += crealf(dax[ig]);
+		    for(it=at.n-1;it>=0;it--) {
+			rweone_fx(w,dat[iw],it,aa);
+			rweone_img(inv,dat[iw],img[it]);
 		    }
+		} else { /* migration */
+		    w=aw.o+iw*aw.d; w*=2;    
+		    w*=+1; /* anti-causal */
 
-		    rweone_ssh(dax,w,it,aa);
-		    rweone_fds(dax,w,it, 0);
+		    for(it=0;it<at.n;it++) {
+			rweone_img(inv,dat[iw],img[it]);
+			rweone_fx(w,dat[iw],it,aa);
+		    }
 		}
 	    }
 	    break;
     } /* end switch method */
 }
+
+/*------------------------------------------------------------*/
+
+void rweone_img(
+    bool           inv,
+    complex float *ddd,
+    float         *iii)
+/*< imaging condition >*/
+{
+    int ig;
+
+    if(inv) { /* modeling */
+	for(ig=0;ig<ag.n;ig++) {
+	    ddd[ig] += iii[ig];
+	}
+	rweone_tap(ddd);
+    } else {
+	rweone_tap(ddd);
+	for(ig=0;ig<ag.n;ig++) {
+	    iii[ig] += crealf(ddd[ig]);
+	}
+    }
+}
+
+void rweone_fk(
+    float w,
+    complex float *ddd,
+    int it,
+    float **aa,
+    float **a0,
+    float **b0,
+    float **mm)
+/*< one F-K extrapolation step >*/
+{
+    int ig,ir;
+
+    for(ig=0;ig<ag.n;ig++) {
+	wtt[ig] = ddd[ig];
+	ddd[ig] = 0.;
+    }
+    for(ir=0;ir<ar.n;ir++) {
+	for(ig=0;ig<ag.n;ig++) {
+	    wfl[ig] = wtt[ig];
+	}
+	
+	rweone_phs(wfl,w,it,ir,a0,b0);
+	rweone_ssf(wfl,w,it,ir,aa,a0);
+	/* skip F-D for SSF */
+	if(method!=1) { rweone_fds(wfl,w,it,ir); } 
+	rweone_mrs(wfl,  it,ir,mm,ddd);
+    }
+    
+}
+
+void rweone_fx(
+    float w,
+    complex float *ddd,
+    int it,
+    float **aa)
+/*< one F-X extrapolation step >*/
+{
+    rweone_ssh(ddd,w,it,aa);
+    rweone_fds(ddd,w,it, 0);
+}
+
+
 
 /*------------------------------------------------------------*/
 /* 
@@ -267,7 +331,8 @@ void rweone_ffd_coef(
 
 	    for(ig=0;ig<ag.n;ig++) {
 		bob = bb[ig][it]/b0[ir][it];
-		bob2= bob*bob;
+		bob2= bob *bob;
+		bob4= bob2*bob2;
 
 		aoa = a0[ir][it]/aa[ig][it];
 		aoa3= aoa*aoa*aoa;
