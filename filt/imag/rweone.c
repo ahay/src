@@ -137,31 +137,51 @@ void rweone_main(
 
     switch(method) {
 	case 3: /* PSC */
+	    sf_warning("compute PSC coef");
+	    rweone_psc_coef(aa,bb,a0,b0);
 	    break;
-
 	case 2: /* FFD */
+	    sf_warning("compute FFD coef");
+	    rweone_ffd_coef(aa,bb,a0,b0);
 	    break;
-
 	case 1: /* SSF */
+	    break;
+	case 0: /* XFD */
+	    sf_warning("compute XFD coef");
+	    rweone_xfd_coef(aa,bb);
+	    break;
+    }
+
+    switch(method) {
+	case 3:
+	case 2:
+	case 1:
 	    for(iw=0;iw<aw.n;iw++) {
 		w=aw.o+iw*aw.d; w*=2;
-		sf_warning("SSF %d %d",iw,aw.n);
+		if(method==3)      { sf_warning("PSC %d %d",iw,aw.n); }
+		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
+		else               { sf_warning("SSF %d %d",iw,aw.n); }
 		
 		for(ix=0;ix<ax.n;ix++) {
 		    dax[ix] = dat[iw][ix];
 		}
-
+		
 		for(iz=0;iz<az.n;iz++) {
 		    for(ix=0;ix<ax.n;ix++) {
 			wtt[ix] = dax[ix];
 			dax[ix] = 0.;
 		    }
+		    
 		    for(ir=0;ir<ar.n;ir++) {
 			for(ix=0;ix<ax.n;ix++) {
 			    wfl[ix] = wtt[ix];
 			}
-/*			rweone_phs(wfl,w,iz,ir,a0,b0);*/
-/*			rweone_ssf(wfl,w,iz,ir,aa,a0);*/
+			
+			rweone_phs(wfl,w,iz,ir,a0,b0);
+			rweone_ssf(wfl,w,iz,ir,aa,a0);
+			if(method!=1) {
+			    rweone_fds(wfl,w,iz,ir);
+			}
 			rweone_mrs(wfl,  iz,ir,mm,dax);
 		    }
 		    rweone_tap(dax);
@@ -171,37 +191,29 @@ void rweone_main(
 		}
 	    }
 	    break;
-
-	case 0: /* XFD */
+	case 0:
 	default:
-	    sf_warning("compute XFD coef");
-	    rweone_xfd_coef(aa,bb);
-
 	    for(iw=0;iw<aw.n;iw++) {
 		w=aw.o+iw*aw.d; w*=2;
 		sf_warning("XFD %d %d",iw,aw.n);
-
+		
 		for(ix=0;ix<ax.n;ix++) {
 		    dax[ix] = dat[iw][ix];
 		}
-
+		
 		for(iz=0;iz<az.n;iz++) {
 		    rweone_ssh(dax,w,iz,aa);
 		    rweone_fds(dax,w,iz, 0);
 		    rweone_tap(dax);
-
+		    
 		    for(ix=0;ix<ax.n;ix++) {
 			img[ix][iz] += crealf(dax[ix]);
 		    }
 		}
-
 	    }
-
-	    break;    
-    }
-
+	    break;
+    } /* end switch method */
 }
-
 
 /*------------------------------------------------------------*/
 /* 
@@ -229,14 +241,138 @@ void rweone_xfd_coef(
     }
 }
 
+void rweone_ffd_coef(
+    float **aa,
+    float **bb,
+    float **a0,
+    float **b0)
+/*< FFD coefficients >*/
+{
+    float ***d1, ***d2;
+    int ii,ir,iz,ix;
+    float tt,tt2, *tb;
+    float boa, boa2, boa4;
+    float bob, bob2, bob4;
+    float aoa, aoa3;
+
+    d1=sf_floatalloc3(az.n,ax.n,ar.n);
+    d2=sf_floatalloc3(az.n,ax.n,ar.n);
+
+    /* find max(b0) */
+    tb=sf_floatalloc (az.n*ar.n);    
+    ii=0;
+    for(ir=0;ir<ar.n;ir++) {
+	for(iz=0;iz<az.n;iz++) {
+	    tb[ii] = b0[ir][iz];
+	    ii++;
+	}
+    }
+    tt = SF_ABS(sf_quantile(ar.n*az.n-1,ar.n*az.n,tb));
+    tt2= tt*tt;
+    free(tb);
+
+    for(ir=0;ir<ar.n;ir++) {
+	for(iz=0;iz<az.n;iz++) {
+	    boa = ( b0[ir][iz]/tt ) / a0[ir][iz];
+	    boa2= boa *boa ;
+	    boa4= boa2*boa2;
+
+	    for(ix=0;ix<ax.n;ix++) {
+		bob = bb[ix][iz]/b0[ir][iz];
+		bob2= bob*bob;
+
+		aoa = a0[ir][iz]/aa[ix][iz];
+		aoa3= aoa*aoa*aoa;
+
+		d1[ir][ix][iz] = a0[ir][iz] * boa2 * ( bob2 * aoa  - 1.);
+		d2[ir][ix][iz] = a0[ir][iz] * boa4 * ( bob4 * aoa3 - 1.);
+	    }
+	}
+    }
+
+    /* regularize d1 */
+    for(ir=0;ir<ar.n;ir++) {
+	for(ix=0;ix<ax.n;ix++) {
+	    for(iz=0;iz<az.n;iz++) {
+		if( SF_ABS(d1[ir][ix][iz]) < 1e-6) d1[ir][ix][iz]=1e-6;
+	    }
+	}
+    }
+
+    for(ir=0;ir<ar.n;ir++) {
+	for(ix=0;ix<ax.n;ix++) {
+	    for(iz=0;iz<az.n;iz++) {
+
+		m0[ir][ix][iz] =       d1[ir][ix][iz] / tt2;
+		n0[ir][ix][iz] = -c1 * d1[ir][ix][iz] * d1[ir][ix][iz];
+		r0[ir][ix][iz] =  c2 * d2[ir][ix][iz];
+
+		m0[ir][ix][iz] *= kmu;
+		n0[ir][ix][iz] *= knu;
+		r0[ir][ix][iz] *= kro;
+	    }
+	}
+    }
+    
+    free(**d1); free(*d1); free(d1);
+    free(**d2); free(*d2); free(d2);
+}
+
+void rweone_psc_coef(
+    float **aa,
+    float **bb,
+    float **a0,
+    float **b0)
+/*< PSC coefficients >*/
+{
+    float tt,tt2, *tb;
+    int ii,ir,iz,ix;
+    float boa, boa2;
+    float aoa;
+    float bob;
+
+    /* find max(b0) */
+    tb=sf_floatalloc (az.n*ar.n);
+    ii=0;
+    for(ir=0;ir<ar.n;ir++) {
+	for(iz=0;iz<az.n;iz++) {
+	    tb[ii] = b0[ir][iz];
+	    ii++;
+	}
+    }
+    tt = SF_ABS(sf_quantile(ar.n*az.n-1,ar.n*az.n,tb));
+    tt2= tt*tt;
+    free(tb);
+
+    for(ir=0;ir<ar.n;ir++) {
+	for(iz=0;iz<az.n;iz++) {
+	    boa = ( b0[ir][iz]/tt ) / a0[ir][iz];
+	    boa2=boa*boa;
+
+	    for(ix=0;ix<ax.n;ix++) {
+		aoa = aa[ix][iz]/a0[ir][iz];
+		bob = bb[ix][iz]/b0[ir][iz];
+
+		m0[ir][ix][iz] = 1 / tt2;
+		n0[ir][ix][iz] = a0[ir][iz] * boa2 * (c1*(aoa-1.) - (bob-1.));
+		r0[ir][ix][iz] =    3 * c2 * boa2;
+
+		m0[ir][ix][iz] *= kmu;
+		n0[ir][ix][iz] *= knu;
+		r0[ir][ix][iz] *= kro;
+	    }
+	}
+    }
+}
+
 /*------------------------------------------------------------*/
 /* 
- * Extrapolation
+ * Extrapolation components
  */
 /*------------------------------------------------------------*/
 
 void rweone_phs(
-    complex float *dax,
+    complex float *v,
     float w,
     int iz,
     int ir,
@@ -250,27 +386,27 @@ void rweone_phs(
     float ta,tb,tt;
     complex float ikz;
 
-    rweone_fft(false,dax);
+    rweone_fft(false,v);
 
     for(ix=0;ix<ax.n;ix++) {
 	ikx = KMAP(ix,ax.n);
 	kx = okx + ikx * dkx;
 
-	ta = b0[ir][iz]*kx;
-	tb = a0[ir][iz]*w;
+	ta = a0[ir][iz]*w;
+	tb = b0[ir][iz]*kx;
 	tt = tb/ta;
 	arg = 1.0 - tt*tt;
 
 	if(arg<0.) {
-	    ikz =     ta * sqrt(-arg);
+	    ikz =     ta * sqrtf(-arg);
 	} else {
-	    ikz = I * ta * sqrt(+arg);
+	    ikz = I * ta * sqrtf(+arg);
 	}
-	
-	dax[ix] *= cexpf( ikz * (-az.d) );
+
+	v[ix] *= cexp( ikz * (-az.d));
     }
    
-    rweone_fft( true,dax);
+    rweone_fft( true,v);
 }
 
 void rweone_ssf(
@@ -280,19 +416,19 @@ void rweone_ssf(
     int ir,
     float **aa,
     float **a0)
-/*< split-step Fourier >*/
+/*< split-step Fourier correction >*/
 {
     int ix;
     complex float ikz;
 
-    for(ix=0; ix<ax.n; ix++) {
+    for(ix=0; ix<ax.n; ix++) {	
 	ikz = I * w * (aa[ix][iz] - a0[ir][iz]);
-	dax[ix] *= cexpf( ikz * (-az.d) );
+	v[ix] *= cexpf( ikz * (-az.d) );
     }
 }
 
 void rweone_ssh(
-    complex float *dax,
+    complex float *v,
     float w,
     int   iz,
     float **aa)
@@ -301,12 +437,12 @@ void rweone_ssh(
     int ix;
 
     for(ix=0;ix<ax.n;ix++) {
-	dax[ix] *= cexpf( -I*w*aa[ix][iz] * az.d);
+	v[ix] *= cexpf( -I*w*aa[ix][iz] * az.d);
     }
 }
 
 void rweone_fds(
-    complex float *dax,
+    complex float *v,
     float w,
     int iz,
     int ir)
@@ -339,15 +475,15 @@ void rweone_fds(
     */
     for(ix=1;ix<ax.n-1;ix++) {
 	u[ix] = 
-	    rk[ix] *(dax[ix-1]+dax[ix+1]) +  
-	    (ck[ix]-2.0*rk[ix]) * dax[ix];
+	    rk[ix] *(v[ix-1]+v[ix+1]) +  
+	    (ck[ix]-2.0*rk[ix]) * v[ix];
     }
-    ix=     0; u[ix]=(ck[ix]-2.0*rk[ix])*dax[ix] + rk[ix]*dax[ix+1];
-    ix=ax.n-1; u[ix]=(ck[ix]-2.0*rk[ix])*dax[ix] + rk[ix]*dax[ix-1];
+    ix=     0; u[ix]=(ck[ix]-2.0*rk[ix])*v[ix] + rk[ix]*v[ix+1];
+    ix=ax.n-1; u[ix]=(ck[ix]-2.0*rk[ix])*v[ix] + rk[ix]*v[ix-1];
 
     rweone_thr(a,b,c,u,ax.n);
 
-    for(ix=0;ix<ax.n;ix++) { dax[ix] = u[ix]; };
+    for(ix=0;ix<ax.n;ix++) { v[ix] = u[ix]; };
 }
 
 /*------------------------------------------------------------*/
@@ -468,7 +604,7 @@ void rweone_mrs(
     int ix, iloop;
 
     for(ix=0;ix<ax.n;ix++) {
-	if(m[ix][iz] == ir) {
+	if(m[ix][iz]-1 == ir) {
 	    mtt[ix] = 1.;
 	} else {
 	    mtt[ix] = 0.;
@@ -491,4 +627,10 @@ void rweone_mrs(
     for(ix=0;ix<ax.n;ix++) {
 	d[ix] += msk[ix] * v[ix];
     }
+}
+
+void cwrite(complex float x)
+/*< output a complex number >*/
+{
+    sf_warning("(%f,%f)",crealf(x), cimagf(x));
 }

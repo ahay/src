@@ -205,6 +205,13 @@ int main(int argc, char* argv[])
 	}
     }
 
+    /* for compatibility with older RWE programs */
+    LOOPRC(
+	ma[ig][it] +=1;
+	mb[ig][it] +=1;
+	mm[ig][it] +=1;
+	);
+
     sf_floatwrite(aa[0],at.n*ag.n,Fo);
     sf_floatwrite(bb[0],at.n*ag.n,Fo);
     sf_floatwrite(mm[0],at.n*ag.n,Fo);    
