@@ -36,7 +36,7 @@ static complex float *a,*b,*c,*u;
 static float c1,c2,sixth;
 static float kmu,knu,kro;
 
-static complex float *dax;
+static complex float *dax; /* pointer to frequency slice */
 
 static float *tap;
 static int   ntap;
@@ -95,9 +95,6 @@ void rweone_init(
     kmu = 1./ at.d;             /* 1/ dz */
     knu = 1 /(   2*ag.d*ag.d);  /* 1/( 2 dx^2) */
     kro = 1./(at.d*ag.d*ag.d);  /* 1/(dz dx^2) */
-
-    /* data slice */
-    dax = sf_complexalloc(ag.n);
 
     /* taper */
     if(! sf_getint("ntap",&ntap)) ntap=1;
@@ -159,17 +156,18 @@ void rweone_main(
 		if(method==3)      { sf_warning("PSC %d %d",iw,aw.n); }
 		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
 		else               { sf_warning("SSF %d %d",iw,aw.n); }
-		
-		for(ig=0;ig<ag.n;ig++) {
-		    dax[ig] = dat[iw][ig];
-		}
-		
+		dax = dat[iw];
+
 		for(it=0;it<at.n;it++) {
+		    rweone_tap(dax);
+		    for(ig=0;ig<ag.n;ig++) {
+			img[ig][it] += crealf(dax[ig]);
+		    }
+		    
 		    for(ig=0;ig<ag.n;ig++) {
 			wtt[ig] = dax[ig];
 			dax[ig] = 0.;
 		    }
-		    
 		    for(ir=0;ir<ar.n;ir++) {
 			for(ig=0;ig<ag.n;ig++) {
 			    wfl[ig] = wtt[ig];
@@ -177,14 +175,9 @@ void rweone_main(
 			
 			rweone_phs(wfl,w,it,ir,a0,b0);
 			rweone_ssf(wfl,w,it,ir,aa,a0);
-			if(method!=1) {
-			    rweone_fds(wfl,w,it,ir);
-			}
+			/* skip F-D for SSF */
+			if(method!=1) { rweone_fds(wfl,w,it,ir); } 
 			rweone_mrs(wfl,  it,ir,mm,dax);
-		    }
-		    rweone_tap(dax);
-		    for(ig=0;ig<ag.n;ig++) {
-			img[ig][it] += crealf(dax[ig]);
 		    }
 		}
 	    }
@@ -194,19 +187,16 @@ void rweone_main(
 	    for(iw=0;iw<aw.n;iw++) {
 		w=aw.o+iw*aw.d; w*=2;
 		sf_warning("XFD %d %d",iw,aw.n);
-		
-		for(ig=0;ig<ag.n;ig++) {
-		    dax[ig] = dat[iw][ig];
-		}
-		
+		dax = dat[iw];
+
 		for(it=0;it<at.n;it++) {
-		    rweone_ssh(dax,w,it,aa);
-		    rweone_fds(dax,w,it, 0);
 		    rweone_tap(dax);
-		    
 		    for(ig=0;ig<ag.n;ig++) {
 			img[ig][it] += crealf(dax[ig]);
 		    }
+
+		    rweone_ssh(dax,w,it,aa);
+		    rweone_fds(dax,w,it, 0);
 		}
 	    }
 	    break;
@@ -433,9 +423,11 @@ void rweone_ssh(
 /*< space-domain phase shift >*/
 {
     int ig;
+    complex float ikz;
 
     for(ig=0;ig<ag.n;ig++) {
-	v[ig] *= cexpf( -I*w*aa[ig][it] * at.d);
+	ikz = I * w * aa[ig][it];
+	v[ig] *= cexpf( ikz * (-at.d) );
     }
 }
 
