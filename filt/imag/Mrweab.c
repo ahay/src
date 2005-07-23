@@ -19,7 +19,7 @@
 
 #include <rsf.h>
 
-#define LOOPRC(a) for(ig=0;ig<ag.n;ig++){ for(it=0;it<at.n;it++){ {a} }}
+#define LOOPRC(a) for(it=0;it<at.n;it++){ for(ig=0;ig<ag.n;ig++){ {a} }}
 
 int main(int argc, char* argv[])
 {
@@ -51,8 +51,8 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
 
-    Fi = sf_input("in");
-    Fs = sf_input("slo");
+    Fi = sf_input ( "in");
+    Fs = sf_input ("slo");
     Fo = sf_output("out");
     Fr = sf_output("abr");
 
@@ -63,8 +63,11 @@ int main(int argc, char* argv[])
 
     if(verb) sf_warning("naref=%d nbref=%d",naref,nbref);
 
-    iaxa(Fi,&at,1); if(verb) raxa(at);
-    iaxa(Fi,&ag,2); if(verb) raxa(ag);
+    iaxa(Fi,&ag,1); if(verb) raxa(ag);
+    iaxa(Fi,&at,2); if(verb) raxa(at);
+
+    ag.l="g"; oaxa(Fo,&ag,1);
+    at.l="t"; oaxa(Fo,&at,2);
 
     sf_settype(Fo,SF_FLOAT);
     sf_putint(Fo,"n3",5);
@@ -74,74 +77,75 @@ int main(int argc, char* argv[])
     ar.n=naref*nbref;
     ar.o=0.;
     ar.d=1.;
-    oaxa(Fr,&at,1);
-    oaxa(Fr,&ar,2);
+    ar.l="r";
+    oaxa(Fr,&ar,1);
+    oaxa(Fr,&at,2);
     sf_settype(Fr,SF_COMPLEX);
     sf_putfloat(Fr,"esize",8);
 
-    rays = sf_complexalloc2(at.n,ag.n);
-    ab   = sf_complexalloc2(at.n,naref*nbref);
+    rays = sf_complexalloc2(ag.n,at.n);
+    ab   = sf_complexalloc2(naref*nbref,at.n);
 
-    x    = sf_floatalloc2(at.n,ag.n);
-    z    = sf_floatalloc2(at.n,ag.n);
-    h1   = sf_floatalloc2(at.n,ag.n);
-    h2   = sf_floatalloc2(at.n,ag.n);
+    x    = sf_floatalloc2(ag.n,at.n);
+    z    = sf_floatalloc2(ag.n,at.n);
+    h1   = sf_floatalloc2(ag.n,at.n);
+    h2   = sf_floatalloc2(ag.n,at.n);
 
-    ss   = sf_floatalloc2(at.n,ag.n);
-    aa   = sf_floatalloc2(at.n,ag.n);
-    bb   = sf_floatalloc2(at.n,ag.n);
-    ma   = sf_floatalloc2(at.n,ag.n);
-    mb   = sf_floatalloc2(at.n,ag.n);
-    mm   = sf_floatalloc2(at.n,ag.n);
+    ss   = sf_floatalloc2(ag.n,at.n);
+    aa   = sf_floatalloc2(ag.n,at.n);
+    bb   = sf_floatalloc2(ag.n,at.n);
+    ma   = sf_floatalloc2(ag.n,at.n);
+    mb   = sf_floatalloc2(ag.n,at.n);
+    mm   = sf_floatalloc2(ag.n,at.n);
 
-    qq   = sf_floatalloc (at.n*ag.n);
-    gg   = sf_floatalloc (     ag.n);
+    qq   = sf_floatalloc (ag.n*at.n);
+    gg   = sf_floatalloc (ag.n);
 
-    sf_floatread  (ss[0],  at.n*ag.n,Fs);  /* slowness */
-    sf_complexread(rays[0],at.n*ag.n,Fi);  /* rays */
-    LOOPRC( z[ig][it] = cimagf(rays[ig][it]);
-	    x[ig][it] = crealf(rays[ig][it]); );
+    sf_floatread  (ss[0],  ag.n*at.n,Fs);  /* slowness */
+    sf_complexread(rays[0],ag.n*at.n,Fi);  /* rays */
+    LOOPRC( z[it][ig] = cimagf(rays[it][ig]);
+	    x[it][ig] = crealf(rays[it][ig]); );
     
     /* h1=alpha */
-    for(ig=0;ig<ag.n;ig++) {
-	for(it=0;it<at.n-1;it++) {
-	    gx = (x[ig][it+1] - x[ig][it]) / at.d;
-	    gz = (z[ig][it+1] - z[ig][it]) / at.d;
-	    h1[ig][it] = sqrtf(gx*gx+gz*gz);
+    for(it=0;it<at.n-1;it++) {
+	for(ig=0;ig<ag.n;ig++) {
+	    gx = (x[it+1][ig] - x[it][ig]) / at.d;
+	    gz = (z[it+1][ig] - z[it][ig]) / at.d;
+	    h1[it][ig] = sqrtf(gx*gx+gz*gz);
 	}
     }
     for(ig=0;ig<ag.n;ig++) {
-	h1[ig][at.n-1] = h1[ig][at.n-2];
+	h1[at.n-1][ig] = h1[at.n-2][ig];
     }
 
     /* h2=J */
-    for(ig=1;ig<ag.n-1;ig++) {
-	for(it=0;it<at.n;it++) {
-	    gx = (x[ig+1][it] - x[ig-1][it]) / (2*ag.d);
-	    gz = (z[ig+1][it] - z[ig-1][it]) / (2*ag.d);
-	    h2[ig][it] = sqrtf(gx*gx+gz*gz);
+    for(it=0;it<at.n;it++) {
+	for(ig=1;ig<ag.n-1;ig++) {
+	    gx = (x[it][ig+1] - x[it][ig-1]) / (2*ag.d);
+	    gz = (z[it][ig+1] - z[it][ig-1]) / (2*ag.d);
+	    h2[it][ig] = sqrtf(gx*gx+gz*gz);
 	}
     }
     for(it=0;it<at.n;it++) {
-	h2[     0][it] = h2[     1][it];
-	h2[ag.n-1][it] = h2[ag.n-2][it];
+	h2[it][     0] = h2[it][     1];
+	h2[it][ag.n-1] = h2[it][ag.n-2];
     }
 
     /* avoid small h2=J */
-    ii=0; LOOPRC( qq[ii] = SF_ABS(h2[ig][it]); ii++; );
+    ii=0; LOOPRC( qq[ii] = SF_ABS(h2[it][ig]); ii++; );
 /*    eps = peps * sf_quantile(at.n*ag.n/2,at.n*ag.n,qq);*/
     eps = peps * (
 	sf_quantile(          0,at.n*ag.n,qq) + 
 	sf_quantile(at.n*ag.n-1,at.n*ag.n,qq)
 	) /2.;
-    LOOPRC( if(SF_ABS(h2[ig][it]) < eps) h2[ig][it]=eps; );
+    LOOPRC( if(SF_ABS(h2[it][ig]) < eps) h2[it][ig]=eps; );
 
     LOOPRC( 
-	aa[ig][it] = ss[ig][it] * h1[ig][it];
-	bb[ig][it] = h1[ig][it] / h2[ig][it];
-	mm[ig][it] = 1.;
-	ma[ig][it] = 1.;
-	mb[ig][it] = 1.;
+	aa[it][ig] = ss[it][ig] * h1[it][ig];
+	bb[it][ig] = h1[it][ig] / h2[it][ig];
+	mm[it][ig] = 1.;
+	ma[it][ig] = 1.;
+	mb[it][ig] = 1.;
 	);
 
     tiny=0.1;
@@ -150,14 +154,14 @@ int main(int argc, char* argv[])
     for(it=0;it<at.n;it++) {
 
 	for(ig=0;ig<ag.n;ig++){
-	    gg[ig] = aa[ig][it];
+	    gg[ig] = aa[it][ig];
 	}
 	mina = sf_quantile(     0,ag.n,gg);
 	maxa = sf_quantile(ag.n-1,ag.n,gg);
 	dela = (maxa-mina)/naref;
 
 	for(ig=0;ig<ag.n;ig++){
-	    gg[ig] = bb[ig][it];
+	    gg[ig] = bb[it][ig];
 	}
 	minb = sf_quantile(     0,ag.n,gg);
 	maxb = sf_quantile(ag.n-1,ag.n,gg);
@@ -169,7 +173,7 @@ int main(int argc, char* argv[])
 	    a0 = mina + 0.5*dela + ia*dela;
 	    for(ib=0;ib<nbref;ib++) {
 		b0 = minb + 0.5*delb + ib*delb;
-		ab[ii][it] = a0+I*b0;
+		ab[it][ii] = a0+I*b0;
 		ii++;
 	    }
 	}
@@ -178,16 +182,16 @@ int main(int argc, char* argv[])
 	for(ia=0;ia<naref;ia++) {
 	    a0 = mina + 0.5*dela + ia*dela;
 	    for(ig=0;ig<ag.n;ig++) {
-		if( a0-(0.5+tiny)*dela <= aa[ig][it] &&
-		    a0+(0.5+tiny)*dela >= aa[ig][it]  ) ma[ig][it] = ia;
+		if( a0-(0.5+tiny)*dela <= aa[it][ig] &&
+		    a0+(0.5+tiny)*dela >= aa[it][ig]  ) ma[it][ig] = ia;
 	    }
 	}
 	/* mask for b */
 	for(ib=0;ib<nbref;ib++) {
 	    b0 = minb + 0.5*delb + ib*delb;
 	    for(ig=0;ig<ag.n;ig++) {
-		if( b0-(0.5+tiny)*delb <= bb[ig][it] &&
-		    b0+(0.5+tiny)*delb >= bb[ig][it]  ) mb[ig][it] = ib;
+		if( b0-(0.5+tiny)*delb <= bb[it][ig] &&
+		    b0+(0.5+tiny)*delb >= bb[it][ig]  ) mb[it][ig] = ib;
 	    }
 	}
     }
@@ -198,8 +202,8 @@ int main(int argc, char* argv[])
 	for(ib=0;ib<nbref;ib++) {
 	    
 	    LOOPRC(
-		if( ma[ig][it]==ia &&
-		    mb[ig][it]==ib  ) mm[ig][it]=ii;
+		if( ma[it][ig]==ia &&
+		    mb[it][ig]==ib  ) mm[it][ig]=ii;
 		);
 	    ii++;
 	}
@@ -207,16 +211,16 @@ int main(int argc, char* argv[])
 
     /* for compatibility with older RWE programs */
     LOOPRC(
-	ma[ig][it] +=1;
-	mb[ig][it] +=1;
-	mm[ig][it] +=1;
+	ma[it][ig] +=1;
+	mb[it][ig] +=1;
+	mm[it][ig] +=1;
 	);
 
-    sf_floatwrite(aa[0],at.n*ag.n,Fo);
-    sf_floatwrite(bb[0],at.n*ag.n,Fo);
-    sf_floatwrite(mm[0],at.n*ag.n,Fo);    
-    sf_floatwrite(ma[0],at.n*ag.n,Fo);
-    sf_floatwrite(mb[0],at.n*ag.n,Fo);
+    sf_floatwrite(aa[0],ag.n*at.n,Fo);
+    sf_floatwrite(bb[0],ag.n*at.n,Fo);
+    sf_floatwrite(mm[0],ag.n*at.n,Fo);    
+    sf_floatwrite(ma[0],ag.n*at.n,Fo);
+    sf_floatwrite(mb[0],ag.n*at.n,Fo);
 
-    sf_complexwrite(ab[0],at.n*naref*nbref,Fr);
+    sf_complexwrite(ab[0],naref*nbref*at.n,Fr);
 }

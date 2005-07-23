@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
-    iaxa(Fm,&at,1); at.l="t"; /* 'extrapolation axis' (can be time) */
-    iaxa(Fr,&ar,2); ar.l="r"; /* a,b reference */
+    iaxa(Fm,&at,2); at.l="t"; /* 'extrapolation axis' (can be time) */
+    iaxa(Fr,&ar,1); ar.l="r"; /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
 
     if(inv) {  /* modeling */
@@ -60,6 +60,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
 	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
 	if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
+	aw.l="w";
 
 	iaxa(Fi,&ag,1); ag.l="g";
 	iaxa(Fi,&at,2); at.l="t";
@@ -93,24 +94,24 @@ int main(int argc, char* argv[])
     }
 
     /* read ABM */
-    aa = sf_floatalloc2  (at.n,ag.n);
-    bb = sf_floatalloc2  (at.n,ag.n);
-    mm = sf_floatalloc2  (at.n,ag.n);
+    aa = sf_floatalloc2  (ag.n,at.n);
+    bb = sf_floatalloc2  (ag.n,at.n);
+    mm = sf_floatalloc2  (ag.n,at.n);
 
-    sf_floatread(aa[0],at.n*ag.n,Fm); /* a coef */
-    sf_floatread(bb[0],at.n*ag.n,Fm); /* b coef */
-    sf_floatread(mm[0],at.n*ag.n,Fm); /* mask */
+    sf_floatread(aa[0],ag.n*at.n,Fm); /* a coef */
+    sf_floatread(bb[0],ag.n*at.n,Fm); /* b coef */
+    sf_floatread(mm[0],ag.n*at.n,Fm); /* mask */
 
     /* read ABr */
-    ab = sf_complexalloc2(at.n,ar.n);
-    a0 = sf_floatalloc2  (at.n,ar.n);
-    b0 = sf_floatalloc2  (at.n,ar.n);
+    ab = sf_complexalloc2(ar.n,at.n);
+    a0 = sf_floatalloc2  (ar.n,at.n);
+    b0 = sf_floatalloc2  (ar.n,at.n);
 
-    sf_complexread(ab[0],at.n*ar.n,Fr);
-    for(ir=0;ir<ar.n;ir++) {
-	for(it=0;it<at.n;it++) {
-	    a0[ir][it] = crealf(ab[ir][it]);
-	    b0[ir][it] = cimagf(ab[ir][it]);
+    sf_complexread(ab[0],ar.n*at.n,Fr);
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    a0[it][ir] = crealf(ab[it][ir]);
+	    b0[it][ir] = cimagf(ab[it][ir]);
 	}
     }
 

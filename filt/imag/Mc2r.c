@@ -20,8 +20,8 @@
 #include <math.h>
 #include <rsf.h>
 
-#define LOOPCC(a) for(ix=0;ix<ax.n;ix++){ for(iz=0;iz<az.n;iz++){ {a} }}
-#define LOOPRC(a) for(ig=0;ig<ag.n;ig++){ for(it=0;it<at.n;it++){ {a} }}
+#define LOOPCC(a) for(iz=0;iz<az.n;iz++){ for(ix=0;ix<ax.n;ix++){  {a} }}
+#define LOOPRC(a) for(it=0;it<at.n;it++){ for(ig=0;ig<ag.n;ig++){  {a} }}
 
 int main(int argc, char* argv[])
 {
@@ -49,49 +49,49 @@ int main(int argc, char* argv[])
     /* init RSF */
     sf_init(argc,argv);
 
-    Fi = sf_input("in");
-    Fr = sf_input("rays");
-    Fo = sf_output("out");
+    Fi = sf_input (  "in");
+    Fr = sf_input ("rays");
+    Fo = sf_output( "out");
 
     if(! sf_getbool(  "verb",&verb   ))   verb=false;
     if(! sf_getbool(   "adj",&adj    ))    adj=false;
     if(! sf_getbool("linear",&linear )) linear=true;  
 
-    iaxa(Fr,&at,1); if(verb) raxa(at);
-    iaxa(Fr,&ag,2); if(verb) raxa(ag);
+    iaxa(Fr,&ag,1); if(verb) raxa(ag);
+    iaxa(Fr,&at,2); if(verb) raxa(at);
 
     if(adj) {
-	az.l="z";
-	if(! sf_getint  ("azn",&az.n)) az.n=1;
-	if(! sf_getfloat("azo",&az.o)) az.o=0.;
-	if(! sf_getfloat("azd",&az.d)) az.d=1.;
+	az.l="a2";
+	if(! sf_getint  ("a2n",&az.n)) az.n=1;
+	if(! sf_getfloat("a2o",&az.o)) az.o=0.;
+	if(! sf_getfloat("a2d",&az.d)) az.d=1.;
 	if(verb) raxa(az);
 
-	ax.l="x";
-	if(! sf_getint  ("axn",&ax.n)) ax.n=1;
-	if(! sf_getfloat("axo",&ax.o)) ax.o=0.;
-	if(! sf_getfloat("axd",&ax.d)) ax.d=1.;
+	ax.l="a1";
+	if(! sf_getint  ("a1n",&ax.n)) ax.n=1;
+	if(! sf_getfloat("a1o",&ax.o)) ax.o=0.;
+	if(! sf_getfloat("a1d",&ax.d)) ax.d=1.;
 	if(verb) raxa(ax);
 
-	oaxa(Fo,&az,1);
-	oaxa(Fo,&ax,2);
+	oaxa(Fo,&ax,1);
+	oaxa(Fo,&az,2);
     } else {
-	iaxa(Fi,&az,1); if(verb) raxa(az);
-	iaxa(Fi,&ax,2); if(verb) raxa(ax);
+	iaxa(Fi,&ax,1); if(verb) raxa(ax);
+	iaxa(Fi,&az,2); if(verb) raxa(az);
 
-	oaxa(Fo,&at,1);
-	oaxa(Fo,&ag,2);
+	oaxa(Fo,&ag,1);
+	oaxa(Fo,&at,2);
     }
 
-    mapCC=sf_floatalloc2  (az.n,ax.n); LOOPCC( mapCC[ix][iz]=0.; );
-    mapRC=sf_floatalloc2  (at.n,ag.n); LOOPRC( mapRC[ig][it]=0.; );
-    rays =sf_complexalloc2(at.n,ag.n);
-    
-    sf_complexread(rays[0],at.n*ag.n,Fr);
+    mapCC=sf_floatalloc2  (ax.n,az.n); LOOPCC( mapCC[iz][ix]=0.; );
+    mapRC=sf_floatalloc2  (ag.n,at.n); LOOPRC( mapRC[it][ig]=0.; );
+
+    rays =sf_complexalloc2(ag.n,at.n);
+    sf_complexread(rays[0],ag.n*at.n,Fr);
     if(adj) {
-	sf_floatread(mapRC[0],at.n*ag.n,Fi);
+	sf_floatread(mapRC[0],ag.n*at.n,Fi);
     } else {
-	sf_floatread(mapCC[0],az.n*ax.n,Fi);
+	sf_floatread(mapCC[0],ax.n*az.n,Fi);
     }
 
     if(linear) {
@@ -100,12 +100,13 @@ int main(int argc, char* argv[])
 	zmin = az.o;
 	zmax = az.o + (az.n-1)*az.d;
 	
-	for(ig=0;ig<ag.n;ig++) {
-	    if( ig%100 == 0 ) sf_warning("LINT %d of %d",ig,ag.n);
-	    for(it=0;it<at.n;it++) {		
+	for(it=0;it<at.n;it++) {		
+	    if( it%100 == 0 ) sf_warning("LINT %d of %d",it,at.n);	    
 
-		z = cimagf(rays[ig][it]);
-		x = crealf(rays[ig][it]);
+	    for(ig=0;ig<ag.n;ig++) {
+
+		z = cimagf(rays[it][ig]);
+		x = crealf(rays[it][ig]);
 		
 		z = SF_MIN(z,zmax);
 		z = SF_MAX(z,zmin);
@@ -135,10 +136,10 @@ int main(int argc, char* argv[])
 		fx = SF_MIN(1., fx);
 		
 		/*
-		  00   01       --> x
-	          .         |
-		  10   11      v
-		  z
+		  00 . 01    --> x
+	          .    .    |
+		  10 . 11   v
+ 		            z
 		*/
 		w00=(1.-fx)*(1.-fz);
 		w10=(   fx)*(1.-fz);
@@ -153,19 +154,19 @@ int main(int argc, char* argv[])
 		w11 = w11 / sumw;
 		
 		if(adj) {
-		    mapCC[ix][iz] += w00 * mapRC[ig][it];
-		    mapCC[ix][jz] += w10 * mapRC[ig][it];
-		    mapCC[jx][iz] += w01 * mapRC[ig][it];
-		    mapCC[jx][jz] += w11 * mapRC[ig][it];
+		    mapCC[iz][ix] += w00 * mapRC[it][ig];
+		    mapCC[iz][jx] += w10 * mapRC[it][ig];
+		    mapCC[jz][ix] += w01 * mapRC[it][ig];
+		    mapCC[jz][jx] += w11 * mapRC[it][ig];
 		} else {
-		    mapRC[ig][it] += w00 * mapCC[ix][iz];
-		    mapRC[ig][it] += w10 * mapCC[ix][jz];
-		    mapRC[ig][it] += w01 * mapCC[jx][iz];
-		    mapRC[ig][it] += w11 * mapCC[jx][jz];
+		    mapRC[it][ig] += w00 * mapCC[iz][ix];
+		    mapRC[it][ig] += w10 * mapCC[iz][jx];
+		    mapRC[it][ig] += w01 * mapCC[jz][ix];
+		    mapRC[it][ig] += w11 * mapCC[jz][jx];
 		}
 		
-	    } /* it */
-	} /* ig */
+	    } /* ig */
+	} /* it */
     } else {
 	dr = sqrtf(az.d*az.d + ax.d*ax.d);
 
@@ -173,12 +174,12 @@ int main(int argc, char* argv[])
 	if(! sf_getint("nsx",&nsx)) nsx=1; if(verb) sf_warning("nsx=%d",nsx);
 
 	/* loop over RC */
-	for(ig=0;ig<ag.n;ig++) {
-	    if( ig%100 == 0 ) sf_warning("SINT %d of %d",ig,ag.n);
-	    for(it=0;it<at.n;it++) {
+	for(it=0;it<at.n;it++) {
+	    if( it%100 == 0 ) sf_warning("SINT %d of %d",it,at.n);
+	    for(ig=0;ig<ag.n;ig++) {
 	
-		z = cimagf(rays[ig][it]);
-		x = crealf(rays[ig][it]);
+		z = cimagf(rays[it][ig]);
+		x = crealf(rays[it][ig]);
 		
 		iz=floor((z-az.o)/az.d);
 		ix=floor((x-ax.o)/ax.d);
@@ -204,9 +205,9 @@ int main(int argc, char* argv[])
 			    }
 
 			    if(adj) {
-				mapCC[jx][jz] += mapRC[ig][it] * sincr;
+				mapCC[jz][jx] += mapRC[it][ig] * sincr;
 			    } else {
-				mapRC[ig][it] += mapCC[jx][jz] * sincr;
+				mapRC[it][ig] += mapCC[jz][jx] * sincr;
 			    }
 			}
 		    }
@@ -214,15 +215,15 @@ int main(int argc, char* argv[])
 
 		} /* if iz,ix in bounds */
 
-	    } /* it */
-	} /* ig */
+	    } /* ig */
+	} /* it */
 	
     } /* end linear */
 
     if(adj) {
-	sf_floatwrite(mapCC[0],az.n*ax.n,Fo);
+	sf_floatwrite(mapCC[0],ax.n*az.n,Fo);
     } else {
-	sf_floatwrite(mapRC[0],at.n*ag.n,Fo);
+	sf_floatwrite(mapRC[0],ag.n*at.n,Fo);
     }
 
 }

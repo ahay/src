@@ -69,9 +69,9 @@ void rweone_init(
     aw.o *= 2.*SF_PI;
     
     /* space for F-D */
-    m0 = sf_floatalloc3(at.n,ag.n,ar.n);
-    n0 = sf_floatalloc3(at.n,ag.n,ar.n);
-    r0 = sf_floatalloc3(at.n,ag.n,ar.n);
+    m0 = sf_floatalloc3(ag.n,ar.n,at.n);
+    n0 = sf_floatalloc3(ag.n,ar.n,at.n);
+    r0 = sf_floatalloc3(ag.n,ar.n,at.n);
     
     mu = sf_floatalloc(ag.n);
     nu = sf_floatalloc(ag.n);
@@ -280,15 +280,15 @@ void rweone_xfd_coef(
 {
     int it,ig;
 
-    for(ig=0;ig<ag.n;ig++) {
-	for(it=0;it<at.n;it++) {
-	    m0[0][ig][it] = 1.;
-	    n0[0][ig][it] = - c1 * (bb[ig][it]*bb[ig][it]) /  aa[ig][it];
-	    r0[0][ig][it] =   c2 * (bb[ig][it]*bb[ig][it]) / (aa[ig][it] * aa[ig][it]);
+    for(it=0;it<at.n;it++) {
+	for(ig=0;ig<ag.n;ig++) {
+	    m0[it][0][ig] = 1.;
+	    n0[it][0][ig] = - c1 * (bb[it][ig]*bb[it][ig]) /  aa[it][ig];
+	    r0[it][0][ig] =   c2 * (bb[it][ig]*bb[it][ig]) / (aa[it][ig] * aa[it][ig]);
 
-	    m0[0][ig][it] *= kmu;
-	    n0[0][ig][it] *= knu;
-	    r0[0][ig][it] *= kro;
+	    m0[it][0][ig] *= kmu;
+	    n0[it][0][ig] *= knu;
+	    r0[it][0][ig] *= kro;
 	}
     }
 }
@@ -307,15 +307,15 @@ void rweone_ffd_coef(
     float bob, bob2, bob4;
     float aoa, aoa3;
 
-    d1=sf_floatalloc3(at.n,ag.n,ar.n);
-    d2=sf_floatalloc3(at.n,ag.n,ar.n);
+    d1=sf_floatalloc3(ag.n,ar.n,at.n);
+    d2=sf_floatalloc3(ag.n,ar.n,at.n);
 
     /* find max(b0) */
-    tb=sf_floatalloc (at.n*ar.n);    
+    tb=sf_floatalloc (ar.n*at.n); 
     ii=0;
-    for(ir=0;ir<ar.n;ir++) {
-	for(it=0;it<at.n;it++) {
-	    tb[ii] = b0[ir][it];
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    tb[ii] = b0[it][ir];
 	    ii++;
 	}
     }
@@ -323,46 +323,46 @@ void rweone_ffd_coef(
     tt2= tt*tt;
     free(tb);
 
-    for(ir=0;ir<ar.n;ir++) {
-	for(it=0;it<at.n;it++) {
-	    boa = ( b0[ir][it]/tt ) / a0[ir][it];
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    boa = ( b0[it][ir]/tt ) / a0[it][ir];
 	    boa2= boa *boa ;
 	    boa4= boa2*boa2;
 
 	    for(ig=0;ig<ag.n;ig++) {
-		bob = bb[ig][it]/b0[ir][it];
+		bob = bb[it][ig]/b0[it][ir];
 		bob2= bob *bob;
 		bob4= bob2*bob2;
 
-		aoa = a0[ir][it]/aa[ig][it];
+		aoa = a0[it][ir]/aa[it][ig];
 		aoa3= aoa*aoa*aoa;
 
-		d1[ir][ig][it] = a0[ir][it] * boa2 * ( bob2 * aoa  - 1.);
-		d2[ir][ig][it] = a0[ir][it] * boa4 * ( bob4 * aoa3 - 1.);
+		d1[it][ir][ig] = a0[it][ir] * boa2 * ( bob2 * aoa  - 1.);
+		d2[it][ir][ig] = a0[it][ir] * boa4 * ( bob4 * aoa3 - 1.);
 	    }
 	}
     }
 
     /* regularize d1 */
-    for(ir=0;ir<ar.n;ir++) {
-	for(ig=0;ig<ag.n;ig++) {
-	    for(it=0;it<at.n;it++) {
-		if( SF_ABS(d1[ir][ig][it]) < 1e-6) d1[ir][ig][it]=1e-6;
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    for(ig=0;ig<ag.n;ig++) {
+		if( SF_ABS(d1[it][ir][ig]) < 1e-6) d1[it][ir][ig]=1e-6;
 	    }
 	}
     }
+    
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    for(ig=0;ig<ag.n;ig++) {
 
-    for(ir=0;ir<ar.n;ir++) {
-	for(ig=0;ig<ag.n;ig++) {
-	    for(it=0;it<at.n;it++) {
+		m0[it][ir][ig] =       d1[it][ir][ig] / tt2;
+		n0[it][ir][ig] = -c1 * d1[it][ir][ig] * d1[it][ir][ig];
+		r0[it][ir][ig] =  c2 * d2[it][ir][ig];
 
-		m0[ir][ig][it] =       d1[ir][ig][it] / tt2;
-		n0[ir][ig][it] = -c1 * d1[ir][ig][it] * d1[ir][ig][it];
-		r0[ir][ig][it] =  c2 * d2[ir][ig][it];
-
-		m0[ir][ig][it] *= kmu;
-		n0[ir][ig][it] *= knu;
-		r0[ir][ig][it] *= kro;
+		m0[it][ir][ig] *= kmu;
+		n0[it][ir][ig] *= knu;
+		r0[it][ir][ig] *= kro;
 	    }
 	}
     }
@@ -385,11 +385,11 @@ void rweone_psc_coef(
     float bob;
 
     /* find max(b0) */
-    tb=sf_floatalloc (at.n*ar.n);
+    tb=sf_floatalloc (ar.n*at.n);
     ii=0;
-    for(ir=0;ir<ar.n;ir++) {
-	for(it=0;it<at.n;it++) {
-	    tb[ii] = b0[ir][it];
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    tb[ii] = b0[it][ir];
 	    ii++;
 	}
     }
@@ -397,22 +397,22 @@ void rweone_psc_coef(
     tt2= tt*tt;
     free(tb);
 
-    for(ir=0;ir<ar.n;ir++) {
-	for(it=0;it<at.n;it++) {
-	    boa = ( b0[ir][it]/tt ) / a0[ir][it];
+    for(it=0;it<at.n;it++) {
+	for(ir=0;ir<ar.n;ir++) {
+	    boa = ( b0[it][ir]/tt ) / a0[it][ir];
 	    boa2=boa*boa;
 
 	    for(ig=0;ig<ag.n;ig++) {
-		aoa = aa[ig][it]/a0[ir][it];
-		bob = bb[ig][it]/b0[ir][it];
+		aoa = aa[it][ig]/a0[it][ir];
+		bob = bb[it][ig]/b0[it][ir];
 
-		m0[ir][ig][it] = 1 / tt2;
-		n0[ir][ig][it] = a0[ir][it] * boa2 * (c1*(aoa-1.) - (bob-1.));
-		r0[ir][ig][it] =    3 * c2 * boa2;
+		m0[it][ir][ig] = 1 / tt2;
+		n0[it][ir][ig] = a0[it][ir] * boa2 * (c1*(aoa-1.) - (bob-1.));
+		r0[it][ir][ig] =    3 * c2 * boa2;
 
-		m0[ir][ig][it] *= kmu;
-		n0[ir][ig][it] *= knu;
-		r0[ir][ig][it] *= kro;
+		m0[it][ir][ig] *= kmu;
+		n0[it][ir][ig] *= knu;
+		r0[it][ir][ig] *= kro;
 	    }
 	}
     }
@@ -445,8 +445,8 @@ void rweone_phs(
 	ikg = KMAP(ig,ag.n);
 	kg = okg + ikg * dkg;
 
-	ta = a0[ir][it]*w;
-	tb = b0[ir][it]*kg;
+	ta = a0[it][ir]*w;
+	tb = b0[it][ir]*kg;
 	tt = tb/ta;
 	arg = 1.0 - tt*tt;
 
@@ -475,7 +475,7 @@ void rweone_ssf(
     complex float ikz;
 
     for(ig=0; ig<ag.n; ig++) {	
-	ikz = I * w * (aa[ig][it] - a0[ir][it]);
+	ikz = I * w * (aa[it][ig] - a0[it][ir]);
 	v[ig] *= cexpf( ikz * (-at.d) );
     }
 }
@@ -491,7 +491,7 @@ void rweone_ssh(
     complex float ikz;
 
     for(ig=0;ig<ag.n;ig++) {
-	ikz = I * w * aa[ig][it];
+	ikz = I * w * aa[it][ig];
 	v[ig] *= cexpf( ikz * (-at.d) );
     }
 }
@@ -506,9 +506,9 @@ void rweone_fds(
     int ig;
 
     for(ig=0;ig<ag.n;ig++) {
-	mu[ig] =  m0[ir][ig][it];
-	nu[ig] = -n0[ir][ig][it] / w;
-	ro[ig] =  r0[ir][ig][it] /(w*w);
+	mu[ig] =  m0[it][ir][ig];
+	nu[ig] = -n0[it][ir][ig] / w;
+	ro[ig] =  r0[it][ir][ig] /(w*w);
     }
 
     for(ig=0;ig<ag.n;ig++) {
@@ -659,7 +659,7 @@ void rweone_mrs(
     int ig, iloop;
 
     for(ig=0;ig<ag.n;ig++) {
-	if(m[ig][it]-1 == ir) {
+	if(m[it][ig]-1 == ir) {
 	    mtt[ig] = 1.;
 	} else {
 	    mtt[ig] = 0.;
