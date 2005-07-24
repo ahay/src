@@ -40,7 +40,9 @@ fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
 pdf2ps      = WhereIs('pdf2ps')
 pstoimg     = WhereIs('pstoimg')
-mathematica = WhereIs('math')
+mathematica = WhereIs('mathematica')
+if mathematica:
+    mathematica = WhereIs('math')
 
 ressuffix = '.pdf'
 vpsuffix  = '.vpl'
@@ -540,7 +542,7 @@ class TeXPaper(Environment):
                 self.imgs = []
         if pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
-        if mathematica:
+        if mathematica and epstopdf:
             self.Append(BUILDERS={'Math':Math})
         self.scons = []
         self.figs = []
