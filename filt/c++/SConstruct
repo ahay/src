@@ -22,8 +22,6 @@ except:
     env.Prepend(CPPPATH=['../../include'],
                 LIBPATH=['../lib'])
 
-env.Prepend(LIBS=['rsf++','rsf'])
-
 # to build ../lib/librsf and ../lib/librsf++
 SConscript('../lib/SConstruct')
 
@@ -33,6 +31,7 @@ mains = Split(progs)
 api = string.split(string.lower(env.get('API','')),',')
 
 if 'c++' in api:
+    env.Prepend(LIBS=['rsf++','rsf'])
     for prog in mains:
         # compilation
         main = env.Program(prog + '.cc')
