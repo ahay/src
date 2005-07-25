@@ -34,7 +34,7 @@ else:
 
 latex       = WhereIs('pdflatex')
 bibtex      = WhereIs('bibtex')
-acroread    = WhereIs('acroread') or WhereIs('xpdf')
+acroread    = WhereIs('acroread') or WhereIs('xpdf') or WhereIs('gv')
 epstopdf    = WhereIs('epstopdf')
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
