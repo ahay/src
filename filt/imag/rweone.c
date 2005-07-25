@@ -160,7 +160,7 @@ void rweone_main(
 		    w*=-1; /* causal */
 
 		    for(it=at.n-1;it>=0;it--) {
-			rweone_fk(w,dat[iw],it,aa,a0,b0,mm);
+			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else {  /* migration */
@@ -169,7 +169,7 @@ void rweone_main(
 
 		    for(it=0;it<at.n;it++) {
 			rweone_img(inv,dat[iw],img[it]);
-			rweone_fk(w,dat[iw],it,aa,a0,b0,mm);
+			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 		    }
 		}
 	    }
@@ -184,7 +184,7 @@ void rweone_main(
 		    w*=-1; /* causal */
 
 		    for(it=at.n-1;it>=0;it--) {
-			rweone_fx(w,dat[iw],it,aa);
+			rweone_fx(w,dat[iw],aa[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else { /* migration */
@@ -193,7 +193,7 @@ void rweone_main(
 
 		    for(it=0;it<at.n;it++) {
 			rweone_img(inv,dat[iw],img[it]);
-			rweone_fx(w,dat[iw],it,aa);
+			rweone_fx(w,dat[iw],aa[it],it);
 		    }
 		}
 	    }
@@ -227,11 +227,11 @@ void rweone_img(
 void rweone_fk(
     float w,
     complex float *ddd,
-    int it,
-    float **aa,
-    float **a0,
-    float **b0,
-    float **mm)
+    float *aa,
+    float *a0,
+    float *b0,
+    float *mm,
+    int it)
 /*< one F-K extrapolation step >*/
 {
     int ig,ir;
@@ -245,11 +245,11 @@ void rweone_fk(
 	    wfl[ig] = wtt[ig];
 	}
 	
-	rweone_phs(wfl,w,it,ir,a0,b0);
-	rweone_ssf(wfl,w,it,ir,aa,a0);
+	rweone_phs(wfl,w,a0[ir],b0[ir]);
+	rweone_ssf(wfl,w,aa,a0[ir]);
 	/* skip F-D for SSF */
 	if(method!=1) { rweone_fds(wfl,w,it,ir); } 
-	rweone_mrs(wfl,  it,ir,mm,ddd);
+	rweone_mrs(wfl,ddd,mm,ir);
     }
     
 }
@@ -257,12 +257,12 @@ void rweone_fk(
 void rweone_fx(
     float w,
     complex float *ddd,
-    int it,
-    float **aa)
+    float *aa,
+    int it)
 /*< one F-X extrapolation step >*/
 {
-    rweone_ssh(ddd,w,it,aa);
-    rweone_fds(ddd,w,it, 0);
+    rweone_ssh(ddd,w,aa);     /* space shift */
+    rweone_fds(ddd,w,it, 0);  /* finite-differences */
 }
 
 
@@ -427,10 +427,8 @@ void rweone_psc_coef(
 void rweone_phs(
     complex float *v,
     float w,
-    int it,
-    int ir,
-    float **a0,
-    float **b0
+    float a0,
+    float b0
     )
 /*< Fourier-domain phase shift >*/
 {
@@ -445,8 +443,8 @@ void rweone_phs(
 	ikg = KMAP(ig,ag.n);
 	kg = okg + ikg * dkg;
 
-	ta = a0[it][ir]*w;
-	tb = b0[it][ir]*kg;
+	ta = a0*w;
+	tb = b0*kg;
 	tt = tb/ta;
 	arg = 1.0 - tt*tt;
 
@@ -465,17 +463,15 @@ void rweone_phs(
 void rweone_ssf(
     complex float *v,
     float w,
-    int it,
-    int ir,
-    float **aa,
-    float **a0)
+    float *aa,
+    float  a0)
 /*< split-step Fourier correction >*/
 {
     int ig;
     complex float ikz;
 
     for(ig=0; ig<ag.n; ig++) {	
-	ikz = I * w * (aa[it][ig] - a0[it][ir]);
+	ikz = I * w * (aa[ig] - a0);
 	v[ig] *= cexpf( ikz * (-at.d) );
     }
 }
@@ -483,15 +479,14 @@ void rweone_ssf(
 void rweone_ssh(
     complex float *v,
     float w,
-    int   it,
-    float **aa)
+    float *aa)
 /*< space-domain phase shift >*/
 {
     int ig;
     complex float ikz;
 
     for(ig=0;ig<ag.n;ig++) {
-	ikz = I * w * aa[it][ig];
+	ikz = I * w * aa[ig];
 	v[ig] *= cexpf( ikz * (-at.d) );
     }
 }
@@ -650,16 +645,15 @@ void rweone_mrs_init()
 
 void rweone_mrs(
     complex float *v,
-    int it,
-    int ir,
-    float **m,
-    complex float *d)
+    complex float *d,
+    float *m,
+    int ir)
 /*< combine MRS >*/
 {
     int ig, iloop;
 
     for(ig=0;ig<ag.n;ig++) {
-	if(m[it][ig]-1 == ir) {
+	if(m[ig]-1 == ir) {
 	    mtt[ig] = 1.;
 	} else {
 	    mtt[ig] = 0.;

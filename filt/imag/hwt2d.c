@@ -154,7 +154,8 @@ pt2d hwtorth( pt2d Pm, pt2d Po, pt2d Pp)
     double sina,cosa,tana;
     int    ss;
 
-    lo = 0.5 * DST2d(Pm,Pp);
+/*    lo = 0.5 * DST2d(Pm,Pp);*/
+    lo = Po.v * at.d;
 
     if(Pp.x!=Pm.x) {
 	tana = (Pp.z-Pm.z) / (Pp.x-Pm.x);
