@@ -84,7 +84,7 @@ void vp_axis_init (const sf_file in)
     if (!sf_getint ("n2tic",&(axis2.ntic))) axis2.ntic = 1;
 
     if (!sf_getfloat ("d1num", &(axis1.dnum))) getscl (&axis1);
-    if (!sf_getfloat ("d1num", &(axis2.dnum))) getscl (&axis2);
+    if (!sf_getfloat ("d2num", &(axis2.dnum))) getscl (&axis2);
 
     if (0. == axis1.dnum) sf_error("%s: zero d1num",__FILE__);
     if (0. == axis2.dnum) sf_error("%s: zero d2num",__FILE__);
