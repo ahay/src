@@ -124,7 +124,6 @@ int main (int argc, char *argv[])
 
     zomva_close();
 
-
     /*------------------------------------------------------------*/
     if(inv) fslice_dump(Ps,Pslow,SF_COMPLEX);
     else    fslice_dump(Pi,Pimag,SF_COMPLEX);

@@ -83,7 +83,9 @@ void lsr_init( axa az_,
     wt = sf_complexalloc2 (bxx.n,byy.n);
 
     /* square-root expansion coefficients */
-    nsc = 1;
+    if(!sf_getint("nsc",&nsc)) nsc = 0;
+    if(nsc>5) nsc=5;
+
     csc[0]= 1.;
     csc[1]= 1./  2.;
     csc[2]= 3./  8.;
@@ -113,6 +115,7 @@ void kweight( float **bs, /* slowness */
     int ix,iy,ii,nn;
     float *ss, smin, ko;
 
+    /* find s min */
     nn = axx.n*ayy.n;
     ss = sf_floatalloc(nn);
     ii=0;
@@ -129,9 +132,7 @@ void kweight( float **bs, /* slowness */
 	    kw[iy][ix] = 1.;
 	} else {
 	    kw[iy][ix] = 0.;
-	}
-	);
-
+	} );
 }
 
 /*------------------------------------------------------------*/
@@ -150,37 +151,36 @@ void lsr_s2w(
     float complex iwdz;
 
     wo = cimagf(w);     /* real frequency */
-    iwdz = 2 * I * wo * az.d;
+    iwdz = -2 * I * wo * az.d;
 
     /* 0th order term */
-/*    LOOP( pw[iy][ix] =*/
-/*	  ps[iy][ix] * bw[iy][ix] * iwdz; );*/
+    LOOP( pw[iy][ix] =
+	  ps[iy][ix] * iwdz * bw[iy][ix]; );
 
     /* higher order terms */
     if(nsc>0) {
 	kweight(bs,wo);     /* k-domain weight */
 
-	LOOP( pw[iy][ix] = kw[iy][ix]; );
+	LOOP( wt[iy][ix] = pw[iy][ix]; );
 
-/*	LOOP( wt[iy][ix] = pw[iy][ix]; */
-/*	      pw[iy][ix] = 0;);*/
+	for( isc=1; isc<=nsc; isc++) {
+	    sf_warning("FWD isc=%d csc=%g",isc,csc[isc]);
 
-/*	for( isc=1; isc<=nsc; isc++) {*/
-/*	    KOOP( wk[iy][ix] = 0.; );*/
-/*	    LOOP( wk[iy][ix] = wt[iy][ix]; );*/
+	    KOOP( wk[iy][ix] = 0.; );
+	    LOOP( wk[iy][ix] = wt[iy][ix]; );
 
-/*	    fft2(false,wk);*/
+	    fft2(false,wk);
 
-/*	    KOOP( wk[iy][ix] *= */
-/*		  kw[iy][ix] * pow(kk[iy][ix],isc); );*/
+	    KOOP( wk[iy][ix] *= 
+		  kw[iy][ix] * pow(kk[iy][ix],isc); );
 
-/*	    fft2(true,wk);*/
+	    fft2(true,wk);
 
-/*	    LOOP( wk[iy][ix] /=  pow(wo*bs[iy][ix],2*isc); );*/
+	    LOOP( wk[iy][ix] *= pow(wo*bs[iy][ix],-2*isc); );
 
-/*	    LOOP( pw[iy][ix] +=*/
-/*		  wk[iy][ix] * csc[isc]; );*/
-/*	}*/
+	    LOOP( pw[iy][ix] +=
+		  wk[iy][ix] * csc[isc]; );
+	}
     }
 }
 
@@ -198,20 +198,22 @@ void lsr_w2s(
     float complex iwdz;
 
     wo = cimagf(w);     /* real frequency */
-    iwdz = 2 * I * wo * az.d;
+    iwdz = -2 * I * wo * az.d;
+
+    /* 0th order term */
+    LOOP( ps[iy][ix] =
+	  pw[iy][ix] * iwdz * conjf( bw[iy][ix] ); );
 
     /* higher order terms */
     if(nsc>0) {
 	kweight(bs,wo);     /* k-domain weight */
 
-	LOOP( wt[iy][ix] = pw[iy][ix]; 
-	      pw[iy][ix] = 0;);
-
 	for( isc=1; isc<=nsc; isc++) {
-	    KOOP( wk[iy][ix] = 0.; );
-	    LOOP( wk[iy][ix] = wt[iy][ix]; );
+	    sf_warning("ADJ isc=%d csc=%g",isc,csc[isc]);
 
-	    LOOP( wk[iy][ix] /= pow(wo*bs[iy][ix],2*isc); );
+	    KOOP( wk[iy][ix] = 0.; );
+	    LOOP( wk[iy][ix] = pw[iy][ix]; );
+	    LOOP( wk[iy][ix]*= pow(wo*bs[iy][ix],-2*isc); );
 
 	    fft2(true,wk);
  
@@ -219,15 +221,13 @@ void lsr_w2s(
 		  kw[iy][ix] * pow(kk[iy][ix],isc); );
  
 	    fft2(false,wk);
+
+	    LOOP( wk[iy][ix] *= iwdz * conjf( bw[iy][ix] ); );
 	    
-	    LOOP( pw[iy][ix] +=
+	    LOOP( ps[iy][ix] +=
 		  wk[iy][ix] * csc[isc]; );
 	}
     }
-
-    /* 0th order term */
-    LOOP( ps[iy][ix] =
-	  pw[iy][ix] * conjf( bw[iy][ix] * iwdz ); );
 }
 
 

@@ -282,15 +282,14 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		/* continuation */
 		fslice_get(Bslow,iz+1,ss[0]);
 		SOOP( ss[ily][ilx] *= twoway; );
-/*		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);*/
+		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 		/* scattering */
 		fslice_get(Bwfld,iw*az.n+iz+1,bw[0]);
 		fslice_get(Pslow,        iz+1,ps[0]);
 		lsr_s2w(w,bw,so,pw,ps);
-/*		LOOP(dw[imy][imx] += pw[imy][imx]; );*/
-		LOOP(dw[imy][imx] = pw[imy][imx]; );
+		LOOP(dw[imy][imx] += pw[imy][imx]; );
 
 		/* imaging */
 		fslice_get(Pimag,iz+1,pwsum[0]);

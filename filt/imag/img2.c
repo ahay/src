@@ -233,7 +233,6 @@ void img2t_init(axa amx_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-/* */
     /* precompute phase shift */
     tt = sf_complexalloc2(aht.n,aw.n);
     for (iw=0; iw<aw.n; iw++) {
