@@ -22,7 +22,7 @@ dirs = ('main','proc','imag','plot','cc',
         'fomels','savap','gee','jennings') # ,'mirandaf')
 
 use = os.path.join(libdir,'rsfuse.py')
-env.Command(use,None,action=Action(rsfdoc.use))
+env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 Depends(use,os.path.join(libdir,'suproj.py'))

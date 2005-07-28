@@ -65,6 +65,3 @@ for dir in dirs:
     sys.stderr.write(string.join(['-' * 44,dir,'\n'],' '))
 
 sys.stderr.write('Done.\n')
-
-
-
