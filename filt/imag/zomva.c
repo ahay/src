@@ -219,6 +219,10 @@ void zomva(bool inv     /* forward/adjoint flag */,
 
 	    LOOP( dw[imy][imx]=0.; );
 
+	    iz = az.n-1;
+	    fslice_get(Bslow,iz,so[0]);	    
+	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+
 	    for (iz=az.n-1; iz>0; iz--) {
 
 		/* imaging */

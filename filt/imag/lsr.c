@@ -25,7 +25,7 @@
 #define LOOP(a) for(iy=0;iy<ayy.n;iy++){ for(ix=0;ix<axx.n;ix++){ {a} }}
 #define KOOP(a) for(iy=0;iy<byy.n;iy++){ for(ix=0;ix<bxx.n;ix++){ {a} }}
 
-#define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
+#define KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
 static axa az,axx,ayy;
@@ -164,7 +164,7 @@ void lsr_s2w(
 	LOOP( wt[iy][ix] = pw[iy][ix]; );
 
 	for( isc=1; isc<=nsc; isc++) {
-	    sf_warning("FWD isc=%d csc=%g",isc,csc[isc]);
+/*	    sf_warning("FWD isc=%d csc=%g",isc,csc[isc]);*/
 
 	    KOOP( wk[iy][ix] = 0.; );
 	    LOOP( wk[iy][ix] = wt[iy][ix]; );
@@ -209,7 +209,7 @@ void lsr_w2s(
 	kweight(bs,wo);     /* k-domain weight */
 
 	for( isc=1; isc<=nsc; isc++) {
-	    sf_warning("ADJ isc=%d csc=%g",isc,csc[isc]);
+/*	    sf_warning("ADJ isc=%d csc=%g",isc,csc[isc]);*/
 
 	    KOOP( wk[iy][ix] = 0.; );
 	    LOOP( wk[iy][ix] = pw[iy][ix]; );
@@ -219,7 +219,7 @@ void lsr_w2s(
  
 	    KOOP( wk[iy][ix] *=
 		  kw[iy][ix] * pow(kk[iy][ix],isc); );
- 
+
 	    fft2(false,wk);
 
 	    LOOP( wk[iy][ix] *= iwdz * conjf( bw[iy][ix] ); );
