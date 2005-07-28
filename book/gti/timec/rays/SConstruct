@@ -1,0 +1,25 @@
+from rsfproj import *
+
+grey = '''
+grey color=j allpos=y screenht=6 screenwd=12
+wanttitle=n label1="Depth (km)" label2="Lateral (km)"
+'''
+rays =  '''
+cell2 nr=1000 nt=4000 yshot=0 |
+plotrays par=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=0
+'''
+
+Flow('const',None,'spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0')
+Plot('const',grey)
+Plot('cell2','const',rays)
+Result('straight','const cell2','Overlay')
+
+Flow('cgrad',None,
+     'math n1=601 d1=0.01 n2=1201 d2=0.01 output="1/sqrt(1-x1*0.165)" ')
+Plot('cgrad',grey)
+Plot('ccell2','cgrad',rays)
+Result('parab','cgrad ccell2','Overlay')
+
+###########################################################################
+
+End()

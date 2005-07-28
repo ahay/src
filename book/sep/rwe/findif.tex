@@ -1,0 +1,81 @@
+\section{Finite-difference solutions to the one-way wave equation}
+Alternative solutions to the one-way wave-equation are 
+obtained with pure finite-differencing methods in the 
+$\omega-x$ domain, which can be implemented either as 
+implicit \cite[]{Claerbout.blackwell.85}, or as 
+explicit methods \cite[]{GEO.56.11.17701777}.
+For the same stencil size,
+implicit methods are more accurate and robust than explicit methods, 
+but harder to implement in {3-D}.
+However, explicit methods of comparable accuracy can be 
+designed using larger stencils.
+\par
+For implicit methods, various approximations to the 
+square root in \req{oneway.3d} lead to approximate equations 
+of different orders of accuracy. 
+For downward continuation in Cartesian coordinates, 
+those methods are known by their respective angular 
+accuracy as the $15^\circ$ equation, $45^\circ$ 
+equation and so on. 
+Although the meanings of $15^\circ$, $45^\circ$ are
+undefined in ray coordinates where the extrapolation axis 
+is time, we can still write approximations for 
+the numerical finite-difference solutions using analogous 
+approximations.
+\par
+If we introduce the notation
+\beq
+\ko^2 = \frac{\lp\ww\ss\rp^2}{\czz} - \lp\frac{\cz}{2\czz}\rp^2
+\eeq
+we can simplify the one-way wave \req{oneway.3d} as
+\beq \label{eqn:oneway.3d.b}
+\kz = i \frac{\cz}{2\czz} +
+\sqrt{
+\ko^2
+- \lb \frac{\cxx}{\czz}\kx^2 -i \frac{\cx}{\czz}\kx \rb
+- \lb \frac{\cyy}{\czz}\ky^2 -i \frac{\cy}{\czz}\ky \rb
+- \frac{\cxy}{\czz} \kx\ky
+}\;.
+\eeq
+
+\subsection{$15^\circ$ wave-equation in a 3-D Riemannian space}
+A simple way of deriving the $15^\circ$ equation is by a 
+second-order Taylor series expansion of the extrapolation 
+wavenumber $\kz$ function of the variables $\kx$ and $\ky$:
+\beqa \label{eqn:taylor.3d}
+\kz\lp \kx  ,\ky   \rp \approx
+\kz\lp \kx=0,\ky=0 \rp + 
+            \left. \done{\kz}{\kx}      \right|_0 \kx   +
+            \left. \done{\kz}{\ky}      \right|_0 \ky   +
+\nonumber \\ +
+\frac{1}{2} \left. \dtwo{\kz}{\kx}      \right|_0 \kx^2 +
+            \left. \mtwo{\kz}{\kx}{\ky} \right|_0 \kx\ky+
+\frac{1}{2} \left. \dtwo{\kz}{\ky}      \right|_0 \ky^2 \;.
+\eeqa
+If we introduce \req{oneway.3d.b} into \req{taylor.3d}, we obtain 
+an equivalent form for the $15^\circ$ equation in a 
+semi-orthogonal {3-D} Riemannian space:
+\beqa \label{eqn:fifteen.3d}
+\kz \approx i \frac{\cz}{2\czz} + \ko
++ \frac{i\cx}{2\czz\ko} \kx
++ \frac{1}{2\ko} \lb \lp\frac{\cx   }{2\czz  \ko}\rp^2-\frac{\cxx}{\czz} \rb \kx^2
+\nonumber \\
++ \frac{i\cy}{2\czz\ko} \ky 
++ \frac{1}{2\ko} \lb \lp\frac{\cy   }{2\czz  \ko}\rp^2 -\frac{\cyy}{\czz}\rb \ky^2
+\nonumber \\
++ \frac{1}{2\ko} \lb    \frac{\cx\cy}{2\czz^2\ko^2}    -\frac{\cxy}{\czz}\rb \kx\ky \;.
+\eeqa
+\par
+For the particular case of Cartesian coordinates
+($\cx=\cy=\cz=0, \cxx=\cyy=\czz=1, \cxy=0, \ko=\ww\ss$),
+\beq
+\kz \approx \ww\ss - \frac{1}{2\ww\ss} \lp \kx^2 + \ky^2 \rp \;,
+\eeq
+which is the usual form of the $15^\circ$ equation.
+%%\subsection{$45^\circ$ wave-equation in a 3-D Riemannian space}
+%%
+%%Not yet in {3-D}.
+
+
+
+

@@ -1,0 +1,99 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import wemig
+
+# ------------------------------------------------------------
+# MIGRATION parameters
+# ------------------------------------------------------------
+par = {
+    'nw':150, 'ow':5,'jw':1,
+#    'nw':1, 'ow':15,
+    'nx':320,'ox':2000,'dx':25,
+    'nt':726,'ot':0,'dt':0.008,'kt':1,'ft':0,
+    'ns':80, 'js':3, 'fs':0,
+#    'ns':24, 'js':10, 'fs':0,
+    'nh':64,
+    #
+    'verb':'y',
+    'eps':0.01,
+    'nrmax':5,
+    'dtmax':0.00005,
+    #
+    'tmx':8,
+    'tmy':0,
+    'pmx':0,
+    'pmy':0,
+    #
+    'xmin':2000, 'xmax':9000, 'zmin':0, 'zmax':3000
+    }
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# fetch data
+# ------------------------------------------------------------
+Fetch(['marmrefl.hh'],'marm')
+Fetch(['marmvel.hh'] ,'marm')
+
+# ------------------------------------------------------------
+# VELOCITY
+# ------------------------------------------------------------
+Flow('velo','marmvel.hh',
+     '''
+     dd form=native |
+     put label1=z label2=x
+     ''')
+Flow('s0','velo',
+     '''
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+Flow('sd','s0','window squeeze=n n3=200')
+Flow('s1','s0','window squeeze=n f3=200')
+
+# ------------------------------------------------------------
+# SHOTS
+# ------------------------------------------------------------
+Flow('shot','marmrefl.hh',
+     '''
+     dd form=native |
+     put o2=-2575 d2=25 label1=t label2=r label3=s |
+     pad n2out=104
+     ''')
+
+# ------------------------------------------------------------
+# CMPS
+# ------------------------------------------------------------
+Flow('cmps','shot',
+     '''
+     reverse which=2 |
+     put o2=0 d2=12.5 |
+     pad n2out=128 |
+     shot2cmp positive=n |
+     window j3=2 min3=%(ox)g |
+     pad n3out=320 |
+     put label2=h label3=m
+     ''' % par )
+
+# ------------------------------------------------------------
+# WAVELET
+# ------------------------------------------------------------
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g |
+     ricker1 frequency=9
+         ''' % par )    
+Result('wave','wave','graph')
+
+# ------------------------------------------------------------
+
+wemig.sinking(par)
+
+wemig.profile(par)
+
+wemig.result(par)
+
+End()

@@ -1,0 +1,396 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import spmig, sgmig, zomig
+
+# ------------------------------------------------------------
+# PLOTTING
+# ------------------------------------------------------------
+def igrey(custom,par):
+    return '''
+    transp memsize=250 plane=23 |
+    transp memsize=250 plane=12 |
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=138  frame2=%d frame3=%d
+    label1=z label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+def dgrey(custom,par):
+    return '''
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=150 frame2=%d frame3=%d
+    label1=t label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+def vgrey(custom,par):
+    return '''
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=138  frame2=%d frame3=%d color=j
+    label1=z label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+
+# ------------------------------------------------------------
+# parameters
+# ------------------------------------------------------------
+par = {
+    'nt':500, 'ot':0,'dt':0.0025,'kt':20,
+    'nw':251, 'ow':0,
+    'nx':440, 'ox':0,'dx':15,
+    'ny':280, 'oy':0,'dy':15,
+    'nz':200, 'oz':0,'dz':3,
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':16,'pmx':0,'pmy':0,
+    'misc':'incore=y'
+    }
+
+par['dw']=1./(par['nt']*par['dt'])
+
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['ymin']=par['oy']
+par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+
+par['xpad']=par['nx']/2.
+par['ypad']=par['ny']/2.
+
+par['xsou']=par['ox'] + par['xpad'] * par['dx']
+par['ysou']=par['oy'] + par['ypad'] * par['dy']
+
+par['ft']=par['kt']*par['dt']
+
+# ------------------------------------------------------------
+Fetch(['vp.hh'], 'frst3')
+Fetch(['rho.hh'],'frst3')
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# density
+Flow('den','rho.hh','window n1=%(nz)d' % par)
+Result('den','den',vgrey('pclip=100 bias=1.5 allpos=y',par))
+# ------------------------------------------------------------
+# velocity
+Flow('vel','vp.hh', 'window n1=%(nz)d' % par)
+Result('vel','vel',vgrey('pclip=100 bias=1500 allpos=y',par))
+# ------------------------------------------------------------
+
+
+# ------------------------------------------------------------
+# slowness (true)
+Flow('slo','vel',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('slo','slo',
+       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
+       + vgrey('pclip=100 bias=0.000340432 allpos=y',par))
+
+# slowness (smooth)
+Flow('sss','vel',
+     '''
+     math "output=1/input" |
+     smooth rect1=11 rect2=11 |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('sss','sss',
+       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
+       + vgrey('pclip=100 bias=0.000340432 allpos=y',par))
+
+# ------------------------------------------------------------
+# acoustic impedance
+Flow('aim','vel den','math v=${SOURCES[1]} d=${SOURCES[1]} output=v*d', stdin=0)
+Result('aim','aim',vgrey('pclip=100 bias=1 allpos=y',par))
+
+# reflectivity
+Flow('ref','aim','ai2refl')
+Flow('rrr','ref','transp memsize=250 plane=12 | transp memsize=250 plane=23')
+Result('rrr','rrr',igrey('pclip=99',par))
+
+# ------------------------------------------------------------
+# 2D files
+Flow('_ref','ref','window squeeze=n n3=1 f3=140')
+Flow('_vel','vel','window squeeze=n n3=1 f3=140')
+Flow('l_l' ,'slo','window squeeze=n n2=1 f2=140')
+Flow('s_s' ,'sss','window squeeze=n n2=1 f2=140')
+Flow('r_r' ,'rrr','window squeeze=n n2=1 f2=140')
+# ------------------------------------------------------------
+## 
+ # z-x-y cubes: den, vel, aim, ref
+ # x-y-z cubes:      sss,      rrr
+ # x-.-z cubes:      s_s,      r_r
+ ##
+# ------------------------------------------------------------
+
+# loop over frequencies
+for k in ('0','1'):
+    f = 40 + int(k)*40
+    par['f']=f
+
+    wv = 'wav' + k # wavelet
+
+    d_d = 'd_d' + k # data
+    ddd = 'ddd' + k
+    f_f = 'f_f' + k
+    fff = 'fff' + k
+
+    r_r = 'r_r' + k # reflectivity
+    rrr = 'rrr' + k
+
+    i_i = 'i_i' + k # image
+    iii = 'iii' + k
+
+    u_u = 'u_u' + k # source wavefield
+    uuu = 'uuu' + k
+    
+    e_e = 'e_e' + k # data
+    eee = 'eee' + k
+    c_c = 'c_c' + k
+    ccc = 'ccc' + k
+    g_g = 'g_g' + k # data
+    t_t = 't_t' + k # 1-D convolution data
+    ttt = 'ttt' + k
+
+    w_w = 'w_w' + k # downgoing wavefield
+    www = 'www' + k
+    
+    j_j = 'j_j' + k # image
+    jjj = 'jjj' + k
+
+    # ------------------------------------------------------------
+    
+    Flow(wv,None,
+         '''
+         spike nsp=1 mag=1 k1=%(kt)d
+         n1=%(nt)d d1=%(dt)g o1=0
+         n2=1      d2=%(dx)g o2=%(xsou)g
+         n3=1      d3=%(dy)g o3=%(ysou)g |
+         ricker1 frequency=%(f)s |
+         put label1=t label2=x label3=y 
+         ''' % par)
+    Result(wv,wv,'graph title=" "')
+
+    # 1-D convolution
+    Flow(t_t,['_ref','_vel'],
+         '''
+         depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+         ricker1 frequency=%(f)s |
+         put label1=t
+         ''' % par )
+    Flow(ttt,['ref','vel'],
+         '''
+         depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+         ricker1 frequency=%(f)s |
+         put label1=t
+         ''' % par )
+
+    # ------------------------------------------------------------
+    # SURVEY-SINKING
+    # ------------------------------------------------------------
+    # the wavelet is embedded in the reflectivity;
+    # the source is a delta function
+
+    # reflectivity
+    Flow(r_r,['_ref','_vel'],
+         '''
+         depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+         ricker1 frequency=%(f)s | 
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 | transp memsize=250 plane=23
+         ''' % par )
+    Flow(rrr,['ref','vel'],
+         '''
+         depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+         ricker1 frequency=%(f)s | 
+         time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+         transp memsize=250 plane=12 | transp memsize=250 plane=23
+         ''' % par )
+
+    # modeling
+    zomig.model(d_d,'l_l',r_r,par)
+    Flow(f_f,d_d,
+         '''
+         window | transp memsize=250 |
+         fft1 inv=y
+         ''' % par )
+    zomig.model(ddd,'slo',rrr,par)
+    Flow(fff,ddd,
+         '''
+         transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+         fft1 inv=y
+         ''' % par )
+
+    # diffraction focusing
+    zof = 'zof' + k
+    dip = 'dip' + k
+    pwd = 'pwd' + k # isolated diffractions
+    ckx = 'ckx' + k # FFT for velocity continuation
+    vlf = 'vlf' + k # velocity continuation
+    foc = 'foc' + k # focusing measure
+    pik = 'pik' + k # picked velocity
+    slc = 'slc' + k # diffractions image
+
+    Flow(zof,f_f,'window max1=0.5')
+
+    def grey2(title):
+        return '''window min1=0.2 min2=250 max2=5500 |
+        grey title="%s, %d Hz" 
+        label1="Time (s)" label2="Lateral (m)"
+        ''' % (title,f)
+    
+    Result(zof,grey2('Zero-Offset Data'))
+    
+    Flow(dip,zof,'dip rect1=10 rect2=10')
+    Flow(pwd,[zof,dip],'pwd dip=${SOURCES[1]}')
+
+    Result(pwd,grey2('Isolated Diffractions'))
+
+    fft = '''
+    pad n2=513 | cosft sign2=1 | spray axis=2 n=1 o=0 d=15
+    '''
+    Flow(ckx,pwd,fft)
+    velcon = '''
+    stolt vel=3000 nf=4 |
+    fourvc nv=200 dv=5 v0=1500 |
+    cosft sign3=-1 |
+    window n3=440
+    '''
+    Flow(vlf,ckx,velcon)
+
+    for vel in (1500,2000,2500):
+        Result('%s-%d' % (vlf,vel),vlf,
+               'window n2=1 min2=%d | %s' %
+               (vel,grey2('Migration at %d m/s' % vel)))
+    
+    Flow(foc,vlf,'focus rect1=100 rect3=20 | math output=1/input')
+
+    Result(foc,
+           '''
+           window n3=1 min3=4000 min1=0.2 | 
+           grey allpos=y color=j bias=1 title="Focusing Analysis" 
+           label1="Time (s)" label2="Velocity (m/s)"
+           ''')
+
+    Flow(pik,foc,'scale axis=3 | blindpick rect1=10 rect2=10 | window')
+
+    Result(pik,grey2('Picked Focusing Velocity') + \
+           'color=j allpos=y bias=2000 scalebar=y wherescalebar=b')
+    
+    Flow(slc,[vlf,pik],'slice pick=${SOURCES[1]} | window')
+
+    Result(slc,grey2('Focused Diffractions'))
+    
+    Flow(vlf+'+',zof,fft + ' | ' + velcon)
+    Flow(slc+'+',[vlf+'+',pik],'slice pick=${SOURCES[1]} | window')
+
+    Result(slc+'+',grey2('Focused Image'))
+
+    # migration
+    zomig.image(i_i,'s_s',d_d,par)
+    zomig.image(iii,'sss',ddd,par)
+
+    # ------------------------------------------------------------
+    # SHOT-RECORD
+    # ------------------------------------------------------------
+    # the wavelet is embedded in the source wavefield;
+    # the reflectivity is made of delta functions
+
+    # source wavefield
+    Flow(u_u,wv,
+         '''
+         fft1 |
+         window squeeze=n n1=%(nw)d min1=%(ow)g |
+         pad beg2=%(xpad)d n2out=%(nx)d |
+         put label1=w label2=x label3=y |
+         transp memsize=250 plane=12 | transp memsize=250 plane=23 
+         ''' % par)
+    Flow(uuu,wv,
+         '''
+         fft1 |
+         window squeeze=n n1=%(nw)d min1=%(ow)g |
+         pad beg2=%(xpad)d n2out=%(nx)d |
+         pad beg3=%(ypad)d n3out=%(ny)d |
+         put label1=w label2=x label3=y |
+         transp memsize=250 plane=12 | transp memsize=250 plane=23 
+         ''' % par)
+
+    # S-R modeling/migration
+    spmig.model(e_e,'l_l',u_u,'r_r',par)
+    Flow(c_c,e_e,
+         '''
+         window | transp memsize=250 |
+         fft1 inv=y |
+         window min1=%(ft)g | pad n1out=%(nt)d | put o1=0
+         ''' % par)
+    spmig.image(j_j,'s_s',u_u,e_e,par)
+
+    # S-R modeling/migration
+    spmig.model(eee,'slo',uuu,'rrr',par)
+    Flow(ccc,eee,
+         '''
+         transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+         fft1 inv=y |
+         window min1=%(ft)g | pad n1out=%(nt)d | put o1=0
+         ''' % par )
+    spmig.image(jjj,'sss',uuu,eee,par)
+
+    # RESULTS (2-D)
+    Result(t_t,t_t,'window          | grey labelrot=n pclip=100 title="" label1=t label2=x')
+    Result(r_r,r_r,'window | transp | grey labelrot=n pclip=100 title="" label1=z label2=x')
+    Result(f_f,f_f,'window          | grey labelrot=n pclip=100 title="" label1=t label2=x')
+    Result(i_i,i_i,'window | transp | grey labelrot=n pclip=100 title="" label1=z label2=x')
+    Result(c_c,c_c,'window          | grey labelrot=n pclip=100 title="" label1=t label2=x')
+    Result(j_j,j_j,'window | transp | grey labelrot=n pclip=100 title="" label1=z label2=x')
+
+    # RESULTS (3-D)
+    Result(ttt,ttt,dgrey('pclip=99.8',par))
+    Result(rrr,rrr,igrey('pclip=99'  ,par))
+    Result(fff,fff,dgrey('pclip=99.8',par))
+    Result(iii,iii,igrey('pclip=99'  ,par))
+    Result(ccc,ccc,dgrey('pclip=99.8',par))
+    Result(jjj,jjj,igrey('pclip=99'  ,par))
+
+# ------------------------------------------------------------
+# survey by shot-record modeling
+# ------------------------------------------------------------
+Flow('wow','wav0',
+     '''
+     fft1 |
+     window squeeze=n n1=150 min1=%(ow)g |
+     put label1=w label2=x label3=y
+     ''' % par)
+
+alls     = map(lambda s:  '%03d'     % s,range(0,par['nx'],1))
+allshots = map(lambda s: 'c%03d.rsf' % s,range(0,par['nx'],1))
+allimags = map(lambda s: 'j%03d.rsf' % s,range(0,par['nx'],1))
+
+for i in alls:
+    u = 'u' + i
+
+    Flow(u,'wow',
+     '''
+     pad beg2=%d n2out=%d |
+     put o2=0 |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 
+     ''' % (int(i),par['nx']))
+
+    e = 'e' + i
+    spmig.model(e,'l_l',u,'r_r',par)
+    c = 'c' + i
+    Flow(c,e,
+         '''
+         window | transp memsize=250 |
+	 pad n1out=%(nw)d |
+         fft1 inv=y |
+         window min1=%(ft)g | pad n1out=%(nt)d | put o1=0 label1=t
+         ''' % par)
+    j = 'j' + i
+    spmig.image(j,'s_s',u,e,par)
+
+Flow('shots',allshots,'cat axis=3 space=n ${SOURCES[:%d]} | put o3=0' % len(allshots), stdin=0)
+Flow('image',allimags,'add                ${SOURCES[:%d]}' % len(allimags), stdin=0)
+
+# ------------------------------------------------------------
+
+End()

@@ -1,0 +1,54 @@
+from rsfproj import *
+
+Fetch('line19410.sgy','salt')
+
+grey = '''
+grey label1="Time (s)" label2="Lateral (m)" scalebar=y
+'''
+
+grey2 = 'grey label1="Time (s)" label2="Lateral (m)" '
+
+Flow('line ./ahead ./bhead','line19410.sgy',
+     '''segyread tape=$SOURCE read=data
+     hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     window min1=1.5''',stdin=0)
+Plot('line',grey + ' title="Input Line"')
+
+Flow('dip','line','dip2 eps=10 lam=100 verb=y niter=10 gauss=n')
+Plot('dip',grey + ' title="Dip" color=j')
+
+Result('dip','line dip','OverUnderAniso')
+
+Flow('pwd','line dip','pwd dip=${SOURCES[1]}')
+Flow('smooth','pwd',
+          'math output="input*input" | smooth rect1=10 rect2=10')
+Plot('pwd','smooth',grey + ' title="Coherency" allpos=y color=j')
+
+Result('pwd','line pwd','OverUnderAniso')
+
+Flow('line2','line',
+     'window min1=1.9 max1=2.7 min2=500 max2=1500 | bandpass fhi=25')
+Flow('dip2','line2','dip rect1=10 rect2=10 verb=y niter=10')
+
+Plot('line2',grey2 + ' title="Input Line" clip=17')
+Plot('dip2',grey2 + ' title="Dip" color=j scalebar=y')
+
+Flow('flat','line2 dip2',
+     'flat dip=${SOURCES[1]} i0=501 | bandpass fhi=25')
+Plot('flat',grey2 + ' title=Flattened clip=17')
+
+Result('flat','line2 flat','OverUnderAniso')
+
+Flow('vg wt','line dip',
+     '''
+     pwdsigk eps=1 dips=${SOURCES[1]} verb=y niter=1000 nliter=1
+     weight=${TARGETS[1]}
+     ''')
+Plot('vg',grey + ' title="Structure Enhanced" ')
+Plot('wt','envelope | %s allpos=y title="Discontinuity" ' % grey)
+
+Result('dvg','line vg','OverUnderAniso')
+
+###########################################################################
+
+End()

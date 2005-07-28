@@ -1,0 +1,350 @@
+%\documentclass[12pt]{handout}
+
+%\begin{document}
+
+\author{Sergey Fomel}
+\title{Traveltime computation I}
+
+\maketitle
+
+Today's lecture addresses the numerical analysis of wavefront propagation. It
+discusses how continuous theoretical objects such as rays and
+wavefronts are turned into numbers for computation on a computer.
+
+In the basic traveltime computation problem, we are given the velocity
+function $V(\mathbf{x})$ or the slowness function
+$S(\mathbf{x})=1/V(\mathbf{x})$, defined in a region of the Earth, and the
+source position (typically on the surface of the Earth), and our task is to
+compute the traveltime function $T(\mathbf{x})$. Different theoretical
+approaches for describing the geometry of wavefront propagation translate into
+different numerical techniques.
+
+\section{Ray tracing}
+
+In the ray tracing approach, the problem is formulated as follows:
+Given a slowness function $S(\mathbf{x})$, the initial location of the
+ray $\mathbf{x}_0$, and the initial ray direction~$\mathbf{n_0}$, find
+the ray $\mathbf{x}(\sigma)$ and the traveltime on the ray
+$T(\sigma)$. Tracing sufficiently many rays from the source allows one
+to establish the required relationship between $T$ and
+$\mathbf{x}$. Rays are found by solving the initial value problem
+$\mathbf{x}(0)=\mathbf{x}_0$, $\mathbf{p}(0)=\mathbf{p}_0 =
+\mathbf{n_0}\,S(\mathbf{x}_0)$, and $T(0) = 0$ for the ray tracing system
+\begin{eqnarray}
+  \label{eq:xray}
+  \frac{d\,\mathbf{x}}{d\,\sigma} & = & \mathbf{p}\;, \\
+  \label{eq:pray}
+  \frac{d\,\mathbf{p}}{d\,\sigma} & = & S(\mathbf{x})\,\nabla S\;, \\
+  \label{eq:tray}
+  \frac{d\,T}{d\,\sigma} & = & S^2(\mathbf{x})\;.
+\end{eqnarray}
+According to the mathematical theory for systems of ordinary
+differential equations, the initial value problem is guaranteed to
+have a unique well-behaved solution for a well-behaved (smoothly
+differentiable) slowness function $S(\mathbf{x})$.
+
+\subsection{Analytical techniques}
+
+\inputdir{anal}
+
+In some special cases, it is possible to solve the ray tracing
+equations analytically. The already familiar example is the
+constant-velocity case $S(\mathbf{x}) = S_0$. In this case, the
+derivative $\frac{d\,\mathbf{p}}{d\,\sigma}$ is zero, the ray
+direction remains constant, and the ray trajectory is a straight
+line. Mathematically,
+\begin{eqnarray}
+  \label{eq:tconst}
+  T(\sigma) & = & S_0^2\,\sigma\;, \\
+  \label{eq:pconst}
+  \mathbf{p}(\sigma) & = & \mathbf{p}_0\;, \\
+  \label{eq:xconst}
+  \mathbf{x}(\sigma) & = & 
+  \mathbf{x}_0 + \mathbf{p}_0\,\sigma\;.
+\end{eqnarray}
+
+\plot{straight}{width=\textwidth}{In a medium with a constant slowness, rays
+  are straight lines.}
+
+Another special case is that of a constant gradient of the slowness squared.
+According to the mechanical analogy, ray trajectories in this case are
+analogous to trajectories of mechanical particles traveling with a constant
+acceleration. As known from elementary mechanics, a cannon ball shot in the
+field of the constant gravitational acceleration travels along a parabola. We
+will see that the ray trajectories for a constant gradient of the slowness
+squared also have a parabolic form. In the special case of a zero gradient,
+the trajectories are straight lines as shown previously. Let
+$S(\mathbf{x})\,\nabla S = \mathbf{g}_0$, where $\mathbf{g}_0$ is a constant
+vector. The slowness function has the form
+\begin{equation}
+  \label{eq:grad}
+  S^2(\mathbf{x}) = S^2(\mathbf{x}_0) + 
+  2\,\mathbf{g}_0 \cdot (\mathbf{x}-\mathbf{x}_0)\;.
+\end{equation}
+Solving the initial-value problem for equation~(\ref{eq:pray}), we obtain
+\begin{equation}
+  \label{eq:pgrad}
+  \mathbf{p}(\sigma) =  \mathbf{p}_0 + \mathbf{g}_0\,\sigma\;.
+\end{equation}
+Solving equation~(\ref{eq:xray}) leads to
+\begin{equation}
+  \label{eq:xgrad}
+  \mathbf{x}(\sigma) = \mathbf{x}_0 + \mathbf{p}_0\,\sigma
+  + \mathbf{g}_0\,\frac{\sigma^2}{2}\;.
+\end{equation}
+Rays, described by equation~(\ref{eq:xgrad}) are parabolic trajectories, shown
+in Figure~\ref{fig:parab}.  Equation~(\ref{eq:tray}) transforms to
+\begin{equation}
+  \label{eq:tgrad0}
+  \frac{d\,T}{d\,\sigma} = S^2(\mathbf{x}) = 
+  \mathbf{p}(\sigma) \cdot \mathbf{p}(\sigma) =
+  \mathbf{p}_0 \cdot \mathbf{p}_0 + 2\,\mathbf{p}_0 \cdot \mathbf{g}_0\,\sigma
+  +  \mathbf{g}_0 \cdot \mathbf{g}_0\,\sigma^2\;.
+\end{equation}
+Its solution takes the form
+\begin{equation}
+  \label{eq:tgrad}
+  T(\sigma) = \mathbf{p}_0 \cdot \mathbf{p}_0\,\sigma +
+  \mathbf{p}_0 \cdot \mathbf{g}_0\,\sigma^2 +  
+  \mathbf{g}_0 \cdot \mathbf{g}_0\,\frac{\sigma^3}{3}\;.
+\end{equation}
+Analytical solutions exist for some other special cases such as the
+constant gradient of velocity and constant second-order partial
+derivatives of slowness squared. Armed with analytical solutions and
+Snell's law, one can compute traveltimes by dividing the medium into
+cells, tracing rays analytically inside each cell, and using Snell's
+law to transmit rays through the cell interfaces.
+
+\plot{parab}{width=\textwidth}{In a medium with a constant gradient of
+  the slowness squared, rays are parabolas. Observe the ray envelope
+  (a \emph{caustic}) and a shadow region behind the caustic.}
+
+\subsection{Numerical ray tracing}
+
+\inputdir{XFig}
+
+In a more general case, one can obtain an approximate solution of the
+ray tracing problem with a numerical method. The simplest method for
+advancing solutions of ordinary differential equations is known as
+\emph{Euler's method}. In Euler's method, one takes a small step
+$\Delta \sigma$ and advances the solution according to
+\begin{eqnarray}
+  \label{eq:exray}
+  \mathbf{x}(\Delta \sigma) & \approx & 
+  \mathbf{x}_1 = \mathbf{x}_0 + \mathbf{p}_0\,\Delta \sigma\;, \\
+  \label{eq:epray}
+  \mathbf{p}(\Delta \sigma) & \approx &
+  \mathbf{p}_1 = \mathbf{p}_0 + \mathbf{g}(\mathbf{x}_0)\,\Delta \sigma\;,
+\end{eqnarray}
+where $\mathbf{g}(\mathbf{x}) = S(\mathbf{x})\,\nabla S$.  The solution
+follows a straight line along the initial direction (Figure \ref{fig:euler}.)
+The first step is repeated and becomes an iteration
+\begin{eqnarray}
+  \label{eq:exrayk}
+  \mathbf{x}_k & = & \mathbf{x}_{k-1} + \mathbf{p}_{k-1}\,\Delta \sigma\;, \\
+  \label{eq:eprayk}
+  \mathbf{p}_k & = & \mathbf{p}_{k-1} + \mathbf{g}(\mathbf{x}_{k-1})\,\Delta \sigma\;
+\end{eqnarray}
+for $k=1,2,\cdots$ and $\mathbf{x}_k$ and $\mathbf{p}_k$ approximating
+$\mathbf{x}(k\,\Delta \sigma)$ and $\mathbf{p}(k\,\Delta \sigma)$
+respectively. The step size $\Delta \sigma$ can also vary with $k$.
+
+%\sideplot{euler}{width=0.7\textwidth}{In Euler's ray tracing method,
+%  the numerical solution follows at each step a straight line along
+%  the ray direction (a scheme). The thick curved line shows the exact
+%  ray.}
+
+What is the error of such an approximation? Comparing
+equations~(\ref{eq:exray}) and~(\ref{eq:xgrad}), we can observe, that,
+in the case of the constant $\mathbf{g}$, there is a numerical error
+of $\mathbf{g}_0\,(\Delta \sigma)^2/2$ accumulated at each step of the
+computation. If we divide the interval from $0$ to $\sigma$ into $N$
+steps of the size $\Delta \sigma = \sigma/N$, the error at each step
+will be proportional to $(\sigma/N)^2$, and the cumulative error will
+be proportional to $N \times (\sigma/N)^2 = \sigma\,\Delta \sigma$. In
+other words, the error will decrease linearly with the decrease in
+$\Delta \sigma$. Such a behavior is called the first-order
+accuracy. This type of accuracy is usually insufficient in
+practical applications of ray tracing.
+
+Before we move on to more accurate higher-order methods, note that there are
+two other possible ways to formulate the first-order method. Instead of
+advancing $\mathbf{x}$ and $\mathbf{p}$ in parallel, we can advance one of
+them first and then use its new value to advance the other. The first of these
+alternative approaches leads to the iteration
+\begin{eqnarray}
+  \label{eq:exrayk1}
+  \mathbf{x}_k & = & \mathbf{x}_{k-1} + \mathbf{p}_{k-1}\,\Delta \sigma\;, \\
+  \label{eq:eprayk1}
+  \mathbf{p}_k & = & \mathbf{p}_{k-1} + \mathbf{g}(\mathbf{x}_{k})\,
+  \Delta \sigma\;,
+\end{eqnarray}
+and the second approach leads to the iteration
+\begin{eqnarray}
+  \label{eq:eprayk2}
+  \mathbf{p}_k & = & \mathbf{p}_{k-1} + \mathbf{g}(\mathbf{x}_{k-1})\,
+  \Delta \sigma\;, 
+  \\
+  \label{eq:exrayk2}
+  \mathbf{x}_k & = & \mathbf{x}_{k-1} + \mathbf{p}_{k}\,\Delta \sigma\;.
+\end{eqnarray}
+Are there any significant practical differences among the three
+approaches~(\ref{eq:exray}-\ref{eq:epray}),
+(\ref{eq:exrayk1}-\ref{eq:eprayk1}), and
+~(\ref{eq:eprayk2}-\ref{eq:exrayk2})? The theory of numerical
+integration for these type of differential equations shows that, while
+all the three schemes have similar first-order accuracy, schemes
+(\ref{eq:exrayk1}-\ref{eq:eprayk1}) and
+(\ref{eq:eprayk2}-\ref{eq:exrayk2}) are more stable than
+scheme~(\ref{eq:exray}-\ref{eq:epray}) when integrating long rays over
+many steps. The two new schemes preserve certain symmetries in the
+structure of the original system of differential equations. Such
+methods are called \emph{symplectic}. Stated simply, the numerical ray
+produced by a symplectic integrator, is still a ray but in a perturbed
+slowness field.
+%while the trajectory produced by a non-symplectic integrator such as
+%Euler's scheme~(\ref{eq:exray}-\ref{eq:epray}), can loose some of
+%the ray properties. 
+In addition to enforcing symplecticity, one can also constrain the
+numerical solution to preserve the eikonal equation condition
+\begin{equation}
+  \label{eq:eikonal}
+  \mathbf{p}_k \cdot \mathbf{p}_k = S^2(\mathbf{x}_k)\;.
+\end{equation}
+
+To produce a higher-order scheme, let us divide the integration
+interval~$\Delta \sigma$ in half and make two Euler-like symplectic steps.
+Combining schemes~~(\ref{eq:eprayk2}-\ref{eq:exrayk2})
+and~(\ref{eq:exrayk1}-\ref{eq:eprayk1}), we can write
+\begin{eqnarray}
+  \label{eq:spray1}
+  \mathbf{p}_{1/2} & = & \mathbf{p}_0 + 
+  \mathbf{g}(\mathbf{x}_{0})\,\frac{\Delta \sigma}{2}\;, \\
+  \label{eq:sxray1}  
+  \mathbf{x}_{1/2} & = & \mathbf{x}_0 + 
+  \mathbf{p}_{1/2}\,\frac{\Delta \sigma}{2}\;, \\
+  \label{eq:sxray2}  
+  \mathbf{x}_{1} & = & \mathbf{x}_{1/2} + 
+  \mathbf{p}_{1/2}\,\frac{\Delta \sigma}{2}\;, \\
+  \label{eq:spray1}
+  \mathbf{p}_{1} & = & \mathbf{p}_{1/2} + 
+  \mathbf{g}(\mathbf{x}_{1})\,\frac{\Delta \sigma}{2}\;,
+\end{eqnarray}
+or, eliminating the intermediate results,
+\begin{eqnarray}
+  \label{eq:sxray}  
+  \mathbf{x}_{1} & = & \mathbf{x}_{0} + 
+  \mathbf{p}_{0}\,\Delta \sigma + \mathbf{g}(\mathbf{x}_{0})\,
+  \frac{(\Delta \sigma)^2}{2} \\
+  \label{eq:spray}
+  \mathbf{p}_{1} & = & \mathbf{p}_0 + 
+  \frac{\mathbf{g}(\mathbf{x}_{0})+\mathbf{g}(\mathbf{x}_1)}{2}\,
+  \Delta \sigma\;.
+\end{eqnarray}
+The iteration scheme becomes 
+\begin{eqnarray}
+  \label{eq:sxrayk}  
+  \mathbf{x}_{k} & = & \mathbf{x}_{k-1} + 
+  \mathbf{p}_{k-1}\,\Delta \sigma + 
+  \mathbf{g}(\mathbf{x}_{k-1})\,\frac{(\Delta \sigma)^2}{2}
+  \\
+  \label{eq:sprayk}
+  \mathbf{p}_{k} & = & \mathbf{p}_{k-1} + 
+  \frac{\mathbf{g}(\mathbf{x}_{k-1})+\mathbf{g}(\mathbf{x}_{k})}{2}\,
+  \Delta \sigma\;.
+\end{eqnarray}
+Comparing equations~(\ref{eq:sxrayk}) and~(\ref{eq:xgrad}), we can see
+that, in the case of a constant~$\mathbf{g}$, the parabolic ray
+trajectory will be reproduced exactly. The local accuracy of
+scheme~(\ref{eq:sxrayk}-\ref{eq:sprayk}) is proportional to $(\Delta
+\sigma)^3$, which leads to global second-order accuracy. The number of
+numerical operations (additions and multiplications) increases in
+comparison with the first-order methods. However, we still need only
+one evaluation of the gradient function~$\mathbf{g}(\mathbf{x})$ per
+step, and, in practice, this is the most time-consuming part of the
+computation.
+
+How is traveltime $T$ defined along a numerical ray? According to
+equation~(\ref{eq:tray}), traveltime is the integral of the slowness
+squared. Slowness squared itself changes along the ray according to
+\begin{equation}
+  \label{eq:dsds}
+  \frac{d\,S^2}{d\,\sigma} = 
+  \nabla (S^2) \cdot \frac{d\,\mathbf{x}}{d\,\sigma} =
+  2\,\mathbf{g}(\mathbf{x}) \cdot \mathbf{p}\;.
+\end{equation}
+We can use the numerical values of $\mathbf{x}$ and $\mathbf{p}$ to
+constrain both slowness squared and its derivative at both ends of the
+$\Delta \sigma$ interval. The traveltime is found by integrating a
+third-order polynomial fitted at the end points
+(Figure~\ref{fig:hermit}). The derivation of the following expression
+is left as an exercise for the reader:
+\begin{equation}
+  \label{eq:tk}
+  T_k = T_{k-1} + \frac{S^2(\mathbf{x}_k) +
+    S^2(\mathbf{x}_{k-1})}{2}\,
+  \Delta \sigma
+  + \frac{\mathbf{g}(\mathbf{x}_{k-1}) \cdot \mathbf{p}_{k-1} -
+    \mathbf{g}(\mathbf{x}_k) \cdot \mathbf{p}_k}{6}\,(\Delta \sigma)^2\;.
+\end{equation}
+If we use a constant $\Delta \sigma$ interval throughout the
+integration, the final traveltime approximation will be
+\begin{equation}
+  \label{eq:tsigma}
+  T(\sigma) \approx 
+  T_N = \frac{S^2(\mathbf{x}_0)+S^2(\mathbf{x}_N)}{2}\,\Delta \sigma
+  + \sum_{k=1}^{n-1} S^2(\mathbf{x}_k)\,\Delta \sigma
+  + \frac{\mathbf{g}(\mathbf{x}_{0}) \cdot \mathbf{p}_{0} -
+    \mathbf{g}(\mathbf{x}_N) \cdot \mathbf{p}_N}{6}\,(\Delta \sigma)^2\;.
+\end{equation}
+
+\sideplot{hermit}{width=0.7\textwidth}{Traveltime increment in numerical ray
+  tracing can be found by integrating a local third-order polynomial (a
+  scheme).}
+
+Iterative scheme~(\ref{eq:sxrayk}-\ref{eq:sprayk}) belongs to the
+family of symplectic \emph{Runge-Kutta} schemes. It is common to use
+Runge-Kutta schemes of orders four and higher, which can be designed
+by including intermediate steps in the computation. Sometimes, two
+schemes of different orders are combined in order to pick a variable
+$\Delta \sigma$ step for an optimal accuracy versus efficiency
+trade-off. When the difference between the outputs of the two schemes
+is smaller than a given precision, the step gets increased. If the
+difference is larger than a given threshold, the step is reduced.
+
+Other numerical approaches to integrating systems of differential
+equations include implicit and multistep methods.
+
+%\section{Huygens principle and numerical wavefront tracing}
+
+%\section{Fermat's principle and numerical solution of the eikonal equation}
+
+%\section{Multi-valued traveltimes and escape equations}
+
+\section{Acknowledgments and references}
+
+Some analytical solutions for ray tracing are reviewed by
+\cite{cerveny}.  \cite{kornig} generalizes the analytical solution for
+a constant gradient of slowness squared to the case of constant
+second-order partial derivatives of slowness squared. 
+
+A general theory of symplectic (structure preserving) integration of
+ordinary differential equations (such as those in the ray tracing
+system) is described in the books by \cite{serna} and
+\cite{symplectic}. The second-order symplectic
+scheme~(\ref{eq:sxrayk}-\ref{eq:sprayk}) is sometimes attributed to
+\cite{verlet}, who proposed it for molecular dynamics
+problems. Accurate high-order symplectic Runge-Kutta methods have been
+developed by \cite{atela}, among others.
+
+The RSF package contains an implementation of the second-order cell
+ray tracing using locally parabolic rays (program \texttt{sfcell2})
+and an implementation of the McLachlan-Atela high-order symplectic
+Runge-Kutta integrator (program \texttt{sfrays2}). You will experiment
+with these programs in the next lab assignment.
+
+\bibliographystyle{sep}
+\bibliography{timec,SEG}
+
+%\end{document}
+

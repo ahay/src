@@ -1,0 +1,6 @@
+from rsfproj import *
+
+Result('hankel',None,
+       'spike k1=8 n1=32| halfint inv=y | dots title=" " label1=" " ')
+
+End()

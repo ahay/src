@@ -1,0 +1,71 @@
+from rsfproj import *
+
+	  # SET PARAMETERS #
+########################################################################
+nt=1250                 # number of time samples
+dt=0.004                # time sampling interval (sec)
+ft=0.0                  # first time (sec)
+fxs=0.5                 # first shotpoint (km)
+nxs=301                 # number of shotpoints (see notes below)
+dxs=0.025               # shotpoint sampling interval (km)
+fxo=0.                  # first offset (km, see notes below)
+nxo=121                 # number of source-receiver offsets
+dxo=0.025               # offset sampling interval (km)
+v00=1.5                 # velocity at x0,z0 (km/sec)
+dvdx=0.36               # derivative of velocity with distance x (dv/dx)
+dvdz=0.36               # derivative of velocity with depth z (dv/dz)
+fpeak=30.               # peak frequency of symmetric Ricker wavelet (Hz)
+tmin=0.                 # minimum time of interest (sec)
+er=0                    # =1 for exploding reflector amplitudes
+ls=0                    # =1 for line source; default is point source
+ob=1                    # =1 to include obliquity factors  (pas touche)
+smooth=1                # =1 for smooth (piecewise cubic spline) reflectors
+ndpfz=1000              # number of diffractors per Fresnel zone
+verbose=1
+REF1="-0.55555555555556:0,2.;3.5,2.;4.5,2.5;5.,2.25;5.5,2.;6.5,2.5;10,2.5"
+REF2="-0.55555555555556:0,2.5;10,3.5"
+REF3="-0.55555555555556:0,3.2;3.5,3.2;5,3.7;6.5,4.2;10,4.2"
+REF4="-0.55555555555556:0,4.5;10,4.5"
+########################################################################
+
+dim1 = 'd1=0.01 o1=0 n1=1001'
+dim2 = 'd2=0.01 o2=0 n2=501'
+
+layers = (
+    ((0,2),(3.5,2),(4.5,2.5),(5.,2.25),(5.5,2),(6.5,2.5),(10,2.5)),
+    ((0,2.5),(10,3.5)),
+    ((0,3.2),(3.5,3.2),(5,3.7),(6.5,4.2),(10,4.2)),
+    ((0,4.5),(10,4.5))
+    )
+
+nlays = len(layers)
+for i in range(nlays):
+    inp = 'inp%d' % (i+1)
+    Flow('./'+inp,None,
+         'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+         (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
+                      ' '),
+          len(layers[i])))
+
+Flow('lay1','inp1','dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay2',None,'math %s output="2.5+x1*0.1" ' % dim1)
+Flow('lay3','inp3','dd form=native | spline %s fp=0,0' % dim1)
+Flow('lay4',None,'math %s output=4.5' % dim1)
+
+Flow('lays','lay1 lay2 lay3 lay4','cat axis=2 ${SOURCES[1:4]}')
+graph = 'graph min1=2.5 max1=7.5 min2=0 max2=5 yreverse=y wantaxis=n wanttitle=n scalebar=y'
+
+Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
+Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
+
+
+Flow('vel',None,'math %s %s output="1.5+0.36*x1+0.36*x2" | transp' % (dim1,dim2))
+Plot('vel',
+     '''
+     grey color=j allpos=y bias=1.5 min2=2.5 max2=7.5 min1=0 max1=5
+     title="Baina Model" scalebar=y barreverse=y
+     ''')
+
+Result('baina','vel lays0 lays1','Overlay')
+
+End()

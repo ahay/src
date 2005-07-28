@@ -1,0 +1,143 @@
+from rsfproj import *
+
+Fetch('mona.img','imgs')
+Flow('mona','mona.img','byte2rsf n1=512 n2=513')
+Result('mona',
+       '''
+       grey transp=n allpos=y title="Mona Lisa"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
+for rect in [10,20,30,40,50,60,70,80]:
+    mona = 'mona%d' % rect
+    Flow(mona,'mona','impl2 rect1=%d rect2=%d tau=1' % (rect,rect))
+    Plot(mona,
+         '''grey transp=n allpos=y
+         title="Mona Lisa %d" color=b screenratio=1''' % rect)
+
+for rect in ['','80']:
+    Result('mgrad'+rect,'mona'+rect,
+           '''
+           grad2 |
+           grey allpos=y title="Gradient Magnitude" transp=n screenratio=1
+           ''')
+    Result('medge'+rect,'mona'+rect,
+           '''
+           canny | dd type=float | 
+           grey allpos=y title="Edge Detector" transp=n screenratio=1
+           ''')
+
+Flow('monas','mona','smooth rect1=12 rect2=12')
+Flow('gradx','monas','igrad square=y')
+Flow('grady','monas','transp | igrad square=y | transp')
+Flow('monag','gradx grady','add ${SOURCES[1]} | smooth rect1=12 rect2=12')
+
+Plot('monag','grey transp=n allpos=y title="Smoothed Gradient" color=b screenratio=1')
+
+mclip = 1.5
+
+Flow('monap','monag','math output="1+12/(1+input/%g)" | dd type=int' % mclip)
+Flow('monat','mona monap',
+     '''
+     nsmooth rect1=${SOURCES[1]} rect2=${SOURCES[1]} |
+     nsmooth rect1=${SOURCES[1]} rect2=${SOURCES[1]}
+     ''')
+
+Result('monat',
+       '''
+       grey transp=n allpos=y title="Nonstationary Smoothing"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
+Result('monap',
+       '''
+       dd type=float |
+       grey transp=n allpos=y title="Mona Lisa"
+       color=j wantscalebar=y pclip=100
+       ''')
+
+Flow('monad','mona','smooth rect1=7 rect2=7 | smooth rect1=7 rect2=7')
+
+Result('monad',
+       '''
+       grey transp=n allpos=y title="Stationary Smoothing"
+       color=b screenratio=1 wantaxis=n
+       ''')
+
+Flow('one',None,'spike n1=30 mag=2')
+Flow('two',None,'spike n1=30')
+Flow('spk',['one','two'],
+     'cat axis=1 ${SOURCES[1]} ${SOURCES[0]} ${SOURCES[1]}')
+Flow('noi',None,'spike n1=120 mag=0 | noise var=0.001 seed=2005 | bandpass fhi=60')
+Flow('sig',['spk','noi'],'add ${SOURCES[1]}')
+Plot('sig','graph title=Signal min2=0.8 max2=2.2')
+
+for rect in [5,10,20,40,80]:
+    sig = 'sig%d' % rect
+    Flow(sig,'sig','impl1 rect1=%d' % rect)
+    Plot(sig,'graph title="Smooth %d" ' % rect)
+
+Flow('grad','sig','igrad square=y')
+clip = 5.8868e-05
+for rect in [5,10,20,40,80]:
+    smo = 'smo%d' % rect
+    smoo = 'smoo%d' % rect
+    Flow(smo,'grad',
+         '''
+         scale dscale=%g | smooth rect1=%d |
+         math output="sqrt(1+%d/(1+input))" | dd type=int
+         ''' % (1/clip,rect,rect*rect))
+    Flow(smoo,['sig',smo],
+         '''
+         nsmooth rect1=${SOURCES[1]} |
+         nsmooth rect1=${SOURCES[1]} |
+         nsmooth rect1=${SOURCES[1]} |
+         nsmooth rect1=${SOURCES[1]} |
+         nsmooth rect1=${SOURCES[1]}
+         ''')
+
+clip = 0.00279991 # mean value
+
+Flow('parab','sig',
+     '''
+     smooth rect1=6 | igrad square=y | smooth rect1=6 |
+     math output="1+6/(1+input/%g)" | dd type=int
+     ''' % clip)
+
+Flow('smoo','sig parab',
+     'nsmooth rect1=${SOURCES[1]} | nsmooth rect1=${SOURCES[1]}')
+Plot('smoo','graph title=Smoothed min2=0.8 max2=2.2')
+
+Result('smoo','sig smoo','SideBySideAniso')
+
+Flow('sig2','sig','window n1=60')
+Plot('sig2','graph title=Signal min2=0.8 max2=2.2')
+
+clip2 = 0.00183378
+
+Flow('parab2','sig2',
+     '''
+     smooth rect1=6 | igrad square=y | smooth rect1=6 |
+     math output="1+6/(1+input/%g)" | dd type=int
+     ''' % clip2)
+
+Flow('smoo2','sig2 parab2',
+     'nsmooth rect1=${SOURCES[1]} | nsmooth rect1=${SOURCES[1]}')
+Plot('smoo2','graph title=Smoothed min2=0.8 max2=2.2')
+
+Result('smoo2','sig2 smoo2','SideBySideAniso')
+
+Flow('circle',None,
+     '''
+     math n1=201 n2=201 d1=1 d2=1 o1=-100 o2=-100 output="sqrt(x1*x1+x2*x2)" |
+     mask max=75 | dd type=float | math output=input+1
+     ''')
+Plot('circle','grey color=j allpos=y wanttitle=n screenratio=1',view=1)
+
+Flow('ecircle','circle',
+     'canny min=98 max=99 | dd type=float | add mode=p $SOURCE')
+Result('ecircle','grey allpos=y wanttitle=n screenratio=1')
+      
+############################################################################
+
+End()

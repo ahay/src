@@ -1,0 +1,179 @@
+\append{NORMAL MOVEOUT BEYOND THE NIP THEOREM}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In this Appendix, we derive equations that relate traveltime
+derivatives of the reflected wave, evaluated at the zero offset point,
+and traveltime derivatives of the direct wave, evaluated in the
+vicinity of the zero-offset ray. Such a relationship for second-order
+derivatives is known as the NIP (normal incidence point) theorem
+\cite[]{chergr,hubkrey,GEO48-08-10511062}. Its extension to high-order
+derivatives is described by \cite{fomel}.
+
+Reflection traveltime in any type of model can be considered as a
+function of the source and receiver locations $s$ and $r$ and the
+location of the reflection point $x$, as follows:
+\begin{equation}
+t(y,h) = F\left(y,h,x(y,h)\right)\;,
+\label{eqn:ttsum}
+\end{equation}
+where $y$ is the midpoint $\left(y = {{s + r} \over 2}\right)$, $h$ is
+the half-offset $\left(h = {{r - s} \over 2}\right)$, and the
+function $F$ has a natural decomposition into two parts corresponding
+to the incident and reflected rays:
+\begin{equation}
+F(y,h,x) = T(y-h,x) + T(y+h,x)\;,
+\label{eqn:f2t}
+\end{equation}
+where $T$ is the traveltime of the direct wave. Clearly, at the
+zero-offset point,
+\begin{equation}
+t(y,0) = 2 T(y,x)\;,
+\label{eqn:2t2t0}
+\end{equation}
+where $x=x(y,0)$ corresponds to the reflection point of the
+zero-offset ray.
+
+Differentiating equation (\ref{eqn:ttsum}) with respect to the half-offset
+$h$ and applying the chain rule, we obtain
+\begin{equation}
+{{\partial t} \over {\partial h}} = {{\partial F} \over {\partial h}}
++ {{\partial F} \over {\partial x}}\,{{\partial x} \over {\partial h}}\;.
+\label{eqn:ttp}
+\end{equation}
+According to Fermat's principle, one of the
+fundamental principles of ray theory, the ray
+trajectory of the reflected wave corresponds to an
+extremum value of the traveltime. Parameterizing
+the trajectory in terms of the reflection point
+location $x$ and assuming that $F$ is a smooth
+function of $x$, we can write Fermat's principle
+in the form 
+\begin{equation}
+{{\partial F} \over {\partial x}} = 0\;.
+\label{eqn:ferma}
+\end{equation}
+Equation (\ref{eqn:ferma}) must be satisfied for any values of $x$ and
+$h$. Substituting this equation into equation (\ref{eqn:ttp}) leads to the
+equation
+\begin{equation}
+{{\partial t} \over {\partial h}} = {{\partial F} \over {\partial h}}\;.
+\label{eqn:tp1}
+\end{equation}
+
+Differentiating (\ref{eqn:tp1}) again with respect to $h$, we arrive at the
+equation 
+\begin{equation}
+{{\partial^2 t} \over {\partial h^2}} = 
+{{\partial^2 F} \over {\partial h^2}} +
+{{\partial^2 F} \over {\partial h\,\partial x}}\,
+{{\partial x} \over {\partial h}}\;.
+\label{eqn:tpp}
+\end{equation}
+Interchanging the source and receiver locations doesn't change the
+reflection point position (the principle of reciprocity). Therefore,
+$x$ is an even function of the offset $h$, and we can simplify equation
+(\ref{eqn:tpp}) at zero offset, as follows:
+\begin{equation}
+\left.{{\partial^2 t} \over {\partial h^2}}\right|_{h=0} = 
+\left.{{\partial^2 F} \over {\partial h^2}}\right|_{h=0}\;.
+\label{eqn:tpp1}
+\end{equation}
+Substituting the expression for the function $F$ (\ref{eqn:f2t}) into
+(\ref{eqn:tpp1}) leads to the equation
+\begin{equation}
+\left.{{\partial^2 t} \over {\partial h^2}}\right|_{h=0} = 
+2\,{{\partial^2 T} \over {\partial y^2}}\;,
+\label{eqn:tpp2}
+\end{equation}
+which is the mathematical formulation of the NIP theorem. It proves
+that the second-order derivative of the reflection traveltime with
+respect to the offset is equal, at zero offset, to the second
+derivative of the direct wave traveltime for the wave propagating from
+the incidence point of the zero-offset ray. One immediate conclusion
+from the NIP theorem is that the short-spread normal moveout velocity,
+connected with the derivative in the left-hand-side of equation
+(\ref{eqn:tpp2}) can depend on the reflector dip but doesn't depend on
+the curvature of the reflector. Our derivation up to this point has
+followed the derivation suggested by \cite{chergr}.
+
+Differentiating equation (\ref{eqn:tpp}) twice with respect to $h$ evaluates,
+with the help of the chain rule, the fourth-order derivative, as
+follows:
+\begin{equation}
+{{\partial^4 t} \over {\partial h^4}}  = 
+{{\partial^4 F} \over {\partial h^4}} +
+3\,{{\partial^4 F} \over {\partial h^3\,\partial x}}\,
+{{\partial x} \over {\partial h}} +
+3\,{{\partial^4 F} \over {\partial h^2\,\partial x^2}}\,
+\left({{\partial x} \over {\partial h}}\right)^2 +
+3\,{{\partial^4 F} \over {\partial h\,\partial x^3}}\,
+\left({{\partial x} \over {\partial h}}\right)^3 + 
+\nonumber 
+\end{equation}
+\begin{equation}
+ +  3\,{{\partial^3 F} \over {\partial h^2\,\partial x}}\,
+{{\partial^2 x} \over {\partial h^2}} +
+3\,{{\partial^3 F} \over {\partial h\,\partial x^2}}\,
+{{\partial^2 x} \over {\partial h^2}}\,
+{{\partial x} \over {\partial h}} +
+{{\partial^2 F} \over {\partial h\,\partial x}}\,
+{{\partial^3 x} \over {\partial h^3}}\;.
+\label{eqn:tp4}
+\end{equation}
+Again, we can apply the principle of reciprocity to eliminate the
+odd-order derivatives of $x$ in equation (\ref{eqn:tp4}) at the zero
+offset. The resultant expression has the form
+\begin{equation}
+\left.{{\partial^4 t} \over {\partial h^4}}\right|_{h=0} = 
+\left.\left({{\partial^4 F} \over {\partial h^4}} +
+3\,{{\partial^3 F} \over {\partial h^2\,\partial x}}\,
+{{\partial^2 x} \over {\partial h^2}}\right)\right|_{h=0}.
+\label{eqn:tp41}
+\end{equation}
+In order to determine the unknown second derivative of the reflection
+point location ${{\partial^2 x} \over {\partial h^2}}$, we
+differentiate Fermat's equation (\ref{eqn:ferma}) twice, obtaining
+\begin{equation}
+{{\partial^3 F} \over {\partial^2 h\,\partial x}} + 
+2\,{{\partial^3 F} \over {\partial h\,\partial x}}\,
+{{\partial x} \over {\partial h}} +
+{{\partial^3 F} \over {\partial^3 x}}\,
+\left({{\partial x} \over {\partial h}}\right)^2 +
+{{\partial^2 F} \over {\partial^2 x}}\,
+{{\partial^2 x} \over {\partial h^2}} = 0\;.
+\label{eqn:ferma2}
+\end{equation}
+Simplifying this equation at zero offset, we can solve it for the
+second derivative of $x$. The solution has the form
+\begin{equation}
+\left.{{\partial^2 x} \over {\partial h^2}}\right|_{h=0} = 
+- \left[\left({{\partial^2 F} \over {\partial^2 x}}\right)^{-1}\,
+{{\partial^3 F} \over {\partial^2 h\,\partial x}}\right]_{h=0}\;.
+\label{eqn:dxdh}
+\end{equation}
+Here we neglect the case of ${{\partial^2 F} \over {\partial^2 x}} =
+0$, which corresponds to a focusing of the reflected rays at the
+surface.  Finally, substituting expression (\ref{eqn:dxdh}) into (\ref{eqn:tp41})
+and recalling the definition of the $F$ function
+from (\ref{eqn:f2t}), we obtain
+the equation
+\begin{equation}
+\left.{{\partial^4 t} \over {\partial h^4}}\right|_{h=0}  = 
+2\,{{\partial^4 T} \over {\partial y^4}}-
+6\,\left({{\partial^2 T} \over {\partial x^2}}\right)^{-1}\,
+\left({{\partial^3 T} \over {\partial y^2\,\partial x}}\right)^2\;,
+\label{eqn:tp42} 
+\end{equation}
+which is the same as equation (\ref{eqn:NIP4}) in the main
+text. Higher-order derivatives can be expressed in an analogous way
+with a set of recursive algebraic functions \cite[]{fomel}.
+
+In the derivation of equations (\ref{eqn:tpp2}) and (\ref{eqn:tp42}),
+we have used Fermat's principle, the principle of reciprocity, and the
+rules of calculus. Both these equations remain valid in anisotropic
+media as well as in heterogeneous media, providing that the traveltime
+function is smooth and that focusing of the reflected rays doesn't
+occur at the surface of observation.
+
+
+
+

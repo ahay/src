@@ -1,0 +1,7 @@
+from rsfproj import *
+
+Result('dc', None,'dc',prefix=plprefix)
+Result('dcretard',None,'dcretard',prefix=plprefix)
+
+
+End()

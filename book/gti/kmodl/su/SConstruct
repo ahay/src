@@ -1,0 +1,45 @@
+from rsfproj import *
+
+import math
+###########################################################################
+
+Flow('test',None,
+     '''
+     spike mag=2 n1=301 d1=0.01 o1=1 | 
+     kirmod nt=101 dt=0.04 vel=2 ns=101 ds=0.05 s0=0 nh=1 dh=0.05 h0=0 |
+     window
+     ''')
+Result('test','grey title=Test')
+
+# examples from SU/src/demos/Making_Data/ShotGathers/*SingleShot
+
+for dip in [0,20,40,60]:
+    mod = 'dip%d' % dip
+    ref = 'ref%d' % dip
+    kir = 'kir%d' % dip
+    slp = 'slp%d' % dip
+    Flow(slp,None,'spike n1=1001 d1=0.004 mag=%g' % math.tan(math.pi*dip/180.))
+    Flow(ref,slp,'math output="1+x1*input" ')
+    Flow(mod,ref,'unif2 n1=101 d1=0.05 v00=1,2')
+    Plot(mod,
+           '''
+           grey label1="Depth (km)" label2="Lateral (km)"
+           title="%d-degree Model"
+           color=j allpos=y bias=1 Xscreenratio=1.25 Xscalebar=y
+           Xbarlabel="Velocity (km/s)"
+           ''' % dip)
+    Flow(kir,[ref,slp],
+         '''
+         kirmod nt=750 dt=0.008 vel=2 ns=1 nh=101 h0=0.05 dh=0.05
+         dip=${SOURCES[1]}
+         ''')
+    Plot(kir,
+         '''
+         grey pclip=99.9 max1=4 title="Shot Gather"
+         label1="Time (s)" label2="Offset (km)"
+         ''')
+    Result(mod,[mod,kir],'SideBySideAniso')
+
+############################################################################
+
+End()

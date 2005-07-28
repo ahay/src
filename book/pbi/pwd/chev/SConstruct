@@ -1,0 +1,83 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('chev230.HH','chevron',private)
+Flow('chev230','chev230.HH','dd form=native | bandpass fhi=45')
+
+grey3 = '''
+byte | grey3 frame1=30 frame2=450 frame3=150
+flat=1 point1=0.4 point2=0.5 title=Input
+'''
+
+Flow('chev2d','chev230','window n3=1 f3=100 max1=3 max2=40000')
+Plot('chev2d','grey title=Input')
+
+Flow('chev3d','chev230',
+     '''
+     sed s/41.01/0.04101/ | sed s/ft/kft/ |
+     sed s/25995./25.995/ | sed s/33788./33.788/ |
+     window max1=3
+     ''')
+Result('chev3d','byte | grey3 flat=y frame3=100 frame2=450 frame1=230 ')
+
+Flow('dip3d','chev3d',
+     'dip rect1=10 rect2=10 rect3=10 w1=501 p1=1 memsize=150')
+
+Flow('dip2d','chev2d','dip rect1=10 rect2=10')
+Plot('dip2d','grey color=j scalebar=y title=Dip')
+
+Result('chev2d','chev2d dip2d','SideBySideAniso')
+
+Flow('flt2d','chev2d dip2d','flat dip=${SOURCES[1]}')
+Plot('flt2d','grey title=Flattened')
+
+Result('flt2d','chev2d flt2d','SideBySideAniso')
+
+Flow('chev','chev3d','window n1=100 f1=200 n2=450 n3=450')
+Result('chev',grey3)
+
+Flow('chev3','chev','window n2=200 n3=200 f2=150 f3=100')
+Result('chev3',
+       '''
+       byte gainpanel=75 | grey3 frame1=52 frame2=150 frame3=75
+       flat=1 point1=0.4 point2=0.5 title=Input
+       ''')
+Flow('dip3','chev3','dip rect1=10 rect2=10 rect3=10 w1=100 p1=1 memsize=200')
+Flow('dip31','dip3','window n4=1')
+Flow('dip32','dip3','window f4=1')
+Flow('flt3','chev3 dip31 dip32',
+     '''
+     flat3 idip=${SOURCES[1]} xdip=${SOURCES[2]} ref2=150 ref3=75
+     ''')
+Result('flt3',
+       '''
+       byte gainpanel=75 | grey3 frame1=52 frame2=150 frame3=75
+       flat=1 point1=0.4 point2=0.5 title=Flattened
+       ''')
+Result('dip31',
+       '''
+       byte gainpanel=all | grey3 frame1=52 frame2=150 frame3=75
+       flat=1 point1=0.4 point2=0.5 title="Inline Dip" color=j
+       ''')
+Result('dip32',
+       '''
+       byte gainpanel=all | grey3 frame1=52 frame2=150 frame3=75
+       flat=1 point1=0.4 point2=0.5 title="Crossline Dip" color=j
+       ''')
+
+Flow('dip','chev','dip rect1=10 rect2=10 rect3=10 w1=100 p1=1 memsize=200')
+Flow('dip1','dip','window n4=1')
+Flow('dip2','dip','window f4=1')
+
+Result('dip1',grey3 + ' color=j title="Inline Dip" ')
+Result('dip2',grey3 + ' color=j title="Crossline Dip" ')
+
+Flow('flt','chev dip1 dip2',
+     'flat3 idip=${SOURCES[1]} xdip=${SOURCES[2]} ref2=225 ref3=335')
+Result('flt',grey3 + ' title=Flattened')
+
+End()

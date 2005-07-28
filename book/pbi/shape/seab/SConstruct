@@ -1,0 +1,80 @@
+from rsfproj import *
+
+Fetch('apr18.h','seab')
+
+Flow('data','apr18.h','dd form=native')
+Flow('depth','data',
+     "window n1=1 f1=2 | math output='(2978-input)/387' ")
+
+def interp(prog):
+    return prog + ' nx=160 ny=160 xkey=0 ykey=1 head=${SOURCES[1]}' 
+def grey(title):
+    return '''
+    grey crowd=0.82 clip=0.8 labelsz=12 titlesz=14 transp=n yreverse=n
+    title='%s'
+    ''' % title
+
+Flow('bin',['depth','data'],interp('bin'))
+Plot('bin',grey('Binned'))
+
+Flow('fill',['depth','data','bin'],
+     interp(
+    'shapebin filt1=10 niter=400 nliter=2 gauss=y pattern=${SOURCES[2]}'))
+Plot('fill',grey('Filled'))
+
+Flow('miss','bin',
+     '''pad n1=300 n2=300 beg1=70 beg2=70 |
+     miss2 filt1=10 niter=200 eps=0 shape=y  |
+     window n1=160 n2=160 f1=70 f2=70
+     ''')
+Plot('miss',grey('Filled'))
+
+misses = []
+for iter in range(1,101):
+    miss = 'shape%d' % iter
+    Flow(miss,['depth','data','bin'],
+         interp('''
+         shapebin filt1=10 niter=%d nliter=2 gauss=y pattern=${SOURCES[2]}
+         ''' % iter))
+    Plot(miss,grey('niter=%d' % iter))
+    misses.append(miss)
+Plot('shape',misses,'Movie')
+
+misses = []
+for iter in range(1,21):
+    miss = 'miss%d' % iter
+    Flow(miss,'bin','miss2 filt1=10 niter=%d force=n eps=0.2 shape=y' % iter)
+    Plot(miss,grey('niter=%d' % iter))
+    misses.append(miss)
+Plot('movie',misses,'Movie')
+
+Result('fill',['bin','fill'],'SideBySideAniso')
+Result('miss',['bin','miss'],'SideBySideAniso')
+
+for inp in ['bin','fill']:
+    spec = 'spec-' + inp
+    spec2 = 'spec2-' + inp
+    Flow(spec,inp,'spectra2 | pad n2=161')
+    Flow(spec2,spec,
+         '''
+         monof2 verb=y a0=0.001 c0=0.001 ma=/dev/null nliter=2
+         ''')
+
+    title = {spec:'Actual Spectrum',
+             spec2:'Model Spectrum'}
+    for sp in [spec,spec2]:
+        mirror = sp + '-mirror'
+        Flow(mirror,sp,
+             'window f1=1 | reverse which=3 | cat axis=1 $SOURCE')
+        Plot(sp,mirror,
+         '''
+         grey color=j allpos=y clip=2 transp=n title='%s'
+         label1='X Wavenumber (1/m)' label2='Y Wavenumber (1/m)'
+         ''' % title[sp])
+    Result(spec,[spec,spec2],'SideBySideAniso')
+
+###########################################################################
+
+End()
+
+# 	$Id: SConstruct 691 2004-07-04 19:28:08Z fomels $	

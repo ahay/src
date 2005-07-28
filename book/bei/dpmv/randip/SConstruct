@@ -1,0 +1,7 @@
+from rsfproj import *
+
+for case in ('cmp','csp'):
+    Plot(case, None,case,prefix=plprefix)
+Result('randip','csp cmp','SideBySideAniso')
+
+End()

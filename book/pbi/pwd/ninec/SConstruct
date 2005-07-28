@@ -1,0 +1,39 @@
+from rsfproj import *
+
+for case in ('P','X','Y','Z'):
+    sgy = 'rec_gather_%s.sgy' % case
+    Fetch(sgy,'ninec')
+    Flow([case,'./h'+case,'./b'+case,'t'+case],sgy,
+         '''
+         segyread tape=$SOURCE hfile=${TARGETS[1]}
+         bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         ''',stdin=0)
+    bin='bin'+case
+    offset = 'offset'+case
+    Flow(offset,'t'+case,'dd type=float | headermath output=sy-gy')
+    Flow(bin,[case,offset],
+         '''
+         transp |
+         bin1 head=${SOURCES[1]} x0=-2500 nx=101 dx=50 interp=2 |
+         transp
+         ''')
+    Result(bin,'grey title="%s component" ' % case)
+    scan='scan'+case
+    Flow(scan,bin,'vscan v0=500 dv=25 nv=100 semblance=y half=n')
+    Result(scan,
+           '''
+           grey color=j
+           label2="Velocity (m/s)" title="%s Velocity Scan"
+           allpos=y
+           ''' % case)
+    
+Flow('nmo','binP','nmostretch half=n v0=1500')
+Result('nmo','grey title="NMO" ')
+Result('bnmo','nmo','bandpass flo=20 | grey title="NMO+Bandpass" ')
+
+Flow('lmo','binP','lmostretch half=n delay=0 v0=1500')
+Result('lmo','grey title="LMO" ')
+Result('lnmo','lmo','bandpass flo=20 | grey title="LMO+Bandpass" ')
+
+
+End()

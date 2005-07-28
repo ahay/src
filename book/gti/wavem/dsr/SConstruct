@@ -1,0 +1,142 @@
+from rsfproj import *
+
+plot = "grey label1='Time (s)' label2='Lateral (km)' "
+
+################### Impulses ######################################
+
+Flow('impuls',None,
+     '''
+     spike n1=129 n2=400 d1=1 d2=1 nsp=1 k1=100 k2=128 |
+     bandpass flo=0.05 fhi=0.3 | transp |
+     bandpass fhi=0.3 | transp
+     ''')
+Flow('impuls2',None,
+     '''
+     spike n1=129 n3=256 n2=100 d1=1 d2=1 d3=1 nsp=1 k1=100 k3=122 k2=42 |
+     bandpass flo=0.05 fhi=0.3 | transp | bandpass fhi=0.3 | transp |
+     transp plane=13 | bandpass fhi=0.3 | transp plane=13
+     ''')
+
+##################### Models #####################################
+
+Flow('const',None,'spike n1=129 n2=256 d1=1 d2=1 mag=2')
+Flow(['wall','one','two'],None,
+     '''
+     spike n1=129 n2=80  d1=1 d2=1 mag=4 > ${TARGETS[1]} &&
+     spike n1=129 n2=176 d1=1 d2=1 mag=2 > ${TARGETS[2]} &&
+     cat axis=2 ${TARGETS[1]} ${TARGETS[2]}
+     ''')
+Flow('noise','const',
+     '''
+     spike n1=129 n2=256 d1=1 d2=1 mag=200 nsp=1 k1=100 k2=80 |
+     add $SOURCE
+     ''',stdin=0)
+Flow('vofz','const','math output="1+0.01*x1" ')
+Flow('vofx','const','math output="1+0.01*x2" ')
+Flow('vofx2','const','math output="1+0.01*x2*(1+0.001*x2)" ')
+Flow('vofx3','const','math output="1/sqrt(1-0.00375*x2)" ')
+
+def gauss(r=25,a=1,c1=64,c2=199):
+    return '''
+    math output="input+%g*exp(-((x1-%g)^2+(x2-%g)^2)/(%g^2))"
+    ''' % (a,c1,c2,r)
+
+Flow('pgauss',None,
+     'spike n1=129 n2=400 d1=1 d2=1 mag=2 | ' + gauss(c1=33))
+Flow('mgauss',None,
+     'spike n1=129 n2=400 d1=1 d2=1 mag=2 | ' + gauss(c1=33,a=-1))
+
+for mod in ('const','wall','noise',
+            'vofz','vofx','vofx2','vofx3',
+            'pgauss','mgauss'):
+    trav = mod + '-trav'
+    trav1 = mod + '-trav1'
+    trav2 = mod + '-trav2'
+    Plot(trav,mod,
+              '''
+              eikonal yshot=127 | window n2=256 |
+              contour nc=1 c0=49.5 plotcol=2 plotfat=3 wanttitle=n wantaxis=n
+              ''')
+    Flow(trav1,mod,'eikonal yshot=80')
+    Flow(trav2,mod,'eikonal yshot=160')
+    Plot(trav2,[trav1,trav2],
+              '''
+              add ${SOURCES[1]} | window n2=256 |
+              contour nc=1 c0=99 plotcol=2 plotfat=3 wanttitle=n wantaxis=n
+              ''')
+
+    # Depth migration by Gazdag
+    vz = mod + '-vz'
+    phase = mod + '-phase'
+    Flow(vz,mod,'stack')
+    Flow(phase,['impuls',vz],
+         '''
+         cosft sign2=1 |
+         gazdag inv=0 velocity=${SOURCES[1]} eps=1 depth=y |
+         cosft sign2=-1 | window n2=256
+         ''')
+    Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+    Result(phase,[phase,trav],'Overlay')
+
+    # Time migration by Gazdag
+    vz = mod + '-vt'
+    phase = mod + '-phase0'
+    Flow(vz,mod,'depth2time velocity=$SOURCE | stack')
+    Flow(phase,['impuls',vz,mod],
+         '''
+         cosft sign2=1 |
+         gazdag inv=0 velocity=${SOURCES[1]} eps=1 depth=n |
+         cosft sign2=-1 | window n2=256 |
+         time2depth velocity=${SOURCES[2]}
+         ''')
+    Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+    Result(phase,[phase,trav],'Overlay')
+
+# Depth migration by split-step
+#    phase = mod + '-sstep'
+#    Flow(phase,['impuls',mod],
+#              'window n2=256 | sstep1 eps=1 velocity=${SOURCES[1]}')    
+#    Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+#    Result(phase,[phase,trav],'Overlay')
+
+    # Time migration by DSR
+    vz = mod + '-vt'
+    phase = mod + '-phase1'
+    Flow(phase,['impuls2',vz,mod],
+         '''
+         cosft sign2=1 sign3=1 |
+         dsr inv=0 velocity=${SOURCES[1]} eps=1 depth=n | window | 
+         cosft sign2=-1 | window n2=256 |
+         time2depth velocity=${SOURCES[2]} twoway=n
+         ''')
+    Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+    Result(phase,[phase,trav],'Overlay')
+
+    # Depth migration by DSR
+    phase = mod + '-phase2'
+    vz = mod + '-vz'
+    Flow(phase,['impuls2',vz],
+         '''
+         cosft sign2=1 sign3=1 |
+         dsr inv=0 velocity=${SOURCES[1]} depth=y eps=1 | window |
+         cosft sign2=-1
+         ''')
+    Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+    Result(phase,[phase,trav2],'Overlay')
+
+
+# Prestack Stolt migration
+phase = 'const-stolt'
+trav2 = 'const-trav2'
+Flow(phase,'impuls2',
+     'cosft sign2=1 sign3=1 | prestolt vel=2 | cosft sign2=-1')
+Plot(phase,plot + 'label1="Depth (km)" wanttitle=n')
+Result(phase,[phase,trav2],'Overlay')
+
+grad = {
+    'vofx3':-0.00375,
+    'vofx':-0.00272
+    }
+
+###########################################################################
+End()

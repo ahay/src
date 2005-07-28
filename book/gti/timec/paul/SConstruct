@@ -1,0 +1,40 @@
+from rsfproj import *
+
+Fetch('vel.cc.HH','paul')
+
+Flow('vel','vel.cc.HH','dd form=native')
+Plot('vel','grey color=j bias=800 pclip=100 scalebar=n wanttitle=n')
+
+def graph(title,col=7,fat=1):
+    return '''
+    graph
+    min2=-3000 max2=5995
+    min1=0 max1=7495
+    plotcol=%d plotfat=%d transp=1
+    wantaxis=n wheretitle=b whersexlabel=t
+    yreverse=y 
+    title="%s"
+    ''' % (col,fat,title)
+
+Flow('rays2','vel','rays2 nr=10000 nt=4000 dt=0.001 yshot=-1000')
+Plot('wrays2','rays2','window j2=50 |' + graph('Rays'))
+Plot('wfronts2','rays2','window j1=100 | transp |' + graph('Wavefronts'))
+Plot('brays2','rays2','window j2=50 |' + graph('Rays',0,7))
+Plot('bfronts2','rays2','window j1=100 | transp |' + graph('Wavefronts',0,7))
+
+Plot('rays2','vel brays2 wrays2','Overlay')
+Plot('fronts2','vel bfronts2 wfronts2','Overlay')
+Result('paul','rays2 fronts2','SideBySideIso')
+
+Flow('x',None,'math o1=1000 n1=4000 d1=1 output=x1')
+Flow('plane','x','math output=0 | cat axis=2 $SOURCE | transp')
+Flow('prays2',['vel','plane'],
+     'rays2 shotfile=${SOURCES[1]} nr=1 a0=-180 nt=4000 dt=0.001')
+
+Plot('prays2','window j3=100 |' + graph('Rays'))
+Plot('pfronts2','prays2','window j1=100 | transp |' + graph('Wavefronts'))
+
+Result('paul-prays2','vel prays2','Overlay')
+Result('paul-pfronts2','vel pfronts2','Overlay')
+
+End()

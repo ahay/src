@@ -1,0 +1,23 @@
+from rsfproj import *
+
+Fetch(['marmrefl.hh','marmvel.hh'],'marm')
+
+Result('shot','marmrefl.hh',
+       '''
+       dd form=native |
+       window n3=1 min3=6000 |
+       grey title='Marmousi Shot Gather'
+       label1="Time (s)" label2="Offset (m)"
+       ''')
+
+Result('model','marmvel.hh',
+       '''
+       dd form=native |
+       grey title="Marmousi Model" allpos=y
+       bias=1000 label1="Depth (m)" label2="Lateral (m)" pclip=100
+       screenht=3.75 screenwd=11.5 titlesz=5 labelsz=4
+       ''')
+
+###########################################################################
+
+End()

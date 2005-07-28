@@ -1,0 +1,141 @@
+from rsfproj import *
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+par = {
+    'nx1':300, 'dx1':5, 'ox1':0,'x1min':0,'x1max':1500,'x1sou':750,
+    'nx2':400, 'dx2':5, 'ox2':0,'x2min':0,'x2max':2000,'x2sou':1000,
+    'nq1':201, 'dq1':5, 'oq1':250,
+    'nq2':201, 'dq2':5, 'oq2':500,
+    'nt' :201, 'dt' :0.003, 'ot':0,
+    'ng' :721, 'og' :-90, 'dg':0.5
+    }
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+# define the 'X' and 'Q' spaces
+Flow('xspace',None,
+     '''
+     spike nsp=1 mag=0
+           n1=%(nx1)d o1=%(ox1)g d1=%(dx1)g
+           n2=%(nx2)d o2=%(ox2)g d2=%(dx2)g
+     ''' % par)
+Flow('qspace',None,
+     '''
+     spike nsp=1 mag=0
+           n1=%(nq1)d o1=%(oq1)g d1=%(dq1)g
+           n2=%(nq2)d o2=%(oq2)g d2=%(dq2)g
+     ''' % par)
+# ------------------------------------------------------------
+Flow('velo','xspace','add add=1000')
+# ------------------------------------------------------------
+# define Riemannian coordinate systems: x2(q1,q2) , x1(q1,q2)
+
+# Cartesian coordinates
+Flow('cart1','qspace', 'math output="x1"' )
+Flow('cart2','qspace', 'math output="x2"' )
+
+# Ray coordinates
+Flow('ray','velo',
+     '''
+     hwt2d verb=n xsou=%(x2sou)g zsou=%(x1sou)g
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
+     ''' % par)
+Flow('rays2','ray','window f2=20 | real')
+Flow('rays1','ray','window f2=20 | imag')
+
+# ------------------------------------------------------------
+# rotation
+def rot1(r1=200,o1=200,o2=200,a=0,p1=200,p2=200):
+    return '''
+    math z=${SOURCES[0]} x=${SOURCES[1]}
+    output=" %g+sqrt((z-%g)^2+(x-%g)^2) * sin(-(%g) + atan((z-%g)/(x-%g)) )"
+    ''' %(r1,o1,o2,a,p1,p2)
+def rot2(r2=200,o1=200,o2=200,a=0,p1=200,p2=200):
+    return '''
+    math z=${SOURCES[0]} x=${SOURCES[1]}
+    output=" %g+sqrt((z-%g)^2+(x-%g)^2) * cos(-(%g) + atan((z-%g)/(x-%g)) )"
+    ''' %(r2,o1,o2,a,p1,p2)
+# ------------------------------------------------------------
+# anisotropy
+def ani1(p=750,k=1.0,o=750):
+    return 'math output="%g + %g * (input - %g)"' % (p,k,o)
+def ani2(p=1000,k=1.0,o=1000):
+    return 'math output="%g + %g * (input - %g)"' % (p,k,o)
+# ------------------------------------------------------------
+# coordinates
+for cos in ('cart','rays'):
+    Flow(cos,[cos+'2',cos+'1'],'cmplx ${SOURCES[0]} ${SOURCES[1]}')
+
+for cos in ('vticart','vtirays'):
+    vt1 = cos[3:] + 'v1'
+    vt2 = cos[3:] + 'v2'
+    Flow(vt1,[cos[3:]+'1'],ani1(k=0.75))
+    Flow(vt2,[cos[3:]+'2'],ani2(k=1.25))
+    Flow(cos,[vt2,vt1],'cmplx ${SOURCES[0]} ${SOURCES[1]}')
+
+for cos in ('tticart','ttirays'):
+    ro1 = cos[3:] + 'r1'
+    ro2 = cos[3:] + 'r2'
+    Flow(ro1,[cos[3:]+'1',cos[3:]+'2'],rot1(a=0.45))
+    Flow(ro2,[cos[3:]+'1',cos[3:]+'2'],rot2(a=0.45))
+    
+    ar1 = ro1 + 'a'
+    ar2 = ro2 + 'a'
+    Flow(ar1,[ro1],ani1(k=0.75))
+    Flow(ar2,[ro2],ani2(k=1.25))
+    
+    tt1 = ar1 + 't'
+    tt2 = ar2 + 't'
+    Flow(tt1,[ar1,ar2],rot1(a=-0.45))
+    Flow(tt2,[ar1,ar2],rot2(a=-0.45))
+    Flow(cos,[tt2,tt1],'cmplx ${SOURCES[0]} ${SOURCES[1]}')
+
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+for cos in (
+            'cart','vticart','tticart',
+            'rays','vtirays','ttirays'
+            ):
+    # rays + wavefronts
+    Plot(cos+'w',cos,
+         '''
+         window j2=10 |
+         graph labelrot=n yreverse=y title=" " plotcol=2 wantaxis=y grid=y
+         min1=%(x2min)g max1=%(x2max)g min2=%(x1min)g max2=%(x1max)g
+         ''' % par)
+    Plot(cos+'r',cos,
+         '''
+         transp | 
+         window j2=10 |
+         graph labelrot=n yreverse=y title=" " plotcol=1 wantaxis=n
+         min1=%(x2min)g max1=%(x2max)g min2=%(x1min)g max2=%(x1max)g
+         ''' % par)
+    Result(cos,[cos+'w',cos+'r'],'Overlay')
+
+    # compute metric tensor
+    Flow('g'+cos,cos,'rwemete2d')
+
+    # plot metric tensor
+    g11 = cos + "g11"
+    g12 = cos + "g12"
+    g21 = cos + "g21"
+    g22 = cos + "g22"
+    ggg = cos + "ggg"
+    k=-1;
+    for i in range(2):
+        for j in range(2):
+            k=k+1;
+            gxx = cos + 'g' + str(i+1)+str(j+1);
+            Plot(gxx,'g'+cos,
+                 '''
+                 window n3=1 f3=%d |
+                 grey labelrot=n title=%s
+                 pclip=99 scalebar=y color=j 
+                 ''' % (k,gxx[4:]) )
+
+    Result(ggg,[g11,g12,g21,g22],'SideBySideAniso')
+
+
+
+End()

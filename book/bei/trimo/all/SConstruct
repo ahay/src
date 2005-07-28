@@ -1,0 +1,20 @@
+from rsfproj import *
+
+Flow('dense',None,
+     '''
+     spike n1=140 n2=500 nsp=3 k1=10,70,110 d1=0.012 d2=0.004 |
+     nmostretch inv=y v0=1.5 half=n
+     ''')
+Plot('dense','dense','grey crowd2=0.96 crowd1=0.80 pclip=100')
+
+Flow('sparse','dense','put n2=50 n3=10 | stack norm=no')
+Plot('sparse',
+     '''
+     dots gaineach=0 dots=0 seemean=1 strings=1 constsep=1 transp=1
+     title=" " label1=" " connect=3 overlap=5.0
+     ''')
+
+Result('oversamp','dense sparse','SideBySideAniso')
+
+End()
+

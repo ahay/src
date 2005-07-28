@@ -1,0 +1,130 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('mig16.sgy','hongliu',private)
+
+Flow(['zeng','./hzeng','./bzeng','tzeng'],'mig16.sgy',
+     '''
+     segyread tape=$SOURCE hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+     tfile=${TARGETS[3]}
+     ''',stdin=0)
+Flow('zeng3','zeng tzeng','intbin head=${SOURCES[1]} yk=cdp')
+Flow('bin3','zeng3','byte')
+
+Result('zeng3','bin3',
+       '''
+       grey3 flat=n frame1=563 frame2=251 frame3=401 point1=0.8
+       title="Tiger Shoal"
+       ''')
+
+Flow('zeng2','zeng3','window n3=1 f3=401')
+Plot('zeng2','grey wanttitle=n')
+Plot('bef2','zeng2','bandpass fhi=60 | grey wanttitle=n min1=1 max1=3')
+
+Flow('dip2','zeng2','dip rect1=10 rect2=20')
+Plot('dip2','grey color=j scalebar=y title=Dip')
+
+Result('zeng2','zeng2 dip2','SideBySideAniso')
+
+Flow('zeng0','zeng2','window min1=1 max1=2 min2=1200 max2=1300')
+
+shifts = []
+focuss = []
+for a in range(-90,91,2):
+    shift = 'shift%d' % a
+    focus = 'focus%d' % a
+    shifts.append(shift)
+    focuss.append(focus)
+    Flow(shift,'zeng0','envelope hilb=y phase=%d' % a)
+    Flow(focus,shift,'focus rect1=100 rect2=10')
+
+cat = 'cat ${SOURCES[1:%d]} | put o3=-90 d3=2' % len(shifts)
+    
+Flow('zshift',shifts,cat)
+Flow('zfocus',focuss,cat)
+
+Flow('zpick','zfocus','math output=1/input | transp plane=23 | blindpick rect1=10 rect2=10 | window')
+Flow('zslice','zshift zpick','transp plane=23 | slice pick=${SOURCES[1]} | window')
+
+Flow('zslice2','zslice','envelope hilb=y phase=90')
+
+Flow('flat2','zeng2 dip2','flat i0=125 dip=${SOURCES[1]}')
+Plot('flat2','grey title=Flattened')
+Plot('aft2','flat2','bandpass fhi=60 | grey title=Flattened min1=1 max1=3')
+
+Result('zflt2','zeng2 flat2','SideBySideAniso')
+Result('zba2','bef2 aft2','SideBySideAniso')
+
+Flow('sep','zeng3',
+     'window n1=100 min1=1.5 n2=100 min2=1350.00 n3=100 min3=890')
+Flow('sdip','sep','dip rect1=5 rect2=5 rect3=5')
+Flow('sdip1','sdip','window n4=1')
+Flow('sdip2','sdip','window f4=1')
+
+Flow('sflt','sep sdip1 sdip2',
+     'flat3 idip=${SOURCES[1]} xdip=${SOURCES[2]} ref2=50 ref3=50')
+
+Result('sep',
+     '''
+     byte | grey3 frame1=50 frame2=50 frame3=50
+     title=Input
+     ''')
+
+Result('sflt',
+     '''
+     byte | grey3 frame1=50 frame2=50 frame3=50
+     title=Flattened
+     ''')
+
+Flow('win','zeng3',
+     'window min2=1460 min3=700 min1=1 max1=2.5')
+Flow('win2','win','window n2=1 min2=1587')
+
+Result('zwin2','win2','grey title=Slice')
+
+def grey3(title):
+    return '''
+    byte gainpanel=all | transp plane=23 |
+    grey3 frame1=150 frame3=120 frame2=200 title="%s"
+    point2=0.75 flat=n
+    ''' % title
+
+Result('zwin3','win',grey3('Input'))
+
+Flow('wdip','win','dip rect1=5 rect2=5 rect3=5 memsize=1000 verb=y')
+Flow('wdip1','wdip','window n4=1')
+Flow('wdip2','wdip','window f4=1')
+
+Flow('wflt','win wdip1 wdip2',
+     'flat3 idip=${SOURCES[1]} xdip=${SOURCES[2]} ref3=150 ref2=40')
+
+Result('zflt','wflt',grey3('Flattened'))
+
+Flow('vgdip2','win2','dip rect1=5 rect2=5')
+
+for niter in [1,2,5,10]:
+    vg = 'vangogh%d' % niter
+    mt = 'monet%d' % niter
+    wt = 'weight%d' % niter
+    
+    Flow([vg,wt],'win2  vgdip2',
+         '''
+         pwdsigk dips=${SOURCES[1]} weight=${TARGETS[1]}
+         verb=y nliter=%d niter=50 eps=0
+         ''' % niter)
+    Flow(mt,[vg,'win2'],'add scale=1,-1 ${SOURCES[1]}')
+
+    Plot(vg,'grey title="Structure Enhanced (%d)" clip=9179' % niter)
+    Plot(mt,'grey title="Residual" clip=9179')
+    if niter > 1:
+        Plot(wt,'envelope | grey allpos=y title="Edge Detection (%d)" ' % niter)
+
+    Result(vg,[vg,mt],'SideBySideAniso')
+
+Result('vgweight','weight2 weight10','SideBySideAniso')
+
+End()

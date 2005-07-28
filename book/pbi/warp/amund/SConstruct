@@ -1,0 +1,41 @@
+from rsfproj import *
+
+import string
+
+mod = {
+    'z' :  (   5, 340, 405, 430, 500, 525, 960,1173,1186,1458,1547,1567),
+    'vp':  (1550,1600,1700,1900,1700,2000,1800,2000,2538,2252,2309,2400,2600),
+    'vs':  (  75, 250, 325, 420, 370, 500, 450, 700,1250,1200,1414,1570,1570),
+    'rho': (1800,1850,1870,1950,1830,2100,1980,2000,2100,2160,1950,2150,2250)
+    }
+
+for file in mod.keys():
+    Flow('./'+file+'0',None,
+         'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
+         (string.join(map(str,mod[file]),' '),len(mod[file])))
+    Flow(file,file+'0','dd form=native')
+
+Flow('dat','z vp vs rho',
+     '''
+     modrefl vp=${SOURCES[1]} vs=${SOURCES[2]} rho=${SOURCES[3]}
+     nt=5000 dt=0.004
+     ''')
+Flow('pp','dat','window n2=1 | ricker1 freq=0.04')
+Flow('ps','dat','window f2=1 | ricker1 freq=0.02')
+
+graph = 'graph plotfat=10 label1="Time (s)" wanttitle=n labelsz=10 label2=%s'
+
+Plot('pp',graph % 'PP')
+Plot('ps',graph % 'PS')
+Result('adat','pp ps','OverUnderAniso')
+
+grey = '''
+grey transp=n label1=' ' wherexlabel=b wheretitle=t
+labelsz=18 titlesz=18 wantaxis2=n crowd1=0.9 title="%s"
+'''
+
+Plot('gpp','pp',grey % 'PP')
+Plot('gps','ps',grey % 'PS')
+Result('agdat','gpp gps','OverUnderAniso')
+
+End()

@@ -1,0 +1,63 @@
+from rsfproj import *
+
+input = {
+    'amp': 'MK_Cube1_SCVA_3d_Horizon_Amp.segy',
+    'only': 'MK_Cube1_SCVA_3d_Horizon_only_Amp.segy'
+    }
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for case in input.keys():
+    Fetch(input[case],'wmao',private)
+    data = 'd'+case
+    Flow([data,'./b'+case,'./h'+case,'t'+case],input[case],
+         '''
+         segyread tape=$SOURCE verbose=y tfile=${TARGETS[3]}
+         bfile=${TARGETS[1]} hfile=${TARGETS[2]}
+         ''',stdin=0)
+    Flow(case,data,'put n2=150 n3=45')
+
+Flow('wind','only','window f1=750 n1=1000')
+
+Flow('smoo','wind',
+     '''
+     mask max=10000 | dd type=float |
+     add mode=p $SOURCE | scale axis=3 | smooth rect1=10     
+     ''')
+Flow('hdip','wind smoo',
+     '''
+     smooth rect1=3 |
+     dip rect1=3 rect2=10 rect3=10 memsize=500 mask=${SOURCES[1]} |
+     pad n1=2001 beg1=750
+     ''')
+
+Flow('wdip1','hdip smoo',
+     'window f1=750 n1=1000 n4=1 | add mode=p ${SOURCES[1]}')
+Flow('wdip2','hdip smoo',
+     'window f1=750 n1=1000 f4=1 | add mode=p ${SOURCES[1]}')
+
+Result('wind',
+       '''
+       byte pclip=100 allpos=y |
+       grey3 flat=n frame1=500 frame2=100 frame3=20
+       title=Input point2=0.75
+       ''')
+
+Result('wdip1',
+       '''
+       byte gainpanel=all pclip=100 |
+       grey3 flat=n frame1=500 frame2=100 frame3=20
+       title="Inline Dip" point2=0.75
+       ''')
+
+Result('wdip2',
+       '''
+       byte gainpanel=all pclip=100 |
+       grey3 flat=n frame1=500 frame2=100 frame3=20
+       title="Crossline Dip" point2=0.75
+       ''')
+    
+End()

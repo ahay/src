@@ -1,0 +1,30 @@
+from rsfproj import *
+import string
+
+for case in ('bourgeois','campion','cvx'):
+    segy = 'guad_%s_segy.sgy' % case
+    Fetch(segy,'guad')
+    Flow(case,segy,
+         '''
+         segyread read=data tape=$SOURCE > $TARGET &&
+         echo n2=200 n3=200 >> $TARGET
+         ''',stdin=0,stdout=-1)
+    Result(case,
+           '''
+           byte gainpanel=all allpos=y bias=3500 |
+           grey3 flat=n frame1=100 frame2=100 frame3=100
+           color=j title="%s Acoustic Impedance" point2=0.75
+           label1="Time (s)" label2="In-line" label3="Cross-line"
+           ''' % string.capitalize(case))
+    for freq in (30, 62.5):
+        refl = 'refl%d-%s' % (int(freq),case)
+        Flow(refl,case,'ai2refl | ricker1 freq=%g' % (freq/384.61507)) 
+        Result(refl,
+               '''
+               byte gainpanel=all |
+               grey3 flat=n frame1=100 frame2=100 frame3=100
+               color=G title="%s Convolution Model, %g Hz" point2=0.75
+               label1="Time (s)" label2="In-line" label3="Cross-line"
+               ''' % (string.capitalize(case),freq))
+
+End()

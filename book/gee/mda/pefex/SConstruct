@@ -1,0 +1,57 @@
+from rsfproj import *
+
+dat = {'shot':'gomshot.h','offset':'gomnearoffset.H'}
+
+for case in dat.keys():
+    Fetch(dat[case],'gom')
+    Flow(case,dat[case],'dd form=native')
+
+def showdat(title,max1,f2=1,flip=''):
+    return '''
+     window min1=1.8 max1=%g max2=10000 f2=%d | %s
+     grey  crowd=0.85 pclip=99 tpow=1 label1="Time(s)" label2="Offset(ft)"
+     title="%s"
+     ''' % (max1,f2,flip,title)
+
+Flow('mask','shot','math output=1 | mutter half=n v0=4800 tp=1.6')
+
+for filt in range(2):
+    pef = 'pef%d' % filt
+    lag = 'lag%d' % filt
+    decon = 'decon%d' % filt
+    data = 'shot' + str(filt)
+    Flow([pef,lag],['shot','mask'],
+         'pef a=%s maskin=${SOURCES[1]} lag=${TARGETS[1]}' %
+         ['30,1','20,5'][filt])
+    Flow(decon,['shot',pef],'helicon filt=${SOURCES[1]}')
+    Plot(decon,showdat('PEF*Data',2.8+filt,f2=1+3*filt))
+    Plot(data,'shot',showdat('Data',2.8+filt,flip='reverse which=2 |'))
+    Result(decon,[data,decon],'SideBySideAniso')
+
+def showspec(title):
+    return '''
+    spectra all=y |
+    graph title="%s" crowd1=0.85
+    label1="Frequency(Hz)" label2="Amplitude"
+    wheretitle=bot wherexlabel=top
+    ''' % title
+
+Plot('specdat','shot',showspec('Spectrum Data'))
+Plot('specdecon','decon0',showspec('Spectrum PEF*Data'))
+Result('specdecon','specdat specdecon','OverUnderAniso')
+
+def showdat(title):
+    return '''
+    window f2=10 f1=10 |
+    grey crowd1=0.85  crowd2=0.8 label1="Time(s)" label2="X(ft)" title="%s"
+    ''' % title
+
+Flow(['zofpef','zoflag'],'offset',
+     'window max3=6000 | pef a=10,2 lag=${TARGETS[1]}')
+Flow('zofdecon',['offset','zofpef'],'helicon filt=${SOURCES[1]}')
+Plot('zof','offset',showdat('Data'))
+Plot('zofdecon',showdat('10x2 PEF * Data'))
+Result('zof','zof zofdecon','OverUnderAniso')
+
+###########################################################################
+End()

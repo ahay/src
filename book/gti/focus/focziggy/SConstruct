@@ -1,0 +1,144 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import zomig
+
+def showdat(title):
+    return '''
+    grey labelrot=n
+    label1="t (s)" label2="x (ft)" title="%s"
+    ''' % title
+def igrey(custom):
+    return '''
+    grey labelrot=n title=" " %s
+    ''' % (custom)
+# ------------------------------------------------------------
+par = {
+    'nz':1600,'dz':10,  'oz':0000, 
+    'nx':500, 'dx':150, 'ox':10925,
+    'nt':1000,
+    'nw':700, 'jw':1, 'ow':3,
+#    
+    'verb':'y',
+    'eps':0.01,
+    'nrmax':5,
+    'dtmax':0.00005,
+#
+    'tmx':32, 
+    'tmy':0,
+    'pmx':32,
+    'pmy':0
+    }
+# ------------------------------------------------------------
+
+# zero offset data
+Fetch('zoff.hh','sigsbee')
+Flow  ('zof','zoff.hh','dd form=native')
+Plot  ('zof','zof',showdat('Data'))
+Result('zof','zof',showdat('Data'))
+
+# dip
+Flow  ('dip','zof','dip verb=y order=3 rect1=5 rect2=20 liter=100')
+Result('dip',
+       showdat('Dominant Dip') + ' color=j scalebar=y')
+
+# ------------------------------------------------------------
+# PWD
+# ------------------------------------------------------------
+# diffractions
+Flow  ('dec','zof dip','pwd order=3 dip=${SOURCES[1]}')
+Plot  ('dec',showdat('Residual'))
+Result('dec',showdat('Residual'))
+
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# van Gogh
+# ------------------------------------------------------------
+Flow('dwg','zof dip',
+     'pwdsigk dips=${SOURCES[1]} verb=y eps=5 niter=1000 nliter=3')
+Result('dwg',showdat('Structure Enhanced'))
+
+Flow  ('dns','zof dwg','add scale=1,-1 ${SOURCES[1]}')
+Result('dns',showdat('Diffractions Enhanced'))
+# ------------------------------------------------------------
+
+
+
+
+# data (frequency)
+Flow('frq','dec',
+     '''
+     pad end1=%(nt)d |
+     fft1 |
+     window min1=%(ow)g n1=%(nw)d j1=%(jw)d |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label1=x label2=y label3=w
+     ''' % par)
+
+# velocity & slowness
+Flow('vel',None,
+     '''
+     spike nsp=1 mag=4500
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     ''' % par)
+Flow('slo','vel',
+     '''
+     window |
+     math "output=1/input" |
+     transp | spray axis=2 n=1 o=0 d=1 |
+     put label1=x label2=y label3=z
+     ''')
+
+# migration
+zomig.image('img','slo','frq',par)
+
+# ------------------------------------------------------------
+# LOOP over velocities
+f = 0.05
+n = 20
+for k in range(n):
+    scale = 1+(n/2-k)*f
+#    print k,scale
+    
+    slo = 'slo' + str(k)
+    Flow(slo,['slo'],'math output="input*%g"' % scale)
+
+    img = 'img' + str(k)
+    zomig.image(img,slo,'frq',par)
+
+    foc = 'foc' + str(k)
+    Flow(foc,img,'window | transp | focus rect1=150 rect2=50')
+# ------------------------------------------------------------
+
+allimg = map(lambda x: 'img%d' % x,range(n))
+Flow('timg',allimg,
+      '''
+       cat ${SOURCES[:%d]} axis=2 space=n |
+       transp plane=23 | transp plane=12
+       ''' % len(allimg))
+
+Result('timg',allimg,
+       '''
+       cat ${SOURCES[:%d]} axis=2 space=n |
+       transp plane=23 | transp plane=12 |
+       ''' % len(allimg)
+       + igrey('gainpanel=a pclip=99 ')
+       , stdin=0)
+
+allfoc = map(lambda x: 'foc%d' % x,range(n))
+Flow('tfoc',allfoc,
+      '''
+       cat ${SOURCES[:%d]} axis=3 space=n
+       ''' % len(allfoc))
+
+Result('tfoc',allfoc,
+       '''
+       cat ${SOURCES[:%d]} axis=3 space=n | 
+       ''' % len(allfoc)
+       + igrey('gainpanel=a pclip=100 color=j allpos=y')
+       ,stdin=0)
+
+End()

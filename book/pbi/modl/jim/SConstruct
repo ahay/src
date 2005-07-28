@@ -1,0 +1,455 @@
+#
+# Make a deep-water channel model
+#
+# James W. Jennings Jr.
+# Research Scientist
+# 
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+# 
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+# 
+# May 2005
+#
+
+#
+# Setting up
+#
+
+from math import pi
+import os, string
+from rsfproj import *
+
+# Authentication for the private data server
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+#
+# Grid specification
+#
+# Set these parameters to obtain the desired grid.
+#
+# This SConstruct version interpolates 15 2D arrays of channel position
+# and skew from Mathematica-exported files to your desired grid.  The original
+# files were generated in Mathematica on the following grid:
+#
+#     n1=181         d1=30          o1=0          
+#     n2=101         d2=30          o2=0          
+#
+# The Mathematica grid spans 0 <= x <= 5400 and 0 <= y <= 3000.  Your
+# grid should be within this range to avoid extrapolation on the edges.
+#
+# Future versions of this SConstruct may generate position and skew
+# internally, avoiding the interpolation-extrapolation issue.
+#
+# Vertically, the channels range from about -20, the bottom of the first 
+# channel surface, to 90, the top of last channel surface.  You can choose
+# any vertical grid.  Choosing a grid smaller than the channel range will
+# produce a grid that clips some of the channels.  Choosing a larger grid
+# will generate extra "pad" volume above or below the channels.
+#
+
+# Array sizes
+
+nx =  360   
+ny =  200
+nz =  150
+
+# Cell sizes
+
+dx =  15
+dy =  15
+dz =   1
+
+# Axis origin
+
+ox =   0          
+oy =   0          
+oz = -40
+
+#
+# Amalgamated sand geometrical properties 
+#
+
+# width at channel bottom
+# fraction of channel top width
+as_width   = 0.8
+
+# lateral shift at abs(skew)=1 (channel max bend)
+# fraction of channel top width
+as_shift   = 0.8
+
+# height at skew=0 (channel inflection)
+# fraction of channel depth
+as_height0 = 0.5
+
+# height at abs(skew)=1 (channel max bend)
+# fraction of channel depth
+as_height1 = 0.8
+
+# cross-section shape factor
+# =1 parabolic, >1 more blunt, <1 more pointy
+as_shape   = 1.2   
+
+#
+# Bar drape geometrical properties 
+#
+
+# bar drape profile depth
+# fraction of basic channel depth
+bd_depth  =  0.8
+
+# bar drape profile z shift
+# fraction of basic channel depth, positive is down
+bd_zshift = -0.15
+
+#
+# Margin drape geometrical properties 
+#
+
+# margin drape profile depth
+# fraction of basic channel depth
+md_depth  =  1.2
+
+# margin drape profile z shift
+# fraction of basic channel depth, positive is down
+md_zshift =  0.1
+
+#
+# Sand fraction parameters 
+#
+
+# sand fraction in the bypass drape
+bd_sand = 0.3
+
+# sand fraction in the margin drape
+md_sand = 0.2
+
+# sand fraction in the amalgamated sand
+as_sand = 1.0
+
+# sand fraction in non-amalgamated sand at channel top
+na_sand0 = 0.4
+
+# sand fraction in non-amalgamated sand just outside the amalgamated sand
+na_sand1 = 0.9
+
+# Get data from the data server
+
+Fetch('props.dat','jim',private)
+
+#
+# Put the channel properties table into an RSF file
+#
+
+# define a builder to convert props.dat format to RSF
+def get_props(target=None,source=None,env=None):
+    inp = open(str(source[0]),'r')
+    file = str(target[0])
+    out = open(file,'w')
+    lines = inp.readlines()
+    lines.pop(0) # remove the first line
+    for line in lines:
+        # get all fields except the first one
+        out.write(string.join(line.split()[1:],' ')+'\n')
+    out.write('''
+              n1=4 d1=1 o1=1
+              n2=%d d2=1 o2=1
+              esize=0 in=%s data_format=ascii_float
+              ''' % (len(lines),file))
+    out.close()
+    inp.close()
+
+Props = Builder(action=Action(get_props),src_suffix='.dat',suffix='.asc')
+env = Environment(BUILDERS={'Props':Props})
+
+env.Props('props')
+
+Flow ('props','props.asc','dd form=native')
+
+#
+# Get the channel properties out of a table
+#
+
+Flow ('depth_list'  ,'props','window f1=0 n1=1')
+Flow ('wtop_list'   ,'props','window f1=1 n1=1')
+Flow ('wbot_list'   ,'props','window f1=2 n1=1')
+Flow ('aggrade_list','props','window f1=3 n1=1')
+
+#
+# Put the channel properties into layer arrays
+#
+
+for prop in ('depth','wtop','wbot','aggrade'):
+    Flow (prop,prop+'_list',
+          '''
+          spray axis=2 n=%d d=%f o=%f | 
+          spray axis=3 n=%d d=%f o=%f |
+          transp plane=13
+          ''' % (ny,dy,oy,nx,dx,ox)
+         )
+
+#
+# Interpolate the position and skew layer arrays
+#
+
+for type in ('skew','pos'):
+    Fetch(type+'_data.rsf','jim',private) # get data from the data server
+    Flow (type,type+'_data',
+          '''
+          dd form=native |
+          remap1 n1=%d d1=%f o1=%f | transp plane=12 |
+          remap1 n1=%d d1=%f o1=%f | transp plane=12
+          ''' % (nx,dx,ox,ny,dy,oy)
+         )
+
+#
+# Make channel profile surfaces
+#
+
+Flow ('xleft','pos skew wtop wbot',
+      '''
+      math p=${SOURCES[0]} s=${SOURCES[1]} wt=${SOURCES[2]} wb=${SOURCES[3]} 
+      output="(2*p+s*(wt-wb)-wb)/((s+1)*(wt-wb))"
+      ''',stdin=0
+     )
+    
+Flow ('xrght','pos skew wtop wbot',
+      '''
+      math p=${SOURCES[0]} s=${SOURCES[1]} wt=${SOURCES[2]} wb=${SOURCES[3]} 
+      output="(2*p+s*(wt-wb)+wb)/((s-1)*(wt-wb))"
+      ''',stdin=0
+     )
+     
+prefix = ["ch_" ,"bd_"      ,"md_"]
+depthf = [ 1    , bd_depth  , md_depth]
+zshift = [ 0    , bd_zshift , md_zshift]
+
+for i in (0,1,2):
+    Flow (prefix[i]+'profiles','depth xleft xrght',
+          '''
+          math d=depth.rsf xl=xleft.rsf xr=xrght.rsf
+          output="d*(%g+%g*(tanh(%g*(xl-0.5))+tanh(%g*(xr-0.5)))/2)" |
+          clip2 upper=0
+          ''' % (zshift[i],depthf[i],pi,pi)
+         )
+
+Flow ('ch_surfaces','ch_profiles aggrade','add ${SOURCES[1]}')
+
+Flow ('bd_surfaces','bd_profiles ch_profiles aggrade',
+      '''
+      minmax mode=max file1=${SOURCES[0]} file2=${SOURCES[1]} |
+      add ${SOURCES[2]}
+      '''
+     )
+
+Flow ('md_surfaces','md_profiles ch_profiles aggrade',
+      '''
+      minmax mode=max file1=${SOURCES[0]} file2=${SOURCES[1]} |
+      add ${SOURCES[2]}
+      '''
+     )
+
+#
+# Erode the channel profile surfaces
+#
+
+Flow ('ch_erode','ch_surfaces',
+      '''
+      transp plane=13 | reverse which=1 | 
+      listminmax | 
+      reverse which=1 | transp plane=13
+      '''
+      )
+      
+Flow ('bd_surface_15','bd_surfaces','window f3=14 n3=1')
+Flow ('md_surface_15','md_surfaces','window f3=14 n3=1')
+
+Flow ('ch_erode_temp','ch_erode','window f3=1 n3=14')
+
+Flow ('bd_erode_temp','ch_erode_temp bd_surface_15',
+      'cat axis=3 ${SOURCES[1]}')
+
+Flow ('md_erode_temp','ch_erode_temp md_surface_15',
+      'cat axis=3 ${SOURCES[1]}')
+
+Flow ('bd_erode','bd_erode_temp bd_surfaces',
+      'minmax mode=min file1=${SOURCES[0]} file2=${SOURCES[1]}'
+     )
+
+Flow ('md_erode','md_erode_temp md_surfaces',
+      'minmax mode=min file1=${SOURCES[0]} file2=${SOURCES[1]}'
+     )
+
+#
+# Put channel properties into a regular grid
+#
+
+for prop in ('pos','skew','aggrade'):
+    Flow (prop+'_pad',prop,'pad beg3=1 o3=0')
+    Flow (prop+'_grid','ch_erode '+prop+'_pad',
+          '''
+          unif3 n1=%d d1=%f o1=%f layers=${SOURCES[1]} | 
+          transp plane=13 | transp plane=12
+          ''' % (nz,dz,oz)
+         )
+
+for prop in ('depth','wtop','bd_erode','md_erode'):
+    Flow (prop+'_pad' ,prop,'window f3=0 n3=1 | cat axis=3 ${SOURCES[0]}')
+    Flow (prop+'_grid','ch_erode '+prop+'_pad',
+          '''
+          unif3 n1=%d d1=%f o1=%f layers=${SOURCES[1]} | 
+          transp plane=13 | transp plane=12
+          ''' % (nz,dz,oz)
+         )
+
+#
+# Make layer indicator and above-layer-0 mask
+#
+
+Flow ('layer','ch_erode',
+      '''
+      unif3 n1=%d d1=%f o1=%f v00=0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15 |
+      transp plane=13 | transp plane=12
+      ''' % (nz,dz,oz)
+     )
+
+Flow ('layer_00_mask','layer','clip2 upper=1')
+
+#
+# Make channel region masks
+#
+
+Flow ('ch_mask','z_rel','mask max=-0.01 | dd type=float')
+
+Flow ('bd_mask','bd_erode_grid ch_mask',
+      '''
+      math surf=${SOURCES[0]} output="x3-surf" | 
+      mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
+      '''
+     )
+
+Flow ('md_mask','md_erode_grid ch_mask',
+      '''
+      math surf=${SOURCES[0]} output="x3-surf" | 
+      mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
+      '''
+     )
+
+Flow ('as_mask','sand_parm bd_mask md_mask',
+      '''
+      mask min=1 | dd type=float |
+      math bd=${SOURCES[1]} md=${SOURCES[2]} output="input*(1-bd)*(1-md)"
+      '''
+     )
+
+Flow ('na_mask','ch_mask bd_mask md_mask as_mask',
+      'add scale=1,-1,-1,-1 ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}'
+     )
+
+#
+# Make sand fraction grid
+#
+
+Flow ('z_rel','aggrade_grid depth_grid layer_00_mask',
+      '''
+      math a=${SOURCES[0]} d=${SOURCES[1]} m=${SOURCES[2]}
+      output="m*(x3-a)/d" |
+      clip2 upper=0
+      '''
+     )
+     
+Flow ('pos_shift','pos_grid wtop_grid skew_grid',
+      '''
+      math p=${SOURCES[0]} w=${SOURCES[1]} s=${SOURCES[2]}
+      output="p/w+%g*s/2"
+      ''' % (as_shift)
+     )
+     
+Flow ('as_height','skew_grid',
+      'math s=${SOURCES[0]} output="%g+%g*s"'
+      % (as_height0,as_height1-as_height0)
+     )
+     
+Flow ('sand_parm','pos_shift z_rel as_height',
+      '''
+      math x=${SOURCES[0]} z=${SOURCES[1]} h=${SOURCES[2]}
+      output="-z/(1-h+4^%g*h*(x^2/%g^2)^%g)"
+      ''' % (as_shape,as_width,as_shape)
+     )
+     
+Flow ('sand_parm_clip','sand_parm','clip2 upper=1')
+
+Flow ('sand','sand_parm_clip bd_mask md_mask as_mask na_mask',
+      '''
+      math p=${SOURCES[0]} 
+      bd=${SOURCES[1]} md=${SOURCES[2]} as=${SOURCES[3]} na=${SOURCES[4]}
+      output="bd*%g+md*%g+as*%g+na*(%g+%g*p)"
+      ''' % (bd_sand,md_sand,as_sand,na_sand0,na_sand1-na_sand0)
+     )
+     
+#
+# Make shale, porosity, and sonic properties
+#
+
+Flow ('shale','sand','math sand=${SOURCES[0]} output="1-sand"')
+
+Flow ('phi01','shale',
+      '''
+      math shale=${SOURCES[0]}
+      output="0.378-0.144*shale-0.0000262*(10000-7000)"
+      '''
+     )
+
+Flow ('rho01','phi01 shale',
+      '''
+      math phi=${SOURCES[0]} shale=${SOURCES[1]}
+      output="2.70-0.085*shale-1.75*phi"
+      '''
+     )
+
+Flow ('vp01','phi01 shale',
+      '''
+      math phi=${SOURCES[0]} shale=${SOURCES[1]}
+      output="4090-960*shale-4510*phi"
+      '''
+     )
+
+Flow ('vs01','vp01','math vp=${SOURCES[0]} output="-880+0.782*vp"')
+
+
+#
+# Make plots
+#
+
+bias = {
+        'sand':0,
+        'shale':0,
+        'phi01':0.1,
+        'rho01':2,
+        'vp01':2000,
+        'vs01':1000
+       }
+
+for cube in ('sand','shale','phi01','rho01','vp01','vs01'):
+    Result (cube,
+            '''
+            byte gainpanel=all allpos=y pclip=100 bias=%g |
+            grey3 title="%s" color=j frame1=180 frame2=100 frame3=75
+            ''' % (bias[cube],cube))
+
+#
+# End
+#
+
+End ()
+
+# $Id: SConstruct 514 2005-05-18 09:17:11Z jennings $

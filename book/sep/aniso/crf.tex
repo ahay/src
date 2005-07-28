@@ -1,0 +1,256 @@
+\section{CURVILINEAR REFLECTOR}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+Reflector curvature can also cause nonhyperbolic reflection moveout. 
+In isotropic media, local dip of the reflector influences the normal-moveout velocity, while reflector 
+curvature introduces nonhyperbolic moveout. When overlaying layer is also anisotropic, both hyperbolic and nonhyperbolic moveouts for reflections from curved reflectors also become 
+functions of the anisotropic parameters.
+
+\subsection{Curved reflector beneath isotropic medium}
+%%%%%%%%%%%%%%%%%%%%%%
+If the reflector has the shape of a dipping plane beneath a homogeneous
+isotropic medium, the reflection moveout in the dip direction is a hyperbola 
+\cite[]{GEO36-03-05100516}
+\begin{equation}
+t^2(l) = t_0^2 + {l^2 \over V_n^2}\;.
+\label{eqn:ttplane}
+\end{equation}
+Here 
+\begin{eqnarray}
+t_0 & = & {{2\,L} \over V_z}\;,
+\label{eqn:t0plane} \\
+V_n & = & {{V_z} \over {\cos{\alpha}}}\;, 
+\label{eqn:vnplane}
+\end{eqnarray}
+$L$ is the length of the zero-offset ray, and $\alpha$ is the
+reflector dip. Formula (\ref{eqn:ttplane}) is inaccurate if the
+reflector is both dipping and curved. The Taylor series expansion for
+moveout in this case has the form of equation
+(\ref{eqn:taylor}), with coefficients \cite[]{fomel}
+\begin{eqnarray}
+a_2 & = & {{\cos^2{\alpha}\,\sin^2{\alpha}\,G} 
+\over {4\,V_z^2\,L^2}}\;,
+\label{eqn:a2plane} \\
+a_3 & = & - {{\cos^2{\alpha}\,\sin^2{\alpha}\,G^2} 
+\over {16\,V_z^2\,L^4}}\,\left(\cos{2 \alpha} + \sin{2 \alpha}\,
+{{G\,K_3} \over {K_2^2\,L}}\right)\;,
+\label{eqn:a3plane}
+\end{eqnarray}
+where 
+\begin{equation}
+G={{K_2\,L} \over {1 + K_2\,L}}\;,
+\label{eqn:g}
+\end{equation}
+$K_2$ is the reflector curvature [defined by equation~(\ref{eqn:k2})]
+at the reflection point of the zero-offset ray, and $K_3$ is the
+third-order curvature [equation~(\ref{eqn:k3})]. If the reflector has
+an explicit representation $z=z(x)$, then the parameters in equations
+(\ref{eqn:a2plane}) and (\ref{eqn:a3plane}) are
+\begin{eqnarray}
+\tan{\alpha} & = & {{d z} \over {d x}}\;,
+\label{eqn:dip} \\
+L & = & {z \over {\cos{\alpha}}}\;,
+\label{eqn:l} \\
+K_2 & = & {{d^2 z} \over {d x^2}}\,\cos^3{\alpha}\;,
+\label{eqn:k2} \\
+K_3 & = & {{d^3 z} \over {d x^3}}\,\cos^4{\alpha} - 
+3\,K_2^2\,\tan{\alpha}\;.
+\label{eqn:k3}
+\end{eqnarray}
+\par
+Keeping only three terms in the Taylor series leads to the approximation
+\begin{equation}
+t^2(l) = t_0^2 + {l^2 \over V_n^2} + {{G\,l^4 \tan^2{\alpha}} \over 
+{V_n^2\,\left(V_n^2 t_0^2 + G\,l^2\right)}}\;,
+\label{eqn:CRapprox}
+\end{equation}
+where we included the denominator in the third term to ensure that the
+traveltime behavior at large offsets satisfies the obvious limit
+\begin{equation}
+\lim_{l \rightarrow \infty} t^2(l) = {l^2 \over V_z^2}\;.
+\label{eqn:CRlimit}
+\end{equation}
+As indicated by equation (\ref{eqn:k2}), the sign of the curvature $K_2$ is
+positive if the reflector is locally convex (i.e., an anticline-type). 
+The sign of $K_2$ is negative for concave, syncline-type reflectors. 
+%??? Am I correct saying that ? --
+Therefore, the coefficient $G$
+expressed by equation (\ref{eqn:g}) and, likewise, the nonhyperbolic term in
+(\ref{eqn:CRapprox}) can take both positive and negative values. This means
+that only for concave reflectors in homogeneous media do nonhyperbolic
+moveouts resemble those in VTI and vertically heterogeneous media.
+Convex surfaces produce nonhyperbolic moveout with the opposite sign.
+Clearly, equation (\ref{eqn:CRapprox}) is not accurate for strong
+negative curvatures $K_2 \approx -1 / L$, 
+%??? Is this correct? --
+which cause focusing of the
+reflected rays and triplications of the reflection traveltimes.
+\par
+In order to evaluate the accuracy of approximation (\ref{eqn:CRapprox}), we
+can compare it with the exact expression for a point diffractor, which 
+is formally a convex reflector with an
+infinite curvature. The exact expression for normal moveout 
+in the present notation is
+\begin{equation}
+t(l) = {{\sqrt{z^2 + {(z\,\tan{\alpha} - l/2)^2}} +
+\sqrt{z^2 + {(z\,\tan{\alpha} + l/2)^2}}} \over {V_z}}\;,
+\label{eqn:ttdiff}
+\end{equation}
+where $z$ is the depth of the diffractor, and $\alpha$ is the angle from 
+vertical of the
+zero-offset ray. Figure \ref{fig:nmoerr} shows the relative error of
+approximation (\ref{eqn:CRapprox}) as a function of the ray angle for
+offset $l$ twice the diffractor depth $z$. The
+maximum error of about 1\% occurs at $\alpha \approx 50^{\circ}$.
+We can expect equation (\ref{eqn:CRapprox}) to be even more accurate
+for reflectors with smaller curvatures.
+
+\plot{nmoerr}{height=2in}{Relative error $e$ of the
+nonhyperbolic moveout approximation~\protect(\ref{eqn:CRapprox}) for a 
+point diffractor. The error corresponds to offset $l$ twice the diffractor depth $z$ and is plotted against the angle from vertical $\alpha$ of
+the zero-offset ray.}
+%??? -- Am I right?
+%??? -- Remove the words ``Relative error'' from the plot.
+%??? -- Replace ``angle'' with ``$\alpha$''.
+%}
+
+\inputdir{XFig}
+
+\subsection{Curved reflector beneath homogeneous VTI medium} 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+For a dipping curved reflector in a homogeneous VTI medium,
+the ray trajectories of the incident and reflected waves are straight,
+but the location of the reflection point is no longer controlled by
+the isotropic laws. To obtain analytic expressions in this
+model, we use the theoremthat connects the derivatives of the
+common-midpoint traveltime with the derivatives of the one-way
+traveltimes for an imaginary wave originating at the reflection point
+of the zero-offset ray. This theorem, introduced for the
+second-order derivatives by \cite{chergr},
+is usually called the normal incidence point (NIP) theorem
+\cite[]{hubkrey,GEO48-08-10511062}. Although the original proof did not
+address anisotropy, it is applicable to anisotropic media because it is based
+on the fundamental Fermat's principle. The ``normal incidence'' point
+in anisotropic media is the point of incidence for the zero-offset ray
+(which is, in general, not normal to the reflector). In Appendix~A, we
+review the NIP theorem, as well as its extension to the high-order
+traveltime derivatives \cite[]{fomel}.
+\par
+Two important equations derived in Appendix~A are:
+\begin{eqnarray}
+\left.{{\partial^2 t} \over {\partial l^2}}\right|_{l=0} & = &
+\frac{1}{2}\,{{\partial^2 T} \over {\partial y^2}}\;,
+\label{eqn:NIP2} \\
+\left.{{\partial^4 t} \over {\partial l^4}}\right|_{l=0} & = &
+\frac{1}{8}\,{{\partial^4 T} \over {\partial y^4}}-
+\frac{3}{8}\,\left({{\partial^2 T} \over {\partial x^2}}\right)^{-1}\,
+\left({{\partial^3 T} \over {\partial y^2\,\partial x}}\right)^2\;,
+\label{eqn:NIP4} 
+\end{eqnarray}
+where $T(x,y)$ is the one-way traveltime of the direct wave propagating from
+the reflection point $x$ to the point $y$ at the surface $z=0$. All 
+derivatives in equations (\ref{eqn:NIP2}) and (\ref{eqn:NIP4}) are evaluated 
+at the zero-offset ray. Both equations are based
+solely on Fermat's principle and, therefore, remain valid in any type of
+media for reflectors of an arbitrary shape, assuming that the traveltimes
+possess the required order of smoothness. It is especially convenient
+to use equations (\ref{eqn:NIP2}) and (\ref{eqn:NIP4}) in 
+homogeneous media, where the direct traveltime $T$ can be expressed explicitly.
+\par
+To apply equations (\ref{eqn:NIP2}) and (\ref{eqn:NIP4}) in VTI
+media, we need to start with tracing the zero-offset ray. According to 
+Fermat's principle, the ray trajectory must correspond to an extremum of
+the traveltime. For the zero-offset ray, this simply means that the
+one-way traveltime $T$ satisfies the equation
+\begin{equation}
+{{\partial T} \over {\partial x}} = 0\;,
+\label{eqn:fermat0}
+\end{equation}
+where
+\begin{equation}
+T(x,y) = {\sqrt{z^2(x) + (x-y)^2} \over {V_g(\psi(x,y))}}\;.
+\label{eqn:defT}
+\end{equation}
+Here, the function $z(x)$ describes the reflector shape, and $\psi$ is the ray angle given by the trigonometric relationship 
+(Figure~\ref{fig:nmoray})
+\begin{equation}
+\cos{\psi(x,y)} = {z(x) \over \sqrt{z^2(x) + (x-y)^2}}\;.
+\label{eqn:defpsi}
+\end{equation}
+Substituting approximate equation (\ref{eqn:vgeta}) for the group velocity
+$V_g$ into equation (\ref{eqn:defT}) and linearizing it with respect to the
+anisotropic parameters $\delta$ and $\eta$, we can solve equation
+(\ref{eqn:fermat0}) for $y$, obtaining
+\begin{equation}
+y = x + z\,\tan{\alpha}\,(1 + 2\,\delta + 4\,\eta\,\sin^2{\alpha})
+\label{eqn:defy}
+\end{equation}
+or, in terms of $\psi$,
+\begin{equation}
+\tan{\psi} = \tan{\alpha}\,(1 + 2\,\delta + 4\,\eta\,\sin^2{\alpha})\;,
+\label{eqn:a2p}
+\end{equation}
+where $\alpha$ is the local dip of the reflector at the reflection
+point $x$. Equation (\ref{eqn:a2p}) shows that, in VTI media, the
+angle $\psi$ of the zero-offset ray differs from the reflector dip
+$\alpha$ (Figure~\ref{fig:nmoray}). As one might expect, the relative
+difference is approximately linear in Thomsen anisotropic parameters.
+
+\plot{nmoray}{height=4in}{Zero-offset reflection from a
+curved reflector beneath a VTI medium (a scheme). Note that the ray angle
+$\psi$ is not equal to the local reflector dip $\alpha$.}
+%??? -- Make the arcs for $\psi$ and $\alpha$ touch the straight lines.
+%??? -- Put the reflection point ON the reflector, not above it.}
+\par
+Now we can apply equation (\ref{eqn:NIP2}) to evaluate the second term of the
+Taylor series expansion (\ref{eqn:taylor}) for a curved
+reflector. The linearization in anisotropic parameters leads to the expression
+\begin{equation}
+a_1 = {1 \over V_n^2} = 
+{\cos^2{\alpha} \over {V_z^2\,
+\left(1 + 2\,\delta\,(1 + \sin^2{\alpha}) + 
+6\,\eta\,\sin^2{\alpha}\,(1+\cos^2{\alpha})\right)}}\;,
+\label{eqn:tsvan}
+\end{equation}
+which is equivalent to that derived by \cite{tsvan1995}. As in
+isotropic media, the normal-moveout velocity does not depend on the
+reflector curvature. Its dip dependence, however, is an important
+indicator of anisotropy, especially in areas of conflicting dips
+\cite[]{aktsvan}.  \par Finally, using equation (\ref{eqn:NIP4}), we
+determine the third coefficient of the Taylor series. After
+linearization in anisotropic parameters and lengthy algebra, the
+result takes the form
+\begin{equation}
+a_2 = {A \over {V_n^4\,t_0^2}}\;,
+\label{eqn:a2new}
+\end{equation}
+where
+\begin{eqnarray}
+A = G\,\tan^2{\alpha} + 
+2\,\delta\,G\,\sin^2{\alpha}\,(2 + \tan^2{\alpha} - G) -
+2\,\eta\,(1 - 4\,\sin^2{\alpha}) +
+\nonumber \\
++ 4\,\eta\,G\,\sin^2{\alpha}\,\left(
+6\,\cos^2{\alpha} + \sin^2{\alpha}\,(\tan^2{\alpha}-3\,G)\right)\;,
+\label{eqn:Anew}
+\end{eqnarray}
+and the coefficient $G$ is defined by equation (\ref{eqn:g}). For zero curvature (a plane reflector) $G = 0$, and
+the only term remaining in equation (\ref{eqn:Anew}) is
+\begin{equation}
+A = - 2\,\eta\,(1 - 4\,\sin^2{\alpha})\;.
+\label{eqn:zerog}
+\end{equation}
+If the reflector is curved, we can rewrite the
+isotropic equation (\ref{eqn:CRapprox}) in the form
+\begin{equation}
+t^2(l) = t_0^2 + {l^2 \over V_n^2} + {{A\,l^4} \over 
+{V_n^2\,\left(V_n^2 t_0^2 + G\,l^2\right)}}\;,
+\label{eqn:TICRapprox}
+\end{equation}
+where the normal-moveout velocity $V_n$ and the quantity $A$ are given by 
+equations~(\ref{eqn:tsvan}) and~(\ref{eqn:Anew}), respectively. 
+Equation~(\ref{eqn:TICRapprox}) approximates the nonhyperbolic moveout 
+in homogeneous VTI media above a curved reflector. For small
+curvature, the accuracy of this equation at finite offsets
+can be increased by modifying the denominator in the quartic term  similarly
+to that done by \cite{grektsvan} for VTI media.

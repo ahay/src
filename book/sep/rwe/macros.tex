@@ -1,0 +1,93 @@
+%\sepinput{mainmacros}
+
+% wavefield
+\def\W{\mathcal{U}}
+% laplacian
+\def\LAP{\Delta}
+\def\dd {\Delta}
+
+% partial derivatives
+\def\dtwo#1#2{  \frac{\partial^2 #1}{\partial #2^2}   }
+\def\done#1#2{  \frac{\partial   #1}{\partial #2  }   }
+\def\eone#1#2{  \frac{\partial   }  {\partial #2  } #1}
+\def\mtwo#1#2#3{\frac{\partial^2 #1}{\partial #2\partial #3}   }
+
+\def\z{z}
+\def\x{x}
+\def\y{y}
+\def\qz{\zeta}
+\def\qx{\xi}
+\def\qy{\eta}
+
+\def\kz{k_\qz}
+\def\kx{k_\qx}
+\def\ky{k_\qy}
+
+\def\xone{x_1}
+\def\xtwo{x_2}
+\def\xthr{x_3}
+\def\qone{\xi_1}
+\def\qtwo{\xi_2}
+\def\qthr{\xi_3}
+
+\def\DF#1#2{h_{#1#2}}
+%%\def\hxx{\DF{\qx}{\qx}}
+%%\def\hyy{\DF{\qy}{\qy}}
+%%\def\hzz{\DF{\qz}{\qz}}
+%%\def\hxy{\DF{\qx}{\qy}}
+
+\def\EE{E}
+\def\FF{F}
+\def\GG{G}
+\def\JJ{J}
+\def\AA{\alpha}
+
+\def\ww{\omega}
+\def\ss{s}
+\def\vv{v}
+
+\def\xvec{{\bf  x }}
+%%\def\qvec{{\bf  \xi }}
+\def\qvec{\boldsymbol \xi}
+
+\def\hxxdef{\xvec_{\qx} \cdot \xvec_{\qx}}
+\def\hyydef{\xvec_{\qy} \cdot \xvec_{\qy}}
+\def\hzzdef{\xvec_{\qz} \cdot \xvec_{\qz}}
+\def\hxydef{\xvec_{\qx} \cdot \xvec_{\qy}}
+
+\def\c{c}
+\def\cxx{\c_{\qx\qx}}
+\def\cx {\c_{\qx   }}
+\def\cyy{\c_{\qy\qy}}
+\def\cy {\c_{\qy   }}
+\def\czz{\c_{\qz\qz}}
+\def\cz {\c_{\qz   }}
+\def\cxy{\c_{\qx\qy}}
+
+\def\ko{\; k_o}
+\def\ofpo{ \lp \qz,\qx,\qy \rp}
+\def\ofzo{ \lp \z ,\x ,\y  \rp}
+
+% ray coordinates
+\def\g{\gamma}
+\def\t{\tau}
+\def\hgg{\DF{\g}{\g}}
+\def\htt{\DF{\t}{\t}}
+
+\def\ofto{ \lp \t ,\g \rp}
+\def\ctt{\c_{\t\t}}
+\def\ct {\c_{\t  }}
+\def\cgg{\c_{\g\g}}
+\def\cg {\c_{\g  }}
+
+\def\kt{k_\t}
+\def\kg{k_\g}
+
+% discretization
+\def\Wpo{\W^{\qx+1}_{\qz}}
+\def\Woo{\W^{\qx}  _{\qz}}
+\def\Wmo{\W^{\qx-1}_{\qz}}
+
+\def\Wp {\W^{\qx+1}_{\qz+1}}
+\def\Wo {\W^{\qx}  _{\qz+1}}
+\def\Wm {\W^{\qx-1}_{\qz+1}}

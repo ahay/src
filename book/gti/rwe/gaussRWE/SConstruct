@@ -1,0 +1,156 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import rweone, zomig
+
+par = {
+    'nz':500,  'dz':5,    'oz':0,     # CC axis 1
+    'nx':1400, 'dx':5,    'ox':-3500, # CC axis 2
+    'nt':700,  'dt':0.002,'ot':0,     # RC axis 1
+    'ng':1000, 'dg':5,    'og':-2500, # RC axis 2
+    'nT':2500, 'dT':0.004,'oT':0      # time
+    }
+par['xmin']=-2000
+par['xmax']=+2000
+par['zmin']=0
+par['zmax']=2500
+par['jwft']=30
+par['jray']=30
+# ------------------------------------------------------------
+# velocity
+Flow('vv',None,
+     '''
+     spike n1=%(nz)d o1=%(oz)g d1=%(dz)g |
+     math output=2000 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('va',None,
+     '''
+     spike nsp=2 mag=+3,-1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200,200 l1=300,300
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=400,800 l2=600,1000 |
+     smooth rect1=201 rect2=201 |
+     scale axis=123 |
+     scale rscale=800
+     ''' % par)
+Flow('vb',None,
+     '''
+     spike nsp=1 mag=+1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=150 l1=200
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=650 l2=750 |
+     smooth rect1=101 rect2=101 |
+     scale axis=123 |
+     scale rscale=-1000
+     ''' % par)
+Flow('vco','vv va',
+     '''
+     math
+     a=${SOURCES[0]}
+     b=${SOURCES[1]}
+     output="a+b"
+     ''')
+Flow('vel','vv va vb',
+     '''
+     math
+     a=${SOURCES[0]}
+     b=${SOURCES[1]}
+     c=${SOURCES[2]}
+     output="a+b+c"
+     ''')
+Flow('velCC','vel','transp | put label1=x label2=z')
+Flow('sloCC','velCC','math output="1/input" ')
+# ------------------------------------------------------------
+# coordinate system
+
+Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"'  % par)
+Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
+Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"'  % par)
+Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
+
+# wavefronts by HWT
+Flow('hwt','vco sou',
+     '''
+     hwtex verb=n sou=${SOURCES[1]}
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ''' % par)
+
+# coordinate system
+Flow('cos','hwt','window')
+# coordinate system overlay
+rweone.cos('cos',par)
+
+# coordinate system coefficients
+rweone.abm('abmRC','abrRC','sloCC','cos',par)
+
+Flow('aaRC','abmRC','window n3=1 f3=0')
+rweone.rcplot('aaRC','allpos=y bias=0.99',par)
+Flow('bbRC','abmRC','window n3=1 f3=1')
+rweone.rcplot('bbRC','allpos=y',par)
+Result('abmRC',['aaRC','bbRC'],'SideBySideAniso')
+
+
+# slowness
+rweone.ccplot('velCC','allpos=y bias=1050',par)
+Result('velCC',['velCC','cos'],'Overlay')
+# ------------------------------------------------------------
+
+# time data RC: (t,g)
+Flow('datRC',None,
+     '''
+     spike n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=200 |
+     ricker1 frequency=10 |
+     pad beg2=512 n2out=%(ng)d |
+     smooth rect2=7 |
+     put o2=%(og)g d2=%(dg)g label1=t label2=g
+     ''' % par )
+
+# frequency data RC: (g,w)
+rweone.freq('frqRC','datRC',30,1,10)
+
+# ------------------------------------------------------------
+for i in (['F15','F45','SSF','FFD','PSC']):
+#for i in (['F15','SSF']):
+    imgRC = 'imgRC' + '-' + i
+    imgCC = 'imgCC' + '-' + i
+
+    # image RC: (t,g)
+    rweone.imrc(imgRC,'frqRC','abmRC','abrRC',i,par)
+    rweone.rcplot(imgRC,'',par)
+#    Result(imgRC,imgRC,'Overlay')
+
+    # image CC: (z,x)
+    rweone.imcc(imgCC,imgRC,'cos',i,par)
+    rweone.ccplot(imgCC,'',par)
+
+    img = 'i' + i
+    Plot(img,[imgCC,'cos'],'Overlay')
+#    Result(imgCC,[imgCC,'cos'],'Overlay')
+    
+# ------------------------------------------------------------
+
+par['verb'] = 'y'
+par['eps'] = 0.01
+par['nrmax']=1
+par['dtmax']=0.0005
+
+Flow('sc','sloCC','spray axis=2 n=1')
+Flow('dc','frqRC','pad beg1=200 n1out=1400 | spray axis=2 n=1')
+
+zomig.image('ic','sc','dc',par)
+Flow('img','ic','window')
+rweone.ccplot('img','',par)
+
+# ------------------------------------------------------------
+
+# combined plots
+rweone.complot('RCall',
+               'aaRC',     'imgRC-F15','imgRC-F45',
+               'imgRC-SSF','imgRC-PSC','imgRC-FFD')
+
+rweone.complot('CCall',
+               'img', 'iF15','iF45',
+               'iSSF','iPSC','iFFD')
+
+# ------------------------------------------------------------
+
+End()

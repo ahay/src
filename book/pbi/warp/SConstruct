@@ -1,0 +1,5 @@
+from rsftex import *
+
+Paper('dummy')
+
+End()

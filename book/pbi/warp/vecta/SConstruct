@@ -1,0 +1,595 @@
+from rsfproj import *
+
+import string, math
+
+###########################################################################
+#
+# Data
+#
+###########################################################################
+
+trace=300
+
+Flow('./line',None,
+     'echo %d 0 %d 4 n1=4 data_format=ascii_float in=$TARGET' %
+     (trace,trace))
+Plot('line',
+     '''
+     dd form=native | dd type=complex |
+     graph min2=0 max2=4 min1=-0.5 max1=471.5 pad=n wantaxis=n wanttitle=n
+     ''')
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for mode in ['pp','ss']:
+    data = 'bend_l1_%cmig_enhanc.sgy' % mode[1]
+    Fetch(data,'vecta',private)
+    Flow(mode,data,
+         'segyread tape=$SOURCE read=data | window n2=471 | scale axis=2',
+         stdin=0)
+    Plot(mode,
+         'grey title=%s label1="Time (s)" label2="Trace" ' %
+         string.upper(mode))
+    Result('v'+mode,[mode,'line'],'Overlay')
+    Flow(mode+'trace',mode,'window n2=1 min2=%d' % trace)
+
+Result('vtrace','pptrace sstrace',
+       '''
+       pad n1=2048 | cat axis=2 ${SOURCES[1]} |
+       dots poly=y label1="Time (s)" labels=PP:SS
+       ''')
+
+nails = Split('''
+0.32 0.72
+0.57 1.22
+0.97 1.97
+''')
+
+Flow('./nails0',None,
+     'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
+     (string.join(nails,' '),len(nails)/2))
+Flow('nails','nails0','dd form=native')
+Flow('nreal','nails','window n1=1')
+Flow('nimag','nails','window f1=1')
+Plot('nails','nreal nimag',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph min1=0 max1=2 min2=0 max2=4 symbol='o' wanttitle=n
+     label1="PP time (s)" label2="SS time (s)" plotcol=5
+     symbolsz=15
+     ''',stdin=0)
+
+Flow('fit',['nails','pptrace'],'linefit pattern=${SOURCES[1]}')
+Plot('fit','graph min1=0 max1=2 min2=0 max2=4 title="Line Fit" ')
+Result('vnails','fit nails','Overlay')
+
+#############################################################################
+#
+# Trace processing
+#
+#############################################################################
+
+def difplot(min1,max1):
+    return '''
+    add scale=1,-1 ${SOURCES[1]} |
+    cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
+    window min1=%g max1=%g |
+    dots gaineach=0
+    labels="Difference:SS warped:PP" label1="Time (s)"
+    ''' % (min1,max1)
+
+warp0 = 'warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} verb=1 nliter=0'
+
+Flow('fit0','fit','math output=input-x1')
+Flow('wtrace',['sstrace','pptrace','fit0'],warp0)
+Plot('warp0',['wtrace','pptrace'],difplot(0,1.5))
+
+def vgraph(min1,max1,min2,max2):
+    return '''graph wanttitle=n min1=%g max1=%g min2=%g max2=%g
+    wherexlabel=t wheretitle=b crowd=0.8 label2="Vp/Vs"
+    ''' % (min1,max1,min2,max2)
+
+Flow('gamma0','fit','smoothder')
+Plot('gamma0',vgraph(0,1.5,1,3))
+Result('varp0','gamma0 warp0','OverUnderAniso')
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+## Flow('pwin','pptrace','window1 nw=4 w=600')
+## Flow('swin','wtrace','window1 nw=4 w=600')
+
+## rick = 'spectra | ricker niter=1000 ma=$TARGET m=20'
+
+## Flow('prick','pwin',rick,stdout=0)
+## Flow('srick','swin',rick,stdout=0)
+
+## reshape = '''
+## reshape in2=${SOURCES[1]}
+## ma=${SOURCES[2]} ma2=${SOURCES[3]}
+## out2=${TARGETS[1]} |
+## stack norm=no
+## '''
+
+## Flow(['presh','resh'],['pwin','swin','prick','srick'],reshape)
+## Flow('sresh','resh','stack norm=no')
+
+iphase = '''
+cat axis=2 ${SOURCES[1]} |
+scale dscale=%g | 
+graph title="Local Frequency" label1="Time (s)"
+min2=20 max2=80 dash=0,1 label2="Frequency (Hz)"
+''' % (0.5/(math.pi*0.002))
+
+Flow('ipp','pptrace','iphase rect1=100 order=100')
+Flow('iss','wtrace','iphase rect1=100 order=100')
+Plot('iss','ipp iss',iphase + ' title="Local Frequency (Before)" ')
+
+getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
+
+Flow('imask','iss ipp',getmask)
+
+ssrect = '''
+math min=${SOURCES[2]} max=${SOURCES[1]}
+output="sqrt(1+12*(1/min^2-1/max^2)*input)" | dd type=int
+'''
+
+pprect = '''
+math min=${SOURCES[2]} max=${SOURCES[1]}
+output="sqrt(1+12*(1/max^2-1/min^2)*(1-input))" | dd type=int
+'''
+
+def balance(rect):
+    return '''
+    nsmooth1 rect=${SOURCES[1]} |
+    abalance rect1=%d order=100 other=${SOURCES[2]}
+    ''' % rect
+
+Flow('srect','imask iss ipp',ssrect)
+Flow('sresh','wtrace srect pptrace',balance(120))
+
+Flow('prect','imask iss ipp',pprect)
+Flow('presh','pptrace prect pptrace',balance(120))
+
+Plot('warp1',['sresh','presh'],difplot(0,1.5))
+Result('varp1','gamma0 warp1','OverUnderAniso')
+
+Flow('ipp3','presh','iphase rect1=100 order=100')
+Flow('iss3','sresh','iphase rect1=100 order=100')
+Plot('iss3','ipp3 iss3',iphase + ' title="Local Frequency (After)" ')
+
+Result('iss','iss iss3','SideBySideAniso')
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+def warsscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1):
+    dg = (gmax-g0)/(ng-1)
+    return '''
+    warpscan2 other=${SOURCES[1]} niter=100
+    ng=%d dg=%g g0=%g rect1=%d rect2=%d rect3=%d |
+    math output='(1+input)^4' |
+    window''' % (ng,dg,g0,rect1,rect2,rect3)
+
+def greyscan(min1,max1,min2,max2):
+     return '''grey title="Gamma scan" allpos=y 
+     min1=%g max1=%g min2=%g max2=%g
+     color=j pclip=100 
+     label1="Time (s)" label2="Gamma"''' % (min1,max1,min2,max2)
+
+Flow('scan',['sresh','presh'],warsscan(101,0.9,1.1,50,1))
+Plot('scan',greyscan(0,1.5,0.9,1.1))
+
+def blindpick(ess=10,lam=1):
+    return 'blindpick2 eps=%g lam=%g gauss=n | window' % (ess,lam)
+def showpick(min1,max1,min2,max2,col=7,fat=1):
+    return '''
+    graph transp=y min1=%g max1=%g min2=%g max2=%g
+    yreverse=y plotcol=%d plotfat=%d 
+    wantaxis=n wanttitle=n pad=n
+    ''' % (min1,max1,min2,max2,col,fat)
+
+Flow('pick0',['scan','pptrace'],
+     'window max2=1.025 n1=340 | pad n1=1024 | ' + blindpick(800))
+Flow('pick','pick0','math output="(input-1)*x1" ')
+Plot('pick','pick0',showpick(0,1.5,0.9,1.1,7,5))
+Plot('pick0',showpick(0,1.5,0.9,1.1,0,1))
+Result('vscan','scan pick pick0','Overlay')
+
+###########################################################################
+# WARPING
+###########################################################################
+
+def warp1(niter,rect1=1,rect2=1):
+    return '''warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+    warpout=${TARGETS[2]}
+    verb=1 nliter=%d noamp=1 rect1=%d rect2=%d > ${TARGETS[1]} &&
+    warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % (niter,rect1,rect2)
+
+Flow(['warp2','wtrace2','w2'],
+     ['sresh','presh','pick','fit0'],
+     warp1(20,220))
+
+warp2gamma = 'math output="input+x1" | smoothder'
+
+Flow('gamma2','warp2',warp2gamma)
+Plot('gamma2',vgraph(0,1.5,1,3))
+Plot('warp2','wtrace2 presh',difplot(0,1.5))
+Result('varp2','gamma2 warp2','OverUnderAniso')
+
+####################################################################
+# MOVE CLOSER
+####################################################################
+
+Flow('wtrace3',['sstrace','pptrace','warp2'],warp0)
+Plot('warp3','wtrace3 pptrace',difplot(0,1.5))
+Result('varp3','gamma2 warp3','OverUnderAniso')
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+## Flow('swin2','wtrace3','window1 nw=4 w=600')
+## Flow('srick2','swin2',rick,stdout=0)
+
+## Flow(['presh2','resh2'],['pwin','swin2','prick','srick2'],reshape)
+## Flow('sresh2','resh2','stack norm=no')
+
+Flow('iss4','wtrace3','iphase rect1=100 order=100')
+Result('iss4','ipp iss4',iphase)
+
+Flow('imask4','iss4 ipp',getmask)
+
+Flow('srect4','imask4 iss4 ipp',ssrect)
+Flow('sresh2','wtrace3 srect4 pptrace',balance(120))
+
+Flow('prect4','imask4 iss4 ipp',pprect)
+Flow('presh2','pptrace prect4 pptrace',balance(120))
+
+Plot('warp4',['sresh2','presh2'],difplot(0,1.5))
+Result('varp4','gamma2 warp4','OverUnderAniso')
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('scan2',['sresh2','presh2'],warsscan(101,0.95,1.05,50,2))
+Plot('scan2',greyscan(0,1.5,0.95,1.05))
+
+Flow('pick1',['scan2','pptrace'],
+     'window min2=0.98 max2=1.02 | ' + blindpick(800))
+Flow('pick2','pick1','math output="(input-1)*x1" ')
+Plot('pick2','pick1',showpick(0,1.5,0.95,1.05,7,5))
+Plot('pick1',showpick(0,1.5,0.95,1.05,0,1))
+Result('vscan2','scan2 pick2 pick1','Overlay')
+
+###########################################################################
+# WARPING
+###########################################################################
+
+Flow(['warp5','wtrace5','w5'],
+     ['sresh2','presh2','pick2','warp2'],
+     warp1(20,220))
+
+Flow('gamma5','warp5',warp2gamma)
+Plot('gamma5',vgraph(0,1.5,1,3))
+Plot('warp5','wtrace5 presh2',difplot(0,1.5))
+Result('varp5','gamma5 warp5','OverUnderAniso')
+
+#############################################################################
+#
+# Line processing
+#
+#############################################################################
+
+Flow('fit2','fit0','spray o=0 d=1 n=471')
+Flow('wline',['ss','pp','fit2'],warp0)
+
+def plot(title,clip=0.4):
+    return '''
+    window min1=0 max1=1.5 |
+    grey title="%s" label1="Time (s)" clip=%g
+    ''' % (title,clip)
+
+Plot('pline','pp',plot('PP'))
+Plot('wline',plot('Warped SS'))
+Plot('diff','wline pp',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+
+wplot2 = plot('Vp/Vs',1) + \
+         ' scalebar=y color=j allpos=y bias=1.5 minval=1.5 maxval=2.5'
+
+Flow('ggamma1','gamma0','spray o=0 d=1 n=471')
+Plot('ggamma1',wplot2)
+Result('vaarp0','pline wline diff ggamma1','TwoRows')
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+## Flow('Pwwin','pp','window2 nw=2,2 w=600,300')
+## Flow('Swwin','wline','window2 nw=2,2 w=600,300')
+
+## rick2 = 'spectra | stack norm=y | ricker niter=1000 ma=$TARGET m=20'
+
+## Flow('Prrick','Pwwin',rick2,stdout=0)
+## Flow('Srrick','Swwin',rick2,stdout=0)
+
+## reshape2 = '''
+## reshape dim=2 in2=${SOURCES[1]} ma=${SOURCES[2]}
+## ma2=${SOURCES[3]} out2=${TARGETS[1]} |
+## stack axis=3 norm=no
+## '''
+
+## Flow(['Prresh','Reesh'],['Pwwin','Swwin','Prrick','Srrick'],reshape2)
+## Flow('Srresh','Reesh','stack axis=3 norm=no')
+
+def balance2(rect1,rect2):
+    return '''
+    nsmooth1 rect=${SOURCES[1]} |
+    abalance rect1=%d rect2=%d order=100 other=${SOURCES[2]}
+    ''' % (rect1,rect2)
+
+Flow('iipp','pp','iphase rect1=50 rect2=50 order=100')
+Flow('iiss','wline','iphase rect1=50 rect2=50 order=100')
+
+Flow('rect','iiss','math output="sqrt(1+12*(1/input^2-1/0.72^2))" | dd type=int')
+Flow('debl','wline rect','deblur rect=${SOURCES[1]} verb=y niter=100 eps=0.04 nliter=1')
+
+Result('wline','grey title="Warped SS Image" label1="Time (s)" label2="Trace" ')
+Result('wdebl','debl','grey title="Deblurred" label1="Time (s)" label2="Trace" ')
+
+Flow('iimask',['iiss','iipp'],getmask)
+
+Flow('srrect',['iimask','iiss','iipp'],ssrect)
+Flow('Srresh',['wline','srrect','pp'],balance2(50,50))
+
+Flow('prrect',['iimask','iiss','iipp'],pprect)
+Flow('Prresh',['pp','prrect','pp'],balance2(50,50))
+
+Plot('iipp',plot('PP Local Frequency',0.2) + ' bias=0.5 color=j')
+Plot('iiss',plot('SS Local Frequency',0.2) + ' bias=0.5 color=j')
+Result('vii','iipp iiss','OverUnderAniso')
+
+Flow('iidb','debl','iphase rect1=50 rect2=50 order=100')
+
+
+Plot('iipp1','iipp',
+     '''
+     scale dscale=%g |
+     grey title="PP Local Frequency"
+     color=j scalebar=y bias=40 clip=15
+     barlabel="Frequency (Hz)" label1="Time (s)"
+     ''' % (0.5/(math.pi*0.002)))
+Plot('iiss1','iiss',
+     '''
+     scale dscale=%g |
+     grey title="SS Local Frequency"
+     color=j scalebar=y bias=40 clip=15
+     barlabel="Frequency (Hz)" label1="Time (s)"
+     '''% (0.5/(math.pi*0.002)))
+Result('vii1','iipp1 iiss1','OverUnderAniso')
+
+Plot('iidb',
+     '''
+     scale dscale=%g |
+     grey title="SS Local Frequency"
+     color=j scalebar=y bias=40 clip=15
+     barlabel="Frequency (Hz)" label1="Time (s)"
+     '''% (0.5/(math.pi*0.002)))
+Result('dbii','iiss1 iidb','OverUnderAniso')
+
+Flow('iipp1','iipp','stack norm=y')
+Flow('iiss1','iiss','stack norm=y')
+Plot('vii0','iipp1 iiss1',iphase + ' title="Local Frequency (Before)" ')
+
+Plot('pppp1','pp','grey    title="PP"        color=I scalebar=y')
+Plot('ssss1','wline','grey title="Warped SS" color=I scalebar=y')
+Result('ppss1','pppp1 ssss1','OverUnderAniso')
+
+Flow('iipp2','Prresh','iphase rect1=50 rect2=50 order=100')
+Flow('iiss2','Srresh','iphase rect1=50 rect2=50 order=100')
+Plot('iipp2',plot('PP Local Frequency',0.2) + ' bias=0.5 color=j')
+Plot('iiss2',plot('SS Local Frequency',0.2) + ' bias=0.5 color=j')
+Result('vii2','iipp2 iiss2','OverUnderAniso')
+
+Flow('iipp12','iipp2','stack norm=y')
+Flow('iiss12','iiss2','stack norm=y')
+Plot('vii00','iipp12 iiss12',iphase + ' title="Local Frequency (After)" ')
+
+Plot('iipp11','iipp2',
+     '''
+     scale dscale=%g |
+     grey title="PP Local Frequency"
+     color=j scalebar=y bias=40 clip=15
+     barlabel="Frequency (Hz)" label1="Time (s)"
+     ''' % (0.5/(math.pi*0.002)))
+Plot('iiss11','iiss2',
+     '''
+     scale dscale=%g |
+     grey title="SS Local Frequency"
+     color=j scalebar=y bias=40 clip=15
+     barlabel="Frequency (Hz)" label1="Time (s)"
+     '''% (0.5/(math.pi*0.002)))
+Result('vii11','iipp11 iiss11','OverUnderAniso')
+
+Flow('Pspec0','pp','spectra all=y')
+Flow('Sspec0','wline','spectra all=y')
+Plot('spec0','Pspec0 Sspec0',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=Before max1=150 max2=0.5 label1="Frequency (Hz)"
+     ''')
+Flow('Psppec','Prresh','spectra all=y')
+Flow('Ssppec','Srresh','spectra all=y')
+Plot('spec1','Psppec Ssppec',
+     '''
+     cat axis=2 ${SOURCES[1]} |
+     graph title=After max1=150 max2=0.5 label1="Frequency (Hz)"
+     ''')
+Result('vspec1','spec0 spec1','SideBySideAniso')
+
+
+Plot('inter',['Prresh','Srresh'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |
+     grey title='Interleaved (Before)'
+     ''')
+
+partial = 'pad n2=480 | put n2=5 n3=96 | stack'
+
+Flow('pstack','Prresh',partial)
+Flow('sstack','Srresh',partial)
+Plot('inter1',['pstack','sstack'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} | window max1=1.5 |
+     grey title='Interleaved (Before)'
+     label1='Time (s)' label2='In-line'
+     ''')
+Result('vinter1',['pstack','sstack'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} | window max1=1.5 |
+     grey title='Interleaved (Before)'
+     label1='Time (s)' label2='In-line'
+     ''')
+
+Plot('Prresh',plot('Balanced PP'))
+Plot('Srresh',plot('Warped and Balanced SS'))
+Plot('diff2','Srresh Prresh',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Result('vaarp1','Prresh Srresh diff2 ggamma1','TwoRows')
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('Sccan',['Srresh','Prresh'],warsscan(41,0.89,1.11,50,1,5))
+
+def scanplot3(frame2):
+    return '''
+    byte gainpanel=all allpos=y |
+    grey3 frame1=300 frame3=300 frame2=%d color=j flat=n
+    label1="Time (s)" label3="In-line" label2="Relative Gamma"
+    title="Gamma Scan"
+    ''' % frame2
+
+Result('vsccan','Sccan',scanplot3(21))
+
+Flow('Piick0','Sccan',
+     'window max2=1.025 n1=340 | pad n1=1024 | ' + blindpick(800,800))
+
+Flow('time2','pptrace','math output=x1 | spray n=471 d=1 o=0')
+Flow('Piick',['Piick0','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+
+###################################################################
+# WARPING
+###################################################################
+Flow(['Waarp2','wline2','W22'],
+     ['Srresh','Prresh','Piick','fit2'],
+     warp1(20,220,220))
+
+warp2gamma2 = 'math T=${SOURCES[1]} output="input+T" | smoothder'
+
+Plot('wline2',plot('Warped and Balanced SS'))
+Plot('diff3','wline2 Prresh',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Flow('Gaamma2',['Waarp2','time2'],warp2gamma2)
+Plot('Gaamma2',wplot2)
+Result('vaarp2','Prresh wline2 diff3 Gaamma2','TwoRows')
+
+####################################################################
+# MOVE CLOSER
+####################################################################
+Flow('wline3',['ss','pp','Waarp2'],warp0)
+
+Plot('wline3','wline3',plot('Warped SS'))
+Plot('diff4','wline3 pp',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Result('vaarp3','pline wline3 diff4 Gaamma2','TwoRows')
+
+####################################################################
+# SPECTRAL BALANCING
+####################################################################
+## Flow('Swwin2','wline3','window2 nw=2,2 w=600,300')
+## Flow('Srrick2','Swwin2',rick2,stdout=0)
+
+## Flow(['Prresh2','Reesh2'],['Pwwin','Swwin2','Prrick','Srrick2'],reshape2)
+## Flow('Srresh2','Reesh2','stack axis=3 norm=no')
+
+Flow('iiss3','wline3','iphase rect1=50 rect2=50 order=100')
+
+Flow('iimask3',['iiss3','iipp'],getmask)
+
+Flow('srrect3',['iimask3','iiss3','iipp'],ssrect)
+Flow('Srresh2',['wline3','srrect3','pp'],balance2(50,50))
+
+Flow('prrect3',['iimask3','iiss3','iipp'],pprect)
+Flow('Prresh2',['pp','prrect3','pp'],balance2(50,50))
+
+Plot('Prresh2',plot('Balanced PP'))
+Plot('Srresh2',plot('Warped and Balanced SS'))
+Plot('diff5','Srresh2 Prresh2',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Result('vaarp4','Prresh2 Srresh2 diff5 Gaamma2','TwoRows')
+
+####################################################################
+# GAMMA SCAN
+####################################################################
+
+Flow('Sccan2',['Srresh2','Prresh2'],warsscan(31,0.978,1.022,50,1,5))
+Result('vsccan2','Sccan2',scanplot3(16))
+
+Flow('Piick1','Sccan2','window n1=512 | pad n1=1024 |' + blindpick(400,400))
+Flow('Piick2',['Piick1','time2'],'math T=${SOURCES[1]} output="(input-1)*T" ')
+
+###################################################################
+# WARPING
+###################################################################
+
+Flow(['Waarp5','wline5','W55'],
+     ['Srresh2','Prresh2','Piick2','Waarp2'],
+     warp1(20,220,440))
+
+Plot('wline5',plot('Warped and Balanced SS'))
+Plot('diff6','wline5 Prresh2',
+     'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+Flow('Gaamma5',['Waarp5','time2'],warp2gamma2)
+Plot('Gaamma5',wplot2)
+
+Result('vgamma','Gaamma5',wplot2)
+
+Result('vaarp5','Prresh2 wline5 diff6 Gaamma5','TwoRows')
+
+Plot('inter2',['Prresh2','wline5'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} | 
+     grey title='Interleaved (After)'
+     ''')
+Result('vinter',['inter','inter2'],'OverUnderAniso')
+
+Flow(['pstack2','pshift2'],'Prresh2',partial)
+Flow(['sstack2','sshift2'],'wline5',partial)
+Plot('inter3',['pstack2','sstack2'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |  window max1=1.5 |
+     grey title='Interleaved (After)'
+     label1='Time (s)' label2='In-line'
+     ''')
+Result('vinter3',['pstack2','sstack2'],
+     '''
+     interleave axis=2 other=${SOURCES[1]} |  window max1=1.5 |
+     grey title='Interleaved (After)'
+     label1='Time (s)' label2='In-line'
+     ''')
+Result('vinter2',['inter1','inter3'],'OverUnderAniso')
+
+Result('vpp0','pp','grey title=PP label1="Time (s)" label2=Trace')
+
+Flow('wline6',['ss','pp','Waarp5'],warp0)
+
+Result('vss0','wline6','grey title=SS label1="Time (s)" label2=Trace')
+
+###########################################################################
+End()

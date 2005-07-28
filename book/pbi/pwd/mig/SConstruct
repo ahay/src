@@ -1,0 +1,139 @@
+from rsfproj import *
+
+Fetch('beinew.HH','midpts')
+Flow('bei','beinew.HH','dd form=native')
+
+Flow('cdp','bei','window n3=1')
+Plot('cdp','grey title=Input')
+
+d2=0.0335
+d1=0.004
+
+def dip(slow2):
+    return '''
+    math output="(%g*x2/x1)" | mutter half=n v0=1.4 tp=0.4
+    ''' % (slow2*d2/d1)
+    
+Flow('dip0','cdp',dip(1./3.-1./9.))
+Flow('dip1','cdp',dip(1./9.))
+
+Flow('dip2',['cdp','dip0','dip1'],
+     '''
+     nmostretch half=n v0=3 |
+     twodip2 dip1=${SOURCES[1]} q0=0
+     order=3 niter=10 eps=50 lam=10 |
+     window n3=1 |
+     math ref=${SOURCES[2]} output="input+ref" 
+     ''')
+
+Flow('dip3',['cdp','dip2'],
+     '''
+     dip idip=${SOURCES[1]} order=3
+     niter=10 liter=100 rect1=25 rect2=10 sign=y
+     ''')
+Plot('dip','dip3','grey title=Slope allpos=y')
+
+Result('pint','cdp dip','SideBySideAniso')
+
+Flow('pwd','cdp dip3','pwd order=3 dip=${SOURCES[1]}')
+Plot('pwd','grey title=Residual clip=3.9796e+06')
+
+Result('mpwd','cdp dip pwd','SideBySideAniso',vppen='txscale=1.5')
+
+Flow('txt','cdp dip3',
+     '''
+     noise rep=y seed=2004 |
+     trismooth2 rect2=20 dip=${SOURCES[1]} |
+     mutter v0=1.4
+     ''')
+Plot('txt','grey title=Texture')
+
+Flow('txt2','cdp dip3',
+     '''
+     noise rep=y seed=2004 |
+     pwdsmooth2 rect2=20 dip=${SOURCES[1]} |
+     mutter v0=1.4
+     ''')
+Plot('txt2','grey title=Texture')
+
+Result('mtxt','cdp dip txt','SideBySideAniso',vppen='txscale=1.5')
+
+Flow('pnmo vel','cdp dip3','pnmo dip=${SOURCES[1]} vel=${TARGETS[1]}')
+Plot('pnmo','grey title="Oriented Normal Moveout" ')
+
+Result('pnmo','cdp dip pnmo','SideBySideAniso',vppen='txscale=1.5')
+
+Flow('dip05','dip3','window min2=0.5')
+Flow('vtr','cdp dip05',
+     '''
+     window min2=0.5 |
+     pveltran v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}
+     ''')
+Plot('vtr',
+     '''
+     envelope | 
+     grey allpos=y label2="Velocity (km/s)"
+     title="Oriented Velocity Scan"
+     ''')
+
+Flow('vsc','cdp',
+     'vscan v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}')
+Plot('vsc',
+     '''
+     envelope | 
+     grey allpos=y label2="Velocity (km/s)"
+     title="Velocity Scan"
+     ''')
+
+Result('bvsc','vsc vtr','SideBySideAniso',vppen='txscale=1.5')
+
+
+Flow('dips0','dip3','spray axis=3 n=250 d=0.0335 o=7.705')
+Flow('dips','bei dips0',
+     'dip memsize=500 idip=${SOURCES[1]} rect1=20 rect2=5 rect3=20')
+
+Flow('hdip','dips','window n4=1')
+Flow('ydip','dips','window f4=1')
+
+def grey3(title,color='I'):
+    return '''byte | transp plane=23 | grey3 title="%s"
+    frame1=500 frame2=125 frame3=10 color=%s flat=y point2=0.7
+    ''' % (title,color)
+
+Result('bei',grey3('Data'))
+Result('hdip',grey3('Offset Slope','j'))
+Result('ydip',grey3('Midpoint Slope','j'))
+
+Flow('nmo vrms','bei hdip','pnmo dip=${SOURCES[1]} vel=${TARGETS[1]}')
+
+Result('bnmo','nmo',grey3('Oriented NMO'))
+
+Flow('stack','nmo','stack')
+Result('bstack','stack','grey title="Oriented Stack" ')
+
+Flow('hdip2','hdip','transp plane=23 memsize=500')
+Flow('ydip2','ydip','transp plane=23 memsize=500')
+
+Flow('pmig','bei hdip2 ydip2',
+     '''
+     transp plane=23 memsize=500 |
+     pmig hdip=${SOURCES[1]} xdip=${SOURCES[2]} |
+     transp plane=23 memsize=500
+     ''')
+Result('bpmig','pmig',grey3('Oriented Prestack Time Migration'))
+
+Flow('bmig','pmig','stack')
+Result('bmig','grey title="Oriented Prestack Time Migration" ')
+
+Flow('pmzo','bei hdip2 ydip2',
+     '''
+     transp plane=23 memsize=500 |
+     pmig hdip=${SOURCES[1]} xdip=${SOURCES[2]} mzo=y |
+     transp plane=23 memsize=500
+     ''')
+Result('bpmzo','pmzo',grey3('Oriented Migration to Zero Offset'))
+
+Flow('bmzo','pmzo','stack')
+Result('bmzo','grey title="Oriented DMO Stack" ')
+
+End()

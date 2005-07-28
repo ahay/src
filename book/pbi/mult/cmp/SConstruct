@@ -1,0 +1,61 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('cmp.hh','acig',private)
+Flow('cmp','cmp.hh','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
+Plot('cmp','grey title=Data')
+
+Result('cmp','grey title="CMP Gather" ')
+
+Flow('env','cmp','envelope | scale axis=2')
+Flow('amp','env',
+     '''
+     math output="atan(input)" |
+     math output="input-sin(input)" |
+     add mode=d $SOURCE
+     ''')
+
+Flow('acmp','cmp amp','add mode=p ${SOURCES[1]}')
+Flow('ncmp','cmp',
+     '''
+     scale axis=2 |
+     math output="atan(input)" |
+     math output="input-sin(input)"
+     ''')
+     
+Flow('ccmp','cmp','pad n1=2048 beg2=5 | fft1 | fft3')
+Flow('mult','ccmp','add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000 f2=5')
+Plot('mult','grey title="SRME-predicted Multiples" ')
+
+Flow('mask','mult',
+     'math output=1 | mutter hyper=y t0=0.7 v0=2 half=n | smooth rect1=5 rect2=5')
+Flow('cmp2','mask cmp','add mode=p ${SOURCES[1]}')
+Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
+
+Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
+Flow('mdip2','cmp2 mdip','twodip2 eps=100 lam=10 dip1=${SOURCES[1]} q0=0.1 sign=y')
+
+Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=100')
+
+Flow('nois','comp mask','window n3=1 | add mode=p ${SOURCES[1]}')
+Plot('nois','grey title="Estimated Multiples" ')
+
+Flow('sign','cmp nois','add scale=1,-1 ${SOURCES[1]}')
+Plot('sign','grey title="Estimated Primaries" ')
+
+Result('super','cmp mult nois sign','SideBySideAniso')
+
+for dat in ('cmp','sign'):
+    Flow('v'+dat,dat,'vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
+    Plot('v'+dat,'''
+    grey color=j allpos=y label1="Time (s)" label2="Velocity (km/s)"
+    title="Velocity Scan (%s)"
+    ''' % ('Data','Estimated Primaries')[dat=='sign'])
+    
+Result('vscan','vcmp vsign','SideBySideAniso')
+
+End()

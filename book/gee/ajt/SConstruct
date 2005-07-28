@@ -1,0 +1,12 @@
+from rsfproj import *
+##################################################################
+import glob
+
+dirs = Split('causint  conv  cunha  igrad1')
+
+for dir in dirs:
+    SConscript(os.path.join(dir,'SConstruct'))
+
+    
+##################################################################
+End(use=['sep','jfc','rsf'])

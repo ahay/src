@@ -1,0 +1,69 @@
+from rsfproj import *
+
+g = 'grey color=I crowd1=0.96 crowd2=0.85 titlesz=20 wantaxis=0 title="%s" '
+
+textures = ['granite','wood','herr','brick','ridges','WGstack']
+
+for file in textures[0:5]:
+    Fetch(file + '.h','textures')
+    Flow(file,file + '.h','dd form=native')
+
+Fetch('WGstack.H','book/iee')
+Flow('WGstack','WGstack.H','window f2=500 j2=2 n2=125 n1=250 j1=2')
+
+makepef = 'pef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'
+
+for file in textures:
+    Plot(file,g % 'Training Image')
+
+    #------------------------------------------------------------
+    # Minimize ||Data*PEF||^2 for unknown PEF.
+    #------------------------------------------------------------
+    pef = file + '-pef'
+    lag = file + '-lag'
+    Flow([pef,lag],file,makepef)
+
+    #------------------------------------------------------------
+    # Synthesized texture = Random #'s/PEF  ("/" = poly. div.)
+    #------------------------------------------------------------
+    syn = file + '-syn'
+    Flow(syn,[file,pef],
+              '''noise type=0 range=127.5 mean=0 rep=y seed=2003 | 
+              helicon filt=${SOURCES[1]} div=1''')
+    Plot(syn,g % 'Synthesized Image')
+
+    #------------------------------------------------------------
+    # Compute residual for known PEF: res = Data*PEF
+    #------------------------------------------------------------
+    wht = file + '-wht'
+    Flow(wht,[file,pef],'helicon filt=${SOURCES[1]}')
+    Plot(wht,g % 'TI * PEF')
+
+    Result(file,[file,syn,wht],'SideBySideAniso')
+
+for file in textures[1:5]:
+    #------------------------------------------------------------
+    # Punch hole in data files.
+    #------------------------------------------------------------
+    hole = file + '-hole'
+    known = file + '-known'
+    Flow([hole,known],file,'hole maskout=${TARGETS[1]}')
+    Plot(hole,g % 'Gapped')
+
+    pef = hole + '-pef'
+    lag = hole + '-lag'
+    Flow([pef,lag],hole,makepef)
+
+    #------------------------------------------------------------
+    # Fill hole in data
+    #------------------------------------------------------------
+    fill = hole + '-fill'
+    Flow(fill,[hole,known,pef],
+              'miss filt=${SOURCES[2]} mask=${SOURCES[1]} padin=20')
+    Plot(fill,g % 'Restored')
+
+    Result(fill,[hole,file,fill],'SideBySideAniso')
+    
+###########################################################################
+
+End()

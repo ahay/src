@@ -1,0 +1,107 @@
+%%\section{Discussion}
+\section{Practical aspects}
+\begin{description}
+%%
+\item[Coordinate system construction:]
+The ray coordinate systems do not need to be created using the
+same velocity model as the one used for extrapolation.
+We can use a smooth velocity model to create the coordinate
+system by ray tracing, and then remap the rough velocity
+\uline{to the ray coordinates}, 
+similar to the method used by \cite{BDEtgen-EAGE03}.
+An alternative method of creating ray coordinate systems
+is discussed by \cite{Shragge.segab.2004}.
+The coordinate system can be initiated from a point source
+or an arbitrary surface in 3D (or a line in 2D) which positions 
+it optimally relative to our target.
+Furthermore, with Riemannian wavefield extrapolation,
+we can address a particular target
+in the image and thus we do not need to construct a
+coordinate system which is appropriate for the entire
+image.
+%%
+\item[Coordinate system regularization:]
+The coordinate system coefficients for Riemannian wavefield 
+extrapolation given by \reqs{coefs.3d} have singularities at 
+caustics, i.e. when the geometrical spreading term $\JJ$,
+defining a cross-sectional area of a ray tube, is zero.
+We address this problem through a simple numerical
+regularization, by adding a small non-zero quantity to the 
+denominators to avoid division by zero. This strategy worked
+reasonably well for our current examples, although better
+strategies are needed.
+\par
+In principle, it is best if coordinate system 
+triplications are avoided.
+    However, for velocity models with large
+    contrasts (e.g. salt), avoiding such triplications 
+    may require large smoothing prior to ray tracing. 
+    In these situations,
+    there is a strong possibility that the waves do not
+    propagate close to our extrapolation axis, thus requiring 
+    higher-order terms in the extrapolator 
+    at increased cost.
+%%
+\item[Prestack data:]
+Our examples of Riemannian wavefield extrapolation are based on
+\req{oneway.3d} which corresponds to the single-square root 
+(SSR)
+equation of standard Cartesian wavefield extrapolation.
+Riemannian wavefield extrapolation can be extended
+to prestack data either for shot-profile, plane-wave or 
+S-G migration by appropriate definitions of the 
+underlying ray coordinate system.
+Figure~\ref{fig:spmig} is a schematic representation of 
+shot-profile migration in ray coordinates, 
+where both source and receivers
+are extrapolated in the same ray coordinate system
+appropriate for overturning waves.
+However, source and receiver wavefields
+can be migrated in different coordinate systems,
+with the imaging condition applied after interpolation to 
+Cartesian coordinates. 
+%%
+\sideplot{spmig}{width=3.0in}
+{Shot-profile migration sketch.
+Sources (a) and receivers (b) are both extrapolated in
+a ray coordinate system appropriate for 
+overturning waves.
+}
+%%
+\item[Interpolation:]
+The images created with wavefield extrapolation in Riemannian
+coordinates require interpolation to a Cartesian coordinate 
+system. This is a shared difficulty of all methods 
+operating on non-Cartesian grids. In our current implementation, 
+we use simple sinc-type interpolation based on the
+explicit mapping of the Cartesian coordinates $(\x,\z)$
+function of the ray coordinates $(\t,\g)$ given by ray tracing.
+%%
+\item[Cost:]
+The main cost of an implicit finite-difference solution to the 
+one-way equation in Riemannian coordinates involves solving a
+tridiagonal system. In this respect, the cost of Riemannian
+wavefield extrapolation is identical to the cost of Cartesian
+downward continuation for the same number of samples.
+However, computing the coefficients of the tridiagonal 
+system adds modestly to the cost, since they can be 
+precomputed ahead of time.
+\par
+A second consideration is that
+    we are comparing extrapolation 
+    in different domains (space for downward continuation
+    and shooting angle for Riemannian extrapolation). 
+    Since in Riemannian coordinates
+    we extrapolate at small angles, we can
+    sample the wavefronts less and achieve same or better
+    angular accuracy than in Cartesian coordinates at lower
+    cost.
+%%
+\end{description}
+
+
+
+
+
+
+

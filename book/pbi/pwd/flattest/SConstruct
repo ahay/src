@@ -1,0 +1,67 @@
+from rsfproj import *
+
+Flow('trace',None,
+     'qdome d1=1 d2=1 d3=1 n1=256 n2=1 n3=1 trace=$TARGET',stdout=0)
+
+t0=161
+x0=-128
+
+Flow('planes','trace',
+     '''
+     window f1=10 |
+     spray axis=2 n=128 d=1 o=0 |
+     ai2refl | ricker1 |     
+     stretch rule=rad tdelay=%g hdelay=%g half=n v0=1 inv=y |
+     window min1=0 max1=255
+     ''' % (t0,-x0))
+
+Plot('planes','grey wanttitle=n')
+Result('planes','grey title=Planes')
+
+Flow('dip','planes','dip order=3 rect1=10 rect2=10')
+
+def grey(title,clip=2,allpos=1):
+    return '''
+    grey color=j title="%s" scalebar=y allpos=%d
+    bartype=h clip=%g minval=%g maxval=%g
+    ''' % (title,allpos,clip,(-clip,0)[allpos],clip)
+
+Plot('pldip','dip',grey('Estimated Dip'))
+
+Flow('tdip','planes','math output="x1/(x2+%g)" ' % (-x0))
+
+Plot('tdip',grey('Theoretical Dip'))
+
+Plot('dipdif','dip tdip',
+     'add scale=1,-1 ${SOURCES[1]} | ' + grey('Error',allpos=0))
+
+Result('pldip','tdip pldip dipdif','SideBySideAniso')
+
+
+Flow('dpdx','dip','transp | deriv | transp')
+Plot('dpdx',grey('dP/dx',0.02,0))
+
+Flow('dp2dt','dip','add mode=p $SOURCE | deriv | scale dscale=0.5')
+Plot('dp2dt',grey('1/2 dP^2/dt',0.02,0))
+
+Flow('rhs','dpdx dp2dt','add ${SOURCES[1]}')
+Plot('rhs',grey('dP/dx + 1/2 dP^2/dt',0.02,0))
+
+Result('rhs','dpdx dp2dt rhs','SideBySideAniso')
+
+Flow('pflat','planes dip','flat dip=${SOURCES[1]}')
+Result('pflat','grey title=Flattened')
+
+Flow('pick','dip','pick0')
+
+for plot in [0,1]:
+    Plot('pick%d' % plot,'pick',
+         '''
+         window j2=10 |
+         graph yreverse=y plotcol=%d plotfat=%d
+         min1=0 max1=127 min2=0 max2=255
+         wanttitle=n wantaxis=n
+         ''' % ((0,5)[plot],(10,1)[plot]))
+Result('pick','planes pick0 pick1','Overlay')
+
+End()

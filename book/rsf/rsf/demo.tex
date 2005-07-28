@@ -1,0 +1,285 @@
+\title{Guide to programming using RSF}
+\email{paul.sava@beg.utexas.edu}
+\author{Paul Sava}
+\lefthead{Sava}
+\righthead{RSF DEMO}
+
+\maketitle
+
+\begin{abstract}
+
+  This guide demonstrates a simple time-domain
+  finite-differences modeling code in RSF.
+
+\end{abstract}
+
+\section{Introduction}
+This section presents time-domain 
+finite-difference modeling
+\footnote{
+``Hello world'' of seismic imaging.
+}
+written with the RSF library.
+The program is demonstrated with the C, C++ and Fortran 90 interfaces.
+
+The acoustic wave-equation
+\begin{equation}
+\Delta U - \frac{1}{v^2} \frac{\partial^2 U}{\partial t^2} = f(t)
+\end{equation}
+can be written as
+\begin{equation}
+\left[ \Delta U - f(t) \right] v^2 =
+\frac{\partial^2 U}{\partial t^2} \;.
+\end{equation}
+$\Delta$ is the Laplacian symbol,
+$f(t)$ is the source wavelet,
+$v$ is the velocity, and
+$U$ is a scalar wavefield.
+
+A discrete time-step involves the following computations:
+\begin{equation}
+U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1} \;,
+\end{equation}
+where $U$, $U$ and $U$
+represent the propagating wavefield at various time steps.
+% ------------------------------------------------------------
+
+\newpage
+\section{C program}
+\def\FDMc{\RSF/user/savap/rsfdemo/AFDMc__.c}
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\tiny
+\lstinputlisting[frame=single]{\FDMc}
+\normalsize
+\newpage
+
+\begin{itemize}
+\item Declare input, output and auxiliary file tags:
+\texttt{Fw} for input wavelet, 
+\texttt{Fv} for velocity,
+\texttt{Fr} for reflectivity, and
+\texttt{Fo} for output wavefield.
+\tiny
+\lstinputlisting[firstline=9,lastline=9,frame=single]{\FDMc}
+\normalsize
+
+\item Declare RSF cube axes:
+\texttt{at} time axis,
+\texttt{ax} space axis,
+\texttt{az} depth axis.
+\tiny
+\lstinputlisting[firstline=10,lastline=10,frame=single]{\FDMc}
+\normalsize
+
+\item Declare multi-dimensional arrays for input, output and computations.
+\tiny
+\lstinputlisting[firstline=14,lastline=15,frame=single]{\FDMc}
+\normalsize
+
+\item Open files for input/output.
+\tiny
+\lstinputlisting[firstline=21,lastline=24,frame=single]{\FDMc}
+\normalsize
+
+\item Read axes from input files; write axes to output file.
+\tiny
+\lstinputlisting[firstline=27,lastline=28,frame=single]{\FDMc}
+\normalsize
+
+\item Allocate arrays and read wavelet, velocity and reflectivity.
+\tiny
+\lstinputlisting[firstline=35,lastline=38,frame=single]{\FDMc}
+\normalsize
+
+\item Allocate temporary arrays.
+\tiny
+\lstinputlisting[firstline=40,lastline=43,frame=single]{\FDMc}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=56,lastline=56,frame=single]{\FDMc}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$.
+\tiny
+\lstinputlisting[firstline=60,lastline=69,frame=single]{\FDMc}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
+\tiny
+\lstinputlisting[firstline=72,lastline=76,frame=single]{\FDMc}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
+\tiny
+\lstinputlisting[firstline=78,lastline=82,frame=single]{\FDMc}
+\normalsize
+
+\item Time step: 
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
+\tiny
+\lstinputlisting[firstline=86,lastline=96,frame=single]{\FDMc}
+\normalsize
+
+\end{itemize}
+
+% ------------------------------------------------------------
+\newpage
+\section{C++ program}
+\lstset{language=c++,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\def\FDMcc{\RSF/user/savap/rsfdemo/AFDMc++.cc}
+
+\tiny
+\lstinputlisting[frame=single]{\FDMcc}
+\normalsize
+\newpage
+
+\begin{enumerate}
+\item Declare input, output and auxiliary file cubes 
+(of type \texttt{CUB}).
+\tiny
+\lstinputlisting[firstline=19,lastline=22,frame=single]{\FDMcc}
+\normalsize
+
+\item Declare, read and write RSF cube axes:
+\texttt{at} time axis,
+\texttt{ax} space axis,
+\texttt{az} depth axis.
+\tiny
+\lstinputlisting[firstline=25,lastline=28,frame=single]{\FDMcc}
+\normalsize
+
+\item Declare multi-dimensional 
+\texttt{valarrays} for input, output and read data.
+\tiny
+\lstinputlisting[firstline=36,lastline=38,frame=single]{\FDMcc}
+\normalsize
+
+\item Declare multi-dimensional 
+\texttt{valarrays} for temporary storage.
+\tiny
+\lstinputlisting[firstline=41,lastline=44,frame=single]{\FDMcc}
+\normalsize
+
+\item Initialize multidimensional \texttt{valarray} 
+index counter (of type \texttt{VAI}).
+\tiny
+\lstinputlisting[firstline=47,lastline=47,frame=single]{\FDMcc}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=51,lastline=51,frame=single]{\FDMcc}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$.
+\tiny
+\lstinputlisting[firstline=55,lastline=64,frame=single]{\FDMcc}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
+\tiny
+\lstinputlisting[firstline=67,lastline=67,frame=single]{\FDMcc}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
+\tiny
+\lstinputlisting[firstline=70,lastline=70,frame=single]{\FDMcc}
+\normalsize
+
+\item Time step: 
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
+\tiny
+\lstinputlisting[firstline=73,lastline=75,frame=single]{\FDMcc}
+\normalsize
+
+\end{enumerate}
+% ------------------------------------------------------------
+\newpage
+\section{Fortran 90 program}
+\lstset{language=fortran,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\def\FDMf{\RSF/user/savap/rsfdemo/AFDMf90.f90}
+
+\tiny
+\lstinputlisting[frame=single]{\FDMf}
+\normalsize
+\newpage
+
+\begin{itemize}
+\item Declare input, output and auxiliary file tags.
+\tiny
+\lstinputlisting[firstline=11,lastline=11,frame=single]{\FDMf}
+\normalsize
+
+\item Declare RSF cube axes:
+\texttt{at} time axis,
+\texttt{ax} space axis,
+\texttt{az} depth axis.
+\tiny
+\lstinputlisting[firstline=12,lastline=12,frame=single]{\FDMf}
+\normalsize
+
+\item Declare multi-dimensional arrays for input, output and computations.
+\tiny
+\lstinputlisting[firstline=16,lastline=17,frame=single]{\FDMf}
+\normalsize
+
+\item Open files for input/output.
+\tiny
+\lstinputlisting[firstline=23,lastline=26,frame=single]{\FDMf}
+\normalsize
+
+\item Read axes from input files; write axes to output file.
+\tiny
+\lstinputlisting[firstline=29,lastline=30,frame=single]{\FDMf}
+\normalsize
+
+\item Allocate arrays and read wavelet, velocity and reflectivity.
+\tiny
+\lstinputlisting[firstline=37,lastline=39,frame=single]{\FDMf}
+\normalsize
+
+\item Allocate temporary arrays.
+\tiny
+\lstinputlisting[firstline=42,lastline=45,frame=single]{\FDMf}
+\normalsize
+
+\item Loop over time.
+\tiny
+\lstinputlisting[firstline=48,lastline=48,frame=single]{\FDMf}
+\normalsize
+
+\item Compute Laplacian: $\Delta U$.
+\tiny
+\lstinputlisting[firstline=52,lastline=61,frame=single]{\FDMf}
+\normalsize
+
+\item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
+\tiny
+\lstinputlisting[firstline=64,lastline=64,frame=single]{\FDMf}
+\normalsize
+
+\item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
+\tiny
+\lstinputlisting[firstline=67,lastline=67,frame=single]{\FDMf}
+\normalsize
+
+\item Time step: 
+$U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
+\tiny
+\lstinputlisting[firstline=70,lastline=72,frame=single]{\FDMf}
+\normalsize
+
+\end{itemize}
+
+% ------------------------------------------------------------
+%
+%\bibliographystyle{segnat}
+%\bibliography{api}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

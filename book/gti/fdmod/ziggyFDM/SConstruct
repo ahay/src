@@ -1,0 +1,229 @@
+## 
+ # F-D modeling 
+ ##
+from rsfproj import *
+
+# ------------------------------------------------------------
+par = {
+    'nt':8000,   # no of time steps
+    'dt':0.001,  #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    #
+    'ns':1,      # no of shots
+    'os':40000,  #       shots origin
+    'ds':10000,  #       shots sampling
+    #
+    'nr': 3201,  # no of receivers
+    'or':10025,  #       receivers origin
+    'dr':25,     #       receivers sampling
+    #
+    'ne':1,      # no of experiments
+    'nm':7,      # no of models
+    #
+    'nx':3201, 'ox':10025, 'dx':25,
+    'nz':1001, 'oz':5000,  'dz':25
+    }
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# plotting functions
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="z (ft)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="t (s)" %s
+    min2=%g max2=%g
+    ''' % (custom,par['xmin'],par['xmax'])
+
+def pgraph(custom,par):
+    return '''
+    graph labelrot=n  %s
+    yreverse=y symbolsz=4 wantaxis=y title=" "
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+# ------------------------------------------------------------
+# modeling function
+def amodel(dat,wfl,wav,vel,sou,rec,custom):
+    Flow([dat,wfl],[wav,vel,sou,rec],
+         '''
+         afdm2d verb=y abc=y free=n snap=y jsnap=200 %s
+         nbz=250 tz=0.001
+         nbx=250 tx=0.001
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         ''' % custom)
+# ------------------------------------------------------------
+# wavelet
+
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=10 | 
+         put label1=t label2=x label3=y 
+         ''' % par)    
+Result('wav','wav','window n1=1000 | graph title=" "')
+
+# ------------------------------------------------------------
+# velocity
+
+vstr = 'sigsbee2a_stratigraphy.sgy'
+Fetch(vstr,'sigsbee')
+
+Flow('zvstr tzvstr ./shead ./bshead',vstr,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('vel','zvstr',
+     '''
+     put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
+     window f1=200
+     ''' % par )
+Result('vel','vel',igrey('color=j allpos=y',par))
+
+# ------------------------------------------------------------
+# models
+
+Flow('mm0','vel','window')
+
+Flow('mm1',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=300
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     math output="input+8700"
+     ''' % par)
+Flow('mm2',None,
+     '''
+     spike nsp=1 mag=3000
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=300 l1=%(nz)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     math output=input+8200
+     ''' % par)
+Flow('mm3',None,
+     '''
+     spike nsp=2 mag=3000,-3000
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=300,400 l1=399,%(nz)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     math output=input+7400
+     ''' % par)
+
+Flow('mm4','vel',
+     '''
+     window n2=1 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
+     smooth rect1=101 rect2=101
+     ''' % par)
+Flow('mm5','vel',
+     '''
+     window n2=1 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('mm6','vel',
+     '''
+     window n2=1 min2=60000 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+for im in range(par['nm']):
+    mm = 'mm' + str(im)
+    Plot(mm,mm,igrey('color=j allpos=y bias=4715',par))
+
+# ------------------------------------------------------------
+# experiments
+
+Flow('ro',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
+Flow('so',None,'math n1=1      d1=0      o1=0      output=0' % par)
+
+for ie in range(par['ne']):
+    
+    # receivers
+    if(ie==0): r_ = 6000
+    if(ie==1): r_ =16000
+    
+    zr = 'zr' + str(ie)
+    xr = 'xr' + str(ie)
+    rr = 'rr' + str(ie)
+
+    Flow(zr,'ro','math output="%g"' % r_)
+    Flow(xr,'ro','math output="x1"')
+    Flow(rr,[xr,zr],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+    Plot(rr,rr,'window n1=2 | dd type=complex | window j2=50 | '
+         + pgraph('symbol=. plotcol=7',par))
+
+    # sources
+    if(ie==0): s_ = 40000
+    if(ie==1): s_ = 40000
+
+    zs = 'zs' + str(ie)
+    xs = 'xs' + str(ie)
+    rs = 'rs' + str(ie)
+    ss = 'ss' + str(ie)
+    
+    Flow(zs,'so','math output=6000')
+    Flow(xs,'so','math output=%g' % s_)
+    Flow(rs,'so','math output=1')
+    Flow(ss,[xs,zs,rs],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
+    Plot(ss,ss,'window n1=2 | dd type=complex | window | '
+         + pgraph('symbol=v plotcol=7',par))
+    
+# ------------------------------------------------------------
+# F-D modeling
+
+# loop over models
+for im in range(par['nm']):
+    mm = 'mm' + str(im)
+
+    # loop over experiment geometry
+    for ie in range(par['ne']):
+        ss = 'ss' + str(ie)
+        rr = 'rr' + str(ie)
+
+        # experiment geometry
+        gg = 'gg' + '-' + str(im) + '-' + str(ie)
+        Result(gg,[mm,ss,rr],'Overlay')
+
+        # modeling
+        dd = 'dd' + '-' + str(im) + '-' + str(ie) # data     (absorbing surface)
+        do = 'do' + '-' + str(im) + '-' + str(ie) # data     (     free surface)
+        ww = 'ww' + '-' + str(im) + '-' + str(ie) # snapshot (absorbing surface)
+        wo = 'wo' + '-' + str(im) + '-' + str(ie) # snapshot (     free surface)
+
+        amodel(dd,ww,'wav',mm,ss,rr,'free=n')
+        amodel(do,wo,'wav',mm,ss,rr,'free=y')
+        
+        #Result(ww,ww,'window |' + igrey('gainpanel=a pclip=99',par))
+        Result(dd,dd,'transp |' + dgrey('',par))
+        #Result(wo,wo,'window |' + igrey('gainpanel=a pclip=99',par))
+        Result(do,do,'transp |' + dgrey('',par))
+
+# ------------------------------------------------------------
+
+End()

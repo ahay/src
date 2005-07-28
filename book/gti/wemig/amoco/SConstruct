@@ -1,0 +1,114 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import wemig
+
+# ------------------------------------------------------------
+# MIGRATION parameters
+# ------------------------------------------------------------
+par = {
+    'nw':180, 'ow':1,'jw':1,'ns':116, 'js':3, 'fs':1,
+#    'nw':10, 'ow':10,'ns':69, 'js':5, 'fs':0,
+    'nx':200, 'ox':10.5, 'dx':0.05,    
+    'nh':200,
+    #
+    'verb':'y',
+    'eps':0.01,
+    'nrmax':5,
+    'dtmax':0.00005,
+    'tmx':16, 'tmy':0,
+    'pmx':0,  'pmy':0,
+    #
+    'xmin':10.5, 'xmax':20.5, 'zmin':0, 'zmax':4
+    }
+
+wpar = {'nt':384, 'ot':0, 'dt':0.0099, 'kt':1,'ft':0}
+
+# ------------------------------------------------------------
+# fetch data
+# ------------------------------------------------------------
+Fetch(['velmodel.hh'],'Amoco')
+Fetch(['shots.hh'],'Amoco')
+
+# ------------------------------------------------------------
+# VELOCITY
+# ------------------------------------------------------------
+Flow('velo','velmodel.hh',
+     '''
+     dd form=native |
+     math "output=input/1000" |
+     put label1=z label2=x
+     ''')
+
+Flow('s0','velo',
+     '''
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+Flow('sd','s0','window squeeze=n n3=100')
+Flow('s1','s0','window squeeze=n f3=100')
+
+# ------------------------------------------------------------
+# SHOTS
+# ------------------------------------------------------------
+Flow('sraw','shots.hh',
+     '''
+     dd form=native |
+     window min3=%(ox)g |
+     put label1=t o1=0
+         label2=r 
+         label3=s |
+     mutter half=n t0=0.1 v0=2.7 
+     ''' % par )
+
+# infill shots
+Flow('shot','sraw',
+     '''
+            window f1=10 | 
+            stretch inv=n rule=L |
+            fft1    inv=n |
+            transp plane=12 |
+            transp plane=23 |
+     infill eps=1. |
+            transp plane=23 |
+            transp plane=12 |
+            fft1    inv=y |
+            stretch inv=y rule=L |
+            pad beg1=10 
+     ''')
+
+# ------------------------------------------------------------
+# CMPS
+# ------------------------------------------------------------
+Flow('cmps','shot',
+     '''
+     put d2=.0125 |
+     shot2cmp positive=n |
+     window j3=2 min3=%(ox)g |
+     put label2=h label3=m
+     ''' % par )
+
+# ------------------------------------------------------------
+# WAVELET
+# ------------------------------------------------------------
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g |
+     ricker1 frequency=9
+         ''' % wpar )    
+Result('wave','wave','graph')
+
+# ------------------------------------------------------------
+
+wemig.sinking(par)
+
+wemig.profile(par)
+
+wemig.result(par)
+
+# ------------------------------------------------------------
+
+End()

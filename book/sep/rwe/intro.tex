@@ -1,0 +1,175 @@
+\section{Introduction}
+
+\inputdir{XFig}
+
+Imaging complex geology is one of the main challenges of 
+\sout{today's}
+seismic processing
+\uline{today}. 
+Of the many seismic imaging methods available,
+downward continuation \cite[]{Claerbout.blackwell.85}
+is accurate, robust, and capable of handling
+models with large and sharp velocity variations.
+This method naturally handles the multipathing
+that occurs in complex geology and provides a band-limited
+solution to the seismic imaging problem.
+Furthermore, as computational power increases, such methods
+are gradually moving into the mainstream of seismic
+processing.
+This explains why one-way wave extrapolation has been a 
+subject of extensive theoretical research in the recent years
+\cite[]{ristow.geo.94,dehoop.jmathphys.96,SEG-1996-0415,thomson1999,GEO67-03-08720882}.
+\par
+However, migration by downward 
+continuation imposes strong limitations on the dip of reflectors 
+that can be imaged since, by design, it favors 
+downward propagating energy.
+%% which is 
+%%propagating mainly in the downward direction. 
+Upward propagating energy, for example overturning waves,
+can be imaged in principle using downward continuation
+methods \cite[]{GEO57-11-14531462}, although the procedure 
+is difficult, particularly for prestack data.
+In contrast, Kirchhoff-type methods based on ray-traced
+traveltimes can image steep dips and handle 
+overturning waves, although those methods are far less 
+reliable in complex velocity models given their
+asymptotic assumption \cite[]{GEO66-05-16221640}.
+\par
+The steep-dip limitation of downward continuation techniques has
+been addressed in several ways: 
+\bit
+\itt A first option is to increase the
+angular accuracy of the extrapolation operator, for example by 
+employing methods from the Fourier finite-difference (FFD)
+family \cite[]{ristow.geo.94,GEO67-03-08720882}, or the
+Generalized Screen Propagator (GSP) family 
+\cite[]{dehoop.jmathphys.96,SEG-1996-0415}. 
+The enhancements brought about by these methods
+come at a price, since they increase the cost of 
+extrapolation without guaranteeing unconditional stability.
+%%
+\itt A second option is to perform the wavefield extrapolation
+in tilted coordinate systems \cite[]{Etgen-SEG02}, 
+or by designing sources that favor illumination of
+particular regions of the image 
+\cite[]{GEO59-05-08010809,Wu-SEG02}.
+We can thus increase angular accuracy, although these methods 
+are best suited for only a subset of the model 
+(a salt flank, for example),
+and potentially decrease the accuracy in other regions of the model. 
+In complex geology, 
+%%it is also not obvious what is 
+defining an optimal
+tilt angle for the extrapolation grid is not obvious. 
+%%
+\itt A third possibility is hybridization of 
+wavefield and ray-based techniques, either in the form 
+of Gaussian beams 
+\cite[]{cerveny,GEO.55.11.14161428,GEO66-04-12401250,Gray-SEG02},
+coherent states 
+\cite[]{Albertin-SEG01,Albertin-SEG02},
+or beam-waves 
+\cite[]{BDEtgen-EAGE03}.
+Such techniques are quite powerful, since they
+couple wavefield methods with
+multipathing and band-limited properties, with
+ray methods, which deliver arbitrary directions 
+of propagation, even overturning.
+Beams can be understood as localized wave packets propagating in the 
+preferential direction
+\cite[]{SEG-2000-10081011}.
+Numerically, they are usually implemented using localized 
+extrapolation paths.
+Extrapolation
+beams may leave shadow zones in various parts 
+of the model, which hamper their imaging abilities.
+Furthermore, extrapolation beams have limited width, 
+and do not allow diffractions from sharp features in the
+velocity model to develop completely without being
+attenuated at the boundaries \uline{of the beam}.
+%%limits 
+%%the extent of the diffractions created by sharp features 
+%%in the model to 
+%%that of any particular beam, no matter how accurate the 
+%%extrapolator within each beam is. 
+In addition, the narrow 
+extrapolation domain \uline{can} generate\sout{s} beam superposition
+artifacts, such as beam boundary effects.
+\eit
+\par
+In our method, we recognize that Cartesian coordinates for 
+downward, tilted continuation or along beams of limited spatial extent,
+are just a mathematical convenience that do not reflect a 
+physical reality.
+The main idea of our paper is to reformulate wavefield 
+extrapolation in general Riemannian coordinates that conform
+with the general direction of wave propagation,
+thus the name {\it Riemannian wavefield extrapolation} (RWE)
+for our method.
+We formulate the wavefield extrapolation theory in arbitrary {3-D} 
+semi-orthogonal Riemannian spaces, where the extrapolation direction
+is orthogonal to all other directions.
+Examples of such coordinate systems include, but are not limited
+to, fans of rays emerging from a source point, 
+or bundles of rays initiated by plane waves of arbitrary
+initial dips at the source.
+For constant background velocity,
+our method reduces to 
+extrapolation in polar/spherical coordinates
+\cite[]{Nichols.sepphd.81,GEO61-01-02530263},
+or extrapolation in tilted coordinates
+\cite[]{Etgen-SEG02}.
+Our method is also closely related to Huygens wavefront tracing
+\cite[]{GEO66-03-08830889}, 
+which represents a finite-difference
+solution to the eikonal equation in ray coordinates.
+\par
+The main strength of our method is that the coordinate system
+can follow the waves, which may overturn, such that 
+we can use one-way extrapolators to image 
+diving waves (Figure~\ref{fig:overturned}).
+\sideplot{overturned}{width=3.0in}
+{
+Ray coordinate systems are superior to tilted coordinate 
+systems for imaging overturning waves using one-way 
+wavefield extrapolators.
+Overturning reflected energy may become evanescent 
+in tilted coordinate systems (a), 
+but stays non-evanescent in ray coordinate systems (b).
+}
+We can also use inexpensive
+extrapolators with limited angle accuracy (e.g. $15^\circ$),
+since, in principle, we are never too far from the 
+wave propagation direction.
+We are also not confined to the extent
+of any individual extrapolation 
+beam, therefore we can track diffractions
+for their entire spatial extent (Figure~\ref{fig:beams}).
+%%
+\sideplot{beams}{width=3.0in}
+{Extrapolated energy is attenuated
+at beam boundaries (a), but is propagated in a Riemannian 
+coordinate system (b).}
+%%
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,100 @@
+from rsfproj import *
+
+def wiggle(title):
+    return '''
+    wiggle clip=1 transp=y yreverse=y poly=y
+    title="%s" wheretitle=b wherexlabel=t
+    ''' % title
+
+Flow('mask',None,'spike n1=64 n2=25 | pad n2=32 beg2=3')
+
+for p in (1,3):
+    dat = 'suplane_%d_dip%s.dat' % (p,('','s')[(p-1)/2])
+    inp = 'inp%d' % p
+    dip = 'dip%d' % p
+    pwd = 'pwd%d' % p
+    flt = 'flt%d' % p
+    Fetch(dat,'plane')
+    Flow(inp,dat,'segyread tape=$SOURCE read=data su=y endian=0',stdin=0)
+    Plot(inp,wiggle('INPUT'))
+    Flow(dip,[inp,'mask'],
+         'dip rect1=3 rect2=3 niter=10 order=3 mask=${SOURCES[1]} verb=y')
+    Plot(dip,'grey color=j scalebar=y title=DIP allpos=y')
+    Flow(pwd,[inp,dip],'pwd dip=${SOURCES[1]} order=3')
+    Plot(pwd,wiggle('RESIDUAL'))
+    Result(dip,[inp,dip,pwd],'SideBySideAniso',vppen='txscale=1.5')
+
+    Flow(flt,[inp,dip],'flat dip=${SOURCES[1]} i0=3 eps=0.02')
+    Plot(flt,wiggle('FLATTENED'))
+    Result(flt,[inp,flt],'SideBySideAniso',vppen='txscale=1.5')
+
+Flow('dip2','inp3 mask',
+     'twodip2 eps=1 lam=1 gauss=n order=3 mask=${SOURCES[1]}')
+Flow('dip21','dip2','window n3=1')
+Flow('dip22','dip2','window f3=1')
+Plot('dip21','grey clip=2 color=j scalebar=y title="DIP 1" ')
+Plot('dip22','grey clip=2 color=j scalebar=y title="DIP 2" ')
+Flow('pwd2',['inp3','dip21','dip22'],
+     'pwd dip=${SOURCES[1]} order=3 | pwd dip=${SOURCES[2]} order=3')
+Plot('pwd2',wiggle('RESIDUAL'))
+Result('dip2','inp3 dip21 dip22 pwd2','SideBySideAniso',
+       vppen='txscale=1.5')
+
+Result('of','inp1',
+       '''
+       window n2=25 f2=3 |
+       ofpwd p0=0 dp=0.02 order=3 np=200 |
+       graph title="PWD Objective Function" label1=Dip
+       ''')
+
+
+Result('of2','inp1',
+       '''
+       window n2=25 f2=3 |
+       ofsemb p0=0 dp=0.02 order=3 np=200 |
+       graph title="Semblance Objective Function" label1=Dip
+       ''')
+
+def plot(title):
+    return '''
+    grey wantaxis1=n label1=Sample label2=Trace title="%s"
+    labelsz=12 titlesz=15 crowd1=0.9 wheretitle=t
+    wherexlabel=b wanttitle=n
+    ''' % title
+
+Flow('noiz',None,'make second=n n1=75 n2=25 t1=2')
+Plot('noiz',plot('Signal'))
+
+Flow('make',None,'make second=y n1=75 n2=25 t1=2')
+Plot('make',plot('Signal'))
+
+Plot('nof','noiz',
+     '''
+     ofpwd p0=-3 dp=0.02 order=3 np=200 |
+     graph title="PWD Objective Function" label1=Dip
+     labelsz=12 titlesz=15 crowd1=0.9 
+     ''')
+Plot('mof','make',
+     '''
+     ofpwd2 p0=-3 dp=0.02 order=3 np=200 nq=200 q0=0 dq=0.02 |
+     contour title="PWD Objective Function" label1="First Dip"
+     label2="Second Dip" transp=n yreverse=n c0=0 dc=0.1 nc=50
+     labelsz=12 titlesz=15
+     wherexlabel=b wanttitle=n
+     ''')
+Plot('nof2','noiz',
+     '''
+     ofsemb p0=-3 dp=0.02 np=200 |
+     graph title="Stack Semblance" label1=Dip
+     labelsz=12 titlesz=15 crowd1=0.9 
+     ''')
+
+Result('nof','noiz nof','SideBySideAniso')
+Result('mof','make mof','SideBySideAniso')
+Result('nof2','noiz nof2','SideBySideAniso')
+
+Flow('dips1','inp1','window n2=25 f2=3 | dips nd=1 order=1 verb=n niter=5') 
+Flow('dips3','inp3','window n2=25 f2=3 | dips nd=3 order=3 verb=y')
+Flow('dips13','inp1','window n2=25 f2=3 | dips nd=3 order=3 verb=y niter=20')
+
+End()

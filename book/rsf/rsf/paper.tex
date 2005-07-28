@@ -1,0 +1,151 @@
+\title{Introduction to RSF}
+\author{Sergey Fomel}
+\lefthead{Fomel}
+\righthead{Introduction to RSF}
+
+\maketitle
+
+\section{Why RSF?}
+
+The RSF mission is to provide
+\begin{enumerate}
+\item a convenient and powerful environment
+\item a convenient technology transfer tool
+\end{enumerate}
+for researchers working with digital image and data processing. The package is
+available in an open-source form to allow effective collaboration of a wide
+community of developers. The technology developed using the RSF project
+management system is transferred in the form of recorded processing histories,
+which become ``computational recipes'' to be verified, exchanged, and modified
+by users of the system.
+
+\section{What is RSF?}
+
+RSF is a software package for digital data processing,
+which consists of
+\begin{enumerate}
+\item A collection of main programs. Most programs act as filters on input
+  data and can be chained in a Unix pipeline. For example:
+\begin{verbatim}
+< data.rsf sfwindow n1=100 | sfbandpass fhi=60 > data2.rsf
+\end{verbatim}
+This approach follows the Unix philosophy, as formulated by Doug McIlroy,
+the inventor of Unix pipes \cite[]{salus}:
+\begin{enumerate}
+\item Write programs that do one thing and do it well. 
+\item Write programs to work together. 
+\item Write programs to handle text streams, because that is a universal
+  interface.
+\end{enumerate}
+
+Running a command (such as \texttt{sfwindow}) without parameters or the
+necessary input and output files shows a brief documentation, explaining the
+program purpose and parameters.  Alternatively, brief documentation is
+provided by \texttt{sfdoc} program. Main program documentation in HTML format
+is available on the web at \\ \url{http://egl.beg.utexas.edu/RSF/}.
+
+RSF uses \emph{Regularly Sampled File} format for data files, which is similar
+to the format used in the SEPlib library developed at the Stanford Exploration
+Project (SEP). The file format describes regularly sampled hypercubes. Up to 9
+dimensions are supported. In accordance with the Unix philosophy, each RSF
+file (such as \texttt{data.rsf}) is a simple readable text. It contains a
+pointer (\texttt{in=} parameter) to the location of the binary data. 
+
+RSF provides programs for conversion to and from other popular formats such as
+SEG-Y and SU. RSF currently adopts Vplot file format, also developed at SEP,
+for generated graphics files.
+
+\item An API (application programmer's interface) for programmers writing
+  their own software to manipulate RSF files. The main software language of
+  the RSF package is C. Interfaces to other languages (C++, Fortran-77,
+  Fortran-90, Python, Matlab) are also provided.
+  
+\item A project management system. The system uses and extends \texttt{SCons},
+  an open-source software construction
+  package\footnote{\url{http://www.scons.org/}}, to document and maintain data
+  processing flows. Documented projects become computational recipes that can
+  be easily exchanged among RSF users.
+  
+\item A collection of reproducible documents, organized in living books. Each
+  reproducible book contains a collection of RSF recipes (\texttt{SConstruct}
+  files) used to generate book figures. The recipes cover a variety of data
+  processing and imaging tasks described in the books. Figures and recipes
+  serve dual purpose with respect to RSF maintenence. They provide demos for
+  introducing new users to the functionality of the package and regression
+  tests for assuring that the system is stable under change.
+
+\end{enumerate}
+
+Follow the links at the end of this paper for additional documentation.
+
+\section{Copyright notice}
+
+The RSF package is released in an open-source form under the standard GNU GPL
+license. In simple words, there are no restrictions on the use of the software
+(including copying, modifying, selling, etc.) However, there are restrictions
+on the software redistribution intended to prevent the package from loosing
+its open-source status. Users are encourages to submit their modifications
+back to the original distribution to the benefit of the whole user community.
+
+\section{Alternatives} 
+
+In the present form, the RSF package, while being completely written from
+scratch, borrows from the design of SEPlib, a publicly available software
+package, maintained by Bob Clapp at the Stanford Exploration Project
+\cite[]{Claerbout.sep.70.413,Dellinger.sep.73.461,Nichols.sep.82.257,Biondi.sep.92.343,Clapp.sep.102.bob1}\footnote{SEPlib
+  is available at \url{http://sepwww.stanford.edu/software/seplib/}.}.
+Generations of SEP students and researchers contributed to SEPlib. Most
+important contributions came from Rob Clayton, Jon Claerbout, Dave Hale, Stew
+Levin, Rick Ottolini, Joe Dellinger, Steve Cole, Dave Nichols, Martin
+Karrenbach, Biondo Biondi, and Bob Clapp.
+
+RSF also borrows ideas from Seismic Unix (SU), a package maintained by John
+Stockwell at the Center for Wave Phenomenon at the Colorado School of Mines
+\cite[]{TLE16-07-10451049,su}\footnote{SU is available at
+  \url{http://timna.mines.edu/cwpcodes/}.}. Main contributors to SU
+included Einar Kjartansson, Shuki Ronen, Jack Cohen, Chris Liner, Dave Hale,
+and John Stockwell.
+
+Another option for a seismic processing system is Free USP. USP is a
+processing package originally developed by Amoco and released by BP
+\footnote{Free USP is available at
+\url{http://www.freeusp.org/}.}. Another package, DDS (Data Dictionary
+System) is also released by BP\footnote{DDS is available at
+\url{http://www.freeusp.org/DDS/}}. The DDS design is closer to RSF.
+
+None of these three packages can be qualified as free software according to
+the \href{http://www.fsf.org/philosophy/free-sw.html}{Free Software
+  Foundation} or as open-source software according to the
+\href{http://www.opensource.org/docs/definition.php}{Open Source Initiative}.
+However, they are available for free in the source form under certain
+conditions. The RSF package is both free and open-source.
+
+\section{Other documents}
+
+\begin{itemize}
+\item
+  \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/install_html/}{Installation instructions}
+\item \href{http://egl.beg.utexas.edu/RSF/}{Self-documentation reference for RSF programs}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/prog_html/}{guide to RSF programs}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/format_html/}
+  {guide to RSF file format}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/api_html/}{guide to
+    RSF programming interface}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/demo_html/}{guide to programming with RSF}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/tour_html/}{tour of RSF software}
+\item A
+  \href{http://egl.beg.utexas.edu/RSF/book/rsf/scons/paper_html/}{guide
+    to SCons interface for reproducible computations}
+\end{itemize}
+
+\bibliographystyle{seg}
+\bibliography{intro,SEG,SEP2}
+
+%\end{document}
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

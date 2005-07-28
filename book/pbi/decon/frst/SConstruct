@@ -1,0 +1,70 @@
+from rsfproj import *
+
+segy = 'ch80hz_4000.sgy'
+
+Fetch(segy,'frst')
+
+Flow('ch80 ./hfile ./bfile tfile',segy,
+     '''
+     segyread tape=$SOURCE tfile=${TARGETS[3]}
+     hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     put n3=750 n2=400 d2=3 o2=0 d3=6 o3=1350 |
+     reverse which=2 opt=i
+     ''',stdin=0)
+
+Flow('ch','ch80','shot2cmp')
+Flow('mut','ch','mutter v0=3000 t0=0.1')
+Flow('vscan','mut','vscan semblance=y v0=1500 nv=100 dv=50')
+
+Flow('vrms','vscan','blindpick rect1=10 rect2=5')
+Result('hvrms','vrms',
+       '''
+       window max3=6000 | 
+       grey color=j allpos=y pclip=100 bias=2000
+       scalebar=y barlabel="Stacking Velocity"
+       wanttitle=n label1="Time (s)" label2="Midpoint (m)"
+       ''')
+
+Flow('nmo',['mut','vrms'],'nmo velocity=${SOURCES[1]}')
+Flow('stack','nmo','stack')
+
+for mod in ('vp','vs','rho'):
+    Fetch(mod+'.dir','frst')
+    Flow(mod,mod+'.dir',
+         '''
+         echo in=$SOURCE data_format=native_float esize=4
+         n1=600 n2=2000 d1=1 d2=3
+         ''',stdin=0)
+    
+Flow('vel','vp','scale dscale=1000') # km to m 
+Flow('ai0','rho vp','add mode=p ${SOURCES[1]}') # in depth
+Flow('ai','ai0 vel', # in time
+     '''
+     depth2time velocity=${SOURCES[1]} dt=0.001 nt=1000 eps=1
+     ''')
+Result('hai','ai',
+       '''
+       grey color=j allpos=y bias=1 pclip=100
+       scalebar=y barlabel="Acoustic Impedance"
+       wanttitle=n label1="Time (s)"
+       ''')
+
+Flow('refl','ai','ai2refl')
+Flow('conv','refl','ricker1')
+Flow('mod','conv vel','time2depth nz=600 dz=1 velocity=${SOURCES[1]}')
+
+Result('hmod','mod',
+       'grey color=G title=Reflectivity label1="Depth (m)" ')
+
+Flow('stack','nmo','stack')
+
+Result('hstack','stack',
+       '''
+       window max2=6000 min1=0.3 max1=0.5 |
+       grey title="NMO Stack" label1="Time (s)" label2="Midpoint (m)"
+       ''')
+
+Flow('pre','mut','window j3=2 max3=6000')
+Flow('mig0','pre','preconstkirch vel=1500')
+
+End()

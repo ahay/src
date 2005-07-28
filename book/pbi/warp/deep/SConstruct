@@ -1,0 +1,407 @@
+from rsfproj import *
+
+Flow(['synth','vpvs'],None,
+     'randrefl nr=1000 vpvs=${TARGETS[1]} func=m d1=0.004 tscale=6')
+Flow('pp','synth','window n2=1 f2=0 max1=6')
+Flow('ps','synth','window n2=1 f2=1')
+
+def graph(max,title):
+    return '''
+    graph plotfat=10 label1="Time (s)" wanttitle=n labelsz=10 label2=%s
+    max1=%g
+    ''' % (title,max)
+
+####################################################################
+# GRAPH PLOT
+####################################################################
+
+Plot('pp',graph(6,'PP'))
+Plot('ps',graph(11,'PS'))
+Result('synth','pp ps','OverUnderAniso')
+
+Flow('vpvs0 vpvs1 vpvs2','vpvs',
+     '''
+     window n2=1 f2=0 < $SOURCE > ${TARGETS[1]} &&
+     window n2=1 f2=1 < $SOURCE > ${TARGETS[2]} &&
+     cmplx ${TARGETS[1]} ${TARGETS[2]}
+     ''',stdin=0)
+Plot('vpvs','vpvs0',
+     '''
+     graph symbol='*' label1='Time (s)' label2='Vp/Vs'
+     wanttitle=n wherexlabel=t wheretitle=b crowd1=0.8 labelsz=10 
+     min1=0 max1=6 min2=1 max2=6 symbolsz=8 plotcol=5
+     ''')
+
+##################################################################
+# GREYSCALE PLOT
+##################################################################
+
+Plot('gpp','pp',
+     '''
+     grey transp=n label1=' ' wherexlabel=b wheretitle=t max1=6
+     labelsz=20 titlesz=20 wantaxis2=n crowd1=0.9 title=PP
+     ''')
+Plot('gps','ps',
+     '''
+     grey transp=n label1=' ' wherexlabel=b wheretitle=t max1=11
+     labelsz=20 titlesz=20 wantaxis2=n crowd1=0.9 title=PS
+     ''')
+Plot('bot','gpp gps','OverUnderAniso')
+Result('vpvs','vpvs bot','OverUnderAniso')
+
+##################################################################
+# EXACT WARPING
+##################################################################
+
+warp2gamma = 'math output="input+x1" | smoothder | math output="2*input-1" '
+
+graph2 = '''
+graph wanttitle=n min1=0 max1=6 min2=1 max2=6
+wherexlabel=t wheretitle=b crowd1=0.8 labelsz=10
+'''
+
+#Flow('swrp','pp',
+#     '''
+#     math output='0.5*x1+sin(4.*acos(-1.)*x1/6.)/(40.*acos(-1.)/6.)'
+#     ''')
+Flow('swrp','pp',"math output='3*log(1+25*x1/36)'")
+Flow('spps','swrp',warp2gamma)
+Plot('spps',graph2)
+
+warp0 = '''
+warp1 other=${SOURCES[1]} warpin=${SOURCES[2]} 
+verb=1 nliter=0 noamp=1
+'''
+
+Flow('morph','ps pp swrp',warp0)
+Plot('morph-bot','swrp',
+     '''math output=0 |
+     graph plotcol=2
+     label1=' ' label2='Time Error (s)'
+     wanttitle=n wherexlabel=t wheretitle=b 
+     min1=0 max1=6 crowd=0.8 labelsz=10
+     title="Traveltime Error (s)"
+     ''')
+Plot('morph-top',['vpvs','spps'],'Overlay')
+Result('morph','morph-top morph-bot','OverUnderAniso')
+
+difplot = '''
+add scale=1,-1 ${SOURCES[1]} |
+cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
+dots gaineach=0 Xscreenwd=9.225 Xscreenht=5.2 Xyyscale=0.8
+labels="Difference:PS warped:PP" label1="Time (s)"
+'''
+
+Result('morphs','morph pp',difplot)
+
+iphase = '''
+cat axis=2 ${SOURCES[1]} |
+graph title="Instantaneous Frequency" label1="Time (s)"
+min2=0 max2=1 dash=0,1
+'''
+
+Flow('ipp','pp','iphase rect1=200 order=100')
+Flow('imorph','morph','iphase rect1=200 order=100')
+Result('imorphs','ipp imorph',iphase)
+
+getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
+
+Flow('mask','imorph ipp',getmask)
+
+psrect = '''
+math min=${SOURCES[2]} max=${SOURCES[1]}
+output="sqrt(1+12*(1/min^2-1/max^2)*input)" | dd type=int
+'''
+
+pprect = '''
+math min=${SOURCES[2]} max=${SOURCES[1]}
+output="sqrt(1+12*(1/max^2-1/min^2)*(1-input))" | dd type=int
+'''
+
+def balance(rect):
+    return '''
+    nsmooth1 rect=${SOURCES[1]} |
+    abalance rect1=%d order=100 other=${SOURCES[2]}
+    ''' % rect
+
+Flow('srect','mask imorph ipp',psrect)
+Flow('imorph2','morph srect pp',balance(120))
+
+Flow('prect','mask imorph ipp',pprect)
+Flow('ipp2','pp prect pp',balance(120))
+
+Result('imorphs2','imorph2 ipp2',difplot)
+
+Flow('ipp3','ipp2','iphase rect1=200 order=100')
+Flow('imorph3','imorph2','iphase rect1=200 order=100')
+Result('imorphsss','ipp3 imorph3',iphase)
+
+####################################################################
+# GAMMA PICK
+####################################################################
+
+#def warpscan(ng,gmin,gmax):
+#    return '''warpscan other=${SOURCES[1]}
+#    ng=%d g0=%g dg=%g nw=120 w=200 |
+#    math output='(1+input)^4' | window''' % (ng,gmin,(gmax-gmin)/(ng-1))
+
+def warpscan(ng,gmin,gmax,rect1,rect2):
+    return '''warpscan2 other=${SOURCES[1]}
+    ng=%d g0=%g dg=%g rect1=%d rect2=%d niter=200 |
+    math output='(1+input)^4'
+    ''' % (ng,gmin,(gmax-gmin)/(ng-1),rect1,rect2)
+
+def greyscan(min,max):
+    return '''grey title="Warping Scan"
+    min2=%g max2=%g allpos=y min1=0 max1=6
+    color=j pclip=100 label1="Time (s)" label2="Gamma Scan"
+    wanttitle=n label1='Time' label2="Gamma"''' % (min,max)
+
+Flow('iscan','imorph2 ipp2',warpscan(41,0.9,1.1,200,1))
+Plot('iscan',greyscan(0.9,1.1))
+Plot('bwiscan','iscan',greyscan(0.9,1.1) + ' color=I')
+
+#def blindpick(eps=1):
+#    return 'blindpick2 eps=%g | spline pattern=${SOURCES[1]}' % eps
+
+def blindpick(eps=1):
+    return 'blindpick2 eps=%g' % (eps*1000)
+
+def pickplot(min,max,col=7,fat=1):
+    return '''graph transp=y min2=%g max2=%g min1=0 max1=6
+    yreverse=y plotcol=%d plotfat=%d pad=n
+    wantaxis=n wanttitle=n''' % (min,max,col,fat)
+
+
+Flow('pick0','iscan ipp2',blindpick(25))
+Flow('pick','pick0','math output="(input-1)*x1" ')
+Plot('pick','pick0',pickplot(0.9,1.1,7,1))
+Plot('pick0',pickplot(0.9,1.1,0,7))
+Result('scan','iscan pick0 pick','Overlay')
+Result('bwscan','bwiscan pick0 pick','Overlay')
+
+####################################################################
+# ADDITIONAL WARPING
+####################################################################
+
+def warp1(niter,rect):
+    return '''warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+    warpout=${TARGETS[2]} noamp=1
+    verb=1 nliter=%d rect1=%d > ${TARGETS[1]} &&
+    warpadd < ${SOURCES[3]} add=${TARGETS[2]}''' % (niter,rect)
+
+Flow('warp morph1 varp6','imorph2 ipp2 pick swrp',warp1(2,350))
+Plot('warp',warp2gamma + ' | ' + graph2)
+Plot('morph2-top','vpvs warp','Overlay')
+
+def botplot(min,max):
+    return '''add scale=1,-1 ${SOURCES[1]} | scale dscale=1000 |
+    graph plotcol=2
+    label1=' ' label2='Time Error (ms)'
+    wanttitle=n wherexlabel=t wheretitle=b
+    crowd=0.8 labelsz=10
+    min1=0 max1=6 min2=%g max2=%g
+    title="Traveltime Error (s)"
+    ''' % (min,max)
+
+Plot('morph2-bot','warp swrp',botplot(-3,3))
+Result('morph22','morph2-top morph2-bot','OverUnderAniso')
+
+# Result('morph23','morph1 ipp2',difplot)
+
+# WRONG START
+
+# Flow('rswrp','swrp','math output=1.25*x1')
+
+htable = '''
+0 0
+2.7 3.168
+6 4.927
+'''
+
+Flow('./htable',None,
+     'echo %s n1=2 n2=3 in=$TARGET data_format=ascii_float' %
+     string.join(Split(htable),' '))
+Flow('rswrp','htable swrp','dd form=native | spline pattern=${SOURCES[1]}')
+
+Flow('rspps','rswrp',warp2gamma)
+Plot('rspps',graph2)
+
+Flow('rmorph','ps pp rswrp',warp0)
+
+Plot('morphl-bot','rswrp swrp',botplot(-400,400))
+Plot('morphl-top','vpvs rspps','Overlay')
+Result('morphl','morphl-top morphl-bot','OverUnderAniso')
+
+Result('morphls','rmorph pp',difplot)
+
+# SPECTRAL BALANCING
+
+Flow('rimorph','rmorph','iphase rect1=200 order=100')
+Result('rimorphs','ipp rimorph',iphase)
+
+Flow('rmask','rimorph ipp',getmask)
+
+Flow('rsrect','rmask rimorph ipp',psrect)
+Flow('rimorph2','rmorph rsrect pp',balance(120))
+
+Flow('rprect','rmask rimorph ipp',pprect)
+Flow('ripp2','pp rprect pp',balance(120))
+
+Result('rmorphl1','rimorph2 ripp2',difplot)
+
+# GAMMA SCAN
+
+Flow('scanl','rimorph2 ripp2',warpscan(81,0.95,1.35,25,1))
+Plot('scanl',greyscan(0.95,1.35))
+Plot('bwscanl','scanl',greyscan(0.95,1.35) + ' color=I')
+
+Flow('pickl0','scanl pp','window max2=1.25 |' + blindpick(3))
+Flow('pickl','pickl0','math output="(input-1)*x1" ')
+Plot('pickl','pickl0',pickplot(0.95,1.35))
+Plot('pickl0',pickplot(0.95,1.35,0,7))
+Result('scanl','scanl pickl0 pickl','Overlay')
+Result('bwscanl','bwscanl pickl0 pickl','Overlay')
+
+# WARPING CORRECTION
+Flow('warpl1 morphl1 varp7',
+     'rimorph2 ripp2 pickl rswrp',warp1(1,500))
+Plot('warpl1',warp2gamma + '| ' + graph2)
+Plot('morphl2-top','vpvs warpl1','Overlay')
+Plot('morphl2-bot','warpl1 rswrp',botplot(-300,300))
+Result('morphl2','morphl2-top morphl2-bot','OverUnderAniso')
+
+Result('morphl2s','morphl1 ripp2',difplot)
+
+# MOVE CLOSER
+Flow('morphr','ps pp warpl1',warp0)
+Plot('morphr-bot','morphr pp',difplot)
+Result('morphr','morphl2-top morphr-bot','OverUnderAniso')
+
+# SPECTRAL BALANCING
+
+Flow('imorphr','morphr','iphase rect1=200 order=100')            
+Result('imorphsr','ipp imorphr',iphase)
+
+Flow('maskr','imorphr ipp',getmask)
+
+Flow('srectr','maskr imorphr ipp',psrect)
+Flow('imorph2r','morphr srectr pp',balance(120))
+
+Flow('prectr','maskr imorphr ipp',pprect)
+Flow('ipp2r','pp prectr pp',balance(120))
+            
+Plot('morphr1-bot','imorph2r ipp2r',difplot)
+Result('morphr1','morphl2-top morphr1-bot','OverUnderAniso')
+
+# GAMMA SCAN
+Flow('scanr','imorph2r ipp2r',warpscan(41,0.9,1.1,50,1))
+Plot('scanr',greyscan(0.9,1.1))
+Plot('bwscanr','scanr',greyscan(0.9,1.1) + ' color=I')
+
+# GAMMA PICK
+Flow('pickr0','scanr',blindpick(2))
+Flow('pickr','pickr0','math output="(input-1)*x1" ')
+Plot('pickr','pickr0',pickplot(0.9,1.1))
+Plot('pickr0',pickplot(0.9,1.1,0,7))
+Result('scanr','scanr pickr0 pickr','Overlay')
+Result('bwscanr','bwscanr pickr0 pickr','Overlay')
+
+# WARPING CORRECTION 2
+Flow('warpr1 morphr1 varp8',
+     'imorph2r ipp2r pickr warpl1',warp1(2,500))
+Plot('warpr1',warp2gamma + ' | ' + graph2)
+Plot('morphr2-top','vpvs warpr1','Overlay')
+Plot('morphr2-bot','morphr1 ipp2r',difplot)
+Result('morphr2','morphr2-top morphr2-bot','OverUnderAniso')
+
+# MOVE CLOSER
+Flow('morphq','ps pp warpr1',warp0)
+Plot('morphq-bot','morphq pp',difplot)
+Result('morphq','morphr2-top morphq-bot','OverUnderAniso')
+
+# SPECTRAL BALANCING
+Flow('imorphq','morphq','iphase rect1=200 order=100')            
+Result('imorphsq','ipp imorphq',iphase)
+
+Flow('maskq','imorphq ipp',getmask)
+
+Flow('srectq','maskq imorphq ipp',psrect)
+Flow('imorph2q','morphq srectq pp',balance(120))
+
+Flow('prectq','maskq imorphq ipp',pprect)
+Flow('ipp2q','pp prectq pp',balance(120))
+            
+Plot('morphq1-bot','imorph2q ipp2q',difplot)
+Result('morphq1','morphr2-top morphq1-bot','OverUnderAniso')
+
+# GAMMA SCAN
+Flow('scanq','imorph2q ipp2q',warpscan(41,0.9,1.1,50,1))
+Plot('scanq',greyscan(0.9,1.1))
+Plot('bwscanq','scanq',greyscan(0.9,1.1) + ' color=I')
+
+# GAMMA PICK
+Flow('pickq0','scanq pp',blindpick(1))
+Flow('pickq','pickq0','math output="(input-1)*x1" ')
+Plot('pickq','pickq0',pickplot(0.9,1.1))
+Plot('pickq0',pickplot(0.9,1.1,0,7))
+Result('scanq','scanq pickq0 pickq','Overlay')
+Result('bwscanq','bwscanq pickq0 pickq','Overlay')
+
+# WARPING CORRECTION 3
+Flow('warpq1 morphq1 varp9',
+     'imorph2q ipp2q pickq warpr1',warp1(2,500))
+Plot('warpq1',warp2gamma + ' | ' + graph2)
+
+Plot('morphq2-bot','warpq1 swrp',botplot(-15,15))             
+Plot('morphq2-top','vpvs warpq1','Overlay')
+Result('morphq2','morphq2-top morphq2-bot','OverUnderAniso')
+
+Result('morphq2s','morphq1 ipp2q',difplot)
+
+# MOVE CLOSER
+Flow('morphqq','ps pp warpq1',warp0)
+Plot('morphqq-bot','morphqq pp',difplot)
+Result('morphqq','morphq2-top morphqq-bot','OverUnderAniso')
+
+# SPECTRAL BALANCING
+Flow('imorphqq','morphq1','iphase rect1=200 order=100')            
+Result('imorphsqq','ipp imorphqq',iphase)
+        
+Flow('maskqq','imorphqq ipp',getmask)
+
+Flow('srectqq','maskqq imorphqq ipp',psrect)
+Flow('imorph2qq','morphq1 srectqq pp',balance(120))
+
+Flow('prectqq','maskqq imorphqq ipp',pprect)
+Flow('ipp2qq','pp prectqq pp',balance(120))
+            
+Plot('morphqq1-bot','imorph2qq ipp2qq',difplot)
+Result('morphqq1','morphq2-top morphqq1-bot','OverUnderAniso')
+
+# GAMMA SCAN
+Flow('scanqq','imorph2qq ipp2qq',warpscan(41,0.9,1.1,200,1))
+Plot('scanqq',greyscan(0.9,1.1))
+Plot('bwscanqq','scanqq',greyscan(0.9,1.1) + ' color=I')
+
+# GAMMA PICK
+Flow('pickqq0','scanqq pp',blindpick(10))
+Flow('pickqq','pickqq0','math output="(input-1)*x1" ')
+Plot('pickqq','pickqq0',pickplot(0.9,1.1))
+Plot('pickqq0',pickplot(0.9,1.1,0,7))
+Result('scanqq','scanqq pickqq0 pickqq','Overlay')
+Result('bwscanqq','bwscanqq pickqq0 pickqq','Overlay')
+
+# WARPING CORRECTION 4
+Flow('warpqq1 morphqq1 varp10',
+     'imorph2qq ipp2qq pickqq warpq1',warp1(2,500))
+Plot('warpqq1',warp2gamma + ' | ' + graph2)
+
+Plot('morphqq2-bot','warpqq1 swrp',botplot(-12,12))
+             
+Plot('morphqq2-top','vpvs warpqq1','Overlay')
+Result('morphqq2','morphqq2-top morphqq2-bot','OverUnderAniso')
+
+Result('morphqq2s','morphqq1 ipp2qq',difplot)
+
+End()

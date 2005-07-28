@@ -1,0 +1,10 @@
+from rsfbook import *
+
+Papers(sections={'fmeiko':'Traveltime'},
+       authors={'aniso':'Sergey Fomel and Vladimir Grechka',
+                'precon':'Sergey Fomel and Jon Claerbout',
+                'rwe':'Paul Sava and Sergey Fomel'})
+       
+
+
+

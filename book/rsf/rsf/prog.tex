@@ -1,0 +1,367 @@
+\title{Guide to RSF programs}
+\email{sergey.fomel@beg.utexas.edu}
+\author{Sergey Fomel}
+\lefthead{Fomel}
+\righthead{RSF programs}
+
+\maketitle
+
+\begin{abstract}
+
+This guide introduces some of the most used RSF programs and illustrates their
+usage with examples.
+
+\end{abstract}
+
+\section{Main programs}
+
+The source files for these programs can be found under
+\href{http://egl.beg.utexas.edu/viewcvs/trunk/filt/main/}{filt/main}
+in the RSF distribution.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfadd}
+}}
+
+\texttt{sfadd} is useful for combining (adding, dividing, or
+multiplying) several datasets. What if you want to subtract two
+datasets? Easy. Use the \texttt{scale} parameter as follows:
+\begin{verbatim}
+bash$ sfadd data1.rsf data2.rsf scale=1,-1 > diff.rsf
+\end{verbatim}
+or
+\begin{verbatim}
+bash$ sfadd < data1.rsf data2.rsf scale=1,-1 > diff.rsf
+\end{verbatim}
+The same task can be accomplished with the more general \texttt{sfmath} program:
+\begin{verbatim}
+bash$ sfmath one=data1.rsf two=data2.rsf output='one-two' > diff.rsf
+\end{verbatim}
+or
+\begin{verbatim}
+bash$ sfmath < data1.rsf two=data2.rsf output='input-two' > diff.rsf
+\end{verbatim}
+In both cases, the size and shape of \texttt{data1.rsf} and
+\texttt{data2.rsf} hypercubes should be the same, and a warning
+message is printed out if the the axis sampling parameters (such as
+\texttt{o1} or \texttt{d1}) in these files are different.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfattr}
+}}
+
+\texttt{sfattr} is a useful diagnostic program. It reports certain statistical
+values for an RSF dataset: RMS (root-mean-square) amplitude, mean value, norm
+value, maximum and minimum values, number of nonzero samples, and the total
+number of samples. If we denote data values as $d_i$ for $i=0,1,2,\ldots,n$,
+then the RMS value is $\sqrt{\frac{1}{n}\,\sum\limits_{i=0}^n d_i^2}$, the
+mean value is $\frac{1}{n}\,\sum\limits_{i=0}^n d_i$, and the $L_2$-norm value
+is $\sum\limits_{i=0}^n d_i^2$. Using \texttt{sfattr} is a quick way to see
+the distribution of data values and check it for errors.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfcat}
+}}
+
+\texttt{sfcat} and \texttt{sfmerge} concatenate two or more files
+together along a particular axis. It is the same program, only
+\texttt{sfcat} has the default \texttt{space=n} and \texttt{sfmerge}
+has the default \texttt{space=y}.
+
+Example of \texttt{sfcat}:
+\begin{verbatim}
+bash$ sfspike n1=2 n2=3 > one.rsf
+bash$ sfin one.rsf
+one.rsf:
+    in="/tmp/one.rsf@"
+    esize=4 type=float form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        6 elements 24 bytes
+bash$ sfcat one.rsf one.rsf axis=1 > two.rsf
+bash$ sfin two.rsf
+two.rsf:
+    in="/tmp/two.rsf@"
+    esize=4 type=float form=native
+    n1=4           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        12 elements 48 bytes
+\end{verbatim}
+
+Example of \texttt{sfmerge}:
+\begin{verbatim}
+bash$ sfmerge one.rsf one.rsf axis=2 > two.rsf
+bash$ sfin two.rsf
+two.rsf:
+    in="/tmp/two.rsf@"
+    esize=4 type=float form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=7           d2=0.1         o2=0          label2="Distance (km)"
+        14 elements 56 bytes
+\end{verbatim}
+In this case, an extra empty trace is inserted between the two merged files.
+
+The axes that are not being merged are checked for consistency:
+\begin{verbatim}
+bash$ sfcat one.rsf two.rsf > three.rsf
+sfcat: n2 mismatch: need 3
+\end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfcmplx}
+}}
+
+\texttt{sfcmplx} simply creates a complex dataset from its real and
+imaginary parts. The reverse operation can be accomplished with
+\texttt{sfreal} and \texttt{sfimag}.
+
+Example of \texttt{sfcmplx}:
+\begin{verbatim}
+bash$ sfspike n1=2 n2=3 > one.rsf
+bash$ sfin one.rsf
+one.rsf:
+    in="/tmp/one.rsf@"
+    esize=4 type=float form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        6 elements 24 bytes
+bash$ sfcmplx one.rsf one.rsf > cmplx.rsf
+bash$ sfin cmplx.rsf
+cmplx.rsf:
+    in="/tmp/cmplx.rsf@"
+    esize=8 type=complex form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        6 elements 48 bytes
+\end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfcp}
+}}
+
+The \texttt{sfcp} and \texttt{sfmv} command imitate the Unix
+\texttt{cp} and \texttt{mv} commands and serve for copying and moving
+RSF files. Example:
+\begin{verbatim}
+bash$ sfspike n1=2 n2=3 > one.rsf
+bash$ sfin one.rsf
+one.rsf:
+    in="/tmp/one.rsf@"
+    esize=4 type=float form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        6 elements 24 bytes
+bash$ sfcp one.rsf two.rsf
+bash$ sfin two.rsf
+two.rsf:
+    in="/tmp/two.rsf@"
+    esize=4 type=float form=native
+    n1=2           d1=0.004       o1=0          label1="Time (s)"
+    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+        6 elements 24 bytes
+\end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfcut}
+}}
+
+The \texttt{sfcut} command is related to \texttt{sfwindow} and has the same
+set of arguments only instead of extracting the selected window, it fills it
+with zeroes. The size of the input data is preserved. 
+
+Examples:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=5 > in.rsf
+bash$ < in.rsf sfdisfil
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            1            1            1            1
+  15:             1            1            1            1            1
+  20:             1            1            1            1            1
+bash$ < in.rsf sfcut n1=2 f1=1 n2=3 f2=2 | sfdisfil
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            0            0            1            1
+  15:             1            0            0            1            1
+  20:             1            0            0            1            1
+bash$ < in.rsf sfcut j1=2 | sfdisfil
+   0:             0            1            0            1            0
+   5:             0            1            0            1            0
+  10:             0            1            0            1            0
+  15:             0            1            0            1            0
+  20:             0            1            0            1            0
+\end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfdd}
+}}
+
+The \texttt{sfdd} program is used to change either the form (\texttt{ascii},
+\texttt{xdr}, \texttt{native}) or the type (\texttt{complex}, \texttt{float},
+\texttt{int}, \texttt{char}) of the input dataset. 
+
+In the example below, we create a plain text (ASCII) file with numbers and
+then use \texttt{sfdd} to generate an RSF file in \texttt{xdr} form with
+\texttt{complex} numbers. 
+\begin{verbatim}
+bash$ cat test.txt
+1 2 3 4 5 6
+bash$ echo n1=6 data_format=ascii_int in=test.txt > test.rsf
+bash$ sfin test.rsf
+test.rsf:
+    in="test.txt"
+    esize=0 type=int form=ascii
+    n1=6           d1=?           o1=?
+        6 elements
+bash$ sfdd < test.rsf form=xdr type=complex > test2.rsf
+bash$ sfin test2.rsf
+test2.rsf:
+    in="/tmp/test2.rsf@"
+    esize=8 type=complex form=xdr
+    n1=3           d1=?           o1=?
+        3 elements 24 bytes
+bash$ sfdisfil < test2.rsf
+   0:          1,         2i         3,         4i         5,         6i
+\end{verbatim}
+
+To learn more about the data format in RSF, consult the
+\href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/format_html/}{guide to RSF
+  format}.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfdisfil}
+}}
+
+The \texttt{sfdisfil} program simply dumps the data contents to the standard
+output in a text form. It is used mostly for debugging purposes to quickly
+examine RSF files. Here is an example:
+\begin{verbatim}
+bash$ sfmath o1=0 d1=2 n1=12 output=x1 > test.rsf
+bash$ < test.rsf sfdisfil
+   0:             0            2            4            6            8
+   5:            10           12           14           16           18
+  10:            20           22
+\end{verbatim}
+The output format is easily configurable.
+\begin{verbatim}
+bash$ < test.rsf sfdisfil col=6 number=n format="%5.1f"
+  0.0  2.0  4.0  6.0  8.0 10.0
+ 12.0 14.0 16.0 18.0 20.0 22.0
+\end{verbatim}
+Along with \texttt{sfdd}, \texttt{sfdisfil} provides a simple way to convert
+RSF data to an ASCII form.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfget}
+}}
+
+The \texttt{sfget} program extracts a parameter value from an RSF file. It is
+useful mostly for scripting. Here is, for example, a quick calculation of the
+maximum value on the first axis in an RSF dataset (the output of
+\texttt{sfspike}) using the standard Unix \texttt{bc} calculator.
+\begin{verbatim}
+bash$ ( sfspike n1=100 | sfget n1 d1 o1; echo "o1+(n1-1)*d1" ) | bc
+.396
+\end{verbatim}
+See also \texttt{sfput}.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfheaderattr}
+}}
+
+The \texttt{sfheaderattr} examines the contents of a trace header file,
+typically generated by \texttt{sfsegyread}. In the example below, we examine
+trace headers in the output of \texttt{suplane}, a program from Seismic Unix.
+\begin{verbatim}
+bash$ suplane > plane.su
+bash$ sfsegyread tape=plane.su su=y tfile=tfile.rsf endian=0 > plane.rsf
+bash$ sfheaderattr < tfile.rsf
+*******************************************
+71 headers, 32 traces
+key[0]="tracl"      min[0]=1            max[31]=32          mean=16.5
+key[1]="tracr"      min[0]=1            max[31]=32          mean=16.5
+key[2]="fldr"       min[0]=0            max[31]=0           mean=0
+key[3]="tracf"      min[0]=0            max[31]=0           mean=0
+key[4]="ep"         min[0]=0            max[31]=0           mean=0
+key[5]="cdp"        min[0]=0            max[31]=0           mean=0
+key[6]="cdpt"       min[0]=0            max[31]=0           mean=0
+key[7]="trid"       min[0]=0            max[31]=0           mean=0
+key[8]="nvs"        min[0]=0            max[31]=0           mean=0
+key[9]="nhs"        min[0]=0            max[31]=0           mean=0
+key[10]="duse"      min[0]=0            max[31]=0           mean=0
+key[11]="offset"    min[0]=400          max[31]=400         mean=400
+key[12]="gelev"     min[0]=0            max[31]=0           mean=0
+key[13]="selev"     min[0]=0            max[31]=0           mean=0
+key[14]="sdepth"    min[0]=0            max[31]=0           mean=0
+key[15]="gdel"      min[0]=0            max[31]=0           mean=0
+key[16]="sdel"      min[0]=0            max[31]=0           mean=0
+key[17]="swdep"     min[0]=0            max[31]=0           mean=0
+key[18]="gwdep"     min[0]=0            max[31]=0           mean=0
+key[19]="scalel"    min[0]=0            max[31]=0           mean=0
+key[20]="scalco"    min[0]=0            max[31]=0           mean=0
+key[21]="sx"        min[0]=0            max[31]=0           mean=0
+key[22]="sy"        min[0]=0            max[31]=0           mean=0
+key[23]="gx"        min[0]=0            max[31]=0           mean=0
+key[24]="gy"        min[0]=0            max[31]=0           mean=0
+key[25]="counit"    min[0]=0            max[31]=0           mean=0
+key[26]="wevel"     min[0]=0            max[31]=0           mean=0
+key[27]="swevel"    min[0]=0            max[31]=0           mean=0
+key[28]="sut"       min[0]=0            max[31]=0           mean=0
+key[29]="gut"       min[0]=0            max[31]=0           mean=0
+key[30]="sstat"     min[0]=0            max[31]=0           mean=0
+key[31]="gstat"     min[0]=0            max[31]=0           mean=0
+key[32]="tstat"     min[0]=0            max[31]=0           mean=0
+key[33]="laga"      min[0]=0            max[31]=0           mean=0
+key[34]="lagb"      min[0]=0            max[31]=0           mean=0
+key[35]="delrt"     min[0]=0            max[31]=0           mean=0
+key[36]="muts"      min[0]=0            max[31]=0           mean=0
+key[37]="mute"      min[0]=0            max[31]=0           mean=0
+key[38]="ns"        min[0]=64           max[31]=64          mean=64
+key[39]="dt"        min[0]=4000         max[31]=4000        mean=4000
+key[40]="gain"      min[0]=0            max[31]=0           mean=0
+key[41]="igc"       min[0]=0            max[31]=0           mean=0
+key[42]="igi"       min[0]=0            max[31]=0           mean=0
+key[43]="corr"      min[0]=0            max[31]=0           mean=0
+key[44]="sfs"       min[0]=0            max[31]=0           mean=0
+key[45]="sfe"       min[0]=0            max[31]=0           mean=0
+key[46]="slen"      min[0]=0            max[31]=0           mean=0
+key[47]="styp"      min[0]=0            max[31]=0           mean=0
+key[48]="stas"      min[0]=0            max[31]=0           mean=0
+key[49]="stae"      min[0]=0            max[31]=0           mean=0
+key[50]="tatyp"     min[0]=0            max[31]=0           mean=0
+key[51]="afilf"     min[0]=0            max[31]=0           mean=0
+key[52]="afils"     min[0]=0            max[31]=0           mean=0
+key[53]="nofilf"    min[0]=0            max[31]=0           mean=0
+key[54]="nofils"    min[0]=0            max[31]=0           mean=0
+key[55]="lcf"       min[0]=0            max[31]=0           mean=0
+key[56]="hcf"       min[0]=0            max[31]=0           mean=0
+key[57]="lcs"       min[0]=0            max[31]=0           mean=0
+key[58]="hcs"       min[0]=0            max[31]=0           mean=0
+key[59]="year"      min[0]=0            max[31]=0           mean=0
+key[60]="day"       min[0]=0            max[31]=0           mean=0
+key[61]="hour"      min[0]=0            max[31]=0           mean=0
+key[62]="minute"    min[0]=0            max[31]=0           mean=0
+key[63]="sec"       min[0]=0            max[31]=0           mean=0
+key[64]="timbas"    min[0]=0            max[31]=0           mean=0
+key[65]="trwf"      min[0]=0            max[31]=0           mean=0
+key[66]="grnors"    min[0]=0            max[31]=0           mean=0
+key[67]="grnofr"    min[0]=0            max[31]=0           mean=0
+key[68]="grnlof"    min[0]=0            max[31]=0           mean=0
+key[69]="gaps"      min[0]=0            max[31]=0           mean=0
+key[70]="otrav"     min[0]=0            max[31]=0           mean=0
+*******************************************
+\end{verbatim}
+For each standard keyword, a minimum, maximum, and mean values are reported.
+This quick inspection can help in identifying meaningful keywords set in the
+data. The input data type must be \texttt{int}.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfheadermath}
+}}
+
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

@@ -1,0 +1,141 @@
+from rsfproj import *
+
+# ------------------------------------------------------------
+par = {
+    'nz':751,  'dz':4,    'oz':0,     # CC axis 1
+    'nx':2301, 'dx':4,    'ox':0,     # CC axis 2
+    'nt':1500, 'dt':0.001,'ot':0,     # RC axis 1
+    'ng':1024, 'dg':0.175,'og':-89.6, # RC axis 2
+    'nT':2500, 'dT':0.001,'oT':0      # time
+    }
+# ------------------------------------------------------------
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+# ------------------------------------------------------------
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def igraph(custom,par):
+    return '''
+    graph labelrot=n  %s
+    yreverse=y wantaxis=n title=" " 
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+
+# ------------------------------------------------------------
+Fetch(['marmvel.hh'],'marm')
+
+# true velocity
+Flow('vel','marmvel.hh',
+     '''
+     dd form=native |
+     smooth rect1=5 rect2=5 |
+     put label1=z label2=x
+     ''')
+Plot('vel',igrey('allpos=y',par))
+# smooth velocity
+Flow('vsm','vel','smooth rect1=201 rect2=201')
+
+# wavefronts (by HWT)
+Flow('hwt','vsm',
+     '''
+     hwt2d verb=n xsou=5000 zsou=0 
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
+     ''' % par)
+
+# coordinate system: rays(g,t)
+Flow('cos','hwt','window')
+
+Plot('wft','cos','window j2=50 |'
+     + igraph('plotcol=1',par))
+Plot('ray','cos','window j1=50 f2=50 | transp |'
+     + igraph('plotcol=2',par))
+
+Result('cos','vel ray wft','Overlay')
+# ------------------------------------------------------------
+
+# slowness in CC
+Flow('sloCC','vel','math output="1/input" | transp ')
+# slowness in RC
+Flow('sloRC','sloCC cos',
+     '''
+     c2r rays=${SOURCES[1]} adj=n |
+     put label1=g label2=t
+     ''')
+Result('sloRC','sloRC','grey color=j allpos=y')
+
+# coordinate system coefficients (A,B,M=mask) and references (A,B)
+Flow(['abmRC','abrRC'],['cos','sloRC'],
+     '''
+     rweab naref=1 nbref=1
+     slo=${SOURCES[1]} abr=${TARGETS[1]}
+     ''')
+Result('abmRC','abmRC','grey gainpanel=e color=j allpos=y')
+
+# ------------------------------------------------------------
+
+# time data RC: (t,g)
+Flow('datRC',None,
+     '''
+     spike n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=75 |
+     ricker1 frequency=10 |
+     spray axis=2 n=%(ng)d o=%(og)g d=%(dg)g |
+     put label1=t label2=g
+     ''' % par )
+Result('datRC','datRC','grey')
+
+# frequency data RC: (g,w)
+Flow('frqRC','datRC',
+     '''
+     fft1 inv=n |
+     window squeeze=n min1=1 j1=1 n1=60 |
+     transp |
+     put label1=g label2=w
+     ''')
+Result('frqRC','frqRC','real | grey')
+
+# ------------------------------------------------------------
+for i in (['F15','F45','SSF','FFD','PSC']):
+#for i in (['F15','SSF']):
+    if(i=='F15'): method='method=0 c1=0.50   c2=0.00'
+    if(i=='F45'): method='method=0 c1=0.50   c2=0.25'
+    if(i=='F60'): method='method=0 c1=0.4761 c2=0.3767'
+    if(i=='SSF'): method='method=1'
+    if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
+    if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
+    
+    imgRC = 'imgRC' + '-' + i
+    imgCC = 'imgCC' + '-' + i
+
+    # image RC: (t,g)
+    Flow(imgRC,['frqRC','abmRC','abrRC'],
+         '''
+         rwezomig ntap=100 %s verb=y
+         abm=${SOURCES[1]}
+         abr=${SOURCES[2]} |
+         put label1=g label2=t
+         ''' % method)
+    Result(imgRC,imgRC,'transp | grey title=%s' % i)
+
+    # image CC: (z,x)
+    Flow(imgCC,[imgRC,'cos'],
+         '''
+         c2r rays=${SOURCES[1]} adj=y linear=n 
+         nsz=5 nsx=5
+         a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
+         a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
+         put label1=x label2=z
+         ''' % par)
+    Plot(imgCC,imgCC,'transp |' + igrey('title=%s',par) % i)
+    Result(imgCC,[imgCC,'ray','wft'],'Overlay')
+# ------------------------------------------------------------
+
+End()

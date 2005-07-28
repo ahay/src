@@ -1,0 +1,439 @@
+\title{Seismic wavefield extrapolation by curved-ray phase-shift}
+\author{Sergey Fomel}
+
+\maketitle
+
+\begin{abstract}
+This is an abstract.
+\end{abstract}
+
+\section{Introduction}
+
+Phase-shift method of wavefield continuation is a popular tool for
+wave-equation imaging. While the original method of
+\cite{GEO43-07-13421351} is applicable only for wave extrapolation through
+constant-velocity layers, there are several extensions for approximate wave
+extrapolation through variable velocities: PSPI (phase-shift plus
+interpolation) \cite[]{GEO49-02-01240131}, extended split-step
+\cite[]{GEO55-04-04100421,SEG-1992-0917}, Fourier finite differences
+\cite[]{GEO59-12-18821893}, nonstationary phase-shift
+\cite[]{GEO64-04-10671078}, etc.
+
+In the PSPI method and its variations, one extrapolates the wavefield several
+times through the same layer using a set of constant velocities and then
+combines the results according to the local velocity. The accuracy of the
+method depends on the number of velocities used. However, even with the
+maximum possible number of extrapolation velocities, the method is only
+approximate in the variable-velocity case, because it essentially assumes
+straight-ray extrapolation. The straight-ray approximation can be sufficiently
+accurate in the case of very small steps in depth. Improving this
+approximation can allow for larger extrapolation steps and/or smaller number
+of extrapolation velocities, which should result in noticeable computational
+savings.
+
+In this paper, I derive phase-shift extrapolation operators extending the
+straight-ray approximation to locally parabolic rays. This construction leads
+to second-order accurate wave-propagation operators. The accuracy improvement
+is verified by numerical experiments.
+
+Instead of assuming a constant local velocity, I assume a medium with a
+locally constant gradient of slowness squared. Two particular extensions
+correspond to the cases of vertical and horizontal gradients.
+
+\section{PSPI and straight rays}
+
+In the limiting case of the maximum number of extrapolation velocities, the
+PSPI method \cite[]{GEO49-02-01240131} can be written in the form of a
+pseudo-differential operator \cite[]{GEO64-04-10671078}
+\begin{equation}
+  \label{eq:pspi}
+  W(z,x) = \int \widehat{W}(z+\Delta z,k)\,
+  e^{i\,\omega\,\Delta z\,\sqrt{s^2(z,x)-(k/\omega)^2}-i\,k\,x}\,d k\;,
+\end{equation}
+where $W(z,x)$ is the wavefield at depth $z$, $\widehat{W}(z,k)$
+is the spatial Fourier transform:
+\begin{equation}
+  \label{eq:ft}
+  \widehat{W}(z,k) = \int W(z,y)\,e^{i\,k\,y}\,d y\;,
+\end{equation}
+$s(z,x)$ is the local slowness and $\omega$ is temporal frequency.
+
+Substituting equation~(\ref{eq:ft}) into~(\ref{eq:pspi}), we can rewrite the
+PSPI operator in the form
+\begin{equation}
+  \label{eq:pspi2}
+  W(z,x) = \int W(z+\Delta z,y)\,\int
+  e^{i\,\omega\,\Delta z\,\sqrt{s^2(z,x)-(k/\omega)^2}+i\,k\,(y-x)}\,
+  d k\,d y\;.
+\end{equation}
+Evaluating the inner integral by the stationary-phase method, one can
+establish the equivalence, in the high-frequency asymptotics, of the PSPI
+extrapolator and the Kirchhoff extrapolation operator
+\begin{equation}
+  \label{eq:kirch}
+  W(z,x) \approx \int 
+  W(z+\Delta z,y)\,
+  \frac{\Delta z}{D}\,
+  \left[\frac{i\,\omega\,s(z,x)}{D}\right]^{m/2}\,
+  e^{i\,\omega\,s(z,x)\,D}\,d y\;,
+\end{equation}
+where $D = \sqrt{(\Delta z)^2+(y-x)^2}$ is the straight-ray
+distance between points $\{z,x\}$ and $\{z+\Delta z,y\}$, and $m$ corresponds
+to the dimensionality of $x$ and $y$ ($m=1$ in the 2-D case and $m=2$ in the
+3-D case).
+  
+\inputdir{XFig}
+
+\plot{scheme}{width=\textwidth}{Local ray propagation (a scheme). Conventional
+  phase-shift extrapolation approximates local ray trajectories inside each
+  layer by straight lines (left). Curved-ray phase shift assumes curved
+  trajectories to better approximate the true local character of wave
+  propagation (right).}
+
+In the general variable-velocity case, the traveltime $T$ between points
+$\{z,x\}$ and $\{z+\Delta z,y\}$ follows a curved ray
+(Figure~\ref{fig:scheme}). The following steps are needed to find the
+appropriate phase-shift term:
+\begin{enumerate}
+\item Trace a ray from $\{z+\Delta z,y\}$ using the starting ray parameter 
+  \begin{equation}
+    \label{eq:py}
+    p = -\frac{\partial T}{\partial y} = \frac{k}{\omega}\;.
+  \end{equation}
+\item Stop the ray when it hits the $z$ level. Record the output
+  position $x$ and the traveltime  $T$ along the ray.
+\item The phase-shift operator is then
+  \begin{equation}
+    \label{eq:ps}
+    e^{i\omega\left[T + p\,(y-x)\right]}\;.
+    \end{equation}
+    The first term in equation~(\ref{eq:ps}) accounts for the traveltime,
+    while the second term accounts for the shift of the lateral position.
+  \item In order to use equation~(\ref{eq:ps}) in the wavenumber domain, it is
+    necessary to express it in the form independent of $y$ but possibly
+    dependent on the slowness $s(z,x)$ and other characteristics at the output
+    location $\{z,x\}$. This transformation is possible in some special cases.
+    In the case of a locally constant velocity, $T = s(z,x)\,D$. Expressing
+    the $(y-x)$ term from equation~(\ref{eq:py}) and substituting it in
+    equation~(\ref{eq:ps}), we arrive at the PSPI operator~(\ref{eq:pspi}),
+    which has
+    \begin{equation}
+      \label{eq:simp}
+      T+p\,(y-x) = \sqrt{s^2(z,x)-p^2}\;.
+    \end{equation}
+
+    Another special case is that of a constant
+    gradient of slowness squared. It is considered in the next sections.
+\end{enumerate}
+
+\section{Vertical velocity gradient}
+
+If the slowness $s(z,x)$ varies only with depth, the phase-shift term can be
+expressed analytically as
+\begin{eqnarray}
+\nonumber
+  T + p\,(y-x) & = &
+  \int\limits_{z}^{z+\Delta z} 
+  \frac{s^2(\zeta)\,d \zeta}{\sqrt{s^2(\zeta)-p^2}}
+  - p \int\limits_{z}^{z+\Delta z} \frac{p\,d \zeta}{\sqrt{s^2(\zeta)-p^2}} \\
+  & = & \int\limits_{z}^{z+\Delta z} \sqrt{s^2(\zeta)-p^2}\,d \zeta\;.
+  \label{eq:dz}
+\end{eqnarray}
+Let us assume that the slowness squared $s^2(z)$ has a constant vertical
+gradient between $z$ and $z+\Delta z$: $s^2(z)=s_0^2+2\,g\,(z-z_0)$. In this
+case, ray trajectories have a parabolic form, and the integral in
+equation~(\ref{eq:dz}) can be evaluated analytically to yield
+\begin{eqnarray}
+\nonumber
+  \int\limits_{z}^{z+\Delta z} \sqrt{s_0^2+2\,g\,(\zeta-z_0)-p^2}\,d \zeta 
+  & = & \left.
+  \frac{2}{3}\,\frac{\left[s_0^2+2\,g\,(\zeta-z_0)-p^2\right]^{3/2}}{2\,g}
+  \right|_{z}^{z+\Delta z} \\
+  \nonumber 
+  & = &
+  \frac{2}{3}\,\Delta z\,
+  \frac{\psi_1^2+\psi_2^2+\psi_1\,\psi_2}{\psi_1+\psi_2} \\
+  & = & 
+  \frac{2}{3}\,\Delta z\,
+  \left(\psi_1+\psi_2-\frac{1}{1/\psi_1+1/\psi_2}\right)\;,
+  \label{eq:zint}
+\end{eqnarray}
+where $\psi_1 = \sqrt{s^2(z)-p^2}$ and $\psi_2 = \sqrt{s^2(z+\Delta z)-p^2}$.
+We can see that, in this case, the exact phase-shift operator is a combination
+of shifts with velocities at the top and at the bottom of the layer. This
+combined shift corresponds to waves propagating along parabolic rays in the
+vertically-variable velocity.
+
+In Appendix~A, I derive equation~(\ref{eq:zint}) in an alternative way by an
+analytical solution of the Helmholtz equation. Appendix~B contains a
+derivation of the corresponding one-way wave equation.
+
+\subsection{Accuracy comparison}
+
+\inputdir{Math}
+
+How accurate is the phase shift expression~(\ref{eq:zint})? It is instructive
+to compare its accuracy with that of the straight-ray approximation for the
+case of velocity linearly increasing with depth: $1/s(z)=v_0+a\,(z-z_0)$. In
+this case, ray trajectories have a circular form \cite[]{GEO01-01-00090022}, and
+the phase integral has an analytical expression
+\begin{equation}
+\int\limits_{z}^{z+\Delta z} \sqrt{s^2(\zeta)-p^2}\,d \zeta =
+\Delta z\,\frac{\psi_2\,s_1 - \psi_1\,s_2+
+  s_1\,s_2\,\ln{\left(\frac{\psi_1+s_1}{\psi_2+s2}\right)}}{s_1-s_2}\;,
+\label{eq:circl}
+\end{equation}
+where $s_1 = s(z)$ and $s_2=s(z+\Delta z)$. The relative errors in replacing
+the exact expression~(\ref{eq:circl}) with the curved (parabolic) ray
+approximation~(\ref{eq:zint}) or with the straight-ray approximation
+$\psi_1\,\Delta z$ depend on the velocity contrast at the top and bottom of
+the layer $(s2-s1)/s1$ and on the angle of wave propagation $\theta =
+\arcsin{(p/s_1)}$. They are plotted in Figure~\ref{fig:errcomp}. We can see
+that the error of replacing circular rays with parabolic rays is negligible
+even with a high velocity contrast, while the error of the conventional
+straight-ray phase shift can be significant, especially at large angles of
+wave propagation.
+
+\plot{errcomp}{height=\textheight}{Relative phase shift errors of parabolic
+  ray (solid line) and straight ray (dashed line) approximations as functions
+  of the propagation angle. A linear velocity function $1/s(z)=v_0+a\,(z-z_0)$
+  is assumed. Different plots correspond to different velocity contrasts: a --
+  0.1\%, b -- 1\%, c -- 10\%. In all cases, the relative error of the
+  straight-ray approximation (conventional phase shift) climbs to 100\% at
+  $90^{\circ}$ propagation angle.}
+
+\inputdir{test}
+
+Figure~\ref{fig:err} shows an accuracy comparison by a numerical experiment.
+Figure~\ref{fig:err}a shows a migration impulse response computed by a phase
+shift with a small depth step $\Delta z = 1\,\mbox{m}$ assuming a linear
+velocity distributon with $v_0 = 1\,\mbox{km/s}$ and $a=2\,\mbox{1/s}$. This
+impulse response is used as a reference for comparing different
+approximations. The error of the straight-ray approximation is negligible when
+the step size (layer thickness) is $\Delta z = 1\,\mbox{m}$
+(Figure~\ref{fig:err}b) but becomes large when the layer thickness increases
+to the more realistic values of 10~m (Figure~\ref{fig:err}d) and 40~m
+(Figure~\ref{fig:err}f). The curved-ray (parabolic) approximation is
+practically zero at $\Delta z = 10\,\mbox{m}$ (Figure~\ref{fig:err}c) and
+negligible at 40~m (Figure~\ref{fig:err}e).
+
+\plot{serr}{width=\textwidth}{Numerical accuracy comparison. a - Migration
+  impulse response in a linear velocity distribution $1/s(z) = 1 + 2 z$
+  computed with  $\Delta z = 1\,\mbox{m}$ and used for reference. b - Error of
+  the straight-ray phase-shift for $\Delta z = 1\,\mbox{m}$. c - Error of
+  the curved-ray phase-shift for $\Delta z = 10\,\mbox{m}$. d - Error of
+  the straight-ray phase-shift for $\Delta z = 10\,\mbox{m}$. e - Error of
+  the curved-ray phase-shift for $\Delta z = 40\,\mbox{m}$. f - Error of
+  the straight-ray phase-shift for $\Delta z = 40\,\mbox{m}$.  
+  All panels are plotted at the same clip.}
+
+\section{Horizontal velocity gradient}
+
+The case of the locally constant lateral gradient of slowness squared is
+somewhat more complicated. Similarly to the previous case, the rays are
+parabolic but their curvature is now affected by lateral changes in velocity.
+
+Assuming that the slowness squared can be described locally as the linear 
+function $s^2(x) = s_0^2 + 2\,g\,(x-x_0)$, where $g$ is half of the lateral
+gradient, we can write the ray tracing system \cite[]{cerveny}
+\begin{eqnarray}
+  \label{eq:xray}
+  \frac{d\,x}{d\,\sigma} & = & p\;, \\
+  \label{eq:zray}
+  \frac{d\,z}{d\,\sigma} & = & \sqrt{s^2(x)-p^2}\;, \\
+  \label{eq:pray}
+  \frac{d\,p}{d\,\sigma} & = & g\;, \\
+  \label{eq:tray}
+  \frac{d\,T}{d\,\sigma} & = & s^2(x) = s_0^2 + 2\,g\,(x-x_0)\;,
+\end{eqnarray}
+where $\sigma$ is a parameter increasing along a ray. The system has an
+analytical solution, which leads to the expressions
+\begin{eqnarray}
+  \label{eq:ztrace}
+  \Delta z & = & \sigma\,\sqrt{s^2(x) - (p - g\,\sigma)^2}\;, \\
+  \label{eq:ttrace}
+  T + p\,(y-x) & = & \left(s^2(x) - p^2\right)\,\sigma
+    + \frac{3}{2}\,g\,p\,\sigma^2 - \frac{2}{3}\,g^2\,\sigma^3\;.
+\end{eqnarray}
+Evaluating $\sigma$ from equation~(\ref{eq:ztrace}) and substituting it into
+equation~(\ref{eq:ttrace}), we should be able to obtain an exact phase-shift
+factor to use in a PSPI-like extrapolation method. Even though an exact
+analytical solution of the fourth-order equation~(\ref{eq:ztrace}) is
+possible, it is inconvenient for practical use. One possibility is to solve
+equation~(\ref{eq:ztrace}) numerically and tabulate the solution for every
+value of $p/s$ and $g\,\Delta z/s^2$. A practical alternative is to
+approximate the exact solution using a perturbation approach. Assuming a small
+gradient $g$ or a small depth step $\Delta z$, we can write the Taylor series
+expansion around $g=0$ by differentiating the parametric relationship in
+equations~(\ref{eq:ztrace}-\ref{eq:ttrace}):
+\begin{eqnarray}
+  \label{eq:staylor}
+  \sigma & = & \frac{\Delta z}{\psi}\,
+  \left[1 - \frac{p\,(g\,\Delta z)}{\psi^3} + 
+    \frac{\left(\psi^2+5\,p^2\right)\,(g\,\Delta z)^2}
+    {2\,\psi^6} + O\left((g\,\Delta z)^3\right)\right]\;, \\
+  \label{eq:taylor}
+  T + p\,(y-x) & = & \Delta z\,\psi\,\left[1
+  + \frac{p\,(g\,\Delta z)}{2\,\psi^3} 
+  - \frac{\left(\psi^2+3\,p^2\right)\,(g\,\Delta z)^2}
+  {6\,\psi^6} + O\left((g\,\Delta z)^3\right)\right]\;,
+\end{eqnarray}
+where $\psi = \sqrt{s^2(x)-p^2}$.
+To avoid the danger of division by zero in equation~(\ref{eq:taylor}), we can
+select a non-linear function, which has the Taylor expansion similar
+to~(\ref{eq:taylor}). One such function is
+\begin{equation}
+  \label{eq:pspix}
+  T + p\,(y-x) \approx
+  \Delta z\,\sqrt{\frac{1}{3}\,\psi^2+
+    \frac{2}{3}\,\sqrt{\psi^4+
+      3\,p\,g\,\Delta z\,\psi - \left(g\,\Delta z\right)^2}}\;.
+\end{equation}
+
+\subsection{Accuracy comparison}
+
+\inputdir{Math}
+
+The error of approximation~(\ref{eq:pspix}) is plotted in
+Figure~\ref{fig:xerr}, where it is compared with the error of the straight-ray
+approximation. Approximation~(\ref{eq:pspix}) appears accurate for a wide
+range of propagation angles even for high velocity contrasts, where the error
+of the conventional straight-ray phase shift (PSPI approximation) is
+significant.
+
+\plot{xerr}{height=\textheight}{Relative phase shift errors of
+  approximation~(\ref{eq:pspix}) (solid line) and the straight-ray
+  approximation (dashed line) as functions of the propagation angle. Different
+  plots correspond to different velocity contrasts ($g\,\Delta z/s^2(x)$): a
+  -- 0.1\%, b -- 1\%, c -- 10\%. In all cases, the relative error of the
+  straight-ray approximation (conventional phase shift) climbs to 100\% at
+  $90^{\circ}$ propagation angle.}
+
+\newpage
+
+\bibliographystyle{segnat}
+\bibliography{SEG,pspi}
+
+\newpage
+
+\APPENDIX{A}
+\section{Curved-ray phase-shift extrapolator and the Helmholtz equation}
+
+In this appendix, I derive the curved-ray (parabolic) phase-shift extrapolator
+in a $v(z)$ medium by solving the Helmholtz equation analytically. Assuming
+that the wavefield $W(z,x)$ satisfies the Helmholtz equation
+\begin{equation}
+  \label{eq:helm}
+  \frac{\partial^2 W}{\partial z^2} +
+  \frac{\partial^2 W}{\partial x^2} +
+  \omega^2\,s^2(z,x)\,W = 0
+\end{equation}
+and that the slowness $s(z,x)$ is a linear function of depth $z$: $s^2(z) =
+s_0^2 + 2\,g\,(z-z_0)$, one can transform equation~(\ref{eq:helm}) 
+to the wavenumber domain
+\begin{equation}
+  \label{eq:helm2}
+  \frac{d^2 \widehat{W}}{d z^2} + 
+  \omega^2\,\left(s_0^2 + 2\,g\,(z-z_0)  - p^2\right)\,
+  \widehat{W} = 0
+\end{equation}
+and solve it analytically with the help of the following transformations:
+\begin{enumerate}
+\item Change from $z$ to a new variable
+  \begin{equation}
+    \label{eq:z2}
+    \zeta(z) = \frac{2}{3}\,\omega\,
+    \frac{
+      \left(s_0^2 + 2\,g\,(z-z_0)  - p^2\right)^{3/2}}
+    {2\,g}\;.
+  \end{equation}
+\item Change from $\widehat{W}(z)$ to a new function 
+  $V(\zeta)$ such that $\widehat{W}(z) = \zeta^{1/3}\,V(\zeta)$.
+\end{enumerate}
+With these changes, equation~(\ref{eq:helm2}) transforms to
+\begin{equation}
+  \label{eq:bessel}
+  \zeta^2\,\frac{d^2 V}{d \zeta^2} + 
+  \zeta\,\frac{d V}{d \zeta} + 
+  \left(\zeta^2-\frac{1}{9}\right)\,V(\zeta) = 0\;,
+\end{equation}
+which is the Bessel equation of order $1/3$. 
+Therefore, $V(\zeta)$ is simply a Bessel function of order $1/3$. 
+We can write the analytical solution of equation~(\ref{eq:helm2}) in the form
+\begin{equation}
+  \label{eq:anal}
+  \widehat{W}(z) = \widehat{W}(z+\Delta z)\,\left(\frac{\zeta_1}{\zeta_2}\right)^{1/3}\,
+  \frac{H_{1/3}^{(2)}(\zeta_1)}{H_{1/3}^{(2)}(\zeta_2)}\;,
+\end{equation}
+where $\zeta_1 = \zeta(z)$, $\zeta_2 = \zeta(z+\Delta z)$, and $H_{1/3}^{(2)}$
+is the Hankel function (Bessel function of the third kind) of order $1/3$. The
+choice of the Hankel function for propagating upward traveling waves is
+justified by considering the high-frequency asymptotics of the analytical
+solution~(\ref{eq:anal}).
+
+In the high-frequency asymptotic regime $\zeta \rightarrow \infty$, and 
+the Hankel function behaves as \cite[]{watson}
+\begin{equation}
+  \label{eq:asymp}
+  H_{1/3}^{(2)}(\zeta) \approx \sqrt{\frac{2}{\pi\,\zeta}}\,
+  e^{-i\,(\zeta - 5\,\pi/12)}\;.
+\end{equation}
+Correspondingly, the analytical solution~(\ref{eq:anal}) transforms
+to
+\begin{equation}
+  \label{eq:wkbj}
+  \widehat{W}(z) \approx \widehat{W}(z+\Delta z)\,\left(\frac{\zeta_2}{\zeta_1}\right)^{1/6}\,
+  e^{i\,(\zeta_2 - \zeta_1)}
+  = \widehat{W}(z+\Delta z)\,\sqrt{\frac{\psi_2}{\psi_1}}\,
+  \exp{\left(i\,\omega\,\frac{2}{3}\,\Delta z\,
+      \frac{\psi_1^2+\psi_2^2+\psi_1\,\psi_2}{\psi_1+\psi_2}\right)}
+  \;,
+\end{equation}
+where $\psi_1 = \sqrt{s^2(z)-p^2}$ and $\psi_2 = \sqrt{s^2(z+\Delta
+  z)-p^2}$. The phase term in equation~(\ref{eq:wkbj}) corresponds
+precisely to equation~(\ref{eq:zint}), derived in a different way. The
+amplitude term $\sqrt{\psi_2/\psi_1}$ is a common WKBJ amplitude transmission
+factor \cite[]{stolt}.
+
+\newpage
+
+\APPENDIX{B}
+
+\section{Curved-ray one-way wave equation}
+
+It is instructive to obtain a one-way equivalent of the two-way Helmholtz
+equation in the curved ray approximation. According to
+equation~(\ref{eq:wkbj}), the curved-ray solution behaves at high frequencies
+as
+\begin{equation}
+  \label{eq:behave}
+  \widehat{W}(z) \approx A\,\zeta^{-1/6}\,e^{-i\,\zeta}\;,
+\end{equation}
+where $\zeta$ is defined in equation~(\ref{eq:z2}), and $A$ does not depend on
+$\zeta$. Differentiating equation~(\ref{eq:behave}), we obtain
+\begin{equation}
+  \label{eq:ow1}
+  \frac{d \widehat{W}}{d \zeta} \approx 
+  - \left(i + \frac{1}{6\,\zeta}\right)\,\widehat{W}
+\end{equation}
+and
+\begin{equation}
+  \label{eq:ow2}
+  \frac{d \widehat{W}}{d z} = 
+\frac{d \widehat{W}}{d \zeta}\,\frac{d \zeta}{d z}
+\approx 
+  - \left(i\,\omega\,\psi + \frac{g}{2\,\psi^2}\right)\,
+  \widehat{W}\;,
+\end{equation}
+where $\psi = \sqrt{s^2(z)-p^2}$. Equation~(\ref{eq:ow2}) is
+equivalent to the true-amplitude one-way wave equation of
+\cite[]{SEG-2003-09250928}, derived in a different way. Extrapolation
+operator~(\ref{eq:wkbj}) provides an analytical solution of
+equation~(\ref{eq:ow2}) under the assumption that gradient of the
+slowness squared $g=s(z)\,s'(z)$ does not depend on $z$.
+
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

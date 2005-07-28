@@ -1,0 +1,98 @@
+from rsfproj import *
+
+mpar = {
+    'nz':150, 'dz':5,      'oz':0,
+    'nx':200, 'dx':5,      'ox':0, 'kx':100, 
+    'ny':1  , 'dy':1,      'oy':0,
+    'nh':150, 'dh':10,     'oh':0, 'kh':50,
+    'nt':250, 'dt':0.0025, 'ot':0, 'kt':200,
+#
+    'PHS':' phmig freq=y readwrite=y verb=y       eps=0.1  nrmax=5 dtmax=0.016',
+    'NOS':' phmig freq=n readwrite=y verb=y       eps=0.1  nrmax=5 dtmax=0.016',
+    'CAM':' camig        readwrite=y verb=y inv=n eps=0.1     nr=5    dt=0.016'
+    }
+
+# ------------------------------------------------------------
+# DATA
+# ------------------------------------------------------------
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1
+         n1=%(nt)d d1=%(dt)g o1=0
+         k1=%(kt)d |
+         ricker1 frequency=20 |
+         put label1=t label2=x label3=y 
+         ''' % mpar )
+Result('wav','wav','graph title=" "')
+Flow('frq','wav','fft1 | window n1=2 f1=20 j1=5')
+Result('frq','frq','real | graph')
+# ------------------------------------------------------------
+Flow('dzof','frq',
+     '''
+     pad beg2=%(kx)d n2out=%(nx)d |
+     put o2=%(ox)g d2=%(dx)g |
+     transp | spray axis=2 n=1 |
+     put label1=x label2=h label3=w
+     ''' % mpar )
+Result('dzof','dzof','window | real | grey pclip=100')
+# ------------------------------------------------------------
+Flow('doff','frq',
+     '''
+     pad beg2=%(kh)d n2out=%(nh)d |
+     put o2=%(oh)g d2=%(dh)g |
+     transp | spray axis=1 n=1 o=%(ox)g d=%(dx)g |
+     put label1=x label2=h label3=w
+     ''' % mpar )
+Result('doff','doff','window | real | grey pclip=100')
+# ------------------------------------------------------------
+Flow('dcaz','dzof',
+     '''
+     spray axis=2 n=1 |
+     put label2=y label3=h label4=w
+     ''')
+Flow('dcam','doff',
+     '''
+     spray axis=2 n=1 |
+     put label2=y label3=h label4=w
+     ''')
+# ------------------------------------------------------------
+# MODEL
+# ------------------------------------------------------------
+Flow('const',None,
+     '''
+     spike nsp=1 mag=0.0005
+        n1=%(nx)d d1=%(dx)g
+        n2=%(ny)d d2=%(dy)g
+        n3=%(nz)d d3=%(dz)g |
+     put label1=x label2=y label3=z
+     ''' % mpar )
+Flow('sone','const','window n1=1')
+Flow('slow','const','window squeeze=n n1=1')
+
+# ------------------------------------------------------------
+# IMAGE
+# ------------------------------------------------------------
+def igrey(custom):
+    return '''
+    grey labelrot=n %s grid=y g1num=200
+    ''' % (custom)
+
+Flow('icaz',['dcaz','slow'],'%(CAM)s slo=${SOURCES[1]}' % mpar)
+Flow('iphz',['dzof','sone'],'%(PHS)s slo=${SOURCES[1]}' % mpar)
+Flow('inoz',['dzof','sone'],'%(NOS)s slo=${SOURCES[1]}' % mpar)
+
+Flow('icam',['dcam','slow'],'%(CAM)s slo=${SOURCES[1]}' % mpar)
+Flow('iphs',['doff','sone'],'%(PHS)s slo=${SOURCES[1]}' % mpar)
+Flow('inos',['doff','sone'],'%(NOS)s slo=${SOURCES[1]}' % mpar)
+
+Result('icaz','window | transp | ' + igrey('title=CAM'))
+Result('iphz','window | transp | ' + igrey('title=PHS'))
+Result('inoz','window | transp | ' + igrey('title=NOS'))
+
+Result('icam','window | transp | ' + igrey('title=CAM'))
+Result('iphs','window | transp | ' + igrey('title=PHS'))
+Result('inos','window | transp | ' + igrey('title=NOS'))
+
+# ------------------------------------------------------------
+
+End()

@@ -1,0 +1,55 @@
+from rsfproj import *
+
+Flow('ricker',None,'spike n1=101 k1=51 | ricker1')
+
+traces = []
+for a in range(-180,190,10):
+    ricker = 'ricker%d' % a
+    traces.append(ricker)
+    Flow(ricker,'ricker','envelope hilb=y phase=%d' % a)
+
+Flow('traces',traces,
+     '''
+     cat ${SOURCES[1:%d]} axis=2 > $TARGET &&
+     echo n2=%d o2=-180 d2=10 >> $TARGET
+     ''' % (len(traces),len(traces)),stdout=-1)
+Result('traces','dots')
+
+Flow('focus','traces','focus rect1=20')
+Result('focus','grey allpos=y color=j pclip=100 title=Focus')
+
+Flow('num','traces','math output="input^4" | stack axis=1 norm=no')
+Flow('den','traces',
+     '''
+     math output="input*input" |
+     stack axis=1 norm=no |
+     math output="input*input"
+     ''')
+Result('zerop','num den','add mode=d | graph')
+
+Flow('spike',None,
+     '''
+     spike n1=129 n2=129 d1=0.004 d2=0.008
+     nsp=3 k1=50,75,100 k2=50,75,100 |
+     bandpass flo=10 fhi=50
+     ''')
+Flow('fft2','spike','cosft sign2=1')
+Flow('stolt','fft2','stolt nf=4 vel=4 | cosft sign2=-1')
+
+for vel in (3,4,5):
+    back = 'back%d' % vel
+    Flow(back,'stolt','cosft sign2=1 | stolt nf=4 vel=-%d | cosft sign2=-1' % vel)
+    num = 'num%d' % vel
+    den = 'den%d' % vel
+    rat = 'rat%d' % vel
+    Flow(num,back,'math output="input^4" | stack axis=2 norm=no | stack axis=1 norm=no')
+    Flow(den,back,
+         '''
+         math output="input*input" |
+         stack axis=2 norm=no |
+         stack axis=1 norm=no |
+         math output="input*input"
+         ''')
+    Flow(rat,[num,den],'add mode=d')
+
+End()

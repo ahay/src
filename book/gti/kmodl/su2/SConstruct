@@ -1,0 +1,43 @@
+from rsfproj import *
+
+import math
+###########################################################################
+
+# examples from SU/src/demos/Making_Data/ShotGathers/*SingleShot
+
+for dip in [0,60]:
+    [mod,ref,kir,slp] = map (lambda x: x+str(dip),
+                             ['dips','refs','kirs','slop'])
+    Flow(slp,None,'spike n1=1001 d1=0.005 mag=%g' % math.tan(math.pi*dip/180.))
+    Flow(ref,slp,'math output="1+x1*input" ')
+    Flow(mod,ref,'unif2 n1=101 d1=0.04 v00=1,2')
+    Result(mod,
+           '''
+           grey label1="Depth (km)" label2="Lateral (km)"
+           title="%d-degree Model"
+           color=j allpos=y bias=1 Xscreenratio=1.25 Xscalebar=y
+           Xbarlabel="Velocity (km/s)"
+           ''' % dip)
+    Flow(kir,[ref,slp],
+         '''
+         kirmod nt=750 dt=0.008 vel=2 ns=5
+         s0=0 ds=0.025 nh=50 h0=0.05 dh=0.05
+         dip=${SOURCES[1]}
+          ''')
+#        noise seed=2004
+    shts = []
+    for shot in range(5):
+        sht = 'shot%d-%d' % (dip,shot)
+        shts.append(sht)
+        Plot(sht,kir,
+             '''
+             window n3=1 f3=%d |
+             grey pclip=99.9 max1=4 title="Shot %d"
+             label1="Time (s)" label2=" "
+             labelsz=16 titlesz=20 wantaxis1=%d
+             ''' % (shot,shot+1,shot+1))
+    Result(kir,shts,'SideBySideAniso')
+
+############################################################################
+
+End()

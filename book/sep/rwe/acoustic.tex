@@ -1,0 +1,149 @@
+\section{Acoustic wave-equation in 3-D Riemannian spaces}
+The acoustic propagation of a monochromatic wave is
+governed by the Helmholtz equation:
+\beq \label{eqn:helm}
+  \dd \W = - \frac{\ww^2}{\vv^2} \W \;,
+\eeq
+where $\ww$ is temporal frequency, 
+$\vv$ is the spatially variable wave propagation velocity, and 
+$\W$ represents a wavefield. 
+\par
+The Laplacian operator acting on a scalar function 
+$\W$ in an arbitrary 
+Riemannian space with coordinates 
+$\qvec=\{\qone,\qtwo,\qthr\}$ takes the form
+\beq \label{eqn:laplac}
+  \Delta \W = \sum_{i=1}^{3}\frac{1}{\sqrt{|\mathbf{g}|}}\,
+    \frac{\partial}{\partial \xi_i}\,
+    \left(\sum_{j=1}^{3}\,g^{ij}\,\sqrt{|\mathbf{g}|}\,
+      \frac{\partial \W}{\partial \xi_j}\right),
+\eeq
+where $g^{ij}$ is a component of the associated metric tensor, 
+and $|\mathbf{g}|$ is its determinant \cite[]{tensor}.
+The differential geometry of any coordinate system 
+\sout{is fully represented by}
+\uline{can be described with the help of}
+the metric tensor $g^{ij}$.
+\par
+The expression simplifies if one of the coordinates,
+e.g. the coordinate of one-way wave extrapolation $\qone$,
+is orthogonal to the other coordinates $(\qtwo,\qthr)$. 
+The metric tensor reduces to
+\beq \label{eqn:metric}
+  \left[g_{ij}\right] = \left[\begin{array}{ccc}
+      \EE & \FF & 0      \\
+      \FF & \GG & 0      \\
+      0   &   0 & \AA^2
+    \end{array}\right]\;,
+\eeq
+where $\EE$, $\FF$, $\GG$, and $\AA$ 
+\sout{are differential forms that} 
+can be found
+from mapping Cartesian coordinates $\xvec=(\xone,\xtwo,\xthr)$ 
+to general Riemannian coordinates
+$\qvec=\{\qone,\qtwo,\qthr\}$, as follows:
+\beqa
+\label{eqn:emap} \EE   & = & \sum_k \done{x_k}{\qone} \done{x_k}{\qone}  \;, \nonumber \\
+\label{eqn:fmap} \FF   & = & \sum_k \done{x_k}{\qone} \done{x_k}{\qtwo}  \;, \nonumber \\
+\label{eqn:gmap} \GG   & = & \sum_k \done{x_k}{\qtwo} \done{x_k}{\qtwo}  \;, \nonumber \\
+\label{eqn:gmap} \AA^2 & = & \sum_k \done{x_k}{\qthr} \done{x_k}{\qthr}  \;.
+\eeqa
+The associated metric tensor 
+$\left[g^{ij}\right] = \left[g_{ij}\right]^{-1}$
+has the matrix
+\beq \label{eqn:ametric}
+  \left[g^{ij}\right] =
+  \left[\begin{array}{ccc}
+      +\GG/J^2 & -\FF/J^2 & 0 \\
+      -\FF/J^2 & +\EE/J^2 & 0 \\
+             0 &        0 & 1/\AA^2
+    \end{array}\right]\;,
+\eeq
+where $\JJ^2 = \EE\,\GG-\FF^2$. 
+The metric determinant takes the form
+\beq \label{eqn:det}
+  |\mathbf{g}| = \AA^2\,\JJ^2\;.
+\eeq
+\par
+Substituting \reqs{ametric} and \reqo{det} into
+\reqo{laplac}, 
+and making the notations
+$\xi_1=\qx$, $\xi_2=\qy$, and $\xi_3=\qz$, 
+with $\qz$ orthogonal to both $\qx$ and $\qy$,
+we obtain the Helmholtz wave \req{helm}
+for propagating waves in a {3-D} semi-orthogonal Riemannian space:
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\beqa \label{eqn:weqrc.3d}
+\frac{1}{\AA\,\JJ}
+\lb
+\eone{\lp \frac{\JJ}{\AA} \done{\W}{\qz}\rp}{\qz}
++
+\eone{\lp 
+\GG\frac{\AA}{\JJ} \done{\W}{\qx} -
+\FF\frac{\AA}{\JJ} \done{\W}{\qy}
+\rp}{\qx}
+%%\right .
+%%\nonumber \\
+%%\left .
++
+\eone{\lp 
+\EE\frac{\AA}{\JJ} \done{\W}{\qy} -
+\FF\frac{\AA}{\JJ} \done{\W}{\qx}
+\rp}{\qy}
+\rb
+= - \frac{\ww^2}{\vv^2} \W \;.
+\eeqa
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In \req{weqrc.3d}, $\vv \lp \qx,\qy,\qz \rp$ 
+is the wave propagation velocity mapped to Riemannian coordinates.
+\par
+For the special case of two dimensional spaces
+($\FF=0$ and $\GG=1$),
+the Helmholtz wave equation reduces to the simpler form:
+\beq \label{eqn:weqrc.2d}
+\frac{1}{\AA\JJ}
+\lb \eone{\lp \frac{\JJ}{\AA} \done{\W}{\qz} \rp}{\qz} + 
+    \eone{\lp \frac{\AA}{\JJ} \done{\W}{\qx} \rp}{\qx} \rb 
+= - \frac{\ww^2}{\vv^2} \W \;,
+\eeq
+which corresponds to a curvilinear orthogonal coordinate system.
+\par
+Particular examples of coordinate systems for one-way wave propagation are:
+\begin{description}
+\item[Cartesian (propagation in depth):] 
+  $x_1=\qx$, $x_2=\qy$, $x_3=\qz$,
+  \begin{eqnarray*}
+    \EE & = & \GG \quad = \quad \AA \quad = \quad \JJ \quad = \quad 1\;, \\
+    \FF & = & 0\;.
+  \end{eqnarray*}
+\item[Cylindrical (propagation in radius):] 
+  $x_1=\qz\,\cos{\qx}$,
+  $x_2=\qz\,\sin{\qx}$,
+  $x_3=\qy$,
+  \begin{eqnarray*}
+    \EE & = & \JJ \quad = \quad \qz^2\;, \\
+    \GG & = & \AA \quad = \quad 1\;, \\
+    \FF & = & 0\;.
+  \end{eqnarray*}
+\item[Spherical (propagation in radius):] 
+  $x_1=\qz\,\sin{\qx}\,\cos{\qy}$,
+  $x_2=\qz\,\sin{\qx}\,\sin{\qy}$,
+  $x_3=\qz\,\cos{\qx}$,
+  \begin{eqnarray*}
+    \EE & = & \qz^2\;, \\
+    \GG & = & \qz^2\,\sin^2{\qx}\;, \\
+    \AA & = & 1\;, \\
+    \JJ & = & \qz^2\,\sin{\qx}\;, \\
+    \FF & = & 0\;.
+  \end{eqnarray*}
+\item[Ray family (propagation along rays):] $\qx$ and $\qy$ represent
+  parameters defining a particular ray in the family (i.e. the ray take-off
+  angles), $\JJ$ is the geometrical spreading factor, related to the
+  cross-sectional area of the ray tube \cite[]{cerveny}. The coefficients 
+  $\EE$, $\FF$, $\GG$, and $\JJ$ are easily computed by 
+  finite-difference approximations
+  with the Huygens wavefront tracing technique \cite[]{GEO66-03-08830889}. If
+  the propagation parameter $\qz$ is taken to be time along the ray, then
+  $\AA$ equals the propagation velocity~$\vv$.
+\end{description}
+

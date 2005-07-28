@@ -1,0 +1,231 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import spmig
+
+
+def igrey(custom):
+    return '''
+    grey labelrot=n title="" %s
+    ''' % custom
+# ------------------------------------------------------------
+# MIGRATION parameters
+# ------------------------------------------------------------
+par = {
+    'nw':400,'ow':1,
+    'nw':200,'ow':1, 'jw':1,
+    'nx':500,'ox':-2000,'dx':20,
+    'nz':200,'oz':0,'dz':10,
+    'nt':1000,'ot':0,'dt':0.008,'kt':1,'ft':0,
+    'ns':10, 'js':15, 'fs':0, 'os':3000,
+    'ns':50, 'js':3,  'fs':0,
+    'ns':1,  'js':1,  'fs':75,
+    #
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':0,'pmy':0
+    }
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['xmin']=0
+par['xmax']=6000
+# ------------------------------------------------------------
+
+DDIR = '/data/daniel/'
+
+# ------------------------------------------------------------
+# VELOCITY
+# ------------------------------------------------------------
+Flow('spike',None,'spike n1=200 d1=10 n2=500 o2=-2000 d2=20')
+Flow('vp','spike',
+     'dd form=native | math output=2000 | window n1=%(nz)d | put label1=z label2=x' % par)
+Flow('vs','spike',
+     'dd form=native | math output=1000 | window n1=%(nz)d | put label1=z label2=x' % par)
+
+Flow('sp','vp',
+     'math output="1/input"|transp|spray axis=2 n=1 o=0 d=1|put label2=y')
+Flow('ss','vs',
+     'math output="1/input"|transp|spray axis=2 n=1 o=0 d=1|put label2=y')
+
+# ------------------------------------------------------------
+# SHOTS
+# ------------------------------------------------------------
+Flow('shot',DDIR+'model3.hh',
+    '''
+    dd form=native |
+    ricker1 frequency=9 |
+    put label1=t label2=r label3=s
+    ''')
+
+# ------------------------------------------------------------
+# WAVELET
+# ------------------------------------------------------------
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g
+         ''' % par )    
+Result('wave','wave','graph')
+
+
+# ------------------------------------------------------------
+Flow('ref',None,
+     '''
+     spike nsp=1 mag=1
+           n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=150
+           n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     ''' % par )
+Result('ref','ref',igrey('pclip=100'))
+Flow('r0','ref','transp plane=12 | transp plane=23')
+
+Flow('wvlt',None,
+     '''
+     spike nsp=1 mag=1 k1=50
+     n1=%(nt)d d1=%(dt)g o1=0
+     n2=1      d2=%(dx)g o2=%(os)g |
+     ricker1 frequency=9
+     put label1=t label2=x label3=y 
+     ''' % par )
+Result('wvlt','wvlt','window n1=500 | graph grid=y g1num=0.1 title=%s' % 'wvlt')
+
+Flow('w0','wvlt',
+     '''
+     fft1 |
+     window squeeze=n n1=%d min1=%g j1=%g |
+     pad beg2=%d n2out=%d |
+     put label1=w label2=x label3=y |
+     transp plane=12 | transp plane=23
+     ''' % (par['nw'],par['ow'],par['jw'],par['nx']/2,par['nx']))
+Result('w0','w0','window | real | transp | grey pclip=100')
+
+spmig.model   ('dpw','sp',     'w0','r0',par)
+spmig.model_cw('dcw','sp','ss','w0','r0',par)
+
+Flow('refl',None,'spike n1=500 o1=-2000 d1=20 mag=1500')
+
+for case in ('pp','ps'):
+    kir = case+'kir'
+    if case == 'pp':
+        vel2=2000
+    else:
+        vel2=1000
+    Flow(kir,'refl',
+         '''
+         kirmod nt=1000 dt=0.008 vel=2000 vel2=%d
+         nh=256 h0=-2560 dh=20 s0=3000 ds=40 ns=1 freq=9
+         ''' % vel2)
+    Result(kir,'window max1=4 | ' + igrey('pclip=100 grid=y'))
+
+for k in ('p','c'):
+    wdd = 'd' + k + 'w'
+    tdd = 't' + k + 'w'
+
+    Flow(tdd,wdd,
+         '''
+         window | transp | pad beg1=8 n1out=501 |
+         fft1 inv=y |
+         window min1=0.4 |
+         pad n1out=%(nt)d |
+         window min2=440 n2=256 |
+         put o1=0 o2=-2560 d2=20 o3=3000 d3=40
+         ''' % par)
+    Result(tdd,'window max1=4 | ' + igrey('pclip=100 grid=y'))
+
+Flow('tcx','shot','window n3=1 min3=3000')
+Result('tcx','window max1=4 | ' + igrey('pclip=100 grid=y'))
+# ------------------------------------------------------------
+    
+# ------------------------------------------------------------
+spmig.wflds('dps','dpr','wave','tpw',par)
+spmig.wflds('dcs','dcr','wave','tcw',par)
+spmig.wflds('dxs','dxr','wave','tcx',par)
+
+Flow('vpvs','vp vs','add mode=d ${SOURCES[1]} | window n2=1 min2=4000')
+Flow('vpvp','vp vp','add mode=d ${SOURCES[1]} | window n2=1 min2=4000')
+
+# ------------------------------------------------------------
+for h in ('x','h'):           # Imaging: o,x,t            
+    locpar = par
+    if(h=='o'): locpar['misc']='itype=o'
+    if(h=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025'
+    if(h=='x'): locpar['misc']='itype=x hsym=y nhx=40               jcx=20'
+    if(h=='h'): locpar['misc']='itype=h nhh=40 dhh=10 nha=30 oha=12 jcx=20'
+
+    ip = 'ip' + h
+    gp = 'gp' + h
+#    spmig.image   (ip,'sp',     'dps','dpr',locpar)
+    spmig.imagePW   (ip,gp,'sp',     'dps','dpr',locpar)
+    Result(ip,ip,'window n4=1 min4=0 | transp |'+igrey(''))
+
+    ic = 'ic' + h
+    spmig.image_cw(ic,'sp','ss','dcs','dcr',locpar)
+    Result(ic,ic,'window n4=1 min4=0 | transp |'+igrey(''))    
+    ii = 'ii' + h
+    spmig.image_cw(ii,'sp','ss','dxs','dxr',locpar)
+    Result(ii,ii,'window n4=1 min4=0 | transp |'+igrey(''))
+
+    # offset gathers
+    hp = 'hp' + h
+    Flow(hp,gp,'window n1=1 min1=4500')
+    Result(hp,hp,igrey('pclip=100'))
+
+    hc = 'hc' + h
+    Flow(hc,ic,'window n1=1 min1=4500')
+    Result(hc,hc,igrey('pclip=100'))
+    hi = 'hi' + h
+    Flow(hi,ii,'window n1=1 min1=4500')
+    Result(hi,hi,igrey('pclip=100'))
+    
+    # angle gathers
+    ap = 'ap' + h
+    bp = 'bp' + h
+    ac = 'ac' + h
+    bc = 'bc' + h
+    ai = 'ai' + h
+    bi = 'bi' + h
+    if(h=='x','h'):
+        Flow(ap,hp,
+             '''
+             radon adj=y p0=-4 np=200 dp=0.04 |
+             window min2=0 max2=2.0 |
+             put label2=tan
+             ''')
+        Flow(bp,[ap,'vpvp'],'pp2psang vpvs=${SOURCES[1]}')
+        Result(ap,ap, igrey('pclip=100 grid=y g1num=0.1'))
+        Result(bp,bp, igrey('pclip=100 grid=y g1num=0.1'))
+
+        Flow(ac,hc,
+             '''
+             radon adj=y p0=-4 np=200 dp=0.04 |
+             window min2=0 max2=2.0 |
+             put label2=tan
+             ''')
+        Flow(bc,[ac,'vpvs'],'pp2psang vpvs=${SOURCES[1]}')
+        Result(ac,ac, igrey('pclip=100 grid=y g1num=0.1'))
+        Result(bc,bc, igrey('pclip=100 grid=y g1num=0.1'))
+
+        Flow(ai,hi,
+             '''
+             radon adj=y p0=-4 np=200 dp=0.04 |
+             window min2=0 max2=2.0 |
+             put label2=tan
+             ''')
+        Flow(bi,[ai,'vpvs'],'pp2psang vpvs=${SOURCES[1]}')
+        Result(ai,ai, igrey('pclip=100 grid=y g1num=0.1'))
+        Result(bi,bi, igrey('pclip=100 grid=y g1num=0.1'))
+
+
+#    
+#    if(h=='t'):
+#        Flow(ang,off,
+#             '''
+#             radon adj=y p0=0  np=200 dp=50 |
+#             window min2=0 max2=4000 |
+#             put label2=v
+#             ''')
+#
+#        Result(ang,ang, igrey('pclip=99.5 label1="depth (m)" label2="\F10 n\F3 (m/s)"'))
+# ------------------------------------------------------------
+
+End()

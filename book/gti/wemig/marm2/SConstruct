@@ -1,0 +1,208 @@
+from rsfproj import *
+import sys
+sys.path.append('../../Scons')
+import spmig,zomig
+
+def igrey(custom):
+    return '''
+    grey labelrot=n title="" %s 
+    ''' % (custom)
+
+MDIR = '/data/MARMOUSI2/'
+MDIR = ''
+
+# ------------------------------------------------------------
+# PARAMETERS
+# ------------------------------------------------------------
+par = {
+    'nw':400,'ow':1,
+    'nw':500,'ow':1,'jw':1,
+    'nt':2500,'ot':0,'dt':0.002,'kt':1,'ft':0,
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':500,'pmy':0
+    }
+# ------------------------------------------------------------
+# VELOCITY/SLOWNESS
+# ------------------------------------------------------------
+VSUF = '_marmousi-ii.segy'
+for c in ('p','s'):
+    v = 'v' + c
+    t = MDIR + v + VSUF
+    h = v + 'head'
+
+    # velocity
+    Flow([v,h],t,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         window n1=1000 |
+         put o1=0 d1=0.00125 o2=0 d2=0.00125 label1=z label2=x
+         ''',stdin=0)
+    Result(v,v,igrey('color=j allpos=y'))
+
+    # slowness
+    s = 's' + c
+    Flow(s,v,
+         '''
+         window f1=400 j2=10 |
+         math "output=1/input" |
+         transp memsize=400 |
+         spray axis=2 n=1 o=0 d=1 |
+         put label2=y
+         ''')
+    Result(s,s,'window | transp | '+igrey('color=j allpos=y'))
+
+Flow('sx','sp','window squeeze=n')
+
+
+# slowness for P datuming (one big step in water)
+Flow('sd','vp',
+     '''
+     window n1=2 j1=360 j2=10 |
+     math "output=1/input" |
+     transp memsize=400 |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+Result('sd','sd','window | transp | '+igrey('color=j allpos=y'))
+# slowness for P datuming (40 small steps in soft sediments)
+Flow('so','vp',
+     '''
+     window n1=40 f1=360 j2=10 |
+     math "output=1/input" |
+     transp memsize=400 |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+Result('so','so','window | transp | '+igrey('color=j allpos=y'))
+# ------------------------------------------------------------
+# DATA
+# ------------------------------------------------------------
+for k in ('1'):
+    # ------------------------------------------------------------
+    # OBC data
+    pdat = 'pdat' + k
+    phdr = 'phdr' + k
+    pobc = MDIR + 'obc_div_v_' + k + '.segy'
+
+    Flow([pdat,phdr],pobc,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3 d3=0.025
+         ''')
+
+    sdat = 'sdat' + k
+    shdr = 'shdr' + k
+    sobc = MDIR + 'obc_curl_v_' + k + '.segy'
+
+    Flow([sdat,shdr],sobc,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3 d3=0.025
+         ''')
+
+# ------------------------------------------------------------
+# wavefields
+# SURFACE
+
+# OBC X
+#Flow('vxdat1 vxhdr1',MDIR+'obc_vx_1.segy',
+#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
+#Flow('vxdat2 vxhdr2',MDIR+'obc_vx_2.segy',
+#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
+
+Flow('vx1','vxdat1 vxhdr1','intbin xk=tracf yk=fldr head=${SOURCES[1]}')
+Flow('vx2','vxdat2 vxhdr2','intbin xk=tracf yk=fldr head=${SOURCES[1]}')
+
+# OBC Y
+#Flow('vzdat1 vzhdr1',MDIR+'obc_vz_1.segy',
+#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
+#Flow('vzdat2 vzhdr2',MDIR+'obc_vz_2.segy',
+#     'segyread tape=$SOURCE tfile=${TARGETS[1]}')
+
+Flow('datp','vzdat1',
+     'window n2=1381 | put o2=0 d2=0.0125 label1=t label2=x | window n2=480')
+Flow('dats','vxdat1',
+     'window n2=1381 | put o2=0 d2=0.0125 label1=t label2=x | window n2=480')
+Result('datp','datp',igrey('grid1=y g1num=1'))
+Result('dats','dats',igrey('grid1=y g1num=1'))
+
+# ------------------------------------------------------------
+# receiver (P & S) data [dpr, dsr]
+# ------------------------------------------------------------
+for c in ('p','s'):
+    rec = 'd' + c + 'r'
+#    dat = c + 'dat1'
+    dat = 'dat' + c
+
+    Flow(rec,dat,
+         '''
+         fft1 |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         transp |
+         spray axis=2 n=1 o=1 d=1 |
+         put label1=x label2=y label3=w label4=e
+         ''' % par )
+    Result(rec,rec,'window | real | '+igrey(''))
+
+Flow('dxr','../../wemod/marm2win/datx.rsf',
+     '''
+     fft1 |
+     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+     transp |
+     spray axis=2 n=1 o=1 d=1 |
+     put label1=x label2=y label3=w label4=e
+     ''' % par )
+Result('dxr','dxr','window | real | '+igrey(''))
+
+for c in ('p','s','x'):
+    t = 't' + c + 'r'
+    d = 'd' + c + 'r'
+    Result(t,d,
+           'window | transp | pad beg1=5 n1out=1251 | fft1 inv=1 | '
+           +igrey('pclip=99'))
+
+# ------------------------------------------------------------
+# source (P) data [dps]
+# ------------------------------------------------------------
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g |
+     ricker1 frequency=10
+         ''' % par )    
+Result('wave','wave','graph')
+
+# data at the surface [dos]
+Flow('dos','wave',
+     '''
+     fft1 inv=n |
+     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+     pad beg2=240 n2out=480 |
+     transp |
+     spray axis=2 n=1 o=1 d=1 |
+     put label1=x label2=y label3=w label4=e o1=0 d1=0.0125
+     ''' % par )
+
+# datumed data [dds]
+zomig.Cdtone('dds','dos','sd',par)
+Result('dds','dds','window | real | '+igrey(''))
+
+# datumed data [dds]
+zomig.Cdtone('dps','dds','so',par)
+Result('dps','dps','window | real | '+igrey(''))
+
+Flow('tps','dps','window | transp | pad beg1=5 n1out=1251 | fft1 inv=y ')
+# ------------------------------------------------------------
+# migration (P & S) [ip is]
+# ------------------------------------------------------------
+for c in ('p','s','x'):
+    i ='i' + c
+    s ='s' + c
+    ds='d' +'p'+ 's'
+    dr='d' + c + 'r'
+
+    spmig.image(i,s,ds,dr,par)
+    Result(i,i,'window | transp | ' + igrey('pclip=99'))
+# ------------------------------------------------------------
+
+End()

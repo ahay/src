@@ -1,0 +1,81 @@
+\section{Mixed-domain solutions to the one-way wave-equation}
+We can use \req{oneway.3d} to construct a numerical solution
+to the one-way wave equation in the mixed 
+$\omega-k$, $\omega-x$ domain.
+The extrapolation wavenumber described in \req{oneway.3d}
+is, in general, a function dependent on several quantities
+\beq
+\kz = \kz \lp \ss,\c_j\rp \;,
+\eeq
+where $\ss \ofpo$ is slowness, and
+$\c_j\ofpo=\lc \cx,\cy,\cz,\cxx,\cyy,\czz,\cxy \rc$ are 
+coefficients computed numerically from the definition
+of the coordinate system, as indicated by 
+equations~(\ref{eqn:coefs.3d}).
+Specifying a coordinate system, indirectly defines all $\c_j$.
+\par
+Next, we write the extrapolation wavenumber $\kz$ as a 
+first-order Taylor expansion relative to a reference medium:
+\beq \label{eqn:mixed.3d}
+\kz = {\kz}_0 + 
+            \left . \frac{\partial \kz}{\partial\ss }\right |_{ \ss_0,{\c_j}_0} \lp \ss  - \ss_0    \rp +
+\sum_{\c_j} \left . \frac{\partial \kz}{\partial\c_j}\right |_{ \ss_0,{\c_j}_0} \lp \c_j - {\c_j}_0 \rp \;,
+\eeq
+where $\ss\ofpo$ and  $\c_j\ofpo$
+represent the spatially variable slowness and coordinate 
+system parameters, and  $\ss_0$ and ${\c_j}_0$ are the 
+constant reference values at every 
+extrapolation level.
+\par
+As usual, the first part of \req{mixed.3d}, 
+corresponding to the extrapolation wavenumber in the 
+reference medium ${\kz}_0$,
+is implemented in the Fourier domain,
+while the second part, corresponding to the spatially variable
+medium coefficients, is implemented in the space domain.
+\par
+If we make the further simplifying assumptions that 
+$\kx \approx 0$ and $\ky \approx 0$, 
+we can write
+\beq \label{eqn:mixed.3d.explicit}
+\kz = {\kz}_0 +
+\left . \frac{\partial\kz}{\partial\czz}\right |_{0} \lp \ss  -  \ss_0   \rp +
+\left . \frac{\partial\kz}{\partial\czz}\right |_{0} \lp \czz - {\czz}_0 \rp + 
+\left . \frac{\partial\kz}{\partial\cz }\right |_{0} \lp \cz  - {\cz}_0  \rp \;,
+\eeq
+\par
+where
+\beqa
+\left . \frac{\partial\kz}{\partial\ss}\right |_{0} &=&
+\frac {2\ww \lp \ww\ss_0\rp }
+      {            \sqrt {4{\czz}_0\lp\ww\ss_0\rp^2 - {\cz}_0^2} } \;,
+\nonumber \\
+\left . \frac{\partial\kz}{\partial\czz}\right |_{0} &=&
+- \frac{i{\cz}_0}{ 2{\czz}_0^2} +
+\frac {  {\cz}_0^2-2{\czz}_0 \lp\ww\ss_0\rp^2 }
+      {2{\czz}_0^2 \sqrt {4{\czz}_0\lp\ww\ss_0\rp^2 - {\cz}_0^2} } \;,
+\nonumber \\
+\left . \frac{\partial\kz}{\partial\cz}\right |_{0} &=&
+  \frac{i       }{ 2{\czz}_0  } -
+\frac {  {\cz}_0 }
+      {2{\czz}_0   \sqrt {4{\czz}_0\lp\ww\ss_0\rp^2 - {\cz}_0^2} } \;.
+\eeqa
+%%Equation~\reqo{mixed.3d.explicit} is motivated by 
+%%a wavefront normal propagation approximation.
+By ``0'', we denote the reference medium ($\ss_0,{\c_j}_0)$.
+We could also use many reference media, followed by 
+interpolation, similarly to the 
+Phase-Shift Plus Interpolation (PSPI) technique of
+\cite{GEO49.02.01240131}.
+\par
+For the particular case of Cartesian coordinates
+($\cz=0, \czz=1$),
+\req{mixed.3d.explicit} reduces to
+\beq 
+\kz = {\kz}_0 + \ww \lp \ss - \ss_0 \rp \;,
+\eeq
+which corresponds to the popular Split-Step Fourier (SSF) 
+extrapolation method \cite[]{GEO55-04-04100421}.
+
+
+

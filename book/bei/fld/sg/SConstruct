@@ -1,0 +1,7 @@
+from rsfproj import *
+
+Result('geqs', None,'sg 1',prefix=plprefix)
+Result('geq2s',None,'sg 2',prefix=plprefix)
+
+###########################################################################
+End()

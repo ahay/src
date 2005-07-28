@@ -1,0 +1,51 @@
+from rsfproj import *
+
+Fetch(['data.hh','cdp.hh'],'rad')
+Flow('data','data.hh','dd form=native | pad n1=1200')
+Flow('cdp','cdp.hh','dd form=native')
+
+Flow('rad','data',
+     'radon nx=60 ox=0.275 dx=0.005 inv=n p0=0 np=200 dp=0.005')
+
+Flow('cdp-rad','cdp',
+     'radon nx=24 ox=0.132 dx=0.067 inv=y p0=0 np=100 dp=0.012')
+Flow('frw','rad','radon adj=n nx=60 ox=0.275 dx=0.005')
+
+label = 'transp=y poly=y yreverse=y crowd=0.89'
+labelr = label + 'label2="p (s/km)" label1="tau (s)" title="tau-p domain"'
+labelc = label + 'label2="Offset (km)" label1="Time (s)" title="cmp domain"'
+
+radon = map(lambda x: 'radon%d' % x,range(3))    
+Plot(radon[1],'rad', 'window n1=860 | grey ' + labelr) # middle
+Plot(radon[0],'data','window n1=860 | grey ' + labelc) # left
+Plot(radon[2],'frw', 'window n1=860 | grey ' + labelc) # right
+Result('radon',radon,'SideBySideAniso')
+
+Flow('inv','data',
+     'radon nx=60 ox=0.275 dx=0.005 p0=0 np=200 dp=0.005')
+Flow('pre','inv','radon adj=n nx=60 ox=0.275 dx=0.005')
+
+radon_inv = map(lambda x: 'radon-inv%d' % x,range(3))
+Plot(radon_inv[0],'inv','window n1=860 | grey ' + labelr) # left
+Plot(radon_inv[2],'pre data',
+          '''add scale=1,-1 ${SOURCES[1]} |
+          window n1=860 | grey clip=131.365''' +
+          labelc) # right
+Plot(radon_inv[1],'pre',
+          'window n1=860 | grey clip=131.365' + labelc) # middle
+Result('radon-inv',radon_inv,'SideBySideAniso')
+
+Flow('cdpv','cdp-rad','window n2=1 | math output=1.5')
+Flow('cdp-nmo','cdp-rad cdpv','taupmo velocity=${SOURCES[1]}')
+Flow('cdp-dip','cdp-nmo','dip2 niter=10 eps=20 lam=10 order=2')
+Flow('cdp-pik','cdp-dip','pick0')
+Plot('sig','cdp-rad','grey wanttitle=n')
+Plot('pik','cdp-pik',
+          '''window j2=40 |
+          graph min2=0 max2=999 pad=n
+          yreverse=y wanttitle=n plotcol=6 wantaxis=n''')
+Result('cdp-pick','sig pik','Overlay')
+          
+############################################################################
+
+End()

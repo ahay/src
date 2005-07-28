@@ -1,0 +1,194 @@
+from rsfproj import *
+import math
+
+Fetch('Sanclemente.rsf','sanclem')
+Flow('./dat','Sanclemente','dd form=ascii type=int out=$TARGET',stdout=0)
+
+colors = {
+    'red':    ('2.1','2.1'),  # pebbly, cong. sand
+    'orange': ('2.0','1.9'),  # med-coarse sand, amalgamated
+    'yellow': ('2.1','1.9'),  # med-coarse sand, thick bedded
+    'pink':   ('2.1','1.9'),  # med-coarse sand, large mud clasts
+    'green':  ('2.1','1.9'),  # med-fine sand, thin bedded + mudstone
+    'gray':   ('2.35','2.4'), # mudstone, very thin bedded sand
+    'white':  ('2.3','2.35'), # bioturbated slope mudstone
+    'black':  ('2.1','1.9')
+    }
+    
+rocks = ('black','green','gray','yellow','red','orange','white','pink')
+
+def color2ai(target=None,source=None,env=None):
+    col = open(str(source[0]),'r')
+    vfile = str(target[0])
+    dfile = str(target[1])
+    vel = open(vfile,'w')
+    den = open(dfile,'w')    
+    for line in col.readlines():
+        cols = map(int,string.split(line))
+        vp = string.join(map(lambda x: colors[rocks[x-1]][0],cols),' ')+'\n'
+        ro = string.join(map(lambda x: colors[rocks[x-1]][1],cols),' ')+'\n'
+        vel.write(vp)
+        den.write(ro)
+    col.close()
+    vel.write('n2=3200 n1=420 data_format=ascii_float esize=0 in=%s\n' % vfile)
+    vel.write('d1=0.0862069 d2=0.344828\n')
+    den.write('n2=3200 n1=420 data_format=ascii_float esize=0 in=%s\n' % dfile)
+    den.write('d1=0.0862069 d2=0.344828\n')
+    vel.close()
+    den.close()
+
+Color2ai = Builder(action=Action(color2ai))
+env = Environment(BUILDERS={'Color2ai':Color2ai})
+
+env.Color2ai(['vp0'+sfsuffix,'ro0'+sfsuffix],'dat'+sfsuffix)
+
+label = {
+    'vp': 'Velocity (km/s)',
+    'ro': 'Density (g/cc)'
+    }
+
+for case in ['vp','ro']:
+    Flow(case,case+'0','dd form=native')
+    Plot(case,
+         '''
+         grey scalebar=y barlabel="%s" color=j
+         bias=2 pclip=100 title=SanClemente label1="Depth (m)"
+         ''' % label[case])
+
+Flow('vel','vp','scale dscale=1000')
+Flow('ai0','ro vp','add mode=p ${SOURCES[1]}')
+Flow('ai','ai0 vel',
+     '''
+     depth2time velocity=${SOURCES[1]} dt=0.0001 nt=400 eps=1 |
+     smooth rect1=5
+     ''')
+Plot('ai',
+       '''
+       grey color=j allpos=y bias=4 pclip=100
+       scalebar=y barlabel="Acoustic Impedance"
+       title=SanClemente label1="Time (s)"
+       ''')
+Result('sanclem','vp ro ai','OverUnderAniso')
+
+Flow('ai1','ai','window n2=1 min2=300')
+Flow('refl','ai1','ai2refl')
+Flow('ricker',None,'spike n1=250 d1=1e-04 k1=125 | ricker1')
+Flow('conv','refl','ricker1')
+
+plots = {'ai1':'Acoustic Impedance',
+         'refl':'Reflectivity',
+         'ricker': 'Wavelet',
+         'conv': 'Synthetic Trace'}
+for plot in plots.keys():
+    Plot(plot,'graph title="%s" wantaxis1=n' % plots[plot])
+    Plot('spec'+plot,plot,
+         'spectra | graph title="%s Spectrum" wantaxis1=n' % plots[plot])
+Result('inv1','ai1 refl ricker conv','TwoRows')
+Result('inv2','specai1 specrefl specricker specconv','TwoRows')
+
+for case in (1,2):
+    sf = 'sf%d' % case
+    Flow(sf,'conv','iphase order=10 rect1=%d hertz=y' % (1,250)[case-1])
+    Plot(sf,
+         '''
+         scale dscale=0.05 |
+         graph title="%s Frequency"
+         wantaxis1=n min2=0 max2=100
+         label2="Frequency (Hz)" plotcol=5
+         ''' % ('Instantaneous','Local')[case-1])
+    Result(sf,['conv',sf],'OverUnderAniso',vppen='txscale=1.5')
+
+Flow('bf2','conv','iphase order=10 rect1=100 hertz=y band=y')
+Plot('bf2',
+     '''
+     scale dscale=0.05 |
+     graph title="Local Frequency"
+     wantaxis1=n min2=0 max2=100
+     ''')
+
+Flow('chirp',None,
+     'math  n1=1024 d1=0.004 output="cos(%g*x1*(1+0.5*x1))" ' % (math.pi*10))
+Flow('chirp2',None,
+     'math  n1=1424 d1=0.004 o1=-0.8 output="cos(%g*x1*(1+0.5*x1))" ' % (math.pi*10))
+
+Plot('chirp','graph title="Chirp Signal" wantaxis1=n') 
+
+for case in (1,2):
+    ic = 'ic%d' % case
+    Plot(ic,'chirp2',
+         '''     
+         iphase order=200 rect1=%d hertz=y |
+         window min1=0 n1=1024 |
+         graph title="%s Frequency" min2=0 max2=30 plotcol=5
+         label1="Time (s)" label2="Frequency (Hz)"
+         ''' % ((1,"Instantaneous"),(10,"Local"))[case-1])
+    Result(ic,['chirp',ic],'OverUnderAniso',vppen='txscale=1.5')
+
+Plot('bc2','chirp',
+     '''
+     iphase order=10 rect1=100 hertz=y band=y | 
+     graph title="Local Bandwidth" min2=0 max2=50
+     ''')
+
+freq = (30,60,120)
+for hz in freq:
+    mod = 'clem%d' % hz
+    Flow(mod,'ai','ai2refl | ricker1 freq=%g' % (hz*0.0002))
+    Plot(mod,
+         '''
+         grey title="Seismic Model (%d-Hz Ricker)" color=G
+         label1="Time (s)"
+         ''' % hz)
+Result('clem', map(lambda hz: 'clem%d' % hz,freq),'OverUnderAniso')
+
+Flow('vel2','topvel vel',
+     'cat axis=1 ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[0]}')
+Flow('topai','ai','math output=7.2')
+Flow('topvel','vel','math output=3000')
+Flow('mod','topai ai vel2',
+     '''
+     cat axis=1 ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[0]} |
+     ai2refl f=60 |
+     time2depth nz=1156 dz=0.1 velocity=${SOURCES[2]}
+     ''')
+Result('mod',
+       '''
+       window min1=60 j1=5 |
+       grey title="Reflectivity Model" label1="Depth (m)" color=G
+       ''')
+
+Flow('slow2','vel2','math output=1/input | transp | spray axis=2 n=1')
+Flow('mod2','mod','transp | spray axis=2 n=1')
+
+#Flow('zof','mod vel2',
+#     'sstep1 eps=0.01 nt=100 dt=0.002 velocity=${SOURCES[1]} inv=1')
+#Result('zof','grey title="Exploding Reflector Data" label1="Time (s)" color=G')
+
+Flow('zof2','mod2 slow2',
+     'sstep2 eps=0.01 nw=51 dw=5 slowness=${SOURCES[1]} verb=y inv=1')
+Result('zof2',
+       '''
+       window | transp | fft1 inv=y |
+       grey title="Exploding Reflector Data" label1="Time (s)" color=G
+       ''')
+
+Flow('vel1','vel2','smooth rect1=50 rect2=50 | window j1=5')
+Flow('slow1','vel1','math output=1/input | transp | spray axis=2 n=1')
+
+#Flow('mig','zof vel1','sstep1 eps=0.01 velocity=${SOURCES[1]}')
+#Result('mig',
+#       '''
+#       window min1=60 |
+#       grey title="Migrated Image" label1="Depth (m)" color=G
+#       ''')
+
+Flow('mig2','zof2 slow1',
+     'sstep2 eps=0.01 slowness=${SOURCES[1]} verb=y readwrite=y')
+Result('mig2',
+       '''
+       window min3=60 | transp |
+       grey title="Migrated Image" label1="Depth (m)" color=G
+       ''')
+
+###########################################################################
+End()

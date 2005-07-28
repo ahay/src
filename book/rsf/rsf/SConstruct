@@ -1,0 +1,43 @@
+from rsftex import *
+
+import os
+import rsfdoc
+import rsfprog
+
+root = os.environ.get('RSFROOT')
+libdir = os.path.join(root,'lib')
+bindir = os.path.join(root,'bin')
+sfdoc  = os.path.join(bindir,'sfdoc')
+
+progs = []
+for prog in rsfdoc.progs.keys():
+    progs.append(prog+'.tex')
+    Command2(prog+'.tex',sfdoc,
+             'PYTHONPATH=%s $SOURCE -l . %s' % (libdir,prog))
+
+Alias('progs',progs)
+
+
+Paper('install',use='[bookmarks=true]hyperref')
+Paper('tour',use='listings,color,hyperref')
+Paper('format',use='hyperref')
+Paper('api',use='hyperref,listings',
+      include='\\newcommand{\\RSF}{%s}' %
+      os.path.join(os.environ.get('HOME'),'RSF'))
+Paper('demo',use='hyperref,listings',
+      include='\\newcommand{\\RSF}{%s}' %
+      os.path.join(os.environ.get('HOME'),'RSF'))
+
+Paper('prog',use='hyperref,amsmath,fancybox',
+      include='''
+      \\newcommand{\\prog}[1]{
+      \\noindent\\fbox{
+      \\parbox{\\textwidth}{
+      \\input{sf#1}
+      }}}
+      ''')
+
+Depends2('install',map(lambda x: x+'.install',
+                       Split('api format install prog tour demo')))
+
+End(use='hyperref')

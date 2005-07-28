@@ -1,0 +1,6 @@
+from rsfproj import *
+
+Result('stratrms',None,'vrms',prefix=plprefix)
+
+###########################################################################
+End()

@@ -1,0 +1,44 @@
+from rsfproj import *
+
+import math, os
+
+Flow('cos',None,'math n1=1024 d1=0.004 output="cos(%g*x1)" ' % (math.pi*50))
+Flow('chirp',None,
+     'math  n1=1024 d1=0.004 output="cos(%g*x1*(1+0.1*x1))" ' % (math.pi*50))
+
+Plot('cos','graph title="Cosine Signal" ') 
+Plot('icos','cos',
+     '''
+     iphase order=100 rect1=100 | scale dscale=%g | 
+     graph title="Local Frequency" min2=0 max2=50
+     ''' % (0.5/(math.pi*0.004)))
+
+Flow('icos0','cos','LD_LIBRARY_PATH=%s %s freq=1' %
+     (os.environ.get('LD_LIBRARY_PATH'),WhereIs('Envelope')))
+Plot('icos0',
+     '''
+     scale dscale=%g | 
+     graph title="Instantaneous Frequency" min2=0 max2=50
+     ''' % (0.5/(math.pi*0.004)))
+
+Plot('chirp','graph title="Chirp Signal" ') 
+Plot('ichirp','chirp',
+     '''
+     iphase order=10 rect1=100 | scale dscale=%g | 
+     graph title="Local Frequency" min2=0 max2=50
+     ''' % (0.5/(math.pi*0.004)))
+Plot('bchirp','chirp',
+     '''
+     iphase order=10 rect1=100 band=y | scale dscale=%g | 
+     graph title="Local Bandwidth" min2=0 max2=50
+     ''' % (0.5/(math.pi*0.004)))
+
+Flow('ichirp0','chirp','LD_LIBRARY_PATH=%s %s freq=1' %
+     (os.environ.get('LD_LIBRARY_PATH'),WhereIs('Envelope')))
+Plot('ichirp0',
+     '''
+     scale dscale=%g | 
+     graph title="Instantaneous Frequency" min2=0 max2=50
+     ''' % (0.5/(math.pi*0.004)))
+
+End()

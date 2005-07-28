@@ -1,0 +1,268 @@
+\title{Reproducible research in computational geophysics \\ using SCons}
+
+\author{Sergey Fomel}
+
+\maketitle
+
+\begin{abstract}
+SCons (from Software Construction) is
+\end{abstract}
+
+\section{Introduction}
+
+\subsection{Reproducible research philosophy}
+
+Peer review is the backbone of scientific progress. From the ancient
+alchemists, who worked in secret on magic solutions to insolvable problems,
+the modern science has come a long way to become a social enterprise, where
+hypotheses, theories, and experimental results are openly published and
+verified by the community. By reproducing and verifying previously published
+research, a researcher can take new steps to advance the progress of science.
+
+Traditionally, scientific disciplines are divided into theoretical and
+experimental studies. Reproduction and verification of theoretical results
+usually requires only imagination (apart from pencils and paper),
+experimental results are verified in laboratories using equipment and
+materials similar to those described in the publication.
+
+During the last century, computational studies emerged as a new scientific
+discipline. Computational experiments are carried out on a computer by
+applying numerical algorithms to digital data. How reproducible are such
+experiments? On one hand, reproducing the result of a numerical experiment is
+a difficult undertaking. The reader needs to have access to precisely the
+same kind of input data, software and hardware as the author of the
+publication to reproduce the result. It is often difficult or impossible to
+provide detailed specifications for these components. On the other hand, basic
+components of a computational system such as operating systems and file
+formats are getting increasingly standardized, and new components can be
+shared in principle because they simply represent digital information
+transferable over the Internet.
+
+The practice of software sharing has fueled the miraculously efficient
+development of Linux, Apache, and many other open-source software projects.
+Its proponents often refer to this ideology as an analog of the scientific
+peer review tradition. Eric Raymond, one of the best-known supporters of the
+open-source movement, writes \cite[]{taoup}:
+\begin{quote}
+  Abandoning the habit of secrecy in favor of process transparency and
+  peer review was the crucial step by which alchemy became chemistry. In the
+  same way, it is beginning to appear that open-source development may signal
+  the long-awaited maturation of software development as a discipline. 
+\end{quote}
+While software development is trying to imitate science, computational science
+needs to borrow from the open-source model in order to sustain itself as a
+fully scientific discipline.
+
+In computer science, the concept of publishing and explaining computer
+programs goes back to the idea of \emph{literate programming} promoted by
+\cite{knuth} and expended by many other researchers \cite[]{thimbleby}. In his
+2004 lecture on ``better programming'', Harold Thimbleby
+says\footnote{url:http://www.uclic.ucl.ac.uk/harold/}
+\begin{quote}
+  We want ideas, and in particular programs, that work in one place to work
+  elsewhere. One form of objectivity is that published science must work
+  elsewhere than just in the author's laboratory or even just in the author's
+  imagination; this requirement is called \emph{reproducibility}.
+\end{quote}
+
+The quest for peer review and reproducibility is especially important for
+computational geosciences and computational geophysics in particular. The very
+first paper published in \emph{Geophysics} was titled ``Black magic in
+geophysical prospecting'' \cite[]{GEO01-01-00010008,TLE02-03-00280031} and
+presented an account of different ``magical'' methods of oil explorations
+promoted by entrepreneurs in the early days of geophysical exploration
+industry. Although none of these methods exist today, it is not a secret that
+industrial practice is full of nearly magical tricks, often hidden besides a
+scientific appearance. Only a scrutiny of peer review and result verification
+can help us distinguish magic from science and advance the latter.
+
+Nearly ten years ago, the technology of reproducible research in geophysics was
+pioneered by Jon Claerbout and his students at the Stanford Exploration
+Project (SEP).  SEP's system of reproducible research requires the author of a
+publication to document creation of numerical results from the input data and
+software sources to let others test and verify the result reproducibility
+\cite[]{SEG-1992-0601,matt}. 
+%% In Claerbout's words
+%% \footnote{http://sepwww.stanford.edu/research/redoc/IRIS.html},
+%% \begin{quote}
+%%   The purpose of reproducible research is to facilitate someone going a step
+%%   further by changing something. The first step that someone will want to make
+%%   is to be sure that your work is reproducible before they change and improve
+%%   upon it. 
+%% \end{quote}
+%% \begin{quote}
+%%   It takes some effort to organize your research to be reproducible.
+%%   We found that although the effort seems to be directed to helping other
+%%   people stand up on your shoulders, the principal beneficiary is generally
+%%   the author herself. This is because time turns each one of us into another
+%%   person, and by making effort to communicate with strangers, we help
+%%   ourselves to communicate with our future selves.
+%% \end{quote}
+The discipline of reproducible research was also adopted and popularized in
+the statistics and wavelet theory community by \cite{donoho}. It is referenced
+in the popular wavelet theory books \cite[]{hubbard,mallat}. 
+However, the adoption or reproducible research practice by computational
+geoscientists outside of SEP has been slow.  Partially, this is caused by
+difficult and inadequate tools.
+
+%What kind of documentation is required to make geophysical numerical
+%experiments reproducible? Geophysical data analysis involves remote datasets
+%that are typically passed through several data processing steps before a final
+%image is created and some information about the subsurface geology is
+%inferred.  Keeping a precise record of the processing history is necessary for
+%reproducing and verifying the result. 
+
+%The closest analog from other
+%disciplines is medicine. Both geosciences and medical sciences study unique
+%objects (the Earth planet and the human organism respectively). Each
+%geophysical dataset is in some sense as unique as each medical patient, and
+%keeping a careful log of the data analysis history is essential for scientific
+%validation of the methods applied to it.
+
+\subsection{Tools for reproducible research}
+
+The reproducible research system developed at Stanford is based on
+``make''\footnote{Originally, SEP used ``cake'', a dialect of ``make''
+  \cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}.
+  The system was converted to ``GNU make'', a more standard dialect, by
+  \cite{Schwab.sep.89.217}.}, a Unix software construction utility. The
+``make'' program keeps track of dependencies between different components of
+the system and the software construction targets, which, in the case of a
+reproducible research system, turn into figures and manuscripts. The targets
+and commands for their construction are specified by the author in
+``makefiles'', which serve as databases for defining source and target
+dependencies. A dependency-based system leads to rapid development, because
+when one of the sources changes, only parts that depend on this source get
+recomputed.  \cite{donoho} based their system on Matlab, a popular integrated
+development environment \cite[]{matlab}, produced by MathWorks.  While Matlab
+is an adequate tool for prototyping numerical algorithms, it may not be
+sufficient for large-scale computation, typical for many applications in
+computational geophysics.
+
+``Make'' is an extremely useful utility employed by thousands of software
+development projects \cite[]{make}. Unfortunately, it is not well designed
+from the user experience prospective. ``Make'' employs an obscure and limited
+special language (a mixture of Unix shell commands and special-purpose
+commands), which often appears confusing to unexperienced users. According to
+Peter van der Linden, a software expert from Sun Microsystems \cite[]{linden},
+\begin{quote}
+  ``Sendmail'' and ``make'' are two well known programs that are pretty widely
+  regarded as originally being debugged into existence. That's why their
+  command languages are so poorly thought out and difficult to learn. It's not
+  just you -- everyone finds them troublesome.
+\end{quote}
+The inconvenience of ``make'' command language is also in its limited
+capabilities.  The reproducible research system includes not only custom
+``make'' rules but also an obscure and hardly portable agglomeration of shell
+and Perl scripts that extend ``make''.
+
+Several alternative systems for dependency-checking software construction have
+been developed in recent years. One of the most promising new tools is SCons,
+enthusiastically endorsed by \cite{dubois}. The SCons initial design won the
+Software Carpentry competition sponsored by Los Alamos National Laboratory in
+2000 in the category of ``a dependency management tool to replace make''.
+Some of the main advantages of SCons are:
+\begin{itemize}
+\item SCons configuration files are Python scripts. Python is a modern
+  programming language praised for its readability, elegance, simplicity, and
+  power \cite[]{python1,python2}. \cite{TLE21-03-02600267} recommend Python as
+  the first programming language for geophysics students.
+\item SCons offers reliable, automatic, and extensible dependency analysis --
+  no more ``make depend'' or ``make clean'' to get all of the dependencies.
+\item SCons has built-in support for many programming languages and systems: 
+  C, C++, Fortran, Java, LaTeX, CVS, and others. 
+\item While ``make'' relies on timestamps for detecting file changes (creating
+  numerous problems on platforms with different system clocks), SCons
+  uses by default a much more reliable detection mechanism employing MD5
+  signatures. It can detect changes not only in files but also in commands
+  used to build them.
+\item SCons provides integrated support for parallel builds.
+\item SCons provides configuration support analogous to the ``autoconf''
+  utility for testing the environment on different platforms.
+\item SCons creates a global view of all dependencies -- no more multiple
+  build passes or touching and reordering targets in order to build
+  everything.
+\item SCons is designed from the ground up as a cross-platform tool. It is
+  known to work equally well on both POSIX systems (Linux, Mac OS X, Solaris,
+  etc.) and Windows.
+\item The stability of SCons is assured by an incremental development
+  methodology utilizing comprehensive regression tests\footnote{As of time of
+    this writing, SCons is in a beta version 0.96 approaching the 1.0 official
+    release. See \url{http://www.scons.org/}.}.
+\item SCons is publicly released under a liberal open-source license.
+\end{itemize}
+
+In this paper, we propose to adopt SCons as a new platform for reproducible
+research in scientific computing.
+
+\subsection{Paper organization}
+
+This paper is organized ``by example''. We will take a small project typical
+for geophysical data processing and show how it can be organized with SCons.
+The example is taken from the collection of demos in Seismic Unix \cite[]{su}.
+Next, we reproduce a similar example using the newly developed RSF (regularly
+sampled file) software package. Finally, we show how to adopt SCons for
+generating documents such as the one you are reading now.
+
+\section{Setting up a project}
+
+In this example, we will generate synthetic seismic data for a layered
+Earth model, perform velocity analysis and NMO and stack the data,
+displaying all intermediate results.
+
+\definecolor{frame}{rgb}{0.905,0.905,0.905}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+
+\subsection{SU example}
+
+The SConstruct file starts with loading the SU project management
+module \texttt{suproj}, which provides our extention to SCons. We also
+load the standard Python ``\texttt{string}'' module, which will be
+useful later for manipulating text strings.
+
+\lstinputlisting[firstline=4,lastline=5,frame=single]{su/SConstruct}
+
+\subsubsection{Definining the model}
+
+Next, we define the model dimensions and specify reflectors (by their
+depth and reflectivity) and layer velocities.
+
+\lstinputlisting[firstline=7,lastline=21,frame=single]{su/SConstruct}
+
+For convenience, we define a \texttt{model} function in Python that
+translates our reflector definition into a form suitable for SU's
+\texttt{unif2} command. 
+
+\lstinputlisting[firstline=23,lastline=28,frame=single]{su/SConstruct}
+
+Finally, 
+
+\label{flow}
+
+\subsection{RSF example}
+
+\subsection{LaTeX example}
+
+\section{Command summary}
+
+The following is a summary of SConstruct commands and default SCons
+targets that are set in our reproducible research environment.
+
+\begin{description}
+\item[\texttt{Flow(target,source,command)}] \dotfill \pageref{flow} \\
+A rule to generate \texttt{target} from \texttt{source} using \texttt{command}.
+\end{description}
+
+\section{Open source availability}
+
+SU software package is available from... RSF is available from... The
+RSF distribution also contains \texttt{suproj} and \texttt{rsfproj}
+modules used in the examples of this paper.
+
+\bibliographystyle{seg}
+\bibliography{SEG,SEP2,scons}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% End: 

@@ -1,0 +1,72 @@
+from rsfproj import *
+
+def showdat(title):
+    return '''
+    window f2=10 f1=10 |
+    grey crowd1=0.85  crowd2=0.8 label1="Time(s)" label2="X(ft)" title="%s"
+    ''' % title
+
+Fetch('gomnearoffset.H','gom')
+Flow('offset','gomnearoffset.H','dd form=native')
+
+Plot('zof','offset',showdat('Data'))
+Result('dzof','offset',showdat('Data'))
+
+Flow('dip','offset','dip verb=y order=3 rect1=5 rect2=20 liter=100')
+Flow('dec','offset dip','pwd order=3 dip=${SOURCES[1]}')
+
+Result('dip',
+       showdat('Dominant Dip') + ' crowd1=0.75 color=j scalebar=y ')
+
+Plot('dec',showdat('Residual'))
+Result('ddec','dec',showdat('Residual'))
+
+Result('dec','zof dec','OverUnderAniso')
+
+Flow('dwg','offset dip',
+     'pwdsigk dips=${SOURCES[1]} verb=y eps=5 niter=1000 nliter=3')
+Result('dwg',showdat('Structure Enhanced'))
+
+Flow('dns','offset dwg','add scale=1,-1 ${SOURCES[1]}')
+Result('dns',showdat('Diffractions Enhanced'))
+
+Flow('wkx','dec',
+     'pad n2=1025 beg1=400 | cosft sign2=1 | spray axis=2 n=1 o=0 d=26.67')
+
+Flow('vlf','wkx',
+     '''
+     fourvc nv=250 dv=10 v0=0.00001 |
+     cosft sign3=-1 | window n3=920 f1=400
+     ''')
+
+Flow('vkx','offset',
+     'pad n2=1025 beg1=400 | cosft sign2=1 | spray axis=2 n=1 o=0 d=26.67')
+
+Flow('vlf2','vkx',
+     '''
+     fourvc nv=250 dv=10 v0=0.00001 |
+     cosft sign3=-1 | window n3=920 f1=400
+     ''')
+
+Flow('foc','vlf','window j3=5 | focus rect1=200 rect3=10 | math output=1/input')
+
+Flow('pick','foc','blindpick rect1=10 rect2=10')
+
+Flow('pick2','pick','window | transp | spline n1=920 d1=26.6699 o1=0 | transp')
+
+Result('dvel','pick2',
+       '''
+       window f2=10 f1=10 |
+       grey label1="Time(s)" label2="X(ft)" allpos=y title=Velocity color=j scalebar=y
+       bias=1500 minval=1500 clip=700 maxval=2200
+       ''')
+
+Flow('slice','vlf pick2','slice pick=${SOURCES[1]}')
+
+Result('slice','window | ' + showdat('Migrated Diffractions'))
+
+Flow('slice2','vlf2 pick2','slice pick=${SOURCES[1]}')
+
+Result('slice2','window | ' + showdat('Migration'))
+
+End()

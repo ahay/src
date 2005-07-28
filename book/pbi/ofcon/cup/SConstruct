@@ -1,0 +1,245 @@
+from rsfproj import *
+import math
+
+Flow('cup2',None,
+     'math n2=1 n3=1 n1=256 o1=0 d1=0.008 output="%g*(3+cos(%g*(%g*x1-1)))" ' %
+     ((256*0.004/9.0),math.pi,2.0/((1+256/2)*0.008)))
+Flow('cup','cup2',
+     '''
+     unif2 n1=256 o1=0.004 d1=0.004 |
+     deriv |
+     bandpass flo=10 fhi=50 | transp | bandpass fhi=50 | transp
+     ''')
+Result('cup',
+       'grey label1="Time (s)" label2="Midpoint (km)" pclip=99.5 title=Model')
+
+Flow('data','cup',
+     '''halfint inv=y |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 |
+     window''')
+Flow('nmo','data',
+     'transp plane=23 | nmostretch v0=1.5 | transp plane=23')
+Flow(['hole','mask'],'nmo','shotholes perc=0.9 mask=${TARGETS[1]}')
+
+nmos = []
+holes = []
+for slice in [0,25,50]:
+    offset = slice*0.008
+    grey = '''
+         window n1=100 f1=50 n3=1 f3=%d | 
+         grey pclip=99.5 title="h=%g"
+         label1="Time (s)" label2="Midpoint (km)"
+         ''' % (slice,offset)
+    nmo = 'nmo%d' % slice
+    hole = 'hole%d' % slice
+    Plot(nmo,'nmo',grey)
+    Plot(hole,'hole',grey)
+    nmos.append(nmo)
+    holes.append(hole)
+Plot('nmo',nmos,'OverUnderAniso')
+Plot('hole',holes,'OverUnderAniso')
+Result('data',['nmo','hole'],'SideBySideAniso',vppen='txscale=3')
+
+nmos = []
+holes = []
+for slice in [74,99,124]:
+    time = 0.004 + slice*0.004
+    grey = '''
+         window n1=1 f1=%d | 
+         grey pclip=99.5 transp=n title="t=%g"
+         label1="Midpoint (km)" label2="Offset (km)"
+         ''' % (slice,time)
+    nmo = 'tnmo%d' % slice
+    hole = 'thole%d' % slice
+    Plot(nmo,'nmo',grey)
+    Plot(hole,'hole',grey)
+    nmos.append(nmo)
+    holes.append(hole)
+Plot('tnmo',nmos,'OverUnderAniso')
+Plot('thole',holes,'OverUnderAniso')
+Result('tslice',['tnmo','thole'],'SideBySideAniso',vppen='txscale=3')
+
+Flow('fftd','hole',
+     'window f1=50 | logstretch nout=256 | fft1 | transp | transp plane=23')
+Flow('fill',['fftd','mask'],
+     'window n3=55 | ofilp known=${SOURCES[1]} niter=500')
+Flow('hfill',['fftd','mask'],
+     'window n3=55 | ofilp known=${SOURCES[1]} niter=500 simple=y')
+
+ffts = []
+fills = []
+for slice in [8,13,18]:
+    frec = int(slice*0.607908)
+    grey = '''
+         window n3=1 f3=%d | real | 
+         grey title="frequency=%g" transp=n
+         label1="Midpoint (km)" labbel2="Offset (km)"
+         ''' % (slice,frec)
+    fft = 'fft%d' % slice
+    fill = 'fill%d' % slice
+    Plot(fft,'fftd',grey)
+    Plot(fill,'fill',grey)
+    ffts.append(fft)
+    fills.append(fill)
+Plot('fft',ffts,'OverUnderAniso')
+Plot('fill',fills,'OverUnderAniso')
+Result('fslice',['fft','fill'],'SideBySideAniso',vppen='txscale=3')
+
+back = '''pad n3=131 | transp plane=23 | transp | fft1 inv=y |
+     window n1=256 | logstretch inv=y'''
+
+Flow('fild','fill',back)
+Flow('hild','hfill',back)
+
+goods = []
+bads = []
+for slice in [0,25,50]:
+    offset = slice*0.008
+    grey = '''
+         window n1=100 n3=1 f3=%d | 
+         grey pclip=99.5 title="h=%g"
+         label1="Time (s)" label2="Midpoint (km)"
+         ''' % (slice,offset)
+    good = 'good%d' % slice
+    bad = 'bad%d' % slice
+    Plot(good,'fild',grey)
+    Plot(bad,'hild',grey)
+    bads.append(bad)
+    goods.append(good)
+Plot('bad',bads,'OverUnderAniso')
+Plot('good',goods,'OverUnderAniso')
+Result('all',['bad','good'],'SideBySideAniso',vppen='txscale=3')
+
+Flow('shot','nmo','transp plane=23 | cmp2shot')
+Flow('shot1','shot','window n3=1 f3=227')
+Flow('shot2','shot','window n3=1 f3=228')
+Flow('shot3','shot','window n3=1 f3=229')
+
+clip=2145.77
+
+grey = 'grey clip=%g' % clip + ' label2=offset crowd1=0.85 title="%s" '
+
+Plot('shot1',grey % 'shot1')
+Plot('shot3',grey % 'shot3')
+
+Flow('simp',['shot1','shot3'],'add ${SOURCES[1]} scale=0.5,0.5')
+Plot('simp',grey % '(shot1+shot3)/2')
+
+Flow('simperr',['simp','shot2'],'add scale=1,-1 ${SOURCES[1]}')
+Plot('simperr',grey % 'error: (shot1+shot3)/2-shot2')
+Result('shot3','shot1 shot3 simp simperr','TwoRows')
+
+Flow('shotftd','shot',
+     '''window f1=50 | logstretch nout=256 |
+     fft1 | transp | transp plane=23''')
+Flow('shots','shotftd','window n2=2 f2=227 j2=2')
+Flow('shotin','shots','infill | window n2=1 f2=1')
+Flow('shotnd','shotin',
+     '''
+     pad n2=131 | transp | fft1 inv=y |
+     window n1=256 | logstretch inv=y | pad beg1=50 
+     ''')
+Flow('shoterr',['shotnd','shot2'],'add scale=1,-1 ${SOURCES[1]}')
+
+Flow('shot0','shotftd','window n2=1 f2=100 squeeze=n')
+Flow('shotp','shot0','shotprop ns=100 ds=0.008')
+
+Plot('shotnd',grey % 'Interpolated Shot')
+Plot('shoterr',grey % 'Error')
+Result('shotin','shotnd shoterr','SideBySideAniso')
+
+Fetch('midpts.hh','midpts')
+
+Flow('beidat','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+Flow('beiscn','beidat',
+     '''mutter v0=1.4 | vscan semblance=y v0=1.3 nv=48 dv=0.03''')
+Flow('beivel','beiscn','blindpick2 eps=10 lam=100 | window')
+Result('beivel',
+       'grey color=j allpos=y scalebar=y title="RMS velocity" bias=1')
+
+Flow('beinmod',['beidat','beivel'],
+     'nmo velocity=${SOURCES[1]} | mutter v0=1.4')
+Flow('beistup','beinmod','stack')
+Result('beistup','grey title="NMO Stack" ')
+
+Flow('beistrd','beinmod','window f1=15 | logstretch nout=2048')
+Flow('beifftd','beistrd','fft1 | transp plane=13')
+Flow('beistck','beifftd','finstack')
+
+Flow('beitop','beistup','window n1=15')
+Flow('beibot','beistck',
+     'transp | fft1 inv=y | window n1=2048 | logstretch inv=y')
+Flow('beistkd',['beitop','beibot'],'cat axis=1 ${SOURCES[1]}')
+Result('beistkd','grey title="DMO Stack" ')
+
+Flow('beiagc','beistkd','agc rect1=200')
+Flow('beidip','beiagc','dip rect1=10 rect2=10')
+
+Flow('beidif','beiagc beidip','pwd dip=${SOURCES[1]}')
+
+Result('beidif','grey title=Diffractions')
+
+Flow('beickx','beidif','pad n2=521 | cosft sign2=1 | spray axis=2 n=1 o=0 d=0.1')
+Flow('beivlf','beickx','fourvc nv=100 dv=0.025 v0=0.00001 pad=1024 pad2=2048 | cosft sign3=-1 | window n3=250')
+
+Flow('beifoc','beivlf','focus rect1=50 rect2=3 rect3=5 | math output=1/input')
+Flow('beipik','beifoc','blindpick rect1=100 rect2=10')
+
+Result('beipik',
+       '''
+       window | 
+       grey label1="Time(s)" label2="X(ft)" allpos=y title=Velocity color=j scalebar=y
+       ''')
+
+Flow('beislc','beivlf beipik','slice pick=${SOURCES[1]}')
+
+Flow('beishot','beinmod','cmp2shot')
+Flow('beisfft','beishot',
+     '''window f1=15 | logstretch nout=2048 |
+     fft1 | transp | transp plane=23''')
+Flow('beisfill','beisfft','infill eps=0.3')
+Flow('beisdens','beisfill',
+     '''transp plane=23 | transp | fft1 inv=y |
+     window n1=2048 | logstretch inv=y | pad beg1=15''')
+Flow('beidens','beisdens',
+     'shot2cmp | window min3=7.705 n3=250 | mutter v0=1.4')
+Flow('beistup2','beidens','stack')
+Result('beistup2',
+       'grey title="NMO Stack after Shot Interpolation" ')
+
+Flow('beinew',['beidens','beivel'],
+     'inmo velocity=${SOURCES[1]}')
+
+cmpplot = '''
+window n3=1 f3=1 | grey title="%s" label1="Time (s)" label2="Offset (km)"
+'''
+
+Plot('before','beidat',cmpplot % 'Before')
+Plot('after','beinew',cmpplot % 'After')
+Result('beidens',['before','after'],'SideBySideAniso')
+
+Flow('beistrd2','beidens','window f1=15 | logstretch nout=2048')
+Flow('beifftd2','beistrd2','fft1 | transp plane=13')
+Flow('beistck2','beifftd2','finstack')
+
+Flow('beitop2','beistup2','window n1=15')
+Flow('beibot2','beistck2',
+     'transp | fft1 inv=y | window n1=2048 | logstretch inv=y')
+Flow('beistkd2',['beitop2','beibot2'],'cat axis=1 ${SOURCES[1]}')
+Result('beistkd2',
+       'grey title="DMO Stack after Shot Interpolation" ')
+
+Plot('beistkd-zoom','beistkd',
+     '''window min1=1 max1=2 min2=8 max2=14 |
+     grey title="DMO Stack" label1="Time (s)" label2="Midpoint (km)"
+     ''')
+Plot('beistkd2-zoom','beistkd2',
+     '''window min1=1 max1=2 min2=8 max2=14 |
+     grey title="DMO Stack after Shot Interpolation"
+     label1="Time (s)" label2="Midpoint (km)"
+     ''')
+Result('beistkd-zoom',['beistkd-zoom','beistkd2-zoom'],'OverUnderAniso')
+
+###########################################################################
+End()
