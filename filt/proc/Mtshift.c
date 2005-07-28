@@ -94,5 +94,3 @@ int main (int argc, char* argv[])
 	
     exit (0);
 }
-
-/* 	$Id: Mnmo.c 1089 2005-04-02 14:57:29Z savap $	 */

@@ -27,11 +27,16 @@ penv.Program('AFDMc++.x',
              LIBS=['rsf++','rsf','m'])
 
 # F90 environment
+#fenv=Environment(LIBPATH=[libdir],
+#                 F90PATH=[incdir],
+#                 F90='/opt/intel/bin/ifort',
+#                 F90FLAGS= '-O2 -Vaxlib',
+#                 LINK=rsfproj.Get('F90'))
 fenv=Environment(LIBPATH=[libdir],
                  F90PATH=[incdir],
                  F90='/opt/intel/bin/ifort',
                  F90FLAGS= '-O2 -Vaxlib',
-                 LINK=rsfproj.Get('F90'))
+                 LINK='/opt/intel/bin/ifort')
 fenv.Program('AFDMf90.x',
              Split('AFDMf90.f90'),
              LIBS=['rsff90','rsf','m'])

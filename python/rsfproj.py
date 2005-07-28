@@ -356,8 +356,8 @@ def Program90(prog):
                            map(lambda x: x + '.f90',sources),
                            F90PATH=[incdir],
                            LIBS=['rsff90','rsf','m'],
-                           LINK=Get('F90'),
-                           LINKFLAGS=Get('F90FLAGS'))
+                           LINK=project.get('F90'),
+                           LINKFLAGS=project.get('F90FLAGS'))
 
 if __name__ == "__main__":
      import pydoc

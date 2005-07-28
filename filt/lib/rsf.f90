@@ -770,7 +770,7 @@ contains
 
   end subroutine iaxa
 
-!------------------------------------------------------------
+  !------------------------------------------------------------
 
   subroutine oaxa(FF,AA,i)
     type(file), intent(in) :: FF
@@ -786,7 +786,15 @@ contains
     call to_par(FF,BB,AA%d)
 
   end subroutine oaxa
-!------------------------------------------------------------
+  !------------------------------------------------------------
+
+  subroutine raxa(AA)
+    type(axa),  intent(in) :: AA
+
+    write(0,*) AA%n,AA%o,AA%d
+  end subroutine raxa
+  
+  !------------------------------------------------------------
+
 end module RSF
 
-!	$Id: rsf.f90 757 2004-08-25 17:21:39Z fomels $	
