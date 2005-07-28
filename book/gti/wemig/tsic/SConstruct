@@ -1,6 +1,5 @@
 from rsfproj import *
-import sys,math
-sys.path.append('../../Scons')
+import math
 import spmig
 
 # ------------------------------------------------------------

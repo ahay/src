@@ -218,6 +218,7 @@ class Project(Environment):
         self.lock = []
         self.test = []
         self.coms = []
+        sys.path.append('../../Scons')
     def Exe(self,source,**kw):
         target = source.replace('.c','.x')
         return apply(self.Program,(target,source),kw)

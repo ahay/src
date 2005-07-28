@@ -1,6 +1,4 @@
 from rsfproj import *
-import sys, math
-sys.path.append('../../Scons')
 import zomig,sgmig
 
 # ------------------------------------------------------------

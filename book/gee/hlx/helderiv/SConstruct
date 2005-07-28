@@ -1,7 +1,4 @@
 from rsfproj import *
-
-import sys
-sys.path.append('../../Scons')
 from bay import Bay
 from helderiv import Helderiv
 

@@ -3,8 +3,6 @@
  ##
 
 from rsfproj import *
-import sys
-sys.path.append('../../Scons')
 import spmig,sgmig,cluster,wemig
 
 # ------------------------------------------------------------

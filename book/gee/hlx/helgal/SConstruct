@@ -1,7 +1,4 @@
 from rsfproj import *
-
-import sys
-sys.path.append('../../Scons')
 from galilee import Galilee
 from helderiv import Helderiv
 
