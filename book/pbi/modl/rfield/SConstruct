@@ -1,0 +1,132 @@
+#
+# Test the random field rsf/scons/python module rfield.py
+#
+# James W. Jennings Jr.
+# Research Scientist
+# 
+# Bureau of Economic Geology
+# John A. and Katherine G. Jackson School of Geosciences
+# University of Texas at Austin
+# University Station, Box X
+# Austin, TX 78713-8924
+# 
+# 512-471-1534 (voice)
+# 512-471-0140 (fax)
+# mailto:jim.jennings@beg.utexas.edu
+# http://www.beg.utexas.edu/staffinfo/jennings01.htm
+# 
+# July 2005
+#
+# $Id$
+#
+
+#
+# Setting up
+#
+
+from rsfproj import *
+import rfield
+
+#
+# Build 1D, 2D, and 3D example random fields
+#
+
+name = ['ex1D_','ex2D_','ex3D_']    # file name prefixes
+
+nr = 3                              # number of realizations
+
+nx = [ 1024, 1024,  256]            # array sizes
+ny = [    1,  512,  256]
+nz = [    1,    1,   16]
+
+dx = [ 1, 1,  4]                    # cell sizes
+dy = [ 1, 1,  2]
+dz = [ 1, 1, 16]
+
+oriu = [ 5,1,0]                     # covariance range orientation vectors
+oriv = [-1,5,0]
+oriw = [ 0,0,1]
+
+ru = 100                            # covariance range parameters
+rv =  20
+rw =  20
+
+rfield.rfield(name=name[0],nr=nr,
+              nx=nx[0],ny=ny[0],nz=nz[0],
+              dx=dx[0],dy=dy[0],dz=dz[0],
+              oriu=oriu,oriv=oriv,oriw=oriw,
+              ru=ru,rv=rv,rw=rw)
+
+rfield.rfield(name=name[1],nr=nr,
+              nx=nx[1],ny=ny[1],nz=nz[1],
+              dx=dx[1],dy=dy[1],dz=dz[1],
+              oriu=oriu,oriv=oriv,oriw=oriw,
+              ru=ru,rv=rv,rw=rw)
+
+rfield.rfield(name=name[2],nr=nr,
+              nx=nx[2],ny=ny[2],nz=nz[2],
+              dx=dx[2],dy=dy[2],dz=dz[2],
+              oriu=oriu,oriv=oriv,oriw=oriw,
+              ru=ru,rv=rv,rw=rw)
+
+#
+# Plot the results.
+#
+
+results = ['dist','covar','taper','covar_taper',
+           'shift','pspec_real','aspec_real']
+           
+for i in range(nr): 
+    results = results + ['sim_%02d_real' % (i+1)]
+          
+plots = [map(lambda x: name[0]+x,results),
+         map(lambda x: name[1]+x,results),
+         map(lambda x: name[2]+x,results)]
+
+#          
+# 1D plots
+#
+ 
+if (nx[0] > 50):
+    circles = ''
+else:
+    circles = 'symbol="o" symbolsz=10'
+    
+for i in (plots[0]):
+    Result (i,'graph title="%s" %s' % (i,circles))
+
+#          
+# 2D plots	
+#          
+    
+screen_ratio  = float(ny[1]*dy[1])/float(nx[1]*dx[1])
+screen_height = 10
+if (screen_height/screen_ratio > 13):
+    screen_height = 13*screen_ratio
+
+for i in (plots[1]):
+    Result (i,
+            '''
+            grey title="%s" label1="x" label2="y"
+            transp=n yreverse=n
+            pclip=100 color=E wantscalebar=y gainpanel=a
+            screenratio=%g screenht=%g
+            ''' % (i,screen_ratio,screen_height)
+           )
+
+#          
+# 3D plots
+#          
+
+for i in (plots[2]):
+    Result (i,
+            '''
+            transp plane=12 | transp plane=13 | reverse which=1 |
+            byte gainpanel=all pclip=100 wantscalebar=y |
+            grey3 title="%s" label1="z" label2="x" label3="y" 
+            color=E movie=0 flat=y 
+            frame1=%d frame2=%d frame3=%d point1=%g point2=%g
+            ''' % (i,nz[2]/2-1,nx[2]/2,ny[2]/2,0.5,0.5)
+           )
+
+End ()
