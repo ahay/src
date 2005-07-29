@@ -10,7 +10,8 @@ def param(par):
     if(par.has_key('tmy')):   p += ' tmy='   + str(par['tmy'])
     if(par.has_key('pmx')):   p += ' pmx='   + str(par['pmx'])
     if(par.has_key('pmy')):   p += ' pmy='   + str(par['pmy'])
-    if(par.has_key('misc')):  p += ' '      +     par['misc']
+    if(par.has_key('misc')):  p += ' '       +     par['misc']
+    if(par.has_key('nsc')):   p += ' nsc='   + str(par['nsc'])
     p += ' '
     return p
 
@@ -116,7 +117,7 @@ def Awftwo(wfld,data,slow,par):
 def s2i(dslow,dimag,bwfld,bslow,par):
     Flow(dimag,[dslow,bwfld,bslow],
          '''
-         /home/savap/RSF/filt/imag/sfzomva inv=n %s
+         zomva inv=n %s
          wfl=${SOURCES[1]}
          slo=${SOURCES[2]}
          ''' % param(par))
@@ -125,7 +126,7 @@ def s2i(dslow,dimag,bwfld,bslow,par):
 def i2s(dimag,dslow,bwfld,bslow,par):
     Flow(dslow,[dimag,bwfld,bslow],
          '''
-         /home/savap/RSF/filt/imag/sfzomva inv=y %s
+         zomva inv=y %s
          wfl=${SOURCES[1]}
          slo=${SOURCES[2]}
          ''' % param(par))
