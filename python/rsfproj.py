@@ -74,6 +74,7 @@ top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
+figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
 resdir = None
 
@@ -92,7 +93,8 @@ sep = os.path.join(os.environ.get('SEP',''),'bin/')
 
 def test(target=None,source=None,env=None):
     src = str(source[0])
-    locked = re.sub('\/([^\/]+)$','/.\\1',src)
+    locked = re.sub('\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/$',
+                    figdir+'\\1/\\2/\\3/',os.path.abspath(src))
     if os.path.isfile(locked):
         try:
             if not filecmp.cmp(locked,src,shallow=0):
@@ -186,7 +188,8 @@ class Project(Environment):
         rsfconf.options(opts)
         opts.Add('TIMER','Whether to time execution')
         opts.Update(self)
-        dir = os.path.basename(os.getcwd())
+        cwd = os.getcwd()
+        dir = os.path.basename(cwd)
         if datapath[:2] == './':
             self.path = datapath
         else:
@@ -195,6 +198,7 @@ class Project(Environment):
             os.mkdir(self.path)
         self.SConsignFile(self.path+'.sconsign',anydbm)
         self.resdir = resdir
+        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',figdir+'/\\1',cwd) 
 	self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
@@ -316,8 +320,7 @@ class Project(Environment):
         plot = apply(self.Plot,(target2,source,flow),kw)
         self.Default (plot)
         self.view.append(self.View(target + '.view',plot))
-        lock = self.InstallAs(os.path.join(self.resdir,'.'+target+suffix),
-                              target2+suffix)
+        lock = self.InstallAs(os.path.join(self.figdir,target+suffix),target2+suffix)
         self.lock.append(lock)
         self.Alias(target + '.lock',lock)
         test = self.Test('.test_'+target,target2+suffix)

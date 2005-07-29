@@ -561,8 +561,8 @@ class TeXPaper(Environment):
         self.Alias('install',self.docdir)        
         # reproducible figures
         erfigs = []
-        for fig in glob.glob('%s/[a-z]*/%s/.*%s' % (topdir,resdir,vpsuffix)):
-             eps = re.sub(r'\.(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
+        for fig in glob.glob('%s/[a-z]*/%s/*%s' % (topdir,resdir,vpsuffix)):
+             eps = re.sub(r'(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
              figdir = os.path.join(self.docdir,os.path.dirname(eps))
              self.Build(eps,fig)
              if epstopdf:
