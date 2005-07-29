@@ -22,8 +22,8 @@ except:
     env.Prepend(CPPPATH=['../../include'],
                 LIBPATH=['../lib'])
 
-# to build ../lib/librsf and ../lib/librsf++
-SConscript('../lib/SConstruct')
+    # to build ../lib/librsf and ../lib/librsf++
+    SConscript('../lib/SConstruct')
 
 # make a list out of string
 mains = Split(progs)

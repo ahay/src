@@ -107,7 +107,8 @@ def test(target=None,source=None,env=None):
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
     global dataserver
-    folder = 'data/'+env['dir']
+    top = env.get('top')
+    folder = top + os.sep +env['dir']
     private = env.get('private')
     if private:
         login = private['login']
@@ -152,7 +153,7 @@ def retrieve(target=None,source=None,env=None):
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
-Retrieve = Builder(action = Action(retrieve,varlist=['dir','private']))
+Retrieve = Builder(action = Action(retrieve,varlist=['dir','private','top']))
 Test = Builder(action=Action(test))
 
 #############################################################################
@@ -218,7 +219,7 @@ class Project(Environment):
         self.lock = []
         self.test = []
         self.coms = []
-        sys.path.append('../../Scons')
+        sys.path.append('../../../packages')
     def Exe(self,source,**kw):
         target = source.replace('.c','.x')
         return apply(self.Program,(target,source),kw)
@@ -329,8 +330,8 @@ class Project(Environment):
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
-    def Fetch(self,file,dir,private=None):
-        return self.Retrieve(file,None,dir=dir,private=private)
+    def Fetch(self,file,dir,private=None,top='data'):
+        return self.Retrieve(file,None,dir=dir,private=private,top=top)
 
 # Default project
 project = Project()

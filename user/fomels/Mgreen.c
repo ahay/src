@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
 
 		c = trace1[iw];
 		if (fabsf(w) < dw) c *= 2.;
-		w *= 2.*SF_PI;
+		w *= SF_PI; /* 2.*SF_PI */
 		
 		for (it = 0; it < nt; it++) {
 		    if (zx[it] > sz+dz || zx[it] < sz-dz) continue;
