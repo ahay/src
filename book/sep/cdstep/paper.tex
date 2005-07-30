@@ -4,6 +4,8 @@
 \righthead{Conjugate directions}
 \footer{SEP--92}
 
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
 \title{Least-square inversion with inexact adjoints. \\
 Method of conjugate directions: A tutorial}
 %\keywords{inversion, algorithm, modeling, linear }
@@ -458,8 +460,6 @@ iteration of the conjugate-direction method. It is based upon Jon
 Claerbout's \verb!cgstep()! program \cite[]{gee} and uses an analogous
 naming convention. Vectors in the data space are denoted by double
 letters.
-
-\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
 \tabl{program}{The source of this program is \texttt{RSF/filt/lib/cdstep.c}}{
 \lstinputlisting[frame=single,firstline=46,lastline=86]{\RSF/filt/lib/cdstep.c}

@@ -567,7 +567,6 @@ class TeXPaper(Environment):
         for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
              eps = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
                           r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),fig)
-             print "fig=",fig," eps=",eps
              resdir2 = os.path.join(self.docdir,os.path.dirname(eps))
              self.Build(eps,fig)
              if epstopdf:
