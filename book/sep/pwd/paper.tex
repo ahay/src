@@ -520,22 +520,22 @@ and prediction-error filters are known as a powerful method for
 interpolating them. Interpolating irregularly spaced data also reduces
 to gap interpolation after binning. 
 \par
-Figure~\ref{fig:hole} shows a simple synthetic example of gap
+Figure~\ref{fig:hole0} shows a simple synthetic example of gap
 interpolation from \cite{gee}.  The input data has a large
 elliptic gap cut out from a two plane-wave model. I estimate both dip
 components from the input data by using the method of
 equations~(\ref{eqn:lin2}-\ref{eqn:reg2}). The initial values for the
 two local dips were 1 and 0, and the estimated values are close to the
-true dips of 2 and -1 (two middle plots in Figure~\ref{fig:hole}.)
+true dips of 2 and -1 (two middle plots in Figure~\ref{fig:hole0}.)
 Although the estimation program did not make any assumption about dip
 being constant, it correctly estimated nearly constant values with the
 help of regularization equations~(\ref{eqn:reg1}-\ref{eqn:reg2}). The
-rightmost plot in Figure~\ref{fig:hole} shows the result of gap
+rightmost plot in Figure~\ref{fig:hole0} shows the result of gap
 interpolation with a two-plane local plane-wave destructor. The result
 is nearly perfect and compares favorably with the analogous result of
 the $T$-$X$ PEF technique \cite[]{gee}.
 
-\plot{hole}{width=6in,height=3.5in}{Synthetic gap interpolation
+\plot{hole0}{width=6in,height=3.5in}{Synthetic gap interpolation
   example. From left to right: original data, input data, first
   estimated dip, second estimated dip, interpolation output.}
 \par
@@ -601,7 +601,7 @@ only we need to take special care of the aliased dips at the dip
 estimation stage.
 
 A simple synthetic example of interpolation beyond aliasing is shown
-in Figure~\ref{fig:aliasp2}. The input data are clearly aliased and
+in Figure~\ref{fig:aliasp0}. The input data are clearly aliased and
 non-stationary. To take the aliasing into account, I estimate the two
 dips present in the data with the slope estimation technique of
 equations~(\ref{eqn:lin2}) and~(\ref{eqn:reg1}-\ref{eqn:reg2}). The
@@ -613,10 +613,10 @@ may be required to determine which of the dip components is
 contaminated by aliasing.  Throwing away the aliased dip and
 interpolating intermediate traces with the true dip produces the
 accurate interpolation result shown in the right plot of
-Figure~\ref{fig:aliasp2}. Three additional traces were inserted between
+Figure~\ref{fig:aliasp0}. Three additional traces were inserted between
 each of the neighboring input traces.
 
-\plot{aliasp2}{width=5.5in,height=2.75in}{Synthetic example of
+\plot{aliasp0}{width=5.5in,height=2.75in}{Synthetic example of
   interpolation beyond aliasing with plane-wave destruction filters.
   Left: input aliased data, right: interpolation output.Three
   additional traces were inserted between each of the neighboring
@@ -631,7 +631,7 @@ direction. The data are similar to those used by
 \cite{Crawley.sepphd.104}. The shot gather has long-period
 multiples and complicated diffraction events caused by a salt body.
 The amplitudes of the hyperbolic events are not as uniformly
-distributed as in the synthetic case of Figure~\ref{fig:aliasp2}.
+distributed as in the synthetic case of Figure~\ref{fig:aliasp0}.
 Subsampling by a factor of two (the right plot in
 Figure~\ref{fig:sean2}) causes clearly visible aliasing in the
 steeply dipping events.  The goal of the experiment is to interpolate
