@@ -1,0 +1,287 @@
+/* 3-D SSR migration/modeling using extended split-step */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+
+#include <math.h>
+
+#include <rsf.h>
+/*^*/
+
+#include "srmva.h"
+#include "taper.h"
+#include "slowref.h"
+
+#include "ssr.h"
+#include "lsr.h"
+
+#include "slice.h"
+/*^*/
+
+#define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
+#define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
+
+static axa amz,aw,alx,aly,amx,amy;
+static bool verb;
+static float eps;
+static float twoway;
+
+static float         **sm; /* reference slowness squared */
+static float         **ss; /* slowness */
+static float         **so; /* slowness */
+static int            *nr; /* number of references */
+static fslice       Bslow; /* slowness slice */
+static fslice       Bwfls; /* wavefield slice */
+static fslice       Bwflr; /* wavefield slice */
+
+static float complex **bw_s,**bw_r;
+static float complex **pw_s,**pw_r;
+static float complex **dw_s,**dw_r; /* wavefield */
+static float complex **pwsum;
+
+static float complex **ds; /* slowness */
+static float complex **ps;
+static float complex **pssum;
+
+void srmva_init(bool verb_,
+		float eps_,
+		bool twoway_,
+		float dtmax,
+		axa amz_       /* depth */,
+		axa aw_        /* frequency */,
+		axa amx_       /* i-line (data) */,
+		axa amy_       /* x-line (data) */,
+		axa alx_       /* i-line (slowness/image) */,
+		axa aly_       /* x-line (slowness/image) */,
+		int tmx, int tmy /* taper size */,
+		int pmx, int pmy /* padding in the k domain */,
+		int    nrmax,   /* maximum number of references */
+		fslice slow_,
+		fslice wfls_,
+		fslice wflr_
+    )
+/*< initialize >*/
+{
+
+    int   iz, jj;
+    float dsmax;
+
+    verb=verb_;
+    eps = eps_;
+
+    aw = aw_;
+    amx= amx_;
+    amy= amy_;
+    amz= amz_;
+    alx= alx_;
+    aly= aly_;
+
+    /* from hertz to radian */
+    aw.d *= 2.*SF_PI; 
+    aw.o *= 2.*SF_PI;
+
+    dsmax = dtmax/amz.d;
+
+    /* SSR */
+    ssr_init(amz_ ,
+	     amx_,amy_,
+	     alx_,aly_,
+	     pmx ,pmy,
+	     tmx ,tmy,
+	     dsmax);
+
+    /* LSR */
+    lsr_init(amz_ ,
+	     amx_,amy_,
+	     pmx ,pmy);
+
+    /* precompute taper */
+    taper2_init(amy.n,
+		amx.n ,
+		SF_MIN(tmy,amy.n-1),
+		SF_MIN(tmx,amx.n-1), 
+		true,
+		true);
+    
+    /* compute reference slowness */
+    if(twoway_) { twoway = 2;
+    } else {      twoway = 1;
+    }
+
+    Bwfls = wfls_;
+    Bwflr = wflr_;
+    Bslow = slow_;
+
+    ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
+    so = sf_floatalloc2(alx.n,aly.n); /* slowness */
+    sm = sf_floatalloc2 (nrmax,amz.n); /* ref slowness squared*/
+    nr = sf_intalloc          (amz.n); /* nr of ref slownesses */
+    for (iz=0; iz<amz.n; iz++) {
+	fslice_get(Bslow,iz,ss[0]);
+
+	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
+	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
+    }
+    for (iz=0; iz<amz.n-1; iz++) {
+	for (jj=0; jj<nr[iz]; jj++) {
+	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
+	}
+    }
+
+    /* allocate wavefield storage */
+    bw_s = sf_complexalloc2(amx.n,amy.n);
+    bw_r = sf_complexalloc2(amx.n,amy.n);
+
+    ds = sf_complexalloc2(amx.n,amy.n);
+}
+/*------------------------------------------------------------*/
+
+void srmva_close(void)
+/*< free allocated storage >*/
+{
+    ssr_close();
+    lsr_close();
+    
+    free( *bw_s); free( bw_s);
+    free( *bw_r); free( bw_r);
+
+    free( *ds); free( ds);
+
+    free( *ss); free( ss);
+    free( *so); free( so);
+    free( *sm); free( sm);
+    ;           free( nr);
+}
+
+/*------------------------------------------------------------*/
+
+void srmva_aloc()
+/*< allocate scattering storage >*/
+{
+    ps = sf_complexalloc2(amx.n,amy.n);
+
+    pw_s = sf_complexalloc2(amx.n,amy.n);
+    pw_r = sf_complexalloc2(amx.n,amy.n);
+
+    dw_s = sf_complexalloc2(amx.n,amy.n);
+    dw_r = sf_complexalloc2(amx.n,amy.n);
+
+    pwsum = sf_complexalloc2(amx.n,amy.n);
+    pssum = sf_complexalloc2(amx.n,amy.n);
+}
+
+void srmva_free()
+/*< free scattering storage >*/
+{
+    free( *ps); free( ps);
+
+    free( *pw_s); free( pw_s);
+    free( *pw_r); free( pw_r);
+
+    free( *dw_s); free( dw_s);
+    free( *dw_r); free( dw_r);
+
+    free( *pwsum); free( pwsum);
+    free( *pssum); free( pssum);
+}
+
+/*------------------------------------------------------------*/
+void srmva(bool inv     /* forward/adjoint flag */, 
+	   fslice Pslow /* slowness perturbation [nz][nmy][nmx] */,
+	   fslice Pimag /*    image perturbation [nz][nmy][nmx] */)
+/*< Apply forward/adjoint SR MVA >*/
+{
+    int imz,iw,imy,imx,ilx,ily;
+    float complex ws,wr;
+
+    if(inv) {
+	LOOP( ps[imy][imx] = 0.0; );
+	for (imz=0; imz<amz.n; imz++) {
+	    fslice_put(Pslow,imz,ps[0]);
+	}
+    } else {
+	LOOP( pwsum[imy][imx] = 0.0; );
+	for (imz=0; imz<amz.n; imz++) {
+	    fslice_put(Pimag,imz,pwsum[0]);
+	}
+    }
+    
+    /* loop over frequencies w */
+    for (iw=0; iw<aw.n; iw++) {
+	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+	
+	if (inv) { /* adjoint: image -> slowness */
+
+	} else {   /* forward: slowness -> image */
+	    ws = eps*aw.d - I*(aw.o+iw*aw.d); /*      causal */
+	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+
+	    LOOP( 
+		dw_s[imy][imx]=0.; 
+		dw_r[imy][imx]=0.;
+		);
+
+	    imz = 0;
+	    fslice_get(Bslow,imz,so[0]);
+
+	    /* scattering */
+	    fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
+	    fslice_get(Pslow,         imz,ps  [0]);
+
+	    lsr_s2w(ws,bw_s,so,pw_s,ps);
+	    lsr_s2w(wr,bw_s,so,pw_r,ps);
+
+	    LOOP(dw_s[imy][imx] = pw_s[imy][imx]; );
+	    LOOP(dw_r[imy][imx] = pw_r[imy][imx]; );
+
+	    /* imaging */
+	    fslice_get(Pimag,imz,pwsum[0]);
+	    LOOP(pwsum[imy][imx] += 
+		 conjf(bw_s[imy][imx]) * dw_r[imy][imx] +
+		 conjf(dw_s[imy][imx]) * bw_r[imy][imx]; );
+	    fslice_put(Pimag,imz,pwsum[0]);
+
+	    for (imz=0; imz<amz.n-1; imz++) {
+
+		/* continuation */
+		fslice_get(Bslow,imz+1,ss[0]);
+
+		ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
+		ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
+
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+
+		/* scattering */
+		fslice_get(Bwfls,iw*amz.n+imz+1,bw_s[0]);
+		fslice_get(Pslow,         imz+1,ps[0]);
+
+		lsr_s2w(ws,bw_s,so,pw_s,ps);
+		lsr_s2w(wr,bw_r,so,pw_r,ps);
+
+		LOOP(dw_s[imy][imx] += pw_s[imy][imx]; );
+		LOOP(dw_r[imy][imx] += pw_r[imy][imx]; );
+
+		/* imaging */
+		fslice_get(Pimag,imz+1,pwsum[0]);
+		LOOP(pwsum[imy][imx] += 
+		     conjf(bw_s[imy][imx]) * dw_r[imy][imx] +
+		     conjf(dw_s[imy][imx]) * bw_r[imy][imx]; );
+		fslice_put(Pimag,imz+1,pwsum[0]);
+	    }
+	}
+    }
+}
