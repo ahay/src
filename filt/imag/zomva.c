@@ -35,7 +35,7 @@
 #define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,amx,amy;
+static axa amz,aw,alx,aly,amx,amy;
 static bool verb;
 static float eps;
 static float twoway;
@@ -61,10 +61,10 @@ void zomva_init(bool verb_,
 		float eps_,
 		bool twoway_,
 		float dtmax,
-		axa az_          /* depth */,
 		axa aw_          /* frequency */,
 		axa amx_         /* i-line (data/image) */,
 		axa amy_         /* x-line (data/image) */,
+		axa amz_         /* depth */,
 		axa alx_         /* i-line (slowness) */,
 		axa aly_         /* x-line (slowness) */,
 		int tmx, int tmy /* taper size */,
@@ -81,10 +81,10 @@ void zomva_init(bool verb_,
     verb=verb_;
     eps = eps_;
 
-    az = az_;
     aw = aw_;
     amx= amx_;
     amy= amy_;
+    amz= amz_;
     alx= alx_;
     aly= aly_;
 
@@ -92,10 +92,10 @@ void zomva_init(bool verb_,
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
 
-    dsmax = dtmax/az.d;
+    dsmax = dtmax/amz.d;
 
     /* SSR */
-    ssr_init(az_ ,
+    ssr_init(amz_ ,
 	     amx_,amy_,
 	     alx_,aly_,
 	     pmx ,pmy,
@@ -103,7 +103,7 @@ void zomva_init(bool verb_,
 	     dsmax);
 
     /* LSR */
-    lsr_init(az_ ,
+    lsr_init(amz_ ,
 	     amx_,amy_,
 	     pmx ,pmy);
 
@@ -125,16 +125,16 @@ void zomva_init(bool verb_,
 
     ss = sf_floatalloc2(alx.n,aly.n); /* slowness */
     so = sf_floatalloc2(alx.n,aly.n); /* slowness */
-    sm = sf_floatalloc2 (nrmax,az.n); /* ref slowness squared*/
-    nr = sf_intalloc          (az.n); /* nr of ref slownesses */
-    for (iz=0; iz<az.n; iz++) {
+    sm = sf_floatalloc2 (nrmax,amz.n); /* ref slowness squared*/
+    nr = sf_intalloc          (amz.n); /* nr of ref slownesses */
+    for (iz=0; iz<amz.n; iz++) {
 	fslice_get(Bslow,iz,ss[0]);
 	SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 
 	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
 	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
-    for (iz=0; iz<az.n-1; iz++) {
+    for (iz=0; iz<amz.n-1; iz++) {
 	for (jj=0; jj<nr[iz]; jj++) {
 	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
 	}
@@ -200,12 +200,12 @@ void zomva(bool inv     /* forward/adjoint flag */,
 
     if(inv) {
 	LOOP( ps[imy][imx] = 0.0; );
-	for (iz=0; iz<az.n; iz++) {
+	for (iz=0; iz<amz.n; iz++) {
 	    fslice_put(Pslow,iz,ps[0]);
 	}
     } else {
 	LOOP( pwsum[imy][imx] = 0.0; );
-	for (iz=0; iz<az.n; iz++) {
+	for (iz=0; iz<amz.n; iz++) {
 	    fslice_put(Pimag,iz,pwsum[0]);
 	}
     }
@@ -219,18 +219,18 @@ void zomva(bool inv     /* forward/adjoint flag */,
 
 	    LOOP( dw[imy][imx]=0.; );
 
-	    iz = az.n-1;
+	    iz = amz.n-1;
 	    fslice_get(Bslow,iz,so[0]);	    
 	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 
-	    for (iz=az.n-1; iz>0; iz--) {
+	    for (iz=amz.n-1; iz>0; iz--) {
 
 		/* imaging */
 		fslice_get(Pimag,iz,pwsum[0]);
 		LOOP(dw[imy][imx] += pwsum[imy][imx]; );
 
 		/* scattering */
-		fslice_get(Bwfld,iw*az.n+iz,bw[0]);
+		fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 		lsr_w2s(w,bw,so,dw,ps);
 
 		fslice_get(Pslow,        iz,pssum[0]);
@@ -253,7 +253,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 	    LOOP(dw[imy][imx] += pwsum[imy][imx]; );
 
 	    /* scattering */
-	    fslice_get(Bwfld,iw*az.n+iz,bw[0]);
+	    fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 	    lsr_w2s(w,bw,so,dw,ps);
 
 	    fslice_get(Pslow,        iz,pssum[0]);
@@ -271,7 +271,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
 
 	    /* scattering */
-	    fslice_get(Bwfld,iw*az.n+iz,bw[0]);
+	    fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 	    fslice_get(Pslow,        iz,ps[0]);
 	    lsr_s2w(w,bw,so,pw,ps);
 	    LOOP(dw[imy][imx] = pw[imy][imx]; );
@@ -281,7 +281,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 	    LOOP(pwsum[imy][imx] += dw[imy][imx]; );
 	    fslice_put(Pimag,iz,pwsum[0]);
 
-	    for (iz=0; iz<az.n-1; iz++) {
+	    for (iz=0; iz<amz.n-1; iz++) {
 
 		/* continuation */
 		fslice_get(Bslow,iz+1,ss[0]);
@@ -290,7 +290,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 
 		/* scattering */
-		fslice_get(Bwfld,iw*az.n+iz+1,bw[0]);
+		fslice_get(Bwfld,iw*amz.n+iz+1,bw[0]);
 		fslice_get(Pslow,        iz+1,ps[0]);
 		lsr_s2w(w,bw,so,pw,ps);
 		LOOP(dw[imy][imx] += pw[imy][imx]; );

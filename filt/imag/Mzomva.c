@@ -32,8 +32,8 @@ int main (int argc, char *argv[])
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
     
-    axa az,amx,amy,aw;
-    axa    alx,aly;
+    axa amz,amx,amy,aw;
+    axa     alx,aly;
 
     sf_file Bs;  /*  slowness  file S (nlx,nly,nz)    */
     sf_file Bw;  /*  wavefield file W (nmx,nmy,nz,nw) */
@@ -61,8 +61,8 @@ int main (int argc, char *argv[])
     Bs = sf_input ("slo");
     iaxa(Bs,&alx,1); alx.l="lx";
     iaxa(Bs,&aly,2); aly.l="ly";
-    iaxa(Bs,&az ,3);  az.l= "z";
-    Bslow = fslice_init(alx.n*aly.n,az.n,sizeof(float));
+    iaxa(Bs,&amz,3); amz.l="mz";
+    Bslow = fslice_init(alx.n*aly.n,amz.n,sizeof(float));
     fslice_load(Bs,Bslow,SF_FLOAT);
 
     /* wavefield parameters */
@@ -71,10 +71,10 @@ int main (int argc, char *argv[])
     
     iaxa(Bw,&amx,1); amx.l="mx";
     iaxa(Bw,&amy,2); amy.l="my";
-    iaxa(Bw,&az, 3);  az.l= "z";
+    iaxa(Bw,&amz,3); amz.l="mz";
     iaxa(Bw,&aw ,4);  aw.l= "w";
 
-    Bwfld = fslice_init(amx.n*amy.n,az.n*aw.n,sizeof(float complex));
+    Bwfld = fslice_init(amx.n*amy.n,amz.n*aw.n,sizeof(float complex));
     fslice_load(Bw,Bwfld,SF_COMPLEX);
 
     if (inv) { /* adjoint: image -> slowness */
@@ -85,11 +85,11 @@ int main (int argc, char *argv[])
 	Ps = sf_output("out"); sf_settype(Ps,SF_COMPLEX);
 	oaxa(Ps,&amx,1);
 	oaxa(Ps,&amy,2);
-	oaxa(Ps,&az, 3);
+	oaxa(Ps,&amz,3);
 
-	Pslow = fslice_init(amx.n*amy.n, az.n, sizeof(float complex));
+	Pslow = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
 
-	Pimag = fslice_init(amx.n*amy.n, az.n, sizeof(float complex));
+	Pimag = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
 	fslice_load(Pi,Pimag,SF_COMPLEX);
 
     } else {   /* forward: slowness -> image */
@@ -100,19 +100,19 @@ int main (int argc, char *argv[])
 	Pi = sf_output("out"); sf_settype(Pi,SF_COMPLEX);
 	oaxa(Pi,&amx,1);
 	oaxa(Pi,&amy,2);
-	oaxa(Pi,&az, 3);
+	oaxa(Pi,&amz,3);
 	
-	Pslow = fslice_init(amx.n*amy.n, az.n, sizeof(float complex));
+	Pslow = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
 	fslice_load(Ps,Pslow,SF_COMPLEX);
 
-	Pimag = fslice_init(amx.n*amy.n, az.n, sizeof(float complex));
+	Pimag = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
 
     }
     /*------------------------------------------------------------*/
 
     zomva_init(verb,eps,twoway,dtmax,
-	       az,aw,
-	       amx,amy,
+	       aw,
+	       amx,amy,amz,
 	       alx,aly,
 	       tmx,tmy,
 	       pmx,pmy,

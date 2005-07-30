@@ -1,4 +1,4 @@
-/* 3-D SSR migration/modeling using extended split-step */
+/* 3-D SR MVA using extended split-step */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -48,23 +48,25 @@ static fslice       Bslow; /* slowness slice */
 static fslice       Bwfls; /* wavefield slice */
 static fslice       Bwflr; /* wavefield slice */
 
-static float complex **bw_s,**bw_r;
-static float complex **pw_s,**pw_r;
-static float complex **dw_s,**dw_r; /* wavefield */
+static float complex **bw_s,**bw_r; /* wavefield */
+
+static float complex **pw_s,**pw_r; /* */ 
+static float complex **dw_s,**dw_r;
 static float complex **pwsum;
 
-static float complex **ds; /* slowness */
 static float complex **ps;
+static float complex **ps_s,**ps_r;
+static float complex **ds_s,**ds_r; /* slowness */
 static float complex **pssum;
 
 void srmva_init(bool verb_,
 		float eps_,
 		bool twoway_,
 		float dtmax,
-		axa amz_       /* depth */,
 		axa aw_        /* frequency */,
 		axa amx_       /* i-line (data) */,
 		axa amy_       /* x-line (data) */,
+		axa amz_       /* depth */,
 		axa alx_       /* i-line (slowness/image) */,
 		axa aly_       /* x-line (slowness/image) */,
 		int tmx, int tmy /* taper size */,
@@ -146,7 +148,8 @@ void srmva_init(bool verb_,
     bw_s = sf_complexalloc2(amx.n,amy.n);
     bw_r = sf_complexalloc2(amx.n,amy.n);
 
-    ds = sf_complexalloc2(amx.n,amy.n);
+    ds_s = sf_complexalloc2(amx.n,amy.n);
+    ds_r = sf_complexalloc2(amx.n,amy.n);
 }
 /*------------------------------------------------------------*/
 
@@ -159,7 +162,8 @@ void srmva_close(void)
     free( *bw_s); free( bw_s);
     free( *bw_r); free( bw_r);
 
-    free( *ds); free( ds);
+    free( *ds_s); free( ds_s);
+    free( *ds_r); free( ds_r);
 
     free( *ss); free( ss);
     free( *so); free( so);
@@ -174,6 +178,9 @@ void srmva_aloc()
 {
     ps = sf_complexalloc2(amx.n,amy.n);
 
+    ps_s = sf_complexalloc2(amx.n,amy.n);
+    ps_r = sf_complexalloc2(amx.n,amy.n);
+
     pw_s = sf_complexalloc2(amx.n,amy.n);
     pw_r = sf_complexalloc2(amx.n,amy.n);
 
@@ -187,7 +194,11 @@ void srmva_aloc()
 void srmva_free()
 /*< free scattering storage >*/
 {
+
     free( *ps); free( ps);
+
+    free( *ps_s); free( ps_s);
+    free( *ps_r); free( ps_r);
 
     free( *pw_s); free( pw_s);
     free( *pw_r); free( pw_r);
@@ -209,10 +220,6 @@ void srmva(bool inv     /* forward/adjoint flag */,
     float complex ws,wr;
 
     if(inv) {
-	LOOP( ps[imy][imx] = 0.0; );
-	for (imz=0; imz<amz.n; imz++) {
-	    fslice_put(Pslow,imz,ps[0]);
-	}
     } else {
 	LOOP( pwsum[imy][imx] = 0.0; );
 	for (imz=0; imz<amz.n; imz++) {
