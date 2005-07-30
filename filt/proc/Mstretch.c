@@ -25,8 +25,10 @@
 
 #include "fint1.h"
 
-static float t0, x0, h=0.;
+static float t0, dt, x0, h=0.;
 
+static float t2_cheb(float t) { return acosf((t0-t*t)/dt); }
+static float t2_cheb_inv(float t) { return sqrtf(t0-dt*cosf(t)); }
 static float t2(float t) { return t*t; }
 static float log_frw(float t) { return logf(t/t0); }
 static float log_inv(float t) { return t0*expf(t); }
@@ -68,18 +70,23 @@ int main(int argc, char* argv[])
     prog = sf_getprog();
     if (NULL != strstr (prog, "log")) {
 	rule="Log";
+    } else if (NULL != strstr (prog, "t2cheb")) {
+	rule="cheb";
     } else if (NULL != strstr (prog, "t2")) {
 	rule="2";
     } else if (NULL != strstr (prog, "lmo")) {
 	rule="lmo";
+    } else if (NULL != strstr (prog, "rad")) {
+	rule="rad";
     } else if (NULL != strstr (prog,"nmo") || 
 	       NULL == (rule = sf_getstring("rule"))) {
 	/* Stretch rule:
-	   n - normal moveout
-	   l - linear moveout
-	   L - logstretch
-	   2 - t^2 stretch
-	   r - radial moveout
+	   n - normal moveout (nmostretch), default
+	   l - linear moveout (lmostretch)
+	   L - logarithmic stretch (logstretch)
+	   2 - t^2 stretch (t2stretch)
+	   c - t^2 chebyshev stretch (t2chebstretch)
+	   r - radial moveout (radstretch)
 	*/
 	rule="nmo";
     }
@@ -135,6 +142,21 @@ int main(int argc, char* argv[])
 	    inverse = sqrtf;
 	    
 	    if (o1 < FLT_EPSILON) o1=FLT_EPSILON;
+	    break;
+	case 'c':
+	    forward = t2_cheb;
+	    inverse = t2_cheb_inv;
+
+	    if (inv) {
+		if (!sf_histfloat(in,"dt",&dt)) sf_error("No dt= in input");
+		if (!sf_histfloat(in,"t0",&t0)) sf_error("No t0= in input");
+	    } else {
+		dt=0.5*(t2(o1+d1*(n1-1))-t2(o1));
+		t0=t2(o1)+dt;
+		sf_putfloat(out,"dt",dt);
+		sf_putfloat(out,"t0",t0);
+	    }
+
 	    break;
 	case 'r':
 	    if (!sf_getfloat("tdelay",&t0)) sf_error("Need tdelay=");

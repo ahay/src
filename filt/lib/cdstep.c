@@ -60,12 +60,8 @@ void sf_cdstep(bool forget     /* restart flag */,
 
     s = sf_floatalloc(nx+ny);
 
-    for (ix=0; ix < nx; ix++) {
-	s[ix] = g[ix];
-    }
-    for (iy=0; iy < ny; iy++) {
-	s[nx+iy] = gg[iy];
-    }
+    for (ix=0; ix < nx; ix++) { s[ix]    = g[ix]; }
+    for (iy=0; iy < ny; iy++) { s[nx+iy] = gg[iy]; }
 
     sf_llist_rewind (steps);
     n = sf_llist_depth (steps);
@@ -82,17 +78,11 @@ void sf_cdstep(bool forget     /* restart flag */,
     if (beta < DBL_EPSILON) return;
 
     sf_llist_add (steps, s, beta);
-    if (forget) {
-	sf_llist_chop (steps);
-    }
+    if (forget) sf_llist_chop (steps);
     alpha = - dotprod (ny, rr, s+nx) / beta;
     
-    for (ix=0; ix < nx; ix++) {
-	x[ix] += alpha * s[ix];
-    }
-    for (iy=0; iy < ny; iy++) {
-	rr[iy] += alpha * s[nx+iy];
-    }
+    for (ix=0; ix < nx; ix++) { x[ix]  += alpha * s[ix]; }
+    for (iy=0; iy < ny; iy++) { rr[iy] += alpha * s[nx+iy]; }
 }
 
 void sf_cdstep_diag(int nx, float *res /* [nx] */)

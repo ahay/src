@@ -55,6 +55,7 @@ top = os.environ.get('RSFROOT')
 bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
+figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
 # temporary (I hope)
 sep = os.path.join(os.environ.get('SEP'),'bin/')
@@ -468,13 +469,13 @@ def latexscan(node,env,path):
             dir = subdir.search(line)
             if dir:
                 resdir = dir.group(1)
-            figdir = os.path.join(inputdir,resdir)
+            resdir2 = os.path.join(inputdir,resdir)
             
             check = isplot.search(line)
             if check:
                  plot = check.group(1)
                  plot = string.replace(plot,'\_','_')
-                 plots.append(os.path.join(figdir,plot + ressuffix))
+                 plots.append(os.path.join(resdir2,plot + ressuffix))
                  if re.search('angle=90',line):
                       plotoption[plot+pssuffix] = '-flip r90'
 
@@ -484,7 +485,7 @@ def latexscan(node,env,path):
                  mplot = check.group(1)
                  mplot = string.replace(mplot,'\_','_')
                  for plot in string.split(mplot,','):
-                     plots.append(os.path.join(figdir,plot + ressuffix))
+                     plots.append(os.path.join(resdir2,plot + ressuffix))
                      if re.search('angle=90',line):
                          plotoption[plot+pssuffix] = '-flip r90'
 
@@ -561,9 +562,13 @@ class TeXPaper(Environment):
         self.Alias('install',self.docdir)        
         # reproducible figures
         erfigs = []
-        for fig in glob.glob('%s/[a-z]*/%s/*%s' % (topdir,resdir,vpsuffix)):
-             eps = re.sub(r'(\w.*)'+vpsuffix+'$',r'\1'+pssuffix,fig)
-             figdir = os.path.join(self.docdir,os.path.dirname(eps))
+        vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
+                        figdir+'/\\1',os.path.abspath(topdir)) 
+        for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
+             eps = re.sub(r'.*([^\/]+)'+vpsuffix+'$',
+                          r'%s/%s/\1' % (topdir,resdir) + pssuffix,fig)
+             print "fig=",fig," eps=",eps
+             resdir2 = os.path.join(self.docdir,os.path.dirname(eps))
              self.Build(eps,fig)
              if epstopdf:
                   pdf = re.sub(pssuffix+'$','.pdf',eps)
@@ -573,8 +578,8 @@ class TeXPaper(Environment):
                   png = re.sub(pssuffix+'$','.png',eps)
                   self.PNGBuild(png,eps)
                   self.imgs.append(png)
-                  self.Install(figdir,[png,pdf])
-                  self.Alias('install',figdir)
+                  self.Install(resdir2,[png,pdf])
+                  self.Alias('install',resdir2)
         self.figs.extend(erfigs)
         # conditionally reproducible figures
         crfigs = []
@@ -599,9 +604,9 @@ class TeXPaper(Environment):
                 if fig2dev:
                     self.XFig(pdf,fig)
                 crfigs.append(pdf)
-            figdir = os.path.join(self.docdir,'XFig')
-            self.Install(figdir,figs)
-            self.Alias('install',figdir)
+            resdir2 = os.path.join(self.docdir,'XFig')
+            self.Install(resdir2,figs)
+            self.Alias('install',resdir2)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
             os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
@@ -613,9 +618,9 @@ class TeXPaper(Environment):
                     png = re.sub(pssuffix+'$','.png',eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
-                    figdir = os.path.join(self.docdir,os.path.dirname(png))
-                    self.Install(figdir,[png,pdf])
-                    self.Alias('install',figdir)
+                    resdir2 = os.path.join(self.docdir,os.path.dirname(png))
+                    self.Install(resdir2,[png,pdf])
+                    self.Alias('install',resdir2)
         self.figs.extend(nrfigs)
     def Paper(self,paper,lclass='geophysics',
               use=None,include=None,options=None):

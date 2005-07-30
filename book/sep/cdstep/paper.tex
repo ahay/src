@@ -17,14 +17,13 @@ Method of conjugate directions: A tutorial}
   This tutorial describes the classic method of conjugate directions:
   the generalization of the conjugate-gradient method in iterative
   least-square inversion. I derive the algebraic equations of the
-  conjugate-direction method from general optimization
-  principles. The derivation explains the ``magic'' properties of
-  conjugate gradients. It also justifies the use of conjugate
-  directions in cases when these properties are distorted
-  either by computational errors or by inexact adjoint operators. The
-  extra cost comes from storing a larger number of previous search directions
-  in the computer memory. A simple ratfor program and three examples
-  illustrate the method.
+  conjugate-direction method from general optimization principles. The
+  derivation explains the ``magic'' properties of conjugate gradients.
+  It also justifies the use of conjugate directions in cases when
+  these properties are distorted either by computational errors or by
+  inexact adjoint operators. The extra cost comes from storing a
+  larger number of previous search directions in the computer memory.
+  A simple program and two examples illustrate the method.
 \end{abstract}
 
 
@@ -33,22 +32,20 @@ Method of conjugate directions: A tutorial}
 
 This paper describes the method of conjugate directions for solving
 linear operator equations in Hilbert space. This method is usually
-described in the numerous textbooks on unconstrained optimization as an
-introduction to the much more popular method of conjugate
-gradients. See, for example, {\em Practical optimization} by Gill et
-al. \shortcite{gill} and its bibliography. The famous
-conjugate-gradient solver possesses specific properties, well-known
-from the original works of Hestenes and Stiefel \shortcite{hestenes}
-and Fletcher and Reeves \shortcite{fletcher}. For linear operators and
-exact computations, it guarantees finding the solution after, at most,
-$n$ iterative steps, where $n$ is the number of dimensions in the
-solution space. The method of conjugate gradients doesn't require
-explicit computation of the objective function and explicit inversion
-of the Hessian matrix. This makes it particularly attractive for
-large-scale inverse problems, such as those of seismic data processing
-and interpretation. However, it does require explicit computation of
-the adjoint operator. Jon Claerbout
-\shortcite{Claerbout.blackwell.85,Claerbout.tdf.82} shows dozens of
+described in the numerous textbooks on unconstrained optimization as
+an introduction to the much more popular method of conjugate
+gradients. See, for example, {\em Practical optimization} by
+\cite{gill} and its bibliography. The famous conjugate-gradient solver
+possesses specific properties, well-known from the original works of
+\cite{hestenes} and \cite{fletcher}. For linear operators and exact
+computations, it guarantees finding the solution after, at most, $n$
+iterative steps, where $n$ is the number of dimensions in the solution
+space. The method of conjugate gradients doesn't require explicit
+computation of the objective function and explicit inversion of the
+Hessian matrix.  This makes it particularly attractive for large-scale
+inverse problems, such as those of seismic data processing and
+interpretation.  However, it does require explicit computation of the
+adjoint operator. \cite{Claerbout.blackwell.92,iee} shows dozens of
 successful examples of the conjugate gradient application with
 numerically precise adjoint operators.
 \par
@@ -57,21 +54,21 @@ using different types of preconditioning operators in the place of
 adjoints in iterative least-square inversion. For some linear or
 linearized operators, implementing the exact adjoint may pose a
 difficult problem. For others, one may prefer different
-preconditioners because of their smoothness \cite{jon,sean},
-simplicity \cite{kleinman}, or asymptotic properties \cite{herman}. In
-those cases, we could apply the natural generalization of the
-conjugate gradient method, which is the method of conjugate
-directions. The cost difference between those two methods is in the
-volume of memory storage. In the days when the conjugate gradient
-method was invented, this difference looked too large to even consider
-a practical application of conjugate directions. With the evident
-increase of computer power over the last 30 years, we can afford to do
-it now.
+preconditioners because of their smoothness
+\cite[]{Claerbout.sep.89.201,Crawley.sep.89.207}, simplicity
+\cite[]{kleinman}, or asymptotic properties \cite[]{herman}. In those
+cases, we could apply the natural generalization of the conjugate
+gradient method, which is the method of conjugate directions. The cost
+difference between those two methods is in the volume of memory
+storage. In the days when the conjugate gradient method was invented,
+this difference looked too large to even consider a practical
+application of conjugate directions. With the evident increase of
+computer power over the last 30 years, we can afford to do it now.
 \par
 I derive the main equations used in the conjugate-direction method
 from very general optimization criteria, with minimum restrictions
-implied. The textbook algebra is illustrated with a ratfor program and
-three simple examples.
+implied. The textbook algebra is illustrated with a simple program and
+two simple examples.
 
 \section{IN SEARCH OF THE MINIMUM} 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -456,25 +453,44 @@ distinguishing that method in the family of conjugate-direction
 methods.
 
 \section{PROGRAM}
-The following ratfor program, \verb!cdstep()!, implements one iteration
-of the conjugate-direction method. It is based upon Jon Claerbout's
-\verb!cgstep()! program \cite{Claerbout.tdf.82} and uses an analogous
+The program in Table~\ref{tbl:program} implements one
+iteration of the conjugate-direction method. It is based upon Jon
+Claerbout's \verb!cgstep()! program \cite[]{gee} and uses an analogous
 naming convention. Vectors in the data space are denoted by double
 letters.
 
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\tabl{program}{The source of this program is \texttt{RSF/filt/lib/cdstep.c}}{
+\lstinputlisting[frame=single,firstline=46,lastline=86]{\RSF/filt/lib/cdstep.c}
+}
+
 %\listing{cdstep.rt} 
 
-In addition to the previous steps ${\bf s}_j$ (array
-\verb!s!) and their conjugate counterparts ${\bf A\,s}_j$ (array
-\verb!ss!), the program stores the squared norms $\|{\bf A\,s}_j\|^2$
-(array \verb!ssn!) to avoid recomputation.
-For practical reasons, the number of remembered iterations
-\verb!niter! can actually be smaller than the total number of
-iterations. The value \verb!niter=2! corresponds to the
-conjugate-gradient method. The value \verb!niter=1! corresponds to the
-steepest-descent method. The iteration process should start with
-\verb!iter = 1!, corresponding to the first steepest-descent iteration
-in the method of conjugate gradients.
+%In addition to the previous steps ${\bf s}_j$ (array
+%\verb!s!) and their conjugate counterparts ${\bf A\,s}_j$ (array
+%\verb!ss!), the program stores the squared norms $\|{\bf A\,s}_j\|^2$
+%(array \verb!ssn!) to avoid recomputation.
+%For practical reasons, the number of remembered iterations
+%\verb!niter! can actually be smaller than the total number of
+%iterations. The value \verb!niter=2! corresponds to the
+%conjugate-gradient method. The value \verb!niter=1! corresponds to the
+%steepest-descent method. The iteration process should start with
+%\verb!iter = 1!, corresponding to the first steepest-descent iteration
+%in the method of conjugate gradients.
+
+In addition to the previous steps ${\bf s}_j$ and their conjugate
+counterparts ${\bf A\,s}_j$ (array \verb!s!), the program stores the
+squared norms $\|{\bf A\,s}_j\|^2$ (variable \verb!beta!) to avoid
+recomputation.  For practical reasons, the number of remembered
+iterations can actually be smaller than the total number of
+iterations.
+
+%The value \verb!niter=2! corresponds to the
+%conjugate-gradient method. The value \verb!niter=1! corresponds to the
+%steepest-descent method. The iteration process should start with
+%\verb!iter = 1!, corresponding to the first steepest-descent iteration
+%in the method of conjugate gradients.
 
 \section{EXAMPLES}
 %%%%%%%%%%%%%%%%
@@ -488,7 +504,7 @@ Matthias Schwab has suggested (in a personal communication) an
 interesting example, in which the \verb!cgstep! program fails to
 comply with the conjugate-gradient theory. The inverse problem is a
 simple one-dimensional data interpolation with a known filter
-\cite{Claerbout.tdf.82}. The known portion of the data is a single
+\cite[]{gee}. The known portion of the data is a single
 spike in the middle. One hundred other data points are considered
 missing. The known filter is the Laplacian $(1,-2,1)$, and the
 expected result is a bell-shaped cubic spline. The forward problem is
@@ -521,10 +537,13 @@ data.}
 
 \subsection{Example 2: Velocity transform}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\inputdir{veltran}
+
 The next test example is the velocity transform inversion with a CMP
 gather from the Mobil AVO dataset
-\cite{Nichols.sep.82.1,Lumley.sep.82.25,Lumley.sep.82.63}. I use Jon
-Claerbout's \verb!veltran! program \cite{Claerbout.bei.95} for
+\cite[]{Nichols.sep.82.1,Lumley.sep.82.25,Lumley.sep.82.63}. I use Jon
+Claerbout's \verb!veltran! program \cite[]{Claerbout.bei.95} for
 anti-aliased velocity transform with rho-filter preconditioning
 and compare three different pairs of operators for inversion. The
 first pair is the CMP stacking operator with the ``migration''
@@ -544,36 +563,35 @@ smaller effect than that of the pseudo-unitary weighting in comparison
 with the uniform one. The results of inversion after 10
 conjugate-gradient iterations are plotted in Figures \ref{fig:dircvv} and
 \ref{fig:dirrst}, which are to be compared with the analogous results of
-David Lumley \shortcite{Lumley.sep.82.63} and Dave Nichols
-\shortcite{Nichols.sep.82.1}.
+\cite{Lumley.sep.82.63} and \cite{Nichols.sep.82.1}.
 
-%\plot{diritr}{width=6in,height=3in}{Comparison of
-%convergence of the iterative velocity transform inversion. The left
-%plot compares conjugate-gradient inversion with unweighted (uniformly
-%weighted) and pseudo-unitary operators. The right plot compares
-%pseudo-unitary conjugate-gradient and weighted conjugate-direction
-%inversion.}  
+\plot{diritr}{width=6in,height=3in}{Comparison of
+convergence of the iterative velocity transform inversion. The left
+plot compares conjugate-gradient inversion with unweighted (uniformly
+weighted) and pseudo-unitary operators. The right plot compares
+pseudo-unitary conjugate-gradient and weighted conjugate-direction
+inversion.}  
 
-%\plot{dircvv}{width=6in,height=3in}{Input
-%CMP gather (left) and its velocity transform counterpart (right) after
-%10 iterations of conjugate-direction inversion.}
+\plot{dircvv}{width=6in,height=3in}{Input
+CMP gather (left) and its velocity transform counterpart (right) after
+10 iterations of conjugate-direction inversion.}
 
-%\plot{dirrst}{width=6in,height=3in}{The modeled CMP
-%gather (left) and the residual data (right) plotted at the same scale.}
+\plot{dirrst}{width=6in,height=3in}{The modeled CMP
+gather (left) and the residual data (right) plotted at the same scale.}
 
+\begin{comment}
 \subsection{Example 3: Leveled inverse interpolation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The third example is the linearized nonlinear inversion for
-interpolating the SeaBeam dataset
-\cite{Claerbout.tdf.82,Crawley.sep.84.279}. This interpolation problem
-is nonlinear because the pre\-dic\-tion-error fil\-ter is esti\-mated
-simul\-ta\-neously with the missing data. The conjugate-gradient
-solver showed a very slow convergence in this case. Figure
-\ref{fig:dirjbm} compares the results of the conjugate-gradient and
-conjugate-direction methods after 2500 iterations. Because of the
+interpolating the SeaBeam dataset \cite[]{gee,Crawley.sep.84.279}. This
+interpolation problem is nonlinear because the pre\-dic\-tion-error
+fil\-ter is esti\-mated simul\-ta\-neously with the missing data. The
+conjugate-gradient solver showed a very slow convergence in this case.
+Figure \ref{fig:dirjbm} compares the results of the conjugate-gradient
+and conjugate-direction methods after 2500 iterations. Because of the
 large scale of the problem, I set \verb!niter=4! in the
-\verb!cdstep()!  program, storing only the three preceding steps of the
-conjugate-direction optimization. The acceleration of convergence
+\verb!cdstep()!  program, storing only the three preceding steps of
+the conjugate-direction optimization. The acceleration of convergence
 produced a noticeably better interpolation, which is visible in the
 figure.
 
@@ -581,7 +599,8 @@ figure.
 %Left plot: the result of the conjugate-gradient inversion
 %after 2500 iterations. Right plot: the result of the short-memory
 %conjugate-direction inversion after 2500 iterations.}
- 
+\end{comment} 
+
 \section{Conclusions}
 
 %%%%
@@ -596,11 +615,7 @@ implements a short-memory version of the conjugate-direction method.
 Extending the length of the memory raises the cost of iterations, but
 can speed up the convergence.
 
-\bibliographystyle{sep}\bibliography{paper,MISC,SEP}
-
-
-
-
+\bibliographystyle{seg}\bibliography{paper,SEG,SEP2}
 
 %%% Local Variables: 
 %%% mode: latex

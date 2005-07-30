@@ -320,7 +320,9 @@ class Project(Environment):
         plot = apply(self.Plot,(target2,source,flow),kw)
         self.Default (plot)
         self.view.append(self.View(target + '.view',plot))
-        lock = self.InstallAs(os.path.join(self.figdir,target+suffix),target2+suffix)
+        lock = self.InstallAs(os.path.join(self.figdir,target+suffix),
+                              target2+suffix)
+        
         self.lock.append(lock)
         self.Alias(target + '.lock',lock)
         test = self.Test('.test_'+target,target2+suffix)

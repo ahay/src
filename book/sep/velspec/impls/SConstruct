@@ -1,0 +1,29 @@
+from rsfproj import *
+
+Flow('spike',None,
+     '''
+     spike
+     n1=256
+     n2=256
+     d1=0.004
+     d2=0.008 nsp=3
+     k1=100,150,200
+     k2=100,150,200 |
+     bandpass flo=10 fhi=50
+     ''')
+
+ffts = []
+for pad in (256,512):
+    for dv in (1,-1):
+        fft = 'fft%d-%d' % (dv,pad)
+        ffts.append(fft)
+        Flow(fft,'spike',
+             '''
+             pad n2=%d | cosft sign2=1 | spray axis=2 n=1 o=0 d=0.008 |
+             fourvc pad=%d pad2=%d nv=1 dv=%d v0=%g |
+             cosft sign3=-1 | window n3=256
+         ''' % (pad,pad,(pad,2*pad)[pad==512],2*dv,(2.0001,0.0001)[dv==1]))
+        Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
+Result('fft-imp',ffts,'TwoRows')
+
+End()

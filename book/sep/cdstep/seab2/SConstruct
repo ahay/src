@@ -3,11 +3,13 @@ from rsfproj import *
 Fetch('wind18.HH','seab')
 Flow('wind18','wind18.HH','dd form=native | transp')
 
-for case in ('cg','cd'):
-    int = case+'int'
-    Flow(int,'wind18',
-         'levint2 warmup=20 m1=160 m2=160 a1=5 a2=3 niter=2500 cdstep=%d' % (case=='cd'))
-    Plot(int,'grey pclip=100 title="Conjugate gradients" crowd=0.82')
-Result('dirjbm','cgint cdint','SideBySideAniso')
+## for case in ('cg','cd'):
+##     int = case+'int'
+##     Flow(int,'wind18',
+##          'levint2 warmup=20 m1=160 m2=160 a1=5 a2=3 niter=2500 cdstep=%d' % \
+##          (case=='cd'))
+##     Plot(int,'grey pclip=100 title="Conjugate %s" crowd=0.82' % \
+##          ('Gradients','Directions')[case=='cd'])
+## Result('dirjbm','cgint cdint','SideBySideAniso')
 
 End()

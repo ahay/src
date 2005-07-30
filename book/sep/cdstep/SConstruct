@@ -1,3 +1,5 @@
 from rsftex import *
 
-End()
+End(use='hyperref,listings',
+    include='\\newcommand{\\RSF}{%s}' %
+    os.path.join(os.environ.get('HOME'),'RSF'))
