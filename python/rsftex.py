@@ -565,8 +565,8 @@ class TeXPaper(Environment):
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
                         figdir+'/\\1',os.path.abspath(topdir)) 
         for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
-             eps = re.sub(r'.*\/([^\/]+)'+vpsuffix+'$',
-                          r'%s/%s/\1%s' % (topdir,resdir,pssuffix),fig)
+             eps = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
+                          r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix,fig)
              print "fig=",fig," eps=",eps
              resdir2 = os.path.join(self.docdir,os.path.dirname(eps))
              self.Build(eps,fig)
