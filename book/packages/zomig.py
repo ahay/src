@@ -122,7 +122,7 @@ def s2i(dslow,dimag,bwfld,bslow,par):
          slo=${SOURCES[2]}
          ''' % param(par))
 
-# first-order scattering (image 2 slowness)
+# first-order scattering (image to slowness)
 def i2s(dimag,dslow,bwfld,bslow,par):
     Flow(dslow,[dimag,bwfld,bslow],
          '''
