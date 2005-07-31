@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, i3, i2, i1, i, fatp, xmask, ymask;
     float o1, o2, o3, d1, d2, d3, *xp, pclip, zplot, zdata, x1, x2, y1, y2;
-    float gpow, scale, x0, y0, zero;
+    float gpow, scale, x0, y0, zero, xmax, xmin;
     float **pdata, *q, *x, *y, *px=NULL, *py=NULL, *tmp;
     bool poly, seemean, verb, xreverse, yreverse;
     sf_file in, xpos;
@@ -54,20 +54,39 @@ int main(int argc, char* argv[])
     
     if (NULL != sf_getstring("xpos")) {
 	/* optional header file with trace positions */
-
+	
 	xpos = sf_input("xpos");
 	if (SF_FLOAT != sf_gettype(xpos)) sf_error("Need float xpos");
-	sf_floatread(xp,n2,xpos);
-	sf_fileclose(xpos);
     } else { 
+	xpos = NULL;
+	
 	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 	if (!sf_histfloat(in,"o2",&o2)) o2=0.;
-
+	
 	for (i2=0; i2 < n2; i2++) {
 	    xp[i2] = o2+i2*d2;
 	}
     }
-
+    
+     
+    if (!sf_getfloat("xmax",&xmax)) {
+	/* maximum trace position (if using xpos) */
+	if (NULL == xpos) {
+	    xmax=xp[n2-1];
+	} else {
+	    sf_error("Need xmax=");
+	}
+    }
+    
+    if (!sf_getfloat("xmin",&xmin)) {
+	/* minimum trace position (if using xpos) */
+	if (NULL == xpos) {
+	    xmin=xp[0];
+	 } else {
+	     sf_error("Need xmin=");
+	 }
+    }
+    
     if (!sf_histfloat(in,"d3",&d3)) d3=1.;
     if (!sf_histfloat(in,"o3",&o3)) o3=0.;
 
@@ -83,6 +102,7 @@ int main(int argc, char* argv[])
     /* clip percentile */
 
     if (!sf_getfloat("zplot",&zplot)) zplot = 0.75;
+    d2 = (n2>1)? (xmax-xmin)/(n2-1): 1.0;
     zplot *= d2;
 
     if (!sf_getfloat("clip",&zdata)) zdata = 0.;
@@ -91,8 +111,8 @@ int main(int argc, char* argv[])
     x1 = o1;
     x2 = o1+(n1-1)*d1;
 
-    y1 = xp[0]-zplot;
-    y2 = xp[n2-1]+zplot;
+    y1 = xmin-zplot;
+    y2 = xmax+zplot;
 
     if (!sf_getbool("seemean",&seemean)) seemean = false;
     /* if y, plot mean lines of traces */
@@ -143,6 +163,8 @@ int main(int argc, char* argv[])
 
 	vp_frame();
 	vp_plot_set(0);
+
+	if (NULL != xpos) sf_floatread(xp,n2,xpos);
 
 	/* draw traces */
 	for (i2=0; i2 < n2; i2++) {
