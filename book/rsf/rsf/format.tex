@@ -50,7 +50,7 @@ bash$ sfmath n1=1000 output='sin(0.5*x1)' > sin.rsf
 Open and read the file \texttt{sin.rsf}.
 \begin{verbatim}
 bash$ cat sin.rsf
-sfmath: fomels@BEGPC132 Mon Sep 13 12:43:22 2004
+sfmath  rsf/rsf/rsftour:        fomels@egl      Sun Jul 31 07:18:48 2005
 
         o1=0
         data_format="native_float"
@@ -60,12 +60,13 @@ sfmath: fomels@BEGPC132 Mon Sep 13 12:43:22 2004
         d1=1
         n1=1000
 \end{verbatim}
-The file contains nine lines with simple readable text. The first line shows
-the name of the program, the user and computer that created the file and the
-time it was created (that information is recorded for accounting
-purposes). Other lines contain parameter-value pairs separated by the ``=''
-sign. The ``in'' parameter points to the location of the binary data. Before
-we discuss the meaning of parameters in more detail, let us plot the data.
+The file contains nine lines with simple readable text. The first line
+shows the name of the program, the working directory, the user and
+computer that created the file and the time it was created (that
+information is recorded for accounting purposes). Other lines contain
+parameter-value pairs separated by the ``='' sign. The ``in''
+parameter points to the location of the binary data. Before we discuss
+the meaning of parameters in more detail, let us plot the data.
 \begin{verbatim}
 bash$ < sin.rsf  sfwiggle title='One Trace' | tube
 \end{verbatim}
