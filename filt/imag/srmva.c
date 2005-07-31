@@ -220,6 +220,10 @@ void srmva(bool inv     /* forward/adjoint flag */,
     float complex ws,wr;
 
     if(inv) {
+	LOOP( pssum[imy][imx] = 0.0; );
+	for (imz=0; imz<amz.n; imz++) {
+	    fslice_put(Pslow,imz,ps[0]);
+	}
     } else {
 	LOOP( pwsum[imy][imx] = 0.0; );
 	for (imz=0; imz<amz.n; imz++) {
@@ -230,27 +234,85 @@ void srmva(bool inv     /* forward/adjoint flag */,
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
 	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+
+	LOOP( dw_s[imy][imx]=0.; 
+	      dw_r[imy][imx]=0.; );
 	
 	if (inv) { /* adjoint: image -> slowness */
+	    ws = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+	    wr = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
+
+	    imz = amz.n-1;
+	    fslice_get(Bslow,imz,so[0]);
+
+	    for (imz=amz.n-1; imz>0; imz--) {
+
+		/* imaging */
+		fslice_get(Pimag,imz,pwsum[0]);
+		LOOP( dw_s[imy][imx] += pwsum[imy][imx]; 
+		      dw_r[imy][imx] += pwsum[imy][imx]; 
+		    );
+
+		/* scattering */
+		fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
+		fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
+
+		lsr_w2s(ws,bw_s,so,dw_s,ps_s);
+		lsr_w2s(wr,bw_r,so,dw_r,ps_r);
+
+		fslice_get(Pslow,imz,pssum[0]);
+		LOOP(pssum[imy][imx] += 
+		     ps_s [imy][imx] + 
+		     ps_r [imy][imx];
+		    );
+		fslice_put(Pslow,imz,pssum[0]);
+
+		/* continuation */
+		fslice_get(Bslow,imz-1,ss[0]);
+
+		ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
+		ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
+
+		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+	    }
+	    
+	    imz=0;
+	    fslice_get(Bslow,imz,so[0]);	    
+
+	    /* imaging */
+	    fslice_get(Pimag,imz,pwsum[0]);
+	    LOOP( dw_s[imy][imx] += pwsum[imy][imx]; 
+		  dw_r[imy][imx] += pwsum[imy][imx]; 
+		);
+
+	    /* scattering */
+	    fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
+	    fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
+
+	    lsr_w2s(ws,bw_s,so,dw_s,ps_s);
+	    lsr_w2s(wr,bw_r,so,dw_r,ps_r);
+
+	    fslice_get(Pslow,imz,pssum[0]);
+	    LOOP(pssum[imy][imx] += 
+		 ps_s [imy][imx] + 
+		 ps_r [imy][imx];
+		);
+	    fslice_put(Pslow,imz,pssum[0]); 
 
 	} else {   /* forward: slowness -> image */
-	    ws = eps*aw.d - I*(aw.o+iw*aw.d); /*      causal */
+	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
-
-	    LOOP( 
-		dw_s[imy][imx]=0.; 
-		dw_r[imy][imx]=0.;
-		);
 
 	    imz = 0;
 	    fslice_get(Bslow,imz,so[0]);
 
 	    /* scattering */
 	    fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
+	    fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
 	    fslice_get(Pslow,         imz,ps  [0]);
 
 	    lsr_s2w(ws,bw_s,so,pw_s,ps);
-	    lsr_s2w(wr,bw_s,so,pw_r,ps);
+	    lsr_s2w(wr,bw_r,so,pw_r,ps);
 
 	    LOOP(dw_s[imy][imx] = pw_s[imy][imx]; );
 	    LOOP(dw_r[imy][imx] = pw_r[imy][imx]; );
@@ -274,6 +336,7 @@ void srmva(bool inv     /* forward/adjoint flag */,
 
 		/* scattering */
 		fslice_get(Bwfls,iw*amz.n+imz+1,bw_s[0]);
+		fslice_get(Bwflr,iw*amz.n+imz+1,bw_r[0]);
 		fslice_get(Pslow,         imz+1,ps[0]);
 
 		lsr_s2w(ws,bw_s,so,pw_s,ps);

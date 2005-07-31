@@ -213,11 +213,11 @@ void zomva(bool inv     /* forward/adjoint flag */,
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
 	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+
+	LOOP( dw[imy][imx]=0.; );
 	
 	if (inv) { /* adjoint: image -> slowness */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
-
-	    LOOP( dw[imy][imx]=0.; );
 
 	    iz = amz.n-1;
 	    fslice_get(Bslow,iz,so[0]);	    
@@ -260,11 +260,8 @@ void zomva(bool inv     /* forward/adjoint flag */,
 	    LOOP(pssum[imy][imx] += ps[imy][imx];)
 	    fslice_put(Pslow,        iz,pssum[0]);
 
-
 	} else {   /* forward: slowness -> image */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
-
-	    LOOP( dw[imy][imx]=0.; );
 
 	    iz = 0;
 	    fslice_get(Bslow,iz,so[0]);	    

@@ -31,20 +31,14 @@ int main (int argc, char *argv[])
     float dtmax;          /* time error */
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
-    char *itype;          /* imaging type 
-			     o = zero offset (default)
-			     x = space offset
-			     h = absolut offset
-			     t = time offset
-			  */
+
     axa amx,amy,amz;
     axa alx,aly;
-    axa aw,ae,aj;
+    axa aw,ae;
 
     /* I/O files */
     sf_file Bw_s,Bw_r; /* wavefield file W ( nx, ny,nw) */
     sf_file Bs;
-
     sf_file Ps;        /*  slowness file S (nlx,nly,nz) */
     sf_file Pi;        /*     image file R ( nx, ny,nz) */
 
@@ -56,8 +50,6 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
-
-    if (NULL == (itype = sf_getstring("itype"))) itype = "o";
 
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
@@ -73,6 +65,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* SLOWNESS */
+
     Bs = sf_input("slo");
     iaxa(Bs,&alx,1); alx.l="lx";
     iaxa(Bs,&aly,2); aly.l="ly";
@@ -82,21 +75,21 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/    
     /* WAVEFIELD */
-    Bw_s = sf_input ("swf");
-    Bw_r = sf_input ("rwf");
+
+    Bw_s = sf_input("swf");
+    Bw_r = sf_input("rwf");
     
     if (SF_COMPLEX != sf_gettype(Bw_s)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Bw_r)) sf_error("Need complex receiver data");
 
-    aj.n=1; aj.o=0; aj.d=1; aj.l=" ";
-    
     iaxa(Bw_s,&amx,1); amx.l="mx";
     iaxa(Bw_s,&amy,2); amy.l="my";
-    iaxa(Bw_s,&aw,3);  aw.l = "w";
-    iaxa(Bw_s,&ae,4);  ae.l = "e"; /* experiments */
+    iaxa(Bw_s,&amz,3); amz.l="mz";
+    iaxa(Bw_s,&aw,4);  aw.l = "w";
+    iaxa(Bw_s,&ae,5);  ae.l = "e";
 
-    Bwfls = fslice_init( amx.n*amy.n, amz.n*aw.n,sizeof(float complex));
-    Bwflr = fslice_init( amx.n*amy.n, amz.n*aw.n,sizeof(float complex));
+    Bwfls = fslice_init( amx.n*amy.n,amz.n*aw.n,sizeof(float complex));
+    Bwflr = fslice_init( amx.n*amy.n,amz.n*aw.n,sizeof(float complex));
 
     fslice_load(Bw_s,Bwfls,SF_COMPLEX);
     fslice_load(Bw_r,Bwflr,SF_COMPLEX);
@@ -149,11 +142,12 @@ int main (int argc, char *argv[])
     srmva_close();
 
     /*------------------------------------------------------------*/
+      
     if(inv) fslice_dump(Ps,Pslow,SF_COMPLEX);
     else    fslice_dump(Pi,Pimag,SF_COMPLEX);
     fslice_close(Pimag);
     fslice_close(Pslow);
-
+    
     fslice_close(Bwfls);
     fslice_close(Bwflr);
     fslice_close(Bslow);
