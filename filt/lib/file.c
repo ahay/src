@@ -588,8 +588,9 @@ Prepares file for writing binary data >*/
     if (NULL == file->dataname) return;
     
     tm = time (NULL);
-    if (0 >= fprintf(file->stream,"%s:\t%s@%s\t%s\n",
+    if (0 >= fprintf(file->stream,"%s\t%s:\t%s@%s\t%s\n",
 		     sf_getprog(),
+		     sf_getcdir(),
 		     sf_getuser(),
 		     sf_gethost(),
 		     ctime(&tm)))

@@ -38,16 +38,17 @@ static sf_simtab pars;
 static char *prog = NULL;
 static char *user = NULL;
 static char *host = NULL;
+static char *cdir = NULL;
 
 void sf_init(int argc,char *argv[]) 
 /*< initialize parameter table from command-line arguments >*/
 {
-    int ic;
+    int ic, slash;
     struct passwd* pass;
     struct utsname uhost;
     FILE *fp;
     size_t len;
-    char *rsf, sfdoc[PATH_MAX];
+    char *rsf, sfdoc[PATH_MAX], cwd[PATH_MAX], *pwd;
 
     pars = sf_simtab_init (argc);
 
@@ -86,6 +87,21 @@ void sf_init(int argc,char *argv[])
     len = strlen(uhost.nodename)+1;
     host = sf_charalloc(len);
     memcpy(host,uhost.nodename,len);
+
+    /* set cdir */
+    if (NULL == getcwd(cwd,PATH_MAX)) {
+	cdir = sf_charalloc(1);
+	cdir[0] = '\0';
+    } else {
+	slash = 0;
+	for (pwd = cwd+strlen(cwd); pwd != cwd; pwd--) {
+	    if ('/' == *pwd) slash++; 
+	    if (3 == slash) break;
+	}
+	len = strlen(pwd);
+	cdir = sf_charalloc(len);
+	memcpy(cdir,pwd+1,len);
+    }
 
     for (ic=1; ic < argc; ic++) {
 	if (0 == strncmp(argv[ic],"par=",4)) {
@@ -128,6 +144,12 @@ char* sf_gethost (void)
 /*< returns host name >*/
 {
     return host;
+}
+
+char* sf_getcdir (void) 
+/*< returns current directory >*/
+{
+    return cdir;
 }
 
 bool sf_getint (const char* key,/*@out@*/ int* par) 
