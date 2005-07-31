@@ -1,0 +1,193 @@
+from rsfproj import *
+#import sys, math
+#sys.path.append('../../Scons')
+import zomig,sgmig,spmig
+
+# ------------------------------------------------------------
+# PLOTTING
+# ------------------------------------------------------------
+def igrey(custom):
+    return '''
+    grey  labelrot=n wantaxis=y wanttitle=y title=""
+    pclip=100
+    min2=-1200 max2=1200 grid=y gridcol=0
+    label1="z (m)" label2="x (m)"
+    %s 
+    ''' % (custom)
+# ------------------------------------------------------------
+par = {
+    'nz':120,  'dz':5.0,  'oz':0,
+    'nx':1000, 'dx':5.0,  'ox':-2500,
+    'nt':1000, 'dt':0.004,'ot':0, 'kt':201,
+#
+    'nf':50, 'of':1.5, 'jf':1,
+    'nw':25, 'ow':1.5, 'jw':2,
+    'nw':1,  'ow':12, 'jw':1,
+#    
+    'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,
+    'tmx':32,'tmy':0,'pmx':128,'pmy':0,
+    'misc':'incore=n',
+#
+    'nsc':1,
+    'ns':1,'fs':0,'js':1
+    }
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+
+#par['xpad']=par['nx']/2.
+par['xpad']=450
+par['xsou']=par['ox'] + par['xpad'] * par['dx']
+par['xoff']=          - par['xpad'] * par['dx']
+
+# ------------------------------------------------------------
+# VELOCITY/SLOWNESS
+# ------------------------------------------------------------
+Flow('vel',None,
+     '''
+     spike nsp=1 mag=1000
+     n1=%(nz)d d1=%(dz)g o1=0 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
+     put label1=z label2=x label3=y 
+     ''' % par )    
+Result('vel','vel',igrey('title="background velocity"'))
+Flow('slo','vel',
+     '''
+     transp |
+     math "output=1/input" |
+     spray axis=2 n=1 |
+     put label2=y
+     ''' % par )
+
+Flow('dsl',None,
+     '''
+     spike nsp=1 mag=0.00005
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g 
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g |
+     put label1=z label2=x label3=y |
+     smooth rect1=1 rect2=1 |
+     transp plane=12 |
+     transp plane=23 |
+     rtoc
+     ''' % par )
+
+# k1=049 l1=051
+# k2=499 l2=501
+
+# ------------------------------------------------------------
+# WAVELET
+# ------------------------------------------------------------
+
+# migration wavelet
+Flow('wvl',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nt)d d1=%(dt)g o1=0       k1=1
+     n2=1      d2=%(dx)g o2=%(xsou)g |
+     put label1=t label2=x label3=y
+     ''' % par)
+
+# modeling wavelet
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nt)d d1=%(dt)g o1=0        k1=125
+     n2=1      d2=%(dx)g o2=%(xsou)g |
+     ricker1 frequency=5 |
+     put label1=t label2=x label3=y
+     ''' % par)
+Result('wav','wav','graph title=" "')
+
+Flow('sou','wav',
+     '''
+     fft1 |
+     window squeeze=n n1=%(nf)d min1=%(of)g |
+     pad beg2=%(xpad)d n2out=%(nx)d |
+     put label1=w label2=x label3=y |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 
+     ''' % par)
+
+# ------------------------------------------------------------
+# REFLECTIVITY
+# ------------------------------------------------------------
+Flow('ref',None,
+     '''
+     spike nsp=1 mag=1 
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g
+     n2=%(nz)d d2=%(dz)g o2=%(oz)g k2=100 |
+     spray axis=2 n=1 o=0 d=1 |
+     put label1=x label2=y label3=z 
+     ''' % par )    
+Result('ref','ref','window | transp | grey pclip=100')
+
+# ------------------------------------------------------------
+# DATA (by shot-record modeling)
+# ------------------------------------------------------------
+spmig.model('mod','slo','sou','ref',par)
+
+Flow('dat','mod',
+     '''
+     window |
+     transp |
+     pad beg1=6 n1out=501 |
+     fft1 inv=y |
+     window f1=125 |
+     pad n1out=%(nt)d |
+     put o1=0 o2=%(xoff)g o3=%(xsou)g
+     ''' % par)
+Result('dat','dat','grey pclip=100')
+
+Flow('msk',None,
+     '''
+     spike nsp=1 mag=1 
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g 
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=550 l2=550
+     ''' % par)
+Flow('rec',['dat','msk'],'math a=${SOURCES[0]} b=${SOURCES[1]} output="a*b"')
+Result('rec','rec','grey pclip=100')
+
+spmig.wflds('dos','dor','wvl','rec',par)
+
+# ------------------------------------------------------------
+# IMAGE (by shot-record migration)
+# ------------------------------------------------------------
+spmig.imagePW('img','cig','slo','dos','dor',par)
+Result('img','img','window | transp |' + igrey('title="image"'))
+
+# ------------------------------------------------------------
+# WAVEFIELD
+# ------------------------------------------------------------
+zomig.Cwfone('wos','dos','slo',par)
+zomig.Awfone('wor','dor','slo',par)
+
+# ------------------------------------------------------------
+# forward WEMVA
+# ------------------------------------------------------------
+
+spmig.s2i('dsl','dim','wos','wor','slo',par)
+spmig.i2s('dim','bsl','wos','wor','slo',par)
+
+Plot('dim','dim','window | real | transp |'+ igrey('title="dim"'))
+Plot('img','img','window |        transp |'+ igrey('title="img"'))
+Plot('dsl','dsl','window | real | transp |'+ igrey('title="dsl" color=F pclip=99'))
+Plot('bsl','bsl','window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
+
+def combine2by2(plot,p0,p1,p2,p3):
+    j0 = '_' + p0
+    j1 = '_' + p1
+    j2 = '_' + p2
+    j3 = '_' + p3
+
+    Plot(j0,p0,'Overlay',vppen='yscale=0.25 xscale=0.40 ycenter=-10.0 xcenter=-00.0')
+    Plot(j1,p1,'Overlay',vppen='yscale=0.25 xscale=0.40 ycenter=-10.0 xcenter=-15.0')
+    Plot(j2,p2,'Overlay',vppen='yscale=0.25 xscale=0.40 ycenter=-00.0 xcenter=-00.0')
+    Plot(j3,p3,'Overlay',vppen='yscale=0.25 xscale=0.40 ycenter=-00.0 xcenter=-15.0')
+
+    Result(plot,[j0,j1,j2,j3],'Overlay')
+
+combine2by2('scat','img','dsl','dim','bsl')
+
+# ------------------------------------------------------------
+
+End()
