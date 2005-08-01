@@ -219,83 +219,59 @@ void zomva(bool inv     /* forward/adjoint flag */,
 	if (inv) { /* adjoint: image -> slowness */
 	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
 
-	    iz = amz.n-1;
-	    fslice_get(Bslow,iz,so[0]);	    
-	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
-
 	    for (iz=amz.n-1; iz>0; iz--) {
+		/* background */
+		fslice_get(Bslow,iz,so[0]);	    
+		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+		fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 
-		/* imaging */
+		if(iz>0) { /* continuation */
+		    fslice_get(Bslow,iz-1,ss[0]);
+		    SOOP( ss[ily][ilx] *= twoway; );
+		    ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
+
+		/* scattering dI -> dS */
 		fslice_get(Pimag,iz,pwsum[0]);
+
 		LOOP(dw[imy][imx] += pwsum[imy][imx]; );
 
-		/* scattering */
-		fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 		lsr_w2s(w,bw,so,dw,ps);
 
-		fslice_get(Pslow,        iz,pssum[0]);
+		fslice_get(Pslow,iz,pssum[0]);
 		LOOP(pssum[imy][imx] += ps[imy][imx];)
-		fslice_put(Pslow,        iz,pssum[0]);
-
-		/* continuation */
-		fslice_get(Bslow,iz-1,ss[0]);
-		SOOP( ss[ily][ilx] *= twoway; );
-		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		fslice_put(Pslow,iz,pssum[0]);
+		/* end scattering */
 	    }
-
-	    iz=0;
-	    fslice_get(Bslow,iz,so[0]);	    
-	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
-
-	    /* imaging */
-	    fslice_get(Pimag,iz,pwsum[0]);
-	    LOOP(dw[imy][imx] += pwsum[imy][imx]; );
-
-	    /* scattering */
-	    fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
-	    lsr_w2s(w,bw,so,dw,ps);
-
-	    fslice_get(Pslow,        iz,pssum[0]);
-	    LOOP(pssum[imy][imx] += ps[imy][imx];)
-	    fslice_put(Pslow,        iz,pssum[0]);
 
 	} else {   /* forward: slowness -> image */
 	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 
-	    iz = 0;
-	    fslice_get(Bslow,iz,so[0]);	    
-	    SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
-
-	    /* scattering */
-	    fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
-	    fslice_get(Pslow,        iz,ps[0]);
-	    lsr_s2w(w,bw,so,pw,ps);
-	    LOOP(dw[imy][imx] = pw[imy][imx]; );
-
-	    /* imaging */
-	    fslice_get(Pimag,iz,pwsum[0]);
-	    LOOP(pwsum[imy][imx] += dw[imy][imx]; );
-	    fslice_put(Pimag,iz,pwsum[0]);
-
 	    for (iz=0; iz<amz.n-1; iz++) {
+		/* background */
+		fslice_get(Bslow,iz,so[0]);	    
+		SOOP( so[ily][ilx] *= twoway; ); /* 2-way time */
+		fslice_get(Bwfld,iw*amz.n+iz,bw[0]);
 
-		/* continuation */
-		fslice_get(Bslow,iz+1,ss[0]);
-		SOOP( ss[ily][ilx] *= twoway; );
-		ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		/* scattering dS -> dI */
+		fslice_get(Pslow,iz,ps[0]);
 
-		/* scattering */
-		fslice_get(Bwfld,iw*amz.n+iz+1,bw[0]);
-		fslice_get(Pslow,        iz+1,ps[0]);
 		lsr_s2w(w,bw,so,pw,ps);
+
 		LOOP(dw[imy][imx] += pw[imy][imx]; );
 
-		/* imaging */
-		fslice_get(Pimag,iz+1,pwsum[0]);
+		fslice_get(Pimag,iz,pwsum[0]);
 		LOOP(pwsum[imy][imx] += dw[imy][imx]; );
-		fslice_put(Pimag,iz+1,pwsum[0]);
+		fslice_put(Pimag,iz,pwsum[0]);
+		/* end scattering */
+
+		if(iz<amz.n-1) { /* continuation */
+		    fslice_get(Bslow,iz+1,ss[0]);
+		    SOOP( ss[ily][ilx] *= twoway; );
+		    ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
 	    }
 	}
     }

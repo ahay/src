@@ -246,98 +246,52 @@ void srmva(bool inv     /* forward/adjoint flag */,
 	    fslice_get(Bslow,imz,so[0]);
 
 	    for (imz=amz.n-1; imz>0; imz--) {
-
-		/* imaging */
-		fslice_get(Pimag,imz,pwsum[0]);
-		LOOP( dw_s[imy][imx] += pwsum[imy][imx]; 
-		      dw_r[imy][imx] += pwsum[imy][imx]; 
-		    );
-
-		/* scattering */
+		/* background */
+		fslice_get(Bslow,imz,so[0]);
 		fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
 		fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
+
+		if(imz>0) { /* continuation */
+		    fslice_get(Bslow,imz-1,ss[0]);
+		    ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
+		    ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
+
+		/* scattering dI -> dS */
+		fslice_get(Pimag,imz,pwsum[0]);
+
+		LOOP( dw_s [imy][imx] +=
+		      bw_r [imy][imx] * conjf(pwsum[imy][imx]);
+		      dw_r [imy][imx] += 
+		      bw_s [imy][imx] *       pwsum[imy][imx];
+/*		      dw_r [imy][imx] += */
+/*		      conjf(bw_s[imy][imx]) * pwsum[imy][imx];*/
+		    );
 
 		lsr_w2s(ws,bw_s,so,dw_s,ps_s);
 		lsr_w2s(wr,bw_r,so,dw_r,ps_r);
 
 		fslice_get(Pslow,imz,pssum[0]);
 		LOOP(pssum[imy][imx] += 
-		     ps_s [imy][imx] + 
+		     ps_s [imy][imx]+ 
 		     ps_r [imy][imx];
 		    );
 		fslice_put(Pslow,imz,pssum[0]);
-
-		/* continuation */
-		fslice_get(Bslow,imz-1,ss[0]);
-
-		ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
-		ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
-
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		/* end scattering */
 	    }
-	    
-	    imz=0;
-	    fslice_get(Bslow,imz,so[0]);	    
-
-	    /* imaging */
-	    fslice_get(Pimag,imz,pwsum[0]);
-	    LOOP( dw_s[imy][imx] += pwsum[imy][imx]; 
-		  dw_r[imy][imx] += pwsum[imy][imx]; 
-		);
-
-	    /* scattering */
-	    fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
-	    fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
-
-	    lsr_w2s(ws,bw_s,so,dw_s,ps_s);
-	    lsr_w2s(wr,bw_r,so,dw_r,ps_r);
-
-	    fslice_get(Pslow,imz,pssum[0]);
-	    LOOP(pssum[imy][imx] += 
-		 ps_s [imy][imx] + 
-		 ps_r [imy][imx];
-		);
-	    fslice_put(Pslow,imz,pssum[0]); 
-
 	} else {   /* forward: slowness -> image */
 	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
 	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 
-	    imz = 0;
-	    fslice_get(Bslow,imz,so[0]);
-
-	    /* scattering */
-	    fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
-	    fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
-	    fslice_get(Pslow,         imz,ps  [0]);
-
-	    lsr_s2w(ws,bw_s,so,pw_s,ps);
-	    lsr_s2w(wr,bw_r,so,pw_r,ps);
-
-	    LOOP(dw_s[imy][imx] = pw_s[imy][imx]; );
-	    LOOP(dw_r[imy][imx] = pw_r[imy][imx]; );
-
-	    /* imaging */
-	    fslice_get(Pimag,imz,pwsum[0]);
-	    LOOP(pwsum[imy][imx] += 
-		 conjf(bw_s[imy][imx]) * dw_r[imy][imx] +
-		 conjf(dw_s[imy][imx]) * bw_r[imy][imx]; );
-	    fslice_put(Pimag,imz,pwsum[0]);
-
 	    for (imz=0; imz<amz.n-1; imz++) {
+		/* background */
+		fslice_get(Bslow,imz,so[0]);
+		fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
+		fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
 
-		/* continuation */
-		fslice_get(Bslow,imz+1,ss[0]);
-
-		ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
-		ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
-
-		SOOP( so[ily][ilx] = ss[ily][ilx]; );
-
-		/* scattering */
-		fslice_get(Bwfls,iw*amz.n+imz+1,bw_s[0]);
-		fslice_get(Bwflr,iw*amz.n+imz+1,bw_r[0]);
-		fslice_get(Pslow,         imz+1,ps[0]);
+		/* scattering dS -> dI */
+		fslice_get(Pslow,imz,ps[0]);
 
 		lsr_s2w(ws,bw_s,so,pw_s,ps);
 		lsr_s2w(wr,bw_r,so,pw_r,ps);
@@ -345,12 +299,20 @@ void srmva(bool inv     /* forward/adjoint flag */,
 		LOOP(dw_s[imy][imx] += pw_s[imy][imx]; );
 		LOOP(dw_r[imy][imx] += pw_r[imy][imx]; );
 
-		/* imaging */
 		fslice_get(Pimag,imz+1,pwsum[0]);
-		LOOP(pwsum[imy][imx] += 
+		LOOP(     pwsum[imy][imx] += 
 		     conjf(bw_s[imy][imx]) * dw_r[imy][imx] +
-		     conjf(dw_s[imy][imx]) * bw_r[imy][imx]; );
+		     conjf(dw_s[imy][imx]) * bw_r[imy][imx]; 
+		    );
 		fslice_put(Pimag,imz+1,pwsum[0]);
+		/* end scattering */
+
+		if(imz<amz.n-1) { /* continuation */
+		    fslice_get(Bslow,imz+1,ss[0]);
+		    ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
+		    ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
+		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
+		}
 	    }
 	}
     }
