@@ -13,6 +13,20 @@ def igrey(custom):
     label1="z (m)" label2="x (m)"
     %s 
     ''' % (custom)
+
+def combine2by2(plot,p0,p1,p2,p3):
+    j0 = '_' + p0
+    j1 = '_' + p1
+    j2 = '_' + p2
+    j3 = '_' + p3
+
+    Plot(j0,p0,'Overlay',vppen='yscale=0.5 xscale=0.4 ycenter=-10.0 xcenter=-00.0')
+    Plot(j1,p1,'Overlay',vppen='yscale=0.5 xscale=0.4 ycenter=-10.0 xcenter=-15.0')
+    Plot(j2,p2,'Overlay',vppen='yscale=0.5 xscale=0.4 ycenter=-00.0 xcenter=-00.0')
+    Plot(j3,p3,'Overlay',vppen='yscale=0.5 xscale=0.4 ycenter=-00.0 xcenter=-15.0')
+
+    Result(plot,[j0,j1,j2,j3],'Overlay')
+
 # ------------------------------------------------------------
 par = {
     'nz':200,  'dz':5.0,  'oz':0,
@@ -80,26 +94,23 @@ Flow('dsl',None,
      transp plane=23 |
      rtoc
      ''' % par )
-# k1=079,089,099 l1=081,091,101
-# k2=299,249,349 l2=301,251,351
 
 # ------------------------------------------------------------
-# IMAGE
+# IMAGE (background)
 # ------------------------------------------------------------
 zomig.image('img','slo','wfl',par)
 Result('img','img','window | transp |' + igrey('title="image"'))
 
 # ------------------------------------------------------------
-# WAVEFIELD
+# WAVEFIELD (background)
 # ------------------------------------------------------------
 zomig.Awftwo('www','wfl','slo',par)
 
 # ------------------------------------------------------------
-# forward WEMVA
+# WEMVA
 # ------------------------------------------------------------
-
-zomig.s2i('dsl','dim','www','slo',par)
-zomig.i2s('dim','bsl','www','slo',par)
+zomig.s2i('dsl','dim','www','slo',par) # forward
+zomig.i2s('dim','bsl','www','slo',par) # adjoint
 
 Plot('www','www','window | real | transp |'+ igrey('title="www"'))
 Plot('dim','dim','window | real | transp |'+ igrey('title="dim"'))
@@ -108,23 +119,11 @@ Plot('img','img','window |        transp |'+ igrey('title="img"'))
 Plot('dsl','dsl','window | real | transp |'+ igrey('title="dsl" color=F'))
 Plot('bsl','bsl','window | real | transp |'+ igrey('title="bsl" color=F'))
 
-def combine2by2(plot,p0,p1,p2,p3):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
-    j3 = '_' + p3
-
-    Plot(j0,p0,'Overlay',vppen='yscale=0.5 xscale=0.40 ycenter=-10.0 xcenter=-00.0')
-    Plot(j1,p1,'Overlay',vppen='yscale=0.5 xscale=0.40 ycenter=-10.0 xcenter=-15.0')
-    Plot(j2,p2,'Overlay',vppen='yscale=0.5 xscale=0.40 ycenter=-00.0 xcenter=-00.0')
-    Plot(j3,p3,'Overlay',vppen='yscale=0.5 xscale=0.40 ycenter=-00.0 xcenter=-15.0')
-
-    Result(plot,[j0,j1,j2,j3],'Overlay')
-
 combine2by2('scat','img','dsl','dim','bsl')
 
 # ------------------------------------------------------------
 
+# test scattering order
 for i in range(5):
     par['nsc']=i
 
@@ -139,5 +138,7 @@ for i in range(5):
 
 Result('dimall','dim0 dim1 dim2 dim3 dim4','Movie')
 Result('bslall','bsl0 bsl1 bsl2 bsl3 bsl4','Movie')
+
+# ------------------------------------------------------------
 
 End()
