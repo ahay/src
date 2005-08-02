@@ -31,7 +31,7 @@ def wflds(wfld,data,par):
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          transp plane=12 memsize=500 |
          transp plane=23 memsize=500 |
-         put label1=mx label2=my label4=w
+         put label1=mx label2=my label3=w
          ''' % par )
 
 # zero-offset modeling
@@ -130,6 +130,3 @@ def i2s(dimag,dslow,bwfld,bslow,par):
          wfl=${SOURCES[1]}
          slo=${SOURCES[2]}
          ''' % param(par))
-
-
-

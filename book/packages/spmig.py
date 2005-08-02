@@ -244,7 +244,7 @@ def run(img,cig,swf,rwf,slo,imc,par,clspar,cigpar):
 def s2i(dslow,dimag,swfld,rwfld,bslow,par):
     Flow(dimag,[dslow,swfld,rwfld,bslow],
          '''
-         srmva inv=n %s
+         /home/savap/RSF/filt/imag/sfsrmva inv=n %s
          swf=${SOURCES[1]}
          rwf=${SOURCES[2]}
          slo=${SOURCES[3]}
@@ -254,7 +254,7 @@ def s2i(dslow,dimag,swfld,rwfld,bslow,par):
 def i2s(dimag,dslow,swfld,rwfld,bslow,par):
     Flow(dslow,[dimag,swfld,rwfld,bslow],
          '''
-         srmva inv=y %s
+         /home/savap/RSF/filt/imag/sfsrmva inv=y %s
          swf=${SOURCES[1]}
          rwf=${SOURCES[2]}
          slo=${SOURCES[3]}
