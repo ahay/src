@@ -148,8 +148,20 @@ void srmva_init(bool verb_,
     bw_s = sf_complexalloc2(amx.n,amy.n);
     bw_r = sf_complexalloc2(amx.n,amy.n);
 
+    ps   = sf_complexalloc2(amx.n,amy.n);
+
     ds_s = sf_complexalloc2(amx.n,amy.n);
     ds_r = sf_complexalloc2(amx.n,amy.n);
+    ps_s = sf_complexalloc2(amx.n,amy.n);
+    ps_r = sf_complexalloc2(amx.n,amy.n);
+
+    pw_s = sf_complexalloc2(amx.n,amy.n);
+    pw_r = sf_complexalloc2(amx.n,amy.n);
+    dw_s = sf_complexalloc2(amx.n,amy.n);
+    dw_r = sf_complexalloc2(amx.n,amy.n);
+
+    pwsum = sf_complexalloc2(amx.n,amy.n);
+    pssum = sf_complexalloc2(amx.n,amy.n);
 }
 /*------------------------------------------------------------*/
 
@@ -162,8 +174,20 @@ void srmva_close(void)
     free( *bw_s); free( bw_s);
     free( *bw_r); free( bw_r);
 
+    free( *ps  ); free( ps  );
+
     free( *ds_s); free( ds_s);
     free( *ds_r); free( ds_r);
+    free( *ps_s); free( ps_s);
+    free( *ps_r); free( ps_r);
+
+    free( *pw_s); free( pw_s);
+    free( *pw_r); free( pw_r);
+    free( *dw_s); free( dw_s);
+    free( *dw_r); free( dw_r);
+
+    free( *pwsum); free( pwsum);
+    free( *pssum); free( pssum);
 
     free( *ss); free( ss);
     free( *so); free( so);
@@ -173,44 +197,6 @@ void srmva_close(void)
 
 /*------------------------------------------------------------*/
 
-void srmva_aloc()
-/*< allocate scattering storage >*/
-{
-    ps = sf_complexalloc2(amx.n,amy.n);
-
-    ps_s = sf_complexalloc2(amx.n,amy.n);
-    ps_r = sf_complexalloc2(amx.n,amy.n);
-
-    pw_s = sf_complexalloc2(amx.n,amy.n);
-    pw_r = sf_complexalloc2(amx.n,amy.n);
-
-    dw_s = sf_complexalloc2(amx.n,amy.n);
-    dw_r = sf_complexalloc2(amx.n,amy.n);
-
-    pwsum = sf_complexalloc2(amx.n,amy.n);
-    pssum = sf_complexalloc2(amx.n,amy.n);
-}
-
-void srmva_free()
-/*< free scattering storage >*/
-{
-
-    free( *ps); free( ps);
-
-    free( *ps_s); free( ps_s);
-    free( *ps_r); free( ps_r);
-
-    free( *pw_s); free( pw_s);
-    free( *pw_r); free( pw_r);
-
-    free( *dw_s); free( dw_s);
-    free( *dw_r); free( dw_r);
-
-    free( *pwsum); free( pwsum);
-    free( *pssum); free( pssum);
-}
-
-/*------------------------------------------------------------*/
 void srmva(bool inv     /* forward/adjoint flag */, 
 	   fslice Pslow /* slowness perturbation [nz][nmy][nmx] */,
 	   fslice Pimag /*    image perturbation [nz][nmy][nmx] */)

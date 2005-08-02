@@ -135,9 +135,9 @@ int main (int argc, char *argv[])
 		pmx,pmy,
 		nrmax,Bslow,Bwfls,Bwflr);
     
-    srmva_aloc();
+/*    srmva_aloc();*/
     srmva(inv,Pslow,Pimag);
-    srmva_free();
+/*    srmva_free();*/
 
     srmva_close();
 

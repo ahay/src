@@ -143,8 +143,14 @@ void zomva_init(bool verb_,
     /* allocate wavefield storage */
     bw = sf_complexalloc2(amx.n,amy.n);
 
-    dw = sf_complexalloc2(amx.n,amy.n);
     ds = sf_complexalloc2(amx.n,amy.n);
+    ps = sf_complexalloc2(amx.n,amy.n);
+
+    dw = sf_complexalloc2(amx.n,amy.n);
+    pw = sf_complexalloc2(amx.n,amy.n);
+
+    pwsum = sf_complexalloc2(amx.n,amy.n);
+    pssum = sf_complexalloc2(amx.n,amy.n);
 }
 
 /*------------------------------------------------------------*/
@@ -157,35 +163,19 @@ void zomva_close(void)
 
     free( *bw); free( bw);
 
-    free( *dw); free( dw);
     free( *ds); free( ds);
+    free( *ps); free( ps);
+
+    free( *dw); free( dw);
+    free( *pw); free( pw);
+
+    free( *pwsum); free( pwsum);
+    free( *pssum); free( pssum);
 
     free( *ss); free( ss);
     free( *so); free( so);
     free( *sm); free( sm);
     ;           free( nr);
-}
-
-/*------------------------------------------------------------*/
-
-void zomva_aloc()
-/*< allocate scattering storage >*/
-{
-    ps = sf_complexalloc2(amx.n,amy.n);
-    pw = sf_complexalloc2(amx.n,amy.n);
-
-    pwsum = sf_complexalloc2(amx.n,amy.n);
-    pssum = sf_complexalloc2(amx.n,amy.n);
-}
-
-void zomva_free()
-/*< free scattering storage >*/
-{
-    free( *ps); free( ps);
-    free( *pw); free( pw);
-
-    free( *pwsum); free( pwsum);
-    free( *pssum); free( pssum);
 }
 
 /*------------------------------------------------------------*/
@@ -230,7 +220,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		    SOOP( ss[ily][ilx] *= twoway; );
 		    ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-		}
+		} /* end continuation */
 
 		/* scattering dI -> dS */
 		fslice_get(Pimag,iz,pwsum[0]);
@@ -271,7 +261,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		    SOOP( ss[ily][ilx] *= twoway; );
 		    ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-		}
+		} /* end continuation */
 	    }
 	}
     }

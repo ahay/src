@@ -118,9 +118,7 @@ int main (int argc, char *argv[])
 	       pmx,pmy,
 	       nrmax,Bslow,Bwfld);
 
-    zomva_aloc();
     zomva(inv,Pslow,Pimag);
-    zomva_free();
 
     zomva_close();
 
