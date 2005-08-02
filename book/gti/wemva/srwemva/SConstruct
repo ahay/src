@@ -10,7 +10,7 @@ def igrey(custom):
     return '''
     grey  labelrot=n wantaxis=y wanttitle=y title=""
     pclip=100
-    min2=-1000 max2=1000 grid=y gridcol=0
+    min2=-500 max2=1500 grid=y gridcol=0 g1num=500 g2num=500
     label1="z (m)" label2="x (m)"
     %s 
     ''' % (custom)
@@ -20,10 +20,10 @@ def combine2by2(plot,p0,p1,p2,p3):
     j2 = '_' + p2
     j3 = '_' + p3
 
-    Plot(j0,p0,'Overlay',vppen='yscale=0.35 xscale=0.55 ycenter=-10.0 xcenter=+00.0')
-    Plot(j1,p1,'Overlay',vppen='yscale=0.35 xscale=0.55 ycenter=-10.0 xcenter=-12.0')
-    Plot(j2,p2,'Overlay',vppen='yscale=0.35 xscale=0.55 ycenter=-00.0 xcenter=+00.0')
-    Plot(j3,p3,'Overlay',vppen='yscale=0.35 xscale=0.55 ycenter=-00.0 xcenter=-12.0')
+    Plot(j0,p0,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-10.0 xcenter=+00.0')
+    Plot(j1,p1,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-10.0 xcenter=-12.0')
+    Plot(j2,p2,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-00.0 xcenter=+00.0')
+    Plot(j3,p3,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-00.0 xcenter=-12.0')
 
     Result(plot,[j0,j1,j2,j3],'Overlay')
 
