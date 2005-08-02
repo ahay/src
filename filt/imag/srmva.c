@@ -265,8 +265,6 @@ void srmva(bool inv     /* forward/adjoint flag */,
 		      bw_r [imy][imx] * conjf(pwsum[imy][imx]);
 		      dw_r [imy][imx] += 
 		      bw_s [imy][imx] *       pwsum[imy][imx];
-/*		      dw_r [imy][imx] += */
-/*		      conjf(bw_s[imy][imx]) * pwsum[imy][imx];*/
 		    );
 
 		lsr_w2s(ws,bw_s,so,dw_s,ps_s);
