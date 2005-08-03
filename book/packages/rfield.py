@@ -20,7 +20,7 @@
 # 
 # July 2005
 #
-# $Id: rfield.py 594 2005-07-25 08:14:14Z jennings $
+# $Id$
 #
 
 #
@@ -259,24 +259,6 @@ def rfield (name,
     uniw = [float(oriw[0])/lenw,float(oriw[1])/lenw,float(oriw[2])/lenw]
 
 #
-# Compute u, v, and w arrays.
-#
-# These arrays hold the u, v, and w coordinate values for a possibly
-# skewed, and rotated coordinate system defined by the covariance range
-# orientation vectors.
-#
-
-    u = name+'u'
-    v = name+'v'
-    w = name+'w'
-
-    formula = grid+'output="x1*(%g)+x2*(%g)+x3*(%g)"'
-    
-    Flow (u,'','math'+formula % (uniu[0],uniu[1],uniu[2]),stdin=0)
-    Flow (v,'','math'+formula % (univ[0],univ[1],univ[2]),stdin=0)
-    Flow (w,'','math'+formula % (uniw[0],uniw[1],uniw[2]),stdin=0)
-
-#
 # Compute a scaled distance variable.
 #
 # This array measures the distance from the origin after scaling by a
@@ -285,15 +267,33 @@ def rfield (name,
 # covariance range and anisotropy in the possibly skewed and rotated
 # uvw coordinate system.
 #
+# This calculation is easier to understand in two steps, transformation
+# to the uvw coordinate system, and calculation of the scaled distance.
+# Here they are combined into one step to avoid some unnecessary
+# intermediate target files.
+#
+# The transformation step works like this:
+#
+# u = x*uniu[0] + y*uniu[1] + z*uniu[2]
+# v = x*univ[0] + y*univ[1] + z*univ[2]
+# w = x*uniw[0] + y*uniw[1] + z*uniw[2]
+#
+# The scaled distance calculation works like this:
+#
+# dist = sqrt((u/ru)^2 + (v/rv)^2 + (w/rw)^2)
+#
 
     dist = name+'dist'
 
-    Flow (dist,[u,v,w],
-          '''
-          math u=${SOURCES[0]} v=${SOURCES[1]} w=${SOURCES[2]}
-          output="sqrt((u/%g)^2+(v/%g)^2+(w/%g)^2)"
-          ''' % (ru,rv,rw),stdin=0
-         )
+    formula = '''
+              output="sqrt(((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2
+                          +((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2
+                          +((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2)"
+              ''' % (uniu[0],uniu[1],uniu[2],ru,
+                     univ[0],univ[1],univ[2],rv,
+                     uniw[0],uniw[1],uniw[2],rw)
+                     
+    Flow (dist,'','math'+grid+formula,stdin=0)
          
 #
 # Make a "stable" covariance grid.
