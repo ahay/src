@@ -160,22 +160,23 @@ def erode_surfaces (memsize=100):
           reverse which=1 | transp memsize=%d plane=13
           ''' % (memsize,memsize) )
           
-    Flow ('bd_surface_15','bd_surfaces','window squeeze=n f3=14 n3=1')
-    Flow ('md_surface_15','md_surfaces','window squeeze=n f3=14 n3=1')
-    
     Flow ('ch_erode_temp','ch_erode','window squeeze=n f3=1 n3=14')
     
-    Flow ('bd_erode_temp','ch_erode_temp bd_surface_15',
-          'cat axis=3 ${SOURCES[1]}')
-    
-    Flow ('md_erode_temp','ch_erode_temp md_surface_15',
-          'cat axis=3 ${SOURCES[1]}')
-    
-    Flow ('bd_erode','bd_erode_temp bd_surfaces',
-          'minmax mode=min file1=${SOURCES[0]} file2=${SOURCES[1]}')
+    Flow ('bd_erode','bd_surfaces ch_erode_temp',
+          '''
+          window squeeze=n f3=14 n3=1 > bd_surface_15.rsf &&
+          cat axis=3 ${SOURCES[1]} bd_surface_15.rsf > bd_erode_temp.rsf &&
+          minmax mode=min file1=bd_erode_temp.rsf file2=${SOURCES[0]} > $TARGET &&
+          rm bd_surface_15.rsf bd_erode_temp.rsf
+          ''', stdout=0)
 
-    Flow ('md_erode','md_erode_temp md_surfaces',
-          'minmax mode=min file1=${SOURCES[0]} file2=${SOURCES[1]}')
+    Flow ('md_erode','md_surfaces ch_erode_temp',
+          '''
+          window squeeze=n f3=14 n3=1 > md_surface_15.rsf &&
+          cat axis=3 ${SOURCES[1]} md_surface_15.rsf > md_erode_temp.rsf &&
+          minmax mode=min file1=md_erode_temp.rsf file2=${SOURCES[0]} > $TARGET &&
+          rm md_surface_15.rsf md_erode_temp.rsf
+          ''', stdout=0)
 
 #
 # Put channel properties into a regular grid
