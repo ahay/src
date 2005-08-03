@@ -1,5 +1,5 @@
 from rsfproj import *
-import zomig,sgmig,spmig
+import zomig,sgmig,spmig,pplot
 
 # ------------------------------------------------------------
 # PLOTTING
@@ -12,19 +12,6 @@ def igrey(custom):
     label1="z (m)" label2="x (m)"
     %s 
     ''' % (custom)
-def combine2by2(plot,p0,p1,p2,p3):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
-    j3 = '_' + p3
-
-    Plot(j0,p0,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-10.0 xcenter=+00.0')
-    Plot(j1,p1,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-10.0 xcenter=-12.0')
-    Plot(j2,p2,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-00.0 xcenter=+00.0')
-    Plot(j3,p3,'Overlay',vppen='yscale=0.25 xscale=0.55 ycenter=-00.0 xcenter=-12.0')
-
-    Result(plot,[j0,j1,j2,j3],'Overlay')
-
 # ------------------------------------------------------------
 par = {
     'nz':120,  'dz':5.0,  'oz':0,
@@ -33,8 +20,8 @@ par = {
 #
     'nf':200, 'of':1.5, 'jf':1,
     'nw':200, 'ow':1.5, 'jw':1,
-    'nw':40, 'ow':1.5, 'jw':4,
-    'nw':1,  'ow':8, 'jw':1,
+#    'nw':40,  'ow':1.5, 'jw':4,
+#    'nw':1,   'ow':8,   'jw':1,
 #    
     'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,
     'tmx':32,'tmy':0,'pmx':128,'pmy':0,
@@ -191,7 +178,7 @@ for i in range(9):
     Plot( bsl , bsl ,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99.9'))
 
     scat = 'scat' + str(i)
-    combine2by2(scat,'img',dsl,dim,bsl)
+    pplot.p2x2(scat,'img',dsl,dim,bsl,0.25,0.55,-10,-12)
     
 # ------------------------------------------------------------
 
