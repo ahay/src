@@ -4,22 +4,22 @@ Fetch('apr18.h','seab')
 
 Flow('data','apr18.h','dd form=native')
 Flow('depth','data',
-     "window n1=1 f1=2 | math output='(2978-input)/387' ")
+     "window n1=1 f1=2 | math output='(2978-input)/387' | put head=$SOURCE")
 
 def interp(prog):
-    return prog + ' nx=160 ny=160 xkey=0 ykey=1 head=${SOURCES[1]}' 
+    return prog + ' nx=160 ny=160 xkey=0 ykey=1' 
 def grey(title):
     return '''
     grey crowd=0.82 clip=0.8 labelsz=12 titlesz=14 transp=n yreverse=n
     title='%s'
     ''' % title
 
-Flow('bin',['depth','data'],interp('bin'))
+Flow('bin','depth',interp('bin'))
 Plot('bin',grey('Binned'))
 
-Flow('fill',['depth','data','bin'],
+Flow('fill','depth bin',
      interp(
-    'shapebin filt1=10 niter=400 nliter=2 gauss=y pattern=${SOURCES[2]}'))
+    'shapebin filt1=10 niter=400 nliter=2 gauss=y pattern=${SOURCES[1]}'))
 Plot('fill',grey('Filled'))
 
 Flow('miss','bin',
@@ -32,9 +32,9 @@ Plot('miss',grey('Filled'))
 misses = []
 for iter in range(1,101):
     miss = 'shape%d' % iter
-    Flow(miss,['depth','data','bin'],
+    Flow(miss,'depth bin',
          interp('''
-         shapebin filt1=10 niter=%d nliter=2 gauss=y pattern=${SOURCES[2]}
+         shapebin filt1=10 niter=%d nliter=2 gauss=y pattern=${SOURCES[1]}
          ''' % iter))
     Plot(miss,grey('niter=%d' % iter))
     misses.append(miss)

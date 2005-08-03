@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
     int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
     int xmin, xmax, ymin, ymax, i, ix, iy, **map, esize;
     off_t pos;
-    char *buf, *zero, *xk, *yk;
+    char *buf, *zero, *xk, *yk, *header;
     sf_file in, out, head;
 
     sf_init (argc,argv);
@@ -37,7 +37,13 @@ int main (int argc, char* argv[])
     if (!sf_histint(in,"n1",&nt)) sf_error("Need n1= in in");
     if (!sf_histint(in,"n2",&nd)) sf_error("Need n2= in in");
 
-    head = sf_input("head");
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
 
     if (SF_INT != sf_gettype(head)) sf_error("Need int header");
     if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");

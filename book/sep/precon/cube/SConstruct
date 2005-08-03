@@ -37,12 +37,9 @@ Flow('nmo','data vel offset',
      nmo velocity=${SOURCES[1]} offset=${SOURCES[2]} slowness=y |
      window n1=250 f1=100
      ''')
-Flow('dat','nmo','transp memsize=500')
-Flow('bin fold','dat head',
-     '''
-     bin xkey=0 ykey=1 head=${SOURCES[1]} fold=${TARGETS[1]}
-     nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25
-     ''')
+Flow('dat','nmo head','transp memsize=500 | put head=${SOURCES[1]}')
+Flow('bin fold','dat',
+     'bin xkey=0 ykey=1 fold=${TARGETS[1]} nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25')
 
 Result('fold-win','fold',
        '''
@@ -98,11 +95,8 @@ for t in (0,3,7,10):
 
 Result('splin',splin,'OverUnderAniso',vppen='vpstyle=n txscale=4')
 
-Flow('smo2','dat head tens0',
-     '''
-     invbin xkey=0 ykey=1 head=${SOURCES[1]} filt=${SOURCES[2]}
-     nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25 niter=50
-     ''')
+Flow('smo2','dat tens0',
+     'invbin xkey=0 ykey=1 filt=${SOURCES[1]} nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25 niter=50')
 
 Result('smo2-win','smo2',grey3('Smoothing Preconditioning'))
 
@@ -113,10 +107,10 @@ Flow('dip','smo2',
 Flow('pch','dip',
      'math output="0.5+0.5*(input/%g+1)*%d" | dd type=int' % (4,399))
 
-Flow('int4','dat head bank pch',
+Flow('int4','dat bank pch',
      '''
      invbin xkey=0 ykey=1 interp=4 stat=n
-     head=${SOURCES[1]} filt=${SOURCES[2]} pch=${SOURCES[3]}
+     filt=${SOURCES[1]} pch=${SOURCES[2]}
      nx=282 x0=13584 dx=25 ny=94 y0=17372 dy=25 niter=50 |
      postfilter2 nw=4
      ''')

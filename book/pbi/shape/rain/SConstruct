@@ -52,7 +52,7 @@ Plot('data',['coord','border'],'Overlay')
 Result('raindata',['obsdata','data'],'SideBySideIso')
 
 Flow('obsdata','obsdata.hh','dd form=native')
-Flow('raindata','obsdata','window f1=2')
+Flow('raindata','obsdata','window f1=2 | put head=$SOURCE')
 
 def contour(cont):
     return '''
@@ -69,12 +69,11 @@ for niter in cases:
     if (niter == 0):
         niter = 100
         name = "Gauss Estimated"
-        extra = 'shape=y gauss=y pattern=${SOURCES[2]} eps=1.e-10'
-        Flow(lapinter,['raindata','obsdata','lapinter-40'],
-                  '''shapebin head=${SOURCES[1]}
-                  niter=%d xkey=0 ykey=1 filt1=25
-                  nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
-                  %s''' % (niter,extra))
+        extra = 'shape=y gauss=y pattern=${SOURCES[1]} eps=1.e-10'
+        Flow(lapinter,'raindata lapinter-40',
+             '''shapebin niter=%d xkey=0 ykey=1 filt1=25
+             nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+             %s''' % (niter,extra))
     else:
         if (niter < 0):
             niter = -niter
@@ -84,8 +83,8 @@ for niter in cases:
             prec = 0
             name = "Laplacian Regularization"
             extra = 'shape=n'
-        Flow([lapinter,pout],['raindata','obsdata'],
-             '''shapebin head=${SOURCES[1]} pout=${TARGETS[1]}
+        Flow([lapinter,pout],'raindata',
+             '''shapebin pout=${TARGETS[1]}
              niter=%d xkey=0 ykey=1 filt1=25
              nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
              %s''' % (niter,extra))
@@ -106,9 +105,9 @@ for seed in range(2000,2005):
          '''
          noise mean=152.776 var=1e6 rep=y seed=%d
           ''' % seed)
-    Flow(real,['raindata','obsdata',rand],
+    Flow(real,['raindata',rand],
          '''
-         shapebin head=${SOURCES[1]} shape=y pin=${SOURCES[2]}
+         shapebin shape=y pin=${SOURCES[1]}
          niter=100 xkey=0 ykey=1 filt1=25
          nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
          ''')
@@ -131,7 +130,7 @@ for niter in [10000,-40,0]:
     lapdat = 'lapdat%d' % niter
     lapstat = 'lapstat%d' % niter
     Flow(lapdat,[lapinter,'coord'],
-              'extract head=${SOURCES[1]} xkey=0 ykey=1')
+         'extract head=${SOURCES[1]} xkey=0 ykey=1')
     if (niter < 0):
         name = "Shaping Regularization"
     else:

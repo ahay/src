@@ -16,8 +16,7 @@ for mode in ['pz','ps']:
               '''segyread tape=$SOURCE
               hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
               ''',stdin=0)
-    Flow(mode+'cube',[mode,mode+'head'],
-              'intbin head=${SOURCES[1]} yk=cdp')
+    Flow(mode+'cube',mode,'intbin head=${SOURCES[1]} yk=cdp')
 
 Flow('pznail','pzcube','window n1=1 min1=0.796')
 Flow('psnail','pscube','window n1=1 min1=1.964')

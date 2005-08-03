@@ -41,11 +41,7 @@ for mode in ['pp','ps']:
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
          fldr=180 tracf=184 sx=188 sy=193
          ''',stdin=0)
-    Flow(mode+'cube',[mode,mode+'head'],
-              '''
-              intbin head=${SOURCES[1]} |
-              window n2=116 n3=132 min2=18 min3=15
-              ''')
+    Flow(mode+'cube',mode,'intbin | window n2=116 n3=132 min2=18 min3=15')
     Result(mode+'cube',
            '''byte gainpanel=all |
            grey3 flat=n frame3=%d frame2=%d frame1=%d title=%s

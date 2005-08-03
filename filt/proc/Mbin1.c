@@ -1,21 +1,20 @@
-/* Data binning in 1-D slices.
-*/
+/* Data binning in 1-D slices. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <float.h>
@@ -27,6 +26,7 @@ int main (int argc, char* argv[])
 {
     int id, nd, nt, it, ix, nx, interp;
     float *mm, *count, *dd, *offset, x0, dx, xmin, xmax, f, clip;
+    char *header;
     sf_file in, out, head, fold, pattern;
 
     sf_init (argc,argv);
@@ -40,7 +40,13 @@ int main (int argc, char* argv[])
     /* create coordinates */
     offset = sf_floatalloc(nd);
 
-    head = sf_input("head");
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
     sf_floatread (offset,nd,head);
     sf_fileclose (head);

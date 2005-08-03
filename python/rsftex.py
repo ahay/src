@@ -211,8 +211,7 @@ _styles = {
 _pos = 0
 
 def _link(name):
-     link = '<a href="../../../%s.html">%s</a>' % \
-            (rsfdoc.progs[name].name, name)
+     link = '<a href="/RSF/%s.html">%s</a>' % (rsfdoc.progs[name].name, name)
      return link
  
 def colorize(target=None,source=None,env=None):

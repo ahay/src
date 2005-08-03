@@ -1,6 +1,6 @@
 /* Read data from an RSF file.
  *
- * MATLAB usage: array = rsf_read(file[,size][,same])
+ * MATLAB usage: rsf_read(data,file[,same])
  *
  */
 /*
@@ -51,30 +51,24 @@ void mexFunction(int nlhs, mxArray *plhs[],
     sf_file file;
 
     /* Check for proper number of arguments. */
-    if (nrhs < 1) {
-	mexErrMsgTxt("One or more inputs required.");
-    } else if (nrhs > 3) {
-	mexErrMsgTxt("Too many inputs.");
-    } else if (nlhs > 1) { 
-	mexErrMsgTxt("Too many output arguments.");
-    }
+    if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
 
-    /* First input must be a string. */
-    if (!mxIsChar(prhs[0]))
-	mexErrMsgTxt("First input must be a string.");
+    /* Second input must be a string. */
+    if (!mxIsChar(prhs[1]))
+	mexErrMsgTxt("Second input must be a string.");
 
-    /* First input must be a row vector. */
-    if (mxGetM(prhs[0]) != 1)
-	mexErrMsgTxt("First input must be a row vector.");
+    /* Second input must be a row vector. */
+    if (mxGetM(prhs[1]) != 1)
+	mexErrMsgTxt("Second input must be a row vector.");
     
     /* Get the length of the input string. */
-    taglen = mxGetN(prhs[0]) + 1;
+    taglen = mxGetN(prhs[1]) + 1;
 
     /* Allocate memory for input string. */
     tag = mxCalloc(taglen, sizeof(char));
 
     /* Copy the string data from prhs[0] into a C string. */
-    status = mxGetString(prhs[0], tag, taglen);
+    status = mxGetString(prhs[1], tag, taglen);
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
@@ -108,29 +102,20 @@ void mexFunction(int nlhs, mxArray *plhs[],
     
     dim = sf_filedims(file,n);
     type = sf_gettype (file);
+    esize = sf_esize(file);
+
+    /* Input 1 must be a number. */
+    if (!mxIsDouble(prhs[0])) mexErrMsgTxt("First input must be double.");
+    
+    /* data pointers */
+    p = mxGetPr(prhs[0]);
+    
+    /* get data size */
+    nd = mxGetNumberOfElements(prhs[0]);
+
     pos = sf_tell(file);
+    if (same) sf_seek(file,shift,SEEK_CUR);
 
-    if (!sf_histint(file,"esize",&esize)) esize=sizeof(float);
-
-    /* Output */
-    if (1 == nrhs) { /* read everything */
-	nd = 1;
-	for (i=0; i < dim; i++) {
-	    nd *= n[i];
-	}
-
-	plhs[0] = mxCreateNumericArray(dim,n,mxDOUBLE_CLASS,mxREAL);
-    } else {
-	if (mxGetN(prhs[1]) != 1 || mxGetM(prhs[1]) !=1) 
-	    mexErrMsgTxt("Second input must be a scalar value.\n");
-	nd = (int) mxGetScalar(prhs[1]);
-
-	if (same) sf_seek(file,shift,SEEK_CUR);
-
-	plhs[0] = mxCreateDoubleMatrix(nd,1,mxREAL);
-    }
-
-    p = mxGetPr(plhs[0]);
     for (j=0, nbuf /= esize; nd > 0; nd -= nbuf) {
 	if (nbuf > nd) nbuf=nd;
 	

@@ -38,12 +38,20 @@ int main(int argc, char* argv[])
     off_t pos;
     struct skey *sorted;
     float *unsorted;
-    char *trace;
+    char *trace, *header;
     sf_file in, head, out;
 
     sf_init (argc,argv);
+    in = sf_input ("in");
+    out = sf_output ("out");
  
-    head = sf_input("head");
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
     if (SF_FLOAT != sf_gettype(head))
 	sf_error("Need float header");
     n2 = sf_filesize(head);
@@ -60,9 +68,6 @@ int main(int argc, char* argv[])
     sf_fileclose(head);
 
     qsort(sorted,n2,sizeof(struct skey),key_compare);
-
-    in = sf_input ("in");
-    out = sf_output ("out");
  
     if (!sf_histint(in,"n1",&n1)) n1=1;
     if (!sf_histint(in,"esize",&esize)) esize=4;

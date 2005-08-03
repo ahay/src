@@ -10,9 +10,8 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 for dat in ('curve','linear','random','marm'):
     input = 'input.%s.segy' % dat
     Fetch(input,'ray',private)
-    Flow(dat,input,
-         '''segyread tape=$SOURCE data=1
-         hfile=head.A bfile=head.B tfile=head.T''',
+    Flow([dat,'./A'+dat,'./B'+dat],input,
+         'segyread tape=$SOURCE read=d hfile=${TARGETS[1]} bfile=${TARGETS[2]}',
          stdin=0)
 
 Flow('curve2','curve','window min1=1.2 max1=2 | bandpass fhi=60')

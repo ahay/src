@@ -17,6 +17,6 @@ for line in (284,288,549):
             segyread tape=$SOURCE
             tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
             ''',stdin=0)
-       Flow(rsf,[rsf+'-0','t'+rsf],'intbin head=${SOURCES[1]} xk=cdp yk=fldr')
+       Flow(rsf,rsf+'-0','intbin xk=cdp yk=fldr')
 
 End()

@@ -9,7 +9,7 @@ def Galilee(name,grad=1):
 
     Flow('data','galilee.h','dd data_format=native_float')
     Flow('mask','data','window n1=1 f1=2 | mask max=%g' % base)
-    Flow('triplets',['data','mask'],'headerwindow mask=${SOURCES[1]}')
+    Flow('triplets','data mask','headerwindow mask=${SOURCES[1]}')
 
     Flow(name,'triplets',
          '''

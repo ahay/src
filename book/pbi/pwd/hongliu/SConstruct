@@ -12,7 +12,7 @@ Flow(['zeng','./hzeng','./bzeng','tzeng'],'mig16.sgy',
      segyread tape=$SOURCE hfile=${TARGETS[1]} bfile=${TARGETS[2]}
      tfile=${TARGETS[3]}
      ''',stdin=0)
-Flow('zeng3','zeng tzeng','intbin head=${SOURCES[1]} yk=cdp')
+Flow('zeng3','zeng','intbin yk=cdp')
 Flow('bin3','zeng3','byte')
 
 Result('zeng3','bin3',

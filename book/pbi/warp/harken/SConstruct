@@ -23,7 +23,7 @@ for case in (1,2):
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
          fldr=216 tracf=220
          ''',stdin=0)
-    Flow(cube,[output,output+'head'],'intbin head=${SOURCES[1]}')
+    Flow(cube,output,'intbin')
     Result(cube,
            '''byte gainpanel=all |
            grey3 flat=n frame3=40 frame2=40 frame1=500 title=%s

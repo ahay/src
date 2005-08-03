@@ -1,6 +1,6 @@
 /* Read data from an RSF file.
  *
- * MATLAB usage: rsf_write(file,data[,same])
+ * MATLAB usage: rsf_write(data,file[,same])
  *
  */
 /*
@@ -34,7 +34,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     const int *dim;
     size_t nbuf = BUFSIZ, nd, j;
     char *tag, *argv[] = {"matlab","-"}, *par, *filename;
-    double *dr, *di;
+    double *dr;
     float *p;
     char buf[BUFSIZ], key[5];
     bool same;
@@ -47,21 +47,21 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (nrhs < 2 || nrhs > 3) mexErrMsgTxt("Two or three inputs required.");
     
     /* First input must be a string. */
-    if (!mxIsChar(prhs[0]))
+    if (!mxIsChar(prhs[1]))
 	mexErrMsgTxt("First input must be a string.");
 
     /* First input must be a row vector. */
-    if (mxGetM(prhs[0]) != 1)
+    if (mxGetM(prhs[1]) != 1)
 	mexErrMsgTxt("First input must be a row vector.");
     
     /* Get the length of the input string. */
-    taglen = mxGetN(prhs[0]) + 1;
+    taglen = mxGetN(prhs[1]) + 1;
 
     /* Allocate memory for input string. */
     tag = mxCalloc(taglen, sizeof(char));
 
-    /* Copy the string data from prhs[0] into a C string. */
-    status = mxGetString(prhs[0], tag, taglen);
+    /* Copy the string data from prhs[1] into a C string. */
+    status = mxGetString(prhs[1], tag, taglen);
     if (status != 0) 
 	mexWarnMsgTxt("Not enough space. String is truncated.");
 
@@ -95,6 +95,8 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (same) {
 	file = sf_input(tag);
 	filename = sf_histstring(file,"in");
+	sf_fileclose(file);
+
 	if (NULL == filename) mexErrMsgTxt("No in= in file.");
 	file2 = fopen(filename,"w+b");
 	if (NULL == file2) 
@@ -107,21 +109,20 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     /* Input 2 must be a number. */
-    if (!mxIsDouble(prhs[1])) mexErrMsgTxt("Input 2 must be double.");
+    if (!mxIsDouble(prhs[0])) mexErrMsgTxt("Input 2 must be double.");
     
     /* data pointers */
-    dr = mxGetPr(prhs[1]);
-    di = mxGetPr(prhs[1]);
+    dr = mxGetPr(prhs[0]);
     
     /* get data dimensions */
-    ndim=mxGetNumberOfDimensions(prhs[1]);
-    dim=mxGetDimensions(prhs[1]);
+    ndim=mxGetNumberOfDimensions(prhs[0]);
+    dim=mxGetDimensions(prhs[0]);
 
     /* get data size */
-    nd = mxGetNumberOfElements(prhs[1]);
+    nd = mxGetNumberOfElements(prhs[0]);
 
     if (!same) {
-	sf_setformat(file,mxIsComplex(prhs[1])?"native_complex":"native_float");
+	sf_setformat(file,mxIsComplex(prhs[0])?"native_complex":"native_float");
    
 	/* Output */
 	for (i=0; i < ndim; i++) {
@@ -150,6 +151,7 @@ void mexFunction(int nlhs, mxArray *plhs[],
     if (same) {
 	shift = ftello(file2) - pos;
 	fclose(file2);
+    } else {
+	sf_fileclose(file);
     }
-    sf_fileclose(file);
 }

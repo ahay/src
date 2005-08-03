@@ -10,17 +10,14 @@ Fetch('datacassisAll.su.poscdp','cassis',private)
 Flow(['all','head'],'datacassisAll.su.poscdp',
      'segyread tape=$SOURCE tfile=${TARGETS[1]} su=1 endian=0',
      stdin=0)
-Flow(['cassis','junk1','junk2'],['all','head'],
-     '''intbin head=${SOURCES[1]} > ${TARGETS[0]} &&
-     window < ${TARGETS[0]} f2=196 > ${TARGETS[1]} &&
-     window < ${TARGETS[0]} n2=196 > ${TARGETS[2]} &&
-     cat axis=2 ${TARGETS[1]} ${TARGETS[2]} > ${TARGETS[0]} &&
-     echo o3=0 d3=0.0125 label3=offset >> ${TARGETS[0]} &&
-     echo o2=0.5 d2=0.025 label2=shot >> ${TARGETS[0]}''',
-     stdout=-1)
+Flow('cassis0','all','intbin')
+Flow('cassis1','cassis0','window f2=196')
+Flow('cassis2','cassis0','window n2=196')
+Flow('cassis','cassis1 cassis2',
+     'cat axis=2 ${SOURCES[1]} | put o3=0 d3=0.0125 label3=offset o2=0.5 d2=0.025 label2=shot')
 Flow('cmp','cassis','transp plane=23 memsize=500 | shot2cmp')
 
-mutter = 'slope0=1.3 tp=0.5'
+mutter = 'slope0=1.3 tgp=0.5'
 mutter0 = 'abs=n x0=1 v0=1.5 tp=1'
 
 Flow('vscan','cmp',

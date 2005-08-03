@@ -27,7 +27,7 @@ int main (int argc, char* argv[])
     int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp;
     float *mm, *count, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, clip;
-    char *xk, *yk;
+    char *xk, *yk, *header;
     sf_file in, out, head, fold;
 
     sf_init (argc,argv);
@@ -40,7 +40,14 @@ int main (int argc, char* argv[])
 
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);
-    head = sf_input("head");
+
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
 
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float header");
     if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");

@@ -25,6 +25,7 @@ int main(int argc, char* argv[])
 {
     int nd, m1, na, nr, niter;
     float *rr, *dd, *coord, o1, d1, eps;
+    char *header;
     sf_file in, out, head;
 
     sf_init (argc,argv);
@@ -59,7 +60,13 @@ int main(int argc, char* argv[])
     coord = sf_floatalloc(nd);
     dd = sf_floatalloc(nd);
 
-    head = sf_input("head");
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
     sf_floatread (coord,nd,head);
     sf_fileclose (head);

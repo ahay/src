@@ -380,15 +380,8 @@ int main(int argc, char *argv[])
 	sf_putint(out,"n2",n2);
 	sf_putfloat(out,"d1",dt);
 	sf_putfloat(out,"o1",0.);
-	sf_setformat(out, "native_float");
-	sf_fileflush(out,NULL);
-    
-	if (su) {
-	    sf_setform(out,SF_NATIVE);
-	    ftrace = NULL;
-	} else {
-	    ftrace = sf_floatalloc (ns);
-	}
+	sf_setformat(out, "native_float");    
+	ftrace = su? NULL: sf_floatalloc (ns);
     } else {
 	out = NULL;
 	ftrace = NULL;
@@ -399,9 +392,15 @@ int main(int argc, char *argv[])
 	sf_putint(hdr,"n1",SF_NKEYS);
 	sf_putint(hdr,"n2",n2);
 	sf_setformat(hdr,"native_int");
+
+	if (NULL == (headname = sf_getstring("tfile"))) headname = "tfile";
+	/* output trace header file */
+	if (NULL != out) sf_putstring(out,"head",headname);
     } else {
 	hdr = NULL;
     }
+
+    if (NULL != out) sf_fileflush(out,NULL);
     
     switch (read[0]) {
 	case 'h': /* header only */

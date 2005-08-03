@@ -33,6 +33,7 @@ int main (int argc, char* argv[])
     bool prec, pef;
     int id, nd, nt, it, nx, filt, niter, three=3, i;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
+    char *header;
     filter bb;
     sf_file in, out, head;
 
@@ -47,7 +48,13 @@ int main (int argc, char* argv[])
     /* create coordinates */
     offset = sf_floatalloc(nd);
 
-    head = sf_input("head");
+    header = sf_getstring("head");
+    if (NULL == header) { 
+	header = sf_histstring(in,"head");
+	if (NULL == header) sf_error("Need head=");
+    }
+
+    head = sf_input(header);
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float head");
     sf_floatread (offset,nd,head);
     sf_fileclose (head);

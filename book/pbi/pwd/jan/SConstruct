@@ -22,7 +22,7 @@ for case in range(len(lines)):
          segyread tape=$SOURCE
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
          ''',stdin=0)
-    Flow(test,[line,head],'intbin head=${SOURCES[1]} xk=cdpt yk=cdp')     
+    Flow(test,line,'intbin xk=cdpt yk=cdp')     
     Flow(data,test,'window n3=1 min1=5 max1=8 | bandpass fhi=25')
     Plot(data,
          'grey title=Input clip=1591620 label2=Channel label1=%s' %

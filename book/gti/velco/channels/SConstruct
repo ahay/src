@@ -6,7 +6,8 @@ Flow('shots','shots.hh','dd form=native')
 Flow('midpt',None,'math n1=1 n2=440 d2=2 o2=0 n3=440 d3=2 o3=0 output="(x2+x3)/2" ')
 Flow('offset','midpt','math output="(x2-x3)/2" ')
 Flow('head','offset midpt','cat axis=1 ${SOURCES[1]} | dd type=int | put n3=1 n2=193600')
-Flow('cmps','shots head','put n3=1 n2=193600 | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=-200 xmax=200')
+Flow('cmps','shots head',
+     'put n3=1 n2=193600 | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=-200 xmax=200')
 
 Flow('cmp1','cmps','window j3=2 j2=2           | put d2=15 o2=-1500 d3=7.5')
 Flow('cmp2','cmps','window j3=2 j2=2 f3=1 f2=1 | put d2=15 o2=-1500 d3=7.5')
