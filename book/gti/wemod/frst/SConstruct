@@ -1,0 +1,428 @@
+from rsfproj import *
+import channels
+import zomig,spmig
+
+# Array sizes (number of cells)
+nx     =  360   
+ny     =  200
+nz_res =   50
+nz_ovr =  200
+
+# Cell sizes (in meters)
+dx     =  15          
+dy     =  15
+dz_res =   3
+dz_ovr =  10
+
+# Axis origin (in meters)
+ox     =    0          
+oy     =    0          
+oz_res =  -20
+oz_ovr =  130
+
+
+xy_pad = 40
+as_width   = 0.8
+as_shift   = 0.8
+as_height0 = 0.5
+as_height1 = 0.8
+
+as_shape   = 1.2   
+
+bd_depth  =  0.8
+bd_zshift = -0.15
+
+md_depth  =  1.2
+md_zshift =  0.1
+
+bd_sand = 0.3
+md_sand = 0.2
+
+as_sand = 1.0
+
+na_sand0 = 0.4
+na_sand1 = 0.9
+
+bk_std_dev = 0.007
+sd_std_dev = 0.01
+
+oriu = [1,0,0]
+oriv = [0,1,0]
+oriw = [0,0,1]
+
+bk_ru = 1000         
+bk_rv = 1000
+bk_rw =    1
+
+sd_ru =  200         
+sd_rv =  200
+sd_rw =    1
+
+taper_thickness_res =    0
+taper_thickness_ovr = 2000
+
+taper_phi = 0.35
+taper_rho = 1.687
+taper_vp = 1964.573
+taper_vs =  509.796
+
+memsize = 512
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+# ------------------------------------------------------------
+
+channels.make_reservoir (   private=private, memsize=memsize, xy_pad=xy_pad,
+                            nx=nx,    ny=ny,    nz=nz_res,
+                            dx=dx,    dy=dy,    dz=dz_res,
+                            ox=ox,    oy=oy,    oz=oz_res,
+                            oriu=oriu,      oriv=oriv,      oriw=oriw,
+                            bk_ru=bk_ru,    bk_rv=bk_rv,    bk_rw=bk_rw,
+                            sd_ru=sd_ru,    sd_rv=sd_rv,    sd_rw=sd_rw,
+                            bk_std_dev=bk_std_dev,  sd_std_dev=sd_std_dev,
+                            bd_depth=bd_depth,      md_depth=md_depth,
+                            bd_zshift=bd_zshift,    md_zshift=md_zshift,
+                            as_width=as_width,      as_shift=as_shift, 
+                            as_height0=as_height0,  as_height1=as_height1, 
+                            as_shape=as_shape,      as_sand=as_sand,
+                            bd_sand=bd_sand,        md_sand=md_sand,
+                            na_sand0=na_sand0,      na_sand1=na_sand1,
+                            taper_thickness=taper_thickness_res, 
+                            taper_phi=taper_phi,    taper_rho=taper_rho,
+                            taper_vp=taper_vp,      taper_vs=taper_vs)
+
+# ------------------------------------------------------------
+
+channels.make_overburden (  memsize=memsize, xy_pad=xy_pad,
+                            nx=nx,    ny=ny,    nz=nz_ovr,
+                            dx=dx,    dy=dy,    dz=dz_ovr,
+                            ox=ox,    oy=oy,    oz=oz_ovr,
+                            oriu=oriu,      oriv=oriv,      oriw=oriw,
+                            bk_ru=bk_ru,    bk_rv=bk_rv,    bk_rw=bk_rw,
+                            bk_std_dev=bk_std_dev,
+                            taper_thickness=taper_thickness_ovr, 
+                            taper_phi=taper_phi,    taper_rho=taper_rho,
+                            taper_vp=taper_vp,      taper_vs=taper_vs)
+
+# ------------------------------------------------------------
+
+
+# ------------------------------------------------------------
+# PLOTTING
+# ------------------------------------------------------------
+def iplot3d(custom,par):
+    return '''
+    transp memsize=250 plane=23 |
+    transp memsize=250 plane=12 |
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=40  frame2=%d frame3=%d
+    label1=z label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+def dplot3d(custom,par):
+    return '''
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=170 frame2=%d frame3=%d
+    label1=t label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+def vplot3d(custom,par):
+    return '''
+    byte gainpanel=all %s |
+    grey3 labelrot=n flat=y title="" frame1=40  frame2=%d frame3=%d color=j
+    label1=z label2=x label3=y
+    ''' % (custom,par['xpad'],par['ypad'])
+
+def dplot2d(custom,par):
+    return '''
+    window |
+    grey labelrot=n pclip=100 title=""
+    label1=t label2=x %s
+    ''' % (custom)
+def iplot2d(custom,par):
+    return '''
+    window |
+    transp |
+    grey labelrot=n pclip=100 title=""
+    label1=z label2=x %s
+    ''' % (custom)
+
+
+# ------------------------------------------------------------
+# parameters
+# ------------------------------------------------------------
+par = {
+    'nt':1000,'ot':0,'dt':0.005,'kt':20,
+    'nw':251, 'ow':0,
+    'nx':440, 'ox':0,'dx':15,
+    'ny':280, 'oy':0,'dy':15,
+    'nz':50,  'oz':0,'dz':3,
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':16,'pmx':0,'pmy':0,
+    'misc':'incore=y'
+    }
+
+par['dw']=1./(par['nt']*par['dt'])
+
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['ymin']=par['oy']
+par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+
+par['xpad']=par['nx']/2.
+par['ypad']=par['ny']/2.
+
+par['xsou']=par['ox'] + par['xpad'] * par['dx']
+par['ysou']=par['oy'] + par['ypad'] * par['dy']
+
+par['ft']=par['kt']*par['dt']
+
+# ------------------------------------------------------------
+
+# '0' = reservoir
+# '1' = overburden
+
+# ------------------------------------------------------------
+
+def flip():
+    return '''
+    transp memsize=250 plane=23 |
+    transp memsize=250 plane=12 |
+    reverse which=1 opt=i |
+    put axis1=z axis2=x axis3=y
+    '''
+
+Flow('vp0','res_vp_noise_taper',flip() )
+Flow('vp1','ovr_vp_noise_taper',flip() )
+
+Flow('ro0','res_rho_noise_taper',flip() )
+Flow('ro1','ovr_rho_noise_taper',flip() )
+
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# density
+Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
+Result('den','den',vplot3d('pclip=100 bias=1.5 allpos=y',par))
+# ------------------------------------------------------------
+# velocity
+Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' %par)
+Result('vel','vel',vplot3d('pclip=100 bias=2297 allpos=y',par))
+Flow(  'ovb','vp1', 'window n1=200    | put o1=0 o3=0' %par)
+Result('ovb','ovb',vplot3d('pclip=100 bias=1500 allpos=y',par))
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# slowness (true)
+Flow('slo','vel',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('slo','slo',
+       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+
+# slowness (smooth)
+Flow('slx','vel',
+     '''
+     math "output=1/input" |
+     smooth rect1=101 rect2=51 rect3=51 |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('slx','slx',
+       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+
+# slowness (overburden)
+Flow('wat','slo','window n3=2 | put d3=75 | math output=0.000666')
+
+Flow('ovs','ovb',
+     '''
+     math "output=1/input" |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+Result('ovs','ovs',
+       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+
+# ------------------------------------------------------------
+
+# acoustic impedance
+Flow('aim','vel den','math v=${SOURCES[1]} d=${SOURCES[1]} output=v*d', stdin=0)
+Result('aim','aim',vplot3d('pclip=100 bias=1 allpos=y',par))
+
+# reflectivity
+Flow('ref','aim','ai2refl')
+Flow('rrr','ref','transp memsize=250 plane=12 | transp memsize=250 plane=23')
+Result('rrr','rrr',iplot3d('pclip=99',par))
+
+
+# ------------------------------------------------------------
+
+Flow('r2d','ref','window squeeze=n n3=1 f3=140')
+Flow('r3d','ref','window')
+
+Flow('v2d','vel','window squeeze=n n3=1 f3=140')
+Flow('v3d','vel','window')
+
+Flow('o2d','ovs','window squeeze=n n2=1 f2=140')
+Flow('o3d','ovs','window')
+
+Flow('s2d','slo','window squeeze=n n2=1 f2=140')
+Flow('s3d','slo','window')
+
+Flow('x2d','slx','window squeeze=n n2=1 f2=140')
+Flow('x3d','slx','window')
+# ------------------------------------------------------------
+# wavelet
+par['frq'] = 40 # frequency
+
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=0
+     n2=1      d2=%(dx)g o2=%(xsou)g
+     n3=1      d3=%(dy)g o3=%(ysou)g |
+     ricker1 frequency=%(frq)s |
+     put label1=t label2=x label3=y
+     ''' % par)
+Result('wav','wav','graph title=" "')
+
+# ------------------------------------------------------------
+# 1-D convolution
+# ------------------------------------------------------------
+
+Flow('t2d',['r2d','v2d'],
+     '''
+     depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+     ricker1 frequency=%(frq)s |
+     put label1=t
+     ''' % par )
+Flow('t3d',['r3d','v3d'],
+     '''
+     depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+     ricker1 frequency=%(frq)s |
+     put label1=t
+     ''' % par )
+
+# ------------------------------------------------------------
+# SHOT-RECORD
+# ------------------------------------------------------------
+# the wavelet is embedded in the source wavefield;
+# the reflectivity is made of delta functions
+
+# S-R modeling/migration (2-D)
+Flow('u2d','wav',
+     '''
+     fft1 |
+     window squeeze=n n1=%(nw)d min1=%(ow)g |
+     pad beg2=%(xpad)d n2out=%(nx)d |
+     put label1=w label2=x label3=y |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 
+     ''' % par)
+
+zomig.Cdtone('u2do','u2d','o2d',par)       #   source wavefield through overburden
+spmig.model('e2do','s2d','u2do','r2d',par) # shot-record modeling in reservoir
+zomig.Cdtone('e2d','e2do','o2d',par)       # receiver wavefield through overburden
+Flow('c2d','e2d',
+     '''
+     window | transp memsize=250 |
+     pad n1out=1001 | fft1 inv=y |
+     window min1=%(ft)g | pad n1out=2000 |
+     put o1=0 label1=t
+     ''' % par)                            # time-domain shot record
+spmig.image('j2d','s2d','u2do','e2do',par) # shot-record migration
+
+# ------------------------------------------------------------
+
+# S-R modeling/migration (3-D)
+Flow('u3d','wav',
+     '''
+     fft1 |
+     window squeeze=n n1=%(nw)d min1=%(ow)g |
+     pad beg2=%(xpad)d n2out=%(nx)d |
+     pad beg3=%(ypad)d n3out=%(ny)d |
+     put label1=w label2=x label3=y |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23 
+     ''' % par)
+
+zomig.Cdtone('u3do','u3d','o3d',par)       #   source wavefield through overburden
+spmig.model('e3do','s3d','u3do','r3d',par) # shot-record modeling in reservoir
+zomig.Cdtone('e3d','e3do','o3d',par)       # receiver wavefield through overburden
+Flow('c3d','e3d',
+     '''
+     window | transp memsize=250 |
+     pad n1out=1001 | fft1 inv=y |
+     window min1=%(ft)g | pad n1out=2000 |
+     put o1=0 label1=t
+     ''' % par)                            # time-domain shot record
+spmig.image('j3d','s3d','u3do','e3do',par) # shot-record migration
+
+
+# ------------------------------------------------------------
+# SURVEY SINKING
+# ------------------------------------------------------------
+Flow('m2d',['r2d','v2d'],
+     '''
+     depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+     ricker1 frequency=%(frq)s | 
+     time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23
+     ''' % par )
+
+Flow('m3d',['r3d','v3d'],
+     '''
+     depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
+     ricker1 frequency=%(frq)s | 
+     time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
+     transp memsize=250 plane=12 | transp memsize=250 plane=23
+     ''' % par )
+
+# S-S modeling/migration (2-D)
+zomig.model('d2do','s2d','m2d',par)
+zomig.Cdttwo('d2d','d2do','o2d',par)
+Flow('f2d','d2d',
+     '''
+     window | transp memsize=250 |
+     pad n1out=1001 | fft1 inv=y
+     ''' % par )
+zomig.image('i2d','x2d','d2do',par)
+
+# S-S modeling/migration (3-D)
+zomig.model('d3d','s3d','m3d',par)
+zomig.Cdttwo('d3dw','d3d','o3d',par)
+Flow('f3d','d3dw',
+     '''
+     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+     pad n1out=1001 | fft1 inv=y
+     ''' % par )
+zomig.image('i3d','x3d','d3do',par)
+
+# ------------------------------------------------------------
+# RESULTS 2D
+Result('t2d','t2d','window max1=0.25         |' + dplot2d('',par)) # data convolution
+Result('c2d','c2d','window min1=1.5 max1.3.5 |' + dplot2d('',par)) # data S-R
+Result('f2d','f2d','window min1=1.5 max1.3.5 |' + dplot2d('',par)) # data S-S
+
+Result('m2d','m2d',iplot2d('',par)) # image convolution
+Result('j2d','j2d',iplot2d('',par)) # image S-R
+Result('i2d','i2d',iplot2d('',par)) # image S-S
+
+# RESULTS 3D
+Result('t3d','t3d', 'window max1=0.25        |' +  dplot3d('pclip=99.8',par)) # data convolution
+#Result('c3d','c3d','window min1=1.5 max1.3.5 |' + dplot3d('pclip=99.8',par)) # data S-R
+Result('f3d','f3d','window min1=1.5 max1.3.5 |' + dplot3d('pclip=99.8',par)) # data S-S
+
+Result('m3d','m3d',iplot3d('pclip=99'  ,par)) # image convolution
+#Result('j3d','j3d',iplot3d('pclip=99'  ,par)) # image S-R
+Result('i3d','i3d',iplot3d('pclip=99'  ,par)) # image S-S
+
+# ------------------------------------------------------------
+
+End()
