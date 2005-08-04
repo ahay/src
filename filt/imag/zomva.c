@@ -218,7 +218,7 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		if(iz>0) { /* continuation */
 		    fslice_get(Bslow,iz-1,ss[0]);
 		    SOOP( ss[ily][ilx] *= twoway; );
-		    ssr_ssf(w,dw,so,ss,nr[iz],sm[iz]);
+		    ssr_ssf(w,dw,so,ss,nr[iz-1],sm[iz-1]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		} /* end continuation */
 

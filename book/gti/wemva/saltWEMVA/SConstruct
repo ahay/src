@@ -13,33 +13,42 @@ def igrey(custom,par):
     grey  labelrot=n wantaxis=y wanttitle=y title="" pclip=100
     %s %s
     ''' % (par['greypar'],custom)
-# ------------------------------------------------------------
-par = {
-    'nz':120,  'dz':5.0,  'oz':0,
-    'nx':250,  'dx':15.0, 'ox':-1875,
-    'nt':1000, 'dt':0.004,'ot':0,
-    'ns':1,'fs':0,'js':1,
-#
-    'nw':120, 'ow':1, 'jw':1,
-#    'nw':1,  'ow':4.5, 'jw':1,
-#    
-    'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,
-    'tmx':32,'tmy':0,'pmx':128,'pmy':0,'misc':'incore=y',
-#
-    'nsc':1,
-    'greypar':'min2=-1800 max2=1800 grid=y gridcol=0 g1num=500 g2num=500',
-    'vel':1000,'frq':12
-    }
 
 # ------------------------------------------------------------
+par = {
+    'nx':500, 'ox':10925,'dx':150,    'nx':200,
+    'nt':2000,'ot':0,   'dt':0.004,   
+    'nz':950, 'oz':0,   'dz':25,      'nz':250, 'dz':50,
+    'ns':1,'fs':0,'js':1,
+#
+#    'nw':360,'ow':1,'jw':1,
+    'nw':100,'ow':1,'jw':1,
+#    'nw':1,  'ow':6,'jw':1,
+#
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':0,'pmy':0,'misc':'incore=y',
+#
+    'nsc':1,
+    'greypar':'',
+    'vel':10000,'frq':6
+    }
+# ------------------------------------------------------------
 # VELOCITY
-Flow('vel',None,
+velo = 'sigsbee2a_migvel.sgy'
+Fetch(velo,'sigsbee')
+Flow('zvelo tzvelo ./vhead ./bvhead',velo,
      '''
-     spike nsp=1 mag=1000
-     n1=%(nz)d d1=%(dz)g o1=0 |
-     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
-     put label1=z label2=x label3=y 
-     ''' % par )    
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+Flow('vel','zvelo',
+     '''
+     put d1=25 o2=10025 d2=37.5 label1=z label2=x |
+     window n1=%(nz)d f1=244 j1=2
+     ''' % par)
 Result('vel','vel',igrey('color=F allpos=y',par))
 
 # REFLECTIVITY
@@ -47,7 +56,7 @@ Flow('ref',None,
      '''
      spike nsp=1 mag=1 
      n1=%(nx)d d1=%(dx)g o1=%(ox)g
-     n2=%(nz)d d2=%(dz)g o2=%(oz)g k2=100 |
+     n2=%(nz)d d2=%(dz)g o2=%(oz)g k2=200 |
      spray axis=2 n=1 o=0 d=1 |
      put label1=x label2=y label3=z 
      ''' % par )    
@@ -55,5 +64,5 @@ Result('ref','ref','window | transp |' + igrey('pclip=100',par))
 # ------------------------------------------------------------
 
 wemva.test(par)
-    
+
 End()

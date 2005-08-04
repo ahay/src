@@ -292,7 +292,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 	    LOOP( ww_r[iy][ix] = 0; );	    
 	    for (iz=az.n-1; iz>0; iz--) {
 		LOOP( ww_r[iy][ix] += www[iz][iy][ix]*rrr[iz][iy][ix]; );
-		ssr_ssf(w,ww_r,ssp[iz],ssp[iz-1],nr[iz],sm[iz]);
+		ssr_ssf(w,ww_r,ssp[iz],ssp[iz-1],nr[iz-1],sm[iz-1]);
 	    }
 
 	    fslice_put(uwfl,iw,ww_r[0]);
@@ -330,7 +330,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 		LOOP( ww_s[iy][ix] *= rr  [iy][ix];
 		      ww_r[iy][ix] += ww_s[iy][ix]; );
 		
-		ssr_ssf(w,ww_r,so,ss,nr[iz],sm[iz]);
+		ssr_ssf(w,ww_r,so,ss,nr[iz-1],sm[iz-1]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 	    fslice_put(uwfl,iw,ww_r[0]);

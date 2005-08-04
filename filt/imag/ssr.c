@@ -198,3 +198,94 @@ void ssr_ssf(
 }
 
 /*------------------------------------------------------------*/
+
+void ssr_sso(
+    float complex    w /* frequency */,
+    complex float **wx /* wavefield */,
+    float         **so /* slowness  */, 
+    float         **ss /* slowness  */,
+    int             nr /* nr. of ref slo */,
+    float          *sm /* ref slo squared */
+    )
+/*< Wavefield extrapolation by SSF w/ one reference slowness >*/
+{
+    float complex w2,co,cc;
+    int ix,iy,jr;
+    float s;
+
+    w2 = w*w;
+
+    /* w-x part 1 */
+/*    LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];*/
+/*	  wx[iy][ix] *= cexpf(-w*s*az.d); );*/
+
+    /* FFT */
+    KOOP( pk[iy][ix] = 0.; );
+    LOOP( pk[iy][ix] = wx[iy][ix]; );
+    fft2(false,pk);
+
+    jr=0;
+/*    co =       csqrtf(w2 * sm[jr]);*/
+    co = 0;
+    KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
+	  wk[iy][ix] = 
+	  pk[iy][ix] * cexpf((co-cc)*az.d); );
+
+/*    KOOP( wk[iy][ix] = pk[iy][ix] * cexpf((co)*az.d); );*/
+
+    /* IFT */
+    fft2(true,wk);
+    LOOP( wx[iy][ix] = wk[iy][ix]; );
+    
+    /* w-x part 2 */
+/*    LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];*/
+/*	  wx[iy][ix] *= cexpf(-w*s*az.d); );*/
+
+/*    taper2(wx);*/
+}
+
+/*------------------------------------------------------------*/
+
+void ssr_phs(
+    float complex    w /* frequency */,
+    complex float **wx /* wavefield */,
+    float         **so /* slowness  */, 
+    float         **ss /* slowness  */,
+    int             nr /* nr. of ref slo */,
+    float          *sm /* ref slo squared */
+    )
+/*< Wavefield extrapolation by phase-shift >*/
+{
+    float complex w2,cc;
+    int ix,iy,jr;
+    float d;
+
+    w2 = w*w;
+
+    /* FFT */
+    KOOP( pk[iy][ix] = 0.; );
+    LOOP( pk[iy][ix] = wx[iy][ix]; );
+    fft2(false,pk);
+
+    LOOP( wx[iy][ix] = 0;
+	  wt[iy][ix] = 0; );
+    for (jr=0; jr<nr; jr++) {
+	/* w-k */
+	KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
+	      wk[iy][ix] = 
+	      pk[iy][ix] * cexpf((-cc)*az.d); );
+
+	/* IFT */
+	fft2(true,wk);
+
+	/* accumulate wavefield */
+	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
+			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
+	      d = dsmax2/(d*d+dsmax2);
+	      wx[iy][ix] += wk[iy][ix]*d;
+	      wt[iy][ix] += d; );
+    }
+    LOOP( wx[iy][ix] /= wt[iy][ix]; );
+
+    taper2(wx);
+}

@@ -115,26 +115,6 @@ Flow('wave',None,
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
-# DELTA SLOWNESS
-# ------------------------------------------------------------
-
-Flow('dsl',None,
-     '''
-     spike nsp=1 mag=0.00005
-     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=050 l1=300
-     n2=1      d2=1      o2=0
-     n3=%(nz)d d3=%(dz)g o3=%(oz)g k3=450 l3=650 |
-     smooth rect1=25 rect3=100 |
-     rtoc |
-     put label1=x label2=y label3=z
-     ''' % par )
-#  k1=070 l1=080
-#  k3=150 l3=200 |
-
-# ------------------------------------------------------------
-
-
-# ------------------------------------------------------------
 # ZERO-OFFSET
 # ------------------------------------------------------------
 # data
@@ -153,22 +133,7 @@ zomig.Awftwo('woo','ddo','slo',par)
 
 # migration
 zomig.image('imgZ','slo','ddo',par)
-Result('imgZ','imgZ','window | transp |' + igrey('title="image" pclip=99'))
-
-# ------------------------------------------------------------
-zomig.s2i('dsl' ,'dimZ','woo','slo',par) # forward WEMVA
-zomig.i2s('dimZ','bslZ','woo','slo',par) # adjoint WEMVA
-# ------------------------------------------------------------
-
-Plot('dsl' ,'dsl' ,'window | real | transp |'+ igrey('title="dsl" color=F'))
-
-Plot('dimZ','dimZ','window | real | transp |'+ igrey('title="dim" pclip=99'))
-Plot('imgZ','imgZ','window |        transp |'+ igrey('title="img" pclip=99'))
-Plot('bslZ','bslZ','window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
-
-pplot.p2x2('scatZ','imgZ','dsl','dimZ','bslZ',0.5,0.55,-10,-12)
-# ------------------------------------------------------------
-
+Plot('imgZ','imgZ','window | transp |'+ igrey('title="img" pclip=99'))
 
 # ------------------------------------------------------------
 # SHOT-RECORD
@@ -180,23 +145,52 @@ Result('sone','sone',igrey('title="sone" pclip=99'))
 # wavefields
 spmig.wflds('dos','dor','wave','sone',par)
 spmig.datum('dds','ddr','sdt','dos','dor',par)
-zomig.Cwfone('wos','dos','slo',par) # source
-zomig.Awfone('wor','dor','slo',par) # receiver
+zomig.Cwfone('wos','dds','slo',par) # source
+zomig.Awfone('wor','ddr','slo',par) # receiver
 
 # migration
 spmig.imagePW('imgS','cig','slo','dds','ddr',par)
-Result('imgS','imgS','window | transp |' + igrey('title="image" pclip=99'))
+Plot('imgS','imgS','window | transp |'+ igrey('title="img" pclip=99'))
+
+for i in range(3):
+    par['xs']=200+i*50 - 10 # x start
+    par['xe']=200+i*50 + 10 # x end
+
+    dsl = 'dsl' + str(i)
+    Flow(dsl,None,
+         '''
+         spike nsp=1 mag=0.00005
+         n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=%(xs)d l1=%(xe)d
+         n2=1      d2=1      o2=0
+         n3=%(nz)d d3=%(dz)g o3=%(oz)g k3=450 l3=650 |
+         smooth rect1=25 rect3=100 |
+         rtoc |
+         put label1=x label2=y label3=z
+         ''' % par )
+    Plot(dsl,dsl,'window | real | transp |'+ igrey('title="dsl" color=F'))
+    
+    # WEMVA shot-record
+    scatS= 'scatS'+ str(i)
+    dimS = 'dimS' + str(i)
+    bslS = 'bslS' + str(i)
+    spmig.s2i(dsl, dimS,'wos','wor','slo',par) # forward
+    spmig.i2s(dimS,bslS,'wos','wor','slo',par) # adjoint
+
+    Plot(dimS,dimS,'window | real | transp |'+ igrey('title="dim" pclip=99'))
+    Plot(bslS,bslS,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
+    pplot.p2x2(scatS,'imgS',dsl,dimS,bslS,0.5,0.55,-10,-12)
+
+    # WEMVA zero-offset
+    scatZ= 'scatZ'+ str(i)
+    dimZ = 'dimZ' + str(i)
+    bslZ = 'bslZ' + str(i)
+    zomig.s2i(dsl ,dimZ,'woo','slo',par) # forward
+    zomig.i2s(dimZ,bslZ,'woo','slo',par) # adjoint
+
+    Plot(dimZ,dimZ,'window | real | transp |'+ igrey('title="dim" pclip=99'))
+    Plot(bslZ,bslZ,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
+    pplot.p2x2(scatZ,'imgZ',dsl,dimZ,bslZ,0.5,0.55,-10,-12)
 
 # ------------------------------------------------------------
-spmig.s2i('dsl' ,'dimS','wos','wor','slo',par) # forward WEMVA
-spmig.i2s('dimS','bslS','wos','wor','slo',par) # adjoint WEMVA
-# ------------------------------------------------------------
-
-Plot('dimS','dimS','window | real | transp |'+ igrey('title="dim" pclip=99'))
-Plot('imgS','imgS','window |        transp |'+ igrey('title="img" pclip=99'))
-Plot('bslS','bslS','window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
-pplot.p2x2('scatS','imgS','dsl','dimS','bslS',0.5,0.55,-10,-12)
-# ------------------------------------------------------------
-
 
 End()

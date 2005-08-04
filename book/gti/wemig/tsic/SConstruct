@@ -23,12 +23,12 @@ par = {
     'ns':50,  'os':0,    'ds':20, 'js':1, 'fs':0,
     'nz':600, 'oz':0,    'dz':10,
     'nt':2000,'ot':0,    'dt':0.005,
-    'vel2':1000,
+    'vel':2000, 'vel2':2000,
     'nw':100,'ow':1,'jw':1,
     #
     'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':0,'pmy':0,
-    'misc':'itype=t nht=200 oht=-0.75 dht=0.0075 jcx=1',
+    'misc':'itype=t nht=400 oht=-0.75 dht=0.00375 jcx=1',
     #    
     'SOU':2000,'ns':1,'os':1500,'ds':500,
     'REF':0
@@ -48,7 +48,7 @@ Flow('wave',None,
 # velocity
 Flow('vel',None,
      '''
-     spike nsp=1 mag=1000
+     spike nsp=1 mag=%(vel)g
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
      put label1=z label2=x
@@ -58,11 +58,11 @@ Flow('vel',None,
 Flow('slo','vel',
      'math output=1/input | transp | spray axis=2 n=1')
 
-for DIP in ('00','15','30'):
-#for DIP in (['00']):
+#for DIP in ('00','15','30'):
+for DIP in (['00']):
 
     par['REF'] = par['zcig'] - par['xcig'] * math.tan(math.pi*    float(DIP) /180.)
-    par['SOU'] = par['xcig'] + par['zcig'] * math.tan(math.pi*(30+float(DIP))/180.)
+    par['SOU'] = par['xcig'] - par['zcig'] * math.tan(math.pi*(30-float(DIP))/180.)
 
     # ------------------------------------------------------------ 
     # modeling
@@ -81,7 +81,7 @@ for DIP in ('00','15','30'):
     # kirchhoff data
     Flow(kir,[ref,dip],
          '''
-         kirmod vel=1000 vel2=%(vel2)g dip=${SOURCES[1]}
+         kirmod vel=%(vel)g vel2=%(vel2)g dip=${SOURCES[1]}
          nt=%(nt)d  dt=%(dt)g freq=5
          nh=%(nh)d  h0=%(oh)g  dh=%(dh)g
          ns=%(ns)d  s0=%(SOU)g ds=%(ds)g |
@@ -124,7 +124,7 @@ for DIP in ('00','15','30'):
             Flow(slz,cig,
                  '''
                  window n1=1 min1=%(xcig)g |
-                 slant adj=y p0=0 np=200 dp=20 |
+                 slant adj=y p0=0 np=400 dp=10 |
                  put label2=v
                  ''' % par)
             Result(slz,slz,'window |'+igrey('grid=y title=%s' %DIP))
@@ -172,6 +172,31 @@ for DIP in ('00','15','30'):
                  put label2=tan
                  ''' % par)
             Result(anh,anh,'window |'+igrey('grid=y title=%s' %DIP))
+
+# ------------------------------------------------------------
+# testing of slant-stack to angle transformation
+#200 oht=-0.75 dht=0.0075
+#p0=0 np=200 dp=20
+
+Flow('tsla',None,
+     '''
+     spike nsp=3 mag=1,1,1
+     n1=%(nz)d  o1=%(oz)g  d1=%(dz)g
+     n2=400 o2=0 d2=10 k2=150,200,250 l2=150,200,250
+     ''' % par)
+Plot('tsla','tsla','window |'+igrey('grid=y gridcol=5'))
+
+Flow('tvel','vel','window n2=1 min2=%(xcig)g' % par)
+Flow('tang',['tsla','tvel'],
+     '''
+     tshift a0=0 na=250 da=0.01 velocity=${SOURCES[1]} |
+     put label2=tan
+     ''' % par)
+Plot('tang','tang','window |'+igrey('grid=y gridcol=5'))
+
+Result('test',['tsla','tang'],'SideBySideAniso')
+# ------------------------------------------------------------
+
 
 
 End()

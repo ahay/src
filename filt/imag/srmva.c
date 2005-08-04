@@ -239,8 +239,8 @@ void srmva(bool inv     /* forward/adjoint flag */,
 
 		if(imz>0) { /* continuation */
 		    fslice_get(Bslow,imz-1,ss[0]);
-		    ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
-		    ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
+		    ssr_ssf(ws,dw_s,so,ss,nr[imz-1],sm[imz-1]);
+		    ssr_ssf(wr,dw_r,so,ss,nr[imz-1],sm[imz-1]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 

@@ -188,7 +188,7 @@ void camig(bool inv  /* forward/adjoint flag */,
 		
 		/* upward continuation */
 		fslice_get(slow,iz-1,ss[0]);
-		cam_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		cam_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
 
@@ -254,7 +254,7 @@ void cadtm(bool inv    /* forward/adjoint flag */,
 		fslice_get(slow,az.n-1,so[0]);
 		for (iz=az.n-1; iz>0; iz--) {
 		    fslice_get(slow,iz-1,ss[0]);
-		    cam_ssf(w,wx,so,ss,nr[iz],sm[iz]);
+		    cam_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 		

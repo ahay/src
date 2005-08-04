@@ -46,7 +46,7 @@ void fft2_init(int n1_, int n2_)
 	NULL == forw1 || NULL == invs1) 
 	sf_error("%s: KISS FFT allocation error",__FILE__);
 
-    fftscale = 1./(n1*n2);
+    fftscale = 1./sqrtf(n1*n2);
 }
 
 void fft2_close(void)
@@ -86,6 +86,12 @@ void fft2(bool inv           /* inverse/forward flag */,
 	    }
 	}
     } else {
+	for (i1=0; i1 < n1; i1++) {
+	    for (i2=0; i2<n2; i2++) {
+		pp[i2][i1] *= fftscale;
+	    }
+	}
+
 	for (i1=0; i1 < n1; i1++) {
 	    kiss_fft_stride(forw2,
 			    (const kiss_fft_cpx *) (pp[0]+i1), 
