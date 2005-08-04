@@ -368,7 +368,6 @@ Flow('c3d','e3d',
      ''' % par)                            # time-domain shot record
 spmig.image('j3d','s3d','u3do','e3do',par) # shot-record migration
 
-
 # ------------------------------------------------------------
 # SURVEY SINKING
 # ------------------------------------------------------------
