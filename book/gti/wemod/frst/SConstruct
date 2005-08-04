@@ -171,7 +171,8 @@ par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-par['xpad']=par['nx']/2.
+#par['xpad']=par['nx']/2.
+par['xpad']=200
 par['ypad']=par['ny']/2.
 
 par['xsou']=par['ox'] + par['xpad'] * par['dx']
@@ -265,8 +266,8 @@ Result('rrr','rrr',iplot3d('pclip=99',par))
 
 # ------------------------------------------------------------
 
-Flow('r2d','ref','window squeeze=n n3=1 f3=140')
-Flow('r3d','ref','window')
+Flow('r2d','ref','window squeeze=n n3=1 f3=140 | transp memsize=250 plane=12 | transp memsize=250 plane=23')
+Flow('r3d','ref','window                       | transp memsize=250 plane=12 | transp memsize=250 plane=23')
 
 Flow('v2d','vel','window squeeze=n n3=1 f3=140')
 Flow('v3d','vel','window')
@@ -300,12 +301,14 @@ Result('wav','wav','graph title=" "')
 
 Flow('t2d',['r2d','v2d'],
      '''
+     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s |
      put label1=t
      ''' % par )
 Flow('t3d',['r3d','v3d'],
      '''
+     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s |
      put label1=t
@@ -357,7 +360,8 @@ spmig.model('e3do','s3d','u3do','r3d',par) # shot-record modeling in reservoir
 zomig.Cdtone('e3d','e3do','o3d',par)       # receiver wavefield through overburden
 Flow('c3d','e3d',
      '''
-     window | transp memsize=250 |
+     transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
      pad n1out=1001 | fft1 inv=y |
      window min1=%(ft)g | pad n1out=2000 |
      put o1=0 label1=t
@@ -370,6 +374,7 @@ spmig.image('j3d','s3d','u3do','e3do',par) # shot-record migration
 # ------------------------------------------------------------
 Flow('m2d',['r2d','v2d'],
      '''
+     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s | 
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
@@ -378,6 +383,7 @@ Flow('m2d',['r2d','v2d'],
 
 Flow('m3d',['r3d','v3d'],
      '''
+     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s | 
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
@@ -399,7 +405,8 @@ zomig.model('d3d','s3d','m3d',par)
 zomig.Cdttwo('d3dw','d3d','o3d',par)
 Flow('f3d','d3dw',
      '''
-     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
      pad n1out=1001 | fft1 inv=y
      ''' % par )
 zomig.image('i3d','x3d','d3do',par)
@@ -407,21 +414,21 @@ zomig.image('i3d','x3d','d3do',par)
 # ------------------------------------------------------------
 # RESULTS 2D
 Result('t2d','t2d','window max1=0.25         |' + dplot2d('',par)) # data convolution
-Result('c2d','c2d','window min1=1.5 max1.3.5 |' + dplot2d('',par)) # data S-R
-Result('f2d','f2d','window min1=1.5 max1.3.5 |' + dplot2d('',par)) # data S-S
+Result('f2d','f2d','window min1=1.5 max1=3.5 |' + dplot2d('',par)) # data S-S
+Result('c2d','c2d','window min1=1.5 max1=3.5 |' + dplot2d('',par)) # data S-R
 
 Result('m2d','m2d',iplot2d('',par)) # image convolution
-Result('j2d','j2d',iplot2d('',par)) # image S-R
 Result('i2d','i2d',iplot2d('',par)) # image S-S
+Result('j2d','j2d',iplot2d('',par)) # image S-R
 
 # RESULTS 3D
-Result('t3d','t3d', 'window max1=0.25        |' +  dplot3d('pclip=99.8',par)) # data convolution
-#Result('c3d','c3d','window min1=1.5 max1.3.5 |' + dplot3d('pclip=99.8',par)) # data S-R
-Result('f3d','f3d','window min1=1.5 max1.3.5 |' + dplot3d('pclip=99.8',par)) # data S-S
+Result('t3d','t3d','window max1=0.25         |' + dplot3d('pclip=99.8',par)) # data convolution
+Result('f3d','f3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data S-S
+Result('c3d','c3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data S-R
 
-Result('m3d','m3d',iplot3d('pclip=99'  ,par)) # image convolution
-#Result('j3d','j3d',iplot3d('pclip=99'  ,par)) # image S-R
-Result('i3d','i3d',iplot3d('pclip=99'  ,par)) # image S-S
+Result('m3d','m3d',iplot3d('pclip=99',par)) # image convolution
+#Result('i3d','i3d',iplot3d('pclip=99',par)) # image S-S
+#Result('j3d','j3d',iplot3d('pclip=99',par)) # image S-R
 
 # ------------------------------------------------------------
 
