@@ -158,7 +158,7 @@ par = {
     'ny':280, 'oy':0,'dy':15,
     'nz':50,  'oz':0,'dz':3,
     #    migration vvvv
-    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,
     'tmx':16,'tmy':16,'pmx':0,'pmy':0,'misc':'incore=y'                
     }
 
@@ -441,13 +441,13 @@ Result('i2d','i2d',iplot2d('',par)) # image E-R
 Result('j2d','j2d',iplot2d('',par)) # image S-R
 
 # RESULTS 3D
-#Result('t3d','t3d','window max1=0.25         |' + dplot3d('pclip=99.8',par)) # data convolution
-#Result('f3d','f3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data E-R
-#Result('c3d','c3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data S-R
+Result('t3d','t3d','window max1=0.25         |' + dplot3d('pclip=99.8',par)) # data convolution
+Result('f3d','f3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data E-R
+Result('c3d','c3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data S-R
 
-#Result('m3d','m3d',iplot3d('pclip=99',par)) # image convolution
-#Result('i3d','i3d',iplot3d('pclip=99',par)) # image E-R
-#Result('j3d','j3d',iplot3d('pclip=99',par)) # image S-R
+Result('m3d','m3d',iplot3d('pclip=99',par)) # image convolution
+Result('i3d','i3d',iplot3d('pclip=99',par)) # image E-R
+Result('j3d','j3d',iplot3d('pclip=99',par)) # image S-R
 
 # ------------------------------------------------------------
 
