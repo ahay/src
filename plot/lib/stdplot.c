@@ -90,10 +90,14 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 
     transp = transp1;
     if (!sf_getbool ("xreverse",&xreverse)) xreverse = xreverse1;
+    /* reverse horizontal axis */
     if (!sf_getbool ("yreverse",&yreverse)) yreverse = yreverse1;
+    /* reverse vertical axis */
     if (!sf_getbool ("pad",&pad)) pad = pad1;
+    /* pad plotting area */
     if (!sf_getbool ("wantscalebar",&scalebar) && 
 	!sf_getbool ("scalebar",&scalebar)) scalebar = false;
+    /* plot a scalebar */
 
     if (pad) { /* 4% stretch */
 	mid = 0.5*(umin1+umax1);
@@ -109,9 +113,13 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
  
     /* get max and min */
     if (!sf_getfloat ("min1",&min1)) min1=umin1;
+    /* minimum on the first axis */
     if (!sf_getfloat ("min2",&min2)) min2=umin2;
+    /* minimum on the second axis */
     if (!sf_getfloat ("max1",&max1)) max1=umax1;
+    /* maximum on the first axis */
     if (!sf_getfloat ("max2",&max2)) max2=umax2;
+    /* maximum on the second axis */
 
     if (transp) {
 	swap(&min1,&min2);
@@ -173,6 +181,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     /* make frame smaller to accomodate scale bar */
     if (scalebar) {
 	bartype = sf_getstring("bartype");
+	/* [v,h] vertical or horizontal bar (default is v) */
 	if (NULL == bartype) {
 	    vertbar = true;
 	} else {
@@ -186,10 +195,17 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	    barmax = 0.88*screenwd;
 	    barmin = barmax-barwd;
 	} else {
-	    yur += 0.4*barwd;
-	    yll += (0.04*screenht + barwd);
-	    barmin = 0.12*screenht;
-	    barmax = barmin+barwd;
+	    if (cube) {
+		yll -= 0.4*barwd;
+		yur -= (0.04*screenht + barwd);
+		barmax = 0.98*screenht;
+		barmin = barmax-barwd;
+	    } else {
+		yur += 0.4*barwd;
+		yll += (0.04*screenht + barwd);
+		barmin = 0.12*screenht;
+		barmax = barmin+barwd;
+	    }
 	}
     }
 
@@ -1089,7 +1105,7 @@ void vp_frame(void)
 
 	    vp_tjust (TH_CENTER, TV_TOP);
 	    if (labelrot) {
-		vp_gtext(xc+4.0*vs,yc,0.,-labelsz,labelsz,0.,string);
+		vp_gtext(xc+3.0*vs,yc,0.,-labelsz,labelsz,0.,string);
 	    } else {
 		vp_gtext(xc+0.5*vs, yc, 0., labelsz, -labelsz, 0., string);
 	    }

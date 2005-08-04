@@ -142,7 +142,9 @@ int main(int argc, char* argv[])
 	if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
 	
 	if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);
+	/* minimum value for scalebar */
 	if (nomax) nomax = !sf_histfloat(bar,"maxval",&barmax);
+	/* maximum value for scalebar */
     }
 
     sf_unpipe(in,n1*n2*n3);
