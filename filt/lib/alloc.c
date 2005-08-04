@@ -316,4 +316,20 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
+/*@out@*/ unsigned char ***sf_ucharalloc3 (size_t n1 /* fast dimension */, 
+					   size_t n2 /* slower dimension */, 
+					   size_t n3 /* slowest dimension */)
+/*< unsigned char 3-D allocation, out[0][0] points to a contiguous array >*/ 
+{
+    size_t i3;
+    unsigned char ***ptr;
+    
+    ptr = (unsigned char***) sf_alloc (n3,sizeof(unsigned char**));
+    ptr[0] = sf_ucharalloc2 (n1,n2*n3);
+    for (i3=1; i3 < n3; i3++) {
+	ptr[i3] = ptr[0]+i3*n2;
+    }
+    return ptr;
+}
+
 /* 	$Id$	 */

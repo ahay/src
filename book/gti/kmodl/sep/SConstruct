@@ -16,13 +16,13 @@ Flow('l4','l2','noise seed=2006 var=5 | smooth rect1=4 rect2=4')
 
 Flow('texture','l1 l2 l3 l4','cat ${SOURCES[1:4]}')
 
-def grey3(bias=0):
+def grey3(bias=0,extra=''):
     return '''
-    byte allpos=y clip=2.2 bias=%g |
+    byte allpos=y clip=2.2 bias=%g %s |
     grey3 frame1=80 frame2=100 frame3=50 flat=n  point1=.7 point2=.7
     color=j wanttitle=n
     label1="Depth(km)" label2="X_Position(km)" label3="Y_Position(km)"
-    ''' % bias
+    ''' % (bias,extra)
      
 Flow('const','struct','unif3 n1=200 d1=0.025 v00=0,0.5,1.2,2')
 Result('const',grey3())

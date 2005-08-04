@@ -20,8 +20,16 @@ Flow('dip','qdome',
 Flow('dip1','dip','window n4=1')
 Flow('dip2','dip','window f4=1')
 
-Result('dip1',cubeplot('Inline dip','allpos=y','color=j'))
-Result('dip2',cubeplot('Crossline dip','allpos=y','color=j'))
+Result('dip1',cubeplot('Inline dip','allpos=y bar=bar.rsf',
+                       '''
+                       color=j scalebar=y bar=bar.rsf bartype=v wanttitle=n
+                       barlabel="Inline Dip"
+                       '''))
+Result('dip2',cubeplot('Crossline dip','allpos=y bar=bar.rsf',
+                       '''
+                       color=j scalebar=y bar=bar.rsf bartype=h wanttitle=n
+                       barlabel="Crossline Dip"
+                       '''))
 
 Flow('cost','dip','stack axis=1 rms=y norm=n')
 Plot('cost1','cost',

@@ -29,9 +29,9 @@ int main(int argc, char* argv[])
 {
     int n1,n2,n3, nreserve, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
-    float point1, point2, barmin, barmax;
-    bool flat, scalebar, nomin, nomax, barreverse;
-    char *color, maxk[100], mink[100];
+    float point1, point2, barmin, barmax, minmax[2];
+    bool flat, scalebar, nomin=true, nomax=true, barreverse;
+    char *color;
     unsigned char **front, **top, **side, **buf, b, *barbuf[1];
     sf_file in, bar=NULL;
 
@@ -195,16 +195,13 @@ int main(int argc, char* argv[])
 	    }
 	    
 	    if (scalebar) {
-		if (nomin) {
-		    sprintf(mink,"minval%d",frame3);
-		    sf_histfloat(bar,mink,&barmin);
-		} 		    
-		if (nomax) {
-		    sprintf(maxk,"maxval%d",frame3);
-		    sf_histfloat(bar,maxk,&barmax);
-		}
-		sf_seek(bar,(off_t) frame3*VP_BSIZE,SEEK_SET);
+		sf_seek(bar,(off_t) frame3*(VP_BSIZE+2*sizeof(float)),SEEK_SET);
+
+		sf_floatread(minmax,2,bar);
 		sf_ucharread(barbuf[0],VP_BSIZE,bar);
+
+		if (nomin) barmin=minmax[0];
+		if (nomax) barmax=minmax[1];
 	    }
 	}
 

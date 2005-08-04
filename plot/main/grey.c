@@ -38,11 +38,11 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, gainstep, panel, it, nreserve, i1, i2, i3, j, orient;
     float o1, o2, o3, d1, d2, d3, gpow, clip, pclip, phalf, bias=0.;
-    float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat;
+    float pbias, gain=0., x1, y1, x2, y2, **data=NULL, f, barmin, barmax, dat, minmax[2];
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     bool eclip=false, egpow=false, barreverse;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
-    char *gainpanel, *color, mink[100], maxk[100];
+    char *gainpanel, *color;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     off_t pos;
@@ -177,14 +177,16 @@ int main(int argc, char* argv[])
 	/* minimum value for scalebar (default is the data minimum) */
 	nomax = !sf_getfloat("maxval",&barmax);
 	/* maximum value for scalebar (default is the data maximum) */
+	
 	barbuf[0] = (unsigned char*) sf_alloc(VP_BSIZE,sizeof(unsigned char));
+
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
 	/* if y, go from small to large on the bar scale */
 
 	if (byte) {
 	    bar = sf_output("bar");
 	    sf_settype(bar,SF_UCHAR);
-	    sf_putint(bar,"n1",VP_BSIZE);
+	    sf_putint(bar,"n1",VP_BSIZE+2*sizeof(float));
 	    sf_putint(bar,"n2",1);
 	    sf_putint(bar,"n3",n3);
 
@@ -333,9 +335,6 @@ int main(int argc, char* argv[])
 	}
 	
 	if (scalebar) {
-	    if (nomin) sprintf(mink,"minval%d",i3);
-	    if (nomax) sprintf(maxk,"maxval%d",i3);
-
 	    if (!charin) {
 		if (nomin) barmin = data[0][0];
 		if (nomax) barmax = data[0][0];
@@ -361,15 +360,16 @@ int main(int argc, char* argv[])
 		    barbuf[0][it] = tbl[j];
 		} 
 	    } else {
-		if (nomin) sf_histfloat(bar,mink,&barmin);
-		if (nomax) sf_histfloat(bar,maxk,&barmax);
-
+		sf_floatread(minmax,2,bar);
 		sf_ucharread(barbuf[0],VP_BSIZE,bar);
+
+		if (nomin) barmin=minmax[0];
+		if (nomax) barmax=minmax[1];
 	    }
 
 	    if (byte) {
-		if (nomin) sf_putfloat(bar,mink,barmin);
-		if (nomax) sf_putfloat(bar,maxk,barmax);
+		sf_floatwrite(&barmin,1,bar);
+		sf_floatwrite(&barmax,1,bar);
 		sf_ucharwrite(barbuf[0],VP_BSIZE,bar);
 	    } else {
 		if (barreverse) {
