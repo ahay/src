@@ -23,7 +23,11 @@
 
 #include <mex.h>
 
-#include <rsf.h>
+#include <string.h>
+
+#include "file.h"
+#include "getpar.h"
+#include "files.h"
 
 /* BSD - MAXNAMELEN, Posix - NAME_MAX */
 #ifndef NAME_MAX
@@ -139,4 +143,5 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     shift = sf_tell(file) - pos;
+    sf_fileclose(file);
 }

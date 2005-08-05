@@ -22,7 +22,11 @@
 */
 
 #include <mex.h>
-#include <rsf.h>
+
+#include <string.h>
+
+#include "file.h"
+#include "getpar.h"
 
 extern __off_t ftello (FILE *__stream);
 extern int fseeko (FILE *__stream, __off_t __off, int __whence);

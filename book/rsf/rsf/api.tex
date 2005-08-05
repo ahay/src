@@ -346,12 +346,45 @@ The python script does not require compilation. Simply make sure that
 
 \section{Matlab interface}
 
+\lstset{language=matlab}
+
+The Matlab clip function is listed below.
+
+\lstinputlisting[frame=single]{\RSF/api/clip.m}
+
+Let us examine it in detail. 
+
+\lstinputlisting[firstline=4,lastline=4,frame=single]{\RSF/api/clip.m}
+We start by figuring out the input file dimensions.
+
+\lstinputlisting[firstline=5,lastline=6,frame=single]{\RSF/api/clip.m}
+The first dimension is the trace length, the product of all other
+dimensions correspond to the number of traces.
+
+\lstinputlisting[firstline=7,lastline=8,frame=single]{\RSF/api/clip.m}
+Next, we allocate the trace array and create an output file.
+
+\lstinputlisting[firstline=10,lastline=15,frame=single]{\RSF/api/clip.m}
+Finally, we do the actual work: loop over input traces, reading, clipping, and
+writing out each trace.
+
 \subsection{Compiling}
+
+The Matlab script does not require compilation. Simply make sure that
+\texttt{\$RSFROOT/lib} is in \texttt{MATLABPATH}.
 
 \section{Installation} 
 
-\bibliographystyle{seg}
-\bibliography{api}
+To install the interface to a particular language, use \texttt{API=}
+parameter in the RSF configuration. For example, to to install C++ and
+Fortran-90 API bindings in addition to the basic package, run
+\begin{verbatim}
+scons API=c++,fortran-90 config
+\end{verbatim}
+Only the C interface is configured by default. The configuration
+parameters are stored in \texttt{\$RSFROOT/lib/rsfconfig.py}.
+
+\bibliographystyle{seg} \bibliography{api}
 
 %%% Local Variables: 
 %%% mode: latex

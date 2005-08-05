@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
     bool transp, yreverse, xreverse, allpos, polarity, verb;
     bool eclip=false, egpow=false, barreverse;
     bool scalebar, nomin=true, nomax=true, framenum, byte, charin;
-    char *gainpanel, *color;
+    char *gainpanel, *color, *barfile;
     unsigned char tbl[TSIZE+1], **buf, tmp, *barbuf[1];
     enum {GAIN_EACH=-3,GAIN_ALL=-2,NO_GAIN=-1};
     off_t pos;
@@ -165,8 +165,12 @@ int main(int argc, char* argv[])
 	/* verbosity flag */
     } /* if !charin */
 
+    barfile = sf_getstring("bar");
+    /* file for scalebar data */
+
     if (byte) {
-	scalebar = (NULL != sf_getstring("bar"));
+	scalebar = (NULL != barfile);
+	if (scalebar) sf_putstring(out,"bar",barfile);
     } else {
 	if (!sf_getbool ("wantscalebar",&scalebar) && 
 	    !sf_getbool ("scalebar",&scalebar)) scalebar = false;
@@ -193,7 +197,12 @@ int main(int argc, char* argv[])
 	    if (!nomin) sf_putfloat(bar,"minval",barmin);
 	    if (!nomax) sf_putfloat(bar,"maxval",barmax);
 	} else if (charin) {
-	    bar = sf_input("bar");
+	    if (NULL == barfile) {
+		barfile=sf_histstring(in,"bar");
+		if (NULL == barfile) sf_error("Need bar=");
+	    }
+
+	    bar = sf_input(barfile);
 	    if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
 
 	    if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);

@@ -207,6 +207,7 @@ class Project(Environment):
                          os.path.join(os.environ.get('HOME'),'.Xauthority'),
                          'DISPLAY': os.environ.get('DISPLAY'),
                          'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
+                         'HOME': os.environ.get('HOME'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Retrieve':Retrieve,

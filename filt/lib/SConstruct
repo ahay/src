@@ -155,13 +155,15 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
 ##############################################################################
 
 mex = WhereIs('mex')
-if mex:
+
+if mex and 'matlab' in api:
+    # suffix is different on different platforms, fix later
     suffix = '.mexglx'
 
     for inp in Split('par dim read write create'):
         file = 'rsf_'+inp
-        mexfile = env.Command(file+suffix,file+'.c',
-                              "%s CFLAGS='%s %s' $SOURCE %s %s" %
+        mexfile = env.Command(file+suffix,[file+'.c',lib],
+                              "%s CFLAGS='%s %s' $SOURCE %s %s -output $TARGET" %
                               (WhereIs('mex'),env['_CPPINCFLAGS'],
                                env['CCFLAGS'],env['_LIBDIRFLAGS'],env['_LIBFLAGS']))
         if root:

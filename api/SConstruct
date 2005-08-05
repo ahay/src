@@ -18,6 +18,13 @@ test = '''
 spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
 '''
 
+test_matlab = '''
+spike n1=1000 n2=100 n3=10 nsp=1 k1=500 > spike.rsf &&
+MATLABPATH=%s %s -nosplash -nojvm -r "clip('spike.rsf','out.rsf',0.5); quit" &&
+attr < out.rsf > $TARGET &&
+rm spike.rsf out.rsf
+'''
+
 ############################################################################
 # C API
 ############################################################################
@@ -77,6 +84,18 @@ if 'python' in api:
     pytest = proj.Flow('py','clippy.exe',
                        test % 'clippy',suffix='.attr',stdin=0)
     Default(pytest)
+
+############################################################################
+# Matlab API
+############################################################################
+
+matlab = WhereIs('matlab')
+
+if matlab and 'matlab' in api:
+    mattest = proj.Flow('mat','clip.m',
+                        test_matlab % (libdir,matlab),
+                        suffix='.attr',stdin=0,stdout=-1)
+    Default(mattest)
 
 ############################################################################
 
