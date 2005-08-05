@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
     float point1, point2, barmin, barmax, minmax[2];
     bool flat, scalebar, nomin=true, nomax=true, barreverse;
-    char *color;
+    char *color, *barfile;
     unsigned char **front, **top, **side, **buf, b, *barbuf[1];
     sf_file in, bar=NULL;
 
@@ -138,7 +138,15 @@ int main(int argc, char* argv[])
 	if (!sf_getbool("barreverse",&barreverse)) barreverse=false;
 	/* if y, go from small to large on the bar scale */
 
-	bar = sf_input("bar");
+	barfile = sf_getstring("bar");
+	/* file for scalebar data */
+
+	if (NULL == barfile) {
+	    barfile=sf_histstring(in,"bar");
+	    if (NULL == barfile) sf_error("Need bar=");
+	}
+
+	bar = sf_input(barfile);
 	if (SF_UCHAR != sf_gettype(bar)) sf_error("Need uchar in bar");
 	
 	if (nomin) nomin = !sf_histfloat(bar,"minval",&barmin);
