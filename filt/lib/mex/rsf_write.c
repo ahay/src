@@ -38,8 +38,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     float *p;
     char buf[BUFSIZ], key[5];
     bool same;
-    off_t pos=0;
-    static off_t shift=0;
     FILE *file2;
     sf_file file;
 
@@ -98,11 +96,9 @@ void mexFunction(int nlhs, mxArray *plhs[],
 	sf_fileclose(file);
 
 	if (NULL == filename) mexErrMsgTxt("No in= in file.");
-	file2 = fopen(filename,"w+b");
+	file2 = fopen(filename,"ab");
 	if (NULL == file2) 
 	    mexErrMsgTxt("Could not open binary file for writing.");
-	pos = ftello(file2);
-	fseeko(file2,shift,SEEK_CUR);
     } else {
 	file = sf_output(tag);
 	file2 = NULL;
@@ -149,7 +145,6 @@ void mexFunction(int nlhs, mxArray *plhs[],
     }
 
     if (same) {
-	shift = ftello(file2) - pos;
 	fclose(file2);
     } else {
 	sf_fileclose(file);

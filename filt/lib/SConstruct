@@ -151,6 +151,23 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
         Clean(python,['c_rsf.py','c_rsf.pyc'])
 
 ##############################################################################
+# MATLAB BINDING
+##############################################################################
+
+mex = WhereIs('mex')
+if mex:
+    suffix = '.mexglx'
+
+    for inp in Split('par dim read write create'):
+        file = 'rsf_'+inp
+        mexfile = env.Command(file+suffix,file+'.c',
+                              "%s CFLAGS='%s %s' $SOURCE %s %s" %
+                              (WhereIs('mex'),env['_CPPINCFLAGS'],
+                               env['CCFLAGS'],env['_LIBDIRFLAGS'],env['_LIBFLAGS']))
+        if root:
+            env.Install(libdir,mexfile)   
+
+##############################################################################
 # LINT
 ##############################################################################
 
