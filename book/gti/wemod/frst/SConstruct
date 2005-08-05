@@ -419,10 +419,11 @@ Flow('f2d','d2d',
 # migration
 zomig.image('i2d','x2d','d2do',par)
 
+
 # S-S modeling/migration (3-D)
-zomig.model('d3d','s3d','m3d',par)
-zomig.Cdttwo('d3do','d3d','o3d',par)
-Flow('f3d','d3do',
+zomig.model('d3do','s3d','m3d',par)
+zomig.Cdttwo('d3d','d3do','o3d',par)
+Flow('f3d','d3d',
      '''
      transp memsize=250 plane=23 |
      transp memsize=250 plane=12 |
