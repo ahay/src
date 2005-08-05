@@ -140,8 +140,8 @@ def test(par):
         par['xs']=par['nx']/2+i*20 - 1 # x start
         par['xe']=par['nx']/2+i*20 + 1 # x end
 
-        par['zs']=par['nz']/2 - 3
-        par['ze']=par['nz']/2 + 3
+        par['zs']=par['nz']/2 - 3      # z start
+        par['ze']=par['nz']/2 + 3      # z end
         
         dsl = 'dsl' + str(i)
         Flow(dsl,None,
