@@ -1,4 +1,4 @@
-/* Kirchhoff 2-D post-stack time migration and modeling with antialiasing. 
+/* Kirchhoff 2-D post-stack least-squares time migration with antialiasing. 
 
  Antialiasing by reparameterization. */
 /*
@@ -24,13 +24,15 @@
 #include <rsf.h>
 
 #include "kirchnew.h"
+#include "invert.h"
 
 int main(int argc, char* argv[])
 {
-    int n12, n1, n2, n3, i3, sw;
-    bool adj, hd;
-    float **data, **modl, *vrms, o1,d1,o2,d2;
-    sf_file in, out, vel;
+    int n12, n1, n2, n3, i3, sw, niter;
+    bool hd, ps;
+    float *data, *modl, *vrms, *error=NULL, o1,d1,o2,d2;
+    char *errfile;
+    sf_file in, out, vel, err=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -39,13 +41,15 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
-    
-    if (!sf_getbool("adj",&adj)) adj=true;
-    /* yes: migration, no: modeling */
+
     if (!sf_getbool("hd",&hd)) hd=true;
     /* if y, apply half-derivative filter */
+    if (!sf_getbool("ps",&ps)) ps=true;
+    /* if y, apply pseudo-unitary weighting */
     if (!sf_getint("sw",&sw)) sw=0;
     /* if > 0, select a branch of the antialiasing operation */
+    if (!sf_getint("niter",&niter)) niter=10;
+    /* number of iterations */
 
     if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
     if (!sf_histfloat(in,"o2",&o2)) sf_error("No o2= in input");
@@ -59,25 +63,33 @@ int main(int argc, char* argv[])
     sf_fileclose(vel);
     
     n12 = n1*n2;
-    data = sf_floatalloc2(n1,n2);
-    modl = sf_floatalloc2(n1,n2);
+    data = sf_floatalloc(n12);
+    modl = sf_floatalloc(n12);
 
-    kirchnew_init (vrms, o1, d1, d2, n1, n2, sw, true, hd);
+    if (niter > 0) {
+	errfile = sf_getstring("err");
+	/* output file for error */
+	if (NULL != errfile) {
+	    err = sf_output(errfile);
+	    sf_putint(err,"n1",niter);
+	    sf_putfloat(err,"d1",1);
+	    sf_putfloat(err,"o1",1);
+	    sf_putstring(err,"label1","Iteration Number");
+	    sf_putstring(err,"label2","Relative Squared Error");
+	    sf_putint(err,"n2",1);
+	}
+	error = sf_floatalloc(niter);
+    }
+
+    kirchnew_init (vrms, o1, d1, d2, n1, n2, sw, ps, hd);
 
     for (i3=0; i3 < n3; i3++) {
-	if (adj) {
-	    sf_floatread (data[0],n12,in);
-	} else {
-	    sf_floatread (modl[0],n12,in);
-	}
+	sf_floatread (data,n12,in);
 
-	kirchnew_lop (adj,false,n12,n12,modl[0],data[0]);
+	invert(kirchnew_lop,niter,niter,n12,n12,modl,data,error);
 
-	if (adj) {
-	    sf_floatwrite (modl[0],n12,out);
-	} else {
-	    sf_floatwrite (data[0],n12,out);
-	}
+	sf_floatwrite (modl,n12,out);
+	if (NULL != err) sf_floatwrite(error,niter,err);
     }
 
     exit(0);

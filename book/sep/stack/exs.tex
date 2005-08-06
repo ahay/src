@@ -55,7 +55,7 @@ w^{(-)}(y;z,x) & = & {1\over{\left(2\,\pi\right)^{m/2}}} \,
 \end{eqnarray}
 \par
 The weighting functions commonly used in Kirchhoff datuming
-\cite[]{GEO44.08.13291344,GEO49.08.12391248,svgdat} are defined as
+\cite[]{GEO44-08-13291344,GEO49-08-12391248,svgdat} are defined as
 \begin{eqnarray}
 w(x;t,y) & = & {1\over{\left(2\,\pi\right)^{m/2}}} \,
 {{\cos{\alpha(x)}}\over {v(x)\,R(x,y)}}\;,
@@ -154,7 +154,7 @@ rays. Born scattering approximation provides a different physical
 model for the reflected waves. According to this approximation, the
 recorded waves are viewed as scattered on smooth local inhomogeneities
 rather than reflected from sharp reflector surfaces. The inversion of
-Born modeling \cite[]{GEO52.07.09430964,GEO52.07.09310942} closely
+Born modeling \cite[]{GEO52-07-09430964,GEO52-07-09310942} closely
 corresponds with the result of Kirchhoff integral inversion. For an
 unknown reflector and the correct macro-velocity model, the asymptotic
 inversion reconstructs the signal located at the reflector surface
@@ -209,14 +209,13 @@ with the help of Gritsenko's formula (\ref{eqn:gritsenko}) to the form
 \label{eqn:csmigw}
 \end{equation}
 where the angle $\alpha(r)$ is measured between the reflected ray and
-the normal to the observation surface at the reflector point
-$r$. Formula (\ref{eqn:csmigw}) coincides with the analogous result of Keho
-and Beydoun \shortcite{GEO53.12.15401546}, derived directly from
-Claerbout's imaging principle \cite[]{GEO35.03.04070418}. An alternative
-derivation is given by Goldin \shortcite{goldin87}. Docherty
-\shortcite{GEO56.08.11641169} points out a remarkable correspondence
-between this formula and the classic results of Born scattering
-inversion \cite[]{GEO52.07.09310942}.
+the normal to the observation surface at the reflector point $r$.
+Formula (\ref{eqn:csmigw}) coincides with the analogous result of
+\cite{GEO53-12-15401546}, derived directly from Claerbout's imaging
+principle \cite[]{GEO35-03-04070418}. An alternative derivation is
+given by \cite{goldin87}.  \cite{GEO56-08-11641169} points out a
+remarkable correspondence between this formula and the classic results
+of Born scattering inversion \cite[]{GEO52-07-09310942}.
 
 For common-shot migration, pseudo-unitary weighting coincides with the
 weighting of datuming and corresponds to the downward continuation of the
@@ -237,9 +236,9 @@ seismic section by the factor $\left(v \over 2 \right)^{m-1}\,\left(t
 \over 2\right)^{m/2}$ [which corresponds at the stationary point to the
 geometric spreading $R(x,y)$] and downward continuation according to
 formula (\ref{eqn:datw2}) with the effective velocity $v/2$ 
-\cite[]{goldin87,GEO56.01.00180026}. This conclusion is in
+\cite[]{goldin87,GEO56-01-00180026}. This conclusion is in
 agreement with the analogous result of Born inversion
-\cite[]{GEO50.08.12531265}, though derived from a different viewpoint. 
+\cite[]{GEO50-08-12531265}, though derived from a different viewpoint. 
 
 In the zero-offset case, the pseudo-unitary forward operator reduces to
 downward pseudo-unitary continuation with a velocity of $v/2$.
@@ -287,14 +286,14 @@ constant-velocity migration:
 \label{eqn:comigw}
 \end{equation}
 Equation~(\ref{eqn:comigw}) is similar to the result obtained by
-\cite{GEO52.06.07450754}. In the case of zero offset $h=0$,
+\cite{GEO52-06-07450754}. In the case of zero offset $h=0$,
 it reduces to equation~(\ref{eqn:zomigw}). Note that the value
 of $m=1$ in (\ref{eqn:comigw}) corresponds to the two-dimensional (cylindric)
 waves recorded on the seismic line. A special case is the 2.5-D inversion,
 when the waves are assumed to be spherical, while the recording is on a line,
 and the medium has cylindric symmetry. In this case, the modeling weighting
 function (\ref{eqn:modw}) transforms to
-\cite[]{GPR31.02.02930333,GPR34.05.06860703}
+\cite[]{GPR31-02-02930333,GPR34-05-06860703}
 \begin{equation}
 w(x;t,y)  =  {1\over{\left(2\,\pi\right)^{1/2}}} \,
 {\sqrt{v}\,{C\left(s(y),x,r(y)\right)} 
@@ -304,7 +303,7 @@ and the time filter is $\left({\partial \over {\partial
 z}}\right)^{1/2}$. Combining this result with formula (\ref{eqn:cobeilk})
 for $m=1$, we obtain the weighting function for the 2.5-D
 common-offset migration in a constant velocity medium
-\cite[]{GEO52.06.07450754}:
+\cite[]{GEO52-06-07450754}:
 \begin{equation}
 \widehat{w}_{CO;2.5D}(y;z,x)  =  {1\over{\left(2\,\pi\right)^{1/2}}} \,
 {{x_3\,\sqrt{\rho_s + \rho_r}\,(\rho_s^2 + \rho_r^2)} \over 
@@ -332,6 +331,8 @@ where
 
 \subsection{Post-Stack Time Migration}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\inputdir{miginv}
+
 An interesting example of a stacking operator is the hyperbola summation
 used for time migration in the post-stack domain. In this case, the
 summation path is defined as
@@ -354,7 +355,7 @@ The Jacobian of transforming $z$ to $t$ is
 \label{eqn:zomj}
 \end{equation}
 If the migration weighting function is defined by conventional
-downward continuation \cite[]{GEO43.01.00490076}, it takes the following form,
+downward continuation \cite[]{GEO43-01-00490076}, it takes the following form,
 which is equivalent to equation (\ref{eqn:datw2}):
 \begin{equation}
 \widehat{w}(y;z,x)  =  {1\over{\left(2\,\pi\right)^{m/2}}} \,
@@ -373,7 +374,7 @@ vertical traveltime $z$ and the zero-offset reflected traveltime $t$:
 The equivalence of the Jacobian (\ref{eqn:zomj}) and the cosine factor
 (\ref{eqn:cos}) has important interpretations in the theory of Stolt
 frequency-domain migration
-\cite[]{GEO43.01.00230048,GEO46.05.07170733,Levin.sep.48.147}.
+\cite[]{GEO43-01-00230048,GEO46-05-07170733,Levin.sep.48.147}.
 According to equation (\ref{eqn:tildew}), the weighting function of the
 adjoint operator is the ratio of (\ref{eqn:zomw}) and (\ref{eqn:zomj}):
 \begin{equation}
@@ -482,7 +483,7 @@ which is coincident with (\ref{eqn:adjzomw}), and the correction filter
 $\left(\mbox{sign}(v_0-v)\,{d \over {d t}}\right)^{m/2}$. Comparing equations
 (\ref{eqn:rmt}) and (\ref{eqn:zomt}), we can see that this solution is equivalent
 kinematically to residual migration with the velocity
-$v_r=\sqrt{v^2-v_0^2}$ \cite[]{GEO50.01.01100126}. The reverse operator
+$v_r=\sqrt{v^2-v_0^2}$ \cite[]{GEO50-01-01100126}. The reverse operator
 is the solution of equation (\ref{eqn:VCequation}) with the boundary
 condition on $v$ and has the reciprocal form of the summation path
 \begin{equation}
@@ -545,6 +546,8 @@ inverted operators.
 
 \subsection{Velocity Transform}
 %%%%%%%%%%%%%%%%%%%%%%%%%% 
+\inputdir{velinv}
+
 Velocity transform is another form of hyperbolic stacking with the
 summation path
 \begin{equation}
@@ -582,8 +585,7 @@ w^{(-)} & = & {1\over{\left(2\,\pi\right)^{1/2}}} \,
 {{\sqrt{s\,h}\,\sqrt{t_0/t}} \over {\sqrt{t}}}\;.
 \end{eqnarray}
 The factor $\sqrt{s\,h}$ for pseudo-unitary velocity transform
-weighting has been discovered empirically by Claerbout
-\shortcite{Claerbout.bei.95}.
+weighting has been discovered empirically by \cite{Claerbout.bei.95}.
 
 Figure~\ref{fig:cgiter} shows the output of a numerical test of the
 least-squares velocity transform inversion using a CMP gather from the
@@ -607,26 +609,25 @@ scan. Figure~\ref{fig:dirrst} shows the corresponding modeled CMP
 gather and the residual error. The error is negligible which
 indicates a successful inversion.
 
-\sideplot{cgiter}{height=3in}{figdir}{Comparison of convergence
-  of the iterative velocity transform inversion. The dashed line
-  corresponds to the unweighted (uniformly weighted) operator. The
-  solid line corresponds to the asymptotic pseudo-unitary operator.
-  The latter provides a faster convergence at early iterations.}
+\sideplot{cgiter}{height=3in}{Comparison of convergence of the
+  iterative velocity transform inversion. The dashed line corresponds
+  to the unweighted (uniformly weighted) operator. The solid line
+  corresponds to the asymptotic pseudo-unitary operator.  The latter
+  provides a faster convergence at early iterations.}
 
-\plot{dircvv}{width=6in,height=3in}{figdir}{Input
-CMP gather (left) and its velocity transform counterpart (right) after
-10 iterations of iterative least-squares inversion.}
+\plot{dircvv}{width=6in,height=3in}{Input CMP gather (left) and its
+  velocity transform counterpart (right) after 10 iterations of
+  iterative least-squares inversion.}
 
-\plot{dirrst}{width=6in,height=3in}{figdir}{The modeled CMP
-  gather (left) and the residual error (right) plotted at the same
-  scale.}
+\plot{dirrst}{width=6in,height=3in}{The modeled CMP gather (left) and
+  the residual error (right) plotted at the same scale.}
 
 
 \subsection{Offset Continuation and DMO}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 Offset continuation is the operator that transforms seismic reflection
 data from one offset to another
-\cite[]{GPR30.06.08130828,GPR30.06.08290849}. If the data are continued
+\cite[]{GPR30-06-08130828,GPR30-06-08290849}. If the data are continued
 from half-offset $h_1$ to a larger offset $h_2$, the summation path of
 the post-NMO integral offset continuation has the following form
 \cite[]{Biondi.sep.80.125,stovas,Fomel.sepphd.107}:
@@ -723,21 +724,23 @@ w^{(-)} & = &
 {\sqrt{h_2^2 + (x-y)^2} \over {h_2^2-(x-y)^2}}\;.
 \label{eqn:puDMO21} 
 \end{eqnarray}
-Equations similar to~(\ref{eqn:wDMO12}) and~(\ref{eqn:wDMO21}) have been
-published by Stovas and Fomel \shortcite{stovas}. Equation~(\ref{eqn:wDMO21})
-differs from the similar result of Black et al.  \shortcite{black} by a simple
-time multiplication factor. This difference corresponds to the difference in
-definition of the amplitude preservation criterion. Equation~(\ref{eqn:wDMO21})
-agrees asymptotically with the frequency-domain Born DMO operators
-\cite[]{Born,GEO56-02-01820189,cwp}. Likewise, the stacking operator with the
-weighting function (\ref{eqn:wDMO12}) corresponds to Ronen's inverse DMO
-\cite[]{GEO52.07.09730984}, as discussed by \cite{Fomel.sepphd.107}.  Its
-adjoint, which has the weighting function
+Equations similar to~(\ref{eqn:wDMO12}) and~(\ref{eqn:wDMO21}) have
+been published by \cite{stovas}. Equation~(\ref{eqn:wDMO21}) differs
+from the similar result of \cite{black} by a simple time
+multiplication factor. This difference corresponds to the difference
+in definition of the amplitude preservation criterion.
+Equation~(\ref{eqn:wDMO21}) agrees asymptotically with the
+frequency-domain Born DMO operators
+\cite[]{Born,GEO56-02-01820189,cwp}. Likewise, the stacking operator
+with the weighting function (\ref{eqn:wDMO12}) corresponds to Ronen's
+inverse DMO \cite[]{GEO52-07-09730984}, as discussed by
+\cite{Fomel.sepphd.107}.  Its adjoint, which has the weighting
+function
 \begin{equation}
 \widetilde{w}(x;t,y)  =  {{t/\sqrt{z}} \over {2\,\pi}}\;{1 \over h_2}\;,
 \label{eqn:hDMO21}
 \end{equation}
-corresponds to Hale's DMO \cite[]{GEO49.06.07410757}.
+corresponds to Hale's DMO \cite[]{GEO49-06-07410757}.
 
 %%% Local Variables: 
 %%% mode: latex

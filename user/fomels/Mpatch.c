@@ -1,8 +1,10 @@
-/* Testing patching. 
+/* Patching (N-dimensional). 
 
-Takes: w1=n1 w2=n2 w3=n3 p1=1 p2=1 p3=1
+Takes: w=n1,n2,... p=1,1,...
 
-w1,w2,w3 is window size, p1,p2,p3 is number of patches. 
+w is window size, p is number of patches in different dimensions.
+
+The number of output dimensions is twice the number of input dimensions.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -21,25 +23,26 @@ w1,w2,w3 is window size, p1,p2,p3 is number of patches.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <stdio.h>
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
 #include <unistd.h>
+#include <stdio.h>
 
 #include <rsf.h>
 
-#include "dip3.h"
-#include "mask6.h"
 #include "ocpatch.h"
 #include "oc.h"
 
 int main (int argc, char *argv[])
 {
-    int w123,p123,n123, j, ip,iw;
-    int n[3], nw[3], w[3]; 
-    off_t nall;
-    float *u, *tent, *tmp;
-    char key[3], *dipname, *wallname;
+    int dim,w12,p12, j, ip;
+    int n[SF_MAX_DIM], p[SF_MAX_DIM], w[SF_MAX_DIM]; 
+    off_t nall, n12;
+    float *u;
+    char key[4];
     sf_file in, out;
-    FILE *wall, *dip;
 
     sf_init(argc,argv);
     in = sf_input ("in");
@@ -47,72 +50,57 @@ int main (int argc, char *argv[])
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
 
-    if (!sf_histint(in,"n1",&n[0])) sf_error("Need n1= in input");
-    if (!sf_histint(in,"n2",&n[1])) n[1]=1;
-    if (!sf_histint(in,"n3",&n[2])) n[2]=1;
-    n123 = n[0]*n[1]*n[2];
-
-    for (j=0; j <3; j++) {
-	snprintf(key,3,"w%d",j+1);
-	if (!sf_getint(key,w+j) || w[j] > n[j]) w[j] = n[j];
-	
-	snprintf(key,3,"p%d",j+1);
-	if (!sf_getint(key,nw+j)) {
-	    if (n[j] > w[j]) {
-		nw[j] = 1 + 1.5*n[j]/w[j]; /* 50% overlap */
-	    } else {
-		nw[j] = 1;
-	    }
+    dim = sf_filedims(in,n);
+    
+    if (!sf_getints("w",w,dim)) {
+	/* window size */
+	for (j=0; j < dim; j++) {
+	    w[j] = n[j];
+	}
+    } else {
+	for (j=0; j < dim; j++) {
+	    if (w[j] > n[j]) w[j] = n[j];
 	}
     }
-    w123 = w[0]*w[1]*w[2];
-    p123 = nw[0]*nw[1]*nw[2];
 
-    u = sf_floatalloc(w123);
+    if (!sf_getints("p",p,dim)) {
+	/* number of windows */
+	for (j=0; j < dim; j++) {
+	    if (n[j] > w[j]) {
+		p[j] = 1 + 1.5*n[j]/w[j]; /* 50% overlap */
+	    } else {
+		p[j] = 1;
+	    }
+	}	
+    }
 
-    sf_warning("window: %d %d %d",w[0],w[1],w[2]);
-    sf_warning("patches: %d %d %d",nw[0],nw[1],nw[2]);
+    n12 = w12 = p12 = 1;    
+    for (j=0; j < dim; j++) {
+	n12 *= n[j];
+	w12 *= w[j];
+	p12 *= p[j];
+	sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
+	snprintf(key,4,"n%d",j+1);
+	sf_putint(out,key,w[j]);
+	snprintf(key,4,"n%d",dim+j+1);
+	sf_putint(out,key,p[j]);
+    }
 
-    nall = n123*sizeof(float);
+    u = sf_floatalloc(w12);
+    nall = n12*sizeof(float);
     
     sf_unpipe(in,nall);
-    wall = sf_tempfile(&wallname,"w+b");
-    dip = sf_tempfile(&dipname,"w+b");
-
-    tent = sf_floatalloc(w123);
-    tmp = sf_floatalloc(w123);
     
-    sf_tent2 (3, w, tent);
-    
-    ocpatch_init(3,w123,p123,nw,n,w);
-    oc_zero(nall,wall);
-    oc_zero(nall,dip);
+    ocpatch_init(dim,w12,p12,p,n,w);
     
     /* loop over patches */
-    for (ip=0; ip < p123; ip++) {
-	sf_warning("patch %d of %d",ip+1,p123);
-
+    for (ip=0; ip < p12; ip++) {
 	/* read data */
 	ocpatch_flop (ip,false,in,u);
 		
-	/* write weight */
-	ocpatch_lop (ip,false,wall,tmp);
-	for (iw=0; iw < w123; iw++) {
-	    tmp[iw] += tent[iw];
-	}
-	ocpatch_lop (ip,true,wall,tmp);
-		
-	/* write dip */
-	ocpatch_lop (ip,false,dip,tmp);
-	for (iw=0; iw < w123; iw++) {
-	    tmp[iw] += tent[iw]*u[iw];
-	}
-	ocpatch_lop (ip,true,dip,tmp);
-    }
-	    
-    oc_divide(nall,dip,wall,out);
-    unlink(dipname);
-    unlink(wallname);
+	/* write data */
+	sf_floatwrite (u,w12,out);
+    }		
     
     exit (0);
 }

@@ -22,10 +22,12 @@
 #include <rsf.h>
 /*^*/
 
-#include  "kirchnew.h"
+#include "kirchnew.h"
+#include "halfint.h"
 
 static int nt, nx, sw;
-static float t0, dt, dx, *vrms;
+static bool ps, hd;
+static float t0, dt, dx, *vrms, **tmp;
 
 void kirchnew_init (float *vrms_in /* RMS velocity */, 
 		    float t0_in    /* time origin */, 
@@ -33,7 +35,9 @@ void kirchnew_init (float *vrms_in /* RMS velocity */,
 		    float dx_in    /* midpoint sampling */, 
 		    int nt_in      /* time samples */, 
 		    int nx_in      /* midpoint samples */, 
-		    int sw_in      /* branch to compute */)
+		    int sw_in      /* branch to compute */,
+		    bool ps_in     /* pseudo-unitary weight */,
+		    bool hd_in     /* hald-derivative filter */)
 /*< Initialize >*/
 {
     vrms = vrms_in;
@@ -43,6 +47,21 @@ void kirchnew_init (float *vrms_in /* RMS velocity */,
     nt = nt_in;
     nx = nx_in;
     sw = sw_in;
+    ps = ps_in;
+    hd = hd_in;
+    if (hd) {
+	halfint_init(true,nt,1.-1./nt);
+	tmp = sf_floatalloc2 (nt,nx);
+    }
+}
+
+void kirchnew_close (void)
+/*< Free allocated storage >*/
+{
+    if (hd) {
+	free (*tmp);
+	free (tmp);
+    }
 }
 
 void kirchnew_lop (bool adj, bool add, int nm, int nd, 
@@ -53,6 +72,21 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
     float amp,t,z,b,db,f,g;
 
     sf_adjnull(adj,add,nm,nd,modl,data);
+
+    if (hd) {
+	for (ix=0; ix < nx; ix++) {
+	    if (adj) {
+		for (it=0; it < nt; it++) {
+		    tmp[ix][it] = data[it+ix*nt];
+		}
+		halfint (adj,tmp[ix]);
+	    } else {
+		for (it=0; it < nt; it++) {
+		    tmp[ix][it] = 0.;
+		}
+	    }
+	}
+    }
 
     maxx[0] = nx;	
     minx[1] = 1;
@@ -69,7 +103,10 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
 	    i = iy+1; g = 1.-f;
 
 	    if(i >= nx)	continue;
-	    amp = (z / (t+dt)) * sqrtf(nt*dt / (t+dt)) * (dt / db);
+
+	    amp = ps? 
+		(z / (t+dt)) * sqrtf(nt*dt / (t+dt)) * (dt / db):
+		(dt / db);
 
 	    minx[0] = i;  
 	    maxx[1] = nx-i;
@@ -81,10 +118,19 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
 		    id1 = (ix+iy)*nt+it;
 		    id2 = (ix+i)*nt+it;
 		    if( adj) {	
-			modl[im] += amp*(data[id1]*g + data[id2]*f);
+			if (hd) {
+			    modl[im] += amp*(tmp[ix+iy][it]*g + tmp[ix+i][it]*f);
+			} else {
+			    modl[im] += amp*(data[id1]*g + data[id2]*f);
+			}
 		    } else {
-			data[id1] += modl[im]*amp*g;
-			data[id2] += modl[im]*amp*f;
+			if (hd) {
+			    tmp[ix+iy][it] += modl[im]*amp*g;
+			    tmp[ix+i ][it] += modl[im]*amp*f;
+			} else {
+			    data[id1] += modl[im]*amp*g;
+			    data[id2] += modl[im]*amp*f;
+			}
 		    }
 		}
 	    }
@@ -102,7 +148,9 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
 	    i = it+1; g = 1.-f;
 	    if(it >= nt) break;
 
-	    amp = (z / (t+dt)) * sqrtf(nt*dt / (t+dt)); 
+	    amp = ps?
+		(z / (t+dt)) * sqrtf(nt*dt / (t+dt)):
+		1.; 
 	    if(ib == 0) amp *= 0.5;
 
 	    minx[0] = iy; 
@@ -114,14 +162,33 @@ void kirchnew_lop (bool adj, bool add, int nm, int nd,
 		    id1 = (ix+iy)*nt+it;
 		    id2 = (ix+iy)*nt+i;
 
-		    if( adj) {	
-			modl[im] += amp*(data[id1]*g + data[id2]*f);
+		    if( adj) {
+			if (hd) {
+			    modl[im] += amp*(tmp[ix+iy][it]*g + tmp[ix+iy][i]*f);
+			} else {
+			    modl[im] += amp*(data[id1]*g + data[id2]*f);
+			}
 		    } else {
-			data[id1] += modl[im]*amp*g;
-			data[id2] += modl[im]*amp*f;
+			if (hd) {
+			    tmp[ix+iy][it] += modl[im]*amp*g;
+			    tmp[ix+iy][i ] += modl[im]*amp*f;
+			} else {			    
+			    data[id1] += modl[im]*amp*g;
+			    data[id2] += modl[im]*amp*f;
+			}
 		    }
 		}
 	    }
 	}
     }
+    
+    if (hd && !adj) {
+	for (ix=0; ix < nx; ix++) {
+	    halfint (adj,tmp[ix]);
+	    for (it=0; it < nt; it++) {
+		data[it+ix*nt] += tmp[ix][it];
+	    }
+	}
+    }
 }
+

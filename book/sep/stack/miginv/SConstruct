@@ -11,4 +11,36 @@ Flow('vel',None,
 
 Flow('mkaa','mod vel','kirchnew velocity=${SOURCES[1]} adj=0')
 
+Plot('dat','mkaa','grey labelsz=10 titlesz=12 title="Input Data" ')
+
+for ps in (0,1):
+    mig = 'mig%d' % ps
+    err = 'err%d' % ps
+    Flow([mig,err],'mkaa vel',
+         'kirchinv velocity=${SOURCES[1]} ps=%d err=${TARGETS[1]}' % ps)
+
+Result('migiter','err0 err1',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       graph min2=0 max2=0.3 
+       labelsz=10 titlesz=12 dash=1,0
+       title="Iterative Convergence"
+       ''')
+Plot('mig','mig1','grey labelsz=10 titlesz=12 title="Least-squares Image" ')
+
+Result('migcvv','dat mig','SideBySideAniso')
+
+Flow('migdat','mig1 vel','kirchnew velocity=${SOURCES[1]} adj=0 ps=1')
+
+clip=0.0481432
+
+Plot('migres','mkaa migdat',
+     '''
+     add scale=1,-1 ${SOURCES[1]} |
+     grey clip=%g title="Residual Error"
+     ''' % clip)
+Plot('migdat','grey clip=%g title="Predicted Data" ' % clip)
+
+Result('migrst','migdat migres','SideBySideAniso')
+
 End()
