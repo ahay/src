@@ -1,4 +1,13 @@
-/* Mathematical operations, possibly on header keys. */
+/* Mathematical operations, possibly on header keys. 
+
+Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
+                 cosh, sinh, tanh, acosh, asinh, atanh,
+                 exp,  log,  sqrt, abs
+
+See also sfmath. 
+
+An addition operation can be performed by sfstack.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
