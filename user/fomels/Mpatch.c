@@ -1,10 +1,10 @@
 /* Patching (N-dimensional). 
 
-Takes: w=n1,n2,... p=1,1,...
+w is window size (defaults to n1,n2,...)
+p is number of patches in different dimensions (defaults to 1,1,...)
 
-w is window size, p is number of patches in different dimensions.
-
-The number of output dimensions is twice the number of input dimensions.
+If inv=n, the number of output dimensions is twice the number of input dimensions.
+If inv=y, the number of output dimensions is half the number of input dimensions.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -37,6 +37,7 @@ The number of output dimensions is twice the number of input dimensions.
 
 int main (int argc, char *argv[])
 {
+    bool inv, verb;
     int dim,w12,p12, j, ip;
     int n[SF_MAX_DIM], p[SF_MAX_DIM], w[SF_MAX_DIM]; 
     off_t nall, n12;
@@ -49,6 +50,12 @@ int main (int argc, char *argv[])
     out = sf_output ("out");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float type");
+
+    if (!sf_getbool("inv",&inv)) inv=false;
+    /* inverse or forward operation */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     dim = sf_filedims(in,n);
     
@@ -76,10 +83,12 @@ int main (int argc, char *argv[])
 
     n12 = w12 = p12 = 1;    
     for (j=0; j < dim; j++) {
+	if (verb) sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
+
 	n12 *= n[j];
 	w12 *= w[j];
 	p12 *= p[j];
-	sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
+
 	snprintf(key,4,"n%d",j+1);
 	sf_putint(out,key,w[j]);
 	snprintf(key,4,"n%d",dim+j+1);
