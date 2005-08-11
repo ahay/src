@@ -93,8 +93,9 @@ sep = os.path.join(os.environ.get('SEP',''),'bin/')
 
 def test(target=None,source=None,env=None):
     src = str(source[0])
-    locked = re.sub('\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/$',
-                    figdir+'\\1/\\2/\\3/',os.path.abspath(src))
+    locked = re.sub('.*\/([^\/]+)\/([^\/]+)\/([^\/]+)\/Fig\/',
+                    figdir+'/\\1/\\2/\\3/',os.path.abspath(src))
+    print "Comparing %s and %s" % (locked,src)
     if os.path.isfile(locked):
         try:
             if not filecmp.cmp(locked,src,shallow=0):
