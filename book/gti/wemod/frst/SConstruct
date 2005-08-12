@@ -112,40 +112,46 @@ channels.make_overburden (  memsize=memsize, xy_pad=xy_pad,
 # ------------------------------------------------------------
 # PLOTTING
 # ------------------------------------------------------------
-def dplot3d(custom,par):
+def dplot3d(custom,par,title=""):
     return '''
-    byte gainpanel=all %s |
-    grey3 labelrot=n flat=y title="" frame1=170 frame2=%d frame3=%d
+    byte bar=bar.rsf gainpanel=all %s |
+    grey3 scalebar=y bar=bar.rsf labelrot=n flat=y title="%s"
+    frame1=170 frame2=%d frame3=%d
     label1=t label2=x label3=y
-    ''' % (custom,par['xpad'],par['ypad'])
-def iplot3d(custom,par):
+    ''' % (custom,title,par['xpad'],par['ypad'])
+    
+def iplot3d(custom,par,title=""):
     return '''
     transp memsize=250 plane=23 |
     transp memsize=250 plane=12 |
-    byte gainpanel=all %s |
-    grey3 labelrot=n flat=y title="" frame1=40  frame2=%d frame3=%d
+    byte bar=bar.rsf gainpanel=all %s |
+    grey3 scalebar=y bar=bar.rsf labelrot=n flat=y title="%s"
+    frame1=40  frame2=%d frame3=%d
     label1=z label2=x label3=y
-    ''' % (custom,par['xpad'],par['ypad'])
-def vplot3d(custom,par):
+    ''' % (custom,title,par['xpad'],par['ypad'])
+    
+def vplot3d(custom,par,title=""):
     return '''
-    byte gainpanel=all %s |
-    grey3 labelrot=n flat=y title="" frame1=40  frame2=%d frame3=%d color=j
+    byte bar=bar.rsf gainpanel=all %s |
+    grey3 scalebar=y bar=bar.rsf labelrot=n flat=y title="%s"
+    frame1=40  frame2=%d frame3=%d color=j
     label1=z label2=x label3=y
-    ''' % (custom,par['xpad'],par['ypad'])
+    ''' % (custom,title,par['xpad'],par['ypad'])
 
-def dplot2d(custom,par):
+def dplot2d(custom,par,title=""):
     return '''
     window |
-    grey labelrot=n pclip=100 title=""
+    grey scalebar=y labelrot=n pclip=100 title="%s"
     label1=t label2=x %s
-    ''' % (custom)
-def iplot2d(custom,par):
+    ''' % (title,custom)
+    
+def iplot2d(custom,par,title=""):
     return '''
     window |
     transp |
-    grey labelrot=n pclip=100 title=""
+    grey scalebar=y labelrot=n pclip=100 title="%s"
     label1=z label2=x %s
-    ''' % (custom)
+    ''' % (title,custom)
 
 
 # ------------------------------------------------------------
@@ -200,15 +206,15 @@ Flow('ro1','ovr_rho_noise_taper',flip() )
 
 # density
 Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
-Result('den','den',vplot3d('pclip=100 bias=1.5 allpos=y',par))
+Result('den','den',vplot3d('pclip=100 bias=1.5 allpos=y',par,'density'))
 
 # reservoir velocity
 Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
-Result('vel','vel',vplot3d('pclip=100 bias=2297 allpos=y',par))
+Result('vel','vel',vplot3d('pclip=100 bias=2297 allpos=y',par,'velocity'))
 
 # overburden velocity (can reduce n1=??? for speed)
 Flow(  'ovb','vp1', 'window n1=200    | put o1=0 o3=0' %par)
-Result('ovb','ovb',vplot3d('pclip=100 bias=1500 allpos=y',par))
+Result('ovb','ovb',vplot3d('pclip=100 bias=1500 allpos=y',par,'overburden velocity'))
 
 # ------------------------------------------------------------
 # reservoir slowness (true)
@@ -221,7 +227,7 @@ Flow('slo','vel',
      ''')
 Result('slo','slo',
        'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par,'slowness'))
 
 # reservoir slowness (smooth)
 Flow('slx','vel',
@@ -234,7 +240,7 @@ Flow('slx','vel',
      ''')
 Result('slx','slx',
        'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par,'smoothed slowness'))
 
 # slowness (overburden)
 Flow('ovs','ovb',
@@ -245,18 +251,18 @@ Flow('ovs','ovb',
      ''')
 Result('ovs','ovs',
        'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par))
+       + vplot3d('pclip=100 bias=0.000340432 allpos=y',par,'overburden slowness'))
 
 # ------------------------------------------------------------
 
 # acoustic impedance
 Flow('aim','vel den','math v=${SOURCES[1]} d=${SOURCES[1]} output=v*d', stdin=0)
-Result('aim','aim',vplot3d('pclip=100 bias=1 allpos=y',par))
+Result('aim','aim',vplot3d('pclip=100 bias=1 allpos=y',par,'acoustic impedance'))
 
 # reflectivity
 Flow('ref','aim','ai2refl')
 Flow('rrr','ref','transp memsize=250 plane=12 | transp memsize=250 plane=23')
-Result('rrr','rrr',iplot3d('pclip=99',par))
+Result('rrr','rrr',iplot3d('pclip=99',par,'reflectivity'))
 
 # ------------------------------------------------------------
 
@@ -293,7 +299,8 @@ Flow('wav',None,
      ricker1 frequency=%(frq)s |
      put label1=t label2=x label3=y
      ''' % par)
-Result('wav','wav','window n1=200 | graph title=" "')
+     
+Result('wav','wav','window n1=200 | graph title="wavelet"')
 
 # ------------------------------------------------------------
 # 1-D convolution
@@ -442,23 +449,23 @@ zomig.image('i3d','x3d','d3do',par)
 # ------------------------------------------------------------
 # RESULTS 2D
 
-Result('t2d','t2d','window max1=0.25         |' + dplot2d('',par)) # data convolution
-Result('f2d','f2d','window min1=1.5 max1=3.5 |' + dplot2d('',par)) # data exploding reflector
-Result('c2d','c2d','window min1=1.5 max1=3.5 |' + dplot2d('',par)) # data shot record
+Result('t2d','t2d','window max1=0.25         |' + dplot2d('',par,'convolution'))
+Result('f2d','f2d','window min1=1.5 max1=3.5 |' + dplot2d('',par,'exploding reflector'))
+Result('c2d','c2d','window min1=1.5 max1=3.5 |' + dplot2d('',par,'shot record'))
 
-Result('m2d','m2d',iplot2d('',par)) # image convolution
-Result('i2d','i2d',iplot2d('',par)) # image exploding reflector
-Result('j2d','j2d',iplot2d('',par)) # image shot record
+Result('m2d','m2d',iplot2d('',par,'convolution'))
+Result('i2d','i2d',iplot2d('',par,'exploding reflector'))
+Result('j2d','j2d',iplot2d('',par,'shot record'))
 
 # RESULTS 3D
 
-Result('t3d','t3d','window max1=0.25         |' + dplot3d('pclip=99.8',par)) # data convolution
-Result('f3d','f3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data exploding reflector
-Result('c3d','c3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par)) # data shot record
+Result('t3d','t3d','window max1=0.25         |' + dplot3d('pclip=99.8',par,'convolution'))
+Result('f3d','f3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par,'exploding reflector'))
+Result('c3d','c3d','window min1=1.5 max1=3.5 |' + dplot3d('pclip=99.8',par,'shot record'))
 
-Result('m3d','m3d',iplot3d('pclip=99',par)) # image convolution
-Result('i3d','i3d',iplot3d('pclip=99',par)) # image exploding reflector
-Result('j3d','j3d',iplot3d('pclip=99',par)) # image shot record
+Result('m3d','m3d',iplot3d('pclip=99',par,'convolution'))
+Result('i3d','i3d',iplot3d('pclip=99',par,'exploding reflector'))
+Result('j3d','j3d',iplot3d('pclip=99',par,'shot record'))
 
 # ------------------------------------------------------------
 
