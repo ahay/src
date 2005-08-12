@@ -48,7 +48,7 @@ sfsuffix = '.rsf'
 # suffix for vplot files
 vpsuffix = '.vpl'
 
-# path bor binary files
+# path for binary files
 datapath = os.environ.get('DATAPATH')
 if not datapath:
     try:
@@ -199,8 +199,8 @@ class Project(Environment):
             os.mkdir(self.path)
         self.SConsignFile(self.path+'.sconsign',anydbm)
         self.resdir = resdir
-        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',figdir+'/\\1',cwd) 
-	self.progsuffix = self['PROGSUFFIX']
+        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',figdir+'/\\1',cwd)
+        self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
@@ -217,9 +217,9 @@ class Project(Environment):
                     CPPPATH=[incdir],
                     LIBS=['rsf','m'],
                     PROGSUFFIX='.exe')
-        if sys.platform[:6] == 'cygwin': 
-	    self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
-	    self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
+        if sys.platform[:6] == 'cygwin':
+            self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
+            self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
         self['PROGPREFIX']=''
         self.view = []
         self.lock = []
@@ -372,4 +372,4 @@ if __name__ == "__main__":
      import pydoc
      pydoc.help(Project)
      
-# 	$Id$	
+#   $Id$

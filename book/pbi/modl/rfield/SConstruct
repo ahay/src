@@ -122,9 +122,9 @@ for i in (plots[2]):
     Result (i,
             '''
             transp plane=12 | transp plane=13 | reverse which=1 |
-            byte gainpanel=all pclip=100 wantscalebar=y |
+            byte bar=bar.rsf gainpanel=all pclip=100 wantscalebar=y |
             grey3 title="%s" label1="z" label2="x" label3="y" 
-            color=E movie=0 flat=y 
+            color=E movie=0 flat=y scalebar=y bar=bar.rsf
             frame1=%d frame2=%d frame3=%d point1=%g point2=%g
             ''' % (i,nz[2]/2-1,nx[2]/2,ny[2]/2,0.5,0.5)
            )
