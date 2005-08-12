@@ -211,7 +211,6 @@ void ssr_sso(
 {
     float complex w2,co,cc;
     int ix,iy,jr;
-    float s;
 
     w2 = w*w;
 

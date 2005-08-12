@@ -25,10 +25,6 @@
 
 #ifndef _kirmod_h
 
-typedef enum {CONST, S2LIN, VLIN} maptype;
-/* type of velocity distribution */
-/*^*/
-
 typedef struct Surface *surface;
 /* abstract data type */
 /*^*/
@@ -39,7 +35,6 @@ struct Surface {
     int is, ih;
     float x, **ta;
 };
-
 
 static int ny, **map;
 
@@ -120,7 +115,7 @@ void kirmod_close(surface y)
 }
 
 void kirmod_table (surface y                  /* surface structure */,
-		   maptype type               /* velocity distribution */, 
+		   char type                  /* velocity distribution */, 
 		   int nx, float x0, float dx /* reflector axis */,
 		   float *curve               /* reflector */,
 		   float *dip                 /* reflector dip */,
@@ -128,45 +123,74 @@ void kirmod_table (surface y                  /* surface structure */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy;
-    float x, z, zx, x1, x2=0., **ta=NULL, t, a, p, q;
+    float x, z, x2, zx, x1, xp=0., **ta=NULL, t, a, p, q, r, v0, v1, v2;
+    float sigma, rad, g;
 
     for (iy=0; iy < ny; iy++) {	
 	x1 = y[iy].x;
-	if (0==iy || x1 != x2) {
+	if (0==iy || x1 != xp) {
 	    ta = sf_floatalloc2(4,nx);
 
 	    for (ix=0; ix < nx; ix++) {
-		x = x0-x1 + ix*dx;
+		x2 = x0 + ix*dx;
+		x = x2 - x1;
 		z = curve[ix];
 		zx = dip[ix];
+
+		r = hypotf(x,z)+FLT_EPSILON*dx; /* distance */
+		g = hypotf(veloc[1],veloc[2]);	/* gradient */
+       
 		switch (type) {
-		    case CONST:	
-			a = hypotf(x,z)+FLT_EPSILON*dx;
-			t = a/veloc[0];
-			p = (x+z*zx)/(a*veloc[0]);
-			q = fabsf(z+x*zx)/(a*hypotf(1.0,zx));
+		    case 'c': /* constant velocity */
+			v0 = veloc[0];
+			a = r;
+			t = r/v0;
+			p = (x+z*zx)/(r*v0);
+			q = fabsf(z+x*zx)/(r*hypotf(1.0,zx));
 			if (q >= 1.0) {
 			    q = 0.;
 			} else {
 			    q = acosf(q)*SF_SIG(x-z*zx);
 			}
 			break;		    
+		    case 's': /* linear sloth */
+			v1 = veloc[0]+2*(veloc[1]*(x1-veloc[3])-veloc[2]*veloc[4]);
+			v2 = veloc[0]+2*(veloc[1]*(x2-veloc[3])+veloc[2]*(z-veloc[4]));
+			v0 = 0.5*(v1+v2);
+			rad = v0*v0-g*g*r*r;           /* => v0^2=1/v^4 */
+			if (rad < 0.) 
+			    sf_error("%s: shadow zone, fix later",__FILE__);
+			rad = sqrtf(rad);              /* => v0=1/v^2 */
+			sigma = sqrtf(2*r*r/(v0+rad)); /* => r*v */
+			a = sigma*sqrtf(rad);          /* => r */
+			t = sigma*(2*v0+rad)/3.;       /* => r/v */
+			p = 0.;
+			q = 0.;
+			break;
+		    case 'v': /* linear velocity */
+			v1 = veloc[0]+veloc[1]*(x1-veloc[3])-veloc[2]*veloc[4];
+			v2 = veloc[0]+veloc[1]*(x2-veloc[3])+veloc[2]*(z-veloc[4]);
+			v0 = v1*v2;                      /* => v^2 */
+			a = r*sqrtf(1.+0.25*r*r*g*g/v0); /* => r */
+			t = acoshf(1.+0.5*r*r*g*g/v0)/g; /* => r/v */
+			p = 0.;
+			q = 0.;
 		    default:
 			a = 0.;
 			t = 0.;
 			p = 0.;
 			q = 0.;
-			sf_error("__FILE__: case %d is not implemented",type);
+			sf_error("%s: case %c is not implemented",__FILE__,type);
 			break;
 		}
 		ta[ix][0] = t; /* traveltime */
-		ta[ix][1] = a; /* amplitude */
+		ta[ix][1] = a; /* geometrical spreading */
 		ta[ix][2] = p; /* slope */
 		ta[ix][3] = q; /* angle from the normal */
 	    }
 	}
 	y[iy].ta = ta;
-	x2 = x1;
+	xp = x1;
     }
 }
 

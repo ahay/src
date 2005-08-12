@@ -1,0 +1,35 @@
+from rsfproj import *
+
+Fetch('milo.rsf','ninec')
+
+Flow('milo0','milo',
+     '''
+     dd form=native | put d1=0.001 |
+     window n3=1 f3=6 f1=20 |
+     pad beg1=20 |
+     costaper nw1=80 nw2=80
+     ''')
+Result('milo','milo0','grey title="Milo\'s Near-Offset Gather" ')
+
+Flow('dip','milo0','dip rect1=50 rect2=50')
+Flow('pwd','milo0 dip','pwd dip=${SOURCES[1]}')
+
+Result('midif','pwd','grey title="Isolated Diffractions" ')
+
+Flow('vkx','milo0','pad n2=1000 | cosft sign2=1 verb=y | spray axis=2 n=1 o=0 d=5')
+
+Flow('vlf','vkx',
+     '''
+     fourvc pad=1024 pad2=2048 nv=100 dv=20 v0=0.00001 |
+     cosft sign3=-1 | window n3=869
+     ''')
+
+Flow('pkx','pwd','pad n2=1000 | cosft sign2=1 verb=y | spray axis=2 n=1 o=0 d=5')
+
+Flow('plf','pkx',
+     '''
+     fourvc pad=1024 pad2=2048 nv=100 dv=20 v0=0.00001 |
+     cosft sign3=-1 | window n3=869
+     ''')
+
+End()
