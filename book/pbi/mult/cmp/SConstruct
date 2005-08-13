@@ -9,8 +9,8 @@ Fetch('cmp.hh','acig',private)
 Flow('cmp','cmp.hh','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
 Plot('cmp','grey title=Data')
 
-Result('cmp','grey title="CMP Gather" ')
-
+# Playing with amplitude gains
+##############################
 Flow('env','cmp','envelope | scale axis=2')
 Flow('amp','env',
      '''
@@ -26,19 +26,47 @@ Flow('ncmp','cmp',
      math output="atan(input)" |
      math output="input-sin(input)"
      ''')
-     
-Flow('ccmp','cmp','pad n1=2048 beg2=5 | fft1 | fft3')
-Flow('mult','ccmp','add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000 f2=5')
+
+# Interpolate near offsets
+Flow('cmp0','cmp','window max2=1 | pad beg2=5')
+Flow('cmp1','cmp0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('mask0','cmp','math output=1 | window max2=1 | pad beg2=5')
+Flow('mask1','mask0','reverse which=2 opt=n | cat axis=2 $SOURCE')
+Flow('dip1','cmp1','math output="x2*%g/(x1+0.001)" ' % (0.05/(0.004*1.5*1.5)))
+Flow('dip2','cmp1 dip1 mask1',
+     'twodip2 eps=100 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[2]} q0=0')
+Flow('mis','cmp1 dip2 mask1',
+     '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y prec=0 niter=10000
+     ''')
+Flow('mis2','mis cmp','window min2=0 n2=6 | cat axis=2 ${SOURCES[1]}')
+Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
+
+Plot('mis2','grey title="Near Offsets Interpolated" ')
+
+Result('cmp','cmp mis2','SideBySideAniso')
+
+# Predict multiples
+###################
+Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
+Flow('mult','ccmp',
+     'add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000 f2=6')
 Plot('mult','grey title="SRME-predicted Multiples" ')
 
+# Mask the important part
+#########################
 Flow('mask','mult',
      'math output=1 | mutter hyper=y t0=0.7 v0=2 half=n | smooth rect1=5 rect2=5')
 Flow('cmp2','mask cmp','add mode=p ${SOURCES[1]}')
 Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
 
+# Estimate dips
+###############
 Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
 Flow('mdip2','cmp2 mdip','twodip2 eps=100 lam=10 dip1=${SOURCES[1]} q0=0.1 sign=y')
 
+# Separate signal/noise
+#######################
 Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=100')
 
 Flow('nois','comp mask','window n3=1 | add mode=p ${SOURCES[1]}')
@@ -47,8 +75,12 @@ Plot('nois','grey title="Estimated Multiples" ')
 Flow('sign','cmp nois','add scale=1,-1 ${SOURCES[1]}')
 Plot('sign','grey title="Estimated Primaries" ')
 
+# Final result
+##############
 Result('super','cmp mult nois sign','SideBySideAniso')
 
+# Velocity scans before and after
+#################################
 for dat in ('cmp','sign'):
     Flow('v'+dat,dat,'vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
     Plot('v'+dat,'''

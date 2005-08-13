@@ -403,6 +403,56 @@ of \texttt{sfheaderattr} above.) A variety of mathematical expressions
 can be defined in the \texttt{output=} string. The expression
 processing engine is shared with \texttt{sfmath}.
 
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfheadersort}
+}}
+
+\texttt{sfheadersort} is used to sort traces in the input file
+according to a header information. 
+
+Here is an example of using
+\texttt{sfheadersort} for randomly shuffling tracing in the input
+file. First, let us create an input file with seven traces:
+\begin{verbatim}
+bash$ sfmath n1=5 n2=7 output=x2+1 > input.rsf
+bash$ < input.rsf sfdisfil
+   0:             1            1            1            1            1
+   5:             2            2            2            2            2
+  10:             3            3            3            3            3
+  15:             4            4            4            4            4
+  20:             5            5            5            5            5
+  25:             6            6            6            6            6
+  30:             7            7            7            7            7 
+\end{verbatim}
+Next, we can create a random file with seven header values using
+\texttt{sfnoise}.
+\begin{verbatim}
+bash$ sfspike n1=7 | sfnoise rep=y > random.rsf
+bash$ < random.rsf sfdisfil
+   0:        0.6576        1.669       0.2335       -1.087      -0.4247
+   5:       -0.4106      -0.4843
+\end{verbatim}
+If you reproduce this example, your numbers will be different,
+because, in the absence of \texttt{seed=} parameter, \texttt{sfnoise}
+uses a random seed value to generate pseudo-random numbers. Finally, we
+apply \texttt{sfheadersort} to shuffle the input traces.
+\begin{verbatim}
+bash$ < input.rsf sfheadersort head=random.rsf > output.rsf
+bash$ < output.rsf sfdisfil
+   0:             4            4            4            4            4
+   5:             7            7            7            7            7
+  10:             5            5            5            5            5
+  15:             6            6            6            6            6
+  20:             3            3            3            3            3
+  25:             1            1            1            1            1
+  30:             2            2            2            2            2
+\end{verbatim}
+As expected, the order of traces in the output file corresponds to the
+order of values in the header. Thanks to the separation between
+headers and data, the operation of \texttt{sfheadersort} is optimally
+efficient. It first sorts the headers and only then accesses the data,
+reading each data trace only once.
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: t
