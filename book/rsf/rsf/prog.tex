@@ -408,10 +408,10 @@ processing engine is shared with \texttt{sfmath}.
 }}
 
 \texttt{sfheadersort} is used to sort traces in the input file
-according to a header information. 
+according to trace header information. 
 
 Here is an example of using
-\texttt{sfheadersort} for randomly shuffling tracing in the input
+\texttt{sfheadersort} for randomly shuffling traces in the input
 file. First, let us create an input file with seven traces:
 \begin{verbatim}
 bash$ sfmath n1=5 n2=7 output=x2+1 > input.rsf
@@ -427,31 +427,83 @@ bash$ < input.rsf sfdisfil
 Next, we can create a random file with seven header values using
 \texttt{sfnoise}.
 \begin{verbatim}
-bash$ sfspike n1=7 | sfnoise rep=y > random.rsf
+bash$ sfspike n1=7 | sfnoise rep=y type=n > random.rsf
 bash$ < random.rsf sfdisfil
-   0:        0.6576        1.669       0.2335       -1.087      -0.4247
-   5:       -0.4106      -0.4843
+   0:       0.05256      -0.2879       0.1487       0.4097       0.1548
+   5:        0.4501       0.2836
 \end{verbatim}
-If you reproduce this example, your numbers will be different,
+If you reproduce this example, your numbers will most likely be different,
 because, in the absence of \texttt{seed=} parameter, \texttt{sfnoise}
 uses a random seed value to generate pseudo-random numbers. Finally, we
 apply \texttt{sfheadersort} to shuffle the input traces.
 \begin{verbatim}
 bash$ < input.rsf sfheadersort head=random.rsf > output.rsf
 bash$ < output.rsf sfdisfil
-   0:             4            4            4            4            4
-   5:             7            7            7            7            7
-  10:             5            5            5            5            5
-  15:             6            6            6            6            6
-  20:             3            3            3            3            3
-  25:             1            1            1            1            1
-  30:             2            2            2            2            2
+   0:             2            2            2            2            2
+   5:             1            1            1            1            1
+  10:             3            3            3            3            3
+  15:             5            5            5            5            5
+  20:             7            7            7            7            7
+  25:             4            4            4            4            4
+  30:             6            6            6            6            6
 \end{verbatim}
 As expected, the order of traces in the output file corresponds to the
 order of values in the header. Thanks to the separation between
 headers and data, the operation of \texttt{sfheadersort} is optimally
 efficient. It first sorts the headers and only then accesses the data,
 reading each data trace only once.
+
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfheaderwindow}
+}}
+
+\texttt{sfheaderwindow} is used to window traces in the input file
+according to trace header information. 
+
+Here is an example of using \texttt{sfheaderwindow} for randomly
+selecting part of the traces in the input file. First, let us create
+an input file with ten traces:
+\begin{verbatim}
+bash$ sfmath n1=5 n2=10 output=x2+1 > input.rsf
+bash$ < input.rsf sfdisfil
+   0:             1            1            1            1            1
+   5:             2            2            2            2            2
+  10:             3            3            3            3            3
+  15:             4            4            4            4            4
+  20:             5            5            5            5            5
+  25:             6            6            6            6            6
+  30:             7            7            7            7            7
+  35:             8            8            8            8            8
+  40:             9            9            9            9            9
+  45:            10           10           10           10           10
+\end{verbatim}
+Next, we can create a random file with ten header values using
+\texttt{sfnoise}.
+\begin{verbatim}
+bash$ sfspike n1=10 | sfnoise rep=y type=n > random.rsf
+bash$ < random.rsf sfdisfil
+   0:     -0.005768      0.02258     -0.04331      -0.4129      -0.3909
+   5:      -0.03582       0.4595      -0.3326        0.498      -0.3517
+\end{verbatim}
+If you reproduce this example, your numbers will most likely be different,
+because, in the absence of \texttt{seed=} parameter, \texttt{sfnoise}
+uses a random seed value to generate pseudo-random numbers. Finally,
+we apply \texttt{sfheaderwindow} to window the input traces selecting
+only those for which the header is greater than zero.
+\begin{verbatim}
+bash$ < random.rsf sfmask min=0 > mask.rsf
+bash$ < mask.rsf sfdisfil
+   0:    0    1    0    0    0    0    1    0    1    0
+bash$ < input.rsf sfheaderwindow mask=mask.rsf > output.rsf
+bash$ < output.rsf sfdisfil
+   0:             2            2            2            2            2
+   5:             7            7            7            7            7
+  10:             9            9            9            9            9
+\end{verbatim}
+In this case, only three traces are selected for the output. Thanks to
+the separation between headers and data, the operation of
+\texttt{sfheaderwindow} is optimally efficient. 
+
 
 %%% Local Variables: 
 %%% mode: latex
