@@ -17,6 +17,17 @@
 import os, stat, sys, types 
 import re, string, urllib, ftplib
 
+# database for .sconsign
+try:
+    import gdbm
+    db='gdbm'
+except:
+    try:
+        import dbhash
+        db='dbhash'
+    except:
+        db=None
+        
 try:
     import filecmp
 except:
@@ -197,9 +208,15 @@ class Project(Environment):
             self.path = datapath + dir + os.sep
         if not os.path.exists(self.path):
             os.mkdir(self.path)
-        self.SConsignFile(self.path+'.sconsign')
+        if db=='gdbm':
+            self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
+        elif db=='dbhash':
+            self.SConsignFile(self.path+'.sconsign.'+db,dbhash)
+        else:
+            self.SConsignFile(self.path+'.sconsign')
         self.resdir = resdir
-        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',figdir+'/\\1',cwd)
+        self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
+                             figdir+'/\\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
