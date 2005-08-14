@@ -16,9 +16,14 @@ Flow('qdome',None,
 Result('qdome',cubeplot('Input'))
 
 Flow('dip','qdome',
-     'dip w1=200 w2=100 w3=75 p1=1 p2=2 p3=2 rect1=5 rect2=5 rect3=5 order=3')
-Flow('dip1','dip','window n4=1')
-Flow('dip2','dip','window f4=1')
+     '''
+     patch w=200,100,75 p=1,2,2 |
+     dip rect1=5 rect2=5 rect3=5 order=3
+     ''')
+Flow('dip1','dip',
+     'window n4=1 | spray axis=4 n=1 o=0 d=1 | patch inv=y weight=y verb=y')
+Flow('dip2','dip',
+     'window f4=1 | spray axis=4 n=1 o=0 d=1 | patch inv=y weight=y verb=y')
 
 Result('dip1',cubeplot('Inline dip','allpos=y bar=bar.rsf',
                        '''
@@ -31,16 +36,18 @@ Result('dip2',cubeplot('Crossline dip','allpos=y bar=bar.rsf',
                        barlabel="Crossline Dip"
                        '''))
 
-Flow('cost','dip','stack axis=1 rms=y norm=n')
-Plot('cost1','cost',
+Flow('cost1','dip1','stack axis=1 rms=y norm=n')
+Flow('cost2','dip2','stack axis=1 rms=y norm=n')
+
+Flow('cost','cost1 cost2','cat axis=3 ${SOURCES[1]}')
+
+Plot('cost1',
      '''
-     window n3=1 |
      grey color=j scalebar=y bartype=h allpos=y
      title="West-East cost" transp=n yreverse=n
      ''')
-Plot('cost2','cost',
+Plot('cost2',
      '''
-     window f3=1 |
      grey color=j scalebar=y bartype=h allpos=y
      title="South-North cost" transp=n yreverse=n
      ''')

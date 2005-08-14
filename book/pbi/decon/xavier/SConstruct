@@ -45,10 +45,6 @@ Flow('refl','ai vel1',
 Flow('modl','refl vel1','time2depth velocity=${SOURCES[1]} dz=1.17')
 
 Result('xrefl','refl',grey3('','G','Convolution Model, 120 Hz','Time (s)'))
-
-Flow('xdip','refl',
-     'dip rect1=10 rect2=10 rect3=10 memsize=150 p1=1 w1=300')
-
 Result('xmodl','modl',grey3('','G','Convolution Model, 120 Hz','Depth (m)'))
 
 Flow('slow1','vel1','math output=1/input | transp plane=13')

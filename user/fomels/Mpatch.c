@@ -37,12 +37,13 @@ If inv=y, the number of output dimensions is half the number of input dimensions
 
 int main (int argc, char *argv[])
 {
-    bool inv, verb;
-    int dim,w12,p12, j, ip;
+    bool inv, verb, weight;
+    int dim,w12,p12, j, ip, iw;
     int n[SF_MAX_DIM], p[SF_MAX_DIM], w[SF_MAX_DIM]; 
     off_t nall, n12;
-    float *u;
-    char key[4];
+    float *u, *t, *r;
+    char key[4], *tmpname, *whtname;
+    FILE *tmp, *wht;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -57,60 +58,149 @@ int main (int argc, char *argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    dim = sf_filedims(in,n);
-    
-    if (!sf_getints("w",w,dim)) {
-	/* window size */
-	for (j=0; j < dim; j++) {
-	    w[j] = n[j];
-	}
-    } else {
-	for (j=0; j < dim; j++) {
-	    if (w[j] > n[j]) w[j] = n[j];
-	}
-    }
+    if (!sf_getbool("weight",&weight)) weight=false;
+    /* if y, apply weighting to each patch */
 
-    if (!sf_getints("p",p,dim)) {
-	/* number of windows */
+    if (inv) {
+	dim = sf_filedims(in,w)/2;
 	for (j=0; j < dim; j++) {
-	    if (n[j] > w[j]) {
-		p[j] = 1 + 1.5*n[j]/w[j]; /* 50% overlap */
-	    } else {
-		p[j] = 1;
-	    }
+	    p[j]=w[dim+j];
+	}
+	if (!sf_histints(in,"n0",n,dim) && !sf_getints("n0",n,dim))
+	    sf_error("Need n0=");
+	/* data dimensions (for inv=y) */
+
+	for (j=0; j < dim; j++) {
+	    snprintf(key,4,"n%d",j+1);
+	    sf_putint(out,key,n[j]);
+	    snprintf(key,4,"n%d",dim+j+1);
+	    sf_putint(out,key,1);
 	}	
-    }
+    } else {
+	dim = sf_filedims(in,n);
+	sf_putints(out,"n0",n,dim);
 
+	if (!sf_getints("w",w,dim)) {
+	    /* window size */
+	    for (j=0; j < dim; j++) {
+		w[j] = n[j];
+	    }
+	} else {
+	    for (j=0; j < dim; j++) {
+		if (w[j] > n[j]) w[j] = n[j];
+	    }
+	}
+
+	for (j=0; j < dim; j++) {
+	    snprintf(key,4,"n%d",j+1);
+	    sf_putint(out,key,w[j]);
+	}
+
+	if (!sf_getints("p",p,dim)) {
+	    /* number of windows */
+	    for (j=0; j < dim; j++) {
+		if (n[j] > w[j]) {
+		    p[j] = 1 + 1.5*n[j]/w[j]; /* 50% overlap */
+		} else {
+		    p[j] = 1;
+		}
+	    }	
+	}
+
+	for (j=0; j < dim; j++) {
+	    snprintf(key,4,"n%d",dim+j+1);
+	    sf_putint(out,key,p[j]);
+	}
+    }
+	
     n12 = w12 = p12 = 1;    
     for (j=0; j < dim; j++) {
-	if (verb) sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
-
+	if (verb) 
+	    sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
+	    
 	n12 *= n[j];
 	w12 *= w[j];
 	p12 *= p[j];
-
-	snprintf(key,4,"n%d",j+1);
-	sf_putint(out,key,w[j]);
-	snprintf(key,4,"n%d",dim+j+1);
-	sf_putint(out,key,p[j]);
-    }
+    }    
 
     u = sf_floatalloc(w12);
     nall = n12*sizeof(float);
     
-    sf_unpipe(in,nall);
-    
+    if (inv) {
+	tmp = sf_tempfile(&tmpname,"w+b");
+	oc_zero(nall,tmp);
+
+	t = sf_floatalloc(w12);
+    } else {
+	sf_unpipe(in,nall);
+	t = NULL;
+    }
+
+    if (weight) {
+	r = sf_floatalloc(w12);
+	sf_tent2 (dim,w,r);
+	
+	if (inv) {
+	    wht = sf_tempfile(&whtname,"w+b");
+	    oc_zero(nall,wht);
+	}
+    } else {
+	r = NULL;
+    }
+	
+
     ocpatch_init(dim,w12,p12,p,n,w);
     
-    /* loop over patches */
-    for (ip=0; ip < p12; ip++) {
-	/* read data */
-	ocpatch_flop (ip,false,in,u);
-		
-	/* write data */
-	sf_floatwrite (u,w12,out);
+    for (ip=0; ip < p12; ip++) {	
+	if (verb) sf_warning("patch %d of %d",ip+1,p12);
+
+	if (inv) {
+	    sf_floatread (u,w12,in);
+	    ocpatch_lop (ip,false,tmp,t);
+
+	    if (weight) {
+		for (iw=0; iw < w12; iw++) {
+		    t[iw] += r[iw]*u[iw];
+		}
+	    } else {
+		for (iw=0; iw < w12; iw++) {
+		    t[iw] += u[iw];
+		}
+	    }
+
+	    ocpatch_lop (ip,true,tmp,t);
+
+	    if (weight) {
+		ocpatch_lop (ip,false,wht,t);
+		for (iw=0; iw < w12; iw++) {
+		    t[iw] += r[iw];
+		}
+		ocpatch_lop (ip,true,wht,t);
+	    }
+
+	} else {
+
+	    ocpatch_flop (ip,false,in,u);
+	    if (NULL != r) {
+		for (iw=0; iw < w12; iw++) {
+		    u[iw] *= r[iw];
+		}
+	    }
+	    sf_floatwrite (u,w12,out);
+
+	}
     }		
     
+    if (inv) {
+	if (weight) {
+	    oc_divide(nall,tmp,wht,out);
+	    unlink(whtname);
+	} else {
+	    oc_dump(nall,tmp,out);
+	}
+	unlink(tmpname);
+    }
+
     exit (0);
 }
 

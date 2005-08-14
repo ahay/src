@@ -90,7 +90,7 @@ Result('bvsc','vsc vtr','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('dips0','dip3','spray axis=3 n=250 d=0.0335 o=7.705')
 Flow('dips','bei dips0',
-     'dip memsize=500 idip=${SOURCES[1]} rect1=20 rect2=5 rect3=20')
+     'dip idip=${SOURCES[1]} rect1=20 rect2=5 rect3=20')
 
 Flow('hdip','dips','window n4=1')
 Flow('ydip','dips','window f4=1')
