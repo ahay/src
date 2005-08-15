@@ -504,6 +504,48 @@ In this case, only three traces are selected for the output. Thanks to
 the separation between headers and data, the operation of
 \texttt{sfheaderwindow} is optimally efficient. 
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfin}
+  }}
+
+\texttt{sfin} is one of the most useful programs for operating with
+RSF files. It produces quick information on the file hypercube
+dimensions and checks the consistency of the associated data file.
+
+Here is an example. Let us create an RSF file and examine it with \texttt{sfin}.
+\begin{verbatim}
+bash$ sfspike n1=100 n2=20 > spike.rsf
+bash$ sfin spike.rsf
+spike.rsf:
+    in="/tmp/spike.rsf@"
+    esize=4 type=float form=native
+    n1=100         d1=0.004       o1=0          label1="Time (s)"
+    n2=20          d2=0.1         o2=0          label2="Distance (km)"
+        2000 elements 8000 bytes
+\end{verbatim}
+\texttt{sfin} reports the following information:
+\begin{itemize}
+\item location of the data file (\texttt{/tmp/spike.rsf\@})
+\item element size (4 bytes)
+\item element type (floating point)
+\item element form (native)
+\item hypercube dimensions (100 by 20)
+\item axes scale (0.004 and 0.1)
+\item axes origin (0 and 0)
+\item axes labels
+\item total number of elements
+\item total number of bytes in the data file
+\end{itemize}
+
+Suppose that the file got corrupted by a buggy program and reports
+incorrect dimensions. The \texttt{sfin} program should be able to
+catch the discrepancy.
+\begin{verbatim}
+bash$ echo n2=100 >> spike.rsf
+bash$ sfin spike.rsf > /dev/null
+sfin:           Actually 8000 bytes, 20% of expected.
+\end{verbatim}
+
 
 %%% Local Variables: 
 %%% mode: latex
