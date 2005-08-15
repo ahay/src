@@ -6,13 +6,13 @@ import zomig, spmig
 nx     =  360   
 ny     =  200
 nz_res =   50
-nz_ovr =  200
+nz_ovr =  100
 
 # Cell sizes (in meters)
 dx     =  15          
 dy     =  15
 dz_res =   3
-dz_ovr =  10
+dz_ovr =  20
 
 # Axis origin (in meters)
 ox     =    0          
@@ -213,7 +213,7 @@ Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
 Result('vel','vel',vplot3d(par,'velocity','pclip=100 bias=2297 allpos=y'))
 
 # overburden velocity (can reduce n1=??? for speed)
-Flow(  'ovb','vp1', 'window n1=200    | put o1=0 o3=0' %par)
+Flow(  'ovb','vp1', 'window n1=%d | put o1=0 o3=0' % nz_ovr)
 Result('ovb','ovb',vplot3d(par,'overburden velocity','pclip=100 bias=1500 allpos=y'))
 
 # ------------------------------------------------------------
@@ -409,6 +409,7 @@ Flow('c2d','e2d',
      window min1=%(ft)g | pad n1out=2000 |
      put o1=0 label1=t
      ''' % par)                             # time-domain shot record
+                                            # n1out=501, n1out=1000
 
 # migration
 spmig.image('j2d','s2d','u2do','e2do',par)  # shot-record migration
@@ -516,17 +517,17 @@ Result('j2d', 'j2d', iplot2d(par,'shot record'))
 
 # RESULTS 3D
 
-Result('t3d', 't3d', 'window max1=0.15         |' + dplot3d(par,'convolution',        'pclip=99.8','frame1=19'))
-Result('tt3d','tt3d','window max1=0.15         |' + dplot3d(par,'convolution',        'pclip=99.8','frame1=19'))
-Result('f3d', 'f3d', 'window min1=1.5 max1=2.5 |' + dplot3d(par,'exploding reflector','pclip=99.8'))
-Result('ft3d','ft3d','window min1=1.5 max1=2.5 |' + dplot3d(par,'exploding reflector','pclip=99.8'))
-Result('c3d', 'c3d', 'window min1=1.5 max1=2.5 |' + dplot3d(par,'shot record',        'pclip=99.8'))
-
-Result('m3d', 'm3d', iplot3d(par,'convolution',        'pclip=99'))
-Result('mt3d','mt3d',iplot3d(par,'convolution',        'pclip=99'))
-Result('i3d', 'i3d', iplot3d(par,'exploding reflector','pclip=99'))
-Result('it3d','it3d',iplot3d(par,'exploding reflector','pclip=99'))
-Result('j3d', 'j3d', iplot3d(par,'shot record',        'pclip=99'))
+# Result('t3d', 't3d', 'window max1=0.15         |' + dplot3d(par,'convolution',        'pclip=99.8','frame1=19'))
+# Result('tt3d','tt3d','window max1=0.15         |' + dplot3d(par,'convolution',        'pclip=99.8','frame1=19'))
+# Result('f3d', 'f3d', 'window min1=1.5 max1=2.5 |' + dplot3d(par,'exploding reflector','pclip=99.8'))
+# Result('ft3d','ft3d','window min1=1.5 max1=2.5 |' + dplot3d(par,'exploding reflector','pclip=99.8'))
+# Result('c3d', 'c3d', 'window min1=1.5 max1=2.5 |' + dplot3d(par,'shot record',        'pclip=99.8'))
+# 
+# Result('m3d', 'm3d', iplot3d(par,'convolution',        'pclip=99'))
+# Result('mt3d','mt3d',iplot3d(par,'convolution',        'pclip=99'))
+# Result('i3d', 'i3d', iplot3d(par,'exploding reflector','pclip=99'))
+# Result('it3d','it3d',iplot3d(par,'exploding reflector','pclip=99'))
+# Result('j3d', 'j3d', iplot3d(par,'shot record',        'pclip=99'))
 
 # ------------------------------------------------------------
 
