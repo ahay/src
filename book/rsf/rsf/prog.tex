@@ -546,6 +546,29 @@ bash$ sfin spike.rsf > /dev/null
 sfin:           Actually 8000 bytes, 20% of expected.
 \end{verbatim}
 
+\texttt{sfin} also checks the first records in the file for zeros. 
+\begin{verbatim}
+bash$ sfspike n1=100 n2=100 k2=99 > spike2.rsf
+bash$ sfin spike2.rsf >/dev/null
+sfin: The first 32768 bytes are all zeros
+\end{verbatim}
+The number of bytes to check is adjustable
+\begin{verbatim}
+bash$ sfin spike2.rsf check=0.01 >/dev/null
+sfin: The first 16384 bytes are all zeros
+\end{verbatim}
+
+You can also output only the location of the data file. This is
+sometimes handy in scripts.
+\begin{verbatim}
+bash$ sfin spike.rsf spike2.rsf info=n
+/tmp/spike.rsf@ /tmp/spike2.rsf@
+\end{verbatim}
+An alternative is to use \texttt{sfget}, as follows:
+\begin{verbatim}
+bash$ sfget parform=n in < spike.rsf
+/tmp/spike.rsf@
+\end{verbatim}
 
 %%% Local Variables: 
 %%% mode: latex
