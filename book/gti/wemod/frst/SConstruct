@@ -122,21 +122,19 @@ def dplot3d(par,title="",custom1="",custom2=""):
     
 def iplot3d(par,title="",custom1="",custom2=""):
     return '''
-    transp memsize=250 plane=23 |
-    transp memsize=250 plane=12 |
     byte bar=bar.rsf gainpanel=all %s |
     grey3 scalebar=y bar=bar.rsf labelrot=n flat=y title="%s"
     frame1=40  frame2=%d frame3=%d
     label1=z label2=x label3=y %s
-    ''' % (custom1,title,par['xpad'],par['ypad'],custom2)
+    ''' % (custom1,title,par['ypad'],par['xpad'],custom2)
     
-def vplot3d(par,title="",custom1=""):
+def vplot3d(par,title="",custom1="",custom2=""):
     return '''
     byte bar=bar.rsf gainpanel=all %s |
     grey3 scalebar=y bar=bar.rsf labelrot=n flat=y title="%s"
     frame1=40  frame2=%d frame3=%d color=j
-    label1=z label2=x label3=y
-    ''' % (custom1,title,par['xpad'],par['ypad'])
+    label1=z label2=y label3=x %s
+    ''' % (custom1,title,par['ypad'],par['xpad'],custom2)
 
 def dplot2d(par,title="",custom=""):
     return '''
@@ -159,7 +157,7 @@ def iplot2d(par,title="",custom=""):
 # ------------------------------------------------------------
 par = {
         'nt':1000,'ot':0,'dt':0.005,'kt':20,                # time
-        'nw':251, 'ow':0,                                   # frequency
+        'nw':501, 'ow':0,                                   # frequency
         'nx':440, 'ox':0,'dx':15,                           # x
         'ny':280, 'oy':0,'dy':15,                           # y
         'nz':50,  'oz':0,'dz':3,                            # z
@@ -206,15 +204,21 @@ Flow('ro1','ovr_rho_noise_taper',flip() )
 
 # density
 Flow  ('den','ro0','window n1=%(nz)d | put o1=0' % par)
-Result('den','den',vplot3d(par,'density','pclip=100 bias=1.5 allpos=y'))
+Result('den','den',
+       'transp plane=23 |'
+       + vplot3d(par,'density','pclip=100 bias=2.1 allpos=y','point1=0.15 point2=0.40'))
 
 # reservoir velocity
 Flow(  'vel','vp0', 'window n1=%(nz)d | put o1=0 o3=0' % par)
-Result('vel','vel',vplot3d(par,'velocity','pclip=100 bias=2297 allpos=y'))
+Result('vel','vel',
+       'transp plane=23 |'
+       + vplot3d(par,'velocity','pclip=100 bias=2297 allpos=y','point1=0.15 point2=0.40'))
 
 # overburden velocity (can reduce n1=??? for speed)
 Flow(  'ovb','vp1', 'window n1=%d | put o1=0 o3=0' % nz_ovr)
-Result('ovb','ovb',vplot3d(par,'overburden velocity','pclip=100 bias=1500 allpos=y'))
+Result('ovb','ovb',
+       'transp plane=23 |'
+       + vplot3d(par,'overburden velocity','pclip=100 bias=1950 allpos=y','point1=0.30 point2=0.40'))
 
 # ------------------------------------------------------------
 # reservoir slowness (true)
@@ -225,57 +229,53 @@ Flow('slo','vel',
      transp memsize=250 plane=23 |
      put label1=x label2=y label3=z
      ''')
-     
 Result('slo','slo',
-       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d(par,'slowness','pclip=100 bias=0.000340432 allpos=y'))
+       'transp memsize=250 plane=13 |'
+       + vplot3d(par,'slowness','pclip=100 bias=0.000340432 allpos=y','point1=0.15 point2=0.40'))
 
 # reservoir slowness (smooth)
-Flow('slx','vel',
-     '''
-     math "output=1/input" |
-     smooth rect1=101 rect2=51 rect3=51 |
-     transp memsize=250 plane=12 | 
-     transp memsize=250 plane=23 |
-     put label1=x label2=y label3=z
-     ''')
-     
-Result('slx','slx',
-       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d(par,'smoothed slowness','pclip=100 bias=0.000340432 allpos=y'))
+Flow('slo-s','slo','smooth rect1=50 rect2=50 rect3=50')
+Result('slo-s','slo-s',
+       'transp memsize=250 plane=13 |'
+       + vplot3d(par,'smoothed slowness','pclip=100 bias=0.000340432 allpos=y','point1=0.15 point2=0.40'))
 
-# slowness (overburden)
+# overburden slowness (true)
 Flow('ovs','ovb',
      '''
      math "output=1/input" |
-     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
      put label1=x label2=y label3=z
      ''')
-     
 Result('ovs','ovs',
-       'transp memsize=250 plane=23 | transp memsize=250 plane=12 | '
-       + vplot3d(par,'overburden slowness','pclip=100 bias=0.000340432 allpos=y'))
-
+       'transp memsize=250 plane=13 |'
+       + vplot3d(par,'overburden slowness','pclip=100 bias=0.000340432 allpos=y','point1=0.30 point2=0.40'))
+Flow('ovs-s','ovs','smooth rect1=50 rect2=50 rect3=50')
+Result('ovs-s','ovs-s',
+       'transp memsize=250 plane=13 |'
+       + vplot3d(par,'smoothed slowness','pclip=100 bias=0.000340432 allpos=y','point1=0.30 point2=0.40'))
 # ------------------------------------------------------------
 
 # acoustic impedance (depth)
 Flow('aim','vel den','math v=${SOURCES[1]} d=${SOURCES[1]} output=v*d', stdin=0)
-Result('aim','aim',vplot3d(par,'acoustic impedance','pclip=100 bias=1 allpos=y'))
+Result('aim','aim',
+       'transp plane=23 |'
+       + iplot3d(par,'acoustic impedance','pclip=100 bias=4.44 allpos=y','point1=0.15 point2=0.40'))
 
 # acoustic impedance (time)
 Flow('ait',['aim','vel'],
      'depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d | put label1=t' % par )
-
 Result('ait','ait','window max1=0.15 | ' 
-       + dplot3d(par,'acoustic impedance','pclip=100 bias=1 allpos=y','color=j frame1=19'))
+       + dplot3d(par,'acoustic impedance','pclip=100 bias=4.00 allpos=y','color=j frame1=19'))
 
 # reflectivity (depth)
 Flow('ref','aim','ai2refl')
-Result('ref','ref',dplot3d(par,'reflectivity','pclip=99','label1=z frame1=40'))
+Result('ref','ref',
+       'transp plane=23 |'
+       + iplot3d(par,'reflectivity','pclip=99','point1=0.15 point2=0.40'))
 
 # reflectivity (time)
 Flow('ret','ait','ai2refl')
-
 Result('ret','ret','window max1=0.15 | '
        + dplot3d(par,'reflectivity','pclip=99','frame1=19'))
 
@@ -294,16 +294,16 @@ Flow('v2d','vel','window squeeze=n n3=1 f3=140')
 Flow('v3d','vel','window')
 
 # overburden slowness
-Flow('o2d','ovs','window squeeze=n n2=1 f2=140')
-Flow('o3d','ovs','window')
+Flow('o2d'  ,'ovs'  ,'window squeeze=n n2=1 f2=140') # true
+Flow('o3d'  ,'ovs'  ,'window')                       # true
+Flow('o2d-s','ovs-s','window squeeze=n n2=1 f2=140') # smooth
+Flow('o3d-s','ovs-s','window')                       # smooth
 
-# slowness
-Flow('s2d','slo','window squeeze=n n2=1 f2=140')
-Flow('s3d','slo','window')
-
-# slowness
-Flow('x2d','slx','window squeeze=n n2=1 f2=140')
-Flow('x3d','slx','window')
+# reservoir slowness
+Flow('s2d'  ,'slo'  ,'window squeeze=n n2=1 f2=140') # true
+Flow('s3d'  ,'slo'  ,'window')                       # true
+Flow('s2d-s','slo-s','window squeeze=n n2=1 f2=140') # smooth
+Flow('s3d-s','slo-s','window')                       # smooth
 # ------------------------------------------------------------
 
 # wavelet
@@ -318,7 +318,6 @@ Flow('wav',None,
      ricker1 frequency=%(frq)s |
      put label1=t label2=x label3=y
      ''' % par)
-     
 Result('wav','wav','window n1=200 | graph title="wavelet"')
 
 # ------------------------------------------------------------
@@ -328,14 +327,16 @@ Result('wav','wav','window n1=200 | graph title="wavelet"')
 # data from reflectivity in depth
 Flow('t2d',['r2d','v2d'],
      '''
-     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s | put label1=t
      ''' % par )
      
 Flow('t3d',['r3d','v3d'],
      '''
-     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s | put label1=t
      ''' % par )
@@ -348,17 +349,20 @@ Flow('tt3d','rt3d','ricker1 frequency=%(frq)s | put label1=t' % par )
 Flow('m2d',['t2d','v2d'],
      '''
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
-     transp memsize=250 plane=12 | transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
      put label1=z
      ''' % par )
 
 Flow('m3d',['r3d','v3d'],
      '''
-     transp memsize=250 plane=23 | transp memsize=250 plane=12 |
+     transp memsize=250 plane=23 |
+     transp memsize=250 plane=12 |
      depth2time velocity=${SOURCES[1]} dt=%(dt)g nt=%(nt)d |
      ricker1 frequency=%(frq)s | 
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
-     transp memsize=250 plane=12 | transp memsize=250 plane=23
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23
      ''' % par )
 
 # image from reflectivity in time
@@ -366,14 +370,16 @@ Flow('m3d',['r3d','v3d'],
 Flow('mt2d',['tt2d','v2d'],
      '''
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
-     transp memsize=250 plane=12 | transp memsize=250 plane=23
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23
      put label1=z
      ''' % par )
 
 Flow('mt3d',['tt3d','v3d'],
      '''
      time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
-     transp memsize=250 plane=12 | transp memsize=250 plane=23
+     transp memsize=250 plane=12 |
+     transp memsize=250 plane=23
      put label1=z
      ''' % par )
 
@@ -396,10 +402,10 @@ Flow('u2d','wav',
      transp memsize=250 plane=23 
      ''' % par)
 
-# C dt one = causal datuming one-way
-zomig.Cdtone('u2do','u2d','o2d',par)        # source wavefield through overburden
+# C dt one = causal datuming one-way traveltime
+zomig.Cdtone('u2do','u2d','o2d',par)        #   source wavefield down through overburden
 spmig.model('e2do','s2d','u2do','r2d',par)  # shot-record modeling in reservoir
-zomig.Cdtone('e2d','e2do','o2d',par)        # receiver wavefield through overburden
+zomig.Cdtone('e2d','e2do','o2d',par)        # receiver wavefield   up through overburden
 
 # modeled data from frequency to time
 Flow('c2d','e2d',
@@ -409,10 +415,11 @@ Flow('c2d','e2d',
      window min1=%(ft)g | pad n1out=2000 |
      put o1=0 label1=t
      ''' % par)                             # time-domain shot record
-                                            # n1out=501, n1out=1000
-
+                                            
 # migration
-spmig.image('j2d','s2d','u2do','e2do',par)  # shot-record migration
+zomig.Cdtone('u2do-s','u2d','o2d-s',par) #   source datuming (    causal) in smooth overburden
+zomig.Adtone('e2do-s','e2d','o2d-s',par) # receiver datuming (anticausal) in smooth overburden
+spmig.image('j2d','s2d-s','u2do-s','e2do-s',par)  # shot-record migration in smooth slowness
 
 # Shot-record modeling/migration (3-D)
 
@@ -444,7 +451,9 @@ Flow('c3d','e3d',
      ''' % par)                             # time-domain shot record
 
 # migration
-spmig.image('j3d','s3d','u3do','e3do',par)  # shot-record migration
+zomig.Cdtone('u3do-s','u3d','o3d-s',par) #   source datuming (    causal) in smooth overburden
+zomig.Adtone('e3do-s','e3d','o3d-s',par) # receiver datuming (anticausal) in smooth overburden
+spmig.image('j3d','s3d-s','u3do-s','e3do-s',par)  # shot-record migration in smooth slowness
 
 # ------------------------------------------------------------
 # EXPLODING REFLECTOR
@@ -453,7 +462,6 @@ spmig.image('j3d','s3d','u3do','e3do',par)  # shot-record migration
 # Exploding reflector modeling/migration (2-D)
 zomig.model('d2do', 's2d','m2d', par)     # modeling in the reservoir
 zomig.model('dt2do','s2d','mt2d',par)     # modeling in the reservoir
-
 # C dt two = causal datuming (up) two-way traveltime
 zomig.Cdttwo('d2d', 'd2do', 'o2d',par)    # upward continuation in overburden
 zomig.Cdttwo('dt2d','dt2do','o2d',par)    # upward continuation in overburden
@@ -471,13 +479,14 @@ Flow('ft2d','dt2d',
      ''' % par )
 
 # migration
-zomig.image('i2d', 'x2d','d2do', par)
-zomig.image('it2d','x2d','dt2do',par)
+zomig.Adttwo('d2do-s','d2d', 'o2d-s',par) 
+zomig.image('i2d', 's2d-s','d2do-s', par)
+zomig.image('it2d','s2d-s','dt2do',par)
+
 
 # Exploding reflector modeling/migration (3-D)
 zomig.model('d3do', 's3d','m3d', par)     # modeling in the reservoir
 zomig.model('dt3do','s3d','mt3d',par)     # modeling in the reservoir
-
 # C dt two = causal datuming (up) two-way traveltime
 zomig.Cdttwo('d3d', 'd3do', 'o3d',par)    # upward continuation in overburden
 zomig.Cdttwo('dt3d','dt3do','o3d',par)    # upward continuation in overburden
@@ -497,8 +506,9 @@ Flow('ft3d','dt3d',
      ''' % par )
 
 # migration
-zomig.image('i3d', 'x3d','d3do', par)
-zomig.image('it3d','x3d','dt3do',par)
+zomig.Adttwo('d3do-s','d3d', 'o3d-s',par) 
+zomig.image('i3d', 's3d-s','d3do-s', par)
+zomig.image('it3d','s3d-s','dt3do',par)
 
 # ------------------------------------------------------------
 # RESULTS 2D
