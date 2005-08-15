@@ -1,6 +1,6 @@
 /* Display basic information about RSF files.
    
-Takes: file1.rsf file2.rsf file3.rsf
+Takes: file1.rsf file2.rsf ...
 
 n1,n2,... are data dimensions
 o1,o2,... are axis origins
