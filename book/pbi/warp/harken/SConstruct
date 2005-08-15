@@ -116,7 +116,7 @@ for file in Split('s1line s2line wline2'):
 
 def interleave(title):
     return '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 ${SOURCES[1]} |
      wiggle poly=y transp=y yreverse=y
      title="Interleaved (%s)" label1="Time (s)" label2="In-line"
      ''' % title

@@ -570,6 +570,51 @@ bash$ sfget parform=n in < spike.rsf
 /tmp/spike.rsf@
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfinterleave}
+  }}
+
+\texttt{interleave} combines two or more datasets by interleaving them on one
+of the axes. Here is a quick example:
+\begin{verbatim}
+bash$ sfspike n1=5 n2=5 > one.rsf
+bash$ sfdisfil < one.rsf
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            1            1            1            1
+  15:             1            1            1            1            1
+  20:             1            1            1            1            1
+bash$ sfscale < one.rsf dscale=2 > two.rsf
+bash$ sfdisfil < two.rsf
+   0:             2            2            2            2            2
+   5:             2            2            2            2            2
+  10:             2            2            2            2            2
+  15:             2            2            2            2            2
+  20:             2            2            2            2            2
+bash$ sfinterleave one.rsf two.rsf axis=1 | sfdisfil
+   0:             1            2            1            2            1
+   5:             2            1            2            1            2
+  10:             1            2            1            2            1
+  15:             2            1            2            1            2
+  20:             1            2            1            2            1
+  25:             2            1            2            1            2
+  30:             1            2            1            2            1
+  35:             2            1            2            1            2
+  40:             1            2            1            2            1
+  45:             2            1            2            1            2
+bash$ sfinterleave < one.rsf two.rsf axis=2 | sfdisfil
+   0:             1            1            1            1            1
+   5:             2            2            2            2            2
+  10:             1            1            1            1            1
+  15:             2            2            2            2            2
+  20:             1            1            1            1            1
+  25:             2            2            2            2            2
+  30:             1            1            1            1            1
+  35:             2            2            2            2            2
+  40:             1            1            1            1            1
+  45:             2            2            2            2            2
+\end{verbatim}
+
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: t

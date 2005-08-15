@@ -483,10 +483,7 @@ Plot('spec1','Psppec Ssppec',
 Result('spec1','spec0 spec1','SideBySideIso')
 
 Plot('inter',['Prresh','Srresh'],
-     '''
-     interleave axis=2 other=${SOURCES[1]} |
-     grey title='Interleaved (Before)'
-     ''')
+     'interleave axis=2 ${SOURCES[1]} | grey title="Interleaved (Before)" ')
 
 inter = '''
 pad end2=1 > ${TARGETS[1]} &&
@@ -497,7 +494,7 @@ Flow(['pstack','pshift'],'Prresh',inter)
 Flow(['sstack','sshift'],'Srresh',inter)
 Plot('inter1',['pstack','sstack'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 ${SOURCES[1]} |
      grey title='Interleaved (Before)'
      label1='Time (s)' label2='In-line'
      ''')
@@ -551,7 +548,7 @@ Flow(['spstack','spshift'],'Prresh',inter)
 Flow(['ssstack','ssshift'],'Srresh',inter)
 Plot('sinter1',['spstack','ssstack'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 ${SOURCES[1]} |
      grey title='Interleaved (Before)'
      label1='Time (s)' label2='In-line'
      ''')
@@ -721,16 +718,13 @@ Plot('Gaamma5',
 Result('Waarp5','Prresh2 wline5 diff6 Gaamma5','TwoRows')
 
 Plot('inter2',['Prresh2','wline5'],
-     '''
-     interleave axis=2 other=${SOURCES[1]} | 
-     grey title='Interleaved (After)'
-     ''')
+     'interleave axis=2 ${SOURCES[1]} | grey title="Interleaved (After)" ')
 
 Flow(['pstack2','pshift2'],'Prresh2',inter)
 Flow(['sstack2','sshift2'],'wline5',inter)
 Plot('inter3',['pstack2','sstack2'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 ${SOURCES[1]} |
      grey title='Interleaved (After)'
      label1='Time (s)' label2='In-line'
      ''')
@@ -756,7 +750,7 @@ Flow(['spstack2','spshift2'],'sprresh2',inter)
 Flow(['ssstack2','ssshift2'],'swline5',inter)
 Plot('sinter3',['spstack2','ssstack2'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |
+     interleave axis=2 ${SOURCES[1]} |
      grey title='Interleaved (After)'
      label1='Time (s)' label2='In-line'
      ''')

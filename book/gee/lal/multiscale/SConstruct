@@ -7,7 +7,7 @@ Flow('make',None,'make n2=20 n=5 p=11 t1=3 t2=3')
 Plot('make',plot('original'))
 
 Flow('win','hole','window j2=2 f2=1')
-Flow('strip','win','math output=0 | interleave axis=2 other=$SOURCE')
+Flow('strip','win','math output=0 | interleave axis=2 $SOURCE')
 Plot('strip',plot('gapped'))
 
 Flow(['pef','lag'],'strip',

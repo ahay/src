@@ -430,7 +430,7 @@ Flow('pstack','Prresh',partial)
 Flow('sstack','Srresh',partial)
 Plot('wginter1',['pstack','sstack'],
      '''
-     interleave axis=2 other=${SOURCES[1]} | window max1=3 |
+     interleave axis=2 ${SOURCES[1]} | window max1=3 |
      grey title='Interleaved (Before)' label1='Time (s)'
      ''')
 

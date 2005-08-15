@@ -433,10 +433,7 @@ Result('vspec1','spec0 spec1','SideBySideAniso')
 
 
 Plot('inter',['Prresh','Srresh'],
-     '''
-     interleave axis=2 other=${SOURCES[1]} |
-     grey title='Interleaved (Before)'
-     ''')
+     'interleave axis=2 ${SOURCES[1]} | grey title="Interleaved (Before)" ')
 
 partial = 'pad n2=480 | put n2=5 n3=96 | stack'
 
@@ -444,13 +441,13 @@ Flow('pstack','Prresh',partial)
 Flow('sstack','Srresh',partial)
 Plot('inter1',['pstack','sstack'],
      '''
-     interleave axis=2 other=${SOURCES[1]} | window max1=1.5 |
+     interleave axis=2 ${SOURCES[1]} | window max1=1.5 |
      grey title='Interleaved (Before)'
      label1='Time (s)' label2='In-line'
      ''')
 Result('vinter1',['pstack','sstack'],
      '''
-     interleave axis=2 other=${SOURCES[1]} | window max1=1.5 |
+     interleave axis=2 ${SOURCES[1]} | window max1=1.5 |
      grey title='Interleaved (Before)'
      label1='Time (s)' label2='In-line'
      ''')
@@ -563,23 +560,20 @@ Result('vgamma','Gaamma5',wplot2)
 Result('vaarp5','Prresh2 wline5 diff6 Gaamma5','TwoRows')
 
 Plot('inter2',['Prresh2','wline5'],
-     '''
-     interleave axis=2 other=${SOURCES[1]} | 
-     grey title='Interleaved (After)'
-     ''')
+     'interleave axis=2 ${SOURCES[1]} | grey title="Interleaved (After)" ')
 Result('vinter',['inter','inter2'],'OverUnderAniso')
 
 Flow(['pstack2','pshift2'],'Prresh2',partial)
 Flow(['sstack2','sshift2'],'wline5',partial)
 Plot('inter3',['pstack2','sstack2'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |  window max1=1.5 |
+     interleave axis=2 ${SOURCES[1]} |  window max1=1.5 |
      grey title='Interleaved (After)'
      label1='Time (s)' label2='In-line'
      ''')
 Result('vinter3',['pstack2','sstack2'],
      '''
-     interleave axis=2 other=${SOURCES[1]} |  window max1=1.5 |
+     interleave axis=2 ${SOURCES[1]} |  window max1=1.5 |
      grey title='Interleaved (After)'
      label1='Time (s)' label2='In-line'
      ''')
