@@ -127,9 +127,10 @@ def zplot2d(par,custom=""):
     ''' % (custom)
 def tplot3d(par,custom1="",custom2=""):
     return '''
-    byte bar=bar.rsf gainpanel=all %s |
+    byte bar=bar.rsf gainpanel=all pclip=99.8 %s |
     grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
     frame1=%d frame2=%d frame3=170
+    point1=0.65 point2=0.60 screenratio=0.7 screenht=9
     label1=y label2=x label3=t %s
     ''' % (custom1,par['ypad'],par['xpad'],custom2)
 
@@ -519,9 +520,9 @@ Result('j2d', 'j2d', zplot2d(par,'title="shot record"'))
 
 # RESULTS 3D
  
-Result('t3d','t3d','window max1=0.15          | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="convolution" frame3=19'))
-Result('f3d','f3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="exploding reflector" frame3=170'))
-Result('c3d','c3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="shot record" frame3=170'))
+Result('t3d','t3d','window max1=0.15          | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="convolution" frame3=19'))
+Result('f3d','f3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="exploding reflector"'))
+Result('c3d','c3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="shot record"'))
 
 Result('m3d','m3d','transp plane=12 |'+ zplot3d(par,'pclip=99','title="convolution"'))
 Result('i3d','i3d','transp plane=12 |'+ zplot3d(par,'pclip=99','title="exploding reflector"'))
