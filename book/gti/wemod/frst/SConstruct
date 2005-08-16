@@ -518,14 +518,14 @@ Result('j2d', 'j2d', zplot2d(par,'title="shot record"'))
 #Result('it2d','it2d',zplot2d(par,'exploding reflector'))
 
 # RESULTS 3D
+ 
+Result('t3d','t3d','window max1=0.15          | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="convolution" frame3=19'))
+Result('f3d','f3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="exploding reflector" frame3=170'))
+Result('c3d','c3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="shot record" frame3=170'))
 
-Result('t3d', 't3d', 'window max1=0.15         | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="convolution" frame3=19'))
-Result('f3d', 'f3d', 'window min1=1.5 max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="exploding reflector" frame3=170'))
-#Result('c3d', 'c3d', 'window min1=1.5 max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'pclip=99.8','title="shot record" frame3=170')
-
-Result('m3d', 'm3d', 'transp plane=12 |'+ zplot3d(par,'pclip=99','title="convolution"'))
-Result('i3d', 'i3d', 'transp plane=12 |'+ zplot3d(par,'pclip=99','title="exploding reflector"'))
-#Result('j3d', 'j3d', 'transp plane=12 |'+ zplot3d(par,'pclip=99','title="shot-record"'))
+Result('m3d','m3d','transp plane=12 |'+ zplot3d(par,'pclip=99','title="convolution"'))
+Result('i3d','i3d','transp plane=12 |'+ zplot3d(par,'pclip=99','title="exploding reflector"'))
+Result('j3d','j3d','transp plane=12 |'+ zplot3d(par,'pclip=99','title="shot-record"'))
 
 # Result('tt3d','tt3d','window max1=0.15         |' + dplot3d(par,'convolution',        'pclip=99.8','frame1=19'))
 # Result('ft3d','ft3d','window min1=1.5 max1=2.5 |' + dplot3d(par,'exploding reflector','pclip=99.8'))
