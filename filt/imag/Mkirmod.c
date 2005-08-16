@@ -27,9 +27,9 @@
 
 int main(int argc, char* argv[]) 
 {
-    int nx, nt, ns, nh, is, ih, ix;
-    float *rfl, *rgd, *crv, *dip, *shot, *trace, *ts, *tg, vel[5], vel2[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, *time, *ampl, *delt, freq, theta, ava;
+    int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
+    float **rfl, **rgd, **crv, **dip, *shot, *trace, **ts, **tg, vel[5], vel2[5], slow;
+    float dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq, theta, ava;
     char *type, *type2;
     surface inc, ref;
     sf_file refl, curv, modl, shots;
@@ -42,6 +42,8 @@ int main(int argc, char* argv[])
     if (!sf_histint  (curv,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(curv,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(curv,"o1",&x0)) sf_error("No o1= in input");
+    if (!sf_histint  (curv,"n2",&nc)) nc=1; /* number of reflectors */
+    nxc = nx*nc;
 
     /*** Initialize trace ***/
 
@@ -106,44 +108,50 @@ int main(int argc, char* argv[])
 
     /*** Initialize reflector ***/
 
-    crv = sf_floatalloc(nx);
-    rfl = sf_floatalloc(nx);
-    rgd = sf_floatalloc(nx);
-    dip = sf_floatalloc(nx);
+    crv = sf_floatalloc2(nx,nc);
+    rfl = sf_floatalloc2(nx,nc);
+    rgd = sf_floatalloc2(nx,nc);
+    dip = sf_floatalloc2(nx,nc);
 
-    sf_floatread(crv,nx,curv);
+    sf_floatread(crv[0],nxc,curv);
 
     /* reflectivity (A) */
     if (NULL != sf_getstring("refl")) {
 	refl = sf_input("refl");
-	sf_floatread(rfl,nx,refl);
+	sf_floatread(rfl[0],nxc,refl);
 	sf_fileclose(refl);
     } else {
 	if (!sf_getfloat("r0",&r0)) r0=1.;
-	for (ix=0; ix < nx; ix++) {
-	    rfl[ix] = r0;
+	for (ic=0; ic < nc; ic++) {
+	    for (ix=0; ix < nx; ix++) {
+		rfl[ic][ix] = r0;
+	    }
 	}
     }
 
     /* AVO gradient (B/A) */
     if (NULL != sf_getstring("rgrad")) {
 	refl = sf_input("rgrad");
-	sf_floatread(rgd,nx,refl);
+	sf_floatread(rgd[0],nxc,refl);
 	sf_fileclose(refl);
     } else {
-	for (ix=0; ix < nx; ix++) {
-	    rgd[ix] = 0.;
+	for (ic=0; ic < nc; ic++) {
+	    for (ix=0; ix < nx; ix++) {
+		rgd[ic][ix] = 0.;
+	    }
 	}
     }
 
     /* reflector dip */
     if (NULL != sf_getstring("dip")) {
 	refl = sf_input("dip");
-	sf_floatread(dip,nx,refl);
+	sf_floatread(dip[0],nxc,refl);
 	sf_fileclose(refl);
     } else {
-	for (ix=0; ix < nx; ix++) {
-	    dip[ix] = 0.;
+	for (ic=0; ic < nc; ic++) {
+	    for (ix=0; ix < nx; ix++) {
+		dip[ic][ix] = 0.;
+	    }
 	}
     }
 
@@ -221,11 +229,11 @@ int main(int argc, char* argv[])
 	inc;
     
     /*** Initialize stretch ***/
-    aastretch_init (nt, t0, dt, nx);
+    aastretch_init (nt, t0, dt, nxc);
 
-    time = sf_floatalloc(nx);
-    ampl = sf_floatalloc(nx);
-    delt = sf_floatalloc(nx);
+    time = sf_floatalloc2(nx,nc);
+    ampl = sf_floatalloc2(nx,nc);
+    delt = sf_floatalloc2(nx,nc);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
@@ -233,8 +241,8 @@ int main(int argc, char* argv[])
 
     /*** Compute traveltime table ***/
 
-    kirmod_table (inc, type[0], nx, x0, dx, crv, dip, vel);
-    if (ref != inc) kirmod_table (ref, type2[0], nx, x0, dx, crv, dip, vel2);
+    kirmod_table (inc, type[0], nx, x0, dx, nc, crv, dip, vel);
+    if (ref != inc) kirmod_table (ref, type2[0], nx, x0, dx, nc, crv, dip, vel2);
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
@@ -243,16 +251,18 @@ int main(int argc, char* argv[])
 		ts = kirmod_map(inc,is,nh,ix);
 		tg = kirmod_map(ref,is,ih,ix);
 
-		time[ix] = ts[0] + tg[0];
-		theta = sinf(0.5*(tg[3]-ts[3]));
-		ava = 1.+rgd[ix]*theta*theta;
-		if (ref != inc) ava *= -theta;
-		ampl[ix] = ava*dx/sqrt(ts[1]*tg[1]*(ts[1]+tg[1])+0.001*dt); /* 2.5-D amplitude? */
-		delt[ix] = fabsf(ts[2]+tg[2])*dx; 
+		for (ic=0; ic < nc; ic++) {
+		    time[ic][ix] = ts[ic][0] + tg[ic][0];
+		    theta = sinf(0.5*(tg[ic][3]-ts[ic][3]));
+		    ava = 1.+rgd[ic][ix]*theta*theta;
+		    if (ref != inc) ava *= theta;
+		    ampl[ic][ix] = ava*dx/sqrt(ts[ic][1]*tg[ic][1]*(ts[ic][1]+tg[ic][1])+0.001*dt); /* 2.5-D amplitude? */
+		    delt[ic][ix] = fabsf(ts[ic][2]+tg[ic][2])*dx; 
+		}
 	    }
 
-	    aastretch_define (time,delt,ampl);
-	    aastretch_lop (false,false,nx,nt,rfl,trace);
+	    aastretch_define (time[0],delt[0],ampl[0]);
+	    aastretch_lop (false,false,nxc,nt,rfl[0],trace);
 
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);

@@ -33,7 +33,7 @@ typedef struct Surface *surface;
 
 struct Surface {
     int is, ih;
-    float x, **ta;
+    float x, ***ta;
 };
 
 static int ny, **map;
@@ -90,12 +90,13 @@ void kirmod_close(surface y)
 /*< Free allocated storage >*/
 {
     int iy;
-    float **ta, **ta2;
+    float ***ta, ***ta2;
 
     ta2 = y[0].ta;;
     for (iy=0; iy < ny; iy++) {
 	ta = y[iy].ta;
 	if (ta != ta2) {
+	    free(**ta2);
 	    free(*ta2);
 	    free(ta2);
 	    ta2 = NULL;
@@ -104,6 +105,7 @@ void kirmod_close(surface y)
     }
     
     if (ta2 != NULL) {
+	free(**ta2);
 	free(*ta2);
 	free(ta2);
 	ta2 = NULL;
@@ -117,84 +119,88 @@ void kirmod_close(surface y)
 void kirmod_table (surface y                  /* surface structure */,
 		   char type                  /* velocity distribution */, 
 		   int nx, float x0, float dx /* reflector axis */,
-		   float *curve               /* reflector */,
-		   float *dip                 /* reflector dip */,
+		   int nc                     /* number of reflectors */,
+		   float **curve              /* reflectors */,
+		   float **dip                /* reflector dip */,
 		   float *veloc               /* velocity attributes */) 
 /*< Compute traveltime/amplitude map >*/
 {
-    int ix, iy;
-    float x, z, x2, zx, x1, xp=0., **ta=NULL, t, a, p, q, r, v0, v1, v2;
-    float sigma, rad, g;
+    int ix, iy, ic;
+    float x, z, x2, zx, x1, xp=0., ***ta=NULL, t, a, p, q, r, v0, v1, v2;
+    float sigma, rad, g, gx, gy, dz;
 
     for (iy=0; iy < ny; iy++) {	
-	x1 = y[iy].x;
-	if (0==iy || x1 != xp) {
-	    ta = sf_floatalloc2(4,nx);
+	x1 = y[iy].x; /* x1 is on the surface */
+	if (0==iy || x1 != xp) { /* new point */
+	    ta = sf_floatalloc3(4,nc,nx);
 
 	    for (ix=0; ix < nx; ix++) {
-		x2 = x0 + ix*dx;
+		x2 = x0 + ix*dx; /* x2 is on the reflector */
 		x = x2 - x1;
-		z = curve[ix];
-		zx = dip[ix];
 
-		r = hypotf(x,z)+FLT_EPSILON*dx; /* distance */
-		g = hypotf(veloc[1],veloc[2]);	/* gradient */
-       
-		switch (type) {
-		    case 'c': /* constant velocity */
-			v0 = veloc[0];
-			a = r;
-			t = r/v0;
-			p = (x+z*zx)/(r*v0);
-			q = fabsf(z+x*zx)/(r*hypotf(1.0,zx));
-			if (q >= 1.0) {
+		for (ic=0; ic < nc; ic++) { 
+		    z = curve[ic][ix];
+		    zx = dip[ic][ix];
+		    dz = hypotf(1.0,zx);
+
+		    r = hypotf(x,z)+FLT_EPSILON*dx; /* distance */
+		    g = hypotf(veloc[1],veloc[2]);  /* gradient */
+		    gx = veloc[2]+veloc[1]*zx;      /* dw/dx */
+		    gy = veloc[1]-veloc[2]*zx;
+		    p = x+z*zx;                     /* r*dr/dx */
+		    q = z-x*zx;
+		    
+		    switch (type) {
+			case 'c': /* constant velocity */
+			    v0 = veloc[0];
+			    a = r;
+			    t = r/v0;
+			    p /= (r*v0);
+			    q = fabsf(q)/(r*dz);
+			    break;		    
+			case 's': /* linear sloth */
+			    v1 = veloc[0]+2*(veloc[2]*(x1-veloc[4])-veloc[1]*veloc[3]);
+			    v2 = veloc[0]+2*(veloc[2]*(x2-veloc[4])+veloc[1]*(z-veloc[3]));
+			    v0 = 0.5*(v1+v2);
+			    rad = v0*v0-r*r*g*g;           /* => v0^2=1/v^4 */
+			    if (rad < 0.) 
+				sf_error("%s: shadow zone, fix later",__FILE__);
+			    rad = sqrtf(rad);              /* => v0=1/v^2 */
+			    sigma = r*sqrtf(2./(v0+rad));  /* => r*v */
+			    a = sigma*sqrtf(rad);          /* => r */
+			    t = sigma*(2*v0+rad)/3.;       /* => r/v */
+			    q = fabsf(q+0.5*sigma*sigma*gy)/(sqrtf(v2)*sigma*dz);
+			    p = (p/sigma+0.5*gx*sigma);    /* => p/(rv) */
+			    break;
+			case 'v': /* linear velocity */
+			    v1 = veloc[0]+veloc[2]*(x1-veloc[4])-veloc[1]*veloc[3];
+			    v2 = veloc[0]+veloc[2]*(x2-veloc[4])+veloc[1]*(z-veloc[3]);
+			    v0 = sqrtf(v1*v2);                   /* => v */
+			    a = r*hypotf(1.,0.5*r*g/v0);         /* => r */
+			    t = acoshf(1.+0.5*r*r*g*g/(v0*v0))/g;    /* => r/v */
+			    q = fabsf(q*v2-0.5*r*r*gy)/(v0*a*dz);
+			    p = (p-0.5*r*r*gx/v2)/(a*v0);       /* => p/(r*v) */
+			default:
+			    a = 0.;
+			    t = 0.;
+			    p = 0.;
 			    q = 0.;
-			} else {
-			    q = acosf(q)*SF_SIG(x-z*zx);
-			}
-			break;		    
-		    case 's': /* linear sloth */
-			v1 = veloc[0]+2*(veloc[1]*(x1-veloc[3])-veloc[2]*veloc[4]);
-			v2 = veloc[0]+2*(veloc[1]*(x2-veloc[3])+veloc[2]*(z-veloc[4]));
-			v0 = 0.5*(v1+v2);
-			rad = v0*v0-g*g*r*r;           /* => v0^2=1/v^4 */
-			if (rad < 0.) 
-			    sf_error("%s: shadow zone, fix later",__FILE__);
-			rad = sqrtf(rad);              /* => v0=1/v^2 */
-			sigma = sqrtf(2*r*r/(v0+rad)); /* => r*v */
-			a = sigma*sqrtf(rad);          /* => r */
-			t = sigma*(2*v0+rad)/3.;       /* => r/v */
-			p = 0.;
-			q = 0.;
-			break;
-		    case 'v': /* linear velocity */
-			v1 = veloc[0]+veloc[1]*(x1-veloc[3])-veloc[2]*veloc[4];
-			v2 = veloc[0]+veloc[1]*(x2-veloc[3])+veloc[2]*(z-veloc[4]);
-			v0 = v1*v2;                      /* => v^2 */
-			a = r*sqrtf(1.+0.25*r*r*g*g/v0); /* => r */
-			t = acoshf(1.+0.5*r*r*g*g/v0)/g; /* => r/v */
-			p = 0.;
-			q = 0.;
-		    default:
-			a = 0.;
-			t = 0.;
-			p = 0.;
-			q = 0.;
-			sf_error("%s: case %c is not implemented",__FILE__,type);
-			break;
-		}
-		ta[ix][0] = t; /* traveltime */
-		ta[ix][1] = a; /* geometrical spreading */
-		ta[ix][2] = p; /* slope */
-		ta[ix][3] = q; /* angle from the normal */
-	    }
-	}
+			    sf_error("%s: case %c is not implemented",__FILE__,type);
+			    break;
+		    } /* type */
+		    ta[ix][ic][0] = t;                                   /* traveltime */
+		    ta[ix][ic][1] = a;                                   /* geometrical spreading */
+		    ta[ix][ic][2] = p;                                   /* traveltime slope */
+		    ta[ix][ic][3] = (q >= 1.0)? 0.: -acosf(q)*SF_SIG(p); /* angle from the normal */
+		} /* ic */
+	    } /* ix */
+	} /* if new */
 	y[iy].ta = ta;
 	xp = x1;
     }
 }
 
-float *kirmod_map(surface y, int is, int ih, int ix) 
+float **kirmod_map(surface y, int is, int ih, int ix) 
 /*< Extract from traveltime/amplitude map >*/
 {
     return y[map[is][ih]].ta[ix];
