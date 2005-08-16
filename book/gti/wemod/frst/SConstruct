@@ -530,7 +530,7 @@ Result('t3d', 't3d', 'window max1=0.15          | transp memsize=250 plane=13 |'
 Result('tt3d','tt3d','window max1=0.15          | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="convolution" frame3=19'))
 # Result('f3d', 'f3d', 'window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="exploding reflector"'))
 # Result('ft3d','ft3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="exploding reflector"'))
-# Result('c3d','c3d','window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="shot record"'))
+# Result('c3d', 'c3d', 'window min1=1.5  max1=2.5 | transp memsize=250 plane=13 |'+ tplot3d(par,'','title="shot record"'))
 
 Result('m3d', 'm3d', 'transp plane=12 |'+ zplot3d(par,'','title="convolution"'))
 Result('mt3d','mt3d','transp plane=12 |'+ zplot3d(par,'','title="convolution"'))
