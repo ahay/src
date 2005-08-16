@@ -130,7 +130,7 @@ def tplot3d(par,custom1="",custom2=""):
     byte bar=bar.rsf gainpanel=all pclip=99.8 %s |
     grey3 scalebar=n bar=bar.rsf labelrot=n flat=y
     frame1=%d frame2=%d frame3=170
-    point1=0.65 point2=0.60 screenratio=0.7 screenht=9
+    point1=0.65 point2=0.75 screenratio=0.7 screenht=9
     label1=y label2=x label3=t %s
     ''' % (custom1,par['ypad'],par['xpad'],custom2)
 
