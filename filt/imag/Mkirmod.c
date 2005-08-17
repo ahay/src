@@ -28,8 +28,9 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
-    float **rfl, **rgd, **crv, **dip, *shot, *trace, **ts, **tg, vel[5], vel2[5], slow;
-    float dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq, theta, ava;
+    float **rfl, **rgd, **crv, **dip, *shot, *trace, **ts, **tg, vel[5], vel2[5];
+    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq;
+    float theta, ava;
     char *type, *type2;
     surface inc, ref;
     sf_file refl, curv, modl, shots;
@@ -165,7 +166,7 @@ int main(int argc, char* argv[])
     /* velocity gradient */
 
     type = sf_getstring("type");
-    /* type of velocity distribution ('c': constant, 's': linear sloth, 'v': linear velocity) */
+    /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity) */
     if (NULL==type) {
 	type= (vel[2]==0. && vel[1]==0.)?"const":"veloc";
     } else if (vel[2]==0. && vel[1]==0.) {
@@ -190,14 +191,13 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("vel2",&vel2[0])) vel2[0]=vel[0];
     /* converted velocity */
     
-    if (!sf_getfloat("gradx2",&vel2[2])) vel2[2]=0.;
-    if (!sf_getfloat("gradz2",&vel2[1])) vel2[1]=0.;
+    if (!sf_getfloat("gradx2",&vel2[2])) vel2[2]=vel[2];
+    if (!sf_getfloat("gradz2",&vel2[1])) vel2[1]=vel[1];
     /* converted velocity gradient */
 
     type2 = sf_getstring("type2");
-    /* type of converted velocity distribution ('c': constant, 's': linear sloth, 'v': linear velocity) */
     if (NULL==type2) {	
-	type2=(vel2[2]==0. && vel2[1]==0.)?"const":"veloc";
+	type2=type;
     } else if (vel2[2]==0. && vel2[1]==0.) {
 	free(type2);
 	type2 = "const"; 
@@ -213,14 +213,15 @@ int main(int argc, char* argv[])
 	sf_error("Unknown type=%s",type2);
     }
 
-    if (!sf_getfloat("refx2",&vel2[4])) vel2[4]=x0;
-    if (!sf_getfloat("refz2",&vel2[3])) vel2[3]=0.;
+    if (!sf_getfloat("refx2",&vel2[4])) vel2[4]=vel[4];
+    if (!sf_getfloat("refz2",&vel2[3])) vel2[3]=vel[3];
     /* reference coordinates for converted velocity */
     
     /*** Allocate space ***/
     
     inc = kirmod_init(ns, s0, ds, nh, h0, dh);
-    ref = (vel2[0] != vel[0] || 
+    ref = (strcmp(type,type2) ||
+	   vel2[0] != vel[0] || 
 	   vel2[1] != vel[1] ||
 	   vel2[2] != vel[2] ||
 	   vel2[3] != vel[3] ||

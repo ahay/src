@@ -180,6 +180,7 @@ void kirmod_table (surface y                  /* surface structure */,
 			    t = acoshf(1.+0.5*r*r*g*g/(v0*v0))/g;    /* => r/v */
 			    q = fabsf(q*v2-0.5*r*r*gy)/(v0*a*dz);
 			    p = (p-0.5*r*r*gx/v2)/(a*v0);       /* => p/(r*v) */
+			    break;
 			default:
 			    a = 0.;
 			    t = 0.;

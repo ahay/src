@@ -80,7 +80,7 @@ if not os.path.isfile('stkvel.p1'): # interactive processing
         pick.append(param+'.su')
         Flow(panel,'data','suwind key=cdp min=%d max=%d count=12' % (cdp,cdp))
         Result(panel,
-               'suxwigb title="CDP gather for cdp=%s" xbox=700' % cdp)
+               'suxwigb title="CDP gather for cdp=%d" xbox=700' % cdp)
         Flow(picks,panel,
              '''
              sugain tpow=2 |

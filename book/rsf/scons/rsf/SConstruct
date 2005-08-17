@@ -1,15 +1,57 @@
 from rsfproj import *
 
-Flow('model',None,
+
+Flow('modl',None,'spike n1=100 d1=0.08 n2=4 nsp=4 k2=1,2,3,4 mag=1,2.2,3.5,5')
+Flow('refl',None,
      '''
-     spike n1=100 d1=0.08 n2=4 nsp=4 k2=1,2,3,4 mag=1,2.2,3.5,5 |
-     unif2 n1=110 d1=0.05 v00=5,6,8,10,15
+     spike n1=100 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
      ''')
-Result('model',
+
+Result('modl',
        '''
+       unif2 n1=110 d1=0.05 v00=5,6,8,10,15 |
        grey color=j allpos=y title="Model" scalebar=y
        barlabel="Velocity (kft/s)" label1="Depth (kft)" label2="Lateral (kft)"
        barreverse=y pclip=100
        ''')
+
+Flow('clean','modl refl',
+     '''
+     kirmod nt=501 dt=0.004 freq=25 refl=${SOURCES[1]}
+     ns=12 s0=1.4 ds=-0.1
+     nh=64 h0=0.1 dh=0.1
+     vel=5 gradz=2 type=v
+     ''')
+Flow('data','clean',
+     '''
+     noise rep=y seed=2004 range=0.002 |
+     ricker1 frequency=25 |
+     add $SOURCE 
+     ''')
+
+shots = []
+for shot in range(0,12,5):
+    data = 'data%d' % shot
+    shots.append(data)
+    Plot(data,'data',
+         '''
+         window n3=1 f3=%d |
+         tpow tpow=2 |
+         grey gpow=0.5 title="Shot %d"
+         ''' % (shot,shot+1))
+Result('data',shots,'SideBySideAniso')
+
+Flow('cmp','data','window n1=1 | math output="1000*x2+500*x1" ')
+
+for cdp in range(1500,4000,500):
+    data = 'cdp%d' % cdp
+    Flow('mask','cmp','mask min=%d max=%d' % (cdp,cdp))
+    Flow(data,'data mask','headerwindow mask=${SOURCES[1]}')
+    Plot(data,
+         '''
+         wiggle transp=y yreverse=y poly=y
+         title="CDP gather for cdp=%d"
+         ''' % cdp)
 
 End()
