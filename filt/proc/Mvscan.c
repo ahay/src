@@ -58,12 +58,16 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
 
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
+    CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
-	h0 = dh = 0.;
 	hh = sf_floatalloc(nh);
+
+	h0 = dh = 0.;
     } else {
-	offset = NULL;
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	
@@ -71,14 +75,16 @@ int main(int argc, char* argv[])
 	sf_putfloat(scan,"dh",dh);
 	sf_putint(scan,"nh",nh);
 
-	if (!sf_getbool("half",&half)) half=true;
-	/* if y, the second axis is half-offset instead of full offset */
-	
-	if (half) {
-	    dh *= 2.;
-	    h0 *= 2.;
+	if (sf_histfloat(cmp,"d3",&dy)) {
+	    CDPtype=half? 0.5+dh/dy: 0.5+0.5*dh/dy;
+	    if (0 == CDPtype) CDPtype=1;
+	    if (1 != CDPtype) {
+		sf_histint(cmp,"CDPtype",&CDPtype);
+		sf_warning("CDPtype=%d",CDPtype);
+	    }
 	}
 
+	offset = NULL;
 	hh = NULL;
     }
 
@@ -92,14 +98,6 @@ int main(int argc, char* argv[])
     sf_putfloat(scan,"o2",v0);
     sf_putfloat(scan,"d2",dv);
     sf_putint(scan,"n2",nv);
-
-    CDPtype=1;
-    if (sf_histfloat(cmp,"d3",&dy)) {
-	CDPtype=0.5+0.5*dh/dy;
-	if (0 == CDPtype) CDPtype=1;
-	if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
-    } 	    
-    sf_warning("CDPtype=%d",CDPtype);
 
     sf_putstring(scan,"label2",slow? "slowness": "velocity");
 
@@ -128,6 +126,7 @@ int main(int argc, char* argv[])
 	for (ih=0; ih < nh; ih++) {
 	    h = (NULL != offset)? hh[ih]: 
 		h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
+	    if (half) h *= 2.;
 	    sf_floatread(trace,nt,cmp); 
 
 	    for (it=0; it < nt; it++) {

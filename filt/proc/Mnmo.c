@@ -47,39 +47,37 @@ int main (int argc, char* argv[])
     if (!sf_histint  (cmp,"n2",&nh)) sf_error("No n2= in input");
     nx = sf_leftsize(cmp,2);
 
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset */
+
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
-	if (!sf_histint(offset,"n1",&nh2)) sf_error("No n1= in offset");
-	if (nh2 != nh && (nh2 != nx || (nh2 == nx && nh != 1)))
-	    sf_error("Wrong dimensions in offset");
+	nh2 = sf_filesize(offset);
+	if (nh2 != nh || nh2 != nh*nx) sf_error("Wrong dimensions in offset");
 
-	off = sf_floatalloc(nh2);
+	off = sf_floatalloc(nh2);	
 	sf_floatread (off,nh2,offset);
 	sf_fileclose(offset);
     } else {
 	if (!sf_histfloat(cmp,"d2",&dh)) sf_error("No d2= in input");
 	if (!sf_histfloat(cmp,"o2",&h0)) sf_error("No o2= in input");
 
-	if (!sf_getbool("half",&half)) half=true;
-	/* if y, the second axis is half-offset instead of full offset */
-	
-	if (half) {
-	    dh *= 2.;
-	    h0 *= 2.;
-	}
-
 	if (sf_histfloat(cmp,"d3",&dy)) {
-	    CDPtype=0.5+0.5*dh/dy;
-	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
+	    CDPtype=half? 0.5+dh/dy : 0.5+0.5*dh/dy;
+	    if (1 != CDPtype) {
+		sf_histint(cmp,"CDPtype",&CDPtype);
+	    	sf_warning("CDPtype=%d",CDPtype);
+	    }
 	} 	    
-	sf_warning("CDPtype=%d",CDPtype);
 
 	nh2 = nh;
 	off = sf_floatalloc(nh2);
 	for (ih = 0; ih < nh; ih++) {
 	    off[ih] = h0 + ih*dh; 
-	}	
+	}
+
+	offset = NULL;
     }
 
     if (!sf_getbool("slowness",&slow)) slow=false;
@@ -87,6 +85,7 @@ int main (int argc, char* argv[])
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
     /* reference offset */
+    if (half) h0 *= 2.;
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
 
@@ -103,7 +102,8 @@ int main (int argc, char* argv[])
 	    fint1_set(nmo,trace);
 
 	    h = (nh2 == nh)? off[ih] + (dh/CDPtype)*(ix%CDPtype) : 
-		off[ix]; 
+		off[ix*nh+ih];
+	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
 	    for (it=0; it < nt; it++) {

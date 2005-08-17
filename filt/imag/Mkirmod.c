@@ -22,17 +22,20 @@
 #include <rsf.h>
 
 #include "kirmod.h"
+#include "kirmod2.h"
 #include "ricker.h"
 #include "aastretch.h"
 
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
-    float **rfl, **rgd, **crv, **dip, *shot, *trace, **ts, **tg, vel[5], vel2[5];
+    float **rfl, **rgd, **crv, **dip, *shot, *trace, vel[5], vel2[5];
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq;
-    float theta, ava;
+    float theta, ava, amp;
     char *type, *type2;
+    bool twod;
     surface inc, ref;
+    ktable ts, tg;
     sf_file refl, curv, modl, shots;
 
     sf_init(argc,argv);
@@ -177,12 +180,15 @@ int main(int argc, char* argv[])
 	
 	slow = 1./(vel[0]*vel[0]);
 	/* slowness squared */
-	vel[2] *= -slow/vel[0];
-	vel[1] *= -slow/vel[0];
+	vel[2] *= -2.*slow/vel[0];
+	vel[1] *= -2.*slow/vel[0];
 	vel[0] = slow;     
     } else if ('v' != type[0]) {
 	sf_error("Unknown type=%s",type);
     }
+
+    if (!sf_getbool("twod",&twod)) twod=false;
+    /* 2-D or 2.5-D */
 	
     if (!sf_getfloat("refx",&vel[4])) vel[4]=x0;
     if (!sf_getfloat("refz",&vel[3])) vel[3]=0.;
@@ -219,14 +225,14 @@ int main(int argc, char* argv[])
     
     /*** Allocate space ***/
     
-    inc = kirmod_init(ns, s0, ds, nh, h0, dh);
+    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
     ref = (strcmp(type,type2) ||
 	   vel2[0] != vel[0] || 
 	   vel2[1] != vel[1] ||
 	   vel2[2] != vel[2] ||
 	   vel2[3] != vel[3] ||
 	   vel2[4] != vel[4])?
-	kirmod_init(ns, s0, ds, nh, h0, dh):
+	kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc):
 	inc;
     
     /*** Initialize stretch ***/
@@ -242,23 +248,27 @@ int main(int argc, char* argv[])
 
     /*** Compute traveltime table ***/
 
-    kirmod_table (inc, type[0], nx, x0, dx, nc, crv, dip, vel);
-    if (ref != inc) kirmod_table (ref, type2[0], nx, x0, dx, nc, crv, dip, vel2);
+    kirmod2_table (inc, type[0], twod, crv, dip, vel);
+    if (ref != inc) kirmod2_table (ref, type2[0], twod, crv, dip, vel2);
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
 	for (ih=0; ih < nh; ih++) {
 	    for (ix=0; ix < nx; ix++) {
-		ts = kirmod_map(inc,is,nh,ix);
-		tg = kirmod_map(ref,is,ih,ix);
-
 		for (ic=0; ic < nc; ic++) {
-		    time[ic][ix] = ts[ic][0] + tg[ic][0];
-		    theta = sinf(0.5*(tg[ic][3]-ts[ic][3]));
+		    ts = kirmod2_map(inc,is,nh,ix,ic);
+		    tg = kirmod2_map(ref,is,ih,ix,ic);
+
+		    time[ic][ix] = ts->t + tg->t;
+
+		    theta = sinf(0.5*(tg->an - ts->an));
 		    ava = 1.+rgd[ic][ix]*theta*theta;
 		    if (ref != inc) ava *= theta;
-		    ampl[ic][ix] = ava*dx/sqrt(ts[ic][1]*tg[ic][1]*(ts[ic][1]+tg[ic][1])+0.001*dt); /* 2.5-D amplitude? */
-		    delt[ic][ix] = fabsf(ts[ic][2]+tg[ic][2])*dx; 
+		    
+		    amp = 0.5*(ts->tn + tg->tn)/(ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON);
+
+		    ampl[ic][ix] = ava*amp*dx; 
+		    delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx; 
 		}
 	    }
 
