@@ -29,28 +29,29 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
-    float **rfl, **rgd, **crv, **dip, *shot, *trace, vel[5], vel2[5];
+    float **rfl, **rgd, **crv, **dip, *shot, *trace;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq;
-    float theta, ava, amp;
+    float theta, ava, amp, obl;
     char *type, *type2;
     bool twod;
     surface inc, ref;
+    velocity vel, vel2;
     ktable ts, tg;
     sf_file refl, curv, modl, shots;
-
+    
     sf_init(argc,argv);
     curv = sf_input("in");
     modl = sf_output("out");
-
+    
     if (SF_FLOAT != sf_gettype(curv)) sf_error("Need float input");
     if (!sf_histint  (curv,"n1",&nx)) sf_error("No n1= in input");
     if (!sf_histfloat(curv,"d1",&dx)) sf_error("No d1= in input");
     if (!sf_histfloat(curv,"o1",&x0)) sf_error("No o1= in input");
     if (!sf_histint  (curv,"n2",&nc)) nc=1; /* number of reflectors */
     nxc = nx*nc;
-
+    
     /*** Initialize trace ***/
-
+    
     if (!sf_getint("nt",&nt)) sf_error("Need nt=");
     /* time samples */
     if (!sf_getfloat("dt",&dt)) dt=0.004;
@@ -63,16 +64,16 @@ int main(int argc, char* argv[])
     sf_putint  (modl,"n1",nt);
     sf_putfloat(modl,"d1",dt);
     sf_putfloat(modl,"o1",t0);
-
+    
     /*** Initialize shots ***/
-
+    
     if (NULL != sf_getstring("shots")) {
 	shots = sf_input("shots");
 	
 	if (!sf_histint(shots,"n1",&ns)) sf_error("No n1= in shots");
     } else {
 	shots = NULL;
-
+	
 	if (!sf_getint("ns",&ns)) ns=nx;
 	/* number of shots */
 	if (!sf_getfloat("s0",&s0)) s0=x0;
@@ -116,9 +117,9 @@ int main(int argc, char* argv[])
     rfl = sf_floatalloc2(nx,nc);
     rgd = sf_floatalloc2(nx,nc);
     dip = sf_floatalloc2(nx,nc);
-
+    
     sf_floatread(crv[0],nxc,curv);
-
+    
     /* reflectivity (A) */
     if (NULL != sf_getstring("refl")) {
 	refl = sf_input("refl");
@@ -160,29 +161,31 @@ int main(int argc, char* argv[])
     }
 
     /*** Initialize velocity ***/
+    vel  = (velocity) sf_alloc(1,sizeof(*vel));
+    vel2 = (velocity) sf_alloc(1,sizeof(*vel2));
 
-    if (!sf_getfloat("vel",&vel[0])) sf_error("Need vel=");
+    if (!sf_getfloat("vel",&(vel->v0))) sf_error("Need vel=");
     /* velocity */
     
-    if (!sf_getfloat("gradx",&vel[2])) vel[2]=0.;
-    if (!sf_getfloat("gradz",&vel[1])) vel[1]=0.;
+    if (!sf_getfloat("gradx",&(vel->gx))) (vel->gx)=0.;
+    if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
     /* velocity gradient */
 
     type = sf_getstring("type");
     /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity) */
     if (NULL==type) {
-	type= (vel[2]==0. && vel[1]==0.)?"const":"veloc";
-    } else if (vel[2]==0. && vel[1]==0.) {
+	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
+    } else if ((vel->gx)==0. && (vel->gz)==0.) {
 	free(type);
 	type = "const"; 
     } else if ('s'==type[0]) {
 	/* linear slowness squared */
 	
-	slow = 1./(vel[0]*vel[0]);
+	slow = 1./((vel->v0)*(vel->v0));
 	/* slowness squared */
-	vel[2] *= -2.*slow/vel[0];
-	vel[1] *= -2.*slow/vel[0];
-	vel[0] = slow;     
+	(vel->gx) *= -2.*slow/(vel->v0);
+	(vel->gz) *= -2.*slow/(vel->v0);
+	(vel->v0) = slow;     
     } else if ('v' != type[0]) {
 	sf_error("Unknown type=%s",type);
     }
@@ -190,50 +193,52 @@ int main(int argc, char* argv[])
     if (!sf_getbool("twod",&twod)) twod=false;
     /* 2-D or 2.5-D */
 	
-    if (!sf_getfloat("refx",&vel[4])) vel[4]=x0;
-    if (!sf_getfloat("refz",&vel[3])) vel[3]=0.;
+    if (!sf_getfloat("refx",&(vel->x0))) (vel->x0)=x0;
+    if (!sf_getfloat("refz",&(vel->z0))) (vel->z0)=0.;
     /* reference coordinates for velocity */
 
-    if (!sf_getfloat("vel2",&vel2[0])) vel2[0]=vel[0];
+    if (!sf_getfloat("vel2",&(vel2->v0))) (vel2->v0)=(vel->v0);
     /* converted velocity */
     
-    if (!sf_getfloat("gradx2",&vel2[2])) vel2[2]=vel[2];
-    if (!sf_getfloat("gradz2",&vel2[1])) vel2[1]=vel[1];
+    if (!sf_getfloat("gradx2",&(vel2->gx))) (vel2->gx)=(vel->gx);
+    if (!sf_getfloat("gradz2",&(vel2->gz))) (vel2->gz)=(vel->gz);
     /* converted velocity gradient */
 
     type2 = sf_getstring("type2");
     if (NULL==type2) {	
 	type2=type;
-    } else if (vel2[2]==0. && vel2[1]==0.) {
+    } else if ((vel2->gx)==0. && (vel2->gz)==0.) {
 	free(type2);
 	type2 = "const"; 
     } else if ('s'==type2[0]) {
 	/* linear slowness squared */
 	
-	slow = 1./(vel2[0]*vel2[0]);
+	slow = 1./((vel2->v0)*(vel2->v0));
 	/* slowness squared */
-	vel2[2] *= -slow/vel2[0];
-	vel2[1] *= -slow/vel2[0];
-	vel2[0] = slow;     
+	(vel2->gx) *= -slow/(vel2->v0);
+	(vel2->gz) *= -slow/(vel2->v0);
+	(vel2->v0) = slow;     
     } else if ('v' != type2[0]) {
 	sf_error("Unknown type=%s",type2);
     }
 
-    if (!sf_getfloat("refx2",&vel2[4])) vel2[4]=vel[4];
-    if (!sf_getfloat("refz2",&vel2[3])) vel2[3]=vel[3];
+    if (!sf_getfloat("refx2",&(vel2->x0))) (vel2->x0)=(vel->x0);
+    if (!sf_getfloat("refz2",&(vel2->z0))) (vel2->z0)=(vel->z0);
     /* reference coordinates for converted velocity */
     
     /*** Allocate space ***/
     
     inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
-    ref = (strcmp(type,type2) ||
-	   vel2[0] != vel[0] || 
-	   vel2[1] != vel[1] ||
-	   vel2[2] != vel[2] ||
-	   vel2[3] != vel[3] ||
-	   vel2[4] != vel[4])?
-	kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc):
-	inc;
+    if (strcmp(type,type2) ||
+	(vel2->v0) != (vel->v0) || 
+	(vel2->gz) != (vel->gz) ||
+	(vel2->gx) != (vel->gx) ||
+	(vel2->z0) != (vel->z0) ||
+	(vel2->x0) != (vel->x0)) {
+	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
+    } else {
+	ref = inc;
+    }
     
     /*** Initialize stretch ***/
     aastretch_init (nt, t0, dt, nxc);
@@ -248,8 +253,8 @@ int main(int argc, char* argv[])
 
     /*** Compute traveltime table ***/
 
-    kirmod2_table (inc, type[0], twod, crv, dip, vel);
-    if (ref != inc) kirmod2_table (ref, type2[0], twod, crv, dip, vel2);
+    kirmod2_table (inc, vel, type[0], twod, crv, dip);
+    if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
@@ -264,10 +269,12 @@ int main(int argc, char* argv[])
 		    theta = sinf(0.5*(tg->an - ts->an));
 		    ava = 1.+rgd[ic][ix]*theta*theta;
 		    if (ref != inc) ava *= theta;
-		    
-		    amp = 0.5*(ts->tn + tg->tn)/(ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON);
 
-		    ampl[ic][ix] = ava*amp*dx; 
+		    obl = 0.5*(ts->tn + tg->tn);
+		    
+		    amp = ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON;
+
+		    ampl[ic][ix] = ava*obl*dx/amp; 
 		    delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx; 
 		}
 	    }

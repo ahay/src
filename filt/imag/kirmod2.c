@@ -32,6 +32,11 @@ typedef struct Surface *surface;
 /* abstract data type */
 /*^*/
 
+typedef struct Velocity {
+    float v0, gx, gz, x0, z0;
+} *velocity;
+/*^*/
+
 #endif
 
 struct Surface {
@@ -137,11 +142,11 @@ void kirmod2_close(surface y)
 }
 
 void kirmod2_table (surface y                  /* surface structure */,
+		    velocity v                 /* velocity attributes */, 
 		    char type                  /* velocity distribution */,
 		    bool twod                  /* 2-D or 2.5-D */, 
 		    float **curve              /* reflectors */,
-		    float **dip                /* reflector dip */,
-		    float *veloc               /* velocity attributes */) 
+		    float **dip                /* reflector dip */)
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy, ic;
@@ -151,7 +156,7 @@ void kirmod2_table (surface y                  /* surface structure */,
     for (iy=0; iy < ny; iy++) {	
 	x1 = y[iy].x; /* x1 is on the surface */
 	if (0==iy || x1 != xp) { /* new point */
-	    v1 = veloc[0]+veloc[2]*(x1-veloc[4])-veloc[1]*veloc[3];
+	    v1 = (v->v0)+(v->gx)*(x1-(v->x0))-(v->gz)*(v->z0);
 	    ta = (ktable**) sf_alloc(nx,sizeof(ktable*));
 	    
 	    for (ix=0; ix < nx; ix++) {
@@ -159,7 +164,6 @@ void kirmod2_table (surface y                  /* surface structure */,
 
 		x2 = x0 + ix*dx; /* x2 is on the reflector */
 		x = x2 - x1;
-		v2 = veloc[0]+veloc[2]*(x2-veloc[4])+veloc[1]*(z-veloc[3]);
 
 		for (ic=0; ic < nc; ic++) { 
 		    ta[ix][ic] = (ktable) sf_alloc(1,sizeof(ta[ix][ic][0]));
@@ -167,12 +171,13 @@ void kirmod2_table (surface y                  /* surface structure */,
 		    z = curve[ic][ix];
 		    zx = dip[ic][ix];
 		    dz = hypotf(1.0,zx);
+		    v2 = (v->v0)+(v->gx)*(x2-(v->x0))+(v->gz)*(z-(v->z0));
 		    
 		    r = hypotf(x,z)+FLT_EPSILON*dx; /* distance */
-		    g = hypotf(veloc[1],veloc[2]);  /* gradient */
-		    gx = veloc[2]+veloc[1]*zx;      /* dw/dx */
-		    gz = veloc[1]-veloc[2]*zx;
-		    px = x+z*zx;                     /* r*dr/dx */
+		    g = hypotf(v->gx,v->gz);        /* gradient */
+		    gx = (v->gx)+(v->gz)*zx;        /* dw/dx */
+		    gz = (v->gz)-(v->gx)*zx;
+		    px = x+z*zx;                    /* r*dr/dx */
 		    pz = z-x*zx;
 		    kirmod_table(type,twod,r,g,gx,gz,v1,v2,px,pz,dz,ta[ix][ic]);
 		} 
