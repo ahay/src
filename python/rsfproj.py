@@ -19,12 +19,12 @@ import re, string, urllib, ftplib
 
 # database for .sconsign
 try:
-    import gdbm
-    db='gdbm'
+    import dbhash
+    db='dbhash'
 except:
     try:
-        import dbhash
-        db='dbhash'
+        import gdbm
+        db='gdbm'
     except:
         db=None
         
