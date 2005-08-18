@@ -34,8 +34,7 @@ typedef struct Fint1 *fint1;
 #endif
 
 struct Vint1 {
-    float** spl;
-    float w[4];
+    float **spl, w[4];
     int n1, nw, dim;
     sf_tris slv;
 };
@@ -104,8 +103,10 @@ void vint1_set (vint1 fnt, float** dat /* [dim][n1] */)
     int i;
     for (i = 0; i < fnt->dim; i++) {
 	extend (fnt->nw,fnt->n1,dat[i],fnt->spl[i]);
-	fnt->spl[i][0] *= (5./6.);
+
+	fnt->spl[i][                  0] *= (5./6.);
 	fnt->spl[i][fnt->n1+2*fnt->nw-1] *= (5./6.);
+
 	sf_tridiagonal_solve (fnt->slv,fnt->spl[i]);
     }
 }
@@ -205,5 +206,3 @@ void stretch(fint1 str                  /* interpolation object */,
 	}
     }
 }
-
-/* 	$Id$	 */

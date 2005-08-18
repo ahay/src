@@ -26,70 +26,80 @@
 int main (int argc, char* argv[])
 {
     fint1 sft;
-    int it,ix,iz,ih,ia, nt,nx,nw, nh,na;
-    float h0, f, dh, v, da, a0;
-    float **gath, **gath2, *vel, *trace;
-    sf_file in, out, velocity;
+    int  ext;
+
+    float v,a,n,f;
+    int         fint;
+
+    axa ax,az,av,aa;
+    int ix,iz,iv,ia;
+
+    float   **stk, **ang, *vel, *tmp;
+    sf_file  Fstk,  Fang, Fvel;
 
     sf_init (argc,argv);
-    in       = sf_input("in");
-    velocity = sf_input("velocity");
-    out      = sf_output("out");
 
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    if (!sf_histint  (in,"n1",&nt)) sf_error("No n1= in input");
-    if (!sf_histint  (in,"n2",&nh)) sf_error("No n2= in input");
-    nx = sf_leftsize(in,2);
+    /*------------------------------------------------------------*/
+    Fstk = sf_input("in");
+    Fvel = sf_input("velocity");
+    Fang = sf_output("out");
 
-    if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input");
-    if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input");
+    if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
-    if (!sf_getint("na",&na)) na=nh;
-    /* tangent samples */
-    if (!sf_getfloat("da",&da)) da=1./(nh-1);
-    /* tangent sampling */
-    if (!sf_getfloat("a0",&a0)) a0=0.;
-    /* tangent origin */
+    iaxa(Fstk,&az,1);
+    iaxa(Fstk,&av,2);
+    iaxa(Fstk,&ax,3);
 
-/*    sf_putfloat(out,"o2",0.);*/
+    if (!sf_getint  ("na",&aa.n)) aa.n=    av.n;       
+    if (!sf_getfloat("da",&aa.d)) aa.d=1./(av.n-1);
+    if (!sf_getfloat("a0",&aa.o)) aa.o=0.;         
 
-    sf_putfloat(out,"o2",a0);
-    sf_putfloat(out,"d2",da);
-    sf_putint  (out,"n2",na);
+    oaxa(Fang,&aa,2);
 
-    if (!sf_getint("extend",&nw)) nw=4;
-    /* trace extension */
+    if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
+    /*------------------------------------------------------------*/
 
-    gath = sf_floatalloc2(nt,nh);
-    gath2 = sf_floatalloc2(nt,na);
-    trace = sf_floatalloc(nh);
-    vel   = sf_floatalloc(nt);
+    stk = sf_floatalloc2(az.n,av.n);
+    ang = sf_floatalloc2(az.n,aa.n);
+    tmp = sf_floatalloc(      av.n);
+    vel = sf_floatalloc(az.n      );
 
-    sft = fint1_init (nw, nh);
+    sft = fint1_init(ext, av.n);
     
-    for (ix = 0; ix < nx; ix++) {
-	sf_floatread (vel,nt,velocity);	
-	sf_floatread (gath[0],nt*nh,in);
-
-	for (it = 0; it < nt; it++) {
-	    for (ih = 0; ih < nh; ih++) {
-		trace[ih] = gath[ih][it];
+    for (ix = 0; ix < ax.n; ix++) {
+	sf_floatread(vel   ,az.n     ,Fvel);	
+	sf_floatread(stk[0],az.n*av.n,Fstk);
+	
+	/*------------------------------------------------------------*/
+	for (iz = 0; iz < az.n; iz++) {
+	    for (iv = 0; iv < av.n; iv++) {
+		tmp[iv] = stk[iv][iz];
 	    }
-	    fint1_set(sft,trace);
-	    v = vel[it];
+	    fint1_set(sft,tmp);
+	    v = vel[iz];
 	    
-	    for (ia=0; ia < na; ia++) {
-		f = (v*hypotf(a0+ia*da,1.) - h0)/dh;
-		iz = f;
-		if (iz >= 0 && iz < nh) {
-		    gath2[ia][it] = fint1_apply(sft,iz,f-iz,false);
+	    for (ia=0; ia < aa.n; ia++) {
+		a = aa.o+ia*aa.d;      /*                    tan     */
+		n = v * hypotf(a,1.);  /* nu = v * sqrt( 1 - tan^2 ) */
+
+		f = (n - av.o) / av.d;
+/*		if( a>0. ) {*/
+/*		    f = ( v-av.o + SF_ABS(n-v) ) / av.d;*/
+/*		} else {*/
+/*		    f = ( v-av.o - SF_ABS(n-v) ) / av.d;*/
+/*		}*/
+		fint = f;
+
+		if (fint >= 0 && fint < av.n) {
+		    ang[ia][iz] = fint1_apply(sft,fint,f-fint,false);
 		} else {
-		    gath2[ia][it] = 0.;
+		    ang[ia][iz] = 0.;
 		}
 	    }
 	}
+	/*------------------------------------------------------------*/
 	    
-	sf_floatwrite (gath2[0],nt*na,out);
+	sf_floatwrite(ang[0],az.n*aa.n,Fang);
     }
 	
     exit (0);
