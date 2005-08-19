@@ -20,7 +20,7 @@
 
 #include <rsf.h>
 
-static float **prev, **next, ***what, *dist, *time;
+static float **prev, **next, ***what, *dist, *prob;
 static int n1, n2, gt;
 
 static float find_minimum(int ic, int nc, int jc, float c, float *pick);
@@ -41,7 +41,7 @@ void dynprog_init(int nz    /* vertical */,
     prev = sf_floatalloc2(n2,n2);
     next = sf_floatalloc2(n2,n2);
     dist = sf_floatalloc(n2);
-    time = sf_floatalloc(2*gate-1);
+    prob = sf_floatalloc(2*gate-1);
     what = sf_floatalloc3(n2,n2,n1);
 
     for (i2=0; i2 < n2; i2++) {
@@ -55,7 +55,7 @@ void dynprog_close(void)
     free(*prev); free(prev);
     free(*next); free(next);
     free(dist); 
-    free(time);
+    free(prob);
     free(**what); free(*what); free(what);
 }
 
@@ -66,17 +66,17 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
     if (0==ic) {
 	ic++;
 	fm=c;
-	f0=time[ic];
-	fp=time[ic+1];
+	f0=prob[ic];
+	fp=prob[ic+1];
     } else if (nc-1==ic) {
 	ic--;
-	fm=time[ic-1];
-	f0=time[ic];
+	fm=prob[ic-1];
+	f0=prob[ic];
 	fp=c;
     } else {
-	fm=time[ic-1];
+	fm=prob[ic-1];
 	f0=c;
-	fp=time[ic+1];
+	fp=prob[ic+1];
     }
     ic += jc;
     a = fm+fp-2.*f0;
@@ -107,14 +107,14 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
     return f0;
 }
 
-void dynprog(float** weight /* [n2][n1] */)
+void dynprog(float** weight /* [n1][n2] */)
 /*< apply >*/
 {
     float d, c, w, w2;
     int i1, is, i2, i, ic, ib, ie, it;
     
     for (i2=0; i2 < n2; i2++) {
-	w = weight[i2][1];
+	w = weight[1][i2];
 	for (is=0; is < n2; is++) {
 	    w2 = 0.5*(w+weight[0][is]);
 	    prev[i2][is] = dist[SF_ABS(i2-is)]*w2;
@@ -123,23 +123,22 @@ void dynprog(float** weight /* [n2][n1] */)
     }
 
     for (i1=2; i1 < n1; i1++) {
-	sf_warning("step %d of %d",i1,n1);
 	for (i2=0; i2 < n2; i2++) {
-	    w = weight[i2][i1];
+	    w = weight[i1][i2];
 	    ib = SF_MAX(i2-gt,-1);
 	    ie = SF_MIN(i2+gt,n2);
 	    for (is=0; is < n2; is++) {
 		c = FLT_MAX;
 		ic = -1;
 		for (i=ib+1; i < ie; i++) {
-		    w2 = 0.5*(w+weight[i][i1-1]);
+		    w2 = 0.5*(w+weight[i1-1][i]);
 		    d = dist[SF_ABS(i2-i)]*w2+prev[i][is];
 		    it = i-ib-1;
 		    if (d < c) {
 			c = d;
 			ic = it;
 		    }
-		    time[it]=d;
+		    prob[it]=d;
 		}
 		
 		next[i2][is]=find_minimum(ic,ie-ib-1,ib+1,c,&what[i1][i2][is]);
@@ -154,7 +153,7 @@ void dynprog(float** weight /* [n2][n1] */)
     }
 }
 
-void dynprog_traj(float o2, float d2, float *traj /* [n1] */)
+void dynprog_traj(float *traj /* [n1] */)
 /*< extract trajectory >*/
 {
     int ic, i, i2, is, i1;
@@ -173,7 +172,7 @@ void dynprog_traj(float o2, float d2, float *traj /* [n1] */)
 	}
     }
     for (i1=n1-1; i1 >= 0; i1--) {
-	traj[i1]=o2+fc*d2;
+	traj[i1]=fc;
 	fc = interpolate(fc,i1,i);
     }
 }

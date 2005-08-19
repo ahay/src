@@ -30,9 +30,9 @@ int main (int argc, char* argv[])
 {
     fint1 nmo;
     bool half, slow;
-    int it,ix,iz,ih, nt,nx,nw, nh, nh2, CDPtype;
-    float dt, t0, h, h0, f, dh, dy, v;
-    float *trace, *vel, *off;
+    int it,ix,iz,ih, nt,nx,nw, nh, nh2, CDPtype, mute, im;
+    float dt, t0, h, h0, f, dh, dy, v, t, str, fp;
+    float *trace, *vel, *off, *m;
     sf_file cmp, nmod, velocity, offset;
 
     sf_init (argc,argv);
@@ -49,6 +49,16 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
+    if (!sf_getfloat("str",&str)) str=0.25;
+    /* minimum stretch allowed */
+
+    if (!sf_getint("mute",&mute)) mute=25;
+    /* mute zone */
+    m = sf_floatalloc(mute);
+    for (im=0; im < mute; im++) {
+	t = sinf(0.5*SF_PI*(im+1.)/(mute+1.));
+	m[im] = t*t;
+    }
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
@@ -106,21 +116,34 @@ int main (int argc, char* argv[])
 	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
+	    fp = -1.;
+	    im = mute;
 	    for (it=0; it < nt; it++) {
 		f = t0 + it*dt;
 		v = vel[it];
 		v = slow ? h*(v*v) : h/(v*v);
 		f = f*f + v;
 		if (f < 0.) {
+		    fp = -1.;
 		    trace[it]=0.;
+		    im=0;
 		} else {
 		    f = (sqrtf(f) - t0)/dt;
-		    iz = f;
-		    if (iz >= 0 && iz < nt) {
-			trace[it] = fint1_apply(nmo,iz,f-iz,false);
+		    if (fp > 0. && fabsf(f-fp) < str) { /* too much stretch */
+			trace[it]=0.;
+			im=0;
 		    } else {
-			trace[it] = 0.;
+			iz = floorf(f);
+			if (iz >= 0 && iz < nt) {
+			    t = fint1_apply(nmo,iz,f-iz,false);
+			    if (im < mute) t *= m[im++];
+			    trace[it]=t;
+			} else {
+			    trace[it] = 0.;
+			    im=0;
+			}
 		    }
+		    fp = f;
 		}
 	    }
 	    

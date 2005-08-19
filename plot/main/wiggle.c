@@ -31,7 +31,7 @@ static bool transp;
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i3, i2, i1, i, fatp, xmask, ymask;
-    float o1, o2, o3, d1, d2, d3, *xp, pclip, zplot, zdata, x1, x2, y1, y2;
+    float o1, o2, o3, d1, d2, d3, **xp, pclip, zplot, zdata, x1, x2, y1, y2;
     float gpow, scale, x0, y0, zero, xmax, xmin;
     float **pdata, *q, *x, *y, *px=NULL, *py=NULL, *tmp;
     bool poly, seemean, verb, xreverse, yreverse;
@@ -49,42 +49,57 @@ int main(int argc, char* argv[])
     
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
-
-    xp = sf_floatalloc(n2);
     
     if (NULL != sf_getstring("xpos")) {
 	/* optional header file with trace positions */
 	
-	xpos = sf_input("xpos");
+	xpos = sf_input("xpos");	
 	if (SF_FLOAT != sf_gettype(xpos)) sf_error("Need float xpos");
+	
+	xp = sf_floatalloc2(n2,n3);
+
+
+	sf_floatread(xp[0],n2*n3,xpos);
+	sf_fileclose(xpos);	
     } else { 
 	xpos = NULL;
-	
+
 	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 	if (!sf_histfloat(in,"o2",&o2)) o2=0.;
-	
+
+	xp = sf_floatalloc2(n2,1);
+
 	for (i2=0; i2 < n2; i2++) {
-	    xp[i2] = o2+i2*d2;
+	    xp[0][i2] = o2+i2*d2;
 	}
     }
-    
-     
+         
     if (!sf_getfloat("xmax",&xmax)) {
 	/* maximum trace position (if using xpos) */
 	if (NULL == xpos) {
-	    xmax=xp[n2-1];
+	    xmax=xp[0][n2-1];
 	} else {
-	    sf_error("Need xmax=");
+	    xmax=-FLT_MAX;
+	    for (i3=0; i3 < n3; i3++) {
+		for (i2=0; i2 < n2; i2++) {
+		    if (xp[i3][i2] > xmax) xmax=xp[i3][i2];
+		}
+	    }
 	}
     }
     
     if (!sf_getfloat("xmin",&xmin)) {
 	/* minimum trace position (if using xpos) */
 	if (NULL == xpos) {
-	    xmin=xp[0];
-	 } else {
-	     sf_error("Need xmin=");
-	 }
+	    xmin=xp[0][0];
+	} else {
+	    xmin=FLT_MAX;
+	    for (i3=0; i3 < n3; i3++) {
+		for (i2=0; i2 < n2; i2++) {
+		    if (xp[i3][i2] < xmin) xmin=xp[i3][i2];
+		}
+	    }
+	}
     }
     
     if (!sf_histfloat(in,"d3",&d3)) d3=1.;
@@ -164,12 +179,10 @@ int main(int argc, char* argv[])
 	vp_frame();
 	vp_plot_set(0);
 
-	if (NULL != xpos) sf_floatread(xp,n2,xpos);
-
 	/* draw traces */
 	for (i2=0; i2 < n2; i2++) {
 	    q = pdata[i2];
-	    zero = xp[i2];
+	    zero = (NULL==xpos)? xp[0][i2]: xp[i3][i2];
 
 	    for (i1=0; i1 < n1; i1++) {
 		x[i1] = o1 + i1*d1;
