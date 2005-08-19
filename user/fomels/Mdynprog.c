@@ -22,8 +22,8 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, i3, *pick, gate;
-    float **scan, an;
+    int n1, n2, n3, i3, gate;
+    float **scan, *pick, o2, d2, an;
     sf_file scn, pik;
 
     sf_init(argc,argv);
@@ -31,13 +31,13 @@ int main(int argc, char* argv[])
     pik = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(scn)) sf_error("Need float input");
-    sf_settype(pik,SF_INT);
 
     if (!sf_histint(scn,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(scn,"n2",&n2)) sf_error("No n2= in input");
+    if (!sf_histfloat(scn,"o2",&o2)) o2=0.;
+    if (!sf_histfloat(scn,"d2",&d2)) d2=1.;
     n3 = sf_leftsize(scn,2);
 
-    sf_putint(pik,"n1",n2);
     sf_putint(pik,"n2",1);
 
     if (!sf_getfloat("an",&an)) an=1.; 
@@ -46,14 +46,17 @@ int main(int argc, char* argv[])
     /* picking gate */
 
     scan = sf_floatalloc2(n1,n2);
-    pick = sf_intalloc(n2);
+    pick = sf_floatalloc(n1);
 
-    dynprog_init(n2,n1,an);
+    dynprog_init(n1,n2,gate,an);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(scan[0],n1*n2,scn);
-	dynprog(gate,scan,pick);
-	sf_intwrite(pick,n2,pik);
+
+	dynprog(scan);
+	dynprog_traj(o2,d2,pick);
+
+	sf_floatwrite(pick,n1,pik);
     }
 
     exit(0);

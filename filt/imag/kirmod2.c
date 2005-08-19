@@ -179,7 +179,7 @@ void kirmod2_table (surface y                  /* surface structure */,
 		    gz = (v->gz)-(v->gx)*zx;
 		    px = x+z*zx;                    /* r*dr/dx */
 		    pz = z-x*zx;
-		    kirmod_table(type,twod,r,g,gx,gz,v1,v2,px,pz,dz,ta[ix][ic]);
+		    kirmod_table(type,twod,r,g,gx,0.,gz,v1,v2,px,0.,pz,dz,ta[ix][ic]);
 		} 
 	    } 
 	} 

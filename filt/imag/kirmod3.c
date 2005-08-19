@@ -175,7 +175,7 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy, im, ic;
-    float x, y, z, x2, y2, zx, zy, x1, y1, px, pz, r, v1, v2, g, gx, gz, dz;
+    float x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, v2, g, gy, gx, gz, dz;
     float xp=0., yp=0.;
     ktable ***ta=NULL;
 
@@ -215,10 +215,12 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 			    FLT_EPSILON*hypotf(dx,dy); /* distance */
 			g = sqrtf((v->gz)*(v->gz)+(v->gx)*(v->gx)+(v->gy)*(v->gy));
 			gx = v->gx+v->gz*zx;            /* dw/dx */
+			gy = v->gy+v->gz*zy;
 			gz = v->gz-v->gx*zx-v->gy*zy;
 			px = x+z*zx;                    /* r*dr/dx */
+			py = y+z*zy;
 			pz = z-x*zx-y*zy;
-			kirmod_table(type,twod,r,g,gx,gz,v1,v2,px,pz,dz,
+			kirmod_table(type,twod,r,g,gx,gy,gz,v1,v2,px,py,pz,dz,
 				     ta[iy][ix][ic]);
 		    } 
 		}

@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
 
 		    time[ic][ix] = ts->t + tg->t;
 
-		    theta = sinf(0.5*(tg->an - ts->an));
+		    theta = sinf(0.5*(SF_SIG(tg->tx)*tg->an - SF_SIG(ts->tx)*ts->an));
 		    ava = 1.+rgd[ic][ix]*theta*theta;
 		    if (ref != inc) ava *= theta;
 

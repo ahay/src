@@ -26,6 +26,7 @@ typedef struct KTable {
     float t  /* traveltime */;
     float a  /* geometrical spreading */;
     float tx /* traveltime slope (dt/dx) */;
+    float ty /* traveltime slope (dt/dy) */;
     float tn /* obliguity (dt/dn) */;
     float an /* angle from the normal */;
     float ar /* 2.5-D factor (1/r dt/dr) */;
@@ -39,10 +40,12 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		  float r      /* distance between source and receiver */, 
 		  float g      /* absolute gradient */,
 		  float gx     /* gx+gz*zx */,
+		  float gy     /* gy+gz*zy */,
 		  float gz     /* gz-gx*zx */,
 		  float v1     /* source velocity function */, 
 		  float v2     /* receiver velocity function */,
 		  float px     /* x+z*zx */,
+		  float py     /* y+z*zy */,
 		  float pz     /* z-x*zx */,
 		  float dz     /* hypotf(1.0,zx) */,
 		  ktable table /* [5] output table */)
@@ -60,8 +63,9 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		table->ar = 1./(r*v1);
 	    }
 	    px /= (r*v1);
+	    py /= (r*v1);
 	    pz = fabsf(pz)/(r*dz);
-	    table->tn = sqrtf(fabsf(1./(v1*v1)-px*px));
+	    table->tn = sqrtf(fabsf(1./(v1*v1)-px*px-py*py));
 	    break;		    
 	case 's': /* linear sloth */
 	    v0 = 0.5*(v1+v2);
@@ -79,29 +83,33 @@ void kirmod_table(char type    /* type of velocity distribution */,
 		table->ar = 1./sigma;
 	    }
 	    px = (px/sigma+0.5*gx*sigma);  /* => p/(rv) */
+	    py = (py/sigma+0.5*gy*sigma);  /* => p/(rv) */
 	    pz = fabsf(pz+0.5*sigma*sigma*gz)/(sqrtf(v2)*sigma*dz);
-	    table->tn = sqrtf(fabsf(v2-px*px));
+	    table->tn = sqrtf(fabsf(v2-px*px-py*py));
 	    break;
 	case 'v': /* linear velocity */
 	    v0 = sqrtf(v1*v2);                     /* => v */
 	    table->t = acoshf(1.+0.5*r*r*g*g/(v0*v0))/g;  /* => r/v */
 	    a = r*hypotf(1.,0.5*r*g/v0);           /* => r */
+	    rad = 1./(a*v0);                       /* => 1./(r*v) */
 	    if (twod) {
-		table->a = sqrtf(a/v0);
+		table->a = a*sqrtf(rad);
 	    } else {
 		table->a = a;
-		table->ar = 1./(a*v0);
+		table->ar = rad;
 	    }
-	    px = (px-0.5*r*r*gx/v2)/(a*v0);        /* => p/(r*v) */
+	    px = (px-0.5*r*r*gx/v2)*rad;           /* => p/(r*v) */
+	    py = (py-0.5*r*r*gy/v2)*rad;           /* => p/(r*v) */
 	    pz = fabsf(pz*v2-0.5*r*r*gz)/(v0*a*dz);
-	    table->tn = sqrtf(fabsf(1./(v2*v2)-px*px));
+	    table->tn = sqrtf(fabsf(1./(v2*v2)-px*px-py*py));
 	    break;
 	default:
 	    sf_error("%s: type %c is not implemented",__FILE__,type);
 	    break;
     } /* type */
     if (twod) table->ar=0.5;
-    table->tx = px;                                     /* traveltime slope (dt/dx) */
-    table->an = (pz >= 1.0)? 0.: -acosf(pz)*SF_SIG(px); /* angle from the normal */
+    table->tx = px;                          /* traveltime slope (dt/dx) */
+    table->ty = py;
+    table->an = (pz >= 1.0)? 0.: -acosf(pz); /* angle from the normal */
 }
 
