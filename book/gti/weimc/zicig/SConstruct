@@ -1,11 +1,8 @@
 ## 
- # Angle-gathers after wave-equation migration
+ # Angle-gathers after wave-equation migration (ziggy model)
  ##
-
+ 
 from rsfproj import *
-#import sys
-#sys.path.append('../../Scons')
-#import spmig,sgmig,cluster,wemig
 
 # ------------------------------------------------------------
 # MIGRATION parameters

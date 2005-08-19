@@ -1,9 +1,15 @@
+## 
+ # TEST wave-equation time-shift imaging condition
+ # - flat and dipping reflectors
+ # - incidence/reflection at various angles
+ ##
+
 from rsfproj import *
 import math
 import spmig
 
 # ------------------------------------------------------------
-
+# plotting functions
 def igrey(custom):
     return '''
     grey labelrot=n title="" pclip=100 grid=y gridcol=5 %s
@@ -14,7 +20,9 @@ def igraph(custom,par):
     label2=z label1=x
     min2=%f max2=%f grid=y %s
     ''' % (par['zmin'],par['zmax'],custom)
+
 # ------------------------------------------------------------
+# modeling/migration parameters
 
 par = {
     'ny':2000,'oy':-10000,'dy':20,                            # for kirmod
@@ -23,6 +31,8 @@ par = {
     'nz':600, 'oz':0,     'dz':10,                            # for WEM
     'ns':50,  'os':0,     'ds':20, 'js':1, 'fs':0,
     'nt':2000,'ot':0,     'dt':0.01,
+    'nht':100,'oht':-0.5, 'dht':0.01,
+    'nhx':50,
     'vel':2000, 'vel2':2000,
     'nw':300,'ow':1,'jw':1, 'frq':6,
     #
@@ -35,6 +45,7 @@ par = {
     }
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + par['nz'] * par['dz']
+
 # ------------------------------------------------------------
 
 # wavelet
@@ -60,13 +71,13 @@ Flow('slo','vel',
 
 
 # ------------------------------------------------------------
-# slant-stack (time to velocity)
+# time-shift CIG to slant-stack CIG 
 def cig2ssk():
     return '''
     slant adj=y p0=0 np=400 dp=10 |
     put label2=v
     '''
-# slant-stack to angle
+# slant-stack CIG to angle CIG
 def ssk2ang():
     return '''
     tshift a0=-2.0 na=400 da=0.01
@@ -75,16 +86,15 @@ def ssk2ang():
     '''
 # ------------------------------------------------------------
 
-
 #for DIP in ('00','15','30'):
-for DIP in (['00','15']):
+for DIP in (['00']):
 
     par['REF'] = par['zcig'] - par['xcig'] * math.tan(math.pi*    float(DIP) /180.)
-    par['SOU'] = par['xcig'] - par['zcig'] * math.tan(math.pi*(15-float(DIP))/180.)
+    par['SOU'] = par['xcig'] - par['zcig'] * math.tan(math.pi*(00-float(DIP))/180.)
 
     # ------------------------------------------------------------ 
-    # modeling
-    
+    # modeling (Kirchhoff)
+    # ------------------------------------------------------------
     dip = 'dip'+str(DIP)
     ref = 'ref'+str(DIP)
     kir = 'kir'+str(DIP)
@@ -113,9 +123,11 @@ for DIP in (['00','15']):
     sou = 'sou'+str(DIP)
     rec = 'rec'+str(DIP)    
     spmig.wflds(sou,rec,'wave',kir,par)
-
     Result(rec,rec,'window | real | transp | ' + igrey(''))
 
+    # imaging type
+    # x = space-shift
+    # t =  time-shift
     for TYP in ('t','x'):
 
         # ------------------------------------------------------------
@@ -124,11 +136,11 @@ for DIP in (['00','15']):
         if(TYP=='t'):
             img = 'imt'+str(DIP)
             cig = 'cit'+str(DIP)
-            par['misc']='itype=t nht=200 oht=-1.0 dht=0.01 jcx=50'
+            par['misc']='itype=t nht=%(nht)d oht=%(oht)g dht=%(dht)g jcx=50' % par
         else:
             img = 'imx'+str(DIP)
             cig = 'cix'+str(DIP)
-            par['misc']='itype=x nhx=100 hsym=y            jcx=50'
+            par['misc']='itype=x nhx=%(nhx)d hsym=y                  jcx=50' % par
 
         spmig.imagePW(img,cig,'slo',sou,rec,par)
     
@@ -141,33 +153,29 @@ for DIP in (['00','15']):
         # ------------------------------------------------------------
         if(TYP=='t'):
             # slant stack (in z-t plane)
-            slz = 'slz'+str(DIP)
-            Flow(slz,cig,
-                 'window n1=1 min1=%(xcig)g |'% par +cig2ssk())
-
-            Result(slz,slz,'window |'+igrey('title=%s' %DIP))
-            Plot  (slz,slz,'window |'+igrey('title=%s' %DIP))
+            slt = 'slt'+str(DIP)
+            Flow(slt,cig, 'window n1=1 min1=%(xcig)g |'% par + cig2ssk())
+            Result(slt,slt,'window |'+igrey('title=%s' %DIP))
+            Plot  (slt,slt,'window |'+igrey('title=%s' %DIP))
 
             # angle mapping (w/o structural dip)
             vaz = 'vaz'+str(DIP)
-            anz = 'anz'+str(DIP)            
-
+            ant = 'ant'+str(DIP)            
             Flow(vaz,'vel','window n2=1 min2=%(xcig)g' % par)
-            Flow(anz,[slz,vaz],'window |' + ssk2ang())
-            Result(anz,anz,'window |'+igrey('title=%s' %DIP))
-            Plot  (anz,anz,'window |'+igrey('title=%s' %DIP))
+            Flow(ant,[slt,vaz],'window |' + ssk2ang())
+            Result(ant,ant,'window |'+igrey('title=%s' %DIP))
+            Plot  (ant,ant,'window |'+igrey('title=%s' %DIP))
+
+            # dip field
+            dif = 'dif'+str(DIP)
+            ANG = math.pi*float(DIP)/180.
+            Flow(dif,img,'window | transp | math output=%g' % ANG)
             
             # angle mapping (w/  structural dip)
             vbz = 'vbz'+str(DIP)
             bnz = 'bnz'+str(DIP)
-            dif = 'dif'+str(DIP)
-
-            # dip field
-            ANG = math.pi*float(DIP)/180.
-            Flow(dif,img,'window | transp | math output=%g' % ANG)
-
             Flow(vbz,[dif,'vel'],'math v=${SOURCES[1]} output="v/cos(input)"')
-            Flow(bnz,[slz,vbz], ssk2ang())
+            Flow(bnz,[slt,vbz], ssk2ang())
             Result(bnz,bnz,'window |'+igrey('title=%s' %DIP))
 
         else:
@@ -181,33 +189,90 @@ for DIP in (['00','15']):
                  ''' % par)
             Result(anh,anh,'window |'+igrey('title=%s' %DIP))
 
-Result('comp',['cit00','slz00','anz00'],'SideBySideAniso')
+# composite: time-shift CIG, slant-stack, angle-gather
+Result('comp',['cit00','slt00','ant00'],'SideBySideAniso')
+
 
 # ------------------------------------------------------------
-# resolution testing of
-# slant-stack to angle transformation
+# compare positive, normal, negative incidence
+Flow('cin','cit00', 'window n1=1 min1=4000 | stretch rule=l v0=0.001 delay=0'% par) # negative incidence
+Flow('cio','cit00', 'window n1=1 min1=5000 | stretch rule=l v0=0.001 delay=0'% par) # normal   incidence
+Flow('cip','cit00', 'window n1=1 min1=6000 | stretch rule=l v0=0.001 delay=0'% par) # positive incidence
 
-# cig (time shift)
-Flow('tcig',None,
-     '''
-     spike nsp=7 mag=1,1,1,1,1,1,1
-     n1=%(nz)d  o1=%(oz)g  d1=%(dz)g k1=150,200,250,300,350,400,450 l1=150,200,250,300,350,400,450
-     n2=200     o2=-1.0    d2=0.01   k2=025,050,075,100,125,150,175 l2=025,050,075,100,125,150,175 |
-     ricker1 frequency=0.008 |
-     put label1=z label2=t
-     ''' % par)
-Plot('tcig','tcig','window |'+igrey('pclip=100'))
+Flow('hin','cix00', 'window n1=1 min1=4000'% par) # negative incidence
+Flow('hio','cix00', 'window n1=1 min1=5000'% par) # normal   incidence
+Flow('hip','cix00', 'window n1=1 min1=6000'% par) # positive incidence
 
-# slant-stack
-Flow('tsla','tcig',cig2ssk())
-Plot('tsla','tsla','window |'+igrey(''))
+Flow('von',  'vel', 'window n2=1 min2=5000'% par) # velocity
 
-# angle transform
-Flow('tvel','vel','window n2=1 min2=%(xcig)g' % par)
-Flow('tang',['tsla','tvel'],ssk2ang())
-Plot('tang','tang','window |'+igrey('title=tang'))
+#< cio.rsf sfstretch rule=l v0=0.001 delay=0 | sfcat cio.rsf |  sfgrey | tube
 
-Result('test',['tcig','tsla','tang'],'SideBySideAniso')
+for j in ('n','o','p'):
+    c = 'ci' + j
+    Plot(c,c,igrey('title=%s pclip=100' %j ))
+    h = 'hi' + j
+    Plot(h,h,igrey('title=%s pclip=100' %j ))
+    
+    s = 'st' + j
+    Flow(s,c, 'slant adj=y p0=-2000 np=400 dp=10 | put o2=0' )
+    Plot(s,s,igrey('title=%s' %j ))
+
+    a = 'an' + j
+    Flow(a,[s,'von'], ssk2ang())
+    Plot(a,a,'window min2=-1 max2=1 |' + igrey('title=%s' %j ))
+
+    b = 'bn' + j
+    Flow(b,h,'slant adj=y p0=-2.0 np=400 dp=0.01')
+    Plot(b,b,'window min2=-1 max2=1 |' + igrey('title=%s' %j ))
+
+    csa = 'csa' + j
+    Plot(csa,[c,s,a,h,b],'SideBySideAniso')
+
+Result('csa','csan csao csap','Movie')
+
+# ------------------------------------------------------------
+# test time-shift to angle transformation
+for i in (['0','1','2','3','4','5','6']):
+
+    vv = 500 + int(i) * 500
+    kk = vv * par['dht'] / par['dz']
+    
+    spk=''
+    spk+=str(int(300-50*kk))+','
+    spk+=str(int(300-25*kk))+','
+    spk+=str(int(300-00*kk))+','
+    spk+=str(int(300+25*kk))+','
+    spk+=str(int(300+50*kk))
+
+    # cig (time shift)
+    tcig = 'tcig'+ i
+    Flow(tcig,None,
+         '''
+         spike nsp=5 mag=1,1,1,1,1
+         n1=%d  o1=%g   d1=%g   k1=%s l1=%s
+         n2=200 o2=-1.0 d2=0.01 k2=050,075,100,125,150 l2=050,075,100,125,150 |
+         ricker1 frequency=0.008 |
+         put label1=z label2=t
+         ''' % (par['nz'],par['oz'],par['dz'],spk,spk) )
+
+    Plot(tcig,tcig,'window |'+igrey('pclip=100'))
+
+    # slant-stack (velocity parameter)
+    tsla = 'tsla' + i
+    Flow(tsla,tcig,cig2ssk())
+    Plot(tsla,tsla,'window |'+igrey('pclip=99'))
+    
+    # angle transform
+    tvel = 'tvel' + i
+    Flow(tvel,'vel','window n2=1 min2=%(xcig)g' % par)
+    tang = 'tang' + i
+    Flow(tang,[tsla,tvel],ssk2ang())
+    Plot(tang,tang,'window |'+igrey('pclip=99'))
+
+    ctest = 'ctest' + i
+    Plot(ctest,[tcig,tsla,tang],'SideBySideAniso')
+
+Result('ctest','ctest0 ctest1 ctest2 ctest3 ctest4 ctest5 ctest6','Movie')
 # ------------------------------------------------------------
 
 #

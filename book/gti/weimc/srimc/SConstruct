@@ -1,3 +1,7 @@
+## 
+ # wave-equation extrapolation and imaging demo (flat reflector)
+ ##
+
 from rsfproj import *
 import math
 import zomig,spmig

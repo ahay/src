@@ -27,19 +27,19 @@
 
 static float t0, dt, x0, h=0.;
 
-static float t2_cheb(float t) { return acosf((t0-t*t)/dt); }
+static float t2_cheb    (float t) { return acosf((t0-t*t)/dt); }
 static float t2_cheb_inv(float t) { return sqrtf(t0-dt*cosf(t)); }
-static float t2(float t) { return t*t; }
-static float log_frw(float t) { return logf(t/t0); }
-static float log_inv(float t) { return t0*expf(t); }
-static float nmo(float t) 
+static float t2         (float t) { return t*t; }
+static float log_frw    (float t) { return logf(t/t0); }
+static float log_inv    (float t) { return t0*expf(t); }
+static float nmo        (float t) 
 { 
     t = t*t + h;
     return (t > 0.)? sqrtf(t): 0.; 
 } 
-static float lmo(float t) { return t + h; } 
-static float rad_inv(float t) { return (t-t0)*(h+x0)/x0; }
-static float rad_frw(float t) { return t0-t*x0/(h-x0); }
+static float lmo        (float t) { return t + h; } 
+static float rad_inv    (float t) { return (t-t0)*(h+x0)/x0; }
+static float rad_frw    (float t) { return t0-t*x0/(h-x0); }
 
 int main(int argc, char* argv[])
 {
@@ -91,7 +91,10 @@ int main(int argc, char* argv[])
 	rule="nmo";
     }
 
-    if ('n'==rule[0] || 'l'==rule[0] || 'r'==rule[0]) {
+    if ( 'n'==rule[0] || 
+	 'l'==rule[0] || 
+	 'r'==rule[0] ) {
+
 	if (!sf_histfloat(in,"o2",&h0)) sf_error("No o2= in input"); 
 	if (!sf_histfloat(in,"d2",&dh)) sf_error("No d2= in input"); 
 	if (!sf_getfloat("v0",&v0)) sf_error("Need v0=");
@@ -125,6 +128,7 @@ int main(int argc, char* argv[])
 	    forward = inverse = lmo;
 	    if (!sf_getfloat("delay",&t0)) sf_error("Need delay=");
 	    /* time delay for rule=lmo */
+
 	    h = -t0;
 
 	    break;
@@ -133,9 +137,9 @@ int main(int argc, char* argv[])
 	    inverse = log_inv;
 
 	    if (o1 < FLT_EPSILON) o1=FLT_EPSILON;
-	    if (!sf_getfloat ("t1", &t0) && 
-		!sf_histfloat(in,"t1",&t0)) t0=o1;
-	    sf_putfloat(out,"t1",t0);
+	    if (!sf_getfloat (    "t1",&t0) && 
+		!sf_histfloat(in, "t1",&t0)  ) t0=o1;
+	    sf_putfloat      (out,"t1", t0);
 	    break;
 	case '2':
 	    forward = t2;
@@ -191,8 +195,8 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"o1",o2);
     sf_putfloat(out,"d1",d2);
 
-    trace = sf_floatalloc(n1);
-    stretched = sf_floatalloc(n);
+    trace     = sf_floatalloc(n1);
+    stretched = sf_floatalloc(n );
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
@@ -200,11 +204,15 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    if ('l' == rule[0] || 'n' == rule[0] || 'r' == rule[0]) {
+	    if ( 'l' == rule[0] || 
+		 'n' == rule[0] || 
+		 'r' == rule[0]) {
 		h = h0+i2*dh + (dh/CDPtype)*(i3%CDPtype);
+
 		if ('n' == rule[0]) h *= h;
-		if ('l' == rule[0]) h = fabsf(h);
-		if (inv) h = -h;
+/*		if ('l' == rule[0]) h = fabsf(h);*/
+
+		if (inv) h = - h;
 	    } 
 
 	    sf_floatread (trace,n1,in);
@@ -219,5 +227,3 @@ int main(int argc, char* argv[])
 
     exit (0);
 }
-
-/* 	$Id$	 */
