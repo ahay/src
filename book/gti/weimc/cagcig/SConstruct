@@ -1,0 +1,202 @@
+from rsfproj import *
+import math
+import spmig
+
+par = {
+    'nx':500,'ox':4000,    'dx':10,
+#    'nh':500, 'oh':-5000,'dh':20,
+    'nh':300, 'oh':-2000,'dh':20,
+    'ns':1,   'os':5000, 'ds':40,
+    'nz':250, 'oz':0,    'dz':10,
+    'nt':500,'ot':0,    'dt':0.008,
+    'nw':100,'ow':1,'jw':2,'ns':1,'js':1,'fs':0,
+    #
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':0,'pmy':0,
+    'os': 5500, 'pvel': 2000, 'svel': 1000
+    }
+
+# ------------------------------------------------------------
+def igrey2(custom):
+    return '''
+    grey labelrot=n title="" pclip=100 %s
+    ''' % custom
+def igrey3(custom,custom2):
+    return '''
+    transp plane=12 | transp plane=23 |
+    byte gainpanel=all %s |
+    grey3 labelrot=n title="" flat=n
+          point2=0.5 point1=0.6 labelsz=6
+          label1="h\s60 \_x\^\s100 (m)"
+          label2="h\s60 \_z\^\s100 (m)"
+          label3="depth (m)"
+          frame1=50 frame2=50 %s
+    ''' % (custom,custom2)
+
+DLABEL = ' label1="time (s)"  label2="offset (m)" '
+XLABEL = ' label1="depth (m)" label2="location (m)" '
+OLABEL = ' label1="depth (m)" label2="offset (m)" grid=y '
+ALABEL = ' label1="depth (m)" label2="tan \F10 q\F3 " grid=y '
+
+SCR = ' screenratio=1.5 screenht=20'
+SCR = ' screenratio=1.5 screenht=10'
+SCR = ' screenratio=1'
+
+# ------------------------------------------------------------
+
+
+# Velocities and slownesses
+###########################
+Flow('pvel',None,
+     '''
+     spike nsp=1 mag=%(pvel)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=z label2=x
+     ''' % par)
+Flow('cvel','pvel','math output=%(svel)g' % par)
+Flow('pslo','pvel','math output=1/input | transp | spray axis=2 n=1')
+Flow('cslo','cvel','math output=1/input | transp | spray axis=2 n=1')
+
+# Wavelet
+#########
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=1
+     n1=%(nt)d d1=%(dt)g o1=0|
+     put label1=t label2=x label3=y 
+     ''' % par )    
+
+# Imaging condition types
+#########################
+type = {
+    'o': 'itype=o',
+    't': 'itype=t nht=160 oht=-0.200 dht=0.0025 jcx=10',
+    'x': 'itype=x hsym=y nhx=50 jcx=10',
+    'z': 'itype=x hsym=y nhz=50 jcx=10',
+    'm': 'itype=x hsym=y nhx=50 nhz=50 jcx=10',
+    'h': 'itype=h nhh=50 dhh=10 nha=180 dha=2 oha=0 jcx=10 vpvs=2'
+    }
+
+cases = {
+    'flat-': (0,1500,7000,1500),
+    'dips-': (-15,2973.7,7447.1,1060.7)
+    }
+
+for c in cases.keys(): 
+    (DIP,REF,CIG,DEP) = cases[c]
+
+    # Create reflector geometry
+    ###########################
+    
+    mod = c+'mod'
+    ref = c+'ref'
+
+    Flow(mod,None,'spike n1=%d o1=%g d1=%g mag=%g'
+         % (par['nx']*3,par['ox']-par['nx']*par['dx'],par['dx'],
+            math.tan(math.pi*DIP/180.)))
+    Flow(ref,mod,'math output="%g+x1*input"' % REF)
+
+    # Gamma function (Vp/Vs) for one CIG
+    ####################################
+    gamm = c+'gamm'
+    Flow(gamm,'pvel cvel',
+         'add mode=d ${SOURCES[1]} | window n2=1 min2=%g' % CIG)
+
+    # Modeling one shot gather PP and PS by Kirchoff
+    ################################################
+    for case in ('p','c'):
+        c2 = c+case
+        kir = c2+'kir'
+        if case == 'p':
+            par['vel2']=par['pvel']
+        else:
+            par['vel2']=par['svel']
+
+        Flow(kir,[ref,mod],
+             '''
+             kirmod vel=%(pvel)g vel2=%(vel2)g dip=${SOURCES[1]}
+             nt=%(nt)d  dt=%(dt)g freq=15         
+             nh=%(nh)d  h0=%(oh)g dh=%(dh)g
+             ns=%(ns)d  s0=%(os)g ds=%(ds)g |
+             put label1=t label2=h
+                 ''' % par)
+        Plot(kir,kir,igrey2('pclip=100'+DLABEL))
+
+        # Preparing wave fields for shot-record migration
+        #################################################
+        spmig.wflds(c2+'sou',c2+'rec','wave',kir,par)
+
+        for h in type.keys():
+            locpar = par
+            locpar['misc'] = type[h]
+
+            img = c2 + 'img' + h
+            cig = c2 + 'cig' + h
+
+            # Shot-record migration
+            #######################
+            if case=='p':
+                spmig.imagePW(img,cig,'pslo',       c2+'sou',c2+'rec',locpar)
+            else:
+                spmig.imageCW(img,cig,'pslo','cslo',c2+'sou',c2+'rec',locpar)
+
+            # Plot stacked image
+            ####################
+            Plot(img,'window n4=1 min4=0 | transp |'+ igrey2(''+XLABEL))
+
+            # Estimate dip
+            ##############
+            dip = c2 + 'dip' + h
+            Flow(dip,img,
+                 'window | transp | dip rect1=100 rect2=10 | window n2=1 min2=%g | scale dscale=%g' %
+                 (CIG,par['dz']/par['dx']))
+
+
+            # Extract and plot offset gathers at one CIG
+            ###################################                   
+            off = c2 + 'off' + h
+
+            if(h=='m'): # Full-offset imaging condition
+                Flow(off,cig,'window n1=1 min1=%g' % CIG)
+                Result(off,off,igrey3('','frame3=%d') % int(float(DEP)/float(par['dz'])) )
+            else:
+                Flow(off,cig,'window n1=1 min1=%g' % CIG)
+                Plot(off,igrey2('min2=0 min1=500 max1=2500 '+SCR+OLABEL))
+
+            # Convert offset to angle
+            #########################
+            ang = c2 + 'ang' + h
+            cor = c2 + 'cor' + h
+        
+            if(h=='z' or h=='h'):
+                Flow(ang,off,'radon adj=y p0=-1.5 np=201 dp=0.015 | put label2=tan')
+                Flow(cor,[ang,gamm],'pp2psang vpvs=${SOURCES[1]}')
+            elif(h=='x'): # Lateral-offset imaging condition
+                Flow(ang,off,'radon adj=y p0=-1.5 np=201 dp=0.015 | put label2=tan')
+                Flow(cor,[ang,gamm,dip],'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+            elif(h=='t'):
+                Flow(ang,off,'radon adj=y p0=-5000 np=400 dp=25 | put label2=v')
+
+            # Display angle gathers
+            #######################
+            Plot(ang,ang,igrey2('min2=0 max2=1.1 min1=500 max1=2500 '+SCR+ALABEL))
+            Plot(cor,cor,igrey2('min2=0 max2=1.1 min1=500 max1=2500 '+SCR+ALABEL))
+
+        Result(c2+'dat',[kir,c2+'imgx'],'SideBySideAniso')
+        Result(c2+'offangx',[c2+'offx',c2+'angx'],'SideBySideIso')
+        Result(c2+'offangh',[c2+'offh',c2+'angh'],'SideBySideIso')
+
+        Flow(c2+'offall',c2+'cigx','window | transp | stack')
+        Plot(c2+'offall',igrey2('min2=0 min1=500 max1=2500 '+SCR+OLABEL))
+
+        Flow(c2+'angall',c2+'offall',
+             'radon adj=y p0=-1.5 np=201 dp=0.015 | put label2=tan')
+        Plot(c2+'angall',
+             igrey2('min2=0 max2=1.1 min1=500 max1=2500 '+SCR+ALABEL))
+
+        Result(c2+'offangall',[c2+'offall',c2+'angall'],'SideBySideIso')
+        
+    Result(c+'cang',[c+'coffx',c+'cangx',c+'ccorx'],'SideBySideIso')
+
+End()

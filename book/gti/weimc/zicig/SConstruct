@@ -1,0 +1,278 @@
+## 
+ # Angle-gathers after wave-equation migration
+ ##
+
+from rsfproj import *
+#import sys
+#sys.path.append('../../Scons')
+#import spmig,sgmig,cluster,wemig
+
+# ------------------------------------------------------------
+# MIGRATION parameters
+# ------------------------------------------------------------
+par = {
+    'nx':500,'ox':10925,'dx':150,
+    'nt':1500,'ot':0,'dt':0.008,'kt':1,'ft':0,
+#
+    'nw':1,  'ow':5,
+    'nw':100,'ow':1,'jw':1,
+    'nw':360,'ow':1,'jw':1,
+#
+    'ns':100, 'js':5, 'fs':0,
+    'ns':500, 'js':1, 'fs':0,
+#
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':0,'pmy':0,
+    #
+    'dz':25, 'zmin':6100, 'zmax':30000
+    }
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+minmax = ' min2=%g max2=%g ' % (par['xmin'],par['xmax'])
+
+def igrey(custom):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n grid=y gridcol=6
+    title="" pclip=97 label1="depth (ft)" %s
+    ''' % (custom)
+LABEL = " labelsz=12 titlesz=16 "
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# from SGY to RSF
+# ------------------------------------------------------------
+velo = 'sigsbee2a_migvel.sgy'
+vstr = 'sigsbee2a_stratigraphy.sgy'
+
+Fetch(velo,'sigsbee')
+Fetch(vstr,'sigsbee')
+
+Flow('zvelo tzvelo ./vhead ./bvhead',velo,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+Flow('zvstr tzvstr ./shead ./bshead',vstr,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+# ------------------------------------------------------------
+# VELOCITY
+# ------------------------------------------------------------
+# stratigraphic slowness
+Flow('vstr','zvstr',
+     'put d1=25 o2=10025 d2=25 label1=z label2=x')
+Flow('vstrpad','vstr',
+     '''
+     window n1=1 f1=1200 |
+     spray axis=1 n=100 o=0 d=25
+     ''')
+Flow('s0','vstr vstrpad',
+     '''
+     cat axis=1 space=n ${SOURCES[1]} |
+     window |
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y |
+     window squeeze=n      f3=244
+     ''' % par)
+
+# migration slowness
+Flow('velo','zvelo',
+     'put d1=25 o2=10025 d2=37.5 label1=z label2=x')
+Flow('velopad','velo',
+     '''
+     window n1=1 f1=1200 |
+     spray axis=1 n=100 o=0 d=25
+     ''')
+
+Flow('s1','velo velopad',
+     '''
+     cat axis=1 space=n ${SOURCES[1]} |
+     window |
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y |
+     window squeeze=n      f3=244
+     ''')
+
+# datuming slowness
+Flow('sd','velo velopad',
+     '''
+     cat axis=1 space=n ${SOURCES[1]} |
+     window |
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y |
+     window squeeze=n n3=2 j3=244
+     ''')
+
+# wrong migration velocity
+Flow('sm','s1',
+     '''
+     window squeeze=n f3=350 |
+     math output=0.1 |
+     pad beg3=350    |
+     math output=input+1 |
+     smooth rect3=31
+     ''')
+Flow('s2','s1 sm',
+     'math s=${SOURCES[0]} m=${SOURCES[1]} output=s*m')
+
+# ------------------------------------------------------------
+# MIGRATION
+# ------------------------------------------------------------
+
+#SLOlist = '0','1','2'
+#CIGlist = '24000','36000','48000','60000','72000'
+
+SLOlist = '0'
+CIGlist = '20000','24000','48000','72000'
+IMGlist = 'x','t'
+
+cigpar = {'jmx':20,
+          'nhx':20,
+          'nht':80, 'oht':-0.15, 'dht':0.0075,
+          'npt':325,'opt':4000,  'dpt':80,
+          'na':400, 'oa':-2.0,   'da':0.01, 'mina':0, 'maxa':1.6 }
+
+for i in SLOlist:
+    for k in IMGlist:
+        SRcig = 'SRC' + i + k
+        Fetch(     SRcig+'.hh','sigsbee')
+        Flow(SRcig,SRcig+'.hh','window squeeze=n')
+
+# ------------------------------------------------------------
+# RESULTS
+# ------------------------------------------------------------
+
+# SHOT-RECORD RESULTS
+for i in SLOlist:
+    slo = 's' + i
+    Result(slo,slo,'window      | transp |'
+           +igrey('pclip=100 color=j allpos=y label2="location (ft)" '))
+
+    vel = 'v' + i
+    Flow(vel,slo,'window | transp | smooth rect1=51 | math output=1/input')
+
+    for k in IMGlist:
+        SRimg = 'SRI' + i + k
+        Flow(SRimg,SRcig,'window n4=1 min4=0 | transp')
+        SRcig = 'SRC' + i + k
+        Result(SRimg,SRimg, igrey('pclip=99 label2="location (ft)"'))
+
+        # dip field
+        SRdip = 'DIP' + i + k
+        Flow(SRdip,SRimg,'dip rect1=3 rect2=3 order=3 liter=100')
+        SRmap = 'MAP' + i + k
+        Flow(SRmap,[SRdip,slo],'transp | remap1 pattern=${SOURCES[1]} | transp')
+
+        # image after plane-wave distruction
+        SRpwd = 'PWD' + i + k
+        Flow(SRpwd,[SRimg,SRdip],'pwd dip=${SOURCES[1]}')
+        Result(SRpwd,SRpwd, igrey('pclip=99 label2="location (ft)"'))
+
+        # dip-corrected velocity
+        vco = 'v' + i + k
+        Flow(vco,[SRmap,vel],
+             '''
+             math v=${SOURCES[1]} output="v/cos(atan(input*%(dz)g/%(dx)g))"
+             ''' % par)
+
+        for l in CIGlist:
+
+            # image
+            z = 'z' + i + k + l
+            lmin = float(l) - 20 * float('%(dx)g' % par)
+            lmax = float(l) + 20 * float('%(dx)g' % par)
+            Flow(z,SRcig,
+                 '''
+                 window n4=1 min4=0 min1=%g max1=%g |
+                 transp |
+                 bandpass fhi=0.005
+                 ''' % (lmin,lmax) )
+            Plot(z,z,igrey('label2="location (ft)"'+LABEL))
+            
+            # offset gathers
+            h = 'h' + i + k + l
+            Flow(h,SRcig,
+                 '''
+                 window n1=1 min1=%g |
+                 bandpass fhi=0.005
+                 ''' % float(l))
+            
+            # angle gathers
+            a = 'a' + i + k + l
+            b = 'b' + i + k + l
+            c = 'c' + i + k + l
+
+            if(k=='x'):
+                Flow(a,h,
+                     '''
+                     bandpass fhi=0.005 |
+                     slant adj=y p0=%(oa)g np=%(na)d dp=%(da)g |
+                     window min2=%(mina)g max2=%(maxa)g
+                     ''' % cigpar)
+                Plot  (a,a,igrey('label2="tan \F10 q\F3 "'+LABEL))
+                Plot  (h,h,igrey('label2="offset (ft)"   '+LABEL))
+                
+            if(k=='t'):
+                vb = 'vb' + i + k + l
+                Flow(vb,vel,'window n2=1 min2=%g' % float(l) )
+                vc = 'vc' + i + k + l
+                Flow(vc,vco,'window n2=1 min2=%g' % float(l) )
+
+                Flow(a,h,
+                     '''
+                     bandpass fhi=0.005 |
+                     slant adj=y p0=%(opt)g np=%(npt)d dp=%(dpt)g
+                     ''' % cigpar)
+                # w/o dip correction
+                Flow(b,[a,vb],
+                     '''
+                     tshift      a0=%(oa)g  na=%(na)d  da=%(da)g velocity=${SOURCES[1]} |
+                     window min2=%(mina)g max2=%(maxa)g
+                     ''' % cigpar)
+                # w/  dip correction
+                Flow(c,[a,vc],
+                     '''
+                     tshift      a0=%(oa)g  na=%(na)d  da=%(da)g velocity=${SOURCES[1]} |
+                     window min2=%(mina)g max2=%(maxa)g
+                     ''' % cigpar)
+                Plot  (a,a,igrey('label2="vel"           '+LABEL))
+                Plot  (b,b,igrey('label2="tan \F10 q\F3 "'+LABEL))
+                Plot  (c,c,igrey('label2="tan \F10 q\F3 "'+LABEL))
+                Plot  (h,h,igrey('label2="\F10 t\F3 (s)" '+LABEL))
+
+for l in CIGlist:
+    for i in SLOlist:
+        SRoff = 'SRoff' + i + '-' + l
+        SRang = 'SRang' + i + '-' + l
+        SRtic = 'SRtic' + i + '-' + l
+
+        zx = 'z' + i + 'x' + l
+        hx = 'h' + i + 'x' + l
+        ht = 'h' + i + 't' + l
+
+        ax = 'a' + i + 'x' + l
+
+        at = 'a' + i + 't' + l
+        bt = 'b' + i + 't' + l
+        ct = 'c' + i + 't' + l
+        
+#        Result(SRoff,[zx,hx,ht],'SideBySideAniso')
+#        Result(SRang,[zx,ax,at],'SideBySideAniso')
+        Result(SRtic,[zx,ht,at,bt,ct,ax],'SideBySideAniso')
+
+End()
