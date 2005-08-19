@@ -27,14 +27,15 @@ def igraph(custom,par):
 par = {
     'ny':2000,'oy':-10000,'dy':20,                            # for kirmod
     'nh':500, 'oh':-5000, 'dh':20,                            # for kirmod
-    'nx':500, 'ox':0,     'dx':20, 'xcig':5000, 'zcig':3000,  # for WEM
-    'nz':600, 'oz':0,     'dz':10,                            # for WEM
+    'nx':500, 'ox':0,     'dx':20, 'xcig':5000, 'zcig':2000,  # for WEM
+    'nz':400, 'oz':0,     'dz':10,                            # for WEM
     'ns':50,  'os':0,     'ds':20, 'js':1, 'fs':0,
     'nt':2000,'ot':0,     'dt':0.01,
     'nht':100,'oht':-0.5, 'dht':0.01,
     'nhx':50,
     'vel':2000, 'vel2':2000,
     'nw':300,'ow':1,'jw':1, 'frq':6,
+    'nw':100,'jw':3,
     #
     'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':0,'pmy':0,
@@ -80,7 +81,7 @@ def cig2ssk():
 # slant-stack CIG to angle CIG
 def ssk2ang():
     return '''
-    tshift a0=-2.0 na=400 da=0.01
+    /home/savap/RSF/filt/proc/sftshift a0=-2.0 na=400 da=0.01
     velocity=${SOURCES[1]} |
     put label2=tan
     '''
@@ -195,13 +196,16 @@ Result('comp',['cit00','slt00','ant00'],'SideBySideAniso')
 
 # ------------------------------------------------------------
 # compare positive, normal, negative incidence
-Flow('cin','cit00', 'window n1=1 min1=4000 | stretch rule=l v0=0.001 delay=0'% par) # negative incidence
-Flow('cio','cit00', 'window n1=1 min1=5000 | stretch rule=l v0=0.001 delay=0'% par) # normal   incidence
-Flow('cip','cit00', 'window n1=1 min1=6000 | stretch rule=l v0=0.001 delay=0'% par) # positive incidence
+#Flow('cin','cit00', 'window n1=1 min1=4000 | stretch rule=l v0=0.001 delay=0'% par) # negative incidence
+#Flow('cio','cit00', 'window n1=1 min1=5000 | stretch rule=l v0=0.001 delay=0'% par) # normal   incidence
+#Flow('cip','cit00', 'window n1=1 min1=6000 | stretch rule=l v0=0.001 delay=0'% par) # positive incidence
+Flow('cin','cit00', 'window n1=1 min1=3000'% par) # negative incidence
+Flow('cio','cit00', 'window n1=1 min1=5000'% par) # normal   incidence
+Flow('cip','cit00', 'window n1=1 min1=7000'% par) # positive incidence
 
-Flow('hin','cix00', 'window n1=1 min1=4000'% par) # negative incidence
+Flow('hin','cix00', 'window n1=1 min1=3000'% par) # negative incidence
 Flow('hio','cix00', 'window n1=1 min1=5000'% par) # normal   incidence
-Flow('hip','cix00', 'window n1=1 min1=6000'% par) # positive incidence
+Flow('hip','cix00', 'window n1=1 min1=7000'% par) # positive incidence
 
 Flow('von',  'vel', 'window n2=1 min2=5000'% par) # velocity
 
@@ -214,16 +218,17 @@ for j in ('n','o','p'):
     Plot(h,h,igrey('title=%s pclip=100' %j ))
     
     s = 'st' + j
-    Flow(s,c, 'slant adj=y p0=-2000 np=400 dp=10 | put o2=0' )
+#    Flow(s,c, 'slant adj=y p0=-2000 np=400 dp=10 | put o2=0' )
+    Flow(s,c, cig2ssk() )
     Plot(s,s,igrey('title=%s' %j ))
 
     a = 'an' + j
     Flow(a,[s,'von'], ssk2ang())
-    Plot(a,a,'window min2=-1 max2=1 |' + igrey('title=%s' %j ))
+    Plot(a,a,igrey('title=%s' %j ))
 
     b = 'bn' + j
     Flow(b,h,'slant adj=y p0=-2.0 np=400 dp=0.01')
-    Plot(b,b,'window min2=-1 max2=1 |' + igrey('title=%s' %j ))
+    Plot(b,b,igrey('title=%s' %j ))
 
     csa = 'csa' + j
     Plot(csa,[c,s,a,h,b],'SideBySideAniso')
@@ -235,51 +240,83 @@ Result('csa','csan csao csap','Movie')
 for i in (['0','1','2','3','4','5','6']):
 
     vv = 500 + int(i) * 500
-    kk = vv * par['dht'] / par['dz']
+    kt = vv * par['dht'] / par['dz']
     
-    spk=''
-    spk+=str(int(300-50*kk))+','
-    spk+=str(int(300-25*kk))+','
-    spk+=str(int(300-00*kk))+','
-    spk+=str(int(300+25*kk))+','
-    spk+=str(int(300+50*kk))
+    tspk=''
+    tspk+=str(int(200-50*kt))+','
+    tspk+=str(int(200-25*kt))+','
+    tspk+=str(int(200-00*kt))+','
+    tspk+=str(int(200+25*kt))+','
+    tspk+=str(int(200+50*kt))
 
     # cig (time shift)
     tcig = 'tcig'+ i
     Flow(tcig,None,
          '''
          spike nsp=5 mag=1,1,1,1,1
-         n1=%d  o1=%g   d1=%g   k1=%s l1=%s
+         n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
          n2=200 o2=-1.0 d2=0.01 k2=050,075,100,125,150 l2=050,075,100,125,150 |
          ricker1 frequency=0.008 |
          put label1=z label2=t
-         ''' % (par['nz'],par['oz'],par['dz'],spk,spk) )
+         ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
 
-    Plot(tcig,tcig,'window |'+igrey('pclip=100'))
+    Plot(tcig,tcig,igrey('pclip=100'))
 
     # slant-stack (velocity parameter)
     tsla = 'tsla' + i
     Flow(tsla,tcig,cig2ssk())
-    Plot(tsla,tsla,'window |'+igrey('pclip=99'))
+    Plot(tsla,tsla,igrey('pclip=99'))
     
     # angle transform
     tvel = 'tvel' + i
     Flow(tvel,'vel','window n2=1 min2=%(xcig)g' % par)
     tang = 'tang' + i
     Flow(tang,[tsla,tvel],ssk2ang())
-    Plot(tang,tang,'window |'+igrey('pclip=99'))
+    Plot(tang,tang,igrey('pclip=99'))
 
-    ctest = 'ctest' + i
-    Plot(ctest,[tcig,tsla,tang],'SideBySideAniso')
+    ttest = 'ttest' + i
+    Plot(ttest,[tcig,tsla,tang],'SideBySideAniso')
 
-Result('ctest','ctest0 ctest1 ctest2 ctest3 ctest4 ctest5 ctest6','Movie')
+    # ------------------------------------------------------------
+
+    kh = int(i) - 3
+
+    hspk=''
+    hspk+=str(int(200-50*kh))+','
+    hspk+=str(int(200-25*kh))+','
+    hspk+=str(int(200-00*kh))+','
+    hspk+=str(int(200+25*kh))+','
+    hspk+=str(int(200+50*kh))
+
+    # cig (space shift)
+    hcig = 'hcig'+ i
+    Flow(hcig,None,
+         '''
+         spike nsp=5 mag=1,1,1,1,1
+         n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
+         n2=200 o2=-2000 d2=20 k2=050,075,100,125,150 l2=050,075,100,125,150 |
+         ricker1 frequency=0.008 |
+         put label1=z label2=h
+         ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
+    Plot(hcig,hcig,igrey('pclip=100'))
+
+    # slant-stack (velocity parameter)
+    hang = 'hang' + i
+    Flow(hang,hcig,'slant adj=y p0=-2.0 np=400 dp=0.01 | put label2=tan')
+    Plot(hang,hang,igrey('pclip=99'))
+
+    htest = 'htest' + i
+    Plot(htest,[hcig,hang],'SideBySideAniso')
+    
+Result('ttest','ttest0 ttest1 ttest2 ttest3 ttest4 ttest5 ttest6','Movie')
+Result('htest','htest0 htest1 htest2 htest3 htest4 htest5 htest6','Movie')
 # ------------------------------------------------------------
 
 #
 Flow('tspk',None,
      '''
      spike nsp=3 mag=-1,0,+1
-     n1=%(nz)d  o1=%(oz)g  d1=%(dz)g k1=200,300,400 l1=200,300,400
+     n1=%(nz)d  o1=%(oz)g  d1=%(dz)g k1=100,200,300 l1=100,200,300
      n2=400     o2=0       d2=10     k2=100,200,300 l2=100,200,300 |
      ricker1 frequency=0.008 |
      put label1=z label2=v

@@ -48,16 +48,16 @@ int main (int argc, char *argv[])
     axa ahh,aha,ahb; /* |h|,alpha,beta */
 
     /* I/O files */
-    sf_file Fw_s,Fw_r; /* wavefield file W ( nx, ny,nw) */
-    sf_file Fs_s,Fs_r; /*  slowness file S (nlx,nly,nz) */
-    sf_file Fi;        /*     image file R ( nx, ny,nz) */
-    sf_file Fc;        /*      cigs file C */
+    sf_file Fw_s=NULL,Fw_r=NULL; /* wavefield file W ( nx, ny,nw) */
+    sf_file Fs_s=NULL,Fs_r=NULL; /*  slowness file S (nlx,nly,nz) */
+    sf_file Fi=NULL;             /*     image file R ( nx, ny,nz) */
+    sf_file Fc=NULL;             /*      cigs file C */
 
     /* I/O slices */
-    fslice wfl_s,wfl_r;
-    fslice slo_s,slo_r;
-    fslice imag;
-    fslice cigs;
+    fslice wfl_s=NULL,wfl_r=NULL;
+    fslice slo_s=NULL,slo_r=NULL;
+    fslice imag=NULL;
+    fslice cigs=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

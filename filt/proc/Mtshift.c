@@ -82,12 +82,14 @@ int main (int argc, char* argv[])
 		a = aa.o+ia*aa.d;      /*                    tan     */
 		n = v * hypotf(a,1.);  /* nu = v * sqrt( 1 - tan^2 ) */
 
-		f = (n - av.o) / av.d;
+/*		f = (n - av.o) / av.d;*/
 /*		if( a>0. ) {*/
 /*		    f = ( v-av.o + SF_ABS(n-v) ) / av.d;*/
 /*		} else {*/
 /*		    f = ( v-av.o - SF_ABS(n-v) ) / av.d;*/
 /*		}*/
+		f =  ( v-av.o + SF_SIG(a) * SF_ABS(n-v) ) / av.d;
+
 		fint = f;
 
 		if (fint >= 0 && fint < av.n) {
