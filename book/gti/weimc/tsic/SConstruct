@@ -81,7 +81,7 @@ def cig2ssk():
 # slant-stack CIG to angle CIG
 def ssk2ang():
     return '''
-    /home/savap/RSF/filt/proc/sftshift a0=-2.0 na=400 da=0.01
+    tshift a0=-2.0 na=400 da=0.01
     velocity=${SOURCES[1]} |
     put label2=tan
     '''
@@ -91,7 +91,7 @@ def ssk2ang():
 for DIP in (['00']):
 
     par['REF'] = par['zcig'] - par['xcig'] * math.tan(math.pi*    float(DIP) /180.)
-    par['SOU'] = par['xcig'] - par['zcig'] * math.tan(math.pi*(00-float(DIP))/180.)
+    par['SOU'] = par['xcig'] + par['zcig'] * math.tan(math.pi*(00-float(DIP))/180.)
 
     # ------------------------------------------------------------ 
     # modeling (Kirchhoff)
@@ -118,13 +118,26 @@ for DIP in (['00']):
          ''' % par)
     Result(kir,kir,'window max1=8 | ' + igrey('pclip=99 title=%s') %DIP)
 
+    # mask
+    msk = 'msk'+str(DIP)
+    Flow(msk,None,
+         '''
+         spike nsp=2 mag=1,1
+         n1=%(nt)d o1=%(ot)g d1=%(dt)g
+         n2=%(nh)d o2=%(oh)g d2=%(dh)g k2=150,350 l2=150,350
+         ''' % par)
+
+    dat = 'dat'+str(DIP)
+    Flow(dat,[kir,msk],'math k=${SOURCES[0]} m=${SOURCES[1]} output="k*m"', stdin=0)
+    Result(dat,dat,'window max1=8 | ' + igrey('pclip=100 title=%s') %DIP)
+    
     # ------------------------------------------------------------
     # source/receiver wavefields
     # ------------------------------------------------------------
     sou = 'sou'+str(DIP)
     rec = 'rec'+str(DIP)    
     spmig.wflds(sou,rec,'wave',kir,par)
-    Result(rec,rec,'window | real | transp | ' + igrey(''))
+    Result(rec,rec,'window | real | transp | ' + igrey('pclip=100'))
 
     # imaging type
     # x = space-shift
@@ -196,16 +209,16 @@ Result('comp',['cit00','slt00','ant00'],'SideBySideAniso')
 
 # ------------------------------------------------------------
 # compare positive, normal, negative incidence
-#Flow('cin','cit00', 'window n1=1 min1=4000 | stretch rule=l v0=0.001 delay=0'% par) # negative incidence
-#Flow('cio','cit00', 'window n1=1 min1=5000 | stretch rule=l v0=0.001 delay=0'% par) # normal   incidence
-#Flow('cip','cit00', 'window n1=1 min1=6000 | stretch rule=l v0=0.001 delay=0'% par) # positive incidence
-Flow('cin','cit00', 'window n1=1 min1=3000'% par) # negative incidence
+#Flow('cin','cit00', 'window n1=1 min1=4000 | stretch rule=l v0=0.001 delay=0'% par)
+#Flow('cio','cit00', 'window n1=1 min1=5000 | stretch rule=l v0=0.001 delay=0'% par)
+#Flow('cip','cit00', 'window n1=1 min1=6000 | stretch rule=l v0=0.001 delay=0'% par)
+Flow('cin','cit00', 'window n1=1 min1=4000'% par) # negative incidence
 Flow('cio','cit00', 'window n1=1 min1=5000'% par) # normal   incidence
-Flow('cip','cit00', 'window n1=1 min1=7000'% par) # positive incidence
+Flow('cip','cit00', 'window n1=1 min1=6000'% par) # positive incidence
 
-Flow('hin','cix00', 'window n1=1 min1=3000'% par) # negative incidence
+Flow('hin','cix00', 'window n1=1 min1=4000'% par) # negative incidence
 Flow('hio','cix00', 'window n1=1 min1=5000'% par) # normal   incidence
-Flow('hip','cix00', 'window n1=1 min1=7000'% par) # positive incidence
+Flow('hip','cix00', 'window n1=1 min1=6000'% par) # positive incidence
 
 Flow('von',  'vel', 'window n2=1 min2=5000'% par) # velocity
 
@@ -323,7 +336,7 @@ Flow('tspk',None,
      ''' % par)
 Plot('tspk','tspk','window |'+igrey('pclip=100'))
 
-Flow('ttan',['tspk','tvel'],ssk2ang())
+Flow('ttan',['tspk','von'],ssk2ang())
 Plot('ttan','ttan','window |'+igrey('pclip=100'))
 
 Result('tcod',['tspk','ttan'],'SideBySideAniso')
