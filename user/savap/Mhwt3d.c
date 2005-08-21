@@ -197,7 +197,6 @@ int main(int argc, char* argv[])
 		} else {
 		    Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);
 		}
-/*		Tp = hwt3d_raytr(Tm,To);*/
 		wp[ih][ig] = Tp;
 	    }
 	}
