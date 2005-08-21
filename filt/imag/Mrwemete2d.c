@@ -76,7 +76,7 @@ int main (int argc, char *argv[])
     /* read CS mapping */
     for( iq2=0; iq2<aq2.n; iq2++) {
 	if(verb) sf_warning("read %d \n",iq2);
-	readpt2d(Fm,mm,aq1.n,2);
+	pt2dread1(Fm,mm,aq1.n,2);
 
 	LOOP1( zz[iq2][iq1] = mm[iq1].z;
 	       xx[iq2][iq1] = mm[iq1].x; );

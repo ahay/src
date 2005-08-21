@@ -1,4 +1,8 @@
-/* Huygens wavefront tracing traveltimes */
+/* 
+ * 2-D Huygens wavefront tracing traveltimes 
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -16,6 +20,7 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
 #include <math.h>
 #include <rsf.h>
 #include "hwt2d.h"
@@ -24,17 +29,19 @@ int main (int argc, char *argv[])
 {
     bool verb;
 
-    axa az,ax,at,ag;
-    int       it,ig;
+    axa az,ax;  /* Cartesian coordinates */
+    axa at,ag;  /* Ray coordinates */
+    int it,ig;
     
-    float xsou,zsou;
+    float xsou,zsou; /* source coordinates */
 
-    sf_file Fv,Fw;
+    sf_file Fv; /* velocity file */
+    sf_file Fw; /* wavefronfs file */
 
-    float **vv; /* velocity       */
-    pt2d   *wm; /* wavefront it-1 */
-    pt2d   *wo; /* wavefront it   */
-    pt2d   *wp; /* wavefront it+1 */
+    float **vv=NULL; /* velocity       */
+    pt2d   *wm=NULL; /* wavefront it-1 */
+    pt2d   *wo=NULL; /* wavefront it   */
+    pt2d   *wp=NULL; /* wavefront it+1 */
 
     pt2d    Ro;    /* point  on wft it-1 */
     pt2d Pm,Po,Pp; /* points on wft it   */
@@ -50,11 +57,12 @@ int main (int argc, char *argv[])
     iaxa(Fv,&az,1); az.l="z"; if(verb) raxa(az);
     iaxa(Fv,&ax,2); ax.l="x"; if(verb) raxa(ax);
 
-    vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
+    vv=sf_floatalloc2(az.n,ax.n); 
+    sf_floatread(vv[0],az.n*ax.n,Fv);
 
     /* source location */
-    if(! sf_getfloat("zsou",&zsou)) zsou=az.o + az.n*az.d/2;
     if(! sf_getfloat("xsou",&xsou)) xsou=ax.o + ax.n*ax.d/2;
+    if(! sf_getfloat("zsou",&zsou)) zsou=az.o + az.n*az.d/2;
     if(verb) fprintf(stderr,"xsou=%f zsou=%f\n",xsou,zsou);    
 
     /* time axis */
@@ -71,7 +79,7 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
 
-    /* wavefronts file */
+    /* wavefronts file (g,t) */
     Fw = sf_output("out");
     oaxa(Fw,&ag,1); if(verb) raxa(ag);
     oaxa(Fw,&at,2); if(verb) raxa(at);
@@ -82,11 +90,12 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
 
-    /* wavefronts */
-    wm = (pt2d*) sf_alloc(ag.n,sizeof(*wm));
-    wo = (pt2d*) sf_alloc(ag.n,sizeof(*wo));
-    wp = (pt2d*) sf_alloc(ag.n,sizeof(*wp));
-
+    /* allocate wavefronts */
+    wm = pt2dalloc1(ag.n);
+    wo = pt2dalloc1(ag.n);
+    wp = pt2dalloc1(ag.n);
+    
+    /* initialize wavefronts */
     for( ig=0; ig<ag.n; ig++) {
 	wm[ig].x=wo[ig].x=wp[ig].x=0;
 	wm[ig].z=wo[ig].z=wp[ig].z=0;
@@ -100,40 +109,40 @@ int main (int argc, char *argv[])
 
 /*------------------------------------------------------------*/
 
-    /* construct first wavefront (it=0) */
+    /* construct it=0 wavefront */
     it=0;
-
     for( ig=0; ig<ag.n; ig++) {
 	wm[ig].x=xsou;
 	wm[ig].z=zsou;
-	wm[ig].v=hwtgetv(wm[ig]);
+	wm[ig].v=hwt2d_getv(wm[ig]);
     }
-    writept2d(Fw,wm,ag.n,2);
+    pt2dwrite1(Fw,wm,ag.n,2); /* write wavefront it=0 */
 
 /*------------------------------------------------------------*/
 
-    /* construct second wavefront (it=1) */
+    /* construct it=1 wavefront */
     it=1;
     for( ig=0; ig<ag.n; ig++) {
 	double d,g;
 
-	d = at.d * hwtgetv(wm[ig]);
+	d = at.d * hwt2d_getv(wm[ig]);
 	g = (ag.o+ig*ag.d) * SF_PI/180;
 
 	wo[ig].x=xsou + d*sin(g);
 	wo[ig].z=zsou + d*cos(g);
-	wo[ig].v=hwtgetv(wo[ig]);
+	wo[ig].v=hwt2d_getv(wo[ig]);
     }
-    writept2d(Fw,wo,ag.n,2); /* write wavefront it=1 */
+    pt2dwrite1(Fw,wo,ag.n,2); /* write wavefront it=1 */
 
 /*------------------------------------------------------------*/
-
+    /* LOOP over time */
     for (it=2; it<at.n; it++) {
 	if(verb) fprintf(stderr,"it=%d\n",it);
 
 	if(ag.n>3) {
-	    /* boundary */
-	    ig=0;      wp[ig] = raytr(wm[ig],wo[ig]);
+	    /* boundaries */
+	    ig=0;      wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
+	    ig=ag.n-1; wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 
 	    for (ig=1; ig<ag.n-1; ig++) {
 		
@@ -141,34 +150,32 @@ int main (int argc, char *argv[])
 		Po = wo[ig  ];  Qo = wm[ig];
 		Pp = wo[ig+1];
 		
-		if(hwtcusp(Qo,Pm,Po,Pp)) {
-		    Ro = raytr(Qo,   Po   );
+		if(hwt2d_cusp(Qo,Pm,Po,Pp)) {
+		    Ro = hwt2d_raytr(Qo,   Po   );
 		} else {
-		    Ro = wfttr(Qo,Pm,Po,Pp);
+		    Ro = hwt2d_wfttr(Qo,Pm,Po,Pp);
 		}
 		wp[ig] = Ro;
 	    }
-
-	    /* boundary */
-	    ig=ag.n-1; wp[ig] = raytr(wm[ig],wo[ig]);
 	} else {
 	    for (ig=0; ig<ag.n; ig++) {
 		Po = wo[ig];  
 		Qo = wm[ig];
-		Ro = raytr(Qo,Po);
+		Ro = hwt2d_raytr(Qo,Po);
 		wp[ig] = Ro;
 	    }
 	}
 
 	/* write wavefront it */
-	writept2d(Fw,wp,ag.n,2);
+	pt2dwrite1(Fw,wp,ag.n,2);
 
 	/* step in time */
 	for( ig=0; ig<ag.n; ig++) {
 	    wm[ig] = wo[ig];
 	    wo[ig] = wp[ig];
 	}
-    }
+    } /* end it */
+
 /*------------------------------------------------------------*/    
     exit (0);
 }

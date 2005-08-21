@@ -1,0 +1,90 @@
+from rsfproj import *
+
+par = {
+    'nz':100, 'dz':5,    'oz':0,   
+    'nx':200, 'dx':5,    'ox':0,
+    'ny':200, 'dy':5,    'oy':0,
+    #
+    'nt':2,  'dt':0.001,'ot':0,
+    'ng':180,'dg':1,    'og':-90,
+    'nh':360,'dh':1,    'oh':0,
+    #
+#    'ng':1,'dg':1,'og':0,
+    'nh':1,'dh':1,'oh':0,
+    }
+
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['ymin']=par['oy']
+par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+
+par['xmid']=par['nx']/2.
+par['ymid']=par['ny']/2.
+
+par['zsou']=par['oz']
+par['xsou']=par['ox'] + par['xmid'] * par['dx']
+par['ysou']=par['oy'] + par['ymid'] * par['dy']
+
+def igrey(custom):
+    return '''
+    grey labelrot=n pclip=100 color=F
+    wantscalebar=y
+    %s
+    ''' % (custom)
+
+# ------------------------------------------------------------
+
+Flow('vel',None,
+     '''
+     spike nsp=1 mag=2000
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g
+     n3=%(ny)d d3=%(dy)g o3=%(oy)g
+     ''' % par)
+
+# ------------------------------------------------------------
+
+Flow('wft','vel',
+     '''
+     /home/savap/RSF/user/savap/sfhwt3d verb=y
+     xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
+     nh=%(nh)d oh=%(oh)g dh=%(dh)g
+     ''' % par)
+
+# ------------------------------------------------------------
+
+for it in range(par['nt']):
+    ttt = 'ttt' + str(it)
+    xxx = 'xxx' + str(it)
+    yyy = 'yyy' + str(it)
+    zzz = 'zzz' + str(it)
+    
+    Flow(ttt,'wft','window n4=1 f4=%d' % it)
+    Flow(xxx,ttt,'window n1=1 f1=0')
+    Flow(yyy,ttt,'window n1=1 f1=1')
+    Flow(zzz,ttt,'window n1=1 f1=2')
+
+    Plot(xxx,xxx,igrey('bias=%(xsou)g title=x') % par)
+    Plot(yyy,yyy,igrey('bias=%(ysou)g title=y') % par)
+    Plot(zzz,zzz,igrey('bias=%(zsou)g title=z') % par)
+    
+    Result(ttt,[xxx,yyy,zzz],'SideBySideAniso')
+
+# ------------------------------------------------------------
+
+Flow('ray','wft',
+     '''
+     window n1=2 j1=2 |
+     dd type=complex |
+     window
+     ''')
+Result('ray','ray','graph yreverse=y')
+
+# ------------------------------------------------------------
+
+
+End()

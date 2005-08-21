@@ -1,4 +1,8 @@
-/* 3-D S/R WEMVA with extended split-step. */
+/* 
+ * 3-D S/R WEMVA with extended split-step
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -37,16 +41,16 @@ int main (int argc, char *argv[])
     axa aw,ae;
 
     /* I/O files */
-    sf_file Bw_s,Bw_r; /* wavefield file W ( nx, ny,nw) */
-    sf_file Bs;
-    sf_file Ps;        /*  slowness file S (nlx,nly,nz) */
-    sf_file Pi;        /*     image file R ( nx, ny,nz) */
+    sf_file Bw_s=NULL,Bw_r=NULL; /* wavefield file W ( nx, ny,nw) */
+    sf_file Bs=NULL;
+    sf_file Ps=NULL;             /*  slowness file S (nlx,nly,nz) */
+    sf_file Pi=NULL;             /*     image file R ( nx, ny,nz) */
 
     /* I/O slices */
-    fslice Bwfls,Bwflr;
-    fslice Bslow;
-    fslice Pslow;
-    fslice Pimag;
+    fslice Bwfls=NULL,Bwflr=NULL;
+    fslice Bslow=NULL;
+    fslice Pslow=NULL;
+    fslice Pimag=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

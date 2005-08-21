@@ -1,4 +1,8 @@
-/* 3-D S/R migration with extended split-step. */
+/* 
+ * 3-D S/R migration with extended split-step
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   

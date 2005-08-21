@@ -1,6 +1,9 @@
-/* Riemannian Wavefield Extrapolation: 
-   zero-offset modeling/migration 
-*/
+/* 
+ * Riemannian Wavefield Extrapolation: 
+ *  zero-offset modeling/migration 
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    sf_file Fd, Fi, Fm, Fr;
+    sf_file Fd=NULL, Fi=NULL, Fm=NULL, Fr=NULL;
     axa ag,at,aw,ar;
     int ig,it,iw,ir;
 
@@ -41,9 +44,9 @@ int main(int argc, char* argv[])
 
     sf_init(argc,argv);
 
-    if(! sf_getbool("verb",&verb)) verb=false;
-    if(! sf_getint("method",&method)) method=0; /* extrapolation method */
-    if(! sf_getbool("inv",&inv)) inv=false;     /* y=modeling; n=migration */
+    if(! sf_getbool("verb", &verb))     verb=false;
+    if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
+    if(! sf_getbool("inv",  &inv))       inv=false;/* y=modeling; n=migration*/
 						
     Fm = sf_input("abm");
     Fr = sf_input("abr");

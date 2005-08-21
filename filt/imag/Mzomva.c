@@ -1,4 +1,8 @@
-/* 3-D zero-offset MVA */
+/* 
+ * 3-D zero-offset WEMVA
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -35,13 +39,13 @@ int main (int argc, char *argv[])
     axa amz,amx,amy,aw;
     axa     alx,aly;
 
-    sf_file Bs;  /*  slowness  file S (nlx,nly,nz)    */
-    sf_file Bw;  /*  wavefield file W (nmx,nmy,nz,nw) */
-    sf_file Ps;  /* slowness perturbation dS (nmx,nmy,nz) complex */
-    sf_file Pi;  /*    image perturbation dI (nmx,nmy,nz) complex */
+    sf_file Bs=NULL;  /*  slowness  file S (nlx,nly,nz)    */
+    sf_file Bw=NULL;  /*  wavefield file W (nmx,nmy,nz,nw) */
+    sf_file Ps=NULL;  /* slowness perturbation dS (nmx,nmy,nz) complex */
+    sf_file Pi=NULL;  /*    image perturbation dI (nmx,nmy,nz) complex */
 
-    fslice Bslow,Bwfld;
-    fslice Pslow,Pimag;
+    fslice Bslow=NULL,Bwfld=NULL;
+    fslice Pslow=NULL,Pimag=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

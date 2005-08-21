@@ -24,6 +24,8 @@ from rsfproj import *
 #     ''' % par)
 #Result('wft','window | transp | graph' % par)
 
+
+
 # ------------------------------------------------------------
 # ------------------------------------------------------------
 mpar = {
@@ -38,8 +40,9 @@ Fetch(['marmvel.hh'],'marm')
 Flow('mvel','marmvel.hh','dd form=native | smooth rect1=51 rect2=51')
 Plot('mvel',
      '''
-     grey title=" " axes=n allpos=y bias=1500
+     grey labelrot=n title=" " axes=n allpos=y bias=1500
      min2=%(xmin)g max2=%(xmax)g min1=%(zmin)g max1=%(zmax)g
+     label1=z label2=x
      ''' % mpar)
 
 Flow('mwft','mvel',
@@ -52,7 +55,7 @@ Plot('mwft',
      '''
      window j1=50 |
      transp |\
-     graph yreverse=y title" "
+     graph labelrot=n yreverse=y title=" " wantaxis=n
      min1=%(xmin)g max1=%(xmax)g min2=%(zmin)g max2=%(zmax)g
      ''' % mpar)
 
@@ -67,7 +70,7 @@ Flow('msou','mxs mzs',    'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=c
 
 Plot('msou','msou',
      '''
-     graph yreverse=y symbol=. wantaxis=n title=" " plotcol=7 
+     graph labelrot=n yreverse=y symbol=. wantaxis=n title=" " plotcol=7 
      min1=%(xmin)g max1=%(xmax)g min2=%(zmin)g max2=%(zmax)g
      ''' % mpar)
 Result('msou','mvel msou','Overlay')

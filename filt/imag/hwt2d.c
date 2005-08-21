@@ -1,13 +1,11 @@
-/*#include <math.h>*/
-/*^*/
 #include <rsf.h>
 /*^*/
 
 #include "hwt2d.h"
 
-static axa az,ax,at,ag;
+static axa az,ax;
+static axa at,ag;
 static float **vv;
-static float  *ww;
 /*------------------------------------------------------------*/
 
 void hwt2d_init(float** vv_in    /* velocity */,
@@ -23,12 +21,11 @@ void hwt2d_init(float** vv_in    /* velocity */,
     ag = ag_in;
 
     vv = vv_in;
-    ww=sf_floatalloc(2*ag.n);
 }
 
 /*------------------------------------------------------------*/
-double hwtgetv(pt2d P) 
-/*< get velocity from map >*/
+double hwt2d_getv(pt2d P) 
+/*< get velocity from 2-D cube >*/
 {
     float  z, x;
     float rz,rx;
@@ -57,7 +54,7 @@ double hwtgetv(pt2d P)
 
 /*------------------------------------------------------------*/
 
-bool hwtcusp(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
+bool hwt2d_cusp(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 /*< find cusp points >*/
 {
   int  sjm,sjp;
@@ -73,7 +70,7 @@ bool hwtcusp(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 
 /*------------------------------------------------------------*/
 
-pt2d raytr(pt2d Qo, pt2d Po)
+pt2d hwt2d_raytr(pt2d Qo, pt2d Po)
 /*< ray tracing >*/
 {
     pt2d Pm,Pp, Ro;
@@ -97,26 +94,26 @@ pt2d raytr(pt2d Qo, pt2d Po)
 	sina = 1;
     }
 
-    Pm.x=Po.x-lo*cosa; Pm.z=Po.z+ss*lo*sina; Pm.v=hwtgetv(Pm);
-    Pp.x=Po.x+lo*cosa; Pp.z=Po.z-ss*lo*sina; Pp.v=hwtgetv(Pp);
+    Pm.x=Po.x-lo*cosa; Pm.z=Po.z+ss*lo*sina; Pm.v=hwt2d_getv(Pm);
+    Pp.x=Po.x+lo*cosa; Pp.z=Po.z-ss*lo*sina; Pp.v=hwt2d_getv(Pp);
 
-    Ro=hwtstep(Qo,Pm,Po,Pp);
+    Ro=hwt2d_step(Qo,Pm,Po,Pp);
     return(Ro);
 }
 
 /*------------------------------------------------------------*/
 
-pt2d wfttr(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
+pt2d hwt2d_wfttr(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 /*< wavefront tracing >*/
 {
     pt2d Ro;
-    Ro=hwtstep(Qo,Pm,Po,Pp);
+    Ro=hwt2d_step(Qo,Pm,Po,Pp);
     return(Ro);
 }
 
 /*------------------------------------------------------------*/
 
-pt2d hwtstep(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
+pt2d hwt2d_step(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 /*< one HWT time step >*/
 {
     pt2d   Ro,Sm,Sp;
@@ -140,13 +137,13 @@ pt2d hwtstep(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
     Sp.z = Po.z - lo*( ka*b - kb*a );
 
     Ro = DST2d(Sm,Qo) > DST2d(Sp,Qo) ? Sm : Sp;
-    Ro.v=hwtgetv(Ro);
+    Ro.v=hwt2d_getv(Ro);
     return(Ro);
 }
 
 /*------------------------------------------------------------*/
 
-pt2d hwtorth( pt2d Pm, pt2d Po, pt2d Pp)
+pt2d hwt2d_orth( pt2d Pm, pt2d Po, pt2d Pp)
 /*< orthogonal step forward  >*/
 {
     pt2d   Ro;
@@ -173,7 +170,7 @@ pt2d hwtorth( pt2d Pm, pt2d Po, pt2d Pp)
 
     Ro.x = Po.x - ss * lo * sina;
     Ro.z = Po.z +      lo * cosa;
-    Ro.v=hwtgetv(Ro);
+    Ro.v=hwt2d_getv(Ro);
     
     return(Ro);
 }

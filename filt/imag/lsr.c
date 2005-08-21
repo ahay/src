@@ -1,4 +1,8 @@
-/* 3-D linearized SSR */
+/* 
+ * 3-D linearized SSR
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   

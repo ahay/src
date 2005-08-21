@@ -1,4 +1,8 @@
-/* Exploding reflector time-domain acoustic FD modeling */
+/* 
+ * Exploding reflector time-domain acoustic FD modeling
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -150,8 +154,8 @@ int main(int argc, char* argv[])
     ss = (pt2d*) sf_alloc(as.n,sizeof(*ss)); 
     rr = (pt2d*) sf_alloc(ar.n,sizeof(*rr)); 
 
-    readpt2d(Fs,ss,as.n,3); /* read 3 elements (x,z,v) */
-    readpt2d(Fr,rr,ar.n,2); /* read 2 elements (x,z)   */
+    pt2dread1(Fs,ss,as.n,3); /* read 3 elements (x,z,v) */
+    pt2dread1(Fr,rr,ar.n,2); /* read 2 elements (x,z)   */
 
     dd=sf_floatalloc(ar.n);
     jzs=sf_intalloc(as.n); fzs=sf_floatalloc(as.n); 

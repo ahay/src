@@ -1,4 +1,8 @@
-/* 3-D S/R migration with extended split-step. */
+/* 
+ * 3-D S/R migration with extended split-step
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -43,12 +47,12 @@ int main (int argc, char *argv[])
     axa aw,ae,aj;
     axa ahx,ahy,ahz,aht;
 
-    sf_file Fs_s,Fs_r;/*  slowness file S (nlx,nly,nz) */
-    sf_file Fw_s,Fw_r;/* wavefield file W ( nx, ny,nw) */
-    sf_file Fi;       /*     image file R ( nx, ny,nz) */
+    sf_file Fs_s=NULL,Fs_r=NULL;/*  slowness file S (nlx,nly,nz) */
+    sf_file Fw_s=NULL,Fw_r=NULL;/* wavefield file W ( nx, ny,nw) */
+    sf_file Fi=NULL;            /*     image file R ( nx, ny,nz) */
 
-    fslice wfl_s,wfl_r,imag;
-    fslice slo_s,slo_r;
+    fslice wfl_s=NULL,wfl_r=NULL,imag=NULL;
+    fslice slo_s=NULL,slo_r=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

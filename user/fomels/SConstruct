@@ -74,6 +74,3 @@ if root:
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)
-
-# 	$Id: SConstruct 777 2004-09-07 09:40:19Z fomels $
-

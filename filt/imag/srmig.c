@@ -1,4 +1,8 @@
-/* 3-D SSR migration/modeling using extended split-step */
+/* 
+ * 3-D SSR migration/modeling using extended split-step
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   

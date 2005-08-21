@@ -98,13 +98,13 @@ int main (int argc, char *argv[])
 
     /* read initial wavefront (it=0) */
     it=0;
-    readpt2d (Fs,wm,ag.n,2);
+    pt2dread1(Fs,wm,ag.n,2);
     for( ig=0; ig<ag.n; ig++) {
 	Po = wm[ig];
-	Po.v=hwtgetv(Po);
+	Po.v=hwt2d_getv(Po);
 	wm[ig] = Po;
     }
-    writept2d(Fw,wm,ag.n,2);
+    pt2dwrite1(Fw,wm,ag.n,2); /* write wavefront it=0 */
 
 /*------------------------------------------------------------*/
 
@@ -113,7 +113,7 @@ int main (int argc, char *argv[])
 
     Po=wm[0]; 
     Pp=wm[2]; 
-    Ro=hwtorth(Po,Po,Pp);
+    Ro=hwt2d_orth(Po,Po,Pp);
     wo[0] = Ro;
 
     for( ig=1; ig<ag.n-1; ig++) {
@@ -123,17 +123,17 @@ int main (int argc, char *argv[])
 	Pp = wm[ig+1];
 	
 	/* orthogonal rays */
-	Ro = hwtorth(Pm,Po,Pp);
+	Ro = hwt2d_orth(Pm,Po,Pp);
 
 	wo[ig] = Ro;
     }
 
     Pm=wm[ag.n-3]; 
     Po=wm[ag.n-1]; 
-    Ro=hwtorth(Pm,Po,Po);
+    Ro=hwt2d_orth(Pm,Po,Po);
     wo[ag.n-1] = Ro;
 
-    writept2d(Fw,wo,ag.n,2); /* write wavefront it=1 */
+    pt2dwrite1(Fw,wo,ag.n,2); /* write wavefront it=1 */
 
 /*------------------------------------------------------------*/
 
@@ -142,34 +142,34 @@ int main (int argc, char *argv[])
 
 	if(ag.n>3) {
 	    /* boundary */
-	    ig=0;      wp[ig] = raytr(wm[ig],wo[ig]);
+	    ig=0;      wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 
 	    for (ig=1; ig<ag.n-1; ig++) {		
 		Pm = wo[ig-1];
 		Po = wo[ig  ];  Qo = wm[ig];
 		Pp = wo[ig+1];
 		
-		if(hwtcusp(Qo,Pm,Po,Pp)) {
-		    Ro = raytr(Qo,   Po   );
+		if(hwt2d_cusp(Qo,Pm,Po,Pp)) {
+		    Ro = hwt2d_raytr(Qo,   Po   );
 		} else {
-		    Ro = wfttr(Qo,Pm,Po,Pp);
+		    Ro = hwt2d_wfttr(Qo,Pm,Po,Pp);
 		}
 		wp[ig] = Ro;
 	    }
 
 	    /* boundary */
-	    ig=ag.n-1; wp[ig] = raytr(wm[ig],wo[ig]);
+	    ig=ag.n-1; wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 	} else {
 	    for (ig=0; ig<ag.n; ig++) {
 		Po = wo[ig];  
 		Qo = wm[ig];
-		Ro = raytr(Qo,Po);
+		Ro = hwt2d_raytr(Qo,Po);
 		wp[ig] = Ro;
 	    }
 	}
 
 	/* write wavefront it */
-	writept2d(Fw,wp,ag.n,2);
+	pt2dwrite1(Fw,wp,ag.n,2);
 
 	/* step in time */
 	for( ig=0; ig<ag.n; ig++) {

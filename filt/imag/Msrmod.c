@@ -1,4 +1,8 @@
-/* 3-D S/R modeling with extended split-step. */
+/* 
+ * 3-D S/R modeling with extended split-step
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -33,12 +37,12 @@ int main (int argc, char *argv[])
 
     axa az,ax,ay,aw,alx,aly,ae;
 
-    sf_file Fs_s,Fs_r;/*  slowness file S (nlx,nly,nz) */
-    sf_file Fw_s,Fw_r;  /* wavefield file D or U ( nx, ny,nw) */
-    sf_file Fr;     /* reflectivity */
+    sf_file Fs_s=NULL,Fs_r=NULL;  /*  slowness file S      (nlx,nly,nz) */
+    sf_file Fw_s=NULL,Fw_r=NULL;  /* wavefield file D or U ( nx, ny,nw) */
+    sf_file Fr=NULL;              /* reflectivity */
 
-    fslice wfl_s,wfl_r,refl;
-    fslice slo_s,slo_r;
+    fslice wfl_s=NULL,wfl_r=NULL,refl=NULL;
+    fslice slo_s=NULL,slo_r=NULL;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);

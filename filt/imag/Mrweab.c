@@ -1,4 +1,9 @@
-/* Riemannian Wavefield Extrapolation a,b coefficients */
+/* 
+ * Riemannian Wavefield Extrapolation:
+ * a,b coefficient
+ * pcs 2005
+ */
+
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -24,7 +29,7 @@
 int main(int argc, char* argv[])
 {
 
-    sf_file Fi, Fo, Fr, Fs; /* I/O files */
+    sf_file Fi=NULL, Fo=NULL, Fr=NULL, Fs=NULL; /* I/O files */
 
     complex float **rays;
     complex float **ab;
