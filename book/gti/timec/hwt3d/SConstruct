@@ -5,12 +5,12 @@ par = {
     'nx':200, 'dx':5,    'ox':-500,
     'ny':200, 'dy':5,    'oy':-500,
     #
-    'nt':3,  'dt':0.001,'ot':0,
+    'nt':50, 'dt':0.005,'ot':0,
     'ng':181,'dg':1,    'og':-90,
     'nh':361,'dh':1,    'oh':0,
     #
-    'ng':31,'dg':6,'og':-90,
-    'nh':61,'dh':6,'oh':0,
+#    'ng':181,'dg':1,'og':-90,
+    'nh':3,'dh':1,'oh':-1,
     }
 
 par['xmin']=par['ox']
@@ -34,14 +34,30 @@ def igrey(custom):
     %s
     ''' % (custom)
 
+def gre(custom,par):
+    return '''
+    grey labelrot=n pclip=100
+    min2=%g max2=%g min1=%g max1=%g
+    %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+
+def gra(custom,par):
+    return '''
+    graph labelrot=n yreverse=y
+    min1=%g max1=%g min2=%g max2=%g
+    %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+
 # ------------------------------------------------------------
 
 Flow('vel',None,
      '''
-     spike nsp=1 mag=2000
-     n1=%(nz)d d1=%(dz)g o1=%(oz)g
-     n2=%(nx)d d2=%(dx)g o2=%(ox)g
-     n3=%(ny)d d3=%(dy)g o3=%(oy)g
+     spike nsp=1 mag=-1500
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=31 l1=40
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=81 l2=121
+     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=91 l3=111 |
+     math output="2000+input" |
+     smooth rect1=11 rect2=11 rect3=11
      ''' % par)
 
 # ------------------------------------------------------------
@@ -78,11 +94,16 @@ for it in range(par['nt']):
 
 Flow('ray','wft',
      '''
-     window n1=2 j1=2 n3=1 f3=0 |
+     window n1=2 j1=2 n3=1 |
      dd type=complex |
      window
      ''')
-Result('ray','ray','transp | graph yreverse=y')
+
+Plot('vel','vel','window n3=1 min3=0 |'
+     + gre('grid=y gridcol=0 allpos=y',par))
+Plot('ray','ray','window |' + gra('plotcol=1',par) )
+
+Result('ray','vel ray','Overlay')
 
 # ------------------------------------------------------------
 
