@@ -82,6 +82,7 @@ bool hwt3d_cusp(pt3d Tm, /* it-1,ig   ,ih   */
     int sGpHm, sGpHp;
     int sHmGm, sHmGp;
     int sHpGm, sHpGp;
+    bool c;
     
     sGmHm = SF_SIG( jac3d(&To,&Tm,&Gm,&Hm) );
     sGmHp = SF_SIG( jac3d(&To,&Tm,&Gm,&Hp) );
@@ -95,10 +96,12 @@ bool hwt3d_cusp(pt3d Tm, /* it-1,ig   ,ih   */
     sHpGm = SF_SIG( jac3d(&To,&Tm,&Hp,&Gm) );
     sHpGp = SF_SIG( jac3d(&To,&Tm,&Hp,&Gp) );
 
-    if( sGmHm*sGmHp==1 ||
+    c = sGmHm*sGmHp==1 ||
 	sGpHm*sGpHp==1 ||
 	sHmGm*sHmGp==1 ||
-	sHpGm*sHpGp==1) 
+	sHpGm*sHpGp==1;
+
+    if(c)
 	return true;
     else
 	return false;
@@ -130,11 +133,14 @@ pt3d hwt3d_raytr(pt3d Tm,
     vc3d TmTo;
 
     double a1,a2,a3;
-    vc3d  v1,v2,v3;
-    vc3d vv,uu,ww; /* unit vectors */
-
+    vc3d   v1,v2,v3;
+    vc3d   vv,uu,ww; /* unit vectors */
     float ro;
-    ro = To.v * at.d * 0.01;
+
+/*    printpt3d(Tm);*/
+/*    printpt3d(To);*/
+
+    ro = To.v * at.d * 0.1;
 
     TmTo = vec3d(&Tm,&To);
 
@@ -142,13 +148,28 @@ pt3d hwt3d_raytr(pt3d Tm,
     v2 = axa3d(2);
     v3 = axa3d(3);
 
-    a1 = ang3d(&TmTo, &v1);
-    a2 = ang3d(&TmTo, &v2);
-    a3 = ang3d(&TmTo, &v3);
+    a1 = ang3d(&TmTo, &v1); a1 = SF_ABS(a1);
+    a2 = ang3d(&TmTo, &v2); a2 = SF_ABS(a2);
+    a3 = ang3d(&TmTo, &v3); a3 = SF_ABS(a3);
 
-    if     (a1>a2 && a1<a3) ww=v1;
-    else if(a2>a1 && a2<a3) ww=v2;
-    else                    ww=v3;
+/*    sf_warning("a1=%g a2=%g a3=%g",a1,a2,a3);*/
+
+/*    if     (a1>=a2 && a1<=a3) ww=v1;*/
+/*    else if(a2>=a1 && a2<=a3) ww=v2;*/
+/*    else                      ww=v3;*/
+
+    if(      SF_ABS(a1-90) <= SF_ABS(a2-90) &&
+	     SF_ABS(a1-90) <= SF_ABS(a3-90) )
+	ww=v1;
+    else if( SF_ABS(a2-90) <= SF_ABS(a1-90) &&
+	     SF_ABS(a2-90) <= SF_ABS(a3-90) )
+	ww=v2;
+    else 
+	ww=v3;
+
+/*    sf_warning("TmTo: %g %g %g",TmTo.dx,TmTo.dy,TmTo.dz);*/
+/*    sf_warning(" ww : %g %g %g",  ww.dx,  ww.dy,  ww.dz);*/
+/*    sf_warning(" v3 : %g %g %g",  v3.dx,  v3.dy,  v3.dz);*/
 
     vv   = scl3d(&ww,+1);
     uu   = vcp3d(&TmTo,&vv); /* uu = TmTo x vv */
@@ -156,6 +177,7 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&vv,ro);    /* uu = vv * ro */
     Gm   = tip3d(&To,&uu);   /* Gm at tip of uu from To */
     Gm.v = hwt3d_getv(Gm);
+/*    printpt3d(Gm);*/
 
     vv   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&vv); 
@@ -163,6 +185,7 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&vv,ro);
     Gp   = tip3d(&To,&uu);
     Gp.v = hwt3d_getv(Gp);
+/*    printpt3d(Gp);*/
 
     uu = vec3d(&Gm,&Gp);
     ww = nor3d(&uu);
@@ -173,6 +196,7 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&vv,ro);
     Hm   = tip3d(&To,&uu);
     Hm.v = hwt3d_getv(Hm);
+/*    printpt3d(Hm);*/
 
     vv   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&vv); 
@@ -180,6 +204,7 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&vv,ro);
     Hp   = tip3d(&To,&uu);
     Hp.v = hwt3d_getv(Hp);
+/*    printpt3d(Hp);*/
 
     Tp=hwt3d_step(Tm,To,Gm,Gp,Hm,Hp);
     return(Tp);
@@ -226,8 +251,14 @@ pt3d hwt3d_step(pt3d Tm,
     ddx = gdz*hdy - gdy*hdz;
     ddy = gdx*hdz - gdz*hdx;
 
-    if( SF_ABS(ddz) > SF_ABS(ddx) && 
+/*    sf_warning("vvvvvvvvvvvvvvvvvvvvvvvvvv");*/
+
+/*    sf_warning("ddx=%g ddy=%g ddz=%g",ddx,ddy,ddz);*/
+
+    if( SF_ABS(ddz) >=SF_ABS(ddx) && 
 	SF_ABS(ddz) > SF_ABS(ddy)) {
+
+/*	sf_warning("use ddz=%g",ddz);*/
 
 	ax  = gdr*hdy - hdr*gdy; 
 	bx  = gdy*hdz - gdz*hdy; 
@@ -249,8 +280,10 @@ pt3d hwt3d_step(pt3d Tm,
 	dx = ro*ax-dz*bx; Sm.x = To.x + dx/  ddz;
 	dy = ro*ay-dz*by; Sm.y = To.y + dy/(-ddz);
 	
-    } else if( SF_ABS(ddx) > SF_ABS(ddy) &&
+    } else if( SF_ABS(ddx) >=SF_ABS(ddy) &&
 	       SF_ABS(ddx) > SF_ABS(ddz)) {
+
+/*	sf_warning("use ddx=%g",ddx);*/
 
 	ay  = gdr*hdz - hdr*gdz; 
 	by  = gdz*hdx - gdx*hdz; 
@@ -273,6 +306,8 @@ pt3d hwt3d_step(pt3d Tm,
 	dz = ro*az-dx*bz; Sm.z = To.z + dz/(-ddx);
 
     } else {
+
+/*	sf_warning("use ddy=%g",ddy);*/
 
 	az  = gdr*hdx - hdr*gdx; 
 	bz  = gdx*hdy - gdy*hdx; 
@@ -305,6 +340,10 @@ pt3d hwt3d_step(pt3d Tm,
     if(am<ap) S=Sm;
     else      S=Sp;
     S.v = hwt3d_getv(S);
+
+/*    printpt3d(S);*/
+/*    sf_warning("^^^^^^^^^^^^^^^^^^^^^^^^^^");*/
+
     return S;
 }
 

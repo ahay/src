@@ -166,6 +166,7 @@ int main(int argc, char* argv[])
 	for( ih=0; ih<ah.n; ih++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
 	}
+
 	ig=ag.n-1; 
 	for( ih=0; ih<ah.n; ih++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
@@ -191,10 +192,12 @@ int main(int argc, char* argv[])
 
 		Hm = wo[ih-1][ig  ];
 		Hp = wo[ih+1][ig  ];
-		
+
 		if(hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp)) {
+/*		    sf_warning("RAY");*/
 		    Tp = hwt3d_raytr(Tm,To);
 		} else {
+/*		    sf_warning("HWT");*/
 		    Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);
 		}
 		wp[ih][ig] = Tp;
