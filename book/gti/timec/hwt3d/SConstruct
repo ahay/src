@@ -2,15 +2,15 @@ from rsfproj import *
 
 par = {
     'nz':100, 'dz':5,    'oz':0,   
-    'nx':200, 'dx':5,    'ox':0,
-    'ny':200, 'dy':5,    'oy':0,
+    'nx':200, 'dx':5,    'ox':-500,
+    'ny':200, 'dy':5,    'oy':-500,
     #
-    'nt':2,  'dt':0.001,'ot':0,
-    'ng':180,'dg':1,    'og':-90,
-    'nh':360,'dh':1,    'oh':0,
+    'nt':3,  'dt':0.001,'ot':0,
+    'ng':181,'dg':1,    'og':-90,
+    'nh':361,'dh':1,    'oh':0,
     #
-#    'ng':1,'dg':1,'og':0,
-    'nh':1,'dh':1,'oh':0,
+    'ng':31,'dg':6,'og':-90,
+    'nh':61,'dh':6,'oh':0,
     }
 
 par['xmin']=par['ox']
@@ -78,11 +78,11 @@ for it in range(par['nt']):
 
 Flow('ray','wft',
      '''
-     window n1=2 j1=2 |
+     window n1=2 j1=2 n3=1 f3=0 |
      dd type=complex |
      window
      ''')
-Result('ray','ray','graph yreverse=y')
+Result('ray','ray','transp | graph yreverse=y')
 
 # ------------------------------------------------------------
 

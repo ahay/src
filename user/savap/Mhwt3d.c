@@ -162,55 +162,45 @@ int main(int argc, char* argv[])
 	if(verb) fprintf(stderr,"it=%d\n",it);
 
 	/* boundaries */
-	ig=0;
+	ig=0;      
+	for( ih=0; ih<ah.n; ih++) {
+	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
+	}
+	ig=ag.n-1; 
 	for( ih=0; ih<ah.n; ih++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
 	}
 
-	ig=ag.n-1;
-	for( ih=0; ih<ah.n; ih++) {
-	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
-	}
-
-	ih=0;
+	ih=0;      
 	for( ig=0; ig<ag.n; ig++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
-	    
-/*	    sf_warning("ih=%d ig=%d x=%g y=%g z=%g",ih,ig,*/
-/*		       wo[ih][ig].x,*/
-/*		       wo[ih][ig].y,*/
-/*		       wo[ih][ig].z);*/
-/*	    sf_warning("ih=%d ig=%d x=%g y=%g z=%g",ih,ig,*/
-/*		       wp[ih][ig].x,*/
-/*		       wp[ih][ig].y,*/
-/*		       wp[ih][ig].z);*/
-/*	    sf_warning("**************************");*/
 	}
-
-	ih=ah.n-1;
+	ih=ah.n-1; 
 	for( ig=0; ig<ag.n; ig++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
 	}
 
+	for (ih=1; ih<ah.n-1; ih++) { 
+	    for (ig=1; ig<ag.n-1; ig++) {
 
-/*	for (ih=1; ih<ah.n-1; ih++) {*/
-/*	    for (ig=1; ig<ag.n-1; ig++) {*/
-/*		*/
-/*		Hm = wo[ih-1][ig  ];*/
-/*		Gm = wo[ih  ][ig-1];*/
-/*		To = wo[ih  ][ig  ];  Tm = wm[ih  ][ig  ];*/
-/*		Gp = wo[ih  ][ig+1];*/
-/*		Hp = wo[ih+1][ig  ];*/
+		Tm = wm[ih  ][ig  ];
+		To = wo[ih  ][ig  ];  
+
+		Gm = wo[ih  ][ig-1];
+		Gp = wo[ih  ][ig+1];
+
+		Hm = wo[ih-1][ig  ];
+		Hp = wo[ih+1][ig  ];
 		
-/*		if(hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp)) {*/
-/*		    Tp = hwt3d_raytr(Tm,To);*/
-/*		} else {*/
-/*		    Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);*/
-/*		}*/
+		if(hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp)) {
+		    Tp = hwt3d_raytr(Tm,To);
+		} else {
+		    Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);
+		}
 /*		Tp = hwt3d_raytr(Tm,To);*/
-/*		wp[ih][ig] = Tp;*/
-/*	    }*/
-/*	}*/
+		wp[ih][ig] = Tp;
+	    }
+	}
 
 	/* write wavefront it */
 	pt3dwrite2(Fw,wp,ag.n,ah.n,3);
