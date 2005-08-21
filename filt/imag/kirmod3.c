@@ -168,7 +168,6 @@ void kirmod3_close(surface3 y)
 void kirmod3_table (surface3 s                 /* surface structure */,
 		    velocity3 v                /* velocity attributes */,
 		    char type                  /* velocity distribution */,
-		    bool twod                  /* 2-D or 2.5-D */, 
 		    float ***curve             /* reflectors */,
 		    float ***dipx              /* reflector inline dip */,
 		    float ***dipy              /* reflector crossline dip */)
@@ -220,7 +219,7 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 			px = x+z*zx;                    /* r*dr/dx */
 			py = y+z*zy;
 			pz = z-x*zx-y*zy;
-			kirmod_table(type,twod,r,g,gx,gy,gz,v1,v2,px,py,pz,dz,
+			kirmod_table(type,false,r,g,gx,gy,gz,v1,v2,px,py,pz,dz,
 				     ta[iy][ix][ic]);
 		    } 
 		}

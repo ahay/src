@@ -61,7 +61,7 @@ Flow('sback','sparse','infill')
 Flow('sdense','sfft','infill eps=0.3')
 Flow('snmo2','sback',
      '''transp transp plane=23 memsize=500 | transp memsize=500 |
-     fft1 inv=1 | window n1=701 | stretch inv=1 rule=L | pad beg1=50''')
+     fft1 inv=1 | window n1=701 n3=201 | stretch inv=1 rule=L | pad beg1=50''')
 Flow('snmo1','sdense',
      '''transp transp plane=23 memsize=500 | transp memsize=500 |
      fft1 inv=1 | window n1=701 | stretch inv=1 rule=L | pad beg1=50''')
@@ -105,7 +105,7 @@ for shot in [59,69,79,99,109]:
     Plot(simperr,'diff0',
          shotplot(shot) +
          ' title="(Shot%d+Shot%d)/2-Shot%d" ' % (shot,shot+2,shot+1))
-    Result(shotin,[shotin,shoterr,simperr],'SideBySideAniso')
+#    Result(shotin,[shotin,shoterr,simperr],'SideBySideAniso')
 
 Flow('sparsecmp','cassis',
      'window j2=2 | transp plane=23 memsize=500 | shot2cmp')
@@ -132,9 +132,9 @@ for cmp in [4]:
     Plot('dens'+cmpi,  cmpplot + '  title=Interpolated')
     Plot('err'+cmpi,['back'+cmpi,cmpi],
          'add scale=1,-1 ${SOURCES[1]} | ' + cmpplot + '  title=Error')
-    Result(cmpi,[cmpi,'sparse'+cmpi],'SideBySideAniso')
-    Result('err'+cmpi,['back'+cmpi,'err'+cmpi],'SideBySideAniso')
-    Result('dens'+cmpi,[cmpi,'dens'+cmpi],'SideBySideAniso')
+#    Result(cmpi,[cmpi,'sparse'+cmpi],'SideBySideAniso')
+#    Result('err'+cmpi,['back'+cmpi,'err'+cmpi],'SideBySideAniso')
+#    Result('dens'+cmpi,[cmpi,'dens'+cmpi],'SideBySideAniso')
 
 ###########################################################################
 End()

@@ -29,7 +29,7 @@
 int main(int argc, char* argv[]) 
 {
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
-    float **rfl, **rgd, **crv, **dip, *shot, *trace;
+    float **rfl, **rgd, **crv, **dip, *trace;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq;
     float theta, ava, amp, obl;
     char *type, *type2;
@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg;
-    sf_file refl, curv, modl, shots;
+    sf_file refl, curv, modl;
     
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -67,35 +67,15 @@ int main(int argc, char* argv[])
     
     /*** Initialize shots ***/
     
-    if (NULL != sf_getstring("shots")) {
-	shots = sf_input("shots");
-	
-	if (!sf_histint(shots,"n1",&ns)) sf_error("No n1= in shots");
-    } else {
-	shots = NULL;
-	
-	if (!sf_getint("ns",&ns)) ns=nx;
-	/* number of shots */
-	if (!sf_getfloat("s0",&s0)) s0=x0;
-	/* first shot */
-	if (!sf_getfloat("ds",&ds)) ds=dx;
-	/* shot increment */
+    if (!sf_getint("ns",&ns)) ns=nx;
+    /* number of shots */
+    if (!sf_getfloat("s0",&s0)) s0=x0;
+    /* first shot */
+    if (!sf_getfloat("ds",&ds)) ds=dx;
+    /* shot increment */
 
-	sf_putfloat(modl,"o3",s0);
-	sf_putfloat(modl,"d3",ds);
-    }
-
-    shot = sf_floatalloc(ns);
-
-    if (NULL != shots) {
-	sf_floatread(shot,ns,shots);
-	sf_fileclose(shots);
-    } else {
-	for (is=0; is < ns; is++) {
-	    shot[is] = s0+is*ds;
-	}
-    }
-
+    sf_putfloat(modl,"o3",s0);
+    sf_putfloat(modl,"d3",ds);
     sf_putint(modl,"n3",ns);
 
     /*** Initialize offsets ***/
@@ -266,7 +246,8 @@ int main(int argc, char* argv[])
 
 		    time[ic][ix] = ts->t + tg->t;
 
-		    theta = sinf(0.5*(SF_SIG(tg->tx)*tg->an - SF_SIG(ts->tx)*ts->an));
+		    theta = 0.5*(SF_SIG(tg->tx)*tg->an - SF_SIG(ts->tx)*ts->an);
+		    theta = sinf(theta);
 		    ava = 1.+rgd[ic][ix]*theta*theta;
 		    if (ref != inc) ava *= theta;
 

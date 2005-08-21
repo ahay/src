@@ -792,13 +792,11 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
+		fwrite(file->buf,1,nbuf,file->stream);
 	    }
 	    break;
 	default:
-	    if (size != fwrite(arr,sizeof(float complex),size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
+	    fwrite(arr,sizeof(float complex),size,file->stream);
 	    break;
     }
 }
@@ -870,13 +868,11 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
+		fwrite(file->buf,1,nbuf,file->stream);
 	    }
 	    break;
 	default:
-	    if (size != fwrite(arr,sizeof(char),size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
+	    fwrite(arr,sizeof(char),size,file->stream);
 	    break;
     }
 }
@@ -909,13 +905,11 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
 		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
 				(xdrproc_t) xdr_u_char))
 		    sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
+		fwrite(file->buf,1,nbuf,file->stream);
 	    }
 	    break;
 	default:
-	    if (size != fwrite(arr,sizeof(unsigned char),size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
+	    fwrite(arr,sizeof(unsigned char),size,file->stream);
 	    break;
     }
 }
@@ -1022,13 +1016,11 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 				nbuf/sizeof(int),sizeof(int),
 				(xdrproc_t) xdr_int))
 		    sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
+		fwrite(file->buf,1,nbuf,file->stream);
 	    }
 	    break;
 	default:
-	    if (size != fwrite(arr,sizeof(int),size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
+	    fwrite(arr,sizeof(int),size,file->stream);
 	    break;
     }
 }
@@ -1099,13 +1091,11 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 				nbuf/sizeof(float),sizeof(float),
 				(xdrproc_t) xdr_float))
 		    sf_error ("sf_file: trouble writing xdr");
-		if (nbuf != fwrite(file->buf,1,nbuf,file->stream)) 
-		    sf_error ("%s: trouble writing:",__FILE__);
+		fwrite(file->buf,1,nbuf,file->stream);
 	    }
 	    break;
 	default:
-	    if (size != fwrite(arr,sizeof(float),size,file->stream)) 
-		sf_error ("%s: trouble writing:",__FILE__);
+	    fwrite(arr,sizeof(float),size,file->stream);
 	    break;
     }
 }
@@ -1240,35 +1230,6 @@ void sf_close(void)
 	0 != unlink(infile->dataname))
 	sf_warning ("%s: trouble removing %s:",__FILE__,infile->dataname);
 }
-
-/*
-FILE* sf_direct (const sf_file file)
-{
-    return file->pipe? sf_tempfile(&(file->dataname)): file->stream;
-}
-
-void sf_pipe (sf_file file, FILE* tmp, size_t size) 
-{
-    char buf[BUFSIZ];
-    size_t nbuf;
-
-    if (tmp == file->stream) return;
-
-    tmp = freopen(file->dataname,"rb",tmp);
-    if (NULL == tmp)
-	sf_error ("%s: Trouble reading data file %s:",__FILE__,file->dataname);
-
-    while (size > 0) {
-	nbuf = (BUFSIZ < size)? BUFSIZ : size;
-	if (nbuf != fread(buf,1,nbuf,tmp) ||
-	    nbuf != fwrite(buf,1,nbuf,file->stream))
-	    sf_error ("%s: trouble piping from %s:",__FILE__,file->dataname);
-	size -= nbuf;
-    }
-
-    (void) fclose(tmp);
-}
-*/
 
 /* 	$Id$	 */
 

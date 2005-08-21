@@ -28,15 +28,12 @@ for alpha in [0,0.5]:
          inmo velocity=${SOURCES[1]} half=n
          ''')
     Flow(strat,[nmo+sfsuffix,vel],
-         '''
-         nmo velocity=${SOURCES[1]} half=n |
-         stack
-         ''')
+         'nmo velocity=${SOURCES[1]} half=n str=0 | stack')
     Result(nmo,['model','empty',nmo+sfsuffix,'empty',strat],
-           '''cat axis=2 ${SOURCES[1:5]} |
+           '''
+           cat axis=2 ${SOURCES[1:5]} |
            dots dots=0 yreverse=1 gaineach=0 labels="%s" overlap=1.85
            title="alpha=%g"
            ''' % (labels,alpha))
     
-###########################################################################
 End()

@@ -18,7 +18,7 @@ for case in cases:
     nmos.append(nmo)
     
     Plot(case,'window n1=300 | grey wanttitle=n')
-    Flow(nmo,[case,'vrms'],'nmo half=n velocity=${SOURCES[1]}')
+    Flow(nmo,[case,'vrms'],'nmo half=n velocity=${SOURCES[1]} str=0')
     Plot(nmo,'grey wanttitle=n clip=%g' % clip)
         
 Result('mutter',cases,'SideBySideAniso',vppen='txscale=1.5')

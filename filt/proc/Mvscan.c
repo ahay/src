@@ -36,11 +36,11 @@ static float hyperb(float t)
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl, half, slow;
-    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype;
-    float amp, dt, dh, t0, h0, v0, dv, h, num, den, dy;
+    bool sembl, half, slow, dsembl, weight;
+    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, *mask;
+    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy;
     float *trace, **stack, **stack2, *hh;
-    sf_file cmp, scan, offset;
+    sf_file cmp, scan, offset, msk;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -52,8 +52,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("semblance",&sembl)) sembl=false;
     /* if y, compute semblance; if n, stack */
+    if (sembl || !sf_getbool("diffsemblance",&dsembl)) dsembl=false;
+    /* if y, compute differential semblance */
     if (!sf_getint("nb",&nb)) nb=2;
     /* semblance averaging */
+    if (!sf_getbool("weight",&weight)) weight=true;
+    /* if y, apply pseudo-unitary weighting */
 
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
@@ -88,6 +92,14 @@ int main(int argc, char* argv[])
 	hh = NULL;
     }
 
+    if (NULL != sf_getstring("mask")) {
+	msk = sf_input("mask");
+	mask = sf_intalloc(nh);
+    } else {
+	msk = NULL;
+	mask = NULL;
+    }
+
     if (!sf_getfloat("v0",&v0) && !sf_histfloat(cmp,"v0",&v0)) 
 	sf_error("Need v0=");
     if (!sf_getfloat("dv",&dv) && !sf_histfloat(cmp,"dv",&dv)) 
@@ -99,19 +111,18 @@ int main(int argc, char* argv[])
     sf_putfloat(scan,"d2",dv);
     sf_putint(scan,"n2",nv);
 
+    if (!sf_getbool("slowness",&slow)) slow=false;
+    /* if y, use slowness instead of velocity */
     sf_putstring(scan,"label2",slow? "slowness": "velocity");
 
     stack =  sf_floatalloc2(nt,nv);
-    stack2 = sembl? sf_floatalloc2(nt,nv) : NULL;
+    stack2 = (sembl || dsembl)? sf_floatalloc2(nt,nv) : NULL;
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
 
     trace = sf_floatalloc(nt);
     nmo = fint1_init(nw,nt);
-
-    if (!sf_getbool("slowness",&slow)) slow=false;
-    /* if y, use slowness instead of velocity */
 
     for (ix=0; ix < nx; ix++) {
 	sf_warning("cmp %d of %d",ix+1,nx);
@@ -122,18 +133,21 @@ int main(int argc, char* argv[])
 	}
 
 	if (NULL != offset) sf_floatread(hh,nh,offset);
+	if (NULL != msk) sf_intread(mask,nh,msk);
 
 	for (ih=0; ih < nh; ih++) {
+	    sf_floatread(trace,nt,cmp); 
+	    if (NULL != msk && 0==mask[ih]) continue;
+
 	    h = (NULL != offset)? hh[ih]: 
 		h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
 	    if (half) h *= 2.;
-	    sf_floatread(trace,nt,cmp); 
 
 	    for (it=0; it < nt; it++) {
 		trace[it] /= nt*nh;
 	    }
 	    fint1_set(nmo,trace);
-
+	    
 	    for (iv=0; iv < nv; iv++) {
 		v = v0 + iv * dv;
 		v = slow? h*v: h/v;
@@ -141,9 +155,17 @@ int main(int argc, char* argv[])
 		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace);
 
 		for (it=0; it < nt; it++) {
-		    amp = fabsf(v)*trace[it];
-		    stack[iv][it] += amp;
-		    if (sembl) stack2[iv][it] += amp*amp;
+		    amp = weight? fabsf(v)*trace[it]: trace[it];
+		    if (dsembl) {
+			if (ih > 0) {
+			    amp2 = amp - stack2[iv][it];
+			    stack[iv][it] += amp2*amp2;
+			}
+			stack2[iv][it] = amp;
+		    } else {
+			if (sembl) stack2[iv][it] += amp*amp;
+			stack[iv][it] += amp;
+		    }
 		}
 	    } /* v */
 	} /* h */

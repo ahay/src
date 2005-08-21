@@ -134,26 +134,35 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     /* get screen size */
     if (!sf_getfloat ("screenratio",&screenratio))
 	screenratio = VP_SCREEN_RATIO;
+    /* ratio of screen height to screen width */
     if (!sf_getfloat ("screenht",&screenht))
 	screenht = VP_STANDARD_HEIGHT;
+    /* screen height (in "inches") */
     if (!sf_getfloat ("screenwd",&screenwd))
 	screenwd = screenht / screenratio;
+    /* screen width (in "inches") */
 
     /* get inches */
     if (!sf_getfloat ("crowd",&crowd)) crowd  = 0.75;
-    
+    /* window size as ratio of the total area */
     if (!sf_getfloat ("xinch",&inch1)) {
+	/* window width as ratio of the screen width */
 	if (!sf_getfloat ("crowd1",&inch1)) inch1 = crowd;
+	/* window width as ratio of the screen width */
 	inch1 *= screenwd;
     }
     if (!sf_getfloat ("yinch",&inch2)) {
+	/* window height as ratio of the screen height */
 	if (!sf_getfloat ("crowd2",&inch2)) inch2 = crowd;
+	/* window height as ratio of the screen height */
 	inch2 *= screenht;
     }
 
     /* get corners */
     set = sf_getfloat ("xll",&xll);
+    /* lower left horizontal coordinate */
     if (!sf_getfloat ("xur",&xur)) {
+	/* upper right horizontal coordinate */
 	if (set) {
 	    xur = xll + inch1;
 	} else {
@@ -166,7 +175,9 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     }
 	
     set = sf_getfloat ("yll",&yll);
+    /* lower left vertical coordinate */
     if (!sf_getfloat ("yur",&yur)) {
+	/* upper right vertical coordinate */
 	if (set) {
 	    yur = yll + inch2;
 	} else {
@@ -189,6 +200,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	    free (bartype);
 	}
 	if (!sf_getfloat("barwidth",&barwd)) barwd = 0.36;
+	/* scale bar size */
 	if (vertbar) {
 	    xur -= (0.07*screenwd + barwd);
 	    xll -= 0.5*barwd;
@@ -284,6 +296,7 @@ static void make_labels (sf_file in, char where1, char where2)
     struct Label *label;
 
     if (sf_getbool ("wantaxis", &want) && !want) {
+	/* if draw axes */
 	label1 = NULL;
 	label2 = NULL;
 	if (cube) label3 = NULL;
@@ -291,12 +304,14 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (sf_getbool ("wantaxis1",&want) && !want) {
+	/* if draw first axis */
 	label1 = NULL;
     } else if (NULL == label1) { 
 	label1 = (struct Label*) sf_alloc(1,sizeof(struct Label));
     }
 
     if (sf_getbool ("wantaxis2",&want) && !want) {
+	/* if draw second axis */
 	label2 = NULL;
 	if (!cube && NULL == label1) return;
     } else if (NULL == label2) {
@@ -305,6 +320,7 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (cube) {
 	if (sf_getbool ("wantaxis3",&want) && !want) {
+	    /* if draw third axis (in cube plots) */
 	    label3 = NULL;
 	    if (NULL == label1 && NULL == label2) return;
 	} else if (NULL == label3) {
@@ -319,6 +335,7 @@ static void make_labels (sf_file in, char where1, char where2)
     }
 
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
+    /* label size */
     if (cube) {
 	labelsz *= 0.03; /* slightly smaller */
     } else {
@@ -328,11 +345,13 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (NULL != label1) {
 	if (!cube && NULL != (where = sf_getstring("wherexlabel"))) {
+	    /* where to put horizontal axis (top,bottom) */
 	    label1->where = *where;
 	} else {
 	    label1->where = where1;
 	}
 	if (!sf_getint ("labelfat",&(label1->fat))) label1->fat=0;
+	/* label fatness */
 	if ((NULL == (label1->text=sf_getstring(transp? "label2":"label1"))) &&
 	    (NULL == (label1->text=sf_histstring(in,
 						 transp? "label2":"label1"))))
@@ -366,6 +385,7 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (NULL != label3) {
 	if (!sf_getint ("labelfat",&(label3->fat))) label3->fat=0;
+	/* label fatness */
 	if ((NULL == (label3->text=sf_getstring("label3"))) &&
 	    (NULL == (label3->text=sf_histstring(in,"label3"))))
 	    label3->text = blank;
@@ -417,17 +437,20 @@ static void make_labels (sf_file in, char where1, char where2)
 
     if (NULL != label2) {
 	if (!cube && NULL != (where = sf_getstring("whereylabel"))) {
+	    /* where to put vertical label (left,right) */
 	    label2->where = *where;
 	} else {
 	    label2->where = where2;
 	}
 	if (!sf_getint ("labelfat",&(label2->fat))) label2->fat=0;
+	/* label fatness */
 	if ((NULL == (label2->text=sf_getstring(transp? "label1":"label2"))) &&
 	    (NULL == (label2->text=sf_histstring(in,
 						 transp? "label1":"label2"))))
 	    label2->text = blank;
 
 	if (!sf_getbool ("labelrot",&labelrot)) labelrot = true;
+	/* if rotate vertical label */
 	if (labelrot) vs *= 1.7;
 
 	label2->ypath = labelrot? -labelsz: labelsz;
@@ -467,6 +490,7 @@ static void make_baraxis (float min, float max)
 	baraxis = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
 
     if (!sf_getfloat ("axisorbar",&(baraxis->or))) {
+	/* bar origin */
 	if (vertbar) {
 	    baraxis->or = (barlabel->where == 'l'? barmin: barmax);
 	} else {
@@ -475,6 +499,7 @@ static void make_baraxis (float min, float max)
     }
 
     if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
+    /* bar ticmarks */
     if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
 	!sf_getfloat ("obarnum", &(baraxis->num0))) 
 	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
@@ -507,8 +532,10 @@ static void make_axes (void)
 
 	if (!sf_getfloat ("axisor1",&(axis1->or)))
 	    axis1->or = (label1->where == 'b'? min2: max2);
+	/* first axis origin */
 
 	if (!sf_getint ("n1tic",&(axis1->ntic))) axis1->ntic = 1;
+	/* first axis ticmarks */
 	if (!sf_getfloat ("d1num", &(axis1->dnum)) ||
 	    !sf_getfloat ("o1num", &(axis1->num0))) 
 	    axis1->ntic = vp_optimal_scale(cube? 
@@ -526,8 +553,10 @@ static void make_axes (void)
 
 	if (!sf_getfloat ("axisor2",&(axis2->or)))
 	    axis2->or = (label2->where == 'l'? min1: max1);
-	
+	/* second axis origin */
+
 	if (!sf_getint ("n2tic",&(axis2->ntic))) axis2->ntic = 1;
+	/* second axis ticmarks */
 	if (!sf_getfloat ("d2num", &(axis2->dnum)) ||
 	    !sf_getfloat ("o2num", &(axis2->num0))) 
 	    axis2->ntic = vp_optimal_scale(cube?
@@ -545,8 +574,10 @@ static void make_axes (void)
 
 	if (!sf_getfloat ("axisor3",&(axis3->or)))
 	    axis3->or = min1;
+	/* third axis origin */
 	
 	if (!sf_getint ("n3tic",&(axis3->ntic))) axis3->ntic = 1;
+	/* third axis ticmarks */
 	if (!sf_getfloat ("d3num", &(axis3->dnum)) ||
 	    !sf_getfloat ("o3num", &(axis3->num0))) 
 	    axis3->ntic = vp_optimal_scale(inch3/(aspect*labelsz), 
@@ -568,6 +599,7 @@ static void make_grid (bool grid)
     if (axis1 != NULL) { 
 	if (!sf_getbool("grid",&need) && !sf_getbool("grid1",&need))
 	    need = transp? false: grid;
+	/* to draw grid */
 
 	if (need) {
 	    grid1 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
@@ -576,6 +608,7 @@ static void make_grid (bool grid)
 	    grid1->or = axis1->or;
 
 	    if (!sf_getfloat ("g1num",&(grid1->dnum))) {
+		/* grid marks on first axis */
 		grid1->dnum = axis1->dnum;
 		grid1->ntic = axis1->ntic;
 	    } else {
@@ -590,6 +623,7 @@ static void make_grid (bool grid)
     if (axis2 != NULL) {
 	if (!sf_getbool("grid",&need) && !sf_getbool("grid2",&need))
 	    need = transp? grid: false;
+	/* to draw grid */
 
 	if (need) {
 	    grid2 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
@@ -598,6 +632,7 @@ static void make_grid (bool grid)
 	    grid2->or = axis2->or;
 	    
 	    if (!sf_getfloat ("g2num",&(grid2->dnum))) {
+		/* grid marks on second axis */
 		grid2->dnum = axis2->dnum;
 		grid2->ntic = axis2->ntic;
 	    } else {
@@ -613,6 +648,7 @@ static void make_grid (bool grid)
 	((sf_getbool("grid",&need) && need) || 
 	 (sf_getbool("grid3",&need) && need))) {
 	grid3 = (struct Axis*) sf_alloc(1,sizeof(struct Axis));
+	/* to draw grid */
 
 	grid3->num0 = axis3->num0;
 	grid3->or = axis3->or;
@@ -622,7 +658,9 @@ static void make_grid (bool grid)
 
     if (NULL != grid1 || NULL != grid2 || NULL != grid3) {
 	if (!sf_getint("gridcol",&gridcol)) gridcol=grid? VP_RED: framecol;
+	/* grid color */
 	if (!sf_getint("gridfat",&gridfat)) gridfat=1;
+	/* grid fatness */
     } 
 }
 
@@ -633,6 +671,7 @@ static void make_title (sf_file in, char wheret)
     float titlesz, vs, xc, yc;
     
     if (sf_getbool ("wanttitle",&want) && !want) {
+	/* if include title */
 	title = NULL;
 	return;
     }
@@ -641,14 +680,17 @@ static void make_title (sf_file in, char wheret)
 	title = (struct Label*) sf_alloc(1,sizeof(struct Label));
 
     if (!cube && NULL != (where = sf_getstring("wheretitle"))) {
+	/* where to put title (top,bottom,left,right) */
 	title->where = *where;
     } else {
 	title->where = wheret;
     }
 
     if (!sf_getint ("titlefat",&(title->fat))) title->fat=0;
+    /* title fatness */
 
     if (!sf_getfloat ("titlesz",&titlesz)) titlesz=10.;
+    /* title font size */
 
     if (NULL == (title->text = sf_getstring("title")) &&
 	NULL == (title->text = sf_histstring(in,"title")) &&
@@ -660,6 +702,7 @@ static void make_title (sf_file in, char wheret)
 
     if (title->where == 'l' || title->where == 'r') {	
 	if (!sf_getbool ("labelrot",&labelrot)) labelrot = true;
+	/* label rotation (for vertical labels */
 	if (NULL != label2 && title->where == label2->where)
 	    vs += 3.25*labelsz;
 
@@ -702,6 +745,7 @@ static void make_barlabel (void)
     char* where;
 
     if (sf_getbool ("wantbaraxis", &want) && !want) {
+	/* if include scale bar axis */
 	barlabel = NULL;
 	return;
     }
@@ -709,6 +753,7 @@ static void make_barlabel (void)
     barlabel = (struct Label*) sf_alloc(1,sizeof(struct Label));
 
     if (!sf_getfloat ("barlabelsz",&barlabelsz)) {
+	/* bar label font size */
 	barlabelsz=labelsz;
     } else {
 	barlabelsz /= 33.;
@@ -716,10 +761,13 @@ static void make_barlabel (void)
     vs = 2.5*barlabelsz;
     
     if (!sf_getint ("barlabelfat",&(barlabel->fat))) barlabel->fat=0;
+    /* bar label fatness */
     if (NULL == (barlabel->text=sf_getstring("barlabel"))) 
 	barlabel->text = blank;
+    /* bar label */
 
     if (NULL != (where = sf_getstring("wherebarlabel"))) {
+	/* where to put bar label (top,bottom,left,right) */ 
 	barlabel->where = *where;
 	if (vertbar) {
 	    if ('l' == barlabel->where) {

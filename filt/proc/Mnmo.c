@@ -26,14 +26,16 @@ Compatible with sfvscan.
 
 #include "fint1.h"
 
+static int zero(int it, int mute, float *mask, float *trace);
+
 int main (int argc, char* argv[])
 {
     fint1 nmo;
     bool half, slow;
-    int it,ix,iz,ih, nt,nx,nw, nh, nh2, CDPtype, mute, im;
-    float dt, t0, h, h0, f, dh, dy, v, t, str, fp;
-    float *trace, *vel, *off, *m;
-    sf_file cmp, nmod, velocity, offset;
+    int it,ix,iz,ih, nt,nx,nw, nh, nh2, CDPtype, mute, im, *mask;
+    float dt, t0, h, h0, f, dh, dy, v, str, fp, t;
+    float *trace, *vel, *off, *taper;
+    sf_file cmp, nmod, velocity, offset, msk;
 
     sf_init (argc,argv);
     cmp      = sf_input("in");
@@ -49,22 +51,22 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("half",&half)) half=true;
     /* if y, the second axis is half-offset instead of full offset */
-    if (!sf_getfloat("str",&str)) str=0.25;
+    if (!sf_getfloat("str",&str)) str=0.5;
     /* minimum stretch allowed */
 
-    if (!sf_getint("mute",&mute)) mute=25;
+    if (!sf_getint("mute",&mute)) mute=12;
     /* mute zone */
-    m = sf_floatalloc(mute);
+    taper = sf_floatalloc(mute);
     for (im=0; im < mute; im++) {
-	t = sinf(0.5*SF_PI*(im+1.)/(mute+1.));
-	m[im] = t*t;
+	f = sinf(0.5*SF_PI*(im+1.)/(mute+1.));
+	taper[im] = f*f;
     }
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
 	offset = sf_input("offset");
 	nh2 = sf_filesize(offset);
-	if (nh2 != nh || nh2 != nh*nx) sf_error("Wrong dimensions in offset");
+	if (nh2 != nh && nh2 != nh*nx) sf_error("Wrong dimensions in offset");
 
 	off = sf_floatalloc(nh2);	
 	sf_floatread (off,nh2,offset);
@@ -89,6 +91,14 @@ int main (int argc, char* argv[])
 
 	offset = NULL;
     }
+    
+    if (NULL != sf_getstring("mask")) {
+	msk = sf_input("mask");
+	mask = sf_intalloc(nh);
+    } else {
+	msk = NULL;
+	mask = NULL;
+    }
 
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
@@ -106,9 +116,17 @@ int main (int argc, char* argv[])
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
+	if (NULL != msk) sf_intread(mask,nh,msk);
 
 	for (ih = 0; ih < nh; ih++) {
 	    sf_floatread (trace,nt,cmp);
+	    
+	    /* skip dead traces */
+	    if (NULL != msk && 0==mask[ih]) {
+		sf_floatwrite (trace,nt,nmod);
+		continue;
+	    }
+	    
 	    fint1_set(nmo,trace);
 
 	    h = (nh2 == nh)? off[ih] + (dh/CDPtype)*(ix%CDPtype) : 
@@ -125,22 +143,19 @@ int main (int argc, char* argv[])
 		f = f*f + v;
 		if (f < 0.) {
 		    fp = -1.;
-		    trace[it]=0.;
-		    im=0;
+		    im = zero(it,mute,taper,trace);
 		} else {
 		    f = (sqrtf(f) - t0)/dt;
 		    if (fp > 0. && fabsf(f-fp) < str) { /* too much stretch */
-			trace[it]=0.;
-			im=0;
+  			im = zero(it,mute,taper,trace);
 		    } else {
 			iz = floorf(f);
 			if (iz >= 0 && iz < nt) {
 			    t = fint1_apply(nmo,iz,f-iz,false);
-			    if (im < mute) t *= m[im++];
-			    trace[it]=t;
+			    if (im < mute) t *= taper[im++];
+			    trace[it] = t;
 			} else {
-			    trace[it] = 0.;
-			    im=0;
+			    im = zero(it,mute,taper,trace);
 			}
 		    }
 		    fp = f;
@@ -152,6 +167,21 @@ int main (int argc, char* argv[])
     }
 	
     exit (0);
+}
+
+static int zero(int it, int mute, float *taper, float *trace)
+{
+    int im, i;
+    static int ir=-1;
+
+    trace[it]=0.;
+    if (ir < 0 || ir != it-1) {
+	for (i=it-1, im=0; i >=0 && im < mute; i--, im++) {
+	    trace[i] *= taper[im];
+	}
+    }
+    ir=it;
+    return 0;
 }
 
 /* 	$Id$	 */

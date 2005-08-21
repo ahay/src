@@ -60,23 +60,30 @@ shots = []
 for shot in range(0,12,5):
     data = 'data%d' % shot
     shots.append(data)
-    Plot(data,'dat',
+    Plot(data,'data',
          '''
-         window n3=1 f3=%d |
-         tpow tpow=2 |
-         grey gpow=0.5 title="Shot %d"
+         window n3=1 f3=%d | tpow tpow=2 | grey title="Shot %d"
          ''' % (shot,shot+1))
 Result('data',shots,'SideBySideAniso')
-
-Flow('off','data','window n1=1 | math output="0.5*x1" ')
-Flow('cmp','off','math output="input+x2" ')
 
 v0=4
 dv=0.075
 nv=120
 
-##############################
+#########################################################################
+#
 # Processing individual CMPs
+#
+#########################################################################
+
+###############################
+# Create offset and cmp headers
+###############################
+Flow('off','data','window n1=1 | math output="0.5*x1" ')
+Flow('cmp','off','math output="input+x2" ')
+
+##############################
+# Loop over selected cmps
 ##############################
 for x in range(1500,4000,500):    
     ##################
@@ -88,7 +95,7 @@ for x in range(1500,4000,500):
     msk = 'msk%d' % x    
     Flow(msk,'cmp','mask min=%g max=%g' % (y-0.001,y+0.001))
     Flow(off,['off',msk],'spray axis=1 n=1 | headerwindow mask=${SOURCES[1]}')
-    Flow(cdp,['dat',msk],'headerwindow mask=${SOURCES[1]}')
+    Flow(cdp,['data',msk],'headerwindow mask=${SOURCES[1]}')
     Plot(cdp,[cdp,off],wiggle('CDP gather for cdp=%g' % y))
     ##################
     # Velocity Scan
@@ -96,7 +103,8 @@ for x in range(1500,4000,500):
     scn = 'scn%d' % x
     Flow(scn,[cdp,off],
          'vscan offset=${SOURCES[1]} semblance=y v0=%g dv=%g nv=%d' % (v0,dv,nv))
-    Plot(scn,'grey color=j allpos=y label2="Velocity (kft/s)" title="Velocity Scan" ')
+    Plot(scn,
+         'grey color=j allpos=y label2="Velocity (kft/s)" title="Velocity Scan" ')
     ##################
     # Velocity Picking
     ##################
@@ -116,15 +124,37 @@ for x in range(1500,4000,500):
     #####################
     Result(cdp,[cdp,scn+'a',nmo],'SideBySideAniso')
 
-##############################
+########################################################################
+#
 # Processing the whole dataset
-##############################
-Flow('cmpdata','data','reverse which=4 | put o2=0.05 d2=0.05 | shot2cmp')
-Flow('scan','cmpdata','vscan semblance=y v0=%g dv=%g nv=%d' % (v0,dv,nv))
+#
+########################################################################
+
+#####################
+# Convert shot to cmp
+#####################
+Flow('cmpdata cmpmask','data',
+     '''
+     reverse which=4 |
+     put o2=0.05 d2=0.05 |
+     shot2cmp mask=${TARGETS[1]}
+     ''')
+#####################
+# Velocity scan
+#####################
+Flow('scan','cmpdata cmpmask',
+     'vscan semblance=y mask=${SOURCES[1]} v0=%g dv=%g nv=%d' % (v0,dv,nv))
+#####################
+# Velocity picking
+#####################
 Flow('pick','scan','mutter x0=4 inner=y v0=3 half=n | pick rect1=50 rect2=100')
 Result('pick','window | ' + velplot('Stacking Velocity','Time (s)'))
 
-Flow('nmo','cmpdata pick','nmo velocity=${SOURCES[1]} str=0.5')
+#####################
+# NMO and stack
+#####################
+Flow('nmo','cmpdata cmpmask pick',
+     'nmo mask=${SOURCES[1]} velocity=${SOURCES[2]}')
 Flow('stack','nmo','stack')
 Result('stack','grey title="NMO Stack" ')
     

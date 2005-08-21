@@ -1,4 +1,4 @@
-/* Kirchhoff 2.5-D modeling with analytical Green's functions. */
+/* Kirchhoff 3-D modeling with analytical Green's functions. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -28,16 +28,15 @@
 
 int main(int argc, char* argv[]) 
 {
-    int nx, ny, nt, ns, nsx, nsy, nh, nc, nxyc, is, isx, isy, ih, ix, iy, ic;
-    float ***rfl, ***rgd, ***crv, ***dipx, ***dipy, **shot, *trace;
-    float slow, dx, x0, dt, t0, dsx, dsy, sx0, sy0, dh, h0, r0, **time, **ampl, **delt, freq;
-    float theta, ava, amp, obl;
-    char *type, *type2;
-    bool twod;
-    surface inc, ref;
-    velocity vel, vel2;
+    int nx,ny, nt, nsx,nsy, nhx,nhy, nc, nxyc, isx,isy, ihx,ihy, ix,iy, ic;
+    float ***rfl, ***rgd, ***crv, ***dipx, ***dipy, *trace;
+    float slow, dx, x0, dy, y0, dt, t0, dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
+    float theta, ava, amp, obl, ***time, ***ampl, ***delt, freq;
+    char *type;
+    surface3 inc;
+    velocity3 vel;
     ktable ts, tg;
-    sf_file refl, curv, modl, shots;
+    sf_file refl, curv, modl;
     
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -70,78 +69,50 @@ int main(int argc, char* argv[])
     
     /*** Initialize shots ***/
     
-    if (NULL != sf_getstring("shots")) {
-	shots = sf_input("shots");
-	
-	if (!sf_histint(shots,"n1",&two) || 2 != two) sf_error("Need n1=2 in shots");
-	if (!sf_histint(shots,"n2",&ns)) sf_error("No n2= in shots");
-
-	sf_putint(modl,"n4",ns);
-    } else {
-	shots = NULL;
-	
-	if (!sf_getint("nsx",&nsx)) nsx=nx;
-	/* number of inline shots */
-	if (!sf_getfloat("sx0",&sx0)) sx0=x0;
-	/* first inline shot */
-	if (!sf_getfloat("dsx",&dsx)) dsx=dx;
-	/* inline shot increment */
-
-	sf_putfloat(modl,"o4",sx0);
-	sf_putfloat(modl,"d4",dsx);
-	sf_putint(modl,"n4",nsx);
-
-	if (!sf_getint("nsy",&nsy)) nsy=ny;
-	/* number of crossline shots */
-	if (!sf_getfloat("sy0",&sy0)) sy0=y0;
-	/* first crossline shot */
-	if (!sf_getfloat("dsy",&dsy)) dsy=dy;
-	/* crossline shot increment */
-
-	sf_putfloat(modl,"o5",sy0);
-	sf_putfloat(modl,"d5",dsy);
-	sf_putint(modl,"n5",nsy);
-
-	ns = nsx*nsy;
-    }
+    if (!sf_getint("nsx",&nsx)) nsx=nx;
+    /* number of inline shots */
+    if (!sf_getfloat("s0x",&s0x)) s0x=x0;
+    /* first inline shot */
+    if (!sf_getfloat("dsx",&dsx)) dsx=dx;
+    /* inline shot increment */
     
-    shot = sf_floatalloc2(2,ns);
+    sf_putfloat(modl,"o4",s0x);
+    sf_putfloat(modl,"d4",dsx);
+    sf_putint(modl,"n4",nsx);
+    
+    if (!sf_getint("nsy",&nsy)) nsy=ny;
+    /* number of crossline shots */
+    if (!sf_getfloat("s0y",&s0y)) s0y=y0;
+    /* first crossline shot */
+    if (!sf_getfloat("dsy",&dsy)) dsy=dy;
+    /* crossline shot increment */
 
-    if (NULL != shots) {
-	sf_floatread(shot[0],2*ns,shots);
-	sf_fileclose(shots);
-    } else {	
-	for (isy=0; isy < nsy; isy++) {
-	    for (isx=0; isx < nsx; isx++) {
-		is = isx + isy*nsx;
-		shot[is][0] = sx0+isx*dsx;
-		shot[is][1] = sy0+isy*dsy;
-	    }
-	}
-    }
+    sf_putfloat(modl,"o5",s0y);
+    sf_putfloat(modl,"d5",dsy);
+    sf_putint(modl,"n5",nsy);
     
     /*** Initialize offsets ***/
 
     if (!sf_getint  ("nhx",&nhx)) nhx=nx;
     /* number of inline offsets */
-    if (!sf_getfloat("hx0",&hx0)) hx0=0.;
+    if (!sf_getfloat("h0x",&h0x)) h0x=0.;
     /* first inline offset */
     if (!sf_getfloat("dhx",&dhx)) dhx=dx;
     /* inline offset increment */
 
     sf_putint  (modl,"n2",nhx);
-    sf_putfloat(modl,"o2",hx0);
+    sf_putfloat(modl,"o2",h0x);
     sf_putfloat(modl,"d2",dhx);
     
-    if (!sf_getint  ("nhy",&nhy)) nh=ny;
+    if (!sf_getint  ("nhy",&nhy)) nhy=ny;
     /* number of crossline offsets */
-    if (!sf_getfloat("hy0",&hy0)) hy0=0.;
+    if (!sf_getfloat("h0y",&h0y)) h0y=0.;
     /* first crossline offset */
     if (!sf_getfloat("dhy",&dhy)) dhy=dy;
     /* crossline offset increment */
 
     sf_putint  (modl,"n3",nhy);
-    sf_putfloat(modl,"o3",hy0);
+    sf_putfloat(modl,"o3",h0y);
     sf_putfloat(modl,"d3",dhy);
 
     /*** Initialize reflector ***/
@@ -149,8 +120,9 @@ int main(int argc, char* argv[])
     crv = sf_floatalloc3(nx,ny,nc);
     rfl = sf_floatalloc3(nx,ny,nc);
     rgd = sf_floatalloc3(nx,ny,nc);
-    dip = sf_floatalloc3(nx,ny,nc);
-    
+    dipx = sf_floatalloc3(nx,ny,nc);
+    dipy = sf_floatalloc3(nx,ny,nc);
+
     sf_floatread(crv[0][0],nxyc,curv);
     
     /* reflectivity (A) */
@@ -216,21 +188,21 @@ int main(int argc, char* argv[])
     }
 
     /*** Initialize velocity ***/
-    vel  = (velocity) sf_alloc(1,sizeof(*vel));
-    vel2 = (velocity) sf_alloc(1,sizeof(*vel2));
+    vel  = (velocity3) sf_alloc(1,sizeof(*vel));
 
     if (!sf_getfloat("vel",&(vel->v0))) sf_error("Need vel=");
     /* velocity */
     
     if (!sf_getfloat("gradx",&(vel->gx))) (vel->gx)=0.;
+    if (!sf_getfloat("grady",&(vel->gy))) (vel->gy)=0.;
     if (!sf_getfloat("gradz",&(vel->gz))) (vel->gz)=0.;
     /* velocity gradient */
 
     type = sf_getstring("type");
     /* type of velocity ('c': constant, 's': linear sloth, 'v': linear velocity) */
     if (NULL==type) {
-	type= ((vel->gx)==0. && (vel->gz)==0.)?"const":"veloc";
-    } else if ((vel->gx)==0. && (vel->gz)==0.) {
+	type= ((vel->gx)==0. && (vel->gy)==0. && (vel->gz)==0.)?"const":"veloc";
+    } else if ((vel->gx)==0. && (vel->gy)==0. && (vel->gz)==0.) {
 	free(type);
 	type = "const"; 
     } else if ('s'==type[0]) {
@@ -239,68 +211,32 @@ int main(int argc, char* argv[])
 	slow = 1./((vel->v0)*(vel->v0));
 	/* slowness squared */
 	(vel->gx) *= -2.*slow/(vel->v0);
+	(vel->gy) *= -2.*slow/(vel->v0);
 	(vel->gz) *= -2.*slow/(vel->v0);
 	(vel->v0) = slow;     
     } else if ('v' != type[0]) {
 	sf_error("Unknown type=%s",type);
     }
-
-    if (!sf_getbool("twod",&twod)) twod=false;
-    /* 2-D or 2.5-D */
 	
     if (!sf_getfloat("refx",&(vel->x0))) (vel->x0)=x0;
     if (!sf_getfloat("refz",&(vel->z0))) (vel->z0)=0.;
     /* reference coordinates for velocity */
-
-    if (!sf_getfloat("vel2",&(vel2->v0))) (vel2->v0)=(vel->v0);
-    /* converted velocity */
     
-    if (!sf_getfloat("gradx2",&(vel2->gx))) (vel2->gx)=(vel->gx);
-    if (!sf_getfloat("gradz2",&(vel2->gz))) (vel2->gz)=(vel->gz);
-    /* converted velocity gradient */
-
-    type2 = sf_getstring("type2");
-    if (NULL==type2) {	
-	type2=type;
-    } else if ((vel2->gx)==0. && (vel2->gz)==0.) {
-	free(type2);
-	type2 = "const"; 
-    } else if ('s'==type2[0]) {
-	/* linear slowness squared */
-	
-	slow = 1./((vel2->v0)*(vel2->v0));
-	/* slowness squared */
-	(vel2->gx) *= -slow/(vel2->v0);
-	(vel2->gz) *= -slow/(vel2->v0);
-	(vel2->v0) = slow;     
-    } else if ('v' != type2[0]) {
-	sf_error("Unknown type=%s",type2);
-    }
-
-    if (!sf_getfloat("refx2",&(vel2->x0))) (vel2->x0)=(vel->x0);
-    if (!sf_getfloat("refz2",&(vel2->z0))) (vel2->z0)=(vel->z0);
-    /* reference coordinates for converted velocity */
-    
-    /*** Allocate space ***/
-    
-    inc = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
-    if (strcmp(type,type2) ||
-	(vel2->v0) != (vel->v0) || 
-	(vel2->gz) != (vel->gz) ||
-	(vel2->gx) != (vel->gx) ||
-	(vel2->z0) != (vel->z0) ||
-	(vel2->x0) != (vel->x0)) {
-	ref = kirmod2_init(ns, s0, ds, nh, h0, dh, nx, x0, dx, nc);
-    } else {
-	ref = inc;
-    }
+    /*** Allocate space ***/    
+    inc = kirmod3_init(nsx, s0x, dsx, 
+		       nsy, s0y, dsy,
+		       nhx, h0x, dhx, 
+		       nhy, h0y, dhy, 
+		       nx, x0, dx, 
+		       ny, y0, dy,
+		       nc);
     
     /*** Initialize stretch ***/
-    aastretch_init (nt, t0, dt, nxc);
+    aastretch_init (nt, t0, dt, nxyc);
 
-    time = sf_floatalloc2(nx,nc);
-    ampl = sf_floatalloc2(nx,nc);
-    delt = sf_floatalloc2(nx,nc);
+    time = sf_floatalloc3(nx,ny,nc);
+    ampl = sf_floatalloc3(nx,ny,nc);
+    delt = sf_floatalloc3(nx,ny,nc);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
@@ -308,41 +244,48 @@ int main(int argc, char* argv[])
 
     /*** Compute traveltime table ***/
 
-    kirmod2_table (inc, vel, type[0], twod, crv, dip);
-    if (ref != inc) kirmod2_table (ref, vel2, type2[0], twod, crv, dip);
+    kirmod3_table (inc, vel, type[0], crv, dipx, dipy);
 
     /*** Main loop ***/
-    for (is=0; is < ns; is++) {
-	for (ih=0; ih < nh; ih++) {
-	    for (ix=0; ix < nx; ix++) {
+    for (isy=0; isy < nsy; isy++) { for (isx=0; isx < nsx; isx++) {
+	for (ihy=0; ihy < nhy; ihy++) { for (ihx=0; ihx < nhx; ihx++) {
+	    for (iy=0; iy < ny; iy++) { for (ix=0; ix < nx; ix++) {
 		for (ic=0; ic < nc; ic++) {
-		    ts = kirmod2_map(inc,is,nh,ix,ic);
-		    tg = kirmod2_map(ref,is,ih,ix,ic);
+		    ts = kirmod3_map(inc,isx,isy,nhx*nhy,0,ix,iy,ic);
+		    tg = kirmod3_map(inc,isx,isy,ihx,ihy,ix,iy,ic);
+		    
+		    time[ic][iy][ix] = ts->t + tg->t;
+		    
+		    tg->an /= sqrtf(1.-(tg->tn)*(tg->tn));
+		    ts->an /= sqrtf(1.-(ts->tn)*(ts->tn)); 
+		    theta = hypotf((tg->an)*(tg->tx)-(ts->an)*(ts->tx),
+				   (tg->an)*(tg->ty)-(ts->an)*(ts->ty));
 
-		    time[ic][ix] = ts->t + tg->t;
+		    /* AVA */
+		    theta = sinf(0.5*theta);
+		    ava = 1.+rgd[ic][iy][ix]*theta*theta;
 
-		    theta = sinf(0.5*(SF_SIG(tg->tx)*tg->an - SF_SIG(ts->tx)*ts->an));
-		    ava = 1.+rgd[ic][ix]*theta*theta;
-		    if (ref != inc) ava *= theta;
-
+		    /* obliguity */
 		    obl = 0.5*(ts->tn + tg->tn);
 		    
-		    amp = ts->a * tg->a * sqrtf(ts->ar + tg->ar) + FLT_EPSILON;
-
-		    ampl[ic][ix] = ava*obl*dx/amp; 
-		    delt[ic][ix] = fabsf(ts->tx+tg->tx)*dx; 
+		    /* Geometrical spreading */
+		    amp = ts->a * tg->a + FLT_EPSILON;
+		    
+		    ampl[ic][iy][ix] = ava*obl*dx/amp; 
+		    delt[ic][iy][ix] = SF_MAX(fabsf(ts->tx+tg->tx)*dx,
+					      fabsf(ts->ty+tg->ty)*dy); 
 		}
-	    }
+	    }}
 
-	    aastretch_define (time[0],delt[0],ampl[0]);
-	    aastretch_lop (false,false,nxc,nt,rfl[0],trace);
-
+	    aastretch_define (time[0][0],delt[0][0],ampl[0][0]);
+	    aastretch_lop (false,false,nxyc,nt,rfl[0][0],trace);
+	    
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);
 	    
 	    sf_floatwrite(trace,nt,modl);
-	}
-    }
+	}}
+    }}
   
     exit(0);
 }

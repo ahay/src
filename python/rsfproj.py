@@ -273,7 +273,11 @@ class Project(Environment):
                 command = pars.pop(0)
                 # check if this command is in our list
                 if rsf:
-                    rsfprog = prefix + command            
+                    if command[:2]==prefix:
+                        # assuming prefix is two chars
+                        rsfprog = command
+                    else:
+                        rsfprog = prefix + command            
                     if rsfdoc.progs.has_key(rsfprog):
                         command = os.path.join(bindir,rsfprog+self.progsuffix) 
                         sources.append(command)
@@ -339,11 +343,12 @@ class Project(Environment):
         plot = apply(self.Plot,(target2,source,flow),kw)
         self.Default (plot)
         self.view.append(self.View(target + '.view',plot))
-        lock = self.InstallAs(os.path.join(self.figdir,target+suffix),
-                              target2+suffix)
-        
+        locked = os.path.join(self.figdir,target+suffix)
+        lock = self.InstallAs(locked,target2+suffix)        
         self.lock.append(lock)
         self.Alias(target + '.lock',lock)
+        self.Command(target + '.flip',target2+suffix,
+                     '%sxtpen $SOURCE %s' % (sep,locked))
         test = self.Test('.test_'+target,target2+suffix)
         self.test.append(test)
         self.Alias(target + '.test',test)

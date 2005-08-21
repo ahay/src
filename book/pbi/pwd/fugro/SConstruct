@@ -85,8 +85,10 @@ Flow('cdipz','cband',
 Result('ccstack','cdata',
        'stack | window max1=10000 | grey title="Stack (Before)" ')
 
-Flow('cdip','cdata',
-     'dip n4=0 rect1=40 rect2=5 rect3=10 memsize=100 w1=2401 w2=64 verb=y')
+Flow('cpat','cdata','patch w=2401,64,100')
+Flow('cpip','cpat',
+     'dip n4=0 rect1=40 rect2=5 rect3=10 verb=y')
+Flow('cdip','cpip','patch inv=y weight=y')
 Flow('cdip2','cdip','mutter v0=1000 tp=5000')
 
 Flow('cflat','cdata cdip2','flat dip=${SOURCES[1]}')

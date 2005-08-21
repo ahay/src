@@ -12,11 +12,13 @@ Flow('mutter','cmp','mutter ' + mutter)
 Flow('vscan','mutter','vscan semblance=y v0=1500 nv=120 dv=50')
 Flow('vrms','vscan','blindpick2 eps=40 lam=40 gauss=n')
 Result('vrms',
-       '''window min3=2800 max3=7600 |
-       grey Xcolor=j allpos=y scalebar=y wanttitle=n
+       '''
+       window min3=2800 max3=7600 |
+       grey color=j allpos=y scalebar=y wanttitle=n
        barlabel="NMO velocity (km/s)"
        label1="Time (s)" label2="Midpoint (m)"
-       bias=1500''')
+       bias=1500
+       ''')
 
 Flow('nmo',['mutter','vrms'],'nmo velocity=${SOURCES[1]}')
 Flow('stack','nmo','stack')

@@ -26,11 +26,11 @@ int main(int argc, char* argv[])
     int type, esize;
     off_t pos;
     bool sign;
-    int   ns,    ny,    nh, nt;
-    int   is,    iy,    ih;
+    int   ns,    ny,    nh, nh2, nt;
+    int   is,    iy,    ih, ih2, *mask;
     float os,ds, oy,dy, oh,dh;
     char *trace, *zero;
-    sf_file in, out;
+    sf_file in, out, msk;
 
     sf_init(argc,argv);
     in  = sf_input ( "in");
@@ -55,7 +55,8 @@ int main(int argc, char* argv[])
     oy = sign ? os + oh: os - oh - type*((nh-1)/type)*dh;
     ny = ns*type + nh - 1;
 
-    sf_putint  (out,"n2",(nh+type-1)/type);
+    nh2 = (nh+type-1)/type;
+    sf_putint  (out,"n2",nh2);
     sf_putfloat(out,"d2",type*dh);
 
     sf_putint  (out,"n3",ny);
@@ -69,6 +70,19 @@ int main(int argc, char* argv[])
     }
     nt *= esize;
 
+    if (NULL != sf_getstring("mask")) {
+	msk = sf_output("mask");
+	sf_settype(msk,SF_INT);
+
+	sf_putint(msk,"n1",nh2);
+	sf_putint(msk,"n2",ny);
+
+	mask = sf_intalloc(nh2);
+    } else {
+	msk = NULL;
+	mask = NULL;
+    }
+
     trace = sf_charalloc(nt);
     zero  = sf_charalloc(nt);
     memset(zero,0,nt);
@@ -81,6 +95,7 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
 
     for (iy=0; iy < ny; iy++) {
+	if (NULL != msk) ih2=0;
 	for (ih=iy%type; ih < nh+iy%type; ih += type) {
 	    is = sign? (iy - ih)/type : (iy + ih)/type - (nh - 1)/type;
 
@@ -88,10 +103,13 @@ int main(int argc, char* argv[])
 		sf_seek(in,pos+(is*nh+ih)*nt,SEEK_SET);
 		sf_charread(trace,nt,in);
 		sf_charwrite(trace,nt,out);
+		if (NULL != msk) mask[ih2++] = 1;
 	    } else {
 		sf_charwrite(zero,nt,out);
+		if (NULL != msk) mask[ih2++] = 0;
 	    }
 	}
+	if (NULL != msk) sf_intwrite(mask,nh2,msk);
     }
 
     sf_close();
