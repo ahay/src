@@ -40,30 +40,30 @@ float hwt3d_getv(pt3d P)
     double fz,fx,fy;
     float  v;
 
-    z = SF_MIN(SF_MAX(az.o,P.z),az.o+(az.n-2)*az.d);
-    y = SF_MIN(SF_MAX(ay.o,P.y),ay.o+(ay.n-2)*ay.d);
     x = SF_MIN(SF_MAX(ax.o,P.x),ax.o+(ax.n-2)*ax.d);
-
-    rz = (z-az.o)/az.d;
-    jz = (int)(rz);
-    fz =       rz-jz;
-
-    ry = (y-ay.o)/ay.d;
-    jy = (int)(ry);
-    fy =       ry-jy;
+    y = SF_MIN(SF_MAX(ay.o,P.y),ay.o+(ay.n-2)*ay.d);
+    z = SF_MIN(SF_MAX(az.o,P.z),az.o+(az.n-2)*az.d);
 
     rx = (x-ax.o)/ax.d;
     jx = (int)(rx);
     fx =       rx-jx;
 
-    v = vv[ jx  ][ jy  ][ jz  ] * (1-fz)*(1-fx)*(1-fy) +
-	vv[ jx  ][ jy  ][ jz+1] * (  fz)*(1-fx)*(1-fy) +
-	vv[ jx+1][ jy  ][ jz  ] * (1-fz)*(  fx)*(1-fy) +
-	vv[ jx+1][ jy  ][ jz+1] * (  fz)*(  fx)*(1-fy) + 
-	vv[ jx  ][ jy+1][ jz  ] * (1-fz)*(1-fx)*(  fy) +
-	vv[ jx  ][ jy+1][ jz+1] * (  fz)*(1-fx)*(  fy) +
-	vv[ jx+1][ jy+1][ jz  ] * (1-fz)*(  fx)*(  fy) +
-	vv[ jx+1][ jy+1][ jz+1] * (  fz)*(  fx)*(  fy);
+    ry = (y-ay.o)/ay.d;
+    jy = (int)(ry);
+    fy =       ry-jy;
+
+    rz = (z-az.o)/az.d;
+    jz = (int)(rz);
+    fz =       rz-jz;
+
+    v = vv[ jy  ][ jx  ][ jz  ] * (1-fz)*(1-fx)*(1-fy) +
+	vv[ jy  ][ jx  ][ jz+1] * (  fz)*(1-fx)*(1-fy) +
+	vv[ jy+1][ jx  ][ jz  ] * (1-fz)*(1-fx)*(  fy) +
+	vv[ jy+1][ jx  ][ jz+1] * (  fz)*(1-fx)*(  fy) + 
+	vv[ jy  ][ jx+1][ jz  ] * (1-fz)*(  fx)*(1-fy) +
+	vv[ jy  ][ jx+1][ jz+1] * (  fz)*(  fx)*(1-fy) +
+	vv[ jy+1][ jx+1][ jz  ] * (1-fz)*(  fx)*(  fy) +
+	vv[ jy+1][ jx+1][ jz+1] * (  fz)*(  fx)*(  fy);
 
     return(v);
 }
@@ -134,7 +134,7 @@ pt3d hwt3d_raytr(pt3d Tm,
 
     double a1,a2,a3;
     vc3d   v1,v2,v3;
-    vc3d   vv,uu,ww; /* unit vectors */
+    vc3d   qq,uu,ww; /* unit vectors */
     float ro;
 
 /*    printpt3d(Tm);*/
@@ -171,18 +171,18 @@ pt3d hwt3d_raytr(pt3d Tm,
 /*    sf_warning(" ww : %g %g %g",  ww.dx,  ww.dy,  ww.dz);*/
 /*    sf_warning(" v3 : %g %g %g",  v3.dx,  v3.dy,  v3.dz);*/
 
-    vv   = scl3d(&ww,+1);
-    uu   = vcp3d(&TmTo,&vv); /* uu = TmTo x vv */
-    vv   = nor3d(&uu);       /* vv = uu / |uu| */
-    uu   = scl3d(&vv,ro);    /* uu = vv * ro */
+    qq   = scl3d(&ww,+1);
+    uu   = vcp3d(&TmTo,&qq); /* uu = TmTo x qq */
+    qq   = nor3d(&uu);       /* qq = uu / |uu| */
+    uu   = scl3d(&qq,ro);    /* uu = qq * ro */
     Gm   = tip3d(&To,&uu);   /* Gm at tip of uu from To */
     Gm.v = hwt3d_getv(Gm);
 /*    printpt3d(Gm);*/
 
-    vv   = scl3d(&ww,-1);
-    uu   = vcp3d(&TmTo,&vv); 
-    vv   = nor3d(&uu);
-    uu   = scl3d(&vv,ro);
+    qq   = scl3d(&ww,-1);
+    uu   = vcp3d(&TmTo,&qq); 
+    qq   = nor3d(&uu);
+    uu   = scl3d(&qq,ro);
     Gp   = tip3d(&To,&uu);
     Gp.v = hwt3d_getv(Gp);
 /*    printpt3d(Gp);*/
@@ -190,18 +190,18 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu = vec3d(&Gm,&Gp);
     ww = nor3d(&uu);
 
-    vv   = scl3d(&ww,+1);
-    uu   = vcp3d(&TmTo,&vv); 
-    vv   = nor3d(&uu);
-    uu   = scl3d(&vv,ro);
+    qq   = scl3d(&ww,+1);
+    uu   = vcp3d(&TmTo,&qq); 
+    qq   = nor3d(&uu);
+    uu   = scl3d(&qq,ro);
     Hm   = tip3d(&To,&uu);
     Hm.v = hwt3d_getv(Hm);
 /*    printpt3d(Hm);*/
 
-    vv   = scl3d(&ww,-1);
-    uu   = vcp3d(&TmTo,&vv); 
-    vv   = nor3d(&uu);
-    uu   = scl3d(&vv,ro);
+    qq   = scl3d(&ww,-1);
+    uu   = vcp3d(&TmTo,&qq); 
+    qq   = nor3d(&uu);
+    uu   = scl3d(&qq,ro);
     Hp   = tip3d(&To,&uu);
     Hp.v = hwt3d_getv(Hp);
 /*    printpt3d(Hp);*/

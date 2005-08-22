@@ -126,6 +126,7 @@ int main(int argc, char* argv[])
 
     /* construct it=0 wavefront */
     it=0;
+    if(verb) fprintf(stderr,"it=%d\n",it);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    wm[ih][ig].x=xsou;
@@ -140,6 +141,7 @@ int main(int argc, char* argv[])
 
     /* construct it=1 wavefront */
     it=1;
+    if(verb) fprintf(stderr,"it=%d\n",it);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    double d,g,h;
