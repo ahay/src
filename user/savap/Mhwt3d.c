@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     /* init HWT */
-    hwt3d_init(vv,az,ax,ay,at,ag,ah);
+    hwt3d_init(az,ax,ay,at,ag,ah);
 
 /*------------------------------------------------------------*/
 
@@ -142,7 +142,7 @@ int main(int argc, char* argv[])
 	    wm[ih][ig].x=xsou;
 	    wm[ih][ig].y=ysou;
 	    wm[ih][ig].z=zsou;
-	    wm[ih][ig].v=hwt3d_getv(wm[ih][ig]);
+	    wm[ih][ig].v=hwt3d_getv(vv,wm[ih][ig]);
 	}
     }
     pt3dwrite2(Fw,wm,ag.n,ah.n,3); /* write wavefront it=0 */
@@ -156,14 +156,14 @@ int main(int argc, char* argv[])
 	for( ig=0; ig<ag.n; ig++) {
 	    double d,g,h;
 	    
-	    d = at.d * hwt3d_getv(wm[ih][ig]);
+	    d = at.d * hwt3d_getv(vv,wm[ih][ig]);
 	    g = (ag.o+ig*ag.d) * SF_PI/180;
 	    h = (ah.o+ih*ah.d) * SF_PI/180;
 
 	    wo[ih][ig].x=xsou + d*sin(g)*cos(h);
 	    wo[ih][ig].y=ysou + d*sin(g)*sin(h);
 	    wo[ih][ig].z=zsou + d*cos(g);
-	    wo[ih][ig].v=hwt3d_getv(wo[ih][ig]);
+	    wo[ih][ig].v=hwt3d_getv(vv,wo[ih][ig]);
 	}
     }
     pt3dwrite2(Fw,wo,ag.n,ah.n,3); /* write wavefront it=1 */
@@ -176,20 +176,20 @@ int main(int argc, char* argv[])
 	/* boundaries */
 	ig=0;      
 	for( ih=0; ih<ah.n; ih++) {
-	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
 	}
 	ig=ag.n-1; 
 	for( ih=0; ih<ah.n; ih++) {
-	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
 	}
 
 	ih=0;      
 	for( ig=0; ig<ag.n; ig++) {
-	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
 	}
 	ih=ah.n-1; 
 	for( ig=0; ig<ag.n; ig++) {
-	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
 	}
 
 	for (ih=1; ih<ah.n-1; ih++) { 
@@ -208,8 +208,8 @@ int main(int argc, char* argv[])
 		if( kk[ih][ig] == false)
 		    kk[ih][ig] = hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp);
 
-		if(kk[ih][ig]) Tp = hwt3d_raytr(Tm,To);            /* HWT */
-		else           Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);/* HRT */
+		if(kk[ih][ig]) Tp = hwt3d_raytr(vv,Tm,To);            /* HWT */
+		else           Tp = hwt3d_wfttr(vv,Tm,To,Gm,Gp,Hm,Hp);/* HRT */
 
 		wp[ih][ig] = Tp;
 	    }

@@ -8,10 +8,8 @@
 
 static axa az,ax,ay;
 static axa at,ag,ah;
-static float ***vv;
 
-void hwt3d_init(float*** vv_in    /* velocity */,
-		axa      az_in    /* z axis   */,
+void hwt3d_init(axa      az_in    /* z axis   */,
 		axa      ax_in    /* x axis   */,
 		axa      ay_in    /* y axis   */,
 		axa      at_in    /* t axis   */,
@@ -26,12 +24,11 @@ void hwt3d_init(float*** vv_in    /* velocity */,
     at = at_in;
     ag = ag_in;
     ah = ah_in;
-
-    vv = vv_in;
 }
 
 /*------------------------------------------------------------*/
-float hwt3d_getv(pt3d P) 
+float hwt3d_getv(float ***vv,
+		 pt3d P) 
 /*< get velocity from 3-D cube by linear interpolation >*/
 {
     double  z, x, y;
@@ -109,7 +106,8 @@ bool hwt3d_cusp(pt3d Tm, /* it-1,ig   ,ih   */
 
 /*------------------------------------------------------------*/
 
-pt3d hwt3d_wfttr(pt3d Tm, 
+pt3d hwt3d_wfttr(float ***vv,
+		 pt3d Tm, 
 		 pt3d To,
 		 pt3d Gm, 
 		 pt3d Gp,
@@ -122,13 +120,14 @@ pt3d hwt3d_wfttr(pt3d Tm,
     /* execute HWT step 
      * from Tm & (Gm,Hm,To,Gp,Hp) to Tp
      */
-    Tp=hwt3d_step(Tm,To,Gm,Gp,Hm,Hp);
+    Tp=hwt3d_step(vv,Tm,To,Gm,Gp,Hm,Hp);
     return(Tp);
 }
 
 /*------------------------------------------------------------*/
 
-pt3d hwt3d_raytr(pt3d Tm, 
+pt3d hwt3d_raytr(float ***vv,
+		 pt3d Tm, 
 		 pt3d To)
 /*< ray tracing >*/
 {
@@ -172,14 +171,14 @@ pt3d hwt3d_raytr(pt3d Tm,
     qq   = nor3d(&uu);       /* qq = uu / |uu| */
     uu   = scl3d(&qq,ro);    /* uu = qq * ro */
     Gm   = tip3d(&To,&uu);   /* Gm at tip of uu from To */
-    Gm.v = hwt3d_getv(Gm);
+    Gm.v = hwt3d_getv(vv,Gm);
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
     qq   = nor3d(&uu);
     uu   = scl3d(&qq,ro);
     Gp   = tip3d(&To,&uu);
-    Gp.v = hwt3d_getv(Gp);
+    Gp.v = hwt3d_getv(vv,Gp);
 
     uu = vec3d(&Gm,&Gp);
     ww = nor3d(&uu);
@@ -189,25 +188,26 @@ pt3d hwt3d_raytr(pt3d Tm,
     qq   = nor3d(&uu);
     uu   = scl3d(&qq,ro);
     Hm   = tip3d(&To,&uu);
-    Hm.v = hwt3d_getv(Hm);
+    Hm.v = hwt3d_getv(vv,Hm);
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
     qq   = nor3d(&uu);
     uu   = scl3d(&qq,ro);
     Hp   = tip3d(&To,&uu);
-    Hp.v = hwt3d_getv(Hp);
+    Hp.v = hwt3d_getv(vv,Hp);
 
     /* execute HWT step 
      * from Tm & (Gm,Hm,To,Gp,Hp) to Tp
      */
-    Tp=hwt3d_step(Tm,To,Gm,Gp,Hm,Hp);
+    Tp=hwt3d_step(vv,Tm,To,Gm,Gp,Hm,Hp);
     return(Tp);
 }
 
 /*------------------------------------------------------------*/
 
-pt3d hwt3d_step(pt3d Tm, 
+pt3d hwt3d_step(float ***vv,
+		pt3d Tm, 
 		pt3d To, 
 		pt3d Gm, 
 		pt3d Gp,
@@ -327,9 +327,72 @@ pt3d hwt3d_step(pt3d Tm,
     /* select candidate point that moves forward */
     if(am<ap) S=Sm;
     else      S=Sp;
-    S.v = hwt3d_getv(S);
+    S.v = hwt3d_getv(vv,S);
 
     return S;
 }
 
 /*------------------------------------------------------------*/
+void hwt3d_putt(float*** tt, /* traveltime cube */
+		float*** ll, /*     length cube */
+		pt3d     P,  /* coordinates (x,y,z) */
+		float    t,  /*   time from source to P */
+		float    l)  /* length from source to P */
+/*< interpolate traveltime >*/
+{
+    double rz,rx,ry;
+    int    jz,jx,jy;
+    double fz,fx,fy;
+
+    rx = (P.x-ax.o)/ax.d;
+    jx = (int)(rx);
+    fx =       rx-jx;
+
+    ry = (P.y-ay.o)/ay.d;
+    jy = (int)(ry);
+    fy =       ry-jy;
+    
+    rz = (P.z-az.o)/az.d;
+    jz = (int)(rz);
+    fz =       rz-jz;
+    
+    if( 0<=jx && jx<ax.n-1 &&
+	0<=jy && jy<ay.n-1 &&
+	0<=jz && jz<az.n-1 ) {
+
+/*	sf_warning("jx=%d jy=%d jz=%d t=%g l=%g",jx,jy,jz,t,l);*/
+
+/*	sf_warning("jx=%d jy=%d jz=%d",jx,jy,jz);*/
+/*	sf_warning("fx=%g fy=%g fz=%g",fx,fy,fz);*/
+
+	if(true) {
+
+/*	    fz=0.5;*/
+	    fy=0;
+/*	    fx=0.5;*/
+
+	    tt[ jy  ][ jx  ][ jz  ] = t * (1-fz)*(1-fx)*(1-fy);
+	    tt[ jy  ][ jx  ][ jz+1] = t * (  fz)*(1-fx)*(1-fy);
+	    tt[ jy+1][ jx  ][ jz  ] = t * (1-fz)*(1-fx)*(  fy);
+	    tt[ jy+1][ jx  ][ jz+1] = t * (  fz)*(1-fx)*(  fy); 
+	    tt[ jy  ][ jx+1][ jz  ] = t * (1-fz)*(  fx)*(1-fy);
+	    tt[ jy  ][ jx+1][ jz+1] = t * (  fz)*(  fx)*(1-fy);
+	    tt[ jy+1][ jx+1][ jz  ] = t * (1-fz)*(  fx)*(  fy);
+	    tt[ jy+1][ jx+1][ jz+1] = t * (  fz)*(  fx)*(  fy);
+
+	} else {
+	    
+	    tt[ jy  ][ jx  ][ jz  ] = t;
+	    tt[ jy  ][ jx  ][ jz+1] = t;
+	    tt[ jy+1][ jx  ][ jz  ] = t;
+	    tt[ jy+1][ jx  ][ jz+1] = t;
+	    tt[ jy  ][ jx+1][ jz  ] = t;
+	    tt[ jy  ][ jx+1][ jz+1] = t;
+	    tt[ jy+1][ jx+1][ jz  ] = t;
+	    tt[ jy+1][ jx+1][ jz+1] = t;
+	}
+    }
+}
+
+/*------------------------------------------------------------*/
+
