@@ -411,19 +411,26 @@ def add_xy_pad (prefix='',xy_pad=0):
 
 def apply_taper (   prefix='',memsize=100,
                     nz=None, dz=None, oz=None,
-                    taper_thickness=None, 
-                    taper_phi=None, taper_rho=None,
-                    taper_vp=None,  taper_vs=None):
+                    top_taper=None,     bot_taper=None,
+                    top_taper_phi=None, top_taper_rho=None,
+                    top_taper_vp=None,  top_taper_vs=None,
+                    bot_taper_phi=None, bot_taper_rho=None,
+                    bot_taper_vp=None,  bot_taper_vs=None):
 
-    if (taper_thickness > 0):
-    
-        Flow (prefix+'taper',prefix+'bk_sim_01_real',
+    if (top_taper > 0):
+        Flow (prefix+'top_taper',prefix+'bk_sim_01_real',
               'math output="(%g-x3)/%g" | clip2 upper=1'
-              % ((nz-1)*dz,taper_thickness) )
-        
+              % ((nz-1)*dz,top_taper) )
     else:
-    
-        Flow (prefix+'taper',prefix+'bk_sim_01_real',
+        Flow (prefix+'top_taper',prefix+'bk_sim_01_real',
+              'math output="1"')
+        
+    if (bot_taper > 0):
+        Flow (prefix+'bot_taper',prefix+'bk_sim_01_real',
+              'math output="x3/%g" | clip2 upper=1'
+              % (bot_taper) )
+    else:
+        Flow (prefix+'bot_taper',prefix+'bk_sim_01_real',
               'math output="1"')
         
     taper_list = [prefix+'phi_noise',
@@ -431,17 +438,22 @@ def apply_taper (   prefix='',memsize=100,
                   prefix+'vp_noise',
                   prefix+'vs_noise']
         
-    taper_props = {prefix+'phi_noise'  : taper_phi,
-                   prefix+'rho_noise'  : taper_rho,
-                   prefix+'vp_noise'   : taper_vp,
-                   prefix+'vs_noise'   : taper_vs}
+    top_props = {prefix+'phi_noise'  : top_taper_phi,
+                 prefix+'rho_noise'  : top_taper_rho,
+                 prefix+'vp_noise'   : top_taper_vp,
+                 prefix+'vs_noise'   : top_taper_vs}
+    
+    bot_props = {prefix+'phi_noise'  : bot_taper_phi,
+                 prefix+'rho_noise'  : bot_taper_rho,
+                 prefix+'vp_noise'   : bot_taper_vp,
+                 prefix+'vs_noise'   : bot_taper_vs}
     
     for prop in (taper_list):
-        Flow (prop+'_taper',[prop,prefix+'taper'],
+        Flow (prop+'_taper',[prop,prefix+'top_taper',prefix+'bot_taper'],
               '''
-              math prop=${SOURCES[0]} taper=${SOURCES[1]}
-              output="prop*taper+%g*(1-taper)"
-              ''' % (taper_props[prop]) )
+              math prop=${SOURCES[0]} top=${SOURCES[1]} bot=${SOURCES[2]}
+              output="prop*top*bot+%g*(1-top)+%g*(1-bot)"
+              ''' % (top_props[prop],bot_props[prop]) )
 
 #
 # Make reservoir model grids
@@ -462,9 +474,11 @@ def make_reservoir (    private=None, memsize=100, xy_pad=None,
                         as_shape=None,      as_sand=None,
                         bd_sand=None,       md_sand=None,
                         na_sand0=None,      na_sand1=None,
-                        taper_thickness=None, 
-                        taper_phi=None,     taper_rho=None,
-                        taper_vp=None,      taper_vs=None):
+                        top_taper=None,     bot_taper=None,
+                        top_taper_phi=None, top_taper_rho=None,
+                        top_taper_vp=None,  top_taper_vs=None,
+                        bot_taper_phi=None, bot_taper_rho=None,
+                        bot_taper_vp=None,  bot_taper_vs=None):
 
 # Get channel properties from the data server
 
@@ -539,9 +553,11 @@ def make_reservoir (    private=None, memsize=100, xy_pad=None,
 
     apply_taper (   prefix='res_',memsize=memsize,
                     nz=nz, dz=dz, oz=oz,
-                    taper_thickness=taper_thickness, 
-                    taper_phi=taper_phi, taper_rho=taper_rho,
-                    taper_vp=taper_vp,   taper_vs=taper_vs)
+                    top_taper=top_taper,            bot_taper=bot_taper,
+                    top_taper_phi=top_taper_phi,    top_taper_rho=top_taper_rho,
+                    top_taper_vp=top_taper_vp,      top_taper_vs=top_taper_vs,
+                    bot_taper_phi=bot_taper_phi,    bot_taper_rho=bot_taper_rho,
+                    bot_taper_vp=bot_taper_vp,      bot_taper_vs=bot_taper_vs)
 
 #
 # Make overburden model grids
@@ -554,9 +570,11 @@ def make_overburden (   memsize=100, xy_pad=None,
                         oriu=None,  oriv=None,  oriw=None,
                         bk_ru=None, bk_rv=None, bk_rw=None,
                         bk_std_dev=None,
-                        taper_thickness=None, 
-                        taper_phi=None,     taper_rho=None,
-                        taper_vp=None,      taper_vs=None):
+                        top_taper=None,     bot_taper=None,
+                        top_taper_phi=None, top_taper_rho=None,
+                        top_taper_vp=None,  top_taper_vs=None,
+                        bot_taper_phi=None, bot_taper_rho=None,
+                        bot_taper_vp=None,  bot_taper_vs=None):
 
 
 # Make sand fraction grid
@@ -593,6 +611,8 @@ def make_overburden (   memsize=100, xy_pad=None,
 
     apply_taper (   prefix='ovr_',memsize=memsize,
                     nz=nz, dz=dz, oz=oz,
-                    taper_thickness=taper_thickness, 
-                    taper_phi=taper_phi, taper_rho=taper_rho,
-                    taper_vp=taper_vp,   taper_vs=taper_vs)
+                    top_taper=top_taper,            bot_taper=bot_taper,
+                    top_taper_phi=top_taper_phi,    top_taper_rho=top_taper_rho,
+                    top_taper_vp=top_taper_vp,      top_taper_vs=top_taper_vs,
+                    bot_taper_phi=bot_taper_phi,    bot_taper_rho=bot_taper_rho,
+                    bot_taper_vp=bot_taper_vp,      bot_taper_vs=bot_taper_vs)
