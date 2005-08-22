@@ -1,0 +1,24 @@
+import os, string
+import rsfdoc
+import rsfprog
+
+def progtest(target=None,source=None,env=None):
+    for project in env.get('projects'):
+        print 'Testing in %s' % project
+        print '-----------' + '-'*len(project)
+        run = 'cd %s && scons test && cd ../../..' % project
+        if os.system(run):
+            return 1
+    return 0
+
+env = Environment()
+
+for prog in rsfdoc.progs.keys():
+    uses = rsfdoc.progs[prog].uses
+    projects = []
+    for book in uses.keys():
+        for chapter in uses[book].keys():
+            projects.extend(map(lambda x: os.path.join(book,chapter,x),
+                                uses[book][chapter]))
+    env.Command(prog+'.test',None,
+                Action(progtest,varlist=['projects']),projects=projects)
