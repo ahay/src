@@ -17,7 +17,7 @@ void hwt3d_init(float*** vv_in    /* velocity */,
 		axa      at_in    /* t axis   */,
 		axa      ag_in    /* g axis   */,
 		axa      ah_in    /* h axis   */)
-/*< initialize hwt2d >*/
+/*< initialize hwt3d >*/
 {
     az = az_in;
     ax = ax_in;
@@ -32,7 +32,7 @@ void hwt3d_init(float*** vv_in    /* velocity */,
 
 /*------------------------------------------------------------*/
 float hwt3d_getv(pt3d P) 
-/*< get velocity from 3-D cube >*/
+/*< get velocity from 3-D cube by linear interpolation >*/
 {
     double  z, x, y;
     double rz,rx,ry;
@@ -118,6 +118,10 @@ pt3d hwt3d_wfttr(pt3d Tm,
 /*< wavefront tracing >*/
 {
     pt3d Tp;
+
+    /* execute HWT step 
+     * from Tm & (Gm,Hm,To,Gp,Hp) to Tp
+     */
     Tp=hwt3d_step(Tm,To,Gm,Gp,Hm,Hp);
     return(Tp);
 }
@@ -137,27 +141,22 @@ pt3d hwt3d_raytr(pt3d Tm,
     vc3d   qq,uu,ww; /* unit vectors */
     float ro;
 
-/*    printpt3d(Tm);*/
-/*    printpt3d(To);*/
+    ro = To.v * at.d;      /* ray step */
+    TmTo = vec3d(&Tm,&To); /* ray vector */
 
-    ro = To.v * at.d * 0.1;
-
-    TmTo = vec3d(&Tm,&To);
-
+    /* axes unit vectors */
     v1 = axa3d(1);
     v2 = axa3d(2);
     v3 = axa3d(3);
 
+    /* ray angle with axes*/
     a1 = ang3d(&TmTo, &v1); a1 = SF_ABS(a1);
     a2 = ang3d(&TmTo, &v2); a2 = SF_ABS(a2);
     a3 = ang3d(&TmTo, &v3); a3 = SF_ABS(a3);
 
-/*    sf_warning("a1=%g a2=%g a3=%g",a1,a2,a3);*/
-
-/*    if     (a1>=a2 && a1<=a3) ww=v1;*/
-/*    else if(a2>=a1 && a2<=a3) ww=v2;*/
-/*    else                      ww=v3;*/
-
+    /* select reference unit vector 
+       as "most orthogonal" to in-comming ray 
+     */
     if(      SF_ABS(a1-90) <= SF_ABS(a2-90) &&
 	     SF_ABS(a1-90) <= SF_ABS(a3-90) )
 	ww=v1;
@@ -167,17 +166,13 @@ pt3d hwt3d_raytr(pt3d Tm,
     else 
 	ww=v3;
 
-/*    sf_warning("TmTo: %g %g %g",TmTo.dx,TmTo.dy,TmTo.dz);*/
-/*    sf_warning(" ww : %g %g %g",  ww.dx,  ww.dy,  ww.dz);*/
-/*    sf_warning(" v3 : %g %g %g",  v3.dx,  v3.dy,  v3.dz);*/
-
+    /* build orthogonal wavefront (Gm,Gp,Hm,Hp) */
     qq   = scl3d(&ww,+1);
     uu   = vcp3d(&TmTo,&qq); /* uu = TmTo x qq */
     qq   = nor3d(&uu);       /* qq = uu / |uu| */
     uu   = scl3d(&qq,ro);    /* uu = qq * ro */
     Gm   = tip3d(&To,&uu);   /* Gm at tip of uu from To */
     Gm.v = hwt3d_getv(Gm);
-/*    printpt3d(Gm);*/
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
@@ -185,7 +180,6 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&qq,ro);
     Gp   = tip3d(&To,&uu);
     Gp.v = hwt3d_getv(Gp);
-/*    printpt3d(Gp);*/
 
     uu = vec3d(&Gm,&Gp);
     ww = nor3d(&uu);
@@ -196,7 +190,6 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&qq,ro);
     Hm   = tip3d(&To,&uu);
     Hm.v = hwt3d_getv(Hm);
-/*    printpt3d(Hm);*/
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
@@ -204,8 +197,10 @@ pt3d hwt3d_raytr(pt3d Tm,
     uu   = scl3d(&qq,ro);
     Hp   = tip3d(&To,&uu);
     Hp.v = hwt3d_getv(Hp);
-/*    printpt3d(Hp);*/
 
+    /* execute HWT step 
+     * from Tm & (Gm,Hm,To,Gp,Hp) to Tp
+     */
     Tp=hwt3d_step(Tm,To,Gm,Gp,Hm,Hp);
     return(Tp);
 }
@@ -235,7 +230,7 @@ pt3d hwt3d_step(pt3d Tm,
 
 /*------------------------------------------------------------*/
 
-    ro = To.v * at.d;
+    ro = To.v * at.d;       /* ray step */
 
     gdx = Gp.x-Gm.x;
     gdy = Gp.y-Gm.y;
@@ -247,18 +242,13 @@ pt3d hwt3d_step(pt3d Tm,
     hdz = Hp.z-Hm.z;
     hdr =(Hp.v-Hm.v)*at.d;
 
+    /* find largest dd (avoid division by 0) */
     ddz = gdy*hdx - gdx*hdy;
     ddx = gdz*hdy - gdy*hdz;
     ddy = gdx*hdz - gdz*hdx;
 
-/*    sf_warning("vvvvvvvvvvvvvvvvvvvvvvvvvv");*/
-
-/*    sf_warning("ddx=%g ddy=%g ddz=%g",ddx,ddy,ddz);*/
-
     if( SF_ABS(ddz) >=SF_ABS(ddx) && 
 	SF_ABS(ddz) > SF_ABS(ddy)) {
-
-/*	sf_warning("use ddz=%g",ddz);*/
 
 	ax  = gdr*hdy - hdr*gdy; 
 	bx  = gdy*hdz - gdz*hdy; 
@@ -283,8 +273,6 @@ pt3d hwt3d_step(pt3d Tm,
     } else if( SF_ABS(ddx) >=SF_ABS(ddy) &&
 	       SF_ABS(ddx) > SF_ABS(ddz)) {
 
-/*	sf_warning("use ddx=%g",ddx);*/
-
 	ay  = gdr*hdz - hdr*gdz; 
 	by  = gdz*hdx - gdx*hdz; 
 	az  = gdr*hdy - gdy*hdr; 
@@ -307,8 +295,6 @@ pt3d hwt3d_step(pt3d Tm,
 
     } else {
 
-/*	sf_warning("use ddy=%g",ddy);*/
-
 	az  = gdr*hdx - hdr*gdx; 
 	bz  = gdx*hdy - gdy*hdx; 
 	ax  = gdr*hdz - gdz*hdr; 
@@ -330,19 +316,18 @@ pt3d hwt3d_step(pt3d Tm,
 	dx = ro*ax-dy*bx; Sm.x = To.x + dx/(-ddy);
     }
 
-    TmTo = vec3d( &Tm, &To);
-    ToSm = vec3d( &To, &Sm);
-    ToSp = vec3d( &To, &Sp);
+    TmTo = vec3d( &Tm, &To); /* in-comming ray */
+    ToSm = vec3d( &To, &Sm); /*  candidate ray */
+    ToSp = vec3d( &To, &Sp); /*  candidate ray */
     
+    /* angle between ray segments */
     am = ang3d( &TmTo, &ToSm);
     ap = ang3d( &TmTo, &ToSp);
 
+    /* select candidate point that moves forward */
     if(am<ap) S=Sm;
     else      S=Sp;
     S.v = hwt3d_getv(S);
-
-/*    printpt3d(S);*/
-/*    sf_warning("^^^^^^^^^^^^^^^^^^^^^^^^^^");*/
 
     return S;
 }

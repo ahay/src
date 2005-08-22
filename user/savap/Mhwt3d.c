@@ -27,7 +27,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb;
+    bool verb, forceray;
     axa az,ax,ay;    /* Cartesian coordinates */
     axa at,ag,ah,aa; /* Ray coordinates */
     int it,ig,ih;
@@ -38,17 +38,22 @@ int main(int argc, char* argv[])
     sf_file Fw; /* wavefronfs file */
 
     float ***vv=NULL; /* velocity       */
+
     pt3d   **wm=NULL; /* wavefront it-1 */
     pt3d   **wo=NULL; /* wavefront it   */
     pt3d   **wp=NULL; /* wavefront it+1 */
 
-    pt3d       Tm;       /* point  on wft it-1 */
-    pt3d Hm,Gm,To,Gp,Hp; /* points on wft it   */
-    pt3d       Tp;       /* point  on wft it+1 */
+    bool   **kk=NULL; /* cusp flag */
+
+    pt3d Tm,To,Tp; /* points on ray ig,ih:    it-1,it,it+1 */
+    pt3d Gm,   Gp; /* points on wavefront it: ig-1,   ig+1 */
+    pt3d Hm,   Hp; /* points on wavefront it: ih-1,   ih+1 */
+
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
-    if(! sf_getbool("verb",&verb)) verb=false;
+    if(! sf_getbool(    "verb",&verb    ))     verb=false;
+    if(! sf_getbool("forceray",&forceray)) forceray=false;
 
     /* velocity file */
     Fv = sf_input ("in");
@@ -107,6 +112,9 @@ int main(int argc, char* argv[])
     wo = pt3dalloc2(ag.n,ah.n);
     wp = pt3dalloc2(ag.n,ah.n);
 
+    /* allocate cusp flag */
+    kk = sf_boolalloc2(ag.n,ah.n);
+
     /* initialize wavefronts */
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
@@ -114,6 +122,8 @@ int main(int argc, char* argv[])
 	    wm[ih][ig].y=wo[ih][ig].y=wp[ih][ig].y=0;
 	    wm[ih][ig].z=wo[ih][ig].z=wp[ih][ig].z=0;
 	    wm[ih][ig].v=wo[ih][ig].v=wp[ih][ig].v=0;
+
+	    kk[ih][ig]  = forceray;
 	}
     }
 
@@ -168,7 +178,6 @@ int main(int argc, char* argv[])
 	for( ih=0; ih<ah.n; ih++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
 	}
-
 	ig=ag.n-1; 
 	for( ih=0; ih<ah.n; ih++) {
 	    wp[ih][ig] = hwt3d_raytr(wm[ih][ig],wo[ih][ig]);
@@ -195,13 +204,13 @@ int main(int argc, char* argv[])
 		Hm = wo[ih-1][ig  ];
 		Hp = wo[ih+1][ig  ];
 
-		if(hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp)) {
-/*		    sf_warning("RAY");*/
-		    Tp = hwt3d_raytr(Tm,To);
-		} else {
-/*		    sf_warning("HWT");*/
-		    Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);
-		}
+		/* after a cusp, use normal-wavefront HWT */
+		if( kk[ih][ig] == false)
+		    kk[ih][ig] = hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp);
+
+		if(kk[ih][ig]) Tp = hwt3d_raytr(Tm,To);            /* HWT */
+		else           Tp = hwt3d_wfttr(Tm,To,Gm,Gp,Hm,Hp);/* HRT */
+
 		wp[ih][ig] = Tp;
 	    }
 	}
