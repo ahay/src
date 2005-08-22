@@ -6,6 +6,9 @@
 #include "vecop.h"
 /*^*/
 
+#define MISSING 0
+/*^*/
+
 static axa az,ax,ay;
 static axa at,ag,ah;
 
@@ -365,11 +368,11 @@ void hwt3d_putt(float*** tt, /* traveltime cube */
 /*	sf_warning("jx=%d jy=%d jz=%d",jx,jy,jz);*/
 /*	sf_warning("fx=%g fy=%g fz=%g",fx,fy,fz);*/
 
-	if(true) {
+	if(false) {
 
-/*	    fz=0.5;*/
+	    fz=0.5;
 	    fy=0;
-/*	    fx=0.5;*/
+	    fx=0.5;
 
 	    tt[ jy  ][ jx  ][ jz  ] = t * (1-fz)*(1-fx)*(1-fy);
 	    tt[ jy  ][ jx  ][ jz+1] = t * (  fz)*(1-fx)*(1-fy);
@@ -395,4 +398,179 @@ void hwt3d_putt(float*** tt, /* traveltime cube */
 }
 
 /*------------------------------------------------------------*/
+void lpick(float*** tt, float*** ll,
+	  float     t, float     l,
+	  int iy,int ix,int iz) {
 
+    if( ll[iy][ix][iz] == MISSING || 
+	ll[iy][ix][iz] >=l ) {
+	tt[iy][ix][iz]= t;
+	ll[iy][ix][iz]= l;
+    }
+}
+
+void hwt3d_lint(float*** tt, /* traveltime cube */
+		float*** ll, /*     length cube */
+		pt3d     P,  /* coordinates (x,y,z) */
+		float    t,  /*   time from source to P */
+		float    l)  /* length from source to P */
+/*< interpolate traveltime >*/
+{
+    double rz,rx,ry;
+    int    jz,jx,jy;
+
+    rx = (P.x-ax.o)/ax.d;
+    jx = (int)(rx);
+
+    ry = (P.y-ay.o)/ay.d;
+    jy = (int)(ry);
+    
+    rz = (P.z-az.o)/az.d;
+    jz = (int)(rz);
+    
+    if( 0<=jx && jx<ax.n-1 &&
+	0<=jy && jy<ay.n-1 &&
+	0<=jz && jz<az.n-1 ) {
+	
+	lpick(tt,ll,t,l,jy  ,jx  ,jz  );
+	lpick(tt,ll,t,l,jy  ,jx  ,jz+1);
+	lpick(tt,ll,t,l,jy+1,jx  ,jz  );
+	lpick(tt,ll,t,l,jy+1,jx  ,jz+1);
+	lpick(tt,ll,t,l,jy  ,jx+1,jz  );
+	lpick(tt,ll,t,l,jy  ,jx+1,jz+1);
+	lpick(tt,ll,t,l,jy+1,jx+1,jz  );
+	lpick(tt,ll,t,l,jy+1,jx+1,jz+1);
+    }
+}
+
+/*------------------------------------------------------------*/
+
+void tpick(float*** tt, float*** ll,
+	  float     t, float     l,
+	  int iy,int ix,int iz) {
+    if( tt[iy][ix][iz]== MISSING ||
+	tt[iy][ix][iz]>=t )
+	tt[iy][ix][iz]= t;
+}
+
+void hwt3d_tint(float*** tt, /* traveltime cube */
+		float*** ll, /*     length cube */
+		pt3d     P,  /* coordinates (x,y,z) */
+		float    t,  /*   time from source to P */
+		float    l)  /* length from source to P */
+/*< interpolate traveltime >*/
+{
+    double rz,rx,ry;
+    int    jz,jx,jy;
+
+    rx = (P.x-ax.o)/ax.d;
+    jx = (int)(rx);
+
+    ry = (P.y-ay.o)/ay.d;
+    jy = (int)(ry);
+    
+    rz = (P.z-az.o)/az.d;
+    jz = (int)(rz);
+    
+    if( 0<=jx && jx<ax.n-1 &&
+	0<=jy && jy<ay.n-1 &&
+	0<=jz && jz<az.n-1 ) {
+	
+	tpick(tt,ll,t,l,jy  ,jx  ,jz  );
+	tpick(tt,ll,t,l,jy  ,jx  ,jz+1);
+	tpick(tt,ll,t,l,jy+1,jx  ,jz  );
+	tpick(tt,ll,t,l,jy+1,jx  ,jz+1);
+	tpick(tt,ll,t,l,jy  ,jx+1,jz  );
+	tpick(tt,ll,t,l,jy  ,jx+1,jz+1);
+	tpick(tt,ll,t,l,jy+1,jx+1,jz  );
+	tpick(tt,ll,t,l,jy+1,jx+1,jz+1);
+    }
+}
+
+/*------------------------------------------------------------*/
+
+void hwt3d_nint(float*** tt, /* traveltime cube */
+		float*** ll, /*     length cube */
+		pt3d     P,  /* coordinates (x,y,z) */
+		float    t,  /*   time from source to P */
+		float    l)  /* length from source to P */
+/*< interpolate traveltime >*/
+{
+    double rz,rx,ry;
+    int    jz,jx,jy;
+
+    rx = (P.x-ax.o)/ax.d;
+    jx = (int)(rx);
+
+    ry = (P.y-ay.o)/ay.d;
+    jy = (int)(ry);
+    
+    rz = (P.z-az.o)/az.d;
+    jz = (int)(rz);
+    
+    if( 0<=jx && jx<ax.n-1 &&
+	0<=jy && jy<ay.n-1 &&
+	0<=jz && jz<az.n-1 ) {
+	
+	tt[ jy  ][ jx  ][ jz  ] = t;
+	tt[ jy  ][ jx  ][ jz+1] = t;
+	tt[ jy+1][ jx  ][ jz  ] = t;
+	tt[ jy+1][ jx  ][ jz+1] = t;
+	tt[ jy  ][ jx+1][ jz  ] = t;
+	tt[ jy  ][ jx+1][ jz+1] = t;
+	tt[ jy+1][ jx+1][ jz  ] = t;
+	tt[ jy+1][ jx+1][ jz+1] = t;
+    }
+}
+
+
+/*------------------------------------------------------------*/
+
+void hwt3d_fill(float*** tt, /* traveltime cube */
+		int n)
+/*< fill holes >*/
+{
+    int ix,iy,iz;
+    int kx,ky,kz;
+    int lx,ly,lz;
+    int jx,jy,jz;
+    float v;
+    int   k;
+
+    for(iy=0;iy<ay.n;iy++) {
+	for(ix=0;ix<ax.n;ix++) {
+	    for(iz=0;iz<az.n;iz++) {
+
+		//---------------------------------------
+		if( tt[iy][ix][iz] == MISSING) {
+
+		    kx=ix-n; lx=ix+n;
+		    ky=iy-n; ly=iy+n;
+		    kz=iz-n; lz=iz+n;
+
+		    k=0;
+		    v=0.;
+		    for(jy=ky;jy<ly;jy++) {
+			for(jx=kx;jx<lx;jx++) {
+			    for(jz=kz;jz<lz;jz++) {
+
+				if(jy>0 && jy<ay.n &&
+				   jx>0 && jx<ax.n &&
+				   jz>0 && jz<az.n )
+				    if( tt[jy][jx][jz] != MISSING) {
+					v+=tt[jy][jx][jz];
+					k++;
+				    }
+			    }
+			}
+		    } // local loop
+		    
+		    if(k>0) tt[iy][ix][iz] = v/k;
+		    
+		} // end if MISSING
+		//---------------------------------------
+
+	    }
+	}
+    } // global loop
+}

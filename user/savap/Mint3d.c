@@ -28,6 +28,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
+    int  pick,fill;
     axa az,ax,ay;    /* Cartesian coordinates */
     int iz,ix,iy;
     axa at,ag,ah,aa; /* Ray coordinates */
@@ -53,7 +54,9 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
-    if(! sf_getbool(    "verb",&verb    ))     verb=false;
+    if(! sf_getbool("verb",&verb)) verb=false;
+    if(! sf_getint ("pick",&pick)) pick=0;
+    if(! sf_getint ("fill",&fill)) fill=0;
 
     /* wavefronts file (a,g,h,t) */
     Fw = sf_input("in");    
@@ -99,8 +102,8 @@ int main(int argc, char* argv[])
     for(iy=0;iy<ay.n;iy++) {
 	for(ix=0;ix<ax.n;ix++) {
 	    for(iz=0;iz<az.n;iz++) {
-		tt[iy][ix][iz] = 0.;
-		ll[iy][ix][iz] = 0.;
+		tt[iy][ix][iz] = MISSING;
+		ll[iy][ix][iz] = MISSING;
 	    }
 	}
     }
@@ -154,7 +157,9 @@ int main(int argc, char* argv[])
 
 		l = wl[ih][ig]; // ray length to the current wavefront
 
-		hwt3d_putt(tt,ll,To,t,l); // interpolate traveltime
+		if     (pick==2) hwt3d_lint(tt,ll,To,t,l);
+		else if(pick==1) hwt3d_tint(tt,ll,To,t,l);
+		else             hwt3d_nint(tt,ll,To,t,l);
 	    }
 	}
 
@@ -166,6 +171,9 @@ int main(int argc, char* argv[])
 	}
 
     } // end it 
+
+    /* fill holes */
+    if(fill>0) hwt3d_fill(tt,fill);
 
     /* write traveltime cube */
     sf_floatwrite(tt[0][0],az.n*ax.n*ay.n,Ft);
