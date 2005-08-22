@@ -1,16 +1,17 @@
 from rsfproj import *
 
 par = {
-    'nz':100, 'dz':5,    'oz':0,   
+    'nz':150, 'dz':5,    'oz':0,   
     'nx':200, 'dx':5,    'ox':-500,
-    'ny':200, 'dy':5,    'oy':-500,
+    'ny':200, 'dy':5,    'oy':0,
     #
-    'nt':50, 'dt':0.005,'ot':0,
-    'ng':181,'dg':1,    'og':-90,
-    'nh':361,'dh':1,    'oh':0,
+    'nt':150,'dt':0.0025,'ot':0,
+    'ng':361,'dg':0.5,   'og':-90,
+    'nh':721,'dh':0.5,   'oh':0,
     #
-#    'ng':181,'dg':1,'og':-90,
-    'nh':3,'dh':1,'oh':-1,
+    'ng':30, 'dg':2,'og':-60,
+    'nh':181,'dh':2,'oh':0,
+#    'nh':3,'dh':1,'oh':-1,
     }
 
 par['xmin']=par['ox']
@@ -29,42 +30,56 @@ par['ysou']=par['oy'] + par['ymid'] * par['dy']
 
 def igrey(custom):
     return '''
-    grey labelrot=n pclip=100 color=F
+    grey labelrot=n pclip=100 color=F title=""
     wantscalebar=y
     %s
     ''' % (custom)
 
-def gre(custom,par):
+def grex(custom,par):
     return '''
-    grey labelrot=n pclip=100
+    grey labelrot=n pclip=100 title=""
     min2=%g max2=%g min1=%g max1=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
-
-def gra(custom,par):
+def grey(custom,par):
     return '''
-    graph labelrot=n yreverse=y
+    grey labelrot=n pclip=100 title=""
+    min2=%g max2=%g min1=%g max1=%g
+    %s
+    ''' % (par['ymin'],par['ymax'],par['zmin'],par['zmax'],custom)
+
+def grax(custom,par):
+    return '''
+    graph labelrot=n yreverse=y title=""
     min1=%g max1=%g min2=%g max2=%g
     %s
     ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+def gray(custom,par):
+    return '''
+    graph labelrot=n yreverse=y title=""
+    min1=%g max1=%g min2=%g max2=%g
+    %s
+    ''' % (par['ymin'],par['ymax'],par['zmin'],par['zmax'],custom)
 
 # ------------------------------------------------------------
 
 Flow('vel',None,
      '''
-     spike nsp=1 mag=-1500
-     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=31 l1=40
-     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=81 l2=121
-     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=91 l3=111 |
-     math output="2000+input" |
-     smooth rect1=11 rect2=11 rect3=11
+     spike nsp=1 mag=1
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=041 l1=041
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=061 l2=101
+     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=101 l3=101 |
+     smooth rect1=11 rect2=11 rect3=11 repeat=5 |
+     scale axis=123 |
+     math output="2000-1000*input" |
+     put label1=z label2=x label3=y
      ''' % par)
 
 # ------------------------------------------------------------
 
-Flow('wft','vel',
+Flow('hwt','vel',
      '''
-     /home/savap/RSF/user/savap/sfhwt3d verb=y
+     /home/savap/RSF/user/savap/sfhwt3d verb=y forceray=y
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
@@ -79,7 +94,7 @@ for it in range(par['nt']):
     yyy = 'yyy' + str(it)
     zzz = 'zzz' + str(it)
     
-    Flow(ttt,'wft','window n4=1 f4=%d' % it)
+    Flow(ttt,'hwt','window n4=1 f4=%d' % it)
     Flow(xxx,ttt,'window n1=1 f1=0')
     Flow(yyy,ttt,'window n1=1 f1=1')
     Flow(zzz,ttt,'window n1=1 f1=2')
@@ -92,19 +107,44 @@ for it in range(par['nt']):
 
 # ------------------------------------------------------------
 
-Flow('ray','wft',
+Flow('xray','hwt',
      '''
-     window n1=2 j1=2 n3=1 |
+     window n1=2 j1=2 n3=1 min3=0 |
+     dd type=complex | window
+     ''')
+Plot('xvel','vel','window n3=1 f3=%(ymid)d |' % par
+     + grex('grid=y gridcol=0 allpos=y bias=1000',par))
+Plot('xray','xray','window j2=5 |'
+     + grax('plotcol=1 label1=x label2=z',par) )
+Result('xray','xvel xray','Overlay')
+
+Flow('yray','hwt',
+     '''
+     window n1=2 f1=1 n3=1 min3=90 |
+     dd type=complex | window
+     ''')
+Plot('yvel','vel','window n2=1 f2=%(xmid)d |' % par
+     + grey('grid=y gridcol=0 allpos=y bias=1000',par))
+Plot('yray','yray','window j2=5 |'
+     + gray('plotcol=1 label1=y label2=z',par) )
+Result('yray','yvel yray','Overlay')
+
+# ------------------------------------------------------------
+
+# wavefront horizontal projections
+
+Flow('wft','hwt',
+     '''
+     window n2=1 f2=%d n1=2 f1=0 |
      dd type=complex |
      window
-     ''')
-
-Plot('vel','vel','window n3=1 min3=0 |'
-     + gre('grid=y gridcol=0 allpos=y',par))
-Plot('ray','ray','window |' + gra('plotcol=1',par) )
-
-Result('ray','vel ray','Overlay')
-
+     ''' % int(par['ng']/2) )
+Result('wft','wft',
+       '''
+       window j2=5 | transp plane=23 |
+       graph label1=x label2=y
+       min1=%g max1=%g min2=%g max2=%g
+       ''' % (par['xmin'],par['xmax'],par['ymin'],par['ymax']) )
 # ------------------------------------------------------------
 
 
