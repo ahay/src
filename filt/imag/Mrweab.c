@@ -1,6 +1,6 @@
 /* 
  * Riemannian Wavefield Extrapolation:
- * a,b coefficient
+ * a,b coefficients
  * pcs 2005
  */
 

@@ -3,15 +3,15 @@ from rsfproj import *
 par = {
     'nz':150, 'dz':5,    'oz':0,   
     'nx':200, 'dx':5,    'ox':-500,
-    'ny':200, 'dy':5,    'oy':0,
+    'ny':200, 'dy':5,    'oy':-500,
     #
-    'nt':150,'dt':0.0025,'ot':0,
-    'ng':361,'dg':0.5,   'og':-90,
-    'nh':721,'dh':0.5,   'oh':0,
-    #
+    'nt':200,'dt':0.0025,'ot':0,
+#
     'ng':30, 'dg':2,'og':-60,
     'nh':181,'dh':2,'oh':0,
-#    'nh':3,'dh':1,'oh':-1,
+#
+    'ng':451,'dg':0.4,'og':-90,
+    'nh':361,'dh':0.5,'oh':0,
     }
 
 par['xmin']=par['ox']
@@ -66,25 +66,62 @@ def gray(custom,par):
 Flow('vel',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=041 l1=041
-     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=061 l2=101
-     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=101 l3=101 |
-     smooth rect1=11 rect2=11 rect3=11 repeat=5 |
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=051 l1=150
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=101 l2=200
+     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=101 l3=200 |
      scale axis=123 |
-     math output="2000-1000*input" |
+     math output="2000+4000*input" |
      put label1=z label2=x label3=y
      ''' % par)
 
+Flow('vsm','vel',
+     '''
+     smooth rect1=5 rect2=5 rect3=5 repeat=3
+     ''')
+
 # ------------------------------------------------------------
 
-Flow('hwt','vel',
+# Huygens wavefront tracing
+Flow('hwt','vsm',
      '''
-     /home/savap/RSF/user/savap/sfhwt3d verb=y forceray=y
+     /home/savap/RSF/user/savap/sfhwt3d verb=y forceray=n
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      nh=%(nh)d oh=%(oh)g dh=%(dh)g
      ''' % par)
+
+# eikonal
+Flow('eik','vel',
+     '''
+     eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g
+     ''' % par)
+Flow('emap','eik','window n3=1 f3=%(ymid)d' % par)
+
+for i in range(3):
+    par['pick']=i
+
+    # interpolation
+    tim = 'tim' + str(i)
+    Flow(tim,'hwt',
+         '''
+         /home/savap/RSF/user/savap/sfint3d
+         verb=y pick=%(pick)d fill=1
+         nz=%(nz)d oz=%(oz)g dz=%(dz)g
+         nx=%(nx)d ox=%(ox)g dx=%(dx)g
+         ny=%(ny)d oy=%(oy)g dy=%(dy)g
+         ny=3 oy=-5. dy=5.
+         ''' % par)
+
+    hmap = 'hmap' + str(i)
+    Flow(hmap,tim,'window n3=1 f3=1')
+
+Flow('time','emap hmap0 hmap1 hmap2',
+     '''
+     cat axis=3 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}
+     ''', stdin=0)
+Result('time','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
 
 # ------------------------------------------------------------
 
@@ -138,7 +175,7 @@ Flow('wft','hwt',
      window n2=1 f2=%d n1=2 f1=0 |
      dd type=complex |
      window
-     ''' % int(par['ng']/2) )
+     ''' % 350)
 Result('wft','wft',
        '''
        window j2=5 | transp plane=23 |

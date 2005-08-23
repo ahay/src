@@ -449,7 +449,7 @@ static void make_labels (sf_file in, char where1, char where2)
 						 transp? "label1":"label2"))))
 	    label2->text = blank;
 
-	if (!sf_getbool ("labelrot",&labelrot)) labelrot = true;
+	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
 	/* if rotate vertical label */
 	if (labelrot) vs *= 1.7;
 

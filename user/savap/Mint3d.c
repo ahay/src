@@ -141,7 +141,7 @@ int main(int argc, char* argv[])
 
     /* LOOP over time */
     for (it=1; it<at.n; it++) {
-	if(verb) fprintf(stderr,"it=%d\n",it);
+	if(verb) sf_warning("it=%d",it);
 
 	t = at.o + it * at.d; // traveltime to the current wavefront
 
@@ -179,5 +179,12 @@ int main(int argc, char* argv[])
     sf_floatwrite(tt[0][0],az.n*ax.n*ay.n,Ft);
 
 /*------------------------------------------------------------*/
+
+    free(**tt); free(*tt); free(tt);
+    free(**ll); free(*ll); free(ll);
+    ;           free(*wm); free(wm);
+    ;           free(*wo); free(wo);
+    ;           free(*wl); free(wl);
+    
     exit (0);
 }

@@ -81,7 +81,7 @@ void pt2dwrite1(sf_file F,
     }
     sf_floatwrite(w[0],k*n1,F);
 
-    free(w);
+    free( *w); free(w);
 }
 
 void pt2dwrite2(sf_file F, 
@@ -104,7 +104,7 @@ void pt2dwrite2(sf_file F,
     }
     sf_floatwrite(w[0][0],k*n1*n2,F);
     
-    free(w);
+    free(**w); free(*w); free(w);
 }
 
 /*------------------------------------------------------------*/
@@ -127,7 +127,7 @@ void pt3dwrite1(sf_file F,
     }
     sf_floatwrite(w[0],k*n1,F);
 
-    free(w);
+    free(*w); free(w);
 }
 
 void pt3dwrite2(sf_file F, 
@@ -151,7 +151,7 @@ void pt3dwrite2(sf_file F,
     }
     sf_floatwrite(w[0][0],k*n1*n2,F);
 
-    free(w);
+    free(**w); free(*w); free(w);
 }
 
 /*------------------------------------------------------------*/
@@ -173,7 +173,7 @@ void pt2dread1(sf_file F,
 	if(k==3) v[i1].v = w[i1][2];
     }
 
-    free(w);
+    free(*w); free(w);
 }
 
 void pt2dread2(sf_file F, 
@@ -196,7 +196,7 @@ void pt2dread2(sf_file F,
 	}
     }
 
-    free(w);
+    free(**w); free(*w); free(w);
 }
 
 /*------------------------------------------------------------*/
@@ -219,7 +219,7 @@ void pt3dread1(sf_file F,
 	if(k==4) v[i1].v = w[i1][3];
     }
 
-    free(w);
+    free(*w); free(w);
 }
 
 void pt3dread2(sf_file F, 
@@ -243,12 +243,12 @@ void pt3dread2(sf_file F,
 	}
     }
 
-    free(w);
+    free(**w); free(*w); free(w);
 }
 
 /*------------------------------------------------------------*/
 
-/*@out@*/ pt2d* pt2dalloc1( size_t n1)
+pt2d* pt2dalloc1( size_t n1)
 /*< alloc point2d 1-D vector >*/
 {
     pt2d *ptr;
@@ -271,7 +271,7 @@ void pt3dread2(sf_file F,
     return ptr;
 }
 
-/*@out@*/ pt2d*** pt2dalloc3( size_t n1,
+pt2d*** pt2dalloc3( size_t n1,
 			      size_t n2,
 			      size_t n3)
 /*< alloc point2d 3-D vector >*/
@@ -289,7 +289,7 @@ void pt3dread2(sf_file F,
 
 /*------------------------------------------------------------*/
 
-/*@out@*/ pt3d* pt3dalloc1( size_t n1)
+pt3d* pt3dalloc1( size_t n1)
 /*< alloc point3d 1-D vector >*/
 {
     pt3d *ptr;
@@ -297,7 +297,7 @@ void pt3dread2(sf_file F,
     return ptr;
 }
 
-/*@out@*/ pt3d** pt3dalloc2( size_t n1,
+pt3d** pt3dalloc2( size_t n1,
 			     size_t n2)
 /*< alloc point3d 2-D vector >*/
 {
@@ -312,7 +312,7 @@ void pt3dread2(sf_file F,
     return ptr;
 }
 
-/*@out@*/ pt3d*** pt3dalloc3( size_t n1,
+pt3d*** pt3dalloc3( size_t n1,
 			      size_t n2,
 			      size_t n3)
 /*< alloc point3d 3-D vector >*/

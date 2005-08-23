@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     if(! sf_getfloat("xsou",&xsou)) xsou=ax.o + ax.n*ax.d/2;
     if(! sf_getfloat("ysou",&ysou)) ysou=ay.o + ay.n*ay.d/2;
     if(! sf_getfloat("zsou",&zsou)) zsou=az.o + az.n*az.d/2;
-    if(verb) fprintf(stderr,"xsou=%f ysou=%f zsou=%f\n",xsou,ysou,zsou);    
+    if(verb) sf_warning("xsou=%f ysou=%f zsou=%f",xsou,ysou,zsou);
 
     /* time axis */
     if(! sf_getint  ("nt",&at.n)) at.n=100;
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
 
     /* construct it=0 wavefront */
     it=0;
-    if(verb) fprintf(stderr,"it=%d\n",it);
+    if(verb) sf_warning("it=%d",it);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    wm[ih][ig].x=xsou;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
 
     /* construct it=1 wavefront */
     it=1;
-    if(verb) fprintf(stderr,"it=%d\n",it);
+    if(verb) sf_warning("it=%d",it);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    double d,g,h;
@@ -171,7 +171,7 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
     /* LOOP over time */
     for (it=2; it<at.n; it++) {
-	if(verb) fprintf(stderr,"it=%d\n",it);
+	if(verb) sf_warning("it=%d",it);
 
 	/* boundaries */
 	ig=0;      
@@ -229,5 +229,12 @@ int main(int argc, char* argv[])
     } /* end it */
 
 /*------------------------------------------------------------*/
+
+    free(**vv); free(*vv); free(vv);
+    ;           free(*wm); free(wm);
+    ;           free(*wo); free(wo);
+    ;           free(*wp); free(wp);
+    ;           free(*kk); free(kk);
+
     exit (0);
 }
