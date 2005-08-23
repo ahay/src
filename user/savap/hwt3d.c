@@ -12,6 +12,8 @@
 static axa az,ax,ay;
 static axa at,ag,ah;
 
+
+/*------------------------------------------------------------*/
 void hwt3d_init(axa      az_in    /* z axis   */,
 		axa      ax_in    /* x axis   */,
 		axa      ay_in    /* y axis   */,
@@ -27,6 +29,19 @@ void hwt3d_init(axa      az_in    /* z axis   */,
     at = at_in;
     ag = ag_in;
     ah = ah_in;
+}
+
+void hwt3d_rand(axa      az_in    /* z axis   */,
+		axa      ax_in    /* x axis   */,
+		axa      ay_in    /* y axis   */,
+		axa      at_in    /* t axis   */)
+/*< initialize hwt3d (reduced # of variables) >*/
+{
+    az = az_in;
+    ax = ax_in;
+    ay = ay_in;
+
+    at = at_in;
 }
 
 /*------------------------------------------------------------*/
@@ -131,7 +146,8 @@ pt3d hwt3d_wfttr(float ***vv,
 
 pt3d hwt3d_raytr(float ***vv,
 		 pt3d Tm, 
-		 pt3d To)
+		 pt3d To,
+		 int scaleray)
 /*< ray tracing >*/
 {
     pt3d Tp;
@@ -143,8 +159,8 @@ pt3d hwt3d_raytr(float ***vv,
     vc3d   qq,uu,ww; /* unit vectors */
     float ro;
 
-    ro = To.v * at.d;      /* ray step */
-    TmTo = vec3d(&Tm,&To); /* ray vector */
+    ro = To.v * at.d; /* ray step */
+    TmTo = vec3d(&Tm,&To);       /* ray vector */
 
     /* axes unit vectors */
     v1 = axa3d(1);
@@ -170,16 +186,16 @@ pt3d hwt3d_raytr(float ***vv,
 
     /* build orthogonal wavefront (Gm,Gp,Hm,Hp) */
     qq   = scl3d(&ww,+1);
-    uu   = vcp3d(&TmTo,&qq); /* uu = TmTo x qq */
-    qq   = nor3d(&uu);       /* qq = uu / |uu| */
-    uu   = scl3d(&qq,ro);    /* uu = qq * ro */
-    Gm   = tip3d(&To,&uu);   /* Gm at tip of uu from To */
+    uu   = vcp3d(&TmTo,&qq);       /* uu = TmTo x qq */
+    qq   = nor3d(&uu);             /* qq = uu / |uu| */
+    uu   = scl3d(&qq,ro*scaleray); /* uu = qq * ro */
+    Gm   = tip3d(&To,&uu);         /* Gm at tip of uu from To */
     Gm.v = hwt3d_getv(vv,Gm);
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
     qq   = nor3d(&uu);
-    uu   = scl3d(&qq,ro);
+    uu   = scl3d(&qq,ro*scaleray);
     Gp   = tip3d(&To,&uu);
     Gp.v = hwt3d_getv(vv,Gp);
 
@@ -189,14 +205,14 @@ pt3d hwt3d_raytr(float ***vv,
     qq   = scl3d(&ww,+1);
     uu   = vcp3d(&TmTo,&qq); 
     qq   = nor3d(&uu);
-    uu   = scl3d(&qq,ro);
+    uu   = scl3d(&qq,ro*scaleray);
     Hm   = tip3d(&To,&uu);
     Hm.v = hwt3d_getv(vv,Hm);
 
     qq   = scl3d(&ww,-1);
     uu   = vcp3d(&TmTo,&qq); 
     qq   = nor3d(&uu);
-    uu   = scl3d(&qq,ro);
+    uu   = scl3d(&qq,ro*scaleray);
     Hp   = tip3d(&To,&uu);
     Hp.v = hwt3d_getv(vv,Hp);
 

@@ -28,7 +28,9 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int  pick,fill;
+    int  pick; /* method for selecting multi-arrival times */
+    int  fill; /* hole-filling parameter */
+
     axa az,ax,ay;    /* Cartesian coordinates */
     int iz,ix,iy;
     axa at,ag,ah,aa; /* Ray coordinates */
@@ -45,12 +47,11 @@ int main(int argc, char* argv[])
     float  **wl=NULL; /* ray length     */
 
     pt3d Tm,To; /* points on ray ig,ih: it-1,it*/
-    vc3d TmTo;
+    vc3d TmTo;  /* Tm-To vector */
 
     double l;
     float  t;
-    
-    
+
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
@@ -141,7 +142,7 @@ int main(int argc, char* argv[])
 
     /* LOOP over time */
     for (it=1; it<at.n; it++) {
-	if(verb) sf_warning("it=%d",it);
+	if(verb) sf_warning("it=%d of %d",it+1,at.n);
 
 	t = at.o + it * at.d; // traveltime to the current wavefront
 

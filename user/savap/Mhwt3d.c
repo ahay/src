@@ -28,13 +28,14 @@
 int main(int argc, char* argv[])
 {
     bool verb, forceray;
+    int        scaleray;
     axa az,ax,ay;    /* Cartesian coordinates */
     axa at,ag,ah,aa; /* Ray coordinates */
     int it,ig,ih;
     
     float xsou,ysou,zsou; /* source coordinates */
 
-    sf_file Fv; /* velocity file */
+    sf_file Fv; /*   velocity file */
     sf_file Fw; /* wavefronfs file */
 
     float ***vv=NULL; /* velocity       */
@@ -54,6 +55,8 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     if(! sf_getbool(    "verb",&verb    ))     verb=false;
     if(! sf_getbool("forceray",&forceray)) forceray=false;
+    if(! sf_getint ("scaleray",&scaleray)) scaleray=1.;
+
 
     /* velocity file */
     Fv = sf_input ("in");
@@ -136,7 +139,7 @@ int main(int argc, char* argv[])
 
     /* construct it=0 wavefront */
     it=0;
-    if(verb) sf_warning("it=%d",it);
+    if(verb) sf_warning("it=%d of %d",it+1,at.n);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    wm[ih][ig].x=xsou;
@@ -151,7 +154,7 @@ int main(int argc, char* argv[])
 
     /* construct it=1 wavefront */
     it=1;
-    if(verb) sf_warning("it=%d",it);
+    if(verb) sf_warning("it=%d of %d",it+1,at.n);
     for( ih=0; ih<ah.n; ih++) {
 	for( ig=0; ig<ag.n; ig++) {
 	    double d,g,h;
@@ -171,25 +174,25 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
     /* LOOP over time */
     for (it=2; it<at.n; it++) {
-	if(verb) sf_warning("it=%d",it);
+	if(verb) sf_warning("it=%d of %d",it+1,at.n);
 
 	/* boundaries */
 	ig=0;      
 	for( ih=0; ih<ah.n; ih++) {
-	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig],scaleray);
 	}
 	ig=ag.n-1; 
 	for( ih=0; ih<ah.n; ih++) {
-	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig],scaleray);
 	}
 
 	ih=0;      
 	for( ig=0; ig<ag.n; ig++) {
-	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig],scaleray);
 	}
 	ih=ah.n-1; 
 	for( ig=0; ig<ag.n; ig++) {
-	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig]);
+	    wp[ih][ig] = hwt3d_raytr(vv,wm[ih][ig],wo[ih][ig],scaleray);
 	}
 
 	for (ih=1; ih<ah.n-1; ih++) { 
@@ -208,7 +211,7 @@ int main(int argc, char* argv[])
 		if( kk[ih][ig] == false)
 		    kk[ih][ig] = hwt3d_cusp(Tm,To,Gm,Gp,Hm,Hp);
 
-		if(kk[ih][ig]) Tp = hwt3d_raytr(vv,Tm,To);            /* HWT */
+		if(kk[ih][ig]) Tp = hwt3d_raytr(vv,Tm,To,scaleray);   /* HWT */
 		else           Tp = hwt3d_wfttr(vv,Tm,To,Gm,Gp,Hm,Hp);/* HRT */
 
 		wp[ih][ig] = Tp;
