@@ -37,7 +37,7 @@ int main(int argc, char* argv[])
     int  fill; /* hole-filling parameter */
 
     int scaleray;
-    int nray, iray;
+    int nray,jray,iray;
 
     axa az,ax,ay; /* Cartesian coordinates */
     int iz,ix,iy;
@@ -70,6 +70,7 @@ int main(int argc, char* argv[])
     if(! sf_getint (    "fill",&fill    ))     fill=0;
     if(! sf_getint ("scaleray",&scaleray)) scaleray=1.;
     if(! sf_getint (    "nray",&nray    ))     nray=1;
+    if(! sf_getint (    "jray",&jray    ))     jray=1;
 
     if(! sf_getfloat("gmin",&gmin)) gmin=-90;
     if(! sf_getfloat("gmax",&gmax)) gmax=+90;
@@ -80,7 +81,7 @@ int main(int argc, char* argv[])
     if(! sf_getint  ("nt",&at.n)) at.n=100;
     if(! sf_getfloat("ot",&at.o)) at.o=0;
     if(! sf_getfloat("dt",&at.d)) at.d=0.001;
-    at.l="t";
+    at.l="t"; if(verb) raxa(at);
 
     /* velocity file */
     Fv = sf_input ("in");
@@ -93,9 +94,9 @@ int main(int argc, char* argv[])
 
     /* traveltime file */
     Ft = sf_output("out");
-    oaxa(Ft,&az,1); if(verb) raxa(az);
-    oaxa(Ft,&ax,2); if(verb) raxa(ax);
-    oaxa(Ft,&ay,3); if(verb) raxa(ay);
+    oaxa(Ft,&az,1);
+    oaxa(Ft,&ax,2);
+    oaxa(Ft,&ay,3);
     tt=sf_floatalloc3(az.n,ax.n,ay.n); 
     ll=sf_floatalloc3(az.n,ax.n,ay.n); 
 
@@ -134,8 +135,14 @@ int main(int argc, char* argv[])
 	g = gmin + genrand_real1() * (gmax-gmin); g*=SF_PI/180;
 	h = hmin + genrand_real1() * (hmax-hmin); h*=SF_PI/180;
 
-	if(verb && iray%1000 == 0) sf_warning("iray=%d of %d",iray,nray);
+	if(verb && iray%jray == 0) sf_warning("iray=%d of %d",iray,nray);
 	
+	/* trace ray */
+	l = 0;
+
+	it=1;
+	t = at.o + it * at.d;
+
 	Tm.x = xsou;
 	Tm.y = ysou;
 	Tm.z = zsou;
@@ -145,13 +152,7 @@ int main(int argc, char* argv[])
 	To.y = Tm.y + Tm.v*at.d * sin(g)*sin(h);
 	To.z = Tm.z + Tm.v*at.d * cos(g);
 	To.v = hwt3d_getv(vv,To);
-	    
-	/* trace ray */
-	l = 0;
 
-	it=1;
-	t = at.o + it * at.d;
-       
 	TmTo = vec3d(&Tm,&To);
 	l   += len3d(&TmTo);
 	if     (pick==2) hwt3d_lint(tt,ll,To,t,l);
