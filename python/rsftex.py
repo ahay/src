@@ -444,7 +444,7 @@ isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?\{([^\}]+)
 ismplot = re.compile(r'^[^%]*\\multiplot\*?\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-input = re.compile(r'[^%]\\input\s*\{([^\}]+)')
+input = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
 # listing = re.compile(r'\\lstinputlisting(?:\[[^\]]+\])?\{([^\}]+)')
 chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
 subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
@@ -454,7 +454,8 @@ def latexscan(node,env,path):
     if top[-4:] != '.tex':
         return []
     contents = node.get_contents()
-    inputs = map(lambda x: x+'.tex',input.findall(contents))
+    inputs = map(lambda x: x+('.tex','')[os.path.isfile(x)],
+                 input.findall(contents))
     inputs.append(str(node))
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')

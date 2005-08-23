@@ -25,9 +25,9 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, i,j, i0,j0, iframe;
+    int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, iframe;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
-    float point1, point2, **front, **top, **side, b;
+    float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
     off_t esize;
     bool flat;
     sf_file in;
@@ -41,6 +41,11 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n3 = sf_leftsize(in,2);
+
+    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+    if (!sf_histfloat(in,"o2",&o2)) o2=0.;
+    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 
     if (!sf_getfloat("point1",&point1)) point1=0.5;
     /* fraction of the vertical axis for front face */
@@ -108,6 +113,21 @@ int main(int argc, char* argv[])
     if (n1front >= n1pix) n1front=n1pix-1;
     if (n2front >= n2pix) n2front=n2pix-1;
 
+    front = sf_floatalloc(n1);
+    side = sf_floatalloc(n2);
+    top = sf_floatalloc2(n1,n2);
+
+    x = sf_floatalloc(n1);
+    y = sf_floatalloc(n2);
+
+    for (i1=0; i1 < n1; i1++) {
+	x[i1] = o1 + i1*d1;
+    }
+
+    for (i2=0; i2 < n2; i2++) {
+	y[i2] = o2 + i2*d2;
+    }
+
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
 
@@ -118,26 +138,24 @@ int main(int argc, char* argv[])
     vp_frame_init (in,"blt",false);
 
     for (iframe=0; iframe < nframe; iframe++) {
+	for (i3=0; i3 < n3; i3++) {
+	    vp_plot_set (i3);
 
-	if (0 == iframe || 3 == movie) { 
-	    sf_seek(in,(off_t) frame3*n1*n2*esize,SEEK_SET);
-	    sf_floatread(front[0],n1*n2,in);
-
-	    /*
-	    for (i=0; i < n2front; i++) {
-		i2 = n2*i/(float) n2front;
-		for (j=0; j < n1front; j++) {
-		    i1 = n1*(n1front-j)/(float) n1front;
-		    buf[i][j] = front[i2][i1];
+	    if (0 == iframe || 3 == movie) {
+		sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
+		sf_floatread(front,n1,in);
+		
+		vp_umove(x[0],front[0]);
+		for (i1=1; i1 < n1; i1++) {
+		    vp_udraw(x[i1],front[i1]);
 		}
 	    }
-	    */
-	}
 
-	if (0 == iframe || 2 == movie) {
-	    for (i3=0; i3 < n3; i3++) {
-		sf_seek(in,(off_t) (i3*n1*n2+frame2*n1)*esize,SEEK_SET);
-		sf_floatread(side[i3],n1,in);
+	    if (0 == iframe || 2 == movie) {
+		for (i2=0; i2 < n2; i2++) {
+		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
+		    sf_floatread(&side[i2],1,in);
+		}
 	    }
 
 	    /*
@@ -158,14 +176,10 @@ int main(int argc, char* argv[])
 		}
 	    }
 	    */
-	}
 
-	if (0 == iframe || 1 == movie) {
-	    for (i3=0; i3 < n3; i3++) {
-		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame1)*esize,SEEK_SET);
-		    sf_floatread(&top[i2][i3],1,in);
-		}
+	    if (0 == iframe || 1 == movie) {
+		sf_seek(in,(off_t) (frame1*n1*n2*esize),SEEK_SET);
+		sf_floatread(top[0],n1*n2,in);		
 	    }
 
 	    /*
@@ -215,7 +229,7 @@ int main(int argc, char* argv[])
 
 	vp_purge(); 
     } /* frame loop */
-
+    
     sf_close();
     exit(0);
 }
