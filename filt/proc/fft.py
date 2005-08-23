@@ -24,3 +24,11 @@ out.write('in=fft.rsf\n')
 out.write('data_format=ascii_float\n')
 out.close()
 
+## < fft.rsf sfdd form=native > fft2.rsf
+## < fft2.rsf sfmath output="0.00001*x1*log(x1)-input" | sfmask min=0 > mask.rsf
+## < fft2.rsf sftransp | sfheaderwindow mask=mask.rsf > y.rsf
+## < fft2.rsf sftransp | sfmath output=x2 | sfheaderwindow mask=mask.rsf > x.rsf
+## sfcmplx x.rsf y.rsf | sfdd form=ascii line=1 format="    {%g,%g}," > dat.rsf
+## cp /var/scratch/dat.rsf@ fft.dat
+## cp ~/fft.dat filt/lib/_fftsize.h
+
