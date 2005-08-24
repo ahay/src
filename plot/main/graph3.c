@@ -25,9 +25,11 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, frame1,frame2,frame3, i1,i2,i3, iframe;
+    int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
     float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
+    float min, max, f, frame1;
+    char *label1, *label2;
     off_t esize;
     bool flat;
     sf_file in;
@@ -42,28 +44,79 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n3 = sf_leftsize(in,2);
 
+    esize = sf_esize(in);
+    sf_unpipe(in,n1*n2*n3*esize);
+
+    front = sf_floatalloc(n1);
+    side = sf_floatalloc(n2);
+    top = sf_floatalloc2(n1,n2);
+
+    min = +FLT_MAX;
+    max = -FLT_MAX;
+    for (i3=0; i3 < n3; i3++) {
+	sf_floatread(top[0],n1*n2,in);
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		f = top[i2][i1];
+		if (f > max) max=f;
+		if (f < min) min=f;
+	    }
+	}
+    }
+    if (min == 0. && max == 0.) {
+	min = -1.;
+	max = 1.;
+    } else if (min == max) {
+        max *= 1.04;
+        min *= 0.96;
+    }
+
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
     if (!sf_histfloat(in,"o2",&o2)) o2=0.;
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+
+    /* for proper frame */
+    sf_putint(in,"n1",3);
+    sf_putfloat(in,"o1",max);
+    sf_putfloat(in,"d1",0.5*(min-max));
+    sf_putint(in,"n2",n1);
+    sf_putfloat(in,"o2",o1);
+    sf_putfloat(in,"d2",d1);
+    sf_putint(in,"n3",n2);
+    sf_putfloat(in,"o3",o2);
+    sf_putfloat(in,"d3",d2);
+
+    label1 = sf_histstring(in,"label1");
+    label2 = sf_histstring(in,"label2");
+
+    if (NULL != label1) {
+	sf_putstring(in,"label1","");
+	sf_putstring(in,"label2",label1);
+	free(label1);
+    }
+    if (NULL != label2) {
+	sf_putstring(in,"label3",label2);
+	free(label2);
+    }
 
     if (!sf_getfloat("point1",&point1)) point1=0.5;
     /* fraction of the vertical axis for front face */
     if (!sf_getfloat("point2",&point2)) point2=0.5;
     /* fraction of the horizontal axis for front face */
     
-    if (!sf_getint("frame1",&frame1)) frame1=0;
-    if (!sf_getint("frame2",&frame2)) frame2=n2-1;
+    if (!sf_getfloat("frame1",&frame1)) frame1=1;
+    if (!sf_getint("frame2",&frame2)) frame2=n1-1;
     if (!sf_getint("frame3",&frame3)) frame3=0;
     /* frame numbers for cube faces */
 
     /* sanity check */
-    if (frame1 < 0) frame1 = 0;
+    if (frame1 < min) frame1 = min;
     if (frame2 < 0) frame2 = 0;
     if (frame3 < 0) frame3 = 0;
-    if (frame1 >= n1) frame1 = n1-1;
-    if (frame2 >= n2) frame2 = n2-1;
-    if (frame3 >= n3) frame3 = n3-1;
+    if (frame1 > max) frame1 = max;
+    if (frame2 >= n1) frame2 = n1-1;
+    if (frame3 >= n2) frame3 = n2-1;
 
     if (!sf_getint("movie",&movie)) movie=0;
     /* 0: no movie, 1: movie over axis 1, 2: axis 2, 3: axis 3 */
@@ -76,13 +129,13 @@ int main(int argc, char* argv[])
 	    nframe = 1;
 	    break;
 	case 1:
-	    nframe = (n1-frame1)/dframe;
+	    sf_error("movie=1 is not implemented yet");
 	    break;
 	case 2:
-	    nframe = (n2-frame2)/dframe;
+	    nframe = (n1-frame2)/dframe;
 	    break;
 	case 3:
-	    nframe = (n3-frame3)/dframe;
+	    nframe = (n2-frame3)/dframe;
 	    break;
 	default:
 	    sf_error("movie=%d is outside [0,3]",movie);
@@ -113,10 +166,6 @@ int main(int argc, char* argv[])
     if (n1front >= n1pix) n1front=n1pix-1;
     if (n2front >= n2pix) n2front=n2pix-1;
 
-    front = sf_floatalloc(n1);
-    side = sf_floatalloc(n2);
-    top = sf_floatalloc2(n1,n2);
-
     x = sf_floatalloc(n1);
     y = sf_floatalloc(n2);
 
@@ -131,11 +180,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("flat",&flat)) flat=true;
     /* if n, display perspective view */
 
-    esize = sizeof(float);
-    sf_unpipe(in,n1*n2*n3*esize);
-
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
+    vp_plot_init(n3);
 
     for (iframe=0; iframe < nframe; iframe++) {
 	for (i3=0; i3 < n3; i3++) {
@@ -178,7 +225,7 @@ int main(int argc, char* argv[])
 	    */
 
 	    if (0 == iframe || 1 == movie) {
-		sf_seek(in,(off_t) (frame1*n1*n2*esize),SEEK_SET);
+		sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
 		sf_floatread(top[0],n1*n2,in);		
 	    }
 
@@ -211,12 +258,9 @@ int main(int argc, char* argv[])
 
 	if (iframe > 0) vp_erase (); 
 	
-/*	vp_cuberaster(n1pix,n2pix,buf,frame1,frame2,frame3); */
+	vp_cubeframe((int) frame1,frame2,frame3);
 	
 	switch (movie) {
-	    case 1:
-		frame1 += dframe;
-		break;
 	    case 2:
 		frame2 += dframe;
 		break;

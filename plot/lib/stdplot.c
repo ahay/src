@@ -33,6 +33,7 @@ static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
 static float d1, d2, d3;
 static int framecol, frame1, frame2, frame3, gridcol, gridfat=1;
+static int cubelinecol=VP_WHITE;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat;
 static char blank[]=" ";
@@ -1131,12 +1132,12 @@ void vp_frame(void)
     
     if (cube) {
 	/* draw colored lines */
-	vp_color(VP_YELLOW);
 	vs = 0.5*labelsz;
 
 	if (NULL != label2) {
 	    yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(label2->min-label2->max);
 
+	    vp_color(cubelinecol);
 	    vp_umove(min1,yc);
  
 	    if (flat) {
@@ -1146,6 +1147,7 @@ void vp_frame(void)
 		vp_udraw(max1,yc+max2-mid2);
 	    }
 
+	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 
 	    num = label2->max+(frame1+0.5)*d1;
@@ -1161,6 +1163,8 @@ void vp_frame(void)
 
 	if (NULL != label1) {
 	    xc = min1+(mid1-min1)*(frame2+0.5)*d2/(label1->max-label1->min);
+
+	    vp_color(cubelinecol);
 	    vp_umove(xc,min2);
 	    
 	    if (flat) {
@@ -1170,6 +1174,7 @@ void vp_frame(void)
 		vp_udraw(xc+max1-mid1,max2);
 	    }
 	    
+	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 	    
 	    num = label1->min+(frame2+0.5)*d2;
@@ -1182,6 +1187,8 @@ void vp_frame(void)
 	if (NULL != label3) {
 	    yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(label3->max-label3->min);
 	    xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(label3->max-label3->min);
+
+	    vp_color(cubelinecol);
 
 	    if (flat) {
 		vp_umove(xc,min2);
@@ -1199,6 +1206,7 @@ void vp_frame(void)
 		vp_udraw(xc+min1-mid1,yc);
 	    }
 
+	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 
 	    num = label3->min+(frame3+0.5)*d3;
@@ -1219,7 +1227,6 @@ void vp_frame(void)
 	    }
 	} /* label3 */
     } /* if cube */
-
 
     vp_uclip (min1, min2, max1, max2);
 }
@@ -1308,6 +1315,13 @@ void vp_cuberaster(int n1, int n2,
 /*< Filling 3-D cube with rasters >*/
 {
     vp_uraster (buf, false, 256, n1, n2, min1,min2,max1,max2, 3);
+    cubelinecol = VP_YELLOW;
+    vp_cubeframe(f1,f2,f3);
+}
+
+void vp_cubeframe(int f1, int f2, int f3   /* frame numbers */) 
+/*< Drawing 3-D frame >*/
+{
     frame1 = f1;
     frame2 = f2;
     frame3 = f3;
