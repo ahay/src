@@ -574,7 +574,7 @@ bash$ sfget parform=n in < spike.rsf
     \input{sfinterleave}
   }}
 
-\texttt{interleave} combines two or more datasets by interleaving them on one
+\texttt{sfinterleave} combines two or more datasets by interleaving them on one
 of the axes. Here is a quick example:
 \begin{verbatim}
 bash$ sfspike n1=5 n2=5 > one.rsf
@@ -614,6 +614,28 @@ bash$ sfinterleave < one.rsf two.rsf axis=2 | sfdisfil
   40:             1            1            1            1            1
   45:             2            2            2            2            2
 \end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfmask}
+  }}
+
+\texttt{sfmask} creates an integer output of ones and zeros comparing
+the values of the input data to specified \texttt{min=} and
+\texttt{max=} parameters. It is useful for \texttt{sfheaderwindow} and
+in many other applications. Here is a quick example:
+\begin{verbatim}
+bash$ sfmath n1=10 output="sin(x1)" > sin.rsf
+bash$ < sin.rsf sfdisfil
+   0:             0       0.8415       0.9093       0.1411      -0.7568
+   5:       -0.9589      -0.2794        0.657       0.9894       0.4121
+bash$ < sin.rsf sfmask min=-0.5 max=0.5 | sfdisfil
+   0:    1    0    0    1    0    0    1    0    0    1
+\end{verbatim}
+
+
+
+
+
 
 %%% Local Variables: 
 %%% mode: latex
