@@ -97,6 +97,7 @@ int main(int argc, char* argv[])
     oaxa(Ft,&az,1);
     oaxa(Ft,&ax,2);
     oaxa(Ft,&ay,3);
+
     tt=sf_floatalloc3(az.n,ax.n,ay.n); 
     ll=sf_floatalloc3(az.n,ax.n,ay.n); 
 

@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-erfdm hwt3d int3d rrt3d
+erfdm hwt3d int3d rrt3d nfill
 '''
 
 try:  # distributed version
