@@ -28,28 +28,62 @@
 #
 
 from rsfproj import *
-from math    import *
+from math    import sqrt,pi
 
-def rfield (name, 
-            nr = 1,                 # number of realizations
-            seed = 1,               # random number seed
-            taper_switch = True,    # covariance-model taper switch
-            nx = 1, ny = 1, nz = 1, # array sizes
-            dx = 1, dy = 1, dz = 1, # cell sizes
-            oriu = [1,0,0],         # covariance range orientation vectors
-            oriv = [0,1,0],
-            oriw = [0,0,1],
-            ru = 1,                 # covariance range parameters
-            rv = 1,
-            rw = 1,
-            alpha = 1):             # covariance shape parameter
+def rfield (real_par,grid_par,covar_par):
 
 # 
 # Input parameter explanations.
 #
 
+# The input parameters are loaded into dictionaries:
 #
-# Array sizes: nx, ny, & nz.
+# real_par = {  'name':   File name prefix
+#               'nr':     Number of realizations
+#               'seed':   Random number seed
+#            }
+#
+# grid_par = {  'nx', 'ny', 'nz':   Array sizes
+#               'dx', 'dy', 'dz':   Cell sizes
+#            }
+#
+# covar_par = {'taper_switch':      Covariance taper switch
+#              'alpha':             Covariance shape parameter
+#              'oriu':[ 5,1,0]      Covariance range orientation vectors
+#              'oriv':[-1,5,0] 
+#              'oriw':[ 0,0,1]
+#              'ru'  :              Covariance range parameters
+#              'rv'  :
+#              'rw'  :
+#             }
+#
+
+#
+# File name prefix: real_par['name']
+#
+# A string to prepend to each file generated.
+#
+
+#
+# Number of realizations to generate: real_par['nr']
+#
+# Use an integer in the range 1 <= nr <= 99.
+#
+
+#
+# Random number seed: real_par['seed']
+#
+# The random number seed initializes the pseudo random number
+# generator.  Repeat runs of the script with the same random number
+# seed will produce exactly the same random field realization, except
+# perhaps for roundoff differences, even on different platforms.  For
+# different realizations choose different random number seeds.
+#
+# Use an integer.
+#
+
+#
+# Array sizes: grid_par['nx','ny','nz']
 #
 # The code works for 1D, 2D, or 3D simulations.  For 2D or 1D set one
 # or two of the array dimensions to 1.
@@ -65,25 +99,14 @@ def rfield (name,
 #
 
 #
-# Number of realizations to generate: nr.
+# Cell sizes: grid_par['dx','dy','dz']
 #
-# Use an integer in the range 1 <= nr <= 99.
-#
-
-#
-# Random number seed: seed.
-#
-# The random number seed initializes the pseudo random number
-# generator.  Repeat runs of the script with the same random number
-# seed will produce exactly the same random field realization, except
-# perhaps for roundoff differences, even on different platforms.  For
-# different realizations choose different random number seeds.
-#
-# Use an integer.
+# You may use integers or floats, conversion to float is done for
+# you when necessary.
 #
 
 #
-# Covariance grid cosine taper switch: taper_switch.
+# Covariance grid cosine taper switch: covar_par['taper_switch']
 #
 # A cosine taper will be applied to the edges of the grid if
 # taper_switch is true, otherwise not.
@@ -116,14 +139,7 @@ def rfield (name,
 #
 
 #
-# Cell sizes: dx, dy, dz.
-#
-# You may use integers or floats, conversion to float is done for
-# you when necessary.
-#
-
-#
-# Covariance range orientation vectors: oriu, oriv, oriw.
+# Covariance range orientation vectors: covar_par['oriu','oriv','oriw']
 #
 # The orientation vectors define a possibly rotated and skewed
 # coordinate system orienting the covariance model.  The correlation
@@ -148,7 +164,7 @@ def rfield (name,
 #
 
 #
-# Covariance range parameters: ru, rv, rw.
+# Covariance range parameters: covar_par['ru','rv','rw']
 #
 # Each covariance range parameter controls the correlation range in the
 # direction of the corresponding orientation vector.
@@ -167,7 +183,7 @@ def rfield (name,
 #
 
 # 
-# "Stable" covariance model shape parameter: alpha.
+# "Stable" covariance model shape parameter: covar_par['alpha']
 #
 # The stable covariance model for unit variance is:
 #
@@ -232,31 +248,47 @@ def rfield (name,
 # grid. 
 #
 
-    ox = -float(nx//2)*dx
-    oy = -float(ny//2)*dy
-    oz = -float(nz//2)*dz
+    grid_par['ox'] = -float(grid_par['nx']//2)*grid_par['dx']
+    grid_par['oy'] = -float(grid_par['ny']//2)*grid_par['dy']
+    grid_par['oz'] = -float(grid_par['nz']//2)*grid_par['dz']
 
 #
 # Set up the grid specification.
 #
 
-    grid = '''
-       n1=%d d1=%g o1=%g
-       n2=%d d2=%g o2=%g
-       n3=%d d3=%g o3=%g
-       ''' % (nx,dx,ox,ny,dy,oy,nz,dz,oz)
+    grid_str = '''
+               n1=%(nx)d d1=%(dx)g o1=%(ox)g
+               n2=%(ny)d d2=%(dy)g o2=%(oy)g
+               n3=%(nz)d d3=%(dz)g o3=%(oz)g
+               ''' % (grid_par)
 
 #
 # Scale the orientation vectors.
 #
 
-    lenu = sqrt(oriu[0]**2+oriu[1]**2+oriu[2]**2)
-    lenv = sqrt(oriv[0]**2+oriv[1]**2+oriv[2]**2)
-    lenw = sqrt(oriw[0]**2+oriw[1]**2+oriw[2]**2)
+    lenu = sqrt(covar_par['oriu'][0]**2
+               +covar_par['oriu'][1]**2
+               +covar_par['oriu'][2]**2)
+               
+    lenv = sqrt(covar_par['oriv'][0]**2
+               +covar_par['oriv'][1]**2
+               +covar_par['oriv'][2]**2)
+               
+    lenw = sqrt(covar_par['oriw'][0]**2
+               +covar_par['oriw'][1]**2
+               +covar_par['oriw'][2]**2)
 
-    uniu = [float(oriu[0])/lenu,float(oriu[1])/lenu,float(oriu[2])/lenu]
-    univ = [float(oriv[0])/lenv,float(oriv[1])/lenv,float(oriv[2])/lenv]
-    uniw = [float(oriw[0])/lenw,float(oriw[1])/lenw,float(oriw[2])/lenw]
+    uniu = [float(covar_par['oriu'][0])/lenu,
+            float(covar_par['oriu'][1])/lenu,
+            float(covar_par['oriu'][2])/lenu]
+            
+    univ = [float(covar_par['oriv'][0])/lenv,
+            float(covar_par['oriv'][1])/lenv,
+            float(covar_par['oriv'][2])/lenv]
+            
+    uniw = [float(covar_par['oriw'][0])/lenw,
+            float(covar_par['oriw'][1])/lenw,
+            float(covar_par['oriw'][2])/lenw]
 
 #
 # Compute a scaled distance variable.
@@ -283,25 +315,25 @@ def rfield (name,
 # dist = sqrt((u/ru)^2 + (v/rv)^2 + (w/rw)^2)
 #
 
-    dist = name+'dist'
+    dist = real_par['name']+'dist'
 
     formula = '''
               output="sqrt(((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2
                           +((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2
                           +((x1*(%g)+x2*(%g)+x3*(%g))/(%g))^2)"
-              ''' % (uniu[0],uniu[1],uniu[2],ru,
-                     univ[0],univ[1],univ[2],rv,
-                     uniw[0],uniw[1],uniw[2],rw)
+              ''' % (uniu[0],uniu[1],uniu[2],covar_par['ru'],
+                     univ[0],univ[1],univ[2],covar_par['rv'],
+                     uniw[0],uniw[1],uniw[2],covar_par['rw'])
                      
-    Flow (dist,'','math'+grid+formula,stdin=0)
+    Flow (dist,'','math'+grid_str+formula,stdin=0)
          
 #
 # Make a "stable" covariance grid.
 #
 
-    covar = name+'covar'
+    covar = real_par['name']+'covar'
     
-    Flow (covar,dist,'math output="exp(-(input^%g))"' % (alpha))
+    Flow (covar,dist,'math output="exp(-(input^%(alpha)g))"' % (covar_par))
 
 #
 # Make a cosine taper.
@@ -315,22 +347,23 @@ def rfield (name,
 # artifacts throughout the grid aligned with the grid axes.
 #
     
-    taper = name+'taper'
+    taper = real_par['name']+'taper'
     
-    if (taper_switch == 1):
-        formula = grid+'output="(cos(x1*%g)+1)*(cos(x2*%g)+1)*(cos(x3*%g)+1)/8"'
+    if (covar_par['taper_switch'] == True):
+        formula = grid_str+'output="(cos(x1*%g)+1)*(cos(x2*%g)+1)*(cos(x3*%g)+1)/8"'
         Flow (taper,'',
-              'math'+formula % (2*pi/(nx*dx),2*pi/(ny*dy),2*pi/(nz*dz)),
-              stdin=0
-             )
+              'math'+formula % (2*pi/(grid_par['nx']*grid_par['dx']),
+                                2*pi/(grid_par['ny']*grid_par['dy']),
+                                2*pi/(grid_par['nz']*grid_par['dz'])),
+              stdin=0)
     else:
-        Flow (taper,'','spike'+grid,stdin=0)
+        Flow (taper,'','spike'+grid_str,stdin=0)
 
 #
 # Apply the taper to the covariance.
 #
 
-    covar_taper = name+'covar_taper'
+    covar_taper = real_par['name']+'covar_taper'
 
     Flow (covar_taper,[covar,taper],'add mode=m ${SOURCES[1]}')
 
@@ -341,43 +374,43 @@ def rfield (name,
 # the halves back together in the reverse order, along each grid axis.
 #
 
-    shift_x = name+'shift_x'
-    shift_y = name+'shift_y'
-    shift   = name+'shift'
+    shift_x = real_par['name']+'shift_x'
+    shift_y = real_par['name']+'shift_y'
+    shift   = real_par['name']+'shift'
 
-    if (nx > 1):
+    if (grid_par['nx'] > 1):
         Flow (shift_x,covar_taper,
               '''
               window n1=%d > half_x.rsf &&
               window f1=%d < $SOURCE | cat axis=1 half_x.rsf > $TARGET &&
               rm half_x.rsf
-              ''' % (nx/2,nx/2), stdout=0
+              ''' % (grid_par['nx']/2,grid_par['nx']/2), stdout=0
              )
     else:
         Flow (shift_x,covar_taper,
               'cp $SOURCE $TARGET',stdin=0,stdout=0
              )
     
-    if (ny > 1):
+    if (grid_par['ny'] > 1):
         Flow (shift_y,shift_x,
               '''
               window n2=%d > half_y.rsf &&
               window f2=%d < $SOURCE | cat axis=2 half_y.rsf > $TARGET &&
               rm half_y.rsf
-              ''' % (ny/2,ny/2), stdout=0
+              ''' % (grid_par['ny']/2,grid_par['ny']/2), stdout=0
              )
     else:
         Flow (shift_y,shift_x,
               'cp $SOURCE $TARGET',stdin=0,stdout=0
              )
     
-    if (nz > 1):
+    if (grid_par['nz'] > 1):
         Flow (shift,shift_y,
               '''
               window n3=%d > half_z.rsf &&
               window f3=%d < $SOURCE | cat axis=3 half_z.rsf > $TARGET &&
               rm half_z.rsf
-              ''' % (nz/2,nz/2), stdout=0
+              ''' % (grid_par['nz']/2,grid_par['nz']/2), stdout=0
              )
     else:
         Flow (shift,shift_y,
@@ -388,15 +421,18 @@ def rfield (name,
 # Make uncorrelated Gaussian random noise with unit variance.
 #
 
-    noise   = name+'noise'
-    noise_i = name+'noise_%02d'
+    noise   = real_par['name']+'noise'
+    noise_i = real_par['name']+'noise_%02d'
     
     Flow (noise,covar,
-          'pad n4=%d | put n4=%d d4=1 o4=1 | noise var=1 rep=y seed=%d' 
-          % (nr,nr,seed)
+          '''
+          pad n4=%(nr)d | put n4=%(nr)d d4=1 o4=1 | 
+          noise var=1 rep=y seed=%(seed)d
+          '''
+          % (real_par)
          )
      
-    for i in range(nr):
+    for i in range(real_par['nr']):
         Flow (noise_i % (i+1),noise,'window f4=%d n4=1' % (i))
     
 #
@@ -415,16 +451,16 @@ def rfield (name,
 # random field.
 #
 
-    pspec       = name+'pspec'
-    pspec_real  = name+'pspec_real'
-    noise_i_fft = name+'noise_%02d_fft'
+    pspec       = real_par['name']+'pspec'
+    pspec_real  = real_par['name']+'pspec_real'
+    noise_i_fft = real_par['name']+'noise_%02d_fft'
 
     Flow (pspec,shift,
           'rtoc | fft3 pad=1 axis=1 | fft3 pad=1 axis=2 | fft3 pad=1 axis=3')
     
     Flow (pspec_real,pspec,'real')
     
-    for i in range(nr): 
+    for i in range(real_par['nr']): 
         Flow (noise_i_fft % (i+1),noise_i % (i+1),
               'rtoc | fft3 pad=1 axis=1 | fft3 pad=1 axis=2 | fft3 pad=1 axis=3')
 
@@ -460,8 +496,8 @@ def rfield (name,
 # with complex or negative power spectrum values.
 #
 
-    aspec      = name+'aspec'
-    aspec_real = name+'aspec_real'
+    aspec      = real_par['name']+'aspec'
+    aspec_real = real_par['name']+'aspec_real'
 
     Flow (aspec,pspec_real,'clip2 lower=0 | rtoc | add sqrt=1')
     Flow (aspec_real,aspec,'real')
@@ -489,9 +525,9 @@ def rfield (name,
 # day...
 #
 
-    sim_i_fft = name+'sim_%02d_fft'
+    sim_i_fft = real_par['name']+'sim_%02d_fft'
 
-    for i in range(nr): 
+    for i in range(real_par['nr']): 
         Flow (sim_i_fft % (i+1),[aspec,noise_i_fft % (i+1)],
               'add mode=m ${SOURCES[1]}'
              )
@@ -504,10 +540,10 @@ def rfield (name,
 # be small in magnitude.
 #
 
-    sim_i      = name+'sim_%02d'
-    sim_i_real = name+'sim_%02d_real'
+    sim_i      = real_par['name']+'sim_%02d'
+    sim_i_real = real_par['name']+'sim_%02d_real'
 
-    for i in range(nr): 
+    for i in range(real_par['nr']): 
         Flow (sim_i % (i+1),sim_i_fft % (i+1),
               '''
               fft3 inv=y pad=1 axis=3 |

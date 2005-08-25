@@ -44,9 +44,10 @@ private = { 'server'   : os.environ.get('BEG_SERVER'),
 #
 # Grid specification
 #
-# This SConstruct version interpolates 15 2D arrays of channel position
-# and skew from Mathematica-exported files to your desired grid.  The
-# original files were generated in Mathematica on the following grid:
+# This current version of channels.py interpolates 15 2D arrays of
+# channel position and skew from Mathematica-exported files to your
+# desired grid.  The original files were generated in Mathematica on
+# the following grid:
 #
 # n1=181   d1=30m   o1=0m 
 # n2=101   d2=30m   o2=0m          
@@ -66,8 +67,8 @@ private = { 'server'   : os.environ.get('BEG_SERVER'),
 # larger than those specified here (see padding parameter below), and
 # the grid origin is reset to zero.
 #
-# Future versions of this SConstruct may generate position and
-# skew internally, avoiding the interpolation-extrapolation issue.
+# Future versions of channels.py may generate position and skew
+# internally, avoiding the interpolation-extrapolation issue.
 #
 # The following example spans:
 #
@@ -103,36 +104,13 @@ private = { 'server'   : os.environ.get('BEG_SERVER'),
 # -20m <= z <= 129m, with a 20m pad below the bottom channel, and a 19m
 # pad above the top channel:
 #
-# nz_res=150   dz_res=1m   oz_res=-20m
+# res_grid_par['nz'] = 150
+# res_grid_par['dz'] =   1 (m)
+# res_grid_par['oz'] = -20 (m)
 #
 
 #
-# Set the grid parameters here
-#
-
-# Array sizes (number of cells)
-
-nx     =  360   
-ny     =  200
-nz_res =   90
-nz_ovr =   50
-
-# Cell sizes (in meters)
-
-dx     =  15          
-dy     =  15
-dz_res =   2
-dz_ovr =  40
-
-# Axis origin (in meters)
-
-ox     =    0          
-oy     =    0          
-oz_res =  -40
-oz_ovr =  130
-
-#
-# Additional padding in the x and y directions 
+# Additional padding in the x and y directions: grid_par['xy_pad']
 #
 # This parameter controls the width (in cells) for additional all-shale
 # padding to be added to all four horizontal sides of the model after
@@ -140,74 +118,88 @@ oz_ovr =  130
 # origin is reset to zero.
 #
 
-xy_pad = 40
+grid_par = {'nx':360, 'dx':15, 'ox':0,      # common x & y grid parameters
+            'ny':200, 'dy':15, 'oy':0,
+            'xy_pad':40}
+
+res_grid_par = grid_par.copy()              # reservoir z grid parameters
+res_grid_par['nz'] =  90
+res_grid_par['dz'] =   2
+res_grid_par['oz'] = -40
+
+ovr_grid_par = grid_par.copy()              # overburden z grid parameters
+ovr_grid_par['nz'] =  50
+ovr_grid_par['dz'] =  40
+ovr_grid_par['oz'] = 130
 
 #
-# Amalgamated sand geometrical properties 
+# Channel geometrical properties
 #
+
+geo_par = {}
+
+# Amalgamated sand geometrical properties 
 
 # width at channel bottom
 # fraction of channel top width
-as_width   = 0.8
+geo_par['as_width']   = 0.8
 
 # lateral shift at abs(skew)=1 (channel max bend)
 # fraction of channel top width
-as_shift   = 0.8
+geo_par['as_shift']   = 0.8
 
 # height at skew=0 (channel inflection)
 # fraction of channel depth
-as_height0 = 0.5
+geo_par['as_height0'] = 0.5
 
 # height at abs(skew)=1 (channel max bend)
 # fraction of channel depth
-as_height1 = 0.8
+geo_par['as_height1'] = 0.8
 
 # cross-section shape factor
 # =1 parabolic, >1 more blunt, <1 more pointy
-as_shape   = 1.2   
+geo_par['as_shape']   = 1.2   
 
-#
 # Bar drape geometrical properties 
-#
 
 # bar drape profile depth
 # fraction of basic channel depth
-bd_depth  =  0.8
+geo_par['bd_depth']  =  0.8
 
 # bar drape profile z shift
 # fraction of basic channel depth, positive is down
-bd_zshift = -0.15
+geo_par['bd_zshift'] = -0.15
 
-#
 # Margin drape geometrical properties 
-#
 
 # margin drape profile depth
 # fraction of basic channel depth
-md_depth  =  1.2
+geo_par['md_depth']  =  1.2
 
 # margin drape profile z shift
 # fraction of basic channel depth, positive is down
-md_zshift =  0.1
+geo_par['md_zshift'] =  0.1
 
 #
 # Sand fraction parameters 
 #
 
+sand_par = {}
+
 # sand fraction in the bypass drape
-bd_sand = 0.3
+sand_par['bd_sand'] = 0.3
 
 # sand fraction in the margin drape
-md_sand = 0.2
+sand_par['md_sand'] = 0.2
 
 # sand fraction in the amalgamated sand
-as_sand = 1.0
+sand_par['as_sand'] = 1.0
 
 # sand fraction in non-amalgamated sand at channel top
-na_sand0 = 0.4
+sand_par['na_sand0'] = 0.4
 
 # sand fraction in non-amalgamated sand just outside the amalgamated sand
-na_sand1 = 0.9
+sand_par['na_sand1'] = 0.9
 
 #
 # Porosity random field properties
@@ -229,29 +221,30 @@ na_sand1 = 0.9
 # for different realizations of the entire model.
 #
 
-# Background standard deviation
-bk_std_dev = 0.007
+# Background noise parameters
+bk_noise_par = {'taper_switch':True,    # covariance taper switch
+                'std_dev': 0.007,       # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0], 
+                'oriw':[0,0,1],
+                'ru':1000,              # covariance range parameters
+                'rv':1000,   
+                'rw':   1}
 
-# Amalgamated and non-amalgamated sand (sand) standard deviation
-sd_std_dev = 0.01
-
-# Covariance range orientation vectors
-oriu = [1,0,0]
-oriv = [0,1,0]
-oriw = [0,0,1]
-
-# Background covariance range parameters
-bk_ru = 1000         
-bk_rv = 1000
-bk_rw =    1
-
-# Sand covariance range parameters
-sd_ru =  200         
-sd_rv =  200
-sd_rw =    1
+# Amalgamated and non-amalgamated sand noise parameters
+sd_noise_par = {'taper_switch':True,    # covariance taper switch
+                'std_dev':0.01,         # porosity noise standard devietion
+                'alpha':1,              # covariance shape parameter
+                'oriu':[1,0,0],         # covariance range orientation vectors
+                'oriv':[0,1,0], 
+                'oriw':[0,0,1],
+                'ru':200,               # covariance range parameters
+                'rv':200,   
+                'rw':  1}
 
 #
-# Taper thicknesses
+# Taper parameters
 #
 # A linear taper is applied, if desired, to the rock properties (phi,
 # rho, vp, and vs) at the top and bottom of each of the reservoir and
@@ -266,36 +259,33 @@ sd_rw =    1
 # the bottom (or top) of the taper zone and below (or above), and
 # linear weighting with depth in between.
 #
-# These parameters set the thicknesses of the taper zones in meters. 
-# If a value is set to zero no taper will be applied in the
+# If a taper thickness is set to zero no taper will be applied in the
 # corresponding taper zone.
 #
 
-top_taper_res =    0
-bot_taper_res =   20
+# Reservoir taper parameters
+res_taper_par = { 'top_h'    :    0,      # thickness (m)
+                  'top_phi'  :    0.3500, # porosity (fraction)
+                  'top_rho'  :    1.6865, # density (gm/cc)
+                  'top_vp'   : 1964.5730, # Vp (m/s)
+                  'top_vs'   :  509.7961, # Vs (m/s)
+                  'bot_h'    :   20,      # thickness (m)
+                  'bot_phi'  :    0.1554, # porosity (fraction)
+                  'bot_rho'  :    2.3431, # density (gm/cc)
+                  'bot_vp'   : 2429.1460, # Vp (m/s)
+                  'bot_vs'   : 1019.5922} # Vs (m/s)
 
-top_taper_ovr = 2000
-bot_taper_ovr =    0
-
-#
-# Taper properties
-#
-
-# Porosity (fraction)
-top_taper_phi = 0.3500
-bot_taper_phi = 0.1554
-
-# Density (gm/cc)
-top_taper_rho = 1.6865
-bot_taper_rho = 2.3431
-
-# Vp (m/s)
-top_taper_vp = 1964.5730
-bot_taper_vp = 2429.1460
-
-# Vs (m/s)
-top_taper_vs =  509.7961
-bot_taper_vs = 1019.5922
+# Overburden taper parameters
+ovr_taper_par = { 'top_h'    : 2000,      # thickness (m)
+                  'top_phi'  :    0.3500, # porosity (fraction)
+                  'top_rho'  :    1.6865, # density (gm/cc)
+                  'top_vp'   : 1964.5730, # Vp (m/s)
+                  'top_vs'   :  509.7961, # Vs (m/s)
+                  'bot_h'    :    0,      # thickness (m)
+                  'bot_phi'  :    0.1554, # porosity (fraction)
+                  'bot_rho'  :    2.3431, # density (gm/cc)
+                  'bot_vp'   : 2429.1460, # Vp (m/s)
+                  'bot_vs'   : 1019.5922} # Vs (m/s)
 
 #
 # Available memory size setting for transpose operations (Mb)
@@ -311,44 +301,16 @@ memsize = 512
 # Make reservoir model grids
 #
 
-channels.make_reservoir (   private=private, memsize=memsize, xy_pad=xy_pad,
-                            nx=nx,    ny=ny,    nz=nz_res,
-                            dx=dx,    dy=dy,    dz=dz_res,
-                            ox=ox,    oy=oy,    oz=oz_res,
-                            oriu=oriu,      oriv=oriv,      oriw=oriw,
-                            bk_ru=bk_ru,    bk_rv=bk_rv,    bk_rw=bk_rw,
-                            sd_ru=sd_ru,    sd_rv=sd_rv,    sd_rw=sd_rw,
-                            bk_std_dev=bk_std_dev,  sd_std_dev=sd_std_dev,
-                            bd_depth=bd_depth,      md_depth=md_depth,
-                            bd_zshift=bd_zshift,    md_zshift=md_zshift,
-                            as_width=as_width,      as_shift=as_shift, 
-                            as_height0=as_height0,  as_height1=as_height1, 
-                            as_shape=as_shape,      as_sand=as_sand,
-                            bd_sand=bd_sand,        md_sand=md_sand,
-                            na_sand0=na_sand0,      na_sand1=na_sand1,
-                            top_taper=top_taper_res,        bot_taper=bot_taper_res,
-                            top_taper_phi=top_taper_phi,    top_taper_rho=top_taper_rho,
-                            top_taper_vp=top_taper_vp,      top_taper_vs=top_taper_vs,
-                            bot_taper_phi=bot_taper_phi,    bot_taper_rho=bot_taper_rho,
-                            bot_taper_vp=bot_taper_vp,      bot_taper_vs=bot_taper_vs)
-
+channels.make_reservoir (   memsize, private,
+                            res_grid_par, geo_par,
+                            sand_par, bk_noise_par, sd_noise_par,
+                            res_taper_par)
 
 #
 # Make overburden model grids
 #
 
-channels.make_overburden (  memsize=memsize, xy_pad=xy_pad,
-                            nx=nx,    ny=ny,    nz=nz_ovr,
-                            dx=dx,    dy=dy,    dz=dz_ovr,
-                            ox=ox,    oy=oy,    oz=oz_ovr,
-                            oriu=oriu,      oriv=oriv,      oriw=oriw,
-                            bk_ru=bk_ru,    bk_rv=bk_rv,    bk_rw=bk_rw,
-                            bk_std_dev=bk_std_dev,
-                            top_taper=top_taper_ovr,        bot_taper=bot_taper_ovr,
-                            top_taper_phi=top_taper_phi,    top_taper_rho=top_taper_rho,
-                            top_taper_vp=top_taper_vp,      top_taper_vs=top_taper_vs,
-                            bot_taper_phi=bot_taper_phi,    bot_taper_rho=bot_taper_rho,
-                            bot_taper_vp=bot_taper_vp,      bot_taper_vs=bot_taper_vs)
+channels.make_overburden (memsize, ovr_grid_par, bk_noise_par, ovr_taper_par)
 
 #
 # Make plots
@@ -381,16 +343,20 @@ for cube in (list_res):
             '''
             byte gainpanel=all allpos=n pclip=100 bias=%g |
             grey3 title="%s" color=j frame1=%d frame2=%d frame3=%d
-            ''' % (bias_res[cube],cube,nx/2+xy_pad,ny/2+xy_pad,nz_res/2)
-           )
+            ''' % (bias_res[cube],cube,
+                   grid_par['nx']/2+grid_par['xy_pad'],
+                   grid_par['ny']/2+grid_par['xy_pad'],
+                   res_grid_par['nz']/2) )
 
 for cube in (list_ovr):
     Result (cube,
             '''
             byte gainpanel=all allpos=n pclip=100 bias=%g |
             grey3 title="%s" color=j frame1=%d frame2=%d frame3=%d
-            ''' % (bias_ovr[cube],cube,nx/2+xy_pad,ny/2+xy_pad,nz_ovr/2)
-           )
+            ''' % (bias_ovr[cube],cube,
+                   grid_par['nx']/2+grid_par['xy_pad'],
+                   grid_par['ny']/2+grid_par['xy_pad'],
+                   ovr_grid_par['nz']/2) )
 
 #
 # End

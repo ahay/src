@@ -52,7 +52,7 @@ float randn_one (void)
 }
 
 void randn (int nr, float *r /* [nr] */)
-/*< feel an array with normally distributed numbers >*/
+/*< fill an array with normally distributed numbers >*/
 {
     int i;
 

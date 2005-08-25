@@ -28,46 +28,41 @@ from rsfproj import *
 import rfield
 
 #
-# Build 1D, 2D, and 3D example random fields
+# Set up 1D, 2D, and 3D example random field parameter dictionaries
 #
 
-name = ['ex1D_','ex2D_','ex3D_']    # file name prefixes
+real_par = [{},{},{}]               # realization parameters
 
-nr = 3                              # number of realizations
+real_par[0] = {'name':'ex1D_', 'nr':3, 'seed':1}
+real_par[1] = {'name':'ex2D_', 'nr':3, 'seed':1}
+real_par[2] = {'name':'ex3D_', 'nr':3, 'seed':1}
 
-nx = [ 1024, 1024,  256]            # array sizes
-ny = [    1,  512,  256]
-nz = [    1,    1,   16]
+grid_par = [{},{},{}]               # grid parameters
 
-dx = [ 1, 1,  4]                    # cell sizes
-dy = [ 1, 1,  2]
-dz = [ 1, 1, 16]
+grid_par[0] = {'nx':1024, 'ny':   1, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+                  
+grid_par[1] = {'nx':1024, 'ny': 512, 'nz':   1,
+               'dx':   1, 'dy':   1, 'dz':   1}
+                  
+grid_par[2] = {'nx': 256, 'ny': 256, 'nz':  16,
+               'dx':   4, 'dy':   2, 'dz':  16}
+                  
+covar_par = {'taper_switch':True,   # covariance taper switch
+             'alpha':1,             # covariance shape parameter
+             'oriu':[ 5,1,0],       # covariance range orientation vectors
+             'oriv':[-1,5,0], 
+             'oriw':[ 0,0,1],
+             'ru'  :100,            # covariance range parameters
+             'rv'  :20,   
+             'rw'  :20}
 
-oriu = [ 5,1,0]                     # covariance range orientation vectors
-oriv = [-1,5,0]
-oriw = [ 0,0,1]
+#
+# Build the random fields
+#
 
-ru = 100                            # covariance range parameters
-rv =  20
-rw =  20
-
-rfield.rfield(name=name[0],nr=nr,
-              nx=nx[0],ny=ny[0],nz=nz[0],
-              dx=dx[0],dy=dy[0],dz=dz[0],
-              oriu=oriu,oriv=oriv,oriw=oriw,
-              ru=ru,rv=rv,rw=rw)
-
-rfield.rfield(name=name[1],nr=nr,
-              nx=nx[1],ny=ny[1],nz=nz[1],
-              dx=dx[1],dy=dy[1],dz=dz[1],
-              oriu=oriu,oriv=oriv,oriw=oriw,
-              ru=ru,rv=rv,rw=rw)
-
-rfield.rfield(name=name[2],nr=nr,
-              nx=nx[2],ny=ny[2],nz=nz[2],
-              dx=dx[2],dy=dy[2],dz=dz[2],
-              oriu=oriu,oriv=oriv,oriw=oriw,
-              ru=ru,rv=rv,rw=rw)
+for i in range(3): 
+    rfield.rfield(real_par[i],grid_par[i],covar_par)
 
 #
 # Plot the results.
@@ -76,18 +71,19 @@ rfield.rfield(name=name[2],nr=nr,
 results = ['dist','covar','taper','covar_taper',
            'shift','pspec_real','aspec_real']
            
-for i in range(nr): 
-    results = results + ['sim_%02d_real' % (i+1)]
-          
-plots = [map(lambda x: name[0]+x,results),
-         map(lambda x: name[1]+x,results),
-         map(lambda x: name[2]+x,results)]
+plots = range(3)
 
+for i in range(3):
+    plots[i] = results
+    for j in range(real_par[i]['nr']):
+        plots[i] = plots[i] + ['sim_%02d_real' % (j+1)]
+    plots[i] = map(lambda x: real_par[i]['name']+x,plots[i])
+    
 #          
 # 1D plots
 #
  
-if (nx[0] > 50):
+if (grid_par[0]['nx'] > 50):
     circles = ''
 else:
     circles = 'symbol="o" symbolsz=10'
@@ -99,7 +95,8 @@ for i in (plots[0]):
 # 2D plots	
 #          
     
-screen_ratio  = float(ny[1]*dy[1])/float(nx[1]*dx[1])
+screen_ratio  = ( float(grid_par[1]['ny']*grid_par[1]['dy'])
+                 /float(grid_par[1]['nx']*grid_par[1]['dx']) )
 screen_height = 10
 if (screen_height/screen_ratio > 13):
     screen_height = 13*screen_ratio
@@ -125,8 +122,10 @@ for i in (plots[2]):
             byte bar=bar.rsf gainpanel=all pclip=100 wantscalebar=y |
             grey3 title="%s" label1="z" label2="x" label3="y" 
             color=E movie=0 flat=y scalebar=y bar=bar.rsf
-            frame1=%d frame2=%d frame3=%d point1=%g point2=%g
-            ''' % (i,nz[2]/2-1,nx[2]/2,ny[2]/2,0.5,0.5)
+            frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5
+            ''' % (i,grid_par[2]['nz']/2-1,
+                     grid_par[2]['nx']/2,
+                     grid_par[2]['ny']/2)
            )
 
 End ()
