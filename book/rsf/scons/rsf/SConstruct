@@ -123,7 +123,7 @@ for x in range(1500,4000,500):
     ##################
     pik = 'pik%d' % x
     Flow(pik,scn,
-         'mutter x0=4 inner=y v0=3 half=n | pick rect1=50')
+         'mutter x0=4 inner=y v0=3 half=n | pick rect1=50 vel0=5 gate=10')
     Plot(pik+'a',pik,graph(1,v0,dv,nv,0,20))
     Plot(pik+'b',pik,graph(1,v0,dv,nv,7,5))
     Plot(scn+'a',[scn,pik+'a',pik+'b'],'Overlay')
@@ -168,7 +168,7 @@ Flow('scan','cmpdata cmpmask',
 Flow('pick','scan',
      '''
      mutter x0=4 inner=y v0=3 half=n |
-     pick rect1=50 rect2=100 | window
+     pick rect1=50 rect2=100 vel0=5 | window
      ''')
 Result('pick',velplot('Stacking Velocity','Time (s)'))
 

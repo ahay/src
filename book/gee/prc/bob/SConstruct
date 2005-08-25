@@ -29,8 +29,10 @@ def graph(title):
     title="%s"
     ''' % title
 
-Flow('rms','scan','blindpick2 eps=100 | window')
+Flow('rms','scan','pick rect1=50 | window')
 Plot('rms',graph(' ') + ' pad=y plotcol=3 plotfat=10 wantaxis=n' + win)
+
+Flow('piks','scan','picks nt=8281 dt=100000')
 
 Plot('scan2',['scan','rms'],'Overlay')
 

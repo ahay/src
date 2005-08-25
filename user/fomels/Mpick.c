@@ -29,8 +29,8 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main(int argc, char* argv[])
 {
     int dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate;
-    float **scan, **weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, ct;
+    int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0;
+    float **scan, **weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, ct, vel0;
     bool smooth;
     char key[6];
     sf_file scn, pik;
@@ -55,6 +55,12 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(scn,"o2",&o2)) o2=0.;
     if (!sf_histfloat(scn,"d2",&d2)) d2=1.;
  
+    if (!sf_getfloat("vel0",&vel0)) vel0=o2;
+    /* surface velocity */
+    i0 = 0.5 + (vel0-o2)/d2;
+    if (i0 < 0) i0=0;
+    if (i0 >= n2) i0=n2-1;
+
     sf_putint(pik,"n2",1);
 
     for (i=1; i < dim-1; i++) {
@@ -93,7 +99,9 @@ int main(int argc, char* argv[])
 
 	divn_init(dim,nm,n,rect,niter);
     } else {
+	pick = NULL;
 	pick2 = sf_floatalloc(n1);
+	ampl = NULL;
     }
 
     for (i3=0; i3 < n3; i3++) {
@@ -107,7 +115,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	dynprog(weight);
+	dynprog(i0, weight);
 	dynprog_traj(pick2);
 
 	if (smooth) {
