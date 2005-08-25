@@ -1,16 +1,16 @@
 from rsfproj import *
 
 par = {
-    'nz':625, 'dz':40,    'oz':0,    'nz':600, 'jz':1, 'dz':40,
-    'nx':400, 'dx':110,   'ox':5500, 'nx':400, 'jx':1, 'dx':110,
-    'ny':1,   'dy':110,   'oy':38500,'ny':150, 'jy':1, 'dy':110,
+    'nz':625, 'dz':40,    'oz':0,    'nz':300, 'jz':2, 'dz':80,
+    'nx':400, 'dx':110,   'ox':5500, 'nx':200, 'jx':2, 'dx':220,
+    'ny':1,   'dy':110,   'oy':38500,'ny':75,  'jy':2, 'dy':220,
     #
-    'nt':600,'dt':0.005,'ot':0,
+    'nt':600,'dt':0.0075,'ot':0,
 #
-    'ng':721,'dg':0.25,'og':-90,
+    'ng':2881,'dg':0.0625,'og':-90,
     'nh':361,'dh':0.5, 'oh':0,
-    'nray':1000, 'jray':500, 'nray3d':60000,
-    'fill':0,'scaleray':1., 'pick':2
+    'nray':5000, 'jray':1000, 'nray3d':250000,
+    'fill':1,'scaleray':1., 'pick':2
     }
 
 par['xmin']=par['ox']
@@ -24,7 +24,7 @@ par['xmid']=par['nx']/2.
 par['ymid']=par['ny']/2.
 
 par['zsou']=0
-par['xsou']=29000
+par['xsou']=27000
 par['ysou']=46200
 
 def igrey(custom):
@@ -49,8 +49,8 @@ Flow('vel3d','./DATA/vel3d.HH',
      put label1=z label2=x label3=y
      ''' % par)
 
-Flow('vsm2d','vel2d','smooth rect1=5 rect2=5         repeat=1')
-Flow('vsm3d','vel3d','smooth rect1=5 rect2=5 rect3=5 repeat=1')
+Flow('vsm2d','vel2d','smooth rect1=1 rect2=1         repeat=1')
+Flow('vsm3d','vel3d','smooth rect1=1 rect2=1 rect3=1 repeat=1')
 
 Result('vsm2d','vsm2d',igrey('color=j allpos=y bias=5000'))
 # ------------------------------------------------------------
