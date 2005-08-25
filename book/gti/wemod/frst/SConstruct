@@ -89,9 +89,11 @@ channels.make_reservoir (   private=private, memsize=memsize, xy_pad=xy_pad,
                             as_shape=as_shape,      as_sand=as_sand,
                             bd_sand=bd_sand,        md_sand=md_sand,
                             na_sand0=na_sand0,      na_sand1=na_sand1,
-                            taper_thickness=taper_thickness_res, 
-                            taper_phi=taper_phi,    taper_rho=taper_rho,
-                            taper_vp=taper_vp,      taper_vs=taper_vs)
+                            top_taper_phi=taper_phi, top_taper_rho=taper_rho,
+                            top_taper_vp=taper_vp,   top_taper_vs=taper_vs,
+                            bot_taper_phi=taper_phi, bot_taper_rho=taper_rho,
+                            bot_taper_vp=taper_vp,   bot_taper_vs=taper_vs
+                            )
 
 # ------------------------------------------------------------
 
@@ -102,9 +104,11 @@ channels.make_overburden (  memsize=memsize, xy_pad=xy_pad,
                             oriu=oriu,      oriv=oriv,      oriw=oriw,
                             bk_ru=bk_ru,    bk_rv=bk_rv,    bk_rw=bk_rw,
                             bk_std_dev=bk_std_dev,
-                            taper_thickness=taper_thickness_ovr, 
-                            taper_phi=taper_phi,    taper_rho=taper_rho,
-                            taper_vp=taper_vp,      taper_vs=taper_vs)
+                            top_taper_phi=taper_phi,    top_taper_rho=taper_rho,
+                            top_taper_vp=taper_vp,      top_taper_vs=taper_vs
+                            bot_taper_phi=taper_phi,    bot_taper_rho=taper_rho,
+                            bot_taper_vp=taper_vp,      bot_taper_vs=taper_vs
+                            )
 
 # ------------------------------------------------------------
 

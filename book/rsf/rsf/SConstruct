@@ -21,12 +21,8 @@ Alias('progs',progs)
 Paper('install',use='[bookmarks=true]hyperref')
 Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')
-Paper('api',use='hyperref,listings',
-      include='\\newcommand{\\RSF}{%s}' %
-      os.path.join(os.environ.get('HOME'),'RSF'))
-Paper('demo',use='hyperref,listings',
-      include='\\newcommand{\\RSF}{%s}' %
-      os.path.join(os.environ.get('HOME'),'RSF'))
+Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
+Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 
 Paper('prog',use='hyperref,amsmath,fancybox',
       include='''
