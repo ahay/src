@@ -27,9 +27,6 @@
 #include <rsf.h>
 #include "hwt3d.h"
 
-#include "mt19937ar.h"
-/*^*/
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -76,6 +73,9 @@ int main(int argc, char* argv[])
     if(! sf_getfloat("gmax",&gmax)) gmax=+90;
     if(! sf_getfloat("hmin",&hmin)) hmin=0;
     if(! sf_getfloat("hmax",&hmax)) hmax=180;
+
+    if(verb) sf_warning("gmin=%g gmax=%g",gmin,gmax);
+    if(verb) sf_warning("hmin=%g hmax=%g",hmin,hmax);
 
     /* time axis */
     if(! sf_getint  ("nt",&at.n)) at.n=100;
@@ -130,12 +130,14 @@ int main(int argc, char* argv[])
     
     /* LOOP over rays */
     for(iray=0; iray<nray; iray++) {
+	if(verb && iray%jray == 0) sf_warning("iray=%d of %d",iray,nray);
 
 	/* init ray */
-	g = gmin + genrand_real1() * (gmax-gmin); g*=SF_PI/180;
-	h = hmin + genrand_real1() * (hmax-hmin); h*=SF_PI/180;
+	g = gmin + genrand_real1() * (gmax-gmin); 
+	h = hmin + genrand_real1() * (hmax-hmin);
 
-	if(verb && iray%jray == 0) sf_warning("iray=%d of %d",iray,nray);
+	g *= SF_PI/180;
+	h *= SF_PI/180;
 	
 	/* trace ray */
 	l = 0;
@@ -153,6 +155,8 @@ int main(int argc, char* argv[])
 	To.z = Tm.z + Tm.v*at.d * cos(g);
 	To.v = hwt3d_getv(vv,To);
 
+/*	printpt3d(To);*/
+
 	TmTo = vec3d(&Tm,&To);
 	l   += len3d(&TmTo);
 	if     (pick==2) hwt3d_lint(tt,ll,To,t,l);
@@ -165,6 +169,8 @@ int main(int argc, char* argv[])
 	    Tp = hwt3d_raytr(vv,Tm,To,scaleray);
 	    Tm = To;
 	    To = Tp;
+
+/*	    printpt3d(To);*/
 
 	    TmTo = vec3d(&Tm,&To);
 	    l   += len3d(&TmTo); 

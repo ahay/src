@@ -1,16 +1,16 @@
 from rsfproj import *
 
 par = {
-    'nz':150, 'dz':5,    'oz':0,   
-    'nx':200, 'dx':5,    'ox':-500,
-    'ny':200, 'dy':5,    'oy':-500,
+    'nz':75,  'dz':10,    'oz':0,   
+    'nx':100, 'dx':10,    'ox':-500,
+    'ny':100, 'dy':10,    'oy':-500,
     #
     'nt':200,'dt':0.0025,'ot':0,
 #
     'ng':30, 'dg':2,'og':-60,
     'nh':181,'dh':2,'oh':0,
 #
-    'ng':451,'dg':0.4,'og':-90,
+    'ng':361,'dg':0.5,'og':-90,
     'nh':361,'dh':0.5,'oh':0,
     }
 
@@ -63,40 +63,43 @@ def gray(custom,par):
 
 # ------------------------------------------------------------
 
+# velocity
 Flow('vel',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=051 l1=150
-     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=101 l2=200
-     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=101 l3=200 |
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=025 l1=075
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=051 l2=100
+     n3=%(ny)d d3=%(dy)g o3=%(oy)g k3=051 l3=100 |
      scale axis=123 |
-     math output="2000+4000*input" |
+     math output="2000+2500*input" |
      put label1=z label2=x label3=y
      ''' % par)
 
-Flow('vsm','vel',
-     '''
-     smooth rect1=5 rect2=5 rect3=5 repeat=3
-     ''')
+# smooth velocity
+Flow('vsm','vel','smooth rect1=3 rect2=3 rect3=3 repeat=1')
 
 # ------------------------------------------------------------
 
 # Huygens wavefront tracing
 Flow('hwt','vsm',
      '''
-     /home/savap/RSF/user/savap/sfhwt3d verb=y forceray=n
+     hwt3d verb=y forceray=n scaleray=2 
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      nh=%(nh)d oh=%(oh)g dh=%(dh)g
      ''' % par)
 
-# eikonal
-Flow('eik','vel',
+Flow('rrt','vsm',
      '''
-     eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g
+     rrt3d verb=y scaleray=2 nray=100000 jray=10000 pick=2 fill=1
+     xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     gmin=-90 gmax=90 hmin=0 hmax=180
      ''' % par)
-Flow('emap','eik','window n3=1 f3=%(ymid)d' % par)
+
+# fast-marching eikonal solver
+Flow('eik','vel','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
 
 for i in range(3):
     par['pick']=i
@@ -105,26 +108,40 @@ for i in range(3):
     tim = 'tim' + str(i)
     Flow(tim,'hwt',
          '''
-         /home/savap/RSF/user/savap/sfint3d
-         verb=y pick=%(pick)d fill=1
+         int3d verb=y pick=%(pick)d fill=1
          nz=%(nz)d oz=%(oz)g dz=%(dz)g
          nx=%(nx)d ox=%(ox)g dx=%(dx)g
          ny=%(ny)d oy=%(oy)g dy=%(dy)g
-         ny=3 oy=-5. dy=5.
          ''' % par)
 
-    hmap = 'hmap' + str(i)
-    Flow(hmap,tim,'window n3=1 f3=1')
+for j in range(0,par['ny'],10):
 
-Flow('time','emap hmap0 hmap1 hmap2',
-     '''
-     cat axis=3 space=n
-     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]}
-     ''', stdin=0)
-Result('time','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
+    # eikonal traveltime cube
+    emap = 'emap' + str(j)
+    Flow(emap,'eik','window n3=1 f3=%d' % j)
+
+    # random ray traveltime cube
+    rmap = 'rmap' + str(j)
+    Flow(rmap,'rrt','window n3=1 f3=%d' % j)
+
+    # HWT traveltime cubes - various branch selection methods
+    hmap = 'hmap' + str(j)
+    for i in range(3):
+        htmp = hmap + '-' + str(i)
+        Flow(htmp,tim,'window n3=1 f3=%d' % j)
+
+    # combined plot (eikonal + HWT[0-2])
+    time = 'time' + str(j)
+    Flow(time,[emap,hmap+'-0',hmap+'-1',hmap+'-2',rmap],
+         '''
+         cat axis=3 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} ${SOURCES[3]} ${SOURCES[4]} 
+         ''', stdin=0)
+    Result(time,'grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
 
 # ------------------------------------------------------------
 
+# plot x,y,z at various time steps
 for it in range(par['nt']):
     ttt = 'ttt' + str(it)
     xxx = 'xxx' + str(it)
@@ -144,6 +161,7 @@ for it in range(par['nt']):
 
 # ------------------------------------------------------------
 
+# vertical slice (x)
 Flow('xray','hwt',
      '''
      window n1=2 j1=2 n3=1 min3=0 |
@@ -155,6 +173,7 @@ Plot('xray','xray','window j2=5 |'
      + grax('plotcol=1 label1=x label2=z',par) )
 Result('xray','xvel xray','Overlay')
 
+# vertical slice (y)
 Flow('yray','hwt',
      '''
      window n1=2 f1=1 n3=1 min3=90 |
@@ -169,13 +188,12 @@ Result('yray','yvel yray','Overlay')
 # ------------------------------------------------------------
 
 # wavefront horizontal projections
-
 Flow('wft','hwt',
      '''
      window n2=1 f2=%d n1=2 f1=0 |
      dd type=complex |
      window
-     ''' % 350)
+     ''' % 120)
 Result('wft','wft',
        '''
        window j2=5 | transp plane=23 |

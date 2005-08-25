@@ -54,6 +54,7 @@ float hwt3d_getv(float ***vv,
     int    jz,jx,jy;
     double fz,fx,fy;
     float  v;
+    int    kz,kx,ky;
 
     x = SF_MIN(SF_MAX(ax.o,P.x),ax.o+(ax.n-2)*ax.d);
     y = SF_MIN(SF_MAX(ay.o,P.y),ay.o+(ay.n-2)*ay.d);
@@ -62,23 +63,33 @@ float hwt3d_getv(float ***vv,
     rx = (x-ax.o)/ax.d;
     jx = (int)(rx);
     fx =       rx-jx;
+    kx = fx+1;
 
     ry = (y-ay.o)/ay.d;
     jy = (int)(ry);
     fy =       ry-jy;
+    ky = fy+1;
 
     rz = (z-az.o)/az.d;
     jz = (int)(rz);
     fz =       rz-jz;
+    kz = fz+1;
 
-    v = vv[ jy  ][ jx  ][ jz  ] * (1-fz)*(1-fx)*(1-fy) +
-	vv[ jy  ][ jx  ][ jz+1] * (  fz)*(1-fx)*(1-fy) +
-	vv[ jy+1][ jx  ][ jz  ] * (1-fz)*(1-fx)*(  fy) +
-	vv[ jy+1][ jx  ][ jz+1] * (  fz)*(1-fx)*(  fy) + 
-	vv[ jy  ][ jx+1][ jz  ] * (1-fz)*(  fx)*(1-fy) +
-	vv[ jy  ][ jx+1][ jz+1] * (  fz)*(  fx)*(1-fy) +
-	vv[ jy+1][ jx+1][ jz  ] * (1-fz)*(  fx)*(  fy) +
-	vv[ jy+1][ jx+1][ jz+1] * (  fz)*(  fx)*(  fy);
+    if(ax.n==1) {jx=0; kx=0; fx=0;}
+    if(ay.n==1) {jy=0; ky=0; fy=0;}
+    if(az.n==1) {jz=0; kz=0; fz=0;}
+
+/*    v = vv[ jy][ jx][ jz] * (1-fz)*(1-fx)*(1-fy) + */
+/*	vv[ jy][ jx][ kz] * (  fz)*(1-fx)*(1-fy);*/
+
+    v = vv[ jy][ jx][ jz] * (1-fz)*(1-fx)*(1-fy) +
+	vv[ jy][ jx][ kz] * (  fz)*(1-fx)*(1-fy) +
+	vv[ ky][ jx][ jz] * (1-fz)*(1-fx)*(  fy) +
+	vv[ ky][ jx][ kz] * (  fz)*(1-fx)*(  fy) + 
+	vv[ jy][ kx][ jz] * (1-fz)*(  fx)*(1-fy) +
+	vv[ jy][ kx][ kz] * (  fz)*(  fx)*(1-fy) +
+	vv[ ky][ kx][ jz] * (1-fz)*(  fx)*(  fy) +
+	vv[ ky][ kx][ kz] * (  fz)*(  fx)*(  fy);
 
     return(v);
 }
@@ -415,8 +426,8 @@ void hwt3d_putt(float*** tt, /* traveltime cube */
 
 /*------------------------------------------------------------*/
 void lpick(float*** tt, float*** ll,
-	  float     t, float     l,
-	  int iy,int ix,int iz) {
+	   float     t, float     l,
+	   int iy,int ix,int iz) {
 
     if( ll[iy][ix][iz] == MISSING || 
 	ll[iy][ix][iz] >=l ) {
@@ -434,36 +445,45 @@ void hwt3d_lint(float*** tt, /* traveltime cube */
 {
     double rz,rx,ry;
     int    jz,jx,jy;
+    int    kz,kx,ky;
 
     rx = (P.x-ax.o)/ax.d;
     jx = (int)(rx);
+    kx = jx + 1;
 
     ry = (P.y-ay.o)/ay.d;
     jy = (int)(ry);
+    ky = jy + 1;
     
     rz = (P.z-az.o)/az.d;
     jz = (int)(rz);
+    kz = jz + 1;
+
+    if(ax.n==1) {jx=0; kx=0;}
+    if(ay.n==1) {jy=0; ky=0;}
+    if(az.n==1) {jz=0; kz=0;}
     
-    if( 0<=jx && jx<ax.n-1 &&
-	0<=jy && jy<ay.n-1 &&
-	0<=jz && jz<az.n-1 ) {
+    if( 0<=jx && kx<=ax.n-1 &&
+	0<=jy && ky<=ay.n-1 &&
+	0<=jz && kz<=az.n-1 ) {
 	
-	lpick(tt,ll,t,l,jy  ,jx  ,jz  );
-	lpick(tt,ll,t,l,jy  ,jx  ,jz+1);
-	lpick(tt,ll,t,l,jy+1,jx  ,jz  );
-	lpick(tt,ll,t,l,jy+1,jx  ,jz+1);
-	lpick(tt,ll,t,l,jy  ,jx+1,jz  );
-	lpick(tt,ll,t,l,jy  ,jx+1,jz+1);
-	lpick(tt,ll,t,l,jy+1,jx+1,jz  );
-	lpick(tt,ll,t,l,jy+1,jx+1,jz+1);
+	lpick(tt,ll,t,l,jy,jx,jz);
+	lpick(tt,ll,t,l,jy,jx,kz);
+	lpick(tt,ll,t,l,ky,jx,jz);
+	lpick(tt,ll,t,l,ky,jx,kz);
+	lpick(tt,ll,t,l,jy,kx,jz);
+	lpick(tt,ll,t,l,jy,kx,kz);
+	lpick(tt,ll,t,l,ky,kx,jz);
+	lpick(tt,ll,t,l,ky,kx,kz);
     }
 }
 
 /*------------------------------------------------------------*/
 
 void tpick(float*** tt, float*** ll,
-	  float     t, float     l,
-	  int iy,int ix,int iz) {
+	   float     t, float     l,
+	   int iy,int ix,int iz) {
+
     if( tt[iy][ix][iz]== MISSING ||
 	tt[iy][ix][iz]>=t )
 	tt[iy][ix][iz]= t;
@@ -478,28 +498,36 @@ void hwt3d_tint(float*** tt, /* traveltime cube */
 {
     double rz,rx,ry;
     int    jz,jx,jy;
+    int    kz,kx,ky;
 
     rx = (P.x-ax.o)/ax.d;
     jx = (int)(rx);
+    kx = jx+1;
 
     ry = (P.y-ay.o)/ay.d;
     jy = (int)(ry);
+    ky = jy+1;
     
     rz = (P.z-az.o)/az.d;
     jz = (int)(rz);
+    kz = jz+1;
+
+    if(ax.n==1) {jx=0; kx=0;}
+    if(ay.n==1) {jy=0; ky=0;}
+    if(az.n==1) {jz=0; kz=0;}
     
-    if( 0<=jx && jx<ax.n-1 &&
-	0<=jy && jy<ay.n-1 &&
-	0<=jz && jz<az.n-1 ) {
+    if( 0<=jx && kx<=ax.n-1 &&
+	0<=jy && ky<=ay.n-1 &&
+	0<=jz && kz<=az.n-1 ) {
 	
-	tpick(tt,ll,t,l,jy  ,jx  ,jz  );
-	tpick(tt,ll,t,l,jy  ,jx  ,jz+1);
-	tpick(tt,ll,t,l,jy+1,jx  ,jz  );
-	tpick(tt,ll,t,l,jy+1,jx  ,jz+1);
-	tpick(tt,ll,t,l,jy  ,jx+1,jz  );
-	tpick(tt,ll,t,l,jy  ,jx+1,jz+1);
-	tpick(tt,ll,t,l,jy+1,jx+1,jz  );
-	tpick(tt,ll,t,l,jy+1,jx+1,jz+1);
+	tpick(tt,ll,t,l,jy,jx,jz);
+	tpick(tt,ll,t,l,jy,jx,kz);
+	tpick(tt,ll,t,l,ky,jx,jz);
+	tpick(tt,ll,t,l,ky,jx,kz);
+	tpick(tt,ll,t,l,jy,kx,jz);
+	tpick(tt,ll,t,l,jy,kx,kz);
+	tpick(tt,ll,t,l,ky,kx,jz);
+	tpick(tt,ll,t,l,ky,kx,kz);
     }
 }
 
@@ -514,28 +542,36 @@ void hwt3d_nint(float*** tt, /* traveltime cube */
 {
     double rz,rx,ry;
     int    jz,jx,jy;
+    int    kz,kx,ky;
 
     rx = (P.x-ax.o)/ax.d;
     jx = (int)(rx);
+    kx = jx + 1;
 
     ry = (P.y-ay.o)/ay.d;
     jy = (int)(ry);
+    ky = jy + 1;
     
     rz = (P.z-az.o)/az.d;
     jz = (int)(rz);
+    kz = jz + 1;
+
+    if(ax.n==1) {jx=0; kx=0;}
+    if(ay.n==1) {jy=0; ky=0;}
+    if(az.n==1) {jz=0; kz=0;}
     
-    if( 0<=jx && jx<ax.n-1 &&
-	0<=jy && jy<ay.n-1 &&
-	0<=jz && jz<az.n-1 ) {
+    if( 0<=jx && kx<=ax.n-1 &&
+	0<=jy && ky<=ay.n-1 &&
+	0<=jz && kz<=az.n-1 ) {
 	
-	tt[ jy  ][ jx  ][ jz  ] = t;
-	tt[ jy  ][ jx  ][ jz+1] = t;
-	tt[ jy+1][ jx  ][ jz  ] = t;
-	tt[ jy+1][ jx  ][ jz+1] = t;
-	tt[ jy  ][ jx+1][ jz  ] = t;
-	tt[ jy  ][ jx+1][ jz+1] = t;
-	tt[ jy+1][ jx+1][ jz  ] = t;
-	tt[ jy+1][ jx+1][ jz+1] = t;
+	tt[ jy][ jx][ jz] = t;
+	tt[ jy][ jx][ kz] = t;
+	tt[ ky][ jx][ jz] = t;
+	tt[ ky][ jx][ kz] = t;
+	tt[ jy][ kx][ jz] = t;
+	tt[ jy][ kx][ kz] = t;
+	tt[ ky][ kx][ jz] = t;
+	tt[ ky][ kx][ kz] = t;
     }
 }
 
@@ -560,23 +596,24 @@ void hwt3d_fill(float*** tt, /* traveltime cube */
 		//---------------------------------------
 		if( tt[iy][ix][iz] == MISSING) {
 
-		    kx=ix-n; lx=ix+n;
-		    ky=iy-n; ly=iy+n;
-		    kz=iz-n; lz=iz+n;
+		    kx=SF_MIN(SF_MAX(ix-n,0),ax.n-1);
+		    ky=SF_MIN(SF_MAX(iy-n,0),ay.n-1);
+		    kz=SF_MIN(SF_MAX(iz-n,0),az.n-1);
+
+		    lx=SF_MIN(SF_MAX(ix+n,0),ax.n-1);
+		    ly=SF_MIN(SF_MAX(iy+n,0),ay.n-1);
+		    lz=SF_MIN(SF_MAX(iz+n,0),az.n-1);
 
 		    k=0;
 		    v=0.;
-		    for(jy=ky;jy<ly;jy++) {
-			for(jx=kx;jx<lx;jx++) {
-			    for(jz=kz;jz<lz;jz++) {
+		    for(jy=ky;jy<=ly;jy++) {
+			for(jx=kx;jx<=lx;jx++) {
+			    for(jz=kz;jz<=lz;jz++) {
 
-				if(jy>0 && jy<ay.n &&
-				   jx>0 && jx<ax.n &&
-				   jz>0 && jz<az.n )
-				    if( tt[jy][jx][jz] != MISSING) {
-					v+=tt[jy][jx][jz];
-					k++;
-				    }
+				if(    tt[jy][jx][jz] != MISSING) {
+				    v+=tt[jy][jx][jz];
+				    k++;
+				}
 			    }
 			}
 		    } // local loop

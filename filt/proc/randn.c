@@ -21,11 +21,9 @@
 #include <math.h>
 
 #include <rsf.h>
+/*^*/
 
 #include "randn.h"
-
-/*#include "mt19937ar.h"*/
-/*^*/
 
 static const double s = 0.449871, tt = -0.386595;
 static const double a = 0.19600, b = 0.25472;
