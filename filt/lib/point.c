@@ -31,16 +31,6 @@ typedef struct{
 }pt3d;
 /*^*/
 
-typedef struct{
-    double dx,dz;
-}vc2d;
-/*^*/
-
-typedef struct{
-    double dx,dy,dz;
-}vc3d;
-/*^*/
-
 #endif
 
 

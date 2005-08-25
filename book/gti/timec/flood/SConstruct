@@ -1,16 +1,16 @@
 from rsfproj import *
 
 par = {
-    'nz':625, 'dz':40,    'oz':0,
-    'nx':746, 'dx':110,   'ox':0,   'nx':400,
-    'ny':1,   'dy':110,   'oy':46200,
+    'nz':625, 'dz':40,    'oz':0,    'nz':600, 'jz':1, 'dz':40,
+    'nx':400, 'dx':110,   'ox':5500, 'nx':400, 'jx':1, 'dx':110,
+    'ny':1,   'dy':110,   'oy':38500,'ny':150, 'jy':1, 'dy':110,
     #
-    'nt':500,'dt':0.01,'ot':0,
+    'nt':600,'dt':0.005,'ot':0,
 #
-    'ng':1801,'dg':0.05,'og':0,
-    'nh':1,'dh':0.5,'oh':0,
-    'nray':10000, 'jray':1000,
-    'fill':0,'scaleray':2
+    'ng':721,'dg':0.25,'og':-90,
+    'nh':361,'dh':0.5, 'oh':0,
+    'nray':1000, 'jray':500, 'nray3d':60000,
+    'fill':0,'scaleray':1., 'pick':2
     }
 
 par['xmin']=par['ox']
@@ -23,9 +23,9 @@ par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 par['xmid']=par['nx']/2.
 par['ymid']=par['ny']/2.
 
-par['zsou']=par['oz']
-par['xsou']=10000
-par['ysou']=par['oy'] #+ par['ymid'] * par['dy']
+par['zsou']=0
+par['xsou']=29000
+par['ysou']=46200
 
 def igrey(custom):
     return '''
@@ -33,49 +33,40 @@ def igrey(custom):
     wantscalebar=y
     %s
     ''' % (custom)
-
-def grex(custom,par):
-    return '''
-    grey labelrot=n pclip=100 title=""
-    min2=%g max2=%g min1=%g max1=%g
-    %s
-    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
-def grey(custom,par):
-    return '''
-    grey labelrot=n pclip=100 title=""
-    min2=%g max2=%g min1=%g max1=%g
-    %s
-    ''' % (par['ymin'],par['ymax'],par['zmin'],par['zmax'],custom)
-
-def grax(custom,par):
-    return '''
-    graph labelrot=n yreverse=y title=""
-    min1=%g max1=%g min2=%g max2=%g
-    %s
-    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
-def gray(custom,par):
-    return '''
-    graph labelrot=n yreverse=y title=""
-    min1=%g max1=%g min2=%g max2=%g
-    %s
-    ''' % (par['ymin'],par['ymax'],par['zmin'],par['zmax'],custom)
-
 # ------------------------------------------------------------
 
 # velocity
-Flow('vel2d','./DATA/vel.HH','window n2=%(nx)d | put label1=z label2=x label3=y' % par)
-Result('vel2d','vel2d',igrey('color=j allpos=y'))
+Flow('vel2d','./DATA/vel3d.HH',
+     '''
+     window n1=%(nz)d j1=%(jz)d n2=%(nx)d j2=%(jx)d n3=1 f3=70 |
+     put label1=z label2=x label3=y
+     ''' % par)
+Result('vel2d','vel2d',igrey('color=j allpos=y bias=5000'))
 
-# smooth velocity
-Flow('vsm2d','vel2d','smooth rect1=31 rect2=21 rect3=21 repeat=11')
-Result('vsm2d','vsm2d',igrey('color=j allpos=y'))
+Flow('vel3d','./DATA/vel3d.HH',
+     '''
+     window n1=%(nz)d j1=%(jz)d n2=%(nx)d j2=%(jx)d n3=%(ny)d j3=%(jy)d |
+     put label1=z label2=x label3=y
+     ''' % par)
 
+Flow('vsm2d','vel2d','smooth rect1=5 rect2=5         repeat=1')
+Flow('vsm3d','vel3d','smooth rect1=5 rect2=5 rect3=5 repeat=1')
+
+Result('vsm2d','vsm2d',igrey('color=j allpos=y bias=5000'))
 # ------------------------------------------------------------
 
 # Huygens wavefront tracing
 Flow('hwt2d','vsm2d',
      '''
-     hwt3d verb=y forceray=y scaleray=%(scaleray)d
+     hwt3d verb=y forceray=n scaleray=%(scaleray)d
+     xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
+     nh=1      oh=0      dh=%(dh)g
+     ''' % par)
+Flow('hwt3d','vsm3d',
+     '''
+     hwt3d verb=y forceray=n scaleray=%(scaleray)d
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
@@ -84,33 +75,118 @@ Flow('hwt2d','vsm2d',
 
 Flow('tim2d','hwt2d',
      '''
-     int3d verb=y pick=2 fill=%(fill)d
+     int3d verb=y pick=%(pick)d fill=%(fill)d
+     nz=%(nz)d oz=%(oz)g   dz=%(dz)g
+     nx=%(nx)d ox=%(ox)g   dx=%(dx)g
+     ny=1      oy=%(ysou)g dy=%(dy)g
+     ''' % par)
+Flow('tim3d','hwt3d',
+     '''
+     int3d verb=y pick=%(pick)d fill=%(fill)d
      nz=%(nz)d oz=%(oz)g dz=%(dz)g
      nx=%(nx)d ox=%(ox)g dx=%(dx)g
      ny=%(ny)d oy=%(oy)g dy=%(dy)g
      ''' % par)
+Flow('tim2ds','tim3d','window n3=1 min3=%(ysou)g' % par)
 
-#/home/savap/RSF/user/savap/sf
 Flow('rrt2d','vsm2d',
      '''
      rrt3d verb=y scaleray=%(scaleray)d nray=%(nray)d jray=%(jray)d
-     pick=2 fill=%(fill)d
+     pick=%(pick)d fill=%(fill)d
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
-     gmin=0. gmax=90. hmin=0 hmax=0
+     gmin=-90. gmax=90. hmin=0 hmax=0
      ''' % par)
+Flow('rrt3d','vsm3d',
+     '''
+     rrt3d verb=y scaleray=%(scaleray)d nray=%(nray3d)d jray=%(jray)d
+     pick=%(pick)d fill=%(fill)d
+     xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     gmin=-90. gmax=90. hmin=0 hmax=180
+     ''' % par)
+Flow('rrt2ds','rrt3d','window n3=1 min3=%(ysou)g' % par)
 
 # fast-marching eikonal solver
-Flow('eik2d','vel2d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
+Flow('eik2d','vsm2d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
+Flow('eik3d','vsm3d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
+Flow('eik2ds','eik3d','window n3=1 min3=%(ysou)g' % par)
 
-Flow('time',['eik2d','tim2d','rrt2d'],
+Flow('time2d',['eik2d','tim2d','rrt2d'],
      '''
      cat axis=3 space=n
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]}
      ''', stdin=0)
-Result('time','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
+Result('time2d','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
+
+Flow('time3d',['eik2ds','tim2ds','rrt2ds'],
+     '''
+     cat axis=3 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]}
+     ''', stdin=0)
+Result('time3d','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
+
+# ------------------------------------------------------------
+def grex(custom,par):
+    return '''
+    grey labelrot=n pclip=100 title=""
+    min2=%g max2=%g min1=%g max1=%g
+    %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+
+def grax(custom,par):
+    return '''
+    graph labelrot=n yreverse=y title=""
+    min1=%g max1=%g min2=%g max2=%g
+    %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
+
 
 # ------------------------------------------------------------
 
+Plot('xvel','vel2d','window |' % par
+     + grex('grid=y gridcol=0 allpos=y bias=1000',par))
+
+# ------------------------------------------------------------
+
+Flow('wftnew','vsm2d',
+     '''
+     /home/savap/RSF/filt/imag/sfhwt3d
+     verb=y forceray=n
+     xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g 
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
+     nh=1      oh=0      dh=%(dh)g
+     ''' % par)
+Flow('xnew','wftnew',
+     '''
+     window n1=2 j1=2 n3=1 min3=0 |
+     dd type=complex | window
+     ''')
+Plot('xnew','xnew','window j2=10 |'
+     + grax('plotcol=1 label1=x label2=z',par) )
+#Plot('xnew','xnew','graph yreverse=y')
+Plot('xvnew','xvel xnew','Overlay')
+
+# ------------------------------------------------------------
+
+Flow('wftold','vsm2d',
+     '''
+     /home/savap/RSF/filt/imag/sfhwt2d
+     verb=y
+     xsou=%(xsou)g zsou=%(zsou)g 
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g 
+     ng=%(ng)d og=%(og)g dg=%(dg)g 
+     ''' % par)
+Plot('xold','wftold','window j2=10 |'
+     + grax('plotcol=1 label1=x label2=z',par) )
+#Plot('xold','wftold','graph yreverse=y')
+Plot('xvold','xvel xold','Overlay')
+
+# ------------------------------------------------------------
+
+Result('test','xvold xvnew','Movie')
+
+# ------------------------------------------------------------
 
 End()

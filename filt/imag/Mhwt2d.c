@@ -115,6 +115,8 @@ int main (int argc, char *argv[])
 	wm[ig].x=xsou;
 	wm[ig].z=zsou;
 	wm[ig].v=hwt2d_getv(wm[ig]);
+
+/*	printpt2d(wm[ig]);*/
     }
     pt2dwrite1(Fw,wm,ag.n,2); /* write wavefront it=0 */
 
