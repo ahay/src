@@ -7,10 +7,11 @@ par = {
     'ny':150, 'dy':110,   'oy':38500,'jy':1,
     #
     'nt':600, 'dt':0.0075,'ot':0,
-    #
     'ng':2881,'dg':0.0625,'og':-90,
     'nh':361, 'dh':0.5,   'oh':0,
-    'nray2d':5000, 'jray':1000, 'nray3d':100000,
+    #    
+    'nray2d':10000, 'jray':1000,
+    'nray3d':100000,
     'fill':1,'pick':2
     }
 par['xmin']=par['ox']
@@ -39,7 +40,8 @@ Flow('vel2d','./DATA/vel3d.HH',
      n1=%(nz)d j1=%(jz)d min1=%(oz)g
      n2=%(nx)d j2=%(jx)d min2=%(ox)g
      n3=1      j3=%(jy)d min3=%(ysou)g |
-     put label1=z label2=x label3=y
+     put label1=z label2=x label3=y |
+     smooth rect1=1 rect2=1 
      ''' % par)
 Result('vel2d','vel2d',igrey('color=j allpos=y bias=5000'))
 
@@ -49,14 +51,15 @@ Flow('vel3d','./DATA/vel3d.HH',
      n1=%(nz)d j1=%(jz)d min1=%(oz)g
      n2=%(nx)d j2=%(jx)d min2=%(ox)g
      n3=%(ny)d j3=%(jy)d min3=%(oy)g |
-     put label1=z label2=x label3=y
+     put label1=z label2=x label3=y |
+     smooth rect1=1 rect2=1 rect3=1 
      ''' % par)
 # ------------------------------------------------------------
 
 # Huygens wavefront tracing
 Flow('hwt2d','vel2d',
      '''
-     hwt3d verb=y forceray=n 
+     hwt3d verb=y 
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
@@ -64,7 +67,7 @@ Flow('hwt2d','vel2d',
      ''' % par)
 Flow('hwt3d','vel3d',
      '''
-     hwt3d verb=y forceray=n 
+     hwt3d verb=y 
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
