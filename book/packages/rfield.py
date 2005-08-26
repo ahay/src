@@ -381,41 +381,38 @@ def rfield (real_par,grid_par,covar_par):
     if (grid_par['nx'] > 1):
         Flow (shift_x,covar_taper,
               '''
-              window n1=%d > half_x.rsf &&
-              window f1=%d < $SOURCE | cat axis=1 half_x.rsf > $TARGET &&
+              window squeeze=n n1=%d > half_x.rsf &&
+              window squeeze=n f1=%d < $SOURCE | 
+              cat axis=1 half_x.rsf > $TARGET &&
               rm half_x.rsf
-              ''' % (grid_par['nx']/2,grid_par['nx']/2), stdout=0
-             )
+              ''' % (grid_par['nx']/2,grid_par['nx']/2), stdout=0 )
     else:
         Flow (shift_x,covar_taper,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0
-             )
+              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
     
     if (grid_par['ny'] > 1):
         Flow (shift_y,shift_x,
               '''
-              window n2=%d > half_y.rsf &&
-              window f2=%d < $SOURCE | cat axis=2 half_y.rsf > $TARGET &&
+              window squeeze=n n2=%d > half_y.rsf &&
+              window squeeze=n f2=%d < $SOURCE | 
+              cat axis=2 half_y.rsf > $TARGET &&
               rm half_y.rsf
-              ''' % (grid_par['ny']/2,grid_par['ny']/2), stdout=0
-             )
+              ''' % (grid_par['ny']/2,grid_par['ny']/2), stdout=0 )
     else:
         Flow (shift_y,shift_x,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0
-             )
+              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
     
     if (grid_par['nz'] > 1):
         Flow (shift,shift_y,
               '''
-              window n3=%d > half_z.rsf &&
-              window f3=%d < $SOURCE | cat axis=3 half_z.rsf > $TARGET &&
+              window squeeze=n n3=%d > half_z.rsf &&
+              window squeeze=n f3=%d < $SOURCE | 
+              cat axis=3 half_z.rsf > $TARGET &&
               rm half_z.rsf
-              ''' % (grid_par['nz']/2,grid_par['nz']/2), stdout=0
-             )
+              ''' % (grid_par['nz']/2,grid_par['nz']/2), stdout=0 )
     else:
         Flow (shift,shift_y,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0
-             )
+              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
 
 #
 # Make uncorrelated Gaussian random noise with unit variance.
@@ -429,11 +426,10 @@ def rfield (real_par,grid_par,covar_par):
           pad n4=%(nr)d | put n4=%(nr)d d4=1 o4=1 | 
           noise var=1 rep=y seed=%(seed)d
           '''
-          % (real_par)
-         )
+          % (real_par) )
      
     for i in range(real_par['nr']):
-        Flow (noise_i % (i+1),noise,'window f4=%d n4=1' % (i))
+        Flow (noise_i % (i+1),noise,'window squeeze=n f4=%d n4=1' % (i))
     
 #
 # Compute the FFT of the covariance and random noise.
