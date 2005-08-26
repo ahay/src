@@ -25,10 +25,11 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe;
+    int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe, np=3;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
     float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
-    float min, max, f, frame1;
+    float min, max, f, frame1, oo1, dd1;
+    bool nomin, nomax;
     char *label1, *label2;
     off_t esize;
     bool flat;
@@ -51,18 +52,26 @@ int main(int argc, char* argv[])
     side = sf_floatalloc(n2);
     top = sf_floatalloc2(n1,n2);
 
-    min = +FLT_MAX;
-    max = -FLT_MAX;
-    for (i3=0; i3 < n3; i3++) {
-	sf_floatread(top[0],n1*n2,in);
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		f = top[i2][i1];
-		if (f > max) max=f;
-		if (f < min) min=f;
+    nomin = !sf_getfloat("min",&min);
+    /* minimum function value */
+    nomax = !sf_getfloat("max",&max);
+    /* maximum function value */
+
+    if (nomin) min = +FLT_MAX;
+    if (nomax) max = -FLT_MAX;
+    if (nomin || nomax) {
+	for (i3=0; i3 < n3; i3++) {
+	    sf_floatread(top[0],n1*n2,in);
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    f = top[i2][i1];
+		    if (nomax && f > max) max=f;
+		    if (nomin && f < min) min=f;
+		}
 	    }
 	}
     }
+
     if (min == 0. && max == 0.) {
 	min = -1.;
 	max = 1.;
@@ -77,9 +86,12 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&d2)) d2=1.;
 
     /* for proper frame */
-    sf_putint(in,"n1",3);
-    sf_putfloat(in,"o1",max);
-    sf_putfloat(in,"d1",0.5*(min-max));
+    dd1 = (min-max)/np;
+    oo1 = max+0.5*dd1;
+
+    sf_putint(in,"n1",np);
+    sf_putfloat(in,"o1",oo1);
+    sf_putfloat(in,"d1",dd1);
     sf_putint(in,"n2",n1);
     sf_putfloat(in,"o2",o1);
     sf_putfloat(in,"d2",d1);
@@ -105,7 +117,7 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("point2",&point2)) point2=0.5;
     /* fraction of the horizontal axis for front face */
     
-    if (!sf_getfloat("frame1",&frame1)) frame1=1;
+    if (!sf_getfloat("frame1",&frame1)) frame1=0.5*(min+max);
     if (!sf_getint("frame2",&frame2)) frame2=n1-1;
     if (!sf_getint("frame3",&frame3)) frame3=0;
     /* frame numbers for cube faces */
@@ -188,7 +200,9 @@ int main(int argc, char* argv[])
 	for (i3=0; i3 < n3; i3++) {
 	    vp_plot_set (i3);
 
-	    if (0 == iframe || 3 == movie) {
+	    if (0 == iframe || 3 == movie) {		
+		vp_cubecoord(true,x[0],x[n1-1],min,max);
+
 		sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
 		sf_floatread(front,n1,in);
 		
@@ -197,32 +211,22 @@ int main(int argc, char* argv[])
 		    vp_udraw(x[i1],front[i1]);
 		}
 	    }
-
+	    
 	    if (0 == iframe || 2 == movie) {
+		vp_cubecoord(false,y[0],y[n2-1],min,max);
+
 		for (i2=0; i2 < n2; i2++) {
 		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
-		    sf_floatread(&side[i2],1,in);
+		    sf_floatread(&f,1,in);
+		    if (i2==0) {
+			vp_umove(y[0],f);
+		    } else {
+			vp_udraw(y[i2],f);
+		    }
 		}
 	    }
 
-	    /*
-	    for (i=n2front; i < n2pix; i++) {
-		i3 = n3*(i-n2front)/(float) (n2pix-n2front);
-		if (flat) {
-		    for (j=0; j < n1front; j++) {
-			i1 = n1*(n1front-j)/(float) n1front;
-			buf[i][j] = side[i3][i1];
-		    }
-		} else {
-		    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
-		    for (j=j0; j < n1pix; j++) {
-			i1 = n1*(n1front+j0-j)/(float) n1front;
-			if (i1 >= 0)
-			    buf[i][j] = side[i3][i1];
-		    }
-		}
-	    }
-	    */
+	    vp_coordinates();
 
 	    if (0 == iframe || 1 == movie) {
 		sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
@@ -258,7 +262,7 @@ int main(int argc, char* argv[])
 
 	if (iframe > 0) vp_erase (); 
 	
-	vp_cubeframe((int) frame1,frame2,frame3);
+	vp_cubeframe((frame1-oo1)/dd1,frame2,frame3);
 	
 	switch (movie) {
 	    case 2:

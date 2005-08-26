@@ -31,8 +31,8 @@
 
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
-static float d1, d2, d3;
-static int framecol, frame1, frame2, frame3, gridcol, gridfat=1;
+static float d1, d2, d3, frame1;
+static int framecol, frame2, frame3, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
 static bool cube=false, flat;
@@ -85,7 +85,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 /*< Initializing standard plot >*/
 {
     bool pad, set, xreverse, yreverse;
-    float mid, off, scale1, scale2, uorig1, uorig2, crowd, barwd;
+    float mid, off, crowd, barwd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
     char* bartype;
 
@@ -252,7 +252,41 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
         max2 *= 1.04;
         min2 *= 0.96;
     }
+
+    if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
+    /* axes color */
+
+    vp_coordinates();
+}
+
+void vp_cubecoord (bool front /* front or side */,
+		   float umin1, float umax1, float umin2, float umax2)
+/*< setup the coordinate system for the cube front >*/
+{
+    float scale1, scale2;
+
+    /* find scales and user origin */
+    if (front) {
+	scale1 = inch1 * (mid1 - min1) / (max1 - min1) / (umax1 - umin1);
+	vp_orig (orig1-0.5*inch1,orig2-0.5*inch2);
+    } else {
+	scale1 = inch1 * (max1 - mid1) / (max1 - min1) / (umax1 - umin1);
+	vp_orig (orig1+inch1*((mid1 - min1)/(max1 - min1)-0.5),orig2-0.5*inch2);
+    }
     
+    scale2 = inch2 * (mid2 - min2) / (max2 - min2) / (umax2 - umin2);
+
+    /* setup the coordinate system */
+    vp_scale (scale1, scale2);
+    vp_uorig (umin1, umin2);
+}
+
+
+void vp_coordinates (void)
+/*< setup the coordinate system >*/
+{
+    float scale1, scale2, uorig1, uorig2;
+
     /* find scales and user origin */
     scale1 = inch1 / (max1 - min1);
     scale2 = inch2 / (max2 - min2);
@@ -263,10 +297,8 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     vp_scale (scale1, scale2);
     vp_orig (orig1, orig2);
     vp_uorig (uorig1, uorig2);
-
-    if (!sf_getint ("axiscol",&framecol)) framecol=VP_WHITE;
-    /* axes color */
 }
+
 
 void vp_cubeplot_init (int n1pix, int n2pix,      /* total pixels */ 
 		       int n1front, int n2front,  /* front face pixels */
@@ -1319,7 +1351,7 @@ void vp_cuberaster(int n1, int n2,
     vp_cubeframe(f1,f2,f3);
 }
 
-void vp_cubeframe(int f1, int f2, int f3   /* frame numbers */) 
+void vp_cubeframe(float f1, int f2, int f3   /* frame numbers */) 
 /*< Drawing 3-D frame >*/
 {
     frame1 = f1;
