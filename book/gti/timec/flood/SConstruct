@@ -1,27 +1,24 @@
 from rsfproj import *
+import pplot
 
 par = {
-    'nz':625, 'dz':40,    'oz':0,    'nz':300, 'jz':2, 'dz':80,
-    'nx':400, 'dx':110,   'ox':5500, 'nx':200, 'jx':2, 'dx':220,
-    'ny':1,   'dy':110,   'oy':38500,'ny':75,  'jy':2, 'dy':220,
+    'nz':600, 'dz':40,    'oz':0,    'jz':1,
+    'nx':400, 'dx':110,   'ox':5500, 'jx':1,
+    'ny':150, 'dy':110,   'oy':38500,'jy':1,
     #
-    'nt':600,'dt':0.0075,'ot':0,
-#
+    'nt':600, 'dt':0.0075,'ot':0,
+    #
     'ng':2881,'dg':0.0625,'og':-90,
-    'nh':361,'dh':0.5, 'oh':0,
-    'nray':5000, 'jray':1000, 'nray3d':250000,
-    'fill':1,'scaleray':1., 'pick':2
+    'nh':361, 'dh':0.5,   'oh':0,
+    'nray2d':5000, 'jray':1000, 'nray3d':100000,
+    'fill':1,'pick':2
     }
-
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
 par['ymin']=par['oy']
 par['ymax']=par['oy'] + (par['ny']-1) * par['dy']
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
-
-par['xmid']=par['nx']/2.
-par['ymid']=par['ny']/2.
 
 par['zsou']=0
 par['xsou']=27000
@@ -30,7 +27,7 @@ par['ysou']=46200
 def igrey(custom):
     return '''
     grey labelrot=n pclip=100 color=F title=""
-    wantscalebar=y
+    wantscalebar=n
     %s
     ''' % (custom)
 # ------------------------------------------------------------
@@ -38,41 +35,43 @@ def igrey(custom):
 # velocity
 Flow('vel2d','./DATA/vel3d.HH',
      '''
-     window n1=%(nz)d j1=%(jz)d n2=%(nx)d j2=%(jx)d n3=1 f3=70 |
+     window
+     n1=%(nz)d j1=%(jz)d min1=%(oz)g
+     n2=%(nx)d j2=%(jx)d min2=%(ox)g
+     n3=1      j3=%(jy)d min3=%(ysou)g |
      put label1=z label2=x label3=y
      ''' % par)
 Result('vel2d','vel2d',igrey('color=j allpos=y bias=5000'))
 
 Flow('vel3d','./DATA/vel3d.HH',
      '''
-     window n1=%(nz)d j1=%(jz)d n2=%(nx)d j2=%(jx)d n3=%(ny)d j3=%(jy)d |
+     window
+     n1=%(nz)d j1=%(jz)d min1=%(oz)g
+     n2=%(nx)d j2=%(jx)d min2=%(ox)g
+     n3=%(ny)d j3=%(jy)d min3=%(oy)g |
      put label1=z label2=x label3=y
      ''' % par)
-
-Flow('vsm2d','vel2d','smooth rect1=1 rect2=1         repeat=1')
-Flow('vsm3d','vel3d','smooth rect1=1 rect2=1 rect3=1 repeat=1')
-
-Result('vsm2d','vsm2d',igrey('color=j allpos=y bias=5000'))
 # ------------------------------------------------------------
 
 # Huygens wavefront tracing
-Flow('hwt2d','vsm2d',
+Flow('hwt2d','vel2d',
      '''
-     hwt3d verb=y forceray=n scaleray=%(scaleray)d
+     hwt3d verb=y forceray=n 
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      nh=1      oh=0      dh=%(dh)g
      ''' % par)
-Flow('hwt3d','vsm3d',
+Flow('hwt3d','vel3d',
      '''
-     hwt3d verb=y forceray=n scaleray=%(scaleray)d
+     hwt3d verb=y forceray=n 
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      nh=%(nh)d oh=%(oh)g dh=%(dh)g
      ''' % par)
 
+# Interpolation to Cartesian grid
 Flow('tim2d','hwt2d',
      '''
      int3d verb=y pick=%(pick)d fill=%(fill)d
@@ -89,17 +88,18 @@ Flow('tim3d','hwt3d',
      ''' % par)
 Flow('tim2ds','tim3d','window n3=1 min3=%(ysou)g' % par)
 
-Flow('rrt2d','vsm2d',
+# Ray tracing + interpolation on Cartesian grid
+Flow('rrt2d','vel2d',
      '''
-     rrt3d verb=y scaleray=%(scaleray)d nray=%(nray)d jray=%(jray)d
+     rrt3d verb=y nray=%(nray2d)d jray=%(jray)d
      pick=%(pick)d fill=%(fill)d
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      gmin=-90. gmax=90. hmin=0 hmax=0
      ''' % par)
-Flow('rrt3d','vsm3d',
+Flow('rrt3d','vel3d',
      '''
-     rrt3d verb=y scaleray=%(scaleray)d nray=%(nray3d)d jray=%(jray)d
+     rrt3d verb=y nray=%(nray3d)d jray=%(jray)d
      pick=%(pick)d fill=%(fill)d
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
@@ -108,10 +108,15 @@ Flow('rrt3d','vsm3d',
 Flow('rrt2ds','rrt3d','window n3=1 min3=%(ysou)g' % par)
 
 # fast-marching eikonal solver
-Flow('eik2d','vsm2d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
-Flow('eik3d','vsm3d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
+Flow('eik2d','vel2d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
+Flow('eik3d','vel3d','eikonal yshot=%(xsou)g xshot=%(ysou)g zshot=%(zsou)g'%par)
 Flow('eik2ds','eik3d','window n3=1 min3=%(ysou)g' % par)
 
+# ------------------------------------------------------------
+# PLOTS
+# ------------------------------------------------------------
+
+# 2D run
 Flow('time2d',['eik2d','tim2d','rrt2d'],
      '''
      cat axis=3 space=n
@@ -119,6 +124,7 @@ Flow('time2d',['eik2d','tim2d','rrt2d'],
      ''', stdin=0)
 Result('time2d','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
 
+# 2D slice out of 3D run
 Flow('time3d',['eik2ds','tim2ds','rrt2ds'],
      '''
      cat axis=3 space=n
@@ -126,7 +132,34 @@ Flow('time3d',['eik2ds','tim2ds','rrt2ds'],
      ''', stdin=0)
 Result('time3d','grey pclip=100 wantscalebar=y allpos=y color=j gainpanel=a')
 
+# depth slices
+for j in range(0,par['nz'],20):
+
+    vel3d = 'vel3d-t'
+    eik3d = 'eik3d-t'
+    hwt3d = 'hwt3d-t'
+    rrt3d = 'rrt3d-t'
+
+    Flow(vel3d,'vel3d','byte gainpanel=a pclip=100 allpos=y bias=5000 bar=velbar.rsf')
+    Flow(eik3d,'eik3d','byte gainpanel=a pclip=100 allpos=y           bar=eikbar.rsf')
+    Flow(hwt3d,'tim3d','byte gainpanel=a pclip=100 allpos=y           bar=hwtbar.rsf')
+    Flow(rrt3d,'rrt3d','byte gainpanel=a pclip=100 allpos=y           bar=rrtbar.rsf')
+
+    vel = 'vel' + str(j) # velocity
+    eik = 'eik' + str(j) # eikonal
+    hwt = 'tim' + str(j) # wavefront tracing
+    rrt = 'rrt' + str(j) # ray tracing
+
+    Plot(vel,vel3d,'window n1=1 f1=%d | transp |' % j + igrey('bar=velbar.rsf color=j title=vel'))
+    Plot(eik,eik3d,'window n1=1 f1=%d | transp |' % j + igrey('bar=eikbar.rsf color=j title=eik'))
+    Plot(hwt,hwt3d,'window n1=1 f1=%d | transp |' % j + igrey('bar=hwtbar.rsf color=j title=hwt'))
+    Plot(rrt,rrt3d,'window n1=1 f1=%d | transp |' % j + igrey('bar=rrtbar.rsf color=j title=rrt'))
+
+    slice = 'slice' + str(j)
+    pplot.p2x2(slice,vel,eik,hwt,rrt,0.5,0.55,-10,-12)
+
 # ------------------------------------------------------------
+
 def grex(custom,par):
     return '''
     grey labelrot=n pclip=100 title=""
@@ -141,7 +174,6 @@ def grax(custom,par):
     %s
     ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
 
-
 # ------------------------------------------------------------
 
 Plot('xvel','vel2d','window |' % par
@@ -149,43 +181,22 @@ Plot('xvel','vel2d','window |' % par
 
 # ------------------------------------------------------------
 
-Flow('wftnew','vsm2d',
+Flow('wft','vel2d',
      '''
-     /home/savap/RSF/filt/imag/sfhwt3d
-     verb=y forceray=n
+     hwt3d verb=y forceray=n
      xsou=%(xsou)g ysou=%(ysou)g zsou=%(zsou)g 
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      nh=1      oh=0      dh=%(dh)g
      ''' % par)
-Flow('xnew','wftnew',
+Flow('xwft','wft',
      '''
      window n1=2 j1=2 n3=1 min3=0 |
      dd type=complex | window
      ''')
-Plot('xnew','xnew','window j2=10 |'
+Plot('xwft','xwft','window j2=10 |'
      + grax('plotcol=1 label1=x label2=z',par) )
-#Plot('xnew','xnew','graph yreverse=y')
-Plot('xvnew','xvel xnew','Overlay')
-
-# ------------------------------------------------------------
-
-Flow('wftold','vsm2d',
-     '''
-     /home/savap/RSF/filt/imag/sfhwt2d
-     verb=y
-     xsou=%(xsou)g zsou=%(zsou)g 
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g 
-     ng=%(ng)d og=%(og)g dg=%(dg)g 
-     ''' % par)
-Plot('xold','wftold','window j2=10 |'
-     + grax('plotcol=1 label1=x label2=z',par) )
-#Plot('xold','wftold','graph yreverse=y')
-Plot('xvold','xvel xold','Overlay')
-
-# ------------------------------------------------------------
-
-Result('test','xvold xvnew','Movie')
+Result('xvelwft','xvel xwft','Overlay')
 
 # ------------------------------------------------------------
 

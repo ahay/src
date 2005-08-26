@@ -9,7 +9,6 @@
 static axa az,ax,ay;
 static axa at,ag,ah;
 
-
 /*------------------------------------------------------------*/
 void hwt3d_init(axa      az_in    /* z axis   */,
 		axa      ax_in    /* x axis   */,
@@ -178,7 +177,7 @@ pt3d hwt3d_raytr(float ***vv,
     a3 = ang3d(&TmTo, &v3); a3 = SF_ABS(a3);
 
     /* select reference unit vector 
-       as "most orthogonal" to in-comming ray 
+       as "most orthogonal" to an incomming ray 
      */
     if(      SF_ABS(a1-90) <= SF_ABS(a2-90) &&
 	     SF_ABS(a1-90) <= SF_ABS(a3-90) )
@@ -190,36 +189,35 @@ pt3d hwt3d_raytr(float ***vv,
 	ww=v3;
 
     /* build orthogonal wavefront (Gm,Gp,Hm,Hp) */
-    qq   = scl3d(&ww,+1);
-    uu   = vcp3d(&TmTo,&qq);       /* uu = TmTo x qq */
+
+/*------------------------------------------------------------*/
+    /* find Gm, Gp */
+    uu   = vcp3d(&TmTo,&ww);       /* uu = TmTo x qq */
     qq   = nor3d(&uu);             /* qq = uu / |uu| */
     uu   = scl3d(&qq,ro*scaleray); /* uu = qq * ro */
-    Gm   = tip3d(&To,&uu);         /* Gm at tip of uu from To */
+
+    Gm   = tip3d(&To,&uu);         /* Gm at tip of +uu from To */
+    qq   = scl3d(&uu,-1);
+    Gp   = tip3d(&To,&qq);         /* Gp at tip of -uu from To */
+
     Gm.v = hwt3d_getv(vv,Gm);
-
-    qq   = scl3d(&ww,-1);
-    uu   = vcp3d(&TmTo,&qq); 
-    qq   = nor3d(&uu);
-    uu   = scl3d(&qq,ro*scaleray);
-    Gp   = tip3d(&To,&uu);
     Gp.v = hwt3d_getv(vv,Gp);
-
+/*------------------------------------------------------------*/
     uu = vec3d(&Gm,&Gp);
     ww = nor3d(&uu);
-
-    qq   = scl3d(&ww,+1);
-    uu   = vcp3d(&TmTo,&qq); 
+/*------------------------------------------------------------*/
+    /* find Hm, Hp */
+    uu   = vcp3d(&TmTo,&ww); 
     qq   = nor3d(&uu);
     uu   = scl3d(&qq,ro*scaleray);
+
     Hm   = tip3d(&To,&uu);
-    Hm.v = hwt3d_getv(vv,Hm);
+    qq   = scl3d(&uu,-1);
+    Hp   = tip3d(&To,&qq);
 
-    qq   = scl3d(&ww,-1);
-    uu   = vcp3d(&TmTo,&qq); 
-    qq   = nor3d(&uu);
-    uu   = scl3d(&qq,ro*scaleray);
-    Hp   = tip3d(&To,&uu);
+    Hm.v = hwt3d_getv(vv,Hm);
     Hp.v = hwt3d_getv(vv,Hp);
+/*------------------------------------------------------------*/
 
     /* execute HWT step 
      * from Tm & (Gm,Hm,To,Gp,Hp) to Tp
