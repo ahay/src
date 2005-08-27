@@ -432,10 +432,11 @@ def make_masks (memsize=100, grid_par=None):
               mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
               ''')
         
-        Flow ('md_mask','md_erode_grid ch_mask',
+        Flow ('md_mask','md_erode_grid ch_mask bd_mask',
               '''
               math surf=${SOURCES[0]} output="x3-surf" | 
-              mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
+              mask max=0 | dd type=float | add mode=m ${SOURCES[1]} |
+              math bd=${SOURCES[2]} output="input*(input-bd)"
               ''')
     else:
         Flow ('bd_mask','bd_erode_grid ch_mask',
@@ -444,10 +445,11 @@ def make_masks (memsize=100, grid_par=None):
               mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
               ''' % (par) )
               
-        Flow ('md_mask','md_erode_grid ch_mask',
+        Flow ('md_mask','md_erode_grid ch_mask bd_mask',
               '''
               math surf=${SOURCES[0]} output="%(oz)g-surf" | 
               mask max=0 | dd type=float | add mode=m ${SOURCES[1]}
+              math bd=${SOURCES[2]} output="input*(input-bd)"
               ''' % (par) )
 
 # amalgamated sand mask

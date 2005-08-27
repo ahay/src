@@ -325,7 +325,9 @@ def rfield (real_par,grid_par,covar_par):
                      univ[0],univ[1],univ[2],covar_par['rv'],
                      uniw[0],uniw[1],uniw[2],covar_par['rw'])
                      
-    Flow (dist,'','math'+grid_str+formula,stdin=0)
+    Flow (dist,'','math'
+                  +grid_str+formula
+                  +' | put label1="x" label2="y" label3="z"',stdin=0)
          
 #
 # Make a "stable" covariance grid.
@@ -352,12 +354,14 @@ def rfield (real_par,grid_par,covar_par):
     if (covar_par['taper_switch'] == True):
         formula = grid_str+'output="(cos(x1*%g)+1)*(cos(x2*%g)+1)*(cos(x3*%g)+1)/8"'
         Flow (taper,'',
-              'math'+formula % (2*pi/(grid_par['nx']*grid_par['dx']),
-                                2*pi/(grid_par['ny']*grid_par['dy']),
-                                2*pi/(grid_par['nz']*grid_par['dz'])),
-              stdin=0)
+              'math'
+              +formula % (2*pi/(grid_par['nx']*grid_par['dx']),
+                          2*pi/(grid_par['ny']*grid_par['dy']),
+                          2*pi/(grid_par['nz']*grid_par['dz']))
+              +' | put label1="x" label2="y" label3="z"',stdin=0)
     else:
-        Flow (taper,'','spike'+grid_str,stdin=0)
+        Flow (taper,'','spike'+grid_str
+                       +' | put label1="x" label2="y" label3="z"',stdin=0)
 
 #
 # Apply the taper to the covariance.
