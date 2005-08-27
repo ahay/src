@@ -456,13 +456,25 @@ def rfield (real_par,grid_par,covar_par):
     noise_i_fft = real_par['name']+'noise_%02d_fft'
 
     Flow (pspec,shift,
-          'rtoc | fft3 pad=1 axis=1 | fft3 pad=1 axis=2 | fft3 pad=1 axis=3')
+          '''
+          rtoc | 
+          fft3 pad=1 axis=1 | 
+          fft3 pad=1 axis=2 | 
+          fft3 pad=1 axis=3 |
+          put label1="wx" label2="wy" label3="wz"
+          ''')
     
     Flow (pspec_real,pspec,'real')
     
     for i in range(real_par['nr']): 
         Flow (noise_i_fft % (i+1),noise_i % (i+1),
-              'rtoc | fft3 pad=1 axis=1 | fft3 pad=1 axis=2 | fft3 pad=1 axis=3')
+              '''
+              rtoc | 
+              fft3 pad=1 axis=1 | 
+              fft3 pad=1 axis=2 | 
+              fft3 pad=1 axis=3 |
+              put label1="wx" label2="wy" label3="wz"
+              ''')
 
 # 
 # Compute the amplitude spectrum.
@@ -548,7 +560,8 @@ def rfield (real_par,grid_par,covar_par):
               '''
               fft3 inv=y pad=1 axis=3 |
               fft3 inv=y pad=1 axis=2 |
-              fft3 inv=y pad=1 axis=1
+              fft3 inv=y pad=1 axis=1 |
+              put label1="x" label2="y" label3="z"
               '''
              )
     
