@@ -102,12 +102,13 @@ for case in ('pp','ps'):
     spmig.wflds(sou,rec,'wav',case,par)
     Result(rec,rec,'window | real |' + igrey(''))
 
-    for TYP in ('x','h'):
+    for TYP in ('x','h'): # imaging condition
         if(TYP=='x'):
             par['misc']='itype=x nhx=%(nhx)d nhz=1       hsym=y jcx=50' % par
         else:
             par['misc']='itype=x nhx=%(nhx)d nhz=%(nhz)d hsym=y jcx=50' % par
 
+        # migration
         img = case + 'img' + '-'+TYP
         cig = case + 'cig' + '-'+TYP
         if(case=='pp'):
@@ -116,15 +117,28 @@ for case in ('pp','ps'):
             spmig.imageCW(img,cig,'slop','slos',sou,rec,par)
 
         Result(img,img,'window max1=2800 | transp |' + igrey(''))
-        Result(cig,cig,'window n1=1 min1=%(os)g |' % par + igrey(''))
+
+        # CIGs
+        off = case + 'off' + '-'+TYP
+        Flow(off,cig,
+             '''
+             window squeeze=n n1=1 min1=%(os)g |
+             stack |
+             transp |
+             stack
+             ''' % par)
 
         ang = case + 'ang' + '-'+TYP
-        Flow(ang,cig,
-             '''
-             window n1=1 min1=%(os)g |
-             slant adj=y p0=-0.5 np=200 dp=0.01 |
-             put label2=tan
-             ''' % par)
+
+        if(TYP=='x'):
+            Result(off,off,igrey(''))
+            Flow(ang,off,
+                 '''
+                 slant adj=y p0=-0.5 np=200 dp=0.01 |
+                 put label2=tan
+                 ''' % par)
+        else:
+            Result(off,off,igrey(''))
 
 # ------------------------------------------------------------
 ppan = string.join(map(lambda a: str(
@@ -135,27 +149,35 @@ psan = string.join(map(lambda a: str(
     tan( ( asin(sin(a*pi/180)/par['vpvs']) + a*pi/180 )/2 )
     ),deg),',')
 # ------------------------------------------------------------
-# PP reflection angles
-Flow('ppan',None,
+# dip angle
+Flow('dipa',None,
      '''
      spike nsp=4 mag=%s
      n1=%d o1=%g d1=%g
      k1=0,76,141,221 l1=75,140,220,400
+     ''' % (ppan,par['nz'],par['oz'],par['dz']))
+
+# PP reflection angles
+Flow('ppan',None,
+     '''
+     spike nsp=4 mag=%s n1=4 k1=1,2,3,4 |
+     spray axis=2 n=%d o=%g d=%g |
+     transp
      ''' % (ppan,par['nz'],par['oz'],par['dz']))
 Plot('ppan','ppan',igraph(''))
 
 # PS reflection angles
 Flow('psan',None,
      '''
-     spike nsp=4 mag=%s
-     n1=%d o1=%g d1=%g
-     k1=0,76,141,221 l1=75,140,220,400
+     spike nsp=4 mag=%s n1=4 k1=1,2,3,4 |
+     spray axis=2 n=%d o=%g d=%g |
+     transp
      ''' % (psan,par['nz'],par['oz'],par['dz']))
 Plot('psan','psan',igraph(''))
 # ------------------------------------------------------------
 
 # PS reflection angle (after correction)
-Flow('pscor-x','psang-x vpvs ppan',
+Flow('pscor-x','psang-x vpvs dipa',
      'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
 
 # ------------------------------------------------------------
@@ -168,6 +190,33 @@ Result('ppang-x','ppang-x ppan','Overlay')
 Result('psang-x','psang-x psan','Overlay')
 Result('pscor-x','pscor-x psan','Overlay')
 
+# ------------------------------------------------------------
+# ------------------------------------------------------------
+
+Flow('one','ppoff-h',
+     '''
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=34 |
+     window squeeze=n
+     ''')
+Flow('two','one',
+     '''
+     /home/savap/RSF/user/savap/sfoff2abs verb=y
+     ''')
+
+Flow('one-neg','one','window n3=1 min3=0 n1=40 f1=0 | reverse which=1 ')
+Flow('one-pos','one','window n3=1 min3=0 n1=40 f1=40')
+Flow('one-sum','one-pos one-neg','add ${SOURCES[1]}')
+
+Flow('aone','one-sum','window | transp | slant adj=y p0=-0.5 np=200 dp=0.01')
+Flow('atwo','two'    ,'window | transp | slant adj=y p0=-0.5 np=200 dp=0.01')
+
+Plot('aone','aone','grey pclip=100')
+Plot('atwo','atwo','grey pclip=100')
+Result('atest','aone atwo','Movie')
+
+# ------------------------------------------------------------
 # ------------------------------------------------------------
 
 End()
