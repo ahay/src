@@ -1,0 +1,173 @@
+from rsfproj import *
+from math import *
+#import math
+import string
+import spmig
+
+# ------------------------------------------------------------
+par = {
+    'nx':400, 'dx':20,    'ox':0,
+    'nz':400, 'dz':5,     'oz':0,
+    'nt':4000,'dt':0.004, 'ot':0,
+    'nh':400, 'dh':20,    'oh':-1000,
+    'ns':1,   'ds':20,    'os':1000, 'fs':0, 'js':1,
+    'nw':400, 'jw':1,
+    'velp':2000,
+    'vels':1000,
+    'vpvs':2,
+    'nhx':40, 'nhz':40
+    }
+par['ow']=0.
+par['dw']=1./(par['nt']*par['dt'])
+
+# ------------------------------------------------------------
+def igrey(custom):
+    return '''
+    grey labelrot=n title="" pclip=100 grid=n gridcol=5
+    %s
+    ''' % custom
+def igraph(custom):
+    return '''
+    graph labelrot=n title="" transp=y yreverse=y
+    wantaxis=n wantlabels=n
+    min2=-0.5 max2=1.5 min1=0 max1=2000
+    %s
+    ''' % custom
+
+# ------------------------------------------------------------
+
+deg  = (0,15,30,45)
+ndeg = len(deg)
+
+Flow('dip',None,
+     'spike n1=%d d1=%g o1=%g n2=%d nsp=%d k2=%s mag=%s' % 
+     (par['nx'],
+      par['dx'],
+      par['ox'],
+      ndeg,
+      ndeg,
+      string.join(map(str,range(1,1+ndeg)),','),
+      string.join(map(lambda a: str(tan(a*pi/180)),deg),',')
+      )
+     )
+Flow('ref','dip','math output="300+input*x1" ')
+
+# wavelet
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 k1=1
+     n1=%(nt)d d1=%(dt)g o1=0
+     ''' % par)
+
+# velocity/slowness
+Flow('vel',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g
+     n2=%(nx)d d2=%(dx)g o2=%(ox)g |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label1=x label2=y label3=z
+     ''' % par)
+Flow('slop','vel','math output=input/%(velp)d' % par)
+Flow('slos','vel','math output=input/%(vels)d' % par)
+
+# vpvs ratio
+Flow('vpvs',None, 'spike nsp=1 mag=%(vpvs)g n1=%(nz)d o1=%(oz)g d1=%(dz)g' % par)
+
+for case in ('pp','ps'):
+
+    # data
+    Flow(case,'ref dip',
+         '''
+         kirmod vel=%d vel2=%d dip=${SOURCES[1]}
+         nt=%d dt=%g t0=%g     freq=10
+         nh=%d dh=%g h0=%g
+         ns=%d ds=%g s0=%g |
+         tpow tpow=1 |
+         window f2=50 | pad beg2=50 |
+         put label1=t label2=h
+         ''' %
+         ( par['velp'],
+           (par['velp'],par['vels'])[case=='ps'],
+           par['nt'],par['dt'],par['ot'],
+           par['nh'],par['dh'],par['oh'],
+           par['ns'],par['ds'],par['os'])
+         )
+    Result(case,'grey title="%s" ' % string.upper(case))
+
+    # migration
+    sou = case + 'sou'
+    rec = case + 'rec'
+    spmig.wflds(sou,rec,'wav',case,par)
+    Result(rec,rec,'window | real |' + igrey(''))
+
+    for TYP in ('x','h'):
+        if(TYP=='x'):
+            par['misc']='itype=x nhx=%(nhx)d nhz=1       hsym=y jcx=50' % par
+        else:
+            par['misc']='itype=x nhx=%(nhx)d nhz=%(nhz)d hsym=y jcx=50' % par
+
+        img = case + 'img' + '-'+TYP
+        cig = case + 'cig' + '-'+TYP
+        if(case=='pp'):
+            spmig.imagePW(img,cig,'slop',       sou,rec,par)
+        else:
+            spmig.imageCW(img,cig,'slop','slos',sou,rec,par)
+
+        Result(img,img,'window max1=2800 | transp |' + igrey(''))
+        Result(cig,cig,'window n1=1 min1=%(os)g |' % par + igrey(''))
+
+        ang = case + 'ang' + '-'+TYP
+        Flow(ang,cig,
+             '''
+             window n1=1 min1=%(os)g |
+             slant adj=y p0=-0.5 np=200 dp=0.01 |
+             put label2=tan
+             ''' % par)
+
+# ------------------------------------------------------------
+ppan = string.join(map(lambda a: str(
+    tan(a*pi/180)
+    ),deg),',')
+
+psan = string.join(map(lambda a: str(
+    tan( ( asin(sin(a*pi/180)/par['vpvs']) + a*pi/180 )/2 )
+    ),deg),',')
+# ------------------------------------------------------------
+# PP reflection angles
+Flow('ppan',None,
+     '''
+     spike nsp=4 mag=%s
+     n1=%d o1=%g d1=%g
+     k1=0,76,141,221 l1=75,140,220,400
+     ''' % (ppan,par['nz'],par['oz'],par['dz']))
+Plot('ppan','ppan',igraph(''))
+
+# PS reflection angles
+Flow('psan',None,
+     '''
+     spike nsp=4 mag=%s
+     n1=%d o1=%g d1=%g
+     k1=0,76,141,221 l1=75,140,220,400
+     ''' % (psan,par['nz'],par['oz'],par['dz']))
+Plot('psan','psan',igraph(''))
+# ------------------------------------------------------------
+
+# PS reflection angle (after correction)
+Flow('pscor-x','psang-x vpvs ppan',
+     'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+
+# ------------------------------------------------------------
+
+Plot('ppang-x','ppang-x',igrey(''))
+Plot('psang-x','psang-x',igrey(''))
+Plot('pscor-x','pscor-x',igrey(''))
+
+Result('ppang-x','ppang-x ppan','Overlay')
+Result('psang-x','psang-x psan','Overlay')
+Result('pscor-x','pscor-x psan','Overlay')
+
+# ------------------------------------------------------------
+
+End()
