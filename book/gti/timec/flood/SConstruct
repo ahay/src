@@ -11,7 +11,7 @@ par = {
     'nh':361, 'dh':0.5,   'oh':0,
     #    
     'nray2d':10000, 'jray':1000,
-    'nray3d':100000,
+    'nray3d':3000000,
     'fill':1,'pick':2
     }
 par['xmin']=par['ox']
