@@ -559,9 +559,9 @@ for frq in frq_list:
          ''' % par)
     
     # C dt one = causal datuming one-way traveltime
-    zomig.Cdtone('u2do_%d' % (frq),'u2d_%d' % (frq),'o2d',par)        # source wavefield down through overburden
-    spmig.model('e2do_%d' % (frq),'s2d','u2do_%d' % (frq),'r2d',par)  # shot-record modeling in reservoir
-    zomig.Cdtone('e2d_%d' % (frq),'e2do_%d' % (frq),'o2d',par)        # receiver wavefield up through overburden
+    zomig.Cdtone('u2do_%d' % (frq),'u2d_%d'        % (frq),'o2d',par) # source wavefield down through overburden
+    spmig.model( 'e2do_%d' % (frq),'s2d','u2do_%d' % (frq),'r2d',par) # shot-record modeling in reservoir
+    zomig.Cdtone('e2d_%d'  % (frq),'e2do_%d'       % (frq),'o2d',par) # receiver wavefield up through overburden
     
     # modeled data from frequency to time
     Flow('c2d_%d' % (frq),'e2d_%d' % (frq),

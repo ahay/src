@@ -27,16 +27,15 @@ int main(int argc, char* argv[])
     sf_file in, out, vpvs, dip;
 
     sf_init (argc,argv);
-    in = sf_input("in");
-    out = sf_output("out");
-    vpvs = sf_input("vpvs");
-    dip = sf_input("dip");
+    in   = sf_input ("in");
+    out  = sf_output("out");
+    vpvs = sf_input ("vpvs");
+    dip  = sf_input ("dip");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
 
-    if (!sf_histint(in,"n1",&nz)) sf_error("No n1= in input");
-
-    if (!sf_histint(in,"n2",&na)) sf_error("No n2= in input");
+    if (!sf_histint  (in,"n1",&nz)) sf_error("No n1= in input");
+    if (!sf_histint  (in,"n2",&na)) sf_error("No n2= in input");
     if (!sf_histfloat(in,"d2",&da)) sf_error("No d2= in input"); 
     if (!sf_histfloat(in,"o2",&a0)) sf_error("No o2= in input"); 
 
@@ -51,30 +50,31 @@ int main(int argc, char* argv[])
     /* if y, do inverse transform */
 
     gather = sf_floatalloc2(nz,na);
-    trace = sf_floatalloc(na);
-    coord = sf_floatalloc(na);
-    modl =  sf_floatalloc(na);
-    gamma = sf_floatalloc(nz);
-    dzdx = sf_floatalloc(nz);
+    trace  = sf_floatalloc (   na);
+    coord  = sf_floatalloc (   na);
+    modl   = sf_floatalloc (   na);
+    gamma  = sf_floatalloc (nz   );
+    dzdx   = sf_floatalloc (nz   );
 
     for (i3=0; i3 < n3; i3++) { /* loop over CIG */
 	sf_floatread(gamma,nz,vpvs);
-	sf_floatread(dzdx,nz,dip);
+	sf_floatread( dzdx,nz, dip);
 	
 	sf_floatread(gather[0],nz*na,in);
 
 	for (iz=0; iz < nz; iz++) { /* loop over depth */
 	    g = gamma[iz];
 	    d = dzdx[iz]*(g*g-1.);
-
+	    
 	    for (ia=0; ia < na; ia++) { /* loop over tan(theta) */
 		t = a0+ia*da;
-
-		/* formula for flat reflector */
+		
+		/* formula for dipping reflector */
 		coord[ia] = (4*g*t+d*(t*t+1.)) / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
-
+		
 		trace[ia] = gather[ia][iz];
 	    }
+
 	    sf_prefilter_apply (na,trace);
 	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
 	    sf_int1_lop (false,false,na,na,trace,modl);

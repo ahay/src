@@ -1,4 +1,5 @@
-/* Transform vector offset to absolute offset 
+/* Transform vector-offset to absolute-offset 
+             h = sqrt(hx^2+hy^2+hz^2)
    pcs 2005 
 */
 
@@ -29,31 +30,31 @@ int main(int argc, char* argv[])
     int  iz,   ihx,ihy,ihz;
     float       hx, hy, hz;
 
-    sf_file Fh; /*   vector offset (hx,hy,hz)-z */
-    sf_file Fo; /* absolute offset  h        -z */
+    sf_file Fd; /*  data =   vector offset (hx,hy,hz)-z */
+    sf_file Fm; /* model = absolute offset     h     -z */
 
-    float *hh=NULL;
-    float *ho=NULL;
-
-    int nw; /* interpolator size */
-
+    int nw; /* spline order */
     int nd; /*  data size (nd=nhx*nhy*nhz) */
     int nm; /* model size (nm=nh) */
-    float *coord;
+
+    float *dat=NULL;
+    float *mod=NULL;
+    float *map=NULL;
+
     int i;
 
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
 
-    if(! sf_getbool("verb",&verb)) verb=false;
-    if(! sf_getint(   "nw",&nw))     nw=4; /* accuracy level */
+    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+    if(! sf_getint(   "nw",&nw))     nw=4;     /* spline order */
 
-    Fh = sf_input ("in");
-    iaxa(Fh,&ahx,1); ahx.l="hx"; if(verb) raxa(ahx);
-    iaxa(Fh,&ahy,2); ahy.l="hy"; if(verb) raxa(ahy);
-    iaxa(Fh,&ahz,3); ahz.l="hz"; if(verb) raxa(ahz);
-    iaxa(Fh,&az, 4);  az.l="z";  if(verb) raxa(az);
+    Fd = sf_input ("in");
+    iaxa(Fd,&ahx,1); ahx.l="hx"; if(verb) raxa(ahx);
+    iaxa(Fd,&ahy,2); ahy.l="hy"; if(verb) raxa(ahy);
+    iaxa(Fd,&ahz,3); ahz.l="hz"; if(verb) raxa(ahz);
+    iaxa(Fd,&az, 4);  az.l="z";  if(verb) raxa(az);
 
     if(!sf_getint  ("nh",&ah.n)) ah.n=ahx.n + ahx.o/ahx.d;
     if(!sf_getfloat("oh",&ah.o)) ah.o=0;
@@ -63,25 +64,23 @@ int main(int argc, char* argv[])
 
     aj.n=1; aj.o=0; aj.d=1.; aj.l="";
 
-    Fo = sf_output("out");
-    oaxa(Fo,&ah,1);
-    oaxa(Fo,&az,2);
-    oaxa(Fo,&aj,3);
-    oaxa(Fo,&aj,4);
+    Fm = sf_output("out");
+    oaxa(Fm,&ah,1);
+    oaxa(Fm,&az,2);
+    oaxa(Fm,&aj,3);
+    oaxa(Fm,&aj,4);
 
 /*------------------------------------------------------------*/
+    nm = ah.n;               /* model size */
+    nd = ahx.n*ahy.n*ahz.n;  /*  data size */
 
-    nd = ahx.n*ahy.n*ahz.n; /* data size */
-    nm = ah.n;              /* model size */
+    mod = sf_floatalloc(nm); /* model vector */
+    dat = sf_floatalloc(nd); /*  data vector */
+    map= sf_floatalloc(nd);  /* mapping */
 
-    hh=sf_floatalloc(nd);
-    ho=sf_floatalloc(nm);
-    
-    coord = sf_floatalloc(nd);
-
-    sf_prefilter_init(nw,    // spline order
-		      nd,    // temporary storage
-		      2*nd); // padding
+    sf_prefilter_init(nw,    /* spline order */
+		      nd,    /* temporary storage */
+		      2*nd); /* padding */
 
     for(ihz=0;ihz<ahz.n;ihz++) {
 	hz = ahz.o + ihz * ahz.d;         hz*=hz;
@@ -94,12 +93,12 @@ int main(int argc, char* argv[])
 		    ihy * ahx.n       +
 		    ihx;
 		
-		coord[i] = sqrtf(hx+hy+hz);
+		map[i] = sqrtf(hx+hy+hz);
 	    }
 	}
     }
 
-    sf_int1_init( coord, 
+    sf_int1_init( map, 
 		  ah.o, ah.d, ah.n, 
 		  sf_spline_int, 
 		  nw, 
@@ -108,26 +107,28 @@ int main(int argc, char* argv[])
     for(iz=0;iz<az.n;iz++) {
 	sf_warning("iz=%d of %d",iz+1,az.n);
 
-	sf_floatread(hh,nd,Fh);
+	sf_floatread(dat,nd,Fd);
 
 	sf_prefilter_apply( nd,
-			    hh);  
+			    dat);  
 
 	sf_int1_lop( true,   // adj
 		     false,  // add
 		     nm,     // n model
 		     nd,     // n data
-		     ho,   
-		     hh);
+		     mod,   
+		     dat);
 
-	sf_floatwrite(ho,nm,Fo);
+	sf_floatwrite(mod,nm,Fm);
     }
 
 /*------------------------------------------------------------*/
 
     sf_int1_close();
 
-    free(coord);
+    free(mod);
+    free(dat);
+    free(map);
 
     exit(0);
 }
