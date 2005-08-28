@@ -24,7 +24,8 @@
 
 int main(int argc, char* argv[])
 {
-    int esize, size, shift;
+    int esize, shift;
+    off_t size;
     size_t i, nleft, nbuf, e_size, len;
     sf_file real, cmplx;
     char rbuf[BUFSIZ], *cbuf, *rformat, *cformat, *prog;

@@ -26,7 +26,8 @@ static void head(int i, int cols, bool number);
 int main (int argc, char* argv[])
 {
     int cols, *ibuf, esize, i;
-    size_t bufsiz = BUFSIZ, nbuf, size, j;
+    size_t bufsiz = BUFSIZ, nbuf, j;
+    off_t size;
     char* format, *buf;
     float *fbuf;
     float complex *cbuf;
@@ -57,7 +58,7 @@ int main (int argc, char* argv[])
 
     if (!sf_histint(in,"esize",&esize)) esize=4;
     if (0 != esize) bufsiz /= esize;
-    size = (size_t) sf_filesize(in);
+    size = sf_filesize(in);
 
     switch (type) {
 	case SF_UCHAR:

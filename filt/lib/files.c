@@ -50,16 +50,17 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     return dim;
 }
 
-int sf_filesize (sf_file file) 
+off_t sf_filesize (sf_file file) 
 /*< Find file size (product of all dimensions) >*/
 {    
     return sf_leftsize (file, 0);
 }
 
-int sf_leftsize (sf_file file, int dim) 
+off_t sf_leftsize (sf_file file, int dim) 
 /*< Find file size for dimensions greater than dim >*/
 {
-    int size, ni;
+    int ni;
+    off_t size;
     char key[3];
 
     for (size=1; dim < SF_MAX_DIM; dim++, size *= ni) {

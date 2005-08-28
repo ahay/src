@@ -29,8 +29,8 @@ There has to be only two input files specified and no additional parameters.
 
 int main(int argc, char* argv[])
 {
-    int resize, iesize, rsize, isize;
-    size_t nleft, nbuf, i;
+    int resize, iesize;
+    off_t nleft, nbuf, i, rsize, isize;
     sf_file real=NULL, imag=NULL, cmplx;
     char rbuf[BUFSIZ], ibuf[BUFSIZ], *cbuf, *rformat, *cformat;
 

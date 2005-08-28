@@ -27,7 +27,8 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[]) {
     int *ibuf;
-    size_t nsiz, nbuf, j;
+    size_t nbuf, j;
+    off_t nsiz;
     float *fbuf, min, max;
     sf_file in, out;
 

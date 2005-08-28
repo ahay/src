@@ -252,6 +252,78 @@ Along with \texttt{sfdd}, \texttt{sfdisfil} provides a simple way to convert
 RSF data to an ASCII form.
 
 \noindent\doublebox{\parbox{\textwidth}{
+    \input{sfdottest}
+}}
+
+\texttt{sfdottest} is a generic dot-product test program for testing
+linear operators. Suppose there is an executable program
+\texttt{<prog>} that takes an RSF file from the standard input and
+produces an RSF file in the standard output. It may take any number of
+additional parameters but one of them must be \texttt{adj=} that sets
+the forward (\texttt{adj=0}) or adjoint (\texttt{adj=1}) operations.
+The program \texttt{<prog>} is typically an RSF program but it could
+be anything (a script, a multiprocessor MPI program, etc.) as long as
+it implements a linear operator $\mathbf{L}$ and its adjoint
+$\mathbf{L}^T$. The \texttt{sfdottest} program is testing the equality
+\begin{equation}
+\label{eq:dptest}
+\mathbf{d}^T\,\mathbf{L}\,\mathbf{m} = \mathbf{m}^T\,\mathbf{L}^T\,\mathbf{d}
+\end{equation}
+by using random vectors $\mathbf{m}$ and $\mathbf{d}$. You can invoke it with
+\begin{verbatim}
+bash$ sfdottest <prog> [optional aruments] mod=mod.rsf dat=dat.rsf
+\end{verbatim}
+where \texttt{mod.rsf} and \texttt{dat.rsf} are RSF files that
+represent vectors from the model and data spaces. \texttt{sfdottest}
+does not create any temporary files and does not have any restrictive
+limitations on the size of the vectors.
+
+Here is an example. We first setup a vector with 100 elements using
+\texttt{sfspike} and then run \texttt{sfdottest} to test the
+\texttt{sfcausint} program. \texttt{sfcausint} implements a linear
+operator of causal integration and its adjoint, the anti-causal
+integration.
+\begin{verbatim}
+bash$ sfspike n1=100 > vec.rsf
+bash$ sfdottest sfcausint mod=vec.rsf dat=vec.rsf
+sfdottest:  L[m]*d=1410.2
+sfdottest: L'[d]*m=1410.2
+bash$ sfdottest sfcausint mod=vec.rsf dat=vec.rsf
+sfdottest:  L[m]*d=1165.87
+sfdottest: L'[d]*m=1165.87
+\end{verbatim}
+The numbers are different on subsequent runs because of changing
+seed in the random number generator.
+
+Here is a somewhat more complicated example. The \texttt{sfhelicon}
+program implements Claerbout's multidimensional helical filtering
+\cite[]{GEO63-05-15321541}. It requires a filter to be specified in
+addition to the input and output vectors. We create a helical 
+2-D filter using the Unix \texttt{echo} command.
+\begin{verbatim}
+bash$ echo 1 19 20 n1=3 n=20,20 data_format=ascii_int in=lag.rsf > lag.rsf
+bash$ echo 1 1 1 a0=-3 n1=3 data_format=ascii_float in=flt.rsf > flt.rsf
+\end{verbatim}
+Next, we create an example 2-D model and data vector with \texttt{sfspike}.
+\begin{verbatim}
+bash$ sfspike n1=50 n2=50 > vec.rsf
+\end{verbatim}
+Now the \texttt{sfdottest} program can perform the dot product test.
+\begin{verbatim}
+bash$ sfdottest sfhelicon filt=flt.rsf lag=lag.rsf \
+> mod=vec.rsf dat=vec.rsf
+sfdottest:  L[m]*d=8.97375
+sfdottest: L'[d]*m=8.97375
+\end{verbatim}
+Here is the same program tested in the inverse filtering mode:
+\begin{verbatim}
+bash$ sfdottest sfhelicon filt=flt.rsf lag=lag.rsf \
+> mod=vec.rsf dat=vec.rsf inv=y
+sfdottest:  L[m]*d=15.0222
+sfdottest: L'[d]*m=15.0222
+\end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
 \input{sfget}
 }}
 
@@ -632,10 +704,8 @@ bash$ < sin.rsf sfmask min=-0.5 max=0.5 | sfdisfil
    0:    1    0    0    1    0    0    1    0    0    1
 \end{verbatim}
 
-
-
-
-
+\bibliographystyle{seg}
+\bibliography{SEG}
 
 %%% Local Variables: 
 %%% mode: latex

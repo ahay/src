@@ -34,9 +34,9 @@ static off_t seektable (int dim, int *n, int *m, int *f, int *j,
 
 int main (int argc, char *argv[])
 {
-    int i, esize, dim, n1, n2, m1, i2, i1, j1, jump;
+    int i, esize, dim, n1, m1, i2, i1, j1, jump;
     int i0, n[SF_MAX_DIM], m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
-    off_t *table, maxsize;
+    off_t *table, maxsize, n2;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
     char key[7], *label[SF_MAX_DIM], *buf;
     bool squeeze, verb;

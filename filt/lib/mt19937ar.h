@@ -8,4 +8,7 @@ void init_genrand(unsigned long s);
 double genrand_real1(void);
 /* generates a random number on [0,1]-real-interval */
 
+unsigned long genrand_int32(void);
+/* generates a random number on [0,0xffffffff]-interval */
+
 #endif

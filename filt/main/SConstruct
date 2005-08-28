@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-add attr cat cmplx cp cut dd disfil get headerattr headermath
+add attr cat cmplx cp cut dd disfil dottest get headerattr headermath
 headersort headerwindow in interleave mask math pad put real reverse
 rm rtoc scale segyread segywrite spike spray stack transp window
 '''

@@ -424,17 +424,20 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
         parline = parline + " %s=" % (parname)
     files = inpout.findall(text)
     snps = name
+    valid = {}
     for par in files:
         filename = par[0]
-        io = par[1]
-        tag = par[2]
-        if tag == 'in':
-            iostring = ' < %s.%s' % (filename,rsfsuffix)
-        elif tag == 'out':
-            iostring = ' > %s.%s' % (filename,rsfsuffix)
-        else:
-            iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
-        snps = snps + iostring
+        if valid.get(filename,1):
+            io = par[1]
+            tag = par[2]
+            if tag == 'in':
+                iostring = ' < %s.%s' % (filename,rsfsuffix)
+            elif tag == 'out':
+                iostring = ' > %s.%s' % (filename,rsfsuffix)
+            else:
+                iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
+            snps = snps + iostring
+        valid[filename]=0
     if re.match(rsfplotprefix,name):
         snps = snps + ' > plot.' + rsfplotsuffix
     snps = snps + parline
