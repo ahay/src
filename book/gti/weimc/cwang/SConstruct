@@ -27,7 +27,7 @@ def igraph(custom):
     return '''
     graph labelrot=n title="" transp=y yreverse=y
     wantaxis=n wantlabels=n
-    min2=-0.5 max2=2.0 min1=0 max1=2000
+    min2=-0.1 max2=1.39 min1=0 max1=2000
     %s
     ''' % custom
 
@@ -103,7 +103,8 @@ Flow('dipa',None,
      '''
      spike nsp=2 mag=%s
      n1=%d o1=%g d1=%g
-     k1=0,%d l1=%d,%d
+     k1=0,%d l1=%d,%d |
+     smooth rect1=3 repeat=3
      ''' % (ppan,par['nz'],par['oz'],par['dz'],
             lll/tan(rad)/par['dz']+5+1,
             lll/tan(rad)/par['dz']+5,
@@ -156,7 +157,7 @@ for case in ('pp','ps'):
 
     ovl = case + 'ovl'
 
-    for TYP in ('x'): # imaging condition
+    for TYP in ('x','h'): # imaging condition
 
         # imaging condition parameters
         if(TYP=='x'):
@@ -193,7 +194,7 @@ for case in ('pp','ps'):
                      transp plane=23 |
                      transp plane=34 |
                      window squeeze=n |
-                     off2abs verb=y |
+                     /home/savap/RSF/user/savap/sfoff2abs verb=y |
                      transp 
                      ''' % LOC)
             Result(off,off,igrey(''))
@@ -204,19 +205,21 @@ for case in ('pp','ps'):
             if(TYP=='x'):
                 Flow(ang,off,
                      '''
-                     slant adj=y p0=-0.5 np=250 dp=0.01 |
+                     slant adj=y p0=-0.1 np=150 dp=0.01 |
                      put label2=tan
                      ''' % par)
             else:
                 Flow(ang,[off,'dipa'],
                      '''
-                     slant adj=y p0=-0.5 np=250 dp=0.01 |
+                     slant adj=y p0=-0.1 np=150 dp=0.01 |
                      /home/savap/RSF/user/savap/sfangdip verb=y dip=${SOURCES[1]} |
                      put label2=tan
                      ''' % par)
             Plot(ang,ang,igrey(''))
             Result(ang,[ang,ovl],'Overlay')
 
+#                      window f2=1 | reverse which=2 opt=n | pad beg2=1 |
+#                     cat axis=2 space=n ${SOURCES[0]} | 
                 
             if(case=='ps'):
                 cor = case + 'cor' + '-'+TYP + '-'+LOC

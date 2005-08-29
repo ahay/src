@@ -1,4 +1,6 @@
-/* Transform PP angle gathers to PS angle gathers. */
+/* Transform PP angle gathers to PS angle gathers. 
+ * (designed for horizontal offsets)
+ */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -39,8 +41,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&da)) sf_error("No d2= in input"); 
     if (!sf_histfloat(in,"o2",&a0)) sf_error("No o2= in input"); 
 
-    if (!sf_getint("nw",&nw)) nw=4;
-    /* accuracy level */
+    if (!sf_getint("nw",&nw)) nw=4; /* accuracy level */
 
     sf_prefilter_init (nw,na,2*na);
 

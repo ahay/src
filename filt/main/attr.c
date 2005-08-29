@@ -1,5 +1,5 @@
 /* Display dataset attributes.
-
+   
 Sample output from "sfspike n1=100 | sfbandpass fhi=60 | sfattr"
 *******************************************
 rms = 0.992354

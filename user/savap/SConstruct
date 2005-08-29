@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-erfdm nfill off2abs
+erfdm nfill off2abs angdip
 '''
 
 try:  # distributed version

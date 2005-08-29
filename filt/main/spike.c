@@ -1,5 +1,5 @@
 /* Generate simple data: spikes, boxes, planes, constants.
-
+   
 Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... l1= l2= ... mag=1,1,...] 
 
 k1,k2,... specify the spike starting position (indexing starts with 1).

@@ -33,13 +33,16 @@ int main(int argc, char* argv[])
     sf_file Fd; /*  data =   vector offset (hx,hy,hz)-z */
     sf_file Fm; /* model = absolute offset     h     -z */
 
-    int nw; /* spline order */
-    int nd; /*  data size (nd=nhx*nhy*nhz) */
-    int nm; /* model size (nm=nh) */
+    int nw;    /* spline order */
+    int nd,id; /*  data size (nd=nhx*nhy*nhz) */
+    int nm,im; /* model size (nm=nh) */
 
     float *dat=NULL;
     float *mod=NULL;
     float *map=NULL;
+
+    float *mwt=NULL;
+    float *dwt=NULL;
 
     int i;
 
@@ -74,9 +77,14 @@ int main(int argc, char* argv[])
     nm = ah.n;               /* model size */
     nd = ahx.n*ahy.n*ahz.n;  /*  data size */
 
+    map = sf_floatalloc(nd); /* mapping */
+
     mod = sf_floatalloc(nm); /* model vector */
     dat = sf_floatalloc(nd); /*  data vector */
-    map= sf_floatalloc(nd);  /* mapping */
+
+    mwt = sf_floatalloc(nm); /* model weight */
+    dwt = sf_floatalloc(nd); /*  data weight */
+
 
     sf_prefilter_init(nw,    /* spline order */
 		      nd,    /* temporary storage */
@@ -104,20 +112,28 @@ int main(int argc, char* argv[])
 		  nw, 
 		  nd);
 
+    for(id=0;id<nd;id++) {
+	dwt[id]=1;
+    }
+    sf_prefilter_apply(nd,dwt);  
+    sf_int1_lop(true,false,nm,nd,mwt,dwt);
+
     for(iz=0;iz<az.n;iz++) {
 	sf_warning("iz=%d of %d",iz+1,az.n);
 
 	sf_floatread(dat,nd,Fd);
 
-	sf_prefilter_apply( nd,
-			    dat);  
-
+	sf_prefilter_apply(nd,dat);  
 	sf_int1_lop( true,   // adj
 		     false,  // add
 		     nm,     // n model
 		     nd,     // n data
 		     mod,   
 		     dat);
+
+/*	for(im=0;im<nm;im++) {*/
+/*	    if(mwt[im] >0) mod[im] /= mwt[im];*/
+/*	}*/
 
 	sf_floatwrite(mod,nm,Fm);
     }
@@ -126,9 +142,11 @@ int main(int argc, char* argv[])
 
     sf_int1_close();
 
+    free(map);
     free(mod);
     free(dat);
-    free(map);
+    free(mwt);
+    free(dwt);
 
     exit(0);
 }
