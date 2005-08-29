@@ -14,16 +14,26 @@ Flow('spike',None,
 
 ffts = []
 for pad in (256,512):
+    spike = 'spike%d' % pad
+    Flow(spike,'spike','pad n2=%d' % pad)
     for dv in (1,-1):
         fft = 'fft%d-%d' % (dv,pad)
         ffts.append(fft)
-        Flow(fft,'spike',
+        Flow(fft,spike,
              '''
-             pad n2=%d | cosft sign2=1 | spray axis=2 n=1 o=0 d=0.008 |
+             cosft sign2=1 | spray axis=2 n=1 o=0 d=0.008 |
              fourvc pad=%d pad2=%d nv=1 dv=%d v0=%g |
              cosft sign3=-1 | window n3=256
-         ''' % (pad,pad,(pad,2*pad)[pad==512],2*dv,(2.0001,0.0001)[dv==1]))
+         ''' % (pad,(pad,2*pad)[pad==512],2*dv,(2.0001,0.0001)[dv==1]))
         Plot(fft,'grey title="t^2-FFT impulse response, dv=%d km/s"' % dv)
 Result('fft-imp',ffts,'TwoRows')
+
+for adj in (0,1):
+    fd = 'fd%d' % adj
+    Flow(fd,'spike512',
+         'velcon vel=1 v0=0 nv=3000 inv=%d adj=%d | window n2=256' % (adj,1-adj))
+    Plot(fd,
+         'grey title="Finite-diff impulse response, dv=%d km/s" ' % (1-2*adj))
+Result('fd-imp','fd0 fd1','SideBySideIso')
 
 End()

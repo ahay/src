@@ -54,7 +54,7 @@ Flow('dip',None,
       ndeg,
       ndeg,
       string.join(map(str,range(1,1+ndeg)),','),
-      string.join(map(lambda a: qstr(tan(a*pi/180)),deg),',')
+      string.join(map(lambda a: str(tan(a*pi/180)),deg),',')
       )
      )
 Flow('ref','dip','math output="300+input*x1" ')
