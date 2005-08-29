@@ -235,4 +235,32 @@ for case in ('pp','ps'):
             
 # ------------------------------------------------------------
 
+Flow('one2','ppcig-h','window n1=1 min1=1000 n3=1 min3=2000')
+Flow('two2','one2',
+     '''
+     /home/savap/RSF/user/savap/sfoff2abs2 verb=y
+     ''')
+Plot('one2','one2','window | grey pclip=100')
+Plot('two2','two2','window | grey pclip=100')
+
+Flow('one3','ppcig-h',
+     '''
+     window n1=1 min1=1000 n3=1 min3=2000 |
+     transp plane=23 |
+     put o2=0
+     ''')
+Flow('two3','one3',
+     '''
+     /home/savap/RSF/user/savap/sfoff2abs3 verb=y
+     ''')
+Plot('one3','one3','window | grey pclip=100')
+Plot('two3','two3','window | grey pclip=100')
+
+Plot('one','one2 one3','OverUnderAniso')
+Plot('two','two2 two3','OverUnderAniso')
+Result('all','one two','SideBySideAniso')
+
+# ------------------------------------------------------------
+
+
 End()

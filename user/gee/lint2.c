@@ -1,7 +1,7 @@
 /* Bi-linear interpolation in 2-D */
 /*
   Copyright (C) 2004 University of Texas at Austin
-   
+  
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
@@ -21,8 +21,9 @@
 
 #include "lint2.h"
 
-static int nx, ny;
-static float ox, dx, oy, dy;
+static int    nx,  ny;
+static float  ox,  oy;
+static float  dx,  dy;
 static float *xx, *yy;
 
 void lint2_init( int n1, float o1, float d1 /* first grid axis */, 
@@ -30,51 +31,56 @@ void lint2_init( int n1, float o1, float d1 /* first grid axis */,
 		 float* x, float* y         /* coordinates */) 
 /*< initialize >*/
 {
-  nx = n1;
-  ox = o1;
-  dx = d1;
-  xx = x;
-  ny = n2;
-  oy = o2;
-  dy = d2;
-  yy = y;
+    nx = n1;
+    ox = o1;
+    dx = d1;
+    xx = x;
+
+    ny = n2;
+    oy = o2;
+    dy = d2;
+    yy = y;
 }
 
 void lint2_lop( bool adj, bool add, int nm, int nd, float* mm, float*dd) 
 /*< linear operator >*/
 {
-    int ix, iy, im, id;
-  float f, fx, gx, fy, gy;
-  
-  sf_adjnull (adj, add, nm, nd, mm, dd);
+    int   ix, iy, im, id;
+    float fx, fy;
+    float gx, gy;
+    float f;
 
-  for (id= 0; id< nd; id++) {
-    f = (xx[id]-ox)/dx;
-    ix = (int) f;  
-    if ( ix < 0 || ix > nx-2) continue;
-    fx=f-ix;
-    gx= 1.-fx;
+    sf_adjnull (adj, add, nm, nd, mm, dd);
+    
+    for (id= 0; id< nd; id++) {
 
-    f = (yy[id]-oy)/dy;
-    iy = (int) f;  
-    if ( iy < 0 || iy > ny-2) continue;
-    fy=f-iy;
-    gy= 1.-fy;
+	f = (xx[id]-ox)/dx;
+	ix = (int) f;  
+	if ( ix < 0 || ix > nx-2) continue;
+	fx=f-ix;
+	gx= 1.-fx;
+	
+	f = (yy[id]-oy)/dy;
+	iy = (int) f;  
+	if ( iy < 0 || iy > ny-2) continue;
+	fy=f-iy;
+	gy= 1.-fy;
+	
+	im = nx*iy+ix;
+	
+	if (adj) {
+	    mm[im  ]    += gx * gy * dd[id];
+	    mm[im+1]    += fx * gy * dd[id];
+	    mm[im+nx]   += gx * fy * dd[id];
+	    mm[im+nx+1] += fx * fy * dd[id];
+	} else {
+	    dd[id] += 
+		gx * gy * mm[im] + 
+		fx * gy * mm[im+1] +
+		gx * fy * mm[im+nx] +
+		fx * fy * mm[im+nx+1];
+	}
 
-    im = nx*iy+ix;
-
-    if (adj) {
-      mm[im  ]    += gx * gy * dd[id];
-      mm[im+1]    += fx * gy * dd[id];
-      mm[im+nx]   += gx * fy * dd[id];
-      mm[im+nx+1] += fx * fy * dd[id];
-    } else {
-      dd[id] += 
-	gx * gy * mm[im] + 
-	fx * gy * mm[im+1] +
-	gx * fy * mm[im+nx] +
-	fx * fy * mm[im+nx+1];
     }
-  }
 }
 

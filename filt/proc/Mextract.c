@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
     sf_file in, out, head;
 
     sf_init (argc,argv);
-    in = sf_input("in");
+    in  = sf_input ( "in");
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&nx)) sf_error("Need n1= in in");
@@ -55,11 +55,11 @@ int main (int argc, char* argv[])
 
     /* create coordinates */
     head = sf_input("head");
-    if (!sf_histint(head,"n1",&nk)) sf_error("No n1= in head");
+    if (!sf_histint(head,"n1",&nk)) sf_error("No   n1= in head");
     if (!sf_histint(head,"n2",&nd)) sf_error("Need n2= in head");
     if (SF_FLOAT != sf_gettype(head)) sf_error("Need float header");
 
-    xy = sf_floatalloc2(2,nd);
+    xy  = sf_floatalloc2(2,nd);
     hdr = sf_floatalloc(nk);
 
     for (id=0; id<nd; id++) {	
