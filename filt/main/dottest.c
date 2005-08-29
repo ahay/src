@@ -88,6 +88,8 @@ int main(int argc, char* argv[])
 		buf[im] = (float) genrand_real1 ();
 	    }
 	    sf_floatwrite(buf,mbuf,pip);
+	    
+	    sf_warning("I am child one: %d/%d",(int) mbuf, (int) nm);
 	}
     } 
 
@@ -101,6 +103,8 @@ int main(int argc, char* argv[])
 	close(p[1][0]);
 	close(STDOUT_FILENO);
 	dup(p[1][1]);
+
+	sf_warning("I am child two");
 
 	argv[argc-1][4]='0';
 	execvp(argv[0],argv);

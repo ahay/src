@@ -8,6 +8,8 @@ typedef struct Device *device;
 struct Device {
     float dashpos, dashsum, *dashes;
     float pixels_per_inch, aspect_ratio;
+    float greyc, pixc;
+    int invras;
     /* control routines */
     int (*open)(void);
     int (*reset)(void);

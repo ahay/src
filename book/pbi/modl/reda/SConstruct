@@ -68,4 +68,30 @@ Plot('vel',
 
 Result('baina','vel lays0 lays1','Overlay')
 
+Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0')
+Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
+Flow('dips','lays','deriv | scale dscale=100')
+
+for vpvs in (1,2): 
+    for twod in (0,1):
+        for nh in (1,121):
+            bdat = 'bdat%d-%d-%d' % (vpvs,twod,nh)
+            Flow(bdat,'lays refl grad dips',
+                 '''
+                 kirmod
+                 ns=301 ds=0.025 s0=0.5
+                 h0=0 nh=%d dh=0.025
+                 type=v vel=1.5 gradx=0.36 gradz=0.36 twod=%d
+                 type2=v vel2=%g gradx2=%g gradz2=%g
+                 t0=0 dt=0.004 nt=1250 freq=30
+                 refl=${SOURCES[1]} rgrad=${SOURCES[2]} dip=${SOURCES[3]}
+                 ''' % (nh,twod,(1.5,0.75)[vpvs-1],(0.36,0.18)[vpvs-1],(0.36,0.18)[vpvs-1]))
+
+Result('bzo','bdat1-0-1','window min3=2 min1=0.5 max1=3 | grey title="Zero Offset Data" ')
+
+Plot('pp','bdat1-1-121','window n3=1 f3=60 min1=1 max1=4 | grey title="PP Shot Gather" ')
+Plot('ps','bdat2-1-121','window n3=1 f3=60 min1=1 max1=4 | grey title="PS Shot Gather" ')
+
+Result('bps','pp ps','SideBySideAniso')
+
 End()

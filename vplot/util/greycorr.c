@@ -23,30 +23,25 @@
  */
 
 #include <stdio.h>
-#include "../include/extern.h"
-#include "../include/round.h"
 
-int
-greycorr (colornum)
-    int             colornum;
+#include "_round.h"
+#include "device.h"
+
+int greycorr (device dev, int colornum)
 {
-float           newval;
-extern float    greyc, pixc;
-extern int      invras;
-int             outval;
+    float           newval;
+    int             outval;
 
     newval = colornum;
 
-    if (invras)
-	newval = 255 - newval;
+    if (dev->invras) newval = 255 - newval;
 
-/* 
- * correction to simulate nonlinearity of graphics displays
- */
-    if (greyc != 1.)
+    /*  correction to simulate nonlinearity of graphics displays */
+    if (dev->greyc != 1.)
     {
 	newval /= 255.;
-	newval = (-2. + 2. * greyc) * newval * newval * newval + 3. * (1. - greyc) * newval * newval + greyc * newval;
+	newval = (-2. + 2. * dev->greyc) * newval * newval * newval + 
+	    3. * (1. - dev->greyc) * newval * newval + dev->greyc * newval;
 	newval *= 255.;
 	if (newval < 0)
 	    newval = 0.;
@@ -54,18 +49,16 @@ int             outval;
 	    newval = 255.;
     }
 
-/*
- * correction for pixel overlap on hardcopy devices
- */
-    if (pixc != 1.)
+    /* correction for pixel overlap on hardcopy devices */
+    if (dev->pixc != 1.)
     {
-	if (newval < pixc * 128.)
+	if (newval < dev->pixc * 128.)
 	{
-	    newval /= pixc;
+	    newval /= dev->pixc;
 	}
 	else
 	{
-	    newval = 128. + (newval - pixc * 128.) / (2. - pixc);
+	    newval = 128. + (newval - dev->pixc * 128.) / (2. - dev->pixc);
 	}
 	if (newval < 0)
 	    newval = 0.;
