@@ -1,4 +1,4 @@
-/* 2-D interpolation */
+/* 3-D interpolation */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -22,7 +22,7 @@
 #include "interp.h"
 /*^*/
 
-#include "int2.h"
+#include "int3.h"
 #include "alloc.h"
 #include "adjnull.h"
 #include "error.h"
@@ -31,33 +31,37 @@
 #include "_bool.h"
 /*^*/
 
-static int nd, nf, m1, m2, **nxy;
+static int nd, nf, **nxyz;
 static bool *mask, allocated=false;
-static float **w1, **w2;
+static   int   m1,   m2,   m3;
+static float **w1, **w2, **w3;
 
-void  sf_int2_init (float** coord          /* coordinates [nd][2] */, 
-		    float o1, float o2, 
-		    float d1, float d2,
-		    int   n1, int   n2     /* axes */, 
+void  sf_int3_init (float** coord          /* coordinates [nd][3] */, 
+		    float o1, float o2, float o3,
+		    float d1, float d2, float d3,
+		    int   n1, int   n2,   int n3 /* axes */, 
 		    sf_interpolator interp /* interpolation function */, 
 		    int nf_in              /* interpolator length */, 
 		    int nd_in              /* number of data points */)
 /*< initialize >*/
 {
+
     int   id;
-    int   i1, i2; 
-    float x1, x2, rx;
+    int   i1, i2, i3; 
+    float x1, x2, x3, rx;
 
     nf = nf_in;
     nd = nd_in;
     m1 = n1;
     m2 = n2;
+    m3 = n3;
 
     if (!allocated) {
-	nxy  = sf_intalloc2  ( 2,nd);
+	nxyz = sf_intalloc2  ( 3,nd);
 	mask = sf_boolalloc  (   nd);
 	w1   = sf_floatalloc2(nf,nd);
 	w2   = sf_floatalloc2(nf,nd);
+	w3   = sf_floatalloc2(nf,nd);
     }
 
     for (id = 0; id < nd; id++) {
@@ -69,56 +73,75 @@ void  sf_int2_init (float** coord          /* coordinates [nd][2] */,
 	rx = (coord[id][1] - o2)/d2;
 	i2 = (int) floorf(rx + 1. - 0.5*nf);
 	x2 = rx - floorf(rx);
+
+	rx = (coord[id][2] - o3)/d3;
+	i3 = (int) floorf(rx + 1. - 0.5*nf);
+	x3 = rx - floorf(rx);
    
 	if (i1 > - nf && i1 < n1 &&
-	    i2 > - nf && i2 < n2) {
+	    i2 > - nf && i2 < n2 &&
+	    i3 > - nf && i3 < n3) {
 	    mask[id] = false; 
 	    interp (x1, nf, w1[id]);
 	    interp (x2, nf, w2[id]);
-	    nxy[id][0] = i1;
-	    nxy[id][1] = i2;
+	    interp (x3, nf, w3[id]);
+	    nxyz[id][0] = i1;
+	    nxyz[id][1] = i2;
+	    nxyz[id][2] = i3;
 	} else {
 	    mask[id] = true;
 	}
     }
 }
 
-void  sf_int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
+void  sf_int3_lop (bool adj, bool add, int nm, int ny, float* mm, float* dd)
 /*< linear operator >*/
 { 
-    int id, i0, j0, i, j, im;
-    float w;
+    int id, im;
+    int i0, j0, k0;
+    int i,  j,  k;
     
     if (ny != nd) sf_error("%s: wrong dimensions: %d != %d",__FILE__,ny,nd);
     
-    sf_adjnull (adj,add,nm,nd,x,ord);
+    sf_adjnull(adj,add,nm,nd,mm,dd);
     
     for (id=0; id < nd; id++) {
+
 	if (mask[id]) continue;
-	i0 = nxy[id][0]; 
-	j0 = nxy[id][1]; 
-	for (j = SF_MAX(0,-j0); j < SF_MIN(nf,m2-j0); j++) {
-	    w = w2[id][j];
-	    for (i = SF_MAX(0,-i0); i < SF_MIN(nf,m1-i0); i++) { 
-		im = (i+i0) + (j+j0)*m1;
-		if( adj) { 
-		    x[im] += ord[id] * w * w1[id][i];
-		} else {
-		    ord[id] += x[im] * w * w1[id][i];
+
+	i0 = nxyz[id][0]; 
+	j0 = nxyz[id][1];
+	k0 = nxyz[id][2];
+
+	for         (k = SF_MAX(0,-k0); k < SF_MIN(nf,m3-k0); k++) {
+	    for     (j = SF_MAX(0,-j0); j < SF_MIN(nf,m2-j0); j++) {
+		for (i = SF_MAX(0,-i0); i < SF_MIN(nf,m1-i0); i++) { 
+
+		    im =(i+i0) + 
+			(j+j0)*m1 + 
+			(k+k0)*m1*m2;
+
+		    if( adj) { 
+			mm[im] += dd[id] * w3[id][k] * w2[id][j] * w1[id][i];
+		    } else {
+			dd[id] += mm[im] * w3[id][k] * w2[id][j] * w1[id][i];
+		    }
+
 		}
 	    }
 	}
-    }
+
+    } // end id
 }
 
-void int2_close (void)
+void int3_close (void)
 /*< free allocated storage >*/
 {
     if (allocated) {
 	allocated = false;
 	free (mask);
-	free (*nxy); free (nxy);
-	free (*w1);  free (w1);
-	free (*w2);  free (w2);
+	free (*nxyz); free (nxyz);
+	free (*w1);   free (w1); 
+	free (*w2);   free (w2);	
     }
 }
