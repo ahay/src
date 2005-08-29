@@ -54,7 +54,9 @@ Flow('lay3','inp3','dd form=native | spline %s fp=0,0' % dim1)
 Flow('lay4',None,'math %s output=4.5' % dim1)
 
 Flow('lays','lay1 lay2 lay3 lay4','cat axis=2 ${SOURCES[1:4]}')
-graph = 'graph min1=2.5 max1=7.5 min2=0 max2=5 yreverse=y wantaxis=n wanttitle=n scalebar=y'
+graph = '''
+graph min1=2.5 max1=7.5 min2=0 max2=5 yreverse=y wantaxis=n wanttitle=n scalebar=y
+'''
 
 Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
 Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
@@ -69,10 +71,8 @@ Plot('vel',
 
 Result('baina','vel lays0 lays1','Overlay')
 
-#Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0')
-#Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
-Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0.05')
-Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,0,0,0')
+Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0')
+Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
 Flow('dips','lays','deriv | scale dscale=100')
 
 for vpvs in (1,2): 
@@ -88,12 +88,18 @@ for vpvs in (1,2):
                  type2=v vel2=%g gradx2=%g  gradz2=%g
                  t0=0 dt=0.004 nt=1250 freq=30
                  refl=${SOURCES[1]} rgrad=${SOURCES[2]} dip=${SOURCES[3]}
-                 ''' % (nh,twod,(1.5,0.75)[vpvs-1],(0.36,0.18)[vpvs-1],(0.36,0.18)[vpvs-1]))
+                 ''' % (nh,twod,
+                        (1.5,0.75)[vpvs-1],
+                        (0.36,0.18)[vpvs-1],
+                        (0.36,0.18)[vpvs-1]))
 
-Result('bzo','bdat1-0-1','window min3=2 min1=0.5 max1=3 | grey title="Zero Offset Data" ')
+Result('bzo','bdat1-0-1',
+       'window min3=2 min1=0.5 max1=3 | grey title="Zero Offset Data" ')
 
-Plot('pp','bdat1-1-121','window n3=1 f3=60 min1=1 max1=5 | grey title="PP Shot Gather" ')
-Plot('ps','bdat2-1-121','window n3=1 f3=60 min1=1 max1=5 | grey title="PS Shot Gather" ')
+Plot('pp','bdat1-1-121',
+     'window n3=1 f3=60 min1=1 max1=5 | grey title="PP Shot Gather" ')
+Plot('ps','bdat2-1-121',
+     'window n3=1 f3=60 min1=1 max1=5 | grey title="PS Shot Gather" ')
 
 Result('bps','pp ps','SideBySideAniso')
 
@@ -112,12 +118,16 @@ par['ow']=0.
 par['dw']=1./(par['nt']*par['dt'])
 
 # velocity
-Flow('velp','vel','window n1=%(nz)d | math output="input"  | put label1=z label2=x' % par)
-Flow('vels','vel','window n1=%(nz)d | math output="input/2"| put label1=z label2=x' % par)
+Flow('velp','vel',
+     'window n1=%(nz)d | math output="input"  | put label1=z label2=x' % par)
+Flow('vels','vel',
+     'window n1=%(nz)d | math output="input/2"| put label1=z label2=x' % par)
 
 # slowness
-Flow('slop','velp','math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
-Flow('slos','vels','math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
+Flow('slop','velp',
+     'math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
+Flow('slos','vels',
+     'math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
 
 Plot('slop','slop','window | transp | grey color=j allpos=y title=P')
 Plot('slos','slos','window | transp | grey color=j allpos=y title=S')
@@ -142,8 +152,16 @@ Result('rec','recp recc','SideBySideAniso')
 spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
 spmig.imageCW('imgc','cigc','slop','slos','souc','recc',par)
 
-Plot('imgp','imgp','window | transp | grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=P')
-Plot('imgc','imgc','window | transp | grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=C')
+Plot('imgp','imgp',
+     '''
+     window | transp |
+     grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=P
+     ''')
+Plot('imgc','imgc',
+     '''
+     window | transp |
+     grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=C
+     ''')
 
 Result('img','imgp imgc','SideBySideAniso')
 

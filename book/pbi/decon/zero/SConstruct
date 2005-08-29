@@ -5,15 +5,22 @@ Flow('ricker',None,'spike n1=101 k1=51 | ricker1')
 traces = []
 for a in range(-180,190,10):
     ricker = 'ricker%d' % a
+    histog = 'histog%d' % a
     traces.append(ricker)
     Flow(ricker,'ricker','envelope hilb=y phase=%d' % a)
+    Flow(histog,ricker,'histogram n1=21 o1=-0.25 d1=0.025')
 
 Flow('traces',traces,
-     '''
-     cat ${SOURCES[1:%d]} axis=2 > $TARGET &&
-     echo n2=%d o2=-180 d2=10 >> $TARGET
-     ''' % (len(traces),len(traces)),stdout=-1)
+     'cat ${SOURCES[1:%d]} axis=2 | put o2=-180 d2=10' % len(traces))
 Result('traces','dots')
+
+Flow('histos','histog0 histog90','cat ${SOURCES[1]} axis=2')
+Result('histos',
+       '''
+       interleave axis=1 %s |
+       dd type=float |
+       graph dash=1,0 title=Histogram wantaxis1=n
+       ''' % ('$SOURCE '*10))
 
 Flow('focus','traces','focus rect1=20')
 Result('focus','grey allpos=y color=j pclip=100 title=Focus')

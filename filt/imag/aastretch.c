@@ -77,8 +77,8 @@ void aastretch_define (const float *coord /* data coordinates [nd] */,
 	x[id][1] = ix[1] + nt;
 	x[id][2] = ix[2] + 2*nt;
 
-	a[id] = amp[id]*dt*dt/
-	    (delt[id]*delt[id] + dt*dt); 
+	a[id] = dt*dt/(delt[id]*delt[id] + dt*dt);
+	if (NULL != amp) a[id] *= amp[id];
     }
 }
 

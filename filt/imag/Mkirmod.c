@@ -248,7 +248,7 @@ int main(int argc, char* argv[])
 
 		    theta = 0.5*(SF_SIG(tg->tx)*tg->an - SF_SIG(ts->tx)*ts->an);
 		    theta = sinf(theta);
-		    ava = 1.+rgd[ic][ix]*theta*theta;
+		    ava = rfl[ic][ix]+rgd[ic][ix]*theta*theta;
 		    if (ref != inc) ava *= theta;
 
 		    obl = 0.5*(ts->tn + tg->tn);
@@ -260,8 +260,8 @@ int main(int argc, char* argv[])
 		}
 	    }
 
-	    aastretch_define (time[0],delt[0],ampl[0]);
-	    aastretch_lop (false,false,nxc,nt,rfl[0],trace);
+	    aastretch_define (time[0],delt[0],NULL);
+	    aastretch_lop (false,false,nxc,nt,ampl[0],trace);
 
 	    /* convolve with Ricker wavelet */
 	    sf_freqfilt(nt,trace);
