@@ -27,14 +27,18 @@ def igraph(custom):
     return '''
     graph labelrot=n title="" transp=y yreverse=y
     wantaxis=n wantlabels=n
-    min2=-0.5 max2=1.5 min1=0 max1=2000
+    min2=-0.5 max2=2.0 min1=0 max1=2000
     %s
     ''' % custom
 
 # ------------------------------------------------------------
 
-deg = (0,45)
-dep = (1000,1000*(sqrt(2)-1)) 
+aaa = 30.
+rad = aaa / 180. * pi
+lll = 1000
+
+deg = (           0,           aaa    )
+dep = (lll/tan(rad),lll/sin(rad) - lll*tan(rad)) 
 ndeg = len(deg)
 
 # ------------------------------------------------------------
@@ -68,7 +72,8 @@ Flow('dep',None,
       string.join(map(lambda a: str(a),dep),',')))
 
 Flow('ref','dip dep','math d=${SOURCES[0]} z=${SOURCES[1]} output="z+d*x1" ')
-Result('ref','ref','graph yreverse=y min2=0 max2=3000 min1=0 max1=4000 ')
+Plot  ('ref','ref','graph yreverse=y min2=0 max2=3000 min1=0 max1=4000 wantaxis=n wanttitle=n')
+Result('ref','ref','graph yreverse=y min2=0 max2=3000 min1=0 max1=4000 title="" label1=x label2=z')
 
 # wavelet
 Flow('wav',None,
@@ -98,8 +103,11 @@ Flow('dipa',None,
      '''
      spike nsp=2 mag=%s
      n1=%d o1=%g d1=%g
-     k1=0,111 l1=110,300
-     ''' % (ppan,par['nz'],par['oz'],par['dz']))
+     k1=0,%d l1=%d,%d
+     ''' % (ppan,par['nz'],par['oz'],par['dz'],
+            lll/tan(rad)/par['dz']+5+1,
+            lll/tan(rad)/par['dz']+5,
+            par['nz']))
 
 # PP reflection angles
 Flow('ppovl',None,
@@ -144,11 +152,11 @@ for case in ('pp','ps'):
     sou = case + 'sou'
     rec = case + 'rec'
     spmig.wflds(sou,rec,'wav',case,par)
-    Result(rec,rec,'window | real |' + igrey(''))
+    Result(rec,rec,'window | real | transp | grey')
 
     ovl = case + 'ovl'
 
-    for TYP in ('x','h'): # imaging condition
+    for TYP in ('x'): # imaging condition
 
         # imaging condition parameters
         if(TYP=='x'):
@@ -163,7 +171,8 @@ for case in ('pp','ps'):
             spmig.imagePW(img,cig,'slop',       sou,rec,par)
         else:
             spmig.imageCW(img,cig,'slop','slos',sou,rec,par)
-        Result(img,img,'window max1=2800 | transp |' + igrey(''))
+        Plot(img,img,'window | transp |' + igrey('min2=0 max2=4000 min1=0 max1=3000'))
+        Result(img,[img,'ref'],'Overlay')
 
         for LOC in (['1000','2000']):
             # offset CIGs
@@ -173,9 +182,7 @@ for case in ('pp','ps'):
                 Flow(off,cig,
                      '''
                      window squeeze=n n1=1 min1=%s |
-                     stack |
-                     transp |
-                     stack
+                     stack | transp | stack
                      ''' % LOC)
             else:
                 Flow(off,cig,
@@ -193,20 +200,33 @@ for case in ('pp','ps'):
 
             # angle CIGs
             ang = case + 'ang' + '-'+TYP + '-'+LOC
-           
+
             if(TYP=='x'):
                 Flow(ang,off,
                      '''
-                     slant adj=y p0=-0.5 np=200 dp=0.01 |
+                     slant adj=y p0=-0.5 np=250 dp=0.01 |
                      put label2=tan
                      ''' % par)
-                Plot(ang,ang,igrey(''))
-                Result(ang,[ang,ovl],'Overlay')
+            else:
+                Flow(ang,[off,'dipa'],
+                     '''
+                     slant adj=y p0=-0.5 np=250 dp=0.01 |
+                     /home/savap/RSF/user/savap/sfangdip verb=y dip=${SOURCES[1]} |
+                     put label2=tan
+                     ''' % par)
+            Plot(ang,ang,igrey(''))
+            Result(ang,[ang,ovl],'Overlay')
+
                 
-            if(case=='ps' and TYP=='x'):
+            if(case=='ps'):
                 cor = case + 'cor' + '-'+TYP + '-'+LOC
-                Flow(cor,[ang,'vpvs','dipa'],
-                     'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+                if(TYP=='x'):                    
+                    Flow(cor,[ang,'vpvs','dipa'],
+                         'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+                else:
+                    Flow(cor,[ang,'vpvs'],
+                         'pp2psang  vpvs=${SOURCES[1]} ')
+
                 Plot(cor,cor,igrey(''))
                 Result(cor,[cor,ovl],'Overlay')
             
