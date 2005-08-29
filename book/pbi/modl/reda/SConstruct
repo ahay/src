@@ -1,4 +1,5 @@
 from rsfproj import *
+import spmig
 
 	  # SET PARAMETERS #
 ########################################################################
@@ -58,7 +59,7 @@ graph = 'graph min1=2.5 max1=7.5 min2=0 max2=5 yreverse=y wantaxis=n wanttitle=n
 Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
 Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 
-
+# velocity
 Flow('vel',None,'math %s %s output="1.5+0.36*x1+0.36*x2" | transp' % (dim1,dim2))
 Plot('vel',
      '''
@@ -68,8 +69,10 @@ Plot('vel',
 
 Result('baina','vel lays0 lays1','Overlay')
 
-Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0')
-Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
+#Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0')
+#Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
+Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0.05,0.05,0.05,0.05')
+Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,0,0,0')
 Flow('dips','lays','deriv | scale dscale=100')
 
 for vpvs in (1,2): 
@@ -80,18 +83,70 @@ for vpvs in (1,2):
                  '''
                  kirmod
                  ns=301 ds=0.025 s0=0.5
-                 h0=0 nh=%d dh=0.025
-                 type=v vel=1.5 gradx=0.36 gradz=0.36 twod=%d
-                 type2=v vel2=%g gradx2=%g gradz2=%g
+                 nh=%d  dh=0.025 h0=0
+                 type=v  vel=1.5 gradx=0.36 gradz=0.36 twod=%d
+                 type2=v vel2=%g gradx2=%g  gradz2=%g
                  t0=0 dt=0.004 nt=1250 freq=30
                  refl=${SOURCES[1]} rgrad=${SOURCES[2]} dip=${SOURCES[3]}
                  ''' % (nh,twod,(1.5,0.75)[vpvs-1],(0.36,0.18)[vpvs-1],(0.36,0.18)[vpvs-1]))
 
 Result('bzo','bdat1-0-1','window min3=2 min1=0.5 max1=3 | grey title="Zero Offset Data" ')
 
-Plot('pp','bdat1-1-121','window n3=1 f3=60 min1=1 max1=4 | grey title="PP Shot Gather" ')
-Plot('ps','bdat2-1-121','window n3=1 f3=60 min1=1 max1=4 | grey title="PS Shot Gather" ')
+Plot('pp','bdat1-1-121','window n3=1 f3=60 min1=1 max1=5 | grey title="PP Shot Gather" ')
+Plot('ps','bdat2-1-121','window n3=1 f3=60 min1=1 max1=5 | grey title="PS Shot Gather" ')
 
 Result('bps','pp ps','SideBySideAniso')
+
+# ------------------------------------------------------------
+par = {
+    'nx':300, 'ox':1.5,   'dx':0.025,
+    'nz':500, 'oz':0,     'dz':0.01,
+    'ns':60,  'os':2.5,   'ds':0.025, 'fs':0, 'js':2,
+    'nt':1250,'ot':0,     'dt':0.004,
+    'nw':400, 'jw':1,
+    'nhx':1,
+    'nrmax':5,'dtmax':0.0005
+    }
+par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=50' % par
+par['ow']=0.
+par['dw']=1./(par['nt']*par['dt'])
+
+# velocity
+Flow('velp','vel','window n1=%(nz)d | math output="input"  | put label1=z label2=x' % par)
+Flow('vels','vel','window n1=%(nz)d | math output="input/2"| put label1=z label2=x' % par)
+
+# slowness
+Flow('slop','velp','math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
+Flow('slos','vels','math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
+
+Plot('slop','slop','window | transp | grey color=j allpos=y title=P')
+Plot('slos','slos','window | transp | grey color=j allpos=y title=S')
+Result('slo','slop slos','SideBySideAniso')
+
+# data
+Flow('datp','bdat1-1-121','window min3=%(os)g' % par)
+Flow('datc','bdat2-1-121','window min3=%(os)g' % par)
+
+# wavelet
+Flow('wav',None,'spike nsp=1 mag=1 k1=1 n1=%(nt)d d1=%(dt)g o1=0' % par)
+
+# wavefields
+spmig.wflds('soup','recp','wav','datp',par)
+spmig.wflds('souc','recc','wav','datc',par)
+
+Plot('recp','recp','window | real | transp | grey title=P')
+Plot('recc','recc','window | real | transp | grey title=C')
+Result('rec','recp recc','SideBySideAniso')
+
+# migration
+spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
+spmig.imageCW('imgc','cigc','slop','slos','souc','recc',par)
+
+Plot('imgp','imgp','window | transp | grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=P')
+Plot('imgc','imgc','window | transp | grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=C')
+
+Result('img','imgp imgc','SideBySideAniso')
+
+# ------------------------------------------------------------
 
 End()
