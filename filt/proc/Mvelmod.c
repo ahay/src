@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 static float h;
 
-static float hyperb(float t) 
+static float hyperb(float t, int it) 
 { 
     if (t > h) {
 	return sqrtf(t*t-h*h);
@@ -98,7 +98,7 @@ int main(int argc, char* argv[])
     /* trace extension */
 
     trace = sf_floatalloc(nt);
-    nmo = fint1_init(nw,nt);
+    nmo = fint1_init(nw,nt,0);
 
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
 		h = h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
 		h = slow? h*v: h/v;
 
-		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace);
+		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace,0.);
 
 		for (it=0; it < nt; it++) {
 		    stack[ih][it] += trace[it];
@@ -137,4 +137,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mvelmod.c,v 1.4 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

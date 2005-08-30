@@ -26,15 +26,26 @@ Compatible with sfvscan.
 
 #include "fint1.h"
 
-static int zero(int it, int mute, float *mask, float *trace);
+static float *vel, h;
+static bool slow;
+
+static float nmo_map(float t, int it) {
+    float v;
+    
+    v = vel[it];
+    v = slow ? h*(v*v) : h/(v*v);
+    t = t*t + v;
+    if (t > 0.) t=sqrtf(t);
+    return t;
+}
 
 int main (int argc, char* argv[])
 {
     fint1 nmo;
-    bool half, slow;
-    int it,ix,iz,ih, nt,nx,nw, nh, nh2, CDPtype, mute, im, *mask;
-    float dt, t0, h, h0, f, dh, dy, v, str, fp, t;
-    float *trace, *vel, *off, *taper;
+    bool half;
+    int ix,ih, nt,nx,nw, nh, nh2, CDPtype, mute, *mask;
+    float dt, t0, h0, dh, dy, str;
+    float *trace, *off;
     sf_file cmp, nmod, velocity, offset, msk;
 
     sf_init (argc,argv);
@@ -56,11 +67,6 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("mute",&mute)) mute=12;
     /* mute zone */
-    taper = sf_floatalloc(mute);
-    for (im=0; im < mute; im++) {
-	f = sinf(0.5*SF_PI*(im+1.)/(mute+1.));
-	taper[im] = f*f;
-    }
 
     CDPtype=1;
     if (NULL != sf_getstring("offset")) {
@@ -112,7 +118,7 @@ int main (int argc, char* argv[])
     trace = sf_floatalloc(nt);
     vel   = sf_floatalloc(nt);
 
-    nmo = fint1_init (nw, nt);
+    nmo = fint1_init (nw, nt, mute);
     
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
@@ -134,54 +140,12 @@ int main (int argc, char* argv[])
 	    if (half) h *= 2;
 	    h = h*h - h0*h0;
 	    
-	    fp = -1.;
-	    im = mute;
-	    for (it=0; it < nt; it++) {
-		f = t0 + it*dt;
-		v = vel[it];
-		v = slow ? h*(v*v) : h/(v*v);
-		f = f*f + v;
-		if (f < 0.) {
-		    fp = -1.;
-		    im = zero(it,mute,taper,trace);
-		} else {
-		    f = (sqrtf(f) - t0)/dt;
-		    if (fp > 0. && fabsf(f-fp) < str) { /* too much stretch */
-  			im = zero(it,mute,taper,trace);
-		    } else {
-			iz = floorf(f);
-			if (iz >= 0 && iz < nt) {
-			    t = fint1_apply(nmo,iz,f-iz,false);
-			    if (im < mute) t *= taper[im++];
-			    trace[it] = t;
-			} else {
-			    im = zero(it,mute,taper,trace);
-			}
-		    }
-		    fp = f;
-		}
-	    }
-	    
+	    stretch(nmo,nmo_map,nt,dt,t0,nt,dt,t0,trace,str);
 	    sf_floatwrite (trace,nt,nmod);
 	}
     }
 	
     exit (0);
-}
-
-static int zero(int it, int mute, float *taper, float *trace)
-{
-    int im, i;
-    static int ir=-1;
-
-    trace[it]=0.;
-    if (ir < 0 || ir != it-1) {
-	for (i=it-1, im=0; i >=0 && im < mute; i--, im++) {
-	    trace[i] *= taper[im];
-	}
-    }
-    ir=it;
-    return 0;
 }
 
 /* 	$Id$	 */

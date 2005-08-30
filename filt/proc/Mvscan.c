@@ -28,7 +28,7 @@ Inverse of sfvelmod
 
 static float v;
 
-static float hyperb(float t) 
+static float hyperb(float t, int it) 
 { 
     return hypotf(t,v); 
 } 
@@ -37,8 +37,8 @@ int main(int argc, char* argv[])
 {
     fint1 nmo;
     bool sembl, half, slow, dsembl, weight;
-    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, *mask;
-    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy;
+    int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, mute, *mask;
+    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str;
     float *trace, **stack, **stack2, *hh;
     sf_file cmp, scan, offset, msk;
 
@@ -121,8 +121,14 @@ int main(int argc, char* argv[])
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
 
+    if (!sf_getint("mute",&mute)) mute=12;
+    /* mute zone */
+
+    if (!sf_getfloat("str",&str)) str=0.5;
+    /* maximum stretch allowed */
+
     trace = sf_floatalloc(nt);
-    nmo = fint1_init(nw,nt);
+    nmo = fint1_init(nw,nt,mute);
 
     for (ix=0; ix < nx; ix++) {
 	sf_warning("cmp %d of %d",ix+1,nx);
@@ -152,7 +158,7 @@ int main(int argc, char* argv[])
 		v = v0 + iv * dv;
 		v = slow? h*v: h/v;
 
-		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace);
+		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace,str);
 
 		for (it=0; it < nt; it++) {
 		    amp = weight? fabsf(v)*trace[it]: trace[it];

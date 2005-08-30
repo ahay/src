@@ -27,27 +27,28 @@
 
 static float t0, dt, x0, h=0.;
 
-static float t2_cheb    (float t) { return acosf((t0-t*t)/dt); }
-static float t2_cheb_inv(float t) { return sqrtf(t0-dt*cosf(t)); }
-static float t2         (float t) { return t*t; }
-static float log_frw    (float t) { return logf(t/t0); }
-static float log_inv    (float t) { return t0*expf(t); }
-static float nmo        (float t) 
+static float msqrt      (float t, int it) { return sqrtf(t); }
+static float t2_cheb    (float t, int it) { return acosf((t0-t*t)/dt); }
+static float t2_cheb_inv(float t, int it) { return sqrtf(t0-dt*cosf(t)); }
+static float t2         (float t, int it) { return t*t; }
+static float log_frw    (float t, int it) { return logf(t/t0); }
+static float log_inv    (float t, int it) { return t0*expf(t); }
+static float nmo        (float t, int it) 
 { 
     t = t*t + h;
     return (t > 0.)? sqrtf(t): 0.; 
 } 
-static float lmo        (float t) { return t + h; } 
-static float rad_inv    (float t) { return (t-t0)*(h+x0)/x0; }
-static float rad_frw    (float t) { return t0-t*x0/(h-x0); }
+static float lmo        (float t, int it) { return t + h; } 
+static float rad_inv    (float t, int it) { return (t-t0)*(h+x0)/x0; }
+static float rad_frw    (float t, int it) { return t0-t*x0/(h-x0); }
 
 int main(int argc, char* argv[])
 {
     fint1 str;
     bool inv, half;
-    int i2, n1,n2, i3, n3, n, dens, nw, CDPtype;
-    float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3;
-    float (*forward)(float) = NULL, (*inverse)(float) = NULL;
+    int i2, n1,n2, i3, n3, n, dens, nw, CDPtype, mute;
+    float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3, maxstr;
+    mapfunc forward = NULL, inverse = NULL;
     char *rule, *prog;
     sf_file in, out;
 
@@ -143,7 +144,7 @@ int main(int argc, char* argv[])
 	    break;
 	case '2':
 	    forward = t2;
-	    inverse = sqrtf;
+	    inverse = msqrt;
 	    
 	    if (o1 < FLT_EPSILON) o1=FLT_EPSILON;
 	    break;
@@ -155,8 +156,8 @@ int main(int argc, char* argv[])
 		if (!sf_histfloat(in,"dt",&dt)) sf_error("No dt= in input");
 		if (!sf_histfloat(in,"t0",&t0)) sf_error("No t0= in input");
 	    } else {
-		dt=0.5*(t2(o1+d1*(n1-1))-t2(o1));
-		t0=t2(o1)+dt;
+		dt=0.5*(t2(o1+d1*(n1-1),0)-t2(o1,0));
+		t0=t2(o1,0)+dt;
 		sf_putfloat(out,"dt",dt);
 		sf_putfloat(out,"t0",t0);
 	    }
@@ -179,16 +180,16 @@ int main(int argc, char* argv[])
     if (inv) {
 	if (!sf_histint(in,"nin",&n)) n=n1/dens;
 
-	o2 = inverse(o1);
-	d2 = (inverse(o1+(n1-1)*d1) - o2)/(n-1);
+	o2 = inverse(o1,0);
+	d2 = (inverse(o1+(n1-1)*d1,0) - o2)/(n-1);
     } else {
 	if (!sf_getint("nout",&n)) n=dens*n1;
 	/* output axis length (if inv=n) */
 	sf_putint(out,"nin",n1);
 
-	o2 = forward(o1);
+	o2 = forward(o1,0);
 	d2 = o1+(n1-1)*d1;
-	d2 = (forward(d2) - o2)/(n-1);
+	d2 = (forward(d2,0) - o2)/(n-1);
     }
 
     sf_putint  (out,"n1",n);
@@ -200,7 +201,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
-    str = fint1_init(nw,n1);
+    if (!sf_getint("mute",&mute)) mute=0;
+    /* tapering size */
+    if (!sf_getfloat("maxstr",&maxstr)) maxstr=0;
+    /* maximum stretch */
+
+    str = fint1_init(nw,n1,mute);
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
@@ -219,7 +225,7 @@ int main(int argc, char* argv[])
 	    fint1_set(str,trace);
 	    
 	    stretch(str,inv? forward: inverse, 
-		    n1, d1, o1, n, d2, o2, stretched);
+		    n1, d1, o1, n, d2, o2, stretched, maxstr);
 
 	    sf_floatwrite (stretched,n,out);
 	}

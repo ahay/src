@@ -9,6 +9,7 @@ Flow('spike',None,
 
 Flow('fft3','spike','cosft sign2=1 sign3=1')
 
+# Loop over interpolation lengths
 for nf in [2,4,8]:
     stolt = 'stolt%d' % nf
     Flow(stolt,'fft3',

@@ -121,7 +121,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("extend",&nf)) nf=4;
     /* trace extension */
 
-    str = fint1_init(nf,nw);
+    str = fint1_init(nf,nw,0);
 
     for (iy = 0; iy < ny; iy++) {
 	y = iy*dy;

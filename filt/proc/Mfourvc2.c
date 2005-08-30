@@ -90,8 +90,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getint("extend",&next)) next=4;
     /* trace extension */
-    str = fint1_init(next,n1);
-    istr = fint1_init(next,n2);
+    str = fint1_init(next,n1,0);
+    istr = fint1_init(next,n2,0);
 
     for (i1=0; i1 < n1*nx*nv; i1++) {
 	stack[0][0][i1] = 0.;

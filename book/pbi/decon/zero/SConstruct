@@ -8,7 +8,7 @@ for a in range(-180,190,10):
     histog = 'histog%d' % a
     traces.append(ricker)
     Flow(ricker,'ricker','envelope hilb=y phase=%d' % a)
-    Flow(histog,ricker,'histogram n1=21 o1=-0.25 d1=0.025')
+    Flow(histog,ricker,'window min1=0.1 max1=0.3 | histogram n1=11 o1=-0.25 d1=0.05')
 
 Flow('traces',traces,
      'cat ${SOURCES[1:%d]} axis=2 | put o2=-180 d2=10' % len(traces))

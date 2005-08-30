@@ -64,7 +64,7 @@ int main (int argc, char* argv[])
     tmp = sf_floatalloc(      av.n);
     vel = sf_floatalloc(az.n      );
 
-    sft = fint1_init(ext, av.n);
+    sft = fint1_init(ext, av.n, 0);
     
     for (ix = 0; ix < ax.n; ix++) {
 	sf_floatread(vel   ,az.n     ,Fvel);	

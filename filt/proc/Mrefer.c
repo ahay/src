@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     ref = sf_input("ref");
     sf_floatread(datum[0],n2*n3,ref);
 
-    fnt = fint1_init (5, n1);
+    fnt = fint1_init (5, n1, 0);
 
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {

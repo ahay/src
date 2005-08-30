@@ -57,7 +57,7 @@ int main (int argc, char* argv[])
     trace = sf_floatalloc(nt);
     vel = sf_floatalloc(nt);
 
-    nmo = fint1_init (nw, nt);
+    nmo = fint1_init (nw, nt, 0);
 
     for (ix=0; ix < nx; ix++) {
 	sf_floatread (vel,nt,velocity);	
@@ -98,4 +98,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mtaupmo.c,v 1.7 2004/07/02 11:54:48 fomels Exp $	 */
+/* 	$Id$	 */

@@ -64,7 +64,7 @@ int main (int argc, char *argv[])
     if (!sf_getbool ("slow",&slow)) slow = false;
     /* If y, input slowness; if n, velocity */
 
-    fnt = fint1_init (nw, nt);
+    fnt = fint1_init (nw, nt, 0);
 
     time = sf_floatalloc (nt);
     depth = sf_floatalloc (nz);
