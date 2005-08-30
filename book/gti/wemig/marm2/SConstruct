@@ -6,16 +6,15 @@ def igrey(custom):
     grey labelrot=n title="" %s 
     ''' % (custom)
 
-MDIR = '/data/MARMOUSI2/'
-MDIR = ''
-
 # ------------------------------------------------------------
 # PARAMETERS
 # ------------------------------------------------------------
 par = {
-    'nw':400,'ow':1,
+    'nw':100, 'ow':10,
     'nw':500,'ow':1,'jw':1,
     'nt':2500,'ot':0,'dt':0.002,'kt':1,'ft':0,
+    'os':3, 'ds':0.025,
+    'ox':2, 'dx':0.0125, 'nx':256,
     'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':500,'pmy':0
     }
@@ -25,15 +24,16 @@ par = {
 VSUF = '_marmousi-ii.segy'
 for c in ('p','s'):
     v = 'v' + c
-    t = MDIR + v + VSUF
     h = v + 'head'
+    t = v + VSUF
+
+    Fetch(t,'marm2')
 
     # velocity
     Flow([v,h],t,
          '''
          segyread tape=$SOURCE tfile=${TARGETS[1]} |
-         window n1=1000 |
-         put o1=0 d1=0.00125 o2=0 d2=0.00125 label1=z label2=x
+         put o1=0 d1=0.00125 o2=0 d2=0.00125 label1="z(km)" label2="x(km)"
          ''',stdin=0)
     Result(v,v,igrey('color=j allpos=y'))
 
@@ -41,7 +41,7 @@ for c in ('p','s'):
     s = 's' + c
     Flow(s,v,
          '''
-         window f1=400 j2=10 |
+         window f1=400 j2=1 n1=400 |
          math "output=1/input" |
          transp memsize=400 |
          spray axis=2 n=1 o=0 d=1 |
@@ -49,13 +49,10 @@ for c in ('p','s'):
          ''')
     Result(s,s,'window | transp | '+igrey('color=j allpos=y'))
 
-Flow('sx','sp','window squeeze=n')
-
-
 # slowness for P datuming (one big step in water)
 Flow('sd','vp',
      '''
-     window n1=2 j1=360 j2=10 |
+     window n1=2 j1=360 j2=1 |
      math "output=1/input" |
      transp memsize=400 |
      spray axis=2 n=1 o=0 d=1 |
@@ -65,94 +62,91 @@ Result('sd','sd','window | transp | '+igrey('color=j allpos=y'))
 # slowness for P datuming (40 small steps in soft sediments)
 Flow('so','vp',
      '''
-     window n1=40 f1=360 j2=10 |
+     window n1=40 f1=360 j2=1 |
      math "output=1/input" |
      transp memsize=400 |
      spray axis=2 n=1 o=0 d=1 |
      put label2=y
      ''')
-Result('so','so','window | transp | '+igrey('color=j allpos=y'))
+Result('so','so','window | transp | '+igrey('color=j allpos=y bias=0.61'))
+
+# slowness for migration from the surface
+Flow('sq','vp',
+     '''
+     window n1=800 j2=1 |
+     math "output=1/input" |
+     transp memsize=400 |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+Result('sq','sq','window | transp | '+igrey('color=j allpos=y bias=0.45'))
+
+
 # ------------------------------------------------------------
 # DATA
 # ------------------------------------------------------------
 for k in ('1'):
-    # ------------------------------------------------------------
-    # OBC data
+
+    # OBC P data
     pdat = 'pdat' + k
     phdr = 'phdr' + k
-    pobc = MDIR + 'obc_div_v_' + k + '.segy'
+    pobc = 'obc_div_v_' + k + '.segy'
 
+    Fetch(pobc,'marm2')
     Flow([pdat,phdr],pobc,
          '''
-         segyread tape=$SOURCE tfile=${TARGETS[1]} |
-         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3 d3=0.025
+         segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3.050 d3=0.025
+         label1=t label2=x label3=s
          ''')
 
+    # OBC S data
     sdat = 'sdat' + k
     shdr = 'shdr' + k
-    sobc = MDIR + 'obc_curl_v_' + k + '.segy'
+    sobc = 'obc_curl_v_' + k + '.segy'
 
+    Fetch(sobc,'marm2')
     Flow([sdat,shdr],sobc,
          '''
-         segyread tape=$SOURCE tfile=${TARGETS[1]} |
-         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3 d3=0.025
+         segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3.050 d3=0.025
+         label1=t label2=x label3=s
          ''')
 
-# ------------------------------------------------------------
-# wavefields
-# SURFACE
+    # SUR P data
+    qdat = 'qdat' + k
+    qhdr = 'qhdr' + k
+    qsur = 'surface_p' + k + '.segy'
 
-# OBC X
-#Flow('vxdat1 vxhdr1',MDIR+'obc_vx_1.segy',
-#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
-#Flow('vxdat2 vxhdr2',MDIR+'obc_vx_2.segy',
-#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
-
-Flow('vx1','vxdat1 vxhdr1','intbin xk=tracf yk=fldr head=${SOURCES[1]}')
-Flow('vx2','vxdat2 vxhdr2','intbin xk=tracf yk=fldr head=${SOURCES[1]}')
-
-# OBC Y
-#Flow('vzdat1 vzhdr1',MDIR+'obc_vz_1.segy',
-#     'segyread tape=$SOURCE tfile=${TARGETS[1]}',stdin=0)
-#Flow('vzdat2 vzhdr2',MDIR+'obc_vz_2.segy',
-#     'segyread tape=$SOURCE tfile=${TARGETS[1]}')
-
-Flow('datp','vzdat1',
-     'window n2=1381 | put o2=0 d2=0.0125 label1=t label2=x | window n2=480')
-Flow('dats','vxdat1',
-     'window n2=1381 | put o2=0 d2=0.0125 label1=t label2=x | window n2=480')
-Result('datp','datp',igrey('grid1=y g1num=1'))
-Result('dats','dats',igrey('grid1=y g1num=1'))
+    Fetch(qsur,'marm2')
+    Flow([qdat,qhdr],qsur,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+         put n2=1381 o2=0 d2=0.0125 n3=320 o3=3.050 d3=0.025
+         label1=t label2=x label3=s
+         ''')
 
 # ------------------------------------------------------------
 # receiver (P & S) data [dpr, dsr]
 # ------------------------------------------------------------
-for c in ('p','s'):
+for c in ('p','s','q'):
     rec = 'd' + c + 'r'
-#    dat = c + 'dat1'
-    dat = 'dat' + c
+    dat = c + 'dat1'
 
     Flow(rec,dat,
          '''
+         window n3=1 min3=%(os)g |
          fft1 |
-         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         window squeeze=n
+         n1=%(nw)d min1=%(ow)g j1=%(jw)d
+         n2=%(nx)d min2=%(ox)g |
          transp |
          spray axis=2 n=1 o=1 d=1 |
          put label1=x label2=y label3=w label4=e
          ''' % par )
     Result(rec,rec,'window | real | '+igrey(''))
 
-Flow('dxr','../../wemod/marm2win/datx.rsf',
-     '''
-     fft1 |
-     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-     transp |
-     spray axis=2 n=1 o=1 d=1 |
-     put label1=x label2=y label3=w label4=e
-     ''' % par )
-Result('dxr','dxr','window | real | '+igrey(''))
-
-for c in ('p','s','x'):
+for c in ('p','s','q'):
     t = 't' + c + 'r'
     d = 'd' + c + 'r'
     Result(t,d,
@@ -164,9 +158,9 @@ for c in ('p','s','x'):
 # ------------------------------------------------------------
 Flow('wave',None,
      '''
-     spike nsp=1 mag=1 k1=%(kt)d
-     n1=%(nt)d d1=%(dt)g o1=%(ot)g |
-     ricker1 frequency=10
+     spike nsp=1 mag=1 k1=1
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g
+     n2=1      d2=%(dx)g o2=%(os)g
          ''' % par )    
 Result('wave','wave','graph')
 
@@ -174,18 +168,21 @@ Result('wave','wave','graph')
 Flow('dos','wave',
      '''
      fft1 inv=n |
-     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-     pad beg2=240 n2out=480 |
+     window squeeze=n n1=%d min1=%g j1=%d |
+     pad beg2=%d n2out=%d |
      transp |
      spray axis=2 n=1 o=1 d=1 |
-     put label1=x label2=y label3=w label4=e o1=0 d1=0.0125
-     ''' % par )
+     put label1=x label2=y label3=w label4=e
+     ''' % (par['nw'],par['ow'],par['jw'],
+            (par['os']-par['ox'])/par['dx'],
+            par['nx']) )
+Result('dos','dos','window | real | '+igrey('pclip=100'))
 
 # datumed data [dds]
 zomig.Cdtone('dds','dos','sd',par)
 Result('dds','dds','window | real | '+igrey(''))
 
-# datumed data [dds]
+# datumed data [dps]
 zomig.Cdtone('dps','dds','so',par)
 Result('dps','dps','window | real | '+igrey(''))
 
@@ -193,14 +190,19 @@ Flow('tps','dps','window | transp | pad beg1=5 n1out=1251 | fft1 inv=y ')
 # ------------------------------------------------------------
 # migration (P & S) [ip is]
 # ------------------------------------------------------------
-for c in ('p','s','x'):
-    i ='i' + c
-    s ='s' + c
-    ds='d' +'p'+ 's'
-    dr='d' + c + 'r'
+for j in ('p','s'):
+    i ='i' + j
+    c ='c' + j
+    s ='s' + j
 
-    spmig.image(i,s,ds,dr,par)
+    ds='d' +'p'+ 's'
+    dr='d' + j + 'r'
+
+    spmig.imagePW(i,c,s,ds,dr,par)
     Result(i,i,'window | transp | ' + igrey('pclip=99'))
 # ------------------------------------------------------------
 
+spmig.imagePW('iq','cq','sq','dos','dqr',par)
+Result('iq','iq','window | transp | ' + igrey('pclip=99'))
+    
 End()

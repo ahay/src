@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
     if(! sf_getint ("pick",&pick)) pick=0;
-    if(! sf_getint ("fill",&fill)) fill=0;
+    if(! sf_getint ("fill",&fill)) fill=1;
 
     /* wavefronts file (a,g,h,t) */
     Fw = sf_input("in");    

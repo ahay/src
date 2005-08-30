@@ -215,12 +215,13 @@ void ssr_sso(
 {
     float complex w2,co,cc;
     int ix,iy,jr;
+    float s;
 
     w2 = w*w;
 
     /* w-x part 1 */
-/*    LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];*/
-/*	  wx[iy][ix] *= cexpf(-w*s*az.d); );*/
+    LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] *= cexpf(-w*s*az.d); );
 
     /* FFT */
     KOOP( pk[iy][ix] = 0.; );
@@ -228,23 +229,22 @@ void ssr_sso(
     fft2(false,pk);
 
     jr=0;
-/*    co =       csqrtf(w2 * sm[jr]);*/
-    co = 0;
+    co =       csqrtf(w2 * sm[jr]);
     KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	  wk[iy][ix] = 
 	  pk[iy][ix] * cexpf((co-cc)*az.d); );
 
-/*    KOOP( wk[iy][ix] = pk[iy][ix] * cexpf((co)*az.d); );*/
+    KOOP( wk[iy][ix] = pk[iy][ix] * cexpf((co)*az.d); );
 
     /* IFT */
     fft2(true,wk);
     LOOP( wx[iy][ix] = wk[iy][ix]; );
     
     /* w-x part 2 */
-/*    LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];*/
-/*	  wx[iy][ix] *= cexpf(-w*s*az.d); );*/
+    LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] *= cexpf(-w*s*az.d); );
 
-/*    taper2(wx);*/
+    taper2(wx);
 }
 
 /*------------------------------------------------------------*/

@@ -53,10 +53,10 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
+
     if(! sf_getbool(    "verb",&verb    ))     verb=false;
     if(! sf_getbool("forceray",&forceray)) forceray=false;
     if(! sf_getint ("scaleray",&scaleray)) scaleray=1.;
-
 
     /* velocity file */
     Fv = sf_input ("in");
