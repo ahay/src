@@ -29,6 +29,17 @@ REF3="-0.55555555555556:0,3.2;3.5,3.2;5,3.7;6.5,4.2;10,4.2"
 REF4="-0.55555555555556:0,4.5;10,4.5"
 ########################################################################
 
+
+# ------------------------------------------------------------
+def igrey(custom=""):
+    return '''
+    grey labelrot=n pclip=100
+    min2=2.5 max2=7.5 min1=0 max1=5
+    scalebar=y barreverse=y
+    label1=z label2=x %s
+    ''' % (custom)
+# ------------------------------------------------------------
+
 dim1 = 'd1=0.01 o1=0 n1=1001'
 dim2 = 'd2=0.01 o2=0 n2=501'
 
@@ -63,11 +74,7 @@ Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 
 # velocity
 Flow('vel',None,'math %s %s output="1.5+0.36*x1+0.36*x2" | transp' % (dim1,dim2))
-Plot('vel',
-     '''
-     grey color=j allpos=y bias=1.5 min2=2.5 max2=7.5 min1=0 max1=5
-     title="Baina Model" scalebar=y barreverse=y
-     ''')
+Plot('vel','vel',igrey('color=j allpos=y title="Baina model"'))
 
 Result('baina','vel lays0 lays1','Overlay')
 
@@ -89,7 +96,7 @@ for vpvs in (1,2):
                  t0=0 dt=0.004 nt=1250 freq=30
                  refl=${SOURCES[1]} rgrad=${SOURCES[2]} dip=${SOURCES[3]}
                  ''' % (nh,twod,
-                        (1.5,0.75)[vpvs-1],
+                        (1.50,0.75)[vpvs-1],
                         (0.36,0.18)[vpvs-1],
                         (0.36,0.18)[vpvs-1]))
 
@@ -105,15 +112,15 @@ Result('bps','pp ps','SideBySideAniso')
 
 # ------------------------------------------------------------
 par = {
-    'nx':300, 'ox':1.5,   'dx':0.025,
+    'nx':400, 'ox':0.5,   'dx':0.025,
     'nz':500, 'oz':0,     'dz':0.01,
-    'ns':60,  'os':2.5,   'ds':0.025, 'fs':0, 'js':2,
+    'ns':60,  'os':0.5,   'ds':0.025, 'fs':0, 'js':5,
     'nt':1250,'ot':0,     'dt':0.004,
     'nw':400, 'jw':1,
-    'nhx':1,
+    'nhx':20,
     'nrmax':5,'dtmax':0.0005
     }
-par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=50' % par
+par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=40' % par
 par['ow']=0.
 par['dw']=1./(par['nt']*par['dt'])
 
@@ -129,8 +136,8 @@ Flow('slop','velp',
 Flow('slos','vels',
      'math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
 
-Plot('slop','slop','window | transp | grey color=j allpos=y title=P')
-Plot('slos','slos','window | transp | grey color=j allpos=y title=S')
+Plot('slop','slop','window | transp |' + igrey('color=j allpos=y bias=0.145 title=P'))
+Plot('slos','slos','window | transp |' + igrey('color=j allpos=y bias=0.290 title=S'))
 Result('slo','slop slos','SideBySideAniso')
 
 # data
@@ -152,17 +159,8 @@ Result('rec','recp recc','SideBySideAniso')
 spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
 spmig.imageCW('imgc','cigc','slop','slos','souc','recc',par)
 
-Plot('imgp','imgp',
-     '''
-     window | transp |
-     grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=P
-     ''')
-Plot('imgc','imgc',
-     '''
-     window | transp |
-     grey min2=2.5 max2=7.5 min1=0 max1=5 pclip=100 scalebar=y title=C
-     ''')
-
+Plot('imgp','imgp','window | transp |'+igrey('title=P'))
+Plot('imgc','imgc','window | transp |'+igrey('title=C'))
 Result('img','imgp imgc','SideBySideAniso')
 
 # ------------------------------------------------------------
