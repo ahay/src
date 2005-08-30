@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     /* shooting directions */
     float gmin,gmax,g;
     float hmin,hmax,h;
-       
+
     sf_file Fv; /*   velocity file */
     sf_file Ft; /* traveltime file */
 
@@ -64,7 +64,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool(    "verb",&verb    ))     verb=false;
     if(! sf_getint (    "pick",&pick    ))     pick=0;
-    if(! sf_getint (    "fill",&fill    ))     fill=0;
+    if(! sf_getint (    "fill",&fill    ))     fill=1;
     if(! sf_getint ("scaleray",&scaleray)) scaleray=1.;
     if(! sf_getint (    "nray",&nray    ))     nray=1;
     if(! sf_getint (    "jray",&jray    ))     jray=1;
