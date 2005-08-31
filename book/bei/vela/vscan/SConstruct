@@ -32,7 +32,7 @@ Flow('wgmutter','midpts.hh','dd form=native | mutter half=n v0=1.4')
 
 Flow('wgsmb','wgmutter',
      'vscan slowness=y half=n v0=0.3 nv=81 dv=0.005 semblance=y')
-Flow('wgfit','wgsmb','blindpick2 eps=25 lam=25')
+Flow('wgfit','wgsmb','pick rect1=17 rect2=17')
 
 def graph(col=7,fat=1):
     return '''

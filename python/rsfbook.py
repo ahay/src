@@ -56,7 +56,9 @@ def get_year(default):
         year = time.localtime(time.time())[0]
     year = str(year)
     year = string.join([str(int(year)-1),year[-2:]],'-')
-    
+
+#def get_author():
+        
 def report_toc(target=None,source=None,env=None):
     "Build a table of contents from a collection of papers"
     toc = open(str(target[0]),'w')
@@ -156,25 +158,59 @@ def report_tpg(target=None,source=None,env=None):
                   (dir,fig,size))
     year = get_year(env.get('year'))
     tpg.write('\n\\newpage\\GEOcopyr{%s}\n' % year)
+    return 0
 
-Toc = Builder(action = Action(report_toc), varlist=['year','sections'])
-Tpg = Builder(action = Action(report_tpg),
-              varlist=['group','title1','authors','title2','line','fig','dir','size','year'])
+def include(file,sep=''):
+    tex = file+'.tex'
+    if os.path.isfile(tex):
+        print "Found %s" % tex
+        return '\\include{%s}\t%s\t\\newpage\n' % (file,sep)
+    else:
+        return ''
+
+def report_all(target=None,source=None,env=None):
+    "Build the main paper"
+    all = open(str(target[0]),'w')
+    map(all.write,
+        ['%% This file is automatocally generated, DO NOT EDIT\n\n',
+         '\\renewcommand{\\REPORT}{%s}\n' % report,
+         '\\renewcommand{\\thepage}{}\n',
+         include('tpg','\\cleardoublepage'),
+         include('preface'),
+         '\\pagenumbering{roman}\n',
+         '\\setcounter{page}{1}\n',
+         include('toc'),
+         include('intro'),
+         '\\cleardoublepage\n',
+         '\\pagenumbering{arabic}\n',
+         '\\setcounter{page}{1}\n',
+         '\\GEOheader{\\ORG, Report \\REPORT, \\today}\n'
+         ])
+    all.write('\%\% start of paper list\n')
+    for src in source:
+        dir = os.path.basename(os.path.dirname(str(src)))
+        all.write('\\GEOpaper{%s}\t\\include{paper}\n' % dir)
+    all.write('\%\% end of paper list\n')
+    return 0
 
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
-        self.Append(BUILDERS={'Toc':Toc,
-                              'Tpg':Tpg})        
     def Papers(self,papers,**kw):
-        apply(self.Toc,('toc.tex',papers),kw)
-        apply(self.Tpg,('tpg.tex',papers),kw)
-        for file in ('tpg.tex','toc.tex'):
+        kw.update({'action':Action(report_toc),
+                   'varlist':['year','sections']})
+        apply(self.Command,('toc.tex',papers),kw)
+        kw.update({'action':Action(report_tpg),
+                   'varlist':['group','title1','authors','title2','line','fig','dir','size','year']})
+        apply(self.Command,('tpg.tex',papers),kw)
+        kw.update({'action':Action(report_all),'varlist':[]})
+        apply(self.Command,('paper.tex',papers),kw)
+        for file in ['tpg.tex','toc.tex']:
             map(lambda tex: self.Depends(file,tex),
                 filter(os.path.isfile,misc.keys()))
+            self.Depends('paper.tex',file)
 
 # Default report
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
     return apply(book.Papers,(papers,),kw)
-    

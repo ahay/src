@@ -178,6 +178,6 @@ Result('pick',velplot('Stacking Velocity','Time (s)'))
 Flow('nmo','cmpdata cmpmask pick',
      'nmo mask=${SOURCES[1]} velocity=${SOURCES[2]}')
 Flow('stack','nmo','stack')
-Result('stack','grey title="NMO Stack 2" ')
+Result('stack','grey title="NMO Stack" ')
     
 End()
