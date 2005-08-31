@@ -36,6 +36,7 @@ def igrey(custom=""):
     grey labelrot=n pclip=100
     min2=2.5 max2=7.5 min1=0 max1=5
     scalebar=y barreverse=y
+    grid=y gridcol=1
     label1=z label2=x %s
     ''' % (custom)
 # ------------------------------------------------------------
@@ -114,11 +115,13 @@ Result('bps','pp ps','SideBySideAniso')
 par = {
     'nx':400, 'ox':0.5,   'dx':0.025,
     'nz':500, 'oz':0,     'dz':0.01,
-    'ns':60,  'os':0.5,   'ds':0.025, 'fs':0, 'js':5,
+    'ns':30,  'os':0.5,   'ds':0.025, 'fs':0, 'js':10,
+    'ns':70, 'js':4, 'fs':20,
     'nt':1250,'ot':0,     'dt':0.004,
     'nw':400, 'jw':1,
     'nhx':20,
-    'nrmax':5,'dtmax':0.0005
+    'nrmax':5,'dtmax':0.0005,
+    'xcig':5.0
     }
 par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=40' % par
 par['ow']=0.
@@ -129,6 +132,7 @@ Flow('velp','vel',
      'window n1=%(nz)d | math output="input"  | put label1=z label2=x' % par)
 Flow('vels','vel',
      'window n1=%(nz)d | math output="input/2"| put label1=z label2=x' % par)
+Flow('vpvs',['velp','vels'],'math p=${SOURCES[0]} s=${SOURCES[1]} output="p/s"', stdin=0)
 
 # slowness
 Flow('slop','velp',
@@ -159,10 +163,41 @@ Result('rec','recp recc','SideBySideAniso')
 spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
 spmig.imageCW('imgc','cigc','slop','slos','souc','recc',par)
 
-Plot('imgp','imgp','window | transp |'+igrey('title=P'))
-Plot('imgc','imgc','window | transp |'+igrey('title=C'))
+Plot('imgp','window | transp |'+igrey('title=P'))
+Plot('imgc','window | transp |'+igrey('title=C'))
 Result('img','imgp imgc','SideBySideAniso')
 
+# dip field
+Flow('dipp','imgp','window | transp | dip rect1=3 rect2=3 liter=50')
+Flow('dipc','imgc','window | transp | dip rect1=3 rect2=3 liter=50')
+
+Plot('dipp',igrey('color=j title=P'))
+Plot('dipc',igrey('color=j title=C'))
+Result('dip','dipp dipc','SideBySideAniso')
+
+# one offset gather
+Flow('gatp','cigp','window n1=1 min1=%(xcig)g' % par)
+Flow('gatc','cigc','window n1=1 min1=%(xcig)g' % par)
+
+Plot('gatp','grey title=P pclip=100')
+Plot('gatc','grey title=C pclip=100')
+Result('gat','gatp gatc','SideBySideAniso')
+
+# one angle gather
+Flow('angp','gatp','slant adj=y p0=0 np=80 dp=0.01 | put label2=tan')
+Flow('angc','gatc','slant adj=y p0=0 np=80 dp=0.01 | put label2=tan')
+
+Plot('angp','grey title=P pclip=100')
+Plot('angc','grey title=C pclip=100')
+Result('ang','angp angc','SideBySideAniso')
+
+# converted-wave correction
+Flow('dipa','dipc','window n2=1 min2=%(xcig)g' % par)
+Flow('psra','vpvs','window n2=1 min2=%(xcig)g' % par)
+Flow('corc',['angc','psra','dipa'],'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+
+Plot('corc','grey title=C pclip=100')
+Result('cor','angc corc','Movie')
 # ------------------------------------------------------------
 
 End()
