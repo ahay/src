@@ -227,7 +227,7 @@ void stretch(fint1 str                  /* interpolation object */,
 	    (tp > 0. && fabsf(t-tp) < maxstr)) { /* too much stretch */
 	    trace_taper(str,trace,i2);
 	    im=0;
-	} else if (it >= 0 && it < n1) {
+	} else {
 	    trace[i2] = fint1_apply(str,it,t-it,false);
 	    if (im < str->nt) trace[i2] *= str->t[im];
 	}

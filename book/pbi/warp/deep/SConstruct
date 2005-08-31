@@ -146,7 +146,7 @@ Result('imorphsss','ipp3 imorph3',iphase)
 #    math output='(1+input)^4' | window''' % (ng,gmin,(gmax-gmin)/(ng-1))
 
 def warpscan(ng,gmin,gmax,rect1,rect2):
-    return '''warpscan2 other=${SOURCES[1]}
+    return '''warpscan other=${SOURCES[1]}
     ng=%d g0=%g dg=%g rect1=%d rect2=%d niter=200 |
     math output='(1+input)^4'
     ''' % (ng,gmin,(gmax-gmin)/(ng-1),rect1,rect2)

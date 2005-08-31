@@ -8,7 +8,8 @@ for a in range(-180,190,10):
     histog = 'histog%d' % a
     traces.append(ricker)
     Flow(ricker,'ricker','envelope hilb=y phase=%d' % a)
-    Flow(histog,ricker,'window min1=0.1 max1=0.3 | histogram n1=11 o1=-0.25 d1=0.05')
+    Flow(histog,ricker,
+         'window min1=0.1 max1=0.3 | histogram n1=11 o1=-0.25 d1=0.05')
 
 Flow('traces',traces,
      'cat ${SOURCES[1:%d]} axis=2 | put o2=-180 d2=10' % len(traces))
@@ -22,8 +23,15 @@ Result('histos',
        graph dash=1,0 title=Histogram wantaxis1=n
        ''' % ('$SOURCE '*10))
 
-Flow('focus','traces','focus rect1=20')
+Flow('focus','traces','focus rect1=50')
 Result('focus','grey allpos=y color=j pclip=100 title=Focus')
+
+Flow('envcorr','traces','envcorr rect1=50')
+Result('envcorr',
+       '''
+       add mode=p $SOURCE |
+       grey allpos=y color=j pclip=100 title="Envelope Correlation"
+       ''')
 
 Flow('num','traces','math output="input^4" | stack axis=1 norm=no')
 Flow('den','traces',
@@ -49,7 +57,8 @@ for vel in (3,4,5):
     num = 'num%d' % vel
     den = 'den%d' % vel
     rat = 'rat%d' % vel
-    Flow(num,back,'math output="input^4" | stack axis=2 norm=no | stack axis=1 norm=no')
+    Flow(num,back,
+         'math output="input^4" | stack axis=2 norm=no | stack axis=1 norm=no')
     Flow(den,back,
          '''
          math output="input*input" |
