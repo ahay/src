@@ -48,10 +48,6 @@ struct Fint1 {
     sf_tris slv;
 };
 
-static void trace_taper(fint1 str    /* interpolation object */,
-			float *trace /* muted trace */,
-			int it       /* end mute */);
-
 float* fint1_coeff (fint1 fnt, int n)
 /*< extract n-th spline coefficient >*/
 {
@@ -213,10 +209,11 @@ void stretch(fint1 str                  /* interpolation object */,
 	     float maxstr               /* maximum stretch */)
 /*< trace interpolation >*/
 {
-    int i2, it, im;
+    int i2, it, im, ip, i;
     float t, tp;
 
     tp = -1.;
+    ip = -1;
     im = str->nt;
     for (i2=0; i2 < n2; i2++) {
 	t = o2+i2*d2;
@@ -225,28 +222,21 @@ void stretch(fint1 str                  /* interpolation object */,
 	it = floorf(t);
 	if (it < 0 || it >= n1 || 
 	    (tp > 0. && fabsf(t-tp) < maxstr)) { /* too much stretch */
-	    trace_taper(str,trace,i2);
+	    trace[i2]=0.;
+	    if (ip < 0 || ip != i2-1) {
+		for (i=i2-1, im=0; i >=0 && im < str->nt; i--, im++) {
+		    trace[i] *= str->t[im];
+		}
+	    }
+	    ip = i2;
 	    im=0;
 	} else {
 	    trace[i2] = fint1_apply(str,it,t-it,false);
-	    if (im < str->nt) trace[i2] *= str->t[im];
+	    if (im < str->nt) {
+		trace[i2] *= str->t[im];
+		im++;
+	    }
 	}
 	tp = t;
     }
-}
-
-static void trace_taper(fint1 str    /* interpolation object */,
-			float *trace /* muted trace */,
-			int it       /* end mute */)
-/* taper trace */
-{
-    int im, i;
-
-    trace[it]=0.;
-    if (str->ir < 0 || str->ir != it-1) {
-	for (i=it-1, im=0; i >=0 && im < str->nt; i--, im++) {
-	    trace[i] *= str->t[im];
-	}
-    }
-    str->ir=it;
 }
