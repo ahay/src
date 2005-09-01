@@ -29,16 +29,40 @@ REF3="-0.55555555555556:0,3.2;3.5,3.2;5,3.7;6.5,4.2;10,4.2"
 REF4="-0.55555555555556:0,4.5;10,4.5"
 ########################################################################
 
+# ------------------------------------------------------------
+par = {
+    'nx':400, 'ox':0.5,   'dx':0.025,
+    'nz':500, 'oz':0,     'dz':0.01,
+    'ns':30,  'os':0.5,   'ds':0.025, 'fs':0, 'js':10,
+    'ns':101, 'js':1,     'fs':0,
+#    'ns':21,  'js':5,     'fs':0,
+    'ns':1, 'fs':50,
+    'nt':1250,'ot':0,     'dt':0.004,
+    'nw':100, 'jw':1,
+    'nhx':40,
+    'nrmax':5,'dtmax':0.0003,
+    'xcig':5.0
+    }
+par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=1' % par
+par['ow']=0.
+par['dw']=1./(par['nt']*par['dt'])
+
+par['xmin']=2.5
+par['xmax']=7.5
+par['zmin']=0
+par['zmax']=5
+# ------------------------------------------------------------
+
 
 # ------------------------------------------------------------
-def igrey(custom=""):
+def igrey(custom="",par={}):
     return '''
     grey labelrot=n pclip=100
-    min2=2.5 max2=7.5 min1=0 max1=5
+    min2=%g max2=%g min1=%g max1=%g
     scalebar=y barreverse=y
-    grid=y gridcol=1
-    label1=z label2=x %s
-    ''' % (custom)
+    grid=y gridcol=7
+    label1="z(km)" label2="x(km)" %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
 # ------------------------------------------------------------
 
 dim1 = 'd1=0.01 o1=0 n1=1001'
@@ -75,7 +99,7 @@ Plot('lays1','lays',graph + ' plotfat=2 plotcol=7')
 
 # velocity
 Flow('vel',None,'math %s %s output="1.5+0.36*x1+0.36*x2" | transp' % (dim1,dim2))
-Plot('vel','vel',igrey('color=j allpos=y title="Baina model"'))
+Plot('vel','vel',igrey('color=j allpos=y bias=1.5 title="" barlabel="v(km/s)"',par))
 
 Result('baina','vel lays0 lays1','Overlay')
 
@@ -83,53 +107,35 @@ Result('baina','vel lays0 lays1','Overlay')
 #Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,-0.5,0.5,0.5')
 Flow('refl',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=1,1,1,1')
 Flow('grad',None,'spike n1=1001 n2=4 nsp=4 k2=1,2,3,4 mag=0,0,0,0')
-Flow('dips','lays','deriv | scale dscale=100')
+Flow('dipf','lays','deriv | scale dscale=100')
 
 for vpvs in (1,2): 
     for twod in (0,1):
         for nh in (1,401):
             bdat = 'bdat%d-%d-%d' % (vpvs,twod,nh)
-            Flow(bdat,'lays refl grad dips',
+            Flow(bdat,'lays refl grad dipf',
                  '''
                  kirmod
                  ns=101 ds=0.100 s0=0.5
                  nh=%d  dh=0.025 h0=-5
                  type=v  vel=1.5 gradx=0.36 gradz=0.36 twod=%d
                  type2=v vel2=%g gradx2=%g  gradz2=%g
-                 t0=0 dt=0.004 nt=1250 freq=20
+                 t0=0 dt=0.004 nt=1250 freq=8
                  refl=${SOURCES[1]} rgrad=${SOURCES[2]} dip=${SOURCES[3]}
                  ''' % (nh,twod,
                         (1.50,0.75)[vpvs-1],
                         (0.36,0.18)[vpvs-1],
                         (0.36,0.18)[vpvs-1]))
 
-Result('bzo','bdat1-0-1',
-       'window min1=1 max1=4.5 | grey title="Zero Offset Data" ')
+#Result('bzo','bdat1-0-1',
+#       'window min1=0 max1=4.5 | grey title="Zero Offset Data" ')
 
 Plot('pp','bdat1-1-401',
-     'window n3=1 f3=50 min1=1 max1=5 | grey title="PP Shot Gather" ')
+     'window n3=1 f3=50 min1=0 max1=5 | grey title="P" label1="t(s)" label2="h(km)" ')
 Plot('ps','bdat2-1-401',
-     'window n3=1 f3=50 min1=1 max1=5 | grey title="PS Shot Gather" ')
+     'window n3=1 f3=50 min1=0 max1=5 | grey title="S" label1="t(s)" label2="h(km)" ')
 
 Result('bps','pp ps','SideBySideAniso')
-
-# ------------------------------------------------------------
-par = {
-    'nx':400, 'ox':0.5,   'dx':0.025,
-    'nz':500, 'oz':0,     'dz':0.01,
-    'ns':30,  'os':0.5,   'ds':0.025, 'fs':0, 'js':10,
-    'ns':101, 'js':1,     'fs':0,
-#    'ns':21,  'js':5,     'fs':0,
-    'nt':1250,'ot':0,     'dt':0.004,
-    'nw':250, 'jw':1,
-    'nhx':40,
-    'nrmax':5,'dtmax':0.0005,
-    'xcig':5.5
-    }
-par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=40' % par
-par['ow']=0.
-par['dw']=1./(par['nt']*par['dt'])
-# ------------------------------------------------------------
 
 # velocity
 Flow('velp','vel',
@@ -144,31 +150,33 @@ Flow('slop','velp',
 Flow('slos','vels',
      'math output="1/input" | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
 
-Plot('slop','slop','window | transp |' + igrey('color=j allpos=y bias=0.145 title=P'))
-Plot('slos','slos','window | transp |' + igrey('color=j allpos=y bias=0.290 title=S'))
+Plot('slop','slop','window | transp | window min2=%(xmin)g max2=%(xmax)g |' % par
+     + igrey('color=j allpos=y bias=0.145 title=P',par))
+Plot('slos','slos','window | transp | window min2=%(xmin)g max2=%(xmax)g |' % par
+     + igrey('color=j allpos=y bias=0.290 title=S',par))
 Result('slo','slop slos','SideBySideAniso')
 
 # data
 Flow('datp','bdat1-1-401','window min3=%(os)g' % par)
-Flow('datc','bdat2-1-401','window min3=%(os)g' % par)
+Flow('dats','bdat2-1-401','window min3=%(os)g' % par)
 
 # wavelet
 Flow('wav',None,'spike nsp=1 mag=1 k1=1 n1=%(nt)d d1=%(dt)g o1=0' % par)
 
 # migration wavefields
 spmig.wflds('soup','recp','wav','datp',par)
-spmig.wflds('souc','recc','wav','datc',par)
+spmig.wflds('sous','recs','wav','dats',par)
 
 Result('recp','recp','window | real | transp | grey title=P')
-Result('recc','recc','window | real | transp | grey title=C')
+Result('recs','recs','window | real | transp | grey title=S')
 
 # migration
 spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
-spmig.imageCW('imgc','cigc','slop','slos','souc','recc',par)
+spmig.imageCW('imgs','cigs','slop','slos','sous','recs',par)
 
-Plot('imgp','window | transp |'+igrey('title=P'))
-Plot('imgc','window | transp |'+igrey('title=C'))
-Result('img','imgp imgc','SideBySideAniso')
+Plot('imgp','window | transp |'+igrey('title=P',par))
+Plot('imgs','window | transp |'+igrey('title=S',par))
+Result('img','imgp imgs','SideBySideAniso')
 
 # dip field
 Flow('dipo','lays',
@@ -176,40 +184,56 @@ Flow('dipo','lays',
      unif2 v00=1,2,3,4,5 n1=%(nz)d d1=%(dz)g o1=%(oz)g |
      ai2refl |
      ricker1 |
-     dip rect1=10 rect2=15 liter=20
+     dip rect1=5 rect2=10 liter=50
      ''' % par)
 
-Flow('dipp','imgp','window | transp | dip rect1=3 rect2=3 liter=50')
-Flow('dipc','imgc','window | transp | dip rect1=3 rect2=3 liter=50')
+Flow('dipp','imgp','window | transp | dip rect1=3 rect2=3 liter=20')
+Flow('dips','imgs','window | transp | dip rect1=3 rect2=3 liter=20')
 
-Plot('dipp',igrey('color=j title=P'))
-Plot('dipc',igrey('color=j title=C'))
-Plot('dipo',igrey('color=j'))
-Result('dip','dipo dipp dipc','SideBySideAniso')
+Plot('dipp',igrey('color=j title=P',par))
+Plot('dips',igrey('color=j title=S',par))
+Plot('dipo',igrey('color=j',par))
+Result('dip','dipo dipp dips','SideBySideAniso')
 
-# one offset gather
-Flow('gatp','cigp','window n1=1 min1=%(xcig)g' % par)
-Flow('gatc','cigc','window n1=1 min1=%(xcig)g' % par)
+# offset gathers
+#Flow('gatp','cigp','window n1=1 min1=%(xcig)g' % par)
+#Flow('gats','cigs','window n1=1 min1=%(xcig)g' % par)
 
-Plot('gatp','grey title=P pclip=100')
-Plot('gatc','grey title=C pclip=100')
-Result('gat','gatp gatc','SideBySideAniso')
+Plot('gatp','cigp','window n1=1 min1=%(xcig)g | grey title=P pclip=100' % par)
+Plot('gats','cigs','window n1=1 min1=%(xcig)g | grey title=S pclip=100' % par)
+Result('gat','gatp gats','SideBySideAniso')
 
-# one angle gather
-Flow('angp','gatp','slant adj=y p0=-1 np=200 dp=0.01 | put label2=tan')
-Flow('angc','gatc','slant adj=y p0=-1 np=200 dp=0.01 | put label2=tan')
+# angle gathers
+Flow('angp','cigp',
+     '''
+     window |
+     transp plane=12 |
+     transp plane=23 |
+     window n3=1 min3=%(xcig)g |
+     slant adj=y p0=-1 np=200 dp=0.01 verb=y |
+     put label2=tan
+     ''' % par)
+Flow('angs','cigs',
+     '''
+     window |
+     transp plane=12 |
+     transp plane=23 |
+     window n3=1 min3=%(xcig)g |
+     slant adj=y p0=-1 np=200 dp=0.01 verb=y |
+     put label2=tan
+     ''' % par)
 
-Plot('angp','grey title=P pclip=100 grid=y gridcol=1')
-Plot('angc','grey title=C pclip=100 grid=y gridcol=1')
-Result('ang','angp angc','SideBySideAniso')
+Plot('angp','grey title=P pclip=100 grid=y gridcol=7')
+Plot('angs','grey title=S pclip=100 grid=y gridcol=7')
+Result('ang','angp angs','SideBySideAniso')
 
 # converted-wave correction
 Flow('dipa','dipo','window n2=1 min2=%(xcig)g' % par)
 Flow('psra','vpvs','window n2=1 min2=%(xcig)g' % par)
-Flow('corc',['angc','psra','dipa'],'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
+Flow('cors',['angs','psra','dipa'],'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
 
-Plot('corc','grey title=C pclip=100 grid=y gridcol=1')
-Result('cor','angc corc','Movie')
+Plot('cors','grey title=S pclip=100 grid=y gridcol=7')
+Result('cor','angs cors','SideBySideAniso')
 # ------------------------------------------------------------
 
 End()
