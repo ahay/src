@@ -104,7 +104,7 @@ for vpvs in (1,2):
                         (0.36,0.18)[vpvs-1]))
 
 Result('bzo','bdat1-0-1',
-       'window min3=2 min1=0.5 max1=5 | grey title="Zero Offset Data" ')
+       'window min1=1 max1=4.5 | grey title="Zero Offset Data" ')
 
 Plot('pp','bdat1-1-401',
      'window n3=1 f3=50 min1=1 max1=5 | grey title="PP Shot Gather" ')
@@ -199,8 +199,8 @@ Result('gat','gatp gatc','SideBySideAniso')
 Flow('angp','gatp','slant adj=y p0=-1 np=200 dp=0.01 | put label2=tan')
 Flow('angc','gatc','slant adj=y p0=-1 np=200 dp=0.01 | put label2=tan')
 
-Plot('angp','grey title=P pclip=100')
-Plot('angc','grey title=C pclip=100')
+Plot('angp','grey title=P pclip=100 grid=y gridcol=1')
+Plot('angc','grey title=C pclip=100 grid=y gridcol=1')
 Result('ang','angp angc','SideBySideAniso')
 
 # converted-wave correction
@@ -208,7 +208,7 @@ Flow('dipa','dipo','window n2=1 min2=%(xcig)g' % par)
 Flow('psra','vpvs','window n2=1 min2=%(xcig)g' % par)
 Flow('corc',['angc','psra','dipa'],'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
 
-Plot('corc','grey title=C pclip=100')
+Plot('corc','grey title=C pclip=100 grid=y gridcol=1')
 Result('cor','angc corc','Movie')
 # ------------------------------------------------------------
 
