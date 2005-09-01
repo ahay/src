@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
 
     if(! sf_getbool(    "verb",&verb    ))     verb=false;
-    if(! sf_getint (    "pick",&pick    ))     pick=0;
+    if(! sf_getint (    "pick",&pick    ))     pick=2;
     if(! sf_getint (    "fill",&fill    ))     fill=1;
     if(! sf_getint ("scaleray",&scaleray)) scaleray=1.;
     if(! sf_getint (    "nray",&nray    ))     nray=1;
