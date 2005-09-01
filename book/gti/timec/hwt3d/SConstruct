@@ -1,14 +1,13 @@
 from rsfproj import *
 
 par = {
-    'nz':75,  'dz':10,    'oz':0,   
-    'nx':100, 'dx':10,    'ox':-500,
-    'ny':100, 'dy':10,    'oy':-500,
+    'nz':75,  'dz':10,   'oz':0,   
+    'nx':100, 'dx':10,   'ox':-500,
+    'ny':100, 'dy':10,   'oy':-500,
     #
     'nt':200,'dt':0.0025,'ot':0,
-#
-    'ng':30, 'dg':2,'og':-60,
-    'nh':181,'dh':2,'oh':0,
+    'ng':30, 'dg':2,     'og':-60,
+    'nh':181,'dh':2,     'oh':0,
 #
     'ng':361,'dg':0.5,'og':-90,
     'nh':361,'dh':0.5,'oh':0,
@@ -157,7 +156,7 @@ for it in range(par['nt']):
     Plot(yyy,yyy,igrey('bias=%(ysou)g title=y') % par)
     Plot(zzz,zzz,igrey('bias=%(zsou)g title=z') % par)
     
-    Result(ttt,[xxx,yyy,zzz],'SideBySideAniso')
+#    Result(ttt,[xxx,yyy,zzz],'SideBySideAniso')
 
 # ------------------------------------------------------------
 

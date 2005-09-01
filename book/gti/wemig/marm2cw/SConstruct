@@ -10,16 +10,17 @@ def igrey(custom):
 # PARAMETERS
 # ------------------------------------------------------------
 par = {
-    'nw':600, 'ow':3,                            'jw':1,
-    'nt':2500,'ot':0,  'dt':0.002,'kt':1,'ft':0,
-    'ns':1,   'os':3,  'ds':0.025,
-    'nx':256, 'ox':2,  'dx':0.0125,
-    'nz':1500,'oz':0,  'jz':4,
+    'nw':300, 'ow':3,                         'jw':1,
+#    'nw':1, 'ow':15,
+    'nt':2500,'ot':0,       'dt':0.002,'kt':1,'ft':0,
+    'ns':1,   'os':3,       'ds':0.025,
+    'nx':256, 'ox':2.00208, 'dx':0.01232,
+    'nz':200,'oz':0,                         'jz':4,
     'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':500,'pmy':0
     }
 par['xmin']=par['ox']
-par['xmax']=par['ox']+(par['nx']-1)*par['dx']
+par['xmax']=par['ox']+ (par['nx']-1)*par['dx']
 
 # ------------------------------------------------------------
 # VELOCITY/SLOWNESS
@@ -45,7 +46,7 @@ for c in ('p','s'):
     s = 's' + c
     Flow(s,v,
          '''
-         window f1=90 |
+         window f1=91 n1=%(nz)d |
          math "output=1/input" |
          transp memsize=400 |
          spray axis=2 n=1 o=0 d=1 |
@@ -56,7 +57,7 @@ for c in ('p','s'):
 # P source datuming (from 10m to 450m)
 Flow('xs','vp',
      '''
-     window squeeze=n n1=2 j1=88 f1=2 |
+     window squeeze=n n1=2 j1=89 f1=2 |
      math "output=1/input" |
      transp memsize=400 |
      spray axis=2 n=1 o=0 d=1 |
@@ -64,49 +65,59 @@ Flow('xs','vp',
      ''' % par )
 Result('xs','xs','window | transp | '+igrey('color=j allpos=y bias=0.45'))
 
-# P receivers datuming (from 5m to 450m)
-Flow('xr','vp',
-     '''
-     window squeeze=n n1=2 j1=89 f1=1 |
-     math "output=1/input" |
-     transp memsize=400 |
-     spray axis=2 n=1 o=0 d=1 |
-     put label2=y
-     ''' % par )
-Result('xr','xr','window | transp | '+igrey('color=j allpos=y bias=0.45'))
-
 # ------------------------------------------------------------
 # DATA
 # ------------------------------------------------------------
-sgy = 'surface_p1.segy'
-Fetch(sgy,'marm2')
-Flow(['dat','hdr'],sgy,
+
+psgy = 'obc_div_v_1.segy'
+Fetch(psgy,'marm2')
+Flow(['pdat','phdr'],psgy,
      '''
      segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
-     put n2=1361 o2=0   d2=0.0125
-         n3=320  o3=3.0 d3=0.025
-     label1=t label2=x label3=s
+     put n2=1381 o2=0 d2=0.01232
+         n3=320  o3=3 d3=0.025
+         label1=t label2=x label3=s
      ''')
 
-# ------------------------------------------------------------
-# receiver (P) data [rec]
-# ------------------------------------------------------------
-Flow('rec','dat',
+ssgy = 'obc_curl_v_1.segy'
+Fetch(ssgy,'marm2')
+Flow(['sdat','shdr'],ssgy,
      '''
-     window n3=1 min3=%(os)g |
-     window f1=37 | pad end1=37 | put o1=0 |
-     fft1 |
-     window squeeze=n
-     n1=%(nw)d min1=%(ow)g j1=%(jw)d
-     n2=%(nx)d min2=%(ox)g |
-     transp |
-     spray axis=2 n=1 o=1 d=1 |
-     put label1=x label2=y label3=w label4=e
-     ''' % par )
-Result('rec','rec','window | real | '+igrey('pclip=100'))
-Result('trec','rec',
-       'window | transp | pad beg1=5 n1out=1251 | fft1 inv=1 | '
-       +igrey('pclip=99'))
+     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+     put n2=1381 o2=0 d2=0.01232
+         n3=320  o3=3 d3=0.025
+         label1=t label2=x label3=s
+         ''')
+
+# ------------------------------------------------------------
+# receiver data [prec,srec]
+# ------------------------------------------------------------
+for i in ('p','s'):
+
+    rec = i + 'rec'
+    dat = i + 'dat'
+
+#         window f1=37 | pad end1=37 | put o1=0 |
+
+    Flow(rec,dat,
+         '''
+         window n3=1 min3=%(os)g |
+         window f1=19 | pad end1=19 | put o1=0 |
+         bandpass flo=5 fhi=30 |
+         fft1 |
+         window squeeze=n
+         n1=%(nw)d min1=%(ow)g j1=%(jw)d
+         n2=%(nx)d min2=%(ox)g |
+         transp |
+         spray axis=2 n=1 o=1 d=1 |
+         put label1=x label2=y label3=w label4=e
+         ''' % par )
+    Result(rec,rec,'window | real | '+igrey('pclip=100'))
+
+    trec= 't'+rec
+    Result(trec,rec,
+           'window | transp | pad beg1=5 n1out=1251 | fft1 inv=1 | '
+           +igrey('pclip=99'))
 
 # ------------------------------------------------------------
 # source (P) data [sou]
@@ -115,7 +126,7 @@ Flow('wave',None,
      '''
      spike nsp=1 mag=1 k1=1
      n1=%(nt)d d1=%(dt)g o1=%(ot)g
-     n2=1      d2=%(dx)g o2=%(os)g
+     n2=1      d2=%(dx)g o2=%(os)g 
          ''' % par )    
 Result('wave','wave','graph')
 
@@ -142,13 +153,11 @@ Result('tsou','sou',
 zomig.Cdtone('dds','sou','xs',par)
 Result('dds','dds','window | real | '+igrey('pclip=100'))
 
-# datumed receivers (anticausal, from 5m to 450m)
-zomig.Adtone('ddr','rec','xr',par)
-Result('ddr','ddr','window | real | '+igrey('pclip=100'))
+spmig.imagePW('pimg','pcig','sp',     'dds','prec',par)
+spmig.imageCW('simg','scig','sp','ss','dds','srec',par)
 
-spmig.imagePW('img','cig','sp','dds','ddr',par)
-
-Result('img','img','window | transp | '+ igrey('pclip=99'))
+Result('pimg','pimg','window | transp | '+ igrey('pclip=99'))
+Result('simg','simg','window | transp | '+ igrey('pclip=99'))
 Result('vv','sp','window | transp | '
        + igrey('color=j allpos=y min2=%(xmin)g max2=%(xmax)g') % par)
 
