@@ -5,9 +5,9 @@ Fetch(['midpts.hh','beifit.HH'],'midpts')
 Flow('midpts','midpts.hh','dd form=native | mutter half=n v0=1.4')
 Flow('beifit','beifit.HH','dd form=native')
 
-Flow('nmo','midpts','nmostretch v0=2 half=n')
+Flow('nmo','midpts','nmostretch v0=2 half=n mute=12 maxstr=0.5')
 Flow('ndmo','nmo','transp plane=23 | dmo velhalf=1 half=n | transp plane=23')
-Flow('dmo','ndmo','nmostretch v0=2 half=n inv=y')
+Flow('dmo','ndmo','nmostretch v0=2 half=n inv=y mute=12 maxstr=0.5')
 
 def vscan(title):
     return '''

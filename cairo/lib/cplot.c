@@ -65,7 +65,7 @@ static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
     gint box_size = (width+height)/6;
 
     cairo_save (cr);
-    cairo_default_matrix (cr);
+    cairo_identity_matrix (cr);
 
     cairo_translate (cr, width/2, height/2);
     sf_warning("translating to %d %d",width/2, height/2);
@@ -73,7 +73,7 @@ static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
     cairo_rectangle (cr, -box_size, -box_size, box_size, box_size);
     sf_warning("rectangle %d",box_size);
 
-    cairo_set_rgb_color (cr, 1, 0, 0);
+    cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_fill (cr);
     
     cairo_restore (cr);
@@ -108,7 +108,7 @@ void cr_init(int* argc, char** argv[])
     gtk_container_add (GTK_CONTAINER (win), vbox);
  
     cr0 = gtk_cairo_get_cairo(GTK_CAIRO(gtkcairo));
-    cairo_set_rgb_color (cr0, 0, 1, 0);
+    cairo_set_source_rgb (cr0, 0, 1, 0);
 }
 
 void cr_main(void)
