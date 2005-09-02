@@ -1,0 +1,17 @@
+from rsfproj import *
+import os, string
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for mode in ('pp','ps'):
+    data = 'IL475%s4SERGEY.segy' % string.upper(mode)
+    Fetch(data,'apache',private)
+    Flow([mode,'t'+mode,'./h'+mode,'./b'+mode],data,
+         '''
+         segyread tape=$SOURCE
+         hfile=${TARGETS[2]} bfile=${TARGETS[3]} tfile=${TARGETS[1]}
+         ''',stdin=0)
+    Flow(mode+'cube',mode,'intbin | window')
+    
