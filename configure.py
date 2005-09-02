@@ -13,6 +13,7 @@ toheader = re.compile(r'\n\n((?:[^\n]|\n[^\n])+)\n'
                       '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
 
 def header(target=None,source=None,env=None):
+# generate a header file
     inp = open(str(source[0]),'r')
     text = string.join(inp.readlines(),'')
     inp.close()
