@@ -58,6 +58,11 @@ Flow('dip',None,
       )
      )
 Flow('ref','dip','math output="300+input*x1" ')
+Plot('ref',
+     '''
+     graph yreverse=y min2=0 max2=2000 min1=0 max1=2800
+     title="" wantaxis=n
+     ''')
 
 # wavelet
 Flow('wav',None,
@@ -128,13 +133,13 @@ for case in ('pp','ps'):
            par['nh'],par['dh'],par['oh'],
            par['ns'],par['ds'],par['os'])
          )
-    Result(case,'grey title="%s" ' % string.upper(case))
+    Result(case,'window max1=8 | grey label1="t(s)" label2="h(m)" title=""')
 
     # migration
     sou = case + 'sou'
     rec = case + 'rec'
     spmig.wflds(sou,rec,'wav',case,par)
-    Result(rec,rec,'window | real |' + igrey(''))
+#    Result(rec,rec,'window | real |' + igrey(''))
 
     for TYP in ('x'): # imaging condition
 
@@ -151,7 +156,10 @@ for case in ('pp','ps'):
             spmig.imagePW(img,cig,'slop',       sou,rec,par)
         else:
             spmig.imageCW(img,cig,'slop','slos',sou,rec,par)
-        Result(img,img,'window max1=2800 | transp |' + igrey(''))
+        Plot(img,img,'window max1=2800 | transp |'
+               + igrey('label1="z(m)" label2="x(m)" '))
+        Result(img,[img,'ref'],'Overlay')
+
 
         # offset CIGs
         off = case + 'off' + '-'+TYP
@@ -176,7 +184,7 @@ for case in ('pp','ps'):
                  off2abs verb=y |
                  transp 
                  ''' % par)
-        Result(off,off,igrey(''))
+        Result(off,off,igrey('label1="z(m)" label2="h(m)" '))
 
         # angle CIGs
         ang = case + 'ang' + '-'+TYP
@@ -188,14 +196,14 @@ for case in ('pp','ps'):
                  slant adj=y p0=-0.5 np=200 dp=0.01 |
                  put label2=tan
                  ''' % par)
-            Plot(ang,ang,igrey(''))
+            Plot(ang,ang,igrey('label1="z(m)" label2="tan" '))
             Result(ang,[ang,ovl],'Overlay')
 
         if(case=='ps' and TYP=='x'):
             cor = case + 'cor' + '-'+TYP
             Flow(cor,[ang,'vpvs','dipa'],
                  'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
-            Plot(cor,cor,igrey(''))
+            Plot(cor,cor,igrey('label1="z(m)" label2="tan"'))
             Result(cor,[cor,ovl],'Overlay')
             
 # ------------------------------------------------------------
