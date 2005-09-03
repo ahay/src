@@ -423,18 +423,14 @@ def rfield (real_par,grid_par,covar_par):
 #
 
     noise   = real_par['name']+'noise'
-    noise_i = real_par['name']+'noise_%02d'
     
     Flow (noise,covar,
           '''
-          pad n4=%(nr)d | put n4=%(nr)d d4=1 o4=1 | 
+          put n4=%(nr)d d4=1 o4=1 label4="r" | 
           noise var=1 rep=y seed=%(seed)d
           '''
           % (real_par) )
      
-    for i in range(real_par['nr']):
-        Flow (noise_i % (i+1),noise,'window squeeze=n f4=%d n4=1' % (i))
-    
 #
 # Compute the FFT of the covariance and random noise.
 #
@@ -453,7 +449,7 @@ def rfield (real_par,grid_par,covar_par):
 
     pspec       = real_par['name']+'pspec'
     pspec_real  = real_par['name']+'pspec_real'
-    noise_i_fft = real_par['name']+'noise_%02d_fft'
+    noise_fft   = real_par['name']+'noise_fft'
 
     Flow (pspec,shift,
           '''
@@ -466,16 +462,15 @@ def rfield (real_par,grid_par,covar_par):
     
     Flow (pspec_real,pspec,'real')
     
-    for i in range(real_par['nr']): 
-        Flow (noise_i_fft % (i+1),noise_i % (i+1),
-              '''
-              rtoc | 
-              fft3 pad=1 axis=1 | 
-              fft3 pad=1 axis=2 | 
-              fft3 pad=1 axis=3 |
-              put label1="wx" label2="wy" label3="wz"
-              ''')
-
+    Flow (noise_fft,noise,
+          '''
+          rtoc | 
+          fft3 pad=1 axis=1 | 
+          fft3 pad=1 axis=2 | 
+          fft3 pad=1 axis=3 |
+          put label1="wx" label2="wy" label3="wz"
+          ''')
+    
 # 
 # Compute the amplitude spectrum.
 # 
@@ -540,9 +535,11 @@ def rfield (real_par,grid_par,covar_par):
     sim_i_fft = real_par['name']+'sim_%02d_fft'
 
     for i in range(real_par['nr']): 
-        Flow (sim_i_fft % (i+1),[aspec,noise_i_fft % (i+1)],
-              'add mode=m ${SOURCES[1]}'
-             )
+        Flow (sim_i_fft % (i+1),[noise_fft,aspec],
+              '''
+              window squeeze=n f4=%d n4=1 | 
+              add mode=m ${SOURCES[1]}
+              ''' % (i) )
 
 #
 # Invert the simulation FFT.
@@ -562,7 +559,7 @@ def rfield (real_par,grid_par,covar_par):
               fft3 inv=y pad=1 axis=2 |
               fft3 inv=y pad=1 axis=1 |
               put label1="x" label2="y" label3="z"
-              '''
-             )
+              ''')
     
-        Flow (sim_i_real % (i+1),sim_i % (i+1),'real')
+        Flow (sim_i_real % (i+1),sim_i % (i+1),
+              'real | put o1=0 o2=0 o3=0')
