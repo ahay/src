@@ -28,6 +28,13 @@ par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['tmin']=par['ot']
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+
+par['xmin']=20000
+par['xmax']=80000
+par['iratio']=(1.0*par['zmax']-par['zmin'])/(1.0*par['xmax']-par['xmin'])
+par['dratio']=1.5*par['iratio']
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
@@ -35,24 +42,27 @@ par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
 def igrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="z (ft)" %s
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
     min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+    screenratio=%g screenht=6 labelsz=4
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['iratio'])
 
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t (s)" %s
+    title="" pclip=99 label1="t(s)" label2="x(ft)" %s
     min2=%g max2=%g
-    ''' % (custom,par['xmin'],par['xmax'])
+    screenratio=%g screenht=9 labelsz=4
+    ''' % (custom,par['xmin'],par['xmax'],par['dratio'])
 
 def pgraph(custom,par):
     return '''
     graph labelrot=n  %s
-    yreverse=y symbolsz=4 wantaxis=y title=" "
+    yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
     min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+    screenratio=%g screenht=6 labelsz=4
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'],par['iratio'])
 # ------------------------------------------------------------
 # modeling function
 def amodel(dat,wfl,wav,vel,sou,rec,custom):
@@ -145,7 +155,7 @@ Flow('mm6','vel',
 
 for im in range(par['nm']):
     mm = 'mm' + str(im)
-    Plot(mm,mm,igrey('color=j allpos=y bias=4715',par))
+    Plot(mm,mm,igrey('allpos=y bias=4715',par))
 
 # ------------------------------------------------------------
 # experiments
@@ -171,7 +181,7 @@ for ie in range(par['ne']):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
     Plot(rr,rr,'window n1=2 | dd type=complex | window j2=50 | '
-         + pgraph('symbol=. plotcol=7',par))
+         + pgraph('symbol=. plotcol=6',par))
 
     # sources
     if(ie==0): s_ = 40000
@@ -192,7 +202,7 @@ for ie in range(par['ne']):
          ''', stdin=0)
 
     Plot(ss,ss,'window n1=2 | dd type=complex | window | '
-         + pgraph('symbol=v plotcol=7',par))
+         + pgraph('symbol=v plotcol=6',par))
     
 # ------------------------------------------------------------
 # F-D modeling
@@ -200,28 +210,39 @@ for ie in range(par['ne']):
 # loop over models
 for im in range(par['nm']):
     mm = 'mm' + str(im)
+    ms = 'ms' + str(im)
+    Flow(ms,mm,'scale axis=123')
 
-    # loop over experiment geometry
+    # loop over experiments
     for ie in range(par['ne']):
         ss = 'ss' + str(ie)
         rr = 'rr' + str(ie)
 
-        # experiment geometry
-        gg = 'gg' + '-' + str(im) + '-' + str(ie)
-        Result(gg,[mm,ss,rr],'Overlay')
-
-        # modeling
-        dd = 'dd' + '-' + str(im) + '-' + str(ie) # data     (absorbing surface)
-        do = 'do' + '-' + str(im) + '-' + str(ie) # data     (     free surface)
-        ww = 'ww' + '-' + str(im) + '-' + str(ie) # snapshot (absorbing surface)
-        wo = 'wo' + '-' + str(im) + '-' + str(ie) # snapshot (     free surface)
+        dd = 'dd' + '-' + str(im) + '-' + str(ie) # data      (absorbing surface)
+        do = 'do' + '-' + str(im) + '-' + str(ie) # data      (     free surface)
+        ww = 'ww' + '-' + str(im) + '-' + str(ie) # wavefield (absorbing surface)
+        wo = 'wo' + '-' + str(im) + '-' + str(ie) # wavefield (     free surface)
 
         amodel(dd,ww,'wav',mm,ss,rr,'free=n')
         amodel(do,wo,'wav',mm,ss,rr,'free=y')
+
+        Plot(ww,[ww,ms],
+               '''
+               window n3=1 f3=12 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
+               scale rscale=1e8 |
+               math v=${SOURCES[1]} output="input+v" |
+               ''' % par + igrey('pclip=99 allpos=y',par))
+        Plot(wo,[wo,ms],
+               '''
+               window n3=1 f3=12 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
+               scale rscale=1e8 |
+               math v=${SOURCES[1]} output="input+v" |
+               ''' % par + igrey('pclip=99 allpos=y',par))
+
+        Result(ww,[ww,ss,rr],'Overlay')
+        Result(wo,[wo,ss,rr],'Overlay')
         
-        #Result(ww,ww,'window |' + igrey('gainpanel=a pclip=99',par))
         Result(dd,dd,'transp |' + dgrey('',par))
-        #Result(wo,wo,'window |' + igrey('gainpanel=a pclip=99',par))
         Result(do,do,'transp |' + dgrey('',par))
 
 # ------------------------------------------------------------
