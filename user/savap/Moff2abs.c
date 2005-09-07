@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
 
     int nw;    /* spline order */
     int nd,id; /*  data size (nd=nhx*nhy*nhz) */
-    int nm,im; /* model size (nm=nh) */
+    int nm;    /* model size (nm=nh) */
 
     float *dat=NULL;
     float *mod=NULL;
