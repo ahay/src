@@ -5,7 +5,7 @@ from rsfproj import *
 
 # ------------------------------------------------------------
 par = {
-    'nt':600,    # no of time steps
+    'nt':451,    # no of time steps
     'dt':0.001,  #       time sampling
     'ot':0,      #       time origing
     'kt':100,    # wavelet delay
@@ -16,13 +16,13 @@ par = {
     #
     'nr':201,    # no of receivers
     'or':0,      #       receivers origin
-    'dr':20,     #       receivers sampling
+    'dr':5,     #       receivers sampling
     #
     'ne':1,      # no of experiments
     'nm':4,      # no of models
     #
-    'nx':201, 'ox':0, 'dx':20,
-    'nz':201, 'oz':0, 'dz':20
+    'nx':201, 'ox':0, 'dx':5,
+    'nz':101, 'oz':0, 'dz':5
     }
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
@@ -39,15 +39,15 @@ par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
     min1=%g max1=%g min2=%g max2=%g
-    screenratio=1
+    screenratio=0.5 screenht=7 
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
 
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t(s)" label2="x(ft)" %s
+    title="" pclip=99 label1="t(s)" label2="x(m)" %s
     min2=%g max2=%g
     ''' % (custom,par['xmin'],par['xmax'])
 
@@ -56,17 +56,42 @@ def pgraph(custom,par):
     graph labelrot=n  %s
     yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
     min1=%g max1=%g min2=%g max2=%g
-    screenratio=1
+    screenratio=0.5 screenht=7 
     ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+
+def wgrey(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g |
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    screenratio=0.5 screenht=7
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
+
 # ------------------------------------------------------------
 # modeling function
-def amodel(dat,wfl,wav,vel,sou,rec,custom):
-    Flow([dat,wfl],[wav,vel,sou,rec],
+def lmodel(dat,wfl,lid,liw,wav,vel,sou,rec,ref,custom):
+    Flow([dat,wfl,lid,liw],[wav,vel,sou,rec,ref],
          '''
          /home/savap/RSF/user/savap/sfborn2d
          verb=y abc=y free=n snap=y jsnap=50 %s
-         nbz=50 tz=0.001
-         nbx=50 tx=0.001
+         nbz=50 tz=0.02
+         nbx=50 tx=0.02
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         ref=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         lid=${TARGETS[2]}
+         liw=${TARGETS[3]}
+         ''' % custom)
+
+def amodel(dat,wfl,wav,vel,sou,rec,custom):
+    Flow([dat,wfl],[wav,vel,sou,rec],
+         '''
+         afdm2d
+         verb=y abc=y free=n snap=y jsnap=50 %s
+         nbz=50 tz=0.02
+         nbx=50 tx=0.02
          vel=${SOURCES[1]}
          sou=${SOURCES[2]}
          rec=${SOURCES[3]}
@@ -86,7 +111,7 @@ Result('wav','wav','window | graph title=" "')
 # velocity
 Flow('vel',None,
      '''
-     spike nsp=1 mag=8000
+     spike nsp=1 mag=2000
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par )
@@ -95,23 +120,17 @@ Result('vel','vel',igrey('color=j allpos=y',par))
 def spmodel(mag1,mag2,par):
     return '''
     spike nsp=2 mag=%g,%g
-    n1=%d o1=%g d1=%g k1=75,75  l1=76,76
-    n2=%d o2=%g d2=%g k2=100,145 l2=101,146
+    n1=%d o1=%g d1=%g k1=30,51  l1=50,101
+    n2=%d o2=%g d2=%g 
     ''' % (mag1,mag2,
            par['nz'],par['oz'],par['dz'],
            par['nx'],par['ox'],par['dx'])
 
 # reflectivity
-Flow('ref1',None,spmodel(+1000,    0,par))
-Flow('ref2',None,spmodel(    0,-1500,par))
-Flow('ref3',None,spmodel(+1000,-1500,par))
-
-# ------------------------------------------------------------
-# models
-Flow('mm0','vel','window')
-Flow('mm1','vel ref1','add ${SOURCES[1]} scale=1,3')
-Flow('mm2','vel ref2','add ${SOURCES[1]}')
-Flow('mm3','vel ref3','add ${SOURCES[1]}')
+Flow('lr0',None,spmodel(0.0,0.0,par))
+Flow('lr1',None,spmodel(+.1,0.0,par))
+Flow('lr2',None,spmodel(0.0,-.1,par))
+Flow('lr3',None,spmodel(-0.1,+0.0,par))
 
 # ------------------------------------------------------------
 # experiments
@@ -126,7 +145,7 @@ for ie in range(par['ne']):
     xr = 'xr' + str(ie)
     rr = 'rr' + str(ie)
 
-    Flow(zr,'ro','math output="100" ')
+    Flow(zr,'ro','math output="0" ')
     Flow(xr,'ro','math output="x1"')
     Flow(rr,[xr,zr],
          '''
@@ -142,8 +161,8 @@ for ie in range(par['ne']):
     rs = 'rs' + str(ie)
     ss = 'ss' + str(ie)
     
-    Flow(zs,'so','math output=2000')
-    Flow(xs,'so','math output=2000')
+    Flow(zs,'so','math output=0')
+    Flow(xs,'so','math output=500')
     Flow(rs,'so','math output=1')
     Flow(ss,[xs,zs,rs],
          '''
@@ -155,51 +174,51 @@ for ie in range(par['ne']):
          + pgraph('symbol=v plotcol=6',par))
     
 # ------------------------------------------------------------
-# F-D modeling
-
 # loop over models
 for im in range(par['nm']):
-    mm = 'mm' + str(im)
-    Result(mm,mm,igrey('allpos=y pclip=100',par))
+    lr = 'lr' + str(im)
+    ld = 'ld' + str(im)
+    lw = 'lw' + str(im)
 
+    mm = 'mm' + str(im)
+    mo = 'mo' + str(im)
+    mx = 'mx' + str(im)
+    
+    Flow(mm,['vel',lr],'math r=${SOURCES[1]} output="input*(1+r)"')
+    Result(mm,igrey('allpos=y pclip=100',par))
+
+    Flow(mo,mm,'smooth rect1=20 rect2=10')
+    Result(mm,igrey('allpos=y pclip=100',par))
+    
+    Flow(mx,[mm,mo],'math smo=${SOURCES[1]} output="(input-smo)/input"')
+    Result(mx,igrey('allpos=y pclip=100',par))
+    
     ss = 'ss0'
     rr = 'rr0'
     
-    dd = 'dd' + '-' + str(im)
-    ww = 'ww' + '-' + str(im)
-    do = 'do' + '-' + str(im)
-    wo = 'wo' + '-' + str(im)
-    
-    amodel(dd,ww,'wav',mm,ss,rr,'free=n')
+    wm = 'wm' + str(im)
+    wo = 'wo' + str(im)
+    wx = 'wx' + str(im)
+    ww = 'ww' + str(im)
+    wy = 'wy' + str(im)
 
-    if(im!=0):
-        Flow(wo,[ww,'ww-0'],'add ${SOURCES[1]} scale=1,-1')
-        Flow(do,[dd,'dd-0'],'add ${SOURCES[1]} scale=1,-1')
-    else:
-        Flow(wo,ww,'window')
-        Flow(do,dd,'window')
-    
-    Plot(wo,wo,
-         '''
-         window n3=1 f3=9 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
-         ''' % par + igrey('pclip=97',par))
-    Result(wo,[wo,ss,rr],'Overlay')
+    dm = 'dm' + str(im)
+    do = 'do' + str(im)
+    dx = 'dx' + str(im)
 
-    Result(do,do,'window j2=4 | transp |' + dgrey('',par))
-    
+    amodel(dm,wm,      'wav',mm,ss,rr,   'free=n')
+    lmodel(do,wo,dx,wx,'wav',mo,ss,rr,mx,'free=n')
+
+    Flow(ww,[wo,wx],'add scale=+1,-1 ${SOURCES[1]}')
+    Flow(wy,[wm,wo],'add scale=-1,+1 ${SOURCES[1]}')
+
+    Result(wm,wgrey('pclip=99 gainpanel=a',par))
+    Result(wo,wgrey('pclip=99 gainpanel=a',par))
+    Result(wx,wgrey('pclip=99 gainpanel=a',par))
+    Result(ww,wgrey('pclip=99 gainpanel=a',par))
+    Result(wy,wgrey('pclip=99 gainpanel=a',par))
+
+
 # ------------------------------------------------------------
 
-Flow('one','wo-1 wo-2','add ${SOURCES[1]}')
-Flow('two','wo-3','window')
-
-Plot('one','one',
-       '''
-       window n3=1 f3=8 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
-       ''' % par + igrey('pclip=95',par))
-Plot('two','two',
-       '''
-       window n3=1 f3=8 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
-       ''' % par + igrey('pclip=95',par))
-
-Result('all','one two','Movie')
 End()
