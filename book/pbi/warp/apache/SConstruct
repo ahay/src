@@ -15,3 +15,4 @@ for mode in ('pp','ps'):
          ''',stdin=0)
     Flow(mode+'cube',mode,'intbin | window')
     
+End()
