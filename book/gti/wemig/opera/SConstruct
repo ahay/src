@@ -33,11 +33,7 @@ REF4="-0.55555555555556:0,4.5;10,4.5"
 par = {
     'nx':400, 'ox':0.5,   'dx':0.025,
     'nz':500, 'oz':0,     'dz':0.01,
-#    'ns':30,  'os':0.5,   'ds':0.025, 'fs':0, 'js':10,
-#    'ns':101, 'js':1,     'fs':0,
-#    'ns':21,  'js':5,     'fs':0,
-#    'ns':1, 'fs':50,
-    'ns':51, 'js':2, 'fs':0, 'os':0.5,
+    'ns':51,  'os':0.5,               'js':2,     'fs':0,
     'nt':1250,'ot':0,     'dt':0.004,
     'nw':100, 'jw':1,
     'nw':200,
@@ -171,8 +167,8 @@ Flow('wav',None,'spike nsp=1 mag=1 k1=1 n1=%(nt)d d1=%(dt)g o1=0' % par)
 spmig.wflds('soup','recp','wav','datp',par)
 spmig.wflds('sous','recs','wav','dats',par)
 
-Result('recp','recp','window | real | transp | grey title=P')
-Result('recs','recs','window | real | transp | grey title=S')
+#Result('recp','recp','window | real | transp | grey title=P')
+#Result('recs','recs','window | real | transp | grey title=S')
 # ------------------------------------------------------------
 # migration
 spmig.imagePW('imgp','cigp','slop',       'soup','recp',par)
