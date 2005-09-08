@@ -9,7 +9,7 @@ def velplot(title,label1='Depth (kft)'):
     grey color=j allpos=y title="%s" scalebar=y
     barlabel="Velocity (kft/s)"
     label1="%s" label2="Lateral (kft)"
-    barreverse=y pclip=100
+    barreverse=y pclip=100 
     ''' % (title,label1)
 
 def graph(transp,o2,d2,n2,col,fat,extra=''):
