@@ -75,8 +75,8 @@ def lmodel(dat,wfl,lid,liw,wav,vel,sou,rec,ref,custom):
          '''
          born2d
          verb=y abc=y free=n snap=y jsnap=100 %s
-         nbz=50 tz=0.0075
-         nbx=50 tx=0.0075
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
          vel=${SOURCES[1]}
          sou=${SOURCES[2]}
          rec=${SOURCES[3]}
@@ -91,8 +91,8 @@ def amodel(dat,wfl,wav,vel,sou,rec,custom):
          '''
          afdm2d
          verb=y abc=y free=n snap=y jsnap=100 %s
-         nbz=50 tz=0.0075
-         nbx=50 tx=0.0075
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
          vel=${SOURCES[1]}
          sou=${SOURCES[2]}
          rec=${SOURCES[3]}
@@ -163,7 +163,7 @@ def wplot(wplot,wm,wo,wx,ww,par):
     Result(wplot,[_wowx,_wwwm],
            '''
            cat ${SOURCES[0]} ${SOURCES[1]} axis=2 space=n |
-           grey pclip=97 gainpanel=a title="" screenratio=0.5 screenht=7 wantaxis=n
+           grey pclip=95 gainpanel=a title="" screenratio=0.5 screenht=7 wantaxis=n
            grid=y g1num=1000
            ''', stdin=0)
 # ------------------------------------------------------------
@@ -277,7 +277,7 @@ for im in range(par['nm']):
     Flow([mcomp,mbar],[mm,'mo'],
          '''
          cat axis=3 space=n ${SOURCES[0:2]} |
-         byte bar=${TARGETS[1]} gainpanel=all pclip=97 bias=1500
+         byte bar=${TARGETS[1]} gainpanel=all pclip=95 bias=1500
          ''', stdin=0)
     Plot(mm,[mcomp,mbar],'window n3=1 f3=0 |' + igrey('bar=${SOURCES[1]} color=j',par))
     Plot(mo,[mcomp,mbar],'window n3=1 f3=1 |' + igrey('bar=${SOURCES[1]} color=j',par))
@@ -295,7 +295,7 @@ for im in range(par['nm']):
     Flow([wcomp,wbar],[wm+'f',ww+'f',we+'f'],
          '''
          cat axis=3 space=n ${SOURCES[0:3]} |
-         byte bar=${TARGETS[1]} gainpanel=all pclip=97
+         byte bar=${TARGETS[1]} gainpanel=all pclip=95
          ''', stdin=0)
     Plot(wm,[wcomp,wbar],'window n3=1 f3=0 |' + igrey('bar=${SOURCES[1]}',par))
     Plot(ww,[wcomp,wbar],'window n3=1 f3=1 |' + igrey('bar=${SOURCES[1]}',par))
@@ -307,7 +307,7 @@ for im in range(par['nm']):
     Flow([dcomp,dbar],[dm,dw,de],
          '''
          cat axis=3 space=n ${SOURCES[0:3]} |
-         byte bar=${TARGETS[1]} gainpanel=all pclip=97
+         byte bar=${TARGETS[1]} gainpanel=all pclip=95
          ''', stdin=0)
     Plot(dm,[dcomp,dbar],'window n3=1 f3=0 | transp |' + dgrey('bar=${SOURCES[1]}',par))
     Plot(dw,[dcomp,dbar],'window n3=1 f3=1 | transp |' + dgrey('bar=${SOURCES[1]}',par))
@@ -323,7 +323,7 @@ Flow('wx9'+'f','wx9','window n3=1 f3=6')
 Flow(['wscat9','wbars9'],['wd9'+'f','wx9'+'f'],
      '''
      cat axis=3 space=n ${SOURCES[0:2]} |
-     byte bar=${TARGETS[1]} gainpanel=all pclip=97
+     byte bar=${TARGETS[1]} gainpanel=all pclip=95
      ''', stdin=0)
 Plot('wd9',['wscat9','wbars9'],'window n3=1 f3=0 |' + igrey('bar=${SOURCES[1]}',par))
 Plot('wx9',['wscat9','wbars9'],'window n3=1 f3=1 |' + igrey('bar=${SOURCES[1]}',par))

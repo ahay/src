@@ -6,16 +6,13 @@
 
 #ifndef _sf_point_h
 
-/* distance */
 #define DST2d(A,B) ( (B.x-A.x)*(B.x-A.x) + \
                      (B.z-A.z)*(B.z-A.z) ) 
-/*^*/
 #define DST3d(A,B) ( (B.x-A.x)*(B.x-A.x) + \
                      (B.y-A.y)*(B.y-A.y) + \
                      (B.z-A.z)*(B.z-A.z) ) 
 /*^*/
 
-/* Jacobian */
 #define JAC2d(O,A,B) ( (A.x-O.x)*(B.z-O.z)-(B.x-O.x)*(A.z-O.z) )
 /*^*/
 
@@ -246,8 +243,8 @@ pt2d* pt2dalloc1( size_t n1)
     return ptr;
 }
 
-/*@out@*/ pt2d** pt2dalloc2( size_t n1,
-			     size_t n2)
+pt2d** pt2dalloc2( size_t n1,
+		   size_t n2)
 /*< alloc point2d 2-D vector >*/
 {
     size_t i2;
@@ -262,8 +259,8 @@ pt2d* pt2dalloc1( size_t n1)
 }
 
 pt2d*** pt2dalloc3( size_t n1,
-			      size_t n2,
-			      size_t n3)
+		    size_t n2,
+		    size_t n3)
 /*< alloc point2d 3-D vector >*/
 {
     size_t i3;
@@ -288,7 +285,7 @@ pt3d* pt3dalloc1( size_t n1)
 }
 
 pt3d** pt3dalloc2( size_t n1,
-			     size_t n2)
+		   size_t n2)
 /*< alloc point3d 2-D vector >*/
 {
     size_t i2;
@@ -303,8 +300,8 @@ pt3d** pt3dalloc2( size_t n1,
 }
 
 pt3d*** pt3dalloc3( size_t n1,
-			      size_t n2,
-			      size_t n3)
+		    size_t n2,
+		    size_t n3)
 /*< alloc point3d 3-D vector >*/
 {
     size_t i3;

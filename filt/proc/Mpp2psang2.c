@@ -22,13 +22,16 @@
 
 int main(int argc, char* argv[])
 {
-    bool inv;
+    bool inv, verb;
     int nz, na, iz, ia, nw, n3, i3;
     float **gather, *trace, *modl, *coord, *gamma, *dzdx; 
     float da, a0, t,g,d;
     sf_file in, out, vpvs, dip;
 
     sf_init (argc,argv);
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+
     in   = sf_input ("in");
     out  = sf_output("out");
     vpvs = sf_input ("vpvs");
@@ -58,16 +61,17 @@ int main(int argc, char* argv[])
     dzdx   = sf_floatalloc (nz   );
 
     for (i3=0; i3 < n3; i3++) { /* loop over CIG */
-	sf_floatread(gamma,nz,vpvs);
-	sf_floatread( dzdx,nz, dip);
-	
-	sf_floatread(gather[0],nz*na,in);
+	if(verb) sf_warning("%d of %d",i3+1,n3);
+
+	sf_floatread(gamma    ,nz   ,vpvs);
+	sf_floatread( dzdx    ,nz   ,dip );
+	sf_floatread(gather[0],nz*na,in  );
 
 	for (iz=0; iz < nz; iz++) { /* loop over depth */
 	    g = gamma[iz];
-	    d = dzdx[iz]*(g*g-1.);
+	    d =  dzdx[iz]*(g*g-1.);
 	    
-	    for (ia=0; ia < na; ia++) { /* loop over tan(theta) */
+	    for (ia=0; ia < na; ia++) { /* loop over tan */
 		t = a0+ia*da;
 		
 		/* formula for dipping reflector */

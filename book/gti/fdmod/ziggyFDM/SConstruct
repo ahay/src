@@ -117,9 +117,9 @@ Flow('mm0','vel','window')
 Flow('mm1',None,
      '''
      spike nsp=1 mag=0
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=300
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output="input+8700"
+     math output="input+8200"
      ''' % par)
 Flow('mm2',None,
      '''
@@ -210,8 +210,11 @@ for ie in range(par['ne']):
 # loop over models
 for im in range(par['nm']):
     mm = 'mm' + str(im)
-    ms = 'ms' + str(im)
-    Flow(ms,mm,'scale axis=123')
+    ms = 'ms' + str(im)    
+    if(im==1):
+        Flow(ms,mm,'scale axis=123 | add add=-0.80')
+    else:
+        Flow(ms,mm,'scale axis=123')
 
     # loop over experiments
     for ie in range(par['ne']):
@@ -242,8 +245,8 @@ for im in range(par['nm']):
         Result(ww,[ww,ss,rr],'Overlay')
         Result(wo,[wo,ss,rr],'Overlay')
         
-        Result(dd,dd,'transp |' + dgrey('',par))
-        Result(do,do,'transp |' + dgrey('',par))
+        Result(dd,dd,'window j2=4 | transp |' + dgrey('',par))
+        Result(do,do,'window j2=4 | transp |' + dgrey('',par))
 
 # ------------------------------------------------------------
 
