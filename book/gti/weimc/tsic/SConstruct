@@ -255,11 +255,11 @@ for i in (['0','1','2','3','4','5','6']):
     kt = vv * par['dht'] / par['dz']
     
     tspk=''
-    tspk+=str(int(200-50*kt))+','
-    tspk+=str(int(200-25*kt))+','
-    tspk+=str(int(200-00*kt))+','
-    tspk+=str(int(200+25*kt))+','
-    tspk+=str(int(200+50*kt))
+    tspk=tspk+str(int(200-50*kt))+','
+    tspk=tspk+str(int(200-25*kt))+','
+    tspk=tspk+str(int(200-00*kt))+','
+    tspk=tspk+str(int(200+25*kt))+','
+    tspk=tspk+str(int(200+50*kt))
 
     # cig (time shift)
     tcig = 'tcig'+ i
@@ -267,7 +267,8 @@ for i in (['0','1','2','3','4','5','6']):
          '''
          spike nsp=5 mag=1,1,1,1,1
          n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
-         n2=200 o2=-1.0 d2=0.01 k2=050,075,100,125,150 l2=050,075,100,125,150 |
+         n2=200 o2=-1.0 d2=0.01 k2=050,075,100,125,150
+         l2=050,075,100,125,150 |
          ricker1 frequency=0.008 |
          put label1=z label2=t
          ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
@@ -294,11 +295,11 @@ for i in (['0','1','2','3','4','5','6']):
     kh = int(i) - 3
 
     hspk=''
-    hspk+=str(int(200-50*kh))+','
-    hspk+=str(int(200-25*kh))+','
-    hspk+=str(int(200-00*kh))+','
-    hspk+=str(int(200+25*kh))+','
-    hspk+=str(int(200+50*kh))
+    hspk=hspk+str(int(200-50*kh))+','
+    hspk=hspk+str(int(200-25*kh))+','
+    hspk=hspk+str(int(200-00*kh))+','
+    hspk=hspk+str(int(200+25*kh))+','
+    hspk=hspk+str(int(200+50*kh))
 
     # cig (space shift)
     hcig = 'hcig'+ i
@@ -306,7 +307,8 @@ for i in (['0','1','2','3','4','5','6']):
          '''
          spike nsp=5 mag=1,1,1,1,1
          n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
-         n2=200 o2=-2000 d2=20 k2=050,075,100,125,150 l2=050,075,100,125,150 |
+         n2=200 o2=-2000 d2=20 k2=050,075,100,125,150
+         l2=050,075,100,125,150 |
          ricker1 frequency=0.008 |
          put label1=z label2=h
          ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
@@ -314,14 +316,17 @@ for i in (['0','1','2','3','4','5','6']):
 
     # slant-stack (velocity parameter)
     hang = 'hang' + i
-    Flow(hang,hcig,'slant adj=y p0=-2.0 np=400 dp=0.01 | put label2=tan')
+    Flow(hang,hcig,
+         'slant adj=y p0=-2.0 np=400 dp=0.01 | put label2=tan')
     Plot(hang,hang,igrey('pclip=99'))
 
     htest = 'htest' + i
     Plot(htest,[hcig,hang],'SideBySideAniso')
     
-Result('ttest','ttest0 ttest1 ttest2 ttest3 ttest4 ttest5 ttest6','Movie')
-Result('htest','htest0 htest1 htest2 htest3 htest4 htest5 htest6','Movie')
+Result('ttest','ttest0 ttest1 ttest2 ttest3 ttest4 ttest5 ttest6',
+       'Movie')
+Result('htest','htest0 htest1 htest2 htest3 htest4 htest5 htest6',
+       'Movie')
 # ------------------------------------------------------------
 
 #
