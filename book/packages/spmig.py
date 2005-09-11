@@ -4,16 +4,24 @@ import os
 
 def param(par):
     p  = ' '
-    p += ' readwrite=y'
-    if(par.has_key('verb')):  p += ' verb=' +     par['verb']
-    if(par.has_key('nrmax')): p += ' nrmax='+ str(par['nrmax'])
-    if(par.has_key('dtmax')): p += ' dtmax='+ str(par['dtmax'])
-    if(par.has_key('tmx')):   p += ' tmx='  + str(par['tmx'])
-    if(par.has_key('tmy')):   p += ' tmy='  + str(par['tmy'])
-    if(par.has_key('pmx')):   p += ' pmx='  + str(par['pmx'])
-    if(par.has_key('pmy')):   p += ' pmy='  + str(par['pmy'])
-    if(par.has_key('misc')):  p += ' '      +     par['misc']
-    p += ' '
+    p = p + ' readwrite=y'
+    if(par.has_key('verb')):
+        p = p + ' verb=' +     par['verb']
+    if(par.has_key('nrmax')):
+        p = p + ' nrmax='+ str(par['nrmax'])
+    if(par.has_key('dtmax')):
+        p = p + ' dtmax='+ str(par['dtmax'])
+    if(par.has_key('tmx')):
+        p = p + ' tmx='  + str(par['tmx'])
+    if(par.has_key('tmy')):
+        p = p + ' tmy='  + str(par['tmy'])
+    if(par.has_key('pmx')):
+        p = p + ' pmx='  + str(par['pmx'])
+    if(par.has_key('pmy')):
+        p = p + ' pmy='  + str(par['pmy'])
+    if(par.has_key('misc')):
+        p = p + ' '      +     par['misc']
+    p = p + ' '
     return p
 
 # create surface wavefield files
@@ -159,12 +167,12 @@ def script(EDIR,job,imag,cigs,slow,swfl,rwfl,par,ngroup,nshots):
         _v = '_' + slow + '.rsf'
 
         mycom  = 'sfsrmig2'
-        mycom += param(par)
-        mycom += ' <'    + _s
-        mycom += ' rwf=' + _r
-        mycom += ' slo=' + _v
-        mycom += ' cig=' + _c
-        mycom += ' >'    + _j
+        mycom = mycom + param(par)
+        mycom = mycom + ' <'    + _s
+        mycom = mycom + ' rwf=' + _r
+        mycom = mycom + ' slo=' + _v
+        mycom = mycom + ' cig=' + _c
+        mycom = mycom + ' >'    + _j
         mycom = 'echo "' + mycom + '" >>' + EDIR + '/' + job
         os.system(mycom)
 
@@ -182,12 +190,12 @@ def execute(EDIR,JOB,ngroup,nshots,imag,cigs,slow,swfl,rwfl,par):
         _v = '_' + slow + '.rsf'
 
         mycom  = 'sfsrmig2'
-        mycom += param(par)
-        mycom += ' <'    + _s
-        mycom += ' rwf=' + _r
-        mycom += ' slo=' + _v
-        mycom += ' cig=' + _c
-        mycom += ' >'    + _j
+        mycom = mycom + param(par)
+        mycom = mycom + ' <'    + _s
+        mycom = mycom + ' rwf=' + _r
+        mycom = mycom + ' slo=' + _v
+        mycom = mycom + ' cig=' + _c
+        mycom = mycom + ' >'    + _j
         f.write(mycom+'\n')
 
     f.close()

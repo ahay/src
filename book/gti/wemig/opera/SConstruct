@@ -187,8 +187,8 @@ Flow('dipo','lays',
      ''' % par)
 
 dzdx = par['dz']/par['dx']
-Flow('dipp','imgp','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
-Flow('dips','imgs','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
+#Flow('dipp','imgp','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
+#Flow('dips','imgs','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
 
 Result('dipp',igrey('color=j',par))
 Result('dips',igrey('color=j',par))

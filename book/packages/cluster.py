@@ -65,8 +65,8 @@ def sprd(file,EDIR,axis,ngroup,nelems,jelems):
         oelems = nelems * int(k)*jelems
 
         axiswin = ' n'+str(axis)+'='+str(nelems)
-        axiswin+= ' f'+str(axis)+'='+str(oelems)
-        axiswin+= ' j'+str(axis)+'='+str(jelems)
+        axiswin = axiswin + ' f'+str(axis)+'='+str(oelems)
+        axiswin = axiswin + ' j'+str(axis)+'='+str(jelems)
 
         Flow(EDIR+_f,file,'window squeeze=n %s out=stdout' % axiswin )
 

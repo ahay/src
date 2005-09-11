@@ -3,23 +3,30 @@ import cluster
 
 def param(par):
     p  = ' '
-    p += ' readwrite=y'
-    if(par.has_key('verb')):  p += ' verb='  +     par['verb']
-    if(par.has_key('nrmax')): p += ' nrmax=' + str(par['nrmax'])
-    if(par.has_key('dtmax')): p += ' dtmax=' + str(par['dtmax'])
-    if(par.has_key('tmx')):   p += ' tmx='   + str(par['tmx'])
-    if(par.has_key('tmy')):   p += ' tmy='   + str(par['tmy'])
-    if(par.has_key('pmx')):   p += ' pmx='   + str(par['pmx'])
-    if(par.has_key('pmy')):   p += ' pmy='   + str(par['pmy'])
-    p += ' '
+    p  = p + ' readwrite=y'
+    if(par.has_key('verb')):
+        p = p + ' verb='  +     par['verb']
+    if(par.has_key('nrmax')):
+        p = p + ' nrmax=' + str(par['nrmax'])
+    if(par.has_key('dtmax')):
+        p = p + ' dtmax=' + str(par['dtmax'])
+    if(par.has_key('tmx')):
+        p = p + ' tmx='   + str(par['tmx'])
+    if(par.has_key('tmy')):
+        p = p + ' tmy='   + str(par['tmy'])
+    if(par.has_key('pmx')):
+        p = p + ' pmx='   + str(par['pmx'])
+    if(par.has_key('pmy')):
+        p = p + ' pmy='   + str(par['pmy'])
+    p = p + ' '
     return p
 
 def freqs(par):
     f  = ' '
-    if(par.has_key('nw')): f += ' nw=' + str(par['nw'])
-    if(par.has_key('ow')): f += ' ow=' + str(par['ow'])
-    if(par.has_key('dw')): f += ' dw=' + str(par['dw'])
-    f += ' '
+    if(par.has_key('nw')): f = f + ' nw=' + str(par['nw'])
+    if(par.has_key('ow')): f = f + ' ow=' + str(par['ow'])
+    if(par.has_key('dw')): f = f + ' dw=' + str(par['dw'])
+    f = f + ' '
     return f
 
 def wflds(wfld,cmps,par):
@@ -78,11 +85,11 @@ def script(EDIR,job,imag,slow,wfld,par,ngroup,nfreqs):
         _v = '_' + slow + '.rsf'
 
         mycom  = 'sfcamig'
-        mycom += param(par)
-        mycom += ' <'    + _w
-        mycom += ' slo=' + _v
-        mycom += ' >'    + _i
-        mycom += ' datapath=' + EDIR
+        mycom = mycom + param(par)
+        mycom = mycom + ' <'    + _w
+        mycom = mycom + ' slo=' + _v
+        mycom = mycom + ' >'    + _i
+        mycom = mycom + ' datapath=' + EDIR
         mycom = 'echo "' + mycom + '" >>' + EDIR + '/' + job
         os.system(mycom)
 
@@ -98,11 +105,11 @@ def execute(EDIR,JOB,ngroup,nfreqs,imag,slow,wfld,par):
         _v = '_' + slow + '.rsf'
 
         mycom  = 'sfcamig'
-        mycom += param(par)
-        mycom += ' <'    + _w
-        mycom += ' slo=' + _v
-        mycom += ' >'    + _i
-        mycom += ' datapath=' + EDIR
+        mycom = mycom + param(par)
+        mycom = mycom + ' <'    + _w
+        mycom = mycom + ' slo=' + _v
+        mycom = mycom + ' >'    + _i
+        mycom = mycom + ' datapath=' + EDIR
         f.write(mycom+'\n')
 
     f.close()
