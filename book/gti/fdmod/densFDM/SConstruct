@@ -168,13 +168,13 @@ Flow('ro',None,
 for jm in range(par['nm']):
     if(jm==0):
         par['vmag']=0.1
-        par['dmag']=0.1
+        par['dmag']=0.4
     if(jm==1):
         par['vmag']=0.2
-        par['dmag']=0.2
+        par['dmag']=0.4
     if(jm==2):
         par['vmag']=0.3
-        par['dmag']=0.3
+        par['dmag']=0.4
     if(jm==3):
         par['vmag']=0.4
         par['dmag']=0.4
@@ -183,7 +183,7 @@ for jm in range(par['nm']):
     Flow(vx,None,
          '''
          spike nsp=2 mag=-%(vmag)g,%(vmag)g
-         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=065,101 l1=100,140
+         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=065,101 l1=100,125
          n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=150,175 l2=250,225 |
          smooth rect1=15 rect2=15 repeat=2
          ''' % par)
@@ -191,7 +191,7 @@ for jm in range(par['nm']):
     Flow(rx,None,
          '''
          spike nsp=2 mag=%(dmag)g,-%(dmag)g
-         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=50,150 l1=51,151 |
+         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=130,150 l1=131,151 |
          spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
          ''' % par)
 
@@ -224,8 +224,8 @@ for im in range(par['nm']):
 
     wcomp = 'wcomp' + str(im)
     wbar  = 'wbar'  + str(im)
-    Flow(wv+'f',wv,'window n3=1 f3=14')
-    Flow(wr+'f',wr,'window n3=1 f3=14')
+    Flow(wv+'f',wv,'window n3=1 f3=13')
+    Flow(wr+'f',wr,'window n3=1 f3=13')
     Flow([wcomp,wbar],[wv+'f',wr+'f'],
          '''
          cat axis=3 space=n ${SOURCES[0:2]} |
