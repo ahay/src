@@ -17,7 +17,7 @@ to bring the latest class assignment to your local directory.
 to change directory to your current homework.
 \end{itemize}
 
-\item Open the file \texttt{homework1} in your favourite text editor
+\item Open the file \texttt{homework1} in your favorite text editor
 and change the name at the top of the file.
 
 \item Run \texttt{scons homework1.read} to build and 
@@ -37,7 +37,7 @@ Part $2$ is optional but with extra credit (max $50$ points).
 
 \item \texttt{cd \$RSFBOOK/geo391/hw1/hw1a}
 
-\item open the \texttt{SConstruct} file in your favourite text editor.
+\item open the \texttt{SConstruct} file in your favorite text editor.
 
 \item In this assignment, you will get familiar with 
 the computer library called \texttt{RSF} and the reproducible testing
@@ -53,7 +53,7 @@ it as much as possible to avoid being distracted in future labs.
 \begin{itemize}
 \item \texttt{Flow} describes a flow with which we produce 
 one or more outputs using one or more inputs and execution rules and
-parameters. The gereric format is:
+parameters. The generic format is:
 \par
 \texttt{ Flow(output,input,command) }
 \par
@@ -61,7 +61,7 @@ For example
 \par
 \texttt{ Flow('mm0','vel','window n2=\%(nx)d min2=\%(ox)g' \% par)}
 \par
-procudes output \texttt{mm0.rsf} from input \texttt{vel.rsf} using the rule
+produces output \texttt{mm0.rsf} from input \texttt{vel.rsf} using the rule
 \par
 \texttt{'window n2=\%(nx)d min2=\%(ox)g'} where parameters
 \texttt{nx} and \texttt{ox} are extracted from the dictionary \texttt{par}.
@@ -73,7 +73,7 @@ For example
 \par
 \texttt{ Plot(mm,igrey('allpos=y bias=4715',par))}
 \par
-procudes output \texttt{mm.vpl} from input 
+produces output \texttt{mm.vpl} from input 
 \texttt{mm.rsf} using the rule defined by the function 
 \texttt{igrey} with arguments \texttt{allpos=y bias=4715}.
 
@@ -91,7 +91,7 @@ For each model-experiment pair, you will observe
 plots for the model and a wavefield snapshot (acquisition overlain),
 and recorded data.
 
-\item Each triplet model-wavefield-data is annotated with a baloon
+\item Each triplet model-wavefield-data is annotated with a balloon
 label with a letter (e.g. A). Use the model in the 
 \texttt{SConstruct} file to add at least one more label 
 indicating one reflector/reflection observation.
@@ -101,10 +101,11 @@ to list all of them in this document and describe what you
 wanted to indicate. For example, you can point at 
 a reflector on the model plot,
 a reflected wave in the wavefield plot and
-the same reflected wave in the aquired data.
+the same reflected wave in the acquired data.
 Identify direct arrivals, reflected arrivals, multiple reflection or 
 anything else that you might find interesting.
 This exercise is about being creative and seeing things.
+
 \end{itemize}
 
 \end{enumerate}
@@ -122,9 +123,9 @@ This exercise is about being creative and seeing things.
       \begin{enumerate}
 
       \item Experiment 0
-      \plot*{me-0-0}{width=3.0in}{Model 0, experiment 0}
-      \plot*{ww-0-0}{width=3.0in}{Model 0, experiment 0}
-      \plot*{dd-0-0}{width=3.0in}{Model 0, experiment 0}
+%      \plot*{me-0-0}{width=3.0in}{Model 0, experiment 0}
+%      \plot*{ww-0-0}{width=3.0in}{Model 0, experiment 0}
+%      \plot*{dd-0-0}{width=3.0in}{Model 0, experiment 0}
 
             \begin{itemize}
 	    \item Label A
@@ -132,9 +133,9 @@ This exercise is about being creative and seeing things.
 	    \end{itemize}
 
       \item Experiment 1
-      \plot*{me-0-1}{width=3.0in}{Model 0, experiment 1}
-      \plot*{ww-0-1}{width=3.0in}{Model 0, experiment 0}
-      \plot*{dd-0-1}{width=3.0in}{Model 0, experiment 0}
+%      \plot*{me-0-1}{width=3.0in}{Model 0, experiment 1}
+%      \plot*{ww-0-1}{width=3.0in}{Model 0, experiment 1}
+%      \plot*{dd-0-1}{width=3.0in}{Model 0, experiment 1}
 
             \begin{itemize}
 	    \item Label A
@@ -149,12 +150,20 @@ This exercise is about being creative and seeing things.
       \begin{enumerate}
 
       \item Experiment 0
+%      \plot*{me-0-0}{width=3.0in}{Model 1, experiment 0}
+%      \plot*{ww-0-0}{width=3.0in}{Model 1, experiment 0}
+%      \plot*{dd-0-0}{width=3.0in}{Model 1, experiment 0}
+
             \begin{itemize}
 	    \item Label A
 	    \item Label B
 	    \end{itemize}
 
       \item Experiment 1
+%      \plot*{me-0-0}{width=3.0in}{Model 1, experiment 1}
+%      \plot*{ww-0-0}{width=3.0in}{Model 1, experiment 1}
+%      \plot*{dd-0-0}{width=3.0in}{Model 1, experiment 1}
+
             \begin{itemize}
 	    \item Label A
 	    \item Label B
@@ -167,12 +176,20 @@ This exercise is about being creative and seeing things.
       \begin{enumerate}
 
       \item Experiment 0
+%      \plot*{me-0-0}{width=3.0in}{Model 2, experiment 0}
+%      \plot*{ww-0-0}{width=3.0in}{Model 2, experiment 0}
+%      \plot*{dd-0-0}{width=3.0in}{Model 2, experiment 0}
+
             \begin{itemize}
 	    \item Label A
 	    \item Label B
 	    \end{itemize}
 
       \item Experiment 1
+%      \plot*{me-0-0}{width=3.0in}{Model 2, experiment 1}
+%      \plot*{ww-0-0}{width=3.0in}{Model 2, experiment 1}
+%      \plot*{dd-0-0}{width=3.0in}{Model 2, experiment 1}
+
             \begin{itemize}
 	    \item Label A
 	    \item Label B
@@ -180,10 +197,17 @@ This exercise is about being creative and seeing things.
 
       \end{enumerate}
 
+\item When you are done, run
+\par \texttt{scons lock}
+\par to archive your pictures so they can be included in your answer.
+Don't forget to uncomment the plots in \texttt{homework.tex}.
+
 \end{enumerate}
 
 
 % ------------------------------------------------------------
+
+\inputdir{hw1b}
 
 \section{Programming assignment (extra credit)}
 
@@ -229,9 +253,9 @@ and variable-density, respectively.
 
 The source wavelet is in \texttt{wav},
 the velocity in \texttt{vv}, and
-the density in \texttt{rr}. 
+the density  in \texttt{rr}. 
 
-The source coordinates are in \texttt{sc} and
+The   source coordinates are in \texttt{sc} and
 the receiver coordinates are in \texttt{rc}.
 
 All input files are predefined for you, so you don't need to change them.
@@ -259,18 +283,30 @@ for the two cases.
 
 \end{itemize}
 
-Initially, the left and right panels in \texttt{wcomp} and 
+Initially, the left and right panels of \texttt{wcomp} and 
 \texttt{dcomp} are identical. After you modify the program, the 
 two panels will change. Are you sure you obtained correct results?
 
+\item When you are done, run
+\par \texttt{scons lock}
+\par to archive your pictures so they can be included in your answer.
+Don't forget to uncomment the plots in \texttt{homework.tex}.
+
 \end{enumerate}
+
+%\plot{mcomp}{width=6.0in}{Model}
+%\plot{wcomp}{width=6.0in}{Wavefield}
+%\plot{dcomp}{width=6.0in}{Data}
 
 % ------------------------------------------------------------
 
 \section{Wrap-up}
 
 When you are done, rebuild this document and 
-print your answers. This homework is due in class $2$ weeks
+print your answers. Remember to uncomment the plots
+so the figures you created are included in the document.
+
+This homework is due in class $2$ weeks
 from the day in which it was handed-out.
 
 % ------------------------------------------------------------
