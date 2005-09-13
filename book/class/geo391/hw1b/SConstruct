@@ -1,0 +1,204 @@
+## 
+ # GEO391 - Homework 1
+ ##
+from rsfproj import *
+
+# ------------------------------------------------------------
+# Finite-differences modeling program
+# ------------------------------------------------------------
+import rsfproj
+proj = rsfproj.Project()
+proj.Program('AFDM.c')
+
+# ------------------------------------------------------------
+par = {
+    'nt':1500,   # no of time steps
+    'dt':0.0005, #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    #
+    'ns':1,      # no of shots
+    'os':2000,   #       shots origin
+    'ds':20,     #       shots sampling
+    #
+    'nr':401,    # no of receivers
+    'or':0,      #       receivers origin
+    'dr':2.5,    #       receivers sampling
+    #
+    'nm':1,      # no of models
+    #
+    'nx':401, 'ox':0, 'dx':2.5,
+    'nz':201, 'oz':0, 'dz':2.5
+    }
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['tmin']=par['ot']
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# plotting functions
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=0.5 screenht=7 crowd=0.9
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def dgrey(custom,par):
+    return '''
+    transp |
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="t(s)" label2="x(m)" %s
+    min2=%g max2=%g
+    screenratio=0.5 screenht=7 crowd=0.9
+    ''' % (custom,par['xmin'],par['xmax'])
+
+def pgraph(custom,par):
+    return '''
+    graph labelrot=n  %s
+    yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=0.5 screenht=7 crowd=0.9
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+
+def wgrey(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g |
+    grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    screenratio=0.5 screenht=7 crowd=0.9
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
+
+# ------------------------------------------------------------
+# modeling functions
+
+# constant density
+def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
+    Flow( [dat,wfl],[wav,vel,den,sou,rec,'AFDM.exe'],
+         '''
+         ./%s.exe
+         verb=y abc=y free=n snap=y jsnap=50 %s
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         ''' % ('AFDM',custom))
+
+# variable density
+def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
+    Flow( [dat,wfl],[wav,vel,den,sou,rec,'AFDM.exe'],
+         '''
+         ./%s.exe
+         verb=y abc=y free=n snap=y jsnap=50 %s
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         ''' % ('AFDM',custom))
+# ------------------------------------------------------------
+# source wavelet
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=50 |
+         scale axis=123 |
+         put label1=t label2=x label3=y 
+         ''' % par)    
+Result('wav','wav','window n1=200 | graph title="" label1="t(s)" label2=')
+
+# ------------------------------------------------------------
+# receiver coordinates
+Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
+Flow('zr','r_','math output="0" ')
+Flow('xr','r_','math output="x1"')
+Flow('rc',['xr','zr'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rc','window n1=2 | dd type=complex | window j2=10 | '
+     + pgraph('symbol=. plotcol=6',par))
+
+# source coordinates
+Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+
+Flow('zs','s_','math output=0')
+Flow('xs','s_','math output=400')
+Flow('rs','s_','math output=1')
+Flow('sc',['xs','zs','rs'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('sc','window n1=2 | dd type=complex | window | '
+     + pgraph('symbol=v plotcol=6',par))
+# ------------------------------------------------------------
+# background velocity
+Flow('vo',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1500+1.0*x1" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+# background density
+Flow('ro',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2000" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+# velocity perturbation
+Flow('vx',None,
+     '''
+     spike nsp=2 mag=-0.2,0.2
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=065,101 l1=100,125
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=150,175 l2=250,225 |
+     smooth rect1=15 rect2=15 repeat=2
+     ''' % par)
+
+# density perturbations
+Flow('rx',None,
+     '''
+     spike nsp=2 mag=0.4,-0.4
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=130,150 l1=131,151 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+# combined model: background + perturbation
+Flow('vv',['vo', 'vx' ],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
+Flow('rr',['ro', 'rx' ],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
+
+Plot('vv',igrey('color=j allpos=y bias=1000 pclip=100',par))
+Plot('rr',igrey('        allpos=y bias=1500 pclip=100',par))
+Result('mcomp',['vv','rr'],'SideBySideIso')
+
+# ------------------------------------------------------------
+
+# modeling
+amodel('dv','wv','wav','vv','rr','sc','rc','free=n dens=n')
+amodel('dr','wr','wav','vv','rr','sc','rc','free=n dens=y')
+
+# ------------------------------------------------------------
+# results
+
+# wavefield
+Result('wv',wgrey('gainpanel=a',par))
+Result('wr',wgrey('gainpanel=a',par))
+
+# data
+Result('dv',dgrey('gainpanel=a',par))
+Result('dr',dgrey('gainpanel=a',par))
+# ------------------------------------------------------------
+
+End()
