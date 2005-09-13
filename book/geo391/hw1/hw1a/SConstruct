@@ -1,0 +1,213 @@
+## 
+ # GEO391 - Homework 1 (part a)
+ ##
+from rsfproj import *
+
+# ------------------------------------------------------------
+par = {
+    'nt':10000,  # no of time steps
+    'dt':0.001,  #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    #
+    'ns':1,      # no of shots
+    'os':40000,  #       shots origin
+    'ds':10000,  #       shots sampling
+    #
+    'nr': 1001,  # no of receivers
+    'or':20000,  #       receivers origin
+    'dr':25,     #       receivers sampling
+    #
+    'ne':2,      # no of experiments
+    'nm':3,      # no of models
+    #
+    'nx':1001, 'ox':20000, 'dx':25,
+    'nz':801,  'oz':5000,  'dz':25
+    }
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['tmin']=par['ot']
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+
+par['iratio']=(1.0*par['zmax']-par['zmin'])/(1.0*par['xmax']-par['xmin'])
+par['dratio']=par['iratio']
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# plotting functions
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=%g screenht=10 labelsz=4
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['iratio'])
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="t(s)" label2="x(ft)" %s
+    min2=%g max2=%g
+    screenratio=%g screenht=10 labelsz=4
+    ''' % (custom,par['xmin'],par['xmax'],par['dratio'])
+
+def pgraph(custom,par):
+    return '''
+    graph labelrot=n  %s
+    yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=%g screenht=10 labelsz=4
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'],par['iratio'])
+
+def wgrey(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g |
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
+    screenratio=%g screenht=10 labelsz=4
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom,par['iratio'])
+
+# ------------------------------------------------------------
+# modeling function
+def amodel(dat,wfl,wav,vel,sou,rec,custom):
+    Flow([dat,wfl],[wav,vel,sou,rec],
+         '''
+         afdm2d verb=y abc=y free=n snap=y jsnap=200 %s
+         nbz=250 tz=0.001
+         nbx=250 tx=0.001
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         ''' % custom)
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=10 | 
+         put label1=t label2=x label3=y 
+         ''' % par)    
+Result('wav','wav','window n1=1000 | graph title=" "')
+
+# ------------------------------------------------------------
+# velocity
+
+vstr = 'sigsbee2a_stratigraphy.sgy'
+Fetch(vstr,'sigsbee')
+
+Flow('zvstr tzvstr ./shead ./bshead',vstr,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('vel','zvstr',
+     '''
+     put d1=%(dz)g o2=10025 d2=%(dx)g label1=z label2=x |
+     window f1=200 n1=%(nz)d
+     ''' % par )
+Result('vel','vel',igrey('color=j allpos=y',par))
+
+# ------------------------------------------------------------
+# experiments
+
+Flow('ro',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
+Flow('so',None,'math n1=1      d1=0      o1=0      output=0' % par)
+
+for ie in range(par['ne']):
+    
+    # receivers
+    if(ie==0): r_ = 6000
+    if(ie==1): r_ = 6000
+    
+    zr = 'zr' + str(ie)
+    xr = 'xr' + str(ie)
+    rr = 'rr' + str(ie)
+
+    Flow(zr,'ro','math output="%g"' % r_)
+    Flow(xr,'ro','math output="x1"')
+    Flow(rr,[xr,zr],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+    Plot(rr,rr,'window n1=2 | dd type=complex | window j2=25 | '
+         + pgraph('symbol=. plotcol=5',par))
+
+    # sources
+    if(ie==0):
+        zs_ =  6000
+        xs_ = 35000
+    if(ie==1):
+        zs_ = 22500
+        xs_ = 40000
+
+    zs = 'zs' + str(ie)
+    xs = 'xs' + str(ie)
+    rs = 'rs' + str(ie)
+    ss = 'ss' + str(ie)
+    
+    Flow(xs,'so','math output=%g' % xs_)
+    Flow(zs,'so','math output=%g' % zs_)
+    Flow(rs,'so','math output=1')
+    Flow(ss,[xs,zs,rs],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
+    Plot(ss,ss,'window n1=2 | dd type=complex | window | '
+         + pgraph('symbol=* plotcol=6',par))
+    
+# ------------------------------------------------------------
+# models
+Flow('mm0','vel',
+     '''
+     window n2=1 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('mm1','vel',
+     '''
+     window n2=1 min2=60000 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('mm2','vel','window n2=%(nx)d min2=%(ox)g' % par)
+# ------------------------------------------------------------
+# F-D modeling
+
+# loop over models
+for im in range(par['nm']):
+    mm = 'mm' + str(im)
+    Plot(mm,igrey('allpos=y bias=4715',par))
+
+    # loop over experiments
+    for ie in range(par['ne']):
+        ss = 'ss' + str(ie)
+        rr = 'rr' + str(ie)
+
+        me = 'me' + '-' + str(im) + '-' + str(ie) # model
+
+        dd = 'dd' + '-' + str(im) + '-' + str(ie) # data 
+        ww = 'ww' + '-' + str(im) + '-' + str(ie) # wavefield
+
+        # MODELING function
+        amodel(dd,ww,'wav',mm,ss,rr,'free=y')
+        
+        Plot(ww,'window n3=1 f3=12 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |'% par
+             + igrey('pclip=99',par))
+
+        Result(me,[mm,ss,rr],'Overlay')
+        Result(ww,[ww,ss,rr],'Overlay')
+        Result(ww+'-movie',ww,wgrey('gainpanel=a',par))
+        Result(dd,dd,'window j2=4 | transp |' + dgrey('',par))
+
+# ------------------------------------------------------------
+
+End()
