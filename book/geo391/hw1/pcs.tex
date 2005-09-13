@@ -1,0 +1,90 @@
+\def\bea{\begin{eqnarray}}
+\def\eea{  \end{eqnarray}}
+
+\def\beq{\begin{equation}}
+\def\eeq{  \end{equation}}
+
+\def\req#1{(\ref{#1})}
+
+\def\lp{\left (}
+\def\rp{\right)}
+
+\def\lb{\left [}
+\def\rb{\right]}
+
+\def\pbox#1{ \fbox {$ \displaystyle #1 $}}
+
+% ------------------------------------------------------------
+% trace
+\def\tr{\texttt{tr}\;}
+
+% divergence
+\def\DIV#1{\nabla \cdot #1}
+
+% curl
+\def\CURL#1{\nabla \times #1}
+
+% gradient
+\def\GRAD#1{\nabla #1}
+
+% Laplacian
+\def\LAPL#1{\nabla^2 #1}
+% ------------------------------------------------------------
+
+% stress tensor
+\def\ssten{{\bf \sigma}}
+
+\def\ssmat{
+\lp \matrix {
+ \sigma_{11} &  \sigma_{12}   &  \sigma_{13} \cr
+ \sigma_{12} &  \sigma_{22}   &  \sigma_{23} \cr
+ \sigma_{13} &  \sigma_{23}   &  \sigma_{33} \cr
+} \rp
+}
+
+% strain tensor
+\def\eeten{{\bf \epsilon}}
+
+\def\eemat{
+\lp \matrix {
+ \epsilon_{11} &  \epsilon_{12}   &  \epsilon_{13} \cr
+ \epsilon_{12} &  \epsilon_{22}   &  \epsilon_{23} \cr
+ \epsilon_{13} &  \epsilon_{23}   &  \epsilon_{33} \cr
+} \rp
+}
+
+% elastic tensor
+\def\CC{{\bf C}}
+
+% identity tensor
+\def\I{\;{\bf I}}
+
+% particle displacement vector
+\def\uu{{\bf u}}
+
+% particle velocity vector
+\def\vv{{\bf v}}
+
+% force vector
+\def\ff{{\bf f}}
+
+% distance vector
+\def\xx{{\bf x}}
+
+% wavenumber vector
+\def\kk{{\bf k}}
+
+% normal vector
+\def\nn{{\bf n}}
+
+% source vector
+\def\ss{{\bf s}}
+
+% receiver vector
+\def\rr{{\bf r}}
+
+\def\Fop#1{\mathcal{F}     \lb #1 \rb}
+\def\Fin#1{\mathcal{F}^{-1}\lb #1 \rb}
+
+\def\dtwo#1#2  {\frac{\partial^2 #1}{\partial #2^2         }   }
+\def\done#1#2  {\frac{\partial   #1}{\partial #2           }   }

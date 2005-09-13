@@ -1,0 +1,285 @@
+\author{Paul Sava}
+\title{Homework 1}
+
+\input{pcs}
+
+% ------------------------------------------------------------
+
+\section{Prerequisites}
+
+\begin{enumerate}
+\item Log into your class account and prepare for the assignment:
+
+\begin{itemize}
+\item \texttt{cd \$RSFBOOK} and run \texttt{scons update} \par
+to bring the latest class assignment to your local directory.
+\item \texttt{cd \$RSFBOOK/geo391/hw1} \par
+to change directory to your current homework.
+\end{itemize}
+
+\item Open the file \texttt{homework1} in your favourite text editor
+and change the name at the top of the file.
+
+\item Run \texttt{scons homework1.read} to build and 
+read this file.
+
+\item This homework has $2$ parts. 
+Part $1$ is mandatory (max $100$ points).
+Part $2$ is optional but with extra credit (max $50$ points).
+
+\end{enumerate}
+
+% ------------------------------------------------------------
+
+\section{Assignment}
+
+\begin{enumerate}
+
+\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1a}
+
+\item open the \texttt{SConstruct} file in your favourite text editor.
+
+\item In this assignment, you will get familiar with 
+the computer library called \texttt{RSF} and the reproducible testing
+environment using \texttt{scons}.
+You will run a number of commands defined in the 
+\texttt{SConstruct} file, modify them, 
+observe and comment on the results, and finally include comments
+in this homework document.
+We will use this setup in future labs, so try to get familiar with
+it as much as possible to avoid being distracted in future labs.
+
+\item Observe typical commands in the \texttt{SConstruct} file:
+\begin{itemize}
+\item \texttt{Flow} describes a flow with which we produce 
+one or more outputs using one or more inputs and execution rules and
+parameters. The gereric format is:
+\par
+\texttt{ Flow(output,input,command) }
+\par
+For example
+\par
+\texttt{ Flow('mm0','vel','window n2=\%(nx)d min2=\%(ox)g' \% par)}
+\par
+procudes output \texttt{mm0.rsf} from input \texttt{vel.rsf} using the rule
+\par
+\texttt{'window n2=\%(nx)d min2=\%(ox)g'} where parameters
+\texttt{nx} and \texttt{ox} are extracted from the dictionary \texttt{par}.
+
+\item \texttt{Plot} produces an output plot file 
+in \texttt{vplot} format, that can be displayed using the program 
+\texttt{xtpen}.
+For example
+\par
+\texttt{ Plot(mm,igrey('allpos=y bias=4715',par))}
+\par
+procudes output \texttt{mm.vpl} from input 
+\texttt{mm.rsf} using the rule defined by the function 
+\texttt{igrey} with arguments \texttt{allpos=y bias=4715}.
+
+\item \texttt{Result} is similar with \texttt{Plot} except
+that outputs
+
+\item In this homework, you will analyze wave propagation modeled
+using the acoustic wave-equation. 
+You will observe and discuss $3$ pre-defined models and 
+$2$ pre-defined acquisition geometries (experiments).
+Feel free to add more examples by replicating the rules in the
+\texttt{SConstruct} file.
+
+For each model-experiment pair, you will observe
+plots for the model and a wavefield snapshot (acquisition overlain),
+and recorded data.
+
+\item Each triplet model-wavefield-data is annotated with a baloon
+label with a letter (e.g. A). Use the model in the 
+\texttt{SConstruct} file to add at least one more label 
+indicating one reflector/reflection observation.
+
+Use section ``Discussion''
+to list all of them in this document and describe what you 
+wanted to indicate. For example, you can point at 
+a reflector on the model plot,
+a reflected wave in the wavefield plot and
+the same reflected wave in the aquired data.
+Identify direct arrivals, reflected arrivals, multiple reflection or 
+anything else that you might find interesting.
+This exercise is about being creative and seeing things.
+\end{itemize}
+
+\end{enumerate}
+
+% ------------------------------------------------------------
+
+\inputdir{hw1a}
+
+\section{Discussion}
+
+\begin{enumerate}
+
+\item Model 0
+
+      \begin{enumerate}
+
+      \item Experiment 0
+      \plot*{me-0-0}{width=3.0in}{Model 0, experiment 0}
+      \plot*{ww-0-0}{width=3.0in}{Model 0, experiment 0}
+      \plot*{dd-0-0}{width=3.0in}{Model 0, experiment 0}
+
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \item Experiment 1
+      \plot*{me-0-1}{width=3.0in}{Model 0, experiment 1}
+      \plot*{ww-0-1}{width=3.0in}{Model 0, experiment 0}
+      \plot*{dd-0-1}{width=3.0in}{Model 0, experiment 0}
+
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \end{enumerate}
+
+
+\item Model 1
+
+      \begin{enumerate}
+
+      \item Experiment 0
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \item Experiment 1
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \end{enumerate}
+
+\item Model 2
+
+      \begin{enumerate}
+
+      \item Experiment 0
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \item Experiment 1
+            \begin{itemize}
+	    \item Label A
+	    \item Label B
+	    \end{itemize}
+
+      \end{enumerate}
+
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+
+\section{Programming assignment (extra credit)}
+
+\begin{enumerate}
+
+\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1b}
+
+\item The file \texttt{AFDM.c} is a \texttt{C} program
+for time-domain acoustic finite-difference modeling.
+The \texttt{SConstruct} file contains all the rules for compiling and
+running tests with this program. Every change in the program will
+automatically recompile it and create an updated executable,
+so you don't need to worry about doing anything special about this.
+Just make your changes and run the tests using \texttt{scons}.
+
+The program is set for models with constant density.
+You will modify this program to include the variable-density term.
+Consult the class notes for details.
+
+\item
+You will use the Python function \texttt{amodel} (already
+defined in the SConstruct file) to run tests for both constant-density
+and variable-density modeling.
+
+The lines
+\par
+\texttt{ amodel('dv','wv','wav','vv','rr','sc','rc','free=n dens=n') }
+\par
+\texttt{ amodel('dr','wr','wav','vv','rr','sc','rc','free=n dens=y') }
+\par
+generate
+\begin{itemize}
+\item the data files \texttt{dv} and \texttt{dr} 
+corresponding to constant-density
+and variable-density, respectively. 
+You are basically running the same program, but the flag
+\texttt{dens=y} indicates if you use or ignore density.
+
+\item the wavefield files \texttt{dv} and \texttt{dr} 
+corresponding to constant-density
+and variable-density, respectively. 
+\end{itemize}
+
+The source wavelet is in \texttt{wav},
+the velocity in \texttt{vv}, and
+the density in \texttt{rr}. 
+
+The source coordinates are in \texttt{sc} and
+the receiver coordinates are in \texttt{rc}.
+
+All input files are predefined for you, so you don't need to change them.
+However, feel free to duplicate the rules in the \texttt{SConstruct} 
+file and experiment at will.
+
+\item
+When you are finished modifying the program, run the commands:
+
+\begin{itemize}
+
+\item \texttt{scons mcomp.view} to view the velocity and density models.
+
+\item \texttt{scons wvmovie.view} to view a movie of the pulse in
+\texttt{wav} propagate through the medium with constant density.
+
+\item \texttt{scons wrmovie.view} to view a movie of the pulse in
+\texttt{wav} propagate through the medium with variable density.
+
+\item \texttt{scons wcomp} to compare snapshots of the wavefield
+for the two cases.
+
+\item \texttt{scons dcomp} to compare the data recorded at the surface
+for the two cases.
+
+\end{itemize}
+
+Initially, the left and right panels in \texttt{wcomp} and 
+\texttt{dcomp} are identical. After you modify the program, the 
+two panels will change. Are you sure you obtained correct results?
+
+\end{enumerate}
+
+% ------------------------------------------------------------
+
+\section{Wrap-up}
+
+When you are done, rebuild this document and 
+print your answers. This homework is due in class $2$ weeks
+from the day in which it was handed-out.
+
+% ------------------------------------------------------------
+
+\section{Resources}
+
+\begin{itemize}
+\item RSF
+\item scons
+\item Python
+\item C
+\end{itemize}
