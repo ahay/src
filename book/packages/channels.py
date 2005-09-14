@@ -571,8 +571,9 @@ def add_noise_reservoir (prefix='',bk_std_dev=0,sd_std_dev=0):
     
     noises = []
     for i in range(15): noises.append('layer_%02d_noise' % (i+1))
-        
-    Flow ('sd_rfield',noises,'add mode=a ${SOURCES[1:15]}')
+    
+    Flow ('sd_rfield',noises,
+          'cat axis=4 ${SOURCES[1:15]} | stack axis=4')
     
     sources = [prefix+'phi',prefix+'bk_sim_01_real',
                'ch_mask_xypad','sd_rfield',
