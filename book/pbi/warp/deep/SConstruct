@@ -1,4 +1,5 @@
 from rsfproj import *
+import math
 
 Flow(['synth','vpvs'],None,
      'randrefl nr=1000 vpvs=${TARGETS[1]} func=m d1=0.004 tscale=6')
@@ -165,7 +166,7 @@ Plot('bwiscan','iscan',greyscan(0.9,1.1) + ' color=I')
 #    return 'blindpick2 eps=%g | spline pattern=${SOURCES[1]}' % eps
 
 def blindpick(eps=1):
-    return 'blindpick2 eps=%g' % (eps*1000)
+    return 'pick rect1=%d' % int(math.sqrt(eps*12000))
 
 def pickplot(min,max,col=7,fat=1):
     return '''graph transp=y min2=%g max2=%g min1=0 max1=6

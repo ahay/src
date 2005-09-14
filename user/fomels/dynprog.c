@@ -104,6 +104,10 @@ static float find_minimum(int ic, int nc, int jc, float c, float *pick)
 	*pick = ic-1;
 	return fm;
     }
+    if (f0 < 0.5*b*a) {
+      *pick = ic;
+      return f0;
+    }
     f0 -= 0.5*b*a;
     *pick=ic+a;
     return f0;
