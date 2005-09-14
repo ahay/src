@@ -11,9 +11,9 @@
 \item Log into your class account and prepare for the assignment:
 
 \begin{itemize}
-\item \texttt{cd \$RSFBOOK} and run \texttt{scons update} \par
+\item \texttt{cd ~/geo391} and run \texttt{scons update} \par
 to bring the latest class assignment to your local directory.
-\item \texttt{cd \$RSFBOOK/geo391/hw1} \par
+\item \texttt{cd ~/geo391/hw1} \par
 to change directory to your current homework.
 \end{itemize}
 
@@ -59,7 +59,7 @@ in this homework document.
 We will use this setup in future labs, so try to get familiar with
 it as much as possible to avoid being distracted in future labs.
 
-\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1a}
+\item \texttt{cd ~/geo391/hw1/hw1a}
 
 \item open the \texttt{SConstruct} file in your favorite text editor.
 
@@ -109,14 +109,15 @@ plots for the model and a wavefield snapshot (acquisition overlain),
 and recorded data.
 
 Each triplet model-wavefield-data is annotated with a balloon
-label with a letter (e.g. A). Modify the \texttt{x0} and \texttt{y0}
-parameters in the \texttt{SConstruct} file to indicate a consistent 
-event across all 3 figures.
+label with a letter (e.g. A). 
+Modify the \texttt{x0} and \texttt{y0} parameters in the 
+\texttt{SConstruct} file to indicate a consistent event across 
+all 3 figures for each model. By default, the labels are in
+arbitrary positions that do not point to anything in particular.
 
-Use section ``Discussion''
-to list all of them in this document and describe what you 
-wanted to indicate. For example, you can point at 
-a reflector on the model plot,
+Use section ``Discussion'' to list all of them in this document 
+and describe what you wanted to indicate. For example, you can 
+point at a reflector on the model plot,
 a wave reflected from this reflector in the wavefield plot and
 the same reflected wave in the acquired data.
 
@@ -180,7 +181,7 @@ Don't forget to uncomment the plots in \texttt{homework1.tex}.
 
 \begin{enumerate}
 
-\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1b}
+\item \texttt{cd ~/geo391/hw1/hw1b}
 
 \item The file \texttt{AFDM.c} is a \texttt{C} program
 for time-domain acoustic finite-difference modeling.
