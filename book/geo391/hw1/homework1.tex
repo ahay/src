@@ -19,25 +19,35 @@ to change directory to your current homework.
 
 \item Open the file \texttt{homework1} in your favorite text editor
 and change the name at the top of the file.
-
-\item Run \texttt{scons homework1.read} to build and 
-read this file.
+Run \texttt{scons homework1.read} to build and read this file.
 
 \item This homework has $2$ parts. 
-Part $1$ is mandatory (max $100$ points).
-Part $2$ is optional but with extra credit (max $50$ points).
+Part $A$ is mandatory (max $100$ points).
+Part $B$ is optional but with extra credit (max $50$ points).
+
+If you answer only part $A$, \texttt{cd hw1a},
+run the commands in this directory according to the 
+instructions. When you are done, run \texttt{scons lock} and
+return to the \texttt{hw1} directory.
+
+If you also answer part $B$, \texttt{cd hw1b},
+run the commands in this directory according to the 
+instructions. When you are done, run \texttt{scons lock} and
+return to the \texttt{hw1} directory.
+
+When you are done, uncomment the ``plot'' lines in this document
+to include your figures, add your answers, and run
+\texttt{scons homework1.read}. 
+When you are happy with your answer, print the document and
+bring it to class. Don't forget to update your name on the file.
 
 \end{enumerate}
 
 % ------------------------------------------------------------
 
-\section{Assignment}
+\section{Part A: SConstruct assignment}
 
 \begin{enumerate}
-
-\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1a}
-
-\item open the \texttt{SConstruct} file in your favorite text editor.
 
 \item In this assignment, you will get familiar with 
 the computer library called \texttt{RSF} and the reproducible testing
@@ -48,6 +58,10 @@ observe and comment on the results, and finally include comments
 in this homework document.
 We will use this setup in future labs, so try to get familiar with
 it as much as possible to avoid being distracted in future labs.
+
+\item \texttt{cd \$RSFBOOK/geo391/hw1/hw1a}
+
+\item open the \texttt{SConstruct} file in your favorite text editor.
 
 \item Observe typical commands in the \texttt{SConstruct} file:
 \begin{itemize}
@@ -80,6 +94,8 @@ produces output \texttt{mm.vpl} from input
 \item \texttt{Result} is similar with \texttt{Plot} except
 that outputs
 
+\end{itemize}
+
 \item In this homework, you will analyze wave propagation modeled
 using the acoustic wave-equation. 
 You will observe and discuss $3$ pre-defined models and 
@@ -87,26 +103,28 @@ $2$ pre-defined acquisition geometries (experiments).
 Feel free to add more examples by replicating the rules in the
 \texttt{SConstruct} file.
 
+\item 
 For each model-experiment pair, you will observe
 plots for the model and a wavefield snapshot (acquisition overlain),
 and recorded data.
 
-\item Each triplet model-wavefield-data is annotated with a balloon
-label with a letter (e.g. A). Use the model in the 
-\texttt{SConstruct} file to add at least one more label 
-indicating one reflector/reflection observation.
+Each triplet model-wavefield-data is annotated with a balloon
+label with a letter (e.g. A). Modify the \texttt{x0} and \texttt{y0}
+parameters in the \texttt{SConstruct} file to indicate a consistent 
+event across all 3 figures.
 
 Use section ``Discussion''
 to list all of them in this document and describe what you 
 wanted to indicate. For example, you can point at 
 a reflector on the model plot,
-a reflected wave in the wavefield plot and
+a wave reflected from this reflector in the wavefield plot and
 the same reflected wave in the acquired data.
-Identify direct arrivals, reflected arrivals, multiple reflection or 
-anything else that you might find interesting.
-This exercise is about being creative and seeing things.
 
-\end{itemize}
+You can identify direct arrivals, reflected arrivals, 
+multiple reflection or anything else that you might find 
+interesting.
+This exercise is about being creative and seeing things,
+as well as getting used to the  \texttt{SConstruct} setup.
 
 \end{enumerate}
 
@@ -118,98 +136,47 @@ This exercise is about being creative and seeing things.
 
 \begin{enumerate}
 
-\item Model 0
-
-      \begin{enumerate}
-
-      \item Experiment 0
+\item Model 0, experiment 0, label A
 %      \plot*{me-0-0}{width=3.0in}{Model 0, experiment 0}
 %      \plot*{ww-0-0}{width=3.0in}{Model 0, experiment 0}
 %      \plot*{dd-0-0}{width=3.0in}{Model 0, experiment 0}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \item Experiment 1
+\item Model 0, experiment 1, label B
 %      \plot*{me-0-1}{width=3.0in}{Model 0, experiment 1}
 %      \plot*{ww-0-1}{width=3.0in}{Model 0, experiment 1}
 %      \plot*{dd-0-1}{width=3.0in}{Model 0, experiment 1}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \end{enumerate}
-
-
-\item Model 1
-
-      \begin{enumerate}
-
-      \item Experiment 0
+\item Model 1, experiment 0, label C
 %      \plot*{me-0-0}{width=3.0in}{Model 1, experiment 0}
 %      \plot*{ww-0-0}{width=3.0in}{Model 1, experiment 0}
 %      \plot*{dd-0-0}{width=3.0in}{Model 1, experiment 0}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \item Experiment 1
+\item Model 1, experiment 1, label D
 %      \plot*{me-0-0}{width=3.0in}{Model 1, experiment 1}
 %      \plot*{ww-0-0}{width=3.0in}{Model 1, experiment 1}
 %      \plot*{dd-0-0}{width=3.0in}{Model 1, experiment 1}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \end{enumerate}
-
-\item Model 2
-
-      \begin{enumerate}
-
-      \item Experiment 0
+\item Model 2, experiment 0, label E
 %      \plot*{me-0-0}{width=3.0in}{Model 2, experiment 0}
 %      \plot*{ww-0-0}{width=3.0in}{Model 2, experiment 0}
 %      \plot*{dd-0-0}{width=3.0in}{Model 2, experiment 0}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \item Experiment 1
+\item Model 2, experiment 1, label F
 %      \plot*{me-0-0}{width=3.0in}{Model 2, experiment 1}
 %      \plot*{ww-0-0}{width=3.0in}{Model 2, experiment 1}
 %      \plot*{dd-0-0}{width=3.0in}{Model 2, experiment 1}
 
-            \begin{itemize}
-	    \item Label A
-	    \item Label B
-	    \end{itemize}
-
-      \end{enumerate}
-
-\item When you are done, run
-\par \texttt{scons lock}
-\par to archive your pictures so they can be included in your answer.
-Don't forget to uncomment the plots in \texttt{homework.tex}.
-
 \end{enumerate}
 
+When you are done, run \texttt{scons lock} to archive your pictures 
+so they can be included in your answer.
+Don't forget to uncomment the plots in \texttt{homework1.tex}.
 
 % ------------------------------------------------------------
 
 \inputdir{hw1b}
 
-\section{Programming assignment (extra credit)}
+\section{Part B: programming assignment (extra credit)}
 
 \begin{enumerate}
 
@@ -285,14 +252,14 @@ for the two cases.
 
 Initially, the left and right panels of \texttt{wcomp} and 
 \texttt{dcomp} are identical. After you modify the program, the 
-two panels will change. Are you sure you obtained correct results?
-
-\item When you are done, run
-\par \texttt{scons lock}
-\par to archive your pictures so they can be included in your answer.
-Don't forget to uncomment the plots in \texttt{homework.tex}.
+two panels will change. Are you sure that you obtained correct 
+results? If yes, explain why?
 
 \end{enumerate}
+
+When you are done, run \texttt{scons lock} to archive your pictures 
+so they can be included in your answer.
+Don't forget to uncomment the plots in \texttt{homework1.tex}.
 
 %\plot{mcomp}{width=6.0in}{Model}
 %\plot{wcomp}{width=6.0in}{Wavefield}
