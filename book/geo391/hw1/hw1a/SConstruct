@@ -49,7 +49,7 @@ def igrey(custom,par):
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t(s)" label2="x(ft)" %s
+    title="" pclip=97 label1="t(s)" label2="x(ft)" %s
     min2=%g max2=%g
     screenratio=%g screenht=10 labelsz=4
     ''' % (custom,par['xmin'],par['xmax'],par['dratio'])
@@ -66,7 +66,7 @@ def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
+    title="" pclip=97 label1="z(ft)" label2="x(ft)" %s
     screenratio=%g screenht=10 labelsz=4
     ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom,par['iratio'])
 
@@ -180,8 +180,24 @@ Flow('mm1','vel',
      ''' % par)
 Flow('mm2','vel','window n2=%(nx)d min2=%(ox)g' % par)
 # ------------------------------------------------------------
-# F-D modeling
 
+# label parameters
+labpar = ' xt=1.000000 yt=1.000000 lab_fat=0 lab_color=7 boxit=1 size=0.250000 pointer=1'
+
+# ml = model     label
+# wl = wavefield label
+# dl = data      label
+lab = {
+    'ml-0-0':'x0=6 y0=5 label="A"','wl-0-0':'x0=6 y0=5 label="A"','dl-0-0':'x0=6 y0=5 label="A"',
+    'ml-0-1':'x0=6 y0=5 label="B"','wl-0-1':'x0=6 y0=5 label="B"','dl-0-1':'x0=6 y0=5 label="B"',
+    'ml-1-0':'x0=6 y0=5 label="C"','wl-1-0':'x0=6 y0=5 label="C"','dl-1-0':'x0=6 y0=5 label="C"',
+    'ml-1-1':'x0=6 y0=5 label="D"','wl-1-1':'x0=6 y0=5 label="D"','dl-1-1':'x0=6 y0=5 label="D"',
+    'ml-2-0':'x0=6 y0=5 label="E"','wl-2-0':'x0=6 y0=5 label="E"','dl-2-0':'x0=6 y0=5 label="E"',
+    'ml-2-1':'x0=6 y0=5 label="F"','wl-2-1':'x0=6 y0=5 label="F"','dl-2-1':'x0=6 y0=5 label="F"',
+    }
+# change x0 and y0 to indicate a consistent event
+
+# ------------------------------------------------------------
 # loop over models
 for im in range(par['nm']):
     mm = 'mm' + str(im)
@@ -189,11 +205,20 @@ for im in range(par['nm']):
 
     # loop over experiments
     for ie in range(par['ne']):
+
+        # labels
+        ml = 'ml' + '-' + str(im) + '-' + str(ie)
+        wl = 'wl' + '-' + str(im) + '-' + str(ie)
+        dl = 'dl' + '-' + str(im) + '-' + str(ie)
+        
+        Plot(ml,None,'box %s' % lab[ml] + labpar)
+        Plot(wl,None,'box %s' % lab[wl] + labpar)
+        Plot(dl,None,'box %s' % lab[dl] + labpar)
+
         ss = 'ss' + str(ie)
         rr = 'rr' + str(ie)
 
         me = 'me' + '-' + str(im) + '-' + str(ie) # model
-
         dd = 'dd' + '-' + str(im) + '-' + str(ie) # data 
         ww = 'ww' + '-' + str(im) + '-' + str(ie) # wavefield
 
@@ -201,13 +226,16 @@ for im in range(par['nm']):
         amodel(dd,ww,'wav',mm,ss,rr,'free=y')
         
         Plot(ww,'window n3=1 f3=12 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |'% par
-             + igrey('pclip=99',par))
+             + igrey('pclip=97',par))
+        Plot(dd,'window j2=4 | transp |'
+             + dgrey('',par))
 
-        Result(me,[mm,ss,rr],'Overlay')
-        Result(ww,[ww,ss,rr],'Overlay')
         Result(ww+'-movie',ww,wgrey('gainpanel=a',par))
-        Result(dd,dd,'window j2=4 | transp |' + dgrey('',par))
-
+        
+        Result(me,[mm,ss,rr,ml],'Overlay')
+        Result(ww,[ww,ss,rr,wl],'Overlay')
+        Result(dd,[dd,      dl],'Overlay')
+        
 # ------------------------------------------------------------
 
 End()
