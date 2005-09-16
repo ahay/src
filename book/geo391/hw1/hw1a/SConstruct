@@ -5,7 +5,7 @@ from rsfproj import *
 
 # ------------------------------------------------------------
 par = {
-    'nt':10000,  # no of time steps
+    'nt':8000,   # no of time steps
     'dt':0.001,  #       time sampling
     'ot':0,      #       time origing
     'kt':100,    # wavelet delay
