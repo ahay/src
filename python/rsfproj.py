@@ -226,6 +226,7 @@ class Project(Environment):
                          'DISPLAY': os.environ.get('DISPLAY'),
                          'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
                          'HOME': os.environ.get('HOME'),
+                         'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Retrieve':Retrieve,

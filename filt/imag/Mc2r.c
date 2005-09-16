@@ -226,4 +226,5 @@ int main(int argc, char* argv[])
 	sf_floatwrite(mapRC[0],ag.n*at.n,Fo);
     }
 
+    exit(0);
 }

@@ -37,7 +37,8 @@ float sf_quadratic_solve (float a, float b, float c)
     float d;
     
     if (fabsf(c) < SF_EPS && 
-	((b > SF_EPS && a  < -SF_EPS) || (b < - SF_EPS && a > SF_EPS))) 
+	((b >   SF_EPS && a < -SF_EPS) || 
+	 (b < - SF_EPS && a >  SF_EPS))) 
 	return (-2.*b/a);
     
     d = b*b - a*c;

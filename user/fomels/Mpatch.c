@@ -43,7 +43,7 @@ int main (int argc, char *argv[])
     off_t nall, n12;
     float *u, *t, *r;
     char key[4], *tmpname, *whtname;
-    FILE *tmp, *wht;
+    FILE *tmp=NULL, *wht=NULL;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -116,7 +116,8 @@ int main (int argc, char *argv[])
     n12 = w12 = p12 = 1;    
     for (j=0; j < dim; j++) {
 	if (verb) 
-	    sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",j,n[j],j,w[j],j,p[j]);
+	    sf_warning("n[%d]=%d\tw[%d]=%d\tp[%d]=%d",
+		       j,n[j],j,w[j],j,p[j]);
 	    
 	n12 *= n[j];
 	w12 *= w[j];

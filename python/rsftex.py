@@ -588,7 +588,7 @@ class TeXPaper(Environment):
             for mth in mths:
                 pdf = re.sub(r'([^/]+)\.ma$',
                              os.path.join(resdir,'\g<1>.pdf'),mth)
-                if mathematica:
+                if mathematica and epstopdf:
                     self.Math(pdf,mth)
                 crfigs.append(pdf)
             mathdir = os.path.join(self.docdir,'Math')
