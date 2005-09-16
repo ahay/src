@@ -1,0 +1,248 @@
+## 
+ # F-D modeling 
+ ##
+from rsfproj import *
+
+# ------------------------------------------------------------
+par = {
+    'nt':2000,   # no of time steps
+    'dt':0.0005, #       time sampling
+    'ot':0,      #       time origing
+    'kt':50,     # wavelet delay
+    #
+    'ns':1,      # no of shots
+    'os':2000,   #       shots origin
+    'ds':20,     #       shots sampling
+    #
+    'nr':401,    # no of receivers
+    'or':0,      #       receivers origin
+    'dr':2.5,    #       receivers sampling
+    #
+    'ne':1,      # no of experiments
+    'nm':3,      # no of models
+    #
+    'nx':401, 'ox':0, 'dx':2.5,
+    'nz':301, 'oz':0, 'dz':2.5
+    }
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['tmin']=par['ot']
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# plotting functions
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=0.75 screenht=10
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99 label1="t(s)" label2="x(m)" %s
+    min2=%g max2=%g
+    screenratio=1.5 screenht=21
+    ''' % (custom,par['xmin'],par['xmax'])
+
+def pgraph(custom,par):
+    return '''
+    graph labelrot=n  %s
+    yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
+    min1=%g max1=%g min2=%g max2=%g
+    screenratio=0.75 screenht=10 
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+
+def wgrey(custom,par):
+    return '''
+    window min1=%g max1=%g min2=%g max2=%g |
+    grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
+    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    screenratio=0.75 screenht=10 
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
+
+# ------------------------------------------------------------
+# modeling function
+def amodel(dat,wfl,wav,vel,den,sou,rec,custom):
+    Flow([dat,wfl],[wav,vel,den,sou,rec],
+         '''
+         afmod
+         verb=y abc=y free=n snap=y jsnap=50 %s
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         ''' % custom)
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=50 |
+         scale axis=123 |
+         put label1=t label2=x label3=y 
+         ''' % par)    
+Result('wav','wav','window n1=200 | graph title="" label1="t(s)" label2=')
+
+# ------------------------------------------------------------
+# experiments
+
+Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
+Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+
+# receivers
+Flow('xr','r_','math output="x1"')
+for ir in ('000','100','200','300','400','500','600','700'):
+    zr = 'zr' + ir
+    Flow(zr,'r_','math output=%s' % ir)
+    rr = 'rr' + ir
+    Flow(rr,['xr',zr],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+Flow('rr',['rr000','rr100','rr200','rr300','rr400','rr500','rr600','rr700'],
+     'cat axis=2 space=n ${SOURCES[1:8]}')
+Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
+     + pgraph('symbol=o plotcol=1',par))
+
+# sources
+Flow('zs','s_','math output=0')
+Flow('xs','s_','math output=500')
+Flow('rs','s_','math output=1')
+Flow('ss',['xs','zs','rs'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + pgraph('symbol=* plotcol=2',par))
+
+# ------------------------------------------------------------
+# smooth background
+Flow('vo',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1500+1.0*x1" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('ro',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2000" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+# rough perturbations
+for jm in range(par['nm']):
+    if(jm==0):
+        par['vmag']='0.0'
+        par['dmag']='0.1,-.1,0.0,0.0'
+    if(jm==1):
+        par['vmag']='0.0'
+        par['dmag']='0.0,0.0,0.1,-.1'
+    if(jm==2):
+        par['vmag']='-0.3'
+        par['dmag']='0.0,0.0,0.1,-.1'
+
+    vx = 'vx' + str(jm)
+    Flow(vx,None,
+         '''
+         spike nsp=1 mag=%(vmag)s
+         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=041 l1=101 
+         n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=181 l2=221 |
+         smooth rect1=20 rect2=20 repeat=3
+         ''' % par)
+        
+    rx = 'rx' + str(jm)
+    Flow(rx,None,
+         '''
+         spike nsp=4 mag=%(dmag)s
+         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=161,161,121,201 
+         n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=001,201,001,101 l2=200,401,301,401
+         ''' % par)
+
+# loop over models
+for im in range(par['nm']):
+    ve = 've' + str(im)
+    vx = 'vx' + str(im)
+    wv = 'wv' + str(im)
+    dv = 'dv' + str(im)
+    
+    de = 'de' + str(im)
+    rx = 'rx' + str(im)
+    wr = 'wr' + str(im)
+    dr = 'dr' + str(im)
+
+    ww = 'ww' + str(im)
+    dd = 'dd' + str(im)
+
+    # combined smooth+rough
+    Flow(ve,['vo',vx],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
+    Flow(de,['ro',rx],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
+    Plot(ve,igrey('allpos=y bias=1100 pclip=100',par))
+    Plot(de,igrey('allpos=y bias=1500 pclip=100',par))
+    Result(ve,[ve,'rr','ss'],'Overlay')
+    Result(de,[de,'rr','ss'],'Overlay')
+
+    # modeling 
+    amodel(dv,wv,'wav',ve,de,'ss','rr','free=n dens=n')
+    amodel(dr,wr,'wav',ve,de,'ss','rr','free=n dens=y')
+
+    Flow(ww,[wr,wv],'add scale=1,-1 ${SOURCES[1]}')
+    Flow(dd,[dr,dv],'add scale=1,-1 ${SOURCES[1]}')
+
+    Result(wv,wgrey('gainpanel=a pclip=99',par))
+    Result(wr,wgrey('gainpanel=a pclip=99',par))
+    Result(ww,wgrey('gainpanel=a pclip=99',par))
+
+# ------------------------------------------------------------
+
+for im in range(par['nm']):
+    uscube = 'us'+str(im)
+    urcube = 'ur'+str(im)
+
+    usbyte = uscube + 'byte'
+    urbyte = urcube + 'byte'
+    usbar  = uscube + 'bar'
+    urbar  = urcube + 'bar'
+    
+    Flow(uscube,'dv'+str(im),
+         'window f2=%(kt)d | transp | put n2=%(nr)d n3=8 o3=0 d3=1' % par)
+    Flow(urcube,'dd'+str(im),
+         'window f2=%(kt)d | transp | put n2=%(nr)d n3=8 o3=0 d3=1' % par)
+
+    Flow([usbyte,usbar],uscube,
+         'byte bar=${TARGETS[1]} gainpanel=all pclip=99')
+    Flow([urbyte,urbar],urcube,
+         'byte bar=${TARGETS[1]} gainpanel=all pclip=99')
+
+    for ir in ('000','100','200','300','400','500','600','700'):
+        win = int(ir) / 100
+        
+        us = uscube + '-' + ir
+        ur = urcube + '-' + ir
+        uu = 'uu' + str(im) + '-' + ir
+                
+        Plot(us,[usbyte,usbar],'window n3=1 f3=%d |' % win
+             + dgrey('bar=${SOURCES[1]} wanttitle=y title=%s' %ir,par))
+        Plot(ur,[urbyte,urbar],'window n3=1 f3=%d |' % win
+             + dgrey('bar=${SOURCES[1]} wanttitle=y title=%s' %ir,par))
+        Plot  (uu,[us,ur],'SideBySideIso')
+        Result(uu,[us,ur],'SideBySideIso')
+        
+Result('uu0all',['uu0-000','uu0-100','uu0-200','uu0-300','uu0-400','uu0-500','uu0-600','uu0-700'],'Movie')
+Result('uu1all',['uu1-000','uu1-100','uu1-200','uu1-300','uu1-400','uu1-500','uu1-600','uu1-700'],'Movie')
+Result('uu2all',['uu2-000','uu2-100','uu2-200','uu2-300','uu2-400','uu2-500','uu2-600','uu2-700'],'Movie')
+
+# ------------------------------------------------------------
+
+End()
