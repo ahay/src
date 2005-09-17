@@ -205,10 +205,12 @@ for im in range(par['nm']):
     Flow(ww,[wr,wv],'add scale=1,-1 ${SOURCES[1]}')
     Flow(dd,[dr,dv],'add scale=1,-1 ${SOURCES[1]}')
 
+    # wavefield movies
     Result(wv,wgrey('gainpanel=a pclip=99',par))
     Result(wr,wgrey('gainpanel=a pclip=99',par))
     Result(ww,wgrey('gainpanel=a pclip=99',par))
 
+    #
     Plot(wv+'o',wv,'window n3=1 f3=12|' + wgrey('pclip=98',par))
     Plot(wr+'o',wr,'window n3=1 f3=12|' + wgrey('pclip=98',par))
     Plot(ww+'o',ww,'window n3=1 f3=12|' + wgrey('pclip=98',par))
@@ -226,14 +228,13 @@ for im in range(par['nm']):
 # ------------------------------------------------------------
 
 for im in range(par['nm']):
-    uscube = 'us'+str(im)
-    urcube = 'ur'+str(im)
-
+    uscube = 'uscube'+str(im)
+    urcube = 'urcube'+str(im)
     usbyte = uscube + 'byte'
     urbyte = urcube + 'byte'
     usbar  = uscube + 'bar'
     urbar  = urcube + 'bar'
-    
+
     Flow(uscube,'dv'+str(im),
          'window f2=%(kt)d | transp | put n2=%(nr)d n3=8 o3=0 d3=1' % par)
     Flow(urcube,'dd'+str(im),
@@ -257,11 +258,50 @@ for im in range(par['nm']):
              + dgrey('bar=${SOURCES[1]} wanttitle=y title=%s' %ir,par))
         Plot  (uu,[us,ur],'SideBySideIso')
         Result(uu,[us,ur],'SideBySideIso')
+
+    wscube = 'wscube'+str(im)
+    wrcube = 'wrcube'+str(im)
+    wsbyte = wscube + 'byte'
+    wrbyte = wrcube + 'byte'
+    wsbar  = wscube + 'bar'
+    wrbar  = wrcube + 'bar'
+    
+    Flow(wscube,'wv'+str(im),
+         'put o3=-%s' % str(par['kt']*par['dt']) )
+    Flow(wrcube,'ww'+str(im),
+         'put o3=-%s' % str(par['kt']*par['dt']) )
+
+    Flow([wsbyte,wsbar],wscube,
+         'byte bar=${TARGETS[1]} gainpanel=all pclip=99')
+    Flow([wrbyte,wrbar],wrcube,
+         'byte bar=${TARGETS[1]} gainpanel=all pclip=99')
+
+    for it in range(9):
+        wit = 0.1 * it
+        
+        ws = wscube + '-' + str(it)
+        wr = wrcube + '-' + str(it)
+        wf = 'wf' + str(im) + '-' + str(it)
+
+        Plot(ws,[wsbyte,wsbar],'window n3=1 min3=%s |' % wit
+             + wgrey('bar=${SOURCES[1]} wanttitle=y title=%s' %wit,par))
+        Plot(wr,[wrbyte,wrbar],'window n3=1 min3=%s |' % wit
+             + wgrey('bar=${SOURCES[1]} wanttitle=y title=%s' %wit,par))
+
+        Plot  (wf,[ws,wr],'SideBySideIso')
+        Result(wf,[ws,wr],'SideBySideIso')
         
 Result('uu0all',['uu0-000','uu0-100','uu0-200','uu0-300','uu0-400','uu0-500','uu0-600','uu0-700'],'Movie')
 Result('uu1all',['uu1-000','uu1-100','uu1-200','uu1-300','uu1-400','uu1-500','uu1-600','uu1-700'],'Movie')
 Result('uu2all',['uu2-000','uu2-100','uu2-200','uu2-300','uu2-400','uu2-500','uu2-600','uu2-700'],'Movie')
 
+Result('wf0all',['wf0-0','wf0-1','wf0-2','wf0-3','wf0-4','wf0-5','wf0-6','wf0-7','wf0-8'],'Movie')
+Result('wf1all',['wf1-0','wf1-1','wf1-2','wf1-3','wf1-4','wf1-5','wf1-6','wf1-7','wf1-8'],'Movie')
+Result('wf2all',['wf2-0','wf2-1','wf2-2','wf2-3','wf2-4','wf2-5','wf2-6','wf2-7','wf2-8'],'Movie')
+
+pplot.p4x1('wf0fig','wf0-1','wf0-2','wf0-3','wf0-4',0.4,0.4,-5.5)
+pplot.p4x1('wf1fig','wf1-1','wf1-2','wf1-3','wf1-4',0.4,0.4,-5.5)
+pplot.p4x1('wf2fig','wf2-1','wf2-2','wf2-3','wf2-4',0.4,0.4,-5.5)
 # ------------------------------------------------------------
 
 End()
