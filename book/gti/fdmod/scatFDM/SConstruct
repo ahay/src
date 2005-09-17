@@ -2,6 +2,7 @@
  # F-D modeling 
  ##
 from rsfproj import *
+import pplot
 
 # ------------------------------------------------------------
 par = {
@@ -39,33 +40,34 @@ par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" pclip=99 label1="z(m)" label2="x(m)"
     min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.75 screenht=10
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+    screenratio=0.75 screenht=10 crowd=0.9 %s
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
 
 def dgrey(custom,par):
     return '''
+    window max1=0.7 |
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t(s)" label2="x(m)" %s
+    title="" pclip=99 label1="t(s)" label2="x(m)"
     min2=%g max2=%g
-    screenratio=1.5 screenht=21
-    ''' % (custom,par['xmin'],par['xmax'])
+    screenratio=1.5 screenht=20 crowd=0.9 %s
+    ''' % (par['xmin'],par['xmax'],custom)
 
 def pgraph(custom,par):
     return '''
-    graph labelrot=n  %s
+    graph labelrot=n
     yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
     min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.75 screenht=10 
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+    screenratio=0.75 screenht=10 crowd=0.9  %s
+    ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
 
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
-    screenratio=0.75 screenht=10 
+    title="" pclip=99 label1="z(m)" label2="x(m)" 
+    screenratio=0.75 screenht=10 crowd=0.9 %s
     ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
 
 # ------------------------------------------------------------
@@ -132,7 +134,7 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 # smooth background
 Flow('vo',None,
      '''
-     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1500+1.0*x1" |
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2100+0.5*x1" |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 Flow('ro',None,
@@ -150,16 +152,16 @@ for jm in range(par['nm']):
         par['vmag']='0.0'
         par['dmag']='0.0,0.0,0.1,-.1'
     if(jm==2):
-        par['vmag']='-0.3'
+        par['vmag']='-0.60'
         par['dmag']='0.0,0.0,0.1,-.1'
 
     vx = 'vx' + str(jm)
     Flow(vx,None,
          '''
          spike nsp=1 mag=%(vmag)s
-         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=041 l1=101 
+         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=021 l1=081 
          n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=181 l2=221 |
-         smooth rect1=20 rect2=20 repeat=3
+         smooth rect1=20 rect2=20 repeat=5
          ''' % par)
         
     rx = 'rx' + str(jm)
@@ -189,9 +191,12 @@ for im in range(par['nm']):
     Flow(ve,['vo',vx],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
     Flow(de,['ro',rx],'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
     Plot(ve,igrey('allpos=y bias=1100 pclip=100',par))
-    Plot(de,igrey('allpos=y bias=1500 pclip=100',par))
-    Result(ve,[ve,'rr','ss'],'Overlay')
-    Result(de,[de,'rr','ss'],'Overlay')
+    Plot(de,igrey('allpos=y bias=1700 pclip=100',par))
+    Plot(ve+'o',[ve,'rr','ss'],'Overlay')
+    Plot(de+'o',[de,'rr','ss'],'Overlay')
+
+    model = 'model' + str(im)
+    Result(model,[ve+'o',de+'o'],'SideBySideIso')
 
     # modeling 
     amodel(dv,wv,'wav',ve,de,'ss','rr','free=n dens=n')
@@ -203,6 +208,20 @@ for im in range(par['nm']):
     Result(wv,wgrey('gainpanel=a pclip=99',par))
     Result(wr,wgrey('gainpanel=a pclip=99',par))
     Result(ww,wgrey('gainpanel=a pclip=99',par))
+
+    Plot(wv+'o',wv,'window n3=1 f3=12|' + wgrey('pclip=98',par))
+    Plot(wr+'o',wr,'window n3=1 f3=12|' + wgrey('pclip=98',par))
+    Plot(ww+'o',ww,'window n3=1 f3=12|' + wgrey('pclip=98',par))
+    wflds = 'wflds' + str(im)
+    Plot(wflds,[wv+'o',ww+'o'],'SideBySideIso')
+
+    Plot(dv,dv,'window n1=%(nr)d f2=%(kt)d | transp|'%par + dgrey('pclip=98',par))
+    Plot(dr,dr,'window n1=%(nr)d f2=%(kt)d | transp|'%par + dgrey('pclip=98',par))
+    Plot(dd,dd,'window n1=%(nr)d f2=%(kt)d | transp|'%par + dgrey('pclip=98',par))
+    sdata = 'sdata' + str(im)
+    Plot(sdata,[dv,dd],'SideBySideIso')
+
+    pplot.p2x1(wflds,sdata,wflds,0.65,0.65,-10)
 
 # ------------------------------------------------------------
 
