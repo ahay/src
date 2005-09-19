@@ -1,13 +1,16 @@
 from rsfproj import *
+import random, string
+
+random.seed(2005)
 
 Fetch('lena.img','imgs')
 Flow('lena','lena.img','byte2rsf n1=512 n2=513 | window f2=1')
 
-def grey(title):
+def grey(title,allpos=1):
     return '''
-    grey transp=n allpos=y title="%s"
+    grey transp=n allpos=%d title="%s"
     color=b screenratio=1 wantaxis=n
-    ''' % title
+    ''' % (allpos,title)
 
 Result('lena',grey('Lena'))
 
@@ -17,15 +20,21 @@ Result('haar1',grey('1-D Haar Transform'))
 Flow('haar2','haar1','dwt type=h')
 Result('haar2',grey('2-D Haar Transform'))
 
-for case in ('lena','slena'):
-    Result(case+'f',case,
-       '''
-       transp |
-       put d1=0.004 d2=0.01 o2=0 o1=0 |
-       spectra2 |
-       sfgrey color=j title="%s Spectrum"
-       label2=Wavenumber label1=Frequency allpos=y
-       ''' % ('Lena','Seismic Lena')[case=='slena'])
+Flow('linear1','lena','transp | dwt type=l | transp')
+Result('linear1',grey('1-D Wavelet Transform'))
+
+Flow('linear2','linear1','dwt type=l')
+Result('linear2',grey('2-D Wavelet Transform'))
+
+for scale in (2,4,8,16,32,64,128,256,512):
+    lena = 'lena%d' % scale
+    Flow(lena,'linear2',
+         '''
+         window n2=%d n1=%d |
+         dwt type=l inv=y adj=y |
+         transp | dwt type=l inv=y adj=y | transp
+         ''' % (scale,scale))
+    Result(lena,grey('Scale=%d' % scale))
 
 Flow('slena','lena',
      '''
@@ -37,12 +46,54 @@ Flow('slena','lena',
      bandpass flo=15 fhi=45 |
      transp
      ''')
-Result('slena',grey('Seismic Lena'))
+Result('slena',grey('Seismic Lena',0))
+
+
+nsp = 100
+k2 = string.join(map(lambda x: str(random.randint(1,512)), xrange(nsp)),',')
+k1 = string.join(map(lambda x: str(random.randint(1,512)), xrange(nsp)),',')
+    
+Flow('imps',None,
+     '''
+     spike nsp=%d k1=%s k2=%s n1=512 n2=512 |
+     dwt type=l inv=y adj=y |
+     transp | dwt type=l inv=y adj=y | transp
+     ''' % (nsp,k1,k2))
+Result('imps',grey('Wavelets',0))
+
+k1 = string.join(map(lambda x: str(x+1), xrange(512)),',')
+
+Flow('spikes',None,
+     'math n1=128 n2=128 output="abs(x1-x2)" | mask max=0.5 | dd type=float') 
+for type in ('haar','linear'):
+    imps = 'i'+type
+    Flow(imps,'spikes','dwt type=%s inv=y adj=y' % type)
+    Result(imps,'grey title="%s Wavelets" label1=Time label2=Scale' % string.capitalize(type))
+    fft = 'f' + type
+    Flow(fft,imps,'spectra all=n')
+    Result(fft,'''
+    grey title="%s Wavelets Spectra" label1=Frequency label2=Scale
+    allpos=y color=j
+    ''' % string.capitalize(type))
+
+title = {'lena': 'Lena',
+         'slena': 'Seismic Lena',
+         'imps': 'Wavelets'}
+
+for case in title.keys():
+    Result('f'+case,case,
+       '''
+       transp |
+       put d1=0.004 d2=0.01 o2=0 o1=0 |
+       spectra2 |
+       sfgrey color=j title="%s Spectrum"
+       label2=Wavenumber label1=Frequency allpos=y
+       ''' % title[case])
 
 Flow('sdip','slena','transp | dip rect1=10 rect2=10 order=3')
 Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
 
 Flow('spwd','slena sdip','transp | pwd order=3 dip=${SOURCES[1]} | transp')
-Result('spwd',grey('Seismic Residual') + ' clip=34.4275')
+Result('spwd',grey('Seismic Residual',0) + ' clip=34.4275')
     
 End()

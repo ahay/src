@@ -32,13 +32,29 @@ static void linear(bool adj)
 
     if (adj) {
 	for (j=nt/2; j >= 1; j /= 2) {
-	    for (i=0; i < nt-j; i += 2*j) {
-		if (inv) {
-		    t[i]   -= t[i+j]/2;
+	    if (inv) {
+		for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i]   -= (t[i+j]+t[i-j])/4;
+		}
+		t[0] -= t[j]/2;
+		for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i+j] += (t[i]+t[i+2*j])/2;
+		}	 
+		for (; i < nt-j; i += 2*j) {
 		    t[i+j] += t[i];
-		} else {
-		    t[i+j] += t[i]/2;
-		    t[i]   -= t[i+j];
+		}
+	    } else {
+		for (i=2*j; i < nt-j; i += 2*j) {
+		    t[i+j] += t[i]/4;
+		    t[i-j] += t[i]/4;
+		}
+		t[j] += t[0]/2;
+		for (i=0; i < nt-2*j; i += 2*j) {
+		    t[i]     -= t[i+j]/2;
+		    t[i+2*j] -= t[i+j]/2;
+		}	 
+		for (; i < nt-j; i += 2*j) {
+		    t[i] -= t[i+j];
 		}
 	    }
 	}
@@ -46,9 +62,13 @@ static void linear(bool adj)
 	for (j=1; j <= nt/2; j *= 2) {
 	    for (i=0; i < nt-2*j; i += 2*j) {
 		t[i+j] -= (t[i]+t[i+2*j])/2;
-	    }	    
-	    for (i=0; i < nt-2*j; i += 2*j) {
-		t[i]   += (t[i+j]+t[i+2*j])/4;
+	    }	 
+	    for (; i < nt-j; i += 2*j) {
+		t[i+j] -= t[i];
+	    }
+	    t[0] += t[j]/2;
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i-j])/4;
 	    }
 	}
     }
@@ -92,6 +112,9 @@ void wavelet_init(int n, bool inv1, char type)
     switch(type) {
 	case 'h': 
 	    transform = haar;
+	    break;
+	case 'l':
+	    transform = linear;
 	    break;
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
