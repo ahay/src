@@ -1,0 +1,48 @@
+from rsfproj import *
+
+Fetch('lena.img','imgs')
+Flow('lena','lena.img','byte2rsf n1=512 n2=513 | window f2=1')
+
+def grey(title):
+    return '''
+    grey transp=n allpos=y title="%s"
+    color=b screenratio=1 wantaxis=n
+    ''' % title
+
+Result('lena',grey('Lena'))
+
+Flow('haar1','lena','transp | haar | transp')
+Result('haar1',grey('1-D Haar Transform'))
+
+Flow('haar2','haar1','haar')
+Result('haar2',grey('2-D Haar Transform'))
+
+for case in ('lena','slena'):
+    Result(case+'f',case,
+       '''
+       transp |
+       put d1=0.004 d2=0.01 o2=0 o1=0 |
+       spectra2 |
+       sfgrey color=j title="%s Spectrum"
+       label2=Wavenumber label1=Frequency allpos=y
+       ''' % ('Lena','Seismic Lena')[case=='slena'])
+
+Flow('slena','lena',
+     '''
+     transp |
+     put d1=0.004 d2=0.01 o2=0 o1=0 |
+     fft1 | fft3 |
+     dipfilter v1=-1.5 v2=-1 v3=1 v4=1.5 taper=2 pass=0 |
+     fft3 inv=y | fft1 inv=y |
+     bandpass flo=15 fhi=45 |
+     transp
+     ''')
+Result('slena',grey('Seismic Lena'))
+
+Flow('sdip','slena','transp | dip rect1=10 rect2=10 order=3')
+Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
+
+Flow('spwd','slena sdip','transp | pwd order=3 dip=${SOURCES[1]} | transp')
+Result('spwd',grey('Seismic Residual') + ' clip=34.4275')
+    
+End()

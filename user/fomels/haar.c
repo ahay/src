@@ -1,0 +1,115 @@
+/* Haar wavelet transform */
+/*
+  Copyright (C) 2004 University of Texas at Austin
+   
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+   
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+   
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*/
+#include <rsf.h>
+
+#include "haar.h"
+
+static int nt;
+static bool inv;
+static float *t;
+
+
+static void haar(bool adj) 
+/* Lifting Haar transform in place */
+{
+    int i, j;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		if (inv) {
+		    t[i]   -= t[i+j]/2;
+		    t[i+j] += t[i];
+		} else {
+		    t[i+j] += t[i]/2;
+		    t[i]   -= t[i+j];
+		}
+	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		t[i+j] -= t[i];
+		t[i]   += t[i+j]/2;
+	    }	    
+	}
+    }
+}
+
+void haar_init(int n, bool inv1) 
+/*< allocate space >*/
+{
+    inv = inv1;
+    for (nt=1; nt < n; nt *= 2) ;
+    t = sf_floatalloc(nt);
+}
+
+void haar_close(void) 
+/*< deallocate space >*/
+{
+    free (t);
+}
+
+void haar_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+/*< linear operator >*/
+{
+    int it, i, j;
+
+    sf_adjnull (adj,add,nx,ny,x,y);
+
+    if (adj) {
+	t[0] = y[0];
+	it = 1;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		if (it < ny) {
+		    t[i+j]=y[it];
+		    it++;
+		} else {
+		    t[i+j]=0.;
+		}
+	    }	    	    
+	}
+    } else {
+	for (it=0; it < nx; it++) {
+	    t[it]=x[it];
+	}
+	for (it=nx; it < nt; it++) {
+	    t[it] = 0.;
+	}
+    }
+
+    haar(adj);
+
+    if (adj) {
+	for (it=0; it < nx; it++) {
+	    x[it] += t[it];
+	}
+    } else {
+	y[0] += t[0];
+	it = 1;
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		y[it] += t[i+j];
+		it++;
+		if (it >= ny) return;
+	    }	    	    
+	}
+    }
+}
