@@ -73,7 +73,7 @@ def wgrey(custom,par):
 def amodel(dat,wfl,wav,vel,den,sou,rec,custom):
     Flow([dat,wfl],[wav,vel,den,sou,rec],
          '''
-         /home/savap/RSF/user/savap/sfafmod
+         afmod
          verb=y abc=y free=n snap=y jsnap=50 %s
          nbz=100 tz=0.0035
          nbx=100 tx=0.0035
