@@ -1,4 +1,4 @@
-/* Haar wavelet transform */
+/* Digital wavelet transform */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -18,12 +18,41 @@
 */
 #include <rsf.h>
 
-#include "haar.h"
+#include "wavelet.h"
 
 static int nt;
 static bool inv;
+static void (*transform)(bool);
 static float *t;
 
+static void linear(bool adj) 
+/* Lifting linear-interpolation transform in place */
+{
+    int i, j;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		if (inv) {
+		    t[i]   -= t[i+j]/2;
+		    t[i+j] += t[i];
+		} else {
+		    t[i+j] += t[i]/2;
+		    t[i]   -= t[i+j];
+		}
+	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+j] -= (t[i]+t[i+2*j])/2;
+	    }	    
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i]   += (t[i+j]+t[i+2*j])/4;
+	    }
+	}
+    }
+}
 
 static void haar(bool adj) 
 /* Lifting Haar transform in place */
@@ -52,21 +81,31 @@ static void haar(bool adj)
     }
 }
 
-void haar_init(int n, bool inv1) 
+void wavelet_init(int n, bool inv1, char type) 
 /*< allocate space >*/
 {
     inv = inv1;
+
     for (nt=1; nt < n; nt *= 2) ;
     t = sf_floatalloc(nt);
+
+    switch(type) {
+	case 'h': 
+	    transform = haar;
+	    break;
+	default:
+	    sf_error("Unknown wavelet type=%c",type);
+	    break;
+    }
 }
 
-void haar_close(void) 
+void wavelet_close(void) 
 /*< deallocate space >*/
 {
     free (t);
 }
 
-void haar_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
+void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 /*< linear operator >*/
 {
     int it, i, j;
@@ -95,7 +134,7 @@ void haar_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	}
     }
 
-    haar(adj);
+    transform(adj);
 
     if (adj) {
 	for (it=0; it < nx; it++) {

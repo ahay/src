@@ -11,10 +11,10 @@ def grey(title):
 
 Result('lena',grey('Lena'))
 
-Flow('haar1','lena','transp | haar | transp')
+Flow('haar1','lena','transp | dwt type=h | transp')
 Result('haar1',grey('1-D Haar Transform'))
 
-Flow('haar2','haar1','haar')
+Flow('haar2','haar1','dwt type=h')
 Result('haar2',grey('2-D Haar Transform'))
 
 for case in ('lena','slena'):

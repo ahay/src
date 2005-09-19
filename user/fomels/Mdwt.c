@@ -1,4 +1,4 @@
-/* 1-D Haar wavelet transform */
+/* 1-D digital wavelet transform */
 /*
   Copyright (C) 2004 University of Texas at Austin
    
@@ -19,12 +19,13 @@
 
 #include <rsf.h>
 
-#include "haar.h"
+#include "wavelet.h"
 
 int main(int argc, char *argv[])
 {
     int n1, i2, n2;
     bool inv, adj;
+    char *type;
     float *pp, *qq;
     sf_file in, out;
 
@@ -45,15 +46,17 @@ int main(int argc, char *argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* if y, do adjoint transform */
 
-    haar_init(n1,inv);
+    if (NULL == (type=sf_getstring("type"))) type="linear";
+    /* wavelet type */
 
+    wavelet_init(n1,inv,type[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);
 	if (adj) {
-	    haar_lop(adj,false,n1,n1,qq,pp);
+	    wavelet_lop(adj,false,n1,n1,qq,pp);
 	} else {
-	    haar_lop(adj,false,n1,n1,pp,qq);
+	    wavelet_lop(adj,false,n1,n1,pp,qq);
 	}
 	sf_floatwrite(qq,n1,out);
     }
