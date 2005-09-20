@@ -29,7 +29,7 @@ from rsfproj import *
 import os
 import string
 import rfield
-import channels_mark
+import channels
 
 # Authentication for the private data server
 
@@ -301,7 +301,7 @@ memsize = 512
 # Make reservoir model grids
 #
 
-channels_mark.make_reservoir (   memsize, private,
+channels.make_reservoir (   memsize, private,
                             res_grid_par, geo_par,
                             sand_par, bk_noise_par, sd_noise_par,
                             res_taper_par)
@@ -310,7 +310,7 @@ channels_mark.make_reservoir (   memsize, private,
 # Make overburden model grids
 #
 
-channels_mark.make_overburden (memsize, ovr_grid_par, bk_noise_par, ovr_taper_par)
+channels.make_overburden (memsize, ovr_grid_par, bk_noise_par, ovr_taper_par)
 
 #
 # Make plots
