@@ -30,7 +30,7 @@ for scale in (2,4,8,16,32,64,128,256,512):
     lena = 'lena%d' % scale
     Flow(lena,'linear2',
          '''
-         window n2=%d n1=%d |
+         cut f2=%d f1=%d |
          dwt type=l inv=y adj=y |
          transp | dwt type=l inv=y adj=y | transp
          ''' % (scale,scale))
@@ -99,7 +99,11 @@ Flow('spwd','slena sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
 Result('spwd',grey('Seismic Residual',0) + ' clip=34.4275')
 
 Flow('seis','slena sdip',
-     'transp | seislet dip=${SOURCES[1]} eps=0.1 | transp')
+     'transp | seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y | transp')
 Result('seis',grey('Seislet Transform',0))
-    
+
+Flow('sinv','seis sdip',
+     'transp | seislet dip=${SOURCES[1]} eps=0.01 | bandpass flo=15 fhi=45 | transp')
+Result('sinv',grey('Inverse Seislet Transform',0))
+     
 End()

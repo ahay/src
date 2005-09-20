@@ -1,17 +1,112 @@
 from rsfproj import *
+import random, string
+
+random.seed(2005)
 
 Flow('sigmoid',None,
      '''
      sigmoid d1=.004 n1=200 d2=.008 n2=256 |
      smooth rect1=3 diff1=1 | smooth rect1=3
      ''')
-Result('sigin','sigmoid','grey title=Input scalebar=y')
+Result('sigin','sigmoid','grey title=Input ')
 
 Flow('sdip','sigmoid',
      'dip2 p0=0 verb=y niter=10 gauss=n eps=1 lam=1')
 Result('sigdip','sdip','grey color=j title="Smooth Dip" scalebar=y')
 
-Flow('seis','sigmoid sdip','seislet dip=${SOURCES[1]}')
-Result('sigseis','seis','grey title="Seislet Transform" scalebar=y')
+Flow('seis','sigmoid sdip','seislet dip=${SOURCES[1]} eps=0.1 adj=y inv=y')
+Result('sigseis','seis','grey title="Seislet Transform" ')
+
+Flow('sinv','seis sdip','seislet dip=${SOURCES[1]} eps=0.1')
+Result('siginv','sinv','grey title="Inverse Seislet Transform" ')
+
+Flow('seis1','sigmoid sdip','seislet dip=${SOURCES[1]} adj=y niter=100 eps=0.1')
+Result('sigseis1','seis1','grey title="Sparse Seislet Transform" ')
+
+Flow('sinv1','seis1 sdip','seislet dip=${SOURCES[1]} eps=0.1')
+Result('siginv1','sinv1','grey title="Inverse Sparse Seislet Transform" ')
+
+
+for scale in (2,4,8,16,32,64,128,256):
+    seis = 'seis%d' % scale
+    Flow(seis,'seis1 sdip','cut f2=%d | seislet dip=${SOURCES[1]} eps=0.1' % scale)
+    Plot(seis,'grey title="Scale=%d" ' % scale)
+    diff = 'diff%d' % scale
+    Flow(diff,'seis1 sdip','cut n2=%d | seislet dip=${SOURCES[1]} eps=0.1' % scale)
+    Plot(diff,'grey title="Scale=%d" ' % scale)
+
+nsp = 200
+k2 = string.join(map(lambda x: str(random.randint(1,256)), xrange(nsp)),',')
+k1 = string.join(map(lambda x: str(random.randint(1,200)), xrange(nsp)),',')
+    
+Flow('simps','sdip',
+     '''
+     spike nsp=%d k1=%s k2=%s n1=200 n2=256 |
+     seislet dip=$SOURCE eps=0.1
+     ''' % (nsp,k1,k2),stdin=0)
+Result('simps','grey title=Seislets')
+
+Fetch('wz.27.H','wz')
+Flow('yc','wz.27.H','dd form=native | window n1=400 n2=64| tpow tpow=2')
+Flow('yc2','yc','window f2=21')
+Flow('yc27','yc yc2','window n2=20 | pad n2=21 | cat axis=2 ${SOURCES[1]}')
+Result('yc27','grey title=Input')
+
+Flow('ydip','yc27','dip p0=2 rect1=10 rect2=5 pmin=0')
+Result('ydip','grey color=j title=Slope scalebar=y allpos=y')
+
+Flow('yseis','yc27 ydip','seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y')
+Result('yseis','grey title="Seislet Transform" ')
+
+Flow('ysinv','yseis ydip','seislet dip=${SOURCES[1]} eps=0.01')
+Result('ysinv','grey title="Inverse Seislet Transform" ')
+
+Flow('yseis1','yc27 ydip','seislet dip=${SOURCES[1]} eps=0.01 adj=y niter=100')
+Result('yseis1','grey title="Sparse Seislet Transform" ')
+
+Flow('ysinv1','yseis1 ydip','seislet dip=${SOURCES[1]} eps=0.01')
+Result('ysinv1','grey title="Inverse Sparse Seislet Transform" ')
+
+nsp=100
+k2 = string.join(map(lambda x: str(random.randint(1,64)), xrange(nsp)),',')
+k1 = string.join(map(lambda x: str(random.randint(1,400)), xrange(nsp)),',')
+
+Flow('yimps','ydip',
+     '''
+     spike nsp=%d k1=%s k2=%s n1=400 n2=64 |
+     seislet dip=$SOURCE eps=0.1
+     ''' % (nsp,k1,k2),stdin=0)
+Result('yimps','yimps','grey title=Seislets')
+
+Fetch('WGstack.H','book/iee')
+Flow('gulf','WGstack.H','dd form=native | window n1=1000 f2=1000 n2=256')
+Result('gulf','grey title=Input')
+
+Flow('gdip','gulf','dip rect1=25 rect2=10')
+Result('gdip','grey color=j title=Slope scalebar=y')
+
+Flow('gseis','gulf gdip','seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y')
+Result('gseis','grey title="Seislet Transform" ')
+
+Flow('gsinv','gseis gdip','seislet dip=${SOURCES[1]} eps=0.01')
+Result('gsinv','grey title="Inverse Seislet Transform" ')
+
+Flow('gseis1','gulf gdip','seislet dip=${SOURCES[1]} eps=0.01 adj=y niter=100')
+Result('gseis1','grey title="Sparse Seislet Transform" ')
+
+Flow('gsinv1','gseis1 gdip','seislet dip=${SOURCES[1]} eps=0.01')
+Result('gsinv1','grey title="Inverse Sparse Seislet Transform" ')
+
+nsp=100
+k2 = string.join(map(lambda x: str(random.randint(1,256)), xrange(nsp)),',')
+k1 = string.join(map(lambda x: str(random.randint(1,1000)), xrange(nsp)),',')
+
+Flow('gimps','gdip',
+     '''
+     spike nsp=%d k1=%s k2=%s n1=400 n2=64 |
+     seislet dip=$SOURCE eps=0.1
+     ''' % (nsp,k1,k2),stdin=0)
+Result('gimps','gimps','grey title=Seislets')
+
 
 End()

@@ -20,12 +20,14 @@
 #include <rsf.h>
 
 #include "seislet.h"
+#include "weight.h"
+#include "hilbert.h"
 
 int main(int argc, char *argv[])
 {
-    int n1, n2, i3, n3, n12;
+    int i1, n1, i2, n2, i3, n3, n12, niter;
     bool inv, adj;
-    float *pp, *qq, **dd, eps;
+    float *pp, *qq, **ww, *hilb, **dd, eps;
     sf_file in, out, dip;
 
     sf_init(argc,argv);
@@ -52,19 +54,51 @@ int main(int argc, char *argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     /* regularization */
 
+    if (!sf_getint("niter",&niter)) niter=0;
+    /* number of iterations */
+
+    if (adj && 0 != niter) {
+	ww = sf_floatalloc2(n1,n2);
+	hilb = sf_floatalloc(n1);
+	weight_init(ww[0]);
+	hilbert_init(n1, 6, 1.);
+    } else {
+	ww = NULL;
+	hilb = NULL;
+    }
+
     seislet_init(n1,n2,inv,eps,dd);
+
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp,n12,in);
 	sf_floatread(dd[0],n12,dip);
 
 	if (adj) {
-	    seislet_lop(adj,false,n12,n12,qq,pp);
+	    if (0==niter) {
+		seislet_lop(adj,false,n12,n12,qq,pp);
+	    } else {
+		sf_solver (seislet_lop,sf_cgstep,
+			   n12,n12,qq,pp,niter,"verb",true,"end");
+		sf_cgstep_close();
+
+		/* find envelope */
+		for (i2=0; i2 < n2; i2++) {
+		    hilbert(qq+i2*n1,hilb);
+		    for (i1=0; i1 < n1; i1++) {
+			ww[i2][i1] = hypotf(qq[i1+i2*n1],hilb[i1]);
+		    }
+		}
+
+		sf_solver_prec (seislet_lop,sf_cgstep,weight_lop,n12,
+				n12,n12,qq,pp,niter,0.,"verb",true,"end");
+		sf_cgstep_close();
+	    }
 	} else {
 	    seislet_lop(adj,false,n12,n12,pp,qq);
 	}
 	sf_floatwrite(qq,n12,out);
     }
-
+    
     exit(0);
 }

@@ -31,20 +31,26 @@ static void haar(bool adj)
     int i, j, i1, i2;
 
     if (adj) {
-	for (j=nt/2; j >= 1; j /= 2) {
+	for (j=1; j <= nt/2; j *= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		if (inv) {
+		    for (i2=i; i2 < i+j; i2++) {
+			predict_step(false,true,t[i],d[i2]);
+		    }
 		    for (i1=0; i1 < n; i1++) {
-			t[i][i1]   -= t[i+j][i1]/2;
-			t[i+j][i1] += t[i][i1];
+			t[i+j][i1] -= t[i][i1];     /* d = o - P[e] */
+			t[i][i1]   += t[i+j][i1]/2; /* s = e + U[d] */
 		    }
 		    for (i2=i+j-1; i2 >= i; i2--) {
 			predict_step(false,false,t[i],d[i2]);
 		    }
 		} else {
+		    for (i2=i; i2 < i+j; i2++) {
+			predict_step(true,false,t[i],d[i2]);
+		    }
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] += t[i][i1]/2;
-			t[i][i1]   -= t[i+j][i1];
+			t[i][i1]   += t[i+j][i1];
+			t[i+j][i1] -= t[i][i1]/2;
 		    }
 		    for (i2=i+j-1; i2 >= i; i2--) {
 			predict_step(true,true,t[i],d[i2]);
@@ -53,18 +59,21 @@ static void haar(bool adj)
 	    }
 	}
     } else {
-	for (j=1; j <= nt/2; j *= 2) {
+	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		for (i2=i; i2 < i+j; i2++) {
 		    predict_step(false,true,t[i],d[i2]);
 		}
 		for (i1=0; i1 < n; i1++) {
-		    t[i+j][i1] -= t[i][i1];
-		    t[i][i1]   += t[i+j][i1]/2;
-		}	    
+		    t[i][i1]   -= t[i+j][i1]/2;
+		    t[i+j][i1] += t[i][i1];
+		}
+		for (i2=i+j-1; i2 >= i; i2--) {
+		    predict_step(false,false,t[i],d[i2]);
+		}
 	    }
 	}
-    }
+    } 
 }
 
 void seislet_init(int n1      /* trace length */, 
@@ -98,15 +107,22 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
     sf_adjnull (adj,add,nx,ny,x,y);
 
     if (adj) {
-	for (i1=0; i1 < n; i1++) {
-	    t[0][i1] = y[i1];
+	for (it=0; it < nx; it++) {
+	    t[0][it] = y[it];
 	}
-	it = 1;
+	for (it=nx; it < n*nt; it++) {
+	    t[0][it] = 0.;
+	}
+    } else {
+	for (i1=0; i1 < n; i1++) {
+	    t[0][i1] = x[i1];
+	}
+	it = n;
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		for (i1=0; i1 < n; i1++) {
 		    if (it < ny) {
-			t[i+j][i1]=y[it];
+			t[i+j][i1]=x[it];
 			it++;
 		    } else {
 			t[i+j][i1]=0.;
@@ -114,34 +130,27 @@ void seislet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 		}
 	    }	    	    
 	}
-    } else {
-	for (it=0; it < nx; it++) {
-	    t[0][it] = x[it];
-	}
-	for (it=nx; it < n*nt; it++) {
-	    t[0][it] = 0.;
-	}
     }
 
     haar(adj);
 
     if (adj) {
-	for (it=0; it < nx; it++) {
-	    x[it] += t[0][it];
-	}
-    } else {
 	for (i1=0; i1 < n; i1++) {
-	    y[i1] += t[0][i1];
+	    x[i1] += t[0][i1];
 	}
-	it = 1;
+	it = n;
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		for (i1=0; i1 < n; i1++) {
-		    y[it] += t[i+j][i1];
+		    x[it] += t[i+j][i1];
 		    it++;
 		    if (it >= ny) return;
 		}
 	    }	    	    
+	}
+    } else {
+	for (it=0; it < nx; it++) {
+	    y[it] += t[0][it];
 	}
     }
 }

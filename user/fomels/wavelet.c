@@ -40,9 +40,7 @@ static void linear(bool adj)
 		for (i=0; i < nt-2*j; i += 2*j) {
 		    t[i+j] += (t[i]+t[i+2*j])/2;
 		}	 
-		for (; i < nt-j; i += 2*j) {
-		    t[i+j] += t[i];
-		}
+		if (i+j < nt) t[i+j] += t[i];
 	    } else {
 		for (i=2*j; i < nt-j; i += 2*j) {
 		    t[i+j] += t[i]/4;
@@ -53,9 +51,7 @@ static void linear(bool adj)
 		    t[i]     -= t[i+j]/2;
 		    t[i+2*j] -= t[i+j]/2;
 		}	 
-		for (; i < nt-j; i += 2*j) {
-		    t[i] -= t[i+j];
-		}
+		if (i+j < nt) t[i] -= t[i+j];
 	    }
 	}
     } else {
@@ -63,9 +59,7 @@ static void linear(bool adj)
 	    for (i=0; i < nt-2*j; i += 2*j) {
 		t[i+j] -= (t[i]+t[i+2*j])/2;
 	    }	 
-	    for (; i < nt-j; i += 2*j) {
-		t[i+j] -= t[i];
-	    }
+	    if (i+j < nt) t[i+j] -= t[i];    
 	    t[0] += t[j]/2;
 	    for (i=2*j; i < nt-j; i += 2*j) {
 		t[i]   += (t[i+j]+t[i-j])/4;

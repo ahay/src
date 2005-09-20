@@ -1,4 +1,7 @@
 from rsfproj import *
+import random, string
+
+random.seed(2005)
 
 Flow('trace',None,
      'qdome d1=1 d2=1 d3=1 n1=256 n2=1 n3=1 trace=$TARGET',stdout=0)
@@ -64,10 +67,21 @@ for plot in [0,1]:
          ''' % ((0,5)[plot],(10,1)[plot]))
 Result('pick','planes pick0 pick1','Overlay')
 
-Flow('pseis','planes dip','seislet dip=${SOURCES[1]} eps=0.1')
+Flow('pseis','planes dip','seislet dip=${SOURCES[1]} inv=y adj=y eps=0.1')
 Result('pseis','grey title="Seislet Transform" ')
 
-Flow('psinv','pseis dip','seislet dip=${SOURCES[1]} eps=0.1 inv=y adj=y')
+Flow('psinv','pseis dip','seislet dip=${SOURCES[1]} eps=0.1')
 Result('psinv','grey title="Inverse Seislet Transform" ')
+
+nsp = 75
+k2 = string.join(map(lambda x: str(random.randint(1,128)), xrange(nsp)),',')
+k1 = string.join(map(lambda x: str(random.randint(1,256)), xrange(nsp)),',')
+    
+Flow('imps','dip',
+     '''
+     spike nsp=%d k1=%s k2=%s n1=256 n2=128 |
+     seislet dip=$SOURCE eps=0.1
+     ''' % (nsp,k1,k2),stdin=0)
+Result('pimps','imps','grey title=Seislets')
 
 End()
