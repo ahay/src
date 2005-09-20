@@ -78,6 +78,7 @@ def check_all(context):
     cc(context)
     ar(context)
     libs(context)
+    jpeg(context)
     api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
         cxx(context)
@@ -112,6 +113,28 @@ def libs(context):
         context.Result(0)
         context.Message("Please install RPC libraries.\n")
         sys.exit(1)
+
+def jpeg(context):
+    context.Message("checking jpeg ... ")
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    jpeg = context.env.get('JPEG','jpeg')
+    LIBS.append(jpeg)
+    text = '''
+    #include <stdio.h>
+    #include <jpeglib.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }
+    '''
+    res = context.TryRun(text,'.c')
+    if res[0]:
+        context.Result(res[0])
+        context.env['JPEG'] = jpeg
+    else:
+        context.Result(0)
+        context.env['JPEG'] = None
 
 def ar(context):
     context.Message("checking ar ... ")
@@ -311,6 +334,7 @@ def intel(context):
 def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
+    opts.Add('JPEG','The libjpeg library')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

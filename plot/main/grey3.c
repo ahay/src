@@ -45,13 +45,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     n3 = sf_leftsize(in,2);
 
-    /* initialize color table */
-    if (NULL == (color = sf_getstring("color"))) color="I";
-    /* color scheme */
-    if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
-    /* reserved colors */
-    vp_rascoltab (nreserve, color);
-
     if (!sf_getfloat("point1",&point1)) point1=0.5;
     /* fraction of the vertical axis for front face */
     if (!sf_getfloat("point2",&point2)) point2=0.5;
@@ -160,6 +153,13 @@ int main(int argc, char* argv[])
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
     if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
+
+    /* initialize color table */
+    if (NULL == (color = sf_getstring("color"))) color="I";
+    /* color scheme */
+    if (!sf_getint ("nreserve",&nreserve)) nreserve = 8;
+    /* reserved colors */
+    vp_rascoltab (nreserve, color);
 
     /* fill empty areas */
     b = '\0';

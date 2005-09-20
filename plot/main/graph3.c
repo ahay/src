@@ -123,10 +123,15 @@ int main(int argc, char* argv[])
     /* frame numbers for cube faces */
 
     /* sanity check */
-    if (frame1 < min) frame1 = min;
+    if (min < max) {
+	if (frame1 < min) frame1 = min;
+	if (frame1 > max) frame1 = max;
+    } else {
+	if (frame1 > min) frame1 = min;
+	if (frame1 < max) frame1 = max;
+    }
     if (frame2 < 0) frame2 = 0;
     if (frame3 < 0) frame3 = 0;
-    if (frame1 > max) frame1 = max;
     if (frame2 >= n1) frame2 = n1-1;
     if (frame3 >= n2) frame3 = n2-1;
 
@@ -262,6 +267,7 @@ int main(int argc, char* argv[])
 
 	if (iframe > 0) vp_erase (); 
 	
+	vp_plot_unset();
 	vp_cubeframe((frame1-oo1)/dd1,frame2,frame3);
 	
 	switch (movie) {

@@ -858,6 +858,14 @@ void vp_barframe_init (float min, float max)
     make_baraxis(min,max);
 }
 
+void vp_plot_unset (void)
+/*< return to defaults >*/
+{
+    vp_fat (gridfat);
+    vp_color (gridcol);
+    vp_set_dash (0);
+}
+
 void vp_simpleframe(void)
 /*< Drawing simple frame >*/
 {

@@ -161,7 +161,7 @@ write_JPEG_file (JSAMPLE * image_buffer, int image_height, int image_width, int 
 
   jpeg_finish_compress(&cinfo);
   /* After finish_compress, we can close the output file. */
-  /* fclose(outfile); *
+  /* fclose(outfile); */
 
   /* Step 7: release JPEG compression object */
 

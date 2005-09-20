@@ -26,8 +26,8 @@
 static float *dashtype;
 static int *fat, *col;
 
-static void set_dash (float type)
-/* type is
+void vp_set_dash (float type
+/*
  *	0 continuous   DEFAULT
  *	1 fine dash
  *	2 fine dot
@@ -39,7 +39,8 @@ static void set_dash (float type)
  *	8 double dash
  *	9 loose dash  The part after the decimal point determines 
  *                     the pattern repetition interval
- */
+ */)
+/*< set dash type >*/
 {
     float size=0.;
     float dash[2], gap[2];
@@ -149,7 +150,7 @@ void vp_plot_set (int i2 /* line number */)
 {
     vp_fat (fat[i2]);
     vp_color (col[i2]);
-    set_dash (dashtype[i2]);
+    vp_set_dash (dashtype[i2]);
 }
 
 void vp_plot_close (void)
