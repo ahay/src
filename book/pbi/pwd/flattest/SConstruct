@@ -64,4 +64,10 @@ for plot in [0,1]:
          ''' % ((0,5)[plot],(10,1)[plot]))
 Result('pick','planes pick0 pick1','Overlay')
 
+Flow('pseis','planes dip','seislet dip=${SOURCES[1]} eps=0.1')
+Result('pseis','grey title="Seislet Transform" ')
+
+Flow('psinv','pseis dip','seislet dip=${SOURCES[1]} eps=0.1 inv=y adj=y')
+Result('psinv','grey title="Inverse Seislet Transform" ')
+
 End()

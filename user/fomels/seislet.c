@@ -76,8 +76,7 @@ void seislet_init(int n1      /* trace length */,
 {
     inv = inv1;
     n = n1;
-    nt = n2;
-    for (nt=1; nt < n; nt *= 2) ;
+    for (nt=1; nt < n2; nt *= 2) ;
     t = sf_floatalloc2(n,nt);
     d = dip;
     predict_init (n, nt, eps*eps, 1);

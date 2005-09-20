@@ -66,15 +66,17 @@ k1 = string.join(map(lambda x: str(x+1), xrange(512)),',')
 Flow('spikes',None,
      'math n1=128 n2=128 output="abs(x1-x2)" | mask max=0.5 | dd type=float') 
 for type in ('haar','linear'):
+    Type = string.capitalize(type)
     imps = 'i'+type
     Flow(imps,'spikes','dwt type=%s inv=y adj=y' % type)
-    Result(imps,'grey title="%s Wavelets" label1=Time label2=Scale' % string.capitalize(type))
+    Result(imps,
+           'grey title="%s Wavelets" label1=Time label2=Scale' % Type)
     fft = 'f' + type
     Flow(fft,imps,'spectra all=n')
     Result(fft,'''
     grey title="%s Wavelets Spectra" label1=Frequency label2=Scale
     allpos=y color=j
-    ''' % string.capitalize(type))
+    ''' % Type)
 
 title = {'lena': 'Lena',
          'slena': 'Seismic Lena',
@@ -90,10 +92,14 @@ for case in title.keys():
        label2=Wavenumber label1=Frequency allpos=y
        ''' % title[case])
 
-Flow('sdip','slena','transp | dip rect1=10 rect2=10 order=3')
+Flow('sdip','slena','transp | dip rect1=10 rect2=10 order=1')
 Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
 
-Flow('spwd','slena sdip','transp | pwd order=3 dip=${SOURCES[1]} | transp')
+Flow('spwd','slena sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
 Result('spwd',grey('Seismic Residual',0) + ' clip=34.4275')
+
+Flow('seis','slena sdip',
+     'transp | seislet dip=${SOURCES[1]} eps=0.1 | transp')
+Result('seis',grey('Seislet Transform',0))
     
 End()

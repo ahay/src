@@ -87,21 +87,22 @@ void pick0_step (float t0, float* t)
     }
 }
 
-void pick0_step0 (float t0, float* t)
-/*< step picking starting from t0 to t[n2] >*/
+float pick0_step0 (int p1, int p2, float t0, float* t)
+/*< step picking starting from t[k1]=t0 to t[k2-1] >*/
 {
     int i, i2;
     float k1;
 
-    t[0] = t0;
-    for (i2 = 0; i2 < n2-1; i2++) {
+    if (NULL != t) t[p1] = t0;
+    for (i2 = p1; i2 < p2-1; i2++) {
 	i = floorf(t0); 
 	sf_eno_apply (ent[i2], i, t0-i, &k1, NULL, FUNC);
 	if (k1 < pmin) k1 = pmin;
 	if (k1 > pmax) k1 = pmax;
 	t0 += k1;
-	t[i2+1] = t0;
+	if (NULL != t) t[i2+1] = t0;
     }
+    return t0;
 }
 
 void pick0_delta (int m2, float* t)

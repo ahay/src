@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
 	}
 
 	for (i1=0; i1 < n1; i1++) {
-	    pick0_step0 ((float) i1, pik);
+	    pick0_step0 (0, n2, (float) i1, pik);
 	    sf_floatwrite(pik,n2,out);
 	}
     }

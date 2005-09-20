@@ -155,7 +155,8 @@ void predicter_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 {
     int i1, i2;
 
-    if (nx != ny || nx != n1*(n2+2*k2)) sf_error("%s: Wrong dimensions",__FILE__);
+    if (nx != ny || nx != n1*(n2+2*k2)) 
+	sf_error("%s: Wrong dimensions",__FILE__);
 
     sf_adjnull(adj,add,nx,ny,xx,yy);
 
@@ -191,7 +192,8 @@ void subtracter_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
 {
     int i1, i2, j2, m2;
 
-    if (nx != ny || nx != n1*(n2+2*k2)) sf_error("%s: Wrong dimensions",__FILE__);
+    if (nx != ny || nx != n1*(n2+2*k2)) 
+	sf_error("%s: Wrong dimensions",__FILE__);
 
     sf_adjnull(adj,add,nx,ny,xx,yy);
 

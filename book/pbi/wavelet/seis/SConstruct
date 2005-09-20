@@ -1,0 +1,17 @@
+from rsfproj import *
+
+Flow('sigmoid',None,
+     '''
+     sigmoid d1=.004 n1=200 d2=.008 n2=256 |
+     smooth rect1=3 diff1=1 | smooth rect1=3
+     ''')
+Result('sigin','sigmoid','grey title=Input scalebar=y')
+
+Flow('sdip','sigmoid',
+     'dip2 p0=0 verb=y niter=10 gauss=n eps=1 lam=1')
+Result('sigdip','sdip','grey color=j title="Smooth Dip" scalebar=y')
+
+Flow('seis','sigmoid sdip','seislet dip=${SOURCES[1]}')
+Result('sigseis','seis','grey title="Seislet Transform" scalebar=y')
+
+End()
