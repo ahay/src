@@ -61,7 +61,8 @@ extern int image_width;		 // Number of columns in image
  */
 
 GLOBAL(void)
-write_JPEG_file (JSAMPLE * image_buffer, int image_height, int image_width, int numcol)
+write_JPEG_file (JSAMPLE * image_buffer, 
+		 int image_height, int image_width, int numcol)
 {
   /* This struct contains the JPEG compression parameters and pointers to
    * working space (which is allocated as needed by the JPEG library).

@@ -135,6 +135,7 @@ def jpeg(context):
     else:
         context.Result(0)
         context.env['JPEG'] = None
+    LIBS.pop()
 
 def ar(context):
     context.Message("checking ar ... ")

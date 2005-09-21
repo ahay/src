@@ -15,6 +15,7 @@ tomo tree trismooth2 twodip2 twofreq2 velcon warp1 warpadd warpscan ztrace
 try:  # distributed version
     Import('env')
     root = env.get('RSFROOT')
+
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
@@ -48,6 +49,14 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+
+jpeg = env.get('JPEG')
+if jpeg:
+    libs=env.get('LIBS')+[jpeg]
+    prog = env.Program('sfbyte2jpg',['_byte2jpg.c','_jpeg.c'],LIBS=libs)
+    if root:
+        env.Install(bindir,prog)
+        
 for prog in Split(
     '''
     gauss2 gaussshape2 matmult ntriangle1 predict predict2 pwdsl triangle2
