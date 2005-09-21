@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
 {
     int i1, n1, i2, n2, i3, n3, n12, niter;
     bool inv, adj;
+    char *type;
     float *pp, *qq, **ww, *hilb, **dd, eps;
     sf_file in, out, dip;
 
@@ -67,8 +68,10 @@ int main(int argc, char *argv[])
 	hilb = NULL;
     }
 
-    seislet_init(n1,n2,inv,eps,dd);
+    if (NULL == (type=sf_getstring("type"))) type="haar";
+    /* wavelet type */
 
+    seislet_init(n1,n2,inv,eps,dd,type[0]);
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp,n12,in);
