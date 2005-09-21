@@ -16,25 +16,27 @@ def seislet(data,              # data name
     Result(data,'grey title=Input')
 
     dip = data+'dip'
-    Flow(dip,data,'dip rect1=%d rect2=%d p0=%g pmin=%g' % (rect1,rect2,p0,pmin))
+    Flow(dip,data,
+         'dip rect1=%d rect2=%d p0=%g pmin=%g' % (rect1,rect2,p0,pmin))
     Result(dip,'grey color=j title=Slope scalebar=y')
 
     seis = data+'seis'
     Flow(seis,[data,dip],'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
     Result(seis,'grey title="Seislet Transform" ')
 
-    sseis = data+'sseis'
-    Flow(sseis,[data,dip],'seislet dip=${SOURCES[1]} eps=%g adj=y niter=100' % eps)
-    Result(sseis,'grey title="Sparse Seislet Transform" ')
+#    sseis = data+'sseis'
+#    Flow(sseis,[data,dip],
+#         'seislet dip=${SOURCES[1]} eps=%g adj=y niter=100' % eps)
+#    Result(sseis,'grey title="Sparse Seislet Transform" ')
 
     sinv = data+'sinv'
-    ssinv = data+'ssinv'
+#    ssinv = data+'ssinv'
 
     Flow(sinv,[seis,dip],'seislet dip=${SOURCES[1]} eps=%g' % eps)
     Result(sinv,'grey title="Inverse Seislet Transform" ')
 
-    Flow(ssinv,[sseis,dip],'seislet dip=${SOURCES[1]} eps=%g' % eps)
-    Result(ssinv,'grey title="Inverse Seislet Transform" ')
+#    Flow(ssinv,[sseis,dip],'seislet dip=${SOURCES[1]} eps=%g' % eps)
+#    Result(ssinv,'grey title="Inverse Seislet Transform" ')
 
     wvlt = data+'wvlt'
 
@@ -43,20 +45,27 @@ def seislet(data,              # data name
 
     for c in (1,clip,25):
         rec = '%ssrec%d' % (data,c)
-        Flow(rec,[sseis,dip],'threshold pclip=%d | seislet dip=${SOURCES[1]} eps=%g' % (c,eps))
+        Flow(rec,[seis,dip],
+             '''
+             threshold pclip=%d |
+             seislet dip=${SOURCES[1]} eps=%g
+             ''' % (c,eps))
         Result(rec,'grey title="Inverse Seislet Transform (%d%%)" ' % c)
         wrec = '%swrec%d' % (data,c)
-        Flow(wrec,wvlt,'threshold pclip=%d | transp | dwt adj=y inv=y | transp' % c)
+        Flow(wrec,wvlt,
+             'threshold pclip=%d | transp | dwt adj=y inv=y | transp' % c)
         Result(wrec,'grey title="Inverse Wavelet Transform (%d%%)" ' % c)
 
     max=int(math.log(n2)/math.log(2))
     for m in xrange(max):
         scale = int(math.pow(2,m))
         slet = '%sslet%d' % (data,scale)
-        Flow(slet,[sseis,dip],'cut f2=%d | seislet dip=${SOURCES[1]} eps=%g' % (scale,eps))
+        Flow(slet,[seis,dip],
+             'cut f2=%d | seislet dip=${SOURCES[1]} eps=%g' % (scale,eps))
         Result(slet,'grey title="Scale=%d" ' % scale)
         diff = '%sdiff%d' % (data,scale)
-        Flow(diff,[sseis,dip],'cut n2=%d | seislet dip=${SOURCES[1]} eps=%g' % (scale,eps))
+        Flow(diff,[seis,dip],
+             'cut n2=%d | seislet dip=${SOURCES[1]} eps=%g' % (scale,eps))
         Result(diff,'grey title="Scale=%d" ' % scale)
 
     k1 = string.join(map(lambda x: str(random.randint(1,n1)), xrange(nsp)),',')

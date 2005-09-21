@@ -14,7 +14,8 @@ seislet('sigmoid',200,256)
 #############################################################################
 
 Fetch('wz.27.H','wz')
-Flow('yc','wz.27.H','dd form=native | window n1=400 n2=64| tpow tpow=2 | cut n2=1 f2=20')
+Flow('yc','wz.27.H',
+     'dd form=native | window n1=400 n2=64| tpow tpow=2 | cut n2=1 f2=20')
 
 seislet('yc',400,64,p0=2,pmin=0,nsp=100,clip=5)
 

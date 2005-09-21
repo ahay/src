@@ -92,7 +92,7 @@ for case in title.keys():
        label2=Wavenumber label1=Frequency allpos=y
        ''' % title[case])
 
-Flow('sdip','slena','transp | dip rect1=10 rect2=10 order=1')
+Flow('sdip','slena','transp | dip rect1=20 rect2=20 order=1')
 Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
 
 Flow('spwd','slena sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
@@ -103,7 +103,41 @@ Flow('seis','slena sdip',
 Result('seis',grey('Seislet Transform',0))
 
 Flow('sinv','seis sdip',
-     'transp | seislet dip=${SOURCES[1]} eps=0.01 | bandpass flo=15 fhi=45 | transp')
+     'transp | seislet dip=${SOURCES[1]} eps=0.01 | transp')
 Result('sinv',grey('Inverse Seislet Transform',0))
-     
+
+for scale in (2,4,8,16,32,64,128,256,512):
+    slena = 'slena%d' % scale
+    Flow(slena,'seis sdip',
+         '''
+         transp | cut f2=%d | seislet dip=${SOURCES[1]} | transp
+         ''' % scale)
+    Result(slena,grey('Scale=%d' % scale,0))
+
+c=5
+
+rec = 'srec%d' % c
+Flow(rec,'seis sdip',
+     '''
+     threshold pclip=%d |
+     transp |
+     seislet dip=${SOURCES[1]} | transp
+     ''' % c)
+Result(rec,grey('Inverse Seislet Transform (%d%%)' % c,0))
+
+wrec = 'wrec%d' % c
+Flow(wrec,'linear2',
+     '''
+     threshold pclip=%d |
+     dwt adj=y inv=y | transp |
+     dwt adj=y inv=y | transp
+     ''' % c)
+Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
+
+srec = 'wsrec%d' % c
+Flow(srec,'slena',
+     'dwt | threshold pclip=%d | dwt adj=y inv=y' % c)
+Result(srec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
+
+
 End()

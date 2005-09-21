@@ -23,7 +23,7 @@
 
 static int nt, n;
 static bool inv;
-static float **t, **d, **t2=NULL;
+static float **t, **d, *t1, *t2;
 static void (*transform)(bool);
 
 static void predict_forw(bool adj, float *tt, int i, int j)
@@ -55,31 +55,61 @@ static void haar(bool adj)
 	for (j=1; j <= nt/2; j *= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		if (inv) {
-		    predict_forw(false,t[i],i,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] -= t[i][i1];     /* d = o - P[e] */
-			t[i][i1]   += t[i+j][i1]/2; /* s = e + U[d] */
+			t1[i1] = t[i][i1];
 		    }
-		    predict_back(false,t[i],i,j);
+		    predict_forw(false,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i+j][i1] -= t1[i1];     
+			/* d = o - P[e] */
+		    }
+		    for (i1=0; i1 < n; i1++) {
+			t2[i1] = t[i+j][i1];
+		    }
+		    predict_back(false,t2,i,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i][i1] += t2[i1]/2; 
+                        /* s = e + U[d] */
+		    }
 		} else {
-		    predict_forw(true,t[i],i,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i][i1]   += t[i+j][i1];
-			t[i+j][i1] -= t[i][i1]/2;
+			t1[i1] = t[i+j][i1];  
 		    }
-		    predict_back(true,t[i],i,j);
+		    predict_forw(true,t1,i,j); 
+		    for (i1=0; i1 < n; i1++) {
+			t[i][i1] += t1[i1];
+			/* s = e + P'[d] */
+		    }
+		    for (i1=0; i1 < n; i1++) {
+			t2[i1] = -t[i][i1]/2; 
+		    }
+		    predict_back(true,t2,i,j); 
+		    for (i1=0; i1 < n; i1++) {
+			t[i+j][i1] += t2[i1];
+			/* d = o - U'[s] */
+		    }
 		}
 	    }
 	}
     } else {
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
-		predict_forw(false,t[i],i,j);
 		for (i1=0; i1 < n; i1++) {
-		    t[i][i1]   -= t[i+j][i1]/2;
-		    t[i+j][i1] += t[i][i1];
+		    t2[i1] = t[i+j][i1];
 		}
-		predict_back(false,t[i],i,j);
+		predict_back(false,t2,i,j); 
+		for (i1=0; i1 < n; i1++) {
+		    t[i][i1] -= t2[i1]/2; 
+		    /* e = s - U[d] */
+		}
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i][i1];
+		}
+		predict_forw(false,t1,i,j); 
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] += t1[i1];     
+		    /* o = d + P[e] */
+		}
 	    }
 	}
     } 
@@ -88,48 +118,139 @@ static void haar(bool adj)
 static void linear(bool adj)
 {
     int i, j, i1;
-    float **t1;
-
-    t1=t;
-    for (i=0; i < nt; i++) {
-	for (i1=0; i1 < n; i1++) {
-	    t2[i][i1] = t[i][i1];
-	}
-    }
     
     if (adj) {
 	for (j=1; j <= nt/2; j *= 2) {
 	    if (inv) {
 		for (i=0; i < nt-2*j; i += 2*j) {
-		    predict_forw(false,t1[i],i,j);
-		    predict_back(false,t2[i+2*j],i+j,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] -= (t1[i][i1]+t2[i+2*j][i1])/2;
-			t1[i][i1] += t[i+j][i1]/2;
-			t2[i][i1] += t[i+j][i1]/2;
+			t1[i1] = t[i][i1];
+			t2[i1] = t[i+2*j][i1];
 		    }
-		    predict_back(false,t1[i],i,j);
-		    predict_forw(false,t2[i+2*j],i+j,j);
-		}
-		if (i+j < nt) {
-		    predict_forw(false,t1[i],i,j);
+		    predict_forw(false,t1,i,j);
+		    predict_back(false,t2,i+j,j);
 		    for (i1=0; i1 < n; i1++) {
-			t[i+j][i1] -= t1[i][i1];
-			t1[i][i1] += t[i+j][i1]/2;
+			t[i+j][i1] -= (t1[i1]+t2[i1])/2; 
+                        /* d = o - P[e] */
+		    }
+		}		
+		if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(false,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i+j][i1] -= t1[i1];
+			/* d = o - P[e] */
 		    }		    
-		    predict_back(false,t1[i],i,j);
 		}
 		for (i1=0; i1 < n; i1++) {
-		    t[0][i1] = t2[j][i1];
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(false,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[0][i1] += t1[i1]/2;
 		}
 		for (i=2*j; i < nt-j; i += 2*j) {
 		    for (i1=0; i1 < n; i1++) {
-			t[i][i1] = (t1[i-j][i1]+t2[i+j][i1])/2;
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(false,t1,i,j);
+		    predict_forw(false,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i][i1] += (t1[i1]+t2[i1])/4;
+			/* s = e + U d */
+		    }
+		}
+	    } else {
+		for (i=0; i < nt-2*j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+			t2[i1] = t[i+2*j][i1];
+		    }
+		    predict_forw(true,t1,i,j);
+		    predict_back(true,t2,i+j,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i+j][i1] -= (t1[i1]+t2[i1])/2; 
+                        /* d = o - P[e] */
+		    }
+		}		
+		if (i+j < nt) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i][i1];
+		    }
+		    predict_forw(true,t1,i,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i+j][i1] -= t1[i1];
+			/* d = o - P[e] */
+		    }		    
+		}
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[j][i1];
+		}
+		predict_back(true,t1,0,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[0][i1] += t1[i1]/2;
+		}
+		for (i=2*j; i < nt-j; i += 2*j) {
+		    for (i1=0; i1 < n; i1++) {
+			t1[i1] = t[i+j][i1];
+			t2[i1] = t[i-j][i1];
+		    }
+		    predict_back(true,t1,i,j);
+		    predict_forw(true,t2,i-j,j);
+		    for (i1=0; i1 < n; i1++) {
+			t[i][i1] += (t1[i1]+t2[i1])/4;
+			/* s = e + U d */
 		    }
 		}
 	    }
 	}
-    } else {	
+    } else {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i+j][i1];
+		    t2[i1] = t[i-j][i1];
+		}
+		predict_back(false,t1,i,j);
+		predict_forw(false,t2,i-j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i][i1] -= (t1[i1]+t2[i1])/4;
+		    /* e = s - U d */
+		}
+	    }
+	    for (i1=0; i1 < n; i1++) {
+		t1[i1] = t[j][i1];
+	    }
+	    predict_back(false,t1,0,j);
+	    for (i1=0; i1 < n; i1++) {
+		t[0][i1] -= t1[i1]/2;
+	    }
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i][i1];
+		    t2[i1] = t[i+2*j][i1];
+		}
+		predict_forw(false,t1,i,j);
+		predict_back(false,t2,i+j,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] += (t1[i1]+t2[i1])/2; 
+		    /* o = d + P[e] */
+		}
+	    }	 
+	    if (i+j < nt) {
+		for (i1=0; i1 < n; i1++) {
+		    t1[i1] = t[i][i1];
+		}
+		predict_forw(false,t1,i,j);
+		for (i1=0; i1 < n; i1++) {
+		    t[i+j][i1] += t1[i1];
+		    /* o = d + P[e] */
+		}		    
+	    }
+	}
     }
 }
 
@@ -148,14 +269,15 @@ void seislet_init(int n1      /* trace length */,
     d = dip;
     predict_init (n, nt, eps*eps, 1);
 
+    t1 = sf_floatalloc(n);
+    t2 = sf_floatalloc(n);
+
     switch(type) {
 	case 'h': 
 	    transform = haar;
 	    break;
 	case 'l':
 	    transform = linear;
-
-	    t2 = sf_floatalloc2(n,nt);
 	    break;
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
@@ -168,10 +290,8 @@ void seislet_close(void)
 {
     free (*t);
     free (t);
-    if (NULL != t2) {
-	free (*t2);
-	free (t2);
-    }
+    free (t1);
+    free (t2);
     predict_close();
 }
 

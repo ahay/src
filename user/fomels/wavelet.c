@@ -58,11 +58,13 @@ static void linear(bool adj)
 	for (j=1; j <= nt/2; j *= 2) {
 	    for (i=0; i < nt-2*j; i += 2*j) {
 		t[i+j] -= (t[i]+t[i+2*j])/2;
+		/* d = o - P e */
 	    }	 
 	    if (i+j < nt) t[i+j] -= t[i];    
 	    t[0] += t[j]/2;
 	    for (i=2*j; i < nt-j; i += 2*j) {
 		t[i]   += (t[i+j]+t[i-j])/4;
+		/* s = e + U d */
 	    }
 	}
     }

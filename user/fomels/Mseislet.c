@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 	hilb = NULL;
     }
 
-    if (NULL == (type=sf_getstring("type"))) type="haar";
+    if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type */
 
     seislet_init(n1,n2,inv,eps,dd,type[0]);
