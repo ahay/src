@@ -357,7 +357,7 @@ def erode_surfaces (memsize=100):
           window squeeze=n f3=14 n3=1 > bd_surface_15.rsf &&
           cat axis=3 ${SOURCES[1]} bd_surface_15.rsf > bd_erode_temp.rsf &&
           minmax mode=min file1=bd_erode_temp.rsf file2=${SOURCES[0]} > $TARGET &&
-          rm bd_surface_15.rsf bd_erode_temp.rsf
+          rm -f bd_surface_15.rsf bd_erode_temp.rsf
           ''', stdout=0)
 
     Flow ('md_erode','md_surfaces ch_erode_temp',
@@ -365,7 +365,7 @@ def erode_surfaces (memsize=100):
           window squeeze=n f3=14 n3=1 > md_surface_15.rsf &&
           cat axis=3 ${SOURCES[1]} md_surface_15.rsf > md_erode_temp.rsf &&
           minmax mode=min file1=md_erode_temp.rsf file2=${SOURCES[0]} > $TARGET &&
-          rm md_surface_15.rsf md_erode_temp.rsf
+          rm -f md_surface_15.rsf md_erode_temp.rsf
           ''', stdout=0)
 
 #

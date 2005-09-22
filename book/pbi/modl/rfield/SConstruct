@@ -121,10 +121,11 @@ for i in (plots[2]):
             byte bar=bar.rsf gainpanel=all pclip=100 wantscalebar=y |
             grey3 title="%s" 
             color=E movie=0 flat=y scalebar=y bar=bar.rsf
-            frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5
+            frame1=%d frame2=%d frame3=%d point1=0.5 point2=0.5 > $TARGET &&
+            rm -f bar.rsf
             ''' % (i,grid_par[2]['nz']/2-1,
                      grid_par[2]['nx']/2,
-                     grid_par[2]['ny']/2)
+                     grid_par[2]['ny']/2) , stdout=0
            )
 
 End ()

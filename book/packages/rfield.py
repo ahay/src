@@ -388,7 +388,7 @@ def rfield (real_par,grid_par,covar_par):
               window squeeze=n n1=%d > half_x.rsf &&
               window squeeze=n f1=%d < $SOURCE | 
               cat axis=1 half_x.rsf > $TARGET &&
-              rm half_x.rsf
+              rm -f half_x.rsf
               ''' % (grid_par['nx']/2,grid_par['nx']/2), stdout=0 )
     else:
         Flow (shift_x,covar_taper,
@@ -400,7 +400,7 @@ def rfield (real_par,grid_par,covar_par):
               window squeeze=n n2=%d > half_y.rsf &&
               window squeeze=n f2=%d < $SOURCE | 
               cat axis=2 half_y.rsf > $TARGET &&
-              rm half_y.rsf
+              rm -f half_y.rsf
               ''' % (grid_par['ny']/2,grid_par['ny']/2), stdout=0 )
     else:
         Flow (shift_y,shift_x,
@@ -412,7 +412,7 @@ def rfield (real_par,grid_par,covar_par):
               window squeeze=n n3=%d > half_z.rsf &&
               window squeeze=n f3=%d < $SOURCE | 
               cat axis=3 half_z.rsf > $TARGET &&
-              rm half_z.rsf
+              rm -f half_z.rsf
               ''' % (grid_par['nz']/2,grid_par['nz']/2), stdout=0 )
     else:
         Flow (shift,shift_y,
