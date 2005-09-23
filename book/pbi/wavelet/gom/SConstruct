@@ -1,0 +1,9 @@
+from rsfproj import *
+from seislet import seislet
+
+Fetch('gomnearoffset.H','gom')
+Flow('gom','gomnearoffset.H','dd form=native | window n2=512')
+
+seislet('gom',301,512,clip=10,rect1=5,rect2=20);
+
+End()
