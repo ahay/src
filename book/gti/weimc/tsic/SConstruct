@@ -127,10 +127,6 @@ for DIP in (['00']):
          n2=%(nh)d o2=%(oh)g d2=%(dh)g k2=150,350 l2=150,350
          ''' % par)
 
-    dat = 'dat'+str(DIP)
-    Flow(dat,[kir,msk],'math k=${SOURCES[0]} m=${SOURCES[1]} output="k*m"', stdin=0)
-    Result(dat,dat,'window max1=8 | ' + igrey('pclip=100 title=%s') %DIP)
-    
     # ------------------------------------------------------------
     # source/receiver wavefields
     # ------------------------------------------------------------
@@ -255,11 +251,11 @@ for i in (['0','1','2','3','4','5','6']):
     kt = vv * par['dht'] / par['dz']
     
     tspk=''
-    tspk=tspk+str(int(200-50*kt))+','
-    tspk=tspk+str(int(200-25*kt))+','
-    tspk=tspk+str(int(200-00*kt))+','
-    tspk=tspk+str(int(200+25*kt))+','
-    tspk=tspk+str(int(200+50*kt))
+    tspk=tspk+str(int(201-50*kt))+','
+    tspk=tspk+str(int(201-25*kt))+','
+    tspk=tspk+str(int(201-00*kt))+','
+    tspk=tspk+str(int(201+25*kt))+','
+    tspk=tspk+str(int(201+50*kt))
 
     # cig (time shift)
     tcig = 'tcig'+ i
@@ -267,12 +263,11 @@ for i in (['0','1','2','3','4','5','6']):
          '''
          spike nsp=5 mag=1,1,1,1,1
          n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
-         n2=200 o2=-1.0 d2=0.01 k2=050,075,100,125,150
-         l2=050,075,100,125,150 |
+         n2=200 o2=-1.0 d2=0.01 k2=051,076,101,126,151
+                                l2=051,076,101,126,151 |
          ricker1 frequency=0.008 |
          put label1=z label2=t
          ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
-
     Plot(tcig,tcig,igrey('pclip=100'))
 
     # slant-stack (velocity parameter)
@@ -295,11 +290,11 @@ for i in (['0','1','2','3','4','5','6']):
     kh = int(i) - 3
 
     hspk=''
-    hspk=hspk+str(int(200-50*kh))+','
-    hspk=hspk+str(int(200-25*kh))+','
-    hspk=hspk+str(int(200-00*kh))+','
-    hspk=hspk+str(int(200+25*kh))+','
-    hspk=hspk+str(int(200+50*kh))
+    hspk=hspk+str(int(201-50*kh))+','
+    hspk=hspk+str(int(201-25*kh))+','
+    hspk=hspk+str(int(201-00*kh))+','
+    hspk=hspk+str(int(201+25*kh))+','
+    hspk=hspk+str(int(201+50*kh))
 
     # cig (space shift)
     hcig = 'hcig'+ i
@@ -307,8 +302,8 @@ for i in (['0','1','2','3','4','5','6']):
          '''
          spike nsp=5 mag=1,1,1,1,1
          n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
-         n2=200 o2=-2000 d2=20 k2=050,075,100,125,150
-         l2=050,075,100,125,150 |
+         n2=200 o2=-2000 d2=20 k2=051,076,101,126,151
+                               l2=051,076,101,126,151 |
          ricker1 frequency=0.008 |
          put label1=z label2=h
          ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
