@@ -102,8 +102,8 @@ void envcorr(float** inp /* input data [ntr][n1] */, float* rat1)
     for (i2=0; i2 < ntr; i2++) {
 	for (i1=0; i1 < n1; i1++) {
 	    i = i2*n1 + i1;
-	    num[i] = data[i1]*doth;
-	    den[i] = hilb[i1]*doth;
+	    num[i] = inp[0][i1]*doth;
+	    den[i] = hlb[0][i1]*doth;
 	}
     }
 

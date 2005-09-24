@@ -92,6 +92,7 @@ surface3 kirmod3_init(int nsx, float s0x, float dsx  /* source inline */,
 	sy = s0y + isy*dsy;
 	for (isx=0; isx < nsx; isx++, yi++) {
 	    sx = s0x + isx*dsx;
+	    ihx=0;
 	    for (ihy=0; ihy < nhy; ihy++) {
 		for (ihx=0; ihx < nhx; ihx++, yi++) {
 		    yi->x = sx + h0x + ihx*dhx;
@@ -174,7 +175,7 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 /*< Compute traveltime/amplitude map >*/
 {
     int ix, iy, im, ic;
-    float x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, v2, g, gy, gx, gz, dz;
+    float x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, g, gy, gx, gz, dz;
     float xp=0., yp=0.;
     ktable ***ta=NULL;
 
@@ -219,7 +220,7 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 			px = x+z*zx;                    /* r*dr/dx */
 			py = y+z*zy;
 			pz = z-x*zx-y*zy;
-			kirmod_table(type,false,r,g,gx,gy,gz,v1,v2,px,py,pz,dz,
+			kirmod_table(type,false,r,g,gx,gy,gz,v1,v1,px,py,pz,dz,
 				     ta[iy][ix][ic]);
 		    } 
 		}

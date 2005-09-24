@@ -66,16 +66,16 @@ void nos(float            w,
     float         h_;     /* H     */
     float complex w_;     /* W     */
     float         k_;     /* K, K' */
-    float complex kp;
-    float complex s_, sp; /* S, S' */
-    float complex ss, ds;
-    float complex a,b,c;
+/*    float complex kp;     */
+/*    float complex s_, sp; */ /* S, S' */
+/*    float complex ss, ds; */
+/*    float complex a,b,c; */
 
     float complex cc;
     float complex w2;
     float         s2, aa, fold;
 
-    int jn;
+/*    int jn; */
 /*------------------------------------------------------------*/
 
     w2 = 0.1*aw.d - I*w;

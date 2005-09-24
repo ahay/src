@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     off_t pos;
     bool sign;
     int   ns,    ny,    nh, nh2, nt;
-    int   is,    iy,    ih, ih2, *mask;
+    int   is,    iy,    ih, ih2=0, *mask;
     float os,ds, oy,dy, oh,dh;
     char *trace, *zero;
     sf_file in, out, msk;

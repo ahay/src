@@ -35,8 +35,8 @@ int main (int argc, char* argv[])
     char *xk, *yk, *lagfile, *nhfile, *header;
     bool stat;
     filter aa;
-    nfilter naa;
-    sf_file in, out, head, flt, lag, nhh, pch;
+    nfilter naa=NULL;
+    sf_file in, out, head, flt, lag, nhh, pch=NULL;
 
     sf_init (argc,argv);
     in = sf_input("in");

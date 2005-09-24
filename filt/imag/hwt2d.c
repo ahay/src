@@ -132,9 +132,11 @@ pt2d hwt2d_step(pt2d Qo, pt2d Pm, pt2d Po, pt2d Pp)
 
     Sm.x = Po.x - lo*( ka*a - kb*b );
     Sm.z = Po.z - lo*( ka*b + kb*a );
-    
+    Sm.v = 0;
+
     Sp.x = Po.x - lo*( ka*a + kb*b );
     Sp.z = Po.z - lo*( ka*b - kb*a );
+    Sp.v = 0;
 
     Ro = DST2d(Sm,Qo) > DST2d(Sp,Qo) ? Sm : Sp;
     Ro.v=hwt2d_getv(Ro);
@@ -170,6 +172,7 @@ pt2d hwt2d_orth( pt2d Pm, pt2d Po, pt2d Pp)
 
     Ro.x = Po.x - ss * lo * sina;
     Ro.z = Po.z +      lo * cosa;
+    Ro.v = 0;
     Ro.v=hwt2d_getv(Ro);
     
     return(Ro);

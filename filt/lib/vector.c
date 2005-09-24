@@ -154,6 +154,7 @@ pt3d tip3d(pt3d* O, vc3d* V)
     A.x = O->x + V->dx;
     A.y = O->y + V->dy;
     A.z = O->z + V->dz;
+    A.v = 0;
 
     return A;    
 }

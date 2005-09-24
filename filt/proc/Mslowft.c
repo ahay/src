@@ -66,6 +66,7 @@ int main (int argc, char **argv)
     if (inv) { 
 	nk = n1;
 	if (!sf_histfloat(in,"d1",&dk)) sf_error("No d1= in input");
+	if (!sf_histfloat(in,"o1",&k0)) sf_error("No o1= in input");
 	if (!sf_histint  (in,"m1",&nx)) nx=nk;
 	if (!sf_histfloat(in,"c1",&x0)) x0 = 0.; 
 	dx = 1./(nk*dk);

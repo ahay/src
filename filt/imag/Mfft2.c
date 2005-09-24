@@ -77,8 +77,7 @@ int main (int argc, char *argv[])
 	case 'b':
 	    sf_warning("FFT on 1 and 2");
 	    if(s1 != s2) sf_error("%s: s1 != s2",__FILE__);
-	    if(s1>0) flag=true;
-	    else     flag=false;
+	    flag = (s1>0);
 
 	    fft2_init(b1.n,b2.n);
 	    sft2_init(a1.o,a1.d,a2.o,a2.d);
@@ -90,8 +89,7 @@ int main (int argc, char *argv[])
 	    break;
 	case '1':
 	    sf_warning("FFT on 1");
-	    if(s1>0) flag=true;
-	    else     flag=false;
+	    flag = (s1>0);
 
 	    fft1_init(b1.n,a2.n,1);
 	    sft1_init(a1.o,a1.d);
@@ -103,8 +101,7 @@ int main (int argc, char *argv[])
 	    break;
 	case '2':
 	    sf_warning("FFT on 2");
-	    if(s2>0) flag=true;
-	    else     flag=false;
+	    flag = (s2>0);
 
 	    fft1_init(a1.n,b2.n,2);
 	    sft1_init(a2.o,a2.d);
@@ -117,6 +114,7 @@ int main (int argc, char *argv[])
 	default:
 	    sf_warning("no FFT");
 	    dk=sf_complexalloc2(a1.n,a2.n);
+	    flag = false;
 
 	    oaxa(Fo,&a1,1);
 	    oaxa(Fo,&a2,2);
