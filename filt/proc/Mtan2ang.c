@@ -1,4 +1,4 @@
-/* Compute shift from pseudo-v to pseudo-tan(theta) */
+/* Compute cos(theta) from 1/|pm| for time-shift imaging condition */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -28,71 +28,59 @@ int main (int argc, char* argv[])
     fint1 sft;
     int  ext;
 
-    float v,a,n,f;
-    int         fint;
+    float a,n,f;
+    int       fint;
 
-    axa ax,az,av,aa;
-    int ix,iz,iv,ia;
+    axa ax,az,at,aa;
+    int ix,iz,it,ia;
 
-    float   **stk, **ang, *vel, *tmp;
-    sf_file  Fstk,  Fang, Fvel;
+    float   **stk, **ang, *tmp;
+    sf_file  Fstk,  Fang;
 
     sf_init (argc,argv);
 
     /*------------------------------------------------------------*/
     Fstk = sf_input("in");
-    Fvel = sf_input("velocity");
     Fang = sf_output("out");
 
     if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
     iaxa(Fstk,&az,1);
-    iaxa(Fstk,&av,2);
+    iaxa(Fstk,&at,2);
     iaxa(Fstk,&ax,3);
 
-    if (!sf_getint  ("na",&aa.n)) aa.n=    av.n;       
-    if (!sf_getfloat("da",&aa.d)) aa.d=1./(av.n-1);
+    if (!sf_getint  ("na",&aa.n)) aa.n=    at.n;       
+    if (!sf_getfloat("da",&aa.d)) aa.d=90/(at.n-1);
     if (!sf_getfloat("a0",&aa.o)) aa.o=0.;         
-
     oaxa(Fang,&aa,2);
 
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
-    stk = sf_floatalloc2(az.n,av.n);
+    stk = sf_floatalloc2(az.n,at.n);
     ang = sf_floatalloc2(az.n,aa.n);
-    tmp = sf_floatalloc(      av.n);
-    vel = sf_floatalloc(az.n      );
+    tmp = sf_floatalloc(      at.n);
 
-    sft = fint1_init(ext, av.n, 0);
+    sft = fint1_init(ext, at.n, 0);
     
     for (ix = 0; ix < ax.n; ix++) {
-	sf_floatread(vel   ,az.n     ,Fvel);	
-	sf_floatread(stk[0],az.n*av.n,Fstk);
+	sf_floatread(stk[0],az.n*at.n,Fstk);
 	
 	/*------------------------------------------------------------*/
 	for (iz = 0; iz < az.n; iz++) {
-	    for (iv = 0; iv < av.n; iv++) {
-		tmp[iv] = stk[iv][iz];
+	    for (it = 0; it < at.n; it++) {
+		tmp[it] = stk[it][iz];
 	    }
 	    fint1_set(sft,tmp);
-	    v = vel[iz];
 	    
 	    for (ia=0; ia < aa.n; ia++) {
-		a = aa.o+ia*aa.d;      /*                    tan     */
-		n = v * hypotf(a,1.);  /* nu = v * sqrt( 1 + tan^2 ) */
+		a = aa.o+ia*aa.d;      /* ang */
+		n = tanf(a/180*SF_PI); /* tan */
 
-		f = (n - av.o) / av.d;
-/*		if( a>0. ) {*/
-/*		    f = ( v-av.o + SF_ABS(n-v) ) / av.d;*/
-/*		} else {*/
-/*		    f = ( v-av.o - SF_ABS(n-v) ) / av.d;*/
-/*		}*/
-/*		f =  ( v-av.o + SF_SIG(a) * SF_ABS(n-v) ) / av.d;*/
-
+		f = (n - at.o) / at.d;
 		fint = f;
 
-		if (fint >= 0 && fint < av.n) {
+		if (fint >= 0 && fint < at.n) {
 		    ang[ia][iz] = fint1_apply(sft,fint,f-fint,false);
 		} else {
 		    ang[ia][iz] = 0.;

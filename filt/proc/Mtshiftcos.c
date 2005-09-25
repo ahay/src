@@ -1,4 +1,4 @@
-/* Compute shift from pseudo-v to pseudo-tan(theta) */
+/* Compute cos(theta) from 1/|pm| for time-shift imaging condition */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -51,9 +51,8 @@ int main (int argc, char* argv[])
     iaxa(Fstk,&ax,3);
 
     if (!sf_getint  ("na",&aa.n)) aa.n=    av.n;       
-    if (!sf_getfloat("da",&aa.d)) aa.d=1./(av.n-1);
+    if (!sf_getfloat("da",&aa.d)) aa.d=90/(av.n-1);
     if (!sf_getfloat("a0",&aa.o)) aa.o=0.;         
-
     oaxa(Fang,&aa,2);
 
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
@@ -79,17 +78,11 @@ int main (int argc, char* argv[])
 	    v = vel[iz];
 	    
 	    for (ia=0; ia < aa.n; ia++) {
-		a = aa.o+ia*aa.d;      /*                    tan     */
-		n = v * hypotf(a,1.);  /* nu = v * sqrt( 1 + tan^2 ) */
+		a = aa.o+ia*aa.d;      /* ang */
+		a = cosf(a/180*SF_PI); /* cos */
 
+		n = v / a;             /* nu = v / cos */
 		f = (n - av.o) / av.d;
-/*		if( a>0. ) {*/
-/*		    f = ( v-av.o + SF_ABS(n-v) ) / av.d;*/
-/*		} else {*/
-/*		    f = ( v-av.o - SF_ABS(n-v) ) / av.d;*/
-/*		}*/
-/*		f =  ( v-av.o + SF_SIG(a) * SF_ABS(n-v) ) / av.d;*/
-
 		fint = f;
 
 		if (fint >= 0 && fint < av.n) {
