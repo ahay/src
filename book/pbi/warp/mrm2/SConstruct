@@ -5,9 +5,41 @@ for case in mods:
     segy = case + '_marmousi-ii.segy'
     Fetch(segy,'marm2')
 
-    Flow(case,segy,'segyread tape=$SOURCE format=5 read=data',stdin=0)
+    Flow(case,segy,
+         '''
+         segyread tape=$SOURCE read=data |
+         put d1=0.00125 o1=0 d2=0.00125 o2=0 > $TARGET &&
+         /bin/rm header binary
+         ''',
+         stdin=0,stdout=-1)
 
 Flow('ref',mods,
-     'cat ${SOURCES[1:3]} | transp plane=23 memsize=500 | modrefl2 nt=1000 dt=0.001')
+     '''
+     cat ${SOURCES[1:3]} |
+     window f1=361 |
+     transp plane=23 memsize=500 |
+     modrefl2 nt=2501 dt=0.002
+     ''')
 
+freq = {
+    'pp': ['5,10,60,80','35'],
+    'ps': ['2.5,5,30,40','17.5']
+    }
+window = {
+    'pp': 'n1=1251',
+    'ps': 'f2=2'
+    }
+
+for mode in ('pp','ps'):
+    grey = 'grey title=%s' % string.upper(mode)
+    for case in range(2):
+        modec = mode+str(case)
+        Flow(modec,'ref','window n2=1 %s | ' % window[mode] +
+             ('trapez frequency=%s','ricker1 frequency=%s')[case] %
+             freq[mode][case])
+        Result(modec,grey)
+        win = modec+'win'
+        Flow(win,modec,'window max2=5')
+        Result(win,grey)
+        
 End()

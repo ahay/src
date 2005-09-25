@@ -30,8 +30,8 @@ The output contains PP intercept, PP gradient, and PS gradient.
 int main(int argc, char* argv[])
 {
     int nt, n1, i1, i2, n2, nw, three;
-    float z, *a, *b, *r, *tpp, *tps, *app, *aps, *bpp, *spline, *trace;
-    float dt, tp,ts, a1,a2, b1,b2, r1,r2, o1, d1, dr, da, db, ab; 
+    float *a, *b, *r, *tpp, *tps, *app, *aps, *bpp, *spline, *trace;
+    float dt, tp,ts, a1,a2, b1,b2, r1,r2, d1, dr, da, db, ab; 
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -43,7 +43,6 @@ int main(int argc, char* argv[])
     n2 = sf_leftsize(in,2);
 
     if (!sf_histfloat(in,"d1",&d1)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&o1)) sf_error("No o1= in input");
 
     if (!sf_getint("nt",&nt)) sf_error("Need nt=");
     /* time samples */
@@ -78,9 +77,8 @@ int main(int argc, char* argv[])
 	b2 = b[0];
 	r2 = r[0];
 	for (i1=1; i1 < n1; i1++) {
-	    z = o1+i1*d1;
-	    tp += 2.*z/a2;
-	    ts += z/a2 + z/b2;
+	    tp += 2.*d1/a2;
+	    ts += d1/a2 + d1/b2;
 	
 	    a1 = a2;
 	    a2 = a[i1];

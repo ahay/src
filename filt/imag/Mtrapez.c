@@ -1,4 +1,4 @@
-/* Convolution with a Ricker wavelet. */
+/* Convolution with a trapezoidal filter. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -19,12 +19,12 @@
 
 #include <rsf.h>
 
-#include "ricker.h"
+#include "trapez.h"
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2;
-    float d1, freq, *trace;
+    int i, n1, n2, i2;
+    float d1, freq[4], *trace;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -34,17 +34,21 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     n2 = sf_leftsize(in,1);
 
-    if (!sf_getfloat("frequency",&freq)) {
-      /* peak frequency for Ricker wavelet (in Hz) */
-      if (!sf_getfloat("freq",&freq)) freq=0.2;
-      /* peak frequency for Ricker wavelet (as fraction of Nyquist) */
+    if (!sf_getfloats("frequency",freq,4)) {
+	/* frequencies (in Hz), default: (0.1,0.15,0.45,0.5)*Nyquist */
+	freq[0] = 0.1*0.5;
+	freq[1] = 0.15*0.5;
+	freq[2] = 0.45*0.5;
+	freq[3] = 0.5*0.5;
     } else {
-      if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-      freq *= 2.*d1;
+	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	for (i=0; i < 4; i++) {
+	    freq[i] *= d1;
+	}
     }
 
     trace = sf_floatalloc(n1);
-    ricker_init(sf_fftr_size(n1,2*n1),0.5*freq,0);
+    trapez_init(sf_fftr_size(n1,2*n1),freq);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
