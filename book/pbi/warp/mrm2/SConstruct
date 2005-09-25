@@ -1,9 +1,13 @@
 from rsfproj import *
 
-for case in ('vp','vs'):
+mods = ['vp','vs','density']
+for case in mods:
     segy = case + '_marmousi-ii.segy'
     Fetch(segy,'marm2')
 
     Flow(case,segy,'segyread tape=$SOURCE format=5 read=data',stdin=0)
+
+Flow('ref',mods,
+     'cat ${SOURCES[1:3]} | transp plane=23 memsize=500 | modrefl2 nt=1000 dt=0.001')
 
 End()
