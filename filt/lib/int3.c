@@ -131,7 +131,7 @@ void  sf_int3_lop (bool adj, bool add, int nm, int ny, float* mm, float* dd)
 	    }
 	}
 
-    } // end id
+    } /* id */
 }
 
 void int3_close (void)

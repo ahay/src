@@ -3,7 +3,7 @@ import sys, os, string, re, commands, types
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-if SCons.__version__ == '0.96.90':
+if SCons.__version__ == '0.96.90' or SCons.__version__ == '0.96.91':
     from SCons.Script import *
 else:
     import SCons.Script.SConscript

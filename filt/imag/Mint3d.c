@@ -156,8 +156,8 @@ int main(int argc, char* argv[])
     for (it=1; it<at.n; it++) {
 	if(verb) sf_warning("it=%d of %d",it+1,at.n);
 
-	t = at.o + it * at.d; // traveltime to the current wavefront
-	pt3dread2(Fw,wo,ag.n,ah.n,3); // read wavefront it
+	t = at.o + it * at.d; /* traveltime to the current wavefront */
+	pt3dread2(Fw,wo,ag.n,ah.n,3); /* read wavefront it */
 
 	for (ih=0; ih<ah.n; ih++) { 
 	    for (ig=0; ig<ag.n; ig++) {
@@ -166,8 +166,8 @@ int main(int argc, char* argv[])
 		To = wo[ih][ig];
 		TmTo = vec3d(&Tm,&To);
 
-		wl[ih][ig] += len3d(&TmTo); // update ray length
-		l = wl[ih][ig]; // ray length to the current wavefront
+		wl[ih][ig] += len3d(&TmTo); /* update ray length */
+		l = wl[ih][ig]; /* ray length to the current wavefront */
 
 		if     (pick==2) hwt3d_lint(tt,ll,To,t,l);
 		else if(pick==1) hwt3d_tint(tt,ll,To,t,l);
@@ -182,7 +182,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-    } // end it 
+    } /* end it */
 
     /* fill holes */
     if(fill>0) hwt3d_fill(tt,fill);
