@@ -22,6 +22,7 @@
 /*^*/
 
 #include "quadratic.h"
+#include "c99.h"
 
 #ifndef _quadratic_h
 

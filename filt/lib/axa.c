@@ -1,5 +1,6 @@
 #include "axa.h"
 #include <string.h>
+#include <stdio.h>
 
 #include "file.h"
 /*^*/

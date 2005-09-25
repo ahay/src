@@ -24,6 +24,7 @@
 
 #include "cell.h"
 #include "quadratic.h"
+#include "c99.h"
 #include "_defs.h"
 
 static float pg;

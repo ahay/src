@@ -124,10 +124,10 @@ int main(int argc, char* argv[])
 	sf_floatread(dat,nd,Fd);
 
 	sf_prefilter_apply(nd,dat);  
-	sf_int1_lop( true,   // adj
-		     false,  // add
-		     nm,     // n model
-		     nd,     // n data
+	sf_int1_lop( true,   /* adj */
+		     false,  /* add */
+		     nm,     /* n model */
+		     nd,     /* n data */
 		     mod,   
 		     dat);
 

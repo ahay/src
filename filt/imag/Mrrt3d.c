@@ -180,7 +180,7 @@ int main(int argc, char* argv[])
 	    else if(pick==1) hwt3d_tint(tt,ll,To,t,l);
 	    else             hwt3d_nint(tt,ll,To,t,l);
 
-	} /* end it */
+	} /* end it */	
 
     } /* end iray */
 
