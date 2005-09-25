@@ -523,7 +523,7 @@ void hwt3d_fill(float*** tt, /* traveltime cube */
 	for(ix=0;ix<ax.n;ix++) {
 	    for(iz=0;iz<az.n;iz++) {
 
-		//---------------------------------------
+		/*---------------------------------------*/
 		if( tt[iy][ix][iz] == MISSING) {
 
 		    kx=SF_MIN(SF_MAX(ix-n,0),ax.n-1);
@@ -546,14 +546,14 @@ void hwt3d_fill(float*** tt, /* traveltime cube */
 				}
 			    }
 			}
-		    } // local loop
+		    } /* local loop */
 		    
 		    if(k>0) tt[iy][ix][iz] = v/k;
 		    
-		} // end if MISSING
-		//---------------------------------------
+		} /* end if MISSING */
+		/*---------------------------------------*/
 
 	    }
 	}
-    } // global loop
+    } /* global loop */
 }
