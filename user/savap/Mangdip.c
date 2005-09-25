@@ -109,10 +109,10 @@ int main(int argc, char* argv[])
 			 sf_spline_int, 
 			 nw, aa.n);
 
-	    sf_int1_lop( true,   // adj
-			 false,  // add
-			 aa.n,   // n model
-			 aa.n,   // n data
+	    sf_int1_lop( true,   /* adj */
+			 false,  /* add */
+			 aa.n,   /* n model */
+			 aa.n,   /* n data */
 			 mod,   
 			 dat);
 

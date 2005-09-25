@@ -90,14 +90,14 @@ int main(int argc, char* argv[])
 				}
 			    }
 			}
-		    } // local loop
+		    } /* local loop */
 		    
 		    if(k>0) hh[iy][ix][iz] = v/k;
-		} // end if missing
+		} /* end if missing */
 		
 	    }
 	}
-    }  // global loop
+    }  /* global loop */
 
     sf_floatwrite(hh[0][0],az.n*ax.n*ay.n,Ff);
 
