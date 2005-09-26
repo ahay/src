@@ -5,7 +5,7 @@
  ##
 
 from rsfproj import *
-import math
+from math    import *
 import spmig
 
 # ------------------------------------------------------------
@@ -35,31 +35,7 @@ def p2x2(plot,p0,p1,p2,p3,ys,xs,yc,xc):
     Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0 '% (ys,xs)      )
     Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=%f'% (ys,xs,   xc))
 
-    Plot(plot,[j0,j1,j2,j3],'Overlay')
-
-def p1x3(plot,p0,p1,p2,ys,xs,xc):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
-
-    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=0 '% (ys,xs     ))
-    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,  xc))
-    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,2*xc))
-
-    Plot(plot,[j0,j1,j2],'Overlay')
-
-def p4x1(plot,p0,p1,p2,p3,ys,xs,yc):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
-    j3 = '_' + p3
-
-    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0'% (ys,xs      ))
-    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,  yc ))
-    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,2*yc ))
-    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,3*yc ))
-
-    Plot(plot,[j0,j1,j2,j3],'Overlay')
+    Plot  (plot,[j0,j1,j2,j3],'Overlay')
     Result(plot,[j0,j1,j2,j3],'Overlay')
 
 SCREEN = " screenratio=2 screenht=22 labelsz=12"
@@ -74,8 +50,8 @@ par = {
     'nz':400, 'oz':0,     'dz':10,                            # for WEM
     'ns':50,  'os':0,     'ds':20, 'js':1, 'fs':0,
     'nt':2000,'ot':0,     'dt':0.01,
-    'nht':100,'oht':-0.5, 'dht':0.01,
-    'nhx':50,
+    'nht':200,'oht':-1.0, 'dht':0.01,
+    'nhx':100,
     'vel':2000, 'vel2':2000,
     'nw':100,'ow':1,'jw':3, 'frq':6,
     #
@@ -83,7 +59,7 @@ par = {
     'tmx':16,'tmy':0,'pmx':0,'pmy':0,
     'misc':'',
     #    
-    'SOU':2000,'ns':1,'os':1500,'ds':500,
+    'ns':1,'os':1500,'ds':500,
     'REF':0
     }
 par['zmin']=par['oz']
@@ -127,22 +103,25 @@ def hcig2ssk():
 # slant-stack to angle
 def tssk2ang():
     return '''
-    /home/savap/RSF/filt/proc/sftshiftcos a0=0 na=150 da=0.45
+    tshiftcos a0=0 na=150 da=0.45
     velocity=${SOURCES[1]} |
     put label2=ang
     '''
 def hssk2ang():
     return '''
-    /home/savap/RSF/filt/proc/sftan2ang a0=0 na=150 da=0.45 |
+    tan2ang a0=0 na=150 da=0.45 |
     put label2=ang
     '''
 # ------------------------------------------------------------
 
-#for DIP in ('00','15','30'):
-for DIP in (['00']):
+Flow('von',  'vel', 'window n2=1 min2=%g'% par['xcig']) # velocity
 
-    par['REF'] = par['zcig'] - par['xcig'] * math.tan(math.pi*    float(DIP) /180.)
-    par['SOU'] = par['xcig'] + par['zcig'] * math.tan(math.pi*(00-float(DIP))/180.)
+
+for DIP in ('00','15','30'):
+#for DIP in (['00']):
+
+    par['REF'] = par['zcig'] - par['xcig'] * tan(pi*float(DIP) /180.)
+    par['SOU'] = par['xcig']
 
     # ------------------------------------------------------------ 
     # modeling (Kirchhoff)
@@ -154,7 +133,7 @@ for DIP in (['00']):
     # reflector
     Flow(dip,None,'spike n1=%d o1=%g d1=%g mag=%g'
          % (par['ny'],par['oy'],par['dy'],
-            math.tan(math.pi*float(DIP)/180.)))
+            tan(pi*float(DIP)/180.)))
     Flow(ref,dip,'math output="%(REF)g+x1*input"' % par)
     Result(ref,ref, igraph('title=%s',par) %DIP)
 
@@ -169,15 +148,6 @@ for DIP in (['00']):
          ''' % par)
     Result(kir,kir,'window max1=8 | ' + igrey('pclip=99 title=%s') %DIP)
 
-    # mask
-    msk = 'msk'+str(DIP)
-    Flow(msk,None,
-         '''
-         spike nsp=2 mag=1,1
-         n1=%(nt)d o1=%(ot)g d1=%(dt)g
-         n2=%(nh)d o2=%(oh)g d2=%(dh)g k2=150,350 l2=150,350
-         ''' % par)
-
     # ------------------------------------------------------------
     # source/receiver wavefields
     # ------------------------------------------------------------
@@ -191,188 +161,146 @@ for DIP in (['00']):
     # t =  time-shift
     for TYP in ('t','x'):
 
+        imt = 'imt'+str(DIP)
+        cit = 'cit'+str(DIP)
+
+        imh = 'imx'+str(DIP)
+        cih = 'cix'+str(DIP)
+
         # ------------------------------------------------------------
         # migration
         # ------------------------------------------------------------
         if(TYP=='t'):
-            img = 'imt'+str(DIP)
-            cig = 'cit'+str(DIP)
             par['misc']='itype=t nht=%(nht)d oht=%(oht)g dht=%(dht)g jcx=1' % par
+            spmig.imagePW(imt,cit,'slo',sou,rec,par)
         else:
-            img = 'imx'+str(DIP)
-            cig = 'cix'+str(DIP)
             par['misc']='itype=x nhx=%(nhx)d hsym=y                  jcx=1' % par
+            spmig.imagePW(imh,cih,'slo',sou,rec,par)
 
-        spmig.imagePW(img,cig,'slo',sou,rec,par)
-        Result(img,img,'window | transp | '                + igrey('title=%s          ') %DIP)
-#        Result(cig,cig,'window n1=1 min1=%(xcig)g |' % par + igrey('title=%s pclip=100') %DIP)
-        Plot  (cig,cig,'window n1=1 min1=%(xcig)g |' % par + igrey('title=%s pclip=100') %DIP)
+        Result(imt,'window | transp | ' + igrey('title=%s') %DIP)
+        Result(imh,'window | transp | ' + igrey('title=%s') %DIP)
 
         # ------------------------------------------------------------
         # angle decomposition
         # ------------------------------------------------------------
-        if(TYP=='t'):
-            # slant stack (in z-t plane)
-            slt = 'slt'+str(DIP)
-            Flow(slt,cig, 'window n1=1 min1=%(xcig)g |'% par + tcig2ssk())
-#            Result(slt,slt,'window |'+igrey('title=%s' %DIP))
-            Plot  (slt,slt,'window |'+igrey('title=%s' %DIP))
+        ct = 'ct'+str(DIP)
+        Flow(ct,cit,'window n1=1 min1=%(xcig)g' % par)
+        Plot(ct,igrey('pclip=99 label2="\F10 t\F3 (s)"'))
+        
+        st = 'st'+str(DIP)
+        Flow(st,ct,        tcig2ssk())
+        Plot(st,igrey('pclip=100 label2="\F10 n \F3  (m/s)"'))
+        
+        at = 'at'+str(DIP)
+        Flow(at,[st,'von'],tssk2ang())
+        Plot(at,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
 
-            # angle mapping (w/o structural dip)
-            vaz = 'vaz'+str(DIP)
-            ant = 'ant'+str(DIP)            
-            Flow(vaz,'vel','window n2=1 min2=%(xcig)g' % par)
-            Flow(ant,[slt,vaz],'window |' + tssk2ang())
-            Result(ant,ant,'window |'+igrey('title=%s' %DIP))
-            Plot  (ant,ant,'window |'+igrey('title=%s' %DIP))
-
-            # dip field
-            dif = 'dif'+str(DIP)
-            ANG = math.pi*float(DIP)/180.
-            Flow(dif,img,'window | transp | math output=%g' % ANG)
             
-            # angle mapping (w/  structural dip)
-            vbz = 'vbz'+str(DIP)
-            bnz = 'bnz'+str(DIP)
-            Flow(vbz,[dif,'vel'],'math v=${SOURCES[1]} output="v/cos(input)"')
-            Flow(bnz,[slt,vbz], tssk2ang())
-#            Result(bnz,bnz,'window |'+igrey('title=%s' %DIP))
-
-        else:
-            # slant stack (in z-h plane)
-            anh = 'anh'+str(DIP)
-            Flow(anh,cig,'window n1=1 min1=%(xcig)g |' % par + hcig2ssk())
-            Result(anh,anh,'window |'+igrey('title=%s' %DIP))
+        # slant stack (in z-t plane)
+        #            slt = 'slt'+str(DIP)
+        #            Flow(slt,cig, 'window n1=1 min1=%(xcig)g |'% par + tcig2ssk())
+        #            Result(slt,slt,'window |'+igrey('title=%s' %DIP))
+        #            Plot  (slt,slt,'window |'+igrey('title=%s' %DIP))
+        
+        # angle mapping (w/o structural dip)
+        #            vaz = 'vaz'+str(DIP)
+        #            ant = 'ant'+str(DIP)            
+        #            Flow(vaz,'vel','window n2=1 min2=%(xcig)g' % par)
+        #            Flow(ant,[slt,vaz],'window |' + tssk2ang())
+        #            Result(ant,ant,'window |'+igrey('title=%s' %DIP))
+        #            Plot  (ant,ant,'window |'+igrey('title=%s' %DIP))
+        
+        # dip field
+        #            dif = 'dif'+str(DIP)
+        #            ANG = pi*float(DIP)/180.
+        #            Flow(dif,img,'window | transp | math output=%g' % ANG)
+        
+        # angle mapping (w/  structural dip)
+        #            vbz = 'vbz'+str(DIP)
+        #            bnz = 'bnz'+str(DIP)
+        #            Flow(vbz,[dif,'vel'],'math v=${SOURCES[1]} output="v/cos(input)"')
+        #            Flow(bnz,[slt,vbz], tssk2ang())
+        #            Result(bnz,bnz,'window |'+igrey('title=%s' %DIP))
+        ch = 'ch'+str(DIP)
+        Flow(ch,cih,'window n1=1 min1=%(xcig)g' % par)
+        Plot(ch,igrey('pclip=99 label2="h(m)"'))
+        
+        sh = 'sh'+str(DIP)
+        Flow(sh,ch,        hcig2ssk())
+        Plot(sh,igrey('pclip=100 label2="tan \F10 q\F3 "'))
+        
+        ah = 'ah'+str(DIP)
+        Flow(ah,sh,        hssk2ang())
+        Plot(ah,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
+        
+        csa = 'csa'+str(DIP)
+        p2x2(csa,ct,at,ch,ah,0.5,0.5,-10,-12)
+        
+        # slant stack (in z-h plane)
+#            anh = 'anh'+str(DIP)
+#            Flow(anh,cig,'window n1=1 min1=%(xcig)g |' % par + hcig2ssk())
+#            Result(anh,anh,'window |'+igrey('title=%s' %DIP))
 
 # composite: time-shift CIG, slant-stack, angle-gather
-Result('comp',['cit00','slt00','ant00'],'SideBySideAniso')
+#Result('comp',['cit00','slt00','ant00'],'SideBySideAniso')
 
 # ------------------------------------------------------------
-# compare positive, normal, negative incidence
-Flow('von',  'vel', 'window n2=1 min2=5000'% par) # velocity
+# FLAT REFLECTOR
+# compare incidence at various angles
 
-for j in range(3000,8000,1000):
+for j in range(5000,8000,1000):
 
+    # time-shift
     ct = 'ci' + str(j)
     Flow(ct,'cit00','window n1=1 min1=%g' % j)
-    Plot(ct,igrey('pclip=100'))
+    Plot(ct,igrey('pclip=100 label2="\F10 t\F3 (s)"'))
+
     st = 'st' + str(j)
     Flow(st,ct,        tcig2ssk())
-    Plot(st,igrey(''))
+    Plot(st,igrey('pclip=100 label2="\F10 n \F3  (m/s)"'))
+
     at = 'at' + str(j)
     Flow(at,[st,'von'],tssk2ang())
-    Plot(at,igrey(''))
+    Plot(at,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
 
+    # space-shift
     ch = 'hi' + str(j)
     Flow(ch,'cix00','window n1=1 min1=%g' % j)
-    Plot(ch,igrey('pclip=100'))
+    Plot(ch,igrey('pclip=100 label2="h(m)"'))
+
     sh = 'sh' + str(j)
     Flow(sh,ch,        hcig2ssk())
-    Plot(sh,igrey(''))
+    Plot(sh,igrey('pclip=100 label2="tan \F10 q\F3 "'))
+
     ah = 'ah' + str(j)
     Flow(ah,sh,        hssk2ang())
-    Plot(ah,igrey(''))
+    Plot(ah,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
 
+    # composite (CIG,slant-stack,angle)
     csa = 'csa' + str(j)
     p2x2(csa,ct,at,ch,ah,0.5,0.5,-10,-12)
 
 Result('csa','csa5000 csa6000 csa7000','Movie')
-    
-# ------------------------------------------------------------
-# test time-shift to angle transformation
-#for i in (['0','1','2','3','4','5','6']):
-for i in (['3','4','5','6','7']):
-
-    a = (int(i)-3)*15
-
-    vv = 2000/math.cos(math.pi*a/180.)
-    kt = vv * par['dht'] / par['dz']
-    
-    tspk=''
-    tspk=tspk+str(int(201-50*kt))+','
-    tspk=tspk+str(int(201-25*kt))+','
-    tspk=tspk+str(int(201-00*kt))+','
-    tspk=tspk+str(int(201+25*kt))+','
-    tspk=tspk+str(int(201+50*kt))
-
-    # cig (time shift)
-    tcig = 'tcig'+ i
-    Flow(tcig,None,
-         '''
-         spike nsp=5 mag=1,1,1,1,1
-         n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
-         n2=200 o2=-1.0 d2=0.01 k2=051,076,101,126,151
-                                l2=051,076,101,126,151 |
-         ricker1 frequency=0.004 |
-         put label1=z label2=t
-         ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
-    Plot(tcig,igrey('pclip=100 label2="\F10 t\F3 (s)"'+SCREEN))
-
-    # slant-stack (velocity parameter)
-    tsla = 'tsla' + i
-    Flow(tsla,tcig,tcig2ssk())
-    Plot(tsla,igrey('pclip=100 label2="\F10 n \F3  (m/s)"'+SCREEN))
-    
-    # angle transform
-    tvel = 'tvel' + i
-    Flow(tvel,'vel','window n2=1 min2=%(xcig)g' % par)
-    tang = 'tang' + i
-    Flow(tang,[tsla,tvel],tssk2ang())
-    Plot(tang,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'+SCREEN))
-
-    ttest = 'ttest' + i
-    p1x3(ttest,tcig,tsla,tang,0.4,0.4,-10)
-
-    # ------------------------------------------------------------
-
-    tt = math.tan(math.pi*a/180.)
-    kh = tt * par['dh'] / par['dz']
-
-    hspk=''
-    hspk=hspk+str(int(201-50*kh))+','
-    hspk=hspk+str(int(201-25*kh))+','
-    hspk=hspk+str(int(201-00*kh))+','
-    hspk=hspk+str(int(201+25*kh))+','
-    hspk=hspk+str(int(201+50*kh))
-
-    # cig (space shift)
-    hcig = 'hcig'+ i
-    Flow(hcig,None,
-         '''
-         spike nsp=5 mag=1,1,1,1,1
-         n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
-         n2=200 o2=-2000 d2=20 k2=051,076,101,126,151
-                               l2=051,076,101,126,151 |
-         ricker1 frequency=0.004 |
-         put label1=z label2=h
-         ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
-    Plot(hcig,igrey('pclip=100 label2="h(m)"'+SCREEN))
-
-    # slant-stack (velocity parameter)
-    hsla = 'hsla' + i
-    Flow(hsla,hcig,hcig2ssk())
-    Plot(hsla,igrey('pclip=100 label2="tan \F10 q\F3 "'+SCREEN))
-
-    # angle transform
-    hang = 'hang' + i
-    Flow(hang,hsla,hssk2ang())
-    Plot(hang,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'+SCREEN))
-
-    htest = 'htest' + i
-    p1x3(htest,hcig,hsla,hang,0.4,0.4,-10)
-
-    # ------------------------------------------------------------
-
-    atest = 'atest' + i
-    Plot(atest,[ttest,htest],'OverUnderAniso')
-
-Result('tmovie','ttest3 ttest4 ttest5 ttest6 ttest7','Movie')
-Result('hmovie','htest3 htest4 htest5 htest6 htest7','Movie')
-Result('amovie','atest3 atest4 atest5 atest6 atest7','Movie')
-
-p4x1('ttest','ttest3','ttest4','ttest5','ttest6',0.3,0.3,-8)
-p4x1('htest','htest3','htest4','htest5','htest6',0.3,0.3,-8)
 
 # ------------------------------------------------------------
 
+Flow('stkt','cit00','window | transp | stack')
+Plot('stkt',igrey('pclip=100 label2="\F10 t\F3 (s)"'))
+
+Flow('slst','stkt',        tcig2ssk())
+Flow('angt',['slst','von'],tssk2ang())
+Plot('angt',igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
+
+
+Flow('stkh','cix00','window | transp | stack')
+Plot('stkh',igrey('pclip=100 label2="h(m)"'))
+
+Flow('slsh','stkh',        hcig2ssk())
+Flow('angh','slsh',        hssk2ang())
+Plot('angh',igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
+
+
+p2x2('stka','stkt','angt','stkh','angh',0.5,0.5,-10,-12)
+
+# ------------------------------------------------------------
 End()

@@ -41,7 +41,7 @@ IRATIO = ' labelsz=6 screenratio=0.7 screenht=10 min2=%g max2=%g ' % (par['xmin'
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n grid=y gridcol=6
-    title="" pclip=97 label1="depth (km)" label2="location (km)"
+    title="" pclip=97 label1="z(km)" label2="x(km)"
     min1=%g max1=%g
     %s
     ''' % (par['zmin'],par['zmax'],custom)
@@ -138,17 +138,38 @@ Flow('s2','s1 sm',
 # MIGRATION
 # ------------------------------------------------------------
 
-#SLOlist = '0','1','2'
-#CIGlist = '24000','36000','48000','60000','72000'
-
-SLOlist = '0'
-CIGlist = '7','15'
+SLOlist = '0','2'
+CIGlist = '7','11','15'
 IMGlist = 'x','t'
 
 cigpar = {'npt':500,'opt':4000,'dpt':80,
            'na':400, 'oa':-2.0, 'da':0.01, 'mina':0, 'maxa':1.3 }
 cigpar['opt']=cigpar['opt']*ft2km
 cigpar['dpt']=cigpar['dpt']*ft2km
+
+# ------------------------------------------------------------
+
+# CIG to slant-stack
+def tcig2ssk():
+    return '''
+    slant adj=y p0=%g np=%d dp=%g
+    ''' % (cigpar['opt'],cigpar['npt'],cigpar['dpt'])
+def hcig2ssk():
+    return '''
+    slant adj=y p0=%g np=%d dp=%g
+    ''' % (cigpar['oa'],cigpar['na'],cigpar['da'])
+
+# slant-stack to angle
+def tssk2ang():
+    return '''
+    tshiftcos a0=0 na=150 da=0.45
+    velocity=${SOURCES[1]}
+    '''
+def hssk2ang():
+    return '''
+    tan2ang a0=0 na=150 da=0.45
+    '''
+# ------------------------------------------------------------
 
 for i in SLOlist:
     for k in IMGlist:
@@ -188,7 +209,7 @@ for i in SLOlist:
         SRimg = 'SRI' + i + k
         SRcig = 'SRC' + i + k
         Flow(SRimg,SRcig,'window n4=1 min4=0 | transp')
-        Result(SRimg,igrey('pclip=98'+IRATIO,par))
+        Result(SRimg,igrey('pclip=97'+IRATIO,par))
 
         # dip field
         SRdip = 'DIP' + i + k
@@ -222,7 +243,7 @@ for i in SLOlist:
                  transp |
                  bandpass fhi=10
                  ''' % (lmin,lmax) )
-            Plot(z,z,igrey('pclip=98q'+LABEL,par))
+            Plot(z,z,igrey('pclip=97 screenratio=1.5 '+LABEL,par))
             
             # offset gathers
             h = 'h' + i + k + l
@@ -238,14 +259,10 @@ for i in SLOlist:
             c = 'c' + i + k + l    #  time-shift (w/  dip cor)
 
             if(k=='x'):
-                Flow(a,h,
-                     '''
-                     bandpass fhi=10 |
-                     slant adj=y p0=%(oa)g np=%(na)d dp=%(da)g |
-                     window min2=%(mina)g max2=%(maxa)g
-                     ''' % cigpar)
-                Plot  (a,a,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
-                Plot  (h,h,igrey('label2="offset (km)"   '+LABEL,par))
+                Flow(a,h,'bandpass fhi=10 | '+hcig2ssk() +'|'+ hssk2ang())
+
+                Plot  (a,a,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
+                Plot  (h,h,igrey('label2="h(km)"   '+LABEL,par))
                 
             if(k=='t'):
                 vb = 'vb' + i + k + l
@@ -253,29 +270,16 @@ for i in SLOlist:
                 vc = 'vc' + i + k + l
                 Flow(vc,vco,'window n2=1 min2=%g' % float(l) )
 
-                Flow(a,h,
-                     '''
-                     bandpass fhi=10 |
-                     slant adj=y p0=%(opt)g np=%(npt)d dp=%(dpt)g
-                     ''' % cigpar)
+                Flow(a,h,'bandpass fhi=10 | '+tcig2ssk())
 
-                # w/o dip correction
-                Flow(b,[a,vb],
-                     '''
-                     tshift      a0=%(oa)g  na=%(na)d  da=%(da)g velocity=${SOURCES[1]} |
-                     window min2=%(mina)g max2=%(maxa)g
-                     ''' % cigpar)
-                # w/  dip correction
-                Flow(c,[a,vc],
-                     '''
-                     tshift      a0=%(oa)g  na=%(na)d  da=%(da)g velocity=${SOURCES[1]} |
-                     window min2=%(mina)g max2=%(maxa)g
-                     ''' % cigpar)
-    
-                Plot  (a,igrey('label2="vel" max2=5    '+LABEL,par))
-                Plot  (b,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
-                Plot  (c,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
+                Flow(b,[a,vb],tssk2ang()) # w/o dip correction
+                Flow(c,[a,vc],tssk2ang()) # w/  dip correction
+
                 Plot  (h,igrey('label2="\F10 t\F3 (s)" '+LABEL,par))
+                Plot  (a,igrey('label2="\F10 n\F3 (km/s)" max2=5'+LABEL,par))
+                Plot  (b,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
+                Plot  (c,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
+    
                
 for l in CIGlist:
     for i in SLOlist:
@@ -293,8 +297,8 @@ for l in CIGlist:
         bt = 'b' + i + 't' + l
         ct = 'c' + i + 't' + l
         
-#        Result(SRoff,[zx,hx,ht],'SideBySideAniso')
-#        Result(SRang,[zx,ax,at],'SideBySideAniso')
-        Result(SRtic,[zx,ht,at,bt,ct,ax],'SideBySideAniso')
+        Result(SRoff,[zx,hx,ht],'SideBySideAniso')
+        Result(SRang,[zx,ax,ct],'SideBySideAniso')
+        Result(SRtic,[zx,ht,at,ct],'SideBySideAniso')
 
 End()

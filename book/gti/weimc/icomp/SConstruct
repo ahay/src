@@ -26,19 +26,17 @@ def p1x3(plot,p0,p1,p2,ys,xs,xc):
 
     Plot(plot,[j0,j1,j2],'Overlay')
 
-def p4x1(plot,p0,p1,p2,p3,ys,xs,yc):
+def p3x1(plot,p0,p1,p2,ys,xs,yc):
     j0 = '_' + p0
     j1 = '_' + p1
     j2 = '_' + p2
-    j3 = '_' + p3
 
     Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0'% (ys,xs      ))
     Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,  yc ))
     Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,2*yc ))
-    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,3*yc ))
 
-    Plot(plot,[j0,j1,j2,j3],'Overlay')
-    Result(plot,[j0,j1,j2,j3],'Overlay')
+    Plot  (plot,[j0,j1,j2],'Overlay')
+    Result(plot,[j0,j1,j2],'Overlay')
 
 SCREEN = " screenratio=2 screenht=22 labelsz=12"
 # ------------------------------------------------------------
@@ -96,9 +94,9 @@ def hssk2ang():
     '''
 # ------------------------------------------------------------
 
-for i in (['3','4','5','6','7']):
+for i in (['3','4','5','6','7','8']):
 
-    a = (int(i)-3)*15
+    a = (int(i)-3)*10
 
     vv = 2000/math.cos(math.pi*a/180.)
     kt = vv * par['dht'] / par['dz']
@@ -118,12 +116,12 @@ for i in (['3','4','5','6','7']):
          n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
          n2=200 o2=-1.0 d2=0.01 k2=051,076,101,126,151
                                 l2=051,076,101,126,151 |
-         ricker1 frequency=0.004 |
+         ricker1 frequency=0.006 |
          put label1=z label2=t
          ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
     Plot(tcig,igrey('pclip=100 label2="\F10 t\F3 (s)"'+SCREEN))
 
-    # slant-stack (velocity parameter)
+    # slant-stack
     tsla = 'tsla' + i
     Flow(tsla,tcig,tcig2ssk())
     Plot(tsla,igrey('pclip=100 label2="\F10 n \F3  (m/s)"'+SCREEN))
@@ -158,12 +156,12 @@ for i in (['3','4','5','6','7']):
          n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
          n2=200 o2=-2000 d2=20 k2=051,076,101,126,151
                                l2=051,076,101,126,151 |
-         ricker1 frequency=0.004 |
+         ricker1 frequency=0.006 |
          put label1=z label2=h
          ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
     Plot(hcig,igrey('pclip=100 label2="h(m)"'+SCREEN))
 
-    # slant-stack (velocity parameter)
+    # slant-stack
     hsla = 'hsla' + i
     Flow(hsla,hcig,hcig2ssk())
     Plot(hsla,igrey('pclip=100 label2="tan \F10 q\F3 "'+SCREEN))
@@ -181,12 +179,12 @@ for i in (['3','4','5','6','7']):
     atest = 'atest' + i
     Plot(atest,[ttest,htest],'OverUnderAniso')
 
-Result('tmovie','ttest3 ttest4 ttest5 ttest6 ttest7','Movie')
-Result('hmovie','htest3 htest4 htest5 htest6 htest7','Movie')
-Result('amovie','atest3 atest4 atest5 atest6 atest7','Movie')
+Result('tmovie','ttest3 ttest4 ttest5 ttest6 ttest7 ttest8','Movie')
+Result('hmovie','htest3 htest4 htest5 htest6 htest7 htest8','Movie')
+Result('amovie','atest3 atest4 atest5 atest6 atest7 atest8','Movie')
 
-p4x1('ttest','ttest3','ttest4','ttest5','ttest6',0.3,0.3,-8)
-p4x1('htest','htest3','htest4','htest5','htest6',0.3,0.3,-8)
+p3x1('ttest','ttest7','ttest5','ttest3',0.4,0.4,-8)
+p3x1('htest','htest7','htest5','htest3',0.4,0.4,-8)
 
 # ------------------------------------------------------------
 
