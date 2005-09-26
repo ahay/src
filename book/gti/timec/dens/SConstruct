@@ -1,0 +1,38 @@
+from rsfproj import *
+
+# ------------------------------------------------------------
+par = {
+    'nt':1500,   # no of time steps
+    'dt':0.0005, #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    #
+    'ns':1,      # no of shots
+    'os':2000,   #       shots origin
+    'ds':20,     #       shots sampling
+    #
+    'nr':401,    # no of receivers
+    'or':0,      #       receivers origin
+    'dr':2.5,    #       receivers sampling
+    #
+    'ne':1,      # no of experiments
+    'nm':4,      # no of models
+    #
+    'nx':401, 'ox':0, 'dx':2.5,
+    'nz':201, 'oz':0, 'dz':2.5
+    }
+
+# smooth background
+Flow('vo',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1500+1.0*x1" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Flow('ro',None,
+     '''
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2000" |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+
+
+End()
