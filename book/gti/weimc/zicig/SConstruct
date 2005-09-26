@@ -8,30 +8,44 @@ from rsfproj import *
 # MIGRATION parameters
 # ------------------------------------------------------------
 par = {
-    'nx':500,'ox':10925,'dx':150,
-    'nt':1500,'ot':0,'dt':0.008,'kt':1,'ft':0,
-#
-    'nw':1,  'ow':5,
-    'nw':100,'ow':1,'jw':1,
-    'nw':360,'ow':1,'jw':1,
-#
-    'ns':100, 'js':5, 'fs':0,
-    'ns':500, 'js':1, 'fs':0,
-#
-    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
-    'tmx':16,'tmy':0,'pmx':0,'pmy':0,
-    #
-    'dz':25, 'zmin':6100, 'zmax':30000
+    'ox':10925,'dx':150, 'nx':500,
+    'oz':6100, 'dz':25,
+    'oh':-3000,'dh':150
     }
-par['xmin']=par['ox']
-par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-minmax = ' min2=%g max2=%g ' % (par['xmin'],par['xmax'])
 
-def igrey(custom):
+# ------------------------------------------------------------
+# from ft to km
+ft2km = 0.3024/1000
+
+par['ox']=par['ox']*ft2km
+par['dx']=par['dx']*ft2km
+
+par['oz']=par['oz']*ft2km
+par['dz']=par['dz']*ft2km
+
+par['oh']=par['oh']*ft2km
+par['dh']=par['dh']*ft2km
+
+# ------------------------------------------------------------
+
+par['zmin']=2
+par['zmax']=9
+
+par['xmin']=6
+par['xmax']=16
+
+IRATIO = ' labelsz=6 screenratio=0.7 screenht=10 min2=%g max2=%g ' % (par['xmin'],par['xmax'])
+
+# ------------------------------------------------------------
+
+def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n grid=y gridcol=6
-    title="" pclip=97 label1="depth (ft)" %s
-    ''' % (custom)
+    title="" pclip=97 label1="depth (km)" label2="location (km)"
+    min1=%g max1=%g
+    %s
+    ''' % (par['zmin'],par['zmax'],custom)
+
 LABEL = " labelsz=12 titlesz=16 "
 # ------------------------------------------------------------
 
@@ -66,12 +80,15 @@ Flow('zvstr tzvstr ./shead ./bshead',vstr,
 # ------------------------------------------------------------
 # stratigraphic slowness
 Flow('vstr','zvstr',
-     'put d1=25 o2=10025 d2=25 label1=z label2=x')
+     '''
+     scale rscale=%g |
+     put d1=%g o2=%g d2=%g label1=z label2=x
+     '''% (ft2km,25*ft2km, 10025*ft2km, 25*ft2km))
 Flow('vstrpad','vstr',
      '''
      window n1=1 f1=1200 |
-     spray axis=1 n=100 o=0 d=25
-     ''')
+     spray axis=1 n=100 o=0 d=%g
+     ''' % (25*ft2km))
 Flow('s0','vstr vstrpad',
      '''
      cat axis=1 space=n ${SOURCES[1]} |
@@ -80,18 +97,20 @@ Flow('s0','vstr vstrpad',
      transp |
      spray axis=2 n=1 o=0 d=1 |
      put label2=y |
-     window squeeze=n      f3=244
+     window squeeze=n f3=244
      ''' % par)
 
 # migration slowness
 Flow('velo','zvelo',
-     'put d1=25 o2=10025 d2=37.5 label1=z label2=x')
+     '''
+     scale rscale=%g |
+     put d1=%g o2=%g d2=%g label1=z label2=x
+     '''% (ft2km,25*ft2km, 10025*ft2km, 37.5*ft2km))
 Flow('velopad','velo',
      '''
      window n1=1 f1=1200 |
-     spray axis=1 n=100 o=0 d=25
-     ''')
-
+     spray axis=1 n=100 o=0 d=%g
+     ''' % (25*ft2km))
 Flow('s1','velo velopad',
      '''
      cat axis=1 space=n ${SOURCES[1]} |
@@ -100,19 +119,7 @@ Flow('s1','velo velopad',
      transp |
      spray axis=2 n=1 o=0 d=1 |
      put label2=y |
-     window squeeze=n      f3=244
-     ''')
-
-# datuming slowness
-Flow('sd','velo velopad',
-     '''
-     cat axis=1 space=n ${SOURCES[1]} |
-     window |
-     math "output=1/input" |
-     transp |
-     spray axis=2 n=1 o=0 d=1 |
-     put label2=y |
-     window squeeze=n n3=2 j3=244
+     window squeeze=n f3=244
      ''')
 
 # wrong migration velocity
@@ -135,50 +142,66 @@ Flow('s2','s1 sm',
 #CIGlist = '24000','36000','48000','60000','72000'
 
 SLOlist = '0'
-CIGlist = '20000','24000','48000','72000'
+CIGlist = '7','15'
 IMGlist = 'x','t'
 
-cigpar = {'jmx':20,
-          'nhx':20,
-          'nht':80, 'oht':-0.15, 'dht':0.0075,
-          'npt':325,'opt':4000,  'dpt':80,
-          'na':400, 'oa':-2.0,   'da':0.01, 'mina':0, 'maxa':1.6 }
+cigpar = {'npt':500,'opt':4000,'dpt':80,
+           'na':400, 'oa':-2.0, 'da':0.01, 'mina':0, 'maxa':1.3 }
+cigpar['opt']=cigpar['opt']*ft2km
+cigpar['dpt']=cigpar['dpt']*ft2km
 
 for i in SLOlist:
     for k in IMGlist:
         SRcig = 'SRC' + i + k
         Fetch(     SRcig+'.hh','sigsbee')
-        Flow(SRcig,SRcig+'.hh','window squeeze=n')
+
+        if(k=='t'):
+            Flow(SRcig,SRcig+'.hh',
+                 '''
+                 window squeeze=n |
+                 put o1=%(ox)g d1=%(dx)g
+                     o3=%(oz)g d3=%(dz)g
+                 ''' % par)
+        if(k=='x'):
+            Flow(SRcig,SRcig+'.hh',
+                 '''
+                 window squeeze=n |
+                 put o1=%(ox)g d1=%(dx)g
+                     o3=%(oz)g d3=%(dz)g
+                     o4=%(oh)g d4=%(dh)g
+                 ''' % par)
 
 # ------------------------------------------------------------
 # RESULTS
 # ------------------------------------------------------------
-
-# SHOT-RECORD RESULTS
 for i in SLOlist:
     slo = 's' + i
-    Result(slo,slo,'window      | transp |'
-           +igrey('pclip=100 color=j allpos=y label2="location (ft)" '))
+    Result(slo,'window      | transp |'
+           +igrey('pclip=100 allpos=y bias=6.75676e-05'+IRATIO,par))
 
     vel = 'v' + i
     Flow(vel,slo,'window | transp | smooth rect1=51 | math output=1/input')
 
     for k in IMGlist:
+        
+        # image / CIGs
         SRimg = 'SRI' + i + k
-        Flow(SRimg,SRcig,'window n4=1 min4=0 | transp')
         SRcig = 'SRC' + i + k
-        Result(SRimg,SRimg, igrey('pclip=99 label2="location (ft)"'))
+        Flow(SRimg,SRcig,'window n4=1 min4=0 | transp')
+        Result(SRimg,igrey('pclip=98'+IRATIO,par))
 
         # dip field
         SRdip = 'DIP' + i + k
         Flow(SRdip,SRimg,'dip rect1=3 rect2=3 order=3 liter=100')
+        Result(SRdip,igrey('pclip=99 color=j'+IRATIO,par))
+
         SRmap = 'MAP' + i + k
         Flow(SRmap,[SRdip,slo],'transp | remap1 pattern=${SOURCES[1]} | transp')
 
         # image after plane-wave distruction
         SRpwd = 'PWD' + i + k
         Flow(SRpwd,[SRimg,SRdip],'pwd dip=${SOURCES[1]}')
-        Result(SRpwd,SRpwd, igrey('pclip=99 label2="location (ft)"'))
+        Result(SRpwd,igrey('pclip=99'+IRATIO,par))
 
         # dip-corrected velocity
         vco = 'v' + i + k
@@ -197,32 +220,32 @@ for i in SLOlist:
                  '''
                  window n4=1 min4=0 min1=%g max1=%g |
                  transp |
-                 bandpass fhi=0.005
+                 bandpass fhi=10
                  ''' % (lmin,lmax) )
-            Plot(z,z,igrey('label2="location (ft)"'+LABEL))
+            Plot(z,z,igrey('pclip=98q'+LABEL,par))
             
             # offset gathers
             h = 'h' + i + k + l
             Flow(h,SRcig,
                  '''
                  window n1=1 min1=%g |
-                 bandpass fhi=0.005
+                 bandpass fhi=10
                  ''' % float(l))
             
             # angle gathers
-            a = 'a' + i + k + l
-            b = 'b' + i + k + l
-            c = 'c' + i + k + l
+            a = 'a' + i + k + l    # space-shift
+            b = 'b' + i + k + l    #  time-shift (w/o dip cor)
+            c = 'c' + i + k + l    #  time-shift (w/  dip cor)
 
             if(k=='x'):
                 Flow(a,h,
                      '''
-                     bandpass fhi=0.005 |
+                     bandpass fhi=10 |
                      slant adj=y p0=%(oa)g np=%(na)d dp=%(da)g |
                      window min2=%(mina)g max2=%(maxa)g
                      ''' % cigpar)
-                Plot  (a,a,igrey('label2="tan \F10 q\F3 "'+LABEL))
-                Plot  (h,h,igrey('label2="offset (ft)"   '+LABEL))
+                Plot  (a,a,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
+                Plot  (h,h,igrey('label2="offset (km)"   '+LABEL,par))
                 
             if(k=='t'):
                 vb = 'vb' + i + k + l
@@ -232,9 +255,10 @@ for i in SLOlist:
 
                 Flow(a,h,
                      '''
-                     bandpass fhi=0.005 |
+                     bandpass fhi=10 |
                      slant adj=y p0=%(opt)g np=%(npt)d dp=%(dpt)g
                      ''' % cigpar)
+
                 # w/o dip correction
                 Flow(b,[a,vb],
                      '''
@@ -247,11 +271,12 @@ for i in SLOlist:
                      tshift      a0=%(oa)g  na=%(na)d  da=%(da)g velocity=${SOURCES[1]} |
                      window min2=%(mina)g max2=%(maxa)g
                      ''' % cigpar)
-                Plot  (a,a,igrey('label2="vel"           '+LABEL))
-                Plot  (b,b,igrey('label2="tan \F10 q\F3 "'+LABEL))
-                Plot  (c,c,igrey('label2="tan \F10 q\F3 "'+LABEL))
-                Plot  (h,h,igrey('label2="\F10 t\F3 (s)" '+LABEL))
-
+    
+                Plot  (a,igrey('label2="vel" max2=5    '+LABEL,par))
+                Plot  (b,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
+                Plot  (c,igrey('label2="tan \F10 q\F3 "'+LABEL,par))
+                Plot  (h,igrey('label2="\F10 t\F3 (s)" '+LABEL,par))
+               
 for l in CIGlist:
     for i in SLOlist:
         SRoff = 'SRoff' + i + '-' + l
