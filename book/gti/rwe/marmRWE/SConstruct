@@ -90,7 +90,7 @@ Flow('datRC',None,
      spray axis=2 n=%(ng)d o=%(og)g d=%(dg)g |
      put label1=t label2=g
      ''' % par )
-Result('datRC','datRC','grey')
+Result('datRC','datRC','grey wanttitle=n')
 
 # frequency data RC: (g,w)
 Flow('frqRC','datRC',

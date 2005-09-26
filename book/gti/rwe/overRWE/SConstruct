@@ -81,7 +81,7 @@ Flow('refRC','refCC cos',
      c2r rays=${SOURCES[1]} adj=n linear=y |
      put label1=g label2=t
      ''')
-Result('refRC','refRC','grey pclip=100')
+Result('refRC','refRC','grey pclip=100 wanttitle=n')
 
 Flow('intCC','refRC cos',
      '''
@@ -102,7 +102,7 @@ Flow('sloRC','sloCC cos',
      c2r rays=${SOURCES[1]} adj=n |
      put label1=t label2=g
      ''')
-Result('sloRC','sloRC','grey color=j allpos=y pclip=100')
+Result('sloRC','sloRC','grey color=j allpos=y pclip=100 wanttitle=n')
 
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
 Flow(['abmRC','abrRC'],['cos','sloRC'],
@@ -110,7 +110,7 @@ Flow(['abmRC','abrRC'],['cos','sloRC'],
      rweab naref=1 nbref=1
      slo=${SOURCES[1]} abr=${TARGETS[1]}
      ''')
-Result('abmRC','abmRC','grey gainpanel=e color=j allpos=y')
+Result('abmRC','abmRC','grey gainpanel=e color=j allpos=y wanttitle=n')
 
 # ------------------------------------------------------------
 
@@ -123,7 +123,7 @@ Flow('datRC',None,
      smooth rect2=7 |
      put o2=%(og)g d2=%(dg)g label1=t label2=g
      ''' % par )
-Result('datRC','datRC','grey pclip=100')
+Result('datRC','datRC','grey pclip=100 wanttitle=n')
 
 # frequency data RC: (g,w)
 Flow('frqRC','datRC',
