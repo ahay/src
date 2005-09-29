@@ -1,0 +1,121 @@
+\author{Leonard Euler} 
+%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 2}
+
+\begin{abstract}
+This homework has two parts. In the theoretical part, you will derive
+analatycal solutions for the one-point and two-point ray tracing
+problems in a medium with a constant gradient of velocity. In the
+computational part, you will experiment with a real dataset from...
+\end{abstract}
+
+\section{Introduction}
+
+Start by running
+\begin{verbatim}
+> cd ~/geo391
+> svn update
+> cd hw2
+> scons read
+\end{verbatim}
+to display the homework on your screen. Edit the file
+\texttt{~/geo391/hw2/paper.tex} in your favorite editor and change the
+first line to have your name instead of Euler's. 
+
+At any time, you can
+produce a PDF file by running
+\begin{verbatim}
+> scons pdf
+\end{verbatim}
+or display it on your screen by running
+\begin{verbatim}
+> scons read
+\end{verbatim}
+
+\section{Theoretical part}
+
+You can either write your answers on paper or edit them in
+\texttt{~/geo391/hw2/paper.tex}. Please show all the derivations that
+you do.
+
+\begin{enumerate}
+\item In the class, we used a mysterious parameter $\sigma$ to
+represent a variable continuously increasing along a ray. There are
+other variables that can play a similar role.
+\begin{enumerate}
+\item Use the chain rule $\frac{d}{d \sigma} = \frac{d}{d T}\,\frac{d
+T}{d \sigma}$ to transform the isotropic ray tracing system
+\begin{eqnarray}
+\label{eq:xsigma}
+\frac{d \mathbf{x}}{d \sigma} & = & \mathbf{p} \\
+\label{eq:psigma}
+\frac{d \mathbf{p}}{d \sigma} & = & S(\mathbf{x})\,\nabla S \\
+\label{eq:tsigma}
+\frac{d T}{d \sigma} & = & S^2(\mathbf{x})
+\end{eqnarray}
+into the equivalent system
+\begin{eqnarray}
+\label{eq:xt}
+\frac{d \mathbf{x}}{d T} = & & \hfill \\
+\label{eq:pt}
+\frac{d \mathbf{p}}{d T} = & & \hfill
+\end{eqnarray}
+that uses time $T$ as the ray parameter.
+\item Use the chain rule to find a parameter $\xi$ such that
+\begin{equation}
+\label{eq:pxi}
+\frac{d \mathbf{p}}{d \xi} = - \nabla V = \frac{\nabla S}{S^2(\mathbf{x}}
+\end{equation}
+What are the physical dimensions of $\xi$?
+\item Show that
+\begin{equation}
+  \label{eq:txi}
+  \frac{d T}{d \xi} = V(\mathbf{x})\;,
+\end{equation}
+where $V=1/S$ is the velocity.
+\end{enumerate}
+\item We will use a new $\xi$ parameterization to solve the ray
+tracing problem analytically for the special case when the velocity
+distribution has a constant gradient
+\begin{equation}
+  \label{eq:v}
+  V(\mathbf{x}) = V(\mathbf{x}_0) + \mathbf{g}_0\,(\mathbf{x} - \mathbf{x}_0)\;.
+\end{equation}
+\begin{enumerate}
+\item Solving the one-point ray tracing problem for $\mathbf{x}(\xi)$
+and $\mathbf{p}(\xi)$ with the initial conditions  $\mathbf{x}(0)=\mathbf{x}_0$ and
+ $\mathbf{p}(0)=\mathbf{p}_0$, show that
+\begin{equation}
+\label{eq:psol}
+\mathbf{p}(\xi) = \mathbf{p}_0 - \mathbf{g}_0\,\xi\;.
+\end{equation}
+\item Express
+\begin{eqnarray}
+\label{eq:vsol}
+V(\mathbf{x}) = \frac{1}{S(\mathbf{x})} = \frac{1}{\sqrt{\mathbf{p} \cdot \mathbf{p}}} = & &
+\end{eqnarray}
+in terms of $V(\mathbf{x}_0)$, $\mathbf{g}_0$, $\mathbf{p}_0$ and $\xi$.
+\item Define $a = \mathbf{p} \cdot (\mathbf{x} - \mathbf{x}_0)$. Find
+\begin{eqnarray}
+\label{eq:axi}
+\frac{d a}{d \xi} = & & 
+\end{eqnarray}
+and show that 
+\begin{equation}
+\label{eq:sol}
+a(\xi) = V(\mathbf{x}_0)\,\xi
+\end{equation}
+\item Show that
+\begin{equation}
+\label{eq:sol}
+a_0(\xi) = \mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) = V(\mathbf{x})\,\xi
+\end{equation}
+\item One way to seek the solution for the one-point ray tracing equation
+
+\end{enumerate}
+\end{enumerate}
+
+\section{Computational part}
+
+
+

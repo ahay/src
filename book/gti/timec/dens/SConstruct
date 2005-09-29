@@ -35,7 +35,7 @@ par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" Xpclip=99 label1="z(m)" label2="x(m)" %s
     min1=%g max1=%g min2=%g max2=%g
     screenratio=0.5 screenht=7 Xcrowd=0.9
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
@@ -133,9 +133,12 @@ Flow('wcomp wbar','wvf wrf',
      cat axis=3 space=n ${SOURCES[1]} |
      byte bar=${TARGETS[1]} gainpanel=all pclip=98
      ''')
-Plot('wv','wcomp wbar','window n3=1 f3=0 |' + igrey('bar=${SOURCES[1]}',par))
-Plot('wr','wcomp wbar','window n3=1 f3=1 |' + igrey('bar=${SOURCES[1]}',par))
+Plot('wv','wcomp wbar','window n3=1 f3=0 |' + igrey('clip=0.05',par))
+Plot('wr','wcomp wbar','window n3=1 f3=1 |' + igrey('clip=0.05',par))
 Result('wcomp','wv wr','SideBySideIso')
+
+Result('wdiff','wvf wrf',
+       'add scale=1,-1 ${SOURCES[1]} | ' + igrey('clip=0.05',par))
 
 # Ray tracing
 Flow('ray','vv','rays2 nr=2000 nt=1500 dt=0.0005 yshot=400')
@@ -145,7 +148,7 @@ Plot('front','ray',
      min2=0 max2=1000
      min1=0 max1=500
      screenratio=0.5 screenht=7 
-     plotcol=6 transp=1 plotfat=5 dash=1
+     plotcol=0 transp=1 plotfat=5 dash=1
      wantaxis=n wheretitle=b wherexlabel=t
      yreverse=y wanttitle=n
      ''')
