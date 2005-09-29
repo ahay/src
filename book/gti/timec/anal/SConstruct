@@ -6,17 +6,19 @@ import string
 
 grey = '''grey color=j allpos=y screenht=6 screenwd=12
 wanttitle=n label1="Depth (km)" label2="Lateral (km)"
-scalebar=y barlabel="Velocity (km/s)"'''
+scalebar=y barlabel="Velocity (km/s)" barreverse=y'''
 
 rays =  '''cell2 nr=1000 nt=4000 yshot=0 |
-plotrays frame=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=0
+plotrays frame=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=7
 scalebar=y'''
 
-contour = '''contour scalebar=y plotcol=0 wanttitle=n
-screenht=6 screenwd=12 c0=0 dc=0.1 nc=20'''
+contour = '''contour scalebar=y plotcol=7 wanttitle=n
+screenht=6 screenwd=12 c0=0 dc=0.1 nc=30'''
 
 fronts = string.join(['eikonal yshot=0',contour],' | ')
-exact = string.join(['window n3=1 f3=1',contour],' | ')
+
+def exact(f3):
+    return string.join(['window n3=1 f3=%d' % f3,contour],' | ')
 
 Flow('const',None,"spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0")
 Plot('const',grey)
@@ -31,19 +33,21 @@ Result('circle','cgrad ccell2','Overlay')
 
 Plot('ceiko','cgrad',fronts)
 Result('ceiko','cgrad ceiko','Overlay')
-Plot('cexact','vofz',exact)
+Plot('cexact','vofz',exact(1))
 Result('cexact','cgrad cexact','Overlay')
 
 Flow('s2ofz',None,'s2ofz n=600 s=0')
 Flow('c2grad','s2ofz','window n3=1')
-Plot('c2grad',grey)
-Plot('c2cell2','c2grad',rays)
+Plot('c2grad',grey + ' screenht=4')
+Plot('c2cell2','c2grad',rays + '  screenht=4')
 Result('parab','c2grad c2cell2','Overlay')
 
-Plot('c2eiko','c2grad',fronts)
+Plot('c2eiko','c2grad',fronts + ' screenht=4')
 Result('c2eiko','c2grad c2eiko','Overlay')
-Plot('c2exact','s2ofz',exact)
-Result('c2exact','c2grad c2exact','Overlay')
+
+Plot('c2exact1','s2ofz',exact(1) + ' screenht=4')
+Plot('c2exact2','s2ofz',exact(2) + ' screenht=4')
+Result('c2exact','c2grad c2exact1 c2exact2','Overlay')
     
 ###########################################################################
 End()
