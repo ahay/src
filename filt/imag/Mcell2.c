@@ -33,13 +33,25 @@ int main(int argc, char* argv[])
     bool velocity;
     int is, nz, nx, im, nm, order, nshot, ndim, nsr;
     int nt, nr, ir, it;
-    float da=0., a0, amax, t;
-    float x[2], p[2], dz, dx, z0, x0, **traj, *slow, **s, *a;
+    float da=0., a0, amax, *t;
+    float x[2], p[2], dz, dx, z0, x0, **trj, *slow, **s, *a;
     celltrace ct;
-    sf_file shots, vel, angles;
+    char *trajname;
+    FILE *traj;
+    sf_file shots, vel, angles, time;
 
     sf_init (argc,argv);
     vel = sf_input("in");
+    time = sf_output("out");
+
+    trajname = sf_getstring("traj");
+
+    if (NULL != trajname) {
+	traj = fopen(trajname,"wb");
+	if (NULL==traj) sf_error("Cannot open file \"%s\" for writing",trajname);
+    } else {
+	traj = NULL;
+    }
 
     /* get 2-D grid parameters */
     if (!sf_histint(vel,"n1",&nz))   sf_error("No n1= in input");
@@ -111,8 +123,11 @@ int main(int argc, char* argv[])
  
     /* specify output dimensions */
     nsr = nr*nshot;
-    fwrite(&nsr,sizeof(int),1,stdout);
+    if (NULL != traj) fwrite(&nsr,sizeof(int),1,traj);
 	    
+    sf_putint(time,"n1",nr);
+    sf_putint(time,"n2",nshot);
+
     /* get slowness */
     nm = nz*nx;
     slow = sf_floatalloc(nm);
@@ -130,7 +145,8 @@ int main(int argc, char* argv[])
     
     free (slow);
 
-    traj = sf_floatalloc2 (ndim,nt);
+    trj = sf_floatalloc2 (ndim,nt);
+    t = sf_floatalloc(nr);
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
 	/* initialize angles */
@@ -150,11 +166,15 @@ int main(int argc, char* argv[])
 	    p[0] = -cosf(a[ir]);
 	    p[1] = sinf(a[ir]);
 
-	    t = cell_trace (ct, x, p, &it, traj);
-	    if (it < 0) it = -it; /* keep side-exiting rays */
-	    fwrite(&it,sizeof(int),1,stdout);
-	    fwrite(traj[0],sizeof(float),(it+1)*ndim,stdout);
+	    t[ir] = cell_trace (ct, x, p, &it, trj);
+
+	    if (NULL != traj) {
+		if (it < 0) it = -it; /* keep side-exiting rays */
+		fwrite(&it,sizeof(int),1,traj);
+		fwrite(trj[0],sizeof(float),(it+1)*ndim,traj);
+	    }
 	}
+	sf_floatwrite(t,nr,time);
     }
 
     exit (0);

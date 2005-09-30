@@ -4,9 +4,10 @@
 
 \begin{abstract}
 This homework has two parts. In the theoretical part, you will derive
-analytical solutions for one-point and two-point ray tracing
-problems in a medium with a constant gradient of velocity. In the
-computational part, you will experiment with a real dataset from...
+analytical solutions for one-point and two-point ray tracing problems
+in a medium with a constant gradient of velocity. In the computational
+part, you will experiment with a real marine dataset from offshore
+Florida.
 \end{abstract}
 
 \section{Introduction}
@@ -15,27 +16,12 @@ Start by running
 \begin{verbatim}
 > cd ~/geo391
 > svn update
-> cd hw2
-> scons read
-\end{verbatim}
-to display the homework on your screen. Edit the file
-\texttt{~/geo391/hw2/paper.tex} in your favorite editor and change the
-first line to have your name instead of Euler's. 
-
-At any time, you can
-produce a PDF file by running
-\begin{verbatim}
-> scons pdf
-\end{verbatim}
-or display it on your screen by running
-\begin{verbatim}
-> scons read
 \end{verbatim}
 
 \section{Theoretical part}
 
 You can either write your answers on paper or edit them in
-\texttt{\~/geo391/hw2/paper.tex}. Please show all the mathematical derivations that
+\verb#~/geo391/hw2/paper.tex#. Please show all the mathematical derivations that
 you do.
 
 \begin{enumerate}
@@ -132,6 +118,9 @@ Under what condition does the linear system of equations
 \end{eqnarray}
 have a unique solution for $\alpha$ and $\beta$?
 \end{enumerate}
+
+\newpage
+
 \item (EXTRA CREDIT) For an extra credit, solve the
   two-point ray tracing problem. 
 \begin{enumerate}
@@ -140,9 +129,9 @@ have a unique solution for $\alpha$ and $\beta$?
 \item Express the squared distance between the ray end points
   \begin{eqnarray}
   \nonumber
-    |\mathbf{x} - \mathbf{x}_0|^2 = (\mathbf{x} - \mathbf{x}_0) \cdot (\mathbf{x} - \mathbf{x}_0) =
+    |\mathbf{x} - \mathbf{x}_0|^2 & = & (\mathbf{x} - \mathbf{x}_0) \cdot (\mathbf{x} - \mathbf{x}_0) =
     \alpha^2\,\mathbf{p}_0 \cdot \mathbf{p}_0 + 2 \alpha\,\beta\,\mathbf{p}_0 \cdot \mathbf{g}_0 +
-    \beta^2\,\mathbf{g}_0 \cdot \mathbf{g}_0 & = & \\
+    \beta^2\,\mathbf{g}_0 \cdot \mathbf{g}_0 \\
     & = & 
     \label{eq:d2} 
   \end{eqnarray}
@@ -173,9 +162,75 @@ Your result will be the analytical two-point
 \end{enumerate}
 \end{enumerate}
 
-\newpage
-
 \section{Computational part}
 
+\inputdir{blake}
 
+In the computational part, we begin working with a real data
+set. The dataset is a 2-D line from the Blake Outer Ridge area
+offshore Florida. It was collected by USGS in order to study the
+occurrence of methane hydrates. The dataset and its analysis for gas
+hydrate detection are described by
+\cite{GEO63-05-16591669,GEO65-02-05650573}.
 
+Figure~\ref{fig:cmp} shows an example CMP (common midpoint) gather
+from the dataset. Note the change in the trace spacing caused by using
+a non-linear cable in the acquisition. The presence of gas hydrates is
+manifested by a so-called BSR (bottom-simulating reflector).
+
+\plot{cmp}{width=\textwidth}{CMP (common midpoint) gather from the Blake Outer Ridge dataset. 
+The presence of gas hydrates is manifested by BSR (bottom-simulating
+reflector).}
+
+We will use a very simple model to try explaining the geometry of the
+observed events in the data. The left plot in Figure~\ref{fig:ray}
+shows the model and rays from two-point ray tracing. The model
+consists of a constant velocity water layer and sedimentary layer that
+contains BSR with a slowly variable velocity. The right plot in
+Figure~\ref{fig:ray} shows the CMP gather and traveltime curves
+obtained by ray tracing. 
+
+\plot{ray}{width=\textwidth}{Left: A two-layer model and ray trajectories. 
+Right: A CMP gather and traveltime curves.}
+
+Your task is to modify the model so that the predicted traveltime
+curves match the geometry of the sea bottom and the BSR reflection
+observed in the data.
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw2/blake
+\end{verbatim}
+\item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+to generate figures and display them on your screen.  
+\item Edit the
+top of the \texttt{SConstruct} file to modify the model
+parameters. Check your result by running
+\begin{verbatim}
+> scons ray.view
+\end{verbatim}
+or (equivalently)
+\begin{verbatim}
+> scons Fig/ray.vpl
+> xtpen Fig/ray.vpl
+\end{verbatim}
+\item After you are done, run
+\begin{verbatim}
+> scons lock
+> cd ..
+\end{verbatim}
+\item Edit the file
+\verb#~/geo391/hw2/paper.tex# in your favorite editor and change the
+first line to have your name instead of Euler's. Run
+\begin{verbatim}
+> scons pdf
+\end{verbatim}
+and submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+\end{enumerate}
+
+\bibliographystyle{seg} \bibliography{SEG}

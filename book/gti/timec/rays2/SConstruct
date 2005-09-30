@@ -34,15 +34,19 @@ Result('syrays2','symes syrays2','Overlay')
 Result('syfronts2','symes syfronts2','Overlay')
 
 Plot('sycell2','symes',
-     '''cell2 %s |
-     plotrays frame=$SOURCE screenratio=2 jr=5 plotcol=7''' % par)
+     '''cell2 %s traj=traj >/dev/null &&
+     plotrays < traj frame=$SOURCE screenratio=2 jr=5 plotcol=7 > $TARGET &&
+     /bin/rm traj
+     ''' % par,stdout=-1)
 Result('sycell2','symes sycell2','Overlay')
 
 Flow('sytable','symes',
      'shoot2 %s zshot=1 nr=40 r0=0.2 dr=0.02' % par)
 Plot('syshoot2',['symes','sytable'],          
-     '''cell2 %s zshot=1 anglefile=${SOURCES[1]} |
-     plotrays frame=${SOURCES[0]} screenratio=2 plotcol=7''' % par)
+     '''cell2 %s zshot=1 anglefile=${SOURCES[1]} traj=traj >/dev/null &&
+     plotrays < traj frame=${SOURCES[0]} screenratio=2 plotcol=7 > $TARGET &&
+     /bin/rm traj
+     ''' % par,stdout=-1)
 Result('syshoot2','symes syshoot2','Overlay')
 
 ############################################################################
