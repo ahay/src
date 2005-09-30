@@ -39,9 +39,9 @@ You can either write your answers on paper or edit them in
 you do.
 
 \begin{enumerate}
-\item In the class, we used a mysterious parameter $\sigma$ to
-represent a variable continuously increasing along a ray. There are
-other variables that can play a similar role.
+\item In class, we used a mysterious parameter $\sigma$ to represent a
+  variable continuously increasing along a ray. There are other
+  variables that can play a similar role.
 \begin{enumerate}
 \item Use the chain rule $\frac{d}{d \sigma} = \frac{d}{d T}\,\frac{d
 T}{d \sigma}$ to transform the isotropic ray tracing system
@@ -60,11 +60,11 @@ into the equivalent system
 \label{eq:pt}
 \frac{d \mathbf{p}}{d T} = & & \hfill
 \end{eqnarray}
-that uses time $T$ as the ray parameter.
+that uses time $T$ as the ray parameter. Check physical dimensions.
 \item Use the chain rule to find a parameter $\xi$ such that
 \begin{equation}
 \label{eq:pxi}
-\frac{d \mathbf{p}}{d \xi} = - \nabla V = \frac{\nabla S}{S^2(\mathbf{x}}
+\frac{d \mathbf{p}}{d \xi} = - \nabla V = \frac{\nabla S}{S^2(\mathbf{x})}
 \end{equation}
 What are the physical dimensions of $\xi$?
 \item Show that
@@ -73,13 +73,18 @@ What are the physical dimensions of $\xi$?
   \frac{d T}{d \xi} = V(\mathbf{x})\;,
 \end{equation}
 where $V=1/S$ is the velocity.
+\item Find
+\begin{eqnarray}
+  \label{eq:xxi}
+  \frac{d \mathbf{x}}{d \xi} = & & \hfill 
+\end{eqnarray}
 \end{enumerate}
 \item We will use a new $\xi$ parameterization to solve the ray
 tracing problem analytically for the special case when the velocity
 distribution has a constant gradient
 \begin{equation}
   \label{eq:v}
-  V(\mathbf{x}) = V(\mathbf{x}_0) + \mathbf{g}_0\,(\mathbf{x} - \mathbf{x}_0)\;.
+  V(\mathbf{x}) = V(\mathbf{x}_0) + \mathbf{g}_0 \cdot (\mathbf{x} - \mathbf{x}_0)\;.
 \end{equation}
 \begin{enumerate}
 \item Solving the one-point ray tracing problem for $\mathbf{x}(\xi)$
@@ -94,7 +99,7 @@ and $\mathbf{p}(\xi)$ with the initial conditions  $\mathbf{x}(0)=\mathbf{x}_0$ 
 \label{eq:vsol}
 V(\mathbf{x}) = \frac{1}{S(\mathbf{x})} = \frac{1}{\sqrt{\mathbf{p} \cdot \mathbf{p}}} = & &
 \end{eqnarray}
-in terms of $V(\mathbf{x}_0)$, $\mathbf{g}_0$, $\mathbf{p}_0$ and $\xi$.
+in terms of $\mathbf{g}_0$, $\mathbf{p}_0$ and $\xi$.
 \item Define $a = \mathbf{p} \cdot (\mathbf{x} - \mathbf{x}_0)$. Find
 \begin{eqnarray}
 \label{eq:axi}
@@ -102,18 +107,70 @@ in terms of $V(\mathbf{x}_0)$, $\mathbf{g}_0$, $\mathbf{p}_0$ and $\xi$.
 \end{eqnarray}
 and show that 
 \begin{equation}
-\label{eq:sol}
+\label{eq:asol}
 a(\xi) = V(\mathbf{x}_0)\,\xi
 \end{equation}
-\item Show that
+and
 \begin{equation}
-\label{eq:sol}
-a_0(\xi) = \mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) = V(\mathbf{x})\,\xi
+\label{eq:a0sol}
+\mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) = V(\mathbf{x})\,\xi
 \end{equation}
-\item One way to seek the solution for the one-point ray tracing equation
+\item One way to seek the solution for the one-point ray tracing
+  problem is to look for scalars $\alpha$ and $\beta$ in the representation
+\begin{equation}
+  \label{eq:xsol}
+  \mathbf{x}(\xi) = \mathbf{x}_0 + \alpha(\xi)\,\mathbf{p}_0 + \beta(\xi)\,\mathbf{g}_0\;.
+\end{equation}
+Under what condition does the linear system of equations
+\begin{eqnarray}
+  \label{eq:linsys1}
+  V(\mathbf{x})\,\xi = \mathbf{p}_0 \cdot (\mathbf{x} - \mathbf{x}_0) & = & 
+  \alpha\,\mathbf{p}_0 \cdot \mathbf{p}_0 + \beta\,\mathbf{p}_0 \cdot \mathbf{g}_0 \\
+  \label{eq:linsys2}
+  V(\mathbf{x}) - V(\mathbf{x}_0) = \mathbf{g}_0 \cdot (\mathbf{x} - \mathbf{x}_0) & = &
+  \alpha\,\mathbf{p}_0 \cdot \mathbf{g}_0 + \beta\,\mathbf{g}_0 \cdot \mathbf{g}_0
+\end{eqnarray}
+have a unique solution for $\alpha$ and $\beta$?
+\end{enumerate}
+\item (EXTRA CREDIT) For an extra credit, switch to solving the
+  two-point ray tracing problem. 
+\begin{enumerate}
+\item Find $\alpha$ and $\beta$ from
+  equations~(\ref{eq:linsys1}-\ref{eq:linsys2}).
+\item Express the squared distance between the ray end points
+  \begin{equation}
+    \label{eq:d2} 
+    |\mathbf{x} - \mathbf{x}_0|^2 = (\mathbf{x} - \mathbf{x}_0) \cdot (\mathbf{x} - \mathbf{x}_0) =
+    \alpha^2\,\mathbf{p}_0 \cdot \mathbf{p}_0 + 2 \alpha\,\beta\,\mathbf{p}_0 \cdot \mathbf{g}_0 +
+    \beta^2\,\mathbf{g}_0 \cdot \mathbf{g}_0 =
+  \end{equation}
+  in terms of $\mathbf{g}_0$,$\mathbf{p}_0$, and $\xi$. 
+\item In the two-point problem, $|\mathbf{x} - \mathbf{x}_0|$ is known, and the two unknown
+  parameters are $\xi$ and $(\mathbf{p}_0 \cdot \mathbf{g}_0)$.
+  Express $(\mathbf{p}_0 \cdot \mathbf{g}_0)$ from your
+  equation~(\ref{eq:vsol}) and substitute it into your
+  equation~(\ref{eq:d2}). Solve for $\xi$. How many physically
+  meaningful solutions can you obtain?
+\item Finally, use $(\mathbf{p}_0 \cdot \mathbf{g}_0)$ and $\xi$
+  expressed in terms of $|\mathbf{x} - \mathbf{x}_0|$, $|\mathbf{g}_0|$, $V(\mathbf{x}_0)$, and
+  $V(\mathbf{x})$ and substitute them into the one-point traveltime
+  solution obtained by integrating
+  equation~(\ref{eq:txi})\footnote{$\mbox{arccosh}(x)$ is the inverse
+    hyperbolic cosine function defined as $\mbox{arccosh}(x) = \ln\left(x + \sqrt{x^2-1}\right)$.}
+  \begin{equation}
+    \label{eq:t1}
+    T(\xi) = \frac{1}{|\mathbf{g}_0|}\,\mbox{arccosh}\left(1 + \frac{|\mathbf{g}_0|^2\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi^2}
+      {V(\mathbf{x})+V(\mathbf{x}_0) - \mathbf{p}_0 \cdot \mathbf{g}_0\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi}\right)\;.
+  \end{equation}
+  Your result will be the analytical two-point traveltime
+  \begin{eqnarray}
+    \label{eq:t2}
+    \widehat{T}(\mathbf{x}_0,\mathbf{x}) = & & \hfill \ 
+  \end{eqnarray}
+\end{enumerate}
+\end{enumerate}
 
-\end{enumerate}
-\end{enumerate}
+\newpage
 
 \section{Computational part}
 
