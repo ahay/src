@@ -25,6 +25,8 @@ from rsfproj import *
 
 Fetch('cmps-tp.HH','blake')
 
+Flow('noff','cmps-tp.HH','window f2=47 | dd form=native')
+
 Flow('cmp','cmps-tp.HH',
      '''
      window f3=950 n3=1 max1=6 |
@@ -32,6 +34,22 @@ Flow('cmp','cmps-tp.HH',
      reverse which=2 |
      put "o2=0.0 d2=1"
      ''')
+
+##################################################################
+#
+# Plot Near Offset Section
+#
+##################################################################
+
+Plot('noff',
+     '''
+     grey title="Near Offset Section" wheretitle=t
+     label1="Time (s)" label2="Distance (km)" wherexlabel=b
+     ''')
+Plot('floor0',None,'box x0=6.238 y0=6.705 label="Seafloor" xt=-1 yt=1')
+Plot('bsr0',None,'box x0=10.918 y0=5.922 label="BSR" xt=1 yt=1')
+
+Result('noff','noff floor0 bsr0','Overlay')
 
 ##################################################################
 #
@@ -45,9 +63,9 @@ Plot('cmp',
      label2="Trace Number" wherexlabel=b max1=6
      ''')
 Plot('floorbox',None,
-     'box x0=6.153333 y0=6.565000 label="Seafloor" xt=1.000000 yt=1.000000')
+     'box x0=6.153 y0=6.565 label="Seafloor" xt=1 yt=1')
 Plot('bsrbox',None,
-     'box x0=4.721667 y0=4.778333 label="BSR" xt=-1.000000 yt=-1.000000')
+     'box x0=4.722 y0=4.778 label="BSR" xt=-1 yt=-1')
 Plot('gcmp','cmp floorbox bsrbox','Overlay')
 
 Flow('off1',None,'math n1=24 o1=0.4 d1=0.1  output=x1')
