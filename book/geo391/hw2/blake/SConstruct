@@ -2,4 +2,19 @@ from rsfproj import *
 
 Fetch('cmps-tp.HH','blake')
 
+Flow('cmp','cmps-tp.HH',
+     '''
+     window f3=950 n3=1 max1=6 |
+     dd form=native |
+     reverse which=2 |
+     put "o2=0.0 d2=1"
+     ''')
+Plot('cmp',
+     '''
+     grey title="Raw CMP Gather " wheretitle=t label1="Time (sec)"
+     label2="Trace Number" wherexlabel=b max1=6
+     ''')
+
+
+
 End()
