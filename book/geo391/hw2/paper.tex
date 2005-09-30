@@ -4,7 +4,7 @@
 
 \begin{abstract}
 This homework has two parts. In the theoretical part, you will derive
-analatycal solutions for the one-point and two-point ray tracing
+analytical solutions for one-point and two-point ray tracing
 problems in a medium with a constant gradient of velocity. In the
 computational part, you will experiment with a real dataset from...
 \end{abstract}
@@ -35,7 +35,7 @@ or display it on your screen by running
 \section{Theoretical part}
 
 You can either write your answers on paper or edit them in
-\texttt{~/geo391/hw2/paper.tex}. Please show all the derivations that
+\texttt{\~/geo391/hw2/paper.tex}. Please show all the mathematical derivations that
 you do.
 
 \begin{enumerate}
@@ -132,41 +132,44 @@ Under what condition does the linear system of equations
 \end{eqnarray}
 have a unique solution for $\alpha$ and $\beta$?
 \end{enumerate}
-\item (EXTRA CREDIT) For an extra credit, switch to solving the
+\item (EXTRA CREDIT) For an extra credit, solve the
   two-point ray tracing problem. 
 \begin{enumerate}
 \item Find $\alpha$ and $\beta$ from
   equations~(\ref{eq:linsys1}-\ref{eq:linsys2}).
 \item Express the squared distance between the ray end points
-  \begin{equation}
-    \label{eq:d2} 
+  \begin{eqnarray}
+  \nonumber
     |\mathbf{x} - \mathbf{x}_0|^2 = (\mathbf{x} - \mathbf{x}_0) \cdot (\mathbf{x} - \mathbf{x}_0) =
     \alpha^2\,\mathbf{p}_0 \cdot \mathbf{p}_0 + 2 \alpha\,\beta\,\mathbf{p}_0 \cdot \mathbf{g}_0 +
-    \beta^2\,\mathbf{g}_0 \cdot \mathbf{g}_0 =
-  \end{equation}
-  in terms of $\mathbf{g}_0$,$\mathbf{p}_0$, and $\xi$. 
-\item In the two-point problem, $|\mathbf{x} - \mathbf{x}_0|$ is known, and the two unknown
+    \beta^2\,\mathbf{g}_0 \cdot \mathbf{g}_0 & = & \\
+    & = & 
+    \label{eq:d2} 
+  \end{eqnarray}
+  in terms of $\mathbf{g}_0$, $\mathbf{p}_0$, and $\xi$. 
+\item In the two-point problem, the two unknown
   parameters are $\xi$ and $(\mathbf{p}_0 \cdot \mathbf{g}_0)$.
   Express $(\mathbf{p}_0 \cdot \mathbf{g}_0)$ from your
   equation~(\ref{eq:vsol}) and substitute it into your
   equation~(\ref{eq:d2}). Solve for $\xi$. How many physically
   meaningful solutions can you obtain?
-\item Finally, use $(\mathbf{p}_0 \cdot \mathbf{g}_0)$ and $\xi$
-  expressed in terms of $|\mathbf{x} - \mathbf{x}_0|$, $|\mathbf{g}_0|$, $V(\mathbf{x}_0)$, and
-  $V(\mathbf{x})$ and substitute them into the one-point traveltime
-  solution obtained by integrating
-  equation~(\ref{eq:txi})\footnote{$\mbox{arccosh}(x)$ is the inverse
-    hyperbolic cosine function defined as $\mbox{arccosh}(x) = \ln\left(x + \sqrt{x^2-1}\right)$.}
+\item Finally, use $\xi$ and $(\mathbf{p}_0 \cdot \mathbf{g}_0)$ 
+  expressed in terms of $|\mathbf{x} - \mathbf{x}_0|$,
+  $|\mathbf{g}_0|$, $V(\mathbf{x}_0)$, and $V(\mathbf{x})$ and
+  substitute them into the one-point traveltime solution obtained by
+  integrating equation~(\ref{eq:txi})\footnote{$\mbox{arccosh}(x)$ is
+  the inverse hyperbolic cosine function defined as $\mbox{arccosh}(x)
+  = \ln\left(x + \sqrt{x^2-1}\right)$.}  
   \begin{equation}
-    \label{eq:t1}
-    T(\xi) = \frac{1}{|\mathbf{g}_0|}\,\mbox{arccosh}\left(1 + \frac{|\mathbf{g}_0|^2\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi^2}
-      {V(\mathbf{x})+V(\mathbf{x}_0) - \mathbf{p}_0 \cdot \mathbf{g}_0\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi}\right)\;.
-  \end{equation}
-  Your result will be the analytical two-point traveltime
-  \begin{eqnarray}
-    \label{eq:t2}
-    \widehat{T}(\mathbf{x}_0,\mathbf{x}) = & & \hfill \ 
-  \end{eqnarray}
+  \label{eq:t1} T(\xi) =
+  \frac{1}{|\mathbf{g}_0|}\,\mbox{arccosh}\left(1 +
+  \frac{|\mathbf{g}_0|^2\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi^2}
+  {V(\mathbf{x})+V(\mathbf{x}_0) - (\mathbf{p}_0 \cdot
+  \mathbf{g}_0)\,V(\mathbf{x})\,V^2(\mathbf{x}_0)\,\xi}\right)\;.
+  \end{equation} 
+Your result will be the analytical two-point
+  traveltime \begin{eqnarray} \label{eq:t2}
+  \widehat{T}(\mathbf{x}_0,\mathbf{x}) = & & \hfill \ \end{eqnarray}
 \end{enumerate}
 \end{enumerate}
 

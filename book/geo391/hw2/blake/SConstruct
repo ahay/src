@@ -1,0 +1,5 @@
+from rsfproj import *
+
+Fetch('cmps-tp.HH','blake')
+
+End()
