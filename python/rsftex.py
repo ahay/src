@@ -47,6 +47,7 @@ if mathematica:
 ressuffix = '.pdf'
 vpsuffix  = '.vpl'
 pssuffix  = '.eps'
+itype = os.environ.get('IMAGE_TYPE','png')
 
 rerun = re.compile(r'\bRerun')
 
@@ -412,8 +413,6 @@ if pstoimg:
 if pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
                       suffix=pssuffix,src_suffix='.pdf')
-
-itype = os.environ.get('IMAGE_TYPE','png')
 
 if latex2html:
     l2hdir = os.environ.get('LATEX2HTML','')
