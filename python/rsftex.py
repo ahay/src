@@ -250,15 +250,15 @@ def colorize(target=None,source=None,env=None):
      <body>
      <div>
      <a href="paper_html/paper.html"><img width="32" height="32"
-     align="bottom" border="0" alt="up" src="paper_html/icons/up.png"></a>
-     <a href="paper.pdf"><img src="paper_html/icons/pdf.png" alt="[pdf]"
+     align="bottom" border="0" alt="up" src="paper_html/icons/up.%s"></a>
+     <a href="paper.pdf"><img src="paper_html/icons/pdf.%s" alt="[pdf]"
      width="32" height="32" border="0"></a>
-     <a href="%s"><img src="paper_html/icons/tgz.png" alt="[tgz]"
+     <a href="%s"><img src="paper_html/icons/tgz.%s" alt="[tgz]"
      width="32" height="32" border="0"></a>
      </div>
      <div class="scons">
      <table><tr><td>
-     ''' % tgz)
+     ''' % (itype,itype,tgz,itype))
 
      # store line offsets in self.lines
      lines = [0, 0]
@@ -413,6 +413,8 @@ if pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
                       suffix=pssuffix,src_suffix='.pdf')
 
+itype = os.environ.get('IMAGE_TYPE','png')
+
 if latex2html:
     l2hdir = os.environ.get('LATEX2HTML','')
     inputs = os.environ.get('TEXINPUTS','')
@@ -424,8 +426,8 @@ if latex2html:
         init = ''
 
     HTML = Builder(action = 'TEXINPUTS=%s LATEX2HTMLSTYLES=%s/perl %s '
-                   '-debug $SOURCE -dir $TARGET.dir %s' %
-                   (inputs,l2hdir,latex2html,init),src_suffix='.ltx')
+                   '-debug $SOURCE -dir $TARGET.dir -image_type %s %s' %
+                   (inputs,l2hdir,latex2html,itype,init),src_suffix='.ltx')
 
 if mathematica and epstopdf:
      Math = Builder(action = 'DISPLAY=" " nohup %s -batchoutput '
@@ -638,7 +640,7 @@ class TeXPaper(Environment):
             html = os.path.join(dir,'index.html')
             icons = os.path.join(dir,'icons')
             self.InstallAs(css,css0)
-            self.Install(icons,glob.glob('%s/*.png' % icons0))
+            self.Install(icons,glob.glob('%s/*.%s' % (icons0,itype)))
             self.HTML(html,paper+'.ltx')
             self.Depends(self.imgs,pdf)
             self.Depends(html,self.imgs)
