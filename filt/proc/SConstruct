@@ -5,7 +5,7 @@ import configure
 progs = '''
 agc ai2refl aliasp avo bin bin1 boxsmooth byte2rsf canny causint clip
 costaper cmp2shot cosft depth2time dipfilter enoint2 extract fft1 fft3
-fourvc fourvc2 fourvcd grad2 histogram igrad imospray impl1 impl2
+fourvc fourvc2 fourvcd grad2 histogram hslice igrad imospray impl1 impl2
 infill inmo intbin intshow inttest1 inttest2 kolmog linefit lpad
 modrefl modrefl2 nmo noise ofsemb pmig pnmo postfilter2 pp2psang pp2psang2
 prestolt pveltran radial radon randrefl refer reshape ricker shot2cmp

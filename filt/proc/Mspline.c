@@ -24,11 +24,21 @@ Specify either n1= o1= d1= or pattern=
 
 #include "spline3.h"
 
+static float **table=NULL, **table2=NULL;
+
+static int compare_table (const void *a, const void *b)
+{
+    float fa = table[* ((int*) a)][0];
+    float fb = table[* ((int*) b)][0];
+ 
+    return (fa < fb)? -1: (fa > fb)? 1: 0;
+}
+
 int main(int argc, char* argv[])
 {
-    int nd, n1, i1, n2, i2, two;
-    float x, o1, d1, *table1=NULL, **table=NULL, *trace, x0, dx, *fp;
-    bool reginput;
+    int nd, n1, i1, n2, i2, two, id, *index=NULL;
+    float x, o1, d1, *table1=NULL, *trace, x0, dx, *fp;
+    bool reginput, sort;
     sf_file in, out, pattern;
 
     sf_init(argc,argv);
@@ -48,6 +58,9 @@ int main(int argc, char* argv[])
 	fp = NULL;
     } else {
 	reginput = false;
+	if (!sf_getbool("sort",&sort)) sort=false;
+	/* if y, the coordinates need sorting */
+
 	if (!sf_histint(in,"n2",&nd)) sf_error ("Need n2= in input");
 	sf_putint(out,"n2",1);
 	n2 = sf_leftsize(in,2);
@@ -91,6 +104,10 @@ int main(int argc, char* argv[])
     } else {
 	spine3_init(nd,fp);
 	table = sf_floatalloc2(2,nd);
+	if (sort) {
+	  index = sf_intalloc(nd);
+	  table2 = sf_floatalloc2(2,nd);
+	}
     }
 
     for (i2=0; i2 < n2; i2++) {
@@ -104,8 +121,22 @@ int main(int argc, char* argv[])
 	    }
 	} else {
 	    sf_floatread(table[0],2*nd,in);
-	    spline_coeffs(table);
-	    
+
+	    if (sort) {
+	      for (id=0; id < nd; id++) {
+		index[id]=id;
+	      }
+	      qsort(index,nd,sizeof(int),compare_table);
+	      for (id=0; id < nd; id++) {
+		table2[id][0] = table[index[id]][0];
+		table2[id][1] = table[index[id]][1];
+	      }
+
+	      spline_coeffs(table2);
+	    } else {
+	      spline_coeffs(table);
+	    }
+
 	    for (i1=0; i1 < n1; i1++) {
 		x = o1 + i1*d1;
 		trace[i1] = spline_eval(x);
