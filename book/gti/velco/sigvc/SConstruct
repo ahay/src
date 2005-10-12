@@ -1,0 +1,24 @@
+from rsfproj import *
+import velcon
+
+Flow('sig',None,
+     '''
+     sigmoid n1=200 d2=0.008 n2=200 | put n3=1 |
+     smooth rect1=3 diff1=1 | pad beg1=25 | smooth rect1=3 | halfint inv=1 |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 
+     ''')
+
+velcon.velcon('sig',
+              nv=100,     # continuation steps
+              v0=2,       # initial velocity
+              dv=-0.01,   # velocity step
+              nx=200,     # lateral dimension
+              padt=1024,  # time padding
+              padt2=2048, # extra time padding
+              padx=421,   # lateral padding
+              v1=1.5,     # other velocity
+              rect1=10,   # vertical smoothing
+              rect2=10)   # lateral  smoothing
+
+End()
+       

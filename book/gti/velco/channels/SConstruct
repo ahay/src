@@ -25,7 +25,7 @@ Result('cvscan','vscan',
        grey color=j allpos=y title="Semblance Scan" 
        ''')
 
-Flow('vpick','vscan','blindpick rect1=10 rect2=10')
+Flow('vpick','vscan','pick rect1=10 rect2=10')
 
 Result('cvpick','vpick',
        '''
@@ -83,6 +83,8 @@ Flow('vlf2','cip',
      fourvc2 nv=100 dv=20 v0=1500 pad=512 pad2=1024 | 
      transp plane=23 memsize=500
      ''')
+
+
 
 Fetch('vp.hh','frst3')
 Flow('vp','vp.hh','dd form=native | window n3=1 f3=140')
