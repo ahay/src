@@ -32,7 +32,7 @@ Flow('cmp','cmps-tp.HH',
      window f3=950 n3=1 max1=6 |
      dd form=native |
      reverse which=2 |
-     put "o2=0.0 d2=1"
+     put o2=0.0 d2=1
      ''')
 
 ##################################################################

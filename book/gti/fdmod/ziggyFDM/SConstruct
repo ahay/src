@@ -107,12 +107,24 @@ Flow('vel','zvstr',
      put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
      window f1=200
      ''' % par )
-Result('vel','vel',igrey('color=j allpos=y',par))
+Result('vel',igrey('color=j allpos=y',par))
+Plot('vel',igrey('color=j allpos=y',par))
 
 # ------------------------------------------------------------
 # models
 
 Flow('mm0','vel','window')
+
+Flow('eiko','vel','eikonal yshot=%(os)g' % par)
+Plot('eiko',
+     '''
+     contour nc=200 plotcol=7
+     labelrot=n wantaxis=n wanttitle=n wantscalebar=n
+     title="" 
+     min1=%g max1=%g min2=%g max2=%g
+     screenratio=%g screenht=6 labelsz=4
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['iratio']))
+Result('eiko','vel eiko','Overlay')
 
 Flow('mm1',None,
      '''

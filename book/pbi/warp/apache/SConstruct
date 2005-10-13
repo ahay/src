@@ -6,7 +6,8 @@ private = {'login':os.environ.get('BEG_LOGIN'),
            'server':os.environ.get('BEG_SERVER')}
 
 for mode in ('pp','ps'):
-    data = 'IL475%s4SERGEY.segy' % string.upper(mode)
+    Mode = string.upper(mode)
+    data = 'IL475%s4SERGEY.segy' % Mode
     Fetch(data,'apache',private)
     Flow([mode,'t'+mode,'./h'+mode,'./b'+mode],data,
          '''
@@ -14,5 +15,8 @@ for mode in ('pp','ps'):
          hfile=${TARGETS[2]} bfile=${TARGETS[3]} tfile=${TARGETS[1]}
          ''',stdin=0)
     Flow(mode+'cube',mode,'intbin | window')
+    Plot(mode,mode+'cube','grey color=G title=%s label1="Time (s)" ' % Mode)
+
+Result('apache','pp ps','SideBySideIso')
     
 End()

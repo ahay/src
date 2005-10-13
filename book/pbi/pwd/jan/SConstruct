@@ -40,16 +40,19 @@ Flow('dat2','data2 mask','add mode=p ${SOURCES[1]}')
 Flow('nmo2','data2','pad beg1=140 | nmostretch v0=18 half=n')
 Plot('nmo2','grey title=NMO clip=1591620 label2=Channel label1=Depth')
 
+Flow('nmask','mask','pad beg1=140 | nmostretch v0=18 half=n')
+
 Result('data2','data2 nmo2','SideBySideAniso')
 
-Flow('ddip2','nmo2','twodip2 order=3 eps=10 gauss=n verb=y sign=1 q0=-1')
+Flow('ddip2','nmo2',
+     'twodip2 order=3 eps=10 gauss=n verb=y sign=1 q0=-1')
 Plot('ndip2','ddip2',
      'window n3=1 | grey title="Noise Slope" color=j scalebar=y')
 Plot('sdip2','ddip2',
      'window f3=1 | grey title="Signal Slope" color=j scalebar=y')
 Result('ddip2','ndip2 sdip2','SideBySideAniso')
 
-Flow('nsep2','nmo2 ddip2','pwdsigk dips=${SOURCES[1]} verb=y')
+Flow('nsep2','nmo2 ddip2','pwdsigk dips=${SOURCES[1]} verb=y niter=200')
 
 Flow('nnoi2','nsep2','window n3=1')
 Plot('nnoi2','grey title="Estimated Noise" clip=1591620')
@@ -67,35 +70,21 @@ Plot('sig2','grey title="Estimated Signal" clip=1591620')
 
 Result('sep2','data2 noi2 sig2','SideBySideAniso')
 
-## Flow('dip','data2 mask',
-##      'twodip2 order=3 eps=10 gauss=n verb=y mask=${SOURCES[1]}')
-## Flow('dip1','dip','window n3=1')
-## Flow('dip2','dip','window f3=1')
+Flow('dip','data2 mask',
+     'twodip2 order=3 eps=10 gauss=n verb=y mask=${SOURCES[1]}')
 
-## Flow('signoi','data2 dip1 dip2',
-##      '''
-##      planesignoi ndip=${SOURCES[2]} sdip=${SOURCES[1]}
-##      eps=1 verb=y niter=100 order=3 | bandpass fhi=25
-##      ''')
-## Flow('noi','signoi','window n3=1')
-## Plot('noi','grey title="Estimated Noise" clip=1591620')
+Flow('signoi','data2 dip',
+     'pwdsigk dips=${SOURCES[1]} verb=y niter=200 | bandpass fhi=40')
 
-## Flow('sig','signoi','window f3=1')
-## Plot('sig','grey title="Estimated Signal" clip=1591620')
+Flow('sig','signoi','window f3=1')
+Plot('sig','grey title="Estimated Signal" clip=1591620')
 
-## Flow('signoi2','data2 dip',
-##      '''
-##      pwdsigk dips=${SOURCES[1]} verb=y | bandpass fhi=25
-##      ''')
-## Flow('noi2','signoi2','window n3=1')
-## Plot('noi2','grey title="Estimated Noise" clip=1591620')
+Flow('noi','data2 sig','add scale=1,-1 ${SOURCES[1]}')
+Plot('noi','grey title="Estimated Noise" clip=1591620')
 
-## Flow('sig2','signoi2','window f3=1')
-## Plot('sig2','grey title="Estimated Signal" clip=1591620')
+Result('test2','data2 sig noi','SideBySideAniso')
 
 Result('hydro','data2 data3','SideBySideAniso')
-## Result('test2','data2 sig noi','SideBySideAniso')
-## Result('test1','data2 sig2 noi2','SideBySideAniso')
 
 ###########################################################################
 End()

@@ -1,0 +1,37 @@
+from rsfproj import *
+import stack
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+stack.stack('bei',
+            v0=1.4,
+            nv=48,
+            dv=0.025,
+            rect1=40,
+            rect2=10,
+            vslope=0.67, #
+            vx0=1.5,     #
+            f1=15,
+            nout=2048)
+
+Flow('foc','vlf','focus rect1=100 rect3=10 | math output=1/input')
+Flow('pik','foc','pick rect1=10 rect2=10')
+Flow('slc','vlf pik','slice pick=${SOURCES[1]}')
+
+Result('beislc','slc','window | grey title="Migrated Diffractions" ')
+
+Flow('vlf2','beistkd',
+     '''
+     pad n2=521 | cosft sign2=1 | spray axis=2 n=1 o=0 d=1 |
+     stolt vel=1.5 nf=4 |
+     fourvc nv=80 dv=0.0125 v0=1.3 |
+     cosft sign3=-1 |
+     window n3=250
+     ''')
+
+Flow('slc2','vlf2 pik','slice pick=${SOURCES[1]}')
+
+Result('beislc2','slc2','window | grey title="Migrated Stack" ')
+
+End()
