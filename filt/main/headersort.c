@@ -46,6 +46,7 @@ int main(int argc, char* argv[])
     out = sf_output ("out");
  
     header = sf_getstring("head");
+    /* header file */
     if (NULL == header) { 
 	header = sf_histstring(in,"head");
 	if (NULL == header) sf_error("Need head=");

@@ -6,6 +6,7 @@ def convert(infile,outfile):
     spacing = os.environ.get('GIFBORDER',0.25)
     ppi = os.environ.get('PPI',75)
     scale = os.environ.get('PPMSCALE',1)
+    delay = os.environ.get('GIFDELAY',100)
     
     stat = string.split(
         commands.getoutput("vppen vpstyle=n stat=l < %s | head -1" % infile))
@@ -44,14 +45,14 @@ def convert(infile,outfile):
         gifs.append(gif)
  
         os.system ("ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d "
-                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | ppmquant 128 | "
+                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | pnmquant 256 | " 
                                 "pnmcrop | ppmtogif -interlace > %s" %
                    (height,width,ppi,xcen,ycen,vppen,scale,gif))
         os.unlink(vppen)
 
     if outfile[-1] != '/':
-        gifsicle = 'gifsicle --merge --loopcount=forever --optimize --delay=100'
-        run = '%s %s > %s' % (gifsicle,string.join(gifs),outfile)
+        gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
+        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),string.join(gifs),outfile)
         print run
         os.system (run)
 
