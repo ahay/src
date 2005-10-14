@@ -1,5 +1,6 @@
 from rsfproj import *
 import os, string
+import warp
 
 private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
@@ -18,5 +19,21 @@ for mode in ('pp','ps'):
     Plot(mode,mode+'cube','grey color=G title=%s label1="Time (s)" ' % Mode)
 
 Result('apache','pp ps','SideBySideIso')
+
+gamma = 2.5
+
+Flow('pp2','ppcube','window max1=1.25 | scale dscale=2')
+
+Flow('warp0','pp2','math output="%g*x1" ' % (0.5*(gamma-1)))
+
+warp.warp2('apa','pp2','pscube','warp0',
+           trace=600,
+           dt=0.002,
+           g0=0.9,
+           ng=100,
+           rect1=25,
+           iter=2,
+           fmin=20,
+           clip=11.33)
     
 End()
