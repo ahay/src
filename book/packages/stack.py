@@ -4,33 +4,55 @@ def stack(name,
           v0,
           nv,
           dv,
+          nx,
+          padx,
+          nt,
           rect1=10,
           rect2=10,
           vslope=None,
+          units='km',
           f1=1,
+          j3=1,
+          dx=1,
+          x0=0,
           nout=2048,
           vx0=None):
 
     scn = name+'-scn'
     vel = name+'-vel'
     
-    Flow(scn,name,'mutter v0=%g | vscan semblance=y v0=%g nv=%d dv=%g' % (v0,v0,nv,dv))
+    Flow(scn,name,
+         'mutter v0=%g | vscan semblance=y v0=%g nv=%d dv=%g' % (v0,v0,nv,dv))
 
     if vslope:
-        pick = 'mutter x0=%g v0=%g half=n | pick rect1=%d rect2=%d | window' % (vx0,vslope,rect1,rect2)
+        pick = '''
+        mutter x0=%g v0=%g half=n |
+        pick rect1=%d rect2=%d | window
+        ''' % (vx0,vslope,rect1,rect2)
     else:
         pick = 'pick rect1=%d rect2=%d | window' % (rect1,rect2)
         
-    Flow(vel,scn,pick)
+    def grey(title):
+        return '''
+        window n1=%d |
+        grey title="%s" 
+        label1="Time (s)" label2="Lateral (%s)"
+        ''' % (nt,title,units)
 
-    Result(vel,'grey color=j scalebar=y title="RMS velocity" bias=%g' % (v0+0.5*nv*dv))
+    def velgrey(title):
+        return grey(title) + '''
+        color=j scalebar=y bias=%g
+        ''' % (v0+0.5*nv*dv)
 
+    Flow(vel,scn,pick)   
+    Result(vel,velgrey('RMS Velocity'))
+ 
     nmo = name+'-nmo'
     stk = name+'-stk'
 
     Flow(nmo,[name,vel],'mutter v0=%g | nmo velocity=${SOURCES[1]}' % v0)
     Flow(stk,nmo,'stack')
-    Result(stk,'grey title="NMO Stack" ')
+    Result(stk,grey('NMO Stack'))
 
     Flow(stk+'2',nmo,
          '''
@@ -41,22 +63,66 @@ def stack(name,
          fft1 inv=y | window n1=%d |
          logstretch inv=y | pad beg1=%d
          ''' % (f1,nout,nout,f1))
-    Result(stk+'2','grey title="DMO Stack" ')
+    Result(stk+'2',grey('DMO Stack'))
 
     dip = name+'-dip'
     Flow(dip,stk+'2','dip rect1=%d rect2=%d' % (rect1,rect2))
-    Result(dip,'grey title=Slope color=j scalebar=y')
+    Result(dip,grey('Slope') + ' color=j scalebar=y')
 
     pwd=name+'-pwd'
     Flow(pwd,[stk+'2',dip],'pwd dip=${SOURCES[1]}')
-    Result(pwd,'grey title=Diffractions')
+    Result(pwd,grey('Diffractions'))
+
+    velcon = '''
+    pad n2=%d | cosft sign2=1 | spray axis=2 n=1 o=0 d=1 |
+    stolt vel=%g nf=4 |
+    fourvc nv=%d dv=%g v0=%g |
+    cosft sign3=-1 |
+    window n3=%d
+    ''' % (padx,2*v0,nv,dv,v0,nx)
 
     vlf=name+'-vlf'
-    Flow(vlf,pwd,
-         '''
-         pad n2=521 | cosft sign2=1 | spray axis=2 n=1 o=0 d=1 |
-         stolt vel=1.5 nf=4 |
-         fourvc nv=80 dv=0.0125 v0=1.3 |
-         cosft sign3=-1 |
-         window n3=250
-         ''')
+    Flow(vlf,pwd,velcon)
+
+    if j3 > 1:
+        focus = '''
+        window j3=%d |
+        focus rect1=%d rect3=%d |
+        math output=1/input
+        ''' % (j3,2*rect1,2*rect2)
+    else:
+        focus = '''
+        focus rect1=%d rect3=%d |
+        math output=1/input
+        ''' % (2*rect1,2*rect2)
+
+    foc=name+'-foc'
+    Flow(foc,vlf,focus)
+
+    pik=name+'-pik'
+
+    if j3 > 1:
+        pick2 = pick + ''' |
+        transp |
+        spline n1=%d d1=%g o1=%g |
+        transp
+        ''' % (nx,dx,x0)
+    else:
+        pick2 = pick
+        
+    Flow(pik,foc,pick2)
+    Result(pik,velgrey('Migration Velocity'))
+
+    slc=name+'-slc'
+    Flow(slc,[vlf,pik],'slice pick=${SOURCES[1]}')
+
+    Result(slc,grey('Migrated Diffractions'))
+
+    Flow(vlf+'2',stk+'2',velcon)
+    Flow(slc+'2',[vlf+'2',pik],'slice pick=${SOURCES[1]}')
+
+    Result(slc+'2',grey('Migrated Stack'))
+
+    Flow(slc+'1',slc+'2','agc rect1=200')
+
+    Result(slc+'1',grey('Migrated Stack'))

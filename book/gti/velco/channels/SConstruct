@@ -1,13 +1,19 @@
 from rsfproj import *
+import stack
 
 Fetch('shots.hh','frst3')
 Flow('shots','shots.hh','dd form=native')
 
-Flow('midpt',None,'math n1=1 n2=440 d2=2 o2=0 n3=440 d3=2 o3=0 output="(x2+x3)/2" ')
+Flow('midpt',None,
+     'math n1=1 n2=440 d2=2 o2=0 n3=440 d3=2 o3=0 output="(x2+x3)/2" ')
 Flow('offset','midpt','math output="(x2-x3)/2" ')
-Flow('head','offset midpt','cat axis=1 ${SOURCES[1]} | dd type=int | put n3=1 n2=193600')
+Flow('head','offset midpt',
+     'cat axis=1 ${SOURCES[1]} | dd type=int | put n3=1 n2=193600')
 Flow('cmps','shots head',
-     'put n3=1 n2=193600 | intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=-200 xmax=200')
+     '''
+     put n3=1 n2=193600 |
+     intbin head=${SOURCES[1]} xkey=0 ykey=1 xmin=-200 xmax=200
+     ''')
 
 Flow('cmp1','cmps','window j3=2 j2=2           | put d2=15 o2=-1500 d3=7.5')
 Flow('cmp2','cmps','window j3=2 j2=2 f3=1 f2=1 | put d2=15 o2=-1500 d3=7.5')
@@ -16,6 +22,20 @@ Flow('cmp','cmp1 cmp2',
 Flow('mut','cmp','mutter v0=2200')
 
 Result('cmut','mut','window n3=1 f3=200 | grey title="CMP gather" ')
+
+Flow('chan','cmp','window min3=1500 max3=5500')
+
+stack.stack('chan',
+            v0=1500,
+            nv=100,
+            dv=20,
+            nx=534,
+            nt=241,
+            padx=1025,
+            rect1=10,
+            rect2=10,
+            f1=40,
+            nout=256)
 
 Flow('vscan','mut','vscan semblance=y v0=1500 dv=20 nv=100')
 
@@ -68,23 +88,39 @@ Flow('vlf0','stkd',
      ''')
 
 Flow('vpick0','vpick','window n1=201')
-Flow('mig0','vlf0 vpick0','slice pick=${SOURCES[1]} | window')
+#Flow('mig0','vlf0 vpick0','slice pick=${SOURCES[1]} | window')
 
-Result('cmig0','mig0','window max2=5500 min1=0.2 | grey title=Migration')
+Result('cmig0','mig0',
+       '''
+       window max2=5500 min1=0.2 | grey title="Poststack Migration" color=G
+       ''')
 
 Flow('tst','cmp','transp plane=24 memsize=500')
 Flow('mig','tst','preconstkirch vel=1500')
 Flow('cip','mig','transp plane=24 memsize=500 | halfint inv=1 adj=1')
 Flow('ckx','cip','cosft sign3=1')
-Flow('vlf','ckx','fourvc nv=100 dv=20 v0=1500 pad=512 pad2=1024 | cosft sign3=-1')
-Flow('vlf2','cip',
-     '''
-     transp plane=23 memsize=500 | 
-     fourvc2 nv=100 dv=20 v0=1500 pad=512 pad2=1024 | 
-     transp plane=23 memsize=500
-     ''')
+#Flow('vlf','ckx',
+#     'fourvc nv=100 dv=20 v0=1500 pad=512 pad2=1024 | cosft sign3=-1')
+#Flow('vlf2','cip',
+#     '''
+#     transp plane=23 memsize=500 | 
+#     fourvc2 nv=100 dv=20 v0=1500 pad=512 pad2=1024 | 
+#     transp plane=23 memsize=500
+#     ''')
 
+Flow('pik','vlf2','window max1=0.6 | pick rect1=10 rect2=20 | window')
+Result('pik',
+       'grey color=j scalebar=y title="Migration Velocity" bias=2000')
 
+Flow('slc','vlf pik','window max1=0.6 | slice pick=${SOURCES[1]} | window')
+Result('slc',
+       'grey title="Prestack Time Migration" ')
+
+Result('slc0','slc',
+       '''
+       window max2=5500 min1=0.2 max1=0.5 |
+       grey title="Prestack Time Migration" color=G
+       ''')
 
 Fetch('vp.hh','frst3')
 Flow('vp','vp.hh','dd form=native | window n3=1 f3=140')
@@ -99,7 +135,8 @@ Flow('zof','cmp1','window n2=1 min2=0')
 Flow('fft1','zof','window f1=40 | logstretch nout=512 | fft1 | transp')
 Flow('fin','fft1','fincon h0=0 dh=15 nh=100 all=y')
 Flow('off','fin','transp plane=13 | fft1 inv=y | logstretch inv=y')
-Flow('off2','off','window f2=1 | reverse which=2 | cat axis=2 $SOURCE | reverse which=2')
+Flow('off2','off',
+     'window f2=1 | reverse which=2 | cat axis=2 $SOURCE | reverse which=2')
 
 Flow('vpick2','vpick','window j3=2')
 

@@ -109,15 +109,21 @@ def velcon(data,        # data name
 
     fmg = data+'-fmg'
     Flow(fmg,[vlf,npk],'slice pick=${SOURCES[1]} | transp plane=23')
-    Result(fmg,'grey title=Slice label1="Time (s)" label2="Lateral (%s)" ' % units)
+    Result(fmg,
+           'grey title=Slice label1="Time (s)" label2="Lateral (%s)" ' % units)
 
     agc = data+'-agc'
     Flow(agc,fmg,'agc rect1=200')
     Result(agc,
-           'grey title=Picked pclip=98 label1="Time (s)" label2="Lateral (%s)" ' % units)
+           '''
+           grey title=Picked pclip=98 label1="Time (s)" label2="Lateral (%s)"
+           ''' % units)
     
     Plot(fmg,agc,
-         'grey title="Time-Migrated Image" label1="Time (s)" label2="Lateral (%s)" ' % units)
+         '''
+         grey title="Time-Migrated Image"
+         label1="Time (s)" label2="Lateral (%s)"
+         ''' % units)
     Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
     slp = data+'-slp'
@@ -211,7 +217,9 @@ def velcon(data,        # data name
     # To estimate uncertainty: measure dt/dv, measure dv, multiply
     ref = data+'-ref'
     Flow(ref,[vlf,npk],
-         'transp | refer ref=${SOURCES[1]} | window n1=9 f1=%d | transp' % (nv-5))
+         '''
+         transp | refer ref=${SOURCES[1]} | window n1=9 f1=%d | transp
+         ''' % (nv-5))
 
     if vslope:
         refer = '''
@@ -281,7 +289,8 @@ def velcon(data,        # data name
            label1="Time (s)" label2="Lateral (%s)"
            barlabel="Vertical Uncertainty (s)"
            ''' % units)
-    Flow(unc+'2',[dxdv,ddv],'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
+    Flow(unc+'2',[dxdv,ddv],
+         'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
     Result(unc+'2',
            '''
            grey title="Structural Uncertainty"
@@ -333,3 +342,9 @@ def velcon(data,        # data name
          ''' % (nv,dv,v0,padt,padt2,nx))
 
     
+    foc=data2+'-foc'
+    Flow(foc,[vlf2,vlf22],
+         '''
+         focus rect1=%d rect3=%d |
+         math vlf=${SOURCES[1]} output=vlf/input
+         ''' % (2*rect1,2*rect2))

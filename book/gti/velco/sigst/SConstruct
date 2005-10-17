@@ -1,0 +1,24 @@
+from rsfproj import *
+import stack
+
+Flow('sig',None,
+     '''
+     sigmoid n1=200 d2=0.008 n2=200 | put n3=1 d3=0.008 o3=0 |
+     smooth rect1=3 diff1=1 | pad beg1=25 | smooth rect1=3 | halfint inv=1 |
+     preconstkirch zero=y inv=y h0=0 dh=0.008 nh=61 vel=1.5 |
+     transp plane=24 | window
+     ''')
+
+stack.stack('sig',            
+            v0=2,
+            nv=100,
+            dv=-0.01,
+            nx=200,
+            nt=225,
+            padx=521,
+            rect1=100,
+            rect2=10,
+            f1=15,
+            nout=1024)
+
+End()

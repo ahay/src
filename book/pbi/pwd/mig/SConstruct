@@ -1,4 +1,5 @@
 from rsfproj import *
+import pmig
 
 Fetch('beinew.HH','midpts')
 Flow('bei','beinew.HH','dd form=native')
@@ -95,45 +96,6 @@ Flow('dips','bei dips0',
 Flow('hdip','dips','window n4=1')
 Flow('ydip','dips','window f4=1')
 
-def grey3(title,color='I'):
-    return '''byte | transp plane=23 | grey3 title="%s"
-    frame1=500 frame2=125 frame3=10 color=%s flat=y point2=0.7
-    ''' % (title,color)
-
-Result('bei',grey3('Data'))
-Result('hdip',grey3('Offset Slope','j'))
-Result('ydip',grey3('Midpoint Slope','j'))
-
-Flow('nmo vrms','bei hdip','pnmo dip=${SOURCES[1]} vel=${TARGETS[1]}')
-
-Result('bnmo','nmo',grey3('Oriented NMO'))
-
-Flow('stack','nmo','stack')
-Result('bstack','stack','grey title="Oriented Stack" ')
-
-Flow('hdip2','hdip','transp plane=23 memsize=500')
-Flow('ydip2','ydip','transp plane=23 memsize=500')
-
-Flow('pmig','bei hdip2 ydip2',
-     '''
-     transp plane=23 memsize=500 |
-     pmig hdip=${SOURCES[1]} xdip=${SOURCES[2]} |
-     transp plane=23 memsize=500
-     ''')
-Result('bpmig','pmig',grey3('Oriented Prestack Time Migration'))
-
-Flow('bmig','pmig','stack')
-Result('bmig','grey title="Oriented Prestack Time Migration" ')
-
-Flow('pmzo','bei hdip2 ydip2',
-     '''
-     transp plane=23 memsize=500 |
-     pmig hdip=${SOURCES[1]} xdip=${SOURCES[2]} mzo=y |
-     transp plane=23 memsize=500
-     ''')
-Result('bpmzo','pmzo',grey3('Oriented Migration to Zero Offset'))
-
-Flow('bmzo','pmzo','stack')
-Result('bmzo','grey title="Oriented DMO Stack" ')
+pmig.pmig('bei','hdip','ydip',500,125,10)
 
 End()

@@ -55,13 +55,13 @@ void shotfill_init (int nh_in, float h0, float dh /* half-offset axis */,
     cbanded_init(nh, 2);
     /* initialize complex banded matrix inversion */
 
-    s = -ds/dh;
+    s = -0.5*ds/dh;
     h1 = h0/dh;
     /* normalize by dh */
 
-    b0[0] = (2.-s)*(1.-s)/12.;
-    b0[1] = (2.-s)*(2.+s)/6.;
-    b0[2] = (2.+s)*(1.+s)/12.;
+    b0[2] = (s-2.)*(s-1.)/12.;
+    b0[1] = (s-2.)*(s+2.)/6.;
+    b0[0] = (s+2.)*(s+1.)/12.;
     /* h-independent part of the filter */
 
     eps = eps1;
@@ -109,9 +109,9 @@ static void predefine (float w /* log-stretch frequency */)
 	
 	b = a[ih];
 
-	b[0] = b0[0] - 0.5*h*(I*(s-2.)/w+(2.*h+I*(s-1.)*w)/den);
-	b[1] = b0[1] + h*(I*s/w+(2.*h+I*s*w)/den);
-	b[2] = b0[2] - 0.5*h*(I*(s+2.)/w+(2.*h+I*(s+1.)*w)/den);
+	b[0] = b0[0]; /* - 0.5*h*(I*(s-2.)/w+(2.*h+I*(s-1.)*w)/den); */
+	b[1] = b0[1]; /* + h*(I*s/w+(2.*h+I*s*w)/den); */
+	b[2] = b0[2]; /* - 0.5*h*(I*(s+2.)/w+(2.*h+I*(s+1.)*w)/den); */
 
 	filt2matrix(b,c[ih],cc[ih]);
     }
