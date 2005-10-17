@@ -16,6 +16,8 @@
  *	Please log any further modifications made to this file:
  */
 
+#include "solve.h"
+
 struct vertex
 {
     int x;
@@ -50,3 +52,41 @@ int dupside (struct vertex *base)
     while (v != base);
     return 0;
 }
+
+int intersect (int x, int *crosses, struct vertex  *head, int scany)
+/*< find intersections >*/
+{
+    struct vertex *v;
+    int ncross, y;
+
+    ncross = 0;
+    v = head;
+    if (scany)
+    {
+	do
+	{
+	    if (v->y > x && v->last->y > x)
+		continue;
+	    if (v->y < x && v->last->y < x)
+		continue;
+
+	    y = solve (x, v->y, v->x, v->last->y, v->last->x);
+	    crosses[ncross++] = y;
+	} while ((v = v->next) != head);
+    }
+    else
+    {
+	do
+	{
+	    if (v->x > x && v->last->x > x)
+		continue;
+	    if (v->x < x && v->last->x < x)
+		continue;
+
+	    y = solve (x, v->x, v->y, v->last->x, v->last->y);
+	    crosses[ncross++] = y;
+	} while ((v = v->next) != head);
+    }
+    return (ncross);
+}
+
