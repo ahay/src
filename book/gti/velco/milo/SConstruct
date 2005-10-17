@@ -35,7 +35,7 @@ Flow('pkx','pwd','pad n2=1000 | cosft sign2=1 verb=y | spray axis=2 n=1 o=0 d=5'
 
 Flow('plf','pkx',velcon)
 
-Flow('poc','plf','window j3=5 | focus rect1=100 rect3=10 | math output=1/input')
+Flow('poc','plf','window j3=5 | focus rect1=40 rect3=10 | math output=1/input')
 Flow('pic','poc','cut max1=0.1 | pick rect1=10 rect2=10')
 Flow('pic2','pic','window | transp | spline n1=869 d1=5 o1=0 | transp')
 Flow('plc','plf pic2','slice pick=${SOURCES[1]} | window')

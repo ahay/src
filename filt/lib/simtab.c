@@ -248,35 +248,37 @@ bool sf_simtab_getfloats (sf_simtab table, const char* key,
     result = true;
     for (i = 0; i < n; i++) {
 	fval = (0==i)? strtok(val,","):strtok(NULL,",");
-	if (NULL == fval) 
-	    sf_error("%s: Not enough values in %s=: %d < %d",__FILE__,key,i,n);
-	fvali = strpbrk(fval,"x*");
-	if (NULL != fvali) {
-	    strncpy(cnum,fval,(size_t) (fvali-fval));
-
-	    num = strtol(cnum,NULL,10);
-	    if (ERANGE == errno) 
-		sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
-	    fvali++;
-	    
-	    fi = strtod(fvali,NULL);
-	    if (ERANGE == errno || fi < -FLT_MAX || fi > FLT_MAX ) 
-		sf_error ("%s: %s='%s' is out of range:",__FILE__,key,fvali);
-
-	    for (; i < n && i < (size_t) num; i++) {
-		par[i] = (float) fi;
-	    }
-	    if (i == n) break;
+	if (NULL == fval) {
+	    if (0==i) return false;
 	} else {
-	    if (NULL==fval) {
-		if (0==i) {
-		    result = false;
-		    break;
-		}
-	    } else {
-		fi = strtod(fval,NULL);
+	    fvali = strpbrk(fval,"x*");
+	    if (NULL != fvali) {
+		strncpy(cnum,fval,(size_t) (fvali-fval));
+
+		num = strtol(cnum,NULL,10);
+		if (ERANGE == errno) 
+		    sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
+		fvali++;
+		
+		fi = strtod(fvali,NULL);
 		if (ERANGE == errno || fi < -FLT_MAX || fi > FLT_MAX ) 
-		    sf_error("%s: %s='%s' is out of range:",__FILE__,key,fval);
+		    sf_error ("%s: %s='%s' is out of range:",__FILE__,key,fvali);
+		
+		for (; i < n && i < (size_t) num; i++) {
+		    par[i] = (float) fi;
+		}
+		if (i == n) break;
+	    } else {
+		if (NULL==fval) {
+		    if (0==i) {
+			result = false;
+			break;
+		    }
+		} else {
+		    fi = strtod(fval,NULL);
+		    if (ERANGE == errno || fi < -FLT_MAX || fi > FLT_MAX ) 
+			sf_error("%s: %s='%s' is out of range:",__FILE__,key,fval);
+		}
 	    }
 	}
 	par[i] = (float) fi;

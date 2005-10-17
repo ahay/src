@@ -1,0 +1,62 @@
+from rsfproj import *
+import math
+
+# Velocity model
+########################################
+v0 = 0.5        # velocity at the origin
+gz = 0.8        # vertical gradient
+gx = 0.6        # horizontal gradient
+nz = 601        # depth samples
+nx = 1201       # lateral samples
+dz = 0.5/(nz-1) # depth sampling
+dx = 1.0/(nx-1) # lateral sampling
+########################################
+
+# v(z,x) = v0 + gz*z + gx*x
+###########################
+Flow('vel',None,
+     '''
+     math n1=%d d1=%g n2=%d d2=%g
+     output="%g+%g*x1+%g*x2"
+     ''' % (nz,dz,nx,dx,v0,gz,gx))
+Plot('vel',
+     '''
+     grey color=j allpos=y screenht=6 screenratio=%g bias=%g
+     wanttitle=n label1="Depth (km)" label2="Lateral (km)"
+     scalebar=y barlabel="Velocity (km/s)" barreverse=y''
+     ''' % ((nz-1.)/(nx-1.),v0))
+
+# Analytical traveltime
+########################
+
+# t(z,x) =
+#############################
+g = math.hypot(gx,gz) # sqrt(gx*gx + gz*gz)
+Flow('time','vel',
+     '''
+     math output="acosh(1 + %g*(x1*x1+x2*x2)/input)/%g"
+     ''' % (0.5*g*g/v0,g))
+Plot('time',
+     '''
+     contour scalebar=y plotcol=7 plotfat=5 wanttitle=n
+     screenht=6 screenratio=%g c0=0 dc=0.1 nc=30
+     ''' % ((nz-1.)/(nx-1.)))
+
+Result('exact','vel time','Overlay')
+
+for sample in range(int(math.log(nx)/math.log(2))):
+    jump = int(pow(2,sample))
+
+    # Subsample velocity and analytical traveltime
+    ##############################################
+    vel = 'vel%d' % sample
+    tim = 'tim%d' % sample
+    Flow(vel,'vel','window j1=%d j2=%d' % jump)
+    Flow(tim,'time','window j1=%d j2=%d' % jump)
+
+    # Solve the eikonal equation
+    ############################
+    eik = 'eik%d' % sample
+    Flow(eik,vel,'eikonal yshot=0 br1=%g br2=%g' % (dz,dx))
+
+End()

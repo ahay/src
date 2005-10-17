@@ -15,7 +15,7 @@ Flow('mask','far zero',
      '''
      interleave axis=1 ${SOURCES[1]} |
      cat axis=1 ${SOURCES[0]} |
-     put o1=0.4 d1=0.05
+     put o1=0.4 d1=0.05 | spray axis=1 n=625 d=0.004 o=4
      ''')
 
 #velcon.velcon('bei',
