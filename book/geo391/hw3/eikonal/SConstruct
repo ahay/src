@@ -19,6 +19,18 @@ Flow('vel',None,
      math n1=%d d1=%g n2=%d d2=%g
      output="%g+%g*x1+%g*x2"
      ''' % (nz,dz,nx,dx,v0,gz,gx))
+
+# v(z,x) = sqrt(v0^3/(v0 + gz*z + gx*x))
+########################################
+
+# !!!!!!!!!! UNCOMMENT BELOW !!!!!!!!!!
+
+## Flow('vel',None,
+##      '''
+##      math n1=%d d1=%g n2=%d d2=%g
+##      output="%g*sqrt(%g/%g+%g*x1+%g*x2)"
+##      ''' % (nz,dz,nx,dx,v0,v0,v0,gz,gx))
+
 Plot('vel',
      '''
      grey color=j allpos=y screenht=6 screenratio=%g bias=%g
@@ -29,8 +41,8 @@ Plot('vel',
 # Analytical traveltime
 ########################
 
-# t(z,x) =
-#############################
+# !!!!!!!!!! CHANGE BELOW !!!!!!!!!!!!!
+
 g = math.hypot(gx,gz) # sqrt(gx*gx + gz*gz)
 Flow('time','vel',
      '''
@@ -42,21 +54,94 @@ Plot('time',
      screenht=6 screenratio=%g c0=0 dc=0.1 nc=30
      ''' % ((nz-1.)/(nx-1.)))
 
+# Plot wavefronts overlayed on the velocity model
+#################################################
 Result('exact','vel time','Overlay')
 
-for sample in range(int(math.log(nx)/math.log(2))):
-    jump = int(pow(2,sample))
+errs = []
+cpus = []
+sizes = []
+spaces = []
+
+samples = range(1,nz/30)
+
+for sample in samples:
 
     # Subsample velocity and analytical traveltime
     ##############################################
     vel = 'vel%d' % sample
     tim = 'tim%d' % sample
-    Flow(vel,'vel','window j1=%d j2=%d' % jump)
-    Flow(tim,'time','window j1=%d j2=%d' % jump)
+    Flow(vel,'vel','window j1=%d j2=%d' % (sample,sample))
+    Flow(tim,'time','window j1=%d j2=%d' % (sample,sample))
 
-    # Solve the eikonal equation
-    ############################
+    size = 'siz%d' % sample
+    Flow(size,None,'spike n1=1 mag=%g' % (float(nx*nz)/(sample*sample)))
+    sizes.append(size)
+
+    space = 'spc%d' % sample
+    Flow(space,None,'spike n1=1 mag=%g' % (sample*math.hypot(dx,dz)))
+    spaces.append(space)
+
+    # !!!!!!!!! CHANGE BELOW TO SECOND-ORDER ACCURACY !!!!!!!!!!
+
+    # Solve the eikonal equation, record CPU time
+    #############################################
     eik = 'eik%d' % sample
-    Flow(eik,vel,'eikonal yshot=0 br1=%g br2=%g' % (dz,dx))
+    cpu = 'cpu%d' % sample
+    Flow([cpu,eik],vel,
+         '''
+         (/usr/bin/time -f "%%S %%U" %s < $SOURCE yshot=0 order=1 br1=%g br2=%g > ${TARGETS[1]} ) >& cpu.out &&
+         (tail -1 cpu.out; echo in=cpu.rsf n1=2 data_format=ascii_float) > cpu.rsf &&
+         dd form=native < cpu.rsf | stack axis=1 > ${TARGETS[0]} &&
+         /bin/rm cpu.out cpu.rsf
+         ''' % (WhereIs('sfeikonal'),20*dz,20*dx),stdin=0,stdout=-1)
+    cpus.append(cpu)
+
+    # Compute RMS error
+    ###################
+    err = 'err%d' % sample
+    Flow(err,[eik,tim],
+         '''
+         math exact=${SOURCES[1]} output="abs(input-exact)" |
+         stack axis=2 norm=y | stack axis=1 norm=y 
+         ''')
+    errs.append(err)
+
+# Concatenate results
+#####################
+cat = 'cat axis=1 ${SOURCES[1:%d]}' % len(samples)
+   
+Flow('space',spaces,cat)
+Flow('logspace','space','math output="log(input)" ')
+
+Flow('err',errs,cat)
+Flow('logerr','err','math output="log(input)" ')
+
+Flow('size',sizes,cat)
+Flow('cpu',cpus,cat)
+
+graph = 'cmplx ${SOURCES[0:2]} | graph wanttitle=n '
+for case in (0,1):
+    Plot('err'+str(case),'space err',
+         graph + 'label1="Grid Spacing (km)" label2="Error (s)" ',stdin=0)
+    Plot('logerr'+str(case),'logspace logerr',
+         graph + 'label1="Log(Grid Spacing)" label2="Log(Error)" ',stdin=0)
+    Plot('cpu'+str(case),'size cpu',
+         graph + 'label1="Grid Size" label2="CPU Time (s)" ',stdin=0)
+    graph = graph + 'symbol=x plotcol=2 '
+
+# Plot error versus spacing
+###########################
+Plot('err','err0 err1','Overlay')
+
+# Plot error versus spacing on a logarithmic scale
+##################################################
+Plot('logerr','logerr0 logerr1','Overlay')
+
+Result('err','err logerr','SideBySideAniso')
+
+# Plot CPU time
+###############
+Result('cpu','cpu0 cpu1','Overlay')
 
 End()

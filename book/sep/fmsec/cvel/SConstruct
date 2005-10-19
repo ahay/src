@@ -54,9 +54,9 @@ for sample in samples:
         time = 'tim%d-%d' % (order,sample)
         Flow(time,[vel,siz],
              '''
-             (/usr/bin/time -f %%e %s < ${SOURCES[0]} order=%d zshot=%g yshot=%g br1=0.1 br2=0.1 > /dev/null ) >& time.out &&
-             (tail -1 time.out; echo in=time0.rsf n1=1 data_format=ascii_float) > time0.rsf &&
-             dd form=native < time0.rsf > time1.rsf &&
+             (/usr/bin/time -f "%%S %%U" %s < ${SOURCES[0]} order=%d zshot=%g yshot=%g br1=0.1 br2=0.1 > /dev/null ) >& time.out &&
+             (tail -1 time.out; echo in=time0.rsf n1=2 data_format=ascii_float) > time0.rsf &&
+             dd form=native < time0.rsf | stack axis=1 norm=n > time1.rsf &&
              cmplx ${SOURCES[1]} time1.rsf > $TARGET &&
              /bin/rm time.out time0.rsf &&
              rm time1.rsf
@@ -105,7 +105,6 @@ Plot('tim',
      ''')
 Plot('normtim',
      '''
-     window n1=5 |
      graph wanttitle=n dash=0,3 screenratio=1. labelsz=9 label2="1000000 CPU time/N" label1="N/1000000"
      min2=0 max2=2
      ''')

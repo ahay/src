@@ -1,3 +1,38 @@
 from rsfproj import *
 
+# Velocity model
+########################################
+v0 = 0.5        # velocity at the origin
+gz = 0.8        # vertical gradient
+gx = 0.6        # horizontal gradient
+nz = 601        # depth samples
+nx = 1201       # lateral samples
+dz = 0.5/(nz-1) # depth sampling
+dx = 1.0/(nx-1) # lateral sampling
+########################################
+
+# v(z,x) = v0 + gz*z + gx*x
+###########################
+Flow('vel',None,
+     '''
+     math n1=%d d1=%g n2=%d d2=%g
+     output="%g+%g*x1+%g*x2"
+     ''' % (nz,dz,nx,dx,v0,gz,gx))
+Plot('vel',
+     '''
+     grey color=j allpos=y screenht=6 screenratio=%g bias=%g
+     wanttitle=n label1="Depth (km)" label2="Lateral (km)"
+     scalebar=y barlabel="Velocity (km/s)" barreverse=y''
+     ''' % ((nz-1.)/(nx-1.),v0))
+
+Flow('ray','vel','rays2 yshot=0 nr=1 a0=130 nt=%d dt=%g' % (1200,0.001))
+Plot('ray',
+     '''
+     graph scalebar=y plotcol=7 plotfat=5 wanttitle=n
+     transp=y yreverse=y screenht=6 screenratio=%g pad=n
+     wantaxis=n min1=0 max1=0.5 min2=0 max2=1
+     ''' % ((nz-1.)/(nx-1.)))
+Result('ray','vel ray','Overlay')
+
+
 End()
