@@ -33,9 +33,10 @@ Flow('vel',None,
 
 Plot('vel',
      '''
-     grey color=j allpos=y screenht=6 screenratio=%g bias=%g
-     wanttitle=n label1="Depth (km)" label2="Lateral (km)"
-     scalebar=y barlabel="Velocity (km/s)" barreverse=y''
+     grey color=j allpos=y screenht=6 screenratio=%g
+     bias=%g wanttitle=n barreverse=y
+     label1="Depth (km)" label2="Lateral (km)"
+     scalebar=y barlabel="Velocity (km/s)" 
      ''' % ((nz-1.)/(nx-1.),v0))
 
 # Analytical traveltime
@@ -46,12 +47,13 @@ Plot('vel',
 g = math.hypot(gx,gz) # sqrt(gx*gx + gz*gz)
 Flow('time','vel',
      '''
-     math output="acosh(1 + %g*(x1*x1+x2*x2)/input)/%g"
+     math
+     output="acosh(1 + %g*(x1*x1+x2*x2)/input)/%g"
      ''' % (0.5*g*g/v0,g))
 Plot('time',
      '''
-     contour scalebar=y plotcol=7 plotfat=5 wanttitle=n
-     screenht=6 screenratio=%g c0=0 dc=0.1 nc=30
+     contour scalebar=y plotcol=7 c0=0 dc=0.1 nc=30
+     screenht=6 screenratio=%g plotfat=5 wanttitle=n
      ''' % ((nz-1.)/(nx-1.)))
 
 # Plot wavefronts overlayed on the velocity model
@@ -71,18 +73,22 @@ for sample in samples:
     ##############################################
     vel = 'vel%d' % sample
     tim = 'tim%d' % sample
-    Flow(vel,'vel','window j1=%d j2=%d' % (sample,sample))
-    Flow(tim,'time','window j1=%d j2=%d' % (sample,sample))
+    window = 'window j1=%d j2=%d' % (sample,sample)
+    
+    Flow(vel,'vel',window)
+    Flow(tim,'time',window)
 
     size = 'siz%d' % sample
-    Flow(size,None,'spike n1=1 mag=%g' % (float(nx*nz)/(sample*sample)))
+    n = float(nx*nz)/(sample*sample)
+    Flow(size,None,'spike n1=1 mag=%g' % n)
     sizes.append(size)
 
     space = 'spc%d' % sample
-    Flow(space,None,'spike n1=1 mag=%g' % (sample*math.hypot(dx,dz)))
+    h = sample*math.hypot(dx,dz)
+    Flow(space,None,'spike n1=1 mag=%g' % h)
     spaces.append(space)
 
-    # !!!!!!!!! CHANGE BELOW TO SECOND-ORDER ACCURACY !!!!!!!!!!
+    # !!!!!!!!! CHANGE BELOW !!!!!!!!!!
 
     # Solve the eikonal equation, record CPU time
     #############################################
@@ -90,19 +96,24 @@ for sample in samples:
     cpu = 'cpu%d' % sample
     Flow([cpu,eik],vel,
          '''
-         (/usr/bin/time -f "%%S %%U" %s < $SOURCE yshot=0 order=1 br1=%g br2=%g > ${TARGETS[1]} ) >& cpu.out &&
-         (tail -1 cpu.out; echo in=cpu.rsf n1=2 data_format=ascii_float) > cpu.rsf &&
-         dd form=native < cpu.rsf | stack axis=1 > ${TARGETS[0]} &&
+         (/usr/bin/time -f "%%S %%U" %s < $SOURCE
+         yshot=0 order=1 br1=%g br2=%g > ${TARGETS[1]}
+         ) >& cpu.out && (tail -1 cpu.out;
+         echo in=cpu.rsf n1=2 data_format=ascii_float)
+         > cpu.rsf && dd form=native < cpu.rsf |
+         stack axis=1 > ${TARGETS[0]} &&
          /bin/rm cpu.out cpu.rsf
-         ''' % (WhereIs('sfeikonal'),20*dz,20*dx),stdin=0,stdout=-1)
+         ''' % (WhereIs('sfeikonal'),20*dz,20*dx),
+         stdin=0,stdout=-1)
     cpus.append(cpu)
 
-    # Compute RMS error
-    ###################
+    # Compute error
+    ###############
     err = 'err%d' % sample
     Flow(err,[eik,tim],
          '''
-         math exact=${SOURCES[1]} output="abs(input-exact)" |
+         math exact=${SOURCES[1]}
+         output="abs(input-exact)" |
          stack axis=2 norm=y | stack axis=1 norm=y 
          ''')
     errs.append(err)
@@ -122,12 +133,15 @@ Flow('cpu',cpus,cat)
 
 graph = 'cmplx ${SOURCES[0:2]} | graph wanttitle=n '
 for case in (0,1):
-    Plot('err'+str(case),'space err',
-         graph + 'label1="Grid Spacing (km)" label2="Error (s)" ',stdin=0)
-    Plot('logerr'+str(case),'logspace logerr',
-         graph + 'label1="Log(Grid Spacing)" label2="Log(Error)" ',stdin=0)
-    Plot('cpu'+str(case),'size cpu',
-         graph + 'label1="Grid Size" label2="CPU Time (s)" ',stdin=0)
+    Plot('err'+str(case),'space err',graph + '''
+    label1="Grid Spacing (km)" label2="Error (s)"
+    ''',stdin=0)
+    Plot('logerr'+str(case),'logspace logerr',graph + '''
+    label1="Log(Grid Spacing)" label2="Log(Error)"
+    ''',stdin=0)
+    Plot('cpu'+str(case),'size cpu',graph + '''
+    label1="Grid Size" label2="CPU Time (s)"
+    ''',stdin=0)
     graph = graph + 'symbol=x plotcol=2 '
 
 # Plot error versus spacing
