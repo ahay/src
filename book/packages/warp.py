@@ -36,6 +36,12 @@ nsmooth1 rect=${SOURCES[1]} |
 abalance rect1=100 order=100 other=${SOURCES[2]}
 '''
 
+inter = '''
+pad end2=1 > shift.rsf &&
+pad < $SOURCE beg2=1 | add shift.rsf | window f2=1 j2=2 > $TARGET &&
+rm shift.rsf
+'''
+
 def warping(niter,rect1=1,rect2=1,rect3=1):
     return '''
     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -76,8 +82,7 @@ def warp2(name,       # name prefix
     if trace:
         for case in (pp,ps,warp):
             Flow(case+'1',case,'window n2=1 min2=%d' % trace)
-        warp1(name+'t',pp+'1',ps+'1',warp+'1',gmin,gmax,dt,fmin,fmax,ng,g0,rect1,iter)
-
+#        warp1(name+'t',pp+'1',ps+'1',warp+'1',gmin,gmax,dt,fmin,fmax,ng,g0,rect1,iter)
 
     def plot(title):
         return '''
@@ -101,9 +106,28 @@ def warp2(name,       # name prefix
         %s clip=%g bias=%g color=j scalebar=y barlabel="Frequency (Hz)"
         ''' % (0.5/(math.pi*dt),plot(title),(fmax-fmin)*0.5,(fmax+fmin)*0.5)
 
+    def specplot(title):
+        return '''
+        cat axis=2 ${SOURCES[1]} |
+        graph title="%s" max1=%g label1="Frequency (Hz)"
+        dash=0,1
+        ''' % (title,4*fmax)
+
     Plot(pp,plot('PP'))
     Flow(pp+'i',pp,ifreq)
     Plot(pp+'i',freqplot('PP Local Frequency'))
+
+    Flow(pp+'s0',pp,'spectra all=y')
+
+    g1 = 2-g0
+    warpscan2 = warpscan(ng,g0,g1,rect1,1,rect2)
+
+    scanplot = '''
+    byte gainpanel=all allpos=y |
+    grey3 frame1=750 frame3=10 frame2=25 color=j flat=n
+    label1="Time (s)" label3="In-line" label2="Relative Gamma"
+    wanttitle=n
+    '''
 
     wrp = warp 
     for i in range(iter):
@@ -149,8 +173,61 @@ def warp2(name,       # name prefix
         Flow(pr+'0',[msk,si,pp+'i'],pprect)
         Flow(pr,[pp,pr+'0',pp],balance)
 
+        si = si+'2'
+        pi = n('pi')
+        Flow(pi,pr,ifreq)
+        Flow(si,sr,ifreq)
         
+        Plot(si,freqplot('PS Local Frequency'))
+        Plot(pi,freqplot('PP Local Frequency'))
+        Result(si,[pi,si],'OverUnderAniso')
+
+        s0 = psw+'s0'
+        Flow(s0,psw,'spectra all=y')
+        Plot(s0,[pp+'s0',s0],specplot('Before'))
         
+        s1 = psw+'s1'
+        Flow(s1,sr,'spectra all=y')
+        Flow(pr+'s1',pr,'spectra all=y')
+        Plot(s1,[pr+'s1',s1],specplot('After'))
+
+        Result(n('sp'),[s0,s1],'SideBySideIso')
+
+        in0 = n('in0')
+        Flow(pr+'in',pr,inter,stdout=-1)
+        Flow(sr+'in',sr,inter,stdout=-1)
+        Plot(in0,[pr+'in',sr+'in'],
+             '''
+             interleave axis=2 ${SOURCES[1]} |
+             grey
+             title='Interleaved (Before)'
+             label1='Time (s)' label2='In-line'
+             ''')
+        Plot(in0+'w',[pr+'in',sr+'in'],
+             '''
+             interleave axis=2 ${SOURCES[1]} |
+             wiggle poly=y transp=y yreverse=y
+             title='Interleaved (Before)'
+             label1='Time (s)' label2='In-line'
+             ''')
+
+        Plot(sr,plot('Warped and Balanced PS'))
+        Plot(pr,plot('Balanced PP'))
+        
+        dif = dif+'2'
+        Plot(dif,[sr,pr],
+             'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
+
+        Result(sr,[pr,sr,dif,gamma],'TwoRows')        
+
+        ############
+        # GAMMA SCAN
+        ############
+        sc = n('sc')
+        Flow(sc,[sr,pr],warpscan2)
+        Result(sc,scanplot)
+        
+
 
 def warp1(name,      # name prefix
           pp,ps,     # PP and PS images

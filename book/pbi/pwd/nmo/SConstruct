@@ -11,7 +11,7 @@ Flow('mask','cdp','math output=1 | mutter half=n v0=1.4 tp=0.4')
 
 Flow('velsmb','mutter',
      'vscan slowness=y half=n v0=0.3 nv=81 dv=0.005 semblance=y')
-Flow('velpick','velsmb','blindpick2 eps=500')
+Flow('velpick','velsmb','pick rect1=75')
 Plot('pick','velpick',
      '''
      window | graph yreverse=y transp=y

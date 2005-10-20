@@ -10,7 +10,7 @@ mutter = 'v0=1500 tp=0.5'
 Flow('cmp','marm','shot2cmp positive=n')
 Flow('mutter','cmp','mutter ' + mutter)
 Flow('vscan','mutter','vscan semblance=y v0=1500 nv=120 dv=50')
-Flow('vrms','vscan','blindpick2 eps=40 lam=40 gauss=n')
+Flow('vrms','vscan','pick rect1=20 rect2=20')
 Result('vrms',
        '''
        window min3=2800 max3=7600 |

@@ -38,7 +38,7 @@ Flow('vlf','vkx',velcon)
 Flow('plf','pkx',velcon)
 
 Flow('poc','plf','window j3=5 | focus rect1=40 rect3=10 | math output=1/input')
-Flow('pic','poc','cut max1=0.1 | pick rect1=10 rect2=10')
+Flow('pic','poc','window min2=2000 max2=2500 | pick rect1=10 rect2=10')
 Flow('pic2','pic','window | transp | spline n1=869 d1=5 o1=0 | transp')
 Flow('plc','plf pic2','slice pick=${SOURCES[1]} | window')
 
