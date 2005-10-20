@@ -1,0 +1,66 @@
+from rsfproj import *
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+trace=300
+
+Flow('./line',None,
+     'echo %d 0 %d 4 n1=4 data_format=ascii_float in=$TARGET' %
+     (trace,trace))
+Plot('line',
+     '''
+     dd form=native | dd type=complex |
+     graph min2=0 max2=4 min1=-0.5 max1=471.5 pad=n wantaxis=n wanttitle=n
+     ''')
+
+for mode in ['pp','ss']:
+    data = 'bend_l1_%cmig_enhanc.sgy' % mode[1]
+    Fetch(data,'vecta',private)
+    Flow(mode,data,
+         'segyread tape=$SOURCE read=data | window n2=471 | scale axis=2',
+         stdin=0)
+    Result('v'+mode,[mode,'line'],'Overlay')
+
+nails = Split('''
+0.32 0.72
+0.57 1.22
+0.97 1.97
+''')
+
+Flow('./nails0',None,
+     'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
+     (string.join(nails,' '),len(nails)/2))
+Flow('nails','nails0','dd form=native')
+Flow('nreal','nails','window n1=1')
+Flow('nimag','nails','window f1=1')
+Plot('nails','nreal nimag',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph min1=0 max1=2 min2=0 max2=4 symbol='o' wanttitle=n
+     label1="PP time (s)" label2="SS time (s)" plotcol=5
+     symbolsz=15
+     ''',stdin=0)
+
+Flow('fit','nails pp1','linefit pattern=${SOURCES[1]}')
+Plot('fit','graph min1=0 max1=2 min2=0 max2=4 title="Line Fit" ')
+Result('vnails','fit nails','Overlay')
+
+Flow('fit0','fit','math output=input-x1 | spray o=0 d=1 n=471')
+
+import warp
+warp.warp2('vec','pp','ss','fit0',
+           ss=1,
+           trace=trace,
+           dt=0.002,
+           g0=0.9,
+           ng=101,
+           rect1=50,
+           rect2=50,
+           fmax=70,
+           fmin=20,
+           iter=2,
+           clip=0.39)
+
+End()

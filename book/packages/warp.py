@@ -1,12 +1,6 @@
 from rsfproj import *
 import math
 
-warp2gamma = '''
-math output="input+x1" |
-smoothder |
-math output="2*input-1" 
-'''
-
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
 verb=1 nliter=0
@@ -62,6 +56,12 @@ def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
     math output='(1+input)^4' |
     window''' % (ng,dg,g0,rect1,rect2,rect3,rect4)
 
+def warp2gamma(ss):
+    return '''
+    math output="input+x1" |
+    smoothder %s
+    ''' % ('| math output="2*input-1" ','')[ss]
+
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
           warp,       # initial warp
@@ -76,13 +76,16 @@ def warp2(name,       # name prefix
           rect1=50,   # vertical smoothing
           rect2=50,   # lateral smoothing
           iter=2,     # number of iterations
-          clip=6
+          ss=0,       # PP-PS (0) or PP-SS (1)
+          clip=6      # display clip
           ):
 
+      
     if trace:
         for case in (pp,ps,warp):
             Flow(case+'1',case,'window n2=1 min2=%d' % trace)
-#        warp1(name+'t',pp+'1',ps+'1',warp+'1',gmin,gmax,dt,fmin,fmax,ng,g0,rect1,iter)
+        warp1(name+'t',pp+'1',ps+'1',warp+'1',
+              gmin,gmax,dt,fmin,fmax,ng,g0,rect1,iter,ss)
 
     def plot(title):
         return '''
@@ -98,13 +101,13 @@ def warp2(name,       # name prefix
     abalance rect1=%d rect2=%d order=100 other=${SOURCES[2]}
     ''' % (rect1,rect2)
 
-    ifreq = 'iphase rect1=100 rect2=10 order=100'
+    ifreq = 'iphase rect1=%d rect2=%d order=100' % (rect1,rect2)
 
     def freqplot(title):
         return '''
         scale scale dscale=%g |
         %s clip=%g bias=%g color=j scalebar=y barlabel="Frequency (Hz)"
-        ''' % (0.5/(math.pi*dt),plot(title),(fmax-fmin)*0.5,(fmax+fmin)*0.5)
+        ''' % (0.5/(math.pi*dt),plot(title),(fmax-fmin)*0.25,(fmax+fmin)*0.5)
 
     def specplot(title):
         return '''
@@ -118,9 +121,6 @@ def warp2(name,       # name prefix
     Plot(pp+'i',freqplot('PP Local Frequency'))
 
     Flow(pp+'s0',pp,'spectra all=y')
-
-    g1 = 2-g0
-    warpscan2 = warpscan(ng,g0,g1,rect1,1,rect2)
 
     scanplot = '''
     byte gainpanel=all allpos=y |
@@ -147,7 +147,7 @@ def warp2(name,       # name prefix
              'add scale=1,-1 ${SOURCES[1]} | ' + plot('Difference'))
 
         gamma = n('gamma')
-        Flow(gamma,wrp,warp2gamma)
+        Flow(gamma,wrp,warp2gamma(ss))
         Plot(gamma,vplot)
 
         Result(psw,[pp,psw,dif,gamma],'TwoRows')
@@ -223,11 +223,14 @@ def warp2(name,       # name prefix
         ############
         # GAMMA SCAN
         ############
+
+        g1 = 2-g0
+        warpscan2 = warpscan(ng,g0,g1,rect1,1,rect2)
+        
         sc = n('sc')
         Flow(sc,[sr,pr],warpscan2)
         Result(sc,scanplot)
         
-
 
 def warp1(name,      # name prefix
           pp,ps,     # PP and PS images
@@ -240,7 +243,8 @@ def warp1(name,      # name prefix
           ng=101,    # number of gammas
           g0=0.96,   # first gamma
           rect1=50,  # vertical smoothing
-          iter=2     # number of iterations
+          iter=2,    # number of iterations
+          ss=0
           ):
 
     graph = '''
@@ -262,18 +266,7 @@ def warp1(name,      # name prefix
         #################
         # INITIAL WARPING
         #################
-
-        g1 = 2-g0
-
-        warpscan1 = warpscan(ng,g0,g1,rect1)
-
-        greyscan = '''
-        grey title="Gamma scan" allpos=y 
-        min2=%g max2=%g
-        color=j pclip=100
-        label1="Time (s)" label2="Gamma"
-        ''' % (g0,g1)
-        
+      
         def showpick(case):
             return '''
             graph transp=y min2=%g max2=%g
@@ -285,7 +278,7 @@ def warp1(name,      # name prefix
             return '%s-%s-%d' % (name,s,i)
 
         gamma = n('gamma')
-        Flow(gamma,wrp,warp2gamma);
+        Flow(gamma,wrp,warp2gamma(ss));
         Plot(gamma,graph)
 
         psw = n('psw')
@@ -298,11 +291,13 @@ def warp1(name,      # name prefix
         # SPECTRAL BALANCING
         ####################
 
+        phase = 'iphase rect1=%d' % rect1
+
         ifr = n('ifr')
         ppi = n('ppi')
         psi = n('psi')
-        Flow(ppi,pp, 'iphase rect1=100')
-        Flow(psi,psw,'iphase rect1=100')
+        Flow(ppi,pp, phase)
+        Flow(psi,psw,phase)
         Result(ifr,[ppi,psi],iphase)
 
         msk = n('msk')
@@ -321,12 +316,23 @@ def warp1(name,      # name prefix
         Result(psw+'1',[gamma,psw+'1'],'OverUnderAniso')
 
         for case in (sr,pr):
-            Flow(case+'i',case,'iphase rect1=100')
+            Flow(case+'i',case,phase)
         Result(ifr+'1',[pr+'i',sr+'i'],iphase)
 
         ############
         # GAMMA SCAN
         ############
+
+        g1 = 2-g0
+        
+        warpscan1 = warpscan(ng,g0,g1,rect1)
+        
+        greyscan = '''
+        grey title="Gamma scan" allpos=y 
+        min2=%g max2=%g
+        color=j pclip=100
+        label1="Time (s)" label2="Gamma"
+        ''' % (g0,g1)
 
         scn = n('scn')
         Flow(scn,[sr,pr],warpscan1)
@@ -346,7 +352,7 @@ def warp1(name,      # name prefix
         wrp = n('wrp')
 
         Flow([wrp,psw+'2'],[sr,pr,pik,warp],warp1,stdout=-1)
-        Flow(gamma+'2',wrp,warp2gamma)
+        Flow(gamma+'2',wrp,warp2gamma(ss))
         Plot(gamma+'2',graph)
         Plot(psw+'2',[psw+'2',pr],dplot)
         Result(psw+'2',[gamma+'2',psw+'2'],'OverUnderAniso')

@@ -20,12 +20,11 @@
  * VPLOT filter utility routine
  * sort the elements of vec into ascending order.
  */
-sort (vec, n)
-    register int   *vec;
-    int             n;
+void sort (int *vec, int n)
 {
-register int   *above, *below, *last;
-register int    temp;
+    int   *above, *below, *last;
+    int    temp;
+    
     last = vec + (n - 1);
     for (above = vec; above < last; above++)
     {
