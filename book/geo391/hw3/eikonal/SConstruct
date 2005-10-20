@@ -10,7 +10,6 @@ nz = 601        # depth samples
 nx = 1201       # lateral samples
 dz = 0.5/(nz-1) # depth sampling
 dx = 1.0/(nx-1) # lateral sampling
-########################################
 
 # v(z,x) = v0 + gz*z + gx*x
 ###########################
@@ -20,16 +19,16 @@ Flow('vel',None,
      output="%g+%g*x1+%g*x2"
      ''' % (nz,dz,nx,dx,v0,gz,gx))
 
-# v(z,x) = sqrt(v0^3/(v0 + gz*z + gx*x))
+# v(z,x) = sqrt(v0^3/(v0 + 2*gz*z + 2*gx*x))
 ########################################
 
 # !!!!!!!!!! UNCOMMENT BELOW !!!!!!!!!!
 
 ## Flow('vel',None,
-##      '''
-##      math n1=%d d1=%g n2=%d d2=%g
-##      output="%g*sqrt(%g/%g+%g*x1+%g*x2)"
-##      ''' % (nz,dz,nx,dx,v0,v0,v0,gz,gx))
+##       '''
+##       math n1=%d d1=%g n2=%d d2=%g
+##       output="%g*sqrt(%g/%g+%g*x1+%g*x2)"
+##       ''' % (nz,dz,nx,dx,v0,v0,v0,2*gz,2*gx))
 
 Plot('vel',
      '''
@@ -47,8 +46,7 @@ Plot('vel',
 g = math.hypot(gx,gz) # sqrt(gx*gx + gz*gz)
 Flow('time','vel',
      '''
-     math
-     output="acosh(1 + %g*(x1*x1+x2*x2)/input)/%g"
+     math output="acosh(1 + %g*(x1*x1+x2*x2)/input)/%g"
      ''' % (0.5*g*g/v0,g))
 Plot('time',
      '''
@@ -112,8 +110,7 @@ for sample in samples:
     err = 'err%d' % sample
     Flow(err,[eik,tim],
          '''
-         math exact=${SOURCES[1]}
-         output="abs(input-exact)" |
+         math ref=${SOURCES[1]} output="abs(input-ref)" |
          stack axis=2 norm=y | stack axis=1 norm=y 
          ''')
     errs.append(err)

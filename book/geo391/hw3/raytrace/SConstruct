@@ -10,7 +10,6 @@ nz = 601        # depth samples
 nx = 1201       # lateral samples
 dz = 0.5/(nz-1) # depth sampling
 dx = 1.0/(nx-1) # lateral sampling
-########################################
 
 # v(z,x) = v0 + gz*z + gx*x
 ###########################
@@ -95,8 +94,7 @@ for sample in samples:
     err = 'err%d' % sample
     Flow(err,[ray,ref],
          '''
-         math exact=${SOURCES[1]}
-         output="abs(input-exact)" |
+         math ref=${SOURCES[1]} output="abs(input-ref)" |
          real | stack axis=1 norm=y 
          ''')
     errs.append(err)
