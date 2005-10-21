@@ -73,7 +73,7 @@ for wtype in ('p'):
                 Flow(off,cig,'window n1=1 min1=%g' % 3958.5)
 
             if(imco != 'm'):
-                Result(off,igrey2('min2=0'+OLABEL))
+                Result(off,igrey2(''+OLABEL))
 
                 Flow(ang,off,'slant adj=y p0=-1.5 np=201 dp=0.015 | put label2=tan')
                 Result(ang,igrey2('screenratio=1.75'+ALABEL))
@@ -83,4 +83,10 @@ for wtype in ('p'):
                 else:
                     Result(off,igrey3('','frame3=%d') % int(1060.7/float(par['dz'])) )
 
+        # END imco
+
+    # END dip
+
+# END wtype
             
+End()
