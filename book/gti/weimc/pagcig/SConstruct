@@ -1,0 +1,86 @@
+from rsfproj import *
+import spmig
+sys.path.append('.')
+import itest
+
+# ------------------------------------------------------------
+par = {
+    'nx':1000,'ox':0,    'dx':10,
+#    'nh':500, 'oh':-5000,'dh':20,
+    'nh':400, 'oh':-4000,'dh':20,
+    'ns':1,   'os':5000, 'ds':40,
+    'nz':250, 'oz':0,    'dz':10,
+    'nt':1000,'ot':0,    'dt':0.008,
+    'vel2':2000,
+    'nw':100,'ow':1,'jw':3,'ns':1,'js':1,'fs':0,
+    #
+    'verb':'y','eps':0.01,'nrmax':5,'dtmax':0.00005,
+    'tmx':16,'tmy':0,'pmx':0,'pmy':0
+    }
+# ------------------------------------------------------------
+
+def igrey2(custom):
+    return '''
+    grey labelrot=n title="" pclip=100 %s
+    ''' % custom
+def igrey3(custom,custom2):
+    return '''
+    transp plane=12 | transp plane=23 |
+    byte gainpanel=all %s |
+    grey3 labelrot=n title="" flat=n
+          point2=0.5 point1=0.6 labelsz=6
+          label1="h\s60 \_x\^\s100 (m)"
+          label2="h\s60 \_z\^\s100 (m)"
+          label3="depth (m)"
+          frame1=50 frame2=50 %s
+    ''' % (custom,custom2)
+
+DLABEL = ' label1="time (s)"  label2="offset (m)" '
+XLABEL = ' label1="depth (m)" label2="location (m)" '
+OLABEL = ' label1="depth (m)" label2="offset (m)" grid=y '
+ALABEL = ' label1="depth (m)" label2="tan \F10 q\F3 " grid=y '
+
+SCR = ' screenratio=0.5 screenht=7'
+# ------------------------------------------------------------
+
+# build velocity models
+itest.model(par)
+
+# generate data
+for wtype in ('p'):
+    for dip in ('00','15'):
+
+        dat = wtype + 'dat' + dip
+        if(dip=='00'):
+            itest.data(wtype,dat,00,1500,5500.0,par)
+        else:
+            itest.data(wtype,dat,15,0000,5795.6,par)
+        Result(dat,'window max1=5 |'+ igrey2('pclip=100'+SCR+DLABEL))
+
+        for imco in ('x','h','m'):
+
+            img = wtype + 'img' + dip + imco
+            cig = wtype + 'cig' + dip + imco
+            itest.migrate(wtype,imco,dat,img,cig,par)
+            Result(img,'window n4=1 min4=0 | transp |'+ igrey2(''+SCR+XLABEL))
+        
+            off = wtype + 'off' + dip + imco
+            ang = wtype + 'ang' + dip + imco
+
+            if(dip=='00'):
+                Flow(off,cig,'window n1=1 min1=%g' % 4000.0)
+            else:
+                Flow(off,cig,'window n1=1 min1=%g' % 3958.5)
+
+            if(imco != 'm'):
+                Result(off,igrey2('min2=0'+OLABEL))
+
+                Flow(ang,off,'slant adj=y p0=-1.5 np=201 dp=0.015 | put label2=tan')
+                Result(ang,igrey2('screenratio=1.75'+ALABEL))
+            else:
+                if(dip=='00'):
+                    Result(off,igrey3('','frame3=%d') % int(1500.0/float(par['dz'])) )
+                else:
+                    Result(off,igrey3('','frame3=%d') % int(1060.7/float(par['dz'])) )
+
+            
