@@ -27,8 +27,8 @@
 #include "slice.h"
 /*^*/
 
-#define LOOP(a) for( imy=0; imy< amy.n; imy++){ \
-                for( imx=0; imx< amx.n; imx++){ {a} }}
+#define  LOOP(a) for( imy=0; imy< amy.n; imy++){ \
+                 for( imx=0; imx< amx.n; imx++){ {a} }}
 
 #define MLOOP(a) for( imz=0; imz< amz.n; imz++){ \
                  for( imy=0; imy< amy.n; imy++){ \
@@ -448,13 +448,13 @@ void img2h( fslice imag,
 	if(ihh>0) hscale=(hh+ahh.d)*aha.d;
 
 	for(ihb=0; ihb<ahb.n; ihb++) {        /* latitude  */
-	    bb = ahb.o + ihb*ahb.d;
+	    bb = ahb.o + ihb * ahb.d;
 	    for(iha=0; iha<aha.n; iha++) {    /* longitude */
-		aa = aha.o + iha*aha.d;
+		aa = aha.o + iha * aha.d;
 		
 		hz = hh * sin(aa);
 		hx = hh * cos(aa) * cos(bb);
-		hy = hh * sin(aa) * sin(bb);
+		hy = hh * cos(aa) * sin(bb);
 
 		/* nearest neighbour - source dh */
 		dsx = (int)( (2.*vpvs/(1.+vpvs))*hx / amx.d);

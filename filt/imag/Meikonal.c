@@ -112,7 +112,7 @@ int main (int argc,char* argv[])
 
     t  = sf_floatalloc (n123);
     v  = sf_floatalloc (n123);
-    p  = sf_intalloc (n123);
+    p  = sf_intalloc   (n123);
 
     sf_floatread(v,n123,vel);
    /* transform velocity to slowness squared */

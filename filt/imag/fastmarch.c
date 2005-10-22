@@ -39,11 +39,11 @@ void fastmarch (float* time                /* time */,
 		float* v                   /* slowness */, 
 		int* in                    /* in/front/out flag */, 
 		bool* plane                /* if plane source */,
-		int n3,int n2,int n1       /* dimensions */,
+		int   n3,  int n2,  int n1 /* dimensions */,
 		float o3,float o2,float o1 /* origin */,
 		float d3,float d2,float d1 /* sampling */,
 		float s3,float s2,float s1 /* source */,
-		int b3, int b2, int b1     /* box around the source */,
+		int   b3,  int b2,  int b1 /* box around the source */,
 		int order                  /* accuracy order (1,2,3) */)
 /*< Run fast marching eikonal solver >*/
 {
@@ -71,7 +71,7 @@ void fastmarch (float* time                /* time */,
 	    sf_warning("%s: heap exausted!",__FILE__);
 	    break;
 	}
-
+	
 	i = p - time;
 
 	in[i] = SF_IN;

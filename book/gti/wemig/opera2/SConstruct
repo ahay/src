@@ -190,7 +190,7 @@ for c in ('p','s'):
     # dip field
     dip = 'dip' + c
     dzdx = par['dz']/par['dx']
-    Flow(dip,img,'window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)    
+    Flow(dip,img,'window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
     Result(dip,igrey('color=j',par))
 
     # angle-gathers
