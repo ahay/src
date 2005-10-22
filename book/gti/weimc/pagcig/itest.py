@@ -1,5 +1,6 @@
 from rsfproj import *
-import sys,math
+import sys
+from math import *
 import spmig
 
 def model(par):
@@ -21,15 +22,14 @@ def model(par):
          put label1=t label2=x label3=y 
          ''' % par )    
     
-def data(case,dat,DIP,REF,SOU,par):
-    par['os']=SOU
-
+def data(case,dat,DIP,par):
     dip = 'dip' + str(DIP)
     Flow(dip,None,'spike n1=%d o1=%g d1=%g mag=%g'
          % (par['nx'],par['ox'],par['dx'],
-            math.tan(math.pi*DIP/180.)))
+            tan(pi*DIP/180.)))
     ref = 'ref' + str(DIP)
-    Flow(ref,dip,'math output="%g+x1*input"' % REF)
+    Flow(ref,dip,'math output="%g+x1*input"'
+         % (2000-par['os']*tan(pi*DIP/180.) ))
     
     if case == 'p':
         par['vel2']=2000
@@ -49,16 +49,15 @@ def data(case,dat,DIP,REF,SOU,par):
     rec = 'rec' + dat
     spmig.wflds(sou,rec,'wave',dat,par)
 
-
 def migrate(case,imco,dat,img,cig,par):
 
     locpar = par
     if(imco=='o'): locpar['misc']='itype=o'
-    if(imco=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025             jcx=100'
-    if(imco=='x'): locpar['misc']='itype=x hsym=y nhx=50                             jcx=100'
-    if(imco=='z'): locpar['misc']='itype=x hsym=y        nhz=50                      jcx=100'
-    if(imco=='m'): locpar['misc']='itype=x hsym=y nhx=50 nhz=50                      jcx=100'
-    if(imco=='h'): locpar['misc']='itype=h        nhh=50 dhh=10 nha=180 dha=2 oha=0  jcx=100'
+    if(imco=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025             jcx=500'
+    if(imco=='x'): locpar['misc']='itype=x hsym=y nhx=50                             jcx=500'
+    if(imco=='z'): locpar['misc']='itype=x hsym=y        nhz=50                      jcx=500'
+    if(imco=='m'): locpar['misc']='itype=x hsym=y nhx=50 nhz=50                      jcx=500'
+    if(imco=='h'): locpar['misc']='itype=h        nhh=50 dhh=10 nha=180 dha=2 oha=0  jcx=500'
 
     sou = 'sou' + dat
     rec = 'rec' + dat
@@ -68,9 +67,6 @@ def migrate(case,imco,dat,img,cig,par):
     else:
         spmig.imageCW(img,cig,'pslo','cslo',sou,rec,locpar)
         
-
-#def gathers(imco,off,CIG,par):
-
     
 
     
