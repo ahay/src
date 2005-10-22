@@ -3,6 +3,7 @@
  ##
  
 from rsfproj import *
+import pplot
 
 # ------------------------------------------------------------
 # MIGRATION parameters
@@ -31,22 +32,51 @@ par['dh']=par['dh']*ft2km
 par['zmin']=2
 par['zmax']=9
 
-par['xmin']=6
-par['xmax']=16
+par['xmin']=4
+par['xmax']=21
 
-IRATIO = ' labelsz=6 screenratio=0.7 screenht=10 min2=%g max2=%g ' % (par['xmin'],par['xmax'])
-
+IRATIO = ' labelsz=6 screenratio=0.5 screenht=7 min2=%g max2=%g ' % (par['xmin'],par['xmax'])
+CRATIO = ' labelsz=5 screenratio=3.5 screenht=10.5 '
 # ------------------------------------------------------------
 
 def igrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n grid=y gridcol=6
+    grey labelrot=n wantaxis=n wanttitle=n grid=y gridcol=6
     title="" pclip=97 label1="z(km)" label2="x(km)"
     min1=%g max1=%g
     %s
     ''' % (par['zmin'],par['zmax'],custom)
 
-LABEL = " labelsz=12 titlesz=16 "
+LABEL = " wantlabel=n "
+
+def p1x3(plot,p0,p1,p2,ys,xs,x0,x1,x2):
+    j0 = '_' + plot+ p0
+    j1 = '_' + plot+ p1
+    j2 = '_' + plot+ p2
+
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x0))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x1))
+    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x2))
+
+    Result(plot,[j0,j1,j2],'Overlay')
+
+def p1x6(plot,p0,p1,p2,p3,p4,p5,ys,xs,xc):
+    j0 = '_' + plot+ p0
+    j1 = '_' + plot+ p1
+    j2 = '_' + plot+ p2
+    j3 = '_' + plot+ p3
+    j4 = '_' + plot+ p4
+    j5 = '_' + plot+ p5
+
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,   0))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,  xc))
+    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,2*xc))
+    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,3*xc))
+    Plot(j4,p4,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,4*xc))
+    Plot(j5,p5,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,5*xc))
+
+    Result(plot,[j0,j1,j2,j3,j4,j5],'Overlay') 
+    
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
@@ -139,7 +169,7 @@ Flow('s2','s1 sm',
 # ------------------------------------------------------------
 
 SLOlist = '0','2'
-CIGlist = '7','11','15'
+CIGlist = '7','9','11','13','15','17'
 IMGlist = 'x','t'
 
 cigpar = {'npt':500,'opt':4000,'dpt':80,
@@ -192,13 +222,26 @@ for i in SLOlist:
                      o4=%(oh)g d4=%(dh)g
                  ''' % par)
 
+        if(0):
+            cig = 'cig' + i + k
+            Flow(cig,SRcig,'transp plane=15 memsize=500 | window')
+            env = 'env' + i + k       
+            Flow(env,cig,'envelope')
+            pik = 'pik' + i + k
+            Flow(pik,env,'pick rect1=10 rect2=100')
+            slc = 'slc' + i + k
+            Flow(slc,[cig,pik],'slice pick=${SOURCES[1]} | window')
+            Result(slc,igrey('pclip=95'+IRATIO,par))
+
 # ------------------------------------------------------------
 # RESULTS
 # ------------------------------------------------------------
 for i in SLOlist:
     slo = 's' + i
+    Plot  (slo,'window      | transp |'
+           +igrey('pclip=99 allpos=y bias=0.22'+IRATIO,par))
     Result(slo,'window      | transp |'
-           +igrey('pclip=100 allpos=y bias=6.75676e-05'+IRATIO,par))
+           +igrey('pclip=99 allpos=y bias=0.22'+IRATIO,par))
 
     vel = 'v' + i
     Flow(vel,slo,'window | transp | smooth rect1=51 | math output=1/input')
@@ -209,7 +252,11 @@ for i in SLOlist:
         SRimg = 'SRI' + i + k
         SRcig = 'SRC' + i + k
         Flow(SRimg,SRcig,'window n4=1 min4=0 | transp')
-        Result(SRimg,igrey('pclip=97'+IRATIO,par))
+        Plot  (SRimg,igrey('pclip=95'+IRATIO,par))
+        Result(SRimg,igrey('pclip=95'+IRATIO,par))
+
+        IMGSLO = 'IMGSLO' + i + k
+        pplot.p2x1(IMGSLO,SRimg,slo,0.75,0.75,-6.5)
 
         # dip field
         SRdip = 'DIP' + i + k
@@ -232,9 +279,10 @@ for i in SLOlist:
              ''' % par)
 
         for l in CIGlist:
+            ikl = i + k + l
 
             # image
-            z = 'z' + i + k + l
+            z = 'z' + ikl
             lmin = float(l) - 20 * float('%(dx)g' % par)
             lmax = float(l) + 20 * float('%(dx)g' % par)
             Flow(z,SRcig,
@@ -243,10 +291,14 @@ for i in SLOlist:
                  transp |
                  bandpass fhi=10
                  ''' % (lmin,lmax) )
-            Plot(z,z,igrey('pclip=97 screenratio=1.5 '+LABEL,par))
+            Plot(z,z,igrey('labelsz=5 screenratio=6 screenht=10.5',par))
+
+            # velocity
+            v = 'v' + ikl
+            Flow(v,vco,'window n2=1 min2=%g' % float(l) )
             
             # offset gathers
-            h = 'h' + i + k + l
+            h = 'h' + ikl
             Flow(h,SRcig,
                  '''
                  window n1=1 min1=%g |
@@ -254,51 +306,68 @@ for i in SLOlist:
                  ''' % float(l))
             
             # angle gathers
-            a = 'a' + i + k + l    # space-shift
-            b = 'b' + i + k + l    #  time-shift (w/o dip cor)
-            c = 'c' + i + k + l    #  time-shift (w/  dip cor)
+            a    = 'a'    + ikl    # slant-stack
+            c    = 'c'    + ikl    # angle-gather
+            cdip = 'cdip' + ikl    # 
+            ccln = 'ccln' + ikl    # dip noise separation
 
             if(k=='x'):
-                Flow(a,h,'bandpass fhi=10 | '+hcig2ssk() +'|'+ hssk2ang())
+                Flow(a,h,'bandpass fhi=10 | '+hcig2ssk())
+                Flow(c,a,                     hssk2ang())
 
-                Plot  (a,a,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
-                Plot  (h,h,igrey('label2="h(km)"   '+LABEL,par))
-                
+                Plot(h,igrey('label2="h(km)"'                +CRATIO,par))
+                Plot(a,igrey('label2="tan \F10 q\F3 " min2=0'+CRATIO,par))
+
             if(k=='t'):
-                vb = 'vb' + i + k + l
-                Flow(vb,vel,'window n2=1 min2=%g' % float(l) )
-                vc = 'vc' + i + k + l
-                Flow(vc,vco,'window n2=1 min2=%g' % float(l) )
-
                 Flow(a,h,'bandpass fhi=10 | '+tcig2ssk())
+                Flow(c,[a,v],                 tssk2ang())
 
-                Flow(b,[a,vb],tssk2ang()) # w/o dip correction
-                Flow(c,[a,vc],tssk2ang()) # w/  dip correction
+                Plot(h,igrey('label2="\F10 t\F3 (s)" '         +CRATIO,par))
+                Plot(a,igrey('label2="\F10 n\F3 (km/s)" max2=5'+CRATIO,par))
+                                
+            # clean-up noise
+            Flow(cdip,c,'twodip2 eps=10 lam=1 p0=-1 q0=0 both=n')
+            Flow(ccln,[c,cdip],'pwdsigk dips=${SOURCES[1]} verb=y eps=1 | window n3=1 f3=1')
 
-                Plot  (h,igrey('label2="\F10 t\F3 (s)" '+LABEL,par))
-                Plot  (a,igrey('label2="\F10 n\F3 (km/s)" max2=5'+LABEL,par))
-                Plot  (b,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
-                Plot  (c,igrey('label2="\F10 q\F3 (\^o\_)"'+LABEL,par))
-    
-               
+            Plot  (c   ,igrey('label2="\F10 q\F3 (\^o\_)"'      +CRATIO,par))                
+            Plot  (ccln,igrey('label2="\F10 q\F3 (\^o\_)"'      +CRATIO,par))
+
+# < clean0t11.rsf sfwindow f3=1 > clean.rsf
+# < clean.rsf sfenvelope | sfthreshold pclip=100 | sfmask min=0.1 | sfdd type=float | sfadd mode=p clean.rsf | sfstack | sfgraph | tube
+
+
+# ------------------------------------------------------------
+
 for l in CIGlist:
     for i in SLOlist:
         SRoff = 'SRoff' + i + '-' + l
         SRang = 'SRang' + i + '-' + l
+        SRxic = 'SRxic' + i + '-' + l
         SRtic = 'SRtic' + i + '-' + l
 
-        zx = 'z' + i + 'x' + l
-        hx = 'h' + i + 'x' + l
-        ht = 'h' + i + 't' + l
-
-        ax = 'a' + i + 'x' + l
-
-        at = 'a' + i + 't' + l
-        bt = 'b' + i + 't' + l
-        ct = 'c' + i + 't' + l
+        zx = 'z'    + i + 'x' + l
         
-        Result(SRoff,[zx,hx,ht],'SideBySideAniso')
-        Result(SRang,[zx,ax,ct],'SideBySideAniso')
-        Result(SRtic,[zx,ht,at,ct],'SideBySideAniso')
+        hx = 'h'    + i + 'x' + l
+        ht = 'h'    + i + 't' + l
+
+        ax = 'a'    + i + 'x' + l
+        at = 'a'    + i + 't' + l
+
+        cx = 'ccln' + i + 'x' + l
+        ct = 'ccln' + i + 't' + l
+
+        p1x3(SRxic,hx,ax,cx,1,1,-1,-4,-7)
+        p1x3(SRtic,ht,at,ct,1,1,-1,-4,-7)
+
+        p1x3(SRoff,zx,hx,ht,1,1,-1,-3,-6)
+        p1x3(SRang,zx,cx,ct,1,1,-1,-3,-6)
+
+p1x6('allxoff',   'h0x7',   'h0x9',   'h0x11',   'h0x13',   'h0x15',   'h0x17',0.75,0.75,-3)
+p1x6('allxang','ccln0x7','ccln0x9','ccln0x11','ccln0x13','ccln0x15','ccln0x17',0.75,0.75,-3)
+
+p1x6('alltoff',   'h0t7',   'h0t9',   'h0t11',   'h0t13',   'h0t15',   'h0t17',0.75,0.75,-3)
+p1x6('alltang','ccln0t7','ccln0t9','ccln0t11','ccln0t13','ccln0t15','ccln0t17',0.75,0.75,-3)
+# ------------------------------------------------------------
+
 
 End()

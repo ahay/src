@@ -65,7 +65,7 @@ Flow('spk','left rght',
      ai2refl | scale axis=12
      ''' % par)
 Flow('ref','spk msk','math s=${SOURCES[0]} m=${SOURCES[1]} output=s*m ')
-Plot  ('ref','ref',igrey('pclip=100 label1="depth (m)" label2="location (m)" '))
+Plot  ('ref','ref',igrey('pclip=100 label1="z (m)" label2="x (m)" '))
 #Result('ref','ref',igrey('pclip=100'))
 Flow('r0','ref','transp plane=12 | transp plane=23')
 # ------------------------------------------------------------
@@ -136,7 +136,7 @@ for k in ('p'):
          put o1=0 o2=-2000 o3=%(os)g n3=%(ns)d d3=%(ds)g label3=s
          ''' % par)
     Plot  (tdd,'window | '
-           + igrey('pclip=100 min1=0 max1=1.24975 label1="time (s)" label2="offset (m)" '))
+           + igrey('pclip=100 min1=0 max1=1.24975 label1="t (s)" label2="h (m)" '))
 #    Result(tdd,'window | ' + igrey('pclip=100 label1=t grid=y title=%s' % tdd))
 
     dww = 'd' + k + 's'
@@ -251,48 +251,56 @@ for h in ('x','t'):
 
             img = 'i' + h + k + n
             off = 'h' + h + k + n
+            ssk = 's' + h + k + n
+            ssko= 'c' + h + k + n
+
             ang = 'a' + h + k + n
-            cag = 'c' + h + k + n
+
+            slo = 's' + k + n
+            vel = 'v' + k + n
             
             # offset gather
-            Flow(off,img,
-                 'window | transp | stack ')
-            if(h=='x'):Plot(off,off, igrey('pclip=100 label1="depth (m)" label2="offset (m)" %s') % tit)
-            if(h=='t'):Plot(off,off, igrey('pclip=100 label1="depth (m)" label2="offset (s)" %s') % tit)
-                
-            # angle gathers
-            if(h=='x'): Flow(ang,off,
-                             '''
-                             radon adj=y p0=-4 np=200 dp=0.04 |
-                             window min2=0 max2=2.5 |
-                             put label2=tan
-                             ''')
-            if(h=='t'): Flow(ang,off,
-                             '''
-                             radon adj=y p0=0  np=200 dp=50 |
-                             window min2=0 max2=4000 |
-                             put label2=v
-                             ''')
- 
-            if(h=='x'):Plot(ang,ang, igrey('pclip=100  label1="depth (m)" label2="tan \F10 q\F3 "  %s') % tit)
-            if(h=='t'):Plot(ang,ang, igrey('pclip=99.5 label1="depth (m)" label2="\F10 n\F3 (m/s)" %s') % tit)
+            Flow(off,img,'window | transp | stack ')
+            if(h=='x'):
+                Plot(off,off, igrey('pclip=100 label1="z (m)" label2="h (m)"         %s') % tit)
+                Flow(ssk,off,'radon adj=y p0=-4 np=200 dp=0.04')
+                Plot(ssk,igrey('pclip=100  min2=0 max2=2.5  label1="z (m)" label2="tan \F10 q\F3 "  %s') % tit)
+                ovl = 'xov' + n
+
+                Flow(ang,ssk,'tan2ang a0=0 na=150 da=0.45')
+                Plot(ang,igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 "  %s') % tit)
             
-            # add overlays
-            if(h=='x'): ovl = 'xov' + n
-            if(h=='t'): ovl = 'tov' + n
-            Plot(cag,[ang,ovl],'Overlay')
+            if(h=='t'):
+                Plot(off,off, igrey('pclip=100 label1="z (m)" label2="\F10 t\F3 (s)" %s') % tit)
+                Flow(ssk,off,'radon adj=y p0=0  np=200 dp=50')
+                Plot(ssk,igrey('pclip=99.5 min2=0 max2=4000 label1="z (m)" label2="\F10 n\F3 (m/s)" %s') % tit)
+                ovl = 'tov' + n
+
+                Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
+                Flow(ang,[ssk,vel],'tshiftcos a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
+                Plot(ang,igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 "  %s') % tit)
+                
+            Plot(ssko,[ssk,ovl],'Overlay')
 
 #Result('xoffall',['hxp-','hxp0','hxp+'],'Movie')
 #Result('toffall',['htp-','htp0','htp+'],'Movie')
 #Result('xangall',['cxp-','cxp0','cxp+'],'Movie')
 #Result('tangall',['ctp-','ctp0','ctp+'],'Movie')
 
-Result('xoff',['hxp-','hxp0','hxp+'],'SideBySideIso')
-Result('toff',['htp-','htp0','htp+'],'SideBySideIso')
-Result('xang',['cxp-','cxp0','cxp+'],'SideBySideIso')
-Result('tang',['ctp-','ctp0','ctp+'],'SideBySideIso')
-# ------------------------------------------------------------
+#Result('xoff',['hxp-','hxp0','hxp+'],'SideBySideIso')
+#Result('toff',['htp-','htp0','htp+'],'SideBySideIso')
+#Result('xang',['cxp-','cxp0','cxp+'],'SideBySideIso')
+#Result('tang',['ctp-','ctp0','ctp+'],'SideBySideIso')
 
+Result('xoff',['hxp-','hxp0','hxp+'],'OverUnderIso')
+Result('toff',['htp-','htp0','htp+'],'OverUnderIso')
+Result('xssk',['cxp-','cxp0','cxp+'],'OverUnderIso')
+Result('tssk',['ctp-','ctp0','ctp+'],'OverUnderIso')
+Result('xang',['axp-','axp0','axp+'],'OverUnderIso')
+Result('tang',['atp-','atp0','atp+'],'OverUnderIso')
+
+
+# ------------------------------------------------------------
 
 End()
 

@@ -13,14 +13,14 @@ import spmig
 def igrey(custom):
     return '''
     grey labelrot=n title="" pclip=100 grid=n gridcol=5
-    label1="z(m)" 
+    label1="z(m)" wantaxis=y 
     %s
     ''' % custom
 def igraph(custom,par):
     return '''
     graph labelrot=n title="" yreverse=y
     label2="z(m)" label1="x(m)"
-    min2=%f max2=%f grid=y
+    min2=%f max2=%f grid=y wantaxis=y
     %s
     ''' % (par['zmin'],par['zmax'],custom)
 
@@ -115,7 +115,6 @@ def hssk2ang():
 # ------------------------------------------------------------
 
 Flow('von',  'vel', 'window n2=1 min2=%g'% par['xcig']) # velocity
-
 
 for DIP in ('00','15','30'):
 #for DIP in (['00']):

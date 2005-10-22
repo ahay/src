@@ -4,21 +4,20 @@
 
 from rsfproj import *
 import math
-import spmig
 
 # ------------------------------------------------------------
 # plotting functions
 def igrey(custom):
     return '''
     grey labelrot=n title="" pclip=100 grid=n gridcol=5
-    label1="z(m)" 
+    label1="z(km)" wantaxis=y
     %s
     ''' % custom
 
 def p1x3(plot,p0,p1,p2,ys,xs,xc):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
+    j0 = plot + '_' + p0
+    j1 = plot + '_' + p1
+    j2 = plot + '_' + p2
 
     Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=0 '% (ys,xs     ))
     Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,  xc))
@@ -26,10 +25,19 @@ def p1x3(plot,p0,p1,p2,ys,xs,xc):
 
     Plot(plot,[j0,j1,j2],'Overlay')
 
+def p2x1(plot,p0,p1,ys,xs,yc):
+    j0 = plot + '_' + p0
+    j1 = plot + '_' + p1
+
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0'% (ys,xs      ))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,  yc ))
+
+    Plot  (plot,[j0,j1],'Overlay')
+
 def p3x1(plot,p0,p1,p2,ys,xs,yc):
-    j0 = '_' + p0
-    j1 = '_' + p1
-    j2 = '_' + p2
+    j0 = plot + '_' + p0
+    j1 = plot + '_' + p1
+    j2 = plot + '_' + p2
 
     Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0'% (ys,xs      ))
     Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,  yc ))
@@ -38,21 +46,18 @@ def p3x1(plot,p0,p1,p2,ys,xs,yc):
     Plot  (plot,[j0,j1,j2],'Overlay')
     Result(plot,[j0,j1,j2],'Overlay')
 
-SCREEN = " screenratio=2 screenht=22 labelsz=12"
+SCREEN = " screenratio=1 screenht=12 labelsz=12"
 # ------------------------------------------------------------
 # modeling/migration parameters
 
 par = {
-    'ny':2000,'oy':-10000,'dy':20,                            # for kirmod
-    'nh':500, 'oh':-5000, 'dh':20,                            # for kirmod
-#    
-    'nx':500, 'ox':0,     'dx':20, 'xcig':5000, 'zcig':2000,  # for WEM
-    'nz':400, 'oz':0,     'dz':10,                            # for WEM
-    'ns':50,  'os':0,     'ds':20, 'js':1, 'fs':0,
+    'dh':0.02,
+    'nx':500, 'ox':0,     'dx':0.02, 'xcig':5,
+    'nz':400, 'oz':0,     'dz':0.01,
     'nt':2000,'ot':0,     'dt':0.01,
     'nht':100,'oht':-0.5, 'dht':0.01,
     'nhx':50,
-    'vel':2000, 'vel2':2000
+    'vel':2, 
     }
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + par['nz'] * par['dz']
@@ -72,7 +77,7 @@ Flow('vel',None,
 # CIG to slant-stack
 def tcig2ssk():
     return '''
-    slant adj=y p0=0 np=500 dp=10 |
+    slant adj=y p0=0 np=500 dp=0.01 |
     put label2=v
     '''
 def hcig2ssk():
@@ -98,7 +103,7 @@ for i in (['3','4','5','6','7','8']):
 
     a = (int(i)-3)*10
 
-    vv = 2000/math.cos(math.pi*a/180.)
+    vv = 2/math.cos(math.pi*a/180.)
     kt = vv * par['dht'] / par['dz']
     
     tspk=''
@@ -116,7 +121,7 @@ for i in (['3','4','5','6','7','8']):
          n1=%d  o1=%g   d1=%g   k1=%s                  l1=%s
          n2=200 o2=-1.0 d2=0.01 k2=051,076,101,126,151
                                 l2=051,076,101,126,151 |
-         ricker1 frequency=0.006 |
+         ricker1 frequency=6 |
          put label1=z label2=t
          ''' % (par['nz'],par['oz'],par['dz'],tspk,tspk) )
     Plot(tcig,igrey('pclip=100 label2="\F10 t\F3 (s)"'+SCREEN))
@@ -124,7 +129,7 @@ for i in (['3','4','5','6','7','8']):
     # slant-stack
     tsla = 'tsla' + i
     Flow(tsla,tcig,tcig2ssk())
-    Plot(tsla,igrey('pclip=100 label2="\F10 n \F3  (m/s)"'+SCREEN))
+    Plot(tsla,igrey('pclip=100 label2="\F10 n \F3 (km/s)"'+SCREEN))
     
     # angle transform
     tvel = 'tvel' + i
@@ -134,7 +139,7 @@ for i in (['3','4','5','6','7','8']):
     Plot(tang,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'+SCREEN))
 
     ttest = 'ttest' + i
-    p1x3(ttest,tcig,tsla,tang,0.4,0.4,-10)
+    p1x3(ttest,tcig,tsla,tang,0.4,0.4,-11)
 
     # ------------------------------------------------------------
 
@@ -154,12 +159,12 @@ for i in (['3','4','5','6','7','8']):
          '''
          spike nsp=5 mag=1,1,1,1,1
          n1=%d  o1=%g    d1=%g k1=%s                  l1=%s
-         n2=200 o2=-2000 d2=20 k2=051,076,101,126,151
+         n2=200 o2=-2 d2=0.02  k2=051,076,101,126,151
                                l2=051,076,101,126,151 |
-         ricker1 frequency=0.006 |
+         ricker1 frequency=6 |
          put label1=z label2=h
          ''' % (par['nz'],par['oz'],par['dz'],hspk,hspk) )
-    Plot(hcig,igrey('pclip=100 label2="h(m)"'+SCREEN))
+    Plot(hcig,igrey('pclip=100 label2="h(km)"'+SCREEN))
 
     # slant-stack
     hsla = 'hsla' + i
@@ -172,19 +177,20 @@ for i in (['3','4','5','6','7','8']):
     Plot(hang,igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'+SCREEN))
 
     htest = 'htest' + i
-    p1x3(htest,hcig,hsla,hang,0.4,0.4,-10)
+    p1x3(htest,hcig,hsla,hang,0.4,0.4,-11)
 
     # ------------------------------------------------------------
-
+    
     atest = 'atest' + i
-    Plot(atest,[ttest,htest],'OverUnderAniso')
+    #    Plot(atest,[ttest,htest],'OverUnderAniso')
+    p2x1(atest,ttest,htest,1,1,-5)
 
 Result('tmovie','ttest3 ttest4 ttest5 ttest6 ttest7 ttest8','Movie')
 Result('hmovie','htest3 htest4 htest5 htest6 htest7 htest8','Movie')
 Result('amovie','atest3 atest4 atest5 atest6 atest7 atest8','Movie')
 
-p3x1('ttest','ttest7','ttest5','ttest3',0.4,0.4,-8)
-p3x1('htest','htest7','htest5','htest3',0.4,0.4,-8)
+p3x1('ttest','ttest7','ttest5','ttest3',0.7,0.7,-4.5)
+p3x1('htest','htest7','htest5','htest3',0.7,0.7,-4.5)
 
 # ------------------------------------------------------------
 
