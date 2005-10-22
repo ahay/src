@@ -5,6 +5,9 @@ import itest
 
 # ------------------------------------------------------------
 par = {
+    'xcig':5000,
+    'zcig':2000,
+#    
     'nx':1000,  'ox':0,    'dx':10,
     'nh':801,   'oh':-4000,'dh':10,
     'ns':1,     'os':5000, 'ds':40, 'js':1,'fs':0,
@@ -49,62 +52,88 @@ SCR = ' screenratio=0.5 screenht=7'
 itest.model(par)
 
 # generate data
-for wtype in ('p'):
-    for dip in ('00','15','30'):
-
-        dat = wtype + 'dat' + dip
-        itest.data(wtype,dat,int(dip),par)
-        Result(dat,'window max1=5 |'
-               + igrey2('pclip=100'+SCR+DLABEL))
-
-        for imco in ('x','h','m'):
-
-            img = wtype + 'img' + dip + imco
-            cig = wtype + 'cig' + dip + imco
-            itest.migrate(wtype,imco,dat,img,cig,par)
-            Result(img,'window n4=1 min4=0 | transp |'
-                   + igrey2('screenratio=0.25 screenht=3.5'+XLABEL))
-        
-            off = wtype + 'off' + dip + imco
-            ang = wtype + 'ang' + dip + imco
+for wtype in ('p'):                      # wave type
+    for DIP in ('00','30'):              # reflector dip
+        for ANG in ('00','30'):          # incidence angle
             
-            if(imco != 'm'):
-                Flow(off,cig,'window n1=1 min1=%(os)g' % par)
+            exp = wtype + DIP + ANG      # experiment
+            
+            dat = 'dat-' + exp
+            itest.data(wtype,dat,DIP,ANG,par)
+            Result(dat,'window max1=5 |'
+                   + igrey2('pclip=100'+SCR+DLABEL))
 
-                if(imco=='x'):
-                    Result(off,igrey2('screenratio=2'+OLABEL))
+            for imco in ('x','h','m'):   # imaging condition
+
+                img = 'img-' + exp + imco
+                cig = 'cig-' + exp + imco
+                itest.migrate(wtype,imco,dat,img,cig,par)
+                Result(img,'window n4=1 min4=0 | transp |'
+                       + igrey2('screenratio=0.25 screenht=3.5'+XLABEL))
+        
+                off = 'off-' + exp + imco
+                ang = 'ang-' + exp + imco
+                hlf = 'hlf-' + exp + imco
+                    
+                if(imco == 'x'):
+                    Flow(off,cig,'window n1=1 min1=%(xcig)g' % par)
+                    
                 else:
-                    Result(off,igrey2('screenratio=4'+OLABEL))
-            else:
-                cub = wtype + 'cub' + dip + imco
-                Result(cub,cig,
-                       'window n1=1 min1=%(os)g min3=1600 max3=2400 | ' % par +
-                       igrey3('',''))
-                
-                Flow(off,cig,
+                    if(imco == 'h'):
+                        Flow(hlf,cig,'window n1=1 min1=%(xcig)g' % par)
+                        Flow(off,hlf,
+                             '''
+                             window f2=1 | pad end2=1 |
+                             reverse which=2 |
+                             cat axis=2 space=n ${SOURCES[0]}
+                             ''')
+                    else:
+                        cub = 'cub-' + exp + imco
+                        Result(cub,cig,
+                               'window n1=1 min1=%(xcig)g min3=1600 max3=2400 | ' % par +
+                               igrey3('',''))
+
+                        Flow(hlf,cig,
+                             '''
+                             window squeeze=n n1=1 min1=%(xcig)g |
+                             stack | transp | stack |
+                             transp plane=12 |
+                             transp plane=23 |
+                             transp plane=34 |
+                             window squeeze=n |
+                             off2abs verb=y |
+                             transp 
+                             ''' % par)
+                        Flow(off,hlf,
+                             '''
+                             window f2=1 | pad end2=1 |
+                             reverse which=2 |
+                             cat axis=2 space=n ${SOURCES[0]}
+                             ''')
+                    
+                Result(off,igrey2('screenratio=2'+OLABEL))
+                Flow(ang,off,
                      '''
-                     window squeeze=n n1=1 min1=%(os)g |
-                     stack | transp | stack |
-                     transp plane=12 |
-                     transp plane=23 |
-                     transp plane=34 |
-                     window squeeze=n |
-                     off2abs verb=y |
-                     transp 
-                     ''' % par)
+                     slant adj=y p0=-1.5 np=201 dp=0.015 |
+                     tan2ang a0=-60 na=241 da=0.50
+                     ''')
+                Result(ang,igrey2('screenratio=1'+ALABEL))
 
-            Flow(ang,off,
-                 '''
-                 slant adj=y p0=-1.5 np=201 dp=0.015 |
-                 tan2ang a0=-45 na=201 da=0.45
-                 ''')
-            Result(ang,igrey2('screenratio=1'+ALABEL))
+            # END imco
 
-        # END imco
-
+        # END ang
+        
     # END dip
 
 # END wtype
+
+Flow('hx00','cig-p0030m','window n1=1 min1=5000 n6=1 min6=0')
+Flow('hz00','cig-p0030m','window n1=1 min1=5000 n4=1 min4=0')
+Result('hall00','hx00 hz00','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a')
+
+Flow('hx30','cig-p3030m','window n1=1 min1=5000 n6=1 min6=0')
+Flow('hz30','cig-p3030m','window n1=1 min1=5000 n4=1 min4=0')
+Result('hall30','hx30 hz30','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a')
 
 
 #Flow('coh','pcig30m',

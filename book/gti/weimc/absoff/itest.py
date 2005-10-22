@@ -22,19 +22,26 @@ def model(par):
          put label1=t label2=x label3=y 
          ''' % par )    
     
-def data(case,dat,DIP,par):
-    dip = 'dip' + str(DIP)
+def data(case,dat,DIP,ANG,par):
+
+    dip = 'dip' + DIP + ANG
     Flow(dip,None,'spike n1=%d o1=%g d1=%g mag=%g'
          % (par['nx'],par['ox'],par['dx'],
-            tan(pi*DIP/180.)))
-    ref = 'ref' + str(DIP)
+            tan(pi*int(DIP)/180.)))
+
+    ref = 'ref' + DIP + ANG
     Flow(ref,dip,'math output="%g+x1*input"'
-         % (2000-par['os']*tan(pi*DIP/180.) ))
+         % (par['zcig']-par['xcig']*tan(pi*int(DIP)/180.) ))
     
     if case == 'p':
         par['vel2']=2000
     else:
         par['vel2']=1000
+
+    par['os'] = par['xcig'] - \
+                par['zcig'] * tan(pi*(int(ANG)-int(DIP))/180.)
+    print DIP, ANG, par['os']
+
     Flow(dat,[ref,dip],
          '''
          kirmod vel=2000 vel2=%(vel2)g dip=${SOURCES[1]}
