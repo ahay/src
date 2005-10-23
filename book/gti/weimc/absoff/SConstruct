@@ -73,26 +73,20 @@ for wtype in ('p'):                      # wave type
         
                 off = 'off-' + exp + imco
                 ang = 'ang-' + exp + imco
-                hlf = 'hlf-' + exp + imco
                     
                 if(imco == 'x'):
                     Flow(off,cig,'window n1=1 min1=%(xcig)g' % par)
                     
                 else:
+                    hlf = 'hlf-' + exp + imco
                     if(imco == 'h'):
                         Flow(hlf,cig,'window n1=1 min1=%(xcig)g' % par)
-                        Flow(off,hlf,
-                             '''
-                             window f2=1 | pad end2=1 |
-                             reverse which=2 |
-                             cat axis=2 space=n ${SOURCES[0]}
-                             ''')
                     else:
                         cub = 'cub-' + exp + imco
                         Result(cub,cig,
                                'window n1=1 min1=%(xcig)g min3=1600 max3=2400 | ' % par +
                                igrey3('',''))
-
+                        
                         Flow(hlf,cig,
                              '''
                              window squeeze=n n1=1 min1=%(xcig)g |
@@ -104,20 +98,20 @@ for wtype in ('p'):                      # wave type
                              off2abs verb=y |
                              transp 
                              ''' % par)
-                        Flow(off,hlf,
-                             '''
-                             window f2=1 | pad end2=1 |
-                             reverse which=2 |
-                             cat axis=2 space=n ${SOURCES[0]}
-                             ''')
+                    Flow(off,hlf,
+                         '''
+                         window f2=1 | pad end2=1 |
+                         reverse which=2 opt=n|
+                         cat axis=2 space=n ${SOURCES[0]}
+                         ''')
                     
-                Result(off,igrey2('screenratio=2'+OLABEL))
+                Result(off,'window min1=1500 |' + igrey2('screenratio=1'+OLABEL))
                 Flow(ang,off,
                      '''
                      slant adj=y p0=-1.5 np=201 dp=0.015 |
                      tan2ang a0=-60 na=241 da=0.50
                      ''')
-                Result(ang,igrey2('screenratio=1'+ALABEL))
+                Result(ang,'window min1=1500 |' + igrey2('screenratio=1'+ALABEL))
 
             # END imco
 

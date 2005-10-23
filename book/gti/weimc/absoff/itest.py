@@ -40,8 +40,6 @@ def data(case,dat,DIP,ANG,par):
 
     par['os'] = par['xcig'] - \
                 par['zcig'] * tan(pi*(int(ANG)-int(DIP))/180.)
-#    print DIP, ANG, par['os']
-
     Flow(dat,[ref,dip],
          '''
          kirmod vel=2000 vel2=%(vel2)g dip=${SOURCES[1]}
