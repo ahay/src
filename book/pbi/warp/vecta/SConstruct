@@ -170,7 +170,7 @@ Result('iss','iss iss3','SideBySideAniso')
 def warsscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1):
     dg = (gmax-g0)/(ng-1)
     return '''
-    warpscan2 other=${SOURCES[1]} niter=100
+    warpscan other=${SOURCES[1]} niter=100
     ng=%d dg=%g g0=%g rect1=%d rect2=%d rect3=%d |
     math output='(1+input)^4' |
     window''' % (ng,dg,g0,rect1,rect2,rect3)

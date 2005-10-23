@@ -51,15 +51,21 @@ Flow('fit0','fit','math output=input-x1 | spray o=0 d=1 n=471')
 
 import warp
 warp.warp2('vec','pp','ss','fit0',
+           nx=471,
+           inter=5,
+           tmax=1.5,
            ss=1,
            trace=trace,
+           gmax=2.3,
+           gmin=1.5,
            dt=0.002,
            g0=0.9,
-           ng=101,
+           ng=41,
            rect1=50,
            rect2=50,
            fmax=70,
            fmin=20,
+           frame1=285,
            iter=2,
            clip=0.39)
 
