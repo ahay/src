@@ -37,8 +37,10 @@ acroread    = WhereIs('acroread') or WhereIs('xpdf') or WhereIs('gv')
 epstopdf    = WhereIs('epstopdf')
 if epstopdf:
     latex       = WhereIs('pdflatex')
+    ressuffix = '.pdf'
 else:
     latex       = WhereIs('latex')
+    ressuffix = '.eps'
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
 pdf2ps      = WhereIs('pdf2ps')
@@ -47,7 +49,6 @@ mathematica = WhereIs('mathematica')
 if mathematica:
     mathematica = WhereIs('math')
 
-ressuffix = '.pdf'
 vpsuffix  = '.vpl'
 pssuffix  = '.eps'
 itype = os.environ.get('IMAGE_TYPE','png')
