@@ -55,7 +55,7 @@ par['zmax']=5
 # ------------------------------------------------------------
 def igrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title=""
+    grey labelrot=n pclip=100 title="" wantaxis=n
     min2=%g max2=%g min1=%g max1=%g
     wantscalebar=n barreverse=y
     grid=y gridcol=7 screenratio=1
@@ -64,7 +64,7 @@ def igrey(custom="",par={}):
 
 def agrey(custom="",par={}):
     return '''
-    grey pclip=100 title=""
+    grey labelrot=n pclip=100 title="" wantaxis=n
     min2=-1 max2=+1 min1=%g max1=%g
     grid=y gridcol=7
     label1="z(km)" label2="tan" %s
@@ -136,9 +136,11 @@ for vpvs in (1,2):
                         (0.36,0.18)[vpvs-1]))
 # data
 Result('pp','bdat1-1-401',
-     'window n3=1 f3=50 min1=0 max1=5 | grey title="" label1="t(s)" label2="h(km)" ')
+     'window n3=1 f3=50 min1=0 max1=5 |'
+       + igrey('label1="t(s)" label2="h(km)" min2=-5 max2=+5',par))
 Result('ps','bdat2-1-401',
-     'window n3=1 f3=50 min1=0 max1=5 | grey title="" label1="t(s)" label2="h(km)" ')
+     'window n3=1 f3=50 min1=0 max1=5 |'
+       + igrey('label1="t(s)" label2="h(km)" min2=-5 max2=+5',par))
 Flow('datp','bdat1-1-401','window min3=%(os)g' % par)
 Flow('dats','bdat2-1-401','window min3=%(os)g' % par)
 # ------------------------------------------------------------
@@ -187,11 +189,11 @@ Flow('dipo','lays',
      ''' % par)
 
 dzdx = par['dz']/par['dx']
-#Flow('dipp','imgp','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
-#Flow('dips','imgs','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
+Flow('dipp','imgp','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
+Flow('dips','imgs','window | transp | dip rect1=15 rect2=15 liter=50 | scale rscale=%g' % dzdx)
 
-#Result('dipp',igrey('color=j',par))
-#Result('dips',igrey('color=j',par))
+Result('dipp',igrey('color=j',par))
+Result('dips',igrey('color=j',par))
 # ------------------------------------------------------------
 # angle-gathers
 Flow('angp','cigp',
@@ -259,19 +261,15 @@ for hplot in ('cigp','cigs'):
            transp plane=12 |
            transp plane=23 |
            put n2=400 o2=2.5 d2=.0125 n3=1 |
-           grey pclip=100 grid=y g1num=1 gridcol=7 screenratio=1
-           title="" label1="z(km)" label2="x(km)"
-           ''')
-
+           ''' + igrey('g1num=1',par))
+    
 # plot angle-gathers
 for aplot in ('angp','angs','cors','angsflip','corsflip'):
     Result(aplot,
            '''
            window j3=40 min3=3 max3=7 min2=-1 n2=200 |
            put n2=1000 o2=2.5 d2=.005 n3=1 |
-           grey pclip=100 grid=y g1num=1 gridcol=7 screenratio=1
-           title="" label1="z(km)" label2="x(km)"
-           ''')
+           ''' + igrey('g1num=1',par))
 
 # ------------------------------------------------------------
 # stack after correction

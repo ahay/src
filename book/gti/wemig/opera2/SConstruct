@@ -21,8 +21,8 @@ par['misc']='itype=x nhx=%(nhx)d nhz=1 hsym=y jcx=1' % par
 par['ow']=0.
 par['dw']=1./(par['nt']*par['dt'])
 
-par['xmin']=2.5
-par['xmax']=7.5
+par['xmin']=2.75
+par['xmax']=7.25
 par['zmin']=0
 par['zmax']=5
 # ------------------------------------------------------------
@@ -31,22 +31,22 @@ par['zmax']=5
 # ------------------------------------------------------------
 def igrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title=""
+    grey labelrot=n pclip=100 title="" wantaxis=n
     min2=%g max2=%g min1=%g max1=%g
     wantscalebar=n barreverse=y
-    grid=y gridcol=7 screenratio=1
+    grid=y gridcol=7 screenratio=1.11111
     label1="z(km)" label2="x(km)" %s
     ''' % (par['xmin'],par['xmax'],par['zmin'],par['zmax'],custom)
 
 def dgrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title=""
+    grey labelrot=n pclip=100 title=""  wantaxis=n
     label1="t(s)" label2="h(km)" %s
     ''' % (custom)
 
 def agrey(custom="",par={}):
     return '''
-    grey pclip=100 title=""
+    grey labelrot=n pclip=100 title=""  wantaxis=n
     min2=-1 max2=+1 min1=%g max1=%g
     grid=y gridcol=7
     label1="z(km)" label2="tan" %s
@@ -81,7 +81,7 @@ Flow('lay4',None  ,'math %s output=4.5'                % dim1)
 Flow('lays','lay1 lay2 lay3 lay4','cat axis=2 ${SOURCES[1:4]}')
 graph = '''
 graph min1=%(xmin)g max1=%(xmax)g min2=%(zmin)g max2=%(zmax)g
-yreverse=y wantaxis=n wanttitle=n wantscalebar=n screenratio=1
+yreverse=y wantaxis=n wanttitle=n wantscalebar=n screenratio=1.11111
 ''' % par
 
 Plot('lays0','lays',graph + ' plotfat=10 plotcol=0')
@@ -203,11 +203,19 @@ for c in ('p','s'):
          slant adj=y p0=-2 np=400 dp=0.01 verb=y |
          put label2=tan
          ''')
+
+    gat = 'gat' + c
+    Result(gat,ang,'window n3=1 min3=6 |'
+           + agrey('screenratio=1.5',par))
     
     if(c=='s'):
         cor = 'cor' + c
         Flow(cor,[ang,'vpvs',dip],
              'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]} verb=y')        
+
+        gatcor = 'gat' + c + 'cor'
+        Result(gatcor,cor,'window n3=1 min3=6 |'
+           + agrey('screenratio=1.5',par))
 
     # stacks
     stk = 'stk' + c
@@ -243,23 +251,19 @@ Result('avo',igrey('',par))
 for hplot in ('cigp','cigs'):
     Result(hplot,
            '''
-           window j1=40 min1=3 max1=7 |
+           window j1=20 min1=3 max1=7 |
            transp plane=12 |
            transp plane=23 |
-           put n2=200 o2=2.5 d2=.025 n3=1 |
-           grey pclip=100 grid=y g1num=1 gridcol=7 screenratio=1
-           title="" label1="z(km)" label2="x(km)"
-           ''')
+           put n2=360 o2=2.75 d2=.0125 n3=1 |
+           ''' + igrey('g1num=1',par))
 
 # plot angle-gathers
 for aplot in ('angp','angs','cors','angsflip','corsflip'):
     Result(aplot,
            '''
-           window j3=40 min3=3 max3=7 min2=-1 n2=200 |
-           put n2=1000 o2=2.5 d2=.005 n3=1 |
-           grey pclip=100 grid=y g1num=1 gridcol=7 screenratio=1
-           title="" label1="z(km)" label2="x(km)"
-           ''')
+           window j3=20 min3=3 max3=7 min2=-1 n2=200 |
+           put n2=1800 o2=2.75 d2=.0025 n3=1 |
+           ''' + igrey('g1num',par))
 
 # ------------------------------------------------------------
 # stack after correction
