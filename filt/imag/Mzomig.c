@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
 		
 		iaxa(Fi,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
 		iaxa(Fi,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
-		iaxa(Fi,&az ,3);  az.l= "z"; oaxa(Fd,&aw ,3);
+		iaxa(Fi,&az ,3);  aw.l= "w"; oaxa(Fd,&aw ,3);
 
 		data = fslice_init(amx.n*amy.n, aw.n,sizeof(float complex));
 		imag = fslice_init(amx.n*amy.n, az.n,sizeof(float));
@@ -147,7 +147,7 @@ int main (int argc, char *argv[])
 		
 		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fi,&amx,1);
 		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
-		iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fi,&az ,3);
+		iaxa(Fd,&aw ,3);  az.l= "z"; oaxa(Fi,&az ,3);
 
 		data = fslice_init(amx.n*amy.n, aw.n,sizeof(float complex));
 		imag = fslice_init(amx.n*amy.n, az.n,sizeof(float));

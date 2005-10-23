@@ -32,10 +32,13 @@ else:
 # CONFIGURATION VARIABLES
 #############################################################################
 
-latex       = WhereIs('pdflatex')
 bibtex      = WhereIs('bibtex')
 acroread    = WhereIs('acroread') or WhereIs('xpdf') or WhereIs('gv')
 epstopdf    = WhereIs('epstopdf')
+if epstopdf:
+    latex       = WhereIs('pdflatex')
+else:
+    latex       = WhereIs('latex')
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
 pdf2ps      = WhereIs('pdf2ps')
