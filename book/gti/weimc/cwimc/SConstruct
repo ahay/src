@@ -20,17 +20,21 @@ par['vpvs']= par['velp'] / par['vels']
 # ------------------------------------------------------------
 def igrey(custom):
     return '''
-    grey labelrot=n title="" pclip=100 grid=n gridcol=5
+    grey labelrot=n title="" pclip=100 wantaxis=n
+    grid=n gridcol=5
+    labelsz=5
     %s
     ''' % custom
 def igraph(custom):
     return '''
-    graph labelrot=n title="" transp=y yreverse=y
+    graph labelrot=n title="" transp=y yreverse=y wantaxis=n
     wantaxis=n wantlabels=n
     min2=-0.5 max2=1.5 min1=0 max1=2000
     %s
     ''' % custom
 
+ISCR = ' screenratio=0.5 screenht=7 '
+OSCR = ' screenratio=0.8 screenht=7 '
 # ------------------------------------------------------------
 
 deg  = (0,15,30,45)
@@ -60,9 +64,9 @@ Flow('dip',None,
 Flow('ref','dip','math output="300+input*x1" ')
 Plot('ref',
      '''
-     graph yreverse=y min2=0 max2=2000 min1=0 max1=2800
+     graph yreverse=y min2=0 max2=2000 min1=0 max1=4000
      title="" wantaxis=n
-     ''')
+     ''' + ISCR)
 
 # wavelet
 Flow('wav',None,
@@ -102,7 +106,7 @@ Flow('ppovl',None,
      spray axis=2 n=%d o=%g d=%g |
      transp
      ''' % (ppan,par['nz'],par['oz'],par['dz']))
-Plot('ppovl','ppovl',igraph(''))
+Plot('ppovl','ppovl',igraph(''+OSCR))
 
 # PS reflection angles
 Flow('psovl',None,
@@ -111,7 +115,7 @@ Flow('psovl',None,
      spray axis=2 n=%d o=%g d=%g |
      transp
      ''' % (psan,par['nz'],par['oz'],par['dz']))
-Plot('psovl','psovl',igraph(''))
+Plot('psovl','psovl',igraph(''+OSCR))
 # ------------------------------------------------------------
 
 for case in ('pp','ps'):
@@ -133,7 +137,8 @@ for case in ('pp','ps'):
            par['nh'],par['dh'],par['oh'],
            par['ns'],par['ds'],par['os'])
          )
-    Result(case,'window max1=8 | grey label1="t(s)" label2="h(m)" title=""')
+    Result(case,'window max1=8 |'
+           + igrey('label1="t(s)" label2="h(m)"'))
 
     # migration
     sou = case + 'sou'
@@ -156,8 +161,8 @@ for case in ('pp','ps'):
             spmig.imagePW(img,cig,'slop',       sou,rec,par)
         else:
             spmig.imageCW(img,cig,'slop','slos',sou,rec,par)
-        Plot(img,img,'window max1=2800 | transp |'
-               + igrey('label1="z(m)" label2="x(m)" '))
+        Plot(img,img,'window max1=4000 | transp |'
+               + igrey('label1="z(m)" label2="x(m)"'+ISCR))
         Result(img,[img,'ref'],'Overlay')
 
 
@@ -184,7 +189,7 @@ for case in ('pp','ps'):
                  off2abs verb=y |
                  transp 
                  ''' % par)
-        Result(off,off,igrey('label1="z(m)" label2="h(m)" '))
+        Result(off,off,igrey('label1="z(m)" label2="h(m)"'+OSCR))
 
         # angle CIGs
         ang = case + 'ang' + '-'+TYP
@@ -196,14 +201,14 @@ for case in ('pp','ps'):
                  slant adj=y p0=-0.5 np=200 dp=0.01 |
                  put label2=tan
                  ''' % par)
-            Plot(ang,ang,igrey('label1="z(m)" label2="tan" '))
+            Plot(ang,ang,igrey('label1="z(m)" label2="tan"'+OSCR))
             Result(ang,[ang,ovl],'Overlay')
 
         if(case=='ps' and TYP=='x'):
             cor = case + 'cor' + '-'+TYP
             Flow(cor,[ang,'vpvs','dipa'],
                  'pp2psang2 vpvs=${SOURCES[1]} dip=${SOURCES[2]}')
-            Plot(cor,cor,igrey('label1="z(m)" label2="tan"'))
+            Plot(cor,cor,igrey('label1="z(m)" label2="tan"'+OSCR))
             Result(cor,[cor,ovl],'Overlay')
             
 # ------------------------------------------------------------
