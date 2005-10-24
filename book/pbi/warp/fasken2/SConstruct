@@ -37,13 +37,6 @@ for mode in ['pp','ps']:
          fldr=180 tracf=184 sx=188 sy=193
          ''',stdin=0)
     Flow(mode+'cube',mode,'intbin | window n2=116 n3=132 min2=18 min3=15')
-    Result(mode+'cube',
-           '''byte gainpanel=all |
-           grey3 flat=n frame3=%d frame2=%d frame1=%d title=%s
-           point1=0.75 point2=0.75
-           label1="Time (s)" label2="In-line" label3="Cross-line"
-           ''' %
-           (line-15,trace-18,time[mode],string.upper(mode)))
     Result(mode+'2',[mode+'cube2','line'],'Overlay')
 
 
@@ -69,7 +62,7 @@ Plot('nails','nreal nimag',
      symbolsz=15
      ''',stdin=0)
 
-Flow('fit','nails ppline1','linefit pattern=${SOURCES[1]}')
+Flow('fit','nails ppcube21','linefit pattern=${SOURCES[1]}')
 Plot('fit','graph min1=0 max1=3 min2=0 max2=4 title="Line Fit" ')
 Result('fnails','fit nails','Overlay')
 
@@ -88,6 +81,7 @@ warp.warp3('fas','ppcube','pscube','fit0',
            trace=trace,
            line=line,
            o2=18,
+           o3=15,
            dt=0.002,
            g0=0.96,
            gmin=1,
@@ -96,6 +90,7 @@ warp.warp3('fas','ppcube','pscube','fit0',
            ng=51,
            rect1=50,
            rect2=25,
+           rect3=25,
            fmin=10,
            fmax=40,
            frect=6,

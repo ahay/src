@@ -67,7 +67,8 @@ def warp3(name,       # name prefix
           tmin=0,     # minimum time for display
           line=None,  # selected line
           trace=None, # seleted trace
-          o2=0,       # trace start
+          o2=0,       # in-line start
+          o3=0,       # cross-line start
           gmin=1,     # minimum gamma
           gmax=4,     # maximum gamma
           dt=0.004,   # time sampling
@@ -91,13 +92,62 @@ def warp3(name,       # name prefix
     if line:
         for case in (pp,ps,warp):
             Flow(case+'2',case,'window n3=1 min3=%d' % line)
-        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
-              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
-              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
+#        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
+#              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
+#              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
     else:
         line=10
 
+    def plot3(title):
+        return '''
+        window min1=%g max1=%g |
+        byte gainpanel=all |
+        grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
+        point1=0.75 point2=0.75
+        label1="Time (s)" label2="In-line" label3="Cross-line"
+        ''' % (tmin,tmax,title,frame1,trace-o2,line-o3)
 
+    Result(pp,plot3('PP'))
+
+    PS = ('PS','SS')[ss]
+
+    ifreq = 'iphase rect1=%d rect2=%d rect3=%d order=100' % (2*rect1,2*rect2,2*rect3)
+
+    def freqplot3(title):
+        return '''
+        window min1=%g max1=%g |
+        scale scale dscale=%g |
+        byte clip=%g bias=%g bar=bar.rsf |
+        grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
+        point1=0.75 point2=0.75
+        label1="Time (s)" label2="In-line" label3="Cross-line"
+        color=j scalebar=y barlabel="Frequency (Hz)"
+        ''' % (tmin,tmax,0.5/(math.pi*dt),(fmax-fmin)*0.25,(fmax+fmin)*0.5,title,frame1,trace-o2,line-o3)
+
+    Flow(pp+'i',pp,ifreq)
+    Result(pp+'i',freqplot3('PP Local Frequency'))
+
+    for i in range(iter):
+        wrp = warp 
+        
+        #################
+        # INITIAL WARPING
+        #################
+
+        def n(s):
+            return '%s-%s-%d' % (name,s,i)
+
+        psw = n('psw')
+        Flow(psw,[ps,pp,wrp],warp0)
+        Result(psw,plot3('Warped ' + PS))
+
+        ####################
+        # SPECTRAL BALANCING
+        ####################
+
+        si = n('si')
+        Flow(si,psw,ifreq)
+        Result(si,freqplot3(PS + ' Local Frequency'))
 
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
