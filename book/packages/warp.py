@@ -6,24 +6,19 @@ warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
 verb=1 nliter=0
 '''
 
-dplot ='''
-add scale=1,-1 ${SOURCES[1]} |
-cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
-dots gaineach=0
-labels="Difference:PS warped:PP" label1="Time (s)"
-''' 
-
 getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
 
-psrect = '''
-math min=${SOURCES[2]} max=${SOURCES[1]}
-output="sqrt(1+12*(1/min^2-1/max^2)*input)" | dd type=int
-'''
+def psrect(rect):
+    return '''
+    math min=${SOURCES[2]} max=${SOURCES[1]}
+    output="sqrt(1+%d*(1/min^2-1/max^2)*input)" | dd type=int
+    ''' % rect
 
-pprect = '''
-math min=${SOURCES[2]} max=${SOURCES[1]}
-output="sqrt(1+12*(1/max^2-1/min^2)*(1-input))" | dd type=int
-'''
+def pprect(rect):
+    return '''
+    math min=${SOURCES[2]} max=${SOURCES[1]}
+    output="sqrt(1+%d*(1/max^2-1/min^2)*(1-input))" | dd type=int
+    ''' % rect
 
 balance = '''
 nsmooth1 rect=${SOURCES[1]} |
@@ -39,8 +34,11 @@ def warping(niter,rect1=1,rect2=1,rect3=1):
     rm www.rsf
     ''' % (niter,rect1,rect2,rect3)
 
-def pick(rect1=1,rect2=1,rect3=1):
-    return 'pick rect1=%d rect2=%d rect3=%d an=0.5 | window' % (rect1,rect2,rect3)
+def pick(min2,max2,rect1=1,rect2=1,rect3=1):
+    return '''
+    window min2=%g max2=%g | 
+    pick rect1=%d rect2=%d rect3=%d an=0.5 |
+    window''' % (min2,max2,rect1,rect2,rect3)
 
 def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
     dg = (gmax-g0)/(ng-1)
@@ -61,6 +59,46 @@ def warp2egamma(ss):
     math output="(input+x1)/x1" %s 
     ''' % ('| math output="2*input-1" ','')[ss]
 
+def warp3(name,       # name prefix
+          pp,ps,      # PP and PS images
+          warp,       # initial warp
+          nx,         # number of traces
+          tmax,       # maximum time for display
+          tmin=0,     # minimum time for display
+          line=None,  # selected line
+          trace=None, # seleted trace
+          o2=0,       # trace start
+          gmin=1,     # minimum gamma
+          gmax=4,     # maximum gamma
+          dt=0.004,   # time sampling
+          fmin=0,     # minimum frequency
+          fmax=40,    # maximum frequency
+          frect=12,   # frequency smoothing
+          frame1=10,  # time frame          
+          ng=101,     # number of gammas
+          g0=0.96,    # first gamma
+          pmin=0,     # minimum gamma for picking
+          pmax=2,     # maximum gamma for picking
+          rect1=50,   # vertical smoothing
+          rect2=50,   # in-line smoothing
+          rect3=50,   # cross-line smoothing
+          iter=2,     # number of iterations
+          ss=0,       # PP-PS (0) or PP-SS (1)
+          inter=1,    # interleaving
+          clip=6      # display clip
+          ):
+
+    if line:
+        for case in (pp,ps,warp):
+            Flow(case+'2',case,'window n3=1 min3=%d' % line)
+        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
+              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
+              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
+    else:
+        line=10
+
+
+
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
           warp,       # initial warp
@@ -68,14 +106,18 @@ def warp2(name,       # name prefix
           tmax,       # maximum time for display
           tmin=0,     # minimum time for display
           trace=None, # seleted trace
+          o2=0,       # trace start
           gmin=1,     # minimum gamma
           gmax=4,     # maximum gamma
           dt=0.004,   # time sampling
           fmin=0,     # minimum frequency
           fmax=40,    # maximum frequency
+          frect=12,   # frequency smoothing
           frame1=10,  # time frame          
           ng=101,     # number of gammas
           g0=0.96,    # first gamma
+          pmin=0,     # minimum gamma for picking
+          pmax=2,     # maximum gamma for picking
           rect1=50,   # vertical smoothing
           rect2=50,   # lateral smoothing
           iter=2,     # number of iterations
@@ -92,7 +134,7 @@ def warp2(name,       # name prefix
         for case in (pp,ps,warp):
             Flow(case+'1',case,'window n2=1 min2=%d' % trace)
         warp1(name+'t',pp+'1',ps+'1',warp+'1',tmax,tmin,
-              gmin,gmax,dt,fmin,fmax,ng,g0,rect1,iter,ss)
+              gmin,gmax,dt,fmin,fmax,frect,ng,g0,pmin,pmax,rect1,iter,ss)
     else:
         trace=10
 
@@ -160,9 +202,9 @@ def warp2(name,       # name prefix
     grey3 frame1=%d frame3=%d frame2=%d color=j flat=n
     label1="Time (s)" label3="In-line" label2="Relative Gamma"
     wanttitle=n
-    ''' % (tmin,tmax,frame1,trace,ng/2)
+    ''' % (tmin,tmax,frame1,trace-o2,ng/2)
 
-    warpit = warping(2,200,200)
+    warpit = warping(20,200,200)
 
     for i in range(iter):
         wrp = warp 
@@ -203,10 +245,10 @@ def warp2(name,       # name prefix
         sr = n('sr')
         pr = n('pr')
 
-        Flow(sr+'0',[msk,si,pp+'i'],psrect)
+        Flow(sr+'0',[msk,si,pp+'i'],psrect(frect))
         Flow(sr,[psw,sr+'0',pp],balance)
 
-        Flow(pr+'0',[msk,si,pp+'i'],pprect)
+        Flow(pr+'0',[msk,si,pp+'i'],pprect(frect))
         Flow(pr,[pp,pr+'0',pp],balance)
 
         si = si+'2'
@@ -227,7 +269,7 @@ def warp2(name,       # name prefix
         Flow(pr+'s1',pr,'spectra all=y')
         Plot(s1,[pr+'s1',s1],specplot('After'))
 
-        Result(n('sp'),[s0,s1],'SideBySideIso')
+        Result(n('sp'),[s0,s1],'SideBySideAniso')
 
         if i == 0:
             in0 = n('in0')
@@ -262,7 +304,12 @@ def warp2(name,       # name prefix
         Result(sc,scanplot)
         
         pk = n('pk')
-        Flow(pk+'0',sc,pick(rect1,4*rect2))
+
+        if i==0:
+            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2))
+        else:
+            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2))
+
         Flow(pk,pk+'0','math output="(input-1)*x1" ')
 
         #########
@@ -326,8 +373,11 @@ def warp1(name,      # name prefix
           dt=0.004,  # time sampling
           fmin=0,    # minimum frequency
           fmax=40,   # maximum frequency
+          frect=12,  # frequency smoothing
           ng=101,    # number of gammas
           g0=0.96,   # first gamma
+          pmin=0,    # minimum gamma for picking
+          pmax=2,    # maximum gamma for picking
           rect1=50,  # vertical smoothing
           iter=2,    # number of iterations
           ss=0
@@ -338,15 +388,24 @@ def warp1(name,      # name prefix
     wherexlabel=t wheretitle=b crowd=0.8 label2="Vp/Vs"
     ''' % (gmin,gmax,tmin,tmax)
 
-    iphase = '''
-    cat axis=2 ${SOURCES[1]} |
-    scale dscale=%g | 
-    graph title="Local Frequency" label1="Time (s)"
-    min2=%g max2=%g min1=%g max1=%g
-    dash=0,1 label2="Frequency (Hz)"
-    ''' % (0.5/(math.pi*dt),fmin,fmax,tmin,tmax)
+    dplot ='''
+    add scale=1,-1 ${SOURCES[1]} |
+    cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
+    window min1=%g max1=%g |
+    dots gaineach=0
+    labels="Difference:PS warped:PP" label1="Time (s)"
+    ''' % (tmin,tmax)
 
-    warpit = warping(2,200)
+    def iphase(title):
+        return '''
+        cat axis=2 ${SOURCES[1]} |
+        scale dscale=%g | 
+        graph title="Local Frequency (%s)" label1="Time (s)"
+        min2=%g max2=%g min1=%g max1=%g
+        dash=0,1 label2="Frequency (Hz)"
+        ''' % (0.5/(math.pi*dt),title,fmin,fmax,tmin,tmax)
+
+    warpit = warping(20,200)
 
     for i in range(iter):
         #################
@@ -385,7 +444,7 @@ def warp1(name,      # name prefix
         psi = n('psi')
         Flow(ppi,pp, phase)
         Flow(psi,psw,phase)
-        Result(ifr,[ppi,psi],iphase)
+        Plot(ifr,[ppi,psi],iphase('Before'))
 
         msk = n('msk')
         Flow(msk,[psi,ppi],getmask)
@@ -393,18 +452,19 @@ def warp1(name,      # name prefix
         sr = n('sr')
         pr = n('pr')
 
-        Flow(sr+'0',[msk,psi,ppi],psrect)
+        Flow(sr+'0',[msk,psi,ppi],psrect(frect))
         Flow(sr,[psw,sr+'0',pp],balance)
     
-        Flow(pr+'0',[msk,psi,ppi],pprect)
+        Flow(pr+'0',[msk,psi,ppi],pprect(frect))
         Flow(pr,[pp,pr+'0',pp],balance)
-
-        Plot(psw+'1',[sr,pr],dplot)
-        Result(psw+'1',[gamma,psw+'1'],'OverUnderAniso')
 
         for case in (sr,pr):
             Flow(case+'i',case,phase)
-        Result(ifr+'1',[pr+'i',sr+'i'],iphase)
+        Plot(ifr+'1',[pr+'i',sr+'i'],iphase('After'))
+        Result(ifr,[ifr,ifr+'1'],'SideBySideAniso')     
+
+        Plot(psw+'1',[sr,pr],dplot)
+        Result(psw+'1',[gamma,psw+'1'],'OverUnderAniso')
 
         ############
         # GAMMA SCAN
@@ -412,7 +472,7 @@ def warp1(name,      # name prefix
 
         g1 = 2-g0
         
-        warpscan1 = warpscan(ng,g0,g1,rect1)
+        warpscan1 = warpscan(2*ng,g0,g1,rect1)
         
         greyscan = '''
         window min1=%g max1=%g |
@@ -427,7 +487,12 @@ def warp1(name,      # name prefix
         Plot(scn,greyscan)
 
         pik = n('pik')
-        Flow(pik+'0',scn,pick(2*rect1))
+
+        if i==0:
+            Flow(pik+'0',scn,pick(max(pmin,g0),min(pmax,g1),2*rect1))
+        else:
+            Flow(pik+'0',scn,pick(g0,g1,2*rect1))
+
         Flow(pik,pik+'0','math output="(input-1)*x1" ')
         Plot(pik,pik+'0',showpick(0))
         Plot(pik+'0',showpick(1))
@@ -440,7 +505,7 @@ def warp1(name,      # name prefix
         warp = n('wrp')
 
         Flow([warp,psw+'2'],[sr,pr,pik,wrp],warpit,stdout=-1)
-        Flow(gamma+'2',wrp,warp2gamma(ss))
+        Flow(gamma+'2',warp,warp2gamma(ss))
         Plot(gamma+'2',graph)
         Plot(psw+'2',[psw+'2',pr],dplot)
         Result(psw+'2',[gamma+'2',psw+'2'],'OverUnderAniso')

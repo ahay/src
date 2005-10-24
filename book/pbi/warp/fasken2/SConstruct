@@ -1,0 +1,106 @@
+from rsfproj import *
+import string,math
+import warp
+
+data = {
+    'pp': 'Pw.sgy',
+    'ps': 'Cw.sgy'
+    }
+
+time = {
+    'pp': int(1.5/0.002),
+    'ps': int(2.413/0.002)
+    }
+
+line=67
+trace=74
+
+Flow('./line',None,
+     'echo %d 0 %d 4 n1=4 data_format=ascii_float in=$TARGET' %
+     (trace,trace))
+Plot('line','line',
+     '''
+     dd form=native | dd type=complex |
+     graph min2=0 max2=2.5 min1=17.05 max1=133.5 pad=n wantaxis=n wanttitle=n
+     ''')
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for mode in ['pp','ps']:
+    Fetch(data[mode],'fasken',private)
+    Flow([mode,'./'+mode+'hhead','./'+mode+'bhead',mode+'head'],data[mode],
+         '''segyread tape=$SOURCE
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
+         fldr=180 tracf=184 sx=188 sy=193
+         ''',stdin=0)
+    Flow(mode+'cube',mode,'intbin | window n2=116 n3=132 min2=18 min3=15')
+    Result(mode+'cube',
+           '''byte gainpanel=all |
+           grey3 flat=n frame3=%d frame2=%d frame1=%d title=%s
+           point1=0.75 point2=0.75
+           label1="Time (s)" label2="In-line" label3="Cross-line"
+           ''' %
+           (line-15,trace-18,time[mode],string.upper(mode)))
+    Result(mode+'2',[mode+'cube2','line'],'Overlay')
+
+
+nails = Split('''
+1.046 1.788
+1.188 1.976
+1.396 2.270
+1.560 2.492
+3.000 4.500
+''')  
+
+Flow('./nails0',None,
+     'echo %s n1=2 n2=%d in=$TARGET data_format=ascii_float' %
+     (string.join(nails,' '),len(nails)/2))
+Flow('nails','nails0','dd form=native')
+Flow('nreal','nails','window n1=1')
+Flow('nimag','nails','window f1=1')
+Plot('nails','nreal nimag',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph min1=0 max1=3 min2=0 max2=4 symbol='o' wanttitle=n
+     label1="PP time (s)" label2="PS time (s)" plotcol=5
+     symbolsz=15
+     ''',stdin=0)
+
+Flow('fit','nails ppline1','linefit pattern=${SOURCES[1]}')
+Plot('fit','graph min1=0 max1=3 min2=0 max2=4 title="Line Fit" ')
+Result('fnails','fit nails','Overlay')
+
+Flow('fit0','fit',
+     '''
+     math output=input-x1 |
+     spray axis=2 n=116 d=1 o=18 |
+     spray axis=3 n=132 d=1 o=15
+     ''')
+
+warp.warp3('fas','ppcube','pscube','fit0',
+           nx=116,
+           tmin=0.5,
+           tmax=2,
+           inter=2,
+           trace=trace,
+           line=line,
+           o2=18,
+           dt=0.002,
+           g0=0.96,
+           gmin=1,
+           gmax=2.5,
+           pmin=1,
+           ng=51,
+           rect1=50,
+           rect2=25,
+           fmin=10,
+           fmax=40,
+           frect=6,
+           frame1=500,
+           iter=2,
+           clip=3.5)
+
+End()
