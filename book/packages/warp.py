@@ -127,6 +127,11 @@ def warp3(name,       # name prefix
     Flow(pp+'i',pp,ifreq)
     Result(pp+'i',freqplot3('PP Local Frequency'))
 
+    balance = '''
+    nsmooth1 rect=${SOURCES[1]} |
+    abalance rect1=%d rect2=%d rect3=%d order=100 other=${SOURCES[2]}
+    ''' % (rect1,rect2,rect3)
+
     for i in range(iter):
         wrp = warp 
         
@@ -148,6 +153,25 @@ def warp3(name,       # name prefix
         si = n('si')
         Flow(si,psw,ifreq)
         Result(si,freqplot3(PS + ' Local Frequency'))
+
+        msk = n('msk')
+        Flow(msk,[si,pp+'i'],getmask)
+
+        sr = n('sr')
+        pr = n('pr')
+
+        Flow(sr+'0',[msk,si,pp+'i'],psrect(frect))
+        Flow(sr,[psw,sr+'0',pp],balance)
+
+        Flow(pr+'0',[msk,si,pp+'i'],pprect(frect))
+        Flow(pr,[pp,pr+'0',pp],balance)
+
+        Result(sr,plot3('Warped and Balanced ' + PS))
+        Result(pr,plot3('Balanced PP'))
+
+        ############
+        # GAMMA SCAN
+        ############
 
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
