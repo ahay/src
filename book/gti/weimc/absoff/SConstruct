@@ -11,18 +11,17 @@ par = {
     'nx':1000,  'ox':0,    'dx':10,
     'nh':1001,  'oh':-1000,'dh':10,
     'ns':1,     'os':5000, 'ds':40, 'js':1,'fs':0,
-    'nz':201,   'oz':0,    'dz':10,
+    'nz':401,   'oz':0,    'dz':5,
     'nt':1000,  'ot':0,    'dt':0.008,
-    'nw':100,   'ow':1,'jw':3,
-    'nw':50, 'ow':1,
+    'nw':100,   'ow':1,             'jw':3,
     'vel':2000,
     'vel2':2000,
-    #
-    'jcx':300,
     #
     'verb':'y','eps':0.01,'nrmax':1,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':0,'pmy':0
     }
+
+par['jcx']=par['xcig']/par['dx']
 # ------------------------------------------------------------
 
 def igrey2(custom):
@@ -31,21 +30,19 @@ def igrey2(custom):
     ''' % custom
 def igrey3(custom,custom2):
     return '''
-    transp plane=12 | transp plane=23 |
     byte gainpanel=all %s |
     grey3 labelrot=n title="" flat=y labelsz=5
-          point2=0.55 point1=0.55 screenratio=1.0
-          label1="h\s80 \_x\^\s100 (m)"
-          label2="h\s80 \_z\^\s100 (m)"
-          label3="z (m)"
-          frame1=50 frame2=50 frame3=40 %s
+          point2=0.5 point1=0.7 screenratio=1.4
+          label1="z (m)"
+          label2="h\s80 \_x\^\s100 (m)"
+          label3="h\s80 \_z\^\s100 (m)"
+          frame1=80 frame2=0 frame3=0 %s
     ''' % (custom,custom2)
 
 DLABEL = ' label1="t (s)" label2="h (m)" '
 XLABEL = ' label1="z (m)" label2="x (m)" '
 OLABEL = ' label1="z (m)" label2="h (m)" grid=y '
 ALABEL = ' label1="z (m)" label2="\F10 q\F3 (\^o\_)" grid=y'
-#ALABEL = ' label1="depth (m)" label2="tan \F10 q\F3 " grid=y '
 
 SCR = ' screenratio=0.5 screenht=7'
 # ------------------------------------------------------------
@@ -53,12 +50,12 @@ SCR = ' screenratio=0.5 screenht=7'
 # build velocity models
 itest.model(par)
 
-# generate data
 for wtype in ('p'):                      # wave type
     for DIP in (['00','45']):            # reflector dip
         for ANG in (['30']):             # incidence angle
             exp = wtype + DIP + ANG      # experiment label
-            
+
+            # generate data
             dat = 'dat-' + exp
             itest.data(wtype,dat,DIP,ANG,par)
             Result(dat,'window max1=5 |'
@@ -70,53 +67,45 @@ for wtype in ('p'):                      # wave type
                 off = 'off-' + exp + imco
                 ang = 'ang-' + exp + imco
 
+                # migrate
                 itest.migrate(wtype,imco,dat,img,cig,par)
                 Result(img,'window n4=1 min4=0 min1=%g max1=%g | transp |'
                        % (par['xcig']-2000,par['xcig']+2000)
                        + igrey2(''+SCR+XLABEL))
         
-                if(imco == 'x' or imco == 'z'):
-                    Flow(off,cig,'window n1=1 min1=%(xcig)g' % par)                    
+                if(imco != 'm'):
+                    Flow(off,cig,'window n1=1 min1=%(xcig)g' % par)
                 else:
-                    hlf = 'hlf-' + exp + imco
-                    if(imco == 'h'):
-                        Flow(hlf,cig,'window n1=1 min1=%(xcig)g' % par)
-                    else:
-                        cub = 'cub-' + exp + imco
-                        Result(cub,cig,
-                               'window n1=1 min1=%g min3=%g max3=%g | '
-                               % (par['xcig'],par['zcig']-400,par['zcig']+400)
-                               + igrey3('',''))
-                        
-                        Flow(hlf,cig,
-                             '''
-                             window squeeze=n n1=1 min1=%(xcig)g |
-                             stack | transp | stack |
-                             transp plane=12 |
-                             transp plane=23 |
-                             transp plane=34 |
-                             window squeeze=n |
-                             off2abs verb=y nh=50 dh=10 |
-                             transp 
-                             ''' % par)
-                    Flow(off,hlf,
+                    Flow(off,cig,
                          '''
-                         window f2=1 | pad end2=1 |
-                         reverse which=2 opt=n |
-                         cat axis=2 space=n ${SOURCES[0]}
-                         ''')
+                         window squeeze=n n1=1 min1=%(xcig)g |
+                         stack | transp | stack |
+                         transp plane=12 |
+                         transp plane=23 |
+                         transp plane=34 |
+                         window squeeze=n |
+                         off2abs verb=y nh=40 |
+                         transp 
+                         ''' % par)
+
+                    cub = 'cub-' + exp + imco
+                    Result(cub,cig,
+                           'window n1=1 min1=%g min3=%g max3=%g | '
+                           % (par['xcig'],par['zcig']-400,par['zcig']+400)
+                           + igrey3('',''))
                     
                 Result(off,'window min1=%g max1=%g |'
                        % (par['zcig']-400,par['zcig']+400)
-                       + igrey2('screenratio=1'+OLABEL))
+                       + igrey2('screenratio=2'+OLABEL))
+
                 Flow(ang,off,
                      '''
-                     slant adj=y p0=-1.5 np=201 dp=0.015 |
-                     tan2ang a0=-45 na=201 da=0.45
+                     slant adj=y p0=0 np=101 dp=0.015 |
+                     tan2ang a0=0 na=101 da=0.45
                      ''')
                 Result(ang,'window min1=%g max1=%g |'
                        % (par['zcig']-400,par['zcig']+400)
-                       + igrey2('screenratio=1'+ALABEL))
+                       + igrey2('screenratio=2'+ALABEL))
 
             # END imco
 
@@ -125,57 +114,5 @@ for wtype in ('p'):                      # wave type
     # END dip
 
 # END wtype
-
-#Flow('hx00','cig-p0000x','window n1=1 min1=5000')
-#Flow('hz00','cig-p0000z','window n1=1 min1=5000')
-#Result('hall00','hx00 hz00','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a')
-
-#Flow('hx30','cig-p3000x','window n1=1 min1=5000')
-#Flow('hz30','cig-p3000z','window n1=1 min1=5000')
-#Result('hall30','hx30 hz30','cat axis=3 space=n ${SOURCES[1]} | grey gainpanel=a')
-
-#Plot('sim00','simdat-p0000','window | transp | grey')
-#Plot('rim00','rimdat-p0000','window | transp | grey')
-#Result('imtest00','sim00 rim00','Movie')
-
-#Plot('sim30','simdat-p3000','window | transp | grey')
-#Plot('rim30','rimdat-p3000','window | transp | grey')
-#Result('imtest30','sim30 rim30','Movie')
-
-
-#Flow('coh','pcig30m',
-#     '''
-#     window squeeze=n n1=1 min1=5000 |
-#     stack | transp | stack |
-#     transp plane=12 |
-#     transp plane=23 |
-#     transp plane=34 |
-#     /home/savap/RSF/user/savap/sfoff2abs verb=y |
-#     transp 
-#     ''')
-#Result('coh',igrey2('screenratio=2'+OLABEL))
-#Flow('coa',['coh'],
-#     '''
-#     slant adj=y p0=-1.5 np=201 dp=0.015 |
-#     put label2=tan
-#     ''' % par)
-#
-#
-#Flow('off',None,
-#     '''
-#     spike nsp=1 mag=1
-#     n1=100 o1=-500 d1=10 k1=71
-#     n2=1   o2=0    d2=1
-#     n3=100 o3=-500 d3=10 k3=71 |
-#     put label1=hx label2=hy label3=hz
-#     ''')
-#Plot('off','window | grey pclip=100')
-#Flow('abs','off',
-#     '''
-#     /home/savap/RSF/user/savap/sfoff2abs verb=y
-#     ''')
-#Plot('abs','graph')
-#
-#Result('offabs','off abs','SideBySideAniso')
 
 End()

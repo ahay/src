@@ -1,7 +1,7 @@
 from rsfproj import *
 import sys
 from math import *
-import spmig, zomig
+import spmig
 
 def model(par):
     Flow('pvel',None,
@@ -44,7 +44,7 @@ def data(case,dat,DIP,ANG,par):
     Flow(dat,[ref,dip],
          '''
          kirmod vel=%(vel)g vel2=%(vel2)g dip=${SOURCES[1]}
-         nt=%(nt)d  dt=%(dt)g freq=9         
+         nt=%(nt)d  dt=%(dt)g freq=18
          nh=%(nh)d  h0=%(oh)g dh=%(dh)g
          ns=%(ns)d  s0=%(os)g ds=%(ds)g |
          put label1=t label2=h
@@ -59,11 +59,11 @@ def migrate(case,imco,dat,img,cig,par):
 
     locpar = par
     if(imco=='o'): locpar['misc']='itype=o'
-    if(imco=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025             jcx=%(jcx)d' % par
-    if(imco=='x'): locpar['misc']='itype=x hsym=n nhx=50                             jcx=%(jcx)d' % par
-    if(imco=='z'): locpar['misc']='itype=x hsym=n        nhz=50                      jcx=%(jcx)d' % par
-    if(imco=='m'): locpar['misc']='itype=x hsym=n nhx=50 nhz=50                      jcx=%(jcx)d' % par
-    if(imco=='h'): locpar['misc']='itype=h        nhh=50 dhh=10 nha=180 dha=2 oha=0  jcx=%(jcx)d' % par
+    if(imco=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025              jcx=%(jcx)d' % par
+    if(imco=='x'): locpar['misc']='itype=x hsym=n nhx=40                              jcx=%(jcx)d' % par
+    if(imco=='z'): locpar['misc']='itype=x hsym=n         nhz=40                      jcx=%(jcx)d' % par
+    if(imco=='m'): locpar['misc']='itype=x hsym=n nhx=40  nhz=40                      jcx=%(jcx)d' % par
+    if(imco=='h'): locpar['misc']='itype=h        nhh=40  dhh=10 nha=180 dha=2 oha=0  jcx=%(jcx)d' % par
 
     sou = 'sou' + dat
     rec = 'rec' + dat
@@ -72,8 +72,3 @@ def migrate(case,imco,dat,img,cig,par):
         spmig.imagePW(img,cig,'pslo',       sou,rec,locpar)
     else:
         spmig.imageCW(img,cig,'pslo','cslo',sou,rec,locpar)
-
-#    sim = 'sim' + dat
-#    rim = 'rim' + dat
-#    zomig.image(sim,'pslo',sou,par)
-#    zomig.image(rim,'pslo',rec,par)
