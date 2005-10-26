@@ -50,7 +50,7 @@ SCR = ' screenratio=0.5 screenht=7'
 # build velocity models
 itest.model(par)
 
-for wtype in ('p'):                      # wave type
+for wtype in ('p','c'):                  # wave type
     for DIP in (['00','45']):            # reflector dip
         for ANG in (['30']):             # incidence angle
             exp = wtype + DIP + ANG      # experiment label
