@@ -42,6 +42,7 @@ warp.warp2('apa','pp2','pscube','warp0',
            rect2=50,
            fmin=10,
            fmax=50,
+           frect=9,
            frame1=400,
            iter=2,
            clip=11.33)

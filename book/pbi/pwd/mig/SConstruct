@@ -30,9 +30,9 @@ Flow('dip2',['cdp','dip0','dip1'],
 Flow('dip3',['cdp','dip2'],
      '''
      dip idip=${SOURCES[1]} order=3
-     niter=10 liter=100 rect1=25 rect2=10 sign=y
+     niter=10 liter=100 rect1=25 rect2=10 pmin=0
      ''')
-Plot('dip','dip3','grey title=Slope allpos=y')
+Plot('dip','dip3','grey title=Slope allpos=y color=j scalebar=y')
 
 Result('pint','cdp dip','SideBySideAniso')
 

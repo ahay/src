@@ -41,7 +41,7 @@ Flow('dip2',['mutter','dip0','dip1'],
 
 Flow('dip3',['mutter','dip2'],
      'dip2 gauss=n dip0=${SOURCES[1]} order=3 niter=10 eps=50 lam=10')
-Plot('dip','dip3','grey title=Slope allpos=y')
+Plot('dip','dip3','grey title=Slope allpos=y color=j')
 
 Flow('pwd','mutter dip3','pwd order=3 dip=${SOURCES[1]}')
 Plot('pwd','grey title=Residual clip=4.38943e+06')
@@ -170,7 +170,7 @@ Flow('sdip','synt sdip0',
      dip order=3 liter=100 pmin=0
      idip=${SOURCES[1]} niter=10 rect1=40 rect2=5
      ''')
-Plot('sdip','grey title=Slope allpos=y scalebar=y clip=2 maxval=2')
+Plot('sdip','grey title=Slope allpos=y scalebar=y clip=2 maxval=2 color=j')
 
 Flow('dipx','sdip','transp | deriv order=3 | transp')
 Flow('dipt','sdip','deriv order=3')

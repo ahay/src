@@ -63,6 +63,9 @@ def warp3(name,       # name prefix
           pp,ps,      # PP and PS images
           warp,       # initial warp
           nx,         # number of traces
+          ny=1,       # number of lines
+          j2=1,       # trace subsampling
+          j3=1,       # line subsampling
           tmax,       # maximum time for display
           tmin=0,     # minimum time for display
           line=None,  # selected line
@@ -172,6 +175,17 @@ def warp3(name,       # name prefix
         ############
         # GAMMA SCAN
         ############
+        g1 = 2-g0
+        warpscan3 = warpscan(ng,g0,g1,rect1,1,rect2,rect3)
+
+        Flow(sr+'2',sr,'window j2=%d j3=%d' % (j2,j3))
+        Flow(pr+'2',pr,'window j2=%d j3=%d' % (j2,j3))
+
+        sc = n('sc')
+        Flow(sc,[sr+'2',pr+'2'],warpscan3)
+        
+        
+
 
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
