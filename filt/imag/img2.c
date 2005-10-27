@@ -356,19 +356,19 @@ void img2x( fslice imag,
 	for( ihy=LOy; ihy<HIy; ihy++){
 	    for( ihx=LOx; ihx<HIx; ihx++){
 
-		for( icz=0; icz< acz.n; icz++){ 
-		    imzs = icz*jcz - ihz,amz;
-		    imzr = icz*jcz + ihz,amz;
+		for( icz=0; icz<acz.n; icz++){ 
+		    imzs = icz*jcz - ihz;
+		    imzr = icz*jcz + ihz;
 		    if(imzs>=0 && imzs<amz.n && imzr>=0 && imzr<amz.n) {
 
-			for( icy=0; icy< acy.n; icy++){
-			    imys = icy*jcy - ihy,amy;
-			    imyr = icy*jcy + ihy,amy;
+			for( icy=0; icy<acy.n; icy++){
+			    imys = icy*jcy - ihy;
+			    imyr = icy*jcy + ihy;
 			    if(imys>=0 && imys<amy.n && imyr>=0 && imyr<amy.n) {
 
-				for( icx=0; icx< acx.n; icx++){
-				    imxs = icx*jcx - ihx,amx;
-				    imxr = icx*jcx + ihx,amx;
+				for( icx=0; icx<acx.n; icx++){
+				    imxs = icx*jcx - ihx;
+				    imxr = icx*jcx + ihx;
 				    if(imxs>=0 && imxs<amx.n && imxr>=0 && imxr<amx.n) {
 
 					qx[ihz-LOz][ihy-LOy][ihx-LOx][icz][icy][icx] +=

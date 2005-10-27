@@ -44,7 +44,7 @@ def data(case,dat,DIP,ANG,par):
     Flow(dat,[ref,dip],
          '''
          kirmod vel=%(vel)g vel2=%(vel2)g dip=${SOURCES[1]}
-         nt=%(nt)d  dt=%(dt)g freq=18
+         nt=%(nt)d  dt=%(dt)g freq=15
          nh=%(nh)d  h0=%(oh)g dh=%(dh)g
          ns=%(ns)d  s0=%(os)g ds=%(ds)g |
          put label1=t label2=h
@@ -63,7 +63,7 @@ def migrate(case,imco,dat,img,cig,par):
     if(imco=='x'): locpar['misc']='itype=x hsym=n nhx=40                              jcx=%(jcx)d' % par
     if(imco=='z'): locpar['misc']='itype=x hsym=n         nhz=40                      jcx=%(jcx)d' % par
     if(imco=='m'): locpar['misc']='itype=x hsym=n nhx=40  nhz=40                      jcx=%(jcx)d' % par
-    if(imco=='h'): locpar['misc']='itype=h        nhh=40  dhh=10 nha=180 dha=2 oha=0  jcx=%(jcx)d' % par
+    if(imco=='h'): locpar['misc']='itype=h        nhh=40  dhh=5  nha=180 dha=1 oha=0  jcx=%(jcx)d' % par
 
     sou = 'sou' + dat
     rec = 'rec' + dat

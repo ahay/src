@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     float *dwt=NULL;
 
     int i;
-
+/*    int im;*/
 /*------------------------------------------------------------*/
 
     sf_init(argc,argv);
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 	dwt[id]=1;
     }
     sf_prefilter_apply(nd,dwt);  
-    sf_int1_lop(true,false,nm,nd,mwt,dwt);
+/*    sf_int1_lop(true,false,nm,nd,mwt,dwt);*/
 
     for(iz=0;iz<az.n;iz++) {
 	sf_warning("iz=%d of %d",iz+1,az.n);

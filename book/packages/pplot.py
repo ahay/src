@@ -39,7 +39,15 @@ def p2x1(plot,p0,p1,ys,xs,yc):
 
     Result(plot,[j0,j1],'Overlay')
 
+def p1x2(plot,p0,p1,ys,xs,yc):
+    j0 = '_' + p0
+    j1 = '_' + p1
 
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=-1 '% (ys,xs   ))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,yc))
+
+    Result(plot,[j0,j1],'Overlay')
+    
 def p4x1(plot,p0,p1,p2,p3,ys,xs,yc):
     j0 = '_' + p0
     j1 = '_' + p1
