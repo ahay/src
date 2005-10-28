@@ -18,11 +18,14 @@ def dip(slow2):
 Flow('dip0','cdp',dip(1./3.-1./9.))
 Flow('dip1','cdp',dip(1./9.))
 
-Flow('dip2',['cdp','dip0','dip1'],
+#Flow('mask','dip0',
+#     'math output=1 | nmostretch half=n v0=3 | mutter half=n v0=1.4 tp=0.4')
+
+Flow('dip2','cdp dip0 dip1',
      '''
      nmostretch half=n v0=3 |
      twodip2 dip1=${SOURCES[1]} q0=0
-     order=3 niter=10 eps=50 lam=10 |
+     order=3 niter=10 eps=200 lam=40 |
      window n3=1 |
      math ref=${SOURCES[2]} output="input+ref" 
      ''')
@@ -30,7 +33,7 @@ Flow('dip2',['cdp','dip0','dip1'],
 Flow('dip3',['cdp','dip2'],
      '''
      dip idip=${SOURCES[1]} order=3
-     niter=10 liter=100 rect1=25 rect2=10 pmin=0
+     niter=10 liter=100 rect1=50 rect2=20 pmin=0
      ''')
 Plot('dip','dip3','grey title=Slope allpos=y color=j scalebar=y')
 
@@ -65,6 +68,7 @@ Plot('pnmo','grey title="Oriented Normal Moveout" ')
 Result('pnmo','cdp dip pnmo','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('dip05','dip3','window min2=0.5')
+
 Flow('vtr','cdp dip05',
      '''
      window min2=0.5 |
@@ -74,7 +78,7 @@ Plot('vtr',
      '''
      envelope | 
      grey allpos=y label2="Velocity (km/s)"
-     title="Oriented Velocity Scan"
+     title="Oriented Velocity Scan" 
      ''')
 
 Flow('vsc','cdp',
@@ -83,15 +87,29 @@ Plot('vsc',
      '''
      envelope | 
      grey allpos=y label2="Velocity (km/s)"
-     title="Velocity Scan"
+     title="Velocity Scan" 
      ''')
 
 Result('bvsc','vsc vtr','SideBySideAniso',vppen='txscale=1.5')
 
+Flow('dipt05','dip05','smooth rect1=200 | deriv')
+Flow('vint','cdp dip05 dipt05',
+     '''
+     window min2=0.5 |
+     pveltran v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}
+     interval=y dipt=${SOURCES[2]}
+     ''')
+
+Result('bvint','vint',
+     '''
+     envelope | 
+     grey allpos=y label2="Interval Velocity (km/s)"
+     title="Oriented Velocity Scan" 
+     ''')
 
 Flow('dips0','dip3','spray axis=3 n=250 d=0.0335 o=7.705')
 Flow('dips','bei dips0',
-     'dip idip=${SOURCES[1]} rect1=20 rect2=5 rect3=20')
+     'dip idip=${SOURCES[1]} rect1=50 rect2=20 rect3=20')
 
 Flow('hdip','dips','window n4=1')
 Flow('ydip','dips','window f4=1')
