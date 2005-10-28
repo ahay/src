@@ -1,6 +1,4 @@
-/* Transform PP angle gathers to PS angle gathers. 
- * (designed for horizontal offsets)
- */
+/* Apply dip correction for angle-gathers computed with absolute offset */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -18,15 +16,24 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+/* 
+
+tan t_0 = k_|h|/k_z
+
+tan t = tan t_0 * 1/sqrt{ 1 + (dz/dx)^2 }
+
+*/
+
 #include <rsf.h>
 
 int main(int argc, char* argv[])
 {
     bool inv, verb;
     int nz, na, iz, ia, nw, n3, i3;
-    float **gather, *trace, *modl, *coord, *gamma, *dzdx; 
-    float da, a0, t,g,d;
-    sf_file in, out, vpvs, dip;
+    float **gather, *trace, *modl, *coord, *dzdx; 
+    float da, a0, t,d;
+    sf_file in, out, dip;
 
     sf_init (argc,argv);
 
@@ -34,7 +41,6 @@ int main(int argc, char* argv[])
 
     in   = sf_input (  "in");
     out  = sf_output( "out");
-    vpvs = sf_input ("vpvs");
     dip  = sf_input ( "dip");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -57,37 +63,29 @@ int main(int argc, char* argv[])
     trace  = sf_floatalloc (   na);
     coord  = sf_floatalloc (   na);
     modl   = sf_floatalloc (   na);
-    gamma  = sf_floatalloc (nz   );
     dzdx   = sf_floatalloc (nz   );
 
     for (i3=0; i3 < n3; i3++) { /* loop over CIG */
 	if(verb) sf_warning("%d of %d",i3+1,n3);
 
-	sf_floatread(gamma    ,nz   ,vpvs);
 	sf_floatread( dzdx    ,nz   ,dip );
 	sf_floatread(gather[0],nz*na,in  );
 
 	for (iz=0; iz < nz; iz++) { /* loop over depth */
-	    g = gamma[iz];
-	    d =  dzdx[iz]*(g*g-1.);
+	    d =  dzdx[iz];
 	    
 	    for (ia=0; ia < na; ia++) { /* loop over tan */
 		t = a0+ia*da;
-		
-		/* formula for dipping reflector */
-		/* 
-		   mapping from t0 w/o correction
-		   to           t  w   correction
-		*/
-		coord[ia] = (4*g*t+d*(t*t+1.)) / ( t*t * (g-1)*(g-1) + (g+1)*(g+1) );
-		
+
+		coord[ia] = t * sqrtf(1.+d*d);
+
 		trace[ia] = gather[ia][iz];
 	    }
 
 	    sf_prefilter_apply (na,trace);
 	    sf_int1_init (coord, a0, da, na, sf_spline_int, nw, na);
 	    sf_int1_lop (false,false,na,na,trace,modl);
-
+	    
 	    for (ia=0; ia < na; ia++) {
 		gather[ia][iz] = modl[ia];
 	    }
