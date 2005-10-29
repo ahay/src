@@ -92,8 +92,10 @@ Plot('vsc',
 
 Result('bvsc','vsc vtr','SideBySideAniso',vppen='txscale=1.5')
 
-Flow('dipt05','dip05','smooth rect1=200 | deriv')
-Flow('vint','cdp dip05 dipt05',
+Flow('dips05','dip05','smooth rect1=100')
+
+Flow('dipt05','dips05','deriv')
+Flow('vint','cdp dips05 dipt05',
      '''
      window min2=0.5 |
      pveltran v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}
@@ -109,7 +111,7 @@ Result('bvint','vint',
 
 Flow('dips0','dip3','spray axis=3 n=250 d=0.0335 o=7.705')
 Flow('dips','bei dips0',
-     'dip idip=${SOURCES[1]} rect1=50 rect2=20 rect3=20')
+     'dip idip=${SOURCES[1]} rect1=25 rect2=10 rect3=25')
 
 Flow('hdip','dips','window n4=1')
 Flow('ydip','dips','window f4=1')

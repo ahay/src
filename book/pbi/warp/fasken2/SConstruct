@@ -73,7 +73,12 @@ Flow('fit0','fit',
      spray axis=3 n=132 d=1 o=15
      ''')
 
-warp.warp3('fas','ppcube','pscube','fit0',
+Flow('ppcube2','ppcube','window min1=0.5 max1=2 | costaper nw1=300')
+#Flow('pscube2','pscube','envelope hilb=y phase=90')
+
+Flow('fit2','fit0','window min1=0.5 max1=2')
+
+warp.warp3('fas','ppcube2','pscube','fit2',
            nx=116,
            ny=132,
            j2=4,

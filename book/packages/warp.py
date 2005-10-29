@@ -63,11 +63,11 @@ def warp3(name,       # name prefix
           pp,ps,      # PP and PS images
           warp,       # initial warp
           nx,         # number of traces
+          tmax,       # maximum time for display
+          tmin=0,     # minimum time for display
           ny=1,       # number of lines
           j2=1,       # trace subsampling
           j3=1,       # line subsampling
-          tmax,       # maximum time for display
-          tmin=0,     # minimum time for display
           line=None,  # selected line
           trace=None, # seleted trace
           o2=0,       # in-line start
@@ -95,9 +95,9 @@ def warp3(name,       # name prefix
     if line:
         for case in (pp,ps,warp):
             Flow(case+'2',case,'window n3=1 min3=%d' % line)
-#        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
-#              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
-#              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
+        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
+              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
+              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
     else:
         line=10
 
@@ -134,6 +134,8 @@ def warp3(name,       # name prefix
     nsmooth1 rect=${SOURCES[1]} |
     abalance rect1=%d rect2=%d rect3=%d order=100 other=${SOURCES[2]}
     ''' % (rect1,rect2,rect3)
+
+    warpit = warping(20,200,200,200)
 
     for i in range(iter):
         wrp = warp 
@@ -176,16 +178,49 @@ def warp3(name,       # name prefix
         # GAMMA SCAN
         ############
         g1 = 2-g0
-        warpscan3 = warpscan(ng,g0,g1,rect1,1,rect2,rect3)
+        warpscan3 = warpscan(ng,g0,g1,rect1,1,int(0.5+rect2/j2),int(0.5+rect3/j3))
 
         Flow(sr+'2',sr,'window j2=%d j3=%d' % (j2,j3))
         Flow(pr+'2',pr,'window j2=%d j3=%d' % (j2,j3))
 
         sc = n('sc')
         Flow(sc,[sr+'2',pr+'2'],warpscan3)
-        
-        
 
+        pk = n('pk')
+
+        if i==0:
+            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2/j2,4*rect3/j3))
+        else:
+            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2/j2,4*rect3/j3))
+
+        Flow(pk,pk+'0',
+             '''
+             transp          memsize=500 | spline n1=%d d1=1 o1=%g | transp memsize=500  |
+             transp plane=13 memsize=500 | spline n1=%d d1=1 o1=%g | transp plane=13 memsize=500 |
+             math output="(input-1)*x1"
+             ''' % (nx,o2,ny,o3))
+
+        #########
+        # WARPING
+        #########
+        
+        warp = n('wrp')
+        Flow([warp,psw+'2'],[sr,pr,pk,wrp],warpit,stdout=-1)
+        Result(psw+'2',plot3('Warped ' + PS))        
+        
+        gamma = n('gamma2')
+        Flow(gamma,warp,warp2gamma(ss))        
+        Result(gamma,
+               '''
+               window min1=%g max1=%g |
+               byte bias=%g clip=%g bar=bar.rsf |
+               grey3 title="Vp/Vs" flat=n frame1=%d frame2=%d frame3=%d
+               point1=0.75 point2=0.75 color=j scalebar=y minval=%g maxval=%g
+               label1="Time (s)" label2="In-line" label3="Cross-line"
+               ''' % (tmin,tmax,(gmin+gmax)/2,(gmax-gmin)/2,
+                      frame1,trace-o2,line-o3,gmin,gmax))   
+                
+        g0 = (g0+1)*0.5
 
 def warp2(name,       # name prefix
           pp,ps,      # PP and PS images
@@ -599,3 +634,4 @@ def warp1(name,      # name prefix
         Result(psw+'2',[gamma+'2',psw+'2'],'OverUnderAniso')
         
         g0 = (g0+1)*0.5
+        
