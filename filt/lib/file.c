@@ -1130,7 +1130,7 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	default:
 	    got = fread(arr,sizeof(float),size,file->stream);
 	    if (got != size) 
-		sf_warning ("%s: trouble reading: %d of %d",__FILE__,got,size);
+		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
 	    break;
     }
 }
