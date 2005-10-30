@@ -104,9 +104,9 @@ contains
     external sf_filesize, sf_leftsize
 
     if (present (dim)) then
-       s = sf_filesize(f%tag)
-    else
        s = sf_leftsize(f%tag,dim)
+    else
+       s = sf_filesize(f%tag)
     end if
   end function filesize
 
