@@ -125,7 +125,8 @@ def warp3(name,       # name prefix
         point1=0.75 point2=0.75
         label1="Time (s)" label2="In-line" label3="Cross-line"
         color=j scalebar=y barlabel="Frequency (Hz)"
-        ''' % (tmin,tmax,0.5/(math.pi*dt),(fmax-fmin)*0.25,(fmax+fmin)*0.5,title,frame1,trace-o2,line-o3)
+        ''' % (tmin,tmax,0.5/(math.pi*dt),
+               (fmax-fmin)*0.25,(fmax+fmin)*0.5,title,frame1,trace-o2,line-o3)
 
     Flow(pp+'i',pp,ifreq)
     Result(pp+'i',freqplot3('PP Local Frequency'))
@@ -135,7 +136,17 @@ def warp3(name,       # name prefix
     abalance rect1=%d rect2=%d rect3=%d order=100 other=${SOURCES[2]}
     ''' % (rect1,rect2,rect3)
 
+    def pslice(title):
+        return '''
+        window min1=%g max1=%g |
+        window n1=1 f1=%d |
+        grey verb=y color=j label1="In-line" label2="Cross-line" title="%s"
+        transp=n yreverse=n clip=%g
+        ''' % (tmin,tmax,frame1,title,clip)
+
     warpit = warping(20,200,200,200)
+
+    Plot(pp+'s',pp,pslice('PP'))
 
     for i in range(iter):
         wrp = warp 
@@ -150,6 +161,9 @@ def warp3(name,       # name prefix
         psw = n('psw')
         Flow(psw,[ps,pp,wrp],warp0)
         Result(psw,plot3('Warped ' + PS))
+
+        if i==0:
+            Plot(ps+'s',psw,pslice('Warped %s (Before)' % PS))
 
         ####################
         # SPECTRAL BALANCING
@@ -219,6 +233,12 @@ def warp3(name,       # name prefix
                label1="Time (s)" label2="In-line" label3="Cross-line"
                ''' % (tmin,tmax,(gmin+gmax)/2,(gmax-gmin)/2,
                       frame1,trace-o2,line-o3,gmin,gmax))   
+
+        if i == iter-1:
+            Flow(psw+'1',[ps,pp,warp],warp0)
+            Plot(psw+'s',psw+'1',pslice('Warped %s (After)' % PS))
+
+            Result(psw+'s',[pp+'s',ps+'s',psw+'s'],'SideBySideIso')
                 
         g0 = (g0+1)*0.5
 
