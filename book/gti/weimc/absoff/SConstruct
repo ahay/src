@@ -2,16 +2,17 @@ from rsfproj import *
 import spmig,pplot
 sys.path.append('.')
 import itest
+from math import *
 
 # ------------------------------------------------------------
 par = {
     'xcig':3000,
     'zcig':1200,
 #    
-    'nx':2000,  'ox':0,    'dx':5,
-    'nh':2001,  'oh':-1000,'dh':5,
+    'nx':1000,  'ox':0,    'dx':10,
+    'nh':1001,  'oh':-1000,'dh':10,
     'ns':1,     'os':5000, 'ds':40, 'js':1,'fs':0,
-    'nz':401,   'oz':0,    'dz':5,
+    'nz':201,   'oz':0,    'dz':10,
     'nt':1000,  'ot':0,    'dt':0.008,
     'nw':80,    'ow':1,             'jw':3,
     'vel':2000,
@@ -40,13 +41,13 @@ def igrey3(custom,custom2):
           label1="z (m)"
           label2="h\s80 \_x\^\s100 (m)"
           label3="h\s80 \_z\^\s100 (m)"
-          frame1=80 frame2=0 frame3=0 %s
+          frame1=40 frame2=0 frame3=0 %s
     ''' % (custom,custom2)
 
 DLABEL = ' label1="t (s)" label2="h (m)" '
 XLABEL = ' label1="z (m)" label2="x (m)" '
 OLABEL = ' label1="z (m)" label2="h (m)" '
-ALABEL = ' label1="z (m)" label2="\F10 q\F3 (\^o\_)" grid1=y'
+ALABEL = ' label1="z (m)" label2="\F10 q\F3 (\^o\_)" grid1=y min2=0'
 
 SCR = ' screenratio=0.5 screenht=7'
 # ------------------------------------------------------------
@@ -54,23 +55,30 @@ SCR = ' screenratio=0.5 screenht=7'
 # build velocity models
 itest.model(par)
 
-for wtype in ('p','c'):                  # wave type
+for wtype in (['p']):                    # wave type
     for DIP in (['00','45']):            # reflector dip
+        dip = 'dip' + DIP
+        Flow(dip,None,
+             '''
+             spike nsp=1 mag=%s
+             n1=%d o1=%g d1=%g
+             ''' % (tan(int(DIP)*pi/180),par['nz'],par['oz'],par['dz']))
+        
         for ANG in (['30']):             # incidence angle
             exp = wtype + DIP + ANG      # experiment label
 
             # generate data
             dat = 'dat-' + exp
             itest.data(wtype,dat,DIP,ANG,par)
-            Result(dat,'window max1=5 |'
-                   + igrey2('pclip=100'+SCR+DLABEL))
+            Result(dat,igrey2('pclip=100 screenratio=0.75'+DLABEL))
 
-            for imco in ('x','z','h','m'):   # imaging condition
+            for imco in ('x','m'):   # imaging condition
                 img = 'img-' + exp + imco
                 cig = 'cig-' + exp + imco
                 off = 'off-' + exp + imco
                 ang = 'ang-' + exp + imco
-
+                err = 'err-' + exp + imco
+                
                 # migrate
                 itest.migrate(wtype,imco,dat,img,cig,par)
                 Result(img,'window n4=1 min4=0 min1=%g max1=%g | transp |'
@@ -88,8 +96,9 @@ for wtype in ('p','c'):                  # wave type
                          transp plane=23 |
                          transp plane=34 |
                          window squeeze=n |
-                         off2abs verb=y nh=40 |
-                         transp 
+                         /home/savap/RSF/user/savap/sfoff2abs3 verb=y nw=2|
+                         stack | stack | transp |
+                         window f2=1 | pad beg2=1
                          ''' % par)
 
                     cub = 'cub-' + exp + imco
@@ -101,15 +110,33 @@ for wtype in ('p','c'):                  # wave type
                 Plot(off,'window min1=%(zmin)g max1=%(zmax)g |' % par
                      + igrey2('screenratio=4 screenht=10'+OLABEL))
 
-                Flow(ang,off,
-                     '''
-                     radon adj=y p0=-3.0 np=401 dp=0.015 |
-                     tan2ang a0=-50 na=201 da=0.50
-                     ''')
+                if(imco == 'x' or imco=='z'):
+                    Flow(ang,off,
+                         '''
+                         radon adj=y p0=-3.0 np=401 dp=0.015 |
+                         tan2ang a0=-50 na=201 da=0.50
+                         ''')
+                if(imco =='h' or imco=='m'):                    
+                    Flow(ang,[off,dip],
+                         '''
+                         radon adj=y p0=-3.0 np=401 dp=0.015 |
+                         /home/savap/RSF/filt/proc/sfabsoffdip dip=${SOURCES[1]} |
+                         tan2ang a0=-50 na=201 da=0.50
+                         ''')
+                    
+                    Flow(err,off,
+                         '''
+                         radon adj=y p0=-3.0 np=401 dp=0.015 |
+                         tan2ang a0=-50 na=201 da=0.50
+                         ''')
+                    Plot(err,'window min1=%(zmin)g max1=%(zmax)g |' % par
+                         + igrey2('screenratio=2 screenht=10'+ALABEL))
+                    pplot.p1x2(err,off,err,1,1,-3.5)
+                    
                 Plot(ang,'window min1=%(zmin)g max1=%(zmax)g |' % par
-                     + igrey2('screenratio=1 screenht=10'+ALABEL))
+                     + igrey2('screenratio=2 screenht=10'+ALABEL))
                 pplot.p1x2(cig,off,ang,1,1,-3.5)
-
+                    
             # END imco
 
         # END ang
@@ -117,5 +144,31 @@ for wtype in ('p','c'):                  # wave type
     # END dip
 
 # END wtype
+
+
+Flow('cub','cig-p0030m',
+     '''
+     window squeeze=n n1=1 min1=%(xcig)g n3=1 min3=1200 |
+     stack | transp | stack |
+     transp plane=12 |
+     transp plane=23 |
+     transp plane=34 |
+     window squeeze=n
+     ''' % par)
+Plot('cub','window | grey')
+
+Flow('stk1','cub','off2abs verb=y nh=50')
+Plot('stk1','graph')
+
+Flow('int3','cub','/home/savap/RSF/user/savap/sfoff2abs3 verb=y nh=50 na=45 da=2 nw=2')
+Plot('int3','window | grey')
+
+Flow('stk3','int3','window | stack')
+Plot('stk3','graph')
+
+Result('itest','cub  int3','SideBySideAniso')
+Result('stest','stk1 stk3','Movie')
+
+
 
 End()
