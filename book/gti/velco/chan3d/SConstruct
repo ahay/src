@@ -1,0 +1,46 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+
+Fetch('zovol.HH','jim',private)
+Flow('zovol','zovol.HH','dd form=native | window min1=1.7 max1=2.2')
+
+def plot3(title):
+    return '''
+    byte gainpanel=all bar=bar.rsf |
+    grey3 frame1=80 frame2=220 frame3=140
+    title="%s"
+    label1="Time (s)" label2="In-line (m)" label3="Cross-line (m)"
+    ''' % title
+
+Result('zovol',plot3('Zero-Offset Data'))
+
+Flow('zdip','zovol','dip rect1=10 rect2=40 rect3=40')
+
+Flow('xdip','zdip','window n4=1')
+Flow('ydip','zdip','window f4=1')
+
+Result('xdip',plot3('In-line Slope') + ' color=j scalebar=y')
+Result('ydip',plot3('Cross-line Slope') + ' color=j scalebar=y')
+
+Flow('zpwd','zovol zdip','pwd dip=${SOURCES[1]}')
+
+Flow('xpwd','zpwd','window n4=1')
+Flow('ypwd','zpwd','window f4=1')
+
+Result('xpwd',plot3('Isolated Diffractions (In-line)'))
+Result('ypwd',plot3('Isolated Diffractions (Cross-line)'))
+
+Flow('xckx','xpwd','cosft sign2=1 sign3=1')
+Flow('xvlf','xckx',
+     '''
+     pad beg1=680 |
+     spray axis=2 n=1 o=0 d=1 |
+     fourvc nv=100 dv=0.02 v0=0.0001
+     ''')
+
+End()

@@ -1,21 +1,20 @@
-/* Velocity continuation.
-*/
+/* Velocity continuation. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include "fint1.h"
@@ -27,6 +26,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     fint1 str, istr;
+    bool verb;
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
     float *trace, *strace;
@@ -46,6 +46,9 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getint("pad",&n2)) n2=n1;
     if (!sf_getint("pad2",&n3)) n3=n2;
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     if (n3%2) n3++;
     nw = n3/2+1;
@@ -97,7 +100,8 @@ int main(int argc, char* argv[])
 	    x = ix*dx; 
 	    x *= x;
 
-	    sf_warning("wavenumber %d of %d and %d of %d", ix+1,nx, iy+1,ny);
+	    if (verb) sf_warning("wavenumber %d of %d and %d of %d", 
+				 ix+1,nx, iy+1,ny);
 	    k = (x+y) * 0.25 * 0.25 * 0.5;
 
 	    for (iv=0; iv < nv; iv++) {
