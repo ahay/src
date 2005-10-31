@@ -64,7 +64,7 @@ Flow('msk',None,
      ''' % par)
 
 for wtype in (['p']):                    # wave type
-    for DIP in (['00','60']):            # reflector dip
+    for DIP in (['60','30','00']):       # reflector dip
         dip = 'dip' + DIP
         Flow(dip,None,
              '''
@@ -72,7 +72,7 @@ for wtype in (['p']):                    # wave type
              n1=%d o1=%g d1=%g
              ''' % (tan(int(DIP)*pi/180),par['nz'],par['oz'],par['dz']))
         
-        for ANG in (['20']):             # incidence angle
+        for ANG in (['20','00']):        # incidence angle
             exp = wtype + DIP + ANG      # experiment label
 
             # generate data
@@ -104,7 +104,7 @@ for wtype in (['p']):                    # wave type
                          transp plane=23 |
                          transp plane=34 |
                          window squeeze=n |
-                         /home/savap/RSF/user/savap/sfoff2abs3 verb=y |
+                         off2abs3 verb=y |
                          stack | stack | transp |
                          math m=${SOURCES[1]} output="input*m"
                          ''' % par)
@@ -161,7 +161,7 @@ Plot('cub','window | grey pclip=100')
 Flow('stk1','cub','off2abs verb=y nh=20 dh=10')
 Plot('stk1','graph')
 
-Flow('int3','cub','/home/savap/RSF/user/savap/sfoff2abs3 verb=y oa=-15 da=1 na=155')
+Flow('int3','cub','off2abs3 verb=y oa=-15 da=1 na=155')
 Plot('int3','window | grey pclip=100')
 
 Flow('stk3','int3','window | stack')

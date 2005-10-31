@@ -31,7 +31,7 @@ par['zmax']=5
 # ------------------------------------------------------------
 def igrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title="" wantaxis=n
+    grey labelrot=n pclip=100 title="" wantaxis=y
     min2=%g max2=%g min1=%g max1=%g
     wantscalebar=n barreverse=y
     grid=y gridcol=7 screenratio=1.11111
@@ -40,13 +40,13 @@ def igrey(custom="",par={}):
 
 def dgrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title=""  wantaxis=n
+    grey labelrot=n pclip=100 title=""  wantaxis=y
     label1="t(s)" label2="h(km)" %s
     ''' % (custom)
 
 def agrey(custom="",par={}):
     return '''
-    grey labelrot=n pclip=100 title=""  wantaxis=n
+    grey labelrot=n pclip=100 title=""  wantaxis=y
     min2=-1 max2=+1 min1=%g max1=%g
     grid=y gridcol=7
     label1="z(km)" label2="tan" %s

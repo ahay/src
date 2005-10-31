@@ -77,6 +77,10 @@ int main(int argc, char* argv[])
 	    for (ia=0; ia < na; ia++) { /* loop over tan */
 		t = a0+ia*da;
 
+		/* 
+		   loop over output t;
+		   find map to input t0, i.e. t0=f(t);
+		*/
 		coord[ia] = t * sqrtf(1.+d*d);
 
 		trace[ia] = gather[ia][iz];

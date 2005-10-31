@@ -20,14 +20,14 @@ par['vpvs']= par['velp'] / par['vels']
 # ------------------------------------------------------------
 def igrey(custom):
     return '''
-    grey labelrot=n title="" pclip=100 wantaxis=n
+    grey labelrot=n title="" pclip=100 wantaxis=y
     grid=n gridcol=5
     labelsz=5
     %s
     ''' % custom
 def igraph(custom):
     return '''
-    graph labelrot=n title="" transp=y yreverse=y wantaxis=n
+    graph labelrot=n title="" transp=y yreverse=y
     wantaxis=n wantlabels=n
     min2=-0.5 max2=1.5 min1=0 max1=2000
     %s

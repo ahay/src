@@ -54,6 +54,7 @@ int main(int argc, char* argv[])
     iaxa(Fm,&ahz,3); ahz.l="hz"; if(verb) raxa(ahz);
     iaxa(Fm,&az, 4);  az.l="z";  if(verb) raxa(az);
 
+    /* h = absolute offset */
     if(!sf_getint  ("nh",&ah.n)) ah.n=ahx.n + ahx.o/ahx.d;
     if(!sf_getfloat("oh",&ah.o)) ah.o=0;
     if(!sf_getfloat("dh",&ah.d)) ah.d=ahx.d;
@@ -61,17 +62,17 @@ int main(int argc, char* argv[])
     if(verb) raxa(ah);
 
     /* a = angle in x-z plane */
-    aa.n = 180;
-    aa.d = 2;
-    aa.o = 0;
+    if(!sf_getint  ("na",&aa.n)) aa.n=180;
+    if(!sf_getfloat("oa",&aa.o)) aa.o=0.;
+    if(!sf_getfloat("da",&aa.d)) aa.d=2.;
     aa.l ="a";
     if(ahz.n==1) aa.n=1;
     if(verb) raxa(aa);
 
     /* b = angle in x-y plane */
-    ab.n = 180;
-    ab.d = 2;
-    ab.o = 0;
+    if(!sf_getint  ("nb",&ab.n)) ab.n=180;
+    if(!sf_getfloat("ob",&ab.o)) ab.o=0.;
+    if(!sf_getfloat("db",&ab.d)) ab.d=2.;
     ab.l ="b";
     if(ahy.n==1) ab.n=1;
     if(verb) raxa(ab);
