@@ -38,13 +38,18 @@ def data(case,dat,DIP,ANG,par):
     else:
         par['vel2']=1000
 
-    par['os'] = par['xcig'] - \
-                par['zcig'] * tan(pi*(int(ANG)-int(DIP))/180.)
+    par['os'] = par['xcig'] + \
+                par['zcig'] * tan(pi*(int(ANG)+int(DIP))/180.)
 
+    if(DIP != '00'):
+        par['oh'] = -par['os'] + \
+                    (par['xcig']) - par['zcig'] / tan(pi*int(DIP)/180.)
+#    print par['os'],par['oh']
+    
     Flow(dat,[ref,dip],
          '''
          kirmod vel=%(vel)g vel2=%(vel2)g dip=${SOURCES[1]}
-         nt=%(nt)d  dt=%(dt)g freq=15
+         nt=%(nt)d  dt=%(dt)g freq=18
          nh=%(nh)d  h0=%(oh)g dh=%(dh)g
          ns=%(ns)d  s0=%(os)g ds=%(ds)g |
          put label1=t label2=h
@@ -60,10 +65,11 @@ def migrate(case,imco,dat,img,cig,par):
     locpar = par
     if(imco=='o'): locpar['misc']='itype=o'
     if(imco=='t'): locpar['misc']='itype=t nht=160 oht=-0.200 dht=0.0025              jcx=%(jcx)d' % par
-    if(imco=='x'): locpar['misc']='itype=x hsym=n nhx=20                              jcx=%(jcx)d' % par
-    if(imco=='z'): locpar['misc']='itype=x hsym=n         nhz=20                      jcx=%(jcx)d' % par
-    if(imco=='m'): locpar['misc']='itype=x hsym=n nhx=20  nhz=20                      jcx=%(jcx)d' % par
     if(imco=='h'): locpar['misc']='itype=h        nhh=20  dhh=10 nha=180 dha=1 oha=0  jcx=%(jcx)d' % par
+
+    if(imco=='x'): locpar['misc']='itype=x hsym=y nhx=80                              jcx=%(jcx)d' % par
+    if(imco=='z'): locpar['misc']='itype=x hsym=y         nhz=80                      jcx=%(jcx)d' % par
+    if(imco=='m'): locpar['misc']='itype=x hsym=y nhx=80  nhz=80                      jcx=%(jcx)d' % par
 
     sou = 'sou' + dat
     rec = 'rec' + dat
