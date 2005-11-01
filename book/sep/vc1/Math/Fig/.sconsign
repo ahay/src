@@ -1,5 +1,0 @@
-}qU
-vlcvrs.pdfq(cSCons.Node.FS
-BuildInfo
-qoq}q(Ubsourcesq]qUMath/vlcvrs.maqaUbimplicitsigsq	]q
-UbactqU“DISPLAY=" " nohup /usr/local/bin/math -batchoutput < $SOURCE >& /dev/null > /dev/null && /usr/bin/epstopdf junk_ma.eps -o=$TARGET && rm junk_ma.epsqUbdependsq]qUbsourcesigsq]qU fe7ab3d9d4e148c792cd6e6a07eb7b78qaUbdependsigsq]qUbsigqU a39ded79f0385c703cdae4c8790ac4e6qU	bimplicitq]qUbactsigqU edb71cff26f7b55fee37a420cd61af55qubs.
