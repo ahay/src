@@ -27,5 +27,5 @@ Show[%15,%18,PlotRange->{{0,1.2},{0,-0.6}},
 	Ticks->{{0.4,0.8,1.2},
 	{{-0.2,"0.2"},{-0.4,"0.4"},{-0.6,"0.6"}}},
 	AxesLabel->{"x",""}];
-Display["junk.eps",%10,"EPS"];
+Display["junk_ma.eps",%10,"EPS"];
 
