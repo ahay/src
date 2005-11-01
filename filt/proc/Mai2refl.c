@@ -18,6 +18,7 @@
 */
 
 #include <math.h>
+#include <float.h>
 
 #include <rsf.h>
 
@@ -47,7 +48,7 @@ int main (int argc, char* argv[])
 	imp1=imp[0];
 	for (it=0; it < nt-1; it++) {
 	    imp2 = imp[it+1];
-	    sig[it] = (imp2-imp1)/(imp2+imp1);
+	    sig[it] = (imp2-imp1)/(imp2+imp1+FLT_EPSILON);
 	    imp1 = imp2;
 	}
 	sig[nt-1] = 0.;
