@@ -37,8 +37,16 @@ for mode in ['pp','ps']:
          fldr=180 tracf=184 sx=188 sy=193
          ''',stdin=0)
     Flow(mode+'cube',mode,'intbin | window n2=116 n3=132 min2=18 min3=15')
-    Result(mode+'2',[mode+'cube2','line'],'Overlay')
+    Result(mode,mode+'cube',
+           '''
+           byte gainpanel=all |
+           grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
+           point1=0.75 point2=0.75
+           label1="Time (s)" label2="In-line" label3="Cross-line"
+           ''' % (string.upper(mode),(794,1268)[mode=='ps'],trace-18,line-15))
 
+Result('pp2','ppcube22 line','Overlay')
+Result('ps2','pscube2 line','Overlay')
 
 nails = Split('''
 1.046 1.788
@@ -62,7 +70,7 @@ Plot('nails','nreal nimag',
      symbolsz=15
      ''',stdin=0)
 
-Flow('fit','nails ppcube21','linefit pattern=${SOURCES[1]}')
+Flow('fit','nails ppcube','linefit pattern=${SOURCES[1]}')
 Plot('fit','graph min1=0 max1=3 min2=0 max2=4 title="Line Fit" ')
 Result('fnails','fit nails','Overlay')
 
@@ -74,7 +82,6 @@ Flow('fit0','fit',
      ''')
 
 Flow('ppcube2','ppcube','window min1=0.5 max1=2 | costaper nw1=300')
-#Flow('pscube2','pscube','envelope hilb=y phase=90')
 
 Flow('fit2','fit0','window min1=0.5 max1=2')
 

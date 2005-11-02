@@ -105,8 +105,8 @@ def warp3(name,       # name prefix
         return '''
         window min1=%g max1=%g |
         byte gainpanel=all |
-        grey3 title="%s" flat=n frame1=%d frame2=%d frame3=%d
-        point1=0.75 point2=0.75
+        grey3 title="%s" flat=y frame1=%d frame2=%d frame3=%d
+        Xpoint1=0.75 Xpoint2=0.75
         label1="Time (s)" label2="In-line" label3="Cross-line"
         ''' % (tmin,tmax,title,frame1,trace-o2,line-o3)
 
@@ -412,7 +412,7 @@ def warp2(name,       # name prefix
         Flow(pr+'s1',pr,'spectra all=y')
         Plot(s1,[pr+'s1',s1],specplot('After'))
 
-        Result(n('sp'),[s0,s1],'SideBySideAniso')
+        Result(n('sp'),[s0,s1],'SideBySideIso')
 
         if i == 0:
             in0 = n('in0')
@@ -484,7 +484,7 @@ def warp2(name,       # name prefix
             
             Result(in1,in1,'Overlay')
             Result(in1+'w',in1+'w','Overlay')
-            Result(in0+'1',[in0,in1],'SideBySideAniso')
+            Result(in0+'1',[in0,in1],'SideBySideIso')
             Result(in0+'1w',[in0+'w',in1+'w'],'OverUnderAniso')
 
             Flow(psw+'1',[ps,pp,warp],warp0)
