@@ -44,8 +44,6 @@ Flow('mis3','mis2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
 
 Plot('mis2','grey title="Near Offsets Interpolated" ')
 
-Result('cmp','cmp mis2','SideBySideAniso')
-
 # Predict multiples
 ###################
 Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
@@ -63,7 +61,25 @@ Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
 # Estimate dips
 ###############
 Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
-Flow('mdip2','cmp2 mdip','twodip2 eps=100 lam=10 dip1=${SOURCES[1]} q0=0.1 sign=y')
+Flow('mask2','mdip','mask max=5 | dd type=float | smooth rect1=5 rect2=5')
+
+Flow('mdip2','cmp2 mdip mask2',
+     'twodip2 eps=30 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[2]} q0=0.2 verb=y sign=y both=y')
+
+Plot('mdip1','mdip2',
+     '''
+     window f3=1 |
+     grey color=j title="Primary Slope"
+     scalebar=y allpos=y clip=3
+     ''')
+Plot('mdip2','mdip2',
+     '''
+     window n3=1 |
+     grey color=j title="Multiple Slope"
+     scalebar=y allpos=y clip=3
+     ''')
+
+Result('cmp','cmp mis2 mdip1 mdip2','SideBySideAniso')
 
 # Separate signal/noise
 #######################
