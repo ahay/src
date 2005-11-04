@@ -19,7 +19,7 @@ env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
 dirs = ('main','proc','imag','plot','cc','libplot',
-        'fomels','savap','gee','jennings') # ,'mirandaf')
+        'fomels','savap','gee','jennings','chaoshun') # ,'mirandaf')
 
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')
