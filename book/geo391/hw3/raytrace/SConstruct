@@ -72,8 +72,10 @@ for sample in samples:
     dt2 = dt*sample      # time step
 
     # Subsample exact ray
-    ref = 'ref%d' % sample
-    Flow(ref,'ray','window j1=%d' % sample)
+    zref = 'zref%d' % sample
+    xref = 'xref%d' % sample
+    Flow(zref,'ray','window j1=%d | real' % sample)
+    Flow(xref,'ray','window j1=%d | imag' % sample)
     
     # Define time step
     ####################
@@ -92,11 +94,16 @@ for sample in samples:
     # Compute error
     ###############
     err = 'err%d' % sample
-    Flow(err,[ray,ref],
+    Flow(err,[ray,xref,zref],
          '''
-         math ref=${SOURCES[1]} output="abs(input-ref)" |
-         real | stack axis=1 norm=y 
-         ''')
+         real < $SOURCE > z.rsf &&
+         imag < $SOURCE > x.rsf &&
+         math x=x.rsf z=z.rsf
+         xref=${SOURCES[1]} zref=${SOURCES[2]}
+         output="sqrt((x-xref)^2+(z-zref)^2)" |
+         stack axis=1 norm=y > $TARGET &&
+         rm x.rsf z.rsf
+         ''',stdin=0,stdout=-1)
     errs.append(err)
 
 # Concatenate results

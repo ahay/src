@@ -108,4 +108,3 @@ void halfint_close(void)
     free (invs);
     free (tmp);
 }
-

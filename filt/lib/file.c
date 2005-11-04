@@ -294,11 +294,7 @@ size_t sf_esize(sf_file file)
 	    return sizeof(int);
 	    break;
 	case SF_COMPLEX:
-#ifndef __cplusplus
-	    return sizeof(float complex);
-#else
 	    return 2*sizeof(float);
-#endif
 	    break;
 	default:
 	    return sizeof(char);

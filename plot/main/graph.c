@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     int n1, n2, n3, i1, i2, i3, len;
     float min1, max1, min2, max2, o3, d3, o1, d1;
     float **x, **y, **tmp, f, *symbolsz=NULL, symsize, xc, yc;    
-    complex float** data=NULL;
+    float*** data=NULL;
     char* symbol, sym[2]=" ";
     sf_datatype type;
     sf_file in;
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 	    }
 	    break;
 	case SF_COMPLEX:
-	    data = sf_complexalloc2(n1,n2);
+	    data = sf_floatalloc3(2,n1,n2);
 	    break;
 	default:
 	    sf_error("Wrong data type (need float or complex)");
@@ -106,14 +106,14 @@ int main(int argc, char* argv[])
 	if (SF_COMPLEX == type) {
 	    min1 = min2;
 	    max1 = max2;
-	    sf_complexread(data[0],n1*n2,in);
+	    sf_floatread(data[0][0],2*n1*n2,in);
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
-		    f = crealf(data[i2][i1]);
+		    f = data[i2][i1][0];
 		    if (f > max1) max1=f;
 		    if (f < min1) min1=f;
 		    x[i2][i1] = f;
-		    f = cimagf(data[i2][i1]);
+		    f = data[i2][i1][1];
 		    if (f > max2) max2=f;
 		    if (f < min2) min2=f;
 		    y[i2][i1] = f;
