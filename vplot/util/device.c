@@ -10,6 +10,7 @@ struct Device {
     float pixels_per_inch, aspect_ratio;
     float greyc, pixc;
     int invras;
+    int afat;
     /* control routines */
     int (*open)(void);
     int (*reset)(void);

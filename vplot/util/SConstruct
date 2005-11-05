@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 src = '''
-alloc clip dashvec device dither error fatvec solve vertex greycorr sort
+alloc clip dashvec device dither error fatvec solve vertex greycorr sort vecoutline
 '''
 
 try: # distribution version

@@ -17,13 +17,10 @@
  */
 
 #include <stdio.h>
-#include "../include/params.h"
-#include "../include/pat.h"
-#include "../include/vertex.h"
-#include "../include/extern.h"
+#include "vertex.h"
+#include "device.h"
 
-vecoutline (head)
-    struct vertex  *head;
+void vecoutline (device dev, struct vertex  *head)
 {
     /*
      * Draw the outline of the polygon pointed to by 'head'.  If any side of
@@ -32,8 +29,8 @@ vecoutline (head)
      * doughnut to be defined by a single polygon without the line that
      * connects the inner and outer being plotted. 
      */
-register int    xlast, ylast;
-register struct vertex *v;
+    int    xlast, ylast;
+    struct vertex *v;
 
     xlast = head->last->x;
     ylast = head->last->y;
@@ -41,7 +38,7 @@ register struct vertex *v;
     do
     {
 	if (!dupside (v))
-	    dev.vector (v->x, v->y, xlast, ylast, afat, 0);
+	    dev->vector (v->x, v->y, xlast, ylast, dev->afat, 0);
 	xlast = v->x;
 	ylast = v->y;
     } while ((v = v->next) != head);

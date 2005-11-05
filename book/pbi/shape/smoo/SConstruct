@@ -15,7 +15,7 @@ for iter in range(1,repeat+1):
     Flow(exp,'spike','smoothreg eps=5  repeat=%d' % iter)
 
 def dots(n=repeat):
-    return 'cat axis=2 ${SOURCES[1:%d]} | dots yreverse=y' % n
+    return 'cat axis=2 ${SOURCES[1:%d]} | dots yreverse=y dots=0' % n
 
 def graph(title):
     return '''
