@@ -16,26 +16,29 @@ Flow('elf','elf0.H',
      transp plane=24 memsize=500
      ''')
 
-velcon.velcon('elf',
-              nv=120,      # continuation steps
-              v0=1400,     # initial velocity
-              dv=25,       # velocity step
-              nx=1000,     # lateral dimension
-              padt=1024,   # time padding
-              padt2=4096,  # extra time padding
-              padx=1025,   # lateral padding
-              dx=13.3333,  # lateral sampling
-              v1=2000,     # other velocity
-              vx0=2000,    # semblance muting
-              vslope=1200, # semblance muting
-              units='m',   # lateral units
-              rect1=35,    # vertical smoothing
-              rect2=35)    # lateral  smoothing
+# velcon.velcon('elf',
+#              nv=120,      # continuation steps
+#              v0=1400,     # initial velocity
+#              dv=25,       # velocity step
+#              nx=1000,     # lateral dimension
+#              padt=1024,   # time padding
+#              padt2=4096,  # extra time padding
+#              padx=1025,   # lateral padding
+#              dx=13.3333,  # lateral sampling
+#              v1=2000,     # other velocity
+#              vx0=2000,    # semblance muting
+#              vslope=1200, # semblance muting
+#              units='m',   # lateral units
+#              rect1=35,    # vertical smoothing
+#              rect2=35)    # lateral  smoothing
 
 Flow('scan','elf-vlf2','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
 Plot('scan','grey color=j allpos=y title="Semblance Scan" label1="Time (s)" label2="Velocity (m/s)" ')
 
 Flow('pick','scan','pick rect1=35')
+
+Flow('slice','elf-vlf','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
+Plot('slice','grey title="Velocity Continuation" label1="Time (s)" label2="Velocity (m/s)" ')
 
 def graph(col,fat):
     return '''
@@ -48,6 +51,8 @@ Plot('pick1','pick',graph(7,1))
 
 Result('escan','scan pick0 pick1','Overlay')
 
+Result('eslice','slice pick0 pick1','Overlay')
+
 Flow('ddv','elf-ddv','window n2=1 min2=10000')
 Flow('ppick','pick ddv','add ${SOURCES[1]} scale=1,0.25')
 Flow('mpick','pick ddv','add ${SOURCES[1]} scale=1,-0.25')
@@ -59,6 +64,7 @@ Plot('mpick0','mpick',graph(0,10))
 Plot('mpick1','mpick',graph(7,1))
 
 Result('escan2','scan ppick0 mpick0 ppick1 mpick1','Overlay')
+Result('eslice2','slice ppick0 mpick0 ppick1 mpick1','Overlay')
 
 Flow('left0','elf-unc','math output=x1-0.5*input')
 Flow('rite0','elf-unc','math output=x1+0.5*input')

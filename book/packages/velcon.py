@@ -127,7 +127,7 @@ def velcon(data,        # data name
     Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
     slp = data+'-slp'
-    Flow(slp,agc,'dip rect1=%d rect2=%d' % (rect1,rect2))
+    Flow(slp,agc,'dip liter=40 rect1=10 rect2=10')
     Plot(slp,
          '''
          grey title="Estimated Dips" scalebar=y color=j
@@ -180,14 +180,14 @@ def velcon(data,        # data name
          pwdix slope=${SOURCES[2]}
          weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
          niter=50 verb=y ncycle=10 rect1=%d
-         ''' % (2*rect1))
+         ''' % (4*rect1))
     Plot(pdx,
          '''
-         grey pclip=100 color=j bias=%g
+         grey pclip=100 color=j bias=%g allpos=y
          scalebar=y barlabel="Estimated Interval Velocity (%s/s)"
          label1="Time (s)" label2="Lateral (%s)"
          wanttitle=n 
-         ''' % (vm,units,units))
+         ''' % (v0,units,units))
     Plot(pdx+'0',
          '''
          grey pclip=100 color=j bias=%g

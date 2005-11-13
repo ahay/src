@@ -54,7 +54,7 @@ Result('sz',['sm','zm'],'SideBySideAniso')
 
 Flow('sm','sm300','put d1=1')
 Flow('spec','sm','spectra')
-Flow('spec1','spec','math output="exp(-%g*x1*x1)" ' % (4*math.pi*math.pi))
+Flow('spec1','spec','math output="exp(-%g*x1*x1)" ' % (8*math.pi*math.pi))
 Flow('spec2','spec','monof ma=/dev/null | scale axis=1')
 
 

@@ -28,9 +28,6 @@
 #include "file.h"
 #include "getpar.h"
 
-extern __off_t ftello (FILE *__stream);
-extern int fseeko (FILE *__stream, __off_t __off, int __whence);
-
 void mexFunction(int nlhs, mxArray *plhs[], 
 		 int nrhs, const mxArray *prhs[])
 {

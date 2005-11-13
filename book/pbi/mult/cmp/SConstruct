@@ -48,20 +48,20 @@ Plot('mis2','grey title="Near Offsets Interpolated" ')
 ###################
 Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
 Flow('mult','ccmp',
-     'add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000 f2=6')
-Plot('mult','grey title="SRME-predicted Multiples" ')
+     'add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000')
+Plot('mult','window f2=6 | grey title="SRME-predicted Multiples" ')
 
 # Mask the important part
 #########################
 Flow('mask','mult',
      'math output=1 | mutter hyper=y t0=0.7 v0=2 half=n | smooth rect1=5 rect2=5')
-Flow('cmp2','mask cmp','add mode=p ${SOURCES[1]}')
+Flow('cmp2','mask mis2','add mode=p ${SOURCES[1]}')
 Flow('mult2','mask mult','add mode=p ${SOURCES[1]}')
 
 # Estimate dips
 ###############
 Flow('mdip','mult2','dip rect1=20 rect2=10 liter=40 pmin=0')
-Flow('vdip','cmp',
+Flow('vdip','cmp2',
      'math output="%g*x2/(x1+0.004)" ' % (0.05/(2.5*2.5*0.004)))
 Flow('mask2','mdip','mask max=5 | dd type=float | smooth rect1=5 rect2=5')
 
@@ -72,32 +72,28 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
 
 Plot('mdip1','mdip2',
      '''
-     window n3=1 |
+     window n3=1 f2=6 |
      grey color=j title="Signal Slope"
      scalebar=y allpos=y clip=5 minval=0 maxval=6
      ''')
 Plot('mdip2','mdip2',
      '''
-     window f3=1 |
+     window f3=1 f2=6 |
      grey color=j title="Noise Slope"
      scalebar=y allpos=y clip=5 minval=0 maxval=6
      ''')
 
-Result('cmp','cmp mis2 mdip1 mdip2','SideBySideAniso')
+Result('cmp','cmp mult mdip1 mdip2','SideBySideAniso')
 
 # Separate signal/noise
 #######################
-Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=1000 eps=0.1')
+Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
 
 Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
-Plot('nois','grey title="Estimated Noise" clip=228')
+Plot('nois','window f2=6 | grey title="Estimated Noise" clip=228')
 
-Flow('sign','cmp nois','add scale=1,-1 ${SOURCES[1]}')
-Plot('sign','grey title="Estimated Signal" clip=228')
-
-# Final result
-##############
-Result('super','cmp mult nois sign','SideBySideAniso')
+Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
+Plot('sign','window f2=6 | grey title="Estimated Signal" clip=228')
 
 # Velocity scans before and after
 #################################
@@ -107,8 +103,9 @@ for dat in ('cmp','sign'):
     grey color=j allpos=y label1="Time (s)" label2="Velocity (km/s)"
     title="Velocity Scan (%s)"
     ''' % ('Data','Estimated Signal')[dat=='sign'])
-    
-Result('vscan','vcmp vsign','SideBySideAniso')
 
+# Final result
+##############
+Result('super','sign nois vcmp vsign','SideBySideAniso')
 
 End()
