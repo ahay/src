@@ -1,0 +1,30 @@
+from rsfproj import *
+
+Flow('zo',None,
+     '''
+     spike n1=400 nsp=5 k1=100,150,200,250,300 n2=101 o2=-0.5 d2=0.01 |
+     bandpass flo=5 fhi=20
+     ''')
+Flow('vel','zo','window n2=1 | math output=2')
+Flow('cmp','zo vel','inmo velocity=${SOURCES[1]}')
+
+Result('cmp',
+       'wiggle wanttitle=n yreverse=y transp=y poly=y wheretitle=b wherexlabel=t')
+
+Flow('stack','cmp','stack norm=n')
+
+Flow('stack2','stack','deriv | math output="input/sqrt(x1+0.002)" | halfint adj=n')
+
+Result('comp','zo stack stack2',
+       '''
+       window n2=1 |
+       cat axis=2 ${SOURCES[1:3]} |
+       dots labels="Zero-Offset:Stack:Filtered Stack"
+       ''')
+
+Flow('vel3','vel','spray axis=2 n=101 o=-0.5 d=0.0')
+Flow('cmp3','cmp vel3','spray axis=2 n=101 o=-0.5 d=0.01 | inmo velocity=${SOURCES[1]}')
+
+Result('cmp3','byte gainpanel=all | grey3 wanttitle=n frame1=220 frame2=50 frame3=50 flat=n point2=0.7')
+
+End()

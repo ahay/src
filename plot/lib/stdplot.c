@@ -1191,6 +1191,8 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 
 	    num = label2->max+(frame1+0.5)*d1;
+	    if (fabsf(d1) > FLT_EPSILON && 
+		fabsf(num) < FLT_EPSILON) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 
 	    vp_tjust (TH_CENTER, TV_TOP);
@@ -1218,6 +1220,8 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 	    
 	    num = label1->min+(frame2+0.5)*d2;
+	    if (fabsf(d2) > FLT_EPSILON && 
+		fabsf(num) < FLT_EPSILON) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
@@ -1250,6 +1254,8 @@ void vp_frame(void)
 	    vp_where(&xc,&yc);
 
 	    num = label3->min+(frame3+0.5)*d3;
+	    if (fabsf(d3) > FLT_EPSILON && 
+		fabsf(num) < FLT_EPSILON) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
