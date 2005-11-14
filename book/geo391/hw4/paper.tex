@@ -1,0 +1,219 @@
+\author{Isaac Newton}
+%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+This homework has two parts. In the theoretical part, you will derive
+analytical reflection traveltimes using Fermat's principle. In the
+computational part, you will experiment with numerical traveltime
+computation methods and measure their accuracy.
+\end{abstract}
+
+\definecolor{frame}{rgb}{0.905,0.905,1.0}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false}
+
+\section{Introduction}
+
+Start by running
+\begin{verbatim}
+> cd ~/geo391
+> svn update
+\end{verbatim}
+
+\section{Theoretical part}
+
+You can either write your answers on paper or edit them in
+\verb#~/geo391/hw2/paper.tex#. Please show all the mathematical
+derivations that you do.
+
+In the theoretical part of this homework, you will derive an
+analytical expression for the reflection traveltime for a special
+reflector geometry. 
+
+\begin{enumerate}
+\item Consider a reflector (a salt dome) with a hyperbolic shape
+\begin{equation}
+  \label{eq:dome}
+  z(x) = \sqrt{a^2 + b^2\,x^2}
+\end{equation}
+Place the source and receiver at the surface and assume a constant
+isotropic velocity $V$. Express the reflection traveltime as a sum of
+the two-point traveltimes from $\{s,0\}$ to $\{x,z(x)\}$ and from
+$\{x,z(x)\}$ to $\{r,0\}$.
+\begin{equation}
+  \label{eq:that}
+  \widehat{T}(s,r) = 
+\end{equation}
+
+\item What principle can you use to constrain the position of the
+  reflection point? Write the corresponding equation.
+
+\item Using the explicit analytical form~(\ref{eq:dome}), solve your
+  equation for $x$.
+
+\item Substitute the value of $x$ into equation~(\ref{eq:that}) to find
+  an explicit analytical expression for the reflection traveltime as a
+  function of $s$, $r$, $a$, and $b$.
+
+\item Check your formula by considering the limits of $a=0$ and $b=0$ when the
+  hyperbolic reflector turns into a line.
+\end{enumerate}
+
+\section{Computational part}
+
+\begin{enumerate}
+
+\item In the first part of the computational assignment, you will
+  investigate the numerical accuracy of finite-difference eikonal solvers.
+
+  \inputdir{eikonal}
+  
+  Figure~\ref{fig:exact} shows wavefronts in a constant velocity
+  gradient medium computed with the analytical two-point ray tracing
+  formula from Homework 2.
+
+  \plot{exact}{width=\textwidth}{Wavefronts in a constant velocity
+    gradient medium computed with the analytical formula.}
+
+  By computing traveltimes numerically at different sampling intervals
+  and comparing the numerical result with the analytical one, we can
+  get an experimental estimate of the numerical error behavior. The
+  error is shown in Figure~\ref{fig:err}. The right plot in
+  Figure~\ref{fig:err} displays the error in log-log coordinates. The
+  slope of the line in these coordinates shows directly the rate of
+  convergence of the numerical method. For example, a first-order
+  accurate method should have a slope of one.
+
+  \plot{err}{width=\textwidth}{Left: average error of the
+    finite-difference eikonal solver as a function of grid spacing.
+    Right: the same on a log-log plot. The slope of the curve on the
+    log-log plot indicates the order of the numerical accuracy.}
+
+  We can also measure the computational time of the method in its
+  relationship with the number of grid points (Figure~\ref{fig:cpu}).
+  For example, if the computational time grows linearly with the grid
+  size, the method is said to have an $O(N)$ efficiency.
+
+  \sideplot{cpu}{width=\textwidth}{Computational time of the
+    finite-difference eikonal solver as a function of the grid size.}
+
+  \begin{enumerate}
+  \item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw3/eikonal
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+    to generate figures and display them on your screen.  
+  \item In the \texttt{SConstruct} file, find the parameter that defines the order of accuracy for the eikonal solver. Change the order from $1$ to $2$ and recompute the results. Does the numerical accuracy change? What is the experimental order of accuracy? Does the computational time change? 
+  \item Instead of an analytical solution for a constant velocity gradient, let us try an analytical solution for a constant gradient of slowness squared. Uncomment the part of the \texttt{SConstruct} file that defines a velocity model with the constant gradient of slowness squared. Change the analytical solution for the two-point traveltime to an appropriate formula. Recompute the figures and check your results.
+    
+    \item After you are done, run
+\begin{verbatim}
+> scons lock
+> scons -c
+\end{verbatim} 
+  \end{enumerate}
+  
+{\small
+    \lstinputlisting[frame=single]{eikonal/SConstruct}
+}
+
+\item In the second-part of the computational assignment, you will
+  investigate the numerical accuracy of one-point ray tracing.
+
+  \inputdir{raytrace}
+
+  Figure~\ref{fig:ray} shows the same constant velocity gradient model
+  and one ray computed by analytical one-point ray tracing using
+  formulas from Homework 2. The ray has the shape of a circular arc.
+
+  \plot{ray}{width=\textwidth}{Analytical ray tracing in a constant
+    velocity gradient medium. A single ray is displayed.}
+
+  Figure~\ref{fig:rayerr} displays errors of numerical ray tracing for
+  different sizes of the time step. 
+
+  \sideplot{rayerr}{width=\textwidth}{Average error of the
+    one-point ray tracer as a function of the time step size.}
+
+\begin{enumerate}
+  \item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw3/raytrace
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+    to generate figures and display them on your screen.  
+  \item Edit the \texttt{SConstruct} file to plot the numerical error
+    on a log-log scale similarly to Figure~\ref{fig:err}. What is the
+    order of accuracy of this numerical method?
+
+  \item After you are done, run
+\begin{verbatim}
+> scons lock
+> scons -c
+\end{verbatim} 
+  \end{enumerate}
+
+{\small
+      \lstinputlisting[frame=single]{raytrace/SConstruct}
+}   
+
+\item In some cases, no analytical solution exists for measuring the
+  accuracy of your numerical scheme. You can still get an estimate of
+  the error by computing the solution at different grid sizes and
+  comparing them with computations at the finest scale.
+
+  \inputdir{sigsbee}
+
+  Figure~\ref{fig:eiko} shows numerical wavefronts from a
+  finite-difference solution of the eikonal equation in the Sigsbee
+  velocity model.
+
+  \plot{eiko}{width=\textwidth}{Wavefronts in the Sigsbee velocity
+    model computed with a finite-difference eikonal solver.}
+
+  \begin{enumerate}    
+  \item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw3/sigsbee
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+    to generate figures and display them on your screen.  
+\item Edit
+  the \texttt{SConstruct} file to include subsampling of the velocity
+  model and to plot numerical error versus sampling similar to the
+  previous examples. Can you figure out the order of the numerical
+  accuracy in this case?
+    
+\item Include your figure in \verb#~/geo391/hw2/paper.tex# following an analogy with the previous examples.
+  
+\item After you are done, run
+\begin{verbatim}
+> scons lock scons -c
+\end{verbatim}
+
+\end{enumerate}
+
+{\small
+\lstinputlisting[frame=single]{sigsbee/SConstruct}
+}
+
+\item Edit the file
+\verb#~/geo391/hw2/paper.tex# in your favorite editor and change the
+first line to have your name instead of Fermat's. Run
+\begin{verbatim}
+> scons pdf
+\end{verbatim}
+and submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+
+\end{enumerate}
