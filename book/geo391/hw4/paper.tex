@@ -5,6 +5,12 @@
 \begin{abstract}
 In this lab, we will use shot-record migration to create 
 images in complex velocity media.
+Every seismic experiment (i.e. shot) can be used to create
+an image. Every shot can be decomposed in frequency
+components. 
+How many shots do we need to create a good image?
+How many frequencies do we need to create a good image?
+These and other questions are addressed in this lab.
 \end{abstract}
 
 \definecolor{frame}{rgb}{0.905,0.905,1.0}
@@ -21,10 +27,6 @@ Start by running
 % ------------------------------------------------------------
 \section{Sigsbee 2A migration}
 % ------------------------------------------------------------
-
-\begin{enumerate}
-%%
-\item
 In this exercise, you will modify parameters controlling 
 shot-record wavefield extrapolation migration.
 Everything is set-up for migration. Your task is to
@@ -33,9 +35,9 @@ new figures, include them in this document and discuss
 the importance/effect of your various changes.
 
 \inputdir{sigsbee}
-\plot{slo}{width=6.0in}{}
+\plot{slo}{width=6.0in}{Sigsbee 2A velocity}
 
-
+\begin{enumerate}
 %% 
 \item Change directory 
 
@@ -52,8 +54,14 @@ to generate figures and display them on your screen.
 \item
 Open the \texttt{SConstruct} file and 
 find the dictionary named \texttt{par}.
-Parameters $ns$, $js$, $fs$ control sampling on the shot axis,
-and parameters $nw$, $jw$, $fw$ control sampling on the 
+Parameters 
+\texttt{ns}, 
+\texttt{js}, and
+\texttt{fs} control sampling on the shot axis,
+and parameters 
+\texttt{nw}, 
+\texttt{jw}, and 
+\texttt{fw} control sampling on the 
 frequency axis (``n''=number, ``j''=jump, ``f''=first).
 
 %%
@@ -67,21 +75,22 @@ Two examples are included in this document
 You will include and discuss more figures.
 
 \plot{img0}{width=6.0in}
-{Monochromatic migration for one shot 
-($ns=1$, $nw=1$, $ow=2$).}
+{Monochromatic image for $1$ shot 
+($ns=1$, $fs=250$, $nw=1$, $ow=2$).}
 
 \plot{img1}{width=6.0in}{ 
-Monochromatic migration for three shots 
-($ns=3$, $fs=50$, $js=150$, $nw=1$).}
+Monochromatic image for $3$ shots 
+($ns=3$, $fs=50$, $js=150$, $nw=1$, $ow=5$).}
 
 %%
 \item
 Keep the number of frequencies fixed 
-(for example $nw=1$, $ow=2$),
+(e.g. $nw=1$, $ow=2$),
 and modify the number of shots used in migration
 (change $ns$, $js$, $os$).
 How many shots do you need in order to see the main 
 features of the structure?
+Can you identify the structure?
 Include a new figure and discuss your observations.
 
 %% 
@@ -91,7 +100,7 @@ Include a new figure and discuss your observations.
 
 %%
 \item
-Keep the number of shots fixed ($ns=1$) 
+Keep the number of shots fixed (e.g. $ns=1$) 
 and change the migration frequency (change $ow$).
 The migrated images will change accordingly and
 the subsurface illumination will change.
@@ -137,10 +146,10 @@ observations and choice of parameters.
 
 %%
 \item
-This is a free-form questions.
+This is a free-form question.
 Experiment with migration parameters on your own.
 Include and discuss another migration configuration
-of your choice. Discuss your figure and observations.
+of your choice. Discuss your new figure and observations.
 
 %% 
  % \plot ...
@@ -157,20 +166,49 @@ of your choice. Discuss your figure and observations.
 \end{enumerate}
 
 
-\section{}
+% ------------------------------------------------------------
+\section{Blake Outer Ridge migration}
+% ------------------------------------------------------------
+In this exercise, you will experiment with zero-offset 
+migration and simple velocity analysis.
+
+\inputdir{sigsbee}
+\plot{noff}{width=6.0in}{Blake Outer Ridge near-offset data.}
+
+\plot{img}{width=6.0in}{Blake Outer Ridge migration of 
+near-offset data.}
+
+\begin{enumerate}
+
+%%
+\item
+
+%%    
+\item After you are done, run
+
+\begin{verbatim}
+> scons lock
+> scons -c
+\end{verbatim} 
+  
+\end{enumerate}
 
 
+% ------------------------------------------------------------
 \section{Wrap-up}
+% ------------------------------------------------------------
 
 \begin{enumerate}  
+
+%%
 \item 
 Edit the file
-\verb#~/geo391/hw4/paper.tex# in your favorite editor and change the
-first line to have your name. Run
+\verb#~/geo391/hw4/paper.tex# in your favorite editor and 
+change the first line to have your name. Run
 \begin{verbatim}
 > scons pdf
 \end{verbatim}
-and submit your result (file \texttt{paper.pdf}) on paper or by
-e-mail.
+and submit your result (file \texttt{paper.pdf}) on paper 
+or by e-mail.
 
 \end{enumerate}
