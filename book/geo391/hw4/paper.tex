@@ -3,13 +3,19 @@
 \title{Homework 4}
 
 \begin{abstract}
-In this lab, we will use shot-record migration to create 
+In this lab, we will use zero-offset and
+shot-record migration to create 
 images in complex velocity media.
+%
 Every seismic experiment (i.e. shot) can be used to create
-an image. Every shot can be decomposed in frequency
-components. 
+an image. 
+Every shot can be decomposed in frequency components. 
 How many shots do we need to create a good image?
 How many frequencies do we need to create a good image?
+%
+How do we build a velocity model?
+What is the impact of the velocity model on the migrated image?
+%
 These and other questions are addressed in this lab.
 \end{abstract}
 
@@ -42,7 +48,7 @@ the importance/effect of your various changes.
 \item Change directory 
 
 \begin{verbatim}
-> cd ~/geo391/hw3/sigsbee
+> cd ~/geo391/hw4/sigsbee
 \end{verbatim}
   \item Run
 \begin{verbatim}
@@ -146,6 +152,25 @@ observations and choice of parameters.
 
 %%
 \item
+Using your optimal choice of parameters for shots
+and frequencies from the preceding question, 
+re-migrate the Sigsbee 2A data using a smooth velocity model.
+Generate new migration rules,
+experiment with different smoothing parameters and 
+discuss how accurate does the velocity model need to be
+in order to obtain a good image.
+Where is the impact of the velocity model accuracy largest?
+How did you decide how much to smooth? Why?
+Include one or more new figures and discuss your 
+observations and choice of parameters.
+
+%% 
+ % \plot ...
+ %%
+
+
+%%
+\item
 This is a free-form question.
 Experiment with migration parameters on your own.
 Include and discuss another migration configuration
@@ -190,6 +215,17 @@ depth-migrate the data.
 near-offset data.}
 
 \begin{enumerate}
+%% 
+\item Change directory 
+
+\begin{verbatim}
+> cd ~/geo391/hw4/blake
+\end{verbatim}
+  \item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+to generate figures and display them on your screen.  
 
 %%
 \item
@@ -262,5 +298,7 @@ change the first line to have your name. Run
 \end{verbatim}
 and submit your result (file \texttt{paper.pdf}) on paper 
 or by e-mail.
+
+This homework is due in class on November $29^{th}$, $2005$.
 
 \end{enumerate}
