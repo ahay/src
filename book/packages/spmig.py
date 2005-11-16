@@ -27,8 +27,8 @@ def param(par):
 # create surface wavefield files
 def wflds(swfl,rwfl,wave,shot,par):
     #
-    _wave = '_' + wave
-    _shot = '_' + shot
+    _wave = swfl + '_' + wave
+    _shot = rwfl + '_' + shot
     #
     _ssss = '_' + swfl
     _rrrr = '_' + rwfl
