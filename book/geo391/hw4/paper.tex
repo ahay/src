@@ -171,9 +171,20 @@ of your choice. Discuss your new figure and observations.
 % ------------------------------------------------------------
 In this exercise, you will experiment with zero-offset 
 migration and simple velocity analysis.
+The \texttt{SConstruct} file is configured with all the rules
+used to create a velocity model from semblance scans and
+depth-migrate the data.
 
 \inputdir{blake}
 \plot{noff}{width=6.0in}{Blake Outer Ridge near-offset data.}
+
+\plot{vscan}{width=6.0in}{Velocity scan.}
+
+\plot{picks}{width=6.0in}{Stacking velocity.}
+
+\plot{velz}{width=6.0in}{Blake Outer Ridge interval velocity model.}
+
+\plot{velz}{width=6.0in}{Blake Outer Ridge interval velocity model.}
 
 \plot{img}{width=6.0in}{Blake Outer Ridge migration of 
 near-offset data.}
@@ -182,6 +193,47 @@ near-offset data.}
 
 %%
 \item
+Review all rules in the \texttt{SConstruct} used to generate
+Figures~\ref{fig:velz} and \ref{fig:img}.
+\begin{itemize}
+\item Identify the rules for velocity scans.
+\item Identify the rules for conversion from stacking
+to interval velocity.
+\item Identify the rules for conversion of interval velocity
+from time to depth.
+\item Identify the rules for datuming and depth migration.
+\end{itemize}
+
+%%
+\item
+Add rules to perform another migration with constant velocity.
+Create a new Result and compare it with the image
+obtained by migration with a laterally variable velocity.
+How do the two images compare?
+Include one or more new figures and discuss your 
+observations.
+
+%% 
+ % \plot ...
+ %%
+
+%%
+\item
+In the original example, the velocity analysis
+is performed in the CMP-domain every $10^{th}$ gather.
+Add rules to recompute velocity scans at every CMP
+(also adjust the "rect1= rect2=" parameters for optimal 
+smoothing). 
+Create another figure with the image obtained using
+your new velocity model and compare it with the image
+produced by the original \texttt{SConstruct}.
+How do the two images compare?
+Include one or more new figures and discuss your 
+observations.
+
+%% 
+ % \plot ...
+ %%
 
 %%    
 \item After you are done, run
