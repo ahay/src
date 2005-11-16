@@ -1,0 +1,113 @@
+from rsfproj import *
+
+par = {
+    'nx':512,'ox':0,'dx':0.002,
+    'nz':512,'oz':0,'dz':0.001,
+    'nt':512,'ot':0,'dt':0.002,
+    'vel':2.0
+    }
+
+def igrey(custom):
+    return '''
+    grey wantaxis=y wanttitle=n labelsz=6
+    title="" pclip=100 label1="z" label2="x"
+    screenratio=0.5 screenht=6.25
+    %s
+    ''' % (custom)
+def dgrey(custom):
+    return '''
+    grey wantaxis=y wanttitle=n labelsz=6
+    title="" pclip=100 label1="t" label2="x"
+    screenratio=0.7 screenht=8.75
+    %s
+    ''' % (custom)
+# ------------------------------------------------------------
+Flow('vel',None,
+     '''
+     spike nsp=1 mag=%(vel)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     ''' % par)
+
+Flow('spk',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=256
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=256 l2=256 |
+     smooth rect2=3 repeat=5 |
+     put label1=z label2=x
+     ''' % par)
+Result('spk',igrey(''))
+
+Flow('dat','spk vel',
+     '''
+     depth2time velocity=${SOURCES[1]}
+     nt=%(nt)d t0=%(ot)g dt=%(dt)g |
+     ricker1 frequency=30 |
+     put label1=t label2=x
+     ''' % par)
+Result('dat',dgrey(''))
+
+Flow('ref','dat vel',
+     '''
+     time2depth velocity=${SOURCES[1]}
+     nz=%(nz)d z0=%(oz)g dz=%(dz)g |
+     put label1=z label2=x
+     ''' % par)
+Result('ref',igrey(''))
+
+# ------------------------------------------------------------
+# Stolt modeling
+
+Flow('mod','dat',
+     '''
+     cosft sign2=1 |
+     stolt nf=4 vel=-%(vel)g |
+     cosft sign2=-1 |
+     put label1=t label2=x
+     ''' %par)
+Result('mod',dgrey(''))
+
+
+# ------------------------------------------------------------
+# Stolt migration
+
+for k in range(-2,3,1):
+    f = 1 + 0.1*k
+    v = f * par['vel']
+
+    mig = 'mig' + str(k)  # image
+    Flow(mig,'mod',
+         '''
+         cosft sign2=1 |
+         stolt nf=2 vel=%g |
+         cosft sign2=-1 |
+         put label1=t label2=x
+         ''' % v)
+    Result(mig,dgrey('title=%g' %v))
+
+    vel = 'vel' + str(k)  # image
+    Flow(vel,'vel','math "output=input*%g"' %f)
+
+    img = 'img' + str(k)  # image
+    Flow(img,[mig,vel],
+         '''
+         time2depth velocity=${SOURCES[1]}
+         nz=%(nz)d z0=%(oz)g dz=%(dz)g |
+         put label1=z label2=x
+         ''' % par )
+    Result(img,igrey('title=%g' %v))
+
+
+# ------------------------------------------------------------
+
+Flow('mig','mig-2 mig-1 mig0 mig1 mig2',
+     'cat axis=3 space=n ${SOURCES[0:5]}',stdin=0)
+Result('mig',dgrey(''))
+
+Flow('img','img-2 img-1 img0 img1 img2',
+     'cat axis=3 space=n ${SOURCES[0:5]}',stdin=0)
+Result('img',igrey(''))
+
+
+End()
