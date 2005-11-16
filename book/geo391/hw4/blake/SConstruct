@@ -18,13 +18,44 @@ Flow('noff','cmps-tp.HH',
      put label1=t label2=x o3=0 d3=1 label3=
      ''')
 
-Flow('cmp','cmps-tp.HH',
+Flow('cmps','cmps-tp.HH',
+     'dd form=native | reverse which=2')
+
+Flow('cmp','cmps',
      '''
      window f3=950 n3=1 max1=6 |
-     dd form=native |
-     reverse which=2 |
      put o2=0.0 d2=1
      ''')
+
+Flow('off1',None,'math n1=24 o1=0.4 d1=0.1  output=x1')
+Flow('off2',None,'math n1=24 o1=2.8 d1=0.05 output=x1')
+Flow('off','off1 off2','cat axis=1 ${SOURCES[1]}')
+
+Flow('vscan','cmp off','vscan offset=${SOURCES[1]} v0=1.4 nv=61 dv=0.005 half=n semblance=y')
+Plot('vscan','grey color=j allpos=y title="Velocity Scan" label2="Velocity (km/s)" pclip=100')
+
+Flow('pick','vscan','pick rect1=30')
+Plot('pick','graph transp=y yreverse=y min2=1.4 max2=1.7 plotcol=7 plotfat=5 pad=n wanttitle=n wantaxis=n')
+
+Result('vscan','vscan pick','Overlay')
+
+Flow('offs','off','spray n=111')
+Flow('vscans','cmps offs',
+     'window j3=10 | vscan offset=${SOURCES[1]} v0=1.4 nv=61 dv=0.005 half=n semblance=y')
+Flow('picks0','vscans','pick rect1=30 rect2=5')
+Flow('picks','picks0','window | transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
+
+Result('picks','grey color=j scalebar=y title="Stacking Velocity" bias=1.55')
+
+Flow('semb','vscans picks0','slice pick=${SOURCES[1]} | window | transp | remap1 n1=1105 d1=0.05 o1=0 | transp')
+Flow('vel','picks semb','dix rect1=30 rect2=30 weight=${SOURCES[1]}')
+
+Result('vel','grey color=j scalebar=y title="Interval Velocity" label1="Time (s)" bias=1.55')
+
+Flow('vel2','vel','window n1=1 | spray axis=2 n=1000 d=0.004 o=0 | transp | cat $SOURCE axis=1')
+Flow('velz','vel2','time2depth velocity=$SOURCE z0=0 dz=0.002 nz=3000 intime=y')
+
+Result('velz','grey color=j scalebar=y title="Interval Velocity" label1="Depth (km)" bias=1.55')
 
 Result('noff',
        '''

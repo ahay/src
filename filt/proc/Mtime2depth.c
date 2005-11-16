@@ -20,14 +20,16 @@
 #include <rsf.h>
 
 #include "fint1.h"
+#include "stretch.h"
 
 int main (int argc, char *argv[])
 {
     int nt, nz, nx, iz, it, ix, nw;
-    bool slow, twoway;
-    float t0, dt, z0, dz, t, z=0.;
-    float *time, *depth, *vel;
+    bool slow, twoway, intime;
+    float t0, dt, z0, dz, t, z=0., eps;
+    float *time, *depth, *vel, *str;
     fint1 fnt;
+    map mp;
     sf_file in, out, velocity;
 
     sf_init(argc, argv);
@@ -41,19 +43,22 @@ int main (int argc, char *argv[])
 
     nx = sf_leftsize(in,1);
 
-    if (!sf_histint(velocity,"n1",&nz) && !sf_getint ("nz",&nz)) {
+    if (!sf_getbool("intime",&intime)) intime=false;
+    /* y if velocity is in time rather than depth */
+
+    if ((intime || !sf_histint(velocity,"n1",&nz)) && !sf_getint ("nz",&nz)) {
 	/* Number of depth samples (default: n1) */
 	nz = nt; 
     } else {
 	sf_putfloat(out,"n1",nz);
     }
-    if (!sf_histfloat(velocity,"d1",&dz) && !sf_getfloat ("dz",&dz)) {	
+    if ((intime || !sf_histfloat(velocity,"d1",&dz)) && !sf_getfloat ("dz",&dz)) {	
 	/* Depth sampling (default: d1) */
 	dz = dt; 
     } else {
 	sf_putfloat(out,"d1",dz);
     }
-    if (!sf_histfloat(velocity,"o1",&z0) && !sf_getfloat ("z0",&z0)) z0 = 0.; 
+    if ((intime || !sf_histfloat(velocity,"o1",&z0)) && !sf_getfloat ("z0",&z0)) z0 = 0.; 
     /* Depth origin */
 
     sf_putfloat(out,"o1",z0);
@@ -63,39 +68,63 @@ int main (int argc, char *argv[])
     if (!sf_getbool ("slow",&slow)) slow = false;
     /* If y, input slowness; if n, velocity */
 
-    fnt = fint1_init (nw, nt, 0);
-
     time = sf_floatalloc (nt);
     depth = sf_floatalloc (nz);
-    vel = sf_floatalloc (nz);
+    vel = sf_floatalloc (intime? nt: nz);
 
     if (!sf_getbool ("twoway",&twoway)) twoway = true;
     /* if y, two-way traveltime */
-    if (twoway) dz *= 2.;
+    if (twoway) {
+	dz *= 2.;
+	z0 *= 2.;
+    }
+
+    if (!sf_getfloat("eps",&eps)) eps=0.01;
+    /* stretch regularization */
+
+    if (intime) {
+	mp = stretch_init (nz, z0, dz, nt, eps, false);
+	str = sf_floatalloc(nt);
+    } else {
+	fnt = fint1_init (nw, nt, 0);
+    }
 
     for (ix = 0; ix < nx; ix++) {
 	sf_floatread (time,nt,in);
-	sf_floatread (vel,nz,velocity);
+	sf_floatread (vel,intime? nt: nz,velocity);
 
-	fint1_set (fnt, time);
+	if (intime) {
+	     for (it=0; it < nt; it++) {
+		 if (it == 0) {
+		     t =  slow? t0/(vel[0]*dt): t0*vel[0]/dt;
+		 } else {
+		     t += slow? 1./vel[it-1]: vel[it-1];
+		 }		 
+		 str[it] = t*dt;		 
+	     }
+	    stretch_define (mp,str);
+	    stretch_apply (mp,time,depth);
+	} else {
+	    fint1_set (fnt, time);
 
-	for (iz = 0; iz < nz; iz++) {
-	    if (iz == 0) {
-		z =  slow? z0*vel[0]/dz: z0/(dz*vel[0]);
-	    } else {
-		z += slow? vel[iz-1]: 1./vel[iz-1];
-	    }
-  
-	    t = (z*dz-t0)/dt;
-	    it = t;
-	    t = t - it;
-
-	    if (it < -nw/2) {
-		depth[iz] = 0.;
-	    } else if (it > nt + nw/2) {
-		depth[iz] = time[nt-1];
-	    } else {
-		depth[iz] = fint1_apply (fnt, it, t, 0);
+	    for (iz = 0; iz < nz; iz++) {
+		if (iz == 0) {
+		    z =  slow? z0*vel[0]/dz: z0/(dz*vel[0]);
+		} else {
+		    z += slow? vel[iz-1]: 1./vel[iz-1];
+		}
+		
+		t = (z*dz-t0)/dt;
+		it = t;
+		t = t - it;
+		
+		if (it < -nw/2) {
+		    depth[iz] = 0.;
+		} else if (it > nt + nw/2) {
+		    depth[iz] = time[nt-1];
+		} else {
+		    depth[iz] = fint1_apply (fnt, it, t, 0);
+		}
 	    }
 	}
 
