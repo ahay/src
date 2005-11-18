@@ -704,6 +704,47 @@ bash$ < sin.rsf sfmask min=-0.5 max=0.5 | sfdisfil
    0:    1    0    0    1    0    0    1    0    0    1
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfmath}
+  }}
+
+\inputdir{sfmath}
+
+\texttt{sfmath} is a versatile program for mathematical operations
+with RSF files. It can operate with several input file, all of the
+same dimensions and data type. The data type can be real (floating
+point) or complex. Here is an example that demonstrates several
+features of \texttt{sfmath}.
+\begin{verbatim}
+bash$ sfmath n1=600 d1=0.01 o1=0 n2=40 d2=1 o2=5 \
+output="x2*(8+sin(6*x1+x2/10))" > rad.rsf
+bash$ < rad.rsf sfrtoc | sfmath output="input*exp(I*x1)" > rose.rsf
+bash$ < rose.rsf sfgraph title=Rose screenratio=1 wantaxis=n | xtpen
+\end{verbatim}
+
+The first line creates a 2-D dataset that consists of 40 traces 600
+samples each. The values of the data are computed with the formula
+\verb#"x2*(8+sin(6*x1+x2/10))"#, where \texttt{x1} refers to the
+coordinate on the first axis, and \texttt{x2} is the coordinate of the
+second axis. In the second line, we convert the data from real to
+complex using \texttt{sfrtoc} and produce a complex dataset using
+formula \verb#"input*exp(I*x1)"#, where \texttt{input} refers to the
+input file. Finally, we plot the complex data as a collection of
+parametric curves using \texttt{sfgraph} and display the result using
+\texttt{xtpen}.  The plot appearing on your screen should look similar
+to Figure~\ref{fig:rose}.
+
+\plot{rose}{width=0.6\textwidth}{This figure was created with \texttt{sfmath}.}
+
+One possible alternative to the second line above is
+\begin{verbatim}
+bash$ < rad.rsf sfmath output=x1 > ang.rsf
+bash$ sfmath r=rad.rsf a=ang.rsf output="r*cos(a)" > cos.rsf
+bash$ sfmath r=rad.rsf a=ang.rsf output="r*sin(a)" > sin.rsf
+bash$ sfcmplx cos.rsf sin.rsf > rose.rsf
+\end{verbatim}
+Here we refer to input files by names (\texttt{r} and \texttt{a}) and combine the names in a formula.
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
