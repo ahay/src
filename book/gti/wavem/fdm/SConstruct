@@ -98,7 +98,7 @@ Plot('vel','vel',
      '''%par)
 
 Result('wfl','wfl sou rec','Overlay')
-Result('www','www sou rec','Overlay')
+# Result('www','www sou rec','Overlay')
 Result('vel','vel sou rec','Overlay')
 Result('dat','grey labelrot=n pclip=100 title="Data" label1="receiver no" label2="time"')
 

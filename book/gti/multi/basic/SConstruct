@@ -123,9 +123,9 @@ Result(all,['hale',all],'Overlay')
 
 ######################## Green's function ##############
 Flow('wave',None,
-          'spike n1=1024 nsp=3 k1=125,325,525 | bandpass fhi=40 flo=10 | fft1')
+          'spike n1=1024 nsp=3 k1=125,325,525 | bandpass fhi=40 flo=10 | fft1 opt=n')
 Flow('pwave',None,
-          'spike n1=1000 nsp=3 k1=125,250,375 | bandpass fhi=40 flo=10 | fft1')
+          'spike n1=1000 nsp=3 k1=125,250,375 | bandpass fhi=40 flo=10 | fft1 opt=n')
 
 Flow('green',['zeiko-hale','zplac-hale','zdept-hale','wave'],
           '''green sx=5 wave=${SOURCES[3]} dx=0.04

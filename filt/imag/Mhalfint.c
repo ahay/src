@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     bool adj, inv;
-    int nn,n1,n2,i2;
+    int nn,n1,n2,i1,i2;
     float rho, *pp;
     sf_file in, out;
 
@@ -48,15 +48,17 @@ int main(int argc, char* argv[])
 	sf_warning("%s half-order integration",inv? "anticausal":"causal");
     }
 
-    nn = n1;
-    if (n1%2) nn++;
+    nn = sf_fftr_size(n1,2*n1);
+    if (nn%2) nn++;
     pp = sf_floatalloc(nn);
 
     halfint_init (inv, nn, rho);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread (pp,n1,in);
-	if (n1%2) pp[n1]=0.;
+	for (i1=n1; i1 < nn; i1++) {
+	    pp[i1]=0.;
+	}
 	halfint (adj, pp);
 	sf_floatwrite (pp,n1,out);
     }

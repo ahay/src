@@ -49,8 +49,10 @@ the end of format adds system information for system errors. >*/
     if (format[0] != '\0' && format[strlen(format)-1] == ':')
 	fprintf (stderr, " %s", strerror(errno));
 
-    fprintf (stderr, "\n");
-
+    /* if format ends with ';', do not end line */
+    if (format[0] == '\0' || format[strlen(format)-1] != ';')
+	fprintf (stderr, "\n");
+    
     exit(EXIT_FAILURE); 
 }
 
@@ -76,7 +78,9 @@ the end of format adds system information for system errors. >*/
     if (format[0] != '\0' && format[strlen(format)-1] == ':')
 	fprintf (stderr, " %s", strerror(errno));
 
-    fprintf (stderr, "\n");
+    /* if format ends with ';', do not end line */
+    if (format[0] == '\0' || format[strlen(format)-1] != ';')
+	fprintf (stderr, "\n");
 }
 
 /* 	$Id$	 */

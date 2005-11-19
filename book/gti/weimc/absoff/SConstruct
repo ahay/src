@@ -125,8 +125,8 @@ for wtype in (['p']):                    # wave type
                          /home/savap/RSF/filt/proc/sfabsoffdip dip=${SOURCES[1]} |
                          tan2ang a0=-45 na=201 da=0.45
                          ''')
-                    Plot(cor,'window min1=%(zmin)g max1=%(zmax)g |' % par
-                         + igrey2('screenratio=1 screenht=10'+ALABEL))
+#                    Plot(cor,'window min1=%(zmin)g max1=%(zmax)g |' % par
+#                         + igrey2('screenratio=1 screenht=10'+ALABEL))
                     pplot.p1x2(cor,off,cor,1,1,-3.5)
 
                 Flow(ang,off,

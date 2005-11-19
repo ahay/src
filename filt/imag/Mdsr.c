@@ -199,8 +199,8 @@ int main (int argc, char **argv)
     }
 
     /* determine frequency sampling */    
-    nt2 = nt;
-    if (nt%2) nt2++;
+    nt2 = sf_fftr_size(nt,2*nt);
+    if (nt2%2) nt2++;
 
     if (NULL == (rule = sf_getstring("rule"))) rule="simple";
     /* phase-shift interpolation rule (simple, midpoint, linear) */

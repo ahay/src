@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
 {
     int nx, nt, ns, nh, nc, nxc, is, ih, ix, ic;
     float **rfl, **rgd, **crv, **dip, *trace;
-    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0, **time, **ampl, **delt, freq;
-    float theta, ava, amp, obl;
+    float **time, **ampl, **delt, freq, theta, ava, amp, obl;
+    float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0;
     char *type, *type2;
     bool twod;
     surface inc, ref;

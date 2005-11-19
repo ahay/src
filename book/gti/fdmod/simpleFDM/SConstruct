@@ -4,7 +4,7 @@ from rsfproj import *
 # ------------------------------------------------------------
 def igrey(custom):
     return '''
-    grey %s 
+    grey wanttitle=n %s 
     ''' % (custom)
 
 # ------------------------------------------------------------
@@ -16,14 +16,13 @@ par = {
     'nz':250, 'dz':2,     'oz':0, 'zmin':0, 'zmax':500,
     'nx':250, 'dx':4,     'ox':0, 'xmin':0, 'xmax':1000,
     'nt':1500,'dt':0.0005,'ot':0,
-    'nw':60,  'ow':5,
     'tx':16,
     'px':0,
     'eps':0.01,
     'nrmax':3,
     'kz':200,
     'ds':8, 'os':400, 'ns':1,
-    'nw':100, 'ow':0, 'jw':1
+    'nw':200, 'ow':0, 'jw':1
     }
 nw=60
 ow=5
@@ -203,6 +202,7 @@ Flow('trr','srr',
      transp |
      pad n1out=751 |
      fft1 inv=y |
+     window max1=0.75 |
      put label1=t
      ''' % par)
 Plot('trr','trr',igrey('pclip=100'))

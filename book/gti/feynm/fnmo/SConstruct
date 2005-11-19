@@ -10,7 +10,7 @@ Flow('zo',None,
      ''')
 Flow('vel','zo','window n2=1 | math output=2')
 Flow('cmp','zo vel','inmo velocity=${SOURCES[1]}')
-Flow('ncmp','cmp','noise rep=1 range=0.1 | bandpass flo=5 fhi=20 | add $SOURCE')
+Flow('ncmp','cmp','noise rep=1 range=0.1 seed=2005 | bandpass flo=5 fhi=20 | add $SOURCE')
 
 Flow('mvel','vel','math output=1')
 Flow('mcmp','ncmp mvel',

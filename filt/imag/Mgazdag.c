@@ -131,8 +131,8 @@ int main (int argc, char *argv[])
     }
 
     /* determine frequency sampling */    
-    nt2 = nt;
-    if (nt%2) nt2++;
+    nt2 = sf_fftr_size(nt,2*nt);
+    if (nt2%2) nt2++;
 
     p = sf_floatalloc(nt2);
     q = sf_floatalloc(nz);

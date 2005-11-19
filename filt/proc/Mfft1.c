@@ -21,7 +21,7 @@
 
 int main (int argc, char *argv[])
 {
-    bool cos, inv, sym;
+    bool cos, inv, sym, opt;
     int n1, nt, nw, i1, i2, n2;
     float dw, *p, *cc=NULL, d1, o1, wt;
     float complex *pp;
@@ -39,6 +39,8 @@ int main (int argc, char *argv[])
     /* if y, perform inverse transform */
     if (!sf_getbool("sym",&sym)) sym=false;
     /* if y, apply symmetric scaling to make the FFT operator Hermitian */
+    if (!sf_getbool("opt",&opt)) opt=true;
+    /* if y, determine optimal size for efficiency */
 
     if (cos) {  
 	if (SF_FLOAT   != sf_gettype(in)) sf_error("Need float input");
@@ -58,8 +60,8 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nt = n1;
-	if (n1%2) nt++;
+	nt = opt? sf_fftr_size(n1,2*n1): n1;
+	if (nt%2) nt++;
 	nw = nt/2+1;
 	dw = 1./(nt*d1);
 
@@ -68,6 +70,7 @@ int main (int argc, char *argv[])
 	sf_putfloat(out,"d1",dw);
 
 	sf_putfloat(out,"t0",o1);
+	sf_putfloat(out,"nt",n1);
     } else {
 	if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
@@ -75,7 +78,8 @@ int main (int argc, char *argv[])
 
 	nt = 2*(nw-1);
 	d1 = 1./(nt*dw);
-	n1 = cos? 1+nt/2:nt;
+
+	if (!sf_histint  (in,"nt",&n1)) n1 = cos? 1+nt/2:nt;
 
 	sf_putint  (out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
