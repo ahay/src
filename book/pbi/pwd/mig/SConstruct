@@ -116,6 +116,8 @@ Flow('dips','bei dips0',
 Flow('hdip','dips','window n4=1')
 Flow('ydip','dips','window f4=1')
 
+Flow('pwds','bei dips','pwd dip=${SOURCES[1]}')
+
 pmig.pmig('bei','hdip','ydip',500,125,10)
 
 End()

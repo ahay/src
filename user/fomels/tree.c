@@ -141,8 +141,8 @@ void tree_build(bool debug)
 		    } else {
 			ia++;
 		    }
-		    x += v*p[1]*s/dx;
-		    z += v*p[0]*s/dz;
+		    x += v*p[1]/(dx*s);
+		    z += v*p[0]/(dz*s);
 		} else if (s == fabsf(sz)) {
 		    z = 0.; 
 		    if (sz < 0.) {
@@ -150,8 +150,8 @@ void tree_build(bool debug)
 		    } else {
 			iz++;
 		    }
-		    x += v*p[1]*s/dx;
-		    b += (g[0]*p[1]-g[1]*p[0])*s/da;
+		    x += v*p[1]/(dx*s);
+		    b += (g[0]*p[1]-g[1]*p[0])/(da*s);
 		} else {
 		    x = 0.;
 		    if (sx < 0.) {
@@ -159,8 +159,8 @@ void tree_build(bool debug)
 		    } else {
 			ix++;
 		    }
-		    z +=v*p[0]*s/dz;
-		    b += (g[0]*p[1]-g[1]*p[0])*s/da;
+		    z +=v*p[0]/(dz*s);
+		    b += (g[0]*p[1]-g[1]*p[0])/(da*s);
 		}
 	    
 		onz = sf_cell_snap (&z,&iz,eps);
