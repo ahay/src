@@ -40,7 +40,7 @@ void repeat_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
 {
     int i2;       
     
-    if (nx != ny || nx != n1*n2) sf_error("%s: Wrong size",__FILE__);
+    if (nx != ny || nx != n1*n2) sf_error("%s: Wrong size (nx=%d ny=%d n1=%d n2=%d)",__FILE__,nx,ny,n1,n2);
 
     sf_adjnull (adj, add, nx, ny, xx, yy);
 

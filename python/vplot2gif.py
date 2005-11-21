@@ -19,6 +19,8 @@ def convert(infile,outfile):
     else:
         frames = 1
     
+    print stat
+
     xmin = float(stat[7]) - spacing
     xmax = float(stat[9]) + spacing
     xcen = (xmin+xmax)/2.
@@ -33,30 +35,30 @@ def convert(infile,outfile):
     cwidth  = int((xmax-xmin-2*spacing)*ppi+0.5)
     cheight = int((ymax-ymin-2*spacing)*ppi+0.5)
     
-    random = time.time()
+#    random = time.time()
 
-    os.system("vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" %
-              (random,infile))
+#    os.system("vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" %
+#              (random,infile))
 
-    gifs = []
-    for i in range(frames):
-        vppen = 'vppen.%d.%s' % (i,random)
-        gif = '%s.%d' % (outfile,i)
-        gifs.append(gif)
+#    gifs = []
+#    for i in range(frames):
+#        vppen = 'vppen.%d.%s' % (i,random)
+#        gif = '%s.%d' % (outfile,i)
+#        gifs.append(gif)
  
-        os.system ("ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d "
-                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | pnmquant 256 | " 
-                                "pnmcrop | ppmtogif -interlace > %s" %
-                   (height,width,ppi,xcen,ycen,vppen,scale,gif))
-        os.unlink(vppen)
+    os.system ("ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d "
+               "xcenter=%d ycenter=%d in=%s | pnmscale %g  | pnmquant 256 | " 
+               "pnmcrop | ppmtopcx > %s" %
+               (height,width,ppi,xcen,ycen,infile,scale,outfile))
+#        os.unlink(vppen)
 
-    if outfile[-1] != '/':
-        gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
-        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),string.join(gifs),outfile)
-        print run
-        os.system (run)
+#    if outfile[-1] != '/':
+#        gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
+#        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),string.join(gifs),outfile)
+#        print run
+#        os.system (run)
 
-    map(os.unlink,gifs)
+#    map(os.unlink,gifs)
 
 if __name__ == "__main__":
     argc = len(sys.argv)
@@ -72,7 +74,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     if argc < 3:
-        outfile = os.path.splitext(infile)[0]+'.gif'
+        outfile = os.path.splitext(infile)[0]+'.pcx'
     else:
         outfile = sys.argv[2]
 

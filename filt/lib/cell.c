@@ -30,7 +30,7 @@
 static float pg;
 
 void sf_cell1_intersect (float a, float x, float dy, float p, 
-		      float *sx, int *jx)
+			 float *sx, int *jx)
 /*< intersecting a straight ray with cell boundaries >*/
 {
     float si; 
@@ -147,7 +147,7 @@ float sf_cell11_update2 (int dim, float s, float v, float *p, const float *g)
 }
 
 void sf_cell_intersect (float a, float x, float dy, float p, 
-		     float *sx, int *jx)
+			float *sx, int *jx)
 /*< intersecting a parabolic ray with cell boundaries >*/
 {
     float si; 

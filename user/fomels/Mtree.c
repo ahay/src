@@ -72,7 +72,7 @@ int main(int argc, char* argv[])
     /* additional parameters */
     if(!sf_getbool("vel",&velocity)) velocity=true;
     /* y: theinput is velocity; n: slowness */
-    if(!sf_getint("method",&order)) order=1; order++;
+    if(!sf_getint("order",&order)) order=3; 
     /* accuracy order */
 
     if (!sf_getbool("debug",&debug)) debug=false;

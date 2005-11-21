@@ -44,9 +44,6 @@ Result(meiko,['hale',meiko],'Overlay')
 Flow(['call-hale','size-hale','grid-hale'],'hale',
           '''trace2 size=${TARGETS[1]} grid=${TARGETS[2]}
           a0=-140 na=71 da=4''')
-#Flow('call-hale','call-hale-safe','cp $SOURCE $TARGET',stdin=0)
-#Flow('size-hale','size-hale-safe','cp $SOURCE $TARGET',stdin=0)
-#Flow('grid-hale','grid-hale-safe','cp $SOURCE $TARGET',stdin=0)
 
 modo = 'cmodo-hale'
 Flow(modo,['call-hale','size-hale','grid-hale'],

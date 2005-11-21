@@ -1,0 +1,48 @@
+from rsfproj import *
+
+Flow('spike',None,"spike n1=101 n2=101 d1=0.01 d2=0.01 mag=1")
+
+arrivals = {'spike':1,'pgauss':3,'mgauss':3,
+            'pgauss2':3,'mgauss2':3,'mgauss3':3}
+
+for model in ('spike',): # 'pgauss','mgauss','pgauss2','mgauss2','mgauss3'):
+    # Fast marching
+    meiko = 'meiko-' + model
+    Flow(meiko,model,'eikonal yshot=0.5')
+    Plot(meiko,
+         "contour title='Fast marching' nc=30 c0=0 dc=0.05")
+    narr = arrivals[model]
+    if model == 'mgauss3':
+        na=121
+        a0=-60
+        da=1
+    elif model == 'mgauss':
+        na=481
+        a0=-60
+        da=0.25
+    else:
+        na=361
+        a0=-180
+        da=1
+
+    # Dependency tree
+    mod = "-%s" % (model)
+    Flow('tree' + mod,model,
+         "tree method=%d na=%d a0=%g da=%g" % (method,na,a0,da))
+    
+    # Interpolation
+    Flow('trdo' + mod,'tree' + mod,"interpt sx=0.5")
+    for branch in xrange(narr):
+        interp = "trde%d%s" % (branch,mod)
+        Flow(interp,'trdo' + mod,
+             "window n2=1 f2=%d | transp" % branch)
+        Plot(interp,"contour wanttitle=n nc=30 c0=0 dc=0.05")
+    if narr > 1:
+        all = 'trde' + mod
+        Plot(all,map(lambda x: "trde%d%s" % (x,mod), xrange(narr)),
+             'Overlay')
+    else:
+        all = 'trde0' + mod
+    Result(all,[all,meiko],'SideBySideAniso')
+
+End()

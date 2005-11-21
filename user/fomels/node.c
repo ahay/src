@@ -73,8 +73,7 @@ void FreeNodeQueue (NodeQueue queue)
     free (queue);
 }
 
-Node CreateNodes (int n     /* number of nodes */, 
-		  int order /* interpolation order */) 
+Node CreateNodes (int n /* number of nodes */) 
 /*< Node array allocation >*/
 {
     Node nd;
@@ -84,9 +83,9 @@ Node CreateNodes (int n     /* number of nodes */,
     for (i=0; i < n; i++) {
 	nd[i].nparents=0;
 	nd[i].children = CreateNodeQueue();
-	nd[i].parents = sf_intalloc2(order,order);
-	for (j=0; j < order; j++) {
-	    for (k=0; k < order; k++) {
+	nd[i].parents = sf_intalloc2(2,2);
+	for (j=0; j < 2; j++) {
+	    for (k=0; k < 2; k++) {
 		nd[i].parents[j][k] = -1;
 	    }
 	}
