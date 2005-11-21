@@ -745,6 +745,46 @@ bash$ sfcmplx cos.rsf sin.rsf > rose.rsf
 \end{verbatim}
 Here we refer to input files by names (\texttt{r} and \texttt{a}) and combine the names in a formula.
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfpad}
+  }}
+
+\texttt{pad} increases the dimensions of the input dataset by padding
+the data with zeroes. Here are some simple examples.
+
+\begin{verbatim}
+bash$ sfspike n1=5 n2=3 > one.rsf
+bash$ sfdisfil < one.rsf
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            1            1            1            1
+bash$ < one.rsf sfpad n2=5 | sfdisfil
+   0:             1            1            1            1            1
+   5:             1            1            1            1            1
+  10:             1            1            1            1            1
+  15:             0            0            0            0            0
+  20:             0            0            0            0            0
+bash$ < one.rsf sfpad beg2=2 | sfdisfil
+   0:             0            0            0            0            0
+   5:             0            0            0            0            0
+  10:             1            1            1            1            1
+  15:             1            1            1            1            1
+  20:             1            1            1            1            1
+bash$ < one.rsf sfpad beg2=1 end2=1 | sfdisfil
+   0:             0            0            0            0            0
+   5:             0            0            0            0            0
+  10:             1            1            1            1            1
+  15:             1            1            1            1            1
+  20:             1            1            1            1            1
+bash$ < one.rsf sfwindow n1=3 | sfpad n1=5 n2=5 beg1=1 beg2=1 | sfdisfil
+   0:             0            0            0            0            0
+   5:             0            1            1            1            0
+  10:             0            1            1            1            0
+  15:             0            1            1            1            0
+  20:             0            0            0            0            0
+\end{verbatim}
+You can use \texttt{sfcat} to pad data with values other than zeroes.
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
