@@ -1,6 +1,6 @@
 from rsfproj import *
 
-Flow('spike',None,'spike n1=201 n2=201 d1=0.005 d2=0.005 mag=1')
+Flow('spike',None,'spike n1=101 n2=101 d1=0.01 d2=0.01 mag=1')
 
 def gauss(r=25,a=1,c1=0.5,c2=0.5):
     return '''
@@ -30,8 +30,8 @@ for model in ('spike','pgauss','mgauss'): #,'pgauss2','mgauss2','mgauss3'):
         a0=-60
         da=0.25
     else:
-        na=1201
-        a0=-60
+        na=1801
+        a0=-90
         da=0.1
 
     # Dependency tree

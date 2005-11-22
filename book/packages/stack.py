@@ -73,6 +73,28 @@ def stack(name,
     Flow(pwd,[stk+'2',dip],'pwd dip=${SOURCES[1]}')
     Result(pwd,grey('Diffractions'))
 
+    dips = name+'-dips'
+    Flow(dips,nmo,'dip rect1=%d rect2=2 rect3=%d' % (rect1,rect2))
+
+    pwds = name+'-pwds'
+    Flow(pwds,[nmo,dips],'pwd dip=${SOURCES[1]}')
+
+
+    difs = name+'-difs'
+    Flow(difs,pwds,
+         '''
+         window n4=1 f1=%d | logstretch nout=%d |
+         fft1 | transp plane=13 |
+         finstack |
+         transp |
+         fft1 inv=y | window n1=%d |
+         logstretch inv=y | pad beg1=%d
+         ''' % (f1,nout,nout,f1))
+    Result(difs,grey('DMO Stack of Diffractions'))
+
+    dif = name+'-dif'
+    Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
+
     velcon = '''
     pad n2=%d | cosft sign2=1 | spray axis=2 n=1 o=0 d=1 |
     stolt vel=%g nf=4 |
