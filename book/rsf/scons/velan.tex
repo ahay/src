@@ -50,9 +50,33 @@ from this paper by simply copying the \texttt{SConstruct} file to any
 directory on your system and running \texttt{scons} there. The file is
 available on the web at...
 
-Meanwhile, notice that... Flow... Plot... Result...
+Notice three basic commands reccuring in the \texttt{SConstruct} file:
+\begin{description}
+\item[\texttt{Flow(target,source,command)}] defines how the
+  \texttt{target} file is build from the \texttt{source} file using the
+  \texttt{command}. Note that the \texttt{Flow} command does not
+  execute anything. It just sets a rule for the file creation. The
+  rule is executed when you run \texttt{scons target.rsf} or build
+  another target that has \texttt{target.rsf} in its dependencies.
+\item[\texttt{Plot(target,source,command)}] is a version of
+  \texttt{Flow} used for creating figures. The output of \texttt{Plot}
+  is a vplot figure \texttt{target.vpl} rather than an RSF file.
+  \texttt{Plot} is also used to combine several figures into one.
+\item[\texttt{Result(target,source,command)}] is similar to
+  \texttt{Plot}, only the output figure is considered a repreoducible
+  result and placed in a special directory (\texttt{./Fig} by
+  default). Executing the rule specified in \texttt{Result} typically
+  results in a file \texttt{Fig/target.vpl}
+\end{description}
 
-Default rules...
+Several default rules are set up for convenience of working with
+\texttt{SCons}.
+\begin{description}
+\item[scons] blah
+\item[scons view] blah
+\item[scons lock] blah
+\item[scons test] blah
+\end{description}
 
 \section{Synthetic data modeling}
 
@@ -100,8 +124,7 @@ Appendix. For other documentation on RSF, please see
 \bibliographystyle{seg}
 \bibliography{intro,SEG}
 
-\appendix
-\section{SConstruct file}
+\append{SConstruct file}
 
 Here is a complete listing of the \texttt{SConstruct} file used in this
 example.

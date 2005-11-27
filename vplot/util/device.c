@@ -11,6 +11,11 @@ struct Device {
     float greyc, pixc;
     int invras;
     int afat;
+    int xorigin, yorigin, xmin, ymin;
+    float xscale, yscale, hscale, vscale;
+    float mxx, mxy, myx, myy;
+    float hshift, vshift;
+    int no_stretch_text;
     /* control routines */
     int (*open)(void);
     int (*reset)(void);

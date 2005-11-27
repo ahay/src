@@ -24,44 +24,40 @@
 /*
  * convert vplot coordinates to device coordinates, or vice versa
  */
-#include <stdio.h>
 #include <math.h>
-#include "../include/extern.h"
-#include "../include/round.h"
 
-extern int      no_stretch_text;
+#include "_round.h"
+#include "device.h"
 
-vptodevxy (x, y, outx, outy)
-    int             x, y;
-    int            *outx, *outy;
+void vptodevxy (device dev, int x, int y, int *outx, int *outy)
+/*< convert vplot coordinates to device coordinates >*/
 {
-float           tempx, tempy, temp;
-
-
-    tempx = (float) (x - xorigin) * xscale;
-    tempy = (float) (y - yorigin) * yscale;
-
-    temp = mxx * tempx + mxy * tempy;
-    tempy = myx * tempx + myy * tempy;
+    float tempx, tempy, temp;
+    
+    tempx = (float) (x - dev->xorigin) * dev->xscale;
+    tempy = (float) (y - dev->yorigin) * dev->yscale;
+    
+    temp  = dev->mxx * tempx + dev->mxy * tempy;
+    tempy = dev->myx * tempx + dev->myy * tempy;
     tempx = temp;
 
-    tempx = tempx * hdevscale + dev_xmin + hshift;
-    tempy = tempy * vdevscale + dev_ymin + vshift;
+    tempx = tempx * dev->hscale + dev->xmin + dev->hshift;
+    tempy = tempy * dev->vscale + dev->ymin + dev->vshift;
 
     *outx = ROUND (tempx);
     *outy = ROUND (tempy);
 }
 
-vptodevw (x1, y1, x2, y2, x1out, y1out, x2out, y2out)
-    int             x1, y1, x2, y2;
-    int            *x1out, *y1out, *x2out, *y2out;
+void vptodevw (device dev, int x1, int y1, int x2, int y2, 
+	       int *x1out, int *y1out, int *x2out, int *y2out)
+/*< convert vplot coordinates to device coordinates >*/
 {
-int             x11, y11, x12, y12, x21, y21, x22, y22, a, b;
+    int x11, y11, x12, y12, x21, y21, x22, y22, a, b;
 
-    vptodevxy (x1, y1, &x11, &y11);
-    vptodevxy (x1, y2, &x12, &y12);
-    vptodevxy (x2, y1, &x21, &y21);
-    vptodevxy (x2, y2, &x22, &y22);
+    vptodevxy (dev, x1, y1, &x11, &y11);
+    vptodevxy (dev, x1, y2, &x12, &y12);
+    vptodevxy (dev, x2, y1, &x21, &y21);
+    vptodevxy (dev, x2, y2, &x22, &y22);
 
     a = (x11 > x12 ? x11 : x12);
     b = (x22 > x21 ? x22 : x21);
@@ -80,36 +76,35 @@ int             x11, y11, x12, y12, x21, y21, x22, y22, a, b;
     *y1out = (a < b ? a : b);
 }
 
-devtovpxy (x, y, outx, outy)
-    int             x, y;
-    int            *outx, *outy;
+void devtovpxy (device dev, int x, int y, int *outx, int *outy)
+/*< convert device coordinates to vplot coordinates >*/
 {
-float           tempx, tempy, temp;
+    float tempx, tempy, temp;
 
-    tempx = (float) (x - dev_xmin - hshift) / hdevscale;
-    tempy = (float) (y - dev_ymin - vshift) / vdevscale;
+    tempx = (float) (x - dev->xmin - dev->hshift) / dev->hscale;
+    tempy = (float) (y - dev->ymin - dev->vshift) / dev->vscale;
 
-    temp = mxx * tempx - mxy * tempy;
-    tempy = -myx * tempx + myy * tempy;
+    temp  =  dev->mxx * tempx - dev->mxy * tempy;
+    tempy = -dev->myx * tempx + dev->myy * tempy;
     tempx = temp;
 
-    tempx = tempx / xscale + xorigin;
-    tempy = tempy / yscale + yorigin;
+    tempx = tempx / dev->xscale + dev->xorigin;
+    tempy = tempy / dev->yscale + dev->yorigin;
 
     *outx = ROUND (tempx);
     *outy = ROUND (tempy);
 }
 
-devtovpw (x1, y1, x2, y2, x1out, y1out, x2out, y2out)
-    int             x1, y1, x2, y2;
-    int            *x1out, *y1out, *x2out, *y2out;
+void devtovpw (device dev, int x1, int y1, int x2, int y2, 
+	       int *x1out, int *y1out, int *x2out, int *y2out)
+/*< convert device coordinates to vplot coordinates >*/
 {
-int             x11, y11, x12, y12, x21, y21, x22, y22, a, b;
+    int x11, y11, x12, y12, x21, y21, x22, y22, a, b;
 
-    devtovpxy (x1, y1, &x11, &y11);
-    devtovpxy (x1, y2, &x12, &y12);
-    devtovpxy (x2, y1, &x21, &y21);
-    devtovpxy (x2, y2, &x22, &y22);
+    devtovpxy (dev, x1, y1, &x11, &y11);
+    devtovpxy (dev, x1, y2, &x12, &y12);
+    devtovpxy (dev, x2, y1, &x21, &y21);
+    devtovpxy (dev, x2, y2, &x22, &y22);
 
     a = (x11 > x12 ? x11 : x12);
     b = (x22 > x21 ? x22 : x21);
@@ -128,39 +123,34 @@ int             x11, y11, x12, y12, x21, y21, x22, y22, a, b;
     *y1out = (a < b ? a : b);
 }
 
-vptodevxy_text (x, y, outx, outy)
-    int             x, y;
-    int            *outx, *outy;
+void vptodevxy_text (device dev, int x, int y, int *outx, int *outy)
+/*< convert vplot coordinates to device coordinates >*/
 {
-float           xscale_save, yscale_save;
+    float xscale, yscale;
 
-    if (no_stretch_text)
-    {
-	xscale_save = xscale;
-	yscale_save = yscale;
+    if (dev->no_stretch_text) {
+	xscale = dev->xscale;
+	yscale = dev->yscale;
 
-	if (fabs (xscale) < fabs (yscale))
-	{
+	if (fabsf (xscale) < fabsf (yscale)) {
 	    yscale = xscale;
-	}
-	else
-	{
+	} else {
 	    xscale = yscale;
 	}
+
 /*
  * This makes more sense geometrically, but it seems better to
  * keep text within the stretched bounding box.
  *
- *	xscale = sqrt (xscale_save * yscale_save);
- *	yscale = xscale;
+ *	dev->xscale = sqrt (xscale * yscale);
+ *	dev->yscale = xscale;
  */
     }
 
-    vptodevxy (x, y, outx, outy);
+    vptodevxy (dev, x, y, outx, outy);
 
-    if (no_stretch_text)
-    {
-	xscale = xscale_save;
-	yscale = yscale_save;
+    if (dev->no_stretch_text) {
+	dev->xscale = xscale;
+	dev->yscale = yscale;
     }
 }
