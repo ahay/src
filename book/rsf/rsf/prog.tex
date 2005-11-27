@@ -785,6 +785,34 @@ bash$ < one.rsf sfwindow n1=3 | sfpad n1=5 n2=5 beg1=1 beg2=1 | sfdisfil
 \end{verbatim}
 You can use \texttt{sfcat} to pad data with values other than zeroes.
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfput}
+  }}
+
+\texttt{sfput} is a very simple program. It simply appends parameters
+from the command line to the output RSF file. One can achieve similar
+results with editing by hand or with standard Unix utilities like
+\texttt{sed} and \texttt{echo}. \texttt{sfput} is sometimes more
+convenient because it handles input/output operations similarly to
+other regular RSF programs.
+
+\begin{verbatim}
+bash$ sfspike n1=10 > spike.rsf
+bash$ sfin spike.rsf
+spike.rsf:
+    in="/tmp/spike.rsf@"
+    esize=4 type=float form=native
+    n1=10          d1=0.004       o1=0          label1="Time (s)"
+        10 elements 40 bytes
+bash$ sfput < spike.rsf d1=25 label1='"Depth (m)"' > spike2.rsf
+bash$ sfin spike2.rsf
+spike2.rsf:
+    in="/tmp/spike2.rsf@"
+    esize=4 type=float form=native
+    n1=10          d1=25          o1=0          label1="Depth (m)"
+        10 elements 40 bytes
+\end{verbatim}
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
