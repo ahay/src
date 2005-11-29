@@ -1,3 +1,28 @@
 from rsfproj import *
 
+for case in (0,1):
+    spike = 'spike%d' % case
+    Flow(spike,None,
+         '''
+         spike n1=884 n2=201 d1=0.0025 d2=10 o1=0 o2=-1000
+         label1="time (sec)" label2="midpoint (m)"
+         nsp=3 k1=%s k2=101,101,101 | bandpass fhi=60
+         ''' % ('201,401,601','301,501,701')[case])
+    rdmo = 'rdmo%d' % case
+    Flow(rdmo,spike,
+         '''
+         dmo h=1000 velhalf=1000 n=200 type=2 inv=1 |
+         nmostretch v0=1333 |
+         dmo h=1000 velhalf=1000 n=200 type=2 inv=0
+         ''')
+    Plot(rdmo,
+         '''
+         window f2=50 n2=101 n1=800 |
+         grey pclip=100 transp=y yreverse=y
+         title="offset=1000 m gamma=1.333"
+         ''')
+
+Result('vlccps','rdmo0 rdmo1','SideBySideAniso')
+
+
 End()

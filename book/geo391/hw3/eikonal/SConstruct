@@ -25,10 +25,10 @@ Flow('vel',None,
 # !!!!!!!!!! UNCOMMENT BELOW !!!!!!!!!!
 
 ## Flow('vel',None,
-##       '''
-##       math n1=%d d1=%g n2=%d d2=%g
-##       output="%g*sqrt(%g/%g+%g*x1+%g*x2)"
-##       ''' % (nz,dz,nx,dx,v0,v0,v0,2*gz,2*gx))
+##        '''
+##        math n1=%d d1=%g n2=%d d2=%g
+##        output="%g*sqrt(%g/(%g-2*%g*x1-2*%g*x2))"
+##        ''' % (nz,dz,nx,dx,v0,v0,v0,0.125*gz,0.125*gx))
 
 Plot('vel',
      '''

@@ -91,7 +91,9 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 	    for (it=0; it < nt; it++) { 
 		tmp[ix][it] = dat1[it+ix*nt];
 	    }
-	    if (nt%2) tmp[ix][nt] = 0.;
+	    for (it=nt; it < nt2; it++) {
+		tmp[ix][it] = 0.;
+	    }
 	    halfint (true,tmp[ix]);
 	}
     } else {
@@ -269,7 +271,9 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 
     if (adj) {
         for (ix=0; ix < nx; ix++) {
-	    if (nt%2) tmp[ix][nt] = 0.;
+	    for (it=nt; it < nt2; it++) {
+		tmp[ix][it] = 0.;
+	    }
 	    halfint (false,tmp[ix]);
 	    
 	    for (it=0; it < nt; it++) {
