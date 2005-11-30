@@ -1,4 +1,5 @@
 from rsfproj import *
+import math
 
 for case in (0,1):
     spike = 'spike%d' % case
@@ -11,16 +12,20 @@ for case in (0,1):
     rdmo = 'rdmo%d' % case
     Flow(rdmo,spike,
          '''
-         dmo h=1000 velhalf=1000 n=200 type=2 inv=1 |
-         nmostretch v0=1333 |
-         dmo h=1000 velhalf=1000 n=200 type=2 inv=0
-         ''')
+         dmo h=1000 velhalf=200 n=200 type=2 adj=n |
+         spray axis=2 n=1 d=1 o=1000 |
+         nmostretch v0=%g inv=%d half=n |
+         window |
+         dmo h=1000 velhalf=200 n=200 type=2 adj=y
+         ''' % ((1./math.sqrt(1./(1000*1000)-1./(1333*1333)),
+                 1./math.sqrt(1./(833*833)-1./(1000*1000)))[case],
+                1-case))
     Plot(rdmo,
          '''
          window f2=50 n2=101 n1=800 |
-         grey pclip=100 transp=y yreverse=y
-         title="offset=1000 m gamma=1.333"
-         ''')
+         grey pclip=100 
+         title="offset=1000 m gamma=%g"
+         ''' % (1.333,0.833)[case])
 
 Result('vlccps','rdmo0 rdmo1','SideBySideAniso')
 
