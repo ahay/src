@@ -1,21 +1,25 @@
-/* Cosine taper around the borders (2-D).
+/* Cosine taper around the borders (N-D). 
+
+Takes: nw1= nw2= ...
+
+nwN defines tapering on Nth axis
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -24,62 +28,67 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, nw1, nw2, i1, i2, iw;
-    float *trace, *w1=NULL, *w2=NULL, wi;
+    int dim, dim1, n[SF_MAX_DIM], nw[SF_MAX_DIM], s[SF_MAX_DIM];
+    int i, j, iw, n1, n2, i0, i2;
+    float *data, *w[SF_MAX_DIM], wi;
+    char key[4];
     sf_file in, out;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
-
-    if (!sf_getint("nw1",&nw1)) nw1=0;
-    /* tapering length on first axis */
-    if (nw1 > n1) nw1=n1;
-
-    if (!sf_getint("nw2",&nw2)) nw2=0;
-    /* tapering length on second axis */
-    if (nw2 > n2) nw2=n2;
-
-    trace = sf_floatalloc(n1);
-    if (nw1 > 0) w1 = sf_floatalloc(nw1);
-    if (nw2 > 0) w2 = sf_floatalloc(nw2);
-
-    for (iw=0; iw < nw1; iw++) {
-	wi = sinf(0.5*SF_PI*(iw+1.)/(nw1+1.));
-	w1[iw] = wi*wi;
+    
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    dim = sf_filedims (in,n);
+    dim1 = -1;
+    for (i=0; i < dim; i++) {
+	snprintf(key,4,"nw%d",i+1);
+	if (!sf_getint(key,nw+i)) nw[i]=0;
+	if (nw[i] > 0) {
+	    dim1 = i;
+	    w[i] = sf_floatalloc(nw[i]);
+	    for (iw=0; iw < nw[i]; iw++) {
+		wi = sinf(0.5*SF_PI*(iw+1.)/(nw[i]+1.));
+		w[i][iw] = wi*wi;
+	    }
+	} else {
+	    w[i] = NULL;
+	}
     }
 
-    for (iw=0; iw < nw2; iw++) {
-	wi = sinf(0.5*SF_PI*(iw+1.)/(nw2+1.));
-	w2[iw] = wi*wi;
+    n1 = n2 = 1;
+    for (i=0; i < dim; i++) {
+	if (i <= dim1) {
+	    s[i] = n1;
+	    n1 *= n[i];
+	} else {
+	    n2 *= n[i];
+	}
     }
+
+    data = sf_floatalloc(n1);
 
     for (i2=0; i2 < n2; i2++) {
-	sf_floatread(trace,n1,in);
-	for (iw=0; iw < nw1; iw++) {
-	    wi = w1[iw];
-	    trace[iw]      *= wi;
-	    trace[n1-1-iw] *= wi;
-	}
-	if (i2 < nw2) {
-	    wi = w2[i2];
-	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] *= wi;
+	sf_floatread(data,n1,in);
+
+	for (i=0; i <= dim1; i++) {
+	    if (nw[i] <= 0) continue;
+
+	    for (j=0; j < n1/n[i]; j++) {
+		i0 = sf_first_index (i,j,dim1+1,n,s);
+		
+		for (iw=0; iw < nw[i]; iw++) {
+		    wi = w[i][iw];
+		    data[i0+iw*s[i]]          *= wi;
+		    data[i0+(n[i]-1-iw)*s[i]] *= wi;
+		}
 	    }
 	}
-	if (n2-1-i2 < nw2) {
-	    wi = w2[n2-1-i2];
-	    for (i1=0; i1 < n1; i1++) {
-		trace[i1] *= wi;
-	    }
-	}
-	sf_floatwrite(trace,n1,out);
+
+	sf_floatwrite(data,n1,out);
     }
 
     exit(0);
 }
 
-/* 	$Id: Mcostaper.c,v 1.5 2004/07/02 11:54:47 fomels Exp $	 */
+/* 	$Id$	 */
