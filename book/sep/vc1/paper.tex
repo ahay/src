@@ -32,7 +32,7 @@ residual prestack time migration}
 \begin{comment}
 Migration velocity analysis is a routine part of prestack time
 migration applications. It serves both as a tool for velocity
-estimation \cite[]{FBR08.06.02240234} and as a tool for optimal stacking
+estimation \cite[]{FBR08-06-02240234} and as a tool for optimal stacking
 of migrated seismic sections and modeling zero-offset data for depth
 migration \cite[]{GEO62-02-05680576}. In the most common form, migration
 velocity analysis amounts to residual moveout correction on CRP
@@ -44,7 +44,7 @@ different points on a stacking hyperbola in a CRP gather can
 correspond to different reflection points at the actual reflector. The
 situation is similar to that of the conventional NMO velocity
 analysis, where the reflection point dispersal problem is usually
-overcome with the help of DMO \cite[]{FBR04.07.00070024,dmo}. An
+overcome with the help of DMO \cite[]{FBR04-07-00070024,dmo}. An
 analogous correction is required for optimal focusing in the
 post-migration domain. In this paper, I propose and test velocity
 continuation as a method of migration velocity analysis. The method
@@ -65,14 +65,14 @@ lead to a different viewpoint on migration.  One of the most
 interesting properties is an ability to decompose the time migration
 procedure into a cascade of two or more migrations with smaller
 migration velocities. This remarkable property is described by
-\cite{GEO50.01.01100126} as {\em residual migration}.
-\cite{GEO52.05.06180643} generalized the method of residual
+\cite{GEO50-01-01100126} as {\em residual migration}.
+\cite{GEO52-05-06180643} generalized the method of residual
 migration to one of {\em cascaded migration.} Cascading
 finite-difference migrations overcomes the dip limitations of
-conventional finite-difference algorithms \cite[]{GEO52.05.06180643};
+conventional finite-difference algorithms \cite[]{GEO52-05-06180643};
 cascading Stolt-type {\em f-k} migrations expands their range of
 validity to the case of a vertically varying velocity
-\cite[]{GEO53.07.08810893}. Further theoretical generalization sets
+\cite[]{GEO53-07-08810893}. Further theoretical generalization sets
 the number of migrations in a cascade to infinity, making each step in
 the velocity space infinitesimally small. This leads to a partial
 differential equation in the time-midpoint-velocity space, discovered
@@ -84,7 +84,7 @@ analysis for migration with nonconstant velocity
 \cite[]{shurtleff,SEG-1984-S1.8,Fowler.sepphd.58, GEO57-01-00510059}.
 
 \new{The concept of velocity continuation was introduced in the earlier
-publications} \cite[]{me,Fomel.segab.97}.  \cite{hubral} and
+publications} \cite[]{me,SEG-1997-1762}.  \cite{hubral} and
 \cite{GEO62-02-05890597} \new{
 use the term \emph{image waves} to describe a
 similar idea.} \cite{adler} \new{generalizes it to the case of variable
@@ -93,7 +93,7 @@ importance of this concept lies in its ability to predict changes in the
 geometry and intensity of reflection events on seismic images with the change
 of migration velocity. While conventional approaches to migration velocity
 analysis methods take into account only vertical movement of reflectors}
-\cite[]{FBR08.06.02240234,GEO60-01-01420153}, 
+\cite[]{FBR08-06-02240234,GEO60-01-01420153}, 
 \new{velocity continuation attempts to describe both
 vertical and lateral movements, thus providing for optimal focusing in
 velocity analysis applications} \cite[]{SEG-2001-11071110,second}. 
@@ -276,7 +276,7 @@ C = \tau_1\,{{\partial \tau_1} \over {\partial x_1}} =
 where $\tau_0$ and $x_0$ correspond to the zero velocity (unmigrated
 section), while $\tau_1$ and $x_1$ correspond to the velocity $v_1$.
 % Equations (\ref{eq:a}), (\ref{eq:b}), and (\ref{eq:c}) have a clear
-%geometric meaning illustrated in Figure \FIG{vlczor}. 
+%geometric meaning illustrated in Figure \ref{fig:vlczor}. 
 The
 simple relationship between the midpoint derivative of the vertical
 traveltime and the local dip angle $\alpha$ (appendix A),
@@ -297,14 +297,14 @@ to a single reflection point, constrained by the values of $\tau_1$,
 $v_1$, and $\alpha$.  As follows from equations (\ref{eq:velrayg1}), the
 projection of a velocity ray to the time-midpoint plane has the
 parabolic shape $x(\tau) = A + (\tau^2 - B) / C$, which has been
-noticed by \cite{GEO46.05.07170733}. On the depth-midpoint plane, the
+noticed by \cite{GEO46-05-07170733}. On the depth-midpoint plane, the
 velocity rays have the circular shape $z^2(x) = (A - x)\,B / C - (A -
 x)^2$, described by \cite{them} as ``Thales circles.''
 
 \inputdir{XFig}
 
-\sideplot{vlczor}{width=4in}{Zero-offset reflection in a constant
-  velocity medium (a scheme).}
+\sideplot{vlczor}{width=0.9\textwidth}{Zero-offset reflection in a
+  constant velocity medium (a scheme).}
 
 For an example of kinematic continuation by velocity rays, let us
 consider the case of a point diffractor. If the diffractor location in
@@ -336,13 +336,13 @@ Eliminating $x_0$ from the system of equations (\ref{eq:difrayg1}) and
 \end{equation}
 For the case of a point diffractor, the wavefront corresponds precisely
 to the summation path of the residual migration operator
-\cite[]{GEO50.01.01100126}. It has a hyperbolic shape when $v_d > v$
+\cite[]{GEO50-01-01100126}. It has a hyperbolic shape when $v_d > v$
 (undermigration) and an elliptic shape when $v_d < v$
 (overmigration). The wavefront collapses to a point when the velocity
 $v$ approaches the actual effective velocity $v_d$. At zero
 velocity, $v=0$, the wavefront takes the familiar form of the post-stack migration
 hyperbolic summation path. The form of the velocity rays and wavefronts
-is illustrated in the left plot of Figure \FIG{vlcvrs}.
+is illustrated in the left plot of Figure \ref{fig:vlcvrs}.
 
 \inputdir{Math}
 
@@ -384,7 +384,7 @@ planes with a modified angle:
 \tau(x)={{p\,x} \over {\sqrt{1 -  p^2\,v^2}}}\;.
 \label{eq:plfront}
 \end{equation}
-The right plot of Figure \FIG{vlcvrs} shows the geometry of the
+The right plot of Figure \ref{fig:vlcvrs} shows the geometry of the
 kinematic velocity continuation for the case of a plane reflector.
 
 \subsection{Kinematics of Residual NMO}
@@ -420,25 +420,27 @@ h^2\,\left({1 \over v_d^2} - {1 \over v^2}\right)}\;.
 \label{eq:PSRMfront}
 \end{equation}
 Summation paths of the form (\ref{eq:PSRMfront}) for a set of diffractors
-with different depths are plotted in Figures \FIG{vlcve1} and
-\FIG{vlcve2}. The parameters chosen in these plots allow a direct
+with different depths are plotted in Figures \ref{fig:vlcve1} and
+\ref{fig:vlcve2}. The parameters chosen in these plots allow a direct
 comparison with Etgen's Figures 2.4 and 2.5 \cite[]{Etgen.sepphd.68},
-based on the exact solution and reproduced in Figures \FIG{vlcve3} and
-\FIG{vlcve4}. The comparison shows that the approximate
+based on the exact solution and reproduced in Figures \ref{fig:vlcve3} and
+\ref{fig:vlcve4}. The comparison shows that the approximate
 solution (\ref{eq:PSRMfront}) captures the main features of the prestack
 residual migration operator, except for the residual DMO cusps
 appearing in the exact solution when the diffractor depth is smaller
 than the offset.
 
-\sideplot{vlcve1}{width=6in}{Summation paths of the
-simplified prestack residual migration for a series of depth
-diffractors. Residual slowness $v/v_d$ is 1.2; half-offset $h$ is 1
-km. This figure is to be compared with Etgen's Figure 2.4, reproduced in Figure~\ref{fig:vlcve3}.}
+\sideplot{vlcve1}{width=\textwidth}{Summation paths of the simplified
+  prestack residual migration for a series of depth diffractors.
+  Residual slowness $v/v_d$ is 1.2; half-offset $h$ is 1 km. This
+  figure is to be compared with Etgen's Figure 2.4, reproduced in
+  Figure~\ref{fig:vlcve3}.}
 
-\sideplot{vlcve2}{width=6in}{Summation paths of the simplified
-prestack residual migration for a series of depth diffractors. Residual
-slowness $v/v_d$ is 0.8; offset $h$ is 1 km. This figure is to be
-compared with Etgen's Figure 2.5, reproduced in Figure~\ref{fig:vlcve4}.}
+\sideplot{vlcve2}{width=\textwidth}{Summation paths of the simplified
+  prestack residual migration for a series of depth diffractors.
+  Residual slowness $v/v_d$ is 0.8; offset $h$ is 1 km. This figure is
+  to be compared with Etgen's Figure 2.5, reproduced in
+  Figure~\ref{fig:vlcve4}.}
 
 Neglecting the residual DMO term in residual migration is
 approximately equivalent in accuracy to neglecting the DMO step in
@@ -451,7 +453,7 @@ DMO term corresponds to the condition
 \label{eq:tatg}
 \end{equation}
 where $\alpha$ is the dip angle, and $\theta$ is the reflection angle.
-As shown by \cite{GEO45.12.17531779}, the conventional processing
+As shown by \cite{GEO45-12-17531779}, the conventional processing
 sequence without the DMO step corresponds to the separable
 approximation of the double-square-root equation (\ref{eq:DSR}):
 \begin{equation}
@@ -477,12 +479,12 @@ Taking the difference of the two sides of
 equation~(\ref{eq:Sepgeom}), one can estimate its accuracy by the
 first term of the Taylor series for small $\alpha$ and $\theta$. The
 estimate is ${3 \over 4}\,\tan^2{\alpha}\,\tan^2{\theta}$
-\cite[]{GEO45.12.17531779}, which agrees qualitatively with
+\cite[]{GEO45-12-17531779}, which agrees qualitatively with
 (\ref{eq:tatg}). Although approximation (\ref{eq:PSRMfront}) fails in situations
 where the dip moveout correction is necessary, it is significantly
 more accurate than the 15-degree approximation of the
 double-square-root equation, implied in the migration velocity
-analysis method of \cite{GEO49.10.16641674} and \cite{abma}.  The
+analysis method of \cite{GEO49-10-16641674} and \cite{abma}.  The
 15-degree approximation
 \begin{equation}
 \sqrt{1 -  v^2\,\left({{\partial t} \over {\partial s}}\right)^2} +
@@ -554,8 +556,8 @@ Q(v,\tau_x) = {{\tau_x^2} \over
 \end{comment}
 
 \new{The derivation of the residual DMO+NMO kinematics is detailed in
-  Appendix B.}  Figure \FIG{vlcvcp} illustrates it with the
-theoretical impulse response curves. Figure \FIG{vlccps} compares the
+  Appendix B.}  Figure \ref{fig:vlcvcp} illustrates it with the
+theoretical impulse response curves. Figure \ref{fig:vlccps} compares the
 theoretical curves with the result of an actual cascade of the inverse
 DMO, residual NMO, and DMO operators.
 
@@ -575,7 +577,7 @@ cases the half-offset $h$ is 1 km.}
 
 \inputdir{Math}
 
-Figure \FIG{vlcvrd} illustrates the residual NMO+DMO velocity
+Figure \ref{fig:vlcvrd} illustrates the residual NMO+DMO velocity
 continuation for two particularly interesting cases. The left plot
 shows the continuation for a point diffractor. One can see that when
 the velocity error is large, focusing of the velocity rays forms a
@@ -595,22 +597,22 @@ half-offset $h$ is 2 km.}
 
 The full residual migration operator is the chain of
 residual zero-offset migration and residual NMO+DMO. I illustrate the
-kinematics of this operator in Figures \FIG{vlcve3} and \FIG{vlcve4},
+kinematics of this operator in Figures \ref{fig:vlcve3} and \ref{fig:vlcve4},
 which are designed to match Etgen's Figures 2.4 and 2.5
-\cite[]{Etgen.sepphd.68}. A comparison with Figures \FIG{vlcve1} and
-\FIG{vlcve2} shows that including the residual DMO term affects
+\cite[]{Etgen.sepphd.68}. A comparison with Figures \ref{fig:vlcve1} and
+\ref{fig:vlcve2} shows that including the residual DMO term affects
 the images of objects with the depth smaller than the half-offset
 $h$. This term complicates the residual migration operator with cusps.
 
-\sideplot{vlcve3}{width=6in}{Summation paths of prestack
-residual migration for a series of depth diffractors. Residual
-slowness $v/v_d$ is 1.2; half-offset $h$ is 1 km. This figure reproduces
-Etgen's Figure 2.4.}
+\sideplot{vlcve3}{width=\textwidth}{Summation paths of prestack
+  residual migration for a series of depth diffractors. Residual
+  slowness $v/v_d$ is 1.2; half-offset $h$ is 1 km. This figure
+  reproduces Etgen's Figure 2.4.}
 
-\sideplot{vlcve4}{width=6in}{Summation paths of prestack
-residual migration for a series of depth diffractors. Residual
-slowness $v/v_d$ is 0.8; half-offset $h$ is 1 km. This figure reproduces
-Etgen's Figure 2.5.}
+\sideplot{vlcve4}{width=\textwidth}{Summation paths of prestack
+  residual migration for a series of depth diffractors. Residual
+  slowness $v/v_d$ is 0.8; half-offset $h$ is 1 km. This figure
+  reproduces Etgen's Figure 2.5.}
 
 \section{FROM KINEMATICS TO DYNAMICS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -723,7 +725,7 @@ one. This means that the amplitude of the image does not change with
 the velocity along the velocity rays. This fact does not agree with the
 theory of conventional post-stack migration, which suggests
 downscaling the image by the ``cosine'' factor $\tau_0 \over
-\tau$ \cite[]{GEO46.05.07170733,Levin.sep.48.147}. The simplest way to
+\tau$ \cite[]{GEO46-05-07170733,Levin.sep.48.147}. The simplest way to
 include the cosine factor in the velocity continuation equation is to
 set the function $F$ to be ${1 \over t}\,{\partial P \over \partial
 v}$. The resulting differential equation
@@ -912,7 +914,7 @@ David Lumley, and Bill Symes for useful and stimulating discussions.
   provided valuable suggestions that improved the quality of the paper.}
 
 \bibliographystyle{seg}
-\bibliography{SEP2,paper,spec,velcon,SEG]
+\bibliography{SEP2,paper,spec,velcon,SEG}
 
 \append{DERIVING THE KINEMATIC EQUATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -922,11 +924,11 @@ depth-midpoint-offset-velocity space.
 
 \inputdir{XFig}
 
-\sideplot{vlcray}{width=6in}{Reflection rays in a constant
-velocity medium (a scheme).}
+\sideplot{vlcray}{width=0.9\textwidth}{Reflection rays in a constant
+  velocity medium (a scheme).}
 
 The derivation starts with observing a simple geometry of reflection
-in a constant-velocity medium, shown in Figure \FIG{vlcray}. The
+in a constant-velocity medium, shown in Figure \ref{fig:vlcray}. The
 well-known equations for the apparent slowness
 \begin{equation}
 {{\partial t} \over {\partial s}} \,=\,
@@ -943,7 +945,7 @@ to the emergence angles of the incident and reflected rays. Here $s$
 stands for the source location at the surface, $r$ is the receiver
 location, $t$ is the reflection traveltime, $v$ is the constant
 velocity, and $\alpha_1$ and $\alpha_2$ are the angles shown in Figure
-\FIG{vlcray}. Considering the traveltime derivative with respect to
+\ref{fig:vlcray}. Considering the traveltime derivative with respect to
 the depth of the observation surface $z$ shows that the
 contributions of the two branches of the reflected ray, added
 together, form the equation
@@ -1024,7 +1026,7 @@ Substituting formulas (\ref{eq:snellz1}) and (\ref{eq:snellz2}) into equation
 \label{eq:snellz3}
 \end{equation}
 which is analogous to the dispersion relationship of Stolt prestack
-migration \cite[]{GEO43.01.00230048}.
+migration \cite[]{GEO43-01-00230048}.
  
 The law of sines in the triangle formed by the incident and reflected
 ray leads to the explicit relationship between the traveltime and the
@@ -1069,7 +1071,7 @@ h = z\,
 \label{eq:z2h} 
 \end{equation}
 which follows directly from the trigonometry of the triangle in Figure
-\FIG{vlcray} \cite[]{ofcon}. For example, equation (\ref{eq:dzdv}) can
+\ref{fig:vlcray} \cite[]{ofcon}. For example, equation (\ref{eq:dzdv}) can
 be transformed to the form obtained by \cite{GEO60-01-01420153}:
 \begin{equation}
 v\,{{\partial z} \over {\partial v}} = 
@@ -1222,7 +1224,7 @@ and
 \end{equation}
 
 The last step of the cascade of inverse DMO, residual NMO, and DMO is
-illustrated in Figure \FIG{vlcvoc}. The three plots in the figure show
+illustrated in Figure \ref{fig:vlcvoc}. The three plots in the figure show
 the offset continuation to zero offset of the inverse DMO impulse
 response shifted by the residual NMO operator. The middle plot
 corresponds to zero NMO shift, for which the DMO step collapses the
@@ -1236,16 +1238,16 @@ to a point corresponding to the pure NMO shift.
 
 \inputdir{Math}
 
-\sideplot{vlcvoc}{width=5in}{Kinematic residual NMO+DMO
-operators constructed by the cascade of inverse DMO, residual NMO, and
-DMO. The impulse response of inverse DMO is shifted by the residual
-NMO procedure. Offset continuation back to zero offset forms the
-impulse response of the residual NMO+DMO operator. Solid lines denote
-traveltime curves; dashed lines denote the offset continuation
-trajectories (time rays). Top plot: $v_1/v_0 = 1.2$. Middle plot:
-$v_1/v_0 = 1$; the inverse DMO impulse response collapses back to the
-initial impulse. Bottom plot: $v_1/v_0 = 0.8$. The half-offset $h$ in
-all three plots is 1 km.}
+\sideplot{vlcvoc}{width=0.9\textwidth}{Kinematic residual NMO+DMO
+  operators constructed by the cascade of inverse DMO, residual NMO,
+  and DMO. The impulse response of inverse DMO is shifted by the
+  residual NMO procedure. Offset continuation back to zero offset
+  forms the impulse response of the residual NMO+DMO operator. Solid
+  lines denote traveltime curves; dashed lines denote the offset
+  continuation trajectories (time rays). Top plot: $v_1/v_0 = 1.2$.
+  Middle plot: $v_1/v_0 = 1$; the inverse DMO impulse response
+  collapses back to the initial impulse. Bottom plot: $v_1/v_0 = 0.8$.
+  The half-offset $h$ in all three plots is 1 km.}
 
 \append{INTEGRAL VELOCITY CONTINUATION AND KIRCHHOFF MIGRATION}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1308,7 +1310,7 @@ and $\sigma_0 = t_0^2/2$.  The unique solution of the initial value
 In the transformed domain, velocity continuation appears to be a unitary
 phase-shift operator. An immediate consequence of this remarkable fact is the
 cascaded migration decomposition of post-stack migration
-\cite[]{GEO52.05.06180643}:
+\cite[]{GEO52-05-06180643}:
 \begin{equation}
 \exp\left( i\,{{k^2} \over {2\,\Omega}}\,
 (v_1^2 +  \cdots + v_n^2)\right) =
@@ -1317,7 +1319,7 @@ cascaded migration decomposition of post-stack migration
 \label{eq:cascaded} 
 \end{equation}
 Analogously, three-dimensional post-stack migration is decomposed
-into the two-pass procedure \cite[]{GPR31.01.00340056}:
+into the two-pass procedure \cite[]{GPR31-01-00340056}:
 \begin{equation}
 \exp\left( i\,{{k_1^2+k_2^2} \over {2\,\Omega}}\,v^2\right) =
 \exp\left( i\,{{k_1^2} \over {2\,\Omega}}\,v^2\right)\,
