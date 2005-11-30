@@ -911,19 +911,16 @@ David Lumley, and Bill Symes for useful and stimulating discussions.
 \new{Paul Fowler, Hugh Geiger, Samuel Gray, and one anonymous reviewer
   provided valuable suggestions that improved the quality of the paper.}
 
-\newpage
+\bibliographystyle{seg}
+\bibliography{SEP2,paper,spec,velcon,SEG]
 
-\putbib[SEP,MISC,GEOTLE,EAEG,paper,spec,velcon,SEG]
-
-\newpage
-
-\APPENDIX{A}
-%%%%%%%%%%%%
-\section{DERIVING THE KINEMATIC EQUATIONS}
+\append{DERIVING THE KINEMATIC EQUATIONS}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The main goal of this appendix is to derive the partial differential
 equation describing the image surface in a
 depth-midpoint-offset-velocity space.
+
+\inputdir{XFig}
 
 \sideplot{vlcray}{width=6in}{Reflection rays in a constant
 velocity medium (a scheme).}
@@ -1117,8 +1114,7 @@ v\,{{\partial z} \over {\partial v}} =
 \label{eq:notheta} 
 \end{equation}
 
-\APPENDIX{B}
-\section{Derivation of the residual DMO kinematics}
+\append{Derivation of the residual DMO kinematics}
 
 This appendix derives the kinematical laws for the residual NMO+DMO
 transformation in the prestack offset continuation process.
@@ -1238,6 +1234,8 @@ operators dramatically decreases with the time increase.  For large
 times (pseudo-depths) of the initial impulses, the operator collapses
 to a point corresponding to the pure NMO shift.
 
+\inputdir{Math}
+
 \sideplot{vlcvoc}{width=5in}{Kinematic residual NMO+DMO
 operators constructed by the cascade of inverse DMO, residual NMO, and
 DMO. The impulse response of inverse DMO is shifted by the residual
@@ -1249,9 +1247,7 @@ $v_1/v_0 = 1$; the inverse DMO impulse response collapses back to the
 initial impulse. Bottom plot: $v_1/v_0 = 0.8$. The half-offset $h$ in
 all three plots is 1 km.}
 
-\APPENDIX{C}
-%%%%%%%%%%%%
-\section{INTEGRAL VELOCITY CONTINUATION AND KIRCHHOFF MIGRATION}
+\append{INTEGRAL VELOCITY CONTINUATION AND KIRCHHOFF MIGRATION}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The main goal of this appendix is to prove the equivalence between the
 result of zero-offset velocity continuation from zero velocity and
