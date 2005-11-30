@@ -9,6 +9,8 @@ def param(par):
         p = p + ' nrmax=' + str(par['nrmax'])
     if(par.has_key('dtmax')):
         p = p + ' dtmax=' + str(par['dtmax'])
+    if(par.has_key('eps')):
+        p = p + ' eps='   + str(par['eps'])
     if(par.has_key('tmx')):
         p = p + ' tmx='   + str(par['tmx'])
     if(par.has_key('tmy')):
@@ -36,7 +38,7 @@ def freqs(par):
 def wflds(wfld,data,par):
     Flow(wfld,data,
          '''
-         fft1 inv=n |
+         fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          transp plane=12 memsize=500 |
          transp plane=23 memsize=500 |

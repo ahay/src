@@ -125,14 +125,13 @@ int main(int argc, char* argv[])
 
     /* h2=J */
     for(it=0;it<at.n;it++) {
-	for(ig=1;ig<ag.n-1;ig++) {
-	    gx = (x[it][ig+1] - x[it][ig-1]) / (2*ag.d);
-	    gz = (z[it][ig+1] - z[it][ig-1]) / (2*ag.d);
+	for(ig=0;ig<ag.n-1;ig++) {
+	    gx = (x[it][ig+1] - x[it][ig]) / (ag.d);
+	    gz = (z[it][ig+1] - z[it][ig]) / (ag.d);
 	    h2[it][ig] = sqrtf(gx*gx+gz*gz);
 	}
     }
     for(it=0;it<at.n;it++) {
-	h2[it][     0] = h2[it][     1];
 	h2[it][ag.n-1] = h2[it][ag.n-2];
     }
 
@@ -220,12 +219,12 @@ int main(int argc, char* argv[])
 	mb[it][ig] +=1;
 	mm[it][ig] +=1;
 	);
-
+    
     sf_floatwrite(aa[0],ag.n*at.n,Fo);
     sf_floatwrite(bb[0],ag.n*at.n,Fo);
     sf_floatwrite(mm[0],ag.n*at.n,Fo);    
     sf_floatwrite(ma[0],ag.n*at.n,Fo);
     sf_floatwrite(mb[0],ag.n*at.n,Fo);
-
+    
     sf_complexwrite(ab[0],naref*nbref*at.n,Fr);
 }

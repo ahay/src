@@ -36,7 +36,7 @@ def wflds(swfl,rwfl,wave,shot,par):
     # _wave(nw)
     Flow(_wave,wave,
          '''
-         fft1 inv=n |
+         fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          put label1=w
          ''' % par )
@@ -44,7 +44,7 @@ def wflds(swfl,rwfl,wave,shot,par):
     Flow(_shot,shot,
          '''
          window n3=%(ns)d f3=%(fs)d j3=%(js)d |
-         fft1 inv=n |
+         fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          spray axis=3 n=1 o=0 d=1 |
          spray axis=5 n=1 o=0 d=1 |

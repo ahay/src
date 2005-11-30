@@ -32,7 +32,7 @@ def freqs(par):
 def wflds(wfld,cmps,par):
     Flow(wfld,cmps,
          '''
-         fft1 inv=n |
+         fft1 inv=n opt=n |
          window squeeze=n n1=%(nw)d min1=%(ow)g |
          transp plane=13 memsize=500 |
          spray axis=2 n=1 o=0 d=1 |

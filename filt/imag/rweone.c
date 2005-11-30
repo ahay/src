@@ -62,12 +62,12 @@ void rweone_init(
     aw = aw_;
     ar = ar_;
 
-    method = method_;
+    method =method_;
     
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
-    
+
     /* space for F-D */
     m0 = sf_floatalloc3(ag.n,ar.n,at.n);
     n0 = sf_floatalloc3(ag.n,ar.n,at.n);
@@ -151,22 +151,21 @@ void rweone_main(
 	case 2:
 	case 1:
 	    for(iw=0;iw<aw.n;iw++) {
+		w=aw.o+iw*aw.d;
+		w*=2;
+
 		if     (method==3) { sf_warning("PSC %d %d",iw,aw.n); }
 		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
 		else               { sf_warning("SSF %d %d",iw,aw.n); }
 
 		if(inv) { /* modeling */
-		    w=aw.o+iw*aw.d; w*=2;
 		    w*=-1; /* causal */
-
 		    for(it=at.n-1;it>=0;it--) {
 			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else {  /* migration */
-		    w=aw.o+iw*aw.d; w*=2;
 		    w*=+1; /* anti-causal */
-
 		    for(it=0;it<at.n;it++) {
 			rweone_img(inv,dat[iw],img[it]);
 			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
@@ -177,20 +176,19 @@ void rweone_main(
 	case 0:
 	default:
 	    for(iw=0;iw<aw.n;iw++) {
+		w=aw.o+iw*aw.d; 
+		w*=2;
+
 		sf_warning("XFD %d %d",iw,aw.n);
 		
 		if(inv) { /* modeling */
-		    w=aw.o+iw*aw.d; w*=2;    
 		    w*=-1; /* causal */
-
 		    for(it=at.n-1;it>=0;it--) {
 			rweone_fx(w,dat[iw],aa[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else { /* migration */
-		    w=aw.o+iw*aw.d; w*=2;    
 		    w*=+1; /* anti-causal */
-
 		    for(it=0;it<at.n;it++) {
 			rweone_img(inv,dat[iw],img[it]);
 			rweone_fx(w,dat[iw],aa[it],it);
@@ -442,21 +440,20 @@ void rweone_phs(
     for(ig=0;ig<ag.n;ig++) {
 	ikg = KMAP(ig,ag.n);
 	kg = okg + ikg * dkg;
-
+	
 	ta = a0*w;
 	tb = b0*kg;
 	tt = tb/ta;
 	arg = 1.0 - tt*tt;
-
+	
 	if(arg<0.) {
 	    ikz = SF_ABS(ta) * sqrtf(-arg);
 	} else {
 	    ikz =    I * ta  * sqrtf(+arg);
 	}
-
 	v[ig] *= cexp( ikz * (-at.d));
     }
-   
+    
     rweone_fft( true,v);
 }
 

@@ -1,5 +1,5 @@
 ## 
- # Wave-equation migration: sparse shots (ever 10th)
+ # Wave-equation migration: sparse shots (every 10th)
  ##
 
 from rsfproj import *

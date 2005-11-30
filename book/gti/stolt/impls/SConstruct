@@ -28,7 +28,8 @@ Flow('phase','spike vel',
      ''')
 Plot('phase','grey title="Phase Shift" ')
 
-Flow('stolt','spike','cosft sign2=1 | stolt nf=4 vel=4 | cosft sign2=-1')
+Flow('stolt','spike',
+     'cosft sign2=1 | stolt nf=4 vel=4 | cosft sign2=-1')
 Plot('stolt','grey title=Stolt')
 
 Plot('waves','phase stolt','OverUnderAniso')

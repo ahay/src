@@ -180,7 +180,8 @@ void ssr_ssf(
 	co =       csqrtf(w2 * sm[jr]);
 	KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	      wk[iy][ix] = 
-	      pk[iy][ix] * cexpf((co-cc)*az.d); );
+	      pk[iy][ix] * cexpf((co-cc)*az.d); 
+	    );
 
 	/* IFT */
 	fft2(true,wk);
@@ -190,7 +191,8 @@ void ssr_ssf(
 			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
 	      d = dsmax2/(d*d+dsmax2);
 	      wx[iy][ix] += wk[iy][ix]*d;
-	      wt[iy][ix] += d; );
+	      wt[iy][ix] += d; 
+	    );
     }
     LOOP( wx[iy][ix] /= wt[iy][ix]; );
 
@@ -291,4 +293,10 @@ void ssr_phs(
     LOOP( wx[iy][ix] /= wt[iy][ix]; );
 
     taper2(wx);
+}
+
+void cwrite(complex float x)
+/*< output a complex number >*/
+{
+    sf_warning("(%f,%f)",crealf(x), cimagf(x));
 }

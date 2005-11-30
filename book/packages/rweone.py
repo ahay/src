@@ -72,7 +72,7 @@ def abm(abm,abr,slo,cos,par):
 def freq(frq,dat,nw,fw,jw):
     Flow(frq,dat,
          '''
-         fft1 inv=n |
+         fft1 inv=n opt=n |
          window squeeze=n min1=1 j1=%d f1=%d n1=%d |
          transp |
          put label1=g label2=w
