@@ -5,6 +5,8 @@ def param(par):
     p = p + ' readwrite=y'
     if(par.has_key('verb')):
         p = p + ' verb='  +     par['verb']
+    if(par.has_key('incore')):
+        p = p + ' incore='+     par['incore']
     if(par.has_key('nrmax')):
         p = p + ' nrmax=' + str(par['nrmax'])
     if(par.has_key('dtmax')):
@@ -48,11 +50,11 @@ def wflds(wfld,data,par):
 # zero-offset modeling
 def model(data,slow,imag,par):
     Flow(data,[imag,slow],
-        '''
-        zomig mode=m inv=y %s %s
-        slo=${SOURCES[1]}
-        ''' % (param(par),freqs(par)))
-
+         '''
+         zomig mode=m inv=y %s %s
+         slo=${SOURCES[1]}
+         ''' % (param(par),freqs(par)))
+    
 # zero-offset migration
 def image(imag,slow,data,par):
     Flow(imag,[data,slow],

@@ -2,12 +2,13 @@ from rsfproj import *
 import zomig
 
 par = {
-    'nz':1000,  'dz':5,    'oz':0,     # CC axis 1
+    'nz':600,  'dz':5,    'oz':0,     # CC axis 1
     'nt':200,  'dt':0.005,'ot':0,     # RC axis 1
     'nx':200,  'dx':5,    'ox':0,     # CC axis 2
     'ng':200,  'dg':5,    'og':0,     # RC axis 2
     'nT':1000, 'dT':0.004,'oT':0,     # time
-    'tmx':10,'eps':0., 'verb':'y'
+    'tmx':10,'eps':0., 'verb':'y',
+    'nw':100, 'dw':0.25, 'ow':1, 'incore':'y'
     }
 # ------------------------------------------------------------
 par['xmin']=par['ox']
@@ -83,6 +84,7 @@ Flow('refCC',None,
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=100
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
      put label1=z label2=x |
+     ricker1 freq=0.1 |
      transp 
      ''' % par)
 Plot('refCC','refCC','transp |' + igrey('pclip=100',par))
@@ -136,8 +138,8 @@ Result('abmRC','aRC bRC mRC','OverUnderAniso')
 Flow('datRC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=125
-     n2=%(ng)d o2=%(og)g d2=%(dg)g k2=50 l2=150 |
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=250
+     n2=%(ng)d o2=%(og)g d2=%(dg)g |
      ricker1 frequency=10 |
      smooth rect2=10 | 
      put label1=t label2=g
@@ -147,8 +149,8 @@ Result('datRC','datRC','grey pclip=100 wanttitle=n')
 # frequency data RC: (g,w)
 Flow('frqRC','datRC',
      '''
-     fft1 inv=n|
-     window squeeze=n min1=1 j1=1 n1=200 |
+     fft1 opt=n inv=n |
+     window squeeze=n min1=1 j1=1 n1=100 |
      transp |
      put label1=g label2=w
      ''')
@@ -156,16 +158,45 @@ Result('frqRC','frqRC','real | grey pclip=100')
 
 # ------------------------------------------------------------
 
-Flow('frq','frqRC','spray axis=2 n=1 o=0 d=1 | put label1="x" ')
-Result('frq','window | real | grey pclip=100')
-Flow('slo','sloCC','spray axis=2 n=1 o=0 d=1')
+Flow('slo','sloCC','spray axis=2 n=1 o=0 d=1 | put label2="y"')
 Result('slo','window | transp | grey pclip=100 color=j allpos=y')
 
-zomig.image('img','slo','frq',par)
+Flow('frq','frqRC','spray axis=2 n=1 o=0 d=1 | put label1="x" ')
+Result('frq','window | real | grey pclip=100')
 
-Flow('iii','img','window')
-Result('iii','transp |' + igrey('title=IMG pclip=100',par))
-#Result('img',['img','ray','wft'],'Overlay')
+Flow('ddd','frq',
+     '''
+     window |
+     transp |
+     pad beg1=4 n1out=1001 |
+     fft1 opt=n inv=y
+     ''')
+Result('ddd','grey pclip=100')
+
+zomig.image('img','slo','frq',par)
+Result('img','window | transp |'
+       + igrey('title=IMG pclip=100',par))
+
+Flow('rrr','refCC','spray axis=2 n=1 o=0 d=1 | put label2="y"')
+Result('rrr','window | transp |'
+       + igrey('title=IMG pclip=100',par))
+
+zomig.model('fff','slo','rrr',par)
+Result('fff','window | real | grey pclip=100')
+
+Flow('ttt','fff',
+     '''
+     window |
+     transp |
+     pad beg1=4 n1out=1001 |
+     fft1 opt=n inv=y
+     ''')
+Result('ttt','grey pclip=100')
+
+zomig.image('iii','slo','fff',par)
+Result('iii','window | transp |'
+       + igrey('title=III pclip=100',par))
+
 
 # ------------------------------------------------------------
 
@@ -220,7 +251,7 @@ for i in (['SSF']):
          '''
          transp |
          pad beg1=10 n1out=1251 |
-         fft1 inv=y
+         fft1 opt=n inv=y
          ''')
     Result(timRC,timRC,'grey title=%s' % i)
 

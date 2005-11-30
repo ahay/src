@@ -69,17 +69,17 @@ int main (int argc, char *argv[])
 	sf_putfloat(out,"o1",0.);
 	sf_putfloat(out,"d1",dw);
 
-	sf_putfloat(out,"t0",o1);
-	sf_putfloat(out,"nt",n1);
+	sf_putfloat(out,"fft_o1",o1);
+	sf_putfloat(out,"fft_n1",n1);
     } else {
 	if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
-	if (!sf_histfloat(in,"t0",&o1)) o1=0.; 
+	if (!sf_histfloat(in,"fft_o1",&o1)) o1=0.; 
 
 	nt = 2*(nw-1);
 	d1 = 1./(nt*dw);
 
-	if (!sf_histint  (in,"nt",&n1)) n1 = cos? 1+nt/2:nt;
+	if (!opt || !sf_histint  (in,"fft_n1",&n1)) n1 = cos? 1+nt/2:nt;
 
 	sf_putint  (out,"n1",n1);
 	sf_putfloat(out,"d1",d1);

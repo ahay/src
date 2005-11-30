@@ -76,9 +76,9 @@ void zomig_init(bool verb_,
     int   ilx, ily, iz, jj;
     float dsmax;
 
-    verb=verb_;
+    verb   = verb_;
     incore = incore_;
-    eps = eps_;
+    eps    = eps_;
 
     az = az_;
     aw = aw_;
@@ -204,23 +204,20 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	    SOOP( sss[iz][ily][ilx] = so[ily][ilx]*twoway;);
 	}
 
-	/* loop over frequencies w */
 	if (inv) { /* MODELING */
 	    
 	    for (iz=0; iz<az.n-1; iz++) {
 		fslice_get(imag,iz,qq[0]);
 		LOOP( rrr[iz][imy][imx] = qq[imy][imx]; );
 	    }
-	    for (iw=0; iw<aw.n; iw++) {
+	    for (iw=0; iw<aw.n; iw++) { // frequency loop
 		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
 		w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
 		
 		LOOP( wx[imy][imx] = 0; );		
 		for (iz=az.n-1; iz>0; iz--) {
-		    /* imaging */
-		    LOOP( wx[imy][imx] += rrr[iz][imy][imx];);
-		    /* upward continuation */
-		    ssr_ssf(w,wx,sss[iz],sss[iz-1],nr[iz-1],sm[iz-1]);
+		    LOOP( wx[imy][imx] += rrr[iz][imy][imx]; );        // imaging
+		    ssr_ssf(w,wx,sss[iz],sss[iz-1],nr[iz-1],sm[iz-1]); // extrapolation
 		}
 		
 		LOOP( wx[imy][imx] += rrr[0][imy][imx]; );	
@@ -228,7 +225,8 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		fslice_put(data,iw,wx[0]);
 	    }
 	} else { /* MIGRATION */
-	    for (iw=0; iw<aw.n; iw++) {
+
+	    for (iw=0; iw<aw.n; iw++) { // frequency loop
 		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
 		w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 		
@@ -237,17 +235,15 @@ void zomig(bool inv  /* forward/adjoint flag */,
 		LOOP( rrr[0][imy][imx] += crealf(wx[imy][imx]); );
 		
 		for (iz=0; iz<az.n-1; iz++) {		    
-		    /* downward continuation */
-		    ssr_ssf(w,wx,sss[iz],sss[iz+1],nr[iz],sm[iz]);
-		    /* imaging */
-		    LOOP(rrr[iz+1][imy][imx] += crealf(wx[imy][imx]); );
+		    ssr_ssf(w,wx,sss[iz],sss[iz+1],nr[iz],sm[iz]);        // extrapolation
+		    LOOP( rrr[iz+1][imy][imx] += crealf(wx[imy][imx]); ); // imaging
 		}
 	    }
 	    for (iz=0; iz<az.n-1; iz++) {
 		LOOP(qq[imy][imx] = rrr[iz][imy][imx]; );
 		fslice_put(imag,iz,qq[0]);
 	    }
-	} /* else */
+	} /* else inv */
 
     } else {
 	/* loop over frequencies w */
