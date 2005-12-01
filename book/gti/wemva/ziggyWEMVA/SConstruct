@@ -16,6 +16,8 @@ par = {
     'verb':'y','eps':0.01,'nrmax':3,'dtmax':0.00005,
     'tmx':16,'tmy':0,'pmx':0,'pmy':0
     }
+par['dw']=1/(par['nt']*par['dt'])
+
 def igrey(custom):
     return '''
     grey  labelrot=n wantaxis=y wanttitle=y title=""
@@ -71,6 +73,8 @@ Flow('slo','velo velopad',
      put label2=y |
      window squeeze=n      f3=244 n3=%(nz)d
      ''' % par)
+Plot('slo','window | transp |'+ igrey('title="slo" pclip=99 color=j allpos=y'))
+
 
 # datuming slowness
 Flow('sdt','velo velopad',
@@ -124,7 +128,7 @@ Flow('zoff','shot',
      bandpass flo=3 fhi=16 |
      put label1=t label2=x
      ''' % par)
-Result('zoff','zoff',igrey('title="zoff" pclip=99'))
+Result('zoff','zoff',igrey('title="zoff" pclip=99 label1=t'))
 
 # wavefields
 zomig.wflds('doo','zoff',par)
@@ -133,7 +137,10 @@ zomig.Awftwo('woo','ddo','slo',par)
 
 # migration
 zomig.image('imgZ','slo','ddo',par)
-Plot('imgZ','imgZ','window | transp |'+ igrey('title="img" pclip=99'))
+Plot('imgZ','window | transp |'+ igrey('title="img" pclip=99'))
+
+# modeling
+zomig.model('datZ','slo','imgZ',par)
 
 # ------------------------------------------------------------
 # SHOT-RECORD
@@ -150,7 +157,7 @@ zomig.Awfone('wor','ddr','slo',par) # receiver
 
 # migration
 spmig.imagePW('imgS','cig','slo','dds','ddr',par)
-Plot('imgS','imgS','window | transp |'+ igrey('title="img" pclip=99'))
+Plot('imgS','window | transp |'+ igrey('title="img" pclip=99'))
 
 for i in range(3):
     par['xs']=200+i*50 - 10 # x start
@@ -167,7 +174,7 @@ for i in range(3):
          rtoc |
          put label1=x label2=y label3=z
          ''' % par )
-    Plot(dsl,dsl,'window | real | transp |'+ igrey('title="dsl" color=F'))
+    Plot(dsl,'window | real | transp |'+ igrey('title="dsl" color=F'))
     
     # WEMVA shot-record
     scatS= 'scatS'+ str(i)
@@ -176,8 +183,8 @@ for i in range(3):
     spmig.s2i(dsl, dimS,'wos','wor','slo',par) # forward
     spmig.i2s(dimS,bslS,'wos','wor','slo',par) # adjoint
 
-    Plot(dimS,dimS,'window | real | transp |'+ igrey('title="dim" pclip=99'))
-    Plot(bslS,bslS,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
+    Plot(dimS,'window | real | transp |'+ igrey('title="dim" pclip=99'))
+    Plot(bslS,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
     pplot.p2x2(scatS,'imgS',dsl,dimS,bslS,0.5,0.55,-10,-12)
 
     # WEMVA zero-offset
@@ -187,8 +194,8 @@ for i in range(3):
     zomig.s2i(dsl ,dimZ,'woo','slo',par) # forward
     zomig.i2s(dimZ,bslZ,'woo','slo',par) # adjoint
 
-    Plot(dimZ,dimZ,'window | real | transp |'+ igrey('title="dim" pclip=99'))
-    Plot(bslZ,bslZ,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
+    Plot(dimZ,'window | real | transp |'+ igrey('title="dim" pclip=99'))
+    Plot(bslZ,'window | real | transp |'+ igrey('title="bsl" color=F pclip=99'))
     pplot.p2x2(scatZ,'imgZ',dsl,dimZ,bslZ,0.5,0.55,-10,-12)
 
 # ------------------------------------------------------------

@@ -35,11 +35,11 @@ int slowref(int nr           /* maximum number of references */,
     for (is=0; is<ns; is++) {
 	ss2[is]=ss[is];
     }
-
+    
     smax = sf_quantile(ns-1,ns,ss2);
     smin = sf_quantile(   0,ns,ss2);
     nr = SF_MIN(nr,1+(smax-smin)/ds);
-
+    
     jr=0;
     for (ir=0; ir<nr; ir++) {
 	qr = (ir+1.0)/nr - 0.5 * 1./nr;

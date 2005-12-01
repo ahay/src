@@ -2,14 +2,15 @@ from rsfproj import *
 import zomig
 
 par = {
-    'nz':600,  'dz':5,    'oz':0,     # CC axis 1
-    'nt':200,  'dt':0.005,'ot':0,     # RC axis 1
-    'nx':200,  'dx':5,    'ox':0,     # CC axis 2
-    'ng':200,  'dg':5,    'og':0,     # RC axis 2
-    'nT':1000, 'dT':0.004,'oT':0,     # time
-    'tmx':10,'eps':0., 'verb':'y',
-    'nw':100, 'dw':0.25, 'ow':1, 'incore':'y'
+    'nz':400,  'dz':0.010,    'oz':0,
+    'nx':200,  'dx':0.020,    'ox':0,
+    'nt':1450, 'dt':0.004,    'ot':0,
+    'tmx':10,'eps':0.01, 'verb':'y','nrmax':1,
+    'ow':1, 'incore':'y'
     }
+
+par['dw']=1/(par['nt']*par['dt'])
+par['nw']=par['nt']/1000*150
 # ------------------------------------------------------------
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
@@ -17,29 +18,30 @@ par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 par['tmin']=par['ot']
 par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
-par['gmin']=par['og']
-par['gmax']=par['og'] + (par['ng']-1) * par['dg']
+par['wmin']=par['ow']
+par['wmax']=par['ow'] + (par['nw']-1) * par['dw']
 # ------------------------------------------------------------
 
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" pclip=99 label1="z(km)" label2="x(km)" %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
 
-def igraph(custom,par):
+def dgrey(custom,par):
     return '''
-    graph labelrot=n  %s
-    yreverse=y wantaxis=n title=" " 
-    min1=%g max1=%g min2=%g max2=%g min1=0
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+    grey labelrot=n wantaxis=y wanttitle=y
+    title="" pclip=99 label1="t(s)" label2="x(km)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['tmin'],par['tmax'],par['xmin'],par['xmax'])
 
-def tgrey(custom,par):
+def fgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 %s
-    ''' % (custom)
+    grey labelrot=n wantaxis=y wanttitle=y
+    title="" pclip=99 label1="w" label2="x(km)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['wmin'],par['wmax'],par['xmin'],par['xmax'])
 
 # ------------------------------------------------------------
 
@@ -47,245 +49,89 @@ def tgrey(custom,par):
 Flow('vel',None,
      '''
      spike n1=%(nz)d o1=%(oz)g d1=%(dz)g |
-     math output=1000+0*x1 |
-     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
-     put label1=z label2=x
+     math output=2+0*x1 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 Plot('vel',igrey('allpos=y',par))
 
-# source
-Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"' % par)
-Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
-Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"' % par)
-Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
-
-# wavefronts (by HWT)
-Flow('hwt','vel sou',
+# slowness
+Flow('slo','vel',
      '''
-     hwtex verb=n sou=${SOURCES[1]}
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g
-     ''' % par)
+     math output="1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1
+     ''')
+Result('slo','window | transp |'
+       + igrey('pclip=100 title=slo allpos=y color=j wantscalebar=y',par) )
 
-# coordinate system: rays(g,t)
-Flow('cos','hwt','window')
-
-Plot('wft','cos','window f1=20 j1=20 | transp |'
-     + igraph('plotcol=1',par))
-Plot('ray','cos','window       j2=20 |'
-     + igraph('plotcol=2',par))
-Result('cos','vel ray wft','Overlay')
-
+# ------------------------------------------------------------
+# FORWARD
 # ------------------------------------------------------------
 
 # reflectivity
-Flow('refCC',None,
+Flow('imgF',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=100
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     put label1=z label2=x |
-     ricker1 freq=0.1 |
-     transp 
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=100 l2=100 |
+     ricker1 freq=0.2 |
+     transp |
+     spray axis=2 n=1 o=0 d=1
      ''' % par)
-Plot('refCC','refCC','transp |' + igrey('pclip=100',par))
-Result('refCC','refCC ray wft','Overlay')
+Plot('imgF','window | transp |'
+     + igrey('pclip=100 title=imgF',par))
 
-Flow('refRC','refCC cos',
-     '''
-     c2r rays=${SOURCES[1]} adj=n linear=y |
-     put label1=g label2=t
-     ''')
-Result('refRC','refRC','grey pclip=100 title=""')
+zomig.model('frqF','slo','imgF',par)
+Plot('frqF','window | real | transp |'
+     + fgrey('pclip=100 title=frqF',par))
 
-Flow('intCC','refRC cos',
+Flow('datF','frqF',
      '''
-     c2r rays=${SOURCES[1]} adj=y linear=n
-     a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
-     a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
-     put label1=z label2=x
-     ''' % par)
-Plot('intCC','intCC','transp |' + igrey('pclip=100',par))
-Result('intCC','intCC ray wft','Overlay')
+     window |
+     transp |
+     pad beg1=%d n1out=%d |
+     fft1 inv=y opt=n 
+     ''' % (par['ow']/par['dw'],par['nt']/2+1) )
+Plot('datF',
+     dgrey('pclip=100 title=datF',par))
 
 # ------------------------------------------------------------
-# slowness in CC
-Flow('sloCC','vel','math output="1/input" | transp ')
-# slowness in RC
-Flow('sloRC','sloCC cos',
-     '''
-     c2r rays=${SOURCES[1]} adj=n |
-     put label1=g label2=t
-     ''')
-Result('sloRC','sloRC','grey color=j allpos=y pclip=100 wanttitle=n')
-
-# coordinate system coefficients (A,B,M=mask) and references (A,B)
-Flow(['abmRC','abrRC'],['cos','sloRC'],
-     '''
-     rweab naref=1 nbref=1
-     slo=${SOURCES[1]} abr=${TARGETS[1]}
-     ''')
-
-Plot('aRC','abmRC','window n3=1 f3=0 | grey allpos=y color=j wantscalebar=y')
-Plot('bRC','abmRC','window n3=1 f3=1 | grey allpos=y color=j wantscalebar=y')
-Plot('mRC','abmRC','window n3=1 f3=2 | grey allpos=y color=j wantscalebar=y')
-Result('abmRC','aRC bRC mRC','OverUnderAniso')
-
-#Result('abmRC','abmRC','grey gainpanel=e color=j allpos=y wanttitle=n')
-
+# ADJOINT
 # ------------------------------------------------------------
 
-# time data RC: (t,g)
-Flow('datRC',None,
+# data
+Flow('datA',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=250
-     n2=%(ng)d o2=%(og)g d2=%(dg)g |
+     n1=%(nt)d o1=%(ot)g d1=%(dt)g k1=500
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=100 l2=100 |
      ricker1 frequency=10 |
-     smooth rect2=10 | 
-     put label1=t label2=g
+     smooth rect2=1
      ''' % par )
-Result('datRC','datRC','grey pclip=100 wanttitle=n')
+Plot('datA',
+     dgrey('pclip=100 title=datA',par))
 
-# frequency data RC: (g,w)
-Flow('frqRC','datRC',
+Flow('frqA','datA',
      '''
-     fft1 opt=n inv=n |
-     window squeeze=n min1=1 j1=1 n1=100 |
+     fft1 inv=n opt=n |
+     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
      transp |
-     put label1=g label2=w
-     ''')
-Result('frqRC','frqRC','real | grey pclip=100')
+     spray axis=2 n=1 o=0 d=1
+     ''' % par)
+Plot('frqA','window | real | transp |'
+     + fgrey('pclip=100 title=frqA',par))
+
+zomig.image('imgA','slo','frqA',par)
+Plot('imgA','window | transp |'
+     + igrey('pclip=100 title=imgA',par))
 
 # ------------------------------------------------------------
 
-Flow('slo','sloCC','spray axis=2 n=1 o=0 d=1 | put label2="y"')
-Result('slo','window | transp | grey pclip=100 color=j allpos=y')
+Result('forw','imgF datF','Movie')
+Result('adjt','imgA datA','Movie')
 
-Flow('frq','frqRC','spray axis=2 n=1 o=0 d=1 | put label1="x" ')
-Result('frq','window | real | grey pclip=100')
-
-Flow('ddd','frq',
-     '''
-     window |
-     transp |
-     pad beg1=4 n1out=1001 |
-     fft1 opt=n inv=y
-     ''')
-Result('ddd','grey pclip=100')
-
-zomig.image('img','slo','frq',par)
-Result('img','window | transp |'
-       + igrey('title=IMG pclip=100',par))
-
-Flow('rrr','refCC','spray axis=2 n=1 o=0 d=1 | put label2="y"')
-Result('rrr','window | transp |'
-       + igrey('title=IMG pclip=100',par))
-
-zomig.model('fff','slo','rrr',par)
-Result('fff','window | real | grey pclip=100')
-
-Flow('ttt','fff',
-     '''
-     window |
-     transp |
-     pad beg1=4 n1out=1001 |
-     fft1 opt=n inv=y
-     ''')
-Result('ttt','grey pclip=100')
-
-zomig.image('iii','slo','fff',par)
-Result('iii','window | transp |'
-       + igrey('title=III pclip=100',par))
-
-
-# ------------------------------------------------------------
-
-for i in (['SSF']):
-    if(i=='F15'): method='method=0 c1=0.50   c2=0.00'
-    if(i=='F45'): method='method=0 c1=0.50   c2=0.25'
-    if(i=='F60'): method='method=0 c1=0.4761 c2=0.3767'
-    if(i=='SSF'): method='method=1'
-    if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
-    if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
-    
-    imgRC = 'imgRC' + '-' + i
-    imgCC = 'imgCC' + '-' + i
-
-    # image RC: (t,g)
-    Flow(imgRC,['frqRC','abmRC','abrRC'],
-         '''
-         rwezomig ntap=10 %s
-         abm=${SOURCES[1]}
-         abr=${SOURCES[2]} |
-         put label1=g label2=t
-         ''' % method)
-    Result(imgRC,imgRC,'transp | grey title=%s wantaxis=y' % i)
-
-    # image CC: (z,x)
-    Flow(imgCC,[imgRC,'cos'],
-         '''
-         c2r rays=${SOURCES[1]} adj=y linear=n 
-         nsz=5 nsx=5
-         a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
-         a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
-         put label1=z label2=x
-         ''' % par)
-    Plot(imgCC,imgCC,'window | transp |' + igrey('title=%s',par) % i)
-    Result(imgCC,[imgCC,'ray','wft'],'Overlay')
-
-    # ------------------------------------------------------------
-
-    modRC = 'modRC' + '-' + i
-    timRC = 'timRC' + '-' + i
-    
-    # modeled data RC: (t,g)
-    Flow(modRC,['refRC','abmRC','abrRC'],
-         '''
-         rwezomig ntap=10 %s
-         inv=y nw=60 ow=1 dw=0.1 
-         abm=${SOURCES[1]}
-         abr=${SOURCES[2]} |
-         put label1=g label2=t
-         ''' % method)
-    Flow(timRC,modRC,
-         '''
-         transp |
-         pad beg1=10 n1out=1251 |
-         fft1 opt=n inv=y
-         ''')
-    Result(timRC,timRC,'grey title=%s' % i)
-
-    migRC = 'migRC' + '-' + i
-    migCC = 'migCC' + '-' + i
-    
-    Flow(migRC,[modRC,'abmRC','abrRC'],
-         '''
-         rwezomig ntap=10 %s
-         abm=${SOURCES[1]}
-         abr=${SOURCES[2]} |
-         put label1=g label2=t
-         ''' % method)
-    Result(migRC,migRC,'transp | grey title=%s' % i)
-
-    Flow(migCC,[migRC,'cos'],
-         '''
-         c2r rays=${SOURCES[1]} adj=y linear=n 
-         nsz=5 nsx=5
-         a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
-         a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
-         put label1=z label2=x
-         ''' % par)
-    Plot(migCC,migCC,'transp |' + igrey('title=%s',par) % i)
-    Result(migCC,[migCC,'ray','wft'],'Overlay')
-    
-    # ------------------------------------------------------------
-
-Result('icomp','iii imgRC-SSF',
-       '''
-       cat axis=3 space=n ${SOURCES[0]} ${SOURCES[1]} |
-       transp | 
-       grey pclip=99 gainpanel=e
-       ''', stdin=0)
-
+Result('icomp','imgA imgF','Movie')
+Result('fcomp','frqA frqF','Movie')
+Result('dcomp','datA datF','Movie')
 
 End()

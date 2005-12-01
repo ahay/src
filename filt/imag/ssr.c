@@ -81,8 +81,8 @@ void ssr_init( axa az_,
     aly = ly_;
 
     /* construct K-domain axes */
-    X2K(axx,bxx,px);
-    X2K(ayy,byy,py);
+    X2K(axx,bxx,px); raxa(bxx);
+    X2K(ayy,byy,py); raxa(byy);
     fft2_init(bxx.n,byy.n);
 
     /* precompute wavenumbers */
@@ -94,6 +94,8 @@ void ssr_init( axa az_,
 	    jx = KMAP(ix,bxx.n);
 	    kx = bxx.o + jx*bxx.d;  
 	    kk[iy][ix] = kx*kx+ky*ky;
+
+/*	    sf_warning("kk[%d][%d]=%g",iy,ix,kk[iy][ix]);*/
 	}
     }    
 
@@ -182,10 +184,10 @@ void ssr_ssf(
 	      wk[iy][ix] = 
 	      pk[iy][ix] * cexpf((co-cc)*az.d); 
 	    );
-
+	
 	/* IFT */
 	fft2(true,wk);
-
+	
 	/* accumulate wavefield */
 	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
 			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
@@ -234,7 +236,8 @@ void ssr_sso(
     co =       csqrtf(w2 * sm[jr]);
     KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	  wk[iy][ix] = 
-	  pk[iy][ix] * cexpf((co-cc)*az.d); );
+	  pk[iy][ix] * cexpf((co-cc)*az.d); 
+	);
 
     KOOP( wk[iy][ix] = pk[iy][ix] * cexpf((co)*az.d); );
 
@@ -278,7 +281,8 @@ void ssr_phs(
 	/* w-k */
 	KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	      wk[iy][ix] = 
-	      pk[iy][ix] * cexpf((-cc)*az.d); );
+	      pk[iy][ix] * cexpf((-cc)*az.d); 
+	    );
 
 	/* IFT */
 	fft2(true,wk);
@@ -292,6 +296,52 @@ void ssr_phs(
     }
     LOOP( wx[iy][ix] /= wt[iy][ix]; );
 
+    taper2(wx);
+}
+
+void ssr_pho(
+    bool           inv,
+    float complex    w /* frequency */,
+    complex float **wx /* wavefield */,
+    float         **so /* slowness  */, 
+    float         **ss /* slowness  */,
+    int             nr /* nr. of ref slo */,
+    float          *sm /* ref slo squared */
+    )
+/*< Wavefield extrapolation by phase-shift w/ one reference >*/
+{
+    float complex w2,cc;
+    int ix,iy,jr;
+    
+    w2 = w*w;
+    
+    /* FFT */
+    KOOP( pk[iy][ix] = 0.; );
+    LOOP( pk[iy][ix] = wx[iy][ix]; );
+
+    if(inv) {
+	fft2( true,pk);
+    } else {
+	fft2(false,pk);
+    }
+
+    jr=0;
+    KOOP( 
+	cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
+/*	cc = csqrtf(w2 * sm[jr]);*/
+	wk[iy][ix] = 
+	pk[iy][ix] * cexpf(-cc*az.d); 
+	);
+
+    /* IFT */
+    if(inv) {
+	fft2(false,wk);
+    } else {
+	fft2( true,wk);
+    }
+
+    LOOP( wx[iy][ix] = wk[iy][ix]; );
+    
     taper2(wx);
 }
 

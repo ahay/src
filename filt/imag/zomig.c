@@ -89,7 +89,7 @@ void zomig_init(bool verb_,
     aly= aly_;
 
     /* from hertz to radian */
-    aw.d *= 2.*SF_PI; 
+    aw.d *= 2.*SF_PI;
     aw.o *= 2.*SF_PI;
 
     dsmax  = dtmax/az.d;
@@ -125,14 +125,15 @@ void zomig_init(bool verb_,
 	SOOP( ss[ily][ilx] *= twoway; ); /* 2-way time */
 
 	nr[iz] = slowref(nrmax,dsmax,alx.n*aly.n,ss[0],sm[iz]);
-	if (verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
+	if(verb) sf_warning("nr[%d]=%d",iz,nr[iz]);
     }
     for (iz=0; iz<az.n-1; iz++) {
 	for (jj=0; jj<nr[iz]; jj++) {
 	    sm[iz][jj] = 0.5*(sm[iz][jj]+sm[iz+1][jj]);
+	    if(verb) sf_warning("s[%d][%d]=%g",iz,jj,sm[iz][jj]);
 	}
     }
-
+    
     if(incore) {
 	sss = sf_floatalloc3  (alx.n,aly.n,az.n);
     }
@@ -181,7 +182,7 @@ void zomig_free()
 
 /*------------------------------------------------------------*/
 
-void zomig(bool inv  /* forward/adjoint flag */, 
+void zomig(bool inv    /* forward/adjoint flag */, 
 	   fslice data /* data  [nw][nmy][nmx] */,
 	   fslice imag /* image [nz][nmy][nmx] */)
 /*< Apply migration/modeling >*/
@@ -189,7 +190,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
     int iz,iw,imy,imx,ilx,ily;
     float complex w;
 
-    if (!inv) { /* prepare image for migration */
+    if(!inv) { /* prepare image for migration */
 	LOOP( qq[imy][imx] = 0.0; );
 	for (iz=0; iz<az.n; iz++) {
 	    fslice_put(imag,iz,qq[0]);
@@ -204,14 +205,14 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	    SOOP( sss[iz][ily][ilx] = so[ily][ilx]*twoway;);
 	}
 
-	if (inv) { /* MODELING */
+	if(inv) { /* MODELING */
 	    
 	    for (iz=0; iz<az.n-1; iz++) {
 		fslice_get(imag,iz,qq[0]);
 		LOOP( rrr[iz][imy][imx] = qq[imy][imx]; );
 	    }
 	    for (iw=0; iw<aw.n; iw++) { // frequency loop
-		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
+		if(verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
 		w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
 		
 		LOOP( wx[imy][imx] = 0; );		
@@ -227,7 +228,7 @@ void zomig(bool inv  /* forward/adjoint flag */,
 	} else { /* MIGRATION */
 
 	    for (iw=0; iw<aw.n; iw++) { // frequency loop
-		if (verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
+		if(verb) sf_warning ("iw=%3d of %3d (in core)",iw+1,aw.n);
 		w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
 		
 		fslice_get(data,iw,wx[0]); 
@@ -248,9 +249,9 @@ void zomig(bool inv  /* forward/adjoint flag */,
     } else {
 	/* loop over frequencies w */
 	for (iw=0; iw<aw.n; iw++) {
-	    if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+	    if(verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 	    
-	    if (inv) { /* MODELING */
+	    if(inv) { /* MODELING */
 		w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
 		LOOP( wx[imy][imx] = 0; );  
 		
@@ -321,9 +322,9 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 	
 	/* loop over frequencies w */
 	for (iw=0; iw<aw.n; iw++) {
-	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
 	    
-	    if (inv) { /* UPWARD DATUMING */
+	    if(inv) { /* UPWARD DATUMING */
 		if(causal) {
 		    w = eps*aw.d - I*(aw.o+iw*aw.d);
 		} else {
@@ -383,7 +384,7 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
-	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
+	if(verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 
 	if(inv) { /*   UPWARD EXTRAPOLATION */
 	    if(causal) {
