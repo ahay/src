@@ -62,7 +62,7 @@ int main (int argc, char *argv[])
     /* if y, apply weighting to each patch */
 
     if (inv) {
-	dim = sf_filedims(in,w)/2;
+	if (!sf_getint("dim",&dim)) dim = sf_filedims(in,w)/2;
 	for (j=0; j < dim; j++) {
 	    p[j]=w[dim+j];
 	}

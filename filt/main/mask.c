@@ -1,7 +1,8 @@
-/* Create a header mask.
+/* Create a mask.
 
 Mask is an integer data with ones and zeros. 
 Ones correspond to input values between min and max.
+
 The output can be used with sfheaderwindow.
 */
 /*

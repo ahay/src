@@ -1,0 +1,34 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+
+Fetch('cub.sgy','moshe',private)
+
+Flow('cub ./cubh ./cubb','cub.sgy',
+     '''
+     segyread tape=$SOURCE read=data
+     hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     put n2=700 n3=102 d2=12.5 d3=37.5
+     ''',stdin=0)
+
+def plot3(title):
+    return '''
+    byte gainpanel=all bar=bar.rsf |
+    grey3 frame1=400 frame2=350 frame3=25
+    title="%s"
+    label1="Time (s)" label2="In-line (m)" label3="Cross-line (m)"
+    ''' % title
+
+Result('cub',plot3('Zero-Offset Data'))
+
+Flow('dip','cub','patch verb=y w=1001,102,102 | dip rect1=10 rect2=40 rect3=40 n4=0 | patch inv=y verb=y weight=y')
+Result('dip',plot3('In-line Slope') + ' color=j scalebar=y')
+
+
+
+
+End()
