@@ -359,6 +359,8 @@ class Project(Environment):
             self.Alias('view',self.view)
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
+        else:
+            self.Command('test',None,'echo "Nothing to test"')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
     def Fetch(self,file,dir,private=None,top='data'):
         return self.Retrieve(file,None,dir=dir,private=private,top=top)
