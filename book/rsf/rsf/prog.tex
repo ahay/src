@@ -427,6 +427,57 @@ For each standard keyword, a minimum, maximum, and mean values are reported.
 This quick inspection can help in identifying meaningful keywords set in the
 data. The input data type must be \texttt{int}.
 
+
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfheadercut}
+  }}
+
+\texttt{sfheadercut} is close to \texttt{sfheaderwindow} but instead
+of windowing the dataset, it fills the traces specified by the header
+mask with zeroes. The size of the input data is preserved.
+
+Here is an example of using \texttt{sfheaderwindow} for 
+zeroing every other trace in the input file. First, let us create
+an input file with ten traces:
+\begin{verbatim}
+bash$ sfmath n1=5 n2=10 output=x2+1 > input.rsf
+bash$ < input.rsf sfdisfil
+   0:             1            1            1            1            1
+   5:             2            2            2            2            2
+  10:             3            3            3            3            3
+  15:             4            4            4            4            4
+  20:             5            5            5            5            5
+  25:             6            6            6            6            6
+  30:             7            7            7            7            7
+  35:             8            8            8            8            8
+  40:             9            9            9            9            9
+  45:            10           10           10           10           10
+\end{verbatim}
+Next, we can create a mask with alternating ones and zeros using
+\texttt{sfinterleave}.
+\begin{verbatim}
+bash$ sfspike n1=5 mag=1 | sfdd type=int > ones.rsf
+bash$ sfspike n1=5 mag=0 | sfdd type=int > zeros.rsf
+bash$ sfinterleave axis=1 ones.rsf zeros.rsf > mask.rsf
+bash$ sfdisfil < mask.rsf
+   0:    1    0    1    0    1    0    1    0    1    0
+\end{verbatim}
+Finally, \texttt{sfheadercut} zeros the input traces.
+\begin{verbatim}
+bash$ sfheadercut < input.rsf mask=mask.rsf > output.rsf
+bash$ sfdisfil < output.rsf 
+   0:             1            1            1            1            1
+   5:             0            0            0            0            0
+  10:             3            3            3            3            3
+  15:             0            0            0            0            0
+  20:             5            5            5            5            5
+  25:             0            0            0            0            0
+  30:             7            7            7            7            7
+  35:             0            0            0            0            0
+  40:             9            9            9            9            9
+  45:             0            0            0            0            0
+\end{verbatim}
+
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfheadermath}
 }}

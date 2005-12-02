@@ -1,7 +1,7 @@
-/* Window a data set based on a header mask.
+/* Window a dataset based on a header mask.
 
 The input data is a collection of traces n1xn2,
-mask is a 1-D integer array n2, windowed is n1xm2,
+mask is an integer array os size n2, windowed is n1xm2,
 where m2 is the number of nonzero elements in mask.
 */
 /*

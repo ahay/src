@@ -36,7 +36,8 @@ Flow('data','cup',
 
 Flow('nmo','data',
      'transp plane=23 | nmostretch v0=1.5 | transp plane=23')
-Flow(['hole','mask'],'nmo','shotholes perc=0.9 mask=${TARGETS[1]}')
+Flow('mask','nmo','shotholes perc=0.9')
+Flow('hole','nmo mask','headercut mask=${SOURCES[1]}')
 
 nmos = []
 holes = []

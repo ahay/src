@@ -1,7 +1,7 @@
 /* Zero a portion of a dataset based on a header mask.
 
 The input data is a collection of traces n1xn2,
-mask is a 1-D integer array n2.
+mask is an integer array of size n2.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -27,7 +27,6 @@ mask is a 1-D integer array n2.
 int main(int argc, char* argv[])
 {
     int n1, n2, j2, i2, esize, *mask;
-    off_t pos;
     char *trace, *zero;
     sf_file in, head, out;
 
@@ -61,18 +60,16 @@ int main(int argc, char* argv[])
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
-
+   
     for (i2=0; i2<n2; i2++) {
+	sf_charread(trace,n1,in);
 	if (mask[i2]) {
-	    sf_seek(in,pos+i2*n1,SEEK_SET);
-	    sf_charread(trace,n1,in);
 	    sf_charwrite(trace,n1,out);
 	} else {
 	    sf_charwrite(zero,n1,out);
 	}
     }
 
-    sf_close();
     exit(0);
 }
     
