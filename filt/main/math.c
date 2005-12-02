@@ -57,13 +57,22 @@ int main (int argc, char* argv[])
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
     float complex **cbuf, **cst;
     sf_datatype type;
+    int no_stdin;
 
     sf_init (argc,argv);
     
     in = (sf_file*) sf_alloc ((size_t) argc-1,sizeof(sf_file));    
     out = sf_output ("out");
+
     
-    if (0 != isatty(fileno(stdin))) { /* no input file in stdin */
+    no_stdin = ( 0 != isatty(fileno(stdin)) );
+    if(!no_stdin) {
+        int c = fgetc(stdin);
+        if(c != EOF) ungetc(c, stdin);
+        else no_stdin = 1;
+    }
+
+    if ( no_stdin ) { /* no input file in stdin */
 	nin=0;
     } else {
 	in[0] = sf_input("in");
