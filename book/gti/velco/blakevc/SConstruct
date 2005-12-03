@@ -53,6 +53,21 @@ Flow('stk2','nmo',
 
 Result('stk2',grey('DMO Stack'))
 
+Flow('dip','stk2','dip rect1=20 rect2=80')
+Result('dip',grey('Slope') + ' color=j scalebar=y')
+
+Flow('pwd','stk2 dip','pwd dip=${SOURCES[1]}')
+Result('pwd',grey('Diffractions'))
+
+velcon = '''
+pad n2=2049 | cosft sign2=1 | 
+pad beg1=1000 | stolt vel=2.8 nf=4 | window f1=1000 |
+spray axis=2 n=1 o=0 d=1 | fourvc nv=40 dv=0.01 v0=1.4 |
+cosft sign3=-1 | window n3=1105
+'''
+
+Flow('vlf','pwd',velcon)
+
 #velcon.velcon('bei',
 #              nv=48,      # continuation steps
 #              v0=1.3,     # initial velocity

@@ -29,7 +29,6 @@
 #include "getpar.h"
 #include "error.h"
 #include "alloc.h"
-#include "files.h"
 
 #include "_bool.h"
 #include "simtab.h"
@@ -40,6 +39,22 @@ static char *prog = NULL;
 static char *user = NULL;
 static char *host = NULL;
 static char *cdir = NULL;
+
+bool sf_stdin(void)
+/*< returns true if there is an input in stdin >*/
+{
+    int c;
+
+    if (isatty(fileno(stdin))) return false;
+ 
+    /* Thanks to Iulian Musat for fixing this! */
+
+    c = fgetc(stdin);
+    if (EOF == c) return false;
+    ungetc(c,stdin);
+    
+    return true;
+}
 
 void sf_init(int argc,char *argv[]) 
 /*< initialize parameter table from command-line arguments >*/
