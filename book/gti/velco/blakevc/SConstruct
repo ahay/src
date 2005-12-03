@@ -1,5 +1,5 @@
 from rsfproj import *
-import velcon
+import velcon, stack
 
 Fetch('cmps-tp.HH','blake')
 Flow('blake0','cmps-tp.HH',
@@ -7,7 +7,8 @@ Flow('blake0','cmps-tp.HH',
 
 Flow('off1',None,'math n1=24 o1=0.4 d1=0.1  output=x1')
 Flow('off2',None,'math n1=24 o1=2.8 d1=0.05 output=x1')
-Flow('off','off1 off2','cat axis=1 ${SOURCES[1]}')
+Flow('off','off1 off2',
+     'cat axis=1 ${SOURCES[1]} | spray axis=2 n=1105 d=0.05 o=0')
 
 Flow('far',None,'spike n1=24')
 Flow('zero',None,'spike n1=24 mag=0')
@@ -17,6 +18,40 @@ Flow('mask','far zero',
      cat axis=1 ${SOURCES[0]} |
      put o1=0.4 d1=0.05 | spray axis=1 n=625 d=0.004 o=4
      ''')
+
+Flow('scan','blake0 off',
+     'vscan semblance=y v0=1.4 nv=40 dv=0.01 half=n offset=${SOURCES[1]}')
+
+Flow('vel','scan','pick rect1=40 rect2=40 | window')
+
+def grey(title):
+    return '''
+    grey title="%s" 
+    label1="Time (s)" label2="Lateral (km)"
+    ''' % title
+
+def velgrey(title):
+    return grey(title) + '''
+    color=j scalebar=y bias=1.6
+    '''
+
+Result('vel',velgrey('Stacking Velocity'))
+
+Flow('nmo','blake0 vel off',
+     'nmo velocity=${SOURCES[1]} half=n offset=${SOURCES[2]}')
+
+Flow('stk','nmo','stack')
+
+Result('stk',grey('NMO Stack'))
+
+Flow('stk2','nmo',
+     '''
+     logstretch | fft1 |
+     transp plane=13 memsize=500 | finstack | transp |
+     fft1 inv=y | logstretch inv=y
+     ''')
+
+Result('stk2',grey('DMO Stack'))
 
 #velcon.velcon('bei',
 #              nv=48,      # continuation steps

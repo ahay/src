@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
 	sf_warning("%s half-order integration",inv? "anticausal":"causal");
     }
 
-    nn = sf_fftr_size(n1,2*n1);
+    nn = sf_fftr_size(n1);
     if (nn%2) nn++;
     pp = sf_floatalloc(nn);
 

@@ -203,8 +203,8 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 		    x = x2 - x1;
 
 		    for (ic=0; ic < nc; ic++) { 
-			ta[iy][ix][ic] = (ktable) sf_alloc(1,
-							   sizeof(ta[ix][ic][0]));
+			ta[iy][ix][ic] = (ktable) 
+			    sf_alloc(1,sizeof(ta[iy][ix][0]));
 			
 			z = curve[ic][iy][ix];
 			zx = dipx[ic][iy][ix];
@@ -213,7 +213,9 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 		    
 			r = sqrtf(x*x+y*y+z*z)+
 			    FLT_EPSILON*hypotf(dx,dy); /* distance */
-			g = sqrtf((v->gz)*(v->gz)+(v->gx)*(v->gx)+(v->gy)*(v->gy));
+			g = sqrtf((v->gz)*(v->gz)+
+				  (v->gx)*(v->gx)+
+				  (v->gy)*(v->gy));
 			gx = v->gx+v->gz*zx;            /* dw/dx */
 			gy = v->gy+v->gz*zy;
 			gz = v->gz-v->gx*zx-v->gy*zy;

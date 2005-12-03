@@ -49,8 +49,8 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = n1;
-    if (n1%2) nfft++;
+    nfft = sf_fftr_size(n1);
+    if (nfft%2) nfft++;
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 
@@ -76,7 +76,9 @@ int main (int argc, char* argv[])
     if (!sf_getbool("phase",&isphase)) isphase=false;
     /* if y, compute phase spectra */
     
-    if (n1%2) trace[nfft-1] = 0.; /* pad with zeros */
+    for (i1=n1; i1 < nfft; i1++) {
+	trace[i1] = 0.; /* pad with zeros */
+    }
 
     scale = sqrtf(1./nfft); /* FFT scaling */ 
     cfg = kiss_fftr_alloc(nfft,0,NULL,NULL);

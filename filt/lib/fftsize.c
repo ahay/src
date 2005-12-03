@@ -21,7 +21,19 @@
 #include "fftsize.h"
 #include "_fftsize.h"
 
-int sf_fftr_size(int min, int max)
+int sf_fftr_size(int min)
+/*< Find optimal size for real FFT greater or equal min >*/
+{
+    int n, size;
+
+    for (n=0; n < SF_FFTR_SIZE; n++) {
+	size = SF_FFTR[n].size;
+	if (size >= min) return size;
+    }
+    return min;
+}
+
+int sf_fftr_size2(int min, int max)
 /*< Find optimal size for real FFT between min and max >*/
 {
     int n, size, nmin, nmax;
@@ -35,7 +47,7 @@ int sf_fftr_size(int min, int max)
 	    break;
 	}
     }
-    if (nmin < 0) return nmin;
+    if (nmin < 0) return min;
 
     nmax=0;
     for (n=SF_FFTR_SIZE-1; n >= 0; n--) {	
@@ -50,6 +62,7 @@ int sf_fftr_size(int min, int max)
     for (n=nmin; n <= nmax; n++) {
 	cost = SF_FFTR[n].cost;
 	if (cost < mincost) {
+	    mincost = cost;
 	    size=SF_FFTR[n].size;
 	}
     }

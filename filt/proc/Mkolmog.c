@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include "kolmog.h"
 
 int main(int argc, char* argv[]) {
-    int n1, nfft, nw;
+    int i1, n1, nfft, nw;
     float *trace;
     bool spec;
     sf_file in, out;
@@ -52,13 +52,15 @@ int main(int argc, char* argv[]) {
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nfft = n1;
-	if (n1%2) nfft++;
+	nfft = sf_fftr_size(n1);
+	if (nfft%2) nfft++;
 	trace = sf_floatalloc(nfft);
 	
 	sf_floatread(trace,n1,in);
 
-	if (n1%2) trace[n1]=0.;
+	for (i1=n1; i1 < nfft; i1++) {
+	    trace[i1]=0.;
+	}
 
 	kolmog_init(nfft);
 	kolmog(trace);

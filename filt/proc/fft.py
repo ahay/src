@@ -1,4 +1,4 @@
-#!/bin/env python
+#!/usr/bin/env python
 
 import os,commands, re
 
@@ -8,8 +8,9 @@ out = open('fft.rsf','w')
 for size in xrange(1,50001):
     spike = 'spike%d.rsf' % size
     fft = 'fft%d.rsf' % size
-    os.system('sfspike n1=%d n2=1000 > %s' % (size,spike))
-    times = commands.getoutput('time sffft1 < %s > %s' % (spike,fft))
+    os.system('sfspike n1=%d n2=1000 | sfrtoc > %s' % (size,spike))
+    times = commands.getoutput('time sffft3 axis=1 pad=1 < %s > %s' %
+                               (spike,fft))
     total = 0.0
     for time in times.split('\n'):
         got = retime.match(time)

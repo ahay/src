@@ -86,8 +86,8 @@ Flow('hfill',['fftd','mask'],
 
 ffts = []
 fills = []
-for slice in [8,13,18]:
-    frec = int(slice*0.607908)
+for slice in [8,13,19]:
+    frec = int(slice*0.585393)
     grey = '''
          window n3=1 f3=%d | real | 
          grey title="frequency=%g" transp=n
@@ -103,7 +103,7 @@ Plot('fft',ffts,'OverUnderAniso')
 Plot('fill',fills,'OverUnderAniso')
 Result('fslice',['fft','fill'],'SideBySideAniso',vppen='txscale=3')
 
-back = '''pad n3=131 | transp plane=23 | transp | fft1 inv=y |
+back = '''pad n3=136 | transp plane=23 | transp | fft1 inv=y |
      window n1=256 | logstretch inv=y'''
 
 Flow('fild','fill',back)
@@ -154,10 +154,10 @@ Flow('shots','shotftd','window n2=2 f2=227 j2=2')
 Flow('shotin','shots','infill | window n2=1 f2=1')
 Flow('shotnd','shotin',
      '''
-     pad n2=131 | transp | fft1 inv=y |
+     pad n2=136 | transp | fft1 inv=y |
      window n1=256 | logstretch inv=y | pad beg1=50 
      ''')
-Flow('shoterr',['shotnd','shot2'],'add scale=1,-1 ${SOURCES[1]}')
+Flow('shoterr','shotnd shot2','add scale=1,-1 ${SOURCES[1]}')
 
 Flow('shot0','shotftd','window n2=1 f2=100 squeeze=n')
 Flow('shotp','shot0','shotprop ns=100 ds=0.008')

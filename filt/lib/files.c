@@ -33,6 +33,22 @@
 #include "file.h"
 /*^*/
 
+bool sf_stdin(void)
+/*< returns true if there is an input in stdin >*/
+{
+    int c;
+
+    if (isatty(fileno(stdin))) return false;
+ 
+    /* Thanks to Iulian Musat for fixing this! */
+
+    c = fgetc(stdin);
+    if (EOF == c) return false;
+    ungetc(c,stdin);
+    
+    return true;
+}
+
 int sf_filedims (sf_file file, /*@out@*/ int *n) 
 /*< Find file dimensions.
 --- 

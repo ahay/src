@@ -100,14 +100,14 @@ Flow('fftd','hole',
      '''window f1=40 | stretch rule=L nout=512 |
      fft1 | transp | transp plane=23''')
 Flow('fill',['fftd','mask'],
-     'window n3=200 | ofilp known=${SOURCES[1]} niter=1000')
+     'window n3=100 | ofilp known=${SOURCES[1]} niter=1000')
 Flow('hfill',['fftd','mask'],
-     'window n3=200 | ofilp known=${SOURCES[1]} niter=1000 simple=y')
+     'window n3=100 | ofilp known=${SOURCES[1]} niter=1000 simple=y')
 
 ffts = []
 fills = []
-for slice in [30,40,50]:
-    frec = int(slice*0.208505)
+for slice in [15,20,25]:
+    frec = int(slice*0.41701)
     grey = '''
          window n3=1 f3=%d | real | 
          grey title="frequency=%g" transp=n
@@ -123,7 +123,7 @@ Plot('fft',ffts,'OverUnderAniso')
 Plot('fill',fills,'OverUnderAniso')
 Result('fslice',['fft','fill'],'SideBySideAniso',vppen='txscale=3')
 
-back = '''pad n3=513 | transp plane=23 | transp | fft1 inv=y |
+back = '''pad n3=257 | transp plane=23 | transp | fft1 inv=y |
      window n1=512 | stretch rule=L inv=y | pad beg1=40'''
 
 Flow('fild','fill',back)

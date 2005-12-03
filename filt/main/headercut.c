@@ -4,7 +4,8 @@ The input data is a collection of traces n1xn2,
 mask is an integer array of size n2.
 */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2005 University of Texas at Austin
+  Copyright (C) 2005 University of British Columbia
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,6 +21,8 @@ mask is an integer array of size n2.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+/* Modified from Gilles Hennenfent's applymask */
+
 #include <stdio.h>
 
 #include <rsf.h>
@@ -27,6 +30,7 @@ mask is an integer array of size n2.
 int main(int argc, char* argv[])
 {
     int n1, n2, j2, i2, esize, *mask;
+    off_t pos;
     char *trace, *zero;
     sf_file in, head, out;
 
@@ -61,15 +65,18 @@ int main(int argc, char* argv[])
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
    
+    pos = sf_tell(in);
     for (i2=0; i2<n2; i2++) {
-	sf_charread(trace,n1,in);
 	if (mask[i2]) {
+	    sf_seek(in,pos+i2*n1,SEEK_SET);
+	    sf_charread(trace,n1,in);
 	    sf_charwrite(trace,n1,out);
 	} else {
 	    sf_charwrite(zero,n1,out);
 	}
     }
 
+    sf_close();
     exit(0);
 }
     

@@ -29,6 +29,7 @@
 #include "getpar.h"
 #include "error.h"
 #include "alloc.h"
+#include "files.h"
 
 #include "_bool.h"
 #include "simtab.h"
@@ -57,7 +58,7 @@ void sf_init(int argc,char *argv[])
     prog = (NULL == prog)? argv[0]:prog+1;
 
     /* no pars and input from terminal */
-    if (1==argc && isatty(fileno(stdin))) {
+    if (1==argc && !sf_stdin()) {
 	/* selfdoc and exit */
 	rsf = getenv("RSFROOT");
 	if (NULL != rsf) {

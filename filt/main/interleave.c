@@ -25,7 +25,7 @@ int main (int argc, char* argv[])
     sf_init(argc,argv);
     in = (sf_file*) sf_alloc ((size_t) argc,sizeof(sf_file));
 
-    if (0 != isatty(fileno(stdin))) { /* no input file in stdin */
+    if (!sf_stdin()) { /* no input file in stdin */
 	nin=0;
     } else {
 	in[0] = sf_input("in");

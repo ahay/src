@@ -51,7 +51,7 @@ void dmo_init (float vel1 /* velocity */,
     n = n1;
     type = type1;
 
-    nt2 = sf_fftr_size(nt,2*nt);
+    nt2 = sf_fftr_size(nt);
     if (nt2%2) nt2++;
 
     ntx = nt*nx;

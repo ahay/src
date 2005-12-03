@@ -54,8 +54,8 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&o2)) o2=0.;
 
     /* determine frequency sampling (for complex FFT) */
-    nfft = n1;
-    if (n1%2) nfft++;
+    nfft = sf_fftr_size(n1);
+    if (nfft%2) nfft++;
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 
@@ -94,7 +94,9 @@ int main (int argc, char* argv[])
     
     scale = sqrtf(1./(nfft*n2)); /* FFT scaling */ 
 
-    if (n1%2) trace[n1]=0.;
+    for (i1=n1; i1 < nfft; i1++) {
+	trace[i1]=0.;
+    }
 
     /*  loop over all planes */
     for (i3=0; i3 < n3; i3++) {
