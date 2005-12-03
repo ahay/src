@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     }
 
     trace = sf_floatalloc(n1);
-    ricker_init(sf_fftr_size(n1),0.5*freq,0);
+    ricker_init(sf_fftr_size2(n1, 2*n1),0.5*freq,0);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
