@@ -24,6 +24,7 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, i2;
+    int fft_size;
     float d1, freq, *trace;
     sf_file in, out;
 
@@ -44,7 +45,9 @@ int main(int argc, char* argv[])
     }
 
     trace = sf_floatalloc(n1);
-    ricker_init(sf_fftr_size2(n1, 2*n1),0.5*freq,0);
+    fft_size = sf_fftr_size(n1);
+    if(fft_size%2) fft_size += 1; /* sf_fftr_size should return an even number?*/
+    ricker_init(fft_size, 0.5*freq, 0);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);
