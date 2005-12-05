@@ -1,0 +1,67 @@
+\author{Gustav Kirchhoff}
+%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 5}
+
+\begin{abstract}
+In this lab, you will derive analytical expressions for geometrical
+spreading in layered media and experiment with creating angle gathers
+by wave equation migration.
+\end{abstract}
+
+\definecolor{frame}{rgb}{0.905,0.905,1.0}
+\lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false}
+
+\section{Introduction}
+
+
+\section{Theoretical part}
+
+\section{Computational part}
+
+\begin{enumerate}
+
+\item Start by running
+\begin{verbatim}
+> cd ~/geo391
+> svn update
+\end{verbatim}
+
+    
+\item Change directory 
+\begin{verbatim}
+> cd ~/geo391/hw5/agath
+\end{verbatim}
+\item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+to generate figures and display them on your screen.  
+
+\item Edit
+  the \texttt{SConstruct} file to ...
+    
+\item After you are done, run
+\begin{verbatim}
+> scons lock 
+> scons -c
+\end{verbatim}
+
+\item Edit the file
+\verb#~/geo391/hw2/paper.tex# in your favorite editor and change the
+first line to have your name instead of Kirchhoff's. Run
+\begin{verbatim}
+> scons pdf
+\end{verbatim}
+and submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+
+\end{enumerate}
+
+\append{\texttt{SConstruct} file}
+
+{\small
+\lstinputlisting[frame=single]{agath/SConstruct}
+}
+
+
+
