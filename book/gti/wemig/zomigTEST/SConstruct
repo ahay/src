@@ -25,7 +25,7 @@ par['wmax']=par['ow'] + (par['nw']-1) * par['dw']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=99 label1="z(km)" label2="x(km)" %s
+    title=" " pclip=99 label1="z(km)" label2="x(km)" %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
 
