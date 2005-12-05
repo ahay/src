@@ -300,7 +300,6 @@ void ssr_phs(
 }
 
 void ssr_pho(
-    bool           inv,
     float complex    w /* frequency */,
     complex float **wx /* wavefield */,
     float         **so /* slowness  */, 
@@ -312,34 +311,25 @@ void ssr_pho(
 {
     float complex w2,cc;
     int ix,iy,jr;
-    
+
+    w = 1e-3 + I * cimagf(w);
     w2 = w*w;
-    
+
     /* FFT */
     KOOP( pk[iy][ix] = 0.; );
     LOOP( pk[iy][ix] = wx[iy][ix]; );
-
-    if(inv) {
-	fft2( true,pk);
-    } else {
-	fft2(false,pk);
-    }
+    fft2(false,pk);
 
     jr=0;
-    KOOP( 
+    KOOP(
 	cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
-/*	cc = csqrtf(w2 * sm[jr]);*/
+
 	wk[iy][ix] = 
 	pk[iy][ix] * cexpf(-cc*az.d); 
 	);
 
     /* IFT */
-    if(inv) {
-	fft2(false,wk);
-    } else {
-	fft2( true,wk);
-    }
-
+    fft2( true,wk);
     LOOP( wx[iy][ix] = wk[iy][ix]; );
     
     taper2(wx);

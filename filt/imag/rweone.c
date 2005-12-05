@@ -160,16 +160,19 @@ void rweone_main(
 
 		if(inv) { /* modeling */
 		    w*=-1; /* causal */
-		    for(it=at.n-1;it>=0;it--) {
+		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
+		    for(it=at.n-2;it>=0;it--) {
 			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else {  /* migration */
 		    w*=+1; /* anti-causal */
-		    for(it=0;it<at.n;it++) {
+
+		    for(it=0;it<=at.n-2;it++) {
 			rweone_img(inv,dat[iw],img[it]);
 			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 		    }
+		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
 		}
 	    }
 	    break;
@@ -422,7 +425,7 @@ void rweone_psc_coef(
  */
 /*------------------------------------------------------------*/
 
-void rweone_phs(
+void rweone_phs_old(
     complex float *v,
     float w,
     float a0,
@@ -456,6 +459,42 @@ void rweone_phs(
     
     rweone_fft( true,v);
 }
+
+void rweone_phs(
+    complex float *v,
+    float w,
+    float a0,
+    float b0
+    )
+/*< Fourier-domain phase shift >*/
+{
+    int ig,ikg;
+    float kg;
+
+    float a2,b2,k2;
+    complex float iw,ikt,w2;
+
+    a2 = a0*a0;
+    b2 = b0*b0;
+
+    iw = 2e-3 - I * w;
+    w2 = iw*iw;
+
+    rweone_fft(false,v);
+
+    for(ig=0;ig<ag.n;ig++) {
+	ikg = KMAP(ig,ag.n);
+	kg = okg + ikg * dkg;
+	k2 = kg*kg;
+	
+	ikt = csqrtf( w2*a2 + k2*b2 );
+
+	v[ig] *= cexp(-ikt*at.d);
+    }
+    
+    rweone_fft( true,v);
+}
+
 
 void rweone_ssf(
     complex float *v,
@@ -598,7 +637,7 @@ void rweone_fft_init(int n)
 /*< init FFT >*/
 {
     if(n>0) {
-	ffts = 1./n; 
+	ffts = 1./sqrt(n); 
     } else {
 	sf_error("KISS FFT scale error: n==0",__FILE__);
     }
@@ -617,12 +656,16 @@ void rweone_fft(
 {
     int ig;
 
-    if(inv) for(ig=0;ig<ag.n;ig++) { d[ig] *= ffts; }
     if(inv) {
+
 	kiss_fft(invs,
 		 (const kiss_fft_cpx *) d, 
 		 (      kiss_fft_cpx *) d);
+	for(ig=0;ig<ag.n;ig++) { d[ig] *= ffts; }
+
     } else {
+
+	for(ig=0;ig<ag.n;ig++) { d[ig] *= ffts; }
 	kiss_fft(forw,
 		 (const kiss_fft_cpx *) d, 
 		 (      kiss_fft_cpx *) d);

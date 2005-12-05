@@ -80,14 +80,14 @@ void fft2(bool inv           /* inverse/forward flag */,
 	    }
 	}
 
-	for (i1=0; i1 < n1; i1++) {
-	    for (i2=0; i2<n2; i2++) {
+	for (i2=0; i2<n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
 		pp[i2][i1] *= fftscale;
 	    }
 	}
     } else {
-	for (i1=0; i1 < n1; i1++) {
-	    for (i2=0; i2<n2; i2++) {
+	for (i2=0; i2<n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
 		pp[i2][i1] *= fftscale;
 	    }
 	}

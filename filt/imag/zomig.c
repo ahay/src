@@ -207,7 +207,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
 
 	if(inv) { /* MODELING */
 	    
-	    for (iz=0; iz<az.n-1; iz++) {
+	    for (iz=0; iz<az.n; iz++) {
 		fslice_get(imag,iz,qq[0]);
 		LOOP( rrr[iz][imy][imx] = qq[imy][imx]; );
 	    }
@@ -240,7 +240,7 @@ void zomig(bool inv    /* forward/adjoint flag */,
 		    LOOP( rrr[iz+1][imy][imx] += crealf(wx[imy][imx]); ); // imaging
 		}
 	    }
-	    for (iz=0; iz<az.n-1; iz++) {
+	    for (iz=0; iz<az.n; iz++) {
 		LOOP(qq[imy][imx] = rrr[iz][imy][imx]; );
 		fslice_put(imag,iz,qq[0]);
 	    }
