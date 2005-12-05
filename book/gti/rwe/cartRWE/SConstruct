@@ -3,7 +3,7 @@ import zomig
 
 par = {
     'nz':300,  'dz':0.005,    'oz':0,     # CC axis 1
-    'nt':150,  'dt':0.005,    'ot':0,     # RC axis 1
+    'nt':200,  'dt':0.005,    'ot':0,     # RC axis 1
     'nx':300,  'dx':0.010,    'ox':0,     # CC axis 2
     'ng':200,  'dg':0.010,    'og':0.5,   # RC axis 2
     'nT':2000, 'dT':0.004,    'oT':0,     # time
@@ -61,7 +61,7 @@ Flow('vel',None,
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output=2-0.1*x1-0.20*x2 |
+     math output=2-0.1*x1-0.40*x2 |
      put label1=z label2=x
      ''' % par)
 Plot('vel',cgrey('allpos=y',par))
@@ -147,8 +147,8 @@ Flow(['abmRC','abrRC'],['cos','sloRC'],
      slo=${SOURCES[1]} abr=${TARGETS[1]}
      ''')
 
-Plot('aRC','abmRC','window n3=1 f3=0 | transp |'+ rgrey('pclip=100 color=j allpos=y bias=1',par))
-Plot('bRC','abmRC','window n3=1 f3=1 | transp |'+ rgrey('pclip=100 color=j allpos=y bias=1',par))
+Plot('aRC','abmRC','window n3=1 f3=0 | transp |'+ rgrey('pclip=100 color=F allpos=n bias=1',par))
+Plot('bRC','abmRC','window n3=1 f3=1 | transp |'+ rgrey('pclip=100 color=F allpos=y bias=1',par))
 Plot('mRC','abmRC','window n3=1 f3=2 | transp |'+ rgrey('pclip=100 color=j allpos=y',par))
 Result('abmRC','aRC bRC mRC','OverUnderAniso')
 
@@ -158,7 +158,7 @@ Result('abmRC','aRC bRC mRC','OverUnderAniso')
 Flow('datCC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=250
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=350
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
      ricker1 frequency=5 |
      smooth rect2=1 |
@@ -185,7 +185,7 @@ Result('frqCC','window | real | transp | grey pclip=100')
 Flow('datRC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=250
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=350
      n2=%(ng)d o2=%(og)g d2=%(dg)g k2=%(spg)d l2=%(spg)d |
      ricker1 frequency=5 |
      smooth rect2=1 |
