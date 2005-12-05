@@ -61,12 +61,28 @@ Result('pwd',grey('Diffractions'))
 
 velcon = '''
 pad n2=2049 | cosft sign2=1 | 
-pad beg1=1000 | stolt vel=2.8 nf=4 | window f1=1000 |
-spray axis=2 n=1 o=0 d=1 | fourvc nv=40 dv=0.01 v0=1.4 |
+pad beg1=1000 | stolt vel=2.8 nf=4 | window f1=1000 | 
+spray axis=2 n=1 o=0 d=1 | fourvc nv=80 dv=0.01 v0=1.4 |
 cosft sign3=-1 | window n3=1105
 '''
 
 Flow('vlf','pwd',velcon)
+
+Flow('foc','vlf',
+     'window j3=2 | focus rect1=80 rect3=80 | math output=1/input')
+
+Flow('pik','foc',
+     '''
+     scale dscale=3 |
+     pick rect1=40 rect2=40 | window |
+     transp | remap1 n1=1105 d1=0.05 o1=0 | transp 
+     ''')
+
+Result('pik',velgrey('Migration Velocity'))
+
+Flow('slc','vlf pik','slice pick=${SOURCES[1]} | window')
+
+Result('slc',grey('Migrated Diffractions'))
 
 #velcon.velcon('bei',
 #              nv=48,      # continuation steps
