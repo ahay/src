@@ -1,0 +1,137 @@
+from rsfproj import *
+import zomig
+
+par = {
+    'nz':400,  'dz':0.010,    'oz':0,
+    'nx':200,  'dx':0.020,    'ox':0,
+    'nt':1450, 'dt':0.004,    'ot':0,
+    'tmx':10,'eps':0.000001, 'verb':'y','nrmax':1,
+    'ow':1, 'incore':'y'
+    }
+
+par['dw']=1/(par['nt']*par['dt'])
+par['nw']=par['nt']/1000*150
+# ------------------------------------------------------------
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['tmin']=par['ot']
+par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+par['wmin']=par['ow']
+par['wmax']=par['ow'] + (par['nw']-1) * par['dw']
+# ------------------------------------------------------------
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=y
+    title="" pclip=99 label1="z(km)" label2="x(km)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=y
+    title="" pclip=99 label1="t(s)" label2="x(km)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['tmin'],par['tmax'],par['xmin'],par['xmax'])
+
+def fgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=y
+    title="" pclip=99 label1="w" label2="x(km)" %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['wmin'],par['wmax'],par['xmin'],par['xmax'])
+
+# ------------------------------------------------------------
+
+# velocity
+Flow('vel',None,
+     '''
+     spike n1=%(nz)d o1=%(oz)g d1=%(dz)g |
+     math output=2+0*x1 |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     ''' % par)
+Plot('vel',igrey('allpos=y',par))
+
+# slowness
+Flow('slo','vel',
+     '''
+     math output="1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1
+     ''')
+Result('slo','window | transp |'
+       + igrey('pclip=100 title=slo allpos=y color=j wantscalebar=y',par) )
+
+# ------------------------------------------------------------
+# FORWARD
+# ------------------------------------------------------------
+
+# reflectivity
+Flow('imgF',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=100 l2=100 |
+     ricker1 freq=0.2 |
+     transp |
+     spray axis=2 n=1 o=0 d=1
+     ''' % par)
+Plot('imgF','window | transp |'
+     + igrey('pclip=100 title=imgF',par))
+
+zomig.model('frqF','slo','imgF',par)
+Plot('frqF','window | real | transp |'
+     + fgrey('pclip=100 title=frqF',par))
+
+Flow('datF','frqF',
+     '''
+     window |
+     transp |
+     pad beg1=%d n1out=%d |
+     fft1 inv=y opt=n 
+     ''' % (par['ow']/par['dw'],par['nt']/2+1) )
+Plot('datF',
+     dgrey('pclip=100 title=datF',par))
+
+# ------------------------------------------------------------
+# ADJOINT
+# ------------------------------------------------------------
+
+# data
+Flow('datA',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nt)d o1=%(ot)g d1=%(dt)g k1=500
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=100 l2=100 |
+     ricker1 frequency=10 |
+     smooth rect2=1
+     ''' % par )
+Plot('datA',
+     dgrey('pclip=100 title=datA',par))
+
+Flow('frqA','datA',
+     '''
+     fft1 inv=n opt=n |
+     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
+     transp |
+     spray axis=2 n=1 o=0 d=1
+     ''' % par)
+Plot('frqA','window | real | transp |'
+     + fgrey('pclip=100 title=frqA',par))
+
+zomig.image('imgA','slo','frqA',par)
+Plot('imgA','window | transp |'
+     + igrey('pclip=100 title=imgA',par))
+
+# ------------------------------------------------------------
+
+Result('forw','imgF datF','Movie')
+Result('adjt','imgA datA','Movie')
+
+Result('icomp','imgA imgF','Movie')
+Result('fcomp','frqA frqF','Movie')
+Result('dcomp','datA datF','Movie')
+
+End()
