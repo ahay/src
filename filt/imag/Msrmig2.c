@@ -109,8 +109,8 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/    
     /* WAVEFIELD/IMAGE */
 
-    Fw_s = sf_input ( "in");
-    Fw_r = sf_input ("rwf");
+    Fw_s = sf_input( "in");
+    Fw_r = sf_input("rwf");
     
     if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("Need complex receiver data");

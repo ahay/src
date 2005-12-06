@@ -114,7 +114,7 @@ Result('sdd','sdd','window | real | transp | grey pclip=100')
 
 Flow('srr www','sdd s0 r0',
      '''
-     /home/savap/RSF/filt/imag/sfsrmod
+     srmod
      readwrite=y verb=y eps=0.01 nr=5 dt=0.00005 tx=16 px=0
      slo=${SOURCES[1]}
      ref=${SOURCES[2]}

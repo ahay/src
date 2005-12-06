@@ -186,16 +186,18 @@ void rweone_main(
 		
 		if(inv) { /* modeling */
 		    w*=-1; /* causal */
-		    for(it=at.n-1;it>=0;it--) {
+		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
+		    for(it=at.n-2;it>=0;it--) {
 			rweone_fx(w,dat[iw],aa[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else { /* migration */
 		    w*=+1; /* anti-causal */
-		    for(it=0;it<at.n;it++) {
+		    for(it=0;it<=at.n-2;it++) {
 			rweone_img(inv,dat[iw],img[it]);
 			rweone_fx(w,dat[iw],aa[it],it);
 		    }
+		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
 		}
 	    }
 	    break;
