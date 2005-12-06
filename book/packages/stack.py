@@ -96,8 +96,8 @@ def stack(name,
     Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
 
     velcon = '''
-    pad n2=%d | cosft sign2=1 | spray axis=2 n=1 o=0 d=1 |
-    stolt vel=%g nf=4 |
+    pad n2=%d | cosft sign2=1 | 
+    stolt vel=%g nf=4 | spray axis=2 n=1 o=0 d=1 |
     fourvc nv=%d dv=%g v0=%g |
     cosft sign3=-1 |
     window n3=%d
