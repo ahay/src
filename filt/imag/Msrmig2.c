@@ -67,6 +67,12 @@ int main (int argc, char *argv[])
     sf_init(argc,argv);
 
     if (NULL == (itype = sf_getstring("itype"))) itype = "o";
+    /* imaging condition type 
+       o = zero offset (default)
+       x = space offset
+       h = absolut offset
+       t = time offset
+    */
 
     /* converted waves flag */
     if (NULL != sf_getstring("sls")) {
@@ -130,6 +136,7 @@ int main (int argc, char *argv[])
     if(!sf_getint  ("jcx",&jcx)) jcx=1;
     if(!sf_getint  ("jcy",&jcy)) jcy=1;
     if(!sf_getint  ("jcz",&jcz)) jcz=1;
+    /* CIGs windowing */
 
     acx.o = amx.o;
     acx.n = amx.n / jcx;
