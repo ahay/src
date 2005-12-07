@@ -24,10 +24,10 @@
 #include <rsf.h>
 /*^*/
 
-#include "rwespm.h"
-
 #include "rweone.h"
 /*^*/
+
+#include "rwespm.h"
 
 static axa ag,at,aw,ar;
 static int method;

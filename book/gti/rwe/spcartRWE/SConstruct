@@ -9,7 +9,8 @@ par = {
     'ny':1,    'dy':1,        'oy':0,     # CC axis 3
     'nT':2000, 'dT':0.004,    'oT':0,     'kT':250, # time
     'tmx':0,'eps':0.0000001, 'verb':'y','nrmax':1,
-    'ow':1, 'incore':'y'
+    'ow':1, 'incore':'y',
+    'spx':250
     }
 
 par['dw']=1/(par['nT']*par['dT'])
@@ -22,7 +23,6 @@ par['spg']=par['ng']/2
 
 par['xsou']=par['spx']*par['dx']
 par['ysou']=par['oy']
-
 
 # ------------------------------------------------------------
 par['xmin']=par['ox']
@@ -69,7 +69,7 @@ Flow('vel',None,
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output=1-0.03*x1-0.025*x2 |
+     math output=2-0.05*x1-0.15*x2 |
      put label1=z label2=x
      ''' % par)
 Plot('vel',cgrey('allpos=y',par))
@@ -115,7 +115,8 @@ Flow('sloRC','sloCC cos',
      c2r rays=${SOURCES[1]} adj=n |
      put label1=g label2=t label3=
      ''')
-Result('sloRC','transp |' + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
+Result('sloRC','transp |'
+       + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
 
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
 Flow(['abmRC','abrRC'],['cos','sloRC'],
@@ -185,7 +186,7 @@ Flow('refCC',None,
      '''
      spike nsp=1 mag=1
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d 
      n3=%(ny)d o3=%(oy)g d3=%(dy)g |
      put label1=z label2=x label3=y |
      transp plane=12 | transp plane=23
@@ -258,7 +259,8 @@ Result('imgCC',['imgCC','ray','wft'],'Overlay')
 
 # ------------------------------------------------------------
 
-for i in (['SSF']):
+for i in (['SSF','FFD','PSC',
+           'F15','F45','F60']):
     if(i=='F15'): method='method=0 c1=0.50   c2=0.00'
     if(i=='F45'): method='method=0 c1=0.50   c2=0.25'
     if(i=='F60'): method='method=0 c1=0.4761 c2=0.3767'
@@ -297,6 +299,6 @@ for i in (['SSF']):
 
 Result('dcomp','datCC datRC','Movie')
 Result('fcomp','frqCC frqRC','Movie')
-Result('icomp','imgCC migCC-SSF','Movie')
+Result('icomp','imgCC migCC-SSF migCC-F15','Movie')
 
 End()

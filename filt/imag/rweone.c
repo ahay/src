@@ -152,21 +152,20 @@ void rweone_main(
 	case 1:
 	    for(iw=0;iw<aw.n;iw++) {
 		w=aw.o+iw*aw.d;
-		w*=2;
 
 		if     (method==3) { sf_warning("PSC %d %d",iw,aw.n); }
 		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
 		else               { sf_warning("SSF %d %d",iw,aw.n); }
 
 		if(inv) { /* modeling */
-		    w*=-1; /* causal */
+		    w*=-2; /* causal */
 		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
 		    for(it=at.n-2;it>=0;it--) {
 			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else {  /* migration */
-		    w*=+1; /* anti-causal */
+		    w*=+2; /* anti-causal */
 
 		    for(it=0;it<=at.n-2;it++) {
 			rweone_img(inv,dat[iw],img[it]);
@@ -179,20 +178,19 @@ void rweone_main(
 	case 0:
 	default:
 	    for(iw=0;iw<aw.n;iw++) {
-		w=aw.o+iw*aw.d; 
-		w*=2;
+		w=aw.o+iw*aw.d;
 
 		sf_warning("XFD %d %d",iw,aw.n);
 		
 		if(inv) { /* modeling */
-		    w*=-1; /* causal */
+		    w*=-2; /* causal */
 		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
 		    for(it=at.n-2;it>=0;it--) {
 			rweone_fx(w,dat[iw],aa[it],it);
 			rweone_img(inv,dat[iw],img[it]);
 		    }
 		} else { /* migration */
-		    w*=+1; /* anti-causal */
+		    w*=+2; /* anti-causal */
 		    for(it=0;it<=at.n-2;it++) {
 			rweone_img(inv,dat[iw],img[it]);
 			rweone_fx(w,dat[iw],aa[it],it);
@@ -525,7 +523,7 @@ void rweone_ssh(
 
     for(ig=0;ig<ag.n;ig++) {
 	ikz = I * w * aa[ig];
-	v[ig] *= cexpf( ikz * (-at.d) );
+	v[ig] *= cexpf( ikz * at.d );
     }
 }
 
@@ -537,6 +535,8 @@ void rweone_fds(
 /*< finite-differences solver >*/
 {
     int ig;
+
+    w *=-1; /* fix sign convention */
 
     for(ig=0;ig<ag.n;ig++) {
 	mu[ig] =  m0[it][ir][ig];
