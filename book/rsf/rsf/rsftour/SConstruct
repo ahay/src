@@ -38,7 +38,7 @@ Flow('subsampled','windowed','window j1=2')
 
 # sinc interpolation in the Fourier domain
 Flow('resampled','subsampled',
-     'fft1 | pad n1=102 | fft1 inv=y | window max1=0.8')
+     'fft1 | pad n1=102 | fft1 inv=y opt=n | window max1=0.8')
 
 Result('resampled','wiggle title=Resampled' + plotpar)
 

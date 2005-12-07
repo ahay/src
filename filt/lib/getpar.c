@@ -124,7 +124,7 @@ void sf_init(int argc,char *argv[])
 	    fp = fopen(argv[ic]+4,"r");
 	    if (NULL == fp) sf_error ("%s: Cannot open par file %s:",
 				      __FILE__,argv[ic]+4);
-	    sf_simtab_input(pars,fp);
+	    sf_simtab_input(pars,fp,NULL);
 	    (void) fclose (fp);
 	} else {
 	    sf_simtab_put(pars,argv[ic]);

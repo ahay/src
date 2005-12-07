@@ -466,7 +466,7 @@ void sf_simtab_put (sf_simtab table, const char *keyval)
     free(key);
 }
 
-void sf_simtab_input (sf_simtab table, FILE* fp) 
+void sf_simtab_input (sf_simtab table, FILE* fp, FILE* out) 
 /*< extract parameters from a file >*/
 {
     char line[LINELEN], word[LINELEN], *cl, *cw;
@@ -478,6 +478,9 @@ void sf_simtab_input (sf_simtab table, FILE* fp)
 	if (SF_EOL==line[0] && SF_EOL==line[1] && SF_EOT==line[2]) return;
 	if ('\n'  !=line[0] && '\n'  !=line[1] && '\n'  !=line[2] &&
 	    NULL == fgets(line+3,LINELEN-3,fp)) return;
+
+	if (NULL != out) fputs(line,out);
+
 	cw = word;
 	state = START;
         for (cl = line; '\0' != (c=*cl); cl++) {

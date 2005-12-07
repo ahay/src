@@ -89,7 +89,7 @@ typedef enum {SF_ASCII, SF_XDR, SF_NATIVE} sf_dataform;
 #endif
 
 struct sf_File {
-    FILE *stream; 
+    FILE *stream, *head; 
     char *dataname, *buf;
     sf_simtab pars;
     XDR xdr;
@@ -137,7 +137,9 @@ sf_file sf_input (/*@null@*/ const char* tag)
 /*    setbuf(file->stream,file->buf); */
 
     file->pars = sf_simtab_init (tabsize);
-    sf_simtab_input (file->pars,file->stream);
+    file->head = tmpfile();
+
+    sf_simtab_input (file->pars,file->stream,file->head);
 
     if (NULL == filename) {
 	infile = file;
@@ -207,6 +209,7 @@ Should do output after sf_input. >*/
 /*    setbuf(file->stream,file->buf); */
 
     file->pars = sf_simtab_init (tabsize);
+    file->head = NULL;
 
     file->pipe = (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
@@ -580,8 +583,16 @@ void sf_fileflush (sf_file file, sf_file src)
 Prepares file for writing binary data >*/ 
 {
     time_t tm;
+    char line[BUFSIZ];
  
     if (NULL == file->dataname) return;
+
+    if (NULL != src && NULL != src->head) {
+	rewind(src->head);
+	while (NULL != fgets(line,BUFSIZ,src->head)) {
+	    fputs(line,file->stream);
+	}
+    }
     
     tm = time (NULL);
     if (0 >= fprintf(file->stream,"%s\t%s:\t%s@%s\t%s\n",
@@ -663,8 +674,6 @@ Prepares file for writing binary data >*/
 			 (NULL==file->buf)? "native_byte":"xdr_byte");
 	    break;
     }    
-    if (NULL != src && NULL != src->pars)
-	sf_simtab_output(src->pars,file->stream);
     
     sf_simtab_output(file->pars,file->stream);
    

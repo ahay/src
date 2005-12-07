@@ -124,7 +124,7 @@ force, verb, and inquire flags should behave similar to the corresponding flags 
     if (verb) sf_warning("sf_rm: Removing header %s",filename);
     file = fopen (filename,"r");
     if (NULL == file) sf_error ("%s: Cannot open file %s:",__FILE__,filename);
-    sf_simtab_input (tab,file);
+    sf_simtab_input (tab,file,NULL);
     (void) fclose (file);
     in = sf_simtab_getstring (tab,"in");
     if (NULL == in) sf_error ("%s:  File %s has no in=",__FILE__,filename);
