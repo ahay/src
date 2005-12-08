@@ -6,7 +6,7 @@ Plot('aliasp','window n1=575 | grey title=Input crowd=0.85')
 Flow('dip2','aliasp',
      'twodip2 order=3 nj1=4 nj2=4 p0=2 q0=-1 eps=4 gauss=n')
 Flow('dip1','aliasp dip2',
-     'dip2 dip0=${SOURCES[1]} order=3 nj=4 eps=4 gauss=n')
+     'dip idip=${SOURCES[1]} order=3 nj1=4 rect1=7 rect2=3')
 Flow('dip','dip1',
      'transp | spline n1=96 o1=0 d1=0.25 | transp')
 

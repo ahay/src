@@ -16,7 +16,7 @@ Flow('bin','data',
      bin head=$SOURCE niter=150 nx=160 ny=160 xkey=0 ykey=1''')
 Plot('bin',grey('Binned'))
 
-Flow('dip','bin','dip2 order=2 gauss=n eps=10 lam=10 mask=$SOURCE')
+Flow('dip','bin','dip order=2 rect1=10 rect2=10 mask=$SOURCE')
 Flow('mis','bin dip','planemis2 order=2 dip=${SOURCES[1]} verb=y')
 Plot('mis',grey('Interpolated'))
 

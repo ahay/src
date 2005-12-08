@@ -10,7 +10,7 @@ Fetch(['acig10.hh','cmp.hh'],'acig',private)
 Flow('acig','acig10.hh','dd form=native | window n3=1')
 Plot('acig','grey title="Angle Common-Image Gather" ')
 
-Flow('dip','acig','dip2 eps=10 lam=1 gauss=n')
+Flow('dip','acig','dip rect1=10 rect2=3')
 Flow('dso','acig dip','flat dip=${SOURCES[1]}')
 Plot('dso','grey title=Flattened')
 
@@ -36,7 +36,7 @@ Flow('cmp','cmp.hh',
      ''')
 Plot('cmp','grey title="CMP Gather" ')
 
-Flow('cmp-dip','cmp','pad n2=100 | dip2 eps=40 lam=10 gauss=n')
+Flow('cmp-dip','cmp','pad n2=100 | dip rect1=20 rect2=10')
 Flow('cmp-dso','cmp cmp-dip',
      'pad n2=100 | flat dip=${SOURCES[1]} | window n2=60')
 Plot('cmp-dso','cmp-dso','grey title=Flattened')
@@ -65,7 +65,7 @@ Result('sigin','sigmoid','grey title=Input scalebar=y')
 Result('sigin2','sigmoid','grey title=Input')
 
 Flow('sdip','sigmoid',
-     'dip2 order=2 p0=0 verb=y niter=10 gauss=n eps=1 lam=1')
+     'dip order=2 p0=0 verb=y niter=10 rect1=3 rect2=3')
 Flow('sdip0','sigmoid','dip p0=0 verb=y rect1=1 rect2=1')
 
 Result('sigdip','sdip','grey color=j title="Smooth Dip" scalebar=y')

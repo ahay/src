@@ -37,7 +37,7 @@ Result('radon-inv',radon_inv,'SideBySideAniso')
 
 Flow('cdpv','cdp-rad','window n2=1 | math output=1.5')
 Flow('cdp-nmo','cdp-rad cdpv','taupmo velocity=${SOURCES[1]}')
-Flow('cdp-dip','cdp-nmo','dip2 niter=10 eps=20 lam=10 order=2')
+Flow('cdp-dip','cdp-nmo','dip niter=10 rect1=40 rect2=10 order=2')
 Flow('cdp-pik','cdp-dip','pick0')
 Plot('sig','cdp-rad','grey wanttitle=n')
 Plot('pik','cdp-pik',

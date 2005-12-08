@@ -18,9 +18,9 @@ Flow('yc27','yc yc2','window n2=20 | pad n2=21 | cat axis=2 ${SOURCES[1]}')
 
 order = {'sigmoid':2,  'conflict':1,  'dgulf':1, 'yc27':3}
 p0 =    {'sigmoid':0,  'conflict':0,  'dgulf':0, 'yc27':2}
-rect =  {'sigmoid':3,  'conflict':1,  'dgulf':4, 'yc27':3}
+smoo =  {'sigmoid':3,  'conflict':1,  'dgulf':4, 'yc27':3}
 pclip = {'sigmoid':100,'conflict':100,'dgulf':96,'yc27':99.5}
-eps   = {'sigmoid':1,  'conflict':2,  'dgulf':10,'yc27':1}
+rect  = {'sigmoid':3,  'conflict':5,  'dgulf':10,'yc27':3}
 
 for case in order.keys():
     dip = case + '-dip'
@@ -30,13 +30,13 @@ for case in order.keys():
     Plot(case,'grey title=INPUT')
 
     Flow(dip,case,
-         'dip2 order=%d p0=%g verb=y niter=10 gauss=n eps=%g lam=%g' %
-         (order[case],p0[case],eps[case],eps[case]))
+         'dip order=%d p0=%g verb=y niter=10 rect1=%d rect2=%d' %
+         (order[case],p0[case],rect[case],rect[case]))
     Plot(dip,'grey title=DIP scalebar=y pclip=100')
 
     Flow(pwd,[case,dip],
          'pwd order=%d dip=${SOURCES[1]} | smooth rect1=%d' %
-         (order[case],rect[case]))
+         (order[case],smoo[case]))
     Plot(pwd,'grey pclip=%g title=RESIDUAL' % pclip[case])
 
     Flow(txr,dip,

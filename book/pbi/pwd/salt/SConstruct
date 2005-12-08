@@ -14,7 +14,7 @@ Flow('line ./ahead ./bhead','line19410.sgy',
      window min1=1.5''',stdin=0)
 Plot('line',grey + ' title="Input Line"')
 
-Flow('dip','line','dip2 eps=10 lam=100 verb=y niter=10 gauss=n')
+Flow('dip','line','dip rect1=10 rect2=30 verb=y niter=10')
 Plot('dip',grey + ' title="Dip" color=j')
 
 Result('dip','line dip','OverUnderAniso')

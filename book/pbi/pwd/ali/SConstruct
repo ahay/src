@@ -19,7 +19,7 @@ title = {'sigmoid':'Original',
 
 for input in ['sigmoid','sigmoid-dec']:
     dip = input + '-dip'     
-    Flow(dip,input,'dip2 order=3')
+    Flow(dip,input,'dip order=3 rect1=3 rect2=3')
     Plot(dip,
          'grey color=j scalebar=y title=%s' % title[input])
 Result('dip',['sigmoid-dip','sigmoid-dec-dip'],'SideBySideAniso')
@@ -29,7 +29,7 @@ err = 'err'
 bot = 'bot'
 dip = 'dip'
 
-Flow(dip,'sigmoid-dec','dip2 verb=1 order=3 niter=10')
+Flow(dip,'sigmoid-dec','dip verb=1 order=3 niter=10 rect1=3 rect2=3')
 Flow(res,['sigmoid-dec',dip],
      'dealias2 dip=${SOURCES[1]} verb=1 nw=3 niter=10')
 Plot(res,'grey title=Restored clip=0.003')
