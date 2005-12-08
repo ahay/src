@@ -28,7 +28,7 @@ for prec in [0,1]:
         iter = res + str(niter)
         iters.append(iter)
         Flow(iter,'alias',
-             'invbin1 nx=200 dx=0.4 x0=0 filter=1 prec=%d niter=%d' % (prec,niter))
+             'invbin1 nx=200 dx=0.4 x0=0 filter=1 prec=%d verb=%d niter=%d' % (prec,prec,niter))
         labels = labels + 'iter=%d:' % niter
         Plot(iter,doty + ' overlap=2 ')
     Result(res,iters,

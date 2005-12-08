@@ -256,13 +256,23 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	if (verb) 
 	    sf_warning("iteration %d res %g prec dat %g prec mod %g grad %g", 
 		       iter, dprr, dppd, dppm, dpgm);
-
+	
 	if (dprr < TOLERANCE || dpgm < TOLERANCE) {
 	    if (verb) 
 		sf_warning("convergence in %d iterations",iter+1);
+
+	    if (mwt != NULL) {
+		for (i=0; i < nprec; i++) {
+		    tp[i] = p[i]*mwt[i];
+		}
+		prec (false, false, nprec, nx, tp, x);
+	    } else {
+		prec (false, false, nprec, nx,  p, x);
+	    }
+
 	    break;
 	}
-    
+
 	solv (forget, nprec+ny, ny, p, g, rr, gg);
 	forget = false;
 
@@ -310,11 +320,8 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 		rmov[iter][i] =  p[i+nprec] * eps;
 	    }
 	}
-    
-	if (err != NULL) {
-	    err[iter] = norm(ny, rr);
-	}
-    }
+	if (err != NULL) err[iter] = norm(ny, rr);
+    } /* iter */
 
     if (xp != NULL) {
 	for (i=0; i < nprec; i++) {
@@ -326,7 +333,21 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	    res[i] = rr[i];
 	}
     }
-  
+
+    for (; iter < niter; iter++) {
+	if (xmov != NULL) {
+	    for (i=0; i < nx; i++) {
+		xmov[iter][i] =  x[i];
+	    }
+	}
+	if (rmov != NULL) {
+	    for (i=0; i < ny; i++) {
+		rmov[iter][i] =  p[i+nprec] * eps;
+	    }
+	}    
+	if (err != NULL) err[iter] = norm(ny, rr);
+    }  
+
     free (p);
     free (g);
     free (rr);

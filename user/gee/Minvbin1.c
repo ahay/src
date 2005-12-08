@@ -30,7 +30,7 @@
 
 int main (int argc, char* argv[])
 {
-    bool prec, pef;
+    bool prec, pef, verb;
     int id, nd, nt, it, nx, filt, niter, three=3, i;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
     char *header;
@@ -97,6 +97,8 @@ int main (int argc, char* argv[])
     /* filter type */
     if (!sf_getbool("prec",&prec)) prec=true;
     /* if y, use preconditioning */
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     if (!prec) {
 	filt++;
@@ -130,10 +132,10 @@ int main (int argc, char* argv[])
 	if (prec) {
 	    if (filt==1) {
 		sf_solver_prec(lint1_lop, sf_cgstep, sf_causint_lop, nx, nx, 
-			       nd, mm, dd, niter, eps, "end");
+			       nd, mm, dd, niter, eps, "verb", verb, "end");
 	    } else {
 		sf_solver_prec(lint1_lop, sf_cgstep, sf_triangle1_lop, nx, nx, 
-			       nd, mm, dd, niter, eps, "verb", false, "end");
+			       nd, mm, dd, niter, eps, "verb", verb, "end");
 	    }
 	} else {
 	    sf_solver_reg(lint1_lop, sf_cgstep, tcai1_lop, nx+filt, nx, nd, 
