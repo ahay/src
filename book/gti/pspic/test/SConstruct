@@ -28,7 +28,7 @@ for dz in [1,10,40]:
     
 def plot(title):
     return '''
-    grey min2=0.5 max2=3.5 min1=0 max1=2 clip=0.306774
+    grey min2=0.5 max2=3.5 min1=0 max1=2 clip=0.0312972 
     label1="Depth (km)" label2="Lateral (km)" title="%s"
     ''' % title
 

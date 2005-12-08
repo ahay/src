@@ -15,7 +15,7 @@ Flow('vscan','mutter','vscan half=n v0=1500 dv=25 nv=151 semblance=y')
 Plot('vscan',
      'grey color=j allpos=y title="Semblance Scan" label2="Velocity (m/s)" ')
 
-Flow('pick','vscan','blindpick rect1=150')
+Flow('pick','vscan','pick rect1=100')
 Plot('pick',
      '''
      window | graph yreverse=y transp=y
