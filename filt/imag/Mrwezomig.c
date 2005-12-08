@@ -23,7 +23,7 @@
 */
 
 #include <rsf.h>
-#include "rweone.h"
+#include "rwezom.h"
 
 int main(int argc, char* argv[])
 {
@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
 
     int method;
     bool verb;
-    bool inv;
+    bool adj;
 
     complex float **dat;
     float         **img;
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb", &verb))     verb=false;
     if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
-    if(! sf_getbool("inv",  &inv))       inv=false;/* y=modeling; n=migration*/
+    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration*/
 						
     Fm = sf_input("abm");
     Fr = sf_input("abr");
@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     iaxa(Fr,&ar,1); ar.l="r"; /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
 
-    if(inv) {  /* modeling */
+    if(adj) {  /* modeling */
 	Fi = sf_input ( "in");
 	Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
 	if (SF_FLOAT !=sf_gettype(Fi)) sf_error("Need float image");
@@ -70,10 +70,6 @@ int main(int argc, char* argv[])
 
 	oaxa(Fd,&ag,1);
 	oaxa(Fd,&aw,2);
-
-	dat = sf_complexalloc2(ag.n,aw.n);
-	img = sf_floatalloc2  (ag.n,at.n);
-
     } else {   /* migration */
 	Fd = sf_input("in");
 	Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
@@ -84,10 +80,10 @@ int main(int argc, char* argv[])
 
 	oaxa(Fi,&ag,1);
 	oaxa(Fi,&at,2);
-
-	dat = sf_complexalloc2(ag.n,aw.n);
-	img = sf_floatalloc2  (ag.n,at.n);
     }
+
+    dat = sf_complexalloc2(ag.n,aw.n);
+    img = sf_floatalloc2  (ag.n,at.n);
 
     if(verb) {
 	raxa(ag);
@@ -118,7 +114,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if(inv) { /* modeling */
+    if(adj) { /* modeling */
 	sf_floatread  (img[0],ag.n*at.n,Fi);
 
 	for(iw=0;iw<aw.n;iw++) {
@@ -139,13 +135,13 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* execute */
-    rweone_init(ag,at,aw,ar,method);
+    rwezom_init(ag,at,aw,ar,method,verb);
 
-    rweone_main(inv,dat,img,aa,bb,mm,a0,b0);
+    rwezom_main(adj,dat,img,aa,bb,mm,a0,b0);
     /* execute */
     /*------------------------------------------------------------*/
 
-    if(inv) { /* modeling */
+    if(adj) { /* modeling */
 	sf_complexwrite(dat[0],ag.n*aw.n,Fd);
     } else {  /* migration */
 	sf_floatwrite  (img[0],ag.n*at.n,Fi);

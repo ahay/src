@@ -271,7 +271,7 @@ for i in (['SSF','FFD','PSC',
     migRC = 'migRC' + '-' + i
     migCC = 'migCC' + '-' + i
 
-    # RWE image RC: (t,g)
+    # RWE image RC: (g,t)
     Flow(migRC,['sokRC','frqRC','abmRC','abrRC'],
          '''
          rwesrmig ntap=0 verb=y %s
@@ -283,7 +283,7 @@ for i in (['SSF','FFD','PSC',
     Plot  (migRC,'window | transp |' + rgrey('title=%s',par) % i)
     Result(migRC,'window | transp |' + rgrey('title=%s',par) % i)
 
-    # image CC: (z,x)
+    # RWE image CC: (z,x)
     Flow(migCC,[migRC,'cos'],
          '''
          c2r rays=${SOURCES[1]} adj=y linear=n 

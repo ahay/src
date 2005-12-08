@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
     
     /*------------------------------------------------------------*/
     /* execute */
-    rwespm_init(ag,at,aw,ar,method);
+    rwespm_init(ag,at,aw,ar,method,verb);
     
     rwespm_main(wfl_s,wfl_r,img,aa,bb,mm,a0,b0);
     /* execute */

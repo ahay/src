@@ -6,7 +6,7 @@ par = {
     'nt':300,  'dt':0.005,    'ot':0,     # RC axis 1
     'nx':500,  'dx':0.020,    'ox':0,     # CC axis 2
     'ng':400,  'dg':0.020,    'og':1,     # RC axis 2
-    'nT':2000, 'dT':0.004,    'oT':0,     # time
+    'nT':2000, 'dT':0.004,    'oT':0,      'kT':500,    # time
     'tmx':0,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':250, 'spg':200
@@ -107,7 +107,8 @@ Flow('sloRC','sloCC cos',
      c2r rays=${SOURCES[1]} adj=n |
      put label1=g label2=t label3=
      ''')
-Result('sloRC','transp |' + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
+Result('sloRC','transp |'
+       + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
 
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
 Flow(['abmRC','abrRC'],['cos','sloRC'],
@@ -127,7 +128,7 @@ Result('abmRC','aRC bRC mRC','OverUnderAniso')
 Flow('datCC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=350
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
      ricker1 frequency=5 |
      smooth rect2=1 |
@@ -154,7 +155,7 @@ Result('frqCC','window | real | transp | grey pclip=100')
 Flow('datRC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=350
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
      n2=%(ng)d o2=%(og)g d2=%(dg)g k2=%(spg)d l2=%(spg)d |
      ricker1 frequency=5 |
      smooth rect2=1 |
@@ -194,11 +195,13 @@ for i in (['SSF','FFD','PSC',
     
     migRC = 'migRC' + '-' + i
     migCC = 'migCC' + '-' + i
-
-    # RWE image RC: (t,g)
+    mofRC = 'mofRC' + '-' + i
+    modRC = 'modRC' + '-' + i
+    
+    # RWE image RC: (g,t)
     Flow(migRC,['frqRC','abmRC','abrRC'],
          '''
-         rwezomig ntap=0 %s
+         rwezomig ntap=0 adj=n %s
          abm=${SOURCES[1]}
          abr=${SOURCES[2]} |
          put label1=g label2=t
@@ -206,7 +209,7 @@ for i in (['SSF','FFD','PSC',
     Plot  (migRC,'window | transp |' + rgrey('title=%s',par) % i)
     Result(migRC,'window | transp |' + rgrey('title=%s',par) % i)
 
-    # image CC: (z,x)
+    # RWE image CC: (z,x)
     Flow(migCC,[migRC,'cos'],
          '''
          c2r rays=${SOURCES[1]} adj=y linear=n 
@@ -218,6 +221,28 @@ for i in (['SSF','FFD','PSC',
     Plot(migCC,'window | transp |' + cgrey('title=%s',par) % i)
     Result(migCC,[migCC,'ray','wft'],'Overlay')
 
+    # RWE data RC: (g,w)
+    Flow(mofRC,[migRC,'abmRC','abrRC'],
+         '''
+         rwezomig ntap=0 adj=y %s
+         nw=%d ow=%g dw=%g 
+         abm=${SOURCES[1]}
+         abr=${SOURCES[2]} |
+         put label1=g label2=w
+         ''' % (method,par['nw'],par['ow'],par['dw']) )
+
+    # RWE data RC: (g,T)
+    Flow(modRC,mofRC,
+         '''
+         window | transp |
+         pad beg1=%d n1out=%d |
+         fft1 opt=n inv=y |
+         put label1=t label2=x
+         ''' % (int(par['ow']/par['dw']),
+                par['nT']/2+1))
+    Plot  (modRC,'grey pclip=100 wanttitle=n')
+    Result(modRC,'grey pclip=100 wanttitle=n grid=y')
+    
     # ------------------------------------------------------------
 
 Result('dcomp','datCC datRC','Movie')

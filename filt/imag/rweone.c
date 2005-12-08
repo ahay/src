@@ -1,4 +1,6 @@
-/* one-way Rienmannian Wavefield Extrapolation */
+/* one-way Rienmannian Wavefield Extrapolation 
+   extrapolation subroutines
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -26,6 +28,7 @@
 
 static axa ag,at,aw,ar;
 static int method;
+static bool verb;
 
 static float ***m0, ***n0, ***r0;
 static float   *mu,   *nu,   *ro;
@@ -54,7 +57,8 @@ void rweone_init(
     axa at_,
     axa aw_,
     axa ar_,
-    int method_)
+    int method_,
+    bool verb_)
 /*< initialize >*/
 {
     ag = ag_;
@@ -62,8 +66,9 @@ void rweone_init(
     aw = aw_;
     ar = ar_;
 
-    method =method_;
-    
+    method = method_;
+    verb   = verb_;
+
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
     aw.o *= 2.*SF_PI;
@@ -113,116 +118,6 @@ void rweone_init(
 
     if(! sf_getint("nloop",&nloop)) nloop=3;
     rweone_mrs_init();
-}
-
-void rweone_main(
-    bool            inv,
-    complex float **dat,
-    float         **img,
-    float         ** aa,
-    float         ** bb,
-    float         ** mm,
-    float         ** a0,
-    float         ** b0)
-/*< run one-way extrapolation >*/
-{
-    int iw,it;
-    float w;
-
-    switch(method) {
-	case 3: /* PSC */
-	    sf_warning("compute PSC coef");
-	    rweone_psc_coef(aa,bb,a0,b0);
-	    break;
-	case 2: /* FFD */
-	    sf_warning("compute FFD coef");
-	    rweone_ffd_coef(aa,bb,a0,b0);
-	    break;
-	case 1: /* SSF */
-	    break;
-	case 0: /* XFD */
-	    sf_warning("compute XFD coef");
-	    rweone_xfd_coef(aa,bb);
-	    break;
-    }
-
-    switch(method) {
-	case 3:
-	case 2:
-	case 1:
-	    for(iw=0;iw<aw.n;iw++) {
-		w=aw.o+iw*aw.d;
-
-		if     (method==3) { sf_warning("PSC %d %d",iw,aw.n); }
-		else if(method==2) { sf_warning("FFD %d %d",iw,aw.n); }
-		else               { sf_warning("SSF %d %d",iw,aw.n); }
-
-		if(inv) { /* modeling */
-		    w*=-2; /* causal */
-		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
-		    for(it=at.n-2;it>=0;it--) {
-			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
-			rweone_img(inv,dat[iw],img[it]);
-		    }
-		} else {  /* migration */
-		    w*=+2; /* anti-causal */
-
-		    for(it=0;it<=at.n-2;it++) {
-			rweone_img(inv,dat[iw],img[it]);
-			rweone_fk(w,dat[iw],aa[it],a0[it],b0[it],mm[it],it);
-		    }
-		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
-		}
-	    }
-	    break;
-	case 0:
-	default:
-	    for(iw=0;iw<aw.n;iw++) {
-		w=aw.o+iw*aw.d;
-
-		sf_warning("XFD %d %d",iw,aw.n);
-		
-		if(inv) { /* modeling */
-		    w*=-2; /* causal */
-		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
-		    for(it=at.n-2;it>=0;it--) {
-			rweone_fx(w,dat[iw],aa[it],it);
-			rweone_img(inv,dat[iw],img[it]);
-		    }
-		} else { /* migration */
-		    w*=+2; /* anti-causal */
-		    for(it=0;it<=at.n-2;it++) {
-			rweone_img(inv,dat[iw],img[it]);
-			rweone_fx(w,dat[iw],aa[it],it);
-		    }
-		    it=at.n-1; rweone_img(inv,dat[iw],img[it]);
-		}
-	    }
-	    break;
-    } /* end switch method */
-}
-
-/*------------------------------------------------------------*/
-
-void rweone_img(
-    bool           inv,
-    complex float *ddd,
-    float         *iii)
-/*< imaging condition >*/
-{
-    int ig;
-
-    if(inv) { /* modeling */
-	for(ig=0;ig<ag.n;ig++) {
-	    ddd[ig] += iii[ig];
-	}
-	rweone_tap(ddd);
-    } else {
-	rweone_tap(ddd);
-	for(ig=0;ig<ag.n;ig++) {
-	    iii[ig] += crealf(ddd[ig]);
-	}
-    }
 }
 
 void rweone_fk(
@@ -281,6 +176,8 @@ void rweone_xfd_coef(
 {
     int it,ig;
 
+    if(verb) sf_warning("compute XFD coef");
+
     for(it=0;it<at.n;it++) {
 	for(ig=0;ig<ag.n;ig++) {
 	    m0[it][0][ig] = 1.;
@@ -307,6 +204,8 @@ void rweone_ffd_coef(
     float boa, boa2, boa4;
     float bob, bob2, bob4;
     float aoa, aoa3;
+
+    if(verb) sf_warning("compute FFD coef");
 
     d1=sf_floatalloc3(ag.n,ar.n,at.n);
     d2=sf_floatalloc3(ag.n,ar.n,at.n);
@@ -384,6 +283,8 @@ void rweone_psc_coef(
     float boa, boa2;
     float aoa;
     float bob;
+
+    if(verb) sf_warning("compute PSC coef");
 
     /* find max(b0) */
     tb=sf_floatalloc (ar.n*at.n);
