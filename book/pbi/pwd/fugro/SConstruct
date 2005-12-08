@@ -53,7 +53,7 @@ Flow('dip2',['mutter','dip0','mask','dip1'],
      ''')
 
 Flow('dip','mutter dip2',
-     'dip2 gauss=n dip0=${SOURCES[1]} niter=10 eps=50 lam=10')
+     'dip idip=${SOURCES[1]} niter=10 rect1=25 rect2=10')
 
 Flow('flt','mutter dip','flat dip=${SOURCES[1]}')
 
