@@ -620,8 +620,48 @@ void rweone_mrs(
     }
 }
 
+/*------------------------------------------------------------*/
+
 void cwrite(complex float x)
 /*< output a complex number >*/
 {
     sf_warning("(%f,%f)",crealf(x), cimagf(x));
+}
+
+/*------------------------------------------------------------*/
+
+void rweone_zoi(
+    bool           adj,
+    complex float *ddd,
+    float         *iii)
+/*< zero-offset imaging condition >*/
+{
+    int ig;
+
+    if(adj) { /* modeling */
+	for(ig=0;ig<ag.n;ig++) {
+	    ddd[ig] += iii[ig];
+	}
+	rweone_tap(ddd);
+    } else {
+	rweone_tap(ddd);
+	for(ig=0;ig<ag.n;ig++) {
+	    iii[ig] += crealf(ddd[ig]);
+	}
+    }
+}
+
+void rweone_spi(
+    complex float *swf,
+    complex float *rwf,
+    float         *iii)
+/*< shot-record imaging condition >*/
+{
+    int ig;
+
+    rweone_tap(swf);
+    rweone_tap(rwf);
+    for(ig=0;ig<ag.n;ig++) {
+	iii[ig] += crealf( conjf(swf[ig]) * rwf[ig] );
+    }
 }

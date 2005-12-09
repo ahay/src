@@ -93,7 +93,7 @@ void rwespm_main(
 	ws = -w; /*      causal */
 	wr = +w; /* anti-causal */
 	for(it=0;it<=at.n-2;it++) {
-	    rwespm_img(swf[iw],rwf[iw],img[it]);
+	    rweone_spi(swf[iw],rwf[iw],img[it]);
 
 	    if(method!=0) {
 		rweone_fk(ws,swf[iw],aa[it],a0[it],b0[it],mm[it],it);
@@ -103,23 +103,9 @@ void rwespm_main(
 		rweone_fx(wr,rwf[iw],aa[it],it);
 	    }
 	}
-	it=at.n-1; rwespm_img(swf[iw],rwf[iw],img[it]);
+	it=at.n-1; rweone_spi(swf[iw],rwf[iw],img[it]);
     }
 }
 
 /*------------------------------------------------------------*/
 
-void rwespm_img(
-    complex float *swf,
-    complex float *rwf,
-    float         *iii)
-/*< imaging condition >*/
-{
-    int ig;
-
-    rweone_tap(swf);
-    rweone_tap(rwf);
-    for(ig=0;ig<ag.n;ig++) {
-	iii[ig] += crealf( conjf(swf[ig]) * rwf[ig] );
-    }
-}

@@ -93,45 +93,24 @@ void rwezom_main(
 	if(adj) {  /* modeling */
 	    w*=-2; /*      causal, two-way time */
 	    
-	    it=at.n-1; rwezom_img(adj,wfl[iw],img[it]);
+	    it=at.n-1; rweone_zoi(adj,wfl[iw],img[it]);
 	    for(it=at.n-2;it>=0;it--) {
 		if(method!=0) rweone_fk(w,wfl[iw],aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(w,wfl[iw],aa[it],it);
-		rwezom_img(adj,wfl[iw],img[it]);
+		rweone_zoi(adj,wfl[iw],img[it]);
 	    }
 	} else {   /* migration */
 	    w*=+2; /* anti-causal, two-way time */
 	    
 	    for(it=0;it<=at.n-2;it++) {
-		rwezom_img(adj,wfl[iw],img[it]);		
+		rweone_zoi(adj,wfl[iw],img[it]);		
 		if(method!=0) rweone_fk(w,wfl[iw],aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(w,wfl[iw],aa[it],it);
 	    }
-	    it=at.n-1; rwezom_img(adj,wfl[iw],img[it]);
+	    it=at.n-1; rweone_zoi(adj,wfl[iw],img[it]);
 	}
     } /* w loop */
 }
 
 /*------------------------------------------------------------*/
-
-void rwezom_img(
-    bool           adj,
-    complex float *ddd,
-    float         *iii)
-/*< imaging condition >*/
-{
-    int ig;
-
-    if(adj) { /* modeling */
-	for(ig=0;ig<ag.n;ig++) {
-	    ddd[ig] += iii[ig];
-	}
-	rweone_tap(ddd);
-    } else {
-	rweone_tap(ddd);
-	for(ig=0;ig<ag.n;ig++) {
-	    iii[ig] += crealf(ddd[ig]);
-	}
-    }
-}
 
