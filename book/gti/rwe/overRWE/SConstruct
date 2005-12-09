@@ -44,17 +44,17 @@ Plot('vel',igrey('allpos=y',par))
 Flow('hwt','vel',
      '''
      hwt2d verb=n xsou=-1500 zsou=0 
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     nt=1400   ot=%(ot)g dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      ''' % par)
 
 # coordinate system: rays(g,t)
 Flow('cos','hwt',
      '''
-     window f2=100 |
+     window f2=100 n2=%(nt)d |
      reverse which=2 opt=n |
      put o2=0
-     ''')
+     ''' % par)
 
 Plot('wft','cos','window f1=50 j1=50 | transp |'
      + igraph('plotcol=1',par))
@@ -131,8 +131,10 @@ Flow('frqRC','datRC',
      fft1 inv=n |
      window squeeze=n min1=1 j1=1 n1=60 |
      transp |
-     put label1=g label2=w
-     ''')
+     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
+     pad n2out=%(nt)d |
+     put label1=g label2=t label3=w
+     ''' % par)
 Result('frqRC','frqRC','real | grey pclip=100')
 
 # ------------------------------------------------------------

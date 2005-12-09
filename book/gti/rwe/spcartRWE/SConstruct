@@ -176,9 +176,11 @@ Flow('sokRC','sokCC',
      '''
      window min1=%(og)g n1=%(ng)d |
      window |
-     put label1=g label2=w
+     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
+     pad n2out=%(nt)d |
+     put label1=g label2=t label3=w
      ''' % par)
-Result('sokRC','window | real | transp | grey pclip=100')
+Result('sokRC','window n2=1 | real | transp | grey pclip=100')
 
 # ------------------------------------------------------------
 
@@ -245,10 +247,12 @@ Flow('frqRC','datRC',
      fft1 opt=n inv=n |
      window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
      transp |
-     put slabel1=g label2=w
+     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
+     pad n2out=%(nt)d |
+     put label1=g label2=t label3=w
      ''' % par)
-Plot  ('frqRC','real | transp | grey pclip=100')
-Result('frqRC','real | transp | grey pclip=100')
+Plot  ('frqRC','window n2=1 | real | transp | grey pclip=100')
+Result('frqRC','window n2=1 | real | transp | grey pclip=100')
 
 # ------------------------------------------------------------
 

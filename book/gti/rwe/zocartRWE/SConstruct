@@ -14,7 +14,7 @@ par = {
 
 par['dw']=1/(par['nT']*par['dT'])
 par['nw']=par['nT']/1000*50
-#par['nw']=20
+#par['nw']=10
 #par['ow']=3
 # ------------------------------------------------------------
 par['xmin']=par['ox']
@@ -170,10 +170,12 @@ Flow('frqRC','datRC',
      fft1 opt=n inv=n |
      window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
      transp |
-     put label1=g label2=w
+     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
+     pad n2out=%(nt)d |
+     put label1=g label2=t label3=w
      ''' % par)
-Plot  ('frqRC','real | transp | grey pclip=100')
-Result('frqRC','real | transp | grey pclip=100')
+Plot  ('frqRC','window n2=1 | real | transp | grey pclip=100')
+Result('frqRC','window n2=1 | real | transp | grey pclip=100')
 
 # ------------------------------------------------------------
 
@@ -201,7 +203,7 @@ for i in (['SSF','FFD','PSC',
     # RWE image RC: (g,t)
     Flow(migRC,['frqRC','abmRC','abrRC'],
          '''
-         rwezomig ntap=0 adj=n %s
+         rwezomig ntap=0 adj=n verb=y %s
          abm=${SOURCES[1]}
          abr=${SOURCES[2]} |
          put label1=g label2=t
@@ -228,13 +230,13 @@ for i in (['SSF','FFD','PSC',
          nw=%d ow=%g dw=%g 
          abm=${SOURCES[1]}
          abr=${SOURCES[2]} |
-         put label1=g label2=w
+         put label1=g label2=t label3=w
          ''' % (method,par['nw'],par['ow'],par['dw']) )
 
     # RWE data RC: (g,T)
     Flow(modRC,mofRC,
          '''
-         window | transp |
+         window n2=1 | transp |
          pad beg1=%d n1out=%d |
          fft1 opt=n inv=y |
          put label1=t label2=x
