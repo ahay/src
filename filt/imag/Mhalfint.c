@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
     }
 
     nn = sf_fftr_size(n1);
-    if (nn%2) nn++;
     pp = sf_floatalloc(nn);
 
     halfint_init (inv, nn, rho);

@@ -53,7 +53,6 @@ int main(int argc, char* argv[]) {
 
 	/* determine wavenumber sampling (for real to complex FFT) */
 	nfft = sf_fftr_size(n1);
-	if (nfft%2) nfft++;
 	trace = sf_floatalloc(nfft);
 	
 	sf_floatread(trace,n1,in);

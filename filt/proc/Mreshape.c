@@ -74,7 +74,6 @@ int main(int argc, char* argv[])
     
     /* determine frequency sampling (for real to complex FFT) */
     nfft = sf_fftr_size(n1);
-    if (nfft%2) nfft++;
     reshape_init (nfft,d1);
 
     if (!sf_histint(ma,"n1",&n) || n != 2)

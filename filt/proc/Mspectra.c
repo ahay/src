@@ -50,7 +50,6 @@ int main (int argc, char* argv[])
 
     /* determine frequency sampling (for real to complex FFT) */
     nfft = sf_fftr_size(n1);
-    if (nfft%2) nfft++;
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 

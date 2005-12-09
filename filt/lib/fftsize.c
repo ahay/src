@@ -28,8 +28,12 @@ int sf_fftr_size(int min)
 
     for (n=0; n < SF_FFTR_SIZE; n++) {
 	size = SF_FFTR[n].size;
-	if (size >= min) return size;
+	if (size >= min) {
+	    min=size;
+	    break;
+	}
     }
+    if (min%2) min++; /* make it even */
     return min;
 }
 
@@ -47,7 +51,10 @@ int sf_fftr_size2(int min, int max)
 	    break;
 	}
     }
-    if (nmin < 0) return min;
+    if (nmin < 0) {
+	if (min%2) min++; /* make it even */
+	return min;
+    }
 
     nmax=0;
     for (n=SF_FFTR_SIZE-1; n >= 0; n--) {	
@@ -66,5 +73,7 @@ int sf_fftr_size2(int min, int max)
 	    size=SF_FFTR[n].size;
 	}
     }
+
+    if (size%2) size++; /* make it even */
     return size;
 }

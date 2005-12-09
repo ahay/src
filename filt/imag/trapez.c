@@ -1,4 +1,4 @@
-/* Ricker filter */
+/* Trapezoidal filter */
 /*
   Copyright (C) 2004 University of Texas at Austin
   

@@ -46,7 +46,6 @@ int main(int argc, char* argv[])
 
     trace = sf_floatalloc(n1);
     fft_size = sf_fftr_size(n1);
-    if(fft_size%2) fft_size += 1; /* sf_fftr_size should return an even number?*/
     ricker_init(fft_size, 0.5*freq, 0);
 
     for (i2=0; i2 < n2; i2++) {
