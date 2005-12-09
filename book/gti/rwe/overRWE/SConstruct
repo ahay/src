@@ -179,7 +179,7 @@ for i in (['F15','SSF']):
     Flow(modRC,['refRC','abmRC','abrRC'],
          '''
          rwezomig ntap=100 %s
-         inv=y nw=60 ow=1 dw=0.1 
+         adj=y nw=60 ow=1 dw=0.1 
          abm=${SOURCES[1]}
          abr=${SOURCES[2]} |
          put label1=g label2=t

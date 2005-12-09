@@ -1,0 +1,154 @@
+from rsfproj import *
+import string
+
+# ------------------------------------------------------------
+par = {
+    'nx':3201, # no of x samples
+    'dx':0.01, #       x sampling
+    'ox':0.0,  #       x origin
+#
+    'nz':1601, # no of z samples
+    'dz':0.01, #       z sampling
+    'oz':0.0,  #       z origin
+#       
+    'nt':20000,  # no of time steps
+    'dt':0.001,  #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    #
+    'ns':2,      # no of shots
+    'os':20,     #       shots origin   (km)
+    'ds':5,      #       shots sampling (km)
+    #
+#    'ns':601,    #  no of shots
+#    'os':1,      #        shots origin   (km)
+#    'ds':0.05    #        shots sampling (km)
+    }
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# build velocity model
+# ------------------------------------------------------------
+Flow('lay0',None,'spike d1=%(dx)g o1=%(ox)g n1=%(nx)d mag=0 label1="x(km)" ' % par)
+
+layers = (
+    ((0.0,0.2),(1.0,0.23),(2.0,0.25),(3.0,0.26),(8.0,0.27)),
+    ((0.9,1.0),(1.0,2.0),(1.1,3.0),(1.5,4.0)),
+    ((0.0,1.0),(1.0,1.0),(1.5,1.3),(8.0,2.2)),
+    ((1.0,2.0),(1.5,2.4),(8.0,3.3)),
+    ((0.0,4.0),(1.5,4.0),(8.0,4.0))
+    )
+
+lays = []
+nlays = len(layers)
+for i in range(nlays):
+    inp = 'inp%d' % i
+    Flow('./'+inp,None,
+         'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+         (string.join(map(lambda x: string.join(map(str,map(lambda x: 4*x,x))),layers[i]),
+                      ' '),
+          len(layers[i])))
+    
+Flow('lay1','inp0 lay0','dd form=native | spline pattern=${SOURCES[1]}')
+Flow('lay2','inp2 lay0','dd form=native | spline pattern=${SOURCES[1]}')
+Flow('lay5','inp4 lay0','dd form=native | spline pattern=${SOURCES[1]}')
+
+Flow('salt-flank','inp1','dd form=native | spline d1=%(dx)g o1=3.6 n1=241' % par)
+Flow('salt-top','lay2','window n1=360')
+Flow('salt-bot','lay5','window f1=601')
+Flow('lay4','salt-top salt-flank salt-bot','cat axis=1 ${SOURCES[1:3]}')
+
+Flow('sedi','inp3 lay0','dd form=native | spline d1=%(dx)g o1=4 n1=2801' % par)
+Flow('lay3','lay4 sedi','window n1=400 | cat axis=1 ${SOURCES[1]}')
+
+Flow('layers','lay0 lay1 lay2 lay3 lay4 lay5','cat axis=2 ${SOURCES[1:%d]}' % (nlays+1))
+Flow('vmod','layers',
+     '''
+     unif2 v00=1,1,0.4,0.15,0.1,0.06,1.0 dvdz=0,0,-0.01,0,0,0,0 z0=0,0,0,0,0,0,0
+     n1=%(nz)d d1=%(dz)g o1=%(oz)g |
+     math output="1.5/sqrt(input)" |
+     put label1="z(km)" label2="x(km)"
+     ''' % par)
+
+Flow('x','lay0','math output=x1')
+Flow('r','lay0','math output=1')
+
+# ------------------------------------------------------------
+# F-D modeling
+# ------------------------------------------------------------
+# receivers file: (x,z)-nreceivers
+Flow('xr',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=x1' % par)
+Flow('zr',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0'  % par)
+Flow('rr',['xr','zr'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+
+# wavelet
+Flow('wav',None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=10 | 
+         put label1=t label2=x label3=y 
+         ''' % par)    
+Result('wav','wav','window n1=1000 | graph title=" "')
+
+Flow('vel','vmod','window')
+Result('vel','grey labelrot=n title="" color=j allpos=y')
+
+# ------------------------------------------------------------
+Flow('vsm','vel','smooth rect1=100 rect2=100 repeat=10')
+Result('vsm','grey labelrot=n title="" color=j allpos=y')
+
+# ------------------------------------------------------------
+# smin = min shot index  (sample #)
+# smax = max shot index  (sample #)
+# sjmp = shot index jump (sample #)
+smin = int((par['os']/par['dx'])) 
+smax = int((par['os']+(par['ns']-1)*par['ds'])/par['dx'])
+sjmp = int((par['ds']/par['dx']))
+
+for js in range(smin,smax,sjmp):
+    s_ = js * par['dx']    # shot location (km)
+    sl = str(js).zfill(4)  # shot index
+
+    zs = 'zs' + sl
+    xs = 'xs' + sl
+    rs = 'rs' + sl
+    ss = 'ss' + sl # shots file (x,z,r)-nshots
+
+    Flow(zs,None,'math n1=1 d1=0 o1=0 output=0')
+    Flow(xs,None,'math n1=1 d1=0 o1=0 output=%g' % s_ )
+    Flow(rs,None,'math n1=1 d1=0 o1=0 output=1')
+    Flow(ss,[xs,zs,rs],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+    
+    dd = 'dd' + sl # data
+    ww = 'ww' + sl # snapshot
+    Flow([dd,ww],['wav','vel',ss,'rr'],
+         '''
+         afdm2d verb=y abc=y free=n snap=y jsnap=500
+                nbz=250 tz=0.001
+                nbx=250 tx=0.001
+                vel=${SOURCES[1]}
+                sou=${SOURCES[2]}
+                rec=${SOURCES[3]}
+                wfl=${TARGETS[1]}
+         ''')
+    # snap=y jsnap=500: dump wavefield at every 500 time steps
+    # verb=y: verbose execution
+    # abc=y:  use absorbing boundary condition
+    # free=n: no free surface
+    
+    Result(ww,ww,'window j3=2 | grey gainpanel=a')
+    Result(dd,dd,'transp | grey')
+# ------------------------------------------------------------
+
+allshots = map(lambda x: 'dd%04d' % x,range(smin,smax,sjmp))
+Flow('shots',allshots,'cat axis=3 space=n ${SOURCES[0:%d]}' % len(allshots),stdin=0)
+
+End()
