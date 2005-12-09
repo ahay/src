@@ -23,12 +23,12 @@
 */
 
 #include <rsf.h>
-#include "rwezom.h"
+#include "rweone.h"
 
 int main(int argc, char* argv[])
 {
     sf_file Fd=NULL, Fi=NULL, Fm=NULL, Fr=NULL;
-    axa ag,at,aw,ar;
+    axa ag,at,aw,ar,aj;
     int ig,it,iw,ir;
 
     int method;
@@ -37,10 +37,14 @@ int main(int argc, char* argv[])
 
     complex float **dat;
     float         **img;
+    complex float  *wfl;
     float         **aa,**bb,**mm;
 
     complex float **ab;
     float         **a0,**b0;
+
+    float            w;
+    char           *met="";
 
     sf_init(argc,argv);
 
@@ -54,6 +58,11 @@ int main(int argc, char* argv[])
     iaxa(Fm,&at,2); at.l="t"; /* 'extrapolation axis' (can be time) */
     iaxa(Fr,&ar,1); ar.l="r"; /* a,b reference */
     if(method==0) ar.n=1; /* pure F-D */
+
+    aj.n=1;
+    aj.o=0.;
+    aj.d=1.;
+    aj.l="";
 
     if(adj) {  /* modeling */
 	Fi = sf_input ( "in");
@@ -69,20 +78,24 @@ int main(int argc, char* argv[])
 	iaxa(Fi,&at,2); at.l="t";
 
 	oaxa(Fd,&ag,1);
-	oaxa(Fd,&aw,2);
+	oaxa(Fi,&at,2);
+	oaxa(Fd,&aw,3);
     } else {   /* migration */
 	Fd = sf_input("in");
 	Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 	if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
 
 	iaxa(Fd,&ag,1); ag.l="g"; /* 'position axis' (can be angle) */
-	iaxa(Fd,&aw,2); aw.l="w"; /* frequency */
+	iaxa(Fd,&at,2); at.l="t";
+	iaxa(Fd,&aw,3); aw.l="w"; /* frequency */
 
 	oaxa(Fi,&ag,1);
 	oaxa(Fi,&at,2);
+	oaxa(Fi,&aj,3);
     }
 
-    dat = sf_complexalloc2(ag.n,aw.n);
+    dat = sf_complexalloc2(ag.n,at.n);
+    wfl = sf_complexalloc (ag.n);
     img = sf_floatalloc2  (ag.n,at.n);
 
     if(verb) {
@@ -114,18 +127,37 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if(adj) { /* modeling */
-	sf_floatread  (img[0],ag.n*at.n,Fi);
+/*------------------------------------------------------------*/
+    switch (method) {
+	case 3: met="PSC"; break;
+	case 2: met="FFD"; break;
+	case 1: met="SSF"; break;
+	case 0: met="XFD"; break;
+    }
 
-	for(iw=0;iw<aw.n;iw++) {
-	    for(ig=0;ig<ag.n;ig++) {
-		dat[iw][ig] = 0.;
+    /* from hertz to radian */
+    aw.d *= 2.*SF_PI; 
+    aw.o *= 2.*SF_PI;
+
+    rweone_init(ag,at,aw,ar,method,verb);
+    switch(method) {
+	case 3: rweone_psc_coef(aa,bb,a0,b0); break;
+	case 2: rweone_ffd_coef(aa,bb,a0,b0); break;
+	case 1: ; /* SSF */                   break;
+	case 0: rweone_xfd_coef(aa,bb);       break;
+    }
+    
+    for(ig=0;ig<ag.n;ig++) { 
+	wfl[ig] = 0.;
+    }
+    
+    if(adj) { /* modeling */
+	for(it=0;it<at.n;it++) {
+	    for(ig=0;ig<ag.n;ig++) { 
+		dat[it][ig] = 0.;
 	    }
 	}
-
     } else {  /* migration */
-	sf_complexread(dat[0],ag.n*aw.n,Fd);
-	
 	for(it=0;it<at.n;it++) {
 	    for(ig=0;ig<ag.n;ig++) {
 		img[it][ig] = 0.;
@@ -133,17 +165,56 @@ int main(int argc, char* argv[])
 	}
     }
 
-    /*------------------------------------------------------------*/
-    /* execute */
-    rwezom_init(ag,at,aw,ar,method,verb);
+/*------------------------------------------------------------*/
+    if( adj) sf_floatread  (img[0],ag.n*at.n,Fi);
+    
+    for(iw=0;iw<aw.n;iw++) {
+	w=aw.o+iw*aw.d;
+	sf_warning("%s %d %d",met,iw,aw.n);
+	
+	if(adj) {  /* modeling */
+	    w*=-2; /*      causal, two-way time */
+	    
+	    for(ig=0;ig<ag.n;ig++) {
+		wfl[ig] = 0;
+	    }
 
-    rwezom_main(adj,dat,img,aa,bb,mm,a0,b0);
-    /* execute */
-    /*------------------------------------------------------------*/
+	    it=at.n-1; rweone_zoi(adj,wfl,img[it]);
+	    for(it=at.n-2;it>=0;it--) {
+		if(method!=0) rweone_fk(w,wfl,aa[it],a0[it],b0[it],mm[it],it);
+		else          rweone_fx(w,wfl,aa[it],it);
+		rweone_zoi(adj,wfl,img[it]);
 
-    if(adj) { /* modeling */
-	sf_complexwrite(dat[0],ag.n*aw.n,Fd);
-    } else {  /* migration */
-	sf_floatwrite  (img[0],ag.n*at.n,Fi);
+		for(ig=0;ig<ag.n;ig++) {
+		    dat[it][ig] = wfl[ig];
+		}
+	    }
+
+	    sf_complexwrite(dat[0],ag.n*at.n,Fd);
+	    
+	} else {   /* migration */
+	    w*=+2; /* anti-causal, two-way time */
+
+	    sf_complexread(dat[0],ag.n*at.n,Fd);
+
+	    for(ig=0;ig<ag.n;ig++) {
+		wfl[ig] = 0;
+	    }
+
+	    for(it=0;it<=at.n-2;it++) {
+		for(ig=0;ig<ag.n;ig++) {
+		    wfl[ig] += dat[it][ig];
+		}
+
+		rweone_zoi(adj,wfl,img[it]);		
+		if(method!=0) rweone_fk(w,wfl,aa[it],a0[it],b0[it],mm[it],it);
+		else          rweone_fx(w,wfl,aa[it],it);
+	    }
+	    it=at.n-1; rweone_zoi(adj,wfl,img[it]);
+	}
     }
+
+    if(!adj) sf_floatwrite  (img[0],ag.n*at.n,Fi);
+/*------------------------------------------------------------*/
+
 }
