@@ -13,7 +13,7 @@ par = {
     'xsou':19.5,'zsou':2.4,'ysou':0
     }
 par['dw']=1/(par['nT']*par['dT'])
-par['nw']=par['nT']/1000*100
+par['nw']=par['nT']/1000*50
 
 #par['nw']=2
 #par['ow']=3
@@ -196,7 +196,7 @@ Result('sokRC','window n3=1 | real | transp |'
 Flow('refCC',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=1 l1=300
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=750
      n3=%(ny)d o3=%(oy)g d3=%(dy)g |
      put label1=z label2=x label3=y |
