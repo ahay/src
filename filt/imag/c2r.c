@@ -47,6 +47,42 @@ void c2r_init(
 
 /*------------------------------------------------------------*/
 
+void c2r(
+    bool linear,
+    bool adj,
+    float         **mapCC,
+    float         **mapRC,
+    complex float **rays )
+/*< interpolation switch >*/
+{
+    int it,ig,iz,ix;
+
+    // nulify output
+    if(adj) {
+	for(iz=0;iz<az.n;iz++) {		
+	    for(ix=0;ix<ax.n;ix++) {
+		mapCC[iz][ix] = 0;
+	    }
+	}
+    } else {
+	for(it=0;it<at.n;it++) {		
+	    for(ig=0;ig<ag.n;ig++) {
+		mapRC[it][ig] = 0;
+	    }
+	}	
+    }
+
+    // select interpolation type
+    if(linear) {
+	c2r_linear(adj,mapCC,mapRC,rays);
+    } else {
+	c2r_sinc  (adj,mapCC,mapRC,rays);
+    }
+
+}
+
+/*------------------------------------------------------------*/
+
 void c2r_linear(
     bool      adj,
     float         **mapCC,

@@ -3,24 +3,24 @@ import zomig
 
 par = {
     'nz':300,  'dz':0.005,    'oz':0,     # CC axis 1
-    'nt':300,  'dt':0.005,    'ot':0,     # RC axis 1
-    'nx':500,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':400,  'dg':0.020,    'og':1,     # RC axis 2
-    'nT':2000, 'dT':0.004,    'oT':0,      'kT':500,    # time
+    'nt':200,  'dt':0.005,    'ot':1.5,   # RC axis 1
+    'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
+    'ng':180,  'dg':0.500,    'og':-45,   # RC axis 2
+    'nT':2000, 'dT':0.004,    'oT':0,      'kT':250,    # time
     'tmx':0,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':250, 'spg':200
+    'spx':150
     }
 
 par['dw']=1/(par['nT']*par['dT'])
 par['nw']=par['nT']/1000*50
-#par['nw']=10
+#par['nw']=2
 #par['ow']=3
 # ------------------------------------------------------------
-par['xmin']=par['ox']
-par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-par['zmin']=par['oz']
-par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['xmin']=par['ox']                             -1
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx'] +1
+par['zmin']=par['oz']                             -1
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz'] +1
 par['tmin']=par['ot']
 par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 par['gmin']=par['og']
@@ -61,28 +61,23 @@ Flow('vel',None,
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output=2-0.05*x1-0.15*x2 |
+     math output=2-0.05*x1-0.05*x2 |
      put label1=z label2=x
      ''' % par)
 Plot('vel',cgrey('allpos=y',par))
 
 # ------------------------------------------------------------
 
-# source
-Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"'  % par)
-Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
-Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"'  % par)
-Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
-
 # wavefronts (by HWT)
-Flow('hwt','vel sou',
+Flow('hwt','vel',
      '''
-     hwtex verb=n sou=${SOURCES[1]}
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     hwt2d verb=n
+     xsou=3 zsou=-3
+     nt=1000 ot=0 dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
      ''' % par)
-
 # coordinate system: rays(g,t)
-Flow('cos','hwt','window')
+Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 Plot('wft','cos','window f1=10 j1=10 | transp |'
      + cgraph('plotcol=1',par))
@@ -134,10 +129,9 @@ Flow('datCC',None,
      smooth rect2=1 |
      put label1=t label2=x
      ''' % par )
-Plot  ('datCC','grey pclip=100 wanttitle=n')
 Result('datCC','grey pclip=100 wanttitle=n')
 
-# frequency data RC: (g,w)
+# frequency data CC: (x,w)
 Flow('frqCC','datCC',
      '''
      fft1 opt=n inv=n |
@@ -146,42 +140,26 @@ Flow('frqCC','datCC',
      spray axis=2 n=1 o=0 d=1 | 
      put label1=x label2=y label3=w
      ''' % par)
-Plot  ('frqCC','window | real | transp | grey pclip=100')
 Result('frqCC','window | real | transp | grey pclip=100')
 
 # ------------------------------------------------------------
-
-# time data RC: (t,g)
-Flow('datRC',None,
-     '''
-     spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
-     n2=%(ng)d o2=%(og)g d2=%(dg)g k2=%(spg)d l2=%(spg)d |
-     ricker1 frequency=5 |
-     smooth rect2=1 |
-     put label1=t label2=g
-     ''' % par )
-Plot  ('datRC','grey pclip=100 wanttitle=n')
-Result('datRC','grey pclip=100 wanttitle=n')
-
 # frequency data RC: (g,w)
-Flow('frqRC','datRC',
+Flow('frqRC','frqCC cos',
      '''
-     fft1 opt=n inv=n |
-     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
-     transp |
-     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
-     pad n2out=%(nt)d |
-     put label1=g label2=t label3=w
+     window |
+     spray axis=2 n=1 o=%(oz)g d=%(dz)g |
+     pad beg2=10 n2out=20 |
+     c2r rays=${SOURCES[1]} adj=n linear=n |
+     put label1=g label2=t label3=
      ''' % par)
-Plot  ('frqRC','window n2=1 | real | transp | grey pclip=100')
-Result('frqRC','window n2=1 | real | transp | grey pclip=100')
+Result('frqRC','window n3=1 | real | transp |'
+       + rgrey('title',par))
 
 # ------------------------------------------------------------
 
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot('imgCC','window | transp |' + cgrey('title=imgCC',par))
+Plot  ('imgCC','window | transp |' + cgrey('title=imgCC',par))
 Result('imgCC',['imgCC','ray','wft'],'Overlay')
 
 # ------------------------------------------------------------
@@ -194,11 +172,14 @@ for i in (['SSF','FFD','PSC',
     if(i=='SSF'): method='method=1'
     if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
     if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
-    
-    migRC = 'migRC' + '-' + i
+
     migCC = 'migCC' + '-' + i
+
+    migRC = 'migRC' + '-' + i
     mofRC = 'mofRC' + '-' + i
-    modRC = 'modRC' + '-' + i
+
+    cutCC = 'cutCC' + '-' + i
+    modCC = 'modCC' + '-' + i
     
     # RWE image RC: (g,t)
     Flow(migRC,['frqRC','abmRC','abrRC'],
@@ -233,22 +214,29 @@ for i in (['SSF','FFD','PSC',
          put label1=g label2=t label3=w
          ''' % (method,par['nw'],par['ow'],par['dw']) )
 
-    # RWE data RC: (g,T)
-    Flow(modRC,mofRC,
+    par['nzcut']=20
+    par['ozcut']=-10*par['dz']
+    Flow(cutCC,[mofRC,'cos'],
          '''
-         window n2=1 | transp |
+         c2r rays=${SOURCES[1]} adj=y linear=n
+         a1n=%(nx)d    a1o=%(ox)g    a1d=%(dx)g
+         a2n=%(nzcut)d a2o=%(ozcut)g a2d=%(dz)g |
+         window n2=1 min2=%(oz)g
+         ''' % par)
+
+    # RWE data RC: (x,T)
+    Flow(modCC,cutCC,
+         '''
+         transp |
          pad beg1=%d n1out=%d |
          fft1 opt=n inv=y |
          put label1=t label2=x
          ''' % (int(par['ow']/par['dw']),
                 par['nT']/2+1))
-    Plot  (modRC,'grey pclip=100 wanttitle=n')
-    Result(modRC,'grey pclip=100 wanttitle=n grid=y')
-    
+    Result(modCC,'grey pclip=100 wanttitle=n grid=y')
+
     # ------------------------------------------------------------
 
-Result('dcomp','datCC datRC','Movie')
-Result('fcomp','frqCC frqRC','Movie')
 Result('icomp','imgCC migCC-SSF migCC-F15','Movie')
 
 End()

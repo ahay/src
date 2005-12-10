@@ -33,11 +33,12 @@ int main(int argc, char* argv[])
     axa ax,az,at,ag;
     int ix,iz,it,ig;
 
-    float **mapCC;
-    float **mapRC;
+    float         **mapCC, **mapRC;
+    complex float **comCC, **comRC;
     complex float **rays;
 
     int nn,ii;
+    bool comp; // complex input
  
     /* init RSF */
     sf_init(argc,argv);
@@ -78,24 +79,71 @@ int main(int argc, char* argv[])
 
     nn = sf_leftsize(Fi,2);
 
-    mapCC=sf_floatalloc2  (ax.n,az.n); LOOPCC( mapCC[iz][ix]=0.; );
-    mapRC=sf_floatalloc2  (ag.n,at.n); LOOPRC( mapRC[it][ig]=0.; );
-
     rays =sf_complexalloc2(ag.n,at.n);
     sf_complexread(rays[0],ag.n*at.n,Fr);
-
+    
     c2r_init(ax,az,ag,at,verb);
 
-    for(ii=0;ii<nn;ii++) {	
-	if(adj) sf_floatread(mapRC[0],ag.n*at.n,Fi);
-	else    sf_floatread(mapCC[0],ax.n*az.n,Fi);
-	
-	if(linear) c2r_linear(adj,mapCC,mapRC,rays);
-	else       c2r_sinc  (adj,mapCC,mapRC,rays);
-	
-	if(adj) sf_floatwrite(mapCC[0],ax.n*az.n,Fo);
-	else    sf_floatwrite(mapRC[0],ag.n*at.n,Fo);
-    }
+/*------------------------------------------------------------*/
 
+    comp=false;
+    if(SF_COMPLEX == sf_gettype(Fi)) comp=true;
+
+/*------------------------------------------------------------*/
+
+    mapCC=sf_floatalloc2(ax.n,az.n);
+    mapRC=sf_floatalloc2(ag.n,at.n);
+
+    if(comp) {
+	comCC=sf_complexalloc2(ax.n,az.n);
+	comRC=sf_complexalloc2(ag.n,at.n);
+
+	for(ii=0;ii<nn;ii++) {	
+	    if(adj) {
+		sf_complexread (comRC[0],ag.n*at.n,Fi);
+
+		// REAL
+		LOOPRC( mapRC[it][ig]  = crealf(comRC[it][ig]); );
+		c2r(linear,adj,mapCC,mapRC,rays);
+		LOOPCC( comCC[iz][ix]  =        mapCC[iz][ix];  );
+
+		// IMAGINARY
+		LOOPRC( mapRC[it][ig]  = cimagf(comRC[it][ig]); );
+		c2r(linear,adj,mapCC,mapRC,rays);
+		LOOPCC( comCC[iz][ix] +=      I*mapCC[iz][ix];  );
+
+		sf_complexwrite(comCC[0],ax.n*az.n,Fo);
+	    } else {
+		sf_complexread (comCC[0],ax.n*az.n,Fi);
+		
+		// REAL
+		LOOPCC( mapCC[iz][ix]  = crealf(comCC[iz][ix]); );
+		c2r(linear,adj,mapCC,mapRC,rays);
+		LOOPRC( comRC[it][ig]  =        mapRC[it][ig];  );
+
+		// IMAGINARY
+		LOOPCC( mapCC[iz][ix]  = cimagf(comCC[iz][ix]); );
+		c2r(linear,adj,mapCC,mapRC,rays);
+		LOOPRC( comRC[it][ig] +=      I*mapRC[it][ig];  );
+
+		sf_complexwrite(comRC[0],ag.n*at.n,Fo);
+	    }
+	}
+
+    } else {	
+
+	for(ii=0;ii<nn;ii++) {	
+	    if(adj) {
+		sf_floatread (mapRC[0],ag.n*at.n,Fi);
+		c2r(linear,adj,mapCC,mapRC,rays);
+		sf_floatwrite(mapCC[0],ax.n*az.n,Fo);
+	    } else {
+		sf_floatread (mapCC[0],ax.n*az.n,Fi);		
+		c2r(linear,adj,mapCC,mapRC,rays);
+		sf_floatwrite(mapRC[0],ag.n*at.n,Fo);
+	    }
+	}
+
+    }
     exit(0);
 }
