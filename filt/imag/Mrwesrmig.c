@@ -33,7 +33,8 @@ int main(int argc, char* argv[])
     int ig,it,iw,ir;
 
     int method;
-    bool verb;
+    bool  verb;
+    bool   adj;
 
     complex float **dat_s, *wfl_s;
     complex float **dat_r, *wfl_r;
@@ -50,7 +51,8 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb", &verb))     verb=false;
     if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
-						
+    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration */
+			
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
@@ -64,25 +66,40 @@ int main(int argc, char* argv[])
     aj.l="";
 
     Fw_s = sf_input ( "in");
-    Fw_r = sf_input ("rwf");
-    Fi   = sf_output("out"); sf_settype(Fi,SF_FLOAT);
-
     if (SF_COMPLEX !=sf_gettype(Fw_s)) sf_error("Need complex source");
-    if (SF_COMPLEX !=sf_gettype(Fw_r)) sf_error("Need complex data");
-    
+
     iaxa(Fw_s,&ag,1); ag.l="g"; /* 'position axis' (can be angle) */
     iaxa(Fw_s,&at,2); at.l="t";
     iaxa(Fw_s,&aw,3); aw.l="w"; /* frequency */
     
-    oaxa(Fi,&ag,1);
-    oaxa(Fi,&at,2);
-    oaxa(Fi,&aj,3);
-    
+    if(adj) { /* modeling */
+	Fw_r = sf_output("out"); 
+	sf_settype(Fw_r,SF_COMPLEX);
+
+	Fi   = sf_input ("img");
+	if (SF_FLOAT !=sf_gettype(Fi)) sf_error("Need float image");
+
+	oaxa(Fw_r,&ag,1);
+	oaxa(Fw_r,&at,2);
+	oaxa(Fw_r,&aw,3);
+
+    } else {  /* migration */
+	Fw_r = sf_input ("rwf");
+	if (SF_COMPLEX !=sf_gettype(Fw_r)) sf_error("Need complex data");
+
+	Fi   = sf_output("out"); 
+	sf_settype(Fi,SF_FLOAT);
+		
+	oaxa(Fi,&ag,1);
+	oaxa(Fi,&at,2);
+	oaxa(Fi,&aj,3);
+    }
+
+    img   = sf_floatalloc2  (ag.n,at.n);
     dat_s = sf_complexalloc2(ag.n,at.n);
     dat_r = sf_complexalloc2(ag.n,at.n);
     wfl_s = sf_complexalloc (ag.n);
     wfl_r = sf_complexalloc (ag.n);
-    img   = sf_floatalloc2  (ag.n,at.n);
     
     if(verb) {
 	raxa(ag);
@@ -133,47 +150,97 @@ int main(int argc, char* argv[])
 	case 0: rweone_xfd_coef(aa,bb);       break;
     }
 
-    for(it=0;it<at.n;it++) {
-	for(ig=0;ig<ag.n;ig++) {
-	    img[it][ig] = 0.;
+    if(adj) { /* modeling */
+	
+    } else {  /* migration */
+	for(it=0;it<at.n;it++) {
+	    for(ig=0;ig<ag.n;ig++) {
+		img[it][ig] = 0.;
+	    }
 	}
     }
 
-/*------------------------------------------------------------*/        
+/*------------------------------------------------------------*/
+    if( adj)  sf_floatread  (img[0],ag.n*at.n,Fi);
+
     for(iw=0;iw<aw.n;iw++) {
 	w=aw.o+iw*aw.d;
-	ws = -w; /*      causal */
-	wr = +w; /* anti-causal */
-
 	sf_warning("%s %d %d",met,iw,aw.n);
-	
-	sf_complexread(dat_s[0],ag.n*at.n,Fw_s);
-	sf_complexread(dat_r[0],ag.n*at.n,Fw_r);
-    
-	for(ig=0;ig<ag.n;ig++) {
-	    wfl_s[ig] = 0;
-	    wfl_r[ig] = 0;
-	}
-	
-	for(it=0;it<=at.n-2;it++) {
+
+	if(adj) {
+	    sf_complexread(dat_s[0],ag.n*at.n,Fw_s);
+
+	    ws = -w; /*      causal */
 	    for(ig=0;ig<ag.n;ig++) {
-		wfl_s[ig] += dat_s[it][ig];
-		wfl_r[ig] += dat_r[it][ig];
+		wfl_s[ig] = 0;
+	    }
+	    for(it=0;it<at.n;it++) {
+		for(ig=0;ig<ag.n;ig++) {
+		    wfl_s[ig] += dat_s[it][ig];
+		    dat_r[it][ig] = wfl_s[ig]*img[it][ig];
+		}
+		
+		if(method!=0) rweone_fk(ws,wfl_s,aa[it],a0[it],b0[it],mm[it],it);
+		else          rweone_fx(ws,wfl_s,aa[it],it);
 	    }
 
-	    rweone_spi(wfl_s,wfl_r,img[it]);
-	    
-	    if(method!=0) {
-		rweone_fk(ws,wfl_s,aa[it],a0[it],b0[it],mm[it],it);
-		rweone_fk(wr,wfl_r,aa[it],a0[it],b0[it],mm[it],it);
-	    } else {
-		rweone_fx(ws,wfl_s,aa[it],it);
-		rweone_fx(wr,wfl_r,aa[it],it);
+	    //-----
+	    for(it=0;it<at.n;it++) {
+		for(ig=0;ig<ag.n;ig++) {
+		    dat_s[it][ig] = dat_r[it][ig];
+		}
 	    }
+	    //-----
+
+	    wr = -w; /*      causal */
+	    for(ig=0;ig<ag.n;ig++) {
+		wfl_r[ig] = 0;
+	    }
+	    for(it=at.n-1;it>=0;it--) {
+		for(ig=0;ig<ag.n;ig++) {
+		    wfl_r[ig] += dat_s[it][ig];
+		    dat_r[it][ig] = wfl_r[ig];
+		}
+		
+		if(method!=0) rweone_fk(wr,wfl_r,aa[it],a0[it],b0[it],mm[it],it);
+		else          rweone_fx(wr,wfl_r,aa[it],it);
+	    }
+
+	    sf_complexwrite(dat_r[0],ag.n*at.n,Fw_r);
+
+	} else {	
+	    ws = -w; /*      causal */
+	    wr = +w; /* anti-causal */
+	    
+	    sf_complexread(dat_s[0],ag.n*at.n,Fw_s);
+	    sf_complexread(dat_r[0],ag.n*at.n,Fw_r);
+	    
+	    for(ig=0;ig<ag.n;ig++) {
+		wfl_s[ig] = 0;
+		wfl_r[ig] = 0;
+	    }
+	    
+	    for(it=0;it<=at.n-2;it++) {
+		for(ig=0;ig<ag.n;ig++) {
+		    wfl_s[ig] += dat_s[it][ig];
+		    wfl_r[ig] += dat_r[it][ig];
+		}
+		
+		rweone_spi(wfl_s,wfl_r,img[it]);
+		
+		if(method!=0) {
+		    rweone_fk(ws,wfl_s,aa[it],a0[it],b0[it],mm[it],it);
+		    rweone_fk(wr,wfl_r,aa[it],a0[it],b0[it],mm[it],it);
+		} else {
+		    rweone_fx(ws,wfl_s,aa[it],it);
+		    rweone_fx(wr,wfl_r,aa[it],it);
+		}
+	    }
+	    it=at.n-1; rweone_spi(wfl_s,wfl_r,img[it]);
 	}
-	it=at.n-1; rweone_spi(wfl_s,wfl_r,img[it]);
     }
+
+    if(!adj)  sf_floatwrite  (img[0],ag.n*at.n,Fi);
 /*------------------------------------------------------------*/
-    
-    sf_floatwrite  (img[0],ag.n*at.n,Fi);
+
 }

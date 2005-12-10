@@ -8,7 +8,7 @@ par = {
     'ng':180,  'dg':0.500,    'og':-45,   # RC axis 2
     'ny':1,    'dy':1,        'oy':0,     # CC axis 3
     'nT':2000, 'dT':0.004,    'oT':0,     'kT':250, # time
-    'tmx':0,'eps':0.0000001, 'verb':'y','nrmax':1,
+    'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':150
     }
@@ -132,7 +132,7 @@ Flow('wav',None,
      ''' % par )    
 Result('wav','graph title=" " grid=y')
 
-Flow('sow','wav',
+Flow('sowCC','wav',
      '''
      fft1 opt=n |
      window squeeze=n n1=%(nw)d min1=%(ow)g |
@@ -140,7 +140,18 @@ Flow('sow','wav',
      put label1=w label2=x label3=y |
      transp plane=12 | transp plane=23 
      ''' % par)
-Result('sow','window | real | transp | grey pclip=100')
+Result('sowCC','window | real | transp | grey pclip=100')
+
+Flow('sowRC','sowCC cos',
+     '''
+     window |
+     spray axis=2 n=1 o=%(oz)g d=%(dz)g |
+     pad beg2=10 n2out=20 |
+     c2r rays=${SOURCES[1]} adj=n linear=n nsz=3 nsx=3|
+     put label1=g label2=t label3=w
+     ''' % par)
+Result('sowRC','window n3=1 | real | transp |'
+       + rgrey('title',par))
 
 # ------------------------------------------------------------
 # modeling reflectivity
@@ -157,10 +168,16 @@ Flow('refCC',None,
 Plot('refCC','window | transp |' + cgrey('pclip=100',par))
 Result('refCC','refCC ray wft','Overlay')
 
+Flow('refRC','refCC cos',
+     '''
+     window |
+     c2r rays=${SOURCES[1]} adj=n |
+     put label1=g label2=t label3=
+     ''')
 # ------------------------------------------------------------
 
 # frequency data CC: (x,w)
-spmig.model('fffCC','sloCC','sow','refCC',par)
+spmig.model('fffCC','sloCC','sowCC','refCC',par)
 Result('fffCC','window | real | transp | grey pclip=100')
 
 # ------------------------------------------------------------
@@ -199,11 +216,11 @@ Flow('frqRC','frqCC cos',
      window |
      spray axis=2 n=1 o=%(oz)g d=%(dz)g |
      pad beg2=10 n2out=20 |
-     c2r rays=${SOURCES[1]} adj=n linear=n |
+     c2r rays=${SOURCES[1]} adj=n linear=n nsz=3 nsx=3|
      put label1=g label2=t label3=w
      ''' % par)
-Result('frqRC','window n3=1 | real | transp |'
-       + rgrey('title',par))
+Result('frqRC','window n3=1 f3=50 | real | transp |'
+       + rgrey('',par))
 
 # ------------------------------------------------------------
 # migration wavelet (impulse)
@@ -233,7 +250,7 @@ Flow('sokRC','sokCC cos',
      window |
      spray axis=2 n=1 o=%(oz)g d=%(dz)g |
      pad beg2=10 n2out=20 |
-     c2r rays=${SOURCES[1]} adj=n linear=n |
+     c2r rays=${SOURCES[1]} adj=n linear=n nsz=3 nsx=3|
      put label1=g label2=t label3=w
      ''' % par)
 Result('sokRC','window n3=1 | real | transp |'
@@ -258,12 +275,17 @@ for i in (['SSF','FFD','PSC',
     if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
 
     migCC = 'migCC' + '-' + i
+    
     migRC = 'migRC' + '-' + i
-
+    mofRC = 'mofRC' + '-' + i
+    
+    cutCC = 'cutCC' + '-' + i
+    modCC = 'modCC' + '-' + i
+    
     # RWE image RC: (g,t)
     Flow(migRC,['sokRC','frqRC','abmRC','abrRC'],
          '''
-         rwesrmig ntap=0 verb=y %s
+         rwesrmig ntap=10 verb=y %s
          rwf=${SOURCES[1]}
          abm=${SOURCES[2]}
          abr=${SOURCES[3]} |
@@ -274,14 +296,52 @@ for i in (['SSF','FFD','PSC',
     # RWE image CC: (z,x)
     Flow(migCC,[migRC,'cos'],
          '''
-         c2r rays=${SOURCES[1]} adj=y linear=n 
-         nsz=3 nsx=3
+         c2r rays=${SOURCES[1]} adj=y linear=n nsz=3 nsx=3
          a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
          a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
          put label1=z label2=x
          ''' % par)
     Plot(migCC,'window | transp |' + cgrey('title=%s',par) % i)
     Result(migCC,[migCC,'ray','wft'],'Overlay')
+
+    # RWE data RC: (g,w)
+    Flow(mofRC,['sowRC','refRC','abmRC','abrRC'],
+         '''
+         rwesrmig ntap=10 adj=y %s
+         nw=%d ow=%g dw=%g 
+         img=${SOURCES[1]}
+         abm=${SOURCES[2]}
+         abr=${SOURCES[3]} |
+         put label1=g label2=t label3=w
+         ''' % (method,par['nw'],par['ow'],par['dw']) )
+    Result(mofRC,'window n3=1 f3=50 | real | transp |'
+           + rgrey('pclip=99',par))
+    
+    par['nzcut']=20
+    par['ozcut']=-10*par['dz']
+    Flow(cutCC,[mofRC,'cos'],
+         '''
+         c2r rays=${SOURCES[1]} adj=y linear=n nsz=3 nsx=3
+         a1n=%(nx)d    a1o=%(ox)g    a1d=%(dx)g
+         a2n=%(nzcut)d a2o=%(ozcut)g a2d=%(dz)g |
+         window n2=1 min2=%(oz)g
+         ''' % par)
+
+    # RWE data RC: (x,T)
+    Flow(modCC,cutCC,
+         '''
+         transp |
+         pad beg1=%d n1out=%d |
+         fft1 opt=n inv=y |
+         window f1=%d |
+         pad n1out=%d |
+         put label1=t label2=x o1=0
+         ''' % (int(par['ow']/par['dw']),
+                par['nT']/2+1,
+                par['kT'],
+                par['nT']))
+    Result(modCC,'grey pclip=100 wanttitle=n grid=y')
+
 
     # ------------------------------------------------------------
 

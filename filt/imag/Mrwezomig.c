@@ -1,6 +1,6 @@
 /* 
  * Riemannian Wavefield Extrapolation: 
- *  zero-offset modeling/migration 
+ * zero-offset modeling/migration 
  * pcs 2005
  */
 
@@ -32,8 +32,8 @@ int main(int argc, char* argv[])
     int ig,it,iw,ir;
 
     int method;
-    bool verb;
-    bool adj;
+    bool  verb;
+    bool   adj;
 
     complex float **dat;
     float         **img;
@@ -43,14 +43,14 @@ int main(int argc, char* argv[])
     complex float **ab;
     float         **a0,**b0;
 
-    float            w;
-    char           *met="";
+    float w;
+    char *met="";
 
     sf_init(argc,argv);
 
     if(! sf_getbool("verb", &verb))     verb=false;
     if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
-    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration*/
+    if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration */
 						
     Fm = sf_input("abm");
     Fr = sf_input("abr");
@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 	iaxa(Fi,&at,2); at.l="t";
 
 	oaxa(Fd,&ag,1);
-	oaxa(Fi,&at,2);
+	oaxa(Fd,&at,2);
 	oaxa(Fd,&aw,3);
     } else {   /* migration */
 	Fd = sf_input("in");
@@ -94,9 +94,9 @@ int main(int argc, char* argv[])
 	oaxa(Fi,&aj,3);
     }
 
+    img = sf_floatalloc2  (ag.n,at.n);
     dat = sf_complexalloc2(ag.n,at.n);
     wfl = sf_complexalloc (ag.n);
-    img = sf_floatalloc2  (ag.n,at.n);
 
     if(verb) {
 	raxa(ag);
@@ -145,10 +145,6 @@ int main(int argc, char* argv[])
 	case 2: rweone_ffd_coef(aa,bb,a0,b0); break;
 	case 1: ; /* SSF */                   break;
 	case 0: rweone_xfd_coef(aa,bb);       break;
-    }
-    
-    for(ig=0;ig<ag.n;ig++) { 
-	wfl[ig] = 0.;
     }
     
     if(adj) { /* modeling */
