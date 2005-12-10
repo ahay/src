@@ -3,14 +3,14 @@ import zomig,spmig
 
 par = {
     'nz':300,  'dz':0.005,    'oz':0,     # CC axis 1
-    'nt':300,  'dt':0.005,    'ot':0,     # RC axis 1
-    'nx':500,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':400,  'dg':0.020,    'og':1,     # RC axis 2
+    'nt':250,  'dt':0.005,    'ot':1.5,   # RC axis 1
+    'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
+    'ng':180,  'dg':0.500,    'og':-45,   # RC axis 2
     'ny':1,    'dy':1,        'oy':0,     # CC axis 3
     'nT':2000, 'dT':0.004,    'oT':0,     'kT':250, # time
     'tmx':0,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':250
+    'spx':150
     }
 
 par['dw']=1/(par['nT']*par['dT'])
@@ -19,16 +19,15 @@ par['nw']=par['nT']/1000*50
 #par['ow']=3
 
 par['spx']=par['nx']/2
-par['spg']=par['ng']/2
 
 par['xsou']=par['spx']*par['dx']
 par['ysou']=par['oy']
 
 # ------------------------------------------------------------
-par['xmin']=par['ox']
-par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-par['zmin']=par['oz']
-par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+par['xmin']=par['ox']                             -1
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx'] +1
+par['zmin']=par['oz']                             -1
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz'] +1
 par['tmin']=par['ot']
 par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 par['gmin']=par['og']
@@ -55,12 +54,6 @@ def cgraph(custom,par):
     min1=%g max1=%g min2=%g max2=%g min1=0
     ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
 
-def tgrey(custom,par):
-    return '''
-    grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 %s
-    ''' % (custom)
-
 # ------------------------------------------------------------
 
 # velocity
@@ -69,32 +62,27 @@ Flow('vel',None,
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output=2-0.05*x1-0.15*x2 |
+     math output=2-0.05*x1-0.05*x2 |
      put label1=z label2=x
      ''' % par)
-Plot('vel',cgrey('allpos=y',par))
+Plot('vel',cgrey('allpos=y bias=1.5',par))
 
 # ------------------------------------------------------------
 
-# source
-Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"'  % par)
-Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
-Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"'  % par)
-Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
-
 # wavefronts (by HWT)
-Flow('hwt','vel sou',
+Flow('hwt','vel',
      '''
-     hwtex verb=n sou=${SOURCES[1]}
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     hwt2d verb=n
+     xsou=3 zsou=-3
+     nt=1000 ot=0 dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
      ''' % par)
-
 # coordinate system: rays(g,t)
-Flow('cos','hwt','window')
+Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
-Plot('wft','cos','window f1=10 j1=10 | transp |'
+Plot('wft','cos','window f1=5 j1=5 | transp |'
      + cgraph('plotcol=1',par))
-Plot('ray','cos','window       j2=10 |'
+Plot('ray','cos','window      j2=5 |'
      + cgraph('plotcol=2',par))
 Result('cos','vel ray wft','Overlay')
 
@@ -126,11 +114,13 @@ Flow(['abmRC','abrRC'],['cos','sloRC'],
      ''')
 
 Plot('aRC','abmRC','window n3=1 f3=0 | transp |'+ rgrey('pclip=100 color=F allpos=n bias=1',par))
-Plot('bRC','abmRC','window n3=1 f3=1 | transp |'+ rgrey('pclip=100 color=F allpos=y bias=1',par))
+Plot('bRC','abmRC','window n3=1 f3=1 | transp |'+ rgrey('pclip=100 color=F allpos=y bias=19',par))
 Plot('mRC','abmRC','window n3=1 f3=2 | transp |'+ rgrey('pclip=100 color=j allpos=y',par))
 Result('abmRC','aRC bRC mRC','OverUnderAniso')
 
 # ------------------------------------------------------------
+# modeling wavelet
+
 Flow('wav',None,
      '''
      spike nsp=1 mag=1 k1=%(kT)d
@@ -152,6 +142,72 @@ Flow('sow','wav',
      ''' % par)
 Result('sow','window | real | transp | grey pclip=100')
 
+# ------------------------------------------------------------
+# modeling reflectivity
+
+Flow('refCC',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d 
+     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
+     put label1=z label2=x label3=y |
+     transp plane=12 | transp plane=23
+     ''' % par)
+Plot('refCC','window | transp |' + cgrey('pclip=100',par))
+Result('refCC','refCC ray wft','Overlay')
+
+# ------------------------------------------------------------
+
+# frequency data CC: (x,w)
+spmig.model('fffCC','sloCC','sow','refCC',par)
+Result('fffCC','window | real | transp | grey pclip=100')
+
+# ------------------------------------------------------------
+
+# time data CC: (t,x)
+Flow('datCC','fffCC',
+     '''
+     window | transp |
+     pad beg1=%d n1out=%d |
+     fft1 opt=n inv=y |
+     window f1=%d | put o1=0 o2=%g | pad n1out=%d |
+     put label1=t label2=x
+     ''' % (int(par['ow']/par['dw']),
+            par['nT']/2+1,
+            par['kT'],par['ox'],par['nT']) )
+Result('datCC','grey pclip=100 wanttitle=n grid=y')
+
+
+# ------------------------------------------------------------
+
+# frequency data CC: (x,w)
+Flow('frqCC','datCC',
+     '''
+     fft1 opt=n inv=n |
+     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
+     transp plane=12 | transp plane=23 |
+     put label1=x label2=y label3=w
+     ''' % par)
+Result('frqCC','window | real | transp | grey pclip=100')
+
+# ------------------------------------------------------------
+
+# frequency data RC: (g,w)
+Flow('frqRC','frqCC cos',
+     '''
+     window |
+     spray axis=2 n=1 o=%(oz)g d=%(dz)g |
+     pad beg2=10 n2out=20 |
+     c2r rays=${SOURCES[1]} adj=n linear=n |
+     put label1=g label2=t label3=w
+     ''' % par)
+Result('frqRC','window n3=1 | real | transp |'
+       + rgrey('title',par))
+
+# ------------------------------------------------------------
+# migration wavelet (impulse)
+
 Flow('spkCC',None,
      '''
      spike nsp=1 mag=1 k1=1
@@ -172,93 +228,22 @@ Flow('sokCC','spkCC',
      ''' % par)
 Result('sokCC','window | real | transp | grey pclip=100')
 
-Flow('sokRC','sokCC',
+Flow('sokRC','sokCC cos',
      '''
-     window min1=%(og)g n1=%(ng)d |
      window |
-     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
-     pad n2out=%(nt)d |
+     spray axis=2 n=1 o=%(oz)g d=%(dz)g |
+     pad beg2=10 n2out=20 |
+     c2r rays=${SOURCES[1]} adj=n linear=n |
      put label1=g label2=t label3=w
      ''' % par)
-Result('sokRC','window n2=1 | real | transp | grey pclip=100')
-
-# ------------------------------------------------------------
-
-Flow('refCC',None,
-     '''
-     spike nsp=1 mag=1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d 
-     n3=%(ny)d o3=%(oy)g d3=%(dy)g |
-     put label1=z label2=x label3=y |
-     transp plane=12 | transp plane=23
-     ''' % par)
-Plot('refCC','window | transp |' + cgrey('pclip=100',par))
-Result('refCC','refCC ray wft','Overlay')
-
-# ------------------------------------------------------------
-
-# frequency data CC: (x,w)
-spmig.model('fffCC','sloCC','sow','refCC',par)
-Plot  ('fffCC','window | real | transp | grey pclip=100')
-Result('fffCC','window | real | transp | grey pclip=100')
-
-# ------------------------------------------------------------
-
-# time data CC: (t,x)
-Flow('datCC','fffCC',
-     '''
-     window | transp |
-     pad beg1=%d n1out=%d |
-     fft1 opt=n inv=y |
-     window f1=%d | put o1=0 o2=%g | pad n1out=%d |
-     put label1=t label2=x
-     ''' % (int(par['ow']/par['dw']),
-            par['nT']/2+1,
-            par['kT'],par['ox'],par['nT']) )
-Plot  ('datCC','grey pclip=100 wanttitle=n')
-Result('datCC','grey pclip=100 wanttitle=n grid=y')
-
-# frequency data CC: (x,w)
-Flow('frqCC','datCC',
-     '''
-     fft1 opt=n inv=n |
-     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
-     transp plane=12 | transp plane=23 |
-     put label1=x label2=y label3=w
-     ''' % par)
-Plot  ('frqCC','window | real | transp | grey pclip=100')
-Result('frqCC','window | real | transp | grey pclip=100')
-
-# ------------------------------------------------------------
-
-# time data RC: (t,g)
-Flow('datRC','datCC',
-     '''
-     window min2=%(og)g n2=%(ng)d |
-     put label1=t label2=g
-     ''' % par)
-Plot  ('datRC','grey pclip=100 wanttitle=n')
-Result('datRC','grey pclip=100 wanttitle=n')
-
-# frequency data RC: (g,w)
-Flow('frqRC','datRC',
-     '''
-     fft1 opt=n inv=n |
-     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
-     transp |
-     spray axis=2 n=1 o=%(ot)g d=%(dt)g |
-     pad n2out=%(nt)d |
-     put label1=g label2=t label3=w
-     ''' % par)
-Plot  ('frqRC','window n2=1 | real | transp | grey pclip=100')
-Result('frqRC','window n2=1 | real | transp | grey pclip=100')
+Result('sokRC','window n3=1 | real | transp |'
+       + rgrey('title',par))
 
 # ------------------------------------------------------------
 
 # WEM image CC: (z,x)
 spmig.image('imgCC','sloCC','sokCC','frqCC',par)
-Plot('imgCC','window | transp |' + cgrey('title=imgCC',par))
+Plot  ('imgCC','window | transp |' + cgrey('title=imgCC',par))
 Result('imgCC',['imgCC','ray','wft'],'Overlay')
 
 # ------------------------------------------------------------
@@ -271,9 +256,9 @@ for i in (['SSF','FFD','PSC',
     if(i=='SSF'): method='method=1'
     if(i=='FFD'): method='method=2 c1=0.50   c2=0.00'
     if(i=='PSC'): method='method=3 c1=0.50   c2=0.00'
-    
-    migRC = 'migRC' + '-' + i
+
     migCC = 'migCC' + '-' + i
+    migRC = 'migRC' + '-' + i
 
     # RWE image RC: (g,t)
     Flow(migRC,['sokRC','frqRC','abmRC','abrRC'],
@@ -284,7 +269,6 @@ for i in (['SSF','FFD','PSC',
          abr=${SOURCES[3]} |
          put label1=g label2=t
          ''' % method)
-    Plot  (migRC,'window | transp |' + rgrey('title=%s',par) % i)
     Result(migRC,'window | transp |' + rgrey('title=%s',par) % i)
 
     # RWE image CC: (z,x)
@@ -301,8 +285,6 @@ for i in (['SSF','FFD','PSC',
 
     # ------------------------------------------------------------
 
-Result('dcomp','datCC datRC','Movie')
-Result('fcomp','frqCC frqRC','Movie')
 Result('icomp','imgCC migCC-SSF migCC-F15','Movie')
 
 End()
