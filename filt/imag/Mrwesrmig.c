@@ -182,6 +182,7 @@ int main(int argc, char* argv[])
 		
 		if(method!=0) rweone_fk(ws,wfl_s,aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(ws,wfl_s,aa[it],it);
+		rweone_tap(wfl_s);
 	    }
 
 	    //-----
@@ -204,6 +205,7 @@ int main(int argc, char* argv[])
 		
 		if(method!=0) rweone_fk(wr,wfl_r,aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(wr,wfl_r,aa[it],it);
+		rweone_tap(wfl_r);
 	    }
 
 	    sf_complexwrite(dat_r[0],ag.n*at.n,Fw_r);
