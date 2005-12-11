@@ -5,15 +5,15 @@ par = {
     'nz':600,  'dz':0.010,    'oz':0,     # CC axis 1
     'nt':400,  'dt':0.010,    'ot':1.0,   # RC axis 1
     'nx':800,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':400,  'dg':0.200,    'og':-120,    # RC axis 2
+    'ng':400,  'dg':0.200,    'og':-120,  # RC axis 2
     'ny':1,    'dy':1,        'oy':0,     # CC axis 3
     'nT':2000, 'dT':0.004,    'oT':0,     'kT':250, # time
-    'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
+    'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
     'ow':1, 'incore':'y',
     'xsou':19.5,'zsou':2.4,'ysou':0
     }
 par['dw']=1/(par['nT']*par['dT'])
-par['nw']=par['nT']/1000*25
+par['nw']=par['nT']/1000*50
 
 #par['nw']=2
 #par['ow']=3
@@ -53,8 +53,8 @@ def cgraph(custom,par):
 
 # ------------------------------------------------------------
 
-# velocity
-Flow('vel',None,
+# background velocity
+Flow('vbk',None,
      '''
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
@@ -62,12 +62,25 @@ Flow('vel',None,
      math output=2+0.5*x1-0.0*x2 |
      put label1=z label2=x
      ''' % par)
+Plot('vbk',cgrey('allpos=y bias=2',par))
+
+# anomaly velocity
+Flow('van',None,
+     '''
+     spike nsp=1 mag=-1.5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=150 l1=170
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=600 l2=610 |
+     smooth rect1=5 rect2=5 repeat=2 |
+     put label1=z label2=x
+     ''' % par)
+
+Flow('vel','vbk van','add ${SOURCES[1]}')
 Plot('vel',cgrey('allpos=y bias=2',par))
 
 # ------------------------------------------------------------
 
 # wavefronts (by HWT)
-Flow('hwt','vel',
+Flow('hwt','vbk',
      '''
      hwt2d verb=n
      xsou=%(xsou)g zsou=%(zsou)g
@@ -196,7 +209,7 @@ Result('spdCC','grey pclip=100 wanttitle=n grid=y')
 
 # data: t -> w
 rweutil.t2w('spwCC','spdCC',par)
-Result('cutCC','real | grey pclip=100 wanttitle=n grid=y')
+Result('spwCC','window | real | grey pclip=100 wanttitle=n grid=y')
 
 # data: C -> R
 rweutil.C2Rdat('spwRC','spwCC','cos',par)
@@ -213,24 +226,18 @@ Result('spiCC',['spiCC','ray','wft'],'Overlay')
 
 # --------------
 # frequency data CC: (x,w)
-Flow('frqCC','spdCC',
+Flow('spf','spdCC',
      '''
      fft1 opt=n inv=n |
      window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
      transp plane=12 | transp plane=23 |
      put label1=x label2=y label3=w
      ''' % par)
-Result('frqCC','window | real | transp | grey pclip=100')
+Result('spf','window | real | transp | grey pclip=100')
 
-# frequency data RC: (g,w)
-rweutil.C2Rdat('frqRC','frqCC','cos',par)
-Result('frqRC',
-       'window n3=1 f3=20 | real | transp |' + rgrey('',par))
-
-# WEM image CC: (z,x)
-spmig.image('imgCC','sloCC','spkCC','frqCC',par)
-Plot  ('imgCC','window | transp |'+ cgrey('',par))
-Result('imgCC',['imgCC','ray','wft'],'Overlay')
+spmig.image('spi','sloCC','spkCC','spf',par)
+Plot  ('spi','window | transp |'+ cgrey('',par))
+Result('spi',['spi','ray','wft'],'Overlay')
 # --------------
 
 
@@ -260,6 +267,21 @@ Plot  ('zoiCC','window | transp |' + cgrey('',par))
 Result('zoiCC',['zoiCC','ray','wft'],'Overlay')
 
 # ------------------------------------------------------------
+
+# --------------
+Flow('zof','zodCC',
+     '''
+     fft1 opt=n inv=n |
+     window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
+     transp plane=12 | transp plane=23 |
+     put label1=x label2=y label3=w
+     ''' % par)
+Result('zof','window | real | transp | grey pclip=100')
+
+zomig.image('zoi','sloCC','zof',par)
+Plot  ('zoi','window | transp |'+ cgrey('',par))
+Result('zoi',['zoi','ray','wft'],'Overlay')
+# --------------
 
 
 End()
