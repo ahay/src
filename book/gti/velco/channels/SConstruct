@@ -26,12 +26,14 @@ Result('cmut','mut','window n3=1 f3=200 | grey title="CMP gather" ')
 Flow('chan','cmp','window min3=1500 max3=5500')
 
 stack.stack('chan',
-            v0=1500,
+            v0=1800,
             nv=100,
-            dv=20,
+            dv=10,
             nx=534,
             nt=241,
             padx=1025,
+            tmin=0.2,
+            tmax=0.5,
             rect1=10,
             rect2=10,
             f1=40,

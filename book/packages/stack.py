@@ -7,8 +7,12 @@ def stack(name,
           nx,
           padx,
           nt,
+          tmin=0,
+          tmax=10,
           rect1=10,
           rect2=10,
+          srect1=1,
+          srect2=3,
           vslope=None,
           units='km',
           f1=1,
@@ -25,12 +29,11 @@ def stack(name,
          'mutter v0=%g | vscan semblance=y v0=%g nv=%d dv=%g' % (v0,v0,nv,dv))
 
     if vslope:
-        pick = '''
-        mutter x0=%g v0=%g half=n |
-        pick rect1=%d rect2=%d | window
-        ''' % (vx0,vslope,rect1,rect2)
+        pick = 'mutter x0=%g v0=%g half=n | '
     else:
-        pick = 'pick rect1=%d rect2=%d | window' % (rect1,rect2)
+        pick = ''
+
+    pick = pick + 'pick rect1=%d rect2=%d | window' % (rect1,rect2)
         
     def grey(title):
         return '''
@@ -71,29 +74,37 @@ def stack(name,
 
     pwd=name+'-pwd'
     Flow(pwd,[stk+'2',dip],'pwd dip=${SOURCES[1]}')
-    Result(pwd,grey('Diffractions'))
+    Result(pwd,grey('Diffractions (PWD)'))
 
-    dips = name+'-dips'
-    Flow(dips,nmo,'dip rect1=%d rect2=2 rect3=%d' % (rect1,rect2))
-
-    pwds = name+'-pwds'
-    Flow(pwds,[nmo,dips],'pwd dip=${SOURCES[1]}')
-
-
-    difs = name+'-difs'
-    Flow(difs,pwds,
+    shp=name+'-shp'
+    Flow(shp,[stk+'2',dip],
          '''
-         window n4=1 f1=%d | logstretch nout=%d |
-         fft1 | transp plane=13 |
-         finstack |
-         transp |
-         fft1 inv=y | window n1=%d |
-         logstretch inv=y | pad beg1=%d
-         ''' % (f1,nout,nout,f1))
-    Result(difs,grey('DMO Stack of Diffractions'))
+         pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d |
+         add ${SOURCES[0]} scale=-1,1
+         ''' % (srect1,srect2))
+    Result(shp,grey('Diffractions'))
 
-    dif = name+'-dif'
-    Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
+#    dips = name+'-dips'
+#    Flow(dips,nmo,'dip rect1=%d rect2=2 rect3=%d' % (rect1,rect2))
+
+#    pwds = name+'-pwds'
+#    Flow(pwds,[nmo,dips],'pwd dip=${SOURCES[1]}')
+
+
+#    difs = name+'-difs'
+#    Flow(difs,pwds,
+#         '''
+#         window n4=1 f1=%d | logstretch nout=%d |
+#         fft1 | transp plane=13 |
+#         finstack |
+#         transp |
+#         fft1 inv=y | window n1=%d |
+#         logstretch inv=y | pad beg1=%d
+#         ''' % (f1,nout,nout,f1))
+#    Result(difs,grey('DMO Stack of Diffractions'))
+
+#    dif = name+'-dif'
+#    Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
 
     velcon = '''
     pad n2=%d | cosft sign2=1 | 
@@ -104,20 +115,19 @@ def stack(name,
     ''' % (padx,2*v0,nv,dv,v0,nx)
 
     vlf=name+'-vlf'
-    Flow(vlf,pwd,velcon)
+    Flow(vlf,shp,velcon)
 
     if j3 > 1:
-        focus = '''
-        window j3=%d |
-        focus rect1=%d rect3=%d |
-        math output=1/input
-        ''' % (j3,2*rect1,2*rect2)
+        focus = 'window j3=%d | ' % j3
     else:
-        focus = '''
-        focus rect1=%d rect3=%d |
-        math output=1/input
-        ''' % (2*rect1,2*rect2)
-
+        focus = ''
+        
+    focus = focus + '''    
+    focus rect1=%d rect3=%d |
+    math output="1/abs(input)" |
+    cut max1=%g | cut min1=%g 
+    ''' % (2*rect1,2*rect2,tmin,tmax)
+ 
     foc=name+'-foc'
     Flow(foc,vlf,focus)
 

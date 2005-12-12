@@ -35,8 +35,19 @@ Flow('ypwd','zpwd','window f4=1')
 Result('xpwd',plot3('Isolated Diffractions (In-line)'))
 Result('ypwd',plot3('Isolated Diffractions (Cross-line)'))
 
-Flow('xckx','xpwd','cosft sign2=1 sign3=1')
-Flow('xsto','xckx','pad beg1=680 | stolt nf=4 vel=3000 | window f1=680')
-Flow('xvlf','xsto','spray axis=2 n=1 o=0 d=1 | fourvc nv=50 dv=40 v0=1500')
+Flow('shp','zovol xdip ydip',
+     '''
+     pwdsmooth2 dip=${SOURCES[1]} rect2=3 |
+     transp memsize=500 plane=23 |
+     pwdsmooth2 dip=${SOURCES[2]} rect2=3 |
+     transp memsize=500 plane=23 |
+     add scale=-1,1 ${SOURCES[0]}
+     ''')
+
+Result('shp',plot3('Isolated Diffractions'))
+
+Flow('ckx','shp','cosft sign2=1 sign3=1')
+Flow('sto','ckx','pad beg1=680 | stolt nf=4 vel=3000 | window f1=680')
+Flow('vlf','sto','spray axis=2 n=1 o=0 d=1 | fourvc nv=50 dv=40 v0=1500')
 
 End()

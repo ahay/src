@@ -23,7 +23,7 @@ mutter0 = 'abs=n x0=1 v0=1.5 tp=1'
 Flow('vscan','cmp',
      'mutter %s | vscan semblance=y v0=1.5 nv=150 dv=0.02' % mutter)
 Flow('vrms','vscan',
-     'window max1=3.5 | pad n1=1251 | blindpick rect1=30 rect2=5')
+     'window max1=3.5 | pad n1=1251 | pick rect1=30 rect2=5')
 Result('vrms',
        '''window max1=3 min3=2.75 max3=5.5125 |
        grey allpos=y scalebar=y wanttitle=n

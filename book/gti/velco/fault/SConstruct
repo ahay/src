@@ -13,6 +13,8 @@ stack.stack('bei',
             padx=521,
             rect1=40,
             rect2=10,
+            srect1=1,
+            srect2=5,
             vslope=0.67, #
             vx0=1.5,     #
             f1=15,
