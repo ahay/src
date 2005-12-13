@@ -5,7 +5,7 @@ import os,commands, re
 retime = re.compile('(\w+)\s([\d\.]+)m([\d\.]+)s')
 out = open('fft.rsf','w')
 
-for size in xrange(1,50001):
+for size in xrange(8813,50001):
     spike = 'spike%d.rsf' % size
     fft = 'fft%d.rsf' % size
     os.system('sfspike n1=%d n2=1000 | sfrtoc > %s' % (size,spike))

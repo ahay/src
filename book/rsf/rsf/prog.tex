@@ -864,6 +864,39 @@ spike2.rsf:
         10 elements 40 bytes
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfreal}
+  }}
+
+\texttt{sfreal} extracts the real part of a complex type dataset. The
+imaginary part can be extracted with \texttt{sfimag}, an the real
+and imaginary part can be combined together with \texttt{sfcmplx}.
+
+
+Here is a simple example. Let us first create a complex dataset 
+with \texttt{sfmath}
+\begin{verbatim}
+bash$ sfmath n1=10 type=complex output="(2+I)*x1" > cmplx.rsf
+bash$ fdisfil < cmplx.rsf
+   0:          0,         0i         2,         1i         4,         2i
+   3:          6,         3i         8,         4i        10,         5i
+   6:         12,         6i        14,         7i        16,         8i
+   9:         18,         9i
+\end{verbatim}
+Extracting the real part with \texttt{sfreal}:
+\begin{verbatim}
+bash$ sfreal < cmplx.rsf | sfdisfil
+   0:             0            2            4            6            8
+   5:            10           12           14           16           18
+\end{verbatim}
+Extracting the imaginary part with \texttt{sfimag}:
+\begin{verbatim}
+bash$ sfimag < cmplx.rsf | sfdisfil
+   0:             0            1            2            3            4
+   5:             5            6            7            8            9
+\end{verbatim}
+
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
