@@ -28,10 +28,6 @@
 
 #ifndef _kirmod3_h
 
-typedef struct Surface3 *surface3;
-/* abstract data type */
-/*^*/
-
 typedef struct Velocity3 {
     float v0, gx, gy, gz, x0, y0, z0;
 } *velocity3;
@@ -39,206 +35,83 @@ typedef struct Velocity3 {
 
 #endif
 
-struct Surface3 {
-    int isx, isy, ihx, ihy;
-    float x, y;
-    ktable ***ta;
-};
+static int nh;
+static float fx, dx, fy, dy, s0x, dsx, s0y, dsy, h0x, dhx, h0y, dhy;
+static velocity3 v;
+static char type;
+static float ***curve, ***dipx, ***dipy; 
 
-static int nm, nc, nx, ny, nh, ***map;
-static float fx, dx, fy, dy;
-
-static int surface3_comp(const void *a, const void *b)
-/* compare by the surface coordinate */
+void kirmod3_init(float s0x1, float dsx1           /* source inline */,
+		  float s0y1, float dsy1           /* source crossline */,
+		  int nhx, float h0x1, float dhx1  /* offset inline */,
+		  int nhy, float h0y1, float dhy1  /* offset crossline */,
+		  float fx1, float dx1,
+		  float fy1, float dy1             /* reflector sampling */,
+		  velocity3 v1                     /* velocity attributes */,
+		  char type1                       /* velocity distribution */,
+		  float ***curve1                  /* reflectors */,
+		  float ***dipx1                   /* reflector inline dip */,
+		  float ***dipy1                   /* reflector crossline dip */)
+/*< Initialize >*/ 
 {
-    float ax, bx, ay, by;
+    s0x = s0x1; dsx = dsx1;
+    s0y = s0y1; dsy = dsy1;
 
-    ax = ((surface3) a)->x;
-    bx = ((surface3) b)->x;
-    ay = ((surface3) a)->y;
-    by = ((surface3) b)->y;
+    h0x = h0x1; dhx = dhx1;
+    h0y = h0y1; dhy = dhy1;
 
-    if (ax <  bx) return (-1);
-    if (ax >  bx) return 1;
-    if (ay <  by) return (-1);
-    if (ay == by) return 0;
-    return 1;
+    dx = dx1; fx = fx1;
+    dy = dy1; fy = fy1;
+    nh = nhx*nhy;
+
+    v = v1;
+    type = type1;
+    curve = curve1;
+    dipx = dipx1;
+    dipy = dipy1;
 }
 
-surface3 kirmod3_init(int nsx, float s0x, float dsx  /* source inline */,
-		      int nsy, float s0y, float dsy  /* source crossline */,
-		      int nhx, float h0x, float dhx  /* offset inline */,
-		      int nhy, float h0y, float dhy  /* offset crossline */,
-		      int nx1, float fx1, float dx1  /* reflector inline */,
-		      int ny1, float fy1, float dy1  /* reflector crossline */,
-		      int nc1                        /* number of reflectors */)
-/*< Initialize surface locations >*/ 
+void kirmod3_map(ktable ta, int isx, int isy, int ihx, int ihy, int ix, int iy, int ic) 
+/*< Compute traveltimes and amplitudes >*/
 {
-    int isx, isy, ihx, ihy, im;
-    float sx, sy;
-    surface3 yi, y;
+    float sx, sy, x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, g, gy, gx, gz, dz;
 
-    nx = nx1; dx = dx1; fx = fx1;
-    ny = ny1; dy = dy1; fy = fy1;
-    nc = nc1;
-    nh = nhx;
+    sy = s0y + isy*dsy;
+    sx = s0x + isx*dsx;    
 
-    nm = nsx*nsy*(nhx*nhy+1);
-    y = (surface3) sf_alloc(nm,sizeof(*y));
-    map = sf_intalloc3(nhx*nhy+1,nsx,nsy);
-
-    yi = y;
-    for (isy=0; isy < nsy; isy++) {
-	sy = s0y + isy*dsy;
-	for (isx=0; isx < nsx; isx++, yi++) {
-	    sx = s0x + isx*dsx;
-	    ihx=0;
-	    for (ihy=0; ihy < nhy; ihy++) {
-		for (ihx=0; ihx < nhx; ihx++, yi++) {
-		    yi->x = sx + h0x + ihx*dhx;
-		    yi->y = sy + h0y + ihy*dhy;
-		    yi->isx = isx;
-		    yi->isy = isy;
-		    yi->ihx = ihx;
-		    yi->ihy = ihy;
-		}
-	    }
-	    yi->x = sx;
-	    yi->y = sy;
-	    yi->isx = isx;
-	    yi->isy = isy;
-	    yi->ihx = ihx;
-	    yi->ihy = ihy;
-	}
+    if (ihx < nh) {
+	x1 = sx + h0x + ihx*dhx;
+	y1 = sy + h0y + ihy*dhy;
+    } else {
+	x1 = sx;
+	y1 = sy;
     }
 
-    qsort(y,nm,sizeof(*y),surface3_comp);
+    v1 = (v->v0)+
+	(v->gy)*(y1-(v->y0))+
+	(v->gx)*(x1-(v->x0))-
+	(v->gz)*(v->z0);
 
-    for (im=0; im < nm; im++) {
-	yi = y+im;
-	map[yi->isy][yi->isx][yi->ihy*nhx+yi->ihx] = im;
-    }
+    y2 = fy + iy*dy; /* y2 is on the reflector */
+    y = y2 - y1;
 
-    return y;
-}
+    x2 = fx + ix*dx; /* x2 is on the reflector */
+    x = x2 - x1;
 
-void kirmod3_close(surface3 y) 
-/*< Free allocated storage >*/
-{
-    int im, ix, iy, ic;
-    ktable ***ta, ***ta2;
-
-    ta2 = y[0].ta;;
-    for (im=0; im < nm; im++) {
-	ta = y[im].ta;
-	if (ta != ta2) {
-	    for (iy=0; iy < ny; iy++) {
-		for (ix=0; ix < nx; ix++) {
-		    for (ic=0; ic < nc; ic++) { 
-			free(ta2[iy][ix][ic]);
-		    }
-		    free(ta2[iy][ix]);
-		}
-		free(ta2[iy]);
-	    }
-	    free(ta2);
-	    ta2 = NULL;
-	}
-	ta2 = ta;
-    }
-    
-    if (ta2 != NULL) {
-	for (iy=0; iy < ny; iy++) {
-	    for (ix=0; ix < nx; ix++) {
-		for (ic=0; ic < nc; ic++) { 
-		    free(ta2[iy][ix][ic]);
-		}
-		free(ta2[iy][ix]);
-	    }
-	    free(ta2[iy]);
-	}
-	free(ta2);
-	ta2 = NULL;
-    }
-
-    free (y);
-    free (map[0]);
-    free (map);
-}
-
-void kirmod3_table (surface3 s                 /* surface structure */,
-		    velocity3 v                /* velocity attributes */,
-		    char type                  /* velocity distribution */,
-		    float ***curve             /* reflectors */,
-		    float ***dipx              /* reflector inline dip */,
-		    float ***dipy              /* reflector crossline dip */)
-/*< Compute traveltime/amplitude map >*/
-{
-    int ix, iy, im, ic;
-    float x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, g, gy, gx, gz, dz;
-    float xp=0., yp=0.;
-    ktable ***ta=NULL;
-
-    for (im=0; im < nm; im++) {	
-	x1 = s[im].x; /* x1 is on the surface */
-	y1 = s[im].y; /* x1 is on the surface */
-	if (0==im || x1 != xp || y1 != yp) { /* new point */
-	    v1 = 
-		(v->v0)+
-		(v->gy)*(y1-(v->y0))+
-		(v->gx)*(x1-(v->x0))-
-		(v->gz)*(v->z0);
-	    ta = (ktable***) sf_alloc(ny,sizeof(ktable**));
-	    
-	    for (iy=0; iy < ny; iy++) {
-		ta[iy] = (ktable**) sf_alloc(nx,sizeof(ktable*));
-		
-		y2 = fy + iy*dy; /* y2 is on the reflector */
-		y = y2 - y1;
-
-		for (ix=0; ix < nx; ix++) {
-		    ta[iy][ix] = (ktable*) sf_alloc(nc,sizeof(ktable));
-
-		    x2 = fx + ix*dx; /* x2 is on the reflector */
-		    x = x2 - x1;
-
-		    sf_warning("ix=%d iy=%d",ix,iy);
-
-		    for (ic=0; ic < nc; ic++) { 
-			ta[iy][ix][ic] = (ktable) 
-			    sf_alloc(1,sizeof(ta[iy][ix][0]));
-			
-			z = curve[ic][iy][ix];
-			zx = dipx[ic][iy][ix];
-			zy = dipy[ic][iy][ix];
-			dz = sqrtf(1.0+zx*zx+zy*zy);
+    z = curve[ic][iy][ix];
+    zx = dipx[ic][iy][ix];
+    zy = dipy[ic][iy][ix];
+    dz = sqrtf(1.0+zx*zx+zy*zy);
 		    
-			r = sqrtf(x*x+y*y+z*z)+
-			    FLT_EPSILON*hypotf(dx,dy); /* distance */
-			g = sqrtf((v->gz)*(v->gz)+
-				  (v->gx)*(v->gx)+
-				  (v->gy)*(v->gy));
-			gx = v->gx+v->gz*zx;            /* dw/dx */
-			gy = v->gy+v->gz*zy;
-			gz = v->gz-v->gx*zx-v->gy*zy;
-			px = x+z*zx;                    /* r*dr/dx */
-			py = y+z*zy;
-			pz = z-x*zx-y*zy;
-			kirmod_table(type,false,r,g,gx,gy,gz,v1,v1,px,py,pz,dz,
-				     ta[iy][ix][ic]);
-		    } 
-		}
-	    } 
-	} 
-	s[im].ta = ta;
-	xp = x1;
-	yp = y1;
-    }
-}
-
-ktable kirmod3_map(surface3 s, int isx, int isy, int ihx, int ihy, 
-		   int ix, int iy, int ic) 
-/*< Extract from traveltime/amplitude map >*/
-{
-    return s[map[isy][isx][ihy*nh+ihx]].ta[iy][ix][ic];
+    r = sqrtf(x*x+y*y+z*z)+FLT_EPSILON*hypotf(dx,dy); /* distance */
+    g = sqrtf((v->gz)*(v->gz)+
+	      (v->gx)*(v->gx)+
+	      (v->gy)*(v->gy));
+    gx = v->gx+v->gz*zx;            /* dw/dx */
+    gy = v->gy+v->gz*zy;
+    gz = v->gz-v->gx*zx-v->gy*zy;
+    px = x+z*zx;                    /* r*dr/dx */
+    py = y+z*zy;
+    pz = z-x*zx-y*zy;
+    kirmod_table(type,false,r,g,gx,gy,gz,v1,v1,px,py,pz,dz,ta);
 }

@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
     float slow, dx, x0, dy, y0, dt, t0, dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
     float theta, ava, amp, obl, ***time, ***ampl, ***delt, freq;
     char *type;
-    surface3 inc;
     velocity3 vel;
     ktable ts, tg;
     sf_file refl, curv, modl;
@@ -223,14 +222,17 @@ int main(int argc, char* argv[])
     /* reference coordinates for velocity */
     
     /*** Allocate space ***/    
-    inc = kirmod3_init(nsx, s0x, dsx, 
-		       nsy, s0y, dsy,
-		       nhx, h0x, dhx, 
-		       nhy, h0y, dhy, 
-		       nx, x0, dx, 
-		       ny, y0, dy,
-		       nc);
-    
+    kirmod3_init(s0x, dsx, 
+		 s0y, dsy,
+		 nhx, h0x, dhx, 
+		 nhy, h0y, dhy, 
+		 x0, dx, 
+		 y0, dy,
+		 vel, type[0], crv, dipx, dipy);
+    ts = (ktable) sf_alloc(1,sizeof(*ts));
+    tg = (ktable) sf_alloc(1,sizeof(*tg));
+
+
     /*** Initialize stretch ***/
     aastretch_init (nt, t0, dt, nxyc);
 
@@ -242,17 +244,15 @@ int main(int argc, char* argv[])
     /* peak frequency for Ricker wavelet */
     ricker_init(nt*2,freq*dt,2);
 
-    /*** Compute traveltime table ***/
-
-    kirmod3_table (inc, vel, type[0], crv, dipx, dipy);
-
     /*** Main loop ***/
     for (isy=0; isy < nsy; isy++) { for (isx=0; isx < nsx; isx++) {
+	if (0==(isx+nsx*isy)%(nx*nsy/10+1)) sf_warning("source %d of %d",isx+nsx*isy+1,nsx*nsy);
+
 	for (ihy=0; ihy < nhy; ihy++) { for (ihx=0; ihx < nhx; ihx++) {
 	    for (iy=0; iy < ny; iy++) { for (ix=0; ix < nx; ix++) {
 		for (ic=0; ic < nc; ic++) {
-		    ts = kirmod3_map(inc,isx,isy,nhx*nhy,0,ix,iy,ic);
-		    tg = kirmod3_map(inc,isx,isy,ihx,ihy,ix,iy,ic);
+		    kirmod3_map(ts,isx,isy,nhx*nhy,0,    ix,iy,ic);
+		    kirmod3_map(tg,isx,isy,ihx,    ihy,  ix,iy,ic);
 		    
 		    time[ic][iy][ix] = ts->t + tg->t;
 		    
@@ -289,4 +289,3 @@ int main(int argc, char* argv[])
   
     exit(0);
 }
-    
