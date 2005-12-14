@@ -202,6 +202,8 @@ void kirmod3_table (surface3 s                 /* surface structure */,
 		    x2 = fx + ix*dx; /* x2 is on the reflector */
 		    x = x2 - x1;
 
+		    sf_warning("ix=%d iy=%d",ix,iy);
+
 		    for (ic=0; ic < nc; ic++) { 
 			ta[iy][ix][ic] = (ktable) 
 			    sf_alloc(1,sizeof(ta[iy][ix][0]));
