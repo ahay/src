@@ -126,179 +126,69 @@
  * Keywords: vplot pen generic
  */
 
-#include 	<stdio.h>
-#include 	<math.h>
-#include	<ctype.h>
-#include	<string.h>
+#include <vplotutil.h>
 
-#include	"./include/vplot.h"
-
-#include	"./include/params.h"	/* for machine dependencies */
-#include	"./include/enum.h"
-#include	"./include/err.h"
-#include	"./include/attrcom.h"
-#include	"./include/intcom.h"
-#include	"./include/mesgcom.h"
-#include	"./include/erasecom.h"
-#include	"./include/closestat.h"
-#include	"./include/getxy.h"
-#include	"./include/pat.h"
-#include	"./include/vertex.h"
-#include	"./include/extern.h"
-#include	"./include/round.h"
-
-#define COLOR_MAP(A) (color_set[(A)][MAP])
-#define GREY_MAP(A) (color_set[(A)][_GREY])
-
-/*
- * Banished to an include file so that "indent" can't get its hands on it
- */
-#include "./include/readraster.h"
-
-void end_of_file(void);
-void set_table(void);
-extern int      wantras, smart_raster;
-extern int      allowecho;
-extern int      brake;
-extern FILE    *controltty;
-extern int      cur_color;
-extern int      pat_color;
-extern int      epause;
-extern int      erase;
-extern int      ever_called;
-extern int      fatbase;
-extern int      ifat;
-extern int      first_time;
-extern int      framewindows;
-extern int      next_color;
-extern int      ipat;
-extern int      nplots;
-extern int      overlay;
-extern struct pat pat[];
-extern FILE    *pltout, *pltin, *temp;
-extern char     group_name[];
-extern int      group_number;
-extern char    *txbuffer;
-extern int      txbuflen;
-extern struct vertex *vxbuffer;
-extern int      vxbuflen;
-extern int      window;
-extern int      xwmax, xwmin, ywmax, ywmin;
-extern int      xWmax, xWmin, yWmax, yWmin;
-int             xwmin_last, xwmax_last, ywmin_last, ywmax_last;
-extern int      xnew, ynew;
-extern int      xold, yold;
-extern int      xorigin, yorigin;
-extern float    scale;
-extern float    xscale;
-extern float    yscale;
-extern int      default_style;
-extern int      default_txfont, default_txprec, default_txovly;
-extern int      default_overlay;
-extern int      color_set[MAX_COL + 1][_NUM_PRIM];
-extern int      greycorr ();
-extern int      num_col_8;
-extern int      xret, yret;
-extern int      add_a_cor ();
-extern char     interact[];
-extern float    dashsum;
-extern float    dashpos;
-extern float    dashes[];
-extern struct txalign txalign;
-extern int      colormask[];
-extern float    redmap[4], greenmap[4], bluemap[4];
-extern float    redpow, greenpow, bluepow;
-int             ras_allgrey = YES;
-
-#if defined (HAVE_STDLIB_H)
-#include <stdlib.h>
-#else 
-char           *malloc ();
-char           *calloc ();
-char           *realloc ();
-#endif
-long int        ftell ();
-extern void     dithline ();
-extern void     wlimit ();
-extern short    geth ();
-
-int             need_devcolor = NO;
-
-dovplot ()
+void dovplot (device dev)
 {
-int             i, j, k, c;
-int             key, size, npts;
-int             nmul;
-int             nx, ny, nx_orig, ny_orig;
-int             orient, ras_orient;
-register int   *ptr;
-int             nx_mult, ny_mult;
-int             nx_temp, ny_temp;
-int            *tempbuf, *ptemp;
-FILE           *fopen ();
-int             new_style;
-int             starterase = 0;
-int             col_tab_no, red, green, blue, grey, dist, min_dist, best_col;
-int             hacol[NHATCH * 2], hafat[NHATCH * 2], haoff[NHATCH * 2],
-                hasiz[NHATCH * 2], numhatch;
-float           angle, xrasmult, yrasmult;
-int             xpix, ypix, num_pat, num_byte;
-int             yrast, lastrast;
-int             xvr_min, xvr_max, yvr_min, yvr_max;
-int             xr_min, xr_max, yr_min, yr_max;
-int             xvru_min, xvru_max, yvru_min, yvru_max;
-int             xru_min, yru_max;
-int             xxx[4], yyy[4];
-int             pos, ii, jj, kk, num_rep, ras_offset, dither_it;
-unsigned short  *rasterline, *rasterline2, *outraster, *outraster2;
-unsigned char   ibyte;
-int             xnewer, ynewer;
-int             xtext0, xtext1, xtext2, ytext0, ytext1, ytext2;
-int             type;
-int            *marker_vec, *mvec;
-int             savefat;
-int             byte2,t1,t2;
-float           savefatmult;
-char            string[MAXFLEN + 1];
+    int             i, j, k, c;
+    int             key, size, npts;
+    int             nmul;
+    int             nx, ny, nx_orig, ny_orig;
+    int             orient, ras_orient;
+    int   *ptr;
+    int             nx_mult, ny_mult;
+    int             nx_temp, ny_temp;
+    int            *tempbuf, *ptemp;
+    int             new_style;
+    int             starterase = 0;
+    int             col_tab_no, red, green, blue, grey, dist, min_dist, 
+	best_col;
+    int             hacol[NHATCH * 2], hafat[NHATCH * 2], haoff[NHATCH * 2],
+	hasiz[NHATCH * 2], numhatch;
+    float           angle, xrasmult, yrasmult;
+    int             xpix, ypix, num_pat, num_byte;
+    int             yrast, lastrast;
+    int             xvr_min, xvr_max, yvr_min, yvr_max;
+    int             xr_min, xr_max, yr_min, yr_max;
+    int             xvru_min, xvru_max, yvru_min, yvru_max;
+    int             xru_min, yru_max;
+    int             xxx[4], yyy[4];
+    int             pos, ii, jj, kk, num_rep, ras_offset, dither_it;
+    unsigned short  *rasterline, *rasterline2, *outraster, *outraster2;
+    unsigned char   ibyte;
+    int             xnewer, ynewer;
+    int             xtext0, xtext1, xtext2, ytext0, ytext1, ytext2;
+    int             type;
+    int            *marker_vec, *mvec;
+    int             savefat;
+    int             byte2,t1,t2;
+    float           savefatmult;
+    char            string[MAXFLEN + 1];
+    
 
-    /*
-     * Check to make sure we really got anything before we claim we've made a
-     * plot.
-     */
-    if ((c = getc (pltin)) == EOF)
-	return;
-    ungetc ((char) c, pltin);
+    c = getchar();
+    if (EOF == c) return;
 
-
-    while (((c = getc (pltin)) == VP_ERASE) || c==VP_SET_COLOR_TABLE || ((c == VP_BREAK) && (brake == BREAK_ERASE)))
+    while((c == VP_ERASE || 
+	   c == VP_SET_COLOR_TABLE || 
+	   c == VP_BREAK) && (brake == BREAK_ERASE))
     {
-	/*
-	 * This is a baby version of the main switch that takes up most of
-	 * this file.
-	 */
-	switch (c)
-	{
-  /*EXPERIMENTAL*/
-	case VP_SET_COLOR_TABLE:	/* set color table entry */
-     if(first_time) init_colors();
-     set_table() ;
-	    break;
-  /*END EXPERIMENTAL*/
-	case VP_ERASE:
-	case VP_BREAK:
-/*    fprintf(stderr,"in dovplot 1\n");*/
-	    starterase = 1;
-	    break;
+	switch (c) {
+	    case VP_SET_COLOR_TABLE:	/* set color table entry */
+		if(first_time) init_colors();
+		set_table();
+		break;
+	    default:
+		starterase = 1;
+		break;
 	}
+	c = getchar();
     }
 
-    /*
-     * Files that consist only of erase characters and nothing else are
-     * ignored.
-     */
-    if (c == EOF)
-	return;
-    ungetc ((char) c, pltin);
+    if (EOF == c) return;
+}
+
+#ifdef sdfsdfjhg
 
     if (first_time)
     {
@@ -2396,3 +2286,5 @@ int             c,ii,k,i;
 		}
 	    }
 }
+
+#endif
