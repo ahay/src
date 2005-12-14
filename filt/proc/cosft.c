@@ -21,16 +21,17 @@
 
 #include "cosft.h"
 
-static int nt, nw;
+static int nt, nw, n1;
 static float *p /* , dt */;
 static float complex *pp;
 static kiss_fftr_cfg forw, invs;
 
-void cosft_init(int nw_in)
+void cosft_init(int n1_in)
 /*< initialize >*/ 
 {
-    nw = nw_in;
-    nt = 2*(nw-1);
+    n1 = n1_in;
+    nt = sf_fftr_size(2*(n1-1));
+    nw = nt/2+1;
     p  = sf_floatalloc (nt);
     pp = sf_complexalloc(nw);
     forw = kiss_fftr_alloc(nt,0,NULL,NULL);
@@ -53,8 +54,11 @@ void cosft_frw (float *q /* data */,
 {
     int i;
 
-    for (i=0; i < nw; i++) {
+    for (i=0; i < n1; i++) {
 	p[i] = q[o1+i*d1];
+    }
+    for (i=n1; i < nw; i++) { 
+	p[i] = 0.; /* pad */
     }
     for (i=nw; i < nt; i++) {
 	p[i] = p[nt-i];
@@ -62,7 +66,7 @@ void cosft_frw (float *q /* data */,
     
     kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
     
-    for (i=0; i < nw; i++) {
+    for (i=0; i < n1; i++) {
 	q[o1+i*d1] = crealf(pp[i]);
     }
 }
@@ -74,8 +78,11 @@ void cosft_inv (float *q /* data */,
 {
     int i;
 
-    for (i=0; i < nw; i++) {
+    for (i=0; i < n1; i++) {
 	pp[i] = q[o1+i*d1];
+    }
+    for (i=n1; i < nw; i++) { 
+	pp[i] = 0.; /* pad */
     }
 
 /*
@@ -90,7 +97,7 @@ void cosft_inv (float *q /* data */,
   
     kiss_fftri(invs,(const kiss_fft_cpx *) pp, p);
     
-    for (i=0; i < nw; i++) {
+    for (i=0; i < n1; i++) {
 	q[o1+i*d1] = p[i]/nt;
     }
 }
