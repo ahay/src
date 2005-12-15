@@ -47,8 +47,14 @@ Flow('shp','zovol xdip ydip',
 Result('shp',plot3('Isolated Diffractions'))
 
 Flow('ckx','shp','cosft sign2=1 sign3=1')
-Flow('sto','ckx','pad beg1=680 | stolt nf=4 vel=3000 | window f1=680')
+Flow('sto','ckx','pad beg1=680 | stolt nf=4 vel=1500 | window f1=680')
 Flow('vlf','sto','spray axis=2 n=1 o=0 d=1 | fourvc nv=50 dv=40 v0=1500')
-Flow('vlc','vlf','cosft sign3=-1 sign4=-1')
+Flow('vlc','vlf',
+     '''
+     transp plane=23 memsize=500 |
+     cosft sign2=-1 |
+     transp plane=34 |
+     cosft sign3=-1
+     ''')
 
 End()

@@ -1,21 +1,20 @@
-/* Velocity continuation with semblance computation.
-*/
+/* Velocity continuation with semblance computation. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -46,9 +45,8 @@ int main(int argc, char* argv[])
     if (!sf_getint("nb",&nb)) nb=2;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getint("pad",&n2)) n2=n1;
-    if (!sf_getint("pad2",&n3)) n3=n2;
+    if (!sf_getint("pad2",&n3)) n3=sf_fftr_size(n2);
 
-    if (n3%2) n3++;
     nw = n3/2+1;
     forw = kiss_fftr_alloc(n3,0,NULL,NULL);
     invs = kiss_fftr_alloc(n3,1,NULL,NULL);
@@ -77,7 +75,7 @@ int main(int argc, char* argv[])
 
     sf_putstring(out,"label3","Velocity (km/s)");
 
-    dx = 2.*SF_PI/(2*(nx-1)*dx);
+    dx = 2.*SF_PI/(sf_fftr_size(2*(nx-1))*dx);
 
     stack = sf_floatalloc3(n1,nx,nv);
     stack2 = sf_floatalloc3(n1,nx,nv);

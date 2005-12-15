@@ -132,14 +132,14 @@ int main(int argc, char* argv[])
     } else {
 	sf_warning("Going out of core... "
 		   "(increase memsize=%d for in-core)",mem);
-	sf_unpipe(in,n1*n2*n3);
+	sf_unpipe(in,(off_t) n1*n2*n3);
 
 	buf = sf_charalloc (n1);
 	
 	pos = sf_tell(in);
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		sf_seek(in,pos+map[i2]*n1,SEEK_SET);
+		sf_seek(in,pos+(off_t) map[i2]*n1,SEEK_SET);
 		sf_charread (buf,n1,in);
 		sf_charwrite(buf,n1,out);
 	    }

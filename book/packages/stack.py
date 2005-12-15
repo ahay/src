@@ -112,7 +112,7 @@ def stack(name,
     fourvc nv=%d dv=%g v0=%g |
     cosft sign3=-1 |
     window n3=%d
-    ''' % (padx,2*v0,nv,dv,v0,nx)
+    ''' % (padx,v0,nv,dv,v0,nx)
 
     vlf=name+'-vlf'
     Flow(vlf,shp,velcon)

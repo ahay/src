@@ -83,7 +83,7 @@ Result('cstkd','stkd','window max2=5500 min1=0.2 | grey title="DMO Stack" ')
 Flow('vlf0','stkd',
      '''
      pad n2=1025 | cosft sign2=1 | spray axis=2 n=1 o=0 d=15 |
-     stolt vel=3000 nf=4 |
+     stolt vel=1500 nf=4 |
      fourvc nv=200 dv=5 v0=1500 |
      cosft sign3=-1 |
      window n3=878

@@ -61,7 +61,7 @@ Result('pwd',grey('Diffractions'))
 
 velcon = '''
 pad n2=2049 | cosft sign2=1 | 
-pad beg1=1000 | stolt vel=2.8 nf=4 | window f1=1000 | 
+pad beg1=1000 | stolt vel=1.4 nf=4 | window f1=1000 | 
 spray axis=2 n=1 o=0 d=1 | fourvc nv=80 dv=0.01 v0=1.4 |
 cosft sign3=-1 | window n3=1105
 '''

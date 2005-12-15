@@ -255,7 +255,7 @@ for k in ('0'):
     '''
     Flow(ckx,pwd,fft)
     velcon = '''
-    stolt vel=3000 nf=4 |
+    stolt vel=1500 nf=4 |
     fourvc nv=200 dv=5 v0=1500 |
     cosft sign3=-1 |
     window n3=440

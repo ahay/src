@@ -13,7 +13,7 @@ Flow('fft3','spike','cosft sign2=1 sign3=1')
 for nf in [2,4,8]:
     stolt = 'stolt%d' % nf
     Flow(stolt,'fft3',
-              'stolt nf=%d vel=4 | cosft sign2=-1 sign3=-1' % nf)
+              'stolt nf=%d vel=2 | cosft sign2=-1 sign3=-1' % nf)
     Plot(stolt+'-depth',stolt,
               '''window n1=1 f1=30 |
               grey title="Stolt migration %d: Depth slice"

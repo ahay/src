@@ -49,7 +49,7 @@ Flow('spike',None,
      bandpass flo=10 fhi=50
      ''')
 Flow('fft2','spike','cosft sign2=1')
-Flow('stolt','fft2','stolt nf=4 vel=4 | cosft sign2=-1')
+Flow('stolt','fft2','stolt nf=4 vel=2 | cosft sign2=-1')
 
 for vel in (3,4,5):
     back = 'back%d' % vel

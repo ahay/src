@@ -50,12 +50,12 @@ int main(int argc, char* argv[])
     nw=sf_fftr_size(2*(nw-1));
 
     cosft_init(nw/2+1);
-    dw = SF_PI/(nw*dt);
+    dw = 2 * SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
-    dx *= 2 * SF_PI * fabsf (vel);
-    dy *= 2 * SF_PI * fabsf (vel);	
+    dx *= SF_PI * fabsf (vel);
+    dy *= SF_PI * fabsf (vel);	
 
     if (!sf_getfloat("stretch", &st)) st=1.;
     /* Stolt stretch parameter */
@@ -83,6 +83,7 @@ int main(int argc, char* argv[])
 	    for (iw = nt; iw < nw; iw++) { /* pad */
 		trace[iw]=0.;
 	    }
+	    cosft_frw (trace,0,1);
 
 	    for (iw = 0; iw < nw; iw++) {
 		w = iw*dw;
@@ -97,9 +98,7 @@ int main(int argc, char* argv[])
 		}
 	    }
        
-	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);
-	    
-	    cosft_frw (trace,0,1);
+	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
 	    sf_prefilter_apply (nw, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
 	    cosft_inv (trace2,0,1);
