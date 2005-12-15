@@ -18,16 +18,13 @@
  *	Do invras here.
  */
 
-/*
- * Utility to modify color tables for plotting grey rasters.
- */
-
 #include <stdio.h>
 
 #include "_round.h"
 #include "device.h"
 
 int greycorr (device dev, int colornum)
+/*< modify color tables for plotting grey rasters >*/
 {
     float           newval;
     int             outval;

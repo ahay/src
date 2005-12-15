@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 src = '''
-alloc clip dashvec device dither error fatvec solve vertex greycorr
+alloc clip dashvec device dither do error fatvec solve vertex greycorr
 sort vecoutline vptodev
 '''
 
@@ -19,6 +19,8 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env.Prepend(CPPPATH=['../../include'])
+    SConscript('../../plot/lib/SConstruct')
 
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])

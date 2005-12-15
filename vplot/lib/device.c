@@ -5,6 +5,23 @@
 typedef struct Device *device;
 /*^*/
 
+typedef enum {BREAK_BREAK, BREAK_ERASE, BREAK_IGNORE} brake;
+/*^*/
+
+typedef enum {SET_COLOR=1,
+	      SET_COLOR_TABLE,
+	      SET_WINDOW,
+	      NEW_DASH,		
+	      NEW_PAT,		
+	      NEW_FONT,		
+	      NEW_OVERLAY,	
+	      NEW_ALIGN,	
+	      NEW_FAT,		
+	      BEGIN_GROUP,	
+	      END_GROUP} attr_command;
+/*^*/
+
+
 struct Device {
     float dashpos, dashsum, *dashes;
     float pixels_per_inch, aspect_ratio;
@@ -16,6 +33,11 @@ struct Device {
     float mxx, mxy, myx, myy;
     float hshift, vshift;
     int no_stretch_text;
+    int first_time;
+    int mono;
+    float redpow, greenpow, bluepow;
+    float redmap[4], greenmap[4], bluemap[4];
+    brake brk;
     /* control routines */
     int (*open)(void);
     int (*reset)(void);
@@ -29,7 +51,7 @@ struct Device {
     int (*area)(void);
     int (*raster)(void);
     int (*point)(void);
-    int (*attributes)(void);    
+    int (*attributes)(device dev,attr_command,int,int,int,int);    
     /* input */
     int (*getpoint)(void);
     int (*interact)(void);  

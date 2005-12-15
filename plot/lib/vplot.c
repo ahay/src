@@ -154,7 +154,7 @@ void vp_init(void)
 }
 
 int vp_getint (void)
-/*< Extract and decode an integer (for debugging) >*/
+/*< Extract and decode an integer >*/
 {
     unsigned short w;
 
