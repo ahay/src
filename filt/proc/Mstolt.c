@@ -54,8 +54,8 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;
-    dx *= SF_PI * fabsf (vel);
-    dy *= SF_PI * fabsf (vel);	
+    dx *= 2 * SF_PI * fabsf (vel);
+    dy *= 2 * SF_PI * fabsf (vel);	
 
     if (!sf_getfloat("stretch", &st)) st=1.;
     /* Stolt stretch parameter */

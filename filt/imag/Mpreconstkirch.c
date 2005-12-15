@@ -1,4 +1,7 @@
-/* Prestack Kirchhoff modeling/migration in constant velocity. */
+/* Prestack Kirchhoff modeling/migration in constant velocity. 
+
+Requires the input to be in (time,cmp x,cmp y,offset)
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
