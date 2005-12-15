@@ -64,7 +64,7 @@ int main (int argc, char* argv[])
 	    }
 	    snprintf(key,3,"d%d",i+1);
 	    if (!sf_histfloat(in,key,d+i)) d[i]=1.;
-	    sf_putfloat(out,key,1./(2*(n[i]-1)*d[i]));
+	    sf_putfloat(out,key,1./(sf_fftr_size(2*(n[i]-1))*d[i]));
 	}
     }
 

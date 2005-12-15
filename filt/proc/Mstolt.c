@@ -47,10 +47,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getint ("pad",&nw)) nw=nt;
     /* padding on the time axis */
-    nw=2*(nw-1);
+    nw=sf_fftr_size(2*(nw-1));
 
-    cosft_init(nw);
-    dw = 2.*SF_PI/(nw*dt);
+    cosft_init(nw/2+1);
+    dw = SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"d3",&dy)) dy=dx;

@@ -9,12 +9,12 @@ Flow('spike',None,
 Flow('kirch1','spike',
      '''
      spray axis=2 o=0 n=1 | transp plane=24 |
-     preconstkirch vel=2 | window |
+     preconstkirch vel=3 | window |
      halfint inv=y adj=y
      ''')
 Plot('kirch1','grey title="Kirchhoff 1"')
 
-Flow('vel','spike','window n2=1 | math output=2')
+Flow('vel','spike','window n2=1 | math output=3')
 Flow('kirch2','spike vel','kirchnew velocity=${SOURCES[1]}')
 Plot('kirch2','grey title="Kirchhoff 2" ')
 
@@ -29,7 +29,7 @@ Flow('phase','spike vel',
 Plot('phase','grey title="Phase Shift" ')
 
 Flow('stolt','spike',
-     'cosft sign2=1 | stolt nf=4 vel=4 | cosft sign2=-1')
+     'cosft sign2=1 | stolt nf=4 vel=3 | cosft sign2=-1')
 Plot('stolt','grey title=Stolt')
 
 Plot('waves','phase stolt','OverUnderAniso')
