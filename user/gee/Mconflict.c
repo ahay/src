@@ -52,7 +52,7 @@ int main (int argc, char* argv[])
 
     data = sf_floatalloc2(nt,nx);
 
-    random_init (1992L);
+    random_init (1992);
     
     for (ix=0; ix < nx; ix++) {
 	for (it=0; it < nt; it++) {

@@ -19,9 +19,9 @@
 
 #include "random.h"
 
-static long seed = 1996;
+static int seed = 1996;
 
-void random_init (long iseed)
+void random_init (int iseed)
 /*< initialize the seed >*/
 {
     seed = iseed;
