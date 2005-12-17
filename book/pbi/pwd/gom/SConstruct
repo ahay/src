@@ -50,7 +50,7 @@ Flow('vlf2','vkx',
 
 Flow('foc','vlf','window j3=5 | focus rect1=200 rect3=10 | math output=1/input')
 
-Flow('pick','foc','blindpick rect1=10 rect2=10')
+Flow('pick','foc','pick rect1=10 rect2=10')
 
 Flow('pick2','pick','window | transp | spline n1=920 d1=26.6699 o1=0 | transp')
 

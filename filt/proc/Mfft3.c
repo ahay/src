@@ -108,7 +108,9 @@ int main (int argc, char **argv)
 	/* padding factor */
 
 	/* determine wavenumber sampling */
-	nk = nx*npad;
+	nk = sf_fft_size(nx*npad);
+	if (nk != nx) sf_warning("padded to %d",nk);
+
 	dk = 1./(nk*dx);
 	k0 = -0.5/dx;
 

@@ -38,8 +38,8 @@ void off2ang_init(int   nz /* depth samples */,
     nt=nz;
     np=na; dp=da; p0=a0;
     nx=nh; dx=dh; x0=h0;
-    nt2 = 2*nt; /* padding */
-    nw = nt+1;
+    nt2 = sf_fftr_size(2*nt); /* padding */
+    nw = nt2/2+1;
     dw = 2.0*SF_PI/(nt2*dz);
     
     tt = sf_floatalloc (nt2);

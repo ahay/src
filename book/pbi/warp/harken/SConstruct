@@ -64,7 +64,7 @@ Result('scan2',scanplot3(16))
 
 def blindpick2(rect1=10,rect2=10):
     return '''
-    blindpick rect1=%d rect2=%d | window |
+    pick rect1=%d rect2=%d | window |
     math T=${SOURCES[1]} output="(input-1)*T"
     ''' % (rect1,rect2)
 
@@ -166,7 +166,7 @@ Flow('time3','time2','spray axis=3 n=81 o=20 d=1')
 
 def blindpick3(rect1=10,rect2=10,rect3=10):
     return '''
-    blindpick rect1=%d rect2=%d rect3=%d | window |
+    pick rect1=%d rect2=%d rect3=%d | window |
     transp          | spline n1=81 d1=1 o1=20 | transp          |
     transp plane=13 | spline n1=81 d1=1 o1=20 | transp plane=13 |
     math T=${SOURCES[1]} output="(input-1)*T"

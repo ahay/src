@@ -16,21 +16,21 @@ Flow('elf','elf0.H',
      transp plane=24 memsize=500
      ''')
 
-# velcon.velcon('elf',
-#              nv=120,      # continuation steps
-#              v0=1400,     # initial velocity
-#              dv=25,       # velocity step
-#              nx=1000,     # lateral dimension
-#              padt=1024,   # time padding
-#              padt2=4096,  # extra time padding
-#              padx=1025,   # lateral padding
-#              dx=13.3333,  # lateral sampling
-#              v1=2000,     # other velocity
-#              vx0=2000,    # semblance muting
-#              vslope=1200, # semblance muting
-#              units='m',   # lateral units
-#              rect1=35,    # vertical smoothing
-#              rect2=35)    # lateral  smoothing
+velcon.velcon('elf',
+              nv=120,      # continuation steps
+              v0=1400,     # initial velocity
+              dv=25,       # velocity step
+              nx=1000,     # lateral dimension
+              padt=1024,   # time padding
+              padt2=4096,  # extra time padding
+              padx=1025,   # lateral padding
+              dx=13.3333,  # lateral sampling
+              v1=2000,     # other velocity
+              vx0=2000,    # semblance muting
+              vslope=1200, # semblance muting
+              units='m',   # lateral units
+              rect1=35,    # vertical smoothing
+              rect2=35)    # lateral  smoothing
 
 Flow('scan','elf-vlf2','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
 Plot('scan','grey color=j allpos=y title="Semblance Scan" label1="Time (s)" label2="Velocity (m/s)" ')

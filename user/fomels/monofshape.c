@@ -34,7 +34,7 @@ void monofshape_init(int n1)
 /*< initialize with data length >*/
 {
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = n1;
+    nfft = sf_fftr_size(n1);
     nw = nfft/2+1;
     dw = 2.*SF_PI/nfft;
 

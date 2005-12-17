@@ -37,8 +37,7 @@ void freqfilt2_init(int n1, int n2 /* data dimensions */,
     m1 = n1;
     nw = nw1;
     m2 = n2;
-    nfft = n1;
-    if (n1%2) nfft++;
+    nfft = sf_fftr_size(n1);
 
     tfor = kiss_fftr_alloc(nfft,0,NULL,NULL);
     tinv = kiss_fftr_alloc(nfft,1,NULL,NULL);
@@ -82,7 +81,9 @@ void freqfilt2_spec (const float* x /* input */, float** y /* spectrum */)
 	for (iw=0; iw < m1; iw++) {
 	    trace[iw] = x[ik*m1+iw];
 	}	
-	if (m1%2) trace[m1]=0.;
+	for (iw=m1; iw < nfft; iw++) {
+	    trace[iw]=0.;
+	}
 
 	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
@@ -110,7 +111,10 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	for (iw=0; iw < m1; iw++) {
 	    trace[iw] = adj? y[ik*m1+iw]: x[ik*m1+iw];
 	}
-	if (m1%2) trace[m1]=0.;
+	for (iw=m1; iw < nfft; iw++) {
+	    trace[iw]=0.;
+	}
+
 	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
 	for (iw=0; iw < nw; iw++) {
 	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];

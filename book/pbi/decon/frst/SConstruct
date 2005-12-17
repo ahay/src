@@ -16,7 +16,7 @@ Flow('ch','ch80','shot2cmp')
 Flow('mut','ch','mutter v0=3000 t0=0.1')
 Flow('vscan','mut','vscan semblance=y v0=1500 nv=100 dv=50')
 
-Flow('vrms','vscan','blindpick rect1=10 rect2=5')
+Flow('vrms','vscan','pick rect1=10 rect2=5')
 Result('hvrms','vrms',
        '''
        window max3=6000 | 

@@ -50,7 +50,6 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    if (n3%2) n3++;
     nw = n3/2+1;
     forw = kiss_fftr_alloc(n3,0,NULL,NULL);
     invs = kiss_fftr_alloc(n3,1,NULL,NULL);

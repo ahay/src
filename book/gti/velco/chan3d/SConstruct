@@ -56,5 +56,6 @@ Flow('vlc','vlf',
      transp plane=34 |
      cosft sign3=-1
      ''')
+Flow('pat','vlc','patch w=201,440,280')
 
 End()

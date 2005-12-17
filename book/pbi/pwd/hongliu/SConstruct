@@ -47,8 +47,10 @@ cat = 'cat ${SOURCES[1:%d]} | put o3=-90 d3=2' % len(shifts)
 Flow('zshift',shifts,cat)
 Flow('zfocus',focuss,cat)
 
-Flow('zpick','zfocus','math output=1/input | transp plane=23 | blindpick rect1=10 rect2=10 | window')
-Flow('zslice','zshift zpick','transp plane=23 | slice pick=${SOURCES[1]} | window')
+Flow('zpick','zfocus',
+     'math output=1/input | transp plane=23 | pick rect1=10 rect2=10 | window')
+Flow('zslice','zshift zpick',
+     'transp plane=23 | slice pick=${SOURCES[1]} | window')
 
 Flow('zslice2','zslice','envelope hilb=y phase=90')
 

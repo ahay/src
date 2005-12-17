@@ -21,31 +21,44 @@
 #include "fftsize.h"
 #include "_fftsize.h"
 
-int sf_fftr_size(int min)
-/*< Find optimal size for real FFT greater or equal min >*/
+static int opt_size(int min, int tabsize, const sf_Table *table)
 {
     int n, size;
-
-    for (n=0; n < SF_FFTR_SIZE; n++) {
-	size = SF_FFTR[n].size;
+    
+    for (n=0; n < tabsize; n++) {
+	size = table[n].size;
 	if (size >= min) {
 	    min=size;
 	    break;
 	}
     }
+    return min;
+}
+
+int sf_fftr_size(int min)
+/*< Find optimal size for real FFT greater or equal min >*/
+{
+    min = opt_size(min,SF_FFTR_SIZE,SF_FFTR);
     if (min%2) min++; /* make it even */
     return min;
 }
 
-int sf_fftr_size2(int min, int max)
-/*< Find optimal size for real FFT between min and max >*/
+
+int sf_fft_size(int min)
+/*< Find optimal size for complex FFT greater or equal min >*/
+{
+    min = opt_size(min,SF_FFT_SIZE,SF_FFT);
+    return min;
+}
+
+static int opt_size2(int min, int max, int tabsize, const sf_Table *table)
 {
     int n, size, nmin, nmax;
     float cost, mincost;
 
     nmin=-1;
-    for (n=0; n < SF_FFTR_SIZE; n++) {
-	size = SF_FFTR[n].size;
+    for (n=0; n < tabsize; n++) {
+	size = table[n].size;
 	if (size >= min) {
 	    nmin = n;
 	    break;
@@ -57,8 +70,8 @@ int sf_fftr_size2(int min, int max)
     }
 
     nmax=0;
-    for (n=SF_FFTR_SIZE-1; n >= 0; n--) {	
-	size = SF_FFTR[n].size;
+    for (n=tabsize-1; n >= 0; n--) {	
+	size = table[n].size;
 	if (size <= max) {
 	    nmax = n;
 	    break;
@@ -67,13 +80,27 @@ int sf_fftr_size2(int min, int max)
 
     mincost = FLT_MAX;
     for (n=nmin; n <= nmax; n++) {
-	cost = SF_FFTR[n].cost;
+	cost = table[n].cost;
 	if (cost < mincost) {
 	    mincost = cost;
-	    size=SF_FFTR[n].size;
+	    size=table[n].size;
 	}
     }
 
-    if (size%2) size++; /* make it even */
     return size;
+}
+
+int sf_fftr_size2(int min, int max)
+/*< Find optimal size for real FFT between min and max >*/
+{
+    min = opt_size2(min,max,SF_FFTR_SIZE,SF_FFTR);
+    if (min%2) min++; /* make it even */
+    return min;
+}
+
+int sf_fft_size2(int min, int max)
+/*< Find optimal size for complex FFT between min and max >*/
+{
+    min = opt_size2(min,max,SF_FFT_SIZE,SF_FFT);
+    return min;
 }

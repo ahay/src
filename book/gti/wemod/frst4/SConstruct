@@ -276,7 +276,7 @@ for k in ('0'):
 #           label1="Time (s)" label2="Velocity (m/s)"
 #           ''')
 
-    Flow(pik,foc,'scale axis=3 | blindpick rect1=10 rect2=10 | window')
+    Flow(pik,foc,'scale axis=3 | pick rect1=10 rect2=10 | window')
 
 #    Result(pik,grey2('Picked Focusing Velocity') + \
 #           'color=j allpos=y bias=2000 scalebar=y wherescalebar=b')
