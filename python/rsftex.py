@@ -66,6 +66,20 @@ figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 sep = os.path.join(os.environ.get('SEP'),'bin/')
 
 #############################################################################
+# REGULAR EXPRESSIONS
+#############################################################################
+
+isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?\{([^\}]+)')
+ismplot = re.compile(r'^[^%]*\\multiplot\*?\{[^\}]+\}\s*\{([^\}]+)')
+isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
+isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
+input = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
+chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
+subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
+beamer = re.compile(r'\\documentclass[^\{]*\{beamer\}')
+hastoc =  re.compile(r'\\tableofcontents')
+
+#############################################################################
 # CUSTOM BUILDERS
 #############################################################################
 
@@ -108,8 +122,16 @@ def latex_emit(target=None, source=None, env=None):
     stem = re.sub('\.[^\.]+$','',tex)
     target.append(stem+'.aux')
     target.append(stem+'.log')
-    target.append(stem+'.bbl')
-    target.append(stem+'.blg')
+    contents = source[0].get_contents()
+    if isbib.search(contents):
+        target.append(stem+'.bbl')
+        target.append(stem+'.blg')
+    if hastoc.search(contents):
+        target.append(stem+'.toc')
+    if beamer.search(contents):
+        target.append(stem+'.nav')
+        target.append(stem+'.out')
+        target.append(stem+'.snm')
     return target, source
 
 def latex2dvi(target=None,source=None,env=None):
@@ -444,14 +466,6 @@ Color = Builder(action = Action(colorize),suffix='.html')
 #############################################################################
 # CUSTOM SCANNERS
 #############################################################################
-
-isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?\{([^\}]+)')
-ismplot = re.compile(r'^[^%]*\\multiplot\*?\{[^\}]+\}\s*\{([^\}]+)')
-isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
-isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-input = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
-chdir = re.compile(r'\\inputdir\s*\{([^\}]+)')
-subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
 
 def latexscan(node,env,path):
     top = str(node)
