@@ -32,7 +32,7 @@ int main(int argc, char* argv[])
     size_t nbuf, mbuf, dbuf;
     float *buf;
     double dp;
-    pid_t pid[6];
+    pid_t pid[6]={1,1,1,1,1,1};
     sf_file mod, dat, pip;
 
     sf_init(argc,argv);
@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
 	}
     } 
 
-    if (0==pid[1]) {
+    if (0 == pid[1]) {
 	/* reads from p[0], runs the program, and writes to p[1] */
 
 	close(p[0][1]);
@@ -108,7 +108,7 @@ int main(int argc, char* argv[])
 	_exit(1);
     }
 
-    if (0==pid[2]) {
+    if (0 == pid[2]) {
 	/* reads from p[1] and multiplies it with random data */
 	
 	close(p[1][1]);
@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 	}
     } 
 
-    if (0==pid[4]) {
+    if (0 == pid[4]) {
 	/* reads from p[2], runs the adjoint, and writes to p[3] */
 
 	close(p[2][1]);
@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
 	_exit(1);
     }
 
-    if (0==pid[5]) {
+    if (0 == pid[5]) {
 	/* reads from p[3] and multiplies it with random model */
 	
 	close(p[3][1]);
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 	dup(p[3][0]);
 
 	pip = sf_input("in");
-	
+
 	init_genrand(mseed);
 	dp = 0.;
 	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {

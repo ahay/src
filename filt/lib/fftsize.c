@@ -56,6 +56,8 @@ static int opt_size2(int min, int max, int tabsize, const sf_Table *table)
     int n, size, nmin, nmax;
     float cost, mincost;
 
+    size=min;
+
     nmin=-1;
     for (n=0; n < tabsize; n++) {
 	size = table[n].size;
@@ -64,10 +66,7 @@ static int opt_size2(int min, int max, int tabsize, const sf_Table *table)
 	    break;
 	}
     }
-    if (nmin < 0) {
-	if (min%2) min++; /* make it even */
-	return min;
-    }
+    if (nmin < 0) return min;
 
     nmax=0;
     for (n=tabsize-1; n >= 0; n--) {	
