@@ -16,6 +16,13 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#ifndef _LARGEFILE_SOURCE
+#define _LARGEFILE_SOURCE
+#endif
+#include <sys/types.h>
+#include <unistd.h>
+/*^*/
+
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -24,14 +31,14 @@
 
 int main(int argc, char* argv[])
 {
-    int i, iter, niter, status, p[4][2];
+    int i, iter, niter, p[6][2];
     char *name;
-    float *buf;
-    double rn;
-    pid_t pid[6];
-    off_t nm, nd, msiz, dsiz;
+    float *buf, *buf2;
+    double rn, rnp, alpha, beta;
+    pid_t pid[5]={1,1,1,1,1};
+    off_t nm, nd, msiz, dsiz, pos;
     size_t nbuf, mbuf, dbuf;
-    FILE *x, *rr, *s, *ss;
+    FILE *x, *rr, *g, *s;
     sf_file mod, dat, out, from, to;
 
     sf_init(argc,argv);
@@ -54,12 +61,16 @@ int main(int argc, char* argv[])
 
     rr = sf_tempfile(&name,"w+b");
     x  = sf_tempfile(&name,"w+b");
+    g  = sf_tempfile(&name,"w+b");
+    s  = sf_tempfile(&name,"w+b");
 
     nm = sf_filesize(mod);
     nd = sf_filesize(dat);
 
+    /* I/O buffers */
     nbuf = BUFSIZ/sizeof(float);
-    buf = sf_floatalloc(nbuf);
+    buf  = sf_floatalloc(nbuf);
+    buf2 = sf_floatalloc(nbuf);
 
     /* r=-dat */
 
@@ -85,12 +96,15 @@ int main(int argc, char* argv[])
 	fwrite(buf,sizeof(float),mbuf,x);
     }
 
-    for (i=0; i < 4; i++) { /* make four pipes */
+    for (i=0; i < 6; i++) { /* make six pipes */
 	if (pipe(p[i]) < 0) sf_error("pipe error:");
     }
 
     for (iter=0; iter < niter; iter++) {
-	for (i=0; i < 6; i++) { /* fork six children */
+	sf_warning("iter %d of %d",iter+1,niter);
+	
+
+	for (i=0; i < 5; i++) { /* fork five children */
 	    if ((pid[i] = fork()) < 0) sf_error("fork error:");
 	    if (0 == pid[i]) break;
 	}
@@ -98,18 +112,26 @@ int main(int argc, char* argv[])
 	if (0 == pid[0]) {	
 	    /* feeds rr to p[0] */
 
+	    sf_warning("child 0 start");
+
 	    close(p[0][0]);
 	    close(STDOUT_FILENO);
 	    dup(p[0][1]);
 
 	    to = sf_output("out");
 
-	    rewind(rr);
+	    if (0 > fseeko(rr,0,SEEK_SET))
+		sf_error ("seek problem");
+
 	    for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 		if (dsiz < dbuf) dbuf=dsiz;
-		fread(buf,sizeof(float),dbuf,rr);
+
+		if (dbuf != fread(buf,sizeof(float),dbuf,rr)) sf_error("read error");
+
 		sf_floatwrite(buf,dbuf,to);
 	    }
+
+	    sf_warning("child 0 end");
 
 	    _exit(0);
 	}
@@ -118,6 +140,8 @@ int main(int argc, char* argv[])
 	if (0==pid[1]) {
 	    /* reads from p[0], runs the adjoint, and writes to p[1] */
 
+	    sf_warning("child 1 start");
+
 	    close(p[0][1]);
 	    close(STDIN_FILENO);
 	    dup(p[0][0]);
@@ -125,6 +149,8 @@ int main(int argc, char* argv[])
 	    close(p[1][0]);
 	    close(STDOUT_FILENO);
 	    dup(p[1][1]);
+
+	    sf_warning("child 1 launch");
 	    
 	    argv[argc-1][4]='1';
 	    execvp(argv[0],argv);
@@ -135,6 +161,8 @@ int main(int argc, char* argv[])
 	if (0==pid[2]) {
 	    /* reads gradient from p[1], uses it, and writes to p[2] */
 	
+	    sf_warning("child 2 start");
+
 	    close(p[1][1]);
 	    close(STDIN_FILENO);
 	    dup(p[1][0]);
@@ -144,18 +172,81 @@ int main(int argc, char* argv[])
 	    close(STDOUT_FILENO);
 	    dup(p[2][1]);
 	    to = sf_output("out");
+	    sf_fileflush(to,mod);
 
+	    if (0 > fseeko(g,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	    /* rn = ddot(g) */
+	    
 	    rn = 0.;
+
 	    for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 		if (msiz < mbuf) mbuf=msiz;
 		sf_floatread(buf,mbuf,from);
+
+		for (i=0; i < mbuf; i++) {
+		    rn += (double) buf[i] * buf[i];
+		}
+
+		fwrite(buf,sizeof(float),mbuf,g);
 		sf_floatwrite(buf,mbuf,to);
 	    }
+
+	    if (0==iter) {
+		alpha = 0.;
+	    } else {
+		if (0 > fseeko(s,0,SEEK_SET))
+		    sf_error ("seek problem");
+
+		if (1 != fread(&rnp,sizeof(float),1,s)) sf_error("read error");
+
+		alpha = rn/rnp;
+
+		if (0 > fseeko(s,0,SEEK_SET))
+		    sf_error ("seek problem");
+	    }
+
+	    fwrite(&rn,sizeof(float),1,s);
+	    fflush(s);
+
+	    write(p[4][1],&alpha,sizeof(float));
+	    
+	    if (0 > fseeko(g,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	    /* s = g + alpha*s */
+	    
+	    for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
+		if (msiz < mbuf) mbuf=msiz;
+
+		if (mbuf != fread(buf,sizeof(float),mbuf,g)) sf_error("read error");
+
+		if (iter > 0) {
+		    pos = ftello(s);
+
+		    if (mbuf != fread(buf2,sizeof(float),mbuf,s))  sf_error("read error");
+
+		    if (0 > fseeko(s,pos,SEEK_SET))
+			sf_error ("seek problem");
+
+		    for (i=0; i < mbuf; i++) {
+			buf[i] += alpha * buf2[i];
+		    }
+		} 
+
+		fwrite(buf,sizeof(float),mbuf,s);
+	    }
+
+	    sf_warning("child 2 done");
+
 	    _exit(2);
 	}
 
 	if (0==pid[3]) {
 	    /* reads from p[2], runs the forward, and writes to p[3] */
+
+	    sf_warning("child 3 start");
 
 	    close(p[2][1]);
 	    close(STDIN_FILENO);
@@ -164,6 +255,8 @@ int main(int argc, char* argv[])
 	    close(p[3][0]);
 	    close(STDOUT_FILENO);
 	    dup(p[3][1]);
+
+	    sf_warning("child 3 launch");
 	    
 	    argv[argc-1][4]='0';
 	    execvp(argv[0],argv);
@@ -173,81 +266,133 @@ int main(int argc, char* argv[])
 	if (0==pid[4]) {
 	    /* reads conj. grad from p[3], does computations with it */
 
+	    sf_warning("child 4 start");
+
 	    close(p[3][1]);
 	    close(STDIN_FILENO);
 	    dup(p[3][0]);
 	    from = sf_input("in");
-	    
+	
+	    read(p[4][0],&alpha,sizeof(float));
+
+	    if (0 > fseeko(s,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	    if (1 != fread(&rn,sizeof(float),1,s)) sf_error("read error");
+
+	    if (0 > fseeko(s,sizeof(float)*nm,SEEK_CUR))
+		sf_error ("seek problem");
+
+	    /* beta = ddot(ss) */
+
+	    beta = 0.;
+
+	    /* ss = gg + alpha * ss */
+
 	    for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 		if (dsiz < dbuf) dbuf=dsiz;
 		sf_floatread(buf,dbuf,from);
+
+		if (iter > 0) {
+		    pos = ftello(s);
+
+		    if (dbuf != fread(buf2,sizeof(float),dbuf,s)) sf_error("read error");
+
+		    if (0 > fseeko(s,pos,SEEK_SET))
+			sf_error ("seek problem");
+		    
+		    for (i=0; i < dbuf; i++) {
+			buf[i] += alpha * buf2[i];
+		    }
+		}
+
+		for (i=0; i < dbuf; i++) {
+		    beta += (double) buf[i] * buf[i];
+		}
+		
+		fwrite(buf,sizeof(float),dbuf,s);
 	    }
 
+	    alpha = - rn/beta;
+
+	    write(p[5][1],&alpha,sizeof(float));
+
+	    sf_warning("child 4 done");
+
+	    _exit(4);
 	}
 
-	for (i=0; i < 6; i++) { 
-	    if (0 == pid[i]) break;
+	for (i=0; i < 5; i++) { 
+	    if (0 == pid[i]) sf_error("A child is alive");
 	}    
-	if (6==i) {
-	    /* parent waits */
-	    waitpid(pid[2],&status,0);
-	    waitpid(pid[5],&status,0); 
-	} 
+
+	/* parent updates x and r */
+	read(p[5][0],&alpha,sizeof(float));
+
+	if (0 > fseeko(s,sizeof(float),SEEK_SET))
+	    sf_error ("seek problem");
+
+	if (0 > fseeko(x,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
+	    if (msiz < mbuf) mbuf=msiz;
+
+	    pos = ftello(x);
+
+	    if (mbuf != fread(buf,sizeof(float),mbuf,x) ||
+		mbuf != fread(buf2,sizeof(float),mbuf,s)) sf_error("read error (x)");
+
+	    for (i=0; i < mbuf; i++) {
+		buf[i] += alpha * buf2[i];
+	    }
+
+	    if (0 > fseeko(x,pos,SEEK_SET))
+		sf_error ("seek problem");
 	    
+	    fwrite(buf,sizeof(float),mbuf,x);
+	}
+
+	if (0 > fseeko(rr,0,SEEK_SET))
+		sf_error ("seek problem");
+
+	for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
+	    if (dsiz < dbuf) dbuf=dsiz;
+
+	    pos = ftello(rr);
+
+	    if (dbuf != fread(buf,sizeof(float),dbuf,rr) ||
+		dbuf != fread(buf2,sizeof(float),dbuf,s)) sf_error("read error (rr)");
+
+	    for (i=0; i < dbuf; i++) {
+		buf[i] += alpha * buf2[i];
+	    }
+
+	    if (0 > fseeko(rr,pos,SEEK_SET))
+		sf_error ("seek problem");
+
+	    
+	    fwrite(buf,sizeof(float),dbuf,rr);
+	}
     }
 
     /* write x to out */  
     out = sf_output("out");
     sf_fileflush(out,mod);
   
-    rewind(x);
+    if (0 > fseeko(x,0,SEEK_SET))
+	sf_error ("seek problem");
+
     for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	if (msiz < mbuf) mbuf=msiz;
-	fread(buf,sizeof(float),mbuf,x);
+
+	if (mbuf != fread(buf,sizeof(float),mbuf,x)) sf_error("read error (last)");
+	
 	sf_floatwrite(buf,mbuf,out);
     }
 
     exit(0);
 }
-
-
-
-#ifdef asdfcgf
-
-
-	/* child1 feeds rr to A' */
-
-	oper( T, F, g, rr);
-	   
-	/* child2 reads g, computes rn, alpha, and s and feeds g to A */
-        
-	oper( F, F, g, gg);       
-
-	/* child 3 reads gg, computes ss and beta */
-
-	/* parent: wait for children, update x and rr */
-
- 
-	rn = sum( dprod( g, g));
-
-	if(iter=0) {
-	    s  = g;
-	    ss = gg;		
-	} else {
-	    alpha = rn / rnp;
-	    s  =  g + alpha *  s;
-	    ss = gg + alpha * ss;
-	}
-
-    beta = sum( dprod( ss, ss))
-    if( beta > epsilon( beta)) {
-           alpha = - rn / beta
-           x =  x  + alpha *  s
-           rr = rr + alpha * ss
-           }
-    rnp = rn;    forget = .false.;   stat = 0
-
-#endif
 
 
 
