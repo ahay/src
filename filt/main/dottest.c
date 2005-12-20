@@ -41,7 +41,8 @@ int main(int argc, char* argv[])
     dat = sf_input("dat");
 
     if (SF_FLOAT != sf_gettype(mod) ||
-	SF_FLOAT != sf_gettype(dat)) sf_error("Need float type in mod and dat");
+	SF_FLOAT != sf_gettype(dat)) 
+	sf_error("Need float type in mod and dat");
 
     nm = sf_filesize(mod);
     nd = sf_filesize(dat);
@@ -127,6 +128,7 @@ int main(int argc, char* argv[])
 	    }	
 	}
 	sf_warning(" L[m]*d=%g",dp);
+	_exit(2);
     }
 
     if (0 == pid[3]) {	
@@ -186,6 +188,7 @@ int main(int argc, char* argv[])
 	    }	
 	}
 	sf_warning("L'[d]*m=%g",dp);
+	_exit(5);
     }
 
     for (i=0; i < 6; i++) { 
