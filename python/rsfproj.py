@@ -284,10 +284,32 @@ class Project(Environment):
                         sources.append(command)
                         if rsfprog not in self.coms:
                             self.coms.append(rsfprog)
-                elif re.match(r'[^/]+\.exe$',command): # local program
-                    command = os.path.join('.',command)                    
-                #<- assemble the command line
+                else:
+                    rsfprog = None
+                    if re.match(r'[^/]+\.exe$',command): # local program
+                        command = os.path.join('.',command)                    
                 pars.insert(0,command)
+                # special rule for solvers
+                if rsfprog == prefix+'conjgrad':
+                    command = pars.pop(1)
+                    # check if this command is in our list
+                    if rsf:
+                        if command[:2]==prefix:
+                            # assuming prefix is two chars
+                            rsfprog = command
+                        else:
+                            rsfprog = prefix + command            
+                        if rsfdoc.progs.has_key(rsfprog):
+                            command = os.path.join(bindir,rsfprog+self.progsuffix) 
+                            sources.append(command)
+                            if rsfprog not in self.coms:
+                                self.coms.append(rsfprog)
+                    else:
+                        rsfprog = None
+                        if re.match(r'[^/]+\.exe$',command): # local program
+                            command = os.path.join('.',command)                 
+                    pars.insert(1,command)
+                #<- assemble the command line                
                 substeps.append(string.join(pars,' '))
             #<-
             steps.append(string.join(substeps," | "))

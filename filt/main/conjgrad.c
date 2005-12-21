@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
     sfile = sf_tempfile(&s,"w+b");
     Sfile = sf_tempfile(&S,"w+b");
 
+    fclose(Rfile);
     fclose(gfile);
     fclose(sfile);
     fclose(Sfile);
@@ -101,21 +102,6 @@ int main(int argc, char* argv[])
     buf  = sf_floatalloc(nbuf);
     buf2 = sf_floatalloc(nbuf);
 
-    /* r=-dat */
-
-    DLOOP( sf_floatread(buf,dbuf,dat);
-	   for (i=0; i < dbuf; i++) { buf[i]=-buf[i]; }
-	   DWRITE (Rfile); );
-    fclose(Rfile);
-    
-    /* x=0 */
-
-    for (i=0; i < nbuf; i++) {
-	buf[i]=0.;
-    }
-    
-    MLOOP( MWRITE(xfile); );    
-    fclose(xfile);
 
     for (i=0; i < 6; i++) { /* make six pipes */
 	if (pipe(p[i]) < 0) sf_error("pipe error:");
@@ -136,8 +122,21 @@ int main(int argc, char* argv[])
 
 	    to = sf_output("out");
 
-	    Rfile = fopen(R,"rb");
-	    DLOOP( DREAD(Rfile); sf_floatwrite(buf,dbuf,to); );
+	    if (0 == iter) {
+		xfile = fopen(x,"wb");
+		for (i=0; i < nbuf; i++) { buf[i] = 0.; }		
+		MLOOP( MWRITE(xfile); );
+		fclose(xfile);
+
+		Rfile = fopen(R,"wb");
+		DLOOP( sf_floatread(buf,dbuf,dat); 
+		       for (i=0; i < dbuf; i++) { buf[i] = -buf[i]; }
+		       sf_floatwrite(buf,dbuf,to);
+		       DWRITE (Rfile); );
+	    } else {
+		Rfile = fopen(R,"rb");
+		DLOOP( DREAD(Rfile); sf_floatwrite(buf,dbuf,to); );
+	    }
 	    fclose(Rfile);
 
 	    sf_warning("iter %d of %d",iter+1,niter);
@@ -371,6 +370,12 @@ int main(int argc, char* argv[])
     xfile = fopen(x,"rb");
     MLOOP( MREAD(xfile); sf_floatwrite(buf,mbuf,out); );
     fclose(xfile);
+
+    unlink(R);
+    unlink(x);
+    unlink(g);
+    unlink(s);
+    unlink(S);
 
     exit(0);
 }

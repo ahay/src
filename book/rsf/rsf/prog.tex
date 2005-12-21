@@ -136,6 +136,92 @@ cmplx.rsf:
 \end{verbatim}
 
 \noindent\doublebox{\parbox{\textwidth}{
+    \input{sfconjgrad}
+}}
+
+\texttt{sfconjgrad} is a generic program for least-squares linear
+inversion with the conjugate-gradient method. Suppose you have an
+executable program \texttt{<prog>} that takes an RSF file from the
+standard input and produces an RSF file in the standard output. It may
+take any number of additional parameters but one of them must be
+\texttt{adj=} that sets the forward (\texttt{adj=0}) or adjoint
+(\texttt{adj=1}) operations.  The program \texttt{<prog>} is typically
+an RSF program but it could be anything (a script, a multiprocessor
+MPI program, etc.) as long as it implements a linear operator
+$\mathbf{L}$ and its adjoint. There are no restrictions on the data
+size or shape. You can easily test the adjointness with
+\texttt{sfdottest}. The \texttt{sfconjgrad} program searches for a
+vector $\mathbf{m}$ that minimizes the least-square misfit 
+$\|\mathbf{d - L\,m}\|^2$ for the given input data vector $\mathbf{d}$.
+
+Here is an example. The \texttt{sfhelicon}
+program implements Claerbout's multidimensional helical filtering
+\cite[]{GEO63-05-15321541}. It requires a filter to be specified in
+addition to the input and output vectors. We create a helical 
+2-D filter using the Unix \texttt{echo} command.
+\begin{verbatim}
+bash$ echo 1 19 20 n1=3 n=20,20 data_format=ascii_int in=lag.rsf > lag.rsf
+bash$ echo 1 1 1 a0=-3 n1=3 data_format=ascii_float in=flt.rsf > flt.rsf
+\end{verbatim}
+Next, we create an example 2-D model and data vector with \texttt{sfspike}.
+\begin{verbatim}
+bash$ sfspike n1=50 n2=50 > vec.rsf
+\end{verbatim}
+The \texttt{sfdottest} program can perform the dot product test to
+check that the adjoint mode works correctly.
+\begin{verbatim}
+bash$ sfdottest sfhelicon filt=flt.rsf lag=lag.rsf \
+> mod=vec.rsf dat=vec.rsf
+sfdottest:  L[m]*d=5.28394
+sfdottest: L'[d]*m=5.28394
+\end{verbatim}
+Your numbers may be different because \texttt{sfdottest} generates new
+random input on each run.
+Next, let us make some random data with \texttt{sfnoise}.
+\begin{verbatim}
+bash$ sfnoise seed=2005 rep=y < vec.rsf > dat.rsf
+\end{verbatim}
+and try to invert the filtering operation using \texttt{sfconjgrad}:
+\begin{verbatim}
+bash$ sfconjgrad sfhelicon filt=flt.rsf lag=lag.rsf \
+mod=vec.rsf < dat.rsf > mod.rsf niter=10
+sfconjgrad: iter 1 of 10
+sfconjgrad: grad=3253.65
+sfconjgrad: iter 2 of 10
+sfconjgrad: grad=289.421
+sfconjgrad: iter 3 of 10
+sfconjgrad: grad=92.3481
+sfconjgrad: iter 4 of 10
+sfconjgrad: grad=36.9417
+sfconjgrad: iter 5 of 10
+sfconjgrad: grad=18.7228
+sfconjgrad: iter 6 of 10
+sfconjgrad: grad=11.1794
+sfconjgrad: iter 7 of 10
+sfconjgrad: grad=7.26941
+sfconjgrad: iter 8 of 10
+sfconjgrad: grad=5.15945
+sfconjgrad: iter 9 of 10
+sfconjgrad: grad=4.23055
+sfconjgrad: iter 10 of 10
+sfconjgrad: grad=3.57495
+\end{verbatim}
+The output shows that, in 10 iterations, the norm of the gradient vector decreases by almost 1000. 
+We can check the residual misfit before
+\begin{verbatim}
+bash$ < dat.rsf sfattr want=norm
+norm value = 49.7801
+\end{verbatim}
+and after
+\begin{verbatim}
+bash$ sfhelicon filt=flt.rsf lag=lag.rsf < mod.rsf | \
+sfadd scale=1,-1 dat.rsf | sfattr want=norm
+norm value = 5.73563
+\end{verbatim}
+In 10 iterations, the misfit decreased by an order of magnitude. The
+result can be improved by running the program for more iterations.
+
+\noindent\doublebox{\parbox{\textwidth}{
 \input{sfcp}
 }}
 

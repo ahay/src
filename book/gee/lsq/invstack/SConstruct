@@ -12,7 +12,8 @@ images = ['model','empty','data','empty']
 labels = "Model:::::::Synthe-:tic data:::::"
 for niter in range(5):
     imag = 'imag%d' % niter
-    Flow(imag,'data','imospray inv=y niter=%d v=1.5' % niter)
+    Flow(imag,'data model',
+         'conjgrad imospray mod=${SOURCES[1]} n2=11 d2=.60 o2=0. v=1.5 niter=%d' % (niter+1))
     images.append(imag)
     labels = labels + ":niter=%d" % niter
 

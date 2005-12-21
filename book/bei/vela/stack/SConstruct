@@ -7,7 +7,8 @@ Flow('model',None,
      ''')
 Flow('empty','model','scale dscale=0')
 Flow('data','model','imospray n2=20 d2=0.1 o2=-1. v=1.5')
-Flow('stack','data','imospray inv=y niter=0 v=1.5')
+Flow('stack','data model',
+     'conjgrad imospray mod=${SOURCES[1]} n2=20 d2=0.1 o2=-1. adj=y v=1.5 niter=1')
 
 images = ['model','empty','data','empty','stack']
 labels = "Model:::::::Synthe-:tic data:::::::::::::::Stack"
