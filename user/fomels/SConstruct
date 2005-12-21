@@ -5,7 +5,7 @@ import configure
 progs = '''
 abalance angle angle2 approx bandpass dealias2 deblur deriv
 dijkstra dip dips dix dixshape dwt envcorr envelope explanesignoi
-expsignoi flat flat3 focus green iphase lapfill miss2 miss3 monof
+expsignoi flat flat3 focus green iphase lapfill matmult miss2 miss3 monof
 monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2 patch
 pick pick0 planemis2 planemis3 planesignoi predict pwd pwdix pwdsigk
 pwdsmooth2 seislet shapebin shapebin1 shapesigk shearer threshold tomo

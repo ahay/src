@@ -105,6 +105,7 @@ int main(int argc, char* argv[])
 
 	argv[argc-1][4]='0';
 	execvp(argv[0],argv);
+
 	_exit(1);
     }
 
@@ -128,6 +129,7 @@ int main(int argc, char* argv[])
 	    }	
 	}
 	sf_warning(" L[m]*d=%g",dp);
+
 	_exit(2);
     }
 
@@ -165,7 +167,8 @@ int main(int argc, char* argv[])
 
 	argv[argc-1][4]='1';
 	execvp(argv[0],argv);
-	_exit(1);
+
+	_exit(4);
     }
 
     if (0 == pid[5]) {
@@ -188,12 +191,14 @@ int main(int argc, char* argv[])
 	    }	
 	}
 	sf_warning("L'[d]*m=%g",dp);
+	
 	_exit(5);
     }
 
     for (i=0; i < 6; i++) { 
 	if (0 == pid[i]) break;
     }    
+
     if (6==i) {
 	/* parent waits */
 	waitpid(pid[2],&status,0);
