@@ -586,9 +586,10 @@ Prepares file for writing binary data >*/
     char line[BUFSIZ];
  
     if (NULL == file->dataname) return;
-
+ 
     if (NULL != src && NULL != src->head) {
 	rewind(src->head);
+
 	while (NULL != fgets(line,BUFSIZ,src->head)) {
 	    fputs(line,file->stream);
 	}

@@ -1,0 +1,378 @@
+from rsfproj import *
+import string, math, os
+
+las = 'well23.las1'  
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch(las,'apache',private)
+
+Flow('./las',las,'tail -n 111')
+Flow('log','las',
+     '''
+     echo in=$SOURCE n1=5 n2=56 data_format=ascii_float |
+     dd form=native |
+     window n1=4 |
+     transp
+     ''')
+
+Flow('z','log','window n2=1')
+Flow('dz','z',
+     '''
+     window n1=55 | pad beg1=1 |
+     add scale=-1,1 $SOURCE |
+     window n1=55
+     ''')
+
+Flow('vp','log','window n2=1 f2=1')
+Flow('vs','log','window n2=1 f2=2')
+Flow('rho','log','window n2=1 f2=3')
+
+# Interval gamma
+Flow('vpvs','vp vs','add mode=d ${SOURCES[1]} | window n1=55')
+Flow('tpp','vp dz',
+     '''
+     window n1=55 |
+     math dz=${SOURCES[1]} output="2*dz/input" |
+     causint
+     ''')
+
+Flow('vs1','vs','window n1=55')
+
+Flow('tps','vp vs1 dz',
+     '''
+     window n1=55 |
+     math vs=${SOURCES[1]} dz=${SOURCES[2]} output="dz/input+dz/vs" |
+     causint
+     ''')
+
+# Effective gamma
+Flow('evpvs','tpp tps',
+     'math tps=${SOURCES[1]} output="2*tps/input-1" ')
+     
+# Modeling
+Flow('dat','dz vp vs rho',
+     '''
+     modrefl vp=${SOURCES[1]} vs=${SOURCES[2]} rho=${SOURCES[3]}
+     nt=751 dt=0.002
+     ''')
+
+# Convolution with Ricker wavelet
+Flow('pp','dat','window n2=1 | ricker1 frequency=50')
+Flow('ps','dat','window f2=1 | ricker1 frequency=20')
+
+Result('data','pp ps',
+       '''
+       sfcat axis=2 ${SOURCES[1]} |
+       dots label1="Time (s)" labels=PP:PS
+       ''')
+
+gamma = 2.5
+
+#Flow('warp0','pp','math output="%g*x1" ' % (0.5*(gamma-1)))
+
+Flow('warp0','pp','math output="0.85*x1-0.215*x1*x1" ')
+
+# Convert w(t) to interval Vp/Vs=2*[d(t+w(t))/dt]-1
+warp2gamma = '''
+math output="input+x1" |
+smoothder |
+math output="2*input-1"
+'''
+
+warp2egamma = '''
+math output="2*(input+x1)/x1-1" 
+'''
+
+gmin=1.5
+gmax=3
+tmin=0
+tmax=1
+
+Plot('vpvs','tpp vpvs',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph symbol=o min2=%g max2=%g min1=%g max1=%g
+     wanttitle=n wantaxis=n symbolsz=10 plotcol=5 crowd=0.8 
+     ''' % (gmin,gmax,tmin,tmax))
+
+Plot('evpvs','tpp evpvs',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph symbol=o min2=%g max2=%g min1=%g max1=%g
+     wanttitle=n wantaxis=n symbolsz=10 plotcol=5 crowd=0.8 
+     ''' % (gmin,gmax,tmin,tmax))
+
+graph = '''
+graph wanttitle=n min2=%g max2=%g min1=%g max1=%g
+wherexlabel=t wheretitle=b crowd=0.8 label2="Vp/Vs"
+''' % (gmin,gmax,tmin,tmax)
+
+dplot ='''
+add scale=1,-1 ${SOURCES[1]} |
+cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
+window min1=%g max1=%g |
+dots gaineach=0
+labels="Difference:PS warped:PP" label1="Time (s)"
+''' % (tmin,tmax)
+
+##############################################################
+#
+# One trace processing
+#
+##############################################################
+
+
+#################
+# INITIAL WARPING
+#################
+
+Flow('gamma0','warp0',warp2gamma)
+
+Plot('gamma0',graph)
+Plot('gamma1','gamma0 vpvs','Overlay')
+
+warp0 = '''
+warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+verb=1 nliter=0
+'''
+
+# pswt is warped PS trace, same as pstrace because warp0=0
+Flow('pswt','ps pp warp0',warp0)
+Plot('pswt','pswt pp',dplot)
+
+Result('pswt','gamma1 pswt','OverUnderAniso')
+
+####################
+# SPECTRAL BALANCING
+####################
+
+phase = 'iphase rect1=50'
+
+dt=0.002
+fmin=0
+fmax=150
+
+def iphase(title):
+    return '''
+    cat axis=2 ${SOURCES[1]} |
+    scale dscale=%g | 
+    graph title="Local Frequency (%s)" label1="Time (s)"
+    min2=%g max2=%g min1=%g max1=%g
+    dash=0,1 label2="Frequency (Hz)"
+    ''' % (0.5/(math.pi*dt),title,fmin,fmax,tmin,tmax)
+
+# Measure local frequencies
+Flow('ppit','pp', phase)
+Flow('psit','pswt',phase)
+Plot('ifr0','ppit psit',iphase('Before'))
+
+getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
+
+frect=12
+
+def psrect(rect):
+    return '''
+    math min=${SOURCES[2]} max=${SOURCES[1]}
+    output="sqrt(1+%d*(1/min^2-1/max^2)*input)" | dd type=int
+    ''' % rect
+
+def pprect(rect):
+    return '''
+    math min=${SOURCES[2]} max=${SOURCES[1]}
+    output="sqrt(1+%d*(1/max^2-1/min^2)*(1-input))" | dd type=int
+    ''' % rect
+
+Flow('mskt','psit ppit',getmask)
+Flow('srt0','mskt psit ppit',psrect(frect))
+
+balance = '''
+nsmooth1 rect=${SOURCES[1]} |
+abalance rect1=100 order=100 other=${SOURCES[2]}
+'''
+
+# Balancing of PS
+Flow('srt','pswt srt0 pp',balance)
+    
+Flow('prt0','mskt psit ppit',pprect(frect))
+
+# Balancing of PP (should do nothing because PP has lower frequency)
+Flow('prt','pp prt0 pp',balance)
+
+for case in ('srt','prt'):
+    # Measure frequencies after balancing
+    Flow(case+'i',case,phase)
+Plot('ifr1','prti srti',iphase('After'))
+Result('ifr','ifr0 ifr1','SideBySideAniso')     
+
+Plot('pswt1','srt prt',dplot)
+Result('pswt1','gamma0 pswt1','OverUnderAniso')
+
+############
+# GAMMA SCAN
+############
+
+g0=0.8
+g1=2-g0
+ng=101
+rect1=50
+
+def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
+    dg = (gmax-g0)/(ng-1)
+    return '''
+    warpscan other=${SOURCES[1]} niter=100
+    ng=%d dg=%g g0=%g rect1=%d rect2=%d rect3=%d rect4=%d |
+    math output='(1+input)^4' |
+    window''' % (ng,dg,g0,rect1,rect2,rect3,rect4)
+
+warpscan1 = warpscan(2*ng-1,g0,g1,rect1)
+
+greyscan = '''
+window min1=%g max1=%g |
+grey title="Gamma scan" allpos=y 
+min2=%g max2=%g
+color=j pclip=100
+label1="Time (s)" label2="Gamma"
+''' % (tmin,tmax,g0,g1)
+
+# Compute gamma scan
+Flow('scnt','srt prt',warpscan1)
+Plot('scnt',greyscan)
+
+def pick(min2,max2,rect1=1,rect2=1,rect3=1):
+    return '''
+    window min2=%g max2=%g | 
+    pick rect1=%d rect2=%d rect3=%d |
+    window''' % (min2,max2,rect1,rect2,rect3)
+
+# Do automatic picking
+Flow('pikt0','scnt',pick(g0,g1,rect1))
+
+def showpick(case):
+    return '''
+    graph transp=y min2=%g max2=%g min1=%g max1=%g
+    yreverse=y plotcol=%d plotfat=%d 
+    wantaxis=n wanttitle=n pad=n
+    ''' % (g0,g1,tmin,tmax,(7,0)[case],(5,1)[case])
+        
+Flow('pikt','pikt0','math output="(input-1)*x1" ')
+Plot('pikt','pikt0',showpick(0))
+Plot('pikt0',showpick(1))
+Result('scnt','scnt pikt pikt0','Overlay')
+
+#########
+# WARPING
+#########
+
+def warping(niter,rect1=1,rect2=1,rect3=1):
+    return '''
+    warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+    warpout=www.rsf
+    verb=1 nliter=%d noamp=1 rect1=%d rect2=%d rect3=%d > ${TARGETS[1]} &&
+    warpadd < ${SOURCES[3]} add=www.rsf > $TARGET &&
+    rm www.rsf
+    ''' % (niter,rect1,rect2,rect3)
+
+warpit = warping(20,200,200)
+
+Flow('warp pswt2','srt prt pikt warp0',warpit,stdout=-1)
+Flow('gamma2t','warp',warp2gamma)
+Plot('gamma2t',graph)
+Plot('gamma1t','gamma2t vpvs','Overlay')
+
+Plot('pswt2','pswt2 prt',dplot)
+Result('pswt2','gamma1t pswt2','OverUnderAniso')
+
+###########################################################
+#
+# Second iteration
+#
+###########################################################
+
+
+#################
+# INITIAL WARPING
+#################
+
+# pswt is warped PS trace, same as pstrace because warp0=0
+Flow('pswt3','ps pp warp',warp0)
+Plot('pswt3','pswt3 pp',dplot)
+
+Result('pswt3','gamma2t pswt3','OverUnderAniso')
+
+####################
+# SPECTRAL BALANCING
+####################
+
+# Measure local frequencies
+Flow('psit2','pswt3',phase)
+Plot('ifr2','ppit psit2',iphase('Before'))
+
+Flow('mskt2','psit2 ppit',getmask)
+Flow('srt02','mskt2 psit2 ppit',psrect(frect))
+
+# Balancing of PS
+Flow('srt2','pswt3 srt02 pp',balance)
+    
+Flow('prt02','mskt2 psit2 ppit',pprect(frect))
+
+# Balancing of PP (should do nothing because PP has lower frequency)
+Flow('prt2','pp prt02 pp',balance)
+
+for case in ('srt2','prt2'):
+    # Measure frequencies after balancing
+    Flow(case+'i',case,phase)
+Plot('ifr3','prt2i srt2i',iphase('After'))
+Result('ifr2','ifr2 ifr3','SideBySideAniso')     
+
+Plot('pswt4','srt prt',dplot)
+Result('pswt4','gamma2t pswt4','OverUnderAniso')
+
+############
+# GAMMA SCAN
+############
+
+g0 = (g0+1)*0.5
+g1=2-g0
+
+warpscan1 = warpscan(2*ng-1,g0,g1,rect1)
+
+greyscan = '''
+window min1=%g max1=%g |
+grey title="Gamma scan" allpos=y 
+min2=%g max2=%g
+color=j pclip=100
+label1="Time (s)" label2="Gamma"
+''' % (tmin,tmax,g0,g1)
+
+# Compute gamma scan
+Flow('scnt2','srt2 prt2',warpscan1)
+Plot('scnt2',greyscan)
+
+# Do automatic picking
+Flow('pikt02','scnt2',pick(g0,g1,int(0.25*rect1)))
+
+Flow('pikt2','pikt02','math output="(input-1)*x1" ')
+Plot('pikt2','pikt02',showpick(0))
+Plot('pikt02',showpick(1))
+Result('scnt2','scnt2 pikt2 pikt02','Overlay')
+
+#########
+# WARPING
+#########
+
+Flow('warp2 pswt5','srt2 prt2 pikt2 warp',warpit,stdout=-1)
+Flow('gamma3t','warp2',warp2gamma)
+Plot('gamma3t',graph)
+Plot('gamma4t','gamma3t vpvs','Overlay')
+Plot('pswt5','pswt5 prt2',dplot)
+Result('pswt5','gamma4t pswt5','OverUnderAniso')
+
+Flow('egamma3t','warp2',warp2egamma)
+Plot('egamma3t',graph)
+Plot('egamma4t','egamma3t evpvs','Overlay')
+Result('epswt5','egamma4t pswt5','OverUnderAniso')
+
+End()

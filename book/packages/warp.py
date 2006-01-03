@@ -34,11 +34,11 @@ def warping(niter,rect1=1,rect2=1,rect3=1):
     rm www.rsf
     ''' % (niter,rect1,rect2,rect3)
 
-def pick(min2,max2,rect1=1,rect2=1,rect3=1):
+def pick(min2,max2,rect1=1,rect2=1,rect3=1,an=0.5):
     return '''
     window min2=%g max2=%g | 
-    pick rect1=%d rect2=%d rect3=%d an=0.5 |
-    window''' % (min2,max2,rect1,rect2,rect3)
+    pick rect1=%d rect2=%d rect3=%d an=%g |
+    window''' % (min2,max2,rect1,rect2,rect3,an)
 
 def warpscan(ng,g0,gmax,rect1=1,rect2=1,rect3=1,rect4=1):
     dg = (gmax-g0)/(ng-1)
@@ -83,6 +83,7 @@ def warp3(name,       # name prefix
           g0=0.96,    # first gamma
           pmin=0,     # minimum gamma for picking
           pmax=2,     # maximum gamma for picking
+          an=0.5,     # anisotropy for picking
           rect1=50,   # vertical smoothing
           rect2=50,   # in-line smoothing
           rect3=50,   # cross-line smoothing
@@ -97,7 +98,7 @@ def warp3(name,       # name prefix
             Flow(case+'2',case,'window n3=1 min3=%d' % line)
         warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
               trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
-              ng,g0,pmin,pmax,rect1,rect2,iter,ss,inter,clip)
+              ng,g0,pmin,pmax,an,rect1,rect2,iter,ss,inter,clip)
     else:
         line=10
 
@@ -203,9 +204,9 @@ def warp3(name,       # name prefix
         pk = n('pk')
 
         if i==0:
-            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2/j2,4*rect3/j3))
+            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2/j2,4*rect3/j3,an=an))
         else:
-            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2/j2,4*rect3/j3))
+            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2/j2,4*rect3/j3,an=an))
 
         Flow(pk,pk+'0',
              '''
@@ -261,6 +262,7 @@ def warp2(name,       # name prefix
           g0=0.96,    # first gamma
           pmin=0,     # minimum gamma for picking
           pmax=2,     # maximum gamma for picking
+          an=0.5,     # anisotropy for picking
           rect1=50,   # vertical smoothing
           rect2=50,   # lateral smoothing
           iter=2,     # number of iterations
@@ -277,7 +279,7 @@ def warp2(name,       # name prefix
         for case in (pp,ps,warp):
             Flow(case+'1',case,'window n2=1 min2=%d' % trace)
         warp1(name+'t',pp+'1',ps+'1',warp+'1',tmax,tmin,
-              gmin,gmax,dt,fmin,fmax,frect,ng,g0,pmin,pmax,rect1,iter,ss)
+              gmin,gmax,dt,fmin,fmax,frect,ng,g0,pmin,pmax,an,rect1,iter,ss)
     else:
         trace=10
 
@@ -449,9 +451,9 @@ def warp2(name,       # name prefix
         pk = n('pk')
 
         if i==0:
-            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2))
+            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2,an=an))
         else:
-            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2))
+            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2,an=an))
 
         Flow(pk,pk+'0','math output="(input-1)*x1" ')
 
@@ -521,6 +523,7 @@ def warp1(name,      # name prefix
           g0=0.96,   # first gamma
           pmin=0,    # minimum gamma for picking
           pmax=2,    # maximum gamma for picking
+          an=0.5,    # anisotropy for picking
           rect1=50,  # vertical smoothing
           iter=2,    # number of iterations
           ss=0
@@ -632,9 +635,9 @@ def warp1(name,      # name prefix
         pik = n('pik')
 
         if i==0:
-            Flow(pik+'0',scn,pick(max(pmin,g0),min(pmax,g1),2*rect1))
+            Flow(pik+'0',scn,pick(max(pmin,g0),min(pmax,g1),2*rect1,an=an))
         else:
-            Flow(pik+'0',scn,pick(g0,g1,2*rect1))
+            Flow(pik+'0',scn,pick(g0,g1,2*rect1,an=an))
 
         Flow(pik,pik+'0','math output="(input-1)*x1" ')
         Plot(pik,pik+'0',showpick(0))
