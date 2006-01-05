@@ -780,7 +780,7 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 		    c = arr[i];
 		    if (EOF==fprintf(file->stream,
 				     (NULL != aformat)? 
-				     aformat:"(%g,%g) ",
+				     aformat:"%g %gi ",
 				     crealf(c),cimagf(c)))
 			sf_error ("%s: trouble writing ascii",__FILE__);
 		}
@@ -817,7 +817,7 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
     switch (file->form) {
 	case SF_ASCII:
 	    for (i = 0; i < size; i++) {
-		if (EOF==fscanf(file->stream,"(%g,%g)",&re,&im))
+		if (EOF==fscanf(file->stream,"%g %gi",&re,&im))
 		    sf_error ("%s: trouble reading ascii:",__FILE__);
 		arr[i]=re+I*im;
 	    }

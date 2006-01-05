@@ -290,7 +290,7 @@ class Project(Environment):
                         command = os.path.join('.',command)                    
                 pars.insert(0,command)
                 # special rule for solvers
-                if rsfprog == prefix+'conjgrad':
+                if rsfprog == prefix+'conjgrad' or rsfprog == prefix+'cconjgrad':
                     command = pars.pop(1)
                     # check if this command is in our list
                     if rsf:

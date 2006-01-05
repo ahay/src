@@ -3,10 +3,10 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-add attr cat cdottest cmplx conjgrad cp cut dd disfil dottest get
-headerattr headercut headermath headersort headerwindow in interleave
-mask math pad put real reverse rm rtoc scale segyread segywrite spike
-spray stack transp window
+add attr cat cconjgrad cdottest cmplx conjgrad cp cut dd disfil
+dottest get headerattr headercut headermath headersort headerwindow in
+interleave mask math pad put real reverse rm rtoc scale segyread
+segywrite spike spray stack transp window
 '''
 
 try: # distributed version
