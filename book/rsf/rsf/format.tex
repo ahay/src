@@ -324,11 +324,12 @@ It is possible to exchange RSF-formatted data with other popular data formats.
 RSF is mostly compatible with its predecessor, the SEPlib file format.
 However, there are several important differences:
 \begin{enumerate}
-\item  SEPlib program typically
-use the element size (\texttt{esize=} parameter) to distinguish between
-different data types: \texttt{esize=4} corresponds to floating point data,
-while \texttt{esize=8} corresponds to complex data. The typical type handling
-mechanism in RSF is different. 
+\item SEPlib program typically use the element size (\texttt{esize=}
+parameter) to distinguish between different data types:
+\texttt{esize=4} corresponds to floating point data, while
+\texttt{esize=8} corresponds to complex data. The typical type
+handling mechanism in RSF is different: RSF looks at
+\texttt{data_format=} to determine the data type.
 \item The default data form in SEPlib programs is
 typically XDR and not native as it is in RSF. 
 \item It is possible to pipe the
