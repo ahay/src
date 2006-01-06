@@ -33,12 +33,12 @@ static void check_zeros (sf_file file, int esize, long long size,
 
 int main (int argc, char* argv[])
 {
-    int i, j, ncheck, esize, nj;
+    int i, j, ncheck, esize, n[SF_MAX_DIM], dim=SF_MAX_DIM, nj;
     long long size;
     float check, fj;
     char *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
-    bool info;
+    bool info, trail;
     char *type[] = {"uchar","char","int","float","complex"};
     char *form[] = {"ascii","xdr","native"};
     char pad[] = "              ", out[15];
@@ -50,6 +50,9 @@ int main (int argc, char* argv[])
     /* Portion of the data (in Mb) to check for zero values. */
     check *= (1024. * 1024.); /* convert Mb to b */
     ncheck = (int) check;
+
+    if (!sf_getbool("trail",&trail)) trail=true;
+    /* If n, skip trailing dimensions of  one */
 
     memset(zero,0,BUFSIZ);
     
@@ -77,9 +80,11 @@ int main (int argc, char* argv[])
 	printf("type=%s form=%s\n",
 	       type[sf_gettype(file)],
 	       form[sf_getform(file)]);
+	
+	if (!trail) dim = sf_filedims(file,n);
 
 	size = 1;
-	for (j=0; j < SF_MAX_DIM; j++) {
+	for (j=0; j < dim; j++) {
 	    snprintf(key,8,"n%d",j+1);
 	    if (!sf_histint(file,key,&nj)) break;
 
