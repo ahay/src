@@ -108,7 +108,7 @@ def latify(target=None,source=None,env=None):
          ltx.write('\n')
     if include:
         ltx.write(include+'\n\n')
-    if lclass == 'geophysics' or lclass == 'segabs':
+    if lclass in ('geophysics','segabs','georeport'):
         ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
