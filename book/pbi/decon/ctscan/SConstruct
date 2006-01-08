@@ -1,0 +1,14 @@
+from rsfproj import *
+
+bin = 'qa_558_dering.rsf'
+
+Fetch(bin,'ctscan')
+Flow('bin',bin,'cp $SOURCE $TARGET',stdin=0,stdout=-1)
+Result('bin',
+       '''
+       grey3 wanttitle=n
+       frame1=256 frame2=256 frame3=250
+       ''')
+
+
+End()

@@ -1,9 +1,10 @@
 /* Generate simple data: spikes, boxes, planes, constants.
    
-Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... l1= l2= ... mag=1,1,...] 
+Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... l1= l2= ... p1= p2= ... mag=1,1,...] 
 
 k1,k2,... specify the spike starting position (indexing starts with 1).
 l1,l2,... specify the spike ending position (indexing starts with 1).
+p1,p2,... specify the spike inclination (in samples)
 
 Inserts label1="Time (s)" and label2=label3=...="Distance (km)"
 Inserts d1=0.004 and d2=d3=...=0.1
@@ -31,10 +32,10 @@ Inserts d1=0.004 and d2=d3=...=0.1
 
 int main(int argc, char* argv[])
 { 
-    int i, j, is, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
+    int i, j, is, ip, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
     int nsp, **k, **l, n1, n2, i1, i2, kk, ll;
     char key[7], *label;
-    float f, *trace, *mag;
+    float f, *trace, *mag, **p, pp;
     sf_file spike;
 
     sf_init (argc,argv);
@@ -75,6 +76,7 @@ int main(int argc, char* argv[])
     mag = sf_floatalloc (nsp);
     k = sf_intalloc2 (nsp,dim);
     l = sf_intalloc2 (nsp,dim);
+    p = sf_floatalloc2 (nsp,dim);
 
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"k%d",i+1);
@@ -103,6 +105,12 @@ int main(int argc, char* argv[])
 	      l[i][is]--; /* C notation */
 	    }
 	}	
+	snprintf(key,3,"p%d",i+1);
+	if (!sf_getfloats(key,p[i],nsp)) {
+	    for (is=0; is < nsp; is++) {
+		p[i][is]=0.;
+	    }
+	}
     }
 
     if (!sf_getfloats("mag",mag,nsp)) {
@@ -122,24 +130,34 @@ int main(int argc, char* argv[])
 	for (i1=0; i1 < n1; i1++) trace[i1]=0.;
 	/* put spikes in it */
 	for (is=0; is < nsp; is++) { /* loop over spikes */
+	    pp = 0.;
 	    for (i=1; i < dim; i++) {
 		kk = k[i][is];
 		ll = l[i][is];
 		if ((kk < -1 && ll < -1) || 
 		    (kk >= 0 && ll >= 0 && 
-		     (kk > ii[i] || ll < ii[i]))) break;	    
+		     (kk > ii[i] || ll < ii[i]))) break;
+		pp += p[i][is]*(ii[i]-k[i][is]);
 	    }
 	    if (i < dim) continue; /* skip this spike */
+
+	    /* linear interpolation */
+	    ip = floorf(pp);
+	    pp = 1.-(pp-ip);
+
 	    kk = k[0][is];
 	    ll = l[0][is];
 	    if (kk >= 0) { /* one segment per trace */
-	      for (j=kk; j <= ll; j++) {
-		trace[j] += mag[is];
-	      }
+		kk = SF_MAX(kk+ip,0);
+		ll = SF_MIN(ll+ip,n1-1);
 	    } else {
-		for (i1=0; i1 < n1; i1++) {
-		    trace[i1] += mag[is];
-		}
+		kk = SF_MAX(ip,0);
+		ll = SF_MIN(n1-1+ip,n1-1);
+	    }
+
+	    for (j=kk; j <= ll; j++) {
+		trace[j] += pp*mag[is];
+		if (j+1 < n1) trace[j+1] += (1.-pp)*mag[is];
 	    }
 	}
 	sf_floatwrite(trace,n1,spike);
