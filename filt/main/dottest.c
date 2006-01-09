@@ -55,7 +55,6 @@ int main(int argc, char* argv[])
     mseed = genrand_int32();
     dseed = genrand_int32();
 
-    free(argv[0]);
     for (i=0; i < argc-1; i++) {
 	argv[i]=argv[i+1];
     }

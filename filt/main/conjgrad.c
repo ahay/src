@@ -73,7 +73,6 @@ int main(int argc, char* argv[])
 	SF_FLOAT != sf_gettype(dat)) 
 	sf_error("Need float type in mod and dat");
   
-    free(argv[0]);
     for (i=0; i < argc-1; i++) {
 	argv[i]=argv[i+1];
     }
