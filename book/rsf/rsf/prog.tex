@@ -438,80 +438,15 @@ bash$ sfheaderattr < tfile.rsf
 71 headers, 32 traces
 key[0]="tracl"      min[0]=1            max[31]=32          mean=16.5
 key[1]="tracr"      min[0]=1            max[31]=32          mean=16.5
-key[2]="fldr"       min[0]=0            max[31]=0           mean=0
-key[3]="tracf"      min[0]=0            max[31]=0           mean=0
-key[4]="ep"         min[0]=0            max[31]=0           mean=0
-key[5]="cdp"        min[0]=0            max[31]=0           mean=0
-key[6]="cdpt"       min[0]=0            max[31]=0           mean=0
-key[7]="trid"       min[0]=0            max[31]=0           mean=0
-key[8]="nvs"        min[0]=0            max[31]=0           mean=0
-key[9]="nhs"        min[0]=0            max[31]=0           mean=0
-key[10]="duse"      min[0]=0            max[31]=0           mean=0
 key[11]="offset"    min[0]=400          max[31]=400         mean=400
-key[12]="gelev"     min[0]=0            max[31]=0           mean=0
-key[13]="selev"     min[0]=0            max[31]=0           mean=0
-key[14]="sdepth"    min[0]=0            max[31]=0           mean=0
-key[15]="gdel"      min[0]=0            max[31]=0           mean=0
-key[16]="sdel"      min[0]=0            max[31]=0           mean=0
-key[17]="swdep"     min[0]=0            max[31]=0           mean=0
-key[18]="gwdep"     min[0]=0            max[31]=0           mean=0
-key[19]="scalel"    min[0]=0            max[31]=0           mean=0
-key[20]="scalco"    min[0]=0            max[31]=0           mean=0
-key[21]="sx"        min[0]=0            max[31]=0           mean=0
-key[22]="sy"        min[0]=0            max[31]=0           mean=0
-key[23]="gx"        min[0]=0            max[31]=0           mean=0
-key[24]="gy"        min[0]=0            max[31]=0           mean=0
-key[25]="counit"    min[0]=0            max[31]=0           mean=0
-key[26]="wevel"     min[0]=0            max[31]=0           mean=0
-key[27]="swevel"    min[0]=0            max[31]=0           mean=0
-key[28]="sut"       min[0]=0            max[31]=0           mean=0
-key[29]="gut"       min[0]=0            max[31]=0           mean=0
-key[30]="sstat"     min[0]=0            max[31]=0           mean=0
-key[31]="gstat"     min[0]=0            max[31]=0           mean=0
-key[32]="tstat"     min[0]=0            max[31]=0           mean=0
-key[33]="laga"      min[0]=0            max[31]=0           mean=0
-key[34]="lagb"      min[0]=0            max[31]=0           mean=0
-key[35]="delrt"     min[0]=0            max[31]=0           mean=0
-key[36]="muts"      min[0]=0            max[31]=0           mean=0
-key[37]="mute"      min[0]=0            max[31]=0           mean=0
 key[38]="ns"        min[0]=64           max[31]=64          mean=64
 key[39]="dt"        min[0]=4000         max[31]=4000        mean=4000
-key[40]="gain"      min[0]=0            max[31]=0           mean=0
-key[41]="igc"       min[0]=0            max[31]=0           mean=0
-key[42]="igi"       min[0]=0            max[31]=0           mean=0
-key[43]="corr"      min[0]=0            max[31]=0           mean=0
-key[44]="sfs"       min[0]=0            max[31]=0           mean=0
-key[45]="sfe"       min[0]=0            max[31]=0           mean=0
-key[46]="slen"      min[0]=0            max[31]=0           mean=0
-key[47]="styp"      min[0]=0            max[31]=0           mean=0
-key[48]="stas"      min[0]=0            max[31]=0           mean=0
-key[49]="stae"      min[0]=0            max[31]=0           mean=0
-key[50]="tatyp"     min[0]=0            max[31]=0           mean=0
-key[51]="afilf"     min[0]=0            max[31]=0           mean=0
-key[52]="afils"     min[0]=0            max[31]=0           mean=0
-key[53]="nofilf"    min[0]=0            max[31]=0           mean=0
-key[54]="nofils"    min[0]=0            max[31]=0           mean=0
-key[55]="lcf"       min[0]=0            max[31]=0           mean=0
-key[56]="hcf"       min[0]=0            max[31]=0           mean=0
-key[57]="lcs"       min[0]=0            max[31]=0           mean=0
-key[58]="hcs"       min[0]=0            max[31]=0           mean=0
-key[59]="year"      min[0]=0            max[31]=0           mean=0
-key[60]="day"       min[0]=0            max[31]=0           mean=0
-key[61]="hour"      min[0]=0            max[31]=0           mean=0
-key[62]="minute"    min[0]=0            max[31]=0           mean=0
-key[63]="sec"       min[0]=0            max[31]=0           mean=0
-key[64]="timbas"    min[0]=0            max[31]=0           mean=0
-key[65]="trwf"      min[0]=0            max[31]=0           mean=0
-key[66]="grnors"    min[0]=0            max[31]=0           mean=0
-key[67]="grnofr"    min[0]=0            max[31]=0           mean=0
-key[68]="grnlof"    min[0]=0            max[31]=0           mean=0
-key[69]="gaps"      min[0]=0            max[31]=0           mean=0
-key[70]="otrav"     min[0]=0            max[31]=0           mean=0
 *******************************************
 \end{verbatim}
-For each standard keyword, a minimum, maximum, and mean values are reported.
-This quick inspection can help in identifying meaningful keywords set in the
-data. The input data type must be \texttt{int}.
+For different standard keywords, a minimum, maximum, and mean values
+are reported unleass they are identically zero.  This quick inspection
+can help in identifying meaningful keywords set in the data. The input
+data type must be \texttt{int}.
 
 
 \noindent\doublebox{\parbox{\textwidth}{

@@ -1,0 +1,20 @@
+from suproj import *
+
+# clip percentiles
+perc = {'3':  95,
+        '30': 85}
+
+# byte swap for little endian
+if little_endian():
+    pre = 'suswapbytes | '
+else:
+    pre = ''
+
+for case in perc.keys():
+    data = 'ozdata.'+case
+    plot = 'oz'+case
+    
+    Fetch(data,'oz.original')
+    Result(plot,data,'%s suxwigb perc=%d' % (pre,perc[case]))
+
+End()

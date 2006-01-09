@@ -1,4 +1,7 @@
-/* Integer header attributes. */
+/* Integer header attributes. 
+
+Only nonzero values are reported.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -67,14 +70,16 @@ int main(int argc, char* argv[])
     }
 
     for (i1=0; i1 < n1; i1++) {
-	snprintf(out,21,"key[%d]=\"%s\"",i1,
-		 i1 < SF_NKEYS? sf_segykeyword(i1): "?");
-	printf("%s%s",out,pad+strlen(out));
-	snprintf(out,21,"min[%d]=%d",imin,min[i1]);
-	printf("%s%s",out,pad+strlen(out));
-	snprintf(out,21,"max[%d]=%d",imax,max[i1]);
-	printf("%s%s",out,pad+strlen(out));
-	printf("mean=%g\n",mean[i1]/n2);
+	if (min[i1] != 0 || max[i1] != 0) {
+	    snprintf(out,21,"key[%d]=\"%s\"",i1,
+		     i1 < SF_NKEYS? sf_segykeyword(i1): "?");
+	    printf("%s%s",out,pad+strlen(out));
+	    snprintf(out,21,"min[%d]=%d",imin,min[i1]);
+	    printf("%s%s",out,pad+strlen(out));
+	    snprintf(out,21,"max[%d]=%d",imax,max[i1]);
+	    printf("%s%s",out,pad+strlen(out));
+	    printf("mean=%g\n",mean[i1]/n2);
+	}
     }
    
     printf("******************************************* \n");

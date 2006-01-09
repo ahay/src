@@ -120,7 +120,6 @@ def test(target=None,source=None,env=None):
 
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
-    global dataserver
     top = env.get('top')
     folder = top + os.sep +env['dir']
     private = env.get('private')
@@ -151,9 +150,10 @@ def retrieve(target=None,source=None,env=None):
                 return 4
         session.quit()
     else:
+        server = env.get('server')
         for file in map(str,target):
             remote = os.path.basename(file)
-            rdir =  string.join([dataserver,folder,remote],'/')
+            rdir =  string.join([server,folder,remote],'/')
             try:
                 urllib.urlretrieve(rdir,file)
 
@@ -167,7 +167,8 @@ def retrieve(target=None,source=None,env=None):
     return 0
 
 View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
-Retrieve = Builder(action = Action(retrieve,varlist=['dir','private','top']))
+Retrieve = Builder(action = Action(retrieve,
+                                   varlist=['dir','private','top','server']))
 Test = Builder(action=Action(test))
 
 #############################################################################
@@ -384,8 +385,10 @@ class Project(Environment):
         else:
             self.Command('test',None,'echo "Nothing to test"')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
-    def Fetch(self,file,dir,private=None,top='data'):
-        return self.Retrieve(file,None,dir=dir,private=private,top=top)
+    def Fetch(self,file,dir,private=None,server=dataserver,top='data'):
+        return self.Retrieve(file,None,
+                             dir=dir,private=private,
+                             top=top,server=server)
 
 # Default project
 project = Project()

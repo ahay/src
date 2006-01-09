@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsfproj, os, re, string, sys
+import rsfproj, os, re, string, sys, array
 
 susuffix = '.su'
 pssuffix = '.eps'
@@ -78,6 +78,10 @@ class SUProject(rsfproj.Project):
             self.Alias('test',self.test)
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
 
+def little_endian():
+    "check for endianness"
+    return ord(array.array("i",[1]).tostring()[0])
+
 # Default project
 project = SUProject()
 def Flow(target,source,flow,**kw):
@@ -86,5 +90,8 @@ def Plot(target,source,flow=None,**kw):
     return apply(project.Plot,(target,source,flow),kw)
 def Result(target,source,flow=None,**kw):
     return apply(project.Result,(target,source,flow),kw)
+def Fetch(file,dir,private=0):
+    return project.Fetch(file,dir,private,
+                         server='ftp://ftp.cwp.mines.edu/pub')
 def End():
     return project.End()
