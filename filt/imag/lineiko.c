@@ -22,7 +22,7 @@
 #include "lineiko.h"
 
 static int n, *sq, ***cd;
-static float d[3], *sref, *tref, *time=NULL, *slow;
+static float d[3], *sref, *tref, *timex=NULL, *slow;
 
 void lineiko_init (int n12      /* total number of grid points */, 
 		   int *sq1     /* sequence array */, 
@@ -42,19 +42,19 @@ void lineiko_init (int n12      /* total number of grid points */,
     sref = sref1; 
     tref = tref1;
 
-    if (NULL == time) {
-	time = sf_floatalloc(n12);
-	slow = sf_floatalloc(n12);
+    if (NULL == timex) {
+	timex = sf_floatalloc(n12);
+	slow  = sf_floatalloc(n12);
     }
 }
 
 void lineiko_close(void)
 /*< free allocated storage >*/
 {
-    if (NULL != time) {
-	free(time);
+    if (NULL != timex) {
+	free(timex);
 	free(slow);
-	time = NULL;
+	timex = NULL;
     }
 }
 
@@ -103,7 +103,7 @@ void lineiko_lop (bool adj, bool add, int ns, int nt,
 	}
     } else {
 	for (j=0; j < n; j++) {
-	    time[j] = 0.;
+	    timex[j] = 0.;
 	}
 
 	for (iq=0; iq < n; iq++) {
@@ -115,7 +115,7 @@ void lineiko_lop (bool adj, bool add, int ns, int nt,
 	    for (k=0; k < 3; k++) {
 		j = from[k];
 		if (j >= 0) {
-		    s = time[j];
+		    s = timex[j];
 		    s2 = tref[i] - tref[j];
 		    
 		    a += s2*d[k];
@@ -123,11 +123,11 @@ void lineiko_lop (bool adj, bool add, int ns, int nt,
 		}
 	    }
 	              
-	    time[i] = b*a/(a*a + FLT_EPSILON);
+	    timex[i] = b*a/(a*a + FLT_EPSILON);
 	}
 
 	for (j=0; j < n; j++) {
-	    tt[j] += time[j];
+	    tt[j] += timex[j];
 	}
     }
 }
