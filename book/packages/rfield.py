@@ -454,9 +454,9 @@ def rfield (real_par,grid_par,covar_par):
     Flow (pspec,shift,
           '''
           rtoc | 
-          fft3 pad=1 axis=1 | 
-          fft3 pad=1 axis=2 | 
-          fft3 pad=1 axis=3 |
+          fft3 pad=1 opt=n axis=1 | 
+          fft3 pad=1 opt=n axis=2 | 
+          fft3 pad=1 opt=n axis=3 |
           put label1="wx" label2="wy" label3="wz"
           ''')
     
@@ -465,9 +465,9 @@ def rfield (real_par,grid_par,covar_par):
     Flow (noise_fft,noise,
           '''
           rtoc | 
-          fft3 pad=1 axis=1 | 
-          fft3 pad=1 axis=2 | 
-          fft3 pad=1 axis=3 |
+          fft3 pad=1 opt=n axis=1 | 
+          fft3 pad=1 opt=n axis=2 | 
+          fft3 pad=1 opt=n axis=3 |
           put label1="wx" label2="wy" label3="wz"
           ''')
     
@@ -555,9 +555,9 @@ def rfield (real_par,grid_par,covar_par):
     for i in range(real_par['nr']): 
         Flow (sim_i % (i+1),sim_i_fft % (i+1),
               '''
-              fft3 inv=y pad=1 axis=3 |
-              fft3 inv=y pad=1 axis=2 |
-              fft3 inv=y pad=1 axis=1 |
+              fft3 inv=y pad=1 opt=n axis=3 |
+              fft3 inv=y pad=1 opt=n axis=2 |
+              fft3 inv=y pad=1 opt=n axis=1 |
               put label1="x" label2="y" label3="z"
               ''')
     

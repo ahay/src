@@ -33,9 +33,15 @@ for font in src:
     aux = string.join(map(lambda x: '%s%s_%s' % (top,base,x),attr))
                           
     env.Command([include,bin],[prog,font],
-                './${SOURCES[0]} %s < ${SOURCES[1]} > ${TARGETS[0]} && '
+                '${SOURCES[0].abspath} %s < ${SOURCES[1]} > ${TARGETS[0]} && '
                 'cat %s > ${TARGETS[1]} && '
                 'rm %s' % (base,aux,aux))
+
+    env.Install('../../include',include)
+
     if root:
         env.Install(incdir,include)
         env.Install(incdir,bin)
+
+
+        

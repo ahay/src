@@ -39,6 +39,7 @@ int main (int argc, char **argv)
 
     bool inv;                /* forward or inverse */
     bool sym;                /* symmetric scaling */
+    bool opt;                /* optimal padding */
     int sign;                /* transform sign */
 
     char varname[6];         /* variable name */
@@ -60,6 +61,9 @@ int main (int argc, char **argv)
 
     if (!sf_getint("sign",&sign)) sign = inv? 1: 0;
     /* transform sign (0 or 1) */
+
+    if (!sf_getbool("opt",&opt)) opt=true;
+    /* if y, determine optimal size for efficiency */
 
     if (!sf_getint("axis",&axis)) axis=2;
     /* Axis to transform */
@@ -108,7 +112,7 @@ int main (int argc, char **argv)
 	/* padding factor */
 
 	/* determine wavenumber sampling */
-	nk = sf_fft_size(nx*npad);
+	nk = opt? sf_fft_size(nx*npad): nx*npad;
 	if (nk != nx) sf_warning("padded to %d",nk);
 
 	dk = 1./(nk*dx);

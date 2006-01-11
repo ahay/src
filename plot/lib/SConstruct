@@ -45,14 +45,11 @@ for source in psrc:
 ##############################################################################
 lib = env.StaticLibrary('rsfplot',objects)
 inc = env.Command('rsfplot.h',includes,Action(configure.merge))
-install = env.Install('../../include',inc)
+env.Install('../../include',inc)
  
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
-else:
-    pass
-#    env.Alias('install',install)
 
 ##############################################################################
 # TESTING

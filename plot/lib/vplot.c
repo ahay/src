@@ -60,6 +60,11 @@ enum {
 };
 /*^*/
 
+enum {PEN, ROMANS, ROMAND, ROMANC, ROMANT, ITALICC, ITALICT, 
+      SCRIPTS, SCRIPTC, GREEKS, GREEKC, CYRILC, GOTHGBT, GOTHGRT, GOTHITT,
+      MATH, MISC};
+/*^*/
+
 enum {TH_NORMAL, TH_LEFT, TH_CENTER, TH_RIGHT, TH_SYMBOL};
 enum {TV_NORMAL, TV_BOTTOM, TV_BASE, TV_HALF, TV_CAP, TV_TOP, TV_SYMBOL};
 /*^*/
@@ -76,6 +81,7 @@ enum {
     VP_OLDAREA		= 'a',
     VP_BYTE_RASTER	= 'R',
     VP_BIT_RASTER	= 'r',    
+    VP_SHORT_RASTER	= 'B',
     VP_ERASE		= 'e',
     VP_BREAK		= 'b',
     VP_PURGE		= 'p',
@@ -620,6 +626,8 @@ void vp_rascoltab (int nreserve, const char *colname)
 }
 
 
+
+
 void vp_raster (unsigned char **array, bool bit, int offset, 
 		int xpix, int ypix, 
 		float xll, float yll, float xur,float yur, int orient)
@@ -944,4 +952,23 @@ void vp_setdash (const float *dash, const float *gapp, int np)
 	vp_putfloat (dash[i]);
 	vp_putfloat (gapp[i]);
     }
+}
+
+void vp_bgroup(char *string)
+/*< begin group >*/
+{
+    char c;
+    
+    (void) putchar (VP_BEGIN_GROUP);
+
+    while ((c = *string++)) {
+	(void) putchar (c);
+    }
+    (void) putchar('\0');    
+}
+
+void vp_break(void)
+/*< break >*/
+{
+    (void) putchar (VP_BREAK);
 }
