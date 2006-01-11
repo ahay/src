@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import rsfproj, os, re, string, sys, array
+import rsfproj, os, re, string, sys, array, types
 
 susuffix = '.su'
 pssuffix = '.eps'
@@ -28,11 +28,11 @@ except:
     print "No SU installed"
     sys.exit(1)
 
-suplots = []
+suplots = ['plot']
 for prog in suprogs:
     if prog[0] == 'x' and 'ps'+prog[1:] in suprogs:
         suplots.append(prog[1:])
-re_plots = re.compile(r'\b(su|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
+re_plots = re.compile(r'\b(su|s|)(?:x|ps)?(%s)\b' % string.join(suplots,'|'))
 
 class SUProject(rsfproj.Project):
     def __init__(self,**kw):
@@ -40,6 +40,7 @@ class SUProject(rsfproj.Project):
         self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + bindir
         self['ENV']['CWPROOT'] = topdir
         self.plots = []
+        self.views = []
     def Flow(self,target,source,flow,suffix=susuffix,src_suffix=susuffix,**kw):
         kw.update({'rsf':0,'suffix': suffix,'src_suffix':src_suffix})
         return apply(rsfproj.Project.Flow,(self,target,source,flow),kw)
@@ -47,14 +48,24 @@ class SUProject(rsfproj.Project):
         if not flow: # two arguments
             flow = source
             source = target
-        # X output
-        xflow  = re_plots.sub('\\1x\\2',flow)
-        kw.update({'suffix':'.x','stdout':-1})
-        apply(self.Flow,(target,source,xflow),kw)
-        # Postscript output
-        psflow = re_plots.sub('\\1ps\\2',flow)
-        kw.update({'suffix': pssuffix,'stdout':1})
-        apply(self.Flow,(target,source,psflow),kw)
+        if flow == 'Merge':
+            if not type(source) is types.ListType:
+                sources = string.split(source)
+                source = map(lambda x: x+pssuffix,sources)
+            self.Command(target+pssuffix,source,
+                         '%s %s > $TARGET' % \
+                         (os.path.join(bindir,'psmerge'),
+                          string.join(map (lambda x: ' in=${SOURCES[%d]}' % x,
+                                           range(len(source))))))
+        else:
+            # X output
+            xflow  = re_plots.sub('\\1x\\2',flow)
+            kw.update({'suffix':'.x','stdout':-1})
+            apply(self.Flow,(target,source,xflow),kw)
+            # Postscript output
+            psflow = re_plots.sub('\\1ps\\2',flow)
+            kw.update({'suffix': pssuffix,'stdout':1})
+            apply(self.Flow,(target,source,psflow),kw)
     def Result(self,target,source,flow=None,**kw):
         if not flow: # two arguments
             flow = source
@@ -62,7 +73,9 @@ class SUProject(rsfproj.Project):
         target2 = os.path.join(self.resdir,target)
         apply(self.Plot,(target2,source,flow),kw)
         self.Default (target2+pssuffix)
-        self.Alias(target+'.view',target2+'.x')
+        if flow != 'Merge':
+            self.Alias(target+'.view',target2+'.x')
+            self.views.append(target)
         self.plots.append(target)
         lock = self.InstallAs(os.path.join(self.resdir,'.'+target+pssuffix),
                               target2+pssuffix)
@@ -73,9 +86,12 @@ class SUProject(rsfproj.Project):
         self.Alias(target + '.test',test)
     def End(self):
         if self.plots: # if any results
-            self.Alias('view',map(lambda x: x+'.view',self.plots))
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
+        if self.views:
+            self.Alias('view',map(lambda x: x+'.view',self.views))
+        else:
+            self.Command('view',None,'echo "There is nothing to view" ')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
 
 def little_endian():
