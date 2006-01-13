@@ -1,0 +1,42 @@
+import os, sys, string
+sys.path.append('../..')
+import configure
+
+src = '''
+clip dashvec dither dupside error fatvec geth greycorr intersect solve sort vecoutline vptodev
+'''
+
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+    env.Prepend(CPPPATH=['..'])
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env.Prepend(CPPPATH=['../../include','..'])
+
+    SConscript('../../plot/lib/SConstruct')
+
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
+sources  = map(lambda x: x+'.c',Split(src))
+includes = map(lambda x: x+'.h',Split(src))
+
+objects = []
+for source in Split(src):
+    env.Include(source,prefix='pen_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+inc = env.Command('util.h',includes,Action(configure.merge))
+lib = env.StaticLibrary('util',objects)

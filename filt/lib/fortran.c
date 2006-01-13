@@ -8,6 +8,7 @@
 #include "_bool.h"
 #include "file.h"
 #include "files.h"
+#include "cosft.h"
 
 /* Fortran functions for command-line arguments - NON-STANDARD
    use #ifdefs if necessary */
@@ -127,5 +128,12 @@ FCALLSCFUN2(INT,sf_leftsize,SF_LEFTSIZE,sf_leftsize,INT,INT)
 
 FCALLSCSUB1(sf_error,SF_ERROR,sf_error,STRING)
 FCALLSCSUB1(sf_warning,SF_WARNING,sf_warning,STRING)
+
+/* Cosine transform */
+
+FCALLSCSUB1(sf_cosft_init,SF_COSFT_INIT,sf_cosft_init,INT)
+FCALLSCSUB0(sf_cosft_close,SF_COSFT_CLOSE,sf_cosft_close)
+FCALLSCSUB3(sf_cosft_frw,SF_COSFT_FRW,sf_cosft_frw,PFLOAT,INT,INT)
+FCALLSCSUB3(sf_cosft_inv,SF_COSFT_INV,sf_cosft_inv,PFLOAT,INT,INT)
 
 /* 	$Id$	 */

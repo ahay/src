@@ -24,8 +24,6 @@ Requires the input to be cosine-transformed over the lateral axes.
 
 #include <rsf.h>
 
-#include "cosft.h"
-
 int main(int argc, char* argv[])
 {
     int nt,nx,ny, iw,ix,iy, nf, nw;
@@ -49,7 +47,7 @@ int main(int argc, char* argv[])
     /* padding on the time axis */
     nw=sf_fftr_size(2*(nw-1));
 
-    cosft_init(nw/2+1);
+    sf_cosft_init(nw/2+1);
     dw = 2 * SF_PI/(nw*dt);
 
     if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
@@ -83,7 +81,7 @@ int main(int argc, char* argv[])
 	    for (iw = nt; iw < nw; iw++) { /* pad */
 		trace[iw]=0.;
 	    }
-	    cosft_frw (trace,0,1);
+	    sf_cosft_frw (trace,0,1);
 
 	    for (iw = 0; iw < nw; iw++) {
 		w = iw*dw;
@@ -101,7 +99,7 @@ int main(int argc, char* argv[])
 	    sf_int1_init (str, 0., dw, nw, sf_spline_int, nf, nw);	    
 	    sf_prefilter_apply (nw, trace);
 	    sf_int1_lop (false,false,nw,nw,trace,trace2);
-	    cosft_inv (trace2,0,1);
+	    sf_cosft_inv (trace2,0,1);
 	    sf_floatwrite(trace2,nt,out);
 	}
     }

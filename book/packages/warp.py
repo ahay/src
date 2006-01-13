@@ -25,6 +25,11 @@ nsmooth1 rect=${SOURCES[1]} |
 abalance rect1=100 order=100 other=${SOURCES[2]}
 '''
 
+def simil(rect1=1,rect2=1):
+    return '''
+    similarity other=${SOURCES[1]} rect1=%d rect2=%d
+    ''' % (rect1,rect2)
+
 def warping(niter,rect1=1,rect2=1,rect3=1):
     return '''
     warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -349,6 +354,13 @@ def warp2(name,       # name prefix
     wanttitle=n
     ''' % (tmin,tmax,frame1,trace-o2,ng/2)
 
+    simplot = '''
+    window min1=%g max1=%g |
+    grey title="%s" allpos=y 
+    color=j clip=1
+    label1="Time (s)" 
+    ''' % (tmin,tmax,'%s')
+
     warpit = warping(20,200,200)
 
     for i in range(iter):
@@ -427,6 +439,10 @@ def warp2(name,       # name prefix
             
             Result(in0,in0,'Overlay')
             Result(in0+'w',in0+'w','Overlay')
+
+            sim0 = n('sim0')
+            Flow(sim0,[pr,sr],simil(rect1,rect2))
+            Result(sim0,simplot % 'Before')
            
         Plot(sr,plot('Warped and Balanced ' + PS))
         Plot(pr,plot('Balanced PP'))
@@ -488,6 +504,10 @@ def warp2(name,       # name prefix
             Result(in1+'w',in1+'w','Overlay')
             Result(in0+'1',[in0,in1],'SideBySideIso')
             Result(in0+'1w',[in0+'w',in1+'w'],'OverUnderAniso')
+
+            sim1 = n('sim1')
+            Flow(sim1,[pr,psw+'2'],simil(rect1,rect2))
+            Result(sim1,simplot % 'After')
 
             Flow(psw+'1',[ps,pp,warp],warp0)
             Result(psw+'1',plot('Warped ' + PS))

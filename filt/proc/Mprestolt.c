@@ -1,21 +1,20 @@
-/* Prestack Stolt modeling/migration.
-*/
+/* Prestack Stolt modeling/migration. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -23,7 +22,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 #include <rsf.h>
 
 #include "fint1.h"
-#include "cosft.h"
 
 int main(int argc, char* argv[])
 {
@@ -94,7 +92,7 @@ int main(int argc, char* argv[])
     /* padding on the time axis */
     nw=2*(nw-1);
 
-    cosft_init(nw);
+    sf_cosft_init(nw);
     dw = 2.*SF_PI/(nw*dw);
     dh *= 2.*SF_PI;
     dx *= 2.*SF_PI;
@@ -136,7 +134,7 @@ int main(int argc, char* argv[])
 		    trace[it]=0.;
 		}
 		
-		cosft_frw (trace,0,1);
+		sf_cosft_frw (trace,0,1);
 		fint1_set(str,trace);
 	    } else if (stack) {
 		for (it=0; it < nw; it++) {
@@ -156,7 +154,7 @@ int main(int argc, char* argv[])
 			trace[it]=0.;
 		    }		
 
-		    cosft_frw (trace,0,1);
+		    sf_cosft_frw (trace,0,1);
 		    fint1_set(str,trace);
 		}
 
@@ -189,7 +187,7 @@ int main(int argc, char* argv[])
 		}
 
 		if (inv || !stack) {
-		    cosft_inv (trace,0,1);
+		    sf_cosft_inv (trace,0,1);
 		    sf_floatwrite(trace,nt,out);
 		} else {
 		    for (iw=0; iw < nw; iw++) {
@@ -198,7 +196,7 @@ int main(int argc, char* argv[])
 		}
 	    } /* h */
 	    if (!inv && stack) {
-		cosft_inv (keep,0,1);
+		sf_cosft_inv (keep,0,1);
 		sf_floatwrite(keep,nt,out);
 	    }
 	} /* x */

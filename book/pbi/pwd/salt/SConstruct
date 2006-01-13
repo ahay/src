@@ -14,6 +14,24 @@ Flow('line ./ahead ./bhead','line19410.sgy',
      window min1=1.5''',stdin=0)
 Plot('line',grey + ' title="Input Line"')
 
+Flow('shear','vg','shearer short=10 long=1000 rect2=3')
+Flow('shear0','shear','window max2=1800')
+Plot('shear',grey + ' title="Attribute" allpos=y color=j')
+
+Result('shear','line shear','OverUnderAniso')
+
+Flow('freq','line','iphase rect1=10 rect2=30')
+Plot('freq',grey + ' title="Attribute" allpos=y color=j')
+
+Result('freq','line freq','OverUnderAniso')
+
+Plot('cfreq','freq','window max2=1800 | contour nc=1 c0=1 wanttitle=n wantaxis=n')
+
+Result('cfreq','line0 cfreq','Overlay')
+
+Flow('line0','line','window max2=1800')
+Plot('line0',grey + ' title="Input Line" scalebar=n')
+
 Flow('dip','line','dip rect1=10 rect2=30 verb=y niter=10')
 Plot('dip',grey + ' title="Dip" color=j')
 
@@ -25,6 +43,27 @@ Flow('smooth','pwd',
 Plot('pwd','smooth',grey + ' title="Coherency" allpos=y color=j')
 
 Result('pwd','line pwd','OverUnderAniso')
+
+Flow('smooth0','smooth','window max2=1800')
+
+Plot('pwd0','smooth0',grey + ' title="Coherency" allpos=y scalebar=n')
+
+Flow('comb0','smooth0 shear0','add mode=p ${SOURCES[1]}')
+
+for attr in ('smooth0','shear0','comb0'):
+    pik = 'pik-'+attr
+    Flow(pik,attr,
+         '''
+         window max2=1800 |
+         transp | scale axis=2 |
+         pick rect1=5 an=1000 gate=5 |
+         window
+         ''')
+    Plot(pik,'graph yreverse=y min2=1.5 max2=4.74 pad=n wantaxis=n wanttitle=n')
+
+    Result(pik,['line0',pik],'Overlay')
+
+Result('pik0','pwd0 pik','Overlay')
 
 Flow('line2','line',
      'window min1=1.9 max1=2.7 min2=500 max2=1500 | bandpass fhi=25')
@@ -39,13 +78,9 @@ Plot('flat',grey2 + ' title=Flattened clip=17')
 
 Result('flat','line2 flat','OverUnderAniso')
 
-Flow('vg wt','line dip',
-     '''
-     pwdsigk eps=1 dips=${SOURCES[1]} verb=y niter=1000 nliter=1
-     weight=${TARGETS[1]}
-     ''')
+Flow('vg','line dip',
+     'pwdsigk eps=1 dips=${SOURCES[1]} verb=y niter=1000 nliter=1')
 Plot('vg',grey + ' title="Structure Enhanced" ')
-Plot('wt','envelope | %s allpos=y title="Discontinuity" ' % grey)
 
 Result('dvg','line vg','OverUnderAniso')
 

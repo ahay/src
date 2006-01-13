@@ -22,7 +22,6 @@
 #include <rsf.h>
 
 #include "fint1.h"
-#include "cosft.h"
 
 int main(int argc, char* argv[])
 {
@@ -96,7 +95,7 @@ int main(int argc, char* argv[])
 	stack2[0][0][i1] = 0.;
     }
 
-    cosft_init(nx);
+    sf_cosft_init(nx);
 
     for (ih=0; ih < nh; ih++) {
 	sf_warning("offset %d of %d",ih+1,nh);
@@ -107,7 +106,7 @@ int main(int argc, char* argv[])
 	sf_floatread(image[0],n1*nx,in);
 
 	for (i1=0; i1 < n1; i1++) {
-	    cosft_frw(image[0],i1,n1);
+	    sf_cosft_frw(image[0],i1,n1);
 	}
 
 	for (ix=0; ix < nx; ix++) {
@@ -170,7 +169,7 @@ int main(int argc, char* argv[])
 
 	for (iv=0; iv < nv; iv++) {
 	    for (i1=0; i1 < n1; i1++) {
-		cosft_inv(cont[0][0],i1+iv*nx*n1,n1);
+		sf_cosft_inv(cont[0][0],i1+iv*nx*n1,n1);
 	    }
 	}
 

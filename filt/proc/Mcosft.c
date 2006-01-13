@@ -29,8 +29,6 @@ Pad the data if you need to suppress wrap-around effects.
 
 #include <rsf.h>
 
-#include "cosft.h"
-
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], sign[SF_MAX_DIM], s[SF_MAX_DIM];
@@ -85,17 +83,17 @@ int main (int argc, char* argv[])
 	
 	for (i=0; i <= dim1; i++) {
 	    if (!sign[i]) continue;
-	    cosft_init(n[i] /* ,o[i],d[i] */);
+	    sf_cosft_init(n[i] /* ,o[i],d[i] */);
 
 	    for (j=0; j < n1/n[i]; j++) {
 		i0 = sf_first_index (i,j,dim1+1,n,s);
 		if (sign[i] > 0) {
-		    cosft_frw (data, i0, s[i]);
+		    sf_cosft_frw (data, i0, s[i]);
 		} else {
-		    cosft_inv (data, i0, s[i]);
+		    sf_cosft_inv (data, i0, s[i]);
 		}
 	    }
-	    cosft_close();
+	    sf_cosft_close();
 	}
 	
 	sf_floatwrite(data,n1,out);

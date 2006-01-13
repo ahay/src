@@ -1,0 +1,6 @@
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+except: # local version
+    root = None
+

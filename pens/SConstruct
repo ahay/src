@@ -1,0 +1,49 @@
+import os, sys, string
+sys.path.append('..')
+import configure
+
+src = 'do  init_  main_ proc_'
+
+pen = 'vp'
+
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')    
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    env.Prepend(CPPPATH=['../include'],
+                LIBPATH=['./utilities','./genlib','../plot/lib','../filt/lib'],
+                LIBS=['genpen','util','rsfplot','rsf'])
+            
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
+env['PROGPREFIX'] = ''
+
+SConscript('genlib/SConstruct')
+
+sources = map(lambda x: x+'vplot',Split(src))
+pens = map(lambda x: x+'pen',Split(pen))
+
+objects = []
+for source in sources:
+    env.Include(source,prefix='pen_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objects.append(obj)
+
+for source in pens:
+    env.Include(source,prefix='pen_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,source+'.h')
+
+    env.Program(source,[obj,]+objects)
