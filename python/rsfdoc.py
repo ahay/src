@@ -346,7 +346,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
                             '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                             '\s*(?P<var>[\w\_\[\]]+)\s*\,'
                             '\s*(?P<size>[\w\_]+)\s*[\)]\s*'
-                            '[^\;]*[\;]\s*' # ending with ;
+                            '[^\;\{]*[\;\{]\s*' # ending with ; or {
                             '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                             '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
         stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'

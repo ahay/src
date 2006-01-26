@@ -114,6 +114,7 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_getfloats("mag",mag,nsp)) {
+	/* spike magnitudes */
 	for (is=0; is < nsp; is++) {
 	    mag[is]=1.;
 	}
