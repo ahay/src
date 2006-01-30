@@ -41,13 +41,13 @@ CRATIO = ' labelsz=5 screenratio=3.5 screenht=10.5 '
 
 def igrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=n wanttitle=n grid=y gridcol=6
+    grey labelrot=n wantaxis=y wanttitle=n grid=y gridcol=6
     title="" pclip=97 label1="z(km)" label2="x(km)"
     min1=%g max1=%g
     %s
     ''' % (par['zmin'],par['zmax'],custom)
 
-LABEL = " wantlabel=n "
+LABEL = " wantlabel=y "
 
 def p1x3(plot,p0,p1,p2,ys,xs,x0,x1,x2):
     j0 = '_' + plot+ p0
@@ -58,7 +58,22 @@ def p1x3(plot,p0,p1,p2,ys,xs,x0,x1,x2):
     Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x1))
     Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x2))
 
+    Plot  (plot,[j0,j1,j2],'Overlay')
     Result(plot,[j0,j1,j2],'Overlay')
+
+def p1x4(plot,p0,p1,p2,p3,ys,xs,x0,x1,x2,x3):
+    j0 = '_' + plot+ p0
+    j1 = '_' + plot+ p1
+    j2 = '_' + plot+ p2
+    j3 = '_' + plot+ p3
+
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x0))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x1))
+    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x2))
+    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,x3))
+
+    Plot  (plot,[j0,j1,j2,j3],'Overlay')
+    Result(plot,[j0,j1,j2,j3],'Overlay')
 
 def p1x6(plot,p0,p1,p2,p3,p4,p5,ys,xs,xc):
     j0 = '_' + plot+ p0
@@ -68,13 +83,14 @@ def p1x6(plot,p0,p1,p2,p3,p4,p5,ys,xs,xc):
     j4 = '_' + plot+ p4
     j5 = '_' + plot+ p5
 
-    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,   0))
-    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,  xc))
-    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,2*xc))
-    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,3*xc))
-    Plot(j4,p4,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,4*xc))
-    Plot(j5,p5,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,5*xc))
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,   0-1))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,  xc-1))
+    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,2*xc-1))
+    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,3*xc-1))
+    Plot(j4,p4,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,4*xc-1))
+    Plot(j5,p5,'Overlay',vppen='yscale=%f xscale=%f ycenter=0 xcenter=%f'% (ys,xs,5*xc-1))
 
+    Plot  (plot,[j0,j1,j2,j3,j4,j5],'Overlay') 
     Result(plot,[j0,j1,j2,j3,j4,j5],'Overlay') 
     
 # ------------------------------------------------------------
@@ -338,14 +354,15 @@ for i in SLOlist:
 
 # ------------------------------------------------------------
 
-for l in CIGlist:
-    for i in SLOlist:
+for i in SLOlist:
+    for l in CIGlist:
         SRoff = 'SRoff' + i + '-' + l
         SRang = 'SRang' + i + '-' + l
         SRxic = 'SRxic' + i + '-' + l
         SRtic = 'SRtic' + i + '-' + l
 
         zx = 'z'    + i + 'x' + l
+        zt = 'z'    + i + 't' + l
         
         hx = 'h'    + i + 'x' + l
         ht = 'h'    + i + 't' + l
@@ -362,11 +379,29 @@ for l in CIGlist:
         p1x3(SRoff,zx,hx,ht,1,1,-1,-3,-6)
         p1x3(SRang,zx,cx,ct,1,1,-1,-3,-6)
 
+
+        SRt = 'SRt' +  i + '-' + l
+        p1x4(SRt,zt,ht,at,ct,1,1,-1,-3,-6,-9)
+
+        SRx = 'SRx' +  i + '-' + l
+        p1x4(SRx,zx,hx,ax,cx,1,1,-1,-3,-6,-9)
+
+#        SRic = 'SRic' + i + '-' + l
+#        pplot.p2x1(SRic,SRxic,SRtic,0.5,0.5,-9)
+
+#        SRcig = 'SRcig' + i + '-' + l
+#        pplot.p2x1(SRcig,SRoff,SRang,0.5,0.5,-9)
+
+
 p1x6('allxoff',   'h0x7',   'h0x9',   'h0x11',   'h0x13',   'h0x15',   'h0x17',0.75,0.75,-3)
 p1x6('allxang','ccln0x7','ccln0x9','ccln0x11','ccln0x13','ccln0x15','ccln0x17',0.75,0.75,-3)
 
 p1x6('alltoff',   'h0t7',   'h0t9',   'h0t11',   'h0t13',   'h0t15',   'h0t17',0.75,0.75,-3)
 p1x6('alltang','ccln0t7','ccln0t9','ccln0t11','ccln0t13','ccln0t15','ccln0t17',0.75,0.75,-3)
+
+pplot.p2x1('alloff','allxoff','alltoff',0.65,0.65,-7)
+pplot.p2x1('allang','allxang','alltang',0.65,0.65,-7)
+
 # ------------------------------------------------------------
 
 
