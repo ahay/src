@@ -38,13 +38,13 @@ def p3x2(plot,p0,p1,p2,p3,p4,p5,ys,xs,yc,xc):
     j4 = '_' + p4
     j5 = '_' + p5
 
-    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  -1,-1))
-    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  yc,-1))
-    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,2*yc,-1))
+    Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,   0-1,0-1))
+    Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  yc-1,0-1))
+    Plot(j2,p2,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,2*yc-1,0-1))
 
-    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  -1,xc))
-    Plot(j4,p4,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  yc,xc))
-    Plot(j5,p5,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,2*yc,xc))
+    Plot(j3,p3,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,   0-1,xc-1))
+    Plot(j4,p4,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,  yc-1,xc-1))
+    Plot(j5,p5,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=%f'% (ys,xs,2*yc-1,xc-1))
 
     Result(plot,[j0,j1,j2,j3,j4,j5],'Overlay')
     
