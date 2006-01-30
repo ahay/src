@@ -19,7 +19,7 @@ def igrey(custom):
 def igraph(custom):
     return '''
     graph labelrot=n wantaxis=y wanttitle=y title=""
-    yreverse=y wantaxis=n plotfat=10 plotcol=1 %s
+    yreverse=y wantaxis=n plotfat=6 plotcol=1 %s
     ''' % (custom)
 
 def reflector(formula,par):
@@ -303,9 +303,9 @@ Result('tssk',['ctp-','ctp0','ctp+'],'OverUnderIso')
 Result('xang',['axp-','axp0','axp+'],'OverUnderIso')
 Result('tang',['atp-','atp0','atp+'],'OverUnderIso')
 
-pplot.p3x2('off','hxp-','hxp0','hxp+','htp-','htp0','htp+',0.30,0.30,-11,-15)
-pplot.p3x2('ssk','cxp-','cxp0','cxp+','ctp-','ctp0','ctp+',0.30,0.30,-11,-15)
-pplot.p3x2('ang','axp-','axp0','axp+','atp-','atp0','atp+',0.30,0.30,-11,-15)
+pplot.p3x2('off','hxp-','hxp0','hxp+','htp-','htp0','htp+',0.30,0.30,-11,-13)
+pplot.p3x2('ssk','cxp-','cxp0','cxp+','ctp-','ctp0','ctp+',0.30,0.30,-11,-13)
+pplot.p3x2('ang','axp-','axp0','axp+','atp-','atp0','atp+',0.30,0.30,-11,-13)
 
 # ------------------------------------------------------------
 
