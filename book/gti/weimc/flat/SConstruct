@@ -5,17 +5,21 @@
 from rsfproj import *
 import math
 import zomig,spmig
+import pplot
 
 # ------------------------------------------------------------
 # PLOTTING
 # ------------------------------------------------------------
 def igrey(custom):
     return '''
-    grey  labelrot=n wantaxis=y wanttitle=y title="" %s 
+    grey  labelrot=n wantaxis=y wanttitle=y title=""
+    labelsz=12 titlesz=16
+    %s 
     ''' % (custom)
 def igraph(custom):
     return '''
-    graph labelrot=n wantaxis=y wanttitle=y title="" yreverse=y wantaxis=n plotfat=10 plotcol=1 %s
+    graph labelrot=n wantaxis=y wanttitle=y title=""
+    yreverse=y wantaxis=n plotfat=10 plotcol=1 %s
     ''' % (custom)
 
 def reflector(formula,par):
@@ -268,7 +272,7 @@ for h in ('x','t'):
                 ovl = 'xov' + n
 
                 Flow(ang,ssk,'tan2ang a0=0 na=150 da=0.45')
-                Plot(ang,igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 "  %s') % tit)
+                Plot(ang,igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
             
             if(h=='t'):
                 Plot(off,off, igrey('pclip=100 label1="z (m)" label2="\F10 t\F3 (s)" %s') % tit)
@@ -278,7 +282,7 @@ for h in ('x','t'):
 
                 Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
                 Flow(ang,[ssk,vel],'tshiftcos a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
-                Plot(ang,igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 "  %s') % tit)
+                Plot(ang,igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
                 
             Plot(ssko,[ssk,ovl],'Overlay')
 
@@ -299,6 +303,9 @@ Result('tssk',['ctp-','ctp0','ctp+'],'OverUnderIso')
 Result('xang',['axp-','axp0','axp+'],'OverUnderIso')
 Result('tang',['atp-','atp0','atp+'],'OverUnderIso')
 
+pplot.p3x2('off','hxp-','hxp0','hxp+','htp-','htp0','htp+',0.30,0.30,-11,-15)
+pplot.p3x2('ssk','cxp-','cxp0','cxp+','ctp-','ctp0','ctp+',0.30,0.30,-11,-15)
+pplot.p3x2('ang','axp-','axp0','axp+','atp-','atp0','atp+',0.30,0.30,-11,-15)
 
 # ------------------------------------------------------------
 
