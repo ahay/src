@@ -34,7 +34,8 @@
  *   Changed LINUX to Posix1 from BSD
  */
 
-#include <termio.h>
+#include <termios.h>
+#include <sys/ioctl.h>
 
 #include <stdio.h>
 #include <string.h>
