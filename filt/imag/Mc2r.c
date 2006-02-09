@@ -98,7 +98,8 @@ int main(int argc, char* argv[])
 	comCC=sf_complexalloc2(ax.n,az.n);
 	comRC=sf_complexalloc2(ag.n,at.n);
 
-	for(ii=0;ii<nn;ii++) {	
+	for(ii=0;ii<nn;ii++) {
+	    sf_warning("%d of %d",ii,nn);
 	    if(adj) {
 		sf_complexread (comRC[0],ag.n*at.n,Fi);
 
@@ -132,7 +133,8 @@ int main(int argc, char* argv[])
 
     } else {	
 
-	for(ii=0;ii<nn;ii++) {	
+	for(ii=0;ii<nn;ii++) {
+	    sf_warning("%d of %d",ii,nn);
 	    if(adj) {
 		sf_floatread (mapRC[0],ag.n*at.n,Fi);
 		c2r(linear,adj,mapCC,mapRC,rays);

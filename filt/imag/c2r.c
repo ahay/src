@@ -105,7 +105,7 @@ void c2r_linear(
     zmax = az.o + (az.n-1)*az.d;
     
     for(it=0;it<at.n;it++) {		
-	if( it%100 == 0 ) sf_warning("LINT %d of %d",it,at.n);	    
+	if( verb && it%100 == 0 ) sf_warning("LINT %d of %d",it,at.n);	    
 	
 	for(ig=0;ig<ag.n;ig++) {
 	    
@@ -198,7 +198,7 @@ void c2r_sinc(
     
     /* loop over RC */
     for(it=0;it<at.n;it++) {
-	if( it%100 == 0 ) sf_warning("SINT %d of %d",it,at.n);
+	if( verb && it%100 == 0 ) sf_warning("SINT %d of %d",it,at.n);
 	for(ig=0;ig<ag.n;ig++) {
 	    
 	    z = cimagf(rays[it][ig]);
