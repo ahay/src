@@ -31,25 +31,29 @@
 #include "ocpatch.h"
 
 static off_t n1, n2, **table; 
+static int np;
 
 void ocpatch_init(int dim     /* number of dimensions */, 
 		  int nw      /* total patch size */, 
-		  int np      /* total number of patches */, 
+		  int np1     /* total number of patches */, 
 		  int* npatch /* number of patches [dim] */, 
 		  int* nwall  /* data size [dim] */, 
 		  int* nwind  /* patch size [dim] */)
 /*< initialize >*/
 {
-    int i, ip, i2, ff[SF_MAX_DIM], gg[SF_MAX_DIM], t2, t;
-    
+    int i, ip, i2, ff[SF_MAX_DIM], gg[SF_MAX_DIM], t2;
+    off_t t;
+
     n1 = nwind[0];
     n2 = nw/n1;
+    np = np1;
 
     table = (off_t**) sf_alloc(np,sizeof(off_t*));
-    table[0] = (off_t*) sf_alloc(np*n2,sizeof(off_t));
 
     for (ip=0; ip < np; ip++) {
-	if (ip) table[ip] = table[0]+ip*n2;
+	sf_warning("patch %d of %d",ip+1,np);
+
+	table[ip] = (off_t*) sf_alloc(n2,sizeof(off_t));
 
 	t = ip;
 	for(i = 0; i < dim; i++) {
@@ -86,7 +90,11 @@ void ocpatch_init(int dim     /* number of dimensions */,
 void ocpatch_close(void)
 /*< free allocated storage >*/
 {
-    free(table[0]);
+    int ip;
+
+    for (ip=0; ip < np; ip++) {
+	free(table[ip]);
+    }
     free(table);
 }
 
