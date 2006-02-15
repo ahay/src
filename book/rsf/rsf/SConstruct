@@ -32,6 +32,9 @@ Paper('prog',use='hyperref,amsmath,fancybox',
       \\input{sf#1}
       }}}
       ''')
+
+Paper('abstract',lclass='eage')
+
 Paper('dummy')
 
 Depends2('install',map(lambda x: x+'.install',

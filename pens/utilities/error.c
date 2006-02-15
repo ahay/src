@@ -106,7 +106,7 @@ char            text[150];
 	}
 	if (!allowecho)		/* restore terminal to original tty state */
 	{
-	    ioctl ((int) (fileno (stdout)), TCSETAW, &tty_clean_state);
+	    ioctl ((int) (fileno (stdout)), TCSADRAIN, &tty_clean_state);
 	}
 	exit (-1);
     }

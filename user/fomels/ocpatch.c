@@ -30,8 +30,9 @@
 
 #include "ocpatch.h"
 
-static off_t n1, n2, **table; 
+static off_t n1, n2, *tab;
 static int np;
+static FILE *table;
 
 void ocpatch_init(int dim     /* number of dimensions */, 
 		  int nw      /* total patch size */, 
@@ -48,13 +49,12 @@ void ocpatch_init(int dim     /* number of dimensions */,
     n2 = nw/n1;
     np = np1;
 
-    table = (off_t**) sf_alloc(np,sizeof(off_t*));
+    table = tmpfile();
+    if (NULL == table) 
+	sf_error("%s: trouble with temporary storage",__FILE__);
+    tab = (off_t*) sf_alloc(n2,sizeof(off_t));
 
     for (ip=0; ip < np; ip++) {
-	sf_warning("patch %d of %d",ip+1,np);
-
-	table[ip] = (off_t*) sf_alloc(n2,sizeof(off_t));
-
 	t = ip;
 	for(i = 0; i < dim; i++) {
 	    t2 = t%npatch[i];
@@ -69,7 +69,7 @@ void ocpatch_init(int dim     /* number of dimensions */,
 	    }
 	}	
 	t = sf_cart2line (dim-1, nwall+1, ff+1);
-	table[ip][0] = (t*nwall[0] + ff[0])*sizeof(float);
+	tab[0] = (t*nwall[0] + ff[0])*sizeof(float);
 	for (i2=1; i2 < n2; i2++) {
 	    t = i2;
 	    for (i = 1; i < dim-1; i++) {
@@ -82,20 +82,18 @@ void ocpatch_init(int dim     /* number of dimensions */,
 		/* line coordinates in input */
 		t = t*nwall[i] + gg[i];
 	    }
-	    table[ip][i2] = (t*nwall[0] + ff[0])*sizeof(float); 
+	    tab[i2] = (t*nwall[0] + ff[0])*sizeof(float); 
 	}
+	if (n2 != fwrite(tab,sizeof(off_t),n2,table)) 
+	    sf_error("%s: trouble writing table",__FILE__);
     }
 }
 
 void ocpatch_close(void)
 /*< free allocated storage >*/
 {
-    int ip;
-
-    for (ip=0; ip < np; ip++) {
-	free(table[ip]);
-    }
-    free(table);
+    free(tab);
+    fclose(table);
 }
 
 void ocpatch_lop (int ip      /* patch number */, 
@@ -105,9 +103,14 @@ void ocpatch_lop (int ip      /* patch number */,
 /*< apply patching >*/
 {
     off_t i2;
+    
+    if (0 != fseeko(table,ip*n2*sizeof(off_t),SEEK_SET))
+	sf_error("%s: table seeking error:",__FILE__);
+    if (n2 != fread(tab,sizeof(off_t),n2,table))
+	sf_error("%s: trouble reading table",__FILE__);
 
     for (i2=0; i2 < n2; i2++, wind += n1) {
-	if (0 != fseeko(wall,table[ip][i2],SEEK_SET))
+	if (0 != fseeko(wall,tab[i2],SEEK_SET))
 	    sf_error("%s: seeking error:",__FILE__);
 
 	if (adj) {
@@ -128,9 +131,14 @@ void ocpatch_flop (int ip       /* patch number */,
 {
     off_t i2;
 
+    if (0 != fseeko(table,ip*n2*sizeof(off_t),SEEK_SET))
+	sf_error("%s: table seeking error:",__FILE__);
+    if (n2 != fread(tab,sizeof(off_t),n2,table))
+	sf_error("%s: trouble reading table",__FILE__);
+    
     for (i2=0; i2 < n2; i2++, wind += n1) {
-	sf_seek(wall,table[ip][i2],SEEK_SET);
-
+	sf_seek(wall,tab[i2],SEEK_SET);
+	
 	if (adj) {
 	    sf_floatwrite(wind,n1,wall);
 	} else {

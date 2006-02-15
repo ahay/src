@@ -1,0 +1,36 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+segy = 'P100335SERGUI.DAT'
+
+Fetch(segy,'total',private)
+
+Flow('t3d h3d ./a3d ./b3d',segy,
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('thed','h3d','dd type=float')
+Flow('tdat','t3d thed','window max1=4 | transp | put head=${SOURCES[1]}')
+
+Flow('tbin tfold','tdat',
+     '''
+     bin xk=sx yk=sy fold=${TARGETS[1]}
+     nx=100 dx=100 x0=520000
+     ny=100 dy=100 y0=6233000
+     ''')
+
+Result('tfold',
+       '''
+       grey allpos=y pclip=100
+       transp=n yreverse=n scalebar=1
+       label1=In-line label2=Cross-line
+       wheretitle=t wherexlabel=b
+       title="Fold Map"
+       ''')
+
+End()
