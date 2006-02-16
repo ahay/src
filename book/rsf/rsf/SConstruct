@@ -33,7 +33,22 @@ Paper('prog',use='hyperref,amsmath,fancybox',
       }}}
       ''')
 
-Paper('abstract',lclass='eage')
+Paper('abstract',lclass='eage',
+      include=r'''
+      \thispagestyle{empty}
+      \setlength{\textheight}{25cm}
+      \newenvironment{geotitle}{%
+      \begin{minipage}{\textwidth}%
+      \bfseries\Large\centering}
+      {\end{minipage}\vspace{.2in}}%
+      \renewcommand{\title}[1]{%
+      \noindent\begin{geotitle}\setlength{\parindent}{0em}\par%
+      {\smallskip #1}\end{geotitle}}
+      \renewcommand{\author}[1]{%
+      \begin{center}
+      \textbf{#1}
+      \end{center}}
+      ''')
 
 Paper('dummy')
 

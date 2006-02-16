@@ -48,9 +48,10 @@ int main(int argc, char* argv[])
     bool inv, half;
     int i2, n1,n2, i3, n3, n, dens, nw, CDPtype, mute;
     float d1, o1, d2, o2, *trace, *stretched, h0, dh, v0, d3, maxstr;
+    float **datum;
     mapfunc forward = NULL, inverse = NULL;
     char *rule, *prog;
-    sf_file in, out;
+    sf_file in, out, dat;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -79,6 +80,8 @@ int main(int argc, char* argv[])
 	rule="lmo";
     } else if (NULL != strstr (prog, "rad")) {
 	rule="rad";
+    } else if (NULL != strstr (prog, "dat")) {
+	rule="dat";
     } else if (NULL != strstr (prog,"nmo") || 
 	       NULL == (rule = sf_getstring("rule"))) {
 	/* Stretch rule:
@@ -88,6 +91,7 @@ int main(int argc, char* argv[])
 	   2 - t^2 stretch (t2stretch)
 	   c - t^2 chebyshev stretch (t2chebstretch)
 	   r - radial moveout (radstretch)
+	   d - datuming (datstretch)
 	*/
 	rule="nmo";
     }
@@ -172,6 +176,15 @@ int main(int argc, char* argv[])
 	    forward = rad_frw;
 	    inverse = rad_inv;
 	    break;
+	case 'd':
+	    forward = inverse = lmo;
+
+	    dat = sf_input("datum");
+	    datum = sf_floatalloc2(n2,n3);
+	    sf_floatread(datum[0],n2*n3,dat);
+	    sf_fileclose(dat);
+	    
+	    break;
 	default:
 	    sf_error("rule=%s is not implemented",rule);
 	    break;
@@ -219,7 +232,10 @@ int main(int argc, char* argv[])
 /*		if ('l' == rule[0]) h = fabsf(h);*/
 
 		if (inv) h = - h;
-	    } 
+	    } else if ('d' == rule[0]) {
+		h = datum[i3][i2];
+		if (inv) h = -h;
+	    }
 
 	    sf_floatread (trace,n1,in);
 	    fint1_set(str,trace);

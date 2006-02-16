@@ -51,7 +51,7 @@ for prog in mains:
     if root:
         env.Install(bindir,main[0])
 	if prog=='stretch':
-	    for stretch in ('log','t2','t2cheb','lmo','nmo','rad'):
+	    for stretch in ('log','t2','t2cheb','lmo','nmo','rad','dat'):
                 copy = string.replace(str(main[0]),'stretch',stretch+'stretch')
                 env.InstallAs(os.path.join(bindir,copy),main[0])
 		doc = os.path.splitext(copy)[0]

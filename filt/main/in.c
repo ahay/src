@@ -39,8 +39,8 @@ int main (int argc, char* argv[])
     char *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
-    char *type[] = {"uchar","char","int","float","complex"};
-    char *form[] = {"ascii","xdr","native"};
+    const char *type[] = {"uchar","char","int","float","complex"};
+    const char *form[] = {"ascii","xdr","native"};
     char pad[] = "              ", out[15];
 
     sf_init (argc,argv);

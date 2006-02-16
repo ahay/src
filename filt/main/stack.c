@@ -3,21 +3,21 @@
 This operation is adjoint to sfspray.
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <string.h>
@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
     char key1[7], key2[7], *val;
     bool norm, rms, min, max;
     float *trace, *stack, f;
+    double *dstack;
     sf_datatype type;
 
     sf_init (argc, argv);
@@ -108,13 +109,15 @@ int main(int argc, char* argv[])
     if (norm) fold = sf_intalloc (n);
     trace = sf_floatalloc (n);
     stack = sf_floatalloc (n);
-    
+    dstack = (min || max)? NULL: (double*) sf_alloc(n,sizeof(double));
+
     for (i3=0; i3 < n3; i3++) {
         if (min || max) {
             if (min) for (i=0; i<n; i++) stack[i] =  FLT_MAX;
             if (max) for (i=0; i<n; i++) stack[i] = -FLT_MAX;
-        }
-        else memset (stack,0,n*sizeof(float));
+        } else {
+	    memset (dstack,0,n*sizeof(double));
+	}
         if (norm) memset (fold,0,n*sizeof(int));
         
         for (i2=0; i2 < n2; i2++) {
@@ -123,19 +126,24 @@ int main(int argc, char* argv[])
                 if (min || max) {
                     if (min) stack[i] = SF_MIN(stack[i],trace[i]);
                     if (max) stack[i] = SF_MAX(stack[i],trace[i]);
-                }
-                else stack[i] += rms? trace[i]*trace[i]: trace[i];
+                } else {
+		    dstack[i] += rms? (double) trace[i]*trace[i]: trace[i];
+		}
                 if (norm && (0.0 != trace[i])) fold[i]++; 
             }
         }
-        if (norm) {
-            for (i=0; i < n; i++) {
-                if (fold[i] > 0) {
-                  stack[i] /= fold[i];
-                  if (rms) stack[i] = sqrtf(stack[i]);
-                }
-            }
-        }
+	if (!min && !max) {
+	    for (i=0; i < n; i++) {
+		if (norm) {
+		    if (fold[i] > 0) {
+			dstack[i] /= fold[i];
+			if (rms) dstack[i] = sqrt(dstack[i]);
+		    }
+		}
+		stack[i] = dstack[i];
+	    }
+	}
+	    	
         sf_floatwrite(stack, n, out); 
     }
 

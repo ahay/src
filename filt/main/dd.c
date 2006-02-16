@@ -165,6 +165,14 @@ int main(int argc, char *argv[])
 		    case SF_COMPLEX:
 			sf_complexwrite(cbuf,nout,out);
 			break;
+		    case SF_FLOAT:
+			fbuf = (float *) bufout;
+			for (i=j=0; i < nout && j < nin; i+=2, j++) {
+			    fbuf[i]   = crealf(cbuf[j]);
+			    fbuf[i+1] = cimagf(cbuf[j]);
+			}
+			sf_floatwrite(fbuf,nout,out);
+			break;
 		    default:
 			ddbreak (itype,otype);
 			break;
@@ -184,7 +192,7 @@ int main(int argc, char *argv[])
 
 static void ddbreak (sf_datatype itype, sf_datatype otype)
 {
-    const char* types[]={"char","int","float","complex"};
+    const char* types[]={"uchar","char","int","float","complex"};
 
     sf_error("Conversion from %s to %s"
 	     " is unsupported",types[itype],types[otype]);

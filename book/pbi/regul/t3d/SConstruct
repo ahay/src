@@ -15,16 +15,42 @@ Flow('t3d h3d ./a3d ./b3d',segy,
      ''',stdin=0)
 
 Flow('thed','h3d','dd type=float')
-Flow('tdat','t3d thed','window max1=4 | transp | put head=${SOURCES[1]}')
 
-Flow('tbin tfold','tdat',
+Flow('hx','thed','headermath output="(gx-sx)/1000" ')
+Flow('hy','thed','headermath output="(gy-sy)/1000" ')
+
+Flow('datum','hx hy',
+     'math hy=${SOURCES[1]} output="sqrt(input*input+hy*hy+0.000025)/2.25" ')
+
+Flow('tdat','t3d datum',
+     'window max1=4 | transp | stretch rule=d datum=${SOURCES[1]}')
+
+az = 1.13
+
+Flow('coff','hx hy',
      '''
-     bin xk=sx yk=sy fold=${TARGETS[1]}
-     nx=100 dx=100 x0=520000
-     ny=100 dy=100 y0=6233000
+     cmplx ${SOURCES[:2]} |
+     math output="input*exp(I*%g)" |
+     dd type=float
+     ''' % az,stdin=0)
+
+for off in ('toff','coff'):
+    Result(off,
+           '''
+           dd type=complex | window |
+           graph symbol=x label1=In-line label2=Cross-line
+           title="Offset"
+           ''')
+
+Flow('tbin tfld','tdat coff',
+     '''
+     bin fold=${TARGETS[1]} head=${SOURCES[1]}
+     xkey=0 ykey=1
+     nx=141 dx=0.05 x0=-3.35
+     ny=141 dy=0.05 y0=-3.5
      ''')
 
-Result('tfold',
+Result('tfld',
        '''
        grey allpos=y pclip=100
        transp=n yreverse=n scalebar=1
@@ -33,4 +59,11 @@ Result('tfold',
        title="Fold Map"
        ''')
 
+Result('tbin',
+       '''
+       transp plane=23 | transp plane=12 |
+       byte gainpanel=all |
+       grey3 title="Binned"
+       frame1=501 frame2=71 frame3=71
+       ''')
 End()

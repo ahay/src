@@ -93,6 +93,7 @@ int main(int argc, char* argv[])
 	}
     }
     dim2++;
+    /* dim2 is the last dimension involved */
 
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
@@ -114,6 +115,12 @@ int main(int argc, char* argv[])
 	}
     }
     dim1++;
+    /* dim1 is the last dimension that fits in memory,
+       n1 is the size up to this dimension
+       n2 is the size of other dimensions involved 
+       n3 is the size of all other dimensions so that
+       n1*n2*n3 is the total data size
+    */
     
     buf = sf_charalloc(n1*esize);
     
@@ -124,7 +131,7 @@ int main(int argc, char* argv[])
 
     if (n2>1) {
 	if (verb) sf_warning("Going out of core...");
-	sf_unpipe(in,n1*n2*n3*esize);
+	sf_unpipe(in,n1*n2*n3*esize); /* prepare for random access */
 	k2 = (size_t*) sf_alloc(n2,sizeof(size_t));
 	mirror(n2,dim2-dim1,n+dim1,f+dim1,k2);
 	pos = sf_tell(in);
@@ -133,10 +140,15 @@ int main(int argc, char* argv[])
     if (verb) sf_warning("n1=%d, n2=%d, n3=%d",
 			 (int) n1,(int) n2,(int) n3);
 
+    /* k1 is a table for reversal mapping 
+       k2 is a table for random input access */
+
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
-	    if (n2 > 1) sf_seek(in,pos+k2[i2]*n1*esize,SEEK_SET);
+	    if (n2 > 1) /* if out of core */
+		sf_seek(in,pos+k2[i2]*n1*esize,SEEK_SET);
 	    sf_charread(buf,n1*esize,in);
+	    /* do the actual reversal */
 	    for (i1=0; i1 < n1/2; i1++) {
 		m = k1[i1];
 		for (j=0; j<esize; j++) {
@@ -155,6 +167,7 @@ int main(int argc, char* argv[])
 
 static void mirror (size_t n1, int dim, 
 		    const int* n, const bool* f, /*@out@*/ size_t *k)
+/* compute map of reversals k */
 {
     size_t i, m, ii;
     int j, nj;
