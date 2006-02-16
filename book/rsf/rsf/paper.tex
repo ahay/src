@@ -5,9 +5,11 @@
 
 \maketitle
 
-\section{Why RSF?}
+\begin{abstract}
 
-The RSF mission is to provide
+RSF (from \emph{Regularly Sampled Format}) is an open-source software
+package for geophysical data processing and reproducible numerical
+experiments. The RSF mission is to provide
 \begin{enumerate}
 \item a convenient and powerful environment
 \item a convenient technology transfer tool
@@ -19,10 +21,62 @@ management system is transferred in the form of recorded processing histories,
 which become ``computational recipes'' to be verified, exchanged, and modified
 by users of the system.
 
+\end{abstract}
+
 \section{What is RSF?}
 
-RSF is a software package for digital data processing,
-which consists of
+RSF is an open-source software package for geophysical data processing
+and reproducible numerical experiments. The four main features of RSF
+are:
+
+\begin{enumerate}
+
+\item RSF is a \emph{new} package. It started in 2003 and was
+developed entirely from scratch. Being a new package, it follows
+modern software engineering practices such as module encapsulation and
+test-driven development. A rapid development of a project of this
+scope (more than 300 main programs and more than 3000 tests) would not
+be possible without standing on the shoulders of giants and learning
+from the 30 years of previous experience in open packages such as
+SEPlib and Seismic Unix. We have borrowed and reimplemented
+functionality and ideas from these packages.
+
+\item RSF is a \emph{test-driven} package. Test-driven development is
+not only an agile software programming practice but also a way of
+bringing scientific foundation to geophysical research that involves
+numerical experiments. Bringing reproducibility and peer review, the
+backbone of any real science, to the field of computational geophysics
+is the main motivation for RSF development. The package consists of
+two levels: low-level main programs (typically developed in the C
+programming language and working as data filters) and high-level
+processing flows (described with the help of the Python programming
+language) that combine main programs and completely document data
+processing histories for testing and reproducibility. Experience
+shows that high-level programming is easily mastered even by beginning
+students that have no previous programming experience.
+
+\item RSF is an \emph{open-source} package. It is distributed under
+the standard GPL open-source license, which places no restriction on
+the usage and modification of the code. Access to modifying the source
+repository is not controlled by one organization but shared equally
+among different developers. This enables an open collaboration among
+different groups spread all over the world, in the true spirit of the
+open source movement.
+
+\item RSF uses a \emph{simple, flexible, and universal} data format
+that can handle very large datasets but is not tied specifically to
+seismic data or data of any other particular kind. This ``regularly
+sampled'' format is borrowed from the traditional SEPlib and is also
+related to the DDS format developed by Amoco and BP. A universal data
+format allows us to share general-purpose data processing tools with
+scientists from other disciplines such as petroleum engineers working
+on large-scale reservoir simulations.
+
+\end{enumerate}
+
+\section{What is in RSF?}
+
+RSF consists of
 \begin{enumerate}
 \item A collection of main programs. Most programs act as filters on input
   data and can be chained in a Unix pipeline. For example:
@@ -44,7 +98,7 @@ program purpose and parameters.  Alternatively, brief documentation is
 provided by \texttt{sfdoc} program. Main program documentation in HTML format
 is available on the web at \\ \url{http://egl.beg.utexas.edu/RSF/}.
 
-RSF uses \emph{Regularly Sampled File} format for data files, which is similar
+RSF uses \emph{Regularly Sampled Format} for data files, which is similar
 to the format used in the SEPlib library developed at the Stanford Exploration
 Project (SEP). The file format describes regularly sampled hypercubes. Up to 9
 dimensions are supported. In accordance with the Unix philosophy, each RSF
@@ -70,9 +124,9 @@ for generated graphics files.
   reproducible book contains a collection of RSF recipes (\texttt{SConstruct}
   files) used to generate book figures. The recipes cover a variety of data
   processing and imaging tasks described in the books. Figures and recipes
-  serve dual purpose with respect to RSF maintenence. They provide demos for
+  serve dual purpose with respect to RSF maintenance. They provide demos for
   introducing new users to the functionality of the package and regression
-  tests for assuring that the system is stable under change.
+  tests for assuring the system stability under change.
 
 \end{enumerate}
 
@@ -89,15 +143,16 @@ back to the original distribution to the benefit of the whole user community.
 
 \section{Alternatives} 
 
-In the present form, the RSF package, while being completely written from
-scratch, borrows from the design of SEPlib, a publicly available software
-package, maintained by Bob Clapp at the Stanford Exploration Project
+In the present form, the RSF package, while being completely written
+from scratch, borrows ideas from the design of SEPlib, a publicly
+available software package, maintained by Bob Clapp at the Stanford
+Exploration Project
 \cite[]{Claerbout.sep.70.413,Dellinger.sep.73.461,Nichols.sep.82.257,Biondi.sep.92.343,Clapp.sep.102.bob1}\footnote{SEPlib
-  is available at \url{http://sepwww.stanford.edu/software/seplib/}.}.
-Generations of SEP students and researchers contributed to SEPlib. Most
-important contributions came from Rob Clayton, Jon Claerbout, Dave Hale, Stew
-Levin, Rick Ottolini, Joe Dellinger, Steve Cole, Dave Nichols, Martin
-Karrenbach, Biondo Biondi, and Bob Clapp.
+is available at \url{http://sepwww.stanford.edu/software/seplib/}.}.
+Generations of SEP students and researchers contributed to
+SEPlib. Most important contributions came from Rob Clayton, Jon
+Claerbout, Dave Hale, Stew Levin, Rick Ottolini, Joe Dellinger, Steve
+Cole, Dave Nichols, Martin Karrenbach, Biondo Biondi, and Bob Clapp.
 
 RSF also borrows ideas from Seismic Unix (SU), a package maintained by John
 Stockwell at the Center for Wave Phenomenon at the Colorado School of Mines
@@ -113,12 +168,14 @@ processing package originally developed by Amoco and released by BP
 System) is also released by BP\footnote{DDS is available at
 \url{http://www.freeusp.org/DDS/}}. The DDS design is closer to RSF.
 
-None of these three packages can be qualified as free software according to
-the \href{http://www.fsf.org/philosophy/free-sw.html}{Free Software
-  Foundation} or as open-source software according to the
-\href{http://www.opensource.org/docs/definition.php}{Open Source Initiative}.
-However, they are available for free in the source form under certain
-conditions. The RSF package is both free and open-source.
+None of these alternative packages can be qualified as free software
+according to the
+\href{http://www.fsf.org/philosophy/free-sw.html}{Free Software
+Foundation} or as open-source software according to the
+\href{http://www.opensource.org/docs/definition.php}{Open Source
+Initiative}.  However, they are available for free in the source form
+under certain conditions. The RSF package is both free and
+open-source.
 
 \section{Other documents}
 
