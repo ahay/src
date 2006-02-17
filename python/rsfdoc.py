@@ -332,7 +332,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl'):
     global comment, param, params, synopsis, stringpar, inpout, version
     if not comment:
-        comment = re.compile(r'\/\*((?:[^*]|\*[^/])+)\*\/')
+        comment = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')
         param = re.compile(r'(?:if\s*\(\!)?sf_get(?P<type>bool|int|float)'
                            '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                            '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'

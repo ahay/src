@@ -1,4 +1,4 @@
-      /*
+/*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
  * the documentation. It authorizes you to use this file for any

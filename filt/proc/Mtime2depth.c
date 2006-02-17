@@ -26,7 +26,7 @@ int main (int argc, char *argv[])
 {
     int nt, nz, nx, iz, it, ix, nw;
     bool slow, twoway, intime;
-    float t0, dt, z0, dz, t, z=0., eps;
+    float t0, dt, z0, dz, t=0., z=0., eps;
     float *time, *depth, *vel, *str;
     fint1 fnt;
     map mp;
@@ -83,10 +83,13 @@ int main (int argc, char *argv[])
     /* stretch regularization */
 
     if (intime) {
+	fnt = NULL;
 	mp = stretch_init (nz, z0, dz, nt, eps, false);
 	str = sf_floatalloc(nt);
     } else {
 	fnt = fint1_init (nw, nt, 0);
+	mp = NULL;
+	str = NULL;
     }
 
     for (ix = 0; ix < nx; ix++) {

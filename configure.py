@@ -9,7 +9,7 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-toheader = re.compile(r'\n\n((?:[^\n]|\n[^\n])+)\n'
+toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
                       '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
 
 def header(target=None,source=None,env=None):
