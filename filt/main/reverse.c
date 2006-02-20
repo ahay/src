@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     dim = sf_filedims(in,n);
-    if (!sf_histint(in,"esize",&esize)) esize=4;
+    esize = sf_esize(in);
     
     if (!sf_getint("which",&which)) which=-1;
     /* Which axis to reverse.
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	if (i < dim2) {
 	    size = n1*n[i];
-	    if (size*esize < (size_t) memsize) {
+	    if (1==n2 && size*esize < (size_t) memsize) {
 		n1=size;
 		dim1=i;
 	    } else {
