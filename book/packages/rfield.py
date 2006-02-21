@@ -261,7 +261,8 @@ def rfield (real_par,grid_par,covar_par):
                n2=%(ny)d d2=%(dy)g o2=%(oy)g
                n3=%(nz)d d3=%(dz)g o3=%(oz)g
                ''' % (grid_par)
-
+               
+    grid_par['string'] = grid_str
 #
 # Scale the orientation vectors.
 #
@@ -374,22 +375,25 @@ def rfield (real_par,grid_par,covar_par):
 #
 # Shift the coordinate system origin to the grid origin.
 #
-# The shift is accomplished by cutting the grid in half and putting
-# the halves back together in the reverse order, along each grid axis.
+# The shift is accomplished along each axis by: (1) cutting the axis in
+# half, (2) inserting an extra dimension of length 2, (3) reversing the
+# extra axis, and (4) returning to the original dimensions.
 #
 
     shift_x = real_par['name']+'shift_x'
     shift_y = real_par['name']+'shift_y'
     shift   = real_par['name']+'shift'
+    
+    grid_par['nxhalf'] = grid_par['nx']/2
+    grid_par['nyhalf'] = grid_par['ny']/2
+    grid_par['nzhalf'] = grid_par['nz']/2
 
     if (grid_par['nx'] > 1):
         Flow (shift_x,covar_taper,
               '''
-              window squeeze=n n1=%d > half_x.rsf &&
-              window squeeze=n f1=%d < $SOURCE | 
-              cat axis=1 half_x.rsf > $TARGET &&
-              rm -f half_x.rsf
-              ''' % (grid_par['nx']/2,grid_par['nx']/2), stdout=0 )
+              put n1=%(nxhalf)d n2=2 n3=%(ny)d n4=%(nz)d |
+              reverse which=2 | put %(string)s n4=1
+              ''' % (grid_par) )
     else:
         Flow (shift_x,covar_taper,
               'cp $SOURCE $TARGET',stdin=0,stdout=0 )
@@ -397,11 +401,9 @@ def rfield (real_par,grid_par,covar_par):
     if (grid_par['ny'] > 1):
         Flow (shift_y,shift_x,
               '''
-              window squeeze=n n2=%d > half_y.rsf &&
-              window squeeze=n f2=%d < $SOURCE | 
-              cat axis=2 half_y.rsf > $TARGET &&
-              rm -f half_y.rsf
-              ''' % (grid_par['ny']/2,grid_par['ny']/2), stdout=0 )
+              put n1=%(nx)d n2=%(nyhalf)d n3=2 n4=%(nz)d |
+              reverse which=4 | put %(string)s n4=1
+              ''' % (grid_par) )
     else:
         Flow (shift_y,shift_x,
               'cp $SOURCE $TARGET',stdin=0,stdout=0 )
@@ -409,11 +411,9 @@ def rfield (real_par,grid_par,covar_par):
     if (grid_par['nz'] > 1):
         Flow (shift,shift_y,
               '''
-              window squeeze=n n3=%d > half_z.rsf &&
-              window squeeze=n f3=%d < $SOURCE | 
-              cat axis=3 half_z.rsf > $TARGET &&
-              rm -f half_z.rsf
-              ''' % (grid_par['nz']/2,grid_par['nz']/2), stdout=0 )
+              put n1=%(nx)d n2=%(ny)d n3=%(nzhalf)d n4=2 |
+              reverse which=8 | put %(string)s n4=1
+              ''' % (grid_par) )
     else:
         Flow (shift,shift_y,
               'cp $SOURCE $TARGET',stdin=0,stdout=0 )
