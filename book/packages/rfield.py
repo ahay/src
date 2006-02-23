@@ -380,49 +380,43 @@ def rfield (real_par,grid_par,covar_par):
 # extra axis, and (4) returning to the original dimensions.
 #
 
-    shift_x = real_par['name']+'shift_x'
-    shift_y = real_par['name']+'shift_y'
-    shift   = real_par['name']+'shift'
+    shift = real_par['name']+'shift'
     
-    grid_par['nxhalf'] = grid_par['nx']/2
-    grid_par['nyhalf'] = grid_par['ny']/2
-    grid_par['nzhalf'] = grid_par['nz']/2
-
     if (grid_par['nx'] > 1):
-        Flow (shift_x,covar_taper,
-              '''
-              put n1=%(nxhalf)d n2=2 n3=%(ny)d n4=%(nz)d |
-              reverse which=2 | put %(string)s n4=1
-              ''' % (grid_par) )
+        grid_par['nx_flip'] = 2
+        grid_par['nx_half'] = grid_par['nx']//2
     else:
-        Flow (shift_x,covar_taper,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
-    
+        grid_par['nx_flip'] = 1
+        grid_par['nx_half'] = grid_par['nx']
+
     if (grid_par['ny'] > 1):
-        Flow (shift_y,shift_x,
-              '''
-              put n1=%(nx)d n2=%(nyhalf)d n3=2 n4=%(nz)d |
-              reverse which=4 | put %(string)s n4=1
-              ''' % (grid_par) )
+        grid_par['ny_flip'] = 2
+        grid_par['ny_half'] = grid_par['ny']//2
     else:
-        Flow (shift_y,shift_x,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
-    
+        grid_par['ny_flip'] = 1
+        grid_par['ny_half'] = grid_par['ny']
+
     if (grid_par['nz'] > 1):
-        Flow (shift,shift_y,
-              '''
-              put n1=%(nx)d n2=%(ny)d n3=%(nzhalf)d n4=2 |
-              reverse which=8 | put %(string)s n4=1
-              ''' % (grid_par) )
+        grid_par['nz_flip'] = 2
+        grid_par['nz_half'] = grid_par['nz']//2
     else:
-        Flow (shift,shift_y,
-              'cp $SOURCE $TARGET',stdin=0,stdout=0 )
+        grid_par['nz_flip'] = 1
+        grid_par['nz_half'] = grid_par['nz']
+
+    Flow (shift,covar_taper,
+          '''
+          put n1=%(nx_half)d n2=%(nx_flip)d 
+              n3=%(ny_half)d n4=%(ny_flip)d 
+              n5=%(nz_half)d n6=%(nz_flip)d |
+          reverse which=42 | 
+          put %(string)s n4=1 n5=1 n6=1
+          ''' % (grid_par) )
 
 #
 # Make uncorrelated Gaussian random noise with unit variance.
 #
 
-    noise   = real_par['name']+'noise'
+    noise = real_par['name']+'noise'
     
     Flow (noise,covar,
           '''
