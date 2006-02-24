@@ -19,10 +19,10 @@ spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
 '''
 
 test_matlab = '''
-spike n1=1000 n2=100 n3=10 nsp=1 k1=500 > spike.rsf &&
-MATLABPATH=%s %s -nosplash -nojvm -r "clip('spike.rsf','out.rsf',0.5); quit" &&
-attr < out.rsf > $TARGET &&
-rm spike.rsf out.rsf
+spike n1=1000 n2=100 n3=10 nsp=1 k1=500 > ${TARGETS[1]} &&
+MATLABPATH=%s %s -nosplash -nojvm -nodesktop
+-r clip('${TARGETS[1]}','${TARGETS[2]}',0.5);quit &&
+attr < ${TARGETS[2]} > ${TARGETS[0]}
 '''
 
 ############################################################################
@@ -92,7 +92,7 @@ if 'python' in api:
 matlab = WhereIs('matlab')
 
 if matlab and 'matlab' in api:
-    mattest = proj.Flow('mat','clip.m',
+    mattest = proj.Flow('mat spike out','clip.m',
                         test_matlab % (libdir,matlab),
                         suffix='.attr',stdin=0,stdout=-1)
     Default(mattest)

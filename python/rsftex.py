@@ -669,7 +669,7 @@ class TeXPaper(Environment):
             docdir = os.path.join(self.docdir,dir)
             dochtml = os.path.join(docdir,'index.html')
             self.Command(dochtml,html,
-                         'cd $SOURCE.dir && cp -r * $TARGET.dir && cd ..')
+                         'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
             self.Alias(paper+'.install',dochtml)
     def End(self,paper='paper',**kw):
          if os.path.isfile(paper+'.tex'):
