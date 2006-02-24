@@ -92,7 +92,11 @@ Example configuration for \texttt{csh} and \texttt{tcsh}:
 \begin{verbatim}
 setenv RSFROOT /usr/local/rsf
 set path = ($path $RSFROOT/bin)
-setenv PYTHONPATH $RSFROOT/lib
+if ($?PYTHONPATH) then
+   setenv PYTHONPATH ${PYTHONPATH}:$RSFROOT/lib
+else
+   setenv PYTHONPATH $RSFROOT/lib
+endif
 setenv DATAPATH /var/tmp/
 \end{verbatim}
 
@@ -100,6 +104,7 @@ Example configuration for \texttt{sh} and \texttt{bash}:
 \begin{verbatim}
 export RSFROOT=/usr/local/rsf
 export PATH=$PATH:$RSFROOT/bin
+
 export PYTHONPATH=$RSFROOT/lib
 export DATAPATH=/var/tmp/
 \end{verbatim}
