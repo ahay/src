@@ -100,12 +100,15 @@ endif
 setenv DATAPATH /var/tmp/
 \end{verbatim}
 
-Example configuration for \texttt{sh} and \texttt{bash}:
+Example configuration for \texttt{bash}:
 \begin{verbatim}
 export RSFROOT=/usr/local/rsf
 export PATH=$PATH:$RSFROOT/bin
-
-export PYTHONPATH=$RSFROOT/lib
+if [ -n "$PYTHONPATH" ]; then
+   export PYTHONPATH=${PYTHONPATH}:$RSFROOT/lib
+else
+   export PYTHONPATH=$RSFROOT/lib
+fi
 export DATAPATH=/var/tmp/
 \end{verbatim}
 
