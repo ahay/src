@@ -1,5 +1,5 @@
 #
-# Test the random field rsf/scons/python module rfield.py
+# Fast Gaussian random field generation with FFTs
 #
 # James W. Jennings Jr.
 # Research Scientist
