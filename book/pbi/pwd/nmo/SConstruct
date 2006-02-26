@@ -73,7 +73,7 @@ Plot('svtr',
      '''
      envelope |
      grey allpos=y label2="Velocity (m/s)"
-     title="Oriented Velocity Scan"
+     title="Oriented Velocity Map"
      ''')
 
 Flow('sdipt','sdip100','deriv')
@@ -87,7 +87,7 @@ Plot('svin',
      '''
      envelope |
      grey allpos=y label2="Interval Velocity (m/s)"
-     title="Oriented Velocity Scan" min2=2000 max2=3000
+     title="Oriented Velocity Map" min2=2000 max2=3000
      ''')
 Result('svin','svin vint','Overlay')
 

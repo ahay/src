@@ -78,7 +78,7 @@ Plot('vtr',
      '''
      envelope | 
      grey allpos=y label2="Velocity (km/s)"
-     title="Oriented Velocity Scan" 
+     title="Oriented Velocity Map" 
      ''')
 
 Flow('vsc','cdp',
@@ -106,7 +106,7 @@ Result('bvint','vint',
      '''
      envelope | 
      grey allpos=y label2="Interval Velocity (km/s)"
-     title="Oriented Velocity Scan" 
+     title="Oriented Velocity Map" 
      ''')
 
 Flow('dips0','dip3','spray axis=3 n=250 d=0.0335 o=7.705')
