@@ -41,12 +41,29 @@ def variogram (par):
 # Input parameter explanations.
 #
 
+#
 # The input parameters are loaded into a dictionary 'par':
 #
 # par = {   'ind', 'val':       Indicator and data filenames
 #           'nx', 'ny', 'nz':   Array sizes
 #           'dx', 'dy', 'dz':   Cell sizes
 #       }
+#
+
+#
+# Value and indicator data files: par['ind','val']
+#
+# This function will compute a variogram grid from the data values
+# stored in the file named in par['val'].  The data must be stored in a
+# regular 1, 2, or 3 dimensional array with array and cell sizes
+# specified elsewhere in the dictionary "par" (see below).  However,
+# missing values are allowed.
+#
+# The array named in par['ind'] should contain only zeros and ones
+# indicating the absence (zero) or presence (one) of data in the
+# corresponding value array.  The value array should have zero values
+# in locations where data is missing.  The value and indicator arrays
+# should share the same dimensions.
 #
 
 #
@@ -160,11 +177,11 @@ def variogram (par):
                     put n1=%(nx)d n2=%(nx_flip)d
                         n3=%(ny)d n4=%(ny_flip)d
                         n5=%(nz)d n6=%(nz_flip)d |
-                    reverse which=42 | 
+                    reverse which=42 opt=n | 
                     put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
                         n4=1          n5=1          n6=1
                     ''' % par
-                    
+    
     window_rule =   '''
                     window f1=%(nx_half)d n1=%(nx_aug)d
                            f2=%(ny_half)d n2=%(ny_aug)d

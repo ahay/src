@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     sf_init (argc,argv);
     want = sf_getstring("want");
     /* 'all' (default), 'rms', 'mean', 'norm', 'max', 'min', 'norm', 'short' 
-       mode='short' displays a short one-line version
+        want='short' displays a short one-line version
      */ 
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
     
