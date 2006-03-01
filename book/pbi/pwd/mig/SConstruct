@@ -2,7 +2,14 @@ from rsfproj import *
 import pmig
 
 Fetch('beinew.HH','midpts')
-Flow('bei','beinew.HH','dd form=native')
+Flow('bei','beinew.HH',
+     '''
+     dd form=native |
+     put
+     label1=\'"Time (s)"\'
+     label2=\'"Offset (km)"\'
+     label3=\'"Midpoint (km)"\'
+     ''')
 
 Flow('cdp','bei','window n3=1')
 Plot('cdp','grey title=Input')

@@ -197,7 +197,7 @@ int main(int argc, char* argv[])
 	    for (i=0; i < n2front; i++) {
 		i2 = n2*i/(float) n2front;
 		for (j=0; j < n1front; j++) {
-		    i1 = n1*(n1front-j)/(float) n1front;
+		    i1 = (n1-1)*(n1front-j)/(float) n1front;
 		    buf[i][j] = front[i2][i1];
 		}
 	    }
@@ -223,13 +223,13 @@ int main(int argc, char* argv[])
 		i3 = n3*(i-n2front)/(float) (n2pix-n2front);
 		if (flat) {
 		    for (j=0; j < n1front; j++) {
-			i1 = n1*(n1front-j)/(float) n1front;
+			i1 = (n1-1)*(n1front-j)/(float) n1front;
 			buf[i][j] = side[i3][i1];
 		    }
 		} else {
 		    j0 = (i-n2front)*(n1pix-n1front)/(float) (n2pix-n2front);
 		    for (j=j0; j < n1pix; j++) {
-			i1 = n1*(n1front+j0-j)/(float) n1front;
+			i1 = (n1-1)*(n1front+j0-j)/(float) n1front;
 			if (i1 >= 0)
 			    buf[i][j] = side[i3][i1];
 		    }

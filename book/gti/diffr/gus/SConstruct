@@ -1,37 +1,104 @@
 from rsfproj import *
 
 Fetch('midpts.hh','midpts')
-Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
 
-Flow('rite','bei','window n2=5 | pad beg2=2')
+dh = 0.067
+
+Flow('bei','midpts.hh',
+     '''
+     dd form=native |
+     put d2=%g o2=0.132 
+     ''' % dh)
+
+ref = 10
+
+Flow('rite','bei','window n2=%d | pad beg2=2' % ref)
 Flow('cent','rite',
      'window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
 
 Flow('mask',None,
      '''
-     spike n1=13 k1=6 l1=8 |
+     spike n1=%d k1=%d l1=%d |
      math output=1-input |
      spray axis=1 n=1000 d=0.004  o=0 |
      spray axis=3 n=250  d=0.0335 o=7.705
-     ''')
+     ''' % (2*ref+3,ref+1,ref+3))
 
 Flow('dip1','cent',
-     'math output="x2*%g/(x1+0.001)" ' % (4*0.067/(0.004*1.5*1.5)))
+     'math output="x2*%g/(x1+0.001)" ' % (4*dh/(0.004*2*2)))
 
 Flow('dip2','cent dip1 mask',
-     'twodip2 eps=100 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[1]} q0=0')
+     '''
+     dip rect1=10 rect2=3 rect3=3
+     idip=${SOURCES[1]} mask=${SOURCES[2]} n4=0 |
+     spray axis=3 n=1
+     ''')
 
 Flow('intp','cent dip2 mask',
     '''
      planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} prec=0 niter=1000
      ''')
 
-Flow('midl','intp','window n2=3 f2=3')
+Flow('midl','intp','window n2=3 f2=%d' % ref)
 
-Flow('flip','bei midl',
-     '''
-     reverse which=2 opt=n |
-     cat axis=2 ${SOURCES[1]} ${SOURCES[0]}
-     ''')
+#Flow('flip','bei midl',
+#     '''
+#     reverse which=2 opt=n |
+#     cat axis=2 ${SOURCES[1]} ${SOURCES[0]}
+#     ''')
+
+Flow('shot','flip','mutter half=y v0=1.45 | cmp2shot')
+
+Flow('shot0','bei','mutter half=y v0=1.45 | cmp2shot | window n3=1 min3=12')
+
+Plot('shot0','grey title="Original Shot" ')
+
+Flow('shot1','shot','window n3=1 min3=12')
+
+Plot('shot1','grey title="Completed Shot" ')
+
+Result('shot','shot0 shot1','SideBySideAniso')
+
+Flow('rad1','shot1','radon adj=y inv=y spk=n p0=-1.5 np=301 dp=0.01')
+
+Plot('rad1','grey label2="Slope (s/km)" title="Radon Transform" ')
+
+Flow('rad0','rad1','radon adj=n nx=102 dx=0.0335 ox=-1.673')
+
+Plot('rad0','grey title="Shot Reconstruction" ')
+
+Result('rad','rad1 rad0','SideBySideAniso')
+
+Flow('aal1','shot1','slant adj=y p0=-1.5 np=301 dp=0.01')
+
+Plot('aal1','grey label2="Slope (s/km)" title="Anti-aliased Radon Transform" ')
+
+Flow('aal0','aal1','radon adj=n nx=102 dx=0.0335 ox=-1.673')
+
+Plot('aal0','grey title="Shot Reconstruction" ')
+
+Result('aal','aal1 aal0','SideBySideAniso')
+
+Flow('rad','shot','radon adj=y inv=y spk=n p0=-1.5 np=301 dp=0.01')
+
+for p in (-1,0,1):
+    plane = 'plane%d' % p
+
+    pg = 0.5*p
+    Flow(plane,'rad','window n2=1 min2=%g' % pg)
+    Plot(plane,'grey title="Plane-Wave Section (p=%g)" ' % pg)
+
+    slp = 'slp%d' % p
+    Flow(slp,plane,'dip rect1=40 rect2=10')
+
+    pwd = 'pwd%d' % p
+    Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
+    Plot(pwd,'grey title="Diffractions (p=%g)" ' % pg)
+
+    Result(plane,[plane,pwd],'SideBySideAniso')
+
+Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,100')
+Flow('dip','pat','dip rect1=40 rect2=10 rect3=10 n4=0 verb=y')
+Flow('dips','dip','patch inv=y weight=y')
 
 End()

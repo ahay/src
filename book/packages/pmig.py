@@ -4,13 +4,13 @@ from rsfproj import *
 def pmig(data,hdip,ydip,frame1=1,frame2=1,frame3=1):
 
     def grey3(title,color='I'):
-        return '''byte | transp plane=23 | grey3 title="%s"
+        return '''byte bar=bar.rsf | transp plane=23 | grey3 title="%s"
         frame1=%d frame2=%d frame3=%d color=%s flat=y point2=0.7
         ''' % (title,frame1,frame2,frame3,color)
 
     Result(data,grey3('Data'))
-    Result(hdip,grey3('Offset Slope','j'))
-    Result(ydip,grey3('Midpoint Slope','j'))
+    Result(hdip,grey3('Offset Slope','j')   + ' scalebar=y bartype=v')
+    Result(ydip,grey3('Midpoint Slope','j') + ' scalebar=y bartype=v')
 
     nmo = data+'-nmo'
     vnmo = data+'-vnmo'

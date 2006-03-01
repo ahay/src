@@ -7,7 +7,15 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 Fetch('cmp.hh','acig',private)
 Flow('cmp','cmp.hh','dd form=native | tpow tpow=2 | mutter v0=1.4 half=n')
-Plot('cmp','grey title=Data clip=228')
+
+
+def grey(title,other=''):
+    return '''
+    grey title="%s" labelsz=10 titlesz=12
+    label1="Time (s)" label2="Offset (km)" %s
+    ''' % (title,other)
+
+Plot('cmp',grey('(a) Data','clip=228'))
 
 # Playing with amplitude gains
 ##############################
@@ -49,7 +57,7 @@ Plot('mis2','grey title="Near Offsets Interpolated" ')
 Flow('ccmp','mis2','pad n1=2048 | fft1 | fft3')
 Flow('mult','ccmp',
      'add mode=p $SOURCE | fft3 inv=y | fft1 inv=y | window n1=1000')
-Plot('mult','window f2=6 | grey title="SRME-predicted Multiples" ')
+Plot('mult','window f2=6 | ' + grey('(b) SRME-predicted Multiples'))
 
 # Mask the important part
 #########################
@@ -71,17 +79,13 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
      ''')
 
 Plot('mdip1','mdip2',
-     '''
-     window n3=1 f2=6 |
-     grey color=j title="Signal Slope"
-     scalebar=y allpos=y clip=5 minval=0 maxval=6
-     ''')
+     'window n3=1 f2=6 | ' + \
+     grey('(c) Signal Slope',
+          'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 Plot('mdip2','mdip2',
-     '''
-     window f3=1 f2=6 |
-     grey color=j title="Noise Slope"
-     scalebar=y allpos=y clip=5 minval=0 maxval=6
-     ''')
+     'window f3=1 f2=6 | ' + \
+     grey('(d) Noise Slope',
+          'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 
 Result('cmp','cmp mult mdip1 mdip2','SideBySideAniso')
 
@@ -90,19 +94,17 @@ Result('cmp','cmp mult mdip1 mdip2','SideBySideAniso')
 Flow('comp','cmp2 mdip2','pwdsigk dips=${SOURCES[1]} verb=y niter=10000 eps=0.01')
 
 Flow('nois','comp mask','window f3=1 | add mode=p ${SOURCES[1]}')
-Plot('nois','window f2=6 | grey title="Estimated Noise" clip=228')
+Plot('nois','window f2=6 | ' + grey('(b) Estimated Noise','clip=228'))
 
 Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
-Plot('sign','window f2=6 | grey title="Estimated Signal" clip=228')
+Plot('sign','window f2=6 | ' + grey('(a) Estimated Signal','clip=228'))
 
 # Velocity scans before and after
 #################################
 for dat in ('cmp','sign'):
     Flow('v'+dat,dat,'vscan semblance=y v0=1 nv=100 dv=0.02 half=n')
-    Plot('v'+dat,'''
-    grey color=j allpos=y label1="Time (s)" label2="Velocity (km/s)"
-    title="Velocity Scan (%s)"
-    ''' % ('Data','Estimated Signal')[dat=='sign'])
+    Plot('v'+dat,grey('(%s) Velocity Scan (%s)' % (('c','Data'),('d','Estimated Signal'))[dat=='sign'],
+                      'label2="Velocity (km/s)" color=j allpos=y'))
 
 # Final result
 ##############
