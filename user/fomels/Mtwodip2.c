@@ -12,7 +12,7 @@ Takes: < data.rsf > dip.rsf
 
 int main (int argc, char *argv[])
 {
-    int n1,n2, n12, niter, nw, nj1, nj2, i;
+    int n1,n2, n12, n3, niter, nw, nj1, nj2, i, i3;
     float eps, lam, p0, q0, *u, **p;
     bool verb, sign, gauss, both, *m;
     sf_file in, out, mask, dip1, dip2;
@@ -26,8 +26,10 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("Need n2= in input");
     n12 = n1*n2;
+    n3 = sf_leftsize(in,2);
     
     sf_putint(out,"n3",2);
+    sf_putint(out,"n4",n3);
 
     if (!sf_getint("niter",&niter)) niter=5;
     /* number of iterations */
@@ -63,6 +65,9 @@ int main (int argc, char *argv[])
     u = sf_floatalloc(n12);
     p = sf_floatalloc2(n12,2);
 
+
+    /* allocate dips */
+
     if (NULL != sf_getstring("dip1")) {
 	p0 = 1.;
 	dip1 = sf_input("dip1");
@@ -80,49 +85,55 @@ int main (int argc, char *argv[])
 	/* initial second dip */
 	dip2 = NULL;
     }
-
-    /* initialize dips */
-    if (NULL == dip1) {
-	for(i=0; i < n12; i++) {
-	    p[0][i] = p0;
-	}
-    } else {
-	sf_floatread(p[0],n12,dip1);
-    }
-    if (NULL == dip2) {
-	for(i=0; i < n12; i++) {
-	    p[1][i] = q0;
-	}
-    } else {
-	sf_floatread(p[1],n12,dip2);
-    }
+ 
   
-    /* initialize mask */
+    /* allocate mask */
     if (NULL != sf_getstring("mask")) {
 	m = sf_boolalloc(n12);
-
 	mask = sf_input("mask");
-	sf_floatread(u,n12,mask);
-	sf_fileclose(mask);
-
-	mask6 (nw, nj1, nj2, n1, n2, u, m);
     } else {
+	mask = NULL;
 	m = NULL;
     }
 
-    /* read data */
-    sf_floatread(u,n12,in);
+    for (i3=0; i3 < n3; i3++) {
+	/* initialize dips */
+	if (NULL == dip1) {
+	    for(i=0; i < n12; i++) {
+		p[0][i] = p0;
+	    }
+	} else {
+	    sf_floatread(p[0],n12,dip1);
+	}
+	if (NULL == dip2) {
+	    for(i=0; i < n12; i++) {
+		p[1][i] = q0;
+	    }
+	} else {
+	    sf_floatread(p[1],n12,dip2);
+	}
 
-    /* estimate dip */
-    if (both) {
-	twodip2(niter, nw, nj1, nj2, verb, u, p, m);
-    } else {
-	otherdip2(niter, nw, nj1, nj2, verb, u, p, m);
-    }
+	/* initialize mask */
+	if (NULL != mask) {
+	    sf_floatread(u,n12,mask);
+	    mask6 (nw, nj1, nj2, n1, n2, u, m);
+	}
 
-    /* write dips */
-    sf_floatwrite(p[0],n12*2,out);
-     
+	/* read data */
+	sf_floatread(u,n12,in);
+
+
+	/* estimate dip */
+	if (both) {
+	    twodip2(niter, nw, nj1, nj2, verb, u, p, m);
+	} else {
+	    otherdip2(niter, nw, nj1, nj2, verb, u, p, m);
+	}
+
+	/* write dips */
+	sf_floatwrite(p[0],n12*2,out);
+    }     
+
     exit (0);
 }
 

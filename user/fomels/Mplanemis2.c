@@ -25,7 +25,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n12, np;
+    int i, niter, nw, n1, n2, n12, np, i3, n3;
     float *mm, *dd, **pp, **qq;
     bool *known, verb, prec;
     sf_file in, out, dip, mask;
@@ -38,6 +38,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n12 = n1*n2;
+    n3 = sf_leftsize(in,2);
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -56,11 +57,9 @@ int main(int argc, char* argv[])
     if (!sf_histint(dip,"n3",&np)) np=1;
 
     pp = sf_floatalloc2(n1,n2);
-    sf_floatread(pp[0],n12,dip);
 
     if (np > 1) {
 	qq = sf_floatalloc2(n1,n2);
-	sf_floatread(qq[0],n12,dip);
     } else {
 	qq = NULL;
     }
@@ -68,50 +67,77 @@ int main(int argc, char* argv[])
     mm = sf_floatalloc(n12);
     dd = sf_floatalloc(n12);
     known = sf_boolalloc(n12);
-
-    sf_floatread(mm,n12,in);
     
     if (NULL != sf_getstring ("mask")) {
 	mask = sf_input("mask");
-	sf_floatread(dd,n12,mask);
-
-	for (i=0; i < n12; i++) {
-	    known[i] = (dd[i] != 0.);
-	    dd[i] = 0.;
-	}
     } else {
-	for (i=0; i < n12; i++) {
-	    known[i] = (mm[i] != 0.);
-	    dd[i] = 0.;
-	}
+	mask = NULL;
     }
 
     if (NULL != qq) {
 	if (prec) {
 	    predict2_init(n1,n2,0.0001,pp,qq);
 	    sf_mask_init(known);
-	    sf_solver_prec(sf_mask_lop, sf_cgstep, predict2_lop, n12, n12, n12, 
-			   mm, mm, niter, 0.,"verb", verb,"end");
 	} else {
 	    twoplane2_init(nw, 1,1, n1,n2, pp, qq);
-	    sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		      "known", known, "x0", mm, "verb", verb, "end");
 	}
     } else {
 	if (prec) {
 	    predict_init(n1,n2,0.0001,1);
 	    predict_set(pp);
 	    sf_mask_init(known);
-	    sf_solver_prec(sf_mask_lop, sf_cgstep, predict_lop, n12, n12, n12, 
-			   mm, mm, niter, 0.,"verb", verb,"end");
 	} else {
 	    allpass22_init(allpass2_init(nw, 1, n1,n2, pp));
-	    sf_solver(allpass21_lop, sf_cgstep, n12, n12, mm, dd, niter,
-		      "known", known, "x0", mm, "verb", verb, "end");
 	}
     }
 
-    sf_floatwrite (mm,n12,out);
+    for (i3=0; i3 < n3; i3++) {
+	sf_warning("slice %d of %d",i3+1,n3);
+
+	sf_floatread(mm,n12,in);
+
+	if (NULL != mask) {
+	    sf_floatread(dd,n12,mask);
+
+	    for (i=0; i < n12; i++) {
+		known[i] = (dd[i] != 0.);
+		dd[i] = 0.;
+	    }
+	} else {
+	    for (i=0; i < n12; i++) {
+		known[i] = (mm[i] != 0.);
+		dd[i] = 0.;
+	    }
+	}
+
+	sf_floatread(pp[0],n12,dip);
+
+	if (NULL != qq) {
+	    sf_floatread(qq[0],n12,dip);
+
+	    if (prec) {
+		sf_solver_prec(sf_mask_lop, sf_cgstep, predict2_lop, 
+			       n12, n12, n12, 
+			       mm, mm, niter, 0.,"verb", verb,"end");
+	    } else {
+		sf_solver(twoplane2_lop, sf_cgstep, n12, n12, mm, dd, niter,
+			  "known", known, "x0", mm, "verb", verb, "end");
+	    }
+	} else {
+	    if (prec) {
+		sf_solver_prec(sf_mask_lop, sf_cgstep, predict_lop, 
+			       n12, n12, n12, 
+			       mm, mm, niter, 0.,"verb", verb,"end");
+	    } else {
+		sf_solver(allpass21_lop, sf_cgstep, n12, n12, mm, dd, niter,
+			  "known", known, "x0", mm, "verb", verb, "end");
+	    }
+	}
+	sf_cgstep_close();
+
+	sf_floatwrite (mm,n12,out);
+    }
+	
 
     exit(0);
 }

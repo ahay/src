@@ -1,0 +1,37 @@
+from rsfproj import *
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+Flow('rite','bei','window n2=5 | pad beg2=2')
+Flow('cent','rite',
+     'window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
+
+Flow('mask',None,
+     '''
+     spike n1=13 k1=6 l1=8 |
+     math output=1-input |
+     spray axis=1 n=1000 d=0.004  o=0 |
+     spray axis=3 n=250  d=0.0335 o=7.705
+     ''')
+
+Flow('dip1','cent',
+     'math output="x2*%g/(x1+0.001)" ' % (4*0.067/(0.004*1.5*1.5)))
+
+Flow('dip2','cent dip1 mask',
+     'twodip2 eps=100 lam=10 dip1=${SOURCES[1]} mask=${SOURCES[1]} q0=0')
+
+Flow('intp','cent dip2 mask',
+    '''
+     planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} prec=0 niter=1000
+     ''')
+
+Flow('midl','intp','window n2=3 f2=3')
+
+Flow('flip','bei midl',
+     '''
+     reverse which=2 opt=n |
+     cat axis=2 ${SOURCES[1]} ${SOURCES[0]}
+     ''')
+
+End()
