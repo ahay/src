@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
     int nin, i, j, k, n[SF_MAX_DIM], ii[SF_MAX_DIM], dim, nbuf, nsiz;
     size_t len;
     sf_file *in, out;
-    char *eq, *output, *key, *arg, xkey[4], *ctype;
+    char *eq, *output, *key, *arg, xkey[8], *ctype, *label;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
     float complex **cbuf, **cst;
     sf_datatype type;
@@ -79,7 +79,11 @@ int main (int argc, char* argv[])
 	    0 == strncmp(arg,"type",4)   ||
 	    (eq-arg == 2 &&
 	     (arg[0] == 'n' || arg[0] == 'd' || arg[0] == 'o') &&
-	     isdigit(arg[1]))) continue; /* not a file */
+	     isdigit(arg[1])) ||
+	    (eq-arg == 6 &&
+	     0 == strncmp(arg,"label",5) &&
+	     isdigit(arg[5]))
+	    ) continue; /* not a file */
 	
 	len = (size_t) (eq-arg);
 	key = sf_charalloc(len+1);
@@ -126,6 +130,11 @@ int main (int argc, char* argv[])
 	    (void) snprintf(xkey,3,"o%d",i+1);
 	    if (!sf_getfloat(xkey,o+i)) o[i] = 0.;
 	    sf_putfloat(out,xkey,o[i]);
+	    (void) snprintf(xkey,7,"label%d",i+1);
+	    if (NULL != (label = sf_getstring(xkey))) {
+		sf_putstring(out,xkey,label);
+		free(label);
+	    }
 	}
     }
 

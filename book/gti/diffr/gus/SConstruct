@@ -101,4 +101,80 @@ Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,100')
 Flow('dip','pat','dip rect1=40 rect2=10 rect3=10 n4=0 verb=y')
 Flow('dips','dip','patch inv=y weight=y')
 
+Flow('pwd','rad dips',
+     '''
+     transp memsize=500 plane=23 |
+     pwd dip=${SOURCES[1]} n4=0 |
+     transp memsize=500 plane=23
+     '''
+     )
+
+Flow('sbak','pwd','radon adj=n nx=102 dx=0.0335 ox=-1.673')
+
+Flow('shot2','sbak','window n3=1 min3=12')
+
+Plot('shot2','grey title="Shot Diffractions" ')
+
+Result('sbak','shot1 shot2','SideBySideAniso')
+
+Flow('cbak','sbak',
+     '''
+     shot2cmp |
+     window n2=24 min2=0.132 n3=250 min3=7.705 |
+     mutter half=y v0=1.45
+     ''')
+
+Flow('scan','cbak','vscan semblance=y v0=1.4 nv=48 dv=0.025')
+Flow('pick','scan','pick rect1=40 rect2=10 | window')
+
+Result('pick',
+       '''
+       grey title="Stacking Velocity for Diffractions"
+       color=j scalebar=y bias=1.5 allpos=y
+       ''')
+
+Flow('nmo','cbak pick','nmo velocity=${SOURCES[1]}')
+Flow('stk','nmo','stack')
+
+Result('stk','grey title="Diffractions NMO Stack" ')
+
+Flow('stk2','nmo',
+     '''
+     window f1=15 | logstretch nout=2048 |
+     fft1 | transp plane=13 |
+     finstack |
+     transp |
+     fft1 inv=y | window n1=2048 |
+     logstretch inv=y | pad beg1=15
+     ''')
+
+Result('stk2','grey title="Diffractions DMO Stack" ')
+
+Flow('vlf','stk2',
+     '''
+     pad n2=521 | cosft sign2=1 | 
+     stolt vel=1.4 nf=4 | spray axis=2 n=1 o=0 d=1 |
+     fourvc nv=48 dv=0.025 v0=1.4 |
+     cosft sign3=-1 |
+     window n3=250
+     ''')
+
+Flow('foc','vlf',
+     '''
+     focus rect1=80 rect3=20 |
+     math output="1/abs(input)" 
+     ''')
+
+Flow('pik','foc','pick rect1=40 rect2=10 | window')
+
+Result('pik',
+       '''
+       grey title="Migration Velocity for Diffractions"
+       color=j scalebar=y bias=1.5 allpos=y
+       ''')
+
+Flow('slc','vlf pik','slice pick=${SOURCES[1]} | window')
+
+Result('slc','grey title="Migrated Stack" ')
+
 End()

@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3, m1, m2, m3, n123, nw, nj1, nj2;
+    int n1,n2,n3,n4, m1, m2, m3, n123, nw, nj1, nj2;
     float *u1, *u2, *p;
     sf_file in, out, dip;
     allpass ap;
@@ -48,8 +48,14 @@ int main (int argc, char *argv[])
     if (1 != n3 && (!sf_histint(dip,"n3",&m3) || m3 != n3)) 
 	sf_error("Need n3=%d in dip",n3);
 
-    /* two dips output in 3-D */
-    if (n3 > 1) sf_putint(out,"n4",2); 
+    if (1 == n3) {
+	n4=0;
+    } else {
+	if (!sf_getint("n4",&n4)) n4=2;
+	/* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */ 
+	if (n4 > 2) n4=2;
+	if (2==n4) sf_putint(out,"n4",n4);
+    }
 
     if (!sf_getint("order",&nw)) nw=1;
     /* [1,2,3] accuracy */
@@ -67,22 +73,24 @@ int main (int argc, char *argv[])
     /* read data */
     sf_floatread(u1,n123,in);
 
-    /* read t-x dip */
-    sf_floatread(p,n123,dip);
+    if (1 != n4) { /* in-line */
+	/* read t-x dip */
+	sf_floatread(p,n123,dip);
 
-    ap = allpass_init (nw,nj1,n1,n2,n3,p);
+	ap = allpass_init (nw,nj1,n1,n2,n3,p);
   
-    /* apply */
-    allpass1(false, ap, u1, u2);
+	/* apply */
+	allpass1(false, ap, u1, u2);
 
-    /* write t-x destruction */
-    sf_floatwrite(u2,n123,out);
+	/* write t-x destruction */
+	sf_floatwrite(u2,n123,out);
+    }
 
-    if (n3 > 1) { /* if 3-D input */
+    if (0 != n4) { /* cross-line */
 	/* read t-y dip */
 	sf_floatread(p,n123,dip);
 	
-	if (nj2 != nj1) ap = allpass_init (nw,nj2,n1,n2,n3,p);
+	ap = allpass_init (nw,nj2,n1,n2,n3,p);
   
 	/* apply */
 	allpass2(false, ap, u1, u2);
