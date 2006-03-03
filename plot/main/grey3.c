@@ -263,7 +263,7 @@ int main(int argc, char* argv[])
 		for (i=i0; i < i0+n2front; i++) {
 		    i2 = n2*(i-i0)/(float) n2front;
 		    if (i2 < n2)
-			buf[i][j] = top[i2][i3];
+			    buf[i][j] = top[i2][i3];
 		}
 	    }
 	}
