@@ -9,4 +9,23 @@ segy = 'TAD162.SGM'
 
 Fetch(segy,'calhoun',private)
 
+Flow('cal ./bcal ./hcal',segy,
+     '''
+     segyread tape=$SOURCE read=data
+     bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Result('cal','grey title="Original Image" ')
+
+Flow('cdip','cal','twodip2 eps=100 lam=10 p0=0 q0=1')
+
+Flow('cdip1','cdip','window n3=1')
+Flow('cdip2','cdip','window f3=1')
+
+Result('cdip1','grey title="First Dip" scalebar=y color=j')
+Result('cdip2','grey title="Second Dip" scalebar=y color=j')
+
+Flow('cln','cal cdip','pwdsigk dips=${SOURCES[1]} verb=y niter=1000')
+
+
 End()

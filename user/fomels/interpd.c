@@ -20,8 +20,6 @@
 #include <rsf.h>
 
 #include "interpd.h"
-#include "bandpass.h"
-#include "burg.h"
 #include "pwd.h"
 
 static int n1, nb;
@@ -43,7 +41,6 @@ void interp_init (int n   /* trace length */,
     slv = sf_banded_init (n1, nb);
     offd = sf_floatalloc2 (n1,nb);
 
-    bandpass_init();
     w1 = pwd_init (n1, nw);
     w2 = pwd_init (n1, nw);
 }
@@ -56,7 +53,6 @@ void interp_close (void)
     free (offd);
     pwd_close (w1);
     pwd_close (w2);
-    bandpass_close ();
 }
 
 void interp2(int n2      /* number of traces */, 
@@ -66,16 +62,22 @@ void interp2(int n2      /* number of traces */,
 /*< interpolate >*/
 {
     int i1, i2;
-    float *diag, a;
+    float *diag;
 
     for (i2=0; i2 < n2-1; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    out[2*i2][i1] = in[i2][i1];
-	}
 	diag = out[2*i2+1];
 
-	a = pef_burg2(n1,2,in+i2);
-	pef_define (n1, a, eps, diag, offd);
+	for (i1=0; i1 < n1; i1++) {
+	    out[2*i2][i1] = in[i2][i1];
+
+	    diag[i1] = 6.*eps;
+	    offd[0][i1] = -4.*eps;
+	    offd[1][i1] = eps;
+	}
+
+	diag[0] = diag[n1-1] = 1.+eps;
+	diag[1] = diag[n1-2] = 1.+5.*eps;
+	offd[0][0] = offd[0][n1-2] = -2.*eps;
 
 	pwd_define (true,  w1, pp[i2  ], diag, offd);
 	pwd_define (false, w2, pp[i2+1], diag, offd);
@@ -88,11 +90,9 @@ void interp2(int n2      /* number of traces */,
 	    diag[i1] = offd[0][i1] + offd[1][i1];
 	}
 
-	sf_banded_solve (slv, diag);
-	bandpass (n1, diag); 
+	sf_banded_solve (slv, diag);	
     }
     for (i1=0; i1 < n1; i1++) {
 	out[2*n2-2][i1] = in[n2-1][i1];
     }
 }
-

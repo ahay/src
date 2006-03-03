@@ -1,0 +1,60 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+su = 'Oseberg_cmp.su'
+
+Fetch(su,'total',private)
+
+Flow('ose hose',su,
+     '''
+     segyread tape=$SOURCE su=y tfile=${TARGETS[1]} endian=0
+     ''',stdin=0)
+
+Flow('obin mask','ose','intbin xk=cdpt yk=cdp mask=${TARGETS[1]}')
+
+Result('onof','obin','window n2=1 | grey title="Near Offset" ')
+
+Flow('off','hose',
+     '''
+     dd type=float |
+     headermath output="offset/1000" |
+     intbin head=$SOURCE xk=cdpt yk=cdp
+     ''')
+
+Flow('oscn','obin off mask',
+     '''
+     vscan offset=${SOURCES[1]} mask=${SOURCES[2]}
+     semblance=y half=n v0=1.4 dv=0.02 nv=80
+     ''')
+
+Flow('opik','oscn',
+     'mutter x0=1.4 v0=0.1 inner=y half=n | pick rect1=100 rect2=40')
+
+Result('ovel','opik',
+       '''
+       window |
+       grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity"
+       ''')
+
+Flow('onmo','obin off mask opik',
+     '''
+     nmo offset=${SOURCES[1]} mask=${SOURCES[2]} velocity=${SOURCES[3]}
+     half=n
+     ''')
+
+Flow('ostk','onmo','stack')
+
+Flow('ostk2','ostk','window min2=800 max2=1600')
+
+Result('ostk2','grey title="NMO Stack" ')
+
+Flow('odip','ostk2','dip rect1=100 rect2=40')
+
+Flow('opwd','ostk2 odip','pwd dip=${SOURCES[1]}')
+
+Result('opwd','grey title="Diffractions" ')
+
+End()
