@@ -19,11 +19,19 @@ Flow('thed','h3d','dd type=float')
 Flow('hx','thed','headermath output="(gx-sx)/1000" ')
 Flow('hy','thed','headermath output="(gy-sy)/1000" ')
 
-Flow('datum','hx hy',
-     'math hy=${SOURCES[1]} output="sqrt(input*input+hy*hy+0.000025)/2.25" ')
+## vel = 1.35
 
-Flow('tdat','t3d datum',
-     'window max1=4 | transp | stretch rule=d datum=${SOURCES[1]}')
+## Flow('datum','hx hy',
+##      '''
+##      math hx=${SOURCES[0]} hy=${SOURCES[1]}
+##      output="sqrt(hx*hx+hy*hy+0.000025)/%g"
+##      ''' % (vel*vel ))
+
+## Flow('tdat','t3d datum',
+##      'window max1=4 | stretch rule=d datum=${SOURCES[1]} | transp')
+
+
+Flow('tdat','t3d','window max1=4 | transp memsize=500')
 
 az = 1.13
 
@@ -42,10 +50,26 @@ for off in ('toff','coff'):
            title="Offset"
            ''')
 
+## Flow('datbin','datum coff',
+##      '''
+##      window |
+##      bin head=${SOURCES[1]}
+##      xkey=0 ykey=1 interp=2
+##      nx=141 dx=0.05 x0=-3.35
+##      ny=141 dy=0.05 y0=-3.5
+##      ''')
+
+## Result('datbin',
+##        '''
+##        grey title="Datum" color=j allpos=y scalebar=y
+##        transp=n yreverse=n barlabel="Time Shift (s)"
+##        ''')
+       
+
 Flow('tbin tfld','tdat coff',
      '''
      bin fold=${TARGETS[1]} head=${SOURCES[1]}
-     xkey=0 ykey=1
+     xkey=0 ykey=1 interp=2
      nx=141 dx=0.05 x0=-3.35
      ny=141 dy=0.05 y0=-3.5
      ''')
@@ -62,8 +86,24 @@ Result('tfld',
 Result('tbin',
        '''
        transp plane=23 | transp plane=12 |
-       byte gainpanel=all |
+       tpow tpow=2.5 |
+       byte gainpanel=70 |
        grey3 title="Binned"
-       frame1=501 frame2=71 frame3=71
+       frame1=500 frame2=67 frame3=70
        ''')
+
+## Flow('tbak','tbin datbin',
+##      '''
+##      transp plane=23 | transp plane=12 |
+##      stretch rule=d datum=${SOURCES[1]} inv=y
+##      ''')
+
+## Result('tbak',
+##        '''
+##        tpow tpow=2.5 |
+##        byte gainpanel=70 |
+##        grey3 title="Binned"
+##        frame1=500 frame2=70 frame3=70
+##        ''')
+
 End()
