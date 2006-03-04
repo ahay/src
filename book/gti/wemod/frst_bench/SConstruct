@@ -47,7 +47,7 @@ titles =  {'t'  : 'convolution (depth refl)',       # data results in time
 #   2D shot record
 #
 
-frq_list = [20,40]                              # frequency list
+frq_list = [40]                              # frequency list; taken out 20
 
 time_list_2D  = ['t','tt','f','ft','c']         # 2D data in time
 depth_list_2D = ['m','mt','i','it','j']         # 2D images in depth
@@ -66,16 +66,16 @@ depth_list_3D_slice = []                        # 2D slices from 3D depth images
 #   2D & 3D shot record
 #
 
-# frq_list = [40]                                 # frequency list
-# 
-# time_list_2D  = ['t','tt','f','ft','c']         # 2D data in time
-# depth_list_2D = ['m','mt','i','it','j']         # 2D images in depth
-# 
-# time_list_3D  = ['t','tt','ft','c']             # 3D data in time
-# depth_list_3D = ['m','mt','it','j']             # 3D images in depth
-# 
-# time_list_3D_slice  = ['ft','c']                # 2D slices from 3D time data
-# depth_list_3D_slice = ['it','j']                # 2D slices from 3D depth images
+#frq_list = [40]                                 # frequency list
+ 
+#time_list_2D  = ['t','tt','f','ft']         # 2D data in time
+#depth_list_2D = ['m','mt','i','it']         # 2D images in depth
+ 
+#time_list_3D  = ['t','tt','ft']             # 3D data in time
+#depth_list_3D = ['m','mt','it']             # 3D images in depth
+
+#time_list_3D_slice  = ['ft']                # 2D slices from 3D time data
+#depth_list_3D_slice = ['it']                # 2D slices from 3D depth images
 
 # Authentication for the private data server
 
@@ -263,7 +263,7 @@ def zplot3d(par,custom1="",custom2=""):
            z_slice/res_grid_par['dz'],custom2)
 
 # ------------------------------------------------------------
-# Seiemic modeling parameters
+# Seismic modeling parameters
 
 par = {
         'nt':1000, 'ot':0, 'dt':0.005, 'kt':20,             # time
