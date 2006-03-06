@@ -28,7 +28,7 @@ res = 'res'
 err = 'err'
 bot = 'bot'
 
-Flow(res,'sigmoid-dec sigmoid-dec-dip','dealias2 dip=${SOURCES[1]}')
+Flow(res,'sigmoid-dec sigmoid-dec-dip','dealias dip=${SOURCES[1]}')
 Plot(res,'grey title=Restored clip=0.003')
 Plot(err,[res,'orig'],
      'add scale=1,-1 ${SOURCES[1]} | grey title=Error clip=0.003')
