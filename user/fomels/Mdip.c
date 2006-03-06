@@ -155,7 +155,7 @@ int main (int argc, char *argv[])
 
 	/* initialize t-y dip */
 	if (NULL != xdip0) {
-	    sf_floatread(p,n123,idip0);
+	    sf_floatread(p,n123,xdip0);
 	} else {
 	    for(i=0; i < n123; i++) {
 		p[i] = q0;
