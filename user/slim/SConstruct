@@ -41,13 +41,6 @@ for prog in mains:
     if root:
         env.Install(bindir,mainc[0])
 
-jpeg = env.get('JPEG')
-if jpeg:
-    libs=env.get('LIBS')+[jpeg]
-    prog = env.Program('sfbyte2jpg',['_byte2jpg.c','_jpeg.c'],LIBS=libs)
-    if root:
-        env.Install(bindir,prog)
- 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
