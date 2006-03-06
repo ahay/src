@@ -8,6 +8,7 @@ import sfcc
 
 # user
 import sffomels
+import sfslim
 import sfgee
 import sfsavap
 import sfjennings
