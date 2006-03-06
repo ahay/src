@@ -38,13 +38,14 @@ int desc(const void * a, const void * b)
 
 float *dataloader(sf_file in, int n, bool complex_data)
 {
+  int i;
   float *data;
   data = sf_floatalloc(n); 
   if (complex_data){
     /* read in memory and compute absolute value of vector entries */
     float complex *cdata;
     cdata = sf_complexalloc(1);
-    for (int i=0; i<n; i++){
+    for (i=0; i<n; i++){
       sf_complexread(cdata,1,in);
       data[i] = sqrt( pow(creal(cdata[0]),2) + pow(cimag(cdata[0]),2));
     }
@@ -52,7 +53,7 @@ float *dataloader(sf_file in, int n, bool complex_data)
   else{
     /* read in memory and compute absolute value of vector entres */
     sf_floatread(data,n,in);
-    for (int i=0; i<n; i++){
+    for (i=0; i<n; i++){
       data[i] = sqrt(pow(data[i],2));
       }
   }
@@ -62,7 +63,15 @@ float *dataloader(sf_file in, int n, bool complex_data)
 
 int main(int argc, char* argv[])
 {
-  int n1, mem, memsize;
+  int n1, mem, memsize, n, nbchunks, nfit, i, j;
+  size_t len;
+  float *data;
+  float *tmp;
+  FILE **fp;
+  int nloop;
+  char *rformat, *cformat;
+  float *currentmax;
+  int icurrentmax = 0;
   bool complex_data = false;// true if input data is complex
   bool ascmode;// true if input data is complex
   sf_file in, out; /* Input and output files */
@@ -90,8 +99,6 @@ int main(int argc, char* argv[])
   /* check that the input is float or complex and format output appropriately */
   if (SF_COMPLEX == sf_gettype(in)){
     complex_data = true;
-    size_t len;
-    char *rformat, *cformat;
     cformat = sf_histstring(in,"data_format");
     len = strlen(cformat)+1;
     rformat = sf_charalloc(len);
@@ -106,9 +113,9 @@ int main(int argc, char* argv[])
     sf_warning("Going out of core...\n"
 	       "Increase memsize for in-core");
     
-    int n = memsize/sizeof(float); /* # of element per chunk */
-    int nbchunks = n1/n+1; /* # of chunks */
-    int nfit = n1%n; /* # of element in the last chunk */
+    n = memsize/sizeof(float); /* # of element per chunk */
+    nbchunks = n1/n+1; /* # of chunks */
+    nfit = n1%n; /* # of element in the last chunk */
     
     /* read chunk, sort and write in temp files */
     if (!getenv("TMPDIR"))
@@ -120,12 +127,10 @@ int main(int argc, char* argv[])
       sf_warning("Use user-defined TMPDIR = %s",getenv("TMPDIR"));
     }
 
-    float *data;
-    FILE **fp;
-    int nloop;
+
     fp = malloc(nbchunks*sizeof(FILE *));
     
-    for (int i=0; i<nbchunks; i++){
+    for (i=0; i<nbchunks; i++){
       if (i == nbchunks-1) nloop = nfit;
       else nloop= n;
       
@@ -145,21 +150,18 @@ int main(int argc, char* argv[])
     }
     
     /* merge sorted vectors */
-    float *tmp;
     tmp = sf_floatalloc(1);
     data = sf_floatalloc(nbchunks);
-    for (int i=0; i<nbchunks; i++){
+    for (i=0; i<nbchunks; i++){
       fread(tmp, sizeof(float), 1, fp[i]);
       data[i] = *tmp;
     }
     
-    float *currentmax;
-    int icurrentmax = 0;
     currentmax = sf_floatalloc(1);
-    for (int i=0; i<n1; i++){
+    for (i=0; i<n1; i++){
       *currentmax = 0;
       /* find current max */
-      for (int j=0; j<nbchunks; j++){
+      for (j=0; j<nbchunks; j++){
 	if (data[j]>*currentmax){
 	  *currentmax = data[j];
 	  icurrentmax = j;
@@ -177,7 +179,7 @@ int main(int argc, char* argv[])
       sf_floatwrite(currentmax,1,out);
     }
     
-    for (int i=0; i<nbchunks; i++)
+    for (i=0; i<nbchunks; i++)
       fclose(fp[i]);
     
   }

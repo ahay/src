@@ -36,7 +36,13 @@ void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
 
 int main(int argc, char* argv[])
 {
-  int n1, n2;
+  int n1, n2, i;
+  float thr, thrvalue;
+  bool thrflag;
+  bool fthrflag;
+  float *fthrsample;
+  sf_file fthr = NULL;
+  int n1fthr, n2fthr;
   bool complex_data = false;/* true if input data is complex */
   char* mode;
   sf_file in, out; /* Input and output files */
@@ -61,15 +67,9 @@ int main(int argc, char* argv[])
   n2 = sf_leftsize(in,1);
   
   /* read threshold level from the command line */
-  float thr;
-  bool thrflag;
-  bool fthrflag;
-  sf_file fthr = NULL;
-  int n1fthr, n2fthr;
-  
   thrflag = sf_getfloat("thr",&thr);
   /* threshold level (>0) */
-  fthrflag = sf_getstring("fthr");
+  fthrflag = (NULL != sf_getstring("fthr"));
   /* varying threshold level (>0) */
   
   if (!fthrflag){ /* constant threshold level */
@@ -96,11 +96,10 @@ int main(int argc, char* argv[])
   if (mode == NULL) mode = "soft";
   
   /* loop over samples */
-  float *fthrsample;
-  float thrvalue = thr;
+  thrvalue = thr;
   fthrsample = sf_floatalloc (1);
   
-  for (int i=0; i<n1*n2; i++){
+  for (i=0; i<n1*n2; i++){
     if (fthrflag){
       sf_floatread(fthrsample,1,fthr);
       if (*fthrsample<0)
