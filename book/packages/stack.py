@@ -1,4 +1,6 @@
 from rsfproj import *
+import string, sys
+
 
 def stack(name,
           v0,
@@ -21,6 +23,10 @@ def stack(name,
           x0=0,
           nout=2048,
           vx0=None):
+
+    version = string.split(string.split(sys.version)[0], ".")
+    if map(int, version) < [2, 2, 0]:
+        return # think how to do it better
 
     scn = name+'-scn'
     vel = name+'-vel'

@@ -111,7 +111,7 @@ sjmp = int((par['ds']/par['dx']))
 
 for js in range(smin,smax,sjmp):
     s_ = js * par['dx']    # shot location (km)
-    sl = str(js).zfill(4)  # shot index
+    sl = string.zfill(str(js),4)  # shot index
 
     zs = 'zs' + sl
     xs = 'xs' + sl

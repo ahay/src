@@ -15,7 +15,7 @@ Flow('ose hose',su,
 
 Flow('obin mask','ose','intbin xk=cdpt yk=cdp mask=${TARGETS[1]}')
 
-Result('onof','obin','window n2=1 | grey title="Near Offset" ')
+# Result('onof','obin','window n2=1 | grey title="Near Offset" ')
 
 Flow('off','hose',
      '''

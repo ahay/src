@@ -48,7 +48,7 @@ grid_par[1] = {'nx':1024, 'ny': 512, 'nz':   1,
 grid_par[2] = {'nx': 256, 'ny': 256, 'nz':  16,
                'dx':   4, 'dy':   2, 'dz':  16}
                   
-covar_par = {'taper_switch':True,   # covariance taper switch
+covar_par = {'taper_switch':1,      # covariance taper switch
              'alpha':1,             # covariance shape parameter
              'oriu':[ 5,1,0],       # covariance range orientation vectors
              'oriv':[-1,5,0], 

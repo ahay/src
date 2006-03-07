@@ -100,7 +100,7 @@ def variogram (par):
     if (par['nx'] > 1):
         par['nx_pad']  = par['nx']*2
         par['nx_aug']  = par['nx']+1
-        par['nx_half'] = par['nx']//2
+        par['nx_half'] = par['nx']/2
         par['nx_flip'] = 2
     else:
         par['nx_pad']  = par['nx']
@@ -111,7 +111,7 @@ def variogram (par):
     if (par['ny'] > 1):
         par['ny_pad']  = par['ny']*2
         par['ny_aug']  = par['ny']+1
-        par['ny_half'] = par['ny']//2
+        par['ny_half'] = par['ny']/2
         par['ny_flip'] = 2
     else:
         par['ny_pad']  = par['ny']
@@ -122,7 +122,7 @@ def variogram (par):
     if (par['nz'] > 1):
         par['nz_pad']  = par['nz']*2
         par['nz_aug']  = par['nz']+1
-        par['nz_half'] = par['nz']//2
+        par['nz_half'] = par['nz']/2
         par['nz_flip'] = 2
     else:
         par['nz_pad']  = par['nz']

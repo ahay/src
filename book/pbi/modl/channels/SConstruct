@@ -222,7 +222,7 @@ sand_par['na_sand1'] = 0.9
 #
 
 # Background noise parameters
-bk_noise_par = {'taper_switch':True,    # covariance taper switch
+bk_noise_par = {'taper_switch':1,       # covariance taper switch
                 'std_dev': 0.007,       # porosity noise standard devietion
                 'alpha':1,              # covariance shape parameter
                 'oriu':[1,0,0],         # covariance range orientation vectors
@@ -233,7 +233,7 @@ bk_noise_par = {'taper_switch':True,    # covariance taper switch
                 'rw':   1}
 
 # Amalgamated and non-amalgamated sand noise parameters
-sd_noise_par = {'taper_switch':True,    # covariance taper switch
+sd_noise_par = {'taper_switch':1,       # covariance taper switch
                 'std_dev':0.01,         # porosity noise standard devietion
                 'alpha':1,              # covariance shape parameter
                 'oriu':[1,0,0],         # covariance range orientation vectors

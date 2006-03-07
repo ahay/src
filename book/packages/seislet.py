@@ -2,6 +2,12 @@ from rsfproj import *
 import random, string, math
 
 random.seed(2005)
+nr = 0
+
+def rnd(x):
+    global nr
+    r = str(random.randint(1,nr))
+    return r
 
 def seislet(data,              # data name
             n1,n2,             # data dimensions
@@ -12,6 +18,8 @@ def seislet(data,              # data name
             nsp=200            # number of spikes
             ):
     'Seislet transform fun'
+
+    global nr
     
     Result(data,'grey title=Input')
 
@@ -68,8 +76,10 @@ def seislet(data,              # data name
              'cut n2=%d | seislet dip=${SOURCES[1]} eps=%g' % (scale,eps))
         Result(diff,'grey title="Scale=%d" ' % scale)
 
-    k1 = string.join(map(lambda x: str(random.randint(1,n1)), xrange(nsp)),',')
-    k2 = string.join(map(lambda x: str(random.randint(1,n2)), xrange(nsp)),',')
+    nr = n1
+    k1 = string.join(map(rnd,range(nsp)),',')
+    nr = n2
+    k2 = string.join(map(rnd,range(nsp)),',')
 
     imps = data+'imps'
     Flow(imps,dip,

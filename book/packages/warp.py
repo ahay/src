@@ -1,5 +1,5 @@
 from rsfproj import *
-import math
+import math, string, sys
 
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -97,6 +97,10 @@ def warp3(name,       # name prefix
           inter=1,    # interleaving
           clip=6      # display clip
           ):
+
+    version = string.split(string.split(sys.version)[0], ".")
+    if map(int, version) < [2, 2, 0]:
+        return # think how to do it better
 
     if line:
         for case in (pp,ps,warp):
@@ -275,6 +279,10 @@ def warp2(name,       # name prefix
           inter=1,    # interleaving
           clip=6      # display clip
           ):
+
+    version = string.split(string.split(sys.version)[0], ".")
+    if map(int, version) < [2, 2, 0]:
+        return # think how to do it better
 
     interg = 'pad n2=%d | put n2=%d n3=%d | stack' % ((nx/inter+1)*inter,inter,nx/inter+1)
     inter = 2*inter    
@@ -548,6 +556,10 @@ def warp1(name,      # name prefix
           iter=2,    # number of iterations
           ss=0
           ):
+
+    version = string.split(string.split(sys.version)[0], ".")
+    if map(int, version) < [2, 2, 0]:
+        return # think how to do it better
 
     graph = '''
     graph wanttitle=n min2=%g max2=%g min1=%g max1=%g

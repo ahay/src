@@ -248,9 +248,9 @@ def rfield (real_par,grid_par,covar_par):
 # grid. 
 #
 
-    grid_par['ox'] = -float(grid_par['nx']//2)*grid_par['dx']
-    grid_par['oy'] = -float(grid_par['ny']//2)*grid_par['dy']
-    grid_par['oz'] = -float(grid_par['nz']//2)*grid_par['dz']
+    grid_par['ox'] = -float(grid_par['nx']/2)*grid_par['dx']
+    grid_par['oy'] = -float(grid_par['ny']/2)*grid_par['dy']
+    grid_par['oz'] = -float(grid_par['nz']/2)*grid_par['dz']
 
 #
 # Set up the grid specification.
@@ -357,7 +357,7 @@ def rfield (real_par,grid_par,covar_par):
                      2*pi/(grid_par['ny']*grid_par['dy']),
                      2*pi/(grid_par['nz']*grid_par['dz']))
 
-    if (covar_par['taper_switch'] == True):
+    if covar_par['taper_switch']:
         Flow (taper,'','math'+grid_str+formula,stdin=0)
     else:
         Flow (taper,'','spike'+grid_str,stdin=0)
@@ -382,21 +382,21 @@ def rfield (real_par,grid_par,covar_par):
     
     if (grid_par['nx'] > 1):
         grid_par['nx_flip'] = 2
-        grid_par['nx_half'] = grid_par['nx']//2
+        grid_par['nx_half'] = grid_par['nx']/2
     else:
         grid_par['nx_flip'] = 1
         grid_par['nx_half'] = grid_par['nx']
 
     if (grid_par['ny'] > 1):
         grid_par['ny_flip'] = 2
-        grid_par['ny_half'] = grid_par['ny']//2
+        grid_par['ny_half'] = grid_par['ny']/2
     else:
         grid_par['ny_flip'] = 1
         grid_par['ny_half'] = grid_par['ny']
 
     if (grid_par['nz'] > 1):
         grid_par['nz_flip'] = 2
-        grid_par['nz_half'] = grid_par['nz']//2
+        grid_par['nz_half'] = grid_par['nz']/2
     else:
         grid_par['nz_flip'] = 1
         grid_par['nz_half'] = grid_par['nz']
