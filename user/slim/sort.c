@@ -70,8 +70,8 @@ int main(int argc, char* argv[])
   FILE **fp;
   int nloop;
   char *rformat, *cformat;
-  float *currentmax;
-  int icurrentmax = 0;
+  float *currentext;
+  int icurrentext;
   bool complex_data = false;// true if input data is complex
   bool ascmode;// true if input data is complex
   sf_file in, out; /* Input and output files */
@@ -157,26 +157,38 @@ int main(int argc, char* argv[])
       data[i] = *tmp;
     }
     
-    currentmax = sf_floatalloc(1);
+    currentext = sf_floatalloc(1);
     for (i=0; i<n1; i++){
-      *currentmax = 0;
-      /* find current max */
+      *currentext = data[0];
+      icurrentext = 0;
+      /* find current extremum */
       for (j=0; j<nbchunks; j++){
-	if (data[j]>*currentmax){
-	  *currentmax = data[j];
-	  icurrentmax = j;
+	if (ascmode){
+	  if (data[j]<*currentext){
+	    *currentext = data[j];
+	    icurrentext = j;
+	  }
+	}
+	else{
+	  if (data[j]>*currentext){
+	    *currentext = data[j];
+	    icurrentext = j;
+	  }
 	}
       }
       
-      fread(tmp, sizeof(float),1, fp[icurrentmax]);
-      if (!(feof(fp[icurrentmax]))){
-	data[icurrentmax] = *tmp;
+      fread(tmp, sizeof(float),1, fp[icurrentext]);
+      if (!(feof(fp[icurrentext]))){
+	data[icurrentext] = *tmp;
       }
       else{
-	data[icurrentmax] = 0;
+	if (ascmode)
+	  data[icurrentext] = MAXFLOAT;
+	else
+	  data[icurrentext] = 0;
       }
       
-      sf_floatwrite(currentmax,1,out);
+      sf_floatwrite(currentext,1,out);
     }
     
     for (i=0; i<nbchunks; i++)
@@ -185,7 +197,6 @@ int main(int argc, char* argv[])
   }
   else{
     /* IN-CORE MODE */
-    float *data;
     data = dataloader(in, n1, complex_data);
     sf_fileclose(in);
     
