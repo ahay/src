@@ -1,8 +1,11 @@
 from rsfproj import *
 import stack
 
-Fetch('shots.hh','frst3')
-Flow('shots','shots.hh','dd form=native')
+shots = '/mnt/data/fomel/shots.hh'
+
+# Fetch('shots.hh','frst3')
+
+# Flow('shots',shots,'dd form=native')
 
 Flow('midpt',None,
      'math n1=1 n2=440 d2=2 o2=0 n3=440 d3=2 o3=0 output="(x2+x3)/2" ')

@@ -23,12 +23,12 @@ Result('ddec','dec',showdat('Residual'))
 
 Result('dec','zof dec','OverUnderAniso')
 
-Flow('dwg','offset dip',
-     'pwdsigk dips=${SOURCES[1]} verb=y eps=5 niter=1000 nliter=3')
-Result('dwg',showdat('Structure Enhanced'))
+#Flow('dwg','offset dip',
+#     'pwdsigk dips=${SOURCES[1]} verb=y eps=5 niter=1000 nliter=3')
+#Result('dwg',showdat('Structure Enhanced'))
 
-Flow('dns','offset dwg','add scale=1,-1 ${SOURCES[1]}')
-Result('dns',showdat('Diffractions Enhanced'))
+#Flow('dns','offset dwg','add scale=1,-1 ${SOURCES[1]}')
+#Result('dns',showdat('Diffractions Enhanced'))
 
 Flow('wkx','dec',
      'pad n2=1025 beg1=400 | cosft sign2=1 | spray axis=2 n=1 o=0 d=26.67')

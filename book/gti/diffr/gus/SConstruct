@@ -41,11 +41,11 @@ Flow('intp','cent dip2 mask',
 
 Flow('midl','intp','window n2=3 f2=%d' % ref)
 
-#Flow('flip','bei midl',
-#     '''
-#     reverse which=2 opt=n |
-#     cat axis=2 ${SOURCES[1]} ${SOURCES[0]}
-#     ''')
+Flow('flip','bei midl',
+     '''
+     reverse which=2 opt=n |
+     cat axis=2 ${SOURCES[1]} ${SOURCES[0]}
+     ''')
 
 Flow('shot','flip','mutter half=y v0=1.45 | cmp2shot')
 
@@ -97,7 +97,7 @@ for p in (-1,0,1):
 
     Result(plane,[plane,pwd],'SideBySideAniso')
 
-Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,100')
+Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,50')
 Flow('dip','pat','dip rect1=40 rect2=10 rect3=10 n4=0 verb=y')
 Flow('dips','dip','patch inv=y weight=y')
 

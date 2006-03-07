@@ -6,7 +6,9 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 su = 'Oseberg_cmp.su'
 
-Fetch(su,'total',private)
+#Fetch(su,'total',private)
+
+su = '/mnt/data/fomel/Oseberg_cmp.su'
 
 Flow('ose hose',su,
      '''

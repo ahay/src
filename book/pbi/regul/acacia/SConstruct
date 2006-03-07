@@ -1,0 +1,11 @@
+from rsfproj import *
+
+segy = '/data9/ricarte/AcaciaFul.segy'
+
+Flow('taca haca ./aaca ./baca',segy,
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+End()
