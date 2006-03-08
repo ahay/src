@@ -173,13 +173,29 @@ def variogram (par):
                     real
                     '''
                     
+#     rotate_rule =   '''
+#                     put n1=%(nx)d n2=%(nx_flip)d
+#                         n3=%(ny)d n4=%(ny_flip)d
+#                         n5=%(nz)d n6=%(nz_flip)d |
+#                     reverse which=42 opt=n | 
+#                     put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
+#                         n4=1          n5=1          n6=1
+#                     ''' % par
+    
     rotate_rule =   '''
-                    put n1=%(nx)d n2=%(nx_flip)d
-                        n3=%(ny)d n4=%(ny_flip)d
-                        n5=%(nz)d n6=%(nz_flip)d |
-                    reverse which=42 opt=n | 
-                    put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
-                        n4=1          n5=1          n6=1
+                    put n1=%(nx)d n2=%(nx_flip)d n3=%(ny_pad)d n4=%(nz_pad)d |
+                    reverse which=2 opt=n | 
+                    put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d n4=1 |
+                    transp memsize=512 plane=12 |
+                    put n1=%(ny)d n2=%(ny_flip)d n3=%(nx_pad)d n4=%(nz_pad)d |
+                    reverse which=2 opt=n | 
+                    put n1=%(ny_pad)d n2=%(nx_pad)d n3=%(nz_pad)d n4=1 |
+                    transp memsize=512 plane=13 |
+                    put n1=%(nz)d n2=%(nz_flip)d n3=%(nx_pad)d n4=%(ny_pad)d |
+                    reverse which=2 opt=n | 
+                    put n1=%(nz_pad)d n2=%(nx_pad)d n3=%(ny_pad)d n4=1 |
+                    transp memsize=512 plane=13 |
+                    transp memsize=512 plane=12
                     ''' % par
     
     window_rule =   '''
