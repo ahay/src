@@ -339,6 +339,7 @@ static int convert4(const char* buf);
 static float fconvert4(const char* buf);
 static void insert2(int y, char* buf);
 static void insert4(int y, char* buf);
+static void finsert4(float y, char* buf);
 static void swapb(byte *x, byte *y);
 
 /* IBM to IEEE float conversion and back */
@@ -427,6 +428,24 @@ static void insert4(int y, char* buf)
     union {
 	byte b[4];
 	int s;
+    } x;
+
+    x.s=y;
+
+    if (little_endian) {
+	swapb(x.b,x.b+3);
+	swapb(x.b+1,x.b+2);
+    }
+    
+    memcpy(buf,x.b,4);
+}
+
+static void finsert4(float y, char* buf)
+/* convert 4-byte float to buf */
+{
+    union {
+	byte b[4];
+	float s;
     } x;
 
     x.s=y;
@@ -603,7 +622,7 @@ static float ibm2float (const char* num)
 void sf_segy2trace(const char* buf, float* trace, int ns, int format)
 /*< Extract a floating-point trace[nt] from buffer buf.
 ---
-format: 1: IBM, 2: int4, 3: int2
+format: 1: IBM, 2: int4, 3: int2, 5: IEEE
 >*/
 {
     int i, nb;
@@ -624,7 +643,7 @@ format: 1: IBM, 2: int4, 3: int2
 void sf_trace2segy(char* buf, const float* trace, int ns, int format)
 /*< Convert a floating-point trace[ns] to buffer buf.
 ---
-format: 1: IBM, 2: int4, 3: int2
+format: 1: IBM, 2: int4, 3: int2, 5: IEEE
 >*/
 {
     int i, nb;
@@ -632,12 +651,13 @@ format: 1: IBM, 2: int4, 3: int2
     nb = (3==format)? 2:4;
 
     for (i=0; i < ns; i++, buf += nb) {
-	switch (format) {
-	    case 1: float2ibm(trace[i],buf);     break; /* IBM float */
-	    case 2: insert4((int) trace[i],buf); break; /* int4 */
-	    case 3: insert2((int) trace[i],buf); break; /* int2 */
-	    default: sf_error("Unknown format %d",format); break;
-	}
+      switch (format) {
+      case 1: float2ibm(trace[i],buf);     break; /* IBM float */
+      case 2: insert4((int) trace[i],buf); break; /* int4 */
+      case 3: insert2((int) trace[i],buf); break; /* int2 */
+      case 5: finsert4((float) trace[i],buf); break; /* IEEE float */
+      default: sf_error("Unknown format %d",format); break;
+      }
     }
 }
 

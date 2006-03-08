@@ -96,6 +96,9 @@ int main(int argc, char *argv[])
 	    case 3:
 		if (verbose) sf_warning("Assuming 2 byte integer format");
 		break;
+	    case 5:
+		if (verbose) sf_warning("Assuming IEEE float format");
+		break;
 	    default:
 		sf_error("Nonstandard format: %d",format);
 		break;

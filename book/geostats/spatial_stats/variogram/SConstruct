@@ -66,7 +66,7 @@ grid_par[2] = {'nx':  64, 'ny':  64, 'nz':  16,
 
                                             # value covariance parameters
 
-val_covar_par = {   'taper_switch':True,    # covariance taper switch
+val_covar_par = {   'taper_switch':1,       # covariance taper switch
                     'alpha':1,              # covariance shape parameter
                     'oriu':[ 5,1,0],        # covariance range orientation vectors
                     'oriv':[-1,5,0], 
@@ -77,7 +77,7 @@ val_covar_par = {   'taper_switch':True,    # covariance taper switch
 
                                             # indicator covariance parameters
 
-ind_covar_par = {   'taper_switch':True,    # covariance taper switch
+ind_covar_par = {   'taper_switch':1,       # covariance taper switch
                     'alpha':2,              # covariance shape parameter
                     'oriu':[ 1,0,0],        # covariance range orientation vectors
                     'oriv':[ 0,1,0], 

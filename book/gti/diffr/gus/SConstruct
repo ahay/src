@@ -97,7 +97,7 @@ for p in (-1,0,1):
 
     Result(plane,[plane,pwd],'SideBySideAniso')
 
-Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,50')
+Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,175,100')
 Flow('dip','pat','dip rect1=40 rect2=10 rect3=10 n4=0 verb=y')
 Flow('dips','dip','patch inv=y weight=y')
 

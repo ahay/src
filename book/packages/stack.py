@@ -66,9 +66,9 @@ def stack(name,
     Flow(stk+'2',nmo,
          '''
          window f1=%d | logstretch nout=%d |
-         fft1 | transp plane=13 |
+         fft1 | transp plane=13 memsize=500 |
          finstack |
-         transp |
+         transp memsize=500 |
          fft1 inv=y | window n1=%d |
          logstretch inv=y | pad beg1=%d
          ''' % (f1,nout,nout,f1))

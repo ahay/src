@@ -89,9 +89,9 @@ figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
 resdir = None
 
-def set_dir(ref='.',dir='Fig'):
+def set_dir(dir='Fig'):
      global resdir
-     resdir = os.path.join(ref,dir)
+     resdir = dir
 
 set_dir()
 
@@ -331,7 +331,7 @@ class Project(Environment):
         else:
             files = string.split(target)
         for file in files:
-            if not re.search(suffix + '$',file):
+            if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
         if suffix == sfsuffix:            

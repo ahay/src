@@ -183,7 +183,7 @@ int main(int argc, char* argv[])
       }
       else{
 	if (ascmode)
-	  data[icurrentext] = MAXFLOAT;
+	  data[icurrentext] = FLT_MAX;
 	else
 	  data[icurrentext] = 0;
       }
