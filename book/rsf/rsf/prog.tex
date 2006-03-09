@@ -50,14 +50,21 @@ message is printed out if the the axis sampling parameters (such as
 \input{sfattr}
 }}
 
-\texttt{sfattr} is a useful diagnostic program. It reports certain statistical
-values for an RSF dataset: RMS (root-mean-square) amplitude, mean value, norm
-value, maximum and minimum values, number of nonzero samples, and the total
-number of samples. If we denote data values as $d_i$ for $i=0,1,2,\ldots,n$,
-then the RMS value is $\sqrt{\frac{1}{n}\,\sum\limits_{i=0}^n d_i^2}$, the
-mean value is $\frac{1}{n}\,\sum\limits_{i=0}^n d_i$, and the $L_2$-norm value
-is $\sum\limits_{i=0}^n d_i^2$. Using \texttt{sfattr} is a quick way to see
-the distribution of data values and check it for errors.
+\texttt{sfattr} is a useful diagnostic program. It reports certain
+statistical values for an RSF dataset: RMS (root-mean-square)
+amplitude, mean value, norm value, variance, standard deviation,
+maximum and minimum values, number of nonzero samples, and the total
+number of samples.
+
+If we denote data values as $d_i$ for $i=0,1,2,\ldots,n$, then the RMS
+value is $\sqrt{\frac{1}{n}\,\sum\limits_{i=0}^n d_i^2}$, the mean
+value is $\frac{1}{n}\,\sum\limits_{i=0}^n d_i$, the $L_2$-norm value
+is $\sqrt{\sum\limits_{i=0}^n d_i^2}$, the variance is
+$\frac{1}{n-1}\,\left[\sum\limits_{i=0}^n d_i^2 -
+\frac{1}{n}\left(\sum\limits_{i=0}^n d_i)^2\right]$, and the standard
+deviation is the square root of the variance. Using \texttt{sfattr}
+is a quick way to see the distribution of data values and check it for
+anomalies.
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}

@@ -35,12 +35,13 @@ Flow('tdat','t3d','window max1=4 | transp memsize=500')
 
 az = 1.13
 
-Flow('coff','hx hy',
+Flow('toff','hx hy','cmplx ${SOURCES[:2]}',stdin=0)
+
+Flow('coff','toff',
      '''
-     cmplx ${SOURCES[:2]} |
      math output="input*exp(I*%g)" |
      dd type=float
-     ''' % az,stdin=0)
+     ''' % az)
 
 for off in ('toff','coff'):
     Result(off,
