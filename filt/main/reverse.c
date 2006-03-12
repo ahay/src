@@ -31,9 +31,9 @@ int main(int argc, char* argv[])
     char *buf, *opt, copt, key[3], byte;
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int j, i, dim, dim1, dim2;
-    int n[SF_MAX_DIM], esize, which, memsize;
-    off_t pos=0;
+    int j, i, dim, dim1, dim2, mem;
+    int n[SF_MAX_DIM], esize, which;
+    off_t pos=0, pos3=0, memsize;
     size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL, m;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;
@@ -67,8 +67,9 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
-    if (!sf_getint("memsize",&memsize) || 0 >= memsize) 
-	memsize = 1 << 20; /* 1 Mb */
+    if (!sf_getint("memsize",&mem)) mem = 100; 
+    /* Available memory size (in Mb) */
+    memsize = mem * (1 << 20); /* convert Mb to bytes */
    
     if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
     for (i=0, mask=1; i < dim; i++, mask <<= 1) {
@@ -131,30 +132,35 @@ int main(int argc, char* argv[])
 
     if (n2>1) {
 	if (verb) sf_warning("Going out of core...");
+
 	sf_unpipe(in,n1*n2*n3*esize); /* prepare for random access */
+	pos = sf_tell(in);
+
 	k2 = (size_t*) sf_alloc(n2,sizeof(size_t));
 	mirror(n2,dim2-dim1,n+dim1,f+dim1,k2);
-	pos = sf_tell(in);
     } 
 
     if (verb) sf_warning("n1=%d, n2=%d, n3=%d",
 			 (int) n1,(int) n2,(int) n3);
 
-    /* k1 is a table for reversal mapping 
-       k2 is a table for random input access */
+    /* k1 is a table for in-core     reversal 
+       k2 is a table for out-of-core reversal */
 
     for (i3=0; i3 < n3; i3++) {
+	if (n2 > 1) pos3 = pos+(off_t) i3*n2*n1*esize;
 	for (i2=0; i2 < n2; i2++) {
 	    if (n2 > 1) /* if out of core */
-		sf_seek(in,pos+k2[i2]*n1*esize,SEEK_SET);
+		sf_seek(in,pos3+(off_t) k2[i2]*n1*esize,SEEK_SET);
 	    sf_charread(buf,n1*esize,in);
-	    /* do the actual reversal */
+	    /* do in-core reversal */
 	    for (i1=0; i1 < n1/2; i1++) {
 		m = k1[i1];
-		for (j=0; j<esize; j++) {
-		    byte = buf[i1*esize+j];
-		    buf[i1*esize+j] = buf[m*esize+j];
-		    buf[m*esize+j] = byte;
+		if (m != i1) { /* swap m-th and i1-th elements */
+		    for (j=0; j<esize; j++) {
+			byte = buf[i1*esize+j];
+			buf[i1*esize+j] = buf[m*esize+j];
+			buf[m*esize+j] = byte;
+		    }
 		}
 	    }
 	    sf_charwrite(buf,n1*esize,out);
