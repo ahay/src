@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
-    if (!sf_getint("memsize",&mem)) mem = 100; 
+    if (!sf_getint("memsize",&mem)) mem = 1; 
     /* Available memory size (in Mb) */
     memsize = mem * (1 << 20); /* convert Mb to bytes */
    
@@ -178,7 +178,7 @@ static void mirror (size_t n1, int dim,
     size_t i, m, ii;
     int j, nj;
     
-    for (i=0; i < n1/2; i++) {
+    for (i=0; i < n1; i++) {
 	m=0;
 	for (j=0, nj=1; j< dim; nj*=n[j], j++) {
 	    ii = (i/nj)%n[j];
@@ -186,9 +186,7 @@ static void mirror (size_t n1, int dim,
 	    m += ii*nj;
 	}
 	k[i]=m;
-	k[m]=i;
     }
-    if (0 != n1%2) k[n1/2]=n1/2; /* Take care of odd n1 */
 }
 
 /* 	$Id$	 */
