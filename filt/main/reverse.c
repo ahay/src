@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	if (i < dim2) {
 	    size = n1*n[i];
-	    if (1==n2 && size*esize < (size_t) memsize) {
+	    if (1==n2 && size*esize < memsize) {
 		n1=size;
 		dim1=i;
 	    } else {
