@@ -1,0 +1,2400 @@
+\normalem
+
+\renewcommand{\uline}[1]{#1}
+
+\def\figdir{./Fig}
+\def\cakedir{.}
+
+\lefthead{Fomel}
+\righthead{Velocity continuation}
+\footer{SEP--92}
+
+\title{\uline{Time} migration velocity analysis by velocity continuation}
+
+\email{sergey@sep.stanford.edu}
+\author{Sergey Fomel}
+
+\ABS{\uline{Time} migration velocity analysis can be performed by velocity
+  continuation, an \uline{incremental} process that \uline{transforms}
+  migrated seismic sections according to changes in the migration velocity.
+  Velocity continuation enhances residual \uline{normal moveout} correction by
+  properly taking into account both vertical and lateral movements of
+  \uline{events on seismic images}. Finite-difference and spectral algorithms
+  provide efficient practical implementations for velocity continuation.
+  Synthetic and field data examples demonstrate the performance of the method
+  and confirm theoretical expectations.}
+
+\begin{comment}
+{Residual and cascaded migration can be described as a continuous
+  process of velocity continuation in the post-migration domain. This
+  process moves reflection events on migrated seismic sections
+  according to changes in the migration velocity. Understanding the
+  laws of velocity continuation is crucially important for a
+  successful application of migration velocity analysis.  In this
+  paper, I derive kinematic and dynamic laws for the case of prestack
+  residual migration from simple trigonometric principles. The main
+  theoretical result is a decomposition of prestack velocity
+  continuation into three different components corresponding to
+  residual normal moveout, residual dip moveout, and residual
+  zero-offset migration. I analyze the contribution and properties of
+  each of the three components separately and develop efficient
+  finite-difference and spectral algorithms of velocity continuation.
+  The algorithms are applied for migration velocity analysis on a real
+  data example.}
+\end{comment}
+
+\newpage
+
+\section{Introduction}
+%%%%%%%%%%%%%%%%%%
+Migration velocity analysis is a routine part of prestack time
+migration applications. It serves both as a tool for velocity
+estimation \cite{FBR08.06.02240234} and as a tool for optimal stacking
+of migrated seismic sections prior to modeling zero-offset data for depth
+migration \cite{GEO62-02-05680576}. In the most common form, migration
+velocity analysis amounts to residual moveout correction on CIP
+(common image point) gathers. However, in the case of dipping
+reflectors, this correction does not provide optimal focusing of
+reflection energy, since it does not account for lateral movement of
+reflectors caused by the change in migration velocity. In other words,
+different points on a stacking hyperbola in a CIP gather can
+correspond to different reflection points at the actual reflector. The
+situation is similar to that of the conventional \uline{normal moveout} (NMO)
+velocity analysis, where the reflection point dispersal problem is
+usually overcome with the help of \uline{dip moveout} \cite{FBR04.07.00070024,dmo}. An
+analogous correction is required for optimal focusing in the
+post-migration domain. In this paper, I propose and test velocity
+continuation as a method of migration velocity analysis. The method
+enhances the conventional residual moveout correction by taking into
+account lateral movements of migrated reflection events.
+
+Velocity continuation is a process of transforming time migrated images
+according to the changes in migration velocity. This process has wave-like
+properties, which have been described in earlier papers
+\cite{me,Fomel.segab.97,first}.  \longcite{hubral} and
+\longcite{GEO62-02-05890597} use the term \emph{image waves} to describe a
+similar concept. \longcite{adlerSEG,adler} generalizes the velocity
+continuation approach for the case of variable background velocities, using
+the term \emph{Kirchhoff image propagation}. \uline{Although the velocity
+continuation concept is tailored for time migration, it finds important
+applications in depth migration velocity analysis by recursive methods} 
+\cite{SEG-1999-17231726,SEG-2000-08740877}.
+
+\begin{comment}
+Velocity
+continuation extends the theory of residual and cascaded migrations
+\cite{GEO50.01.01100126, GEO52.05.06180643}. In practice, the
+continuation process can be modeled by finite-difference or spectral
+methods \cite{Fomel.sep.95.sergey2, Fomel.sep.97.sergey2}.
+
+In a recent work \cite{me,Fomel.sep.92.159}, I
+introduced the process of \emph{velocity continuation} to describe a
+continuous transformation of seismic time-migrated images with a
+change of the migration velocity. Velocity continuation generalizes
+the ideas of residual migration
+\cite{GEO50.01.01100126,Etgen.sepphd.68} and cascaded migrations
+\cite{GEO52.05.06180643}. In the zero-offset (post-stack) case, the
+velocity continuation process is governed by a partial differential
+equation in midpoint, time, and velocity coordinates, first discovered
+by \longcite{Claerbout.sep.48.79}. \longcite{hubral1} and
+\longcite{hubral2} describe this process in a broader context of
+``image waves''. Generalizations are possible for the non-zero offset
+(prestack) case \cite{Fomel.sep.92.159,Fomel.segab.97}.
+\par
+A numerical implementation of velocity continuation process provides
+an efficient method of scanning the velocity dimension in the search
+of an optimally focused image. The first implementations
+\cite{Li.sep.48.85,Fomel.sep.92.159} used an analogy with Claerbout's
+15-degree depth extrapolation equation to construct a
+finite-difference scheme with an implicit unconditionally stable
+advancement in velocity. \longcite{Fomel.sep.95.sergey2} presented an
+efficient three-dimensional generalization, applying the helix
+transform \cite{Claerbout.sep.95.jon1}.
+\par
+\plot{fd-imp}{width=6in}{Impulse responses (Green's functions) of
+  velocity continuation, computed by a second-order finite-difference
+  method.  The left plots corresponds to continuation to a larger
+  velocity ($+1$ km/sec); the right plot, smaller velocity, ($-1$
+  km/sec).}
+\par
+A low-order finite-difference method is probably the most efficient
+numerical approach to this method, requiring the least work per
+velocity step. However, its accuracy is not optimal because of the
+well-known numerical dispersion effect. Figure \ref{fig:fd-imp} shows
+impulse responses of post-stack velocity continuation for three
+impulses, computed by the second-order finite-difference method
+\cite{Fomel.sep.92.159}. As expected from the residual migration
+theory \cite{GEO50.01.01100126}, continuation to a higher velocity
+(left plot) corresponds to migration with a residual velocity, and its
+impulse responses have an elliptical shape. Continuation to a smaller
+velocity (right plot in Figure \ref{fig:fd-imp}) corresponds to
+demigration (modeling), and its impulse responses have a hyperbolic
+shape. The dispersion artifacts are clearly visible in the figure.
+\par
+In this paper, I explore the possibility of implementing a numerical
+velocity continuation by spectral methods. I adopted two different
+methods, comparable in efficiency with finite differences.  The first
+method is a direct application of the Fast Fourier Transform (FFT)
+technique.  The second method transforms the time grid to Chebyshev
+collocation points, which leads to an application of the
+Chebyshev-$\tau$ method \cite{lanc,orszag,boyd}, combined with an
+unconditionally stable implicit advancement in velocity.  Both methods
+employ a transformation of the grid from time $t$ to the squared time
+$\sigma = t^2$, which removes the dependence on $t$ from the
+coefficients of the velocity continuation equation. Additionally, the
+Fourier transform in the space (midpoint) variable $x$ takes care of
+the spatial dependencies. This transform is a major source of
+efficiency, because different wavenumber slices can be processed
+independently on a parallel computer before transforming them back to
+the physical space.
+\end{comment}
+\par
+Applying velocity continuation to migration velocity analysis involves
+the following steps: 
+\begin{enumerate}
+\item prestack common-offset (and common-azimuth) migration - to
+  generate the initial data for continuation,
+\item velocity continuation with stacking and semblance analysis across
+  different offsets - to transform the offset data dimension into the velocity
+  dimension,
+\item picking the optimal velocity and slicing through the migrated
+  data volume - to generate an optimally focused image.
+\end{enumerate}
+The first step transforms the data to the image space. The regularity of this
+space can be exploited for devising efficient algorithms for the next two
+steps. The idea of slicing through the velocity space goes back to the work of
+\longcite{shurtleff}, \longcite{SEG-1984-S1.8,Fowler.sepphd.58}, and
+\longcite{GEO57-01-00510059}. While the previous slicing methods constructed
+the velocity space by repeated migration with different velocities, velocity
+continuation navigates directly in the migration velocity space without
+returning to the original data. This leads to both more efficient algorithms
+and a better understanding of the theoretical continuation properties
+\cite{first}.
+
+In this paper, I demonstrate all three steps, using both synthetic data and a
+North Sea dataset. I introduce and exemplify two methods for the efficient
+practical implementation of velocity continuation: the finite-difference
+method and the Fourier spectral method. The Fourier method is recommended as
+optimal in terms of the accuracy versus efficiency trade-off. Although all the
+examples in this paper are two-dimensional, the method easily extends to 3-D
+under the assumption of common-azimuth geometry (one oriented offset). More
+investigation may be required to extend the method to the multi-azimuth case.
+
+It is also important to note that although the velocity continuation result
+could be achieved in principle by using prestack residual migration in
+Kirchhoff \cite{Etgen.sepphd.68} or frequency-wavenumber
+\cite{GEO61-02-06050607} formulation, the first is inferior in efficiency, and
+the second is not convenient for the conventional velocity analysis across
+different offsets, because it mixes them in the Fourier domain
+\cite{SEG-2000-09920995}.  \uline{Fourier-domain angle-gather analysis}
+\cite{SEG-2001-02960299,sandf} \uline{opens new possibilities for the future
+development of the Fourier-domain velocity continuation. New insights into the
+possibility of extending the method to depth migration can follow from the
+work of} \longcite{adler}.
+
+\begin{comment}
+\par
+In order to understand the concept of velocity continuation, we need
+to look at the fundamentals of seismic time migration. 
+When post-stack migration is performed in the time domain, it
+possesses peculiar properties, which can lead to a different viewpoint
+on migration.  One of the most interesting properties is an ability to
+decompose the time migration procedure into a cascade of two or more
+migrations with smaller migration velocities. This remarkable property
+is described by 
+\longcite{GEO50.01.01100126} as {\em residual migration}. 
+\longcite{GEO52.05.06180643} have generalized the method of
+residual migration to one of {\em cascaded migration.} Cascading
+finite-difference migrations overcomes the dip limitations of
+conventional finite-difference algorithms \cite{GEO52.05.06180643};
+cascading Stolt-type {\em f-k} migrations expands their range of
+validity to the case of a vertically varying velocity
+\cite{GEO53.07.08810893}. Further theoretical generalization sets the
+number of migrations in a cascade to infinity, making each step in the
+velocity space infinitely small. This leads to the partial
+differential equation in the time-midpoint-velocity space, discovered
+by Claerbout \shortcite{Claerbout.sep.48.79}. Claerbout's equation
+describes the process of {\em velocity continuation,} which fills the
+velocity space in the same manner as a set of constant-velocity
+migrations. Slicing in the migration velocity space can serve as a
+method of velocity analysis for migration with non-constant velocity
+\cite{Fowler.sepphd.58}.
+
+In this paper, I generalize the velocity continuation concept to the
+case of prestack migration, connecting it with the theory of prestack
+residual migration \cite{Etgen.sepphd.68}. By exploiting the
+mathematical theory of characteristics, a simplified kinematic
+derivation of the velocity continuation equation leads to differential
+equations with reasonable dynamic properties. In practice, one can
+accomplish dynamic velocity continuation by integral,
+finite-difference, or Fourier-domain methods. For practical
+applications, I chose the Fourier spectral method. The method has its
+limitations \cite{Fomel.sep.97.sergey2}, but looks optimal in terms of
+the accuracy versus efficiency trade-off.
+ 
+Applying velocity continuation to migration velocity analysis involves
+the following steps: 
+\begin{enumerate}
+\item prestack common-offset (and common-azimuth) migration - to
+  generate the initial data for continuation,
+\item velocity continuation with stacking across different offsets -
+  to transform the offset data dimension into the velocity dimension,
+\item picking the optimal velocity and slicing through the migrated
+  data volume - to generate an optimally focused image.
+\end{enumerate}
+The final part of this paper includes a demonstration of all three
+steps on a simple two-dimensional dataset.
+
+It is important to note that although the velocity continuation result
+could be achieved in principle by using prestack residual migration in
+Kirchhoff \cite{Etgen.sepphd.68} or Stolt \cite{GEO61-02-06050607}
+formulation, the first is evidently inferior in efficiency, and the
+second is not convenient for velocity analysis across different
+offsets, because it mixes them in the Fourier domain.
+
+\mhead{KINEMATICS OF VELOCITY CONTINUATION}
+
+From the kinematic point of view, it is convenient to describe the
+reflector as a locally smooth surface $z = z(x)$, where $z$ is the
+depth, and $x$ is the point on the surface ($x$ is a two-dimensional
+vector in the 3-D problem). The image of the reflector obtained after
+a common-offset prestack migration with a half-offset $h$ and a
+constant velocity $v$ is the surface $z = z(x;h,v)$. Appendix A
+provides the derivations of the partial differential equation
+describing the image surface in the depth-midpoint-offset-velocity
+space. The purpose of this section is to discuss the laws of kinematic
+transformations implied by the velocity continuation equation. Later
+in this paper, I obtain dynamic analogs of the kinematic
+relationships in order to describe the continuation of migrated
+sections in the velocity space.
+
+The kinematic equation for prestack velocity continuation, derived in
+Appendix A, takes the following form:
+\begin{equation}
+{{\partial \tau} \over {\partial v}} = 
+v\,\tau\,\left({{\partial \tau} \over {\partial x}}\right)^2 +
+{{h^2} \over {v^3\,\tau}}\,\left(1-v^4\,
+\left({{\partial \tau} \over {\partial x}}\right)^2\,
+\left({{\partial \tau} \over {\partial h}}\right)^2\right)\;.
+\EQNLABEL{eikonal} 
+\end{equation}
+Here $\tau$ denotes the one-way vertical traveltime $\left(\tau = {z
+\over v}\right)$. The right-hand side of equation \EQN{eikonal}
+consists of three distinctive terms. Each has its own geophysical meaning. The first term is the only one remaining
+when the offset $h$ equals zero. It corresponds to the procedure of
+{\em zero-offset residual migration}.  Setting the reflector dip to
+zero eliminates the first and third terms, leaving the second,
+dip-independent one. We can associate the second term with the process of
+{\em residual normal moveout}. The third term is both dip- and offset-
+dependent. The process that it describes is {\em residual dip
+moveout}. It is convenient to analyze each of the three processes
+separately, evaluating their contributions to the cumulative process
+of prestack velocity continuation.
+
+\shead{Kinematics of Zero-Offset Velocity Continuation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The kinematic equation for zero-offset velocity continuation is
+\begin{equation}
+{{\partial \tau} \over {\partial v}} = 
+v\,\tau\,\left({{\partial \tau} \over {\partial x}}\right)^2\;.
+\EQNLABEL{POMeikonal} 
+\end{equation}
+The typical boundary problem associated with it is to find the
+traveltime surface $\tau(x)$ for a constant velocity $v$, given the
+traveltime surface $\tau_1(x_1)$ at some other velocity $v_1$. Both
+surfaces correspond to the reflector images obtained by time
+migrations with the specified velocities.  When the migration velocity
+approaches zero, post-stack time migration approaches the identity
+operator. Therefore, the case of $v_1 = 0$ corresponds kinematically
+to the zero-offset (post-stack) migration, and the case of $v = 0$
+corresponds to the zero-offset modeling (demigration).
+
+The appropriate mathematical method of solving the kinematic
+problem posed above is the method of characteristics \cite{kurant2}. The
+characteristics of equation \EQN{POMeikonal} are the trajectories
+followed by individual points of the reflector image in the velocity
+continuation process, which I have called {\em velocity rays} 
+\cite{me}. Velocity rays are defined by the system of ordinary
+differential equations derived from \EQN{POMeikonal} according to the
+classic rules of mathematical physics:
+\begin{eqnarray}
+{{{dx} \over {dv}} = - 2\,v\,\tau\,\tau_x} & , &
+{{{d\tau} \over {dv}} = - \tau_v}\;,
+\EQNLABEL{velray1} \\
+{{{d\tau_x} \over {dv}} = v\,\tau_x^3} & , &
+{{{d\tau_v} \over {dv}} = \left(\tau + v\,\tau_v\right)\,\tau_x^2}\;.
+\EQNLABEL{velray2} 
+\end{eqnarray}
+An additional constraint for the quantities $\tau_x$ and $\tau_v$
+follows from equation \EQN{POMeikonal}, rewritten in the form
+\begin{equation}
+\tau_v = v\,\tau\,\tau_x^2\;. 
+\EQNLABEL{equiveikonal} 
+\end{equation}
+One can easily solve the system of equations \EQN{velray1} and
+\EQN{velray2} by the classic mathematical methods for ordinary
+differential equations. The general solution of the system takes the
+parametric form
+\begin{eqnarray}
+x(v) & = A - C v^2\;,\;
+\tau^2(v) & = B - C^2\,v^2\;,
+\EQNLABEL{velrayg1} \\ 
+\tau_x(v) & = {C \over {\tau(v)}}\;,\;
+\tau_v(v) & = {{C^2\,v} \over {\tau(v)}}\;,
+\EQNLABEL{velrayg2} 
+\end{eqnarray}
+where $A$, $B$, and $C$ are constant along each individual velocity
+ray. These three constants are determined from the boundary conditions
+as
+\begin{equation}
+A = x_1 + v_1^2\,\tau_1\,{{\partial \tau_1} \over {\partial x_1}} = x_0\;,
+\EQNLABEL{a} 
+\end{equation}
+\begin{equation}
+B = \tau_1^2\,\left(1 + v^2\,
+\left({{\partial \tau_1} \over {\partial x_1}}\right)^2\right) = \tau_0^2\;,
+\EQNLABEL{b} 
+\end{equation}
+\begin{equation}
+C = \tau_1\,{{\partial \tau_1} \over {\partial x_1}} = 
+\tau_0\,{{\partial \tau_0} \over {\partial x_0}}\;,
+\EQNLABEL{c} 
+\end{equation}
+where $\tau_0$ and $x_0$ correspond to the zero velocity (unmigrated
+section). Equations \EQN{a}, \EQN{b}, and \EQN{c} have a clear
+geometric meaning illustrated in Figure \FIG{vlczor}. Noting the
+simple relationship between the midpoint derivative of the vertical
+traveltime and the local dip angle $\alpha$ (appendix A),
+\begin{equation}
+{{\partial \tau} \over {\partial x}} = 
+{{\tan{\alpha}} \over v}\;,
+\EQNLABEL{dtaudx} 
+\end{equation}
+we can see that equations \EQN{a} and \EQN{b} are precisely equivalent
+to the evident geometric relationships
+\begin{equation}
+x + v\,\tau\,\tan{\alpha} = x_0\;,
+\;{\tau \over {\cos{\alpha}}} = \tau_0\;.
+\EQNLABEL{evident}
+\end{equation}
+Equation \EQN{c} states that the points on a velocity ray correspond
+to a single reflection point, constrained by the values of $\tau$,
+$v$, and $\alpha$.  As follows from equations \EQN{velrayg1}, the
+projection of a velocity ray to the time-midpoint plane has the
+parabolic shape $x(\tau) = A + (\tau^2 - B) / C$, which has been
+noticed by Chun and Jacewitz \shortcite{GEO46.05.07170733}. On the
+depth-midpoint plane, the velocity rays have the circular shape
+$z^2(x) = (A - x)\,B / C - (A - x)^2$, described by Liptow and Hubral
+\shortcite{them} as ``Thales circles.''
+
+\activesideplot{vlczor}{height=2.5in}{NR}{Zero-offset reflection in a constant
+velocity medium (a scheme).}
+
+For an example of kinematic continuation by velocity rays, let us
+consider the case of a point diffractor. If the diffractor location in
+the subsurface is the point ${x_d,z_d}$, then the reflection traveltime at
+zero offset is defined from Pythagoras's theorem as the hyperbolic
+curve
+\begin{equation}
+\tau_0(x_0) = {{\sqrt{z_d^2 + (x_0 - x_d)^2}} \over v_d}\;,
+\EQNLABEL{dift0}
+\end{equation}
+where $v$ is half of the actual velocity. Applying formulas
+\EQN{velrayg1}, we can deduce that the velocity rays in this case have the
+following mathematical expressions:
+\begin{eqnarray}
+x(v) & = & x_d\,{v^2 \over v_d^2} + 
+x_0\,\left(1 -  {v^2 \over v_d^2}\right)\;,
+\EQNLABEL{difrayg1} \\ 
+\tau^2(v) & = & \tau_d^2 + {{(x_0 - x_d)^2} \over v_d^2}\,
+\left(1 -  {v^2 \over v_d^2}\right)\;,
+\EQNLABEL{difrayg2} 
+\end{eqnarray}
+where $\tau_d = {z_d \over v_d}$.
+Eliminating $x_0$ from the system of equations \EQN{difrayg1} and
+\EQN{difrayg2} leads to the expression for the velocity continuation
+``wavefront'': 
+\begin{equation}
+\tau(x)=\sqrt{\tau_d^2 + {{(x - x_d)^2} \over {v_d^2 - v^2}}}\;.
+\EQNLABEL{diffront}
+\end{equation}
+For the case of a point diffractor, the wavefront corresponds precisely
+to the summation path of the residual migration operator
+\cite{GEO50.01.01100126}. It has a hyperbolic shape when $v_d > v$
+(undermigration) and an elliptic shape when $v_d < v$
+(overmigration). The wavefront collapses to a point when the velocity
+$v$ coincides with the actual effective velocity $v_d$. At zero
+velocity, $v=0$, the wavefront takes the familiar form of the post-stack migration
+hyperbolic summation path. The form of the velocity rays and wavefronts
+is illustrated in the left plot of Figure \FIG{vlcvrs}.
+
+\activeplot{vlcvrs}{width=5.5in,height=2.25in}{CR}{Kinematic
+velocity continuation in the post-stack migration domain. Solid lines
+denote wavefronts: reflector images for different migration
+velocities; dashed lines denote velocity rays. Left: the case of a
+point diffractor. Right: the case of a dipping plane reflector.}
+
+Another important example is the case of a dipping plane
+reflector. For simplicity, let us put the origin of the midpoint
+coordinate $x$ at the point of the plane intersection with the surface
+of observations. In this case, the plane reflector has the simple
+expression
+\begin{equation}
+z_p(x) = x\,\tan{\alpha}\;,
+\EQNLABEL{plane}
+\end{equation}
+where $\alpha$ is the dip angle. The zero-offset reflection traveltime
+is the plane with a changed angle. It can be expressed as
+\begin{equation}
+\tau_0(x_0) = p\,x_0\;,
+\EQNLABEL{plt0}
+\end{equation}
+where $p = {{\sin{\alpha}}\over v_p}$, and $v_p$ is half of the actual
+velocity. Applying formulas \EQN{velrayg1} leads to the following
+parametric expression for the velocity rays:
+\begin{eqnarray}
+x(v) & = & x_0\,(1 -  p^2\,v^2)\;,
+\EQNLABEL{plrayg1} \\ 
+\tau(v) & = & p\,x_0\,\sqrt{1 -  p^2\,v^2}\;.
+\EQNLABEL{plrayg2} 
+\end{eqnarray}
+Eliminating $x_0$ from the system of equations \EQN{plrayg1} and \EQN{plrayg2}
+shows that the velocity continuation wavefronts are planes with a
+modified angle:
+\begin{equation}
+\tau(x)={{p\,x} \over {\sqrt{1 -  p^2\,v^2}}}\;.
+\EQNLABEL{plfront}
+\end{equation}
+The right plot of Figure \FIG{vlcvrs} shows the geometry of the
+kinematic velocity continuation for the case of a plane reflector.
+
+\shead{Kinematics of Residual NMO}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The residual NMO differential equation is the second term in
+\EQN{eikonal}:
+\begin{equation}
+{{\partial \tau} \over {\partial v}} = 
+{{h^2} \over {v^3\,\tau}}\;.
+\EQNLABEL{ResNMOeikonal} 
+\end{equation}
+Equation \EQN{ResNMOeikonal} is independent from the midpoint
+$x$. This fact indicates the one-dimensional nature of normal
+moveout. The general solution of equation \EQN{ResNMOeikonal} is
+obtained by simple integration. It takes the form
+\begin{equation}
+\tau^2(v) = C - {h^2 \over v^2} = \tau_1^2 + 
+h^2\,\left({1 \over v_1^2} - {1 \over v^2}\right)\;,
+\EQNLABEL{ResNMO} 
+\end{equation}
+where $C$ is an arbitrary velocity-independent constant, and I have
+chosen the constants $\tau_1$ and $v_1$ so that $\tau(v_1) = \tau_1$.
+
+For the case of a point diffractor, solution \EQN{ResNMO} easily
+combines with the zero-offset solution \EQN{diffront}. The result is a
+simplified version of the prestack residual migration summation path:
+\begin{equation}
+\tau(x)=\sqrt{\tau_d^2 + 
+{{(x - x_d)^2} \over {v_d^2 - v^2}} +
+h^2\,\left({1 \over v_d^2} - {1 \over v^2}\right)}\;.
+\EQNLABEL{PSRMfront}
+\end{equation}
+Summation paths of the form \EQN{PSRMfront} for a set of diffractors
+with different depths are plotted in Figures \FIG{vlcve1} and
+\FIG{vlcve2}. The parameters chosen in these plots allow a direct
+comparison with Etgen's Figures 2.4 and 2.5 \cite{Etgen.sepphd.68},
+based on the exact solution and reproduced in Figures \FIG{vlcve3} and
+\FIG{vlcve4}. The comparison shows that the approximate
+solution \EQN{PSRMfront} captures the main features of the prestack
+residual migration operator, except for the residual DMO cusps
+appearing in the exact solution when the diffractor depth is smaller
+than the offset.
+
+\activesideplot{vlcve1}{height=2in}{CR}{Summation paths of the
+simplified prestack residual migration for a series of depth
+diffractors. Residual slowness $v/v_d$ is 1.2; offset $h$ is 1
+km. This figure is to be compared with Etgen's Figure 2.4.}
+
+\activesideplot{vlcve2}{height=2in}{CR}{Summation paths of the simplified
+prestack residual migration for a series of depth diffractors. Residual
+slowness $v/v_d$ is 0.8; offset $h$ is 1 km. This figure is to be
+compared with Etgen's Figure 2.5.}
+
+Neglecting the residual DMO term in residual migration is
+approximately equivalent in accuracy to neglecting the DMO step in
+conventional processing. Indeed, as follows from the geometric analog
+of equation \EQN{eikonal} derived in Appendix A, dropping the residual
+DMO term corresponds to the condition
+ \begin{equation}
+\tan^2{\alpha}\,\tan^2{\gamma} \ll 1\;,
+\EQNLABEL{tatg}
+\end{equation}
+where $\alpha$ is the dip angle, and $\gamma$ is the reflection angle.
+As shown by Yilmaz and Claerbout \shortcite{GEO45.12.17531779}, the
+conventional processing sequence without the DMO step corresponds to
+the separable approximation of the double-square-root equation \EQN{DSR}:
+\begin{equation}
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial s}}\right)^2} +
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial r}}\right)^2}
+\approx
+2\,\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial x}}\right)^2} +
+2\,\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial h}}\right)^2} -
+2\;.
+\EQNLABEL{Sep}
+\end{equation}
+In geometric terms, approximation \EQN{Sep} transforms to
+\begin{equation}
+\cos{\alpha}\,\cos{\gamma}
+\approx
+\sqrt{1 -  \sin^2{\alpha}\,\cos^2{\gamma}} +
+\sqrt{1 -  \sin^2{\gamma}\,\cos^2{\alpha}} - 1\;.
+\EQNLABEL{Sepgeom}
+\end{equation}
+Estimating the accuracy of the separable approximation by the
+first term of the Taylor series for small $\alpha$ and $\gamma$ yields
+the estimate of ${3 \over 4}\,\tan^2{\alpha}\,\tan^2{\gamma}$
+\cite{GEO45.12.17531779}, which agrees qualitatively with
+\EQN{tatg}. Though approximation \EQN{PSRMfront} fails in 
+situations where the dip moveout correction is necessary, it is 
+significantly more accurate than the 15-degree approximation of the
+double-square-root equation, implied in the migration velocity
+analysis method of Yilmaz and Chambers \shortcite{GEO49.10.16641674}
+and MacKay and Abma \shortcite{abma}. The 15-degree approximation
+\begin{equation}
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial s}}\right)^2} +
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial r}}\right)^2}
+\approx
+2 - {v^2 \over 2}\,
+\left(  \left({{\partial t} \over {\partial s}}\right)^2 +
+        \left({{\partial t} \over {\partial s}}\right)^2\right)
+\EQNLABEL{FDeg}
+\end{equation}
+corresponds geometrically to the equation 
+\begin{equation}
+2\,\cos{\alpha}\,\cos{\gamma}
+\approx
+{{3 + \cos{2\alpha}\,\cos{2\gamma}} \over 2}\;.
+\EQNLABEL{FDgeom}
+\end{equation} 
+Its estimated accuracy is ${1 \over 8}\,\tan^2{\alpha} + {1 \over
+8}\,\tan^2{\gamma}$.  Unlike the separable approximation, which is
+accurate separately for zero offset and zero dip, the 15-degree
+approximation fails at zero offset in the case of a steep dip and at zero
+dip in the case of a large offset.
+
+\shead{Kinematics of Residual DMO}   
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The partial differential equation for kinematic residual DMO is the
+third term in \EQN{eikonal}:
+\begin{equation}
+{{\partial \tau} \over {\partial v}} = 
+- {{h^2 v} \over {\tau}}\,
+\left({{\partial \tau} \over {\partial x}}\right)^2\,
+\left({{\partial \tau} \over {\partial h}}\right)^2\;.
+\EQNLABEL{ResDMOeikonal} 
+\end{equation}
+It is more convenient to consider the residual dip-moveout process
+coupled with residual normal moveout. Etgen
+\shortcite{Etgen.sepphd.68} describes this procedure as the cascade of
+inverse DMO with the initial velocity $v_0$, residual NMO, and DMO
+with the updated velocity $v_1$. The kinematic equation for residual
+NMO+DMO is the sum of the two terms in \EQN{eikonal}:
+\begin{equation}
+{{\partial \tau} \over {\partial v}} = 
+{{h^2} \over {v^3\,\tau}}\,\left(1-v^4\,
+\left({{\partial \tau} \over {\partial x}}\right)^2\,
+\left({{\partial \tau} \over {\partial h}}\right)^2\right)\;.
+\EQNLABEL{DMONMOeikonal} 
+\end{equation}
+If the boundary data for equation \EQN{DMONMOeikonal} are on a
+common-offset gather, it is appropriate to rewrite this equation
+purely in terms of the midpoint derivative ${{\partial \tau} \over
+{\partial x}}$, eliminating the offset-derivative term ${{\partial
+\tau} \over {\partial h}}$. The resultant expression, derived in
+Appendix A, has the form
+\begin{equation}
+v^3\,{{\partial \tau} \over {\partial v}} = 
+{{2\,h^2} \over
+{\sqrt{\tau^2 + 4\,h^2\,
+Q\left(v,{{\partial \tau} \over {\partial x}}\right)} + \tau}}\;,
+\EQNLABEL{noth} 
+\end{equation}
+where 
+\begin{equation}
+Q(v,\tau_x) = {{\tau_x^2} \over 
+{\left(1 + v^2\,\tau_x^2\right)^2}}\;.   
+\EQNLABEL{qtx} 
+\end{equation}
+The direct solution of equation \EQN{noth} is nontrivial. A simpler
+way to obtain this solution is to decompose residual NMO+DMO into
+three steps and to evaluate their contributions separately. Let the
+initial data be the zero-offset reflection event $\tau_0(x_0)$. The
+first step of the residual NMO+DMO is the inverse DMO operator. One
+can evaluate the effect of this operator by means of the offset
+continuation concept \cite{Fomel.sep.84.179}. According to this
+concept, each point of the input traveltime curve $\tau_0(x_0)$
+travels with the change of the offset from zero to $h$ along a special
+trajectory, which I call a {\em time ray}. Time rays are parabolic
+curves of the form
+\begin{equation}
+x\left(\tau\right) =  x_0+{{\tau^2-\tau_0^2\left(x_0\right)} \over
+{\tau_0\left(x_0\right)\,\tau_0'\left(x_0\right)}}\;,
+\EQNLABEL{xoftau}
+\end{equation}
+with the final points constrained by the equation
+\begin{equation}
+h^2 = \tau^2\,{{\tau^2-\tau_0^2\left(x_0\right)} \over
+{\left(\tau_0\left(x_0\right)\,\tau_0'\left(x_0\right)\right)^2}}\;.
+\EQNLABEL{hoftau}
+\end{equation}
+The second step of the cumulative residual NMO+DMO process is the
+residual normal moveout. According to equation \EQN{ResNMO}, residual
+NMO is a one-trace operation transforming the traveltime $\tau$ to
+$\tau_1$ as follows:
+\begin{equation}
+\tau_1^2 = \tau^2 + h^2\,s\;,
+\EQNLABEL{ResNMO2} 
+\end{equation}
+where 
+\begin{equation}
+s = {1 \over v_0^2} - {1 \over v_1^2}\;.
+\EQNLABEL{s} 
+\end{equation}
+The third step is dip moveout corresponding to the new velocity
+$v_1$. DMO is the offset continuation from $h$ to zero
+offset along the redefined time rays \cite{Fomel.sep.84.179}
+\begin{equation}
+x_2\left(\tau_2\right) =  
+x + {{h\,X} \over {\tau_1^2\,H}}\,\left(\tau_1^2-\tau_2^2\right)\;,
+\EQNLABEL{xoftau2}
+\end{equation}
+where $H = {{\partial \tau_1} \over {\partial h}}$, and $X =
+{{\partial \tau_1} \over {\partial x}}$. 
+The end points of the time rays \EQN{xoftau2} are defined by the
+equation
+\begin{equation}
+\tau_2^2 = - \tau_1^2\,{{\tau_1\,H} \over {h\,X^2}}\;.
+\EQNLABEL{tauofh2}
+\end{equation}
+The partial derivatives of the common-offset traveltimes are
+constrained by the offset continuation kinematic equation
+\begin{equation}
+h\,(H^2 - Y^2) = \tau_1\,H\;,
+\EQNLABEL{OCequation}
+\end{equation}
+which is equivalent to equation \EQN{OCeikonal} in Appendix
+A. Additionally, as follows from equations \EQN{ResNMO2} and the ray
+invariant equations from \cite{Fomel.sep.84.179},
+\begin{equation}
+\tau_1\,X = \tau\,{{\partial \tau} \over {\partial x}} = 
+{{\tau^2\,\tau_0'\left(x_0\right)} \over {\tau_0\left(x_0\right)}}\;.
+\EQNLABEL{invariant}
+\end{equation}
+Substituting \EQN{xoftau}, \EQN{hoftau}, \EQN{ResNMO2},
+\EQN{OCequation}, and \EQN{invariant} into equations \EQN{xoftau2} and
+\EQN{tauofh2} and performing the algebraic simplifications, we arrive
+at the parametric expressions for velocity rays of the residual
+NMO+DMO process:
+\begin{equation}
+\left\{
+\begin{array}{rcl}
+x_2(s) & = & \displaystyle{x_0 + {{h^2\,\tau_0'(x_0)} \over T}\,
+\left(1 - {T^2 \over T_2^2(s)}\right)}\;,
+\\ 
+\\
+\tau(s) & = & \displaystyle{{{\tau_1^2(s)} \over {T_2(s)}}}\;,
+\end{array}
+\right.
+\EQNLABEL{ResDMO2}
+\end{equation}
+where the function
+$T\left(h,\tau_0(x_0),\tau_0'\left(x_0\right)\right)$ is defined by
+\begin{equation}
+T\left(h,\tau,\tau_x\right) = 
+{{\tau + \sqrt{\tau^2 + 4\,h^2\,\tau_x^2}} \over 2}\;,
+\EQNLABEL{CapT}
+\end{equation}
+\begin{equation}
+T_2(s) = \sqrt{T\left(h,\tau_1^2(s),\tau_0'\left(x_0\right)\,
+T\left(h,\tau_0(x_0),\tau_0'\left(x_0\right)\right)\right)}\;,
+\EQNLABEL{CapT2}
+\end{equation}
+and
+\begin{equation}
+\tau_1^2(s) = \tau_0\,T + s\,h^2\;.
+\EQNLABEL{tauofs}
+\end{equation}
+
+The last step of the cascade of inverse DMO, residual NMO, and DMO is
+illustrated in Figure \FIG{vlcvoc}. The three plots in the figure show the
+offset continuation to zero offset of the inverse DMO impulse response
+shifted by the residual NMO operator. The middle plot corresponds to zero NMO shift, for which the DMO step collapses the wavefront back to a point.
+Both positive (top plot) and negative (bottom plot) NMO shifts
+ result in the formation of the specific triangular impulse
+response of the residual NMO+DMO operator. As noticed by Etgen
+\shortcite{Etgen.sepphd.68}, the size of the ``triangle'' operators
+dramatically decreases with the time increase. For large times
+(pseudo-depths) of the initial impulses, the operator collapses to a
+point corresponding to the pure NMO shift. This fact agrees with the
+conclusions of the preceding subsection about the comparative
+importance
+of
+the
+residual
+DMO
+term.
+It
+is
+illustrated
+in
+Figure
+\FIG{vlcvcp}
+with
+the
+theoretical
+impulse response curves, and in Figure \FIG{vlccps} with the result of
+an actual cascade of the inverse DMO, residual NMO, and DMO operators.
+
+\activesideplot{vlcvoc}{height=5.5in}{CR}{Kinematic residual NMO+DMO
+operators constructed by the cascade of inverse DMO, residual NMO, and
+DMO. The impulse response of inverse DMO is shifted by the residual
+DMO procedure. Offset continuation back to zero offset forms the
+impulse response of the residual NMO+DMO operator. Solid lines denote
+traveltime curves; dashed lines denote the offset continuation
+trajectories (time rays). Top plot: $v_1/v_0 = 1.2$. Middle plot:
+$v_1/v_0 = 1$; the inverse DMO impulse response collapses back to the
+initial impulse. Bottom plot: $v_1/v_0 = 0.8$. The half-offset $h$ in
+all three plots is 1 km.}
+
+\activeplot{vlcvcp}{width=6in,height=3.5in}{CR}{Theoretical
+kinematics of the residual NMO+DMO impulse responses for three
+impulses. Left plot: the velocity ratio $v_1/v_0$ is $1.333$. Right
+plot: the velocity ratio $v_1/v_0$ is $0.833$. In both cases the
+half-offset $h$ is 1 km.}
+
+\activeplot{vlccps}{width=6in,height=3.5in}{ER}{The result of
+residual NMO+DMO (cascading inverse DMO, residual NMO, and DMO) for
+three impulses. Left plot: the velocity ratio $v_1/v_0$ is
+$1.333$. Right plot: the velocity ratio $v_1/v_0$ is $0.833$. In both
+cases the half-offset $h$ is 1 km.}
+
+Figure \FIG{vlcvrd} illustrates the residual NMO+DMO velocity
+continuation for two particularly interesting cases. The left plot
+shows the continuation for a point diffractor. One can see that when
+the velocity error is large, focusing of the velocity rays forms a
+specific loop on the zero-offset hyperbola. The right plot illustrates
+the case of a plane dipping reflector. The image of the reflector
+shifts both vertically and laterally with the change in NMO
+velocity.
+
+\activeplot{vlcvrd}{width=5.5in,height=2.25in}{CR}{Kinematic
+velocity continuation for residual NMO+DMO. Solid lines denote
+wavefronts: zero-offset traveltime curves; dashed lines denote
+velocity rays. Left plot: the case of a point diffractor; the velocity
+ratio $v_1/v_0$ changes from $0.9$ to $1.1$. Right plot:
+the case of a dipping plane reflector; the velocity
+ratio $v_1/v_0$ changes from $0.8$ to $1.2$. In both cases, the
+half-offset $h$ is 2 km.}
+
+The full residual migration operator is the result of cascading
+residual zero-offset migration and residual NMO+DMO. I illustrate the
+kinematics of this operator in Figures \FIG{vlcve3} and \FIG{vlcve4},
+which are designed to match Etgen's Figures 2.4 and 2.5
+\cite{Etgen.sepphd.68}. A comparison with Figures \FIG{vlcve1} and
+\FIG{vlcve2} shows that including the residual DMO term affects
+the images of shallow objects (with the depth smaller than the offset
+$h$) and complicates the residual migration operator with cusps.
+
+\activesideplot{vlcve3}{height=2in}{CR}{Summation paths of prestack
+residual migration for a series of depth diffractors. Residual
+slowness $v/v_d$ is 1.2; offset $h$ is 1 km. This figure reproduces
+Etgen's Figure 2.4.}
+
+\activesideplot{vlcve4}{height=2in}{CR}{Summation paths of prestack
+residual migration for a series of depth diffractors. Residual
+slowness $v/v_d$ is 0.8; offset $h$ is 1 km. This figure reproduces
+Etgen's Figure 2.5.}
+
+\mhead{FROM KINEMATICS TO DYNAMICS}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The theory of characteristics \cite{kurant2} states that if a partial
+differential equation has the form
+\begin{equation}
+\sum_{i,j=1}^{n}\,\Lambda_{ij}(\xi_1,\ldots,\xi_n)\,
+{{\partial^2 P} \over {\partial \xi_i\,\partial \xi_j}} +
+F\left(\xi_1,\ldots,\xi_n,P,
+{{\partial P} \over {\partial \xi_1}},\ldots,
+{{\partial P} \over {\partial \xi_n}}\right) = 0\;,
+\EQNLABEL{gequation}
+\end{equation}
+where F is some arbitrary function, and if the eigenvalues of the matrix
+$\Lambda$ are nonzero, and one of them is different in sign from the
+others, then equation \EQN{gequation} describes a wave-type process, and its
+kinematic counterpart is the characteristic equation
+\begin{equation}
+\sum_{i,j=1}^{n}\,\Lambda_{ij}(\xi_1,\ldots,\xi_n)\,
+{{\partial \psi} \over {\partial \xi_i}}\, 
+{{\partial \psi} \over {\partial \xi_j}} = 0
+\EQNLABEL{charequation}
+\end{equation}
+with the characteristic surface 
+\begin{equation}
+\psi(\xi_1,\ldots,\xi_n) = 0
+\EQNLABEL{charsurface}
+\end{equation}
+corresponding to the wavefront. In velocity continuation problems,
+it is appropriate to choose the variable $\xi_1$ to denote the time
+$t$, $\xi_2$ to denote the velocity $v$, and the rest of the
+$\xi$-variables to denote one or two lateral coordinates $x$. Without
+loss of generality, we can set the characteristic surface to be
+\begin{equation}
+\psi = t - \tau(x;v) = 0\;,
+\EQNLABEL{chartau}
+\end{equation}
+and use the theory of characteristics to reconstruct the main
+(second-order) part of the dynamic differential equation from the
+corresponding kinematic equations. As in the preceding section, it is
+convenient to consider separately the three different components of the prestack
+velocity continuation process.
+
+\shead{Dynamics of Zero-Offset Velocity Continuation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+In the case of zero-offset velocity continuation, the characteristic
+equation is reconstructed from equation \EQN{POMeikonal} to have the form
+\begin{equation}
+{{\partial \psi} \over {\partial v}}\,
+{{\partial \psi} \over {\partial t}} +
+v\,t\,\left({{\partial \psi} \over {\partial x}}\right)^2 = 0\;.
+\EQNLABEL{POMchar} 
+\end{equation}
+According to formula \EQN{gequation}, the corresponding dynamic equation is
+\begin{equation}
+{{\partial^2 P} \over {\partial v\, \partial t}} +
+v\,t\,{{\partial^2 P} \over {\partial x^2}} +
+F\left(x,t,v,P,
+{{\partial P} \over {\partial t}},
+{{\partial P} \over {\partial v}},
+{{\partial P} \over {\partial x}}
+\right) = 0\;,
+\EQNLABEL{POMequation} 
+\end{equation}
+where the function $F$ remains to be defined. The simplest case of $F$
+equal to zero corresponds to Claerbout's velocity continuation
+equation \cite{Claerbout.sep.48.79}, derived in a different way. Levin
+\shortcite{Levin.sep.48.101} provides the dispersion-relation
+derivation, conceptually analogous to applying the method of
+characteristics.
+
+In high-frequency asymptotics, the wavefield $P$ can be
+represented by the ray-theoretical (WKBJ) approximation,
+\begin{equation}
+P(t,x,v) \approx A(x,v)\,f\left(t - \tau(x,v)\right)\;, 
+\EQNLABEL{WKB} 
+\end{equation}
+where $A$ is the amplitude, $f$ is the short (high-frequency) wavelet,
+and the function $\tau$ satisfies the kinematic equation
+\EQN{POMeikonal}. Substituting approximation \EQN{WKB} into the dynamic
+velocity continuation equation \EQN{POMequation}, collecting the
+leading-order terms, and neglecting the $F$ function, we arrive at the
+partial differential equation for amplitude transport:
+\begin{equation}
+{\partial A \over \partial v} = v\,\tau\,\left(2\,
+{\partial A \over \partial x}\,
+{\partial \tau \over \partial x} + A\,
+{\partial^2 \tau \over \partial x^2}\right)\;.
+\EQNLABEL{PAMPequation} 
+\end{equation}
+The general solution of equation \EQN{PAMPequation} follows from the
+theory of characteristics. It takes the form
+\begin{equation}
+A(x,v) = A_0(x_0)\,\exp{\left(\int_0^{v}\,u\,\tau(x,u)\,
+{\partial^2 \tau(x,u) \over \partial x^2}\,du\right)}\;,
+\EQNLABEL{PAMPsolution} 
+\end{equation}
+where $A_0(x_0) = A(x,0)$, and the integral corresponds to the
+curvilinear integration along the corresponding velocity ray.
+In the case of a plane dipping reflector, the image of the reflector remains
+plane in the velocity continuation process. Therefore, the second
+traveltime derivative ${\partial^2 \tau(x,u) \over \partial x^2}$ in
+\EQN{PAMPsolution} equals zero, and the exponential is equal to
+one. This means that the amplitude of the image does not change with
+the velocity along the velocity rays. This fact does not agree with the
+theory of conventional post-stack migration, which suggests
+downscaling the image by the ``cosine'' factor $\tau_0 \over
+\tau$ \cite{GEO46.05.07170733,Levin.sep.48.147}. The simplest way to
+include the cosine factor in the velocity continuation equation is to
+set the function $F$ to be ${1 \over t}\,{\partial P \over \partial
+v}$. The resulting differential equation
+\begin{equation}
+{{\partial^2 P} \over {\partial v\, \partial t}} +
+v\,t\,{{\partial^2 P} \over {\partial x^2}} +
+{1 \over t}\,{\partial P \over \partial v} = 0
+\EQNLABEL{POMequation2} 
+\end{equation}
+has the amplitude transport
+\begin{equation}
+A(x,v) = {\tau_0 \over \tau}\,A_0(x_0)\,
+\exp{\left(\int_0^{v}\,u\,\tau(x,u)\,
+{\partial^2 \tau(x,u) \over \partial x^2}\,du\right)}\;,
+\EQNLABEL{PAMPsolution2} 
+\end{equation}
+corresponding to the differential equation
+\begin{equation}
+{\partial A \over \partial v} = v\,\tau\,\left(2\,
+{\partial A \over \partial x}\,
+{\partial \tau \over \partial x} + A\,
+{\partial^2 \tau \over \partial x^2}\right) - 
+A\,{1 \over \tau}\,{\partial \tau \over \partial v}\;.
+\EQNLABEL{PAMPequation2} 
+\end{equation}
+Appendix B proves that the time-and-space solution of the dynamic
+velocity continuation equation \EQN{POMequation2} coincides with the
+conventional Kirchhoff migration operator.
+
+The finite-difference implementation of zero-offset velocity
+continuation resembles the implementation of Claerbout's
+15-degree equation in a retarded coordinate system
+\cite{Claerbout.blackwell.76}. This implementation is discussed in
+more detail in Appendix C. 
+
+\shead{Dynamics of Residual NMO}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+According to the theory of characteristics, described in the beginning
+of this section, the kinematic residual NMO equation
+\EQN{ResNMOeikonal} corresponds to the dynamic equation of the form
+\begin{equation}
+{{\partial P} \over {\partial v}} + 
+{{h^2} \over {v^3\,t}}\,{{\partial P} \over {\partial t}}\;,
+\EQNLABEL{ResNMOdyn} 
+\end{equation}
+whose general solution is easily found to be
+\begin{equation}
+P(t,x,v) = \phi\left(t^2 + {h^2 \over v^2}\right)\;,
+\EQNLABEL{ResNMOsol} 
+\end{equation}
+where $\phi$ is an arbitrary smooth function.
+The combination of dynamic equations \EQN{ResNMOdyn} and
+\EQN{POMequation2} leads to an approximate prestack velocity
+continuation with the residual DMO effect neglected. To accomplish the
+combination, we can simply add the term ${{h^2} \over
+{v^3\,t}}\,{{\partial^2 P} \over {\partial t^2}}$ to the left-hand
+side of equation \EQN{POMequation2}. This addition changes the
+kinematics of velocity continuation, but does not change the amplitude
+properties embedded in the transport equation \EQN{PAMPsolution2}.
+
+\shead{Dynamics of Residual DMO}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The case of residual DMO complicates the building of a dynamic equation
+because of the essential nonlinearity of the kinematic equation
+\EQN{noth}. One possible way to linearize the problem is to increase
+the order of the equation. In this case, the resultant dynamic
+equation would include a term that has the second-order derivative with
+respect to velocity $v$. Such an equation describes two different
+modes of wave propagation and requires additional initial conditions
+to separate them. Another possible way to linearize equation
+\EQN{noth} is to approximate it at small dip angles. For example, one
+can obtain a recursively accurate approximation by a continuous
+fraction expansion of the square root in equation \EQN{noth},
+analogously to Muir's method in conventional finite-difference
+migration \cite{Claerbout.blackwell.85}. In this case, the dynamic
+equation would contain only the first-order derivative with respect to
+the velocity and high-order derivatives with respect to the other
+parameters. The third, and probably the most attractive, method is to
+change the domain of consideration. For example, we could switch from
+the common-offset domain to the domain of common offset dip. This
+method implies a transformation similar to slant stacking of
+common-midpoint gathers in the post-migration domain in order to
+obtain the local offset dip information. Equation \EQN{noth}
+transforms, with the help of the results from Appendix A, to the form
+\begin{equation}
+v^3\,{{\partial \tau} \over {\partial v}} = 
+{{\tau\,\sin^2{\gamma}} \over
+{\cos^2{\alpha} - \sin^2{\gamma}}}\;,
+\EQNLABEL{noh} 
+\end{equation}
+with
+\begin{equation}
+\cos^2{\alpha} = \left(1 + v^2 \,
+\left({{\partial \tau} \over {\partial x}}\right)^2\right)^{-1}\;,
+\EQNLABEL{cos2a} 
+\end{equation}
+and
+\begin{equation}
+\sin^2{\alpha} = v^2\,
+\left({{\partial \tau} \over {\partial h}}\right)^2\,
+\left(1 + v^2 \,
+\left({{\partial \tau} \over {\partial h}}\right)^2\right)^{-1}\;.
+\EQNLABEL{sin2g} 
+\end{equation}
+For a constant offset dip $\tan{\gamma} = v\,{{\partial \tau} \over
+{\partial h}}$, the dynamic analog of equation \EQN{noh} is the
+third-order partial differential equation
+\begin{equation}
+v\,  \cot^2{\gamma}\,{{\partial^3 P} \over {\partial t^2\, \partial v}} -
+v^3\,{{\partial^3 P} \over {\partial x^2\, \partial v}}
++ t\,{{\partial^3 P} \over {\partial t^2\, \partial v}} +
+v^2\,t\,{{\partial^3 P} \over {\partial x^2\, \partial t}} = 0\;.
+\EQNLABEL{ResDMOdyn} 
+\end{equation}
+Equation \EQN{ResDMOdyn} does not strictly comply with the theory of
+second-order linear differential equations. Its properties and
+practical applicability require further research.
+
+\section{Conclusions}
+%%%%%%%%%%%%%%%%%%%%%
+I have derived kinematic and dynamic equations for residual time migration
+in the form of a continuous velocity continuation process. This
+derivation explicitly decomposes prestack
+velocity continuation into three parts corresponding to
+zero-offset continuation, residual NMO, and residual DMO. These three
+parts can be treated separately both for simplicity of theoretical
+analysis and for practical purposes. It is important to note that in
+the case of a three-dimensional migration, all three components of
+velocity continuation have different dimensionality. Zero-offset
+continuation is fully 3-D. It can be split into two 2-D continuations
+in the in- and cross-line directions. Residual DMO is a
+two-dimensional common-azimuth process. Residual NMO is a 1-D
+single-trace procedure.
+
+The dynamic properties of zero-offset velocity continuation are
+precisely equivalent to those of conventional post-stack migration
+methods such as Kirchhoff migration. Moreover, the Kirchhoff migration
+operator coincides with the integral solution of the velocity
+continuation differential equation for continuation from the zero
+velocity plane.
+
+This rigorous theory of velocity continuation can give us new insights
+into the methods of prestack migration velocity analysis. However, its
+practical applicability faces several important problems. One of them
+concerns the comparative value of the residual DMO term. Another
+problem is the choice of the implementation method for velocity
+continuation. Both these problems require further research efforts.
+
+I have applied two spectral methods for a numerical solution of the
+velocity continuation problem.
+\par
+The Fourier method is attractive because of its numerical efficiency.
+However, it requires additional computational effort to suppress
+numerical artifacts: the inaccuracy of the grid transform and
+the artificial periodicity in the physical space.
+\par
+The Chebyshev-$\tau$ method is free of most of these difficulties,
+although its overall efficiency can be slightly inferior to that of
+the Fourier method.
+\par
+Both methods possess a ``spectral'' accuracy, which is highly desired
+if accuracy is a concern.
+\par
+\plot{mig-impl}{width=6in}{Top left: synthetic model (the ideal image). 
+  Top right: synthetic data. 
+  Bottom left: the result of velocity continuation 
+  with the Fourier method. Bottom right: the result of 
+  velocity continuation with the Chebyshev method.}
+\par
+Figure \ref{fig:mig-impl} compares the results of velocity
+continuation with different methods. The top left plot shows an
+implied subsurface model (an ``ideal image''). The top right plot is
+the corresponding synthetic data. The bottom left plot is the output
+of the Fourier method, and the bottom right plot is the output of the
+Chebyshev method. The Fourier result shows a poor quality in the
+shallow part (caused by subsampling in the $t^2$ grid). The wraparound
+artifacts were suppressed by a zero-padding correction. The quality of
+the Chebyshev result is noticeably higher. It is close to the best
+possible accuracy, under the natural limitations of seismic resolution.
+
+I have demonstrated an application of velocity continuation to
+migration velocity analysis on simple data sets. 
+
+
+\section{Acknowledgments}
+%%%%%%%%%%%%%%%%%%%%%%%%%
+I thank Bee Bednar, Biondo Biondi, Jon Claerbout, Sergey Goldin, Bill
+Harlan, David Lumley, and Bill Symes for useful and stimulating
+discussions. 
+
+\APPENDIX{A}
+%%%%%%%%%%%%
+\mhead{DERIVING THE KINEMATIC EQUATIONS}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The main goal of this appendix is to derive the partial differential
+equation describing the image surface in a
+depth-midpoint-offset-velocity space.
+
+\activesideplot{vlcray}{height=2.5in}{NR}{Reflection rays in a constant
+velocity medium (a scheme).}
+
+The derivation starts with observing a simple geometry of reflection
+in a constant-velocity medium, shown in Figure \FIG{vlcray}. The
+well-known equations for the apparent slowness
+\begin{equation}
+{{\partial t} \over {\partial s}} \,=\,
+{ {\sin{\alpha_1}} \over {v}}\;,
+\EQNLABEL{snell1}
+\end{equation}
+\begin{equation}
+{{\partial t} \over {\partial r}} \,=\, 
+{{\sin{\alpha_2}} \over {v}}  
+\EQNLABEL{snell2}
+\end{equation} 
+relate the first-order traveltime derivatives for the reflected waves
+to the emergency angles of the incident and reflected rays. Here $s$
+stands for the source location at the surface, $r$ is the receiver
+location, $t$ is the reflection traveltime, $v$ is the constant
+velocity, and $\alpha_1$ and $\alpha_2$ are the angles shown in Figure
+\FIG{vlcray}. Considering the traveltime derivative with respect to
+the depth of the observation surface $z$, we can see that the
+contributions of the two branches of the reflected ray, added
+together, form the equation
+\begin{equation}
+- {{\partial t} \over {\partial z}} \,=\,
+{{\cos{\alpha_1}} \over {v}} +
+{{\cos{\alpha_2}} \over {v}}\;.
+\EQNLABEL{snell3}
+\end{equation}
+It is worth mentioning that the elimination of angles from equations
+\EQN{snell1}, \EQN{snell2}, and \EQN{snell3} leads to the famous {\em
+double-square-root equation,}
+\begin{equation}
+- v\,{{\partial t} \over {\partial z}} \,=\,
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial s}}\right)^2} +
+\sqrt{1 -  v^2\,\left({{\partial t} \over {\partial r}}\right)^2}\;,
+\EQNLABEL{DSR}
+\end{equation}
+published in the Russian literature by Belonosova and Alekseev
+\shortcite{alekseev} and commonly used in the form of a
+pseudo-differential dispersion relation
+\cite{Clayton.sep.14.21,Claerbout.blackwell.85} for prestack migration
+\cite{Yilmaz.sepphd.18,Popovici.sep.84.53}. Considered locally,
+equation \EQN{DSR} is independent of the constant velocity assumption
+and enables prestack downward continuation of reflected waves in
+heterogeneous media.
+
+Introducing midpoint coordinate $x = {{s+ r} \over 2}$ and half-offset
+$h = {{r - s} \over 2}$, we can apply the chain rule and elementary
+trigonometric equalities to formulas \EQN{snell1} and
+\EQN{snell2} and transform these formulas to 
+\begin{equation}
+{{\partial t} \over {\partial x}} \,=\, 
+{{\partial t} \over {\partial s}} + 
+{{\partial t} \over {\partial r}} \,=\, 
+{ {2 \sin{\alpha}\,\cos{\gamma}} \over {v}}\;,
+\EQNLABEL{snells1}
+\end{equation}
+\begin{equation}
+{{\partial t} \over {\partial h}} \,=\,
+{{\partial t} \over {\partial r}} - 
+{{\partial t} \over {\partial s}} \,=\, 
+{ {2 \cos{\alpha}\,\sin{\gamma}} \over {v}} \;,
+\EQNLABEL{snells2}
+\end{equation}
+where $\alpha = {{\alpha_1 + \alpha_2} \over 2}$ is the dip angle, and
+$\gamma = {{\alpha_2 - \alpha_1} \over 2}$ is the reflection angle
+\cite{Clayton.sep.14.21,Claerbout.blackwell.85}. Equation
+\EQN{snell3} transforms analogously to
+\begin{equation}
+- {{\partial t} \over {\partial z}} \,=\,
+{{2 \cos{\alpha} \cos{\gamma}} \over {v}}\;. 
+\EQNLABEL{snells3}
+\end{equation}
+This form of equation \EQN{snell3} is used to describe the stretching
+factor of the waveform distortion in depth migration \cite{Tygel}.
+
+Dividing \EQN{snells1} and \EQN{snells2} by \EQN{snells3}, we obtain
+\begin{equation}
+{{\partial z} \over {\partial x}} \,=\,
+- \tan{\alpha}\;, 
+\EQNLABEL{snellz1}
+\end{equation}
+\begin{equation}
+{{\partial z} \over {\partial h}} \,=\,
+- \tan{\gamma}\;.
+\EQNLABEL{snellz2}
+\end{equation}
+Substituting formulas \EQN{snellz1} and \EQN{snellz2} into equation
+\EQN{snells3} yields yet another form of the double-square-root equation:
+\begin{equation}
+- {{\partial t} \over {\partial z}} \,=\, {2 \over {v}}\,
+\sqrt{1 + \left({\partial z} \over {\partial x}\right)^2}\,
+\sqrt{1 + \left({\partial z} \over {\partial h}\right)^2}\;, 
+\EQNLABEL{snellz3}
+\end{equation}
+which is analogous to the dispersion relationship of Stolt prestack
+migration \cite{GEO43.01.00230048}.
+ 
+The law of sines in the triangle formed by the incident and reflected
+ray leads to the explicit relationship between the traveltime and the
+offset:
+\begin{equation}
+v\,t = 2\,h\,  {{\cos{\alpha_1}+ \cos{\alpha_2}} \over
+\sin{\left(\alpha_2-\alpha_1\right)}} = 2\,h\,{\cos{\alpha} \over
+\sin{\gamma}} \;.
+\EQNLABEL{length} 
+\end{equation}
+The combination of formulas \EQN{length}, \EQN{snells1}, and
+\EQN{snells2} forms the basic kinematic equation of the offset
+continuation theory \cite{Fomel.sep.84.179}:
+\begin{equation}
+{{\partial t} \over {\partial h}} \,
+\left(t^2 + {{4\,h^2} \over {v^2}}\right)\,=\,
+h\,t\,\left({4 \over {v^2}} + 
+\left({{\partial t} \over {\partial h}}\right)^2\,-
+\left({{\partial t} \over {\partial x}}\right)^2\right)\;.
+\EQNLABEL{OCeikonal}
+\end{equation}
+
+Differentiating \EQN{length} with respect to the velocity $v$ yields
+\begin{equation}
+- v^2\,{{\partial t} \over {\partial v}} = 
+2\,h\,{\cos{\alpha} \over \sin{\gamma}}\;.
+\EQNLABEL{dtdv} 
+\end{equation}
+Finally, dividing \EQN{dtdv} by \EQN{snells3}, we get
+\begin{equation}
+v\,{{\partial z} \over {\partial v}} = 
+{h \over {\cos{\gamma}\,\sin{\gamma}}}\;.
+\EQNLABEL{dzdv} 
+\end{equation}
+Equation \EQN{dzdv} can be written in a variety of ways with the help
+of an explicit geometric relationship between the half-offset $h$ and
+the depth $z$, 
+\begin{equation}
+h = z\,
+{{\sin{\gamma}\,\cos{\gamma}} \over
+{\cos^2{\alpha}-\sin^2{\gamma}}}\;, 
+\EQNLABEL{z2h} 
+\end{equation}
+which follows directly from the trigonometry of the triangle in
+Figure \FIG{vlcray} \cite{Fomel.sep.84.179}. For example, equation
+\EQN{dzdv} can be transformed to the form obtained recently by Liu and
+Bleistein \shortcite{Liu}:
+\begin{equation}
+v\,{{\partial z} \over {\partial v}} = 
+{z \over{\cos^2{\alpha}-\sin^2{\gamma}}} =
+{z \over{\cos{\alpha_1}\,\cos{\alpha_2}}}\;.
+\EQNLABEL{liu} 
+\end{equation}
+In order to separate different factors contributing to the velocity
+continuation process, we can transform this equation to the form
+\begin{eqnarray*}
+v\,{{\partial z} \over {\partial v}} = 
+{z \over {\cos^2{\alpha}}} +
+{{h^2} \over z}\,\left(1-\tan^2{\alpha}\,\tan^2{\gamma}\right) =
+\end{eqnarray*}
+\begin{equation}
+= z\,\left(1 + \left({{\partial z} \over {\partial x}}\right)^2\right) +
+{{h^2} \over z}\,\left(1-\left({{\partial z} \over {\partial x}}\right)^2\,
+\left({{\partial z} \over {\partial h}}\right)^2\right)\;.
+\EQNLABEL{zeikonal} 
+\end{equation}
+Rewritten in terms of the vertical traveltime, it further transforms
+to equation \EQN{eikonal} in the main text. Yet another form of the
+kinematic velocity continuation equation follows from eliminating the
+reflection angle $\gamma$ from equations \EQN{dzdv} and \EQN{z2h}. The
+resultant expression takes the following form:
+\begin{equation}
+v\,{{\partial z} \over {\partial v}} = 
+{{2\,(z^2 + h^2)} \over
+{\sqrt{z^2 + h^2 \sin^2{2\,\alpha}} + z\,\cos{2\,\alpha}}} =
+{z \over {\cos^2{\alpha}}} + {{2\,h^2} \over
+{\sqrt{z^2 + h^2 \sin^2{2\,\alpha}} + z}}\;.
+\EQNLABEL{nogamma} 
+\end{equation}
+
+\APPENDIX{B}
+%%%%%%%%%%%%
+\mhead{INTEGRAL VELOCITY CONTINUATION AND KIRCHHOFF MIGRATION}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The goal of this appendix is to prove the equivalence between the
+result of zero-offset velocity continuation from zero velocity and
+conventional post-stack migration. After solving the velocity
+continuation problem in the frequency domain, I transform the solution
+back to the time-and-space domain and compare it with the famous
+Kirchhoff migration operator.
+ 
+Zero-offset migration based on velocity continuation is the solution
+of the boundary problem for equation \EQN{POMequation2} with the
+boundary condition
+\begin{equation}
+\left.P\right|_{v=0} = P_0\;,
+\EQNLABEL{POMbound} 
+\end{equation}
+where $P_0(t_0,x_0)$ is the zero-offset seismic section, and
+$P(t,x,v)$ is the continued wavefield. In order to find the solution
+of the boundary problem composed of \EQN{POMequation2} and \EQN{POMbound}, it is
+convenient to apply the function transformation $R(t,x,v) =
+t\,P(t,x,v)$, the time coordinate transformation $\sigma = t^2/2$, and,
+finally, the double Fourier transform over the squared time coordinate
+$\sigma$ and the spatial coordinate $x$:
+\begin{equation}
+\widehat{R}(v) = \int \int\,P(t,x,v)\,
+\exp(i \Omega \sigma - i k x )\,t^2\,dt\,dx\;.
+\EQNLABEL{FTK} 
+\end{equation}
+With the change of domain, equation \EQN{POMequation2} transforms
+to the ordinary differential equation
+\begin{equation}
+{{d\,\widehat{R}} \over {d\,v}} = 
+i\,{k^2 \over \Omega}\,v\,\widehat{R}\;,
+\EQNLABEL{ODE} 
+\end{equation}
+and the boundary condition \EQN{POMbound} transforms to the initial
+value condition
+\begin{equation}
+\widehat{R}(0) = \widehat{R}_0\;, 
+\EQNLABEL{ODEbound} 
+\end{equation}
+where 
+\begin{equation}
+\widehat{R}_0 = \int \int\,P_0(t_0,x_0)\,
+\exp(i \Omega \sigma_0 - i k x_0 )\,t_0^2\,dt_0\,dx_0\;,
+\EQNLABEL{FTK0}
+\end{equation}
+and $\sigma_0 = t_0^2/2$.  The unique solution of the initial value
+(Cauchy) problem \EQN{ODE} - \EQN{ODEbound} is easily found to be
+\begin{equation}
+\widehat{R}(v) = \widehat{R}_0\,
+\exp\left( i\,{{k^2} \over {2\,\Omega}}\,v^2\right)\;.
+\EQNLABEL{ODEsolution} 
+\end{equation}
+
+Observe that, in the transformed domain, velocity continuation is a
+unitary phase-shift operator. An immediate consequence of this
+remarkable fact is the cascaded migration decomposition of post-stack
+migration \cite{GEO52.05.06180643}:
+\begin{equation}
+\exp\left( i\,{{k^2} \over {2\,\Omega}}\,
+(v_1^2 +  \cdots + v_n^2)\right) =
+\exp\left( i\,{{k^2} \over {2\,\Omega}}\,v_1^2\right)\,\cdots\,
+\exp\left( i\,{{k^2} \over {2\,\Omega}}\,v_n^2\right)\;.
+\EQNLABEL{cascaded} 
+\end{equation}
+Analogously, three-dimensional post-stack migration is decomposed
+into the two-pass procedure \cite{GPR31.01.00340056}:
+\begin{equation}
+\exp\left( i\,{{k_1^2+k_2^2} \over {2\,\Omega}}\,v^2\right) =
+\exp\left( i\,{{k_1^2} \over {2\,\Omega}}\,v^2\right)\,
+\exp\left( i\,{{k_2^2} \over {2\,\Omega}}\,v^2\right)\;.
+\EQNLABEL{two-pass}
+\end{equation}
+
+The inverse double Fourier transform of both sides of equality
+\EQN{ODEsolution} yields the integral (convolution) operator
+\begin{equation}
+P(t,x,v) = \int\int\,P_0(t_0,x_0)\,K(t_0,x_0;t,x,v)\,dt_0\,dx_0\;,
+\EQNLABEL{convolution}
+\end{equation}
+with the kernel $K$ defined by
+\begin{equation}
+K = {{t_0^2/t} \over {(2\,\pi)^{m+1}}}\,
+\int\int\,\exp\left(
+i\,{{k^2} \over {2\,\Omega}}\,v^2 + ik\,(x - x_0) - 
+{{i\Omega} \over 2}\,(t^2 - t_0^2)
+\right)\,dk\,d\Omega\;,
+\EQNLABEL{kernel}
+\end{equation}
+where $m$ is the number of dimensions in $x$ and $k$ ($m$ equals $1$
+or $2$). The inner integral on the wavenumber axis $k$ in formula
+\EQN{kernel} is a known table integral \cite{grad}. Evaluating this
+integral simplifies equation \EQN{kernel} to the form
+\begin{equation}
+K = {{t_0^2/t} \over {(2\,\pi)^{m/2+1}\,v^m}}\,
+\int\,(i\Omega)^{m/2}\,\exp\left[
+{{i\Omega} \over 2}\,
+\left(t_0^2 - t^2 - {{(x - x_0)^2} \over v^2}\right)\right]\,
+d\Omega\;.
+\EQNLABEL{skernel}
+\end{equation}
+The term $(i\Omega)^{m/2}$ is the spectrum of the anti-causal
+derivative operator ${d \over {d\sigma}}$ of the order $m/2$. Noting
+the equivalence
+\begin{equation}
+\left({\partial \over {\partial \sigma}}\right)^{m/2} =
+\left({1 \over t}\,{\partial \over {\partial t}}\right)^{m/2} =
+\left({1 \over t}\right)^{m/2}\,
+\left({\partial \over {\partial t}}\right)^{m/2}\;,
+\EQNLABEL{halfdif}
+\end{equation}
+which is exact in the 3-D case ($m=2$) and asymptotically correct in
+the 2-D case ($m=1$), and applying the convolution theorem, we can
+transform operator \EQN{convolution} to the form
+\begin{equation}
+P(t,x,v) = {1 \over {(2\,\pi)^{m/2}}}\,\int\,
+{{\cos{\alpha}} \over {(v\,\rho)^{m/2}}}\,
+\left(- {\partial \over {\partial t_0}}\right)^{m/2}
+P_0\left({\rho \over v},x_0\right)\,dx_0\;,
+\EQNLABEL{Kirchhoff}
+\end{equation}
+where $\rho = \sqrt{v^2\,t^2 + (x - x_0)^2}$, and $\cos{\alpha} =
+t_0/t$. Operator \EQN{Kirchhoff} coincides with the Kirchhoff operator
+of conventional post-stack time migration \cite{GEO43.01.00490076}.
+
+%\APPENDIX{C}
+%%%%%%%%%%%%
+\section{Introduction}
+\par
+In a recent work \cite{me,Fomel.sep.92.159}, I
+introduced the process of \emph{velocity continuation} to describe a
+continuous transformation of seismic time-migrated images with a
+change of the migration velocity. Velocity continuation generalizes
+the ideas of residual migration
+\cite{GEO50.01.01100126,Etgen.sepphd.68} and cascaded migrations
+\cite{GEO52.05.06180643}. In the zero-offset (post-stack) case, the
+velocity continuation process is governed by a partial differential
+equation in midpoint, time, and velocity coordinates, first discovered
+by \longcite{Claerbout.sep.48.79}. \longcite{hubral1} and
+\longcite{hubral2} describe this process in a broader context of
+``image waves''. Generalizations are possible for the non-zero offset
+(prestack) case \cite{Fomel.sep.92.159,Fomel.segab.97}.
+\par
+A numerical implementation of velocity continuation process provides
+an efficient method of scanning the velocity dimension in the search
+of an optimally focused image. The first implementations
+\cite{Li.sep.48.85,Fomel.sep.92.159} used an analogy with Claerbout's
+15-degree depth extrapolation equation to construct a
+finite-difference scheme with an implicit unconditionally stable
+advancement in velocity. \longcite{Fomel.sep.95.sergey2} presented an
+efficient three-dimensional generalization, applying the helix
+transform \cite{Claerbout.sep.95.jon1}.
+\par
+\plot{fd-imp}{width=6in}{Impulse responses (Green's functions) of
+  velocity continuation, computed by a second-order finite-difference
+  method.  The left plots corresponds to continuation to a larger
+  velocity ($+1$ km/sec); the right plot, smaller velocity, ($-1$
+  km/sec).}
+\par
+A low-order finite-difference method is probably the most efficient
+numerical approach to this method, requiring the least work per
+velocity step. However, its accuracy is not optimal because of the
+well-known numerical dispersion effect. Figure \ref{fig:fd-imp} shows
+impulse responses of post-stack velocity continuation for three
+impulses, computed by the second-order finite-difference method
+\cite{Fomel.sep.92.159}. As expected from the residual migration
+theory \cite{GEO50.01.01100126}, continuation to a higher velocity
+(left plot) corresponds to migration with a residual velocity, and its
+impulse responses have an elliptical shape. Continuation to a smaller
+velocity (right plot in Figure \ref{fig:fd-imp}) corresponds to
+demigration (modeling), and its impulse responses have a hyperbolic
+shape. The dispersion artifacts are clearly visible in the figure.
+\par
+In this paper, I explore the possibility of implementing a numerical
+velocity continuation by spectral methods. I adopted two different
+methods, comparable in efficiency with finite differences.  The first
+method is a direct application of the Fast Fourier Transform (FFT)
+technique.  The second method transforms the time grid to Chebyshev
+collocation points, which leads to an application of the
+Chebyshev-$\tau$ method \cite{lanc,orszag,boyd}, combined with an
+unconditionally stable implicit advancement in velocity.  Both methods
+employ a transformation of the grid from time $t$ to the squared time
+$\sigma = t^2$, which removes the dependence on $t$ from the
+coefficients of the velocity continuation equation. Additionally, the
+Fourier transform in the space (midpoint) variable $x$ takes care of
+the spatial dependencies. This transform is a major source of
+efficiency, because different wavenumber slices can be processed
+independently on a parallel computer before transforming them back to
+the physical space.
+\end{comment}
+\par
+\section{Numerical velocity continuation in the post-stack domain}
+\par
+The post-stack velocity continuation process is governed by a partial
+differential equation in the domain, composed by the seismic image
+coordinates (midpoint $x$ and vertical time $t$) and the additional
+velocity coordinate $v$. Neglecting some amplitude-correcting terms
+\cite{first}, the equation takes the form
+\cite{Claerbout.sep.48.79}
+\begin{equation}
+  \label{PDE}
+  {{\partial^2 P} \over {\partial v\, \partial t}} +
+  v\,t\,{{\partial^2 P} \over {\partial x^2}} = 0\;.
+\end{equation}
+Equation (\ref{PDE}) is linear and belongs to the hyperbolic type. It
+describes a wave-type process with the velocity $v$ acting as a
+propagation variable. Each constant-$v$ slice of the function
+$P(x,t,v)$ corresponds to an image with the corresponding constant
+velocity. The necessary boundary and initial conditions are 
+\begin{equation}
+  \label{BC}
+  \left.P\right|_{t=T} = 0\;\quad \left.P\right|_{v=v_0} = P_0 (x,t)\;,
+\end{equation}
+where $v_0$ is the starting velocity, $T=0$ for continuation to a smaller
+velocity and $T$ is the largest time on the image (completely attenuated
+reflection energy) for continuation to a larger velocity.  The first case
+corresponds to ``modeling'' (demigration); the latter case, to seismic
+migration.
+\par
+Mathematically, equations (\ref{PDE}) and (\ref{BC}) define a
+Goursat-type problem \cite{kurant2}. Its analytical solution can be
+constructed by a variation of the Riemann method in the form of an
+integral operator \cite{me,first}:
+\begin{equation}
+  \label{kirch}
+  P(t,x,v) = \frac{1}{(2\,\pi)^{m/2}}\,\int\, 
+  \frac{1}{(\sqrt{v^2-v_0^2}\,\rho)^{m/2}}\, 
+  \left(- \frac{\partial}{\partial t_0}\right)^{m/2}
+  P_0\left(\frac{\rho}{\sqrt{v^2-v_0^2}},x_0\right)\,dx_0\;,
+\end{equation}
+where $\rho = \sqrt{(v^2-v_0^2)\,t^2 + (x - x_0)^2}$, $m=1$ in the 2-D
+case, and $m=2$ in the 3-D case. In the case of continuation from zero
+velocity $v_0=0$, operator (\ref{kirch}) is equivalent (up to the
+amplitude weighting) to conventional Kirchoff time migration
+\cite{GEO43.01.00490076}.  Similarly, in the frequency-wavenumber
+domain, velocity continuation takes the form
+\begin{equation}
+  \label{stolt}
+  \hat{P} (\omega,k,v) = \hat{P}_0 (\sqrt{\omega^2+k^2 (v^2-v_0^2)},k)\;,
+\end{equation}
+which is equivalent (up to scaling coefficients) to Stolt migration
+\cite{GEO43.01.00230048}, regarded as the most efficient constant-velocity
+migration method.
+\par
+If our task is to create many constant-velocity slices, there are
+other ways to construct the solution of problem (\ref{PDE}-\ref{BC}).
+Two alternative approaches are discussed in the next two
+subsections.
+\subsection{Finite-difference approach}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+The differential equation~(\ref{PDE}) has a mathematical form analogous to
+that of the 15-degree wave extrapolation equation
+\cite{Claerbout.blackwell.76}. Its finite-difference implementation, first
+described by Claerbout \shortcite{Claerbout.sep.48.79} and Li
+\shortcite{Li.sep.48.85}, is also analogous to that of the 15-degree equation,
+except for the variable coefficients. One can write the implicit
+unconditionally stable finite-difference scheme for the velocity continuation
+equation in the form
+\begin{equation}
+({\bf I} + a_{j+1}^{i+1}\,{\bf T})\,{\bf P}_{j+1}^{i+1} - 
+({\bf I} - a_{j}^{i+1}\,{\bf T})\,{\bf P}_{j}^{i+1} -
+({\bf I} - a_{j+1}^{i}\,{\bf T})\,{\bf P}_{j+1}^{i} + 
+({\bf I} + a_{j}^{i}\,{\bf T})\,{\bf P}_{j}^{i} = 0\;, 
+\EQNLABEL{fds} 
+\end{equation}
+where index $i$ corresponds to the time dimension, index $j$
+corresponds to the velocity dimension, ${\bf P}$ is a vector along the
+midpoint direction, ${\bf I}$ is the identity matrix, ${\bf T}$
+represents the finite-difference approximation to the 
+second-derivative operator in midpoint,
+and $a_{j}^{i} = v_j\,t_i\,{\Delta v\,\Delta t}$.
+
+In the two-dimensional case, equation \EQN{fds} reduces to a
+tridiagonal system of linear equations, which can be easily inverted.
+In 3-D, a straightforward extension can be obtained by using either
+directional splitting or helical schemes \cite{SEG-1998-1124}. The
+direction of stable propagation is either forward in velocity and
+backward in time or backward in velocity and forward in time as shown
+in Figure \FIG{vlcfds}.
+
+\activesideplot{vlcfds}{height=2in}{NR}{Finite-difference scheme for the
+velocity continuation equation. A stable propagation is either forward
+in velocity and backward in time (a) or backward in velocity
+and forward in time (b).}
+
+\begin{comment}
+The following simple ratfor program implements the finite-difference
+velocity continuation. It is slightly modified from Jon Claerbout's
+original version and has a more straightforward loop structure than
+Zhiming Li's {\tt Caso15} program.
+\listing{velcon.rt}
+The parameter {\tt adj} controls the direction of propagation. It is
+equal to zero for backward propagation, which corresponds to the
+modeling (demigration) operator. The parameter {\tt inv} controls the
+amplitude behavior by introducing time-dependent divisors to equation
+\EQN{fds}. For {\tt inv=1}, the program implements
+Claerbout's velocity continuation equation. For {\tt inv=2}, it
+implements the modified equation \EQN{POMequation2}. The value of {\tt
+inv=0} corresponds to the intermediate case. It leads to the
+{\em pseudounitary} velocity continuation, for which the reverse
+continuation is the exact adjoint operator
+\cite{Fomel.sep.92.267}. We can easily test different types of
+amplitude behavior with the dot-product test and its modifications.
+The parameter {\tt b} is required for the ``1/6 trick'' introduced by
+Claerbout \shortcite{Claerbout.blackwell.85} to increase the accuracy
+of the second-derivative operator ${\bf T}$ in \EQN{fds}. The
+second-order difference in subroutine {\tt diffxx} implies simple
+zero-slope boundary conditions on the midpoint coordinate. The call to
+{\tt rtris} solves the tridiagonal system.
+\end{comment}
+
+In order to test the performance of the finite-difference velocity
+continuation method, I use a simple synthetic model from
+\longcite{Claerbout.bei.95}. The reflectivity model is shown in
+Figure \FIG{vlcmod}. It contains several features that challenge the
+migration performance: dipping beds, unconformity, syncline,
+anticline, and fault. \uline{The velocity is taken to be constant 
+$v=1.5\,\mbox{km/s}$.}
+
+\activesideplot{vlcmod}{height=2.5in}{ER}{Synthetic model for testing
+finite-difference migration by velocity continuation.}
+
+\uline{Figures~\ref{fig:vlckaa}--\ref{fig:vlcspv}} compare invertability of different
+migration methods. In all cases, constant-velocity modeling (demigration) 
+%by the adjoint operator \cite{Claerbout.blackwell.92}
+was followed by migration
+with the correct velocity.  Figures \FIG{vlckaa} and \FIG{vlcsto} show the
+results of modeling and migration with the Kirchhoff \cite{GEO43.01.00490076}
+and $f$-$k$ \cite{GEO43.01.00230048} methods, respectively. These figures
+should be compared with Figure \FIG{vlcvel}, showing the analogous result of
+the finite-difference velocity continuation.  The comparison reveals a
+remarkable invertability of velocity continuation, which reconstructs
+accurately the main features and frequency content of the model. Since the
+forward operators were different for different migrations, this comparison did
+not test the migration properties themselves. For such a test, I compare the
+results of the Kirchhoff and velocity-continuation migrations after Stolt
+modeling.  The result of velocity continuation, shown in Figure \FIG{vlcspv},
+is noticeably more accurate than that of the Kirchhoff method.
+
+%\activeplot{vlckir}{width=6in,height=2.5in}{ER}{Result of modeling and
+%migration with the fast Kirchhoff method. Left plot shows the
+%reconstructed model. Right plot compares the average amplitude
+%spectrum of the true model with that of the reconstructed image.}
+
+\activeplot{vlckaa}{width=6in}{ER}{Result of modeling and
+migration with the Kirchhoff method. Top left plot shows the
+reconstructed model. Top right plot compares the average amplitude
+spectrum of the true model with that of the reconstructed image.
+Bottom left is the reconstruction error. Bottom right is the absolute error in
+the spectrum.
+}
+
+%\activeplot{vlcpha}{width=6in,height=2.5in}{ER}{Result of modeling and
+%migration with the phase-shift method. Left plot shows the
+%reconstructed model. Right plot compares the average amplitude
+%spectrum of the true model with that of the reconstructed image.}
+
+\activeplot{vlcsto}{width=6in}{ER}{Result of modeling and
+  migration with the Stolt method. Top left plot shows the reconstructed model.
+  Top right plot compares the average amplitude spectrum of the true model
+  with that of the reconstructed image. Bottom left is the reconstruction
+  error. Bottom right is the absolute error in the spectrum.}
+
+\activeplot{vlcvel}{width=6in}{ER}{Result of modeling and
+  migration with the finite-difference velocity continuation. Top left plot
+  shows the reconstructed model. Top right plot compares the average amplitude
+  spectrum of the true model with that of the reconstructed image. Bottom left
+  is the reconstruction error. Bottom right is the absolute error in the
+  spectrum.  }
+
+\activeplot{vlcspv}{width=6in,height=5in}{ER}{Top:
+modeling with Stolt method, migration with the Kirchhoff
+method. Bottom: modeling with Stolt method, migration with the
+finite-difference velocity continuation. Left plots show the
+reconstructed models. Right plots show the reconstruction errors.}
+
+These tests confirm that finite-difference velocity continuation is an
+attractive migration method. It possesses remarkable invertability properties,
+which may be useful in applications that \uline{require inversion. While the
+  traditional migration methods transform the data between two completely
+  different domains (data-space and image-space), velocity continuation
+  accomplishes the same trans\-for\-ma\-ti\-on by propagating the data in the
+  extended domain along the velocity direction. Inverse propagation restores
+  the original data.} According to \longcite{Li.sep.48.85}, the computational
+speed of this method compares favorably with that of Stolt migration. The
+advantage is apparent for cascaded migration or migration with multiple
+velocity models. In these cases, the cost of Stolt migration increases in
+direct proportion to the number of velocity models, while the cost of velocity
+continuation stays the same.
+
+\par
+\subsection{Fourier approach}
+\par
+The change of variable $\sigma = t^2$ transforms
+equation~(\ref{PDE}) to the form
+\begin{equation}
+  \label{PDE2}
+  2\,{{\partial^2 P} \over {\partial v\, \partial \sigma}} +
+  v\,{{\partial^2 P} \over {\partial x^2}} = 0\;,
+\end{equation}
+whose coefficients do not depend on the time variables.  Double Fourier
+transform in $\sigma$ and $x$ further simplifies equation (\ref{PDE2})
+to the ordinary differential equation
+\begin{equation}
+  \label{ODE}
+  2\,i\Omega\,{{d \hat{P}} \over {d v}} -
+  v\,k^2\,\hat{P} = 0\;,
+\end{equation}
+where the ``frequency'' variable $\Omega$ corresponds to the stretched time
+coordinate $\sigma$, and $k$ is the wavenumber in $x$:
+\begin{equation}
+\label{FFT}
+\hat{P}(k,\Omega,v) = \int\!\!\int P(x,t,v)\,
+e^{-i\,\Omega\,t^2 + i\,k\,x} d x\,dt
+\end{equation}
+Equation (\ref{ODE}) has
+an explicit analytical solution
+\begin{equation}
+  \label{ODEsol}
+  \hat{P} (k,\Omega,v) = \hat{P}_0 (k,\Omega)\,
+  e^{\frac{i k^2(v_0^2-v^2)}{4\Omega}}\;,
+\end{equation}
+which leads to a very simple algorithm for the numerical velocity
+continuation. The algorithm consists of the following steps:
+\begin{enumerate}
+\item \uline{Input the zero-offset (post-stack) data migrated with velocity $v_0$ (or
+  unmigrated if $v_0=0$).}
+\item Transform the input from a regular grid in $t$ to a regular grid
+  in $\sigma$.
+\item Apply Fast Fourier Transform (FFT) in $x$ and $\sigma$.
+\item Multiply by the all-pass phase-shift filter $e^{\frac{i
+      k^2(v_0^2-v^2)}{4\Omega}}$.
+\item Inverse FFT in $x$ and $\sigma$.
+\item Inverse transform to a regular grid in $t$.
+\end{enumerate}
+
+\plot{t2}{width=6in}{Synthetic seismic data before (left) and after
+  (right) transformation to the $\sigma$ grid.}
+
+Figure \ref{fig:t2} shows a simple synthetic model of seismic
+reflection data generated from the model in Figure~\ref{fig:vlcmod}
+before and after transforming the grid, regularly spaced in $t$, to a
+grid, regular in $\sigma$. The left plot of Figure \ref{fig:t2-fft}
+shows the Fourier transform of the data. Except for the nearly
+vertical event, which corresponds to a stack of parallel layers in the
+shallow part of the data, the data frequency range is contained near
+the origin in the $\Omega-k$ space.  The right plot of Figure
+\ref{fig:t2-fft} shows the phase-shift filter for continuation from
+zero imaging velocity (which corresponds to unprocessed data) to the
+velocity of 1 km/sec. The rapidly oscillating part (small frequencies
+and large wavenumbers) is exactly in the region, where the data
+spectrum is zero. It corresponds to physically impossible reflection
+events.
+
+\plot{t2-fft}{width=6in}{Left: the real part of the data Fourier
+  transform.  Right: the real part of the velocity continuation
+  operator (continuation from 0 to 1 km/s) in the Fourier domain.}
+
+\uline{The described algorithm}
+ is very attractive from the practical point of view
+because of its efficiency (based on the FFT algorithm). The operation count is
+roughly the same as in the Stolt migration implemented with equation
+(\ref{stolt}): two forward and inverse FFTs and forward and inverse grid
+transform with interpolation (one complex-number transform in the case of
+Stolt migration). The velocity continuation algorithm can be more efficient
+than the Stolt method because of the simpler structure of the innermost loop
+\uline{(step 4 in the algorithm)}. 
+
+\begin{comment}
+However, its practical implementation faces two
+difficult problems: artifacts of the $t^2$ grid transform and
+wraparound artifacts
+\par
+\subsection{Improving the accuracy of the $t^2$ grid transform}
+\par
+The first problem is the loss of information in the transform to the
+$t^2$ grid. As illustrated in Figure \ref{fig:t2}, the shallow part of
+the data gets severely compressed in the $t^2$ grid. The amount of
+compression can lead to inadequate sampling, and as a result, aliasing
+artifacts in the frequency domain. Moreover, it can be difficult to
+recover from the loss of information in the transformed domain when
+transforming back into the original grid. A partial remedy for this
+problem is to increase the grid size in the $t^2$ domain. The top plots
+in Figure \ref{fig:fft-inv} show the result of back transformation to
+the $t$ grid and the difference between this result and the original
+model (plotted on the same scale). We can see a noticeable loss of
+information in the upper (shallow) part of the data, caused by
+undersampling. The bottom plots in Figure \ref{fig:fft-inv} correspond
+to increasing the grid size by a factor of three. Some of the
+artifacts have been suppressed, at the expense of dealing with a
+larger grid.
+
+\plot{fft-inv}{width=6in}{The left plots show the reconstruction of the original data 
+  after transforming back from the $t^2$ grid to the original $t$
+  grid.  The right plots show the difference with the original model.
+  Top: using the original grid size ($N_t = 200$). Bottom: increasing
+  the grid size by a factor of three.}
+
+To perform an accurate transform of the grid, I adopted the following
+method, inspired by \cite{Claerbout.sep.48.347}. Let $d_{\mbox{\tiny
+    new}}$ denote the data on the new grid and $d_{\mbox{\tiny old}}$
+be the data on the old grid. If $L$ is the interpolation operator,
+defined on the new grid, then the optimal least-squares transformation
+is
+\begin{equation}
+  \label{interp}
+  d_{\mbox{\tiny new}} = (L^T L)^{-1}\,L\,d_{\mbox{\tiny old}}\;,
+\end{equation}
+where $L^T$ denotes the adjoint interpolation operator. The operator
+$(L^T L)^{-1}$ provides a proper scaling of the result. If we use
+simple linear interpolation for the $L$ operator, then $L^T L$ is a
+tridiagonal matrix, which can be easily inverted (in $8 N$
+operations). If some parts in $d_{\mbox{\tiny new}}$ are not fully
+constrained, then the tridiagonal matrix is not invertible. To obtain
+a solution in this case, we can include a regularization operator $D$
+in (\ref{interp}), as follows:
+\begin{equation}
+  \label{regul}
+  d_{\mbox{\tiny new}} = (L^T L + \epsilon^2 D)^{-1}\,L\,d_{\mbox{\tiny
+      old}}\;,
+\end{equation}
+A convenient choice for $D$ is a second derivative operator,
+represented with the second-order finite-difference approximation.
+This operator allows the selection of the smoothest possible function
+$d_{\mbox{new}}$ while preserving the efficient tridiagonal structure
+of $L^T L + \epsilon^2 D$. In this problem, the parameter $\epsilon$
+can be chosen as small as possible, as long as it prevents the
+inversion from getting unstable.
+\par
+\subsection{Suppressing wraparound artifacts of the Fourier method}
+\par
+The periodic boundary conditions both in the squared time $\sigma$ and
+the spatial coordinate $x$, implied by the Fourier approach, are
+artificial in the problem of velocity continuation. The artificial
+periodicity is convenient from the computational point of view.
+However, false periodic events (wraparound artifacts) should be
+suppressed in the final output. A natural method for attacking this
+problem is to apply zero padding in the physical space prior to
+Fourier transform. Of course, this method involves an additional
+expense of the grid size increase.
+\par
+\plot{fft-imp}{width=6in}{Impulse responses (Green's functions) of velocity continuation, 
+  computed by the Fourier method. Top: without zero padding, bottom:
+  with zero padding. The left plots correspond to continuation to a
+  larger velocity ($+1$ km/sec); the right plots, smaller velocity,
+  ($-1$ km/sec).}
+\par
+The top plots in Figure \ref{fig:fft-imp} show the numerical impulse
+responses of velocity continuation, computed by the Fourier method.
+The initial data contained three spikes, passed through a narrow-band
+filter. Theoretically, continuation to larger velocity (the left plot)
+should create three elliptical wavefronts, and continuation to smaller
+velocity (right plot) should create three hyperbolic wavefronts
+\cite[]{GEO50.01.01100126}. We can see that the results are largely
+contaminated with wraparound artifacts. The result of applying zero
+padding (the bottom plots in Figure \ref{fig:fft-imp}) shows most of
+the artifacts suppressed.
+\par
+Chebyshev spectral method, discussed in the next section, provides a
+spectral accuracy while dealing correctly with non-periodic data.
+\par 
+\section{Chebyshev Approach}
+For an alternative spectral approach, I adopted the Chebyshev-$\tau$
+method \cite{lanc,orszag}. The Chebyshev-$\tau$ velocity continuation
+algorithm consists of the following steps:
+\begin{enumerate}
+\item Transform the regular grid in $t$ to Gauss-Lobato collocation
+  points, required for the fast Chebyshev transform.  First, a new
+  variable $\xi$ is introduced by the shift transform:
+  \begin{equation}
+    \label{t2x}
+    \xi = 1 - \frac{2\,t^2}{T^2}
+  \end{equation}
+  so that the domain $0 \leq t \leq T$ is mapped into the domain $1
+  \geq \xi \geq -1$. Second, the $\xi$ grid points are distributed
+  regularly in the cosine projection: $\xi_j = \cos(\frac{\pi j}{N}), j
+  = 0,1,2,\ldots,N$.
+\item Transform the initial image $P_0 (x,t)$ into the Chebyshev space
+  in $\xi$ and Fourier transform in $x$, using the FFT algorithm. The
+  Chebyshev-Fourier representation of $P_0 (x,t)$ is
+  \begin{equation}
+    \label{cheb}
+    P_0 (x,t) = \sum_{k=-N_x/2}^{N_x/2-1}\sum_{j=0}^{N_t} 
+    \hat{P}_{kj} T_j (\xi) e^{i k x}\;, 
+  \end{equation}
+  where $T_j$ denotes the Chebyshev polynomial of degree $j$.
+\item Apply equation (\ref{PDE}) to advance the image in velocity $v$.
+  It is convenient to rewrite this equation in the form
+  \begin{equation}
+    \label{chebPDE}
+  {{\partial P} \over {\partial v}} =
+  \frac{v T^2}{4}\,\int d\xi\,
+  {{\partial^2 P} \over {\partial x^2}}\;. 
+  \end{equation}
+  In the Chebyshev-$\tau$ domain, the double differentiation in $x$ is
+  performed by multiplying the Fourier transform of $P$ by $-k^2$, and
+  integration in $\xi$ is performed
+  as a direct operations on the Chebyshev coefficients. In
+  particular, if $\sum_{j=0}^{N} a_j T_j (\xi)$ is the Chebyshev
+  representation of the function $f (\xi)$, then the coefficients
+  $b_j$ of $\int f (\xi) d\xi$ are defined by the relation
+  \begin{equation}
+    \label{int}
+    2 j\,b_j = c_{j-1} a_{j-1} - a_{j+1}
+  \end{equation}
+  where $c_0 = 2$, $c_j = 0$ for $j < 0$, and $c_j = 1$ for $j > 0$.
+  The constant of integration (and, correspondingly, the coefficient
+  $b_0$) can be found at each velocity step from the boundary
+  conditions (\ref{BC}), which are transformed to the form
+  \begin{equation}
+    \label{chebBC}
+    \left.P\right|_{\xi=-1} = \sum_{j=0}^{N_t} \hat{P}_{kj} (-1)^j = 0\;.
+  \end{equation}
+  
+  For the velocity advancement I used an implicit Crank-Nicholson scheme,
+  which is unconditionally stable independent of the velocity step size.
+  By writing equation (\ref{chebPDE}) in the matrix form
+  \begin{equation}
+    \label{matrix}
+    \frac{\partial \bold{P}}{\partial v} = \bold{A} \bold{P}\;,
+  \end{equation}
+  the Crank-Nicolson advancement is represented by the equation
+    \begin{equation}
+    \label{CN}
+    \bold{P}_{v+dv} = \left(\bold{I} - \bold{A}\,\frac{dv}{2}\right)^{-1}
+    \left(\bold{I} + \bold{A}\,\frac{dv}{2}\right) \bold{P}_v\;,
+  \end{equation}
+  where $\bold{I}$ is the identity matrix. The inverted matrix
+  $\left(\bold{I} - \bold{A}\,\frac{dv}{2}\right)$ has a tridiagonal
+  structure, except for the first row, implied by the boundary
+  condition (\ref{chebBC}). A careful treatment of the boundary
+  condition by the matrix-bordering method \cite{faddeev,boyd} allows
+  for an efficient inversion at a tridiagonal solver speed.
+\item Transform the result of the velocity advancement back to the
+  physical domain.
+\item Transform the grid back to being regularly space in $t$.
+\end{enumerate}
+\par
+\plot{cheb1}{width=6in}{Synthetic seismic data before (left) and 
+  after (right) transformation to the Chebyshev grid in squared time.}
+\par
+\plot{cheb1-inv}{width=6in}{The left plots show the reconstruction of the original data 
+  after transforming back from the Chebyshev grid to the original $t$
+  grid.  The right plots show the difference with the original model.
+  Top: using the original grid size ($N_t = 200$). Bottom: increasing
+  the grid size by a factor of three.}
+\par
+The first advantage of the Chebyshev approach comes from the better
+conditioning of the grid transform.  Figure \ref{fig:cheb1} shows the
+synthetic data before and after the grid transform.  Figure
+\ref{fig:cheb1-inv} shows a reconstruction of the original data after
+transforming back from the Chebyshev grid (Gauss-Lobato collocation
+points). The difference with the original image is negligibly small.
+\par
+\plot{cheb1-fft}{width=6in}{Left: Synthetic data after Chebyshev
+  transform.  Right: the real part of the Fourier transform in the
+  space coordinate.}
+\par
+The second advantage is the compactness of the Chebyshev
+representation.  Figure \ref{fig:cheb1-fft} shows the data after the
+decomposition into Chebyshev polynomials in $\xi$ and Fourier
+transform in $x$. We observe a very rapid convergence of the Chebyshev
+representation: a relatively small number of polynomials suffices to
+represent the data.
+\par
+\plot{cheb-impl}{width=6in}{Impulse responses (Green's functions) of
+  velocity continuation, computed by the Chebyshev-$\tau$ method. Top:
+  without zero padding, bottom: with zero padding on the $x$ axis. The
+  left plots correspond to continuation to a larger velocity ($+1$
+  km/sec); the right plots, smaller velocity, ($-1$ km/sec).}
+\par
+The third advantage is the proper handling of the non-periodic boundary
+conditions. Figure \ref{fig:cheb-impl} shows the velocity continuation
+impulse responses, computed by the Chebyshev method. As expected, no
+wraparound artifacts occur on the time axis, and the accuracy of the
+result is noticeably higher than in the case of finite differences
+(Figure \ref{fig:fd-imp}).
+
+\section{Data tests}
+\end{comment}
+
+\section{\uline{Numerical velocity continuation in the prestack domain}}
+
+\begin{comment}
+Velocity continuation in the zero-offset (post-stack case) can be
+performed with a simple Fourier-domain algorithm
+\cite{Fomel.sep.97.sergey2}:
+\begin{enumerate}
+  \item Input an image, migrated with velocity $v_0$.
+  \item Transform the time axis $t$ to the squared time coordinate:
+    $\sigma=t^2$.
+  \item Apply a fast Fourier transform (FFT) on both the squared time
+    and the midpoint axis. The squared time $\sigma$ transforms to the
+    frequency $\Omega$, and the midpoint coordinate $x$ transforms to
+    the wavenumber $k$. It is safe to assume that in the
+    post-migration domain seismic images are uniformly sampled in $x$,
+    which allows us to use the FFT technique. In the case of 3-D data,
+    FFT should be applied in both midpoint coordinates.
+  \item Apply a phase-shift operator to transform to different velocities $v$:
+    \begin{equation}
+      \label{eqn:zophase}
+      \hat{P}(\Omega,k,v) = \hat{P}_0 (\Omega,k)\,
+      e^{\frac{i\,k^2\left(v_0^2 - v^2\right)}{4\,\Omega}}\;.
+    \end{equation}
+  \item Apply an inverse FFT to transform from $\Omega$ and $k$ to
+    $\sigma$ and $x$.
+  \item Apply an inverse time stretch to transform from $\sigma$ to $t$.
+\end{enumerate}    
+The computational complexity of this algorithm has the same order as
+that of the Stolt migration \cite{GEO43.01.00230048}, but in practice
+it can be even faster because of the very simple inner computation. 
+\par
+\end{comment}
+
+To generalize the algorithm of the previous section to the prestack case, it is
+first necessary to include the residual NMO term \cite{first}.  Residual normal
+moveout can be formulated with the help of the differential equation:
+\begin{equation}
+{{\partial P} \over {\partial v}} + 
+{{h^2} \over {v^3\,t}}\,{{\partial P} \over {\partial t}} = 0\;,
+\label{eqn:ResNMOdyn} 
+\end{equation}
+where $h$ stands for the half-offset.  The analytical solution of
+equation (\ref{eqn:ResNMOdyn}) has the form of the residual NMO
+operator:
+\begin{equation}
+  P(t,h,v) = P_0\left(\sqrt{t^2 + h^2\,
+    \left(\frac{1}{v_0^2} - \frac{1}{v^2}\right)},h\right)\;.
+\label{eqn:ResNMOsol} 
+\end{equation}
+After transforming to the squared time $\sigma = t^2$ and the
+corresponding Fourier frequency $\Omega$, equation
+(\ref{eqn:ResNMOdyn}) takes the form of the ordinary differential
+equation
+\begin{equation}
+  \frac{d \hat{P}}{d v} + 
+  i \Omega\,\frac{2\,h^2}{v^3}\,\hat{P} = 0
+\label{eqn:FFTResNMO} 
+\end{equation}
+with the analytical frequency-domain phase-shift solution
+\begin{equation}
+  \hat{P} (\Omega, h, v) = \hat{P_0} (\Omega,h) e^{i\,\Omega\,h^2\,
+    \left(\frac{1}{v_0^2} - \frac{1}{v^2}\right)}\;.
+\label{eqn:ResNMOshift} 
+\end{equation}
+To obtain a Fourier-domain prestack velocity continuation algorithm, one just
+needs to combine the phase-shift operators in equations (\ref{ODEsol}) and
+(\ref{eqn:ResNMOshift}) and to include stacking across different offsets. 
+\uline{The
+exact velocity continuation theory also includes the residual DMO term}
+\cite{first}, \uline{which has a second-order effect, pronounced only at small
+depths. It is neglected here for simplicity.}  The algorithm takes the
+following form:
+\begin{enumerate}
+  \item Input a set of common-offset images, migrated with velocity $v_0$.
+  \item Transform the time axis $t$ to the squared time coordinate:
+    $\sigma=t^2$.
+  \item Apply a fast Fourier transform (FFT) on both the squared time
+    and the midpoint axis. The squared time $\sigma$ transforms to the
+    frequency $\Omega$, and the midpoint coordinate $x$ transforms to
+    the wavenumber $k$. 
+  \item Apply a phase-shift operator to transform to different velocities $v$:
+    \begin{equation}
+      \label{eqn:zophase2}
+      \hat{P}(\Omega,k,v) = \sum_{h} \hat{P}_0 (\Omega,k,h)\,
+      e^{i\,\frac{k^2\left(v_0^2 - v^2\right)}{4\,\Omega} +
+        i\,\Omega\,h^2\, \left(\frac{1}{v_0^2} -
+          \frac{1}{v^2}\right)}\;.
+    \end{equation}
+    To save memory, the continuation step is immediately followed
+    by stacking. \uline{For velocity analysis purposes, a semblance measure}
+    \cite{GEO36-03-04820497} \uline{is computed in addition to the simple stack
+    analogously to the standard practice of stacking velocity analysis.}
+    
+    \uline{Implementing the residual moveout correction in the Fourier domain allows
+    one to package it conveniently with the phase-shift operator without the
+    need to transform the continuation result back to the time domain. The
+    offset dimension in equation~(\ref{eqn:zophase2}) is replaced by the
+    velocity dimension similarly to the velocity transform of the conventional
+    stacking velocity analysis} \cite{IG202-00-10012027}.
+
+  \item Apply an inverse FFT to transform from $\Omega$ and $k$ to
+    $\sigma$ and $x$.
+  \item Apply an inverse time stretch to transform from $\sigma$ to $t$.
+  \end{enumerate}  
+  One can design similar algorithms by using the finite difference method.
+  \uline{Although the finite-difference approach offers a faster continuation speed,
+  the spectral algorithm has a higher accuracy while maintaining an acceptable
+  cost.}
+
+%The complete theory of prestack velocity continuation also requires a
+%residual DMO operator
+%\cite{Etgen.sepphd.68,Fomel.sep.92.159,Fomel.segab.97}. However, the
+%difficulty of implementing this operator is not fully compensated by
+%its contribution to the full velocity continuation. For simplicity, I
+%decided not to include residual DMO in the current implementation.
+\par  
+Figure~\ref{fig:velimp} shows impulse responses of prestack velocity
+continuation. The input for producing this figure was a time-migrated
+constant-offset section, corresponding to an offset of 1 km and a constant
+migration velocity of 1 km/s. In full accordance with the theory \cite{first},
+three spikes in the input section transformed into shifted ellipsoids after
+continuation to a higher velocity and into shifted hyperbolas after
+continuation to a smaller velocity. \uline{
+Padding of the time axis helps to avoid
+the wrap-around artifacts of the Fourier method. Alternatively, one could use
+the artifact-free but more expensive Chebyshev spectral method}
+\cite{Fomel.sep.97.sergey2}.
+
+\plot{velimp}{width=6in}{Impulse responses of prestack velocity
+  continuation. Left plot: continuation from 1 km/s to 1.5 km/s.
+  Right plot: continuation from 1 km/s to 0.7 km/s. Both plots
+  correspond to the offset of 1 km.}
+\par
+
+Velocity continuation creates a time-midpoint-velocity cube (four-dimensional
+for 3-D data), which is convenient for picking imaging velocities in the same
+way as the result of common-midpoint or common-reflection-point velocity
+analysis. The important difference is that velocity continuation provides an
+optimal focusing of the reflection energy by properly taking into account both
+vertical and lateral movements of reflector images with changing migration
+velocity. \uline{An experimental evidence for this conclusion is provided in
+  the examples section of this paper.}
+
+\begin{comment}
+Figure \ref{fig:consmb} compares velocity spectra
+(semblance panels) at a CIP location of about 11.5 km after residual
+NMO and after prestack velocity continuation. Although the overall
+difference between the two panels is small, the velocity continuation
+panel shows a noticeably better focusing, especially in the region of
+conflicting dips between 1 and 2 seconds. 
+\end{comment}
+The next subsection discusses
+the velocity picking step in more detail.
+
+%\plot{consmb}{width=6in}{Velocity spectra around 11.5 km CRP after
+%  residual NMO (left) and after prestack velocity continuation
+%  (right). The right plot shows improved focusing in the region between
+%  1 and 2 seconds.}
+
+\subsection{Velocity picking and slicing}
+
+After the velocity continuation process has created a time-midpoint-velocity
+cube, one can pick the best focusing velocity from that cube and create an
+optimally focused image by slicing through the cube. \uline{This step is common in
+other methods that involve velocity slicing}
+\cite{shurtleff,SEG-1984-S1.8,GEO57-01-00510059}. \uline{The algorithm described
+below has been also adopted by} \longcite{SEG-2000-09920995} \uline{for velocity
+analysis in wave-equation migration.}
+
+A simple automatic velocity picking algorithm follows from solving the
+following regularized least-squares system:
+\begin{equation}
+  \label{eqn:pick}
+  \left\{\begin{array}{rcl}
+      \bold{W}\,\bold{x} & \approx & \bold{W}\,\bold{p} \\
+      \epsilon \bold{D} \bold{x} & \approx & \bold{0}
+    \end{array}\right.\;.
+\end{equation}
+\uline{In the more standard notation, the solution $\bold{x}$ minimizes the
+least-squares objective function}
+\begin{equation}
+  \label{eqn:ofpick}
+(\bold{x}-\bold{p})^{T}\, \bold{W}^2\,(\bold{x}-\bold{p}) +
+\epsilon^2\,\bold{x}^T\,\bold{D}^T\,\bold{D}\,\bold{x}
+\end{equation}
+Here $\bold{p}$ is the vector of blind maximum-semblance picks (possibly in a
+predefined fairway), $\bold{x}$ is the estimated velocity picks, $\bold{W}$ is
+the weighting operator with the weight corresponding to the semblance values
+at $\bold{p}$, $\epsilon$ is the scalar regularization parameter, $\bold{D}$
+is a roughening operator, and $\bold{D}^T$ is the adjoint operator.  The first
+least-squares fitting goal in (\ref{eqn:pick}) states that the estimated
+velocity picks should match the measured picks where the semblance is high
+enough\footnote{Of course, this goal might be dangerous, if the original picks
+  $\bold{p}$ include regular noise (such as multiple reflections) with high
+  semblance value \cite{Toldi.sepphd.43}. For simplicity, and to preserve the
+  linearity of the problem, I assume that this is not the case.}.  The second
+fitting goal tries to find the smoothest velocity function possible.  The
+least-squares solution of problem (\ref{eqn:pick}) takes the form
+\begin{equation}
+  \label{eqn:LS}
+  \bold{x} = 
+  \left(\bold{W}^2 + 
+    \epsilon^2\,\bold{D}^T\,\bold{D}\right)^{-1}\,\bold{W}^2\,\bold{p}\;.
+\end{equation}
+In the case of picking a one-dimensional velocity function from a single
+semblance panel, one can simplify the algorithm by choosing $\bold{D}$ to be a
+convolution with the derivative filter $(1,-1)$. It is easy to see that in
+this case the inverted matrix in formula (\ref{eqn:LS}) has a tridiagonal
+structure and therefore can be easily inverted with a linear-time algorithm.
+The regularization parameter $\epsilon$ controls the amount of smoothing of
+the estimated velocity function.  Figure \ref{fig:velpick} shows an example
+velocity spectrum and two automatic picks for different values of $\epsilon$.
+
+\plot{velpick}{width=6in}{Semblance panel (left) and automatic
+  velocity picks for different values of the regularization parameter.
+  Center: $\epsilon=0.01$, right: $\epsilon=0.1$. Higher values of
+  $\epsilon$ lead to smoother velocities.}
+
+\par
+In the case of picking two- or three-dimensional velocity functions,
+one could generalize problem (\ref{eqn:pick}) by defining $\bold{D}$
+as a 2-D or 3-D roughening operator. I chose to use a more simplistic
+approach, which retains the one-dimensional structure of the algorithm. 
+I transform system (\ref{eqn:pick}) to the form
+\begin{equation}
+  \label{eqn:pick2}
+  \left\{\begin{array}{rcl}
+      \bold{W}\,\bold{x} & \approx & \bold{W}\,\bold{p} \\
+      \epsilon \bold{D} \bold{x} & \approx & \bold{0} \\
+      \lambda \bold{x} & \approx & \lambda \bold{x_0}
+    \end{array}\right.\;,
+\end{equation}
+where $\bold{x}$ is still one-dimensional, and $\bold{x}_0$ is the
+estimate from the previous midpoint location. The scalar parameter
+$\lambda$ controls the amount of lateral continuity in the estimated
+velocity function. The least-squares solution to system
+(\ref{eqn:pick2}) takes the form
+\begin{equation}
+  \label{eqn:LS2}
+  \bold{x} = 
+  \left(\bold{W}^2 + \epsilon^2\,\bold{D}^T\,\bold{D}
+    + \lambda^2\,\bold{I}\right)^{-1}\,
+  \left(\bold{W}^2\,\bold{p} + \lambda^2 \bold{x_0}\right)\;,
+\end{equation}
+where $\bold{I}$ denotes the identity matrix. Formula (\ref{eqn:LS2})
+also reduces to an efficient tridiagonal matrix inversion.
+
+\uline{After the velocity has been picked, an optimally focused image is constructed
+by slicing in the time-midpoint-velocity cube. I used simple linear
+interpolation for slicing between the velocity grid values. A more accurate
+interpolation technique can be easily adopted.}
+
+\section{Examples}
+
+I demonstrate the performance of the method using a simple 2-D synthetic
+test and a field data example from the North Sea.
+
+\subsection{Synthetic Test}
+
+The synthetic test uses constant-velocity prestack modeling and migration to
+check the validity of the method when all the theoretical requirements are
+satisfied. The data were generated from the synthetic reflectivity model
+(Figure~\ref{fig:vlcmod}) and included 60~offsets ranging from 0 to 0.5~km.
+The exact velocity in the model is~1.5~km/s, and the initial velocity for
+starting the continuation process was chosen at 2~km/s.
+
+%\plot{sig-mva2}{width=6in}{Semblance panels for migration
+%  velocity analysis at the common image point~0.5~km. Left: after
+%  velocity continuation.  Right: after conventional (NMO) velocity
+%  analysis. In this structurally simple region, the difference between
+%  two methods is small. The correct velocity is 1.5~km/s.}
+
+Figure~\ref{fig:sig-mva1} compares the semblance panels for migration
+velocity analysis using velocity continuation and using the
+conventional (NMO) analysis. In the top part of the image, both panels
+show maximum picks at the correct velocity (1.5~km/s).  The advantage
+of velocity continuation is immediately obvious in the deeper part of
+the image, where the events are noticeably better focused.
+
+\plot{sig-mva1}{width=6in}{Semblance panels for migration
+  velocity analysis at the common image point~1~km. Left: after
+  velocity continuation.  Right: after conventional (NMO) velocity
+  analysis. In a structurally complex region, velocity continuation
+  clearly provides better focusing. The correct velocity is 1.5~km/s.}
+
+The final result of velocity continuation (after picking maximum semblance and
+slicing in the velocity cube) is shown in the bottom left plot of
+Figure~\ref{fig:sig-all}. For comparison, Figure~\ref{fig:sig-all} also shows
+the result of migration with the correct velocity (the top left plot), initial
+velocity (the top right plot), and the result of velocity slicing after the
+simple NMO correction, corresponding to the conventional MVA (the bottom right
+plot). \uline{The same velocity picking and slicing program was used in both cases.}
+The comparison clearly shows that, in this simple example, velocity
+continuation is able to accurately reproduce the correct image without using
+any prior information about the migration velocity and without any need for
+repeating the prestack migration procedure. \uline{Velocity continuation correctly
+images events with conflicting dips by properly taking into account both
+vertical and lateral shifts in the image position.}
+
+\plot{sig-all}{width=6in,height=6in}{Velocity continuation tested 
+  on the synthetic example. Top left: prestack migration with the
+  correct velocity of 1.5~km/s. Top right: prestack migration
+  with the velocity of 2~km/s. Bottom left: the result of velocity
+  continuation. Bottom right: the result from picking migration
+  image after only conventional NMO correction.}
+
+\subsection{\uline{Field} Data Example}
+
+Figure \ref{fig:elfmigr} compares the result of a constant-velocity prestack
+migration with the velocity of 2 km/s, applied to a dataset from the North Sea
+(courtesy of Elf Aquitaine) and the result of velocity continuation to the
+same velocity from a migration with a smaller velocity of 1.4 km/s (Figure
+\ref{fig:elfmigr}a). The two images (Figures \ref{fig:elfmigr}b and
+\ref{fig:elfmigr}c) look remarkably similar, in full accordance with the
+theory.
+
+\plot{elfmigr}{width=6in,height=9in}{Constant-offset section of the
+  North Sea dataset after migration with the velocity of 1.4 km/s (a),
+  migration with the velocity of 2 km/s (b), migration with the
+  velocity of 1.4 km/s and velocity continuation to 2 km/s (c).}
+
+Figure~\ref{fig:elffpk} shows a result of two-dimensional velocity
+picking after velocity continuation. I used values of $\epsilon=0.1$
+and $\lambda=0.1$. The first parameter controls the vertical smoothing
+of velocities, while the second parameter controls the amount of
+lateral continuity.
+
+%\ref{fig:beivpk} shows a result of two-dimensional velocity picking
+%after residual NMO. Figure \ref{fig:beifpk} shows an analogous result
+
+%The difference between residual NMO velocities and
+%velocities picked after velocity continuation is small, but clearly
+%visible.
+
+%\plot{beivpk}{width=6in,height=3.5in}{Automatic picks of 2-D RMS velocity
+%  after residual NMO. The contour spacing is 0.1 km/s, starting from 1.5 km/s.}
+
+\plot{elffpk}{angle=90,totalheight=8.5in,width=6in}{Automatically
+  picked migration velocity after velocity continuation.}
+
+Figure \ref{fig:elffmg} shows the final result of velocity
+continuation: an image, obtained by slicing through the velocity cube
+with the picked imaging velocities. The edges of the salt body in the middle
+of the section have been sharply focused by the velocity
+continuation process. To transform the already well focused image into the
+depth domain, one may proceed in a way similar to
+\emph{hybrid migration}: demigration to zero-offset, followed by
+post-stack depth migration \cite{GEO62-02-05680576}. This step
+would require constructing an interval velocity model from the picked imaging
+velocities.
+
+\plot{elffmg}{angle=90,totalheight=8.5in,width=6in}{Final result of
+  velocity continuation: seismic image, obtained by slicing through
+  the velocity cube.}
+
+\begin{comment}
+Without repeating the details of the procedure, Figures~\ref{fig:pck}
+and \ref{fig:img} show picked imaging velocities and the velocity
+continuation image for the Blake Outer Ridge data, shown in many other
+papers in this report.
+
+\plot{pck}{width=6in,height=3.5in}{Blake Outer Ridge data. Automatic
+  picks of 2-D imaging velocity after velocity continuation. The contour
+  spacing is 0.01 km/s, starting from 1.5 km/s.}
+
+\plot{img}{angle=90,totalheight=8.5in,width=6in}{Blake Outer Ridge
+  data. Final result of velocity continuation: seismic image, obtained
+  by slicing through the velocity cube.}
+\end{comment}
+
+\section{Conclusions}
+
+Velocity continuation is a powerful method for time migration velocity
+analysis.  The strength of this method follows from its ability to take into
+account both vertical and lateral movement of the reflection events in seismic
+images with the changes of migration velocity.
+
+Efficient practical algorithms for velocity continuation can be constructed
+using either finite-difference or spectral methods. When applied in the
+post-stack (zero-offset) setting, velocity continuation can be used as a
+computationally attractive method of time migration. Both finite-difference
+and spectral approaches possess remarkable invertability properties:
+continuation to a lower velocity reverses continuation to a higher velocity.
+\uline{For the finite-difference algorithm, this property is confirmed by synthetic
+tests. For the spectral algorithm, it follows from the fact that velocity
+continuation reduces to a simple phase-shift unitary operator.}
+
+\uline{Including velocity continuation in the practice of migration velocity analysis
+can improve the focusing power of time migration and reduce the production
+time by avoiding the need for iterative velocity refinement. No prior velocity
+model is required for this type of velocity analysis. This conclusion is
+confirmed by synthetic and field data examples.}
+
+\section{Acknowledgments}
+
+I thank Jon Claerbout, Biondo Biondi, and Bill Symes for useful and
+stimulating discussions, the sponsors of the Stanford Exploration Project for
+their financial support, and Elf Aquitaine for providing the data used in this
+work. \uline{I am also grateful to Paul Fowler, Samuel Gray, Hugh Geiger, and one
+anonymous reviewer for thorough and helpful reviews that improved the quality
+of the paper.}
+
+\newpage
+\bibliographystyle{sep}
+\bibliography{SEP,MISC,GEOTLE,EAEG,SEG,paper,spec,velcon}
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: t
+%%% TeX-master: t
+%%% TeX-master: t
+%%% TeX-master: t
+%%% TeX-master: t
+%%% TeX-master: t
+%%% End: 

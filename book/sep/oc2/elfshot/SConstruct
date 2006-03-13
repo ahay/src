@@ -1,0 +1,21 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+
+Fetch('elf0.H','elf',private)
+
+# edit trace? 
+Flow('elf','elf0.H',
+     'dd form=native | cut n3=1 n2=1 n1=300 f3=663 f2=67')
+
+Plot('near','elf',
+     'window n2=1 f2=0   | grey pclip=99.5 title="Near offset" ')
+Plot('far','elf',
+     'window n2=1 f2=135 | grey pclip=99.5 title="Far offset" ')
+
+Result('elf','near far','SideBySideAniso',vppen='xsize=12 ysize=6')
+
+End()

@@ -20,7 +20,7 @@
 
 static float *r, *ld, *rd, *rhs, **pt;
 static float v1, v2, t0, dt, dv, a0;
-static const float b=0.122996;
+static const float b=0.14867678; /* b=0.122996; */
 static int nt, nx, nv, inv;
 static sf_tris slv;
 
@@ -112,7 +112,7 @@ void velcon_lop (bool adj, bool add, int n1, int n2, float *p1, float *p2)
 	    b2=b*a-t; 
 	    offd=a-b2; 
 	    diag=a-2*b2;
-	    sf_tridiagonal_const_define(slv,diag,offd);
+	    sf_tridiagonal_const_define(slv,diag,b2);
 
 	    l = pt[it]; 		         
 	    diffxx(nx,l,ld);

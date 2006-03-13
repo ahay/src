@@ -1,11 +1,317 @@
 from rsfproj import *
 
-segy = '/data9/ricarte/AcaciaFul.segy'
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+segy = 'AcaciaFul.segy'
+
+Fetch(segy,'total',private)
 
 Flow('taca haca ./aaca ./baca',segy,
      '''
      segyread tape=$SOURCE
      tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
      ''',stdin=0)
+
+# Convert from SEGY to RSF
+
+# "tracl" will stand for cmp x coordinate 
+# "tracr" will stand for cmp y coordinate
+# "nvs" is CDP rank
+
+Flow('taca haca ./aaca ./baca',segy,
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     tracl=104 tracr=204 nvs=122
+     ''',stdin=0)
+
+
+# Extract a line
+
+line = 9870
+
+Flow('mask','haca',
+     '''
+     dd type=float |
+     headermath output=ep |
+     mask min=%d max=%d
+     ''' % (line,line))
+
+Flow('line','taca mask','headerwindow mask=${SOURCES[1]}')
+
+Flow('hline','haca mask',
+     '''
+     dd type=float | 
+     headerwindow mask=${SOURCES[1]} |
+     dd type=int
+     ''')
+
+# Plot a CDP gather
+
+Flow('cmask','hline',
+     'dd type=float | headermath output=cdp | mask min=8850 max=8850')
+
+Flow('gath','line cmask','headerwindow mask=${SOURCES[1]}')
+
+Flow('hgath','hline cmask',
+     '''
+     dd type=float |
+     headermath output=offset/1000 |
+     headerwindow mask=${SOURCES[1]}
+     ''')
+
+Plot('gath','gath hgath',
+     '''
+     window min1=1.4 max1=4 |
+     wiggle xpos=${SOURCES[1]}
+     transp=y yreverse=y poly=y
+     title="CMP Gather"
+     ''')
+
+# Velocity analysis
+
+Flow('scan','gath hgath',
+     '''
+     vscan offset=${SOURCES[1]} half=n
+     semblance=y
+     v0=1.4 nv=81 dv=0.02
+     ''')
+
+Plot('scan',
+     '''
+     grey color=j allpos=y
+     title="Velocity Scan"
+     label1="Time (s)"
+     label2="Velocity (km/s)"
+     ''')
+
+Flow('pick','scan',
+     'pick rect1=100 | window')
+
+Plot('pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=3
+     wanttitle=n pad=n wantaxis=n plotcol=7
+     ''')
+
+Result('scan','scan pick','Overlay')
+
+# NMO
+
+Flow('nmo','gath hgath pick',
+     'nmo offset=${SOURCES[1]} half=n velocity=${SOURCES[2]}')
+
+Plot('nmo','nmo hgath',
+     '''
+     window min1=1.4 max1=4 |
+     wiggle xpos=${SOURCES[1]}
+     transp=y yreverse=y poly=y
+     title="NMO"
+     ''')
+
+Result('nmo','gath nmo','SideBySideAniso')
+
+# Bin traces in CMPs for NMO correction
+
+Flow('baca','line hline',
+     'intbin head=${SOURCES[1]} xk=gdel yk=cdp')
+
+##Flow('bhead','hline',
+##     '''
+##     dd type=float |
+##     intbin head=$SOURCE xk=gdel yk=cdp |
+##     put n3=1 n2=%d
+##     ''' % (81*201))
+
+
+Flow('boff','hline',
+     '''
+     dd type=float |
+     headermath output=offset/1000 |
+     intbin head=$SOURCE xk=gdel yk=cdp
+     ''')
+
+# Dense Velocity analysis
+
+Flow('scan2','baca boff',
+     '''
+     vscan offset=${SOURCES[1]} half=n
+     semblance=y
+     v0=1.4 nv=81 dv=0.02
+     ''')
+
+Flow('pick2','scan2',
+     'pick rect1=100 rect2=10 | window')
+
+Result('pick2',
+       '''
+       grey color=j allpos=y bias=1.4
+       scalebar=y title="NMO Velocity"
+       ''')
+
+# Dense NMO
+
+# Flow('nmo2','baca boff pick2',
+#     'nmo offset=${SOURCES[1]} half=n velocity=${SOURCES[2]}')
+
+Flow('stack','nmo2','stack | agc rect1=250')
+
+Result('stack','window min1=1.4 | grey title="NMO Stack" ')
+
+
+# Plot CMP-offset distribution
+
+Flow('cmpx','bhead','headermath output=tracl/1000')
+Flow('cmpy','bhead','headermath output=tracr/1000')
+
+Flow('cmp','cmpx cmpy','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Result('cmp',
+       '''
+       graph symbol=x label1="CMP X" label2="CMP Y"
+       title="CMP Distribution" plotcol=3
+       ''')
+
+# Inline CMP 
+
+x0 = 170.177
+y0 = 9148.34
+
+Flow('icmp','cmpx cmpy',
+     '''
+     math x=${SOURCES[0]} y=${SOURCES[1]}
+     output="sqrt((x-%g)*(x-%g)+(y-%g)*(y-%g))"
+     ''' % (x0,x0,y0,y0))
+
+# Half-Offset
+
+Flow('hoff','bhead','headermath output=offset/2000')
+
+Result('icmp','icmp hoff',
+       '''
+       cmplx ${SOURCES[0:2]} |
+       graph symbol=x label1="Inline CMP" label2="Half Offset"
+       title="CMP Distribution" plotcol=3
+       ''')
+
+# Bin the line
+
+Flow('linehead','icmp hoff','cat axis=1 ${SOURCES[1]}')
+
+Flow('bline fold','nmo2 linehead',
+     '''
+     put n3=1 n2=%d |
+     transp memsize=500 |
+     bin fold=${TARGETS[1]} head=${SOURCES[1]}
+     xkey=0 ykey=1
+     x0=0 nx=201 dx=0.0125
+     y0=0 ny=81  dy=0.025
+     interp=2 |
+     transp plane=23 memsize=500 | transp memsize=500 |
+     tpow tpow=2
+     ''' % (81*201))
+
+# Plot fold
+
+Result('fold',
+       '''
+       grey color=j allpos=y pclip=100
+       scalebar=y title=Fold
+       label1="Inline CMP" label2="Half Offset"
+       transp=n yreverse=n
+       ''')
+
+# Plot binned data
+
+Result('bline',
+       '''
+       window min1=1.4 max1=4 |
+       byte gainpanel=all |
+       grey3 frame1=400 frame2=100 frame3=20
+       flat=y title="Line Data"
+       label1="Time (s)" label2="Inline CMP (km)" label3="Half Offset (km)"
+       ''')
+
+# Logstretch, FFT, Transpose to Frequency Slices
+
+Flow('fft','bline',
+     '''
+     window min1=1 |
+     logstretch |
+     fft1 |
+     transp memsize=500 | transp plane=23
+     ''')
+
+# Regularize in frequency slices
+
+Flow('known','fold','dd type=int')
+
+Flow('fill','fft known',
+     'window max3=350 | ofilp known=${SOURCES[1]} niter=100')
+
+# Transform back
+
+Flow('bfill','fill',
+     '''
+     transp plane=23  memsize=500 | transp  memsize=500 |
+     pad n1=865 |
+     fft1 inv=y |
+     logstretch inv=y
+     ''')
+
+# Compute DMO stack in frequency domain
+
+Flow('fstack','fill',
+     '''
+     finstack |
+     transp memsize=500 |
+     pad n1=865 |
+     fft1 inv=y | 
+     logstretch inv=y
+     ''')
+
+Result('fstack',
+       'agc rect1=250 | window min1=1.4 | grey title="Regularized DMO Stack" ')
+
+Result('rstack','bfill',
+       '''
+       transp memsize=500 plane=23 |
+       stack | agc rect1=250 | window min1=1.4 |
+       grey title="Regularized NMO Stack"
+       ''')
+
+# Plot regularized data
+
+Result('bfill',
+       '''
+       window min1=1.4 max1=4 |
+       byte gainpanel=all |
+       grey3 frame1=400 frame2=100 frame3=20
+       flat=y title="Line Data"
+       label1="Time (s)" label2="Inline CMP (km)" label3="Half Offset (km)"
+       ''')
+
+# Inverse NMO
+
+Flow('inmo','bfill pick2',
+     'inmo half=y velocity=${SOURCES[1]}')
+
+##### Slope based
+
+# Make mask for missing traces
+
+Flow('pmask','fold','spray axis=1 n=2002 o=0 d=0.003')
+
+# Estimate slopes
+
+Flow('dip','bline mask',
+     '''
+     dip rect1=10 rect2=3 rect3=3
+     mask=${SOURCES[1]}
+     nj1=2 nj2=2 liter=20 niter=5
+     ''')
 
 End()

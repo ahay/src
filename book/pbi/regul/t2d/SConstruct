@@ -4,11 +4,9 @@ private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
            'server':os.environ.get('BEG_SERVER')}
 
-su = 'Oseberg_cmp.su'
+su = 'Oseberg.2d.fldr.su'
 
-#Fetch(su,'total',private)
-
-su = '/mnt/data/fomel/Oseberg_cmp.su'
+Fetch(su,'total',private)
 
 Flow('ose hose',su,
      '''
@@ -16,8 +14,6 @@ Flow('ose hose',su,
      ''',stdin=0)
 
 Flow('obin mask','ose','intbin xk=cdpt yk=cdp mask=${TARGETS[1]}')
-
-# Result('onof','obin','window n2=1 | grey title="Near Offset" ')
 
 Flow('off','hose',
      '''
