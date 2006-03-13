@@ -168,7 +168,7 @@ int main(int argc, char* argv[])
     if( NULL==want){
 	printf("******************************************* \n");
 	if(SF_COMPLEX==type) 
-	    printf("   rms, mean and norm refer to amplitude    \n\n");
+	    printf("   rms, mean, norm, var, and std refer to amplitude\n\n");
     }
     if(NULL==want || 0==strcmp(want,"rms"))
 	printf("rms = %g \n",(float) frms);
