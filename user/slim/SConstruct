@@ -6,6 +6,8 @@ progs = '''
 thr sort
 '''
 
+cpp_progs = 'clipcc'
+
 try:  # distributed version
     Import('env')
     root = env.get('RSFROOT')
@@ -42,16 +44,39 @@ for prog in mains:
         env.Install(bindir,mainc[0])
 
 ######################################################################
+# C++ PROGRAMS
+######################################################################
+
+api = string.split(string.lower(env.get('API','')),',')
+
+if 'c++' in api:
+    cpp_mains = Split(cpp_progs)
+    
+    env.Prepend(LIBS=['rsf++','rsf'])
+    for prog in cpp_mains:
+        # compilation
+        main = env.Program(prog + '.cc')
+        
+        if root:
+            env.Install(bindir,main[0])
+else:
+    cpp_mains = [] 
+
+
+######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
     main = 'sfslim.py'
     
-    docs = map(lambda prog: env.Doc(prog+'.c'),mains)
+    docs = map(lambda prog: env.Doc(prog+'.c'),mains) + \
+           map(lambda prog: env.Doc(prog+'.cc'),cpp_mains)
     env.Depends(docs,'#/python/rsfdoc.py')
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
+
+    # clean compiled python: sfslim.pyc
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 

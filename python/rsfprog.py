@@ -4,7 +4,6 @@ import rsfdoc
 import sfmain
 import sfproc
 import sfimag
-import sfcc
 
 # user
 import sffomels

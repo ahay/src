@@ -88,7 +88,7 @@ if 'c++' in api:
         
         env.Program([test,libcc,lib],
                     OBJSUFFIX='++.o',CPPPATH='../../include',
-                    PROGSUFFIX='.x',PROGPREFIX='')
+                    PROGSUFFIX='++.x',PROGPREFIX='')
         
 ##############################################################################
 # FORTRAN-77 BINDING
@@ -103,7 +103,7 @@ if 'fortran' in api:
         
     for file in ['getpar','file']:
         test = 'Test' + file + '.f'
-        env.Program([test,libf,lib],PROGSUFFIX='.x',PROGPREFIX='',
+        env.Program([test,libf,lib],PROGSUFFIX='f.x',PROGPREFIX='',
                     OBJSUFFIX='f.o',
                     LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
         

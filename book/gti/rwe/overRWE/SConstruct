@@ -128,7 +128,7 @@ Result('datRC','datRC','grey pclip=100 wanttitle=n')
 # frequency data RC: (g,w)
 Flow('frqRC','datRC',
      '''
-     fft1 inv=n |
+     fft1 inv=n opt=n |
      window squeeze=n min1=1 j1=1 n1=60 |
      transp |
      spray axis=2 n=1 o=%(ot)g d=%(dt)g |
@@ -190,7 +190,7 @@ for i in (['F15','SSF']):
          '''
          transp |
          pad beg1=10 n1out=1251 |
-         fft1 inv=y
+         fft1 inv=y opt=n
          ''')
     Result(timRC,timRC,'grey title=%s' % i)
 
