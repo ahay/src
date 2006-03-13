@@ -28,13 +28,13 @@ static void mirror (size_t n1, int dim,
 int main(int argc, char* argv[])
 {
     sf_file in, out;
-    char *buf, *opt, copt, key[3], byte;
+    char *buf, *buf2, *opt, copt, key[3];
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int j, i, dim, dim1, dim2, mem;
+    int i, dim, dim1, dim2, mem;
     int n[SF_MAX_DIM], esize, which;
     off_t pos=0, pos3=0, memsize;
-    size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL, m;
+    size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;
 /* Flags; 0=leave alone, 1=reverse this dimension */
@@ -123,8 +123,9 @@ int main(int argc, char* argv[])
        n1*n2*n3 is the total data size
     */
     
-    buf = sf_charalloc(n1*esize);
-    
+    buf  = sf_charalloc(n1*esize);
+    buf2 = sf_charalloc(n1*esize);
+
     if (n1>1) {
 	k1 = (size_t*) sf_alloc(n1,sizeof(size_t));
 	mirror(n1,dim1,n,f,k1);
@@ -151,19 +152,12 @@ int main(int argc, char* argv[])
 	for (i2=0; i2 < n2; i2++) {
 	    if (n2 > 1) /* if out of core */
 		sf_seek(in,pos3+(off_t) k2[i2]*n1*esize,SEEK_SET);
+
 	    sf_charread(buf,n1*esize,in);
-	    /* do in-core reversal */
-	    for (i1=0; i1 < n1/2; i1++) {
-		m = k1[i1];
-		if (m != i1) { /* swap m-th and i1-th elements */
-		    for (j=0; j<esize; j++) {
-			byte = buf[i1*esize+j];
-			buf[i1*esize+j] = buf[m*esize+j];
-			buf[m*esize+j] = byte;
-		    }
-		}
+	    for (i1=0; i1 < n1; i1++) {
+		memcpy(buf2+k1[i1]*esize,buf+i1*esize,esize);
 	    }
-	    sf_charwrite(buf,n1*esize,out);
+	    sf_charwrite(buf2,n1*esize,out);
 	}
     }
     
