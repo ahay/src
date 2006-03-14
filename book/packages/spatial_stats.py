@@ -173,25 +173,25 @@ def variogram (par):
                     real
                     '''
                     
-#     rotate_rule =   '''
-#                     put n1=%(nx)d n2=%(nx_flip)d
-#                         n3=%(ny)d n4=%(ny_flip)d
-#                         n5=%(nz)d n6=%(nz_flip)d |
-#                     reverse which=42 opt=n | 
-#                     put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
-#                         n4=1          n5=1          n6=1
-#                     ''' % par
-    
     rotate_rule =   '''
                     put n1=%(nx)d n2=%(nx_flip)d
                         n3=%(ny)d n4=%(ny_flip)d
                         n5=%(nz)d n6=%(nz_flip)d |
-                    reverse which=2  opt=n | 
-                    reverse which=8  opt=n | 
-                    reverse which=32 opt=n | 
+                    reverse which=42 opt=n | 
                     put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
                         n4=1          n5=1          n6=1
                     ''' % par
+    
+#     rotate_rule =   '''
+#                     put n1=%(nx)d n2=%(nx_flip)d
+#                         n3=%(ny)d n4=%(ny_flip)d
+#                         n5=%(nz)d n6=%(nz_flip)d |
+#                     reverse which=2  opt=n | 
+#                     reverse which=8  opt=n | 
+#                     reverse which=32 opt=n | 
+#                     put n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d 
+#                         n4=1          n5=1          n6=1
+#                     ''' % par
     
     window_rule =   '''
                     window f1=%(nx_half)d n1=%(nx_aug)d
