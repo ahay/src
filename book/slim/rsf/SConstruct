@@ -1,12 +1,10 @@
 from rsftex import *
 
-Paper('prog',use='hyperref,amsmath,amsfonts,fancybox',
-      include='''
-      \\newcommand{\\prog}[1]{
-      \\noindent\\fbox{
-      \\parbox{\\textwidth}{
-      \\input{sf#1}
-      }}}
-      ''')
-
-End()
+End(use='hyperref,amsmath,amsfonts,fancybox',
+    include='''
+    \\newcommand{\\prog}[1]{
+    \\noindent\\fbox{
+    \\parbox{\\textwidth}{
+    \\input{sf#1}
+    }}}
+    ''')

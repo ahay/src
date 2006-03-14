@@ -65,7 +65,11 @@ Result('csi0',
 Flow('shot','dat','window n3=1 f3=210')
 
 Plot('shot',
-     'grey title="Shot Gather" label2="Half-Offset (km)" label1="Time (s)" ')
+     '''
+     window max1=4 |
+     grey title="Original Shot Gather"
+     label2="Half-Offset (km)" label1="Time (s)"
+     ''')
 
 Flow('cmp','dat',
      '''
@@ -77,11 +81,43 @@ Flow('cmp','dat',
 
 Flow('dat2','cmp',
      '''
-     reverse which=2 opt=n |
+     reverse which=2 opt=n memsize=500 |
      window n2=140 |
      cat axis=2 $SOURCE |
      cmp2shot |
      window n3=421 min3=5 j3=2 
      ''')
+
+Flow('shot2','dat2','window n3=1 f3=210')
+
+Plot('shot2',
+     '''
+     window max1=4 |
+     grey title="Extended Shot Gather"
+     label2="Half-Offset (km)" label1="Time (s)"
+     ''')
+
+Result('shot','shot shot2','SideBySideAniso')
+
+Flow('rad2','shot2','radon adj=y inv=y spk=n p0=-1.5 np=601 dp=0.005')
+
+Plot('rad2',
+     '''
+     window max1=4 |
+     grey label2="Slope (s/km)" title="Radon Transform"
+     label1="Time (s)"
+     ''')
+
+Flow('rad','rad2','radon adj=n nx=281 dx=0.0125 ox=-1.75')
+
+Plot('rad',
+     '''
+     window max1=4 |
+     grey title="Shot Reconstruction"
+     label2="Half-Offset (km)" label1="Time (s)"
+     ''')
+
+Result('rad','rad2 rad','SideBySideAniso')
+
 
 End()
