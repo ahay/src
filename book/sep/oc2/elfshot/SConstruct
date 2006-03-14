@@ -14,8 +14,8 @@ Flow('elf','elf0.H',
 Plot('near','elf',
      'window n2=1 f2=0   | grey pclip=99.5 title="Near offset" ')
 Plot('far','elf',
-     'window n2=1 f2=135 | grey pclip=99.5 title="Far offset" ')
+     'window n2=1 f2=100 | grey pclip=99.5 title="Far offset" ')
 
-Result('elf','near far','SideBySideAniso',vppen='xsize=12 ysize=6')
+Result('elf','near far','SideBySideAniso')
 
 End()

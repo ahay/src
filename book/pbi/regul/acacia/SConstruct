@@ -119,13 +119,12 @@ Result('nmo','gath nmo','SideBySideAniso')
 Flow('baca','line hline',
      'intbin head=${SOURCES[1]} xk=gdel yk=cdp')
 
-##Flow('bhead','hline',
-##     '''
-##     dd type=float |
-##     intbin head=$SOURCE xk=gdel yk=cdp |
-##     put n3=1 n2=%d
-##     ''' % (81*201))
-
+Flow('bhead','hline',
+     '''
+     dd type=float |
+     intbin head=$SOURCE xk=gdel yk=cdp |
+     put n3=1 n2=%d
+     ''' % (79*201))
 
 Flow('boff','hline',
      '''
@@ -154,8 +153,8 @@ Result('pick2',
 
 # Dense NMO
 
-# Flow('nmo2','baca boff pick2',
-#     'nmo offset=${SOURCES[1]} half=n velocity=${SOURCES[2]}')
+Flow('nmo2','baca boff pick2',
+     'nmo offset=${SOURCES[1]} half=n velocity=${SOURCES[2]}')
 
 Flow('stack','nmo2','stack | agc rect1=250')
 
@@ -208,11 +207,11 @@ Flow('bline fold','nmo2 linehead',
      bin fold=${TARGETS[1]} head=${SOURCES[1]}
      xkey=0 ykey=1
      x0=0 nx=201 dx=0.0125
-     y0=0 ny=81  dy=0.025
+     y0=0 ny=79  dy=0.025
      interp=2 |
      transp plane=23 memsize=500 | transp memsize=500 |
      tpow tpow=2
-     ''' % (81*201))
+     ''' % (79*201))
 
 # Plot fold
 

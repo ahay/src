@@ -1,4 +1,9 @@
-/* Reverse one or more axes in the data hypercube. */
+/* Rotate a portion of one or more axes in the data hypercube. 
+
+Takes: rot1=0 rot2=0 ... 
+
+rotN defines the length on the N-th axis that is moved to the end.
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -22,23 +27,19 @@
 
 #include <rsf.h>
 
-static void mirror (size_t n1, int dim, 
-		    const int* n, const bool* f, /*@out@*/ size_t *k);
+static void rotate (size_t n1, int dim, 
+		    const int* n, const int* rot, /*@out@*/ size_t *k);
 
 int main(int argc, char* argv[])
 {
     sf_file in, out;
-    char *buf, *buf2, *opt, copt, key[3];
+    char *buf, *buf2, key[5];
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int i, dim, dim1, dim2, mem;
-    int n[SF_MAX_DIM], esize, which;
+    int i, dim, dim1, dim2, mem, n[SF_MAX_DIM], rot[SF_MAX_DIM], esize;
     off_t pos=0, pos3=0, memsize;
     size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL;
-    unsigned int mask;
-    bool f[SF_MAX_DIM], verb;
-/* Flags; 0=leave alone, 1=reverse this dimension */
-    float o, d;
+    bool verb;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -46,24 +47,6 @@ int main(int argc, char* argv[])
 
     dim = sf_filedims(in,n);
     esize = sf_esize(in);
-    
-    if (!sf_getint("which",&which)) which=-1;
-    /* Which axis to reverse.
-       To reverse a given axis, start with 0,
-       add 1 to number to reverse n1 dimension,
-       add 2 to number to reverse n2 dimension,
-       add 4 to number to reverse n3 dimension, etc.
-       Thus, which=7 would reverse the first three dimensions,
-       which=5 just n1 and n3, etc.
-       which=0 will just pass the input on through unchanged. */
-
-    opt = sf_getstring("opt");
-    /* If y, change o and d parameters on the reversed axis;
-       if i, don't change o and d */
-    copt = (NULL == opt)? 'y':opt[0];
-
-    /* Figure out which dimension is the slowest */
-    if (-1 == which) which = (1 << (dim-1));
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
@@ -71,27 +54,15 @@ int main(int argc, char* argv[])
     /* Available memory size (in Mb) */
     memsize = mem * (1 << 20); /* convert Mb to bytes */
    
-    if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
-    for (i=0, mask=1; i < dim; i++, mask <<= 1) {
-	f[i] = (0 != (which & mask)) && n[i]>1;
-	if (verb && f[i]) fprintf(stderr," n%d",i+1);
-    }
-    if (verb) fprintf(stderr,".\n");
-
     dim2=0;
     for (i=0; i < dim; i++) {	
-	if (!f[i]) continue;
-	dim2=i;
-	if ('i' != copt) {     /* update the o's and d's .*/
-	    snprintf(key,3,"d%d",i+1);
-	    if (!sf_histfloat(in,key,&d)) d=1.;
-	    if ('y'==copt) sf_putfloat(out,key,-d);
-	    snprintf(key,3,"o%d",i+1); 
-	    if (!sf_histfloat(in,key,&o)) o=0.;
-	    o += (n[i] - 1) * d;
-	    if ('n'==copt) o=-o;
-	    sf_putfloat(out,key,o);
-	}
+	snprintf(key,5,"rot%d",i+1);
+	if (!sf_getint(key,rot+i) ||
+	    0 > rot[i]) rot[i]=0;
+	if (rot[i] >= n[i]) 
+	    sf_error("rot%d=%d must be smaller than n%d=%d",
+		     i,rot[i],i,n[i]);
+	if (rot[i]) dim2=i;
     }
     dim2++;
     /* dim2 is the last dimension involved */
@@ -128,7 +99,7 @@ int main(int argc, char* argv[])
 
     if (n1>1) {
 	k1 = (size_t*) sf_alloc(n1,sizeof(size_t));
-	mirror(n1,dim1,n,f,k1);
+	rotate(n1,dim1,n,rot,k1);
     }
 
     if (n2>1) {
@@ -138,7 +109,7 @@ int main(int argc, char* argv[])
 	pos = sf_tell(in);
 
 	k2 = (size_t*) sf_alloc(n2,sizeof(size_t));
-	mirror(n2,dim2-dim1,n+dim1,f+dim1,k2);
+	rotate(n2,dim2-dim1,n+dim1,rot+dim1,k2);
     } 
 
     if (verb) sf_warning("n1=%d, n2=%d, n3=%d",
@@ -146,7 +117,7 @@ int main(int argc, char* argv[])
 
     /* k1 is a table for in-core     reversal 
        k2 is a table for out-of-core reversal */
-
+    
     for (i3=0; i3 < n3; i3++) {
 	if (n2 > 1) pos3 = pos+(off_t) i3*n2*n1*esize;
 	for (i2=0; i2 < n2; i2++) {
@@ -165,22 +136,25 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-static void mirror (size_t n1, int dim, 
-		    const int* n, const bool* f, /*@out@*/ size_t *k)
-/* compute map of reversals k */
+static void rotate (size_t n1, int dim, 
+		    const int* n, const int* rot, /*@out@*/ size_t *k)
+/* compute map of rotations k */
 {
     size_t i, m, ii;
-    int j, nj;
+    int j, nj, r1, r2;
     
     for (i=0; i < n1; i++) {
 	m=0;
 	for (j=0, nj=1; j< dim; nj*=n[j], j++) {
 	    ii = (i/nj)%n[j]; /* convert from helix to cartesian */
-	    if (f[j]) ii = n[j]-1-ii; /* reversal */
+	    r1 = rot[j]; 
+	    r2 = n[j]-r1;
+	    if (ii < r2) ii += r1;
+	    else         ii -= r2;
 	    m += ii*nj;       /* convert from cartesian to helix */
 	}
 	k[i]=m;
     }
 }
 
-/* 	$Id$	 */
+/* 	$Id: reverse.c 1729 2006-03-12 10:00:32Z fomels $	 */
