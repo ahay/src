@@ -363,52 +363,21 @@ def rfield (real_par,grid_par,covar_par):
         Flow (taper,'','spike'+grid_str,stdin=0)
 
 #
-# Apply the taper to the covariance.
+# Apply the taper to the covariance, and rotate the coordinate system
+# origin to the grid origin.
 #
 
     covar_taper = real_par['name']+'covar_taper'
 
-    Flow (covar_taper,[covar,taper],'add mode=m ${SOURCES[1]}')
-
-#
-# Shift the coordinate system origin to the grid origin.
-#
-# The shift is accomplished along each axis by: (1) cutting the axis in
-# half, (2) inserting an extra dimension of length 2, (3) reversing the
-# extra axis, and (4) returning to the original dimensions.
-#
-
-    shift = real_par['name']+'shift'
-    
-    if (grid_par['nx'] > 1):
-        grid_par['nx_flip'] = 2
-        grid_par['nx_half'] = grid_par['nx']/2
-    else:
-        grid_par['nx_flip'] = 1
-        grid_par['nx_half'] = grid_par['nx']
-
-    if (grid_par['ny'] > 1):
-        grid_par['ny_flip'] = 2
-        grid_par['ny_half'] = grid_par['ny']/2
-    else:
-        grid_par['ny_flip'] = 1
-        grid_par['ny_half'] = grid_par['ny']
-
-    if (grid_par['nz'] > 1):
-        grid_par['nz_flip'] = 2
-        grid_par['nz_half'] = grid_par['nz']/2
-    else:
-        grid_par['nz_flip'] = 1
-        grid_par['nz_half'] = grid_par['nz']
-
-    Flow (shift,covar_taper,
+    rotx = max(grid_par['nx']/2,1)
+    roty = max(grid_par['ny']/2,1)
+    rotz = max(grid_par['nz']/2,1)
+        
+    Flow (covar_taper,[covar,taper],
           '''
-          put n1=%(nx_half)d n2=%(nx_flip)d 
-              n3=%(ny_half)d n4=%(ny_flip)d 
-              n5=%(nz_half)d n6=%(nz_flip)d |
-          reverse which=42 | 
-          put %(string)s n4=1 n5=1 n6=1
-          ''' % (grid_par) )
+          add mode=m ${SOURCES[1]} |
+          rotate rot1=%d rot2=%d rot3=%d
+          ''' % (rotx,roty,rotz) )
 
 #
 # Make uncorrelated Gaussian random noise with unit variance.
@@ -430,7 +399,7 @@ def rfield (real_par,grid_par,covar_par):
 # function), the power spectrum should have no imaginary component,
 # except for roundoff.  If there is a significant imaginary component
 # then the covariance does not have the proper symmetry, or has not
-# been shifted correctly (anything else?).
+# been rotated correctly (anything else?).
 #
 # Also, the power spectrum should be everywhere positive, except for
 # roundoff.  If not, the covariance is not a valid positive-definite
@@ -442,7 +411,7 @@ def rfield (real_par,grid_par,covar_par):
     pspec_real  = real_par['name']+'pspec_real'
     noise_fft   = real_par['name']+'noise_fft'
 
-    Flow (pspec,shift,
+    Flow (pspec,covar_taper,
           '''
           rtoc | 
           fft3 pad=1 opt=n axis=1 | 

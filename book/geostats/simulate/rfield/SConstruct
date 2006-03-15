@@ -68,8 +68,7 @@ for i in range(3):
 # Plot the results.
 #
 
-results = ['dist','covar','taper','covar_taper',
-           'shift','pspec_real','aspec_real']
+results = ['dist','covar','pspec_real','aspec_real']
            
 plots = range(3)
 
