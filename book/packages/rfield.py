@@ -367,13 +367,13 @@ def rfield (real_par,grid_par,covar_par):
 # origin to the grid origin.
 #
 
-    covar_taper = real_par['name']+'covar_taper'
+    rotate = real_par['name']+'rotate'
 
     rotx = max(grid_par['nx']/2,1)
     roty = max(grid_par['ny']/2,1)
     rotz = max(grid_par['nz']/2,1)
         
-    Flow (covar_taper,[covar,taper],
+    Flow (rotate,[covar,taper],
           '''
           add mode=m ${SOURCES[1]} |
           rotate rot1=%d rot2=%d rot3=%d
@@ -411,7 +411,7 @@ def rfield (real_par,grid_par,covar_par):
     pspec_real  = real_par['name']+'pspec_real'
     noise_fft   = real_par['name']+'noise_fft'
 
-    Flow (pspec,covar_taper,
+    Flow (pspec,rotate,
           '''
           rtoc | 
           fft3 pad=1 opt=n axis=1 | 
