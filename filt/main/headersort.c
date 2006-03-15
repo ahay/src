@@ -71,7 +71,7 @@ int main(int argc, char* argv[])
     qsort(sorted,n2,sizeof(struct skey),key_compare);
  
     if (!sf_histint(in,"n1",&n1)) n1=1;
-    if (!sf_histint(in,"esize",&esize)) esize=4;
+    esize = sf_esize(in);
     n1 *= esize;
 
     trace = sf_charalloc(n1);
