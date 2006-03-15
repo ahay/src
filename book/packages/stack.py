@@ -24,7 +24,9 @@ def stack(name,
           nout=2048,
           vx0=None):
 
-    version = string.split(string.split(sys.version)[0], ".")
+
+    version = string.replace(sys.version,"+","")
+    version = string.split(string.split(version)[0], ".")
     if map(int, version) < [2, 2, 0]:
         return # think how to do it better
 

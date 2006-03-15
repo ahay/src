@@ -99,7 +99,7 @@ Plot('shot2',
 
 Result('shot','shot shot2','SideBySideAniso')
 
-Flow('rad2','shot2','radon adj=y inv=y spk=n p0=-1.5 np=601 dp=0.005')
+Flow('rad2','shot2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
 
 Plot('rad2',
      '''
@@ -119,5 +119,35 @@ Plot('rad',
 
 Result('rad','rad2 rad','SideBySideAniso')
 
+Flow('radon','dat2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
+
+for p in (-1,0,1):
+    plane = 'plane%d' % p
+
+    pg = 0.5*p
+    Flow(plane,'radon','window n2=1 min2=%g' % pg)
+    Plot(plane,
+         '''
+         window max1=3.5 |
+         grey title="Plane-Wave Section (p=%g)"
+         label2="Source (km)" label1="Time (s)"
+         ''' % pg)
+
+    slp = 'slp%d' % p
+    Flow(slp,plane,'dip rect1=20 rect2=10 liter=40')
+
+    pwd = 'pwd%d' % p
+    Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
+    Plot(pwd,
+         '''
+         window max1=3.5 |
+         grey title="Diffractions (p=%g)"
+         label2="Source (km)" label1="Time (s)"
+         ''' % pg)
+
+    Result(plane,[plane,pwd],'SideBySideAniso')
+
+Flow('patch','radon','transp memsize=500 plane=23 | patch w=1251,501,100')
+Flow('dip','patch','dip rect1=20 rect2=10 rect3=3 liter=40 n4=0 verb=y')
 
 End()

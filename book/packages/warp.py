@@ -98,7 +98,8 @@ def warp3(name,       # name prefix
           clip=6      # display clip
           ):
 
-    version = string.split(string.split(sys.version)[0], ".")
+    version = string.replace(sys.version,"+","")
+    version = string.split(string.split(version)[0], ".")
     if map(int, version) < [2, 2, 0]:
         return # think how to do it better
 
@@ -280,7 +281,9 @@ def warp2(name,       # name prefix
           clip=6      # display clip
           ):
 
-    version = string.split(string.split(sys.version)[0], ".")
+    
+    version = string.replace(sys.version,"+","")
+    version = string.split(string.split(version)[0], ".")
     if map(int, version) < [2, 2, 0]:
         return # think how to do it better
 
@@ -557,7 +560,8 @@ def warp1(name,      # name prefix
           ss=0
           ):
 
-    version = string.split(string.split(sys.version)[0], ".")
+    version = string.replace(sys.version,"+","")
+    version = string.split(string.split(version)[0], ".")
     if map(int, version) < [2, 2, 0]:
         return # think how to do it better
 
