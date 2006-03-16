@@ -28,6 +28,37 @@
 static const double s = 0.449871, tt = -0.386595;
 static const double a = 0.19600, b = 0.25472;
 static const double r1 = 0.27597, r2 = 0.27846;
+static const double two_pi = 2*3.14159265358979323846264338327950288;
+
+static int    iset = 0;
+static float  vset = 0.0;
+
+float randn_one_bm (void)
+/*< return a random number (normally distributed, Box-Muller method) >*/
+{
+    double x1, x2, y1, y2, z1, z2;
+    
+    if (iset ==0)
+    {
+        x1 = genrand_real1 ();
+        x2 = genrand_real1 ();
+        
+        z1 = sqrt(-2.0*log(x1));
+        z2 = two_pi*x2;
+        
+        y1 = z1*cos(z2);
+        y2 = z1*sin(z2);
+        
+        iset = 1;
+        vset = y1;
+        return ((float) y2);
+    }
+    else
+    {
+        iset = 0;
+        return (vset);
+    }
+}
 
 float randn_one (void)
 /*< return a random number (normally distributed) >*/

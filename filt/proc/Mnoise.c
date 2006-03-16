@@ -71,7 +71,7 @@ int main (int argc, char* argv[])
 	if (rep) {
 	    if (normal) {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] = a*randn_one() + b;
+		    dat[i] = a*randn_one_bm() + b;
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {
@@ -83,7 +83,7 @@ int main (int argc, char* argv[])
 	    
 	    if (normal) {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] += a*randn_one() + b;
+		    dat[i] += a*randn_one_bm() + b;
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {
