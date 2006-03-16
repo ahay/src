@@ -19,7 +19,7 @@ for file in ('vel','data'):
 
 Result('vel',
        '''
-       put d2=0.01 |
+       put d2=0.0125 |
        grey color=j allpos=y bias=1450 scalebar=y
        title="Velocity Model" barreverse=y
        label2="Lateral (km)" label1="Depth (km)"
@@ -148,6 +148,6 @@ for p in (-1,0,1):
     Result(plane,[plane,pwd],'SideBySideAniso')
 
 Flow('patch','radon','transp memsize=500 plane=23 | patch w=1251,501,50')
-Flow('dip','patch','dip rect1=20 rect2=10 rect3=3 liter=40 n4=0 verb=y')
+Flow('dip','patch','dip rect1=20 rect2=10 rect3=2 liter=40 n4=0 verb=y')
 
 End()

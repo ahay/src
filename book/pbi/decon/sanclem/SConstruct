@@ -1,5 +1,4 @@
 from rsfproj import *
-import math
 
 Fetch('Sanclemente.rsf','sanclem')
 Flow('./dat','Sanclemente','dd form=ascii type=int out=$TARGET',stdout=0)
@@ -40,7 +39,7 @@ def color2ai(target=None,source=None,env=None):
 Color2ai = Builder(action=Action(color2ai))
 env = Environment(BUILDERS={'Color2ai':Color2ai})
 
-env.Color2ai(['vp0'+sfsuffix,'ro0'+sfsuffix],'dat'+sfsuffix)
+env.Color2ai(['vp0'+sfsuffix,'ro0'+sfsuffix],'dat')
 
 label = {
     'vp': 'Velocity (km/s)',
@@ -71,64 +70,6 @@ Plot('ai',
 Result('sanclem','vp ro ai','OverUnderAniso')
 
 Flow('ai1','ai','window n2=1 min2=300')
-Flow('refl','ai1','ai2refl')
-Flow('ricker',None,'spike n1=250 d1=1e-04 k1=125 | ricker1')
-Flow('conv','refl','ricker1')
-
-plots = {'ai1':'Acoustic Impedance',
-         'refl':'Reflectivity',
-         'ricker': 'Wavelet',
-         'conv': 'Synthetic Trace'}
-for plot in plots.keys():
-    Plot(plot,'graph title="%s" wantaxis1=n' % plots[plot])
-    Plot('spec'+plot,plot,
-         'spectra | graph title="%s Spectrum" wantaxis1=n' % plots[plot])
-Result('inv1','ai1 refl ricker conv','TwoRows')
-Result('inv2','specai1 specrefl specricker specconv','TwoRows')
-
-for case in (1,2):
-    sf = 'sf%d' % case
-    Flow(sf,'conv','iphase order=10 rect1=%d hertz=y' % (1,250)[case-1])
-    Plot(sf,
-         '''
-         scale dscale=0.05 |
-         graph title="%s Frequency"
-         wantaxis1=n min2=0 max2=100
-         label2="Frequency (Hz)" plotcol=5
-         ''' % ('Instantaneous','Local')[case-1])
-    Result(sf,['conv',sf],'OverUnderAniso',vppen='txscale=1.5')
-
-Flow('bf2','conv','iphase order=10 rect1=100 hertz=y band=y')
-Plot('bf2',
-     '''
-     scale dscale=0.05 |
-     graph title="Local Frequency"
-     wantaxis1=n min2=0 max2=100
-     ''')
-
-Flow('chirp',None,
-     'math  n1=1024 d1=0.004 output="cos(%g*x1*(1+0.5*x1))" ' % (math.pi*10))
-Flow('chirp2',None,
-     'math  n1=1424 d1=0.004 o1=-0.8 output="cos(%g*x1*(1+0.5*x1))" ' % (math.pi*10))
-
-Plot('chirp','graph title="Chirp Signal" wantaxis1=n') 
-
-for case in (1,2):
-    ic = 'ic%d' % case
-    Plot(ic,'chirp2',
-         '''     
-         iphase order=200 rect1=%d hertz=y |
-         window min1=0 n1=1024 |
-         graph title="%s Frequency" min2=0 max2=30 plotcol=5
-         label1="Time (s)" label2="Frequency (Hz)"
-         ''' % ((1,"Instantaneous"),(10,"Local"))[case-1])
-    Result(ic,['chirp',ic],'OverUnderAniso',vppen='txscale=1.5')
-
-Plot('bc2','chirp',
-     '''
-     iphase order=10 rect1=100 hertz=y band=y | 
-     graph title="Local Bandwidth" min2=0 max2=50
-     ''')
 
 freq = (30,60,120)
 for hz in freq:
