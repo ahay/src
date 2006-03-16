@@ -23,8 +23,9 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3,n4, m1, m2, m3, n123, nw, nj1, nj2;
+    int n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
+    off_t pos;
     sf_file in, out, dip;
     allpass ap;
 
@@ -39,6 +40,8 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("Need n1= in input");
     if (!sf_histint(in,"n2",&n2)) n2=1;
     if (!sf_histint(in,"n3",&n3)) n3=1;
+    n12 = n1*n2;
+    n13 = n1*n3;
     n123 = n1*n2*n3;
 
     if (!sf_histint(dip,"n1",&m1) || m1 != n1) 
@@ -65,32 +68,46 @@ int main (int argc, char *argv[])
     /* in-line aliasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
-
-    u1 = sf_floatalloc(n123);
-    u2 = sf_floatalloc(n123);
-    p  = sf_floatalloc(n123);
-
-    /* read data */
-    sf_floatread(u1,n123,in);
-
+    
     if (1 != n4) { /* in-line */
-	/* read t-x dip */
-	sf_floatread(p,n123,dip);
+	u1 = sf_floatalloc(n12);
+	u2 = sf_floatalloc(n12);
+	p  = sf_floatalloc(n12);
 
-	ap = allpass_init (nw,nj1,n1,n2,n3,p);
-  
-	/* apply */
-	allpass1(false, ap, u1, u2);
+	for (i3=0; i3 < n3; i3++) {
+	    /* read data */
+	    sf_floatread(u1,n12,in);
 
-	/* write t-x destruction */
-	sf_floatwrite(u2,n123,out);
+	    /* read t-x dip */
+	    sf_floatread(p,n12,dip);
+	    
+	    ap = allpass_init (nw,nj1,n1,n2,1,p);
+	    
+	    /* apply */
+	    allpass1(false, ap, u1, u2);
+	    
+	    /* write t-x destruction */
+	    sf_floatwrite(u2,n123,out);
+	}
+
+	free(u1);
+	free(u2);
+	free(p);
+
     }
 
     if (0 != n4) { /* cross-line */
+	u1 = sf_floatalloc(n123);
+	u2 = sf_floatalloc(n123);
+	p  = sf_floatalloc(n123);
+
+        /* read data */
+	sf_floatread(u1,n123,in);
+
 	/* read t-y dip */
 	sf_floatread(p,n123,dip);
 	
-	ap = allpass_init (nw,nj2,n1,n2,n3,p);
+	ap = allpass_init(nw,nj2,n1,n2,n3,p);
   
 	/* apply */
 	allpass2(false, ap, u1, u2);
