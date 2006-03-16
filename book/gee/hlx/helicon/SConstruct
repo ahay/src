@@ -39,15 +39,15 @@ for filt in filters.keys():
     flt = filter['flt']
     a0 = filter['a0']
     n1 = len(lag)
-    Flow('./'+flag+'0',None,
+    Flow('./'+flag+'0.asc',None,
          "echo %s n1=%d n=100,100 data_format=ascii_int in=$TARGET" %
          (string.join(map (str, lag),' '),n1))
-    Flow(flag,flag+'0','dd form=native')
-    Flow('./'+filt+'0',flag,
+    Flow(flag,flag+'0.asc','dd form=native')
+    Flow('./'+filt+'0.asc',flag,
          '''echo %s a0=%g n1=%d data_format=ascii_float in=$TARGET
          lag=$SOURCE''' % (string.join(map (str, flt),' '),a0,n1),
          stdin=0)
-    Flow(filt,filt+'0','dd form=native')
+    Flow(filt,filt+'0.asc','dd form=native')
 
 Flow('spike',None,
      'spike n1=20 k1=10 n2=20 k2=4 label1=" " label2=" " d1=1 d2=2')
