@@ -1,0 +1,8 @@
+from rsfproj import *
+import stack
+
+Fetch('gom.data.hh','gom')
+
+
+
+End()

@@ -37,7 +37,7 @@ def stack(name,
          'mutter v0=%g | vscan semblance=y v0=%g nv=%d dv=%g' % (v0,v0,nv,dv))
 
     if vslope:
-        pick = 'mutter x0=%g v0=%g half=n | '
+        pick = 'mutter x0=%g v0=%g half=n | ' % (vx0,vslope)
     else:
         pick = ''
 
@@ -52,8 +52,9 @@ def stack(name,
 
     def velgrey(title):
         return grey(title) + '''
-        color=j scalebar=y bias=%g
-        ''' % (v0+0.5*nv*dv)
+        color=j scalebar=y bias=%g barlabel="Velocity (%s/s)"
+        barreverse=y
+        ''' % (v0+0.5*nv*dv,units)
 
     Flow(vel,scn,pick)   
     Result(vel,velgrey('RMS Velocity'))
@@ -78,11 +79,12 @@ def stack(name,
 
     dip = name+'-dip'
     Flow(dip,stk+'2','dip rect1=%d rect2=%d' % (rect1,rect2))
-    Result(dip,grey('Slope') + ' color=j scalebar=y')
+    Result(dip,grey('Dominant Slope') + \
+           ' color=j scalebar=y barlabel="Slope (samples)" ')
 
     pwd=name+'-pwd'
     Flow(pwd,[stk+'2',dip],'pwd dip=${SOURCES[1]}')
-    Result(pwd,grey('Diffractions (PWD)'))
+    Result(pwd,grey('Separated Diffractions'))
 
     shp=name+'-shp'
     Flow(shp,[stk+'2',dip],
@@ -134,7 +136,7 @@ def stack(name,
     focus rect1=%d rect3=%d |
     math output="1/abs(input)" |
     cut max1=%g | cut min1=%g 
-    ''' % (2*rect1,2*rect2,tmin,tmax)
+    ''' % (2*rect1,2*rect2,tmax,tmin)
  
     foc=name+'-foc'
     Flow(foc,vlf,focus)

@@ -10,16 +10,17 @@ Fetch('gomnearoffset.H','gom')
 Flow('offset','gomnearoffset.H','dd form=native')
 
 Plot('zof','offset',showdat('Data'))
-Result('dzof','offset',showdat('Data'))
+Result('dzof','offset',showdat('Stack'))
 
 Flow('dip','offset','dip verb=y order=3 rect1=5 rect2=20 liter=100')
 Flow('dec','offset dip','pwd order=3 dip=${SOURCES[1]}')
 
 Result('dip',
-       showdat('Dominant Dip') + ' crowd1=0.75 color=j scalebar=y ')
+       showdat('Dominant Slope') + \
+                                                                ' crowd1=0.75 color=j scalebar=y barlabel="Slope (samples)" ')
 
 Plot('dec',showdat('Residual'))
-Result('ddec','dec',showdat('Residual'))
+Result('ddec','dec',showdat('Separated Diffractions'))
 
 Result('dec','zof dec','OverUnderAniso')
 
@@ -57,7 +58,9 @@ Flow('pick2','pick','window | transp | spline n1=920 d1=26.6699 o1=0 | transp')
 Result('dvel','pick2',
        '''
        window f2=10 f1=10 |
-       grey label1="Time(s)" label2="X(ft)" allpos=y title=Velocity color=j scalebar=y
+       grey label1="Time(s)" label2="X(ft)" allpos=y
+       title="Migration Velocity"
+       color=j scalebar=y barlabel="Velocity (ft/s)"
        bias=1500 minval=1500 clip=700 maxval=2200
        ''')
 
@@ -67,6 +70,6 @@ Result('slice','window | ' + showdat('Migrated Diffractions'))
 
 Flow('slice2','vlf2 pick2','slice pick=${SOURCES[1]}')
 
-Result('slice2','window | ' + showdat('Migration'))
+Result('slice2','window | ' + showdat('Migrated Stack'))
 
 End()

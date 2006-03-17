@@ -99,8 +99,7 @@ int main (int argc, char *argv[])
 		m[i] = 1.5 + (n[i] - 1 - f[i]) / j[i];
 	    }
 	}
-	if (1+(m[i]-1)*j[i] > n[i]) 
-	    sf_error ("n%d=%d is too big",i+1,m[i]);
+	while (1+(m[i]-1)*j[i] > n[i]) m[i]--;
     }
 
     if (!sf_getbool("verb",&verb)) verb=false;
