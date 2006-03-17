@@ -1,7 +1,11 @@
 from rsfproj import *
 
 Fetch('mona.img','imgs')
-Flow('mona','mona.img','byte2rsf n1=512 n2=513')
+Flow('mona','mona.img',
+     '''
+     echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |
+     dd type=float
+     ''',stdin=0)
 Result('mona',
        '''
        grey transp=n allpos=y title="Mona Lisa"

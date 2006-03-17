@@ -60,4 +60,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Mbyte2rsf.c,v 1.3 2004/06/25 08:41:19 fomels Exp $	 */
+/* 	$Id$	 */

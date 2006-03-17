@@ -10,5 +10,6 @@ Result('bin',
        frame1=256 frame2=256 frame3=250
        ''')
 
+Flow('float','bin','dd type=float')
 
 End()

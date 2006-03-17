@@ -33,6 +33,7 @@ int main(int argc, char *argv[])
     sf_datatype itype, otype;
     float *fbuf;
     float complex *cbuf;
+    unsigned char *ubuf;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -93,7 +94,7 @@ int main(int argc, char *argv[])
     /* optimize buffer size */
     bufsiz /= ein;
 
-    if (ein != eout && sf_histint(in,"n1",&n1)) {
+    if (SF_UCHAR != itype && ein != eout && sf_histint(in,"n1",&n1)) {
 	n1 = (n1*ein)/eout;
 	sf_putint(out,"n1",n1);
     }
@@ -179,6 +180,24 @@ int main(int argc, char *argv[])
 		}
 		break;
 	    case SF_UCHAR:
+		nin = bufsiz*ein/eout;
+		if (nin > size) nin=size;
+
+		ubuf = (unsigned char*) bufin;
+		sf_charread(bufin,nin,in);
+		switch (otype) {
+		    case SF_FLOAT:
+			fbuf = (float *) bufout;
+			for (i=0; i < nin; i++) {
+			    fbuf[i] = (float) ubuf[i];
+			}
+			sf_floatwrite(fbuf,nin,out);
+			break;
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
 	    case SF_CHAR:
 	    default:
 		ddbreak (itype,otype);
