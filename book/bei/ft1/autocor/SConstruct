@@ -82,20 +82,20 @@ nsig = len(signals)
 rand = range(nsig)
 
 shuffle(rand)
-Flow('./head1',None,
+Flow('head1.asc',None,
      'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
      (string.join(map(str,rand)),nsig))
 shuffle(rand)
-Flow('./head2',None,
+Flow('head2.asc',None,
      'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
      (string.join(map(str,rand)),nsig))
 
 Plot('randauto',
-     'auto head2','headersort head=${SOURCES[1]} |' + \
+     'auto head2.asc','headersort head=${SOURCES[1]} |' + \
      dots('Reordered Autocors'))
 Result('randauto','sig randauto','SideBySideAniso',vppen='yscale=0.85')
 Plot('randspec',
-     'spec head2','headersort head=${SOURCES[1]} |' + \
+     'spec head2.asc','headersort head=${SOURCES[1]} |' + \
      dots('Reordered Spectra'))
 Result('randspec','auto randspec','SideBySideAniso',vppen='yscale=0.85')
 

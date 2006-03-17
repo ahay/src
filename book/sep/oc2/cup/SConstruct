@@ -164,6 +164,6 @@ Flow('shotp','shot0','shotprop ns=100 ds=0.008')
 
 Plot('shotnd',grey % 'Interpolated Shot')
 Plot('shoterr',grey % 'Error')
-Result('shotin','shotnd shoterr','SideBySideAniso')
+Result('shotin','shotnd shoterr','SideBySideIso')
 
 End()

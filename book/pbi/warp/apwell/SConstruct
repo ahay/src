@@ -9,8 +9,8 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 Fetch(las,'apache',private)
 
-Flow('./las',las,'tail -n 111')
-Flow('log','las',
+Flow('las.asc',las,'tail -n 111')
+Flow('log','las.asc',
      '''
      echo in=$SOURCE n1=5 n2=56 data_format=ascii_float |
      dd form=native |

@@ -151,13 +151,13 @@ Flow('patch','radon','transp memsize=500 plane=23 | patch w=1251,501,50')
 Flow('dip','patch','dip rect1=20 rect2=10 rect3=2 liter=40 n4=0 verb=y')
 Flow('dips','dip','patch inv=y weight=y')
 
-#Flow('pwd','radon dips',
-#     '''
-#     transp memsize=500 plane=23 |
-#     pwd dip=${SOURCES[1]} n4=0 |
-#     transp memsize=500 plane=23
-#     '''
-#     )
+Flow('pwd','radon dips',
+     '''
+     transp memsize=500 plane=23 |
+     pwd dip=${SOURCES[1]} n4=0 |
+     transp memsize=500 plane=23
+     '''
+     )
 
 Flow('sbak','pwd','radon adj=n nx=281 dx=0.0125 ox=-1.75')
 

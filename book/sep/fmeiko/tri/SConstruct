@@ -273,10 +273,10 @@ edge = Split('''
 10 3
 ''')
 
-Flow('./square0',None,
+Flow('square0.asc',None,
      'echo %s n1=2 n2=%d data_format=ascii_float in=$TARGET' %
      (string.join(square),len(square)/2))
-Flow('square','square0 square1',
+Flow('square','square0.asc square1',
      'dd form=native | cat axis=2 ${SOURCES[1]} | pad n1=3')
 
 Flow('sqe0','square',

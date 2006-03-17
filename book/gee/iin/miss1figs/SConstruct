@@ -14,12 +14,12 @@ def filter(filt):
     return ('echo %s in=$TARGET n1=%d esize=0 data_format=ascii_float' %
             (string.join(map(str,filt),' '),len(filt)))
 
-Flow('./in0',None,filter(input))
-Flow('in','in0','dd form=native')
+Flow('in0.asc',None,filter(input))
+Flow('in','in0.asc','dd form=native')
 for case in filters.keys():
     name = 'm'+case
-    Flow(case+'0',None,filter(filters[case]))
-    Flow(case,case+'0','dd data_format=native_float')
+    Flow(case+'0.asc',None,filter(filters[case]))
+    Flow(case,case+'0.asc','dd data_format=native_float')
     Flow(name,['in',case],'miss1 filtin=${SOURCES[1]}')
     Result(name,[case,name,'in'],
            '''

@@ -10,10 +10,10 @@ mod = {
     }
 
 for file in mod.keys():
-    Flow('./'+file+'0',None,
+    Flow(file+'0.asc',None,
          'echo %s n1=%d esize=0 data_format=ascii_float in=$TARGET' %
          (string.join(map(str,mod[file]),' '),len(mod[file])))
-    Flow(file,file+'0','dd form=native')
+    Flow(file,file+'0.asc','dd form=native')
 
 Flow('dat','z vp vs rho',
      '''

@@ -88,10 +88,10 @@ htable = '''
 0.45 0.8311
 1.1 1.17
 '''
-Flow('./htable',None,
+Flow('htable.asc',None,
      'echo %s n1=2 n2=3 in=$TARGET data_format=ascii_float' %
      string.join(Split(htable),' '))
-Flow('hswrp1',['htable','hswrp'],
+Flow('hswrp1','htable.asc hswrp',
      'dd form=native | spline pattern=${SOURCES[1]}')
 Flow('hswrp2','hswrp',
      'window n1=4 j1=366 | spline pattern=${SOURCES[1]}')
@@ -116,10 +116,10 @@ for mode in ['pp','ps']:
         max = psmax['h']
         pick = 1.2811
     nail = mode+'nail'
-    Flow('./'+nail,None,
+    Flow(nail+'.asc',None,
          'echo 0 %g n1=2 data_format=ascii_float in=$TARGET' % pick)
     Plot([nail,mode+'real',mode+'zero',mode+'ones'],
-         [nail,'zero3','ones3'],
+         [nail+'.asc','zero3','ones3'],
          '''
          dd form=native > ${TARGETS[1]} &&
          cmplx ${TARGETS[1]} ${SOURCES[1]} > ${TARGETS[2]} &&
