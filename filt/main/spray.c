@@ -86,6 +86,11 @@ int main(int argc, char* argv[])
 	sprintf(key1,"label%d",j);
 	if (NULL != (val = sf_histstring(in,key1))) 
 	    sf_putstring(out,key2,val);
+
+	sprintf(key2,"unit%d",j+1);
+	sprintf(key1,"unit%d",j);
+	if (NULL != (val = sf_histstring(in,key1))) 
+	    sf_putstring(out,key2,val);
     }
     
     sf_fileflush(out,in);

@@ -6,6 +6,7 @@ n1,n2,... are data dimensions
 o1,o2,... are axis origins
 d1,d2,... are axis sampling intervals
 label1,label2,... are axis labels
+unit1,unit2,... are axis units
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -109,6 +110,11 @@ int main (int argc, char* argv[])
 	    printf(" %s%s",out,pad+strlen(out));
 
 	    snprintf(key,8,"label%d",j+1);
+	    if (NULL != (val = sf_histstring(file,key))) {
+		printf("%s=\"%s\" ",key,val);
+	    }
+
+	    snprintf(key,7,"unit%d",j+1);
 	    if (NULL != (val = sf_histstring(file,key))) {
 		printf("%s=\"%s\" ",key,val);
 	    }

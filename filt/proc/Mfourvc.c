@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
     float *trace, *strace;
     float complex *ctrace, **cstack;
+    char *time, *space, *unit;
+    size_t len;
     kiss_fftr_cfg forw, invs;
     sf_file in, out;
 
@@ -77,7 +79,17 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d2",dv);
     sf_putint(out,"n2",nv);
 
-    sf_putstring(out,"label2","Velocity (km/s)");
+    sf_putstring(out,"label2","Velocity");
+
+    if (NULL != (time = sf_histstring(in,"label1")) &&
+	NULL != (space = sf_histstring(in,"label2"))) {
+	len = strlen(time)+strlen(space)+2;
+	unit = sf_charalloc(len);
+	snprintf(unit,len,"%s/%s",space,time);
+	sf_putstring(out,"unit2",unit);
+	free(time);
+	free(space);
+    }
 
     dx *= 2.*SF_PI; 
     dy *= 2.*SF_PI; 

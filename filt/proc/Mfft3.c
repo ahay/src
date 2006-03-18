@@ -22,6 +22,8 @@ Input and output are complex data. The input is padded by factor pad.
 
 #include <rsf.h>
 
+#include "fftlabel.h"
+
 int main (int argc, char **argv)
 {
     int n1, nx, n3, axis, dim, n[SF_MAX_DIM];	/* dimensions */
@@ -42,7 +44,8 @@ int main (int argc, char **argv)
     bool opt;                /* optimal padding */
     int sign;                /* transform sign */
 
-    char varname[6];         /* variable name */
+    char varname[12];        /* variable name */
+    char *label;             /* transformed axis label */
     kiss_fft_cfg cfg;
     
     sf_file in, out;
@@ -82,10 +85,12 @@ int main (int argc, char **argv)
 	sprintf(varname,"d%d",axis);
 	if (!sf_histfloat(in,varname,&dk)) sf_error("No %s= in input",varname);
 
-	sprintf(varname,"m%d",axis);
+	sprintf(varname,"fft3_n%d",axis);
 	if (!sf_histint  (in,varname,&nx)) nx=nk;
-	sprintf(varname,"c%d",axis);
+	sprintf(varname,"fft3_o%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
+	sprintf(varname,"fft3_label%d",axis);
+	label = sf_histstring(in,varname);
 
 	dx = 1./(nk*dk);
 
@@ -95,6 +100,12 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dx);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,x0);
+	sprintf(varname,"label%d",axis);
+	if (NULL != label) {
+	    sf_putstring(out,varname,label);
+	} else if (NULL != (label = sf_histstring(in,varname))) {
+	    (void) fix_label(axis,label,out);
+	}
     } else { 
 	sprintf(varname,"n%d",axis);
 	if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
@@ -102,11 +113,17 @@ int main (int argc, char **argv)
 	if (!sf_histfloat(in,varname,&dx)) sf_error("No %s= in input",varname);
 	sprintf(varname,"o%d",axis);
 	if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
+	sprintf(varname,"label%d",axis);
+	label = sf_histstring(in,varname);
 
-	sprintf(varname,"m%d",axis);
+	sprintf(varname,"fft3_n%d",axis);
 	sf_putint(out,varname,nx);
-	sprintf(varname,"c%d",axis);
+	sprintf(varname,"fft3_o%d",axis);
 	sf_putfloat(out,varname,x0);
+	if (NULL != label) {
+	    sprintf(varname,"fft3_label%d",axis);
+	    sf_putstring(out,varname,label);
+	}
 
 	if (!sf_getint("pad",&npad)) npad=2;
 	/* padding factor */
@@ -124,7 +141,12 @@ int main (int argc, char **argv)
 	sf_putfloat (out,varname,dk);
 	sprintf(varname,"o%d",axis);
 	sf_putfloat (out,varname,k0);
+	if (NULL != label && !fix_label(axis,label,out)) {
+	    sprintf(varname,"label%d",axis);
+	    sf_putstring(out,varname,"Wavenumber");
+	}
     }
+    fix_unit(axis,in,out);
     
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 

@@ -325,7 +325,8 @@ static void make_labels (sf_file in, char where1, char where2)
     int n1, n2, n3;
     float vs, xc, yc, x1, y1, x2, y2, o1, o2, o3;
     bool want;
-    char* where;
+    char *where, *labl, *unit;
+    size_t len;
     struct Label *label;
 
     if (sf_getbool ("wantaxis", &want) && !want) {
@@ -385,10 +386,21 @@ static void make_labels (sf_file in, char where1, char where2)
 	}
 	if (!sf_getint ("labelfat",&(label1->fat))) label1->fat=0;
 	/* label fatness */
-	if ((NULL == (label1->text=sf_getstring(transp? "label2":"label1"))) &&
-	    (NULL == (label1->text=sf_histstring(in,
-						 transp? "label2":"label1"))))
+	if ((NULL == (labl=sf_getstring(transp? "label2":"label1"))) &&
+	    (NULL == (labl=sf_histstring(in,
+					 transp? "label2":"label1")))) {
 	    label1->text = blank;
+	} else if ((NULL == (unit=sf_getstring(transp? "unit2":"unit1"))) &&
+		   (NULL == (unit=sf_histstring(in,
+						transp? "unit2":"unit1")))) {
+	    label1->text = labl;
+	} else {
+	    len = strlen(labl)+strlen(unit)+4;
+	    label1->text = sf_charalloc(len);
+	    snprintf(label1->text,len,"%s (%s)",labl,unit);
+	    free(labl);
+	    free(unit);
+	}
 	
 	label1->xpath = labelsz;
 	label1->xup = 0.;
@@ -419,9 +431,19 @@ static void make_labels (sf_file in, char where1, char where2)
     if (NULL != label3) {
 	if (!sf_getint ("labelfat",&(label3->fat))) label3->fat=0;
 	/* label fatness */
-	if ((NULL == (label3->text=sf_getstring("label3"))) &&
-	    (NULL == (label3->text=sf_histstring(in,"label3"))))
+	if ((NULL == (labl=sf_getstring("label3"))) &&
+	    (NULL == (labl=sf_histstring(in,"label3")))) {
 	    label3->text = blank;
+	} else if ((NULL == (unit=sf_getstring("unit3"))) &&
+		   (NULL == (unit=sf_histstring(in,"unit3")))) {
+	    label3->text = labl;
+	} else {
+	    len = strlen(labl)+strlen(unit)+4;
+	    label3->text = sf_charalloc(len);
+	    snprintf(label3->text,len,"%s (%s)",labl,unit);
+	    free(labl);
+	    free(unit);
+	}
 
 	if (flat) {
 	    vp_umove (mid1,min2);
@@ -477,10 +499,21 @@ static void make_labels (sf_file in, char where1, char where2)
 	}
 	if (!sf_getint ("labelfat",&(label2->fat))) label2->fat=0;
 	/* label fatness */
-	if ((NULL == (label2->text=sf_getstring(transp? "label1":"label2"))) &&
-	    (NULL == (label2->text=sf_histstring(in,
-						 transp? "label1":"label2"))))
+	if ((NULL == (labl=sf_getstring(transp? "label1":"label2"))) &&
+	    (NULL == (labl=sf_histstring(in,
+					 transp? "label1":"label2")))) {
 	    label2->text = blank;
+	} else if ((NULL == (unit=sf_getstring(transp? "unit1":"unit2"))) &&
+		   (NULL == (unit=sf_histstring(in,
+						transp? "unit1":"unit2")))) {
+	    label2->text = labl;
+	} else {
+	    len = strlen(labl)+strlen(unit)+4;
+	    label2->text = sf_charalloc(len);
+	    snprintf(label2->text,len,"%s (%s)",labl,unit);
+	    free(labl);
+	    free(unit);
+	}
 
 	if (!sf_getbool ("labelrot",&labelrot)) labelrot = false;
 	/* if rotate vertical label */

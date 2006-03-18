@@ -40,6 +40,8 @@ int main(int argc, char* argv[])
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str;
     float *trace, **stack, **stack2, *hh;
+    char *time, *space, *unit;
+    size_t len;
     sf_file cmp, scan, offset, msk;
 
     sf_init (argc,argv);
@@ -114,6 +116,18 @@ int main(int argc, char* argv[])
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
     sf_putstring(scan,"label2",slow? "slowness": "velocity");
+
+    if (NULL != (time = sf_histstring(cmp,"unit1")) &&
+	NULL != (space = sf_histstring(cmp,"unit2"))) {
+	len = strlen(time)+strlen(space)+2;
+	unit = sf_charalloc(len);
+	if (slow) {
+	    snprintf(unit,len,"%s/%s",time,space);
+	} else {
+	    snprintf(unit,len,"%s/%s",space,time);
+	}
+	sf_putstring(scan,"unit1",unit);
+    }
 
     stack =  sf_floatalloc2(nt,nv);
     stack2 = (sembl || dsembl)? sf_floatalloc2(nt,nv) : NULL;

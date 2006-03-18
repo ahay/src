@@ -82,16 +82,16 @@ bash$ sfin one.rsf
 one.rsf:
     in="/tmp/one.rsf@"
     esize=4 type=float form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 bash$ sfcat one.rsf one.rsf axis=1 > two.rsf
 bash$ sfin two.rsf
 two.rsf:
     in="/tmp/two.rsf@"
     esize=4 type=float form=native
-    n1=4           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=4           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         12 elements 48 bytes
 \end{verbatim}
 
@@ -102,8 +102,8 @@ bash$ sfin two.rsf
 two.rsf:
     in="/tmp/two.rsf@"
     esize=4 type=float form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=7           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=7           d2=0.1         o2=0          label2="Distance" unit2="km"
         14 elements 56 bytes
 \end{verbatim}
 In this case, an extra empty trace is inserted between the two merged files.
@@ -129,16 +129,16 @@ bash$ sfin one.rsf
 one.rsf:
     in="/tmp/one.rsf@"
     esize=4 type=float form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 bash$ sfcmplx one.rsf one.rsf > cmplx.rsf
 bash$ sfin cmplx.rsf
 cmplx.rsf:
     in="/tmp/cmplx.rsf@"
     esize=8 type=complex form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 48 bytes
 \end{verbatim}
 
@@ -241,16 +241,16 @@ bash$ sfin one.rsf
 one.rsf:
     in="/tmp/one.rsf@"
     esize=4 type=float form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 bash$ sfcp one.rsf two.rsf
 bash$ sfin two.rsf
 two.rsf:
     in="/tmp/two.rsf@"
     esize=4 type=float form=native
-    n1=2           d1=0.004       o1=0          label1="Time (s)"
-    n2=3           d2=0.1         o2=0          label2="Distance (km)"
+    n1=2           d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=3           d2=0.1         o2=0          label2="Distance" unit2="km"
         6 elements 24 bytes
 \end{verbatim}
 
@@ -670,8 +670,8 @@ bash$ sfin spike.rsf
 spike.rsf:
     in="/tmp/spike.rsf@"
     esize=4 type=float form=native
-    n1=100         d1=0.004       o1=0          label1="Time (s)"
-    n2=20          d2=0.1         o2=0          label2="Distance (km)"
+    n1=100         d1=0.004       o1=0          label1="Time" unit1="s"
+    n2=20          d2=0.1         o2=0          label2="Distance" unit2="km"
         2000 elements 8000 bytes
 \end{verbatim}
 \texttt{sfin} reports the following information:
@@ -684,6 +684,7 @@ spike.rsf:
 \item axes scale (0.004 and 0.1)
 \item axes origin (0 and 0)
 \item axes labels
+\item axes units
 \item total number of elements
 \item total number of bytes in the data file
 \end{itemize}
@@ -881,14 +882,14 @@ bash$ sfin spike.rsf
 spike.rsf:
     in="/tmp/spike.rsf@"
     esize=4 type=float form=native
-    n1=10          d1=0.004       o1=0          label1="Time (s)"
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s"
         10 elements 40 bytes
-bash$ sfput < spike.rsf d1=25 label1='"Depth (m)"' > spike2.rsf
+bash$ sfput < spike.rsf d1=25 label1=Depth unit1=m > spike2.rsf
 bash$ sfin spike2.rsf
 spike2.rsf:
     in="/tmp/spike2.rsf@"
     esize=4 type=float form=native
-    n1=10          d1=25          o1=0          label1="Depth (m)"
+    n1=10          d1=25          o1=0          label1="Depth" unit1="m"
         10 elements 40 bytes
 \end{verbatim}
 

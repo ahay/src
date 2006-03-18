@@ -223,7 +223,7 @@ bash$ sfin spike.rsf
 spike.rsf:
     in="stdin"
     esize=4 type=float form=native
-    n1=10          d1=0.004       o1=0          label1="Time (s)"
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s"
         10 elements 40 bytes
 bash$ ls -l spike.rsf
 -rw-r--r--  1 sergey users 196 2004-11-10 21:39 spike.rsf
@@ -306,14 +306,16 @@ bash$ cat /tmp/asin.rsf@
 
 \subsection{Hypercube}
 
-While RSF stores binary data in a contiguous 1-D array, the conceptual data
-model is a multidimensional hypercube. By convention, the dimensions of the
-cube are defined with parameters \texttt{n1}, \texttt{n2}, \texttt{n3}, etc.
-The fastest axis is \texttt{n1}. Additionally, the grid sampling can be given
-by parameters \texttt{d1}, \texttt{d2}, \texttt{d3}, etc. The axes origins are
-given by parameters \texttt{o1}, \texttt{o2}, \texttt{o3}, etc. Optionally,
-you can also supply the label strings \texttt{label1}, \texttt{label2},
-\texttt{label3}, etc. Labels can be used for plotting the data.
+While RSF stores binary data in a contiguous 1-D array, the conceptual
+data model is a multidimensional hypercube. By convention, the
+dimensions of the cube are defined with parameters \texttt{n1},
+\texttt{n2}, \texttt{n3}, etc.  The fastest axis is \texttt{n1}.
+Additionally, the grid sampling can be given by parameters
+\texttt{d1}, \texttt{d2}, \texttt{d3}, etc. The axes origins are given
+by parameters \texttt{o1}, \texttt{o2}, \texttt{o3}, etc. Optionally,
+you can also supply the axis label strings \texttt{label1},
+\texttt{label2}, \texttt{label3}, etc., and axis units strings
+\texttt{unit1}, \texttt{unit2}, \texttt{unit3}, etc. 
 
 \section{Compatibility with other file formats}
 

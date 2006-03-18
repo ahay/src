@@ -29,13 +29,14 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int nx, ny, n3, titlsz, titlefat, plotfat, plotcolup, plotcoldn;
-    int i3, i2, i1, axissz, axisfat, gainstep;
+    int i, i3, i2, i1, axissz, axisfat, gainstep;
     float *max, *min, ***fff, *ff, alpha, zc, sz, tt, ee, gg, dx, dy;
     float pclip, clip, pbias, cosa, sina, tana, xc, scale, scalex, xs;
     float ax[4], ay[4], dclip, s1, s2, xlength, zmax, zmin, y, fm, scalez, ys;
     float dz, ox, oy, xend, x2, x1, f2, f1, old, z, x, f, r, y2;
     const float huge=1.e30, eps=1.e-5;
-    char *label1, *label2, *label3, *title;
+    size_t len;
+    char *label, *unit, *labels[3], *title, key[8];
     bool uflag, dflag, norm, axis, axis1, axis2, axis3;
     sf_file in;
 
@@ -87,12 +88,24 @@ int main(int argc, char* argv[])
     if (!sf_getint("plotcoldn",&plotcoldn)) plotcoldn=VP_RED;
     /* color of the lower side */
 
-    if (NULL == (label1 = sf_getstring("label1"))) 
-	label1 = sf_histstring(in,"label1");
-    if (NULL == (label2 = sf_getstring("label2"))) 
-	label2 = sf_histstring(in,"label2");
-    if (NULL == (label3 = sf_getstring("label3"))) 
-	label3 = sf_histstring(in,"label3");
+    for (i=0; i < 3; i++) {
+	snprintf(key,8,"label%d",i+1);
+	if (NULL == (label = sf_getstring(key))) 
+	    label = sf_histstring(in,key);
+	snprintf(key,7,"unit%d",i+1);
+	if (NULL == (unit = sf_getstring(key))) 
+	    unit = sf_histstring(in,key);
+	if (NULL != label && NULL != unit) {
+	    len = strlen(label)+strlen(unit)+4;
+	    labels[i] = sf_charalloc(len);
+	    snprintf(labels[i],len,"%s (%s)",label,unit);
+	    free(label);
+	    free(unit);
+	} else {
+	    labels[i] = label;
+	}
+    }
+
     if (NULL == (title = sf_getstring("title")) && 
 	NULL == (title = sf_histstring(in,"title")))
 	title = sf_histstring(in,"in");
@@ -358,8 +371,8 @@ int main(int argc, char* argv[])
 		vp_arrow(ax[0],ay[0],
 			 ax[0]+1.2*(ax[2]-ax[0]),
 			 ay[0]+1.2*(ay[2]-ay[0]),r);
-		if (NULL != label1) 
-		    vp_text (ax[2] + 0.2, ay[2], axissz, 90, label1);
+		if (NULL != labels[0]) 
+		    vp_text (ax[2] + 0.2, ay[2], axissz, 90, labels[0]);
 	    }
 
 	    if (axis2) {
@@ -368,16 +381,16 @@ int main(int argc, char* argv[])
 		xs = ax[0] - .15 * (ax[1]-ax[0]);
 		ys = ay[0] - .15 * (ay[1]-ay[0]);
 		vp_arrow( xs, ys, x2, y2, r);
-		if (NULL != label2) 
-		    vp_text (ax[0] + 0.5, ay[0] - 0.3, axissz, 90, label2);
+		if (NULL != labels[1]) 
+		    vp_text (ax[0] + 0.5, ay[0] - 0.3, axissz, 90, labels[1]);
 	    }
 
 	    if (axis3) {
 		vp_arrow (ax[0], ay[0],
 			  ax[0]+1.2*(ax[3]-ax[0]),
 			  ay[0]+1.2*(ay[3]-ay[0]), r);
-		if (NULL != label3) 
-		    vp_text (ax[0], ay[0] - 0.1, axissz, 90 * 2, label3);
+		if (NULL != labels[2]) 
+		    vp_text (ax[0], ay[0] - 0.1, axissz, 90 * 2, labels[2]);
 	    }
 	}
 

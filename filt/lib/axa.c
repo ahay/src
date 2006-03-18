@@ -12,7 +12,7 @@
 typedef struct {
     int     n;
     float o,d;
-    char   *l;
+    char   *l, *u;
 } axa;
 /*^*/
 
@@ -23,25 +23,27 @@ typedef struct {
 void iaxa(sf_file FF, axa *AA, const int i) 
 /*< read [n,o,d,l] for axis i >*/
 {
-    char BB[3];
-    char LL[7];
+    char key[7];
     int     n;
     float o,d;
 
-    (void) snprintf(BB,3,"n%d",i);
-    if( !sf_histint  (FF,BB,&n)) n=1;
+    (void) snprintf(key,3,"n%d",i);
+    if( !sf_histint  (FF,key,&n)) n=1;
     AA->n=n;
 
-    (void) snprintf(BB,3,"o%d",i);
-    if(! sf_histfloat(FF,BB,&o)) o=0;
+    (void) snprintf(key,3,"o%d",i);
+    if(! sf_histfloat(FF,key,&o)) o=0;
     AA->o=o;
 
-    (void) snprintf(BB,3,"d%d",i);
-    if(! sf_histfloat(FF,BB,&d)) d=1;
+    (void) snprintf(key,3,"d%d",i);
+    if(! sf_histfloat(FF,key,&d)) d=1;
     AA->d=d;
 
-    (void) snprintf(LL,7,"label%d",i);
-    if( NULL == (AA->l = sf_histstring(FF,LL))) AA->l=" ";
+    (void) snprintf(key,7,"label%d",i);
+    if( NULL == (AA->l = sf_histstring(FF,key))) AA->l=" ";
+
+    (void) snprintf(key,6,"unit%d",i);
+    if( NULL == (AA->u = sf_histstring(FF,key))) AA->u=" ";
 }
 
 /*------------------------------------------------------------*/
@@ -49,29 +51,33 @@ void iaxa(sf_file FF, axa *AA, const int i)
 void oaxa(sf_file FF, axa *AA, const int i) 
 /*< write [n,o,d,l] for axis i >*/
 {
-    char BB[3];
-    char LL[7];
+    char key[7];
 
-    (void) snprintf(BB,3,"n%d",i);
-    sf_putint(FF,BB,AA->n);
+    (void) snprintf(key,3,"n%d",i);
+    sf_putint(FF,key,AA->n);
     
-    (void) snprintf(BB,3,"o%d",i);
-    sf_putfloat(FF,BB,AA->o);
+    (void) snprintf(key,3,"o%d",i);
+    sf_putfloat(FF,key,AA->o);
 
-    (void) snprintf(BB,3,"d%d",i);
-    sf_putfloat(FF,BB,AA->d);
+    (void) snprintf(key,3,"d%d",i);
+    sf_putfloat(FF,key,AA->d);
 
-    (void) snprintf(LL,7,"label%d",i);
+    (void) snprintf(key,7,"label%d",i);
     if(NULL == AA->l ) AA->l=" ";
-    sf_putstring(FF,LL,AA->l);
+    sf_putstring(FF,key,AA->l);
+
+    (void) snprintf(key,6,"unit%d",i);
+    if(NULL == AA->u ) AA->u=" ";
+    sf_putstring(FF,key,AA->u);
 }
 
 /*------------------------------------------------------------*/
 
 void raxa(axa AA) 
-/*< report [n,o,d,l] for axis AA >*/
+/*< report [n,o,d,l,u] for axis AA >*/
 {    
-    sf_warning("n=%4d \t o=%f \t d=%f \t l=%s",AA.n,AA.o,AA.d,AA.l);
+    sf_warning("n=%4d \t o=%f \t d=%f \t l=\"%s\" \t u=\"%s\"",
+	       AA.n,AA.o,AA.d,AA.l,AA.u);
 }
 
 /*------------------------------------------------------------*/

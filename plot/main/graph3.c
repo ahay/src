@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
     float min, max, f, frame1, oo1, dd1;
     bool nomin, nomax;
-    char *label1, *label2;
+    char *label1, *label2, *unit1, *unit2;
     off_t esize;
     bool flat;
     sf_file in;
@@ -110,6 +110,19 @@ int main(int argc, char* argv[])
     if (NULL != label2) {
 	sf_putstring(in,"label3",label2);
 	free(label2);
+    }
+
+    unit1 = sf_histstring(in,"unit1");
+    unit2 = sf_histstring(in,"unit2");
+
+    if (NULL != unit1) {
+	sf_putstring(in,"unit1","");
+	sf_putstring(in,"unit2",unit1);
+	free(unit1);
+    }
+    if (NULL != unit2) {
+	sf_putstring(in,"unit3",unit2);
+	free(unit2);
     }
 
     if (!sf_getfloat("point1",&point1)) point1=0.5;

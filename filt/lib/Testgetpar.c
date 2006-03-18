@@ -16,7 +16,7 @@ int main (void)
     /*
       a=100 Xa=5
       float=5.625 cc=fgsg
-      dd=1,2x4.0,2.25 true=yes false=2*no label="Time (sec)"
+      dd=1,2x4.0,2.25 true=yes false=2*no label="Time"
     */
 
     sf_init(argc,argv);
@@ -28,7 +28,7 @@ int main (void)
     assert (sf_getbool("true",&yes) && yes);
     assert (sf_getbools("false",no,2) && !no[0] && !no[1]);
     assert (NULL != (str = sf_getstring("label")) && 
-	    0==strcmp(str,"Time (sec)"));
+	    0==strcmp(str,"Time"));
 
     exit (0);
 }

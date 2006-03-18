@@ -90,12 +90,14 @@ int main(int argc, char* argv[])
     s0 = ds;		               ds = (1./(v0*v0) - s0)/(nv-1);
 
     if (adj) {
-	sf_putstring(out,"label2","Offset (km)");
+	sf_putstring(out,"label2","Offset");
+	sf_putstring(out,"unit2","km");
 	sf_putfloat(out,"o2",x0);
 	sf_putfloat(out,"d2",dx);
 	sf_putint(out,"n2",nx);
     } else {
-	sf_putstring(out,"label2","Slowness Squared (s^2/km^2)");
+	sf_putstring(out,"label2","Slowness Squared");
+	sf_putstring(out,"unit2","s^2/km^2");
 	sf_putfloat(out,"o2",s0);
 	sf_putfloat(out,"d2",ds);
 	sf_putint(out,"n2",nv);

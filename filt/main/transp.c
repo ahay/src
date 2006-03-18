@@ -99,6 +99,12 @@ int main(int argc, char* argv[])
     if (NULL != (val= sf_histstring(in,key1))) sf_putstring(out,key2,val);
     if (NULL != (val= sf_histstring(in,key2))) sf_putstring(out,key1,val);
 
+    snprintf(key1,6,"unit%d",dim1);
+    snprintf(key2,6,"unit%d",dim2);
+
+    if (NULL != (val= sf_histstring(in,key1))) sf_putstring(out,key2,val);
+    if (NULL != (val= sf_histstring(in,key2))) sf_putstring(out,key1,val);
+
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);

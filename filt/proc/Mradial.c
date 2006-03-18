@@ -24,6 +24,8 @@ int main(int argc, char* argv[])
     int nt, nx, nv, it, ix, iv, nw, n3, i3, ntr, ntm, im;
     float *trace, *modl, *r; 
     float vmin, vmax, dv, dx, x0, t0, t, dt, tp;
+    char *unit, *space, *time;
+    size_t len;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -64,6 +66,12 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,"o1",x0);
 	sf_putstring(out,"label1","Offset");
 
+	if (NULL != (unit=sf_histstring(in,"unit1")) &&
+	    NULL != (space=strchr(unit,'/'))) {
+	    *space='\0';
+	    sf_putstring(out,"unit1",unit);
+	}
+
 	sf_prefilter_init (nw, nv, 2*nv);
 
 	ntr = nv;
@@ -87,7 +95,18 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n1",nv);
 	sf_putfloat(out,"d1",dv);
 	sf_putfloat(out,"o1",vmin);
+
 	sf_putstring(out,"label1","Velocity");
+
+	if (NULL != (time = sf_histstring(in,"unit2")) &&
+	    NULL != (space = sf_histstring(in,"unit1"))) {
+	    len = strlen(time)+strlen(space)+2;
+	    unit = sf_charalloc(len);
+	    snprintf(unit,len,"%s/%s",space,time);
+	    sf_putstring(out,"unit1",unit);
+	    free(time);
+	    free(space);
+	}
 
 	sf_putint(out,"nx",nx);
 	sf_putfloat(out,"x0",x0);

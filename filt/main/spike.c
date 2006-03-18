@@ -1,12 +1,13 @@
 /* Generate simple data: spikes, boxes, planes, constants.
    
-Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... k1= k2= ... l1= l2= ... p1= p2= ... mag=1,1,...] 
+Takes: [n1= n2= ... d1= d2= ... o1= o2= ... label1= label2= ... unit1= unit2= ... k1= k2= ... l1= l2= ... p1= p2= ... mag=1,1,...] 
 
 k1,k2,... specify the spike starting position (indexing starts with 1).
 l1,l2,... specify the spike ending position (indexing starts with 1).
 p1,p2,... specify the spike inclination (in samples)
 
-Inserts label1="Time (s)" and label2=label3=...="Distance (km)"
+Inserts label1="Time" and label2=label3=...="Distance" 
+Inserts unit1="s" and unit2=unit3=...="km"
 Inserts d1=0.004 and d2=d3=...=0.1
 
 */
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
 { 
     int i, j, is, ip, dim, n[SF_MAX_DIM], ii[SF_MAX_DIM];
     int nsp, **k, **l, n1, n2, i1, i2, kk, ll;
-    char key[7], *label;
+    char key[7], *label, *unit;
     float f, *trace, *mag, **p, pp;
     sf_file spike;
 
@@ -64,8 +65,15 @@ int main(int argc, char* argv[])
 
 	snprintf(key,7,"label%d",i+1);
 	if (NULL == (label = sf_getstring(key)))
-	    label = (i==0)? "Time (s)":"Distance (km)";
-	sf_putstring(spike,key,label);
+	    label = (i==0)? "Time":"Distance";
+	if (*label != '\0' && (*label != ' ' || *(label+1) != '\0')) 	
+	    sf_putstring(spike,key,label);
+
+	snprintf(key,6,"unit%d",i+1);
+	if (NULL == (unit = sf_getstring(key)))
+	    unit = (i==0)? "s":"km";
+	if (*unit != '\0' && (*unit != ' ' || *(unit+1) != '\0')) 	
+	    sf_putstring(spike,key,unit);
     }
 	
     if (NULL != (label = sf_getstring("title")))

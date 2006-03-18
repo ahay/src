@@ -19,12 +19,15 @@
 
 #include <rsf.h>
 
+#include "fftlabel.h"
+
 int main (int argc, char *argv[])
 {
     bool inv, sym, opt;
     int n1, nt, nw, i1, i2, n2;
     float dw, *p, d1, o1, wt;
     float complex *pp;
+    char *label;
     sf_file in, out;
     kiss_fftr_cfg cfg;
 
@@ -66,6 +69,13 @@ int main (int argc, char *argv[])
 
 	sf_putfloat(out,"fft_o1",o1);
 	sf_putfloat(out,"fft_n1",n1);
+
+	/* fix label */
+	if (NULL != (label = sf_histstring(in,"label1"))) {
+	    sf_putstring(out,"fft_label1",label);
+	    if (!fix_label(1,label,out))
+		sf_putstring(out,"label1","Wavenumber");
+	}
     } else {
 	if (!sf_histint  (in,"n1",&nw)) sf_error("No n1= in input");
 	if (!sf_histfloat(in,"d1",&dw)) sf_error("No d1= in input");
@@ -79,7 +89,15 @@ int main (int argc, char *argv[])
 	sf_putint  (out,"n1",n1);
 	sf_putfloat(out,"d1",d1);
 	sf_putfloat(out,"o1",o1);
+
+	/* fix label */
+	if (NULL != (label = sf_histstring(in,"fft_label1"))) {
+	    sf_putstring(out,"label1",label);
+	} else if (NULL != (label = sf_histstring(in,"label1"))) {
+	    (void) fix_label(1,label,out);
+	}
     }	
+    fix_unit(1,in,out);
     
     p = sf_floatalloc(nt);
     pp = sf_complexalloc(nw);

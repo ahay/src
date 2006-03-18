@@ -38,7 +38,7 @@ int main (int argc, char *argv[])
     int i0, n[SF_MAX_DIM], m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
     off_t *table, maxsize, n2;
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
-    char key[7], *label[SF_MAX_DIM], *buf;
+    char key[7], *label[SF_MAX_DIM], *unit[SF_MAX_DIM], *buf;
     bool squeeze, verb;
     sf_file in, out;
 
@@ -100,9 +100,13 @@ int main (int argc, char *argv[])
 	if (f[i]+(m[i]-1)*j[i] > n[i]) 
 	    sf_error ("m%d=%d is too big",i+1,m[i]);
 
-	/* get label's */
+	/* get labels */
 	snprintf(key,7,"label%d",i+1);
 	label[i] = sf_histstring(in,key);
+
+	/* get units */
+	snprintf(key,6,"unit%d",i+1);
+	unit[i] = sf_histstring(in,key);
     }
 
     if (!sf_getbool("verb",&verb)) verb=false;
@@ -132,6 +136,10 @@ int main (int argc, char *argv[])
 	    snprintf(key,7,"label%d",i+1);
 	    sf_putstring(out,key,label[i0]);
 	}
+	if (NULL != unit[i0]) {
+	    snprintf(key,7,"unit%d",i+1);
+	    sf_putstring(out,key,unit[i0]);
+	}
 	i++;
     }
 
@@ -147,6 +155,10 @@ int main (int argc, char *argv[])
 	    if (NULL != label[i0]) {
 		snprintf(key,7,"label%d",i+1);
 		sf_putstring(out,key,label[i0]);
+	    }
+	    if (NULL != unit[i0]) {
+		snprintf(key,6,"unit%d",i+1);
+		sf_putstring(out,key,unit[i0]);
 	    }
 	    i++;
 	}

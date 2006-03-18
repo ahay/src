@@ -18,6 +18,9 @@ env.Install(libdir,'suproj.py')
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 
+if WhereIs('units'):
+    env.Install(bindir,'sfunits')
+
 dirs = ('main','proc','imag','plot','libplot',
         'fomels','savap','gee','jennings','chaoshun','slim')
 

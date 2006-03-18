@@ -47,17 +47,20 @@ int main(int argc, char* argv[])
     sf_putint(angle,"n1",nh);
     sf_putfloat(angle,"o1",0.);
     sf_putfloat(angle,"d1",dh);
-    sf_putstring(angle,"label1","Offset Wavenumber (1/km)");
+    sf_putstring(angle,"label1","Offset Wavenumber");
+    sf_putstring(angle,"unit1","1/km");
 
     sf_putint(angle,"n2",nm);
     sf_putfloat(angle,"o2",0.);
     sf_putfloat(angle,"d2",dm);
-    sf_putstring(angle,"label2","Midpoint Wavenumber (1/km)");
+    sf_putstring(angle,"label2","Midpoint Wavenumber");
+    sf_putstring(angle,"unit2","1/km");
 
     sf_putint(angle,"n3",nw);
     sf_putfloat(angle,"o3",w0);
     sf_putfloat(angle,"d3",dw);
-    sf_putstring(angle,"label3","Frequency (1/s)");
+    sf_putstring(angle,"label3","Frequency");
+    sf_putstring(angle,"unit3","1/s");
 
     w0 *= 2.*SF_PI/vel;
     dw *= 2.*SF_PI/vel;

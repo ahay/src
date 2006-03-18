@@ -33,7 +33,8 @@ void vp_axis_init (const sf_file in)
 {
     float ftmp, num;
     bool want;
-    char *stmp;
+    char *stmp, *label, *unit;
+    size_t len;
     struct Axis axis;
 
     if (!sf_getint ("axisfat",&axisfat)) axisfat=0;
@@ -41,14 +42,34 @@ void vp_axis_init (const sf_file in)
     if (!sf_getint ("labelfat",&labelfat)) labelfat=0;
     if (!sf_getfloat ("labelsz",&labelsz)) labelsz=8.;
     
-    if ((NULL == (axis1.label=sf_getstring("label1"))) &&
-	(NULL == (axis1.label=sf_histstring(in,"label1"))))
+    if ((NULL == (label=sf_getstring("label1"))) &&
+	(NULL == (label=sf_histstring(in,"label1")))) {  
 	axis1.label = blank;
+    } else if ((NULL == (unit=sf_getstring("unit1"))) &&
+	       (NULL == (unit=sf_histstring(in,"unit1")))) {
+	axis1.label = label;
+    } else {
+	len = strlen(label)+strlen(unit)+4;
+	axis1.label = sf_charalloc(len);
+	snprintf(axis1.label,len,"%s (%s)",label,unit);
+	free(label);
+	free(unit);
+    }
 
-    if ((NULL == (axis2.label=sf_getstring("label2"))) &&
-	(NULL == (axis2.label=sf_histstring(in,"label2"))))
+    if ((NULL == (label=sf_getstring("label2"))) &&
+	(NULL == (label=sf_histstring(in,"label2")))) {
 	axis2.label = blank;
-           
+    } else if ((NULL == (unit=sf_getstring("unit2"))) &&
+	       (NULL == (unit=sf_histstring(in,"unit2")))) {
+	axis2.label = label;           
+    } else {
+	len = strlen(label)+strlen(unit)+4;
+	axis2.label = sf_charalloc(len);
+	snprintf(axis2.label,len,"%s (%s)",label,unit);
+	free(label);
+	free(unit);
+    }
+
     where1 = (NULL != (stmp = sf_getstring ("wherexlabel")) &&
 	      'b' == *stmp);
     where2 = (NULL != (stmp = sf_getstring ("whereylabel")) &&

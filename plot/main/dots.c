@@ -43,12 +43,13 @@ static void circle(int corners,
 int main (int argc, char* argv[])
 {
     int i, i1,n1, i2,n2, i3, n3, ir, labelsz, connect, corners, dots, newsize;
+    size_t len;
     float **data, xxscale, yyscale, clip, f, vx[5], vy[5];
     float epsilon, dd1, dd2, axis, hi=0., lo=0., av, maxab, range;
     float marginl, marginr, margint, marginb, x, y, radius;
     float tracehigh, overlap, zerosignal, o1,d1;
     float d, full, abs, sgn, signal, *cx, *cy;
-    char *label1, *title, **labels;
+    char *label, *label1, *unit1, *title, **labels;
     bool seemean, strings, silk, gaineach, yreverse, constsep, seedead;
     sf_file in;
 
@@ -70,6 +71,25 @@ int main (int argc, char* argv[])
 	(*label1 == '\0' || (*label1 == ' ' && *(label1+1) == '\0'))) {
 	free (label1);
 	label1 = NULL;
+    }
+
+    if (NULL == (unit1 = sf_getstring("unit1"))) 
+	/* unit for the axis */
+	unit1 = sf_histstring(in,"unit1");
+    if (unit1 != NULL &&
+	(*unit1 == '\0' || (*unit1 == ' ' && *(unit1+1) == '\0'))) {
+	free (unit1);
+	unit1 = NULL;
+    }
+
+    if (NULL != label1 && NULL != unit1) {
+	len = strlen(label1)+strlen(unit1)+4;
+	label = sf_charalloc(len);
+	snprintf(label,len,"%s (%s)",label1,unit1);
+	free(label1);
+	free(unit1);
+    } else {
+	label = label1;
     }
  
     if (NULL == (title = sf_getstring("title")))
@@ -145,7 +165,7 @@ int main (int argc, char* argv[])
 
     marginl = screenwide * ((NULL == labels[0])? 0.03: 0.15);
     margint = screenhigh * ((NULL == title)? 0.03: 0.07);
-    marginb = screenhigh * ((NULL == label1)? 0.03: 0.15);
+    marginb = screenhigh * ((NULL == label)? 0.03: 0.15);
     marginr = screenwide * 0.03;
 
     dd1 = (screenwide - marginl - marginr) / ( n1             );
@@ -304,11 +324,11 @@ int main (int argc, char* argv[])
 	    }
 	} /* i2 */
 
-	if(NULL != label1) 
+	if(NULL != label) 
 	    vp_simple_axis(marginl, marginb*0.8,  
 			   screenwide-marginr, marginb*0.8,
 			   o1, o1+(n1-1)*d1, 0., 0., 
-			   .25, label1, 0.03*labelsz);
+			   .25, label, 0.03*labelsz);
 
 	if(NULL != title) {
 	    newsize = 1.2*labelsz;

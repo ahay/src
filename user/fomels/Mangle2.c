@@ -47,12 +47,14 @@ int main(int argc, char* argv[])
     sf_putint(angle,"n1",2*nx-1);
     sf_putfloat(angle,"o1",-(nx-1)*dx);
     sf_putfloat(angle,"d1",dx);
-    sf_putstring(angle,"label1","In-line Offset Slope (degrees)");
+    sf_putstring(angle,"label1","In-line Offset Slope");
+    sf_putstring(angle,"unit1","degrees");
 
     sf_putint(angle,"n2",2*ny-1);
     sf_putfloat(angle,"o2",-(ny-1)*dy);
     sf_putfloat(angle,"d2",dy);
-    sf_putstring(angle,"label2","Cross-line Offset Slope (degrees)");
+    sf_putstring(angle,"label2","Cross-line Offset Slope");
+    sf_putstring(angle,"unit2","degrees");
 
     trace = sf_floatalloc(2*nx-1);
     
