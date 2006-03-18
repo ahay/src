@@ -1,4 +1,0 @@
-}qU	helix.pdfq(cSCons.Node.FS
-BuildInfo
-qoq}q(UbsigqU aec27348cb208f2c1e7611ed92736d93qU	bimplicitq]q	Ubdependsq
-]qUbdependsigsq]qUbactsigqU 2efd05fcd83aa84a185c5826aab5d824qUbimplicitsigsq]qUbactqU–DISPLAY=" " nohup /usr/local/bin/math -batchoutput < helix.ma >& /dev/null > /dev/null && /usr/bin/epstopdf junk_ma.eps -o=helix.pdf && rm junk_ma.epsqUbsourcesq]qUMath/helix.maqaUbsourcesigsq]qU 3329aaa08ae291a47ff85b1913226773qaubs.
