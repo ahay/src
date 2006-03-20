@@ -52,7 +52,6 @@ represent the propagating wavefield at various time steps.
 \tiny
 \lstinputlisting[frame=single]{\FDMc}
 \normalsize
-\newpage
 
 \begin{itemize}
 \item Declare input, output and auxiliary file tags:
@@ -79,48 +78,48 @@ represent the propagating wavefield at various time steps.
 
 \item Open files for input/output.
 \tiny
-\lstinputlisting[firstline=21,lastline=24,frame=single]{\FDMc}
+\lstinputlisting[firstline=22,lastline=25,frame=single]{\FDMc}
 \normalsize
 
 \item Read axes from input files; write axes to output file.
 \tiny
-\lstinputlisting[firstline=27,lastline=28,frame=single]{\FDMc}
+\lstinputlisting[firstline=28,lastline=34,frame=single]{\FDMc}
 \normalsize
 
 \item Allocate arrays and read wavelet, velocity and reflectivity.
 \tiny
-\lstinputlisting[firstline=35,lastline=38,frame=single]{\FDMc}
+\lstinputlisting[firstline=41,lastline=43,frame=single]{\FDMc}
 \normalsize
 
 \item Allocate temporary arrays.
 \tiny
-\lstinputlisting[firstline=40,lastline=43,frame=single]{\FDMc}
+\lstinputlisting[firstline=46,lastline=49,frame=single]{\FDMc}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=56,lastline=56,frame=single]{\FDMc}
+\lstinputlisting[firstline=62,lastline=62,frame=single]{\FDMc}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=60,lastline=69,frame=single]{\FDMc}
+\lstinputlisting[firstline=66,lastline=75,frame=single]{\FDMc}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=72,lastline=76,frame=single]{\FDMc}
+\lstinputlisting[firstline=78,lastline=82,frame=single]{\FDMc}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=78,lastline=82,frame=single]{\FDMc}
+\lstinputlisting[firstline=85,lastline=89,frame=single]{\FDMc}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=86,lastline=96,frame=single]{\FDMc}
+\lstinputlisting[firstline=92,lastline=102,frame=single]{\FDMc}
 \normalsize
 
 \end{itemize}
@@ -148,51 +147,51 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \texttt{ax} space axis,
 \texttt{az} depth axis.
 \tiny
-\lstinputlisting[firstline=25,lastline=28,frame=single]{\FDMcc}
+\lstinputlisting[firstline=25,lastline=32,frame=single]{\FDMcc}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for input, output and read data.
 \tiny
-\lstinputlisting[firstline=36,lastline=38,frame=single]{\FDMcc}
+\lstinputlisting[firstline=39,lastline=41,frame=single]{\FDMcc}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for temporary storage.
 \tiny
-\lstinputlisting[firstline=41,lastline=44,frame=single]{\FDMcc}
+\lstinputlisting[firstline=44,lastline=47,frame=single]{\FDMcc}
 \normalsize
 
 \item Initialize multidimensional \texttt{valarray} 
 index counter (of type \texttt{VAI}).
 \tiny
-\lstinputlisting[firstline=47,lastline=47,frame=single]{\FDMcc}
+\lstinputlisting[firstline=50,lastline=50,frame=single]{\FDMcc}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=51,lastline=51,frame=single]{\FDMcc}
+\lstinputlisting[firstline=54,lastline=54,frame=single]{\FDMcc}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=55,lastline=64,frame=single]{\FDMcc}
+\lstinputlisting[firstline=58,lastline=67,frame=single]{\FDMcc}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=67,lastline=67,frame=single]{\FDMcc}
+\lstinputlisting[firstline=70,lastline=70,frame=single]{\FDMcc}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=70,lastline=70,frame=single]{\FDMcc}
+\lstinputlisting[firstline=73,lastline=73,frame=single]{\FDMcc}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=73,lastline=75,frame=single]{\FDMcc}
+\lstinputlisting[firstline=76,lastline=78,frame=single]{\FDMcc}
 \normalsize
 
 \end{enumerate}

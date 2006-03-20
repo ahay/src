@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 	} else {
 	    snprintf(unit,len,"%s/%s",space,time);
 	}
-	sf_putstring(scan,"unit1",unit);
+	sf_putstring(scan,"unit2",unit);
     }
 
     stack =  sf_floatalloc2(nt,nv);

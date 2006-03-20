@@ -23,7 +23,7 @@ Flow('mcmp','ncmp mvel',
 
 for case in ('','n','m'):
     cmp=case+'cmp'
-    Result(cmp,'grey title=CMP label2="Offset (km)" ')
+    Result(cmp,'grey title=CMP label2="Offset" ')
 
     scan=case+'scan'
     dsem=case+'dsem'
@@ -33,14 +33,14 @@ for case in ('','n','m'):
     Result(semb,
            '''
            grey color=j allpos=y title="Semblance"
-           label2="Velocity (km/s)" 
+           label2="Velocity" 
            ''')
 
     pik=case+'pik'
     nmo=case+'nmo'
     Flow(pik,semb,'window min2=1.75 max2=2.25 | pick rect1=100')
     Flow(nmo,[cmp,pik],'nmo velocity=${SOURCES[1]}')
-    Result(nmo,'grey title=NMO label2="Offset (km)" ')
+    Result(nmo,'grey title=NMO label2="Offset" ')
 
     stck=case+'stck'
     feyn=case+'feyn'
