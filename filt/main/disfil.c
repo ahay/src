@@ -29,6 +29,8 @@ int main (int argc, char* argv[])
     size_t bufsiz = BUFSIZ, nbuf, j;
     off_t size;
     char* format, *buf;
+    char* header;
+    char* trailer;
     float *fbuf;
     float complex *cbuf;
     unsigned char *ubuf;
@@ -55,10 +57,16 @@ int main (int argc, char* argv[])
        "%4d " for int and char,
        "%13.4g" for float,
        "%10.4g,%10.4gi" for complex */
+    header = sf_getstring("header");
+    /* Optional header string to output before data */
+    trailer = sf_getstring("trailer");
+    /* Optional trailer string to output after data */
 
     if (!sf_histint(in,"esize",&esize)) esize=4;
     if (0 != esize) bufsiz /= esize;
     size = sf_filesize(in);
+    
+    if (header != NULL) printf ("%s\n",header);   /* print header string */
 
     switch (type) {
 	case SF_UCHAR:
@@ -135,6 +143,8 @@ int main (int argc, char* argv[])
 	    sf_error("Unknown data type");
 	    break;
     }
+
+    if (trailer != NULL) printf ("%s\n",trailer);   /* print trailer string */
 
     exit (0);
 }
