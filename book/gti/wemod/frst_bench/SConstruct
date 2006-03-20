@@ -528,16 +528,16 @@ for frq in frq_list:
          '''
          time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
          transp memsize=250 plane=12 |
-         transp memsize=250 plane=23
-         put label1=z
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
          ''' % par )
     
     Flow('mt3d_%d' % (frq),['tt3d_%d' % (frq),'v3d'],
          '''
          time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
          transp memsize=250 plane=12 |
-         transp memsize=250 plane=23
-         put label1=z
+         transp memsize=250 plane=23 |
+         put label3=z unit3=m
          ''' % par )
 
 # ------------------------------------------------------------

@@ -22,26 +22,18 @@ int main(int argc, char* argv[])
     CUB Fo("out","o"); Fo.setup(3,Fv.esize()); 
 
     // Read/Write axes
-    sf_axis at = Fw.getax(0); 
-    sf_axis az = Fv.getax(0); 
-    sf_axis ax = Fv.getax(1);
+    sf_axis at = Fw.getax(0); int nt = sf_n(at); float dt = sf_d(at);
+    sf_axis az = Fv.getax(0); int nz = sf_n(az); float dz = sf_d(az);
+    sf_axis ax = Fv.getax(1); int nx = sf_n(ax); float dx = sf_d(ax);
 
     Fo.putax(0,az); 
     Fo.putax(1,ax); 
     Fo.putax(2,at);
     Fo.headou();
 
-    float dt = sf_d(at);
-    float dz = sf_d(az);
-    float dx = sf_d(ax);
-
     float dt2 =    dt*dt;
     float idz = 1/(dz*dz);
     float idx = 1/(dx*dx);
-
-    int nt = sf_n(at);
-    int nz = sf_n(az);
-    int nx = sf_n(ax);
 
     // read wavelet, velocity and reflectivity
     valarray<float> ww( nt    ); ww=0; Fw >> ww;

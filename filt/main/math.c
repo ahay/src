@@ -83,9 +83,8 @@ int main (int argc, char* argv[])
 	    (eq-arg == 6 &&
 	     0 == strncmp(arg,"label",5) &&
 	     isdigit(arg[5])) ||
-	    (eq-arg == 5 &&
-	     0 == strncmp(arg,"unit",4) &&
-	     isdigit(arg[4]))
+	    (0 == strncmp(arg,"unit",4) && 
+	     ((eq-arg == 4) || (eq-arg == 5 && isdigit(arg[4]))))
 	    ) continue; /* not a file */
 	
 	len = (size_t) (eq-arg);
@@ -141,6 +140,10 @@ int main (int argc, char* argv[])
 	    (void) snprintf(xkey,6,"unit%d",i+1);
 	    if (NULL != (unit = sf_getstring(xkey))) {
 		sf_putstring(out,xkey,unit);
+		free(unit);
+	    }
+	    if (NULL != (unit = sf_getstring("unit"))) {
+		sf_putstring(out,"unit",unit);
 		free(unit);
 	    }
 	}
