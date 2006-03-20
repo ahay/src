@@ -309,6 +309,7 @@ def flip():
     transp memsize=250 plane=12 |
     reverse which=1 opt=i |
     put label1=z label2=x label3=y
+    unit1=m unit2=m unit3=m
     '''
 
 # ------------------------------------------------------------
@@ -356,7 +357,8 @@ Flow('slo','vel',
      transp memsize=250 plane=12 |
      transp memsize=250 plane=23 |
      put label1=x label2=y label3=z
-     ''')
+     unit1=m unit2=m unit3=m
+        ''')
 Result('slo','slo',
        'transp memsize=250 plane=12 |'
        + zplot3d(par,'pclip=100 bias=0.00034 allpos=y',
@@ -412,7 +414,7 @@ Result('aim','aim',
 
 # acoustic impedance (time)
 Flow('ait',['aim','vel'],
-     'depth2time velocity=${SOURCES[1]} dt=%g nt=%d | put label1=t' 
+     'depth2time velocity=${SOURCES[1]} dt=%g nt=%d | put label1=t unit1=s' 
      % (dt_conv,par['nt']) )
 Result('ait','ait',
        'window max1=%g |' % (t_window) 
@@ -464,6 +466,7 @@ for frq in frq_list:
     Flow('wav_%d' % (frq),None,
          '''
          spike nsp=1 mag=1 k1=%d
+         unit2=m unit3=m 
          n1=%d d1=%g o1=0
          n2=1  d2=%g o2=%g
          n3=1  d3=%g o3=%g |
@@ -489,7 +492,7 @@ for frq in frq_list:
          transp memsize=250 plane=23 |
          transp memsize=250 plane=12 |
          depth2time velocity=${SOURCES[1]} dt=%g nt=%d |
-         ricker1 frequency=%g | put label1=t
+         ricker1 frequency=%g | put label1=t unit1=s
          ''' % (dt_conv,par['nt'],frq) )
          
     Flow('t3d_%d' % (frq),['r3d','v3d'],
@@ -497,7 +500,7 @@ for frq in frq_list:
          transp memsize=250 plane=23 |
          transp memsize=250 plane=12 |
          depth2time velocity=${SOURCES[1]} dt=%g nt=%d |
-         ricker1 frequency=%g | put label1=t
+         ricker1 frequency=%g | put label1=t unit1=s
          ''' % (dt_conv,par['nt'],frq) )
          
     # data from reflectivity in time
@@ -510,7 +513,7 @@ for frq in frq_list:
          time2depth velocity=${SOURCES[1]} dz=%(dz)g nz=%(nz)d |
          transp memsize=250 plane=12 |
          transp memsize=250 plane=23 |
-         put label1=z
+         put label1=z unit1=m
          ''' % par )
     
     Flow('m3d_%d' % (frq),['t3d_%d' % (frq),'v3d'],
@@ -569,7 +572,7 @@ for frq in frq_list:
          window | transp memsize=250 |
          pad n1out=1001 | fft1 inv=y |
          window min1=%(ft)g | pad n1out=2000 |
-         put o1=0 label1=t
+         put o1=0 label1=t 
          ''' % par)                             # time-domain shot record
                                                 
     # migration

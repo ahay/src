@@ -90,12 +90,12 @@ Flow('dat2','cmp',
 
 #Flow('shot2','dat2','window n3=1 f3=210')
 
-Plot('shot2',
-     '''
-     window max1=4 |
-     grey title="Extended Shot Gather"
-     label2="Half-Offset (km)" label1="Time (s)"
-     ''')
+#Plot('shot2',
+#     '''
+#     window max1=4 |
+#     grey title="Extended Shot Gather"
+#     label2="Half-Offset (km)" label1="Time (s)"
+#     ''')
 
 Result('shot','shot shot2','SideBySideAniso')
 
@@ -163,12 +163,12 @@ Flow('sbak','pwd','radon adj=n nx=281 dx=0.0125 ox=-1.75')
 
 Flow('sbak2','sbak','window n3=1 f3=210')
 
-Plot('sbak2',
-     '''
-     window max1=4 |
-     grey title="Extracted Diffractions"
-     label2="Half-Offset (km)" label1="Time (s)"
-     ''')
+#Plot('sbak2',
+#     '''
+#     window max1=4 |
+#     grey title="Extracted Diffractions"
+#     label2="Half-Offset (km)" label1="Time (s)"
+#     ''')
 
 Result('sbak','shot2 sbak2','SideBySideAniso')
 

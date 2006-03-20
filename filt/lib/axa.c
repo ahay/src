@@ -154,6 +154,17 @@ void sf_setlabel(sf_axis AA, const char* label)
 
     len = strlen(label)+1;
     AA->l = sf_charalloc(len);
-    strncpy(AA->l,label,len);
+    memcpy(AA->l,label,len);
 }
 
+void sf_setunit(sf_axis AA, const char* unit)
+/*< change axis unit >*/
+{
+    size_t len;
+
+    if (NULL != AA->u) free(AA->u);
+
+    len = strlen(unit)+1;
+    AA->u = sf_charalloc(len);
+    memcpy(AA->u,unit,len);
+}

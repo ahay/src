@@ -149,7 +149,9 @@ int main (int argc, char *argv[])
 		if (!sf_getint  ("nw",&nw)) sf_error ("Need nw=");
 		if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
 		if (!sf_getfloat("ow",&ow)) ow=0.;
-		aw = sf_maxa(nw,ow,dw); sf_setlabel(aw,"w");
+		aw = sf_maxa(nw,ow,dw); 
+		sf_setlabel(aw,"w"); 
+		sf_setunit(aw,"1/s"); /* default */
 		ae = sf_maxa(1,0,1);
 
 		amx = sf_iaxa(Fi,1); sf_setlabel(amx,"mx"); sf_oaxa(Fd,amx,1);

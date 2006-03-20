@@ -59,28 +59,6 @@ float randn_one_bm (void)
     }
 }
 
-float randn_one (void)
-/*< return a random number (normally distributed) >*/
-{
-    double u, v, x, y, q;
-    
-    do {
-	u = genrand_real1 ();
-	v = genrand_real1 ();
-	v = 1.7156 * (v - 0.5);
-	/*     Evaluate the quadratic form */
-	x = u - s;
-	y = fabsf(v) - tt;
-	q = x*x + y*(a*y - b*x);
-	/*     Accept P if inside inner ellipse */
-	if (q < r1) break;
-	/*     Reject P if outside outer ellipse */
-	if (q > r2) continue;
-	/*     Reject P if outside acceptance region */
-    } while (v*v >= -4.0*logf(u)*u*u);
-    return ((float) (v/u));
-}
-
 void randn (int nr, float *r /* [nr] */)
 /*< fill an array with normally distributed numbers >*/
 {
