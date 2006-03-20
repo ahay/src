@@ -17,5 +17,5 @@ if 'c++' in api:
 # F90 api
 
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
-    proj.Program90('AFDMf90.f90')
+    rsfproj.Program90('AFDMf90')
 

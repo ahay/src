@@ -12,26 +12,48 @@
 
 /* Fortran functions for command-line arguments - NON-STANDARD
    use #ifdefs if necessary */
+
+#ifdef GFORTRAN
+
+extern int _gfortran_iargc();
+extern void _gfortran_getarg_i4(int *i,char *arg,int len);
+
+#else
+
 PROTOCCALLSFFUN0(INT,IARGC,iargc)
 PROTOCCALLSFSUB2(GETARG,getarg,INT,PSTRING)
 
 #define IARGC() CCALLSFFUN0(IARGC,iargc)
 #define GETARG(I,N) CCALLSFSUB2(GETARG,getarg,INT,PSTRING,I,N)
 
+#endif
+
 void sf_init_f(void)
 {
     int i, len, argc1;
     char** argv1, *argvi, arg[256];
 
-    argc1 = 1+IARGC();    
+#ifdef GFORTRAN
+    argc1 = _gfortran_iargc();
+#else
+    argc1 = 1+IARGC(); 
+#endif   
     argv1 = (char**) sf_alloc(argc1+1,sizeof(char*));
 
     for (i=0; i < argc1; i++) {
-	GETARG(i,arg);
 
+#ifdef GFORTRAN
+        _gfortran_getarg_i4(&i,arg,256);
+	len = strchr(arg,' ')-arg+1;
+#else
+	GETARG(i,arg);
 	len = strlen(arg)+1;
+#endif
 	argvi = argv1[i] = sf_charalloc(len);
 	memcpy(argvi,arg,len);
+        argvi[len-1]='\0';
+
+	/* fprintf(stderr,"got argv[%d]=\"%s\" len=%d\n",i,argvi,len); */
     }    
     argv1[argc1] = NULL;
 

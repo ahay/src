@@ -66,7 +66,7 @@ if 'fortran' in api:
 
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
     proj.Program('clip.f90',
-                 PROGSUFFIX='f90.exe',
+                 PROGSUFFIX='.exe',
                  OBJSUFFIX='f90.o',
                  LIBS=['rsff90','rsf','m'],
                  F90PATH=[incdir],

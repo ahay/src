@@ -225,6 +225,7 @@ def cxx(context):
             context.env['CXXFLAGS'] = oldflag
 
 fortran = {'g77':'f2cFortran',
+           'gfortran':'f2cFortran',
            'f2c':'f2cFortran'}
 
 def f77(context):
@@ -301,8 +302,6 @@ def f90(context):
     res2 = context.TryRun(main,'.f90')
     context.env['LINK'] = oldlink
     context.Result(res1 and res2[0])
-    print res1
-    print res2[0]
     if not res1 or not res2[0]:
         sys.stderr.write("No working F90 compiler detected.\n")
         del context.env['F90']
