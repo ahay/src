@@ -41,8 +41,8 @@ void CUB::headin()
 	(void) snprintf(key,3,"d%d",id+1);
 	if (!sf_histfloat(file_,key,&d[id])) d[id] = 1;
     }
-    // read esize
-    if (!sf_histint(file_,"esize",&e)) e = 4;
+    // find esize
+    e = sf_esize(file_);
 }
 //------------------------------------------------------------
 void CUB::setup(int kd, int esize)
@@ -131,17 +131,15 @@ CUB::operator<< (std::valarray<float> &array) const
     return *this;
 }
 //------------------------------------------------------------
-void CUB::getax(int id, axa *a)
+sf_axis CUB::getax(int id)
 {
-    a->n = n[id];
-    a->o = o[id];
-    a->d = d[id];
+    return sf_maxa(n[id],o[id],d[id]);
 }
 
-void CUB::putax(int id, axa *a)
+void CUB::putax(int id, sf_axis a)
 {
-    n[id] = a->n;
-    o[id] = a->o;
-    d[id] = a->d;
+    n[id] = sf_n(a);
+    o[id] = sf_o(a);
+    d[id] = sf_d(a);
 }
 //------------------------------------------------------------

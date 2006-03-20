@@ -1,6 +1,5 @@
-/* 
- * Riemannian Wavefield Extrapolation:
- * a,b coefficients
+/* Riemannian Wavefield Extrapolation: a,b coefficients.
+ *
  * pcs 2005
  */
 
@@ -24,7 +23,7 @@
 
 #include <rsf.h>
 
-#define LOOPRC(a) for(it=0;it<at.n;it++){ for(ig=0;ig<ag.n;ig++){ {a} }}
+#define LOOPRC(a) for(it=0;it<nt;it++){ for(ig=0;ig<ng;ig++){ {a} }}
 
 int main(int argc, char* argv[])
 {
@@ -40,8 +39,9 @@ int main(int argc, char* argv[])
     float **ss, **aa, **bb;
     float **ma, **mb, **mm;
 
-    axa at,ag,ar;
+    sf_axis at,ag,ar;
     int it,ig;
+    int nt,ng;
     float gx,gz;
     float eps,peps;
 
@@ -68,79 +68,77 @@ int main(int argc, char* argv[])
 
     if(verb) sf_warning("naref=%d nbref=%d",naref,nbref);
 
-    iaxa(Fi,&ag,1); if(verb) raxa(ag);
-    iaxa(Fi,&at,2); if(verb) raxa(at);
+    ag = sf_iaxa(Fi,1); sf_setlabel(ag,"g"); ng=sf_n(ag); if(verb) sf_raxa(ag);
+    at = sf_iaxa(Fi,2); sf_setlabel(at,"t"); nt=sf_n(at); if(verb) sf_raxa(at);
 
-    ag.l="g"; oaxa(Fo,&ag,1);
-    at.l="t"; oaxa(Fo,&at,2);
+    sf_oaxa(Fo,ag,1);
+    sf_oaxa(Fo,at,2);
 
     sf_settype(Fo,SF_FLOAT);
     sf_putint(Fo,"n3",5);
 
     if(! sf_getfloat("peps",&peps)) peps=0.01;
 
-    ar.n=naref*nbref;
-    ar.o=0.;
-    ar.d=1.;
-    ar.l="r";
-    oaxa(Fr,&ar,1);
-    oaxa(Fr,&at,2);
+    ar=sf_maxa(naref*nbref,0.,1.);
+    sf_setlabel(ar,"r");
+    sf_oaxa(Fr,ar,1);
+    sf_oaxa(Fr,at,2);
     sf_settype(Fr,SF_COMPLEX);
     sf_putfloat(Fr,"esize",8);
 
-    rays = sf_complexalloc2(ag.n,at.n);
-    ab   = sf_complexalloc2(naref*nbref,at.n);
+    rays = sf_complexalloc2(ng,nt);
+    ab   = sf_complexalloc2(naref*nbref,nt);
 
-    x    = sf_floatalloc2(ag.n,at.n);
-    z    = sf_floatalloc2(ag.n,at.n);
-    h1   = sf_floatalloc2(ag.n,at.n);
-    h2   = sf_floatalloc2(ag.n,at.n);
+    x    = sf_floatalloc2(ng,nt);
+    z    = sf_floatalloc2(ng,nt);
+    h1   = sf_floatalloc2(ng,nt);
+    h2   = sf_floatalloc2(ng,nt);
 
-    ss   = sf_floatalloc2(ag.n,at.n);
-    aa   = sf_floatalloc2(ag.n,at.n);
-    bb   = sf_floatalloc2(ag.n,at.n);
-    ma   = sf_floatalloc2(ag.n,at.n);
-    mb   = sf_floatalloc2(ag.n,at.n);
-    mm   = sf_floatalloc2(ag.n,at.n);
+    ss   = sf_floatalloc2(ng,nt);
+    aa   = sf_floatalloc2(ng,nt);
+    bb   = sf_floatalloc2(ng,nt);
+    ma   = sf_floatalloc2(ng,nt);
+    mb   = sf_floatalloc2(ng,nt);
+    mm   = sf_floatalloc2(ng,nt);
 
-    qq   = sf_floatalloc (ag.n*at.n);
-    gg   = sf_floatalloc (ag.n);
+    qq   = sf_floatalloc (ng*nt);
+    gg   = sf_floatalloc (ng);
 
-    sf_floatread  (ss[0],  ag.n*at.n,Fs);  /* slowness */
-    sf_complexread(rays[0],ag.n*at.n,Fi);  /* rays */
+    sf_floatread  (ss[0],  ng*nt,Fs);  /* slowness */
+    sf_complexread(rays[0],ng*nt,Fi);  /* rays */
     LOOPRC( z[it][ig] = cimagf(rays[it][ig]);
 	    x[it][ig] = crealf(rays[it][ig]); );
     
     /* h1=alpha */
-    for(it=0;it<at.n-1;it++) {
-	for(ig=0;ig<ag.n;ig++) {
-	    gx = (x[it+1][ig] - x[it][ig]) / at.d;
-	    gz = (z[it+1][ig] - z[it][ig]) / at.d;
-	    h1[it][ig] = sqrtf(gx*gx+gz*gz);
+    for(it=0;it<nt-1;it++) {
+	for(ig=0;ig<ng;ig++) {
+	    gx = (x[it+1][ig] - x[it][ig]) / sf_d(at);
+	    gz = (z[it+1][ig] - z[it][ig]) / sf_d(at);
+	    h1[it][ig] = hypotf(gx,gz);
 	}
     }
-    for(ig=0;ig<ag.n;ig++) {
-	h1[at.n-1][ig] = h1[at.n-2][ig];
+    for(ig=0;ig<ng;ig++) {
+	h1[nt-1][ig] = h1[nt-2][ig];
     }
 
     /* h2=J */
-    for(it=0;it<at.n;it++) {
-	for(ig=0;ig<ag.n-1;ig++) {
-	    gx = (x[it][ig+1] - x[it][ig]) / (ag.d);
-	    gz = (z[it][ig+1] - z[it][ig]) / (ag.d);
-	    h2[it][ig] = sqrtf(gx*gx+gz*gz);
+    for(it=0;it<nt;it++) {
+	for(ig=0;ig<ng-1;ig++) {
+	    gx = (x[it][ig+1] - x[it][ig]) / sf_d(ag);
+	    gz = (z[it][ig+1] - z[it][ig]) / sf_d(ag);
+	    h2[it][ig] = hypotf(gx,gz);
 	}
     }
-    for(it=0;it<at.n;it++) {
-	h2[it][ag.n-1] = h2[it][ag.n-2];
+    for(it=0;it<nt;it++) {
+	h2[it][ng-1] = h2[it][ng-2];
     }
 
     /* avoid small h2=J */
     ii=0; LOOPRC( qq[ii] = SF_ABS(h2[it][ig]); ii++; );
-/*    eps = peps * sf_quantile(at.n*ag.n/2,at.n*ag.n,qq);*/
+/*    eps = peps * sf_quantile(nt*ng/2,nt*ng,qq);*/
     eps = peps * (
-	sf_quantile(          0,at.n*ag.n,qq) + 
-	sf_quantile(at.n*ag.n-1,at.n*ag.n,qq)
+	sf_quantile(      0,nt*ng,qq) + 
+	sf_quantile(nt*ng-1,nt*ng,qq)
 	) /2.;
     LOOPRC( if(SF_ABS(h2[it][ig]) < eps) h2[it][ig]=eps; );
 
@@ -155,20 +153,20 @@ int main(int argc, char* argv[])
     tiny=0.1;
 
     /* compute reference a,b */
-    for(it=0;it<at.n;it++) {
+    for(it=0;it<nt;it++) {
 
-	for(ig=0;ig<ag.n;ig++){
+	for(ig=0;ig<ng;ig++){
 	    gg[ig] = aa[it][ig];
 	}
-	mina = sf_quantile(     0,ag.n,gg);
-	maxa = sf_quantile(ag.n-1,ag.n,gg);
+	mina = sf_quantile(     0,ng,gg);
+	maxa = sf_quantile(ng-1,ng,gg);
 	dela = (maxa-mina)/naref;
 
-	for(ig=0;ig<ag.n;ig++){
+	for(ig=0;ig<ng;ig++){
 	    gg[ig] = bb[it][ig];
 	}
-	minb = sf_quantile(     0,ag.n,gg);
-	maxb = sf_quantile(ag.n-1,ag.n,gg);
+	minb = sf_quantile(     0,ng,gg);
+	maxb = sf_quantile(ng-1,ng,gg);
 	delb = (maxb-minb)/nbref;
 
 	/* reference a and b */
@@ -185,7 +183,7 @@ int main(int argc, char* argv[])
 	/* mask for a */
 	for(ia=0;ia<naref;ia++) {
 	    a0 = mina + 0.5*dela + ia*dela;
-	    for(ig=0;ig<ag.n;ig++) {
+	    for(ig=0;ig<ng;ig++) {
 		if( a0-(0.5+tiny)*dela <= aa[it][ig] &&
 		    a0+(0.5+tiny)*dela >= aa[it][ig]  ) ma[it][ig] = ia;
 	    }
@@ -193,7 +191,7 @@ int main(int argc, char* argv[])
 	/* mask for b */
 	for(ib=0;ib<nbref;ib++) {
 	    b0 = minb + 0.5*delb + ib*delb;
-	    for(ig=0;ig<ag.n;ig++) {
+	    for(ig=0;ig<ng;ig++) {
 		if( b0-(0.5+tiny)*delb <= bb[it][ig] &&
 		    b0+(0.5+tiny)*delb >= bb[it][ig]  ) mb[it][ig] = ib;
 	    }
@@ -220,11 +218,11 @@ int main(int argc, char* argv[])
 	mm[it][ig] +=1;
 	);
     
-    sf_floatwrite(aa[0],ag.n*at.n,Fo);
-    sf_floatwrite(bb[0],ag.n*at.n,Fo);
-    sf_floatwrite(mm[0],ag.n*at.n,Fo);    
-    sf_floatwrite(ma[0],ag.n*at.n,Fo);
-    sf_floatwrite(mb[0],ag.n*at.n,Fo);
+    sf_floatwrite(aa[0],ng*nt,Fo);
+    sf_floatwrite(bb[0],ng*nt,Fo);
+    sf_floatwrite(mm[0],ng*nt,Fo);    
+    sf_floatwrite(ma[0],ng*nt,Fo);
+    sf_floatwrite(mb[0],ng*nt,Fo);
     
-    sf_complexwrite(ab[0],naref*nbref*at.n,Fr);
+    sf_complexwrite(ab[0],naref*nbref*nt,Fr);
 }

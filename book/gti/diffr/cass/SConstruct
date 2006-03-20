@@ -88,7 +88,7 @@ Flow('dat2','cmp',
      window n3=421 min3=5 j3=2 
      ''')
 
-Flow('shot2','dat2','window n3=1 f3=210')
+#Flow('shot2','dat2','window n3=1 f3=210')
 
 Plot('shot2',
      '''
@@ -119,7 +119,7 @@ Plot('rad',
 
 Result('rad','rad2 rad','SideBySideAniso')
 
-Flow('radon','dat2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
+#Flow('radon','dat2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
 
 for p in (-1,0,1):
     plane = 'plane%d' % p
@@ -149,7 +149,7 @@ for p in (-1,0,1):
 
 Flow('patch','radon','transp memsize=500 plane=23 | patch w=1251,501,50')
 Flow('dip','patch','dip rect1=20 rect2=10 rect3=2 liter=40 n4=0 verb=y')
-Flow('dips','dip','patch inv=y weight=y')
+#Flow('dips','dip','patch inv=y weight=y')
 
 Flow('pwd','radon dips',
      '''
@@ -160,5 +160,25 @@ Flow('pwd','radon dips',
      )
 
 Flow('sbak','pwd','radon adj=n nx=281 dx=0.0125 ox=-1.75')
+
+Flow('sbak2','sbak','window n3=1 f3=210')
+
+Plot('sbak2',
+     '''
+     window max1=4 |
+     grey title="Extracted Diffractions"
+     label2="Half-Offset (km)" label1="Time (s)"
+     ''')
+
+Result('sbak','shot2 sbak2','SideBySideAniso')
+
+Flow('tback','tdata','intbin xk=tracf yk=fldr head=$SOURCE')
+
+Flow('diffr.segy','sbak tback ./hdata ./bdata',
+     '''
+     window n2=141 min2=0 |
+     segywrite tape=$TARGET
+     tfile=${SOURCES[1]} hfile=${SOURCES[2]} bfile=${SOURCES[3]}
+     ''',stdout=-1)
 
 End()

@@ -153,14 +153,15 @@ def report_tpg(target=None,source=None,env=None):
         tpg.write('\\vfill\n\title{%s}\n' % title)
     line = env.get('line')
     if line:
-        tpg.write('\\vfill\n\\begin{center}\n\\bfseries%\n%s\n\\end{center}\n' % line)
+        tpg.write('\\vfill\n\\begin{center}\n'
+                  '\\bfseries%\n%s\n\\end{center}\n' % line)
     fig = env.get('fig')
     if fig:
         dir = env.get('dir','.')
         size = env.get('size','')
         tpg.write('\\renewcommand{\\plotdir}{%s}\n'
-                  '\\vfill\n\\begin{center}\n\\plotbox{%s}{%s}\n\\end{center}\n' %
-                  (dir,fig,size))
+                  '\\vfill\n\\begin{center}\n'
+                  '\\plotbox{%s}{%s}\n\\end{center}\n' % (dir,fig,size))
     year = get_year(env.get('year'))
     copyr = env.get('copyr')
     tpg.write('\n\\newpage\\GEOcopyr{%s}{%s}\n' % (year,copyr))
@@ -194,11 +195,11 @@ def report_all(target=None,source=None,env=None):
          '\\setcounter{page}{1}\n',
          '\\GEOheader{\\GROUP, Report \\REPORT, \\today}\n'
          ])
-    all.write('\%\% start of paper list\n')
+    all.write('%% start of paper list\n')
     for src in source:
         dir = os.path.basename(os.path.dirname(str(src)))
         all.write('\\GEOpaper{%s}\t\\include{%s/paper}\n' % (dir,dir))
-    all.write('\%\% end of paper list\n')
+    all.write('%% end of paper list\n')
     return 0
 
 class RSFReport(Environment):

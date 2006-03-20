@@ -35,7 +35,7 @@
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
                 for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,ax,ay,ae;
+static sf_axa az,aw,alx,aly,ax,ay;
 static bool verb, incore;
 static float eps;
 
@@ -62,13 +62,12 @@ void srmod_init(bool verb_,
 		bool incore_,  /* keep shot wavefield in core */
 		float eps_,
 		float dtmax,
-		axa ae_        /* experiments (e.g. shots) */,
-		axa az_        /* depth */,
-		axa aw_        /* frequency */,
-		axa ax_        /* i-line (data) */,
-		axa ay_        /* x-line (data) */,
-		axa alx_       /* i-line (slowness/image) */,
-		axa aly_       /* x-line (slowness/image) */,
+		sf_axis az_    /* depth */,
+		sf_axis aw_    /* frequency */,
+		sf_axis ax_    /* i-line (data) */,
+		sf_axis ay_    /* x-line (data) */,
+		sf_axis alx_   /* i-line (slowness/image) */,
+		sf_axis aly_   /* x-line (slowness/image) */,
 		int tx, int ty /* taper size */,
 		int px, int py /* padding in the k domain */
     )
@@ -80,13 +79,12 @@ void srmod_init(bool verb_,
     incore = incore_;
     eps    = eps_;
     
-    az = az_;
-    aw = aw_;
-    ax = ax_;
-    ay = ay_;
-    alx= alx_;
-    aly= aly_;
-    ae = ae_;
+    az = sf_nod(az_);
+    aw = sf_nod(aw_);
+    ax = sf_nod(ax_);
+    ay = sf_nod(ay_);
+    alx= sf_nod(alx_);
+    aly= sf_nod(aly_);
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 

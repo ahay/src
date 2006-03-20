@@ -1,6 +1,5 @@
-/* 
- * Riemannian Wavefield Extrapolation: 
- * zero-offset modeling/migration 
+/* Riemannian Wavefield Extrapolation: zero-offset modeling/migration
+ * 
  * pcs 2005
  */
 
@@ -28,8 +27,10 @@
 int main(int argc, char* argv[])
 {
     sf_file Fd=NULL, Fi=NULL, Fm=NULL, Fr=NULL;
-    axa ag,at,aw,ar,aj;
+    sf_axis ag,at,aw,ar;
     int ig,it,iw,ir;
+    int ng,nt,nw,nr;
+    float ow,dw;
 
     int method;
     bool  verb;
@@ -51,77 +52,77 @@ int main(int argc, char* argv[])
     if(! sf_getbool("verb", &verb))     verb=false;
     if(! sf_getint("method",&method)) method=0;    /* extrapolation method */
     if(! sf_getbool("adj",  &adj))       adj=false;/* y=modeling; n=migration */
-						
     Fm = sf_input("abm");
     Fr = sf_input("abr");
 
-    iaxa(Fm,&at,2); at.l="t"; /* 'extrapolation axis' (can be time) */
-    iaxa(Fr,&ar,1); ar.l="r"; /* a,b reference */
-    if(method==0) ar.n=1; /* pure F-D */
-
-    aj.n=1;
-    aj.o=0.;
-    aj.d=1.;
-    aj.l="";
+    at = sf_iaxa(Fm,2); sf_setlabel(at,"t"); 
+    ar = sf_iaxa(Fr,1); sf_setlabel(ar,"r"); /* a,b reference */
+    if(method==0) sf_setn(ar,1); /* pure F-D */
+    nr = sf_n(ar);
 
     if(adj) {  /* modeling */
 	Fi = sf_input ( "in");
 	Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
 	if (SF_FLOAT !=sf_gettype(Fi)) sf_error("Need float image");
 
-	if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
-	if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
-	if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
-	aw.l="w";
+	if (!sf_getint  ("nw",&nw)) sf_error ("Need nw=");
+	if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
+	if (!sf_getfloat("ow",&ow)) ow=0.;
+	aw = sf_maxa(nw,ow,dw); sf_setlabel(aw,"w");
 
-	iaxa(Fi,&ag,1); ag.l="g";
-	iaxa(Fi,&at,2); at.l="t";
+	ag = sf_iaxa(Fi,1); sf_setlabel(ag,"g");
+	at = sf_iaxa(Fi,2); sf_setlabel(at,"t");
 
-	oaxa(Fd,&ag,1);
-	oaxa(Fd,&at,2);
-	oaxa(Fd,&aw,3);
+	sf_oaxa(Fd,ag,1);
+	sf_oaxa(Fd,at,2);
+	sf_oaxa(Fd,aw,3);
     } else {   /* migration */
 	Fd = sf_input("in");
 	Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 	if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
 
-	iaxa(Fd,&ag,1); ag.l="g"; /* 'position axis' (can be angle) */
-	iaxa(Fd,&at,2); at.l="t";
-	iaxa(Fd,&aw,3); aw.l="w"; /* frequency */
+        /* 'position axis' (can be angle) */
+	ag = sf_iaxa(Fd,1); sf_setlabel(ag,"g"); 
+        /* 'extrapolation axis' (can be time) */
+	at = sf_iaxa(Fd,2); sf_setlabel(at,"t");
+	aw = sf_iaxa(Fd,3); sf_setlabel(aw,"w"); /* frequency */
+	nw = sf_n(aw); ow = sf_o(aw); dw = sf_d(aw);
 
-	oaxa(Fi,&ag,1);
-	oaxa(Fi,&at,2);
-	oaxa(Fi,&aj,3);
+	sf_oaxa(Fi,ag,1);
+	sf_oaxa(Fi,at,2);
+	sf_putint(Fi,"n3",1);
     }
+    ng = sf_n(ag);
+    nt = sf_n(at);
 
-    img = sf_floatalloc2  (ag.n,at.n);
-    dat = sf_complexalloc2(ag.n,at.n);
-    wfl = sf_complexalloc (ag.n);
+    img = sf_floatalloc2  (ng,nt);
+    dat = sf_complexalloc2(ng,nt);
+    wfl = sf_complexalloc (ng);
 
     if(verb) {
-	raxa(ag);
-	raxa(at);
-	raxa(aw);
-	raxa(ar);
+	sf_raxa(ag);
+	sf_raxa(at);
+	sf_raxa(aw);
+	sf_raxa(ar);
     }
 
     /* read ABM */
-    aa = sf_floatalloc2  (ag.n,at.n);
-    bb = sf_floatalloc2  (ag.n,at.n);
-    mm = sf_floatalloc2  (ag.n,at.n);
+    aa = sf_floatalloc2  (ng,nt);
+    bb = sf_floatalloc2  (ng,nt);
+    mm = sf_floatalloc2  (ng,nt);
 
-    sf_floatread(aa[0],ag.n*at.n,Fm); /* a coef */
-    sf_floatread(bb[0],ag.n*at.n,Fm); /* b coef */
-    sf_floatread(mm[0],ag.n*at.n,Fm); /* mask */
+    sf_floatread(aa[0],ng*nt,Fm); /* a coef */
+    sf_floatread(bb[0],ng*nt,Fm); /* b coef */
+    sf_floatread(mm[0],ng*nt,Fm); /* mask */
 
     /* read ABr */
-    ab = sf_complexalloc2(ar.n,at.n);
-    a0 = sf_floatalloc2  (ar.n,at.n);
-    b0 = sf_floatalloc2  (ar.n,at.n);
+    ab = sf_complexalloc2(nr,nt);
+    a0 = sf_floatalloc2  (nr,nt);
+    b0 = sf_floatalloc2  (nr,nt);
 
-    sf_complexread(ab[0],ar.n*at.n,Fr);
-    for(it=0;it<at.n;it++) {
-	for(ir=0;ir<ar.n;ir++) {
+    sf_complexread(ab[0],nr*nt,Fr);
+    for(it=0;it<nt;it++) {
+	for(ir=0;ir<nr;ir++) {
 	    a0[it][ir] = crealf(ab[it][ir]);
 	    b0[it][ir] = cimagf(ab[it][ir]);
 	}
@@ -136,8 +137,8 @@ int main(int argc, char* argv[])
     }
 
     /* from hertz to radian */
-    aw.d *= 2.*SF_PI; 
-    aw.o *= 2.*SF_PI;
+    dw *= 2.*SF_PI; 
+    ow *= 2.*SF_PI;
 
     rweone_init(ag,at,aw,ar,method,verb);
     switch(method) {
@@ -148,57 +149,57 @@ int main(int argc, char* argv[])
     }
     
     if(adj) { /* modeling */
-	for(it=0;it<at.n;it++) {
-	    for(ig=0;ig<ag.n;ig++) { 
+	for(it=0;it<nt;it++) {
+	    for(ig=0;ig<ng;ig++) { 
 		dat[it][ig] = 0.;
 	    }
 	}
     } else {  /* migration */
-	for(it=0;it<at.n;it++) {
-	    for(ig=0;ig<ag.n;ig++) {
+	for(it=0;it<nt;it++) {
+	    for(ig=0;ig<ng;ig++) {
 		img[it][ig] = 0.;
 	    }
 	}
     }
 
 /*------------------------------------------------------------*/
-    if( adj) sf_floatread  (img[0],ag.n*at.n,Fi);
+    if( adj) sf_floatread  (img[0],ng*nt,Fi);
     
-    for(iw=0;iw<aw.n;iw++) {
-	w=aw.o+iw*aw.d;
-	sf_warning("%s %d %d",met,iw,aw.n);
+    for(iw=0;iw<nw;iw++) {
+	w=ow+iw*dw;
+	sf_warning("%s %d %d",met,iw,nw);
 	
 	if(adj) {  /* modeling */
 	    w*=-2; /*      causal, two-way time */
 	    
-	    for(ig=0;ig<ag.n;ig++) {
+	    for(ig=0;ig<ng;ig++) {
 		wfl[ig] = 0;
 	    }
 
-	    it=at.n-1; rweone_zoi(adj,wfl,img[it]);
-	    for(it=at.n-2;it>=0;it--) {
+	    it=nt-1; rweone_zoi(adj,wfl,img[it]);
+	    for(it=nt-2;it>=0;it--) {
 		if(method!=0) rweone_fk(w,wfl,aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(w,wfl,aa[it],it);
 		rweone_zoi(adj,wfl,img[it]);
 
-		for(ig=0;ig<ag.n;ig++) {
+		for(ig=0;ig<ng;ig++) {
 		    dat[it][ig] = wfl[ig];
 		}
 	    }
 
-	    sf_complexwrite(dat[0],ag.n*at.n,Fd);
+	    sf_complexwrite(dat[0],ng*nt,Fd);
 	    
 	} else {   /* migration */
 	    w*=+2; /* anti-causal, two-way time */
 
-	    sf_complexread(dat[0],ag.n*at.n,Fd);
+	    sf_complexread(dat[0],ng*nt,Fd);
 
-	    for(ig=0;ig<ag.n;ig++) {
+	    for(ig=0;ig<ng;ig++) {
 		wfl[ig] = 0;
 	    }
 
-	    for(it=0;it<=at.n-2;it++) {
-		for(ig=0;ig<ag.n;ig++) {
+	    for(it=0;it<=nt-2;it++) {
+		for(ig=0;ig<ng;ig++) {
 		    wfl[ig] += dat[it][ig];
 		}
 
@@ -206,11 +207,11 @@ int main(int argc, char* argv[])
 		if(method!=0) rweone_fk(w,wfl,aa[it],a0[it],b0[it],mm[it],it);
 		else          rweone_fx(w,wfl,aa[it],it);
 	    }
-	    it=at.n-1; rweone_zoi(adj,wfl,img[it]);
+	    it=nt-1; rweone_zoi(adj,wfl,img[it]);
 	}
     }
 
-    if(!adj) sf_floatwrite  (img[0],ag.n*at.n,Fi);
+    if(!adj) sf_floatwrite  (img[0],ng*nt,Fi);
 /*------------------------------------------------------------*/
 
 }

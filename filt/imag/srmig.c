@@ -1,5 +1,4 @@
-/* 
- * 3-D SSR migration/modeling using extended split-step
+/* 3-D SSR migration/modeling using extended split-step
  * pcs 2005
  */
 
@@ -38,7 +37,7 @@
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
                 for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa aw,alx,aly,amx,amy,amz,ae;
+static sf_axa aw,alx,aly,amx,amy,amz,ae;
 static bool verb;
 static float eps;
 
@@ -53,13 +52,13 @@ static float         **so_s,**so_r,**so; /* slowness */
 void srmig_init(bool verb_,
 		float eps_,
 		float dtmax,
-		axa ae_        /* experiments (e.g. shots) */,
-		axa aw_        /* frequency */,
-		axa amx_       /* i-line (data) */,
-		axa amy_       /* x-line (data) */,
-		axa amz_       /* depth */,
-		axa alx_       /* i-line (slowness/image) */,
-		axa aly_       /* x-line (slowness/image) */,
+		sf_axis ae_      /* experiments (e.g. shots) */,
+		sf_axis aw_      /* frequency */,
+		sf_axis amx_     /* i-line (data) */,
+		sf_axis amy_     /* x-line (data) */,
+		sf_axis amz_     /* depth */,
+		sf_axis alx_     /* i-line (slowness/image) */,
+		sf_axis aly_     /* x-line (slowness/image) */,
 		int tmx, int tmy /* taper size */,
 		int pmx, int pmy /* padding in the k domain */
     )
@@ -70,13 +69,13 @@ void srmig_init(bool verb_,
     verb=verb_;
     eps = eps_;
 
-    aw  = aw_;
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
-    alx = alx_;
-    aly = aly_;
-    ae  = ae_;
+    aw  = sf_nod(aw_);
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
+    alx = sf_nod(alx_);
+    aly = sf_nod(aly_);
+    ae  = sf_nod(ae_);
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 

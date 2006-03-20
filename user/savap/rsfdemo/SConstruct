@@ -1,43 +1,21 @@
-import os, string, rsfproj
+import rsfproj
+import string
 
-root   = os.environ.get('RSFROOT')
-libdir = os.path.join(root,'lib')
-incdir = os.path.join(root,'include')
+proj = rsfproj.Project()
 
-print "-----------------------------------------------------------------------"
-print libdir
-print incdir
-print "-----------------------------------------------------------------------"
+api = string.split(string.lower(proj.get('API','')),',')
 
-# C environment
-cenv=Environment(LIBPATH=[libdir],
-                 CPPPATH=[incdir],
-                 CCFLAGS='-O2 -std=gnu99 -Wall -pedantic -D_FILE_OFFSET_BITS=64')
-cenv.Program('AFDMc__.x',
-             Split('AFDMc__.c'),
-             LIBS=['rsf','m'])
+# C api
 
-# C++ environment
-penv=Environment(LIBPATH=[libdir],
-                 CPPPATH=[incdir],
-                 CCFLAGS='-O2 -std=gnu99 -Wall -pedantic -D_FILE_OFFSET_BITS=64',
-                 CXXFLAGS = '-O2 -Wall -pedantic')
-penv.Program('AFDMc++.x',
-             Split('AFDMc++.cc'),
-             LIBS=['rsf++','rsf','m'])
+proj.Program('AFDMc__.c')
 
-# F90 environment
-#fenv=Environment(LIBPATH=[libdir],
-#                 F90PATH=[incdir],
-#                 F90='/opt/intel/bin/ifort',
-#                 F90FLAGS= '-O2 -Vaxlib',
-#                 LINK=rsfproj.Get('F90'))
-fenv=Environment(LIBPATH=[libdir],
-                 F90PATH=[incdir],
-                 F90='/opt/intel/fc/9.0/bin/ifort',
-                 F90FLAGS= '-O2 -Vaxlib',
-                 LINK='/opt/intel/fc/9.0/bin/ifort')
-fenv.Program('AFDMf90.x',
-             Split('AFDMf90.f90'),
-             LIBS=['rsff90','rsf','m'])
+# C++ api
+
+if 'c++' in api:
+    proj.Program('AFDMc++.cc',LIBS=['rsf++','rsf','m'])
+
+# F90 api
+
+if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
+    proj.Program90('AFDMf90.f90')
 

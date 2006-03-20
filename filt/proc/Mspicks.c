@@ -68,7 +68,7 @@ int main (int argc, char* argv[])
     pikt = sf_floatalloc3(na,nh,nt);
 
     for (ix=0; ix < nx; ix++) {
-	x = x0 + it*dx;
+	x = x0 + ix*dx;
 
 	sf_floatread(imgt,nt,img);
 	sf_floatread(velt,nt,vel);

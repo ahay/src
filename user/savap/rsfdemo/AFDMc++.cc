@@ -22,38 +22,49 @@ int main(int argc, char* argv[])
     CUB Fo("out","o"); Fo.setup(3,Fv.esize()); 
 
     // Read/Write axes
-    axa at,az,ax;
-    Fw.getax(0,&at); Fv.getax(0,&az); Fv.getax(1,&ax);
-    Fo.putax(0,&az); Fo.putax(1,&ax); Fo.putax(2,&at);
+    sf_axis at = Fw.getax(0); 
+    sf_axis az = Fv.getax(0); 
+    sf_axis ax = Fv.getax(1);
+
+    Fo.putax(0,az); 
+    Fo.putax(1,ax); 
+    Fo.putax(2,at);
     Fo.headou();
 
-    float idx,idz,dt2;
-    dt2 =    at.d*at.d ;
-    idz = 1/(az.d*az.d);
-    idx = 1/(ax.d*ax.d);
+    float dt = sf_d(at);
+    float dz = sf_d(az);
+    float dx = sf_d(ax);
+
+    float dt2 =    dt*dt;
+    float idz = 1/(dz*dz);
+    float idx = 1/(dx*dx);
+
+    int nt = sf_n(at);
+    int nz = sf_n(az);
+    int nx = sf_n(ax);
 
     // read wavelet, velocity and reflectivity
-    valarray<float> ww( at.n      ); ww=0; Fw >> ww;
-    valarray<float> vv( az.n*ax.n ); vv=0; Fv >> vv;
-    valarray<float> rr( az.n*ax.n ); rr=0; Fr >> rr;
+    valarray<float> ww( nt    ); ww=0; Fw >> ww;
+    valarray<float> vv( nz*nx ); vv=0; Fv >> vv;
+    valarray<float> rr( nz*nx ); rr=0; Fr >> rr;
    
     // allocate temporary arrays
-    valarray<float> um(az.n*ax.n); um=0;
-    valarray<float> uo(az.n*ax.n); uo=0;
-    valarray<float> up(az.n*ax.n); up=0;
-    valarray<float> ud(az.n*ax.n); ud=0;
+    valarray<float> um(nz*nx); um=0;
+    valarray<float> uo(nz*nx); uo=0;
+    valarray<float> up(nz*nx); up=0;
+    valarray<float> ud(nz*nx); ud=0;
 
     // init ValArray Index counter
-    VAI k(az.n,ax.n);
+    VAI k(nz,nx);
 
     // MAIN LOOP
     if(verb) cerr << endl;
-    for (int it=0; it<at.n; it++) {
+    for (int it=0; it<nt; it++) {
 	if(verb) cerr << "\b\b\b\b\b" << it;
 
 	// 4th order laplacian
-	for (int iz=2; iz<az.n-2; iz++) {
-	    for (int ix=2; ix<ax.n-2; ix++) {
+	for (int iz=2; iz<nz-2; iz++) {
+	    for (int ix=2; ix<nx-2; ix++) {
 		ud[k(iz,ix)] = 
 		    c0* uo[ k(iz  ,ix  )] * (idx+idz) +
 		    c1*(uo[ k(iz  ,ix-1)]+uo[ k(iz  ,ix+1)]) * idx + 

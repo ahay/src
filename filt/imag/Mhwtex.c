@@ -24,8 +24,10 @@ int main (int argc, char *argv[])
 {
     bool verb;
 
-    axa az,ax,at,ag;
+    sf_axis az,ax,at,ag;
     int       it,ig;
+    int nz,nx,nt,ng;
+    float ot,dt;
     
     sf_file Fv,Fs,Fw;
 
@@ -45,32 +47,27 @@ int main (int argc, char *argv[])
 
     /* velocity file */
     Fv = sf_input ("in");
-    iaxa(Fv,&az,1); az.l="z"; if(verb) raxa(az);
-    iaxa(Fv,&ax,2); ax.l="x"; if(verb) raxa(ax);
+    az = sf_iaxa(Fv,1); sf_setlabel(az,"z"); nz=sf_n(az); if(verb) sf_raxa(az);
+    ax = sf_iaxa(Fv,2); sf_setlabel(ax,"x"); nx=sf_n(ax); if(verb) sf_raxa(ax);
 
-    vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
+    vv=sf_floatalloc2(nz,nx); sf_floatread(vv[0],nz*nx,Fv);
 
     /* source location = initial wavefront file*/
     Fs = sf_input ("sou");
-    iaxa(Fs,&ag,1); ag.l="g"; if(verb) raxa(ag);
-
+    ag = sf_iaxa(Fs,1); sf_setlabel(ag,"g"); ng=sf_n(ag); if(verb) sf_raxa(ag);
 
     /* time axis */
-    if(! sf_getint  ("nt",&at.n)) at.n=100;
-    if(! sf_getfloat("ot",&at.o)) at.o=0;
-    if(! sf_getfloat("dt",&at.d)) at.d=0.001;
-    at.l="t";
-
-
-
-
+    if(! sf_getint  ("nt",&nt)) nt=100;
+    if(! sf_getfloat("ot",&ot)) ot=0;
+    if(! sf_getfloat("dt",&dt)) dt=0.001;
+    at = sf_maxa(nt,ot,dt); sf_setlabel(at,"t");
 
 /*------------------------------------------------------------*/
 
     /* wavefronts file */
     Fw = sf_output("out");
-    oaxa(Fw,&ag,1); if(verb) raxa(ag);
-    oaxa(Fw,&at,2); if(verb) raxa(at);
+    sf_oaxa(Fw,ag,1); if(verb) sf_raxa(ag);
+    sf_oaxa(Fw,at,2); if(verb) sf_raxa(at);
 
     /* set the output to complex */
     sf_putint(Fw,"esize",8);
@@ -79,11 +76,11 @@ int main (int argc, char *argv[])
 /*------------------------------------------------------------*/
 
     /* wavefronts */
-    wm = (pt2d*) sf_alloc(ag.n,sizeof(*wm));
-    wo = (pt2d*) sf_alloc(ag.n,sizeof(*wo));
-    wp = (pt2d*) sf_alloc(ag.n,sizeof(*wp));
+    wm = (pt2d*) sf_alloc(ng,sizeof(*wm));
+    wo = (pt2d*) sf_alloc(ng,sizeof(*wo));
+    wp = (pt2d*) sf_alloc(ng,sizeof(*wp));
 
-    for( ig=0; ig<ag.n; ig++) {
+    for( ig=0; ig<ng; ig++) {
 	wm[ig].x=wo[ig].x=wp[ig].x=0;
 	wm[ig].z=wo[ig].z=wp[ig].z=0;
 	wm[ig].v=wo[ig].v=wp[ig].v=0;
@@ -98,13 +95,13 @@ int main (int argc, char *argv[])
 
     /* read initial wavefront (it=0) */
     it=0;
-    pt2dread1(Fs,wm,ag.n,2);
-    for( ig=0; ig<ag.n; ig++) {
+    pt2dread1(Fs,wm,ng,2);
+    for( ig=0; ig<ng; ig++) {
 	Po = wm[ig];
 	Po.v=hwt2d_getv(Po);
 	wm[ig] = Po;
     }
-    pt2dwrite1(Fw,wm,ag.n,2); /* write wavefront it=0 */
+    pt2dwrite1(Fw,wm,ng,2); /* write wavefront it=0 */
 
 /*------------------------------------------------------------*/
 
@@ -116,7 +113,7 @@ int main (int argc, char *argv[])
     Ro=hwt2d_orth(Po,Po,Pp);
     wo[0] = Ro;
 
-    for( ig=1; ig<ag.n-1; ig++) {
+    for( ig=1; ig<ng-1; ig++) {
 
 	Pm = wm[ig-1];
 	Po = wm[ig  ];
@@ -128,23 +125,23 @@ int main (int argc, char *argv[])
 	wo[ig] = Ro;
     }
 
-    Pm=wm[ag.n-3]; 
-    Po=wm[ag.n-1]; 
+    Pm=wm[ng-3]; 
+    Po=wm[ng-1]; 
     Ro=hwt2d_orth(Pm,Po,Po);
-    wo[ag.n-1] = Ro;
+    wo[ng-1] = Ro;
 
-    pt2dwrite1(Fw,wo,ag.n,2); /* write wavefront it=1 */
+    pt2dwrite1(Fw,wo,ng,2); /* write wavefront it=1 */
 
 /*------------------------------------------------------------*/
 
-    for (it=2; it<at.n; it++) {
+    for (it=2; it<nt; it++) {
 	if(verb) fprintf(stderr,"it=%d\n",it);
 
-	if(ag.n>3) {
+	if(ng>3) {
 	    /* boundary */
 	    ig=0;      wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 
-	    for (ig=1; ig<ag.n-1; ig++) {		
+	    for (ig=1; ig<ng-1; ig++) {		
 		Pm = wo[ig-1];
 		Po = wo[ig  ];  Qo = wm[ig];
 		Pp = wo[ig+1];
@@ -158,9 +155,9 @@ int main (int argc, char *argv[])
 	    }
 
 	    /* boundary */
-	    ig=ag.n-1; wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
+	    ig=ng-1; wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
 	} else {
-	    for (ig=0; ig<ag.n; ig++) {
+	    for (ig=0; ig<ng; ig++) {
 		Po = wo[ig];  
 		Qo = wm[ig];
 		Ro = hwt2d_raytr(Qo,Po);
@@ -169,10 +166,10 @@ int main (int argc, char *argv[])
 	}
 
 	/* write wavefront it */
-	pt2dwrite1(Fw,wp,ag.n,2);
+	pt2dwrite1(Fw,wp,ng,2);
 
 	/* step in time */
-	for( ig=0; ig<ag.n; ig++) {
+	for( ig=0; ig<ng; ig++) {
 	    wm[ig] = wo[ig];
 	    wo[ig] = wp[ig];
 	}

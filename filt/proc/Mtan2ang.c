@@ -28,10 +28,10 @@ int main (int argc, char* argv[])
     fint1 sft;
     int  ext;
 
-    float a,n,f;
-    int       fint;
+    float a,n,f,da,a0;
+    int   fint,na,nx,nz,nt;
 
-    axa ax,az,at,aa;
+    sf_axis ax,az,at,aa;
     int ix,iz,it,ia;
 
     float   **stk, **ang, *tmp;
@@ -45,42 +45,43 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
-    iaxa(Fstk,&az,1);
-    iaxa(Fstk,&at,2);
-    iaxa(Fstk,&ax,3);
+    az=sf_iaxa(Fstk,1); nz=sf_n(az);
+    at=sf_iaxa(Fstk,2); nt=sf_n(at);
+    ax=sf_iaxa(Fstk,3); nx=sf_n(ax);
 
-    if (!sf_getint  ("na",&aa.n)) aa.n=    at.n;       
-    if (!sf_getfloat("da",&aa.d)) aa.d=90/(at.n-1);
-    if (!sf_getfloat("a0",&aa.o)) aa.o=0.;         
-    oaxa(Fang,&aa,2);
+    if (!sf_getint  ("na",&na)) na=nt;       
+    if (!sf_getfloat("da",&da)) da=90/(nt-1);
+    if (!sf_getfloat("a0",&a0)) a0=0.;
+    aa = sf_maxa(na,a0,da);
+    sf_oaxa(Fang,aa,2);
 
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
-    stk = sf_floatalloc2(az.n,at.n);
-    ang = sf_floatalloc2(az.n,aa.n);
-    tmp = sf_floatalloc(      at.n);
+    stk = sf_floatalloc2(nz,nt);
+    ang = sf_floatalloc2(nz,na);
+    tmp = sf_floatalloc(nt);
 
-    sft = fint1_init(ext, at.n, 0);
+    sft = fint1_init(ext,nt, 0);
     
-    for (ix = 0; ix < ax.n; ix++) {
-	sf_floatread(stk[0],az.n*at.n,Fstk);
+    for (ix = 0; ix < nx; ix++) {
+	sf_floatread(stk[0],nz*nt,Fstk);
 	
 	/*------------------------------------------------------------*/
-	for (iz = 0; iz < az.n; iz++) {
-	    for (it = 0; it < at.n; it++) {
+	for (iz = 0; iz < nz; iz++) {
+	    for (it = 0; it < nt; it++) {
 		tmp[it] = stk[it][iz];
 	    }
 	    fint1_set(sft,tmp);
 	    
-	    for (ia=0; ia < aa.n; ia++) {
-		a = aa.o+ia*aa.d;      /* ang */
+	    for (ia=0; ia < na; ia++) {
+		a = a0+ia*da;      /* ang */
 		n = tanf(a/180*SF_PI); /* tan */
 
-		f = (n - at.o) / at.d;
+		f = (n - sf_o(at)) / sf_d(at);
 		fint = f;
 
-		if (fint >= 0 && fint < at.n) {
+		if (fint >= 0 && fint < nt) {
 		    ang[ia][iz] = fint1_apply(sft,fint,f-fint,false);
 		} else {
 		    ang[ia][iz] = 0.;
@@ -89,7 +90,7 @@ int main (int argc, char* argv[])
 	}
 	/*------------------------------------------------------------*/
 	    
-	sf_floatwrite(ang[0],az.n*aa.n,Fang);
+	sf_floatwrite(ang[0],nz*na,Fang);
     }
 	
     exit (0);

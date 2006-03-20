@@ -31,7 +31,7 @@ int main (int argc, char* argv[])
     float v,a,n,f;
     int         fint;
 
-    axa ax,az,av,aa;
+    sf_axa ax,az,av,aa;
     int ix,iz,iv,ia;
 
     float   **stk, **ang, *vel, *tmp;
@@ -46,28 +46,30 @@ int main (int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(Fstk)) sf_error("Need float input");
 
-    iaxa(Fstk,&az,1);
-    iaxa(Fstk,&av,2);
-    iaxa(Fstk,&ax,3);
+    az=sf_iaxa(Fstk,1); nz=sf_n(az);
+    av=sf_iaxa(Fstk,2); nv=sf_n(av);
+    ax=sf_iaxa(Fstk,3);
 
-    if (!sf_getint  ("na",&aa.n)) aa.n=    av.n;       
-    if (!sf_getfloat("da",&aa.d)) aa.d=90/(av.n-1);
-    if (!sf_getfloat("a0",&aa.o)) aa.o=0.;         
-    oaxa(Fang,&aa,2);
+    if (!sf_getint  ("na",&na)) na=nv;       
+    if (!sf_getfloat("da",&da)) da=1./(nv-1);
+    if (!sf_getfloat("a0",&a0)) a0=0.;         
+
+    aa = sf_maxa(na,a0,da);
+    sf_oaxa(Fang,aa,2);
 
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
-    stk = sf_floatalloc2(az.n,av.n);
-    ang = sf_floatalloc2(az.n,aa.n);
-    tmp = sf_floatalloc(      av.n);
-    vel = sf_floatalloc(az.n      );
+    stk = sf_floatalloc2(nz,nv);
+    ang = sf_floatalloc2(nz,na);
+    tmp = sf_floatalloc(nv);
+    vel = sf_floatalloc(nz);
 
-    sft = fint1_init(ext, av.n, 0);
+    sft = fint1_init(ext,nv,0);
     
     for (ix = 0; ix < ax.n; ix++) {
-	sf_floatread(vel   ,az.n     ,Fvel);	
-	sf_floatread(stk[0],az.n*av.n,Fstk);
+	sf_floatread(vel   ,nz   ,Fvel);	
+	sf_floatread(stk[0],nz*nv,Fstk);
 	
 	/*------------------------------------------------------------*/
 	for (iz = 0; iz < az.n; iz++) {

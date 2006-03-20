@@ -26,7 +26,7 @@
 
 #include "rweone.h"
 
-static axa ag,at,aw,ar;
+static sf_axa ag,at,aw,ar;
 static int method;
 static bool verb;
 
@@ -53,18 +53,18 @@ int nloop;
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 
 void rweone_init(
-    axa ag_,
-    axa at_,
-    axa aw_,
-    axa ar_,
+    sf_axis ag_,
+    sf_axis at_,
+    sf_axis aw_,
+    sf_axis ar_,
     int method_,
     bool verb_)
 /*< initialize >*/
 {
-    ag = ag_;
-    at = at_;
-    aw = aw_;
-    ar = ar_;
+    ag = sf_nod(ag_);
+    at = sf_nod(at_);
+    aw = sf_nod(aw_);
+    ar = sf_nod(ar_);
 
     method = method_;
     verb   = verb_;

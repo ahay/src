@@ -268,21 +268,27 @@ for h in ('x','t'):
             if(h=='x'):
                 Plot(off,off, igrey('pclip=100 label1="z (m)" label2="h (m)"         %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=-4 np=200 dp=0.04')
-                Plot(ssk,igrey('pclip=100  min2=0 max2=2.5  label1="z (m)" label2="tan \F10 q\F3 "  %s') % tit)
+                Plot(ssk,
+                     igrey('pclip=100  min2=0 max2=2.5  label1="z (m)" label2="tan \F10 q\F3 "  %s') % tit)
                 ovl = 'xov' + n
 
                 Flow(ang,ssk,'tan2ang a0=0 na=150 da=0.45')
-                Plot(ang,igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
+                Plot(ang,
+                     igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
             
             if(h=='t'):
-                Plot(off,off, igrey('pclip=100 label1="z (m)" label2="\F10 t\F3 (s)" %s') % tit)
+                Plot(off,off,
+                     igrey('pclip=100 label1="z (m)" label2="\F10 t\F3 (s)" %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=0  np=200 dp=50')
-                Plot(ssk,igrey('pclip=99.5 min2=0 max2=4000 label1="z (m)" label2="\F10 n\F3 (m/s)" %s') % tit)
+                Plot(ssk,
+                     igrey('pclip=99.5 min2=0 max2=4000 label1="z (m)" label2="\F10 n\F3 (m/s)" %s') % tit)
                 ovl = 'tov' + n
 
                 Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
-                Flow(ang,[ssk,vel],'tshiftcos a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
-                Plot(ang,igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
+                Flow(ang,[ssk,vel],
+                     'tshift cos=y a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
+                Plot(ang,
+                     igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
                 
             Plot(ssko,[ssk,ovl],'Overlay')
 

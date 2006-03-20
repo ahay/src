@@ -472,7 +472,7 @@ for frq in frq_list:
          ''' % (par['kt'],par['nt'],par['dt'],
                 par['dx'],par['xsou'],par['dy'],par['ysou'],frq) )
     Result('wav_%d' % (frq),'wav_%d' % (frq),
-           'window n1=50 | graph title="wavelet %dHz"' % (frq))
+           'window n1=50 | graph title="wavelet %dHz" wantaxis2=n' % (frq))
 
 # ------------------------------------------------------------
 # 1-D convolution

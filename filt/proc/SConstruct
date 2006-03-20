@@ -11,7 +11,7 @@ modrefl modrefl2 nmo noise ofsemb pmig pnmo postfilter2 pp2psang
 pp2psang2 prestolt pveltran radial radon randrefl refer reshape ricker
 shot2cmp shotholes shotprop slice slowft smooth smoothder smoothreg
 smoothreg2 spectra spectra2 spicks spline splinefilter stolt stretch
-taupmo time2depth tpow tan2ang tshift tshiftcos vscan velmod
+taupmo time2depth tpow tan2ang tshift vscan velmod
 '''
 
 try: # distributed version

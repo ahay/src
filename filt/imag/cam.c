@@ -1,5 +1,4 @@
-/* 
- * 3-D CAM migration/modeling using extended split-step
+/* 3-D CAM migration/modeling using extended split-step
  * pcs 2005
  */
 
@@ -46,9 +45,9 @@
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
-static axa az,aw,amx,amy,ahx;
-static axa       bmx,bmy,bhx;
-static axa       alx,aly;
+static sf_axa az,amx,amy,ahx;
+static sf_axa    bmx,bmy,bhx;
+static sf_axa    alx,aly;
 static float dsmax2;
 
 static float          **ksx;/* source   wavenumber  */
@@ -63,13 +62,12 @@ static float         ***wt; /* interpolation weight */
 
 /*------------------------------------------------------------*/
 void cam_init(
-    axa az_,
-    axa aw_,
-    axa amx_,
-    axa amy_,
-    axa ahx_,
-    axa alx_,
-    axa aly_,
+    sf_axis az_,
+    sf_axis amx_,
+    sf_axis amy_,
+    sf_axis ahx_,
+    sf_axis alx_,
+    sf_axis aly_,
     int pmx,
     int pmy,
     int phx,
@@ -85,17 +83,12 @@ void cam_init(
     float  my,  mx,  hx,    k;
     float      kmx, khx;
 
-    az = az_;
-    aw = aw_;
-    amx= amx_;
-    amy= amy_;
-    alx= alx_;
-    aly= aly_;
-    ahx= ahx_;
-
-    /* from hertz to radian */
-    aw.d *= 2.*SF_PI; 
-    aw.o *= 2.*SF_PI;
+    az = sf_nod(az_);
+    amx= sf_nod(amx_);
+    amy= sf_nod(amy_);
+    alx= sf_nod(alx_);
+    aly= sf_nod(aly_);
+    ahx= sf_nod(ahx_);
     
     /* construct K-domain axes */
     X2K(amx,bmx,pmx);

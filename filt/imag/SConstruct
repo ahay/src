@@ -6,10 +6,10 @@ progs = '''
 afdm2d born2d c2r camig cell2 cgscan constfdmig2 cube2list distance
 dmo dsr dsr2 eikonal fincon finstack fkamo fkamopaco fkdmo gazdag
 halfint hwt2d hwtex interp2 interp3 interpt kirchinv kirchnew kirmod
-kirmod3 mig45 mutter phmig preconstkirch rays2 reg2tri remap1 ricker1
+kirmod3 mig45 mutter preconstkirch rays2 reg2tri remap1 ricker1
 rwemete2d rweab rwesrmig rwezomig s2ofz shoot2 slant srsyn srmod srmig
 srmig2 srmva sstep2 trace2 trapez tri2reg trirand unif2 unif3 voft
-vofz zomig zomva wefic weimc
+vofz zomig zomva 
 '''
 
 try:  # distributed version

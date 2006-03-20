@@ -7,10 +7,8 @@ Papers(sections={'fmeiko':'Traveltime'},
                 'norm': 'Sergey Fomel and Norman Bleistein',
                 'rwe':'Paul Sava and Sergey Fomel'},
        copyr='Stanford University')
-
+2
 Paper('toc',lclass='georeport')
        
 End(lclass='georeport',use='hyperref,listings',
-    include='\\newcommand{\\RSF}{%s}' %
-    os.path.join(os.environ.get('HOME'),'RSF'))
-
+    include='\\newcommand{\\RSF}{../..}')

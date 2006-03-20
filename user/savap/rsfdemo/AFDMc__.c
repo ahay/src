@@ -7,9 +7,10 @@ int main(int argc, char* argv[])
 
     bool verb;           /* verbose flag */
     sf_file Fw,Fv,Fr,Fo; /* I/O files */
-    axa at,az,ax;        /* cube axes */
+    sf_axis at,az,ax;    /* cube axes */
     int it,iz,ix;        /* index variables */
-    float idx,idz,dt2;
+    int nt,nz,nx;
+    float dt,dz,dx,idx,idz,dt2;
 
     float  *ww,**vv,**rr;     /* I/O arrays*/
     float **um,**uo,**up,**ud;/* tmp arrays */
@@ -24,26 +25,31 @@ int main(int argc, char* argv[])
     Fr = sf_input ("ref");
 
     /* Read/Write axes */
-    iaxa(Fw,&at,1); iaxa(Fv,&az,1); iaxa(Fv,&ax,2);
-    oaxa(Fo,&az,1); oaxa(Fo,&ax,2); oaxa(Fo,&at,3);
+    at = sf_iaxa(Fw,1); nt = sf_n(at); dt = sf_d(at);
+    az = sf_iaxa(Fv,1); nz = sf_n(az); dz = sf_d(az);
+    ax = sf_iaxa(Fv,2); nx = sf_n(ax); dx = sf_d(ax);
 
-    dt2 =    at.d*at.d;
-    idz = 1/(az.d*az.d);
-    idx = 1/(ax.d*ax.d);
-     
+    sf_oaxa(Fo,az,1); 
+    sf_oaxa(Fo,ax,2); 
+    sf_oaxa(Fo,at,3);
+
+    dt2 =    dt*dt;
+    idz = 1/(dz*dz);
+    idx = 1/(dx*dx);
+
     /* read wavelet, velocity & reflectivity */
-    ww=sf_floatalloc(at.n);       sf_floatread(ww   ,at.n     ,Fw);
-    vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
-    rr=sf_floatalloc2(az.n,ax.n); sf_floatread(rr[0],az.n*ax.n,Fr);
+    ww=sf_floatalloc(nt);     sf_floatread(ww   ,nt   ,Fw);
+    vv=sf_floatalloc2(nz,nx); sf_floatread(vv[0],nz*nx,Fv);
+    rr=sf_floatalloc2(nz,nx); sf_floatread(rr[0],nz*nx,Fr);
 
     /* allocate temporary arrays */
-    um=sf_floatalloc2(az.n,ax.n);
-    uo=sf_floatalloc2(az.n,ax.n);
-    up=sf_floatalloc2(az.n,ax.n);
-    ud=sf_floatalloc2(az.n,ax.n);
+    um=sf_floatalloc2(nz,nx);
+    uo=sf_floatalloc2(nz,nx);
+    up=sf_floatalloc2(nz,nx);
+    ud=sf_floatalloc2(nz,nx);
     
-    for (iz=0; iz<az.n; iz++) {
-	for (ix=0; ix<ax.n; ix++) {
+    for (iz=0; iz<nz; iz++) {
+	for (ix=0; ix<nx; ix++) {
 	    um[ix][iz]=0;
 	    uo[ix][iz]=0;
 	    up[ix][iz]=0;
@@ -53,12 +59,12 @@ int main(int argc, char* argv[])
     
     /* MAIN LOOP */
     if(verb) fprintf(stderr,"\n");
-    for (it=0; it<at.n; it++) {
+    for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
 	/* 4th order laplacian */
-	for (iz=2; iz<az.n-2; iz++) {
-	    for (ix=2; ix<ax.n-2; ix++) {
+	for (iz=2; iz<nz-2; iz++) {
+	    for (ix=2; ix<nx-2; ix++) {
 		ud[ix][iz] = 
 		    c0* uo[ix  ][iz  ] * (idx+idz) + 
 		    c1*(uo[ix-1][iz  ] + uo[ix+1][iz  ])*idx +
@@ -69,22 +75,22 @@ int main(int argc, char* argv[])
 	}
 
 	/* inject wavelet */
-	for (iz=0; iz<az.n; iz++) {
-	    for (ix=0; ix<ax.n; ix++) {
+	for (iz=0; iz<nz; iz++) {
+	    for (ix=0; ix<nx; ix++) {
 		ud[ix][iz] -= ww[it] * rr[ix][iz];
 	    }
 	}
 
 	/* scale by velocity */
-	for (iz=0; iz<az.n; iz++) {
-	    for (ix=0; ix<ax.n; ix++) {
+	for (iz=0; iz<nz; iz++) {
+	    for (ix=0; ix<nx; ix++) {
 		ud[ix][iz] *= vv[ix][iz]*vv[ix][iz];
 	    }
 	}
 	
 	/* time step */
-	for (iz=0; iz<az.n; iz++) {
-	    for (ix=0; ix<ax.n; ix++) {
+	for (iz=0; iz<nz; iz++) {
+	    for (ix=0; ix<nx; ix++) {
 		up[ix][iz] = 
 		    2*uo[ix][iz] 
 		    - um[ix][iz] 
@@ -96,7 +102,7 @@ int main(int argc, char* argv[])
 	}
 	
 	/* write wavefield to output */
-	sf_floatwrite(uo[0],az.n*ax.n,Fo);
+	sf_floatwrite(uo[0],nz*nx,Fo);
     }
     if(verb) fprintf(stderr,"\n");    
 

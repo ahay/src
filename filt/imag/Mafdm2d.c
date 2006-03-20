@@ -35,10 +35,10 @@ int main(int argc, char* argv[])
     sf_file Fd,Fo;
 
     /* cube axes */
-    axa at,az,ax,as,ar;
-    axa bt,bz,bx;
+    sf_axis at,az,ax,as,ar;
+    int nt,nz,nx,ns,nr,nz2,nx2;
     int it,iz,ix,is,ir, iop;
-    float idx,idz,dt2;
+    float dx,dz,dt, x0,z0, idx,idz,dt2;
 
     /* arrays */
     float  *ww,**vv; /* wavelet, velocity */
@@ -81,15 +81,20 @@ int main(int argc, char* argv[])
     Fd = sf_output("out"); /* data */
 
     /* read axes*/
-    iaxa(Fw,&at,1); at.l="t"; if(verb) raxa(at); /* time */
-    iaxa(Fv,&az,1); az.l="z"; if(verb) raxa(az); /* depth */
-    iaxa(Fv,&ax,2); ax.l="x"; if(verb) raxa(ax); /* space */
-    iaxa(Fs,&as,2); as.l="s"; if(verb) raxa(as); /* sources */
-    iaxa(Fr,&ar,2); ar.l="r"; if(verb) raxa(ar); /* receivers */
+    at = sf_iaxa(Fw,1); sf_setlabel(at,"t"); 
+    nt = sf_n(at); dt=sf_d(at); if(verb) sf_raxa(at); /* time */
+    az = sf_iaxa(Fv,1); sf_setlabel(az,"z"); 
+    nz = sf_n(az); dz=sf_d(az); if(verb) sf_raxa(az); /* depth */
+    ax = sf_iaxa(Fv,2); sf_setlabel(ax,"x"); 
+    nx = sf_n(ax); dx=sf_d(ax); if(verb) sf_raxa(ax); /* space */
+    as = sf_iaxa(Fs,2); sf_setlabel(as,"s"); 
+    ns = sf_n(as); if(verb) sf_raxa(as); /* sources */
+    ar = sf_iaxa(Fr,2); sf_setlabel(ar,"r"); 
+    nr = sf_n(ar); if(verb) sf_raxa(ar); /* receivers */
 
     /* configure wavefield snapshots */
     if(snap) {
-	if(! sf_getint("jsnap",&jsnap)) jsnap=at.n;
+	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
     }
 
 /*------------------------------------------------------------*/
@@ -106,32 +111,33 @@ int main(int argc, char* argv[])
 	nbx=nop;
     }
     /* expanded domain ( az+2 nz, ax+2 nx ) */
-    bz.n=az.n+2*nbz; bz.o=az.o-nbz*az.d; bz.d=az.d; bz.l="z";
-    bx.n=ax.n+2*nbx; bx.o=ax.o-nbx*ax.d; bx.d=ax.d; bx.l="x";
+    nz2=nz+2*nbz; sf_setn(az,nz2); 
+    nx2=nx+2*nbx; sf_setn(ax,nx2); 
 
-    if(verb) raxa(bz);
-    if(verb) raxa(bx);
+    z0=sf_o(az)-nbz*dz; sf_seto(az,z0);
+    x0=sf_o(ax)-nbx*dx; sf_seto(ax,x0);
+
+    if(verb) sf_raxa(az);
+    if(verb) sf_raxa(ax);
 /*------------------------------------------------------------*/
 
     /* setup output wavefield header */
     if(snap) {
-	bt.n = at.n / jsnap;
-	bt.o = at.o;
-	bt.d = at.d * jsnap;
-	bt.l = "t";
+	sf_setn(at,nt/jsnap);
+	sf_setd(at,dt*jsnap);
 
-	oaxa(Fo,&bz,1);
-	oaxa(Fo,&bx,2);
-	oaxa(Fo,&bt,3);
+	sf_oaxa(Fo,az,1);
+	sf_oaxa(Fo,ax,2);
+	sf_oaxa(Fo,at,3);
     }
 
     /* setup output data header */
-    oaxa(Fd,&ar,1);
-    oaxa(Fd,&at,2);
+    sf_oaxa(Fd,ar,1);
+    sf_oaxa(Fd,at,2);
 
-    dt2 =    at.d*at.d;
-    idz = 1/(az.d*az.d);
-    idx = 1/(ax.d*ax.d);
+    dt2 =    dt*dt;
+    idz = 1/(dz*dz);
+    idx = 1/(dx*dx);
 
     /* Laplacian coefficients */
     c0=-30./12.; 
@@ -147,39 +153,39 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
      
     /* allocate arrays */
-    ww=sf_floatalloc (at.n);      sf_floatread(ww   ,at.n     ,Fw);
-    vv=sf_floatalloc2(az.n,ax.n); sf_floatread(vv[0],az.n*ax.n,Fv);
+    ww=sf_floatalloc (nt);      sf_floatread(ww   ,nt     ,Fw);
+    vv=sf_floatalloc2(nz,nx); sf_floatread(vv[0],nz*nx,Fv);
 
     /* allocate source/receiver point arrays */
-    ss = (pt2d*) sf_alloc(as.n,sizeof(*ss)); 
-    rr = (pt2d*) sf_alloc(ar.n,sizeof(*rr)); 
+    ss = (pt2d*) sf_alloc(ns,sizeof(*ss)); 
+    rr = (pt2d*) sf_alloc(nr,sizeof(*rr)); 
 
-    pt2dread1(Fs,ss,as.n,3); /* read 3 elements (x,z,v) */
-    pt2dread1(Fr,rr,ar.n,2); /* read 2 elements (x,z)   */
+    pt2dread1(Fs,ss,ns,3); /* read 3 elements (x,z,v) */
+    pt2dread1(Fr,rr,nr,2); /* read 2 elements (x,z)   */
 
-    dd=sf_floatalloc(ar.n);
-    jzs=sf_intalloc(as.n); fzs=sf_floatalloc(as.n); 
-    jzr=sf_intalloc(ar.n); fzr=sf_floatalloc(ar.n);
-    jxs=sf_intalloc(as.n); fxs=sf_floatalloc(as.n);
-    jxr=sf_intalloc(ar.n); fxr=sf_floatalloc(ar.n);
+    dd=sf_floatalloc(nr);
+    jzs=sf_intalloc(ns); fzs=sf_floatalloc(ns); 
+    jzr=sf_intalloc(nr); fzr=sf_floatalloc(nr);
+    jxs=sf_intalloc(ns); fxs=sf_floatalloc(ns);
+    jxr=sf_intalloc(nr); fxr=sf_floatalloc(nr);
 
-    ws00 = sf_floatalloc(as.n); wr00 = sf_floatalloc(ar.n); 
-    ws01 = sf_floatalloc(as.n); wr01 = sf_floatalloc(ar.n);
-    ws10 = sf_floatalloc(as.n); wr10 = sf_floatalloc(ar.n);
-    ws11 = sf_floatalloc(as.n); wr11 = sf_floatalloc(ar.n);
+    ws00 = sf_floatalloc(ns); wr00 = sf_floatalloc(nr); 
+    ws01 = sf_floatalloc(ns); wr01 = sf_floatalloc(nr);
+    ws10 = sf_floatalloc(ns); wr10 = sf_floatalloc(nr);
+    ws11 = sf_floatalloc(ns); wr11 = sf_floatalloc(nr);
 /*------------------------------------------------------------*/
 
-    for (is=0;is<as.n;is++) {
+    for (is=0;is<ns;is++) {
 
-	if(ss[is].z >= bz.o && 
-	   ss[is].z <  bz.o + (bz.n-1)*bz.d &&
-	   ss[is].x >= bx.o && 
-	   ss[is].x <  bx.o + (bx.n-1)*bx.d) {
+	if(ss[is].z >= z0 && 
+	   ss[is].z <  z0 + (nz2-1)*dz &&
+	   ss[is].x >= x0 && 
+	   ss[is].x <  x0 + (nx2-1)*dx) {
 	    
-	    jzs[is] = (int)( (ss[is].z-bz.o)/bz.d);
-	    fzs[is] =        (ss[is].z-bz.o)/bz.d - jzs[is];	    
-	    jxs[is] = (int)( (ss[is].x-bx.o)/bx.d);
-	    fxs[is] =        (ss[is].x-bx.o)/bx.d - jxs[is];
+	    jzs[is] = (int)( (ss[is].z-z0)/dz);
+	    fzs[is] =        (ss[is].z-z0)/dz - jzs[is];	    
+	    jxs[is] = (int)( (ss[is].x-x0)/dx);
+	    fxs[is] =        (ss[is].x-x0)/dx - jxs[is];
 	} else {
 	    jzs[is] = 0; jxs[is] = 0;
 	    fzs[is] = 1; fxs[is] = 0;
@@ -193,17 +199,17 @@ int main(int argc, char* argv[])
 
     }
 
-    for (ir=0;ir<ar.n;ir++) {
+    for (ir=0;ir<nr;ir++) {
 
-	if(rr[ir].z >= bz.o && 
-	   rr[ir].z < bz.o + (bz.n-1)*bz.d &&
-	   rr[ir].x >= bx.o && 
-	   rr[ir].x < bx.o + (bx.n-1)*bx.d) {
+	if(rr[ir].z >= z0 && 
+	   rr[ir].z < z0 + (nz2-1)*dz &&
+	   rr[ir].x >= x0 && 
+	   rr[ir].x < x0 + (nx2-1)*dx) {
 	    
-	    jzr[ir] = (int)( (rr[ir].z-bz.o)/bz.d);
-	    fzr[ir] =        (rr[ir].z-bz.o)/bz.d - jzr[ir];
-	    jxr[ir] = (int)( (rr[ir].x-bx.o)/bx.d);
-	    fxr[ir] =        (rr[ir].x-bx.o)/bx.d - jxr[ir];
+	    jzr[ir] = (int)( (rr[ir].z-z0)/dz);
+	    fzr[ir] =        (rr[ir].z-z0)/dz - jzr[ir];
+	    jxr[ir] = (int)( (rr[ir].x-x0)/dx);
+	    fxr[ir] =        (rr[ir].x-x0)/dx - jxr[ir];
 
 	    rr[ir].v=1;
 	} else {
@@ -221,14 +227,14 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
     
     /* allocate temporary arrays */
-    um=sf_floatalloc2(bz.n,bx.n);
-    uo=sf_floatalloc2(bz.n,bx.n);
-    up=sf_floatalloc2(bz.n,bx.n);
-    ud=sf_floatalloc2(bz.n,bx.n);
-    tt=sf_floatalloc2(bz.n,bx.n);
+    um=sf_floatalloc2(nz2,nx2);
+    uo=sf_floatalloc2(nz2,nx2);
+    up=sf_floatalloc2(nz2,nx2);
+    ud=sf_floatalloc2(nz2,nx2);
+    tt=sf_floatalloc2(nz2,nx2);
 
-    for (iz=0; iz<bz.n; iz++) {
-	for (ix=0; ix<bx.n; ix++) {
+    for (iz=0; iz<nz2; iz++) {
+	for (ix=0; ix<nx2; ix++) {
 	    um[ix][iz]=0;
 	    uo[ix][iz]=0;
 	    up[ix][iz]=0;
@@ -240,23 +246,23 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     /* velocity in the expanded domain (vp=vv^2)*/
-    vp=sf_floatalloc2(bz.n,bx.n);
-    for (iz=0; iz<az.n; iz++) {
-	for (ix=0; ix<ax.n; ix++) {
+    vp=sf_floatalloc2(nz2,nx2);
+    for (iz=0; iz<nz; iz++) {
+	for (ix=0; ix<nx; ix++) {
 	    vp[nbx+ix][nbz+iz] = vv[ix][iz] * vv[ix][iz];
 	}
     }
     /* fill boundaries */
     for (iz=0; iz<nbz; iz++) {
-	for (ix=0; ix<bx.n; ix++) {
+	for (ix=0; ix<nx2; ix++) {
 	    vp[ix][     iz  ] = vp[ix][     nbz  ];
-	    vp[ix][bz.n-iz-1] = vp[ix][bz.n-nbz-1];
+	    vp[ix][nz2-iz-1] = vp[ix][nz2-nbz-1];
 	}
     }
-    for (iz=0; iz<bz.n; iz++) {
+    for (iz=0; iz<nz2; iz++) {
 	for (ix=0; ix<nbx; ix++) {
 	    vp[     ix  ][iz] = vp[     nbx  ][iz];
-	    vp[bx.n-ix-1][iz] = vp[bx.n-nbx-1][iz];
+	    vp[nx2-ix-1][iz] = vp[nx2-nbx-1][iz];
 	}
     }
 
@@ -265,7 +271,7 @@ int main(int argc, char* argv[])
     /* free surface */
     if(abc && free) {
 	for (iz=0; iz<nbz; iz++) {
-	    for (ix=0; ix<bx.n; ix++) {
+	    for (ix=0; ix<nx2; ix++) {
 		vp[ix][iz]=0;
 	    }
 	}
@@ -276,32 +282,32 @@ int main(int argc, char* argv[])
     /* sponge ABC setup */
     if(abc) {
 	for (iz=0; iz<nbz; iz++) {
-	    for (ix=0; ix<bx.n; ix++) {
+	    for (ix=0; ix<nx2; ix++) {
 		tt[ix][     iz  ] = exp( - (tz*(nbz-iz))*(tz*(nbz-iz)) );
-		tt[ix][bz.n-iz-1] = tt[ix][iz];
+		tt[ix][nz2-iz-1] = tt[ix][iz];
 	    }
 	}
-	for (iz=0; iz<bz.n; iz++) {
+	for (iz=0; iz<nz2; iz++) {
 	    for (ix=0; ix<nbx; ix++) {
 		tt[     ix  ][iz] = exp( - (tx*(nbx-ix))*(tx*(nbx-ix)) );
-		tt[bx.n-ix-1][iz] = tt[ix][iz];
+		tt[nx2-ix-1][iz] = tt[ix][iz];
 	    }
 	}
     }
 
     /* one-way ABC setup */
-    bzl=sf_floatalloc(bx.n);
-    bzh=sf_floatalloc(bx.n);
-    bxl=sf_floatalloc(bz.n);
-    bxh=sf_floatalloc(bz.n);
+    bzl=sf_floatalloc(nx2);
+    bzh=sf_floatalloc(nx2);
+    bxl=sf_floatalloc(nz2);
+    bxh=sf_floatalloc(nz2);
     
-    for (ix=0;ix<bx.n;ix++) {
-	dp = vp[ix][     nop  ] *at.d/bz.d; bzl[ix] = (1-dp)/(1+dp);
-	dp = vp[ix][bz.n-nop-1] *at.d/bz.d; bzh[ix] = (1-dp)/(1+dp);
+    for (ix=0;ix<nx2;ix++) {
+	dp = vp[ix][     nop  ] *dt/dz; bzl[ix] = (1-dp)/(1+dp);
+	dp = vp[ix][nz2-nop-1] *dt/dz; bzh[ix] = (1-dp)/(1+dp);
     }
-    for (iz=0;iz<bz.n;iz++) {
-	dp = vp[     nop  ][iz] *at.d/bx.d; bxl[iz] = (1-dp)/(1+dp);
-	dp = vp[bx.n-nop-1][iz] *at.d/bx.d; bxh[iz] = (1-dp)/(1+dp);
+    for (iz=0;iz<nz2;iz++) {
+	dp = vp[     nop  ][iz] *dt/dx; bxl[iz] = (1-dp)/(1+dp);
+	dp = vp[nx2-nop-1][iz] *dt/dx; bxh[iz] = (1-dp)/(1+dp);
     }
 /*------------------------------------------------------------*/
 
@@ -309,12 +315,12 @@ int main(int argc, char* argv[])
      *  MAIN LOOP
      */
     if(verb) fprintf(stderr,"\n");
-    for (it=0; it<at.n; it++) {
+    for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
 	/* 4th order Laplacian operator */
-	for (ix=nop; ix<bx.n-nop; ix++) {
-	    for (iz=nop; iz<bz.n-nop; iz++) {
+	for (ix=nop; ix<nx2-nop; ix++) {
+	    for (iz=nop; iz<nz2-nop; iz++) {
 		ud[ix][iz] = 
 		    co * uo[ix  ][iz  ] + 
 		    c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
@@ -325,7 +331,7 @@ int main(int argc, char* argv[])
 	}
 
 	/* inject wavelet */
-	for (is=0;is<as.n;is++) {
+	for (is=0;is<ns;is++) {
 	    ws = ww[it] * ss[is].v;
 	    ud[ jxs[is]  ][ jzs[is]  ] -= ws * ws00[is];
 	    ud[ jxs[is]  ][ jzs[is]+1] -= ws * ws01[is];
@@ -334,16 +340,16 @@ int main(int argc, char* argv[])
 	}
 
 	/* velocity scale */
-	for (ix=0; ix<bx.n; ix++) {
-	    for (iz=0; iz<bz.n; iz+=2) {
+	for (ix=0; ix<nx2; ix++) {
+	    for (iz=0; iz<nz2; iz+=2) {
 		ud[ix][iz  ] *= vp[ix][iz  ];
 		ud[ix][iz+1] *= vp[ix][iz+1];
 	    }
 	}
 	
 	/* time step */
-	for (ix=0; ix<bx.n; ix++) {
-	    for (iz=0; iz<bz.n; iz+=2) {
+	for (ix=0; ix<nx2; ix++) {
+	    for (iz=0; iz<nz2; iz+=2) {
 		up[ix][iz  ] = 2*uo[ix][iz  ] - um[ix][iz  ] + ud[ix][iz  ] * dt2; 
 		um[ix][iz  ] =   uo[ix][iz  ];
 		uo[ix][iz  ] =   up[ix][iz  ];
@@ -356,7 +362,7 @@ int main(int argc, char* argv[])
 	
 	/* one-way ABC apply */
 	if(abc) {
-	    for(ix=0;ix<bx.n;ix++) {
+	    for(ix=0;ix<nx2;ix++) {
 		for(iop=0;iop<nop;iop++) {
 		    iz = nop-iop;
 		    uo      [ix][iz  ] 
@@ -364,7 +370,7 @@ int main(int argc, char* argv[])
 			+(um[ix][iz  ]
 			- uo[ix][iz+1]) * bzl[ix];
 		    
-		    iz = bz.n-nop+iop-1;
+		    iz = nz2-nop+iop-1;
 		    uo      [ix][iz  ] 
 			= um[ix][iz-1]
 			+(um[ix][iz  ]
@@ -373,14 +379,14 @@ int main(int argc, char* argv[])
 	    }
 
 	    for(iop=0;iop<nop;iop++) {
-		for(iz=0;iz<bz.n;iz++) {
+		for(iz=0;iz<nz2;iz++) {
 		    ix = nop-iop;
 		    uo      [ix  ][iz] 
 			= um[ix+1][iz] 
 			+(um[ix  ][iz]
 			- uo[ix+1][iz]) * bxl[iz];
 		    
-		    ix = bx.n-nop+iop-1;
+		    ix = nx2-nop+iop-1;
 		    uo      [ix  ][iz] 
 			= um[ix-1][iz]
 			+(um[ix  ][iz]
@@ -391,8 +397,8 @@ int main(int argc, char* argv[])
 	
 	/* sponge ABC apply */
 	if(abc) {
-	    for (ix=0; ix<bx.n; ix++) {
-		for (iz=0; iz<bz.n; iz+=2) {
+	    for (ix=0; ix<nx2; ix++) {
+		for (iz=0; iz<nz2; iz+=2) {
 		    uo[ix][iz  ] *= tt[ix][iz  ];
 		    um[ix][iz  ] *= tt[ix][iz  ];
 		    ud[ix][iz  ] *= tt[ix][iz  ];
@@ -406,11 +412,11 @@ int main(int argc, char* argv[])
 	
 	/* write wavefield */
 	if(snap && it%jsnap==0) {
-	    sf_floatwrite(uo[0],bz.n*bx.n,Fo);
+	    sf_floatwrite(uo[0],nz2*nx2,Fo);
 	}
 
 	/* write data */
-	for (ir=0;ir<ar.n;ir++) {
+	for (ir=0;ir<nr;ir++) {
 	    dd[ir] =
 		uo[ jxr[ir]  ][ jzr[ir]  ] * wr00[ir] +
 		uo[ jxr[ir]  ][ jzr[ir]+1] * wr01[ir] +
@@ -418,7 +424,7 @@ int main(int argc, char* argv[])
 		uo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
 	    dd[ir] *= rr[ir].v;
 	}
-	sf_floatwrite(dd,ar.n,Fd);
+	sf_floatwrite(dd,nr,Fd);
 
     }
     if(verb) fprintf(stderr,"\n");    

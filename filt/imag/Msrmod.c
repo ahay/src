@@ -1,5 +1,5 @@
-/* 
- * 3-D S/R modeling with extended split-step
+/* 3-D S/R modeling with extended split-step.
+ *
  * pcs 2005
  */
 
@@ -35,7 +35,9 @@ int main (int argc, char *argv[])
     int   tmx,tmy;        /* boundary taper size */
     bool cw;              /* converted waves flag */
 
-    axa az,ax,ay,aw,alx,aly,ae;
+    sf_axis az,ax,ay,aw,alx,aly;
+
+    int n,nz,nw;
 
     sf_file Fs_s=NULL,Fs_r=NULL;  /*  slowness file S      (nlx,nly,nz) */
     sf_file Fw_s=NULL,Fw_r=NULL;  /* wavefield file D or U ( nx, ny,nw) */
@@ -68,13 +70,16 @@ int main (int argc, char *argv[])
     /* SLOWNESS */
     ;      Fs_s = sf_input("slo");
     if(cw) Fs_r = sf_input("sls");
-    iaxa(Fs_s,&alx,1); alx.l="lx";
-    iaxa(Fs_s,&aly,2); aly.l="ly";
-    iaxa(Fs_s,&az ,3);  az.l= "z";
+    alx = sf_iaxa(Fs_s,1); sf_setlabel(alx,"lx");
+    aly = sf_iaxa(Fs_s,2); sf_setlabel(aly,"ly");
+    az  = sf_iaxa(Fs_s,3); sf_setlabel(az , "z");
     /* test here if slo and sls have similar sizes */
 
-    ;      slo_s = fslice_init(alx.n*aly.n, az.n,sizeof(float));
-    if(cw) slo_r = fslice_init(alx.n*aly.n, az.n,sizeof(float));
+    n = sf_n(alx)*sf_n(aly);
+    nz = sf_n(az);
+
+    ;      slo_s = fslice_init(n,nz,sizeof(float));
+    if(cw) slo_r = fslice_init(n,nz,sizeof(float));
     ;      fslice_load(Fs_s,slo_s,SF_FLOAT);
     if(cw) fslice_load(Fs_r,slo_r,SF_FLOAT);
     
@@ -84,16 +89,20 @@ int main (int argc, char *argv[])
     Fw_r = sf_output("out"); sf_settype(Fw_r,SF_COMPLEX);
     Fr   = sf_input ("ref");
 
-    if (SF_COMPLEX !=sf_gettype(Fw_s)) sf_error("Need complex source wavefield");
+    if (SF_COMPLEX !=sf_gettype(Fw_s)) 
+	sf_error("Need complex source wavefield");
     
-    iaxa(Fw_s,&ax,1); ax.l="x"; oaxa(Fw_r,&ax,1);
-    iaxa(Fw_s,&ay,2); ay.l="y"; oaxa(Fw_r,&ay,2);
-    iaxa(Fw_s,&aw,3); aw.l="w"; oaxa(Fw_r,&aw,3);
+    ax = sf_iaxa(Fw_s,1); sf_setlabel(ax,"x"); sf_oaxa(Fw_r,ax,1);
+    ay = sf_iaxa(Fw_s,2); sf_setlabel(ay,"y"); sf_oaxa(Fw_r,ay,2);
+    aw = sf_iaxa(Fw_s,3); sf_setlabel(aw,"w"); sf_oaxa(Fw_r,aw,3);
+
+    n = sf_n(ax)*sf_n(ay);
+    nw = sf_n(aw);
 
     /* slice management (temp files) */
-    wfl_s = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
-    wfl_r = fslice_init( ax.n* ay.n, aw.n,sizeof(float complex));
-    refl  = fslice_init( ax.n* ay.n, az.n,sizeof(float));
+    wfl_s = fslice_init(n,nw,sizeof(float complex));
+    wfl_r = fslice_init(n,nw,sizeof(float complex));
+    refl  = fslice_init(n,nz,sizeof(float));
 
     fslice_load(Fw_s,wfl_s,SF_COMPLEX);
     fslice_load(Fr,  refl, SF_FLOAT);
@@ -101,7 +110,7 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* MODELING */
     srmod_init (verb,incore,eps,dtmax,
-		ae,az,aw,ax,ay,alx,aly,
+		az,aw,ax,ay,alx,aly,
 		tmx,tmy,pmx,pmy);
     
     if(cw) { 

@@ -245,7 +245,7 @@ def f77(context):
     else:
         context.Result(0)
         return
-    if os.path.basename(F77) == 'ifc':
+    if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
     text = '''      program Test
@@ -271,7 +271,8 @@ def f90(context):
     context.Message("checking F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
-        compilers = ['f90','f95','xlf90','pgf90','ifort','ifc','pghpf']
+        compilers = ['gfortran','f90','f95','xlf90','pgf90',
+                     'ifort','ifc','pghpf']
         F90 = context.env.Detect(compilers)
         if not F90:
             for comp in compilers:
@@ -300,6 +301,8 @@ def f90(context):
     res2 = context.TryRun(main,'.f90')
     context.env['LINK'] = oldlink
     context.Result(res1 and res2[0])
+    print res1
+    print res2[0]
     if not res1 or not res2[0]:
         sys.stderr.write("No working F90 compiler detected.\n")
         del context.env['F90']

@@ -1,5 +1,4 @@
-/* 
- * 3-D SSR MVA
+/* 3-D SSR MVA
  * pcs 2005
  */
 
@@ -39,7 +38,7 @@
 #define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa amz,aw,alx,aly,amx,amy;
+static sf_axa amz,aw,alx,aly,amx,amy;
 static bool verb;
 static float eps;
 static float twoway;
@@ -65,12 +64,12 @@ void zomva_init(bool verb_,
 		float eps_,
 		bool twoway_,
 		float dtmax,
-		axa aw_          /* frequency */,
-		axa amx_         /* i-line (data/image) */,
-		axa amy_         /* x-line (data/image) */,
-		axa amz_         /* depth */,
-		axa alx_         /* i-line (slowness) */,
-		axa aly_         /* x-line (slowness) */,
+		sf_axis aw_      /* frequency */,
+		sf_axis amx_     /* i-line (data/image) */,
+		sf_axis amy_     /* x-line (data/image) */,
+		sf_axis amz_     /* depth */,
+		sf_axis alx_     /* i-line (slowness) */,
+		sf_axis aly_     /* x-line (slowness) */,
 		int tmx, int tmy /* taper size */,
 		int pmx, int pmy /* padding in the k domain */,
 		int nrmax        /* maximum number of references */,
@@ -85,12 +84,12 @@ void zomva_init(bool verb_,
     verb=verb_;
     eps = eps_;
 
-    aw = aw_;
-    amx= amx_;
-    amy= amy_;
-    amz= amz_;
-    alx= alx_;
-    aly= aly_;
+    aw = sf_nod(aw_);
+    amx= sf_nod(amx_);
+    amy= sf_nod(amy_);
+    amz= sf_nod(amz_);
+    alx= sf_nod(alx_);
+    aly= sf_nod(aly_);
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 

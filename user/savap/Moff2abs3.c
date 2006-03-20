@@ -26,9 +26,12 @@
 int main(int argc, char* argv[])
 {
     bool  verb;
-    axa  az,ah,aa,ab,ahx,ahy,ahz,aj;
+    sf_axis  az,ah,aa,ab,ahx,ahy,ahz;
     float    h, a, b, hx, hy, hz;
     int  iz,ih,ia,ib;
+    int  nz,nh,na,nb,nhx,nhy,nhz;
+    float   dh,da,db,dhx,dhy,dhz;
+    float   oh,oa,ob,ohx,ohy,ohz;
 
     sf_file Fd; /*  data =   vector offset (hx,hy,hz)-z */
     sf_file Fm; /* model = absolute offset ( h, a, b)-z */
@@ -49,46 +52,44 @@ int main(int argc, char* argv[])
     if(! sf_getint(   "nw",&nw))     nw=4;     /* spline order */
 
     Fm = sf_input ("in");
-    iaxa(Fm,&ahx,1); ahx.l="hx"; if(verb) raxa(ahx);
-    iaxa(Fm,&ahy,2); ahy.l="hy"; if(verb) raxa(ahy);
-    iaxa(Fm,&ahz,3); ahz.l="hz"; if(verb) raxa(ahz);
-    iaxa(Fm,&az, 4);  az.l="z";  if(verb) raxa(az);
+    ahx = sf_iaxa(Fm,1); sf_setlabel(ahx,"hx"); if(verb) sf_raxa(ahx);
+    ahy = sf_iaxa(Fm,2); sf_setlabel(ahy,"hy"); if(verb) sf_raxa(ahy);
+    ahz = sf_iaxa(Fm,3); sf_setlabel(ahz,"hz"); if(verb) sf_raxa(ahz);
+    az  = sf_iaxa(Fm,4); sf_setlabel(az  ,"z"); if(verb) sf_raxa(az);
+
+    nhx = sf_n(ahx); ohx = sf_o(ahx); dhx = sf_d(ahx);
+    nhy = sf_n(ahy); ohy = sf_o(ahy); dhy = sf_d(ahy);
+    nhz = sf_n(ahz); ohz = sf_o(ahz); dhz = sf_d(ahz);
+    nz  = sf_n(az);
 
     /* h = absolute offset */
-    if(!sf_getint  ("nh",&ah.n)) ah.n=ahx.n + ahx.o/ahx.d;
-    if(!sf_getfloat("oh",&ah.o)) ah.o=0;
-    if(!sf_getfloat("dh",&ah.d)) ah.d=ahx.d;
-    ah.l="h";
-    if(verb) raxa(ah);
-
+    if(!sf_getint  ("nh",&nh)) nh=nhx + ohx/dhx;
+    if(!sf_getfloat("oh",&oh)) oh=0;
+    if(!sf_getfloat("dh",&dh)) dh=dhx;
+    ah = sf_maxa(nh,oh,dh); sf_setlabel(ah,"h"); if(verb) sf_raxa(ah);
+ 
     /* a = angle in x-z plane */
-    if(!sf_getint  ("na",&aa.n)) aa.n=180;
-    if(!sf_getfloat("oa",&aa.o)) aa.o=0.;
-    if(!sf_getfloat("da",&aa.d)) aa.d=2.;
-    aa.l ="a";
-    if(ahz.n==1) aa.n=1;
-    if(verb) raxa(aa);
+    if(!sf_getint  ("na",&na)) na=180; if(nhz==1) na=1;
+    if(!sf_getfloat("oa",&oa)) oa=0.;
+    if(!sf_getfloat("da",&da)) da=2.;
+    aa = sf_maxa(na,oa,da); sf_setlabel(aa,"a"); if(verb) sf_raxa(aa);
 
     /* b = angle in x-y plane */
-    if(!sf_getint  ("nb",&ab.n)) ab.n=180;
-    if(!sf_getfloat("ob",&ab.o)) ab.o=0.;
-    if(!sf_getfloat("db",&ab.d)) ab.d=2.;
-    ab.l ="b";
-    if(ahy.n==1) ab.n=1;
-    if(verb) raxa(ab);
-
-    aj.n=1; aj.o=0; aj.d=1.; aj.l="";
+    if(!sf_getint  ("nb",&nb)) nb=180; if(nhy==1) nb=1;
+    if(!sf_getfloat("ob",&ob)) ob=0.;
+    if(!sf_getfloat("db",&db)) db=2.;
+    ab = sf_maxa(nb,ob,db); sf_setlabel(ab,"b"); if(verb) sf_raxa(ab);
 
     Fd = sf_output("out");
-    oaxa(Fd,&ah,1);
-    oaxa(Fd,&ab,2);
-    oaxa(Fd,&aa,3);
-    oaxa(Fd,&az,4);
-    oaxa(Fd,&aj,5);
+    sf_oaxa(Fd,ah,1);
+    sf_oaxa(Fd,ab,2);
+    sf_oaxa(Fd,aa,3);
+    sf_oaxa(Fd,az,4);
+    sf_putint(Fd,"n5",1);
 
 /*------------------------------------------------------------*/
-    nm = ahx.n*ahy.n*ahz.n;  /* model size */
-    nd =  ah.n* aa.n* ab.n;  /*  data size */
+    nm = nhx*nhy*nhz;  /* model size */
+    nd =  nh* na* nb;  /*  data size */
     sf_warning("nm=%d nd=%d",nm,nd);
 
     map = sf_floatalloc2(3,nd); /* mapping */
@@ -97,16 +98,16 @@ int main(int argc, char* argv[])
     dat = sf_floatalloc(nd); /*  data vector */
 
     id=0;
-    for(ia=0;ia<aa.n;ia++) {
-	a = aa.o + ia * aa.d;
+    for(ia=0;ia<na;ia++) {
+	a = oa + ia * da;
 	a*= SF_PI/180;
 
-	for(ib=0;ib<ab.n;ib++) {
-	    b = ab.o + ib * ab.d;
+	for(ib=0;ib<nb;ib++) {
+	    b = ob + ib * db;
 	    b*= SF_PI/180;
 	    	    
-	    for(ih=0;ih<ah.n;ih++) {
-		h = ah.o + ih * ah.d;
+	    for(ih=0;ih<nh;ih++) {
+		h = oh + ih * dh;
 		
 		hx = h * cos(a) * cos(b);
 		hy = h * cos(a) * sin(b);
@@ -126,14 +127,14 @@ int main(int argc, char* argv[])
 		      2*nd); /* padding */
 
     sf_int3_init( map, 
-		  ahx.o, ahy.o, ahz.o,
-		  ahx.d, ahy.d, ahz.d,
-		  ahx.n, ahy.n, ahz.n,
+		  ohx, ohy, ohz,
+		  dhx, dhy, dhz,
+		  nhx, nhy, nhz,
 		  sf_spline_int, nw, 
 		  nd);
 
-    for(iz=0;iz<az.n;iz++) {
-	sf_warning("iz=%d of %d",iz+1,az.n);
+    for(iz=0;iz<nz;iz++) {
+	sf_warning("iz=%d of %d",iz+1,nz);
 
 	sf_floatread (mod,nm,Fm);
 

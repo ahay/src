@@ -60,13 +60,13 @@
 
 #define MM(i,a) SF_MIN(SF_MAX(i,0),a.n-1)
 
-static axa amx,amy,amz;
-static axa acx,acy,acz;
+static sf_axa amx,amy,amz;
+static sf_axa acx,acy,acz;
 static int jcx,jcy,jcz;
-static axa ahx,ahy,ahz;
-static axa aht;
-static axa ahh,aha,ahb;
-static axa aw;
+static sf_axa ahx,ahy,ahz;
+static sf_axa aht;
+static sf_axa ahh,aha,ahb;
+static sf_axa aw;
 
 static float complex  **tt; /* phase shift for time offset */
 static float complex ***qs,***qr;
@@ -97,9 +97,9 @@ void img2store( int imz,
 }
 
 /*------------------------------------------------------------*/
-void img2o_init(axa amx_,
-		axa amy_,
-		axa amz_,
+void img2o_init(sf_axis amx_,
+		sf_axis amy_,
+		sf_axis amz_,
 		int jcx_,
 		int jcy_,
 		int jcz_,
@@ -110,9 +110,9 @@ void img2o_init(axa amx_,
     int imx,imy,imz;
     int icx,icy,icz;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
     jcx = jcx_; acx.n = amx.n / jcx;
     jcy = jcy_; acy.n = amy.n / jcy;
@@ -133,15 +133,15 @@ void img2o_init(axa amx_,
     CLOOP( qo[icz][icy][icx] = 0.0; );
 }
 
-void img2x_init(axa amx_,
-		axa amy_,
-		axa amz_,
+void img2x_init(sf_axis amx_,
+		sf_axis amy_,
+		sf_axis amz_,
 		int jcx_,
 		int jcy_,
 		int jcz_,
-		axa ahx_,
-		axa ahy_,
-		axa ahz_,
+		sf_axis ahx_,
+		sf_axis ahy_,
+		sf_axis ahz_,
 		fslice imag
     )
 /*< initialize x-offset imaging condition >*/
@@ -150,17 +150,17 @@ void img2x_init(axa amx_,
     int icx,icy,icz;
     int ihx,ihy,ihz;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
     jcx = jcx_; acx.n = amx.n / jcx;
     jcy = jcy_; acy.n = amy.n / jcy;
     jcz = jcz_; acz.n = amz.n / jcz;
     
-    ahx = ahx_;
-    ahy = ahy_;
-    ahz = ahz_;
+    ahx = sf_nod(ahx_);
+    ahy = sf_nod(ahy_);
+    ahz = sf_nod(ahz_);
 
     LOx = floor(ahx.o/ahx.d); HIx = LOx + ahx.n;
     LOy = floor(ahy.o/ahy.d); HIy = LOy + ahy.n;
@@ -185,14 +185,14 @@ void img2x_init(axa amx_,
 	);
 }
 
-void img2t_init(axa amx_,
-		axa amy_,
-		axa amz_,
+void img2t_init(sf_axis amx_,
+		sf_axis amy_,
+		sf_axis amz_,
 		int jcx_,
 		int jcy_,
 		int jcz_,
-		axa aht_,
-		axa aw_,
+		sf_axis aht_,
+		sf_axis aw_,
 		fslice imag
     )
 /*< initialize t-offset imaging condition >*/
@@ -202,16 +202,16 @@ void img2t_init(axa amx_,
     int  iht,iw;
     float ht, w;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
     jcx = jcx_; acx.n = amx.n / jcx;
     jcy = jcy_; acy.n = amy.n / jcy;
     jcz = jcz_; acz.n = amz.n / jcz;
     
-    aht = aht_;
-    aw  = aw_;
+    aht = sf_nod(aht_);
+    aw  = sf_nod(aw_);
 
     /* allocate wavefield storage */
     qs = sf_complexalloc3(amx.n,amy.n,amz.n);
@@ -244,16 +244,16 @@ void img2t_init(axa amx_,
     }
 }
 
-void img2h_init(axa amx_,
-		axa amy_,
-		axa amz_,
+void img2h_init(sf_axis amx_,
+		sf_axis amy_,
+		sf_axis amz_,
 		int jcx_,
 		int jcy_,
 		int jcz_,
-		axa ahh_,
-		axa aha_,
-		axa ahb_,
-		axa aw_,
+		sf_axis ahh_,
+		sf_axis aha_,
+		sf_axis ahb_,
+		sf_axis aw_,
 		fslice imag,
 		float vpvs_
     )
@@ -263,18 +263,18 @@ void img2h_init(axa amx_,
     int icx,icy,icz;
     int  ihh;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
     jcx = jcx_; acx.n = amx.n / jcx;
     jcy = jcy_; acy.n = amy.n / jcy;
     jcz = jcz_; acz.n = amz.n / jcz;
     
-    ahh = ahh_;
-    aha = aha_;
-    ahb = ahb_;
-    aw  = aw_;
+    ahh = sf_nod(ahh_);
+    aha = sf_nod(aha_);
+    ahb = sf_nod(ahb_);
+    aw  = sf_nod(aw_);
 
     vpvs = vpvs_;
 

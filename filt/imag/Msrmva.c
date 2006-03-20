@@ -1,5 +1,5 @@
-/* 
- * 3-D S/R WEMVA with extended split-step
+/* 3-D S/R WEMVA with extended split-step.
+ *
  * pcs 2005
  */
 
@@ -36,9 +36,11 @@ int main (int argc, char *argv[])
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
 
-    axa amx,amy,amz;
-    axa alx,aly;
-    axa aw,ae;
+    sf_axis amx,amy,amz;
+    sf_axis alx,aly;
+    sf_axis aw,ae;
+
+    int n,nz,nw;
 
     /* I/O files */
     sf_file Bw_s=NULL,Bw_r=NULL; /* wavefield file W ( nx, ny,nw) */
@@ -71,10 +73,14 @@ int main (int argc, char *argv[])
     /* SLOWNESS */
 
     Bs = sf_input("slo");
-    iaxa(Bs,&alx,1); alx.l="lx";
-    iaxa(Bs,&aly,2); aly.l="ly";
-    iaxa(Bs,&amz,3); amz.l="mz";
-    Bslow = fslice_init(alx.n*aly.n, amz.n, sizeof(float));
+    alx = sf_iaxa(Bs,1); sf_setlabel(alx,"lx");
+    aly = sf_iaxa(Bs,2); sf_setlabel(aly,"ly");
+    amz = sf_iaxa(Bs,3); sf_setlabel(amz,"mz");
+
+    n = sf_n(alx)*sf_n(aly);
+    nz = sf_n(amz);
+
+    Bslow = fslice_init(n, nz, sizeof(float));
     fslice_load(Bs,Bslow,SF_FLOAT);
 
     /*------------------------------------------------------------*/    
@@ -86,14 +92,17 @@ int main (int argc, char *argv[])
     if (SF_COMPLEX != sf_gettype(Bw_s)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Bw_r)) sf_error("Need complex receiver data");
 
-    iaxa(Bw_s,&amx,1); amx.l="mx";
-    iaxa(Bw_s,&amy,2); amy.l="my";
-    iaxa(Bw_s,&amz,3); amz.l="mz";
-    iaxa(Bw_s,&aw,4);  aw.l = "w";
-    iaxa(Bw_s,&ae,5);  ae.l = "e";
+    amx = sf_iaxa(Bw_s,1); sf_setlabel(amx,"mx");
+    amy = sf_iaxa(Bw_s,2); sf_setlabel(amy,"my");
+    amz = sf_iaxa(Bw_s,3); sf_setlabel(amz,"mz");
+    aw  = sf_iaxa(Bw_s,4); sf_setlabel(aw, "w" );
+    ae  = sf_iaxa(Bw_s,5); sf_setlabel(ae, "e" );
 
-    Bwfls = fslice_init( amx.n*amy.n,amz.n*aw.n,sizeof(float complex));
-    Bwflr = fslice_init( amx.n*amy.n,amz.n*aw.n,sizeof(float complex));
+    n = sf_n(amx)*sf_n(amy);
+    nw = sf_n(aw);
+
+    Bwfls = fslice_init( n,nz*nw,sizeof(float complex));
+    Bwflr = fslice_init( n,nz*nw,sizeof(float complex));
 
     fslice_load(Bw_s,Bwfls,SF_COMPLEX);
     fslice_load(Bw_r,Bwflr,SF_COMPLEX);
@@ -102,31 +111,32 @@ int main (int argc, char *argv[])
 
     if(inv) {
 	Pi = sf_input ( "in");
-	if (SF_COMPLEX !=sf_gettype(Pi)) sf_error("Need complex image perturbation");
+	if (SF_COMPLEX !=sf_gettype(Pi)) 
+	    sf_error("Need complex image perturbation");
 
 	Ps = sf_output("out"); sf_settype(Ps,SF_COMPLEX);
-	oaxa(Ps,&amx,1);
-	oaxa(Ps,&amy,2);
-	oaxa(Ps,&amz,3);
+	sf_oaxa(Ps,amx,1);
+	sf_oaxa(Ps,amy,2);
+	sf_oaxa(Ps,amz,3);
 
-	Pslow = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
-	
-	Pimag = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
+	Pslow = fslice_init(n,nz, sizeof(float complex));	
+	Pimag = fslice_init(n,nz, sizeof(float complex));
 	fslice_load(Pi,Pimag,SF_COMPLEX);
     } else {
 	
 	Ps = sf_input("in");
-	if (SF_COMPLEX !=sf_gettype(Ps)) sf_error("Need complex slowness perturbation");
+	if (SF_COMPLEX !=sf_gettype(Ps)) 
+	    sf_error("Need complex slowness perturbation");
 	
 	Pi = sf_output("out"); sf_settype(Pi,SF_COMPLEX);
-	oaxa(Pi,&amx,1);
-	oaxa(Pi,&amy,2);
-	oaxa(Pi,&amz,3);
+	sf_oaxa(Pi,amx,1);
+	sf_oaxa(Pi,amy,2);
+	sf_oaxa(Pi,amz,3);
 	
-	Pslow = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
+	Pslow = fslice_init(n,nz, sizeof(float complex));
 	fslice_load(Ps,Pslow,SF_COMPLEX);
 	
-	Pimag = fslice_init(amx.n*amy.n,amz.n, sizeof(float complex));
+	Pimag = fslice_init(n,nz, sizeof(float complex));
     }
 
     /*------------------------------------------------------------*/

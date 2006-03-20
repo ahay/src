@@ -26,16 +26,18 @@
 int main(int argc, char* argv[])
 {
     bool  verb;
-    axa  az,ah,ahx,ahy,ahz,aj;
+    sf_axis  az,ah,ahx,ahy,ahz;
     int  iz,   ihx,ihy,ihz;
+    int  nz,   nhx,nhy,nhz;
     float       hx, hy, hz;
+    float oh,dh,ohx,dhx,ohy,dhy,ohz,dhz;
 
     sf_file Fd; /*  data =   vector offset (hx,hy,hz)-z */
     sf_file Fm; /* model = absolute offset     h     -z */
 
     int nw;    /* spline order */
     int nd,id; /*  data size (nd=nhx*nhy*nhz) */
-    int nm;    /* model size (nm=nh) */
+    int nh;    /* model size (nm=nh) */
 
     float *dat=NULL;
     float *mod=NULL;
@@ -54,35 +56,36 @@ int main(int argc, char* argv[])
     if(! sf_getint(   "nw",&nw))     nw=4;     /* spline order */
 
     Fd = sf_input ("in");
-    iaxa(Fd,&ahx,1); ahx.l="hx"; if(verb) raxa(ahx);
-    iaxa(Fd,&ahy,2); ahy.l="hy"; if(verb) raxa(ahy);
-    iaxa(Fd,&ahz,3); ahz.l="hz"; if(verb) raxa(ahz);
-    iaxa(Fd,&az, 4);  az.l="z";  if(verb) raxa(az);
+    ahx = sf_iaxa(Fd,1); sf_setlabel(ahx,"hx"); if(verb) sf_raxa(ahx);
+    ahy = sf_iaxa(Fd,2); sf_setlabel(ahy,"hy"); if(verb) sf_raxa(ahy);
+    ahz = sf_iaxa(Fd,3); sf_setlabel(ahz,"hz"); if(verb) sf_raxa(ahz);
+    az  = sf_iaxa(Fd,4); sf_setlabel(az,"z");   if(verb) sf_raxa(az);
 
-    if(!sf_getint  ("nh",&ah.n)) ah.n=ahx.n + ahx.o/ahx.d;
-    if(!sf_getfloat("oh",&ah.o)) ah.o=0;
-    if(!sf_getfloat("dh",&ah.d)) ah.d=ahx.d;
-    ah.l="h";
-    if(verb) raxa(ah);
+    nhx = sf_n(ahx); ohx = sf_o(ahx); dhx = sf_d(ahx);
+    nhy = sf_n(ahy); ohy = sf_o(ahy); dhy = sf_d(ahy);
+    nhz = sf_n(ahz); ohz = sf_o(ahz); dhz = sf_d(ahz);
+    nz = sf_n(az);
 
-    aj.n=1; aj.o=0; aj.d=1.; aj.l="";
+    if(!sf_getint  ("nh",&nh)) nh=nhx + ohx/dhx;
+    if(!sf_getfloat("oh",&oh)) oh=0;
+    if(!sf_getfloat("dh",&dh)) dh=dhx;
+    ah = sf_maxa(nh,oh,dh); sf_setlabel(ah,"h"); if(verb) sf_raxa(ah);
 
     Fm = sf_output("out");
-    oaxa(Fm,&ah,1);
-    oaxa(Fm,&az,2);
-    oaxa(Fm,&aj,3);
-    oaxa(Fm,&aj,4);
+    sf_oaxa(Fm,ah,1);
+    sf_oaxa(Fm,az,2);
+    sf_putint(Fm,"n3",1);
+    sf_putint(Fm,"n4",1);
 
 /*------------------------------------------------------------*/
-    nm = ah.n;               /* model size */
-    nd = ahx.n*ahy.n*ahz.n;  /*  data size */
+    nd = nhx*nhy*nhz;  /*  data size */
 
     map = sf_floatalloc(nd); /* mapping */
 
-    mod = sf_floatalloc(nm); /* model vector */
+    mod = sf_floatalloc(nh); /* model vector */
     dat = sf_floatalloc(nd); /*  data vector */
 
-    mwt = sf_floatalloc(nm); /* model weight */
+    mwt = sf_floatalloc(nh); /* model weight */
     dwt = sf_floatalloc(nd); /*  data weight */
 
 
@@ -90,15 +93,15 @@ int main(int argc, char* argv[])
 		      nd,    /* temporary storage */
 		      2*nd); /* padding */
 
-    for(ihz=0;ihz<ahz.n;ihz++) {
-	hz = ahz.o + ihz * ahz.d;         hz*=hz;
-	for(ihy=0;ihy<ahy.n;ihy++) {
-	    hy = ahy.o + ihy * ahy.d;     hy*=hy;
-	    for(ihx=0;ihx<ahx.n;ihx++) {
-		hx = ahx.o + ihx * ahx.d; hx*=hx;
+    for(ihz=0;ihz<nhz;ihz++) {
+	hz = ohz + ihz * dhz;         hz*=hz;
+	for(ihy=0;ihy<nhy;ihy++) {
+	    hy = ohy + ihy * dhy;     hy*=hy;
+	    for(ihx=0;ihx<nhx;ihx++) {
+		hx = ohx + ihx * dhx; hx*=hx;
 		
-		i = ihz * ahx.n*ahy.n + 
-		    ihy * ahx.n       +
+		i = ihz * nhx*nhy + 
+		    ihy * nhx     +
 		    ihx;
 		
 		map[i] = sqrtf(hx+hy+hz);
@@ -107,7 +110,7 @@ int main(int argc, char* argv[])
     }
 
     sf_int1_init( map, 
-		  ah.o, ah.d, ah.n, 
+		  oh, dh, nh, 
 		  sf_spline_int, 
 		  nw, 
 		  nd);
@@ -116,26 +119,21 @@ int main(int argc, char* argv[])
 	dwt[id]=1;
     }
     sf_prefilter_apply(nd,dwt);  
-/*    sf_int1_lop(true,false,nm,nd,mwt,dwt);*/
 
-    for(iz=0;iz<az.n;iz++) {
-	sf_warning("iz=%d of %d",iz+1,az.n);
+    for(iz=0;iz<nz;iz++) {
+	sf_warning("iz=%d of %d",iz+1,nz);
 
 	sf_floatread(dat,nd,Fd);
 
 	sf_prefilter_apply(nd,dat);  
 	sf_int1_lop( true,   /* adj */
 		     false,  /* add */
-		     nm,     /* n model */
+		     nh,     /* n model */
 		     nd,     /* n data */
 		     mod,   
 		     dat);
 
-/*	for(im=0;im<nm;im++) {*/
-/*	    if(mwt[im] >0) mod[im] /= mwt[im];*/
-/*	}*/
-
-	sf_floatwrite(mod,nm,Fm);
+	sf_floatwrite(mod,nh,Fm);
     }
 
 /*------------------------------------------------------------*/

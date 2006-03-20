@@ -1,6 +1,4 @@
-/* 
- * Maps a cube to a list, given a threshold (clip value)
- */
+/* Maps a cube to a list, given a threshold (clip value). */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -32,13 +30,15 @@ int main(int argc, char* argv[])
     sf_file Fc; /* cube file */
     sf_file Fl; /* list file */
 
-    axa   ax,ay,az; 
-    axa   aa;       /* elements in the list */
-    axa   aj;
+    sf_axis   ax,ay,az;
+    sf_axis   aa;
     int   ix,iy,iz;
+    int   nx,ny,nz,nj,na;
     int   nk=0,jk;
     
     float **cube;
+    float dx,dy,dz;
+    float x0,y0,z0;
 
     FILE* tfile;
     char* tname;
@@ -55,46 +55,50 @@ int main(int argc, char* argv[])
     Fl = sf_output("out"); /* output list */
     
     /* read axes*/
-    iaxa(Fc,&az,1); az.l="z";
-    iaxa(Fc,&ax,2); ax.l="x";
-    iaxa(Fc,&ay,3); ay.l="y";
+    az=sf_iaxa(Fc,1); sf_setlabel(az,"z");
+    ax=sf_iaxa(Fc,2); sf_setlabel(ax,"x");
+    ay=sf_iaxa(Fc,3); sf_setlabel(ay,"y");
 
-    aa.n=0; aa.o=0; aa.d=1; aa.l=" ";
-    if(ay.n>1) {
+    nz=sf_n(az); z0=sf_o(az); dz=sf_d(az); 
+    nx=sf_n(ax); x0=sf_o(ax); dx=sf_d(ax); 
+    ny=sf_n(ay); y0=sf_o(ay); dy=sf_d(ay); 
+
+    na=0; 
+    if(ny>1) {
 	if(verb) sf_warning("initiating 3D points");
-	aj.n=4;aj.o=0;aj.d=1;aj.l=" ";
+	nj=4;
     } else {
 	if(verb) sf_warning("initiating 2D points");
-	aj.n=3;aj.o=0;aj.d=1;aj.l=" ";
+	nj=3;
     }
     /*------------------------------------------------------------*/
 
-    cube = sf_floatalloc2(az.n,ax.n);
+    cube = sf_floatalloc2(nz,nx);
 
     tfile = sf_tempfile(&(tname), "w+b");
 
-    for (iy=0;iy<ay.n;iy++) {
+    for (iy=0;iy<ny;iy++) {
 /*	if(verb) sf_warning("iy=%d",iy);*/
 	
-	sf_floatread(cube[0],az.n*ax.n,Fc);
+	sf_floatread(cube[0],nz*nx,Fc);
 	
 	nk=0;
-	for (ix=0; ix<ax.n; ix++) {
-	    for (iz=0; iz<az.n; iz++) {
+	for (ix=0; ix<nx; ix++) {
+	    for (iz=0; iz<nz; iz++) {
 		if( fabs(cube[ix][iz]) > clip) {
 		    nk++;
 		}
 	    }
 	}
 
-	if(ay.n>1) {
+	if(ny>1) {
 	    jk=0;
-	    for (ix=0; ix<ax.n; ix++) {
-		for (iz=0; iz<az.n; iz++) {
+	    for (ix=0; ix<nx; ix++) {
+		for (iz=0; iz<nz; iz++) {
 		    if( fabs(cube[ix][iz]) > clip) {
-			t3[0] = ax.o + ix * ax.d;
-			t3[1] = ay.o + iy * ay.d;
-			t3[2] = az.o + iz * az.d;
+			t3[0] = x0 + ix * dx;
+			t3[1] = y0 + iy * dy;
+			t3[2] = z0 + iz * dz;
 			t3[3] = cube[ix][iz];
 			
 			fseeko(tfile,jk*4*sizeof(float),SEEK_SET);
@@ -105,11 +109,11 @@ int main(int argc, char* argv[])
 	    }
 	} else {
 	    jk=0;
-	    for (ix=0; ix<ax.n; ix++) {
-		for (iz=0; iz<az.n; iz++) {
+	    for (ix=0; ix<nx; ix++) {
+		for (iz=0; iz<nz; iz++) {
 		    if( fabs(cube[ix][iz]) > clip) {
-			t2[0] = ax.o + ix * ax.d;
-			t2[1] = az.o + iz * az.d;
+			t2[0] = x0 + ix * dx;
+			t2[1] = z0 + iz * dz;
 			t2[2] = cube[ix][iz];
 
 			fseeko(tfile,jk*3*sizeof(float),SEEK_SET);
@@ -118,17 +122,16 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-	} /* else ay.n=1 */
+	} /* else ny=1 */
 
-	aa.n+=nk;
-	if(verb) raxa(aa);
+	na += nk;
     } /* iy */
     
     /* output axes */
-    oaxa(Fl,&aj,1); if(verb) raxa(aj);
-    oaxa(Fl,&aa,2); if(verb) raxa(aa);
+    aa = sf_maxa(nj,0,1); sf_oaxa(Fl,aa,1); if(verb) sf_raxa(aa); free(aa);
+    aa = sf_maxa(na,0,1); sf_oaxa(Fl,aa,2); if(verb) sf_raxa(aa); free(aa);
 
-    if( ay.n>1) {
+    if( ny>1) {
 	for( jk=0; jk<nk; jk++) {
 	    fseeko(tfile,jk*4*sizeof(float),SEEK_SET);
 	    fread(    t3,     sizeof(float),4,tfile);

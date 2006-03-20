@@ -17,9 +17,9 @@ public:
     int  size();         // return cube size
     int  esize();        // return esize
 
-    void getax(int,axa*);// get an axis from CUB
-    void putax(int,axa*);// put an axis in   CUB
-    void setup(int,int); // setup cube dimensions
+    sf_axis getax(int);      // get an axis from CUB
+    void putax(int,sf_axis); // put an axis in   CUB
+    void setup(int,int);     // setup cube dimensions
 
     int   *n; // n for cube
     float *o; // o for cube

@@ -19,14 +19,12 @@
 
 #include <rsf.h>
 
-#define INDEX(x,a) 0.5+(x-a.o)/a.d;
-
 int main (int argc, char *argv[])
 {
-    axa aw;
-    axa arx,asx,ax;
-    axa ary,asy,ay;
-    axa ae;
+    sf_axis aw;
+    sf_axis arx,asx,ax;
+    sf_axis ary,asy,ay;
+    sf_axis ae;
 
     sf_file Fs;  /* source   file sou[nw]         */
     sf_file Fr;  /* receiver file rec[nw][nrx][nry][nsx][nsy] */
@@ -38,6 +36,8 @@ int main (int argc, char *argv[])
     float complex ***rw;
     float complex ***sw;
     int   isx,isy,irx,iry,ix,iy,iw;
+    int   nsx,nsy,nrx,nry,nx,ny,nw;
+    float ox,dx,oy,dy;
     float  sx, sy, rx, ry,xx,yy;
 
 /*------------------------------------------------------------*/
@@ -49,103 +49,98 @@ int main (int argc, char *argv[])
     Fsw= sf_output("swf"); sf_settype(Fsw,SF_COMPLEX);
     Frw= sf_output("out"); sf_settype(Frw,SF_COMPLEX);
     
-    if (!sf_getint  ("nx",&ax.n)) sf_error ("Need nx=");
-    if (!sf_getfloat("dx",&ax.d)) sf_error ("Need dx=");
-    if (!sf_getfloat("ox",&ax.o)) sf_error ("Need ox=");
-    ax.l="x";
+    if (!sf_getint  ("nx",&nx)) sf_error ("Need nx=");
+    if (!sf_getfloat("dx",&dx)) sf_error ("Need dx=");
+    if (!sf_getfloat("ox",&ox)) sf_error ("Need ox=");
+    ax = sf_maxa(nx,ox,dx); sf_setlabel(ax,"x");
 
-    if (!sf_getint  ("ny",&ay.n)) ay.n=1;
-    if (!sf_getfloat("dy",&ay.d)) ay.o=0;
-    if (!sf_getfloat("oy",&ay.o)) ay.d=1;
-    ay.l="y";
+    if (!sf_getint  ("ny",&ny)) ny=1;
+    if (!sf_getfloat("dy",&dy)) dy=1;
+    if (!sf_getfloat("oy",&oy)) oy=1;
+    ay = sf_maxa(ny,oy,dy); sf_setlabel(ay,"y");
 
-    iaxa(Fr,&aw ,1);  aw.l= "w";
-    iaxa(Fr,&arx,2); arx.l="rx";
-    iaxa(Fr,&ary,3); ary.l="ry";
-    iaxa(Fr,&asx,4); asx.l="sx";
-    iaxa(Fr,&asy,5); asy.l="sy";
+    aw  = sf_iaxa(Fr,1); nw =sf_n(aw) ; sf_setlabel(aw, "w");
+    arx = sf_iaxa(Fr,2); nrx=sf_n(arx); sf_setlabel(arx,"rx");
+    ary = sf_iaxa(Fr,3); nry=sf_n(ary); sf_setlabel(ary,"ry");
+    asx = sf_iaxa(Fr,4); nsx=sf_n(asx); sf_setlabel(asx,"sx");
+    asy = sf_iaxa(Fr,5); nsy=sf_n(asy); sf_setlabel(asy,"sy");
 
     /* experiments axis */
-    ae.o=0;
-    ae.d=1;
-    ae.n=asx.n*asy.n;
-    ae.l="e";
+    ae = sf_maxa(nsx*nsy,0,1); sf_setlabel(ae,"e");
 
-    oaxa(Fsw, &aw,1); oaxa(Frw, &aw,1);
-    oaxa(Fsw, &ax,2); oaxa(Frw, &ax,2);
-    oaxa(Fsw, &ay,3); oaxa(Frw, &ay,3);
-    oaxa(Fsw, &ae,4); oaxa(Frw, &ae,4);
-
-    sf_close();
+    sf_oaxa(Fsw, aw,1); sf_oaxa(Frw, aw,1);
+    sf_oaxa(Fsw, ax,2); sf_oaxa(Frw, ax,2);
+    sf_oaxa(Fsw, ay,3); sf_oaxa(Frw, ay,3);
+    sf_oaxa(Fsw, ae,4); sf_oaxa(Frw, ae,4);
 
 /*------------------------------------------------------------*/
 
-    ss = sf_complexalloc (aw.n);
-    rr = sf_complexalloc (aw.n);
-    sw = sf_complexalloc3(aw.n,ax.n,ay.n);
-    rw = sf_complexalloc3(aw.n,ax.n,ay.n);
+    ss = sf_complexalloc (nw);
+    rr = sf_complexalloc (nw);
+    sw = sf_complexalloc3(nw,nx,ny);
+    rw = sf_complexalloc3(nw,nx,ny);
 
     /* SOURCE wavefield */
-    sf_complexread(ss,aw.n,Fs);
+    sf_complexread(ss,nw,Fs);
 
-    for( isy=0;isy<asy.n;isy++) {             
-	sy = asy.o + isy * asy.d;
-	for( isx=0;isx<asx.n;isx++) {         
-	    sx = asx.o + isx * asx.d;
+    for( isy=0;isy<nsy;isy++) {             
+	sy = sf_o(asy) + isy * sf_d(asy);
+	for( isx=0;isx<nsx;isx++) {         
+	    sx = sf_o(asx) + isx * sf_d(asx);
 	    
-	    for(iy=0;iy<ay.n;iy++) {
-		for(ix=0;ix<ax.n;ix++) {
-		    for(iw=0;iw<aw.n;iw++) {
+	    for(iy=0;iy<ny;iy++) {
+		for(ix=0;ix<nx;ix++) {
+		    for(iw=0;iw<nw;iw++) {
 			sw[iy][ix][iw] = 0.;
 		    }
 		}
 	    }
 	    
-	    yy = sy; iy = INDEX(yy,ay);
-	    xx = sx; ix = INDEX(xx,ax);
-	    if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
+	    yy = sy; iy = 0.5+(yy-oy)/dy;
+	    xx = sx; ix = 0.5+(xx-ox)/dx;
+	    if(iy>=0 && iy<ny && ix>=0 && ix<nx) {
 		
-		for( iw=0;iw<aw.n;iw++) {
+		for( iw=0;iw<nw;iw++) {
 		    sw[iy][ix][iw] = ss[iw];
 		}
 	    }
 	    
-	    sf_complexwrite(sw[0][0],ax.n*ay.n*aw.n,Fsw);
+	    sf_complexwrite(sw[0][0],nx*ny*nw,Fsw);
 	}
     }
 
     /* RECEIVER wavefield */
-    for( isy=0;isy<asy.n;isy++) {	      
-	sy = asy.o + isy * asy.d;
-	for( isx=0;isx<asx.n;isx++) {         
-	    sx = asx.o + isx * asx.d;
+    for( isy=0;isy<nsy;isy++) {	      
+	sy = sf_o(asy) + isy * sf_d(asy);
+	for( isx=0;isx<nsx;isx++) {         
+	    sx = sf_o(asx) + isx * sf_d(asx);
 	    
-	    for(iy=0;iy<ay.n;iy++) {
-		for(ix=0;ix<ax.n;ix++) {
-		    for(iw=0;iw<aw.n;iw++) {
+	    for(iy=0;iy<ny;iy++) {
+		for(ix=0;ix<nx;ix++) {
+		    for(iw=0;iw<nw;iw++) {
 			rw[iy][ix][iw] = 0.;
 		    }
 		}
 	    }
 	    
-	    for( iry=0;iry<ary.n;iry++) {     
-		ry = ary.o + iry * ary.d;
-		for( irx=0;irx<arx.n;irx++) { 
-		    rx = arx.o + irx * arx.d;
+	    for( iry=0;iry<nry;iry++) {     
+		ry = sf_o(ary) + iry * sf_d(ary);
+		for( irx=0;irx<nrx;irx++) { 
+		    rx = sf_o(arx) + irx * sf_d(arx);
 
-		    sf_complexread(rr,aw.n,Fr);
+		    sf_complexread(rr,nw,Fr);
 		    
-		    yy = sy + ry; iy = INDEX(yy,ay);
-		    xx = sx + rx; ix = INDEX(xx,ax);
+		    yy = sy + ry; iy = 0.5+(yy-oy)/dy;
+		    xx = sx + rx; ix = 0.5+(xx-ox)/dx;
 		    
-		    if(iy>=0 && iy<ay.n && ix>=0 && ix<ax.n) {
-			for( iw=0;iw<aw.n;iw++) {
+		    if(iy>=0 && iy<ny && ix>=0 && ix<nx) {
+			for( iw=0;iw<nw;iw++) {
 			    rw[iy][ix][iw] = rr[iw];
 			}
 		    }
 		}
 	    }
-	    sf_complexwrite(rw[0][0],ax.n*ay.n*aw.n,Frw);
+	    sf_complexwrite(rw[0][0],nx*ny*nw,Frw);
 	}
     }
 /*------------------------------------------------------------*/

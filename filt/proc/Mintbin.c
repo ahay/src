@@ -25,7 +25,7 @@
 int main (int argc, char* argv[])
 {
     int id, nk, nd, nt, nx, ny, n2, xkey, ykey, *hdr, *x, *y;
-    int xmin, xmax, ymin, ymax, i, ix, iy, **map, esize;
+    int xmin, xmax, ymin, ymax, i, ix, iy, **map;
     off_t pos;
     char *buf, *zero, *xk, *yk, *header;
     sf_file in, out, head, mask;
@@ -126,13 +126,8 @@ int main (int argc, char* argv[])
 	    map[iy-ymin][ix-xmin] = id;
 	}
     }
-
-    if (!sf_histint(in,"esize",&esize)) {
-	esize=4;
-    } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
-    }
-    nt *= esize;
+   
+    nt *= sf_esize(in);
 	    
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);

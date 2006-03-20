@@ -3,22 +3,22 @@
 
 #include "hwt2d.h"
 
-static axa az,ax;
-static axa at,ag;
+static sf_axa az,ax;
+static sf_axa at,ag;
 static float **vv;
 /*------------------------------------------------------------*/
 
 void hwt2d_init(float** vv_in    /* velocity */,
-		axa     az_in    /* z axis   */,
-		axa     ax_in    /* x axis   */,
-		axa     at_in    /* t axis   */,
-		axa     ag_in    /* g axis   */)
+		sf_axis     az_in    /* z axis   */,
+		sf_axis     ax_in    /* x axis   */,
+		sf_axis     at_in    /* t axis   */,
+		sf_axis     ag_in    /* g axis   */)
 /*< initialize hwt2d >*/
 {
-    az = az_in;
-    ax = ax_in;
-    at = at_in;
-    ag = ag_in;
+    az = sf_nod(az_in);
+    ax = sf_nod(ax_in);
+    at = sf_nod(at_in);
+    ag = sf_nod(ag_in);
 
     vv = vv_in;
 }

@@ -24,23 +24,23 @@
 
 #include "c2r.h"
 
-static axa ax,az,ag,at;
+static sf_axa ax,az,ag,at;
 static bool verb;
 
 /*------------------------------------------------------------*/
 
 void c2r_init(
-    axa ax_,
-    axa az_,
-    axa ag_,
-    axa at_,
+    sf_axis ax_,
+    sf_axis az_,
+    sf_axis ag_,
+    sf_axis at_,
     bool verb_)
 /*< initialize >*/
 {
-    ax = ax_;
-    az = az_;
-    ag = ag_;
-    at = at_;
+    ax = sf_nod(ax_);
+    az = sf_nod(az_);
+    ag = sf_nod(ag_);
+    at = sf_nod(at_);
 
     verb = verb_;
 }

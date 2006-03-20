@@ -56,10 +56,10 @@
                          (ihy-LOy)* ahx.n        + \
                          (ihx-LOx);
 
-static axa amx,amy,amz;
-static axa ahx,ahy,ahz;
-static axa aht;
-static axa aw;
+static sf_axa amx,amy,amz;
+static sf_axa ahx,ahy,ahz;
+static sf_axa aht;
+static sf_axa aw;
 
 static float complex  **tt; /* phase shift for time offset */
 static float complex ***qs,***qr;
@@ -86,18 +86,18 @@ void imgstore( int imz,
 }
 
 /*------------------------------------------------------------*/
-void imgo_init(axa amz_,
-	       axa amx_,
-	       axa amy_,
+void imgo_init(sf_axis amz_,
+	       sf_axis amx_,
+	       sf_axis amy_,
 	       fslice imag
     )
 /*< initialize o-offset imaging condition >*/
 {
     int imx,imy,imz;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
     /* allocate image storage */
     qs = sf_complexalloc3(amx.n,amy.n,amz.n);
@@ -111,12 +111,12 @@ void imgo_init(axa amz_,
     fslice_put(imag,1,qi[0][0]);
 }
 
-void imgx_init(axa amz_,
-	       axa amx_,
-	       axa amy_,
-	       axa ahx_,
-	       axa ahy_,
-	       axa ahz_,
+void imgx_init(sf_axis amz_,
+	       sf_axis amx_,
+	       sf_axis amy_,
+	       sf_axis ahx_,
+	       sf_axis ahy_,
+	       sf_axis ahz_,
 	       fslice imag
     )
 /*< initialize x-offset imaging condition >*/
@@ -124,13 +124,13 @@ void imgx_init(axa amz_,
     int imx,imy,imz;
     int ihx,ihy,ihz,ih;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
-    ahx = ahx_;
-    ahy = ahy_;
-    ahz = ahz_;
+    ahx = sf_nod(ahx_);
+    ahy = sf_nod(ahy_);
+    ahz = sf_nod(ahz_);
 
     LOx = floor(ahx.o/ahx.d); HIx = LOx + ahx.n;
     LOy = floor(ahy.o/ahy.d); HIy = LOy + ahy.n;
@@ -151,11 +151,11 @@ void imgx_init(axa amz_,
 	);
 }
 
-void imgt_init(axa amz_,
-	       axa amx_,
-	       axa amy_,
-	       axa aht_,
-	       axa aw_,
+void imgt_init(sf_axis amz_,
+	       sf_axis amx_,
+	       sf_axis amy_,
+	       sf_axis aht_,
+	       sf_axis aw_,
 	       fslice imag
     )
 /*< initialize t-offset imaging condition >*/
@@ -164,12 +164,12 @@ void imgt_init(axa amz_,
     int  iht,iw;
     float ht, w;
 
-    amx = amx_;
-    amy = amy_;
-    amz = amz_;
+    amx = sf_nod(amx_);
+    amy = sf_nod(amy_);
+    amz = sf_nod(amz_);
 
-    aht = aht_;
-    aw  = aw_;
+    aht = sf_nod(aht_);
+    aw  = sf_nod(aw_);
 
     /* allocate image storage */
     qs = sf_complexalloc3(amx.n,amy.n,amz.n);

@@ -25,7 +25,6 @@ int main (int argc, char *argv[])
 {
     int n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
-    off_t pos;
     sf_file in, out, dip;
     allpass ap;
 
@@ -87,7 +86,7 @@ int main (int argc, char *argv[])
 	    allpass1(false, ap, u1, u2);
 	    
 	    /* write t-x destruction */
-	    sf_floatwrite(u2,n123,out);
+	    sf_floatwrite(u2,n12,out);
 	}
 
 	free(u1);

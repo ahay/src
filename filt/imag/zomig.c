@@ -1,5 +1,5 @@
-/* 
- * 3-D SSR migration/modeling using extended split-step
+/* 3-D SSR migration/modeling using extended split-step
+ *
  * pcs 2005
  */
 
@@ -37,7 +37,7 @@
 #define LOOP(a) for(imy=0;imy<amy.n;imy++){ for(imx=0;imx<amx.n;imx++){ {a} }}
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,amx,amy,ae;
+static sf_axa az,aw,alx,aly,amx,amy,ae;
 static bool verb, incore;
 static float eps;
 static float twoway;
@@ -60,13 +60,13 @@ void zomig_init(bool verb_,
 		float eps_,
 		bool twoway_,
 		float dtmax,
-		axa az_          /* depth */,
-		axa aw_          /* frequency */,
-		axa ae_          /* experiment */,
-		axa amx_         /* i-line (data/image) */,
-		axa amy_         /* x-line (data/image) */,
-		axa alx_         /* i-line (slowness) */,
-		axa aly_         /* x-line (slowness) */,
+		sf_axis az_      /* depth */,
+		sf_axis aw_      /* frequency */,
+		sf_axis ae_      /* experiment */,
+		sf_axis amx_     /* i-line (data/image) */,
+		sf_axis amy_     /* x-line (data/image) */,
+		sf_axis alx_     /* i-line (slowness) */,
+		sf_axis aly_     /* x-line (slowness) */,
 		int tmx, int tmy /* taper size */,
 		int pmx, int pmy /* padding in the k domain */,
 		int nrmax        /* maximum number of references */,
@@ -80,13 +80,13 @@ void zomig_init(bool verb_,
     incore = incore_;
     eps    = eps_;
 
-    az = az_;
-    aw = aw_;
-    ae = ae_;
-    amx= amx_;
-    amy= amy_;
-    alx= alx_;
-    aly= aly_;
+    az = sf_nod(az_);
+    aw = sf_nod(aw_);
+    ae = sf_nod(ae_);
+    amx= sf_nod(amx_);
+    amy= sf_nod(amy_);
+    alx= sf_nod(alx_);
+    aly= sf_nod(aly_);
 
     /* from hertz to radian */
     aw.d *= 2.*SF_PI;

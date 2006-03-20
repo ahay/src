@@ -1,5 +1,5 @@
-/* 
- * 3-D zero-offset modeling/migration with extended split-step
+/* 3-D zero-offset modeling/migration with extended split-step
+ *
  * pcs 2005
  */
 
@@ -38,7 +38,10 @@ int main (int argc, char *argv[])
     int   pmx,pmy;        /* padding in the k domain */
     int   tmx,tmy;        /* boundary taper size */
 
-    axa az,amx,amy,aw,alx,aly,ae;
+    sf_axis az,amx,amy,aw,alx,aly,ae;
+
+    int n,nz,nw;
+    float dw,ow;
 
     sf_file Fs=NULL;    /*  slowness file S(nlx,nly,nz   ) */
     sf_file Fi=NULL;    /*     image file R(nmx,nmy,nz   ) */
@@ -68,10 +71,14 @@ int main (int argc, char *argv[])
 
     /* slowness parameters */
     Fs = sf_input ("slo");
-    iaxa(Fs,&alx,1); alx.l="lx";
-    iaxa(Fs,&aly,2); aly.l="ly";
-    iaxa(Fs,&az ,3);  az.l= "z";
-    slow = fslice_init(alx.n*aly.n,az.n,sizeof(float));
+    alx = sf_iaxa(Fs,1); sf_setlabel(alx,"lx");
+    aly = sf_iaxa(Fs,2); sf_setlabel(aly,"ly");
+    az  = sf_iaxa(Fs,3); sf_setlabel(az ,"z" );
+
+    n = sf_n(alx)*sf_n(aly);
+    nz = sf_n(az);
+
+    slow = fslice_init(n,nz,sizeof(float));
     fslice_load(Fs,slow,SF_FLOAT);
     
     switch(mode[0]) {
@@ -80,13 +87,17 @@ int main (int argc, char *argv[])
 	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
 	    if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
  
-	    iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fw,&amx,1);
-	    iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fw,&amy,2);
-	    ;                            oaxa(Fw,&az ,3);
-	    iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fw,&aw ,4);
+	    amx = sf_iaxa(Fd,1); sf_setlabel(amx,"mx"); sf_oaxa(Fw,amx,1);
+	    amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fw,amy,2);
+	    ;                                           sf_oaxa(Fw,az ,3);
+	    aw  = sf_iaxa(Fd,3); sf_setlabel(aw ,"w" ); sf_oaxa(Fw,aw ,4);
+	    ae  = sf_maxa(1,0,1);
 
-	    data = fslice_init(amx.n*amy.n,      aw.n,sizeof(float complex));
-	    wfld = fslice_init(amx.n*amy.n, az.n*aw.n,sizeof(float complex));
+	    n = sf_n(amx)*sf_n(amy);
+	    nw = sf_n(aw);
+
+	    data = fslice_init(n,nw,sizeof(float complex));
+	    wfld = fslice_init(n,nz*nw,sizeof(float complex));
 
 	    fslice_load(Fd,data,SF_COMPLEX);
 	    break;
@@ -94,14 +105,18 @@ int main (int argc, char *argv[])
 	    if (inv) { /*   upward continuation */
 		Fw = sf_input ( "in");
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
-		if (SF_COMPLEX != sf_gettype(Fw)) sf_error("Need complex data");
-		iaxa(Fw,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
-		iaxa(Fw,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
-		iaxa(Fw,&aw ,3);  aw.l= "w"; oaxa(Fd,&aw ,3);
-		iaxa(Fw,&ae ,4);  ae.l= "e"; oaxa(Fd,&ae ,4);
+		if (SF_COMPLEX !=sf_gettype(Fw)) sf_error("Need complex data");
 
-		data = fslice_init(amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
-		wfld = fslice_init(amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
+		amx = sf_iaxa(Fw,1); sf_setlabel(amx,"mx"); sf_oaxa(Fd,amx,1);
+		amy = sf_iaxa(Fw,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
+		aw  = sf_iaxa(Fw,3); sf_setlabel(aw , "w"); sf_oaxa(Fd,aw ,3);
+		ae  = sf_iaxa(Fw,4); sf_setlabel(ae , "e"); sf_oaxa(Fd,ae ,4);
+
+		n = sf_n(amx)*sf_n(amy);
+		nw = sf_n(aw)*sf_n(ae);
+
+		data = fslice_init(n,nw,sizeof(float complex));
+		wfld = fslice_init(n,nw,sizeof(float complex));
 
 		fslice_load(Fw,wfld,SF_COMPLEX);
 	    } else {   /* downward continuation */
@@ -109,13 +124,17 @@ int main (int argc, char *argv[])
 		Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
 		if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
 		
-		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fw,&amx,1);
-		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fw,&amy,2);
-		iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fw,&aw ,3);
-		iaxa(Fd,&ae ,4);  ae.l= "e"; oaxa(Fw,&ae ,4);
 
-		data = fslice_init(amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
-		wfld = fslice_init(amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
+		amx = sf_iaxa(Fd,1); sf_setlabel(amx,"mx"); sf_oaxa(Fw,amx,1);
+		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fw,amy,2);
+		aw  = sf_iaxa(Fd,3); sf_setlabel(aw , "w"); sf_oaxa(Fw,aw ,3);
+		ae  = sf_iaxa(Fd,4); sf_setlabel(ae , "e"); sf_oaxa(Fw,ae ,4);
+
+		n = sf_n(amx)*sf_n(amy);
+		nw = sf_n(aw)*sf_n(ae);
+
+		data = fslice_init(n,nw,sizeof(float complex));
+		wfld = fslice_init(n,nw,sizeof(float complex));
 
 		fslice_load(Fd,data,SF_COMPLEX);
 	    }
@@ -127,17 +146,20 @@ int main (int argc, char *argv[])
 		Fd = sf_output("out"); sf_settype(Fd,SF_COMPLEX);
 		if (SF_FLOAT !=sf_gettype(Fi)) sf_error("Need float image");
 		
-		if (!sf_getint  ("nw",&aw.n)) sf_error ("Need nw=");
-		if (!sf_getfloat("dw",&aw.d)) sf_error ("Need dw=");
-		if (!sf_getfloat("ow",&aw.o)) aw.o=0.;
-		aw.l="w";
+		if (!sf_getint  ("nw",&nw)) sf_error ("Need nw=");
+		if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
+		if (!sf_getfloat("ow",&ow)) ow=0.;
+		aw = sf_maxa(nw,ow,dw); sf_setlabel(aw,"w");
+		ae = sf_maxa(1,0,1);
 
-		iaxa(Fi,&amx,1); amx.l="mx"; oaxa(Fd,&amx,1);
-		iaxa(Fi,&amy,2); amy.l="my"; oaxa(Fd,&amy,2);
-		iaxa(Fi,&az ,3);  az.l= "z"; oaxa(Fd,&aw ,3);
+		amx = sf_iaxa(Fi,1); sf_setlabel(amx,"mx"); sf_oaxa(Fd,amx,1);
+		amy = sf_iaxa(Fi,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
+		az  = sf_iaxa(Fi,3); sf_setlabel(az , "z"); sf_oaxa(Fd,aw ,3);
 
-		data = fslice_init(amx.n*amy.n, aw.n,sizeof(float complex));
-		imag = fslice_init(amx.n*amy.n, az.n,sizeof(float));
+		n = sf_n(amx)*sf_n(amy);
+
+		data = fslice_init(n,nw,sizeof(float complex));
+		imag = fslice_init(n,nz,sizeof(float));
 
 		fslice_load(Fi,imag,SF_FLOAT);	
 		
@@ -146,12 +168,16 @@ int main (int argc, char *argv[])
 		Fi = sf_output("out"); sf_settype(Fi,SF_FLOAT);
 		if (SF_COMPLEX !=sf_gettype(Fd)) sf_error("Need complex data");
 		
-		iaxa(Fd,&amx,1); amx.l="mx"; oaxa(Fi,&amx,1);
-		iaxa(Fd,&amy,2); amy.l="my"; oaxa(Fi,&amy,2);
-		iaxa(Fd,&aw ,3);  aw.l= "w"; oaxa(Fi,&az ,3);
+		amx = sf_iaxa(Fd,1); sf_setlabel(amx,"mx"); sf_oaxa(Fi,amx,1);
+		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fi,amy,2);
+		aw  = sf_iaxa(Fd,3); sf_setlabel(aw , "w"); sf_oaxa(Fi,az ,3);
+		ae  = sf_maxa(1,0,1); 
 
-		data = fslice_init(amx.n*amy.n, aw.n,sizeof(float complex));
-		imag = fslice_init(amx.n*amy.n, az.n,sizeof(float));
+		n = sf_n(amx)*sf_n(amy);
+		nw = sf_n(aw);
+
+		data = fslice_init(n,nw,sizeof(float complex));
+		imag = fslice_init(n,nz,sizeof(float));
 	    
 		fslice_load(Fd,data,SF_COMPLEX);
 	    }

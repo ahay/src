@@ -32,8 +32,8 @@
 #define KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
-static axa az,axx,ayy;
-static axa    bxx,byy;
+static sf_axa az,axx,ayy;
+static sf_axa    bxx,byy;
 
 static float         **kk; /* wavenumber  */
 static float         **kw; /* wavenumber weight */
@@ -46,9 +46,9 @@ static float csc[5];
 
 /*------------------------------------------------------------*/
 
-void lsr_init( axa az_,
-	       axa ax_,
-	       axa ay_,
+void lsr_init( sf_axis az_,
+	       sf_axis ax_,
+	       sf_axis ay_,
 	       int px,
 	       int py
     )
@@ -58,9 +58,9 @@ void lsr_init( axa az_,
     float kx, ky;
     int   jx, jy;
 
-    az  = az_;
-    axx = ax_;
-    ayy = ay_;
+    az  = sf_nod(az_);
+    axx = sf_nod(ax_);
+    ayy = sf_nod(ay_);
 
     /* construct K-domain axes */
     X2K(axx,bxx,px);

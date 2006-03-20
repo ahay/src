@@ -36,7 +36,7 @@
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
                 for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
-static axa az,aw,alx,aly,amx,amy,ahx,ae;
+static sf_axa az,aw,alx,aly,amx,amy,ahx,ae;
 static bool verb;
 static float eps;
 
@@ -53,14 +53,14 @@ static fslice         slow; /* slowness slice */
 void camig_init(bool verb_,
 		float eps_,
 		float dtmax,
-		axa az_                   /* depth */,
-		axa aw_                   /* frequency */,
-		axa ae_                   /* experiment */,
-		axa amx_                  /* i-line (data/image) */,
-		axa amy_                  /* x-line (data/image) */,
-		axa ahx_                  /* half-offset */,
-		axa alx_                  /* i-line (slowness) */,
-		axa aly_                  /* x-line (slowness) */,
+		sf_axis az_                /* depth */,
+		sf_axis aw_                /* frequency */,
+		sf_axis ae_                /* experiment */,
+		sf_axis amx_               /* i-line (data/image) */,
+		sf_axis amy_               /* x-line (data/image) */,
+		sf_axis ahx_               /* half-offset */,
+		sf_axis alx_               /* i-line (slowness) */,
+		sf_axis aly_               /* x-line (slowness) */,
 		int tmx, int tmy, int thx /* taper size */,
 		int pmx, int pmy, int phx /* padding in the k domain */,
 		int nrmax                 /* maximum number of references */,
@@ -73,14 +73,14 @@ void camig_init(bool verb_,
     verb=verb_;
     eps = eps_;
 
-    az = az_;
-    aw = aw_;
-    ae = ae_;
-    amx= amx_;
-    amy= amy_;
-    alx= alx_;
-    aly= aly_;
-    ahx= ahx_;
+    az = sf_nod(az_);
+    aw = sf_nod(aw_);
+    ae = sf_nod(ae_);
+    amx= sf_nod(amx_);
+    amy= sf_nod(amy_);
+    alx= sf_nod(alx_);
+    aly= sf_nod(aly_);
+    ahx= sf_nod(ahx_);
     
     /* from hertz to radian */
     aw.d *= 2.*SF_PI; 
@@ -89,7 +89,7 @@ void camig_init(bool verb_,
     dsmax  = dtmax/az.d;
 
     /* CAM */
-    cam_init(az_ ,aw_,
+    cam_init(az_ ,
 	     amx_,amy_,ahx_,
 	     alx_,aly_,
 	     pmx ,pmy, phx,

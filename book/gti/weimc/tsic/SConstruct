@@ -103,7 +103,7 @@ def hcig2ssk():
 # slant-stack to angle
 def tssk2ang():
     return '''
-    tshiftcos a0=0 na=150 da=0.45
+    tshift cos=y a0=0 na=150 da=0.45
     velocity=${SOURCES[1]} |
     put label2=ang
     '''

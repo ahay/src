@@ -1,5 +1,4 @@
-/* 
- * 3-D SSR
+/* 3-D SSR
  * pcs 2005
  */
 
@@ -41,9 +40,9 @@
 #define  KMAP(i,n) (i<n/2.) ? (i+n/2.) : (i-n/2.);
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
-static axa az,axx,ayy;
-static axa    bxx,byy;
-static axa    alx,aly;
+static sf_axa az,axx,ayy;
+static sf_axa    bxx,byy;
+static sf_axa    alx,aly;
 static float dsmax2;
 
 static float         **kk; /* wavenumber  */
@@ -55,11 +54,11 @@ static float         **wt;
 
 /*------------------------------------------------------------*/
 
-void ssr_init( axa az_,
-	       axa ax_,
-	       axa ay_,
-	       axa lx_,
-	       axa ly_,
+void ssr_init( sf_axis az_,
+	       sf_axis ax_,
+	       sf_axis ay_,
+	       sf_axis lx_,
+	       sf_axis ly_,
 	       int px,
 	       int py,
 	       int tx,
@@ -74,15 +73,15 @@ void ssr_init( axa az_,
     float xx, yy;
     int  ilx,ily;
 
-    az  = az_;
-    axx = ax_;
-    ayy = ay_;
-    alx = lx_;
-    aly = ly_;
+    az  = sf_nod(az_);
+    axx = sf_nod(ax_);
+    ayy = sf_nod(ay_);
+    alx = sf_nod(lx_);
+    aly = sf_nod(ly_);
 
     /* construct K-domain axes */
-    X2K(axx,bxx,px); raxa(bxx);
-    X2K(ayy,byy,py); raxa(byy);
+    X2K(axx,bxx,px); sf_raxa(sf_maxa(bxx.n,bxx.o,bxx.d));
+    X2K(ayy,byy,py); sf_raxa(sf_maxa(byy.n,byy.o,byy.d));
     fft2_init(bxx.n,byy.n);
 
     /* precompute wavenumbers */

@@ -1,5 +1,5 @@
-/* 
- * 3-D S/R migration with extended split-step
+/* 3-D S/R migration with extended split-step.
+ *
  * pcs 2005
  */
 
@@ -43,13 +43,16 @@ int main (int argc, char *argv[])
     bool hsym;
     float vpvs;
 
-    axa amx,amy,amz;
-    axa alx,aly;
-    axa aw,ae,aj;
-    axa ahx,ahy,ahz,aht;
-    axa acx,acy,acz;
+    sf_axis amx,amy,amz;
+    sf_axis alx,aly;
+    sf_axis aw,ae;
+    sf_axis ahx,ahy,ahz,aht;
+    sf_axis acx,acy,acz;
     int jcx,jcy,jcz;
-    axa ahh,aha,ahb; /* |h|,alpha,beta */
+    sf_axis ahh,aha,ahb; /* |h|,alpha,beta */
+
+    int n,nz,nx,ny,nh,nhx,nhy,nhz,nha,nhb,nw;
+    float dz,dx,dy,oh,dh,oha,dha,ohb,dhb;
 
     /* I/O files */
     sf_file Fw_s=NULL,Fw_r=NULL; /* wavefield file W ( nx, ny,nw) */
@@ -96,13 +99,17 @@ int main (int argc, char *argv[])
 
     ;      Fs_s = sf_input("slo");
     if(cw) Fs_r = sf_input("sls");
-    iaxa(Fs_s,&alx,1); alx.l="lx";
-    iaxa(Fs_s,&aly,2); aly.l="ly";
-    iaxa(Fs_s,&amz,3); amz.l="mz";
+    alx = sf_iaxa(Fs_s,1); sf_setlabel(alx,"lx");
+    aly = sf_iaxa(Fs_s,2); sf_setlabel(aly,"ly");
+    amz = sf_iaxa(Fs_s,3); sf_setlabel(amz,"mz");
     /* test here if slo and sls have similar sizes */
 
-    ;      slo_s = fslice_init(alx.n*aly.n, amz.n, sizeof(float));
-    if(cw) slo_r = fslice_init(alx.n*aly.n, amz.n, sizeof(float));
+    n = sf_n(alx)*sf_n(aly);
+    nz = sf_n(amz);
+    dz = sf_d(amz);
+
+    ;      slo_s = fslice_init(n, nz, sizeof(float));
+    if(cw) slo_r = fslice_init(n, nz, sizeof(float));
     ;      fslice_load(Fs_s,slo_s,SF_FLOAT);
     if(cw) fslice_load(Fs_r,slo_r,SF_FLOAT);
 
@@ -114,22 +121,20 @@ int main (int argc, char *argv[])
     
     if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("Need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("Need complex receiver data");
-
-    aj.n=1; aj.o=0; aj.d=1; aj.l=" ";
     
-    iaxa(Fw_s,&amx,1); amx.l="mx";
-    iaxa(Fw_s,&amy,2); amy.l="my";
-    iaxa(Fw_s,&aw,3);  aw.l = "w";
-    iaxa(Fw_s,&ae,4);  ae.l = "e"; /* experiments */
+    amx = sf_iaxa(Fw_s,1); nx=sf_n(amx); dx=sf_d(amx); sf_setlabel(amx,"mx");
+    amy = sf_iaxa(Fw_s,2); ny=sf_n(amy); dy=sf_d(amy); sf_setlabel(amy,"my");
+    aw  = sf_iaxa(Fw_s,3); sf_setlabel(aw, "w");
+    ae  = sf_iaxa(Fw_s,4); sf_setlabel(ae, "e"); /* experiments */
 
     Fi   = sf_output("out"); sf_settype(Fi,SF_FLOAT);
-    oaxa(Fi,&amx,1);
-    oaxa(Fi,&amy,2);
-    oaxa(Fi,&amz,3);
-    oaxa(Fi,&aj, 4);
-    oaxa(Fi,&aj, 5);
+    sf_oaxa(Fi,amx,1);
+    sf_oaxa(Fi,amy,2);
+    sf_oaxa(Fi,amz,3);
+    sf_putint(Fi,"n4",1);
+    sf_putint(Fi,"n5",1);
 
-    imag = fslice_init( amx.n*amy.n*amz.n,1,sizeof(float));    
+    imag = fslice_init( nx*ny*nz,1,sizeof(float));    
     /*------------------------------------------------------------*/
     /* CIGS */
 
@@ -138,25 +143,15 @@ int main (int argc, char *argv[])
     if(!sf_getint  ("jcz",&jcz)) jcz=1;
     /* CIGs windowing */
 
-    acx.o = amx.o;
-    acx.n = amx.n / jcx;
-    acx.d = amx.d * jcx;
-    acx.l="cx";
-    
-    acy.o = amy.o;
-    acy.n = amy.n / jcy;
-    acy.d = amy.d * jcy;
-    acy.l="cy";
-    
-    acz.o = amz.o;
-    acz.n = amz.n / jcz;
-    acz.d = amz.d * jcz;
-    acz.l="cz";	    
+    acx = sf_maxa(nx/jcx,sf_o(amx),dx*jcx); sf_setlabel(acx,"cx");
+    acy = sf_maxa(ny/jcy,sf_o(amy),dy*jcy); sf_setlabel(acy,"cy");
+    acz = sf_maxa(nz/jcz,sf_o(amz),dz*jcz); sf_setlabel(acz,"cz");
+    n = sf_n(acx)*sf_n(acy)*sf_n(acz);
 
     Fc = sf_output("cig"); sf_settype(Fc,SF_FLOAT);
-    oaxa(Fc,&acx,1);
-    oaxa(Fc,&acy,2);
-    oaxa(Fc,&acz,3);
+    sf_oaxa(Fc,acx,1);
+    sf_oaxa(Fc,acy,2);
+    sf_oaxa(Fc,acz,3);
 
     /*------------------------------------------------------------*/
     /* init output files */
@@ -164,36 +159,38 @@ int main (int argc, char *argv[])
     switch(itype[0]) {
 	case 't':
 	    if(verb) sf_warning("Time-offset imaging condition");
-	    if(!sf_getint  ("nht",&aht.n)) aht.n=1;
-	    if(!sf_getfloat("oht",&aht.o)) aht.o=0;
-	    if(!sf_getfloat("dht",&aht.d)) aht.d=0.1;
-	    aht.l="ht";
+	    if(!sf_getint  ("nht",&nh)) nh=1;
+	    if(!sf_getfloat("oht",&oh)) oh=0;
+	    if(!sf_getfloat("dht",&dh)) dh=0.1;
+	    aht = sf_maxa(nh,oh,dh); sf_setlabel(aht,"ht");
 	    
-	    oaxa(Fc,&aht,4);
-	    cigs = fslice_init( acx.n*acy.n*acz.n*aht.n,1,sizeof(float));
+	    sf_oaxa(Fc,aht,4);
+	    cigs = fslice_init(n*nh,1,sizeof(float));
 
 	    img2t_init(amx,amy,amz,jcx,jcy,jcz,aht,aw,imag);
 	    break;
 	case 'x':
 	    if(verb) sf_warning("Space offset imaging condition");
-	    if(!sf_getint("nhx",&ahx.n)) ahx.n=1;
-	    if(!sf_getint("nhy",&ahy.n)) ahy.n=1;
-	    if(!sf_getint("nhz",&ahz.n)) ahz.n=1;
-	    ahx.o=0;     ahy.o=0;     ahz.o=0.;
-	    ahx.d=amx.d; ahy.d=amy.d; ahz.d=amz.d;
-	    ahx.l="hx";  ahy.l="hy";  ahz.l="hz";
+	    if(!sf_getint("nhx",&nhx)) nhx=1;
+	    if(!sf_getint("nhy",&nhy)) nhy=1;
+	    if(!sf_getint("nhz",&nhz)) nhz=1;
+	    ahx = sf_maxa(nhx,0.,dx); sf_setlabel(ahx,"hx");
+	    ahy = sf_maxa(nhy,0.,dy); sf_setlabel(ahy,"hy");
+	    ahz = sf_maxa(nhz,0.,dz); sf_setlabel(ahz,"hz");
 
 	    if(!sf_getbool("hsym",&hsym)) hsym = false;
 	    if(hsym) {
-		if(ahx.n>1) { ahx.o = - ahx.n * ahx.d; ahx.n *=2; }
-		if(ahy.n>1) { ahy.o = - ahy.n * ahy.d; ahy.n *=2; }
-		if(ahz.n>1) { ahz.o = - ahz.n * ahz.d; ahz.n *=2; }
+		if(nhx>1) { sf_seto(ahx,-nhx*dx); sf_setn(ahx,nhx*2); }
+		if(nhy>1) { sf_seto(ahy,-nhy*dy); sf_setn(ahy,nhy*2); }
+		if(nhz>1) { sf_seto(ahz,-nhz*dz); sf_setn(ahz,nhz*2); }
 	    }
 
-	    oaxa(Fc,&ahx,4);
-	    oaxa(Fc,&ahy,5);
-	    oaxa(Fc,&ahz,6);
-	    cigs = fslice_init( acx.n*acy.n*acz.n*ahx.n*ahy.n*ahz.n,1,sizeof(float));
+	    sf_oaxa(Fc,ahx,4);
+	    sf_oaxa(Fc,ahy,5);
+	    sf_oaxa(Fc,ahz,6);
+
+	    n *= sf_n(ahx)*sf_n(ahy)*sf_n(ahz);
+	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag);
 	    break;
@@ -201,33 +198,32 @@ int main (int argc, char *argv[])
 	case 'h':
 	    if(verb) sf_warning("absolute offset imaging condition");
 
-	    if(!sf_getint  ("nhh",&ahh.n)) ahh.n=1;
-	    if(!sf_getfloat("ohh",&ahh.o)) ahh.o=0;
-	    if(!sf_getfloat("dhh",&ahh.d)) ahh.d=0.1;
-	    ahh.l="hh";
+	    if(!sf_getint  ("nhh",&nh)) nh=1;
+	    if(!sf_getfloat("ohh",&oh)) oh=0;
+	    if(!sf_getfloat("dhh",&dh)) dh=0.1;
+	    ahh = sf_maxa(nh,oh,dh); sf_setlabel(ahh,"hh");
 	    
 	    /* longitude */
-	    if(!sf_getint  ("nha",&aha.n)) aha.n=180;
-	    if(!sf_getfloat("oha",&aha.o)) aha.o=0;   aha.o *= SF_PI/180;
-	    if(!sf_getfloat("dha",&aha.d)) aha.d=2.0; aha.d *= SF_PI/180;
-	    aha.l="ha";
+	    if(!sf_getint  ("nha",&nha)) nha=180;
+	    if(!sf_getfloat("oha",&oha)) oha=0;   oha *= SF_PI/180;
+	    if(!sf_getfloat("dha",&dha)) dha=2.0; dha *= SF_PI/180;
+	    if(nz==1) { nha=1; oha=0.;       dha=SF_PI;}
+	    aha = sf_maxa(nha,oha,dha); sf_setlabel(aha,"ha");
 
 	    /* latitude */
-	    if(!sf_getint  ("nhb",&ahb.n)) ahb.n=180;
-	    if(!sf_getfloat("ohb",&ahb.o)) ahb.o=0;   ahb.o *= SF_PI/180;
-	    if(!sf_getfloat("dhb",&ahb.d)) ahb.d=2.0; ahb.d *= SF_PI/180;
-	    ahb.l="hb";
+	    if(!sf_getint  ("nhb",&nhb)) nhb=180;
+	    if(!sf_getfloat("ohb",&ohb)) ohb=0;   ohb *= SF_PI/180;
+	    if(!sf_getfloat("dhb",&dhb)) dhb=2.0; dhb *= SF_PI/180;
+	    if(nx==1) { nhb=1; ohb=SF_PI/2.; dhb=SF_PI;}
+	    if(ny==1) { nhb=1; ohb=0.;       dhb=SF_PI;}
+	    ahb = sf_maxa(nhb,ohb,dhb); sf_setlabel(ahb,"hb");
 
-	    if(amx.n==1) { ahb.n=1; ahb.o=SF_PI/2.; ahb.d=SF_PI;}
-	    if(amy.n==1) { ahb.n=1; ahb.o=0.;       ahb.d=SF_PI;}
-	    if(amz.n==1) { aha.n=1; aha.o=0.;       aha.d=SF_PI;}
+	    sf_raxa(ahh);
+	    sf_raxa(aha);
+	    sf_raxa(ahb);
 
-	    raxa(ahh);
-	    raxa(aha);
-	    raxa(ahb);
-
-	    oaxa(Fc,&ahh,4);
-	    cigs = fslice_init( acx.n*acy.n*acz.n*ahh.n,1,sizeof(float));
+	    sf_oaxa(Fc,ahh,4);
+	    cigs = fslice_init( n*nh,1,sizeof(float));
 
 	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag,vpvs);
 
@@ -235,15 +231,17 @@ int main (int argc, char *argv[])
 	case 'o':
 	default:
 	    if(verb) sf_warning("zero offset imaging condition");
-	    cigs = fslice_init( acx.n*acy.n*acz.n,1,sizeof(float));
+	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2o_init(amx,amy,amz,jcx,jcy,jcz,imag);
 	    break;
     }
 
     /* slice management (temp files) */
-    wfl_s = fslice_init( amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
-    wfl_r = fslice_init( amx.n*amy.n, aw.n*ae.n,sizeof(float complex));
+    nw = sf_n(aw)*sf_n(ae);
+
+    wfl_s = fslice_init( nx*ny, nw,sizeof(float complex));
+    wfl_r = fslice_init( nx*ny, nw,sizeof(float complex));
 
     fslice_load(Fw_s,wfl_s,SF_COMPLEX);
     fslice_load(Fw_r,wfl_r,SF_COMPLEX);

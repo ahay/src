@@ -22,16 +22,18 @@
 
 #include "c2r.h"
 
-#define LOOPCC(a) for(iz=0;iz<az.n;iz++){ for(ix=0;ix<ax.n;ix++){  {a} }}
-#define LOOPRC(a) for(it=0;it<at.n;it++){ for(ig=0;ig<ag.n;ig++){  {a} }}
+#define LOOPCC(a) for(iz=0;iz<nz;iz++){ for(ix=0;ix<nx;ix++){  {a} }}
+#define LOOPRC(a) for(it=0;it<nt;it++){ for(ig=0;ig<ng;ig++){  {a} }}
 
 int main(int argc, char* argv[])
 {
     sf_file Fi, Fo, Fr; /* I/O files */
     bool adj, verb, linear;
     
-    axa ax,az,at,ag;
+    sf_axis ax,az,at,ag;
     int ix,iz,it,ig;
+    int nx,nz,nt,ng;
+    float dx,dz,x0,z0;
 
     float         **mapCC, **mapRC;
     complex float **comCC, **comRC;
@@ -51,36 +53,34 @@ int main(int argc, char* argv[])
     if(! sf_getbool(   "adj",&adj    ))    adj=false;
     if(! sf_getbool("linear",&linear )) linear=true;  
 
-    iaxa(Fr,&ag,1); if(verb) raxa(ag);
-    iaxa(Fr,&at,2); if(verb) raxa(at);
+    ag=sf_iaxa(Fr,1); ng=sf_n(ag); if(verb) sf_raxa(ag);
+    at=sf_iaxa(Fr,2); nt=sf_n(at); if(verb) sf_raxa(at);
 
     if(adj) {
-	az.l="a2";
-	if(! sf_getint  ("a2n",&az.n)) az.n=1;
-	if(! sf_getfloat("a2o",&az.o)) az.o=0.;
-	if(! sf_getfloat("a2d",&az.d)) az.d=1.;
-	if(verb) raxa(az);
+	if(! sf_getint  ("a2n",&nz)) nz=1;
+	if(! sf_getfloat("a2o",&z0)) z0=0.;
+	if(! sf_getfloat("a2d",&dz)) dz=1.;
+	az = sf_maxa(nz,z0,dz); sf_setlabel(az,"a2"); if(verb) sf_raxa(az);
 
-	ax.l="a1";
-	if(! sf_getint  ("a1n",&ax.n)) ax.n=1;
-	if(! sf_getfloat("a1o",&ax.o)) ax.o=0.;
-	if(! sf_getfloat("a1d",&ax.d)) ax.d=1.;
-	if(verb) raxa(ax);
+	if(! sf_getint  ("a1n",&nx)) nx=1;
+	if(! sf_getfloat("a1o",&x0)) x0=0.;
+	if(! sf_getfloat("a1d",&dx)) dx=1.;
+	ax = sf_maxa(nx,x0,dx); sf_setlabel(ax,"a1"); if(verb) sf_raxa(ax);
 
-	oaxa(Fo,&ax,1);
-	oaxa(Fo,&az,2);
+	sf_oaxa(Fo,ax,1);
+	sf_oaxa(Fo,az,2);
     } else {
-	iaxa(Fi,&ax,1); if(verb) raxa(ax);
-	iaxa(Fi,&az,2); if(verb) raxa(az);
+	ax = sf_iaxa(Fi,1); nx=sf_n(ax); if(verb) sf_raxa(ax);
+	az = sf_iaxa(Fi,2); nz=sf_n(az); if(verb) sf_raxa(az);
 
-	oaxa(Fo,&ag,1);
-	oaxa(Fo,&at,2);
+	sf_oaxa(Fo,ag,1);
+	sf_oaxa(Fo,at,2);
     }
 
     nn = sf_leftsize(Fi,2);
 
-    rays =sf_complexalloc2(ag.n,at.n);
-    sf_complexread(rays[0],ag.n*at.n,Fr);
+    rays =sf_complexalloc2(ng,nt);
+    sf_complexread(rays[0],ng*nt,Fr);
     
     c2r_init(ax,az,ag,at,verb);
 
@@ -91,17 +91,17 @@ int main(int argc, char* argv[])
 
 /*------------------------------------------------------------*/
 
-    mapCC=sf_floatalloc2(ax.n,az.n);
-    mapRC=sf_floatalloc2(ag.n,at.n);
+    mapCC=sf_floatalloc2(nx,nz);
+    mapRC=sf_floatalloc2(ng,nt);
 
     if(comp) {
-	comCC=sf_complexalloc2(ax.n,az.n);
-	comRC=sf_complexalloc2(ag.n,at.n);
+	comCC=sf_complexalloc2(nx,nz);
+	comRC=sf_complexalloc2(ng,nt);
 
 	for(ii=0;ii<nn;ii++) {
 	    sf_warning("%d of %d",ii,nn);
 	    if(adj) {
-		sf_complexread (comRC[0],ag.n*at.n,Fi);
+		sf_complexread (comRC[0],ng*nt,Fi);
 
 		// REAL
 		LOOPRC( mapRC[it][ig]  = crealf(comRC[it][ig]); );
@@ -113,9 +113,9 @@ int main(int argc, char* argv[])
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPCC( comCC[iz][ix] +=      I*mapCC[iz][ix];  );
 
-		sf_complexwrite(comCC[0],ax.n*az.n,Fo);
+		sf_complexwrite(comCC[0],nx*nz,Fo);
 	    } else {
-		sf_complexread (comCC[0],ax.n*az.n,Fi);
+		sf_complexread (comCC[0],nx*nz,Fi);
 		
 		// REAL
 		LOOPCC( mapCC[iz][ix]  = crealf(comCC[iz][ix]); );
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPRC( comRC[it][ig] +=      I*mapRC[it][ig];  );
 
-		sf_complexwrite(comRC[0],ag.n*at.n,Fo);
+		sf_complexwrite(comRC[0],ng*nt,Fo);
 	    }
 	}
 
@@ -136,13 +136,13 @@ int main(int argc, char* argv[])
 	for(ii=0;ii<nn;ii++) {
 	    sf_warning("%d of %d",ii,nn);
 	    if(adj) {
-		sf_floatread (mapRC[0],ag.n*at.n,Fi);
+		sf_floatread (mapRC[0],ng*nt,Fi);
 		c2r(linear,adj,mapCC,mapRC,rays);
-		sf_floatwrite(mapCC[0],ax.n*az.n,Fo);
+		sf_floatwrite(mapCC[0],nx*nz,Fo);
 	    } else {
-		sf_floatread (mapCC[0],ax.n*az.n,Fi);		
+		sf_floatread (mapCC[0],nx*nz,Fi);		
 		c2r(linear,adj,mapCC,mapRC,rays);
-		sf_floatwrite(mapRC[0],ag.n*at.n,Fo);
+		sf_floatwrite(mapRC[0],ng*nt,Fo);
 	    }
 	}
 
