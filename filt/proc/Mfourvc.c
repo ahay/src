@@ -81,8 +81,8 @@ int main(int argc, char* argv[])
 
     sf_putstring(out,"label2","Velocity");
 
-    if (NULL != (time = sf_histstring(in,"label1")) &&
-	NULL != (space = sf_histstring(in,"label2"))) {
+    if (NULL != (time = sf_histstring(in,"unit1")) &&
+	NULL != (space = sf_histstring(in,"unit2"))) {
 	len = strlen(time)+strlen(space)+2;
 	unit = sf_charalloc(len);
 	snprintf(unit,len,"%s/%s",space,time);

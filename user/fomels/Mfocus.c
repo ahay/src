@@ -30,7 +30,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 
 int main (int argc, char* argv[])
 {
-    int i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
+  int i3, n3, dim1, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
     float *num, *den, *rat1, *rat2, *dat, mean;
     char key[6];
     sf_file in, out;
@@ -42,8 +42,16 @@ int main (int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     
     dim = sf_filedims (in,n);
+    if (!sf_getint("dim",&dim1)) {
+      /* dimensionality */
+      dim1=dim;
+      n3=1;
+    } else {
+      n3 = sf_leftsize(in,dim1);
+    }
+
     n12 = 1;
-    for (i=0; i < dim; i++) {
+    for (i=0; i < dim1; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
 	n12 *= n[i];
@@ -58,55 +66,58 @@ int main (int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    sf_floatread(dat,n12,in);
-    divn_init(dim, n12, n, rect, niter);
+    divn_init(dim1, n12, n, rect, niter);
 
-    mean=0.;
-    for (i=0; i < n12; i++) {
+    for (i3=0; i3 < n3; i3++) {
+      sf_floatread(dat,n12,in);
+
+      mean=0.;
+      for (i=0; i < n12; i++) {
 	dat[i] *= dat[i];
 	mean += dat[i]*dat[i];
-    }
-    mean = sqrtf(n12/mean);
+      }
+      mean = sqrtf(n12/mean);
 
-    for (i=0; i < n12; i++) {
+      for (i=0; i < n12; i++) {
 	num[i] = mean;
 	den[i] = dat[i]*mean;
-    }
+      }
+      
+      divn (num, den, rat1);
     
-    divn (num, den, rat1);
-    
-    for (i=0; i < n12; i++) {
+      for (i=0; i < n12; i++) {
 	den[i] = 1.;
 	num[i] = dat[i];
-    }
+      }
     
-    divn (num, den, rat2);
+      divn (num, den, rat2);
 
-    for (i=0; i < n12; i++) {
+      for (i=0; i < n12; i++) {
 	rat1[i] *= rat2[i];
-    }
+      }
     
-    /*
+      /*
+	
+      for (i=0; i < n12; i++) {
+      if (rat1[i] > 0.) {
+      if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
+      rat1[i] = fabsf(rat1[i]*rat2[i]);
+      } else {
+      rat1[i] = -fabsf(rat1[i]*rat2[i]);
+      }
+      } else {
+      if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
+      rat1[i] = -fabsf(rat1[i]*rat2[i]);
+      } else {
+      rat1[i] = fabsf(rat1[i]*rat2[i]);
+      }
+      }
+      }
+      
+      */
 
-    for (i=0; i < n12; i++) {
-	if (rat1[i] > 0.) {
-	    if (rat2[i] > 0. || -rat2[i] < rat1[i]) {
-		rat1[i] = fabsf(rat1[i]*rat2[i]);
-	    } else {
-		rat1[i] = -fabsf(rat1[i]*rat2[i]);
-	    }
-	} else {
-	    if (rat2[i] < 0. || rat2[i] < -rat1[i]) {
-		rat1[i] = -fabsf(rat1[i]*rat2[i]);
-	    } else {
-		rat1[i] = fabsf(rat1[i]*rat2[i]);
-	    }
-	}
+      sf_floatwrite(rat1,n12,out);
     }
-    
-    */
-
-    sf_floatwrite(rat1,n12,out);
 
     exit(0);
 }
