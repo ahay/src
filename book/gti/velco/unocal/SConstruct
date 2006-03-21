@@ -1,0 +1,60 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+sgy = '3631.sgy'
+
+Fetch(sgy,'unocal',private)
+
+Flow('uno tuno ./buno ./huno',sgy,
+     '''
+     segyread tape=$SOURCE tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('bin','uno','intbin xk=cdpt yk=cdp')
+
+Result('noff','bin','window n2=1 | grey title="Near Offset" ')
+
+Flow('off','tuno',
+     '''
+     dd type=float |
+     headermath output="offset/1000" |
+     intbin head=$SOURCE xk=cdpt yk=cdp
+     ''')
+
+Flow('scn','bin off',
+     '''
+     window max1=4 |
+     vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.01 nv=60
+     ''')
+
+Flow('pik','scn','pick rect1=100 rect2=40')
+
+Result('vel','pik',
+       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity" ')
+
+Flow('nmo','bin off pik',
+     'window max1=4 | nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+
+Flow('stk','nmo','window min1=1 | stack')
+
+Result('stk','grey title=Stack')
+
+Flow('agc','stk','agc rect1=250')
+
+Result('agc','grey title="AGC Stack" ')
+
+Flow('cmp0','bin','window n3=1 f3=100')
+Flow('off0','off','window n3=1 f3=100')
+
+Result('cmp','cmp0 off0',
+       '''
+       wiggle transp=y yreverse=y poly=y xpos=${SOURCES[1]}
+       title="CMP" label2="Offset" label1="Time (s)" zplot=0.5
+       wherexlabel=t wheretitle=b
+       ''')
+
+End()
