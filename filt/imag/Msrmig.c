@@ -110,15 +110,8 @@ int main (int argc, char *argv[])
     aw  = sf_iaxa(Fw_s,3); sf_setlabel(aw ,"w" ); sf_oaxa(Fi,amz,3);
     ae  = sf_iaxa(Fw_s,4); sf_setlabel(ae ,"e" );   /* experiments */
 
-    sf_putint(Fi,"n4",1);
-    sf_putint(Fi,"n5",1);
-   	    
     nm = sf_n(amx)*sf_n(amy);
     n = nm*nz;
-
-    sf_oaxa(Fi,amx,1);
-    sf_oaxa(Fi,amy,2);
-    sf_oaxa(Fi,amz,3);
 
     switch(itype[0]) {
 	case 't': /* time offset imaging condition */
@@ -144,9 +137,12 @@ int main (int argc, char *argv[])
 
 	    if(!sf_getbool("hsym",&hsym)) hsym = false;
 	    if(hsym) {
-		if(nhx>1) {sf_seto(ahx,- nhx*sf_d(ahx)); sf_setn(ahx,nhx*2); }
-		if(nhy>1) {sf_seto(ahy,- nhy*sf_d(ahy)); sf_setn(ahy,nhy*2); }
-		if(nhz>1) {sf_seto(ahz,- nhz*sf_d(ahz)); sf_setn(ahz,nhz*2); }
+		if(nhx>1) {
+		    sf_seto(ahx,- nhx*sf_d(ahx)); nhx *= 2; sf_setn(ahx,nhx); }
+		if(nhy>1) {
+		    sf_seto(ahy,- nhy*sf_d(ahy)); nhx *= 2; sf_setn(ahy,nhy); }
+		if(nhz>1) {
+		    sf_seto(ahz,- nhz*sf_d(ahz)); nhz *= 2; sf_setn(ahz,nhz); }
 	    }
 
 	    sf_oaxa(Fi,ahx,4);

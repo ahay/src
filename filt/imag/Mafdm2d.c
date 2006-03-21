@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     sf_file Fd,Fo;
 
     /* cube axes */
-    sf_axis at,az,ax,as,ar;
+    sf_axis at,az,ax,as,ar,bt;
     int nt,nz,nx,ns,nr,nz2,nx2;
     int it,iz,ix,is,ir, iop;
     float dx,dz,dt, x0,z0, idx,idz,dt2;
@@ -123,12 +123,12 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	sf_setn(at,nt/jsnap);
-	sf_setd(at,dt*jsnap);
+	bt = sf_maxa(nt/jsnap,sf_o(at),dt*jsnap);
+	sf_setlabel(bt,"t");
 
 	sf_oaxa(Fo,az,1);
 	sf_oaxa(Fo,ax,2);
-	sf_oaxa(Fo,at,3);
+	sf_oaxa(Fo,bt,3);
     }
 
     /* setup output data header */

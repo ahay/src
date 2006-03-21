@@ -99,7 +99,8 @@ Flow('wvlt',None,
      n1=%(nt)d d1=%(dt)g o1=0
      n2=1      d2=%(dx)g o2=%(os)g |
      ricker1 frequency=%(f)s |
-     put label1=t label2=x label3=y 
+     put label1=t label2=x label3=y
+     unit2=m unit3=m
      ''' % par )    
 Result('wvlt','wvlt','window n1=500 | graph grid=y title=%s' % 'wvlt')
 # wavelet for shot-profile migration
@@ -140,7 +141,7 @@ for k in ('p'):
          put o1=0 o2=-2000 o3=%(os)g n3=%(ns)d d3=%(ds)g label3=s
          ''' % par)
     Plot  (tdd,'window | '
-           + igrey('pclip=100 min1=0 max1=1.24975 label1="t (s)" label2="h (m)" '))
+           + igrey('pclip=100 min1=0 max1=1.24975 label1="t" label2="h" '))
 #    Result(tdd,'window | ' + igrey('pclip=100 label1=t grid=y title=%s' % tdd))
 
     dww = 'd' + k + 's'
@@ -266,29 +267,30 @@ for h in ('x','t'):
             # offset gather
             Flow(off,img,'window | transp | stack ')
             if(h=='x'):
-                Plot(off,off, igrey('pclip=100 label1="z (m)" label2="h (m)"         %s') % tit)
+                Plot(off,off,
+                     igrey('pclip=100 label1=z unit1=m label2=h unit2=m %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=-4 np=200 dp=0.04')
                 Plot(ssk,
-                     igrey('pclip=100  min2=0 max2=2.5  label1="z (m)" label2="tan \F10 q\F3 "  %s') % tit)
+                     igrey('pclip=100  min2=0 max2=2.5  label1=z unit1=m label2="tan \F10 q\F3 "  %s') % tit)
                 ovl = 'xov' + n
 
                 Flow(ang,ssk,'tan2ang a0=0 na=150 da=0.45')
                 Plot(ang,
-                     igrey('pclip=100 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
+                     igrey('pclip=100 label1=z unit1=m label2="\F10 q\F3 (\^o\_)"  %s') % tit)
             
             if(h=='t'):
                 Plot(off,off,
-                     igrey('pclip=100 label1="z (m)" label2="\F10 t\F3 (s)" %s') % tit)
+                     igrey('pclip=100 label1=z unit1=m label2="\F10 t\F3" unit2=s %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=0  np=200 dp=50')
                 Plot(ssk,
-                     igrey('pclip=99.5 min2=0 max2=4000 label1="z (m)" label2="\F10 n\F3 (m/s)" %s') % tit)
+                     igrey('pclip=99.5 min2=0 max2=4000 label1=z unit1=m label2="\F10 n\F3" unit2="m/s" %s') % tit)
                 ovl = 'tov' + n
 
                 Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
                 Flow(ang,[ssk,vel],
                      'tshift cos=y a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
                 Plot(ang,
-                     igrey('pclip=99.5 label1="z (m)" label2="\F10 q\F3 (\^o\_)"  %s') % tit)
+                     igrey('pclip=99.5 label1=z unit1=m label2="\F10 q\F3" unit2="\^o\_"  %s') % tit)
                 
             Plot(ssko,[ssk,ovl],'Overlay')
 

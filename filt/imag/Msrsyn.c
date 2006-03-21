@@ -56,7 +56,7 @@ int main (int argc, char *argv[])
 
     if (!sf_getint  ("ny",&ny)) ny=1;
     if (!sf_getfloat("dy",&dy)) dy=1;
-    if (!sf_getfloat("oy",&oy)) oy=1;
+    if (!sf_getfloat("oy",&oy)) oy=0;
     ay = sf_maxa(ny,oy,dy); sf_setlabel(ay,"y");
 
     aw  = sf_iaxa(Fr,1); nw =sf_n(aw) ; sf_setlabel(aw, "w");

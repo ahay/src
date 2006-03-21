@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int  jsnap;/* save wavefield every *jsnap* time steps */
 
     /* cube axes */
-    sf_axis at,az,ax,as,ar;
+    sf_axis at,az,ax,as,ar,bt;
     int it,iz,ix,is,ir, iop;
     int nt,nz,nx,ns,nr,nz2,nx2;
     float z0,x0,dt,dx,dz, idx,idz,dt2;
@@ -138,16 +138,16 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
-	sf_setn(at,nt/jsnap);
-	sf_setd(at,dt*jsnap);
+	bt = sf_maxa(nt/jsnap,sf_o(at),dt*jsnap);
+	sf_setlabel(bt,"t");
 
 	sf_oaxa(Bu,az,1);
 	sf_oaxa(Bu,ax,2);
-	sf_oaxa(Bu,at,3);
+	sf_oaxa(Bu,bt,3);
 
 	sf_oaxa(Pu,az,1);
 	sf_oaxa(Pu,ax,2);
-	sf_oaxa(Pu,at,3);
+	sf_oaxa(Pu,bt,3);
     }
 
     /* setup output data header */

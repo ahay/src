@@ -39,7 +39,7 @@ par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" pclip=99 label1=z unit1=m label2="x" unit2=m %s
     min1=%g max1=%g min2=%g max2=%g
     screenratio=0.5 screenht=7 crowd=0.9
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
@@ -47,7 +47,7 @@ def igrey(custom,par):
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t(s)" label2="x(m)" %s
+    title="" pclip=99 label1=t unit1=s label2=x unit2=m %s
     min2=%g max2=%g
     screenratio=1.5 screenht=21 crowd=0.9
     ''' % (custom,par['xmin'],par['xmax'])
@@ -64,7 +64,7 @@ def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" pclip=99 label1=z unit1=m label2=x unit2=m %s
     screenratio=0.5 screenht=7 crowd=0.9
     ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
 
@@ -107,7 +107,7 @@ Flow('wav',None,
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    
-Result('wav','wav','window n1=200 | graph title="" label1="t(s)" label2=')
+Result('wav','wav','window n1=200 | graph title="" label2=')
 
 # ------------------------------------------------------------
 # experiments
