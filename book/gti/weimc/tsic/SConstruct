@@ -298,7 +298,6 @@ Flow('slsh','stkh',        hcig2ssk())
 Flow('angh','slsh',        hssk2ang())
 Plot('angh',igrey('pclip=100 label2="\F10 q\F3 (\^o\_)"'))
 
-
 p2x2('stka','stkt','angt','stkh','angh',0.5,0.5,-10,-12)
 
 # ------------------------------------------------------------

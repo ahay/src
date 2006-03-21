@@ -200,7 +200,6 @@ def execute(EDIR,JOB,ngroup,nshots,imag,cigs,slow,swfl,rwfl,par):
 
     f.close()
 
-
 bsub = WhereIs('bsub')
         
 def run(img,cig,swf,rwf,slo,imc,par,clspar,cigpar):

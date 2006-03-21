@@ -91,7 +91,7 @@ int main (int argc, char* argv[])
 		    a = cosf(a/180*SF_PI); /* cos */
 		    n = v / a;             /* nu = v / cos */
 		} else {
-		    n = v * hypotf(a,1.);  /* nu = v * sqrt( 1 + tan^2 ) */
+		    n = v * hypotf(a/180*SF_PI,1.);  /* nu = v * sqrt( 1 + tan^2 ) */
 		}
 
 		f = (n - v0) / dv;

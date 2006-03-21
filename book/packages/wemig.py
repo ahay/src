@@ -30,7 +30,6 @@ def sinking(par):
 # SHOT-PROFILE MIGRATION
 # ------------------------------------------------------------
 def profile(par):
-
     # surface wavefields
     spmig.wflds('d0s','d0r','wave','shot',par)
     
