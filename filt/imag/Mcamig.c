@@ -72,7 +72,7 @@ int main (int argc, char *argv[])
     slow = fslice_init(sf_n(alx)*sf_n(aly),nz,sizeof(float));
     fslice_load(Fs,slow,SF_FLOAT);
     
-    switch(mode[0]) {
+      switch(mode[0]) {
 	case 'w': /* save wavefield */
 	    Fd = sf_input ( "in");
 	    Fw = sf_output("out"); sf_settype(Fw,SF_COMPLEX);
@@ -83,6 +83,7 @@ int main (int argc, char *argv[])
 	    ahx = sf_iaxa(Fd,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fw,ahx,3); 
 	    ;                                           sf_oaxa(Fw,az ,4);
 	    aw  = sf_iaxa(Fd,4); sf_setlabel(aw ,"w" ); sf_oaxa(Fw,aw ,5);
+	    ae = sf_maxa(1,0,1);
 
 	    n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 	    nw = sf_n(aw);
@@ -142,11 +143,15 @@ int main (int argc, char *argv[])
 		if (!sf_getint  ("nw",&nw)) sf_error ("Need nw=");
 		if (!sf_getfloat("dw",&dw)) sf_error ("Need dw=");
 		if (!sf_getfloat("ow",&w0)) w0=0.;
+		aw = sf_maxa(nw,w0,dw); 
+		sf_setlabel(aw, "w");
+		sf_setunit(aw, "1/s");
 		
 		amx = sf_iaxa(Fi,1); sf_setlabel(amx,"mx"); sf_oaxa(Fd,amx,1);
 		amy = sf_iaxa(Fi,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
 		ahx = sf_iaxa(Fi,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fd,ahx,3);
 		az  = sf_iaxa(Fi,4); sf_setlabel(az , "z"); sf_oaxa(Fd,aw ,4);
+		ae = sf_maxa(1,0,1);
 		
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 
@@ -163,6 +168,7 @@ int main (int argc, char *argv[])
 		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fi,amy,2);
 		ahx = sf_iaxa(Fd,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fi,ahx,3);
 		aw  = sf_iaxa(Fd,4); sf_setlabel(aw , "w"); sf_oaxa(Fi,az ,4);
+		ae = sf_maxa(1,0,1);
 
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw);
