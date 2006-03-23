@@ -152,7 +152,7 @@ int main (int argc, char* argv[])
 		}
 	    }
 	    
-	    vp_barframe_init (bmin,bmax);
+	    vp_barframe_init (in,bmin,bmax);
 	    vp_barline(nc,c,bmin,bmax);
 	}
 

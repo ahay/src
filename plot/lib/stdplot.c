@@ -62,7 +62,7 @@ static struct Axis {
     /*@null@*/ *grid3=NULL;
 
 static void make_title (sf_file in, char wheret);
-static void make_barlabel (void);
+static void make_barlabel (sf_file in);
 static void make_labels (sf_file in, char where1, char where2);
 static void make_baraxis (float min, float max);
 static void make_axes (void);
@@ -804,11 +804,12 @@ static void make_title (sf_file in, char wheret)
     }	   
 }    
 
-static void make_barlabel (void)
+static void make_barlabel (sf_file in)
 {
     float vs;
     bool want;
-    char* where;
+    char* where, *labl, *unit;
+    size_t len;
 
     if (sf_getbool ("wantbaraxis", &want) && !want) {
 	/* if include scale bar axis */
@@ -828,10 +829,21 @@ static void make_barlabel (void)
     
     if (!sf_getint ("barlabelfat",&(barlabel->fat))) barlabel->fat=0;
     /* bar label fatness */
-    if (NULL == (barlabel->text=sf_getstring("barlabel"))) 
+    if (NULL == (labl=sf_getstring("barlabel")) && 
+	NULL == (labl=sf_histstring(in,"label"))) { 
+	/* bar label */
 	barlabel->text = blank;
-    /* bar label */
-
+    } else if (NULL == (unit=sf_getstring("barunit")) && 
+	       NULL == (unit=sf_histstring(in,"unit"))) {
+	barlabel->text = labl;
+    } else {
+	len = strlen(labl)+strlen(unit)+4;
+	barlabel->text = sf_charalloc(len);
+	snprintf(barlabel->text,len,"%s (%s)",labl,unit);
+	free(labl);
+	free(unit);
+    }
+  
     if (NULL != (where = sf_getstring("wherebarlabel"))) {
 	/* where to put bar label (top,bottom,left,right) */ 
 	barlabel->where = *where;
@@ -884,10 +896,10 @@ void vp_frame_init (sf_file in        /* input file */,
     make_title(in,where[2]);
 }
 
-void vp_barframe_init (float min, float max)
+void vp_barframe_init (sf_file in, float min, float max)
 /*< Initializing bar label frame >*/
 {
-    make_barlabel();
+    make_barlabel(in);
     make_baraxis(min,max);
 }
 

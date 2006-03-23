@@ -37,7 +37,7 @@ int main (int argc, char* argv[])
     int i, j, ncheck, esize, n[SF_MAX_DIM], dim=SF_MAX_DIM, nj;
     long long size;
     float check, fj;
-    char *unit, *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
+    char *label, *filename, *dataname, key[8], *val, buf[BUFSIZ], zero[BUFSIZ];
     sf_file file;
     bool info, trail;
     const char *type[] = {"uchar","char","int","float","complex"};
@@ -82,8 +82,14 @@ int main (int argc, char* argv[])
 	       type[sf_gettype(file)],
 	       form[sf_getform(file)]);
 
-	if (NULL != (unit = sf_histstring(file,"unit"))) {
-	    printf("unit=\"%s\"",unit);
+	if (NULL != (label = sf_histstring(file,"label"))) {
+	    printf("label=\"%s\" ",label);
+	    free(label);
+	}
+
+	if (NULL != (label = sf_histstring(file,"unit"))) {
+	    printf("unit=\"%s\"",label);
+	    free(label);
 	}
 
 	printf("\n");

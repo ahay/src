@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
     vp_frame();
 
 
-    vp_barframe_init (0.,1.);
+    vp_barframe_init (in,0.,1.);
     vp_barframe ();
 
     exit(0);

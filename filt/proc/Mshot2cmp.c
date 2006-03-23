@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int type, esize;
+    int type;
     off_t pos;
     bool sign;
     int   ns,    ny,    nh, nh2, nt;
@@ -63,12 +63,9 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d3",dy);
     sf_putfloat(out,"o3",oy);
 
-    if (!sf_histint(in,"esize",&esize)) {
-	esize=4;
-    } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
-    }
-    nt *= esize;
+    sf_putstring(out,"label3","Midpoint");
+
+    nt *= sf_esize(in);
 
     if (NULL != sf_getstring("mask")) {
 	msk = sf_output("mask");
@@ -91,7 +88,7 @@ int main(int argc, char* argv[])
     sf_setform( in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
     
-    sf_unpipe(in,(long) ns*nh*nt);
+    sf_unpipe(in,(off_t) ns*nh*nt);
     pos = sf_tell(in);
 
     for (iy=0; iy < ny; iy++) {

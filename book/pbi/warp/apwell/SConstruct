@@ -244,11 +244,11 @@ Plot('scnt',greyscan)
 def pick(min2,max2,rect1=1,rect2=1,rect3=1):
     return '''
     window min2=%g max2=%g | 
-    pick rect1=%d rect2=%d rect3=%d |
+    pick rect1=%d rect2=%d rect3=%d vel0=1 |
     window''' % (min2,max2,rect1,rect2,rect3)
 
 # Do automatic picking
-Flow('pikt0','scnt',pick(g0,g1,rect1))
+Flow('pikt0','scnt',pick(g0,1,rect1))
 
 def showpick(case):
     return '''
@@ -335,6 +335,7 @@ Result('pswt4','gamma2t pswt4','OverUnderAniso')
 ############
 
 g0 = (g0+1)*0.5
+g0 = (g0+1)*0.5
 g1=2-g0
 
 warpscan1 = warpscan(2*ng-1,g0,g1,rect1)
@@ -352,7 +353,7 @@ Flow('scnt2','srt2 prt2',warpscan1)
 Plot('scnt2',greyscan)
 
 # Do automatic picking
-Flow('pikt02','scnt2',pick(g0,g1,int(0.25*rect1)))
+Flow('pikt02','scnt2',pick(g0,g1,rect1/2))
 
 Flow('pikt2','pikt02','math output="(input-1)*x1" ')
 Plot('pikt2','pikt02',showpick(0))
@@ -374,5 +375,31 @@ Flow('egamma3t','warp2',warp2egamma)
 Plot('egamma3t',graph)
 Plot('egamma4t','egamma3t evpvs','Overlay')
 Result('epswt5','egamma4t pswt5','OverUnderAniso')
+
+Flow('tps2','warp2 tpp',
+     '''
+     math output="input+x1" |
+     inttest1 coord=${SOURCES[1]} interp=spline nw=4
+     ''')
+
+for case in ('p','s','s2'):
+    Flow('dt'+case,'tp'+case,'window n1=54 | pad beg1=1 | add scale=-1,1 $SOURCE')
+
+Flow('vpvs1','dtp dts',
+     'math tps=${SOURCES[1]} output="2*tps/input-1" ')
+
+Flow('vpvs2','dtp dts2',
+     'math tps=${SOURCES[1]} output="2*tps/input-1" ')
+
+
+Plot('vpvs2','tpp vpvs2',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph min2=%g max2=%g min1=%g max1=%g crowd=0.8 wanttitle=n
+     wherexlabel=t wheretitle=b label2="Vp/Vs"
+     ''' % (gmin,gmax,tmin,tmax))
+
+Plot('gamma5t','vpvs2 vpvs','Overlay')
+Result('pswt6','gamma5t pswt5','OverUnderAniso')
 
 End()

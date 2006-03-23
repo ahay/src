@@ -221,7 +221,7 @@ int main(int argc, char* argv[])
     if (!byte) {
 	vp_stdplot_init (x1, x2, y1, y2, transp, false, yreverse, false);
 	vp_frame_init(in,"tlb",false);
-	if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
+	if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
     }
 
     if (transp) {
@@ -382,9 +382,9 @@ int main(int argc, char* argv[])
 		sf_ucharwrite(barbuf[0],VP_BSIZE,bar);
 	    } else {
 		if (barreverse) {
-		    vp_barframe_init (barmax,barmin);
+		    vp_barframe_init (in,barmax,barmin);
 		} else {
-		    vp_barframe_init (barmin,barmax);
+		    vp_barframe_init (in,barmin,barmax);
 		}
 		vp_barraster(VP_BSIZE, barbuf);
 	    }

@@ -152,7 +152,7 @@ int main(int argc, char* argv[])
 
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
-    if (scalebar && !nomin && !nomax) vp_barframe_init (barmin,barmax);
+    if (scalebar && !nomin && !nomax) vp_barframe_init (in,barmin,barmax);
 
     /* initialize color table */
     if (NULL == (color = sf_getstring("color"))) color="I";
@@ -274,9 +274,9 @@ int main(int argc, char* argv[])
 	
 	if (scalebar) {
 	    if (barreverse) {
-		vp_barframe_init (barmax,barmin);
+		vp_barframe_init (in,barmax,barmin);
 	    } else {
-		vp_barframe_init (barmin,barmax);
+		vp_barframe_init (in,barmin,barmax);
 	    }
 	    vp_barraster(VP_BSIZE, barbuf);
 	}	    

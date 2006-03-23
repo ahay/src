@@ -23,14 +23,14 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 */
 #include <rsf.h>
 
-#include "dynprog.h"
+#include "dynprog2.h"
 #include "divn.h"
 
 int main(int argc, char* argv[])
 {
     int dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    int it, niter, nm, n1, n2, n3, i3, i2, i1, i, gate, i0;
-    float **scan, **weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, ct, vel0;
+    int it, niter, nm, n1, n2, n3, n4, i4, i3, i2, i1, i, gate, i0, **ipick;
+    float ***scan, ***weight, *pick, *ampl, *pick2, o2, d2, an, asum, a, vel0;
     bool smooth;
     char key[6], *label;
     sf_file scn, pik;
@@ -41,16 +41,17 @@ int main(int argc, char* argv[])
 
     if (SF_FLOAT != sf_gettype(scn)) sf_error("Need float input");
     dim = sf_filedims (scn,n);
-    if (dim < 2) sf_error("Need at least two dimensions");
+    if (dim < 3) sf_error("Need at least three dimensions");
 
-    n3 = 1;
-    for (i=2; i < dim; i++) {
-	n3 *= n[i];
+    n4 = 1;
+    for (i=3; i < dim; i++) {
+	n4 *= n[i];
     }
 
     n1 = n[0];
     n2 = n[1];
-    nm = n1*n3;
+    n3 = n[2];
+    nm = n1*n3*n4;
 
     if (!sf_histfloat(scn,"o2",&o2)) o2=0.;
     if (!sf_histfloat(scn,"d2",&d2)) d2=1.;
@@ -91,10 +92,12 @@ int main(int argc, char* argv[])
     if (!sf_getbool("smooth",&smooth)) smooth=true;
     /* if apply smoothing */
 
-    scan = sf_floatalloc2(n1,n2);
-    weight = sf_floatalloc2(n2,n1);
+    scan = sf_floatalloc3(n1,n2,n3);
+    weight = sf_floatalloc3(n2,n3,n1);
+    
+    dynprog2_init(n1,n2,n3,gate,gate,an,1.);
 
-    dynprog_init(n1,n2,gate,an);
+    ipick = sf_intalloc2(n1,n3);
 
     if (smooth) {
 	pick = sf_floatalloc(nm);
@@ -108,60 +111,58 @@ int main(int argc, char* argv[])
 	ampl = NULL;
     }
 
-    for (i3=0; i3 < n3; i3++) {
-	sf_warning("cmp %d of %d",i3+1,n3);
-	sf_floatread(scan[0],n1*n2,scn);
+    for (i4=0; i4 < n4; i4++) {
+	sf_warning("record %d of %d",i4+1,n4);
+	
+	sf_floatread(scan[0][0],n1*n2*n3,scn);
 
 	/* transpose and reverse */
-	for (i2=0; i2 < n2; i2++) {
-	    for (i1=0; i1 < n1; i1++) {
-		weight[i1][i2] = expf(-scan[i2][i1]);
-	    }
-	}
-
-	dynprog(i0, weight);
-	dynprog_traj(pick2);
-
-	if (smooth) {
-	    for (i1=0; i1 < n1; i1++) {
-		i = i1 + i3*n1;
-		ct = pick2[i1];
-		pick[i] = ct;
-		it = floorf(ct);
-		ct -= it;
-		if (it >= n2-1) {
-		    ampl[i]=scan[n2-1][i1];
-		} else if (it < 0) {
-		    ampl[i]=scan[0][i1];
-		} else {
-		    ampl[i]=scan[it][i1]*(1.-ct)+scan[it+1][i1]*ct;
+	for (i3=0; i3 < n3; i3++) {
+	    for (i2=0; i2 < n2; i2++) {
+		for (i1=0; i1 < n1; i1++) {
+		    weight[i1][i3][i2] = expf(-scan[i3][i2][i1]);
 		}
 	    }
-	} else {
-	    for (i1=0; i1 < n1; i1++) {
-		pick2[i1] = o2+pick2[i1]*d2;
-	    }
-	    sf_floatwrite(pick2,n1,pik);
 	}
-    }
-    
-    if (smooth) {
-	/* normalize amplitudes */
-	asum = 0.;
-	for (i = 0; i < nm; i++) {
-	    a = ampl[i];
-	    asum += a*a;
-	}
-	asum = sqrtf (asum/nm);
-	for(i=0; i < nm; i++) {
-	    ampl[i] /= asum;
-	    pick[i] = (o2+pick[i]*d2)*ampl[i];
-	}
-    
-	divn(pick,ampl,pick2);
 
-	sf_floatwrite(pick2,nm,pik);
-    } 
+	dynprog2(i0, weight);
+	dynprog2_traj(ipick);
+
+	for (i3=0; i3 < n3; i3++) {
+	    if (smooth) {
+		for (i1=0; i1 < n1; i1++) {
+		    i = i1 + n1*(i3+i4*n3);
+		    it = ipick[i3][i1];
+		    pick[i] = it;
+		    ampl[i] = scan[i1][it][i3];
+		}
+	    } else {
+		for (i1=0; i1 < n1; i1++) {
+		    pick2[i1] = o2+ipick[i3][i1]*d2;
+		}
+		sf_floatwrite(pick2,n1,pik);
+	    }
+	}
+
+    
+	if (smooth) {
+	    /* normalize amplitudes */
+	    asum = 0.;
+	    for (i = 0; i < nm; i++) {
+		a = ampl[i];
+		asum += a*a;
+	    }
+	    asum = sqrtf (asum/nm);
+	    for(i=0; i < nm; i++) {
+		ampl[i] /= asum;
+		pick[i] = (o2+pick[i]*d2)*ampl[i];
+	    }
+    
+	    divn(pick,ampl,pick2);
+
+	    sf_floatwrite(pick2,nm,pik);
+	} 
+    }
 
     exit(0);
 }

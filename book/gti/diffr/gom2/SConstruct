@@ -3,6 +3,25 @@ import stack
 
 Fetch('gom.data.hh','gom')
 
+Flow('gom','gom.data.hh',
+     '''
+     dd form=native |
+     put d2=13.335 o2=50.272
+     label1=Time unit1=s
+     label2=Half-offset unit2=m
+     label3=Shot unit3=m
+     ''')
 
+Flow('gom2','gom','shot2cmp | window min1=1 max1=5')
+
+stack.stack('gom2',
+            v0=1200,
+            nv=49,
+            dv=25,
+            nx=1961,
+            nt=1500,
+            padx=2049,
+            rect1=40,
+            rect2=10)
 
 End()

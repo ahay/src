@@ -21,7 +21,7 @@
 
 int main(int argc, char* argv[])
 {
-    int nt,ns, ny,nh, iy,ih,is,it, type, esize;
+    int nt,ns, ny,nh, iy,ih,is,it, type;
     off_t pos;
     bool sign;
     float ds, dy,dh, os, oy,oh;
@@ -57,12 +57,9 @@ int main(int argc, char* argv[])
     sf_putfloat(out,"d3",ds);
     sf_putfloat(out,"o3",os);
 
-    if (!sf_histint(in,"esize",&esize)) {
-	esize=4;
-    } else if (0>=esize) {
-	sf_error("wrong esize=%d",esize);
-    }
-    nt *= esize;
+    sf_putstring(out,"label3","Shot");
+
+    nt *= sf_esize(in);
 
     trace = sf_charalloc(nt);
     zero = sf_charalloc(nt);
@@ -72,7 +69,7 @@ int main(int argc, char* argv[])
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
 
-    sf_unpipe(in,(long) ny*nh*nt);
+    sf_unpipe(in,(off_t) ny*nh*nt);
     pos = sf_tell(in);
 
     for (is=0; is < ns; is++) {
