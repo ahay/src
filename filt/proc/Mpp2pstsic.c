@@ -28,21 +28,21 @@ int main (int argc, char* argv[])
     fint1 sft;
     int  ext, nx, nz, nv, na;
 
-    float v,a,c,d,n,f, a0,da, v0,dv;
+    float v,a,c,d,n,e,f,g, a0,da, v0,dv;
     int         fint;
-    bool cos;
 
     sf_axis ax,az,av,aa;
     int ix,iz,iv,ia;
 
-    float   **stk, **ang, *vel, *dzdx, *tmp;
-    sf_file  Fstk,  Fang, Fvel, Fdip;
+    float   **stk, **ang, *vel, *dzdx, *gam, *tmp;
+    sf_file  Fstk,  Fang, Fvel, Fdip,  Fgam;
 
     sf_init (argc,argv);
 
     /*------------------------------------------------------------*/
     Fstk = sf_input("in");
     Fvel = sf_input("velocity");
+    Fgam = sf_input("vpvs");
     Fdip = sf_input("dip");
     Fang = sf_output("out");
 
@@ -62,20 +62,19 @@ int main (int argc, char* argv[])
     if (!sf_getint("extend",&ext)) ext=4;       /* tmp extension */
     /*------------------------------------------------------------*/
 
-    if (!sf_getbool("cos",&cos)) cos=false;
-    /* if n, convert pseudo-v to pseudo-tan(theta); 
-       if y, compute cos(theta) from 1/|pm| */
-
     stk = sf_floatalloc2(nz,nv);
     ang = sf_floatalloc2(nz,na);
     tmp = sf_floatalloc(nv);
     vel = sf_floatalloc(nz);
     dzdx= sf_floatalloc(nz);
+    gam = sf_floatalloc(nz);
 
     sft = fint1_init(ext,nv,0);
     
     for (ix = 0; ix < nx; ix++) {
-	sf_floatread(vel   ,nz   ,Fvel);	
+	sf_floatread(vel   ,nz   ,Fvel);
+	sf_floatread(gam   ,nz   ,Fgam);
+
 	sf_floatread(stk[0],nz*nv,Fstk);
 	sf_floatread(dzdx  ,nz   ,Fdip);
 	
@@ -87,23 +86,17 @@ int main (int argc, char* argv[])
 	    fint1_set(sft,tmp);
 
 	    v =  vel[iz];
+	    g =  gam[iz];
 	    d = dzdx[iz];
 
 	    v = v * sqrtf(1+d*d); /* dip correction */
+	    e = (1-g)*(1-g) / (4*g);
 
 	    for (ia=0; ia < na; ia++) {
-		a = a0+ia*da;              /* angle */
+		a = a0+ia*da;          /* angle */
+		c = cosf(a/180*SF_PI); /* cos */
 
-		if (cos) {
-		    c = cosf(a/180.*SF_PI); /* cos */
-		    n = v / c;
-		} else {
-		    c = tanf(a/180.*SF_PI);
-		    n = v * sqrtf(1+c*c);
-
-/*		    n = v * hypotf(a/180*SF_PI,1.);  */
-/* nu = v * sqrt( 1 + tan^2 ) */
-		}
+		n = v / sqrtf(g) / sqrtf(c*c + e);
 
 		f = (n - v0) / dv;
 		fint = f;
