@@ -335,12 +335,9 @@ class Project(Environment):
                 file = file + suffix
             targets.append(file)
         if suffix == sfsuffix:            
-            datafiles = [] 
-            for target in targets:
-                if os.sep not in target:
-                    datafile = self.path + target + '@'
-                    datafiles.append(datafile)
-            targets = targets + datafiles
+            targets = targets + \
+                      map(lambda x: self.path + x + '@',
+                          filter(lambda x: x[-4:] == suffix,targets))
         return self.Command(targets,sources,command)
     def Plot (self,target,source,flow=None,suffix=vpsuffix,vppen=None,
               view=None,**kw):
