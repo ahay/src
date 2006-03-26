@@ -16,8 +16,6 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <setjmp.h>
-
 #include <cairo.h>
 
 #include <gtk/gtk.h>
@@ -44,7 +42,6 @@ enum {
 
 #endif
 
-static cairo_t *cr0;
 static GtkWidget *win, *vbox, *frame, *gtkcairo;
 
 static float fx=0.0, fy=0.0;     /* origin in inches */
@@ -52,11 +49,12 @@ static float ufx=0.0, ufy=0.0;   /* origin in user units */
 static float xscl=1.0, yscl=1.0; /* scaling from user units to inches */
 static float xold=0.0, yold=0.0; /* old pen position (in inches) */
 
-static jmp_buf env; /* hacking gtk event loop */
-
 static struct {
     int xmin, xmax, ymin, ymax;
 } clip;
+
+void cr_init(void);
+void cr_show(cairo_t *cr);
 
 static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
 {
@@ -75,13 +73,17 @@ static void show (GtkWidget *widget, cairo_t *cr, gpointer data)
 
     cairo_set_source_rgb (cr, 1, 0, 0);
     cairo_fill (cr);
+
+    cr_show(cr);
     
     cairo_restore (cr);
 }
 
-void cr_init(int* argc, char** argv[])
+void cr_main(int* argc, char** argv[])
 /*< Initialize >*/
 {
+    cr_init();
+
     gtk_init (argc, argv);
 
     win = gtk_window_new (GTK_WINDOW_TOPLEVEL);
@@ -106,19 +108,10 @@ void cr_init(int* argc, char** argv[])
     gtk_box_pack_start (GTK_BOX (vbox), frame, TRUE, TRUE, 0);
     
     gtk_container_add (GTK_CONTAINER (win), vbox);
- 
-    cr0 = gtk_cairo_get_cairo(GTK_CAIRO(gtkcairo));
-    cairo_set_source_rgb (cr0, 0, 1, 0);
-}
 
-void cr_main(void)
-/*< go into main loop >*/
-{
-    if (0 == setjmp (env)) {
-	gtk_widget_show_all (vbox);
-	gtk_widget_show (win);
-	gtk_main ();
-    }
+    gtk_widget_show_all (vbox);
+    gtk_widget_show (win);
+    gtk_main ();
 }
 
 void cr_uorig (float x,float  y)
@@ -154,23 +147,23 @@ void cr_uclip (float xmin, float ymin, float xmax, float ymax)
     cr_clip (xmin, ymin, xmax, ymax);
 }
 
-void cr_umove (float x,float  y)
+void cr_umove (cairo_t *cr, float x,float  y)
 /*< move to a point in user coordinates >*/
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
-    cr_plot (x, y, false);
+    cr_plot (cr, x, y, false);
 }
 
-void cr_udraw (float x,float  y)
+void cr_udraw (cairo_t *cr, float x,float  y)
 /*< line drawing step in user coordinates >*/
 {
     x = fx + (x - ufx) * xscl;
     y = fy + (y - ufy) * yscl;
-    cr_plot (x, y, true);
+    cr_plot (cr, x, y, true);
 }
 
-static void pout (float xp, float  yp, bool down)
+static void pout (cairo_t *cr, float xp, float  yp, bool down)
 {
     
     if      (xp >  CR_MAX) xp =  CR_MAX;
@@ -179,18 +172,18 @@ static void pout (float xp, float  yp, bool down)
     else if (yp < -CR_MAX) yp = -CR_MAX;
     
     if (down) {
-	cairo_line_to(cr0,snap(xp),snap(yp));
+	cairo_line_to(cr,snap(xp),snap(yp));
 	sf_warning("drawing to %g,%g",snap(xp),snap(yp));
     } else {
-	cairo_move_to(cr0,snap(xp),snap(yp));
+	cairo_move_to(cr,snap(xp),snap(yp));
 	sf_warning("moving to %g,%g",snap(xp),snap(yp));
     }
 }
 
-void cr_plot (float x, float y, bool  down)
+void cr_plot (cairo_t *cr, float x, float y, bool  down)
 /*< line drawing >*/
 {
-    pout (x, y, down);	/* output a move or draw */
+    pout (cr, x, y, down);	/* output a move or draw */
     xold = x;
     yold = y;		/* save old x and y */
 }

@@ -25,10 +25,10 @@ Takes: > plot.vpl
 
 int main(int argc, char* argv[])
 {
-    int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe, np=3;
-    int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1, dframe; 
+    int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe, np=3, orient;
+    int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1; 
     float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
-    float min, max, f, frame1, oo1, dd1;
+    float min, max, f, frame1, dframe, oo1, dd1;
     bool nomin, nomax;
     char *label1, *label2, *unit1, *unit2;
     off_t esize;
@@ -71,6 +71,9 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
+
+    if (!sf_getint("orient",&orient)) orient=1;
+    /* function orientation */
 
     if (min == 0. && max == 0.) {
 	min = -1.;
@@ -151,7 +154,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("movie",&movie)) movie=0;
     /* 0: no movie, 1: movie over axis 1, 2: axis 2, 3: axis 3 */
 
-    if (!sf_getint("dframe",&dframe)) dframe=1;
+    if (!sf_getfloat("dframe",&dframe)) dframe=1;
     /* frame increment in a movie */
 
     switch (movie) {
@@ -159,7 +162,7 @@ int main(int argc, char* argv[])
 	    nframe = 1;
 	    break;
 	case 1:
-	    sf_error("movie=1 is not implemented yet");
+	    nframe = 0.5+(max-frame1)/dframe;
 	    break;
 	case 2:
 	    nframe = (n1-frame2)/dframe;
@@ -213,82 +216,54 @@ int main(int argc, char* argv[])
     vp_cubeplot_init (n1pix, n2pix, n1front, n2front, flat); 
     vp_frame_init (in,"blt",false);
     vp_plot_init(n3);
+    vp_contour_init(false,n1,o1,d1,n2,o2,d2); 
 
     for (iframe=0; iframe < nframe; iframe++) {
 	for (i3=0; i3 < n3; i3++) {
 	    vp_plot_set (i3);
 
-	    if (0 == iframe || 3 == movie) {		
-		vp_cubecoord(true,x[0],x[n1-1],min,max);
+	    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
+	    sf_floatread(front,n1,in);
 
-		sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
-		sf_floatread(front,n1,in);
-		
-		vp_umove(x[0],front[0]);
-		for (i1=1; i1 < n1; i1++) {
-		    vp_udraw(x[i1],front[i1]);
-		}
+	    vp_cubecoord(3,x[0],x[n1-1],min,max);
+	    vp_umove(x[0],front[0]);
+	    for (i1=1; i1 < n1; i1++) {
+		vp_udraw(x[i1],front[i1]);
 	    }
 	    
-	    if (0 == iframe || 2 == movie) {
-		vp_cubecoord(false,y[0],y[n2-1],min,max);
-
-		for (i2=0; i2 < n2; i2++) {
-		    sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
-		    sf_floatread(&f,1,in);
-		    if (i2==0) {
-			vp_umove(y[0],f);
-		    } else {
-			vp_udraw(y[i2],f);
-		    }
-		}
+	    for (i2=0; i2 < n2; i2++) {
+		sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
+		sf_floatread(side+i2,1,in);
+	    }
+	    
+	    vp_cubecoord(2,y[0],y[n2-1],min,max);
+	    vp_umove(y[0],side[0]);
+	    for (i2=1; i2 < n2; i2++) {
+		vp_udraw(y[i2],side[i2]);
 	    }
 
-	    vp_coordinates();
-
-	    if (0 == iframe || 1 == movie) {
-		sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
-		sf_floatread(top[0],n1*n2,in);		
-	    }
-
-	    /*
-	    if (flat) {
-		for (i=0; i < n2front; i++) {
-		    i2 = n2*i/(float) n2front;
-		    for (j=n1front; j < n1pix; j++) {
-			i3 = n3*(j-n1front)/(float) (n1pix-n1front);
-			buf[i][j] = top[i2][i3];
-		    }
-		}
-	    } 
-	    */
+	    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
+	    sf_floatread(top[0],n1*n2,in);		
+	    
+	    vp_cubecoord(1,x[0],x[n1-1],y[0],y[n2-1]);
+	    vp_contour(false,top,frame1);
 	}
-
-	/*
-	if ((0 == iframe || 1 == movie || 2 == movie) && !flat) {
-	    for (j=n1front; j < n1pix; j++) {
-		i3 = n3*(j-n1front)/(float) (n1pix-n1front);
-		i0 = (j-n1front)*(n2pix-n2front)/(float) (n1pix-n1front);
-		for (i=i0; i < i0+n2front; i++) {
-		    i2 = n2*(i-i0)/(float) n2front;
-		    if (i2 < n2)
-			buf[i][j] = top[i2][i3];
-		}
-	    }
-	}
-	*/
 
 	if (iframe > 0) vp_erase (); 
 	
 	vp_plot_unset();
+	vp_coordinates();
 	vp_cubeframe((frame1-oo1)/dd1,frame2,frame3);
 	
 	switch (movie) {
 	    case 2:
-		frame2 += dframe;
+		frame2 += (int) dframe;
 		break;
 	    case 3:
-		frame3 += dframe;
+		frame3 += (int) dframe;
+		break;
+	    case 1:
+		frame1 += dframe;
 		break;
 	    default:
 		break;

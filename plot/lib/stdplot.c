@@ -20,6 +20,7 @@
 #include <float.h>
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <rsf.h>
 /*^*/
@@ -259,23 +260,33 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
     vp_coordinates();
 }
 
-void vp_cubecoord (bool front /* front or side */,
+void vp_cubecoord (int side /* 1=top, 2=side, 3=front */,
 		   float umin1, float umax1, float umin2, float umax2)
 /*< setup the coordinate system for the cube front >*/
 {
     float scale1, scale2;
 
     /* find scales and user origin */
-    if (front) {
-	scale1 = inch1 * (mid1 - min1) / (max1 - min1) / (umax1 - umin1);
-	vp_orig (orig1-0.5*inch1,orig2-0.5*inch2);
-    } else {
-	scale1 = inch1 * (max1 - mid1) / (max1 - min1) / (umax1 - umin1);
-	vp_orig (orig1+inch1*((mid1 - min1)/(max1 - min1)-0.5),orig2-0.5*inch2);
+    switch (side) {
+	case 3: /* front */
+	    scale1 = inch1 * (mid1 - min1) / (max1 - min1) / (umax1 - umin1);
+	    scale2 = inch2 * (mid2 - min2) / (max2 - min2) / (umax2 - umin2);
+	    vp_orig (orig1-0.5*inch1,orig2-0.5*inch2);
+	    break;
+	case 2: /* side */
+	    scale1 = inch1 * (max1 - mid1) / (max1 - min1) / (umax1 - umin1);
+	    scale2 = inch2 * (mid2 - min2) / (max2 - min2) / (umax2 - umin2);
+	    vp_orig (orig1+inch1*((mid1 - min1)/(max1 - min1)-0.5),
+		     orig2-0.5*inch2);
+	    break;
+	case 1:
+	default:
+	    scale1 = inch1 * (mid1 - min1) / (max1 - min1) / (umax1 - umin1);
+	    scale2 = inch2 * (max2 - mid2) / (max2 - min2) / (umax2 - umin2);
+	    vp_orig (orig1-0.5*inch1,
+		     orig2+inch2*((mid2 - min2)/(max2 - min2)-0.5));
     }
     
-    scale2 = inch2 * (mid2 - min2) / (max2 - min2) / (umax2 - umin2);
-
     /* setup the coordinate system */
     vp_scale (scale1, scale2);
     vp_uorig (umin1, umin2);
@@ -390,9 +401,10 @@ static void make_labels (sf_file in, char where1, char where2)
 	    (NULL == (labl=sf_histstring(in,
 					 transp? "label2":"label1")))) {
 	    label1->text = blank;
-	} else if ((NULL == (unit=sf_getstring(transp? "unit2":"unit1"))) &&
-		   (NULL == (unit=sf_histstring(in,
-						transp? "unit2":"unit1")))) {
+	} else if (((NULL == (unit=sf_getstring(transp? "unit2":"unit1"))) &&
+		    (NULL == (unit=sf_histstring(in,
+						 transp? "unit2":"unit1")))) ||
+		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
 	    label1->text = labl;
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;
@@ -503,9 +515,10 @@ static void make_labels (sf_file in, char where1, char where2)
 	    (NULL == (labl=sf_histstring(in,
 					 transp? "label1":"label2")))) {
 	    label2->text = blank;
-	} else if ((NULL == (unit=sf_getstring(transp? "unit1":"unit2"))) &&
-		   (NULL == (unit=sf_histstring(in,
-						transp? "unit1":"unit2")))) {
+	} else if (((NULL == (unit=sf_getstring(transp? "unit1":"unit2"))) &&
+		    (NULL == (unit=sf_histstring(in,
+						 transp? "unit1":"unit2")))) ||
+		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) { 
 	    label2->text = labl;
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;

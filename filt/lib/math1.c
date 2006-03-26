@@ -310,10 +310,19 @@ size_t sf_math_parse (char* output /* expression */,
 	
 	if ('.' == (char) c || isdigit(c)) { /* number */
 	    hasleft = true;
+	    c2 = ' ';
 	    for (j=i+1; j < len; j++) {
 		c2 = output[j];
-		if ('.' != c2 && !isdigit(c2) && 'e' != c2) break;
+		if ('.' != c2 && !isdigit(c2) && 
+		    'e' != c2) break;
 	    }
+	    if ('e' == output[j-1] && ('-' == c2 || '+' == c2)) {
+		for (j++; j < len; j++) {
+		    c2 = output[j];
+		    if (!isdigit(c2)) break;
+		}
+	    }
+
 	    keylen = j-i;
 	    key = sf_charalloc(keylen+1);
 	    strncpy(key,output+i,keylen);

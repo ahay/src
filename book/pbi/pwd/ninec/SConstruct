@@ -27,13 +27,22 @@ for case in ('P','X','Y','Z'):
            allpos=y
            ''' % case)
     
-Flow('nmo','binP','nmostretch half=n v0=1500')
-Result('nmo','grey title="NMO" ')
-Result('bnmo','nmo','bandpass flo=20 | grey title="NMO+Bandpass" ')
+t0 = 0.6
+v0 = 1500
 
-Flow('lmo','binP','lmostretch half=n delay=0 v0=1500')
-Result('lmo','grey title="LMO" ')
-Result('lnmo','lmo','bandpass flo=20 | grey title="LMO+Bandpass" ')
+Flow('datum','binP',
+     'window n1=1 | math output="sqrt(%g+x1*x1*%g)" ' % (t0*t0,1./(v0*v0)))
+Flow('dat','binP datum','datstretch datum=${SOURCES[1]}')
+Result('dat','grey title="Reduced" ')
 
+Flow('dip2','dat','twodip2 p0=0 nj2=2 eps=1 lam=1')
+Flow('dip0','dip2','window n3=1')
+Flow('dip1','dip2','window f3=1')
+
+Flow('sn2','dat dip0 dip1',
+     '''
+     planesignoi sdip=${SOURCES[2]} ndip=${SOURCES[1]} 
+     order=3 nj2=2 eps=2 verb=y niter=100
+     ''')
 
 End()

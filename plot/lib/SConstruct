@@ -5,7 +5,7 @@ import configure
 #############################################################################
 # MAIN LIBRARY
 #############################################################################
-psrc = Split('axis coltab gainpar plot stdplot vplot')
+psrc = Split('axis coltab contour gainpar plot stdplot vplot')
 
 try: # distribution version
     Import('env')

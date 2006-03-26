@@ -3,11 +3,15 @@ from rsfproj import *
 yshot=0.2
 zshot=0.2
 
-contour = 'contour c0=0. dc=0.08 nc=15 max1=1. max2=1. wanttitle=n label1=km label2=km screenratio=1. labelsz=12 screenht=14'
+contour = '''
+contour c0=0. dc=0.08 nc=15 max1=1. max2=1. wanttitle=n
+label1=Depth label2=Lateral screenratio=1. labelsz=12 screenht=14
+'''
 
 samples = (1,2,4,8,10,15,20,30,40,50,80,100)
 
-Flow('const',None,'spike n1=2000 n2=2000 d1=0.0005 d2=0.0005 mag=1')
+Flow('const',None,
+     'spike n1=2000 n2=2000 d1=0.0005 d2=0.0005 unit1=km unit2=km mag=1')
      
 Flow('exact','const','math output="sqrt((x1-%g)^2+(x2-%g)^2)" ' % (zshot,yshot))
 Plot('exact','window j1=5 j2=5 | ' + contour)
@@ -89,23 +93,26 @@ Flow('normtim','tim',
 
 Plot('err',
      '''
-     graph wanttitle=n label2="rms error (ms)" label1="grid spacing (m)"
+     graph wanttitle=n
+     label2="rms error" unit2=ms label1="grid spacing" unit1=m
      dash=0,3 screenratio=1. labelsz=12 screenht=14
      ''')
 Plot('logerr',
      '''
      graph wanttitle=n label2="log(rms error)" label1="log(grid spacing)"
-     dash=0,3 screenratio=1. labelsz=12 screenht=14
+     unit2=" " unit1=" " dash=0,3 screenratio=1. labelsz=12 screenht=14
      ''')
 Result('error','err logerr','SideBySideIso')
 
 Plot('tim',
      '''
-     graph wanttitle=n dash=0,3 screenratio=1. labelsz=9 label2="CPU time (s)" label1="N/1000000"
+     graph wanttitle=n dash=0,3 screenratio=1. labelsz=9
+     label2="CPU time" unit2=s label1="N/1000000" unit1=
      ''')
 Plot('normtim',
      '''
-     graph wanttitle=n dash=0,3 screenratio=1. labelsz=9 label2="1000000 CPU time/N" label1="N/1000000"
+     graph wanttitle=n dash=0,3 screenratio=1. labelsz=9
+     label2="1000000 CPU time/N" unit2=s label1="N/1000000" unit1=
      min2=0 max2=2
      ''')
 Result('times','tim normtim','SideBySideIso')
