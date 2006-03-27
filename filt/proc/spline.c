@@ -77,7 +77,7 @@ sf_tris spline4_init (int nd /* data length */)
     sf_tris slv;
     
     slv = sf_tridiagonal_init(nd);
-    sf_tridiagonal_const_define (slv, s4, flt4[0]);
+    sf_tridiagonal_const_define (slv, s4, flt4[0], false);
     
     return slv;
 }

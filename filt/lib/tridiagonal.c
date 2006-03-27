@@ -54,9 +54,9 @@ sf_tris sf_tridiagonal_init (int n /* matrix size */)
     return slv;
 }
 
-void sf_tridiagonal_define (sf_tris slv    /* solver object */, 
-			 float* diag /* diagonal */, 
-			 float* offd /* off-diagonal */)
+void sf_tridiagonal_define (sf_tris slv /* solver object */, 
+			    float* diag /* diagonal */, 
+			    float* offd /* off-diagonal */)
 /*< fill the matrix >*/
 {
     int k;
@@ -76,19 +76,20 @@ void sf_tridiagonal_define (sf_tris slv    /* solver object */,
     }
 }
 
-void sf_tridiagonal_const_define (sf_tris slv   /* solver object */, 
-			       float diag /* diagonal */, 
-			       float offd /* off-diagonal */)
+void sf_tridiagonal_const_define (sf_tris slv /* solver object */, 
+				  float diag  /* diagonal */, 
+				  float offd  /* off-diagonal */,
+				  bool damp   /* damping */)
 /*< fill the matrix for the Toeplitz case >*/
 {
     int k;
     
-    slv->d[0][0] = diag;
+    slv->d[0][0] = damp? diag+offd: diag;
     for (k = 1; k < slv->n; k++) {
 	slv->o[0][k-1] = offd / slv->d[0][k-1];
 	slv->d[0][k] = diag - offd * slv->o[0][k-1];
     }
-    slv->d[1][slv->n-1] = diag;
+    slv->d[1][slv->n-1] = damp? diag+offd: diag;
     for (k = slv->n-2; k >= 0; k--) {
 	slv->o[1][k] = offd / slv->d[1][k+1];
 	slv->d[1][k] = diag - offd * slv->o[1][k];

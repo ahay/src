@@ -60,7 +60,7 @@ void spine3_init1(int n1, float o1, float d1)
     fp = NULL;
 
     slv = sf_tridiagonal_init (n-2);
-    sf_tridiagonal_const_define (slv,4.*d1,d1);
+    sf_tridiagonal_const_define (slv,4.*d1,d1,false);
 }
 
 void spline3_close (void) 
