@@ -8,6 +8,7 @@ stack.stack('bei',
             v0=1.4,
             nv=48,
             dv=0.025,
+            x0=7.705,
             nx=250,
             nt=751,
             padx=521,
@@ -17,6 +18,7 @@ stack.stack('bei',
             srect2=5,
             vslope=0.67, #
             vx0=1.5,     #
+            tmax=4,
             f1=15,
             nout=2048)
 

@@ -120,9 +120,10 @@ def stack(name,
     pad n2=%d | cosft sign2=1 | 
     stolt vel=%g nf=4 | spray axis=2 n=1 o=0 d=1 |
     fourvc nv=%d dv=%g v0=%g |
-    cosft sign3=-1 |
-    window n3=%d
-    ''' % (padx,v0,nv,dv,v0,nx)
+    cosft sign3=-1 | 
+    window n3=%d |
+    put o3=%g
+    ''' % (padx,v0,nv,dv,v0,nx,x0)
 
     vlf=name+'-vlf'
     Flow(vlf,shp,velcon)
@@ -136,7 +137,7 @@ def stack(name,
     focus rect1=%d rect3=%d |
     math output="1/abs(input)" |
     cut max1=%g | cut min1=%g 
-    ''' % (2*rect1,2*rect2,tmax,tmin)
+    ''' % (2*rect1,2*rect2,tmin,tmax)
  
     foc=name+'-foc'
     Flow(foc,vlf,focus)
