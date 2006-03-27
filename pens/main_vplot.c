@@ -179,9 +179,8 @@ extern int      pltoutfd;
 
 int main (int argc, char* argv[])
 {
-    int             in_isatty, num_vplot;
+    int             in_isatty;
     bool            docflag;
-    char            instring[MAXFLEN + 1];
     
     char           *cptr;
     char           *stringptr;
@@ -260,39 +259,6 @@ int main (int argc, char* argv[])
 	    	strcpy (pltinname[infileno], "stdin");
 	    	pltinarray[infileno] = stdin;
 	    	infileno++;
-	    }
-	}
-    }
-
-    /*
-     * next process in= inputfiles If they set num_vplot, also look for in1=
-     * in2= etc 
-     */
-
-    if (!sf_getint ("numvplot", &num_vplot)) num_vplot = 0;
-
-    for (ii = 0; ii <= num_vplot; ii++)
-    {
-	if (ii == 0)
-	    strcpy (instring, "in");
-	else
-	    sprintf (instring, "in%d", ii);
-
-	if (NULL != (stringptr = sf_getstring (instring)))
-	{
-	    if ((temp = fopen (stringptr, "r")) != NULL)
-	    {
-		if (infileno >= MAXIN)
-		{
-		    ERR (FATAL, name, "too many input files (%d max)", MAXIN);
-		}
-		strcpy (pltinname[infileno], string);
-		pltinarray[infileno] = temp;
-		infileno++;
-	    }
-	    else
-	    {
-		ERR (WARN, name, "cannot open %s", stringptr);
 	    }
 	}
     }

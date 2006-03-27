@@ -87,6 +87,7 @@ struct device dev = {
     vpattributes,		/* attributes */
     
     /* input */
+    gen_dovplot,               /* reader */
     nullgetpoint,		/* getpoint */
     nullinteract,		/* interact */
     
@@ -99,8 +100,6 @@ struct device dev = {
 
 int             vpcolor = VP_WHITE;
 int             vpfat = 0;
-
-extern void (*genreader) (int nn, FILE **inpltin, char *innames[]);
 
 int		vpscoltabinfo[VPPEN_NUM_COL][4];
 int		vpsetcoltabanyway = NO;
@@ -1043,7 +1042,7 @@ void vpopen (void)
  * We want to go through the input files ourselves
  */
 
-    genreader = vp_do_dovplot;
+    dev.reader = gen_dovplot;
 
 /*
  * device capabilities

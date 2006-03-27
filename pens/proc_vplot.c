@@ -73,38 +73,23 @@ extern int      pltoutfd;
 extern FILE    *pltin;
 extern FILE    *controltty;
 extern FILE    *pltinarray[];
-extern char     pltinname[][MAXFLEN + 1];
+extern char    *pltinname[];
 extern char     pltname[];
 extern int      infileno;
-extern int      (*genreader) ();
 
 void proc_vplot (void)
 /*< This routine is responsible for processing the input files,
  * and performing the necessary pausing, etc, that may be needed
  * at the end before exiting. >*/
 {
-int             ii;
-char            *string;
-
+    char            *string;
+    
 /*
  * Finally, shove all the plot files off to be done!
  */
+    
+    dev.reader(infileno, pltinarray, pltinname);
 
-/*	fprintf(stderr,"i am in process plot \n");*/
-    if (!buffer_input)
-    {
-	for (ii = 0; ii < infileno; ii++)
-	{
-/*	fprintf(stderr,"2 am in process plot \n");*/
-	    setbuf (pltinarray[ii], (char *) NULL);
-/*	fprintf(stderr,"3 am in process plot \n");*/
-	}
-    }
-/*	fprintf(stderr,"3b am in process plot \n");*/
-
-    (*genreader) (infileno, pltinarray, pltinname);
-
-/*	fprintf(stderr,"4 am in process plot \n");*/
 /*
  * Normally, *genreader will be gen_do_dovplot, found in genlib
  */

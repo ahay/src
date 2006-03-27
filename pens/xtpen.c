@@ -2449,7 +2449,6 @@ static void choose_visual();
 xtopen ()
 {
 extern int      xt_dovplot ();
-extern int      (*genreader) ();
 extern int      (*message) ();
 extern int      brake;
 char            title[50], *ap;
@@ -2736,7 +2735,7 @@ Dimension 	width, height;
     xtattributes (SET_COLOR, 7, 0, 0, 0);;
 
     /* xtpen controls the file stream itself */
-    genreader = xt_dovplot;
+    dev.reader = xt_dovplot;
 
     /* xtpen controls messages */
     message = dev.message;

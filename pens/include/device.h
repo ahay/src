@@ -25,6 +25,7 @@ struct device{
     void (*attributes)(int command, int value, int v1, int v2, int v3);
 
     /* input */
+    void (*reader)(int nn, FILE **inpltin, char** innames);
     int (*getpoint)(int *x, int *y);
     int (*interact)(int what, FILE *controltty, char *string);
 

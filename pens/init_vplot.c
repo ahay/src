@@ -316,7 +316,7 @@ int             pltoutfd, stderrfd, controlfd;
 void  (*message) (int command, char* string) = genmessage;
 struct stat     stderrstat;
 struct stat     pltoutstat;
-FILE           *pltout, *pltin;
+FILE           *pltin;
 
 FILE           *controltty;
 char            outbuf[BUFSIZ];
@@ -329,8 +329,6 @@ FILE           *pltinarray[MAXIN];
 char            pltinname[MAXIN][MAXFLEN + 1];
 char            pltname[MAXFLEN + 1] = "";
 int             infileno = 0;
-extern int      gen_do_dovplot ();
-int             (*genreader) () = gen_do_dovplot;
 
 extern void reset_windows (void);
 
@@ -391,21 +389,11 @@ float           ftemp;
     dev.open ();
     device_open = YES;
 
-/*
- * Beware trying to print out error messages until
- * we've figured out where to connect the "message" routine!
- */
-
-    if (buffer_output)
-	setbuf (pltout, outbuf);
-    else
-	setbuf (pltout, (char *) NULL);
-
     /*
      * If graphics output going to control terminal, disable echoing and
      * arrange for use of device's message routine 
      */
-    pltoutfd = fileno (pltout);
+    pltoutfd = fileno (stdout);
     stderrfd = fileno (stderr);
     out_isatty = isatty (pltoutfd);
 

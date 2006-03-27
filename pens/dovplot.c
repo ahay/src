@@ -233,7 +233,7 @@ static void update_color (void);
 static void getvpstring (void);
 static int getpolygon (int npts);
 
-void gen_do_dovplot (int nn, FILE **inpltin, char** innames)
+void gen_dovplot (int nn, FILE **inpltin, char** innames)
 /*< Call dovplot, cycling through the input plot files >*/
 {
 int             ii;
@@ -247,9 +247,7 @@ int             ii;
  */
 	pltin = inpltin[ii];
 	strncpy (pltname, innames[ii], MAXFLEN - 5);
-/*	fprintf(stderr,"before %s \n",innames[ii]);*/
 	dovplot ();
-/*	fprintf(stderr,"2efore %s \n",innames[ii]);*/
 	fclose (pltin);
     }
 }
