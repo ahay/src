@@ -41,7 +41,7 @@ par['dratio']=par['iratio']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99 label1="z(ft)" label2="x(ft)" %s
+    title="" pclip=99 label1=z unit1=ft label2=x unit2=ft %s
     min1=%g max1=%g min2=%g max2=%g
     screenratio=%g screenht=10 labelsz=4
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['iratio'])
@@ -49,7 +49,7 @@ def igrey(custom,par):
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=97 label1="t(s)" label2="x(ft)" %s
+    title="" pclip=97 label1=t unit1=s label2=x unit2=ft %s
     min2=%g max2=%g
     screenratio=%g screenht=10 labelsz=4
     ''' % (custom,par['xmin'],par['xmax'],par['dratio'])
@@ -66,7 +66,7 @@ def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=97 label1="z(ft)" label2="x(ft)" %s
+    title="" pclip=97 label1=z unit1=ft label2=x unit2=ft %s
     screenratio=%g screenht=10 labelsz=4
     ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom,par['iratio'])
 
