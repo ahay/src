@@ -1,0 +1,37 @@
+from rsfproj import *
+import zomig
+
+## nx=nz=nt=200
+## - c=0.5, -3<=x_0<=3, 0<=t<=0.7, 0<=z<=1.3147
+
+## - c=1.5, -2<=x_0<=2, 0<=t<=0.7, 0<=z<=1.166
+## nx=134, ny=nt=200
+
+for case in (0,1):
+    for data in ('ve','vf','f'):
+        intime = data=='f'
+        dat = data+str(case)
+        inp = data+('05','15')[case]+'.dat'
+        Fetch(inp,'masha')
+        Flow(dat,inp,
+             '''
+             echo in=$SOURCE
+             n1=%d o1=%g d1=%g
+             n2=200 o2=0 d2=%g
+             label1=Lateral unit1=km
+             label2=%s unit2=%s
+             data_format=ascii_float |
+             dd form=native |
+             transp
+             ''' % ((200,134)[case],
+                    (-3,-2)[case],
+                    (0.03015075,.03007519)[case],
+                    ((0.0066065326,0.0058592964)[case],0.003517588)[intime],
+                    ('Depth','Time')[intime],
+                    ('km','s')[intime]),stdin=0)
+        Result(dat,
+               '''
+               grey color=j allpos=y title=%s scalebar=y
+               ''' % dat)
+
+End()
