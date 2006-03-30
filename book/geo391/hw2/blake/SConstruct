@@ -44,7 +44,7 @@ Flow('cmp','cmps-tp.HH',
 Plot('noff',
      '''
      grey title="Near Offset Section" wheretitle=t
-     label1="Time (s)" label2="Distance (km)" wherexlabel=b
+     label1=Time unit1=s label2=Distance unit2=km wherexlabel=b
      ''')
 Plot('floor0',None,'box x0=6.238 y0=6.705 label="Seafloor" xt=-1 yt=1')
 Plot('bsr0',None,'box x0=10.918 y0=5.922 label="BSR" xt=1 yt=1')
@@ -59,7 +59,7 @@ Result('noff','noff floor0 bsr0','Overlay')
 
 Plot('cmp',
      '''
-     grey title="CMP Gather" wheretitle=t label1="Time (s)"
+     grey title="CMP Gather" wheretitle=t label1=Time unit1=s
      label2="Trace Number" wherexlabel=b max1=6
      ''')
 Plot('floorbox',None,
@@ -74,7 +74,7 @@ Flow('off','off1 off2','cat axis=1 ${SOURCES[1]}')
 Plot('wcmp','cmp off',
      '''
      wiggle xpos=${SOURCES[1]} transp=y yreverse=y poly=y
-     label1="Time (s)" label2="Offset (km)" title="CMP Gather"
+     label1=Time unit1=s label2=Offset unit2=km title="CMP Gather"
      ''')
 
 Result('cmp','wcmp gcmp','SideBySideAniso')
@@ -100,8 +100,8 @@ Flow('vel','floor','unif2 d1=0.005 n1=1001 v00=%g,%g dvdz=0,0.1' % (velw,vels))
 Plot('vel',
      '''
      grey color=j bias=%g scalebar=y wanttitle=n
-     label1="Depth (km)" label2="Lateral (km)"
-     barlabel="Velocity (km/s)" barreverse=y
+     label1=Depth unit1=km label2=Lateral unit2=km
+     barlabel=Velocity barunit="km/s" barreverse=y
      wherexlabel=b
      ''' % (0.5*(velw+vels)))
 
@@ -119,9 +119,9 @@ for ref in depth.keys():
         Flow(ray+str(case),'vel','shoot2 yshot=0 tol=0.001 zshot=%g nr=24 r0=%g dr=%g' %
              ((depth[ref],0.2,0.05),(depth[ref],1.4,0.025))[case])
     Flow(ray,[ray+'0',ray+'1'],'cat axis=1 ${SOURCES[1]}')
-    Flow(['t'+ray,'./j'+ray],['vel',ray],
+    Flow(['t'+ray,ray+'.ray'],['vel',ray],
          'cell2 yshot=0 zshot=%g anglefile=${SOURCES[1]} traj=${TARGETS[1]}' % depth[ref])
-    Plot(ray,['j'+ray,'vel'],'plotrays frame=${SOURCES[1]} plotcol=7 scalebar=y')
+    Plot(ray,[ray+'.ray','vel'],'plotrays frame=${SOURCES[1]} plotcol=7 scalebar=y')
     rays.append(ray)
     Plot('t'+ray,
          '''

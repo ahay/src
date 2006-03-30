@@ -1,6 +1,7 @@
-/* Time-domain acoustic FD modeling
- * pcs 2005
- */
+/* Time-domain acoustic FD modeling.
+
+pcs 2005
+*/
 
 /*
   Copyright (C) 2004 University of Texas at Austin

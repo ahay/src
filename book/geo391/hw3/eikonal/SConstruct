@@ -34,8 +34,8 @@ Plot('vel',
      '''
      grey color=j allpos=y screenht=6 screenratio=%g
      bias=%g wanttitle=n barreverse=y
-     label1="Depth (km)" label2="Lateral (km)"
-     scalebar=y barlabel="Velocity (km/s)" 
+     label1=Depth unit1=km label2=Lateral unit2=km
+     scalebar=y barlabel=Velocity barunit="km/s" 
      ''' % ((nz-1.)/(nx-1.),v0))
 
 # Analytical traveltime
@@ -144,13 +144,13 @@ Flow('cpu',cpus,cat)
 graph = 'cmplx ${SOURCES[0:2]} | graph wanttitle=n '
 for case in (0,1):
     Plot('err'+str(case),'space err',graph + '''
-    label1="Grid Spacing (km)" label2="Error (s)"
+    label1="Grid Spacing" unit1=km label2=Error unit2=s
     ''',stdin=0)
     Plot('logerr'+str(case),'logspace logerr',graph + '''
-    label1="Log(Grid Spacing)" label2="Log(Error)"
+    label1="Log(Grid Spacing)" unit1= label2="Log(Error)" unit2=
     ''',stdin=0)
     Plot('cpu'+str(case),'size cpu',graph + '''
-    label1="Grid Size" label2="CPU Time (s)"
+    label1="Grid Size" unit1= label2="CPU Time" unit2=s
     ''',stdin=0)
     graph = graph + 'symbol=x plotcol=2 '
 
