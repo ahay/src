@@ -373,8 +373,8 @@ def eps2png(target=None,source=None,env=None):
      eps = str(source[0])
      option = plotoption.get(os.path.basename(eps),'')
      command =  'PAPERSIZE=ledger %s %s -out %s' \
-               + ' -type png -interlaced -antialias -crop a %s'
-     command = command % (pstoimg,eps,png,option)
+               + ' -type %s -interlaced -antialias -crop a %s'
+     command = command % (pstoimg,eps,png,itype,option)
      print command
      os.system(command)
      return 0
@@ -434,7 +434,7 @@ if fig2dev:
 
 if pstoimg:
      PNGBuild = Builder(action = Action(eps2png),
-                        suffix='.png',src_suffix=pssuffix)
+                        suffix='.'+itype,src_suffix=pssuffix)
 
 if pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
@@ -593,7 +593,7 @@ class TeXPaper(Environment):
                   self.PDFBuild(pdf,eps)
                   erfigs.append(pdf)
              if latex2html and pstoimg:
-                  png = re.sub(pssuffix+'$','.png',eps)
+                  png = re.sub(pssuffix+'$','.'+itype,eps)
                   self.PNGBuild(png,eps)
                   self.imgs.append(png)
                   self.Install(resdir2,[png,pdf])
@@ -633,7 +633,7 @@ class TeXPaper(Environment):
                 eps = re.sub('.pdf$',pssuffix,pdf)
                 self.PSBuild(eps,pdf)
                 if latex2html and pstoimg:
-                    png = re.sub(pssuffix+'$','.png',eps)
+                    png = re.sub(pssuffix+'$','.'+itype,eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
                     resdir2 = os.path.join(self.docdir,os.path.dirname(png))
