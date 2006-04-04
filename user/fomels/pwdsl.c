@@ -24,7 +24,7 @@
 
 #include "pwdsl.h"
 #include "predict.h"
-#include "repeat.h"
+#include "repeat2.h"
 
 static int n2, n1, n, k2;
 static float *tmp1, *tmp2, amp;
@@ -40,7 +40,7 @@ void pwdsl_init(int m1, int m2       /* data dimensions */,
     n2 = m2+2*rect2;
     n = m1*n2;
 
-    repeat_init(m1,n2,sf_triangle1_lop);
+    repeat2_init(m1,n2,sf_triangle1_lop);
 
     tmp1 = sf_floatalloc(n);
     tmp2 = sf_floatalloc(n);
@@ -93,7 +93,7 @@ void pwdsl_lop(bool adj, bool add, int nx, int ny, float* x, float* y)
 
     predicter_lop  (true,  false, n, n, tmp2, tmp1);
     subtracter_lop (true,  false, n, n, tmp1, tmp2);
-    repeat_lop     (true,  false, n, n, tmp2, tmp1);
+    repeat2_lop    (true,  false, n, n, tmp2, tmp1);
     subtracter_lop (false, false, n, n, tmp2, tmp1);
     predicter_lop  (false, false, n, n, tmp1, tmp2);
 

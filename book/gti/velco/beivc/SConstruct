@@ -17,6 +17,7 @@ velcon.velcon('bei',
               n1=876,      # vertical extent
               v1=1.8,      # other velocity
               dx=0.0335,   # lateral sampling
+              x0=7.705,    # lateral origin
               rect1=15,    # vertical smoothing
               rect2=30)    # lateral  smoothing
 

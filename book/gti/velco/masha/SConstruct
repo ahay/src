@@ -1,12 +1,31 @@
 from rsfproj import *
 import zomig
 
-for data in ('vxz','stk'):
-    Fetch('bei'+data+'.rsf','masha')
-    Flow(data,'bei'+data,'dd form=native')
+Fetch('beistk.rsf','masha')
+Flow('stk','beistk.rsf','dd form=native')
 
+Fetch('beivxz.dat','masha')
+Flow('vxz','beivxz.dat',
+     '''
+     echo in=$SOURCE
+     n1=250 o1=0 d1=0.0332
+     n2=250 o2=0 d2=0.0161
+     label1=Lateral unit1=km
+     label2=Depth unit2=km
+     label=Velocity unit="km/s"
+     data_format=ascii_float |
+     dd form=native |
+     transp |
+     window max1=3.2
+     ''',stdin=0)
 
-Result('stk',
+Result('beivxz','vxz',
+       '''
+       grey color=j scalebar=y barreverse=y allpos=y bias=1.4
+       title="Estimated Interval Velocity"
+       ''')
+
+Result('beistk','stk',
        '''
        grey title=Stack
        label1=Time unit1=s label2=Lateral unit2=km
@@ -15,7 +34,7 @@ Result('stk',
 par = {
     'nx':250,'ox':0,'dx':0.0335,
     'nt':1000,'ot':0,'dt':0.004,
-    'nz':182,'oz':0,'dz':0.0332,
+    'nz':250,'oz':0,'dz':0.0161,
     #
     'nw':501, 'ow':0, 'dw':0.25,'jw':1,
     #
@@ -26,14 +45,14 @@ Flow('slo','vxz',
      '''
      transp plane=12 |
      transp plane=23 |
-     math "output=0.5/input" |
+     math "output=1/input" |
      put label1=x label2=y label3=z
      ''')
 
 zomig.wflds ('dat','stk',par)
 zomig.image('img','slo','dat',par)
 
-Result('img',
+Result('beiimg','img',
        '''
        window |
        transp |

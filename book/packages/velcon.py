@@ -15,6 +15,7 @@ def velcon(data,        # data name
            units='km',  # lateral units
            vslope=None, # semblance muting
            vx0=0,       # semblance muting
+           x0=0,        # lateral origin
            rect1=10,    # vertical smoothing
            rect2=10):   # lateral  smoothing
     '''Velocity continuation'''
@@ -96,33 +97,33 @@ def velcon(data,        # data name
          '''
          grey pclip=100 color=j bias=%g 
          scalebar=y title="Picked RMS Velocity"
-         label1="Time (s)" label2="Lateral Position (%s)"
-         barlabel="Velocity (%s/s)"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s
+         barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (vm,units,units))
     for line in (0,1):
         Plot(npk+str(line),npk,
              '''
              contour nc=40 wanttitle=n plotcol=%d plotfat=%d
-             scalebar=y wantaxis=n barlabel="Velocity (%s/s)"
+             scalebar=y wantaxis=n barlabel=Velocity barunit="%s/s"
              ''' % ((0,10,units),(7,1,units))[line])
     Result(npk,[npk,npk+'0',npk+'1'],'Overlay')
 
     fmg = data+'-fmg'
     Flow(fmg,[vlf,npk],'slice pick=${SOURCES[1]} | transp plane=23')
     Result(fmg,
-           'grey title=Slice label1="Time (s)" label2="Lateral Position (%s)" ' % units)
+           'grey title=Slice label1=Time unit1=s label2="Lateral Position" unit2=%s ' % units)
 
     agc = data+'-agc'
     Flow(agc,fmg,'agc rect1=200')
     Result(agc,
            '''
-           grey title=Picked pclip=98 label1="Time (s)" label2="Lateral Position (%s)"
+           grey title=Picked pclip=98 label1="Time" unit1=s label2="Lateral Position" unit2=%s
            ''' % units)
     
     Plot(fmg,agc,
          '''
          grey title="Time-Migrated Image"
-         label1="Time (s)" label2="Lateral Position (%s)"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s
          ''' % units)
     Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
@@ -131,7 +132,7 @@ def velcon(data,        # data name
     Plot(slp,
          '''
          grey title="Estimated Dips" scalebar=y color=j
-         label1="Time (s)" label2="Lateral Position (%s)" pclip=100
+         label1=Time unit1=s label2="Lateral Position" unit2=%s pclip=100
          barlabel="Dip (samples)"
          ''' % units)
     Result(slp,[fmg,slp],'SideBySideAniso')
@@ -142,19 +143,19 @@ def velcon(data,        # data name
     Plot(vg,
          '''
          grey title="Structure Enhancing"
-         label1="Time (s)" label2="Lateral Position (%s)"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s
          ''' % units)
     Plot(vg+'2',[agc,vg],
          '''
          add scale=1,-1 ${SOURCES[1]} | cat ${SOURCES[0]} |
          byte gainpanel=2 | window n3=1 |
          grey title="Removed Noise" 
-         label1="Time (s)" label2="Lateral Position (%s)"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s
          ''' % units)    
     Result(vg,[vg,vg+'2'],'SideBySideAniso')
 
     dix = data+'-dix'
-    Flow(fmg+'2',[vlf2,npk],'slice pick=${SOURCES[1]}')
+    Flow(fmg+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
     Flow([dix,dix+'0'],[npk,fmg+'2'],
          '''
          dix rect1=%d rect2=%d
@@ -164,15 +165,15 @@ def velcon(data,        # data name
     Plot(dix,
          '''
          grey pclip=100 color=j bias=%g 
-         scalebar=y barlabel="Interval Velocity (%s/s)"
-         label1="Time (s)" label2="Lateral Position (%s)" title="Stationary Shaping"
+         scalebar=y title="Interval Velocity" barlabel=Velocity barunit="%s/s"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
          ''' % (vm,units,units))
     Plot(dix+'0',
          '''grey pclip=100 color=j bias=%g 
-         scalebar=y barlabel="Predicted RMS Velocity (%s/s)"
-         label1="Time (s)" label2="Lateral Position (%s)" title="Stationary Shaping"
+         scalebar=y title="Predicted RMS Velocity" barlabel=Velocity barunit="%s/s"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
          ''' % (vm,units,units))
-    Result(dix,[dix,dix+'0'],'SideBySideIso',vppen='txscale=1.2')
+    Result(dix,[dix,dix+'0'],'SideBySideAniso')
     Result(dix+'0',[npk,dix+'0'],'SideBySideAniso')
 
     pdx = data+'-pdx'
@@ -185,18 +186,50 @@ def velcon(data,        # data name
     Plot(pdx,
          '''
          grey pclip=100 color=j bias=%g allpos=y
-         scalebar=y barlabel="Estimated Interval Velocity (%s/s)"
-         label1="Time (s)" label2="Lateral Position (%s)"
+         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s
          wanttitle=n 
          ''' % (v0,units,units))
     Plot(pdx+'0',
          '''
          grey pclip=100 color=j bias=%g
          scalebar=y title="Predicted RMS Velocity"
-         label1="Time (s)" label2="Lateral Position (%s)" 
-         barlabel="Velocity (%s/s)"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s 
+         barlabel=Velocity barunit="%s/s"
          ''' % (vm,units,units))
     Result(pdx,[npk,pdx+'0'],'SideBySideAniso')
+
+    shp = data+'-shp'
+    ext = data+'-ext'
+
+    for inp in (npk,fmg+'2',slp):
+        Flow(inp+'_b',inp,'window n2=1 | spray axis=2 n=10 o=%g d=%g' % (x0-10*dx,dx))
+        Flow(inp+'_e',inp,'window n2=1 f2=%d | spray axis=2 n=10' % (nx-1))
+        Flow(inp+'_',[inp+'_b',inp,inp+'_e'],'cat ${SOURCES[1:3]} axis=2')
+    
+    Flow([shp,shp+'0'],[npk+'_',fmg+'2_',slp+'_'],
+         '''
+         dixshape dip=${SOURCES[2]}
+         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
+         niter=50 verb=y rect1=%d rect2=5 lam=0.1
+         ''' % (2*rect1))
+    Plot(shp,
+         '''
+         window f2=10 n2=%d |
+         grey pclip=100 color=j bias=%g allpos=y
+         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
+         wanttitle=n 
+         ''' % (nx,v0,units,units))
+    Plot(shp+'0',
+         '''
+         window f2=10 n2=%d |
+         grey pclip=100 color=j bias=%g
+         scalebar=y title="Predicted RMS Velocity"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s 
+         barlabel=Velocity barunit="%s/s" barreverse=y
+         ''' % (nx,vm,units,units))
+    Result(shp,[shp,shp+'0'],'SideBySideAniso')
 
     Plot(agc+'w',agc,
          '''
@@ -214,6 +247,7 @@ def velcon(data,        # data name
     
     Result(dix+'w',[dix,agc+'w'],'Overlay')
     Result(pdx+'w',[pdx,vg+'w'],'Overlay')
+    Result(shp+'w',[shp,agc+'w'],'Overlay')
 
     # To estimate uncertainty: measure dt/dv, measure dv, multiply
     ref = data+'-ref'
@@ -246,7 +280,7 @@ def velcon(data,        # data name
     Result(dtdv,
            '''
            grey title="Structural Sensitivity"
-           label1="Time (s)" label2="Lateral Position (%s)"
+           label1=Time unit1=s label2="Lateral Position" unit2=%s
            scalebar=y color=j allpos=y
            ''' % units)
 
@@ -261,7 +295,7 @@ def velcon(data,        # data name
     Result(dxdv,
            '''
            grey title="Structural Sensitivity"
-           label1="Time (s)" label2="Lateral Position (%s)"
+           label1=Time unit1=s label2="Lateral Position" unit2=%s
            scalebar=y color=j 
            ''' % units)
 
@@ -277,8 +311,8 @@ def velcon(data,        # data name
     Result(ddv,
            '''
            grey title="Velocity Uncertainty" allpos=y
-           label1="Time (s)" label2="Lateral Position (%s)"
-           scalebar=y color=j barlabel="Velocity (%s/s)"
+           label1=Time unit1=s label2="Lateral Position" unit2=%s
+           scalebar=y color=j barlabel=Velocity barunit="%s/s"
            ''' % (units,units))
 
     unc = data+'-unc'
@@ -287,7 +321,7 @@ def velcon(data,        # data name
            '''
            grey title="Structural Uncertainty"
            scalebar=y color=j allpos=y
-           label1="Time (s)" label2="Lateral Position (%s)"
+           label1=Time unit1=s label2="Lateral Position" unit2=%s
            barlabel="Vertical Uncertainty (s)"
            ''' % units)
     Flow(unc+'2',[dxdv,ddv],
@@ -296,7 +330,7 @@ def velcon(data,        # data name
            '''
            grey title="Structural Uncertainty"
            scalebar=y color=j allpos=y
-           label1="Time (s)" label2="Lateral Position (%s)"
+           label1=Time unit1=s label2="Lateral Position" unit2=%s
            barlabel="Lateral Uncertainty (%s)"
            ''' % (units,units))
     

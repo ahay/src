@@ -1,0 +1,94 @@
+from rsfproj import *
+import zomig
+
+Fetch('elfh.dat','masha')
+Fetch('elfvxz.dat','masha')
+Fetch('elfstk.rsf','masha')
+
+nt=400
+dt=0.004
+
+nx=1000
+dx=13.3333
+
+nz=1000
+dz=5.005
+
+Flow('elfh','elfh.dat',
+     '''
+     echo in=$SOURCE
+     n1=%d o1=0 d1=%g
+     n2=%d o2=0 d2=%g
+     label1=Lateral unit1=m
+     label2=Time unit2=s
+     label="Dix Velocity" unit="km/s"
+     data_format=ascii_float |
+     dd form=native |
+     transp 
+     ''' % (nx,dx,nt,dt),stdin=0)  
+
+Flow('elfvxz','elfvxz.dat',
+     '''
+     echo in=$SOURCE
+     n1=%d o1=0 d1=%g
+     n2=%d o2=0 d2=%g
+     label1=Lateral unit1=m
+     label2=Depth unit2=m
+     label=Velocity unit="km/s"
+     data_format=ascii_float |
+     dd form=native |
+     transp |
+     window max1=1750
+     ''' % (nx,dx,nz,dz),stdin=0)  
+
+
+Result('elfh',
+       '''
+       grey color=j scalebar=y barreverse=y allpos=y bias=1400
+       title="Dix Velocity"
+       ''')
+
+Result('elfvxz',
+       '''
+       grey color=j scalebar=y barreverse=y allpos=y bias=1400
+       title="Estimated Interval Velocity"
+       ''')
+
+Flow('stk','elfstk.rsf','dd form=native')
+
+Result('elfstk','stk',
+       '''
+       grey title=Stack
+       label1=Time unit1=s label2=Lateral unit2=m
+       ''')
+
+par = {
+    'nx':nx,'ox':0,'dx':dx,
+    'nt':nt,'ot':0,'dt':dt,
+    'nz':351,'oz':0,'dz':dz,
+    #
+    'nw':201, 'ow':0, 'dw':0.625,'jw':1,
+    #
+    'verb':'y','eps':0.01,'nrmax':10
+    }
+
+Flow('slo','elfvxz',
+     '''
+     transp plane=12 |
+     transp plane=23 |
+     math "output=1/input" |
+     put label1=x label2=y label3=z
+     ''')
+
+zomig.wflds ('dat','stk',par)
+zomig.image('img','slo','dat',par)
+
+Result('elfimg','img',
+       '''
+       window |
+       transp |
+       grey title="Post-Stack Depth Migration"
+       label1=Depth unit1=m label2=Lateral unit2=m
+       ''')
+
+End()

@@ -10,7 +10,7 @@ else:
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
 toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
-                      '\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
+                      '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
 
 def header(target=None,source=None,env=None):
 # generate a header file
