@@ -1,12 +1,12 @@
 from rsfproj import *
 
 par = {
-    'nz':731,  'dz':10, 'oz':-1800, # z (ft)
-    'nx':1443, 'dx':10, 'ox':+2000, # x (ft)
-    'nt':1000,   # no of time steps
+    'nz':731,  'dz':10, 'oz':-1800, # z (m)
+    'nx':1443, 'dx':10, 'ox':+2000, # x (m)
+    'nt':4000,   # no of time steps
     'dt':0.0005, #       time sampling
     'ot':0,      #       time origing
-    'kt':200,    # wavelet delay
+    'kt':100,    # wavelet delay
     }
 # ------------------------------------------------------------
 par['xmin']=par['ox']
@@ -21,7 +21,7 @@ nn = par['nx']*2
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n title="" pclip=99
-    label1="z" label2="x" unit1=ft unit2=ft
+    label1="z" label2="x" unit1=m unit2=m
     %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
@@ -30,14 +30,14 @@ def igraph(custom,par):
     return '''
     graph labelrot=n %s
     yreverse=y wantaxis=n title=" " 
-    label1="z" label2="x" unit1=ft unit2=ft
+    label1="z" label2="x" unit1=m unit2=m
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
 
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n title="" pclip=99
-    label1="t" label2="x" unit1=s unit2=ft
+    label1="t" label2="x" unit1=s unit2=m
     %s
     min2=%g max2=%g
     ''' % (custom,par['xmin'],par['xmax'])
@@ -65,23 +65,38 @@ topo = 'huskyelev.HH'
 Fetch(velo,'husky')
 Fetch(topo,'husky')
 
-Plot('velo',velo,igrey('allpos=y',par))
-Plot('topo',topo,igraph('plotcol=0 plotfat=8',par))
+Flow('velo',velo,'dd form=native')
+Flow('topo',topo,'dd form=native')
+
+Plot('velo',igrey('allpos=y',par))
+Plot('topo',igraph('plotcol=0 plotfat=8',par))
 
 Result('model',['velo','topo'],'Overlay')
 
-Flow('acim',velo,'math output="input*2000"')
-
-Flow('refl','acim','ai2refl')
-Plot('refl','refl',igrey('',par))
-
-Flow('thrs','refl','map2list threshold=0.01 verb=y')
 # ------------------------------------------------------------
-# source
 
-Flow('xs','thrs','window n2=1 f2=0')
-Flow('zs','thrs','window n2=1 f2=1')
-Flow('rs','thrs','window n2=1 f2=2')
+Flow('edge','velo','igrad square=y')
+Flow('mask','edge','mask min=1')
+
+for x in ('x1','x2'):
+    if(x=='x1'): o='zs'
+    if(x=='x2'): o='xs'
+
+    Flow(o,'edge mask',
+         '''
+         math output=%s |
+         put n1=1 n2=%d |
+         headerwindow mask=${SOURCES[1]} |
+         window
+         ''' % (x,par['nz']*par['nx']))
+
+Flow('rs','edge mask',
+     '''
+     scale axis=123 |
+     put n1=1 n2=%d |
+     headerwindow mask=${SOURCES[1]} |
+     window
+     ''' % (par['nz']*par['nx']))
 
 Flow('ss',['xs','zs','rs'],
      '''
@@ -94,6 +109,32 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 
 Result('ss',['velo','ss'],'Overlay')
 
+# ------------------------------------------------------------
+
+#Flow('acim',velo,'math output="input*2000"')
+#
+#Flow('refl','acim','ai2refl')
+#Plot('refl','refl',igrey('',par))
+#
+#Flow('thrs','refl','map2list threshold=0.01 verb=y')
+# ------------------------------------------------------------
+# source
+
+#Flow('xs','thrs','window n2=1 f2=0')
+#Flow('zs','thrs','window n2=1 f2=1')
+#Flow('rs','thrs','window n2=1 f2=2')
+
+#Flow('ss',['xs','zs','rs'],
+#     '''
+#     cat axis=2 space=n
+#     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+#     ''', stdin=0)
+
+#Plot('ss','window n1=2 | dd type=complex | window | '
+#     + igraph('symbol=. plotcol=6',par))
+
+#Result('ss',['velo','ss'],'Overlay')
+#
 # ------------------------------------------------------------
 # receiver (topo)
 
@@ -132,7 +173,7 @@ Result('oo',['velo','oo'],'Overlay')
 Flow('wav',None,
      '''
      spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-     ricker1 frequency=10 | 
+     ricker1 frequency=20 | 
      put label1=t label2=x label3=y 
      ''' % par)    
 Result('wav','wav','window n1=1000 | graph title=" "')
@@ -140,15 +181,19 @@ Result('wav','wav','window n1=1000 | graph title=" "')
 # ------------------------------------------------------------
 # modeling
 
-amodel('dd','ww','wav',velo,'ss','rr','free=n')
-amodel('do','wo','wav',velo,'ss','oo','free=n')
+amodel('dd','ww','wav','velo','ss','rr','free=n')
+amodel('do','wo','wav','velo','ss','oo','free=n')
 
 # ------------------------------------------------------------
 
+Result('ww',
+       'window n3=1 f3=4 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+       + igrey('pclip=99',par))
 Result('wo',
        'window n3=1 f3=4 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
        + igrey('pclip=99',par))
 
+Result('dd','transp |' + dgrey('',par))
 Result('do','transp |' + dgrey('',par))
 
 # ------------------------------------------------------------
