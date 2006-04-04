@@ -8,6 +8,10 @@ segy = 'P100335SERGUI.DAT'
 
 Fetch(segy,'total',private)
 
+# Converting from SEGY to RSF and splitting headers from the data
+# t3d.rsf is data
+# h3d.rsf is trace headers
+
 Flow('t3d h3d ./a3d ./b3d',segy,
      '''
      segyread tape=$SOURCE
