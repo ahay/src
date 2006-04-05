@@ -19,11 +19,31 @@ Flow('vxz','beivxz.dat',
      window max1=3.2
      ''',stdin=0)
 
-Result('beivxz','vxz',
-       '''
-       grey color=j scalebar=y barreverse=y allpos=y bias=1.4
-       title="Estimated Interval Velocity"
-       ''')
+for coord in ('x','z'):
+    dat = 'bei%s.dat' % coord
+    Fetch(dat,'masha')
+    Flow(coord,dat,
+         '''
+         echo in=$SOURCE
+         n2=751 n1=250
+         data_format=ascii_float |
+         dd form=native 
+         ''',stdin=0)
+
+Plot('vxz',
+     '''
+     grey color=j scalebar=y barreverse=y allpos=y bias=1.4
+     title="Estimated Interval Velocity"
+     ''')
+
+Plot('rays','x z',
+     '''
+     cmplx ${SOURCES[:2]} | transp | window j2=5 |
+     graph wanttitle=n yreverse=y min1=0 max1=8.2668 min2=0 max2=3.2039
+     plotcol=7 scalebar=y wantaxis=n
+     ''',stdin=0)
+
+Result('beivxz','vxz rays','Overlay')
 
 Result('beistk','stk',
        '''
