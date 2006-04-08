@@ -221,6 +221,14 @@ def velcon(data,        # data name
          label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
          wanttitle=n 
          ''' % (nx,v0,units,units))
+    Plot(shp+'1',shp,
+         '''
+         window f2=10 n2=%d |
+         grey pclip=100 color=j bias=%g allpos=y
+         scalebar=y barlabel="Velocity" barunit="%s/s"
+         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
+         title="Interval Velocity" 
+         ''' % (nx,v0,units,units))
     Plot(shp+'0',
          '''
          window f2=10 n2=%d |
@@ -229,7 +237,7 @@ def velcon(data,        # data name
          label1=Time unit1=s label2="Lateral Position" unit2=%s 
          barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (nx,vm,units,units))
-    Result(shp,[shp,shp+'0'],'SideBySideAniso')
+    Result(shp,[shp,shp+'1'],'SideBySideAniso')
 
     Plot(agc+'w',agc,
          '''

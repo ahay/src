@@ -77,17 +77,74 @@ def stack(name,
          ''' % (f1,nout,nout,f1))
     Result(stk+'2',grey('DMO Stack'))
 
+    diffimg(name,stk+'2',v0,nv,dv,nx,padx,nt,tmin,tmax,
+            rect1,
+            rect2,
+            srect1,
+            srect2,
+            vslope,
+            units,
+            f1,
+            j3,
+            dx,
+            x0,
+            nout,
+            vx0)
+
+def diffimg(name,
+          stk,
+          v0,
+          nv,
+          dv,
+          nx,
+          padx,
+          nt,
+          tmin=0,
+          tmax=10,
+          rect1=10,
+          rect2=10,
+          srect1=1,
+          srect2=3,
+          vslope=None,
+          units='km',
+          f1=1,
+          j3=1,
+          dx=1,
+          x0=0,
+          nout=2048,
+          vx0=None):
+
+    def grey(title):
+        return '''
+        window n1=%d |
+        grey title="%s" 
+        label1="Time (s)" label2="Lateral (%s)"
+        ''' % (nt,title,units)
+
+    def velgrey(title):
+        return grey(title) + '''
+        color=j scalebar=y bias=%g barlabel="Velocity (%s/s)"
+        barreverse=y
+        ''' % (v0+0.5*nv*dv,units)
+
+    if vslope:
+        pick = 'mutter x0=%g v0=%g half=n | ' % (vx0,vslope)
+    else:
+        pick = ''
+
+    pick = pick + 'pick rect1=%d rect2=%d | window' % (rect1,rect2)
+
     dip = name+'-dip'
-    Flow(dip,stk+'2','dip rect1=%d rect2=%d' % (rect1,rect2))
+    Flow(dip,stk,'dip rect1=%d rect2=%d' % (rect1,rect2))
     Result(dip,grey('Dominant Slope') + \
            ' color=j scalebar=y barlabel="Slope (samples)" ')
-
+    
     pwd=name+'-pwd'
-    Flow(pwd,[stk+'2',dip],'pwd dip=${SOURCES[1]}')
+    Flow(pwd,[stk,dip],'pwd dip=${SOURCES[1]}')
     Result(pwd,grey('Separated Diffractions'))
 
     shp=name+'-shp'
-    Flow(shp,[stk+'2',dip],
+    Flow(shp,[stk,dip],
          '''
          pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d |
          add ${SOURCES[0]} scale=-1,1
@@ -137,7 +194,7 @@ def stack(name,
     focus rect1=%d rect3=%d |
     math output="1/abs(input)" |
     cut max1=%g | cut min1=%g 
-    ''' % (2*rect1,2*rect2,tmin,tmax)
+    ''' % (2*rect1,2*rect2/j3,tmin,tmax)
  
     foc=name+'-foc'
     Flow(foc,vlf,focus)
@@ -161,7 +218,7 @@ def stack(name,
 
     Result(slc,grey('Migrated Diffractions'))
 
-    Flow(vlf+'2',stk+'2',velcon)
+    Flow(vlf+'2',stk,velcon)
     Flow(slc+'2',[vlf+'2',pik],'slice pick=${SOURCES[1]}')
 
     Result(slc+'2',grey('Migrated Stack'))

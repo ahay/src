@@ -119,30 +119,28 @@ for scale in (2,4,8,16,32,64,128,256,512):
          ''' % scale)
     Result(slena,grey('Scale=%d' % scale,0))
 
-c=5
-
-rec = 'srec%d' % c
-Flow(rec,'seis sdip',
-     '''
-     threshold pclip=%d |
-     transp |
-     seislet dip=${SOURCES[1]} | transp
-     ''' % c)
-Result(rec,grey('Inverse Seislet Transform (%d%%)' % c,0))
-
-wrec = 'wrec%d' % c
-Flow(wrec,'linear2',
-     '''
-     threshold pclip=%d |
-     dwt adj=y inv=y | transp |
-     dwt adj=y inv=y | transp
-     ''' % c)
-Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
-
-srec = 'wsrec%d' % c
-Flow(srec,'slena',
-     'dwt | threshold pclip=%d | dwt adj=y inv=y' % c)
-Result(srec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
-
+for c in (1,5):
+    rec = 'srec%d' % c
+    Flow(rec,'seis sdip',
+         '''
+         threshold pclip=%d |
+         transp |
+         seislet dip=${SOURCES[1]} | transp
+         ''' % c)
+    Result(rec,grey('Inverse Seislet Transform (%d%%)' % c,0))
+    
+    wrec = 'wrec%d' % c
+    Flow(wrec,'linear2',
+         '''
+         threshold pclip=%d |
+         dwt adj=y inv=y | transp |
+         dwt adj=y inv=y | transp
+         ''' % c)
+    Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
+    
+    srec = 'wsrec%d' % c
+    Flow(srec,'slena',
+         'dwt | threshold pclip=%d | dwt adj=y inv=y' % c)
+    Result(srec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
 
 End()

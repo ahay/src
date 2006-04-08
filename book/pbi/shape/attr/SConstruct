@@ -47,7 +47,7 @@ plots = {'ai1':'Acoustic Impedance',
 for plot in plots.keys():
     Plot(plot,
          '''
-         graph title="%s" label1="Time (s)" label2=Amplitude
+         graph title="%s" label1=Time unit1=s label2=Amplitude
          labelsz=10 titlesz=12
          ''' % plots[plot])
     Plot('spec'+plot,plot,
@@ -99,8 +99,8 @@ for case in (1,2):
 ## COLLECTING TOGETHER
 ######################
 
-Result('sign','chirp conv seis','OverUnderAniso')
-Result('inst','ic1 sf1 seis1','OverUnderAniso')
-Result('locl','ic2 sf2 seis2','OverUnderAniso')
+Result('sign','chirp conv seis','OverUnderAniso',vppen='txscale=1.2')
+Result('inst','ic1 sf1 seis1','OverUnderAniso',vppen='txscale=1.2')
+Result('locl','ic2 sf2 seis2','OverUnderAniso',vppen='txscale=1.2')
 
 End()
