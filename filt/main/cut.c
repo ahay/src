@@ -32,11 +32,11 @@ Reverse of window. */
 #include <rsf.h>
 
 static void seektable (int dim, int *n, int *m, int *f, int *j, 
-		       int n1, int n2, int n3, size_t *table);
+		       int n1, int n2, int n3, off_t *table);
 
 int main (int argc, char *argv[])
 {
-    size_t *table, nleft, nbuf;
+    off_t *table, nleft, nbuf;
     int i, esize, dim, n1, n2, n3, m1, i2, i1, j1, jump;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], j[SF_MAX_DIM], f[SF_MAX_DIM];
     float a, d[SF_MAX_DIM], o[SF_MAX_DIM];
@@ -133,7 +133,7 @@ int main (int argc, char *argv[])
 
     buf = sf_charalloc (n1);
     zero = sf_charalloc (n1);
-    table = (size_t*) sf_alloc (n2+1,sizeof(size_t));
+    table = (off_t*) sf_alloc (n2+1,sizeof(off_t));
     memset(zero,0,n1);
 
     seektable(dim,n,m,f,j,n1,n2,n3,table);
@@ -164,13 +164,13 @@ int main (int argc, char *argv[])
 }
 
 static void seektable(int dim, int *n, int *m, int *f, int *j, 
-		      int n1, int n2, int n3, size_t *table)
+		      int n1, int n2, int n3, off_t *table)
 {
-    size_t t, t2;
+    off_t t, t2;
     int i2, i, ii[SF_MAX_DIM];
 
     t2 = sf_cart2line (dim-1, n+1, f+1);
-    table[0] = (size_t) t2*n[0] + f[0];
+    table[0] = t2*n[0] + f[0];
 
     for (i2=1; i2 < n2; i2++) {
 	t = i2;

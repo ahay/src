@@ -30,18 +30,22 @@ for coord in ('x','z'):
          dd form=native 
          ''',stdin=0)
 
+xmax = 8.2668
+zmax = 3.2039
+
 Plot('vxz',
      '''
-     grey color=j scalebar=y barreverse=y allpos=y bias=1.4
-     title="Estimated Interval Velocity"
-     ''')
+     grey color=j scalebar=y allpos=y bias=1.4 barreverse=y
+     title="Estimated Interval Velocity" barlabel= barunit=
+     screenht=%g screenwd=%g bartype=v 
+     ''' % (1.8*zmax,1.8*xmax))
 
 Plot('rays','x z',
      '''
      cmplx ${SOURCES[:2]} | transp | window j2=5 |
-     graph wanttitle=n yreverse=y min1=0 max1=8.2668 min2=0 max2=3.2039
-     plotcol=7 scalebar=y wantaxis=n
-     ''',stdin=0)
+     graph wanttitle=n yreverse=y min1=0 max1=%g min2=0 max2=%g
+     plotcol=7 scalebar=y wantaxis=n screenht=%g screenwd=%g bartype=v
+     ''' % (xmax,zmax,1.8*zmax,1.8*xmax),stdin=0)
 
 Result('beivxz','vxz rays','Overlay')
 

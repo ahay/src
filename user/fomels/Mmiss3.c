@@ -1,21 +1,20 @@
-/* Missing data interpolation (N-dimensional) using shaping regularization.
-*/
+/* Missing data interpolation (N-dimensional) using shaping regularization. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
@@ -60,16 +59,12 @@ int main(int argc, char* argv[])
     } else {
 	mask = NULL;
     }
-    
-    if (!sf_getfloat("eps",&eps)) eps=0.0001;
-    /* regularization parameter */
-
+ 
     if (!sf_getbool("force",&force)) force=true;
     /* if y, keep known values */
 
     sf_mask_init(known);
     trianglen_init(dim, rect, n);
-    sf_conjgrad_init(n12, n12, n12, n12, eps, 1.e-9, true, false);
 
     sf_floatread(mm,n12,in);
 
@@ -84,11 +79,20 @@ int main(int argc, char* argv[])
 	}
     }
 
+    eps = 0.;
+    for (i=0; i < n12; i++) {
+	if (known[i]) eps += 1.;
+    }
+    eps = sqrtf(eps/n12);
+
     if (force) {
 	for (i=0; i < n12; i++) {
 	    if (known[i]) kk[i]=mm[i];
 	}
     }
+
+    sf_conjgrad_init(n12, n12, n12, n12, eps, FLT_EPSILON, true, false);
+
  
     sf_conjgrad(NULL, sf_mask_lop, trianglen_lop, pp, mm, mm, niter);
 

@@ -1,0 +1,25 @@
+from rsfproj import *
+import seislet
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+
+Fetch('elf0.H','elf',private)
+
+Flow('elf','elf0.H',
+     '''
+     dd form=native | cut n3=1 n2=1 n1=300 f3=663 f2=67
+     ''')
+
+Flow('gath','elf','window n2=128 n3=1 f3=500')
+
+seislet.seislet('gath',800,128,pmin=0,nsp=100,clip=5)
+
+Flow('gaths','elf','window n2=128')
+
+Flow('pat','gaths','patch w=800,128,300')
+Flow('dips','pat','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0')
+
+End()

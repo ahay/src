@@ -846,8 +846,9 @@ static void make_barlabel (sf_file in)
 	NULL == (labl=sf_histstring(in,"label"))) { 
 	/* bar label */
 	barlabel->text = blank;
-    } else if (NULL == (unit=sf_getstring("barunit")) && 
-	       NULL == (unit=sf_histstring(in,"unit"))) {
+    } else if ((NULL == (unit=sf_getstring("barunit")) && 
+		NULL == (unit=sf_histstring(in,"unit"))) ||
+	       *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
 	barlabel->text = labl;
     } else {
 	len = strlen(labl)+strlen(unit)+4;

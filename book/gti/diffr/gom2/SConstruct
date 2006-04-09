@@ -12,7 +12,7 @@ Flow('gom','gom.data.hh',
      label3=Shot unit3=m
      ''')
 
-Flow('gom2','gom','window min1=1 max1=5')
+Flow('gom2','gom','shot2cmp | window max1=5')
 
 stack.stack('gom2',
             v0=1200,

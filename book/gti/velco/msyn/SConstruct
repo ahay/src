@@ -1,37 +1,80 @@
 from rsfproj import *
 import zomig
 
-## nx=nz=nt=200
-## - c=0.5, -3<=x_0<=3, 0<=t<=0.7, 0<=z<=1.3147
 
-## - c=1.5, -2<=x_0<=2, 0<=t<=0.7, 0<=z<=1.166
-## nx=134, ny=nt=200
+#v(x,z)=2+2exp(-x^2-(y-2)^2), -3<=x<=3, 0<=t<=1
+#vf=v found, 300x300
+#ve= v exact, 300x300
+#vdix = the input data, 300x200
 
-for case in (0,1):
-    for data in ('ve','vf','f'):
-        intime = data=='f'
-        dat = data+str(case)
-        inp = data+('05','15')[case]+'.dat'
-        Fetch(inp,'masha')
-        Flow(dat,inp,
-             '''
-             echo in=$SOURCE
-             n1=%d o1=%g d1=%g
-             n2=200 o2=0 d2=%g
-             label1=Lateral unit1=km
-             label2=%s unit2=%s
-             data_format=ascii_float |
-             dd form=native |
-             transp
-             ''' % ((200,134)[case],
-                    (-3,-2)[case],
-                    (0.03015075,.03007519)[case],
-                    ((0.0066065326,0.0058592964)[case],0.003517588)[intime],
-                    ('Depth','Time')[intime],
-                    ('km','s')[intime]),stdin=0)
-        Result(dat,
-               '''
-               grey color=j allpos=y title=%s scalebar=y
-               ''' % dat)
+xmax=3
+tmax=1
+zmax=3
+
+nx=300
+nt=200
+nz=300
+
+dx = 2.0*xmax/(nx-1)
+dt = 2.0*tmax/(nt-1)
+dz = 1.0*zmax/(nz-1)
+
+for case in ('vf','ve','vdix'):
+    intime = (case == 'vdix')
+    
+    Fetch(case+'.dat','masha')
+    Flow(case,case+'.dat',
+         '''
+         echo in=$SOURCE
+         n1=%d o1=%g d1=%g
+         n2=%d o2=0  d2=%g
+         label1=Lateral unit1=km
+         label2=%s unit2=%s
+         label=Velocity unit=km/s
+         data_format=ascii_float |
+         dd form=native |
+         transp
+         ''' % (nx,-xmax,dx,
+                (nz,nt)[intime],
+                (dz,dt)[intime],
+                ('Depth','Time')[intime],
+                ('km','s')[intime]),
+         stdin=0)
+
+
+def zgrey(title):
+    return '''
+    window max1=%g |
+    grey color=j allpos=y bias=2 clip=1.5
+    title="%s" scalebar=y bartype=h barreverse=n
+    screenwd=%g screenht=%g 
+    labelsz=5 minval=2 maxval=3.5 wanttitle=n
+    barlabel=Velocity barunit=km/s
+    ''' % (0.55*zmax,title,4*xmax,1.1*zmax)
+
+Result('ve',zgrey('Interval Velocity'))
+Result('vf',zgrey('Estimated Interval Velocity'))
+
+Result('vdix',
+       '''
+       grey color=j allpos=y scalebar=y bias=2 
+       barlabel=Velocity barunit=km/s bartype=v pclip=100
+       wanttitle=y title="Dix Velocity in Time" minval=2 maxval=4
+       ''')
+
+Result('vdix2','vdix',
+       '''
+       time2depth velocity=$SOURCE nz=%d dz=%g z0=0 intime=y |
+       put label1=Depth unit1=km |
+       ''' % (nz,dz) + zgrey('Dix Velocity in Depth'))
+
+Plot('rays','exp15_x exp15_z',
+     '''
+     cmplx ${SOURCES[:2]} | window j2=3 |
+     graph yreverse=y scalebar=y bartype=h
+     screenwd=12 screenht=2.2 wanttitle=n
+     labelsz=4 min1=-2 max1=2 min2=0 max2=0.7 pad=n
+     wantaxis=n plotcol=7
+     ''')
 
 End()

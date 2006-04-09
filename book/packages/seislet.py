@@ -88,3 +88,14 @@ def seislet(data,              # data name
      seislet dip=$SOURCE eps=%g
      ''' % (nsp,k1,k2,n1,n2,eps),stdin=0)
     Result(imps,'grey title=Seislets')
+
+    
+    impw = data+'impw'
+    Flow(impw,dip,
+     '''
+     spike nsp=%d k1=%s k2=%s n1=%d n2=%d |
+     transp | dwt eps=%g adj=y inv=y | transp
+     ''' % (nsp,k1,k2,n1,n2,eps),stdin=0)
+    Result(impw,'grey title=Wavelets')
+
+    

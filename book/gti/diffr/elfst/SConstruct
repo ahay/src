@@ -28,6 +28,7 @@ stack.stack('elf',
             rect2=35,
             f1=20,
             nout=1024,
+            tmax=3.196,
             j3=5,
             dx=13.3333)
 

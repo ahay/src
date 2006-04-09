@@ -1,11 +1,10 @@
 from rsfproj import *
 import zomig
 
-Fetch('elfh.dat','masha')
-Fetch('elfvxz.dat','masha')
-Fetch('elfstk.rsf','masha')
+for case in ('vxz','_levset'):
+    Fetch('elf%s.dat' % case,'masha')
 
-nt=400
+nt=800
 dt=0.004
 
 nx=1000
@@ -14,20 +13,23 @@ dx=13.3333
 nz=1000
 dz=5.005
 
-Flow('elfh','elfh.dat',
-     '''
-     echo in=$SOURCE
-     n1=%d o1=0 d1=%g
-     n2=%d o2=0 d2=%g
-     label1=Lateral unit1=m
-     label2=Time unit2=s
-     label="Dix Velocity" unit="km/s"
-     data_format=ascii_float |
-     dd form=native |
-     transp 
-     ''' % (nx,dx,nt,dt),stdin=0)  
+xmax = 13319.9667
+zmax = 3200
 
-Flow('elfvxz','elfvxz.dat',
+## Flow('elfh','elfh.dat',
+##      '''
+##      echo in=$SOURCE
+##      n1=%d o1=0 d1=%g
+##      n2=%d o2=0 d2=%g
+##      label1=Lateral unit1=m
+##      label2=Time unit2=s
+##      label="Dix Velocity" unit="km/s"
+##      data_format=ascii_float |
+##      dd form=native |
+##      transp 
+##      ''' % (nx,dx,nt,dt),stdin=0)  
+
+Flow('elfvxz','elf_levset.dat',
      '''
      echo in=$SOURCE
      n1=%d o1=0 d1=%g
@@ -37,9 +39,24 @@ Flow('elfvxz','elfvxz.dat',
      label=Velocity unit="km/s"
      data_format=ascii_float |
      dd form=native |
-     transp |
-     window max1=1750
+     transp 
      ''' % (nx,dx,nz,dz),stdin=0)  
+
+## Flow('melf','elfvxz',
+##      '''
+##      mask max=10 |
+##      sfdd type=float |
+##      smooth rect1=40 rect2=40 |
+##      mask max=0.01
+##      ''')
+
+## Flow('vxz','elfvxz melf',
+##      '''
+##      miss3 mask=${SOURCES[1]} rect1=20 rect2=20 
+##      ''')
+
+
+Flow('vxz','elfvxz','window max1=%g' % zmax)
 
 for coord in ('x','z'):
     dat = 'elf%s.dat' % coord
@@ -47,34 +64,36 @@ for coord in ('x','z'):
     Flow(coord,dat,
          '''
          echo in=$SOURCE
-         n2=400 n1=1000
+         n2=800 n1=1000
          data_format=ascii_float |
          dd form=native 
          ''',stdin=0)
 
+## Result('elfh',
+##        '''
+##        grey color=j scalebar=y barreverse=y allpos=y bias=1400
+##        title="Dix Velocity"
+##        ''')
 
-Result('elfh',
-       '''
-       grey color=j scalebar=y barreverse=y allpos=y bias=1400
-       title="Dix Velocity"
-       ''')
-
-Plot('elfvxz',
+Plot('elfvxz','vxz',
      '''
-     grey color=j scalebar=y barreverse=y allpos=y bias=1400
-     title="Estimated Interval Velocity"
-     ''')
+     grey color=j scalebar=y allpos=y bias=1400
+     wanttitle=n barlabel= barunit=
+     screenht=%g screenwd=%g bartype=h labelsz=3
+     ''' % (0.001*zmax,0.001*xmax))
 
 Plot('rays','x z',
      '''
      cmplx ${SOURCES[:2]} | transp | window j2=10 |
-     graph wanttitle=n yreverse=y min1=0 max1=13319.9667 min2=0 max2=1751.750
+     graph wanttitle=n yreverse=y min1=0 max1=%g min2=0 max2=%g
      plotcol=7 scalebar=y wantaxis=n
-     ''',stdin=0)
+     screenht=%g screenwd=%g bartype=h  
+     ''' % (xmax,zmax,0.001*zmax,0.001*xmax),stdin=0)
 
 Result('elfvxz','elfvxz rays','Overlay')
 
-Flow('stk','elfstk.rsf','dd form=native')
+Fetch('elf-stk2.rsf','masha')
+Flow('stk','elf-stk2.rsf','dd form=native')
 
 Result('elfstk','stk',
        '''
@@ -92,7 +111,7 @@ par = {
     'verb':'y','eps':0.01,'nrmax':10
     }
 
-Flow('slo','elfvxz',
+Flow('slo','vxz',
      '''
      transp plane=12 |
      transp plane=23 |

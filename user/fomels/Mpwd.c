@@ -26,6 +26,7 @@ int main (int argc, char *argv[])
     int n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
+    off_t pos=0;
     allpass ap;
 
     sf_init(argc,argv);
@@ -57,6 +58,10 @@ int main (int argc, char *argv[])
 	/* what to compute in 3-D. 0: in-line, 1: cross-line, 2: both */ 
 	if (n4 > 2) n4=2;
 	if (2==n4) sf_putint(out,"n4",n4);
+	if (0 != n4) {
+	    sf_unpipe(in,(off_t) n123*sizeof(float));
+	    pos = sf_tell(in);
+	}
     }
 
     if (!sf_getint("order",&nw)) nw=1;
@@ -67,6 +72,7 @@ int main (int argc, char *argv[])
     /* in-line aliasing */
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
+
     
     if (1 != n4) { /* in-line */
 	u1 = sf_floatalloc(n12);
@@ -101,6 +107,7 @@ int main (int argc, char *argv[])
 	p  = sf_floatalloc(n123);
 
         /* read data */
+	sf_seek(in,pos,SEEK_SET);
 	sf_floatread(u1,n123,in);
 
 	/* read t-y dip */
@@ -115,6 +122,7 @@ int main (int argc, char *argv[])
 	sf_floatwrite(u2,n123,out);
     }
     
+    sf_close();
     exit (0);
 }
 
