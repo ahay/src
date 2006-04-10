@@ -1,75 +1,26 @@
 from rsfproj import *
-
-def showdat(title):
-    return '''
-    window f2=10 f1=10 |
-    grey crowd1=0.85  crowd2=0.8 label1="Time(s)" label2="X(ft)" title="%s"
-    ''' % title
+import stack
 
 Fetch('gomnearoffset.H','gom')
-Flow('offset','gomnearoffset.H','dd form=native')
 
-Plot('zof','offset',showdat('Data'))
-Result('dzof','offset',showdat('Stack'))
+Flow('gom','gomnearoffset.H','dd form=native')
+Result('gom','window n1=251 | grey label1=Time unit1=s label2=Midpoint unit2=km title="Near Offset" ')
 
-Flow('dip','offset','dip verb=y order=3 rect1=5 rect2=20 liter=100')
-Flow('dec','offset dip','pwd order=3 dip=${SOURCES[1]}')
-
-Result('dip',
-       showdat('Dominant Slope') + \
-                                                                ' crowd1=0.75 color=j scalebar=y barlabel="Slope (samples)" ')
-
-Plot('dec',showdat('Residual'))
-Result('ddec','dec',showdat('Separated Diffractions'))
-
-Result('dec','zof dec','OverUnderAniso')
-
-#Flow('dwg','offset dip',
-#     'pwdsigk dips=${SOURCES[1]} verb=y eps=5 niter=1000 nliter=3')
-#Result('dwg',showdat('Structure Enhanced'))
-
-#Flow('dns','offset dwg','add scale=1,-1 ${SOURCES[1]}')
-#Result('dns',showdat('Diffractions Enhanced'))
-
-Flow('wkx','dec',
-     'pad n2=1025 beg1=400 | cosft sign2=1 | spray axis=2 n=1 o=0 d=26.67')
-
-Flow('vlf','wkx',
-     '''
-     fourvc nv=250 dv=10 v0=0.00001 |
-     cosft sign3=-1 | window n3=920 f1=400
-     ''')
-
-Flow('vkx','offset',
-     'pad n2=1025 beg1=400 | cosft sign2=1 | spray axis=2 n=1 o=0 d=26.67')
-
-Flow('vlf2','vkx',
-     '''
-     fourvc nv=250 dv=10 v0=0.00001 |
-     cosft sign3=-1 | window n3=920 f1=400
-     ''')
-
-Flow('foc','vlf','window j3=5 | focus rect1=200 rect3=10 | math output=1/input')
-
-Flow('pick','foc','pick rect1=10 rect2=10')
-
-Flow('pick2','pick','window | transp | spline n1=920 d1=26.6699 o1=0 | transp')
-
-Result('dvel','pick2',
-       '''
-       window f2=10 f1=10 |
-       grey label1="Time(s)" label2="X(ft)" allpos=y
-       title="Migration Velocity"
-       color=j scalebar=y barlabel="Velocity (ft/s)"
-       bias=1500 minval=1500 clip=700 maxval=2200
-       ''')
-
-Flow('slice','vlf pick2','slice pick=${SOURCES[1]}')
-
-Result('slice','window | ' + showdat('Migrated Diffractions'))
-
-Flow('slice2','vlf2 pick2','slice pick=${SOURCES[1]}')
-
-Result('slice2','window | ' + showdat('Migrated Stack'))
+stack.diffimg('gom',
+              'gom',
+              v0=1200,
+              nv=101,
+              dv=12.5,
+              nx=920,
+              padx=2049,
+              nt=251,
+              an=10,
+              tmin=1.6,
+              tmax=2.8,
+              rect1=10,
+              rect2=40,
+              frect1=40,
+              frect2=10,
+              beg1=400)
 
 End()

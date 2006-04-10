@@ -47,12 +47,12 @@ def stack(name,
         return '''
         window n1=%d |
         grey title="%s" 
-        label1="Time (s)" label2="Lateral (%s)"
+        label1=Time unit1=s label2=Lateral unit2="%s"
         ''' % (nt,title,units)
 
     def velgrey(title):
         return grey(title) + '''
-        color=j scalebar=y bias=%g barlabel="Velocity (%s/s)"
+        color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
         barreverse=y
         ''' % (v0+0.5*nv*dv,units)
 
@@ -92,38 +92,49 @@ def stack(name,
             vx0)
 
 def diffimg(name,
-          stk,
-          v0,
-          nv,
-          dv,
-          nx,
-          padx,
-          nt,
-          tmin=0,
-          tmax=10,
-          rect1=10,
-          rect2=10,
-          srect1=1,
-          srect2=3,
-          vslope=None,
-          units='km',
-          f1=1,
-          j3=1,
-          dx=1,
-          x0=0,
-          nout=2048,
-          vx0=None):
+            stk,
+            v0,
+            nv,
+            dv,
+            nx,
+            padx,
+            nt,
+            tmin=0,
+            tmax=10,
+            rect1=10,
+            rect2=10,
+            srect1=1,
+            srect2=3,
+            vslope=None,
+            units='km',
+            f1=1,
+            j3=1,
+            dx=1,
+            x0=0,
+            beg1=0,
+            frect1=0,
+            frect2=0,
+            an=1,
+            nout=2048,
+            vx0=None):
+
+
+    if frect1==0:
+        frect1 = 2*rect1
+
+    if frect2==0:
+        frect2 = 2*rect2/j3
 
     def grey(title):
         return '''
         window n1=%d |
         grey title="%s" 
-        label1="Time (s)" label2="Lateral (%s)"
+        label1=Time unit1=s label2=Lateral unit2="%s"
         ''' % (nt,title,units)
 
     def velgrey(title):
         return grey(title) + '''
-        color=j scalebar=y bias=%g barlabel="Velocity (%s/s)"
+        color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
         barreverse=y
         ''' % (v0+0.5*nv*dv,units)
 
@@ -132,12 +143,12 @@ def diffimg(name,
     else:
         pick = ''
 
-    pick = pick + 'pick rect1=%d rect2=%d | window' % (rect1,rect2)
+    pick = pick + 'scale axis=2 | pick an=%g rect1=%d rect2=%d | window' % (an,rect1,rect2)
 
     dip = name+'-dip'
     Flow(dip,stk,'dip rect1=%d rect2=%d' % (rect1,rect2))
     Result(dip,grey('Dominant Slope') + \
-           ' color=j scalebar=y barlabel="Slope (samples)" ')
+           ' color=j scalebar=y barlabel=Slope barunit=samples ')
     
     pwd=name+'-pwd'
     Flow(pwd,[stk,dip],'pwd dip=${SOURCES[1]}')
@@ -174,16 +185,16 @@ def diffimg(name,
 #    Flow(dif,[pwds,vel],'window f4=1 | inmo velocity=${SOURCES[1]}')
 
     velcon = '''
-    pad n2=%d | cosft sign2=1 | 
+    pad n2=%d beg1=%d | cosft sign2=1 | 
     stolt vel=%g nf=4 | spray axis=2 n=1 o=0 d=1 |
     fourvc nv=%d dv=%g v0=%g |
     cosft sign3=-1 | 
-    window n3=%d |
+    window n3=%d f1=%d |
     put o3=%g
-    ''' % (padx,v0,nv,dv,v0,nx,x0)
+    ''' % (padx,beg1,v0,nv,dv,v0,nx,beg1,x0)
 
     vlf=name+'-vlf'
-    Flow(vlf,shp,velcon)
+    Flow(vlf,pwd,velcon)
 
     if j3 > 1:
         focus = 'window j3=%d | ' % j3
@@ -194,7 +205,7 @@ def diffimg(name,
     focus rect1=%d rect3=%d |
     math output="1/abs(input)" |
     cut max1=%g | cut min1=%g 
-    ''' % (2*rect1,2*rect2/j3,tmin,tmax)
+    ''' % (frect1,frect2,tmin,tmax)
  
     foc=name+'-foc'
     Flow(foc,vlf,focus)

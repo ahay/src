@@ -1,25 +1,25 @@
 from rsfproj import *
 import stack
 
-Fetch('gom.data.hh','gom')
+Fetch('gom.shot.hh','gom')
 
-Flow('gom','gom.data.hh',
+Flow('gom','gom.shot.hh',
      '''
      dd form=native |
-     put d2=13.335 o2=50.292
+     put d2=0.013335 o2=0.050292
      label1=Time unit1=s
      label2=Half-offset unit2=m
      label3=Shot unit3=m
      ''')
 
-Flow('gom2','gom','shot2cmp | window max1=5')
+Flow('gom2','gom','window max1=4 min1=1.6 | shot2cmp | window min3=2.5 max3=26.5')
 
 stack.stack('gom2',
-            v0=1200,
+            v0=1.2,
             nv=49,
-            dv=25,
-            nx=1961,
-            nt=1001,
+            dv=0.025,
+            nx=1800,
+            nt=601,
             padx=2049,
             rect1=20,
             rect2=20)
