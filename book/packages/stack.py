@@ -21,9 +21,12 @@ def stack(name,
           j3=1,
           dx=1,
           x0=0,
+          beg1=0,
+          frect1=0,
+          frect2=0,
+          an=1,
           nout=2048,
           vx0=None):
-
 
     version = string.replace(sys.version,"+","")
     version = string.split(string.split(version)[0], ".")
@@ -88,6 +91,10 @@ def stack(name,
             j3,
             dx,
             x0,
+            beg1,
+            frect1,
+            frect2,
+            an,
             nout,
             vx0)
 

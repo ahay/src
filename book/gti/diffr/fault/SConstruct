@@ -20,6 +20,21 @@ stack.stack('bei',
             vx0=1.5,     #
             tmax=4,
             f1=15,
+            an=2,
             nout=2048)
+
+panels = []
+for cig in (41,83,110,137,165):
+    panel = 'cig%d' % cig
+    panels.append(panel)
+
+    Plot(panel,'bei-foc',
+         '''
+         window min1=0.5 max1=3.5 n3=1 f3=%d | grey allpos=y
+         label1=Time unit1=s label2=Velocity unit2=km/s
+         labelsz=15 titlesz=18 color=j bias=3 title="IG at %d km"
+         ''' % (cig,int(7.705+0.0335*cig)))
+
+Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 
 End()

@@ -54,12 +54,12 @@ def velcon(data,        # data name
          cosft sign3=-1 | window n3=%d
          ''' % (nv,dv,v0,padt,padt2,nx))
 
-    Flow(vlf2,pad,
-         '''
-         transp plane=23 memsize=500 |
-         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
-         window n2=%d | transp plane=23 memsize=500
-         ''' % (nv,dv,v0,padt,padt2,nx))
+##     Flow(vlf2,pad,
+##          '''
+##          transp plane=23 memsize=500 |
+##          fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
+##          window n2=%d | transp plane=23 memsize=500
+##          ''' % (nv,dv,v0,padt,padt2,nx))
 
     if v1:
         Flow(mig+'1',data,'preconstkirch vel=%g' % v1)
@@ -96,7 +96,7 @@ def velcon(data,        # data name
     Plot(npk,
          '''
          grey pclip=100 color=j bias=%g 
-         scalebar=y title="Picked RMS Velocity"
+         scalebar=y title="Picked Migration Velocity"
          label1=Time unit1=s label2="Lateral Position" unit2=%s
          barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (vm,units,units))
@@ -128,7 +128,7 @@ def velcon(data,        # data name
     Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
 
     slp = data+'-slp'
-    Flow(slp,agc,'dip liter=40 rect1=10 rect2=10')
+    Flow(slp,agc,'dip liter=40 rect1=%d rect2=%d' % (rect1,rect2))
     Plot(slp,
          '''
          grey title="Estimated Dips" scalebar=y color=j
@@ -195,7 +195,7 @@ def velcon(data,        # data name
          grey pclip=100 color=j bias=%g
          scalebar=y title="Predicted RMS Velocity"
          label1=Time unit1=s label2="Lateral Position" unit2=%s 
-         barlabel=Velocity barunit="%s/s"
+         barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (vm,units,units))
     Result(pdx,[npk,pdx+'0'],'SideBySideAniso')
 

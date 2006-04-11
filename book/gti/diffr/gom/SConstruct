@@ -21,6 +21,7 @@ stack.diffimg('gom',
               rect2=40,
               frect1=40,
               frect2=10,
+              units='m',
               beg1=400)
 
 End()

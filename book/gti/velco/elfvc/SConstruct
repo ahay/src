@@ -33,12 +33,20 @@ velcon.velcon('elf',
               rect2=35)    # lateral  smoothing
 
 Flow('scan','elf-vlf2','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
-Plot('scan','grey color=j allpos=y title="Semblance Scan" label1="Time (s)" label2="Velocity (m/s)" ')
+Plot('scan',
+     '''
+     grey color=j allpos=y title="Semblance Scan"
+     label1=Time unit1=s label2=Velocity unit2="m/s"
+     ''')
 
 Flow('pick','scan','pick rect1=35')
 
 Flow('slice','elf-vlf','window n3=1 min3=10000 | mutter v0=1200 x0=2000 half=n')
-Plot('slice','grey title="Velocity Continuation" label1="Time (s)" label2="Velocity (m/s)" ')
+Plot('slice',
+     '''
+     grey title="Velocity Continuation"
+     label1=Time unit1=s label2=Velocity unit2="m/s"
+     ''')
 
 def graph(col,fat):
     return '''
