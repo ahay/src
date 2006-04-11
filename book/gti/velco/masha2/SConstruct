@@ -15,6 +15,7 @@ dz=5.005
 
 xmax = 13319.9667
 zmax = 3200
+zmax = 2000
 
 ## Flow('elfh','elfh.dat',
 ##      '''
@@ -69,6 +70,40 @@ for coord in ('x','z'):
          dd form=native 
          ''',stdin=0)
 
+for coord in ('x0','t0'):
+    dat = 'good%s.dat' % coord
+    Fetch(dat,'masha')
+    Flow(coord,dat,
+         '''
+         echo in=$SOURCE
+         n1=%d o1=0 d1=%g
+         n2=%d o2=0 d2=%g
+         label1=Lateral unit1=m
+         label2=Depth unit2=m
+         label=Velocity unit="km/s"
+         data_format=ascii_float |
+         dd form=native |
+         transp 
+         ''' % (nx,dx,nz,dz),stdin=0)
+
+Flow('coord','t0 x0',
+     'scale dscale=2 | cat axis=3 ${SOURCES[1]} | transp plane=23 | transp')
+    
+Fetch('elf-fmg.rsf','masha')
+Flow('fmg','elf-fmg.rsf','dd form=native')
+Flow('fmg2','fmg coord',
+     'inttest2 interp=spline nw=4 coord=${SOURCES[1]}')
+
+Plot('fmg2',
+     '''
+     window max1=%g | agc |
+     grey title="Prestack Migration Time -> Depth"
+     label1=Depth unit1=m label2=Lateral unit2=m
+     ''' % zmax)
+
+#       screenht=%g screenwd=%g labelsz=4 titlesz=4
+#       ''' % (zmax,0.001*zmax,0.001*xmax))
+
 ## Result('elfh',
 ##        '''
 ##        grey color=j scalebar=y barreverse=y allpos=y bias=1400
@@ -78,8 +113,9 @@ for coord in ('x','z'):
 Plot('elfvxz','vxz',
      '''
      grey color=j scalebar=y allpos=y bias=1400
-     wanttitle=n barlabel= barunit=
-     screenht=%g screenwd=%g bartype=h labelsz=3
+     wanttitle=y barlabel=Velocity barunit=km/s
+     screenht=%g screenwd=%g bartype=v labelsz=4 titlesz=4
+     title="Estimated Interval Velocity" barreverse=y
      ''' % (0.001*zmax,0.001*xmax))
 
 Plot('rays','x z',
@@ -87,7 +123,7 @@ Plot('rays','x z',
      cmplx ${SOURCES[:2]} | transp | window j2=10 |
      graph wanttitle=n yreverse=y min1=0 max1=%g min2=0 max2=%g
      plotcol=7 scalebar=y wantaxis=n
-     screenht=%g screenwd=%g bartype=h  
+     screenht=%g screenwd=%g bartype=v  
      ''' % (xmax,zmax,0.001*zmax,0.001*xmax),stdin=0)
 
 Result('elfvxz','elfvxz rays','Overlay')
@@ -122,12 +158,18 @@ Flow('slo','vxz',
 zomig.wflds ('dat','stk',par)
 zomig.image('img','slo','dat',par)
 
-Result('elfimg','img',
-       '''
-       window |
-       transp |
-       grey title="Post-Stack Depth Migration"
-       label1=Depth unit1=m label2=Lateral unit2=m
-       ''')
+Plot('img',
+     '''
+     window |
+     transp | agc |
+     grey title="Post-Stack Depth Migration"
+     label1=Depth unit1=m label2=Lateral unit2=m
+     ''')
+
+#     screenht=%g screenwd=%g labelsz=4 titlesz=4
+#       ''' % (0.001*zmax,0.001*xmax))
+
+
+Result('elfimg','img fmg2','OverUnderAniso') 
 
 End()

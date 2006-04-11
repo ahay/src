@@ -9,7 +9,7 @@ Flow('sigmoid',None,
      smooth rect1=3 diff1=1 | smooth rect1=3
      ''')
 
-seislet('sigmoid',200,256)
+seislet('sigmoid',200,256,d2=0.008)
 
 #############################################################################
 

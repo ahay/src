@@ -136,7 +136,7 @@ for c in (1,5):
          dwt adj=y inv=y | transp |
          dwt adj=y inv=y | transp
          ''' % c)
-    Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
+    Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c))
     
     srec = 'wsrec%d' % c
     Flow(srec,'slena',

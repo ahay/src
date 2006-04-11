@@ -46,20 +46,20 @@ def zgrey(title):
     return '''
     window max1=%g |
     grey color=j allpos=y bias=2 clip=1.5
-    title="%s" scalebar=y bartype=h barreverse=n
+    title="%s" scalebar=y bartype=v barreverse=y
     screenwd=%g screenht=%g 
-    labelsz=5 minval=2 maxval=3.5 wanttitle=n
+    labelsz=6 titlesz=6 minval=2 maxval=3.5 wanttitle=y
     barlabel=Velocity barunit=km/s
-    ''' % (0.55*zmax,title,4*xmax,1.1*zmax)
+    ''' % (0.55*zmax,title,4.75*xmax,1.1*zmax)
 
 Result('ve',zgrey('Interval Velocity'))
-Result('vf',zgrey('Estimated Interval Velocity'))
+Plot('vf',zgrey('Estimated Interval Velocity'))
 
 Result('vdix',
        '''
-       grey color=j allpos=y scalebar=y bias=2 
+       grey color=j allpos=y scalebar=y bias=2 barreverse=y
        barlabel=Velocity barunit=km/s bartype=v pclip=100
-       wanttitle=y title="Dix Velocity in Time" minval=2 maxval=4
+       wanttitle=y title="Dix Velocity (in Time)" minval=2 maxval=4
        ''')
 
 Result('vdix2','vdix',
@@ -68,13 +68,28 @@ Result('vdix2','vdix',
        put label1=Depth unit1=km |
        ''' % (nz,dz) + zgrey('Dix Velocity in Depth'))
 
-Plot('rays','exp15_x exp15_z',
+for case in ('ex','ez'):
+    Fetch(case+'.dat','masha')
+    Flow(case,case+'.dat',
+         '''
+         echo in=$SOURCE
+         n1=400 n2=50
+         data_format=ascii_float |
+         dd form=native |
+         transp
+         ''',stdin=0)
+
+
+Plot('rays','ex ez',
      '''
-     cmplx ${SOURCES[:2]} | window j2=3 |
-     graph yreverse=y scalebar=y bartype=h
-     screenwd=12 screenht=2.2 wanttitle=n
-     labelsz=4 min1=-2 max1=2 min2=0 max2=0.7 pad=n
+     cmplx ${SOURCES[:2]} | window j2=1 |
+     graph yreverse=y scalebar=y bartype=v
+     screenwd=%g screenht=%g wanttitle=n
+     min1=%g max1=%g min2=0 max2=%g pad=n
      wantaxis=n plotcol=7
-     ''')
+     ''' % (4.75*xmax,1.1*zmax,-xmax,xmax,0.55*zmax),stdin=0)
+
+
+Result('vf','vf rays','Overlay')
 
 End()
