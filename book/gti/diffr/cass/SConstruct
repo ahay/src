@@ -67,7 +67,7 @@ Flow('shot','dat','window n3=1 f3=210')
 Plot('shot',
      '''
      window max1=4 |
-     grey title="Original Shot Gather"
+     grey title="Original Shot Gather" color=G
      label2="Half-Offset (km)" label1="Time (s)"
      ''')
 
@@ -88,14 +88,14 @@ Flow('dat2','cmp',
      window n3=421 min3=5 j3=2 
      ''')
 
-#Flow('shot2','dat2','window n3=1 f3=210')
+Flow('shot2','dat2','window n3=1 f3=210')
 
-#Plot('shot2',
-#     '''
-#     window max1=4 |
-#     grey title="Extended Shot Gather"
-#     label2="Half-Offset (km)" label1="Time (s)"
-#     ''')
+Plot('shot2',
+     '''
+     window max1=4 |
+     grey title="Extended Shot Gather" color=G
+     label2="Half-Offset (km)" label1="Time (s)"
+     ''')
 
 Result('shot','shot shot2','SideBySideAniso')
 
