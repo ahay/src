@@ -40,20 +40,15 @@ eps=0.1         # regularization
 nsp=200         # number of spikes
     
 Result(data,'grey unit1=s unit2=m  title=Input')
-Plot(data,'grey unit1=s unit2=m  title=Input')
 
 dip = data+'dip'
 Flow(dip,data,
      'dip rect1=%d rect2=%d p0=%g pmin=%g' % (rect1,rect2,p0,pmin))
 Result(dip,'grey unit1=s unit2=m  color=j title=Slope allpos=y scalebar=y')
-Plot(dip,'grey unit1=s unit2=m  color=j title=Slope allpos=y scalebar=y')
 
 seis = data+'seis'
 Flow(seis,[data,dip],'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
-Result(seis,'grey unit1=s title="Seislet Transform" label2=Scale unit2=')
-Plot(seis,'grey unit1=s title="Seislet Transform" label2=Scale unit2=')
-
-Result('sinp',[data,dip,seis],'SideBySideAniso')
+Result(seis,'put o2=0 d2=1 | grey unit1=s title="Seislet Transform" label2=Scale unit2=')
 
 #    sseis = data+'sseis'
 #    Flow(sseis,[data,dip],
@@ -89,11 +84,6 @@ for c in (1,clip,25):
            mutter v0=1300 |
            grey unit1=s unit2=m  title="Inverse Seislet Transform (%d%%)"
            ''' % c)
-    Plot(rec,
-           '''
-           mutter v0=1300 |
-           grey unit1=s unit2=m  title="Inverse Seislet Transform (%d%%)"
-           ''' % c)
     
     wrec = '%swrec%d' % (data,c)
     Flow(wrec,wvlt,
@@ -103,8 +93,6 @@ for c in (1,clip,25):
            mutter v0=1300 |
            grey unit1=s unit2=m  title="Inverse Wavelet Transform (%d%%)"
            ''' % c)
-
-Result('srec',recs,'SideBySideAniso')
 
 max=int(math.log(n2)/math.log(2))
 for m in xrange(max):
@@ -121,20 +109,13 @@ for m in xrange(max):
            'mutter v0=1300 | grey unit1=s unit2=m  title="Scale=%d" ' % scale)
 
 slet = '%sslet%d' % (data,16)
-Plot(slet,
-     'mutter v0=1300 | grey unit1=s unit2=m  title=Signal ')
-Plot('snoi',[data,slet],
-     '''
-     add scale=1,-1 ${SOURCES[1]} |
-     grey unit1=s unit2=m clip=7947.37 title=Noise
-     ''')
-Plot('sign',[slet,dip],
+
+Result('sign',[slet,dip],
      '''
      seislet dip=${SOURCES[1]} eps=%g adj=y inv=y |
+     put o2=0 d2=1 | 
      grey unit1=s title="Seislet Transform" label2=Scale unit2=
      ''' % eps)
-
-Result('sign',[slet,'snoi','sign'],'SideBySideAniso')
 
 Flow('rand',seis,'noise rep=y var=200000 seed=2006 | mutter v0=1300')
 
@@ -153,18 +134,16 @@ Plot('gath2',
 Flow('rand2','seis2','noise rep=y var=200000 seed=2006 | mutter v0=1300')
 
 Flow('seis4','seis2 rand2','cat axis=2 ${SOURCES[1]} | put d2=3.125')
-Plot('seis4','grey unit1=s title="Seislet Transform" label2=Scale unit2=')
+Result('seis4','put o2=0 d2=1 | grey unit1=s title="Seislet Transform" label2=Scale unit2=')
 
 Flow('dip4','dip2',
      'transp | remap1 d1=3.125 o1=50 n1=512 | transp | scale dscale=0.5')
 Flow('gath4','seis4 dip4','seislet dip=${SOURCES[1]} eps=%g' % eps)
-Plot('gath4',
-     '''
-     window n2=509 | mutter v0=1200 |
-     grey unit1=s unit2=m title="Resampled by 4"
-     ''')
-
-Result('sres','gath2 gath4 seis4','SideBySideAniso')
+Result('gath4',
+       '''
+       window n2=509 | mutter v0=1200 |
+       grey unit1=s unit2=m title="Resampled by 4"
+       ''')
 
 nr = n1
 k1 = string.join(map(rnd,range(nsp)),',')
@@ -211,43 +190,41 @@ Flow('snmo',nmos,
      cat axis=2 ${SOURCES[1:%d]} 
      ''' % len(nmos))
 
-Plot('snmo','window n2=64 | grey unit1=s unit2=m title="Seislet Moveout" ')
+Result('snmo','grey unit1=s unit2=m title="Seislet Moveout" ')
 
 Flow('scn','gath',
      'mutter v0=%g | vscan semblance=y v0=%g nv=%d dv=%g' % (1400,1400,120,25))
-Flow('vel','scn','pick rect1=%d | window' % 35)
-Flow('nmo','gath vel','mutter v0=%g | nmo velocity=${SOURCES[1]}' % 1400)
+Flow('vel','scn','pick rect1=50 | window')
+Flow('nmo','gath vel','mutter v0=%g | nmo velocity=${SOURCES[1]} str=0' % 1400)
 
-Plot('nmo','window n2=64 | grey unit1=s unit2=m title="Normal Moveout" ')
+Result('nmo','grey unit1=s unit2=m title="Normal Moveout" ')
 
-Result('snmo','nmo snmo','SideBySideAniso')
+## Flow('gaths','elf','window n2=128')
 
-Flow('gaths','elf','window n2=128')
+## Flow('pat','gaths','patch w=800,128,300')
+## Flow('dips','pat','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0')
+## Flow('dip','dips','patch inv=y weight=y')
 
-Flow('pat','gaths','patch w=800,128,300')
-Flow('dips','pat','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0')
-Flow('dip','dips','patch inv=y weight=y')
+## Flow('seis','gaths dip',
+##      'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
 
-Flow('seis','gaths dip',
-     'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
+## Flow('sstack','seis','window n2=1')
 
-Flow('sstack','seis','window n2=1')
+## Plot('sstack',
+##      '''
+##      grey label2=Midpoint unit2=m label1=Time unit1=s
+##      title="Seislet Stack"
+##      ''')
 
-Plot('sstack',
-     '''
-     grey label2=Midpoint unit2=m label1=Time unit1=s
-     title="Seislet Stack"
-     ''')
+## Fetch('elf-stk.rsf','masha')
 
-Fetch('elf-stk.rsf','masha')
+## Plot('stack','elf-stk.rsf',
+##      '''
+##      dd form=native |
+##      grey label2=Midpoint unit2=m label1=Time unit1=s
+##      title="NMO Stack"
+##      ''')
 
-Plot('stack','elf-stk.rsf',
-     '''
-     dd form=native |
-     grey label2=Midpoint unit2=m label1=Time unit1=s
-     title="NMO Stack"
-     ''')
-
-Result('sstack','stack sstack','SideBySideAniso')
+## Result('sstack','stack sstack','SideBySideAniso')
 
 End()

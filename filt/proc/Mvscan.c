@@ -36,7 +36,7 @@ static float hyperb(float t, int it)
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl, half, slow, dsembl, weight;
+    bool sembl, half, slow, dsembl, asembl, weight;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, mute, *mask;
     float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str;
     float *trace, **stack, **stack2, *hh;
@@ -56,6 +56,8 @@ int main(int argc, char* argv[])
     /* if y, compute semblance; if n, stack */
     if (sembl || !sf_getbool("diffsemblance",&dsembl)) dsembl=false;
     /* if y, compute differential semblance */
+    if (sembl || dsembl || !sf_getbool("avosemblance",&asembl)) asembl=false;
+    /* if y, compute AVO-friendly semblance */
     if (!sf_getint("nb",&nb)) nb=2;
     /* semblance averaging */
     if (!sf_getbool("weight",&weight)) weight=true;
@@ -182,6 +184,7 @@ int main(int argc, char* argv[])
 			    stack[iv][it] += amp2*amp2;
 			}
 			stack2[iv][it] = amp;
+		    } else if (asembl) {
 		    } else {
 			if (sembl) stack2[iv][it] += amp*amp;
 			stack[iv][it] += amp;

@@ -31,7 +31,7 @@ def seislet(data,              # data name
 
     seis = data+'seis'
     Flow(seis,[data,dip],'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
-    Result(seis,'grey  title="Seislet Transform" label2=Scale unit2=')
+    Result(seis,'put o2=0 d2=1 | grey  title="Seislet Transform" label2=Scale unit2=')
 
 #    sseis = data+'sseis'
 #    Flow(sseis,[data,dip],
@@ -50,7 +50,7 @@ def seislet(data,              # data name
     wvlt = data+'wvlt'
 
     Flow(wvlt,data,'transp | dwt | transp')
-    Result(wvlt,'grey  title="Wavelet Transform" label2=Scale unit2=')
+    Result(wvlt,'put o2=0 d2=1 | grey  title="Wavelet Transform" label2=Scale unit2=')
 
     for c in (1,clip,25):
         rec = '%ssrec%d' % (data,c)
