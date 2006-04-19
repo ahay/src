@@ -8,7 +8,7 @@ Flow('model',None,
      ''')
 
 Flow('vel0','model','math output=1.5')
-Flow('vel0.5','model',
+Flow('vel1','model',
      '''
      math output="0.5*(x1+0.01)" |
      math output="1.5*sqrt((exp(input)-1)/input)"
@@ -18,10 +18,10 @@ Flow('empty','model','scale dscale=0')
 
 labels = "Model:::::::::::Synthe-:tic data:::::::::::Stack"
 
-for alpha in [0,0.5]:
-    vel = 'vel%g' % alpha + sfsuffix
-    nmo = 'nmoalfa%g' % alpha
-    strat = 'strat%g' % alpha + sfsuffix
+for alpha in [0,1]:
+    vel = 'vel%d' % alpha + sfsuffix
+    nmo = 'nmoalfa%d' % alpha
+    strat = 'strat%d' % alpha + sfsuffix
     Flow(nmo,['model',vel],
          '''
          spray axis=2 n=20 o=0.6 d=0.16 |
@@ -34,6 +34,6 @@ for alpha in [0,0.5]:
            cat axis=2 ${SOURCES[1:5]} |
            dots dots=0 yreverse=1 gaineach=0 labels="%s" overlap=1.85
            title="alpha=%g"
-           ''' % (labels,alpha))
+           ''' % (labels,0.5*alpha))
     
 End()
