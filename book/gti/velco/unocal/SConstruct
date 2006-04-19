@@ -16,8 +16,6 @@ Flow('uno tuno ./buno ./huno',sgy,
 
 Flow('bin','uno','intbin xk=cdpt yk=cdp')
 
-Result('noff','bin','window n2=1 | grey title="Near Offset" ')
-
 Flow('off','tuno',
      '''
      dd type=float |
@@ -26,10 +24,7 @@ Flow('off','tuno',
      ''')
 
 Flow('scn','bin off',
-     '''
-     window max1=4 |
-     vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.01 nv=60
-     ''')
+     'vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.01 nv=60')
 
 Flow('pik','scn','pick rect1=100 rect2=40')
 
