@@ -25,7 +25,7 @@
 
 int main (int argc, char* argv[])
 {
-    map4 nmo;
+    map4 nmo; /* using cubic spline interpolation */
     bool half, slow;
     int it,ix,ih, nt,nx, nh, nw, CDPtype;
     float dt, t0, h, h0, f, dh, eps, dy;
