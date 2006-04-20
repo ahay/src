@@ -121,6 +121,8 @@ int main (int argc, char* argv[])
     nmo = fint1_init (nw, nt, mute);
     
     for (ix = 0; ix < nx; ix++) {
+	sf_warning("CMP %d of %d",ix+1,nx);
+
 	sf_floatread (vel,nt,velocity);	
 	if (NULL != msk) sf_intread(mask,nh,msk);
 

@@ -26,8 +26,8 @@ int main(int argc, char* argv[])
     int niter, miter, psun1, psun2;
     bool adj;
     float o1,d1, x0,dx, v0,dv, anti, s02,s0,ds;
-    float *cmp, *vscan, *error;
-    sf_file in, out, err;
+    float *cmp, *vscan, *error, *mask;
+    sf_file in, out, err, msk;
 
     sf_init(argc,argv);
     in = sf_input("in");
@@ -119,6 +119,14 @@ int main(int argc, char* argv[])
 	error = NULL;
     }
 
+    if (NULL != sf_getstring("mask")) {
+	msk = sf_input("mask");
+	mask = sf_floatalloc(ntv);
+    } else {
+	msk = NULL;
+	mask = NULL;
+    }
+
     ntx = nt*nx;
     ntv = nt*nv;
 
@@ -135,12 +143,15 @@ int main(int argc, char* argv[])
 	    sf_floatread(cmp,ntx,in);
 	}
 
+	
 	if(0==niter) {
 	    veltran_lop(!adj,false,ntv,ntx,vscan,cmp);
 	} else { 
+	    if (NULL != msk) sf_floatread(mask,ntv,msk);
+
 	    sf_cdstep_init();
 	    sf_solver (veltran_lop, sf_cdstep, ntv, ntx, vscan, cmp, niter, 
-		       "err", error, "nmem", 0, "nfreq", miter, "end");
+		       "err", error, "nmem", 0, "nfreq", miter, "mwt", mask, "end");
 	    sf_cdstep_close();
 	    
 	    if(NULL != err) sf_floatwrite(error,niter,err);

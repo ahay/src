@@ -1,0 +1,33 @@
+from rsfproj import *
+
+import os,math
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('shot1317.segy','xom',private)
+
+Flow('shot tshot ./bxom ./hxom','shot1317.segy',
+     '''
+     segyread tape=$SOURCE endian=0
+     tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     ''',stdin=0)
+
+# azimuth
+az=-1.0475
+
+# in-line offset
+Flow('in','tshot','dd type=float | headermath output="((gx-sx)*cos(%g)+(gy-sy)*sin(%g))*10^scalco" ' % (az,az))
+
+# cross-line offset
+Flow('cr','tshot','dd type=float | headermath output="((gy-sy)*cos(%g)-(gx-sx)*sin(%g))*10^scalco" ' % (az,az))
+
+Result('off',['in','cr'],'cmplx ${SOURCES[:2]} | graph symbol=x title=Offset',stdin=0)
+
+Flow('shot2','shot','tpow tpow=2')
+
+Result('shot2','grey title=Shot label2=Trace')
+
+Result('wshot2','shot2 in','wiggle xpos=${SOURCES[1]} title=Shot label2=Offset transp=y yreverse=y poly=y')
+
+End()

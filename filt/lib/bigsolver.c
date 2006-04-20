@@ -208,7 +208,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	}
 	if (mwt != NULL) {
 	    for (i=0; i < nprec; i++) {
-		g[i] = g[i]*mwt[i];
+		g[i] *= mwt[i];
 	    }
 	}
 	for (i=0; i < ny; i++) {
@@ -644,7 +644,8 @@ void sf_solver (sf_operator oper   /* linear operator */,
   "wt":     float*:         weight      
   "wght":   sf_weight wght: weighting function
   "x0":     float*:         initial model
-  "nloper": sf_operator:    nonlinear operator  
+  "nloper": sf_operator:    nonlinear operator
+  "mwt":    float*:         model weight
   "verb":   bool:           verbosity flag
   "known":  bool*:          known model mask
   "nmem":   int:            iteration memory
@@ -662,6 +663,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
     sf_weight wght = NULL;
     float* x0 = NULL;
     sf_operator nloper = NULL;
+    float* mwt = NULL;
     bool verb = false;
     bool* known = NULL;
     int nmem = -1;
@@ -671,7 +673,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
     float* err = NULL;
     float* res = NULL;
     float* wht = NULL;
-    float *g, *rr, *gg, *td = NULL;
+    float *g, *rr, *gg, *tp = NULL, *td = NULL;
     float dpr, dpg, dpr0, dpg0;
     int i, iter; 
     bool forget = false;
@@ -688,6 +690,8 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	{                    x0 = va_arg (args, float*);}
 	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_operator);}
+	else if (0 == strcmp (par,"mwt"))      
+	{                    mwt = va_arg (args, float*);}
 	else if (0 == strcmp (par,"verb"))      
 	{                    verb = (bool) va_arg (args, int);}    
 	else if (0 == strcmp (par,"known"))      
@@ -725,6 +729,8 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	} 
     }
 
+    if (mwt != NULL) tp = sf_floatalloc (nx);
+
     for (i=0; i < ny; i++) {
 	rr[i] = - dat[i];
     }
@@ -733,9 +739,23 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	    x[i] = x0[i];
 	} 
 	if (nloper != NULL) {
-	    nloper (false, true, nx, ny, x, rr); 
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    tp[i] = x[i]*mwt[i];
+		}
+		nloper (false, true, nx, ny, tp, rr);
+	    } else {
+		nloper (false, true, nx, ny, tp, rr);
+	    }
 	} else {
-	    oper (false, true, nx, ny, x, rr); 
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    tp[i] = x[i]*mwt[i];
+		}
+		oper (false, true, nx, ny, tp, rr);
+	    } else { 
+		oper (false, true, nx, ny, x, rr);
+	    } 
 	}
     } else {
 	for (i=0; i < nx; i++) {
@@ -763,12 +783,29 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	} else {
 	    oper (true, false, nx, ny, g, rr);
 	} 
+
+	if (mwt != NULL) {
+	    for (i=0; i < nx; i++) {
+		g[i] *= mwt[i];
+	    }
+	}
 	if (known != NULL) {
 	    for (i=0; i < nx; i++) {
 		if (known[i]) g[i] = 0.0;
 	    }
 	} 
-	oper (false, false, nx, ny, g, gg);
+
+	if (mwt != NULL) {
+	    for (i=0; i < nx; i++) {
+		tp[i] = g[i]*mwt[i];
+	    }
+	
+	    oper (false, false, nx, ny, tp, gg);
+	} else {
+	    oper (false, false, nx, ny, g, gg);
+	}
+
+
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
 		gg[i] *= wht[i];
@@ -797,6 +834,12 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	if (dpr < TOLERANCE || dpg < TOLERANCE) {
 	    if (verb) 
 		sf_warning("convergence in %d iterations",iter+1);
+
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    x[i] *= mwt[i];
+		}
+	    }
 	    break;
 	}
 
@@ -807,14 +850,33 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	    for (i=0; i < ny; i++) {
 		rr[i] = -dat[i]; 
 	    }
-	    nloper (false, true, nx, ny, x, rr);
-	}
-	if (wht != NULL) {
+
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    tp[i] = x[i]*mwt[i];
+		}
+		nloper (false, true, nx, ny, tp, rr);
+	    } else {
+		nloper (false, true, nx, ny, x, rr);
+	    }
+	} else if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
 		rr[i] = -dat[i]; 
 	    }
-	    oper (false, true, nx, ny, x, rr);
-	}  
+	    if (mwt != NULL) {
+		for (i=0; i < nx; i++) {
+		    tp[i] = x[i]*mwt[i];
+		}
+		oper (false, true, nx, ny, tp, rr);
+	    } else {
+		oper (false, true, nx, ny, x, rr);
+	    }
+	}  else if (mwt != NULL && (xmov != NULL || iter == niter-1)) {
+	    for (i=0; i < nx; i++) {
+		x[i] *= mwt[i];
+	    }
+	}
+
 	if (xmov != NULL) {
 	    for (i=0; i < nx; i++) {
 		xmov[iter][i] =  x[i];
@@ -846,6 +908,10 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	if (wt == NULL) {
 	    free (wht);
 	}
+    }
+
+    if (mwt != NULL) {
+	free (tp);
     }
 }
   

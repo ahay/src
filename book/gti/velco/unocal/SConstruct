@@ -5,6 +5,8 @@ private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
            'server':os.environ.get('BEG_SERVER')}
 
+### Original
+
 sgy = '3631.sgy'
 
 Fetch(sgy,'unocal',private)
@@ -24,23 +26,31 @@ Flow('off','tuno',
      ''')
 
 Flow('scn','bin off',
-     'vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.01 nv=60')
+     'vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.02 nv=100')
 
-Flow('pik','scn','pick rect1=100 rect2=40')
+Flow('pik','scn',
+     '''
+     mutter x0=1.4 t0=3 v0=0.15 half=n inner=y |
+     mutter x0=1.4 t0=5 v0=0.60 half=n inner=y |
+     pick rect1=100 rect2=40
+     ''')
 
 Result('vel','pik',
-       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity" ')
+       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity" label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s')
 
-Flow('nmo','bin off pik',
-     'window max1=4 | nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+Flow('nmo','bin off pik','nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
 
 Flow('stk','nmo','window min1=1 | stack')
 
-Result('stk','grey title=Stack')
+Result('stk','grey title=Stack  label1=Time unit1=s label2=CMP ')
 
 Flow('agc','stk','agc rect1=250')
 
-Result('agc','grey title="AGC Stack" ')
+Result('agc','grey title="AGC Stack" label1=Time unit1=s label2=CMP ')
+
+Result('top','agc','window max1=4 | grey title=Top  label1=Time unit1=s label2=CMP ')
+
+Result('bot','agc','window min1=4 | grey title=Bottom  label1=Time unit1=s label2=CMP ')
 
 Flow('cmp0','bin','window n3=1 f3=100')
 Flow('off0','off','window n3=1 f3=100')
@@ -51,5 +61,70 @@ Result('cmp','cmp0 off0',
        title="CMP" label2="Offset" label1="Time (s)" zplot=0.5
        wherexlabel=t wheretitle=b
        ''')
+
+Flow('scan','scn','window n3=1 f3=1170')
+Plot('scan','grey color=j allpos=y title="Semblance Scan" label1=Time unit1=s label2=Velocity unit2=km/s')
+
+Flow('pick','scan',
+     '''
+     mutter x0=1.4 t0=3 v0=0.15 half=n inner=y |
+     mutter x0=1.4 t0=5 v0=0.60 half=n inner=y |
+     pick rect1=100
+     ''')
+Plot('pick','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=7 pad=n wantaxis=n wanttitle=n')
+Plot('pick0','pick','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n')
+
+Result('scan','scan pick0 pick','Overlay')
+
+### RARE
+
+sgy = 'unorare3.sgy'
+
+Fetch(sgy,'unocal',private)
+
+Flow('uno2 tuno2 ./buno2 ./huno2',sgy,
+     '''
+     segyread tape=$SOURCE tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('bin2','uno2','intbin xk=cdpt yk=cdp')
+
+Flow('off2','tuno2',
+     '''
+     dd type=float |
+     headermath output="offset/1000" |
+     intbin head=$SOURCE xk=cdpt yk=cdp
+     ''')
+
+Flow('scn2','bin2 off2',
+     'vscan offset=${SOURCES[1]} semblance=y half=n v0=1.4 dv=0.02 nv=100')
+
+Flow('pik2','scn2','pick rect1=100 rect2=40')
+
+Result('vel2','pik2',
+       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity (RARE)" label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s')
+
+Flow('nmo2','bin2 off2 pik2','nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+
+Flow('stk2','nmo2','window min1=1 | stack')
+
+Result('stk2','grey title="Stack (RARE)" label1=Time unit1=s label2=CMP ')
+
+Flow('agc2','stk2','agc rect1=250')
+
+Result('agc2','grey title="AGC Stack (RARE)" label1=Time unit1=s label2=CMP ')
+
+Result('top2','agc2','window max1=4 | grey title="Top (RARE)"  label1=Time unit1=s label2=CMP ')
+
+Result('bot2','agc2','window min1=4 | grey title="Bottom (RARE)" label1=Time unit1=s label2=CMP ')
+
+Flow('scan2','scn2','window n3=1 f3=1170')
+Plot('scan2','grey color=j allpos=y title="Semblance Scan (RARE)" label1=Time unit1=s label2=Velocity unit2=km/s')
+
+Flow('pick2','scan2','pick rect1=100')
+Plot('pick2','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=7 pad=n wantaxis=n wanttitle=n')
+Plot('pick20','pick2','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n')
+
+Result('scan2','scan2 pick20 pick2','Overlay')
 
 End()

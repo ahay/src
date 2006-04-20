@@ -93,8 +93,8 @@ int main(int argc, char *argv[])
 		    }
 		}
 
-		sf_solver_prec (seislet_lop,sf_cgstep,weight_lop,n12,
-				n12,n12,qq,pp,niter,0.,"verb",true,"end");
+		sf_solver (seislet_lop,sf_cgstep,
+			   n12,n12,qq,pp,niter,"verb",true,"mwt",ww[0],"end");
 		sf_cgstep_close();
 	    }
 	} else {

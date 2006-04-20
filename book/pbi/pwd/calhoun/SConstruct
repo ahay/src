@@ -12,7 +12,7 @@ Fetch(segy,'calhoun',private)
 Flow('cal ./bcal ./hcal',segy,
      '''
      segyread tape=$SOURCE read=data
-     bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     bfile=${TARGETS[1]} hfile=${TARGETS[2]}
      ''',stdin=0)
 
 Result('cal','grey title="Original Image" ')
