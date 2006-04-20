@@ -41,5 +41,5 @@ for mode in ('pp','ps'):
         win = modec+'win'
         Flow(win,modec,'window max2=5')
         Result(win,grey)
-        
+
 End()

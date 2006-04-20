@@ -23,13 +23,18 @@ def wiggle(title):
 
 Flow('modl',None,
      '''
-     spike n1=200 o1=-8 d1=0.08 n2=4
-     nsp=4 k2=1,2,3,4 mag=2.2,3.5,5,7
+     spike n1=200 o1=-8 d1=0.08 n2=5
+     nsp=5 k2=1,2,3,4,5 mag=1,2.2,3.5,5,7
      ''')
 Flow('refl',None,
      '''
-     spike n1=200 n2=4 nsp=4 k2=1,2,3,4
-     mag=0.0909091,0.1428570,0.1111110,0.2000000
+     spike n1=200 n2=5 nsp=5 k2=1,2,3,4,5
+     mag=0.0909091,0.1428570,0.1111110,0.2000000,0.2000000
+     ''')
+Flow('rgrad',None,
+     '''
+     spike n1=200 n2=5 nsp=5 k2=1,2,3,4,5
+     mag=1,-1,0,0.5,-2
      ''')
 Flow('mod1','modl','window min1=0')
 
@@ -59,5 +64,35 @@ Flow('data','clean',
 
 Result('data','grey title=CMP')
 
+Flow('inp',None,
+     '''
+     randrefl nr=1000 func=m d1=0.004 tscale=6 |
+     window n2=1 max1=6 |
+     spray axis=2 n=121 o=-6 d=0.1 |
+     math output=input*x2     
+     ''')
+
+Result('inp','grey title=Reflectivity')
+
+Flow('vnmo','inp','window n2=1 | math output=4+0.5*x1')
+
+Flow('cmp','inp vnmo',
+     '''
+     noise rep=y seed=2004 range=0.2 |
+     ricker1 |
+     add $SOURCE |
+     inmo velocity=${SOURCES[1]}
+     ''')
+
+Result('cmp','grey title=CMP')
+
+for avo in ('','avo'):
+    semb = avo+'semb'
+    Flow(semb,'cmp','vscan %ssemblance=y v0=4 dv=0.075 nv=60' % avo)
+    Result(semb,
+           '''
+           grey color=j allpos=y
+           label2="Velocity" unit2="kft/s" title="%s Semblance"
+           ''' % string.upper(avo))
 
 End()

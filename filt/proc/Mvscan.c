@@ -38,8 +38,8 @@ int main(int argc, char* argv[])
     fint1 nmo;
     bool sembl, half, slow, dsembl, asembl, weight;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, mute, *mask;
-    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str;
-    float *trace, **stack, **stack2, *hh;
+    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str, sh=0., sh2=0.;
+    float *trace, **stack, **stack2, **stackh, *hh;
     char *time, *space, *unit;
     size_t len;
     sf_file cmp, scan, offset, msk;
@@ -132,7 +132,8 @@ int main(int argc, char* argv[])
     }
 
     stack =  sf_floatalloc2(nt,nv);
-    stack2 = (sembl || dsembl)? sf_floatalloc2(nt,nv) : NULL;
+    stack2 = (sembl || dsembl || asembl)? sf_floatalloc2(nt,nv) : NULL;
+    stackh = asembl? sf_floatalloc2(nt,nv) : NULL;
 
     if (!sf_getint("extend",&nw)) nw=4;
     /* trace extension */
@@ -151,11 +152,14 @@ int main(int argc, char* argv[])
 
 	for (it=0; it < nt*nv; it++) {
 	    stack[0][it] = 0.;
-	    if (sembl) stack2[0][it] = 0.;
+	    if (sembl || asembl) stack2[0][it] = 0.;
+	    if (asembl) stackh[0][it] = 0.;
 	}
 
 	if (NULL != offset) sf_floatread(hh,nh,offset);
 	if (NULL != msk) sf_intread(mask,nh,msk);
+
+	if (asembl) sh = sh2 = 0.;
 
 	for (ih=0; ih < nh; ih++) {
 	    sf_floatread(trace,nt,cmp); 
@@ -164,6 +168,11 @@ int main(int argc, char* argv[])
 	    h = (NULL != offset)? hh[ih]: 
 		h0 + ih * dh + (dh/CDPtype)*(ix%CDPtype);
 	    if (half) h *= 2.;
+
+	    if (asembl) {
+		sh  += h;
+		sh2 += h*h;
+	    }
 
 	    for (it=0; it < nt; it++) {
 		trace[it] /= nt*nh;
@@ -184,16 +193,17 @@ int main(int argc, char* argv[])
 			    stack[iv][it] += amp2*amp2;
 			}
 			stack2[iv][it] = amp;
-		    } else if (asembl) {
 		    } else {
-			if (sembl) stack2[iv][it] += amp*amp;
+			if (sembl || asembl) stack2[iv][it] += amp*amp;
+			if (asembl) stackh[iv][it] += amp*h;
+
 			stack[iv][it] += amp;
 		    }
 		}
 	    } /* v */
 	} /* h */
 	
-	if (sembl) {
+	if (sembl || asembl) {
 	    for (iv=0; iv < nv; iv++) {
 		for (it=0; it < nt; it++) {
 		    ib = it-nb;
@@ -205,7 +215,13 @@ int main(int argc, char* argv[])
 		    for (i=ib; i < ie; i++) {
 			num += stack[iv][i]*stack[iv][i];
 			den += stack2[iv][i];
+			
+			/* (h2 s^2 - 2 h s sh + N sh^2)/((-h^2 + h2 N) s2) */
+			if (asembl) 
+			    num += (nh*stackh[iv][i]*stackh[iv][i] - 
+				    2.*sh*stack[iv][i]*stackh[iv][i])/sh2;
 		    }
+		    if (asembl) den *= (nh-sh*sh/sh2);
 		    trace[it] = (den > 0.)? num/den: 0.;
 		}
 		sf_floatwrite(trace,nt,scan);

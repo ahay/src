@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
 {
     int nt, n1, i1, i2, n2, nw, ip, np, three;
     float *a, *b, *r, *tpp, *tps, *app, *aps, *spline, **pp, **ps;
-    float dt, tp,ts, a1,a2, b1,b2, r1,r2, d1, dr, da, db, ab, dp, p, as, bs, ad1, bd2; 
+    float dt, tp,ts, a1,a2, b1,b2, r1,r2, d1, dr, da, db, ab, p0, dp, p, as, bs, ad1, bd1; 
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -49,10 +49,12 @@ int main(int argc, char* argv[])
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
     /* time sampling */
 
-    if (!sf_getint("nt",&np)) sf_error("Need np=");
+    if (!sf_getint("np",&np)) sf_error("Need np=");
     /* slope samples */
-    if (!sf_getfloat("dt",&dp)) sf_error("Need dp=");
+    if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
     /* slope sampling */
+    if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
+    /* slope origin */
 
     if (!sf_getint("nw",&nw)) nw=4;
     /* interpolation length */
@@ -63,7 +65,7 @@ int main(int argc, char* argv[])
 
     sf_putint(out,"n2",np);
     sf_putfloat(out,"d2",dp);
-    sf_putfloat(out,"o2",0.);
+    sf_putfloat(out,"o2",p0);
 
     sf_putint(out,"n3",2);
     sf_putint(out,"n4",n2);
@@ -86,16 +88,16 @@ int main(int argc, char* argv[])
 	sf_floatread(r,n1,in); /* rho */
 
 	for (ip=0; ip < np; ip++) {
-	    p = ip*dp;
+	    p = p0+ip*dp;
 
 	    tp = ts = 0.;
 	    a2 = a[0];
 	    b2 = b[0];
 	    r2 = r[0];
 	    for (i1=1; i1 < n1; i1++) {
-		as = a2*p; if (as > 1.) sf_error("p=%g is postcritical",p);
-		bs = b2*p; if (bs > 1.) sf_error("p=%g is postcritical",p);
-
+		as = a2*p; if (fabsf(as) > 1.) sf_error("p=%g is postcritical (vp=%g)",p,a2);
+		bs = b2*p; if (fabsf(bs) > 1.) sf_error("p=%g is postcritical (vs=%g)",p,b2);
+		
 		ad1 = d1*sqrtf(1.-as*as)/a2;
 		bd1 = d1*sqrtf(1.-bs*bs)/b2;
 
@@ -117,23 +119,21 @@ int main(int argc, char* argv[])
 		dr = (r2-r1)/(r2+r1);
 		ab = (a2+a1)/(b2+b1);
 
-		app[i1] = (da + dr) + (da - 4.*(2.*db+dr)/(ab*ab))*as;
-		aps[i1] = 4.*db/ab + (1.+2./ab)*dr;
+		app[i1] = (da + dr) + (da - 4.*(2.*db+dr)/(ab*ab))*as*as;
+		aps[i1] = (4.*db/ab + (1.+2./ab)*dr)*sinf((asinf(as)+asinf(bs))*0.5);
 	    }
-    
+	    
 	    sf_int1_init (tpp, 0., dt, nt, sf_spline_int, nw, n1);
 	    sf_int1_lop (true,false,nt,n1,spline,app);
-	    spline_post(nw, 0, 1, nt, spline, trace);
-	    sf_floatwrite(trace,nt,out);
-	    sf_int1_lop (true,false,nt,n1,spline,bpp);
-	    spline_post(nw, 0, 1, nt, spline, trace);
-	    sf_floatwrite(trace,nt,out);
+	    spline_post(nw, 0, 1, nt, spline,pp[ip]);
 	    
 	    sf_int1_init (tps, 0., dt, nt, sf_spline_int, nw, n1);
 	    sf_int1_lop (true,false,nt,n1,spline,aps);
-	    spline_post(nw, 0, 1, nt, spline, trace);
-	    sf_floatwrite(trace,nt,out);
+	    spline_post(nw, 0, 1, nt, spline,ps[ip]);
 	}
+
+	sf_floatwrite(pp[0],nt*np,out);
+	sf_floatwrite(ps[0],nt*np,out);
     }    
 
     exit(0);
