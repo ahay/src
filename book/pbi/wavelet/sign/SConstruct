@@ -1,0 +1,33 @@
+from rsfproj import *
+
+def plot(title):
+    return '''
+    grey wantaxis1=n label1=Sample label2=Trace title="%s"
+    labelsz=12 titlesz=15 crowd1=0.9
+    ''' % title
+
+Flow('noiz',None,'make second=n n1=75 n2=32 t1=2')
+Plot('noiz',plot('Signal'))
+
+Flow('make',None,'make second=y n1=75 n2=32 t1=2 | put o1=0 d1=1 o2=0 d2=1')
+Plot('make',plot('Signal+Noise'))
+
+Flow('pq','make','twodip2 verb=y gauss=n')
+Flow('pq1','pq','window n3=1')
+Flow('pq2','pq','window f3=1')
+
+Flow('sigs','make pq','pwdsigk dips=${SOURCES[1]} verb=y')
+Plot('sig1','sigs','window f3=1 | ' + plot('Est. Signal'))
+Plot('sig2','sigs','window n3=1 | ' + plot('Est. Noise'))
+
+Result('shape2','noiz make sig1 sig2','SideBySideAniso',vppen='txscale=2')
+
+Flow('seis','make pq','seisigk dips=${SOURCES[1]} verb=y nliter=2 eps=0.01')
+Plot('sei1','seis','window f3=1 | ' + plot('Est. Signal'))
+Plot('sei2','seis','window n3=1 | ' + plot('Est. Noise'))
+
+Result('seis2','noiz make sei1 sei2','SideBySideAniso',vppen='txscale=2')
+
+
+
+End()

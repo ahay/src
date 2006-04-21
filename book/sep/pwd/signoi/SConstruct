@@ -9,7 +9,7 @@ def plot(title):
 Flow('noiz',None,'make second=n n1=75 n2=25 t1=2')
 Plot('noiz',plot('Signal'))
 
-Flow('make',None,'make second=y n1=75 n2=25 t1=2')
+Flow('make',None,'make second=y n1=75 n2=25 t1=2 | put o1=0 d1=1 o2=0 d2=1')
 Plot('make',plot('Signal+Noise'))
 
 Flow('pq','make','twodip2 verb=y gauss=n')

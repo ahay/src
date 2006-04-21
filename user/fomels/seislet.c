@@ -258,7 +258,6 @@ void seislet_init(int n1      /* trace length */,
 		  int n2      /* number of traces */, 
 		  bool inv1   /* inversion flag */, 
 		  float eps   /* regularization parameter */,
-		  float **dip /* local slope */,
 		  char type   /* transform type */) 
 /*< allocate space >*/
 {
@@ -266,7 +265,6 @@ void seislet_init(int n1      /* trace length */,
     n = n1;
     for (nt=1; nt < n2; nt *= 2) ;
     t = sf_floatalloc2(n,nt);
-    d = dip;
     predict_init (n, nt, eps*eps, 1);
 
     t1 = sf_floatalloc(n);
@@ -283,6 +281,12 @@ void seislet_init(int n1      /* trace length */,
 	    sf_error("Unknown wavelet type=%c",type);
 	    break;
     }
+}
+
+void seislet_set(float **dip /* local slope */)
+/*< set local slope >*/
+{
+    d = dip;
 }
 
 void seislet_close(void) 

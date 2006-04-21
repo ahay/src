@@ -59,6 +59,7 @@ int main (int argc, char* argv[])
 	CDPtype=0.5+0.5*dh/dy;
 	if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
     } 	    
+    if (CDPtype < 1) CDPtype=1;
     sf_warning("CDPtype=%d",CDPtype);
 
     if (!sf_getint("nv",&nv)) sf_error("Need nv=");

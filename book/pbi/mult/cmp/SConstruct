@@ -78,16 +78,21 @@ Flow('mdip2','cmp2 mdip mask2 vdip',
      twodip2 eps=15 lam=5 dip2=${SOURCES[1]} dip1=${SOURCES[3]} mask=${SOURCES[2]} verb=y 
      ''')
 
-Plot('mdip1','mdip2',
-     'window n3=1 f2=6 | ' + \
+Flow('mdip0','mdip2','window n3=1 f2=6')
+Flow('mdip1','mdip2','window f3=1 f2=6')
+
+Plot('mdip0',
      grey('(c) Signal Slope',
           'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
-Plot('mdip2','mdip2',
-     'window f3=1 f2=6 | ' + \
+Plot('mdip1',
      grey('(d) Noise Slope',
           'color=j scalebar=y allpos=y clip=5 minval=0 maxval=6 barlabel="Slope (samples)" '))
 
-Result('cmp','cmp mult mdip1 mdip2','SideBySideAniso')
+Result('cmp','cmp mult mdip0 mdip1','SideBySideAniso')
+
+Flow('pvel0','cmp mdip0','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel1','cmp mdip1','pveltran half=n v0=1 dv=0.02 nv=100 dip=${SOURCES[1]}')
+Flow('pvel','pvel0 pvel1','stack | envelope')
 
 # Separate signal/noise
 #######################
