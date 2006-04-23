@@ -54,6 +54,11 @@ Result('ddip2','ndip2 sdip2','SideBySideAniso')
 
 Flow('nsep2','nmo2 ddip2','pwdsigk dips=${SOURCES[1]} verb=y niter=200')
 
+Flow('nmo2s','nmo2','pad n2=64')
+Flow('ddip2s','ddip2','transp | remap1 n1=64 | transp')
+
+Flow('nsep2s','nmo2s ddip2s','seisigk dips=${SOURCES[1]} verb=y niter=200 eps=0.01 | window n2=62')
+
 Flow('nnoi2','nsep2','window n3=1')
 Plot('nnoi2','grey title="Estimated Noise" clip=1591620')
 
@@ -62,6 +67,14 @@ Plot('ssig2','grey title="Estimated Signal" clip=1591620')
 
 Result('nsep2','nmo2 nnoi2 ssig2','SideBySideAniso')
 
+Flow('nnoi2s','nsep2s','window n3=1')
+Plot('nnoi2s','grey title="Estimated Noise" clip=1591620')
+
+Flow('ssig2s','nsep2s','window f3=1')
+Plot('ssig2s','grey title="Estimated Signal" clip=1591620')
+
+Result('nsep2s','nmo2 nnoi2 ssig2','SideBySideAniso')
+
 Flow('noi2','nnoi2','nmostretch v0=18 half=n inv=y | window f1=140')
 Plot('noi2','grey title="Estimated Noise" clip=1591620')
 
@@ -69,6 +82,14 @@ Flow('sig2','ssig2','nmostretch v0=18 half=n inv=y | window f1=140')
 Plot('sig2','grey title="Estimated Signal" clip=1591620')
 
 Result('sep2','data2 noi2 sig2','SideBySideAniso')
+
+Flow('noi2s','nnoi2s','nmostretch v0=18 half=n inv=y | window f1=140')
+Plot('noi2s','grey title="Estimated Noise" clip=1591620')
+
+Flow('sig2s','ssig2s','nmostretch v0=18 half=n inv=y | window f1=140')
+Plot('sig2s','grey title="Estimated Signal" clip=1591620')
+
+Result('sep2s','data2 noi2s sig2s','SideBySideAniso')
 
 Flow('dip','data2 mask',
      'twodip2 order=3 eps=10 gauss=n verb=y mask=${SOURCES[1]}')

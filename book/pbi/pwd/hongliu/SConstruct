@@ -127,6 +127,8 @@ for niter in [1,2,5,10]:
 
     Result(vg,[vg,mt],'SideBySideAniso')
 
+#Flow('seis','win2  vgdip2','seislet')
+
 Result('vgweight','weight2 weight10','SideBySideAniso')
 
 End()

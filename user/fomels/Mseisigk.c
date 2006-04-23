@@ -28,7 +28,7 @@ The program works with 2-D data.
 int main(int argc, char* argv[])
 {
     int i, n1, n2, n12, n3, ik, nk, n12k, niter, nliter, iter, i1, i2, i3;
-    float eps, eps0, *d, *s, ***pp, ***ww, *w, *p=NULL;
+    float eps, eps0, wi, *d, *s, ***pp, ***ww, *w, *p=NULL;
     char *type;
     bool verb;
     sf_file in, out, dips, weight=NULL;
@@ -94,8 +94,9 @@ int main(int argc, char* argv[])
 	
 	for (ik=0; ik < nk; ik++) {
 	    for (i2=0; i2 < n2; i2++) {
+		wi = 1./(i2+1.);
 		for (i1=0; i1 < n1; i1++) {
-		    ww[ik][i2][i1] = 1./(i2+1);
+		    ww[ik][i2][i1] = wi;
 		}
 	    }
 	}
@@ -109,8 +110,9 @@ int main(int argc, char* argv[])
 	    if (iter < nliter-1) {
 		for (ik=0; ik < nk; ik++) {
 		    for (i2=0; i2 < n2; i2++) {
+			wi = 1./(i2+1.);
 			for (i1=0; i1 < n1; i1++) {
-			    ww[ik][i2][i1] = fabsf(p[i])/(i2+1);
+			    ww[ik][i2][i1] = fabsf(p[i])*wi;
 			}
 		    }
 		}

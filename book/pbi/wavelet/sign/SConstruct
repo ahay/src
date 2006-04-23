@@ -22,12 +22,10 @@ Plot('sig2','sigs','window n3=1 | ' + plot('Est. Noise'))
 
 Result('shape2','noiz make sig1 sig2','SideBySideAniso',vppen='txscale=2')
 
-Flow('seis','make pq','seisigk dips=${SOURCES[1]} verb=y nliter=2 eps=0.01')
+Flow('seis','make pq','seisigk dips=${SOURCES[1]} verb=y niter=100')
 Plot('sei1','seis','window f3=1 | ' + plot('Est. Signal'))
 Plot('sei2','seis','window n3=1 | ' + plot('Est. Noise'))
 
 Result('seis2','noiz make sei1 sei2','SideBySideAniso',vppen='txscale=2')
-
-
 
 End()

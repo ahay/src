@@ -135,5 +135,16 @@ Plot('mcomp2','marmcomp','window n3=1 | grey title="Second Component" ')
 
 Result('marm-comp','mcomp1 mcomp2','OverUnderAniso')
 
+Flow('deals','marmdeal','window n2=128')
+Flow('dip4s','marmdip4','window n2=128')
+
+Flow('comps','deals dip4s',
+     'seisigk dips=${SOURCES[1]} verb=y niter=200')
+
+Plot('comp1s','comps','window f3=1 | grey title="First Component" ')
+Plot('comp2s','comps','window n3=1 | grey title="Second Component" ')
+
+Result('comps','comp1s comp2s','OverUnderAniso')
+
 ###########################################################################
 End()

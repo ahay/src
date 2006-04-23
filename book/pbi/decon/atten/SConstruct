@@ -16,6 +16,14 @@ Result('ddip','dip','grey color=j scalebar=y title="Local Dip" ')
 
 Flow('vg','deep dip','pwdsigk dips=${SOURCES[1]} verb=y eps=1 nliter=3')
 
+Flow('dips','dip','transp | remap1 n1=4096 | transp')
+
+Flow('seis','deep dips','pad n2=4096 | seislet dip=${SOURCES[1]} adj=y inv=y')
+
+Flow('svg','seis dips','cut f2=256 | seislet dip=${SOURCES[1]} adj=n | window n2=4001')
+
+Result('svg','grey title=Cleaned ')
+
 ifreq = 'iphase rect1=50 rect2=50 order=100 verb=y'
 plotfreq = '''
        math output="%g/input" |

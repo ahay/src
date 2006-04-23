@@ -27,5 +27,9 @@ Result('cdip2','grey title="Second Dip" scalebar=y color=j')
 
 Flow('cln','cal cdip','pwdsigk dips=${SOURCES[1]} verb=y niter=1000')
 
+Flow('cals','cal','window n2=256')
+Flow('cdips','cdip','window n2=256')
+
+Flow('clns','cals cdips','seisigk dips=${SOURCES[1]} verb=y niter=1000')
 
 End()

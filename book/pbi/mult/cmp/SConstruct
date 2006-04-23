@@ -104,6 +104,18 @@ Plot('nois','window f2=6 | ' + grey('(b) Estimated Noise','clip=228'))
 Flow('sign','mis2 nois','add scale=1,-1 ${SOURCES[1]}')
 Plot('sign','window f2=6 | ' + grey('(a) Estimated Signal','clip=228'))
 
+Flow('cmp2s','cmp2','window n2=64')
+Flow('mdip2s','mdip2','window n2=64')
+Flow('masks','mask','window n2=64')
+
+Flow('comps','cmp2s mdip2s','seisigk dips=${SOURCES[1]} verb=y niter=1000')
+
+Flow('noiss','comps masks','window f3=1 | add mode=p ${SOURCES[1]}')
+Plot('noiss','window f2=6 | ' + grey('(b) Estimated Noise','clip=228'))
+
+Flow('signs','mis2 noiss','window n2=64 | add scale=1,-1 ${SOURCES[1]}')
+Plot('signs','window f2=6 | ' + grey('(a) Estimated Signal','clip=228'))
+
 # Velocity scans before and after
 #################################
 for dat in ('cmp','sign'):
@@ -114,5 +126,7 @@ for dat in ('cmp','sign'):
 # Final result
 ##############
 Result('super','sign nois vcmp vsign','SideBySideAniso')
+
+Result('supers','signs noiss','SideBySideAniso')
 
 End()

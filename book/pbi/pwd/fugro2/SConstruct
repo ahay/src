@@ -22,6 +22,15 @@ Flow('mdip','msl mask',
      'dip verb=y mask=${SOURCES[1]} rect1=40 rect2=5')
 Flow('mcomp','msl mdip','pwdsigk dips=${SOURCES[1]} eps=1 verb=y niter=100')
 
+Flow('msls','msl','window n2=128')
+Flow('mdips','mdip','window n2=128')
+
+Flow('seis','msls mdips','seislet inv=y adj=y dip=${SOURCES[1]}')
+Flow('mcl','seis mdips','cut f2=32 | seislet adj=n dip=${SOURCES[1]}')
+
+Result('mcl','window min1=3 max1=10 | grey title=Cleaned')
+Result('msls','window min1=3 max1=10 | grey title=Input')
+
 Flow('mdip2','mcomp mask',
      'dip verb=y mask=${SOURCES[1]} rect1=40 rect2=5')
 

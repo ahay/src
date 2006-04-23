@@ -84,6 +84,17 @@ Plot('vg',grey + ' title="Structure Enhanced" ')
 
 Result('dvg','line vg','OverUnderAniso')
 
+Flow('lines','line','pad n2=2048')
+Flow('dips','dip','transp | remap1 n1=2048 | transp')
+
+Flow('seis','lines dips','seislet dip=${SOURCES[1]} adj=y inv=y')
+Flow('clean','seis dips','cut f2=256 | seislet dip=${SOURCES[1]} adj=n | window n2=1941')
+
+Plot('clean',grey + ' title="Structure Enhanced" ')
+
+Result('clean','line clean','OverUnderAniso')
+
+
 ###########################################################################
 
 End()

@@ -41,6 +41,11 @@ Result('sean0-dip','ddip1 ddip2','SideBySideIso')
 
 Flow('separ','sean ppq2','pwdsigk dips=${SOURCES[1]} verb=y niter=200 eps=1')
 
+Flow('seans','sean','window n2=128')
+Flow('ppq2s','ppq2','window n2=128')
+
+Flow('separs','seans ppq2s','seisigk dips=${SOURCES[1]} verb=y niter=200 eps=0.1')
+
 Flow('pad mask','sean2','lpad jump=2 mask=${TARGETS[1]}')
 Result('sean3','pad',grey(' '))
 

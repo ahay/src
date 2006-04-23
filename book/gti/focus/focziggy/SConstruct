@@ -36,7 +36,7 @@ Plot  ('zof','zof',showdat('Data'))
 Result('zof','zof',showdat('Data'))
 
 # dip
-Flow  ('dip','zof','dip verb=y order=3 rect1=5 rect2=20 liter=100')
+Flow  ('dip','zof','dip verb=y rect1=5 rect2=20 liter=100')
 Result('dip',
        showdat('Dominant Dip') + ' color=j scalebar=y')
 
@@ -44,7 +44,7 @@ Result('dip',
 # PWD
 # ------------------------------------------------------------
 # diffractions
-Flow  ('dec','zof dip','pwd order=3 dip=${SOURCES[1]}')
+Flow  ('dec','zof dip','pwd dip=${SOURCES[1]}')
 Plot  ('dec',showdat('Residual'))
 Result('dec',showdat('Residual'))
 
@@ -59,6 +59,18 @@ Result('dwg',showdat('Structure Enhanced'))
 
 Flow  ('dns','zof dwg','add scale=1,-1 ${SOURCES[1]}')
 Result('dns',showdat('Diffractions Enhanced'))
+
+Flow('zofs','zof','pad n2=512')
+Flow('dips','dip','transp | remap1 n1=512 | transp')
+
+Flow('seis','zofs dips','seislet dip=${SOURCES[1]} adj=y inv=y eps=0.1')
+Flow('swg','seis dips','cut f2=128 | seislet dip=${SOURCES[1]} adj=n eps=0.1 | window n2=500')
+
+Result('swg',showdat('Structure Enhanced'))
+ 
+Flow  ('sns','zof swg','add scale=1,-1 ${SOURCES[1]}')
+Result('sns',showdat('Diffractions Enhanced'))
+
 # ------------------------------------------------------------
 
 
