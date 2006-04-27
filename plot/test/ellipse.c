@@ -244,4 +244,4 @@ int main (void)
     return 0;
 }
 
-/* 	$Id: ellipse.c,v 1.6 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

@@ -81,4 +81,4 @@ static void doit(float wide, int panel)
     }
 }
 
-/* 	$Id: dc.c,v 1.5 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

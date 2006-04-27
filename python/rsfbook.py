@@ -18,7 +18,8 @@ import os, string, re, glob, time
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-if SCons.__version__ == '0.96.90' or SCons.__version__ == '0.96.91':
+version = map(int,string.split(SCons.__version__,'.'))
+if version[1] == 96 and version[2] >= 90:
     from SCons.Script import *
 else:
     import SCons.Script.SConscript

@@ -37,5 +37,5 @@ int main(void)
     return 0;
 }
     
-/* 	$Id: Testcbanded.c,v 1.2 2004/04/19 22:03:22 fomels Exp $	 */
+/* 	$Id$	 */
 

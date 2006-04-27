@@ -22,20 +22,20 @@
 #include "freqfilt.h"
 
 #include "_bool.h"
-#include "c99.h"
+#include "kiss_fft.h"
 /*^*/
 
-#include "c99.h"
 #include "alloc.h"
 #include "error.h"
 #include "adjnull.h"
 #include "kiss_fftr.h"
+#include "_kiss_fft_guts.h"
 
 #ifndef __cplusplus
 /*^*/
 
 static int nfft, nw;
-static float complex *cdata, *shape=NULL;
+static kiss_fft_cpx *cdata, *shape=NULL;
 static float *tmp;
 static kiss_fftr_cfg forw, invs;
 
@@ -46,7 +46,7 @@ void sf_freqfilt_init(int nfft1 /* time samples (possibly padded) */,
     nfft = nfft1;
     nw = nw1;
 
-    cdata = sf_complexalloc(nw);
+    cdata = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
     tmp = sf_floatalloc(nfft);
     forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
     invs = kiss_fftr_alloc(nfft,1,NULL,NULL);
@@ -59,17 +59,18 @@ void sf_freqfilt_set(float *filt /* frequency filter [nw] */)
 {
     int iw;
     
-    if (NULL==shape) shape = sf_complexalloc(nw);
+    if (NULL==shape) shape = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
 
     for (iw=0; iw < nw; iw++) {
-	shape[iw] = filt[iw];
+	shape[iw].r = filt[iw];
+	shape[iw].i = 0.;
     }
 }
 
 #ifndef __cplusplus
 /*^*/
 
-void sf_freqfilt_cset(float complex *filt /* frequency filter [nw] */)
+void sf_freqfilt_cset(kiss_fft_cpx *filt /* frequency filter [nw] */)
 /*< Initialize filter >*/
 {
     shape = filt;
@@ -90,6 +91,7 @@ void sf_freqfilt_close(void)
 void sf_freqfilt(int nx, float* x)
 /*< Filtering in place >*/
 {
+    kiss_fft_cpx c;
     int iw;
 
     for (iw=0; iw < nx; iw++) {
@@ -101,9 +103,10 @@ void sf_freqfilt(int nx, float* x)
 
     kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
     for (iw=0; iw < nw; iw++) {
-	cdata[iw] *= shape[iw];
+	C_MUL(c,cdata[iw],shape[iw]);
+	cdata[iw]=c;
     }
-    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, tmp);
+    kiss_fftri(invs, cdata, tmp);
 
     for (iw=0; iw < nx; iw++) {
 	x[iw] = tmp[iw];
@@ -113,6 +116,7 @@ void sf_freqfilt(int nx, float* x)
 void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y) 
 /*< Filtering as linear operator >*/
 {
+    kiss_fft_cpx c;
     int iw;
 
     sf_adjnull(adj,add,nx,ny,x,y);
@@ -124,11 +128,12 @@ void sf_freqfilt_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	tmp[iw] = 0.;
     }
 
-    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
+    kiss_fftr(forw, tmp, cdata);
     for (iw=0; iw < nw; iw++) {
-	cdata[iw] *= shape[iw];
+	C_MUL(c,cdata[iw],shape[iw]);
+	cdata[iw]=c;
     }
-    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, tmp);
+    kiss_fftri(invs, cdata, tmp);
 
     for (iw=0; iw < nx; iw++) {	    
 	if (adj) {

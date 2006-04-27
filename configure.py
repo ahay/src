@@ -3,7 +3,8 @@ import sys, os, string, re, commands, types
 import SCons
 
 # The following adds all SCons SConscript API to the globals of this module.
-if SCons.__version__ == '0.96.90' or SCons.__version__ == '0.96.91':
+version = map(int,string.split(SCons.__version__,'.'))
+if version[1] == 96 and version[2] >= 90:
     from SCons.Script import *
 else:
     import SCons.Script.SConscript
@@ -98,6 +99,8 @@ def libs(context):
         LIBS.append('rpc')
     elif sys.platform[:6] == 'darwin':
         LIBS.append('mx')
+    elif sys.platform[:7] == 'interix':
+        LIBS.append('rpclib')
     text = '''
     #include <rpc/types.h>
     #include <rpc/xdr.h>

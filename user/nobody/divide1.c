@@ -99,4 +99,4 @@ void divide1 (div1 div, float* num, float* den,
     tridiagonal_solve  (div->slv, rat);
 }
 
-/* 	$Id: divide1.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

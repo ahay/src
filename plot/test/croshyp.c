@@ -127,4 +127,4 @@ static void diamond(float x, float y, float dx, float dy )
     vp_udraw( vx[3], vy[3]);
 }
 
-/* 	$Id: croshyp.c,v 1.6 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

@@ -140,4 +140,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: scale.c,v 1.8 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */

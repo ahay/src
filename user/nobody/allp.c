@@ -42,4 +42,4 @@ void allp_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     }
 }
 
-/* 	$Id: allp.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

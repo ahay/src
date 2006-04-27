@@ -77,4 +77,4 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: rtoc.c,v 1.6 2004/07/02 11:54:37 fomels Exp $	 */
+/* 	$Id$	 */

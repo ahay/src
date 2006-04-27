@@ -10,4 +10,4 @@ void gazdagz (bool inv, float k2, float complex *p, float complex *q);
 
 #endif
 
-/* 	$Id: gazdagz.h,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

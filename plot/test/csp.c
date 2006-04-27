@@ -72,4 +72,4 @@ float rand01(void)
     return ((float) iseed - 0.5)/((float) im - 1.);
 }
 
-/* 	$Id: csp.c,v 1.4 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

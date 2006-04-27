@@ -136,4 +136,4 @@ float coh2 (const coh ap, int jx, int jy, int jz, int nx, int ny, int nz,
     return ab/(sqrt(a2*b2)+FLT_EPSILON);
 }
 
-/* 	$Id: coh.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

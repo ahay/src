@@ -126,4 +126,4 @@ static void arrow(float x1, float y1, float x2, float y2)
     vp_udraw( tipx, tipy);
 }
 
-/* 	$Id: whitepruf.c,v 1.3 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

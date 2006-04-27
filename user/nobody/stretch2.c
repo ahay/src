@@ -130,5 +130,5 @@ void stretch2_close (map2 str)
     free (str);
 }
 
-/* 	$Id: stretch2.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */
 

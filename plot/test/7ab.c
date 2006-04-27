@@ -146,4 +146,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: 7ab.c,v 1.7 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

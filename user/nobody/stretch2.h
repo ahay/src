@@ -13,4 +13,4 @@ void stretch2_close (map2 str);
 
 #endif
 
-/* 	$Id: stretch2.h,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

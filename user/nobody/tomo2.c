@@ -113,4 +113,4 @@ void tomo2_close (void)
     free (w2);
 }
 
-/* 	$Id: tomo2.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

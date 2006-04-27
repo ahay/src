@@ -93,4 +93,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mxcorr1.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

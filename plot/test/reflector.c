@@ -248,4 +248,4 @@ int main(void)
     exit(0);
 }
 
-/* 	$Id: reflector.c,v 1.5 2004/06/30 18:29:26 fomels Exp $	 */
+/* 	$Id$	 */

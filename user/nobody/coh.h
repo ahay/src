@@ -11,4 +11,4 @@ float coh2 (const coh ap, int jx, int jy, int jz, int nx, int ny, int nz,
 
 #endif
 
-/* 	$Id: coh.h,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */

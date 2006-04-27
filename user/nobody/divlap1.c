@@ -133,5 +133,5 @@ void divlap1 (divlap div, float* num, float* den, float* ref,
     banded_solve  (div->slv, rat);
 }
 
-/* 	$Id: divlap1.c,v 1.1 2004/05/25 00:46:12 fomels Exp $	 */
+/* 	$Id$	 */
 
