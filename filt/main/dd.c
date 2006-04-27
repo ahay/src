@@ -146,11 +146,7 @@ int main(int argc, char *argv[])
 			sf_intwrite(ibuf,nout,out);
 			break;
 		    case SF_COMPLEX:
-			cbuf = (float complex*) bufout;
-			for (i=j=0; i < nin && j < nout; i+=2, j++) {
-			    cbuf[j] = fbuf[i] + I*fbuf[i+1];
-			}
-			sf_complexwrite(cbuf,nout,out);
+                        sf_floatwrite(fbuf,nin,out);
 			break;		
 		    case SF_UCHAR:
 		    case SF_CHAR:

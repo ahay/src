@@ -10,9 +10,8 @@ docdir = os.path.join(root,'doc')
 
 for src in ('doc','proj','prog','tex','book'):
     py = 'rsf%s.py' % src
-    pyc = py + 'c'
     env.Install(libdir,py)
-    Clean(os.path.join(libdir,py),[os.path.join(libdir,pyc),pyc])
+# clean .pyc files?
 
 env.Install(libdir,'suproj.py')
 env.Install(bindir,'sfdoc')
@@ -31,8 +30,9 @@ Depends(use,os.path.join(libdir,'vpplot.py'))
 Depends(use,os.path.join(libdir,'suproj.py'))
 
 index = os.path.join(docdir,'index.html')
-env.Command(index,None,'PYTHONPATH=%s %s python/sfdoc -w %s' % 
-            (libdir,WhereIs('python'),docdir))
+env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
+                'PYTHONPATH':os.environ.get('PYTHONPATH')})
+env.Command(index,None,'%s python/sfdoc -w %s' % (WhereIs('python'),docdir))
 Depends(index,use)
 
 ##########################################################################

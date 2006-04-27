@@ -238,7 +238,7 @@ Should do output after sf_input. >*/
 	} else { /* invent a name */
 	    sprintf(name,"%sXXXXXX",sf_getprog());
 	    (void) close(mkstemp(file->dataname));
-	    (void) unlink(file->dataname);
+	    /* (void) unlink(file->dataname); */
 	    /* old code for named pipes below */
 	    /*
 	    if (NULL == headname &&

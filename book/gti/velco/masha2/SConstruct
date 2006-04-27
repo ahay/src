@@ -166,6 +166,9 @@ Plot('img',
      label1=Depth unit1=m label2=Lateral unit2=m
      ''')
 
+Result('img','img','Overlay')
+Result('fmg2','fmg2','Overlay')
+
 #     screenht=%g screenwd=%g labelsz=4 titlesz=4
 #       ''' % (0.001*zmax,0.001*xmax))
 
