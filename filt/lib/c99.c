@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #ifndef _sf_c99_h
 
-#if !defined(__CYGWIN__) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+#if !defined(__CYGWIN__) && !defined(__INTERIX) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
 /*^*/
 
 /* The following from C99 - must define for C90 */
@@ -86,7 +86,7 @@ void cprint (float complex c)
     sf_warning("%g+%gi",crealf(c),cimagf(c));
 }
 
-#if defined(__CYGWIN__) || !defined (__STDC__) || (__STDC_VERSION__ < 199901L)
+#if defined(__CYGWIN__) || defined(__INTERIX) || !defined (__STDC__) || (__STDC_VERSION__ < 199901L)
 /*^*/
 
 float sf_crealf(/*@unused@*/ float complex c) 
