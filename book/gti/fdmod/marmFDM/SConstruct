@@ -16,8 +16,8 @@ par = {
 Flow('vel',None,
      '''
      spike nsp=1 mag=-750
-           n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=140 l1=180
-           n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=140 l2=180|
+           n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=140 l1=180 unit1=m
+           n2=%(nx)d d2=%(dx)g o2=%(ox)g k2=140 l2=180 unit2=m |
      math output="input + %(vo)g +
           %(gx)g*(x2-%(ox)g) +
           %(gz)g*(x1-%(oz)g)"
@@ -100,7 +100,11 @@ Plot('vel','vel',
 Result('wfl','wfl sou rec','Overlay')
 #Result('www','www sou rec','Overlay')
 Result('vel','vel sou rec','Overlay')
-Result('dat','grey labelrot=n pclip=100 title="Data" label1="receiver no" label2="time"')
+Result('dat',
+       '''
+       grey labelrot=n pclip=100 title="Data"
+       label1="receiver no" unit1= label2="time"
+       ''')
 
 # ------------------------------------------------------------
 ## 
@@ -183,7 +187,7 @@ Plot('mwfl',
      '''
      window n3=1 f3=28 |
      grey labelrot=n pclip=100
-     title="Wavefield" label1="z" label2="x"
+     title="Wavefield" label1="z" label2="x" unit1=m unit2=m
      min2=%(xmin)g max2=%(xmax)g min1=%(zmin)g max1=%(zmax)g title=" " 
      '''%mpar)
 Plot('mvel','mvel',
@@ -194,6 +198,10 @@ Plot('mvel','mvel',
      '''%mpar)
 Result('mwfl','mwfl msou mrec','Overlay')
 Result('mvel','mvel msou mrec','Overlay')
-Result('mdat','grey labelrot=n pclip=100 title="Data" label1="receiver no" label2="time"')
+Result('mdat',
+       '''
+       grey labelrot=n pclip=100 title="Data"
+       label1="receiver no" unit1= label2="time"
+       ''')
 
 End()

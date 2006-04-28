@@ -40,11 +40,11 @@ Flow('vel',None,
            n1=%(nz)d d1=%(dz)g o1=%(oz)g
            k1=160,140,180
            l1=250,250,250
-           label1="z"
+           label1="z" unit1=m
            n2=%(nx)d d2=%(dx)g o2=%(ox)g
            k2=001,101,151
            l2=100,150,250
-           label2="x"|
+           label2="x" unit2=m |
      math output="input + 2000"
      ''' % par)
 Flow('s0','vel',
@@ -63,11 +63,11 @@ Flow('refl',None,
            n1=%(nz)d d1=%(dz)g o1=%(oz)g
            k1=160,140,180
            l1=160,140,180
-           label1="z"
+           label1="z" unit1=m
            n2=%(nx)d d2=%(dx)g o2=%(ox)g
            k2=001,101,151
            l2=100,150,250
-           label2="x"
+           label2="x" unit2=m
      ''' % par)
 Flow('r0','refl',
      '''
@@ -176,7 +176,7 @@ for i in range(ns):
     Plot(ww,ww,'window n3=1 f3=2|' + igrey('pclip=100'))
     Result(ww,[ww,ss,rr],'Overlay')
     
-    Plot(dd,dd,'transp |' + igrey('pclip=99'))
+    Plot(dd,dd,'transp |' + igrey('pclip=99 unit2=m'))
     Result(dd,[dd,ss,rr],'Overlay')
 
 # ------------------------------------------------------------
