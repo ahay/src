@@ -26,7 +26,7 @@
 
 static int nw, n;
 static float *tmp;
-static float complex *cx, *cf;
+static kiss_fft_cpx *cx, *cf;
 static kiss_fftr_cfg forw, invs;
 
 void halfint_init (bool inv  /* differentiation or integration */, 
@@ -36,13 +36,13 @@ void halfint_init (bool inv  /* differentiation or integration */,
 {
     int i;
     float om;
-    float complex cz;
+    kiss_fft_cpx cw, cz, cz2;
 
     n = n1;
     nw = n/2+1;
 
-    cx = sf_complexalloc(nw);
-    cf = sf_complexalloc(nw);
+    cx = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
+    cf = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
 
     forw = kiss_fftr_alloc(n,0,NULL,NULL);
     invs = kiss_fftr_alloc(n,1,NULL,NULL);
@@ -51,12 +51,20 @@ void halfint_init (bool inv  /* differentiation or integration */,
 
     for (i=0; i < nw; i++) {
 	om = 2.*SF_PI*i/n;
-	cz = cexpf(-I*om);
+	cw.r = cosf(-om);
+	cw.i = sinf(-om);
+
+	cz.r = 1.-rho*cw.r;
+	cz.i = -rho*cw.i;
 	if (inv) {
-	    cf[i] = csqrtf(1.-rho*cz)/n;
+	    cf[i] = sf_csqrtf(cz);
 	} else {
-	    cf[i] = csqrtf(0.5*(1.+rho*cz)/(1.-rho*cz))/n;
+	    cz2.r = 0.5*(1.+rho*cw.r);
+	    cz2.i = 0.5*rho*cw.i;
+	    cf[i] = sf_csqrtf(sf_cdiv(cz2,cz));
 	}
+	cf[i].r /= n;
+	cf[i].i /= n;
     }
 
     tmp = sf_floatalloc(n);
@@ -91,12 +99,18 @@ void halfint (bool adj, float* x /* [n] */)
 /*< Integrate in place >*/
 {
     int i;
+    kiss_fft_cpx c;
 
-    kiss_fftr(forw,x, (kiss_fft_cpx *) cx);
+    kiss_fftr(forw, x, cx);
     for (i=0; i < nw; i++) {
-	cx[i] *= adj? conjf(cf[i]): cf[i];
+	if (adj) {
+	    SF_CCMUL(c,cx[i],cf[i]);
+	} else {
+	    SF_CMUL(c,cx[i],cf[i]);
+	}
+	cx[i]=c;
     }
-    kiss_fftri(invs,(const kiss_fft_cpx *) cx, x);
+    kiss_fftri(invs, cx, x);
 }
 
 void halfint_close(void)

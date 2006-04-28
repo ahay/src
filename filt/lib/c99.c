@@ -1,20 +1,20 @@
 /* Supplying compatibility with the C99 standard */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #ifndef __cplusplus
@@ -220,15 +220,18 @@ float tanhf(float x)
 
 float acoshf(float x) 
 /*< float acosh >*/
-{ return (float) acosh(x);}
+{ extern double acosh(double x);
+return (float) acosh(x);}
 
 float asinhf(float x) 
 /*< float asinh >*/
-{ return (float) asinh(x);}
+{ extern double asinh(double x);
+return (float) asinh(x);}
 
 float atanhf(float x) 
 /*< float atanh >*/
-{ return (float) atanh(x);}
+{ extern double atanh(double x);
+ return (float) atanh(x);}
 
 float powf(float x, float y) 
 /*< float pow >*/
@@ -236,7 +239,8 @@ float powf(float x, float y)
 
 float hypotf(float x, float y) 
 /*< float hypot >*/
-{ return (float) hypot(x,y);}
+{ extern double hypot(double x, double y);
+ return (float) hypot(x,y);}
 
 #endif
 /*^*/

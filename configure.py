@@ -365,24 +365,29 @@ def options(opts):
     opts.Add('CFORTRAN90','Type of the Fortran-90 compiler (for cfortran.h)')
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
 
+local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
+
+def includes(list,file):
+    global local_include
+    fd = open(file,'r')
+    for line in fd.readlines():
+         match = local_include.match(line)            
+         if match:
+             other = os.path.join(os.path.dirname(file),match.group(1))
+             if not other in list:
+                 includes(list,other)
+    list.append(file)
+    fd.close()
+
 def merge(target=None,source=None,env=None):
+    global local_include
     sources = map(str,source)
-    local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
-    includes = []
+    incs = []
     for src in sources:
-        if src in includes:
-            continue
-        inp = open(src,'r')
-        for line in inp.readlines():
-            match = local_include.match(line)            
-            if match:
-                other = match.group(1)
-                if not other in includes:
-                    includes.append(os.path.join(os.path.dirname(src),other))
-        inp.close()
-        includes.append(src)
+        if not src in incs:
+            includes(incs,src)
     out = open(str(target[0]),'w')
-    for src in includes:
+    for src in incs:
         inp = open(src,'r')
         for line in inp.readlines():
             if not local_include.match(line):
