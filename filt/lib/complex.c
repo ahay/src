@@ -1,6 +1,6 @@
 /* Complex number operations */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -76,6 +76,33 @@ kiss_fft_cpx sf_cdiv(kiss_fft_cpx a, kiss_fft_cpx b)
 	c.i = (a.i*r-a.r)/den;
     }
     return c;
+}
+
+kiss_fft_cpx sf_cmul(kiss_fft_cpx a, kiss_fft_cpx b)
+/*< complex multiplication >*/
+{
+    kiss_fft_cpx c;
+    c.r = a.r*b.r-a.i*b.i;
+    c.i = a.i*b.r+a.r*b.i;
+    return c;
+}
+
+kiss_fft_cpx sf_cmplx(float re, float im)
+/*< complex number >*/
+{
+	kiss_fft_cpx c;
+	c.r = re;
+	c.i = im;
+	return c;
+}
+
+kiss_fft_cpx sf_conjg(kiss_fft_cpx z)
+/*< complex conjugate >*/
+{
+	kiss_fft_cpx c;
+	c.r = z.r;
+	c.i = -z.i;
+	return c;
 }
 
 #define SF_CMUL(m,a,b) \

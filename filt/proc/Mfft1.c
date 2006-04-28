@@ -25,8 +25,8 @@ int main (int argc, char *argv[])
 {
     bool inv, sym, opt;
     int n1, nt, nw, i1, i2, n2;
-    float dw, *p, d1, o1, wt;
-    float complex *pp;
+    float dw, *p, d1, o1, wt, shift;
+    kiss_fft_cpx *pp, ce;
     char *label;
     sf_file in, out;
     kiss_fftr_cfg cfg;
@@ -100,7 +100,7 @@ int main (int argc, char *argv[])
     fix_unit(1,in,out);
     
     p = sf_floatalloc(nt);
-    pp = sf_complexalloc(nw);
+    pp = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
 
     cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
     wt = sym? 1./sqrtf((float) nt): 1.0/nt;
@@ -119,25 +119,29 @@ int main (int argc, char *argv[])
 		p[i1]=0.0;
 	    }
 	    
-	    kiss_fftr (cfg,p,(kiss_fft_cpx *) pp);
+	    kiss_fftr (cfg,p,pp);
 	    
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
-		    pp[i1] *= cexpf(-I*2.0*SF_PI*i1*dw*o1);
+		    shift = -2.0*SF_PI*i1*dw*o1;
+		    ce = sf_cmplx(cosf(shift),sinf(shift));
+		    pp[i1]=sf_cmul(pp[i1],ce);
 		}
 	    }
 	    
-	    sf_complexwrite(pp,nw,out);	    
+	    sf_floatwrite((float*) pp,2*nw,out);	    
 	} else {
-	    sf_complexread(pp,nw,in);
+	    sf_floatread((float*) pp,2*nw,in);
 
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
-		    pp[i1] *= cexpf(+I*2.0*SF_PI*i1*dw*o1);
+		    shift = +2.0*SF_PI*i1*dw*o1;
+		    ce = sf_cmplx(cosf(shift),sinf(shift));
+		    pp[i1]=sf_cmul(pp[i1],ce);
 		}
 	    }
 
-	    kiss_fftri(cfg,(const kiss_fft_cpx *) pp,p);
+	    kiss_fftri(cfg,pp,p);
 
 	    for (i1=0; i1 < n1; i1++) {
 		p[i1] *= wt;
