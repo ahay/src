@@ -50,21 +50,20 @@ void halfint_init (bool inv  /* differentiation or integration */,
 	sf_error("%s: KISS FFT allocation error");
 
     for (i=0; i < nw; i++) {
-	om = 2.*SF_PI*i/n;
-	cw.r = cosf(-om);
-	cw.i = sinf(-om);
+	om = -2.*SF_PI*i/n;
+	cw = sf_cmplx(cosf(om),sinf(om));
 
 	cz.r = 1.-rho*cw.r;
 	cz.i = -rho*cw.i;
 	if (inv) {
-	    cf[i] = sf_csqrtf(cz);
+	    cz = sf_csqrtf(cz);
 	} else {
 	    cz2.r = 0.5*(1.+rho*cw.r);
 	    cz2.i = 0.5*rho*cw.i;
-	    cf[i] = sf_csqrtf(sf_cdiv(cz2,cz));
+	    cz = sf_csqrtf(sf_cdiv(cz2,cz));
 	}
-	cf[i].r /= n;
-	cf[i].i /= n;
+	cf[i].r = cz.r/n;
+	cf[i].i = cz.i/n;
     }
 
     tmp = sf_floatalloc(n);
@@ -99,16 +98,14 @@ void halfint (bool adj, float* x /* [n] */)
 /*< Integrate in place >*/
 {
     int i;
-    kiss_fft_cpx c;
 
     kiss_fftr(forw, x, cx);
     for (i=0; i < nw; i++) {
 	if (adj) {
-	    SF_CCMUL(c,cx[i],cf[i]);
+	    cx[i] = sf_cmul(cx[i],sf_conjg(cf[i]));
 	} else {
-	    SF_CMUL(c,cx[i],cf[i]);
+	    cx[i] = sf_cmul(cx[i],cf[i]);
 	}
-	cx[i]=c;
     }
     kiss_fftri(invs, cx, x);
 }

@@ -27,6 +27,8 @@
 kiss_fft_cpx sf_csqrtf (kiss_fft_cpx c)
 /*< replacement for csqrtf >*/
 {
+    extern float copysignf(float x, float y);
+
     float d, r, s;
     kiss_fft_cpx v;
 
