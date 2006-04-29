@@ -89,6 +89,22 @@ kiss_fft_cpx sf_cmul(kiss_fft_cpx a, kiss_fft_cpx b)
     return c;
 }
 
+kiss_fft_cpx sf_crmul(kiss_fft_cpx a, float b)
+/*< complex by real multiplication >*/
+{
+    a.r *= b;
+    a.i *= b;
+    return a;
+}
+
+kiss_fft_cpx sf_cneg(kiss_fft_cpx a)
+/*< unary minus >*/
+{
+    a.r = -a.r;
+    a.i = -a.i;
+    return a;
+}
+
 kiss_fft_cpx sf_cmplx(float re, float im)
 /*< complex number >*/
 {
@@ -107,14 +123,10 @@ kiss_fft_cpx sf_conjg(kiss_fft_cpx z)
 	return c;
 }
 
-#define SF_CMUL(m,a,b) \
-    do{ (m).r = (a).r*(b).r - (a).i*(b).i;\
-        (m).i = (a).r*(b).i + (a).i*(b).r; }while(0)
-/*^*/
-
-#define SF_CCMUL(m,a,b) \
-    do{ (m).r = (a).r*(b).r + (a).i*(b).i;\
-        (m).i = (a).i*(b).r - (a).r*(b).i; }while(0)
-/*^*/
+float sf_cabsf(kiss_fft_cpx z)
+/*< replacement for cabsf >*/
+{
+    return hypotf(z.r,z.i);
+}
 
 

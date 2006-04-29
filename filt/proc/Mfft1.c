@@ -100,7 +100,7 @@ int main (int argc, char *argv[])
     fix_unit(1,in,out);
     
     p = sf_floatalloc(nt);
-    pp = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
+    pp = sf_komplexalloc(nw);
 
     cfg = kiss_fftr_alloc(nt,inv?1:0,NULL,NULL);
     wt = sym? 1./sqrtf((float) nt): 1.0/nt;

@@ -1,21 +1,20 @@
-/* Frequency spectra.
-*/
+/* Frequency spectra. */
 /*
-Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
 
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <stdio.h>
@@ -27,9 +26,9 @@ int main (int argc, char* argv[])
 {
     int n1, n2, ni, nfft, nw, i, i1, i2;
     float d1, o1, dw, *spec, *trace, scale;
-    float complex *fft;
+    kiss_fft_cpx *fft;
     char key[3];
-    bool sum, isphase;
+    bool sum;
     sf_file in, out;
     kiss_fftr_cfg cfg;
 
@@ -54,7 +53,7 @@ int main (int argc, char* argv[])
     dw = 1./(nfft*d1);
 
     trace = sf_floatalloc (nfft);
-    fft = sf_complexalloc (nw);
+    fft = sf_komplexalloc (nw);
     spec = sf_floatalloc (nw);
  	
     sf_putint(out,"n1",nw);
@@ -71,9 +70,6 @@ int main (int argc, char* argv[])
 	    spec[i1] = 0.;
 	}
     }
-
-    if (!sf_getbool("phase",&isphase)) isphase=false;
-    /* if y, compute phase spectra */
     
     for (i1=n1; i1 < nfft; i1++) {
 	trace[i1] = 0.; /* pad with zeros */
@@ -87,27 +83,15 @@ int main (int argc, char* argv[])
 	sf_floatread(trace,n1,in);
 
 	/* Fourier transform */
-	kiss_fftr (cfg,trace,(kiss_fft_cpx *) fft);
+	kiss_fftr (cfg,trace,fft);
 
 	if (sum) {
-	    if (isphase) {
-		for (i1=0; i1 < nw; i1++) {
-		    spec[i1] += cargf(fft[i1]*cexpf(2.*I*SF_PI*i1*dw*o1));
-		}
-	    } else {
-		for (i1=0; i1 < nw; i1++) {
-		    spec[i1] += cabsf(fft[i1]);
-		}
+	    for (i1=0; i1 < nw; i1++) {
+		spec[i1] += sf_cabsf(fft[i1]);
 	    }
 	} else {
-	    if (isphase) {
-		for (i1=0; i1 < nw; i1++) {
-		    spec[i1] = cargf(fft[i1]*cexpf(2.*I*SF_PI*i1*dw*o1));
-		}
-	    } else {
-		for (i1=0; i1 < nw; i1++) {
-		    spec[i1] = cabsf(fft[i1])*scale;
-		}
+	    for (i1=0; i1 < nw; i1++) {
+		spec[i1] = sf_cabsf(fft[i1])*scale;
 	    }
 	    sf_floatwrite(spec,nw,out);
 	}

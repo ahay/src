@@ -41,8 +41,8 @@ void halfint_init (bool inv  /* differentiation or integration */,
     n = n1;
     nw = n/2+1;
 
-    cx = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
-    cf = (kiss_fft_cpx*) sf_alloc(nw,sizeof(kiss_fft_cpx));
+    cx = sf_komplexalloc(nw);
+    cf = sf_komplexalloc(nw);
 
     forw = kiss_fftr_alloc(n,0,NULL,NULL);
     invs = kiss_fftr_alloc(n,1,NULL,NULL);

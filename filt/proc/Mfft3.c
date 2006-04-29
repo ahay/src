@@ -37,7 +37,7 @@ int main (int argc, char **argv)
     float k0;                /* starting wavenumber */
     float wt;                /* Fourier scaling */
 
-    float complex **cp, *ctrace; /* frequency-wavenumber */
+    kiss_fft_cpx **cp, *ctrace; /* frequency-wavenumber */
 
     bool inv;                /* forward or inverse */
     bool sym;                /* symmetric scaling */
@@ -150,41 +150,40 @@ int main (int argc, char **argv)
     
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 
-    cp = sf_complexalloc2(n1,nk);
-    ctrace = sf_complexalloc(nk);
+    cp = sf_komplexalloc2(n1,nk);
+    ctrace = sf_komplexalloc(nk);
     
     /* FFT scaling */
     wt = sym? 1./sqrtf((float) nk): 1./nk;
     
     for (i3=0; i3<n3; i3++) {
 	if (inv) {
-	    sf_complexread(cp[0],n1*nk,in);
+	    sf_floatread((float*) cp[0],n1*nk*2,in);
 
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform k to x */
-		kiss_fft_stride(cfg,(kiss_fft_cpx *) (cp[0]+i1),
-				(kiss_fft_cpx *) ctrace,n1);
+		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
 		
 		for (ix=0; ix<nx; ix++) {
-		    cp[ix][i1] = ix%2? -ctrace[ix]*wt: ctrace[ix]*wt;
+		    cp[ix][i1] = sf_crmul(ctrace[ix],ix%2? -wt: wt);
 		}
 	    }
       
-	    sf_complexwrite(cp[0],n1*nx,out);
+	    sf_floatwrite((float*) cp[0],n1*nx*2,out);
 	} else {
-	    sf_complexread(cp[0],n1*nx,in);
+	    sf_floatread((float*) cp[0],n1*nx*2,in);
 	    
 	    /* FFT centering */
 	    for (ix=1; ix<nx; ix+=2) {
 		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] = -cp[ix][i1];
+		    cp[ix][i1] = sf_cneg(cp[ix][i1]);
 		}
 	    }
 
 	    if (sym) {
 		for (ix=0; ix<nx; ix++) {
 		    for (i1=0; i1 < n1; i1++) {
-			cp[ix][i1] *= wt;
+			cp[ix][i1] = sf_crmul(cp[ix][i1],wt);
 		    }
 		}
 	    }
@@ -192,21 +191,21 @@ int main (int argc, char **argv)
 	    /* pad with zeros */
 	    for (ix=nx; ix<nk; ix++) {
 		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] = 0.;
+		    cp[ix][i1] = sf_cmplx(0.,0.);
 		}
 	    }
     
 	    for (i1=0; i1 < n1; i1++) {
 		/* Fourier transform x to k */
-		kiss_fft_stride(cfg,(kiss_fft_cpx *) (cp[0]+i1),
-				(kiss_fft_cpx *) ctrace,n1);
+		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
+
 		/* Transpose */
 		for (ix=0; ix<nk; ix++) {
 		    cp[ix][i1] = ctrace[ix];
 		}
 	    }
 	    
-	    sf_complexwrite(cp[0],n1*nk,out);
+	    sf_floatwrite((float*) cp[0],n1*nk*2,out);
 	}
     }
     
