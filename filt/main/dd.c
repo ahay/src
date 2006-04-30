@@ -32,7 +32,6 @@ int main(int argc, char *argv[])
     char *form, *type, *format, bufin[BUFSIZ], bufout[BUFSIZ];
     sf_datatype itype, otype;
     float *fbuf;
-    float complex *cbuf;
     unsigned char *ubuf;
 
     sf_init (argc,argv);
@@ -118,11 +117,11 @@ int main(int argc, char *argv[])
 			sf_floatwrite(fbuf,nout,out);
 			break;
 		    case SF_COMPLEX:
-			cbuf = (float complex*) bufout;
-			for (i=j=0; i < nin && j < nout; i+=2, j++) {
-			    cbuf[j] = ibuf[i]+I*ibuf[i+1]; 
+			fbuf = (float*) bufout;
+			for (i=j=0; i < nin && j < 2*nout; i++, j++) {
+			    fbuf[j] = ibuf[i]; 
 			}
-			sf_complexwrite(cbuf,nout,out);
+			sf_floatwrite(fbuf,2*nout,out);
 			break;
 		    case SF_UCHAR:
 		    case SF_CHAR:
@@ -156,18 +155,13 @@ int main(int argc, char *argv[])
 		}
 		break;
 	    case SF_COMPLEX:
-		cbuf = (float complex*) bufin;
-		sf_complexread(cbuf,nin,in);
+		fbuf = (float*) bufin;
+		sf_floatread(fbuf,2*nin,in);
 		switch (otype) {
 		    case SF_COMPLEX:
-			sf_complexwrite(cbuf,nout,out);
+			sf_floatwrite(fbuf,2*nout,out);
 			break;
 		    case SF_FLOAT:
-			fbuf = (float *) bufout;
-			for (i=j=0; i < nout && j < nin; i+=2, j++) {
-			    fbuf[i]   = crealf(cbuf[j]);
-			    fbuf[i+1] = cimagf(cbuf[j]);
-			}
 			sf_floatwrite(fbuf,nout,out);
 			break;
 		    default:

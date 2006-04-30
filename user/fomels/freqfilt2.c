@@ -25,7 +25,7 @@
 #include "freqfilt2.h"
 
 static int nfft, nw, m1, m2;
-static float complex *ctrace, *ctrace2, **fft;
+static kiss_fft_cpx *ctrace, *ctrace2, **fft;
 static float *trace, **shape;
 kiss_fftr_cfg tfor, tinv;
 kiss_fft_cfg  xfor, xinv;
@@ -47,9 +47,9 @@ void freqfilt2_init(int n1, int n2 /* data dimensions */,
 	sf_error("%s: KISS FFT allocation error",__FILE__);
 
     trace = sf_floatalloc(nfft);
-    ctrace = sf_complexalloc(nw);
-    ctrace2 = sf_complexalloc(n2);
-    fft = sf_complexalloc2(nw,n2);
+    ctrace = sf_komplexalloc(nw);
+    ctrace2 = sf_komplexalloc(n2);
+    fft = sf_komplexalloc2(nw,n2);
 }
 
 void freqfilt2_set(float **filt)
@@ -85,17 +85,16 @@ void freqfilt2_spec (const float* x /* input */, float** y /* spectrum */)
 	    trace[iw]=0.;
 	}
 
-	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
+	kiss_fftr (tfor,trace,ctrace);
 	for (iw=0; iw < nw; iw++) {
-	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
+	    fft[ik][iw] = ik%2? sf_cneg(ctrace[iw]): ctrace[iw];
 	}
     }
 
     for (iw=0; iw < nw; iw++) {
-	kiss_fft_stride(xfor,(kiss_fft_cpx *) (fft[0]+iw),
-			(kiss_fft_cpx *) ctrace2,nw);
+	kiss_fft_stride(xfor,fft[0]+iw,ctrace2,nw);
 	for (ik=0; ik < m2; ik++) {
-	    y[iw][ik] = cabsf(ctrace2[ik]); /* transpose */
+	    y[iw][ik] = sf_cabsf(ctrace2[ik]); /* transpose */
 	}
     }
 }
@@ -115,29 +114,28 @@ void freqfilt2_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	    trace[iw]=0.;
 	}
 
-	kiss_fftr (tfor,trace,(kiss_fft_cpx *) ctrace);
+	kiss_fftr (tfor,trace,ctrace);
 	for (iw=0; iw < nw; iw++) {
-	    fft[ik][iw] = ik%2? -ctrace[iw]: ctrace[iw];
+	    fft[ik][iw] = ik%2? sf_cneg(ctrace[iw]): ctrace[iw];
 	}
     }
 
     for (iw=0; iw < nw; iw++) {
-	kiss_fft_stride(xfor,(kiss_fft_cpx *) (fft[0]+iw),
-			(kiss_fft_cpx *) ctrace2,nw);
+	kiss_fft_stride(xfor,fft[0]+iw,ctrace2,nw);
 
 	for (ik=0; ik < m2; ik++) {
-	    ctrace2[ik] *= shape[iw][ik];
+	    ctrace2[ik] = sf_crmul(ctrace2[ik],shape[iw][ik]);
 	}
 
-	kiss_fft(xinv,(kiss_fft_cpx *) ctrace2,(kiss_fft_cpx *) ctrace2);
+	kiss_fft(xinv,ctrace2,ctrace2);
 
 	for (ik=0; ik < m2; ik++) {
-	    fft[ik][iw] = ik%2? -ctrace2[ik]: ctrace2[ik];
+	    fft[ik][iw] = ik%2? sf_cneg(ctrace2[ik]): ctrace2[ik];
 	}
     }
 
     for (ik=0; ik < m2; ik++) {
-	kiss_fftri (tinv,(kiss_fft_cpx *) fft[ik], trace);
+	kiss_fftri (tinv,fft[ik],trace);
 
 	for (iw=0; iw < m1; iw++) {	  
 	    if (adj) {

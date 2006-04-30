@@ -4,13 +4,13 @@ from rsfproj import *
 # Usefule plotting functions
 ##################################
 
-def velplot(title,label1='Depth (kft)'):
+def velplot(title,label1='Depth',unit1='kft'):
     return '''
     grey color=j allpos=y title="%s" scalebar=y
-    barlabel="Velocity (kft/s)"
-    label1="%s" label2="Lateral (kft)"
+    barlabel=Velocity barunit=kft/s
+    label1="%s" unit1="%s" label2=Lateral unit2=kft
     barreverse=y pclip=100 
-    ''' % (title,label1)
+    ''' % (title,label1,unit1)
 
 def graph(transp,o2,d2,n2,col,fat,extra=''):
     return '''
@@ -21,7 +21,7 @@ def graph(transp,o2,d2,n2,col,fat,extra=''):
 def wiggle(title):
     return  '''
     wiggle transp=y yreverse=y poly=y xpos=${SOURCES[1]}
-    title="%s" label2="Half-Offset (kft)" zplot=0.5
+    title="%s" label2=Half-Offset unit2=kft zplot=0.5
     wherexlabel=t wheretitle=b
     ''' % title
 
@@ -116,7 +116,7 @@ for x in range(1500,4000,500):
     Plot(scn,
          '''
          grey color=j allpos=y
-         label2="Velocity (kft/s)" title="Velocity Scan"
+         label2=Velocity unit2=kft/s title="Velocity Scan"
          ''')
     ##################
     # Velocity Picking
@@ -125,6 +125,7 @@ for x in range(1500,4000,500):
     Flow(pik,scn,
          '''
          mutter x0=4 inner=y v0=3 half=n |
+         mutter x0=4 inner=n v0=8 half=n |
          pick rect1=50 vel0=5 gate=10
          ''')
     Plot(pik+'a',pik,graph(1,v0,dv,nv,0,20))
@@ -171,9 +172,10 @@ Flow('scan','cmpdata cmpmask',
 Flow('pick','scan',
      '''
      mutter x0=4 inner=y v0=3 half=n |
+     mutter x0=4 inner=n v0=8 half=n |
      pick rect1=50 rect2=100 vel0=5 | window
      ''')
-Result('pick',velplot('Stacking Velocity','Time (s)'))
+Result('pick',velplot('Stacking Velocity','Time','s'))
 
 #####################
 # NMO and stack

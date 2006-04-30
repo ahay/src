@@ -10,14 +10,14 @@ Flow('data','spike offset2 velocity',
      'inmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
 Plot('reg','data',
      '''
-     wiggle label2="Trace Number" title=Regular
+     wiggle label2="Trace Number" unit2= title=Regular
      yreverse=y transp=y poly=y
      ''')
 
 Plot('ireg','data offset2',
      '''
      wiggle xpos=${SOURCES[1]} xmax=3 xmin=-3
-     label2="Offset (km)" title=Irregular
+     label2=Offset title=Irregular
      yreverse=y transp=y poly=y
      ''')
 

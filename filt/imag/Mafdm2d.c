@@ -1,5 +1,5 @@
-/* 
- * Exploding reflector time-domain acoustic FD modeling
+/* Exploding reflector time-domain acoustic FD modeling.
+ *
  * pcs 2005
  */
 
@@ -213,6 +213,8 @@ int main(int argc, char* argv[])
 
 	    rr[ir].v=1;
 	} else {
+	    jxr[ir] = 0;
+	    fxr[ir] = 1;
 	    jzr[ir] = 0;
 	    fzr[ir] = 1;
 	    rr[ir].v= 0;
