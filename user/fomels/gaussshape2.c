@@ -32,8 +32,7 @@ void gaussshape2_init(int n1, int n2)
 /*< initialize with data size >*/
 {
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = n1;
-    if (n1%2) nfft++;
+    nfft = sf_fftr_size(n1);
     nw = nfft/2+1;
     dw = 2.*SF_PI/nfft;
 
