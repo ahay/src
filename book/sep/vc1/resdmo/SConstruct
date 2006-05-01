@@ -6,7 +6,7 @@ for case in (0,1):
     Flow(spike,None,
          '''
          spike n1=884 n2=201 d1=0.0025 d2=10 o1=0 o2=-1000
-         label1="time (sec)" label2="midpoint (m)"
+         label1=time unit1=s label2=midpoint unit2=m
          nsp=3 k1=%s k2=101,101,101 | bandpass fhi=60
          ''' % ('201,401,601','301,501,701')[case])
     rdmo = 'rdmo%d' % case

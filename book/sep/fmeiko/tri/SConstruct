@@ -288,9 +288,9 @@ Plot('sqe0',
      title="Nonconforming Triangulation"
      ''')
 
-Flow('./sqe',None,'echo %s n1=2 n2=%d data_format=ascii_int in=$TARGET' %
+Flow('sqe.asc',None,'echo %s n1=2 n2=%d data_format=ascii_int in=$TARGET' %
      (string.join(edge),len(edge)/2))
-Flow('sqe1','square sqe',
+Flow('sqe1','square sqe.asc',
      '''
      tri2reg n1=10 n2=10 o1=0 o2=0 d1=0.1 d2=0.1
      edgeout=$TARGET edgein=${SOURCES[1]}

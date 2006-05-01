@@ -20,12 +20,12 @@ Flow('spike',None,
      smooth rect1=3 rect2=3
      ''')
 
-Result('Cos.0','spike',
+Result('Cos0','spike',
        '''
        preconstkirch vel=2 inv=y zero=y nh=1 h0=0.5 dh=0.25 |
        grey title=Constant_offset
        ''')
-Result('Cos.1','spike','preconstkirch vel=2 | grey title=Constant_offset')
+Result('Cos1','spike','preconstkirch vel=2 | grey title=Constant_offset')
 
 Result('coffs','spike',
        '''
