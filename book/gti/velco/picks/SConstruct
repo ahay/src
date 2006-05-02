@@ -1,0 +1,8 @@
+from rsfproj import *
+
+Fetch('elf-fmg.rsf','masha')
+Flow('fmg','elf-fmg.rsf','dd form=native')
+
+
+
+End()

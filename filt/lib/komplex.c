@@ -18,7 +18,7 @@
 */
 #include <math.h>
 
-#include "complex.h"
+#include "komplex.h"
 #include "c99.h"
 
 #include "kiss_fft.h"

@@ -9,9 +9,9 @@ src = 'kiss_fft kiss_fftr mt19937ar'
 
 src2 = '''
 adjnull alloc axa banded bigsolver c99 causint ccgstep cconjgrad cell
-cdstep cgstep chain complex conjgrad conjprec copy cosft decart
-dottest eno eno2 error fftsize file files freqfilt getpar int1 int2
-int3 interp interp_spline irls llist mask math1 point pqueue prefilter
+cdstep cgstep chain conjgrad conjprec copy cosft decart dottest eno
+eno2 error fftsize file files freqfilt getpar int1 int2 int3 interp
+interp_spline irls komplex llist mask math1 point pqueue prefilter
 recfilt quantile quadratic segy simtab stack tent2 triangle triangle1
 tridiagonal vector
 '''

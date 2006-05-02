@@ -24,7 +24,7 @@
 
 int main(int argc, char* argv[]) {
     bool adj;
-    int np, nz, nx, nt, ns, niter, rect1, rect2;
+    int np, nz, nx, nt, ns, nq, dq, niter, rect1, rect2;
     float dz, dx, eps, tol;
     float *s, *t, *p;
     sf_file slow, time;
@@ -66,6 +66,11 @@ int main(int argc, char* argv[]) {
 	sf_putint(slow,"n1",nz);
 	sf_putfloat(slow,"d1",dz);
 	sf_putfloat(slow,"o1",0.);
+
+	if (!sf_getint("ns",&nq) && !sf_histint(time,"n3",&nq)) 
+	    sf_error("Need ns=");
+	if (!sf_getint("ds",&dq) && !sf_histint(time,"ds",&dq)) 
+	    sf_error("Need ds=");
     } else {
 	slow = sf_input("in");
 	time = sf_output("out");
@@ -83,17 +88,28 @@ int main(int argc, char* argv[]) {
 
 	sf_putint(time,"nz",nz);
 	sf_putfloat(time,"dz",dz);    
+	
+	if (!sf_getint("ns",&nq)) nq=1;
+	/* number of depth steps */
+	if (!sf_getint("ds",&dq)) dq=nz;
+	/* step size */
+	
+	sf_putint(time,"n3",nq);
+	sf_putfloat(time,"d3",dq*dz);
+	sf_putfloat(time,"o3",0.);
+
+	sf_putint(time,"ds",dq);
     }
 
     ns = nz*nx;
-    nt = np*nx;
+    nt = nq*np*nx;
 
     /* allocate space */
     s = sf_floatalloc(ns);
     t = sf_floatalloc(nt);
     p = adj? sf_floatalloc(ns): NULL;
 
-    tomo_init(np, nz, nx, dz, dx);
+    tomo_init(np, nq, dq, nz, nx, dz, dx);
 
     if (adj) {
 	sf_floatread(t, nt, time);
@@ -112,11 +128,11 @@ int main(int argc, char* argv[]) {
     } else {
 	sf_floatread(s, ns, slow);
 
-	tomo_lop(false, false, nz*nx, np*nx, s, t);
+	tomo_lop(false, false, ns, nt, s, t);
 
 	sf_floatwrite(t, nt, time);
     }
-
+    
     sf_close();
     exit(0);
 }

@@ -36,7 +36,7 @@ static float d1, d2, d3, frame1;
 static int framecol, frame2, frame3, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
-static bool cube=false, flat;
+static bool cube=false, flat, xreverse, yreverse;
 static char blank[]=" ";
 static const float aspect=0.8;
 
@@ -85,7 +85,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 		      bool pad1                /* default padding */)
 /*< Initializing standard plot >*/
 {
-    bool pad, set, xreverse, yreverse;
+    bool pad, set;
     float mid, off, crowd, barwd;
     float xll, xur, yll, yur, screenratio, screenht, screenwd, marg;
     char* bartype;
@@ -692,8 +692,15 @@ static void make_grid (bool grid)
 		grid1->ntic = axis1->ntic;
 	    } else {
 		grid1->ntic=0; 
-		for (num=grid1->num0; num <= max1; num += grid1->dnum) {
-		    grid1->ntic++;
+		if (xreverse) {
+		    grid1->dnum = -grid1->dnum;
+		    for (num=grid1->num0; num >= max1; num += grid1->dnum) {
+			grid1->ntic++;
+		    }
+		} else {
+		    for (num=grid1->num0; num <= max1; num += grid1->dnum) {
+			grid1->ntic++;
+		    }
 		}
 	    }
 	}
@@ -716,11 +723,20 @@ static void make_grid (bool grid)
 		grid2->ntic = axis2->ntic;
 	    } else {
 		grid2->ntic=0; 
-		for (num=grid2->num0; num <= max2; num += grid2->dnum) {
-		    grid2->ntic++;
+		if (yreverse) {
+		    grid2->dnum = -grid2->dnum;
+		    for (num=grid2->num0; num >= max2; num += grid2->dnum) {
+			grid2->ntic++;
+		    }
+		} else {
+		    for (num=grid2->num0; num <= max2; num += grid2->dnum) {
+			grid2->ntic++;
+		    }
 		}
 	    }
-	}
+			      
+	    
+	} 
     }
     
     if ((axis3 != NULL) && 

@@ -66,6 +66,18 @@ int main(int argc, char* argv[])
 	sf_putfloat(out,key1,f);
     }
 
+    if (NULL != (val = sf_getstring("label"))) {
+	/* Label of the newly created dimension */
+	sprintf(key1,"label%d",axis);
+	sf_putstring(out,key1,val);
+    }
+
+    if (NULL != (val = sf_getstring("unit"))) {
+	/* Units of the newly created dimension */
+	sprintf(key1,"unit%d",axis);
+	sf_putstring(out,key1,val);
+    }
+
     n3 = 1;
     for (j=axis; j < SF_MAX_DIM; j++) {
 	sprintf(key2,"n%d",j+1);

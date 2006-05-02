@@ -54,13 +54,13 @@ def velcon(data,        # data name
          cosft sign3=-1 | window n3=%d
          ''' % (nv,dv,v0,padt,padt2,nx))
 
-##     Flow(vlf2,pad,
-##          '''
-##          transp plane=23 memsize=500 |
-##          fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
-##          window n2=%d | transp plane=23 memsize=500
-##          ''' % (nv,dv,v0,padt,padt2,nx))
-
+    Flow(vlf2,pad,
+         '''
+         transp plane=23 memsize=500 |
+         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
+         window n2=%d | transp plane=23 memsize=500
+         ''' % (nv,dv,v0,padt,padt2,nx))
+    
     if v1:
         Flow(mig+'1',data,'preconstkirch vel=%g' % v1)
         Flow(cip+'1',mig+'1',mig2cip)
