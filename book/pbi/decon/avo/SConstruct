@@ -1,6 +1,6 @@
 from rsfproj import *
 
-Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+100*exp(-2*((x1-2)^2))" ')
+Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
 
 Flow('synt',None,
      '''
@@ -8,7 +8,7 @@ Flow('synt',None,
      noise rep=y seed=2006 |
      cut n1=100 | 
      bandpass flo=4 fhi=20 |
-     spray axis=2 n=175 d=20 o=0 label=Offset unit=m 
+     spray axis=2 n=141 d=25 o=0 label=Offset unit=m 
      ''')
 
 Flow('cmp0','synt vrms',
@@ -38,7 +38,7 @@ for case in range(2):
              ''' % (string.upper(avo),case+1))
 
         pik = '%spik%d' % (avo,case)
-        Flow(pik,scn,'pick rect1=80 gate=10 an=0.1')
+        Flow(pik,scn,'scale axis=2 | pick rect1=50')
         Plot(pik,
              '''
              graph yreverse=y transp=y min2=2000 max2=3000 pad=n
@@ -48,11 +48,11 @@ for case in range(2):
         Plot(scn,[scn+'0',pik],'Overlay')
 
         nmo = '%snmo%d' % (avo,case)
-        Flow(nmo,[cmp,pik],'nmo half=n velocity=${SOURCES[1]}')
+        Flow(nmo,[cmp,pik],'nmo half=n velocity=${SOURCES[1]} str=0.4')
         Plot(nmo,
              '''
              grey title="%s NMO %d"
-             grid2=y gridcol=1 gridfat=5 g2num=-1
+             grid2=y gridcol=6 gridfat=7 g2num=0.5
              ''' % (string.upper(avo),case+1))
 
 for plot in ('cmp','scn','avoscn','nmo','avonmo'):    

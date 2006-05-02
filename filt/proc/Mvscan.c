@@ -221,7 +221,11 @@ int main(int argc, char* argv[])
 			    num += (nh*stackh[iv][i]*stackh[iv][i] - 
 				    2.*sh*stack[iv][i]*stackh[iv][i])/sh2;
 		    }
-		    if (asembl) den *= (nh-sh*sh/sh2);
+		    if (asembl) {
+			den *= (nh-sh*sh/sh2);
+		    } else {
+			den *= nh;
+		    }
 		    trace[it] = (den > 0.)? num/den: 0.;
 		}
 		sf_floatwrite(trace,nt,scan);
