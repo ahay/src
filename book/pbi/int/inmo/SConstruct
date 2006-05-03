@@ -1,0 +1,120 @@
+from rsfproj import *
+
+def velplot(title,label1='Depth',unit1='kft'):
+    return '''
+    grey color=j allpos=y title="%s" scalebar=y
+    barlabel=Velocity barunit=kft/s
+    label1="%s" unit1="%s" label2=Lateral unit2=kft
+    barreverse=y pclip=100 
+    ''' % (title,label1,unit1)
+
+def graph(transp,o2,d2,n2,col,fat,extra=''):
+    return '''
+    graph transp=%d yreverse=y pad=n min2=%g max2=%g
+    plotcol=%d plotfat=%d wantaxis=n wanttitle=n %s
+    ''' % (transp,o2,o2+(n2-1)*d2,col,fat,extra)
+
+# Make synthetic CMP gather
+
+# velocities
+Flow('modl',None,
+     '''
+     spike n1=200 o1=-8 d1=0.08 n2=4
+     nsp=4 k2=1,2,3,4 mag=1,2.2,3.5,5
+     unit2=kft
+     ''')
+
+# reflectivity
+Flow('refl',None,
+     '''
+     spike n1=200 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
+     ''')
+Flow('mod1','modl','window min1=0')
+
+# blocky velocity model
+Flow('unif','mod1','unif2 n1=110 d1=0.05 v00=5,6,8,10,15')
+Result('modl','unif',velplot('Model'))
+
+# continous velocity model with linear gradient
+Flow('mod2','unif','math output=5+2*x1')
+
+Plot('modl','mod2',velplot('True Model'))
+Plot('modla','mod1',graph(0,0,0.05,110,0,20,'scalebar=y'))
+Plot('modlb','mod1',graph(0,0,0.05,110,7,5,'scalebar=y'))
+Result('modl2','modl modla modlb','Overlay')
+
+# Kirchoff modeling
+Flow('clean','modl refl',
+     '''
+     kirmod nt=501 dt=0.004 freq=80 refl=${SOURCES[1]}
+     ns=1 s0=2 ds=0.1
+     nh=64 h0=0.1 dh=0.1
+     vel=5 gradz=2 type=v 
+     ''')
+
+# Add noise and multiply by t^2
+Flow('data','clean',
+     '''
+     tpow tpow=2 |
+     noise rep=y seed=2004 range=0.0002 |
+     ricker1 frequency=80 |
+     add $SOURCE  
+     ''')
+
+Result('data','grey title=CMP')
+
+# Apply constant-velocity NMO and inverse
+
+# Using nmostretch
+
+Flow('cnmo','data','nmostretch half=n v0=10')
+Result('cnmo','grey title="NMO with v=10" ')
+
+Flow('cerr','cnmo data',
+     'nmostretch half=n v0=10 inv=y | add scale=1,-1 ${SOURCES[1]}')
+Result('cerr','grey title="Inverse NMO error" clip=0.0006')
+
+# Using nmo and inmo
+
+Flow('vel','data','window n2=1 | math output=10')
+
+Flow('cnmo2','data vel','nmo half=n velocity=${SOURCES[1]}')
+Result('cnmo2','grey title="NMO with v=10" ')
+
+Flow('cerr2','cnmo2 vel data',
+     'inmo half=n velocity=${SOURCES[1]} | add scale=1,-1 ${SOURCES[2]}')
+Result('cerr2','grey title="Inverse NMO error" clip=0.0006')
+
+# Apply non-constant velocity NMO and inverse
+
+# Velocity scan
+
+v0=4
+dv=0.075
+nv=120
+
+Flow('scan','data','vscan half=n v0=%g dv=%g nv=%d semblance=y' % (v0,dv,nv))
+Plot('scan','grey allpos=y color=j title="Semblance Scan" ')
+
+# Velocity picking
+
+Flow('pick','scan','pick rect1=50')
+Plot('picka','pick',graph(1,v0,dv,nv,0,20))
+Plot('pickb','pick',graph(1,v0,dv,nv,7,5))
+
+Result('scan','scan picka pickb','Overlay')
+
+# NMO
+
+Flow('nmo','data pick','nmo half=n velocity=${SOURCES[1]} str=0.1')
+Result('nmo','grey title="NMO with v=10" ')
+
+# Inverse NMO
+
+Flow('err','nmo pick data',
+     'inmo half=n velocity=${SOURCES[1]} | add scale=1,-1 ${SOURCES[2]}')
+Result('err','grey title="Inverse NMO error" clip=0.0006')
+
+
+End()

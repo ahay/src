@@ -82,7 +82,11 @@ sf_tris spline4_init (int nd /* data length */)
     return slv;
 }
 
-void spline4_post (int n, int n1, int n2, const float* inp, float* out)
+void spline4_post (int n            /* total trace length */, 
+		   int n1           /* start point */, 
+		   int n2           /* end point */, 
+		   const float* inp /* spline coefficients */, 
+		   float* out       /* function values */)
 /*< cubic spline post-filtering >*/
 {
     int i;
