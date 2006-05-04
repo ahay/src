@@ -1,0 +1,92 @@
+from rsfproj import *
+
+# define your plot the way YOU like it
+minval = -150
+maxval = 150
+clip =120
+
+def grey(title):
+    return '''
+    grey title="%s" transp=n
+    minval=%f maxval=%f clip=%f
+    screenratio=1
+    ''' % (title,minval,maxval,clip)
+
+def spectra(title):
+    return '''
+    grey title="%s"
+    minval=%f maxval=%f clip=%f
+    screenratio=1 label1="Frequency" label2="Position"
+    ''' % (title,minval,maxval,clip)
+
+# fetch the data on BEG FTP server
+Fetch('lena.img','imgs')
+Flow('lena','lena.img',
+     '''
+     echo n1=512 n2=513 d1=1 d2=1 in=$SOURCE
+     data_format=native_uchar |
+     dd type=float |
+     window f2=1 | 
+     math output="input-99.0512"
+     ''',stdin=0)
+Plot('lena',grey('Lena'))
+
+# define variance of the noise (SNR = 0 dB)
+nvar = 2796/2
+
+# add noise to lena
+Flow('nlena','lena','noise seed=2006 var=%f' %nvar)
+Plot('nlena',grey('Noisy Lena'))
+
+titles = {'lena':'Lena',
+          'nlena':'Noisy Lena'}
+
+# look at FX plots
+for name in titles.keys():
+    cftitle = titles[name]+' in the FX domain'
+    Flow('fx'+name,name,'spectra')
+    Plot('fx'+name,spectra('%s') %cftitle )
+
+# display 2x2 figs
+Plot('lenas','lena nlena','SideBySideAniso')
+Plot('fxlenas','fxlena fxnlena','SideBySideAniso')
+Result('panel1','lenas fxlenas','OverUnderAniso')
+
+# denoising using LP filtering
+Flow('lplena','nlena','bandpass fhi=.075')
+Plot('lplena',grey('Noisy Lena LP filtered'))
+
+
+# denoising using thresholding
+thrmode = 'soft'
+# Fourier domain
+fthr = 1.5*nvar**.5
+Flow('fthrlena','nlena',
+     '''
+     fft1 sym=y |
+     fft3 sym=y pad=1 |
+     thr thr=%f mode=%s |
+     fft3 sym=y pad=1 inv=y |
+     fft1 sym=y inv=y 
+     ''' % (fthr,thrmode) )
+Plot('fthrlena',grey('Denoising in the Fourier domain'))
+
+# wavelet domain
+wtype = 'linear'
+wthr = .7*nvar**.5
+Flow('wthrlena','nlena',
+     '''
+     transp | dwt type=%s | transp |
+     dwt type=%s |
+     thr thr=%f mode=%s |
+     dwt type=%s inv=y adj=y |
+     transp | dwt type=%s inv=y adj=y | transp
+     ''' % (wtype,wtype,wthr,thrmode,wtype,wtype) )
+Plot('wthrlena',grey('Denoising in the wavelet domain') )
+
+# display 2x2 figs
+Plot('pan2row1','lena nlena','SideBySideAniso')
+Plot('pan2row2','lplena fthrlena wthrlena','SideBySideAniso')
+Result('panel2','pan2row1 pan2row2','OverUnderAniso')
+
+End()
