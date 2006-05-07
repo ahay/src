@@ -226,66 +226,108 @@ reproducible research in scientific computing.
 
 \newpage
 \section{Setting up projects}
-\subsection{RSF example}
+\subsection{Getting started with RSF}
+
+In this example, we will download an image from an anonymous data
+server, perform basic manipulations, and display the result.
 
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
 
-\lstinputlisting[firstline=1,lastline=21,frame=single]{easystart/SConstruct}
-
-The SConstruct file starts with loading the RSF project management
-module \texttt{rsfproj}, which provides our extention to SCons.
+Open a file named ``SConstruct'' in your favorite editor and start it
+with the line
 %
 \lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
-
+%
+This loads the RSF project management module \texttt{rsfproj}, which
+provides our extention to SCons.
+%
+Add a Fetch command as follows
 \lstinputlisting[firstline=3,lastline=3,frame=single]{easystart/SConstruct}
-
+which instructs SCons to connect to an anonymous data server (default
+is BEG FTP server) and extract (fetch) the data file ``lena.img'' from
+the ``data/imgs'' directory. By running \texttt{scons lena.img}
+%
+the file ``lena.img'' is downloaded to your current folder. The
+equivalent command lines are \footnote{use login: anonymous, password:
+  anonymous}
 \begin{verbatim}
 bash$ ftp egl.beg.utexas.edu
+ftp> bin
+ftp> cd data/imgs
+ftp> get lena.img
+ftp> bye
 \end{verbatim}
 %
-with login: anonymous and password: anonymous.
+Add now the following Flow command
 %
-\begin{verbatim}
-bash$ cd data/imgs
-bash$ get lena.img
-\end{verbatim}
-
 \lstinputlisting[firstline=5,lastline=9,frame=single]{easystart/SConstruct}
-
+%
+to prepare the RSF header file. A Flow is a rule to generate target(s)
+from source(s) using command(s). In this specific case, the Flow has
+one source ``lena.img'' and one target ``ulena.rsf'' (the default
+extension for sources and targets is .rsf) The target is obtained from
+the source by running
+%
 \begin{verbatim}
 bash$ echo n1=512 n2=513 d1=1 d2=1 in=lena.img \
 data_format=native_uchar > ulena.rsf
 \end{verbatim}
-
+%
+Since echo does not take a standard input, stdin is set to 0 in the
+Flow command otherwise the first source is the standard input.
+Likewise, the first target is the standard output unless otherwise
+specified. Note the triple quotes used because the actual command is
+broken into several lines in the SConstruct. Note also that
+``lena.img'' is refered as ``\$SOURCE'' in the command. Run
+\texttt{scons ulena.rsf} to execute the Flow command and obtain the
+ASCII header file ``ulena.rsf''.  The next step is to convert the
+binary data ``lena.img'' into a RSF file.  To do so add
+%
 \lstinputlisting[firstline=10,lastline=10,frame=single]{easystart/SConstruct}
-
+%
+The equivalent command line is
+%
 \begin{verbatim}
 bash$ < ulena.rsf sfdd type=float > flena.rsf
 \end{verbatim}
-
+%
+Run \texttt{scons flena.rsf}. At this point the Lena image is
+converted to RSF file format with a header file ``flena.rsf'' in the
+current directory and a binary file ``flena.rsf@'' in the data
+directory (environment variable DATAPATH). The last two steps before
+displaying Lena (we know you are impatient...)  is windowing the image
+and subtracting its mean. Add the following Flow command
+%
 \lstinputlisting[firstline=11,lastline=11,frame=single]{easystart/SConstruct}
-
-\begin{verbatim}
-bash$ < flena.rsf sfwindow f2=1 > flena512.rsf
-\end{verbatim}
-
+%
+to remove the first sample along the second axis. Run \texttt{scons
+  flena512.rsf}. Finally
+%
 \lstinputlisting[firstline=12,lastline=13,frame=single]{easystart/SConstruct}
-
-\begin{verbatim}
-bash$ < flena512.rsf sfmath output="input-99.0512" > zmflena512.rsf
-\end{verbatim}
-
+%
+to substract the mean. Note the keyword ``input'' in the output
+formula which refers to the standard input of the ``sfmath'' function.
+Run \texttt{scons zmflena512.rsf}. It is now time to display Lena...
+Add the Result command
+%
 \lstinputlisting[firstline=15,lastline=19,frame=single]{easystart/SConstruct}
-
+%
+which command line equivalent is
 \begin{verbatim}
 bash$ < zmflena512.rsf sfgrey title="Lena" transp=n minval=-150 \
-maxval=150 clip=120 screenratio=1 titlesz=14 > Fig/zmflena512.vpl
+maxval=150 clip=120 screenratio=1 titlesz=14 | tube
 \end{verbatim}
-
+%
+Running \texttt{scons lena.view} displays the Lena image. It also
+create a ``Fig'' directory in the current folder where it stores the
+result ``lena.vpl''. End the SConstruct with
+%
 \lstinputlisting[firstline=21,lastline=21,frame=single]{easystart/SConstruct}
 
-\subsection{RSF combined with Python example}
+\subsection{Combining RSF and Python in SConstruct}
+
+\lstinputlisting[firstline=1,lastline=83,frame=single]{rsfpy/SConstruct}
 
 \subsection{LaTeX example}
 

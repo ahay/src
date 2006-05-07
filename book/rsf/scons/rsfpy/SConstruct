@@ -55,7 +55,8 @@ Plot('lplena',grey('Noisy Lena LP filtered'))
 lg = 100.
 thr = lg/6.
 Flow('range',None,'math n1=%d output="x1-%f" ' %(lg,lg/2))
-Flow('thr',None,'math n1=%d n2=2 output="(2*x2-1)*%f" ' %(lg,thr))
+Flow('thr',None,
+     'math n1=%d n2=2 output="(2*x2-1)*%f" ' %(lg,thr))
 
 Plot('range',graph('Data with threshold level') )
 Plot('thr',graph()+' dash=1')
