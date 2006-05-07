@@ -1,0 +1,21 @@
+from rsfproj import *
+
+Fetch('lena.img','imgs')
+
+Flow('ulena','lena.img',
+     '''
+     echo n1=512 n2=513 d1=1 d2=1
+     in=$SOURCE data_format=native_uchar
+     ''',stdin=0)
+Flow('flena','ulena','dd type=float')
+Flow('flena512','flena','window f2=1')
+Flow('zmflena512','flena512',
+     'math output="input-99.0512" ')
+
+Result('zmflena512',
+       '''
+       grey title="Lena" transp=n minval=-150
+       maxval=150 clip=120 screenratio=1 titlesz=14
+       ''')
+
+End()

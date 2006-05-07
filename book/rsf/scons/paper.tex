@@ -1,6 +1,10 @@
 \title{Reproducible research in computational geophysics \\ using SCons}
 
-\author{Sergey Fomel}
+\lefthead{Fomel \& Hennenfent}
+\righthead{Reproductible research}
+
+\author{Sergey Fomel and Gilles Hennenfent}
+\email{sergey.fomel@beg.utexas.edu, ghennenfent@eos.ubc.ca}
 
 \maketitle
 
@@ -212,40 +216,76 @@ reproducible research in scientific computing.
 
 \subsection{Paper organization}
 
-This paper is organized ``by example''. We will take a small project
-typical for geophysical data processing and show how it can be
-organized with SCons.  The example is taken from the collection of
-demos in Seismic Unix \cite[]{su}.  Next, we reproduce a similar
-example using the newly developed RSF (regularly sampled file)
-software package. Finally, we show how to adopt SCons for generating
-documents such as the one you are reading now.
+%This paper is organized ``by example''. We will take a small project
+%typical for geophysical data processing and show how it can be
+%organized with SCons.  The example is taken from the collection of
+%demos in Seismic Unix \cite[]{su}.  Next, we reproduce a similar
+%example using the newly developed RSF (regularly sampled file)
+%software package. Finally, we show how to adopt SCons for generating
+%documents such as the one you are reading now.
 
-\section{Setting up a project}
-
-In this example, we will ...
+\newpage
+\section{Setting up projects}
+\subsection{RSF example}
 
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
 
+\lstinputlisting[firstline=1,lastline=21,frame=single]{easystart/SConstruct}
+
 The SConstruct file starts with loading the RSF project management
 module \texttt{rsfproj}, which provides our extention to SCons.
 %
-\lstinputlisting[firstline=1,lastline=1,frame=single]{lena/SConstruct}
+\lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
 
-\subsubsection{Fetching and formatting data}
+\lstinputlisting[firstline=3,lastline=3,frame=single]{easystart/SConstruct}
+
+\begin{verbatim}
+bash$ ftp egl.beg.utexas.edu
+\end{verbatim}
 %
-\lstinputlisting[firstline=4,lastline=11,frame=single]{lena/SConstruct}
-
-\subsubsection{Displaying data}
+with login: anonymous and password: anonymous.
 %
-\lstinputlisting[firstline=12,lastline=16,frame=single]{lena/SConstruct}
+\begin{verbatim}
+bash$ cd data/imgs
+bash$ get lena.img
+\end{verbatim}
 
-\subsubsection{Adding noise to data and displaying result}
-%
-\lstinputlisting[firstline=19,lastline=24,frame=single]{lena/SConstruct}
+\lstinputlisting[firstline=5,lastline=9,frame=single]{easystart/SConstruct}
 
+\begin{verbatim}
+bash$ echo n1=512 n2=513 d1=1 d2=1 in=lena.img \
+data_format=native_uchar > ulena.rsf
+\end{verbatim}
 
+\lstinputlisting[firstline=10,lastline=10,frame=single]{easystart/SConstruct}
 
+\begin{verbatim}
+bash$ < ulena.rsf sfdd type=float > flena.rsf
+\end{verbatim}
+
+\lstinputlisting[firstline=11,lastline=11,frame=single]{easystart/SConstruct}
+
+\begin{verbatim}
+bash$ < flena.rsf sfwindow f2=1 > flena512.rsf
+\end{verbatim}
+
+\lstinputlisting[firstline=12,lastline=13,frame=single]{easystart/SConstruct}
+
+\begin{verbatim}
+bash$ < flena512.rsf sfmath output="input-99.0512" > zmflena512.rsf
+\end{verbatim}
+
+\lstinputlisting[firstline=15,lastline=19,frame=single]{easystart/SConstruct}
+
+\begin{verbatim}
+bash$ < zmflena512.rsf sfgrey title="Lena" transp=n minval=-150 \
+maxval=150 clip=120 screenratio=1 titlesz=14 > Fig/zmflena512.vpl
+\end{verbatim}
+
+\lstinputlisting[firstline=21,lastline=21,frame=single]{easystart/SConstruct}
+
+\subsection{RSF combined with Python example}
 
 \subsection{LaTeX example}
 
