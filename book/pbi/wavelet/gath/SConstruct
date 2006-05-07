@@ -1,6 +1,5 @@
 from rsfproj import *
 import random, string, math
-import seislet
 
 random.seed(2005)
 

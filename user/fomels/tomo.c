@@ -24,7 +24,7 @@
 #include "tomo.h"
 
 /* velocity grid dimensions */
-static int nz, nx, np, ns, ds;
+static int nz, nx, np, nq, dq;
 static float dz, dx, dp, p0;
 
 void tomo_init(int np1            /* number of slopes */,
@@ -38,8 +38,8 @@ void tomo_init(int np1            /* number of slopes */,
   dz = d1;
   dx = d2;
 
-  ns = ns1;
-  ds = ds1;
+  nq = ns1;
+  dq = ds1;
 
   np = np1;
   dp = 2./(np-1);
@@ -52,7 +52,7 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
     int is, ix, iz, ip, iy, it, i, kz;
     float p, x, deltax, distance;
     
-    if (ns != nx*nz || nt != nx*np*ns) sf_error("%s: wrong size",__FILE__);
+    if (ns != nx*nz || nt != nx*np*nq) sf_error("%s: wrong size",__FILE__);
     
     /* initialize for lop
        if !add && adj, zero s
@@ -60,8 +60,8 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
        if add, do nothing */
     sf_adjnull(adj,add,ns,nt,s,t);
  
-    for (i=0; i < ns; i++) { /* loop over initial depths */
-	kz = i*ds;
+    for (i=0; i < nq; i++) { /* loop over initial depths */
+	kz = i*dq;
 	if (kz > nz-1) kz=nz-1;
 
 	for (iy=0; iy < nx; iy++) { /* loop over sources */
@@ -74,7 +74,7 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
 	    
 		deltax = dz*p; /* shift in x */
 		distance = hypotf(dz,deltax); /* Pythagor */
-	    
+		
 		for (iz=kz; iz > 0; iz--) { /* loop up in depth */
 		    if (adj) {
 			s[is] += t[it]*distance;
@@ -84,7 +84,7 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
 		
 		    x += deltax;
 		    ix = 0.5 + x/dx; /* nearest point on the grid */
-		
+		    
 		    if (ix < 0 || ix >= nx) break; /* outside the grid */
 		
 		    is = ix*nz + iz; 
@@ -93,4 +93,3 @@ void tomo_lop(bool adj, bool add, int ns, int nt, float* s, float* t)
 	} /* is */
     } /* i */
 }
-      

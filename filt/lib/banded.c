@@ -89,8 +89,8 @@ void sf_banded_define (sf_bands slv,
 }
 
 void sf_banded_const_define (sf_bands slv, 
-			  float diag        /* diagonal */, 
-			  const float* offd /* off-diagonal [band] */)
+			     float diag        /* diagonal */, 
+			     const float* offd /* off-diagonal [band] */)
 /*< define matrix with constant diagonal coefficients >*/
 {
     int k, m, n;

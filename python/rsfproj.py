@@ -250,7 +250,7 @@ class Project(Environment):
         target = source.replace('.c','.x')
         return apply(self.Program,(target,source),kw)
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
-             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix):
+             suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,rsh=None):
         if not flow:
             return None        
         sources = []
@@ -326,6 +326,8 @@ class Project(Environment):
         timer = self.get('TIMER')
         if timer and timer[0] != 'n' and timer[0] != '0':
             command = WhereIs('time') + ' ' + command
+        if rsh and rsh != 'localhost':
+            command = 'rsh %s %s' % (rsh,command)
         targets = []
         if type(target) is types.ListType:
             files = target

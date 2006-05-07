@@ -69,8 +69,10 @@ int main(int argc, char* argv[]) {
 
 	if (!sf_getint("ns",&nq) && !sf_histint(time,"n3",&nq)) 
 	    sf_error("Need ns=");
-	if (!sf_getint("ds",&dq) && !sf_histint(time,"ds",&dq)) 
+	if (!sf_getint("ds",&dq) && !sf_histint(time,"d3",&dq)) 
 	    sf_error("Need ds=");
+
+	sf_putint(slow,"n3",1);
     } else {
 	slow = sf_input("in");
 	time = sf_output("out");

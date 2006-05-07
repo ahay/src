@@ -31,7 +31,7 @@ def grey(title):
 Result('vel',grey('Exact'))
 
 # Forward modeling
-Flow('time','vel','math output=1/input | tomo adj=n np=2001')
+Flow('time','vel','math output=1/input | tomo adj=n np=2001 ns=25 ds=20')
 
 # Inversion
 Flow('inv1','time','tomo adj=y rect1=1 rect2=1 | math output=1/input')
