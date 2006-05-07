@@ -64,8 +64,8 @@ Plot('nails','nreal nimag',
      symbolsz=15
      ''',stdin=0)
 
-# Window PZ in time to 6 seconds
-Flow('pzcube2','pzcube','window max1=6 | costaper nw1=200')
+# Window PZ in time to 6 seconds and flip polarity
+Flow('pzcube2','pzcube','window max1=6 | scale dscale=-1 | costaper nw1=200')
 
 # Fit a line to nails
 
@@ -105,7 +105,7 @@ warp.warp3('seitel', # naming prefix
            o2=710,    # first inline
            o3=2320,   # first crossline
            dt=0.004,  # time sampling
-           g0=0.95, # min residual gamma for scan
+           g0=0.94, # min residual gamma for scan
            gmin=2,  # min vp/vs (for display)
            gmax=3,  # max vp/vs (for display)
 #           pmin=1, # min allowed residual gamma
