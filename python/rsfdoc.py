@@ -246,10 +246,11 @@ class rsfprog:
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
             name = name + " (%s)" % self.vers
+        repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
         contents = heading(name,'#ffffff','#7799ee',
                            '<a href="./index.html">index</a><br>'+
-                           '<a href="/viewcvs/trunk/%s?view=markup">%s</a>' %
-                           (self.file,self.file))
+                           '<a href="%s/%s?view=markup">%s</a>' %
+                           (repos,self.file,self.file))
         if self.desc:
             contents = contents + self.desc
         if self.snps:
