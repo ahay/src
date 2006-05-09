@@ -37,6 +37,7 @@ void oc_invert(off_t n, FILE *wall)
 {
     off_t i, nleft;
     float *fbuf;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     fbuf = (float *) buf;
     if (0 != fseeko(wall,0,SEEK_SET))
@@ -57,6 +58,7 @@ void oc_zero (off_t n, FILE *wall)
 /*< set wall=0 >*/
 {
     off_t nleft;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     memset(buf,0,BUFSIZ);
     if (0 != fseeko(wall,0,SEEK_SET))
@@ -73,6 +75,7 @@ void oc_dump (off_t n, FILE *wall, sf_file out)
 {
     off_t nleft;
     float *fbuf;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
     
     fbuf = (float *) buf;
 
@@ -91,6 +94,7 @@ void oc_divide (off_t n, FILE *data, FILE *wall, sf_file out)
 {
     off_t nleft, i, nfloat;
     float *fbuf, *fbuf2;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
     
     fbuf = (float *) buf;
     fbuf2 = (float *) buf2;

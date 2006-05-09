@@ -87,7 +87,7 @@ int main (int argc, char *argv[])
     n = sf_n(amx)*sf_n(amy);
     nw = sf_n(aw);
 
-    Bwfld = fslice_init(n,nz*nw,sizeof(float complex));
+    Bwfld = fslice_init(n,nz*nw,sizeof(sf_complex));
     fslice_load(Bw,Bwfld,SF_COMPLEX);
 
     if (inv) { /* adjoint: image -> slowness */
@@ -101,9 +101,9 @@ int main (int argc, char *argv[])
 	sf_oaxa(Ps,amy,2);
 	sf_oaxa(Ps,amz,3);
 
-	Pslow = fslice_init(n,nz, sizeof(float complex));
+	Pslow = fslice_init(n,nz, sizeof(sf_complex));
 
-	Pimag = fslice_init(n,nz, sizeof(float complex));
+	Pimag = fslice_init(n,nz, sizeof(sf_complex));
 	fslice_load(Pi,Pimag,SF_COMPLEX);
 
     } else {   /* forward: slowness -> image */
@@ -117,10 +117,10 @@ int main (int argc, char *argv[])
 	sf_oaxa(Pi,amy,2);
 	sf_oaxa(Pi,amz,3);
 	
-	Pslow = fslice_init(n,nz, sizeof(float complex));
+	Pslow = fslice_init(n,nz, sizeof(sf_complex));
 	fslice_load(Ps,Pslow,SF_COMPLEX);
 
-	Pimag = fslice_init(n,nz, sizeof(float complex));
+	Pimag = fslice_init(n,nz, sizeof(sf_complex));
 
     }
     /*------------------------------------------------------------*/

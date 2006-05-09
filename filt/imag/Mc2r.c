@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
     int nx,nz,nt,ng;
     float dx,dz,x0,z0;
 
-    float         **mapCC, **mapRC;
-    complex float **comCC, **comRC;
-    complex float **rays;
+    float  **mapCC,  **mapRC;
+    float ***comCC, ***comRC;
+    sf_complex **rays;
 
     int nn,ii;
     bool comp; // complex input
@@ -95,39 +95,39 @@ int main(int argc, char* argv[])
     mapRC=sf_floatalloc2(ng,nt);
 
     if(comp) {
-	comCC=sf_complexalloc2(nx,nz);
-	comRC=sf_complexalloc2(ng,nt);
+	comCC=sf_floatalloc3(2,nx,nz);
+	comRC=sf_floatalloc3(2,ng,nt);
 
 	for(ii=0;ii<nn;ii++) {
 	    sf_warning("%d of %d",ii,nn);
 	    if(adj) {
-		sf_complexread (comRC[0],ng*nt,Fi);
+		sf_floatread (comRC[0][0],2*ng*nt,Fi);
 
 		// REAL
-		LOOPRC( mapRC[it][ig]  = crealf(comRC[it][ig]); );
+		LOOPRC( mapRC[it][ig] = comRC[it][ig][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
-		LOOPCC( comCC[iz][ix]  =        mapCC[iz][ix];  );
+		LOOPCC( comCC[iz][ix][0] = mapCC[iz][ix]; );
 
 		// IMAGINARY
-		LOOPRC( mapRC[it][ig]  = cimagf(comRC[it][ig]); );
+		LOOPRC( mapRC[it][ig] = comRC[it][ig][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
-		LOOPCC( comCC[iz][ix] +=      I*mapCC[iz][ix];  );
+		LOOPCC( comCC[iz][ix][1] = mapCC[iz][ix]; );
 
-		sf_complexwrite(comCC[0],nx*nz,Fo);
+		sf_floatwrite(comCC[0][0],2*nx*nz,Fo);
 	    } else {
-		sf_complexread (comCC[0],nx*nz,Fi);
+		sf_floatread (comCC[0][0],2*nx*nz,Fi);
 		
 		// REAL
-		LOOPCC( mapCC[iz][ix]  = crealf(comCC[iz][ix]); );
+		LOOPCC( mapCC[iz][ix] = comCC[iz][ix][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
-		LOOPRC( comRC[it][ig]  =        mapRC[it][ig];  );
+		LOOPRC( comRC[it][ig][0] = mapRC[it][ig]; );
 
 		// IMAGINARY
-		LOOPCC( mapCC[iz][ix]  = cimagf(comCC[iz][ix]); );
+		LOOPCC( mapCC[iz][ix] = comCC[iz][ix][1]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
-		LOOPRC( comRC[it][ig] +=      I*mapRC[it][ig];  );
+		LOOPRC( comRC[it][ig][1] = mapRC[it][ig]; );
 
-		sf_complexwrite(comRC[0],ng*nt,Fo);
+		sf_floatwrite(comRC[0][0],2*ng*nt,Fo);
 	    }
 	}
 

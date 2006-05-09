@@ -100,8 +100,8 @@ int main (int argc, char *argv[])
     nw = sf_n(aw);
 
     /* slice management (temp files) */
-    wfl_s = fslice_init(n,nw,sizeof(float complex));
-    wfl_r = fslice_init(n,nw,sizeof(float complex));
+    wfl_s = fslice_init(n,nw,sizeof(sf_complex));
+    wfl_r = fslice_init(n,nw,sizeof(sf_complex));
     refl  = fslice_init(n,nz,sizeof(float));
 
     fslice_load(Fw_s,wfl_s,SF_COMPLEX);

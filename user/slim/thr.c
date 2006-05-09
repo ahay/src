@@ -119,8 +119,8 @@ void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
 {
   float *isample=NULL;
   float *osample=NULL;
-  float complex *icsample=NULL;
-  float complex *ocsample=NULL;
+  sf_complex *icsample=NULL;
+  sf_complex *ocsample=NULL;
   float absample;
   
   if (complex_data){
@@ -133,26 +133,37 @@ void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
   }
 
   if (complex_data){
-    sf_complexread(icsample,1,in);
-    absample = sqrt(pow(creal(*icsample),2) + pow(cimag(*icsample),2));
-    
-    if (absample > thr){
-      if (strcmp(mode,"soft") == 0)
-	*ocsample =(*icsample/absample)*(absample-thr);
-      if (strcmp(mode,"hard") == 0)
-	*ocsample =*icsample;
-      if (strcmp(mode,"nng") == 0)
-	*ocsample = *icsample-(pow(thr,2)/ *icsample);
-    }
-    else
-      *ocsample = 0.;
-    
-    sf_complexwrite(ocsample,1,out);
+      sf_complexread(icsample,1,in);
+      absample = cabsf(*icsample);
+      
+      if (absample > thr){
+	  if (strcmp(mode,"soft") == 0) {
+#ifdef SF_HAS_COMPLEX_H
+	      *ocsample =(*icsample/absample)*(absample-thr);
+#else
+	      *ocsample = sf_crmul(*icsample,(absample-thr)/absample);
+#endif
+	  
+	  } else if (strcmp(mode,"hard") == 0) {
+	      *ocsample =*icsample;
+	  } else if (strcmp(mode,"nng") == 0) {
+#ifdef SF_HAS_COMPLEX_H
+	      *ocsample = *icsample-(thr*thr/ *icsample);
+#else
+	       *ocsample = sf_csub(*icsample,
+				   sf_cdiv(sf_cmplx(thr*thr,0.),*icsample));
+#endif
+	  }
+      } else {
+	  *ocsample = sf_cmplx(0.,0.);
+      }
+      
+      sf_complexwrite(ocsample,1,out);
   }
   else{
     sf_floatread(isample,1,in);
 
-    if (fabs(*isample)>thr){
+    if (fabsf(*isample)>thr){
       if (strcmp(mode,"soft") == 0){
 	if (*isample>thr)
 	  *osample = *isample-thr;
@@ -162,7 +173,7 @@ void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
       if (strcmp(mode,"hard") == 0)
 	*osample = *isample;
       if (strcmp(mode,"nng") == 0)
-	*osample = *isample-(pow(thr,2)/ *isample);
+	  *osample = *isample-(thr*thr/ *isample);
     }
     else
       *osample=0;

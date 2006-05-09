@@ -54,7 +54,7 @@ static void add_int (bool collect, size_t nbuf, int* buf, int* bufi,
 		     bool abs_flag, bool log_flag, 
 		     bool sqrt_flag, bool exp_flag);
 static void add_complex (bool collect, size_t nbuf, 
-			 float complex* buf, float complex* bufi, 
+			 sf_complex* buf, sf_complex* bufi, 
 			 char cmode, float scale, float add, 
 			 bool abs_flag, bool log_flag, 
 			 bool sqrt_flag, bool exp_flag);
@@ -147,9 +147,9 @@ int main (int argc, char* argv[])
 			      sqrt_flag[j], exp_flag[j]);
 		    break;
 		case SF_COMPLEX:		    
-		    sf_complexread((float complex*) bufi,nbuf,in[j]);
+		    sf_complexread((sf_complex*) bufi,nbuf,in[j]);
 		    add_complex(j != 0, nbuf,
-				(float complex*) buf,(float complex*) bufi, 
+				(sf_complex*) buf,(sf_complex*) bufi, 
 				cmode, scale[j], add[j], 
 				abs_flag[j], log_flag[j], 
 				sqrt_flag[j], exp_flag[j]);
@@ -173,7 +173,7 @@ int main (int argc, char* argv[])
 		sf_floatwrite((float*) buf,nbuf,out);
 		break;
 	    case SF_COMPLEX:
-		sf_complexwrite((float complex*) buf,nbuf,out);
+		sf_complexwrite((sf_complex*) buf,nbuf,out);
 		break;
 	    case SF_INT:
 		sf_intwrite((int*) buf,nbuf,out);
@@ -259,33 +259,64 @@ static void add_int (bool collect, size_t nbuf, int* buf, int* bufi,
 }
 
 static void add_complex (bool collect, size_t nbuf, 
-			 float complex* buf, float complex* bufi, 
+			 sf_complex* buf, sf_complex* bufi, 
 			 char cmode, float scale, float add, 
 			 bool abs_flag, bool log_flag, 
 			 bool sqrt_flag, bool exp_flag)
 {
     size_t j;
-    float complex c;
+    sf_complex c;
 
     for (j=0; j < nbuf; j++) {
 	c = bufi[j];
-	if (abs_flag)    c = cabsf(c);
+	if (abs_flag)  {
+#ifdef SF_HAS_COMPLEX_H
+	    c = cabsf(c);
+#else
+	    c.r = cabsf(c);
+	    c.i = 0.;
+#endif
+	}
+#ifdef SF_HAS_COMPLEX_H
 	c += add;
+#else
+	c.r += add;
+#endif
 	if (log_flag)    c = clogf(c);
 	if (sqrt_flag)   c = csqrtf(c);
-	if (1. != scale) c *= scale;
+	if (1. != scale) {
+#ifdef SF_HAS_COMPLEX_H
+	    c *= scale;
+#else
+	    c = sf_crmul(c,scale);
+#endif
+	}
 	if (exp_flag)    c = cexpf(c);
 	if (collect) {
 	    switch (cmode) {
 		case 'p':
 		case 'm':
+#ifdef SF_HAS_COMPLEX_H
 		    buf[j] *= c;
+#else
+		    buf[j] = sf_cmul(buf[j],c);
+#endif
 		    break;
 		case 'd':
-		    if (c != 0.) buf[j] /= c;
+		    if (cabsf(c) != 0.) {
+#ifdef SF_HAS_COMPLEX_H			
+			buf[j] /= c;
+#else
+			buf[j] = sf_cdiv(buf[j],c);
+#endif	
+		    }
 		    break;
 		default:
+#ifdef SF_HAS_COMPLEX_H	
 		    buf[j] += c;
+#else
+		    buf[j] = sf_cadd(buf[j],c);
+#endif
 		    break;
 	    }
 	} else {

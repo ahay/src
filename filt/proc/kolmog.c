@@ -23,7 +23,7 @@
 
 static kiss_fftr_cfg forw, invs;
 static int nfft, nw;
-static float complex *fft;
+static sf_complex *fft;
 
 void kolmog_init(int n1)
 /*< initialize with data length >*/
@@ -54,7 +54,9 @@ void kolmog(float *trace)
     /* Fourier transform */
     kiss_fftr(forw,trace, (kiss_fft_cpx *) fft);
     for (i1=0; i1 < nw; i1++) {
-	trace[i1] = crealf(fft[i1]*conjf(fft[i1]));
+	trace[i1] = 
+	    crealf(fft[i1])*crealf(fft[i1])+
+	    cimagf(fft[i1])*cimagf(fft[i1]);
     }
 
     kolmog2(trace);
@@ -67,7 +69,7 @@ void kolmog2(float *trace)
     const double eps=1.e-32;
 
     for (i1=0; i1 < nw; i1++) {
-	fft[i1] = clog(trace[i1]+eps)/nfft;
+	fft[i1] = sf_cmplx(log(trace[i1]+eps)/nfft,0.);
     }
 
     /* Inverse transform */
@@ -83,7 +85,11 @@ void kolmog2(float *trace)
     kiss_fftr(forw,trace, (kiss_fft_cpx *) fft);
     
     for (i1=0; i1 < nw; i1++) {
-	fft[i1] = cexp(fft[i1])/nfft;
+#ifdef SF_HAS_COMPLEX_H
+	fft[i1] = cexpf(fft[i1])/nfft;
+#else
+	fft[i1] = sf_crmul(cexpf(fft[i1]),1./nfft);
+#endif
     }
 
     /* Inverse transform */

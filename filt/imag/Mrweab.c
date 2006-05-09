@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
 
     sf_file Fi=NULL, Fo=NULL, Fr=NULL, Fs=NULL; /* I/O files */
 
-    complex float **rays;
-    complex float **ab;
+    sf_complex **rays;
+    sf_complex **ab;
 
     float **x, **z;
     float **h1, **h2;
@@ -175,7 +175,7 @@ int main(int argc, char* argv[])
 	    a0 = mina + 0.5*dela + ia*dela;
 	    for(ib=0;ib<nbref;ib++) {
 		b0 = minb + 0.5*delb + ib*delb;
-		ab[it][ii] = a0+I*b0;
+		ab[it][ii] = sf_cmplx(a0,b0);
 		ii++;
 	    }
 	}

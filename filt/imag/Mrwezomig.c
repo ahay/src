@@ -36,12 +36,12 @@ int main(int argc, char* argv[])
     bool  verb;
     bool   adj;
 
-    complex float **dat;
+    sf_complex **dat;
     float         **img;
-    complex float  *wfl;
+    sf_complex  *wfl;
     float         **aa,**bb,**mm;
 
-    complex float **ab;
+    sf_complex **ab;
     float         **a0,**b0;
 
     float w;
@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
     if(adj) { /* modeling */
 	for(it=0;it<nt;it++) {
 	    for(ig=0;ig<ng;ig++) { 
-		dat[it][ig] = 0.;
+		dat[it][ig] = sf_cmplx(0.,0.);
 	    }
 	}
     } else {  /* migration */
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 	    w*=-2; /*      causal, two-way time */
 	    
 	    for(ig=0;ig<ng;ig++) {
-		wfl[ig] = 0;
+		wfl[ig] = sf_cmplx(0.,0.);
 	    }
 
 	    it=nt-1; rweone_zoi(adj,wfl,img[it]);
@@ -195,12 +195,16 @@ int main(int argc, char* argv[])
 	    sf_complexread(dat[0],ng*nt,Fd);
 
 	    for(ig=0;ig<ng;ig++) {
-		wfl[ig] = 0;
+		wfl[ig] = sf_cmplx(0.,0.);
 	    }
 
 	    for(it=0;it<=nt-2;it++) {
 		for(ig=0;ig<ng;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 		    wfl[ig] += dat[it][ig];
+#else
+		    wfl[ig] = sf_cadd(wfl[ig],dat[it][ig]);
+#endif
 		}
 
 		rweone_zoi(adj,wfl,img[it]);		

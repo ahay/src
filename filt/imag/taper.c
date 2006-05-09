@@ -125,7 +125,7 @@ void taper3_close(void)
     if (nt3 > 0) free(tap3);
 }
 
-void taper2(float complex** tt  /* [n2][n1] tapered array (in and out) */)
+void taper2(sf_complex** tt  /* [n2][n1] tapered array (in and out) */)
 /*< 2-D taper >*/
 {
     int it,i2,i1;
@@ -134,21 +134,31 @@ void taper2(float complex** tt  /* [n2][n1] tapered array (in and out) */)
     for (it=0; it < nt2; it++) {
 	gain = tap2[it];
 	for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	    if (b2) tt[   it  ][i1] *= gain;
 	    ;       tt[n2-it-1][i1] *= gain;
+#else
+	    if (b2) tt[   it  ][i1] = sf_crmul(tt[   it  ][i1],gain);
+	    ;       tt[n2-it-1][i1] = sf_crmul(tt[n2-it-1][i1],gain);
+#endif
 	}
     }
 
     for (it=0; it < nt1; it++) {
 	gain = tap1[it];
 	for (i2=0; i2 < n2; i2++) {
+#ifdef SF_HAS_COMPLEX_H
 	    if (b1) tt[i2][   it  ] *= gain;
 	    ;       tt[i2][n1-it-1] *= gain;
+#else
+	    if (b1) tt[i2][   it  ] = sf_crmul(tt[i2][   it  ],gain);
+	    ;       tt[i2][n1-it-1] = sf_crmul(tt[i2][n1-it-1],gain);
+#endif
 	}
     }
 }
 
-void taper3(float complex*** tt /* [n3][n2][n1] tapered array (inout) */)
+void taper3(sf_complex*** tt /* [n3][n2][n1] tapered array (inout) */)
 /*< 3-D taper >*/
 {
     int it,i1,i2,i3;
@@ -158,8 +168,15 @@ void taper3(float complex*** tt /* [n3][n2][n1] tapered array (inout) */)
 	gain = tap3[it];
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		if(b3) tt[   it  ][i2][i1] *= gain;
 		;      tt[n3-it-1][i2][i1] *= gain;
+#else
+		if(b3) tt[   it  ][i2][i1] = 
+			   sf_crmul(tt[   it  ][i2][i1],gain);
+		;      tt[n3-it-1][i2][i1] = 
+			   sf_crmul(tt[n3-it-1][i2][i1],gain);
+#endif
 	    }
 	}
     }
@@ -168,8 +185,15 @@ void taper3(float complex*** tt /* [n3][n2][n1] tapered array (inout) */)
 	gain = tap2[it];
 	for (i3=0; i3 < n3; i3++) {
 	    for (i1=0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 		if(b2) tt[i3][   it  ][i1] *= gain;
 		;      tt[i3][n2-it-1][i1] *= gain;
+#else
+		if(b2) tt[i3][   it  ][i1] = 
+			   sf_crmul(tt[i3][   it  ][i1],gain);
+		;      tt[i3][n2-it-1][i1] = 
+			   sf_crmul(tt[i3][n2-it-1][i1],gain);
+#endif
 	    }
 	}
     }
@@ -178,8 +202,15 @@ void taper3(float complex*** tt /* [n3][n2][n1] tapered array (inout) */)
 	gain = tap1[it];
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
+#ifdef SF_HAS_COMPLEX_H
 		if(b1) tt[i3][i2][   it  ] *= gain;
 		;      tt[i3][i2][n1-it-1] *= gain;
+#else
+		if(b1) tt[i3][i2][   it  ] = 
+			   sf_crmul(tt[i3][i2][   it  ],gain);
+		;      tt[i3][i2][n1-it-1] = 
+			   sf_crmul(tt[i3][i2][n1-it-1],gain);
+#endif
 	    }
 	}
     }

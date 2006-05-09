@@ -24,10 +24,10 @@
 
 static kiss_fft_cfg forw1, invs1; /* FFT on axis 1 */
 static kiss_fft_cfg forw2, invs2; /* FFT on axis 2 */
-static int            n1,n2;
-static float          fftscale;
-static float complex *ctrace;
-static float complex *shf1,*shf2;
+static int          n1,n2;
+static float        fftscale;
+static kiss_fft_cpx *ctrace;
+static sf_complex *shf1,*shf2;
 
 void fft2_init(int n1_, int n2_)
 /*< initialize >*/
@@ -40,7 +40,7 @@ void fft2_init(int n1_, int n2_)
     forw2 = kiss_fft_alloc(n2,0,NULL,NULL);
     invs2 = kiss_fft_alloc(n2,1,NULL,NULL);
 
-    ctrace = sf_complexalloc(n2);
+    ctrace = (kiss_fft_cpx*) sf_complexalloc(n2);
 
     if (NULL == forw2 || NULL == invs2 || 
 	NULL == forw1 || NULL == invs1) 
@@ -59,22 +59,18 @@ void fft2_close(void)
     free (invs1);
 }
 
-void fft2(bool inv           /* inverse/forward flag */, 
-	  complex float **pp /* [1...n2][1...n1] */) 
+void fft2(bool inv          /* inverse/forward flag */, 
+	  kiss_fft_cpx **pp /* [1...n2][1...n1] */) 
 /*< Apply 2-D FFT >*/
 {
     int i1,i2;
     
     if (inv) {
 	for (i2=0; i2 < n2; i2++) {
-	    kiss_fft(invs1,
-		     (const kiss_fft_cpx *) pp[i2], 
-		     (      kiss_fft_cpx *) pp[i2]);
+	    kiss_fft(invs1,pp[i2],pp[i2]);
 	}
 	for (i1=0; i1 < n1; i1++) {
-	    kiss_fft_stride(invs2,
-			    (const kiss_fft_cpx *) (pp[0]+i1), 
-			    (      kiss_fft_cpx *) ctrace,n1);
+	    kiss_fft_stride(invs2,pp[0]+i1,ctrace,n1);
 	    for (i2=0; i2<n2; i2++) {
 		pp[i2][i1] = ctrace[i2];
 	    }
@@ -82,28 +78,24 @@ void fft2(bool inv           /* inverse/forward flag */,
 
 	for (i2=0; i2<n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		pp[i2][i1] *= fftscale;
+		pp[i2][i1] = sf_crmul(pp[i2][i1],fftscale);
 	    }
 	}
     } else {
 	for (i2=0; i2<n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		pp[i2][i1] *= fftscale;
+		pp[i2][i1] = sf_crmul(pp[i2][i1],fftscale);
 	    }
 	}
 
 	for (i1=0; i1 < n1; i1++) {
-	    kiss_fft_stride(forw2,
-			    (const kiss_fft_cpx *) (pp[0]+i1), 
-			    (      kiss_fft_cpx *) ctrace,n1);
+	    kiss_fft_stride(forw2,pp[0]+i1,ctrace,n1);
 	    for (i2=0; i2<n2; i2++) {
 		pp[i2][i1] = ctrace[i2];
 	    }
 	}
 	for (i2=0; i2 < n2; i2++) {
-	    kiss_fft(forw1,
-		     (const kiss_fft_cpx *) pp[i2], 
-		     (      kiss_fft_cpx *) pp[i2]);
+	    kiss_fft(forw1,pp[i2],pp[i2]);
 	}
     }
 }
@@ -112,15 +104,18 @@ void sft2_init(float o1, float d1, float o2, float d2)
 /*< origin shift >*/
 {
     int i1,i2;
+    float shift;
 
     shf1 = sf_complexalloc(n1);
     for( i1=0; i1<n1; i1++) {
-	shf1[i1] = cexpf(+I*2.0*SF_PI*i1/n1*o1/d1);
+	shift = 2.0*SF_PI*i1/n1*o1/d1;
+	shf1[i1] = sf_cmplx(cosf(shift),sinf(shift));
     }
 
     shf2 = sf_complexalloc(n2);
     for( i2=0; i2<n2; i2++) {
-	shf2[i2] = cexpf(+I*2.0*SF_PI*i2/n2*o2/d2);
+	shift = 2.0*SF_PI*i2/n2*o2/d2;
+	shf2[i2] = sf_cmplx(cosf(shift),sinf(shift));
     }
 }
 
@@ -131,26 +126,34 @@ void sft2_close()
     free(shf2);
 }
 
-void sft2(complex float **pp)
+void sft2(sf_complex **pp)
 /*< apply shift >*/
 {
     int i1,i2;
 
     for(i2=0; i2<n2; i2++) {
 	for (i1=0; i1<n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	    pp[i2][i1] *= shf1[i1]*shf2[i2];
+#else
+	    pp[i2][i1] = sf_cmul(pp[i2][i1],sf_cmul(shf1[i1],shf2[i2]));
+#endif
 	}
     }    
 }
 
-void cnt2(complex float **pp)
+void cnt2(sf_complex **pp)
 /*< apply centering >*/
 {
     int i1,i2;
 
     for(i2=1; i2<n2; i2+=2) {
 	for(i1=1; i1<n1; i1+=2) {
+#ifdef SF_HAS_COMPLEX_H
 	    pp[i2][i1] = - pp[i2][i1];
+#else
+	    pp[i2][i1] = sf_cneg(pp[i2][i1]);
+#endif
 	}
     }
 }

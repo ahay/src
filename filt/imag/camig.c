@@ -41,7 +41,7 @@ static bool verb;
 static float eps;
 
 static float         ***qq; /* image */
-static float complex ***wx; /* wavefield x */
+static sf_complex ***wx; /* wavefield x */
 static float          **sm; /* reference slowness squared */
 static float          **ss; /* slowness */
 static float          **so; /* slowness */
@@ -162,7 +162,7 @@ void camig(bool inv  /* forward/adjoint flag */,
 /*< Apply migration/modeling >*/
 {
     int iz,iw,imy,imx,ihx,ilx,ily;
-    float complex w;
+    sf_complex w;
 
     if (!inv) { /* prepare image for migration */
 	LOOP( qq[ihx][imy][imx] = 0.0; );
@@ -176,16 +176,22 @@ void camig(bool inv  /* forward/adjoint flag */,
 /*	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);*/
 
 	if (inv) { /* MODELING */
-	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* +1 for upward continuation */
-	    LOOP( wx[ihx][imy][imx] = 0; );  
+	    w = sf_cmplx(eps*aw.d,
+			 aw.o+iw*aw.d); /* +1 for upward continuation */
+	    LOOP( wx[ihx][imy][imx] = sf_cmplx(0,0); );  
 
 	    fslice_get(slow,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
-		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
+		if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",
+				      iw+1,aw.n,iz+1,az.n);
 		fslice_get(imag,iz,qq[0][0]);
+#ifdef SF_HAS_COMPLEX_H
 		LOOP( wx[ihx][imy][imx] +=
 		      qq[ihx][imy][imx]; );
-		
+#else
+		LOOP( wx[ihx][imy][imx].r += 
+		      qq[ihx][imy][imx]; );
+#endif		
 		/* upward continuation */
 		fslice_get(slow,iz-1,ss[0]);
 		cam_ssf(w,wx,so,ss,nr[iz-1],sm[iz-1]);
@@ -193,14 +199,20 @@ void camig(bool inv  /* forward/adjoint flag */,
 	    }
 
 	    fslice_get(imag,0,qq[0][0]);      /*     imaging @ iz=0 */
+#ifdef SF_HAS_COMPLEX_H
 	    LOOP( wx[ihx][imy][imx]  += 
-		  qq[ihx][imy][imx]; );		
+		  qq[ihx][imy][imx]; );	
+#else
+	    LOOP( wx[ihx][imy][imx].r  += 
+		  qq[ihx][imy][imx]; );
+#endif	
 	    
 	    taper3(wx);
 	    fslice_put(data,iw,wx[0][0]);    /* output data @ iz=0 */
 	    
 	} else { /* MIGRATION */
-	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* -1 for downward continuation */
+	    w = sf_cmplx(eps*aw.d,
+			 -(aw.o+iw*aw.d)); /* -1 for downward continuation */
 
 	    fslice_get(data,iw,wx[0][0]);    /*  input data @ iz=0 */
 	    taper3(wx);
@@ -237,16 +249,17 @@ void cadtm(bool inv    /* forward/adjoint flag */,
 /*< Apply upward/downward datuming >*/
 {
     int iz,iw,ie, ilx,ily;
-    float complex w;
+    sf_complex w;
     
     for(ie=0; ie<ae.n; ie++) {
 	
 	/* loop over frequencies w */
 	for (iw=0; iw<aw.n; iw++) {
-	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",iw+1,aw.n,ie+1,ae.n);
+	    if (verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",
+				  iw+1,aw.n,ie+1,ae.n);
 	    
 	    if (inv) { /* UPWARD DATUMING */
-		w = eps*aw.d + I*(aw.o+iw*aw.d);
+		w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 		
 		fslice_get(wfld,iw+ie*aw.n,wx[0][0]);
 		taper3(wx);
@@ -261,7 +274,7 @@ void cadtm(bool inv    /* forward/adjoint flag */,
 		taper3(wx);
 		fslice_put(data,iw+ie*aw.n,wx[0][0]);
 	    } else { /* DOWNWARD DATUMING */
-		w = eps*aw.d - I*(aw.o+iw*aw.d);
+		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 		
 		fslice_get(data,iw+ie*aw.n,wx[0][0]);
 		taper3(wx);
@@ -287,12 +300,12 @@ void cawfl(fslice data /*      data [nw][nhx][nmy][nmx] */,
 /*< Save wavefield from downward continuation >*/
 {
     int iz,iw, ilx,ily;
-    float complex w;
+    sf_complex w;
 
     /* loop over frequencies w */
     for (iw=0; iw<aw.n; iw++) {
 /*	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);*/
-	w = eps*aw.d + I*(aw.o+iw*aw.d);
+	w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 
 	fslice_get(data,iw,wx[0][0]);
 	taper3(wx);
@@ -302,7 +315,8 @@ void cawfl(fslice data /*      data [nw][nhx][nmy][nmx] */,
 
 	fslice_get(slow,0,so[0]);
 	for (iz=0; iz<az.n-1; iz++) {	
-	    if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",iw+1,aw.n,iz+1,az.n);
+	    if (verb) sf_warning ("iw=%3d of %3d:   iz=%3d of %3d",
+				  iw+1,aw.n,iz+1,az.n);
 
 	    fslice_get(slow,iz+1,ss[0]);
 	    cam_ssf(w,wx,so,ss,nr[iz],sm[iz]);

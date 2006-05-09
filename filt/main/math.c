@@ -55,7 +55,7 @@ int main (int argc, char* argv[])
     sf_file *in, out;
     char *eq, *output, *key, *arg, xkey[8], *ctype, *label, *unit;
     float **fbuf, **fst, d[SF_MAX_DIM], o[SF_MAX_DIM];
-    float complex **cbuf, **cst;
+    sf_complex **cbuf, **cst;
     sf_datatype type;
 
     sf_init (argc,argv);
@@ -176,7 +176,7 @@ int main (int argc, char* argv[])
 	cbuf = NULL;
 	cst  = NULL; 
     } else {
-	nbuf = BUFSIZ/sizeof(float complex);
+	nbuf = BUFSIZ/sizeof(sf_complex);
 	
 	fbuf = NULL;
 	fst  = NULL;
@@ -218,9 +218,9 @@ int main (int argc, char* argv[])
 	    for (k=0; k < nbuf; k++, j++) {
 		sf_line2cart(dim,n,j,ii);
 		for (i=0; i < dim; i++) {
-		    cbuf[nin+i][k] = o[i]+ii[i]*d[i];
+		    cbuf[nin+i][k] = sf_cmplx(o[i]+ii[i]*d[i],0.);
 		}
-		cbuf[nin+dim][k] = I;
+		cbuf[nin+dim][k] = sf_cmplx(0.,1.);
 	    }
 	    
 	    sf_complex_math_evaluate (len, nbuf, cbuf, cst);

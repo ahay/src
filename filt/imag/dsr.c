@@ -26,7 +26,7 @@
 
 static float eps, *vt, dw, dz, da;
 static int nz, nw, na;
-static float complex *pp;
+static sf_complex *pp;
 static kiss_fftr_cfg forw, invs;
 
 void dsr_init (float eps1 /* regularization */, 
@@ -77,7 +77,7 @@ void dsr (bool inv /* modeling or migration */,
 {
     int iz,iw, ia;
     float s, r, a;
-    float complex w, k;
+    sf_complex w, k;
 
     s = 0.5*(kx-kh);
     r = 0.5*(kx+kh);
@@ -86,19 +86,25 @@ void dsr (bool inv /* modeling or migration */,
 
     if (inv) { /* modeling */
 	for (iw=0; iw<nw; iw++) {
-	    pp[iw] = q[nz-1][0];
+	    pp[iw] = sf_cmplx(q[nz-1][0],0.);
 	}
 	
 	/* loop over migrated times z */
 	for (iz=nz-2; iz>=0; iz--) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
-		w = (eps + I*iw)*dw;
+		w = sf_cmplx(eps*dw,iw*dw);
 
+#ifdef SF_HAS_COMPLEX_H
 		k = pshift(w,r,vt[iz],vt[iz+1])+
 		    pshift(w,s,vt[iz],vt[iz+1]);
-
 		pp[iw] = q[iz][0] + pp[iw]*cexpf(-k*dz);
+#else
+		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1]),
+			    pshift(w,s,vt[iz],vt[iz+1]));
+		pp[iw] = sf_cadd(sf_cmplx(q[iz][0],0.),
+				 sf_cmul(pp[iw],cexpf(sf_crmul(k,-dz))));
+#endif
 	    }
 	}
 
@@ -110,13 +116,22 @@ void dsr (bool inv /* modeling or migration */,
 	for (iz=0; iz<nz-1; iz++) {
 	    /* loop over frequencies w */
 	    for (iw=0; iw<nw; iw++) {
-		w = (eps+I*iw)*dw;
+		w = sf_cmplx(eps*dw,iw*dw);
 
 		/* find angle */
+
+#ifdef SF_HAS_COMPLEX_H
 		k = pshift(w,r,vt[iz],vt[iz+1])+
 		    pshift(w,s,vt[iz],vt[iz+1]);
-		
 		a = crealf(0.5*vt[iz]/w*csqrtf(k*k-kx*kx));
+#else
+		k = sf_cadd(pshift(w,r,vt[iz],vt[iz+1]),
+			    pshift(w,s,vt[iz],vt[iz+1]));
+		a = crealf(sf_cmul(sf_cdiv(sf_cmplx(0.5*vt[iz],0.),w),
+				   csqrtf(sf_csub(sf_cmul(k,k),
+						  sf_cmplx(kx*kx,0.)))));
+#endif
+
 		if (a >= 0. && a <= 1.) {
 		    a = acosf(a)/da;
 		    ia = a;
@@ -127,8 +142,11 @@ void dsr (bool inv /* modeling or migration */,
 			q[iz][ia+1] += a*crealf(pp[iw]);
 		    }
 		}
-
+#ifdef SF_HAS_COMPLEX_H
 		pp[iw] *= conjf(cexpf(-k*dz));
+#else
+		pp[iw] = sf_cmul(pp[iw],conjf(cexpf(sf_crmul(k,-dz))));
+#endif
 	    }
 	}
 

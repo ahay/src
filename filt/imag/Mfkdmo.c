@@ -1,21 +1,20 @@
-/* Offset continuation by log-stretch F-K operator.
-*/
+/* Offset continuation by log-stretch F-K operator. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -26,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main(int argc, char* argv[])
 {
     int nw, nk, iw, ik, nh, ih;
-    float complex *oper;
+    sf_complex *oper;
     float dw,dk, ow,ok, k,w,h, h0, dh, eps,amp,phase;
     sf_file in, out;
 
@@ -71,10 +70,11 @@ int main(int argc, char* argv[])
 		    eps = sqrtf (1+eps*eps);
 		    amp = sqrtf(0.5*(1/eps+eps))*expf(0.5*(1-eps));
 		    phase = 1-eps+logf(0.5*(1+eps));
+		    phase *= -SF_PI*w;
 
-		    oper[iw] = amp*cexpf(-SF_PI*I*phase*w);
+		    oper[iw] = sf_cmplx(amp*cosf(phase),amp*sinf(phase));
 		} else {
-		    oper[iw] = 0.;
+		    oper[iw] = sf_cmplx(0.,0.);
 		}
 	    }
 

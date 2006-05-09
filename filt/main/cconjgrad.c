@@ -35,28 +35,28 @@
 #define MLOOP(a) for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) { \
 	         if (msiz < mbuf) mbuf=msiz; {a} }
 
-#define DREAD(a) if (dbuf != fread(buf,sizeof(float complex),dbuf,a)) \
+#define DREAD(a) if (dbuf != fread(buf,sizeof(sf_complex),dbuf,a)) \
                   sf_error("write error")
 
-#define MREAD(a) if (mbuf != fread(buf,sizeof(float complex),mbuf,a)) \
+#define MREAD(a) if (mbuf != fread(buf,sizeof(sf_complex),mbuf,a)) \
                   sf_error("write error")
 
-#define DREAD2(a) if (dbuf != fread(buf2,sizeof(float complex),dbuf,a)) \
+#define DREAD2(a) if (dbuf != fread(buf2,sizeof(sf_complex),dbuf,a)) \
                   sf_error("write error")
 
-#define MREAD2(a) if (mbuf != fread(buf2,sizeof(float complex),mbuf,a)) \
+#define MREAD2(a) if (mbuf != fread(buf2,sizeof(sf_complex),mbuf,a)) \
                   sf_error("write error")
 
-#define DWRITE(a) if (dbuf != fwrite(buf,sizeof(float complex),dbuf,a)) \
+#define DWRITE(a) if (dbuf != fwrite(buf,sizeof(sf_complex),dbuf,a)) \
                   sf_error("write error")
 
-#define MWRITE(a) if (mbuf != fwrite(buf,sizeof(float complex),mbuf,a)) \
+#define MWRITE(a) if (mbuf != fwrite(buf,sizeof(sf_complex),mbuf,a)) \
                   sf_error("write error")
 
 int main(int argc, char* argv[])
 {
     int i, iter, niter, p[6][2], status;
-    float complex *buf, *buf2;
+    sf_complex *buf, *buf2;
     double rn, rnp, alpha, beta;
     pid_t pid[6]={1,1,1,1,1,1};
     off_t nm, nd, msiz, dsiz, pos;
@@ -64,6 +64,8 @@ int main(int argc, char* argv[])
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
     char *x, *R, *g, *s, *S;
     sf_file mod, dat, out, from, to;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+    extern off_t ftello (FILE *stream);
 
     sf_init(argc,argv);
     dat = sf_input("in");
@@ -97,7 +99,7 @@ int main(int argc, char* argv[])
     nd = sf_filesize(dat);
 
     /* I/O buffers */
-    nbuf = BUFSIZ/sizeof(float complex);
+    nbuf = BUFSIZ/sizeof(sf_complex);
     buf  = sf_complexalloc(nbuf);
     buf2 = sf_complexalloc(nbuf);
 
@@ -125,15 +127,22 @@ int main(int argc, char* argv[])
 
 	    if (0 == iter) {
 		xfile = fopen(x,"wb");
-		for (i=0; i < nbuf; i++) { buf[i] = 0.; }		
+		for (i=0; i < nbuf; i++) { buf[i] = sf_cmplx(0.,0.); }
 		MLOOP( MWRITE(xfile); );
 		fclose(xfile);
 
 		Rfile = fopen(R,"wb");
+#ifdef SF_HAS_COMPLEX_H 
 		DLOOP( sf_complexread(buf,dbuf,dat); 
 		       for (i=0; i < dbuf; i++) { buf[i] = -buf[i]; }
 		       sf_complexwrite(buf,dbuf,to);
 		       DWRITE (Rfile); );
+#else
+		DLOOP( sf_complexread(buf,dbuf,dat); 
+		       for (i=0; i < dbuf; i++) { buf[i] = sf_cneg(buf[i]); }
+		       sf_complexwrite(buf,dbuf,to);
+		       DWRITE (Rfile); );
+#endif
 	    } else {
 		Rfile = fopen(R,"rb");
 		DLOOP( DREAD(Rfile); sf_complexwrite(buf,dbuf,to); );
@@ -185,16 +194,27 @@ int main(int argc, char* argv[])
 	    
 	    rn = 0.;
 
+#ifdef SF_HAS_COMPLEX_H
 	    MLOOP( sf_complexread(buf,mbuf,from);
-		   for (i=0; i < mbuf; i++) { rn += creal(conj(buf[i]) * buf[i]); }
+		   for (i=0; i < mbuf; i++) { 
+		       rn += creal(conj(buf[i]) * buf[i]); }
 		   MWRITE(gfile); );
+#else
+	    MLOOP( sf_complexread(buf,mbuf,from);
+		   for (i=0; i < mbuf; i++) { 
+		       rn += 
+			   (double) buf[i].r * buf[i].r +
+			   (double) buf[i].i * buf[i].i; }
+		   MWRITE(gfile); );
+#endif
 
 	    sfile = fopen(s,"r+b");
 
 	    if (0==iter) {
 		alpha = 0.;
 	    } else {
-		if (1 != fread(&rnp,sizeof(double),1,sfile)) sf_error("read error");
+		if (1 != fread(&rnp,sizeof(double),1,sfile)) 
+		    sf_error("read error");
 
 		alpha = rn/rnp;
 
@@ -210,7 +230,8 @@ int main(int argc, char* argv[])
 		sf_error ("seek problem");
 
 	    /* s = g + alpha*s */
-	    
+
+#ifdef SF_HAS_COMPLEX_H	    
 	    MLOOP( MREAD(gfile); sf_complexwrite(buf,mbuf,to);
 
 		   if (iter > 0) {
@@ -227,6 +248,24 @@ int main(int argc, char* argv[])
 		   } 
 		   
 		   MWRITE(sfile); );
+#else
+	    MLOOP( MREAD(gfile); sf_complexwrite(buf,mbuf,to);
+
+		   if (iter > 0) {
+		       pos = ftello(sfile);
+
+		       MREAD2(sfile); 
+		       
+		       if (0 > fseeko(sfile,pos,SEEK_SET))
+			   sf_error ("seek problem");
+
+		       for (i=0; i < mbuf; i++) {
+			   buf[i] = sf_cadd(buf[i],sf_crmul(buf2[i],alpha));
+		       }
+		   } 
+		   
+		   MWRITE(sfile); );
+#endif
 
 	    fclose(gfile);
 	    fclose(sfile);
@@ -271,6 +310,7 @@ int main(int argc, char* argv[])
 
 	    /* ss = gg + alpha * ss */
 
+#ifdef SF_HAS_COMPLEX_H
 	    DLOOP( sf_complexread(buf,dbuf,from);
 
 		   if (iter > 0) {
@@ -291,6 +331,31 @@ int main(int argc, char* argv[])
 		   }
 		
 		   DWRITE(Sfile); );
+#else
+	    DLOOP( sf_complexread(buf,dbuf,from);
+		   
+		   if (iter > 0) {
+		       pos = ftello(Sfile);
+		       
+		       DREAD2(Sfile);
+		       
+		       if (0 > fseeko(Sfile,pos,SEEK_SET))
+			   sf_error ("seek problem");
+		    
+		       for (i=0; i < dbuf; i++) {
+			   buf[i] = sf_cadd(buf[i],sf_crmul(buf2[i],alpha));
+		       }
+		   }
+
+		   for (i=0; i < dbuf; i++) {
+		       beta += 
+			   (double) buf[i].r * buf[i].r +
+			   (double) buf[i].i * buf[i].i;
+		   }
+		
+		   DWRITE(Sfile); );
+#endif
+
 	    fclose(Sfile);
 
 	    sfile = fopen(s,"rb");
@@ -318,6 +383,7 @@ int main(int argc, char* argv[])
 
 	    xfile = fopen(x,"r+b"); if (NULL == xfile) sf_error("Cannot open %s:",x);
 
+#ifdef SF_HAS_COMPLEX_H
 	    MLOOP( pos = ftello(xfile); 
 
 		   MREAD(xfile);
@@ -331,6 +397,21 @@ int main(int argc, char* argv[])
 		   sf_error ("seek problem");
 	    
 		   MWRITE(xfile); );
+#else
+	    MLOOP( pos = ftello(xfile); 
+
+		   MREAD(xfile);
+		   MREAD2(sfile); 
+		   
+		   for (i=0; i < mbuf; i++) {
+		       buf[i] = sf_cadd(buf[i],sf_crmul(buf2[i],alpha));
+		   }
+
+		   if (0 > fseeko(xfile,pos,SEEK_SET))
+		   sf_error ("seek problem");
+	    
+		   MWRITE(xfile); );
+#endif
 
 	    fclose(sfile);
 	    fclose(xfile);
@@ -338,6 +419,7 @@ int main(int argc, char* argv[])
 	    Sfile = fopen(S,"rb");
 	    Rfile = fopen(R,"r+b");
 
+#ifdef SF_HAS_COMPLEX_H
 	    DLOOP( pos = ftello(Rfile); 
 
 		   DREAD(Rfile);
@@ -351,6 +433,21 @@ int main(int argc, char* argv[])
 		   sf_error ("seek problem");
 		   
 		   DWRITE(Rfile); );
+#else
+	    DLOOP( pos = ftello(Rfile); 
+
+		   DREAD(Rfile);
+		   DREAD2 (Sfile);
+		   
+		   for (i=0; i < dbuf; i++) {
+		       buf[i] = sf_cadd(buf[i],sf_crmul(buf2[i],alpha));
+		   }
+
+		   if (0 > fseeko(Rfile,pos,SEEK_SET))
+		   sf_error ("seek problem");
+		   
+		   DWRITE(Rfile); );
+#endif
 
 	    fclose(Sfile);
 	    fclose(Rfile);

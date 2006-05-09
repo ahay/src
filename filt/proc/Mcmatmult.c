@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     bool adj;
     int n1, n2, i1, i2;
-    float complex *x, *y, **a;
+    sf_complex *x, *y, **a;
     sf_file in, out, mat;
 
     sf_init(argc,argv);
@@ -58,13 +58,21 @@ int main(int argc, char* argv[])
     sf_complexread(a[0],n1*n2,mat);
 
     for (i2 = 0; i2 < n2; i2++) {
-	y[i2] = 0.;
+	y[i2] = sf_cmplx(0.,0.);
 	for (i1 = 0; i1 < n1; i1++) {
+#ifdef SF_HAS_COMPLEX_H
 	    if (adj) {
 		y[i2] += conjf(a[i1][i2]) * x[i1];
 	    } else {
 		y[i2] += a[i2][i1] * x[i1];
 	    }
+#else
+	    if (adj) {
+		y[i2] = sf_cadd(y[i2],sf_cmul(conjf(a[i1][i2]),x[i1]));
+	    } else {
+		y[i2] = sf_cadd(y[i2],sf_cmul(a[i2][i1],x[i1]));
+	    }
+#endif
 	}
     }
 

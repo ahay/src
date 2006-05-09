@@ -29,7 +29,7 @@ int main(int argc, char* argv[])
     int i1,i2, n1,n2,n3, ix,iv,ih, ib, ie, nb, nx,nv,nh, nw, next;
     float d1,o1,d2,o2, eps, w,x,k, v0,v2,v,v1,dv, dx, h0,dh,h, num, den, t;
     float *trace, *strace, ***stack, ***stack2, ***cont, **image;
-    float complex *ctrace, *ctrace0;
+    sf_complex *ctrace, *ctrace0, shift;
     char *time, *space, *unit;
     size_t len;
     static kiss_fftr_cfg forw, invs;
@@ -153,12 +153,18 @@ int main(int argc, char* argv[])
 		v1 = h * (1./(v*v) - 1./(v0*v0)) * 8.;
 		v2 = k * ((v0*v0) - (v*v));
 
-		ctrace[0]=0.; /* dc */
+		ctrace[0]=sf_cmplx(0.,0.); /* dc */
 
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*SF_PI/(d2*n3);
- 
-		    ctrace[i2] = ctrace0[i2] * cexpf(I*(v2/w+(v1-o2)*w));
+		    w = v2/w+(v1-o2)*w;
+		    shift = sf_cmplx(cosf(w),sinf(w));
+
+#ifdef SF_HAS_COMPLEX_H
+		    ctrace[i2] = ctrace0[i2] * shift;
+#else
+		    ctrace[i2] = sf_cmul(ctrace0[i2],shift);
+#endif
 		} /* w */
 
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);

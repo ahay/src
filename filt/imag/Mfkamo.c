@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int nw, nx, ny, iw, ix, iy;
-    float complex *oper;
+    sf_complex *oper;
     float dw,dx,dy, ow,ox,oy, w,x,y, x1,x2, h1,h2,f1,f2, maxe;
     float eps1,eps2,amp1,amp2,phase1,phase2,amp;
     sf_file in, out;
@@ -84,12 +84,14 @@ int main(int argc, char* argv[])
 			phase2 = 1-eps2+logf(0.5*(1.+eps2));
 
 			amp = expf(0.5*(eps1-logf(amp1)+logf(amp2)-eps2));
-			oper[iw] = amp*cexpf(I*SF_PI*(phase2-phase1)*w);
+
+			phase1 = SF_PI*(phase2-phase1)*w;
+			oper[iw] = sf_cmplx(amp*cosf(phase1),amp*sinf(phase1));
 		    } else {
-			oper[iw] = 0.;
+			oper[iw] = sf_cmplx(0.,0.);
 		    }
 		} else {
-		    oper[iw] = 0.;
+		    oper[iw] = sf_cmplx(0.,0.);
 		}
 	    }
 	    sf_complexwrite (oper,nw,out);

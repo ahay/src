@@ -48,8 +48,8 @@ static float dsmax2;
 static float         **kk; /* wavenumber  */
 static int            *lx;
 static int            *ly;
-static float complex **pk;
-static float complex **wk;
+static sf_complex **pk;
+static sf_complex **wk;
 static float         **wt;
 
 /*------------------------------------------------------------*/
@@ -150,8 +150,8 @@ void ssr_close(void)
 /*------------------------------------------------------------*/
 
 void ssr_ssf(
-    float complex    w /* frequency */,
-    complex float **wx /* wavefield */,
+    sf_complex    w /* frequency */,
+    sf_complex **wx /* wavefield */,
     float         **so /* slowness  */, 
     float         **ss /* slowness  */,
     int             nr /* nr. of ref slo */,
@@ -159,47 +159,80 @@ void ssr_ssf(
     )
 /*< Wavefield extrapolation by SSF >*/
 {
-    float complex w2,co,cc;
+    sf_complex w2,co,cc;
     int ix,iy,jr;
     float s,d;
 
+#ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
 
     /* w-x part 1 */
     LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
 
+#else
+    w2 = sf_cmul(w,w);
+
+    /* w-x part 1 */
+    LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] = sf_cmul( wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
+#endif
+
     /* FFT */
-    KOOP( pk[iy][ix] = 0.; );
+    KOOP( pk[iy][ix] = sf_cmplx(0.,0.); );
     LOOP( pk[iy][ix] = wx[iy][ix]; );
     fft2(false,pk);
 
-    LOOP( wx[iy][ix] = 0;
+    LOOP( wx[iy][ix] = sf_cmplx(0.,0.);
 	  wt[iy][ix] = 0; );
     for (jr=0; jr<nr; jr++) {
 	/* w-k */
+#ifdef SF_HAS_COMPLEX_H
 	co =       csqrtf(w2 * sm[jr]);
 	KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	      wk[iy][ix] = 
 	      pk[iy][ix] * cexpf((co-cc)*az.d); 
 	    );
+#else
+	co =       csqrtf(sf_crmul(w2,sm[jr]));
+	KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),
+				  sf_cmplx(kk[iy][ix],0.)));
+	      wk[iy][ix] = 
+	      sf_cmul(pk[iy][ix],cexpf(sf_crmul(sf_csub(co,cc),az.d))); 
+	    );
+#endif
 	
 	/* IFT */
 	fft2(true,wk);
 	
 	/* accumulate wavefield */
+#ifdef SF_HAS_COMPLEX_H
 	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
 			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
 	      d = dsmax2/(d*d+dsmax2);
 	      wx[iy][ix] += wk[iy][ix]*d;
 	      wt[iy][ix] += d; 
 	    );
+#else
+	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
+			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
+	      d = dsmax2/(d*d+dsmax2);
+	      wx[iy][ix] = sf_cadd(wx[iy][ix],sf_crmul(wk[iy][ix],d));
+	      wt[iy][ix] += d; 
+	    );
+#endif
     }
+#ifdef SF_HAS_COMPLEX_H
     LOOP( wx[iy][ix] /= wt[iy][ix]; );
-
     /* w-x part 2 */
     LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
+#else
+    LOOP( wx[iy][ix] = sf_crmul(wx[iy][ix],1./wt[iy][ix]); );
+    /* w-x part 2 */
+    LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
+#endif
 
     taper2(wx);
 }
@@ -207,31 +240,38 @@ void ssr_ssf(
 /*------------------------------------------------------------*/
 
 void ssr_sso(
-    float complex    w /* frequency */,
-    complex float **wx /* wavefield */,
-    float         **so /* slowness  */, 
-    float         **ss /* slowness  */,
-    int             nr /* nr. of ref slo */,
-    float          *sm /* ref slo squared */
+    sf_complex    w /* frequency */,
+    sf_complex **wx /* wavefield */,
+    float      **so /* slowness  */, 
+    float      **ss /* slowness  */,
+    int          nr /* nr. of ref slo */,
+    float       *sm /* ref slo squared */
     )
 /*< Wavefield extrapolation by SSF w/ one reference slowness >*/
 {
-    float complex w2,co,cc;
+    sf_complex w2,co,cc;
     int ix,iy,jr;
     float s;
 
+#ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
-
     /* w-x part 1 */
     LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
+#else
+    w2 = sf_cmul(w,w);
+    /* w-x part 1 */
+    LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
+#endif
 
     /* FFT */
-    KOOP( pk[iy][ix] = 0.; );
+    KOOP( pk[iy][ix] = sf_cmplx(0.,0.); );
     LOOP( pk[iy][ix] = wx[iy][ix]; );
     fft2(false,pk);
 
     jr=0;
+#ifdef SF_HAS_COMPLEX_H
     co =       csqrtf(w2 * sm[jr]);
     KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	  wk[iy][ix] = 
@@ -239,14 +279,29 @@ void ssr_sso(
 	);
 
     KOOP( wk[iy][ix] = pk[iy][ix] * cexpf((co)*az.d); );
+#else
+    co =       csqrtf(sf_crmul(w2,sm[jr]));
+    KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),
+			      sf_cmplx(kk[iy][ix],0.)));
+	  wk[iy][ix] = sf_cmul(pk[iy][ix],
+			       cexpf(sf_crmul(sf_csub(co,cc),az.d))); 
+	);
+
+    KOOP( wk[iy][ix] = sf_cmul(pk[iy][ix],cexpf(sf_crmul(co,az.d))); );
+#endif
 
     /* IFT */
     fft2(true,wk);
     LOOP( wx[iy][ix] = wk[iy][ix]; );
     
     /* w-x part 2 */
+#ifdef SF_HAS_COMPLEX_H
     LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
+#else
+    LOOP( s = 0.5 * ss[ ly[iy] ][ lx[ix] ];
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
+#endif
 
     taper2(wx);
 }
@@ -254,78 +309,117 @@ void ssr_sso(
 /*------------------------------------------------------------*/
 
 void ssr_phs(
-    float complex    w /* frequency */,
-    complex float **wx /* wavefield */,
-    float         **so /* slowness  */, 
-    float         **ss /* slowness  */,
-    int             nr /* nr. of ref slo */,
-    float          *sm /* ref slo squared */
+    sf_complex    w /* frequency */,
+    sf_complex **wx /* wavefield */,
+    float      **so /* slowness  */, 
+    float      **ss /* slowness  */,
+    int          nr /* nr. of ref slo */,
+    float       *sm /* ref slo squared */
     )
 /*< Wavefield extrapolation by phase-shift >*/
 {
-    float complex w2,cc;
+    sf_complex w2,cc;
     int ix,iy,jr;
     float d;
 
+#ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
+#else
+    w2 = sf_cmul(w,w);
+#endif
 
     /* FFT */
-    KOOP( pk[iy][ix] = 0.; );
+    KOOP( pk[iy][ix] = sf_cmplx(0.,0.); );
     LOOP( pk[iy][ix] = wx[iy][ix]; );
     fft2(false,pk);
 
-    LOOP( wx[iy][ix] = 0;
+    LOOP( wx[iy][ix] = sf_cmplx(0.,0.);
 	  wt[iy][ix] = 0; );
     for (jr=0; jr<nr; jr++) {
 	/* w-k */
+#ifdef SF_HAS_COMPLEX_H
 	KOOP( cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 	      wk[iy][ix] = 
 	      pk[iy][ix] * cexpf((-cc)*az.d); 
 	    );
+#else
+	KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),
+				  sf_cmplx(kk[iy][ix],0.)));
+	      wk[iy][ix] = 
+	      sf_cmul(pk[iy][ix],cexpf(sf_crmul(cc,-az.d))); 
+	    );
+#endif
 
 	/* IFT */
 	fft2(true,wk);
 
 	/* accumulate wavefield */
+#ifdef SF_HAS_COMPLEX_H
 	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
 			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
 	      d = dsmax2/(d*d+dsmax2);
 	      wx[iy][ix] += wk[iy][ix]*d;
 	      wt[iy][ix] += d; );
+#else
+	LOOP( d = fabsf(so[ ly[iy] ][ lx[ix] ] * 
+			so[ ly[iy] ][ lx[ix] ] - sm[jr]);
+	      d = dsmax2/(d*d+dsmax2);
+	      wx[iy][ix] = sf_cadd(wx[iy][ix],sf_crmul(wk[iy][ix],d));
+	      wt[iy][ix] += d; );
+#endif
     }
+#ifdef SF_HAS_COMPLEX_H
     LOOP( wx[iy][ix] /= wt[iy][ix]; );
+#else
+    LOOP( wx[iy][ix] = sf_crmul(wx[iy][ix],1./wt[iy][ix]); );
+#endif
 
     taper2(wx);
 }
 
 void ssr_pho(
-    float complex    w /* frequency */,
-    complex float **wx /* wavefield */,
-    float         **so /* slowness  */, 
-    float         **ss /* slowness  */,
-    int             nr /* nr. of ref slo */,
-    float          *sm /* ref slo squared */
+    sf_complex    w /* frequency */,
+    sf_complex **wx /* wavefield */,
+    float      **so /* slowness  */, 
+    float      **ss /* slowness  */,
+    int          nr /* nr. of ref slo */,
+    float       *sm /* ref slo squared */
     )
 /*< Wavefield extrapolation by phase-shift w/ one reference >*/
 {
-    float complex w2,cc;
+    sf_complex  w2,cc;
     int ix,iy,jr;
 
-    w = 1e-3 + I * cimagf(w);
+    w = sf_cmplx(1e-3,cimagf(w));
+
+#ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
+#else
+    w2 = sf_cmul(w,w);
+#endif
 
     /* FFT */
-    KOOP( pk[iy][ix] = 0.; );
+    KOOP( pk[iy][ix] = sf_cmplx(0.,0.); );
     LOOP( pk[iy][ix] = wx[iy][ix]; );
     fft2(false,pk);
 
     jr=0;
+#ifdef SF_HAS_COMPLEX_H
     KOOP(
 	cc = csqrtf(w2 * sm[jr] + kk[iy][ix]);
 
 	wk[iy][ix] = 
 	pk[iy][ix] * cexpf(-cc*az.d); 
 	);
+#else
+     KOOP(
+	cc = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),
+			    sf_cmplx(kk[iy][ix],0.)));
+
+	wk[iy][ix] = 
+	sf_cmul(pk[iy][ix],cexpf(sf_crmul(cc,-az.d))); 
+	);
+#endif
 
     /* IFT */
     fft2( true,wk);
@@ -334,8 +428,3 @@ void ssr_pho(
     taper2(wx);
 }
 
-void cwrite(complex float x)
-/*< output a complex number >*/
-{
-    sf_warning("(%f,%f)",crealf(x), cimagf(x));
-}

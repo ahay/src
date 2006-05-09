@@ -29,6 +29,7 @@ int main(int argc, char* argv[])
     float clip; /* threshold (clip value) */
     sf_file Fc; /* cube file */
     sf_file Fl; /* list file */
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     sf_axis   ax,ay,az;
     sf_axis   aa;

@@ -88,8 +88,8 @@ int main (int argc, char *argv[])
 	    n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 	    nw = sf_n(aw);
 
-	    data = fslice_init(n,nw,sizeof(float complex));
-	    wfld = fslice_init(n, nz*nw,sizeof(float complex));
+	    data = fslice_init(n,nw,sizeof(sf_complex));
+	    wfld = fslice_init(n, nz*nw,sizeof(sf_complex));
 
 	    fslice_load(Fd,data,SF_COMPLEX);
 
@@ -109,8 +109,8 @@ int main (int argc, char *argv[])
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw)*sf_n(ae);
 
-		data = fslice_init(n,nw,sizeof(float complex));
-		wfld = fslice_init(n,nw,sizeof(float complex));
+		data = fslice_init(n,nw,sizeof(sf_complex));
+		wfld = fslice_init(n,nw,sizeof(sf_complex));
 
 		fslice_load(Fw,wfld,SF_COMPLEX);
 	    } else {   /* downward continuation */
@@ -127,8 +127,8 @@ int main (int argc, char *argv[])
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw)*sf_n(ae);
 
-		data = fslice_init(n,nw,sizeof(float complex));
-		wfld = fslice_init(n,nw,sizeof(float complex));
+		data = fslice_init(n,nw,sizeof(sf_complex));
+		wfld = fslice_init(n,nw,sizeof(sf_complex));
 
 		fslice_load(Fd,data,SF_COMPLEX);
 	    }
@@ -155,7 +155,7 @@ int main (int argc, char *argv[])
 		
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 
-		data = fslice_init(n,nw,sizeof(float complex));
+		data = fslice_init(n,nw,sizeof(sf_complex));
 		imag = fslice_init(n,nz,sizeof(float));
 
 		fslice_load(Fi,imag,SF_FLOAT);
@@ -173,7 +173,7 @@ int main (int argc, char *argv[])
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw);
 
-		data = fslice_init(n,nw,sizeof(float complex));
+		data = fslice_init(n,nw,sizeof(sf_complex));
 		imag = fslice_init(n,nz,sizeof(float));
 	    
 		fslice_load(Fd,data,SF_COMPLEX);

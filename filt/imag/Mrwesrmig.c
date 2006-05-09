@@ -36,13 +36,13 @@ int main(int argc, char* argv[])
     bool  verb;
     bool   adj;
 
-    complex float **dat_s, *wfl_s;
-    complex float **dat_r, *wfl_r;
-    float         **img;
-    float         **aa,**bb,**mm;
+    sf_complex **dat_s, *wfl_s;
+    sf_complex **dat_r, *wfl_r;
+    float      **img;
+    float      **aa,**bb,**mm;
 
-    complex float **ab;
-    float         **a0,**b0;
+    sf_complex **ab;
+    float      **a0,**b0;
 
     float w,ws,wr,w0,dw;
     char *met="";
@@ -170,12 +170,17 @@ int main(int argc, char* argv[])
 
 	    ws = -w; /*      causal */
 	    for(ig=0;ig<ng;ig++) {
-		wfl_s[ig] = 0;
+		wfl_s[ig] = sf_cmplx(0.,0.);
 	    }
 	    for(it=0;it<nt;it++) {
 		for(ig=0;ig<ng;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 		    wfl_s[ig] += dat_s[it][ig];
 		    dat_r[it][ig] = wfl_s[ig]*img[it][ig];
+#else
+		    wfl_s[ig] = sf_cadd(wfl_s[ig],dat_s[it][ig]);
+		    dat_r[it][ig] = sf_crmul(wfl_s[ig],img[it][ig]);
+#endif
 		}
 		
 		if(method!=0) rweone_fk(ws,wfl_s,aa[it],a0[it],b0[it],mm[it],it);
@@ -193,11 +198,15 @@ int main(int argc, char* argv[])
 
 	    wr = -w; /*      causal */
 	    for(ig=0;ig<ng;ig++) {
-		wfl_r[ig] = 0;
+		wfl_r[ig] = sf_cmplx(0.,0.);
 	    }
 	    for(it=nt-1;it>=0;it--) {
 		for(ig=0;ig<ng;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 		    wfl_r[ig] += dat_s[it][ig];
+#else
+		    wfl_r[ig] = sf_cadd(wfl_r[ig],dat_s[it][ig]);
+#endif
 		    dat_r[it][ig] = wfl_r[ig];
 		}
 		
@@ -216,14 +225,19 @@ int main(int argc, char* argv[])
 	    sf_complexread(dat_r[0],ng*nt,Fw_r);
 	    
 	    for(ig=0;ig<ng;ig++) {
-		wfl_s[ig] = 0;
-		wfl_r[ig] = 0;
+		wfl_s[ig] = sf_cmplx(0,0);
+		wfl_r[ig] = sf_cmplx(0,0);
 	    }
 	    
 	    for(it=0;it<=nt-2;it++) {
 		for(ig=0;ig<ng;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 		    wfl_s[ig] += dat_s[it][ig];
 		    wfl_r[ig] += dat_r[it][ig];
+#else
+		    wfl_s[ig] = sf_cadd(wfl_s[ig],dat_s[it][ig]);
+		    wfl_r[ig] = sf_cadd(wfl_r[ig],dat_r[it][ig]);
+#endif
 		}
 		
 		rweone_spi(wfl_s,wfl_r,img[it]);

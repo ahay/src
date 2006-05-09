@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     int ns, nh, nw, iw, ih, is;
     bool sign;
     float ds, h0, dh, w0, dw, w, eps;
-    float complex *s, *s2;
+    sf_complex *s, *s2;
     sf_file in, out;
 
     sf_init (argc,argv);
@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
 	if(fabsf(w) < dw) { /* dc */
 	    /* write out zeroes */
 	    for (ih=0; ih < nh; ih++) {
-		s2[ih] = 0.;
+		s2[ih] = sf_cmplx(0.,0.);
 	    }
 	    for (is=0; is < ns; is++) {
 		sf_complexwrite(s2,nh,out);

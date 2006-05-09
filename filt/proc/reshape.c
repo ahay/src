@@ -25,7 +25,7 @@
 
 static int nfft, nw;
 static float dw;
-static float complex *cdata;
+static kiss_fft_cpx *cdata;
 static kiss_fftr_cfg forw, invs;
 
 void reshape_init(int n1, float d1 /* data length and sampling */)
@@ -36,7 +36,7 @@ void reshape_init(int n1, float d1 /* data length and sampling */)
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 
-    cdata = sf_complexalloc(nw);
+    cdata = (kiss_fft_cpx*) sf_complexalloc(nw);
     forw = kiss_fftr_alloc(nfft,0,NULL,NULL);
     invs = kiss_fftr_alloc(nfft,1,NULL,NULL);   
 }
@@ -59,13 +59,15 @@ void reshape (float m1, float a1 /* old parameters */,
 
     if (m1 < m2) return;
 
-    kiss_fftr(forw,data, (kiss_fft_cpx *) cdata);
+    kiss_fftr(forw,data,cdata);
     for (iw=0; iw < nw; iw++) {
 	f = iw*dw;
 	f *= f;
-	cdata[iw] *= (a2*m1)/(a1*m2)*expf(f*(1./m1-1./m2))/nfft;
+	f = (a2*m1)/(a1*m2)*expf(f*(1./m1-1./m2))/nfft;
+	cdata[iw].r *= f;
+	cdata[iw].i *= f;
     }
-    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, data);
+    kiss_fftri(invs,cdata,data);
 }
 
 /* 	$Id$	 */

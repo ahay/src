@@ -32,7 +32,7 @@ int main (int argc, char* argv[])
     char* header;
     char* trailer;
     float *fbuf;
-    float complex *cbuf;
+    sf_complex *cbuf;
     unsigned char *ubuf;
     sf_file in;
     sf_datatype type;

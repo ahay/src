@@ -36,7 +36,8 @@ int main (int argc, char **argv)
     float wt;                /* Fourier scaling */
     float x, k;
 
-    float complex *ck, *cx; /* frequency-wavenumber */
+    sf_complex *ck, *cx;     /* frequency-wavenumber */
+    sf_complex shift;        /* phase shift */
 
     bool inv;                /* forward or inverse */
     bool sym;                /* symmetric scaling */
@@ -113,11 +114,22 @@ int main (int argc, char **argv)
 	    k = k0+ik*dk;
 	    for (ix=0; ix<nx; ix++) {
 		x = x0+ix*dx;
+		x = 2.*SF_PI*x*k;
+		shift = sf_cmplx(cosf(x),sinf(x));
+
+#ifdef SF_HAS_COMPLEX_H
 		if (inv) {
-		    cx[ix] = ck[ik]*cexp(I*2.*SF_PI*x*k)*wt;
+		    cx[ix] = ck[ik]*shift*wt;
 		} else {
-		    ck[ix] = cx[ik]*cexp(-I*2.*SF_PI*x*k)*wt;
+		    ck[ix] = cx[ik]*shift*wt;
 		}
+#else
+		if (inv) {
+		    cx[ix] = sf_cmul(ck[ik],sf_crmul(shift,wt));
+		} else {
+		    ck[ix] = sf_cmul(cx[ik],sf_crmul(shift,wt));
+		}
+#endif
 	    }
 	}
 

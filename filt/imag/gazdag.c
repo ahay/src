@@ -27,7 +27,7 @@
 
 static float eps, *vt, dw, dz;
 static int nz, nw;
-static float complex *pp;
+static sf_complex *pp;
 static kiss_fftr_cfg forw, invs;
 
 void gazdag_init (float eps1  /* regularization */, 
@@ -72,20 +72,25 @@ void gazdag (bool inv  /* modeling (or migration) */,
 /*< Run >*/
 {
     int iz,iw;
-    float complex w2, kz;
+    sf_complex w2, kz;
         
     if (inv) { /* modeling */
         for (iw=0; iw<nw; iw++) {
-            pp[iw] = q[nz-1];
+            pp[iw] = sf_cmplx(q[nz-1],0.);
         }
 
         /* loop over migrated times z */
         for (iz=nz-2; iz>=0; iz--) {
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
-                w2 = (eps + I*iw)*dw;
-		kz = -pshift(w2,k2,vt[iz],vt[iz+1]);
-                pp[iw] = pp[iw]*cexpf(kz*dz) + q[iz];
+                w2 = sf_cmplx(eps*dw,iw*dw);
+		kz = pshift(w2,k2,vt[iz],vt[iz+1]);
+#ifdef SF_HAS_COMPLEX_H
+                pp[iw] = pp[iw]*cexpf(-kz*dz) + q[iz];
+#else
+		pp[iw] = sf_cadd(sf_cmul(pp[iw],cexpf(sf_crmul(kz,-dz))),
+				 sf_cmplx(q[iz],0.));
+#endif
             }
         }
 
@@ -100,12 +105,16 @@ void gazdag (bool inv  /* modeling (or migration) */,
       
             /* loop over frequencies w */
             for (iw=0; iw<nw; iw++) {
-		w2 = (eps + I*iw)*dw;
+		w2 = sf_cmplx(eps*dw,iw*dw);
 
                 /* accumulate image (summed over frequency) */
                 q[iz] += crealf(pp[iw]);
-		kz = -pshift(w2,k2,vt[iz],vt[iz+1]);
-                pp[iw] *= conjf(cexpf(kz*dz));
+		kz = pshift(w2,k2,vt[iz],vt[iz+1]);
+#ifdef SF_HAS_COMPLEX_H
+                pp[iw] *= conjf(cexpf(-kz*dz));
+#else
+		pp[iw] = sf_cmul(pp[iw],conjf(cexpf(sf_crmul(kz,-dz))));
+#endif
             }
         }
 

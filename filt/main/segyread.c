@@ -243,6 +243,8 @@ int main(int argc, char *argv[])
     off_t pos, nsegy;
     FILE *head, *file;
     float *ftrace, dt;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+    extern off_t ftello (FILE *stream);
 
     sf_init(argc, argv);
     

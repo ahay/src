@@ -30,8 +30,8 @@ int main(int argc, char* argv[])
     unsigned long mseed, dseed;
     off_t nm, nd, msiz, dsiz;
     size_t nbuf, mbuf, dbuf;
-    float complex *buf;
-    double complex dp;
+    sf_complex *buf;
+    sf_double_complex dp, rd;
     pid_t pid[6]={1,1,1,1,1,1};
     sf_file mod, dat, pip;
 
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
     nm = sf_filesize(mod);
     nd = sf_filesize(dat);
 
-    nbuf = BUFSIZ/sizeof(float complex);
+    nbuf = BUFSIZ/sizeof(sf_complex);
     buf = sf_complexalloc(nbuf);
 
     mseed = (unsigned long) time(NULL);
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	    if (msiz < mbuf) mbuf=msiz;
 
 	    for (im=0; im < mbuf; im++) {
-		buf[im] = genrand_real1 () + I * genrand_real1 ();
+		buf[im] = sf_cmplx(genrand_real1 (),genrand_real1 ());
 	    }
 	    sf_complexwrite(buf,mbuf,pip);
 	}
@@ -119,16 +119,22 @@ int main(int argc, char* argv[])
 	pip = sf_input("in");
 
 	init_genrand(dseed);
-	dp = 0.;
+
+	dp = sf_dcmplx(0.,0.);
 	for (dsiz=nd, dbuf=nbuf; dsiz > 0; dsiz -= dbuf) {
 	    if (dsiz < dbuf) dbuf=dsiz;
 
 	    sf_complexread(buf,dbuf,pip);
 	    for (id=0; id < dbuf; id++) {
-		dp += buf[id]*(genrand_real1 () - I * genrand_real1 ());
+		rd = sf_dcmplx(genrand_real1 (),-genrand_real1 ());
+#ifdef SF_HAS_COMPLEX_H
+		dp += buf[id]*rd;
+#else
+		dp = sf_dcadd(dp,sf_dcdmul(rd,buf[id]));
+#endif
 	    }	
 	}
-	sf_warning(" L[m]*d=(%g,%g)",crealf(dp),cimagf(dp));
+	sf_warning(" L[m]*d=(%g,%g)",creal(dp),cimag(dp));
 
 	_exit(2);
     }
@@ -149,7 +155,7 @@ int main(int argc, char* argv[])
 	    if (dsiz < dbuf) dbuf=dsiz;
 
 	    for (id=0; id < dbuf; id++) {
-		buf[id] = genrand_real1 () + I * genrand_real1 ();
+		buf[id] = sf_cmplx(genrand_real1(),genrand_real1());
 	    }
 	    sf_complexwrite(buf,dbuf,pip);
 	}
@@ -182,16 +188,21 @@ int main(int argc, char* argv[])
 	pip = sf_input("in");
 
 	init_genrand(mseed);
-	dp = 0.;
+	dp = sf_dcmplx(0.,0.);
 	for (msiz=nm, mbuf=nbuf; msiz > 0; msiz -= mbuf) {
 	    if (msiz < mbuf) mbuf=msiz;
 
 	    sf_complexread(buf,mbuf,pip);	    
 	    for (im=0; im < mbuf; im++) {
-		dp += buf[im]*(genrand_real1 () - I * genrand_real1 ());
+		rd = sf_dcmplx(genrand_real1(),-genrand_real1());
+#ifdef SF_HAS_COMPLEX_H		
+		dp += buf[im]*rd;
+#else
+		dp = sf_dcadd(dp,sf_dcdmul(rd,buf[im]));
+#endif
 	    }	
 	}
-	sf_warning("L'[d]*m=(%g,%g)",crealf(dp),-cimagf(dp));
+	sf_warning("L'[d]*m=(%g,%g)",creal(dp),-cimag(dp));
 	
 	_exit(5);
     }

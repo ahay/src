@@ -24,17 +24,21 @@
 /*^*/
 
 static int n;
-static float complex *a;
+static sf_complex *a;
 
-static float complex cdprod (int j, 
-			     const float complex* a, const float complex* b) 
+static sf_complex cdprod (int j, 
+			  const sf_complex* a, const sf_complex* b) 
 /* complex dot product */
 {
     int i;
-    float complex c;
-    c = 0.;
+    sf_complex c;
+    c = sf_cmplx(0.,0.);
     for (i=1; i <= j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	c += a[j-i]*conjf(b[i]);
+#else
+	c = sf_cadd(c,sf_cmul(a[j-i],conjf(b[i])));
+#endif
     }
     return c;
 }
@@ -44,38 +48,59 @@ void ctoeplitz_init (int n_in /* matrix size */)
 {
     n = n_in;
     a = sf_complexalloc (n);
-    a[0] = 1.;
+    a[0] = sf_cmplx(1.,0.);
 }
 
-void ctoeplitz_solve (const float complex *r /* top row of the matrix */, 
-		      float complex *f       /* inverted in place */)
+void ctoeplitz_solve (const sf_complex *r /* top row of the matrix */, 
+		      sf_complex *f       /* inverted in place */)
 /*< apply the solver >*/
 {    
     int i,j;
-    float complex e,c,w, bot;
+    sf_complex e,c,w, bot;
     float v;
     
     v=crealf(r[0]);
+#ifdef SF_HAS_COMPLEX_H
     f[0] /= v;
+#else
+    f[0] = sf_crmul(f[0],1./v);
+#endif
     
     for (j=1; j < n; j++) {
 	e = cdprod(j,a,r);
+#ifdef SF_HAS_COMPLEX_H
 	c = -e/v;
+#else
+	c = sf_crmul(e,-1./v);
+#endif
 
 	v += crealf(c)*crealf(e) + cimagf(c)*cimagf(e);
        
 	for (i=1; i <= j/2; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    bot  = a[j-i] + c*conjf(a[i]);
-	    a[i] = a[i] + c*conjf(a[j-i]);
+	    a[i] += c*conjf(a[j-i]);
+#else
+	    bot  = sf_cadd(a[j-i],sf_cmul(c,conjf(a[i])));
+	    a[i] = sf_cadd(a[i],sf_cmul(c,conjf(a[j-i])));
+#endif
 	    a[j-i] = bot;
 	}
 	a[j] = c;
        
 	w = cdprod(j,f,r);
+#ifdef SF_HAS_COMPLEX_H
 	c = (f[j]-w)/v;
+#else
+	c = sf_crmul(sf_csub(f[j],w),1./v);
+#endif
        
 	for (i=0; i < j; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    f[i] += c*conjf(a[j-i]);
+#else
+	    f[i] = sf_cadd(f[i],sf_cmul(c,conjf(a[j-i])));
+#endif
 	}
 	f[j] = c;
     }

@@ -42,9 +42,9 @@ static int            *nr; /* number of references */
 static float         **qq; /* image */
 static float         **kk; /* wavenumber */
 
-static float complex **pp; /* wavefield */
-static float complex **wx; /* x wavefield */
-static float complex **wk; /* k wavefield */
+static sf_complex **pp; /* wavefield */
+static sf_complex **wx; /* x wavefield */
+static sf_complex **wk; /* k wavefield */
 
 static float         **wt; /* interpolation weight */
 static float         **ph; /* phase */
@@ -146,7 +146,7 @@ void split2(bool verb                   /* verbosity flag */,
 /*< Apply migration/modeling >*/
 {
     int iz,iw,ix,iy,ir,nxy;
-    float complex cshift, cref, w, w2;
+    sf_complex cshift, cref, w, w2;
     float d;
 
     if (!inv) { /* prepare image for migration */
@@ -173,8 +173,12 @@ void split2(bool verb                   /* verbosity flag */,
     for (iw=0; iw<nw; iw++) {
 	if (verb) sf_warning ("frequency %d of %d",iw+1,nw);
 
-	w = eps*dw + I*(w0+iw*dw);
+	w = sf_cmplx(eps*dw,w0+iw*dw);
+#ifdef SF_HAS_COMPLEX_H	
 	w2 = w*w;
+#else
+	w2 = sf_cmul(w,w);
+#endif
 
 	if (inv) { /* MODELING */
 	    /* start from bottom */
@@ -182,45 +186,83 @@ void split2(bool verb                   /* verbosity flag */,
 	    
 	    /* imaging condition */
 	    slice_get(imag,nz-1,qq[0]);
-	    LOOPxy( wx[ix][iy] = qq[ix][iy]; );
+	    LOOPxy( wx[ix][iy] = sf_cmplx(qq[ix][iy],0.); );
 
 	    /* loop over migrated depths z */
 	    for (iz=nz-2; iz>=0; iz--) {
 		
 		/* w-x @ bottom */
-		LOOPxy2( pp[ix][iy] = 0.;);
+		LOOPxy2( pp[ix][iy] = sf_cmplx(0.,0.););
 		taper2(wx);
+#ifdef SF_HAS_COMPLEX_H
 		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz);
 			pp[ix][iy] = wx[ix][iy]*cshift; 
 			wt[ix][iy] = 0.; 
 			wx[ix][iy] = 0.; 
 		    );
+#else
+		LOOPxy( cshift = cexpf(sf_crmul(w,-ss[ix][iy]*dz));
+			pp[ix][iy] = sf_cmul(wx[ix][iy],cshift); 
+			wt[ix][iy] = 0.; 
+			wx[ix][iy] = sf_cmplx(0.,0.); 
+		    );
+#endif
 		
 		fft2(false,pp);
 		slice_get(slow,iz,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
+#ifdef SF_HAS_COMPLEX_H
 		    cref = csqrtf(w2*sm[iz][ir]);
 		    LOOPxy2( cshift = 
 			     cexpf((cref- 
 				    csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
 			     wk[ix][iy] = pp[ix][iy]*cshift; );
+#else
+		    cref = csqrtf(sf_crmul(w2,sm[iz][ir]));
+		    LOOPxy2( cshift = 
+			     cexpf(
+				 sf_crmul(
+				     sf_csub(cref, 
+					     csqrtf(
+						 sf_cadd(sf_crmul(w2,
+								  sm[iz][ir]),
+							 sf_cmplx(kk[ix][iy],
+								  0.)))),dz));
+			     wk[ix][iy] = sf_cmul(pp[ix][iy],cshift); );
+#endif
 		    fft2(true,wk);
 
 		    /* accumulate wavefield */
+#ifdef SF_HAS_COMPLEX_H
 		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
 			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
 			    wt[ix][iy] += d;
 			);
+#else
+		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
+			    d = ds2/(d*d+ds2);
+			    wx[ix][iy] = sf_cadd(wx[ix][iy],
+						 sf_crmul(wk[ix][iy],d));
+			    wt[ix][iy] += d;
+			);
+#endif
 		} /* ir loop */
 
 		slice_get(imag,iz,qq[0]);
 		
 		/* w-x @ top */
+#ifdef SF_HAS_COMPLEX_H
 		LOOPxy( cshift = cexpf(-w*ss[ix][iy]*dz)/wt[ix][iy];
 			wx[ix][iy] = qq[ix][iy] + wx[ix][iy]*cshift; );
+#else
+		LOOPxy( cshift = sf_crmul(
+			    cexpf(sf_crmul(w,-ss[ix][iy]*dz)),1./wt[ix][iy]);
+			wx[ix][iy] = sf_cadd(sf_cmplx(qq[ix][iy],0.),
+					     sf_cmul(wx[ix][iy],cshift)); );
+#endif
 	    } /* iz */
 
 	    taper2(wx);
@@ -242,35 +284,73 @@ void split2(bool verb                   /* verbosity flag */,
 		slice_put(imag,iz,qq[0]);
 
 		/* w-x @ top */
-		LOOPxy2( pp[ix][iy]=0.;);
+		LOOPxy2( pp[ix][iy]=sf_cmplx(0.,0.););
+#ifdef SF_HAS_COMPLEX_H
 		LOOPxy( cshift= conjf(cexpf(-w*ss[ix][iy]*dz));
 			pp[ix][iy] = wx[ix][iy]*cshift; 
 			wt[ix][iy] = 0.; 
-			wx[ix][iy] = 0.; );
+			wx[ix][iy] = sf_cmplx(0.,0.); );
+#else
+		LOOPxy( cshift= conjf(cexpf(sf_crmul(w,-ss[ix][iy]*dz)));
+			pp[ix][iy] = sf_cmul(wx[ix][iy],cshift); 
+			wt[ix][iy] = 0.; 
+			wx[ix][iy] = sf_cmplx(0.,0.); );
+#endif
 		
 		fft2(false,pp);
 		slice_get(slow,iz+1,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
 		    /* w-k phase shift */
+#ifdef SF_HAS_COMPLEX_H
 		    cref = csqrtf(w2*sm[iz][ir]);
 		    LOOPxy2( cshift = 
 			     cexpf((cref-csqrtf(w2*sm[iz][ir]+kk[ix][iy]))*dz);
 			     wk[ix][iy] = pp[ix][iy]*conjf(cshift); );
+#else
+		    cref = csqrtf(sf_crmul(w2,sm[iz][ir]));
+		    LOOPxy2( cshift = 
+			     cexpf(
+				 sf_crmul(
+				     sf_csub(cref,
+					     csqrtf(
+						 sf_cadd(sf_crmul(w2,
+								  sm[iz][ir]),
+							 sf_cmplx(kk[ix][iy],
+								  0.)))),dz));
+			     wk[ix][iy] = sf_cmul(pp[ix][iy],conjf(cshift)); );
+#endif
 		    fft2(true,wk);
 
 		    /* accumulate wavefield */
+#ifdef SF_HAS_COMPLEX_H
 		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
 			    d = ds2/(d*d+ds2);
 			    wx[ix][iy] += wk[ix][iy]*d;
 			    wt[ix][iy] += d; );
+#else
+		    LOOPxy( d = fabsf(4.*ss[ix][iy]*ss[ix][iy]-sm[iz][ir]);
+			    d = ds2/(d*d+ds2);
+			    wx[ix][iy] = sf_cadd(wx[ix][iy],
+						 sf_crmul(wk[ix][iy],d));
+			    wt[ix][iy] += d; );
+#endif
 		} /* ir loop */
 		
 		/* w-x @ bottom */
+#ifdef SF_HAS_COMPLEX_H
 		LOOPxy( 
 		    cshift = conjf(cexpf(-w*ss[ix][iy]*dz))/wt[ix][iy];
 		    wx[ix][iy] *= cshift; 
 		    );
+#else
+		LOOPxy( 
+		    cshift = conjf(
+			sf_crmul(cexpf(sf_crmul(w,-ss[ix][iy]*dz)),
+				 1./wt[ix][iy]));
+		    wx[ix][iy] = sf_cmul(wx[ix][iy],cshift); 
+		    );
+#endif
 		taper2(wx);
 	    } /* iz */
 
@@ -284,10 +364,10 @@ void split2(bool verb                   /* verbosity flag */,
 }
 
 /*
-static float complex muir(int niter,float complex s,float complex q,
+static sf_complex muir(int niter,sf_complex s,sf_complex q,
 			  float k2,float dz)
 {
-    float complex q2;
+    sf_complex q2;
     int iter;
     
     for (iter=0; iter < niter; iter++) {

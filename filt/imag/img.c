@@ -61,8 +61,8 @@ static sf_axa ahx,ahy,ahz;
 static sf_axa aht;
 static sf_axa aw;
 
-static float complex  **tt; /* phase shift for time offset */
-static float complex ***qs,***qr;
+static sf_complex  **tt; /* phase shift for time offset */
+static sf_complex ***qs,***qr;
 static float         ***qi;
 
 static int LOx,HIx;
@@ -72,8 +72,8 @@ static int LOz,HIz;
 /*------------------------------------------------------------*/
 
 void imgstore( int imz,
-	       float complex **ww_s,
-	       float complex **ww_r
+	       sf_complex **ww_s,
+	       sf_complex **ww_r
     )
 /*< store wavefield >*/
 {
@@ -104,8 +104,8 @@ void imgo_init(sf_axis amz_,
     qr = sf_complexalloc3(amx.n,amy.n,amz.n);
     qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
     MLOOP( 
-	qs[imz][imy][imx] = 0.0; 
-	qr[imz][imy][imx] = 0.0; 
+	qs[imz][imy][imx] = sf_cmplx(0.0,0.0); 
+	qr[imz][imy][imx] = sf_cmplx(0.0,0.0); 
 	qi[imz][imy][imx] = 0.0; 
 	);
     fslice_put(imag,1,qi[0][0]);
@@ -141,8 +141,8 @@ void imgx_init(sf_axis amz_,
     qr = sf_complexalloc3(amx.n,amy.n,amz.n);
     qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
     MLOOP( 
-	qs[imz][imy][imx] = 0.0; 
-	qr[imz][imy][imx] = 0.0; 
+	qs[imz][imy][imx] = sf_cmplx(0.0,0.0); 
+	qr[imz][imy][imx] = sf_cmplx(0.0,0.0); 
 	qi[imz][imy][imx] = 0.0; 
 	);
 
@@ -176,8 +176,8 @@ void imgt_init(sf_axis amz_,
     qr = sf_complexalloc3(amx.n,amy.n,amz.n);
     qi = sf_floatalloc3  (amx.n,amy.n,amz.n);
     MLOOP( 
-	qs[imz][imy][imx] = 0.0; 
-	qr[imz][imy][imx] = 0.0; 
+	qs[imz][imy][imx] = sf_cmplx(0.0,0.0); 
+	qr[imz][imy][imx] = sf_cmplx(0.0,0.0); 
 	qi[imz][imy][imx] = 0.0; 
 	);
 
@@ -195,7 +195,8 @@ void imgt_init(sf_axis amz_,
 	w = aw.o+iw*aw.d;
 	for (iht=0; iht<aht.n; iht++) {
 	    ht = aht.o+iht*aht.d;
-	    tt[iw][iht] = cexpf(-2*I*w*ht);
+	    ht *= -2*w;
+	    tt[iw][iht] = sf_cmplx(cosf(ht),sinf(ht));
 	}
     }
 }
@@ -208,11 +209,18 @@ void imgo( fslice imag,
     int imx,imy,imz;
 
     fslice_get(imag,0,qi[0][0]);
+#ifdef SF_HAS_COMPLEX_H
     MLOOP(
 	;             qi[imz][imy][imx] +=
 	crealf( conjf(qs[imz][imy][imx]) 
 		*     qr[imz][imy][imx] );
 	);
+#else
+    MLOOP(
+	;             qi[imz][imy][imx] +=
+	crealf( sf_cmul(conjf(qs[imz][imy][imx]),qr[imz][imy][imx]));
+	);
+#endif
     fslice_put(imag,0,qi[0][0]);
 }
 
@@ -225,6 +233,7 @@ void imgx( fslice imag,
     int imys,imyr,imzs;
     int imxs,imxr,imzr;
 
+#ifdef SF_HAS_COMPLEX_H
     HLOOP( ih = IND(ihx,ihy,ihz);
 	   fslice_get(imag,ih,qi[0][0]);
 	   CLOOP(
@@ -234,6 +243,17 @@ void imgx( fslice imag,
 	       );
 	   fslice_put(imag,ih,qi[0][0]);
 	);
+#else
+    HLOOP( ih = IND(ihx,ihy,ihz);
+	   fslice_get(imag,ih,qi[0][0]);
+	   CLOOP(
+	       ;             qi[imz ][imy ][imx ] +=
+	       crealf( sf_cmul(conjf(qs[imzs][imys][imxs]),
+			       qr[imzr][imyr][imxr] ));
+	       );
+	   fslice_put(imag,ih,qi[0][0]);
+	);
+#endif
 }
 
 void imgt( fslice imag,
@@ -241,15 +261,21 @@ void imgt( fslice imag,
 /*< Apply t-offset imaging condition >*/
 {
     int imx,imy,imz,iht;
-    float complex wt;
+    sf_complex wt;
 
     for(iht=0; iht<aht.n; iht++) {
 	wt = tt[iw][iht];
 
 	fslice_get(imag,iht,qi[0][0]);
+#ifdef SF_HAS_COMPLEX_H
 	MLOOP(;             qi[imz][imy][imx] += 
 	      crealf( conjf(qs[imz][imy][imx]) 
 		      *     qr[imz][imy][imx] * wt ); );
+#else
+	MLOOP(;             qi[imz][imy][imx] += 
+	      crealf( sf_cmul(sf_cmul(conjf(qs[imz][imy][imx]), 
+				      qr[imz][imy][imx]),wt) ); );	
+#endif
 	fslice_put(imag,iht,qi[0][0]);
     }
 }

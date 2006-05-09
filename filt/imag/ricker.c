@@ -38,7 +38,7 @@ void ricker_init(int nfft   /* time samples */,
     nw = nfft/2+1;
     dw = 1./(nfft*freq);
  
-    shape = sf_komplexalloc(nw);
+    shape = (kiss_fft_cpx*) sf_complexalloc(nw);
 
     for (iw=0; iw < nw; iw++) {
 	w = iw*dw;

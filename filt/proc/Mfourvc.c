@@ -30,7 +30,7 @@ int main(int argc, char* argv[])
     int i1,i2, n1,n2,n3, nw, nx,ny,nv,nh, ix,iy,iv,ih, next;
     float d1,o1,d2,o2, eps, w,x,y,k, v0,v2,v,v1,dv, dx,dy, h0,dh,h, t;
     float *trace, *strace;
-    float complex *ctrace, **cstack;
+    sf_complex *ctrace, **cstack, shift;
     char *time, *space, *unit;
     size_t len;
     kiss_fftr_cfg forw, invs;
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 
 	    for (iv=0; iv < nv; iv++) {
 		for (i1=0; i1 < nw; i1++) {
-		    cstack[iv][i1] = 0.;
+		    cstack[iv][i1] = sf_cmplx(0.,0.);
 		}
 	    }
 
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 		}
 		
 		kiss_fftr(forw,strace, (kiss_fft_cpx *) ctrace);       	
-		ctrace[0]=0.; /* dc */
+		ctrace[0]=sf_cmplx(0.,0.); /* dc */
 
 		for (iv=0; iv < nv; iv++) {
 		    v = v0 + (iv+1)*dv;
@@ -157,9 +157,15 @@ int main(int argc, char* argv[])
 
 		    for (i2=1; i2 < nw; i2++) {
 			w = i2*SF_PI/(d2*n3);
- 
-			cstack[iv][i2] += 
-			    ctrace[i2] * cexpf(I*(v2/w+(v1-o2)*w));
+			w = v2/w+(v1-o2)*w;
+			shift = sf_cmplx(cosf(w),sinf(w));
+
+#ifdef SF_HAS_COMPLEX_H
+			cstack[iv][i2] += ctrace[i2] * shift;
+#else
+			cstack[iv][i2] = sf_cadd(cstack[iv][i2],
+						 sf_cmul(ctrace[i2],shift));
+#endif
 		    } /* w */
 		} /* v */
 	    } /* h */
@@ -167,7 +173,14 @@ int main(int argc, char* argv[])
 	    for (iv=0; iv < nv; iv++) {
 		for (i2=1; i2 < nw; i2++) {
 		    w = i2*SF_PI/(d2*n3);
-		    ctrace[i2] = cstack[iv][i2] * cexpf(I*o2*w);
+		    w *= o2;
+		    shift = sf_cmplx(cosf(w),sinf(w));
+		    
+#ifdef SF_HAS_COMPLEX_H
+		    ctrace[i2] = cstack[iv][i2] * shift;
+#else
+		    ctrace[i2] = sf_cmul(cstack[iv][i2],shift);
+#endif
 		}
 
 		kiss_fftri(invs,(const kiss_fft_cpx *) ctrace, strace);

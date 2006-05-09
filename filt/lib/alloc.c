@@ -25,7 +25,6 @@
 
 #include "_bool.h"
 #include "c99.h"
-#include "kiss_fft.h"
 /*^*/
 
 /*@out@*/ void *sf_alloc (size_t n    /* number of elements */, 
@@ -85,25 +84,22 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
-#ifndef __cplusplus
-/*^*/
-
-/*@out@*/ float complex *sf_complexalloc (size_t n /* number of elements */) 
+/*@out@*/ sf_complex *sf_complexalloc (size_t n /* number of elements */) 
 /*< complex allocation >*/
 {
-    float complex *ptr;
-    ptr = (float complex*) sf_alloc (n,sizeof(float complex));
+    sf_complex *ptr;
+    ptr = (sf_complex*) sf_alloc (n,sizeof(sf_complex));
     return ptr;
 }
 
-/*@out@*/ float complex **sf_complexalloc2 (size_t n1 /* fast dimension */, 
+/*@out@*/ sf_complex **sf_complexalloc2 (size_t n1 /* fast dimension */, 
 					    size_t n2 /* slow dimension */)
 /*< complex 2-D allocation, out[0] points to a contiguous array >*/ 
 {
     size_t i2;
-    float complex **ptr;
+    sf_complex **ptr;
     
-    ptr = (float complex**) sf_alloc (n2,sizeof(float complex*));
+    ptr = (sf_complex**) sf_alloc (n2,sizeof(sf_complex*));
     ptr[0] = sf_complexalloc (n1*n2);
     for (i2=1; i2 < n2; i2++) {
 	ptr[i2] = ptr[0]+i2*n1;
@@ -111,58 +107,16 @@ void *sf_realloc (void* ptr   /* previous data */,
     return ptr;
 }
 
-/*@out@*/ float complex ***sf_complexalloc3 (size_t n1 /* fast dimension */, 
+/*@out@*/ sf_complex ***sf_complexalloc3 (size_t n1 /* fast dimension */, 
 					     size_t n2 /* slower dimension */, 
 					     size_t n3 /* slowest dimension */)
 /*< complex 3-D allocation, out[0][0] points to a contiguous array >*/ 
 {
     size_t i3;
-    float complex ***ptr;
+    sf_complex ***ptr;
     
-    ptr = (float complex***) sf_alloc (n3,sizeof(float complex**));
+    ptr = (sf_complex***) sf_alloc (n3,sizeof(sf_complex**));
     ptr[0] = sf_complexalloc2 (n1,n2*n3);
-    for (i3=1; i3 < n3; i3++) {
-	ptr[i3] = ptr[0]+i3*n2;
-    }
-    return ptr;
-}
-
-#endif
-/*^*/
-
-/*@out@*/ kiss_fft_cpx *sf_komplexalloc (size_t n /* number of elements */) 
-/*< complex allocation >*/
-{
-    kiss_fft_cpx *ptr;
-    ptr = (kiss_fft_cpx*) sf_alloc (n,sizeof(kiss_fft_cpx));
-    return ptr;
-}
-
-/*@out@*/ kiss_fft_cpx **sf_komplexalloc2 (size_t n1 /* fast dimension */, 
-					   size_t n2 /* slow dimension */)
-/*< complex 2-D allocation, out[0] points to a contiguous array >*/ 
-{
-    size_t i2;
-    kiss_fft_cpx **ptr;
-    
-    ptr = (kiss_fft_cpx**) sf_alloc (n2,sizeof(kiss_fft_cpx*));
-    ptr[0] = sf_komplexalloc (n1*n2);
-    for (i2=1; i2 < n2; i2++) {
-	ptr[i2] = ptr[0]+i2*n1;
-    }
-    return ptr;
-}
-
-/*@out@*/ kiss_fft_cpx ***sf_komplexalloc3 (size_t n1 /* fast dimension */, 
-					    size_t n2 /* slower dimension */, 
-					    size_t n3 /* slowest dimension */)
-/*< complex 3-D allocation, out[0][0] points to a contiguous array >*/ 
-{
-    size_t i3;
-    kiss_fft_cpx ***ptr;
-    
-    ptr = (kiss_fft_cpx***) sf_alloc (n3,sizeof(kiss_fft_cpx**));
-    ptr[0] = sf_komplexalloc2 (n1,n2*n3);
     for (i3=1; i3 < n3; i3++) {
 	ptr[i3] = ptr[0]+i3*n2;
     }

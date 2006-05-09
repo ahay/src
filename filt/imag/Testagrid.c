@@ -21,7 +21,7 @@ int main(int argc, char* argv[])
 {
     int maxsplit, i, ix, nx, ng, ig;
     float **place, **out, min1, max1, x, f[2];
-    float complex *c;
+    sf_complex *c;
     agrid grd;
     sf_file grid;
     
@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     c = sf_complexalloc(ng);
     
     for (ig=0; ig < ng; ig++) {
-	c[ig] = out[ig][0] + I*out[ig][1];
+	c[ig] = sf_cmplx(out[ig][0],out[ig][1]);
     }
     
     sf_complexwrite(c, ng, grid);

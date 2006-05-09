@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
     bool inv, hi;
     int nw,nz,nx, iw,ix,iz;
     float dw,dz,dx, vel0, beta, w, w1, w2, omega;
-    float complex aa, *cu, *cd, *diag, *offd;
+    sf_complex aa, *cu, *cd, *diag, *offd;
     float **depth, **vel, **voff;
     ctris slv;
     sf_file in, out, velocity;
@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
 
 	if (inv) { /* modeling */
 	    for (ix=0; ix < nx; ix++) {
-		cu[ix] = depth[ix][nz-1];
+		cu[ix] = sf_cmplx(depth[ix][nz-1],0.);
 	    }
 
 	    for (iz = nz-2; iz >= 0; iz--) { /* march up */
@@ -171,28 +171,45 @@ int main(int argc, char* argv[])
 		    w1 = w*vel[ix][iz];
 		    w2 = w*vel[ix][iz+1];
 		    omega = 0.5*(w1+w2);
-		    aa = beta*omega + I*dx;
+		    aa = sf_cmplx(beta*omega,dx);
+#ifdef SF_HAS_COMPLEX_H
 		    if (hi) aa += dx*0.5*(1./w1+1./w2);
 		    diag[ix] = omega - 2.*aa;
+#else
+		    if (hi) aa.r += dx*0.5*(1./w1+1./w2);
+		    diag[ix].r = omega - 2.*aa.r;
+		    diag[ix].i = - 2.*aa.i;
+#endif
 		}           
 		for (ix=0; ix < nx-1; ix++) {
 		    w1 = w*voff[ix][iz];
 		    w2 = w*voff[ix][iz+1];
 		    omega = 0.5*(w1+w2);
-		    aa = beta*omega + I*dx;
+		    aa = sf_cmplx(beta*omega,dx);
+#ifdef SF_HAS_COMPLEX_H
 		    if (hi) aa += dx*0.5*(1./w1+1./w2);
+#else
+		    if (hi) aa.r += dx*0.5*(1./w1+1./w2);
+#endif
 		    offd[ix] = aa;
 		}
 		/* worry about boundary conditions later */
 		
-		cd[0] = 0.;
+		cd[0] = sf_cmplx(0.,0.);
 		for (ix=1; ix < nx-1; ix++) {
+#ifdef SF_HAS_COMPLEX_H
 		    cd[ix] = 
 			conjf(offd[ix-1])*cu[ix-1] +
 			conjf(diag[ix])*cu[ix] +
 			conjf(offd[ix])*cu[ix+1];
+#else
+		    cd[ix] = sf_cadd( 
+			sf_cmul(conjf(offd[ix-1]),cu[ix-1]),
+			sf_cadd(sf_cmul(conjf(diag[ix]),cu[ix]),
+				sf_cmul(conjf(offd[ix]),cu[ix+1])));
+#endif
 		}
-		cd[nx-1] = 0;
+		cd[nx-1] = sf_cmplx(0.,0.);
 
 		ctridiagonal_define (slv, diag, offd);
 		ctridiagonal_solve (slv, cd);
@@ -201,7 +218,14 @@ int main(int argc, char* argv[])
 		    w1 = w*vel[ix][iz];
 		    w2 = w*vel[ix][iz+1];
 		    omega = 2.*(w1+w2-1./(1./w1+1/w2))/3.;
+#ifdef SF_HAS_COMPLEX_H
 		    cu[ix] = cd[ix] * cexpf(-I*omega) + depth[ix][iz];
+#else
+		    cu[ix] = sf_cadd(sf_cmul(cd[ix],
+					     sf_cmplx(cosf(omega),
+						      -sinf(omega))),
+				     sf_cmplx(depth[ix][iz],0.));
+#endif
 		}
 	    }
 
@@ -219,35 +243,56 @@ int main(int argc, char* argv[])
 		    omega = 2.*(w1+w2-1./(1./w1+1/w2))/3.;
 
 		    depth[ix][iz] += crealf (cu[ix]);
+#ifdef SF_HAS_COMPLEX_H
 		    cd[ix] = cu[ix] * cexpf(I*omega);
+#else
+		    cd[ix] = sf_cmul(cu[ix],sf_cmplx(cosf(omega),sinf(omega)));
+#endif
 		}
 
 		for (ix=0; ix < nx; ix++) {
 		    w1 = w*vel[ix][iz];
 		    w2 = w*vel[ix][iz+1];
 		    omega = 0.5*(w1+w2);
-		    aa = beta*omega - I*dx;
+		    aa = sf_cmplx(beta*omega,-dx);
+#ifdef SF_HAS_COMPLEX_H
 		    if (hi) aa += dx*0.5*(1./w1+1./w2);
 		    diag[ix] = omega - 2.*aa;
+#else
+		    if (hi) aa.r += dx*0.5*(1./w1+1./w2);
+		    diag[ix].r = omega - 2.*aa.r;
+		    diag[ix].i = - 2.*aa.i;
+#endif
 		}           
 		for (ix=0; ix < nx-1; ix++) {
 		    w1 = w*voff[ix][iz];
 		    w2 = w*voff[ix][iz+1];
 		    omega = 0.5*(w1+w2);
-		    aa = beta*omega - I*dx;
+		    aa = sf_cmplx(beta*omega,-dx);
+#ifdef SF_HAS_COMPLEX_H
 		    if (hi) aa += dx*0.5*(1./w1+1./w2);
+#else
+		    if (hi) aa.r += dx*0.5*(1./w1+1./w2);
+#endif
 		    offd[ix] = aa;
 		}
 		/* worry about boundary conditions later */
 		
-		cu[0] = 0.;
+		cu[0] = sf_cmplx(0.,0.);
 		for (ix=1; ix < nx-1; ix++) {
+#ifdef SF_HAS_COMPLEX_H
 		    cu[ix] = 
 			conjf(offd[ix-1])*cd[ix-1] +
 			conjf(diag[ix])*cd[ix] +
 			conjf(offd[ix])*cd[ix+1];
+#else
+		    cu[ix] = 
+			sf_cadd(sf_cmul(conjf(offd[ix-1]),cd[ix-1]),
+				sf_cadd(sf_cmul(conjf(diag[ix]),cd[ix]),
+					sf_cmul(conjf(offd[ix]),cd[ix+1])));
+#endif
 		}
-		cu[nx-1] = 0;
+		cu[nx-1] = sf_cmplx(0.,0.);
 
 		ctridiagonal_define (slv, diag, offd);
 		ctridiagonal_solve (slv, cu);

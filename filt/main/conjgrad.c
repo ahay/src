@@ -64,6 +64,8 @@ int main(int argc, char* argv[])
     FILE *xfile, *Rfile, *gfile, *sfile, *Sfile;
     char *x, *R, *g, *s, *S;
     sf_file mod, dat, out, from, to;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+    extern off_t ftello (FILE *stream);
 
     sf_init(argc,argv);
     dat = sf_input("in");

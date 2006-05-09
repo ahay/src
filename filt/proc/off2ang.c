@@ -22,7 +22,7 @@
 
 static int nt, nt2, np, nx, nw;
 static float *tt, **pp, dw, dp, p0, dx, x0;
-static float complex **cd, **cm, *dd;
+static sf_complex **cd, **cm, *dd;
 static kiss_fftr_cfg forw, invs;
 
 void off2ang_init(int   nz /* depth samples */,
@@ -74,8 +74,8 @@ void off2ang(float **off /* input: local offset gather [nx][nz] */,
 /*< transform >*/
 {
     int ix, ip, it, iw, iq;
-    float w, p, dq;
-    float complex m, c;
+    float w, p, dq, t;
+    sf_complex m, c;
 
     /*** frequency-domain Radon transform ***/
     for (ix=0; ix < nx; ix++) { /* loop over offsets */	
@@ -94,19 +94,37 @@ void off2ang(float **off /* input: local offset gather [nx][nz] */,
 	w = iw*dw;
 
 	for (ix=0; ix < nx; ix++) { /* loop over offsets */
-	    dd[ix] = cd[ix][iw]/nt2; /* transpose + FFT scaling */
+            /* transpose + FFT scaling */
+#ifdef SF_HAS_COMPLEX_H
+	    dd[ix] = cd[ix][iw]/nt2;
+#else
+	    dd[ix] = sf_crmul(cd[ix][iw],1./nt2);
+#endif
 	}
 
 	for (ip=0; ip < np; ip++) { /* loop over slopes */
 	    p = tanf(p0+ip*dp);
-	    c = cexpf(w*p*dx*I);
+	    t = w*p*dx;
+	    c = sf_cmplx(cosf(t),sinf(t));
 
-	    m = 0.;
+	    m = sf_cmplx(0.,0.);
 	    for (ix=nx-1; ix >= 0; ix--) {
+#ifdef SF_HAS_COMPLEX_H
 		m = m*c + dd[ix];
+#else
+		m = sf_cadd(sf_cmul(m,c),dd[ix]);
+#endif
 	    }
 
-	    cm[ip][iw] = m*cexpf(w*p*x0*I); /* transpose */
+	    t = w*p*x0;
+	    c = sf_cmplx(cosf(t),sinf(t));
+            
+            /* transpose */
+#ifdef SF_HAS_COMPLEX_H
+	    cm[ip][iw] = m*c; 
+#else
+	    cm[ip][iw] = sf_cmul(m,c);
+#endif 
 	}
     }
 

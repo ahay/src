@@ -53,7 +53,7 @@ int main (int argc, char* argv[])
     dw = 1./(nfft*d1);
 
     trace = sf_floatalloc (nfft);
-    fft = sf_komplexalloc (nw);
+    fft = (kiss_fft_cpx*) sf_complexalloc (nw);
     spec = sf_floatalloc (nw);
  	
     sf_putint(out,"n1",nw);

@@ -32,6 +32,7 @@
 #include "chain.h"
 #include "alloc.h"
 #include "error.h"
+#include "komplex.h"
 
 static const float TOLERANCE=1.e-12;
 
@@ -906,17 +907,14 @@ static float norm (int n, const float* x)
     return xn;
 }
 
-#ifndef __cplusplus
-/*^*/
-
-static float cnorm (int n, const float complex* x);
+static float cnorm (int n, const sf_complex* x);
 
 void sf_csolver (sf_coperator oper        /* linear operator */, 
 		 sf_csolverstep solv      /* stepping function */, 
 		 int nx                   /* size of x */, 
 		 int ny                   /* size of dat */, 
-		 float complex* x         /* estimated model */, 
-		 const float complex* dat /* data */, 
+		 sf_complex* x            /* estimated model */, 
+		 const sf_complex* dat    /* data */, 
 		 int niter                /* number of iterations */, 
 		 ...                      /* variable number of arguments */) 
 /*< Generic linear solver for complex data.
@@ -933,16 +931,16 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
   ---
   "wt":     float*:          weight      
   "wght":   sf_cweight wght: weighting function
-  "x0":     float complex*:  initial model
+  "x0":     sf_complex*:  initial model
   "nloper": sf_coperator:    nonlinear operator  
   "verb":   bool:            verbosity flag
   "known":  bool*:           known model mask
   "nmem":   int:             iteration memory
   "nfreq":  int:             periodic restart
-  "xmov":   float complex**: model iteration
-  "rmov":   float complex**: residual iteration
-  "err":    float complex*:  final error
-  "res":    float complex*:  final residual
+  "xmov":   sf_complex**: model iteration
+  "rmov":   sf_complex**: residual iteration
+  "err":    float*:  final error
+  "res":    sf_complex*:  final residual
   >*/ 
 {
 
@@ -950,18 +948,18 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
     char* par;
     float * wt = NULL;
     sf_cweight wght = NULL;
-    float complex * x0 = NULL;
+    sf_complex * x0 = NULL;
     sf_coperator nloper = NULL;
     bool verb = false;
     bool* known = NULL;
     int nmem = -1;
     int nfreq = 0;
-    float complex ** xmov = NULL;
-    float complex ** rmov = NULL;
-    float complex * err = NULL;
-    float complex * res = NULL;
+    sf_complex ** xmov = NULL;
+    sf_complex ** rmov = NULL;
+    float * err = NULL;
+    sf_complex * res = NULL;
     float * wht = NULL;
-    float complex *g, *rr, *gg, *td = NULL;
+    sf_complex *g, *rr, *gg, *td = NULL;
     float dpr, dpg, dpr0, dpg0;
     int i, iter; 
     bool forget = false;
@@ -975,7 +973,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	else if (0 == strcmp (par,"wght"))      
 	{                    wght = va_arg (args, sf_cweight);}
 	else if (0 == strcmp (par,"x0"))      
-	{                    x0 = va_arg (args, float complex *);}
+	{                    x0 = va_arg (args, sf_complex *);}
 	else if (0 == strcmp (par,"nloper"))      
 	{                    nloper = va_arg (args, sf_coperator);}
 	else if (0 == strcmp (par,"verb"))      
@@ -987,13 +985,13 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	else if (0 == strcmp (par,"nfreq"))      
 	{                    nfreq = va_arg (args, int);}
 	else if (0 == strcmp (par,"xmov"))      
-	{                    xmov = va_arg (args, float complex **);}
+	{                    xmov = va_arg (args, sf_complex **);}
 	else if (0 == strcmp (par,"rmov"))      
-	{                    rmov = va_arg (args, float complex **);}
+	{                    rmov = va_arg (args, sf_complex **);}
 	else if (0 == strcmp (par,"err"))      
-	{                    err = va_arg (args, float complex *);}
+	{                    err = va_arg (args, float *);}
 	else if (0 == strcmp (par,"res"))      
-	{                    res = va_arg (args, float complex *);}
+	{                    res = va_arg (args, sf_complex *);}
 	else 
 	{ sf_error("solver: unknown argument %s",par);}
     }
@@ -1016,7 +1014,11 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
     }
 
     for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	rr[i] = - dat[i];
+#else 
+	rr[i] = sf_cneg(dat[i]);
+#endif
     }
     if (x0 != NULL) {
 	for (i=0; i < nx; i++) {
@@ -1029,7 +1031,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	}
     } else {
 	for (i=0; i < nx; i++) {
-	    x[i] = 0.0;
+	    x[i] = sf_cmplx(0.0,0.0);
 	} 
     }
 
@@ -1045,8 +1047,13 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	}
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] *= wht[i];
 		td[i] = rr[i]*wht[i];
+#else
+		rr[i] = sf_crmul(rr[i],wht[i]);
+		td[i] = sf_crmul(rr[i],wht[i]);
+#endif
 	    }
       
 	    oper (true, false, nx, ny, g, td);
@@ -1055,13 +1062,17 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	} 
 	if (known != NULL) {
 	    for (i=0; i < nx; i++) {
-		if (known[i]) g[i] = 0.0;
+		if (known[i]) g[i] = sf_cmplx(0.0,0.0);
 	    }
 	} 
 	oper (false, false, nx, ny, g, gg);
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		gg[i] *= wht[i];
+#else
+		gg[i] = sf_crmul(gg[i],wht[i]);
+#endif
 	    }
 	}
  
@@ -1094,13 +1105,21 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 
 	if (nloper != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] = -dat[i]; 
+#else
+		rr[i] = sf_cneg(dat[i]);
+#endif
 	    }
 	    nloper (false, true, nx, ny, x, rr);
 	}
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 		rr[i] = -dat[i]; 
+#else
+		rr[i] = sf_cneg(dat[i]);
+#endif
 	    }
 	    oper (false, true, nx, ny, x, rr);
 	}  
@@ -1138,7 +1157,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
     }
 }
   
-static float cnorm (int n, const float complex* x) 
+static float cnorm (int n, const sf_complex* x) 
 /* norm of a complex vector */
 {
     int i;
@@ -1146,12 +1165,13 @@ static float cnorm (int n, const float complex* x)
 
     xn = 0.0;
     for (i=0; i < n; i++) {
-	xn += creal(x[i]*conjf(x[i]));
+#ifdef SF_HAS_COMPLEX_H
+	xn += crealf(x[i]*conjf(x[i]));
+#else
+	xn += crealf(sf_cmul(x[i],conjf(x[i])));
+#endif
     }
     return xn;
 }
-
-#endif
-/*^*/
 
 /* 	$Id$	 */

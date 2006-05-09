@@ -17,9 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#ifndef __cplusplus
-/*^*/
-
 #include <math.h>
 /*^*/
 
@@ -28,7 +25,10 @@
 
 #ifndef _sf_c99_h
 
-#if !defined(__CYGWIN__) && !defined(__INTERIX) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+#if defined (__cplusplus) && !defined(__CYGWIN__) && !defined(__INTERIX) && defined(__STDC__) && (__STDC_VERSION__ >= 199901L)
+/*^*/
+
+#define SF_HAS_COMPLEX_H
 /*^*/
 
 /* The following from C99 - must define for C90 */
@@ -41,38 +41,18 @@
 #endif
 /*^*/
 
+typedef float complex sf_complex;
+typedef double complex sf_double_complex;
+/*^*/
+
 #else
 /*^*/
 
-#define complex  
-#define I 0.0
-#define csqrtf  sqrtf
-#define clogf   logf
-#define clog    log
-#define cexpf   expf
-#define cexp    exp
-#define cpowf   powf
-#define cabsf   fabsf
-#define cabs    fabs
-#define ccosf   cosf
-#define csinf   sinf
-#define ctanf   tanf
-#define cacosf  acosf
-#define casinf  asinf
-#define catanf  atanf
-#define ccoshf  coshf
-#define csinhf  sinhf
-#define ctanhf  tanhf
-#define cacoshf acoshf
-#define casinhf asinhf
-#define catanhf atanhf
-#define crealf  sf_crealf
-#define cimagf  sf_cimagf
-#define conjf   sf_conjf
-#define cargf   sf_cargf
-#define creal   sf_creal
-#define cimag   sf_cimag
-#define conj    sf_conj
+#include "kiss_fft.h"
+typedef kiss_fft_cpx sf_complex;
+typedef struct {
+    double r, i;
+} sf_double_complex;
 /*^*/
 
 #endif
@@ -80,70 +60,46 @@
 
 #endif
 
-void cprint (float complex c)
-/*< print a complex number (for debugging purposes) >*/
+#ifdef SF_HAS_COMPLEX_H
+/*^*/
+
+float complex sf_cmplx(float re, float im)
+/*< complex number >*/
 {
-    sf_warning("%g+%gi",crealf(c),cimagf(c));
+    float complex c;
+    __real__ c = re;
+    __imag__ c = im;
+    return c;
 }
 
-#if defined(__CYGWIN__) || defined(__INTERIX) || !defined (__STDC__) || (__STDC_VERSION__ < 199901L)
+double complex sf_dcmplx(double re, double im)
+/*< complex number >*/
+{
+    double complex c;
+    __real__ c = re;
+    __imag__ c = im;
+    return c;
+}
+
+#else
 /*^*/
 
-float sf_crealf(/*@unused@*/ float complex c) 
-/*< real part of a complex number >*/
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return c; 
+kiss_fft_cpx sf_cmplx(float re, float im)
+/*< complex number >*/
+{
+    kiss_fft_cpx c;
+    c.r = re;
+    c.i = im;
+    return c;
 }
 
-float sf_cimagf(/*@unused@*/ float complex c) 
-/*< imaginary part of a complex number >*/
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return 0.; 
-} 
-
-double sf_creal(/*@unused@*/ double complex c) 
-/*< real part of a complex number >*/
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return c; 
-}
-
-double sf_cimag(/*@unused@*/ double complex c) 
-/*< imaginary part of a complex number >*/
-{    
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return 0.; 
-} 
-
-
-float sf_cargf(/*@unused@*/ float complex c)
-/*< phase of a complex number >*/ 
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return c; 
-}
-
-float complex sf_conjf(/*@unused@*/ float complex c)
-/*< conjugate of a complex number >*/ 
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return c; 
-}
-
-double complex sf_conj(/*@unused@*/ double complex c) 
-/*< conjugate of a complex number >*/ 
-{ 
-    sf_warning("No support for complex types!!!\n"
-	       "Please use a C99-compliant compiler");
-    return c; 
+sf_double_complex sf_dcmplx(double re, double im)
+/*< complex number >*/
+{
+    sf_double_complex c;
+    c.r = re;
+    c.i = im;
+    return c;
 }
 
 float sqrtf(float x) 
@@ -245,8 +201,4 @@ float hypotf(float x, float y)
 #endif
 /*^*/
 
-#endif /* c++ */
-/*^*/
-
 /* 	$Id$	 */
-

@@ -31,10 +31,10 @@ int main (int argc, char *argv[])
     sf_file Fsw; /* source wavefield [nw][ nx][ ny][ne] */
     sf_file Frw; /* source wavefield [nw][ nx][ ny][ne] */
 
-    float complex   *rr;
-    float complex   *ss;
-    float complex ***rw;
-    float complex ***sw;
+    sf_complex   *rr;
+    sf_complex   *ss;
+    sf_complex ***rw;
+    sf_complex ***sw;
     int   isx,isy,irx,iry,ix,iy,iw;
     int   nsx,nsy,nrx,nry,nx,ny,nw;
     float ox,dx,oy,dy;
@@ -91,7 +91,7 @@ int main (int argc, char *argv[])
 	    for(iy=0;iy<ny;iy++) {
 		for(ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
-			sw[iy][ix][iw] = 0.;
+			sw[iy][ix][iw] = sf_cmplx(0.,0.);
 		    }
 		}
 	    }
@@ -118,7 +118,7 @@ int main (int argc, char *argv[])
 	    for(iy=0;iy<ny;iy++) {
 		for(ix=0;ix<nx;ix++) {
 		    for(iw=0;iw<nw;iw++) {
-			rw[iy][ix][iw] = 0.;
+			rw[iy][ix][iw] = sf_cmplx(0.,0.);
 		    }
 		}
 	    }

@@ -1,21 +1,20 @@
-/* Phase-space Green\'s function from down-marching.
-*/
+/* Phase-space Green\'s function from down-marching. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -27,7 +26,7 @@ int main (int argc, char* argv[])
     int it, nt,nx,nz, ix,iz, iw, nw;
     float a, dz, z, dw, w0, w1, w2, w, sx, sz, dx;
     float *tx, *px, *zx, *trace2;
-    float complex *trace1, c;
+    sf_complex *trace1, c, shift;
     sf_file in, out, place, depth, wave;
 
     sf_init (argc,argv);
@@ -94,7 +93,12 @@ int main (int argc, char* argv[])
 		if (w < w1 || w > w2) continue;
 
 		c = trace1[iw];
+#ifdef SF_HAS_COMPLEX_H
 		if (fabsf(w) < dw) c *= 2.;
+#else
+		if (fabsf(w) < dw) c = sf_crmul(c,2.);
+#endif
+
 		w *= SF_PI; /* 2.*SF_PI */
 		
 		for (it = 0; it < nt; it++) {
@@ -102,7 +106,13 @@ int main (int argc, char* argv[])
 		    
 		    a = fabsf(px[it]-sx);
 		    if (a < dx) {
-			trace2[ix] += crealf((1.-a/dx)*c*cexpf(-I*w*tx[it]));
+			shift = sf_cmplx(cosf(w*tx[it]),-sinf(w*tx[it]));
+#ifdef SF_HAS_COMPLEX_H
+			trace2[ix] += crealf((1.-a/dx)*c*shift);
+#else
+			trace2[ix] += crealf(sf_cmul(c,
+						     sf_crmul(shift,1.-a/dx)));
+#endif		     
 		    }
 		} /* nt */
 	    } /* nw */

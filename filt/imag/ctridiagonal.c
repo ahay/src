@@ -33,7 +33,7 @@ typedef struct CTris *ctris;
 
 struct CTris {
     int n;
-    float complex *d, *o;  
+    sf_complex *d, *o;  
 };
 
 ctris ctridiagonal_init (int n)
@@ -50,25 +50,30 @@ ctris ctridiagonal_init (int n)
     return slv;
 }
 
-void ctridiagonal_define (ctris slv, float complex* diag, float complex* offd)
+void ctridiagonal_define (ctris slv, sf_complex* diag, sf_complex* offd)
 /*< Fill the matrix with diagonal and off-diagonal elements.
 ...
 The matrix is symmetric but not necessarily self-adjoint.
  >*/
 {
     int k;
-    float complex t;
+    sf_complex t;
 
     slv->d[0] = diag[0];
     for (k = 1; k < slv->n; k++) {
 	t = offd[k-1]; 
+#ifdef SF_HAS_COMPLEX_H
 	slv->o[k-1] = t / slv->d[k-1];
 	slv->d[k] = diag[k] - t * slv->o[k-1];
+#else
+	slv->o[k-1] = sf_cdiv(t,slv->d[k-1]);
+	slv->d[k] = sf_csub(diag[k],sf_cmul(t,slv->o[k-1]));
+#endif
     }
 }
 
 void ctridiagonal_const_define (ctris slv, 
-				float complex diag, float complex offd)
+				sf_complex diag, sf_complex offd)
 /*< Fill the matrix with constant diagonal and off-diagonal elements.
 ...
 The matrix is symmetric but not necessarily self-adjoint.
@@ -78,12 +83,17 @@ The matrix is symmetric but not necessarily self-adjoint.
     
     slv->d[0] = diag;
     for (k = 1; k < slv->n; k++) {
+#ifdef SF_HAS_COMPLEX_H
 	slv->o[k-1] = offd / slv->d[k-1];
 	slv->d[k] = diag - offd * slv->o[k-1];
+#else
+	slv->o[k-1] = sf_cdiv(offd,slv->d[k-1]);
+	slv->d[k] = sf_csub(diag,sf_cmul(offd,slv->o[k-1]));
+#endif
     }
 }
 
-void ctridiagonal_solve (ctris slv, float complex* b)
+void ctridiagonal_solve (ctris slv, sf_complex* b)
 /*< Invert in-place. The right-hand side b is replaced with the solution. >*/ 
 {
     int k, n;
@@ -91,11 +101,24 @@ void ctridiagonal_solve (ctris slv, float complex* b)
     n = slv->n;
 
     for (k = 1; k < n; k++) {
+#ifdef SF_HAS_COMPLEX_H
 	b[k] -= slv->o[k-1] * b[k-1];
+#else
+	b[k] = sf_csub(b[k],sf_cmul(slv->o[k-1],b[k-1]));
+#endif
     }
+#ifdef SF_HAS_COMPLEX_H
     b[n-1] /= slv->d[n-1];
+#else
+    b[n-1] = sf_cdiv(b[n-1],slv->d[n-1]);
+#endif
     for (k = n-2; k >= 0; k--) {
+#ifdef SF_HAS_COMPLEX_H
 	b[k] = b[k] / slv->d[k] - slv->o[k] * b[k+1];
+#else
+	b[k] = sf_csub(sf_cdiv(b[k],slv->d[k]),
+		       sf_cmul(slv->o[k],b[k+1]));
+#endif
     }
 }
 

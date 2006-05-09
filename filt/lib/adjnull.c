@@ -17,6 +17,7 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include "adjnull.h"
+#include "komplex.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -46,14 +47,12 @@ void sf_adjnull (bool adj /* adjoint flag */,
     }
 }
 
-#ifndef __cplusplus
-/*^*/
-
 void sf_cadjnull (bool adj /* adjoint flag */, 
 		  bool add /* addition flag */, 
 		  int nx   /* size of x */, 
 		  int ny   /* size of y */, 
-		  float complex* x, float complex* y) 
+		  sf_complex* x, 
+		  sf_complex* y) 
 /*< adjnull version for complex data. >*/
 {
     int i;
@@ -62,16 +61,13 @@ void sf_cadjnull (bool adj /* adjoint flag */,
     
     if(adj) {
 	for (i = 0; i < nx; i++) {
-	    x[i] = 0.;
+	    x[i] = sf_cmplx(0.0,0.0);
 	}
     } else {
 	for (i = 0; i < ny; i++) {
-	    y[i] = 0.;
+	    y[i] = sf_cmplx(0.0,0.0);
 	}
     }
 }
-
-#endif
-/*^*/
 
 /* 	$Id$	 */

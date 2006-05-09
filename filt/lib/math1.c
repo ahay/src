@@ -27,8 +27,10 @@
 #include "stack.h"
 #include "error.h"
 #include "alloc.h"
+#include "komplex.h"
 #include "_defs.h"
 
+#include "kiss_fft.h"
 #include "file.h"
 /*^*/
 
@@ -52,21 +54,24 @@ static func functable[] = {
     fabsf
 };
 
-#ifndef __cplusplus
-
-static float complex myabs(float complex c)
+static sf_complex myabs(sf_complex c)
 {
+#ifdef SF_HAS_COMPLEX_H
     c = cabsf(c);
+#else
+    c.r = cabsf(c);
+    c.i = 0.;
+#endif
     return c;
 }
 
-static float complex myconj(float complex c)
+static sf_complex myconj(sf_complex c)
 {
     c = conjf(c);
     return c;
 }
 
-typedef float complex (*cfunc)(float complex);
+typedef sf_complex (*cfunc)(sf_complex);
 static cfunc cfunctable[] = {
     ccosf,
     csinf,
@@ -86,8 +91,6 @@ static cfunc cfunctable[] = {
     myabs,
     myconj
 };
-
-#endif
 
 enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
 
@@ -178,18 +181,15 @@ void sf_math_evaluate (int len /* stack length */,
     }
 }
 
-#ifndef __cplusplus
-/*^*/
-
 void sf_complex_math_evaluate (int len              /* stack length */, 
 			       int nbuf             /* buffer length */, 
-			       float complex** fbuf /* number buffers */, 
-			       float complex** fst  /* stack */)
+			       sf_complex** fbuf /* number buffers */, 
+			       sf_complex** fst  /* stack */)
 /*< Evaluate a mathematical expression from stack (complex numbers) >*/
 {
     char *op;
     int *indx, i;
-    float complex *num, f, *farr;
+    sf_complex *num, f, *farr;
     cfunc fun;
 
     sf_stack_set(st2,len);
@@ -198,7 +198,7 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 	switch (sf_top (st2)) {
 	    case NUM: 
 		farr = *(++fst);
-		num = (float complex*) sf_pop(st2);
+		num = (sf_complex*) sf_pop(st2);
 		f = *num;
 		for (i=0; i < nbuf; i++) { farr[i] = f; }
 		break;
@@ -219,7 +219,13 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 		op = (char*) sf_pop(st2);
 		farr = *fst;
 		if ('-' == *op) {
-		    for (i=0; i < nbuf; i++) { farr[i] = -farr[i]; }
+		    for (i=0; i < nbuf; i++) {
+#ifdef SF_HAS_COMPLEX_H 
+			farr[i] = -farr[i];
+#else
+			farr[i] = sf_cneg(farr[i]);
+#endif
+		    }
 		}
 		break;
 	    case POW:
@@ -237,9 +243,21 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 		num = *fst;
 		farr = *(--fst);
 		if ('*' == *op) {
-		    for (i=0; i < nbuf; i++) { farr[i] *= num[i]; }
+		    for (i=0; i < nbuf; i++) { 
+#ifdef SF_HAS_COMPLEX_H
+			farr[i] *= num[i];
+#else
+			farr[i] = sf_cmul(farr[i],num[i]);
+#endif 
+		    }
 		} else {
-		    for (i=0; i < nbuf; i++) { farr[i] /= num[i]; }
+		    for (i=0; i < nbuf; i++) { 
+#ifdef SF_HAS_COMPLEX_H
+			farr[i] /= num[i]; 
+#else
+			farr[i] = sf_cdiv(farr[i],num[i]);
+#endif
+		    }
 		}
 		break;
 	    case PLUSMIN:
@@ -247,9 +265,21 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 		num = *fst;
 		farr = *(--fst);
 		if ('+' == *op) {
-		    for (i=0; i < nbuf; i++) { farr[i] += num[i]; }
+		    for (i=0; i < nbuf; i++) {
+#ifdef SF_HAS_COMPLEX_H
+			farr[i] += num[i]; 
+#else
+			farr[i] = sf_cadd(farr[i],num[i]);
+#endif
+		    }
 		} else {
-		    for (i=0; i < nbuf; i++) { farr[i] -= num[i]; }
+		    for (i=0; i < nbuf; i++) { 
+#ifdef SF_HAS_COMPLEX_H
+			farr[i] -= num[i]; 
+#else
+			farr[i] = sf_csub(farr[i],num[i]);
+#endif
+		    }
 		}
 		break;
 	    default:
@@ -258,9 +288,6 @@ void sf_complex_math_evaluate (int len              /* stack length */,
 	}
     }
 }
-
-#endif
-/*^*/
 
 size_t sf_math_parse (char* output /* expression */, 
 		      sf_file out  /* parameter file */,

@@ -41,7 +41,7 @@ static sf_axa aw,alx,aly,amx,amy,amz,ae;
 static bool verb;
 static float eps;
 
-static float complex **ww_s,**ww_r;
+static sf_complex **ww_s,**ww_r;
 
 static int            *nr_s, *nr_r, *nr; /* number of references */
 static float         **sm_s,**sm_r,**sm; /* ref slo squared */
@@ -234,15 +234,15 @@ void srmig_pw(fslice sdat /* source   data [nw][ny][nx] */,
 /*< Apply S/R migration >*/
 {
     int imz,iw,ilx,ily,ie;
-    float complex ws,wr;
+    sf_complex ws,wr;
     
     for (ie=0; ie<ae.n; ie++) {
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",
 				 iw+1,aw.n,ie+1,ae.n);
 	    
-	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
-	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+	    ws = sf_cmplx(eps*aw.d,+(aw.o+iw*aw.d)); /*      causal */
+	    wr = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 	    
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);
@@ -274,15 +274,15 @@ void srmig_cw(fslice sdat /* source   data [nw][ny][nx] */,
 /*< Apply S/R migration >*/
 {
     int imz,iw,ilx,ily,ie;
-    float complex ws,wr;
+    sf_complex ws,wr;
     
     for (ie=0; ie<ae.n; ie++) {
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning ("iw=%3d of %3d:   ie=%3d of %3d",
 				 iw+1,aw.n,ie+1,ae.n);
 	    
-	    ws = eps*aw.d + I*(aw.o+iw*aw.d); /*      causal */
-	    wr = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+	    ws = sf_cmplx(eps*aw.d,+(aw.o+iw*aw.d)); /*      causal */
+	    wr = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 	    
 	    fslice_get(sdat,ie*aw.n+iw,ww_s[0]); taper2(ww_s);
 	    fslice_get(rdat,ie*aw.n+iw,ww_r[0]); taper2(ww_r);

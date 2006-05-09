@@ -26,7 +26,7 @@
 #include "monof.h"
 
 static int nfft, nw;
-static float complex *cdata;
+static kiss_fft_cpx *cdata;
 static float *shape, *tmp, dw;
 static kiss_fftr_cfg forw, invs;
 
@@ -38,7 +38,7 @@ void monofshape_init(int n1)
     nw = nfft/2+1;
     dw = 2.*SF_PI/nfft;
 
-    cdata = sf_complexalloc(nw);
+    cdata = (kiss_fft_cpx*) sf_complexalloc(nw);
     shape = sf_floatalloc(nw);
     tmp = sf_floatalloc(nfft);
     
@@ -66,11 +66,11 @@ void monofshape_set(float a0       /* initial value for Gaussian */,
 
     scale = sqrtf(1./nfft); /* FFT scaling */ 
 
-    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
+    kiss_fftr(forw, tmp,cdata);
     max = 0.;
     i0 = 0;
     for (iw=0; iw < nw; iw++) {
-	f = cabsf(cdata[iw])*scale;
+	f = sf_cabsf(cdata[iw])*scale;
 	if (f > max) {
 	    max = f;
 	    i0 = iw;
@@ -115,11 +115,11 @@ void monofshape_lop (bool adj, bool add, int nx, int ny, float* x, float* y)
 	tmp[iw] = 0.;
     }
 
-    kiss_fftr(forw, tmp, (kiss_fft_cpx *) cdata);
+    kiss_fftr(forw, tmp, cdata);
     for (iw=0; iw < nw; iw++) {
-	cdata[iw] *= shape[iw];
+	cdata[iw] = sf_crmul(cdata[iw],shape[iw]);
     }
-    kiss_fftri(invs,(const kiss_fft_cpx *) cdata, tmp);
+    kiss_fftri(invs, cdata, tmp);
 
     for (iw = 0; iw < nx; iw++) {
 	if (adj) {

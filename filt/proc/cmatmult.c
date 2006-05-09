@@ -22,16 +22,16 @@
 
 #include "cmatmult.h"  
 
-static float complex **bb;
+static sf_complex **bb;
 
-void cmatmult_init(float complex **bb_in)
+void cmatmult_init(sf_complex **bb_in)
 /*< initialize matrix >*/
 {
     bb = bb_in;
 }
 
 void cmatmult_lop (bool adj, bool add, int nx, int ny, 
-		   float complex *x, float complex *y)
+		   sf_complex *x, sf_complex *y)
 /*< operator >*/
 {
     int ix, iy;
@@ -39,11 +39,19 @@ void cmatmult_lop (bool adj, bool add, int nx, int ny,
 
     for (ix=0; ix < nx; ix++) {
 	for (iy=0; iy < ny; iy++) {
+#ifdef SF_HAS_COMPLEX_H
 	    if (adj) {
 		x[ix] +=conjf(bb[iy][ix])*y[iy];
 	    } else {
 		y[iy] += bb[iy][ix]*x[ix];
 	    }
+#else
+	    if (adj) {
+		x[ix] = sf_cadd(x[ix],sf_cmul(conjf(bb[iy][ix]),y[iy]));
+	    } else {
+		y[iy] = sf_cadd(y[iy],sf_cmul(bb[iy][ix],x[ix]));
+	    }
+#endif
 	}
     }
 }

@@ -50,15 +50,15 @@ static int            *nr; /* number of references */
 static fslice       Bslow; /* slowness slice */
 static fslice       Bwfld; /* wavefield slice */
 
-static float complex **bw; /* wavefield */
+static sf_complex **bw; /* wavefield */
 
-static float complex **dw; /* wavefield */
-static float complex **pw;
-static float complex **pwsum;
+static sf_complex **dw; /* wavefield */
+static sf_complex **pw;
+static sf_complex **pwsum;
 
-static float complex **ds; /* slowness */
-static float complex **ps;
-static float complex **pssum;
+static sf_complex **ds; /* slowness */
+static sf_complex **ps;
+static sf_complex **pssum;
 
 void zomva_init(bool verb_,
 		float eps_,
@@ -189,15 +189,15 @@ void zomva(bool inv     /* forward/adjoint flag */,
 /*< Apply forward/adjoint ZO MVA >*/
 {
     int iz,iw,imy,imx,ilx,ily;
-    float complex w;
+    sf_complex w;
 
     if(inv) {
-	LOOP( ps[imy][imx] = 0.0; );
+	LOOP( ps[imy][imx] = sf_cmplx(0.0,0.0); );
 	for (iz=0; iz<amz.n; iz++) {
 	    fslice_put(Pslow,iz,ps[0]);
 	}
     } else {
-	LOOP( pwsum[imy][imx] = 0.0; );
+	LOOP( pwsum[imy][imx] = sf_cmplx(0.0,0.0); );
 	for (iz=0; iz<amz.n; iz++) {
 	    fslice_put(Pimag,iz,pwsum[0]);
 	}
@@ -207,10 +207,10 @@ void zomva(bool inv     /* forward/adjoint flag */,
     for (iw=0; iw<aw.n; iw++) {
 	if (verb) sf_warning ("iw=%3d of %3d",iw+1,aw.n);
 
-	LOOP( dw[imy][imx]=0.; );
+	LOOP( dw[imy][imx]=sf_cmplx(0.,0.); );
 	
 	if (inv) { /* adjoint: image -> slowness */
-	    w = eps*aw.d + I*(aw.o+iw*aw.d); /* causal */
+	    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d); /* causal */
 
 	    for (iz=amz.n-1; iz>0; iz--) {
 		/* background */
@@ -228,18 +228,25 @@ void zomva(bool inv     /* forward/adjoint flag */,
 		/* scattering dI -> dS */
 		fslice_get(Pimag,iz,pwsum[0]);
 
+#ifdef SF_HAS_COMPLEX_H
 		LOOP(dw[imy][imx] += pwsum[imy][imx]; );
-
+#else
+		LOOP(dw[imy][imx] = sf_cadd(dw[imy][imx],pwsum[imy][imx]); );
+#endif
 		lsr_w2s(w,bw,so,dw,ps);
 
 		fslice_get(Pslow,iz,pssum[0]);
-		LOOP(pssum[imy][imx] += ps[imy][imx];)
+#ifdef SF_HAS_COMPLEX_H
+		LOOP(pssum[imy][imx] += ps[imy][imx];);
+#else
+		LOOP(pssum[imy][imx] = sf_cadd(pssum[imy][imx],ps[imy][imx]););
+#endif
 		fslice_put(Pslow,iz,pssum[0]);
 		/* end scattering */
 	    }
 
 	} else {   /* forward: slowness -> image */
-	    w = eps*aw.d - I*(aw.o+iw*aw.d); /* anti-causal */
+	    w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 
 	    for (iz=0; iz<amz.n-1; iz++) {
 		/* background */
@@ -252,10 +259,18 @@ void zomva(bool inv     /* forward/adjoint flag */,
 
 		lsr_s2w(w,bw,so,pw,ps);
 
+#ifdef SF_HAS_COMPLEX_H
 		LOOP(dw[imy][imx] += pw[imy][imx]; );
+#else
+		LOOP(dw[imy][imx] = sf_cadd(dw[imy][imx],pw[imy][imx]); );
+#endif
 
 		fslice_get(Pimag,iz,pwsum[0]);
+#ifdef SF_HAS_COMPLEX_H
 		LOOP(pwsum[imy][imx] += dw[imy][imx]; );
+#else
+		LOOP(pwsum[imy][imx] = sf_cadd(pwsum[imy][imx],dw[imy][imx]););
+#endif
 		fslice_put(Pimag,iz,pwsum[0]);
 		/* end scattering */
 

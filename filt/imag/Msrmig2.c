@@ -240,8 +240,8 @@ int main (int argc, char *argv[])
     /* slice management (temp files) */
     nw = sf_n(aw)*sf_n(ae);
 
-    wfl_s = fslice_init( nx*ny, nw,sizeof(float complex));
-    wfl_r = fslice_init( nx*ny, nw,sizeof(float complex));
+    wfl_s = fslice_init( nx*ny, nw,sizeof(sf_complex));
+    wfl_r = fslice_init( nx*ny, nw,sizeof(sf_complex));
 
     fslice_load(Fw_s,wfl_s,SF_COMPLEX);
     fslice_load(Fw_r,wfl_r,SF_COMPLEX);

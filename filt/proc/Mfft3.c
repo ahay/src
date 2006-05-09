@@ -150,8 +150,8 @@ int main (int argc, char **argv)
     
     cfg = kiss_fft_alloc(nk,sign,NULL,NULL);
 
-    cp = sf_komplexalloc2(n1,nk);
-    ctrace = sf_komplexalloc(nk);
+    cp = (kiss_fft_cpx**) sf_complexalloc2(n1,nk);
+    ctrace = (kiss_fft_cpx*) sf_complexalloc(nk);
     
     /* FFT scaling */
     wt = sym? 1./sqrtf((float) nk): 1./nk;

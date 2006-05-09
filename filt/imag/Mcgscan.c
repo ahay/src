@@ -119,6 +119,9 @@ int main(int argc, char* argv[])
 	error = NULL;
     }
 
+    ntx = nt*nx;
+    ntv = nt*nv;
+
     if (NULL != sf_getstring("mask")) {
 	msk = sf_input("mask");
 	mask = sf_floatalloc(ntv);
@@ -126,9 +129,6 @@ int main(int argc, char* argv[])
 	msk = NULL;
 	mask = NULL;
     }
-
-    ntx = nt*nx;
-    ntv = nt*nv;
 
     cmp = sf_floatalloc(ntx);
     vscan = sf_floatalloc(ntv);

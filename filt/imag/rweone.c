@@ -33,8 +33,8 @@ static bool verb;
 static float ***m0, ***n0, ***r0;
 static float   *mu,   *nu,   *ro;
 
-static complex float *lk,*rk,*ck;
-static complex float *a,*b,*c,*u;
+static sf_complex *lk,*rk,*ck;
+static sf_complex *a,*b,*c,*u;
 
 static float c1,c2,sixth;
 static float kmu,knu,kro;
@@ -46,7 +46,7 @@ static kiss_fft_cfg forw, invs;
 static float ffts;
 static float okg,dkg;
 
-complex float *wfl,*wtt;
+sf_complex *wfl,*wtt;
 float *mtt,*msk;
 int nloop;
 
@@ -122,7 +122,7 @@ void rweone_init(
 
 void rweone_fk(
     float w,
-    complex float *ddd,
+    sf_complex *ddd,
     float *aa,
     float *a0,
     float *b0,
@@ -134,7 +134,7 @@ void rweone_fk(
 
     for(ig=0;ig<ag.n;ig++) {
 	wtt[ig] = ddd[ig];
-	ddd[ig] = 0.;
+	ddd[ig] = sf_cmplx(0.,0.);
     }
     for(ir=0;ir<ar.n;ir++) {
 	for(ig=0;ig<ag.n;ig++) {
@@ -152,7 +152,7 @@ void rweone_fk(
 
 void rweone_fx(
     float w,
-    complex float *ddd,
+    sf_complex *ddd,
     float *aa,
     int it)
 /*< one F-X extrapolation step >*/
@@ -327,7 +327,7 @@ void rweone_psc_coef(
 /*------------------------------------------------------------*/
 
 void rweone_phs_old(
-    complex float *v,
+    sf_complex *v,
     float w,
     float a0,
     float b0
@@ -337,7 +337,7 @@ void rweone_phs_old(
     int ig,ikg;
     float kg,arg;
     float ta,tb,tt;
-    complex float ikz;
+    sf_complex ikz;
 
     rweone_fft(false,v);
 
@@ -351,18 +351,22 @@ void rweone_phs_old(
 	arg = 1.0 - tt*tt;
 	
 	if(arg<0.) {
-	    ikz = SF_ABS(ta) * sqrtf(-arg);
+	    ikz = sf_cmplx(SF_ABS(ta) * sqrtf(-arg),0.);
 	} else {
-	    ikz =    I * ta  * sqrtf(+arg);
+	    ikz = sf_cmplx(0.,ta  * sqrtf(+arg));
 	}
-	v[ig] *= cexp( ikz * (-at.d));
+#ifdef SF_HAS_COMPLEX_H
+	v[ig] *= cexpf( ikz * (-at.d));
+#else
+	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul(ikz,-at.d)));
+#endif
     }
     
     rweone_fft( true,v);
 }
 
 void rweone_phs(
-    complex float *v,
+    sf_complex *v,
     float w,
     float a0,
     float b0
@@ -373,13 +377,17 @@ void rweone_phs(
     float kg;
 
     float a2,b2,k2;
-    complex float iw,ikt,w2;
+    sf_complex iw,ikt,w2;
 
     a2 = a0*a0;
     b2 = b0*b0;
 
-    iw = 2e-3 - I * w;
+    iw = sf_cmplx(2e-3,-w);
+#ifdef SF_HAS_COMPLEX_H
     w2 = iw*iw;
+#else
+    w2 = sf_cmul(iw,iw);
+#endif
 
     rweone_fft(false,v);
 
@@ -388,9 +396,13 @@ void rweone_phs(
 	kg = okg + ikg * dkg;
 	k2 = kg*kg;
 	
+#ifdef SF_HAS_COMPLEX_H
 	ikt = csqrtf( w2*a2 + k2*b2 );
-
-	v[ig] *= cexp(-ikt*at.d);
+	v[ig] *= cexpf(-ikt*at.d);
+#else
+	ikt = csqrtf(sf_cadd(sf_crmul(w2,a2),sf_cmplx(k2*b2,0.)));
+	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul(ikt,-at.d)));
+#endif
     }
     
     rweone_fft( true,v);
@@ -398,38 +410,46 @@ void rweone_phs(
 
 
 void rweone_ssf(
-    complex float *v,
+    sf_complex *v,
     float w,
     float *aa,
     float  a0)
 /*< split-step Fourier correction >*/
 {
     int ig;
-    complex float ikz;
+    sf_complex ikz;
 
     for(ig=0; ig<ag.n; ig++) {	
-	ikz = I * w * (aa[ig] - a0);
+	ikz = sf_cmplx(0.,w * (aa[ig] - a0));
+#ifdef SF_HAS_COMPLEX_H
 	v[ig] *= cexpf( ikz * (-at.d) );
+#else
+	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul(ikz,-at.d)));
+#endif
     }
 }
 
 void rweone_ssh(
-    complex float *v,
+    sf_complex *v,
     float w,
     float *aa)
 /*< space-domain phase shift >*/
 {
     int ig;
-    complex float ikz;
+    sf_complex ikz;
 
     for(ig=0;ig<ag.n;ig++) {
-	ikz = I * w * aa[ig];
+	ikz = sf_cmplx(0.,w * aa[ig]);
+#ifdef SF_HAS_COMPLEX_H
 	v[ig] *= cexpf( ikz * at.d );
+#else
+	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul( ikz, at.d )));
+#endif
     }
 }
 
 void rweone_fds(
-    complex float *v,
+    sf_complex *v,
     float w,
     int it,
     int ir)
@@ -446,16 +466,20 @@ void rweone_fds(
     }
 
     for(ig=0;ig<ag.n;ig++) {
-	lk[ig] = ro[ig]+sixth*mu[ig] + I*nu[ig];
-	rk[ig] = ro[ig]+sixth*mu[ig] - I*nu[ig];
-	ck[ig] =              mu[ig];
+	lk[ig] = sf_cmplx(ro[ig]+sixth*mu[ig],+nu[ig]);
+	rk[ig] = sf_cmplx(ro[ig]+sixth*mu[ig],-nu[ig]);
+	ck[ig] = sf_cmplx(             mu[ig],0.);
     }
 
     /*
           b      |         a           |     c
       ro + I nu  | mu - 2(ro + I nu)   | ro + I nu
     */
+#ifdef SF_HAS_COMPLEX_H
     for(ig=0;ig<ag.n  ;ig++) { a[ig] = ck[ig] - 2.*lk[ig]; }
+#else
+    for(ig=0;ig<ag.n  ;ig++) { a[ig] = sf_csub(ck[ig],sf_crmul(lk[ig],2.)); } 
+#endif
     for(ig=0;ig<ag.n-1;ig++) { b[ig] = lk[ig];   }
     for(ig=0;ig<ag.n-1;ig++) { c[ig] = lk[ig+1]; }
 
@@ -463,13 +487,28 @@ void rweone_fds(
       ro - I nu  |  mu - 2(ro - I nu)  | ro - I nu
     */
     for(ig=1;ig<ag.n-1;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 	u[ig] = 
 	    rk[ig] *(v[ig-1]+v[ig+1]) +  
 	    (ck[ig]-2.0*rk[ig]) * v[ig];
+#else
+	u[ig] = 
+	    sf_cadd(sf_cmul(rk[ig],sf_cadd(v[ig-1],v[ig+1])),  
+		    sf_cmul(sf_csub(ck[ig],sf_crmul(rk[ig],2.)),v[ig]));
+#endif	
     }
+#ifdef SF_HAS_COMPLEX_H
     ig=     0; u[ig]=(ck[ig]-2.0*rk[ig])*v[ig] + rk[ig]*v[ig+1];
     ig=ag.n-1; u[ig]=(ck[ig]-2.0*rk[ig])*v[ig] + rk[ig]*v[ig-1];
-
+#else
+    ig=     0; u[ig]=sf_cadd(
+	sf_cmul(sf_csub(ck[ig],sf_crmul(rk[ig],2.0)),v[ig]),
+	sf_cmul(rk[ig],v[ig+1]));
+    ig=ag.n-1; u[ig]=sf_cadd(
+	sf_cmul(sf_csub(ck[ig],sf_crmul(rk[ig],2.0)),v[ig]),
+	sf_cmul(rk[ig],v[ig-1]));
+#endif
+    
     rweone_thr(a,b,c,u,ag.n);
 
     for(ig=0;ig<ag.n;ig++) { v[ig] = u[ig]; };
@@ -482,25 +521,40 @@ void rweone_fds(
 /*------------------------------------------------------------*/
 
 void rweone_thr(
-    complex float *a,
-    complex float *b,
-    complex float *c,
-    complex float *v,
+    sf_complex *a,
+    sf_complex *b,
+    sf_complex *c,
+    sf_complex *v,
     int n)
 /*< tridiagonal solver >*/
 {
     int i;
 
+#ifdef SF_HAS_COMPLEX_H
     b[0]/=a[0];
     v[0]/=a[0];
+#else
+    b[0] = sf_cdiv(b[0],a[0]);
+    v[0] = sf_cdiv(v[0],a[0]);
+#endif
     for(i=1;i<n;i++) {
+#ifdef SF_HAS_COMPLEX_H
 	a[i] -= c[i-1]*b[i-1];
 	if(i<n-1) b[i]/=a[i];
 	v[i]=( v[i]-c[i-1]*v[i-1] ) / a[i];
+#else
+	a[i] = sf_csub(a[i],sf_cmul(c[i-1],b[i-1]));
+	if(i<n-1) b[i] = sf_cdiv(b[i],a[i]);
+	v[i]=sf_cdiv(sf_csub(v[i],sf_cmul(c[i-1],v[i-1])),a[i]);
+#endif
     }
 
     for(i=n-2;i>=0;i--) {
+#ifdef SF_HAS_COMPLEX_H
 	v[i] -= b[i]*v[i+1];
+#else
+	v[i] = sf_csub(v[i],sf_cmul(b[i],v[i+1]));
+#endif
     }
 }
 
@@ -526,12 +580,16 @@ void rweone_tap_init()
     }
 }
 
-void rweone_tap(complex float *v)
+void rweone_tap(sf_complex *v)
 /*< apply taper >*/
 {
     int ig;
     for(ig=0;ig<ag.n;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 	v[ig] *= tap[ig];
+#else
+	v[ig] = sf_crmul(v[ig],tap[ig]);
+#endif
     }
 }
 
@@ -554,24 +612,21 @@ void rweone_fft_init(int n)
 
 void rweone_fft(
     bool inv,
-    complex float *d)
+    kiss_fft_cpx *d)
 /*< apply FFT >*/
 {
     int ig;
 
     if(inv) {
 
-	kiss_fft(invs,
-		 (const kiss_fft_cpx *) d, 
-		 (      kiss_fft_cpx *) d);
-	for(ig=0;ig<ag.n;ig++) { d[ig] *= ffts; }
+	kiss_fft(invs,d,d);
+	for(ig=0;ig<ag.n;ig++) { d[ig] = sf_crmul(d[ig],ffts); }
 
     } else {
 
-	for(ig=0;ig<ag.n;ig++) { d[ig] *= ffts; }
-	kiss_fft(forw,
-		 (const kiss_fft_cpx *) d, 
-		 (      kiss_fft_cpx *) d);
+	for(ig=0;ig<ag.n;ig++) { d[ig] = sf_crmul(d[ig],ffts); }
+	kiss_fft(forw,d,d);
+
     }
 }
 
@@ -587,8 +642,8 @@ void rweone_mrs_init()
 }
 
 void rweone_mrs(
-    complex float *v,
-    complex float *d,
+    sf_complex *v,
+    sf_complex *d,
     float *m,
     int ir)
 /*< combine MRS >*/
@@ -616,31 +671,31 @@ void rweone_mrs(
     }
 
     for(ig=0;ig<ag.n;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 	d[ig] += msk[ig] * v[ig];
+#else
+	d[ig] = sf_cadd(d[ig],sf_crmul(v[ig],msk[ig]));
+#endif
     }
 }
 
 /*------------------------------------------------------------*/
 
-void cwrite(complex float x)
-/*< output a complex number >*/
-{
-    sf_warning("(%f,%f)",crealf(x), cimagf(x));
-}
-
-/*------------------------------------------------------------*/
-
 void rweone_zoi(
-    bool           adj,
-    complex float *ddd,
-    float         *iii)
+    bool        adj,
+    sf_complex *ddd,
+    float      *iii)
 /*< zero-offset imaging condition >*/
 {
     int ig;
 
     if(adj) { /* modeling */
 	for(ig=0;ig<ag.n;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 	    ddd[ig] += iii[ig];
+#else
+	    ddd[ig].r += iii[ig];
+#endif
 	}
 	rweone_tap(ddd);
     } else {
@@ -652,8 +707,8 @@ void rweone_zoi(
 }
 
 void rweone_spi(
-    complex float *swf,
-    complex float *rwf,
+    sf_complex *swf,
+    sf_complex *rwf,
     float         *iii)
 /*< shot-record imaging condition >*/
 {
@@ -662,6 +717,10 @@ void rweone_spi(
     rweone_tap(swf);
     rweone_tap(rwf);
     for(ig=0;ig<ag.n;ig++) {
+#ifdef SF_HAS_COMPLEX_H
 	iii[ig] += crealf( conjf(swf[ig]) * rwf[ig] );
+#else
+	iii[ig] += crealf(sf_cmul(conjf(swf[ig]),rwf[ig]) );
+#endif
     }
 }

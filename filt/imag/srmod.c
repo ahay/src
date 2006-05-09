@@ -49,12 +49,12 @@ static fslice        wtmp;
 
 /* read one depth level in memory */
 static float         **rr;
-static float complex **ww_s;
-static float complex **ww_r;
+static sf_complex **ww_s;
+static sf_complex **ww_r;
 
 /* read all depth levels in memory */
 static float         ***rrr;
-static float complex ***www;
+static sf_complex ***www;
 static float         ***ssp;
 static float         ***sss;
 
@@ -120,7 +120,7 @@ void srmod_init(bool verb_,
 	www = sf_complexalloc3(ax.n,ay.n,az.n);
 	rrr = sf_floatalloc3  (ax.n,ay.n,az.n);
     } else {
-	wtmp  = fslice_init( ax.n * ay.n, az.n,sizeof(float complex));
+	wtmp  = fslice_init( ax.n * ay.n, az.n,sizeof(sf_complex));
     }
 }
 
@@ -261,7 +261,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 /*< Apply P-wave S/R modeling >*/
 {
     int iz,iw,ix,iy,ilx,ily;
-    float complex w;
+    sf_complex w;
 
     if(incore) {
 
@@ -276,7 +276,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning("iw=%3d of %3d (in core)",iw+1,aw.n);
-	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 	    
 	    /* downgoing wavefield */
 	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
@@ -287,9 +287,15 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 	    }
 	    
 	    /* upgoing wavefield */
-	    LOOP( ww_r[iy][ix] = 0; );	    
+	    LOOP( ww_r[iy][ix] = sf_cmplx(0.,0.); );	    
 	    for (iz=az.n-1; iz>0; iz--) {
+#ifdef SF_HAS_COMPLEX_H
 		LOOP( ww_r[iy][ix] += www[iz][iy][ix]*rrr[iz][iy][ix]; );
+#else
+		LOOP( ww_r[iy][ix] = sf_cadd(ww_r[iy][ix],
+					     sf_crmul(www[iz][iy][ix],
+						      rrr[iz][iy][ix])); );
+#endif
 		ssr_ssf(w,ww_r,ssp[iz],ssp[iz-1],nr[iz-1],sm[iz-1]);
 	    }
 
@@ -300,7 +306,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
-	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 	    
 	    /* downgoing wavefield */
 	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
@@ -316,7 +322,7 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 	    }
 	    
 	    /* upgoing wavefield */
-	    LOOP( ww_r[iy][ix] = 0; );
+	    LOOP( ww_r[iy][ix] = sf_cmplx(0.,0.); );
 	    
 	    fslice_get(slow,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
@@ -324,10 +330,14 @@ void srmod_pw(fslice dwfl /* source   data [nw][ny][nx] */,
 		
 		fslice_get(wtmp,iz,ww_s[0]); 
 		fslice_get(refl,iz,rr[0]); /* reflectivity */
-		
+
+#ifdef SF_HAS_COMPLEX_H		
 		LOOP( ww_s[iy][ix] *= rr  [iy][ix];
 		      ww_r[iy][ix] += ww_s[iy][ix]; );
-		
+#else
+		LOOP( ww_s[iy][ix] = sf_crmul(ww_s[iy][ix],rr[iy][ix]);
+		      ww_r[iy][ix] = sf_cadd(ww_r[iy][ix],ww_s[iy][ix]); );
+#endif		
 		ssr_ssf(w,ww_r,so,ss,nr[iz-1],sm[iz-1]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );
 	    }
@@ -345,7 +355,7 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 /*< Apply C-wave S/R modeling >*/
 {
     int iz,iw,ix,iy,ilx,ily;
-    float complex w;
+    sf_complex w;
 
     if(incore) {
 
@@ -363,7 +373,7 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 	
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning("iw=%3d of %3d (in core)",iw+1,aw.n);
-	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 	    
 	    /* downgoing wavefield */
 	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
@@ -374,9 +384,15 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 	    }
 	    
 	    /* upgoing wavefield */
-	    LOOP( ww_r[iy][ix] = 0; );
+	    LOOP( ww_r[iy][ix] = sf_cmplx(0.,0.); );
 	    for (iz=az.n-1; iz>0; iz--) {
+#ifdef SF_HAS_COMPLEX_H
 		LOOP( ww_r[iy][ix] += www[iz][iy][ix]*rrr[iz][iy][ix]; );
+#else
+		LOOP( ww_r[iy][ix] = sf_cadd(ww_r[iy][ix],
+					     sf_crmul(www[iz][iy][ix],
+						      rrr[iz][iy][ix])); );
+#endif
 		ssr_ssf(w,ww_r,sss[iz],sss[iz-1],nr[iz],sm[iz]);
 	    }
 	    fslice_put(uwfl,iw,ww_r[0]);
@@ -386,7 +402,7 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 
 	for (iw=0; iw<aw.n; iw++) {
 	    if(verb) sf_warning("iw=%3d of %3d",iw+1,aw.n);
-	    w = eps*aw.d + I*(aw.o+iw*aw.d);
+	    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
 	    
 	    /* downgoing wavefield */
 	    fslice_get(dwfl,iw,ww_s[0]); taper2(ww_s);
@@ -403,7 +419,7 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 	    }
 	    
 	    /* upgoing wavefield */
-	    LOOP( ww_r[iy][ix] = 0; );
+	    LOOP( ww_r[iy][ix] = sf_cmplx(0.,0.); );
 	    
 	    fslice_get(slow_r,az.n-1,so[0]);
 	    for (iz=az.n-1; iz>0; iz--) {
@@ -411,8 +427,13 @@ void srmod_cw(fslice dwfl /* source   data [nw][ny][nx] */,
 		
 		fslice_get(wtmp,iz,ww_s[0]); 
 		fslice_get(refl,iz,rr[0]); /* reflectivity */
+#ifdef SF_HAS_COMPLEX_H
 		LOOP( ww_s[iy][ix] *= rr  [iy][ix];
 		      ww_r[iy][ix] += ww_s[iy][ix]; );
+#else
+		LOOP( ww_s[iy][ix] = sf_crmul(ww_s[iy][ix],rr[iy][ix]);
+		      ww_r[iy][ix] = sf_cadd(ww_r[iy][ix],ww_s[iy][ix]); );
+#endif
 		
 		ssr_ssf(w,ww_r,so,ss,nr_r[iz],sm_r[iz]);
 		SOOP( so[ily][ilx] = ss[ily][ilx]; );

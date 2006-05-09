@@ -5,18 +5,23 @@
 int main(void)
 {
     float diag[]={4.,2.,3.,4.};
-    float complex offd1[3];
-    float complex offd2[2];
-    float complex *offd[2];
+    sf_complex offd1[3];
+    sf_complex offd2[2];
+    sf_complex *offd[2];
 
-    float complex x[]={5.-2.*I,-2.-3*I,7.+I,-3.+9.*I}; 
+    sf_complex x[4];
 
-    offd1[0] = -I;
-    offd1[1] = 0.;
-    offd1[2] = 1.+I;
+    x[0] = sf_cmplx(5.,-2.);
+    x[1] = sf_cmplx(-2.,-3.);
+    x[2] = sf_cmplx(7.,1.);
+    x[3] = sf_cmplx(-3.,9.);
 
-    offd2[0] = 1.;
-    offd2[1] = -1.-I;
+    offd1[0] = sf_cmplx(0.,-1.);
+    offd1[1] = sf_cmplx(0.,0.);
+    offd1[2] = sf_cmplx(1.,1.);
+
+    offd2[0] = sf_cmplx(1.,0.);
+    offd2[1] = sf_cmplx(-1.,-1.);
     
     cbanded_init (4,2);
 

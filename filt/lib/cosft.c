@@ -22,10 +22,11 @@
 #include "kiss_fftr.h"
 
 #include "cosft.h"
+#include "komplex.h"
 
 static int nt, nw, n1;
 static float *p /* , dt */;
-static float complex *pp;
+static kiss_fft_cpx *pp;
 static kiss_fftr_cfg forw, invs;
 
 void sf_cosft_init(int n1_in)
@@ -35,7 +36,7 @@ void sf_cosft_init(int n1_in)
     nt = sf_fftr_size(2*(n1-1));
     nw = nt/2+1;
     p  = sf_floatalloc (nt);
-    pp = sf_complexalloc(nw);
+    pp = (kiss_fft_cpx*) sf_complexalloc(nw);
     forw = kiss_fftr_alloc(nt,0,NULL,NULL);
     invs = kiss_fftr_alloc(nt,1,NULL,NULL);
 }
@@ -66,10 +67,10 @@ void sf_cosft_frw (float *q /* data */,
 	p[i] = p[nt-i];
     }
     
-    kiss_fftr(forw, p, (kiss_fft_cpx *) pp);
+    kiss_fftr(forw, p, pp);
     
     for (i=0; i < n1; i++) {
-	q[o1+i*d1] = crealf(pp[i]);
+	q[o1+i*d1] = sf_crealf(pp[i]);
     }
 }
 
@@ -80,24 +81,18 @@ void sf_cosft_inv (float *q /* data */,
 {
     int i;
 
+
     for (i=0; i < n1; i++) {
-	pp[i] = q[o1+i*d1];
+	pp[i].r = q[o1+i*d1];
+	pp[i].i = 0.;
     }
+    /* pad */
     for (i=n1; i < nw; i++) { 
-	pp[i] = 0.; /* pad */
-    }
-
-/*
-
-    if (0. != dt) {
-	for (i=0; i < n; i++) {
-	    pp[i] *= cexpf(I*i*dt);
-	}
+	pp[i].r = 0.; 
+	pp[i].i = 0.;
     }
   
-*/
-  
-    kiss_fftri(invs,(const kiss_fft_cpx *) pp, p);
+    kiss_fftri(invs,pp,p);
     
     for (i=0; i < n1; i++) {
 	q[o1+i*d1] = p[i]/nt;

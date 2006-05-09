@@ -30,11 +30,11 @@ typedef void (*sf_weight)(int,const float*,float*);
 /*^*/
 
 #ifndef __cplusplus
-typedef void (*sf_coperator)(bool,bool,int,int,float complex*,float complex*);
-typedef void (*sf_csolverstep)(bool,int,int,float complex*,
-			       const float complex*,float complex*,
-			       const float complex*);
-typedef void (*sf_cweight)(int,const float complex*,float*);
+typedef void (*sf_coperator)(bool,bool,int,int,sf_complex*,sf_complex*);
+typedef void (*sf_csolverstep)(bool,int,int,sf_complex*,
+			       const sf_complex*,sf_complex*,
+			       const sf_complex*);
+typedef void (*sf_cweight)(int,const sf_complex*,float*);
 #endif 
 /*^*/
 

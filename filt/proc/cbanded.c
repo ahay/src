@@ -24,7 +24,7 @@
 
 static int n, band;
 static float *d;
-static float complex **o;
+static sf_complex **o;
 
 void cbanded_init (int n_in    /* matrix size */, 
 		   int band_in /* band width */)
@@ -34,19 +34,19 @@ void cbanded_init (int n_in    /* matrix size */,
 
     n = n_in; 
     band = band_in;
-    o = (float complex**) sf_alloc(band,sizeof(float complex*));
+    o = (sf_complex**) sf_alloc(band,sizeof(sf_complex*));
     for (i = 0; i < band; i++) {
 	o[i] = sf_complexalloc (n-1-i);
     }
     d = sf_floatalloc(n);
 }
 
-void cbanded_const_define (float diag                /* diagonal */, 
-			   const float complex *offd /* lower off-diagonal */)
+void cbanded_const_define (float diag             /* diagonal */, 
+			   const sf_complex *offd /* lower off-diagonal */)
 /*< set matrix coefficients (constant along diagonals) >*/
 {
     int k, m, j;
-    float complex ct;
+    sf_complex ct;
     float rt;
 
     d[0] = diag;
@@ -54,13 +54,27 @@ void cbanded_const_define (float diag                /* diagonal */,
 	for (m = k; m >= 0; m--) {
 	    ct = offd[m];
 	    for (j = m+1; j < k-1; j++) {
+#ifdef SF_HAS_COMPLEX_H
 		ct -= o[j][k-j]*conjf(o[j-m-1][k-j])*d[k-j];
+#else
+		ct = sf_csub(ct,sf_cmul(o[j][k-j],
+					sf_crmul(conjf(o[j-m-1][k-j]),
+						 d[k-j])));
+#endif
 	    }
+#ifdef SF_HAS_COMPLEX_H
 	    o[m][k-m] = ct/d[k-m];
+#else
+	    o[m][k-m] = sf_crmul(ct,1./d[k-m]);
+#endif
 	}
 	rt = diag;
 	for (m = 0; m <= k; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    rt -= crealf(o[m][k-m]*conjf(o[m][k-m]))*d[k-m];
+#else
+	    rt -= crealf(sf_cmul(o[m][k-m],conjf(o[m][k-m])))*d[k-m];
+#endif
 	}
 	d[k+1] = rt;
     }
@@ -68,24 +82,38 @@ void cbanded_const_define (float diag                /* diagonal */,
 	for (m = band-1; m >= 0; m--) {
 	    ct = offd[m];
 	    for (j = m+1; j < band; j++) {
+#ifdef SF_HAS_COMPLEX_H
 		ct -= o[j][k-j]*conjf(o[j-m-1][k-j])*d[k-j];
+#else
+		ct = sf_csub(ct,sf_cmul(o[j][k-j],
+					sf_crmul(conjf(o[j-m-1][k-j]),
+						 d[k-j])));
+#endif
 	    }
+#ifdef SF_HAS_COMPLEX_H
 	    o[m][k-m] = ct/d[k-m];
+#else
+	    o[m][k-m] = sf_crmul(ct,1./d[k-m]);
+#endif
 	}
 	rt = diag;
 	for (m = 0; m < band; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    rt -= crealf(o[m][k-m]*conjf(o[m][k-m]))*d[k-m];
+#else
+	     rt -= crealf(sf_cmul(o[m][k-m],conjf(o[m][k-m])))*d[k-m];
+#endif
 	}
 	d[k+1] = rt;
     }
 }
 
 void cbanded_define (const float *diag    /* diagonal */, 
-		     float complex **offd /* lower subdiagonals */)
+		     sf_complex **offd /* lower subdiagonals */)
 /*< set matrix coefficients >*/
 {
     int k, m, j;
-    float complex ct;
+    sf_complex ct;
     float rt;
 
     d[0] = diag[0];
@@ -93,13 +121,27 @@ void cbanded_define (const float *diag    /* diagonal */,
 	for (m = k; m >= 0; m--) {
 	    ct = offd[m][k-m];
 	    for (j = m+1; j < k-1; j++) {
+#ifdef SF_HAS_COMPLEX_H
 		ct -= o[j][k-j]*conjf(o[j-m-1][k-j])*d[k-j];
+#else
+		ct = sf_csub(ct,sf_cmul(o[j][k-j],
+					sf_crmul(conjf(o[j-m-1][k-j]),
+						 d[k-j])));
+#endif
 	    }
+#ifdef SF_HAS_COMPLEX_H
 	    o[m][k-m] = ct/d[k-m];
+#else
+	    o[m][k-m] = sf_crmul(ct,1./d[k-m]);
+#endif
 	}
 	rt = diag[k+1];
 	for (m = 0; m <= k; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    rt -= crealf(o[m][k-m]*conjf(o[m][k-m]))*d[k-m];
+#else
+	    rt -= crealf(sf_cmul(o[m][k-m],conjf(o[m][k-m])))*d[k-m];
+#endif
 	}
 	d[k+1] = rt;
     }
@@ -107,49 +149,87 @@ void cbanded_define (const float *diag    /* diagonal */,
 	for (m = band-1; m >= 0; m--) {
 	    ct = offd[m][k-m];
 	    for (j = m+1; j < band; j++) {
+#ifdef SF_HAS_COMPLEX_H
 		ct -= o[j][k-j]*conjf(o[j-m-1][k-j])*d[k-j];
+#else
+		ct = sf_csub(ct,sf_cmul(o[j][k-j],
+					sf_crmul(conjf(o[j-m-1][k-j]),
+						 d[k-j])));
+#endif
 	    }
+#ifdef SF_HAS_COMPLEX_H
 	    o[m][k-m] = ct/d[k-m];
+#else
+	    o[m][k-m] = sf_crmul(ct,d[k-m]);
+#endif
 	}
 	rt = diag[k+1];
 	for (m = 0; m < band; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    rt -= crealf(o[m][k-m]*conjf(o[m][k-m]))*d[k-m];
+#else
+	    rt -= crealf(sf_cmul(o[m][k-m],conjf(o[m][k-m])))*d[k-m];
+#endif
 	}
 	d[k+1] = rt;
     }
 }
 
-void cbanded_solve (float complex *b)
+void cbanded_solve (sf_complex *b)
 /*< multiply by inverse (in place) >*/
 {
     int k, m;
-    float complex t;
+    sf_complex t;
 
     for (k = 1; k < band; k++) {
 	t = b[k];
 	for (m = 1; m <= k; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    t -= o[m-1][k-m] * b[k-m];
+#else
+	    t = sf_csub(t,sf_cmul(o[m-1][k-m],b[k-m]));
+#endif
 	}
 	b[k] = t;
     }
     for (k = band; k < n; k++) {
 	t = b[k];
 	for (m = 1; m <= band; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    t -= o[m-1][k-m] * b[k-m];
+#else
+	    t = sf_csub(t,sf_cmul(o[m-1][k-m],b[k-m]));
+#endif
 	}
 	b[k] = t;
     }
     for (k = n-1; k >= n - band; k--) {
+#ifdef SF_HAS_COMPLEX_H
 	t = b[k]/d[k];
+#else
+	t = sf_crmul(b[k],1./d[k]);
+#endif
 	for (m = 0; m < n - k - 1; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    t -= conjf(o[m][k]) * b[k+m+1];
+#else
+	    t = sf_csub(t,sf_cmul(conjf(o[m][k]),b[k+m+1]));
+#endif
 	}
 	b[k] = t;
     }
     for (k = n - band - 1; k >= 0; k--) {
+#ifdef SF_HAS_COMPLEX_H
 	t = b[k]/d[k];
+#else
+	t = sf_crmul(b[k],1./d[k]);
+#endif
 	for (m = 0; m < band; m++) {
+#ifdef SF_HAS_COMPLEX_H
 	    t -= conjf(o[m][k]) * b[k+m+1];
+#else
+	    t = sf_csub(t,sf_cmul(conjf(o[m][k]),b[k+m+1]));
+#endif
 	}
 	b[k] = t;
     }

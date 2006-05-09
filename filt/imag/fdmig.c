@@ -24,7 +24,7 @@
 #include "ctridiagonal.h"
 
 static float alpha, dw, beta;
-static float complex *cd, *cu;
+static sf_complex *cd, *cu;
 static ctris slv;
 static bool hi;
 static int nx, nz, nw;
@@ -62,19 +62,19 @@ void fdmig_close(void)
     free (cu);
 }
 
-void fdmig (float complex **dat /* input data */, 
+void fdmig (sf_complex **dat /* input data */, 
 	    float **img         /* output image */, 
 	    sf_file movie       /* save movie (if not NULL) */)
 /*< Migrate >*/
 {
     int iz, ix, iw;
     float omega;
-    float complex aa, bb; 
+    sf_complex aa, bb, shift; 
 
     for (iz=0; iz < nz; iz++) { 
 	for (ix=0; ix < nx; ix++) {
 	    img[iz][ix] = 0.;
-	    cu[ix] = 0.;
+	    cu[ix] = sf_cmplx(0.,0.);
 	}
 	if (NULL != movie) sf_complexwrite(cu,nx,movie);
     }
@@ -82,9 +82,15 @@ void fdmig (float complex **dat /* input data */,
     
     for (iw=1; iw < nw; iw++) { 
 	omega = dw*iw;
-	aa = beta*omega + I*alpha;
+	aa = sf_cmplx(beta*omega,alpha);
+#ifdef SF_HAS_COMPLEX_H
 	if (hi) aa += alpha/omega; /* add the third derivative term */	
 	bb = omega - 2.*aa;
+#else
+	if (hi) aa.r += alpha/omega; /* add the third derivative term */
+	bb.r = omega - 2.*aa.r;
+	bb.i = - 2.*aa.i;
+#endif
 
 	ctridiagonal_const_define (slv,conjf(bb),conjf(aa));
 	    
@@ -93,16 +99,26 @@ void fdmig (float complex **dat /* input data */,
 	}
 
 	for (iz=0; iz < nz; iz++) {
-	    cd[0] = 0.;      
+	    cd[0] = sf_cmplx(0.,0.);      
 	    for (ix=1; ix < nx-1; ix++) {
+#ifdef SF_HAS_COMPLEX_H
 		cd[ix] = aa*(cu[ix+1] + cu[ix-1]) + bb*cu[ix];
+#else
+		cd[ix] = sf_cadd(sf_cmul(aa,sf_cadd(cu[ix+1],cu[ix-1])),
+				 sf_cmul(bb,cu[ix]));
+#endif
 	    }
-	    cd[nx-1] = 0.;
+	    cd[nx-1] = sf_cmplx(0.,0.);
 	    
 	    ctridiagonal_solve (slv, cd);
 	    
 	    for (ix=0; ix < nx; ix++) {
-		cu[ix] = cd[ix]*cexpf(I*omega);
+		shift = sf_cmplx(cosf(omega),sinf(omega));
+#ifdef SF_HAS_COMPLEX_H
+		cu[ix] = cd[ix]*shift;
+#else
+		cu[ix] = sf_cmul(cd[ix],shift);
+#endif
 		img[iz][ix] += crealf(cu[ix]);
 	    }
 

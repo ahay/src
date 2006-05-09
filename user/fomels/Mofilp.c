@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int nx, nh, nw, iw, niter, nhx, i, *zero;
     float dx, h0, dh, w0, dw, w;
-    float complex *slice, *dat;
+    sf_complex *slice, *dat;
     bool simple, *mask;
     sf_file in, out, known;
 
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
     sf_intread(zero,nhx,known);
     for (i=0; i < nhx; i++) {
-	dat[i] = 0.;
+	dat[i] = sf_cmplx(0.,0.);
 	mask[i] = (zero[i] != 0);
     }
 

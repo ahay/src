@@ -41,8 +41,8 @@ void halfint_init (bool inv  /* differentiation or integration */,
     n = n1;
     nw = n/2+1;
 
-    cx = sf_komplexalloc(nw);
-    cf = sf_komplexalloc(nw);
+    cx = (kiss_fft_cpx*) sf_complexalloc(nw);
+    cf = (kiss_fft_cpx*) sf_complexalloc(nw);
 
     forw = kiss_fftr_alloc(n,0,NULL,NULL);
     invs = kiss_fftr_alloc(n,1,NULL,NULL);
@@ -102,7 +102,7 @@ void halfint (bool adj, float* x /* [n] */)
     kiss_fftr(forw, x, cx);
     for (i=0; i < nw; i++) {
 	if (adj) {
-	    cx[i] = sf_cmul(cx[i],sf_conjg(cf[i]));
+	    cx[i] = sf_cmul(cx[i],sf_conjf(cf[i]));
 	} else {
 	    cx[i] = sf_cmul(cx[i],cf[i]);
 	}

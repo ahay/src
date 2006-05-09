@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float f, fmin, fmax;
     double fsum, fsqr, frms, fmean, fnorm, fvar, fstd;
-    float complex c=0., cmin1=0., cmin2=0., cmax1=0., cmax2=0.;
+    sf_complex c, cmin1, cmin2, cmax1, cmax2;
     sf_datatype type;
     
     sf_init (argc,argv);
@@ -76,10 +76,9 @@ int main(int argc, char* argv[])
     bufsiz /= sf_esize(in);
 
     type = sf_gettype (in);
-    if (SF_COMPLEX==type) {
-	cmin1 = +FLT_MAX; cmin2 = +I*FLT_MAX;
-	cmax1 = -FLT_MAX; cmax2 = -I*FLT_MAX;
-    }
+
+    cmin1 = sf_cmplx(+FLT_MAX,0.); cmin2 = sf_cmplx(0.,+FLT_MAX);
+    cmax1 = sf_cmplx(-FLT_MAX,0.); cmax2 = sf_cmplx(0.,-FLT_MAX);
     
     fsum = fsqr = 0.0;
     fmin = +FLT_MAX;
@@ -96,7 +95,7 @@ int main(int argc, char* argv[])
 		sf_intread((int*) buf,nbuf,in);
 		break;
 	    case SF_COMPLEX:
-		sf_complexread((float complex*) buf,nbuf,in);
+		sf_complexread((sf_complex*) buf,nbuf,in);
 		break;
 	    case SF_UCHAR:
 		sf_ucharread((unsigned char*) buf,nbuf,in);
@@ -115,7 +114,7 @@ int main(int argc, char* argv[])
 		    f=(float) ((int*)buf)[i]; 
 		    break;
 		case SF_COMPLEX: 
-		    c=((float complex*)buf)[i];  
+		    c=((sf_complex*)buf)[i];  
 		    f=cabsf(c); 
 		    break;
 		case SF_UCHAR:

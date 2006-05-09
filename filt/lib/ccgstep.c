@@ -21,38 +21,36 @@
 
 #include "ccgstep.h"
 #include "alloc.h"
-
-#ifndef __cplusplus
-/*^*/
+#include "komplex.h"
 
 #include "_bool.h"
 #include "c99.h"
 /*^*/
 
-static const float EPSILON=1.e-12; /* precision */
+static const double EPSILON=1.e-12; /* precision */
 
-static float complex* S;  /* model step */
-static float complex* Ss; /* residual step */
+static sf_complex* S;  /* model step */
+static sf_complex* Ss; /* residual step */
 static bool Allocated = false; /* if S and Ss are allocated */
 
-static double complex dotprod (int n, 
-			       const float complex* x, const float complex* y);
+static sf_double_complex dotprod (int n, 
+				  const sf_complex* x, const sf_complex* y);
 /* complex dot product */
-static float norm(int n, const float complex* x);
+static float norm(int n, const sf_complex* x);
 /* complex norm */
 
 void sf_ccgstep( bool forget             /* restart flag */, 
 		 int nx                  /* model size */, 
 		 int ny                  /* data size */, 
-		 float complex* x        /* current model [nx] */,  
-		 const float complex* g  /* gradient [nx] */, 
-		 float complex* rr       /* data residual [ny] */,
-		 const float complex* gg /* conjugate gradient [ny] */) 
+		 sf_complex* x        /* current model [nx] */,  
+		 const sf_complex* g  /* gradient [nx] */, 
+		 sf_complex* rr       /* data residual [ny] */,
+		 const sf_complex* gg /* conjugate gradient [ny] */) 
 /*< Step of Claerbout's conjugate-gradient iteration for complex operators. 
   The data residual is rr = A x - dat
 >*/
 {
-    double complex sds, gdg, gds, sdg, determ, gdr, sdr, alfa, beta;
+    sf_double_complex sds, gdg, gds, sdg, determ, gdr, sdr, alfa, beta;
     int i;
     if (Allocated == false) {
 	Allocated = forget = true;
@@ -61,14 +59,19 @@ void sf_ccgstep( bool forget             /* restart flag */,
     }
     if (forget) {
 	for (i = 0; i < nx; i++) {
-	    S[i] = 0.;
+	    S[i] = sf_cmplx(0.0,0.0);
 	}
 	for (i = 0; i < ny; i++) {
-	    Ss[i] = 0.;
+	    Ss[i] = sf_cmplx(0.0,0.0);
 	}    
-	beta = 0.0;
+
+	beta = sf_dcmplx(0.0,0.0);
 	if (norm(ny,gg) <= 0.) return;
+#ifdef SF_HAS_COMPLEX_H
 	alfa = - dotprod( ny, gg, rr) / dotprod(ny, gg, gg);
+#else
+	alfa = sf_dcneg(sf_dcdiv(dotprod( ny, gg, rr),dotprod(ny, gg, gg)));
+#endif
     } else {
 	/* search plane by solving 2-by-2
 	   G . (R - G*alfa - S*beta) = 0
@@ -77,8 +80,9 @@ void sf_ccgstep( bool forget             /* restart flag */,
 	sds = dotprod( ny, Ss, Ss);       
 	gds = dotprod( ny, gg, Ss);    
 	sdg = dotprod( ny, Ss, gg);   
-	if (gdg == 0. || sds == 0.) return;
+	if (cabs(gdg) == 0. || cabs(sds) == 0.) return;
 
+#ifdef SF_HAS_COMPLEX_H
 	determ = 1.0 - (gds/gdg)*(gds/sds);
 	if (creal(determ) > EPSILON) {
 	    determ *= gdg * sds;
@@ -90,14 +94,44 @@ void sf_ccgstep( bool forget             /* restart flag */,
 	sdr = - dotprod( ny, Ss, rr);
 	alfa = ( sds * gdr - gds * sdr ) / determ;
 	beta = (-sdg * gdr + gdg * sdr ) / determ;
+#else
+	determ = sf_dcneg(sf_dcmul(sf_dcdiv(gds,gdg),
+				   sf_dcdiv(gds,sds)));
+	determ.r += 1.0;
+
+	if (creal(determ) > EPSILON) {
+	    determ = sf_dcmul(determ,sf_dcmul(gdg,sds));
+	} else {
+	    determ = sf_dcmul(gdg,sf_dcrmul(sds,EPSILON));
+	}
+
+	gdr = sf_dcneg(dotprod( ny, gg, rr));
+	sdr = sf_dcneg(dotprod( ny, Ss, rr));
+	alfa = sf_dcdiv(sf_dcsub(sf_dcmul(sds,gdr),
+				 sf_dcmul(gds,sdr)),determ);
+	beta = sf_dcdiv(sf_dcsub(sf_dcmul(gdg,sdr),
+				 sf_dcmul(sdg,gdr)),determ);
+#endif
     }
     for (i = 0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	S[i]  =  alfa * g[i] + beta *  S[i];
 	x[i] +=  S[i];
+#else
+	S[i]  = sf_cadd(sf_dccmul(alfa,g[i]),
+			sf_dccmul(beta,S[i]));
+	x[i] = sf_cadd(x[i],S[i]);
+#endif
     }
     for (i = 0; i < ny; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	Ss[i] = alfa * gg[i] + beta * Ss[i];
 	rr[i] += Ss[i];
+#else
+	Ss[i] = sf_cadd(sf_dccmul(alfa,gg[i]),
+			sf_dccmul(beta,Ss[i]));
+	rr[i] = sf_cadd(rr[i],Ss[i]);
+#endif
     }
 }
 
@@ -111,24 +145,33 @@ void sf_ccgstep_close (void)
     }
 }
 
-static double complex dotprod (int n, 
-			       const float complex* x, const float complex* y)
+static sf_double_complex dotprod (int n, 
+				  const sf_complex* x, const sf_complex* y)
 /* complex dot product */
 {
-    double complex prod;
-    float complex xi, yi;
+    sf_double_complex prod, pi;
+    sf_complex xi, yi;
     int i;
-    prod = 0.;
+
+    prod = sf_dcmplx(0.,0.);
     for (i = 0; i < n; i++) {
 	xi = x[i];
 	yi = y[i];
-	prod += creal(xi)*creal(yi) + cimag(xi)*cimag(yi) + 
-	    I* (creal(xi)*cimag(yi) - cimag(xi)*creal(yi));
+	pi = sf_dcmplx(
+	    (double) crealf(xi)*crealf(yi) + 
+	    (double) cimagf(xi)*cimagf(yi), 
+	    (double) crealf(xi)*cimagf(yi) - 
+	    (double) cimagf(xi)*crealf(yi));
+#ifdef SF_HAS_COMPLEX_H
+	prod += pi;
+#else
+	prod = sf_dcadd(prod,pi);
+#endif
     }
     return prod;
 }
 
-static float norm (int n, const float complex* x) 
+static float norm (int n, const sf_complex* x) 
 /* complex norm */
 {
     int i;
@@ -136,12 +179,13 @@ static float norm (int n, const float complex* x)
 
     xn = 0.0;
     for (i=0; i < n; i++) {
-	xn += creal(x[i]*conjf(x[i]));
+#ifdef SF_HAS_COMPLEX_H
+	xn += crealf(x[i]*conjf(x[i]));
+#else
+	xn += crealf(sf_cmul(x[i],conjf(x[i])));
+#endif
     }
     return xn;
 }
-
-#endif
-/*^*/
 
 /* 	$Id$	 */

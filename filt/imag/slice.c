@@ -85,17 +85,17 @@ void slice_put(slice sl, int i3, float* data)
     sf_floatwrite(data,sl->n12,sl->file);
 }
 
-void cslice_get(slice sl, int i3, complex float* data)
+void cslice_get(slice sl, int i3, sf_complex* data)
 /*< get a slice at level i3 >*/
 {
-    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(complex float),SEEK_SET);
+    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(sf_complex),SEEK_SET);
     sf_complexread(data,sl->n12,sl->file);
 }
 
-void cslice_put(slice sl, int i3, complex float* data)
+void cslice_put(slice sl, int i3, sf_complex* data)
 /*< put a slice at level i3 >*/
 {
-    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(complex float),SEEK_SET);
+    sf_seek(sl->file,sl->start+i3*(sl->n12)*sizeof(sf_complex),SEEK_SET);
     sf_complexwrite(data,sl->n12,sl->file);
 }
 
@@ -117,6 +117,8 @@ fslice fslice_init(int n1, int n2, size_t size)
 void fslice_get(fslice sl, int i2, void* data)
 /*< get a slice at level i2 >*/
 {
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+
     fseeko(sl->file,i2*(sl->n1),SEEK_SET);
     fread(data,sl->n1,1,sl->file);
 }
@@ -124,6 +126,8 @@ void fslice_get(fslice sl, int i2, void* data)
 void fslice_put(fslice sl, int i2, void* data)
 /*< put a slice at level i2 >*/
 {
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+
     fseeko(sl->file,i2*(sl->n1),SEEK_SET);
     fwrite(data,sl->n1,1,sl->file);
 }
@@ -140,6 +144,7 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
 {
     off_t nleft, n;
     char buf[BUFSIZ];
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     /* data size */
     n = (sl->n2)*(sl->n1);
@@ -156,8 +161,8 @@ void fslice_load(sf_file in, fslice sl, sf_datatype type)
 			       nleft/sizeof(float),in);
 		break;
 	    case SF_COMPLEX:
-		sf_complexread((float complex*) buf,
-			       nleft/sizeof(float complex),in);
+		sf_complexread((sf_complex*) buf,
+			       nleft/sizeof(sf_complex),in);
 		break;
 	    default:
 		sf_error("%s: unsupported type %d",__FILE__,type);
@@ -173,6 +178,7 @@ void fslice_dump(sf_file out, fslice sl, sf_datatype type)
 {
     off_t nleft, n;
     char buf[BUFSIZ];
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     /* data size */
     n = (sl->n2)*(sl->n1);
@@ -191,8 +197,8 @@ void fslice_dump(sf_file out, fslice sl, sf_datatype type)
 				nleft/sizeof(float),out);
 		break;
 	    case SF_COMPLEX:
-		sf_complexwrite((float complex*) buf,
-				nleft/sizeof(float complex),out);
+		sf_complexwrite((sf_complex*) buf,
+				nleft/sizeof(sf_complex),out);
 		break;
 	    default:
 		sf_error("%s: unsupported type %d",__FILE__,type);

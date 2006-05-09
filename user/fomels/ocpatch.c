@@ -103,6 +103,7 @@ void ocpatch_lop (int ip      /* patch number */,
 /*< apply patching >*/
 {
     off_t i2;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
     
     if (0 != fseeko(table,ip*n2*sizeof(off_t),SEEK_SET))
 	sf_error("%s: table seeking error:",__FILE__);
@@ -130,6 +131,7 @@ void ocpatch_flop (int ip       /* patch number */,
 /*< apply patching with RSF files >*/
 {
     off_t i2;
+    extern int fseeko(FILE *stream, off_t offset, int whence);
 
     if (0 != fseeko(table,ip*n2*sizeof(off_t),SEEK_SET))
 	sf_error("%s: table seeking error:",__FILE__);

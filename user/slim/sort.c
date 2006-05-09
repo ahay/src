@@ -26,50 +26,50 @@ Created: February 2006
 
 #include <rsf.h>
 
-int asc(const void * a, const void * b)
+static int asc(const void * a, const void * b)
 {
   return (*(float*)a<*(float*)b)? -1: (*(float*)a>*(float*)b)? 1:0;
 }
 
-int desc(const void * a, const void * b)
+static int desc(const void * a, const void * b)
 {
   return (*(float*)a>*(float*)b)? -1: (*(float*)a<*(float*)b)? 1:0;
 }
 
-float *dataloader(sf_file in, int n, bool complex_data)
+static float *dataloader(sf_file in, int n, bool complex_data)
 {
-  int i;
-  float *data;
-  data = sf_floatalloc(n); 
-  if (complex_data){
-    /* read in memory and compute absolute value of vector entries */
-    float complex *cdata;
-    cdata = sf_complexalloc(1);
-    for (i=0; i<n; i++){
-      sf_complexread(cdata,1,in);
-      data[i] = sqrt( pow(creal(cdata[0]),2) + pow(cimag(cdata[0]),2));
+    int i;
+    float *data;
+    sf_complex *cdata;
+    
+    data = sf_floatalloc(n); 
+    if (complex_data){
+	/* read in memory and compute absolute value of vector entries */
+	cdata = sf_complexalloc(n);
+	sf_complexread(cdata,n,in);
+	for (i=0; i<n; i++){
+	    data[i] = cabsf(cdata[i]);
+	}
+	free(cdata);
+    } else{
+	/* read in memory and compute absolute value of vector entres */
+	sf_floatread(data,n,in);
+	for (i=0; i<n; i++){
+	    data[i] = fabsf(data[i]);
+	}
     }
-  }
-  else{
-    /* read in memory and compute absolute value of vector entres */
-    sf_floatread(data,n,in);
-    for (i=0; i<n; i++){
-      data[i] = sqrt(pow(data[i],2));
-      }
-  }
   
-  return(data);
+    return(data);
 }
 
 int main(int argc, char* argv[])
 {
   int n1, mem, memsize, n, nbchunks, nfit, i, j;
-  size_t len;
   float *data;
   float *tmp;
   FILE **fp;
+  char **fn;
   int nloop;
-  char *rformat, *cformat;
   float *currentext;
   int icurrentext;
   bool complex_data = false;// true if input data is complex
@@ -98,15 +98,10 @@ int main(int argc, char* argv[])
   
   /* check that the input is float or complex and format output appropriately */
   if (SF_COMPLEX == sf_gettype(in)){
-    complex_data = true;
-    cformat = sf_histstring(in,"data_format");
-    len = strlen(cformat)+1;
-    rformat = sf_charalloc(len);
-    memcpy(rformat,cformat,len);
-    strcpy(strstr(rformat,"complex"),"float");
-    sf_setformat(out,rformat);
-  }
-  else if (SF_FLOAT != sf_gettype(in)) sf_error("Need float or complex input");
+      complex_data = true;
+      sf_settype(out,SF_FLOAT);
+  } else if (SF_FLOAT != sf_gettype(in)) 
+      sf_error("Need float or complex input");
   
   if (n1*sizeof(float)>memsize){
     /* OUT-OF-CORE MODE */
@@ -117,19 +112,9 @@ int main(int argc, char* argv[])
     nbchunks = n1/n+1; /* # of chunks */
     nfit = n1%n; /* # of element in the last chunk */
     
-    /* read chunk, sort and write in temp files */
-    if (!getenv("TMPDIR"))
-      {
-	putenv("TMPDIR=./");
-	sf_warning("Set TMPDIR to ./");
-      }
-    else{
-      sf_warning("Use user-defined TMPDIR = %s",getenv("TMPDIR"));
-    }
+    fp = (FILE**) sf_alloc(nbchunks,sizeof(FILE *));
+    fn = (char**) sf_alloc(nbchunks,sizeof(char *));
 
-
-    fp = malloc(nbchunks*sizeof(FILE *));
-    
     for (i=0; i<nbchunks; i++){
       if (i == nbchunks-1) nloop = nfit;
       else nloop= n;
@@ -144,7 +129,7 @@ int main(int argc, char* argv[])
 	qsort(data,nloop,sizeof(float),desc);
       }
       
-      fp[i] = tmpfile();
+      fp[i] = sf_tempfile(&fn[i],"w+b");
       fwrite(data, sizeof(float), nloop, fp[i]);
       rewind(fp[i]);
     }
@@ -191,9 +176,10 @@ int main(int argc, char* argv[])
       sf_floatwrite(currentext,1,out);
     }
     
-    for (i=0; i<nbchunks; i++)
+    for (i=0; i<nbchunks; i++) {
       fclose(fp[i]);
-    
+      unlink(fn[i]);
+    }
   }
   else{
     /* IN-CORE MODE */

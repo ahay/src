@@ -56,8 +56,8 @@ static int             *jx; /* i-line index */
 static int             *jy; /* x-line index */
 static int            **is; /* source   index */
 static int            **ir; /* receiver index */
-static float complex ***pk; /* wavefield k */
-static float complex ***wk; /* wavefield k */
+static sf_complex ***pk; /* wavefield k */
+static sf_complex ***wk; /* wavefield k */
 static float         ***wt; /* interpolation weight */
 
 /*------------------------------------------------------------*/
@@ -183,8 +183,8 @@ void cam_close(void)
 /*------------------------------------------------------------*/
 
 void cam_ssf(
-    float complex    w /* frequency */,
-    complex float***wx /* wavefield */,
+    sf_complex      w /* frequency */,
+    sf_complex  ***wx /* wavefield */,
     float         **so /* slowness  */, 
     float         **ss /* slowness  */,
     int             nr /* nr. of ref slo */,
@@ -194,25 +194,38 @@ void cam_ssf(
 {
     int imy,imx,ihx,jmy,js,jr;
     float  s, kmy, d, dsc,drc;
-    float complex co=0, w2, cs, cr, khy, kss, krr;
+    sf_complex co, w2, cs, cr, khy, kss, krr;
     
+    co = sf_cmplx(0,0);
+#ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
+#else
+    w2 = sf_cmul(w,w);
+#endif
     
+#ifdef SF_HAS_COMPLEX_H
     LOOP( s = so[ jy[imy] ][ is[ihx][imx] ] 
 	  +   so[ jy[imy] ][ ir[ihx][imx] ];
 	  wx[ihx][imy][imx] *= cexpf(-w*s* az.d/2); );
+#else
+    LOOP( s = so[ jy[imy] ][ is[ihx][imx] ] 
+	  +   so[ jy[imy] ][ ir[ihx][imx] ];
+	  wx[ihx][imy][imx] = sf_cmul(wx[ihx][imy][imx], 
+				      cexpf(sf_crmul(w,-s*az.d/2))); );
+#endif
 
      /* FFT */
-    KOOP( pk[ihx][imy][imx] = 0.; );
+    KOOP( pk[ihx][imy][imx] = sf_cmplx(0.,0.); );
     LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
     fft3(false,pk);
 
-    LOOP( wx[ihx][imy][imx] = 0;
-	  wt[ihx][imy][imx] = 0; );
+    LOOP( wx[ihx][imy][imx] = sf_cmplx(0.,0.);
+	  wt[ihx][imy][imx] = 0.; );
     for (js=0; js<nr; js++) {
 	for (jr=0; jr<nr; jr++) {
 	    
 	    /* w-k phase shift */
+#ifdef SF_HAS_COMPLEX_H
 	    co  = csqrtf(w2*sm[js]) 
 		+ csqrtf(w2*sm[jr]);
 	    KOOP( jmy = KMAP(imy,bmy.n);
@@ -229,27 +242,71 @@ void cam_ssf(
 		  wk[ihx][imy][imx] = 
 		  pk[ihx][imy][imx] * cexpf((co-cs-cr)*az.d);
 		);
+#else
+	    co  = sf_cadd(
+		csqrtf(sf_crmul(w2,sm[js])),
+		csqrtf(sf_crmul(w2,sm[jr])));
+	    KOOP( jmy = KMAP(imy,bmy.n);
+		  kmy = bmy.o + jmy*bmy.d; 
+		  cs  = csqrtf(sf_cadd(sf_crmul(w2,sm[js]),
+				       sf_cmplx(ksx[ihx][imx],0.)));
+		  cr  = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),
+				       sf_cmplx(krx[ihx][imx],0.)));
+		  khy = sf_crmul(sf_cdiv(sf_csub(cr,cs),
+					 sf_cadd(cr,cs)),kmy);
+		  kss = sf_crmul(sf_csub(sf_cmplx(kmy,0.),khy),0.5);
+		  krr = sf_crmul(sf_cadd(sf_cmplx(kmy,0.),khy),0.5);
+		  kss = sf_cadd(sf_cmul(kss,kss),sf_cmplx(ksx[ihx][imx],0.));
+		  krr = sf_cadd(sf_cmul(krr,krr),sf_cmplx(krx[ihx][imx],0.));
+		  cs  = csqrtf(sf_cadd(sf_crmul(w2,sm[js]),kss));
+		  cr  = csqrtf(sf_cadd(sf_crmul(w2,sm[jr]),krr));
+		  wk[ihx][imy][imx] = sf_cmul(
+		      pk[ihx][imy][imx],
+		      cexpf(sf_crmul(sf_csub(co,sf_cadd(cs,cr)),az.d)));
+		);
+#endif
 	    
 	    /* IFT */
 	    fft3(true,wk);
 	    
 	    /* accumulate wavefield */
+#ifdef SF_HAS_COMPLEX_H
 	    LOOP( 
 		dsc = fabsf( so[ jy[imy] ][ is[ihx][imx] ] *
 			     so[ jy[imy] ][ is[ihx][imx] ] - sm[js]);
 		drc = fabsf( so[ jy[imy] ][ ir[ihx][imx] ] *
 			     so[ jy[imy] ][ ir[ihx][imx] ] - sm[jr]);
-		d = sqrt(dsc*dsc + drc*drc);
+		d = hypotf(dsc,drc);
 		d = dsmax2/(d*d+dsmax2);
 		wx[ihx][imy][imx] += wk[ihx][imy][imx]*d;
 		wt[ihx][imy][imx] += d; );
+#else
+	    LOOP( 
+		dsc = fabsf( so[ jy[imy] ][ is[ihx][imx] ] *
+			     so[ jy[imy] ][ is[ihx][imx] ] - sm[js]);
+		drc = fabsf( so[ jy[imy] ][ ir[ihx][imx] ] *
+			     so[ jy[imy] ][ ir[ihx][imx] ] - sm[jr]);
+		d = hypotf(dsc,drc);
+		d = dsmax2/(d*d+dsmax2);
+		wx[ihx][imy][imx] = sf_cadd(wx[ihx][imy][imx],
+					    sf_crmul(wk[ihx][imy][imx],d));
+		wt[ihx][imy][imx] += d; );
+#endif
 	} /* jr loop */
     } /* js loop */
+#ifdef SF_HAS_COMPLEX_H
     LOOP( wx[ihx][imy][imx] /= wt[ihx][imy][imx]; );
-
     LOOP( s = ss[ jy[imy] ][ is[ihx][imx] ] 
 	  +   ss[ jy[imy] ][ ir[ihx][imx] ];
 	  wx[ihx][imy][imx] *= cexpf(-w*s* az.d/2); );
+#else
+    LOOP( wx[ihx][imy][imx] = sf_crmul(wx[ihx][imy][imx],
+				       1./wt[ihx][imy][imx]); );
+    LOOP( s = ss[ jy[imy] ][ is[ihx][imx] ] 
+	  +   ss[ jy[imy] ][ ir[ihx][imx] ];
+	  wx[ihx][imy][imx] = sf_cmul(wx[ihx][imy][imx],
+				      cexpf(sf_crmul(w,-s* az.d/2))); );
+#endif
 
     taper3(wx);
 }

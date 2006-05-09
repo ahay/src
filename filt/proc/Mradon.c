@@ -42,13 +42,13 @@ int main (int argc, char **argv)
     float eps,tol;            /* damping and tolerance for inversion */ 
     float x0, dx, ox;         /* reference offset, increment, origin */
     float maxw;               /* maximum weight */
-    float complex *dd;        /* data (CMP gather)    */
-    float complex *mm;        /* model (Radon gather) */
-    float complex *pp=NULL;        /* preconditioned model */
-    float complex *qq=NULL;        /* work array */
-    float complex **cm, **cd; /* model and data storage */
+    sf_complex *dd;           /* data (CMP gather)    */
+    sf_complex *mm;           /* model (Radon gather) */
+    sf_complex *pp=NULL;      /* preconditioned model */
+    sf_complex *qq=NULL;      /* work array */
+    sf_complex **cm, **cd;    /* model and data storage */
     float *xx;                /* offset header */
-    float *ww=NULL;                /* weight */
+    float *ww=NULL;           /* weight */
     float *tt;                /* trace */
     kiss_fftr_cfg forw, invs;
     sf_file in, out, offset;
@@ -211,11 +211,19 @@ int main (int argc, char **argv)
 
 	    if (adj) {
 		for (ix=0; ix < nx; ix++) { /* loop over offsets */
+#ifdef SF_HAS_COMPLEX_H
 		    dd[ix] = cd[ix][iw]/nt2; /* transpose */
+#else
+		    dd[ix] = sf_crmul(cd[ix][iw],1.0/nt2); 
+#endif
 		} 
 	    } else {
 		for (ip=0; ip < np; ip++) { /* loop over slopes */
+#ifdef SF_HAS_COMPLEX_H
 		    mm[ip] = cm[ip][iw]/nt2; /* transpose */
+#else
+		    mm[ip] = sf_crmul(cm[ip][iw],1.0/nt2); /* transpose */
+#endif
 		}
 	    }
 	    

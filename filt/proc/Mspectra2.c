@@ -26,7 +26,7 @@ int main (int argc, char* argv[])
 {
     int nw, n1, n2, nk, n3, ni, nfft, i, i1, i2, i3;
     float d1, o1, d2, o2, dw, dk, k0, **spec, scale, *trace;
-    float complex **fft, *ctrace, *ctrace2;
+    kiss_fft_cpx **fft, *ctrace, *ctrace2;
     char key[3];
     bool sum;
     kiss_fftr_cfg tfft;
@@ -63,9 +63,9 @@ int main (int argc, char* argv[])
     k0 = -0.5/d2;
 
     trace = sf_floatalloc (nfft);
-    ctrace = sf_complexalloc (nw);
-    ctrace2 = sf_complexalloc (nk);
-    fft = sf_complexalloc2(nw,nk);
+    ctrace = (kiss_fft_cpx*) sf_complexalloc (nw);
+    ctrace2 = (kiss_fft_cpx*) sf_complexalloc (nk);
+    fft = (kiss_fft_cpx**) sf_complexalloc2(nw,nk);
     spec = sf_floatalloc2(nw,nk);
  	
     tfft = kiss_fftr_alloc(nfft,0,NULL,NULL);
@@ -106,21 +106,20 @@ int main (int argc, char* argv[])
 		trace[i1]=0.;
 	    }
 	    /* Fourier transform in n1 */
-	    kiss_fftr (tfft,trace,(kiss_fft_cpx *) ctrace);
+	    kiss_fftr (tfft,trace,ctrace);
 	    for (i1=0; i1 < nw; i1++) {
-		fft[i2][i1] = i2%2? -ctrace[i1]: ctrace[i1];
+		fft[i2][i1] = i2%2? sf_cneg(ctrace[i1]): ctrace[i1];
 	    }
 	}
 	for (i2=n2; i2 < nk; i2++) {
 	    for (i1=0; i1 < nw; i1++) {
-		fft[i2][i1] = 0.;
+		fft[i2][i1] = sf_cmplx(0.,0.);
 	    }
 	}
 
 	for (i1=0; i1 < nw; i1++) {
 	    /* Fourier transform in n2 */
-	    kiss_fft_stride(xfft,(kiss_fft_cpx *) (fft[0]+i1),
-			    (kiss_fft_cpx *) ctrace2,nw);
+	    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
 	    if (sum) {
 		for (i2=0; i2 < nk; i2++) {
 		    spec[i2][i1] += cabsf(ctrace2[i2]);

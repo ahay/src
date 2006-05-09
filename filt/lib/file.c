@@ -58,6 +58,7 @@
 #include "alloc.h"
 #include "error.h"
 #include "simtab.h"
+#include "komplex.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -121,6 +122,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     sf_file file;
     char *filename, *format;
     size_t len;
+    extern off_t ftello (FILE *stream);
 
     file = (sf_file) sf_alloc(1,sizeof(*file));
     
@@ -193,6 +195,8 @@ Should do output after sf_input. >*/
     sf_file file;
     char *headname, *dataname, *path, *name, *format;
     size_t namelen;
+    extern int mkstemp (char *template);
+    extern off_t ftello (FILE *stream);
 
     file = (sf_file) sf_alloc(1,sizeof(*file));
 
@@ -766,15 +770,12 @@ void sf_setaformat (const char* format /* number format (.i.e "%5g") */,
     aline = (size_t) line;
 }
 
-#ifndef __cplusplus
-/*^*/
-
-void sf_complexwrite (float complex* arr, size_t size, sf_file file)
+void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 /*< write a complex array arr[size] to file >*/
 {
     char* buf;
     size_t i, left, nbuf;
-    float complex c;
+    sf_complex c;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
     switch(file->form) {
@@ -794,7 +795,7 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(float complex);
+	    size *= sizeof(sf_complex);
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
@@ -807,12 +808,12 @@ void sf_complexwrite (float complex* arr, size_t size, sf_file file)
 	    }
 	    break;
 	default:
-	    fwrite(arr,sizeof(float complex),size,file->stream);
+	    fwrite(arr,sizeof(sf_complex),size,file->stream);
 	    break;
     }
 }
 
-void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
+void sf_complexread (/*@out@*/ sf_complex* arr, size_t size, sf_file file)
 /*< read a complex array arr[size] from file >*/
 {
     char* buf;
@@ -824,11 +825,11 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
 	    for (i = 0; i < size; i++) {
 		if (EOF==fscanf(file->stream,"%g %gi",&re,&im))
 		    sf_error ("%s: trouble reading ascii:",__FILE__);
-		arr[i]=re+I*im;
+		arr[i]=sf_cmplx(re,im);
 	    }
 	    break;
 	case SF_XDR:
-	    size *= sizeof(float complex);
+	    size *= sizeof(sf_complex);
 	    buf = (char*)arr+size;
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (BUFSIZ < left)? BUFSIZ : left;
@@ -842,15 +843,12 @@ void sf_complexread (/*@out@*/ float complex* arr, size_t size, sf_file file)
 	    }
 	    break;
 	default:
-	    got = fread(arr,sizeof(float complex),size,file->stream);
+	    got = fread(arr,sizeof(sf_complex),size,file->stream);
 	    if (got != size) 
 		sf_error ("%s: trouble reading: %d of %d",__FILE__,got,size);
 	    break;
     }
 }
-
-#endif /* c++ */
-/*^*/
 
 void sf_charwrite (char* arr, size_t size, sf_file file)
 /*< write a char array arr[size] to file >*/
@@ -1168,6 +1166,7 @@ off_t sf_bytes (sf_file file)
 off_t sf_tell (sf_file file)
 /*< Find position in file >*/
 {
+    extern off_t ftello (FILE *stream);
     return ftello(file->stream);
 }
 
@@ -1176,6 +1175,8 @@ FILE *sf_tempfile(char** dataname, const char* mode)
 {
     FILE *tmp;
     char *path;
+    extern FILE * fdopen (int fd, const char *mode);
+    extern int mkstemp (char *template);
     
     path = gettmpdatapath();
     if (NULL == path) path = getdatapath();
@@ -1190,6 +1191,8 @@ FILE *sf_tempfile(char** dataname, const char* mode)
 void sf_seek (sf_file file, off_t offset, int whence)
 /*< Seek to a position in file. Follows fseek convention. >*/
 {
+    extern int fseeko(FILE *stream, off_t offset, int whence);
+
     if (0 > fseeko(file->stream,offset,whence))
 	sf_error ("%s: seek problem:",__FILE__);
 }

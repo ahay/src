@@ -23,9 +23,7 @@
 #include "cconjgrad.h"
 #include "alloc.h"
 #include "error.h"
-
-#ifndef __cplusplus
-/*^*/
+#include "komplex.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -33,21 +31,21 @@
 /*^*/
 
 static int np, nx, nr, nd;
-static float complex *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
+static sf_complex *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
 
-static double norm (int n, const float complex* x) 
+static double norm (int n, const sf_complex* x) 
 /* double-precision L2 norm of a complex number */
 {
-    double prod;
-    double complex xi;
+    double prod, xi, yi;
     int i;
 
     prod = 0.;
     for (i = 0; i < n; i++) {
-	xi = (double complex) x[i];
-	prod += xi*conj(xi);
+	xi = (double) crealf(x[i]);
+	yi = (double) cimagf(x[i]);
+	prod += xi*xi + yi*yi;
     }
     return prod;
 }
@@ -94,13 +92,13 @@ void sf_cconjgrad_close(void)
     free (gr);
 }
 
-void sf_cconjgrad(sf_coperator prec        /* data preconditioning */, 
-		  sf_coperator oper        /* linear operator */, 
-		  sf_coperator shape       /* shaping operator */, 
-		  float complex* p         /* preconditioned model */, 
-		  float complex* x         /* estimated model */, 
-		  const float complex* dat /* data */, 
-		  int niter                /* number of iterations */)
+void sf_cconjgrad(sf_coperator prec     /* data preconditioning */, 
+		  sf_coperator oper     /* linear operator */, 
+		  sf_coperator shape    /* shaping operator */, 
+		  sf_complex* p         /* preconditioned model */, 
+		  sf_complex* x         /* estimated model */, 
+		  const sf_complex* dat /* data */, 
+		  int niter             /* number of iterations */)
 /*< Conjugate gradient solver with shaping >*/
 {
     double gn, gnp, alpha, beta, g0, dg, r0, b0;
@@ -108,12 +106,20 @@ void sf_cconjgrad(sf_coperator prec        /* data preconditioning */,
     
     if (NULL != prec) {
 	for (i=0; i < nd; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    d[i] = - dat[i];
+#else
+	    d[i] = sf_cneg(dat[i]);
+#endif
 	}
 	prec(false,false,nd,nr,d,r);
     } else {
 	for (i=0; i < nr; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    r[i] = - dat[i];
+#else
+	    r[i] = sf_cneg(dat[i]);
+#endif
 	}
     }
     
@@ -127,10 +133,10 @@ void sf_cconjgrad(sf_coperator prec        /* data preconditioning */,
 	}
     } else {
 	for (i=0; i < np; i++) {
-	    p[i] = 0.;
+	    p[i] = sf_cmplx(0.0,0.0);
 	}
 	for (i=0; i < nx; i++) {
-	    x[i] = 0.;
+	    x[i] = sf_cmplx(0.0,0.0);
 	}
     } 
     
@@ -139,10 +145,18 @@ void sf_cconjgrad(sf_coperator prec        /* data preconditioning */,
 
     for (iter=0; iter < niter; iter++) {
 	for (i=0; i < np; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    gp[i] = eps*p[i];
+#else
+	    gp[i] = sf_crmul(p[i],eps);
+#endif
 	}
 	for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H	    
 	    gx[i] = -eps*x[i];
+#else
+	    gx[i] = sf_crmul(x[i],-eps);
+#endif
 	}
 
 	if (NULL != prec) {
@@ -190,13 +204,25 @@ void sf_cconjgrad(sf_coperator prec        /* data preconditioning */,
 	    }
 
 	    for (i=0; i < np; i++) {
+#ifdef SF_HAS_COMPLEX_H	 
 		sp[i] = gp[i] + alpha * sp[i];
+#else
+		sp[i] = sf_cadd(gp[i],sf_crmul(sp[i],alpha));
+#endif
 	    }
 	    for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H	 		
 		sx[i] = gx[i] + alpha * sx[i];
+#else
+		sx[i] = sf_cadd(gx[i],sf_crmul(sx[i],alpha));
+#endif
 	    }
 	    for (i=0; i < nr; i++) {
+#ifdef SF_HAS_COMPLEX_H	 		
 		sr[i] = gr[i] + alpha * sr[i];
+#else
+		sr[i] = sf_cadd(gr[i],sf_crmul(sr[i],alpha));
+#endif
 	    }
 	}
 
@@ -216,22 +242,31 @@ void sf_cconjgrad(sf_coperator prec        /* data preconditioning */,
 	alpha = - gn / beta;
 
 	for (i=0; i < np; i++) {
+#ifdef SF_HAS_COMPLEX_H	 
 	    p[i] += alpha * sp[i];
+#else
+	    p[i] = sf_cadd(p[i],sf_crmul(sp[i],alpha));
+#endif
 	}
 
 	for (i=0; i < nx; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    x[i] += alpha * sx[i];
+#else
+	    x[i] = sf_cadd(x[i],sf_crmul(sx[i],alpha));
+#endif
 	}
 
 	for (i=0; i < nr; i++) {
+#ifdef SF_HAS_COMPLEX_H
 	    r[i] += alpha * sr[i];
+#else
+	    r[i] = sf_cadd(r[i],sf_crmul(sr[i],alpha));
+#endif
 	}
 
 	gnp = gn;
     }
 }
-
-#endif
-/*^*/
 
 /* 	$Id$	 */

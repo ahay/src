@@ -27,7 +27,7 @@ static kiss_fft_cfg forw2, invs2;
 static kiss_fft_cfg forw3, invs3;
 static int n1, n2, n3;
 static float fftscale;
-static float complex *trace2, *trace3;
+static kiss_fft_cpx *trace2, *trace3;
 
 #define LOOP1(a) for(i1=0;i1<n1;i1++){ {a} }
 #define LOOP2(a) for(i2=0;i2<n2;i2++){ {a} }
@@ -54,8 +54,8 @@ void fft3_init(int n1_, int n2_, int n3_)
 	NULL == forw3 || NULL == invs3) 
 	sf_error("%s: KISS FFT allocation error",__FILE__);
 
-    trace2 = sf_complexalloc(n2);
-    trace3 = sf_complexalloc(n3);
+    trace2 = (kiss_fft_cpx*) sf_complexalloc(n2);
+    trace3 = (kiss_fft_cpx*) sf_complexalloc(n3);
 
     fftscale = 1./(n1*n2*n3);
 }
@@ -74,8 +74,8 @@ void fft3_close(void)
     free (invs3);
 }
 
-void fft3(bool inv            /* inverse/forward flag */, 
-	  complex float ***pp /* [n1][n2][n3] */) 
+void fft3(bool inv           /* inverse/forward flag */, 
+	  kiss_fft_cpx ***pp /* [n1][n2][n3] */) 
 /*< Apply 3-D FFT >*/
 {
     int i1, i2, i3;
@@ -85,18 +85,14 @@ void fft3(bool inv            /* inverse/forward flag */,
 	/* IFT 1 */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		kiss_fft(invs1,
-			 (const kiss_fft_cpx *) pp[i3][i2], 
-			 (      kiss_fft_cpx *) pp[i3][i2]);
+		kiss_fft(invs1,pp[i3][i2],pp[i3][i2]);
 	    }
 	}
 
 	/* IFT 2 */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(invs2,
-				(const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				(      kiss_fft_cpx *) trace2,n1);
+		kiss_fft_stride(invs2,pp[i3][0]+i1,trace2,n1);
 		for (i2=0; i2 < n2; i2++) {
 		    pp[i3][i2][i1] = trace2[i2];
 		}
@@ -106,9 +102,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	/* IFT 3 */
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(invs3,
-				(const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				(      kiss_fft_cpx *) trace3,n1);
+		kiss_fft_stride(invs3,pp[0][i2]+i1,trace3,n1);
 		for (i3=0; i3 < n3; i3++) {
 		    pp[i3][i2][i1] = trace3[i3];
 		}
@@ -119,7 +113,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
 		for (i1=0; i1 < n1; i1++) {
-		    pp[i3][i2][i1] *= fftscale;
+		    pp[i3][i2][i1] = sf_crmul(pp[i3][i2][i1],fftscale);
 		}
 	    }
 	}
@@ -128,9 +122,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	/* FFT 3 */
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(forw3,
-				(const kiss_fft_cpx *) (pp[0][i2]+i1), 
-				(      kiss_fft_cpx *) trace3,n1);
+		kiss_fft_stride(forw3,pp[0][i2]+i1,trace3,n1);
 		for (i3=0; i3 < n3; i3++) {
 		    pp[i3][i2][i1] = trace3[i3];
 		}
@@ -140,9 +132,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	/* FFT 2 */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i1=0; i1 < n1; i1++) {
-		kiss_fft_stride(forw2,
-				(const kiss_fft_cpx *) (pp[i3][0]+i1), 
-				(      kiss_fft_cpx *) trace2,n1);
+		kiss_fft_stride(forw2,pp[i3][0]+i1,trace2,n1);
 		for (i2=0; i2 < n2; i2++) {
 		    pp[i3][i2][i1] = trace2[i2];
 		}
@@ -152,9 +142,7 @@ void fft3(bool inv            /* inverse/forward flag */,
 	/* FFT 1 */
 	for (i3=0; i3 < n3; i3++) {
 	    for (i2=0; i2 < n2; i2++) {
-		kiss_fft(forw1,
-			 (const kiss_fft_cpx *) pp[i3][i2], 
-			 (      kiss_fft_cpx *) pp[i3][i2]);
+		kiss_fft(forw1,pp[i3][i2],pp[i3][i2]);
 	    }
 	}
     }

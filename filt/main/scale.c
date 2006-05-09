@@ -3,21 +3,21 @@
 To scale by a constant factor, you can also use sfmath of sfheadermath.
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <math.h>
@@ -29,7 +29,7 @@ int main (int argc, char* argv[])
     int axis, n[SF_MAX_DIM], ndim, i, i2, n1, n2, nsize, nbuf = BUFSIZ, *ibuf;
     sf_file in, out;    
     float* fbuf, f, dscale;
-    float complex* cbuf;
+    sf_complex* cbuf;
     sf_datatype type;
 
     sf_init (argc, argv);
@@ -83,7 +83,11 @@ int main (int argc, char* argv[])
 		    }
 		    if (dscale > 0.) dscale=1./dscale;
 		    for (i=0; i < n1; i++) {
+#ifdef SF_HAS_COMPLEX_H
 			cbuf[i] *= dscale;
+#else
+			cbuf[i] = sf_crmul(cbuf[i],dscale);
+#endif
 		    }
 		    sf_complexwrite (cbuf,n1,out);
 		}

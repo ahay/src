@@ -38,8 +38,8 @@ static sf_axa    bxx,byy;
 static float         **kk; /* wavenumber  */
 static float         **kw; /* wavenumber weight */
 
-static float complex **wk;
-static float complex **wt;
+static sf_complex **wk;
+static sf_complex **wt;
 
 static int   nsc;
 static float csc[5];
@@ -142,24 +142,29 @@ void kweight( float **bs, /* slowness */
 /*------------------------------------------------------------*/
 
 void lsr_s2w(
-    complex float    w /* frequency */,
-    complex float **bw /* background   wavefield */,
-    float         **bs /* background   slowness  */,
-    complex float **pw /* perturbation wavefield */,
-    complex float **ps /* perturbation slowness  */
+    sf_complex    w /* frequency */,
+    sf_complex **bw /* background   wavefield */,
+    float      **bs /* background   slowness  */,
+    sf_complex **pw /* perturbation wavefield */,
+    sf_complex **ps /* perturbation slowness  */
     )
 /*< linear scattering operator (forward) >*/
 {
     int ix,iy,isc;
     float wo;
-    float complex iwdz;
+    sf_complex iwdz;
 
     wo = cimagf(w);     /* real frequency */
-    iwdz = -2 * I * wo * az.d;
+    iwdz = sf_cmplx(0.,-2 * wo * az.d);
 
     /* 0th order term */
+#ifdef SF_HAS_COMPLEX_H
     LOOP( pw[iy][ix] =
 	  ps[iy][ix] * iwdz * bw[iy][ix]; );
+#else
+    LOOP( pw[iy][ix] =
+	  sf_cmul(ps[iy][ix], sf_cmul(iwdz, bw[iy][ix])); );
+#endif
 
     /* higher order terms */
     if(nsc>0) {
@@ -170,43 +175,59 @@ void lsr_s2w(
 	for( isc=1; isc<=nsc; isc++) {
 /*	    sf_warning("FWD isc=%d csc=%g",isc,csc[isc]);*/
 
-	    KOOP( wk[iy][ix] = 0.; );
+	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = wt[iy][ix]; );
 
 	    fft2(false,wk);
 
+#ifdef SF_HAS_COMPLEX_H
 	    KOOP( wk[iy][ix] *= 
 		  kw[iy][ix] * pow(kk[iy][ix],isc); );
+#else
+	    KOOP( wk[iy][ix] = sf_crmul(wk[iy][ix], 
+					kw[iy][ix] * pow(kk[iy][ix],isc)); );
+#endif
 
 	    fft2(true,wk);
 
+#ifdef SF_HAS_COMPLEX_H
 	    LOOP( wk[iy][ix] *= pow(wo*bs[iy][ix],-2*isc); );
-
 	    LOOP( pw[iy][ix] +=
 		  wk[iy][ix] * csc[isc]; );
+#else
+	     LOOP( wk[iy][ix] = sf_crmul(wk[iy][ix],
+					 pow(wo*bs[iy][ix],-2*isc)); );
+	     LOOP( pw[iy][ix] = sf_cadd(pw[iy][ix],
+					sf_crmul(wk[iy][ix],csc[isc])); );
+#endif
 	}
     }
 }
 
 void lsr_w2s(
-    complex float    w /* frequency */,
-    complex float **bw /* background   wavefield */,
-    float         **bs /* background   slowness  */,
-    complex float **pw /* perturbation wavefield */,
-    complex float **ps /* perturbation slowness  */
+    sf_complex    w /* frequency */,
+    sf_complex **bw /* background   wavefield */,
+    float      **bs /* background   slowness  */,
+    sf_complex **pw /* perturbation wavefield */,
+    sf_complex **ps /* perturbation slowness  */
     )
 /*< linear scattering operator (adjoint) >*/
 {
     int ix,iy,isc;
     float wo;
-    float complex iwdz;
+    sf_complex iwdz;
 
     wo = cimagf(w);     /* real frequency */
-    iwdz = -2 * I * wo * az.d;
+    iwdz = sf_cmplx(0.,-2 * wo * az.d);
 
     /* 0th order term */
+#ifdef SF_HAS_COMPLEX_H
     LOOP( ps[iy][ix] =
 	  pw[iy][ix] * iwdz * conjf( bw[iy][ix] ); );
+#else
+    LOOP( ps[iy][ix] =
+	  sf_cmul(pw[iy][ix],sf_cmul(iwdz,conjf( bw[iy][ix] ))); );
+#endif
 
     /* higher order terms */
     if(nsc>0) {
@@ -215,21 +236,39 @@ void lsr_w2s(
 	for( isc=1; isc<=nsc; isc++) {
 /*	    sf_warning("ADJ isc=%d csc=%g",isc,csc[isc]);*/
 
-	    KOOP( wk[iy][ix] = 0.; );
+	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = pw[iy][ix]; );
+#ifdef SF_HAS_COMPLEX_H
 	    LOOP( wk[iy][ix]*= pow(wo*bs[iy][ix],-2*isc); );
+#else
+	    LOOP( wk[iy][ix] = sf_crmul(wk[iy][ix],
+					pow(wo*bs[iy][ix],-2*isc)); );
+#endif
 
 	    fft2(true,wk);
- 
+
+#ifdef SF_HAS_COMPLEX_H
 	    KOOP( wk[iy][ix] *=
 		  kw[iy][ix] * pow(kk[iy][ix],isc); );
+#else
+	    KOOP( wk[iy][ix] = sf_crmul(wk[iy][ix],
+					kw[iy][ix] * pow(kk[iy][ix],isc)); );
+#endif
 
 	    fft2(false,wk);
 
+#ifdef SF_HAS_COMPLEX_H	    
 	    LOOP( wk[iy][ix] *= iwdz * conjf( bw[iy][ix] ); );
 	    
 	    LOOP( ps[iy][ix] +=
 		  wk[iy][ix] * csc[isc]; );
+#else
+	    LOOP( wk[iy][ix] = sf_cmul(wk[iy][ix],
+				       sf_cmul(iwdz,conjf( bw[iy][ix] ))); );
+	    
+	    LOOP( ps[iy][ix] = sf_cadd(ps[iy][ix],
+				       sf_crmul(wk[iy][ix],csc[isc])); );
+#endif
 	}
     }
 }

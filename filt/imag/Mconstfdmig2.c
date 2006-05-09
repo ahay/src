@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     int nx, nz, nw;
     bool hi;
     float dx, dz, dw, vel, beta;
-    float complex **dat;
+    sf_complex **dat;
     float **img;
     sf_file data, imag, movie;
 

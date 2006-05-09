@@ -105,11 +105,7 @@ int             irand;
 	for (i1 = 0; i1 < npixels; i1++)
 	{
 	    greydata = inpline[i1];
-#ifdef USG
 	    irand = (rand () & 255);
-#else				/* USG */
-	    irand = (random () & 255);
-#endif				/* USG */
 	    if (greydata > irand)
 	    {
 		outline[i1] = pix_off;

@@ -47,9 +47,9 @@ void freqfilt2_init(int n1, int n2 /* data dimensions */,
 	sf_error("%s: KISS FFT allocation error",__FILE__);
 
     trace = sf_floatalloc(nfft);
-    ctrace = sf_komplexalloc(nw);
-    ctrace2 = sf_komplexalloc(n2);
-    fft = sf_komplexalloc2(nw,n2);
+    ctrace = (kiss_fft_cpx*) sf_complexalloc(nw);
+    ctrace2 = (kiss_fft_cpx*) sf_complexalloc(n2);
+    fft = (kiss_fft_cpx**) sf_complexalloc2(nw,n2);
 }
 
 void freqfilt2_set(float **filt)

@@ -50,9 +50,9 @@ void c2r_init(
 void c2r(
     bool linear,
     bool adj,
-    float         **mapCC,
-    float         **mapRC,
-    complex float **rays )
+    float      **mapCC,
+    float      **mapRC,
+    sf_complex **rays )
 /*< interpolation switch >*/
 {
     int it,ig,iz,ix;
@@ -85,9 +85,9 @@ void c2r(
 
 void c2r_linear(
     bool      adj,
-    float         **mapCC,
-    float         **mapRC,
-    complex float **rays)
+    float      **mapCC,
+    float      **mapRC,
+    sf_complex **rays)
 /*< linear interpolation >*/
 {
     int it,ig,iz,ix;
@@ -177,9 +177,9 @@ void c2r_linear(
 
 void c2r_sinc(
     bool      adj,
-    float         **mapCC,
-    float         **mapRC,
-    complex float **rays)
+    float      **mapCC,
+    float      **mapRC,
+    sf_complex **rays)
 /*< sinc interpolation >*/
 {
     int it,ig,iz,ix;
