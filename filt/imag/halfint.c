@@ -51,7 +51,8 @@ void halfint_init (bool inv  /* differentiation or integration */,
 
     for (i=0; i < nw; i++) {
 	om = -2.*SF_PI*i/n;
-	cw = sf_cmplx(cosf(om),sinf(om));
+	cw.r = cosf(om);
+	cw.i = sinf(om);
 
 	cz.r = 1.-rho*cw.r;
 	cz.i = -rho*cw.i;

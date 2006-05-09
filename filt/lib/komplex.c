@@ -399,13 +399,14 @@ kiss_fft_cpx sf_casinf(kiss_fft_cpx z)
 /*< complex hyperbolic arcsine >*/
 {
     float x, y;
+    kiss_fft_cpx z2;
 
     x = z.r;
     y = z.i;
 
     if (0.0 == y) {
-	z.r = asinf(x);
-	z.i = 0.0;
+	z2.r = asinf(x);
+	z2.i = 0.0;
     } else { 
 	z.r = 1.0 - (x - y) * (x + y);
 	z.i = -2.0 * x * y;
@@ -415,10 +416,11 @@ kiss_fft_cpx sf_casinf(kiss_fft_cpx z)
 	z.i += x;
 	z = sf_clogf(z);
 
-	z = sf_cmplx(z.i,-z.r);
+	z2.r =  z.i;
+	z2.i = -z.r;
     }
   
-    return z;
+    return z2;
 }
 
 kiss_fft_cpx sf_cacosf(kiss_fft_cpx z)
@@ -435,7 +437,8 @@ kiss_fft_cpx sf_catanf(kiss_fft_cpx z)
 {
     kiss_fft_cpx z2;
 
-    z2 = sf_cmplx(-z.r,1.0-z.i);
+    z2.r = -z.r;
+    z2.i = 1.0-z.i;
     z.i += 1.0;
     
     z2 = sf_clogf(sf_cdiv(z,z2));
@@ -451,9 +454,10 @@ kiss_fft_cpx sf_catanhf(kiss_fft_cpx z)
 {
     kiss_fft_cpx z2;
 
-    z2 = sf_cmplx(-z.i,z.r);
+    z2.r = -z.i;
+    z2.i =  z.r;
     z2 = sf_catanf(z2);
-    z.r = z2.i;
+    z.r =  z2.i;
     z.i = -z2.r; 
     /* signs? */
 
@@ -465,9 +469,10 @@ kiss_fft_cpx sf_casinhf(kiss_fft_cpx z)
 {
     kiss_fft_cpx z2;
 
-    z2 = sf_cmplx(-z.i,z.r);
+    z2.r = -z.i;
+    z2.i =  z.r;
     z2 = sf_casinf(z2);
-    z.r = z2.i;
+    z.r =  z2.i;
     z.i = -z2.r; 
     /* signs? */
 
@@ -497,7 +502,8 @@ kiss_fft_cpx sf_cpowf(kiss_fft_cpx a, kiss_fft_cpx b)
     i = sf_cargf (a);
 
     if (r == 0.0) {
-	c = sf_cmplx(0.0,0.0);
+	c.r = 0.0;
+	c.i = 0.0;
     } else {
 	theta = i * b.r;
  

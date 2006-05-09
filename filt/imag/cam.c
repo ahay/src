@@ -217,7 +217,7 @@ void cam_ssf(
      /* FFT */
     KOOP( pk[ihx][imy][imx] = sf_cmplx(0.,0.); );
     LOOP( pk[ihx][imy][imx] = wx[ihx][imy][imx]; );
-    fft3(false,pk);
+    fft3(false,(kiss_fft_cpx***) pk);
 
     LOOP( wx[ihx][imy][imx] = sf_cmplx(0.,0.);
 	  wt[ihx][imy][imx] = 0.; );
@@ -267,7 +267,7 @@ void cam_ssf(
 #endif
 	    
 	    /* IFT */
-	    fft3(true,wk);
+	    fft3(true,(kiss_fft_cpx***) wk);
 	    
 	    /* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H

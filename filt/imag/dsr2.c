@@ -275,7 +275,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 #endif
 		
 		/* FFT */
-		fft2(false,pk);		
+		fft2(false,(kiss_fft_cpx**) pk);		
 		
 		si = slow[iz];
 		fslice_get(mms,iz,ms[0]);
@@ -310,7 +310,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 #endif
 		
 			/* IFT */
-			fft2(true,wk);
+			fft2(true,(kiss_fft_cpx**) wk);
 
 			/* create MRS mask */
 			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && 
@@ -381,7 +381,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 #endif
 
 		/* FFT */
-		fft2(false,pk);
+		fft2(false,(kiss_fft_cpx**) pk);
 
 		si = slow[iz+1];
 		fslice_get(mms,iz,ms[0]);
@@ -419,7 +419,7 @@ void dsr2(bool verb                   /* verbosity flag */,
 #endif
 			
 			/* IFT */
-			fft2(true,wk);
+			fft2(true,(kiss_fft_cpx**) wk);
 
 			/* create MRS mask */
 			LOOPxh( ma[ix][ih]= (ms[ix][ih]==j && 

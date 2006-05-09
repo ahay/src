@@ -208,7 +208,7 @@ void split2(bool verb                   /* verbosity flag */,
 		    );
 #endif
 		
-		fft2(false,pp);
+		fft2(false,(kiss_fft_cpx**) pp);
 		slice_get(slow,iz,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
@@ -232,7 +232,7 @@ void split2(bool verb                   /* verbosity flag */,
 								  0.)))),dz));
 			     wk[ix][iy] = sf_cmul(pp[ix][iy],cshift); );
 #endif
-		    fft2(true,wk);
+		    fft2(true,(kiss_fft_cpx**) wk);
 
 		    /* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
@@ -297,7 +297,7 @@ void split2(bool verb                   /* verbosity flag */,
 			wx[ix][iy] = sf_cmplx(0.,0.); );
 #endif
 		
-		fft2(false,pp);
+		fft2(false,(kiss_fft_cpx**) pp);
 		slice_get(slow,iz+1,ss[0]);
 
 		for (ir=0; ir<nr[iz]; ir++) {
@@ -320,7 +320,7 @@ void split2(bool verb                   /* verbosity flag */,
 								  0.)))),dz));
 			     wk[ix][iy] = sf_cmul(pp[ix][iy],conjf(cshift)); );
 #endif
-		    fft2(true,wk);
+		    fft2(true,(kiss_fft_cpx**) wk);
 
 		    /* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H

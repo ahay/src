@@ -339,7 +339,7 @@ void rweone_phs_old(
     float ta,tb,tt;
     sf_complex ikz;
 
-    rweone_fft(false,v);
+    rweone_fft(false,(kiss_fft_cpx*) v);
 
     for(ig=0;ig<ag.n;ig++) {
 	ikg = KMAP(ig,ag.n);
@@ -362,7 +362,7 @@ void rweone_phs_old(
 #endif
     }
     
-    rweone_fft( true,v);
+    rweone_fft( true,(kiss_fft_cpx*) v);
 }
 
 void rweone_phs(
@@ -389,7 +389,7 @@ void rweone_phs(
     w2 = sf_cmul(iw,iw);
 #endif
 
-    rweone_fft(false,v);
+    rweone_fft(false,(kiss_fft_cpx*) v);
 
     for(ig=0;ig<ag.n;ig++) {
 	ikg = KMAP(ig,ag.n);
@@ -405,7 +405,7 @@ void rweone_phs(
 #endif
     }
     
-    rweone_fft( true,v);
+    rweone_fft( true,(kiss_fft_cpx*) v);
 }
 
 

@@ -124,7 +124,8 @@ int main (int argc, char *argv[])
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
 		    shift = -2.0*SF_PI*i1*dw*o1;
-		    ce = sf_cmplx(cosf(shift),sinf(shift));
+		    ce.r = cosf(shift);
+		    ce.i = sinf(shift);
 		    pp[i1]=sf_cmul(pp[i1],ce);
 		}
 	    }
@@ -136,7 +137,8 @@ int main (int argc, char *argv[])
 	    if (0. != o1) {
 		for (i1=0; i1 < nw; i1++) {
 		    shift = +2.0*SF_PI*i1*dw*o1;
-		    ce = sf_cmplx(cosf(shift),sinf(shift));
+		    ce.r = cosf(shift);
+		    ce.i = sinf(shift);
 		    pp[i1]=sf_cmul(pp[i1],ce);
 		}
 	    }

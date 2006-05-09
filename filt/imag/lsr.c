@@ -178,7 +178,7 @@ void lsr_s2w(
 	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = wt[iy][ix]; );
 
-	    fft2(false,wk);
+	    fft2(false,(kiss_fft_cpx**) wk);
 
 #ifdef SF_HAS_COMPLEX_H
 	    KOOP( wk[iy][ix] *= 
@@ -188,7 +188,7 @@ void lsr_s2w(
 					kw[iy][ix] * pow(kk[iy][ix],isc)); );
 #endif
 
-	    fft2(true,wk);
+	    fft2(true,(kiss_fft_cpx**) wk);
 
 #ifdef SF_HAS_COMPLEX_H
 	    LOOP( wk[iy][ix] *= pow(wo*bs[iy][ix],-2*isc); );
@@ -245,7 +245,7 @@ void lsr_w2s(
 					pow(wo*bs[iy][ix],-2*isc)); );
 #endif
 
-	    fft2(true,wk);
+	    fft2(true,(kiss_fft_cpx**) wk);
 
 #ifdef SF_HAS_COMPLEX_H
 	    KOOP( wk[iy][ix] *=
@@ -255,7 +255,7 @@ void lsr_w2s(
 					kw[iy][ix] * pow(kk[iy][ix],isc)); );
 #endif
 
-	    fft2(false,wk);
+	    fft2(false,(kiss_fft_cpx**) wk);
 
 #ifdef SF_HAS_COMPLEX_H	    
 	    LOOP( wk[iy][ix] *= iwdz * conjf( bw[iy][ix] ); );

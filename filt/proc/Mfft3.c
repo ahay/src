@@ -191,7 +191,8 @@ int main (int argc, char **argv)
 	    /* pad with zeros */
 	    for (ix=nx; ix<nk; ix++) {
 		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] = sf_cmplx(0.,0.);
+		    cp[ix][i1].r = 0.;
+		    cp[ix][i1].i = 0.;
 		}
 	    }
     

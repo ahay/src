@@ -113,7 +113,8 @@ int main (int argc, char* argv[])
 	}
 	for (i2=n2; i2 < nk; i2++) {
 	    for (i1=0; i1 < nw; i1++) {
-		fft[i2][i1] = sf_cmplx(0.,0.);
+		fft[i2][i1].r = 0.;
+		fft[i2][i1].i = 0.;
 	    }
 	}
 
@@ -122,11 +123,11 @@ int main (int argc, char* argv[])
 	    kiss_fft_stride(xfft,fft[0]+i1,ctrace2,nw);
 	    if (sum) {
 		for (i2=0; i2 < nk; i2++) {
-		    spec[i2][i1] += cabsf(ctrace2[i2]);
+		    spec[i2][i1] += sf_cabsf(ctrace2[i2]);
 		}
 	    } else {
 		for (i2=0; i2 < nk; i2++) {
-		    spec[i2][i1] = cabsf(ctrace2[i2])*scale;
+		    spec[i2][i1] = sf_cabsf(ctrace2[i2])*scale;
 		}
 	    }
 	}
