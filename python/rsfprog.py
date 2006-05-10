@@ -1,21 +1,18 @@
 import rsfdoc
 
-# filt
 import sfmain
 import sfproc
 import sfimag
-
-# user
-import sffomels
-import sfslim
+import sfplot
+import sflibplot
 import sfgee
+import sffomels
 import sfsavap
 import sfjennings
+import sfmirandaf
 import sfchaoshun
+import sfslim
 
-# plot
-import sflibplot
-import sfplot
 import vpplot
 
 import rsfuse

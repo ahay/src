@@ -23,6 +23,15 @@ def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
+def progs(target=None,source=None,env=None):
+    out = open(str(target[0]),'w')
+    dirs = env.get('dirs')
+    out.write('import rsfdoc\n\n')
+    for mod in dirs:
+        out.write('import sf%s\n' % mod)
+    out.write('\nimport vpplot\n\nimport rsfuse\n')
+    out.close()
+
 def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     doc = ['import rsfdoc\n']

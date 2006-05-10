@@ -8,6 +8,12 @@ bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 docdir = os.path.join(root,'doc')
 
+dirs = ['main','proc','imag','plot','libplot']+env['USERS']
+print dirs
+
+env.Command('rsfprog.py',None,
+            action=Action(rsfdoc.progs,varlist=['dirs']),dirs=dirs)
+
 for src in ('doc','proj','prog','tex','book'):
     py = 'rsf%s.py' % src
     env.Install(libdir,py)
@@ -19,9 +25,6 @@ env.Install(bindir,'sftour')
 
 if WhereIs('units'):
     env.Install(bindir,'sfunits')
-
-dirs = ('main','proc','imag','plot','libplot',
-        'fomels','savap','gee','jennings','chaoshun','slim')
 
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')

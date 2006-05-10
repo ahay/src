@@ -1,6 +1,6 @@
 EnsureSConsVersion(0, 96)
 
-import os, sys, string, re
+import os
 import configure
 
 root = os.environ.get('RSFROOT',os.getcwd())
@@ -41,6 +41,9 @@ env.Alias('config',config)
 # PYTHON BUILD
 ##########################################################################
 
+user = filter(lambda x: x[0] != '.' and x != 'nobody', os.listdir('user'))
+env['USERS']=user
+
 Export('env')
 SConscript(dirs='python',name='SConstruct')
 
@@ -53,8 +56,6 @@ env.Prepend(CPPPATH=['../../include'],
 
 Export('env')
 dirs = ('lib','main','proc','imag')
-
-user = ('fomels','slim','gee','savap','jennings','chaoshun')
 
 Default('build/include')
 subdirs = map(lambda x: os.path.join('filt',x), dirs) + \
