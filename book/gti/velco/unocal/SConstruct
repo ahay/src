@@ -13,7 +13,8 @@ Fetch(sgy,'unocal',private)
 
 Flow('uno tuno ./buno ./huno',sgy,
      '''
-     segyread tape=$SOURCE tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     segyread tape=$SOURCE tfile=${TARGETS[1]}
+     bfile=${TARGETS[2]} hfile=${TARGETS[3]}
      ''',stdin=0)
 
 Flow('bin','uno','intbin xk=cdpt yk=cdp')
@@ -36,9 +37,15 @@ Flow('pik','scn',
      ''')
 
 Result('vel','pik',
-       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity" label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s')
+       '''
+       window |
+       grey color=j allpos=y bias=1.5 scalebar=y
+       title="NMO Velocity"
+       label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s
+       ''')
 
-Flow('nmo','bin off pik','nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+Flow('nmo','bin off pik',
+     'nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
 
 Flow('stk','nmo','window min1=1 | stack')
 
@@ -48,9 +55,11 @@ Flow('agc','stk','agc rect1=250')
 
 Result('agc','grey title="AGC Stack" label1=Time unit1=s label2=CMP ')
 
-Result('top','agc','window max1=4 | grey title=Top  label1=Time unit1=s label2=CMP ')
+Result('top','agc',
+       'window max1=4 | grey title=Top  label1=Time unit1=s label2=CMP ')
 
-Result('bot','agc','window min1=4 | grey title=Bottom  label1=Time unit1=s label2=CMP ')
+Result('bot','agc',
+       'window min1=4 | grey title=Bottom  label1=Time unit1=s label2=CMP ')
 
 Flow('cmp0','bin','window n3=1 f3=100')
 Flow('off0','off','window n3=1 f3=100')
@@ -63,7 +72,11 @@ Result('cmp','cmp0 off0',
        ''')
 
 Flow('scan','scn','window n3=1 f3=1170')
-Plot('scan','grey color=j allpos=y title="Semblance Scan" label1=Time unit1=s label2=Velocity unit2=km/s')
+Plot('scan',
+     '''
+     grey color=j allpos=y title="Semblance Scan"
+     label1=Time unit1=s label2=Velocity unit2=km/s
+     ''')
 
 Flow('pick','scan',
      '''
@@ -71,8 +84,16 @@ Flow('pick','scan',
      mutter x0=1.4 t0=5 v0=0.60 half=n inner=y |
      pick rect1=100
      ''')
-Plot('pick','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=7 pad=n wantaxis=n wanttitle=n')
-Plot('pick0','pick','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n')
+Plot('pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=3.38
+     plotcol=7 pad=n wantaxis=n wanttitle=n
+     ''')
+Plot('pick0','pick',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=3.38
+     plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n
+     ''')
 
 Result('scan','scan pick0 pick','Overlay')
 
@@ -84,7 +105,8 @@ Fetch(sgy,'unocal',private)
 
 Flow('uno2 tuno2 ./buno2 ./huno2',sgy,
      '''
-     segyread tape=$SOURCE tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     segyread tape=$SOURCE tfile=${TARGETS[1]}
+     bfile=${TARGETS[2]} hfile=${TARGETS[3]}
      ''',stdin=0)
 
 Flow('bin2','uno2','intbin xk=cdpt yk=cdp')
@@ -102,9 +124,15 @@ Flow('scn2','bin2 off2',
 Flow('pik2','scn2','pick rect1=100 rect2=40')
 
 Result('vel2','pik2',
-       'window | grey color=j allpos=y bias=1.5 scalebar=y title="NMO Velocity (RARE)" label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s')
+       '''
+       window |
+       grey color=j allpos=y bias=1.5 scalebar=y
+       title="NMO Velocity (RARE)"
+       label1=Time unit1=s label2=CMP barlabel=Velocity barunit=km/s
+       ''')
 
-Flow('nmo2','bin2 off2 pik2','nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+Flow('nmo2','bin2 off2 pik2',
+     'nmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
 
 Flow('stk2','nmo2','window min1=1 | stack')
 
@@ -114,16 +142,36 @@ Flow('agc2','stk2','agc rect1=250')
 
 Result('agc2','grey title="AGC Stack (RARE)" label1=Time unit1=s label2=CMP ')
 
-Result('top2','agc2','window max1=4 | grey title="Top (RARE)"  label1=Time unit1=s label2=CMP ')
+Result('top2','agc2',
+       '''
+       window max1=4 |
+       grey title="Top (RARE)"  label1=Time unit1=s label2=CMP
+       ''')
 
-Result('bot2','agc2','window min1=4 | grey title="Bottom (RARE)" label1=Time unit1=s label2=CMP ')
+Result('bot2','agc2',
+       '''
+       window min1=4 |
+       grey title="Bottom (RARE)" label1=Time unit1=s label2=CMP
+       ''')
 
 Flow('scan2','scn2','window n3=1 f3=1170')
-Plot('scan2','grey color=j allpos=y title="Semblance Scan (RARE)" label1=Time unit1=s label2=Velocity unit2=km/s')
+Plot('scan2',
+     '''
+     grey color=j allpos=y title="Semblance Scan (RARE)"
+     label1=Time unit1=s label2=Velocity unit2=km/s
+     ''')
 
 Flow('pick2','scan2','pick rect1=100')
-Plot('pick2','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=7 pad=n wantaxis=n wanttitle=n')
-Plot('pick20','pick2','graph transp=y yreverse=y min2=1.4 max2=3.38 plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n')
+Plot('pick2',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=3.38
+     plotcol=7 pad=n wantaxis=n wanttitle=n
+     ''')
+Plot('pick20','pick2',
+     '''
+     graph transp=y yreverse=y min2=1.4 max2=3.38
+     plotcol=0 plotfat=10 pad=n wantaxis=n wanttitle=n
+     ''')
 
 Result('scan2','scan2 pick20 pick2','Overlay')
 
