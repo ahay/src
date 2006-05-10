@@ -12,7 +12,7 @@ dirs = ['main','proc','imag','plot','libplot']+env['USERS']
 print dirs
 
 env.Command('rsfprog.py',None,
-            action=Action(rsfdoc.progs,varlist=['dirs']),dirs=dirs)
+            action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
 
 for src in ('doc','proj','prog','tex','book'):
     py = 'rsf%s.py' % src

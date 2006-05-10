@@ -23,7 +23,7 @@ def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
 
-def progs(target=None,source=None,env=None):
+def getprogs(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     dirs = env.get('dirs')
     out.write('import rsfdoc\n\n')
