@@ -106,7 +106,7 @@ def warp3(name,       # name prefix
     if line:
         for case in (pp,ps,warp):
             Flow(case+'2',case,'window n3=1 min3=%d' % line)
-        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,
+        warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,j2/j3,
               trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
               ng,g0,pmin,pmax,an,rect1,rect2,iter,ss,inter,clip)
     else:
@@ -125,7 +125,14 @@ def warp3(name,       # name prefix
 
     PS = ('PS','SS')[ss]
 
-    ifreq = 'iphase rect1=%d rect2=%d rect3=%d order=100' % (2*rect1,2*rect2,2*rect3)
+    ifreq = '''
+    window j2=%d j3=%d |
+    iphase rect1=%d rect2=%d rect3=%d order=100 |
+    transp          memsize=500 |
+    spline n1=%d d1=1 o1=%g | transp memsize=500  |
+    transp plane=13 memsize=500 |
+    spline n1=%d d1=1 o1=%g | transp plane=13 memsize=500 
+    ''' % (j2,j3,2*rect1,2*rect2/j2,2*rect3/j3,nx,o2,ny,o3)
 
     def freqplot3(title):
         return '''
@@ -259,6 +266,7 @@ def warp2(name,       # name prefix
           nx,         # number of traces
           tmax,       # maximum time for display
           tmin=0,     # minimum time for display
+          j2=1,       # trace sumsampling
           trace=None, # seleted trace
           o2=0,       # trace start
           gmin=1,     # minimum gamma
@@ -363,7 +371,7 @@ def warp2(name,       # name prefix
     grey3 frame1=%d frame3=%d frame2=%d color=j flat=n
     label1="Time (s)" label3="In-line" label2="Relative Gamma"
     wanttitle=n
-    ''' % (tmin,tmax,frame1,trace-o2,ng/2)
+    ''' % (tmin,tmax,frame1,(trace-o2)/j2,ng/2)
 
     simplot = '''
     window min1=%g max1=%g |
@@ -469,20 +477,31 @@ def warp2(name,       # name prefix
         ############
 
         g1 = 2-g0
-        warpscan2 = warpscan(ng,g0,g1,rect1,1,rect2)
+        warpscan2 = warpscan(ng,g0,g1,rect1,1,int(0.5+rect2/j2))
         
         sc = n('sc')
-        Flow(sc,[sr,pr],warpscan2)
+
+        Flow(sr+'2',sr,'window j2=%d' % j2)
+        Flow(pr+'2',pr,'window j2=%d' % j2)
+        
+        Flow(sc,[sr+'2',pr+'2'],warpscan2)
         Result(sc,scanplot)
         
         pk = n('pk')
 
         if i==0:
-            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),rect1,4*rect2,an=an))
+            Flow(pk+'0',sc,pick(max(pmin,g0),min(pmax,g1),
+                                rect1,4*rect2/j2,an=an))
         else:
-            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2,an=an))
+            Flow(pk+'0',sc,pick(g0,g1,rect1,4*rect2/j2,an=an))
 
-        Flow(pk,pk+'0','math output="(input-1)*x1" ')
+        Flow(pk,pk+'0',
+             '''
+             transp memsize=500 |
+             spline n1=%d d1=1 o1=%g |
+             transp memsize=500  |
+             math output="(input-1)*x1"
+             ''' % (nx,o2))
 
         #########
         # WARPING

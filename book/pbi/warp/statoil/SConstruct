@@ -1,0 +1,53 @@
+from rsfproj import *
+import string
+import warp
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for mode in ('pz','ps'):
+    Mode = string.upper(mode)
+    
+    stack = Mode + '_stack_full.sgy'
+    Fetch(stack,'statoil',private)
+
+    Flow([mode,'h.'+mode,'b.'+mode],stack,
+         '''
+         segyread tape=$SOURCE read=data
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+         bandpass flo=5 | window min1=2 | costaper nw1=50
+         ''',stdin=0)
+    Result(mode,'grey title=%s' % Mode)
+
+Flow('zero','pz','math output=0')
+
+warp.warp2('sta',       # name prefix
+           'pz','ps',      # PP and PS images
+           'zero',       # initial warp
+           nx=1351,         # number of traces
+           tmax=5,     # maximum time for display
+           tmin=2,     # minimum time for display
+           j2=4,       # trace subsampling
+           trace=675, # seleted trace
+           o2=0,       # trace start
+           gmin=0.75,     # minimum gamma
+           gmax=1.25,     # maximum gamma
+           fmin=10,     # minimum frequency
+           fmax=50,    # maximum frequency
+           frect=10,   # frequency smoothing
+           frame1=650,  # time frame          
+           ng=101,      # number of gammas
+           g0=0.98,    # first gamma
+           pmin=0,     # minimum gamma for picking
+           pmax=2,     # maximum gamma for picking
+           an=1,     # anisotropy for picking
+           rect1=75,   # vertical smoothing
+           rect2=200,  # lateral smoothing
+           iter=2,     # number of iterations
+           ss=0,       # PP-PS (0) or PP-SS (1)
+           inter=8,    # interleaving
+           clip=1325   # display clip
+           )
+         
+End()

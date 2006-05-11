@@ -1,5 +1,5 @@
 from rsfproj import *
-import string
+import string, math
 
 private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
@@ -44,10 +44,16 @@ for case in dat.keys(): # loop over ('ps','pz')
 # table of PP time versus PS time
 nails = Split('''
 2.236 4.460
-3.540 6.680
-3.656 6.968
-3.944 7.436
 ''')
+
+#3.540 6.680
+#3.656 6.968
+#3.944 7.436
+
+for tpp in xrange (3600,4000,50):
+    tps = 5727*math.log(tpp)-40018 # Tury's formula
+    nails.append(str(0.001*tpp))
+    nails.append(str(0.001*tps))
 
 # Display nails
 Flow('nails.asc',None,
@@ -64,12 +70,14 @@ Plot('nails','nreal nimag',
      symbolsz=15
      ''',stdin=0)
 
-# Window PZ in time to 6 seconds and flip polarity
-Flow('pzcube2','pzcube','window max1=6 | scale dscale=-1 | costaper nw1=200')
+# Window PZ in time to 6 seconds 
+Flow('pzcube2','pzcube','window max1=6 | costaper nw1=200')
+
 
 # Fit a line to nails
 
 Flow('fit','nails pzcube2','linefit pattern=${SOURCES[1]}')
+
 
 # Plot a line with nails
 
@@ -89,7 +97,7 @@ import sys
 sys.path.append('/raid1/rsf-test/src/book/packages')
 import warp
 
-warp.warp3('seitel', # naming prefix
+warp.warp3('sei',    # naming prefix
            'pzcube2',# PP cube
            'pscube', # PS cube
            'fit0',   # initial warping function
@@ -97,6 +105,7 @@ warp.warp3('seitel', # naming prefix
            ny=101,   # cube crossline dimensions 
            j2=4,     # inline subsampling for gamma scan
            j3=4,     # crossline subsampling for gamma scan
+           an=1,
            tmin=0,   # min time
            tmax=6,   # max time
            inter=2,   # partial stacking for interlace
@@ -105,17 +114,17 @@ warp.warp3('seitel', # naming prefix
            o2=710,    # first inline
            o3=2320,   # first crossline
            dt=0.004,  # time sampling
-           g0=0.94, # min residual gamma for scan
+           g0=0.97, # min residual gamma for scan
            gmin=2,  # min vp/vs (for display)
            gmax=3,  # max vp/vs (for display)
-#           pmin=1, # min allowed residual gamma
+           pmax=1.005, # min allowed residual gamma
            ng=51,   # number of residual gammas to scan
            rect1=50, # smoothing radius in time
            rect2=25, # smoothing radius inline
            rect3=25, # smoothing radius crossline
            fmin=10, # min frequency (for display)
            fmax=50, # max frequency (for display)
-           frect=6, # smoothing radius for frequencies
+           frect=10, # smoothing radius for frequencies
            frame1=1000, # time slice (for display)
            iter=2,  # number of iterations
            clip=6.5 # data clip for display
