@@ -1,0 +1,73 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('5_gather.segy','rsi',private)
+
+Flow('gath tgath gath.h gath.b','5_gather.segy',
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('gaths','gath',
+     'intbin xk=cdpt yk=cdp | window min1=2.8 | put label1=Time unit1=s')
+
+Flow('off','tgath',
+     '''
+     dd type=float |
+     headermath output=offset/1000 |
+     intbin xk=cdpt yk=cdp head=$SOURCE |
+     window n3=1 
+     ''')
+
+for g in range(5):
+    gath = 'gath%d' % g
+    
+    Flow(gath,'gaths','window n3=1 f3=%d' % g)
+    Result(gath,'grey wanttitle=n label2=Trace')
+    Result('w'+gath,[gath,'off'],
+           '''
+           wiggle xpos=${SOURCES[1]} wanttitle=n
+           transp=y yreverse=y poly=y label2=Offset unit2=kft
+           ''')
+
+    for case in ('','avo'):
+            scan = '%sscan%d' % (case,g)
+            pick = '%spick%d' % (case,g)
+            nmod = '%snmod%d' % (case,g)
+
+            Flow(scan,[gath,'off'],
+                 '''
+                 vscan %ssemblance=y offset=${SOURCES[1]} half=n
+                 slowness=y v0=-0.2 nv=101 dv=0.004 nb=50
+                 ''' % case)
+            Plot(scan,
+                 '''
+                 grey title="%s Scan" color=j allpos=y
+                 label2="Residual Slowness" unit2="s/kft"
+                 ''' % ('Semblance','AVO-Friendly Semblance')[case=='avo'])
+
+            Flow(pick,scan,'pick rect1=100 v0=0 | window')
+            Plot(pick,
+                 '''
+                 graph transp=y yreverse=y transp=y min2=-0.2 max2=0.2
+                 pad=n plotcol=7 plotfat=7 wanttitle=n wantaxis=n
+                 ''')
+
+            Result(scan,[scan,pick],'Overlay')
+
+            Flow(nmod,[gath,pick,'off'],
+                 '''
+                 nmo velocity=${SOURCES[1]} offset=${SOURCES[2]}
+                 half=n slowness=y
+                 ''')
+            Result(nmod,[nmod,'off'],
+                   '''
+                   wiggle xpos=${SOURCES[1]} wanttitle=n
+                   transp=y yreverse=y poly=y label2=Offset unit2=kft
+                   ''')
+
+End()
