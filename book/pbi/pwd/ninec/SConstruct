@@ -35,14 +35,10 @@ Flow('datum','binP',
 Flow('dat','binP datum','datstretch datum=${SOURCES[1]}')
 Result('dat','grey title="Reduced" ')
 
-Flow('dip2','dat','twodip2 p0=0 nj2=2 eps=1 lam=1')
-Flow('dip0','dip2','window n3=1')
-Flow('dip1','dip2','window f3=1')
+Flow('bak','dat','bandpass flo=10 fhi=125')
+Result('bak','grey title="Filtered" ')
 
-Flow('sn2','dat dip0 dip1',
-     '''
-     planesignoi sdip=${SOURCES[2]} ndip=${SOURCES[1]} 
-     order=3 nj2=2 eps=2 verb=y niter=100
-     ''')
+Flow('bakP','bak datum','datstretch inv=y datum=${SOURCES[1]}')
+Result('bakP','grey title="Filtered" ')
 
 End()

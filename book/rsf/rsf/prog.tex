@@ -451,7 +451,7 @@ key[39]="dt"        min[0]=4000         max[31]=4000        mean=4000
 *******************************************
 \end{verbatim}
 For different standard keywords, a minimum, maximum, and mean values
-are reported unleass they are identically zero.  This quick inspection
+are reported unless they are identically zero.  This quick inspection
 can help in identifying meaningful keywords set in the data. The input
 data type must be \texttt{int}.
 
@@ -925,6 +925,73 @@ bash$ sfimag < cmplx.rsf | sfdisfil
    5:             5            6            7            8            9
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfreverse}
+  }}
+
+Here is an example of using \texttt{sfreverse}. First, let us create a
+2-D dataset.
+\begin{verbatim}
+bash$ sfmath n1=5 d1=1 n2=3 d2=1 output=x1+x2 > test.rsf
+bash$ < test.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             1            2            3            4            5
+  10:             2            3            4            5            6
+\end{verbatim}
+Reversing the first axis:
+\begin{verbatim}
+bash$ < test.rsf sfreverse which=1 | sfdisfil
+   0:             4            3            2            1            0
+   5:             5            4            3            2            1
+  10:             6            5            4            3            2
+\end{verbatim}
+Reversing the second axis:
+\begin{verbatim}
+bash$ < test.rsf sfreverse which=2 | sfdisfil
+   0:             2            3            4            5            6
+   5:             1            2            3            4            5
+  10:             0            1            2            3            4
+\end{verbatim}
+Reversing both the first and the second axis:
+\begin{verbatim}
+bash$ < test.rsf sfreverse which=3 | sfdisfil
+   0:             2            3            4            5            6
+   5:             1            2            3            4            5
+  10:             0            1            2            3            4
+\end{verbatim}
+As you can see, the \texttt{which=} parameter controls the axes that are
+being reversed by encoding them into one number.
+
+When an axis is reversed, what happens with its axis origin and
+sampling parameters? This behavior is controlled by \texttt{opt=}. In
+our example,
+\begin{verbatim}
+bash$ < test.rsf sfget n1 o1 d1
+n1=5
+o1=0
+d1=1
+bash$ < test.rsf sfreverse which=1 | sfget o1 d1
+o1=4
+d1=-1
+\end{verbatim}
+The default behavior (equivalent to \texttt{opt=y}) puts the origin
+\texttt{o1} at the end of the axis and reverses the sampling parameter
+\texttt{d1}.  Using \texttt{opt=n} preserves the sampling but reverses
+the origin.
+\begin{verbatim}
+bash$ < test.rsf sfreverse which=1 opt=n | sfget o1 d1
+o1=-4
+d1=1
+\end{verbatim}
+Using \texttt{opt=i} preserves both the sampling and the origin while
+reversing the axis.
+\begin{verbatim}
+bash$ < test.rsf sfreverse which=1 opt=i | sfget o1 d1
+o1=0
+d1=1
+\end{verbatim}
+One of the three possible behaviors may be desirable depending on the
+application.
 
 \bibliographystyle{seg}
 \bibliography{SEG}

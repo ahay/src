@@ -13,7 +13,10 @@ progs = []
 for prog in rsfdoc.progs.keys():
     progs.append(prog+'.tex')
     Command2(prog+'.tex',sfdoc,
-             'PYTHONPATH=%s $SOURCE -l . %s' % (libdir,prog))
+             'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE -l . %s' % \
+             (os.environ.get('PYTHONPATH'),
+              os.environ.get('LD_LIBRARY_PATH'),
+              prog))
 
 Alias('progs',progs)
 

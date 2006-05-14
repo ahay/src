@@ -10,9 +10,9 @@ impl2 infill inmo intbin intshow inttest1 inttest2 kolmog linefit lpad
 map2list modrefl modrefl2 modrefl3 nmo noise ofsemb pmig pnmo
 postfilter2 pp2psang pp2psang2 pp2pstsic prestolt pveltran radial
 radon randrefl refer reshape ricker shot2cmp shotholes shotprop slice
-slowft smooth smoothder smoothreg smoothreg2 spectra spectra2 spicks
-spline splinefilter stolt stretch taupmo time2depth tpow tan2ang
-tshift vscan velmod
+smooth smoothder smoothreg smoothreg2 spectra spectra2 spicks spline
+splinefilter stolt stretch taupmo time2depth tpow tan2ang tshift vscan
+velmod
 '''
 
 try: # distributed version
