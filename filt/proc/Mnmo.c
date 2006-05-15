@@ -27,13 +27,14 @@ Compatible with sfvscan.
 #include "fint1.h"
 
 static float *vel, h;
-static bool slow;
+static bool slow, squared;
 
 static float nmo_map(float t, int it) {
     float v;
     
     v = vel[it];
-    v = slow ? h*(v*v) : h/(v*v);
+    if (!squared) v *= v;
+    v = slow ? h*v : h/v;
     t = t*t + v;
     if (t > 0.) t=sqrtf(t);
     return t;
@@ -108,6 +109,9 @@ int main (int argc, char* argv[])
 
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
+
+    if (!sf_getbool("squared",&squared)) squared=false;
+    /* if y, the slowness or velocity is squared */
 
     if (!sf_getfloat ("h0",&h0)) h0=0.;
     /* reference offset */

@@ -103,8 +103,8 @@ warp.warp3('sei',    # naming prefix
            'fit0',   # initial warping function
            nx=401,   # cube inline dimensions 
            ny=101,   # cube crossline dimensions 
-           j2=4,     # inline subsampling for gamma scan
-           j3=4,     # crossline subsampling for gamma scan
+           j2=8,     # inline subsampling for gamma scan
+           j3=8,     # crossline subsampling for gamma scan
            an=1,
            tmin=0,   # min time
            tmax=6,   # max time
@@ -114,9 +114,9 @@ warp.warp3('sei',    # naming prefix
            o2=710,    # first inline
            o3=2320,   # first crossline
            dt=0.004,  # time sampling
-           g0=0.97, # min residual gamma for scan
-           gmin=2,  # min vp/vs (for display)
-           gmax=3,  # max vp/vs (for display)
+           g0=0.95, # min residual gamma for scan
+           gmin=1.5,  # min vp/vs (for display)
+           gmax=3.5,  # max vp/vs (for display)
            pmax=1.005, # min allowed residual gamma
            ng=51,   # number of residual gammas to scan
            rect1=50, # smoothing radius in time

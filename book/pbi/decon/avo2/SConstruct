@@ -28,11 +28,11 @@ for g in range(5):
     
     Flow(gath,'gaths','window n3=1 f3=%d' % g)
     Result(gath,'grey wanttitle=n label2=Trace')
-    Result('w'+gath,[gath,'off'],
-           '''
-           wiggle xpos=${SOURCES[1]} wanttitle=n
-           transp=y yreverse=y poly=y label2=Offset unit2=kft
-           ''')
+    Plot(gath,[gath,'off'],
+         '''
+         wiggle xpos=${SOURCES[1]} wanttitle=n
+         transp=y yreverse=y poly=y label2=Offset unit2=kft
+         ''')
 
     for case in ('','avo'):
             scan = '%sscan%d' % (case,g)
@@ -42,32 +42,38 @@ for g in range(5):
             Flow(scan,[gath,'off'],
                  '''
                  vscan %ssemblance=y offset=${SOURCES[1]} half=n
-                 slowness=y v0=-0.2 nv=101 dv=0.004 nb=50
+                 slowness=y v0=-0.01 nv=101 dv=0.0002 squared=y
                  ''' % case)
-            Plot(scan,
+            Plot(scan+'a',scan,
                  '''
                  grey title="%s Scan" color=j allpos=y
-                 label2="Residual Slowness" unit2="s/kft"
+                 label2="Residual Curvature" unit2="s\^2\_/kft\^2"
                  ''' % ('Semblance','AVO-Friendly Semblance')[case=='avo'])
 
-            Flow(pick,scan,'pick rect1=100 v0=0 | window')
+            Flow(pick,scan,'pick rect1=20 vel0=0 | window')
             Plot(pick,
                  '''
-                 graph transp=y yreverse=y transp=y min2=-0.2 max2=0.2
+                 graph transp=y yreverse=y transp=y min2=-0.01 max2=0.01
                  pad=n plotcol=7 plotfat=7 wanttitle=n wantaxis=n
                  ''')
 
-            Result(scan,[scan,pick],'Overlay')
+            Plot(scan,[scan+'a',pick],'Overlay')
 
             Flow(nmod,[gath,pick,'off'],
                  '''
                  nmo velocity=${SOURCES[1]} offset=${SOURCES[2]}
-                 half=n slowness=y
+                 half=n slowness=y squared=y
                  ''')
-            Result(nmod,[nmod,'off'],
-                   '''
-                   wiggle xpos=${SOURCES[1]} wanttitle=n
-                   transp=y yreverse=y poly=y label2=Offset unit2=kft
-                   ''')
+            Plot(nmod,[nmod,'off'],
+                 '''
+                 wiggle xpos=${SOURCES[1]} wanttitle=n
+                 transp=y yreverse=y poly=y label2=Offset unit2=kft
+                 ''')
+
+    scan = 'scan%d' % g
+    Result(scan,[scan,'avo'+scan],'SideBySideAniso')
+
+    nmod = 'nmod%d' % g
+    Result(nmod,[gath,nmod,'avo'+nmod],'SideBySideAniso')
 
 End()

@@ -26,19 +26,24 @@ Inverse of sfvelmod
 
 #include "fint1.h"
 
-static float v;
+static float v, h;
 
 static float hyperb(float t, int it) 
 { 
-    return hypotf(t,v); 
+    return hypotf(t,v);
 } 
+
+static float curved(float t, int it) 
+{
+    return sqrtf(t*t+v*h);
+}
 
 int main(int argc, char* argv[])
 {
     fint1 nmo;
-    bool sembl, half, slow, dsembl, asembl, weight;
+    bool sembl, half, slow, dsembl, asembl, weight, squared;
     int it,ih,ix,iv, nt,nh,nx,nv, ib,ie,nb,i, nw, CDPtype, mute, *mask;
-    float amp, amp2, dt, dh, t0, h0, v0, dv, h, num, den, dy, str, sh=0., sh2=0.;
+    float amp, amp2, dt, dh, t0, h0, v0, dv, num, den, dy, str, sh=0., sh2=0.;
     float *trace, **stack, **stack2, **stackh, *hh;
     char *time, *space, *unit;
     size_t len;
@@ -117,7 +122,10 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("slowness",&slow)) slow=false;
     /* if y, use slowness instead of velocity */
-    sf_putstring(scan,"label2",slow? "slowness": "velocity");
+    sf_putstring(scan,"label2",slow? "Slowness": "Velocity");
+
+    if (!sf_getbool("squared",&squared)) squared=false;
+    /* if y, the slowness or velocity is squared */
 
     if (NULL != (time = sf_histstring(cmp,"unit1")) &&
 	NULL != (space = sf_histstring(cmp,"unit2"))) {
@@ -183,7 +191,8 @@ int main(int argc, char* argv[])
 		v = v0 + iv * dv;
 		v = slow? h*v: h/v;
 
-		stretch(nmo,hyperb,nt,dt,t0,nt,dt,t0,trace,str);
+		stretch(nmo,squared? curved: hyperb,
+			nt,dt,t0,nt,dt,t0,trace,str);
 
 		for (it=0; it < nt; it++) {
 		    amp = weight? fabsf(v)*trace[it]: trace[it];
