@@ -23,16 +23,22 @@ Flow('off','tgath',
      window n3=1 
      ''')
 
+grey = 'grey wanttitle=n label2=Trace grid2=y gridcol=2'
+
+def wiggle(title):
+    return '''
+    wiggle xpos=${SOURCES[1]} title="%s"
+    transp=y yreverse=y poly=y label2=Offset unit2=kft
+    wheretitle=b wherexlabel=t
+    ''' % title
+
 for g in range(5):
     gath = 'gath%d' % g
     
     Flow(gath,'gaths','window n3=1 f3=%d' % g)
-    Result(gath,'grey wanttitle=n label2=Trace')
-    Plot(gath,[gath,'off'],
-         '''
-         wiggle xpos=${SOURCES[1]} wanttitle=n
-         transp=y yreverse=y poly=y label2=Offset unit2=kft
-         ''')
+    Result(gath,grey)
+    Result('w'+gath,[gath,'off'],wiggle('Input'))
+#    Result(gath,[gath,'w'+gath],'SideBySideAniso')
 
     for case in ('','avo'):
             scan = '%sscan%d' % (case,g)
@@ -42,7 +48,7 @@ for g in range(5):
             Flow(scan,[gath,'off'],
                  '''
                  vscan %ssemblance=y offset=${SOURCES[1]} half=n
-                 slowness=y v0=-0.01 nv=101 dv=0.0002 squared=y
+                 slowness=y v0=-0.01 nv=101 dv=0.0002 squared=y nb=1
                  ''' % case)
             Plot(scan+'a',scan,
                  '''
@@ -64,16 +70,11 @@ for g in range(5):
                  nmo velocity=${SOURCES[1]} offset=${SOURCES[2]}
                  half=n slowness=y squared=y
                  ''')
-            Plot(nmod,[nmod,'off'],
-                 '''
-                 wiggle xpos=${SOURCES[1]} wanttitle=n
-                 transp=y yreverse=y poly=y label2=Offset unit2=kft
-                 ''')
+            Result(nmod,grey)
+            Result('w'+nmod,[nmod,'off'],wiggle('Corrected'))
+#            Result(nmod,[nmod,'w'+nmod],'SideBySideAniso')
 
     scan = 'scan%d' % g
     Result(scan,[scan,'avo'+scan],'SideBySideAniso')
-
-    nmod = 'nmod%d' % g
-    Result(nmod,[gath,nmod,'avo'+nmod],'SideBySideAniso')
 
 End()

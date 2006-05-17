@@ -28,11 +28,12 @@ warp.warp2('sta',       # name prefix
            nx=1351,         # number of traces
            tmax=5,     # maximum time for display
            tmin=2,     # minimum time for display
-           j2=4,       # trace subsampling
+           j2=8,       # trace subsampling
            trace=675, # seleted trace
            o2=0,       # trace start
            gmin=0.75,     # minimum gamma
            gmax=1.25,     # maximum gamma
+           niter=10,     # warping iterations
            fmin=10,     # minimum frequency
            fmax=50,    # maximum frequency
            frect=10,   # frequency smoothing

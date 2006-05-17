@@ -79,6 +79,7 @@ def warp3(name,       # name prefix
           o3=0,       # cross-line start
           gmin=1,     # minimum gamma
           gmax=4,     # maximum gamma
+          niter=20,   # warping iterations
           dt=0.004,   # time sampling
           fmin=0,     # minimum frequency
           fmax=40,    # maximum frequency
@@ -107,7 +108,7 @@ def warp3(name,       # name prefix
         for case in (pp,ps,warp):
             Flow(case+'2',case,'window n3=1 min3=%d' % line)
         warp2(name+'l',pp+'2',ps+'2',warp+'2',nx,tmax,tmin,j2/j3,
-              trace,o2,gmin,gmax,dt,fmin,fmax,frect,frame1,
+              trace,o2,gmin,gmax,niter,dt,fmin,fmax,frect,frame1,
               ng,g0,pmin,pmax,an,rect1,rect2,iter,ss,inter,clip)
     else:
         line=10
@@ -162,7 +163,7 @@ def warp3(name,       # name prefix
         transp=n yreverse=n clip=%g
         ''' % (tmin,tmax,frame1,title,clip)
 
-    warpit = warping(20,200,200,200)
+    warpit = warping(niter,200,200,200)
 
     Plot(pp+'s',pp,pslice('PP'))
 
@@ -271,6 +272,7 @@ def warp2(name,       # name prefix
           o2=0,       # trace start
           gmin=1,     # minimum gamma
           gmax=4,     # maximum gamma
+          niter=20,   # warping iterations
           dt=0.004,   # time sampling
           fmin=0,     # minimum frequency
           fmax=40,    # maximum frequency
@@ -303,7 +305,8 @@ def warp2(name,       # name prefix
         for case in (pp,ps,warp):
             Flow(case+'1',case,'window n2=1 min2=%d' % trace)
         warp1(name+'t',pp+'1',ps+'1',warp+'1',tmax,tmin,
-              gmin,gmax,dt,fmin,fmax,frect,ng,g0,pmin,pmax,an,rect1,iter,ss)
+              gmin,gmax,niter,
+              dt,fmin,fmax,frect,ng,g0,pmin,pmax,an,rect1,iter,ss)
     else:
         trace=10
 
@@ -380,7 +383,7 @@ def warp2(name,       # name prefix
     label1="Time (s)" 
     ''' % (tmin,tmax,'%s')
 
-    warpit = warping(20,200,200)
+    warpit = warping(niter,200,200)
 
     for i in range(iter):
         wrp = warp 
@@ -565,6 +568,7 @@ def warp1(name,      # name prefix
           tmin=0,    # minimum time for display
           gmin=1,    # minimum gamma
           gmax=4,    # maximum gamma
+          niter=20,  # warping iterations
           dt=0.004,  # time sampling
           fmin=0,    # minimum frequency
           fmax=40,   # maximum frequency
@@ -606,7 +610,7 @@ def warp1(name,      # name prefix
         dash=0,1 label2="Frequency (Hz)"
         ''' % (0.5/(math.pi*dt),title,fmin,fmax,tmin,tmax)
 
-    warpit = warping(20,200)
+    warpit = warping(niter,200)
 
     for i in range(iter):
         #################
