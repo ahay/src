@@ -35,14 +35,14 @@ int ode23_step (int dim     /* dimensionality */,
 		int (*term)(void*,float*)
 		/* function returning 1 if the ray needs to terminate */, 
 		float** traj /* [nt+1][dim] - ray trajectory (output) */) 
-/*< ray tracing 
+/*< ODE solver for dy/dt = f where f comes from rhs(par,y,f)
   Note:
   1. Value of y is changed inside the function.
   2. The output code for it = ode23_step(...)
   it=0 - ray traced to the end without termination
   it>0 - ray terminated
   The total traveltime along the ray is 
-  nt*dt if (it = 0); abs(it)*dt otherwise 
+  nt*dt if (it = 0); it*dt otherwise 
   >*/
 {
     int it, i;

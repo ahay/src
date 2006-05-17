@@ -19,12 +19,13 @@
 
 #include <rsf.h>
 
-#include "raytracing.h"
+#include "raytrace.h"
 #include "grid2.h"
 #include "grid3.h"
 #include "atela.h"
+#include "runge.h"
 
-#ifndef _raytracing_h
+#ifndef _raytrace_h
 
 typedef struct RayTrace* raytrace;
 /* abstract data type */
@@ -33,6 +34,7 @@ typedef struct RayTrace* raytrace;
 #endif
 
 struct RayTrace {
+    bool sym;
     int dim, nt;
     float dt, z0;
     grid3 grd3;
@@ -40,7 +42,55 @@ struct RayTrace {
 };
 /* concrete data type */
 
+static void iso_rhs(void* par, float* y, float* f)
+/* right-hand side for isotropic raytracing */
+{    
+    raytrace rt;
+    int i, dim;
+    float s2, sds[3];
+
+    rt = (raytrace) par;
+    dim = rt->dim;
+
+    switch (dim) {
+	case 2:
+	    s2 = grid2_vel(rt->grd2,y);
+	    grid2_vgrad(rt->grd2,y,sds);
+	    break;
+	case 3:
+	    s2 = grid3_vel(rt->grd3,y);
+	    grid3_vgrad(rt->grd3,y,sds);
+	    break;
+	default:
+	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
+    }
+
+    for (i=0; i < dim; i++) {
+	f[i]   = y[i+dim]/s2; /* p/s^2 */
+	f[i+dim] = sds[i]/s2; /* 1/2 grad(s^2)/s^2 */
+    }
+}
+ 
+static int term(void* par, float* y)
+/* grid termination */
+{
+    raytrace rt;
+    
+    rt = (raytrace) par;
+
+    switch (rt->dim) {
+	case 2:
+	    return grid2_term(rt->grd2,y);
+	case 3:
+	    return grid3_term(rt->grd3,y);
+	default:
+	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,rt->dim);
+	    return 0;
+    }
+}
+
 raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */, 
+		       bool sym,          /* if symplectic */
 		       int nt             /* number of ray tracing steps */, 
 		       float dt           /* ray tracing step (in time) */,
 		       int* n             /* slowness dimensions [dim] */, 
@@ -59,6 +109,7 @@ raytrace raytrace_init(int dim            /* dimensionality (2 or 3) */,
     rt = (raytrace) sf_alloc (1,sizeof(*rt));
     
     rt->dim = dim;
+    rt->sym = sym;
     rt->nt = nt;
     rt->dt = dt;
     rt->z0 = o[0];
@@ -120,22 +171,39 @@ int trace_ray (raytrace rt  /* ray tracing object */,
  nt*dt if (it = 0); abs(it)*dt otherwise 
  >*/
 {
-    int it=0;
-    
-    switch (rt->dim) {
-	case 2:
-	    it = atela_step (rt->dim, rt->nt, rt->dt, true, x, p, 
-			     rt->grd2, 
-			     grid2_vgrad, grid2_vel, grid2_term, traj);
-	    break;
-	case 3:
-	    it = atela_step (rt->dim, rt->nt, rt->dt, true, x, p, 
-			     rt->grd3, 
-			     grid3_vgrad, grid3_vel, grid3_term, traj);
-	    break;
-	default:
-	    sf_error("%s: cannot handle %d dimensions",__FILE__,rt->dim);
-	    break;
+    int i, dim, it=0;
+    float y[6];
+
+    dim = rt->dim;
+
+    if (!rt->sym) {
+	for (i=0; i < dim; i++) {
+	    y[i] = x[i];
+	    y[i+dim] = p[i];
+	}
+
+	it = ode23_step (dim, rt->nt, rt->dt, y, rt,iso_rhs,term,traj);
+
+	for (i=0; i < dim; i++) {
+	    x[i] = y[i];
+	    p[i] = y[i+dim];
+	}
+    } else {
+	switch (dim) {
+	    case 2:
+		it = atela_step (dim, rt->nt, rt->dt, true, x, p, 
+				 rt->grd2, 
+				 grid2_vgrad, grid2_vel, grid2_term, traj);
+		break;
+	    case 3:
+		it = atela_step (rt->dim, rt->nt, rt->dt, true, x, p, 
+				 rt->grd3, 
+				 grid3_vgrad, grid3_vel, grid3_term, traj);
+		break;
+	    default:
+		sf_error("%s: cannot handle %d dimensions",__FILE__,rt->dim);
+		break;
+	}
     }
     
     if (it > 0 && x[0] > rt->z0) {
@@ -145,4 +213,4 @@ int trace_ray (raytrace rt  /* ray tracing object */,
     }
 }
 
-/* 	$Id$	 */
+/* 	$Id: raytracing.c 775 2004-09-03 19:44:45Z fomels $	 */

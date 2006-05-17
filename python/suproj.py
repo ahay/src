@@ -25,7 +25,7 @@ bindir = os.path.join(topdir,'bin')
 try:
     suprogs = os.listdir(bindir)
 except:
-    print "No SU installed"
+    sys.stderr.write("No SU installed.\n")
     sys.exit(1)
 
 suplots = ['plot']

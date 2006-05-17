@@ -35,7 +35,7 @@ par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
 def igrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" Xpclip=99 label1="z(m)" label2="x(m)" %s
+    title="" Xpclip=99 label1=z unit1=m label2=x unit2=m %s
     min1=%g max1=%g min2=%g max2=%g
     screenratio=0.5 screenht=7 Xcrowd=0.9
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
@@ -84,7 +84,7 @@ Flow('wav',None,
      scale axis=123 |
      put label1=t label2=x label3=y 
      ''' % par)    
-Result('wav','wav','window n1=200 | graph title="" label1="t(s)" label2=')
+Result('wav','wav','window n1=200 | graph title="" label1=t unit1=s label2=')
 
 # ------------------------------------------------------------
 # experiments
@@ -148,7 +148,7 @@ Plot('front','ray',
      min2=0 max2=1000
      min1=0 max1=500
      screenratio=0.5 screenht=7 
-     plotcol=0 transp=1 plotfat=5 dash=1
+     plotcol=6 transp=1 plotfat=5 dash=1
      wantaxis=n wheretitle=b wherexlabel=t
      yreverse=y wanttitle=n
      ''')

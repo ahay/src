@@ -1,4 +1,4 @@
-/* Ray tracing by a high-order symplectic Runge-Kutta integrator.
+/* Ray tracing by a Runge-Kutta integrator.
 
 Takes: > rays.rsf
 
@@ -26,11 +26,11 @@ Rays can be plotted with sfplotrays.
 
 #include <rsf.h>
 
-#include "raytracing.h"
+#include "raytrace.h"
 
 int main(int argc, char* argv[])
 {
-    bool velocity;
+    bool velocity, sym;
     int is, n[2], im, nm, order, nshot, ndim;
     int nt, nt1, nr, ir, it, i;
     float dt, da=0., a0, amax, v0;
@@ -60,6 +60,9 @@ int main(int argc, char* argv[])
     /* Number of time steps */
     if (!sf_getfloat("dt",&dt)) sf_error("Need dt=");
     /* Sampling in time */
+
+    if (!sf_getbool("sym",&sym)) sym=true;
+    /* if y, use symplectic integrator */
 
     /* get shot locations */
     if (NULL != sf_getstring("shotfile")) {
@@ -143,7 +146,7 @@ int main(int argc, char* argv[])
     }
 
     /* initialize ray tracing object */
-    rt = raytrace_init (2, nt, dt, n, o, d, slow, order);
+    rt = raytrace_init (2, sym, nt, dt, n, o, d, slow, order);
     
     free (slow);
 
