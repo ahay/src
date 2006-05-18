@@ -25,10 +25,31 @@
 
 #include "runge.h"
 
-int ode23_step (int dim     /* dimensionality */, 
-		int nt      /* number of ray tracing steps */, 
-		float dt    /* step in time */, 
-		float* y    /* [dim] solution */, 
+static int dim, nt;
+static float dt, **k, *yk;
+
+void runge_init(int dim1 /* dimensionality */, 
+		int n1   /* number of ray tracing steps */, 
+		float d1 /* step in time */)
+/*< initialize >*/
+{
+    dim = dim1;
+    nt = n1;
+    dt = d1;
+    
+    yk = sf_floatalloc(dim);
+    k = sf_floatalloc2(dim,3);
+}
+
+void runge_close(void)
+/*< free allocated storage >*/
+{
+    free(yk);
+    free(*k);
+    free(k);
+}
+
+int ode23_step (float* y    /* [dim] solution */, 
 		void* par   /* parameters for function evaluation */,
 		void (*rhs)(void*,float*,float*) 
 		/* RHS function */, 
@@ -46,7 +67,6 @@ int ode23_step (int dim     /* dimensionality */,
   >*/
 {
     int it, i;
-    float f[3], g[3], gi;
  
     if (traj != NULL) {
 	for (i=0; i < dim; i++) {
@@ -55,32 +75,26 @@ int ode23_step (int dim     /* dimensionality */,
     }
 
     for (it = 0; it < nt; it++) {
-	rhs (par, y, f); /* k1 */
+	rhs (par, y, k[0]); 
 	for (i=0; i < dim; i++) {
-	    gi = 0.5*dt*f[i];
-	    y[i] += gi;
-	    g[i] = gi;
+	    yk[i] = y[i] + 0.5*dt*k[0][i];
 	}
       
-	rhs (par, y, f); /* k2 */
+	rhs (par, yk, k[1]); 
 	for (i=0; i < dim; i++) {
-	    gi = 0.75*dt*f[i];
-	    y[i] += gi;
-	    g[i] += gi;
+	    yk[i] = y[i] + dt*(2.0*k[1][i]-k[0][i]);
 	}
       
-	rhs (par, y, f); /* k3 */
+	rhs (par, yk, k[2]); 
 	for (i=0; i < dim; i++) {
-	    y[i] += g[i] + 4.*(g[i]+dt*f[i])/9.;
+	    y[i] += dt*(k[0][i]+4.*k[1][i]+k[2][i])/6.0;
 	    if (traj != NULL) traj[it+1][i] = y[i];
 	}
-     
-	/* Error: -5/72 k1 + 1/12 k2 + 1/9 k3 - 1.8 k4 */
-
+	
 	if (term != NULL && term (par, y)) return (it+1);
     }
   
     return 0;
 }
 
-/* 	$Id: atela.c 746 2004-08-18 07:38:00Z fomels $	 */
+/* 	$Id: runge.c 746 2004-08-18 07:38:00Z fomels $	 */

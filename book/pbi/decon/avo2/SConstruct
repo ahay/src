@@ -36,9 +36,9 @@ for g in range(5):
     gath = 'gath%d' % g
     
     Flow(gath,'gaths','window n3=1 f3=%d' % g)
-    Result(gath,grey)
-    Result('w'+gath,[gath,'off'],wiggle('Input'))
-#    Result(gath,[gath,'w'+gath],'SideBySideAniso')
+    Plot(gath,grey)
+    Plot('w'+gath,[gath,'off'],wiggle('Input'))
+    Result(gath,[gath,'w'+gath],'SideBySideAniso')
 
     for case in ('','avo'):
             scan = '%sscan%d' % (case,g)
@@ -70,9 +70,9 @@ for g in range(5):
                  nmo velocity=${SOURCES[1]} offset=${SOURCES[2]}
                  half=n slowness=y squared=y
                  ''')
-            Result(nmod,grey)
-            Result('w'+nmod,[nmod,'off'],wiggle('Corrected'))
-#            Result(nmod,[nmod,'w'+nmod],'SideBySideAniso')
+            Plot(nmod,grey)
+            Plot('w'+nmod,[nmod,'off'],wiggle('Corrected'))
+            Result(nmod,[nmod,'w'+nmod],'SideBySideAniso')
 
     scan = 'scan%d' % g
     Result(scan,[scan,'avo'+scan],'SideBySideAniso')

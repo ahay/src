@@ -150,7 +150,7 @@ int main(int argc, char* argv[])
     
     free (slow);
 
-    traj = sf_floatalloc2 (ndim,nt1);
+    traj = sf_floatalloc2 (sym? ndim: 2*ndim,nt1);
 
     for( is = 0; is < nshot; is++) { /* loop over shots */
 	/* initialize angles */
@@ -174,14 +174,9 @@ int main(int argc, char* argv[])
 	    it = trace_ray (rt, x, p, traj);
 	    if (it < 0) it = -it; /* keep side-exiting rays */
 
-	    if (it > 0) { /* complete ray by copying the last point */
-		for (i = it+1; i < nt1; i++) {
-		    traj[i][0] = traj[it][0];
-		    traj[i][1] = traj[it][1];
-		}
+	    for (i=0; i < nt1; i++) {
+		sf_floatwrite (traj[SF_MIN(i,it)],ndim,rays);
 	    }
-      
-	    sf_floatwrite (traj[0],nt1*ndim,rays); 
 	}
     }
 

@@ -313,7 +313,7 @@ def warp2(name,       # name prefix
     def plot(title):
         return '''
         window min1=%g max1=%g |
-        grey title="%s" label1="Time (s)" clip=%g 
+        grey title="%s" label1=Time unit1=s clip=%g 
         ''' % (tmin,tmax,title,clip)
 
     vplot = plot('Vp/Vs') + '''
@@ -346,7 +346,7 @@ def warp2(name,       # name prefix
         window min1=%g max1=%g |
         grey
         title="Interleaved (%s)"
-        label1="Time (s)" label2="In-line"
+        label1=Time unit1=s label2="In-line"
         ''' % (tmin,tmax,title)
 
     def wiplot(title):
@@ -355,12 +355,14 @@ def warp2(name,       # name prefix
         window min1=%g max1=%g |
         wiggle poly=y transp=y yreverse=y
         title="Interleaved (%s)"
-        label1="Time (s)" label2="In-line"
+        label1=Time unit1=s label2="In-line"
         ''' % (tmin,tmax,title)
         
     Plot(pp,plot('PP'))
     Flow(pp+'i',pp,ifreq)
     Plot(pp+'i',freqplot('PP Local Frequency'))
+
+    Result(pp+'line',pp,'Overlay')
 
     PS = ('PS','SS')[ss]
 
@@ -372,7 +374,7 @@ def warp2(name,       # name prefix
     window min1=%g max1=%g |
     byte gainpanel=all allpos=y |
     grey3 frame1=%d frame3=%d frame2=%d color=j flat=n
-    label1="Time (s)" label3="In-line" label2="Relative Gamma"
+    label1=Time unit1=s label3="In-line" label2="Relative Gamma"
     wanttitle=n
     ''' % (tmin,tmax,frame1,(trace-o2)/j2,ng/2)
 

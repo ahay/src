@@ -26,12 +26,16 @@ title="Ray tracing"
 
 par = ' nr=1000 nt=4000 dt=0.001 yshot=0.6'
 
-Flow('syrays2','symes','rays2' + par)
-Plot('syrays2','window j2=5 |' + graph)
-Plot('syfronts2','syrays2','window j1=100 | transp |' + graph)
+for sym in (0,1):
+    rays = 'sy%drays2' % sym
+    fronts = 'sy%dfronts2' % sym
+    
+    Flow(rays,'symes','rays2 %s sym=%d' % (par,sym))
+    Plot(rays,'window j2=5 |' + graph)
+    Plot(fronts,rays,'window j1=100 | transp |' + graph)
 
-Result('syrays2','symes syrays2','Overlay')
-Result('syfronts2','symes syfronts2','Overlay')
+    Result(rays,['symes',rays],'Overlay')
+    Result(fronts,['symes',fronts],'Overlay')
 
 Plot('sycell2','symes',
      '''cell2 %s traj=traj >/dev/null &&

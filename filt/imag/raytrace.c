@@ -171,10 +171,11 @@ int trace_ray (raytrace rt  /* ray tracing object */,
  nt*dt if (it = 0); abs(it)*dt otherwise 
  >*/
 {
-    int i, dim, it=0;
+    int i, dim, it=0, nt;
     float y[6];
 
     dim = rt->dim;
+    nt = rt->nt;
 
     if (!rt->sym) {
 	for (i=0; i < dim; i++) {
@@ -182,7 +183,9 @@ int trace_ray (raytrace rt  /* ray tracing object */,
 	    y[i+dim] = p[i];
 	}
 
-	it = ode23_step (dim, rt->nt, rt->dt, y, rt,iso_rhs,term,traj);
+	runge_init(2*dim, nt, rt->dt);
+	it = ode23_step (y, rt,iso_rhs,term,traj);
+	runge_close();
 
 	for (i=0; i < dim; i++) {
 	    x[i] = y[i];
@@ -191,12 +194,12 @@ int trace_ray (raytrace rt  /* ray tracing object */,
     } else {
 	switch (dim) {
 	    case 2:
-		it = atela_step (dim, rt->nt, rt->dt, true, x, p, 
+		it = atela_step (dim, nt, rt->dt, true, x, p, 
 				 rt->grd2, 
 				 grid2_vgrad, grid2_vel, grid2_term, traj);
 		break;
 	    case 3:
-		it = atela_step (rt->dim, rt->nt, rt->dt, true, x, p, 
+		it = atela_step (rt->dim, nt, rt->dt, true, x, p, 
 				 rt->grd3, 
 				 grid3_vgrad, grid3_vel, grid3_term, traj);
 		break;
