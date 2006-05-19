@@ -43,39 +43,13 @@ Flow('cane','vz vx et',
      'eikonalvti vx=${SOURCES[1]} eta=${SOURCES[2]} order=1 zshot=5 yshot=5')
 Plot('cane',contour('VTI Anelliptic'))
 
-Flow('a2',None,'math n1=361 d1=%g o1=0 output="cos(x1)^2" | rtoc' % da)
-Flow('b2','a2','output=1-input')
 
-Flow('theta','a2',
+Flow('tane',None,
      '''
-     math output="abs((0.5*input*(3.3431 + 49.801*input + 
-     11.85*sqrt(148.5961 + input*(-290.506 + 195.054*input)))^2)/
-     (32228.654187610013 + 670.870552680753*sqrt((-2.0163182148834635 + input)*
-     (0.1836980402208928 + (-0.3716881829632375 + input)*input)) + 
-     2564.205523*sqrt(148.59610000000004 + input*(-290.506 + 195.054*input)) + 
-     input*(-67603.04271018005 - 670.870552680753*
-     sqrt((-2.0163182148834635 + input)*(0.1836980402208928 + 
-     (-0.3716881829632375 + input)*input)) - 5117.038385*
-     sqrt(148.5961 + input*(-290.506 + 195.054*input)) + 
-     input*(49647.482345220065 + 8795.303644726435*
-     sqrt((-139.55549066771766 + input)*
-     (-1.001966420780753 + input)) - 9129.632449120021*input + 
-     2552.832862*sqrt(148.5961 + input*(-290.506 + 195.054*input))))))" 
+     exgr - |
+     spray axis=2 n=24 d=0.1 o=0 |
+     math output="input*x2"
      ''')
-
-Flow('vel','a2',
-     '''
-     math output="(31885.64712073 + 2488.984675*sqrt(148.5961 + 
-     input*(-290.506 + 195.054*input)) + input*(-83783.5151616 - 
-     4882.35669*sqrt(148.5961 + input*(-290.506 + 195.054*input)) + 
-     input*(80017.9103984 - 22976.580984*input + 3023.1296*
-     sqrt(148.5961 + input*(-290.506 + 195.054*input)))))/
-     ((148.5961 + input*(-290.506 + 195.054*input))*
-     (16.75 - 4.9*input + sqrt(148.5961 + input*(-290.506 + 195.054*input))))"
-     ''')
-
-Flow('tane','vel theta',
-     'math a=${SOURCES[1]} output="sqrt(input)*exp(I*acos(sqrt(a)))" ')
 Plot('tane',graph)
 
 Plot('ane','cane tane','Overlay')

@@ -640,18 +640,20 @@ approximation~(\ref{eq:shiftM2}).  For a more accurate and robust extension of
 the fast marching method for anisotropic traveltime calculation, I recommend
 the ordered upwind methods of \cite{alex,alex2}.
 
-\begin{comment}
+\inputdir{ell}
 
 Figure~\ref{fig:const} shows finite-difference wavefronts for an isotropic and
 an anisotropic homogeneous media, compared with the exact solutions. The
 anisotropic media has the parameters of the Greenhorn shale. The
 finite-difference error decreases with finer sampling.
 
-%\plot{const}{height=2.5in}{Finite-difference wavefronts in an isotropic (left)
-%  and an anisotropic (right) homogeneous media. The anisotropic media has the
-%  parameters of the Greenhorn shale. The finite-difference sampling is 100~m.
-%  The contour sampling is 0.1~s. Dashed curves indicate the exact solution.
-%  The finite-difference error will be reduced at finer sampling.}
+\plot{const}{height=2.5in}{Finite-difference wavefronts in an isotropic (left)
+  and an anisotropic (right) homogeneous media. The anisotropic media has the
+  parameters of the Greenhorn shale. The finite-difference sampling is 100~m.
+  The contour sampling is 0.1~s. Dashed curves indicate the exact solution.
+  The finite-difference error will be reduced at finer sampling.}
+
+\inputdir{emarm}
 
 Figure~\ref{fig:marm} shows the first arrival wavefronts (traveltime contours)
 computed in the ani\-so\-tro\-pic Marmousi model created by
@@ -661,16 +663,14 @@ parameters are shown in Figure~\ref{fig:marmmod}. The observed significant
 difference in the wavefront position suggests a difference in the positioning
 of seismic images when anisotropy is not properly taken into account.
 
-%\plot{marm}{width=5.5in}{Finite-difference wavefronts in the isotropic (top)
-%  and anisotropic (bottom) Marmousi models. A significant shift in the
-%  wavefront position suggest possible positioning error when seismic imaging
-%  does not take anisotropy into account.}
+\plot{marm}{width=5.5in}{Finite-difference wavefronts in the isotropic
+  (top) and anisotropic (bottom) Marmousi models. A significant shift
+  in the wavefront position suggest possible positioning error when
+  seismic imaging does not take anisotropy into account.}
 
-%\plot{marmmod}{width=5.5in}{Alkhalifah's anisotropic Marmousi model. Top:
-%  vertical velocity. Bottom: anelliptic $\eta$ parameter. The vertical
-%  velocity is taken equal to the NMO velocity $V_n$.}
-
-\end{comment}
+\plot{marmmod}{width=5.5in}{Alkhalifah's anisotropic Marmousi model.
+  Top: vertical velocity. Bottom: anelliptic $\eta$ parameter. The
+  vertical velocity is taken equal to the NMO velocity $V_n$.}
 
 \section{Conclusions}
 
