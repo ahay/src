@@ -1,0 +1,85 @@
+from rsfproj import *
+import math
+
+def spike(mag):
+    return '''
+    spike n1=201 n2=201 n3=1 d1=0.05 d2=0.05 d3=0.05 mag=%g
+    label1=Z label2=X unit1=km unit2=km
+    ''' % mag
+
+vm = math.sqrt(math.sqrt(14.47*9.57))
+
+Flow('vm',None,spike(vm))
+Flow('vx',None,spike(3.80395))
+Flow('vz',None,spike(3.09354))
+Flow('et',None,spike(0.340859))
+
+def contour(title):
+    return '''
+    contour screenratio=1 nc=24 c0=0 dc=0.1 
+    title="%s"
+    ''' % title
+
+Flow('ciso','vm','eikonalvti order=1 zshot=5 yshot=5')
+Plot('ciso',contour('Isotropic'))
+
+da = math.pi/180
+graph = '''
+graph wanttitle=n wantaxis=n dash=1
+min1=-5 max1=5 min2=-5 max2=5 screenratio=1
+'''
+
+Flow('tiso',None,
+     '''
+     spike n1=361 d1=%g o1=0 n2=24 d2=0.1 o2=0 |
+     rtoc |
+     math output="%g*x2*exp(I*x1)"
+     ''' % (da,vm))
+Plot('tiso',graph)
+
+Plot('iso','ciso tiso','Overlay')
+
+Flow('cane','vz vx et',
+     'eikonalvti vx=${SOURCES[1]} eta=${SOURCES[2]} order=1 zshot=5 yshot=5')
+Plot('cane',contour('VTI Anelliptic'))
+
+Flow('a2',None,'math n1=361 d1=%g o1=0 output="cos(x1)^2" | rtoc' % da)
+Flow('b2','a2','output=1-input')
+
+Flow('theta','a2',
+     '''
+     math output="abs((0.5*input*(3.3431 + 49.801*input + 
+     11.85*sqrt(148.5961 + input*(-290.506 + 195.054*input)))^2)/
+     (32228.654187610013 + 670.870552680753*sqrt((-2.0163182148834635 + input)*
+     (0.1836980402208928 + (-0.3716881829632375 + input)*input)) + 
+     2564.205523*sqrt(148.59610000000004 + input*(-290.506 + 195.054*input)) + 
+     input*(-67603.04271018005 - 670.870552680753*
+     sqrt((-2.0163182148834635 + input)*(0.1836980402208928 + 
+     (-0.3716881829632375 + input)*input)) - 5117.038385*
+     sqrt(148.5961 + input*(-290.506 + 195.054*input)) + 
+     input*(49647.482345220065 + 8795.303644726435*
+     sqrt((-139.55549066771766 + input)*
+     (-1.001966420780753 + input)) - 9129.632449120021*input + 
+     2552.832862*sqrt(148.5961 + input*(-290.506 + 195.054*input))))))" 
+     ''')
+
+Flow('vel','a2',
+     '''
+     math output="(31885.64712073 + 2488.984675*sqrt(148.5961 + 
+     input*(-290.506 + 195.054*input)) + input*(-83783.5151616 - 
+     4882.35669*sqrt(148.5961 + input*(-290.506 + 195.054*input)) + 
+     input*(80017.9103984 - 22976.580984*input + 3023.1296*
+     sqrt(148.5961 + input*(-290.506 + 195.054*input)))))/
+     ((148.5961 + input*(-290.506 + 195.054*input))*
+     (16.75 - 4.9*input + sqrt(148.5961 + input*(-290.506 + 195.054*input))))"
+     ''')
+
+Flow('tane','vel theta',
+     'math a=${SOURCES[1]} output="sqrt(input)*exp(I*acos(sqrt(a)))" ')
+Plot('tane',graph)
+
+Plot('ane','cane tane','Overlay')
+
+Result('const','iso ane','SideBySideIso')
+
+End()
