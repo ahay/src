@@ -2,6 +2,7 @@
  # F-D modeling 
  ##
 from rsfproj import *
+import zomig
 
 # ------------------------------------------------------------
 par = {
@@ -251,5 +252,13 @@ for im in range(par['nm']):
     Plot(dx,[dcomp,dbar],'window n3=1 f3=1 | transp |' + dgrey('bar=${SOURCES[1]}',par))
     Result(dcomp,[do,dx],'SideBySideIso')
 # ------------------------------------------------------------
+
+    dos = 'dos' + str(im)
+    dor = 'dor' + str(im)
+
+    Flow(dos,do,
+         '''
+         window f2=%(kt)d | put o1=0 | transp
+         ''' % par)
 
 End()
