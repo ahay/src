@@ -169,13 +169,6 @@ def wplot(wplot,wo,wx,par):
            wantaxis=n
            ''')
 
-#    Result(wplot+'2',[_wo,_wx],
-#           '''
-#           cat ${SOURCES[1]} axis=2 space=n |
-#           transp plane=13 |
-#           grey pclip=97 gainpanel=a title="" wantaxis=n
-#           ''')
-
 def dplot(dplot,ds,dr,par):
     _ds = "_" + ds
     _dr = "_" + dr
@@ -185,7 +178,7 @@ def dplot(dplot,ds,dr,par):
     Result(dplot,[_ds,_dr],
            '''
            cat ${SOURCES[1]} axis=2 space=n |
-           grey pclip=99 gainpanel=a title=""
+           grey pclip=98 gainpanel=a title=""
            ''')
 # ------------------------------------------------------------
 # smooth background
