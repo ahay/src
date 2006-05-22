@@ -46,12 +46,13 @@ void  sf_int2_init (float** coord          /* coordinates [nd][2] */,
 {
     int   id;
     int   i1, i2; 
-    float x1, x2, rx;
+    float x1, x2, ss;
 
     nf = nf_in;
     nd = nd_in;
     m1 = n1;
     m2 = n2;
+    ss = 1. - 0.5*nf;
 
     if (!allocated) {
 	nxy  = sf_intalloc2  ( 2,nd);
@@ -61,25 +62,29 @@ void  sf_int2_init (float** coord          /* coordinates [nd][2] */,
     }
 
     for (id = 0; id < nd; id++) {
-
-	rx = (coord[id][0] - o1)/d1;
-	i1 = (int) floorf(rx + 1. - 0.5*nf);
-	x1 = rx - floorf(rx);
+	x1 = ss + (coord[id][0] - o1)/d1;
+	i1 = floorf(x1);
+	x1 -= i1;
 	
-	rx = (coord[id][1] - o2)/d2;
-	i2 = (int) floorf(rx + 1. - 0.5*nf);
-	x2 = rx - floorf(rx);
-   
-	if (i1 > - nf && i1 < n1 &&
-	    i2 > - nf && i2 < n2) {
-	    mask[id] = false; 
-	    interp (x1, nf, w1[id]);
-	    interp (x2, nf, w2[id]);
-	    nxy[id][0] = i1;
-	    nxy[id][1] = i2;
-	} else {
+	if (i1 <= - nf || i1 >= n1) {
 	    mask[id] = true;
+	    continue;
 	}
+	
+	x2 = ss + (coord[id][1] - o2)/d2;
+	i2 = floorf(x2);
+	x2 -= i2;
+	
+	if (i2 <= - nf || i2 >= n2) {
+	    mask[id] = true;
+	    continue;
+	}
+   
+	mask[id] = false; 
+	interp (x1, nf, w1[id]);
+	interp (x2, nf, w2[id]);
+	nxy[id][0] = i1;
+	nxy[id][1] = i2;
     }
 }
 

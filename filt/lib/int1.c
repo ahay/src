@@ -42,11 +42,12 @@ void  sf_int1_init (float* coord               /* cooordinates [nd] */,
 /*< initialize >*/
 {
     int id, i1; 
-    float rx;
+    float rx, sx;
 
     nf = nf_in;
     nd = nd_in;
     m1 = n1;
+    sx = 1.0 - 0.5*nf;
 
     if (!allocated) {
 	nx = sf_intalloc(nd);
@@ -56,10 +57,10 @@ void  sf_int1_init (float* coord               /* cooordinates [nd] */,
     }
 
     for (id = 0; id < nd; id++) {
-	rx = (coord[id] - o1)/d1;
-	i1 = (int) floorf(rx + 1. - 0.5*nf);
-	rx -= floorf(rx);
-   
+	rx = sx + (coord[id] - o1)/d1;
+	i1 = floorf(rx);
+	rx -= i1;
+	
 	if (i1 > - nf && i1 < n1) {
 	    mask[id] = false; 
 	    interp (rx, nf, w1[id]);

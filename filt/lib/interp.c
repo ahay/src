@@ -18,6 +18,7 @@
 */
 
 #include "interp.h"
+#include "error.h"
 
 #ifndef _sf_interp_h
 

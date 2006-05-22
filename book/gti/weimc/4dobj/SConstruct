@@ -147,15 +147,23 @@ def wplot(wplot,wo,wx,par):
     Flow(_wo,wo,
          'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)
     Flow(_wx,wx,
-         'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)        
-
+         'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)
     Result(wplot,[_wo,_wx],
            '''
-           cat  ${SOURCES[0]} ${SOURCES[1]} axis=2 space=n |
+           cat ${SOURCES[1]} axis=2 space=n |
            window j3=10 |
-           grey pclip=95 gainpanel=a title="" screenratio=0.25 screenht=3.5 wantaxis=n
-           grid=y g1num=1000
-           ''', stdin=0)
+           grey pclip=95 gainpanel=a title="" screenratio=0.25 screenht=3.5
+           wantaxis=n
+           ''')
+
+    Result(wplot+'2',[_wo,_wx],
+           '''
+           cat ${SOURCES[1]} axis=2 space=n |
+           window j1=10 | transp plane=13 |
+           grey pclip=97 gainpanel=a title="" wantaxis=n
+           ''')
+    
+    
 # ------------------------------------------------------------
 # smooth background
 Flow('mo',None,
