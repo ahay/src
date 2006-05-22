@@ -48,13 +48,14 @@ void  sf_int3_init (float** coord          /* coordinates [nd][3] */,
 
     int   id;
     int   i1, i2, i3; 
-    float x1, x2, x3, rx;
+    float x1, x2, x3, ss;
 
     nf = nf_in;
     nd = nd_in;
     m1 = n1;
     m2 = n2;
     m3 = n3;
+    ss = 1. - 0.5*nf;
 
     if (!allocated) {
 	nxyz = sf_intalloc2  ( 3,nd);
@@ -66,17 +67,17 @@ void  sf_int3_init (float** coord          /* coordinates [nd][3] */,
 
     for (id = 0; id < nd; id++) {
 
-	rx = (coord[id][0] - o1)/d1;
-	i1 = (int) floorf(rx + 1. - 0.5*nf);
-	x1 = rx - floorf(rx);
+	x1 = ss + (coord[id][0] - o1)/d1;
+	i1 = floorf(x1);
+	x1 -= i1;
 	
-	rx = (coord[id][1] - o2)/d2;
-	i2 = (int) floorf(rx + 1. - 0.5*nf);
-	x2 = rx - floorf(rx);
+	x2 = ss + (coord[id][1] - o2)/d2;
+	i2 = floorf(x2);
+	x2 -= i2;
 
-	rx = (coord[id][2] - o3)/d3;
-	i3 = (int) floorf(rx + 1. - 0.5*nf);
-	x3 = rx - floorf(rx);
+	x3 = ss + (coord[id][2] - o3)/d3;
+	i3 = floorf(x3);
+	x3 -= i3;
    
 	if (i1 > - nf && i1 < n1 &&
 	    i2 > - nf && i2 < n2 &&

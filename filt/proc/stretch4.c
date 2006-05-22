@@ -93,9 +93,9 @@ void stretch4_define (map4 str, const float* coord)
     }
     
     for (id = 0; id < str->nd; id++) {
-	rx = (coord[id] - str->t0)/str->dt; 
-	ix = (int) floorf(rx - 1.);
-	rx -= floorf(rx);
+	rx = (coord[id] - str->t0)/str->dt - 1.; 
+	ix = floorf(rx);
+	rx -= ix;
 
 	if (ix <= -4 || ix >= n1) {
 	    str->m[id] = true; 
