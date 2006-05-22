@@ -228,8 +228,58 @@ for im in range(par['nm']):
 
     zmovie = 'zmovie' + str(im)
     wzplot(zmovie,wv,ww,par)
-    
 
+    # image
+    mm = 'mm' + str(im)
+
+
+    m0 = mm + '_0'
+    Flow(m0,wv,'add mode=p ${SOURCES[0]} | stack axis=3 norm=n')
+
+    m1 = mm + '_1'
+    Flow(m1,[wv,ww],'add mode=p ${SOURCES[1]} | stack axis=3 norm=n')
+
+    eps = 0.1
+
+    m2 = mm + '_2'
+    Flow(m2,[wv,ww],
+         '''
+         math d=${SOURCES[0]} u=${SOURCES[1]} output="d*u/(d*d+%g)" |
+         stack axis=3 norm=n
+         ''' % eps)
+    
+    m3 = mm + '_3'
+    Flow(m3,[m0,m1],
+         'math du=${SOURCES[1]} output="du/(input+%g)" ' % eps)
+
+    m4 = mm + '_4'
+    Flow(m4,[ww,m0,m1],
+         '''
+         add mode=p ${SOURCES[0]} | stack axis=3 norm=n |
+         math dd=${SOURCES[1]} du=${SOURCES[2]}
+         output="du/sqrt(input*dd+%g)"
+         ''' % eps)
+
+    m5 = mm + '_5'
+    Flow(m5,[m0,m1],
+         '''
+         math du=${SOURCES[1]}
+         output="du*du*du/(input*du*du+%g*input*input+%g)"
+         ''' % (eps,eps))
+
+    for ic in range(5):
+        par['ic']=ic+1
+        mi = '%s_%d' % (mm,ic+1)
+        Plot(mi,igrey('pclip=100',par))
+        Plot(mi+'g',mi,
+             '''
+             window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g|
+             window n1=3 f1=119 j1=40 | transp |
+             scale axis=123 |
+             graph title=%(ic)d min2=-1 max2=+1
+             ''' % par)
+        Result(mi,[mi,mi+'g'],'SideBySideAniso')
+        
 # ------------------------------------------------------------
 
 End()
