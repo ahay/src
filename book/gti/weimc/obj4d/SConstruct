@@ -2,6 +2,7 @@
  # F-D modeling 
  ##
 from rsfproj import *
+from rsftex import *
 import pplot
 
 # ------------------------------------------------------------
