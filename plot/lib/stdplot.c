@@ -446,8 +446,9 @@ static void make_labels (sf_file in, char where1, char where2)
 	if ((NULL == (labl=sf_getstring("label3"))) &&
 	    (NULL == (labl=sf_histstring(in,"label3")))) {
 	    label3->text = blank;
-	} else if ((NULL == (unit=sf_getstring("unit3"))) &&
-		   (NULL == (unit=sf_histstring(in,"unit3")))) {
+	} else if (((NULL == (unit=sf_getstring("unit3"))) &&
+		    (NULL == (unit=sf_histstring(in,"unit3")))) ||
+		   *unit == '\0' || (*unit == ' ' && *(unit+1) == '\0')) {
 	    label3->text = labl;
 	} else {
 	    len = strlen(labl)+strlen(unit)+4;

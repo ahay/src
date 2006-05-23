@@ -49,6 +49,7 @@ pstoimg     = WhereIs('pstoimg')
 mathematica = WhereIs('mathematica')
 if mathematica:
     mathematica = WhereIs('math')
+matlab      = WhereIs('matlab')
 
 vpsuffix  = '.vpl'
 pssuffix  = '.eps'
@@ -479,6 +480,17 @@ if mathematica and epstopdf:
                     '%s junk_ma.eps -o=$TARGET && rm junk_ma.eps' %
                     (mathematica,epstopdf),
                     suffix='.pdf',src_suffix='.ma')
+if matlab and epstopdf:
+    matlabpath = os.environ.get('MATLABPATH')
+    if matlabpath:
+        matlabpath = string.join([matlabpath,'Matlab'],':')
+    else:
+        matlabpath = 'Matlab'
+    Matlab = Builder(action = 'MATLABPATH=%s DISPLAY=" " nohup %s -nojvm '
+                     '< $SOURCE >& /dev/null > /dev/null && '
+                     '%s junk_ml.eps -o=$TARGET && rm junk_ml.eps' %
+                     (matlabpath,matlab,epstopdf),
+                     suffix='.pdf',src_suffix='.ml')
      
 Color = Builder(action = Action(colorize),suffix='.html')
                    
@@ -583,6 +595,8 @@ class TeXPaper(Environment):
             self.Append(BUILDERS={'PSBuild':PSBuild})
         if mathematica and epstopdf:
             self.Append(BUILDERS={'Math':Math})
+        if matlab and epstopdf:
+            self.Append(BUILDERS={'Matlab':Matlab})
         self.scons = []
         self.figs = []
         self.Dir()
@@ -631,8 +645,22 @@ class TeXPaper(Environment):
                     self.Math(pdf,mth)
                 crfigs.append(pdf)
             mathdir = os.path.join(self.docdir,'Math')
-            self.Install(mathdir,mths)
-            self.Alias('install',mathdir)
+            if os.path.isdir(mathdir):
+                self.Install(mathdir,mths)
+                self.Alias('install',mathdir)
+        # matlab figures
+        mtls = glob.glob('%s/Matlab/*.ml' % topdir)
+        if mtls:
+            for mtl in mtls:
+                pdf = re.sub(r'([^/]+)\.ml$',
+                             os.path.join(resdir,'\g<1>.pdf'),mtl)
+                if matlab and epstopdf:
+                    self.Matlab(pdf,mtl)
+                crfigs.append(pdf)
+            matlabdir = os.path.join(self.docdir,'Matlab')
+            if os.path.isdir(matlabdir):
+                self.Install(matlabdir,mtls)
+                self.Alias('install',matlabdir)
         # xfig figures:
         figs =  glob.glob('%s/XFig/*.fig' % topdir)
         if figs: 

@@ -93,7 +93,7 @@ Flow('vlf0','stkd',
      ''')
 
 Flow('vpick0','vpick','window n1=201')
-#Flow('mig0','vlf0 vpick0','slice pick=${SOURCES[1]} | window')
+Flow('mig0','vlf0 vpick0','slice pick=${SOURCES[1]} | window')
 
 Result('cmig0','mig0',
        '''
@@ -104,14 +104,14 @@ Flow('tst','cmp','transp plane=24 memsize=500')
 Flow('mig','tst','preconstkirch vel=1500')
 Flow('cip','mig','transp plane=24 memsize=500 | halfint inv=1 adj=1')
 Flow('ckx','cip','cosft sign3=1')
-#Flow('vlf','ckx',
-#     'fourvc nv=100 dv=20 v0=1500 pad=512 pad2=1024 | cosft sign3=-1')
-#Flow('vlf2','cip',
-#     '''
-#     transp plane=23 memsize=500 | 
-#     fourvc2 nv=100 dv=20 v0=1500 pad=512 pad2=1024 | 
-#     transp plane=23 memsize=500
-#     ''')
+Flow('vlf','ckx',
+     'fourvc nv=100 dv=20 v0=1500 pad=512 pad2=1024 | cosft sign3=-1')
+Flow('vlf2','cip',
+     '''
+     transp plane=23 memsize=500 | 
+     fourvc2 nv=100 dv=20 v0=1500 pad=512 pad2=1024 | 
+     transp plane=23 memsize=500
+     ''')
 
 Flow('pik','vlf2','window max1=0.6 | pick rect1=10 rect2=20 | window')
 Result('pik',
