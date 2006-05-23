@@ -53,18 +53,18 @@ int main(int argc, char* argv[])
     
     switch(orient) {
 	case 1:
-	    front = sf_floatalloc(n1,1);
-	    side = sf_floatalloc(1,n2);
+	    front = sf_floatalloc2(n1,1);
+	    side = sf_floatalloc2(1,n2);
 	    top = sf_floatalloc2(n1,n2);
 	    break;
 	case 2:
-	    front = sf_floatalloc(n1,1);
-	    side = sf_floatalloc(n1,n2);
+	    front = sf_floatalloc2(n1,1);
+	    side = sf_floatalloc2(n1,n2);
 	    top = sf_floatalloc2(1,n2);
 	    break;
 	case 3:
-	    front = sf_floatalloc(n1,n2);
-	    side = sf_floatalloc(1,n2);
+	    front = sf_floatalloc2(n1,n2);
+	    side = sf_floatalloc2(1,n2);
 	    top = sf_floatalloc2(n1,1);
 	    break;
 	default:
@@ -241,23 +241,23 @@ int main(int argc, char* argv[])
 	    vp_plot_set (i3);
 
 	    sf_seek(in,(off_t) (i3*n1*n2+frame3*n1)*esize,SEEK_SET);
-	    sf_floatread(front,n1,in);
+	    sf_floatread(front[0],n1,in);
 
 	    vp_cubecoord(3,x[0],x[n1-1],min,max);
-	    vp_umove(x[0],front[0]);
+	    vp_umove(x[0],front[0][0]);
 	    for (i1=1; i1 < n1; i1++) {
-		vp_udraw(x[i1],front[i1]);
+		vp_udraw(x[i1],front[0][i1]);
 	    }
 	    
 	    for (i2=0; i2 < n2; i2++) {
 		sf_seek(in,(off_t) (i3*n1*n2+i2*n1+frame2)*esize,SEEK_SET);
-		sf_floatread(side+i2,1,in);
+		sf_floatread(side[i2],1,in);
 	    }
 	    
 	    vp_cubecoord(2,y[0],y[n2-1],min,max);
-	    vp_umove(y[0],side[0]);
+	    vp_umove(y[0],side[0][0]);
 	    for (i2=1; i2 < n2; i2++) {
-		vp_udraw(y[i2],side[i2]);
+		vp_udraw(y[i2],side[i2][0]);
 	    }
 
 	    sf_seek(in,(off_t) (i3*n1*n2*esize),SEEK_SET);
