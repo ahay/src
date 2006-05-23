@@ -2,8 +2,6 @@
  # F-D modeling 
  ##
 from rsfproj import *
-from rsftex import *
-import pplot
 
 # ------------------------------------------------------------
 par = {
@@ -240,7 +238,7 @@ for im in range(par['nm']):
     m1 = mm + '_1'
     Flow(m1,[wv,ww],'add mode=p ${SOURCES[1]} | stack axis=3 norm=n')
 
-    eps = 0.1
+    eps = 0.01
 
     m2 = mm + '_2'
     Flow(m2,[wv,ww],
@@ -262,13 +260,24 @@ for im in range(par['nm']):
          ''' % eps)
 
     m5 = mm + '_5'
-    Flow(m5,[m0,m1],
+    Flow(m5,[m3,m0,m1],
          '''
-         math du=${SOURCES[1]}
-         output="du*du*du/(input*du*du+%g*input*input+%g)"
+         math dd=${SOURCES[1]} du=${SOURCES[2]} 
+         output="abs(input)*du/(abs(input)*dd+%g)" |
+         math dd=${SOURCES[1]} du=${SOURCES[2]} 
+         output="abs(input)*du/(abs(input)*dd+%g)"
          ''' % (eps,eps))
 
-    for ic in range(5):
+    m6 = mm + '_6'
+    Flow(m6,[m3,m0,m1],
+         '''
+         math dd=${SOURCES[1]} du=${SOURCES[2]} 
+         output="input*input*du/(input*input*dd+%g)" |
+         math dd=${SOURCES[1]} du=${SOURCES[2]} 
+         output="input*input*du/(input*input*dd+%g)"
+         ''' % (eps,eps))
+
+    for ic in range(6):
         par['ic']=ic+1
         mi = '%s_%d' % (mm,ic+1)
         Plot(mi,igrey('pclip=100',par))
