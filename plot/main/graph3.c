@@ -27,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int n1,n2,n3, frame2,frame3, i1,i2,i3, iframe, np=3, orient;
     int n1pix,n2pix, m1pix,m2pix, n1front,n2front, movie, nframe=1; 
-    float point1, point2, *front, **top, *x, *y, *side, o1, d1, o2, d2;    
+    float point1, point2, **front, **side, **top, *x, *y, o1, d1, o2, d2;    
     float min, max, f, frame1, dframe, oo1, dd1;
     bool nomin, nomax;
     char *label1, *label2, *unit1, *unit2;
@@ -48,9 +48,29 @@ int main(int argc, char* argv[])
     esize = sf_esize(in);
     sf_unpipe(in,n1*n2*n3*esize);
 
-    front = sf_floatalloc(n1);
-    side = sf_floatalloc(n2);
-    top = sf_floatalloc2(n1,n2);
+    if (!sf_getint("orient",&orient)) orient=1;
+    /* function orientation */
+    
+    switch(orient) {
+	case 1:
+	    front = sf_floatalloc(n1,1);
+	    side = sf_floatalloc(1,n2);
+	    top = sf_floatalloc2(n1,n2);
+	    break;
+	case 2:
+	    front = sf_floatalloc(n1,1);
+	    side = sf_floatalloc(n1,n2);
+	    top = sf_floatalloc2(1,n2);
+	    break;
+	case 3:
+	    front = sf_floatalloc(n1,n2);
+	    side = sf_floatalloc(1,n2);
+	    top = sf_floatalloc2(n1,1);
+	    break;
+	default:
+	    sf_error("unknown orientation orient=%d",orient);
+	    break;
+    }
 
     nomin = !sf_getfloat("min",&min);
     /* minimum function value */
@@ -72,8 +92,6 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!sf_getint("orient",&orient)) orient=1;
-    /* function orientation */
 
     if (min == 0. && max == 0.) {
 	min = -1.;
