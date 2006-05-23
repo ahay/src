@@ -1,6 +1,6 @@
 from rsftex import *
 
-Paper('dummy')
+#Paper('dummy')
 
 End()
 
