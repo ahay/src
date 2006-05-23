@@ -601,14 +601,20 @@ class TeXPaper(Environment):
         self.figs = []
         self.Dir()
     def Dir(self,topdir='.',resdir='Fig'):
+        # reproducible directories
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
-             dir = os.path.dirname(scons)
-             html = dir+'.html'
-             self.Color(html,scons)
-             self.scons.append(html)
-             tgz = dir+'.tgz'
-             self.Tar(tgz,dir)
-             self.scons.append(tgz)
+            dir = os.path.dirname(scons)
+            html = dir+'.html'
+            self.Color(html,scons)
+            self.scons.append(html)
+            tgz = dir+'.tgz'
+            self.Tar(tgz,dir)
+            self.scons.append(tgz)
+        # non-reproducible directories
+        for dir in filter(os.path.isdir,glob.glob('%s/[A-Z]*' % topdir)):
+            tgz = dir+'.tgz'
+            self.Tar(tgz,dir)
+            self.scons.append(tgz)
         if self.scons and os.path.isdir(self.docdir):
              self.Install(self.docdir,self.scons)
         self.Alias('install',self.docdir)        
