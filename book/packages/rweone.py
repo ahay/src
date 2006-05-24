@@ -3,14 +3,14 @@ from rsfproj import *
 def ccgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="z(m)" label2="x(m)" %s
+    title="" pclip=99 label1="z" unit1=m label2="x" unit2=m %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
 
 def rcgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99 label1="t(s)" label2="x(m)" %s
+    title="" pclip=99 label1="t" unit1=s label2="x" unit2=m %s
     ''' % (custom)
 
 def ccgraph(custom,par):
@@ -75,7 +75,7 @@ def freq(frq,dat,nw,fw,jw):
          fft1 inv=n opt=n |
          window squeeze=n min1=1 j1=%d f1=%d n1=%d |
          transp |
-         put label1=g label2=w
+         put label1=g label2=t label3=w
          ''' % (jw,fw,nw) )
 
 # plot 2x3 images in RC
