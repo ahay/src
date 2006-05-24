@@ -37,13 +37,13 @@ par['gmax']=par['og'] + (par['ng']-1) * par['dg']
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=100 label1="z(m)" label2="x(m)" %s
+    title="" pclip=100 label1="z" unit1=km label2="x" unit2=km %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
 def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=100 label1="t(s)" label2="g" %s
+    title="" pclip=100 label1="t" unit1=s label2="g" unit2=deg %s
     min1=%g max1=%g min2=%g max2=%g
     ''' % (custom,par['tmin'],par['tmax'],par['gmin'],par['gmax'])
 
