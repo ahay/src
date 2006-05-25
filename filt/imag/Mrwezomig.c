@@ -85,7 +85,8 @@ int main(int argc, char* argv[])
 	ag = sf_iaxa(Fd,1); sf_setlabel(ag,"g"); 
         /* 'extrapolation axis' (can be time) */
 	at = sf_iaxa(Fd,2); sf_setlabel(at,"t");
-	aw = sf_iaxa(Fd,3); sf_setlabel(aw,"w"); /* frequency */
+	/* frequency axis */
+	aw = sf_iaxa(Fd,3); sf_setlabel(aw,"w");
 	nw = sf_n(aw); ow = sf_o(aw); dw = sf_d(aw);
 
 	sf_oaxa(Fi,ag,1);

@@ -70,8 +70,8 @@ def wgrey(custom,par):
 
 # ------------------------------------------------------------
 # modeling function
-def amodel(dat,wfl,wav,vel,den,sou,rec,custom):
-    Flow([dat,wfl],[wav,vel,den,sou,rec],
+def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
+    Flow( [dat,wfl],[wav,vel,den,sou,rec],
          '''
          afmod
          verb=y abc=y free=n snap=y jsnap=50 %s

@@ -1,5 +1,5 @@
 ## 
- # F-D modeling 
+ # 4D wavefield objects matching
  ##
 from rsfproj import *
 
@@ -19,7 +19,7 @@ par = {
     'dr':2.5,    #       receivers sampling
     #
     'ne':1,      # no of experiments
-    'nm':3,      # no of models
+    'nm':4,      # no of models
     #
     'nx':401, 'ox':0, 'dx':2.5,
     'nz':301, 'oz':0, 'dz':2.5
@@ -169,6 +169,9 @@ for jm in range(par['nm']):
     if(jm==2):
         par['vmag']='-0.60'
         par['dmag']='0.0,0.0,0.1,-.1'
+    if(jm==3):
+        par['vmag']='-0.0'
+        par['dmag']='0.0,0.0,0.1,-.1'
 
     vx = 'vx' + str(jm)
     Flow(vx,None,
@@ -178,15 +181,23 @@ for jm in range(par['nm']):
          n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=181 l2=221 |
          smooth rect1=20 rect2=20 repeat=5
          ''' % par)
-        
-    rx = 'rx' + str(jm)
-    Flow(rx,None,
-         '''
-         spike nsp=4 mag=%(dmag)s
-         n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=161,161,121,201 
-         n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=001,201,001,101 l2=200,401,301,401
-         ''' % par)
 
+    rx = 'rx' + str(jm)
+    if(jm==3):
+        Flow(rx,None,
+             '''
+             spike nsp=1 mag=1 n1=%(nz)d o1=%(oz)g d1=%(dz)g |
+             noise range=0.1 |
+             spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+             ''' % par)
+    else:
+        Flow(rx,None,
+             '''
+             spike nsp=4 mag=%(dmag)s
+             n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=161,161,121,201 
+             n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=001,201,001,101 l2=200,401,301,401
+             ''' % par)
+        
 # loop over models
 for im in range(par['nm']):
     ve = 've' + str(im)
@@ -280,7 +291,7 @@ for im in range(par['nm']):
     for ic in range(6):
         par['ic']=ic+1
         mi = '%s_%d' % (mm,ic+1)
-        Plot(mi,igrey('pclip=100',par))
+        Plot(mi,igrey('pclip=99',par))
         Plot(mi+'g',mi,
              '''
              window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g|

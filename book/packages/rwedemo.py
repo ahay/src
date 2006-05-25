@@ -140,7 +140,7 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
                + rgrey('title=%s',par) % i)
         
         Plot(migCC+sfx,'window | transp |'
-             + cgrey('title=%s',par) % i)
+             + cgrey('title=%s pclip=99',par) % i)
         Result(migCC+sfx,[migCC+sfx,cos],'Overlay')
         
 def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):

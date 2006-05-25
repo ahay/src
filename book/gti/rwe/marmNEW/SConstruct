@@ -4,13 +4,13 @@ import zomig
 
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
-    'nx':2301, 'dx':0.004,'ox':0,     # CC axis 2
-    'nt':1500, 'dt':0.001,'ot':0,     # RC axis 1
+    'nx':2301, 'dx':0.004,'ox':0, 'ox':2, 'nx':1500,    # CC axis 2
+    'nt':1250, 'dt':0.001,'ot':0,     # RC axis 1
     'ng':1024, 'dg':0.175,'og':-89.6, # RC axis 2
-    'nT':2500, 'dT':0.001,'oT':0,       'kT':1000,    # time
+    'nT':2500, 'dT':0.001,'oT':0,       'kT':2000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':1250
+    'spx':750
     }
 
 # compute parameters
@@ -23,6 +23,7 @@ Fetch(['marmvel.hh'],'marm')
 Flow('vel','marmvel.hh',
      '''
      dd form=native |
+     window min2=2000 n2=1500 |
      smooth rect1=5 rect2=5 |
      scale rscale=0.001 |
      put label1=z label2=x
