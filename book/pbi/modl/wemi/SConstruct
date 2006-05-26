@@ -1,23 +1,31 @@
 from rsfproj import *
 
+#shot1 Xs= 0.152km, depth=0.0762km
+#delta shot DXs=0.060906km
+#no of shots = 95
+ 
+#Receivers from 0.1524km to 5.8887km with spacing of 0.006096km
+
 private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
            'server':os.environ.get('BEG_SERVER')}
 
-for file in ('vp','vs','density'):
+for file in ('vp','vs','rho'):
     bin = file + '.bin'    
     Fetch(bin,'wemi',private)
     Flow(file,bin,
          '''
          echo in=$SOURCE
-         n1=2401 o1=0 d1=0.01 label1=z unit1=kft
-         n2=1981 o2=0 d2=0.01 label2=x unit2=kft
-         data_format=native_float |
-         scale dscale=%g
-         ''' % (0.001,1)[file=='density'],stdin=0)
+         n1=875 o1=0 d1=0.003048 label1=z unit1=km
+         n2=991 o2=0 d2=0.006096 label2=x unit2=km
+         label=%s unit=%s
+         data_format=native_float 
+         ''' % (('Velocity','km/s'),('Density','gm/cc'))[file=='rho'],
+         stdin=0)
     Result(file,
            '''
-           grey title=%s color=j allpos=y scalebar=y           
+           grey title=%s color=j allpos=y scalebar=y
+           barreverse=y
            ''' % string.capitalize(file))
     
 End()
