@@ -616,7 +616,7 @@ class TeXPaper(Environment):
             self.Tar(tgz,dir)
             self.scons.append(tgz)
         if self.scons and os.path.isdir(self.docdir):
-             self.Install(self.docdir,self.scons)
+            self.Install(self.docdir,self.scons)
         self.Alias('install',self.docdir)        
         # reproducible figures
         erfigs = []

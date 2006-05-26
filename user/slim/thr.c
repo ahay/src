@@ -1,6 +1,4 @@
-/* 
-Threshold float/complex inputs given a constant/varying
-threshold level.
+/* Threshold float/complex inputs given a constant/varying threshold level.
 
 Methods available:
 - soft
@@ -31,8 +29,8 @@ Created: February 2006
 
 #include <rsf.h>
 
-void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
-	       float thr);
+static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
+		      float thr);
 
 int main(int argc, char* argv[])
 {
@@ -114,8 +112,8 @@ int main(int argc, char* argv[])
   exit(0);
 }
 
-void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
-	       float thr)
+static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode, 
+		      float thr)
 {
   float *isample=NULL;
   float *osample=NULL;
