@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
     sf_complex **rays;
 
     int nn,ii;
-    bool comp; // complex input
+    bool comp; /* complex input */
  
     /* init RSF */
     sf_init(argc,argv);
@@ -103,12 +103,12 @@ int main(int argc, char* argv[])
 	    if(adj) {
 		sf_floatread (comRC[0][0],2*ng*nt,Fi);
 
-		// REAL
+		/* REAL */
 		LOOPRC( mapRC[it][ig] = comRC[it][ig][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPCC( comCC[iz][ix][0] = mapCC[iz][ix]; );
 
-		// IMAGINARY
+		/* IMAGINARY */
 		LOOPRC( mapRC[it][ig] = comRC[it][ig][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPCC( comCC[iz][ix][1] = mapCC[iz][ix]; );
@@ -117,12 +117,12 @@ int main(int argc, char* argv[])
 	    } else {
 		sf_floatread (comCC[0][0],2*nx*nz,Fi);
 		
-		// REAL
+		/* REAL */
 		LOOPCC( mapCC[iz][ix] = comCC[iz][ix][0]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPRC( comRC[it][ig][0] = mapRC[it][ig]; );
 
-		// IMAGINARY
+		/* IMAGINARY */
 		LOOPCC( mapCC[iz][ix] = comCC[iz][ix][1]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPRC( comRC[it][ig][1] = mapRC[it][ig]; );

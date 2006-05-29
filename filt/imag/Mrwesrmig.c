@@ -188,13 +188,11 @@ int main(int argc, char* argv[])
 		rweone_tap(wfl_s);
 	    }
 
-	    //-----
 	    for(it=0;it<nt;it++) {
 		for(ig=0;ig<ng;ig++) {
 		    dat_s[it][ig] = dat_r[it][ig];
 		}
 	    }
-	    //-----
 
 	    wr = -w; /*      causal */
 	    for(ig=0;ig<ng;ig++) {

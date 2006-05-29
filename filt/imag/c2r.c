@@ -57,7 +57,7 @@ void c2r(
 {
     int it,ig,iz,ix;
 
-    // nulify output
+    /* nulify output */
     if(adj) {
 	for(iz=0;iz<az.n;iz++) {		
 	    for(ix=0;ix<ax.n;ix++) {
@@ -72,7 +72,7 @@ void c2r(
 	}	
     }
 
-    // select interpolation type
+    /* select interpolation type */
     if(linear) {
 	c2r_linear(adj,mapCC,mapRC,rays);
     } else {
