@@ -102,6 +102,12 @@ sf_double_complex sf_dcmplx(double re, double im)
     return c;
 }
 
+#endif
+/*^*/
+
+#if !defined(__cplusplus) && !defined(SF_HAS_COMPLEX_H)
+/*^*/
+
 float copysignf(float x, float y)
 /*< float copysign >*/
 { return (float) copysign(x,y);}

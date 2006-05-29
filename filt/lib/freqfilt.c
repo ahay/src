@@ -31,9 +31,6 @@
 #include "kiss_fftr.h"
 #include "_kiss_fft_guts.h"
 
-#ifndef __cplusplus
-/*^*/
-
 static int nfft, nw;
 static kiss_fft_cpx *cdata, *shape=NULL;
 static float *tmp;
@@ -75,9 +72,6 @@ void sf_freqfilt_cset(kiss_fft_cpx *filt /* frequency filter [nw] */)
 {
     shape = filt;
 }
-
-#endif
-/*^*/
 
 void sf_freqfilt_close(void) 
 /*< Free allocated storage >*/

@@ -40,7 +40,9 @@ api = string.split(string.lower(proj.get('API','')),',')
 ############################################################################
 
 if 'c++' in api:
-    proj.Program('clip.cc',OBJSUFFIX='++.o',LIBS=['rsf++','rsf','m'])
+    proj.Program('clip.cc',
+                 PROGSUFFIX='++.exe',
+                 OBJSUFFIX='++.o',LIBS=['rsf++','rsf','m'])
     cctest = proj.Flow('cc','clip++.exe',test % 'clip++',suffix='.attr',stdin=0)
     Default(cctest)
 
