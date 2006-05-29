@@ -46,20 +46,12 @@
  * Keywords: vplot text vector hershey font
  */
 
-#include	<stdio.h>
-#include	<math.h>
-#if defined(__stdc__) || defined(__STDC__)
+#include <stdio.h>
+#include <math.h>
 #include <string.h>
-#else
-#include <strings.h>
-#endif
-#if defined(USG) || defined(SOLARIS)
-#include       <fcntl.h>
-#else /* USG */
-#include	<sys/file.h>
-#endif /* USG */
+#include <fcntl.h>
 
-#include	<rsfplot.h>
+#include <rsfplot.h>
 
 #include	"../include/extern.h"
 #include	"../include/err.h"
