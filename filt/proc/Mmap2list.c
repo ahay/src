@@ -54,7 +54,7 @@ int main(int argc, char* argv[])
     nn = sf_n(az)* sf_n(ax);
     sf_floatread(map[0],nn,Fi);
 /*------------------------------------------------------------*/
-// count 
+/* count */
     ik = 0;
     for (ix=0; ix<sf_n(ax); ix++) {
 	for (iz=0; iz<sf_n(az); iz++) {
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 	for (iz=0; iz<sf_n(az); iz++) {
 	    z = sf_o(az) + iz * sf_d(az);
 	    
-	    // -> test threshold
+	    /* -> test threshold */
 	    if(SF_ABS( map[ix][iz]) >= threshold) {
 		ik++;
 		
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 		rrr[ik] = map[ix][iz];
 
 	    }
-	    // -> end test threshold
+	    /* -> end test threshold */
 	}
     }
 
