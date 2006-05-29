@@ -1,6 +1,4 @@
-/*
-Sort in ascending/descending order absolute value entries of a
-float/complex vector.
+/* Sort a float/complex vector by absolute values.
 
 Written by: Gilles Hennenfent & Henryk Modzelewski, UBC
 Created: February 2006
@@ -72,8 +70,8 @@ int main(int argc, char* argv[])
   int nloop;
   float *currentext;
   int icurrentext;
-  bool complex_data = false;// true if input data is complex
-  bool ascmode;// true if input data is complex
+  bool complex_data = false; /* true if input data is complex */
+  bool ascmode;              
   sf_file in, out; /* Input and output files */
   
   /* Initialize RSF */
