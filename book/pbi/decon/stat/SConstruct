@@ -42,8 +42,8 @@ Flow('mean',means,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('mean',
      '''
      graph symbol=o title="Semblance Expectation"
-     label1=N label2="Noise Semblance" unit1= unit2=
-     min2=-0.01 max2=1.01
+     label1=N label2= unit1= unit2=
+     min2=-0.01 max2=1.01 symbolsz=5
      ''')
 
 Plot('tmean','mean',
@@ -59,8 +59,8 @@ Flow('vari',varis,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('vari',
      '''
      graph symbol=o title="Semblance Standard Deviation"
-     label1=N label2="Nose Deviation" unit1= unit2=
-     min2=-0.01 max2=0.37
+     label1=N label2= unit1= unit2=
+     min2=-0.01 max2=0.37 symbolsz=5
      ''')
 
 Plot('tvari','vari',

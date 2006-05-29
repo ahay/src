@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
 
 	symbolsz = sf_floatalloc(n2);
 	if (!sf_getfloats("symbolsz",symbolsz,n2)) {
+	    /* symbol size (default is 2) */
 	    for (i2 = 0; i2 < n2; i2++)
 		symbolsz[i2] = 2./33.;
 	} else {

@@ -339,7 +339,7 @@ class Project(Environment):
             targets.append(file)
         if suffix == sfsuffix and sys.platform[:7] != 'interix':            
             targets = targets + \
-                      map(lambda x: self.path + x + '@',
+                      map(lambda x, self=self: self.path + x + '@',
                           filter(lambda x, suffix=suffix:
                                  x[-4:] == suffix,targets))
         return self.Command(targets,sources,command)
