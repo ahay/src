@@ -102,6 +102,10 @@ sf_double_complex sf_dcmplx(double re, double im)
     return c;
 }
 
+float copysignf(float x, float y)
+/*< float copysign >*/
+{ return (float) copysign(x,y);}
+
 float sqrtf(float x) 
 /*< float sqrt >*/
 { return (float) sqrt(x);}

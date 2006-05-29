@@ -1,0 +1,75 @@
+from rsfproj import *
+
+nr = 10000 # number of realizations
+ns = 100   # number of samples
+
+Flow('rand',None,
+     '''
+     spike n1=%d n2=%d d2=1 d1=1 o1=1 o2=1|
+     noise seed=2006 rep=y
+     ''' % (nr,ns))
+
+means = []
+varis = []
+for i in range(ns):
+    rand = 'rand%d' % i
+    Flow(rand,'rand','window n2=%d' % (i+1))
+
+    num = 'num%d' % i
+    den = 'den%d' % i
+    sem = 'sem%d' % i
+    
+    Flow(num,rand,'stack norm=n | math output="input*input" ')
+    Flow(den,rand,'math output="input*input" | stack norm=n')
+    Flow(sem,[num,den],'add ${SOURCES[1]} mode=d scale=1,%d' % (i+1))
+
+    mean = 'mean%d' % i    
+    Flow(mean,sem,'stack axis=1 norm=n | scale dscale=%g' % (1.0/nr))
+
+    vari = 'vari%d' % i
+    Flow(vari,[mean,sem],
+         '''
+         spray axis=1 n=%d o=1 d=1 |
+         add scale=1,-1 ${SOURCES[1]} |
+         math output="input*input" | stack axis=1 norm=n |
+         math output="sqrt(input/%d)"
+         ''' % (nr,nr))
+    
+    means.append(mean)
+    varis.append(vari)
+
+Flow('mean',means,'cat axis=1 ${SOURCES[1:%d]}' % ns)
+Plot('mean',
+     '''
+     graph symbol=o title="Semblance Expectation"
+     label1=N label2="Noise Semblance" unit1= unit2=
+     min2=-0.01 max2=1.01
+     ''')
+
+Plot('tmean','mean',
+     '''
+     math output=1/x1 |
+     graph plotcol=5 wanttitle=n wantaxis=n
+     min2=-0.01 max2=1.01
+     ''')
+
+Result('mean','mean tmean','Overlay')
+
+Flow('vari',varis,'cat axis=1 ${SOURCES[1:%d]}' % ns)
+Plot('vari',
+     '''
+     graph symbol=o title="Semblance Standard Deviation"
+     label1=N label2="Nose Deviation" unit1= unit2=
+     min2=-0.01 max2=0.37
+     ''')
+
+Plot('tvari','vari',
+     '''
+     math output="sqrt(2*(x1-1)/(x1+2))/x1" |
+     graph plotcol=5 wanttitle=n wantaxis=n
+     min2=-0.01 max2=0.37
+     ''')
+
+Result('vari','vari tvari','Overlay')
+
+End()
