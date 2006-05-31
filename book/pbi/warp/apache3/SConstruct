@@ -14,8 +14,8 @@ for mode in ('pp','ps'):
     Flow([cube,'t'+cube,cube+'.a',cube+'.b'],segy,
          '''
          segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
-         tape=$SOURCE
-         ''',stdin=0)
+         tape=$SOURCE | window max1=%g
+         ''' % (1.1,2)[mode=='ps'],stdin=0)
 
     Flow(mode,cube,'intbin')
 

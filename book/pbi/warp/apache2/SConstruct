@@ -1,0 +1,45 @@
+from rsfproj import *
+import os, string
+import warp
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for mode in ('pp','ps'):
+    Mode = string.upper(mode)
+    data = mode + '2.rsf'
+    Fetch(data,'apache',private)
+    Flow(mode,data,'dd form=native')
+    Plot(mode,'grey color=G title=%s label1="Time (s)" ' % Mode)
+
+Result('apache','pp ps','SideBySideIso')
+
+gamma = 2.5
+
+#Flow('pp2','ppcube','window max1=1.1 | scale dscale=2')
+
+#Flow('warp0','pp2','math output="%g*x1" ' % (0.5*(gamma-1)))
+
+#Result('pp2','pp2','Overlay')
+
+#warp.warp2('apa','pp2','pscube','warp0',
+#           nx=326,
+#           tmax=1.1,
+#           inter=2,
+#           trace=600,
+#           dt=0.002,
+#           g0=0.9,
+#           gmin=2,
+#           gmax=3,
+#           ng=51,
+#           rect1=50,
+#           rect2=50,
+#           fmin=10,
+#           fmax=50,
+#           frect=9,
+#           frame1=400,
+#           iter=2,
+#           clip=11.33)
+    
+End()
