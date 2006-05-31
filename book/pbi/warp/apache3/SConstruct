@@ -10,5 +10,13 @@ for mode in ('pp','ps'):
     segy = mode + '_stack.sgy'
     Fetch(segy,'apache',private)
 
+    cube = mode+'cube'
+    Flow([cube,'t'+cube,cube+'.a',cube+'.b'],segy,
+         '''
+         segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+         tape=$SOURCE
+         ''',stdin=0)
+
+    Flow(mode,cube,'intbin')
 
 End()
