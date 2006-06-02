@@ -65,7 +65,8 @@ k3 = string.join(map(rnd,range(nsp)),',')
 imps = data+'imps'
 Flow(imps,thr,
      '''
-     spike nsp=%d k1=%s k2=%s k3=%s n1=%d n2=%d n3=%d o2=%g d2=%g o3=%g d3=%g label2="Half offset" |
+     spike nsp=%d k1=%s k2=%s k3=%s
+     n1=%d n2=%d n3=%d o2=%g d2=%g o3=%g d3=%g label2="Half offset" |
      diplet eps=%g
      ''' % (nsp,k1,k2,k3,n1,n2,np,o2,d2,p0,dp,eps),stdin=0)
 Plot(imps,'grey unit1=s unit2=m title=Diplets')
