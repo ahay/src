@@ -28,6 +28,10 @@ void nullclose (int status)
 /*<  All purpose Do-nothing generic subroutine >*/
 { }
 
+void nullmidpoly (int x, int y)
+/*<  All purpose Do-nothing generic subroutine >*/
+{ }
+
 void nullarea (int npts, struct vertex  *head)
 /*<  All purpose Do-nothing generic subroutine >*/
 { }

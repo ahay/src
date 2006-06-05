@@ -35,7 +35,6 @@
 
 extern int      smart_clip;
 extern int      lost;
-extern int      fatvec ();
 
 #define ABS(a)   ((a) >= 0  ? (a) : (-(a)))
 

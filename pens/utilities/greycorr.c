@@ -18,17 +18,12 @@
  *	Do invras here.
  */
 
-/*
- * Utility to modify color tables for plotting grey rasters.
- */
-
 #include <stdio.h>
 #include "../include/extern.h"
 #include "../include/round.h"
 
-int
-greycorr (colornum)
-    int             colornum;
+int greycorr (int colornum)
+/*< Utility to modify color tables for plotting grey rasters. >*/
 {
 float           newval;
 extern float    greyc, pixc;

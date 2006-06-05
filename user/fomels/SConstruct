@@ -15,8 +15,9 @@ tree trismooth2 twodip2 twofreq2 velcon warp1 warpadd warpscan ztrace
 
 try:  # distributed version
     Import('env')
+    env = env.Copy()
+    
     root = env.get('RSFROOT')
-
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
@@ -29,13 +30,14 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    env.Prepend(CPPPATH=['../../include'],
-                LIBPATH=['../../filt/lib'],LIBS=['rsf'])
     SConscript('../../filt/lib/SConstruct')
     src = glob.glob('[a-z]*.c')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
 
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../filt/lib'],
+            LIBS=['rsf'])
 
 for source in src:
     inc = env.Include(source,prefix='')
@@ -83,4 +85,3 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-env['SCANNERS'].remove(configure.Include)

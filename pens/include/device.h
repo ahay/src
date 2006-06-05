@@ -8,7 +8,7 @@
 struct device{
 
     /* control routines */
-    void (*open)(void);
+    void (*open)(int argc, char* argv[]);
     void (*reset)(void);
     void (*message)(int command, char *string);
     void (*erase)(int command);

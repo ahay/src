@@ -62,6 +62,7 @@ static void iso_rhs(void* par, float* y, float* f)
 	    grid3_vgrad(rt->grd3,y,sds);
 	    break;
 	default:
+	    s2 = 0.;
 	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
     }
 

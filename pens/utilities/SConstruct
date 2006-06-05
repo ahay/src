@@ -8,10 +8,11 @@ clip dashvec dither dupside error fatvec geth greycorr intersect solve sort veco
 
 try: # distribution version
     Import('env')
+
+    env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
-    env.Prepend(CPPPATH=['..'])
 except: # local version
     root = None
     env = Environment()
@@ -21,12 +22,11 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-    env.Prepend(CPPPATH=['../../include','..'])
-
     SConscript('../../plot/lib/SConstruct')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
 
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+env.Prepend(CPPPATH=['../../include'])
 
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))

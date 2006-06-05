@@ -23,8 +23,8 @@
 
 #include <rsf.h>
 
-#include <include/extern.h>
-#include <include/round.h>
+#include "../include/extern.h"
+#include "../include/round.h"
 
 /*
  * dash1, gap1, dash2, gap2

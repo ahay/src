@@ -10,6 +10,7 @@ cpp_progs = 'clipcc'
 
 try:  # distributed version
     Import('env')
+    env = env.Copy()
     root = env.get('RSFROOT')
 
     libdir = os.path.join(root,'lib')
@@ -24,13 +25,13 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    env.Prepend(CPPPATH=['../../include'],
-                LIBPATH=['../../filt/lib'],LIBS=['rsf'])
-    SConscript('../../filt/lib/SConstruct')
     src = glob.glob('[a-z]*.c')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
+    SConscript('../../filt/lib/SConstruct')
 
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../filt/lib'],LIBS=['rsf'])
 
 for source in src:
     inc = env.Include(source,prefix='')
@@ -52,10 +53,10 @@ api = string.split(string.lower(env.get('API','')),',')
 if 'c++' in api:
     cpp_mains = Split(cpp_progs)
     
-    env.Prepend(LIBS=['rsf++','rsf'])
     for prog in cpp_mains:
         # compilation
-        main = env.Program(prog + '.cc')
+        main = env.Program(prog + '.cc',
+                           LIBS=env.get('LIBS',[])+['rsf++'])
         
         if root:
             env.Install(bindir,main[0])
@@ -80,4 +81,3 @@ if root:
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
-env['SCANNERS'].remove(configure.Include)

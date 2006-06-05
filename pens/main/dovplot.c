@@ -135,23 +135,23 @@
 
 #include <rsfplot.h>
 
-#include	"./include/params.h"	/* for machine dependencies */
-#include	"./include/enum.h"
-#include	"./include/err.h"
-#include	"./include/attrcom.h"
-#include	"./include/intcom.h"
-#include	"./include/mesgcom.h"
-#include	"./include/erasecom.h"
-#include	"./include/closestat.h"
-#include	"./include/getxy.h"
-#include	"./include/pat.h"
-#include	"./include/vertex.h"
-#include	"./include/extern.h"
-#include	"./include/round.h"
-#include	"./include/device.h"
+#include	"../include/params.h"	/* for machine dependencies */
+#include	"../include/enum.h"
+#include	"../include/err.h"
+#include	"../include/attrcom.h"
+#include	"../include/intcom.h"
+#include	"../include/mesgcom.h"
+#include	"../include/erasecom.h"
+#include	"../include/closestat.h"
+#include	"../include/getxy.h"
+#include	"../include/pat.h"
+#include	"../include/vertex.h"
+#include	"../include/extern.h"
+#include	"../include/round.h"
+#include	"../include/device.h"
 
-#include "./utilities/util.h"
-#include "./genlib/genpen.h"
+#include "../utilities/util.h"
+#include "../genlib/genpen.h"
 
 #include "dovplot.h"
 #include "init_vplot.h"
@@ -162,7 +162,7 @@
 /*
  * Banished to an include file so that "indent" can't get its hands on it
  */
-#include "./include/readraster.h"
+#include "../include/readraster.h"
 
 void end_of_file(void);
 void set_table(void);
@@ -184,7 +184,6 @@ extern int      ipat;
 extern int      nplots;
 extern bool      overlay;
 extern struct pat pat[];
-extern FILE    *pltout, *pltin, *temp;
 extern char     group_name[];
 extern int      group_number;
 extern char    *txbuffer;
@@ -1328,30 +1327,31 @@ char            string[MAXFLEN + 1];
 
 	    switch (ras_orient)
 	    {
-	    case 0:
-		xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
-		yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
-		xvr_max--;
-		yvr_max--;
-		break;
-	    case 1:
-		yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
-		xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
-		xvr_max--;
-		yvr_min++;
-		break;
-	    case 2:
-		xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
-		yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
-		xvr_min++;
-		yvr_min++;
-		break;
-	    case 3:
-		yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
-		xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
-		xvr_min++;
-		yvr_max--;
-		break;
+		case 0:
+		    xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
+		    yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
+		    xvr_max--;
+		    yvr_max--;
+		    break;
+		case 1:
+		    yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
+		    xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
+		    xvr_max--;
+		    yvr_min++;
+		    break;
+		case 2:
+		    xrasmult = (float) xpix / (float) (xvr_max - xvr_min);
+		    yrasmult = (float) ypix / (float) (yvr_max - yvr_min);
+		    xvr_min++;
+		    yvr_min++;
+		    break;
+		case 3:
+		default:
+		    yrasmult = (float) ypix / (float) (xvr_max - xvr_min);
+		    xrasmult = (float) xpix / (float) (yvr_max - yvr_min);
+		    xvr_min++;
+		    yvr_max--;
+		    break;
 	    }
 /*    fprintf(stderr,"ORRIENT=%d xpix=%d ypix=%d xvr_min=%d xvr_max=%d yvr_min=%d yvr_max=%d \n",orient,xpix,ypix,xvr_min,xvr_max,yvr_min,yvr_max);*/
 
@@ -1533,42 +1533,43 @@ char            string[MAXFLEN + 1];
 
 		switch (ras_orient)
 		{
-		case 0:
-		    xvr_max++;
-		    yvr_max++;
-		    xr_max = xvr_max - xvru_min;
-		    xr_min = xvr_min - xvru_min;
-		    yr_max = yvr_max - yvru_min;
-		    yr_min = yvr_min - yvru_min;
-		    yru_max = yvru_max - yvru_min;
-		    break;
-		case 1:
-		    xvr_max++;
-		    yvr_min--;
-		    xr_max = yvru_max - yvr_min;
-		    xr_min = yvru_max - yvr_max;
-		    yr_max = xvr_max - xvru_min;
-		    yr_min = xvr_min - xvru_min;
-		    yru_max = xvru_max - xvru_min;
-		    break;
-		case 2:
-		    xvr_min--;
-		    yvr_min--;
-		    xr_max = xvru_max - xvr_min;
-		    xr_min = xvru_max - xvr_max;
-		    yr_max = yvru_max - yvr_min;
-		    yr_min = yvru_max - yvr_max;
-		    yru_max = yvru_max - yvru_min;
-		    break;
-		case 3:
-		    xvr_min--;
-		    yvr_max++;
-		    xr_max = yvr_max - yvru_min;
-		    xr_min = yvr_min - yvru_min;
-		    yr_max = xvru_max - xvr_min;
-		    yr_min = xvru_max - xvr_max;
-		    yru_max = xvru_max - xvru_min;
-		    break;
+		    case 0:
+			xvr_max++;
+			yvr_max++;
+			xr_max = xvr_max - xvru_min;
+			xr_min = xvr_min - xvru_min;
+			yr_max = yvr_max - yvru_min;
+			yr_min = yvr_min - yvru_min;
+			yru_max = yvru_max - yvru_min;
+			break;
+		    case 1:
+			xvr_max++;
+			yvr_min--;
+			xr_max = yvru_max - yvr_min;
+			xr_min = yvru_max - yvr_max;
+			yr_max = xvr_max - xvru_min;
+			yr_min = xvr_min - xvru_min;
+			yru_max = xvru_max - xvru_min;
+			break;
+		    case 2:
+			xvr_min--;
+			yvr_min--;
+			xr_max = xvru_max - xvr_min;
+			xr_min = xvru_max - xvr_max;
+			yr_max = yvru_max - yvr_min;
+			yr_min = yvru_max - yvr_max;
+			yru_max = yvru_max - yvru_min;
+			break;
+		    case 3:
+		    default:
+			xvr_min--;
+			yvr_max++;
+			xr_max = yvr_max - yvru_min;
+			xr_min = yvr_min - yvru_min;
+			yr_max = xvru_max - xvr_min;
+			yr_min = xvru_max - xvr_max;
+			yru_max = xvru_max - xvru_min;
+			break;
 		}
 		xru_min = 0;
 
@@ -2156,272 +2157,268 @@ void getapoint (void)
 
 
 void set_table(void){
-int             col_tab_no, red, green, blue, grey, dist, min_dist, best_col;
-float           red_f, green_f, blue_f, red_fm, green_fm, blue_fm;
-int             red_mask, green_mask, blue_mask;
-int             red_0, green_0, blue_0;
-int             red_7, green_7, blue_7;
-int             c,ii,k,i;
-/*    fprintf(stderr,"in dovplot s\n");*/
-	    /*
-	     * The logic here is a bit tricky. Basically, it goes like this:
-	     * If the device actually has a settable color of that number,
-	     * then reset the device's color as asked. Otherwise, take the
-	     * closest color that we have and map to that. Color 0 is the
-	     * background color, and is special. Merely "close" colors are
-	     * not mapped to Color 0... it has to be exact. Even devices with
-	     * NO settable colors are still sent colors 0 through 7, and
-	     * these colors are then always left set to their original
-	     * defaults. In this way you can handle terminals like the GIGI
-	     * which have colors but not SETTABLE colors. Also remember that
-	     * the device itself will THEN have to permute colors 0 through 7
-	     * on top of all this to correspond with Vplot's definitions!
-	     */
-	    col_tab_no = geth (pltin);
-	    if (col_tab_no > MAX_COL || col_tab_no < 0)
-	    {
-		ERR (FATAL, name, "Bad color table value %d (%d max)",
-		     col_tab_no, MAX_COL);
-	    }
-	    red = geth (pltin);
-	    green = geth (pltin);
-	    blue = geth (pltin);
-	    if (red > MAX_GUN || green > MAX_GUN || blue > MAX_GUN
-		|| red < 0 || green < 0 || blue < 0)
-	    {
-		ERR (FATAL, name,
-		     "Bad color level in color %d (%d,%d,%d), %d max",
-		     col_tab_no, red, green, blue, MAX_GUN);
-	    }
-
+    int             col_tab_no, red, green, blue, grey, dist, min_dist, best_col=0;
+    float           red_f, green_f, blue_f, red_fm, green_fm, blue_fm;
+    int             red_mask, green_mask, blue_mask;
+    int             red_0, green_0, blue_0;
+    int             red_7, green_7, blue_7;
+    int             c,ii,k,i;
+    /*
+     * The logic here is a bit tricky. Basically, it goes like this:
+     * If the device actually has a settable color of that number,
+     * then reset the device's color as asked. Otherwise, take the
+     * closest color that we have and map to that. Color 0 is the
+     * background color, and is special. Merely "close" colors are
+     * not mapped to Color 0... it has to be exact. Even devices with
+     * NO settable colors are still sent colors 0 through 7, and
+     * these colors are then always left set to their original
+     * defaults. In this way you can handle terminals like the GIGI
+     * which have colors but not SETTABLE colors. Also remember that
+     * the device itself will THEN have to permute colors 0 through 7
+     * on top of all this to correspond with Vplot's definitions!
+     */
+    col_tab_no = geth (pltin);
+    if (col_tab_no > MAX_COL || col_tab_no < 0)
+    {
+	ERR (FATAL, name, "Bad color table value %d (%d max)",
+	     col_tab_no, MAX_COL);
+    }
+    red = geth (pltin);
+    green = geth (pltin);
+    blue = geth (pltin);
+    if (red > MAX_GUN || green > MAX_GUN || blue > MAX_GUN
+	|| red < 0 || green < 0 || blue < 0)
+    {
+	ERR (FATAL, name,
+	     "Bad color level in color %d (%d,%d,%d), %d max",
+	     col_tab_no, red, green, blue, MAX_GUN);
+    }
+    
 /*
  * Fun and games with color values
  */
-	    red_f = (float) red / (float) MAX_GUN;
-	    green_f = (float) green / (float) MAX_GUN;
-	    blue_f = (float) blue / (float) MAX_GUN;
-
-	    red_fm =
-	     redmap[3] + redmap[0] * red_f + redmap[1] * green_f + redmap[2] * blue_f;
-	    if (red_fm < 0.)
-		red_fm = 0.;
-	    if (red_fm > 1.)
-		red_fm = 1.;
-	    red_fm = pow (red_fm, redpow);
-	    red = ROUND (red_fm * MAX_GUN);
-
-	    green_fm =
-	     greenmap[3] + greenmap[0] * red_f + greenmap[1] * green_f + greenmap[2] * blue_f;
-	    if (green_fm < 0.)
-		green_fm = 0.;
-	    if (green_fm > 1.)
-		green_fm = 1.;
-	    green_fm = pow (green_fm, greenpow);
-	    green = ROUND (green_fm * MAX_GUN);
-
-	    blue_fm =
-	     bluemap[3] + bluemap[0] * red_f + bluemap[1] * green_f + bluemap[2] * blue_f;
-	    if (blue_fm < 0.)
-		blue_fm = 0.;
-	    if (blue_fm > 1.)
-		blue_fm = 1.;
-	    blue_fm = pow (blue_fm, bluepow);
-	    blue = ROUND (blue_fm * MAX_GUN);
-
-	    /*
-	     * Do color mapping (colormask option) Leave color 0 alone.
-	     */
-	    if (col_tab_no != 0)
-	    {
-		red_mask = red;
-		green_mask = green;
-		blue_mask = blue;
-
+    red_f = (float) red / (float) MAX_GUN;
+    green_f = (float) green / (float) MAX_GUN;
+    blue_f = (float) blue / (float) MAX_GUN;
+    
+    red_fm =
+	redmap[3] + redmap[0] * red_f + redmap[1] * green_f + redmap[2] * blue_f;
+    if (red_fm < 0.)
+	red_fm = 0.;
+    if (red_fm > 1.)
+	red_fm = 1.;
+    red_fm = pow (red_fm, redpow);
+    red = ROUND (red_fm * MAX_GUN);
+    
+    green_fm =
+	greenmap[3] + greenmap[0] * red_f + greenmap[1] * green_f + greenmap[2] * blue_f;
+    if (green_fm < 0.)
+	green_fm = 0.;
+    if (green_fm > 1.)
+	green_fm = 1.;
+    green_fm = pow (green_fm, greenpow);
+    green = ROUND (green_fm * MAX_GUN);
+    
+    blue_fm =
+	bluemap[3] + bluemap[0] * red_f + bluemap[1] * green_f + bluemap[2] * blue_f;
+    if (blue_fm < 0.)
+	blue_fm = 0.;
+    if (blue_fm > 1.)
+	blue_fm = 1.;
+    blue_fm = pow (blue_fm, bluepow);
+    blue = ROUND (blue_fm * MAX_GUN);
+    
+    /*
+     * Do color mapping (colormask option) Leave color 0 alone.
+     */
+    if (col_tab_no != 0)
+    {
+	red_mask = red;
+	green_mask = green;
+	blue_mask = blue;
+	
 /* Background color */
-		red_0 = color_set[0][_RED];
-		green_0 = color_set[0][_GREEN];
-		blue_0 = color_set[0][_BLUE];
-
+	red_0 = color_set[0][_RED];
+	green_0 = color_set[0][_GREEN];
+	blue_0 = color_set[0][_BLUE];
+	
 /* Opposite of background color */
-		red_7 = MAX_GUN - color_set[0][_RED];
-		green_7 = MAX_GUN - color_set[0][_GREEN];
-		blue_7 = MAX_GUN - color_set[0][_BLUE];
-
-		if (red == red_7 && green == green_7 && blue == blue_7)
-		{
-		    if (colormask[3] == NO)
-		    {
-			red_mask = red_0;
-			green_mask = green_0;
-			blue_mask = blue_0;
-		    }
-		}
-		else
-		{
-		    if (colormask[4] == YES)
-		    {
-			if (colormask[0] == NO)
-			    red_mask = red_0;
-			if (colormask[1] == NO)
-			    green_mask = green_0;
-			if (colormask[2] == NO)
-			    blue_mask = blue_0;
-		    }
-		    else
-		    {
-			if (colormask[0] == YES)
-			{
-			    green_mask = red_mask;
-			    blue_mask = red_mask;
-			}
-			if (colormask[1] == YES)
-			{
-			    red_mask = green_mask;
-			    blue_mask = green_mask;
-			}
-			if (colormask[2] == YES)
-			{
-			    red_mask = blue_mask;
-			    green_mask = blue_mask;
-			}
-		    }
-		}
-
-		red = red_mask;
-		green = green_mask;
-		blue = blue_mask;
-	    }
-
-	    /*
-	     * Process the new color table value
-	     */
-/*       fprintf(stderr,"IN DO a \n");*/
-	    if (col_tab_no < num_col)
+	red_7 = MAX_GUN - color_set[0][_RED];
+	green_7 = MAX_GUN - color_set[0][_GREEN];
+	blue_7 = MAX_GUN - color_set[0][_BLUE];
+	
+	if (red == red_7 && green == green_7 && blue == blue_7)
+	{
+	    if (colormask[3] == NO)
 	    {
-		/*
-		 * A settable color.
-		 */
-		dev.attributes (SET_COLOR_TABLE, col_tab_no,
-				red, green, blue);
-		color_set[col_tab_no][STATUS] = SET;
+		red_mask = red_0;
+		green_mask = green_0;
+		blue_mask = blue_0;
 	    }
-	    else if (col_tab_no > 7)
+	}
+	else
+	{
+	    if (colormask[4] == YES)
 	    {
-		color_set[col_tab_no][STATUS] = MAPPED;
+		if (colormask[0] == NO)
+		    red_mask = red_0;
+		if (colormask[1] == NO)
+		    green_mask = green_0;
+		if (colormask[2] == NO)
+		    blue_mask = blue_0;
 	    }
 	    else
 	    {
-		if (col_tab_no > 0)
+		if (colormask[0] == YES)
 		{
-		    color_set[col_tab_no][STATUS] = MAP_SET;
-		    /*
-		     * Means that we need to map these but they are still set
-		     * to the original colors and can't be changed. Color 0
-		     * is always background, and any other color exactly the
-		     * same color as color 0 "wants to be", even if color 0
-		     * actually can't be and hasn't been reset, is mapped to
-		     * color zero if it can't be set.
-		     */
+		    green_mask = red_mask;
+		    blue_mask = red_mask;
 		}
-/*       fprintf(stderr,"IN DO b \n");*/
-	    }
-	    /*
-	     * Save the color that this color table number wants to be
-	     */
-	    color_set[col_tab_no][_RED] = red;
-	    color_set[col_tab_no][_GREEN] = green;
-	    color_set[col_tab_no][_BLUE] = blue;
-	    /*
-	     * grey level is "Black and White TV style" mapped from color,
-	     * with corrections added by the subroutine greycorr.
-	     */
-	    grey = (blue * 1 + red * 2 + green * 4 + 6) / 7;
-	    color_set[col_tab_no][_GREY] = greycorr (grey);
-	    /*
-	     * If the next command is also a set color table command, we can
-	     * postpone doing this and kill 2 (or more) birds with one stone.
-	     */
-	    c = getc (pltin);
-	    if (c == EOF) end_of_file();
-	    ungetc ((char) c, pltin);
-	    if (c != VP_SET_COLOR_TABLE)
-	    {
-		if (mono)
+		if (colormask[1] == YES)
 		{
-		    for (ii = 1; ii <= MAX_COL; ii++)
-		    {
-			if (color_set[ii][_RED] == color_set[0][_RED] &&
-			    color_set[ii][_GREEN] == color_set[0][_GREEN] &&
-			    color_set[ii][_BLUE] == color_set[0][_BLUE])
-			{
-			    color_set[ii][MAP] = 0;
-			}
-			else
-			{
-			    color_set[ii][MAP] = 7;
-			}
-		    }
+		    red_mask = green_mask;
+		    blue_mask = green_mask;
+		}
+		if (colormask[2] == YES)
+		{
+		    red_mask = blue_mask;
+		    green_mask = blue_mask;
+		}
+	    }
+	}
+	
+	red = red_mask;
+	green = green_mask;
+	blue = blue_mask;
+    }
+    
+    /*
+     * Process the new color table value
+     */
+
+    if (col_tab_no < num_col)
+    {
+	/*
+	 * A settable color.
+	 */
+	dev.attributes (SET_COLOR_TABLE, col_tab_no,
+			red, green, blue);
+	color_set[col_tab_no][STATUS] = SET;
+    }
+    else if (col_tab_no > 7)
+    {
+	color_set[col_tab_no][STATUS] = MAPPED;
+    }
+    else
+    {
+	if (col_tab_no > 0)
+	{
+	    color_set[col_tab_no][STATUS] = MAP_SET;
+	    /*
+	     * Means that we need to map these but they are still set
+	     * to the original colors and can't be changed. Color 0
+	     * is always background, and any other color exactly the
+	     * same color as color 0 "wants to be", even if color 0
+	     * actually can't be and hasn't been reset, is mapped to
+	     * color zero if it can't be set.
+	     */
+	}
+    }
+    /*
+     * Save the color that this color table number wants to be
+     */
+    color_set[col_tab_no][_RED] = red;
+    color_set[col_tab_no][_GREEN] = green;
+    color_set[col_tab_no][_BLUE] = blue;
+    /*
+     * grey level is "Black and White TV style" mapped from color,
+     * with corrections added by the subroutine greycorr.
+     */
+    grey = (blue * 1 + red * 2 + green * 4 + 6) / 7;
+    color_set[col_tab_no][_GREY] = greycorr (grey);
+    /*
+     * If the next command is also a set color table command, we can
+     * postpone doing this and kill 2 (or more) birds with one stone.
+     */
+    c = getc (pltin);
+    if (c == EOF) end_of_file();
+    ungetc ((char) c, pltin);
+    if (c != VP_SET_COLOR_TABLE)
+    {
+	if (mono)
+	{
+	    for (ii = 1; ii <= MAX_COL; ii++)
+	    {
+		if (color_set[ii][_RED] == color_set[0][_RED] &&
+		    color_set[ii][_GREEN] == color_set[0][_GREEN] &&
+		    color_set[ii][_BLUE] == color_set[0][_BLUE])
+		{
+		    color_set[ii][MAP] = 0;
 		}
 		else
 		{
-		    /*
-		     * For all color table entries that aren't set, (because
-		     * we ran out of colors, for example) find the best color
-		     * that IS set and use that instead.
-		     */
-/*       fprintf(stderr,"IN DO 1 \n");*/
-		    for (ii = num_col; ii <= MAX_COL; ii++)
-		    {
-			if (color_set[ii][STATUS] & MAPPED)
-			{
-			    min_dist = MAX_GUN * MAX_GUN * 8;
-			    for (i = num_col_8 - 1; i >= 0; i--)
-			    {
-				/*
-				 * Colors 1 through 7 are guaranteed SET, So
-				 * we always get an answer. Color zero is
-				 * background and special. To map to it you
-				 * have to hit its color exactly, and no
-				 * other color matched exactly first.
-				 */
-				if (color_set[i][STATUS] & SET)
-				{
-				    if (color_set[i][STATUS] == SET)
-				    {
-					k = color_set[i][_RED] - color_set[ii][_RED];
-					dist = 2 * k * k;
-					k = color_set[i][_GREEN] - color_set[ii][_GREEN];
-					dist += 4 * k * k;
-					k = color_set[i][_BLUE] - color_set[ii][_BLUE];
-					dist += k * k;
-				    }
-				    else
-				    {
-					k = MAX_GUN * ((i & 2) / 2) - color_set[ii][_RED];
-					dist = 2 * k * k;
-					k = MAX_GUN * ((i & 4) / 4) - color_set[ii][_GREEN];
-					dist += 4 * k * k;
-					k = MAX_GUN * ((i & 1) / 1) - color_set[ii][_BLUE];
-					dist += k * k;
-				    }
-				    if (dist < min_dist && (i != 0 || dist == 0))
-				    {
-					min_dist = dist;
-					best_col = i;
-					if (dist == 0)
-					{
-					    /*
-					     * Might as well look no further
-					     */
-					    break;
-					}
-				    }
-				}
-			    }
-			    color_set[ii][MAP] = best_col;
-/*       fprintf(stderr,"IN MAP %d -%d \n",ii,best_col);*/
-			}
-		    }
+		    color_set[ii][MAP] = 7;
 		}
 	    }
+	}
+	else
+	{
+	    /*
+	     * For all color table entries that aren't set, (because
+	     * we ran out of colors, for example) find the best color
+	     * that IS set and use that instead.
+	     */
+	    for (ii = num_col; ii <= MAX_COL; ii++)
+	    {
+		if (color_set[ii][STATUS] & MAPPED)
+		{
+		    min_dist = MAX_GUN * MAX_GUN * 8;
+		    for (i = num_col_8 - 1; i >= 0; i--)
+		    {
+			/*
+			 * Colors 1 through 7 are guaranteed SET, So
+			 * we always get an answer. Color zero is
+			 * background and special. To map to it you
+			 * have to hit its color exactly, and no
+			 * other color matched exactly first.
+			 */
+			if (color_set[i][STATUS] & SET)
+			{
+			    if (color_set[i][STATUS] == SET)
+			    {
+				k = color_set[i][_RED] - color_set[ii][_RED];
+				dist = 2 * k * k;
+				k = color_set[i][_GREEN] - color_set[ii][_GREEN];
+				dist += 4 * k * k;
+				k = color_set[i][_BLUE] - color_set[ii][_BLUE];
+				dist += k * k;
+			    }
+			    else
+			    {
+				k = MAX_GUN * ((i & 2) / 2) - color_set[ii][_RED];
+				dist = 2 * k * k;
+				k = MAX_GUN * ((i & 4) / 4) - color_set[ii][_GREEN];
+				dist += 4 * k * k;
+				k = MAX_GUN * ((i & 1) / 1) - color_set[ii][_BLUE];
+				dist += k * k;
+			    }
+			    if (dist < min_dist && (i != 0 || dist == 0))
+			    {
+				min_dist = dist;
+				best_col = i;
+				if (dist == 0)
+				{
+				    /*
+				     * Might as well look no further
+				     */
+				    break;
+				}
+			    }
+			}
+		    }
+		    color_set[ii][MAP] = best_col;
+		}
+	    }
+	}
+    }
 }

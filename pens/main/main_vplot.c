@@ -126,21 +126,21 @@
 #include <rsf.h>
 #include <rsfplot.h>
 
-#include	"./include/params.h"	/* for machine dependencies */
-#include	"./include/enum.h"
-#include	"./include/err.h"
-#include	"./include/attrcom.h"
-#include	"./include/intcom.h"
-#include	"./include/mesgcom.h"
-#include	"./include/erasecom.h"
-#include	"./include/closestat.h"
-#include	"./include/pat.h"
-#include	"./include/vertex.h"
-#include	"./include/round.h"
-#include	"./include/extern.h"
+#include	"../include/params.h"	/* for machine dependencies */
+#include	"../include/enum.h"
+#include	"../include/err.h"
+#include	"../include/attrcom.h"
+#include	"../include/intcom.h"
+#include	"../include/mesgcom.h"
+#include	"../include/erasecom.h"
+#include	"../include/closestat.h"
+#include	"../include/pat.h"
+#include	"../include/vertex.h"
+#include	"../include/round.h"
+#include	"../include/extern.h"
 
-#include "./genlib/genpen.h"
-#include "./utilities/util.h"
+#include "../genlib/genpen.h"
+#include "../utilities/util.h"
 
 #include "init_vplot.h"
 #include "proc_vplot.h"
@@ -157,13 +157,6 @@ extern bool      cachepipe;
 /*
  * file and terminal control variables
  */
-extern FILE    *pltout;
-
-FILE           *fopen ();
-FILE           *fdopen ();
-FILE	       *tempcopy();
-extern int	unlink();
-
 extern int      pltoutfd;
 
 /*
@@ -179,7 +172,7 @@ int main (int argc, char* argv[])
     int             in_isatty;
     int len;
     bool            docflag;
-    int      infileno;
+    int      infileno=0;
     FILE    *pltinarray[MAXIN];
     char    *pltinname[MAXIN];
 
@@ -214,7 +207,7 @@ int main (int argc, char* argv[])
  ****************************************************************************
  */
 
-    init_vplot ();
+    init_vplot (argc,argv);
 
 /*
  ****************************************************************************
@@ -337,9 +330,8 @@ void removtemp(void)
     tspoolnm = (char*)NULL;
 }
 
-FILE* tempcopy( infile, filename )
-FILE* infile;
-char* filename;
+FILE* tempcopy(FILE* infile,char* filename )
+/*< temp copy >*/
 {
     FILE *temp;
     int len,total;

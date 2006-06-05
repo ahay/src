@@ -8,6 +8,7 @@ chaoshun
 
 try:  # distributed version
     Import('env')
+    env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
@@ -21,13 +22,14 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    env.Prepend(CPPPATH=['../../include'],
-                LIBPATH=['../../filt/lib'],LIBS=['rsf'])
     SConscript('../../filt/lib/SConstruct')
     src = glob.glob('[a-z]*.c')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
 
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../filt/lib'],
+            LIBS=['rsf'])
 
 for source in src:
     inc = env.Include(source,prefix='')

@@ -9,6 +9,8 @@ headray hyplay nmotraj reflector reflexpt reflkine sg vrms whitepruf
 
 try:
 	Import('env')
+	env = env.Copy()
+	
 	root = env.get('RSFROOT')
 	libdir = os.path.join(root,'lib')
 	bindir = os.path.join(root,'bin')
@@ -20,12 +22,13 @@ except:
 	configure.options(opts)
 	opts.Update(env)
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-	env.Append(CPPPATH=['../../include'],
-		   LIBPATH=['../../filt/lib','../lib'],
-		   LIBS=['rsfplot','rsf'])
 	SConscript('../lib/SConstruct')
 
-vplot = Builder(action = './$SOURCE > $TARGET',suffix='.vpl')
+env.Append(CPPPATH=['../../include'],
+	   LIBPATH=['../../filt/lib','../lib'],
+	   LIBS=['rsfplot','rsf'])
+
+vplot = Builder(action = './$SOURCE - > $TARGET',suffix='.vpl')
 env.Append(BUILDERS = {'Vplot' : vplot})
 env['PROGPREFIX'] = 'vp'
 

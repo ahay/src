@@ -41,20 +41,20 @@
 
 #include	<rsfplot.h>
 
-#include	"./include/params.h"	/* for machine dependencies */
-#include	"./include/enum.h"
-#include	"./include/err.h"
-#include	"./include/attrcom.h"
-#include	"./include/intcom.h"
-#include	"./include/mesgcom.h"
-#include	"./include/erasecom.h"
-#include	"./include/closestat.h"
-#include	"./include/pat.h"
-#include	"./include/vertex.h"
-#include	"./include/round.h"
-#include	"./include/extern.h"
+#include	"../include/params.h"	/* for machine dependencies */
+#include	"../include/enum.h"
+#include	"../include/err.h"
+#include	"../include/attrcom.h"
+#include	"../include/intcom.h"
+#include	"../include/mesgcom.h"
+#include	"../include/erasecom.h"
+#include	"../include/closestat.h"
+#include	"../include/pat.h"
+#include	"../include/vertex.h"
+#include	"../include/round.h"
+#include	"../include/extern.h"
 
-#include "utilities/util.h"
+#include "../utilities/util.h"
 
 #include "dovplot.h"
 
@@ -79,7 +79,7 @@ void proc_vplot (int infileno, FILE *pltinarray[], char *pltinname[])
  * and performing the necessary pausing, etc, that may be needed
  * at the end before exiting. >*/
 {
-    char            *string;
+    char            *string=NULL;
     
 /*
  * Finally, shove all the plot files off to be done!

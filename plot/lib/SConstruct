@@ -9,6 +9,7 @@ psrc = Split('axis coltab contour gainpar plot stdplot vplot')
 
 try: # distribution version
     Import('env')
+    env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
@@ -22,11 +23,13 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-    env.Append(CPPPATH=['../../filt/lib'])
     SConscript('../../filt/lib/SConstruct')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
 
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+env.Prepend(CPPPATH=['../../filt/lib'],
+            LIBS=['rsf'],
+            LIBPATH=['../../filt/lib'])
 
 ##############################################################################
 # INCLUDES
@@ -67,7 +70,6 @@ if 'fortran' in api:
 ##############################################################################
 # TESTING
 ##############################################################################
-env.Prepend(LIBS=['rsf'],LIBPATH=['../../filt/lib'])
 for file in ('axis','stdplot'):
     test = 'Test' + file + '.c'
     env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
@@ -80,9 +82,6 @@ env.Command('../plint/lint',map(lambda x: x+'.c',psrc),
             'splint +posixlib -I%s $SOURCES' % env['CPPPATH'][0])
 env.Alias('plint','../plint')
         
-env['SCANNERS'].remove(configure.Include)
-# env.Append(SCANNERS=CScan)
-
 if root:
     main = 'sflibplot.py'
 

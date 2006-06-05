@@ -19,6 +19,51 @@
  *      Add visual depth as a resource
  */
 
+#include <string.h>
+#include <stdio.h>
+
+#include <sys/ioctl.h>
+
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+
+#include <X11/IntrinsicP.h>
+#include <X11/Xatom.h>
+#include <X11/Object.h>
+#include <X11/ObjectP.h>
+
+#include <X11/Intrinsic.h>
+#include <X11/StringDefs.h>
+
+#include <X11/cursorfont.h>
+#include <X11/Shell.h>
+
+#include <X11/Xaw/Box.h>
+#include <X11/Xaw/Paned.h>
+#include <X11/Xaw/Form.h>
+#include <X11/Xaw/Command.h>
+#include <X11/Xaw/Label.h>
+#include <X11/Xaw/Dialog.h>
+#include <X11/Xaw/Cardinals.h>
+#include <X11/Xaw/AsciiText.h>
+
+#include <rsfplot.h>
+
+#include "../include/attrcom.h"
+#include "../include/closestat.h"
+#include "../include/err.h"
+#include "../include/erasecom.h"
+#include "../include/intcom.h"
+#include "../include/mesgcom.h"
+
+#include "dovplot.h"
+#include "init_vplot.h"
+
+#include "../utilities/util.h"
+#include "../genlib/genpen.h"
+
+#include "_xt.h"
+#include "xtdoc.h"
 
 #include "xtpen.h"
 
@@ -127,6 +172,140 @@ static XtResource resources[] = {
 }
 };
 
+static int xt_after_break = 0;
+static int xt_after_erase = 0;
+
+Display		*pen_display;
+GC		pen_gc;
+Window		pen_window;
+Pixmap		pen_pixmap;
+Drawable	pen_drawable;
+Visual		*pen_visual;
+unsigned long	*pen_colors;
+Colormap	pen_colormap;
+Widget		xtpen, vpane, control_panel, pen_picture; 
+Widget		text_region=(Widget)0;
+XtAppContext	pen_context;
+int		own_colormap;
+int		x_num_col;
+int		num_col_req = 0;
+int		num_col_max = 16384;
+int		num_col_min = 16;
+int             xmono = NO;
+int             xtruecol = NO;
+int		screen_depth;
+int		visual_depth;
+long		screen_black, screen_white;
+bool             xt_stretchy;
+bool 		boxy,want_images,greedy_pixmaps,see_progress;
+char 	*message_text;
+int		plotting_started = 0;
+
+String fallback_resources[] = {
+	"*text.scrollVertical:            whenNeeded",
+	"*text.autoFill:                  True",
+	"*text.Wrap:                      word",
+	"*text.height:                    50",
+	"*Font:                           fixed",
+	"*Foreground:                     black",
+	"*Background:                     white",
+	NULL,
+};
+
+extern void actionNext();
+extern void actionPrev();
+extern void actionQuit();
+extern void actionRun();
+extern void actionStop();
+extern void actionRestart();
+extern void actionStretch();
+extern void actionSlower();
+extern void actionFaster();
+extern void actionNumber();
+extern void actionNumReset();
+extern void actionGoto();
+extern void actionCoord();
+extern void actionRunMode();
+
+extern void PenRepaint();
+
+/* 	 <ColormapNotify>:	PenRepaint() \n\
+         <ConfigureNotify>:	PenRepaint() \n\ */
+
+/* default translation table for pen_picture widget */
+static char trans[] =
+	"<Expose>:		PenRepaint() \n\
+         <ConfigureNotify>:	PenRepaint() \n\
+         <Btn1Down>:            xt_print_coord() \n\
+         None<KeyPress>n:       xt_stop() xt_reset_number() xt_next() \n\
+         None<KeyPress>m:       xt_stop() xt_reset_number() xt_prev() \n\
+         None<KeyPress>r:       xt_run()  \n\
+         None<KeyPress>q:       xt_quit()  \n\
+         None<KeyPress>.:       xt_stop()  \n\
+         None<KeyPress>f:       xt_faster()  \n\
+         None<KeyPress>s:       xt_slower()  \n\
+         None<KeyPress>t:       xt_stretchy()  \n\
+	 None<KeyPress>Escape: 	xt_reset_number()\n\
+         None<KeyPress>0: 	xt_number(0)\n\
+         None<KeyPress>1: 	xt_number(1)\n\
+         None<KeyPress>2: 	xt_number(2)\n\
+         None<KeyPress>3: 	xt_number(3)\n\
+         None<KeyPress>4: 	xt_number(4)\n\
+         None<KeyPress>5: 	xt_number(5)\n\
+         None<KeyPress>6: 	xt_number(6)\n\
+         None<KeyPress>7: 	xt_number(7)\n\
+         None<KeyPress>8: 	xt_number(8)\n\
+         None<KeyPress>9: 	xt_number(9)\n\
+	 None<KeyPress>Return:	xt_goto_frame() xt_reset_number()";
+
+static XtActionsRec window_actions[] = {
+	{"PenRepaint",	      PenRepaint},
+	{"xt_quit",           actionQuit},	
+	{"xt_next",           actionNext},	
+	{"xt_stretchy",       actionStretch},	
+	{"xt_prev",           actionPrev},
+        {"xt_run",            actionRun},
+        {"xt_stop",           actionStop},
+        {"xt_restart",        actionRestart},
+	{"xt_faster",         actionFaster},
+	{"xt_slower",         actionSlower},
+	{"xt_number",         actionNumber},
+	{"xt_reset_number",   actionNumReset},
+	{"xt_goto_frame",     actionGoto},
+	{"xt_print_coord",    actionCoord},
+	{"xt_run_mode",       actionRunMode},
+};
+
+extern int xt_next_num;
+
+char            name[] = "xtpen";
+
+struct device   dev = {
+    /* control routines */
+    xtopen,		/* open */
+    nulldev,		/* reset */
+    xtmessage,	/* message */
+    xterase,		/* erase */
+    xtclose,		/* close */
+    /* high level output */
+    genvector,	/* vector */
+    genmarker,	/* marker */
+    gentext,		/* text */
+    xtarea,		/* area */
+    xtraster,	/* raster */
+    xtpoint,		/* point */
+    xtattributes,	/* attributes */
+    /* input */
+    xt_dovplot,               /* reader */
+    nullgetpoint,		/* getpoint */
+    xtinteract,	/* interact */
+    /* low level output */
+    xtplot,		/* plot */
+    nullclose,		/* startpoly */
+    nullmidpoly,	/* midpoly */
+    nullclose		/* endpoly */
+};
+
 int xt_app_data( app )
 Widget  app;
 {
@@ -162,29 +341,6 @@ Widget  app;
  */
 
 
-#include <string.h>
-#include <stdio.h>
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
-#include <X11/IntrinsicP.h>
-#include <X11/Xatom.h>
-#include <X11/Object.h>
-#include <X11/ObjectP.h>
-
-#include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>
-
-#include <X11/Xaw/Box.h>
-#include <X11/Xaw/Paned.h>
-#include <X11/Xaw/Form.h>
-#include <X11/Xaw/Command.h>
-#include <X11/Shell.h>
-#include <X11/Xaw/Dialog.h>
-#include <X11/Xaw/Cardinals.h>
-
-#include "xtpen.h"
 
 typedef union
 {
@@ -192,8 +348,6 @@ typedef union
   float f;
 } IntFloatUnion;
 
-
-#include <assert.h>
 
 static Widget PopUpWidget;
 static Widget PointLabelWidget;
@@ -272,8 +426,8 @@ float x,y;
   int args;
   
   Window root, child;
-  static Widget labelWidget, formWidget, cancelWidget, confirmWidget;
-  static Widget vpaneWidget, labelBox, buttonBox, offsetBox,otherBox,otherBox2;
+  static Widget cancelWidget, confirmWidget;
+  static Widget vpaneWidget, labelBox, offsetBox,otherBox,otherBox2;
 
   char xoff_string[32];
   char yoff_string[32];
@@ -289,9 +443,6 @@ float x,y;
   static Boolean inited = False;
   int root_x, root_y, child_x, child_y;
   unsigned int buttons;
-  IntFloatUnion max;
-  IntFloatUnion one;
-  IntFloatUnion here;
   
   Dimension width;
   Dimension height;
@@ -348,7 +499,7 @@ float x,y;
     POINTER = XtCreateManagedWidget("dialog1", dialogWidgetClass,
 					       offsetBox, argList, args);
     args = 0;
-    sprintf( xoff_string, "%4.2f\0", 1.0 );
+    sprintf( xoff_string, "%4.2f", 1.0 );
     XtSetArg( argList[0], XtNvalue, (XtArgVal)xoff_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"x-off" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, POINTER); args++;
@@ -356,21 +507,21 @@ float x,y;
 					       offsetBox, argList, args);
 
     args = 0;
-    sprintf( yoff_string, "%4.2f\0", 1.0 );
+    sprintf( yoff_string, "%4.2f", 1.0 );
     XtSetArg( argList[0], XtNvalue, (XtArgVal)yoff_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"y-off" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, xOffset); args++;
     yOffset = XtCreateManagedWidget("dialog2", dialogWidgetClass,
 					      offsetBox, argList, args);
     args = 0;
-    sprintf( xov_string, "%4.2f\0", 0.0 );
+    sprintf( xov_string, "%4.2f", 0.0 );
     XtSetArg( argList[0], XtNvalue, (XtArgVal)xov_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-x" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, yOffset); args++;
     XOVAL = XtCreateManagedWidget("dialog2", dialogWidgetClass,
 					      offsetBox, argList, args);
     args = 0;
-    sprintf( yov_string, "%4.2f\0", 0.0 );
+    sprintf( yov_string, "%4.2f", 0.0 );
     XtSetArg( argList[0], XtNvalue, (XtArgVal)yov_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"Oval-y" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, XOVAL); args++;
@@ -382,7 +533,7 @@ float x,y;
 				vpaneWidget, NULL, 0);
 
     args = 0;
-    sprintf( fat_string, "%3d\0", 0);
+    sprintf( fat_string, "%3d", 0);
     XtSetArg( argList[0], XtNvalue, (XtArgVal)fat_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"fat" ); args++;
     XtSetArg( argList[2], XtNleft, XtChainLeft ); args++;
@@ -390,7 +541,7 @@ float x,y;
 					      otherBox, argList, args);
 
     args = 0;
-    sprintf( color_string, "%2d\0", 7);
+    sprintf( color_string, "%2d", 7);
     XtSetArg( argList[0], XtNvalue, (XtArgVal)color_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"color" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, Fat); args++;
@@ -401,7 +552,7 @@ float x,y;
 				vpaneWidget, NULL, 0);
 
     args = 0;
-    sprintf( size_string, "%6.3f\0", .25);
+    sprintf( size_string, "%6.3f", .25);
     XtSetArg( argList[0], XtNvalue, (XtArgVal)size_string ); args++;
     XtSetArg( argList[1], XtNlabel, (XtArgVal)"Size" ); args++;
     XtSetArg( argList[2], XtNfromHoriz, Color); args++;
@@ -489,35 +640,13 @@ float x,y;
   XtPopup(PopUpWidget, XtGrabExclusive);
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtarea.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window.
- */
-
-#include "xtpen.h"
-#include "../include/vertex.h"
 #define MAXVERT 1000
-XPoint vlist[MAXVERT];
 
-xtarea (npts, head)
-    int             npts;
-    struct vertex  *head;
+void xtarea (int npts, struct vertex *head)
+/*< area >*/
 {
-int             i;
+    int             i;
+    XPoint vlist[MAXVERT];
 
     /* translate data structures */
     for (i = 0; i < npts && i < MAXVERT; i++)
@@ -530,51 +659,11 @@ int             i;
     XFillPolygon(pen_display, pen_drawable, pen_gc, vlist, npts, Complex, CoordModeOrigin);
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtattr.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nicols (SEP), February 14 1992
- *      Rewrote using new xtFrame interface that only plots one
- *      frame at a time.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window.
- * Dave Nichols (SEP), May 13 1992
- *      Changed mono mode to use pixels returned by BlackPixel & WhitePixel
- * Joe Dellinger (SOEST), Oct 16 1992
- *	Vplot includes the boundary of the clipping window in what is shown,
- *	so the width of the clipping window is (max - min + 1).
- * Dave Nichols (SEP) Nov 12 1993
- *	Recognise BREAK_EGROUP as special case and set xt_after_break
- *  	This makes breaks work (if break=b is specified)
- * Dave Nichols (SEP) Dec 14 1993
- *	Use color manipulation routines in xtcolors.c.
- */
-
-#include "xtpen.h"
-#include "../include/attrcom.h"
-
-extern int xt_after_break;
-
-XRectangle clip_rect;
-int clip_xorigin,clip_yorigin;
-
-xtattributes (command, v, v1, v2, v3)
-    int             command, v, v1, v2, v3;
+void xtattributes (int command, int v, int v1, int v2, int v3)
+/*< attributes >*/
 {
-    unsigned long    pixel ;
-
+    XRectangle clip_rect;
+    int clip_xorigin,clip_yorigin;
 
     switch (command)
     {
@@ -624,43 +713,11 @@ xtattributes (command, v, v1, v2, v3)
 		
 	break;
     }
-
-    return 0;
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtclose.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nicols (SEP), February 14 1992
- *      Rewrote using new xtFrame interface that only plots one
- *      frame at a time.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- */
-
-#include "xtpen.h"
-#include "../include/closestat.h"
-#include "../include/mesgcom.h"
-
-int xt_after_erase = 0;
-
-xtclose (status)
-    int             status;
+void xtclose (int status)
+/*< close >*/
 {
-
-
     switch (status)
     {
     case CLOSE_PAUSE:
@@ -713,13 +770,6 @@ xtclose (status)
  *      Restore colormaps all at once (for speed)
  */
 
-#include "xtpen.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-
-#include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>
 
 
 #ifndef SEP_MAP_SIZE
@@ -792,8 +842,8 @@ int mincol,maxcol;
 }
 
 
-void xt_set_color( col )
-int col;
+void xt_set_color(int col )
+/*< set color >*/
 {
    if (mono) {
        if (col){
@@ -805,16 +855,12 @@ int col;
 	   color = map[col];
    }
    XSetForeground(pen_display, pen_gc, color);
-
 }
 
-void xt_set_color_table( col, ired, igreen, iblue )
-int col;
-int ired;
-int igreen;
-int iblue;
+void xt_set_color_table(int col, int ired, int igreen, int iblue )
+/*< set color table >*/
 {
-XColor           pen_color;
+    XColor           pen_color;
 
     if ( mono) return;
 
@@ -925,14 +971,6 @@ int i;
  *	for the command line of Box
  */
 
-
-#include "xtpen.h"
-
-#include <X11/Xaw/Command.h>
-#include <X11/Xaw/Label.h>
-
-#include <X11/Xaw/Cardinals.h>
-#include <X11/Shell.h>
 
 /* variable that control the existance of buttons and labels */
 static int wantButtons = 0;
@@ -1281,11 +1319,10 @@ void inactivate_buttons()
 
 }
 
-int xt_pause( doNEXT,doPREV,doREST,doQUIT,doRUN,doSTOP,doXSIZE)
-int doNEXT,doPREV,doREST,doQUIT,doRUN,doSTOP,doXSIZE;
+int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doSTOP, int doXSIZE)
 {
 
-    int retval;
+    int retval=0;
     XtIntervalId id;
 
 
@@ -1350,68 +1387,6 @@ int doNEXT,doPREV,doREST,doQUIT,doRUN,doSTOP,doXSIZE;
 
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtconf.c
- * 
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- */
-
-#include "xtpen.h"
-
-/* declarations */
-#ifdef SEP
-char            name[] = "Xtpen";
-#else
-char            name[] = "xtpen";
-#endif
-#include "xtdoc.h"
-
-/* device routine table */
-extern
-xtopen (), xtclose (), xtplot (), xterase (), xtpoint (), xtinteract ();
-extern
-xtattributes (), xtraster (), xtgetpoint (), xtmessage ();
-extern
-xtarea (), xtreset();
-extern
-nulldev (), genvector (), genmarker (), gentext ();
-
-struct device   dev = {
- /* control routines */
-		       xtopen,		/* open */
-		       nulldev,		/* reset */
-		       xtmessage,	/* message */
-		       xterase,		/* erase */
-		       xtclose,		/* close */
- /* high level output */
-		       genvector,	/* vector */
-		       genmarker,	/* marker */
-		       gentext,		/* text */
-		       xtarea,		/* area */
-		       xtraster,	/* raster */
-		       xtpoint,		/* point */
-		       xtattributes,	/* attributes */
- /* input */
-		       nulldev,		/* getpoint */
-		       xtinteract,	/* interact */
- /* low level output */
-		       xtplot,		/* plot */
-		       nulldev,		/* startpoly */
-		       nulldev,		/* midpoly */
-		       nulldev		/* endpoly */
-};
-
 int             lost;
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
@@ -1441,16 +1416,6 @@ int             lost;
  *      Use app_data to get defaults from resource database
  */
 
-#include	"xtpen.h"
-#include        "xtcommands.h"
-#include        "../include/intcom.h"
-
-#ifdef SEP
-#define GETPAR getch
-#else
-#define GETPAR getpar
-#endif
-
 FileInfo       *inFiles;
 int		num_files;
 
@@ -1459,11 +1424,8 @@ xtFrameList* frame_list; /* the list of frames to plot */
 
 float fpause;
 
-int
-xt_dovplot (nn, inpltin, innames)
-    int             nn;
-    FILE          **inpltin;
-    char            innames[][MAXFLEN + 1];
+void xt_dovplot (int nn, FILE **inpltin, char **innames)
+/*< do vplot >*/
 {
     int i;
     int draw_file, draw_pos;
@@ -1514,17 +1476,17 @@ xt_dovplot (nn, inpltin, innames)
      *  2) stopping mode ( default mode if epause < 0 ) stops after every frame
      */
     pause=1;
-    if( !GETPAR( "pause","d",&epause) ) {
+    if( !sf_getint( "pause",&epause) ) {
         pause=0;
         epause=app_data.pause;
-   }
+    }
 
     running = ( epause >= 0 ); if( epause <0 ) epause=0;
 
     fpause = (float)epause; /* initial pause is the user's epause */
     if( pause == 0. ){
-      if( !GETPAR( "fpause","f",&fpause) )  
-         if(fpause==0)fpause=.05;
+	if( !sf_getfloat( "fpause",&fpause) )  
+	    if(fpause==0)fpause=.05;
     }
 
     set_delay_label(fpause);
@@ -1698,37 +1660,9 @@ xt_dovplot (nn, inpltin, innames)
 	
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xterase.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), Nov 12 1993
- *      Ignore bogus ERASE_MIDDLE after a break.
- */
-
-#include "xtpen.h"
-#include "../include/attrcom.h"
-#include "../include/erasecom.h"
-
-int xt_after_break = 0;
-
-xterase (command)
-    int             command;
+void xterase (int command)
+/*< erase >*/
 {
-
     /* ignore erase middle after a break */
     if( xt_after_break && command == ERASE_MIDDLE ){
 	xt_after_break = 0;
@@ -1760,50 +1694,18 @@ xterase (command)
     }
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtframe.c
- *
- * Dave Nichols (SEP), February 12 1992
- *      Inserted this sample edit history entry.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), Nov 17 1993
- *      Frame structure now contains info on how frame is terminated.
- * Dave Nichols (SEP), Dec 14 1993
- *      Frame structure now contains colormap info.
- */
-/*
+xtFrameList* xt_new_list(xtFrameList*  old_list, int *frames, int num_frame)
+/*<
  * Maintain a circular list of frame info
  *
  * The info includes the file_name, file_position, frame_number, and image.
  *
  * Given a redraw_file,redraw_position pair we can then return a valid image.
- */
-
-#include "xtpen.h"
-
-
-xtFrame* xt_frame_num();
-void xt_add_frame();
-
-xtFrameList* xt_new_list( old_list, frames, num_frame )
-xtFrameList* old_list;
-int *frames;
-int num_frame;
+ >*/
 {
    xtFrameList* new_list;
 
-   new_list = (xtFrameList*) alloc(sizeof(xtFrameList));
+   new_list = (xtFrameList*) sf_alloc(1,sizeof(xtFrameList));
    
    if( old_list == 0 ){
        new_list->start=0;
@@ -1830,7 +1732,7 @@ int filepos;
 {
    xtFrame *newfr;
 
-   newfr = (xtFrame*)alloc(sizeof(xtFrame));
+   newfr = (xtFrame*) sf_alloc(1,sizeof(xtFrame));
    newfr->file_num = filenum;
    newfr->file_position = filepos;
    newfr->end_pos = 0;
@@ -1846,49 +1748,46 @@ int filepos;
    return newfr;
 }
 
-void xt_add_frame( list, frame )
-xtFrameList* list;
-xtFrame* frame;
+void xt_add_frame(xtFrameList*  list, xtFrame* frame)
+/*< add frame >*/
 {
 
-xtFrame *end; 
-   
-   frame->frame_num = (list->num_frame)++;
-
-   /* list->start is the first fame in the circulary linked list
-     and list->start->prev is the last */
-
-   if( list->start == 0 ){
-       list->start = frame;
-       frame->prev = frame;
-       frame->next = frame;
-   }else{
-       end = list->start->prev;
-       end->next = frame;
-       frame->prev = end;
-       list->start->prev = frame;
-       frame->next = list->start;
-   }
-
+    xtFrame *end; 
+    
+    frame->frame_num = (list->num_frame)++;
+    
+    /* list->start is the first fame in the circulary linked list
+       and list->start->prev is the last */
+    
+    if( list->start == 0 ){
+	list->start = frame;
+	frame->prev = frame;
+	frame->next = frame;
+    }else{
+	end = list->start->prev;
+	end->next = frame;
+	frame->prev = end;
+	list->start->prev = frame;
+	frame->next = list->start;
+    }    
 }
 
-xtFrame* xt_frame_num( list, num )
-xtFrameList* list;
-int num;  
+xtFrame* xt_frame_num(xtFrameList* list, int num)
+/*< frame number >*/
 {
-xtFrame *curr, *start, *found;
+    xtFrame *curr, *start, *found;
 
-if( list==0 || list->start == 0 ) return (xtFrame*) 0;
+    if( list==0 || list->start == 0 ) return (xtFrame*) 0;
 
-found = (xtFrame*)0;
-start = curr = list->start;
-
-do{
-  if( num == curr->frame_num ) found=curr;
-  curr = curr->next;
-}while( (found==(xtFrame*)0) && curr != start );
-
-return found;
+    found = (xtFrame*)0;
+    start = curr = list->start;
+    
+    do{
+	if( num == curr->frame_num ) found=curr;
+	curr = curr->next;
+    }while( (found==(xtFrame*)0) && curr != start );
+    
+    return found;
 }
  
 xtFrame* xt_find_frame( list, filenum, filepos )
@@ -1914,25 +1813,21 @@ return found;
 }
 
 
-xtFrame*  xt_frame( list, filenum, filepos )
-xtFrameList* list;
-int filenum;
-int filepos;
+xtFrame*  xt_frame(xtFrameList*  list, int filenum, int filepos )
+/*< frame >*/
 {
-xtFrame *curr;
-curr = xt_find_frame( list, filenum, filepos );
+    xtFrame *curr;
+    curr = xt_find_frame( list, filenum, filepos );
+    
+    if( curr == 0 ) {
+	curr = xt_new_frame( filenum, filepos );
+	xt_add_frame( list, curr );
+    }
 
-if( curr == 0 ) {
-    curr = xt_new_frame( filenum, filepos );
-    xt_add_frame( list, curr );
+    return ( curr );
 }
 
-return ( curr );
-
-}
-
-xt_store_image( fram )
-xtFrame* fram;
+void xt_store_image(xtFrame* fram )
 {
     fram->has_image = 0;
 
@@ -1996,8 +1891,7 @@ xtFrame* fram;
 }
 
 /* put the image back into the drawable */
-xt_put_image( fram )
-xtFrame* fram;
+void xt_put_image(xtFrame*  fram)
 {
   XImage* old_image;
 
@@ -2016,8 +1910,8 @@ xtFrame* fram;
   xt_restore_colormap( fram );
 }
 
-xt_clear_images( list )
-xtFrameList* list;
+void xt_clear_images(xtFrameList* list)
+/*< clear images >*/
 {
     xtFrame *curr;
     xtFrameList* currlist;
@@ -2051,49 +1945,26 @@ xtFrameList* list;
 }
 
 
-xtFrame* xt_first_frame( list )
-xtFrameList* list;
+xtFrame* xt_first_frame(xtFrameList* list )
+/*< first frame >*/
 {
     return list->start;
 }
 
-xtFrame* xt_last_frame( list )
-xtFrameList* list;
+xtFrame* xt_last_frame(xtFrameList* list)
+/*< last frame >*/
 {
     return list->start->prev;
 }
-
-
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtgetpoint.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- */
-
-#include "xtpen.h" 
-
-#include <X11/cursorfont.h>
 
 static Cursor crossCursor = (Cursor)0;
 static Cursor pointerCursor = (Cursor)0;
 static Cursor currentCursor = (Cursor)-1;
 
-static cross_cursor()
+static void cross_cursor(void)
 {
 
-    if( crossCursor = (Cursor)0 ){
+    if( crossCursor == (Cursor)0 ){
    	crossCursor =  XCreateFontCursor(pen_display,XC_cross);
     }
     XDefineCursor( pen_display, pen_window, crossCursor );
@@ -2101,9 +1972,9 @@ static cross_cursor()
     XFlush(pen_display);
 }
 	
-static pointer_cursor()
+static void pointer_cursor(void)
 {
-    if( pointerCursor = (Cursor)0 ){
+    if( pointerCursor == (Cursor)0 ){
    	pointerCursor =  XCreateFontCursor(pen_display,XC_left_ptr);
     }
     XDefineCursor( pen_display, pen_window, pointerCursor );
@@ -2129,34 +2000,12 @@ int xtgetpoint (int *x, int *y)
 	return(1);
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in the
- * documentation. It authorizes you to use this file for any non-commercial
- * purpose, provided that this copyright notice is not removed and that any
- * modifications made to this file are commented and dated in the style of my
- * example below. 
- */
-
-/* 
- * source file:   ./filters/xtlib/xtinteract.c 
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- */
-
-#include <stdio.h>
-#include "xtpen.h"
-#include "../include/intcom.h"
-#include "../include/attrcom.h"
-#include <sys/ioctl.h>
 
 extern int      group_number;
 int	skipit = NO;
 
 int xtinteract (int what, FILE *controltty, char *string)
+/*< interact >*/
 {
  
     switch (what)
@@ -2189,40 +2038,6 @@ int xtinteract (int what, FILE *controltty, char *string)
     return DOVPLOT_CONT;
 
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtmessage.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- */
-
-#include "xtpen.h"
-#include "../include/mesgcom.h"
-
-#include <X11/Xaw/AsciiText.h>
-
-
-#ifdef __STDC__
-extern char* realloc(char *, int);
-#else
-extern char* malloc();
-extern char* realloc();
-#endif
-
-
-char            oldtext[100];
 
 void xtaddText( str )
 char *str;
@@ -2288,7 +2103,7 @@ char *str;
     rc= XawTextReplace( text_region, start, start, &tblk );
     if (rc != XawEditDone) {
         fprintf(stderr, "XawTextReplace(text, %d, %d, &textblock): %d\n",
-                           start, start, rc);
+		(int) start, (int) start, rc);
     }
     XawTextSetInsertionPoint(text_region, start + len);
     XawTextEnableRedisplay(text_region);
@@ -2298,12 +2113,10 @@ char *str;
 }
 
 
-xtmessage (command, text)
-    int             command;
-    char           *text;
+void xtmessage (int command, char *text)
+/*< message >*/
 {
-static int      eatit = NO;
-
+    static int eatit = NO;
 
     switch (command)
     {
@@ -2327,160 +2140,40 @@ static int      eatit = NO;
 	break;
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my eXample below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtopen.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Joe Dellinger (SOEST), Feb 18 1992
- *	Made "DEFAULT_HARDCOPY_FONT" the default font.
- *	Made "break=ignore" the default.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), May 6 1992
- *      Added option want_text to control message window and
- *      see_progress to control the drawing to an offscreen pixmap.
- * Dave Nichols (SEP), May 13 1992
- *      Get and save what BlackPixel and WhitePixel are for this screen.
- * Stewart A. Levin (Mobil) Feb 19, 1993
- *      Removed erroneous ; after sepwhere function body.
- * Dave Nichols(SEP) April 12, 1993
- *      Moves xt_size_n_scale call into xt_dovplot.
- * Dave Nichols (SEP), April 13 1993
- *      Use app_data to get defaults from resource database
- * Dave Nichols (SEP), Dec 14 1993
- *      Colormap allocation now in xtcolors.c
- * Joe Dellinger (AMOCO), Oct 18 1994
- *      Allow overriding of "pixels_per_inch" from the command line.
- * Joe Dellinger (AMOCO), June 9 1995
- *	This code erroneously set colors 0 to 7 to all be BLACK.
- *	A check in the xtcolors code checked for colors 0 through 7
- *	being set to black and ignored all those erroneous calls.
- *	This had the side effect of also ignoring LEGITIMATE attempts
- *	to set any of colors 0 through 7 to black.
- * Dave Nichols (Schlumberger) Oct 10 1998
- *      Add support for 8/16/24 bit true color visuals
- * Joe Dellinger (BP Amoco), Oct 4 1999
- *	Round aspect_ratio to nearest percent. (On newer Sun workstations
- *	it comes out "1.002778" when it should be "1".)
- * Dave Nichols (Schlumberger) Nov 16 1999
- *      Change method for finding suitable visuals
- */
- 
-#include "xtpen.h"
-
-#include "xtcommands.h"
-
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Shell.h>
-
-#include <X11/Intrinsic.h>
-#include <X11/StringDefs.h>
-
-#include <X11/Xaw/Paned.h>
-#include <X11/Xaw/Box.h>
-#include <X11/Xaw/Form.h>
-#include <X11/Xaw/AsciiText.h>
-#include <X11/Xaw/Cardinals.h>
- 
-#include "../include/attrcom.h"
-#include "../include/enum.h"
-#include "../include/params.h"
- 
-#ifdef SEP
-#define GETPAR getch
-#else
-#define GETPAR getpar
-#endif
-
-Display		*pen_display;
-GC		pen_gc;
-Window		pen_window;
-Pixmap		pen_pixmap;
-Drawable	pen_drawable;
-Visual		*pen_visual;
-unsigned long	*pen_colors;
-Colormap	pen_colormap;
-Widget		xtpen, vpane, control_panel, pen_picture; 
-Widget		text_region=(Widget)0;
-XtAppContext	pen_context;
-int		own_colormap;
-int		x_num_col;
-int		num_col_req = 0;
-int		num_col_max = 16384;
-int		num_col_min = 16;
-int             xmono = NO;
-int             xtruecol = NO;
-int		screen_depth;
-int		visual_depth;
-long		screen_black, screen_white;
-int             xt_stretchy;
-int 		boxy,want_images,greedy_pixmaps,see_progress;
-static char 	message_text[TEXT_BUFFER_SIZE];
-int		plotting_started = 0;
-
-String fallback_resources[] = {
-	"*text.scrollVertical:            whenNeeded",
-	"*text.autoFill:                  True",
-	"*text.Wrap:                      word",
-	"*text.height:                    50",
-	"*Font:                           fixed",
-	"*Foreground:                     black",
-	"*Background:                     white",
-	NULL,
-};
-
-extern int sepxargc;
-extern char** sepxargv;
 
 static void choose_visual();
 
-xtopen ()
+void xtopen (int argc, char* argv[])
+/*< open >*/
 {
-extern int      xt_dovplot ();
-extern int      (*message) ();
-extern int      brake;
-char            title[50], *ap;
-int 		dwidth,dheight,i, mwidth,mheight;
-int             default_width,default_height;
-int		want_buttons,want_labels,want_text,tellme_resolution;
-char		*display_name;
-Visual		*default_visual;
-XVisualInfo	vinfo;
-int		pen_screen;
-Arg		args[20];
-int             cnt,depth;
-int iarg;
+    extern int      brake;
+    int 		dwidth,dheight, mwidth,mheight;
+    int             default_width,default_height;
+    bool		want_buttons,want_labels,want_text;
+    bool tellme_resolution;
+    Visual		*default_visual;
+    XVisualInfo	vinfo;
+    int		pen_screen;
+    Arg		args[20];
+    int             cnt,depth;
+    int iarg;
 
 #if  XtSpecificationRelease > 4
-  int		xtargc;
-  int           myxargc;
+    int		xtargc;
+    int           myxargc;
 #else
-Cardinal	xtargc;
-Cardinal        myxargc;
+    Cardinal	xtargc;
+    Cardinal        myxargc;
 #endif
-char ** myxargv;
-Dimension 	width, height;
-
-   /*
-   * save the command line arguments
-   */
-  
-  myxargc = sepxargc;
-  myxargv = (char **) XtMalloc (myxargc * sizeof (char *));
-  bcopy ((char *) sepxargv, (char *) myxargv, myxargc * sizeof (char *));
-  
+    char ** myxargv;
+    
+    /*
+     * save the command line arguments
+     */
+    
+    myxargc = argc;
+    myxargv = (char **) XtMalloc (myxargc * sizeof (char *));
+    bcopy ((char *) argv, (char *) myxargv, myxargc * sizeof (char *));
     
     /* device capabilities */
     txfont = DEFAULT_HARDCOPY_FONT;
@@ -2493,17 +2186,15 @@ Dimension 	width, height;
     cachepipe = YES;
 
     /* initialize the first app (we will delete this one later ) */
-    xtargc = sepxargc;
+    xtargc = argc;
     xtpen = XtVaAppInitialize(
 		&pen_context,
 		"XTpen",
 		NULL, ZERO,
-		&xtargc, sepxargv,
+		&xtargc, argv,
 		fallback_resources,
 		NULL );
-		
-    sepxargc=xtargc;
-
+    
     /* get app data from the resource database */
     xt_app_data( xtpen );
 
@@ -2513,7 +2204,7 @@ Dimension 	width, height;
     screen_black = BlackPixel( pen_display,pen_screen);
     screen_white = WhitePixel( pen_display,pen_screen);
 
-    if(0==getpar ("depth", "d", &depth)) depth=app_data.vis_depth;
+    if(!sf_getint ("depth",&depth)) depth=app_data.vis_depth;
     /* Choose a visual */
     choose_visual( pen_display, pen_screen, depth, &vinfo );
 		
@@ -2538,10 +2229,8 @@ Dimension 	width, height;
      */
     aspect_ratio = ((int)((aspect_ratio * 100.) + .5)) / 100.;
 
-    tellme_resolution = NO;
-    getpar ("x_screen_info", "1", &tellme_resolution);
-    if (tellme_resolution != NO)
-    {
+    if (!sf_getbool("x_screen_info", &tellme_resolution)) tellme_resolution = false;
+    if (tellme_resolution) {
 	ERR(COMMENT, name,
 	    "display width=%d, height=%d (pixels);  width=%d, height=%d (mm)",
 	    dwidth, dheight, mwidth, mheight);
@@ -2555,12 +2244,11 @@ Dimension 	width, height;
      * the incoming history file... I think it's safer to require
      * them to be on the command line.)
      */
-    getpar ("aspect", "f", &aspect_ratio);
-    getpar ("ppi", "f", &pixels_per_inch);
-
+    sf_getfloat("aspect",&aspect_ratio);
+    sf_getfloat("ppi",&pixels_per_inch);
  
     /* Take a default from the resource database */
-    if ( !GETPAR("numcol","d",&num_col_req) ) num_col_req = app_data.num_col;
+    if ( !sf_getint("numcol",&num_col_req) ) num_col_req = app_data.num_col;
 
     /* colormap support */
     if( !mono ) x_num_col = DisplayCells(pen_display, pen_screen);
@@ -2642,17 +2330,17 @@ Dimension 	width, height;
 		XtNwidth, default_width,
         	NULL);
 
-    if( !GETPAR("buttons","1",&want_buttons) ) want_buttons = app_data.buttons;
-    if( !GETPAR("labels","1",&want_labels) ) want_labels = app_data.labels;
-    if( !GETPAR("want_text","1",&want_text) ) want_text = app_data.textpane;
+    if( !sf_getbool("buttons",&want_buttons) ) want_buttons = app_data.buttons;
+    if( !sf_getbool("labels",&want_labels) ) want_labels = app_data.labels;
+    if( !sf_getbool("want_text",&want_text) ) want_text = app_data.textpane;
 
-    if( !GETPAR("stretchy","1",&xt_stretchy) ) xt_stretchy=app_data.stretchy;
+    if( !sf_getbool("stretchy",&xt_stretchy) ) xt_stretchy=app_data.stretchy;
 
-    if( !GETPAR("boxy","1",&boxy) ) boxy = 0;
+    if( !sf_getbool("boxy",&boxy) ) boxy = 0;
 
-    if( !GETPAR("see_progress","1",&see_progress) ) see_progress=0;
-    if( !GETPAR("images","1",&want_images) ) want_images = app_data.images;
-    if( !GETPAR("pixmaps","1",&greedy_pixmaps)) greedy_pixmaps=app_data.pixmaps;
+    if( !sf_getbool("see_progress",&see_progress) ) see_progress=0;
+    if( !sf_getbool("images",&want_images) ) want_images = app_data.images;
+    if( !sf_getbool("pixmaps",&greedy_pixmaps)) greedy_pixmaps=app_data.pixmaps;
 
     if( want_buttons || want_labels ){
         control_panel = XtCreateManagedWidget("control_panel",boxWidgetClass,
@@ -2665,7 +2353,7 @@ Dimension 	width, height;
 
     if( visual_depth != 8 ) want_text=0; /* BUG for 24 bit visuals */
     if( want_text ) {
-        if( ! GETPAR("message","s",message_text) ) strcpy(message_text,"");
+        if(NULL == (message_text = sf_getstring("message"))) message_text="";
 
         text_region = XtVaCreateManagedWidget("text",
 		asciiTextWidgetClass,vpane,
@@ -2743,18 +2431,6 @@ Dimension 	width, height;
  
 }
 
-/*
- *  make this version link ahead of the one in tseplib to define default
- *  output as /dev/null
- */
-char            sepoutwhere[] = "/dev/null";
-char            sepheadwhere[] = "/dev/null";
-
-/* Make linker happy that it found it. */
-sepwhere ()
-{
-}
-
 extern float user_xscale;
 extern float user_yscale;
 
@@ -2788,7 +2464,7 @@ Dimension *width,*height;
 	
 	win_ratio = (float)(*height) / (float)(*width);
 	
-	new_stretch = win_ratio/SCREEN_RATIO;
+	new_stretch = win_ratio/VP_SCREEN_RATIO;
 
 	if( new_stretch > 1. ){
 	    new_ystretch = new_stretch; new_xstretch =1.;
@@ -2898,19 +2574,10 @@ XVisualInfo* vinfo;
  *      Frame structure now contains info on how frame is terminated.
  */
 
-#include	"xtpen.h"
-
-#include	"../include/intcom.h"
-
 int             in_repaint = NO;
 
 int xt_endframe = NO;
  
-extern int      nulldev ();
-extern int      xtgetpoint ();
-
-
-
 /* draw one frame from the file stream, epause is set to -1 to force
  * a USER_INT command at the end of the frame.
  * this will cause dovplot to exit at the end of the frame.
@@ -3016,17 +2683,12 @@ long *total_len;  /* the total length of vplot data for this frame */
 
 }
 
-
-extern int xt_after_break;
-
-void xt_draw_frame( frame )
-xtFrame* frame;
+void xt_draw_frame(xtFrame* frame )
+/*< draw frame >*/
 {
-int end_file;
-int end_pos;
-long total_len;
-
-
+    int end_file;
+    int end_pos;
+    long total_len;
 
    if( frame->has_image ){
        xt_put_image( frame );
@@ -3051,13 +2713,11 @@ long total_len;
 
 }
 
-/* paint a file, get the window size, allocate a pixmap and call xt_draw_file */
-/* save the current file info because this may not be the one we are redrawing*/
-/* dovplot can be confused if we change the file pointers in midstream */
-
-void
-xtredraw (){
-
+void xtredraw (void)
+/*< paint a file, get the window size, allocate a pixmap and call xt_draw_file 
+  save the current file info because this may not be the one we are redrawing
+  dovplot can be confused if we change the file pointers in midstream >*/
+{
     static FILE     *save_pltin;
     static char     save_pltname[120];
     Dimension width, height;
@@ -3131,7 +2791,8 @@ Position left, top;
 
 }
 
-xt_flush_display()
+void xt_flush_display(void)
+/*< flush display >*/
 {
     if( have_pixmap ){
         /* copy the pixmap to the screen */
@@ -3167,7 +2828,6 @@ xt_flush_display()
  *      see_progress controls offscreen pixmap.
  */
 
-#include "xtpen.h"
 
 int pen_width = -1;
 int pen_height = -1;
@@ -3262,32 +2922,12 @@ if( attachfailed ) return (Pixmap)0;
 else return pix;
 
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
-/*
- *
- *  source file:   ./filters/xtlib/xtplot.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- */
-
-#include "xtpen.h"
-
-int             oldx = 0, oldy = 0;
-
-xtplot (x, y, draw)
-    int             x, y, draw;
+void xtplot (int x, int y, int draw)
+/*< plot >*/
 {
-
-
+    static int oldx = 0, oldy = 0;
+    
     if (draw)
     {
 	XDrawLine (pen_display, pen_drawable, pen_gc, XCORD (oldx), YCORD (oldy), XCORD (x), YCORD (y));
@@ -3295,91 +2935,33 @@ xtplot (x, y, draw)
     oldx = x;
     oldy = y;
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
-/*
- *
- *  source file:   ./filters/xtlib/xtpoint.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- */
-
-#include "xtpen.h"
-
-xtpoint (x, y)
-    int             x, y;
+void xtpoint (int x, int y)
+/*< point >*/
 {
-
     XDrawPoint (pen_display, pen_drawable, pen_gc, XCORD (x), YCORD (y));
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
-/*
- *
- *  source file:   ./filters/xtlib/xtraster.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Stewart A. Levin (Mobil), Feb 19, 1993
- *      Cast data argument in XCreateImage to (char *)
- * Dave Nichols (Schlumberger) Oct 10 1998
- *      Add support for 12/15/16/24/32 bit visuals
- * Joe Dellinger (BP Amoco) Oct 4 1999
- *	Added missing "name" argument to ERR calls.
- * Dave Nichols (Schlumberger) Nov 16 1990
- *      Fix support for 12/15/16/24/32 bit visuals
- */
-
-#include "xtpen.h"
 #define	MASK0 0200
 
-extern char    *calloc ();
-
-xtraster (count, out_of, xpos, ypos, length, orient, raster, dummy1, dummy2,byte2)
-    int             count, out_of, xpos, ypos, length, orient, dummy1, dummy2,byte2;
-  unsigned short  *raster;
+void xtraster (int count, int out_of, int xpos, int ypos, int length, int dummy1, 
+	       unsigned char **raster, int orient, int dummy2)
+/*< raster >*/
 {
-int             i, j, k;
-struct pixrect *raster1;
-XImage	       *pen_image;
-unsigned short   *rp, *re;
-unsigned char  *rp2, *rp3,mask;
-static unsigned char *raster2;
-static unsigned char *raster3;
-static unsigned short *raster4;
-static int      xloc, yloc;
-static int      offset, incr1, incr2;
-static int      width, height, widthpad;
-extern char    *calloc ();
-unsigned short *iref;
-int		format,xoffset,bitmap_pad,bytes_per_line;
-unsigned int	depth,xwidth,xheight;
-int		tempint;
-unsigned char     *tip;
-int              do32;
-int junk[16384];
-unsigned long   xcol;
-
-
-
-
-  
-
+    int             i, j, k;
+    XImage	       *pen_image;
+    unsigned char  *rp, *re, *rp3;
+    unsigned char  *rp2;
+    static unsigned char *raster2;
+    static unsigned char *raster3;
+    static int      xloc, yloc;
+    static int      offset, incr1, incr2;
+    static int      width, height, widthpad;
+    int		format,xoffset,bitmap_pad,bytes_per_line;
+    unsigned int	depth,xwidth=0,xheight=0;
+    unsigned char     *tip;
+    int              do32;
+    unsigned long   xcol;
  
 
 /*
@@ -3478,15 +3060,14 @@ unsigned long   xcol;
 	/* raster2 = (unsigned char *) calloc ((widthpad / 2) * 	
 					     visual_depth * height / 8, 2); */
 	raster3 = (unsigned char *) calloc ((widthpad / 2) * height, 2);
-	raster4 = (unsigned short *) calloc ((widthpad ) * height, sizeof(unsigned short));
 
     }
 
     if (xmono)		/* Just store in correct order AS 2/2/89 */
     {
 	rp3 = raster3 + offset + count * incr2;
-	re = raster + length;
-	for (rp = raster; rp < re; rp++, rp3 += incr1)
+	re = raster[0] + length;
+	for (rp = raster[0]; rp < re; rp++, rp3 += incr1)
 	{
 	    /* if( *rp )
 		*rp3 = screen_black;
@@ -3499,8 +3080,8 @@ unsigned long   xcol;
     {
         /* convert color rasters to 8 bit pixels in raster3 */
 	rp3 = raster3 + offset + count * incr2;
-	re = raster + length;
-	for (rp = raster; rp < re; rp++, rp3 += incr1)
+	re = raster[0] + length;
+	for (rp = raster[0]; rp < re; rp++, rp3 += incr1)
 	{
 	   *rp3 = map[*rp];
         }
@@ -3510,13 +3091,12 @@ unsigned long   xcol;
     {
         /* just keep an interpolated raster of the color indicies in raster3 */
 	rp3 = raster3 + offset + count * incr2;
-  iref= raster4 + offset + count *incr2;
-	re = raster + length;
-	for (rp = raster; rp < re; rp++, iref += incr1)
+	re = raster[0] + length;
+	for (rp = raster[0]; rp < re; rp++, rp3 += incr1)
 	{
-	    *iref =(unsigned short) *rp;
+	    *rp3 = *rp;
 	}
-}
+    }
 
     if (count != out_of - 1)
 	return;
@@ -3582,14 +3162,13 @@ unsigned long   xcol;
 	 }
 
 	 rp3 = raster3;
-   iref = raster4;
 	
 	 if (pen_image->byte_order == MSBFirst) {
 	   
            for (i=0, rp2=raster2; i<height; i++) {
-	     iref = raster4 + i*widthpad;
-	     for (j=0, tip=rp2; j<width; j++, iref++) {
-	       xcol = map[*iref];
+	     rp3 = raster3 + i*widthpad;
+	     for (j=0, tip=rp2; j<width; j++, rp3++) {
+	       xcol = map[*rp3];
 	       *tip++ = xcol >>8 & 0xff;
 	       *tip++ = xcol & 0xff;
 	     }
@@ -3600,9 +3179,8 @@ unsigned long   xcol;
 	   
 	   for (i=0, rp2=raster2; i<height; i++) {
 	     rp3 = raster3 + i*widthpad;
-	     iref = raster4 + i*widthpad;
-	     for (j=0, tip=rp2; j<width; j++, iref++) {
-	       xcol = map[*iref];
+	     for (j=0, tip=rp2; j<width; j++, rp3++) {
+	       xcol = map[*rp3];
 	       *tip++ = xcol & 0xff;
 	       *tip++ = xcol >>8 & 0xff;
 	     }
@@ -3627,16 +3205,13 @@ unsigned long   xcol;
  
         do32 = (pen_image->bits_per_pixel == 32);
  
-    for(i=0; i < 16384; i++) junk[i]=0;
  
         if (pen_image->byte_order == MSBFirst) {
 	  
            for (i=0, rp2=raster2; i<height; i++) {
 	      rp3 = raster3 + i*widthpad;
-	      iref = raster4 + i*widthpad;
-              for (j=0, tip=rp2; j<width; j++, iref++) {
-                 xcol = map[*iref];
-                 junk[*iref]++;
+              for (j=0, tip=rp2; j<width; j++, rp3++) {
+                 xcol = map[*rp3];
                  if (do32) *tip++ = 0;
                  *tip++ = (xcol>>16) & 0xff;
                  *tip++ = (xcol>>8) & 0xff;
@@ -3649,10 +3224,8 @@ unsigned long   xcol;
 
             for (i=0, rp2=raster2; i<height; i++) {
 	      rp3 = raster3 + i*widthpad;
-	      iref = raster4 + i*widthpad;
-              for (j=0, tip=rp2; j<width; j++, iref++) {
-                xcol = map[(int)*iref];
-                 junk[*iref]++;
+              for (j=0, tip=rp2; j<width; j++, rp3++) {
+                xcol = map[*rp3];
                 *tip++ =  xcol & 0xff;
                 *tip++ = (xcol>>8) & 0xff;
                 *tip++ = (xcol>>16) & 0xff;
@@ -3661,12 +3234,6 @@ unsigned long   xcol;
               rp2 += pen_image->bytes_per_line;
             }
         }
-/*     j=0;*/
-/*     for(i=0; i <2200 ; i++){*/
-/*      fprintf(stderr,"color %d used %d times \n",i,junk[i]);*/
-/*      if(junk[i] >0) j++;*/
-/*      }*/
-/*      fprintf(stderr,"TOTAL COLORS USED %d \n",j);*/
 
     } else {
        
@@ -3677,19 +3244,18 @@ unsigned long   xcol;
 	xwidth = width;
 	xheight = height;
     	/*bitmap_pad = 8;*/
-    	bitmap_pad = (visual_depth+7/8)*8;
+    	bitmap_pad = 32;
     	bytes_per_line = 0;
 	raster2 = (unsigned char *) calloc ((widthpad / 2) * 	
-					     bitmap_pad/8 * height, 2); 
+					     visual_depth * height / 8, 2); 
     	pen_image = XCreateImage(pen_display,pen_visual,depth,format,xoffset,
 		(char *)raster2,xwidth,xheight,bitmap_pad,bytes_per_line);
-        if (!pen_image) ERR(FATAL,name,"couldn't create XImage!");
 	for (i = 0; i < height; i++) {
-	  rp = (unsigned short*)(raster3 + widthpad*i);
+	  rp = raster3 + widthpad*i;
 	  for (j = 0; j < width; j++) {
-	    XPutPixel( pen_image, j, i, map[*rp++] );
-	  }
-        }
+	    XPutPixel( pen_image , j, i, map[*rp++] );
+	  }}
+	
      }
 
     XPutImage(pen_display,pen_drawable,pen_gc,pen_image,

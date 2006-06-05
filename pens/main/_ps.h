@@ -14,7 +14,6 @@
 extern int tex;
 extern int file_created;
 extern int ncopies_document;
-extern char label[];
 extern char scratch_file[];
 extern int hold;
 extern int lost;
@@ -23,8 +22,6 @@ extern int ps_dash_pattern_exists;
 extern int ps_last_fat;
 extern float psscale;
 extern int ps_color;
-extern int dumb_fat;
-extern int force_color;
 extern float ps_xlength, ps_ylength;
 extern int ps_set_papersize;
 extern float ps_ypapersize;

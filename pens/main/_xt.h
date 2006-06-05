@@ -9,7 +9,7 @@
 #include <X11/Intrinsic.h>
 #include <X11/StringDefs.h>
 
-#include "../include/vplot.h"
+#include "_vp.h"
 #include "../include/params.h"
 #include "../include/enum.h"
 #include "../include/err.h"
@@ -41,16 +41,9 @@ extern unsigned long *pen_colors;
 extern int xt_endframe;
 
 /* picture scaling info */
-extern int xt_stretchy;
 extern int dev_xmin, dev_xmax;
 extern int dev_ymin, dev_ymax;
 extern void xt_size_n_scale();
-
-/* picture scaling info */
-extern int want_images,greedy_pixmaps,see_progress;
-
-/* interact output format */
-extern int boxy;
 
 extern int num_col;
 extern unsigned long color;
@@ -85,7 +78,39 @@ enum {NEXT,PREV,RESTART,QUIT,RUN,STOP,CHANGED,TIME};
 extern int xt_run_mode;
 enum {XT_FORWARD,XT_BACKWARD,XT_BOTH_WAYS};  
 
-#include "xtpixmap.h"
+/*
+ * Copyright 1991 the Board of Trustees of the Leland Stanford Junior
+ * University. Official permission to use this software is included in
+ * the documentation. It authorizes you to use this file for any
+ * non-commercial purpose, provided that this copyright notice is not
+ * removed and that any modifications made to this file are commented
+ * and dated in the style of my example below.
+ */
+
+/*
+ *
+ *  source file:   ./filters/xtlib/xtpixmap.h
+ *
+ * Steve Cole (SEP), August 4 1991
+ *	Wrote xtpen.  
+ *	Inserted this sample edit history entry.
+ */
+
+extern Pixmap pen_pixmap;
+extern int pen_width,pen_height;
+
+extern int have_pixmap;
+
+extern void clear_pixmap();
+extern void create_pixmap();
+extern void remove_pixmap();
+
+#if defined(__STDC__) || defined (__stdc__)
+extern Pixmap MyCreatePixmap( Display *, Drawable,unsigned int,
+		unsigned int,unsigned int );
+#else
+extern Pixmap MyCreatePixmap();
+#endif
 
 /* inline coordinate transforms;  X origin- upper left, pen origin- lower left */
 #define	XCORD(x)	x
@@ -109,8 +134,44 @@ extern int plotting_started;
 
 /* functions for dealing with the list of frames  and getting old images */
 
-#include "xtframe.h"
+struct cmap_ {
+unsigned char   red[65536] ;
+unsigned char   green[65536];
+unsigned char   blue[65536];
+unsigned long  map[65536];
+};
 
+typedef struct xtf_ {
+    int file_num;		/* file to read (in list of files) */
+    long  file_position;        /* starting poition in the file */
+    int  end_file;              /* file in which the frame ends */
+    long  end_pos;              /* position in that file */
+    long total_len;             /* total length in bytes */
+    int   frame_num;            /* number of this frame */
+    int has_image;              /* A stored image of this frame exists */
+    int break_end;              /* This frame ended with a break (not erase)*/
+		char filename[256];         /* File name */
+    XImage* image;		/* An XIMage of this frame */
+    Pixmap  pixmap;		/* A pixmap of this frame */
+    struct cmap_ cmap;		/* the colormap for this frame */
+    struct xtf_ *next;		/* The next frame */
+    struct xtf_ *prev;		/* The previous frame */
+  
+    
+} xtFrame ;
+
+
+/* 
+ * A list of frames that can be plotted, the parent list of which this list
+ * is an orderd subset is the parent member.
+ */
+
+typedef struct xtfl_ {
+    xtFrame* start;
+    xtFrame* end;
+    int num_frame;
+    struct xtfl_ *parent;
+} xtFrameList;
 
 extern xtFrameList *frame_list; /* current list of frames to draw */
 extern xtFrame *redraw_frame;  /* the frame to redraw not necessarily the same 

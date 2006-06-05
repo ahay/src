@@ -107,7 +107,7 @@ static float qsolve(int i, float *res2)
 /* find new traveltime at gridpoint i */
 {
     int j, k1, k2, ix;
-    float a, b, t, res;
+    float a, b, a2, b2, t, res;
     struct Upd *v[3], *xj;
 
     for (j=0; j<3; j++) {
@@ -116,15 +116,19 @@ static float qsolve(int i, float *res2)
 	if (ix > 0) { 
 	    k1 = i-s[j];
 	    a = itime[k1];
+	    a2 = ttime[k1];
 	} else {
 	    a = big_value;
+	    a2 = big_value;
 	}
 
 	if (ix < n[j]-1) {
 	    k2 = i+s[j];
 	    b = itime[k2];
+	    b2 = ttime[k2];
 	} else {
 	    b = big_value;
+	    b2 = big_value;
 	}
 
 	xj = x+j;
@@ -132,10 +136,10 @@ static float qsolve(int i, float *res2)
 
 	if (a < b) {
 	    xj->stencil = xj->value = a;
-	    xj->stencil2 = (ix > 0)? ttime[k1]: big_value;
+	    xj->stencil2 = a2;
 	} else {
 	    xj->stencil = xj->value = b;
-	    xj->stencil2 = (ix < n[j]-1)? ttime[k2]: big_value;
+	    xj->stencil2 = b2;
 	}
 
 	if (order > 1) {

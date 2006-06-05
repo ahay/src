@@ -16,19 +16,16 @@
  *	Please log any further modifications made to this file:
  */
 
-/*
- * Utility routine to make fat vectors from several thin ones.
- * Should ONLY be called if nfat > 0 and dashon = 0
- *
- * Algorithm by Glenn Kroeger
- * Changes added by Joe Dellinger to make it more efficient when plotting
- */
-
 #include <stdio.h>
 #include <math.h>
 #include "../include/extern.h"
 
 void fatvec (int x1, int y1, int x2, int y2, int nfat, int dashon)
+/*< Utility routine to make fat vectors from several thin ones.
+ * Should ONLY be called if nfat > 0 and dashon = 0
+ *
+ * Algorithm by Glenn Kroeger
+ * Changes added by Joe Dellinger to make it more efficient when plotting >*/
 {
 register int    i;
 register int    fplus, fminus;

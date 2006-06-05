@@ -30,10 +30,8 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
-
-#env['SCANNERS'].remove(CScan)
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
 
 ##############################################################################
 # INCLUDES
@@ -187,6 +185,4 @@ if mex and 'matlab' in api:
 env.Command('../lint/lint',map(lambda x: x+'.c',Split(src2)),
             'splint +posixlib $SOURCES')
 env.Alias('lint','../lint')
-        
-env['SCANNERS'].remove(configure.Include)
-#env.Append(SCANNERS=CScan)
+

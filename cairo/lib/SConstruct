@@ -9,6 +9,7 @@ psrc = Split('cplot')
 
 try: # distribution version
     Import('env')
+    env = env.Copy()
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     incdir = os.path.join(root,'include')
@@ -19,17 +20,18 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    env.Append(CPPPATH=['../../filt/lib'])
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
     SConscript('../../filt/lib/SConstruct')
+
+env.Append(CPPPATH=['../../filt/lib'])
+
 
 ccflags = ' ' + env.get('CCFLAGS','')
 del env['CCFLAGS']
 libs = 'gtk+-2.0 cairo >= 0.1.1 gtkcairo'
 env.ParseConfig('pkg-config --cflags --libs "%s" ' % libs)
 env['CCFLAGS'] = ccflags
-
-env.Append(BUILDERS={'Include':configure.Header},
-           SCANNERS=[configure.Include])
 
 ##############################################################################
 # INCLUDES
@@ -53,7 +55,5 @@ install = env.Install('../../include',inc)
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
-
-env['SCANNERS'].remove(configure.Include)
 
 # 	$Id$

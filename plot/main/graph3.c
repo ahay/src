@@ -68,6 +68,9 @@ int main(int argc, char* argv[])
 	    top = sf_floatalloc2(n1,1);
 	    break;
 	default:
+	    front = NULL;
+	    side = NULL;
+	    top = NULL;
 	    sf_error("unknown orientation orient=%d",orient);
 	    break;
     }

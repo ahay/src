@@ -68,21 +68,21 @@
 
 #include <rsfplot.h>
 
-#include	"./include/params.h"	/* for machine dependencies */
-#include	"./include/enum.h"
-#include	"./include/err.h"
-#include	"./include/attrcom.h"
-#include	"./include/intcom.h"
-#include	"./include/mesgcom.h"
-#include	"./include/erasecom.h"
-#include	"./include/closestat.h"
-#include	"./include/pat.h"
-#include	"./include/vertex.h"
-#include	"./include/round.h"
-#include	"./include/extern.h"
+#include	"../include/params.h"	/* for machine dependencies */
+#include	"../include/enum.h"
+#include	"../include/err.h"
+#include	"../include/attrcom.h"
+#include	"../include/intcom.h"
+#include	"../include/mesgcom.h"
+#include	"../include/erasecom.h"
+#include	"../include/closestat.h"
+#include	"../include/pat.h"
+#include	"../include/vertex.h"
+#include	"../include/round.h"
+#include	"../include/extern.h"
 
-#include "./utilities/util.h"
-#include "./genlib/genpen.h"
+#include "../utilities/util.h"
+#include "../genlib/genpen.h"
 
 #include "init_vplot.h"
 
@@ -328,11 +328,10 @@ int             group_number = 0;
 FILE           *pltinarray[MAXIN];
 char            pltinname[MAXIN][MAXFLEN + 1];
 char            pltname[MAXFLEN + 1] = "";
-int             infileno = 0;
 
 extern void reset_windows (void);
 
-void init_vplot (void)
+void init_vplot (int argc, char* argv[])
 /*< Initialize and declare global variables. >*/
 {
 char           *stringptr;
@@ -386,7 +385,7 @@ float           ftemp;
     /*
      * Call device open before doing anything else. this finalizes pltout 
      */
-    dev.open ();
+    dev.open (argc,argv);
     device_open = YES;
 
     /*

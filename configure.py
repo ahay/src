@@ -79,6 +79,7 @@ def check_all(context):
     cc(context)
     ar(context)
     libs(context)
+    x11(context)
     jpeg(context)
     api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
@@ -116,6 +117,124 @@ def libs(context):
         context.Result(0)
         context.Message("Please install RPC libraries.\n")
         sys.exit(1)
+
+xinc = [
+    '/usr/X11/include',
+    '/usr/X11R6/include',
+    '/usr/X11R5/include',
+    '/usr/X11R4/include',
+    '/usr/include/X11',
+    '/usr/include/X11R6',
+    '/usr/include/X11R5',
+    '/usr/include/X11R4',
+    '/usr/local/X11/include',
+    '/usr/local/X11R6/include',
+    '/usr/local/X11R5/include',
+    '/usr/local/X11R4/include',
+    '/usr/local/include/X11',
+    '/usr/local/include/X11R6',
+    '/usr/local/include/X11R5',
+    '/usr/local/include/X11R4',
+    '/usr/X386/include',
+    '/usr/x386/include',
+    '/usr/XFree86/include/X11',
+    '/usr/include',
+    '/usr/local/include',
+    '/usr/unsupported/include',
+    '/usr/athena/include',
+    '/usr/local/x11r5/include',
+    '/usr/lpp/Xamples/include',
+    '/usr/openwin/include',
+    '/usr/openwin/share/include'
+    ]
+
+xlib = [
+    '/usr/X11/lib',
+    '/usr/X11R6/lib',
+    '/usr/X11R5/lib',
+    '/usr/X11R4/lib',
+    '/usr/lib/X11',
+    '/usr/lib/X11R6',
+    '/usr/lib/X11R5',
+    '/usr/lib/X11R4',
+    '/usr/local/X11/lib',
+    '/usr/local/X11R6/lib',
+    '/usr/local/X11R5/lib',
+    '/usr/local/X11R4/lib',
+    '/usr/local/lib/X11',
+    '/usr/local/lib/X11R6',
+    '/usr/local/lib/X11R5',
+    '/usr/local/lib/X11R4',
+    '/usr/X386/lib',
+    '/usr/x386/lib',
+    '/usr/XFree86/lib/X11',
+    '/usr/lib',
+    '/usr/local/lib',
+    '/usr/unsupported/lib',
+    '/usr/athena/lib',
+    '/usr/local/x11r5/lib',
+    '/usr/lpp/Xamples/lib',
+    '/lib/usr/lib/X11',
+    '/usr/openwin/lib',
+    '/usr/openwin/share/lib'
+    ]
+
+def x11(context):
+    text = '''
+    #include <X11/Intrinsic.h>
+    #include <X11/Xaw/Label.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }
+    '''
+    
+    context.Message("checking for X11 headers ... ")
+    INC = context.env.get('XINC','')
+    if type(INC) is not types.ListType:
+        INC = string.split(INC)
+
+    oldpath = context.env.get('CPPPATH',[])
+    
+    for path in filter(lambda x:
+                       os.path.isfile(os.path.join(x,'X11/Intrinsic.h')),
+                       INC+xinc):        
+        context.env['CPPPATH'] = oldpath + [path,] 
+        res = context.TryCompile(text,'.c')
+
+        if res:
+            context.Result(path)
+            context.env['XINC'] = context.env['CPPPATH']
+            break
+    if not res:
+        context.Result(0)
+        context.env['XINC'] = None
+        return
+    context.env['CPPPATH'] = oldpath
+
+    context.Message("checking for X11 libraries ... ")
+    LIB = context.env.get('XLIB','')
+    if type(LIB) is not types.ListType:
+        LIB = string.split(LIB)
+
+    oldpath = context.env.get('LIBPATH',[])
+    oldlibs = context.env.get('LIBS',[])
+
+    context.env['LIBS'] = oldlibs + ['Xaw','Xt']
+    
+    for path in LIB+xlib:        
+        context.env['LIBPATH'] = oldpath + [path,] 
+        res = context.TryRun(text,'.c')
+
+        if res[0]:
+            context.Result(path)
+            context.env['XLIB'] = context.env['LIBPATH']
+            break
+    if not res[0]:
+        context.Result(0)
+        context.env['XLIB'] = None
+
+    context.env['LIBPATH'] = oldpath
+    context.env['LIBS'] = oldlibs
 
 def jpeg(context):
     context.Message("checking jpeg ... ")
@@ -350,6 +469,8 @@ def options(opts):
              'The list of directories that will be searched for libraries')
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
+    opts.Add('XLIB','Location of X11 libraries')
+    opts.Add('XINC','Location of X11 headers')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
     opts.Add('API','Support for additional languages (possible values: c++, fortran, fortran-90, python)')
     opts.Add('CXX','The C++ compiler')

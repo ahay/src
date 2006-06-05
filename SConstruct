@@ -47,13 +47,12 @@ env['USERS']=user
 Export('env')
 SConscript(dirs='python',name='SConstruct')
 
+env.Append(BUILDERS={'Include':configure.Header},
+           SCANNERS=[configure.Include])
+
 ##########################################################################
 # FILT BUILD
 ##########################################################################
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../filt/lib'],
-            LIBS=['rsf'])
-
 Export('env')
 dirs = ('lib','main','proc','imag')
 
@@ -84,7 +83,9 @@ if env.has_key('F90'):
 ##########################################################################
 # PLOT BUILD
 ##########################################################################
-env.Prepend(LIBPATH=['../../plot/lib'],LIBS=['rsfplot'])
+
+oldpath = env.get('LIBPATH',[])
+oldlibs = env.get('LIBS',[])
 
 Export('env')
 pdirs = ('lib','main','test')
@@ -100,7 +101,7 @@ for dir in map(lambda x: os.path.join('plot',x), pdirs):
 # PENS BUILD
 ##########################################################################
 Export('env')
-pdirs = ('fonts','include','utilities','genlib')
+pdirs = ('fonts','include','utilities','genlib','main')
 
 Default('build/include')
 for dir in map(lambda x: os.path.join('pens',x), pdirs):
@@ -108,11 +109,6 @@ for dir in map(lambda x: os.path.join('pens',x), pdirs):
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')
     Default(build)
-
-build = os.path.join('build','pens')
-BuildDir(build,'pens')
-SConscript(dirs=build,name='SConstruct')
-Default(build)
 
 ##########################################################################
 # INSTALLATION

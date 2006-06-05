@@ -43,9 +43,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <include/err.h>
-#include <include/params.h>
-#include <include/extern.h>
+#include "../include/err.h"
+#include "../include/params.h"
+#include "../include/extern.h"
 
 #include "error.h"
 

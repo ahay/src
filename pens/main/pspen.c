@@ -33,23 +33,78 @@
  */
 
 #define mask0 ((unsigned char) (((unsigned int) 1) << 7))
+
 #include <stdio.h>
 #include <string.h>
-#include "ps.h"
+#include <sys/time.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <pwd.h>
+
+#include <rsfplot.h>
+
 #include "../include/vertex.h"
 #include "../include/extern.h"
 #include "../include/err.h"
 #include "../include/params.h"
 #include "../include/pat.h"
+#include "../include/attrcom.h"
+#include "../include/enum.h"
+#include "../include/closestat.h"
+#include "../include/erasecom.h"
+#include "../include/round.h"
 
+#include "dovplot.h"
+#include "init_vplot.h"
 
-extern FILE    *pltout;
+#include "../genlib/genpen.h"
+#include "../utilities/util.h"
+
+#include "_ps.h"
+#include "psdoc.h"
+#include "pspen.h"
+
+char            name[] = "pspen";
+
+struct device   dev = {
+    /* control routines */
+    psopen,	/* open */
+    psreset,	/* reset */
+    genmessage,	/* message */
+    pserase,	/* erase */
+    psclose,	/* close */
+    
+    /* high level output */
+    psvector,	/* vector */
+    genmarker,	/* marker */
+    pstext,	/* text */
+    psarea,	/* area */
+    smart_psraster,	/* raster */
+    genpoint,	/* point */
+    psattributes,	/* attributes */
+
+    /* input */
+    gen_dovplot,   /* reader */
+    nullgetpoint,   /* getpoint */
+    nullinteract,   /* interact */
+    
+    /* low level output */
+    psplot,	/* plot */
+    nullclose,	/* startpoly */
+    nullmidpoly,	/* midpoly */
+    nullclose,	/* endpoly */
+};
+
 extern int      ipat;
 extern struct pat pat[];
 
-psarea (npts, verlist)
-    int             npts;
-    struct vertex  *verlist;
+static bool force_color;
+static bool dumb_fat; 
+static char *label;
+static FILE *pltout;
+
+void psarea (int npts, struct vertex  *verlist)
+/*< area >*/
 {
 unsigned char   mask, outchar;
 int             nx, ny, nxold, nyold, i, ix, iy;
@@ -269,7 +324,7 @@ char            stringr[80];
 			}
 			if (mask == 1)
 			{
-			    fprintf (pltout, "%02.2x", outchar);
+			    fprintf (pltout, "%2.2x", outchar);
 			    mask = mask0;
 			    outchar = 0;
 			}
@@ -437,14 +492,6 @@ char            stringr[80];
  *	was entangled.
  */
 
-#include <stdio.h>
-#include "./../include/attrcom.h"
-#include "./../include/params.h"
-#include "./../include/extern.h"
-#include "./../include/enum.h"
-#include "ps.h"
-
-extern FILE    *pltout;
 /* Is a dash pattern currently in effect? */
 int             ps_dash_pattern_set = NO;
 /* Is there a dash pattern saved in postscript's memory? */
@@ -466,9 +513,8 @@ static int      ps_curcolor_set = NO;
 
 int             ps_done_clipping_gsave = NO;
 
-psattributes (command, value, v1, v2, v3)
-    register int    command, value;
-    int             v1, v2, v3;
+void psattributes (int command, int value, int v1, int v2, int v3)
+/*< attributes >*/
 {
 int             xmin, ymin, xmax, ymax;
 
@@ -586,12 +632,11 @@ int             xmin, ymin, xmax, ymax;
     default:
 	break;
     }
-
-    return 0;
 }
 
 
-ps_fixup_after_grestore ()
+void ps_fixup_after_grestore (void)
+/*< ? >*/
 {
 /*
  * Alas, when we did the "gerestore" above ALL GLOBAL PLOT SETTINGS WERE LOST!
@@ -619,8 +664,8 @@ ps_fixup_after_grestore ()
     ps_set_color (ps_curcolor_no);
 }
 
-ps_grey_map (coltab)
-    int             coltab;
+void ps_grey_map (int coltab)
+/*< grey map >*/
 {
 int             grey;
 
@@ -636,8 +681,8 @@ int             grey;
     ps_grey_ras[coltab] = greycorr (grey);
 }
 
-ps_set_color (value)
-    int             value;
+void ps_set_color (int value)
+/*< set color >*/
 {
     new_ps_curcolor_no = value;
 
@@ -689,8 +734,8 @@ ps_set_color (value)
     }
 }
 
-ps_set_dash (value)
-    int             value;
+void ps_set_dash (int value)
+/*< set dash >*/
 {
 /*
  * A local variable named dashon. This routine has no business resetting
@@ -750,41 +795,16 @@ int             ii;
  *      Not compiling in the SGI
  */
 
-/* Routine to finish up */
 
-
-#include <stdio.h>
-#if defined(__stdc__) || defined(__STDC__)
-#include <string.h>
-#else
-#include <strings.h>
-#endif
-#if defined(__stdc__) || defined(__STDC__)
-#include <stdlib.h>
-#else
-extern char    *getenv ();
-#endif
-
-#include "../include/closestat.h"
-#include "../include/enum.h"
-#include "../include/extern.h"
-#include "../include/err.h"
-#include "ps.h"
-
-#ifdef SEP
-#define GETPAR getch
-#else
-#define GETPAR getpar
-#endif
-
-psclose (status)
-    int             status;
+void psclose (int status)
+/*< Routine to finish up >*/
 {
-char            system_call[120];
-char            printer[40];
-char           *stringptr;
-int             ecode;
-
+    char            system_call[120];
+    char            printer[40];
+    char            *printer0;
+    char           *stringptr;
+    int             ecode;
+    
     endpath ();
 
     switch (status)
@@ -818,7 +838,7 @@ int             ecode;
 	    else
 		strcpy (printer, "colorps");
 
-	    GETPAR ("printer", "s", printer);
+	    if (NULL != (printer0 = sf_getstring ("printer"))) strcpy(printer,printer0);
 
 	    if (ps_set_papersize)
 	    {
@@ -930,62 +950,8 @@ int             ecode;
 /*
  * Apple Laser Writer Configuration
  */
-#include <stdio.h>
-#include "../include/enum.h"
-#include "../include/extern.h"
 
-/*
- * mandatory declarations and initializations
- */
-#ifdef SEP
-char            name[] = "Pspen";
-#else
-char            name[] = "pspen";
-#endif
-#include "psdoc.h"
 
-/*
- * device routine table
- */
-extern int
-psopen (), psreset (), pserase (), psclose ();
-extern int
-psvector (), psplot (), genmarker (), pstext (), psarea ();
-extern int
-smart_psraster (), psattributes ();
-extern int
-genstartpoly (), genmidpoly (), genendpoly ();
-extern int
-nulldev (), genpoint (), genmessage (), genmarker ();
-
-struct device   dev = {
-
- /* control routines */
-		       psopen,	/* open */
-		       psreset,	/* reset */
-		       genmessage,	/* message */
-		       pserase,	/* erase */
-		       psclose,	/* close */
-
- /* high level output */
-		       psvector,	/* vector */
-		       genmarker,	/* marker */
-		       pstext,	/* text */
-		       psarea,	/* area */
-		       smart_psraster,	/* raster */
-		       genpoint,	/* point */
-		       psattributes,	/* attributes */
-
- /* input */
-		       nulldev,	/* getpoint */
-		       nulldev,	/* interact */
-
- /* low level output */
-		       psplot,	/* plot */
-		       nulldev,	/* startpoly */
-		       nulldev,	/* midpoly */
-		       nulldev,	/* endpoly */
-};
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
@@ -1023,12 +989,6 @@ struct device   dev = {
  *	here so gsaves and grestores are properly paired.
  */
 
-#include	<stdio.h>
-#include	"ps.h"
-#include	"../include/erasecom.h"
-#include	"../include/enum.h"
-#include	"../include/extern.h"
-
 /*
  * Location and height of label and surrounding box in ps coordinates
  */
@@ -1036,14 +996,13 @@ struct device   dev = {
 #define TEXT_HEIGHT	50
 #define TEXT_PAD	18
 
-extern FILE    *pltout;
 float           psscale;
 
 extern int      ps_done_clipping_gsave;
 
 
-pserase (command)
-    int             command;
+void pserase (int command)
+/*< erase >*/
 {
 char            full_label[100];
 static int      page_count = 1;
@@ -1221,31 +1180,6 @@ static int      page_count = 1;
  *	there to fix a bug required a change here).
  */
 
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include "../include/vplot.h"
-#include "../include/err.h"
-#include "../include/enum.h"
-#include "../include/extern.h"
-#include "../include/params.h"
-#include "../include/attrcom.h"
-#include "ps.h"
-#include <pwd.h>
-
-#if defined(__stdc__) || defined(__STDC__)
-#include <stdlib.h>
-#else
-extern char    *getenv ();
-#endif
-
-#ifdef SEP
-#define GETPAR getch
-#else
-#define GETPAR getpar
-#endif
-
-
 #ifndef DEFAULT_PAPER_SIZE
 #define DEFAULT_PAPER_SIZE	"letter"
 #endif
@@ -1258,7 +1192,7 @@ extern char    *getenv ();
 int             file_created = NO;
 int             tex = NO;
 int             ncopies_document = 1;
-char            label[100];
+
 char            ps_paper[80];
 
 char            mapfile[100] = "default";
@@ -1268,12 +1202,7 @@ int             hold;
 int             default_ps_font = DEFAULT_HARDCOPY_FONT;
 float           psscale;
 
-int             ps_color = NO;
-int             dumb_fat = NO;
-int             force_color = NO;
 extern int      red[], green[], blue[];
-
-extern int      smart_psraster (), dumb_psraster ();
 
 float           ps_xlength, ps_ylength;
 float           ps_xmin, ps_xmax, ps_ymin, ps_ymax;
@@ -1282,20 +1211,23 @@ int             ps_set_papersize = NO;
 float           ps_ypapersize;
 char            psprintertype[80] = "default";
 
-psopen ()
+void psopen (int argc, char* argv[])
+/*< open >*/
 {
-char           *user_name, *getlogin ();
-char            date[50];
-int             hard_dither = YES;
-int             i;
-char            units;
-float           unitscale;
-extern int      isafile ();
-struct stat     statbuf;
-int             creatafile;
-int             yesget;
-char           *paperstring;
-
+    char           *user_name, *getlogin ();
+    char            date[50];
+    int             i;
+    char            units;
+    float           unitscale=1.;
+    extern int      isafile ();
+    struct stat     statbuf;
+    int             creatafile;
+    bool             yesget;
+    char           *paperstring;
+    
+    bool             ps_color; 
+    
+    size_t len;
 
 /*
  * A list of different printer types recognized
@@ -1375,7 +1307,7 @@ char           *paperstring;
  * GETPAR here it would also search the incoming history file... I think
  * it's safer to require them to be on the command line.)
  */
-    getpar ("ppi", "f", &pixels_per_inch);
+    sf_getfloat ("ppi",&pixels_per_inch);
 
 
 /*
@@ -1409,8 +1341,8 @@ char           *paperstring;
 /*
  * but GETPAR has the very last say.
  */
-    if (GETPAR ("paper", "s", ps_paper))
-	paperstring = NULL;
+    if (NULL != (paperstring = sf_getstring("paper")))
+	strcpy (ps_paper, paperstring);
 
     if (strcmp (ps_paper, "letter") == 0)
     {
@@ -1542,11 +1474,11 @@ char           *paperstring;
 		    "Height and width of paper are both negative or zero!");
 		}
 		else
-		    ps_xlength = 2. * ps_xborder + (ps_ylength - 2. * ps_yborder) / SCREEN_RATIO;
+		    ps_xlength = 2. * ps_xborder + (ps_ylength - 2. * ps_yborder) / VP_SCREEN_RATIO;
 	    }
 	    else if (ps_ylength <= 0.)
 	    {
-		ps_ylength = 2. * ps_yborder + (ps_xlength - 2. * ps_xborder) * SCREEN_RATIO;
+		ps_ylength = 2. * ps_yborder + (ps_xlength - 2. * ps_xborder) * VP_SCREEN_RATIO;
 	    }
 
 
@@ -1624,9 +1556,9 @@ char           *paperstring;
 /*
  * device capabilities
  */
-    getpar ("dumbfat", "1", &dumb_fat);
-    getpar ("grey gray color", "1", &ps_color);
-    getpar ("force", "1", &force_color);
+    if (!sf_getbool("dumbfat",&dumb_fat)) dumb_fat=false;
+    if (!sf_getbool("color",&ps_color)) ps_color=false;
+    if (!sf_getbool("force",&force_color)) force_color=false;
 
     if (ps_color ||
 	(strcmp (callname, "tcprpen") == 0) ||
@@ -1641,18 +1573,6 @@ char           *paperstring;
 	mono = YES;
 	num_col = 0;
     }
-    getpar ("harddither", "1", &hard_dither);
-
-    if (hard_dither)
-    {
-	smart_raster = YES;
-	dev.raster = smart_psraster;
-    }
-    else
-    {
-	smart_raster = NO;
-	dev.raster = dumb_psraster;
-    }
 
     need_end_erase = YES;
     buffer_output = YES;
@@ -1662,12 +1582,16 @@ char           *paperstring;
     txfont = default_ps_font;
     txprec = DEFAULT_HARDCOPY_PREC;
 
-    if (!GETPAR ("label", "s", label))
+    if (NULL == (label = sf_getstring ("label")))
     {
 	if ((user_name = getlogin ()) == NULL)
 	    user_name = getpwuid (getuid ())->pw_name;
 	dateget (date);
-	sprintf (label, "%s, %s", user_name, date);
+
+	len = strlen(user_name)+strlen(date)+3;
+	label = sf_charalloc(len);
+
+	snprintf (label, len, "%s, %s", user_name, date);
     }
     else
     {
@@ -1752,11 +1676,9 @@ char           *spooldirnm;
 	}
     }
 
-    if (GETPAR ("strip tex", "1", &yesget))
-    {
-	if (yesget)
-	    tex = YES;
-    }
+    if (!sf_getbool("tex",&yesget)) yesget=false;
+    if (yesget) tex = YES;
+ 
 
     if (tex == YES)
     {
@@ -1767,25 +1689,21 @@ char           *spooldirnm;
 	 * size we want, so don't clip it to page boundaries.
 	 */
 	dev_xmax = VP_MAX * RPERIN;
-	dev_ymax = VP_MAX * RPERIN * SCREEN_RATIO;
+	dev_ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
 	dev_xmin = 0;
 	dev_ymin = 0;
 	size = ABSOLUTE;
 	label[0] = '\0';
     }
 
-    if (GETPAR ("hold", "1", &yesget))
-    {
-	if (yesget)
-	    hold = YES;
-	else
-	    hold = NO;
-    }
+    if (!sf_getbool("hold",&yesget)) yesget=false;
 
-    if (!GETPAR ("ncopies copies", "i", &ncopies_document))
-    {
-	ncopies_document = 1;
-    }
+    if (yesget)
+	hold = YES;
+    else
+	hold = NO;
+    
+    if (!sf_getint("copies",&ncopies_document)) ncopies_document = 1;
 
 /*
  * Initialize the PostScript file
@@ -1903,17 +1821,13 @@ char           *spooldirnm;
 }
 
 
-/*
- * get the date
- */
-#include <sys/time.h>
-dateget (date)
-    char           *date;
+void dateget (char *date)
+/*< get the date >*/
 {
-time_t          time ();
-time_t          clock;
-struct tm      *localtime ();
-char           *asctime ();
+    time_t          time ();
+    time_t          clock;
+    struct tm      *localtime ();
+    char           *asctime ();
 
     clock = time (0);
     sprintf (date, "%.16s", asctime (localtime (&clock)));
@@ -1954,19 +1868,12 @@ char           *asctime ();
  *	optimize that case a little bit better. ("x" is shorthand for "0 0 r")
  */
 
-#include <stdio.h>
-#include <string.h>
-#include "../include/err.h"
-#include "../include/enum.h"
-#include "../include/extern.h"
-#include "ps.h"
-
 int             lost = 1;
 static int      where = -1;
 static int      ps_oldx = 0, ps_oldy = 0;
 
-psplot (x, y, draw)
-    int             x, y, draw;
+void psplot (int x, int y, int draw)
+/*< plot >*/
 {
     if (draw == 0)
     {
@@ -1976,7 +1883,8 @@ psplot (x, y, draw)
     addpath (x, y);
 }
 
-startpath ()
+void startpath (void)
+/*< start path >*/
 {
     if (where > 0)
     {
@@ -1985,8 +1893,8 @@ startpath ()
     where = 0;
 }
 
-addpath (x, y)
-    int             x, y;
+void addpath (int x,int y)
+/*< add path >*/
 {
     /*
      * Just in case, allow lots of extra room
@@ -2035,7 +1943,8 @@ char            stringr[80];
     }
 }
 
-endpath ()
+void endpath (void)
+/*< end path >*/
 {
     if (where > 0)
     {
@@ -2043,182 +1952,6 @@ endpath ()
 	where = -1;
     }
     lost = 1;
-}
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- * 
- *  source file:   ./filters/pslib/psraster.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), September 11 1987
- *	Wrote dumb version of psraster.c.
- * Steve Cole (SEP), February 10 1988
- *	Rewrote using readhexstring instead of creating procedure for image.
- *      This avoids possible size problems.
- * Joe Dellinger, Feb 16 1988
- *	Make order and type of arguments same for both kinds of raster, to
- *	avoid problems with machines that have to have consistency of
- *	arguments.
- * Steve Cole (SEP), March 28 1988
- *      Cleaned up bit-handling code. Fixed bugs in handling of orient
- *      parameter and documented that code.
- * Steve Cole (SEP), March 31 1988
- *	Corrected polarity for an input 8 bits/pixel raster.
- * Joe Dellinger (SEP), October 19 1988
- *	Added "harddither" option.
- * Stew Levin (Mobil), May 8, 1996
- *	Changed mask0 definition to make source portable to machines
- *	that don't handle bit strings properly.
- */
-
-#define mask0	((unsigned char) (((unsigned int) 1)  << 7))
-#include <stdio.h>
-#include "ps.h"
-#include "../include/err.h"
-
-extern FILE    *pltout;
-
-dumb_psraster (count, out_of, xpos, ypos, length, orient, raster, dummy1, dummy2,byte2)
-    int             count, out_of, xpos, ypos, length, orient, dummy1, dummy2,byte2;
-    unsigned short  *raster;
-{
-int             i;
-unsigned char   mask, outchar;
-int             bitcount;
-extern int      mono;
-int             xshift, yshift;
-int             xscale, yscale;
-int             rangle;
-
-
-/*   if(byte2==1)*/
-/*   ERR(FATAL,"Asked for two byte option with dumb_psraster (unimplemented) \n");*/
-
-
-    endpath ();
-
-    if (count == 0)
-    {
-/*
- * Comments to explain the code for different orientations:
- * The PostScript command image outputs a raster with its lower left corner
- * at the origin, assuming that the raster is filled from (given the
- * transformation matrix we use below) left to right and top to bottom.
- * Depending on orient, this is not the way that the input raster is
- * filled. For orient 1 it is filled from top to bottom and right to
- * left, for 2 it is from right to left and bottom to top, and for 3
- * it is from left to right and bottom to top. We must apply a transformation
- * that changes the input raster so it appears to be filled in the orient
- * 0 manner. This is just a simple rotation. For orient=(0,1,2,3) the
- * rotation angle (measured clockwise) is (0,270,180,90) degrees.
- * This rotation is done about the origin.
- * To understand the postioning of the origin, for a given orientation,
- * start with a picture of what the raster looks like after the rotation.
- * The frist point of the first raster line (xpos,ypos) is at the upper
- * left. Now "back out" the rotation. The starting point is now at the
- * (upper left,upper right,lower right,lower left) corner for orient
- * (0,1,2,3). But we don't want the rotation to be performed about this
- * first point - we want it to be performed about the first point of the
- * LAST line of raster (sketch this on paper, then it is easy to see why).
- * So we want the origin to be at the beginning of the last line of raster.
- * Starting from the beginning of the first line, the shift needed to get
- * there is (0,-out_of) for orient 0, (-out_of,0) for orient 1,
- * (0,out_of) for orient 2, and (out_of,0) for orient 3. After this
- * translation and rotation, the scaling necessary to get the right
- * size raster is pretty obvious.
- *
- * Don't try to understand these comments unless you need to modify the
- * code! If you do need to modify the code, I think that these comments 
- * will help, even if it takes a few minutes to digest them.
- * A final note: the way to do all this neatly is to incorporate the
- * shifting, scaling, and rotating described here directly into the
- * transform matrix for image. But as long as this code works maybe
- * it's not worth the effort.
- * -S. Cole
- */
-
-	if (orient == 0)
-	{
-	    xshift = xpos;
-	    yshift = ypos - out_of;
-	    xscale = length;
-	    yscale = out_of;
-	    rangle = 0;
-	}
-	else
-	if (orient == 1)
-	{
-	    xshift = xpos - out_of;
-	    yshift = ypos;
-	    xscale = out_of;
-	    yscale = length;
-	    rangle = 270;
-	}
-	else
-	if (orient == 2)
-	{
-	    xshift = xpos;
-	    yshift = ypos + out_of;
-	    xscale = length;
-	    yscale = out_of;
-	    rangle = 180;
-	}
-	else
-	if (orient == 3)
-	{
-	    xshift = xpos + out_of;
-	    yshift = ypos;
-	    xscale = out_of;
-	    yscale = length;
-	    rangle = 90;
-	}
-
-	fprintf (pltout, "/picstr %d string def\n", (length + 7) / 8);
-
-	fprintf (pltout, "gsave %d %d translate %d %d scale %d rotate\n", xshift, yshift, xscale, yscale, rangle);
-
-	fprintf (pltout, "/raster {%d %d %d [ %d 0 0 %d 0 %d ] {currentfile picstr readhexstring pop} image} def\n", length, out_of, 1, length, -out_of, out_of);
-
-	fprintf (pltout, "raster\n");
-    }
-
-    mask = mask0;
-    outchar = 0;
-    bitcount = 0;
-
-    for (i = 0; i < length; i++)
-    {
-	if (raster[i] == 0)
-	    outchar |= mask;
-	mask >>= 1;
-	bitcount++;
-	if (bitcount == 8)
-	{
-	    fprintf (pltout, "%02.2x", outchar);
-	    mask = mask0;
-	    outchar = 0;
-	    bitcount = 0;
-	}
-    }
-    if (bitcount != 0)
-	fprintf (pltout, "%02.2x", outchar);
-
-    if (count != out_of - 1)
-	return;
-
-    fprintf (pltout, "\n");
-    fprintf (pltout, "grestore\n");
-
 }
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
@@ -2258,62 +1991,46 @@ int             rangle;
  *	is needed when color is requested by the pspen color=y option.
  */
 
-#include <stdio.h>
-#include "ps.h"
-#include "../include/err.h"
-
-
-extern FILE    *pltout;
 extern int      ps_grey_ras[];
 extern int	red[], green[], blue[];
-extern int	mono;
 extern int	ras_allgrey;
 
-smart_psraster (xpix, ypix, xmin, ymin, xmax, ymax, raster_block, orient, dither_it,byte2)
-    int             xpix, ypix, xmin, ymin, xmax, ymax, orient, dither_it,byte2;
-    unsigned short  *raster_block;
+void smart_psraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax, 
+		     unsigned char **raster_block, int orient, int dither_it)
+/*< raster >*/
 {
 int             i,j;
 int             xshift, yshift;
 int             xscale, yscale;
 int             rangle;
 
-
-/*   if(byte2==1)*/
-/*   ERR(FATAL,"Asked for two byte option with smart_psraster (unimplemented) \n");*/
-
-
     endpath ();
 
     xscale = xmax - xmin;
     yscale = ymax - ymin;
 
-    if (orient == 0)
-    {
-	xshift = xmin;
-	yshift = ymin;
-	rangle = 0;
-    }
-    else
-    if (orient == 1)
-    {
-	xshift = xmin;
-	yshift = ymax;
-	rangle = 270;
-    }
-    else
-    if (orient == 2)
-    {
-	xshift = xmax;
-	yshift = ymax;
-	rangle = 180;
-    }
-    else
-    if (orient == 3)
-    {
-	xshift = xmax;
-	yshift = ymin;
-	rangle = 90;
+    switch (orient) {
+	case 0:
+	    xshift = xmin;
+	    yshift = ymin;
+	    rangle = 0;
+	    break;
+	case 1:
+	    xshift = xmin;
+	    yshift = ymax;
+	    rangle = 270;
+	    break;
+	case 2:
+	    xshift = xmax;
+	    yshift = ymax;
+	    rangle = 180;
+	    break;
+	case 3:
+	default:
+	    xshift = xmax;
+	    yshift = ymin;
+	    rangle = 90;
+	    break;
     }
 
     fprintf (pltout, "gsave /picstr %d string def\n", xpix);
@@ -2332,7 +2049,7 @@ int             rangle;
 	{
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-	    fprintf (pltout, "%02.2x", 255 - (int) raster_block[i]);
+		    fprintf (pltout, "%2.2x", 255 - (int) raster_block[i]);
 	   	}
     	   	fprintf (pltout, "\n");
 	}
@@ -2343,7 +2060,7 @@ int             rangle;
 	{
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-	    fprintf (pltout,"%02.2x", 255 - ps_grey_ras[(int) raster_block[i]]);
+		    fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[i]]);
 	   	}
     	   	fprintf (pltout, "\n");
 	}
@@ -2357,7 +2074,7 @@ int             rangle;
 	{
 		for (i=j; (i<j+80 && i<xpix*ypix); i++)
 		{
-	    	fprintf (pltout, "%02.2x%02.2x%02.2x", red[(int) raster_block[i]],green[(int) raster_block[i]],blue[(int) raster_block[i]]);
+	    	fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[i]],green[(int) raster_block[i]],blue[(int) raster_block[i]]);
 		}
     		fprintf (pltout, "\n");
 	}
@@ -2387,14 +2104,8 @@ int             rangle;
  *	Grey-level stuff should only be done for mono=y case.
  */
 
-#include <stdio.h>
-#include "../include/attrcom.h"
-#include "ps.h"
-
-extern FILE    *pltout;
-extern int      mono;
-
-psreset ()
+void psreset (void)
+/*< reset >*/
 {
 int             ii;
 
@@ -2444,24 +2155,58 @@ int             ii;
  *	working and not worth saving, so I made it always "true".
  */
 
-#include	<math.h>
-#include	<stdio.h>
-#include	"../include/vplot.h"
-#include	"../include/extern.h"
-#include	"../include/enum.h"
-#include	"../include/params.h"
-#include	"../include/round.h"
-#include	"./ps.h"
-#include	"./psfonts.h"
+
+/*
+ *  font name definitions
+ *  font numbers start with 100
+ */
+static char *psfonts[] = {
+	"Courier-Bold",
+	"Courier-BoldOblique",
+	"Courier-Oblique",
+	"Courier",
+	"Helvetica-Bold",
+	"Helvetica-BoldOblique",
+	"Helvetica-Oblique",
+	"Helvetica",
+	"Symbol",
+	"Times-Bold",
+	"Times-BoldItalic",
+	"Times-Italic",
+	"Times-Roman",
+	"AvantGarde-Book",
+	"AvantGarde-BookOblique",
+	"AvantGarde-Demi",
+	"AvantGarde-DemiOblique",
+	"Bookman-Demi",
+	"Bookman-DemiItalic",
+	"Bookman-Light",
+	"Bookman-LightItalic",
+	"Helvetica-Narrow-Bold",
+	"Helvetica-Narrow-BoldOblique",
+	"Helvetica-Narrow-Oblique",
+	"Helvetica-Narrow",
+	"NewCenturySchlbk-Bold",
+	"NewCenturySchlbk-BoldItalic",
+	"NewCenturySchlbk-Italic",
+	"NewCenturySchlbk-Roman",
+	"Palatino-Bold",
+	"Palatino-BoldItalic",
+	"Palatino-Roman",
+	"Palatino-Italic",
+	"ZapfChancery-MediumItalic",
+	"ZapfDingbats"
+};
+
+int psmaxfont = {(sizeof(psfonts) / sizeof(psfonts[0])) + 100};
 
 extern int      default_ps_font;
 
 static double   path_orient_dx, path_orient_dy;
 static double   up_orient_dx, up_orient_dy;
 
-pstext (string, pathx, pathy, upx, upy)
-    char           *string;
-    float           pathx, pathy, upx, upy;
+void pstext (char *string, float pathx, float pathy, float upx, float upy)
+/*< text >*/
 {
 double          fpathx, fpathy, fupx, fupy;
 double          up, path;
@@ -2540,42 +2285,39 @@ static char     last_size = 0, last_font;
 
     switch (txalign.ver)
     {
-    case TV_TOP:
-	yfact = -0.81 * (float) size;	/* was -1.0 */
-	break;
-    case TV_CAP:
-	yfact = -0.654 * (float) size;	/* was -0.8 */
-	break;
-    case TV_SYMBOL:		/* CHECK THIS!!! */
-    case TV_HALF:
-	yfact = -0.327 * (float) size;	/* was -0.45 */
-	break;
-    case TV_BOTTOM:
-	yfact = .1666666667 * (float) size;	/* was - */
-	break;
-    case TV_BASE:
-	yfact = 0.0;
-	break;
-    default:
-	break;
+	case TV_TOP:
+	    yfact = -0.81 * (float) size;	/* was -1.0 */
+	    break;
+	case TV_CAP:
+	    yfact = -0.654 * (float) size;	/* was -0.8 */
+	    break;
+	case TV_SYMBOL:		/* CHECK THIS!!! */
+	case TV_HALF:
+	    yfact = -0.327 * (float) size;	/* was -0.45 */
+	    break;
+	case TV_BOTTOM:
+	    yfact = .1666666667 * (float) size;	/* was - */
+	    break;
+	case TV_BASE:
+	default:
+	    yfact = 0.0;
+	    break;
     }
 
     switch (txalign.hor)
     {
-    case TH_RIGHT:
-	xfact = -1.;
-	break;
-	break;
-    case TH_NORMAL:
-    case TH_LEFT:
-	xfact = 0.;
-	break;
-    case TH_CENTER:
-    case TH_SYMBOL:
-	xfact = -.5;
-	break;
-    default:
-	break;
+	case TH_RIGHT:
+	    xfact = -1.;
+	    break;
+	case TH_NORMAL:
+	case TH_LEFT:
+	    xfact = 0.;
+	    break;
+	case TH_CENTER:
+	case TH_SYMBOL:
+	default:
+	    xfact = -.5;
+	    break;
     }
     fprintf (pltout, "%.2f mul\n", xfact);
     fprintf (pltout, "%.2f m\n", yfact);
@@ -2619,18 +2361,10 @@ static char     last_size = 0, last_font;
  *	grestore) call ps_set_dash to recreate it.
  */
 
-#include <stdio.h>
-#include "../include/extern.h"
-#include "../include/enum.h"
-#include "ps.h"
-#define NEW_FAT		(nfat != ps_last_fat)
-
-extern FILE    *pltout;
 int             ps_last_fat = -1;
 
-psvector (x1, y1, x2, y2, nfat, dashon)
-    int             x1, y1, x2, y2;
-    int             nfat, dashon;
+void psvector (int x1, int y1, int x2, int y2, int nfat, int dashon)
+/*< vector >*/
 {
 static int      xlst, ylst;
 
@@ -2681,7 +2415,7 @@ static int      xlst, ylst;
 /*
  * set the fatness for the path
  */
-    if (NEW_FAT)
+    if (nfat != ps_last_fat)
     {
 	endpath ();
 	fprintf (pltout, "%d setlinewidth\n", nfat);

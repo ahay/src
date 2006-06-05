@@ -24,19 +24,19 @@
 
 #include <rsfplot.h>
 
-#include "./include/attrcom.h"
-#include "./include/params.h"
-#include "./include/extern.h"
-#include "./include/round.h"
-#include "./include/enum.h"
-#include "./include/pat.h"
-#include "./include/closestat.h"
-#include "./include/err.h"
-#include "./include/erasecom.h"
-#include "./include/mesgcom.h"
+#include "../include/attrcom.h"
+#include "../include/params.h"
+#include "../include/extern.h"
+#include "../include/round.h"
+#include "../include/enum.h"
+#include "../include/pat.h"
+#include "../include/closestat.h"
+#include "../include/err.h"
+#include "../include/erasecom.h"
+#include "../include/mesgcom.h"
 
-#include "genlib/genpen.h"
-#include "utilities/util.h"
+#include "../genlib/genpen.h"
+#include "../utilities/util.h"
 
 #include "dovplot.h"
 #include "init_vplot.h"
@@ -952,7 +952,7 @@ void vpmessage (int command, char *string)
     }
 }
 
-void vpopen (void)
+void vpopen (int argc, char* argv[])
 /*< open >*/
 {
     float           atemp[2];
