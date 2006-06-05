@@ -625,9 +625,6 @@ void vp_rascoltab (int nreserve, const char *colname)
     }
 }
 
-
-
-
 void vp_raster (unsigned char **array, bool bit, int offset, 
 		int xpix, int ypix, 
 		float xll, float yll, float xur,float yur, int orient)

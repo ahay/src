@@ -167,7 +167,8 @@ def retrieve(target=None,source=None,env=None):
                 return 5
     return 0
 
-View = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
+View  = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
+Print = Builder(action = sep + "pspen printer=%s $SOURCES" % os.environ.get('PSPRINTER'),src_suffix=vpsuffix)
 Retrieve = Builder(action = Action(retrieve,
                                    varlist=['dir','private','top','server']))
 Test = Builder(action=Action(test))
@@ -176,21 +177,23 @@ Test = Builder(action=Action(test))
 # PLOTTING COMMANDS
 #############################################################################
 
+vppen = os.path.join(sep,'vppen')
+
 combine ={
     'SideBySideAniso': lambda n:
-    sep + "vppen yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
+    vppen + " yscale=%d vpstyle=n gridnum=%d,1 $SOURCES" % (n,n),
     'OverUnderAniso': lambda n:
-    sep + "vppen xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
+    vppen + " xscale=%d vpstyle=n gridnum=1,%d $SOURCES" % (n,n),
     'SideBySideIso': lambda n:
-    sep + "vppen size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
+    vppen + " size=r vpstyle=n gridnum=%d,1 $SOURCES" % n,
     'OverUnderIso': lambda n:
-    sep + "vppen size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
+    vppen + " size=r vpstyle=n gridnum=1,%d $SOURCES" % n,
     'TwoRows': lambda n:
-    sep + "vppen size=r vpstyle=n gridnum=%d,2 $SOURCES" % (n/2),
+    vppen + " size=r vpstyle=n gridnum=%d,2 $SOURCES" % (n/2),
     'Overlay': lambda n:
-    sep + "vppen erase=o vpstyle=n $SOURCES",
+    vppen + " erase=o vpstyle=n $SOURCES",
     'Movie': lambda n:
-    sep + "vppen vpstyle=n $SOURCES"
+    vppen + " vpstyle=n $SOURCES"
     }
 
 #############################################################################
@@ -231,6 +234,7 @@ class Project(Environment):
                          'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
+                              'Print':Print,
                               'Retrieve':Retrieve,
                               'Test':Test},
                     LIBPATH=[libdir],
@@ -242,6 +246,7 @@ class Project(Environment):
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
         self['PROGPREFIX']=''
         self.view = []
+        self.prnt = []
         self.lock = []
         self.test = []
         self.coms = []
@@ -366,8 +371,9 @@ class Project(Environment):
             source = target
         target2 = os.path.join(self.resdir,target)
         plot = apply(self.Plot,(target2,source,flow),kw)
-        self.Default (plot)
+        self.Default (plot),
         self.view.append(self.View(target + '.view',plot))
+        self.prnt.append(self.Print(target + '.print',plot))
         locked = os.path.join(self.figdir,target+suffix)
         lock = self.InstallAs(locked,target2+suffix)        
         self.lock.append(lock)
@@ -381,6 +387,7 @@ class Project(Environment):
     def End(self):
         if self.view: # if any results
             self.Alias('view',self.view)
+            self.Alias('print',self.prnt)
             self.Alias('lock',self.lock)
             self.Alias('test',self.test)
         else:

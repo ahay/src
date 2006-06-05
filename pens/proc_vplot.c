@@ -72,12 +72,9 @@ extern char     interact[];
 extern int      pltoutfd;
 extern FILE    *pltin;
 extern FILE    *controltty;
-extern FILE    *pltinarray[];
-extern char    *pltinname[];
 extern char     pltname[];
-extern int      infileno;
 
-void proc_vplot (void)
+void proc_vplot (int infileno, FILE *pltinarray[], char *pltinname[])
 /*< This routine is responsible for processing the input files,
  * and performing the necessary pausing, etc, that may be needed
  * at the end before exiting. >*/

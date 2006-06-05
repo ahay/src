@@ -10,7 +10,12 @@ try: # distribution version
     Import('env')
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
-    incdir = os.path.join(root,'include')    
+    bindir = os.path.join(root,'bin')
+    incdir = os.path.join(root,'include')
+    env.Prepend(CPPPATH=['../include'],
+                LIBPATH=['#/pens/utilities','#/pens/genlib'],
+                LIBS=['genpen','util'])
+    
 except: # local version
     root = None
     env = Environment()
@@ -23,13 +28,12 @@ except: # local version
     env.Prepend(CPPPATH=['../include'],
                 LIBPATH=['./utilities','./genlib','../plot/lib','../filt/lib'],
                 LIBS=['genpen','util','rsfplot','rsf'])
+    SConscript('genlib/SConstruct')
             
 env.Append(BUILDERS={'Include':configure.Header},
            SCANNERS=[configure.Include])
 
 env['PROGPREFIX'] = ''
-
-SConscript('genlib/SConstruct')
 
 sources = map(lambda x: x+'vplot',Split(src))
 pens = map(lambda x: x+'pen',Split(pen))
@@ -46,4 +50,10 @@ for source in pens:
     obj = env.StaticObject(source+'.c')
     env.Depends(obj,source+'.h')
 
-    env.Program(source,[obj,]+objects)
+    main = env.Program(source,[obj,]+objects)
+
+    if root:
+        env.Install(bindir,main[0])
+        
+        # do selfdoc later
+

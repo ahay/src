@@ -109,6 +109,11 @@ for dir in map(lambda x: os.path.join('pens',x), pdirs):
     SConscript(dirs=build,name='SConstruct')
     Default(build)
 
+build = os.path.join('build','pens')
+BuildDir(build,'pens')
+SConscript(dirs=build,name='SConstruct')
+Default(build)
+
 ##########################################################################
 # INSTALLATION
 ##########################################################################

@@ -323,8 +323,15 @@ static void text (void)
     char c;
     
     while ('\n' != (c = getchar ())) {
-	if ('\\' != c || '\n' != getchar ()) 
+	if ('\\' != c) {
 	    putchar (c);
+	} else {
+	    c = getchar ();
+	    if ('\n' == c) continue;
+
+	    putchar ('\\');
+	    putchar (c);
+	}
     }
     putchar ('\0');
 }

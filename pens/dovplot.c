@@ -1674,7 +1674,6 @@ char            string[MAXFLEN + 1];
 				{
 				    if (dither_it)
 				    {
-/*fprintf(stderr,"in this read 5 \n");*/
 					READ_RASTER (
 						     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)),
 						     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
@@ -1683,7 +1682,6 @@ char            string[MAXFLEN + 1];
 				    }
 				    else
 				    {
-/*fprintf(stderr,"in this read 6 \n");*/
 					READ_RASTER (
 						     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
 						     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)),

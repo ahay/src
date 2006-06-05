@@ -164,9 +164,6 @@ FILE           *fdopen ();
 FILE	       *tempcopy();
 extern int	unlink();
 
-extern FILE    *pltinarray[MAXIN];
-extern char     pltinname[MAXIN][MAXFLEN + 1];
-extern int      infileno;
 extern int      pltoutfd;
 
 /*
@@ -180,8 +177,12 @@ extern int      pltoutfd;
 int main (int argc, char* argv[])
 {
     int             in_isatty;
+    int len;
     bool            docflag;
-    
+    int      infileno;
+    FILE    *pltinarray[MAXIN];
+    char    *pltinname[MAXIN];
+
     char           *cptr;
     char           *stringptr;
     int             ii;
@@ -242,13 +243,15 @@ int main (int argc, char* argv[])
             /* check for zero length input (e.g. /dev/null ) */
 	    if( pltinarray[infileno] != (FILE*)-1 ) {
 
-	    strcpy( pltinname[infileno], string );
-	    /* remember what number this file is so we can delete it later*/
-	    tempfileindex = infileno;
-            infileno++;
+		len = strlen(string);
+		pltinname[infileno] = sf_charalloc(len+1);
+
+		strncpy( pltinname[infileno],string,len+1);
+		/* remember what number this file is so we can delete it later*/
+		tempfileindex = infileno;
+		infileno++;
 	    }
-        }
-        else
+        } else
         {
 	    if (!allow_pipe)
 	    {
@@ -256,7 +259,8 @@ int main (int argc, char* argv[])
 	    }
 	    else
 	    {
-	    	strcpy (pltinname[infileno], "stdin");
+		pltinname[infileno] = sf_charalloc(6);
+	    	strncpy (pltinname[infileno], "stdin", 5);
 	    	pltinarray[infileno] = stdin;
 	    	infileno++;
 	    }
@@ -285,7 +289,11 @@ int main (int argc, char* argv[])
 	    {
 		ERR (FATAL, name, "too many input files (%d max)", MAXIN);
 	    }
-	    strcpy (pltinname[infileno], cptr);
+
+	    len = strlen(cptr);
+	    pltinname[infileno] = sf_charalloc(len+1);
+	    
+	    strncpy (pltinname[infileno], cptr,len+1);
 	    pltinarray[infileno] = temp;
 	    infileno++;
 	}
@@ -301,7 +309,7 @@ int main (int argc, char* argv[])
  ****************************************************************************
  */
 
-    proc_vplot ();
+    proc_vplot (infileno, pltinarray, pltinname);
 
     /*  delete the temporary copy of piped input if there is one*/
     removtemp();

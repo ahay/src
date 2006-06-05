@@ -51,6 +51,19 @@ if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
 
+api = string.split(string.lower(str(env.get('API',''))),',')
+
+##############################################################################
+# FORTRAN-77 BINDING
+##############################################################################
+if 'fortran' in api:
+    env.Object('fortran.o','fortran.c',
+               CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
+    libf = env.StaticLibrary('rsfplotf','fortran.o')                         
+    
+    if root:
+        env.Install(libdir,libf)
+
 ##############################################################################
 # TESTING
 ##############################################################################
@@ -79,6 +92,7 @@ if root:
     doc = env.Command(main,docs,docmerge)
     env.Install(libdir,doc)
     Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+    
         
 # 	$Id$	
 
