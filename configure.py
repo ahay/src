@@ -219,7 +219,12 @@ def x11(context):
     oldpath = context.env.get('LIBPATH',[])
     oldlibs = context.env.get('LIBS',[])
 
-    context.env['LIBS'] = oldlibs + ['Xaw','Xt']
+    if  sys.platform[:7] == 'interix':
+        extra =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
+    else:
+        extra = ['Xaw','Xt']
+        
+    context.env['LIBS'] = oldlibs + extra
     
     for path in LIB+xlib:        
         context.env['LIBPATH'] = oldpath + [path,] 
