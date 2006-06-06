@@ -151,7 +151,6 @@ extern struct termio tty_clean_state;
 extern int      allow_pipe;
 extern char     callname[];
 extern int      nplots;
-extern bool      allowecho;
 extern bool      cachepipe;
 
 /*

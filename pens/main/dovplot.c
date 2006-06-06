@@ -167,7 +167,6 @@
 void end_of_file(void);
 void set_table(void);
 extern bool      wantras, smart_raster;
-extern bool      allowecho;
 extern int      brake;
 extern FILE    *controltty;
 extern int      cur_color;
@@ -380,11 +379,6 @@ char            string[MAXFLEN + 1];
 		return;
 	    }
 	    message (MESG_HIGHLIGHT_OFF,NULL);
-	    if (!allowecho)
-	    {
-		message (MESG_READY,NULL);
-		message (MESG_TEXT, CRLF);
-	    }
 	    message (MESG_DONE,NULL);
 	    message (MESG_OFF,NULL);
 	    message (MESG_ERASE,NULL);
@@ -941,11 +935,6 @@ char            string[MAXFLEN + 1];
 		if (ii == DOVPLOT_EXIT)
 		    return;
 		message (MESG_HIGHLIGHT_OFF,NULL);
-		if (!allowecho)
-		{
-		    message (MESG_READY,NULL);
-		    message (MESG_TEXT, CRLF);
-		}
 		message (MESG_DONE,NULL);
 		message (MESG_OFF,NULL);
 		message (MESG_ERASE,NULL);

@@ -31,8 +31,7 @@
 #include	<math.h>
 #define		GETPAR	getpar
 
-
-#include	<termio.h>
+#include	<termio.h> 
 
 #include	<sys/types.h>
 #include	<sys/stat.h>
@@ -68,7 +67,6 @@ extern int      ever_called;
 extern int      out_isatty;
 extern int      nplots;
 extern bool      endpause;
-extern bool      allowecho;
 extern int      epause;
 extern char     interact[];
 extern int      pltoutfd;
@@ -139,14 +137,4 @@ void proc_vplot (int infileno, FILE *pltinarray[], char *pltinname[])
 	dev.close (CLOSE_DONE);
     }
 
-    /*
-     * Done, let them see what they are doing again 
-     */
-    if (!allowecho)
-    {
-	if (ioctl (pltoutfd, TCSETAW, &tty_clean_state) == -1)
-	{
-		ERR (FATAL, name, "Bad ioctl call!");
-	}
-    }
 }

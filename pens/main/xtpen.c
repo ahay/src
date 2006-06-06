@@ -2182,7 +2182,6 @@ void xtopen (int argc, char* argv[])
     endpause = YES;
     buffer_output = YES;
     smart_clip = NO;
-    allowecho = YES;
     cachepipe = YES;
 
     /* initialize the first app (we will delete this one later ) */

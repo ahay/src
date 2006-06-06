@@ -1109,7 +1109,6 @@ void vpopen (int argc, char* argv[])
  */
     message = dev.message;
 
-    allowecho = YES;
     cachepipe = YES;
 
 }

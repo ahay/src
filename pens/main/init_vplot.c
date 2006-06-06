@@ -219,22 +219,7 @@ bool             cachepipe;
  * this may get done in dev.open.
  * This is useful if the program may want to reverse seek. e.g. Xvpen, Sunpen
  */
-bool             allowecho;
-/*
- * setting allowecho NO (which may get done
- * in dev.open) means that the output device
- * is the user's terminal and echoing chars
- * back at the user would insert nonsense
- * into the plot stream.  In this case we
- * explicitly shut down echoing and output
- * translation until the end of the job.
- * Arguably, output translation should be
- * set/unset in dev.open or dev.reset as we may
- * be plotting on a terminal not our own or
- * the device filter may have built in
- * workarounds for known output translation
- * effects. I use it here as a safety measure.
- */
+
 bool             wantras;
 bool             colormask[5];
 
@@ -396,36 +381,6 @@ float           ftemp;
     stderrfd = fileno (stderr);
     out_isatty = isatty (pltoutfd);
 
-    if (!sf_getbool ("echo",&allowecho)) allowecho=true;
-
-    if (out_isatty)
-    {
-	fstat (pltoutfd, &pltoutstat);
-	fstat (stderrfd, &stderrstat);
-	
-	if ((pltoutstat.st_dev == stderrstat.st_dev) &&
-	    (pltoutstat.st_ino == stderrstat.st_ino) &&
-	    (pltoutstat.st_rdev == stderrstat.st_rdev))
-	{
-	    allowecho = false;
-	    message = dev.message;
-	}
-    }
-
-    if (!allowecho)
-    {
-
-	if (ioctl (pltoutfd, TCGETA, &tty_clean_state) == -1)
-	{
-		ERR (FATAL, name, "Bad ioctl call!");
-	}
-	tty_plot_state = tty_clean_state;
-	tty_plot_state.c_lflag &= ~ECHO;
-	if (ioctl (pltoutfd, TCSETAW, &tty_plot_state) == -1)
-	{
-		ERR (FATAL, name, "Bad ioctl call! (2)");
-	}
-    }
     if (!sf_getbool ("endpause", &endpause)) endpause=false;
     if (!sf_getbool ("cachepipe",&cachepipe)) cachepipe=false;
     if (!sf_getbool ("shade", &shade)) shade=true;
