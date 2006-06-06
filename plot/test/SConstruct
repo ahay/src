@@ -24,9 +24,9 @@ except:
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
 	SConscript('../lib/SConstruct')
 
-env.Append(CPPPATH=['../../include'],
-	   LIBPATH=['../../filt/lib','../lib'],
-	   LIBS=['rsfplot','rsf'])
+env.Prepend(CPPPATH=['../../include'],
+	    LIBPATH=['../../filt/lib','../lib'],
+	    LIBS=['rsfplot','rsf'])
 
 vplot = Builder(action = './$SOURCE - > $TARGET',suffix='.vpl')
 env.Append(BUILDERS = {'Vplot' : vplot})

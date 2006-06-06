@@ -36,6 +36,8 @@
 
 #include	<sys/types.h>
 #include	<sys/stat.h>
+#include        <sys/ioctl.h>
+
 #include	<ctype.h>
 #include	<string.h>
 

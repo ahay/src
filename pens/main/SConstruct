@@ -65,7 +65,7 @@ if inc:
         env.Depends(obj,'xtpen.h')
         main = env.Program('xtpen',[obj,]+objects,
                            LIBPATH=env.get('LIBPATH',[])+lib,
-                           LIBS=env.get('LIBS',[])+['Xaw','Xt'])
+                           LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
 
         if root:
             env.Install(bindir,main[0])

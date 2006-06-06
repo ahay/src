@@ -212,19 +212,26 @@ def x11(context):
     context.env['CPPPATH'] = oldpath
 
     context.Message("checking for X11 libraries ... ")
-    LIB = context.env.get('XLIB','')
+    LIB = context.env.get('XLIBPATH','')
     if type(LIB) is not types.ListType:
         LIB = string.split(LIB)
 
     oldpath = context.env.get('LIBPATH',[])
     oldlibs = context.env.get('LIBS',[])
 
-    if  sys.platform[:7] == 'interix':
-        extra =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
+    XLIBS = context.env.get('XLIBS')
+    if XLIBS:
+        if type(XLIBS) is not types.ListType:
+            XLIBS = string.split(XLIBS)
     else:
-        extra = ['Xaw','Xt']
+        if  sys.platform[:7] == 'interix':
+            XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
+        elif sys.platform[:6] == 'cygwin':
+            XLIBS = ['Xaw','Xt','X11']
+        else:
+            XLIBS = ['Xaw','Xt']
         
-    context.env['LIBS'] = oldlibs + extra
+    context.env['LIBS'] = oldlibs + XLIBS
     
     for path in LIB+xlib:        
         context.env['LIBPATH'] = oldpath + [path,] 
@@ -232,11 +239,12 @@ def x11(context):
 
         if res[0]:
             context.Result(path)
-            context.env['XLIB'] = context.env['LIBPATH']
+            context.env['XLIBPATH'] = context.env['LIBPATH']
+            context.env['XLIBS'] = XLIBS
             break
     if not res[0]:
         context.Result(0)
-        context.env['XLIB'] = None
+        context.env['XLIBPATH'] = None
 
     context.env['LIBPATH'] = oldpath
     context.env['LIBS'] = oldlibs
@@ -474,7 +482,8 @@ def options(opts):
              'The list of directories that will be searched for libraries')
     opts.Add('LIBS',
              'The list of libraries that will be linked with executables')
-    opts.Add('XLIB','Location of X11 libraries')
+    opts.Add('XLIBPATH','Location of X11 libraries')
+    opts.Add('XLIBS','X11 libraries')
     opts.Add('XINC','Location of X11 headers')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
     opts.Add('API','Support for additional languages (possible values: c++, fortran, fortran-90, python)')

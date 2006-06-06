@@ -1,6 +1,6 @@
 import os
 
-#os.environ['PSTEXPENOPTS'] = 'color=y force=y fat=1 fatmult=1.5'
+os.environ['PSTEXPENOPTS'] = 'color=y force=y fat=1 fatmult=1.5'
 
 from rsftex import *
 
