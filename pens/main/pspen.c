@@ -34,6 +34,10 @@
 
 #define mask0 ((unsigned char) (((unsigned int) 1) << 7))
 
+#include <stdlib.h>
+
+extern int mkstemp (char *template);
+
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
@@ -101,7 +105,7 @@ extern struct pat pat[];
 static bool force_color;
 static bool dumb_fat; 
 static char *label;
-static FILE *pltout;
+FILE *pltout;
 
 void psarea (int npts, struct vertex  *verlist)
 /*< area >*/

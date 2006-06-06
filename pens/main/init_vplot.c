@@ -54,7 +54,8 @@
 
 #include	<stdio.h>
 #include	<math.h>
-#include	<termio.h>
+
+extern FILE * fdopen (int fd, const char *mode);
 
 #include	<sys/ioctl.h>
 #include	<sys/types.h>
@@ -87,9 +88,6 @@
 #include "init_vplot.h"
 
 #define		OPEN_ERROR	-1
-
-struct termio	tty_clean_state;
-struct termio	tty_plot_state;
 
 /* 
  * The following variables must ALWAYS

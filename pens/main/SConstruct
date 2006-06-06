@@ -57,7 +57,7 @@ if root:
 
 inc = env.get('XINC')
 if inc:
-    lib = env.get('XLIB')
+    lib = env.get('XLIBPATH')
 
     if lib:
         env.Include('xtpen',prefix='pen_')

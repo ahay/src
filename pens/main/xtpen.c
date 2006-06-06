@@ -21,6 +21,9 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <strings.h>
+
+extern void bcopy (const void *src, void *dst, size_t len);
 
 #include <sys/ioctl.h>
 
@@ -172,8 +175,8 @@ static XtResource resources[] = {
 }
 };
 
-static int xt_after_break = 0;
-static int xt_after_erase = 0;
+int xt_after_break = 0;
+int xt_after_erase = 0;
 
 Display		*pen_display;
 GC		pen_gc;

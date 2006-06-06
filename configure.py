@@ -109,6 +109,7 @@ def libs(context):
     return 0;
     }
     '''
+    
     res = context.TryRun(text,'.c')
     if res[0]:
         context.Result(str(LIBS))
@@ -231,7 +232,7 @@ def x11(context):
         else:
             XLIBS = ['Xaw','Xt']
         
-    context.env['LIBS'] = oldlibs + XLIBS
+    context.env['LIBS'] = XLIBS + oldlibs
     
     for path in LIB+xlib:        
         context.env['LIBPATH'] = oldpath + [path,] 
@@ -263,6 +264,7 @@ def jpeg(context):
     return 0;
     }
     '''
+    
     res = context.TryRun(text,'.c')
     if res[0]:
         context.Result(res[0])
@@ -270,7 +272,6 @@ def jpeg(context):
     else:
         context.Result(0)
         context.env['JPEG'] = None
-    LIBS.pop()
 
 def ar(context):
     context.Message("checking ar ... ")

@@ -31,8 +31,6 @@
 #include	<math.h>
 #define		GETPAR	getpar
 
-#include	<termio.h> 
-
 #include	<sys/types.h>
 #include	<sys/stat.h>
 #include        <sys/ioctl.h>

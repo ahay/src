@@ -111,12 +111,12 @@
 
 #include <stdlib.h>
 
+extern int mkstemp (char *template);
+
 #include	<stdio.h>
 #include	<math.h>
 #include	<string.h>
 #define		GETPAR	getpar
-
-#include	<termio.h>
 
 #include	<sys/types.h>
 #include	<sys/stat.h>
