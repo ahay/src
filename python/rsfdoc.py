@@ -250,16 +250,15 @@ class rsfprog:
         contents = re.sub('_','\_',contents)
         file.write(contents)
         file.close()
-    def html(self,dir):
+    def html(self,dir,rep):
         file = open (os.path.join(dir,self.name + '.html'),'w')
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
             name = name + " (%s)" % self.vers
-        repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
         contents = heading(name,'#ffffff','#7799ee',
                            '<a href="./index.html">index</a><br>'+
                            '<a href="%s/%s?view=markup">%s</a>' %
-                           (repos,self.file,self.file))
+                           (rep,self.file,self.file))
         if self.desc:
             contents = contents + self.desc
         if self.snps:
@@ -474,14 +473,17 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:l:')
-        dir = None
+        opts, args = getopt.getopt(sys.argv, 'k:w:l:r:')
+        hdir = None
         ldir = None
+        rep = os.getcwd()
         for opt, val in opts:
             if opt == '-w':
-                dir = val
+                hdir = val
             if opt == '-l':
                 ldir = val
+            if opt == '-r':
+                rep = val
             if opt == '-k':
                 val = val.lower()
                 doc = ''
@@ -493,12 +495,12 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 return
     
         if not args:
-            if dir:
-                html(dir)
+            if hdir:
+                html(hdir)
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
-                        main.html(dir)
+                        main.html(hdir,rep)
             else:
                 raise BadUsage
 
@@ -508,8 +510,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 prog = rsfprefix + prog
             main = progs.get(prog)
             if main:
-                if dir:
-                    main.html(dir)
+                if hdir:
+                    main.html(hdir,rep)
                 elif ldir:
                     main.latex(ldir)
                 else:
@@ -523,8 +525,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s <prog1> <prog2> ... 
     Show documentation on programs.
 
-%(prog)s -w <dir> <prog1> <prog2> ... 
-    Write program HTML documentaton in <dir> directory.
+%(prog)s -w <dir> [-r <rep>] <prog1> <prog2> ... 
+    Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
 
 %(prog)s -l <dir> <prog1> <prog2> ... 
     Write program LaTeX documentaton in <dir> directory.
