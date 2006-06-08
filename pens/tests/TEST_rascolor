@@ -1,0 +1,43 @@
+#plas: Vplot units used in this file
+e
+S s
+z
+Test of color mapping in raster
+z
+
+v 1
+R 0 0
+1300 1300
+4300 3200
+5 7
+     1  ------ lines 0 to 0
+2 1  -- start byte 0 in y_line 0
+1
+3 1  -- start byte 2 in y_line 0
+2
+     1  ------ lines 1 to 1
+2 1  -- start byte 0 in y_line 1
+1
+3 1  -- start byte 2 in y_line 1
+7
+     1  ------ lines 2 to 2
+2 1  -- start byte 0 in y_line 2
+1
+3 1  -- start byte 2 in y_line 2
+2
+     1  ------ lines 3 to 3
+5 1  -- start byte 0 in y_line 3
+7
+     1  ------ lines 4 to 4
+5 1  -- start byte 0 in y_line 4
+2
+     1  ------ lines 5 to 5
+5 1  -- start byte 0 in y_line 5
+7
+     1  ------ lines 6 to 6
+5 1  -- start byte 0 in y_line 6
+2
+z
+The colors and orientation of this raster block
+z
+should be as in the American flag.

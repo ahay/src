@@ -1,0 +1,66 @@
+e
+S s
+z
+Test bit and byte raster for a simple pattern
+z
+
+v 1
+c 7
+f 0
+m 0 1500
+d 0 0
+d 1500 0
+r 1 7
+0 0
+1000 1000
+100 100
+     75  ------ lines 0 to 74
+30 3  -- start byte 0 in y_line 0
+0
+1
+0
+10 1  -- start byte 90 in y_line 0
+1
+     25  ------ lines 75 to 99
+50 2  -- start byte 0 in y_line 75
+0
+1
+f 4
+c 4
+m 0 0
+d 0 1000
+d 1000 1000
+d 1000 0
+d 0 0
+o -1500 -1500
+c 7
+f 0
+m 0 1500
+d 0 0
+d 1500 0
+R 1 0
+0 0
+1000 1000
+100 100
+     75  ------ lines 0 to 74
+30 3  -- start byte 0 in y_line 0
+0
+7
+0
+10 1  -- start byte 90 in y_line 0
+5
+     25  ------ lines 75 to 99
+50 2  -- start byte 0 in y_line 75
+0
+3
+f 4
+c 4
+m 0 0
+d 0 1000
+d 1000 1000
+d 1000 0
+d 0 0
+z
+These two should be the same, except that one is color and the other isn't.
+z
+The "solid" part of the pattern should be along the bottom and to the right.

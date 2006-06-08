@@ -283,7 +283,6 @@ int             xtext0, xtext1, xtext2, ytext0, ytext1, ytext2;
 int             type;
 int            *marker_vec, *mvec;
 int             savefat;
-int             byte2;
 float           savefatmult;
 char            string[MAXFLEN + 1];
 
@@ -1263,12 +1262,8 @@ char            string[MAXFLEN + 1];
 		pat[ipat].ydim = nmul;	/* angle */
 	    }
 	    break;
-	case VP_SHORT_RASTER:	/* bit raster data */
 	case VP_BIT_RASTER:	/* bit raster data */
 	case VP_BYTE_RASTER:	/* byte raster data */
-/*   fprintf(stderr,"in byte cxase \n");*/
-      if (c == VP_SHORT_RASTER) byte2=1;
-      else byte2=0;
 	    ras_orient = geth (pltin);
 	    if (rotate % 90 != 0)
 	    {
@@ -1346,21 +1341,9 @@ char            string[MAXFLEN + 1];
 
 	    if (wantras && smart_raster)
 	    {
-		rasterline  = (unsigned char *) malloc ((xpix + 7 + 2) * sizeof (unsigned char));
-		rasterline2 = (unsigned char *) malloc ((xpix + 7 + 2) * sizeof (unsigned char));
-		if (rasterline == NULL || rasterline2 == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load raster line");
-		
-		
-		outraster = (unsigned char **) malloc (ypix * sizeof (unsigned char*));
-		if (outraster == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load raster image");
-		outraster[0] = (unsigned char *) malloc (xpix * ypix * sizeof (unsigned char));
-		if (outraster[0] == NULL)
-		    ERR (FATAL, name, "cannot alloc memory to load raster image");
-		for (ii=1; ii < ypix; ii++) {
-		    outraster[ii] = outraster[0]+ii*xpix;
-		}
+		rasterline  = sf_ucharalloc(xpix + 7 + 2);
+		rasterline2 = sf_ucharalloc(xpix + 7 + 2);
+		outraster = sf_ucharalloc2(xpix,ypix);
 
 /*
  * See whether we want to dither or not.
@@ -1426,38 +1409,31 @@ char            string[MAXFLEN + 1];
 		    if (num_rep <= 0)
 		    {
 			num_rep = geth (pltin);
-			if (num_rep <= 0){
-          fprintf(stderr,"In multiplier error 1 \n");
+			if (num_rep <= 0)
 			    ERR (FATAL, name, "Bad Raster line multiplier(1)");
-      }
+
 			pos = 0;
 		new_pat:num_pat = geth (pltin);
 			num_byte = geth (pltin);
 			if (num_pat <= 0 || num_byte <= 0 ||
-			    pos + num_pat * num_byte > xpix){
-/*          fprintf(stderr,"problem 1 %d %d %d %d \n",num_pat,num_byte,pos,xpix);*/
+			    pos + num_pat * num_byte > xpix)
 			    ERR (FATAL, name, "Raster line not length promised");
-        }
 
 			if (num_pat > 1)
 			{
 			    if (dither_it)
 			    {
-/*fprintf(stderr,"in this read 1 \n");*/
 				READ_RASTER (
-					     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-					     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-					     rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				 );
+				    rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+				    rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+				    );
 			    }
 			    else
 			    {
-/*fprintf(stderr,"in this read 2 \n");*/
 				READ_RASTER (
-					     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-					     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-					     rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				 );
+				    rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+				    rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+				    );
 			    }
 			    for (j = 0; j < num_pat; j++)
 			    {
@@ -1472,21 +1448,17 @@ char            string[MAXFLEN + 1];
 			{
 			    if (dither_it)
 			    {
-/*fprintf(stderr,"in this read 3 \n");*/
 				READ_RASTER (
-					     rasterline[pos + j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-					     rasterline[pos + j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-					     rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				 );
+				    rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+				    rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+				    );
 			    }
 			    else
 			    {
-/*fprintf(stderr,"in this read 4 \n");*/
 				READ_RASTER (
-					     rasterline[pos + j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-					     rasterline[pos + j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-					     rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-				 );
+				    rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+				    rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+				    );
 			    }
 			    pos += num_byte;
 			}
@@ -1665,18 +1637,16 @@ char            string[MAXFLEN + 1];
 				    if (dither_it)
 				    {
 					READ_RASTER (
-						     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-						     rasterline2[j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-						     rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					 );
+					    rasterline2[j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+					    rasterline2[j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					    );
 				    }
 				    else
 				    {
 					READ_RASTER (
-						     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-						     rasterline2[j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-						     rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					 );
+					    rasterline2[j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+					    rasterline2[j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					    );
 				    }
 				    for (j = 0; j < num_pat; j++)
 				    {
@@ -1691,23 +1661,17 @@ char            string[MAXFLEN + 1];
 				{
 				    if (dither_it)
 				    {
-/*fprintf(stderr,"in this read 7 \n");*/
 					READ_RASTER (
-						     rasterline[pos + j] = GREY_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-						     rasterline[pos + j] = GREY_MAP (ras_offset + (unsigned short)fgetc (pltin)*256+fgetc(pltin)),
-						     rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					 );
+					    rasterline[pos + j] = GREY_MAP (ras_offset + (int) fgetc (pltin)),
+					    rasterline[pos + j + jj] = GREY_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					    );
 				    }
 				    else
 				    {
-/*						     rasterline[pos + j] = fgetc (pltin),*/
-/*						     rasterline[pos + j] =( (unsigned short) fgetc (pltin)*256+fgetc(pltin)),*/
-/*fprintf(stderr,"in this read 8 \n");*/
 					READ_RASTER (
-						     rasterline[pos + j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)),
-						     rasterline[pos + j] = COLOR_MAP (ras_offset + (unsigned short) fgetc (pltin)*256+fgetc(pltin)),
-						     rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
-					 );
+					    rasterline[pos + j] = COLOR_MAP (ras_offset + (int) fgetc (pltin)),
+					    rasterline[pos + j + jj] = COLOR_MAP (ras_offset * ((ibyte & (001 << (7 - j))) != 0))
+					    );
 				    }
 				    pos += num_byte;
 				}
@@ -1718,9 +1682,9 @@ char            string[MAXFLEN + 1];
  * We're just going to turn right around and read another one,
  * So throw this away!
  */
-				if (c == VP_BYTE_RASTER || c==VP_SHORT_RASTER)
+				if (c == VP_BYTE_RASTER)
 				{
-				    for (j = 0; j < num_byte*(byte2+1); j++)
+				    for (j = 0; j < num_byte; j++)
 				    {
 					fgetc (pltin);
 				    }

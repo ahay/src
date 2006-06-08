@@ -1,0 +1,1578 @@
+Hacker's guide to the innards of the Pen programs,
+					or
+What you need to know to support a new device well
+
+
+Joe Dellinger and Charles R. Karish
+
+Stanford University School of Earth Sciences
+
+PURPOSE
+This documentation is what you should read if you want to support
+a new device under Vplot. Note that this documentation is NOT complete
+in itself. It refers to the various vplot manual pages, and more
+importantly, to several include files. Where I have had particular
+trouble with people missing important points, I have USED CAPITALS
+to help snap people out of their trances.
+
+INTRODUCTION
+The pen software package, developed by students in the Geophysics department
+at Stanford University over many years, allows graphical data produced by
+computer programs to be displayed on a wide variety of output devices,
+including terminals and hard copy devices. Both vector and raster output
+are supported. The filters allow the user to control the size, aspect ratio,
+and position on the page independent of the program which produces the data.
+Pen programs read files written in the vplot graphics metalanguage and
+write commands appropriate to the various output devices.
+The pen programs are all filters, and can be run in pipelines without
+loss of function. Only rudimentary provisions for interaction are provided.
+
+Terminals now supported include color Tektronix and
+emulators (4105), monochrome Tektronix and emulators (4010)
+(GraphOn, Selanar, Retrographics), Envision, DEC Regis (Gigi, VT125, VT220),
+Imagen, PostScript (e. g., Apple LaserWriter), Printronix printer,
+suntools, X, NEWS, and Rastertek.
+
+FILES
+The source for the pen filters is located in .../vplot/filters and
+subdirectories. All include files (files ending in .h) are kept in
+.../vplot/filters/include. Fonts are kept in
+.../vplot/filters/include/vplotfonts. Each pen filter has an associated
+ device-dependent subroutine library, which is kept in a subdirectory of
+.../vplot/filters. For example, the Envision pen filter "envipen" uses
+the directory .../vplot/filters/envilib.
+
+PROGRAM STRUCTURE
+The philosophy behind vplot and pen has been to have users' programs write
+output in a device-independent language, and to present the results in a
+compatible manner on all devices. All the filters share a common
+user/operating system interface routine, called frontend, and a common
+vplot command interpreter, dovplot.c. Frontend consists of 3 parts:
+main_vplot, init_vplot, and proc_vplot. The routines in utillib.a
+are mostly low-level and device independent. Genlib.a is a set of generic
+routines which is capable of providing all or almost all of the functions
+needed to support a GKS vector output package. The programmer is free
+to use these routines in a device driver, or to substitute calls to
+high-level hardware capabilities. Loclib.a contains a subset of the 
+seplib library, including routines for writing/reading vplot and for
+receiving parameters from the command line and initialization
+files.
+
+The heart of the device support system is the file <dev>conf.c
+where <dev> is the name of the device. Inspired by the file
+/usr/sys/machine/conf.c which configures the UNIX operating system
+to accept peripheral devices, this file is composed of three parts:
+1)	Declaration of the variables necessary to do self-documentation:
+	char name[] = "Filter name";
+	char *documentation[] = {...documentation...};
+	int doclength = {sizeof documentation / sizeof documentation[0] };
+
+	You may wish to include "gendoc.h" as part of your
+	documentation string.
+
+2)	Declaration of the routines which have been chosen/written
+	to provide the various functions.
+	All the routines named in part 3 must be declared, as well as all the
+	routines which they may call.
+
+3)	Initialization of a structure of pointers to the routines which do
+	the work. Since this structure is read directly by dovplot.c,
+	it is vital that the all entries be filled in order.
+	Each subroutine name can be one of three types:
+
+	a) A device-specific subroutine name such as "envipoint".
+	(Note the first 4 characters of the name are a unique identifier
+	for the device, and the rest of the name tells which routine in the
+	table this is. The 4 letter identifier is usually tacked onto
+	"pen" to give the pen filter name (such as "envipen") and onto
+	"lib" to give the subdirectory name (such as "envilib").)
+
+	b) A generic subroutine name such as "genpoint".
+	Generic subroutines simplify the device's work by handling
+	things in software. They in turn call other, simpler, device
+	routines. Generic routines are useful because by using them it
+	is very easy to rapidly support all the primitives on a device.
+	If the device can do things in hardware, however, it is usually
+	preferable to write a device-specific routine to use that capability
+	since that is much more efficient.
+
+	c) The do-nothing subroutine "nulldev".
+	Nulldev is an all-purpose generic subroutine that simply
+	returns. It can either be used as a place holder for routines
+	your device doesn't use, or it can be used in cases where there
+	is simply no reasonable way to handle that particular primitive
+	on that device.
+
+The usual procedure for creating a new driver has been to steal as
+much code as possible from a driver for a similar device,
+or from the generic library. For a Tektronix emulator, this can be as
+simple as checking that the mode changes are handled properly by dev.open
+and dev.close, and writing a devconf.c with the proper subroutine names.
+For a start, it should be possible to get a less-standard device going
+with devopen, devclose, and devplot routines, relying on generic routines
+for all other functions. Figure 1 contains the device structure for the
+Envision 220.
+
+---------------------------------------------------------------------------
+
+struct device   dev =
+{
+ /* control routines */
+    enviopen,		/* open */
+    envireset,		/* reset */
+    envimessage,	/* message */
+    envierase,		/* erase */
+    enviclose,		/* close */
+
+ /* high level output */
+    genvector,		/* vector */
+    genmarker,		/* marker */
+    gentext,		/* text */
+    genarea,		/* area */
+    genraster1,		/* raster */
+    envipoint,		/* point */
+    enviattributes,	/* attributes */
+
+ /* input */
+    envigetpoint,	/* getpoint */
+    geninteract,	/* interact */
+
+ /* low level output */
+    enviplot,		/* plot */
+    envistartpoly,	/* startpoly */
+    envimidpoly,	/* midpoly */
+    enviendpoly		/* endpoly */
+};
+
+Figure 1: device structure for envipen
+-----------------------------------------------------------------------------
+
+VARIABLES
+The following variables are used to communicate information between
+dovplot and the device routines.
+
+These variables must be initialized in either dev.open or dev.reset:
+
+int dev_xmax, dev_ymax, dev_xmin, dev_ymin;
+
+	These variables should give the device coordinates of the lower-leftmost
+	and upper-rightmost pixels on the device screen. It is assumed that
+	the device X axis is horizontal and the device Y axis is vertical,
+	and that dev_xmax > dev_xmin and dev_ymax > dev_ymin. If this is not
+	true for your device, it is up to the device routines to transform
+	the device coordinate system so it is true. (Examples of devices that
+	do this are gigipen and ipen.)
+
+float pixels_per_inch, aspect_ratio;
+
+	Pixels_per_inch gives the number of pixels per inch on the device
+	in the horizontal direction. Aspect_ratio gives the height to width
+	ratio of the pixels. (Aspect_ratio > 1 means that the pixels are tall
+	and skinny, and thus that the resolution is less in the vertical
+	direction than in the horizontal direction.)
+
+int num_col;
+
+	Num_col is the number of settable colors that the device has.
+	Colors that can't be reset from the host don't count.
+	Currently num_col can be at most 256, because this is all
+	the raster routines can handle (due to use of unsigned char's).
+	If mono=y is set, init_vplot will set num_col to zero.
+
+-------------------
+
+These variables are set by dovplot but may be reset in
+dev.open (NOT dev.reset) if the default
+value is not appropriate. For the most part, resetting these variables
+is for the purpose of making a device-dependent default;
+the user is given a chance to override the value the device sets them to.
+
+int size=RELATIVE;
+
+	Large hardcopy devices (the kinds that make wallpaper plots)
+	should set this to size=ABSOLUTE, or else people will regularly
+	make 5 foot tall graphs with 6 inch high labels. Normal devices,
+	like terminals or laserprinters, should just take the default.
+
+int mono=NO;
+
+	If mono=NO, then the device is assumed to have color EVEN IF num_col is
+	zero. If mono=YES, then the device is monochrome. (The user cannot
+	override mono=YES, but can mono=NO.) See comments about the effects
+	of mono and num_col on color in dev.attributes below, and on raster
+	in dev.raster. Mono=YES forces num_col=0.
+
+int invras=YES;
+
+	This variable is only used in the utility routine "greycorr.c".
+	Invras is meant to be used with dithered raster. Raster is only dithered
+	if mono=YES and dither>0. Normally such devices draw in black on a
+	white page, which is the reverse of what is normal for screen devices,
+	and so invras=YES. If the background color is BLACK then invras
+	should be NO. Devices which dither for themselves do not need to do
+	the inverting; it is done before the raster is passed to the device
+	routine.
+
+int dither=1;
+
+	Default dithering style to use for this device. See vplotraster(9)
+	for the different values to be explained.
+ 
+float greyc=1.;
+ 
+	This variable is used only when dithering is being performed,
+	and really should only be used for hardcopy devices. It alters
+ 	the grey scale so that grey rasters come out on paper with the
+	same nonlinear appearance that is perceived on display devices.
+	See vplotraster(9) for a discussion of the parameter and how to
+	use it.
+ 
+float pixc=1.;
+ 
+	This variable is used only when dithering is being performed,
+	and also should only be used for hardcopy devices. It alters the
+	grey scale to correct for pixel overlap on the device, which 
+	(if uncorrected) causes grey raster images to come out much darker
+	on paper than on graphics displays. See vplotraster(9) for a 
+	discussion of the parameter and how to use it.
+
+int txfont=DEFAULT_FONT, txprec=DEFAULT_PREC;
+
+	Default text font, precision, and overlay mode. Text fonts of less
+	than NUMGENFONT are reserved for genvector fonts. If you want the
+	device to by default use some nice hardware font, you can reset
+	txfont to the appropriate device-dependent font number.
+	Alternatively, if the device is one in which plotting speed is not
+	a problem, txfont can be set to DEFAULT_HARDCOPY_FONT.
+	Txprec is pretty much ignored by genvector. Fancy output devices should
+	set txprec to DEFAULT_HARDCOPY_PREC to enable ligatures. Txprec may
+	be used by device-dependent text routines. Txprec must be in the range
+	0 through 2.
+
+float hshift=0., vshift=0.; int rotate=0;
+
+	These values are in addition to whatever the user may set from the
+	command line. This provides a way for a device to rotate or translate
+	all plots.
+
+int shade=YES;
+
+	If shade=NO, then no attempt will be made by vplot to ask the device to
+	shade the interiors of polygons due to the vplot `a' and `A' commands.
+	Instead it will just outline them with vectors whenever it tries to
+	fill a polygon. This option is for devices that CAN fill but are
+	very slow to do so.
+
+int wantras=YES;
+
+	If wantras=NO, then no attempt will be made by vplot to ask the
+	device to handle raster due to the vplot `r' and `R' commands.
+	Instead it will just shade the raster area solid white using dev.area.
+	This option is for devices that CAN do raster but are very slow to
+	do it.
+
+float fatmult=1., patternmult=1.;
+
+	If fat lines are too slow, you can set fatmult=0. and disable line
+	fattening. The user can still turn it on again by overriding with
+	fatmult=1 from the command line. Patternmult can be used to scale up
+	or down patterns by default on a specific device.
+
+int endpause=NO;
+
+	If the device needs a pause at the end of the plot
+	(via dev.close(CLOSE_PAUSE) and then dev.interact(INT_F_PAUSE))
+	then endpause should be set to YES.
+
+int cachepipe=NO;
+
+	If the device may need to reread files it will have problems with
+	pipes. If cachepipe is set to YES any piped input will be copied
+	to a temporary file. This allows reverse seeks on the file.
+	On the other had you incur the overhead of the copy so the user may
+	want to turn it off for humongous files.
+	This option is currently set to YES in vppen, xvpen and sunpen.
+
+
+int allowecho=?;
+
+	Allowecho controls whether echoing is turned off for the duration of
+	plotting. Allowecho=NO turns off echoing.
+	If the dev.open sets allowecho, dovplot assumes that it knows what it's
+	doing and leaves it alone. Otherwise,
+	dovplot tries to decide whether allowecho should be YES or NO depending
+	on where the output stream pltout goes. If after calling dev.open
+	pltout and stderr point to the same place, then it assumes that
+	allowecho should be NO. The user can force allowecho to be YES
+	from the command line if the device or dovplot set it to be NO,
+	but the user cannot force it to be NO.
+
+int (*message)()=genmessage;
+
+	Dovplot decides where to send messages (such as error messages, for
+	example) in the same way that it decides how to set allowecho.
+	Before dev.open has been called, the device is not open and dev.message
+	cannot be called. Instead, it is assumed that it is safe to send all
+	messages to stderr by calling genmessage instead. After dev.open has
+	been called, dovplot checks to see whether stderr and pltout point to
+	the same place. If they do, then from then on all messages are routed to
+	dev.message. However, if they do NOT point to the same place, then it is
+	assumed that it is still safe to route them to stderr and messages are
+	still handled by genmessage. If this logic is incorrect for your device
+	you will need to reset this variable to dev.message in dev.open. So
+	far the only devices for which dovplot's logic has been wrong have
+	been virtual ones. The user cannot determine where messages are to
+	be sent.
+
+----------------
+
+These variables can usually be left at their default values, but may
+have to be reset for some devices. They cannot be changed by the user.
+
+int need_end_erase=NO;
+
+	Some devices use the "erase" routine to do things such as write out
+	a rasterized plot image as well as for erasing. For such devices it
+	is convenient to have dev.erase called one last time before the device
+	is closed (via dev.erase(ERASE_END)). To get this, set need_end_erase=YES.
+
+int buffer_output=YES;
+
+	If for some reason buffering the output to your device is a bad thing to
+	do, set buffer_output=NO. This only applies if you use the FILE *pltout
+	that dovplot provides.
+
+int smart_clip=NO;
+
+	If smart_clip=NO, then dovplot will do all clipping for you, with
+	the exception of polygons supported at the dev.area level. If you
+	can do your own clipping, then set smart_clip=YES. You must then
+	handle dev.attributes(SET_WINDOW)!
+
+int smart_raster=NO;
+
+	If you can stretch AND clip your own raster, then set smart_raster=YES.
+	It is then up to you to do all the stretching and clipping (and possibly
+	dithering) of raster in the dev.raster routine, as dovplot will not
+	then do it for you.
+
+-------------------
+
+These variables may be useful to refer to in dev.open, so that one pen filter
+can support multiple devices:
+
+char callname[]="filename";
+char wstype[]="default";
+
+	Callname gives the name the person invoked to run this pen filter.
+	(The leading path is stripped for you if present.) If the person
+	has "wstype=work_station_type" as a command line option, then
+	wstype will be set to the string "work_station_type". Otherwise,
+	it will be set to "default". Note that the only routine that
+	REALLY has to be defined in dev.conf is dev.open, and the only
+	routines that REALLY have to be defined in dev.open are dev.close,
+	dev.reset and dev.message. However, by the time dev.reset returns
+	everything had better be defined. Thus you can decide inside
+	dev.open which subroutines to plug into the device table, after
+	looking at wstype and callname to tell you which device you are
+	supporting.
+
+------------------------------------------------------------------------------
+
+SUBROUTINES
+All sizes and locations are in device units unless stated otherwise.
+Dovplot() uses its notions of the vplot environment (resolution, origin)
+and the device resolution (pixel size and shape) to call with the appropriate
+values. Subroutines may write to the external FILE *pltout which dovplot
+initializes, which may be a terminal, a pipe, or a text file, or
+they may open their own output file if pltout is not appropriate.
+In general, if the user is redirecting stdout, then that's where the
+output should go and no plot should actually appear anywhere.
+If the user is not redirecting stdout, then the user wants a plot to appear
+on the appropriate device. Pen filters should not easily be made to
+dump binary garbage out onto your screen!
+
+We will list each routine in the device table in order. We will also
+list all associated generic and utility routines at the same time.
+
+Control routines
+
+===========================
+
+dev.open()
+
+Initialize device-dependent variables (see above)
+and emit hardware initialization strings.
+This routine is guaranteed to be the first called, and it is only
+called once.
+
+===========================
+
+dev.reset()
+
+Reset the terminal. It is guaranteed that this will be called once
+after the first call to dev.open before any other routine is called.
+The one exception is in case of certain errors, in which case dev.reset
+is never called and instead dev.close(NOTHING) followed by dev.close(DONE)
+are the only other calls after the initial dev.open call. (This is the
+"No input?" error, which you've probably seen.)
+
+===========================
+
+dev.message(command, string)
+int command;
+char string[];
+
+Choose a command from mesgcom.h to position the cursor, set the proper
+text mode, and print out a message.  Displaying a message will
+require several calls to dev.message, one per command.
+The meanings of the various commands are given by comments inside
+mesgcom.h.
+
+Generic routines: genmessage.c
+Genmessage prints all messages to stderr. It doesn't try to do anything
+at all fancy, although it does beep as the best available completely
+device-independent way of "highlighting text". It beeps twice because
+some devices silently eat single beeps.
+
+===========================
+
+dev.erase(command)
+int command;
+
+Choose an erase mode from erasecom.h, and erase the screen.
+The meanings of the various commands are given by comments inside
+erasecom.h.
+
+===========================
+
+dev.close(status)
+int status;
+
+Choose a close status from closestat.h, and close the workstation.
+The meanings of the various commands are given by comments inside
+closestat.h.
+
+High level output routines
+
+===========================
+
+dev.vector(x1, y1, x2, y2, nfat, dashon)
+int x1, y1, x2, y2, nfat, dashon;
+{
+/* These can be declared by including extern.h */
+extern float dashsum, dashpos;
+extern float dashes[/* dashon*2 */];
+
+Draw a (possibly) fat (possibly) dashed line from device coordinate
+(x1,y1) to (x2,y2). The fatness of the line is given by nfat. Nfat=0
+means the thinnest possible line. Each increase of 1 means to fatten
+the line by one device pixel WIDTH (the height could be quite different,
+depending on the value of aspect_ratio). Nfat < 0 should be checked for,
+and no vector should be drawn at all in that case.
+
+If dashon>0 then a dashed line should be drawn. The pattern consists
+of dashon dash-gap pairs. The pattern is defined in the array
+dashes[2*dashon]. (ie, dashes[0] is the first dash length, dashes[1]
+is the first gap length, dashes[2] is the second dash length, etc.)
+Dovplot will call dev.attributes(NEW_DASH,...) whenever the values
+in this array are changed.
+
+Dashsum gives the total length of the dash-gap pattern
+(ie, dashsum = summation i=0;i<dashon*2;i++ of dashes[i]).
+The position in the dash pattern at the start of the vector is given
+in dashpos (it is the responsibility of dev.vector to update dashpos
+after each vector is drawn. The only time dovplot ever touches it is to
+reset it back to zero after "move" commands or when the pattern is
+reset). Dashpos, dashsum, and dashes are all measured in INCHES.
+(You should get the same size dash pattern on different devices even
+if they have different-sized screens!) If you are not sure whether
+you have supported dashed lines correctly, try using dashvec (described
+below) to do the dashing and see if the results are compatible.
+
+Thus, you can support dashed lines in one of 3 ways:
+  1) You can use the generic routine dashvec to do the dashing for you
+in software, and just ignore all this mess;
+  2) You can refer to dashon, dashsum, dashpos, and dashes on every call
+to dev.vector and use what you find to do the dashing, all the while
+making sure to keep dashpos up to date;
+  3) You can keep track of the current dash pattern via calls to
+dev.attributes(NEW_DASH,...), and let the dashing take place in hardware.
+Note that just because a dashed pattern has been put in effect DOES NOT
+mean it will always be used on all calls to dev.vector. Dev.vector can
+still be asked to draw continuous lines (ie, those for which dashon=0)
+WITHOUT WARNING AT ANY TIME. All you are guaranteed is that IF you
+are asked to draw with a dash pattern, it will be the pattern last
+sent to dev.attributes(NEW_DASH,...). If the pattern last sent to
+dev.attributes(NEW_DASH,...) was just a continuous line (ie no dashing
+at all) then dev.vector is guaranteed to only be called with dashon=0,
+until dev.attributes(NEW_DASH,...) is called again and a new pattern
+is set.
+
+Just as in the case of dashing, dev.attributes(NEW_FAT,...) warns
+when the "current fatness" has been changed. But dev.vector can
+still be asked to draw a line with a different fatness (such as for
+a polygon border) without warning at any time. If your device does
+hardware fattening, the best thing to do is to check "nfat" versus
+the current hardware fatness at the beginning of every call to
+dev.vector to see if the hardware fatness needs to be reset.
+(Dev.attributes(NEW_FAT,...) is probably of use only to vppen.)
+If your device can't do hardware fattening, use the utility routine
+fatvec described below.
+
+Utility routines associated with dev.vector:
+	These routines are meant to be called from a device-dependent
+dev.vector routine as utility functions.
+
+fatvec(x1, y1, x2, y2, nfat, dashon)
+int x1, y1, x2, y2, nfat, dashon;
+
+Fatvec should ONLY be called if nfat>0. Fatvec will apply Glenn Kroeger's
+line-fattening algorithm to the given fat vector, replacing it with several
+non-fat vectors. Fatvec will thus repeatedly call dev.vector with nfat=0.
+(That's why it is important that your routine only call fatvec if nfat>0!)
+Fatvec ignores the dashon argument.
+
+dashvec(x1, y1, x2, y2, nfat, dashon)
+int x1, y1, x2, y2, nfat, dashon;
+
+Dashvec should ONLY be called if dashon>0. Dashvec will apply Joe Dellinger
+and Steve Cole's line-dashing algorithm to the given dashed vector, replacing
+it with several non-dashed vectors. Dashvec will thus repeatedly call
+dev.vector with dashon=0. (That's why it is important that your routine
+only call dashvec if dashon>0!) Dashvec ignores the nfat argument.
+
+Note that if both dashvec and fatvec are called, dashvec must be called
+FIRST.
+
+int clip(x1, y1, x2, y2)
+int *x1, *y1, *x2, *y2;
+
+Clip will clip the vector {(x1,y1),(x2,y2)} to the bounds set by
+{(xwmin,ywmin),(xwmax,ywmax)}. If the line is completely out of
+bounds and is clipped away to nothing, clip returns 1. Otherwise,
+clip returns 0. The standard way of using clip is:
+
+	if(clip(&x1,&y1,&x2,&y2)) return;
+
+Generic routines for dev.vector: genvector.c
+This routine will do all required clipping, fattening, and dashing.
+It will also keep track of the previous position, and breaks up strings
+of vectors for you into moves and draws. (It does this in a tricky way,
+re-ordering the incoming vectors and even discarding moves that can be done
+with draws. The idea is to make the plot come out as efficiently as possible
+on the device.) It calls dev.plot(x,y,flag). No other routine calls
+dev.plot, so if you do not use genvector then dev.plot should be nulldev.
+
+===========================
+
+dev.marker(npts, mtype, msize, coor)
+int npts, type, size;
+int coor[/* npts*2 */];
+
+Draw npts symbols centered at device coordinates (coor[0],coor[1]),
+(coor[2],coor[3]),...,(coor[npts*2-2],coor[npts*2-1]).
+
+Mtype is an integer from 0 to whatever, defining the type of symbol to
+draw. Mtype of 0 through 5 is defined as in GKS:
+0,1: Smallest possible dot on the device.
+2: Plus sign
+3: Asterisk
+4: Circle
+5: Cross
+6-19: Reserved by GKS, but currently undefined.
+These are as used in Vplot:
+20: Square
+21: Triangle (flat side on bottom)
+22: Diamond
+23: 5-pointed Star
+
+For values that make sense as ASCII, something that looks like the
+corresponding ASCII character should be used.
+For ridiculous values of mtype, at least plot a point.
+
+Msize is the vertical height of the symbol in VERTICAL device units.
+(Ie, msize says how many pixels tall the letter `A' should be.)
+
+Generic routines: genmarker.c
+Genmarker calls dev.point, dev.text, or gentext.c as needed to produce
+the desired symbols. For ASCII symbols the current font is used, which
+could either be a device-dependent font or a gentext font depending on the
+font number. Marker types 2 through 23 are drawn using the MATH and
+MISC gentext fonts.
+
+===========================
+
+dev.text(string, pathx, pathy, upx, upy);
+char *string;
+float pathx, pathy, upx, upy;
+{
+/* These can be defined by including vplot.h and extern.h */
+extern int txfont, txprec, txovly;
+struct txalign {int hor; int ver;};
+extern struct txalign txalign;
+extern int fat;
+extern int xold, yold;
+
+Print the text in string at the point (xold,yold) in device coordinates.
+Upon return, xold and yold should be reset to point to the END of the text.
+(IE, for the normal text justification mode (TH_LEFT, TV_BASE), if the
+dev.text routine is called twice in a row the two printed strings should
+fit together nicely, as if produced by one call to dev.text with the two
+strings concatenated.)
+
+The text should have fatness `fat', as defined in the section for
+dev.vector above.
+
+The text should be justified according to the values of txalign.hor
+(for horizontal alignment) and txalign.ver (for vertical alignment.)
+See vplot.h and vplottext.mn for descriptions of how text justification
+should work and to enumerate the various justification modes. (Our modes
+follow GKS, but with a couple of extensions thrown in to handle symbols
+and mid-text font and size changes.)
+
+The text font value to use is given by txfont. Device-dependent text fonts
+start at font number NUMGENFONT. For txfont less than this, dovplot will
+NOT automatically call gentext. Device-dependent text routines, except
+for certain special cases, should begin by:
+
+	if (txfont < NUMGENFONT)
+	{
+	gentext(...pass on all arguments here...);
+	return;
+	}
+
+The text precision value can be used by device-dependent text routines
+to control the quality of text produced. (You should either follow the
+GKS conventions or simply produce good text and ignore this parameter.)
+The three different precisions are enumerated in vplot.h
+
+The text overlay value controls whether or not an area is shaded out
+under the text before it is drawn, and whether or not a box should be
+drawn around it. The shading should be to the current background color,
+color 0. The box should be of the same color and fatness as the text.
+Which value of txovly corresponds to what action is defined in vplot.h.
+It is up to the device to decide how big a box around the text is
+appropriate for a given font. (It is probably a good idea to follow
+gentext's example in this.)
+
+Pathx, pathy, upx, and upy define the size, shape, and orientation of
+the text. Pathx and upx are in HORIZONTAL device units, and pathy and upy
+are in VERTICAL device units. (This distinction is important if your device
+does not have aspect_ratio=1..) Note that all 4 values are FLOATS, not ints.
+
+The vector (pathx,pathy) defines the text path, and the vector (upx,upy)
+defines the character up vector. (This is just like in the GKS text
+notation conventions.) To understand the meaning of these two vectors,
+consider normal horizontal text with a height of 100 pixels. (We'll
+assume our device has square pixels for the moment.)
+For this text, (pathx,pathy) = (100.,0.) and (upx,upy) = (0.,100.).
+Now the position of any point on this text can be expressed as
+a linear combination of the path vector and the up vector.
+This is how dev.text should represent all text internally.
+In this way, if we linearly transform just the path vector and
+the up vector, then we do the transform to every point of the text too.
+If we rotate both the path and up vectors, the text rotates.
+if we multiply both the path and up vectors by two, the text gets twice
+as big. If the path and up vectors are not orthogonal, the text gets
+sheared.
+
+To test a device-dependent text routine, try switching between a
+device-dependent font and one of the gentext fonts (txfont<NUMGENFONT).
+If your device-dependent test routine is correctly working, the text
+should always appear the same as far as height, direction, and position
+in both cases.
+
+Generic routines: gentext.c
+Gentext.c produces text by mixing vectors and filled areas. It calls
+dev.vector, dev.area, and dev.attributes. It also recognizes many
+special escape sequences in the text. Gentext is documented in vplottext(9).
+
+===========================
+
+#include "vertex.h"
+#include "pat.h"
+dev.area(npts, verlist)
+int npts;
+struct vertex *verlist;
+{
+/* These can be defined by including extern.h */
+extern int xwmin, xwmax, ywmin, ywmax;
+extern int overlay;
+extern int ipat;
+extern struct pat pat[];
+
+Dev.area fills a polygon with a user-defined pattern. The even-odd rule
+should be used to determine whether a point is inside or outside the
+polygon. (Draw a line from the point in question out to infinity. If
+it crosses the border of the polygon an odd number of times, it's inside;
+an even number of times, it's outside.) Npts is the number of vertices
+in the polygon. The coordinates of the vertices themselves are stored
+in the doubly-linked list "verlist". You should not change the values
+of these coordinates, as they may be used later by dovplot to draw
+a border around the polygon.
+
+Note that if you use dev.area, it is up to the device to clip the polygon,
+REGARDLESS of the setting of smart_clip. The lower-leftmost displayable
+point is (xwmin,ywmin) and the upper-rightmost displayable point
+is (xwmax,ywmax). Alternatively, keep track of the current clipping
+window via dev.attributes(SET_WINDOW,...).
+
+The "raster overlay mode" (which is set by the variable "overlay")
+controls the transparency of pixels of color 0 in polygon fill
+patterns. Refer to dev.attributes(NEW_OVERLAY,...) and also to
+dev.raster below.
+
+Here is vertex.h, which defines how a vertex is represented:
+
+struct vertex
+{
+	int x;				/* X coordinate of vertex */
+	int y;				/* Y coordinate of vertex */
+	struct vertex *next;		/* pointer to next vertex */
+	struct vertex *last;		/* pointer to last vertex */
+	struct vertex *soft;		/* pointer to some other vertex */
+};
+
+All coordinates are in device pixel units.
+
+The pattern to fill with is given in the external pat[ipat], which is a
+structure of type pat. You can either look in pat[ipat] fresh every
+time you need it, or use dev.attributes(NEW_PAT,...).
+Here is pat.h:
+
+struct pat
+{
+	int    ydim;					/* Slow dimension */
+	int    xdim;					/* Fast dimension */
+	int    ydim_orig;
+	int    xdim_orig;
+	int   patbits[/*xdim*ydim*/];	/* Array of color numbers */
+};
+
+Pat.patbits is an array of pat.xdim by pat.ydim color values, with
+one element in the array for each device pixel. The pattern is repeated
+to fill the polygon. The position of the origin of the pattern does not
+matter, but should not depend on the particular polygon. (In other words,
+if two polygons tiled with the same pattern overlap, the pattern should
+be continuous across the two.)
+
+The horizontal dimension of the pattern is length pat.xdim. This is
+the fast axis. The vertical dimension of the pattern is length pat.ydim.
+This is the slow axis. The pattern is scanned on the screen TV-style.
+(In other words, pat.patbits[0] is at the upper-left hand corner,
+pat.patbits[pat.xdim-1] is the upper-right hand corner, and
+pat.patbits[pat.ydim*pat.xdim-1] is the lower right hand corner.)
+
+If either pat.xdim or pat.ydim is 0 for a given polygon, dev.area is
+never even called and so no filling is done. If your device has color
+and cannot fill with an arbitrary pattern, it is OK to fill solidly
+with the current color instead.
+
+The VP_OLDAREA command requires dovplot to generate its own pattern.
+Pattern number 0 is reserved solely for this purpose. User-defined
+VP_AREA-style patterns run from 1 up to NPAT.
+
+For a VP_OLDAREA polygon on a color device, dovplot will generate
+a 1 by 1 pattern consisting of a single pixel of the current color,
+regardless of the requested pattern (this is part of the definition
+of the VP_OLDAREA command). Xdim_orig and ydim_orig will contain the values
+that xdim and ydim would have had if the device had been monochrome.
+This is provided so that no information needed to reconstruct the
+original vplot command is lost (vppen uses this).
+
+For a VP_OLDAREA polygon on a monochrome device, dovplot will generate
+an xdim by ydim pattern consisting of all zeroes except for the last pixel,
+which will be of the current color. If your device is monochrome and
+cannot use loaded patterns but does have grey levels it is permissible
+to use the proportion of pixels turned on in the pattern as the grey level
+to shade with. You are especially encouraged to do so for VP_OLDAREA
+polygons with xdim = ydim.
+
+Dovplot will call dev.attributes(NEW_PAT,ipat) whenever the pattern
+defined by pat[ipat] is loaded or updated by the user. VP_OLDAREA
+patterns (ipat=0) will NOT be defined in this way. It is also permissible
+for the user to use a pattern that was never defined. Refer to attrcom.h
+for more details about these cases. You only need to worry about this
+if you only keep track of patterns via dev.attributes(NEW_PAT,...). If you
+look at the contents of the "pat" structure fresh each time, you don't
+need to worry about whether the user defined the pattern or not, whether
+it is a VP_AREA or VP_OLDAREA pattern, etc, etc.
+
+Generic routines: vecarea.c, genarea.c, genpatarea.c
+Vecarea fills the polygon with the current color by drawing vertical
+and horizontal vectors. It shows the size of the pattern by the line spacing.
+Vecarea calls dev.vector and dev.attributes.
+
+Genarea clips the given polygon (if smart_clip=NO), possibly generating
+more than one polygon out of the pieces. It then calls dev.startpoly,
+dev.midpoly, and dev.endpoly to do the actual filling of the polygons.
+These three routines are documented below.
+
+Genpatarea fills the polygon with the correct pattern one raster line
+at a time by calling dev.raster. It uses the "dumb" format for
+dev.raster, so you cannot use genpatarea if smart_raster=YES.
+
+===========================
+
+Dev.raster has 2 formats, depending on the value of smart_raster.
+
+If smart_raster=NO, then the raster will be stretched to device
+coordinates, clipped (regardless of the value of smart_clip),
+color mapped, dithered (when appropriate), and broken up into
+individual scan lines. Dev.raster will be called once for each scan
+line of the raster image.
+
+If smart_raster=YES, then the raster will be read in and color mapped
+(which for monochrome devices using dithering means converted to grey
+levels, pixc'd, greyc'd, and inverted if necessary), but nothing else.
+It is up to the device to dither it (depending on the value of the global
+variable dither), stretch it, and clip it. The entire block of raster
+will be passed with one call to dev.raster. 
+
+The "raster overlay mode" (set by the external integer "overlay") controls
+the transparency of pixels of color 0 in raster. If overlay=NO, then raster
+(and polygon fill patterns) should completely obscure anything previously
+plotted underneath. If overlay=YES, then background-colored pixels (color 0)
+should be considered transparent, allowing things previously plotted
+underneath to "show through". If your device cannot do this, you can
+ignore this variable. You can also keep track of the current overlay
+mode via dev.attributes(NEW_OVERLAY,...).
+
+/* Dumb format, smart_raster=NO */
+dev.raster(count, out_of, xpos, ypos, rlength, orient, raster, dummy1, dummy2)
+int count, out_of, xpos, ypos, rlength, orient, dummy1, dummy2;
+unsigned char raster[/*rlength*/];
+{
+/* Including "extern.h" defines this. */
+extern int overlay;
+
+Draw a line of raster, starting at the point (xpos,ypos) and extending
+for a total of length pixels in a direction determined by orient.
+Orient is measured in units of 90 degrees clockwise from the device's
+X (horizontal) axis. Thus for orient=0 you draw the line right,
+for orient=1 you draw down, for orient=2 left, and for orient=3 up.
+
+The line of raster itself is in the array raster, which is of
+dimension rlength. Each element of the array is a color number which
+determines the color of one device pixel.
+
+Some devices may be able to handle more than one line of raster at
+a time. The variables count and out_of are provided so that the device
+can know how many dev.raster calls will be made in a row. Count is
+zero for the first call, and increases by 1 each time until it reaches
+out_of-1 on the last call. (Thus out_of is the total number of raster
+lines.)
+
+Scanning is done TV-style. (Thus, for orient=0, ypos decrements by 1
+for each call; for orient=1, xpos decrements by 1 for each call; for
+orient=2, ypos increments by 1 for each call; for orient=3, xpos
+increments by 1 for each call.) Genraster1 gives you a good example
+of how to write a routine that builds up blocks of raster over several
+calls.
+
+Dummy1 and dummy2 are not used; they are provided only so that both forms
+of the command have the same string of arguments.
+
+Generic routines, dumb format: genraster.c, genraster1.c
+Genraster does vector draws along scan lines to produce raster output.
+It does one raster line at a time. Some fast but stupid devices can
+actually do raster reasonably fast this way. Genraster calls
+dev.attributes (to set the colors) and dev.vector.
+
+Genraster1 attempts to be a little smarter than genraster. It saves up
+many lines worth of raster at a time, and sorts the vectors by color
+and length. It does all the vectors of one color at a time, so as to
+save on calls to dev.attribute to change the color. It also finds
+the parts of the image that can be more efficiently drawn via dev.point,
+and makes a second pass for those. (If the device has a point mode this
+is considerably more efficient.) Genraster1 calls dev.attributes,
+dev.vector, and dev.point.
+
+/* Smart format, smart_raster=YES */
+dev.raster (xpix, ypix, xmin, ymin, xmax, ymax,
+	raster_block, orient, dither_it)
+int xpix, ypix, xmin, ymin, xmax, ymax, orient, dither_it;
+unsigned char raster_block[/*xpix*ypix*/];
+{
+/* Including "extern.h" defines these. */
+extern int xwmin, xwmax, ywmin, ywmax;
+extern int overlay;
+extern int ras_allgrey;
+
+Draw the block of raster in the array raster_block.
+If dither_it=NO, raster_block is an array of color numbers.
+If dither_it=YES, raster_block is an array of grey levels.
+(0 is the background color, 255 is the opposite of that;
+if you have a device with a white background and black ink
+this results in a plot that is inverted from what you would get
+on most screen devices, which have a black background. See the
+variable "invras" described above on how to have dovplot invert
+the grey-levels for you so that the final plot matches what you would
+get on screen devices.) If possible, you should refer to the
+global variable "dither" and dither the grey levels by the same
+method the utility routine "dithline" would use.
+
+The external variable "ras_allgrey" is available for color devices
+to check in smart-format dev.raster. If nonzero, the device can
+safely assume that this raster block is entirely grey-scale. This
+may allow the filter to sometimes use a more efficient special-case
+device command that draws grey-scale-only raster.
+
+Raster_block has dimensions xpix times ypix, with xpix the fast
+axis. If orient=0, the raster is painted on the screen TV-style.
+The first array value is the upper-leftmost point. Each line of
+raster (xpix long) fills from left to right. Each new line of
+raster (ypix lines in all) is below the previous one.
+
+If orient=1, we rotate the raster 90 degrees clockwise. Thus the
+first value is the upper rightmost point, and the raster fills in
+top to bottom and then right to left. For orient=2 we rotate another
+90 degrees and fill in right to left and then bottom to top. For
+orient=3 we fill the raster in bottom to top and then left to right.
+
+The lower-leftmost pixel in the raster image should appear on the screen
+at device coordinate (xmin, ymin) (assuming it isn't clipped, of course).
+The raster image should be (xmax-xmin) horizontal device units wide
+and (ymax-ymin) vertical device units tall. Thus, the pixel (xmax,ymax)
+is not the upper-rightmost pixel in the raster image, but is the first
+pixel above and to the right of the one that is. (I know this sounds
+strange. But when you actually code this up you'll see that it makes
+sense to do it this way, and that this is probably what you actually
+would have done even if I had told you to make sure that the point
+(xmax,ymax) was in the image.)
+
+Finally, the resulting image must be clipped so that (xwmin,ywmin) is
+the lower-leftmost pixel that can appear, and (xwmax,ywmax) is the
+upper-rightmost pixel that can appear. (Note that this time the corner
+IS in the image. Just trying to be confusing.)
+
+Generic routines: NONE
+
+===========================
+
+dev.point(x1, y1)
+int x1, y1;
+
+Change the pixel at device coordinate (x1,y1) to the current color.
+
+Generic routines: genpoint.c
+Genpoint calls dev.vector with zero length. Somethings wrong with
+the dev.vector for your device if it doesn't do anything in this case.
+
+===========================
+
+int dev.attributes(command, value, v1, v2, v3)
+int command, value, v1, v2, v3;
+
+Set various attributes (color table, current color, clipping window, etc)
+using device-specific routines. Commands are defined and DOCUMENTED
+in the include file attrcom.h (So GO PRINT IT OUT RIGHT NOW!). Value
+and v[1-3] are used to pass parameters as needed. Sometimes some of the
+4 will be dummy arguments. This routine must return with an integer return
+value, which is normally zero.
+
+Comments about color:
+	The device tells dovplot how many colors it has by setting num_col
+and mono. Num_col is the number of settable colors. The color for
+color table numbers num_col and up will never attempt to be defined
+by dovplot. If num_col is zero, the device has no settable colors,
+and dev.attributes(SET_COLOR_TABLE,...) will never be called at all.
+
+	Devices with no settable colors can still have color. If mono=NO,
+dovplot assumes that colors 0 through 7 correspond to the standard
+Vplot colors (as listed in vplot.h). Dovplot will not attempt to set
+the current color outside of the range 0 through 7 if num_col=0.
+(There is no provision for devices with more than 8 colors but no
+settable colors.)
+
+	Rather than forcing people to change the colors on their terminal
+to have vplot's colors come out right, you should map the color numbers
+dovplot asks for onto the correct device color numbers so that the
+factory default setting gives the correct colors. (Don't forget to
+similarly map the color table numbers too.)
+	
+	Calls to dev.attributes(SET_COLOR,...) by dovplot will only set
+colors in the range 0 through MAX(7,num_col-1).
+
+	If mono=YES, dovplot will force num_col=0 and will only ever
+try to set the current color to be either 0 (meaning background)
+or 7 (meaning NOT background).
+
+	Calls to device routines should NEVER upset the current color. If
+for some reason they should change it, they should always put it back
+again when they are done. (Dovplot keeps track of the current color,
+and only calls dev.attributes(SET_COLOR,...) when necessary.) Calls to
+generic routines are guaranteed to never (permanently) change the
+current color.
+
+	Color tables should usually be set to factory default settings at
+the beginning of every plot, if it is possible to do this in such a
+way that the former settings can be restored again afterwards.
+
+	Every device should AT LEAST keep track of whether or not the current
+drawing color is color 0 or not. Color 0 always defines the background
+color. If the device cannot draw (or rather undraw) in the background
+color, then it SHOULDN'T DRAW AT ALL when the current color is 0.
+
+Generic routines: NONE
+
+-------------------------------------------------------------
+
+Input routines
+
+==============================
+
+int dev.getpoint(termout, x, y)
+FILE *termout;
+int *x, *y;
+{
+int status;
+
+return status;
+}
+
+Turn on the cursor and let the user pick a point. Return the device
+coordinate of the picked point in (*x,*y), and return 0. If the
+user indicated that he doesn't want to pick any more points, return 1.
+(The value in (*x,*y) is then considered to be junk by dovplot.)
+Returned values should be in the normal range of device coordinates.
+If (*x,*y) is returned unchanged, this will also indicate that no point
+was picked and no more points should be picked.
+
+Termout is a stream pointer reading from "/dev/tty". You can use it if
+it is convenient and correct to do so, or ignore it.
+
+Generic routines: nulldev
+Linking in nulldev for this routine will simulate a user that always
+declines to enter any points at all, since (*x,*y) is returned unchanged.
+
+==============================
+
+int dev.interact(command, termout, string)
+int command;
+FILE *termout;
+char string[];
+
+This routine handles string input from the user and pausing.
+The various possible commands and return values are defined and
+DOCUMENTED in
+".../vplot/filters/include/intcom.h".
+
+(Normally the return value will just always be (int) 0.)
+
+Generic routines: nulldev, geninteract
+Linking in nulldev will rudely zoom past all prompts to the user without
+waiting. This is a reasonable thing to do for hardcopy devices. It is
+a very rude thing to do for screen devices.
+
+Geninteract will read the required input from termout, which is connected
+to read from "/dev/tty". If you find it convenient to use termout, make
+sure it isn't NULL before trying to use it (see geninteract for an example).
+Termout == NULL means "/dev/tty" could not be opened for reading.
+
+--------------------------------------------------------------------------
+
+Low level output routines --- only called by certain generic routines
+
+=================================
+
+int lost = YES;
+dev.plot(x, y, draw)
+int x, y, draw;
+
+Move or draw to device coordinate (x,y).
+Draw=0 for move, 1 for draw.
+
+This routine MUST declare the global flag "lost". It is the responsibility
+of all the device routines to set this to YES whenever anything happens
+that may cause genvector's idea of the "current device pen position"
+to be wrong.  (For example, printing an error message, doing hardware text,
+filling a polygon, etc.) Generic routines do not present a difficulty, since
+they can't output anything directly to the device.
+
+When lost is set to YES, it is guaranteed that the next call to dev.plot
+will by a move, and not a draw.
+
+When genvector's idea of the current position is correct again (for example
+when dev.plot has been called) lost should be set to NO. THIS IS IMPORTANT;
+genvector only looks at the value of lost, it doesn't set it. Leaving
+lost YES all the time will greatly slow down plotting by forcing one move
+for each draw!
+
+Generic routines: nulldev
+Link in nulldev here as a placeholder if you didn't use genvector as
+your vector routine.
+
+=================================
+
+dev.startpoly(npts)
+int npts;
+
+dev.midpoly(x,y)
+int x, y;
+
+dev.endpoly(last)
+int last;
+
+Polygon-drawing routines called only by genarea.
+
+Dev.startpoly is called once at the beginning of every polygon.
+Npts gives the number of points in the polygon. After dev.startpoly
+has been called, then dev.midpoly is called once for each point in
+the polygon. (x,y) gives the device coordinate of the vertex.
+
+Dev.endpoly is called once at the end of each polygon. Genarea may fragment
+one polygon into several. If this polygon just defined is the last polygon
+in a set of polygons that were fragmented from one, then last will be 1.
+If there are more fragments in this set to go, last will be 0. It is
+guaranteed that no other routines but these three will be called after
+the first dev.startpoly call and before dev.endpoly(last=YES) is called.
+
+The genarea algorithm will fail for certain very complicated crossed
+polygons, unless the multiple polygons fragmented from the one original
+one are shaded as a unit. Some devices such as the Tek4105 allow this
+to be done. That is why the "last" flag is provided. There is no
+great harm in shading each polygon as it comes. Occasionally interior
+voids will be filled twice instead of not filled at all, that's all.
+
+If the device can fill with an arbitrary pattern, it should do so.
+The pattern is available to these routines in the same way as described
+under dev.area. If the device cannot fill with a user-defined pattern,
+filling solidly with the current color is the next best thing.
+
+Generic routines: nulldev.c
+If you did not use genarea as your dev.area routine, then none of
+these routines are ever called so you just need to put in nulldev
+as a placeholder.
+
+-------------------------------------------------------------------------
+EXTERNAL VARIABLES AND PROGRAMMING TECHNIQUE:
+He who assumes that any external variables he can get his hands on
+he is free to change will get what he deserves: BUGS. In general, even
+if you THINK you know what a global variable used by the vplot
+device-independent routines does, if it isn't specifically documented
+here that you can use it, LEAVE YOUR HANDS OFF OF IT! (Well, occasionally
+you may have good reason to tweak a few variables; vppen does this. In
+general, though, be careful!) If there were some way to limit globals
+to certain groups of routines in C, I would have done it for many
+variables; but there isn't, so I didn't.
+
+In particular, if you need to keep track of the device's state, don't
+rely on variables associated with the device-independent routines to
+do it for you. They may not match with the actual state of the device.
+Do it yourself, with your own set of device-dependent variables! Don't
+assume that you know exactly how the device-independent code works!
+
+-------------------------------------------------------------------------
+HANDLING ERRORS:
+Device routines SHOULD NOT simply exit when they get a fatal error!
+All errors should be handled via the provided utility routine "ERR"!
+
+#include "err.h"
+ERR (type, filter, fmt, a1, a2, a3)
+int type;
+char *filter;
+char *fmt;
+double a1, a2, a3;
+
+"Type" is one of the possibilities from "err.h". Currently there are three
+possibilities: COMMENT, WARN, FATAL. Case COMMENT is just for making
+remarks, not really error messages per se. Case WARN should be used when
+something is wrong, but the filter can take reasonable corrective action.
+Case FATAL is for errors that should cause abnormal termination of the
+program. Calls to ERR with type FATAL will not return.
+
+"Filter" should be the name of the filter generating the error or comment
+as you want it to appear in the message. Normally this should just be
+the variable "name" defined in <dev>conf.c.
+
+From here on ERR has the same syntax as "printf", except that ERR will
+automatically throw a carriage-return line-feed on for you (so you don't
+want to end with "\n").
+
+After ERR has been called with type FATAL, dovplot and frontend will do
+necessary cleaning up, in the process calling dev.close. Device-dependent
+cleaning up should be done by that routine at that time.
+
+The define ERR is used so that conflicts with other subroutines named
+"error", "err", etc, can be avoided. Currently "ERR" is defined to be
+"filtererror", a name we haven't had any trouble with.
+
+-------------------------------------------------------------------------
+BEING EFFICIENT
+
+Nobody likes waiting for plots. In order to make your Vplot pen filter
+pleasant to use, you should consider what you can do to make the plot come
+out as fast as possible for the kinds of plots you make most often.
+The first thing you have to ask yourself is what is the limiting factor
+likely to be for each kind of object you typically draw?
+
+The answers I usually get, in order of importance, are:
+
+1) The communication link between the device and the host computer
+2) The device's speed at plotting
+3) Your time as a programmer
+4) The host computer's speed at calculating
+
+Let's go through these point by point.
+
+1) My experience is that whenever you have a tty line between the computer
+and a device, that is the weakest link. This means you should put some
+effort into making the output data stream as parsimonious as possible.
+
+Here are some ideas about what you can do:
+
+FASTER LINK:
+Usually the most helpful thing to do is to simply get a faster
+communication channel! Ethernets are better than AppleTalk Networks are
+better than fast tty lines are better than slow tty lines...
+
+COORDINATES:
+Many devices will let you pick the coordinate system you want to work in.
+You should try to pick a coordinate system in which the coordinates are
+as short to represent as possible. Usually this means one integer unit for
+each pixel on the screen, but not always.
+
+CLIPPING:
+Sometimes it is better to let Vplot do the clipping for the device, even
+if the device can clip efficiently in hardware. You don't want to spend
+your time waiting while graphical objects are being laboriously transmitted
+to the device, which then takes one look at them and throws them all away.
+
+MACROS:
+Some devices let you define your own commands to use when talking to the
+device. Use this to make new commands better tailored to what you want
+than the primitives that come with the language.
+
+RASTER:
+Let the device do dithering and pixel replication on board, if possible.
+This is especially important if your raster plots normally have less
+resolution than the device you output them on.
+
+VECTORS:
+Most devices have some alternative to simply always drawing vectors.
+Moves and draws are almost always better to use than vectors because
+most of the time you draw CURVES rather than unconnected line segments
+(Move-draw-draw-draw-... versus Move-draw - Move-draw - Move-draw - ...).
+If you don't want to use genvector you should at least examine it as
+a starting point because it does several sorts of tricky things to try
+to be efficient.
+
+Once you've got the vectors processed into moves and draws, most devices
+will further allow various sorts of compaction. A favorite one is
+"relative moves and draws", where you give the offset from one point
+to the next rather than always specifying the complete global position
+of every point. Many devices have a "Tektronix emulation mode" which
+may be worthwhile to look into using for drawing vectors because Tektronix
+has a particularly good scheme for encoding coordinates into a minimal
+number of bytes. (Of course, if there is no way to escape out of Tektronix
+mode so you can plot things besides vectors on the same plot this is useless.)
+
+Some devices will let you link together strings of vectors into "paths".
+This is just "move-draw-draw-draw-..." under a different name.
+
+It is usually worth it to do fattening and dashing in hardware when possible.
+
+TEXT:
+Although vector text is more flexible and predictable, hardware text is
+usually MUCH faster than vector text, and hence should be made the default
+whenever possible. Hardware text usually looks better, too.
+
+POLYGONS:
+Hardware polygons are usually much faster than any software attempt at
+filling polygons with vectors.
+
+
+2) Watch out for semi-buggy devices. By "semi-buggy" I mean that in certain
+special cases the device will take an exceptionally long time to produce
+the correct result (or if the device is simply "buggy" an incorrect result,
+or nothing at all). You want to avoid such problems if you can.
+
+Typical causes of such problems: 
+
+	Drawing the vertices of a polygon in the "wrong" direction.
+
+	Filling a polygon that is "too long and skinny".
+
+	Filling a polygon with "too complicated" a fill pattern.
+
+	Filling a polygon that doesn't end on the same point it started.
+
+	Filling a polygon that does end on the same point it started.
+
+	Doing "too many" draws in a row without a move.
+
+	Hitting the same point several times in the same set of moves
+	and draws.
+
+	Drawing "too near" the edge of the page.
+
+	Drawing lines "too close" together.
+
+	Drawing "too complicated" a plot.
+
+	Trying to use the machine immediately after somebody else's
+	job on it has bombed.
+
+	Having 2 computers try to talk to the same machine at
+	the same time.
+
+	Processing "too many" jobs without powering off and on the machine.
+
+	Trying to do things that are more complicated than the simple
+	examples in the documentation.
+
+	Trying to use the device at its rated baud rate.
+
+Sometimes you can get around these problems in software, by checking for
+these situations and having a special case to get around them. Sometimes
+yelling loudly at the company that makes the equipment works, too, but
+usually not.
+
+Don't expect that it is always faster to do something in hardware, even when
+it is "working perfectly". On some brands of terminals filling polygons
+by drawing vectors is actually FASTER than using the hardware polygon filling
+commands.
+
+
+3) Don't spend too much time trying to be tricky, especially if the
+communication link between the device and the host computer is very
+fast. It seems every device will have weird bugs you have to get around;
+if the communication link is fast it is usually easier and better to
+just treat the device as being completely stupid and let all the generic
+routines do the work.
+
+
+4) If you wait a few years you'll get a faster computer to replace the one
+you have now, AND it will fit under your desk...
+
+
+-------------------------------------------------------------------------
+BEING TRICKY ABOUT THE ORDER THINGS ARE PLOTTED
+
+The external variable
+extern int (*genreader) ();
+can be changed in dev.open to point to your own routine for processing
+input files. You should only need to change this variable if for some
+reason you want to be able to change the order or way in which input files
+are handled, or if you want to know the actual file names of the input plot
+files. (You might find this handy if you are creating an interactive vplot
+editor, for example.)
+
+The default input file handling routine, which is what you get if you
+ignore this section of the documentation, is the following. Frontend
+already does the job of finding all the input files, verifying that
+they exist, and opening them for reading.
+
+gen_do_dovplot (nn, inpltin, innames)
+int     nn;
+FILE ** inpltin;
+char    innames[][MAXFLEN+1];
+{
+    int     ii;
+
+    for (ii = 0; ii < nn; ii++)
+    {
+	pltin = inpltin[ii];
+	strcpy (pltname, innames[ii]);
+	dovplot ();
+	fclose (pltin);
+    }
+}
+
+"Nn" is the number of input files. "Inpltin" is an array of nn stream
+pointers each of which point to an open (but unread-upon) input stream.
+"Innames" is the corresponding array of strings giving the associated
+name of the input file for each of the streams in inpltin.
+
+The external integer "buffer_input" can be set to NO in dev.open to
+assure that all the input streams are unbuffered. The external integer
+"allow_pipe" can be set to NO in dev.open to assure that all the input
+streams are seekable on.
+
+It is possible to change most variables set by command line arguments
+between calls to dovplot without ill effect. There are comments in
+init_vplot at the end of the section of code where command line arguments
+are processed listing which variables have been explicitly set up to be
+changeable in this way.
+
+Variables controlling the mapping between the device's and vplot's
+coordinate system can also be changed, but the subroutine
+"reset_parameters()" in frontend must be called afterwards to
+reinitialize all the related variables that may need it.
+
+./filters/vplib/vpdovplot.c is an example of a routine that makes
+2 passes through a vplot file, doing things differently the second
+time around.
+
+-------------------------------------------------------------------------
+THINGS THAT GET RESET BETWEEN FRAMES (AND THINGS THAT DON'T)
+
+Vplot has many "global" parameters. Some of these get reset between
+frames (or between input files); a few don't.
+
+The following parameters get reset (by reset()) at the start of
+every new frame:
+clipping windows, drawing fatness, current drawing color, text alignment
+mode, text font, text precision, text overlay mode, raster overlay mode,
+dash line pattern.
+
+The plot style also gets reset at the start of every new frame, but
+it is handled separately.
+
+The following DO NOT GET RESET AT ALL:
+color tables, current pen position
+
+The global vplot origin command is another special case. Generally,
+this command is only used when you are creating a figure "by hand"
+using plas. It is reset when reset_parameters() is called, but is
+global otherwise. It has no libvplot command on purpose.
+
+-------------------------------------------------------------------------
+GROUPS
+
+The begin-end group commands are provided so that a "MacDraw"-like
+vplot editor may be created. The device knows when groups are
+opened and closed, and their positions within the current plot file,
+via the dev.attributes(BEGIN_GROUP,...) and dev.attributes(END_GROUP,...)
+calls. You can use fseek to reposition the plot stream to the beginning
+of a desired group, and then call dovplot to plot the group again.
+When the group open (number one, not zero) command is processed, the device
+gets a chance to reset global attributes from their "initialized" values.
+(For example, to change the color.) When the group close (number one)
+command is processed, the device gets a chance to to reposition pltin
+to the end of the file and so cause dovplot to think it's done and return.
+
+It is possible for the user to violate the grouping laws, ie:
+begin-group and end-group commands must be paired within a file,
+erases and breaks may not be contained within a group.
+Dovplot will warn the user if this happens. How the device handles
+such an error, however, is up to it. Caveat user.
+
+A group number 0 is generated by dovplot itself for each plot frame.
+The group name gives the file name it came from with an appended number
+counting multiple frames within one file. A frame begins whenever the
+screen is erased or there is a "break" command, which may be either when
+an erase or break command within the vplot file is processed or when a new
+file is opened. The 0-level group consists of everything in the plot frame
+excepting erases and breaks. Erases and breaks lie between groups. Groups
+generated by the begin-end group commands in the vplot file are numbered
+from 1 on up.
+
+The external integer "group_number" gives the number of currently
+open groups.
+
+-------------------------------------------------------------------------
+SEPLIB TRICKS
+
+If you don't use the seplib versions of the filters, you can ignore
+this section.
+
+Pen filters have to do some tricky things with SEPlib since the
+standard defaults are inappropriate. Normally seplib wants to send
+the header to standard out. Since the output of Pen filters are usually
+not redirected, this would dump the header on your screen and possibly
+interfere with your plot. By the same token, the data output usually
+SHOULD go to your screen, instead of being saved in a file or sent
+down a pipe. The normal SEPlib method of self-documenting also
+has to be subverted in order to be consistent between the SEP and non-SEP
+versions of the programs.
+
+To accomplish this, several things are done:
+
+A library "tseplib" is provided that contains routines for
+which the standard seplib versions had to be modified. This
+should be linked AHEAD of seplib so that the modified versions
+get taken. The routines are documented as to how they differ and why.
+
+"OUT" and "HEAD" are defined to be the external variables "sepoutwhere"
+and "sepheadwhere", respectively. These are normally "/dev/tty" and
+"/dev/null". (These values are grabbed from the routine "sepwhere"
+in tseplib.) If these values are inappropriate for your filter (unlikely
+to be the case for most filters; see Vppen for an example of one) you can
+create your own version of this routine and make sure it gets linked in
+ahead of tseplib.
+
+If head=/dev/null and this was the default in sepheadwhere and
+standard out is redirected, then it is assumed the user really wants
+some sort of header despite the fact that the Pen filter killed the
+real one and so a "fake" one will be created for them by frontend.
+Frontend will only actually write something into it if "out"
+is not standard out (to avoid mixing header and data). The
+device-dependent code may do so if it wishes, though (see Raspen for
+an example). The device should only use "Puthead" to write to the header,
+to make sure everything is done properly. The "fake" header has the
+advantage that information can be added to it at any time.
+Normal SEPlib headers must be closed before any data can be written.
+Thus only fake headers can have "n3=number_of_frames" added onto
+the header. (This is why Raspen uses fake headers.)
+
+-------------------------------------------------------------------------
+FRONTEND, and DOING IT YOURSELF
+
+The system-user interface is split among three routines, which together
+are called the "frontend".
+
+Main_vplot is responsible for finding the input files and opening them,
+deciding where the output should go for devices that aren't strong-willed
+enough to insist on figuring it out for themselves, setting up signal
+catching, interfacing with SEPlib, and doing self-documentation.
+It also calls the other 2 routines, init_vplot and proc_vplot.
+
+Init_vplot initializes all variables and calls dev.open to open the
+device.
+
+Proc_vplot processes the input files.
+
+It is possible to skip main_vplot and call init_vplot and proc_vplot
+yourself directly. However, init_vplot and proc_vplot expect certain
+things to be set before they are called.
+
+Init_vplot expects:
+
+Xargc and xargv are just copies of main's argc and argv, but declared
+globally so that other routines (namely getpar) have access to them.
+Xargc and xargv should be declared in the calling program.
+
+Callname is a string which gives the "pen filter name" of the set of
+device-dependent routines you want. It should have the path stripped.
+The device-dependent code may want to know callname in order to pick
+between similar devices. Callname should be declared external.
+
+Pltout is just a copy of stdout. It is an external FILE *.
+
+Proc_vplot expects:
+
+Infileno gives the number of input files. It is an external integer.
+
+Pltinname[infileno] gives the names of the input files. It is
+an external array of pointers to chars.
+
+Pltinarray[infileno] gives the already-open stream pointers for the
+afore-mentioned files. It is an external array of FILE *'s.
+
+That's it.
+It is also possible to bypass even calling proc_vplot. See sample.c
+in .../vplot/filters for an example of how to do this.
+
+-------------------------------------------------------------------------
+AUTHORS
+The present generation of pen filters were created by Joe Dellinger.
+The original pen programs were written by Jeff Thorson and Rob Clayton.
+Glenn Kroeger and Michel Debiche cleaned up the organization of the code.
+Wes Monroe, Chuck Karish, Rick Ottolini, Doug Wilson, and Jean-Luc Guiziou
+have added support for new devices. Steve Cole added dithering. Stew Levin
+has found and fixed obscure bugs.
+
+COPYRIGHT
+Vplot is copyrighted. Please read the copyright in the accompanying
+"Vplot" manual page. The copyright is not very restrictive. If you
+want to include vplot (or derivatives thereof) as part of some other
+"public domain" or "nearly public domain" package, we can probably
+work something out. The desired effect of the copyright is to permit
+widespread distribution without somebody trying to grab control of
+it for themselves or trying to sell it.
+
+SEE ALSO
+vplot(L) pen(L) plas(L) pldb(L) seplib(L) getpar(L)

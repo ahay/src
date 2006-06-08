@@ -2946,8 +2946,8 @@ void xtpoint (int x, int y)
 
 #define	MASK0 0200
 
-void xtraster (int count, int out_of, int xpos, int ypos, int length, int dummy1, 
-	       unsigned char **raster, int orient, int dummy2)
+void xtraster (int count, int out_of, int xpos, int ypos, int length, int orient, 
+	       unsigned char **raster, int dummy1, int dummy2)
 /*< raster >*/
 {
     int             i, j, k;

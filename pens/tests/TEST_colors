@@ -1,0 +1,147 @@
+#plas: Vplot units used in this file
+e
+S s
+w -32760 -32760 32760 32760
+F 0 0 0
+J 0 0
+s 0
+w -32760 -32760 8190 32760
+f 0
+c 7
+z
+Test of colors and polygon fill densities.
+z
+
+c 0
+a 4
+1 7 7
+0 0
+7000 0
+7000 500
+0 500
+c 1
+a 4
+1 7 7
+0 499
+7000 499
+7000 999
+0 999
+c 2
+a 4
+1 6 6
+0 999
+7000 999
+7000 1500
+0 1500
+c 3
+a 4
+1 5 5
+0 1500
+7000 1500
+7000 1999
+0 1999
+c 4
+a 4
+1 4 4
+0 1999
+7000 1999
+7000 2499
+0 2499
+c 5
+a 4
+1 3 3
+0 2499
+7000 2499
+7000 3000
+0 3000
+c 6
+a 4
+1 2 2
+0 3000
+7000 3000
+7000 3500
+0 3500
+c 7
+a 4
+1 1 1
+0 3500
+7000 3500
+7000 3999
+0 3999
+f 20
+c 0
+m 3500 0
+d 3500 3999
+F 1 -1 3
+J 2 3
+f 5
+c 7
+m 3500 249
+T 10 0
+Black
+m 3881 249
+m 3500 750
+T 10 0
+Blue
+m 3804 750
+m 3500 1249
+T 10 0
+Red
+m 3766 1249
+m 3500 1750
+T 10 0
+Magenta
+m 4091 1750
+m 3500 2250
+T 10 0
+Green
+m 3907 2250
+m 3500 2750
+T 10 0
+Cyan
+m 3842 2750
+m 3500 3249
+T 10 0
+Yellow
+m 3928 3249
+m 3500 3750
+T 10 0
+White
+m 3873 3750
+z
+On a color device colors of bars should match with their labels.
+z
+If not, then the default colors for the device are wrong.
+z
+Monochrome devices should display a grey scale, with the background color
+z
+at the bottom and the opposite of it at the top.
+z
+The vertical stripe should be drawn in the background color.
+f 4
+c 1
+m 0 4250
+d 7000 4250
+f 2
+c 7
+m 1999 4250
+T 10 0
+Box A
+m 2407 4250
+F -1 -1 1
+m 4999 4250
+T 10 0
+Box B
+m 5420 4250
+z
+
+z
+Box A and Box B at the top should both look exactly the same,
+z
+except that the blue line should disappear behind Box A and not Box B.
+z
+If any of the boxes are shaded with something besides the background color
+z
+(possibly making it so you can't read the text except in Box B)
+z
+then your device driver does not do proper fill for color 0. (serious bug)

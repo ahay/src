@@ -295,6 +295,7 @@ bool mono;
  * file and terminal control variables
  */
 int             pltoutfd, stderrfd, controlfd;
+FILE *pltout;
 
 void  (*message) (int command, char* string) = genmessage;
 struct stat     stderrstat;
@@ -365,6 +366,8 @@ float           ftemp;
 	controltty = fdopen (controlfd, "r");
     }
 
+    pltout = stdout;
+
     /*
      * Call device open before doing anything else. this finalizes pltout 
      */
@@ -375,7 +378,7 @@ float           ftemp;
      * If graphics output going to control terminal, disable echoing and
      * arrange for use of device's message routine 
      */
-    pltoutfd = fileno (stdout);
+    pltoutfd = fileno (pltout);
     stderrfd = fileno (stderr);
     out_isatty = isatty (pltoutfd);
 

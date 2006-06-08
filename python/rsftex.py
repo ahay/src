@@ -64,9 +64,6 @@ libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
-# temporary (I hope)
-sep = os.path.join(os.environ.get('SEP'),'bin/')
-
 #############################################################################
 # REGULAR EXPRESSIONS
 #############################################################################
@@ -170,6 +167,9 @@ def latex2dvi(target=None,source=None,env=None):
     return 0
 
 ppi = 72 # points per inch resolution
+vppen = os.path.join(bindir,'vppen')    
+pspen = os.path.join(bindir,'pspen')
+
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
     vplot = str(source[0])
@@ -185,7 +185,7 @@ def pstexpen(target=None,source=None,env=None):
                               'color=n fat=1 fatmult=1.5 invras=y')
     print opts
     # bounding box
-    getbb = sep + 'vppen big=n stat=l %s < %s | %s -1' % (opts,vplot,
+    getbb = vppen + ' big=n stat=l %s < %s | %s -1' % (opts,vplot,
                                                           WhereIs('head'))   
     out = os.popen(getbb)
     head = string.split(out.read())
@@ -200,7 +200,7 @@ def pstexpen(target=None,source=None,env=None):
         file.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(bb))
 
         name = tempfile.mktemp()
-        command = sep + 'pspen size=a tex=y %s < %s > %s' % (opts,vplot,name)
+        command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)
         os.system(command)
 
         ps = open(name,'r')        

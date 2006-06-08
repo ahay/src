@@ -1,0 +1,19 @@
+e
+S s
+z
+Test of hatched polygons
+z
+
+z
+A technicolor hatched square.
+l   45	-1    2   11
+0 1 0 100
+0 2 25 150
+0 3 0 100
+0 4 25 200
+c 11
+A 4
+1000 1000
+1000 3600
+3600 3600
+3600 1000

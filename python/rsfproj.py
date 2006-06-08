@@ -96,9 +96,6 @@ def set_dir(dir='Fig'):
 
 set_dir()
 
-# temporary (I hope)
-sep = os.path.join(os.environ.get('SEP',''),'bin/')
-
 #############################################################################
 # CUSTOM BUILDERS
 #############################################################################
@@ -167,8 +164,15 @@ def retrieve(target=None,source=None,env=None):
                 return 5
     return 0
 
-View  = Builder(action = sep + "xtpen $SOURCES",src_suffix=vpsuffix)
-Print = Builder(action = sep + "pspen printer=%s $SOURCES" % os.environ.get('PSPRINTER'),src_suffix=vpsuffix)
+vppen = os.path.join(bindir,'vppen')
+xtpen = os.path.join(bindir,'xtpen')
+pspen = os.path.join(bindir,'pspen')
+
+View  = Builder(action = xtpen + " $SOURCES",src_suffix=vpsuffix)
+
+printer = os.environ.get('PSPRINTER',os.environ.get('PRINTER','postscript'))
+
+Print = Builder(action = pspen + " printer=%s $SOURCES" % printer,src_suffix=vpsuffix)
 Retrieve = Builder(action = Action(retrieve,
                                    varlist=['dir','private','top','server']))
 Test = Builder(action=Action(test))
@@ -176,8 +180,6 @@ Test = Builder(action=Action(test))
 #############################################################################
 # PLOTTING COMMANDS
 #############################################################################
-
-vppen = os.path.join(sep,'vppen')
 
 combine ={
     'SideBySideAniso': lambda n:
@@ -361,7 +363,7 @@ class Project(Environment):
                 flow = flow + ' ' + vppen
             kw.update({'src_suffix':vpsuffix,'stdin':0})
         if view:
-            flow = flow + ' | %s pixmaps=y' % (sep+'xtpen')
+            flow = flow + ' | %s pixmaps=y' % xtpen
             kw.update({'stdout':-1})
         kw.update({'suffix':suffix})        
         return apply(self.Flow,(target,source,flow),kw)
@@ -379,7 +381,7 @@ class Project(Environment):
         self.lock.append(lock)
         self.Alias(target + '.lock',lock)
         self.Command(target + '.flip',target2+suffix,
-                     '%sxtpen $SOURCE %s' % (sep,locked))
+                     '%s $SOURCE %s' % (xtpen,locked))
         test = self.Test('.test_'+target,target2+suffix)
         self.test.append(test)
         self.Alias(target + '.test',test)

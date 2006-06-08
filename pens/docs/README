@@ -1,0 +1,6 @@
+Documentation. 50 pages worth.
+
+The ".mn" files are manual pages, the ".doc" file is just plain text.
+
+Device-dependent manual pages should be located in the same directory as
+their associated source code.

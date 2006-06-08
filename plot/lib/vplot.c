@@ -81,7 +81,6 @@ enum {
     VP_OLDAREA		= 'a',
     VP_BYTE_RASTER	= 'R',
     VP_BIT_RASTER	= 'r',    
-    VP_SHORT_RASTER	= 'B',
     VP_ERASE		= 'e',
     VP_BREAK		= 'b',
     VP_PURGE		= 'p',

@@ -3,20 +3,13 @@
  * out of harm's way
  */
 
-#define READ_RASTER(BYTELINE,BYTE2LINE,BITLINE)	\
+#define READ_RASTER(BYTELINE,BITLINE)	\
 {\
     if (c == VP_BYTE_RASTER)\
     {\
 	for (j = 0; j < num_byte; j++)\
 	{\
 	    BYTELINE;\
-	}\
-    }\
-    else if (c == VP_SHORT_RASTER)\
-    {\
-	for (j = 0; j < num_byte; j++)\
-	{\
-	    BYTE2LINE;\
 	}\
     }\
     else\
@@ -31,3 +24,4 @@
 	}\
     }\
 }
+

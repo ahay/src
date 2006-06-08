@@ -105,7 +105,7 @@ extern struct pat pat[];
 static bool force_color;
 static bool dumb_fat; 
 static char *label;
-FILE *pltout;
+extern FILE *pltout;
 
 void psarea (int npts, struct vertex  *verlist)
 /*< area >*/
@@ -1578,6 +1578,8 @@ void psopen (int argc, char* argv[])
 	num_col = 0;
     }
 
+    smart_raster = true;
+
     need_end_erase = YES;
     buffer_output = YES;
     smart_clip = NO;
@@ -2053,7 +2055,7 @@ int             rangle;
 	{
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-		    fprintf (pltout, "%2.2x", 255 - (int) raster_block[i]);
+		    fprintf (pltout, "%2.2x", 255 - (int) raster_block[0][i]);
 	   	}
     	   	fprintf (pltout, "\n");
 	}
@@ -2064,7 +2066,7 @@ int             rangle;
 	{
 	   	for (i=j; (i<j+80 && i<xpix*ypix); i++)
 	   	{
-		    fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[i]]);
+		    fprintf (pltout,"%2.2x", 255 - ps_grey_ras[(int) raster_block[0][i]]);
 	   	}
     	   	fprintf (pltout, "\n");
 	}
@@ -2078,7 +2080,7 @@ int             rangle;
 	{
 		for (i=j; (i<j+80 && i<xpix*ypix); i++)
 		{
-	    	fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[i]],green[(int) raster_block[i]],blue[(int) raster_block[i]]);
+	    	fprintf (pltout, "%2.2x%2.2x%2.2x", red[(int) raster_block[0][i]],green[(int) raster_block[0][i]],blue[(int) raster_block[0][i]]);
 		}
     		fprintf (pltout, "\n");
 	}

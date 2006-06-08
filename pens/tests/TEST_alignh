@@ -1,0 +1,216 @@
+e
+S s
+c 1
+f 3
+z
+Test of hardware text alignment.
+z
+
+z
+Text should be aligned as it claims to be.
+z
+Plot this using a hardware font, plot it again
+z
+using font 1 (a software font), and compare the results.
+z
+If you use font 0 (the pen font) the " will not be aligned properly.
+c 7
+f 3
+m 1000 2000
+d 3000 2000
+m 1000 2100
+d 1000 1900
+m 1000 2000
+f 0
+c 5
+J 1 2
+T 10 0
+Left, Base !g
+f 3
+c 7
+m 1000 3000
+d 3000 3000
+m 3000 3100
+d 3000 2900
+m 3000 3000
+f 0
+c 5
+J 3 3
+T 10 0
+Right, Half !g
+f 3
+c 7
+m 1000 4000
+d 3000 4000
+m 2000 4100
+d 2000 3900
+m 2000 4000
+f 0
+c 5
+J 2 4
+T 10 0
+Center, Cap !g
+f 3
+c 7
+m 1000 5000
+d 3000 5000
+m 2000 5100
+d 2000 4900
+m 2000 5000
+f 0
+c 5
+J 2 1
+T 10 0
+Center, Bottom !g
+f 3
+c 7
+m 1000 1000
+d 3000 1000
+m 2000 1100
+d 2000 0900
+m 2000 1000
+f 0
+c 6
+J 2 5
+T 10 0
+Center, Top !g
+f 3
+c 7
+m 4000 1000
+d 6000 1000
+m 5000 1300
+d 5000 0700
+m 5000 1000
+f 0
+c 6
+J 4 6
+T 20 0
+_
+c 7
+f 3
+m 5500 1300
+d 5500 0700
+m 5500 1000
+f 0
+c 6
+J 4 6
+T 20 90
+_
+c 7
+f 3
+m 4500 1300
+d 4500 0700
+m 4500 1000
+f 0
+c 6
+J 4 6
+T 20 45
+_
+f 3
+c 7
+m 4000 2000
+d 6000 2000
+m 5000 2300
+d 5000 1700
+m 5000 2000
+f 0
+c 6
+J 4 6
+T 15 0
+"
+c 7
+f 3
+m 5500 2300
+d 5500 1700
+m 5500 2000
+f 0
+c 6
+J 4 6
+T 10 0
+@
+c 7
+f 3
+m 4500 2300
+d 4500 1700
+m 4500 2000
+f 0
+c 6
+J 4 6
+T 70 0
+.
+f 3
+c 7
+m 4000 3000
+d 6000 3000
+m 5000 3300
+d 5000 2700
+m 5000 3000
+f 1
+c 6
+J 4 6
+T 15 0
+*
+c 7
+f 3
+m 5500 3300
+d 5500 2700
+m 5500 3000
+f 5
+c 6
+J 4 6
+T 20 20
+*
+c 7
+f 3
+m 4500 3300
+d 4500 2700
+m 4500 3000
+f 18
+c 6
+J 4 6
+T 30 -90
+*
+f 3
+c 7
+m 4000 5000
+d 6000 5000
+m 6000 5100
+d 6000 4900
+m 6000 5000
+f 0
+c 6
+J 3 2
+T 10 0
+Right, Base !g
+f 3
+c 7
+m 4000 4000
+d 6000 4000
+m 5000 4300
+d 5000 3700
+m 5000 4000
+f 0
+c 6
+J 4 6
+T 6 0
+E
+c 7
+f 3
+m 5500 4300
+d 5500 3700
+m 5500 4000
+f 0
+c 6
+J 4 6
+T 12 45
+X
+c 7
+f 3
+m 4500 4300
+d 4500 3700
+m 4500 4000
+f 0
+c 6
+J 4 6
+T 9 90
+S

@@ -87,7 +87,7 @@ struct device dev = {
     vpattributes,		/* attributes */
     
     /* input */
-    gen_dovplot,               /* reader */
+    vp_do_dovplot,               /* reader */
     nullgetpoint,		/* getpoint */
     nullinteract,		/* interact */
     
@@ -373,7 +373,7 @@ char            format_string[80];
 	 * Turn on automatic processing 
 	 */
 	smart_clip = NO;
-	smart_raster = NO;
+	smart_raster = false;
 
 	/*
 	 * Just outline polygons and raster with vectors 
@@ -381,7 +381,7 @@ char            format_string[80];
 	save_wantras = wantras;
 	save_shade = shade;
 
-	wantras = NO;
+	wantras = false;
 	shade = NO;
 
 	/*
@@ -679,12 +679,12 @@ char            format_string[80];
 	dev.area = vecarea;
 	dev.raster = genraster;
 	smart_clip = NO;
-	smart_raster = NO;
+	smart_raster = false;
     }
     else
     {
 	smart_clip = YES;
-	smart_raster = YES;
+	smart_raster = true;
     }
 /*	fprintf(stderr,"doop \n");*/
 
@@ -1042,7 +1042,7 @@ void vpopen (int argc, char* argv[])
  * We want to go through the input files ourselves
  */
 
-    dev.reader = gen_dovplot;
+    dev.reader = vp_do_dovplot;
 
 /*
  * device capabilities

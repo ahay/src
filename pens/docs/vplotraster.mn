@@ -1,0 +1,239 @@
+.TH vplot_raster 9 "4 June 1987"
+.SH "NAME"
+vplot raster \- A guide to using raster plotting commands in vplot graphics
+
+.SH "DESCRIPTION"
+Despite the name
+.B vplot
+(where the `v' once stood for `vector')
+the vplot metalanguage includes raster plotting capability.
+This document describes more detailed aspects of raster plotting
+than are included in the
+.B vplot
+manual page.
+.PP
+A raster is a rectangular array of bytes.
+The value stored in each byte
+determines the number of the color that is to be displayed
+at the corresponding location in the raster.
+The mapping of array values to colors
+is set up by the programmer by calling the
+.B vp_coltab()
+routine, which may be found in
+.B libvplot.a.
+To define a color using
+.B vp_coltab(),
+the red, green, and blue components of the color are each specified
+as floats from 0. to 1., with 1. being fully on and 0. being fully off.
+The corresponding `grey level' for grey-scale
+devices is given by the formula
+floor((4 * green + 2 * red + blue + 6)/7).
+.PP
+Each device has a number of settable colors (call this number N).
+Calling
+.B vp_coltab()
+for colors 0 through N-1 will redefine the desired color.
+If you attempt to define a color X outside of the range 0 through N-1,
+.B vplot
+will pick the color number in the range 0 through N-1 that is closest
+to color X in color and map all requests for color X to that color number. 
+Whenever any color in the range 0 through N-1 is changed,
+all the mappings will be recalculated
+(although of course what is already drawn cannot be changed).
+Note that color 0 is the background color.
+Other colors will be mapped to color 0 only if the match is exact.
+.PP
+As an example, consider the common case where an eight bit per pixel
+raster is to be displayed using a grey scale, ranging from black to white,
+and various colors are to be used to display labels on the plot.
+The calling program should call
+.B vp_coltab
+to allocate the first few color numbers to the label colors,
+then fill the remainder of the lower half of the color scale
+(up to color 255)
+with the needed grey scale colors.
+Because different devices have different numbers of settable colors,
+it is important to order the grey scale colors so that the most important
+ones such as black (0, 0, 0), white (1, 1, 1), and medium grey
+(.5, .5, .5) come first.
+Then whatever the number of settable colors,
+the raster reproduction will be as good as possible.
+More explicitly,
+the calling program should repeatedly cover the 0 to 1 range
+with a decreasing step size,
+taking care not to repeat colors, i.e.,
+(0, 0, 0),
+(1, 1, 1),
+(.5, .5, .5),
+(.25, .25, .25),
+(.75, .75, .75),
+(.125, .125, .125),
+(.375, .375, .375),
+etc.
+Then in the upper half of the color scale (colors 256 through 511),
+the calling program can define the grey scale colors
+corresponding to the raster array values,
+setting, for example,
+color 256 to (0, 0, 0),
+color 257 to (1./255., 1./255., 1./255.),
+color 258 to (2./255., 2./255., 2./255.),..., and
+color 511 to (1, 1, 1).
+(This is all a bit tricky to implement, of course, so we have written a
+.B libvplot
+utility to help you do this:
+.B vp_rascoltab().
+)
+The 
+.B offset
+parameter in
+.B vp_raster
+is used to reference these colors.
+For this example,
+.B offset=256
+would be the appropriate specification.
+Then for each value in the raster array,
+.B vplot
+adds 256 to it to find the grey scale color defined for that value,
+then (using the mapping to available colors) uses the available color
+that best matches the requested color to plot that raster element.
+.PP
+Monochrome devices such as plotters are unable to give a good
+representation of grey rasters because of the lack of definable colors.
+For such devices,
+.B vplot
+can dither the image to simulate a grey or continuous-tone image.
+Briefly, dithering methods represent
+a continuous-tone image on a bilevel display
+by varying the threshold value that determines
+whether a given output pixel is set to `on' or `off'
+given its value on input. 
+Consider the above example of an eight bit per pixel raster.
+This means that, on an appropriate graphics display,
+each pixel can take on any of 256 different intensity levels.
+The task of dithering is to represent such an image
+on a device that has only two different intensity levels.
+A crude way of transforming from continuous-tone to bilevel form
+would be to divide the continuous-tone intensity range in half,
+and set input intensities 0-.5 to `off' and .5-1 to `on'. 
+But this would neglect most of the continuous-tone information.
+Vplot has four better ways of performing this transformation built in.
+.PP
+.B Random dither
+randomly selects a threshold value for determining whether a given output
+pixel is set to `on' or `off'.
+This preserves much of the continuous-tone information,
+but gives a rather `noisy' image,
+since within a constant-intensity region of the raster,
+some pixels will be set to both `on' and `off' due to the random thresholds.
+.PP
+.B Ordered dither
+applies a sixteen by sixteen matrix of threshold values to the input
+image in checkerboard fashion.
+This gives a much more regular appearance on output. 
+.PP
+The
+.B minimized average error method 
+or
+.B Floyd-Steinberg algorithm 
+takes the `error' in converting a single pixel to bilevel form
+into account when converting neighbors,
+with the goal of minimizing the difference
+between the continuous-tone and bilevel images.
+This method generally produces the best representation of the original image,
+though it is the slowest of the four algorithms.
+.PP
+.B Digital halftoning
+is an ordered-dither scheme that is designed for images that are
+going to be reproduced photographically. The high-frequency alternation
+of black and white samples that is used to produce grey levels in
+ordered dither is not reproduced faithfully by photocopiers.
+This algorithm uses lower-frequency alternation of samples to produce
+the same grey level. While the resulting image has a coarser texture,
+it will be reproduced accurately. This method is especially recommended for
+images that will be reproduced photographically.
+.PP
+The dithering method can be selected by use of the 
+.B dither 
+parameter with any
+.B pen
+filter.
+The available dithering methods are:
+ 
+.br
+             0    No dither (0=off, anything else=on)
+.br
+             1    Random Dither
+.br
+             2    Ordered Dither
+.br
+             3    Minimized Average Error Method
+.br
+             4    Digital Halftoning
+.PP
+Dithered output can be displayed on polytone or color devices by specifying 
+.B mono=y 
+in the
+.B pen
+filter call.
+.PP
+On a typical graphics display, a linear grey scale has a nonlinear
+appearance.  The transition from black to white is more rapid than expected,
+leaving the scale clipped at both ends.  This perceived nonlinearity is
+due to the characteristics of the human eye, which sees a linear change
+in brightness as a logarithmic change, as well as to the display characteristics
+of the device being used.  When a grey scale is displayed on paper using
+the dithering methods described above, the nonlinearity is no longer
+present.  Such images seem to have a washed out appearance because of
+the relative scarcity of pure black and white shades.  The nonlinearity
+of display devices seems to be a useful feature that one might wish to
+duplicate on paper.  The pen filter parameter
+.B greyc
+(short for `grey correction') modifies the grey scale used to display a
+raster to simulate the nonlinearity of displays.  The grey scale is
+multiplied by a cubic polynomial with greyc determining the exact shape
+of the polynomial.  The function has been constructed such that the ends
+and middle of the grey scale are left undisturbed, but on either side of
+the middle the grey scale is skewed towards the end of the scale (black or
+white).  Greyc=1. leaves the grey scale undisturbed, and values smaller than
+1. skew the scale as described above.  We have found greyc=-0.5 to yield
+plots on our Imagen laser printer that are very similar to images displayed
+on our Rastertek graphics display.  Some experimentation is undoubtedly
+required for other devices.  Once a desirable value has been obtained for
+a particular device, that value should be made the default for the particular
+device.
+.PP
+A further complication with plotting raster images is the dot size used
+by the plotter.  In displaying a linear grey scale on our laser printer,
+we found the result to be much darker than expected, especially in the
+darker half of the scale.  Our hypothesis is that the plotter causes
+adjacent dots to overlap.  When the image is mostly white (as in the white
+end of the grey scale), this overlap is not very important, since it is
+rare that a given empty spot is surrounded by black dots.  However, in the
+black half of the grey scale, white places in the plotted
+image are usually surrounded by black dots, and the overlap causes the
+white space to be much smaller than expected.  Hence the plot is darker
+than expected. 
+.PP
+From this hypothesis, we have constructed a function that alters the
+grey scale to compensate for dot or pixel overlap.  The
+.B pixc
+(short for `pixel correction') parameter controls this alteration of the
+grey scale.  Pixc=1. leaves the grey scale undisturbed.  Values smaller
+than 1. shift all the grey values toward white in such a way as to
+compensate for the
+darkening that results from pixel overlap.  The shift is larger for the
+dark half of the grey scale, since (from the above discussion) it is more
+seriously affected by pixel overlap.  We have found pixc=0.6 to be an
+appropriate value for our Imagen laser printer.  This value gives accurate
+reproduction of a linear grey scale.
+.PP
+As with the greyc parameter, once a suitable value has been obtained for
+a particular printer, the appropriate value should be made the default
+for that device.
+.SH COPYRIGHT
+The Vplot source code is copyrighted. Please read the copyright notice which
+can be found in the Vplot manual page.
+.SH "SEE ALSO"
+pen vplotlib vplot vplothacker
+.SH "AUTHOR"
+Joe Dellinger and Steve Cole
