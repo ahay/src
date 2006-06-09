@@ -31,6 +31,302 @@
  * Joe Dellinger (Amoco), April 25 1996
  *	Use relative moves when they save space.
  */
+/*
+ *
+ *  source file:   ./filters/pslib/psattr.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), March 27 1988
+ *      Routine no longer modifies the current vplot color. It modifies
+ *      postscript's current color definition only. This is the way
+ *      it's supposed to be done.
+ * Steve Cole (SEP), March 29 1988
+ *      Clipping (the SET_WINDOW case) is now supported.
+ * Steve Cole (SEP), March 31 1988
+ *      Dashed lines (NEW_DASH) is now supported.
+ * Steve Cole (SEP), June 20 1988
+ *      Dashon was incorrectly used as a local variable here. Cleaned
+ *      up the clipping code some.
+ * Steve Cole (SEP), August 19 1988
+ *      Added newpath after setting of clipping window. Otherwise when
+ *      a stroke command came along, the clipping path would be drawn in.
+ * Joe Dellinger (SEP), October 19 1988
+ *	Added "grey" option.
+ * Steve Cole (SEP), November 1 1991
+ *      Replaced grey option with proper color support. Colors are
+ *      shaded in grey (like the grey option) by default in PostScript
+ *      on greyscale devices.
+ * Joe Dellinger (SOEST), October 15 1992
+ *	After setting a new clipping window the global plot parameters
+ *	line width, dash pattern, and color were being lost. (Polygon
+ *	fill pattern is apparently not lost.)
+ * Joe Dellinger (SOEST), October 16 1992
+ *	Postscript allows through everything STRICTLY INSIDE a clipping
+ *	path; the path itself is not included. Thus we have to extend the
+ *	postscript clipping box by one minimal coordinate unit in each
+ *	direction, because vplot assumes the edges of the clipping window
+ *	ARE included.
+ * Steve Cole (SEP), November 30 1992
+ *      Added color raster support.
+ * Joe Dellinger (Amoco), April 24 1996
+ *	Wrap the stuff that needs to be done after a grestore up into
+ *	a subroutine so it can be called from other routines too.
+ * Joe Dellinger (Amoco), March 20 1997
+ *	Don't do a grestore without a preceding gsave to go with it.
+ * Joe Dellinger (BP Amoco), Oct 5 1999
+ *	pspen color=y force=y should just give you the colors you ask for,
+ *	period. pspen color=y force=n should give you their complements,
+ *	period. Don't try to get excessively tricky flipping some colors
+ *	around and not others. Some of the color versus monochrome logic
+ *	was entangled.
+ */
+/*
+ *
+ *  source file:   ./filters/pslib/psclose.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), March 29 1988
+ *	Moved showpage to pserase.
+ * Joe Dellinger (SOEST), Feb 18 1992
+ *	Added option for "PSPRINTER" environment variable.
+ * Steve Cole (SEP), October 22 1992
+ *	Added color printer support.
+ * Joe Dellinger (AMOCO), March 22 1995
+ *      Added custom paper size support.
+ *      Added comment for Amoco users so they can see where their plot
+ *      is being spooled. If you don't like that, #define NOCOMMENTS
+ * Hector Urdaneta (SEP), April 26 1996
+ *      Added ifdef SGI64, define NOCOMMENTS, endif 
+ *      Not compiling in the SGI
+ */
+
+/*
+ *
+ *  source file:   ./filters/pslib/pserase.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), March 29 1988
+ *      Added plot label.
+ * Steve Cole (SEP), March 31 1988
+ *      Added support for ncopies and hold command line options.
+ * Dave Nichols (SEP), May 22 1990
+ *	Added a grestore at the end of the page to match the gsave at the start
+ *	Modified output for tex=y to be compatible with /psfig macros in TeX.
+ * Joe Dellinger (SOEST), Oct 15 1992
+ *	Added a grestore/gsave pair just before printing the label
+ *	to turn off any clipping window which may be in effect.
+ * Joe Dellinger (AMOCO), April 24 1996
+ *	Paper size was not set on pages after the first.
+ *	Line join type was not set if tex=y, causing "fanged S syndrome".
+ *	The variable "rotate" should not have been used here.
+ *	Fatness (and some other variables) needed to be reset at the
+ *	beginning of each new page.
+ * Joe Dellinger (AMOCO), March 20 1997
+ *	If we did a gsave for a clipping window, then do a grestore
+ *	here so gsaves and grestores are properly paired.
+ */
+/*
+ *
+ *  source file:   ./filters/pslib/psopen.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), September 15 1987
+ *	Added smart_raster, mono, dither, pixc, and greyc to attributes.
+ * Steve Cole (SEP), January 10 1988
+ *      Vplot pen font is now default font.
+ * Steve Cole (SEP), March 23 1988
+ *      Default font is now vplot default hardcopy font.
+ * Steve Cole (SEP), March 29 1988
+ *      Added an intial gsave so that the first clipping window call
+ *      will not destroy the rotation and translation done here when
+ *      it tries to back out the previous clipping call.
+ *	Added need_end_erase for plotting label.
+ *      Corrected definition of limits of device space.
+ * Steve Cole (SEP), March 31 1988
+ *      The vplot to PostScript units conversion factor is computed here
+ *	instead of being hardwired in many different places.
+ *      Scaling is done here so that all coordinates output by pspen
+ *      can be integers.
+ * Joe Dellinger (SEP), October 19 1988
+ *	Added "grey" and "harddither" options, fixed bugs, use "move/draw"
+ *	method of sending paths.
+ * Joe Dellinger (SEP), January 19 1989
+ *	This is a "page type" hardcopy device;
+ *	size=relative makes more sense.
+ * Joe Dellinger (SEP), April 17 1990
+ *	Remove pointless calloc call; "getlogin" provides its own allocation.
+ * Dave Nichols (SEP), May 22 1990
+ *	Changed output for tex=y to be compatible with /psfig macros in TeX.
+ * Dave Nichols (SEP), Aug 14 1990
+ *	Changed size of page to be maximum possible and force size=ABSOLUTE
+ *	for tex=y to prevent clipping of plots off the page.
+ * Steve Cole (SEP), Nov 1 1991
+ *	Added color support.
+ * Dave Nichols (SEP) May 2 1992
+ *      Allow VPLOTSPOOLDIR environment variable to override PEN_SPOOL
+ * Joe Dellinger (SOEST) Oct 15 1992
+ *	The Apple LaserWriter page limits are a little more generous
+ *	than the SPARC printer allows.
+ * Steve Cole (SEP), Nov 30 1992
+ *      Added color raster support.
+ *	Added limits for Tektronix color postscript printer. These are
+ *      used if pspen is invoked by the alias tcprpen, or if
+ *      wstype=tcpr.
+ * Ray Abma (SEP) 3 Aug 1993
+ *      changed getdate to dateget to avoid conflict with HP time.h
+ * David Lumley (SEP) March 7 1994
+ *	added translate call so tcpr printable area doesn't get clipped
+ * Joe Dellinger (AMOCO) March 22 1995
+ *	Added the ability to specify a page size from the command line.
+ *	Added the ability to set the default page size either by the
+ *	define DEFAULT_PAPER_SIZE at compile time or by setting an
+ *	environmental variable of the same name.
+ *	Corrected the bug (I hope?) that caused plots to sometimes be
+ *	lost if pspen was run in background from a shell after the user
+ *	logged out. Added more detail to error messages.
+ *	Added "oyo" option to wstype.
+ * Joe Dellinger (AMOCO) April 24 1996
+ *	Set line join type when tex=y too.
+ *	The variable "rotate" was always zero because it hadn't been
+ *	properly set yet and shouldn't have been used here.
+ * Joe Dellinger (AMOCO) April 25 1996
+ *	Add "s" and "r" as shorthands for "stroke" and "rlineto", respectively.
+ * Joe Dellinger (AMOCO) April 26 1996
+ *	Add "x" as shorthand for "0 0 rlineto" (a dot).
+ * Joe Dellinger (BP Amoco) Oct 5, 1999
+ *	Set the actual colors when calling psattributes (changes made
+ *	there to fix a bug required a change here).
+ */
+
+/*
+ *
+ *  source file:   ./filters/pslib/psplot.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Joe Dellinger (SEP), October 18 1988
+ *	Stole imagplot.c to make psplot.c.
+ * Joe Dellinger (SEP), October 19 1988
+ *	Use "move/draw" method of sending paths.
+ * Steve Cole (SEP), July 27 1989
+ *      Added check on PATHLENGTH to avoid too many points/path.
+ * Steve Cole (SEP), August 26 1990
+ *      Removed check for staying at same point in addpath. Correct
+ *	vplot behavior is to plot a point in this case, not ignore it.
+ * Joe Dellinger (SOEST) June 23 1992
+ *	The xold, yold variables in addpath were set but never used.
+ * Joe Dellinger (Amoco) April 25 1996
+ *	Use "s" instead of "stroke" to save a few bytes.
+ *	Use "r" (short for "rlineto") when it uses less space than
+ *	"d" (short for "lineto").
+ * Joe Dellinger (Amoco) April 26 1996
+ *	Jon has plots that consist of zillions of dots, so try to
+ *	optimize that case a little bit better. ("x" is shorthand for "0 0 r")
+ */
+
+/*
+ * 
+ *  source file:   ./filters/pslib/psraster.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), September 11 1987
+ *	Wrote smart version of psraster.c.
+ * Steve Cole (SEP), February 10 1988
+ *      Rewrote using readhexstring instead of creating procedure for image.
+ *      This avoids possible size problems.
+ *	Fixed orientation problems.
+ * Steve Cole (SEP), March 28 1988
+ *      Simplified the handling of the raster. In this routine we want
+ *      always to output bytes and let PostScript do its own dithering.
+ * Steve Cole (SEP), March 31 1988
+ *      Corrected polarity of output raster.
+ * Joe Dellinger (SEP), October 19 1988
+ *	Added "harddither" option.
+ * Steve Cole (SEP), November 30 1992
+ *	Added color raster support.
+ * Dave Nichols (SEP), April 7 1993
+ *	Made grey rasters split their lines (like color ones do)
+ * Joe Dellinger, David Lumley, 10-03-94
+ * 	Check external variable ras_allgrey to decide if only gray raster
+ *	is needed when color is requested by the pspen color=y option.
+ */
+
+/*
+ *
+ *  source file:   ./filters/pslib/psreset.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Joe Dellinger (SEP), October 19 1988
+ *	Added "grey" option.
+ * Joe Dellinger (BP Amoco) October 5 1999
+ *	Grey-level stuff should only be done for mono=y case.
+ */
+
+/*
+ *
+ *  source file:   ./filters/pslib/pstext.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), September 16 1987
+ *      Font 0 is now used if an undefined font is requested.
+ * Steve Cole (SEP), March 23 1988
+ *      For vplot fonts, added return after gentext call.
+ * Steve Cole (SEP), April 2 1988
+ *      Changed scaling to agree with other routines.
+ * Steve Cole (SEP), June 20 1988
+ *      Removed unused array "instruction".
+ * Joe Dellinger (SOEST), March 1 1993
+ *	Pspen hardware fonts were coming out too small due to a bug
+ *	in this routine that used to not matter. This whole routine is
+ *	full of bugs, though, and should be re-written from scratch!
+ *	For example it should NOT attempt to use yscale and xscale itself.
+ *	That is certainly WRONG! I took that part out; better to have
+ *	text always come out square than have it scaled wrongly.
+ *	(Talking to postscript in terms of "orient" and "size" is pointless
+ *	and awkward in any case.) The "DIFFERENT_COORDINATES" stuff was not
+ *	working and not worth saving, so I made it always "true".
+ */
+
+/*
+ *
+ *  source file:   ./filters/pslib/psvector.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Steve Cole (SEP), March 24 1988
+ *      Corrected computation of linewidth.
+ * Steve Cole (SEP), March 31 1988
+ *	Added line dashing logic.
+ * Joe Dellinger (SEP) October 17 1988
+ *	Stole imagvector.c to create psvector.c that does things with
+ *	paths.
+ * Joe Dellinger (SEP), October 19 1988
+ *	Fixed bugs, use "move/draw" method of sending paths.
+ * Aritomo Shinozaki (Loomis Laboratory of Physics), February 25 1989
+ *	The code which generates dash pattern lines was incorrect.
+ * Joe Dellinger (SOEST) June 23 1992
+ *	Added dumb_fat option
+ * Joe Dellinger (SOEST) October 15 1992
+ *	No need for extra space at start of "setlinewidth" command.
+ *	If the dash pattern has been completely lost (because of a
+ *	grestore) call ps_set_dash to recreate it.
+ */
 
 #define mask0 ((unsigned char) (((unsigned int) 1) << 7))
 
@@ -435,66 +731,6 @@ char            stringr[80];
     }
 
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/psattr.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), March 27 1988
- *      Routine no longer modifies the current vplot color. It modifies
- *      postscript's current color definition only. This is the way
- *      it's supposed to be done.
- * Steve Cole (SEP), March 29 1988
- *      Clipping (the SET_WINDOW case) is now supported.
- * Steve Cole (SEP), March 31 1988
- *      Dashed lines (NEW_DASH) is now supported.
- * Steve Cole (SEP), June 20 1988
- *      Dashon was incorrectly used as a local variable here. Cleaned
- *      up the clipping code some.
- * Steve Cole (SEP), August 19 1988
- *      Added newpath after setting of clipping window. Otherwise when
- *      a stroke command came along, the clipping path would be drawn in.
- * Joe Dellinger (SEP), October 19 1988
- *	Added "grey" option.
- * Steve Cole (SEP), November 1 1991
- *      Replaced grey option with proper color support. Colors are
- *      shaded in grey (like the grey option) by default in PostScript
- *      on greyscale devices.
- * Joe Dellinger (SOEST), October 15 1992
- *	After setting a new clipping window the global plot parameters
- *	line width, dash pattern, and color were being lost. (Polygon
- *	fill pattern is apparently not lost.)
- * Joe Dellinger (SOEST), October 16 1992
- *	Postscript allows through everything STRICTLY INSIDE a clipping
- *	path; the path itself is not included. Thus we have to extend the
- *	postscript clipping box by one minimal coordinate unit in each
- *	direction, because vplot assumes the edges of the clipping window
- *	ARE included.
- * Steve Cole (SEP), November 30 1992
- *      Added color raster support.
- * Joe Dellinger (Amoco), April 24 1996
- *	Wrap the stuff that needs to be done after a grestore up into
- *	a subroutine so it can be called from other routines too.
- * Joe Dellinger (Amoco), March 20 1997
- *	Don't do a grestore without a preceding gsave to go with it.
- * Joe Dellinger (BP Amoco), Oct 5 1999
- *	pspen color=y force=y should just give you the colors you ask for,
- *	period. pspen color=y force=n should give you their complements,
- *	period. Don't try to get excessively tricky flipping some colors
- *	around and not others. Some of the color versus monochrome logic
- *	was entangled.
- */
 
 /* Is a dash pattern currently in effect? */
 int             ps_dash_pattern_set = NO;
@@ -768,37 +1004,6 @@ int             ii;
     /* And it is currently active, too. */
     ps_dash_pattern_set = YES;
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/psclose.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), March 29 1988
- *	Moved showpage to pserase.
- * Joe Dellinger (SOEST), Feb 18 1992
- *	Added option for "PSPRINTER" environment variable.
- * Steve Cole (SEP), October 22 1992
- *	Added color printer support.
- * Joe Dellinger (AMOCO), March 22 1995
- *      Added custom paper size support.
- *      Added comment for Amoco users so they can see where their plot
- *      is being spooled. If you don't like that, #define NOCOMMENTS
- * Hector Urdaneta (SEP), April 26 1996
- *      Added ifdef SGI64, define NOCOMMENTS, endif 
- *      Not compiling in the SGI
- */
-
 
 void psclose (int status)
 /*< Routine to finish up >*/
@@ -929,69 +1134,7 @@ void psclose (int status)
 	break;
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
-/*
- *
- *  source file:   ./filters/pslib/psconf.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), August 26 1987
- *	Replaced genraster with psraster.
- * Steve Cole (SEP), March 25 1988
- *      Added psarea as it is now available.
- */
-
-/*
- * Apple Laser Writer Configuration
- */
-
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/pserase.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), March 29 1988
- *      Added plot label.
- * Steve Cole (SEP), March 31 1988
- *      Added support for ncopies and hold command line options.
- * Dave Nichols (SEP), May 22 1990
- *	Added a grestore at the end of the page to match the gsave at the start
- *	Modified output for tex=y to be compatible with /psfig macros in TeX.
- * Joe Dellinger (SOEST), Oct 15 1992
- *	Added a grestore/gsave pair just before printing the label
- *	to turn off any clipping window which may be in effect.
- * Joe Dellinger (AMOCO), April 24 1996
- *	Paper size was not set on pages after the first.
- *	Line join type was not set if tex=y, causing "fanged S syndrome".
- *	The variable "rotate" should not have been used here.
- *	Fatness (and some other variables) needed to be reset at the
- *	beginning of each new page.
- * Joe Dellinger (AMOCO), March 20 1997
- *	If we did a gsave for a clipping window, then do a grestore
- *	here so gsaves and grestores are properly paired.
- */
 
 /*
  * Location and height of label and surrounding box in ps coordinates
@@ -1100,89 +1243,6 @@ static int      page_count = 1;
 	break;
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/psopen.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), September 15 1987
- *	Added smart_raster, mono, dither, pixc, and greyc to attributes.
- * Steve Cole (SEP), January 10 1988
- *      Vplot pen font is now default font.
- * Steve Cole (SEP), March 23 1988
- *      Default font is now vplot default hardcopy font.
- * Steve Cole (SEP), March 29 1988
- *      Added an intial gsave so that the first clipping window call
- *      will not destroy the rotation and translation done here when
- *      it tries to back out the previous clipping call.
- *	Added need_end_erase for plotting label.
- *      Corrected definition of limits of device space.
- * Steve Cole (SEP), March 31 1988
- *      The vplot to PostScript units conversion factor is computed here
- *	instead of being hardwired in many different places.
- *      Scaling is done here so that all coordinates output by pspen
- *      can be integers.
- * Joe Dellinger (SEP), October 19 1988
- *	Added "grey" and "harddither" options, fixed bugs, use "move/draw"
- *	method of sending paths.
- * Joe Dellinger (SEP), January 19 1989
- *	This is a "page type" hardcopy device;
- *	size=relative makes more sense.
- * Joe Dellinger (SEP), April 17 1990
- *	Remove pointless calloc call; "getlogin" provides its own allocation.
- * Dave Nichols (SEP), May 22 1990
- *	Changed output for tex=y to be compatible with /psfig macros in TeX.
- * Dave Nichols (SEP), Aug 14 1990
- *	Changed size of page to be maximum possible and force size=ABSOLUTE
- *	for tex=y to prevent clipping of plots off the page.
- * Steve Cole (SEP), Nov 1 1991
- *	Added color support.
- * Dave Nichols (SEP) May 2 1992
- *      Allow VPLOTSPOOLDIR environment variable to override PEN_SPOOL
- * Joe Dellinger (SOEST) Oct 15 1992
- *	The Apple LaserWriter page limits are a little more generous
- *	than the SPARC printer allows.
- * Steve Cole (SEP), Nov 30 1992
- *      Added color raster support.
- *	Added limits for Tektronix color postscript printer. These are
- *      used if pspen is invoked by the alias tcprpen, or if
- *      wstype=tcpr.
- * Ray Abma (SEP) 3 Aug 1993
- *      changed getdate to dateget to avoid conflict with HP time.h
- * David Lumley (SEP) March 7 1994
- *	added translate call so tcpr printable area doesn't get clipped
- * Joe Dellinger (AMOCO) March 22 1995
- *	Added the ability to specify a page size from the command line.
- *	Added the ability to set the default page size either by the
- *	define DEFAULT_PAPER_SIZE at compile time or by setting an
- *	environmental variable of the same name.
- *	Corrected the bug (I hope?) that caused plots to sometimes be
- *	lost if pspen was run in background from a shell after the user
- *	logged out. Added more detail to error messages.
- *	Added "oyo" option to wstype.
- * Joe Dellinger (AMOCO) April 24 1996
- *	Set line join type when tex=y too.
- *	The variable "rotate" was always zero because it hadn't been
- *	properly set yet and shouldn't have been used here.
- * Joe Dellinger (AMOCO) April 25 1996
- *	Add "s" and "r" as shorthands for "stroke" and "rlineto", respectively.
- * Joe Dellinger (AMOCO) April 26 1996
- *	Add "x" as shorthand for "0 0 rlineto" (a dot).
- * Joe Dellinger (BP Amoco) Oct 5, 1999
- *	Set the actual colors when calling psattributes (changes made
- *	there to fix a bug required a change here).
- */
 
 #ifndef DEFAULT_PAPER_SIZE
 #define DEFAULT_PAPER_SIZE	"letter"
@@ -1837,41 +1897,7 @@ void dateget (char *date)
     clock = time (0);
     sprintf (date, "%.16s", asctime (localtime (&clock)));
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
-/*
- *
- *  source file:   ./filters/pslib/psplot.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger (SEP), October 18 1988
- *	Stole imagplot.c to make psplot.c.
- * Joe Dellinger (SEP), October 19 1988
- *	Use "move/draw" method of sending paths.
- * Steve Cole (SEP), July 27 1989
- *      Added check on PATHLENGTH to avoid too many points/path.
- * Steve Cole (SEP), August 26 1990
- *      Removed check for staying at same point in addpath. Correct
- *	vplot behavior is to plot a point in this case, not ignore it.
- * Joe Dellinger (SOEST) June 23 1992
- *	The xold, yold variables in addpath were set but never used.
- * Joe Dellinger (Amoco) April 25 1996
- *	Use "s" instead of "stroke" to save a few bytes.
- *	Use "r" (short for "rlineto") when it uses less space than
- *	"d" (short for "lineto").
- * Joe Dellinger (Amoco) April 26 1996
- *	Jon has plots that consist of zillions of dots, so try to
- *	optimize that case a little bit better. ("x" is shorthand for "0 0 r")
- */
 
 int             lost = 1;
 static int      where = -1;
@@ -1958,43 +1984,6 @@ void endpath (void)
     }
     lost = 1;
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- * 
- *  source file:   ./filters/pslib/psraster.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), September 11 1987
- *	Wrote smart version of psraster.c.
- * Steve Cole (SEP), February 10 1988
- *      Rewrote using readhexstring instead of creating procedure for image.
- *      This avoids possible size problems.
- *	Fixed orientation problems.
- * Steve Cole (SEP), March 28 1988
- *      Simplified the handling of the raster. In this routine we want
- *      always to output bytes and let PostScript do its own dithering.
- * Steve Cole (SEP), March 31 1988
- *      Corrected polarity of output raster.
- * Joe Dellinger (SEP), October 19 1988
- *	Added "harddither" option.
- * Steve Cole (SEP), November 30 1992
- *	Added color raster support.
- * Dave Nichols (SEP), April 7 1993
- *	Made grey rasters split their lines (like color ones do)
- * Joe Dellinger, David Lumley, 10-03-94
- * 	Check external variable ras_allgrey to decide if only gray raster
- *	is needed when color is requested by the pspen color=y option.
- */
 
 extern int      ps_grey_ras[];
 extern int	red[], green[], blue[];
@@ -2087,27 +2076,6 @@ int             rangle;
 
     fprintf (pltout, "grestore\n");
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/psreset.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger (SEP), October 19 1988
- *	Added "grey" option.
- * Joe Dellinger (BP Amoco) October 5 1999
- *	Grey-level stuff should only be done for mono=y case.
- */
 
 void psreset (void)
 /*< reset >*/
@@ -2124,42 +2092,6 @@ int             ii;
 	psattributes (SET_COLOR, 7, 0, 0, 0);
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/pstext.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), September 16 1987
- *      Font 0 is now used if an undefined font is requested.
- * Steve Cole (SEP), March 23 1988
- *      For vplot fonts, added return after gentext call.
- * Steve Cole (SEP), April 2 1988
- *      Changed scaling to agree with other routines.
- * Steve Cole (SEP), June 20 1988
- *      Removed unused array "instruction".
- * Joe Dellinger (SOEST), March 1 1993
- *	Pspen hardware fonts were coming out too small due to a bug
- *	in this routine that used to not matter. This whole routine is
- *	full of bugs, though, and should be re-written from scratch!
- *	For example it should NOT attempt to use yscale and xscale itself.
- *	That is certainly WRONG! I took that part out; better to have
- *	text always come out square than have it scaled wrongly.
- *	(Talking to postscript in terms of "orient" and "size" is pointless
- *	and awkward in any case.) The "DIFFERENT_COORDINATES" stuff was not
- *	working and not worth saving, so I made it always "true".
- */
-
 
 /*
  *  font name definitions
@@ -2331,40 +2263,6 @@ static char     last_size = 0, last_font;
 
     fprintf (pltout, "grestore\n");
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/pslib/psvector.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Steve Cole (SEP), March 24 1988
- *      Corrected computation of linewidth.
- * Steve Cole (SEP), March 31 1988
- *	Added line dashing logic.
- * Joe Dellinger (SEP) October 17 1988
- *	Stole imagvector.c to create psvector.c that does things with
- *	paths.
- * Joe Dellinger (SEP), October 19 1988
- *	Fixed bugs, use "move/draw" method of sending paths.
- * Aritomo Shinozaki (Loomis Laboratory of Physics), February 25 1989
- *	The code which generates dash pattern lines was incorrect.
- * Joe Dellinger (SOEST) June 23 1992
- *	Added dumb_fat option
- * Joe Dellinger (SOEST) October 15 1992
- *	No need for extra space at start of "setlinewidth" command.
- *	If the dash pattern has been completely lost (because of a
- *	grestore) call ps_set_dash to recreate it.
- */
 
 int             ps_last_fat = -1;
 

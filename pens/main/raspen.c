@@ -17,6 +17,74 @@
  * Stewart A. Levin (MRDC/DRL), September 8, 1988
  *      Return DOVPLOT_CONT on exit.
  */
+/*
+ *
+ *  source file:   ./filters/raslib/rasclose.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Joe Dellinger (SEP), May 7, 1989
+ *	RGB option added.
+ * Chuck Karish, August 5, 1989
+ * 	For non-SEP users, don't try to open colfile unless it has been
+ *	specified!
+ */
+
+/*
+ *
+ *  source file:   ./filters/raslib/raserase.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Joe Dellinger (SEP), May 7, 1989
+ *	RGB option added. Stew Levin's Color tektronix code modified and
+ *	incorporated.
+ * Joe Dellinger (SEP), August 5, 1989
+ *	Fixed bug that caused only first page of GRF format output to
+ *	actually print.
+ * Dave Nichols (SEP) May 2 1992
+ *      Allow VPLOTSPOOLDIR environment variable to override PEN_SPOOL
+ * Dave Nichols (SEP) July 10 1992
+ *      Added ppm output.
+ */
+
+/*
+ *
+ *  source file:   ./filters/raslib/rasopen.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ * Joe Dellinger (SEP), Sept 25 1988
+ *	"ppi" undocumented, and read as an integer and not a float!
+ * Joe Dellinger (SEP), May 7 1989
+ *	Cleaned up to make raslib work with Tektronix color plotter.
+ *	Incorporated portions of Stew Levin's color plotter code.
+ * Joe Dellinger (SEP), August 5, 1989
+ *	Use the variable "default_out" to remember the ORIGINAL
+ *	value of isatty(fileno(pltout)).
+ * Chuck Karish, 5 August 1989
+ *	Non-SEP, colfile defaults to empty string instead of "colfile".
+ * Joe Dellinger, 17 Jan 1990
+ *	ARG!!! I'm changing the default behavior back so it matches
+ *	the documentation. I'm also fixing the bug introduced by the
+ *	change so that "colfile" was not even settable from the command
+ *	line.
+ * Dave Nichols, 10 July 1992
+ *	Added support for ppm output, (ppmpen, Ppmpen).
+ */
+
+/*
+ *
+ *  source file:   ./filters/raslib/rasreset.c
+ *
+ * Joe Dellinger (SEP), June 11 1987
+ *	Inserted this sample edit history entry.
+ *	Please log any further modifications made to this file:
+ */
+
 
 /*
  * control graphics attributes
@@ -110,29 +178,6 @@ void rasattr (int command, int value, int v1, int v2, int v3)
 	    break;
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/raslib/rasclose.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger (SEP), May 7, 1989
- *	RGB option added.
- * Chuck Karish, August 5, 1989
- * 	For non-SEP users, don't try to open colfile unless it has been
- *	specified!
- */
-
 
 extern int      color_table[NCOLOR][3];
 extern char     colfile[];
@@ -151,60 +196,6 @@ void rasclose (int status)
 	    break;
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/raslib/rasconf.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- */
-
-/*
- * Keyword: vplot raster movie pen
- */
-
-/*
- * device routine table
- */
-
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/raslib/raserase.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger (SEP), May 7, 1989
- *	RGB option added. Stew Levin's Color tektronix code modified and
- *	incorporated.
- * Joe Dellinger (SEP), August 5, 1989
- *	Fixed bug that caused only first page of GRF format output to
- *	actually print.
- * Dave Nichols (SEP) May 2 1992
- *      Allow VPLOTSPOOLDIR environment variable to override PEN_SPOOL
- * Dave Nichols (SEP) July 10 1992
- *      Added ppm output.
- */
 
 void raserase (int command)
 /*< erase >*/
@@ -259,40 +250,6 @@ void ras_write (void)
     }
     pm_close( pltout );
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/raslib/rasopen.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- * Joe Dellinger (SEP), Sept 25 1988
- *	"ppi" undocumented, and read as an integer and not a float!
- * Joe Dellinger (SEP), May 7 1989
- *	Cleaned up to make raslib work with Tektronix color plotter.
- *	Incorporated portions of Stew Levin's color plotter code.
- * Joe Dellinger (SEP), August 5, 1989
- *	Use the variable "default_out" to remember the ORIGINAL
- *	value of isatty(fileno(pltout)).
- * Chuck Karish, 5 August 1989
- *	Non-SEP, colfile defaults to empty string instead of "colfile".
- * Joe Dellinger, 17 Jan 1990
- *	ARG!!! I'm changing the default behavior back so it matches
- *	the documentation. I'm also fixing the bug introduced by the
- *	change so that "colfile" was not even settable from the command
- *	line.
- * Dave Nichols, 10 July 1992
- *	Added support for ppm output, (ppmpen, Ppmpen).
- */
 
 
 void rasopen (int argc, char* argv[])
@@ -346,23 +303,6 @@ void rasopen (int argc, char* argv[])
 	    ERR (FATAL, name, "can't open file %s\n", newpath);
     }
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/raslib/rasreset.c
- *
- * Joe Dellinger (SEP), June 11 1987
- *	Inserted this sample edit history entry.
- *	Please log any further modifications made to this file:
- */
 
 void rasreset (void)
 /*< reset >*/
@@ -391,16 +331,6 @@ void zap (void)
     for (p = image; p < &image[dev_xmax * dev_ymax * 3]; p++)
 	*p = 0;
 }
-
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
 
 #define  RGB
 

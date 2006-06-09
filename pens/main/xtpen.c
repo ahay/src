@@ -19,6 +19,108 @@
  *      Add visual depth as a resource
  */
 
+/*
+ *
+ *  source file:   ./filters/xtlib/popup.c
+ *
+ * Dave Nichols (SEP), July 18 1992
+ *      Inserted this sample edit history entry.
+ *
+ * Stewart A. Levin (Mobil), Feb 19, 1993
+ *      Removed erroneous ; after actionPointPopupConfirm function body.
+ *
+ * Stewart A. Levin (SEP), May 22, 1994
+ *      Add explicit XtNinput specification to allow use with OpenWindows
+ */
+
+/*
+ *
+ *  source file:   ./filters/xtlib/xtcolors.c
+ *
+ * Dave Nichols (SEP), December 14 1993
+ *      Inserted this sample edit history entry.
+ */
+/*
+ * Joe Dellinger (AMOCO), June 9 1995
+ *	This code had a check in the xt_set_color_table routine
+ *	which disallowed setting colors 0 through 7 to black.
+ *	This was to get around a bug elsewhere in the code
+ *	that has been fixed, so the check (and the bug it
+ *	created) can now safely be removed.
+ * Dave Nichols (Schlumberger) Oct 10 1998
+ *      Add support for true color visuals
+ * Dave Nichols (Schlumberger) Nov 16 1999
+ *      Restore colormaps all at once (for speed)
+ */
+
+/*
+ *
+ *  source file:   ./filters/xtlib/xtcommands.c
+ *
+ * Steve Cole (SEP), August 4 1991
+ *      Inserted this sample edit history entry.
+ *
+ * Dave Nichols (SEP), February 14 1992
+ *      Changed to new control structure, added new buttons
+ *      for run, stop, prev.
+ * Dave Nichols (SEP), April 30 1992
+ *      Final version of the new xtpen, added message window
+ * Dave Nichols (SEP), July 18 1992
+ *      Added boxy mode for interact, it pops up a dialog to enter
+ *	information for the label and it outputs a format suitable
+ *	for the command line of Box
+ */
+
+/*
+ *
+ *  source file:   ./filters/xtlib/xt_dovplot.c
+ *
+ * Steve Cole (SEP), August 4 1991
+ *      Inserted this sample edit history entry.
+ *
+ * Dave Nichols (SEP), February 14 1992
+ *      Rewrote control structure, dovplot is now invoked only when
+ *      needed and on a per-frame basis.
+ * Dave Nichols (SEP), April 30 1992
+ *      Final version of the new xtpen, added message window.
+ * Dave Nichols (SEP), April 12 1993
+ *      Moved xt_size_n_scale into this routine so that user_scales are
+ *      set before it is called.
+ * Dave Nichols (SEP), April 13 1993
+ *      Use app_data to get defaults from resource database
+ */
+
+/* 
+ * source file:   ./filters/xtlib/xtpaint.c 
+ *
+ * Steve Cole (SEP), August 4 1991
+ *      Inserted this sample edit history entry.
+ *
+ * Dave Nicols (SEP), February 14 1992
+ *      Rewrote using new xtFrame interface that only plots one
+ *      frame at a time.
+ * Dave Nichols (SEP), April 30 1992
+ *      Final version of the new xtpen, added message window
+ * Dave Nichols (SEP), Nov 19 1993
+ *      Added proper handling of repaints that involve breaks.
+ *      Frame structure now contains info on how frame is terminated.
+ */
+
+/*
+ *
+ *  source file:   ./filters/xtlib/xtpixmap.c
+ *
+ * Steve Cole (SEP), August 4 1991
+ *      Inserted this sample edit history entry.
+ * Dave Nicols (SEP), February 14 1992
+ *      Rewrote using new xtFrame interface that only plots one
+ *      frame at a time.
+ * Dave Nichols (SEP), April 30 1992
+ *      Final version of the new xtpen, added message window
+ * Dave Nichols (SEP), May 6 1992
+ *      see_progress controls offscreen pixmap.
+ */
+
 #include <string.h>
 #include <stdio.h>
 #include <strings.h>
@@ -320,29 +422,6 @@ Widget  app;
     return 0;
 
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my eXample below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/popup.c
- *
- * Dave Nichols (SEP), July 18 1992
- *      Inserted this sample edit history entry.
- *
- * Stewart A. Levin (Mobil), Feb 19, 1993
- *      Removed erroneous ; after actionPointPopupConfirm function body.
- *
- * Stewart A. Levin (SEP), May 22, 1994
- *      Add explicit XtNinput specification to allow use with OpenWindows
- */
-
 
 
 typedef union
@@ -744,36 +823,6 @@ void xtclose (int status)
     }
 }
 
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtcolors.c
- *
- * Dave Nichols (SEP), December 14 1993
- *      Inserted this sample edit history entry.
- */
-/*
- * Joe Dellinger (AMOCO), June 9 1995
- *	This code had a check in the xt_set_color_table routine
- *	which disallowed setting colors 0 through 7 to black.
- *	This was to get around a bug elsewhere in the code
- *	that has been fixed, so the check (and the bug it
- *	created) can now safely be removed.
- * Dave Nichols (Schlumberger) Oct 10 1998
- *      Add support for true color visuals
- * Dave Nichols (Schlumberger) Nov 16 1999
- *      Restore colormaps all at once (for speed)
- */
-
-
 
 #ifndef SEP_MAP_SIZE
 #define SEP_MAP_SIZE 65536
@@ -946,34 +995,6 @@ int i;
 
     XtFree((void*) pen_color );
 }
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my eXample below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtcommands.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- *
- * Dave Nichols (SEP), February 14 1992
- *      Changed to new control structure, added new buttons
- *      for run, stop, prev.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), July 18 1992
- *      Added boxy mode for interact, it pops up a dialog to enter
- *	information for the label and it outputs a format suitable
- *	for the command line of Box
- */
-
 
 /* variable that control the existance of buttons and labels */
 static int wantButtons = 0;
@@ -1391,33 +1412,6 @@ int xt_pause(int doNEXT, int doPREV, int doREST, int doQUIT, int doRUN, int doST
 }
 
 int             lost;
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xt_dovplot.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- *
- * Dave Nichols (SEP), February 14 1992
- *      Rewrote control structure, dovplot is now invoked only when
- *      needed and on a per-frame basis.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window.
- * Dave Nichols (SEP), April 12 1993
- *      Moved xt_size_n_scale into this routine so that user_scales are
- *      set before it is called.
- * Dave Nichols (SEP), April 13 1993
- *      Use app_data to get defaults from resource database
- */
 
 FileInfo       *inFiles;
 int		num_files;
@@ -2550,30 +2544,6 @@ XVisualInfo* vinfo;
 
    
 }
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in the
- * documentation. It authorizes you to use this file for any non-commercial
- * purpose, provided that this copyright notice is not removed and that any
- * modifications made to this file are commented and dated in the style of my
- * example below. 
- */
-
-/* 
- * source file:   ./filters/xtlib/xtpaint.c 
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- *
- * Dave Nicols (SEP), February 14 1992
- *      Rewrote using new xtFrame interface that only plots one
- *      frame at a time.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), Nov 19 1993
- *      Added proper handling of repaints that involve breaks.
- *      Frame structure now contains info on how frame is terminated.
- */
 
 int             in_repaint = NO;
 
@@ -2804,31 +2774,6 @@ void xt_flush_display(void)
     }
     XFlush(pen_display);
 }
-
-/*
- * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
- * University. Official permission to use this software is included in
- * the documentation. It authorizes you to use this file for any
- * non-commercial purpose, provided that this copyright notice is not
- * removed and that any modifications made to this file are commented
- * and dated in the style of my example below.
- */
-
-/*
- *
- *  source file:   ./filters/xtlib/xtpixmap.c
- *
- * Steve Cole (SEP), August 4 1991
- *      Inserted this sample edit history entry.
- * Dave Nicols (SEP), February 14 1992
- *      Rewrote using new xtFrame interface that only plots one
- *      frame at a time.
- * Dave Nichols (SEP), April 30 1992
- *      Final version of the new xtpen, added message window
- * Dave Nichols (SEP), May 6 1992
- *      see_progress controls offscreen pixmap.
- */
-
 
 int pen_width = -1;
 int pen_height = -1;
