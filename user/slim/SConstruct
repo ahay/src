@@ -56,7 +56,7 @@ if 'c++' in api:
     for prog in cpp_mains:
         # compilation
         main = env.Program(prog + '.cc',
-                           LIBS=env.get('LIBS',[])+['rsf++'])
+                           LIBS=['rsf++']+env.get('LIBS',[]))
         
         if root:
             env.Install(bindir,main[0])

@@ -45,14 +45,15 @@ def convert(infile,outfile):
         gifs.append(gif)
  
         os.system ("ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d "
-                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | pnmquant 256 | " 
-                                "pnmcrop | ppmtogif -interlace > %s" %
+                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | "
+                   "pnmquant 256 | pnmcrop | ppmtogif -interlace > %s" %
                    (height,width,ppi,xcen,ycen,vppen,scale,gif))
         os.unlink(vppen)
 
     if outfile[-1] != '/':
         gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
-        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),string.join(gifs),outfile)
+        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
+                                         string.join(gifs),outfile)
         print run
         os.system (run)
 

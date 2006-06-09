@@ -372,7 +372,7 @@ char            format_string[80];
 	/*
 	 * Turn on automatic processing 
 	 */
-	smart_clip = NO;
+	smart_clip = false;
 	smart_raster = false;
 
 	/*
@@ -678,12 +678,12 @@ char            format_string[80];
 	dev.text = gentext;
 	dev.area = vecarea;
 	dev.raster = genraster;
-	smart_clip = NO;
+	smart_clip = false;
 	smart_raster = false;
     }
     else
     {
-	smart_clip = YES;
+	smart_clip = true;
 	smart_raster = true;
     }
 /*	fprintf(stderr,"doop \n");*/

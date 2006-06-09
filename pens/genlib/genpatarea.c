@@ -42,17 +42,18 @@
 extern int      need_devcolor, cur_color;
 
 void genpatarea (int npts, struct vertex  *head)
+/*< patarea >*/
 {
-register int    y, i, ii;
-register int    xstr, xend;
-int             ncross;
-int             vminx, vmaxx, vminy, vmaxy;
-struct vertex  *yhead, *v;
-int            *crosses;
-unsigned char  **rasline;
-static int      cur_color_save;
-int             color;
-
+    register int    y, i, ii;
+    register int    xstr, xend;
+    int             ncross;
+    int             vminx, vmaxx, vminy, vmaxy;
+    struct vertex  *yhead, *v;
+    int            *crosses;
+    unsigned char  **rasline;
+    static int      cur_color_save;
+    int             color;
+ 
 /*
  * Save color so we can restore it the last time.
  */

@@ -33,7 +33,6 @@
 #define MOVE 0
 #define DRAW 1
 
-extern int      smart_clip;
 extern int      lost;
 
 #define ABS(a)   ((a) >= 0  ? (a) : (-(a)))

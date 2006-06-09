@@ -1,12 +1,12 @@
 from rsfproj import *
 
-def velplot(title,label1='Depth (kft)'):
+def velplot(title,label1='Depth',unit1='kft'):
     return '''
     grey color=j allpos=y title="%s" scalebar=y
-    barlabel="Velocity (kft/s)"
-    label1="%s" label2="Lateral (kft)"
+    barlabel=Velocity barunit=kft/s
+    label1=%s unit1=%s label2=Lateral unit2=kft
     barreverse=y pclip=100 
-    ''' % (title,label1)
+    ''' % (title,label1,unit1)
 
 def graph(transp,o2,d2,n2,col,fat,extra=''):
     return '''
@@ -23,46 +23,62 @@ def wiggle(title):
 
 Flow('modl',None,
      '''
-     spike n1=200 o1=-8 d1=0.08 n2=5
-     nsp=5 k2=1,2,3,4,5 mag=1,2.2,3.5,5,7
+     spike n1=401 o1=-16 d1=0.08
+     n2=4 nsp=4 k2=1,2,3,4 mag=1,3,5,7
      ''')
 Flow('refl',None,
      '''
-     spike n1=200 n2=5 nsp=5 k2=1,2,3,4,5
-     mag=0.0909091,0.1428570,0.1111110,0.2000000,0.2000000
-     ''')
-Flow('rgrad',None,
-     '''
-     spike n1=200 n2=5 nsp=5 k2=1,2,3,4,5
-     mag=1,-1,0,0.5,-2
+     spike n1=401 n2=4 nsp=4 k2=1,2,3,4
+     mag=0.0909091,0.1428570,0.1111110,0.2000000
      ''')
 Flow('mod1','modl','window min1=0')
 
-Flow('unif','mod1','unif2 n1=150 d1=0.05 v00=5,6,8,10,15')
-Result('modl','unif',velplot('Model'))
-
-Flow('mod2','unif','math output=5+2*x1')
-
-Plot('modl','mod2',velplot('True Model'))
+Flow('mod2',None,'math n1=150 d1=0.05 output=5+2*x1 n2=401 o2=-16 d2=0.08')
+Plot('modl','mod2',velplot('Model'))
 Plot('modla','mod1',graph(0,0,0.05,150,0,20,'scalebar=y'))
 Plot('modlb','mod1',graph(0,0,0.05,150,7,5,'scalebar=y'))
-Result('modl2','modl modla modlb','Overlay')
+Result('modl','modl modla modlb','Overlay')
 
 Flow('clean','modl refl',
      '''
-     kirmod nt=501 dt=0.004 freq=25 refl=${SOURCES[1]}
-     ns=1 s0=2 ds=-0.1
-     nh=241 h0=-12 dh=0.1
+     kirmod nt=376 dt=0.004 freq=25 refl=${SOURCES[1]}
+     ns=1 s0=0 ds=0.05
+     nh=150 h0=0.1 dh=0.05
      vel=5 gradz=2 type=v
      ''')
 Flow('data','clean',
      '''
-     noise rep=y seed=2004 range=0.0002 |
+     noise rep=y seed=2004 range=0.0001 |
      ricker1 frequency=25 |
      add $SOURCE 
      ''')
+Result('data','grey title=CMP label2=Offset unit2=kft')
 
-Result('data','grey title=CMP')
+Flow('scan','data','vscan half=n semblance=y v0=4 nv=101 dv=0.1')
+Result('scan','grey color=j allpos=y title="Velocity Scan" unit2=kft/s')
+
+Flow('pick','scan','pick rect1=40')
+Flow('nmo','data pick','nmo velocity=${SOURCES[1]} half=n')
+Result('nmo','grey title="Normal Moveout (Hyperbolic)" ')
+
+Flow('dip0','data',
+     '''
+     math output="%g*x2/x1" |
+     mutter half=n v0=50 t0=0.004 tp=0.2
+     ''' % (0.05/(0.004*36)))
+Flow('dip','data dip0',
+     '''
+     dip pmin=0 order=1 liter=100 idip=${SOURCES[1]}
+     niter=10 rect1=40 rect2=5
+     ''')
+Result('dip','grey title=Slope scalebar=y clip=4 maxval=4 color=j allpos=y')
+
+Flow('flat','data dip','flat dip=${SOURCES[1]}')
+Result('flat','grey title=Flattened')
+
+Flow('pnmo vel','data dip',
+     'pnmo half=n dip=${SOURCES[1]} vel=${TARGETS[1]}')
+Result('pnmo','grey title="Oriented Normal Moveout (Hyperbolic)" ')
 
 Flow('inp',None,
      '''

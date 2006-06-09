@@ -4,6 +4,8 @@ import zomig
 for case in ('vxz','_levset'):
     Fetch('elf%s.dat' % case,'masha')
 
+Fetch('vsmooth_levset.dat','masha')
+ 
 nt=800
 dt=0.004
 
@@ -14,8 +16,9 @@ nz=1000
 dz=5.005
 
 xmax = 13319.9667
+#zmax = 4999.995
 zmax = 3200
-zmax = 2000
+#zmax = 2000
 
 ## Flow('elfh','elfh.dat',
 ##      '''
@@ -30,7 +33,8 @@ zmax = 2000
 ##      transp 
 ##      ''' % (nx,dx,nt,dt),stdin=0)  
 
-Flow('elfvxz','elf_levset.dat',
+#Flow('elfvxz','elf_levset.dat',
+Flow('elfvxz','vsmooth_levset.dat',
      '''
      echo in=$SOURCE
      n1=%d o1=0 d1=%g
@@ -44,18 +48,18 @@ Flow('elfvxz','elf_levset.dat',
      ''' % (nx,dx,nz,dz),stdin=0)  
 
 ## Flow('melf','elfvxz',
-##      '''
-##      mask max=10 |
-##      sfdd type=float |
-##      smooth rect1=40 rect2=40 |
-##      mask max=0.01
-##      ''')
+##       '''
+##       mask max=10 |
+##       sfdd type=float |
+##       smooth rect1=400 rect2=400 |
+##       mask max=0.01
+##       ''')
 
 ## Flow('vxz','elfvxz melf',
-##      '''
-##      miss3 mask=${SOURCES[1]} rect1=20 rect2=20 
-##      ''')
-
+##       '''
+##       miss3 mask=${SOURCES[1]} rect1=40 rect2=40 |
+##       window max1=%g
+##       ''' % zmax)
 
 Flow('vxz','elfvxz','window max1=%g' % zmax)
 

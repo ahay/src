@@ -24,8 +24,6 @@
 #include "polysubs.h"
 #include "polyfix.h"
 
-extern int      smart_clip;
-
 extern int      Allgone;
 
 void genarea (int npts, struct vertex  *head)

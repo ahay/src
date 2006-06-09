@@ -295,7 +295,8 @@ char            string[MAXFLEN + 1];
     ungetc ((char) c, pltin);
 
 
-    while (((c = getc (pltin)) == VP_ERASE) || c==VP_SET_COLOR_TABLE || ((c == VP_BREAK) && (brake == BREAK_ERASE)))
+    while (((c = getc (pltin)) == VP_ERASE) || 
+	   ((c == VP_BREAK) && (brake == BREAK_ERASE)))
     {
 	/*
 	 * This is a baby version of the main switch that takes up most of
@@ -303,17 +304,10 @@ char            string[MAXFLEN + 1];
 	 */
 	switch (c)
 	{
-  /*EXPERIMENTAL*/
-	case VP_SET_COLOR_TABLE:	/* set color table entry */
-     if(first_time) init_colors();
-     set_table() ;
-	    break;
-  /*END EXPERIMENTAL*/
-	case VP_ERASE:
-	case VP_BREAK:
-/*    fprintf(stderr,"in dovplot 1\n");*/
-	    starterase = 1;
-	    break;
+	    case VP_ERASE:
+	    case VP_BREAK:
+		starterase = 1;
+		break;
 	}
     }
 
@@ -398,9 +392,8 @@ char            string[MAXFLEN + 1];
 	|| (starterase && (erase & DO_LITERALS)))
     {
 
-	if (first_time){
+	if (first_time)
 	    dev.erase (ERASE_START);
-}
 	else
 	{
 	    dev.erase (ERASE_MIDDLE);
@@ -856,10 +849,8 @@ char            string[MAXFLEN + 1];
 		fat = -1;
 	    }
 	    dev.attributes (NEW_FAT, fat, 0, 0, 0);
-/*    fprintf(stderr,"in dovplot p\n");*/
 	    break;
 	case VP_COLOR:		/* change color */
-/*    fprintf(stderr,"in dovplot q\n");*/
 	    pat_color = geth (pltin);
 	    if (pat_color > MAX_COL || pat_color < 0)
 	    {
@@ -878,24 +869,18 @@ char            string[MAXFLEN + 1];
 	     * the rest by one to make room.
 	     */
 	    pat_color++;
-/*    fprintf(stderr,"in dovplot r\n");*/
 	    break;
 	case VP_SET_COLOR_TABLE:	/* set color table entry */
-     set_table();
+	    set_table();
 	    break;
 	case VP_PURGE:		/* purge pltout buffers */
-/*    fprintf(stderr,"in dovplot u\n");*/
 	    dev.close (CLOSE_FLUSH);
-/*    fprintf(stderr,"in dovplot v\n");*/
 	    break;
 	case VP_BREAK:		/* break */
-/*    fprintf(stderr,"in dovplot w\n");*/
 	    if (brake == BREAK_IGNORE)
-/*    fprintf(stderr,"in dovplot x\n");*/
 		break;
 	    /* NOTE break IS IN AN "if": WE USUALLY FALL THROUGH HERE! */
 	case VP_ERASE:		/* erase (and break falls through here too) */
-/*    fprintf(stderr,"in dovplot y\n");*/
 	    dev.close (CLOSE_FLUSH);
 
 	    /*
@@ -1410,7 +1395,7 @@ char            string[MAXFLEN + 1];
 		    {
 			num_rep = geth (pltin);
 			if (num_rep <= 0)
-			    ERR (FATAL, name, "Bad Raster line multiplier(1)");
+			    ERR (FATAL, name, "Bad Raster line multiplier");
 
 			pos = 0;
 		new_pat:num_pat = geth (pltin);
@@ -1465,10 +1450,9 @@ char            string[MAXFLEN + 1];
 
 			if (pos < xpix)
 			    goto new_pat;
-			if (pos != xpix){
-
+			if (pos != xpix)
 			    ERR (FATAL, name, "Raster line not length promised");
-      }
+      
 		    }
 		    num_rep--;
 

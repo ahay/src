@@ -46,14 +46,9 @@ extern float pixc, greyc;
 /*
  * these can also be set in dev.open or dev.reset if dovplot gets them wrong,
  * but can usually be left at their default values.
- *
- * allowecho must only be reset in dev.open because the user can override
- * from the command line to force it to be YES. (But user can't force it NO.)
  */
-extern bool allowecho;
-extern int need_end_erase;
-extern int buffer_output;
-extern int smart_clip;
+extern bool need_end_erase;
+extern bool smart_clip;
 extern bool smart_raster;
 extern bool cachepipe;
 

@@ -2183,8 +2183,7 @@ void xtopen (int argc, char* argv[])
     txprec = DEFAULT_HARDCOPY_PREC;
     brake = BREAK_IGNORE;
     endpause = YES;
-    buffer_output = YES;
-    smart_clip = NO;
+    smart_clip = false;
     cachepipe = YES;
 
     /* initialize the first app (we will delete this one later ) */

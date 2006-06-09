@@ -59,8 +59,7 @@
 
 extern struct termio tty_clean_state;
 
-extern int      need_end_erase;
-extern int      buffer_input;
+extern bool      need_end_erase;
 extern int      ever_called;
 extern int      out_isatty;
 extern int      nplots;

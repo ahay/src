@@ -10,18 +10,21 @@ Flow('rand',None,
      ''' % (nr,ns))
 
 means = []
+ameans = []
 varis = []
 for i in range(ns):
     rand = 'rand%d' % i
     Flow(rand,'rand','window n2=%d' % (i+1))
 
-    num = 'num%d' % i
-    den = 'den%d' % i
+    s  = 's%d'    % i
+    ss = 'ss%d'   % i
+    s2 = 's2-%d'  % i
     sem = 'sem%d' % i
-    
-    Flow(num,rand,'stack norm=n | math output="input*input" ')
-    Flow(den,rand,'math output="input*input" | stack norm=n')
-    Flow(sem,[num,den],'add ${SOURCES[1]} mode=d scale=1,%d' % (i+1))
+
+    Flow(s,rand,'stack norm=n')
+    Flow(ss,s,'math output="input*input" ')
+    Flow(s2,rand,'math output="input*input" | stack norm=n')
+    Flow(sem,[ss,s2],'add ${SOURCES[1]} mode=d scale=1,%d' % (i+1))
 
     mean = 'mean%d' % i    
     Flow(mean,sem,'stack axis=1 norm=n | scale dscale=%g' % (1.0/nr))
@@ -37,6 +40,30 @@ for i in range(ns):
     
     means.append(mean)
     varis.append(vari)
+
+    if i > 0:
+        h  = 'h%d'    % i
+        h2 = 'h2-%d'  % i
+        sh = 'sh%d'   % i
+        avo = 'avo%d' % i
+            
+        Flow(h,rand,'math output=x2 | stack norm=n')
+        Flow(h2,rand,'math output=x2*x2 | stack norm=n')
+        Flow(sh,rand,'math output=input*x2 | stack norm=n')
+        Flow(avo,[s,s2,h,h2,sh],
+             '''
+             math
+             s=${SOURCES[0]} s2=${SOURCES[1]}
+             h=${SOURCES[2]} h2=${SOURCES[3]} sh=${SOURCES[4]}
+             output="(2*s*h*sh - s*s*h2 - %d*sh*sh)/(s2*(h*h-%d*h2))"
+             ''' % (i+1,i+1))
+
+
+        amean = 'amean%d' % i    
+        Flow(amean,avo,'stack axis=1 norm=n | scale dscale=%g' % (1.0/nr))
+        
+        ameans.append(amean)
+
 
 Flow('mean',means,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('mean',
@@ -54,6 +81,23 @@ Plot('tmean','mean',
      ''')
 
 Result('mean','mean tmean','Overlay')
+
+Flow('amean',ameans,'cat axis=1 ${SOURCES[1:%d]} | put o1=2' % (ns-1))
+Plot('amean',
+     '''
+     graph symbol=o title="AVO Semblance Expectation"
+     label1=N label2= unit1= unit2=
+     min2=-0.01 max2=1.01 symbolsz=5
+     ''')
+
+Plot('tamean','amean',
+     '''
+     math output="2/x1" |
+     graph plotcol=5 wanttitle=n wantaxis=n
+     min2=-0.01 max2=1.01
+     ''')
+
+Result('amean','amean tamean mean tmean','Overlay')
 
 Flow('vari',varis,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('vari',

@@ -129,10 +129,9 @@ static int      oldx, oldy;
 void polystart (void)		
 /*< Start working on the polygons >*/
 {
-int             i, j, k, l, ii;
-int             firstpoint, flag, double_check;
-int             temp1, temp2, temp;
-extern int      smart_clip;
+    int             i, j, k, l, ii;
+    int             firstpoint, flag, double_check;
+    int             temp1, temp2, temp;
 
     endlist = point;		/* Last element in use */
     /* initialize array */

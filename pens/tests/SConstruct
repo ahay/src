@@ -10,10 +10,12 @@ Cross Graph KPCC Math Panama Seplogo Tectonics Texas
 '''
 
 vfiles = '''
-anisotropy bering collage erase FDTT gamma grid impulse jon landsat mahjongg
-moffett pacific perestroika photo polar pyramid reciprocity sun time vgr2
-vmap work world zplot
+anisotropy bering collage erase FDTT gamma grid impulse jon landsat
+pacific perestroika photo polar pyramid reciprocity time vmap work
+world zplot
 '''
+
+#removed mahjongg sun moffett vgr2 to save space
 
 proj = Project()
 proj.Prepend(LIBS=['rsfplot'])
@@ -58,7 +60,9 @@ Result('vppen2',
        ./DEMO_Tectonics ./DEMO_Texas ./TEST_align
        ./TEST_clipping ./DEMO_Graph ./TEST_aspect_ratio
        ''',
-       '%s ${SOURCES[:9]} | plas | %s gridnum=3' % (WhereIs('cat'),vppen),stdin=0)
+       '''
+       %s ${SOURCES[:9]} | plas | %s gridnum=3
+       ''' % (WhereIs('cat'),vppen),stdin=0)
 
 for prog in Split('ras ctext poly ufill'):
     Result(prog,program(prog+'test'),'./$SOURCE',stdin=0)

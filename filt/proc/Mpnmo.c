@@ -68,7 +68,8 @@ int main (int argc, char* argv[])
 	if (sf_histfloat(cmp,"d3",&dy)) {
 	    CDPtype=0.5+0.5*dh/dy;
 	    if (1 != CDPtype) sf_histint(cmp,"CDPtype",&CDPtype);
-	} 	    
+	} 	 
+	if (CDPtype < 1) CDPtype=1;
 	sf_warning("CDPtype=%d",CDPtype);
 
 	for (ih = 0; ih < nh; ih++) {
@@ -103,6 +104,8 @@ int main (int argc, char* argv[])
     /* trace extension */
 
     nmo = stretch4_init (nt, t0, dt, nt, eps);
+
+    eps = 100.*FLT_EPSILON;
     
     /* BUG: figure out dh for irregular off[ih] */
 
@@ -119,7 +122,7 @@ int main (int argc, char* argv[])
 		for (it=0; it < nt; it++) {
 		    t = t0 + it*dt;
 		    f = fabsf(p[it]);
-		    g = q[it]*h*dh/(f+FLT_EPSILON);
+		    g = q[it]*h*dh/(f+eps);
 		    if (g < 0.) {
 			str[it]=t0-10.*dt;
 			vtr[it]=0.;
@@ -128,10 +131,10 @@ int main (int argc, char* argv[])
 			str[it] = t - f*h*dt/(sqrtf(g)+dh);
 			vtr[it] = 
 			    sqrtf(fabsf(sqrtf(g)*h/
-					(dt*(f*str[it]+FLT_EPSILON))));
+					(dt*(f*str[it]+eps))));
 			etr[it] = 
-			    ((g-dh*dh)*t/(dt*(f*h+FLT_EPSILON*dh))+dh)/
-			    (8.*sqrtf(g)+FLT_EPSILON*dh);
+			    ((g-dh*dh)*t/(dt*(f*h+eps*dh))+dh)/
+			    (8.*sqrtf(g)+eps*dh);
 		    }
 		}
 	    } else {
@@ -144,7 +147,7 @@ int main (int argc, char* argv[])
 			vtr[it] = 0.;
 		    } else {
 			str[it] = sqrtf(t*f);
-			vtr[it] = h/sqrtf(t*(t-f)+FLT_EPSILON);
+			vtr[it] = h/sqrtf(t*(t-f)+eps);
 		    }
 		}
 	    }		

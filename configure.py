@@ -80,6 +80,7 @@ def check_all(context):
     ar(context)
     libs(context)
     x11(context)
+    ppm(context)
     jpeg(context)
     api = string.split(string.lower(context.env.get('API','')),',')
     if 'c++' in api:
@@ -250,6 +251,30 @@ def x11(context):
     context.env['LIBPATH'] = oldpath
     context.env['LIBS'] = oldlibs
 
+def ppm(context):
+    context.Message("checking ppm ... ")
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    ppm = context.env.get('PPM','netpbm')
+    LIBS.append(ppm)
+    text = '''
+    #include <ppm.h>
+    int main(int argc,char* argv[]) {
+    return 0;
+    }
+    '''
+    
+    res = context.TryRun(text,'.c')
+    if res[0]:
+        context.Result(res[0])
+        context.env['PPM'] = ppm
+    else:
+        context.Result(0)
+        context.env['PPM'] = None
+
+    LIBS.pop()
+
 def jpeg(context):
     context.Message("checking jpeg ... ")
     LIBS = context.env.get('LIBS','m')
@@ -274,6 +299,7 @@ def jpeg(context):
         context.env['JPEG'] = None
 
     LIBS.pop()
+
 
 def ar(context):
     context.Message("checking ar ... ")
@@ -476,6 +502,7 @@ def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
+    opts.Add('PPM','The netpbm library')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',
              '-O2')

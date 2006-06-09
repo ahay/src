@@ -1580,8 +1580,7 @@ void psopen (int argc, char* argv[])
 
     smart_raster = true;
 
-    need_end_erase = YES;
-    buffer_output = YES;
+    need_end_erase = true;
     smart_clip = NO;
 
     dither = 3;

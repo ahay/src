@@ -56,3 +56,7 @@ int nullinteract (int what, FILE *controltty, char *string)
 void nullvector(int x1, int y1, int x2, int y2, int nfat, int vpdashon)
 /*<  All purpose Do-nothing generic subroutine >*/
 { }
+
+void nullplot(int x, int y, int draw)
+/*<  All purpose Do-nothing generic subroutine >*/
+{ }

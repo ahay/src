@@ -113,15 +113,11 @@ int             num_col = -1;
  * override from the command line.)
  */
 /* Does device need erase at end? */
-int             need_end_erase = NO;
-/* should the output be buffered? */
-int             buffer_output = YES;
-/* should the input be buffered? */
-int             buffer_input = YES;
+bool             need_end_erase = false;
 /* should pipes be allowed for input? */
 int             allow_pipe = YES;
 /* Can the device do its own clipping? (of vectors and polygons.) */
-int             smart_clip = NO;
+bool             smart_clip = false;
 /* Can the device stretch AND clip its own raster? */
 bool             smart_raster = false;
 
@@ -192,7 +188,6 @@ int             dashon = NO;	/* Dashed lines? */
 float           dashes[MAXDASH * 2];
 float           dashpos = 0.;	/* Position in current dashing pattern */
 int             color_set[MAX_COL + 1][_NUM_PRIM];
-extern int      greycorr ();
 int             num_col_8;
 
 
@@ -414,13 +409,13 @@ float           ftemp;
  * Valued arguments
  */
 
-    if (!sf_getint ("dither",  &dither)) dither=1;
-    if (!sf_getfloat ("greyc",  &greyc)) greyc=1.;
-    if (!sf_getfloat ("pixc",  &pixc)) pixc=1.;
+    sf_getint ("dither",  &dither);
+    sf_getfloat ("greyc",  &greyc);
+    sf_getfloat ("pixc",  &pixc);
 
-    if (!sf_getint ("txfont",  &txfont)) txfont=DEFAULT_FONT;
-    if (!sf_getint ("txprec",  &txprec)) txprec = DEFAULT_PREC;
-    if (!sf_getint ("txovly",  &txovly)) txovly = OVLY_NORMAL;
+    sf_getint ("txfont",  &txfont);
+    sf_getint ("txprec",  &txprec);
+    sf_getint ("txovly",  &txovly);
     default_txfont = txfont;
     default_txprec = txprec;
     default_txovly = txovly;
