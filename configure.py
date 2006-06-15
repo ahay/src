@@ -230,6 +230,8 @@ def x11(context):
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
         elif sys.platform[:6] == 'cygwin':
             XLIBS = ['Xaw','Xt','X11']
+        elif sys.platform[:6] == 'darwin':
+            XLIBS = ['Xaw','Xt','X11']
         else:
             XLIBS = ['Xaw','Xt']
         
