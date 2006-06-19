@@ -294,7 +294,7 @@ XtAppContext	pen_context;
 int		own_colormap;
 int		x_num_col;
 int		num_col_req = 0;
-int		num_col_max = 16384;
+int		num_col_max = 128;
 int		num_col_min = 16;
 int             xmono = NO;
 int             xtruecol = NO;
@@ -2188,7 +2188,7 @@ void xtopen (int argc, char* argv[])
 		NULL, ZERO,
 		&xtargc, argv,
 		fallback_resources,
-		NULL );
+		NULL, ZERO);
     
     /* get app data from the resource database */
     xt_app_data( xtpen );
@@ -2224,7 +2224,8 @@ void xtopen (int argc, char* argv[])
      */
     aspect_ratio = ((int)((aspect_ratio * 100.) + .5)) / 100.;
 
-    if (!sf_getbool("x_screen_info", &tellme_resolution)) tellme_resolution = false;
+    if (!sf_getbool("x_screen_info", &tellme_resolution)) 
+	tellme_resolution = false;
     if (tellme_resolution) {
 	ERR(COMMENT, name,
 	    "display width=%d, height=%d (pixels);  width=%d, height=%d (mm)",

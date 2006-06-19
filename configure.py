@@ -196,7 +196,8 @@ def x11(context):
         INC = string.split(INC)
 
     oldpath = context.env.get('CPPPATH',[])
-    
+
+    res = None
     for path in filter(lambda x:
                        os.path.isfile(os.path.join(x,'X11/Intrinsic.h')),
                        INC+xinc):        
@@ -207,6 +208,7 @@ def x11(context):
             context.Result(path)
             context.env['XINC'] = context.env['CPPPATH']
             break
+
     if not res:
         context.Result(0)
         context.env['XINC'] = None
@@ -236,7 +238,8 @@ def x11(context):
             XLIBS = ['Xaw','Xt']
         
     context.env['LIBS'] = XLIBS + oldlibs
-    
+
+    res = [None]
     for path in LIB+xlib:        
         context.env['LIBPATH'] = oldpath + [path,] 
         res = context.TryRun(text,'.c')

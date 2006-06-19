@@ -211,7 +211,7 @@ extern char     interact[];
 extern float    dashsum;
 extern float    dashpos;
 extern float    dashes[];
-extern int      colormask[];
+extern bool     colormask[];
 extern float    redmap[4], greenmap[4], bluemap[4];
 extern float    redpow, greenpow, bluepow;
 int             ras_allgrey = YES;
@@ -2186,7 +2186,7 @@ void set_table(void){
 	
 	if (red == red_7 && green == green_7 && blue == blue_7)
 	{
-	    if (colormask[3] == NO)
+	    if (!colormask[3])
 	    {
 		red_mask = red_0;
 		green_mask = green_0;
@@ -2195,28 +2195,28 @@ void set_table(void){
 	}
 	else
 	{
-	    if (colormask[4] == YES)
+	    if (colormask[4])
 	    {
-		if (colormask[0] == NO)
+		if (!colormask[0])
 		    red_mask = red_0;
-		if (colormask[1] == NO)
+		if (!colormask[1])
 		    green_mask = green_0;
-		if (colormask[2] == NO)
+		if (!colormask[2])
 		    blue_mask = blue_0;
 	    }
 	    else
 	    {
-		if (colormask[0] == YES)
+		if (colormask[0])
 		{
 		    green_mask = red_mask;
 		    blue_mask = red_mask;
 		}
-		if (colormask[1] == YES)
+		if (colormask[1])
 		{
 		    red_mask = green_mask;
 		    blue_mask = green_mask;
 		}
-		if (colormask[2] == YES)
+		if (colormask[2])
 		{
 		    red_mask = blue_mask;
 		    green_mask = blue_mask;

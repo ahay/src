@@ -56,7 +56,6 @@ extern bool cachepipe;
  * These variables may be useful for referring to in dev.open,
  * so that similar devices can be merged under one pen filter.
  */
-extern char wstype[];
 extern char callname[];
 
 /*

@@ -1293,71 +1293,20 @@ void psopen (int argc, char* argv[])
     
     size_t len;
 
-/*
- * A list of different printer types recognized
- */
-    if ((strcmp (callname, "oyopen") == 0) ||
-	(strcmp (callname, "Oyopen") == 0) ||
-	(strcmp (wstype, "oyo") == 0))
-    {
-	strcpy (psprintertype, "oyo");
-    }
-    else if ((strcmp (callname, "tcprpen") == 0) ||
-	     (strcmp (callname, "Tcprpen") == 0) ||
-	     (strcmp (wstype, "tcpr") == 0))
-    {
-	strcpy (psprintertype, "tcpr");
-    }
-    else
-    {
-/* Default */
-	strcpy (psprintertype, "default");
-    }
-
+    strcpy (psprintertype, "default");
 
 /*
  * physical device parameters
  */
 
-/*
- * pixc and greyc are used even if smart_raster = YES because
- * PostScript's built in dithering does not compensate for the
- * effects that pixc and greyc correct for.
- */
-
-    if ((strcmp (callname, "oyopen") == 0) ||
-	(strcmp (callname, "Oyopen") == 0) ||
-	(strcmp (wstype, "oyo") == 0))
-    {
-/*
- * OYO electrostatic plotters need a VERY different pixc and greyc
- */
-	pixc = 1.5;
-	greyc = .1;
-
-/*
- * Our main OYO happens to be 300 dpi
- */
-	pixels_per_inch = 300.;
-
-/*
- * Change this if for example you want the oyo-s to use bigger sheets
- * of paper by default than the usual HP printer engines.
- */
-	strcpy (ps_paper, DEFAULT_PAPER_SIZE);
-    }
-    else
-    {
 /* For HP printer engines, the usual default */
 
-	pixc = 0.6;
-	greyc = -0.5;
+    pixc = 0.6;
+    greyc = -0.5;
 
-	pixels_per_inch = DEFAULT_PIXELS_PER_INCH;
+    pixels_per_inch = DEFAULT_PIXELS_PER_INCH;
 
-	strcpy (ps_paper, DEFAULT_PAPER_SIZE);
-    }
-
+    strcpy (ps_paper, DEFAULT_PAPER_SIZE);
 
 /*
  * For now, elsewhere in the code we just ignore aspect_ratio,
@@ -1410,34 +1359,12 @@ void psopen (int argc, char* argv[])
 
     if (strcmp (ps_paper, "letter") == 0)
     {
-	if ((strcmp (callname, "tcprpen") == 0) ||
-	    (strcmp (callname, "Tcprpen") == 0) ||
-	    (strcmp (wstype, "tcpr") == 0))
-	{
-/*
- * Empirically determined plotting limits for the Tek color plotter with
- * letter-size paper
- */
-	    dev_xmin = 1.23333 * pixels_per_inch + .5;
-	    dev_ymin = .18333 * pixels_per_inch + .5;
-	    dev_xmax = 9.76666 * pixels_per_inch + .5;
-	    dev_ymax = 8.31333 * pixels_per_inch + .5;
-/*
- * ps_ypapersize controls an overall plot shift. Normally it will be the
- * same as the height (Y) dimension of the paper, but may be different in
- * case the plotter doesn't put (0,0) at the corner of the paper.
- */
-	    ps_ypapersize = 7.66666;
-	}
-	else
-	{
 /* Empirically determined limits for SPARC printers with letter-size paper */
-	    dev_xmin = .19 * pixels_per_inch + .5;
-	    dev_ymin = .26666 * pixels_per_inch + .5;
-	    dev_xmax = 10.88333 * pixels_per_inch + .5;
-	    dev_ymax = 8.23333 * pixels_per_inch + .5;
-	    ps_ypapersize = 8.5;
-	}
+	dev_xmin = .19 * pixels_per_inch + .5;
+	dev_ymin = .26666 * pixels_per_inch + .5;
+	dev_xmax = 10.88333 * pixels_per_inch + .5;
+	dev_ymax = 8.23333 * pixels_per_inch + .5;
+	ps_ypapersize = 8.5;
     }
     else if (strcmp (ps_paper, "legal") == 0)
     {
@@ -1624,10 +1551,7 @@ void psopen (int argc, char* argv[])
     if (!sf_getbool("color",&ps_color)) ps_color=false;
     if (!sf_getbool("force",&force_color)) force_color=false;
 
-    if (ps_color ||
-	(strcmp (callname, "tcprpen") == 0) ||
-	(strcmp (callname, "Tcprpen") == 0) ||
-	(strcmp (wstype, "tcpr") == 0))
+    if (ps_color)
     {
 	mono = NO;
 	num_col = 16384;

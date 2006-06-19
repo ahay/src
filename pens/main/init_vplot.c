@@ -137,7 +137,6 @@ float           patternmult = 1.;
 /*
  * flags and variables
  */
-char            wstype[25];
 char            callname[25];
 int             xcenterflag, ycenterflag;
 int             ever_called = NO;
@@ -313,10 +312,10 @@ extern void reset_windows (void);
 void init_vplot (int argc, char* argv[])
 /*< Initialize and declare global variables. >*/
 {
-char           *stringptr;
-int             ii;
-char            *string;
-float           ftemp;
+    char           *stringptr;
+    int             ii;
+    char            *string;
+    float           ftemp;
 
 
     txbuffer = (char *) malloc (TXBUFLEN);
@@ -390,8 +389,8 @@ float           ftemp;
     if (!sf_getbool ("txsquare", &no_stretch_text)) no_stretch_text=true;
 
     if (!sf_getbools ("colormask",colormask,5)) 
-	colormask[0] = colormask[1] = colormask[2] = colormask[3] = colormask[4] = false;
-
+	colormask[0] = colormask[1] = colormask[2] = 
+	    colormask[3] = colormask[4] = true;
     if (!colormask[4] && colormask[3]) colormask[4] = true;
 
     if (!sf_getfloat ("redpow",  &redpow)) redpow=1.0;
