@@ -186,7 +186,8 @@ def pstexpen(target=None,source=None,env=None):
     print opts
     # bounding box
     getbb = vppen + ' big=n stat=l %s < %s | %s -1' % (opts,vplot,
-                                                          WhereIs('head'))   
+                                                          WhereIs('head'))
+    
     out = os.popen(getbb)
     head = string.split(out.read())
     out.close() 

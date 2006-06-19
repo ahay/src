@@ -2178,7 +2178,7 @@ void xtopen (int argc, char* argv[])
     brake = BREAK_IGNORE;
     endpause = YES;
     smart_clip = false;
-    cachepipe = YES;
+    cachepipe = true;
 
     /* initialize the first app (we will delete this one later ) */
     xtargc = argc;

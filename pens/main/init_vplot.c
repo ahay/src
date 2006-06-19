@@ -144,7 +144,7 @@ int             first_time = YES;
 int             device_open = NO;	/* used by ERR */
 int             out_isatty = YES;	/* If NO, output is a file or pipe */
 int             nplots = 0;	/* number of plots made */
-bool             no_stretch_text;	/* Don't allow stretched text? */
+bool             no_stretch_text = true;	/* Don't allow stretched text? */
 
 /*
  * coordinate variables
@@ -200,19 +200,19 @@ int             num_col_8;
  * WHITE on most devices is BLACK on a hardcopy black and white device.
  * invras=y is the proper default to make dithered images not come out as negatives
  */
-bool             invras;
-bool             window;
-bool             shade;
+bool             invras = true;
+bool             window = true;
+bool             shade = true;
 int             brake = BREAK_BREAK;
-bool             framewindows;
-bool             endpause;
-bool             cachepipe;
+bool             framewindows = false;
+bool             endpause = false;
+bool             cachepipe = false;
 /* Setting cachepipe = YES will copy any piped files to a temporary file,
  * this may get done in dev.open.
  * This is useful if the program may want to reverse seek. e.g. Xvpen, Sunpen
  */
 
-bool             wantras;
+bool             wantras = true;
 bool             colormask[5];
 
 /*
@@ -230,7 +230,7 @@ int             erase = FORCE_INITIAL | DO_LITERALS;
 int             xcenter, ycenter;	/* Vplot of point to force as center */
 int             fatbase = 0;
 int             epause = 0;	/* time to pause before erasing screen */
-bool             overlay;	/* 1=overlay 0=replace */
+bool             overlay = false;	/* 1=overlay 0=replace */
 int             default_overlay;
 
 /*
@@ -376,17 +376,16 @@ void init_vplot (int argc, char* argv[])
     stderrfd = fileno (stderr);
     out_isatty = isatty (pltoutfd);
 
-    if (!sf_getbool ("endpause", &endpause)) endpause=false;
-    if (!sf_getbool ("cachepipe",&cachepipe)) cachepipe=false;
-    if (!sf_getbool ("shade", &shade)) shade=true;
-    if (!sf_getbool ("wantras", &wantras)) wantras=true;
-    if (!sf_getbool ("window", &window)) window=true;
-    if (!sf_getbool ("frame", &framewindows)) framewindows =false;
-    if (!sf_getbool ("overlay", &overlay)) overlay=false;
+    sf_getbool ("endpause", &endpause);
+    sf_getbool ("cachepipe",&cachepipe);
+    sf_getbool ("shade", &shade);
+    sf_getbool ("wantras", &wantras);
+    sf_getbool ("window", &window);
+    sf_getbool ("frame", &framewindows);
+    sf_getbool ("overlay", &overlay);
     default_overlay = overlay;
-    if (!sf_getbool ("invras", &invras)) invras=true;
-
-    if (!sf_getbool ("txsquare", &no_stretch_text)) no_stretch_text=true;
+    sf_getbool ("invras", &invras);
+    sf_getbool ("txsquare", &no_stretch_text);
 
     if (!sf_getbools ("colormask",colormask,5)) 
 	colormask[0] = colormask[1] = colormask[2] = 
@@ -618,9 +617,7 @@ int             ii;
 
 	for (ii = 0; ii < num_col_8; ii++)
 	{
-/*     if(color_set[ii][STATUS]!=SET)*/
 	    color_set[ii][MAP] = ii;
-/*  fprintf(stderr,"MAPPING %d %d - %d \n",ii,MAP,color_set[ii][MAP]);*/
 	 }
 	/*
 	 * Colors outside the range of this terminal map cyclically back into
@@ -628,7 +625,6 @@ int             ii;
 	 */
 	for (ii = num_col_8; ii <= MAX_COL; ii++)
 	{
-/*     if(color_set[ii][STATUS]!=SET)*/
 	    color_set[ii][MAP] = ((ii - 8) % 7) + 1;
 	}
     }

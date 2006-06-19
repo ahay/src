@@ -442,7 +442,6 @@ char            string[MAXFLEN + 1];
 	switch (c)		/* command list */
 	{
 	case VP_SETSTYLE:	/* set the style */
-/*    fprintf(stderr,"in dovplot 2\n");*/
 	    c = getc (pltin);
 	    if ((c == 'r') || (c == 'R') || (c == 'm') || (c == 'M'))
 		new_style = ROTATED;
@@ -457,20 +456,16 @@ char            string[MAXFLEN + 1];
 	    if (framewindows)
 		outline_window ();
 
-/*    fprintf(stderr,"in dovplot 3\n");*/
 	    break;
 	case VP_MOVE:		/* move */
-/*    fprintf(stderr,"in dovplot 4\n");*/
 	    /*
 	     * Reset position in dash pattern.
 	     */
 	    dashpos = 0.;
 
 	    GETXY (xold, yold);
-/*    fprintf(stderr,"in dovplot 5\n");*/
 	    break;
 	case VP_DRAW:		/* draw */
-/*    fprintf(stderr,"in dovplot 6\n");*/
 	    GETXY (xnew, ynew);
 	    update_color ();
 	    while ((c = getc (pltin)) == VP_DRAW)
@@ -505,10 +500,8 @@ char            string[MAXFLEN + 1];
 	    if (c == EOF)
 		goto End_of_file;
 	    ungetc ((char) c, pltin);
-/*    fprintf(stderr,"in dovplot 7\n");*/
 	    break;
 	case VP_PLINE:		/* polyline */
-/*    fprintf(stderr,"in dovplot 8\n");*/
 	    /*
 	     * Reset position in dash pattern.
 	     */
@@ -554,10 +547,8 @@ char            string[MAXFLEN + 1];
 	    dev.vector (xold, yold, xnew, ynew, fat, dashon);
 	    xold = xnew;
 	    yold = ynew;
-/*    fprintf(stderr,"in dovplot 9\n");*/
 	    break;
 	case VP_PMARK:		/* polymarker */
-/*    fprintf(stderr,"in dovplot 10\n");*/
 	    npts = geth (pltin);/* how many markers ? */
 	    type = geth (pltin);/* what symbol? (any positive integer) */
 	    size = geth (pltin);/* How big? */
@@ -585,25 +576,19 @@ char            string[MAXFLEN + 1];
 	    dev.marker (npts, type, size, marker_vec);
 	    /* release the storage used for the points */
 	    free ((char *) marker_vec);
-/*    fprintf(stderr,"in dovplot a\n");*/
 	    break;
 	case VP_ORIGIN:	/* set origin */
-/*    fprintf(stderr,"in dovplot b\n");*/
 	    xorigin = geth (pltin);
 	    yorigin = geth (pltin);
-/*    fprintf(stderr,"in dovplot c\n");*/
 	    break;
 	case VP_BEGIN_GROUP:
-/*    fprintf(stderr,"in dovplot d\n");*/
 	    ii = ftell (pltin) - 1;
 	    getvpstring ();
 	    strncpy (group_name, txbuffer, MAXFLEN);
 	    dev.attributes (BEGIN_GROUP, group_number, ii, 0, 0);
 	    group_number++;
-/*    fprintf(stderr,"in dovplot e\n");*/
 	    break;
 	case VP_END_GROUP:
-/*    fprintf(stderr,"in dovplot f\n");*/
 	    group_number--;
 	    if (group_number < 1)
 	    {
@@ -615,10 +600,8 @@ char            string[MAXFLEN + 1];
 	    {
 		dev.attributes (END_GROUP, group_number, USER_EGROUP, 0, 0);
 	    }
-/*    fprintf(stderr,"in dovplot g\n");*/
 	    break;
 	case VP_GTEXT:		/* GKS-like text */
-/*    fprintf(stderr,"in dovplot h\n");*/
 	    xtext0 = 0;
 	    ytext0 = 0;
 	    vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
@@ -654,10 +637,8 @@ char            string[MAXFLEN + 1];
 		      txscale * (float) ytext2 / TEXTVECSCALE);
 	    fat = savefat;
 	    fatmult = savefatmult;
-/*    fprintf(stderr,"in dovplot 11\n");*/
 	    break;
 	case VP_TEXT:		/* text */
-/*    fprintf(stderr,"in dovplot 12\n");*/
 	    size = geth (pltin);
 	    size = size * (float) RPERIN / (float) TXPERIN;
 	    orient = (int) geth (pltin);
@@ -678,21 +659,17 @@ char            string[MAXFLEN + 1];
 	    vptodevxy_text (xtext0, ytext0, &xtext0, &ytext0);
 	    vptodevxy_text (xtext1, ytext1, &xtext1, &ytext1);
 	    vptodevxy_text (xtext2, ytext2, &xtext2, &ytext2);
-/*    fprintf(stderr,"in dovplot i\n");*/
 	    goto g_text;
 	    break;
 	case VP_OLDTEXT:	/* archaic format text */
-/*    fprintf(stderr,"in dovplot 13\n");*/
 	    if ((key = geth (pltin)) < 0)
 		ERR (FATAL, name, "invalid text key");
 	    size = (key & 037);
 	    size = size * (float) RPERIN / (float) TXPERIN;
 	    orient = (int) (((key & 0140) >> 5) * 90);
-/*    fprintf(stderr,"in dovplot k\n");*/
 	    goto new_text;
 	    break;
 	case VP_OLDAREA:	/* polygon */
-/*    fprintf(stderr,"in dovplot j\n");*/
 	    npts = geth (pltin);
 	    afat = geth (pltin);
 	    if (afat >= 0)
@@ -760,10 +737,8 @@ char            string[MAXFLEN + 1];
 
 	    if (nx * ny > 0)
 		free ((char *) ptr);
-/*    fprintf(stderr,"in dovplot l\n");*/
 	    break;
 	case VP_AREA:		/* polygon fill */
-/*    fprintf(stderr,"in dovplot m\n");*/
 	    npts = geth (pltin);
 	    ipat = pat_color;
 
@@ -832,10 +807,8 @@ char            string[MAXFLEN + 1];
 		    }
 		}
 	    }
-/*    fprintf(stderr,"in dovplot n\n");*/
 	    break;
 	case VP_FAT:		/* fat */
-/*    fprintf(stderr,"in dovplot o\n");*/
 	    /*
 	     * negative fat always means to not draw the line at all.
 	     */
@@ -965,10 +938,8 @@ char            string[MAXFLEN + 1];
 	    if (framewindows)
 		outline_window ();
 
-/*    fprintf(stderr,"in dovplot z\n");*/
 	    break;
 	case VP_WINDOW:	/* window */
-/*    fprintf(stderr,"in dovplot aa\n");*/
 	    if (window)
 	    {
 		xwmin = geth (pltin);
@@ -1008,23 +979,18 @@ char            string[MAXFLEN + 1];
 	    reset_windows ();
 	    if (framewindows)
 		outline_window ();
-/*    fprintf(stderr,"in dovplot aa\n");*/
 	    break;
 	case VP_NOOP:		/* no op */
-/*    fprintf(stderr,"in dovplot ab\n");*/
 	    break;
 	case VP_TXALIGN:	/* set text alignment */
-/*    fprintf(stderr,"in dovplot ac\n");*/
 	    /*
 	     * These are made available to the device text routine
 	     */
 	    txalign.hor = geth (pltin);
 	    txalign.ver = geth (pltin);
 	    dev.attributes (NEW_ALIGN, txalign.hor, txalign.ver, 0, 0);
-/*    fprintf(stderr,"in dovplot ad\n");*/
 	    break;
 	case VP_TXFONTPREC:	/* set text font */
-/*    fprintf(stderr,"in dovplot ae\n");*/
 	    /*
 	     * These are made available to the device text routine
 	     */
@@ -1050,19 +1016,15 @@ char            string[MAXFLEN + 1];
 	     * Another way for the device to keep track of changes.
 	     */
 	    dev.attributes (NEW_FONT, ii, jj, kk, 0);
-/*    fprintf(stderr,"in dovplot af\n");*/
 	    break;
 	case VP_OVERLAY:	/* change overlay mode */
-/*    fprintf(stderr,"in dovplot ag\n");*/
 	    /*
 	     * This is made available to the device dependent subroutines
 	     */
 	    overlay = geth (pltin);
 	    dev.attributes (NEW_OVERLAY, overlay, 0, 0, 0);
-/*    fprintf(stderr,"in dovplot ah\n");*/
 	    break;
 	case VP_PATLOAD:	/* load a pattern */
-/*    fprintf(stderr,"in dovplot ai\n");*/
 	    nmul = geth (pltin);
 	    ny = geth (pltin);
 
@@ -1282,7 +1244,6 @@ char            string[MAXFLEN + 1];
 	    yvr_min = geth (pltin);
 	    xvr_max = geth (pltin);
 	    yvr_max = geth (pltin);
-/*      fprintf(stderr,"what the problem %d %d %d %d \n",xvr_min,yvr_min,xvr_max,yvr_max);*/
 	    vptodevw (xvr_min, yvr_min, xvr_max, yvr_max,
 		      &xvr_min, &yvr_min, &xvr_max, &yvr_max);
 	    xvru_min = xvr_min;
@@ -1292,7 +1253,6 @@ char            string[MAXFLEN + 1];
 
 	    xpix = geth (pltin);
 	    ypix = geth (pltin);
-/*     fprintf(stderr,"retrieve x and y %d %d \n",xpix,ypix);*/
 
 	    switch (ras_orient)
 	    {
@@ -1322,7 +1282,6 @@ char            string[MAXFLEN + 1];
 		    yvr_max--;
 		    break;
 	    }
-/*    fprintf(stderr,"ORRIENT=%d xpix=%d ypix=%d xvr_min=%d xvr_max=%d yvr_min=%d yvr_max=%d \n",orient,xpix,ypix,xvr_min,xvr_max,yvr_min,yvr_max);*/
 
 	    if (wantras && smart_raster)
 	    {
@@ -1593,26 +1552,16 @@ char            string[MAXFLEN + 1];
 			{
 			    num_rep = geth (pltin);
 			    if (num_rep <= 0){
-/*           fprintf(stderr,"in  bad raster2 %d %d %d %d \n",num_rep,yr_min,i,yr_max); */
 				ERR (FATAL, name, "Bad Raster line multiplier(2)");
         }
 			    pos = 0;
 		    new_pat2:num_pat = geth (pltin);
 			    num_byte = geth (pltin);
-/*          fprintf(stderr,"problem check %d %d %d %d %d \n",num_pat,num_byte,pos,xpix,num_rep);*/
 			    if (num_pat <= 0 || num_byte <= 0 ||
 				pos + num_pat * num_byte > xpix){
-/*          fprintf(stderr,"problem 3 %d %d %d %d \n",num_pat,num_byte,pos,xpix);*/
 				ERR (FATAL, name, "Raster line not length promised");
        }
 
-/*      fprintf(stderr,"IF CHECK %d+%d >= %d -%d && %d >%d && %d >= %d \n",*/
-/*          ii,num_rep,yrast-lastrast,xr_max,xr_min,i,yr_min);*/
-/*
- * Only bother with it if we're actually going to use it
- */
-/*			    if ((ii + num_rep >= yrast - lastrast*/
-/*				&& xr_max > xr_min && i >= yr_min) || c==VP_SHORT_RASTER)*/
 			    if ((ii + num_rep >= yrast - lastrast
 				&& xr_max > xr_min && i >= yr_min) )
 			    {
@@ -1685,7 +1634,6 @@ char            string[MAXFLEN + 1];
 			    if (pos < xpix)
 				goto new_pat2;
 			    if (pos != xpix){
-/*          fprintf(stderr,"problem 3 %d %d \n",pos,xpix);*/
 				ERR (FATAL, name, "Raster line not length promised");
          }
 
@@ -1695,8 +1643,6 @@ char            string[MAXFLEN + 1];
 				{
 				    outraster2[0][j - xr_min] =
 				     rasterline[(int) ((j - xru_min) * xrasmult)];
-/*            fprintf(stderr,"out raster check 1 %d %d %d -%f \n",*/
-/*              j,(int) ((j - xru_min) * xrasmult),outraster2[j - xr_min],xrasmult);*/
 				}
 			    }
 			}
@@ -1765,7 +1711,6 @@ char            string[MAXFLEN + 1];
 		    drawpolygon (4, xxx, yyy);
 		}
 	    }
-/*   fprintf(stderr,"out byte cxase \n");*/
 	    break;
 	case VP_MESSAGE:	/* Text message */
 	    getvpstring ();

@@ -366,7 +366,6 @@ char            format_string[80];
  * before you really do it.
  * The align and fit options need these statistics to do their work.
  */
-/*	fprintf(stderr,"boop \n");*/
     if (vpalign || vpfit)
     {
 	/*
@@ -400,7 +399,6 @@ char            format_string[80];
 	dev.point = genpoint;
 	dev.attributes = nullattributes;
 
-/*	fprintf(stderr,"dfjsdk \n");*/
 
 /*
  * Now do the trial pass
@@ -426,7 +424,6 @@ char            format_string[80];
 			"%17s: h= %6.2f w= %6.2f ;  x=( %6.2f , %6.2f ) y=( %6.2f , %6.2f ) ");
 	    }
 	}
-/*	fprintf(stderr,"dfjsd2 \n");*/
 
 	for (ii = 0; ii < nn; ii++)
 	{
@@ -436,7 +433,6 @@ char            format_string[80];
 	    vpymin = dev_ymax;
 
 	    pltin = inpltin[ii];
-/*	fprintf(stderr,"dfjsd3 %s \n",inpltin[ii]);*/
 	    strcpy (pltname, innames[ii]);
 	    dovplot ();
 	    rewind (pltin);
@@ -450,7 +446,6 @@ char            format_string[80];
 	    if (vpymins > vpymin)
 		vpymins = vpymin;
 
-/*	fprintf(stderr,"d4444 %s \n",inpltin[ii]);*/
 /*
  * For vpstat=y, write out the statistics. Also note if any
  * parts of the plot got clipped.
@@ -490,7 +485,6 @@ char            format_string[80];
 		}
 	    }
 	}
-/*	fprintf(stderr,"d5444 %s \n",inpltin[ii]);*/
 
 	if (vpstat && nn > 1)
 	{
@@ -662,7 +656,6 @@ char            format_string[80];
 	dev.point = genpoint;
 	dev.attributes = vpattributes;
     }
-/*	fprintf(stderr,"coop \n");*/
 
 /*
  *********************************************************************
@@ -686,16 +679,13 @@ char            format_string[80];
 	smart_clip = true;
 	smart_raster = true;
     }
-/*	fprintf(stderr,"doop \n");*/
 
 /* Second (or first) pass */
     for (ii = 0; ii < nn; ii++)
     {
 	pltin = inpltin[ii];
 	strcpy (pltname, innames[ii]);
-/*	fprintf(stderr,"ee \n");*/
 	dovplot ();
-/*	fprintf(stderr,"ff \n");*/
 	fclose (pltin);
     }
 }
@@ -1109,8 +1099,7 @@ void vpopen (int argc, char* argv[])
  */
     message = dev.message;
 
-    cachepipe = YES;
-
+    cachepipe = true;
 }
 
 void vpplot (int x, int y, int draw)
@@ -1233,12 +1222,10 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
     if (*string == '\0')
 	return;
 
-/*	fprintf(stderr,"before 1 \n");*/
     vp_gtext ((float) xold / RPERIN, (float) yold / RPERIN,
 	      pathx / RPERIN, pathy / RPERIN,
 	      upx / RPERIN, upy / RPERIN,
 	      string);
-/*	fprintf(stderr,"before 2 \n");*/
 
 /*
  *   Now reset the pen position to the end of the text.
@@ -1266,10 +1253,8 @@ void vptext (char *string, float pathx, float pathy, float upx, float upy)
 /*
  * Jon note that this shows you how to find the size of the text.
  */
-/*	fprintf(stderr,"before 3 \n");*/
 	vp_move ((float) xold / RPERIN, (float) yold / RPERIN);
     }
-/*	fprintf(stderr,"before 3 \n");*/
 }
 
 #define MOVE 0
