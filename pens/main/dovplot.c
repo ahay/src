@@ -177,7 +177,7 @@ extern int      ever_called;
 extern int      fatbase;
 extern int      ifat;
 extern int      first_time;
-extern int      framewindows;
+extern bool      framewindows;
 extern int      next_color;
 extern int      ipat;
 extern int      nplots;
