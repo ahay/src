@@ -153,6 +153,7 @@ xinc = [
 xlib = [
     '/usr/X11/lib',
     '/usr/X11R6/lib',
+    '/usr/X11R6/lib64',
     '/usr/X11R5/lib',
     '/usr/X11R4/lib',
     '/usr/lib/X11',
