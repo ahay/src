@@ -1554,7 +1554,7 @@ void psopen (int argc, char* argv[])
     if (ps_color)
     {
 	mono = NO;
-	num_col = 16384;
+	num_col = 256;
     }
     else
     {
