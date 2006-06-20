@@ -179,23 +179,3 @@ for i in range(10):
 Result('wflds','wfl0 wfl1 wfl2 wfl3 wfl4','Movie')
 
 End()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

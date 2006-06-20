@@ -144,7 +144,7 @@ Result('img',
        '''
        window |
        transp |
-       grey wantscalebar=y
+       grey wantscalebar=n
        title="Migrated image" label1="Depth (km)" label2="Distance (km)"
        ''')
 
