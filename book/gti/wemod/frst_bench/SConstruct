@@ -41,41 +41,41 @@ titles =  {'t'  : 'convolution (depth refl)',       # data results in time
 
 #
 # Fast collection:
-#   two frequencies
+#   one frequencies
 #   2D & 3D convolution
 #   2D exploding reflector
 #   2D shot record
 #
 
-frq_list = [40]                              # frequency list; taken out 20
+frq_list = [40]                             # frequency list
 
-time_list_2D  = ['t','tt','f','ft','c']         # 2D data in time
-depth_list_2D = ['m','mt','i','it','j']         # 2D images in depth
+time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
 
-time_list_3D  = ['t','tt']                      # 3D data in time
-depth_list_3D = ['m','mt']                      # 3D images in depth
+time_list_3D  = ['t','tt']                  # 3D data in time
+depth_list_3D = ['m','mt']                  # 3D images in depth
 
-time_list_3D_slice  = []                        # 2D slices from 3D time data
-depth_list_3D_slice = []                        # 2D slices from 3D depth images
+time_list_3D_slice  = []                    # 2D slices from 3D time data
+depth_list_3D_slice = []                    # 2D slices from 3D depth images
 
 #
 # Overnight collection:
-#   one frequency
+#   three frequencies
 #   2D & 3D convolution
 #   2D & 3D exploding reflector
-#   2D & 3D shot record
+#   2D shot record
 #
 
-#frq_list = [40]                                 # frequency list
- 
-#time_list_2D  = ['t','tt','f','ft']         # 2D data in time
-#depth_list_2D = ['m','mt','i','it']         # 2D images in depth
- 
-#time_list_3D  = ['t','tt','ft']             # 3D data in time
-#depth_list_3D = ['m','mt','it']             # 3D images in depth
-
-#time_list_3D_slice  = ['ft']                # 2D slices from 3D time data
-#depth_list_3D_slice = ['it']                # 2D slices from 3D depth images
+# frq_list = [20,30,40]                       # frequency list
+#  
+# time_list_2D  = ['t','tt','f','ft','c']     # 2D data in time
+# depth_list_2D = ['m','mt','i','it','j']     # 2D images in depth
+#  
+# time_list_3D  = ['t','tt','ft']             # 3D data in time
+# depth_list_3D = ['m','mt','it']             # 3D images in depth
+# 
+# time_list_3D_slice  = ['ft']                # 2D slices from 3D time data
+# depth_list_3D_slice = ['it']                # 2D slices from 3D depth images
 
 # Authentication for the private data server
 
@@ -99,74 +99,51 @@ ovr_grid_par['nz'] =  50
 ovr_grid_par['dz'] =  40
 ovr_grid_par['oz'] = 130
 
-# Channel geometrical properties
+# Channel geometrical parameters
 
-geo_par = {}
+geo_par =   {
 
-# Amalgamated sand geometrical properties 
+# Amalgamated sand width & shift parameters (fraction of channel top width)
+'as_width'   :  0.8,    # width at channel bottom
+'as_shift'   :  0.8,    # lateral shift at abs(skew)=1 (channel max bend)
 
-# width at channel bottom, fraction of channel top width
-geo_par['as_width']   = 0.8
+# Amalgamated sand height parameters (fraction of channel depth)
+'as_height0' :  0.5,    # height at skew=0 (channel inflection)
+'as_height1' :  0.8,    # height at abs(skew)=1 (channel max bend)
 
-# lateral shift at abs(skew)=1 (channel max bend), fraction of channel top width
-geo_par['as_shift']   = 0.8
+# Amalgamated sand cross-section shape parameter
+'as_shape'   :  1.2,    # =1 parabolic, >1 more blunt, <1 more pointy
 
-# height at skew=0 (channel inflection), fraction of channel depth
-geo_par['as_height0'] = 0.5
+# Bar drape thickness parameters (fraction of channel depth)
+'bd_depth'   :  0.8,    # profile depth
+'bd_zshift'  : -0.15,   # bar drape profile z shift, positive is down
 
-# height at abs(skew)=1 (channel max bend), fraction of channel depth
-geo_par['as_height1'] = 0.8
-
-# cross-section shape factor, =1 parabolic, >1 more blunt, <1 more pointy
-geo_par['as_shape']   = 1.2   
-
-# Bar drape geometrical properties 
-
-# bar drape profile depth, fraction of basic channel depth
-geo_par['bd_depth']  =  0.8
-
-# bar drape profile z shift,, fraction of basic channel depth, positive is down
-geo_par['bd_zshift'] = -0.15
-
-# Margin drape geometrical properties 
-
-# margin drape profile depth, fraction of basic channel depth
-geo_par['md_depth']  =  1.2
-
-# margin drape profile z shift, fraction of basic channel depth, positive is down
-geo_par['md_zshift'] =  0.1
+# Margin drape thickness parameters (fraction of channel depth) 
+'md_depth'   :  1.2,    # margin drape profile depth
+'md_zshift'  :  0.1}    # margin drape profile z shift, positive is down
 
 # Sand fraction parameters 
 
-sand_par = {}
+sand_par =  {
 
-# sand fraction in the bypass drape
-sand_par['bd_sand'] = 0.3
-
-# sand fraction in the margin drape
-sand_par['md_sand'] = 0.2
-
-# sand fraction in the amalgamated sand
-sand_par['as_sand'] = 1.0
-
-# sand fraction in non-amalgamated sand at channel top
-sand_par['na_sand0'] = 0.4
-
-# sand fraction in non-amalgamated sand just outside the amalgamated sand
-sand_par['na_sand1'] = 0.9
+'bd_sand'  : 0.3,   # sand fraction in the bypass drape
+'md_sand'  : 0.2,   # sand fraction in the margin drape
+'as_sand'  : 1.0,   # sand fraction in the amalgamated sand
+'na_sand0' : 0.4,   # sand fraction in non-amalgamated sand at channel top
+'na_sand1' : 0.9}   # sand fraction in non-amalgamated sand at amalgamated sand surface
 
 # Porosity noise parameters
 
 # Background noise parameters
 bk_noise_par = {'taper_switch':1,       # covariance taper switch
-                'std_dev': 0.01,        # porosity noise standard devietion
+                'std_dev': 0.03,        # porosity noise standard devietion
                 'alpha':1,              # covariance shape parameter
                 'oriu':[1,0,0],         # covariance range orientation vectors
                 'oriv':[0,1,0], 
                 'oriw':[0,0,1],
-                'ru':500,               # covariance range parameters
-                'rv':500,   
-                'rw':  1}
+                'ru':1000,              # covariance range parameters
+                'rv':1000,   
+                'rw':   1}
 
 # Amalgamated and non-amalgamated sand noise parameters
 sd_noise_par = {'taper_switch':1,       # covariance taper switch
@@ -182,28 +159,28 @@ sd_noise_par = {'taper_switch':1,       # covariance taper switch
 # Top & bottom taper parameters
 
 # Reservoir taper parameters
-res_taper_par = { 'top_h'    :    0,      # thickness (m)
-                  'top_phi'  :    0.3500, # porosity (fraction)
-                  'top_rho'  :    1.6865, # density (gm/cc)
-                  'top_vp'   : 1964.5730, # Vp (m/s)
-                  'top_vs'   :  509.7961, # Vs (m/s)
-                  'bot_h'    :   20,      # thickness (m)
-                  'bot_phi'  :    0.1554, # porosity (fraction)
-                  'bot_rho'  :    2.3431, # density (gm/cc)
-                  'bot_vp'   : 2429.1460, # Vp (m/s)
-                  'bot_vs'   : 1019.5922} # Vs (m/s)
+res_taper_par = { 'top_h'    :    0,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :   20,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
 
 # Overburden taper parameters
-ovr_taper_par = { 'top_h'    : 2000,      # thickness (m)
-                  'top_phi'  :    0.3500, # porosity (fraction)
-                  'top_rho'  :    1.6865, # density (gm/cc)
-                  'top_vp'   : 1964.5730, # Vp (m/s)
-                  'top_vs'   :  509.7961, # Vs (m/s)
-                  'bot_h'    :    0,      # thickness (m)
-                  'bot_phi'  :    0.1554, # porosity (fraction)
-                  'bot_rho'  :    2.3431, # density (gm/cc)
-                  'bot_vp'   : 2429.1460, # Vp (m/s)
-                  'bot_vs'   : 1019.5922} # Vs (m/s)
+ovr_taper_par = { 'top_h'    : 2000,        # thickness (m)
+                  'top_phi'  :    0.3500,   # porosity (fraction)
+                  'top_rho'  :    1.6865,   # density (gm/cc)
+                  'top_vp'   : 1964.5730,   # Vp (m/s)
+                  'top_vs'   :  509.7961,   # Vs (m/s)
+                  'bot_h'    :    0,        # thickness (m)
+                  'bot_phi'  :    0.1554,   # porosity (fraction)
+                  'bot_rho'  :    2.3431,   # density (gm/cc)
+                  'bot_vp'   : 2429.1460,   # Vp (m/s)
+                  'bot_vs'   : 1019.5922}   # Vs (m/s)
 
 # Available memory size setting for transpose operations (Mb)
 
@@ -448,16 +425,16 @@ Flow('v2d','vel','window squeeze=n n3=1 f3=140')
 Flow('v3d','vel','window')
 
 # overburden slowness
-Flow('o2d'  ,'ovs'  ,'window squeeze=n n2=1 f2=140') # true
-Flow('o3d'  ,'ovs'  ,'window')                       # true
-Flow('o2d-s','ovs-s','window squeeze=n n2=1 f2=140') # smooth
-Flow('o3d-s','ovs-s','window')                       # smooth
+Flow('o2d'  ,'ovs'  ,'window squeeze=n n2=1 f2=140')    # true
+Flow('o3d'  ,'ovs'  ,'window')                          # true
+Flow('o2d-s','ovs-s','window squeeze=n n2=1 f2=140')    # smooth
+Flow('o3d-s','ovs-s','window')                          # smooth
 
 # reservoir slowness
-Flow('s2d'  ,'slo'  ,'window squeeze=n n2=1 f2=140') # true
-Flow('s3d'  ,'slo'  ,'window')                       # true
-Flow('s2d-s','slo-s','window squeeze=n n2=1 f2=140') # smooth
-Flow('s3d-s','slo-s','window')                       # smooth
+Flow('s2d'  ,'slo'  ,'window squeeze=n n2=1 f2=140')    # true
+Flow('s3d'  ,'slo'  ,'window')                          # true
+Flow('s2d-s','slo-s','window squeeze=n n2=1 f2=140')    # smooth
+Flow('s3d-s','slo-s','window')                          # smooth
 
 # ------------------------------------------------------------
 # Wavelet
@@ -563,9 +540,9 @@ for frq in frq_list:
          ''' % par)
     
     # C dt one = causal datuming one-way traveltime
-    zomig.Cdtone('u2do_%d' % (frq),'u2d_%d'        % (frq),'o2d',par) # source wavefield down through overburden
-    spmig.model( 'e2do_%d' % (frq),'s2d','u2do_%d' % (frq),'r2d',par) # shot-record modeling in reservoir
-    zomig.Cdtone('e2d_%d'  % (frq),'e2do_%d'       % (frq),'o2d',par) # receiver wavefield up through overburden
+    zomig.Cdtone('u2do_%d' % (frq),'u2d_%d'        % (frq),'o2d',par)   # source wavefield down through overburden
+    spmig.model( 'e2do_%d' % (frq),'s2d','u2do_%d' % (frq),'r2d',par)   # shot-record modeling in reservoir
+    zomig.Cdtone('e2d_%d'  % (frq),'e2do_%d'       % (frq),'o2d',par)   # receiver wavefield up through overburden
     
     # modeled data from frequency to time
     Flow('c2d_%d' % (frq),'e2d_%d' % (frq),
@@ -577,9 +554,9 @@ for frq in frq_list:
          ''' % par)                             # time-domain shot record
                                                 
     # migration
-    zomig.Cdtone('u2do-s_%d' % (frq),'u2d_%d' % (frq),'o2d-s',par)            # source datuming (causal) in smooth overburden
-    zomig.Adtone('e2do-s_%d' % (frq),'e2d_%d' % (frq),'o2d-s',par)            # receiver datuming (anticausal) in smooth overburden
-    spmig.image('j2d_%d' % (frq),'s2d-s','u2do-s_%d' % (frq),'e2do-s_%d' % (frq),par)    # shot-record migration in smooth slowness
+    zomig.Cdtone('u2do-s_%d' % (frq),'u2d_%d' % (frq),'o2d-s',par)                      # source datuming (causal) in smooth overburden
+    zomig.Adtone('e2do-s_%d' % (frq),'e2d_%d' % (frq),'o2d-s',par)                      # receiver datuming (anticausal) in smooth overburden
+    spmig.image('j2d_%d' % (frq),'s2d-s','u2do-s_%d' % (frq),'e2do-s_%d' % (frq),par)   # shot-record migration in smooth slowness
     
     # Shot-record modeling/migration (3-D)
     
@@ -596,9 +573,9 @@ for frq in frq_list:
          ''' % par)
     
     # C dt one = causal datuming one-way
-    zomig.Cdtone('u3do_%d' % (frq),'u3d_%d' % (frq),'o3d',par)        # source wavefield down through overburden
-    spmig.model('e3do_%d' % (frq),'s3d','u3do_%d' % (frq),'r3d',par)  # shot-record modeling in reservoir
-    zomig.Cdtone('e3d_%d' % (frq),'e3do_%d' % (frq),'o3d',par)        # receiver wavefield up through overburden
+    zomig.Cdtone('u3do_%d' % (frq),'u3d_%d' % (frq),'o3d',par)          # source wavefield down through overburden
+    spmig.model('e3do_%d' % (frq),'s3d','u3do_%d' % (frq),'r3d',par)    # shot-record modeling in reservoir
+    zomig.Cdtone('e3d_%d' % (frq),'e3do_%d' % (frq),'o3d',par)          # receiver wavefield up through overburden
     
     # modeled data from frequency to time
     Flow('c3d_%d' % (frq),'e3d_%d' % (frq),
@@ -611,9 +588,9 @@ for frq in frq_list:
          ''' % par)                             # time-domain shot record
     
     # migration
-    zomig.Cdtone('u3do-s_%d' % (frq),'u3d_%d' % (frq),'o3d-s',par)            # source datuming (causal) in smooth overburden
-    zomig.Adtone('e3do-s_%d' % (frq),'e3d_%d' % (frq),'o3d-s',par)            # receiver datuming (anticausal) in smooth overburden
-    spmig.image('j3d_%d' % (frq),'s3d-s','u3do-s_%d' % (frq),'e3do-s_%d' % (frq),par)    # shot-record migration in smooth slowness
+    zomig.Cdtone('u3do-s_%d' % (frq),'u3d_%d' % (frq),'o3d-s',par)                      # source datuming (causal) in smooth overburden
+    zomig.Adtone('e3do-s_%d' % (frq),'e3d_%d' % (frq),'o3d-s',par)                      # receiver datuming (anticausal) in smooth overburden
+    spmig.image('j3d_%d' % (frq),'s3d-s','u3do-s_%d' % (frq),'e3do-s_%d' % (frq),par)   # shot-record migration in smooth slowness
 
 # ------------------------------------------------------------
 # EXPLODING REFLECTOR
@@ -641,7 +618,7 @@ for frq in frq_list:
          ''' % par )
     
     # migration
-    zomig.Adttwo('d2do-s_%d' % (frq),'d2d_%d' % (frq), 'o2d-s',par)   # downward continuation in (smooth) overburden
+    zomig.Adttwo('d2do-s_%d' % (frq),'d2d_%d' % (frq), 'o2d-s',par)     # downward continuation in (smooth) overburden
     zomig.image('i2d_%d'  % (frq),'s2d-s','d2do-s_%d' % (frq), par)
     zomig.image('it2d_%d' % (frq),'s2d-s','dt2do_%d'  % (frq), par)
     
@@ -668,7 +645,7 @@ for frq in frq_list:
          ''' % par )
     
     # migration
-    zomig.Adttwo('d3do-s_%d' % (frq),'d3d_%d' % (frq), 'o3d-s',par)   # downward continuation in (smooth) overburden
+    zomig.Adttwo('d3do-s_%d' % (frq),'d3d_%d' % (frq), 'o3d-s',par)     # downward continuation in (smooth) overburden
     zomig.image('i3d_%d'  % (frq),'s3d-s','d3do-s_%d' % (frq), par)
     zomig.image('it3d_%d' % (frq),'s3d-s','dt3do_%d'  % (frq), par)
 
