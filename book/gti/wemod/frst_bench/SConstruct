@@ -14,7 +14,7 @@
 # mailto:jim.jennings@beg.utexas.edu
 # http://www.beg.utexas.edu/staffinfo/jennings01.htm
 # 
-# August 2005
+# June 2006
 #
 # $Id$
 #
@@ -114,13 +114,19 @@ geo_par =   {
 # Amalgamated sand cross-section shape parameter
 'as_shape'   :  1.2,    # =1 parabolic, >1 more blunt, <1 more pointy
 
-# Bar drape thickness parameters (fraction of channel depth)
-'bd_depth'   :  0.8,    # profile depth
-'bd_zshift'  : -0.15,   # bar drape profile z shift, positive is down
+# Bar & margin drape thickness parameters (fraction of channel depth)
 
-# Margin drape thickness parameters (fraction of channel depth) 
+# No drapes
+# 'bd_depth'   :  1.0,    # profile depth
+# 'bd_zshift'  :  0.00,   # bar drape profile z shift, positive is down
+# 'md_depth'   :  1.0,    # margin drape profile depth
+# 'md_zshift'  :  0.00}   # margin drape profile z shift, positive is down
+
+# 1x drape thicknesses (base case)
+'bd_depth'   :  0.8,    # bar drape profile depth
+'bd_zshift'  : -0.15,   # bar drape profile z shift, positive is down
 'md_depth'   :  1.2,    # margin drape profile depth
-'md_zshift'  :  0.1}    # margin drape profile z shift, positive is down
+'md_zshift'  :  0.10}   # margin drape profile z shift, positive is down
 
 # Sand fraction parameters 
 
