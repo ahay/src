@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-afmod erfdm off2abs off2abs3 hwt3d rrt3d int3d
+afmod erfdm off2abs off2abs3
 '''
 
 try:  # distributed version
@@ -49,7 +49,7 @@ for prog in mains:
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    main = 'sfsavap.py'
+    main = 'sfpsava.py'
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	
