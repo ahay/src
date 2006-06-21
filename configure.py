@@ -232,12 +232,10 @@ def x11(context):
     else:
         if  sys.platform[:7] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
-        elif sys.platform[:6] == 'cygwin':
-            XLIBS = ['Xaw','Xt','X11']
-        elif sys.platform[:6] == 'darwin':
-            XLIBS = ['Xaw','Xt','X11']
-        else:
+        elif sys.platform[:5] == 'linux':
             XLIBS = ['Xaw','Xt']
+        else:
+            XLIBS = ['Xaw','Xt','X11']
         
     context.env['LIBS'] = XLIBS + oldlibs
 
