@@ -79,6 +79,7 @@ def check_all(context):
     cc(context)
     ar(context)
     libs(context)
+    c99(context)
     x11(context)
     ppm(context)
     jpeg(context)
@@ -361,6 +362,25 @@ def cc(context):
     elif sys.platform[:5] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
+
+def c99(context):
+    context.Message("checking complex support ... ")
+    text = '''
+    #include <complex.h>
+    #include <math.h>
+    int main(int argc,char* argv[]) {
+    float complex c;
+    float f;
+    f = cabsf(c);
+    return 0;
+    }
+    '''
+    res = context.TryRun(text,'.c')
+    if res[0]:
+        context.Result(res[0])
+    else:
+        context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
+        context.Result(0)
 
 def cxx(context):
     context.Message("checking C++ compiler ... ")
