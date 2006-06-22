@@ -1,0 +1,15 @@
+from rsfproj import *
+
+Fetch(['gom.velo.hh'],'gom')
+
+Flow('velo','gom.velo.hh',
+     '''
+     dd form=native |
+     put
+     label1=z unit1=km
+     label2=x unit2=km
+     ''')
+
+Result('velo','grey allpos=y')
+
+End()
