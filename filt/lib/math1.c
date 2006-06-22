@@ -71,44 +71,6 @@ static sf_complex myconj(sf_complex c)
     return c;
 }
 
-#ifdef __FreeBSD__
-/* FreeBSD seems to use macros for complex functions */
-
-static sf_complex myccosf(sf_complex c)
-{
-    c = ccosf(c);
-    return c;
-}
-
-static sf_complex mycsinf(sf_complex c)
-{
-    c = csinf(c);
-    return c;
-}
-
-typedef sf_complex (*cfunc)(sf_complex);
-static cfunc cfunctable[] = {
-    myccosf,
-    mycsinf,
-    ctanf,
-    cacosf,
-    casinf,
-    catanf,
-    ccoshf,
-    csinhf,
-    ctanhf,
-    cacoshf,
-    casinhf,
-    catanhf,
-    cexpf,
-    clogf,
-    csqrtf,
-    myabs,
-    myconj
-};
-
-#else
-
 typedef sf_complex (*cfunc)(sf_complex);
 static cfunc cfunctable[] = {
     ccosf,
@@ -129,8 +91,6 @@ static cfunc cfunctable[] = {
     myabs,
     myconj
 };
-
-#endif
 
 enum {GRP, NUM, INDX, FUN, UNARY, POW, MULDIV, PLUSMIN};
 

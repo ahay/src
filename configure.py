@@ -368,7 +368,7 @@ def c99(context):
     float complex c;
     float f;
     f = cabsf(ccosf(c));
-    return 0;
+    return (int) f;
     }
     '''
     res = context.TryLink(text,'.c')
