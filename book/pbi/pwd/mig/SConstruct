@@ -6,13 +6,14 @@ Flow('bei','beinew.HH',
      '''
      dd form=native |
      put
-     label1=\'"Time (s)"\'
-     label2=\'"Offset (km)"\'
-     label3=\'"Midpoint (km)"\'
+     label1=Time unit1=s
+     label2=Offset unit2=km
+     label3=Midpoint unit3=km
      ''')
 
 Flow('cdp','bei','window n3=1')
-Plot('cdp','grey title=Input')
+Plot('cdp','grey title="(a) Input" ')
+Plot('cdpw','cdp','wiggle transp=y yreverse=y poly=y wherexlabel=t wheretitle=b title="(a) Input" ')
 
 d2=0.0335
 d1=0.004
@@ -42,7 +43,7 @@ Flow('dip3',['cdp','dip2'],
      dip idip=${SOURCES[1]} order=3
      niter=10 liter=100 rect1=50 rect2=20 pmin=0
      ''')
-Plot('dip','dip3','grey title=Slope allpos=y color=j scalebar=y')
+Plot('dip','dip3','grey title="(b) Slope" allpos=y color=j scalebar=y')
 
 Result('pint','cdp dip','SideBySideAniso')
 
@@ -70,9 +71,11 @@ Plot('txt2','grey title=Texture')
 Result('mtxt','cdp dip txt','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('pnmo vel','cdp dip3','pnmo dip=${SOURCES[1]} vel=${TARGETS[1]}')
-Plot('pnmo','grey title="Oriented Normal Moveout" ')
+Plot('pnmo','grey title="(c) Oriented NMO" ')
+Plot('pnmow','pnmo','wiggle transp=y yreverse=y poly=y wherexlabel=t wheretitle=b title="(c) Oriented NMO" ')
 
 Result('pnmo','cdp dip pnmo','SideBySideAniso',vppen='txscale=1.5')
+Result('pnmow','cdpw dip pnmow','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('dip05','dip3','window min2=0.5')
 
@@ -81,23 +84,29 @@ Flow('vtr','cdp dip05',
      window min2=0.5 |
      pveltran v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}
      ''')
+
+Flow('vpk','vtr','envelope | scale axis=2 | pick rect1=20 | window min1=1.2 | remap1 pattern=$SOURCE order=2')
+Plot('vpk','graph transp=y yreverse=y pad=n min2=1.495 max2=3.005 plotcol=5 wanttitle=n wantaxis=n')
+
 Plot('vtr',
      '''
      envelope | 
-     grey allpos=y label2="Velocity (km/s)"
-     title="Oriented Velocity Map" 
+     grey allpos=y label2=Velocity unit2=km/s
+     title="(b) Oriented Velocity Map" 
      ''')
+Plot('vtr2','vtr vpk','Overlay')
 
 Flow('vsc','cdp',
      'vscan v0=1.5 dv=0.01 nv=151 dip=${SOURCES[1]}')
 Plot('vsc',
      '''
      envelope | 
-     grey allpos=y label2="Velocity (km/s)"
-     title="Velocity Scan" 
+     grey allpos=y label2=Velocity unit2=km/s
+     title="(a) Velocity Scan" 
      ''')
+Plot('vsc2','vsc vpk','Overlay')
 
-Result('bvsc','vsc vtr','SideBySideAniso',vppen='txscale=1.5')
+Result('bvsc','vsc2 vtr2','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('dips05','dip05','smooth rect1=100')
 
@@ -112,7 +121,7 @@ Flow('vint','cdp dips05 dipt05',
 Result('bvint','vint',
      '''
      envelope | 
-     grey allpos=y label2="Interval Velocity (km/s)"
+     grey allpos=y label2="Interval Velocity" unit2=km/s
      title="Oriented Velocity Map" 
      ''')
 
@@ -125,6 +134,6 @@ Flow('ydip','dips','window f4=1')
 
 Flow('pwds','bei dips','pwd dip=${SOURCES[1]}')
 
-pmig.pmig('bei','hdip','ydip',500,125,10)
+pmig.pmig('bei','hdip','ydip',500,125,20)
 
 End()

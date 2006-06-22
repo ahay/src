@@ -3,24 +3,25 @@ import string
 from rsfproj import *
 
 Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000" ')
-
 Flow('vint','vrms','math output="125*sqrt((16+x1)*(16+3*x1))" ')
-Plot('vint',
-     '''
-     graph transp=y yreverse=y min2=2000 max2=3000
-     pad=n wantaxis=n wanttitle=n plotcol=5
-     ''')
+
+for vel in ('vrms','vint'):
+    Plot(vel,
+         '''
+         graph transp=y yreverse=y min2=1995 max2=3005
+         pad=n wantaxis=n wanttitle=n plotcol=5
+         ''')
 
 Flow('synt','vrms',
      '''
      spike d1=0.004 n1=1001 o1=0 nsp=17 n2=128 d2=20 o2=0
-     label2="Offset (m)"
+     label2=Offset unit2=m
      k1=%s
      mag=1,1,1,1,-1,1,1,-1,1,1,1,-1,1,1,-1,1,1 |
      bandpass flo=4 fhi=20 |
      inmo velocity=$SOURCE half=n
      ''' % string.join(map(str,range (100,916,48)),','), stdin=0)
-Plot('synt','grey title=Input')
+Plot('synt','grey title="(a) Input" ')
 
 Flow('sdip0','synt',
      '''
@@ -32,7 +33,7 @@ Flow('sdip','synt sdip0',
      dip order=3 liter=100 pmin=0
      idip=${SOURCES[1]} niter=10 rect1=40 rect2=5
      ''')
-Plot('sdip','grey title=Slope allpos=y scalebar=y clip=2 maxval=2 color=j')
+Plot('sdip','grey title="(b) Slope" allpos=y scalebar=y clip=2 maxval=2 color=j')
 
 Flow('dipx','sdip','transp | deriv order=3 | transp')
 Flow('dipt','sdip','deriv order=3')
@@ -50,7 +51,7 @@ Plot('test2','grey color=j allpos=y scalebar=y clip=0.0004')
 
 Flow('spnmo svel','synt sdip',
      'pnmo half=n dip=${SOURCES[1]} vel=${TARGETS[1]}')
-Plot('spnmo','grey title="Oriented Normal Moveout" ')
+Plot('spnmo','grey title="(c) Oriented NMO" ')
 
 Flow('sspnmo ssvel sseta','synt sdip ssdip',
      '''
@@ -72,9 +73,10 @@ Flow('svtr','synt sdip100',
 Plot('svtr',
      '''
      envelope |
-     grey allpos=y label2="Velocity (m/s)"
-     title="Oriented Velocity Map"
+     grey allpos=y label2=Velocity unit2=m/s
+     title="(b) Oriented Velocity Map"
      ''')
+Plot('svtr2','svtr vrms','Overlay')
 
 Flow('sdipt','sdip100','deriv')
 Flow('svin','synt sdip100 sdipt',
@@ -86,7 +88,7 @@ Flow('svin','synt sdip100 sdipt',
 Plot('svin',
      '''
      envelope |
-     grey allpos=y label2="Interval Velocity (m/s)"
+     grey allpos=y label2="Interval Velocity" unit2=m/s
      title="Oriented Velocity Map" min2=2000 max2=3000
      ''')
 Result('svin','svin vint','Overlay')
@@ -95,11 +97,12 @@ Flow('svsc','synt','vscan v0=2000 dv=10 nv=101 half=n')
 Plot('svsc',
      '''
      envelope |
-     grey allpos=y label2="Velocity (m/s)"
-     title="Velocity Scan"
+     grey allpos=y label2=Velocity unit2=m/s
+     title="(a) Velocity Scan"
      ''')
+Plot('svsc2','svsc vrms','Overlay')
 
-Result('svsc','svsc svtr','SideBySideAniso',vppen='txscale=1.5')
+Result('svsc','svsc2 svtr2','SideBySideAniso',vppen='txscale=1.5')
 
 Flow('sflat','synt sdip','flat dip=${SOURCES[1]}')
 Plot('sflat','grey title=Flattened')
@@ -110,7 +113,7 @@ Plot('svel',
      '''
      window min1=0.5 max1=3.5 min2=150 |
      grey allpos=y bias=2000 scalebar=y title='Oriented Vrms'
-     barlabel="Velocity (m/s)" minval=2500 maxval=2000
+     barlabel=Velocity barunit=m/s minval=2500 maxval=2000
      ''')
 
 Plot('svel0','svel vrms',
@@ -119,7 +122,7 @@ Plot('svel0','svel vrms',
      cat axis=2 ${SOURCES[1]} |
      window min1=0.5 max1=3.5 |
      graph dash=1,0 title="Estimated/True Vrms" yreverse=y transp=y
-     wherexlabel=t wheretitle=b label2="Velocity (m/s)"
+     wherexlabel=t wheretitle=b label2=Velocity unit2=m/s
      ''')
 
 Result('svel','svel svel0','SideBySideAniso')
@@ -129,7 +132,7 @@ Plot('ssvel',
      window min1=0.5 max1=3.5 min2=150 |
      grey allpos=y bias=2000 scalebar=y
      title='Oriented Nonhyperbolic Vrms'
-     barlabel="Velocity (m/s)" minval=2500 maxval=2000
+     barlabel=Velocity barunit=m/s minval=2500 maxval=2000
      ''')
 
 Result('ssvel','svel ssvel','SideBySideAniso')
@@ -140,7 +143,7 @@ Plot('ssvel0','ssvel vrms',
      cat axis=2 ${SOURCES[1]} |
      window min1=0.5 max1=3.5 |
      graph dash=1,0 title="Estimated/True Vrms" yreverse=y transp=y
-     wherexlabel=t wheretitle=b label2="Velocity (m/s)"
+     wherexlabel=t wheretitle=b label2=Velocity unit2=m/s
      ''')
 
 Flow('sseta0','sseta','window min2=500 max2=2000 | stack')

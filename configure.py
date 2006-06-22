@@ -112,8 +112,8 @@ def libs(context):
     }
     '''
     
-    res = context.TryRun(text,'.c')
-    if res[0]:
+    res = context.TryLink(text,'.c')
+    if res:
         context.Result(str(LIBS))
         context.env['LIBS'] = LIBS
     else:
@@ -239,17 +239,17 @@ def x11(context):
         
     context.env['LIBS'] = XLIBS + oldlibs
 
-    res = [None]
-    for path in LIB+xlib:        
+    res = None
+    for path in filter(os.path.isdir,LIB+xlib):        
         context.env['LIBPATH'] = oldpath + [path,] 
-        res = context.TryRun(text,'.c')
+        res = context.TryLink(text,'.c')
 
-        if res[0]:
+        if res:
             context.Result(path)
             context.env['XLIBPATH'] = context.env['LIBPATH']
             context.env['XLIBS'] = XLIBS
             break
-    if not res[0]:
+    if not res:
         context.Result(0)
         context.env['XLIBPATH'] = None
 
@@ -270,9 +270,9 @@ def ppm(context):
     }
     '''
     
-    res = context.TryRun(text,'.c')
-    if res[0]:
-        context.Result(res[0])
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
         context.env['PPM'] = ppm
     else:
         context.Result(0)
@@ -295,9 +295,9 @@ def jpeg(context):
     }
     '''
     
-    res = context.TryRun(text,'.c')
-    if res[0]:
-        context.Result(res[0])
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
         context.env['JPEG'] = jpeg
     else:
         context.Result(0)
@@ -330,9 +330,9 @@ def cc(context):
     }
     '''
     context.Message("checking if %s works ... " % CC)
-    res = context.TryRun(text,'.c')
-    context.Result(res[0])
-    if not res[0]:
+    res = context.TryLink(text,'.c')
+    context.Result(res)
+    if not res:
         sys.exit(1)
     if CC[-3:]=='gcc':
         oldflag = context.env.get('CCFLAGS')
@@ -369,13 +369,13 @@ def c99(context):
     int main(int argc,char* argv[]) {
     float complex c;
     float f;
-    f = cabsf(c);
+    f = cabsf(ccosf(c));
     return 0;
     }
     '''
-    res = context.TryRun(text,'.c')
-    if res[0]:
-        context.Result(res[0])
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
     else:
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(0)
@@ -395,9 +395,9 @@ def cxx(context):
     }
     '''
     context.Message("checking if %s works ... " % CXX)
-    res = context.TryRun(text,'.cc')
-    context.Result(res[0])
-    if not res[0]:
+    res = context.TryLink(text,'.cc')
+    context.Result(res)
+    if not res:
         del context.env['CXX']
         return
     if CXX == 'g++':
@@ -444,10 +444,10 @@ def f77(context):
     context.Message("checking if %s works ... " % F77)
     oldlink = context.env.get('LINK')
     context.env['LINK'] = F77
-    res = context.TryRun(text,'.f')
+    res = context.TryLink(text,'.f')
     context.env['LINK'] = oldlink
-    context.Result(res[0])
-    if not res[0]:
+    context.Result(res)
+    if not res:
         sys.stderr.write("No working F77 compiler detected.\n")
         del context.env['F77']
         sys.exit(1)
@@ -487,10 +487,10 @@ def f90(context):
     oldlink = context.env.get('LINK')
     context.env['LINK'] = F90
     res1 = context.TryCompile(module,'.f90')
-    res2 = context.TryRun(main,'.f90')
+    res2 = context.TryLink(main,'.f90')
     context.env['LINK'] = oldlink
-    context.Result(res1 and res2[0])
-    if not res1 or not res2[0]:
+    context.Result(res1 and res2)
+    if not res1 or not res2:
         sys.stderr.write("No working F90 compiler detected.\n")
         del context.env['F90']
         sys.exit(1)
