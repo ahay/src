@@ -215,14 +215,13 @@ def x11(context):
         context.Result(0)
         context.env['XINC'] = None
         return
-    context.env['CPPPATH'] = oldpath
 
     context.Message("checking for X11 libraries ... ")
     LIB = context.env.get('XLIBPATH','')
     if type(LIB) is not types.ListType:
         LIB = string.split(LIB)
 
-    oldpath = context.env.get('LIBPATH',[])
+    oldlibpath = context.env.get('LIBPATH',[])
     oldlibs = context.env.get('LIBS',[])
 
     XLIBS = context.env.get('XLIBS')
@@ -236,14 +235,12 @@ def x11(context):
             XLIBS = ['Xaw','Xt']
         else:
             XLIBS = ['Xaw','Xt','X11']
-        
-    context.env['LIBS'] = XLIBS + oldlibs
 
     res = None
     for path in filter(os.path.isdir,LIB+xlib):        
-        context.env['LIBPATH'] = oldpath + [path,] 
+        context.env['LIBPATH'] = oldlibpath + [path,] 
         res = context.TryLink(text,'.c')
-
+        
         if res:
             context.Result(path)
             context.env['XLIBPATH'] = context.env['LIBPATH']
@@ -253,7 +250,8 @@ def x11(context):
         context.Result(0)
         context.env['XLIBPATH'] = None
 
-    context.env['LIBPATH'] = oldpath
+    context.env['CPPPATH'] = oldpath        
+    context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
 def ppm(context):
