@@ -276,3 +276,4 @@ int sf_filesize (sf_file file);
 int sf_leftsize (sf_file file, int dim);
 void sf_cp(sf_file in, sf_file out);
 void sf_rm(const char* filename, bool force, bool verb, bool inquire);
+

@@ -143,10 +143,17 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
             if os.path.isdir(dir):
                 pythinc.append(dir)
 
-    python = env.SharedLibrary('rsf',['rsf.i']+sources,
+    objs = []
+    for source in Split(src2):
+        obj = env.SharedObject(source+'.c')
+        env.Depends(obj,source+'.h')
+        objs.append(obj)
+
+    python = env.SharedLibrary('rsf',['rsf.i']+sources+objs,
                                SWIGFLAGS='-python',
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
+
 
     if root:
         env.Install(libdir,python)
