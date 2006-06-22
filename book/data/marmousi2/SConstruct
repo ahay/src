@@ -1,0 +1,22 @@
+from rsfproj import *
+
+VSUF = '_marmousi-ii.segy'
+for c in ('p','s'):
+    v = 'v' + c
+    h = v + 'head'
+    t = v + VSUF
+
+    Fetch(t,'marm2')
+
+    # velocity
+    Flow([v,h],t,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[1]} |
+         put
+         o1=0 d1=0.00125 label1="z" unit1=km
+         o2=0 d2=0.00125 label2="x" unit2=km |
+         window j1=4
+         ''',stdin=0)
+    Result(v,v,'grey color=j allpos=y')
+
+End()

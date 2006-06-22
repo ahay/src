@@ -1,0 +1,14 @@
+from rsfproj import *
+
+Fetch(['velmodel.hh'],'Amoco')
+
+Flow('velo','velmodel.hh',
+     '''
+     dd form=native |
+     math "output=input/1000" |
+     put label1=z unit1=km label2=x unit2=km
+     ''')
+
+Result('velo','grey allpos=y')
+
+End()

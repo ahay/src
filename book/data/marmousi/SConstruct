@@ -1,0 +1,13 @@
+from rsfproj import *
+
+Fetch(['marmvel.hh'] ,'marm')
+
+Flow('velo','marmvel.hh',
+     '''
+     dd form=native |
+     put label1=z unit1=m label2=x unit2=m
+     ''')
+
+Result('velo','grey allpos=y pclip=100')
+
+End()
