@@ -1,2 +1,2 @@
 from rsftex import *
-End(lclass='geophysics')
+End(lclass='geophysics',options='short')

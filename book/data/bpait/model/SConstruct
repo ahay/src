@@ -1,0 +1,13 @@
+from rsfproj import *
+
+Fetch(['bpaitvel.hh'] ,'bpait')
+
+Flow('velo','bpaitvel.hh',
+     '''
+     dd form=native |
+     put label1=z unit1=m label2=x unit2=m
+     ''')
+
+Result('velo','grey allpos=y color=j')
+
+End()
