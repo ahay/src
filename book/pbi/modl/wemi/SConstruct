@@ -1,4 +1,5 @@
 from rsfproj import *
+import math
 
 #shot1 Xs= 0.152km, depth=0.0762km
 #delta shot DXs=0.060906km
@@ -12,7 +13,7 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 for case in ('vp','vs','rho'):
     bin = case + '.bin'    
     Fetch(bin,'wemi',private)
-    Flow(case,bin,
+    Flow('./'+case,bin,
          '''
          echo in=$SOURCE
          n1=875 o1=0 d1=0.003048 label1=z unit1=km
@@ -21,7 +22,7 @@ for case in ('vp','vs','rho'):
          data_format=native_float 
          ''' % (('Velocity','km/s'),('Density','gm/cc'))[case=='rho'],
          stdin=0)
-    Result(case,
+    Result(case,'./'+case,
            '''
            grey title=%s color=j allpos=y scalebar=y
            barreverse=y
@@ -41,7 +42,7 @@ v0 = 1.60308
 vmax = 3.53254
 dvdz = (vmax-v0)/z
 
-Flow('vp2','vp','window f1=%d' % nw)
+Flow('vp2','./vp','window f1=%d' % nw)
 
 Flow('inc','vp2',
      'math output="input-(%g+%g*(x1-%g))" ' % (v0,dvdz,z0))
@@ -100,7 +101,7 @@ Flow('spl1','spl','math output=input+%g' % (2*dz))
 
 for case in ('vp','vs','rho'):
     for s in ('0','1'):
-        Flow(case+s,[case,'spl'+s],
+        Flow(case+s,['./'+case,'spl'+s],
              '''
              window f1=%d n2=%d | transp | slice pick=${SOURCES[1]} | window
              ''' % (nw,nsp))
@@ -127,6 +128,21 @@ Flow('rgrad','dvp dvs drho ab',
 Plot('rgrad','graph title="AVA Gradient" ')
 
 Result('ava','refl rgrad','SideBySideAniso')
+
+Flow('ar','refl','spray axis=3 n=101 o=0 d=0.45')
+Flow('ag','rgrad','spray axis=3 n=101 o=0 d=0.45')
+Flow('avas','ar ag',
+     '''
+     math g=${SOURCES[1]} output="input+(sin(%g*x3)^2)*g" |
+     transp plane=13
+     ''' % (math.pi/180))
+Plot('avas',
+     '''
+     window j3=10 squeeze=n |
+     graph min2=-0.11 max2=0.05 title=AVA
+     label2=Reflectivity unit2=
+     label1=Angle unit1=degrees
+     ''')
 
 for ava in ('refl','rgrad'):
     Flow(ava+'2',[ava,'spl2'],
@@ -156,7 +172,7 @@ Flow('shots','spl2 dip2 refl2 rgrad2',
      type=v vel=%g gradz=%g
      ''' % (nx/10,x0,dx*10,2*nx-1,-nx*dx,dx,v0,dvdz))
 
-Flow('slow','vp',
+Flow('slow','./vp',
      '''
      window n1=%d |
      math output=1/input |
