@@ -1,3 +1,2 @@
 from rsftex import *
-Paper('sigsbee')
-End()
+End(lclass='geophysics',options='short',use='listings')
