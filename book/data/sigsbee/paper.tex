@@ -1,27 +1,30 @@
-\title{Sigsbee 2A model}
+\title{Sigsbee Models}
 \author{Trevor Irons}
 \maketitle
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
 \section{Introduction}
-
-Sigsbee is ...
+The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several datasets between September 2001 and November 2002.  These synthetic data model the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico.  Additional information may be found at: \emph{http://www.delphi.tudelft.nl/SMAART/}.  The datasets remain the property of SMAART and are used under the agreement found at: \emph{http://www.delphi.tudelft.nl/SMAART/DataReleaseAgreement.pdf}.  
 \\
 \\
 \textbf	{
-	Data Type:} Synthetic\\
+	Data Type:} \emph{2D model and acoustic finite difference synthetic dataset with constant density}\\
 \textbf	{   
-	Source:} \\
-\textbf {
- 	Location:} \\
+	Source:} \emph{SMAART consortium comprised of BHPBilliton Petroleum, BP, and the ChevronTexaco Exploration and Production Technology Company}\\
+\textbf {                             
+ 	Location:} \emph{http://www.delphi.tudelft.nl/SMAART/sigsbee2a.htm}\\
 \textbf	{
-       	Format:} SEGY \\
+       	Format:} \emph{SEGY} \\
 \textbf{
-	Date of origin:}
-       
+	Date of origin:} \emph{Data were publically released between September 2001 and November 2002.}\\ 
 
-\subsection{2A}
+\subsection{Sigsbee 2A}
+Sigsbee2A models the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico as shown in Sigsbee2A Stratigraphy. The model exhibits the illumination problems due to the complex salt shape with rugose salt top found in this area. The dataset was calculated with an absorbing free surface condition and a weaker than normal water bottom reflection, i.e. the data do not contain free surface multiples and less than normal internal multiples.  The color scale in this stratigraphy plot is chosen to emphasize reflectors and faults and does not represent the real velocity contrasts.  A number of normal and thrust faults separate the sedimentary blocks. The syncline segments of the salt top focus reflection energy from the salt bottom and the sub salt reflections and produce non-hyperbolic arrival travel time curves.
+
+\subsubsection{Sigsbee 2A Velocity Models}
+
+The SConstruct file found in :
 
 \tiny
 \lstinputlisting[frame=single]{model2A/SConstruct}
@@ -31,8 +34,8 @@ Sigsbee is ...
 \plot{vmig}{width=\textwidth}{Migration velocity.}
 \plot{vstr}{width=\textwidth}{Stratigraphic velocity.}
 
-
-\subsection{2B}
+\subsection{Sigsbee 2B}
+\subsubsection{Sigsbee 2B Velocity models}
 
 \tiny
 \lstinputlisting[frame=single]{model2A/SConstruct}
