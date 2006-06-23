@@ -10,6 +10,6 @@ Flow('velo','gom.velo.hh',
      label2=x unit2=km
      ''')
 
-Result('velo','grey allpos=y')
+Result('velo','grey color = j allpos=y title=Velocity wantscalebar=y')
 
 End()
