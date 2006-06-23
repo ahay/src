@@ -1,8 +1,43 @@
 \title{Sigsbee 2A model}
-\author{}
+\author{Trevor Irons}
 \maketitle
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
 \section{Introduction}
 
-\inputdir{model}
-\plot{velo}{width=\textwidth}{Velocity model.}
+Sigsbee is ...
+\\
+\\
+\textbf	{
+	Data Type:} Synthetic\\
+\textbf	{   
+	Source:} \\
+\textbf {
+ 	Location:} \\
+\textbf	{
+       	Format:} SEGY \\
+\textbf{
+	Date of origin:}
+       
+
+\subsection{2A}
+
+\tiny
+\lstinputlisting[frame=single]{model2A/SConstruct}
+\normalsize
+
+\inputdir{model2A}
+\plot{vmig}{width=\textwidth}{Migration velocity.}
+\plot{vstr}{width=\textwidth}{Stratigraphic velocity.}
+
+
+\subsection{2B}
+
+\tiny
+\lstinputlisting[frame=single]{model2A/SConstruct}
+\normalsize
+
+\inputdir{model2B}
+\plot{vmig}{width=\textwidth}{Migration velocity.}
+\plot{vstr}{width=\textwidth}{Stratigraphic velocity.}

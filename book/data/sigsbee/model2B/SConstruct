@@ -1,11 +1,11 @@
 from rsfproj import *
 
 ## 
- # Sigsbee 2A
+ # Sigsbee 2B
  ##
 
-PRFX = 'sigsbee2a_'
-SUFX = '.sgy' 
+PRFX = 'sigsbee2b_'
+SUFX = '.segy' 
 
 for c in ('migration_velocity','stratigraphy'):
 
