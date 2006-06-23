@@ -355,9 +355,15 @@ pipes.
   that represent the geometry information.
 \end{enumerate}
 
-\subsection{Reading and writing SEGY and SU files}
+\subsection{Reading and writing SEG-Y and SU files}
 
-To convert files from SEGY or SU format to RSF, use the \texttt{sfsegyread}
+The SEG-Y format is based on the proposal of \cite{GEO40-02-03440352}.
+It was revised in 2002\footnote{See
+  \url{http://seg.org/publications/tech-stand/seg_y_rev1.pdf}.}. The
+SU format is a modification of SEG-Y used in Seismic Unix
+\cite[]{TLE16-07-10451049}.
+
+To convert files from SEG-Y or SU format to RSF, use the \texttt{sfsegyread}
 program. Let us first manufacture an example file using SU utilities
 \cite[]{su}:
 \begin{verbatim}
@@ -413,7 +419,7 @@ The  \texttt{bfile} is the binary header file.
 \plot{plane}{width=5in}{The output of \texttt{suplane}, converted to RSF and
   displayed with \texttt{sfwiggle}.}
 
-To convert files back from RSF to SEGY or SU, use the \texttt{sfsegywrite}
+To convert files back from RSF to SEG-Y or SU, use the \texttt{sfsegywrite}
 program and reverse the input and output:
 \begin{verbatim}
 bash$ sfsegywrite tape=spike.su su=y tfile=tfile.rsf endian=0 < spike.rsf
