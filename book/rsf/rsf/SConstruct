@@ -58,17 +58,17 @@ Paper('dummy')
 Depends2('install',map(lambda x: x+'.install',
                        Split('api format install prog tour demo')))
 
-Paper('vienna',lclass='beamer',use='helvet,hyperref',
-      include=r'''
-      \mode<presentation>
-      {
-      \usetheme{Madrid}
-      \usecolortheme{albatross}
-      % or ...
-          
-      %  \setbeamercovered{transparent}
-      % or whatever (possibly just delete it)
-      }
-      ''')
+#Paper('vienna',lclass='beamer',use='helvet,hyperref',
+#      include=r'''
+#      \mode<presentation>
+#      {
+#      \usetheme{Madrid}
+#      \usecolortheme{albatross}
+#      % or ...
+#          
+#      %  \setbeamercovered{transparent}
+#      % or whatever (possibly just delete it)
+#      }
+#      ''')
 
 End(use='hyperref')
