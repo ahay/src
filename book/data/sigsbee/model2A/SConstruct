@@ -2,7 +2,7 @@ from rsfproj import *
 
 ## 
  # Sigsbee 2A
- ##
+##
 
 PRFX = 'sigsbee2a_'
 SUFX = '.sgy' 
