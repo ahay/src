@@ -9,8 +9,8 @@
 
 #else
 
-typedef enum {false, true} _Bool;
-#define bool _Bool
+typedef enum {false, true} sf_Bool;
+#define bool sf_Bool
 
 #endif /* stdbool */
 
