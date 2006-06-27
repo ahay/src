@@ -19,6 +19,8 @@ for src in ('doc','proj','prog','tex','book'):
 # clean .pyc files?
 
 env.Install(libdir,'suproj.py')
+env.Install(libdir,'latex2wiki.py')
+
 env.Install(bindir,'sfdoc')
 env.Install(bindir,'sftour')
 

@@ -16,7 +16,7 @@
 
 import os, re, glob, string, types, pwd, tempfile
 import cStringIO, token, tokenize, cgi, sys, keyword
-import rsfconf, rsfdoc, rsfprog
+import rsfconf, rsfdoc, rsfprog, latex2wiki
 
 import SCons
 
@@ -164,6 +164,15 @@ def latex2dvi(target=None,source=None,env=None):
         if done:
             break
         os.system(run)
+    return 0
+
+def latex2mediawiki(target=None,source=None,env=None):
+    "Convert LaTeX to MediaWiki"
+    tex = open(str(source[0]),"r")
+    wiki = open(str(target[0]),"w")
+    latex2wiki.convert(tex,wiki)
+    wiki.close()
+    tex.close()
     return 0
 
 ppi = 72 # points per inch resolution
@@ -431,6 +440,7 @@ Latify = Builder(action = Action(latify,
                  src_suffix='.tex',suffix='.ltx')
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
+Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
 
 if acroread:
     Read = Builder(action = acroread + " $SOURCES",
@@ -573,6 +583,7 @@ class TeXPaper(Environment):
                     SCANNERS=[LaTeX],
                     BUILDERS={'Latify':Latify,
                               'Pdf':Pdf,
+                              'Wiki':Wiki,
                               'Build':Build,
                               'Color':Color},
                     TARFLAGS = '-cvz',
@@ -702,6 +713,7 @@ class TeXPaper(Environment):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',
                     use=use,lclass=lclass,options=options,include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
+        wiki = self.Wiki(target=paper,source=paper+'.ltx')
         pdf[0].target_scanner = LaTeX
         if os.path.isdir(self.docdir):
             pdfinstall = self.Install(self.docdir,paper+'.pdf')
