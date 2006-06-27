@@ -746,6 +746,7 @@ class TeXPaper(Environment):
          if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)
             self.Alias('pdf',paper+'.pdf')
+            self.Alias('wiki',paper+'.wiki')
             self.Alias('read',paper+'.read')
             self.Alias('print',paper+'.print')
             self.Alias('html',paper+'.html')
