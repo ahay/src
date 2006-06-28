@@ -208,13 +208,20 @@ class Project(Environment):
         opts.Add('TIMER','Whether to time execution')
         opts.Update(self)
         cwd = os.getcwd()
-        dir = os.path.basename(cwd)
-        if datapath[:2] == './':
-            self.path = datapath
-        else:
-            self.path = datapath + dir + os.sep
+        self.path = datapath
         if not os.path.exists(self.path):
-            os.mkdir(self.path)
+            os.mkdir(self.path)        
+        if datapath[:2] != './':
+            # create a hierarcical structure
+            (book,chap,proj) = (os.path.basename(os.path.dirname(os.path.dirname(cwd))),
+                                os.path.basename(os.path.dirname(cwd)),
+                                os.path.basename(cwd))
+            for level in (book,chap,proj):
+                if level:
+                    self.path = os.path.join(self.path,level)
+                    if not os.path.exists(self.path):
+                        os.mkdir(self.path)
+            self.path = self.path + os.sep
         if db=='gdbm':
             self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
         elif db=='dbhash':
