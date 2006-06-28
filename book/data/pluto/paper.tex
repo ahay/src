@@ -1,8 +1,36 @@
-\title{Pluto model}
-\author{}
+\title{Pluto Model}
+\author{Trevor Irons}
+
 \maketitle
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
-\section{Introduction}
+\section{Introduction} 
+Pluto 1.5 is an elastic dataset released in November 2000, that contains realistic free surface and internal multiples over a structure that is relatively easy to image. 
+\\
+\\
+\textbf {
+        Data Type:} \emph{Synthetic}\\
+\textbf {
+        Source:} \emph{SMAART Consortium}\\
+\textbf {
+        Location:} \emph{http://www.delphi.tudelft.nl/SMAART/pluto15.htm}\\
+\textbf {
+        Format:} \emph{SEGY} \\
+\textbf{
+        Date of origin:} \emph{Publically released November 2000}\\
 
+
+\noindent The following files are included:
+\tiny
+\lstinputlisting[frame=single]{FILES}
+\normalsize
+
+\noindent The \emph{SConstruct} file found within \emph{RSF/book/data/pluto} is presented below.
+\tiny
+\lstinputlisting[frame=single]{model/SConstruct}
+\normalsize
+
+
+\section{Velocity Models}
 \inputdir{model}
 \plot{velo}{width=\textwidth}{Velocity model}

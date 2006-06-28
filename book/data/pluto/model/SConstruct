@@ -10,6 +10,5 @@ Flow('velo','pluto.velo.hh',
      math "output=input/1000"
      ''')
 
-Result('velo','grey allpos=y')
-
+Result('velo','grey color=j allpos=y title=Velocity')
 End()
