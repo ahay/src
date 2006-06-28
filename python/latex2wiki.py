@@ -41,41 +41,42 @@ bdoc = None
 verbatim_mode = 0
 math_mode = 0
 eqnarry_mode = 0
+el = "\n"
 
 def dummy():
     pass
 
 def inc_bullet():
-	global bullet_level, cr
+	global bullet_level, el
 	bullet_level += 1
+        el = " "
 
 def dec_bullet():
-	global bullet_level, cr
+	global bullet_level, el
 	bullet_level -= 1
+        el = "\n"
 
 def inc_enum():
-	global enum_level, cr
+	global enum_level, el
 	enum_level += 1
-        cr = " "
+        el = " "
 	
 def dec_enum():
-	global enum_level, cr
+	global enum_level, el
 	enum_level -= 1
-        cr = "\n"
+        el = "\n"
 	
 def start_doc():
 	global bdoc;
 	bdoc = 1
 
 def decide_el():
-	if bullet_level or enum_level:
-            return " "
-        else:
-            return "\n"
+    global el
+    return el
 
 def decide_math_replace():
 	global math_mode
-	if math_mode == 1:
+	if math_mode:
 		return r"\1"
 	else:
 		return " "
@@ -134,6 +135,7 @@ tr_list2 = [
 	(r"\\ref{(.*?)}", (lambda :r"(\1)"), dummy),
 	(r"\\citep{(.*?)}", (lambda :r"[[\1]]"), dummy),
 	(r"\\citet{(.*?)}", (lambda :r"[[\1]]"), dummy),
+        (r"(``|'')", (lambda : '"'), dummy),
 	(r"\\emph{(.*?)}", (lambda :r"''\1'' "), dummy),
 	(r"\\textit{(.*?)}", (lambda :r"''\1'' "), dummy),
 	(r"\\texttt{(.*?)}", (lambda : r"<tt>\1</tt>"), dummy),
@@ -147,8 +149,9 @@ tr_list2 = [
 	(r"\\end{itemize}", None, dec_bullet),
 	(r"\\begin{enumerate}", (lambda : "\n"), inc_enum),
 	(r"\\end{enumerate}", None, dec_enum),
-	(r"\\item (.*?)", (lambda :  (r"\n#" * enum_level) +(r"\n*" * bullet_level) + r"\1"), dummy),
-	(r"\\begin{equation[*]*}", (lambda :"<center><math>"), toggle_math),
+	(r"\\item (.*?)", (lambda :   r"\n" + ("#" * enum_level) + \
+                           ("*" * bullet_level) + r"\1"), dummy),
+        (r"\\begin{equation[*]*}", (lambda :"<center><math>"), toggle_math),
 	(r"\\end{equation[*]*}", (lambda :"</math></center>"), toggle_math),
 	(r"\\\[", (lambda :"<center><math>"), toggle_math),
 	(r"\\dfrac", (lambda :r"\\frac"), dummy),
@@ -160,7 +163,6 @@ tr_list2 = [
 #	(r"(\\begin{.*?})", decide_math_replace, dummy),
 #	(r"(\\end{.*?})",decide_math_replace, dummy),
 	(r"~\\ref{([^}]*)}",(lambda : r" ---\1---"),dummy),
-	(r"``(.*?)''", (lambda :r'"\1"'), dummy),
 	(r"\\subsubsection{(.*?)}", (lambda : r"====\1===="), dummy),
 	(r"\\subsection{(.*?)}", (lambda : r"===\1==="), dummy),
 	(r"\\section{(.*?)}", (lambda : r"==\1=="), dummy),
@@ -196,6 +198,7 @@ tr_list2 = [
         (r"\\pdfbookmark\[[^\]]*\]{[^\}]*}{[^\}]*}", None, dummy),
         # the most important thing
         (r"\\LaTeX",(lambda: "L<sup>A</sup>TEX"), dummy),
+        (r"\\\\", None, dummy),
         (r"\\ ",(lambda: " "), dummy),
         # unknown command
         (r"\\\w+{[^\}]+}",None, dummy),
