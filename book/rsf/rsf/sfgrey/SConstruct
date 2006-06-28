@@ -46,11 +46,11 @@ for col in ('h','H'):
     mona = 'mona+%s' % col
     Plot(mona,'mona',
          '''
-         grey allpos=y pclip=100 screenratio=1
+         grey allpos=y pclip=100 
          color=%s title="%s (color=%s)"
          transp=n wantaxis=n
          ''' % (col,colors[col],col))
-Result('monacap','mona+h mona+H','SideBySideIso')
+Result('monacap','mona+h mona+H','SideBySideIso',vppen='ysize=10 xsize=10')
 
 for col in ('i','iC'):
     mona = 'mona+%s' % col
@@ -60,6 +60,6 @@ for col in ('i','iC'):
          color=%s title="%s (color=%s)"
          transp=n wantaxis=n
          ''' % (col,colors[col],col))
-Result('monaclip','mona+i mona+iC','SideBySideIso')
+Result('monaclip','mona+i mona+iC','SideBySideIso',vppen='ysize=10 xsize=10')
     
 End()

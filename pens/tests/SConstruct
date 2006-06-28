@@ -50,7 +50,7 @@ for f in range(17):
      font = 'font%d' % f
      Result(font,program('Font'),'./$SOURCE %d | plas' % f,stdin=0)
 
-vppen = os.path.join(os.environ.get('SEP'),'bin/vppen')
+vppen = os.path.join(os.environ.get('RSFROOT'),'bin/vppen')
 
 Result('vppen','./TEST_erase','plas | %s gridnum=4 frame=y' % vppen)
 

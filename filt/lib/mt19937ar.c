@@ -7,6 +7,8 @@
 
    Copyright (C) 1997 - 2002, Makoto Matsumoto and Takuji Nishimura,
    All rights reserved.                          
+   Copyright (C) 2005, Mutsuo Saito,
+   All rights reserved.                          
 
    Redistribution and use in source and binary forms, with or without
    modification, are permitted provided that the following conditions
@@ -37,11 +39,12 @@
 
 
    Any feedback is very welcome.
-   http://www.math.keio.ac.jp/matumoto/emt.html
-   email: matumoto@math.keio.ac.jp
+   http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html
+   email: m-mat @ math.sci.hiroshima-u.ac.jp (remove space)
 */
 
 #include <stdio.h>
+#include "mt19937ar.h"
 
 /* Period parameters */  
 #define N 624
@@ -73,7 +76,7 @@ void init_genrand(unsigned long s)
 /* init_key is the array for initializing keys */
 /* key_length is its length */
 /* slight change for C++, 2004/2/26 */
-void init_by_array(unsigned long init_key[],int key_length)
+void init_by_array(unsigned long init_key[], int key_length)
 {
     int i, j, k;
     init_genrand(19650218UL);
@@ -170,26 +173,3 @@ double genrand_res53(void)
     return(a*67108864.0+b)*(1.0/9007199254740992.0); 
 } 
 /* These real versions are due to Isaku Wada, 2002/01/09 added */
-
-
-#ifdef __main__
-
-int main(void)
-{
-    int i;
-    unsigned long init[4]={0x123, 0x234, 0x345, 0x456}, length=4;
-    init_by_array(init, length);
-    printf("1000 outputs of genrand_int32()\n");
-    for (i=0; i<1000; i++) {
-      printf("%10lu ", genrand_int32());
-      if (i%5==4) printf("\n");
-    }
-    printf("\n1000 outputs of genrand_real2()\n");
-    for (i=0; i<1000; i++) {
-      printf("%10.8f ", genrand_real2());
-      if (i%5==4) printf("\n");
-    }
-    return 0;
-}
-
-#endif

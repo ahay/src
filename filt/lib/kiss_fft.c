@@ -1,22 +1,22 @@
 /*
-  Copyright (c) 2003-2004, Mark Borgerding
-  
-  All rights reserved.
-  
-  Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
-  
-  * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
-  * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
-  * Neither the author nor the names of any contributors may be used to endorse or promote products derived from this software without specific prior written permission.
-  
-  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+Copyright (c) 2003-2004, Mark Borgerding
+
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+    * Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+    * Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the documentation and/or other materials provided with the distribution.
+    * Neither the author nor the names of any contributors may be used to endorse or promote products derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 
 #include "_kiss_fft_guts.h"
 /* The guts header contains all the multiplication and addition macros that are defined for
-   fixed or floating point complex numbers.  It also delares the kf_ internal functions.
-*/
+ fixed or floating point complex numbers.  It also delares the kf_ internal functions.
+ */
 
 static kiss_fft_cpx *scratchbuf=NULL;
 static size_t nscratchbuf=0;
@@ -26,7 +26,8 @@ static size_t ntmpbuf=0;
 #define CHECKBUF(buf,nbuf,n) \
     do { \
         if ( nbuf < (size_t)(n) ) {\
-            buf = (kiss_fft_cpx*)realloc(buf,sizeof(kiss_fft_cpx)*(n)); \
+            free(buf); \
+            buf = (kiss_fft_cpx*)KISS_FFT_MALLOC(sizeof(kiss_fft_cpx)*(n)); \
             nbuf = (size_t)(n); \
         } \
    }while(0)
@@ -129,8 +130,8 @@ static void kf_bfly3(
          tw1 += fstride;
          tw2 += fstride*2;
 
-         Fout[m].r = Fout->r - scratch[3].r/2;
-         Fout[m].i = Fout->i - scratch[3].i/2;
+         Fout[m].r = Fout->r - HALF_OF(scratch[3].r);
+         Fout[m].i = Fout->i - HALF_OF(scratch[3].i);
 
          C_MULBYSCALAR( scratch[0] , epi3.i );
 
@@ -326,7 +327,7 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
         + sizeof(kiss_fft_cpx)*(nfft-1); /* twiddle factors*/
 
     if ( lenmem==NULL ) {
-        st = ( kiss_fft_cfg)malloc( memneeded );
+        st = ( kiss_fft_cfg)KISS_FFT_MALLOC( memneeded );
     }else{
         if (*lenmem >= memneeded)
             st = (kiss_fft_cfg)mem;
@@ -369,3 +370,16 @@ void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
     kiss_fft_stride(cfg,fin,fout,1);
 }
 
+
+/* not really necessary to call, but if someone is doing in-place ffts, they may want to free the 
+   buffers from CHECKBUF
+ */ 
+void kiss_fft_cleanup(void)
+{
+    free(scratchbuf);
+    scratchbuf = NULL;
+    nscratchbuf=0;
+    free(tmpbuf);
+    tmpbuf=NULL;
+    ntmpbuf=0;
+}

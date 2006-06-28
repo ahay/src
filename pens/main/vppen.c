@@ -1015,8 +1015,12 @@ void vpopen (int argc, char* argv[])
 
     if (vparray[0] != 0)
     {
-	if (vpbig || vpalign)
-	    ERR (FATAL, name, "Incompatible option with gridnum");
+
+/* Let it override.
+
+  if (vpbig || vpalign)
+  ERR (FATAL, name, "Incompatible option with gridnum");
+*/
 
 	if (!sf_getfloats ("gridsize", atemp, 2)) {
 	    atemp[0] = (float) (VP_STANDARD_HEIGHT / VP_SCREEN_RATIO) / vparray[0];

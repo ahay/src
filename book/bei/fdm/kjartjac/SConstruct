@@ -11,7 +11,7 @@ Flow('kjartjac','imp',
 Result('kjartjac',
        '''
        grey label1="traveltime depth, tau" label2=horizontal title=" "
-       xll=2 yll=2 xur=9 yur=9
+       xll=2 yll=2 xur=9 yur=9 unit1= unit2=
        ''')
 
 Flow('kjartjac45','imp',
@@ -19,7 +19,7 @@ Flow('kjartjac45','imp',
 Result('kjartjac45',
        '''
        grey label1="traveltime depth, tau" label2=horizontal title=" "
-       xll=2 yll=2 xur=9 yur=9
+       xll=2 yll=2 xur=9 yur=9 unit1= unit2=
        ''')
 
 End()
