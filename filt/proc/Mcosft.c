@@ -29,11 +29,13 @@ Pad the data if you need to suppress wrap-around effects.
 
 #include <rsf.h>
 
+#include "fftlabel.h"
+
 int main (int argc, char* argv[]) 
 {
     int dim, dim1, i, j, n[SF_MAX_DIM], sign[SF_MAX_DIM], s[SF_MAX_DIM];
     int n1, n2, i2, i0;
-    char key[6], key2[6];
+    char key[20], key2[20], *label;
     float *data, o[SF_MAX_DIM], d[SF_MAX_DIM];
     sf_file in, out;
 
@@ -63,6 +65,17 @@ int main (int argc, char* argv[])
 	    snprintf(key,3,"d%d",i+1);
 	    if (!sf_histfloat(in,key,d+i)) d[i]=1.;
 	    sf_putfloat(out,key,1./(sf_fftr_size(2*(n[i]-1))*d[i]));
+
+	    /* fix label and unit */
+	    snprintf(key,15,"label%d",i+1);
+	    snprintf(key2,15,"cosft_label%d",i+1);
+	    if (NULL != (label = sf_histstring(in,key2))) {
+		sf_putstring(out,key,label);
+	    } else if (NULL != (label = sf_histstring(in,key))) {
+		sf_putstring(out,key2,label);
+		(void) fix_label(i+1,label,out);
+	    }
+	    fix_unit(i+1,in,out);
 	}
     }
 

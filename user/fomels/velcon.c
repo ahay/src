@@ -20,7 +20,7 @@
 
 static float *r, *ld, *rd, *rhs, **pt;
 static float v1, v2, t0, dt, dv, a0;
-static const float b=0.12; /* 2996; */  
+static const float b=0.; /* 12;*/ /* 2996; */  
 static int nt, nx, nv, inv;
 static sf_tris slv;
 

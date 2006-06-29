@@ -11,7 +11,7 @@ Flow('cup','cup2',
      bandpass flo=10 fhi=50 | transp | bandpass fhi=50 | transp
      ''')
 Result('cup',
-       'grey label1="Time (s)" label2="Midpoint (km)" pclip=99.5 title=Model')
+       'grey label1=Time unit1=s label2=Midpoint unit2=km pclip=99.5 title=Model')
 
 Flow('shots2','cup2',
      '''
@@ -46,7 +46,7 @@ for slice in [0,25,50]:
     grey = '''
          window n1=100 f1=50 n3=1 f3=%d | 
          grey pclip=99.5 title="h=%g"
-         label1="Time (s)" label2="Midpoint (km)"
+         label1=Time unit1=s label2=Midpoint unit2=km
          ''' % (slice,offset)
     nmo = 'nmo%d' % slice
     hole = 'hole%d' % slice
@@ -65,7 +65,7 @@ for slice in [74,99,124]:
     grey = '''
          window n1=1 f1=%d | 
          grey pclip=99.5 transp=n title="t=%g"
-         label1="Midpoint (km)" label2="Offset (km)"
+         label1=Midpoint unit1=km label2=Offset unit2=km
          ''' % (slice,time)
     nmo = 'tnmo%d' % slice
     hole = 'thole%d' % slice
@@ -91,7 +91,7 @@ for slice in [8,13,19]:
     grey = '''
          window n3=1 f3=%d | real | 
          grey title="frequency=%g" transp=n
-         label1="Midpoint (km)" labbel2="Offset (km)"
+         label1=Midpoint unit1=km label2=Offset unit2=km
          ''' % (slice,frec)
     fft = 'fft%d' % slice
     fill = 'fill%d' % slice
@@ -116,7 +116,7 @@ for slice in [0,25,50]:
     grey = '''
          window n1=100 n3=1 f3=%d | 
          grey pclip=99.5 title="h=%g"
-         label1="Time (s)" label2="Midpoint (km)"
+         label1=Time unit1=s label2=Midpoint unit2=km
          ''' % (slice,offset)
     good = 'good%d' % slice
     bad = 'bad%d' % slice
@@ -135,7 +135,7 @@ Flow('shot3','shot','window n3=1 f3=229')
 
 clip=2145.77
 
-grey = 'grey clip=%g' % clip + ' label2=offset crowd1=0.85 title="%s" '
+grey = 'grey clip=%g' % clip + ' label1=time label2=offset crowd1=0.85 title="%s" '
 
 Plot('shot1',grey % 'shot1')
 Plot('shot3',grey % 'shot3')

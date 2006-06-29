@@ -1,6 +1,6 @@
 from rsfproj import *
 
-grey = "grey label1='Time (s)' label2='Midpoint (km)' pclip=99.5"
+grey = 'grey label1=Time label2=Midpoint pclip=99.5'
 
 Flow('taper',None,
      '''

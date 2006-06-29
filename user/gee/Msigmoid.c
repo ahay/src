@@ -53,8 +53,10 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("d2",&d2)) d2=0.032; sf_putfloat(mod,"d2",d2);
     /* sampling */
 
-    sf_putstring(mod,"label1","Time (s)");
-    sf_putstring(mod,"label2","Lateral (km)");
+    sf_putstring(mod,"label1","Time");    
+    sf_putstring(mod,"label2","Lateral");
+    sf_putstring(mod,"unit1","s");
+    sf_putstring(mod,"unit2","km");
 
     imp1 = sf_floatalloc(large);
     imp2 = sf_floatalloc(large);

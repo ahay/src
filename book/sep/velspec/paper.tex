@@ -24,6 +24,9 @@ I apply Fourier and Chebyshev spectral methods to derive accurate
 \end{abstract}
 
 \section{Introduction}
+
+\inputdir{impls}
+
 \par
 In a recent work \cite[]{me,Fomel.sep.92.159}, I
 introduced the process of \emph{velocity continuation} to describe a
@@ -49,11 +52,11 @@ advancement in velocity. \cite{Fomel.sep.95.sergey2} presented an
 efficient three-dimensional generalization, applying the helix
 transform \cite[]{Claerbout.sep.95.jon1}.
 \par
-%\plot{fd-imp}{width=6in}{Impulse responses (Green's functions) of
-%  velocity continuation, computed by a second-order finite-difference
-%  method.  The left plots corresponds to continuation to a larger
-%  velocity ($+1$ km/sec); the right plot, smaller velocity, ($-1$
-%  km/sec).}
+\plot{fd-imp}{width=6in}{Impulse responses (Green's functions) of
+  velocity continuation, computed by a second-order finite-difference
+  method.  The left plots corresponds to continuation to a larger
+  velocity ($+1$ km/sec); the right plot, smaller velocity, ($-1$
+  km/sec).}
 \par
 A low-order finite-difference method is probably the most efficient
 numerical approach to this method, requiring the least work per
@@ -145,6 +148,9 @@ Two alternative spectral approaches are discussed in the next two
 sections.
 \par
 \section{Fourier approach}
+
+\inputdir{sigvc}
+
 \par
 Introducing the change of variable $\sigma = t^2$, we can transform
 equation (\ref{PDE}) to the form
@@ -181,8 +187,8 @@ continuation. The algorithms consists of the following steps:
 \item Inverse transform to a regular grid in $t$.
 \end{enumerate}
 
-%\plot{t2}{width=6in}{Synthetic seismic data before (left) and after
-%  (right) transformation to the $\sigma$ grid.}
+\plot{t2}{width=6in}{Synthetic seismic data before (left) and after
+  (right) transformation to the $\sigma$ grid.}
 
 Figure \ref{fig:t2} shows a simple synthetic model of seismic
 reflection data from \cite[]{Claerbout.bei.95} before and after
@@ -198,9 +204,9 @@ rapidly oscillating part (small frequencies and large wavenumbers) is
 exactly in the place, where the data spectrum is zero and corresponds
 to physically impossible reflection events.
 
-%\plot{t2-fft}{width=6in}{Left: the real part of the data Fourier
-%  transform.  Right: the real part of the velocity continuation
-%  operator (continuation from 0 to 1 km/s) in the Fourier domain.}
+\plot{t2-fft}{width=6in}{Left: the real part of the data Fourier
+  transform.  Right: the real part of the velocity continuation
+  operator (continuation from 0 to 1 km/s) in the Fourier domain.}
 
 Algorithm (\ref{ODEsol}) is very attractive from the practical point
 of view because of its efficiency (based on the FFT algorithm). The
@@ -232,11 +238,11 @@ to increasing the grid size by a factor of three. Some of the
 artifacts have been suppressed, at the expense of dealing with a
 larger grid.
 
-%\plot{fft-inv}{width=6in}{The left plots show the reconstruction of the original data 
-%  after transforming back from the $t^2$ grid to the original $t$
-%  grid.  The right plots show the difference with the original model.
-%  Top: using the original grid size ($N_t = 200$). Bottom: increasing
-%  the grid size by a factor of three.}
+\plot{fft-inv}{width=6in}{The left plots show the reconstruction of the original data 
+  after transforming back from the $t^2$ grid to the original $t$
+  grid.  The right plots show the difference with the original model.
+  Top: using the original grid size ($N_t = 200$). Bottom: increasing
+  the grid size by a factor of three.}
 
 To perform an accurate transform of the grid, I adopted the following
 method, inspired by \cite[]{Claerbout.sep.48.347}. Let $d_{\mbox{\tiny
@@ -270,6 +276,8 @@ can be chosen as small as possible, as long as it prevents the
 inversion from getting unstable.
 \par
 \subsection{Suppressing wraparound artifacts of the Fourier method}
+
+\inputdir{impls}
 \par
 The periodic boundary conditions both in the squared time $\sigma$ and
 the spatial coordinate $x$, implied by the Fourier approach, are
@@ -281,11 +289,11 @@ problem is to apply zero padding in the physical space prior to
 Fourier transform. Of course, this method involves an additional
 expense of the grid size increase.
 \par
-%\plot{fft-imp}{width=6in}{Impulse responses (Green's functions) of velocity continuation, 
-%  computed by the Fourier method. Top: without zero padding, bottom:
-%  with zero padding. The left plots correspond to continuation to a
-%  larger velocity ($+1$ km/sec); the right plots, smaller velocity,
-%  ($-1$ km/sec).}
+\plot{fft-imp}{width=6in}{Impulse responses (Green's functions) of velocity continuation, 
+  computed by the Fourier method. Top: without zero padding, bottom:
+  with zero padding. The left plots correspond to continuation to a
+  larger velocity ($+1$ km/sec); the right plots, smaller velocity,
+  ($-1$ km/sec).}
 \par
 The top plots in Figure \ref{fig:fft-imp} show the numerical impulse
 responses of velocity continuation, computed by the Fourier method.
@@ -302,6 +310,7 @@ Chebyshev spectral method, discussed in the next section, provides a
 spectral accuracy while dealing correctly with non-periodic data.
 \par 
 \section{Chebyshev Approach}
+\inputdir{sigvc}
 For an alternative spectral approach, I adopted the Chebyshev-$\tau$
 method \cite[]{lanc,orszag}. The Chebyshev-$\tau$ velocity continuation
 algorithm consists of the following steps:
@@ -378,14 +387,14 @@ algorithm consists of the following steps:
 \item Transform the grid back to being regularly space in $t$.
 \end{enumerate}
 \par
-%\plot{cheb1}{width=6in}{Synthetic seismic data before (left) and 
-%  after (right) transformation to the Chebyshev grid in squared time.}
+\plot{cheb1}{width=6in}{Synthetic seismic data before (left) and 
+  after (right) transformation to the Chebyshev grid in squared time.}
 \par
-%\plot{cheb1-inv}{width=6in}{The left plots show the reconstruction of the original data 
-%  after transforming back from the Chebyshev grid to the original $t$
-%  grid.  The right plots show the difference with the original model.
-%  Top: using the original grid size ($N_t = 200$). Bottom: increasing
-%  the grid size by a factor of three.}
+\plot{cheb1-inv}{width=6in}{The left plots show the reconstruction of the original data 
+  after transforming back from the Chebyshev grid to the original $t$
+  grid.  The right plots show the difference with the original model.
+  Top: using the original grid size ($N_t = 200$). Bottom: increasing
+  the grid size by a factor of three.}
 \par
 The first advantage of the Chebyshev approach comes from the better
 conditioning of the grid transform.  Figure \ref{fig:cheb1} shows the
@@ -394,9 +403,9 @@ synthetic data before and after the grid transform.  Figure
 transforming back from the Chebyshev grid (Gauss-Lobato collocation
 points). The difference with the original image is negligibly small.
 \par
-%\plot{cheb1-fft}{width=6in}{Left: Synthetic data after Chebyshev
-%  transform.  Right: the real part of the Fourier transform in the
-%  space coordinate.}
+\plot{cheb1-fft}{width=6in}{Left: Synthetic data after Chebyshev
+  transform.  Right: the real part of the Fourier transform in the
+  space coordinate.}
 \par
 The second advantage is the compactness of the Chebyshev
 representation.  Figure \ref{fig:cheb1-fft} shows the data after the

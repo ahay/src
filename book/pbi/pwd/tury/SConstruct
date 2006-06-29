@@ -1,0 +1,42 @@
+from rsfproj import *
+
+Flow('mod',None,
+     '''
+     math n1=3001 n2=20 o2=0.5 d2=0.5 o1=-10 d1=0.02
+     output=x2
+     ''')
+Flow('mod2','mod','transp | pad beg1=1 | math output="1.5+0.4*x1" ')
+Plot('mod2',
+     '''
+     grey color=j allpos=y title=Model scalebar=y
+     barlabel=Velocity barunit=km/s min2=0 max2=20 min1=0 max1=11
+     label1=Depth unit1=km label2=Lateral unit2=km
+     barreverse=y pclip=100 
+     ''')
+Plot('mod1','mod',
+     '''
+     graph yreverse=y pad=n min2=0 max2=10
+     plotcol=0 plotfat=20 wantaxis=n wanttitle=n scalebar=y
+     ''')
+Plot('mod0','mod',
+     '''
+     graph yreverse=y pad=n min2=0 max2=10
+     plotcol=7 plotfat=5 wantaxis=n wanttitle=n scalebar=y
+     ''')
+Plot('mod','mod2 mod1 mod0','Overlay')
+     
+Flow('dat','mod',
+     '''
+     kirmod nt=3001 dt=0.004 freq=10
+     ns=1 s0=0 ds=0.5
+     nh=201 h0=0 dh=0.1
+     vel=1.5 gradz=0.4 type=v |
+     tpow tpow=1 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+
+Plot('dat','grey title=Data')
+
+Result('dat','mod dat','SideBySideAniso')
+
+End()
