@@ -32,54 +32,47 @@
 # $Id: latex2twiki.py,v 1.2 2005/07/27 12:40:53 poulhies Exp $
 
 
-import sys, re
+import re
 
-bullet_level=0
-enum_level = 0
 bdoc = None
-
 verbatim_mode = 0
 math_mode = 0
 eqnarry_mode = 0
+
 el = "\n"
+item = ""
 
 def dummy():
     pass
 
-def inc_bullet():
-	global bullet_level, el
-	bullet_level += 1
-        el = " "
+def itemize():
+    global item, el
+    item = item + '*'
+    el = " "
 
-def dec_bullet():
-	global bullet_level, el
-	bullet_level -= 1
-        el = "\n"
+def enumerate():
+    item = item + '#'
+    el = " "
 
-def inc_enum():
-	global enum_level, el
-	enum_level += 1
-        el = " "
-	
-def dec_enum():
-	global enum_level, el
-	enum_level -= 1
-        el = "\n"
+def end_list():
+    global item, el
+    item = item[:-1] # remove last char
+    el = "\n"
 	
 def start_doc():
-	global bdoc;
-	bdoc = 1
+    global bdoc;
+    bdoc = 1
 
 def decide_el():
     global el
     return el
 
 def decide_math_replace():
-	global math_mode
-	if math_mode:
-		return r"\1"
-	else:
-		return " "
+    global math_mode
+    if math_mode:
+        return r"\1"
+    else:
+        return " "
 
 def decide_math():
     global math_mode
@@ -91,32 +84,24 @@ def decide_math():
         return "</math>"
 		
 def start_verbatim():
-	global verbatim_mode
-	verbatim_mode = 1
+    global verbatim_mode
+    verbatim_mode = 1
 
 def end_verbatim():
-	global verbatim_mode
-	verbatim_mode = 0
-
-def start_comment():
-	global bdoc
-	bdoc = 0
-
-def end_comment():
-	global bdoc
-	bdoc = 1
+    global verbatim_mode
+    verbatim_mode = 0
 
 def start_eqnarry():
-	global eqnarry_mode
-	eqarry_mode = 1
+    global eqnarry_mode
+    eqarry_mode = 1
 
 def end_eqnarry():
-	global eqnarry_mode
-	eqnarry_mode = 0
+    global eqnarry_mode
+    eqnarry_mode = 0
 
 def toggle_math():
-	global math_mode
-	math_mode = 1 - math_mode
+    global math_mode
+    math_mode = 1 - math_mode
 
 tr_list2 = [
         (r"^\s+", None, dummy),
@@ -226,4 +211,6 @@ def convert(in_stream,out_stream):
             out_stream.write(mystr)
 
 if __name__ == "__main__":
+    import sys
+    
     convert(sys.stdin,sys.stdout)

@@ -1,0 +1,15 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+sgy = {
+    'pp': 'L212_PP.sgy',
+    'ps': 'L212_PS_RAD.sgy'
+    }
+
+for mode in sgy.keys():
+    Fetch(sgy[mode],'wgeco',private)
+
+End()
