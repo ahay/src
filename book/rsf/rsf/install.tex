@@ -60,18 +60,6 @@ svn update
 \end{verbatim}
 inside the directory that needs updating.
 
-\begin{comment}
-If you cannot get Subversion to work at your location, download the tarball
-file by following the link at \url{http://egl.beg.utexas.edu/viewcvs/}.
-In this case, you will need to run
-\begin{verbatim}
-gunzip < root.tar.gz | tar xvf -
-cd rsf/trunk
-chmod a+x python/sfdoc
-\end{verbatim}
-to prepare software for installation.
-\end{comment}
-
 \section{Installation}
 
 \subsection{Environmental variables}
@@ -106,7 +94,7 @@ fi
 export DATAPATH=/var/tmp/
 \end{verbatim}
 
-Notice the slash at the end of the DATAPATH variable.
+Notice the slash at the end of the \texttt{DATAPATH} variable.
 
 \subsection{Software construction}
 
@@ -205,6 +193,43 @@ This installs \LaTeX2e\ and \texttt{latex2html} macros for writing
 geophysical papers, books, and reports. The \texttt{texmf} directory should
 be placed where \LaTeX\ can find it. Some systems recognize
 \texttt{\$HOME/texmf} as one of the default places.
+
+\section{Troubleshooting}
+
+\subsection{Troubles with svn}
+This section is contributed by Nick Vlad.
+
+\begin{itemize}
+\item If, after running the ``svn co...''
+command, nothing happens, no message, no return to the command
+line: you may be behind a proxy.  This is especially likely if your
+computer is on a corporate Intranet.  To get past a proxy, you will
+need to tell Subversion the name of the proxy and port that will allow
+\texttt{svn} through. First, obtain this information from your IT people. After
+you get an IP number of a URL that looks like
+\texttt{www-proxy.yourcompany.com} and a port number (most likely 80, the
+standard HTTP port), open your \verb#~/.subversion/servers# file in a text
+editor. If this file does not exist, running any \texttt{svn} command (even an
+unsuccessful one, like the one above) will automatically create the
+file. In the \texttt{[global]} section, add the following lines, with your own
+proxy URL and port names instead of the dummy ones below:
+\begin{verbatim}
+http-proxy-host = www-proxy.yourcompany.com
+\end{verbatim}
+\begin{verbatim}
+http-proxy-port = 80
+\end{verbatim}
+Now your \texttt{svn} commands should work. You can find more details at 
+\url{http://subversion.tigris.org/faq.html#proxy}.
+\item If you get a ``is already a working copy for a different URL'' error,
+this means you have an existing directory downloaded from another
+server. Run \texttt{svn switch --relocate} to switch servers.
+\end{itemize}
+
+\subsection{Troubles with cygwin}
+If, installing on \texttt{cygwin}, you get a message about RPC
+libraries, install the \texttt{sunrpc} package located under
+\texttt{Libs} in the \texttt{Setup} program.
 
 %\end{document}
 

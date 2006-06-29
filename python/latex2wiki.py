@@ -141,6 +141,7 @@ tr_list2 = [
 	(r"\\texttt{(.*?)}", (lambda : r"<tt>\1</tt>"), dummy),
 	(r"\\text{(.*?)}", (lambda : r"=\1= "), dummy),
 	(r"\\textbf{(.*?)}", (lambda : r"'''\1''' "), dummy),
+        (r"\\verb(.)(.+)\1", (lambda : r"\2"), dummy),
 	(r"\\begin{verbatim}", (lambda : "<pre>"), start_verbatim),
 	(r"\\end{verbatim}", (lambda : "</pre>"), end_verbatim),
         (r"\\begin{comment}", (lambda : "<!-- "), dummy),
