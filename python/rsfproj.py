@@ -351,7 +351,9 @@ class Project(Environment):
             if (not re.search(suffix + '$',file)) and ('.' not in file):
                 file = file + suffix
             targets.append(file)
-        if suffix == sfsuffix and sys.platform[:7] != 'interix':            
+        if suffix == sfsuffix and \
+               sys.platform[:6] != 'cygwin' and \
+               sys.platform[:7] != 'interix':            
             targets = targets + \
                       map(lambda x, self=self: self.path + x + '@',
                           filter(lambda x, suffix=suffix:
