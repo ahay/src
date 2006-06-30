@@ -1,0 +1,98 @@
+from rsfproj import *
+
+# Generate one trace
+Flow('spike',None,
+     'spike n1=500 n2=40 k1=100,150,200,250,300,350,400 nsp=7 o2=1 d2=1 | ricker1 frequency=5')
+# Generate random offsets
+Flow('offset','spike','window n1=1 | noise type=n rep=y seed=2005 range=3')
+# Sort offsets
+Flow('offset2','offset','transp | headersort head=$SOURCE')
+# Linear velocity function v(t) = 3+0.5*t
+Flow('velocity','spike','window n2=1 | math output="3+0.5*x1" ')
+
+# Generate synthetic CMP gather by inverse NMO
+Flow('data','spike offset2 velocity',
+     'inmo offset=${SOURCES[1]} velocity=${SOURCES[2]} half=n')
+# Display traces
+Plot('reg','data',
+     '''
+     wiggle label2="Trace Number" unit2= title=Regular
+     yreverse=y transp=y poly=y
+     ''')
+# Display irregular data
+Plot('ireg','data offset2',
+     '''
+     wiggle xpos=${SOURCES[1]} xmax=3 xmin=-3
+     label2=Offset title=Irregular
+     yreverse=y transp=y poly=y
+     ''')
+# Compare trace display and irregular display
+Result('wiggle','reg ireg','SideBySideAniso')
+
+# Initial number of bins
+nx = 15
+# Initial bin size
+dx = 0.4
+# Initial lateral smoothing
+rect = 5
+
+# Iterative grid refinement
+for dens in range(1,4):
+    bin  = 'bin%d'  % dens
+    fold = 'fold%d' % dens
+    mask = 'mask%d' % dens
+    dip0 = 'dip0%d' % dens
+    dip2 = 'dip2%d' % dens
+    dip  = 'dip%d'  % dens
+    fill = 'fill%d' % dens
+
+    # Bin the data
+    Flow([bin,fold],'data offset2',
+         '''
+         transp |
+         bin1 head=${SOURCES[1]} fold=${TARGETS[1]} xmin=-3 nx=%d dx=%g |
+         transp | put label2=Offset
+         ''' % (nx+1,dx))
+    Plot(bin,'grey title="Binned (nx=%d)"' % nx)
+
+    # Use fold as mask for dip estimation away from holes
+    Flow(mask,fold,'spray axis=1 n=500')
+
+    # Dip estimation
+    if dens > 1:
+        # Use previous dip estimate as the initial guess
+        # Interpolate it to a denser grid and multiply by 1/2
+        Flow(dip0,olddip,
+             '''
+             transp |
+             remap1 n1=%d d1=%g o1=-3 |
+             transp |
+             scale dscale=0.5
+             ''' % (nx+1,dx))
+        Flow(dip,[bin,mask,dip0],
+             'dip rect1=100 rect2=%g order=3 mask=${SOURCES[1]} idip=${SOURCES[2]}' % rect)
+    else:    
+        Flow(dip,[bin,mask],'dip rect1=100 rect2=%g order=3 mask=${SOURCES[1]}' % rect)
+    Plot(dip,'grey color=j scalebar=y title="Slope (nx=%d)"' % nx)
+    olddip = dip # to use in the next iteration
+
+    # Fill the gaps in the binned data using PWD
+    Flow(fill,[bin,dip,mask],'planemis2 order=3 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+    Plot(fill,'grey title="Regularized (nx=%d)"' % nx)
+
+    Result(fill,[bin,dip,fill],'SideBySideAniso')
+
+    # Double the number of bins
+    nx = nx*2
+    dx = dx/2
+    rect = rect*2
+
+# Wiggle trace display of the final result
+Plot('fill','fill3',
+     '''
+     wiggle label2=Offset title=Regularized
+     yreverse=y transp=y poly=y
+     ''')
+Result('fill','ireg fill','SideBySideAniso')
+
+End()
