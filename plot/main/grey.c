@@ -51,7 +51,7 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     in = sf_input("in");
 
-    byte = (NULL != strstr (sf_getprog(),"byte"));
+    byte = (bool) (NULL != strstr (sf_getprog(),"byte"));
 
     if (byte) {
 	out = sf_output("out");
@@ -60,7 +60,7 @@ int main(int argc, char* argv[])
 	vp_init();
     }
 
-    charin = (SF_UCHAR == sf_gettype(in));
+    charin = (bool) (SF_UCHAR == sf_gettype(in));
 
     if (charin && byte) sf_error("Cannot input uchar to byte");
 
@@ -169,7 +169,7 @@ int main(int argc, char* argv[])
     /* file for scalebar data */
 
     if (byte) {
-	scalebar = (NULL != barfile);
+	scalebar = (bool) (NULL != barfile);
 	if (scalebar) sf_putstring(out,"bar",barfile);
     } else {
 	if (!sf_getbool ("wantscalebar",&scalebar) && 
@@ -210,7 +210,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if (!sf_getbool("wantframenum",&framenum)) framenum = (n3 > 1);
+    if (!sf_getbool("wantframenum",&framenum)) framenum = (bool) (n3 > 1);
     /* if y, display third axis position in the corner */
 
     x1 = o1-0.5*d1;

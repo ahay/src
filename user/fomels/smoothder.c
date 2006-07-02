@@ -44,7 +44,7 @@ void smoothder_init(int n     /* data size */,
     
     repeat_init(n1,n2,sf_causint_lop);
 
-    nonstat = (NULL != len);
+    nonstat = (bool) (NULL != len);
 
     if (nonstat) {
 	ntrianglen_init(ndim,rect,ndat,len);

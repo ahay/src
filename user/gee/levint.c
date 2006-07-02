@@ -51,7 +51,7 @@ void levint1 (int niter       /* number of iterations */,
 
     /* starting guess */
     for (ir=0; ir < nr; ir++) {
-	ma[ir] = (ir >= nm);
+	ma[ir] = (bool) (ir >= nm);
 	rr[ir] = 0.;
     }
     aa[0] = 1.;

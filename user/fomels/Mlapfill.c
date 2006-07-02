@@ -62,7 +62,7 @@ int main(int argc, char* argv[])
 	if (NULL != mask) sf_floatread(msk,n12,mask);
 
 	for (i1=0; i1 < n12; i1++) {
-	    known[i1] = (msk[i1] != 0.);
+	    known[i1] = (bool) (msk[i1] != 0.);
 	}
 
 	lapfill(niter,map,known);

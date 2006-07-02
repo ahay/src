@@ -67,7 +67,7 @@ int main(int argc, char* argv[])
   /* read threshold level from the command line */
   thrflag = sf_getfloat("thr",&thr);
   /* threshold level (>0) */
-  fthrflag = (NULL != sf_getstring("fthr"));
+  fthrflag = (bool) (NULL != sf_getstring("fthr"));
   /* varying threshold level (>0) */
   
   if (!fthrflag){ /* constant threshold level */

@@ -191,7 +191,7 @@ int main (int argc, char* argv[])
 
     in_isatty = isatty ((int) (fileno (stdin)));
 
-    if (!sf_getbool ("selfdoc", &docflag)) docflag =(argc == 1);
+    if (!sf_getbool ("selfdoc", &docflag)) docflag = (bool) (argc == 1);
     if (in_isatty && docflag)
     {
 	for (ii = 0; ii < doclength; ii++)

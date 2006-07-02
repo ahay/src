@@ -470,7 +470,7 @@ void init_vplot (int argc, char* argv[])
     if (NULL != interact)
     {
 	epause = 0;		/* interact makes it own sort of pausing */
-	endpause = NO;
+	endpause = false;
     }
 
     /*

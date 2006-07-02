@@ -106,7 +106,7 @@ void* sf_pop(sf_stack s)
 bool sf_full (sf_stack s)
 /*< test if the stack is full >*/
 {
-    return (s->top >= s->entry);
+    return (bool) (s->top >= s->entry);
 }
 
 int sf_top(sf_stack s)

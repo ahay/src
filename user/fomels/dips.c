@@ -104,7 +104,7 @@ void dips(const float *d /* initial dip [nd] */,
 
 	for (jd=0; jd < nd; jd++) {
 	    tmp = tmp1; tmp1 = tmp2; tmp2 = tmp;
-	    callpass21 (jd == id, ap[jd], tmp1, tmp2);
+	    callpass21 ((bool) (jd == id), ap[jd], tmp1, tmp2);
 	}
 	
 	

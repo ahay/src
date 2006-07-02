@@ -201,7 +201,7 @@ extern float    xscale;
 extern float    yscale;
 extern int      default_style;
 extern int      default_txfont, default_txprec, default_txovly;
-extern int      default_overlay;
+extern bool     default_overlay;
 extern int      color_set[MAX_COL + 1][_NUM_PRIM];
 extern int      greycorr ();
 extern int      num_col_8;
@@ -1021,7 +1021,7 @@ char            string[MAXFLEN + 1];
 	    /*
 	     * This is made available to the device dependent subroutines
 	     */
-	    overlay = geth (pltin);
+	    overlay = (bool) (1 == geth (pltin));
 	    dev.attributes (NEW_OVERLAY, overlay, 0, 0, 0);
 	    break;
 	case VP_PATLOAD:	/* load a pattern */
@@ -1216,8 +1216,9 @@ char            string[MAXFLEN + 1];
 	    {
 		if (wantras)
 		{
-		    ERR (WARN, name, "Raster only possible in 4 principal orientations");
-		    wantras = NO;
+		    ERR (WARN, name, 
+			 "Raster only possible in 4 principal orientations");
+		    wantras = false;
 		}
 	    }
 	    else

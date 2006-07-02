@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
     sf_floatread (xx,n1,in);
     
     for (i1=0; i1 < n1; i1++) {
-	known[i1] = (xx[i1] != 0.);
+	known[i1] = (bool) (xx[i1] != 0.);
     }
 
     for (i2=0; i2 < n2; i2++) {	

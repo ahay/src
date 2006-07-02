@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
    
     if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
     for (i=0, mask=1; i < dim; i++, mask <<= 1) {
-	f[i] = (0 != (which & mask)) && n[i]>1;
+	f[i] = (bool) ((0 != (which & mask)) && n[i]>1);
 	if (verb && f[i]) fprintf(stderr," n%d",i+1);
     }
     if (verb) fprintf(stderr,".\n");

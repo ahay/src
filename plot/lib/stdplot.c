@@ -198,7 +198,7 @@ void vp_stdplot_init (float umin1, float umax1 /* user's frame for axis 1 */,
 	if (NULL == bartype) {
 	    vertbar = true;
 	} else {
-	    vertbar = (bartype[0] == 'v');
+	    vertbar = (bool) (bartype[0] == 'v');
 	    free (bartype);
 	}
 	if (!sf_getfloat("barwidth",&barwd)) barwd = 0.36;
@@ -598,8 +598,8 @@ static void make_baraxis (float min, float max)
 	dbar *= inch1;
     }
 
-    wherebartics = (NULL != (where = sf_getstring ("wherebartics"))) &&
-	('a' == *where);
+    wherebartics = (bool) ((NULL != (where = sf_getstring ("wherebartics"))) &&
+			   ('a' == *where));
 }	
 
 static void make_axes (void)
@@ -666,8 +666,8 @@ static void make_axes (void)
 					   &(axis3->dnum));
     }
 
-    wheretics = (NULL != (where = sf_getstring ("wheretics"))) &&
-	('a' == *where);
+    wheretics = (bool) ((NULL != (where = sf_getstring ("wheretics"))) &&
+			('a' == *where));
 }
 
 

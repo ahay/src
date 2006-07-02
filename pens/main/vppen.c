@@ -350,8 +350,8 @@ void vp_do_dovplot (int nn, FILE **inpltin, char *innames[])
 /*< do vplot >*/
 {
 int             ii;
-int             save_wantras;
-int             save_shade;
+bool             save_wantras;
+bool             save_shade;
 char            string[80];
 static int      it_got_clipped;
 float           hh, ww;
@@ -381,7 +381,7 @@ char            format_string[80];
 	save_shade = shade;
 
 	wantras = false;
-	shade = NO;
+	shade = false;
 
 	/*
 	 * Turn off any actual output 
@@ -711,7 +711,7 @@ extern int vpsetcoltabanyway;
 	    vp_erase ();
 	    if (!vpdumb && vpstyle)
 	    {
-		vp_style (ABSOLUTE);
+		vp_style (VP_ABSOLUTE);
 	    }
 	    lost = YES;
 	    vpsetflag = NO;
@@ -744,7 +744,7 @@ extern int vpsetcoltabanyway;
 	    vp_break ();
 	    if (!vpdumb && vpstyle)
 	    {
-		vp_style (ABSOLUTE);
+		vp_style (VP_ABSOLUTE);
 	    }
 	    lost = YES;
 	    vpsetflag = NO;
@@ -1173,7 +1173,7 @@ void vpraster (int xpix, int ypix, int xmin, int ymin, int xmax, int ymax,
     vpsetflag = NO;
     lost = YES;
 
-    vp_raster (raster_block, (vpbit > 0), vpbit, 
+    vp_raster (raster_block, (bool) (vpbit > 0), vpbit, 
 	       xpix, ypix, 
 	       (float) xmin / RPERIN, (float) ymin / RPERIN,
 	       (float) xmax / RPERIN, (float) ymax / RPERIN, orient);
@@ -1198,7 +1198,7 @@ void vpreset (void)
 
     if (!vpdumb && vpstyle)
     {
-	vp_style (ABSOLUTE);
+	vp_style (VP_ABSOLUTE);
     }
 
     if (!vpdumb)

@@ -2,14 +2,14 @@ from rsfproj import *
 
 Flow('mod',None,
      '''
-     math n1=3001 n2=20 o2=0.5 d2=0.5 o1=-10 d1=0.02
+     math n1=3001 n2=19 o2=1 d2=0.5 o1=-10 d1=0.02
      output=x2
      ''')
-Flow('mod2','mod','transp | pad beg1=1 | math output="1.5+0.4*x1" ')
+Flow('mod2','mod','transp | pad beg1=2 | math output="1.5+0.4*x1" ')
 Plot('mod2',
      '''
      grey color=j allpos=y title=Model scalebar=y
-     barlabel=Velocity barunit=km/s min2=0 max2=20 min1=0 max1=11
+     barlabel=Velocity barunit=km/s min2=0 max2=20 min1=0 max1=10
      label1=Depth unit1=km label2=Lateral unit2=km
      barreverse=y pclip=100 
      ''')
@@ -27,16 +27,43 @@ Plot('mod','mod2 mod1 mod0','Overlay')
      
 Flow('dat','mod',
      '''
-     kirmod nt=3001 dt=0.004 freq=10
+     kirmod nt=2001 dt=0.004 freq=10
      ns=1 s0=0 ds=0.5
-     nh=201 h0=0 dh=0.1
-     vel=1.5 gradz=0.4 type=v |
+     nh=241 h0=0 dh=0.05
+     vel=1.5 gradz=0.4 type=v
+     ''')
+
+Flow('dat2','dat',
+     '''
      tpow tpow=1 |
      put label1=Time unit1=s label2=Offset unit2=km
      ''')
 
-Plot('dat','grey title=Data')
+Plot('dat2','grey title=Data')
 
-Result('dat','mod dat','SideBySideAniso')
+Result('dat','mod dat2','SideBySideAniso')
 
+Flow('scan','dat2',
+     'vscan v0=1.2 nv=241 dv=0.0125 half=n semblance=y')
+Plot('scan2','scan',
+     '''
+     window min1=0.5 max1=6.5 |
+     grey color=j allpos=y title="Semblance Scan"
+     ''')
+
+Flow('pick','scan','pick rect1=50 vel0=1.5 | window')
+Plot('pick',
+     '''
+     window min1=0.5 max1=6.5 | 
+     graph yreverse=y transp=y pad=n min2=1.2 max2=4.2
+     plotcol=7 plotfat=5 Xwantaxis=n wanttitle=n 
+     ''')
+
+Plot('scan','scan2 pick','Overlay')
+
+Flow('nmo','dat2 pick','nmo velocity=${SOURCES[1]} half=n')
+Plot('nmo','window min1=0.5 max1=6.5 | grey title=NMO')
+
+Result('nmo','scan nmo','SideBySideAniso')
+    
 End()

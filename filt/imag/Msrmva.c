@@ -141,7 +141,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
 
-    srmva_init (verb,eps,dtmax,twoway,
+    srmva_init (verb,eps,twoway,dtmax,
 		aw,
 		amx,amy,amz,
 		alx,aly,

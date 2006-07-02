@@ -105,9 +105,9 @@ int main (int argc, char* argv[])
  
     if (!sf_getint("dots",&dots)) dots = (n1 <= 130)? 1: 0;
     /* type of dots: 1 - baloon, 0 - no dots, 2 - only for non-zero data */
-    if (!sf_getbool("seemean",&seemean)) seemean = (n2 <= 30);
+    if (!sf_getbool("seemean",&seemean)) seemean = (bool) (n2 <= 30);
     /* if y, draw axis lines */
-    if (!sf_getbool("strings",&strings)) strings = (n1 <= 400);
+    if (!sf_getbool("strings",&strings)) strings = (bool) (n1 <= 400);
     /* if y, draw strings */
     if (!sf_getint("connect",&connect)) connect = 1; 
     /* connection type: 1 - diagonal, 2 - bar, 4 - only for non-zero data */

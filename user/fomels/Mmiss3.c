@@ -71,11 +71,11 @@ int main(int argc, char* argv[])
     if (NULL != mask) {
 	sf_floatread(kk,n12,mask);
 	for (i=0; i < n12; i++) {
-	    known[i] = (kk[i] != 0.);
+	    known[i] = (bool) (kk[i] != 0.);
 	}
     } else {
 	for (i=0; i < n12; i++) {
-	    known[i] = (mm[i] != 0.);
+	    known[i] = (bool) (mm[i] != 0.);
 	}
     }
 

@@ -117,9 +117,10 @@
 static double   path_orient_dx, path_orient_dy;
 static double   up_orient_dx, up_orient_dy;
 static double   xorigin_f, yorigin_f, xold_f, yold_f;
-static int      ttxfont, cur_color_save, overlay_save;
+static int      ttxfont, cur_color_save;
 extern int      cur_color, ipat, need_devcolor;
 extern bool overlay;
+static bool overlay_save;
 extern int      color_set[MAX_COL + 1][_NUM_PRIM];
 
 extern void drawpolygon (int npts, int *x, int *y);
@@ -223,7 +224,7 @@ int             linecount;
     cur_color_save = cur_color;
     overlay_save = overlay;
 
-    overlay = NO;
+    overlay = false;
 
     for (ii = 0; ii < NMARK; ii++)
 	mark_flag[ii] = 0;

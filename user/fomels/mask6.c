@@ -38,7 +38,7 @@ void mask32 (int nw                 /* filter size */,
     xx = sf_boolalloc(n);
 
     for (i=0; i < n; i++) {
-	xx[i] = (yy[i] == 0.);
+	xx[i] = (bool) (yy[i] == 0.);
 	m1[i] = false;
 	m2[i] = false;
     }
@@ -86,7 +86,7 @@ void mask3 (int nw         /* filter size */,
     
     for (iy=0; iy < ny; iy++) {
 	for (ix=0; ix < nx; ix++) {
-	    xx[iy][ix] = (yy[iy][ix] == 0.);
+	    xx[iy][ix] = (bool) (yy[iy][ix] == 0.);
 	    mm[iy][ix] = false;
 	}
     }
@@ -119,7 +119,7 @@ void mask6 (int nw           /* filter size */,
     xx = sf_boolalloc(n);
     
     for (i=0; i < n; i++) {
-	mm[i] = (yy[i] == 0.);
+	mm[i] = (bool) (yy[i] == 0.);
 	xx[i] = false;
     }
 

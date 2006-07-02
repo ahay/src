@@ -293,7 +293,7 @@ void rasopen (int argc, char* argv[])
      */
     image = sf_ucharalloc (dev_xmax * dev_ymax * 3);
 
-    default_out = isatty(fileno(pltout));
+    default_out = (bool) isatty(fileno(pltout));
 
     if (default_out)
     {

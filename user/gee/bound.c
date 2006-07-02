@@ -80,7 +80,7 @@ void bound (int dim         /* number of dimensions */,
 	}
 	ib = sf_cart2line(dim, nb, ii);
 	
-	aa->mis[iy] = ( yy[ib] > 0.);  /* true where inputs missing */
+	aa->mis[iy] = (bool) (yy[ib] > 0.);  /* true where inputs missing */
     }
     
     free (xx);

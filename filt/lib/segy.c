@@ -470,7 +470,7 @@ bool sf_endian (void)
     test.c[0] = (byte) 1;
     
     assert (2 == sizeof(short) && 4 == sizeof(int)); /* fix this later */
-    little_endian = (0 != (test.i << 8));
+    little_endian = (bool) (0 != (test.i << 8));
     
     return little_endian;
 }

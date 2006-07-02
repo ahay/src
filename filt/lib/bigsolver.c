@@ -193,7 +193,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 
     for (iter = 0; iter < niter; iter++) {
 	if (nmem >= 0) {
-	    forget = (iter > nmem);
+	    forget = (bool) (iter > nmem);
 	}
 	if (wght != NULL && forget) {
 	    wght (ny, rr, wht);
@@ -239,7 +239,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	    }
 	}
 	if (forget && nfreq != 0) {  /* periodic restart */
-	    forget = (iter%nfreq == 0);
+	    forget = (bool) (iter%nfreq == 0);
 	} 
 	
 	if (iter == 0) {
@@ -515,7 +515,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 
     for (iter=0; iter < niter; iter++) {
 	if ( nmem >= 0) {  /* restart */
-	    forget = (iter > nmem);
+	    forget = (bool) (iter > nmem);
 	}
 	if (wght != NULL && forget) {
 	    wght (ny, rr, wht);
@@ -549,7 +549,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
  
 	if (forget && nfreq != 0) { /* periodic restart */
-	    forget = (iter%nfreq == 0);
+	    forget = (bool) (iter%nfreq == 0);
 	}
 
 	if (verb) {
@@ -758,7 +758,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 
     for (iter=0; iter < niter; iter++) {
 	if ( nmem >= 0) {  /* restart */
-	    forget = (iter > nmem);
+	    forget = (bool) (iter > nmem);
 	}
 	if (wght != NULL && forget) {
 	    wght (ny, rr, wht);
@@ -800,7 +800,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	}
  
 	if (forget && nfreq != 0) { /* periodic restart */
-	    forget = (iter%nfreq == 0); 
+	    forget = (bool) (iter%nfreq == 0); 
 	}
 
 
@@ -1040,7 +1040,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 
     for (iter=0; iter < niter; iter++) {
 	if ( nmem >= 0) {  /* restart */
-	    forget = (iter > nmem);
+	    forget = (bool) (iter > nmem);
 	}
 	if (wght != NULL && forget) {
 	    wght (ny, rr, wht);
@@ -1077,7 +1077,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	}
  
 	if (forget && nfreq != 0) { /* periodic restart */
-	    forget = (iter%nfreq == 0); 
+	    forget = (bool) (iter%nfreq == 0); 
 	}
 
 	if (iter == 0) {

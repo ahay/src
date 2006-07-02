@@ -130,11 +130,11 @@ int main(int argc, char* argv[])
 	sf_fileclose(mask);
 	
 	for (i=p1; i < p1+p2; i++) {
-	    known[i] = (kk[i] != 0.);
+	    known[i] = (bool) (kk[i] != 0.);
 	}
     } else {
 	for (i=p1; i < p1+p2; i++) {
-	    known[i] = (mm[i] != 0.);
+	    known[i] = (bool) (mm[i] != 0.);
 	}
     }
 

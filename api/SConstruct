@@ -57,8 +57,12 @@ if 'c++' in api:
 ############################################################################
 
 if 'fortran' in api:
-    proj.Program('clip.f',OBJSUFFIX='f.o',LIBS=['rsff','rsf','m'],
-                 LINK=proj.get('F77'),LINKFLAGS=proj.get('F77FLAGS'))
+    proj.Program('clip.f',
+                 PROGSUFFIX='f.exe',
+                 OBJSUFFIX='f.o',
+                 LIBS=['rsff','rsf','m'],
+                 LINK=proj.get('F77'),
+                 LINKFLAGS=proj.get('F77FLAGS'))
     ftest = proj.Flow('f','clipf.exe',test % 'clipf',suffix='.attr',stdin=0)
     Default(ftest)
 
@@ -68,7 +72,7 @@ if 'fortran' in api:
 
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
     proj.Program('clip.f90',
-                 PROGSUFFIX='.exe',
+                 PROGSUFFIX='f90.exe',
                  OBJSUFFIX='f90.o',
                  LIBS=['rsff90','rsf','m'],
                  F90PATH=[incdir],

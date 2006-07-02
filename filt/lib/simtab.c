@@ -318,9 +318,9 @@ bool sf_simtab_getbool (sf_simtab table, const char* key,/*@out@*/ bool *par)
     val = sf_simtab_getstring(table,key);
     if (NULL == val) return false;
 
-    *par = (('y' == val[0]) || 
-	    ('Y' == val[0]) || 
-	    ('1' == val[0]));
+    *par = (bool) (('y' == val[0]) || 
+		   ('Y' == val[0]) || 
+		   ('1' == val[0]));
 
     free(val);
     return true;
@@ -348,9 +348,9 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 	    if (ERANGE == errno) 
 		sf_error ("%s: Wrong counter in %s='%s':",__FILE__,key,fval);
 	    fvali++;
-	    test = (('y' == fvali[0]) || 
-		    ('Y' == fvali[0]) || 
-		    ('1' == fvali[0]));
+	    test = (bool) (('y' == fvali[0]) || 
+			   ('Y' == fvali[0]) || 
+			   ('1' == fvali[0]));
 	    for (; i < n && i < (size_t) num; i++) {
 		par[i] = test;
 	    }
@@ -359,9 +359,9 @@ bool sf_simtab_getbools (sf_simtab table, const char* key,
 	    if (NULL==fval) {
 		if (0==i) return false;
 	    } else {
-		test = (('y' == fval[0]) || 
-			('Y' == fval[0]) || 
-			('1' == fval[0]));
+		test = (bool) (('y' == fval[0]) || 
+			       ('Y' == fval[0]) || 
+			       ('1' == fval[0]));
 	    }
 	}
 	par[i] = test;

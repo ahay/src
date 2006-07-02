@@ -126,7 +126,7 @@ int main (int argc, char *argv[])
 		} else if (it > nt + nw/2) {
 		    depth[iz] = time[nt-1];
 		} else {
-		    depth[iz] = fint1_apply (fnt, it, t, 0);
+		    depth[iz] = fint1_apply (fnt, it, t, false);
 		}
 	    }
 	}

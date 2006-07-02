@@ -114,11 +114,11 @@ int main(int argc, char* argv[])
 	sf_fileclose(mask);
 	
 	for (id=0; id < nd; id++) {
-	    known[id] = (kk[id] != 0.);
+	    known[id] = (bool) (kk[id] != 0.);
 	}
     } else {
 	for (id=0; id < nd; id++) {
-	    known[id] = (mm[id] != 0.);
+	    known[id] = (bool) (mm[id] != 0.);
 	}
     }
 

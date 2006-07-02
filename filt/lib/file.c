@@ -167,7 +167,7 @@ sf_file sf_input (/*@null@*/ const char* tag)
     }
     free (filename);
 
-    file->pipe = (-1 == ftello(file->stream));
+    file->pipe = (bool) (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 
@@ -220,7 +220,7 @@ Should do output after sf_input. >*/
     file->pars = sf_simtab_init (tabsize);
     file->head = NULL;
 
-    file->pipe = (-1 == ftello(file->stream));
+    file->pipe = (bool) (-1 == ftello(file->stream));
     if (file->pipe && ESPIPE != errno) 
 	sf_error ("%s: pipe problem:",__FILE__);
 

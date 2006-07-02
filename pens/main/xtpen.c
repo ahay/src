@@ -440,9 +440,11 @@ static Widget Color,Fat,Boxit,Size,XOVAL,YOVAL,POINTER;
 static FILE* outfp;
 static float vpx, vpy;
 
-
-
-void PopupConfirm()
+void PopupConfirm(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        /* call_data */ /* callback specific data */
+    )
 {
   float xoff,yoff;
 	int   col,fat,box,point;
@@ -471,18 +473,23 @@ void PopupConfirm()
   XtPopdown( PopUpWidget );
 }
 
-void actionPointPopupConfirm(w, event, params, num_params)
-Widget w; XEvent *event; String *params; Cardinal *num_params;
-{ PopupConfirm(); }
+void actionPointPopupConfirm(Widget w, XEvent *event, 
+			     String *params, Cardinal *num_params)
+{ PopupConfirm(w,NULL,NULL); }
 
 
-void PopupCancel()
+void PopupCancel(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        /* call_data */ /* callback specific data */
+    )
 {
   XtPopdown( PopUpWidget );
 }
-void actionPointPopupCancel(w, event, params, num_params)
-Widget w; XEvent *event; String *params; Cardinal *num_params;
-{ PopupCancel(); }
+
+void actionPointPopupCancel(Widget w, XEvent *event, 
+			    String *params, Cardinal *num_params)
+{ PopupCancel(w,NULL,NULL); }
 
 static void set_labels(x,y)
 float x,y;
@@ -1025,50 +1032,76 @@ void  dummy_proc () { return; }
 void actionDummy( w, ev, p, np)
 Widget w; XEvent *ev; String *p; Cardinal *np; { dummy_proc(); }
 
-void  next_proc(){  if( next_on == YES ) didNEXT = YES;    return; }
-void actionNext( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { next_proc(); }
+void  next_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        
+    ){  if( next_on == YES ) didNEXT = YES;    return; }
+void actionNext(Widget w, XEvent *ev, String *p, Cardinal *np)
+{ next_proc(w,NULL,NULL); }
 
-void  prev_proc(){  if( prev_on==YES ) didPREV = YES;    return; }
-void actionPrev( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { prev_proc(); }
+void  prev_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        
+    ){  if( prev_on==YES ) didPREV = YES;    return; }
+void actionPrev(Widget w, XEvent *ev, String *p, Cardinal *np)
+{ prev_proc(w,NULL,NULL); }
 
-void quit_proc(){  if( quit_on == YES ) didQUIT = YES;    return; }
-
-void actionQuit( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; 
+void quit_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        
+    ){  if( quit_on == YES ) didQUIT = YES;    return; }
+void actionQuit(Widget w, XEvent *ev, String *p, Cardinal *np)
 {
- if( interact[0] != '\0' ) {
-if (first_time == YES){
-        outfp = fopen (interact, "w");
-        if (outfp == NULL) { 
-            ERR (FATAL, name, "Can't open interact output file %s!", interact);
-        }
-        first_time = NO;
-   }
+    if( interact[0] != '\0' ) {
+	if (first_time == YES){
+	    outfp = fopen (interact, "w");
+	    if (outfp == NULL) { 
+		ERR (FATAL, name, "Can't open interact output file %s!", interact);
+	    }
+	    first_time = NO;
+	}
 /*	 fprintf( outfp,"\n");*/
-  fflush( outfp );
+	fflush( outfp );
+    }
+    quit_proc(w,NULL,NULL); 
+    
 }
-  quit_proc(); 
 
-}
+void restart_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        
+    ){  if( restart_on == YES) didFRAM1 = YES;    return; }
+void actionRestart(Widget w, XEvent *ev, String *p, Cardinal *np)
+{ restart_proc(w,NULL,NULL); }
 
-void restart_proc(){  if( restart_on == YES) didFRAM1 = YES;    return; }
-void actionRestart( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { restart_proc(); }
+void run_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2
+    ){  if( run_on == YES ) didRUN = YES;    return; }
+void actionRun(Widget w, XEvent *ev, String *p, Cardinal *np)
+{ run_proc(w,NULL,NULL); }
 
-void run_proc(){  if( run_on == YES ) didRUN = YES;    return; }
-void actionRun( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { run_proc(); }
-
-void stop_proc(){  if( stop_on == YES ) didSTOP = YES;    return; }
-void actionStop( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { stop_proc(); }
+void stop_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2        
+    ){  if( stop_on == YES ) didSTOP = YES;    return; }
+void actionStop(Widget  w, XEvent *ev, String *p, Cardinal *np)
+{ stop_proc(w,NULL,NULL); }
 
 static Arg rigidArgs[] = { { XtNlabel, (XtArgVal)"Rigid" } };
 static Arg stretchArgs[] = { { XtNlabel, (XtArgVal)"Stretchy" } };
 
-void stretch_proc(){ 
+void stretch_proc(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2  
+){ 
     xt_stretchy = !xt_stretchy;  /* toggle the "stretchy" attribute */
 
     if( wantButtons ){
@@ -1084,11 +1117,14 @@ void stretch_proc(){
     }
     didCHANGE = YES; return; 
 }
-void actionStretch( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { stretch_proc(); }
+void actionStretch(Widget w, XEvent *ev, String *p, Cardinal *np)
+{ stretch_proc(w,NULL,NULL); }
 
 /* the timeout proc called in run mode by an application timer */
-void timeout_proc(){    didTIME = YES; return; }
+void timeout_proc(
+    XtPointer      x1     /* closure */,
+    XtIntervalId*  id1     /* id */
+){    didTIME = YES; return; }
 
 void set_delay_label(delay)
 float delay;
@@ -1185,7 +1221,11 @@ char* newlab;
 /* the enumeration is defined in xtpen.h */
 int xt_run_mode=XT_FORWARD;
 
-void toggle_run_mode(){
+void toggle_run_mode(
+    Widget     w         /* widget */,
+    XtPointer  x1        /* closure */,  /* data the application registered */
+    XtPointer  x2  
+){
   switch( xt_run_mode ) {
     case XT_FORWARD:
         xt_run_mode = XT_BACKWARD;
@@ -1202,8 +1242,8 @@ void toggle_run_mode(){
   }
 	    
 }
-void actionRunMode( w, ev, p, np)
-Widget w; XEvent *ev; String *p; Cardinal *np; { toggle_run_mode(); }
+void actionRunMode(Widget  w, XEvent *ev, String *p, Cardinal *np)
+{ toggle_run_mode(w,NULL,NULL); }
 
 
 void set_frame_label(frame_num)
@@ -1252,9 +1292,7 @@ int x,y;
    }
 }
 
-void create_panel(parent,want_buttons,want_labels)
-Widget parent;
-int want_buttons, want_labels;
+void create_panel(Widget parent,bool want_buttons,bool want_labels)
 {
     wantButtons = want_buttons;
     wantLabels = want_labels;
@@ -1845,7 +1883,7 @@ void xt_store_image(xtFrame* fram )
 
 	if( fram->pixmap == (Pixmap)0 ){
 	   /* allocation failed, give up on this method */
-	   greedy_pixmaps = 0;
+	   greedy_pixmaps = false;
 	}else{
            XSync( pen_display,0 );
 	   XSetClipMask( pen_display, pen_gc, None );
@@ -2176,7 +2214,7 @@ void xtopen (int argc, char* argv[])
     txfont = DEFAULT_HARDCOPY_FONT;
     txprec = DEFAULT_HARDCOPY_PREC;
     brake = BREAK_IGNORE;
-    endpause = YES;
+    endpause = false;
     smart_clip = false;
     cachepipe = true;
 
@@ -2248,7 +2286,7 @@ void xtopen (int argc, char* argv[])
 
     /* colormap support */
     if( !mono ) x_num_col = DisplayCells(pen_display, pen_screen);
-    if( x_num_col <= 2 ) mono=YES;
+    if( x_num_col <= 2 ) mono=true;
     if( x_num_col < num_col_req ) num_col_req = x_num_col;
     /* limit to 254 to get around tektronix bug */
     if( num_col_req > 254 ) num_col_req=254;
@@ -2326,17 +2364,22 @@ void xtopen (int argc, char* argv[])
 		XtNwidth, default_width,
         	NULL);
 
-    if( !sf_getbool("buttons",&want_buttons) ) want_buttons = app_data.buttons;
-    if( !sf_getbool("labels",&want_labels) ) want_labels = app_data.labels;
-    if( !sf_getbool("want_text",&want_text) ) want_text = app_data.textpane;
+    if( !sf_getbool("buttons",&want_buttons) ) 
+	want_buttons = (bool) app_data.buttons;
+    if( !sf_getbool("labels",&want_labels) ) 
+	want_labels = (bool) app_data.labels;
+    if( !sf_getbool("want_text",&want_text) ) 
+	want_text = (bool) app_data.textpane;
+    if( !sf_getbool("stretchy",&xt_stretchy) ) 
+	xt_stretchy= (bool) app_data.stretchy;
 
-    if( !sf_getbool("stretchy",&xt_stretchy) ) xt_stretchy=app_data.stretchy;
+    if( !sf_getbool("boxy",&boxy) ) boxy = false;
 
-    if( !sf_getbool("boxy",&boxy) ) boxy = 0;
-
-    if( !sf_getbool("see_progress",&see_progress) ) see_progress=0;
-    if( !sf_getbool("images",&want_images) ) want_images = app_data.images;
-    if( !sf_getbool("pixmaps",&greedy_pixmaps)) greedy_pixmaps=app_data.pixmaps;
+    if( !sf_getbool("see_progress",&see_progress) ) see_progress=false;
+    if( !sf_getbool("images",&want_images) ) 
+	want_images = (bool) app_data.images;
+    if( !sf_getbool("pixmaps",&greedy_pixmaps)) 
+	greedy_pixmaps = (bool) app_data.pixmaps;
 
     if( want_buttons || want_labels ){
         control_panel = XtCreateManagedWidget("control_panel",boxWidgetClass,
@@ -2347,7 +2390,7 @@ void xtopen (int argc, char* argv[])
 
     /* if they want to add a message to the window do it here */
 
-    if( visual_depth != 8 ) want_text=0; /* BUG for 24 bit visuals */
+    if( visual_depth != 8 ) want_text=false; /* BUG for 24 bit visuals */
     if( want_text ) {
         if(NULL == (message_text = sf_getstring("message"))) message_text="";
 
@@ -2536,7 +2579,7 @@ XVisualInfo* vinfo;
      xmono = YES;
      visual_depth = 1;
      xtruecol=NO;
-     mono = YES;
+     mono = true;
      x_num_col = 2;
    }else{
      ERR(FATAL,name,"Could not obtain a suitable visual");

@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 	sf_floatread(xx,n1,in);
 
 	for (im=0; im < n1; im++) {
-	    mm[im] = (xx[im] != 0.);
+	    mm[im] = (bool) (xx[im] != 0.);
 	}
 
         misif1 (nmiss, na, n1, xx, aa, mm);

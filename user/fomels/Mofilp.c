@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
     sf_intread(zero,nhx,known);
     for (i=0; i < nhx; i++) {
 	dat[i] = sf_cmplx(0.,0.);
-	mask[i] = (zero[i] != 0);
+	mask[i] = (bool) (zero[i] != 0);
     }
 
     for (iw=0; iw < nw; iw++) {

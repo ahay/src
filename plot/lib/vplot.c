@@ -308,7 +308,7 @@ void vp_gtext (float x, float y,
 	       float xup, float yup, const char *string)
 /*< output text string >*/
 {
-    pout (x, y, 0);
+    pout (x, y, false);
     (void) putchar (VP_GTEXT);
     vp_putfloat (TEXTVECSCALE * xpath);
     vp_putfloat (TEXTVECSCALE * ypath);
@@ -500,7 +500,7 @@ void vp_plot (float x, float y, bool  down)
 	if (tonext > dist) tonext = dist;
 	xp += tonext * cosine;
 	yp += tonext * sine;
-	pout (xp, yp, !(i % 2));
+	pout (xp, yp, (bool) !(i % 2));
 	dpos = ddef[i];	/* new position */
 	i = (i + 1) % 4;	/* i = 0,1,2, or 3 */
 	if (i == 0) dpos = 0.0;		/* back to start of dashes */
@@ -746,7 +746,7 @@ void vp_text (float x, float y, int size, int orient, const char *string)
 {
     if (0 == size) return;
 
-    pout (x, y, 0);
+    pout (x, y, false);
     (void) putchar (VP_TEXT);
     vp_putint (size);
     vp_putint (orient);
@@ -831,7 +831,7 @@ void vp_arrow (float x1, float y1, float x, float y, float r)
     const float pio4=0.785398;
     bool flag;
 
-    flag = (r < 0.);
+    flag = (bool) (r < 0.);
     if (flag) r = -r;
 
     if (x == x1 && y == y1) {
@@ -877,7 +877,7 @@ void vp_uarrow (float x1, float y1, float x, float y, float r)
     const float pio4=0.785398;
     bool flag;
 
-    flag = (r < 0.);
+    flag = (bool) (r < 0.);
     if (flag) r = -r;
 
     if (x == x1 && y == y1) {

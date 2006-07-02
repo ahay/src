@@ -65,7 +65,7 @@ int main (int argc, char* argv[])
     size_t j, nin, nbuf = BUFSIZ, nsiz;
     sf_file *in, out;
     float *scale, *add;
-    bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag;
+    bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
     char cmode, *mode, buf[BUFSIZ], bufi[BUFSIZ];
     sf_datatype type;
 
@@ -137,10 +137,11 @@ int main (int argc, char* argv[])
 	if (nbuf > nsiz) nbuf=nsiz;
 
 	for (j=0; j < nin; j++) {
+	    collect = (bool) (j != 0);
 	    switch(type) {
 		case SF_FLOAT:
 		    sf_floatread((float*) bufi,nbuf,in[j]);	    
-		    add_float(j != 0, nbuf,
+		    add_float(collect, nbuf,
 			      (float*) buf,(float*) bufi, 
 			      cmode, scale[j], add[j], 
 			      abs_flag[j], log_flag[j], 
@@ -148,7 +149,7 @@ int main (int argc, char* argv[])
 		    break;
 		case SF_COMPLEX:		    
 		    sf_complexread((sf_complex*) bufi,nbuf,in[j]);
-		    add_complex(j != 0, nbuf,
+		    add_complex(collect, nbuf,
 				(sf_complex*) buf,(sf_complex*) bufi, 
 				cmode, scale[j], add[j], 
 				abs_flag[j], log_flag[j], 
@@ -156,7 +157,7 @@ int main (int argc, char* argv[])
 		    break;
 		case SF_INT:
 		    sf_intread((int*) bufi,nbuf,in[j]);
-		    add_int(j != 0, nbuf,
+		    add_int(collect, nbuf,
 			    (int*) buf,(int*) bufi, 
 			    cmode, scale[j], add[j], 
 			    abs_flag[j], log_flag[j], 

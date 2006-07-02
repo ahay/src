@@ -1553,19 +1553,19 @@ void psopen (int argc, char* argv[])
 
     if (ps_color)
     {
-	mono = NO;
+	mono = false;
 	num_col = 256;
     }
     else
     {
-	mono = YES;
+	mono = true;
 	num_col = 0;
     }
 
     smart_raster = true;
 
     need_end_erase = true;
-    smart_clip = NO;
+    smart_clip = false;
 
     dither = 3;
     txfont = default_ps_font;
@@ -1800,7 +1800,7 @@ char           *spooldirnm;
     fflush (pltout);
 
     epause = 0;
-    endpause = NO;
+    endpause = false;
 /*
  * This turns out not to be a good default for this hardcopy device,
  * since people think of it more as a screen-type device.

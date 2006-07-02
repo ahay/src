@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     in = sf_input("in");
     out = sf_output("out");
 
-    compl = (SF_COMPLEX == sf_gettype(in));
+    compl = (bool) (SF_COMPLEX == sf_gettype(in));
 
     if (!sf_histint(in,"n1",&nw)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");

@@ -9,7 +9,7 @@
 	in = sf_input("in")
 	out = sf_output("out")
 
-	if (2 .ne. sf_gettype(in)) 
+	if (3 .ne. sf_gettype(in)) 
      &  call sf_error("Need float input")
 
 	if (.not. sf_histint(in,"n1",n1)) then
