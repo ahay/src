@@ -178,6 +178,9 @@ int main(int argc, char* argv[])
     if(dens) {
 	sf_floatread(ee[0],nz*nx,Fe); 
     } else {
+	#ifdef _OPENMP
+        #pragma omp parallel for private(iz,ix) shared(ee,nz,nx)
+        #endif
 	for (iz=0; iz<nz; iz++) {
 	    for (ix=0; ix<nx; ix++) {
 		ee[ix][iz]=1;
@@ -262,6 +265,9 @@ int main(int argc, char* argv[])
     ud=sf_floatalloc2(nz2,nx2);
     tt=sf_floatalloc2(nz2,nx2);
 
+//#ifdef _OPENMP
+//#pragma omp parallel for private(iz,ix) shared(um,uo,up,ud,tt,nz2,nx2)
+//#endif
     for (iz=0; iz<nz2; iz++) {
 	for (ix=0; ix<nx2; ix++) {
 	    um[ix][iz]=0;
@@ -278,6 +284,9 @@ int main(int argc, char* argv[])
     vp=sf_floatalloc2(nz2,nx2);
     ro=sf_floatalloc2(nz2,nx2);
     
+//#ifdef _OPENMP
+//#pragma omp parallel for private(iz,ix) shared(vp,vv,ro,ee,nz,nx)
+//#endif
     for (iz=0; iz<nz; iz++) {
 	for (ix=0; ix<nx; ix++) {
 	    vp[nbx+ix][nbz+iz] = vv[ix][iz] * vv[ix][iz];
