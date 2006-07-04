@@ -9,7 +9,7 @@
 \maketitle
 
 \begin{abstract}
-RSF has been installed and is periodically tested on
+Madagascar has been installed and is periodically tested on
 \begin{itemize}
 \item Different Linux distributions (Fedora, RedHat, SuSE, Debian, Ubuntu)
 \item FreeBSD and OpenBSD
@@ -30,7 +30,7 @@ Microsoft's \href{http://www.microsoft.com/technet/interopmigration/unix/sfu/def
 \item Python interpreter. \href{http://www.python.org/}{Python} is an
   interpretable programming language. It is used by RSF in installation
   scripts and project management scripts.  Python comes pre-installed on
-  RedHat Linux.
+  some platforms.
 \item SCons (Software Construction). SCons is a Python-based tool for project
   management and software construction. It is a modern replacement for the
   Unix ``make'' utility. RSF uses SCons for both software construction and
@@ -38,27 +38,6 @@ Microsoft's \href{http://www.microsoft.com/technet/interopmigration/unix/sfu/def
   \url{http://www.scons.org/}. It is also provided under the \texttt{scons}
   directory in the RSF source distribution.
 \end{enumerate}
-
-\section{Downloading the development version}
-
-The best way to obtain the current working version of RSF is with a Subversion
-client. \href{http://subversion.tigris.org/}{Subversion} is a version control
-system, which is designed as a replacement for CVS.
-
-To obtain the latest RSF source with Subversion, run 
-\begin{verbatim}
-svn co https://svn.sourceforge.net/svnroot/rsf/trunk RSF
-\end{verbatim}
-The source will be installed under directory \texttt{RSF}. You can also browse
-individual files in the repository at
-\url{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/}
-
-Subversion is a simple and convenient system to use. For example, to update
-the source distribution at any time, you can simply run
-\begin{verbatim}
-svn update
-\end{verbatim}
-inside the directory that needs updating.
 
 \section{Installation}
 
@@ -162,7 +141,7 @@ scons -c install
 
 \section{Other installations}
 
-There are two other packages that might be useful in conjuction with RSF:
+There are two other packages that might be useful in conjunction with RSF:
 
 \subsection{RSF reproducible figures}
 
@@ -196,38 +175,29 @@ be placed where \LaTeX\ can find it. Some systems recognize
 
 \section{Troubleshooting}
 
-\subsection{Troubles with svn}
-This section is contributed by Nick Vlad.
+\subsection{Troubles with compilers}
+If the configuration part ends with the message like
+\begin{verbatim}
+checking if cc works ... no
+\end{verbatim}
+the problem may be that your compiler is in unusual place. By default,
+\texttt{scons} does not inherit your environmental variables including
+\texttt{PATH}. Try
+\begin{verbatim}
+scons CC=/full/path/to/cc config
+\end{verbatim}
+or
+\begin{verbatim}
+scons CC=`which cc` config
+\end{verbatim}
 
-\begin{itemize}
-\item If, after running the ``svn co...''
-command, nothing happens, no message, no return to the command
-line: you may be behind a proxy.  This is especially likely if your
-computer is on a corporate Intranet.  To get past a proxy, you will
-need to tell Subversion the name of the proxy and port that will allow
-\texttt{svn} through. First, obtain this information from your IT people. After
-you get an IP number of a URL that looks like
-\texttt{www-proxy.yourcompany.com} and a port number (most likely 80, the
-standard HTTP port), open your \verb#~/.subversion/servers# file in a text
-editor. If this file does not exist, running any \texttt{svn} command (even an
-unsuccessful one, like the one above) will automatically create the
-file. In the \texttt{[global]} section, add the following lines, with your own
-proxy URL and port names instead of the dummy ones below:
+On Windows under SFU, use the \texttt{gcc} compiler
 \begin{verbatim}
-http-proxy-host = www-proxy.yourcompany.com
+scons CC=/opt/gcc.3.3/bin/gcc config
 \end{verbatim}
-\begin{verbatim}
-http-proxy-port = 80
-\end{verbatim}
-Now your \texttt{svn} commands should work. You can find more details at 
-\url{http://subversion.tigris.org/faq.html#proxy}.
-\item If you get a ``is already a working copy for a different URL'' error,
-this means you have an existing directory downloaded from another
-server. Run \texttt{svn switch --relocate} to switch servers.
-\end{itemize}
 
 \subsection{Troubles with cygwin}
-If, installing on \texttt{cygwin}, you get a message about RPC
+If, configuring on \texttt{cygwin}, you get a message about RPC
 libraries, install the \texttt{sunrpc} package located under
 \texttt{Libs} in the \texttt{Setup} program.
 

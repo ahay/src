@@ -51,6 +51,7 @@ def itemize():
     el = " "
 
 def enumerate():
+    global item, el
     item = item + '#'
     el = " "
 
@@ -135,8 +136,7 @@ tr_list2 = [
 	(r"\\end{itemize}", None, end_list),
 	(r"\\begin{enumerate}", (lambda : "\n"), enumerate),
 	(r"\\end{enumerate}", None, end_list),
-	(r"\\item (.*?)", (lambda :   r"\n" + ("#" * enum_level) + \
-                           ("*" * bullet_level) + r"\1"), dummy),
+	(r"\\item (.*?)", (lambda :   r"\n" + item + r"\1"), dummy),
         (r"\\begin{equation[*]*}", (lambda :"<center><math>"), toggle_math),
 	(r"\\end{equation[*]*}", (lambda :"</math></center>"), toggle_math),
 	(r"\\\[", (lambda :"<center><math>"), toggle_math),
