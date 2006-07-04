@@ -1,10 +1,10 @@
 /* Time-domain acoustic FD modeling.
-
-pcs 2005
+   
+pcs 2006
 */
 
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -26,7 +26,7 @@ pcs 2005
 #include <omp.h>
 #endif
 
-#define C1  0.66666666666666666666 /*  2/3 */	
+#define C1  0.66666666666666666666 /*  2/3  */	
 #define C2 -0.08333333333333333333 /* -1/12 */
 #define D1(a,i2,i1,s) (C2*(a[i2  ][i1+2] - a[i2  ][i1-2]) +  \
                        C1*(a[i2  ][i1+1] - a[i2  ][i1-1])  )*s
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     /* arrays */
     pt2d   *ss, *rr; /* source/receiver locations */
     float  *ww=NULL; /* wavelet */
-    float  *dd=NULL; /* data */
+    float **dd=NULL; /* data */
     float **vv=NULL; /* velocity */
     float **ee=NULL; /* density  */
 
@@ -79,10 +79,14 @@ int main(int argc, char* argv[])
     float dp;
     float ws;     /* injected data */
 
+    int ompchunk;  /* OpenMP data chunk size */
+
 /*------------------------------------------------------------*/
 
     /* init RSF */
     sf_init(argc,argv);
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
 
     if(! sf_getbool("verb",&verb)) verb=false;
     if(! sf_getbool( "abc",&abc ))  abc=false;
@@ -178,16 +182,13 @@ int main(int argc, char* argv[])
     if(dens) {
 	sf_floatread(ee[0],nz*nx,Fe); 
     } else {
-	#ifdef _OPENMP
-        #pragma omp parallel for private(iz,ix) shared(ee,nz,nx)
-        #endif
 	for (iz=0; iz<nz; iz++) {
 	    for (ix=0; ix<nx; ix++) {
 		ee[ix][iz]=1;
 	    }
 	}
     }
-
+    
     /* allocate source/receiver point arrays */
     ss = (pt2d*) sf_alloc(ns,sizeof(*ss)); 
     rr = (pt2d*) sf_alloc(nr,sizeof(*rr)); 
@@ -195,7 +196,7 @@ int main(int argc, char* argv[])
     pt2dread1(Fs,ss,ns,3); /* read 3 elements (x,z,v) */
     pt2dread1(Fr,rr,nr,2); /* read 2 elements (x,z)   */
 
-    dd=sf_floatalloc(nr);
+    dd=sf_floatalloc2(nr,nt);
     jzs=sf_intalloc(ns); fzs=sf_floatalloc(ns); 
     jzr=sf_intalloc(nr); fzr=sf_floatalloc(nr);
     jxs=sf_intalloc(ns); fxs=sf_floatalloc(ns);
@@ -265,9 +266,9 @@ int main(int argc, char* argv[])
     ud=sf_floatalloc2(nz2,nx2);
     tt=sf_floatalloc2(nz2,nx2);
 
-//#ifdef _OPENMP
-//#pragma omp parallel for private(iz,ix) shared(um,uo,up,ud,tt,nz2,nx2)
-//#endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nx2,nz2,um,uo,up,ud,tt)
+#endif
     for (iz=0; iz<nz2; iz++) {
 	for (ix=0; ix<nx2; ix++) {
 	    um[ix][iz]=0;
@@ -284,9 +285,9 @@ int main(int argc, char* argv[])
     vp=sf_floatalloc2(nz2,nx2);
     ro=sf_floatalloc2(nz2,nx2);
     
-//#ifdef _OPENMP
-//#pragma omp parallel for private(iz,ix) shared(vp,vv,ro,ee,nz,nx)
-//#endif
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nz,nx,vp,ro,vv,ee)
+#endif
     for (iz=0; iz<nz; iz++) {
 	for (ix=0; ix<nx; ix++) {
 	    vp[nbx+ix][nbz+iz] = vv[ix][iz] * vv[ix][iz];
@@ -296,19 +297,19 @@ int main(int argc, char* argv[])
     /* fill boundaries */
     for (iz=0; iz<nbz; iz++) {
 	for (ix=0; ix<nx2; ix++) {
-	    vp[ix][    iz  ] = vp[ix][     nbz  ];
+	    vp[ix][    iz  ] = vp[ix][    nbz  ];
 	    vp[ix][nz2-iz-1] = vp[ix][nz2-nbz-1];
-
-	    ro[ix][    iz  ] = ro[ix][     nbz  ];
+	    
+	    ro[ix][    iz  ] = ro[ix][    nbz  ];
 	    ro[ix][nz2-iz-1] = ro[ix][nz2-nbz-1];
 	}
     }
     for (iz=0; iz<nz2; iz++) {
 	for (ix=0; ix<nbx; ix++) {
-	    vp[    ix  ][iz] = vp[     nbx  ][iz];
+	    vp[    ix  ][iz] = vp[    nbx  ][iz];
 	    vp[nx2-ix-1][iz] = vp[nx2-nbx-1][iz];
 
-	    ro[    ix  ][iz] = ro[     nbx  ][iz];
+	    ro[    ix  ][iz] = ro[    nbx  ][iz];
 	    ro[nx2-ix-1][iz] = ro[nx2-nbx-1][iz];
 	}
     }
@@ -357,7 +358,6 @@ int main(int argc, char* argv[])
 	dp = vp[nx2-nop-1][iz] *dt/dx; bxh[iz] = (1-dp)/(1+dp);
     }
 /*------------------------------------------------------------*/
-
     /* 
      *  MAIN LOOP
      */
@@ -365,33 +365,48 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
-	/* 4th order Laplacian operator */
-	for (ix=nop; ix<nx2-nop; ix++) {
-	    for (iz=nop; iz<nz2-nop; iz++) {
-		ud[ix][iz] = 
-		    co * uo[ix  ][iz  ] + 
-		    c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
-		    c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
-		    c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
-		    c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	  
-	    }
-	}
+	if(dens) { 	/* variable density */
 
-	/* variable density */
-	if(dens) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,co,c1x,c1z,c2x,c2z,idx,idz)
+#endif
 	    for (ix=nop; ix<nx2-nop; ix++) {
 		for (iz=nop; iz<nz2-nop; iz++) {
-		    ud[ix][iz] -= 
-			D1(uo,ix,iz,idz) * 
-			D1(ro,ix,iz,idz)/ro[ix][iz];
 
-		    ud[ix][iz] -= 
-			D2(uo,ix,iz,idx) * 
-			D2(ro,ix,iz,idx)/ro[ix][iz];
+		    /* 4th order Laplacian operator */
+		    ud[ix][iz] = 
+			co * uo[ix  ][iz  ] + 
+			c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+			c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+			c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+			c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	  
+
+		    /* density terms */
+		    ud[ix][iz] -= (
+			D1(uo,ix,iz,idz) * D1(ro,ix,iz,idz) +
+			D2(uo,ix,iz,idx) * D2(ro,ix,iz,idx) ) / ro[ix][iz];
 		}
 	    }   
-	}
 
+	} else {	/* constant density */
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z)
+#endif
+	    for (ix=nop; ix<nx2-nop; ix++) {
+		for (iz=nop; iz<nz2-nop; iz++) {
+
+		    /* 4th order Laplacian operator */
+		    ud[ix][iz] = 
+			co * uo[ix  ][iz  ] + 
+			c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+			c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+			c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+			c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	  
+		}
+	    }
+	}
+	
 	/* inject wavelet */
 	for (is=0;is<ns;is++) {
 	    ws = ww[it] * ss[is].v;
@@ -401,24 +416,26 @@ int main(int argc, char* argv[])
 	    ud[ jxs[is]+1][ jzs[is]+1] -= ws * ws11[is];
 	}
 
-	/* velocity scale */
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,ud,uo,um,up,vp,dt2)
+#endif
 	for (ix=0; ix<nx2; ix++) {
 	    for (iz=0; iz<nz2; iz++) {
-		ud[ix][iz] *= vp[ix][iz];
-	    }
-	}
-	
-	/* time step */
-	for (ix=0; ix<nx2; ix++) {
-	    for (iz=0; iz<nz2; iz++) {
-		up[ix][iz] = 2*uo[ix][iz] - um[ix][iz] + ud[ix][iz] * dt2; 
+
+		/* time step and velocity scale*/
+		up[ix][iz] = 2*uo[ix][iz] - 
+		               um[ix][iz] + 
+		               ud[ix][iz] * vp[ix][iz] * dt2; 
 		um[ix][iz] =   uo[ix][iz];
 		uo[ix][iz] =   up[ix][iz];
 	    }
 	}
 	
-	/* one-way ABC apply */
+	/* one-way ABC apply */	
 	if(abc) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
+#endif
 	    for(ix=0;ix<nx2;ix++) {
 		for(iop=0;iop<nop;iop++) {
 		    iz = nop-iop;
@@ -435,6 +452,9 @@ int main(int argc, char* argv[])
 		}
 	    }
 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
+#endif
 	    for(iop=0;iop<nop;iop++) {
 		for(iz=0;iz<nz2;iz++) {
 		    ix = nop-iop;
@@ -454,6 +474,9 @@ int main(int argc, char* argv[])
 	
 	/* sponge ABC apply */
 	if(abc) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,uo,um,ud,tt)
+#endif
 	    for (ix=0; ix<nx2; ix++) {
 		for (iz=0; iz<nz2; iz++) {
 		    uo[ix][iz] *= tt[ix][iz];
@@ -468,19 +491,23 @@ int main(int argc, char* argv[])
 	    sf_floatwrite(uo[0],nz2*nx2,Fu);
 	}
 
-	/* write data */
+	/* collect data */
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ir) shared(dd,rr,uo,jzr,wr00,wr01,wr10,wr11)
+#endif
 	for (ir=0;ir<nr;ir++) {
-	    dd[ir] =
+	    dd[it][ir] =
 		uo[ jxr[ir]  ][ jzr[ir]  ] * wr00[ir] +
 		uo[ jxr[ir]  ][ jzr[ir]+1] * wr01[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]  ] * wr10[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
-	    dd[ir] *= rr[ir].v;
+	    dd[it][ir] *= rr[ir].v;
 	}
-	sf_floatwrite(dd,nr,Fd);
-
     }
     if(verb) fprintf(stderr,"\n");    
 
+    /* write data */
+    sf_floatwrite(dd[0],nr*nt,Fd);
+    
     exit (0);
 }
