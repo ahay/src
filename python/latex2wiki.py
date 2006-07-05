@@ -58,7 +58,8 @@ def enumerate():
 def end_list():
     global item, el
     item = item[:-1] # remove last char
-    el = "\n"
+    if not item:
+        el = "\n"
 	
 def start_doc():
     global bdoc;
@@ -127,7 +128,7 @@ tr_list2 = [
 	(r"\\texttt{(.*?)}", (lambda : r"<tt>\1</tt>"), dummy),
 	(r"\\text{(.*?)}", (lambda : r"=\1= "), dummy),
 	(r"\\textbf{(.*?)}", (lambda : r"'''\1''' "), dummy),
-        (r"\\verb(.)(.+)\1", (lambda : r"\2"), dummy),
+        (r"\\verb(.)(.+)\1", (lambda : r'<font color="#cd4b19">\2</font>'), dummy),
 	(r"\\begin{verbatim}", (lambda : "<pre>"), start_verbatim),
 	(r"\\end{verbatim}", (lambda : "</pre>"), end_verbatim),
         (r"\\begin{comment}", (lambda : "<!-- "), dummy),

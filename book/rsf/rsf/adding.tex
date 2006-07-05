@@ -1,0 +1,51 @@
+\title{Adding new programs to madagascar}
+\author{Sergey Fomel and Ioan Vlad}
+
+\maketitle
+
+Whether you want to share your work with the world or keep it for
+yourself, madagascar is fully extensible. The following instructions
+explain the simplest way to add your own programs to the package:
+
+\begin{enumerate}
+\item Create a directory for yourself or your group under
+\texttt{MADAGASCAR/user}, where \texttt{MADAGASCAR} is the top source
+directory. Put your programs there. 
+\item The following conventions are adopted:
+\begin{itemize}
+\item Files containing main programs start with \texttt{M},
+i.e. \texttt{Mmyprog.c}. Each main program file should start with a
+short one-line comment describing its purpose.
+\item Files containing subroutines start with small letters. A
+header/interface file \texttt{myprog.h} is automatically generated
+from \texttt{myprog.c}. By using header files, dependencies between
+different functions will be figured out automatically. Include a
+comment of the form \verb#/*^*/# after any block of text that you
+want to be included in the header file. Include a comment of the form
+\verb#/*< My function description >*/# after a function definition
+if you want its interface included in the header file.  It is a good
+habit to comment interfaces to all your functions.
+\end{itemize}
+\item Create an \texttt{SConstruct} file in your directory by following examples from other \texttt{user} directories. 
+Inside the triple quotation marks after \texttt{progs=}, replace the
+names of their programs with the names of your programs with spaces
+between the names.
+\item Note that running \texttt{scons} inside your \texttt{user}
+directory compiles programs with debugging flags to make them
+suitable for debugging with common debuggers such as
+\href{http://www.gnu.org/software/gdb/}{gdb}, dbx, or
+\href{http://www.etnus.com/}{TotalView}. Running 
+\texttt{scons install} inside the top source directory will compile your programs with optimization flags and install them in \texttt{\$RSFROOT}.
+\item If you want to share your code with other madagascar users:
+\begin{enumerate}
+\item If your employer holds the copyright for your software, obtain a permission to distribute under a \href{http://www.gnu.org/copyleft/gpl.html}{GPL license} and 
+place a copyright and GPL license notice in each file with code.
+\item \href{http://sourceforge.net/account/newuser_emailverify.php}{Register at SourceForge}
+and pass your SourceForge user name to one of the project
+administrators.  \item Commit your directory to the repository using
+\texttt{svn add} and \texttt{svn commit}.  \item Add examples of using your program
+under the \texttt{MADAGASCAR/book} tree. Create new directories if
+necessary and commit them to the repository. As a rule, programs
+without examples are not included in the release version.
+\end{enumerate}
+\end{enumerate}
