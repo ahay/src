@@ -75,7 +75,8 @@ for prog in Split(
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    main = 'sffomels.py'
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	

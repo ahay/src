@@ -51,7 +51,8 @@ for prog in mains:
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    main = 'sfgee.py'
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	

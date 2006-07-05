@@ -68,7 +68,8 @@ else:
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    main = 'sfslim.py'
+    user = os.path.basename(os.getcwd())
+    main = 'sf%s.py' % user
     
     docs = map(lambda prog: env.Doc(prog+'.c'),mains) + \
            map(lambda prog: env.Doc(prog+'.cc'),cpp_mains)
