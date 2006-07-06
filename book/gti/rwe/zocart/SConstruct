@@ -1,13 +1,13 @@
 from rsfproj import *
 from rwedemo import *
-import zomig
+import zomig,pplot
 
 par = {
-    'nz':300,  'dz':0.005,    'oz':0,     # CC axis 1
-    'nt':250,  'dt':0.005,    'ot':1.5,   # RC axis 1
+    'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1
+    'nt':400,  'dt':0.005,    'ot':1.5,   # RC axis 1
     'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
     'ng':180,  'dg':0.500,    'og':-45,   # RC axis 2
-    'nT':2000, 'dT':0.004,    'oT':0,      'kT':250,    # time
+    'nT':2000, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':150
@@ -17,7 +17,7 @@ par = {
 param(par)
 
 # velocity
-Flow('vel',None,
+Flow('vv',None,
      '''
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
@@ -25,11 +25,30 @@ Flow('vel',None,
      math output=2-0.05*x1-0.05*x2 |
      put label1=z label2=x
      ''' % par)
-Plot('vel',cgrey('allpos=y bias=1.5',par))
-# ------------------------------------------------------------
+Flow('vb',None,
+     '''
+     spike nsp=1 mag=-1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=145 l1=155
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=130 l2=170 |
+     smooth rect1=21 rect2=21 |
+     scale axis=123
+     ''' % par)
 
+Flow('vel','vv vb',
+     '''
+     math
+     a=${SOURCES[0]}
+     b=${SOURCES[1]}
+     output="a+b"
+     ''')
+Plot('vel',cgrey('allpos=y bias=1.5 pclip=100',par))
+
+# smooth velocity for HWT
+Flow('vsm','vv','smooth')
+
+# ------------------------------------------------------------
 # wavefronts (by HWT)
-Flow('hwt','vel',
+Flow('hwt','vsm',
      '''
      hwt2d verb=n
      xsou=3 zsou=-3
@@ -40,7 +59,7 @@ Flow('hwt','vel',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',5,5,par)
+cos('cos',5,10,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
@@ -73,15 +92,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |'
-       + cgrey('title=imgCC label1=z unit1=km label2=x unit2=km',par))
+Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
 mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
-
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
+
+pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+                  'migCC-F15','migCC-F45','migCC-F60',0.5,0.5,-6,-12)
 
 End()

@@ -1,0 +1,130 @@
+from rsfproj import *
+from rwedemo import *
+import zomig
+
+par = {
+    'nz':800,  'dz':0.02,    'oz':0,  # CC axis 1
+    'nx':1000, 'dx':0.02,    'ox':0,  # CC axis 2
+    'nt':2000, 'dt':0.004,   'ot':0,  # RC axis 1
+    'ng':400,  'dg':0.02,    'og':1.0,# RC axis 2
+    'nT':2000, 'dT':0.008,   'oT':0, 'kT':650,      # time
+    'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
+    'ow':1, 'incore':'y'
+    }
+
+# compute parameters
+param(par)
+
+# velocity
+Flow('vv',None,
+     '''
+     spike
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     math output="2.5+0.15*x1-0.115*x2"
+     ''' % par)
+Flow('vx','vv','reverse which=2')
+Flow('vel','vv vx',
+     '''
+     cat axis=2 space=n ${SOURCES[1]} |
+     window n2=%d f2=%d |
+     smooth rect1=101 rect2=101 repeat=2 |
+     put o2=0''' % (par['nx'],par['nx']/2))
+
+
+Flow('va',None,
+     '''
+     spike nsp=2 mag=0,0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200,600 l1=300,700
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=200,200 l2=300,300 |
+     smooth rect1=126 rect2=126 |
+     smooth rect1=126 rect2=126 |
+     scale axis=123
+     ''' % par)
+Flow('vb',None,
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=600 l1=650
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=375 l2=425 |
+     smooth rect1=41 rect2=41 |
+     scale axis=123 |
+     scale rscale=0
+     ''' % par)
+
+#Flow('vel','vv va vb',
+#     '''
+#     math
+#     a=${SOURCES[0]}
+#     b=${SOURCES[1]}
+#     c=${SOURCES[2]}
+#     output="a+b+c"
+#     ''')
+Plot('vel',cgrey('allpos=y bias=1.5',par))
+
+# smooth velocity for HWT
+Flow('vsm','vv','smooth')
+
+# ------------------------------------------------------------
+# wavefronts by HWT
+
+Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"'  % par)
+Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
+Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"'  % par)
+Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
+
+Flow('hwt','vsm sou',
+     '''
+     hwtex verb=n sou=${SOURCES[1]}
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ''' % par)
+
+# coordinate system: rays(g,t)
+Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
+
+# coordinate system plot
+cos('cos',25,25,par)
+Result('cos','vel cos','Overlay')
+
+# slowness
+slow('sloCC','sloRC','vel','cos',par)
+Result('sloRC','transp |'
+       + rgrey('pclip=100 color=j allpos=y bias=0.12',par))
+
+# ------------------------------------------------------------
+# coordinate system coefficients (A,B,M=mask) and references (A,B)
+abm('abmRC','abrRC','sloRC','cos',par)
+abmplot('abmRC',par)
+
+# ------------------------------------------------------------
+# time data CC: (t,x)
+Flow('datCC',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     ricker1 frequency=5 |
+     smooth rect2=1 |
+     put label1=t label2=x
+     ''' % par )
+Result('datCC','grey pclip=100 wanttitle=n')
+
+# ------------------------------------------------------------
+# frequency data RC: (g,w)
+frq('frqRC','frqCC','datCC','cos',par)
+
+# ------------------------------------------------------------
+# WEM image CC: (z,x)
+zomig.image('imgCC','sloCC','frqCC',par)
+Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
+Result('imgCC',['imgCC','cos'],'Overlay')
+
+# ------------------------------------------------------------
+# RWE image
+mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
+mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
+Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
+
+pplot.p2x3('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+                  'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
+
+End()

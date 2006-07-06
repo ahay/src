@@ -1,6 +1,6 @@
 from rsfproj import *
 from rwedemo import *
-import zomig
+import zomig,pplot
 
 par = {
     'nz':500,  'dz':0.005,'oz':0,    # CC axis 1
@@ -41,13 +41,6 @@ Flow('vb',None,
      scale axis=123 |
      scale rscale=-0
      ''' % par)
-Flow('vco','vv va',
-     '''
-     math
-     a=${SOURCES[0]}
-     b=${SOURCES[1]}
-     output="a+b"
-     ''')
 Flow('vel','vv va vb',
      '''
      math
@@ -57,6 +50,16 @@ Flow('vel','vv va vb',
      output="a+b+c"
      ''')
 Plot('vel',cgrey('allpos=y bias=1.5',par))
+
+# smooth velocity for HWT
+Flow('vsm','vv va',
+     '''
+     math
+     a=${SOURCES[0]}
+     b=${SOURCES[1]}
+     output="a+b"
+     ''')
+
 # ------------------------------------------------------------
 # wavefronts (by HWT)
 
@@ -65,7 +68,7 @@ Flow('mxs',None,'spike nsp=1 mag=0 n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output="
 Flow('mrs',None,'spike nsp=1 mag=0 n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output="1"'  % par)
 Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window') 
 
-Flow('hwt','vco sou',
+Flow('hwt','vsm sou',
      '''
      hwtex verb=n sou=${SOURCES[1]}
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
@@ -74,7 +77,7 @@ Flow('hwt','vco sou',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',5,10,par)
+cos('cos',10,20,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
@@ -107,14 +110,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |' + cgrey('title=imgCC',par))
+Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
 mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
-
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
+
+pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+                  'migCC-F15','migCC-F45','migCC-F60',0.5,0.5,-6,-12)
 
 End()

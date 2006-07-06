@@ -1,6 +1,6 @@
 from rsfproj import *
 from rwedemo import *
-import zomig
+import zomig,pplot
 
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
@@ -16,7 +16,6 @@ par = {
 # compute parameters
 param(par)
 
-# ------------------------------------------------------------
 Fetch(['marmvel.hh'],'marm')
 
 # true velocity
@@ -32,9 +31,10 @@ Flow('vel','marmvel.hh',
      ''' % par)
 Plot('vel',cgrey('allpos=y',par))
 
-# smooth velocity
+# smooth velocity for HWT
 Flow('vsm','vel','smooth rect1=201 rect2=201')
 
+# ------------------------------------------------------------
 # wavefronts (by HWT)
 Flow('hwt','vsm',
      '''
@@ -80,15 +80,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |'
-       + cgrey('pclip=99 title=imgCC label1=z unit1=km label2=x unit2=km',par))
+Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
 mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
-
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
+
+pplot.p2x3('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+                  'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
 
 End()
