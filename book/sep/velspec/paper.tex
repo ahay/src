@@ -98,9 +98,9 @@ velocity coordinate $v$. Neglecting some amplitude-correcting terms
 \cite[]{Fomel.sep.92.159}, the equation takes the form
 \cite[]{Claerbout.sep.48.79}
 \begin{equation}
+  \frac{\partial^2 P}{\partial v\, \partial t} +
+  v\,t\,\frac{\partial^2 P}{\partial x^2} = 0\;.
   \label{PDE}
-  {{\partial^2 P} \over {\partial v\, \partial t}} +
-  v\,t\,{{\partial^2 P} \over {\partial x^2}} = 0\;.
 \end{equation}
 Equation (\ref{PDE}) is linear and belongs to the hyperbolic type. It
 describes a wave-type process with the velocity $v$ acting as a
@@ -122,11 +122,11 @@ Goursat-type problem \cite[]{kurant}. Its analytical solution can be
 constructed by a variation of the Riemann method in the form of an
 integral operator \cite[]{me,Fomel.sep.92.159}:
 \begin{equation}
-  \label{kirch}
   P(t,x,v) = \frac{1}{(2\,\pi)^{m/2}}\,\int\, 
   \frac{1}{(\sqrt{v^2-v_0^2}\,\rho)^{m/2}}\, 
   \left(- \frac{\partial}{\partial t_0}\right)^{m/2}
   P_0\left(\frac{\rho}{\sqrt{v^2-v_0^2}},x_0\right)\,dx_0\;,
+  \label{kirch}
 \end{equation}
 where $\rho = \sqrt{(v^2-v_0^2)\,t^2 + (x - x_0)^2}$, $m=1$ in the 2-D
 case, and $m=2$ in the 3-D case. In the case of continuation from zero
@@ -155,16 +155,16 @@ sections.
 Introducing the change of variable $\sigma = t^2$, we can transform
 equation (\ref{PDE}) to the form
 \begin{equation}
+  2\,\frac{\partial^2 P}{\partial v\, \partial \sigma} +
+  v\,\frac{\partial^2 P}{\partial x^2} = 0\;,
   \label{PDE2}
-  2\,{{\partial^2 P} \over {\partial v\, \partial \sigma}} +
-  v\,{{\partial^2 P} \over {\partial x^2}} = 0\;,
 \end{equation}
 whose coefficients don't depend on the time variables.  Double Fourier
 transform in $\sigma$ and $x$ further simplifies equation (\ref{PDE2})
 to the ordinary differential equation
 \begin{equation}
   \label{ODE}
-  2\,i\Omega\,{{d^2 \hat{P}} \over {d v}} -
+  2\,i\Omega\,\frac{d^2 \hat{P}}{d v} -
   v\,k^2\,\hat{P} = 0\;,
 \end{equation}
 where the frequency $\Omega$ corresponds to the time coordinate
@@ -334,15 +334,14 @@ algorithm consists of the following steps:
     P_0 (x,t) = \sum_{k=-N_x/2}^{N_x/2-1}\sum_{j=0}^{N_t} 
     \hat{P}_{kj} T_j (\xi) e^{i k x}\;, 
   \end{equation}
-  where $T_j$ denotes the Chebyshev polynomial of degree $j$.
+ where $T_j$ denotes the Chebyshev polynomial of degree $j$.
 \item Apply equation (\ref{PDE}) to advance the image in velocity $v$.
-  It is convenient to rewrite this equation in the form
-  \begin{equation}
-    \label{chebPDE}
-  {{\partial P} \over {\partial v}} =
-  \frac{v T^2}{4}\,\int d\xi\,
-  {{\partial^2 P} \over {\partial x^2}}\;. 
-  \end{equation}
+ It is convenient to rewrite this equation in the form
+ \begin{equation}
+   \frac{\partial P}{\partial v} =  \frac{v\,T^2}{4}\,
+   \int d\xi\,\frac{\partial^2 P}{\partial x^2}\;.
+   \label{chebPDE} 
+ \end{equation}
   In the Chebyshev-$\tau$ domain, the double differentiation in $x$ is
   performed by multiplying the Fourier transform of $P$ by $-k^2$, and
   integration in $\xi$ is performed
@@ -367,8 +366,8 @@ algorithm consists of the following steps:
   which is unconditionally stable independent of the velocity step size.
   By writing equation (\ref{chebPDE}) in the matrix form
   \begin{equation}
+    \frac{\partial \mathbf{P}}{\partial v} = \mathbf{A}\,\mathbf{P}\;,
     \label{matrix}
-    \frac{\partial \mathbf{P}}{\partial v} = \mathbf{A} \mathbf{P}\;,
   \end{equation}
   the Crank-Nicolson advancement is represented by the equation
     \begin{equation}
