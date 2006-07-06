@@ -413,12 +413,13 @@ decomposition into Chebyshev polynomials in $\xi$ and Fourier
 transform in $x$. We observe a very rapid convergence of the Chebyshev
 representation: a relatively small number of polynomials suffices to
 represent the data.
+\inputdir{impls}
 \par
-%\plot{cheb-impl}{width=6in}{Impulse responses (Green's functions) of
-%  velocity continuation, computed by the Chebyshev-$\tau$ method. Top:
-%  without zero padding, bottom: with zero padding on the $x$ axis. The
-%  left plots correspond to continuation to a larger velocity ($+1$
-%  km/sec); the right plots, smaller velocity, ($-1$ km/sec).}
+\plot{cheb-impl}{width=6in}{Impulse responses (Green's functions) of
+  velocity continuation, computed by the Chebyshev-$\tau$ method. Top:
+  without zero padding, bottom: with zero padding on the $x$ axis. The
+  left plots correspond to continuation to a larger velocity ($+1$
+  km/sec); the right plots, smaller velocity, ($-1$ km/sec).}
 \par
 The third advantage is the proper handling of the non-periodic boundary
 conditions. Figure \ref{fig:cheb-impl} shows the velocity continuation
@@ -428,6 +429,7 @@ result is noticeably higher than in the case of finite differences
 (Figure \ref{fig:fd-imp}).
 \par 
 \section{Conclusions}
+\inputdir{sigvc}
 \par
 I have applied two spectral methods for a numerical solution of the
 velocity continuation problem.
@@ -444,11 +446,11 @@ the Fourier method.
 Both methods possess a ``spectral'' accuracy, which is highly desired
 if accuracy is a concern.
 \par
-%\plot{mig-impl}{width=6in}{Top left: synthetic model (the ideal image). 
-%  Top right: synthetic data. 
-%  Bottom left: the result of velocity continuation 
-%  with the Fourier method. Bottom right: the result of 
-%  velocity continuation with the Chebyshev method.}
+\plot{mig-impl}{width=6in}{Top left: synthetic model (the ideal image). 
+  Top right: synthetic data. 
+  Bottom left: the result of velocity continuation 
+  with the Fourier method. Bottom right: the result of 
+  velocity continuation with the Chebyshev method.}
 \par
 Figure \ref{fig:mig-impl} compares the results of velocity
 continuation with different methods. The top left plot shows an

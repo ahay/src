@@ -8,6 +8,7 @@ Flow('mod',None,
      smooth rect1=3 |
      scale dscale=150
      ''')
+Plot('mod','grey title="Ideal image" ')
 
 Flow('dat','mod',
      '''
@@ -58,5 +59,23 @@ for case in ('','cheb'):
         
 Result('fft-inv','cod1 dif1 cod3 dif3','TwoRows')
 Result('cheb1-inv','chebcod1 chebdif1 chebcod3 chebdif3','TwoRows')
+
+Flow('fft-mig','dat',
+     '''
+     pad n2=513 | cosft sign2=1 |
+     spray  axis=2 n=1 o=0 d=1 | fourvc pad=400 pad2=512 nv=1 dv=1.5 v0=0.0001 | 
+     cosft sign3=-1 | window n3=200
+     ''')
+Plot('fft-mig','grey title="Fourier result" ')
+
+Flow('cheb-mig','dat',
+     '''
+     t2chebstretch nout=513 | pad n2=513 | cosft sign1=1 sign2=1 |
+     chebvc vel=0.75 nv=500 |
+     cosft sign2=-1 sign1=-1 | window n2=200 | t2chebstretch inv=1
+     ''')
+Plot('cheb-mig','grey title="Chebyshev result" ')
+
+Result('mig-impl','mod dat fft-mig cheb-mig','TwoRows')
 
 End()

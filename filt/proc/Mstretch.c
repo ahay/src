@@ -28,7 +28,12 @@
 static float t0, dt, x0, h=0.;
 
 static float msqrt      (float t, int it) { return sqrtf(t); }
-static float t2_cheb    (float t, int it) { return acosf((t0-t*t)/dt); }
+static float t2_cheb    (float t, int it) { 
+    t=(t0-t*t)/dt; 
+    if(t <= -1.) return (float) SF_PI; 
+    if(t >= 1. ) return 0.; 
+    return acosf(t); 
+}
 static float t2_cheb_inv(float t, int it) { return sqrtf(t0-dt*cosf(t)); }
 static float t2         (float t, int it) { return t*t; }
 static float log_frw    (float t, int it) { return logf(t/t0); }
