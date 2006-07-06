@@ -12,6 +12,7 @@ else:
 
 toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
                       '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
+kandr = re.compile(r'\s*\{?\s*$') # K&R style function definitions end with {
 
 def header(target=None,source=None,env=None):
 # generate a header file
@@ -30,7 +31,8 @@ def header(target=None,source=None,env=None):
         if extract[1] == '^':
             out.write(extract[0]+'\n\n')
         else:
-            out.write(extract[0]+';\n')
+            function = kandr.sub('',extract[0])
+            out.write(function+';\n')
             out.write('/*'+extract[1]+'*/\n\n')
     out.write('#endif\n')
     out.close()
