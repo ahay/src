@@ -66,8 +66,8 @@ Flow('datCC',None,
      '''
      spike nsp=1 mag=1
      n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d|
-     ricker1 frequency=10 |
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
+     ricker1 frequency=15 |
      smooth rect2=10 |
      put label1=t label2=x
      ''' % par )

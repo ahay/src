@@ -3,61 +3,60 @@ from rwedemo import *
 import zomig,pplot
 
 par = {
-    'nz':500,  'dz':0.005,'oz':0,    # CC axis 1
-    'nt':600,  'dt':0.002,'ot':0,    # RC axis 1
-    'nx':700,  'dx':0.010,'ox':-3.5, # CC axis 2
-    'ng':1000, 'dg':0.005,'og':-2.5, # RC axis 2
-    'nT':2500, 'dT':0.004,'oT':0, 'kT':500,     # time
+    'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1
+    'nt':350,  'dt':0.005,    'ot':1.5,   # RC axis 1
+    'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
+    'ng':300,  'dg':0.020,    'og':0,     # RC axis 2
+    'nT':2000, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':350
+    'spx':150
     }
 
 # compute parameters
 param(par)
-
 # velocity
 Flow('vv',None,
      '''
-     spike n1=%(nz)d o1=%(oz)g d1=%(dz)g |
-     math output=2 |
-     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     spike
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     math output=2-0.05*x1-0.05*x2 |
+     put label1=z label2=x
      ''' % par)
 Flow('va',None,
      '''
-     spike nsp=2 mag=+3,-1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200,200 l1=300,300
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=200,400 l2=300,500 |
-     smooth rect1=201 rect2=201 |
-     scale axis=123 |
-     scale rscale=0.8
+     spike nsp=2 mag=-0.5,0.5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=51,51 l1=100,100
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=51,201 l2=100,250 |
+     smooth rect1=31 rect2=71
      ''' % par)
+
 Flow('vb',None,
      '''
-     spike nsp=1 mag=+1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=150 l1=200
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=325 l2=375 |
-     smooth rect1=101 rect2=101 |
-     scale axis=123 |
-     scale rscale=-0
+     spike nsp=1 mag=-1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=145 l1=155
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=130 l2=170 |
+     smooth rect1=21 rect2=21 |
+     scale axis=123
      ''' % par)
-Flow('vel','vv va vb',
-     '''
-     math
-     a=${SOURCES[0]}
-     b=${SOURCES[1]}
-     c=${SOURCES[2]}
-     output="a+b+c"
-     ''')
-Plot('vel',cgrey('allpos=y bias=1.5',par))
 
-# smooth velocity for HWT
-Flow('vsm','vv va',
+Flow('vel','vv vb',
      '''
      math
      a=${SOURCES[0]}
      b=${SOURCES[1]}
      output="a+b"
+     ''')
+Plot('vel',cgrey('allpos=y bias=0.7 pclip=100',par))
+
+# smooth velocity for HWT
+Flow('vsm','vv va',
+     '''
+     math
+     v=${SOURCES[0]}
+     a=${SOURCES[1]}
+     output="v+a"
      ''')
 
 # ------------------------------------------------------------
@@ -120,6 +119,6 @@ mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
 pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
-                  'migCC-F15','migCC-F45','migCC-F60',0.5,0.5,-6,-12)
+                  'migCC-F15','migCC-F45','migCC-F60',0.4,0.4,-8,-12)
 
 End()
