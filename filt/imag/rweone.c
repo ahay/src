@@ -422,9 +422,9 @@ void rweone_ssf(
     for(ig=0; ig<ag.n; ig++) {	
 	ikz = sf_cmplx(0.,w * (aa[ig] - a0));
 #ifdef SF_HAS_COMPLEX_H
-	v[ig] *= cexpf( ikz * (-at.d) );
+	v[ig] *= cexpf( ikz * ( at.d) );
 #else
-	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul(ikz,-at.d)));
+	v[ig] = sf_cmul(v[ig],cexpf(sf_crmul(ikz, at.d)));
 #endif
     }
 }

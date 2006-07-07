@@ -5,9 +5,9 @@ import zomig, pplot
 par = {
     'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1
     'nt':350,  'dt':0.005,    'ot':1.5,   # RC axis 1
-    'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':300,  'dg':0.020,    'og':0,     # RC axis 2
-    'nT':2000, 'dT':0.004,    'oT':0,      'kT':800,    # time
+    'nx':360,  'dx':0.020,    'ox':0,     # CC axis 2
+    'ng':300,  'dg':0.020,    'og':0.2,     # RC axis 2
+    'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':150
@@ -26,7 +26,7 @@ Flow('vv',None,
      ''' % par)
 Flow('va',None,
      '''
-     spike nsp=2 mag=-0.5,0.5
+     spike nsp=2 mag=-0.5,+1.5
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=51,51 l1=100,100
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=51,201 l2=100,250 |
      smooth rect1=31 rect2=71
@@ -62,9 +62,9 @@ Flow('vsm','vv va',
 # ------------------------------------------------------------
 # wavefronts (by HWT)
 
-Flow('mzs',None,'spike nsp=1 mag=0 n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output="0"'  % par)
-Flow('mxs',None,'spike nsp=1 mag=0 n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output="x1"' % par)
-Flow('mrs',None,'spike nsp=1 mag=0 n1=%(nx)d d1=%(dx)g o1=%(ox)g | math output="1"'  % par)
+Flow('mzs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="0"'  % par)
+Flow('mxs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="x1"' % par)
+Flow('mrs',None,'spike nsp=1 mag=0 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="1"'  % par)
 Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window') 
 
 Flow('hwt','vsm sou',
@@ -76,13 +76,13 @@ Flow('hwt','vsm sou',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',10,20,par)
+cos('cos',5,10,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
 slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 color=j allpos=y bias=0.00035',par))
+       + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
@@ -96,7 +96,7 @@ Flow('datCC',None,
      spike nsp=1 mag=1
      n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
-     ricker1 frequency=5 |
+     ricker1 frequency=10 |
      smooth rect2=1 |
      put label1=t label2=x
      ''' % par )

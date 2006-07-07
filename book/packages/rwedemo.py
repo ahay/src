@@ -4,8 +4,8 @@ def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100 label1="z" unit1=km label2="x" unit2=km %s
-    min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+    min1=%g max1=%g min2=%g max2=%g screenratio=%g screenht=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['ratio'],par['height'])
 def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
@@ -17,22 +17,26 @@ def cgraph(custom,par):
     return '''
     graph labelrot=n  %s
     yreverse=y wantaxis=n title=" " 
-    min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+    min1=%g max1=%g min2=%g max2=%g  screenratio=%g screenht=%g
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'],par['ratio'],par['height'])
 
 def param(par):
     par['dw']=1/(par['nT']*par['dT'])
-    par['nw']=par['nT']/1000*50
+    par['nw']=par['nT']/1000*100
+
     # ------------------------------------------------------------
-    par['xmin']=par['ox']                             -0.5
-    par['xmax']=par['ox'] + (par['nx']-1) * par['dx'] +0.5
-    par['zmin']=par['oz']                             -0.5
-    par['zmax']=par['oz'] + (par['nz']-1) * par['dz'] +0.5
+    par['xmin']=par['ox']                             -0.1
+    par['xmax']=par['ox'] + (par['nx']-1) * par['dx'] +0.1
+    par['zmin']=par['oz']                             -0.1
+    par['zmax']=par['oz'] + (par['nz']-1) * par['dz'] +0.1
     par['tmin']=par['ot']
     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
     par['gmin']=par['og']
     par['gmax']=par['og'] + (par['ng']-1) * par['dg']
     # ------------------------------------------------------------
+
+    par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
+    par['height']=par['ratio']*14
     
 # plot coordinate system
 def cos(cos,jray,jwft,par):
@@ -90,7 +94,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
     Flow(frqCC,datCC,
          '''
          fft1 opt=n inv=n |
-         window squeeze=n min1=%(ow)g j1=1 n1=%(nw)d |
+         window squeeze=n min1=%(ow)g n1=%(nw)d |
          transp |
          spray axis=2 n=1 o=0 d=1 | 
          put label1=x label2=y label3=w
@@ -107,7 +111,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
     Result(frqRC,'window j3=10 | real | transp |'
            + rgrey('title= gainpanel=a',par))
 
-    
+# run migration
 def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
     for i in (['SSF','FFD','PSC',
                'F15','F45','F60']):
@@ -142,7 +146,8 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
         Plot(migCC+sfx,'window | transp |'
              + cgrey('title=%s pclip=99',par) % i)
         Result(migCC+sfx,[migCC+sfx,cos],'Overlay')
-        
+
+# run modeling
 def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
     for i in (['SSF','FFD','PSC',
                'F15','F45','F60']):

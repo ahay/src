@@ -119,6 +119,6 @@ mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
 pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
-                  'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
+                  'migCC-F15','migCC-F45','migCC-F60',0.3,0.3,-10,-12)
 
 End()

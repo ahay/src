@@ -5,9 +5,9 @@ import zomig, pplot
 par = {
     'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1
     'nt':400,  'dt':0.005,    'ot':1.5,   # RC axis 1
-    'nx':300,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':180,  'dg':0.500,    'og':-45,   # RC axis 2
-    'nT':2000, 'dT':0.004,    'oT':0,      'kT':800,    # time
+    'nx':360,  'dx':0.020,    'ox':0,     # CC axis 2
+    'ng':360,  'dg':0.250,    'og':-45,   # RC axis 2
+    'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':150
@@ -41,7 +41,7 @@ Flow('vel','vv vb',
      b=${SOURCES[1]}
      output="a+b"
      ''')
-Plot('vel',cgrey('allpos=y bias=1.5 pclip=100',par))
+Plot('vel',cgrey('allpos=y bias=0.7 pclip=100',par))
 
 # smooth velocity for HWT
 Flow('vsm','vv','smooth')
@@ -51,7 +51,7 @@ Flow('vsm','vv','smooth')
 Flow('hwt','vsm',
      '''
      hwt2d verb=n
-     xsou=3 zsou=-3
+     xsou=3.5 zsou=-3
      nt=1000 ot=0 dt=%(dt)g
      ng=%(ng)d og=%(og)g dg=%(dg)g
      ''' % par)
@@ -79,7 +79,7 @@ Flow('datCC',None,
      spike nsp=1 mag=1
      n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
-     ricker1 frequency=5 |
+     ricker1 frequency=10 |
      smooth rect2=1 |
      put label1=t label2=x
      ''' % par )

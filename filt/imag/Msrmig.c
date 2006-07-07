@@ -1,11 +1,9 @@
-/* 3-D S/R migration with extended split-step.
- *
- * pcs 2005
- */
+/* 3-D S/R migration with extended split-step */
 
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+  Copyright (C) 2006 Colorado School of Mines
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or

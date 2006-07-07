@@ -4,10 +4,10 @@ import zomig, pplot
 
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
-    'nx':2301, 'dx':0.004,'ox':0, 'ox':2, 'nx':1500,    # CC axis 2
+    'nx':1500, 'dx':0.004,'ox':2,     # CC axis 2
     'nt':1250, 'dt':0.001,'ot':0,     # RC axis 1
     'ng':1024, 'dg':0.175,'og':-89.6, # RC axis 2
-    'nT':2500, 'dT':0.001,'oT':0,       'kT':2000,    # time
+    'nT':2500, 'dT':0.001,'oT':0, 'kT':2000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':750
@@ -68,7 +68,7 @@ Flow('datCC',None,
      n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(spx)d l2=%(spx)d |
      ricker1 frequency=15 |
-     smooth rect2=10 |
+     smooth rect2=3 |
      put label1=t label2=x
      ''' % par )
 Result('datCC','grey pclip=100 wanttitle=n')
