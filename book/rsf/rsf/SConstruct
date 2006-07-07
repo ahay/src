@@ -54,7 +54,7 @@ Paper('abstract',lclass='eage',
       \end{center}}
       ''')
 
-Paper('dummy')
+# Paper('dummy')
 
 Depends2('install',map(lambda x: x+'.install',
                        Split('api format install prog tour demo')))
