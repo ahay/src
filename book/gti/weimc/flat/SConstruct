@@ -263,6 +263,7 @@ for h in ('x','t'):
 
             slo = 's' + k + n
             vel = 'v' + k + n
+            dip = 'd' + k + n
             
             # offset gather
             Flow(off,img,'window | transp | stack ')
@@ -283,14 +284,15 @@ for h in ('x','t'):
                      igrey('pclip=100 label1=z unit1=m label2="\F10 t\F3" unit2=s %s') % tit)
                 Flow(ssk,off,'radon adj=y p0=0  np=200 dp=50')
                 Plot(ssk,
-                     igrey('pclip=99.5 min2=0 max2=4000 label1=z unit1=m label2="\F10 n\F3" unit2="m/s" %s') % tit)
+                     igrey('pclip=99.5 min2=0 max2=4000 label1=z unit1=m label2="\F10 n\F3 " unit2="m/s" %s') % tit)
                 ovl = 'tov' + n
 
                 Flow(vel,slo,'window n1=1 f1=200 | math output=1/input')
-                Flow(ang,[ssk,vel],
-                     'tshift cos=y a0=0 na=150 da=0.45 velocity=${SOURCES[1]}')
+                Flow(dip,vel,'math output=0')
+                Flow(ang,[ssk,vel,dip],
+                     'tshift cos=y a0=0 na=150 da=0.45 velocity=${SOURCES[1]} dip=${SOURCES[2]}')
                 Plot(ang,
-                     igrey('pclip=99.5 label1=z unit1=m label2="\F10 q\F3" unit2="\^o\_"  %s') % tit)
+                     igrey('pclip=99.5 label1=z unit1=m label2="\F10 q\F3 " unit2="\^o\_"  %s') % tit)
                 
             Plot(ssko,[ssk,ovl],'Overlay')
 
