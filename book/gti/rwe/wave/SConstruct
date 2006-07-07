@@ -1,6 +1,6 @@
 from rsfproj import *
 from rwedemo import *
-import zomig,pplot
+import zomig, pplot
 
 par = {
     'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1

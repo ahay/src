@@ -1,13 +1,13 @@
 from rsfproj import *
 from rwedemo import *
-import zomig
+import zomig, pplot
 
 par = {
-    'nz':800,  'dz':0.02,    'oz':0,  # CC axis 1
-    'nx':1000, 'dx':0.02,    'ox':0,  # CC axis 2
-    'nt':2000, 'dt':0.004,   'ot':0,  # RC axis 1
-    'ng':400,  'dg':0.02,    'og':1.0,# RC axis 2
-    'nT':2000, 'dT':0.008,   'oT':0, 'kT':650,      # time
+    'nz':600,  'dz':0.02,    'oz':0,  # CC axis 1
+    'nx':800, 'dx':0.02,    'ox':0,  # CC axis 2
+    'nt':1800, 'dt':0.004,   'ot':0,  # RC axis 1
+    'ng':450,  'dg':0.02,    'og':0.25,# RC axis 2
+    'nT':2000, 'dT':0.008,   'oT':0,      # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
     'ow':1, 'incore':'y'
     }
@@ -21,21 +21,18 @@ Flow('vv',None,
      spike
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     math output="2.5+0.15*x1-0.115*x2"
+     math output="2.5+0.15*x1-0.20*x2" |
+     scale rscale=-1 |
+     add add=10 |
+     clip clip=9.5 |
+     add add=-10 |
+     scale rscale=-1
      ''' % par)
-Flow('vx','vv','reverse which=2')
-Flow('vel','vv vx',
-     '''
-     cat axis=2 space=n ${SOURCES[1]} |
-     window n2=%d f2=%d |
-     smooth rect1=101 rect2=101 repeat=2 |
-     put o2=0''' % (par['nx'],par['nx']/2))
-
 
 Flow('va',None,
      '''
      spike nsp=2 mag=0,0
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200,600 l1=300,700
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=200,400 l1=300,500
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=200,200 l2=300,300 |
      smooth rect1=126 rect2=126 |
      smooth rect1=126 rect2=126 |
@@ -43,23 +40,20 @@ Flow('va',None,
      ''' % par)
 Flow('vb',None,
      '''
-     spike nsp=1 mag=0
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=600 l1=650
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=375 l2=425 |
+     spike nsp=1 mag=-0.25
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=250 l1=300
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=325 l2=375 |
      smooth rect1=41 rect2=41 |
-     scale axis=123 |
-     scale rscale=0
+     scale axis=123
      ''' % par)
-
-#Flow('vel','vv va vb',
-#     '''
-#     math
-#     a=${SOURCES[0]}
-#     b=${SOURCES[1]}
-#     c=${SOURCES[2]}
-#     output="a+b+c"
-#     ''')
-Plot('vel',cgrey('allpos=y bias=1.5',par))
+Flow('vel','vv vb',
+     '''
+     math
+     a=${SOURCES[0]}
+     b=${SOURCES[1]}
+     output="a+b"
+     ''')
+Plot('vel',cgrey('allpos=y bias=0.5',par))
 
 # smooth velocity for HWT
 Flow('vsm','vv','smooth')
@@ -99,11 +93,11 @@ abmplot('abmRC',par)
 # time data CC: (t,x)
 Flow('datCC',None,
      '''
-     spike nsp=1 mag=1
-     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=%(kT)d
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     spike nsp=3 mag=1,1,1
+     n1=%(nT)d o1=%(oT)g d1=%(dT)g k1=500,1000,1500
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=150 l2=450 |
      ricker1 frequency=5 |
-     smooth rect2=1 |
+     smooth rect2=101 |
      put label1=t label2=x
      ''' % par )
 Result('datCC','grey pclip=100 wanttitle=n')
@@ -124,7 +118,7 @@ mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
-pplot.p2x3('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
                   'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
 
 End()

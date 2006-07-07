@@ -1,6 +1,6 @@
 from rsfproj import *
 from rwedemo import *
-import zomig,pplot
+import zomig, pplot
 
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
@@ -89,7 +89,7 @@ mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
-pplot.p2x3('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
+pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
                   'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
 
 End()
