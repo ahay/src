@@ -5,8 +5,8 @@ import zomig, pplot
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
     'nx':1500, 'dx':0.004,'ox':2,     # CC axis 2
-    'nt':1250, 'dt':0.001,'ot':0,     # RC axis 1
-    'ng':1024, 'dg':0.175,'og':-89.6, # RC axis 2
+    'nt':650,  'dt':0.002,'ot':0,     # RC axis 1
+    'ng':512,  'dg':0.350,'og':-89.6, # RC axis 2
     'nT':2500, 'dT':0.001,'oT':0, 'kT':2000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
@@ -47,7 +47,7 @@ Flow('hwt','vsm',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',25,25,par)
+cos('cos',10,10,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
