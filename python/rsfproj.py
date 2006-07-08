@@ -116,6 +116,13 @@ def test(target=None,source=None,env=None):
         print 'No locked file "%s" ' % locked
     return 0
 
+def symlink(target, source, env):
+    "Create symbolic link"
+    src = str(source[0])
+    tar = str(target[0])
+    os.symlink(src,tar)
+    return 0
+
 def retrieve(target=None,source=None,env=None):
     "Fetch data from the web"
     top = env.get('top')
@@ -382,13 +389,15 @@ class Project(Environment):
             source = target
         target2 = os.path.join(self.resdir,target)
         plot = apply(self.Plot,(target2,source,flow),kw)
+        target2 = target2 + suffix
         self.Default (plot),
         self.view.append(self.View(target + '.view',plot))
         self.prnt.append(self.Print(target + '.print',plot))
         locked = os.path.join(self.figdir,target+suffix)
-        lock = self.InstallAs(locked,target2+suffix)        
-        self.lock.append(lock)
-        self.Alias(target + '.lock',lock)
+        self.InstallAs(locked,target2)
+        lock2 = self.Command(target2+'@',locked,symlink)
+        self.Alias(target + '.lock',lock2)
+        self.lock.append(lock2)
         self.Command(target + '.flip',target2+suffix,
                      '%s $SOURCE %s' % (xtpen,locked))
         test = self.Test('.test_'+target,target2+suffix)
