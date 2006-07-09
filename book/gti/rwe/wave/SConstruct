@@ -1,20 +1,22 @@
 from rsfproj import *
-from rwedemo import *
+from rwezo import *
 import zomig, pplot
 
 par = {
-    'nz':300,  'dz':0.010,    'oz':0,     # CC axis 1
-    'nt':350,  'dt':0.005,    'ot':1.5,   # RC axis 1
+    'nz':350,  'dz':0.010,    'oz':0,     # CC axis 1
+    'nt':400,  'dt':0.005,    'ot':1.5,   # RC axis 1
     'nx':360,  'dx':0.020,    'ox':0,     # CC axis 2
-    'ng':300,  'dg':0.020,    'og':0.2,     # RC axis 2
+    'ng':300,  'dg':0.020,    'og':0.5,   # RC axis 2
+    'lg':'label2=x unit2=km',
     'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':150
+    'spx':175
     }
 
 # compute parameters
 param(par)
+
 # velocity
 Flow('vv',None,
      '''
@@ -26,27 +28,28 @@ Flow('vv',None,
      ''' % par)
 Flow('va',None,
      '''
-     spike nsp=2 mag=-0.5,+1.5
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=51,51 l1=100,100
+     spike nsp=2 mag=1.,+1.
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=201,51 l1=300,150
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=51,201 l2=100,250 |
      smooth rect1=31 rect2=71
      ''' % par)
 
 Flow('vb',None,
      '''
-     spike nsp=1 mag=-1
+     spike nsp=1 mag=-0.5
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=145 l1=155
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=130 l2=170 |
-     smooth rect1=21 rect2=21 |
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=145 l2=155 |
+     smooth rect1=21 rect2=11 |
      scale axis=123
      ''' % par)
 
-Flow('vel','vv vb',
+Flow('vel','vv va vb',
      '''
      math
-     a=${SOURCES[0]}
-     b=${SOURCES[1]}
-     output="a+b"
+     v=${SOURCES[0]}
+     a=${SOURCES[1]}
+     b=${SOURCES[2]}
+     output="v+a+b"
      ''')
 Plot('vel',cgrey('allpos=y bias=0.7 pclip=100',par))
 
@@ -76,13 +79,13 @@ Flow('hwt','vsm sou',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',5,10,par)
+cos('cos',10,20,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
 slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 color=j allpos=y bias=0.5',par))
+       + rgrey('pclip=100 color=j allpos=y bias=0.41',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
@@ -109,16 +112,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
+Plot  ('imgCC','window | transp |' + cgrey('pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
 mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
-Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
-pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
-                  'migCC-F15','migCC-F45','migCC-F60',0.4,0.4,-8,-12)
+# ------------------------------------------------------------
+# PLOTS
+plots(par)
 
 End()

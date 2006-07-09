@@ -1,13 +1,14 @@
 from rsfproj import *
-from rwedemo import *
+from rwezo import *
 import zomig, pplot
 
 par = {
     'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
     'nx':1500, 'dx':0.004,'ox':2,     # CC axis 2
-    'nt':650,  'dt':0.002,'ot':0,     # RC axis 1
+    'nt':550,  'dt':0.002,'ot':0,     # RC axis 1
     'ng':512,  'dg':0.350,'og':-89.6, # RC axis 2
-    'nT':2500, 'dT':0.001,'oT':0, 'kT':2000,    # time
+    'lg':'label2="\F10 g\F3 " unit2="\^o\_"',
+    'nT':1250, 'dT':0.002,'oT':0, 'kT':1000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
     'spx':750
@@ -47,7 +48,7 @@ Flow('hwt','vsm',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',10,10,par)
+cos('cos',20,20,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
@@ -80,16 +81,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |' + cgrey('title=CC pclip=99',par))
+Plot  ('imgCC','window | transp |' + cgrey('pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
 mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
 mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
-Result('icomp','imgCC migCC-SSF migCC-F45','Movie')
 
-pplot.p3x2('iall','imgCC'    ,'migCC-SSF','migCC-PSC',
-                  'migCC-F15','migCC-F45','migCC-F60',0.35,0.35,-8,-12)
+# ------------------------------------------------------------
+# PLOTS
+plots(par)
 
 End()
