@@ -168,7 +168,16 @@ def latex2dvi(target=None,source=None,env=None):
 
 def latex2mediawiki(target=None,source=None,env=None):
     "Convert LaTeX to MediaWiki"
-    tex = open(str(source[0]),"r")
+    texfile = str(source[0])
+    tex = open(texfile,"r")
+    bblfile = re.sub('\.[^\.]+$','.bbl',texfile)
+    print bblfile
+    try:
+        bbl = open(bblfile,"r")
+        latex2wiki.parse_bbl(bbl)
+        bbl.close()
+    except:
+        pass
     wiki = open(str(target[0]),"w")
     latex2wiki.convert(tex,wiki)
     wiki.close()
@@ -713,7 +722,7 @@ class TeXPaper(Environment):
         self.Latify(target=paper+'.ltx',source=paper+'.tex',
                     use=use,lclass=lclass,options=options,include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
-        wiki = self.Wiki(target=paper,source=paper+'.ltx')
+        wiki = self.Wiki(target=paper,source=[paper+'.ltx',pdf])
         pdf[0].target_scanner = LaTeX
         if os.path.isdir(self.docdir):
             pdfinstall = self.Install(self.docdir,paper+'.pdf')

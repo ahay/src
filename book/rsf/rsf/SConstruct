@@ -8,8 +8,20 @@ root = os.environ.get('RSFROOT')
 libdir = os.path.join(root,'lib')
 bindir = os.path.join(root,'bin')
 sfdoc  = os.path.join(bindir,'sfdoc')
+run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
+      (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
 
 progs = []
+wprogs = []
+for prog in rsfdoc.progs.keys():
+    progs.append(prog+'.tex')
+    wprogs.append(prog+'.wiki')
+    Command2(prog+'.tex',sfdoc,'%s -l . %s' % (run,prog))
+    Command2(prog+'.wiki',sfdoc,'%s -m . %s' % (run,prog))
+Alias('progs',progs)
+Alias('wprogs',wprogs)
+
+wprogs = []
 for prog in rsfdoc.progs.keys():
     progs.append(prog+'.tex')
     Command2(prog+'.tex',sfdoc,
@@ -19,7 +31,6 @@ for prog in rsfdoc.progs.keys():
               prog))
 
 Alias('progs',progs)
-
 
 Paper('install',use='[bookmarks=true]hyperref')
 Paper('tour',use='listings,color,hyperref')

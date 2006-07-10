@@ -168,6 +168,12 @@ class rsfpar:
         return self.type + " " + \
                "<strong>" + name + self.default + \
                "</strong>" + self.range
+    def wiki(self,name):
+        desc = string.replace(self.desc,'\n','<br>')
+        desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
+        desc = re.sub(r'(?:\s*<br>)+$','',desc)
+        return "|-\n| ''%s'' || '''%s%s''' || %s || %s\n" % \
+               (self.type,name,self.default,self.range,desc)
     def latex(self,name):
         tex = '\\underline{%s} & \\textbf{%s%s} & %s & ' % \
               (self.type,name,self.default,self.range)
@@ -229,6 +235,26 @@ class rsfprog:
         if self.vers:
             doc = doc + section('version',self.vers)
         pydoc.pager(doc)
+    def wiki(self,dir):
+        file = open (os.path.join(dir,self.name + '.wiki'),'w')
+        contents = '==%s==\n{| class="wikitable" align="center"\n' % \
+                   self.name
+        desc = '! colspan="4" style="background:#ffdead;" | %s\n' % self.desc
+        contents = contents + desc
+        if self.snps:
+            contents = contents + '|-\n! colspan="4" | %s\n' % self.snps
+        if self.cmts:
+            cmts = string.replace(self.cmts,'\n','<br>')
+            cmts = re.sub(r'(?:\s*<br>)+$','',cmts)
+            contents = contents + '|-\n|  colspan="4" | %s\n' % cmts
+        pars =  self.pars.keys()
+        if pars:
+            pars.sort()
+            for par in pars:
+                contents = contents + self.pars[par].wiki(par)
+        contents = contents+'|}\n'
+        file.write(contents)
+        file.close()
     def latex(self,dir):
         file = open (os.path.join(dir,self.name + '.tex'),'w')
         contents = '\\footnotesize\n'
@@ -473,13 +499,16 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:l:r:')
+        opts, args = getopt.getopt(sys.argv, 'k:w:m:l:r:')
         hdir = None
+        mdir = None
         ldir = None
         rep = os.getcwd()
         for opt, val in opts:
             if opt == '-w':
                 hdir = val
+            if opt == '-m':
+                mdir = val
             if opt == '-l':
                 ldir = val
             if opt == '-r':
@@ -512,6 +541,8 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
             if main:
                 if hdir:
                     main.html(hdir,rep)
+                elif mdir:
+                    main.wiki(mdir)
                 elif ldir:
                     main.latex(ldir)
                 else:
@@ -527,6 +558,9 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 
 %(prog)s -w <dir> [-r <rep>] <prog1> <prog2> ... 
     Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
+
+%(prog)s -m <dir>  <prog1> <prog2> ...
+    Write program documentaton in MediaWiki format in <dir> directory.
 
 %(prog)s -l <dir> <prog1> <prog2> ... 
     Write program LaTeX documentaton in <dir> directory.

@@ -75,11 +75,6 @@
 #endif
 #endif
 
-/* Cygwin deprecated d_ino */
-#ifdef __CYGWIN__
-#define d_ino __invalid_d_ino
-#endif
-
 #ifndef _sf_file_h
 
 #define SF_MAX_DIM 9
