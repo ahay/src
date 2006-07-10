@@ -26,7 +26,7 @@ command line, for example:
 
 \begin{verbatim}
 bash$ sfspike n1=1000 k1=300 title="\s200 Welcome to \c2 RSF" | \
-sfbandpass fhi=2 phase=1 | sfwiggle | tube
+sfbandpass fhi=2 phase=1 | sfwiggle | xtpen
 \end{verbatim}
 
 If you are already familiar with SEPlib, you can find most of the familiar
@@ -184,8 +184,7 @@ We can verify that the size of the first axis has decreased by running
 sfin windowed.rsf subsampled.rsf. 
 \end{verbatim}
 
-Try also \texttt{sfwiggle <
-  subsampled.rsf | tube} to quickly inspect the subsampled data on the screen.
+Try also \texttt{sfwiggle < subsampled.rsf | xtpen} to quickly inspect the subsampled data on the screen.
 
 To interpolate the data back to the original sampling, the following sequence
 of steps can be applied:

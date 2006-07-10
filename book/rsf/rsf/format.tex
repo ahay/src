@@ -68,7 +68,7 @@ parameter-value pairs separated by the ``='' sign. The ``in''
 parameter points to the location of the binary data. Before we discuss
 the meaning of parameters in more detail, let us plot the data.
 \begin{verbatim}
-bash$ < sin.rsf  sfwiggle title='One Trace' | tube
+bash$ < sin.rsf  sfwiggle title='One Trace' | xtpen
 \end{verbatim}
 On your screen, you should see a plot similar to Figure~\ref{fig:sin1}.
 
@@ -79,11 +79,11 @@ thousand samples, it contains twenty traces with fifty samples each. Try
 running
 \begin{verbatim}
 bash$ < sin.rsf sed 's/n1=1000/n1=100 n2=10/' > sin10.rsf 
-bash$ < sin10.rsf sfwiggle title=Traces | tube
+bash$ < sin10.rsf sfwiggle title=Traces | xtpen
 \end{verbatim}
 or (using pipes)
 \begin{verbatim}
-bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' | sfwiggle title=Traces | tube
+bash$ < sin.rsf sed 's/n1=1000/n1=50 n2=20/' | sfwiggle title=Traces | xtpen
 \end{verbatim}
 On your screen, you should see a plot similar to Figure~\ref{fig:sin2}.
 
@@ -99,7 +99,7 @@ RSF files include \texttt{cat}, \texttt{echo}, \texttt{grep}, etc.
 An alternative way to obtain the previous result is to run
 \begin{verbatim}
 bash$ ( cat sin.rsf; echo n1=50 n2=20 ) > sin10.rsf 
-bash$ < sin10.rsf sfwiggle title=Traces | tube
+bash$ < sin10.rsf sfwiggle title=Traces | xtpen
 \end{verbatim}
 In this case, the \texttt{cat} utility simply copies the contents of the
 previous file, and the \texttt{echo} utility appends new line ``\texttt{n1=50
@@ -183,7 +183,7 @@ machine_name datapath=/path/to_file/
 \end{enumerate}
 
 Examples:
-\begin{enumerate}
+\begin{itemize}
 \item \ \\
 \begin{verbatim}
 bash$ sfspike n1=10 out=test1 > spike.rsf
@@ -208,7 +208,7 @@ bash$ sfspike n1=10 datapath=/tmp/ > /tmp/spike.rsf
 bash$ grep in /tmp/spike.rsf
 in="/tmp/sfspikejcARVf"
 \end{verbatim}
-\end{enumerate}
+\end{itemize}
 
 \subsubsection{Packing header and data together}
 
@@ -358,8 +358,7 @@ pipes.
 \subsection{Reading and writing SEG-Y and SU files}
 
 The SEG-Y format is based on the proposal of \cite{GEO40-02-03440352}.
-It was revised in 2002\footnote{See
-  \url{http://seg.org/publications/tech-stand/seg_y_rev1.pdf}.}. The
+It was revised in 2002\footnote{See \url{http://seg.org/publications/tech-stand/seg_y_rev1.pdf}.}. The
 SU format is a modification of SEG-Y used in Seismic Unix
 \cite[]{TLE16-07-10451049}.
 
@@ -492,20 +491,14 @@ bash$ cat file.asc
 This note should give you a general understanding of the RSF file
 format. Other relevant documentation is 
 \begin{itemize}
-\item
-  \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/paper_html/}{Introduction
-  to RSF}
-\item
-  \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/install_html/}{Installation instructions}
+\item \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/paper_html/}{Introduction to RSF}
+\item \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/install_html/}{Installation instructions}
 \item \href{http://egl.beg.utexas.edu/RSF/}{Self-documentation reference for RSF programs}
 \item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/prog_html/}{guide to RSF programs}
-\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/api_html/}{guide to
-    RSF programming interface}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/api_html/}{guide to RSF programming interface}
 \item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/demo_html/}{guide to programming with RSF}
 \item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/rsf/tour_html/}{tour of RSF software}
-\item A
-  \href{http://egl.beg.utexas.edu/RSF/book/rsf/scons/paper_html/}{guide
-    to SCons interface for reproducible computations}
+\item A \href{http://egl.beg.utexas.edu/RSF/book/rsf/scons/paper_html/}{guide to SCons interface for reproducible computations}
 \end{itemize}
 
 \bibliographystyle{seg}

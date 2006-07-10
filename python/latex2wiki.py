@@ -43,6 +43,7 @@ el = "\n"
 item = ""
 refs = {}
 gref = []
+fullref = None
 insert = ""
 
 def dummy(s):
@@ -106,8 +107,9 @@ def line_math(s):
     in_math = 1
 
 def cite(s):
-    global refs, gref
-    keys = s.group(1)
+    global refs, gref, fullref
+    fullref = s.group(1)
+    keys = s.group(2)
     gref = []
     for key in string.split(keys,','):
         lref = refs.get(key)
@@ -115,9 +117,20 @@ def cite(s):
             gref.append(lref)
 
 def refer():
-    global gref
-    return '(%s)' % string.join(map(lambda x:
-                                    '%s<ref>%s</ref>' % x,gref),';')
+    global gref, fullref
+    list = []
+    name = ''
+    for lref in gref:
+        if fullref:
+            list.append('%s<ref>%s</ref>' % lref)
+        else:
+            (name,year) = string.split(lref[0],', ')
+            list.append('%s<ref>%s</ref>' % (year,lref[1]))
+    lrefs = '(%s)' % string.join(list,';')
+    if fullref:
+        return lrefs
+    else:
+        return '%s %s' % (name,lrefs)
 
 def input_file(s):
     global insert
@@ -189,7 +202,7 @@ tr_list2 = [
     (r"\\end{array[*]?}", (lambda :r"\\end{matrix}"), toggle_math),
     #	(r"(\\begin{.*?})", decide_math_replace, dummy),
     #	(r"(\\end{.*?})",decide_math_replace, dummy),
-    (r"\\cite\[\]\{([^\}]+)\}",refer,cite),
+    (r"\\cite(\[\])?\{([^\}]+)\}",refer,cite),
     (r"~\\ref{([^}]*)}",(lambda : r" ---\1---"),dummy),
     (r"\\subsubsection{(.*?)}", (lambda : r"====\1===="), dummy),
     (r"\\subsection{(.*?)}", (lambda : r"===\1==="), dummy),
@@ -198,11 +211,9 @@ tr_list2 = [
     #	(r"\\title{(.*)}", (lambda :r"= \1 ="),dummy),
     #        (r"\\author{(.*)}", (lambda :r"\1"),dummy),
     (r"\\date{(.*)}", (lambda :r"\1"),dummy),
-    (r"\\tableofcontents",None, dummy),
-    (r"\\null",None, dummy),
-    (r"\\newpage",None, dummy),
+    (r"\\begin{quote}",(lambda : r"<blockquote>"),dummy),
+    (r"\\end{quote}",(lambda : r"</blockquote>"),dummy),
     (r"\\thispagestyle{.*?}", None, dummy),
-    (r"\\maketitle", None, dummy),
     (r"\n$", decide_el, dummy),
     #	(r"[^\\]?\{", None, dummy),
     #	(r"[^\\]?\}", None, dummy),
@@ -226,7 +237,7 @@ tr_list2 = [
     (r"\\pdfbookmark\[[^\]]*\]{[^\}]*}{[^\}]*}", None, dummy),
     # the most important thing
     (r"\\LaTeX",(lambda : "L<sup>A</sup>TEX"), dummy),
-    (r"\\\\", None, dummy),
+    (r"\\\\", (lambda : "\n"), dummy),
     (r"\\ ",(lambda: " "), dummy),
     (r"\$([^\$]+)\$",(lambda : r"<math>\1</math>"),line_math),
     # unknown command
