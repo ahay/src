@@ -3,7 +3,7 @@ import pplot
 
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n
+    grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100 label1="z" unit1=km label2="x" unit2=km %s
     min1=%g max1=%g min2=%g max2=%g screenratio=%g screenht=%g
     ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['ratio'],par['height'])
