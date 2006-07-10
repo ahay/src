@@ -398,9 +398,9 @@ class Project(Environment):
         lock2 = self.Command(target2+'@',locked,symlink)
         self.Alias(target + '.lock',lock2)
         self.lock.append(lock2)
-        self.Command(target + '.flip',target2+suffix,
+        self.Command(target + '.flip',target2,
                      '%s $SOURCE %s' % (xtpen,locked))
-        test = self.Test('.test_'+target,target2+suffix)
+        test = self.Test('.test_'+target,target2)
         self.test.append(test)
         self.Alias(target + '.test',test)
         return plot
