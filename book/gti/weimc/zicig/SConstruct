@@ -209,7 +209,7 @@ def hcig2ssk():
 def tssk2ang():
     return '''
     tshift cos=y a0=0 na=150 da=0.45
-    velocity=${SOURCES[1]}
+    velocity=${SOURCES[1]} dip=${SOURCES[2]}
     '''
 def hssk2ang():
     return '''
@@ -312,6 +312,10 @@ for i in SLOlist:
             # velocity
             v = 'v' + ikl
             Flow(v,vco,'window n2=1 min2=%g' % float(l) )
+
+            # structural dip
+            d = 'd' + ikl            
+            Flow(d,SRdip,'window n2=1 min2=%g' % float(l) )
             
             # offset gathers
             h = 'h' + ikl
@@ -324,6 +328,7 @@ for i in SLOlist:
             # angle gathers
             a    = 'a'    + ikl    # slant-stack
             c    = 'c'    + ikl    # angle-gather
+
             cdip = 'cdip' + ikl    # 
             ccln = 'ccln' + ikl    # dip noise separation
 
@@ -334,9 +339,9 @@ for i in SLOlist:
                 Plot(h,igrey('label2="h(km)"'                +CRATIO,par))
                 Plot(a,igrey('label2="tan \F10 q\F3 " min2=0'+CRATIO,par))
 
-            if(k=='t'):
+            if(k=='t'):                
                 Flow(a,h,'bandpass fhi=10 | '+tcig2ssk())
-                Flow(c,[a,v],                 tssk2ang())
+                Flow(c,[a,v,d],               tssk2ang())
 
                 Plot(h,igrey('label2="\F10 t\F3 (s)" '         +CRATIO,par))
                 Plot(a,igrey('label2="\F10 n\F3 (km/s)" max2=5'+CRATIO,par))
@@ -350,7 +355,6 @@ for i in SLOlist:
 
 # < clean0t11.rsf sfwindow f3=1 > clean.rsf
 # < clean.rsf sfenvelope | sfthreshold pclip=100 | sfmask min=0.1 | sfdd type=float | sfadd mode=p clean.rsf | sfstack | sfgraph | tube
-
 
 # ------------------------------------------------------------
 

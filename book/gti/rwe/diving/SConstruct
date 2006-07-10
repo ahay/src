@@ -3,12 +3,13 @@ from rwezo import *
 import zomig, pplot
 
 par = {
-    'nz':300,  'dz':0.04,    'oz':0,  # CC axis 1
+    'nz':250,  'dz':0.04,    'oz':0,  # CC axis 1
     'nx':400,  'dx':0.04,    'ox':0,  # CC axis 2
     'nt':1800, 'dt':0.004,   'ot':0,  # RC axis 1
-    'ng':225,  'dg':0.04,    'og':1,  # RC axis 2
+    'ng':225,  'dg':0.04,    'og':0.5,  # RC axis 2
     'lg':'label2=x unit2=km',
-    'nT':2000, 'dT':0.008,   'oT':0,      # time
+    'lt':'label1="\F10 t\F3 " unit1="s"',
+    'nT':2400, 'dT':0.008,   'oT':0,      # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
     'ow':1, 'incore':'y'
     }
@@ -54,7 +55,7 @@ Flow('vel','vv vb',
      b=${SOURCES[1]}
      output="a+b"
      ''')
-Plot('vel',cgrey('allpos=y bias=0.5',par))
+Plot('vel',cgrey('allpos=y bias=0',par))
 
 # smooth velocity for HWT
 Flow('vsm','vv','smooth')
@@ -83,7 +84,7 @@ Result('cos','vel cos','Overlay')
 # slowness
 slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 color=j allpos=y bias=0.12',par))
+       + rgrey('pclip=100 allpos=y bias=0.12',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)

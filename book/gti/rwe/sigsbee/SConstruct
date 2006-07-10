@@ -1,0 +1,200 @@
+from rsfproj import *
+
+par = {
+    'nz':1201, 'dz':0.025,  'oz':0,      # z (kft)
+    'nx':2133, 'dx':0.0375,  'ox':10.925, # x (kft)
+    'nt':10000,  # no of time steps
+    'dt':0.001,  #       time sampling
+    'ot':0,      #       time origing
+    'kt':100,    # wavelet delay
+    }
+# ------------------------------------------------------------
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+# ------------------------------------------------------------
+
+def igrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n title="" pclip=99
+    label1="z" label2="x" unit1=kft unit2=kft
+    %s
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+
+def igraph(custom,par):
+    return '''
+    graph labelrot=n %s
+    yreverse=y wantaxis=n title=" " 
+    label1="z" label2="x" unit1=kft unit2=kft
+    min1=%g max1=%g min2=%g max2=%g
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n title="" pclip=99
+    label1="t" label2="x" unit1=s unit2=kft
+    %s
+    min2=%g max2=%g
+    ''' % (custom,par['xmin'],par['xmax'])
+
+# ------------------------------------------------------------
+# modeling function
+def amodel(dat,wfl,  wav,vel,sou,rec,custom):
+    Flow( [dat,wfl],[wav,vel,sou,rec],
+         '''
+         afdm2d verb=y abc=y free=n snap=y jsnap=100 %s
+         nbz=250 tz=0.001
+         nbx=250 tx=0.001
+         vel=${SOURCES[1]}
+         sou=${SOURCES[2]}
+         rec=${SOURCES[3]}
+         wfl=${TARGETS[1]}
+         ''' % custom)
+
+# ------------------------------------------------------------
+# model
+
+velo = 'sigsbee2a_migvel.sgy'
+Fetch(velo,'sigsbee')
+
+Flow('zvelo tzvelo ./vhead ./bvhead',velo,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+# ------------------------------------------------------------
+par['ncut']=1400
+par['npad']=1600
+
+Flow('vraw','zvelo',
+     '''
+     scale rscale=0.001 |
+     put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
+     window n2=%(ncut)d
+     ''' % par)
+
+par['ox']=par['ox']-par['npad']*par['dx']
+par['nx']=par['ncut']+par['npad']
+par['xmin']=par['ox']
+par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+
+Flow('velo','vraw',
+     '''
+     window n2=1 |
+     spray axis=2 n=%(npad)d d=%(dx)g o=%(ox)g |
+     cat ${SOURCES[0]} axis=2 space=n
+     ''' % par)
+
+Plot  ('velo',igrey('allpos=y pclip=95',par))
+Result('velo',igrey('allpos=y pclip=95',par))
+
+Flow('salt','velo','add add=-14 | clip clip=1')
+Result('salt',igrey('allpos=y pclip=100',par))
+
+# ------------------------------------------------------------
+
+Flow('edge','salt','igrad square=y')
+Result('edge','sfdd type=float |' + igrey('pclip=100',par))
+
+Flow('mask','edge','mask min=0.002')
+Result('mask','sfdd type=float |' + igrey('pclip=100',par))
+
+for x in ('x1','x2'):
+    if(x=='x1'): o='zs'
+    if(x=='x2'): o='xs'
+
+    Flow(o,'edge mask',
+         '''
+         math output=%s |
+         put n1=1 n2=%d |
+         headerwindow mask=${SOURCES[1]} |
+         window
+         ''' % (x,par['nz']*par['nx']))
+
+Flow('rs','edge mask',
+     '''
+     scale axis=123 |
+     put n1=1 n2=%d |
+     headerwindow mask=${SOURCES[1]} |
+     window
+     ''' % (par['nz']*par['nx']))
+
+Flow('ss',['xs','zs','rs'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
+     window j2=2
+     ''', stdin=0)
+
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + igraph('symbol=. plotcol=2',par))
+Result('ss',['velo','ss'],'Overlay')
+
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# receiver (flat)
+
+Flow('ro',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+
+Flow('zo','ro','math output="%g"' % par['oz'])
+Flow('xo','ro','math output="x1"')
+Flow('oo',['xo','zo'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+
+Plot('oo','window n1=2 | dd type=complex | window j2=10 | '
+     + igraph('symbol=* plotcol=5',par))
+
+Result('oo',['velo','oo'],'Overlay')
+
+Result('model','velo ss oo','Overlay')
+
+# ------------------------------------------------------------
+# wavelet
+
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+     ricker1 frequency=20 | 
+     put label1=t label2=x label3=y 
+     ''' % par)    
+Result('wav','wav','window n1=1000 | graph title=" "')
+
+# ------------------------------------------------------------
+# modeling
+
+amodel('do','wo','wav','velo','ss','oo','free=n')
+
+# ------------------------------------------------------------
+
+Result('wo',
+       'window n3=1 f3=10 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+       + igrey('pclip=99',par))
+
+Result('do','window j2=4 | transp |' + dgrey('',par))
+
+Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.002' % par)
+Result('dd','window j2=4 | transp |' + dgrey('',par))
+
+# ------------------------------------------------------------
+
+for j in range(0,20):
+    par['ft'] = j
+    wo = 'wo' + str(j)
+    Result(wo,'wo',
+       'window n3=1 f3=%(ft)d min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+       + igrey('pclip=99',par))
+
+# ------------------------------------------------------------
+
+
+End()

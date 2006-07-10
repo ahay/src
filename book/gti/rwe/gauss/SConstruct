@@ -8,6 +8,7 @@ par = {
     'nx':360,  'dx':0.020,    'ox':0,     # CC axis 2
     'ng':360,  'dg':0.250,    'og':-45,   # RC axis 2
     'lg':'label2="\F10 g\F3 " unit2="\^o\_"',
+    'lt':'label1="\F10 t\F3 " unit1="s"',
     'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
@@ -66,7 +67,7 @@ Result('cos','vel cos','Overlay')
 # slowness
 slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 color=j allpos=y bias=0.51',par))
+       + rgrey('pclip=100 allpos=y bias=0.51',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)

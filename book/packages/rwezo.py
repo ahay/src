@@ -1,4 +1,5 @@
 from rsfproj import *
+import pplot
 
 def cgrey(custom,par):
     return '''
@@ -9,9 +10,10 @@ def cgrey(custom,par):
 def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=100 label1="t" unit1=s label2="g" unit2=km %s
+    title="" pclip=100 label1="t" unit1=s label2="g"
+    %s %s %s
     min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['tmin'],par['tmax'],par['gmin'],par['gmax'])
+    ''' % (custom,par['lt'],par['lg'],par['tmin'],par['tmax'],par['gmin'],par['gmax'])
 
 def cgraph(custom,par):
     return '''
@@ -22,7 +24,7 @@ def cgraph(custom,par):
 
 def param(par):
     par['dw']=1/(par['nT']*par['dT'])
-    par['nw']=par['nT']/1000*100
+    par['nw']=par['nT']/500*100
 
     # ------------------------------------------------------------
     par['xmin']=par['ox']                             -0.1
@@ -82,13 +84,15 @@ def abm(abmRC,abrRC,sloRC,cos,par):
 
 def abmplot(abmRC,par):
     Plot('aRC',abmRC,'window n3=1 f3=0 | transp |'
-         + rgrey('pclip=100 color=F allpos=n',par))
+         + rgrey('pclip=100 bias=1 scalebar=y',par))
     Plot('bRC',abmRC,'window n3=1 f3=1 | transp |'
-         + rgrey('pclip=100 color=F allpos=y',par))
+         + rgrey('pclip=100 allpos=y scalebar=y',par))
     Plot('mRC',abmRC,'window n3=1 f3=2 | transp |'
-         + rgrey('pclip=100 color=j allpos=y',par))
+         + rgrey('pclip=100 allpos=y',par))
 
-    Result(abmRC,['aRC','bRC','mRC'],'OverUnderAniso')
+    Result(abmRC,['aRC','bRC'],'SideBySideIso')
+#    Result(abmRC,['aRC','bRC','mRC'],'OverUnderAniso')
+
 
 def frq(frqRC,frqCC,datCC,cos,par):
     Flow(frqCC,datCC,
@@ -139,7 +143,9 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
              a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
              put label1=z label2=x
              ''' % par)
-        
+
+        Plot  (migRC+sfx,'window | transp |'
+               + rgrey('title=%s pclip=99',par) % i)
         Result(migRC+sfx,'window | transp |'
                + rgrey('title=%s',par) % i)
         
@@ -190,4 +196,31 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
              put label1=t label2=x
              ''' % (int(par['ow']/par['dw']),par['nT']/2+1))
         
-        Result(modCC+sfx,'grey pclip=100 wanttitle=n grid=y label1=t unit1=s label2=x unit2=km')
+        Result(modCC+sfx,
+               'grey pclip=100 wanttitle=n grid=y label1=t unit1=s label2=x unit2=km')
+
+# produce plots
+def plots(par):
+    Result('icomp','imgCC migCC-FFD migCC-F60','Movie')
+    Result('imgCC',['imgCC','cos'],'Overlay')
+
+    pplot.p3x2('iCCall',
+               'migCC-SSF','migCC-PSC','migCC-FFD',
+               'migCC-F15','migCC-F45','migCC-F60',
+               0.3,0.3,-8,-12)
+    pplot.p3x2('iRCall',
+               'migRC-SSF','migRC-PSC','migRC-FFD',
+               'migRC-F15','migRC-F45','migRC-F60',
+               0.3,0.3,-10,-12)
+
+    Plot  ('imgCC',
+           'window | transp |' + cgrey('pclip=99',par))
+    Plot  ('imgRC','migCC-FFD',
+           '         transp |' + cgrey('pclip=99',par))
+    Plot('imgRC-ovl',['imgRC','cos'],'Overlay')
+
+    pplot.p2x1('CCvsRC','imgRC-ovl','imgCC',0.5,0.5,-9)
+    
+#    Result('CCvsRC',['imgRC-ovl','imgCC'],'OverUnderIso')
+
+        
