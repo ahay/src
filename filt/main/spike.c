@@ -46,18 +46,18 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"o%d",i+1);
 	if (!sf_getfloat(key,&f)) f=0.;
-	/*< o#=[0,...] origin on #-th axis >*/  
+	/*< o#=(0,...) origin on #-th axis >*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,3,"d%d",i+1);
 	if (!sf_getfloat(key,&f)) f = (i==0)? 0.004: 0.1;
-	/*< d#=[0.004,0.1,0.1,...] sampling on #-th axis >*/  
+	/*< d#=(0.004,0.1,0.1,...) sampling on #-th axis >*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,7,"label%d",i+1);
 	if (NULL == (label = sf_getstring(key)))
 	    label = (i==0)? "Time":"Distance";
-	/*< label#=[Time,Distance,Distance,...] label on #-th axis >*/  
+	/*< label#=(Time,Distance,Distance,...) label on #-th axis >*/  
 	if (*label != '\0' && (*label != ' ' || *(label+1) != '\0')) 	
 	    sf_putstring(spike,key,label);
 
