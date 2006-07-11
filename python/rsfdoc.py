@@ -157,10 +157,25 @@ def multicolumn(list, format, cols=4):
 
 class rsfpar:
     def __init__(self,type,default='',range='',desc=''):
-        self.type = type
+        self.type = type + ' ' * (len('strings')-len(type))
+        if (type == 'bool'):
+            if (default == 'true'):
+                default = 'y'
+            elif (default == 'false'):
+                default = 'n'
+            range = '[y/n]'
         self.default = "=" + str(default)
         self.range = " " + range
         self.desc = "\t" + desc + "\n"
+    def check(self,name,val):
+        '''check if val is an acceptable value, return 1 if not'''
+        if self.type == 'bool':
+            if val != '0' or val != '1' or val != 'y' or val != 'n':
+                sys.stderr.write("%s is bool, "
+                                 "%s is not acceptable "
+                                 "(use [0,1,y,n])\n" % (name,val))
+                return 1
+        return 0
     def show(self,name):
         return underline(self.type) + " " + \
                bold(name + self.default) + self.range + self.desc
@@ -190,6 +205,22 @@ class rsfprog:
         self.vers = None
         self.uses = {}
         self.pars = {}
+    def check(self,par):
+        '''par is name=value pair, check if it makes sense, return 1 if not'''
+        pair = string.split(par,'=')
+        if len(pair) != 2:
+            return 0
+        key = pair[0]
+        val = pair[1]
+        mypar = self.pars.get(key)
+        if mypar:
+            return mypar.check(key,val)    
+        if key[-1] in '123456789':
+            mypar = self.pars.get(key[:-1]+'#')
+            if mypar:
+                return mypar.check(key,val) 
+        sys.stderr.write('No parameter "%s" in %s\n' % (key,self.name))
+        return 1       
     def version(self,vers):
         self.vers = vers
     def synopsis (self,snps,cmts):
@@ -365,7 +396,8 @@ def html(dir):
 
 def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl'):
-    global comment, param, params, synopsis, stringpar, inpout, version
+    global comment, param, params, param2, params2, \
+           synopsis, stringpar, inpout, version
     if not comment:
         comment = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')
         param = re.compile(r'(?:if\s*\(\!)?\s*sf_get(?P<type>bool|int|float)'
@@ -377,13 +409,20 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
                            '[\;])\s*' # ending with ;
                            '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                            '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
-        params = re.compile(r'sf_get(?P<type>bools|ints|floats)'
+        params = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                             '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                             '\s*(?P<var>[\w\_\[\]]+)\s*\,'
-                            '\s*(?P<size>[\w\_]+)\s*[\)]\s*'
+                            '\s*(?P<size>[\w\_]+)\s*\)\s*'
                             '[^\;\{]*[\;\{]\s*' # ending with ; or {
                             '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                             '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+        param2 = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*\([^/]+'
+                            '\/\*\<\s*(?P<name>[\w\#]+)(?:=(?P<default>\S+))?'
+                            '\s*(?P<desc>[^\>]+)\>\*\/')
+        params2 = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
+                             '\s*\([^\,]+\,[^\,]+\,\s*(?P<size>[\w\_]+)\s*\)[^/]+'                             
+                             '\/\*\<\s*(?P<name>[\w\#]+)(?:=(?P<default>\S+))?'
+                             '\s*(?P<desc>[^\>]+)\>\*\/')
         stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
                                '[^\;\{]*[\;\{]'
                                '\s*(?:\/\*\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
@@ -416,12 +455,7 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
         size = par[3]
         range = par[4]
         desc = par[5] + ' [%s]' % size
-        if (type == 'bools'):
-            type = 'bools  ' 
-        elif (type == 'int'):
-            type = 'ints   ' 
-        elif (type == 'floats'):
-            type = 'floats ' 
+
         prog.par(parname,rsfpar(type,None,range,desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                   (name,parname,type,'',range,desc))
@@ -433,17 +467,32 @@ def getprog(file,out,rsfprefix = 'sf',rsfsuffix='rsf',
         default = par[3]
         range = par[4]
         desc = par[5]
-        if (type == 'bool'):
-            if (default == 'true'):
-                default = 'y'
-            elif (default == 'false'):
-                default = 'n'
-            type = 'bool   ' # to align with strings
-            range = '[y/n]'
-        elif (type == 'int'):
-            type = 'int    ' # to align with strings
-        elif (type == 'float'):
-            type = 'float  ' # to align with strings
+
+        prog.par(parname,rsfpar(type,default,range,desc))
+        out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
+                  (name,parname,type,default,range,desc))
+        parline = parline + " %s=%s" % (parname,default)
+    pars = params2.findall(text)    
+    for par in pars:
+        type = par[0]
+        size = par[1]
+        parname = par[2]
+        default = par[3]
+        range = '' # for now
+        desc = par[4] + ' [%s]' % size
+        
+        prog.par(parname,rsfpar(type,default,range,desc))
+        out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
+                  (name,parname,type,default,range,desc))
+        parline = parline + " %s=%s" % (parname,default)
+    pars = param2.findall(text)    
+    for par in pars:
+        type = par[0]
+        parname = par[1]
+        default = par[2]
+        range = '' # for now
+        desc = par[3]
+
         prog.par(parname,rsfpar(type,default,range,desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                   (name,parname,type,default,range,desc))

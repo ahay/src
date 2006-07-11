@@ -28,7 +28,6 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-
 #############################################################################
 # CONFIGURATION VARIABLES
 #############################################################################
@@ -63,6 +62,16 @@ bindir = os.path.join(top,'bin')
 libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
+
+#############################################################################
+# UTILITY FUNCTIONS
+#############################################################################
+
+def mkdir(dir):
+    'Recursive directory making'
+    if not os.path.isdir(dir):
+        mkdir(os.path.dirname(dir))        
+        os.mkdir(dir)
 
 #############################################################################
 # REGULAR EXPRESSIONS
@@ -621,6 +630,9 @@ class TeXPaper(Environment):
         self.scons = []
         self.figs = []
         self.Dir()
+    def Install2(self,dir,fil):
+        mkdir(dir)
+        self.Install(dir,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
@@ -636,8 +648,8 @@ class TeXPaper(Environment):
             tgz = dir+'.tgz'
             self.Tar(tgz,dir)
             self.scons.append(tgz)
-        if self.scons and os.path.isdir(self.docdir):
-            self.Install(self.docdir,self.scons)
+        if self.scons:
+            self.Install2(self.docdir,self.scons)
         self.Alias('install',self.docdir)        
         # reproducible figures
         erfigs = []
@@ -656,9 +668,8 @@ class TeXPaper(Environment):
                   png = re.sub(pssuffix+'$','.'+itype,eps)
                   self.PNGBuild(png,eps)
                   self.imgs.append(png)
-                  if os.path.isdir(resdir2):
-                      self.Install(resdir2,[png,pdf])
-                      self.Alias('install',resdir2)
+                  self.Install2(resdir2,[png,pdf])
+                  self.Alias('install',resdir2)
         self.figs.extend(erfigs)
         # conditionally reproducible figures
         crfigs = []
@@ -672,9 +683,8 @@ class TeXPaper(Environment):
                     self.Math(pdf,mth)
                 crfigs.append(pdf)
             mathdir = os.path.join(self.docdir,'Math')
-            if os.path.isdir(mathdir):
-                self.Install(mathdir,mths)
-                self.Alias('install',mathdir)
+            self.Install2(mathdir,mths)
+            self.Alias('install',mathdir)
         # matlab figures
         mtls = glob.glob('%s/Matlab/*.ml' % topdir)
         if mtls:
@@ -685,9 +695,8 @@ class TeXPaper(Environment):
                     self.Matlab(pdf,mtl)
                 crfigs.append(pdf)
             matlabdir = os.path.join(self.docdir,'Matlab')
-            if os.path.isdir(matlabdir):
-                self.Install(matlabdir,mtls)
-                self.Alias('install',matlabdir)
+            self.Install2(matlabdir,mtls)
+            self.Alias('install',matlabdir)
         # xfig figures:
         figs =  glob.glob('%s/XFig/*.fig' % topdir)
         if figs: 
@@ -698,9 +707,8 @@ class TeXPaper(Environment):
                     self.XFig(pdf,fig)
                 crfigs.append(pdf)
             resdir2 = os.path.join(self.docdir,'XFig')
-            if os.path.isdir(resdir2):
-                self.Install(resdir2,figs)
-                self.Alias('install',resdir2)
+            self.Install2(resdir2,figs)
+            self.Alias('install',resdir2)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
             os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
@@ -713,9 +721,8 @@ class TeXPaper(Environment):
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
                     resdir2 = os.path.join(self.docdir,os.path.dirname(png))
-                    if os.path.isdir(resdir2):
-                        self.Install(resdir2,[png,pdf])
-                        self.Alias('install',resdir2)
+                    self.Install2(resdir2,[png,pdf])
+                    self.Alias('install',resdir2)
         self.figs.extend(nrfigs)
     def Paper(self,paper,lclass='geophysics',
               use=None,include=None,options=None):
@@ -724,9 +731,8 @@ class TeXPaper(Environment):
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         wiki = self.Wiki(target=paper,source=[paper+'.ltx',pdf])
         pdf[0].target_scanner = LaTeX
-        if os.path.isdir(self.docdir):
-            pdfinstall = self.Install(self.docdir,paper+'.pdf')
-            self.Alias(paper+'.install',pdfinstall)
+        pdfinstall = self.Install2(self.docdir,paper+'.pdf')
+        self.Alias(paper+'.install',pdfinstall)
         if acroread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
@@ -745,12 +751,11 @@ class TeXPaper(Environment):
             self.Depends(html,css)
             self.Depends(html,icons)
             self.Alias(paper+'.html',html)
-            if os.path.isdir(self.docdir):
-                docdir = os.path.join(self.docdir,dir)
-                dochtml = os.path.join(docdir,'index.html')
-                self.Command(dochtml,html,
-                             'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
-                self.Alias(paper+'.install',dochtml)
+            docdir = os.path.join(self.docdir,dir)
+            dochtml = os.path.join(docdir,'index.html')
+            self.Command(dochtml,html,
+                         'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
+            self.Alias(paper+'.install',dochtml)
     def End(self,paper='paper',**kw):
          if os.path.isfile(paper+'.tex'):
             apply(self.Paper,(paper,),kw)

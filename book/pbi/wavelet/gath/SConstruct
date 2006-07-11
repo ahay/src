@@ -198,32 +198,32 @@ Flow('nmo','gath vel','mutter v0=%g | nmo velocity=${SOURCES[1]} str=0' % 1400)
 
 Result('nmo','grey unit1=s unit2=m title="Normal Moveout" ')
 
-## Flow('gaths','elf','window n2=128')
+Flow('gaths','elf','window n2=128')
 
-## Flow('pat','gaths','patch w=800,128,300')
-## Flow('dips','pat','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0')
-## Flow('dip','dips','patch inv=y weight=y')
+Flow('pat','gaths','patch w=800,128,300')
+Flow('dips','pat','dip n4=0 rect1=10 rect2=10 rect3=10 p0=0 pmin=0')
+Flow('dip','dips','patch inv=y weight=y')
 
-## Flow('seis','gaths dip',
-##      'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
+Flow('seis','gaths dip',
+     'seislet dip=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
 
-## Flow('sstack','seis','window n2=1')
+Flow('sstack','seis','window n2=1')
 
-## Plot('sstack',
-##      '''
-##      grey label2=Midpoint unit2=m label1=Time unit1=s
-##      title="Seislet Stack"
-##      ''')
+Plot('sstack',
+     '''
+     grey label2=Midpoint unit2=m label1=Time unit1=s
+     title="Seislet Stack"
+     ''')
 
-## Fetch('elf-stk.rsf','masha')
+Fetch('elf-stk.rsf','masha')
 
-## Plot('stack','elf-stk.rsf',
-##      '''
-##      dd form=native |
-##      grey label2=Midpoint unit2=m label1=Time unit1=s
-##      title="NMO Stack"
-##      ''')
+Plot('stack','elf-stk.rsf',
+     '''
+     dd form=native |
+     grey label2=Midpoint unit2=m label1=Time unit1=s
+     title="NMO Stack"
+     ''')
 
-## Result('sstack','stack sstack','SideBySideAniso')
+Result('sstack','stack sstack','SideBySideAniso')
 
 End()

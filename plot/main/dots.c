@@ -138,6 +138,7 @@ int main (int argc, char* argv[])
 
     labels = (char**) sf_alloc(n2,sizeof(char*));
     if (!sf_getstrings("labels",labels,n2)) labels[0] = NULL;
+    /* trace labels */
 
     if (!sf_getfloat("xxscale",&xxscale)) xxscale=1.;
     /* x scaling */

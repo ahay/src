@@ -213,6 +213,7 @@ class Project(Environment):
         opts = Options(os.path.join(libdir,'rsfconfig.py'))
         rsfconf.options(opts)
         opts.Add('TIMER','Whether to time execution')
+        opts.Add('CHECKPAR','Whether to check parameters')
         opts.Update(self)
         cwd = os.getcwd()
         self.path = datapath
@@ -288,6 +289,8 @@ class Project(Environment):
             stdin=0
         lines = string.split(flow,'&&')
         steps = []
+        checkpar = self.get('CHECKPAR')
+        checkpar = checkpar and checkpar[0] != 'n' and checkpar[0] != '0'
         for line in lines:
             substeps = []
             sublines = string.split(line,'|')
@@ -303,6 +306,11 @@ class Project(Environment):
                     else:
                         rsfprog = prefix + command            
                     if rsfdoc.progs.has_key(rsfprog):
+                        if checkpar:
+                            for par in pars:
+                                if rsfdoc.progs[rsfprog].check(par):
+                                    sys.stderr.write('Failed on "%s"\n' % subline)
+                                    sys.exit(1)
                         command = os.path.join(bindir,rsfprog+self.progsuffix) 
                         sources.append(command)
                         if rsfprog not in self.coms:
