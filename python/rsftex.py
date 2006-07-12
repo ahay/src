@@ -69,6 +69,8 @@ figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
 def mkdir(dir):
     'Recursive directory making'
+    while os.path.basename(dir) == '.':
+        dir = os.path.dirname(dir)
     if not os.path.isdir(dir):
         mkdir(os.path.dirname(dir))        
         os.mkdir(dir)

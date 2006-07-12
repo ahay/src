@@ -1,0 +1,31 @@
+from rsfproj import *
+
+for a in (0,1):
+    fern = 'fern%d' % a 
+    Flow(fern,None,'fern n=100000 angle=%d seed=2006' % a)
+    Plot(fern,
+         '''
+         graph symbol=. plotcol=3 wantaxis=n
+         title="Fractal Fern %d" wheretitle=b
+         ''' % (2-a))
+
+Result('fern','fern1 fern0','SideBySideAniso')
+
+Flow('fern','fern0',
+     'put d1=1 o1=0 | spray axis=2 n=1 | spray axis=3 n=100 d=1 o=1')
+Flow('mask','fern',
+     '''
+     real |
+     math output="1000*x3-x1" |
+     mask min=0 |
+     dd type=float |
+     rtoc |
+     add mode=p $SOURCE
+     ''')
+Plot('fern','mask',
+     '''
+     graph min2=0 max2=10 min1=-3 max1=3
+     wantaxis=n title="Fractal Fern" symbol=. plotcol=4
+     ''')
+
+End()

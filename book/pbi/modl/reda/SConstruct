@@ -53,8 +53,8 @@ layers = (
 
 nlays = len(layers)
 for i in range(nlays):
-    inp = 'inp%d' % (i+1)
-    Flow('./'+inp,None,
+    inp = 'inp%d.rsf' % (i+1)
+    Flow(inp,None,
          'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
          (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
                       ' '),

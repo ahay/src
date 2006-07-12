@@ -37,7 +37,7 @@ Flow('wgfit','wgsmb','pick rect1=17 rect2=17 vel0=0.7')
 def graph(col=7,fat=1):
     return '''
     graph min2=0.3 max2=0.7 pad=n transp=y yreverse=y wanttitle=n
-    plotcol=%d plotfat=%d
+    plotcol=%d plotfat=%d wantaxis=n
     ''' % (col,fat)
 
 Flow('fit','wgfit','window n3=1')

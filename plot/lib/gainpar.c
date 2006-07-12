@@ -27,7 +27,6 @@
 static void gain (sf_file in, float **data, int n1, int n2,int step,
 		  float pclip,float phalf,
 		  float *clip, float *gpow, float bias, int nt, float* buf);
-static float quantile (float  p, float* x, int n);
 
 void vp_gainpar (sf_file in, float **data, 
 		 int n1, int n2 /* panel size */,
@@ -41,7 +40,7 @@ void vp_gainpar (sf_file in, float **data,
 		 int panel      /* gain type */)
 /*< Find clip and gpow parameters >*/
 {
-    int nt, i3;
+    int nt, i3, nclip, nhalf;
     float *buf, *clipnp, *gpownp;
 
     nt = n1 / step;
@@ -62,8 +61,11 @@ void vp_gainpar (sf_file in, float **data,
 	    if (NULL == in) data += n1*n2; /* next panel */
 	}
 
-	if (*clip==0.) *clip = quantile (pclip,clipnp,n3);
-	if (*gpow==0.) *gpow = quantile (phalf,gpownp,n3);
+	nclip = SF_MAX(SF_MIN(n3*pclip/100. + .5,n3-1),0);
+	nhalf = SF_MAX(SF_MIN(n3*phalf/100. + .5,n3-1),0);
+
+	if (*clip==0.) *clip = sf_quantile (nclip,n3,clipnp);
+	if (*gpow==0.) *gpow = sf_quantile (nhalf,n3,gpownp);
         free(clipnp);
         free(gpownp);
     }	
@@ -99,7 +101,7 @@ static void gain (sf_file in, float **data, int n1, int n2, int step,
 		if(buf[j] > clip) clip=buf[j];
 	    }	
 	} else {
-	    clip = quantile(pclip,buf,n);
+	    clip = sf_quantile(SF_MAX(ntest,0),n,buf);
 	}
 	*clipp = clip;
     }
@@ -112,7 +114,7 @@ static void gain (sf_file in, float **data, int n1, int n2, int step,
 		if(buf[j] > half) half=buf[j];
 	    }	
 	} else {
-	    half = quantile (phalf,buf,n);
+	    half = sf_quantile (SF_MAX(ntest,0),n,buf);
 	}
 	
 	if (clip==0. || half == clip || half/clip < 0.001) {
@@ -127,33 +129,4 @@ static void gain (sf_file in, float **data, int n1, int n2, int step,
 	}
 	*gpowp = gpow;
     }
-}
-
-static float quantile (float  p, float* x, int n)
-{
-  int q;
-  float *i, *j, ak, *low, *hi, buf, *k;
-
-  q = (p*n)/100.;
-  if      (q < 0)  q=0;
-  else if (q >= n) q=n-1;
-  low=x;
-  hi=x+n-1;
-  k=x+q; 
-  while (low<hi) {
-      ak = *k;
-      i = low; j = hi;
-      do {
-	  while (*i < ak) i++;     
-	  while (*j > ak) j--;     
-	  if (i<=j) {
-	      buf = *i;
-	      *i++ = *j;
-	      *j-- = buf;
-	  }
-      } while (i<=j);
-      if (j<k) low = i; 
-      if (k<i) hi = j;
-  }
-  return (*k);
 }
