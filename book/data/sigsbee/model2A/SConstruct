@@ -10,11 +10,11 @@ SUFX = '.sgy'
 for c in ('migration_velocity','stratigraphy'):
 
     if(c=='migration_velocity'):
-        v='vmig'
+        v='vmig2A'
         o=10025
         d=37.5
     else:
-        v='vstr'
+        v='vstr2A'
         o=10000
         d=25
     
@@ -29,7 +29,8 @@ for c in ('migration_velocity','stratigraphy'):
          o1=0  d1=25   label1=z unit1=ft
          o2=%f d2=%f   label2=x unit2=ft
          ''' %(o,d) ,stdin=0)
-
-    Result(v,v,'grey color=j allpos=y title=Velocity')
-
+    if(c=='migration_velocity'):
+        Result(v,v,'grey color=j allpos=y title=Migration\ Velocity')
+    else:
+        Result(v,v,'grey color=j allpos=y title=Stratigraphic\ Velocity')
 End()

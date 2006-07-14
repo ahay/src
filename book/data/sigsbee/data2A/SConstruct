@@ -1,12 +1,17 @@
+    #########################
+    #   Sigsbee Shot Data   #
+    #########################
 from rsfproj import *
-
- ##
- # Sigsbee 2A
- ##
-
+#------- Define Variables and Filenames ------#
 data = 'sigsbee2a_nfs.sgy'
+
+
+#------------- Import Data -------------------#
+#-- Uses ftp program Fetch
 Fetch(data ,'sigsbee')
 
+
+#----------  Convert Data --------------------#
 Flow('zdata tzdata ./dhead ./bdhead',data,
      '''
      segyread
@@ -30,9 +35,15 @@ Flow('sraw','zdata os',
 Flow('shot','sraw',
      '''
      put                label1=t unit1=s
-	d2=75           label2=o unit2=ft
-	d3=150 o3=10925 label3=s unit2=ft |
+        d2=75           label2=o unit2=ft
+        d3=150 o3=10925 label3=s unit2=ft |
      mutter half=false t0=1.0 v0=6000
      ''')
 
+#----- Create sfin file -------------------#
+Flow('inShot','shot','in $SOURCE')
+
+#---------------- Plot Data ---------------#
+Result('shot','window $SOURCE n3=1 f3=70 | grey title=Shot\ 70')
 End()
+
