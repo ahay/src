@@ -1,5 +1,32 @@
 from rsfproj import *
 
+# rule to output velocity in ProMAX
+def asc2promax(target=None,source=None,env=None):
+    inp = open(str(source[0]),'r')
+    file = str(target[0])
+    out = open(file,'w')
+    out.write('DESC=RSF\nPKEYNAME=CDP\nSKEYNAME=TIME\nZKEYNAME=VEL_RMS\n')
+    cdps = env.get('cdps')
+    o2 = env.get('o2')
+    d2 = env.get('d2')
+    times = env.get('times')
+    o1 = env.get('o1')
+    d1 = env.get('d1')
+    for cdp in xrange(cdps):
+        xcdp = o2+cdp*d2
+        out.write('     CDP=%10.1f\n' % xcdp) 
+        for time in xrange(times):
+            xtime = o1+time*d1
+            line = inp.readline()
+            out.write('\t\tTIME= %6.2f VEL_RMS= ' % xtime +line) 
+    out.close()
+    inp.close()
+
+Promax = Builder(action=Action(asc2promax),varlist=['cdps','o2','d2',
+                                                    'times','o1','d1'],
+                 src_suffix='.asc',suffix='.vel')
+env = Environment(tools=[],BUILDERS={'Promax':Promax})
+
 import os
 private = {'login':os.environ.get('BEG_LOGIN'),
            'password':os.environ.get('BEG_PASSWORD'),
@@ -36,6 +63,15 @@ Flow('pik','scn',
      pick rect1=100 rect2=40
      ''')
 
+Flow('piks.rsf pik.asc','pik',
+     '''
+     scale dscale=1000 | window j1=100 min1=1 |
+     dd form=ascii line=1 format="%6.2f" out=${TARGETS[1]}
+     ''')
+env.Promax('pik',
+           cdps=1701,o2=1389044.0,d2=1.0,
+           times=18,o1=1000.0,d1=400.0)
+           
 Result('vel','pik',
        '''
        window |

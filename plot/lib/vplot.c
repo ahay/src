@@ -65,8 +65,22 @@ enum {PEN, ROMANS, ROMAND, ROMANC, ROMANT, ITALICC, ITALICT,
       MATH, MISC};
 /*^*/
 
-enum {TH_NORMAL, TH_LEFT, TH_CENTER, TH_RIGHT, TH_SYMBOL};
-enum {TV_NORMAL, TV_BOTTOM, TV_BASE, TV_HALF, TV_CAP, TV_TOP, TV_SYMBOL};
+enum {
+    TH_NORMAL, /* Use the default */
+    TH_LEFT,   /* Left justify */
+    TH_CENTER, /* Center */
+    TH_RIGHT,  /* Right justify */
+    TH_SYMBOL  /* Position the character for use as a marking point */
+};
+enum {
+    TV_NORMAL, /* Use the default */
+    TV_BOTTOM, /* Bottom of letters */
+    TV_BASE,   /* Bottom of descenders */
+    TV_HALF,   /* Centered */
+    TV_CAP,    /* Top of capital letters */
+    TV_TOP,    /* Top of writing area */
+    TV_SYMBOL  /* Position the character for use as a marking point */
+};
 /*^*/
 
 enum {
@@ -104,10 +118,15 @@ enum {
 
 typedef enum {
     VP_NO_STYLE_YET=-1,
-    VP_STANDARD,
-    VP_ROTATED,
+    VP_STANDARD, /* Origin in lower left, scaled so that the maximum Y	value
+		    (top of  the  screen)  is VP_STANDARD_HEIGHT */
+    VP_ROTATED, /* Origin in upper left, Y-axis horizontal increasing
+		   to the right, X-axis vertical and increasing down,
+		   scaled so that the maximum X value (bottom of  the
+		   screen)  is VP_ROTATED_HEIGHT.  Use is discouraged */
     VP_NORM,
-    VP_ABSOLUTE
+    VP_ABSOLUTE /* Origin  in  lower left, plotted in physical inches
+		   on the device */
 } vp_plotstyle;
 /*^*/
 
@@ -124,14 +143,21 @@ enum {
 /*^*/
 
 enum {
-    VP_NO_CHANGE=-1,
-    VP_STRING,
-    VP_CHAR,
-    VP_STROKE
+    VP_NO_CHANGE=-1, /* Use the previous value. */
+    VP_STRING,       /* Use the hardware  text  capabilities  to
+			write the whole string. */
+    VP_CHAR,         /* Use hardware  characters,	but  position
+			them individually. */
+    VP_STROKE        /* Software text. */
 };
 /*^*/
 
-enum {OVLY_NORMAL, OVLY_BOX, OVLY_SHADE, OVLY_SHADE_BOX};    
+enum {
+    OVLY_NORMAL,    /* draw the text over */
+    OVLY_BOX,       /* draw a box around the text */
+    OVLY_SHADE,     /* clear a box under the text */
+    OVLY_SHADE_BOX  /* box the text and clear under it */
+};    
 /* text overlay */
 /*^*/
 
@@ -207,7 +233,7 @@ void vp_erase (void)
 }
 
 void vp_fat (int f)
-/*< set fat >*/
+/*< set line width >*/
 {
     (void) putchar (VP_FAT);
     vp_putint (f);
@@ -248,9 +274,15 @@ void vp_ufill (const float *xp /* [np] */,
     }
 }
 
-void vp_area (const float *xp, const float *yp, int np, 
-	      int fat, int xmask, int ymask)
-/*< old-style polygon >*/
+void vp_area (const float *xp, const float *yp /* points [np] */,
+	      int np                           /* number of points */,
+	      int fat                          /* fatness of the border line */, 
+	      int xmask, int ymask             /* rectangles for filling
+						  (1,1 - solid fill;
+						  1,2 - horizontal lines;
+						  0,1 - not filled;
+						  4,4 - gray color) */)
+/*< Fill the aread (old-style polygon) >*/
 {
     int i;
 
@@ -303,10 +335,13 @@ void vp_coltab (int color /* color index */,
 }
 
 
-void vp_gtext (float x, float y, 
-	       float xpath, float ypath, 
-	       float xup, float yup, const char *string)
-/*< output text string >*/
+void vp_gtext (float x, float y         /* reference point */, 
+	       float xpath, float ypath /* vector pointing for the string */,
+	       float xup, float yup     /* vector pointing in the ‘‘up’’ 
+					   direction  for  individual letters */, 
+	       const char *string)
+/*< output text string using the currently-defined font, 
+  precision,  and text  alignment >*/
 {
     pout (x, y, false);
     (void) putchar (VP_GTEXT);
@@ -336,8 +371,13 @@ void vp_ugtext (float x, float y,
 }
 
 
-void vp_hatchload (int angle,int nhatch, int ihatch, int *hatch)
-/*< ? >*/
+void vp_hatchload (int angle  /* line angle */,
+		   int nhatch /* number of lines */, 
+		   int ihatch /* pattern number */, 
+		   int *hatch /* [2 * 4 * nhatch]  for each  set  of	lines
+				 (nhatch * 2) contains 4 elements for
+				 ‘fatness’, ‘color’, ‘offset’, ‘repeat interval’ */)
+/*< Load a hatch pattern  >*/
 {
     int c, i;
 
@@ -392,8 +432,11 @@ void vp_uorig (float x,float  y)
     ufy = y;
 }
 
-void vp_patload (int ppi, int  nx, int ny, int ipat, int *col)
-/*< ? >*/
+void vp_patload (int ppi          /* pixels per inch */, 
+		 int  nx, int ny  /* dimensions */,
+		 int ipat         /* pattern number */, 
+		 int *col         /* [nx * ny] pattern (color table numbers) */)
+/*<Load a raster pattern  >*/
 {
     int c, i;
 
@@ -546,7 +589,7 @@ void vp_udraw (float x,float  y)
 
 void vp_pmark (int npts, int mtype, int msize, 
 	       const float *xp, const float *yp)
-/*< ? >*/
+/*< Plot polymarkers >*/
 {
     int i;
 
@@ -562,7 +605,7 @@ void vp_pmark (int npts, int mtype, int msize,
 }
 
 void vp_purge (void)
-/*< purge >*/
+/*< Flush the output >*/
 {
     (void) putchar (VP_PURGE);
     (void) fflush (stdout);
@@ -624,9 +667,12 @@ void vp_rascoltab (int nreserve, const char *colname)
     }
 }
 
-void vp_raster (unsigned char **array, bool bit, int offset, 
-		int xpix, int ypix, 
-		float xll, float yll, float xur,float yur, int orient)
+void vp_raster (unsigned char **array, 
+		bool bit               /* one bit/byte per pixel */, 
+		int offset             /* add offset for bytes */, 
+		int xpix, int ypix     /* number of pixels */, 
+		float xll, float yll, 
+		float xur,float yur    /* display coordinates */, int orient)
 /*< Output a raster array >*/
 {
     int i, n, nn;
@@ -741,7 +787,11 @@ void vp_style (vp_plotstyle st)
     }
 }
 
-void vp_text (float x, float y, int size, int orient, const char *string)
+void vp_text (float x, float y    /* coordinate of the reference point */, 
+	      int size            /* height of character */, 
+	      int orient          /* text drawing direction ( in degrees counter-clockwise
+				     from horizontal, right-facing) */, 
+	      const char *string /* test */)
 /*< output text string >*/
 {
     if (0 == size) return;
@@ -765,7 +815,9 @@ void vp_utext (float x, float y, int size, int orient, const char *string)
     vp_text (x, y, size, orient, string);
 }
 
-void vp_tfont (int font1, int prec1, int ovly1)
+void vp_tfont (int font1 /* which font to use */, 
+	       int prec1 /* font precision */, 
+	       int ovly1 /* overlay mode */)
 /*< set text font >*/
 {
     font = font1;
@@ -818,14 +870,16 @@ void vp_where (float *x, float *y)
 }
 
 void vp_color (int col)
-/*< set pen color >*/
+/*< set drawing color >*/
 {
     (void) putchar (VP_COLOR);
     vp_putint (col);
 }
 
-void vp_arrow (float x1, float y1, float x, float y, float r)
-/*< plot an arrow from (x1,y1) to (x,y) with arrow-size r >*/
+void vp_arrow (float x1, float y1 /* starting point */, 
+	       float x, float y   /* end point */, 
+	       float r            /* arrow size */)
+/*< plot an arrow >*/
 {
     float beta, alpha, xp[4], yp[4];
     const float pio4=0.785398;
@@ -950,7 +1004,7 @@ void vp_setdash (const float *dash, const float *gapp, int np)
     }
 }
 
-void vp_bgroup(char *string)
+void vp_bgroup(char *string /* group name */)
 /*< begin group >*/
 {
     char c;
@@ -964,7 +1018,7 @@ void vp_bgroup(char *string)
 }
 
 void vp_break(void)
-/*< break >*/
+/*< Interrupt the output processing >*/
 {
     (void) putchar (VP_BREAK);
 }

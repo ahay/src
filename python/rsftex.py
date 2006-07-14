@@ -74,6 +74,7 @@ def mkdir(dir):
     if not os.path.isdir(dir):
         mkdir(os.path.dirname(dir))        
         os.mkdir(dir)
+    return dir
 
 #############################################################################
 # REGULAR EXPRESSIONS
@@ -633,8 +634,8 @@ class TeXPaper(Environment):
         self.figs = []
         self.Dir()
     def Install2(self,dir,fil):
-        mkdir(dir)
-        self.Install(dir,fil)
+        dir2 = mkdir(dir)
+        self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
         # reproducible directories
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):

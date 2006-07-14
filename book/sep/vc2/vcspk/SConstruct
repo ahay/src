@@ -1,0 +1,28 @@
+from rsfproj import *
+
+Flow('spk',None,
+     '''
+     spike n1=129 n2=1 n3=129 n4=1
+     d1=0.004 d2=0.008 d3=0.008 d4=0.008
+     nsp=3 k1=100,75,50 k2=1,1,1 k3=50,75,100 |
+     bandpass flo=10 fhi=50
+     ''')
+Flow('pkx','spk','cosft sign3=1 sign4=1')
+
+dv = {'p': 0.5,
+      'm': -0.3}
+
+for c in dv.keys():
+    pl = 'pl'+c
+    Flow(pl,'pkx',
+         '''
+         fourvc pad=256 pad2=512 nv=1 v0=1. dv=%g |
+         cosft sign3=-1 sign4=-1 |
+         window
+         ''' % dv[c])
+    Plot(pl,
+         'grey label2=Midpoint title="From 1 km/s to %g km/s" ' % (1+dv[c]))
+
+Result('velimp','plp plm','SideBySideIso')
+     
+End()

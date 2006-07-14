@@ -23,7 +23,7 @@ Result('migiter','err0 err1',
        '''
        cat axis=2 ${SOURCES[1]} |
        graph min2=0 max2=0.3 
-       labelsz=10 titlesz=12 dash=1,0
+       labelsz=10 titlesz=12 dash=1,0 unit1= unit2=
        title="Iterative Convergence"
        ''')
 Plot('mig','mig1','grey labelsz=10 titlesz=12 title="Least-squares Image" ')
