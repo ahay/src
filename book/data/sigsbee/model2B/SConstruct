@@ -7,17 +7,18 @@ from rsfproj import *
 PRFX = 'sigsbee2b_'
 SUFX = '.segy' 
 
-for c in ('migration_velocity','stratigraphy'):
+for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
 
     if(c=='migration_velocity'):
         v='vmig2B'
         o=10025
         d=37.5
-    else:
+    if(c=='stratigraphy'):
         v='vstr2B'
         o=10000
         d=25
-    
+    if(c=='reflection_coefficients'):
+        v='reflectionCoefficientsB'
     h = c + 'head'
     t = PRFX + c + SUFX
     Fetch(t,'sigsbee')
@@ -30,7 +31,10 @@ for c in ('migration_velocity','stratigraphy'):
          o2=%f d2=%f   label2=x unit2=ft
          ''' %(o,d) ,stdin=0)
     if(c=='migration_velocity'):
-        Result(v,v,'grey color=j allpos=y title=Migration\ Velocity')
-    else:
-        Result(v,v,'grey color=j allpos=y title=Stratigraphic\ Velocity')
+        Result(v,v,'grey color=j scalebar=y allpos=y title=Migration\ Velocity')
+    if(c=='stratigraphy'):
+        Result(v,v,'grey color=j scalebar=y allpos=y title=Stratigraphic\ Velocity')
+    if(c=='reflection_coefficients'):
+        Result(v,v,'grey color=i scalebar=y minval=0 maxval=.1 title=Reflection\ Coefficients')
 End()
+
