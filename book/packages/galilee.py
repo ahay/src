@@ -1,6 +1,6 @@
 from rsfproj import *
 
-def Galilee(name,grad=1):
+def Galilee(name,nx=280,ny=440):
     '''Extracts the Sea of Galiee dataset and bins it'''
 
     Fetch('galilee.h','galilee')
@@ -17,7 +17,7 @@ def Galilee(name,grad=1):
          math output=%g-input |
          bin interp=1 xkey=0 ykey=1 head=$SOURCE
          xmin=198 xmax=212 ymin=233 ymax=257
-         nx=280 ny=440
-         ''' % base)
+         nx=%d ny=%d
+         ''' % (base,nx,ny))
  
     

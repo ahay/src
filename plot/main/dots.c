@@ -169,6 +169,8 @@ int main (int argc, char* argv[])
     marginb = screenhigh * ((NULL == label)? 0.03: 0.15);
     marginr = screenwide * 0.03;
 
+    if (NULL != labels[0]) margint += 0.03*labelsz;
+
     dd1 = (screenwide - marginl - marginr) / ( n1             );
     dd2 = (screenhigh - marginb - margint) / ((n2-1) + overlap);
 

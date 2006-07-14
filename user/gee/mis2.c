@@ -12,7 +12,8 @@ void mis2(int niter         /* number of iterations */,
 	  int nx            /* model size */, 
 	  float *xx         /* model */, 
 	  filter aa         /* helix filter */, 
-	  const bool *known /* mask for known data */, 
+	  const bool *known /* mask for known data */,
+	  float eps         /* regularization parameter */,
 	  bool doprec       /* to apply preconditioning */) 
 /*< interpolate >*/
 {
@@ -23,7 +24,7 @@ void mis2(int niter         /* number of iterations */,
 	sf_mask_init(known);
 	polydiv_init(nx, aa);
 	sf_solver_prec(sf_mask_lop, sf_cgstep, polydiv_lop, nx, nx, nx, 
-		       xx, xx, niter, 0., "end");
+		       xx, xx, niter, eps, "end");
 	polydiv_close();
     } else {                               /*  regularized */
 	dd = sf_floatalloc(nx);

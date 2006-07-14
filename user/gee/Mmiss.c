@@ -26,7 +26,7 @@
 int main(int argc, char* argv[])
 {
     int dim, na,ia, niter, n1, n2, maxlag, padin, padout, p1, p2, j, i;
-    float a0, *mm, *kk;
+    float a0, *mm, *kk, eps;
     bool prec, exact, *known;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], a[SF_MAX_DIM];
     filter aa;
@@ -47,6 +47,9 @@ int main(int argc, char* argv[])
     /* Number of iterations */
     if (!sf_getbool("exact",&exact)) exact=true;
     /* If y, preserve the known data values (when prec=y) */
+
+    if (!sf_getfloat("eps",&eps)) eps=0.;
+    /* regularization parameter */
 
     if (!sf_getint("padin",&padin)) padin=0;
     /* Pad beginning */
@@ -154,7 +157,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    mis2 (niter, n2, mm, aa, known, prec);
+    mis2 (niter, n2, mm, aa, known, eps, prec);
 
     if (prec && exact) {
 	for (i=p1; i < p1+p2; i++) {

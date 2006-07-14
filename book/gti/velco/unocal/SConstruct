@@ -18,7 +18,7 @@ def asc2promax(target=None,source=None,env=None):
         for time in xrange(times):
             xtime = o1+time*d1
             line = inp.readline()
-            out.write('\t\tTIME= %6.2f VEL_RMS= ' % xtime +line) 
+            out.write(' ' * 23 + 'TIME= %6.2f   VEL_RMS= ' % xtime +line) 
     out.close()
     inp.close()
 
