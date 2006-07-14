@@ -1,0 +1,52 @@
+#########################
+#Sigsbee 2B Shot Data   #
+#########################
+#------------------------
+#  Free Surface Model
+#------------------------
+from rsfproj import *
+
+#------- Define Variables and Filenames ------#
+data = 'sigsbee2b_fs.segy'
+
+#------------- Import Data -------------------#
+#-- Uses ftp program Fetch
+Fetch(data ,'sigsbee')
+
+
+#----------  Convert Data --------------------#
+Flow('zdata tzdata ./dhead ./bdhead',data,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+# create sraw(t,o,s): o=full offset, s=shot position, t=time
+
+Flow('ss','tzdata','dd type=float | headermath output="10925+fldr*150" | window')
+Flow('oo','tzdata','dd type=float | headermath output="offset"         | window')
+Flow('si','ss','math output=input/150')
+Flow('oi','oo','math output=input/75')
+Flow('os','oi si','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=int')
+Flow('sraw','zdata os',
+     '''
+     intbin head=${SOURCES[1]} xkey=0 ykey=1
+     ''')
+Flow('shotFs2B','sraw',
+     '''
+     put                label1=t unit1=s
+        d2=75           label2=o unit2=ft
+        d3=150 o3=10925 label3=s unit2=ft |
+     mutter half=false t0=1.0 v0=6000
+     ''')
+
+#----- Create sfin file -------------------#
+Flow('inShotFs2B','shotFs2B','in $SOURCE')
+
+#---------------- Plot Data ---------------#
+Result('shotFs2B','window $SOURCE n3=1 f3=70 | grey title=Shot\ 70')
+End()
+
