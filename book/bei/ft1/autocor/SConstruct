@@ -63,7 +63,7 @@ labels = labels + ':exp:gauss:rand:s ran'
 def dots(title):
     return '''
     dots dots=0 connect=0 overlap=.75 yreverse=1 labelsz=12
-    title="%s"
+    title="%s" 
     ''' % title
 
 Flow('sig',signals,'cat axis=2 ${SOURCES[1:%d]}' % len(signals))

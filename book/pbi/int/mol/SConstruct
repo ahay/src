@@ -1,0 +1,28 @@
+from rsfproj import *
+
+y = (16,18,21,17,15,12)
+ny = len(y)
+
+Flow('y.asc',None,
+     'echo %s n1=%d data_format=ascii_float in=$TARGET o1=1 d1=1' %
+     (string.join(map(str,y),' '),ny))
+
+map = ' n1=111 o1=0.75 d1=0.05'
+max = ' min1=0.5 max1=6.5 min2=10 max2=22'
+
+Flow('y','y.asc','dd form=native')
+Plot('y','graph symbol=o wanttitle=n wantaxis=n symbolsz=8 plotcol=5' + max)
+
+Flow('poly','y','remap1 order=%d' % ny + map)
+Plot('poly','graph title="Full Degree Polynomial" ' + max)
+Result('poly','y poly','Overlay')
+
+Flow('poly2','y','remap1 order=2' + map)
+Plot('poly2','graph title="Piecewise Linear" ' + max)
+Result('poly2','y poly2','Overlay')
+
+Flow('spline','y','spline' + map)
+Plot('spline','graph title=Spline ' + max)
+Result('spline','y spline','Overlay')
+
+End()

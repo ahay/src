@@ -32,7 +32,7 @@ Result('kirspec','smod skir2 skir',
        '''
        cat axis=2 ${SOURCES[1:3]} |
        dots yreverse=1 labels="m=model:f * recon:recon"
-       label1="Frequency (Hz)" dots=0
+       label1=Frequency unit1=Hz dots=0
        ''')
 
 Result('skmod','mod1 dki1 mod2 dki2','TwoRows')

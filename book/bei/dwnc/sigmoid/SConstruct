@@ -53,7 +53,7 @@ Flow('pspec','pha3','spectra all=y | scale axis=1')
 Result('phaspec','mspec pspec',
        '''
        cat axis=2 ${SOURCES[1]} |
-       dots yreverse=1 labels="model:recon" label1=Hz dots=0
+       dots yreverse=1 labels="model:recon" label1=Frequency unit1=Hz dots=0
        ''')
 
 Result('commod','mod3 mod2 mod1','OverUnderAniso',vppen='txscale=1.5')
