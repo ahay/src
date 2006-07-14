@@ -72,7 +72,7 @@ def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
     Flow( [dat,wfl],[wav,vel,den,sou,rec],
          '''
          afmodP ompchunk=1
-         verb=y abc=y free=n snap=y jsnap=1 %s
+         verb=y abc=y free=y dens=y snap=y jsnap=1 %s
          nbz=100 tz=0.0035
          nbx=100 tx=0.0035
          vel=${SOURCES[1]}
@@ -163,14 +163,22 @@ Result('ro',['ro','ss','rr'],'Overlay')
 Result('vm',['vm','ss','rr'],'Overlay')
 Result('rm',['rm','ss','rr'],'Overlay')
 
-amodel('do','wo','wav','vo','ro','ss','rr','free=n dens=y')
+amodel('do','wo','wav','vo','ro','ss','rr','free=y dens=y')
 amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y')
 
-Result('wo','window j3=50' + wgrey('pclip=99',par))
-Result('do','transp |' + dgrey('pclip=99',par))
+Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
+Flow('wx','ww wo','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
 
+Result('wo','window j3=50' + wgrey('pclip=99',par))
 Result('ww','window j3=50' + wgrey('pclip=99',par))
+Result('wx','window j3=50' + wgrey('pclip=99',par))
+
+Result('do','transp |' + dgrey('pclip=99',par))
 Result('dd','transp |' + dgrey('pclip=99',par))
+Result('dx','transp |' + dgrey('pclip=99',par))
+
+Result('alld','do dd dx',
+       'cat axis=3 space=n ${SOURCES[0:2]} | transp | grey gainpanel=e pclip=99')
 
 for i in range(5):
     k = 0.25 * i
