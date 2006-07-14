@@ -4,46 +4,77 @@
 
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
-\section{Introduction}
-The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several datasets between September 2001 and November 2002.  These synthetic data model the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico.  Additional information may be found at: \emph{http://www.delphi.tudelft.nl/SMAART/}.  The datasets remain the property of SMAART and are used under the agreement found at: \emph{http://www.delphi.tudelft.nl/SMAART/DataReleaseAgreement.pdf}.  
-\\
-\\
-\textbf	{
-	Data Type:} \emph{2D model and acoustic finite difference synthetic dataset with constant density}\\
-\textbf	{   
-	Source:} \emph{SMAART consortium comprised of BHPBilliton Petroleum, BP, and the ChevronTexaco Exploration and Production Technology Company}\\
-\textbf {                             
- 	Location:} \emph{http://www.delphi.tudelft.nl/SMAART/sigsbee2a.htm}\\
-\textbf	{
-       	Format:} \emph{SEGY} \\
+\noindent
+\textbf	{Data Type:} \emph{2D model and acoustic finite difference synthetic dataset with constant density}\\
+\textbf	{Source:} \emph{SMAART consortium comprised of BHPBilliton Petroleum, BP, and the ChevronTexaco Exploration and Production Technology Company}\\
+\textbf {Location:} \emph{http://www.delphi.tudelft.nl/SMAART/sigsbee2a.htm}\\
+\textbf	{Format:} \emph{SEGY} \\
 \textbf{
 	Date of origin:} \emph{Data were publically released between September 2001 and November 2002.}\\ 
 
+\section{Introduction}
+\noindent
+The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several datasets between September 2001 and November 2002.  These synthetic data model the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico.  Additional information may be found at: \emph{http://www.delphi.tudelft.nl/SMAART/}.  The datasets remain the property of SMAART and are used under the agreement found at: \emph{http://www.delphi.tudelft.nl/SMAART/DataReleaseAgreement.pdf}.  
+
 \subsection{Sigsbee 2A}
-Sigsbee2A models the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico as shown in Sigsbee2A Stratigraphy. The model exhibits the illumination problems due to the complex salt shape with rugose salt top found in this area. The dataset was calculated with an absorbing free surface condition and a weaker than normal water bottom reflection, i.e. the data do not contain free surface multiples and less than normal internal multiples.  The color scale in this stratigraphy plot is chosen to emphasize reflectors and faults and does not represent the real velocity contrasts.  A number of normal and thrust faults separate the sedimentary blocks. The syncline segments of the salt top focus reflection energy from the salt bottom and the sub salt reflections and produce non-hyperbolic arrival travel time curves.
+\emph{Sigsbee2A} models the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico. The model exhibits illumination problems due to the complex salt shape with rugose salt top found in this area. The dataset was calculated with an absorbing free surface condition and a weaker than normal water bottom reflection, i.e. the data do not contain free surface multiples and less than normal internal multiples.  A number of normal and thrust faults separate sedimentary blocks. The syncline segments of the salt top focus reflection energy from the salt bottom and the sub salt reflections and produce non-hyperbolic arrival travel time curves.
 
 \subsubsection{Sigsbee 2A Velocity Models}
+\noindent
+\textbf{Madagascar} can easily display the velocity model used by \emph{Sigsbee2a}.  While \textbf{Madagascar} functions may be called from the terminal command line \textbf{SCons} scripts offer more elegant way to process data.  A \textbf{SCons} script, \emph{SConstruct}, is found within the \emph{RSF/book/data/sigsbee/model2A/} directory of the \emph{RSF book repository} and is presented in \emph{table ~\ref{tbl:2ASConstruct}}. 
 
-The \emph{SConstruct} file found within \emph{RSF/book/data/sigsbee/model2A/} is presented below. 
-
+\tabl{2ASConstruct}{Contents of \emph{model2A/SConstruct} script.}
+{
 \tiny
 \lstinputlisting[frame=single]{model2A/SConstruct}
 \normalsize
+}
 
-This set of rules produces the 
-
+\noindent
+This script can be ran by entering \texttt{\$ scons view} at the terminal command line within the \emph{sigsbee/model2A} directory.  This set of rules produces images of the stratographic and smoothed migrated velocity models as shown in \emph{figure~\ref{fig:vmig2A} and ~\ref{fig:vstr2A}.}  
 
 \inputdir{model2A}
-\plot{vmig}{width=\textwidth}{Migration velocity.}
-\plot{vstr}{width=\textwidth}{Stratigraphic velocity.}
+\multiplot{2}{vmig2A,vstr2A}{width=.45\textwidth}{Sigsbee 2A velocity models.}
+%\plot{vstr2A}{width=\textwidth}{Sigsbee 2A Stratigraphic velocity.}
+
+\subsubsection{Sigsbee 2A Shot Records}
+\noindent
+The \emph{sigsbee 2A} shot records may be displayed using the script found at \emph{data2A/SConstruct} whose contents are displayed in table\emph{~\ref{tbl:data2ASConstruct}.}  This script generates the \textbf{Madagascar} formatted data file \emph{shots.rsf} in addition to shot snapshots.
+  
+\tabl{data2ASConstruct}{Contents of \emph{data2A/SConstruct} script.}
+{
+\tiny
+\lstinputlisting[frame=single]{data2A/SConstruct}
+\normalsize
+}
+\noindent
+\textbf{Madagascar} contains the function \emph{sfin} that displays header information about each \emph{.rsf} file that it generates.  The output of the command \texttt{sfin shots.rsf} is shown in table\emph{~\ref{tbl:inShot2A}.}
+
+\tabl{inShot2A}{Display of function \textbf{sfin} perfomred on the file \emph{shots.rsf}.}
+{
+\tiny
+\lstinputlisting[frame=single]{data2A/inShot.rsf}
+\normalsize
+}
+Additionally a plot of the wavefield is produced by the \emph{SConstruct} script and is shown in \emph{figure ~\ref{fig:shot}.}
+
+\inputdir{data2A}
+\plot{shot}{width=\textwidth}{Figure of shot performed on \emph{sigsbee 2A}.}
 
 \subsection{Sigsbee 2B}
 \subsubsection{Sigsbee 2B Velocity models}
+The \emph{Sigsbee 2B} model uses the same structural model as Sigsbee2A but the velocity contrast at the water bottom has been increased to a normal level thus generating significant internal and FS multiples. These datasets are released in October 2002. The Sigsbee2B dataset is featured in paper SP3.8 "Observations from the Sigsbee2B synthetic dataset" at the 2002 SEG meeting in Salt Lake City.  
 
-\tiny
-\lstinputlisting[frame=single]{model2A/SConstruct}
-\normalsize
 
 \inputdir{model2B}
-\plot{vmig}{width=\textwidth}{Migration velocity.}
-\plot{vstr}{width=\textwidth}{Stratigraphic velocity.}
+\tabl{model2BSConstruct}{Contents of \emph{model2B/SConstruct} script.}
+{
+\tiny
+\lstinputlisting[frame=single]{model2B/SConstruct}
+\normalsize
+}
+
+\inputdir{model2B}
+\multiplot{2}{vmig2B,vstr2B}{width=.45\textwidth}{Sigsbee 2B Velocity Models}
+
+
