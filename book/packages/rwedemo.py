@@ -11,9 +11,9 @@ def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100 label1="t" unit1=s label2="g"
-    %s %s %s
+    %s
     min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['lt'],par['lg'],par['tmin'],par['tmax'],par['gmin'],par['gmax'])
+    ''' % (custom,par['tmin'],par['tmax'],par['gmin'],par['gmax'])
 
 def cgraph(custom,par):
     return '''
