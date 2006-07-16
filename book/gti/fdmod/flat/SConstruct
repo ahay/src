@@ -1,25 +1,29 @@
 ## 
- # F-D modeling 
+ # F-D modeling for wavefield comparison in imaging condition
  ##
 from rsfproj import *
+import zomig,spmig
 
 # ------------------------------------------------------------
 par = {
-    'nt':2000,   # no of time steps
-    'dt':0.0005, #       time sampling
+    'nt':3000,   # no of time steps
+    'dt':0.001,  #       time sampling
     'ot':0,      #       time origing
-    'kt':50,     # wavelet delay
+    'kt':100,    # wavelet delay
     #
     'ns':1,      # no of shots
-    'os':0.5,   #       shots origin
-    'ds':0.025,     #       shots sampling
+    'os':2.0,    #       shots origin
+    'ds':0.025,  #       shots sampling
     #
     'nr':401,    # no of receivers
     'or':0,      #       receivers origin
-    'dr':0.0025,    #       receivers sampling
+    'dr':0.01,   #       receivers sampling
     #
-    'nx':401, 'ox':0, 'dx':0.0025,
-    'nz':201, 'oz':0, 'dz':0.0025
+    'nx':401, 'ox':0, 'dx':0.01,
+    'nz':201, 'oz':0, 'dz':0.01,
+    #
+    'nw':100,'ow':0,'jw':1,
+    'verb':'y','tmx':20
     }
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
@@ -27,6 +31,9 @@ par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 par['tmin']=par['ot']
 par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+
+par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
+par['height']=par['ratio']*14
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
@@ -37,9 +44,8 @@ def igrey(custom,par):
     grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
     title="" pclip=99
     label1="z" unit1=km label2="x" unit2=km %s
-    min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.5 screenht=7
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
+    min1=%g max1=%g min2=%g max2=%g  screenratio=%g screenht=%g
+    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['ratio'],par['height'])
 
 def dgrey(custom,par):
     return '''
@@ -53,18 +59,17 @@ def pgraph(custom,par):
     return '''
     graph labelrot=n  %s
     yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=n
-    min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.5 screenht=7
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
+    min1=%g max1=%g min2=%g max2=%g  screenratio=%g screenht=%g
+    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'],par['ratio'],par['height'])
 
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
     grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
     title="" pclip=100 gainpanel=a
-    label1="z" unit1=km label2="x" unit2=km %s
-    screenratio=0.5 screenht=7
-    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
+    label1="z" unit1=km label2="x" unit2=km 
+     screenratio=%g screenht=%g %s
+    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],par['ratio'],par['height'],custom)
 
 # ------------------------------------------------------------
 # modeling function
@@ -87,19 +92,19 @@ def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
 Flow('wav',None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-         ricker1 frequency=50 |
+         ricker1 frequency=15 |
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
-# experiments
+# experiment setup
 
 Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
 Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
 
-# receivers
+# receiver positions
 Flow('zr','r_','math output="0" ')
 Flow('xr','r_','math output="x1"')
 Flow('rr',['xr','zr'],
@@ -110,9 +115,9 @@ Flow('rr',['xr','zr'],
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
      + pgraph('symbol=* plotcol=6',par))
 
-# sources
+# source positions
 Flow('zs','s_','math output=0')
-Flow('xs','s_','math output=0.5')
+Flow('xs','s_','math output=2.0')
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -123,10 +128,10 @@ Plot('ss','window n1=2 | dd type=complex | window | '
      + pgraph('symbol=v plotcol=6',par))
 
 # ------------------------------------------------------------
-# smooth background
+# smooth model
 Flow('vo',None,
      '''
-     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1.5+0.0*x1" |
+     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1.5+0.5*x1" |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 Flow('ro',None,
@@ -135,63 +140,123 @@ Flow('ro',None,
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 
+# rough model
 Flow('vx',None,
      '''
      spike nsp=2 mag=0,0
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=065,101 l1=100,125
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=065,101 l1=100,111
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=150,175 l2=250,225
          ''' % par)
 Flow('rx',None,
      '''
-     spike nsp=1 mag=0.1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=100 l1=%(nz)d |
+     spike nsp=3 mag=+0.25,-0.25,0.5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=51,101,151 l1=100,150,200 |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 
+# velocity for modeling
 Flow('vm',['vo', 'vx' ],
      'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
+# density for modeling
 Flow('rm',['ro', 'rx' ],
      'math c=${SOURCES[0]} r=${SOURCES[1]} output="c*(1+r)"')
 
-Plot('vo',igrey('color=j allpos=y bias=1.5 pclip=100',par))
-Plot('ro',igrey('color=F allpos=y bias=2.0 pclip=100',par))
-Plot('vm',igrey('color=j allpos=y bias=1.5 pclip=100',par))
-Plot('rm',igrey('color=F allpos=y bias=2.0 pclip=100',par))
+Plot('vo',igrey('allpos=y bias=1.5 pclip=100',par))
+Plot('ro',igrey('allpos=y bias=2.0 pclip=100',par))
+Plot('vm',igrey('allpos=y bias=1.5 pclip=100',par))
+Plot('rm',igrey('allpos=y bias=1.5 pclip=100',par))
 
 Result('vo',['vo','ss','rr'],'Overlay')
 Result('ro',['ro','ss','rr'],'Overlay')
 Result('vm',['vm','ss','rr'],'Overlay')
 Result('rm',['rm','ss','rr'],'Overlay')
 
+# ------------------------------------------------------------
+# finite-differences modeling
+
+# wavefield in smooth background
 amodel('do','wo','wav','vo','ro','ss','rr','free=y dens=y')
+# wavefield in rough model
 amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y')
 
+# reflected data and wavefield
 Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
 Flow('wx','ww wo','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
 
-Result('wo','window j3=50' + wgrey('pclip=99',par))
-Result('ww','window j3=50' + wgrey('pclip=99',par))
-Result('wx','window j3=50' + wgrey('pclip=99',par))
+# source wavefield
+Flow('dw','wav',
+     'pad beg2=200 end2=200 | put o2=%(ox)g d2=%(dx)g | transp' % par)
+
+Result('wo','window j3=50' + wgrey('pclip=95',par))
+Result('ww','window j3=50' + wgrey('pclip=95',par))
+Result('wx','window j3=50' + wgrey('pclip=95',par))
 
 Result('do','transp |' + dgrey('pclip=99',par))
 Result('dd','transp |' + dgrey('pclip=99',par))
 Result('dx','transp |' + dgrey('pclip=99',par))
+Result('dw','transp |' + dgrey('pclip=100',par))
 
 Result('alld','do dd dx',
-       'cat axis=3 space=n ${SOURCES[1:3]} | transp | grey gainpanel=e pclip=99')
+       '''
+       cat axis=3 space=n ${SOURCES[0:2]} |
+       transp |
+       grey gainpanel=e pclip=99
+       ''')
 
-for i in range(4):
-    k = 0.25 * i
-    #    print i,k
+# ------------------------------------------------------------
+# slowness
+Flow('so','vo','math output="1/input" | transp plane=12 | transp plane=23')
 
-    Flow('do'+str(i),'wo','window n1=1 min1=%s min2=%f max2=%f'
-         % (k,par['xmin'],par['xmax']) )
-    Flow('dx'+str(i),'wx','window n1=1 min1=%s min2=%f max2=%f'
-         % (k,par['xmin'],par['xmax']) )
-    
-    Plot  ('do'+str(i),'transp |' + dgrey('pclip=99',par))
-    Plot  ('dx'+str(i),'transp |' + dgrey('pclip=99',par))
+# ------------------------------------------------------------
+# source/receiver data in the time-domain
+Flow('dst0','dw','transp')
+Flow('drt0','dx','transp')
 
-    Result('alld'+str(i),['do'+str(i),'dx'+str(i)],'SideBySideAniso')
+Plot('dst0',dgrey('pclip=100',par))
+Plot('drt0',dgrey('pclip=100',par))
+Result('dat0',['dst0','drt0'],'SideBySideAniso')
+
+# source/receiver data in the frequency-domain
+zomig.wflds('dsw0','dst0',par)
+zomig.wflds('drw0','drt0',par)
+
+# S-R migration
+spmig.imagePW('ii','cc','so','dsw0','drw0',par)
+Result('ii','window | transp |' + igrey('pclip=100',par))
+
+# datuming
+for i in range(8):
+    j = i + 1
+
+    # datuming slabs
+    minz=i*0.25
+    nz  =  0.25/par['dz']
+
+    # slowness in datuming slab
+    slo   = 'so'+str(i)
+    Flow(slo,'so','window min3=%f n3=%d squeeze=n'%(minz,nz))
+
+    # source/receiver wavefields at top of slab
+    dswtop = 'dsw' + str(i)
+    drwtop = 'drw' + str(i)
+
+    # source/receiver wavefields at bottom of slab
+    dswbot = 'dsw' + str(j)
+    drwbot = 'drw' + str(j)
+
+    # datuming
+    spmig.datum(dswbot,drwbot,slo,dswtop,drwtop,par)
+
+    # time-domain wavefields
+    dstbot = 'dst' + str(j)
+    drtbot = 'drt' + str(j)
+    datbot = 'dat' + str(j)
+
+    Flow(dstbot,dswbot,'window | transp | pad n1out=1501 | fft1 inv=y opt=n')
+    Flow(drtbot,drwbot,'window | transp | pad n1out=1501 | fft1 inv=y opt=n')
+
+    Plot(dstbot,dgrey('pclip=100',par))
+    Plot(drtbot,dgrey('pclip=100',par))
+    Result(datbot,[dstbot,drtbot],'SideBySideAniso')
 
 End()
