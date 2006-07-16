@@ -1,35 +1,36 @@
 from rsfproj import *
+from rwezo import *
+import zomig
 
-par = {
+par = {    
     'nz':1201, 'dz':0.025,  'oz':0,      # z (kft)
-    'nx':2133, 'dx':0.0375,  'ox':10.925, # x (kft)
-    'nt':10000,  # no of time steps
-    'dt':0.001,  #       time sampling
+    'nx':2133, 'dx':0.0375, 'ox':10.925, # x (kft)
+    'nt':32000,  # no of time steps
+    'dt':0.0005, #       time sampling
     'ot':0,      #       time origing
     'kt':100,    # wavelet delay
+#    
+    'ng':200,  'dg':2.0,      'og':0,
+    'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
+#
+    'lx':'label2=x unit2=kft',
+    'lz':'label1=z unit1=kft',
+    'lg':'label2="\F10 g\F3 " unit2=""',
+    'lt':'label1="\F10 t\F3 " unit1="s"',
+#
+    'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1, 'incore':'y',
+    'ow':1
     }
+
+# compute parameters
+param(par)
+
 # ------------------------------------------------------------
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
 par['zmin']=par['oz']
 par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 # ------------------------------------------------------------
-
-def igrey(custom,par):
-    return '''
-    grey labelrot=n wantaxis=y wanttitle=n title="" pclip=99
-    label1="z" label2="x" unit1=kft unit2=kft
-    %s
-    min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
-
-def igraph(custom,par):
-    return '''
-    graph labelrot=n %s
-    yreverse=y wantaxis=n title=" " 
-    label1="z" label2="x" unit1=kft unit2=kft
-    min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
 
 def dgrey(custom,par):
     return '''
@@ -41,25 +42,25 @@ def dgrey(custom,par):
 
 # ------------------------------------------------------------
 # modeling function
-def amodel(dat,wfl,  wav,vel,sou,rec,custom):
-    Flow( [dat,wfl],[wav,vel,sou,rec],
+def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
+    Flow( [dat,wfl],[wav,vel,den,sou,rec],
          '''
-         afdm2d verb=y abc=y free=n snap=y jsnap=100 %s
-         nbz=250 tz=0.001
-         nbx=250 tx=0.001
+         afmodP ompchunk=1
+         verb=y abc=y free=n snap=y jsnap=100 %s
+         nbz=100 tz=0.0035
+         nbx=100 tx=0.0035
          vel=${SOURCES[1]}
-         sou=${SOURCES[2]}
-         rec=${SOURCES[3]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
          wfl=${TARGETS[1]}
          ''' % custom)
-
 # ------------------------------------------------------------
-# model
-
+# velocity
 velo = 'sigsbee2a_migvel.sgy'
 Fetch(velo,'sigsbee')
 
-Flow('zvelo tzvelo ./vhead ./bvhead',velo,
+Flow('zvelo tzvelo',velo,
      '''
      segyread
      tape=$SOURCE
@@ -69,41 +70,59 @@ Flow('zvelo tzvelo ./vhead ./bvhead',velo,
      ''',stdin=0)
 
 # ------------------------------------------------------------
-par['ncut']=1400
-par['npad']=1600
+par['nxcut']=1600
+par['nxpad']=2500
+par['nzpad']=1099
 
 Flow('vraw','zvelo',
      '''
      scale rscale=0.001 |
      put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
-     window n2=%(ncut)d
+     window n2=%(nxcut)d
      ''' % par)
 
-par['ox']=par['ox']-par['npad']*par['dx']
-par['nx']=par['ncut']+par['npad']
+par['ox']=par['ox']-par['nxpad']*par['dx']
+par['nx']=par['nxcut']+par['nxpad']
+par['nz']=par['nz']+par['nzpad']
+
 par['xmin']=par['ox']
 par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+par['zmin']=par['oz']
+par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-Flow('velo','vraw',
+Flow('padx','vraw',
      '''
      window n2=1 |
-     spray axis=2 n=%(npad)d d=%(dx)g o=%(ox)g |
+     spray axis=2 n=%(nxpad)d d=%(dx)g o=%(ox)g |
      cat ${SOURCES[0]} axis=2 space=n
      ''' % par)
 
-Plot  ('velo',igrey('allpos=y pclip=95',par))
-Result('velo',igrey('allpos=y pclip=95',par))
+Flow('padz','padx',
+     '''
+     window n1=1 f1=1200 |
+     spray axis=1 n=%(nzpad)d d=%(dz)g o=0 |
+     math "output=input+x1*0.2"
+     ''' % par)
+
+Flow('velo','padx padz',
+     '''
+     cat axis=1 space=n ${SOURCES[1]}
+     ''')
+Flow('dens','velo','math output=10')
+
+Plot  ('velo',cgrey('allpos=y pclip=95',par))
+Result('velo',cgrey('allpos=y pclip=95',par))
 
 Flow('salt','velo','add add=-14 | clip clip=1')
-Result('salt',igrey('allpos=y pclip=100',par))
+Result('salt',cgrey('allpos=y pclip=100',par))
 
 # ------------------------------------------------------------
 
 Flow('edge','salt','igrad square=y')
-Result('edge','sfdd type=float |' + igrey('pclip=100',par))
+Result('edge','sfdd type=float |' + cgrey('pclip=100',par))
 
 Flow('mask','edge','mask min=0.002')
-Result('mask','sfdd type=float |' + igrey('pclip=100',par))
+Result('mask','sfdd type=float |' + cgrey('pclip=100',par))
 
 for x in ('x1','x2'):
     if(x=='x1'): o='zs'
@@ -133,7 +152,7 @@ Flow('ss',['xs','zs','rs'],
      ''', stdin=0)
 
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + igraph('symbol=. plotcol=2',par))
+     + cgraph('symbol=. plotcol=2',par))
 Result('ss',['velo','ss'],'Overlay')
 
 # ------------------------------------------------------------
@@ -152,7 +171,7 @@ Flow('oo',['xo','zo'],
      ''', stdin=0)
 
 Plot('oo','window n1=2 | dd type=complex | window j2=10 | '
-     + igraph('symbol=* plotcol=5',par))
+     + cgraph('symbol=* plotcol=5',par))
 
 Result('oo',['velo','oo'],'Overlay')
 
@@ -160,7 +179,6 @@ Result('model','velo ss oo','Overlay')
 
 # ------------------------------------------------------------
 # wavelet
-
 Flow('wav',None,
      '''
      spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
@@ -171,30 +189,130 @@ Result('wav','wav','window n1=1000 | graph title=" "')
 
 # ------------------------------------------------------------
 # modeling
-
-amodel('do','wo','wav','velo','ss','oo','free=n')
+amodel('do','wo','wav','velo','dens','ss','oo','free=n')
 
 # ------------------------------------------------------------
 
 Result('wo',
-       'window n3=1 f3=10 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
-       + igrey('pclip=99',par))
+       'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+       + cgrey('pclip=99 gainpanel=a',par))
+Result('do','window j2=4 | transp memsize=1000 |' + dgrey('',par))
 
-Result('do','window j2=4 | transp |' + dgrey('',par))
+for j in range(20,320,20):
+    par['j'] = j
+    
+    Plot('wo'+str(j/20),'wo',
+         '''
+         window n3=1 f3=%(j)d
+         min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
+         ''' % par
+         + cgrey('pclip=100',par))
+    Result('wo'+str(j/20),['wo'+str(j/20),'cos','ss'],'Overlay')
+    
 
-Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.002' % par)
-Result('dd','window j2=4 | transp |' + dgrey('',par))
+Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
+Result('dd','transp memsize=1000 |' + dgrey('',par))
 
 # ------------------------------------------------------------
 
-for j in range(0,20):
-    par['ft'] = j
-    wo = 'wo' + str(j)
-    Result(wo,'wo',
-       'window n3=1 f3=%(ft)d min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
-       + igrey('pclip=99',par))
+# ------------------------------------------------------------
+# wavefronts (by HWT)
+
+Flow('vel','velo','smooth rect1=351 rect2=351 repeat=3')
+
+Flow('mzs',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="06+0.05*x1"' % par)
+Flow('mxs',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="55+0.05*x1"' % par)
+Flow('sou','mxs mzs','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
+Flow('hwt','vel sou',
+     '''
+     hwtex verb=n sou=${SOURCES[1]}
+     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     ''' % par)
+
+#Flow('rhwt','hwt','real | smooth rect1=51 rect2=51 repeat=3')
+#Flow('ihwt','hwt','imag | smooth rect1=51 rect2=51 repeat=3')
+#Flow('smo','rhwt ihwt','cmplx ${SOURCES[0:2]}', stdin=0)
+
+# coordinate system: rays(g,t)
+Flow('cos','hwt',
+     '''
+     reverse which=2 |
+     put o2=0 d2=%(dt)g |
+     window j2=8
+     ''' % par)
+
+Plot('vel','velo',cgrey('',par))
+
+# coordinate system plot
+cos('cos',10,50,par)
+Result('cos','vel cos','Overlay')
+
+# slowness
+slow('sloCC','sloRC','velo','cos',par)
+Result('sloRC','transp |'
+       + rgrey('pclip=99 allpos=y color=j bias=0.065',par))
 
 # ------------------------------------------------------------
+# coordinate system coefficients (A,B,M=mask) and references (A,B)
+abm('abmRC','abrRC','sloRC','cos',par)
+abmplot('abmRC',par)
 
+# ------------------------------------------------------------
+# time data CC: (t,x)
+Flow('datCC','dd','transp memsize=1000')
+Result('datCC','grey pclip=99 wanttitle=n %s label2=x unit2=kft' % par['lt'])
 
+# ------------------------------------------------------------
+# frequency data RC: (g,w)
+frq('frqRC','frqCC','datCC','cos',par)
+
+# ------------------------------------------------------------
+# RWE image
+mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
+
+# ------------------------------------------------------------
+# WEM image CC: (z,x)
+zomig.image('imgCC','sloCC','frqCC',par)
+Plot  ('imgCC','window | transp |' + cgrey('pclip=99',par))
+Result('imgCC',['imgCC','cos'],'Overlay')
+
+# ------------------------------------------------------------
+# PLOTS
+#plots(par)
+
+# ------------------------------------------------------------
+zoompar = {
+    'nz':30, 'dz':1, 'oz':0,   # z (kft)
+    'nx':40, 'dx':1, 'ox':30,  # x (kft)
+    'nt':32000,  # no of time steps
+    'dt':0.0005, #       time sampling
+    'ot':0,      #       time origing
+    'ng':200,  'dg':2.0,      'og':0,
+    'nT':1600, 'dT':0.004,    'oT':0,
+    'lx':'label2=x unit2=kft',
+    'lz':'label1=z unit1=kft',
+    'lg':'label2="\F10 g\F3 " unit2=""',
+    'lt':'label1="\F10 t\F3 " unit1="s"'
+    }
+param(zoompar)
+
+Plot('zoomvel','velo',cgrey('',zoompar))
+Flow('zoomcos','cos','window')
+cos('zoomcos',5,25,zoompar)
+Result('zoomcos','zoomvel zoomcos','Overlay')
+
+Plot('zoomvel-ovl',['zoomvel','zoomcos'],'Overlay')
+
+Flow('vscale','velo','scale axis=123 | add add=-0.6')
+
+for i in (['SSF','FFD','PSC',
+           'F15','F45','F60']):
+    sfx = '-' + i
+
+    Flow('iscale'+sfx,'migCC'+sfx,'transp | scale axis=123')
+    Flow('comp'+sfx,['vscale','iscale'+sfx],
+         'math a=${SOURCES[0]} b=${SOURCES[1]} output="0.5*a+b"')
+    Plot('comp'+sfx,cgrey('',zoompar))
+    Result('comp'+sfx,['comp'+sfx,'zoomcos'],'Overlay')
+    
 End()

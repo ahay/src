@@ -9,6 +9,8 @@ par = {
     'ng':300,  'dg':0.020,    'og':0.5,   # RC axis 2
     'lg':'label2=x unit2=km',
     'lt':'label1="\F10 t\F3 " unit1="s"',
+    'lx':'label2=x unit2=km',
+    'lz':'label1=z unit1=km',
     'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
