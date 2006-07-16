@@ -6,7 +6,7 @@ import SCons
 version = map(int,string.split(SCons.__version__,'.'))
 if version[1] == 96 and version[2] >= 90:
     from SCons.Script import *
-else:
+else:  # old style
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 

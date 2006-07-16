@@ -27,9 +27,10 @@
 
 int main(int argc, char* argv[])
 {
-    int n12, n1, n2, n3, i3, sw;
+    int n12, n1, n2, n3, i1, i3, sw;
     bool adj, hd;
-    float **data, **modl, *vrms, o1,d1,o2,d2;
+    float **data, **modl, *vrms, o1,d1,o2,d2, v0;
+    char *test;
     sf_file in, out, vel;
 
     sf_init (argc,argv);
@@ -54,10 +55,20 @@ int main(int argc, char* argv[])
 
     vrms = sf_floatalloc(n1);
 
-    vel = sf_input("velocity");
-    sf_floatread(vrms,n1,vel);
-    sf_fileclose(vel);
-    
+    if (NULL != (test = sf_getstring("velocity"))) { 
+	/* velocity file */
+	free(test);
+	vel = sf_input("velocity");
+	sf_floatread(vrms,n1,vel);
+	sf_fileclose(vel);
+    } else {
+	if (!sf_getfloat("v0",&v0)) sf_error("Need velocity= or v0=");
+	/* constant velocity (if no velocity=) */
+	for (i1=0; i1 < n1; i1++) {
+	    vrms[i1] = v0;
+	}
+    }
+
     n12 = n1*n2;
     data = sf_floatalloc2(n1,n2);
     modl = sf_floatalloc2(n1,n2);

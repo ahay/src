@@ -14,12 +14,12 @@ Flow('kirch1','spike',
      ''')
 Plot('kirch1','grey title="Kirchhoff 1"')
 
-Flow('vel','spike','window n2=1 | math output=3')
-Flow('kirch2','spike vel','kirchnew velocity=${SOURCES[1]}')
+Flow('kirch2','spike','kirchnew v0=3')
 Plot('kirch2','grey title="Kirchhoff 2" ')
 
 Plot('kirch','kirch1 kirch2','OverUnderAniso')
 
+Flow('vel','spike','window n2=1 | math output=3')
 Flow('phase','spike vel',
      '''
      cosft sign2=1 | pad n1=400 |
