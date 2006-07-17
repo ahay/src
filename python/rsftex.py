@@ -280,9 +280,17 @@ _styles = {
 
 _pos = 0
 
-def _link(name):
-     link = '<a href="/RSF/%s.html">%s</a>' % (rsfdoc.progs[name].name, name)
-     return link
+
+def _proglink(name):
+    link = '<a href="/RSF/%s.html">%s</a>' % (rsfdoc.progs[name].name, name)
+    return link
+
+dataserver = 'ftp://egl.beg.utexas.edu'
+
+def _datalink(name):
+    global dataserver
+    link = '<a href="%s/%s">%s</a>' % (dataserver,name,name)
+    return link
  
 def colorize(target=None,source=None,env=None):
      "Colorize python source"
@@ -302,6 +310,12 @@ def colorize(target=None,source=None,env=None):
      <style type="text/css">
      div.progs {
      background-color: #DCE3C4;
+     border: thin solid black;
+     padding: 1em;
+     margin-left: 2em;
+     margin-right: 2em; }
+     div.dsets {
+     background-color: #E3C4DC;
      border: thin solid black;
      padding: 1em;
      margin-left: 2em;
@@ -397,24 +411,31 @@ def colorize(target=None,source=None,env=None):
 
      #     (status,progs) = commands.getstatusoutput('scons -s .sf_uses')
 
-     sin, sout, serr = os.popen3('scons -s .sf_uses')
-     sin.close()
-     progs = sout.read()
-     sout.close()
-     status = serr.read()
-     serr.close() 
+     for case in ('uses','data'):
+         sin, sout, serr = os.popen3('scons -s .sf_'+case)
+         sin.close()
+         progs = sout.read()
+         sout.close()
+         status = serr.read()
+         serr.close() 
      
-     os.chdir(cwd)
-    
-     if not status:
-          out.write('</div><p><div class="progs">')
-          out.write(rsfdoc.multicolumn(string.split(progs),_link))
-     
+         if not status:
+             items = string.split(progs)
+             if items:
+                 if case=='uses':
+                     out.write('</div><p><div class="progs">')
+                     out.write(rsfdoc.multicolumn(items,_proglink))
+                 else:
+                     out.write('</div><p><div class="dsets">')
+                     out.write(rsfdoc.multicolumn(items,_datalink))
+ 
      out.write('''
      </div>
      </body>
      </html>
      ''')
+
+     os.chdir(cwd)
      return 0
 
 

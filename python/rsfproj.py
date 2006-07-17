@@ -221,7 +221,8 @@ class Project(Environment):
             os.mkdir(self.path)        
         if datapath[:2] != './':
             # create a hierarcical structure
-            (book,chap,proj) = (os.path.basename(os.path.dirname(os.path.dirname(cwd))),
+            (book,chap,proj) = (os.path.basename(
+                os.path.dirname(os.path.dirname(cwd))),
                                 os.path.basename(os.path.dirname(cwd)),
                                 os.path.basename(cwd))
             for level in (book,chap,proj):
@@ -267,6 +268,7 @@ class Project(Environment):
         self.lock = []
         self.test = []
         self.coms = []
+        self.data = []
         sys.path.append('../../../packages')
     def Exe(self,source,**kw):
         target = source.replace('.c','.x')
@@ -321,7 +323,8 @@ class Project(Environment):
                         command = os.path.join('.',command)                    
                 pars.insert(0,command)
                 # special rule for solvers
-                if rsfprog == prefix+'conjgrad' or rsfprog == prefix+'cconjgrad':
+                if rsfprog == prefix+'conjgrad' or \
+                       rsfprog == prefix+'cconjgrad':
                     command = pars.pop(1)
                     # check if this command is in our list
                     if rsf:
@@ -331,7 +334,8 @@ class Project(Environment):
                         else:
                             rsfprog = prefix + command            
                         if rsfdoc.progs.has_key(rsfprog):
-                            command = os.path.join(bindir,rsfprog+self.progsuffix) 
+                            command = os.path.join(bindir,
+                                                   rsfprog+self.progsuffix) 
                             sources.append(command)
                             if rsfprog not in self.coms:
                                 self.coms.append(rsfprog)
@@ -421,7 +425,10 @@ class Project(Environment):
         else:
             self.Command('test',None,'echo "Nothing to test"')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
+        self.Command('.sf_data',None,'echo %s' % string.join(self.data,' '))
     def Fetch(self,file,dir,private=None,server=dataserver,top='data'):
+        if not private:
+            self.data.append(os.path.join(top,dir,file))
         return self.Retrieve(file,None,
                              dir=dir,private=private,
                              top=top,server=server)

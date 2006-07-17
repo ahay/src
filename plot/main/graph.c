@@ -142,9 +142,7 @@ int main(int argc, char* argv[])
 	    if (NULL != symbol) {
 		sym[0] = symbol[i2];
 		symsize = symbolsz[i2];
-	    } else {
-		start = true;
-	    }
+	    } 
 
 	    for (i1=0; i1 < n1; i1++) {
 		xi = x[i2][i1];
@@ -157,9 +155,12 @@ int main(int argc, char* argv[])
 			vp_where (&xc, &yc);
 			vp_tjust (TH_SYMBOL, TV_SYMBOL);
 			vp_gtext (xc,yc,symsize,0.,0.,symsize,sym);
-		    } else if (start) {
+		    } else if (i1==0 ||
+			       (xi < min1 && x[i2][i1-1] > max1) ||
+			       (xi > max1 && x[i2][i1-1] < min1) ||
+			       (yi < min2 && y[i2][i1-1] > max2) ||
+			       (yi > max2 && y[i2][i1-1] < min2)) {
 			vp_umove(xi,yi);	    
-			start = false;
 		    } else {
 			vp_udraw(xi,yi);
 		    }
@@ -179,15 +180,17 @@ static void getminmax(const float* f, float* min, float* max)
     float fmin, fmax, fi, fbig, fsml, fdif;
 
     m=0;
+    fmin=+FLT_MAX;
+    fmax=-FLT_MAX;
     for (i=0; i < n; i++) {
 	fi = f[i];
 	if (finite(fi)) {
 	    t[m] = fi;
 	    m++;
+	    if (fmin > fi) fmin=fi;
+	    if (fmax < fi) fmax=fi;
 	}
     }
-    fmin = sf_quantile(0,m,t);
-    fmax = sf_quantile(m-1,m,t);
 
     nc = (1.-0.01*pclip)*m;
     if (nc < 0) nc=0;
