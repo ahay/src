@@ -10,5 +10,8 @@ Flow('velo','pluto.velo.hh',
      math "output=input/1000"
      ''')
 
+# inVelo is a text file containing the header info for velo.rsf. 
+Flow('inVelo','velo','in $SOURCE')
+
 Result('velo','grey color=j allpos=y title=Velocity')
 End()

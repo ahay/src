@@ -1,0 +1,48 @@
+#########################
+#      Pluto Data       #
+#########################
+from rsfproj import *
+
+#------- Define Variables and Filenames ------#
+data = 'data.H'
+
+#------------- Import Data -------------------#
+#-- Uses ftp program Fetch
+Fetch(data ,'pluto')
+
+#----------  Convert Data --------------------#
+Flow('shot',data,
+     '''
+     dd form=native
+     ''')
+
+#Window3d:   antoine@okok.Stanford.EDU   Wed Nov 19 14:33:39 2003
+#                sets next: in="/net/okok/scr4/antoine/PRT-data.H@"
+        #Window f1=0  j1=1 n1=1400
+        #Window f2=0  j2=1 n2=180
+        #Window f3=0  j3=1 n3=940
+#                junkME=1074443473
+#        n2=180  o2=-45  d2=0.5   label2="ax"   unit2="Undefined"
+#        n3=940  o3=33000  d3=37.5   label3="mx"   unit3="Undefined"
+#                gff="-1"
+#                hff="-1"
+#hff=-1 gff=-1  n4=1  n5=1  n6=1  n7=1  n8=1  n9=1
+#        n1=1400  o1=0  d1=25   label1="z_"   unit1="Undefined"
+#                hff="-1"
+#                gff="-1"
+#                esize=4
+#                data_format="xdr_float"
+# inVelo is a text file containing the header info for velo.rsf.
+#Flow('inVelo','velo','in $SOURCE')
+
+#Result('velo','grey color=j allpos=y title=Velocity')
+
+
+# create sraw(t,o,s): o=full offset, s=shot position, t=time
+
+#----- Create sfin file -------------------#
+#Flow('inShotFs2B','shotFs2B','in $SOURCE')
+
+#---------------- Plot Data ---------------#
+
+End()

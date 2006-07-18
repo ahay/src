@@ -1,0 +1,26 @@
+#########################
+#   Pluto Shot Data     #
+#########################
+from rsfproj import *
+
+#------- Define Variables and Filenames ------#
+dataOne = 'P15shots150f_endon_0ph-1stHlf.SEGY'
+dataTwo = 'P15shots150f_endon_0ph-2ndHlf.SEGY'
+#------------- Import Data -------------------#
+#-- Uses ftp program Fetch
+Fetch(dataOne,'pluto')
+Fetch(dataTwo,'pluto')
+
+#----------  Convert Data --------------------#
+Flow('dataOneRSF',dataOne,'segyread tape=$SOURCE')
+Flow('dataTwoRSF',dataTwo,'segyread tape=$SOURCE') 
+
+#----------  Cube Data -----------------------#
+#Flow('dataOneCubedRSF','dataOneRSF
+#	'''
+#	put  
+#	'''
+
+
+#----------  Concatinate datasets ------------#
+Flow('dataRSF',['dataOneRSF','dataTwoRSF'],'cat ${SOURCES[0:1]} axis=2')
