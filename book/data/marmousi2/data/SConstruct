@@ -1,0 +1,19 @@
+######################
+#  Marmousi 2 data   #
+######################
+
+###   V Curl Data
+
+from rsfproj import *
+
+fileName1 = 'obc_curl_v_1.segy'
+
+Fetch(fileName1,'marm2')
+
+Flow('curlOneData',fileName1,
+	'''
+	segyread tape=$SOURCE
+	''')
+
+Result('curlOneData','window j3=20 | grey') 
+End()
