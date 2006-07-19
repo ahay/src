@@ -1,7 +1,12 @@
 from rsfproj import *
 
-Fetch(['pluto.velo.hh'],'pluto')
+# Fetch Data set from Repository located at pluto
 
+Fetch('pluto.velo.hh','pluto')
+Fetch('int_depth_vp.sgy','pluto')
+Fetch('P15VPint_25f_padded.SEGY','pluto')
+
+# Convert native format to RSF format
 Flow('velo','pluto.velo.hh',
      '''
      dd form=native |
@@ -10,8 +15,22 @@ Flow('velo','pluto.velo.hh',
      math "output=input/1000"
      ''')
 
+Flow('vp','int_depth_vp.sgy',
+	'''
+	segyread tape=$SOURCE
+	''')
+
+Flow('vpInt','P15VPint_25f_padded.SEGY',
+	'''
+	segyread tape=$SOURCE
+	''')
+
+
 # inVelo is a text file containing the header info for velo.rsf. 
 Flow('inVelo','velo','in $SOURCE')
 
+# Plot images
 Result('velo','grey color=j allpos=y title=Velocity')
+Result('vp','grey color=j title=Int\ Depth\ vp')
+Result('vpInt','grey color=j title=VP\ Int')
 End()

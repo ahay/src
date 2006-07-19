@@ -44,5 +44,5 @@ Flow('shot',data,
 #Flow('inShotFs2B','shotFs2B','in $SOURCE')
 
 #---------------- Plot Data ---------------#
-
+Result('shot','window j3=20 | grey gainpanel=a')
 End()

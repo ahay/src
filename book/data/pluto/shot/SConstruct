@@ -11,16 +11,35 @@ dataTwo = 'P15shots150f_endon_0ph-2ndHlf.SEGY'
 Fetch(dataOne,'pluto')
 Fetch(dataTwo,'pluto')
 
+
+
 #----------  Convert Data --------------------#
 Flow('dataOneRSF',dataOne,'segyread tape=$SOURCE')
 Flow('dataTwoRSF',dataTwo,'segyread tape=$SOURCE') 
 
+
 #----------  Cube Data -----------------------#
-#Flow('dataOneCubedRSF','dataOneRSF
-#	'''
-#	put  
-#	'''
-
-
+Flow('dataOneCubedRSF','dataOneRSF',
+	'''
+	put
+	n2=350 n3=347
+	d2=1 d3=1
+	o1=0 o2=0 o3=0 
+	''')
+Flow('dataTwoCubedRSF','dataTwoRSF',
+	'''
+	put
+	n2=350 n3=347
+	d2=1 d3=1
+	o1=0 o2=0 o3=347
+	''')
 #----------  Concatinate datasets ------------#
-Flow('dataRSF',['dataOneRSF','dataTwoRSF'],'cat ${SOURCES[0:1]} axis=2')
+Flow('dataRSF',['dataOneCubedRSF','dataTwoCubedRSF'],
+	'''
+	cat ${SOURCES[0:1]} axis=3
+	''')
+
+#---------- Make Snapsot ---------------------#
+#Result('dataRSF','dataRSF','window $SOURCE j3=20 | grey gainpanel=a')
+Result('dataRSF','dataRSF','window $SOURCE n3=1 f3=60 | grey title=Shot\ 60')
+End()
