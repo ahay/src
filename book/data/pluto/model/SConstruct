@@ -10,19 +10,23 @@ Fetch('P15VPint_25f_padded.SEGY','pluto')
 Flow('velo','pluto.velo.hh',
      '''
      dd form=native |
-     put label1=z unit1=km d1=0.025 o1=0
-         label2=x unit2=km d2=0.025 o2=-34.875 |
+     put label1=z unit1=ft*1000 d1=0.025 o1=0
+         label2=x unit2=ft*1000 d2=0.025 o2=-34.875 |
      math "output=input/1000"
      ''')
 
 Flow('vp','int_depth_vp.sgy',
 	'''
-	segyread tape=$SOURCE
+	segyread tape=$SOURCE |
+	put d1=.025 o1=0 label1=z unit1=ft*1000
+		d2=.025 o2=-34.875 label2=x unit2=ft*1000
 	''')
 
 Flow('vpInt','P15VPint_25f_padded.SEGY',
 	'''
-	segyread tape=$SOURCE
+	segyread tape=$SOURCE |
+	put d1=.025 o1=0 label1=z unit1=ft*1000
+		d2=.025 o2=-34.875 label2=x unit2=ft*1000
 	''')
 
 

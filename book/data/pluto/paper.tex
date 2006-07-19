@@ -3,20 +3,17 @@
 
 \maketitle
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\textbf {Data Type:} \emph{Synthetic}\\
+\textbf {Source:} \emph{SMAART Consortium}\\
+\textbf {Location:} \emph{http://www.delphi.tudelft.nl/SMAART/pluto15.htm}\\
+\textbf {Format:} \emph{SEGY} \\
+\textbf{Date of origin:} \emph{Publically released November 2000}\\
 
 \section{Introduction} 
-\textbf {Data Type:} \emph{Synthetic}\\
-\textbf {
-        Source:} \emph{SMAART Consortium}\\
-\textbf {
-        Location:} \emph{http://www.delphi.tudelft.nl/SMAART/pluto15.htm}\\
-\textbf {
-        Format:} \emph{SEGY} \\
-\textbf{
-        Date of origin:} \emph{Publically released November 2000}\\
+The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several data sets between September 2001 and November 2002.  Additional information may be found at: \emph{http://www.delphi.tudelft.nl/SMAART/}.  The data sets remain the property of SMAART and are used under the agreement found at: \emph{http://www.delphi.tudelft.nl/SMAART/DataReleaseAgreement.pdf}.
 
-Pluto 1.5 is an elastic dataset released in November 2000, that contains realistic free surface and internal multiples over a structure that is relatively easy to image. Table \ref{tbl:FILES} shows the files contained within the \emph{Pluto} repository of Madagascar.  
-
+The Pluto 1.5 is a 2D elastic dataset released in November 2000, designed to emulate deep water subsalt prospects as found in the Gulf of Mexico. It contains realistic free surface and internal multiples over a structure that is relatively easy to image. Table \ref{tbl:FILES} shows the files contained within the \emph{Pluto} repository of Madagascar.  
+ 
 \tabl{FILES}{A list of all files contained in the \emph{Pluto} repository}
 {
 \tiny
@@ -28,10 +25,16 @@ Pluto 1.5 is an elastic dataset released in November 2000, that contains realist
 The\emph{SConstruct} file found within \emph{RSF/book/data/pluto} is shown in \ref{tbl:velSConstruct}.  Entering \texttt{scons view} at the command line will run the script.  
 
 \tabl{velSConstruct}{\emph{SConstruct} script generating the velocity model}
+{
 \tiny
 \lstinputlisting[frame=single]{model/SConstruct}
 \normalsize
-        
+}        
+
+This script generates three images of the velocity model created with three different input files one of which is reproduced in figure \ref{fig:velo}.
 
 \inputdir{model}
-\plot{velo}{width=\textwidth}{Velocity model}
+\plot{velo}{width=\textwidth}{Pluto velocity model}
+
+\section{Shot Records}
+
