@@ -7,13 +7,38 @@
 from rsfproj import *
 
 fileName1 = 'obc_curl_v_1.segy'
+fileName2 = 'obc_curl_v_2.segy'
 
 Fetch(fileName1,'marm2')
+Fetch(fileName2,'marm2')
 
 Flow('curlOneData',fileName1,
 	'''
-	segyread tape=$SOURCE
+	segyread tape=$SOURCE | put
+	d1=.002	n1=2500	o1=0
+	d2=1	n2=1381	o2=0
+	d3=1	n3=320	o3=0
 	''')
 
-Result('curlOneData','window j3=20 | grey') 
+Flow('curlTwoData',fileName2,
+	'''
+	segyread tape=$SOURCE | put		
+	d1=.002	n1=2500	o1=0
+	d2=1	n2=1381	o2=480
+	d3=1	n3=160	o3=320
+	''')
+#-------- Plot The two separate datasets
+Result('curlOneData','window j3=20 | grey gainpanel=a') 
+Result('curlTwoData','window j3=20 | grey gainpanel=a') 
+
+Flow('curlData',['curlOneData','curlTwoData'],
+	'''
+	cat ${SOURCES[0:1]} space=n axis=3 |
+	put	d1=.002	n1=2500	o1=0
+		d2=1	n2=1381	o2=0
+		d3=1	n3=480	o3=0 
+	''')
+#--------- Plot Concatinated dataset
+Result('curlData','window j3=20 | grey gainpanel=a') 
+
 End()
