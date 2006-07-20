@@ -1,13 +1,105 @@
+#########################################
+#                                       #
+# ##################################### #
+# #         MARMOUSI/model            # #
+# ##################################### #
+#                                       #
+#########################################
+#---------------------------------------
+ # This script reads SEGY amd Native   #
+ # format files and converts them to   #
+ # RSF format                          #   
+#---------------------------------------
 from rsfproj import *
 
-Fetch(['marmvel.hh'] ,'marm')
+ #######################################
+ #        Define Variables             #
+ #######################################
+#----- Define source to download from
+source='marm'
 
-Flow('velo','marmvel.hh',
-     '''
-     dd form=native |
-     put label1=z unit1=m label2=x unit2=m
-     ''')
+#----- Define File(s) to Download -----#
+	#- Include extensions (segy, SEGY, sgy, HH, h, hh)
+	#- FileType is either SEGY or native
+segyFiles=[]				
+nativeFiles=['marmvel.hh','marmrefl.hh','marmvz.HH']      
 
-Result('velo','grey allpos=y pclip=100')
+#----- Define Header info -------------#
+	#- Define n,o,d values
+	#- For Reference only
+numOne='';		offsetOne='';		deltaOne='';
+numTwo='';		offsetTwo='';		deltaTwo='';
+numThree='';	offsetThree='';		deltaThree='';	
+
+labelOne='Depth\ Z';		unitOne='km';
+labelTwo='X';				unitTwo='km';
+labelThree='Shots';			unitsThree=(); 
+
+ #######################################
+ #             Import Data             #
+ #######################################
+
+for file in segyFiles:
+	Fetch(file,source)
+
+for file in nativeFiles:
+	Fetch(file,source)
+
+ #######################################
+ #        Convert Data to RSF          #
+ #######################################
+#----- Convert SEGY Files -------------#
+RSFfiles=[]
+for file in segyFiles:
+    fileOut = ''
+    fileLength =len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    Flow(fileOut,file,
+    '''
+    segyread tape=$SOURCE 
+    ''',stdin=0)
+    RSFfiles.append(fileOut)
+
+#----- Convert Native Files -----------#
+for file in nativeFiles:
+    fileOut = ''
+    fileLength = len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    Flow(fileOut,file,
+    '''
+    dd form=native |
+    put label1=z unit1=ft*1000 d1=0.025 o1=0
+        label2=x unit2=ft*1000 d2=0.025 o2=-34.875 |
+    math "output=input/1000"
+    ''')
+    RSFfiles.append(fileOut)
+
+ #######################################
+ #       Change Header Info            #
+ #######################################
+#----- This info has to be manually entered
+    #- Uncomment to Use
+#Flow('out',RSFfiles[0],'''put
+#    n1=         o1=         d1=
+#    n2=         o2=         d2=
+#    n3=         03=         d3=
+#    label1=         unit1=
+#    label2=         unit2=
+#    label3=         unit3=
+#    ''',stdin=0)
+
+ #######################################
+ #          Display Data               #
+ #######################################
+for file in RSFfiles:
+    Result(file,file,'sfgrey color=j title=Velocity\ model')
 
 End()

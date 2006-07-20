@@ -6,7 +6,7 @@
 
 from rsfproj import *
 
-fileName1 = 'obc_curl_v_1.segy'
+#fileName1 = 'obc_curl_v_1.segy'
 fileName2 = 'obc_curl_v_2.segy'
 
 Fetch(fileName1,'marm2')
@@ -33,11 +33,11 @@ Result('curlTwoData','window j3=20 | grey gainpanel=a')
 
 Flow('curlData',['curlOneData','curlTwoData'],
 	'''
-	cat ${SOURCES[0:1]} space=n axis=3 |
+	cat ${SOURCES[0:2]} space=n axis=3 |
 	put	d1=.002	n1=2500	o1=0
 		d2=1	n2=1381	o2=0
 		d3=1	n3=480	o3=0 
-	''')
+	''',stdin=0)
 #--------- Plot Concatinated dataset
 Result('curlData','window j3=20 | grey gainpanel=a') 
 

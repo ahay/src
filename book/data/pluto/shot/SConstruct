@@ -1,52 +1,113 @@
-#########################
-#   Pluto Shot Data     #
-#########################
+#########################################
+#                                       #
+# ##################################### #
+# #     Repository/ DataSet           # #
+# ##################################### #
+#                                       #
+#########################################
+#---------------------------------------
+ # This script reads SEGY amd Native   #
+ # format files and converts them to   #
+ # RSF format                          #   
+#---------------------------------------
 from rsfproj import *
 
-#------- Define Variables and Filenames ------#
-dataOne = 'P15shots150f_endon_0ph-1stHlf.SEGY'
-dataTwo = 'P15shots150f_endon_0ph-2ndHlf.SEGY'
-#------------- Import Data -------------------#
-#-- Uses ftp program Fetch
-#Fetch(dataOne,'pluto')
-#Fetch(dataTwo,'pluto')
+ #######################################
+ #        Define Variables             #
+ #######################################
+#----- Define source to download from
+source='pluto'
 
+#----- Define File(s) to Download -----#
+	#- Include extensions (segy, SEGY, sgy, HH, h, hh)
+	#- FileType is either SEGY or native
+segyFiles=['P15shots150f_endon_0ph-1stHlf.SEGY','P15shots150f_endon_0ph-2ndHlf.SEGY']	
+nativeFiles=[]
 
+#----- Define Header info -------------#
+	#- Define n,o,d values
+numOne='';		offsetOne='';		deltaOne='';
+numTwo='';		offsetTwo='';		deltaTwo='';
+numThree='';	offsetThree='';		deltaThree='';	
 
-#----------  Convert Data --------------------#
-Flow('dataOneRSF',dataOne,'segyread tape=$SOURCE')
-Flow('dataTwoRSF',dataTwo,'segyread tape=$SOURCE') 
+labelOne='Depth\ Z';		unitOne='km';
+labelTwo='X';				unitTwo='km';
+labelThree='Shots';			unitsThree=(); 
 
+ #######################################
+ #             Import Data             #
+ #######################################
 
-#----------  Cube Data -----------------------#
-Flow('dataOneCubedRSF','dataOneRSF',
-	'''
-	put
-	n2=350	n3=347
-	d2=1	d3=1
-	o1=0	o2=-20	o3=0 
-	''')
-     #put label1=z unit1=ft*1000 d1=0.025 o1=0
-     #    label2=x unit2=ft*1000 d2=0.025 o2=-34.875 |
+#for file in segyFiles:
+#	Fetch(file,source)
 
+#for file in nativeFiles:
+#	Fetch(file,source)
 
-Flow('dataTwoCubedRSF','dataTwoRSF',
-	'''
-	put
-	n2=350 n3=347
-	d2=1 d3=1
-	o1=0 o2=0 o3=347
-	''')
-#----------  Concatinate datasets ------------#
-Flow('dataRSF',['dataOneCubedRSF','dataTwoCubedRSF'],
-	'''
-	cat ${SOURCES[0:1]} axis=3 |
-	put 
-	n1=1126  	d1=0.008    o1=0		label1=z unit1=sec
-    n2=350    	d2=4.5      o2=-270		label2=x unit2=ft
-	''')
+ #######################################
+ #        Convert Data to RSF          #
+ #######################################
+#----- Convert SEGY Files -------------#
+RSFfiles=[]
+for file in segyFiles:
+    fileOut = ''
+    fileLength =len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    Flow(fileOut,file,
+    '''
+    segyread tape=$SOURCE 
+    ''',stdin=0)
+    RSFfiles.append(fileOut)
 
-#---------- Make Snapsot ---------------------#
-Result('dataRSF','dataRSF','window $SOURCE j3=20 | grey gainpanel=a title=Pluto\ Model')
-#Result('dataRSF','dataRSF','window $SOURCE n3=1 f3=60 | grey title=Shot\ 60')
+#----- Convert Native Files -----------#
+for file in nativeFiles:
+    fileOut = ''
+    fileLength = len(file)
+    for letter in file[0:fileLength]:
+        if letter is not '.':
+            fileOut = fileOut + letter
+        if letter == '.':
+            break
+    Flow(fileOut,file,
+    '''
+    dd form=native |
+    put label1=z unit1=ft*1000 d1=0.025 o1=0
+        label2=x unit2=ft*1000 d2=0.025 o2=-34.875 |
+    math "output=input/1000"
+    ''')
+    RSFfiles.append(fileOut)
+
+ #######################################
+ #       Change Header Info            #
+ #######################################
+#----- This info has to be manually entered
+for file in RSFfiles:
+    if file == 'P15shots150f_endon_0ph-1stHlf':
+       Flow('cubedOne',file,'''
+		put 
+	    n2=350
+	    n3=347 
+        ''',stdin=0)
+#    if file == 'P15shots150f_endon_0ph-2ndHlf':
+#        Flow('cubed' + file,file,'''put
+#        n3=347      03=52050    d3=150
+#        label1=z         unit1=ft*1000
+#        label2=x         unit2=ft*1000
+#        label3=Shot      unit3=none
+#        ''',stdin=0)
+#Flow('shotRSF',['cubedOne','cubedP15shots150f_endon_0ph-2ndHlf']
+#       ,'''
+#        cat ${SOURCES[0:2]} axis=3 
+#        ''',stdin=0)
+
+ #######################################
+ #          Display Data               #
+ #######################################
+#for file in RSFfiles:
+#Result('shotRSF','window j3=20 | grey color=j title=Shots')
+
 End()

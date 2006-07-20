@@ -1,35 +1,35 @@
 #########################################
 #                                       #
 # ##################################### #
-# #     Repository/ DataSet           # #
+# #           AMOCO/shots             # #
 # ##################################### #
 #                                       #
 #########################################
- #-------------------------------------#
+#---------------------------------------
  # This script reads SEGY amd Native   #
  # format files and converts them to   #
  # RSF format                          #   
- #-------------------------------------#
+#---------------------------------------
 from rsfproj import *
 
  #######################################
  #        Define Variables             #
  #######################################
-#---- Define source to download from --#
-source='pluto'
+#----- Define source to download from
+source='Amoco'
 
 #----- Define File(s) to Download -----#
 	#- Include extensions (segy, SEGY, sgy, HH, h, hh)
-	#- Places files of each type in apropriate places
-segyFiles=['int_depth_vp.sgy','P15VPint_25f_padded.SEGY']				
-nativeFiles=['pluto.velo.hh']      
+	#- FileType is either SEGY or native
+segyFiles=[]				
+nativeFiles=['shots.hh']      
 
 #----- Define Header info -------------#
 	#- Define n,o,d values
-	#- For Reference only (currently)
-numOne=1;		offsetOne=1;		deltaOne=1;
-numTwo=1;		offsetTwo=1;		deltaTwo=1;
-numThree=1;		offsetThree=1;		deltaThree=1;	
+	#- For Reference only
+numOne='';		offsetOne='';		deltaOne='';
+numTwo='';		offsetTwo='';		deltaTwo='';
+numThree='';	offsetThree='';		deltaThree='';	
 
 labelOne='Depth\ Z';		unitOne='km';
 labelTwo='X';				unitTwo='km';
@@ -99,9 +99,6 @@ for file in nativeFiles:
  #######################################
  #          Display Data               #
  #######################################
-
- #----- Include if statements to alter 
-     #- individual plots
 for file in RSFfiles:
     Result(file,file,'sfgrey color=j title=Velocity\ model')
 
