@@ -22,12 +22,13 @@ Flow('dataTwoRSF',dataTwo,'segyread tape=$SOURCE')
 Flow('dataOneCubedRSF','dataOneRSF',
 	'''
 	put
-	n1=1126	d1=0.008	o1=0		label1=z unit1=sec 
-	n2=350	d2=75		o2=-2700	label2=x unit2=ft
-	n3=347	d3=1		o3=0		label3=Shot
+	n2=350	n3=347
+	d2=1	d3=1
+	o1=0	o2=-20	o3=0 
 	''')
      #put label1=z unit1=ft*1000 d1=0.025 o1=0
      #    label2=x unit2=ft*1000 d2=0.025 o2=-34.875 |
+
 
 Flow('dataTwoCubedRSF','dataTwoRSF',
 	'''
@@ -44,14 +45,6 @@ Flow('dataRSF',['dataOneCubedRSF','dataTwoCubedRSF'],
 	n1=1126  	d1=0.008    o1=0		label1=z unit1=sec
     n2=350    	d2=4.5      o2=-270		label2=x unit2=ft
 	''')
-#   n3=694      d3=1        o3=0		label3=Shot
-#	n4=694		d4=2		o4=0
-#	n5=694		d5=2		o5=0
-#	n6=694		d6=2		o6=0
-#	n7=			d7=			o7=
-#	n8=			d8=			o8=
-#	n9=			d9=			o9=
-#	''')
 
 #---------- Make Snapsot ---------------------#
 Result('dataRSF','dataRSF','window $SOURCE j3=20 | grey gainpanel=a title=Pluto\ Model')
