@@ -1,6 +1,0 @@
-velo.rsf:
-    in="/u2/tirons/scratch/data/pluto/model/velo.rsf@"
-    esize=4 type=float form=native 
-    n1=1401        d1=0.025       o1=0          label1="z" unit1="km" 
-    n2=6960        d2=0.025       o2=-34.875    label2="x" unit2="km" 
-	9750960 elements 39003840 bytes
