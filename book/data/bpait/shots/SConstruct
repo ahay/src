@@ -1,7 +1,7 @@
 #########################################
 #                                       #
 # ##################################### #
-# #          AMOCO/model              # #
+# #           BPAIT/shots             # #
 # ##################################### #
 #                                       #
 #########################################
@@ -17,16 +17,16 @@ from rsfproj import *
  #######################################
 #----- Must be entered as strings --> 'name'
 #----- ['fileNameOne.extension','fileNameTwo.extension']
-source='Amoco'
+source='bpait'
 segyFiles=[]	
-nativeFiles=['velmodel.hh','velsmooth.HH','velsmoother.HH']
+nativeFiles=['bpaitshots.hh']
 
  #######################################
  #      Define Header info             #
  #######################################
 #---- Define n,o,d values, header info must be 
 #---- entered in same order as files.
-insertHeader='y'        #- Enter ['y','n'] to specify
+insertHeader='n'        #- Enter ['y','n'] to specify
 
 #----------  SEGY HEADERS -------------#
 #----- Form --> 'segyread tape=$SOURCE | put <headerinfo>'
@@ -34,10 +34,7 @@ segyHeader=[]
 
 #--------- Natice Headers -------------#
 #----- Form --> 'dd form=native | put <headerinfo>
-nativeHeader=['''dd form=native | math "output=input/1000" | put
-            label1=z unit1=km label2=x unit2=km title=Velocity_Model''',
-                 'dd form=native | put title=Smoothed_Velocity_Model',
-                 'dd form=native | put title=Smoother_Velocity_Model']
+nativeHeader=[]
 
  #######################################
  #      Concatinate  Datasets          #
