@@ -1,7 +1,7 @@
 #########################################
 #                                       #
 # ##################################### #
-# #           PLUTO/shots             # #
+# #           PLUTO/sign              # #
 # ##################################### #
 #                                       #
 #########################################
@@ -21,14 +21,14 @@ source='pluto'
 #----- Define File(s) to Download -----#
 	#- Include extensions (segy, SEGY, sgy, HH, h, hh)
 	#- FileType is either SEGY or native
-segyFiles=['P15shots150f_endon_0ph-1stHlf.SEGY','P15shots150f_endon_0ph-2ndHlf.SEGY']	
-nativeFiles=[]
+segyFiles=[]	
+nativeFiles=['sign.H']
 
  #######################################
  #      Define Header info             #
  #######################################
 	                    #- Define n,o,d values
-insertHeader='y'        #- Enter ['y','n']. If you want to specify
+insertHeader='n'        #- Enter ['y','n']. If you want to specify
                         #- header information they  must be 
                         #- entered in the same order as above,
 #----------  SEGY HEADERS -------------#
@@ -36,13 +36,13 @@ segyHeader=['''   segyread tape=$SOURCE | put
                   n2=350      o2=825      d2=75
                   n3=347      o3=0        d3=150	
                   label1=Depth\ Z		unit1=sec
-                  label2=X			    unit2=ft
+                  label2=X			    unit2=ft*1000
                   label3=Shot                         ''',
             '''   segyread tape=$SOURCE | put
                   n2=350      o2=825      d2=75
                   n3=347      o3=52050    d3=150
                   label1=Depth\ Z       unit1=sec
-                  label2=X              unit2=ft
+                  label2=X              unit2=ft*1000
                   label3=Shot                     ''',] 
 nativeHeader=[''' dd form=native | put
                   n2=350      o2=825      d2=75
@@ -78,11 +78,11 @@ catRules ='cat ${SOURCES[0:2]} axis=3' #- Enter number of files at sources
  #             Import Data             #
  #######################################
 
-#for file in segyFiles:
-#	Fetch(file,source)
+for file in segyFiles:
+	Fetch(file,source)
 
-#for file in nativeFiles:
-#	Fetch(file,source)
+for file in nativeFiles:
+	Fetch(file,source)
 
  #######################################
  #        Convert Data to RSF          #
