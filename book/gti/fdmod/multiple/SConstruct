@@ -49,7 +49,7 @@ def igrey(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n
+    grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=99
     label1="t" unit1=s label2="x" unit2=km %s
     min2=%g max2=%g
@@ -202,11 +202,11 @@ Result('dd','transp |' + dgrey('pclip=99',par))
 Result('dx','transp |' + dgrey('pclip=99',par))
 Result('dw','transp |' + dgrey('pclip=100',par))
 
-Result('alld','do dd dx',
+Result('alld','do dd dx dw',
        '''
-       cat axis=3 space=n ${SOURCES[1:3]} |
+       cat axis=3 space=n ${SOURCES[1:4]} |
        transp |
-       grey gainpanel=e pclip=99
+       grey gainpanel=e pclip=100
        ''')
 
 # ------------------------------------------------------------
@@ -217,10 +217,7 @@ Flow('so','vo','math output="1/input" | transp plane=12 | transp plane=23')
 # source/receiver data in the time-domain
 Flow('dst0','dw','transp')
 Flow('drt0','dx','transp')
-
-Plot('dst0',dgrey('pclip=100',par))
-Plot('drt0',dgrey('pclip=100',par))
-Result('dat0',['dst0','drt0'],'SideBySideAniso')
+Flow('dim0',['dst0','drt0'],'add mode=p ${SOURCES[0]} ${SOURCES[1]}',stdin=0)
 
 # source/receiver data in the frequency-domain
 zomig.wflds('dsw0','dst0',par)
@@ -237,6 +234,7 @@ for i in range(20):
     # datuming slabs
     minz=i*0.10
     nz  =  0.10/par['dz']
+    tit = str(j*0.1)
 
     # slowness in datuming slab
     slo    = 'so'+str(i)
@@ -256,13 +254,45 @@ for i in range(20):
     # time-domain wavefields
     dstbot = 'dst' + str(j)
     drtbot = 'drt' + str(j)
-    datbot = 'dat' + str(j)
+    dimbot = 'dim' + str(j)
 
     Flow(dstbot,dswbot,'window | transp | pad n1out=1501 | fft1 inv=y opt=n')
     Flow(drtbot,drwbot,'window | transp | pad n1out=1501 | fft1 inv=y opt=n')
+    Flow(dimbot,[dstbot,drtbot],'add mode=p ${SOURCES[0]} ${SOURCES[1]}',stdin=0)
+    
+# ------------------------------------------------------------
+# wavefield plots
+alls = map(lambda x: 'dst%d' % x,range(21))
+allr = map(lambda x: 'drt%d' % x,range(21))
+alli = map(lambda x: 'dim%d' % x,range(21))
 
-    Plot(dstbot,dgrey('pclip=100',par))
-    Plot(drtbot,dgrey('pclip=100',par))
-    Result(datbot,[dstbot,drtbot],'SideBySideAniso')
+for k in ('s','r','i'):
+    all = 'all' + k
+    bar = 'all' + k + 'bar'
+
+    if(k=='s'): grp = alls
+    if(k=='r'): grp = allr
+    if(k=='i'): grp = alli
+    
+    Flow([all,bar],grp,
+         '''
+         cat axis=3 space=n ${SOURCES[:21]} |
+         byte bar=${TARGETS[1]} gainpanel=a pclip=100
+         ''',stdin=0)
+
+    for i in range(21):
+        tit = str(i*0.1)
+        wfl =   'd' + k + 't' + str(i)
+        
+        Plot(wfl,[all,bar],
+             'window n3=1 f3=%d |' % i +
+             dgrey('grid2=y title=%s bar=${SOURCES[1]}',par) % tit )
+
+for i in range(21):
+    dst = 'dst' + str(i)
+    drt = 'drt' + str(i)
+    dim = 'dit' + str(i)
+    dat = 'dat' + str(i)
+    Result(dat,[dst,drt,dim],'SideBySideAniso')
 
 End()
