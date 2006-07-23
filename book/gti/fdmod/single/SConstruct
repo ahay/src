@@ -149,8 +149,8 @@ Flow('vx',None,
          ''' % par)
 Flow('rx',None,
      '''
-     spike nsp=1 mag=+0.25
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101 l1=%(nz)d |
+     spike nsp=2 mag=+0.25,-0.25
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101,151 l1=150,%(nz)d |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
 

@@ -179,9 +179,8 @@ amodel('do','wo','wav','vo','ro','ss','rr','free=y dens=y')
 # wavefield in rough model
 amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y')
 
-# reflected data and wavefield
+# reflected data
 Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
-Flow('wx','ww wo','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
 
 # source wavefield
 Flow('dw','wav',
@@ -189,7 +188,6 @@ Flow('dw','wav',
 
 Result('wo','window j3=50' + wgrey('pclip=95',par))
 Result('ww','window j3=50' + wgrey('pclip=95',par))
-Result('wx','window j3=50' + wgrey('pclip=95',par))
 
 Result('do','transp |' + dgrey('pclip=99',par))
 Result('dd','transp |' + dgrey('pclip=99',par))

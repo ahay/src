@@ -242,7 +242,6 @@ for im in range(par['nm']):
     # image
     mm = 'mm' + str(im)
 
-
     m0 = mm + '_0'
     Flow(m0,wv,'add mode=p ${SOURCES[0]} | stack axis=3 norm=n')
 
