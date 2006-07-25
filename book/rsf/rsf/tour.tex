@@ -76,8 +76,8 @@ Add the following line to the \texttt{SConstruct} file:
 \lstinputlisting[firstline=17,lastline=17,frame=single]{rsftour/SConstruct}
 
 Note that it does not matter if this line appears before or after the
-``Fetch'' line. You are simply instructing SCons how to create a result plot
-from the input. 
+``Fetch'' line. You are simply instructing SCons how to create a
+result plot from the input.
 
 Run
 \begin{verbatim}
@@ -96,7 +96,8 @@ retrieve(["Txx.HH"], [])
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:wiggle0} appearing on your screen.
 
-\plot{wiggle0}{width=6in}{To see this figure on your screen, run}% \texttt{scons~wiggle0.view}}
+\plot{wiggle0}{width=6in}{To see this figure on your screen, run
+  \texttt{scons~wiggle0.view}}
 
 \section{Processing exercises}
 
@@ -115,13 +116,13 @@ We will plot the windowed data with three different plotting programs.
 \lstinputlisting[firstline=25,lastline=30,frame=single]{rsftour/SConstruct}
 
 For convenience, plotting parameters are put in a string called
-\texttt{plotpar}. A Python string can be enclosed in single, double, or triple
-quotes. Triple quotes allow the string to span multiple lines. In this case,
-we use triple quotes for convenience. Next, we loop (using Python's
-\texttt{for} construct) through three different programs (\texttt{wiggle},
-\texttt{contour}, and \texttt{grey}). For each program, the command portion of
-\texttt{Result} is formed by concatenating two strings with Python's addition
-operator.
+\texttt{plotpar}. A Python string can be enclosed in single, double,
+or triple quotes. Triple quotes allow the string to span multiple
+lines. In this case, we use triple quotes for convenience. Next, we
+loop (using Python's \texttt{for} construct) through three different
+programs (\texttt{wiggle}, \texttt{contour}, and \texttt{grey}). For
+each program, the command portion of \texttt{Result} is formed by
+concatenating two strings with Python's addition operator.
 
 Try running \texttt{scons -Q wiggle.view}. You should see something like the
 following output in your terminal:
@@ -132,10 +133,11 @@ bash$ scons -Q wiggle.view
 pclip=100 nc=200 > Fig/wiggle.vpl
 /path/to/SEP/bin/xtpen Fig/wiggle.vpl
 \end{verbatim}
-and a figure similar to Figure~\ref{fig:wiggle} appearing on your screen. The \texttt{-Q} switch tells SCons to run in a quiet mode,
-suppressing verbose comments. We will use it from now on to save space. You
-can dismiss the figure by using the ``q'' key on the keyboard or by hitting
-the ``quit'' button. 
+and a figure similar to Figure~\ref{fig:wiggle} appearing on your
+screen. The \texttt{-Q} switch tells SCons to run in a quiet mode,
+suppressing verbose comments. We will use it from now on to save
+space. You can dismiss the figure by using the ``q'' key on the
+keyboard or by hitting the ``quit'' button.
 
 Run \texttt{scons -Q view}, and you should see simply
 \begin{verbatim}

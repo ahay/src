@@ -426,10 +426,13 @@ class Project(Environment):
             self.Command('test',None,'echo "Nothing to test"')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
         self.Command('.sf_data',None,'echo %s' % string.join(self.data,' '))
-    def Fetch(self,file,dir,private=None,server=dataserver,top='data'):
+    def Fetch(self,files,dir,private=None,server=dataserver,top='data'):
         if not private:
-            self.data.append(os.path.join(top,dir,file))
-        return self.Retrieve(file,None,
+            if not type(files) is types.ListType:
+                files = string.split(files)
+            for fil in files:
+                self.data.append(os.path.join(top,dir,fil))
+        return self.Retrieve(files,None,
                              dir=dir,private=private,
                              top=top,server=server)
 
