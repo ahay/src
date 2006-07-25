@@ -34,6 +34,8 @@ env.Prepend(CPPPATH=['../../include'])
 sources  = map(lambda x: x+'.c',Split(src))
 includes = map(lambda x: x+'.h',Split(src))
 
+incdir = os.environ.get('VPLOTFONTDIR',incdir+os.sep)
+
 objects = []
 for source in Split(src):
     env.Include(source,prefix='pen_')
