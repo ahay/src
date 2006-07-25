@@ -1,16 +1,11 @@
 from rsfproj import *
-from rwezo import *
-import zomig, pplot
+import zomig,rwezo
 
 par = {
-    'nz':751,  'dz':0.004,'oz':0,     # CC axis 1
-    'nx':1500, 'dx':0.004,'ox':2,     # CC axis 2
-    'nt':550,  'dt':0.002,'ot':0,     # RC axis 1
-    'ng':512,  'dg':0.350,'og':-89.6, # RC axis 2
-    'lg':'label2="\F10 g\F3 " unit2="\^o\_"',
-    'lt':'label1="\F10 t\F3 " unit1="s"',
-    'lx':'label2=x unit2=km',
-    'lz':'label1=z unit1=km',
+    'nz':751,  'dz':0.004,'oz':0,     'lz':'label1=z unit1=km',                 # CC axis 1
+    'nx':1500, 'dx':0.004,'ox':2,     'lx':'label2=x unit2=km',                 # CC axis 2
+    'nt':550,  'dt':0.002,'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',     # RC axis 1
+    'ng':512,  'dg':0.350,'og':-89.6, 'lg':'label2="\F10 g\F3 " unit2="\^o\_"', # RC axis 2
     'nT':1250, 'dT':0.002,'oT':0, 'kT':1000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
@@ -18,7 +13,7 @@ par = {
     }
 
 # compute parameters
-param(par)
+rwezo.param(par)
 
 Fetch(['marmvel.hh'],'marm')
 
@@ -33,7 +28,7 @@ Flow('vel','marmvel.hh',
      o1=%(oz)g d1=%(dz)g
      o2=%(ox)g d2=%(dx)g
      ''' % par)
-Plot('vel',cgrey('allpos=y',par))
+Plot('vel',rwezo.cgrey('allpos=y',par))
 
 # smooth velocity for HWT
 Flow('vsm','vel','smooth rect1=201 rect2=201')
@@ -51,18 +46,18 @@ Flow('hwt','vsm',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',20,20,par)
+rwezo.cos('cos',20,20,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
-slow('sloCC','sloRC','vel','cos',par)
+rwezo.slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 allpos=y bias=0.18',par))
+       + rwezo.rgrey('pclip=100 allpos=y bias=0.18',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
-abm('abmRC','abrRC','sloRC','cos',par)
-abmplot('abmRC',par)
+rwezo.abm('abmRC','abrRC','sloRC','cos',par)
+rwezo.abmplot('abmRC',par)
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
@@ -84,16 +79,16 @@ frq('frqRC','frqCC','datCC','cos',par)
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
-Plot  ('imgCC','window | transp |' + cgrey('pclip=99',par))
+Plot  ('imgCC','window | transp |' + rwezo.cgrey('pclip=99',par))
 Result('imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image
-mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
-mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
+rwezo.mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
+rwezo.mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 
 # ------------------------------------------------------------
 # PLOTS
-plots(par)
+rwezo.plots(par)
 
 End()

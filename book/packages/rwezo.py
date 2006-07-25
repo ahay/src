@@ -1,6 +1,27 @@
 from rsfproj import *
 import pplot
 
+def param(par):
+    if(not par.has_key('nsz')): par['nsz']=3
+    if(not par.has_key('nsx')): par['nsx']=3
+
+    par['dw']=1/(par['nT']*par['dT'])
+    par['nw']=par['nT']/500*100
+
+    # ------------------------------------------------------------
+    par['xmin']=par['ox']                            
+    par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
+    par['zmin']=par['oz']                            
+    par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
+    par['tmin']=par['ot']
+    par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+    par['gmin']=par['og']
+    par['gmax']=par['og'] + (par['ng']-1) * par['dg']
+    # ------------------------------------------------------------
+
+    par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
+    par['height']=par['ratio']*14
+
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
@@ -12,43 +33,40 @@ def cgrey(custom,par):
            par['lz'],par['lx'],
            par['zmin'],par['zmax'],par['xmin'],par['xmax'],
            par['ratio'],par['height'])
+
 def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100
-    %s %s %s
-    min1=%g max1=%g min2=%g max2=%g
-    ''' % (custom,
-           par['lt'],par['lg'],
-           par['tmin'],par['tmax'],par['gmin'],par['gmax'])
+    min1=%g max1=%g %s
+    min2=%g max2=%g %s
+    %s
+    ''' % (par['tmin'],par['tmax'],par['lt'],
+           par['gmin'],par['gmax'],par['lg'],
+           custom)
+
+def dgrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y wanttitle=n
+    title="" pclip=99
+    min2=%g max2=%g %s
+    %s
+    ''' % (par['xmin'],par['xmax'],par['lx'],
+           custom)
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n  %s
+    graph labelrot=n
     yreverse=y wantaxis=n title=" " 
-    min1=%g max1=%g min2=%g max2=%g  screenratio=%g screenht=%g
-    ''' % (custom,
-           par['xmin'],par['xmax'],par['zmin'],par['zmax'],
-           par['ratio'],par['height'])
+    min2=%g max2=%g %s
+    min1=%g max1=%g %s
+    screenratio=%g screenht=%g
+    %s
+    ''' % (par['zmin'],par['zmax'],par['lz'], 
+           par['xmin'],par['xmax'],par['lx'],
+           par['ratio'],par['height'],
+           custom)
 
-def param(par):
-    par['dw']=1/(par['nT']*par['dT'])
-    par['nw']=par['nT']/500*100
-
-    # ------------------------------------------------------------
-    par['xmin']=par['ox']                             -0.1
-    par['xmax']=par['ox'] + (par['nx']-1) * par['dx'] +0.1
-    par['zmin']=par['oz']                             -0.1
-    par['zmax']=par['oz'] + (par['nz']-1) * par['dz'] +0.1
-    par['tmin']=par['ot']
-    par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
-    par['gmin']=par['og']
-    par['gmax']=par['og'] + (par['ng']-1) * par['dg']
-    # ------------------------------------------------------------
-
-    par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
-    par['height']=par['ratio']*14
-    
 # plot coordinate system
 def cos(cos,jray,jwft,par):
     wft = cos + '-wft'
@@ -92,7 +110,7 @@ def abm(abmRC,abrRC,sloRC,cos,par):
          ''')
 
     Flow(abmRC+'a',abmRC+'tmp','window n3=1 f3=0')
-    Flow(abmRC+'b',abmRC+'tmp','window n3=1 f3=1 | smooth rect1=1 rect2=1')
+    Flow(abmRC+'b',abmRC+'tmp','window n3=1 f3=1 | smooth rect1=11 rect2=1')
     Flow(abmRC+'m',abmRC+'tmp','window n3=1 f3=2')
 
     Flow(abmRC,[abmRC+'a',abmRC+'b',abmRC+'m'],
@@ -100,11 +118,11 @@ def abm(abmRC,abrRC,sloRC,cos,par):
          )
 
 def abmplot(abmRC,par):
-    Result('aRC',abmRC,'window n3=1 f3=0 | transp |'
+    Result(abmRC+'a',abmRC,'window n3=1 f3=0 | transp |'
          + rgrey('pclip=100 bias=1 scalebar=y',par))
-    Result('bRC',abmRC,'window n3=1 f3=1 | transp |'
+    Result(abmRC+'b',abmRC,'window n3=1 f3=1 | transp |'
          + rgrey('pclip=100 allpos=y scalebar=y',par))
-    Result('mRC',abmRC,'window n3=1 f3=2 | transp |'
+    Result(abmRC+'m',abmRC,'window n3=1 f3=2 | transp |'
          + rgrey('pclip=100 allpos=y',par))
 
 def frq(frqRC,frqCC,datCC,cos,par):
@@ -122,7 +140,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
          window |
          spray axis=2 n=1 o=%(oz)g d=%(dz)g |
          pad beg2=10 n2out=20 |
-         c2r rays=${SOURCES[1]} adj=n linear=n nsz=3 nsx=3 |
+         c2r rays=${SOURCES[1]} adj=n linear=n nsz=%(nsz)d nsx=%(nsx)d |
          put label1=g label2=t label3=w
          ''' % par)
     Result(frqRC,'window j3=10 | real | transp |'
@@ -151,7 +169,7 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
 
         Flow(migCC+sfx,[migRC+sfx,cos],
              '''
-             c2r rays=${SOURCES[1]} adj=y linear=n nsz=3 nsx=3
+             c2r rays=${SOURCES[1]} adj=y linear=n nsz=%(nsz)d nsx=%(nsx)d
              a2n=%(nz)d a2o=%(oz)g a2d=%(dz)g
              a1n=%(nx)d a1o=%(ox)g a1d=%(dx)g |
              put label1=z label2=x
@@ -195,7 +213,7 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
 
         Flow('cutCC'+sfx,[modRC+sfx,cos],
              '''
-             c2r rays=${SOURCES[1]} adj=y linear=n nsz=3 nsx=3
+             c2r rays=${SOURCES[1]} adj=y linear=n nsz=%(nsz)d nsx=%(nsx)d
              a1n=%(nx)d    a1o=%(ox)g    a1d=%(dx)g
              a2n=%(nzcut)d a2o=%(ozcut)g a2d=%(dz)g |
              window n2=1 min2=%(oz)g

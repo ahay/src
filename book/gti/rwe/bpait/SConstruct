@@ -2,14 +2,13 @@ from rsfproj import *
 import rwezo,zomig,fdmod
 
 par = {    
-    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z unit1=kft',  
-    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x unit2=kft',
-    'nt':32000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
-    'ng':400,  'dg':2.0,    'og':0,     'lg':'label2="\F10 g\F3 " unit2=""',
-    'kt':100,    # wavelet delay 
+    'nz':1911, 'dz':0.00625, 'oz':0,  'lz':'label1=z unit1=km',
+    'nx':3500, 'dx':0.01250, 'ox':0,  'lx':'label2=x unit2=km',
+    'nt':12000,'dt':0.001,   'ot':0,  'lt':'label1="\F10 t\F3 " unit1="s"',
+    'ng':600,  'dg':0.1,     'og':-85,'lg':'label2="\F10 g\F3 " unit2="\^o\_"',
+    'kt':100,    # wavelet delay
     'nT':1600, 'dT':0.004,    'oT':0,
-    'ow':1,
-    'nsz':7,'nsx':7
+    'ow':1
     }
 
 # compute parameters
@@ -19,63 +18,22 @@ fdmod.param(par)
 
 # ------------------------------------------------------------
 # velocity
-velo = 'sigsbee2a_migvel.sgy'
-Fetch(velo,'sigsbee')
+velo = 'bpaitvel.hh'
+Fetch(velo,'bpait')
 
-Flow('zvelo tzvelo',velo,
+Flow('velo','bpaitvel.hh',
      '''
-     segyread
-     tape=$SOURCE
-     tfile=${TARGETS[1]}
-     hfile=${TARGETS[2]}
-     bfile=${TARGETS[3]}
-     ''',stdin=0)
-
-# ------------------------------------------------------------
-par['nxcut']=1600
-par['nxpad']=2500
-par['nzpad']=1099
-
-Flow('vraw','zvelo',
-     '''
+     dd form=native |
+     window n2=%(nx)d |
      scale rscale=0.001 |
-     put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
-     window n2=%(nxcut)d
+     put d1=%(dz)g d2=%(dx)g label1=z label2=x
      ''' % par)
-
-par['ox']=par['ox']-par['nxpad']*par['dx']
-par['nx']=par['nxcut']+par['nxpad']
-par['nz']=par['nz']+par['nzpad']
-
-par['xmin']=par['ox']
-par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-par['zmin']=par['oz']
-par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
-
-Flow('padx','vraw',
-     '''
-     window n2=1 |
-     spray axis=2 n=%(nxpad)d d=%(dx)g o=%(ox)g |
-     cat ${SOURCES[0]} axis=2 space=n
-     ''' % par)
-
-Flow('padz','padx',
-     '''
-     window n1=1 f1=1200 |
-     spray axis=1 n=%(nzpad)d d=%(dz)g o=0 |
-     math "output=input+x1*0.2"
-     ''' % par)
-
-Flow('velo','padx padz',
-     '''
-     cat axis=1 space=n ${SOURCES[1]}
-     ''')
 Flow('dens','velo','math output=10')
 
-Plot  ('velo',rwezo.cgrey('allpos=y pclip=95',par))
-Result('velo',rwezo.cgrey('allpos=y pclip=95',par))
+Plot  ('velo',rwezo.cgrey('allpos=y pclip=100 bias=1.4',par))
+Result('velo',rwezo.cgrey('allpos=y pclip=100 bias=1.4',par))
 
-Flow(  'salt','velo','add add=-14 | clip clip=1')
+Flow(  'salt','velo','add add=-4.7 | clip clip=0.5')
 Result('salt',rwezo.cgrey('allpos=y pclip=100',par))
 
 # ------------------------------------------------------------
@@ -153,24 +111,23 @@ Result('wav','wav','window n1=1000 | graph title=" "')
 fdmod.amodel('do','wo','wav','velo','dens','ss','oo','free=n',par)
 
 # ------------------------------------------------------------
-
 Result('wo',
-       'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+       'window j3=2 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
        + rwezo.cgrey('pclip=99 gainpanel=a',par))
 Result('do','window j2=4 | transp memsize=1000 |' + rwezo.dgrey('',par))
 
-for j in range(20,320,20):
+for j in range(2,120,2):
     par['j'] = j
     
-    Plot('wo'+str(j/20),'wo',
+    Plot('wo'+str(j/2),'wo',
          '''
          window n3=1 f3=%(j)d
          min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
          ''' % par
          + rwezo.cgrey('pclip=100',par))
-    Result('wo'+str(j/20),['wo'+str(j/20),'cos1','ss'],'Overlay')
-
-Flow(  'dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
+    Result('wo'+str(j/2),['wo'+str(j/2),'cos1','ss'],'Overlay')
+    
+Flow(  'dd','do','window f2=%(kt)d | put o2=0 d2=0.002 | window j2=2' % par)
 Result('dd','transp memsize=1000 |' + rwezo.dgrey('',par))
 
 # ------------------------------------------------------------
@@ -186,22 +143,25 @@ Flow('sou1','mxs1 mzs1','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=com
 # wavefronts (by HWT)
 Flow('hwt1','vel1 sou1',
      '''
-     hwtex verb=n sou=${SOURCES[1]}
-     nt=%(nt)d ot=%(ot)g dt=%(dt)g
+     hwt2d verb=n
+     xsou=38 zsou=3
+     nt=%(nt)d ot=0 dt=%(dt)g
+     ng=%(ng)d og=%(og)g dg=%(dg)g
      ''' % par)
 Flow('cos1','hwt1',
      '''
+     window f2=900 |
      reverse which=2 |
      put o2=0 d2=%(dt)g |
      window j2=8
      ''' % par)
 
 # ------------------------------------------------------------
-Flow('vel2','velo','math output=10')
+Flow('vel2','velo','math output=3.5')
 
 # coordinate system: rays(g,t)
-Flow('mzs2',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="-35+0.10*x1"' % par)
-Flow('mxs2',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="-75-0.03*x1"' % par)
+Flow('mzs2',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="-15+0.5*(x1-(%(og)g))"' % par)
+Flow('mxs2',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g | math output="+0-0.2*(x1-(%(og)g))"' % par)
 Flow('sou2','mxs2 mzs2','cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
 # wavefronts (by HWT)
@@ -214,7 +174,7 @@ Flow('cos2','hwt2','window j2=8')
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
-Flow  ('datCC','dd','transp memsize=1000')
+Flow(  'datCC','dd','transp memsize=1000')
 Result('datCC','grey pclip=99 wanttitle=n %s label2=x unit2=kft' % par['lt'])
 
 # ------------------------------------------------------------
@@ -270,24 +230,13 @@ zoompar = {
 rwezo.param(zoompar)
 
 Plot('zoomvel','velo',rwezo.cgrey('',zoompar))
+Flow('zoomcos','cos1','window')
+rwezo.cos('zoomcos',5,25,zoompar)
+Result('zoomcos','zoomvel zoomcos','Overlay')
+
+Plot('zoomvel-ovl',['zoomvel','zoomcos'],'Overlay')
+
 Flow('vscale','velo','scale axis=123 | add add=-0.6')
 
-for i in ('1','2'):
-    Flow('zoomcos'+i,'cos'+i,'window')
-    rwezo.cos('zoomcos'+i,5,25,zoompar)
-
-    Result('zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
-    Plot('zoomvel-ovl'+i,['zoomvel','zoomcos'+i],'Overlay')
-
     
-    for j in (['SSF','FFD','PSC',
-               'F15','F45','F60']):
-        sfx = i + '-' + j
-
-        Flow('iscale'+sfx,'migCC'+sfx,'transp | scale axis=123')
-        Flow('comp'+sfx,['vscale','iscale'+sfx],
-             'math a=${SOURCES[0]} b=${SOURCES[1]} output="0.5*a+b"')
-        Plot(  'comp'+sfx,rwezo.cgrey('pclip=100',zoompar))
-        Result('comp'+sfx,['comp'+sfx,'zoomcos'+i],'Overlay')
-        
 End()

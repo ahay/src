@@ -100,7 +100,7 @@ def wzplot(wplot,ws,wr,par):
 def amodel(dat,wfl,wav,vel,den,sou,rec,custom):
     Flow([dat,wfl],[wav,vel,den,sou,rec],
          '''
-         afmod
+         afmodP
          verb=y abc=y free=n snap=y jsnap=1 %s
          nbz=100 tz=0.0035
          nbx=100 tx=0.0035

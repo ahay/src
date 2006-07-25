@@ -37,6 +37,16 @@ def freqs(par):
     f = f + ' '
     return f
 
+def migpar(par):
+    if(not par.has_key('tmx')):     par['tmx']=10
+    if(not par.has_key('epsilon')): par['epsilon']=0.000001
+
+    if(not par.has_key('verb')):    par['verb']='y'
+    if(not par.has_key('nrmax')):   par['nrmax']=1
+    if(not par.has_key('incore')):  par['incore']='y'
+
+# ------------------------------------------------------------
+
 def wflds(wfld,data,par):
     Flow(wfld,data,
          '''

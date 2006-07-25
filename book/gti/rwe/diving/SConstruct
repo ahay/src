@@ -1,23 +1,18 @@
 from rsfproj import *
-from rwezo import *
-import zomig, pplot
+import zomig,rwezo
 
 par = {
-    'nz':250,  'dz':0.04,    'oz':0,  # CC axis 1
-    'nx':400,  'dx':0.04,    'ox':0,  # CC axis 2
-    'nt':1800, 'dt':0.004,   'ot':0,  # RC axis 1
-    'ng':225,  'dg':0.04,    'og':0.5,  # RC axis 2
-    'lg':'label2=x unit2=km',
-    'lt':'label1="\F10 t\F3 " unit1="s"',
-    'lx':'label2=x unit2=km',
-    'lz':'label1=z unit1=km',
+    'nz':250,  'dz':0.04,    'oz':0,  'lz':'label1=z unit1=km',             # CC axis 1
+    'nx':400,  'dx':0.04,    'ox':0,  'lx':'label2=x unit2=km',             # CC axis 2
+    'nt':1800, 'dt':0.004,   'ot':0,  'lt':'label1="\F10 t\F3 " unit1="s"', # RC axis 1
+    'ng':225,  'dg':0.04,    'og':0.5, 'lg':'label2=x unit2=km',            # RC axis 2
     'nT':2400, 'dT':0.008,   'oT':0,      # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
     'ow':1, 'incore':'y'
     }
 
 # compute parameters
-param(par)
+rwezo.param(par)
 
 # velocity
 Flow('vv',None,
@@ -57,7 +52,7 @@ Flow('vel','vv vb',
      b=${SOURCES[1]}
      output="a+b"
      ''')
-Plot('vel',cgrey('allpos=y bias=0',par))
+Plot('vel',rwezo.cgrey('allpos=y bias=0',par))
 
 # smooth velocity for HWT
 Flow('vsm','vv','smooth')
@@ -80,18 +75,18 @@ Flow('hwt','vsm sou',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-cos('cos',20,50,par)
+rwezo.cos('cos',20,50,par)
 Result('cos','vel cos','Overlay')
 
 # slowness
-slow('sloCC','sloRC','vel','cos',par)
+rwezo.slow('sloCC','sloRC','vel','cos',par)
 Result('sloRC','transp |'
-       + rgrey('pclip=100 allpos=y bias=0.12',par))
+       + rwezo.rgrey('pclip=100 allpos=y bias=0.12',par))
 
 # ------------------------------------------------------------
 # coordinate system coefficients (A,B,M=mask) and references (A,B)
-abm('abmRC','abrRC','sloRC','cos',par)
-abmplot('abmRC',par)
+rwezo.abm('abmRC','abrRC','sloRC','cos',par)
+rwezo.abmplot('abmRC',par)
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
@@ -108,7 +103,7 @@ Result('datCC','grey pclip=100 wanttitle=n')
 
 # ------------------------------------------------------------
 # frequency data RC: (g,w)
-frq('frqRC','frqCC','datCC','cos',par)
+rwezo.frq('frqRC','frqCC','datCC','cos',par)
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)
@@ -116,11 +111,11 @@ zomig.image('imgCC','sloCC','frqCC',par)
 
 # ------------------------------------------------------------
 # RWE image
-mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
-mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
+rwezo.mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
+rwezo.mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 
 # ------------------------------------------------------------
 # PLOTS
-plots(par)
+rwezo.plots(par)
 
 End()
