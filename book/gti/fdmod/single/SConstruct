@@ -8,8 +8,8 @@ import zomig,spmig,fdmod
 par = {
     'nt':3000, 'dt':0.001, 'ot':0, 'lt':'label1=time unit1=s',     
     'kt':100,    # wavelet delay
-    'nx':401, 'ox':0, 'dx':0.01, 'lx':'label2=x unit2=km',
-    'nz':201, 'oz':0, 'dz':0.01, 'lz':'label1=z unit1=km',
+    'nx':401,  'dx':0.01,  'ox':0, 'lx':'label2=x unit2=km',
+    'nz':201,  'dz':0.01,  'oz':0, 'lz':'label1=z unit1=km',
     #
     'nw':100,'ow':0,'jw':1,
     'verb':'y','tmx':20,
@@ -114,7 +114,7 @@ Result('alld','dx dw',
 
 # ------------------------------------------------------------
 # slowness
-Flow('so','vo','math output="1/input" | transp plane=12 | transp plane=23')
+Flow('so','vm','math output="1/input" | transp plane=12 | transp plane=23')
 
 # ------------------------------------------------------------
 # source/receiver data in the time-domain
@@ -137,7 +137,6 @@ for i in range(20):
     # datuming slabs
     minz=i*0.10
     nz  =  0.10/par['dz']
-    tit = str(j*0.1)
 
     # slowness in datuming slab
     slo    = 'so'+str(i)

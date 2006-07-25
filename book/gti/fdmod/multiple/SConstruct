@@ -114,7 +114,7 @@ Result('alld','dx dw',
 
 # ------------------------------------------------------------
 # slowness
-Flow('so','vo','math output="1/input" | transp plane=12 | transp plane=23')
+Flow('so','vm','math output="1/input" | transp plane=12 | transp plane=23')
 
 # ------------------------------------------------------------
 # source/receiver data in the time-domain
