@@ -7,8 +7,8 @@ par = {
     'nt':12000,'dt':0.001,   'ot':0,  'lt':'label1="\F10 t\F3 " unit1="s"',
     'ng':600,  'dg':0.1,     'og':-85,'lg':'label2="\F10 g\F3 " unit2="\^o\_"',
     'kt':100,    # wavelet delay
-    'nT':1600, 'dT':0.004,    'oT':0,
-    'ow':1
+    'ow':1,
+    'nT':1600, 'dT':0.004,    'oT':0
     }
 
 # compute parameters
@@ -72,7 +72,7 @@ Flow('ss',['xs','zs','rs'],
      ''', stdin=0)
 
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=. plotcol=2',par))
+     + fdmod.cgraph('symbol=. plotcol=0 symbolsz=8',par))
 #Result('ss',['velo','ss'],'Overlay')
 
 # ------------------------------------------------------------
@@ -215,17 +215,11 @@ for i in ('1','2'):
 
 # ------------------------------------------------------------
 zoompar = {
-    'nz':30, 'dz':1, 'oz':0,   # z (kft)
-    'nx':40, 'dx':1, 'ox':30,  # x (kft)
-    'nt':32000,  # no of time steps
-    'dt':0.0005, #       time sampling
-    'ot':0,      #       time origing
-    'ng':200,  'dg':2.0,      'og':0,
-    'nT':1600, 'dT':0.004,    'oT':0,
-    'lx':'label2=x unit2=kft',
-    'lz':'label1=z unit1=kft',
-    'lg':'label2="\F10 g\F3 " unit2=""',
-    'lt':'label1="\F10 t\F3 " unit1="s"'
+    'nz':30,    'dz':1,     'oz':0, 'lz':'label1=z unit1=kft',
+    'nx':40,    'dx':1,     'ox':30,'lx':'label2=x unit2=kft',
+    'nt':32000, 'dt':0.0005,'ot':0, 'lt':'label1="\F10 t\F3 " unit1="s"', 
+    'ng':200,   'dg':2.0,   'og':0, 'lg':'label2="\F10 g\F3 " unit2=""',
+    'nT':1600, 'dT':0.004,    'oT':0
     }
 rwezo.param(zoompar)
 

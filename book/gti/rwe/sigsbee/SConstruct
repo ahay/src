@@ -114,7 +114,7 @@ Flow('ss',['xs','zs','rs'],
      ''', stdin=0)
 
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=. plotcol=2',par))
+     + fdmod.cgraph('symbol=. plotcol=0 symbolsz=8',par))
 #Result('ss',['velo','ss'],'Overlay')
 
 # ------------------------------------------------------------
