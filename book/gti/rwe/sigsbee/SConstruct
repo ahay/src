@@ -255,17 +255,11 @@ for i in ('1','2'):
 
 # ------------------------------------------------------------
 zoompar = {
-    'nz':30, 'dz':1, 'oz':0,   # z (kft)
-    'nx':40, 'dx':1, 'ox':30,  # x (kft)
-    'nt':32000,  # no of time steps
-    'dt':0.0005, #       time sampling
-    'ot':0,      #       time origing
-    'ng':200,  'dg':2.0,      'og':0,
-    'nT':1600, 'dT':0.004,    'oT':0,
-    'lx':'label2=x unit2=kft',
-    'lz':'label1=z unit1=kft',
-    'lg':'label2="\F10 g\F3 " unit2=""',
-    'lt':'label1="\F10 t\F3 " unit1="s"'
+    'nz':30,    'dz':1,      'oz':0,  'lz':'label1=z unit1=kft',
+    'nx':40,    'dx':1,      'ox':30, 'lx':'label2=x unit2=kft',
+    'nt':32000, 'dt':0.0005, 'ot':0,  'lt':'label1="\F10 t\F3 " unit1="s"',
+    'ng':200,   'dg':2.0,    'og':0,  'lg':'label2="\F10 g\F3 " unit2=""',
+    'nT':1600,  'dT':0.004,  'oT':0
     }
 rwezo.param(zoompar)
 
@@ -279,7 +273,6 @@ for i in ('1','2'):
     Result('zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
     Plot('zoomvel-ovl'+i,['zoomvel','zoomcos'+i],'Overlay')
 
-    
     for j in (['SSF','FFD','PSC',
                'F15','F45','F60']):
         sfx = i + '-' + j

@@ -15,7 +15,7 @@ par = {
 # compute parameters
 rwezo.param(par)
 
-Fetch(['marmvel.hh'],'marm')
+Fetch('marmvel.hh','marm')
 
 # true velocity
 Flow('vel','marmvel.hh',
@@ -74,7 +74,7 @@ Result('datCC','grey pclip=100 wanttitle=n')
 
 # ------------------------------------------------------------
 # frequency data RC: (g,w)
-frq('frqRC','frqCC','datCC','cos',par)
+rwezo.frq('frqRC','frqCC','datCC','cos',par)
 
 # ------------------------------------------------------------
 # WEM image CC: (z,x)

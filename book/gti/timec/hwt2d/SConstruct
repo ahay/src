@@ -33,7 +33,7 @@ mpar = {
     'ng':3600,'dg':0.1,  'og':0
     }
 # ------------------------------------------------------------
-Fetch(['marmvel.hh'],'marm')
+Fetch('marmvel.hh','marm')
 
 Flow('mvel','marmvel.hh','dd form=native | smooth rect1=51 rect2=51')
 Plot('mvel',

@@ -19,20 +19,21 @@ def param(par):
     par['gmax']=par['og'] + (par['ng']-1) * par['dg']
     # ------------------------------------------------------------
 
-    par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
-    par['height']=par['ratio']*14
+    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    par['height']=14.0*par['ratio']
 
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100
-    %s %s %s
-    min1=%g max1=%g min2=%g max2=%g
+    min1=%g max1=%g %s 
+    min2=%g max2=%g %s
     screenratio=%g screenht=%g
-    ''' % (custom,
-           par['lz'],par['lx'],
-           par['zmin'],par['zmax'],par['xmin'],par['xmax'],
-           par['ratio'],par['height'])
+    %s
+    ''' % (par['zmin'],par['zmax'],par['lz'],
+           par['xmin'],par['xmax'],par['lx'],
+           par['ratio'],par['height'],
+           custom)
 
 def rgrey(custom,par):
     return '''
