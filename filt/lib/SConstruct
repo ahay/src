@@ -129,6 +129,8 @@ if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
                 mod = 'RSF'+modsuffix
             if root:
                 mod = '#/'+mod
+            env.Depends(mod,libf90)
+
             installf90 = env.Install('../../include',mod)
              
             if root:
