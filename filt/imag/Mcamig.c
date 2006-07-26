@@ -1,9 +1,6 @@
-/* 3-D common-azimuth modeling/migration with extended split-step.
- *
- * pcs 2005
- */
-
+/* 3-D common-azimuth modeling/migration with extended split-step */
 /*
+  Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify

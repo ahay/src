@@ -1,9 +1,6 @@
-/* Riemannian Wavefield Extrapolation: zero-offset modeling/migration
- * 
- * pcs 2005
- */
-
+/* Riemannian Wavefield Extrapolation: zero-offset modeling/migration */
 /*
+  Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify

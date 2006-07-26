@@ -2,6 +2,7 @@
    Cartesian-Coordinates to Riemannian-Coordinates interpolation
 */
 /*
+  Copyright (C) 2006 Colorado School of Mines
   Copyright (C) 2004 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
