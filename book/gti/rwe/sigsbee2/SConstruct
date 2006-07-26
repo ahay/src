@@ -80,11 +80,14 @@ Flow(  'salt','velo','add add=-14 | clip clip=1')
 
 # ------------------------------------------------------------
 
-Flow(  'edge','salt','igrad square=y')
-#Result('edge','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
+Flow(  'edgez','salt','         igrad square=y')
+Flow(  'edgex','salt','transp | igrad square=y | transp')
+Flow(  'edge','edgez edgex',
+       'math z=${SOURCES[0]} x=${SOURCES[1]} output="z+x"')
+Result('edge','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
 
 Flow(  'mask','edge','mask min=0.002')
-#Result('mask','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
+Result('mask','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
 
 for x in ('x1','x2'):
     if(x=='x1'): o='zs'
@@ -115,7 +118,7 @@ Flow('ss',['xs','zs','rs'],
 
 Plot('ss','window n1=2 | dd type=complex | window | '
      + fdmod.cgraph('symbol=. plotcol=0 symbolsz=8',par))
-#Result('ss',['velo','ss'],'Overlay')
+Result('ss',['velo','ss'],'Overlay')
 
 # ------------------------------------------------------------
 
@@ -137,6 +140,12 @@ Plot('oo','window n1=2 | dd type=complex | window j2=10 | '
 #Result('oo',['velo','oo'],'Overlay')
 
 Result('model','velo ss oo','Overlay')
+
+Flow('surf',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=2 |
+     spray axis=2       n=%(nx)d  d=%(dx)g  o=%(ox)g
+     ''' % par)
 
 # ------------------------------------------------------------
 # wavelet
@@ -238,8 +247,15 @@ for i in ('1','2'):
     # slowness
     rwezo.slow(  'sloCC','sloRC'+i,'velo','cos'+i,par)
     Result('sloRC'+i,'transp |'
-           + rwezo.rgrey('pclip=99 allpos=y color=j bias=0.065',par))
+           + rwezo.rgrey('pclip=99 allpos=y color=j bias=0.061',par))
 
+    # surface and salt
+    Result('edgeRC'+i,['edge','surf','cos'+i],
+           '''
+           add ${SOURCES[1]} | transp |
+           c2r rays=${SOURCES[2]} adj=n | transp | bandpass fhi=10 |
+           '''+ rwezo.rgrey('pclip=99',par))
+    
     # ------------------------------------------------------------
     # coordinate system coefficients (A,B,M=mask) and references (A,B)
     rwezo.abm(    'abmRC'+i,'abrRC'+i,'sloRC'+i,'cos'+i,par)
