@@ -58,7 +58,7 @@ if root:
     env.Install(incdir,inc)
 else:
     env.Alias('install',install)
-
+    
 ##############################################################################
 # TESTING
 ##############################################################################
@@ -110,24 +110,38 @@ if 'fortran' in api:
 ##############################################################################
 if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
     if env.has_key('F90'):
-        import configure
-
         F90 = env.get('F90')
+        F90base =  os.path.basename(F90)
         F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
 
-        if os.path.basename(F90) == 'gfortran':
+        if F90base == 'gfortran':
             F90flags = F90flags + ' -DGFORTRAN'
 
         env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
         env.Object('rsf.o','rsf.f90')
         libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o'])
+
+        modsuffix = env.get('F90MODSUFFIX')
+        if modsuffix:
+            if 'ifort'==F90base or 'gfortran'==F90base:
+                mod = 'rsf'+modsuffix
+            else:
+                mod = 'RSF'+modsuffix
+            if root:
+                mod = '#/'+mod
+            installf90 = env.Install('../../include',mod)
+             
+            if root:
+                env.Install(incdir,mod)
+            else:
+                env.Alias('install',installf90)
         
         if root:
             env.Install(libdir,libf90)
             
         for file in ['getpar','file']:
             test = 'Test' + file + '.f90'
-            env.Program([test,libf90,lib],PROGSUFFIX='f90.x',PROGPREFIX='',
+            env.Program([test,libf90,lib],PROGSUFFIX='.x',PROGPREFIX='',
                         OBJSUFFIX='f90.o',
                         LINK=F90,LINKFLAGS=env.get('F90FLAGS'))
             
@@ -192,4 +206,5 @@ if mex and 'matlab' in api:
 env.Command('../lint/lint',map(lambda x: x+'.c',Split(src2)),
             'splint +posixlib $SOURCES')
 env.Alias('lint','../lint')
+
 

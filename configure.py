@@ -57,7 +57,7 @@ def depends(env,list,file):
 include90 = re.compile(r'use\s+(\S+)')
 
 def depends90(env,list,file):
-    filename = env.File(file+'.f90').abspath
+    filename = string.replace(env.File(file+'.f90').abspath,'build/','',1)
     fd = open(filename,'r')
     for line in fd.readlines():
         for inc in include90.findall(line):
@@ -203,7 +203,7 @@ def x11(context):
 
     res = None
     for path in filter(lambda x:
-                       os.path.isfile(os.path.join(x,'X11/Intrinsic.h')),
+                       os.path.isfile(os.path.join(x,'X11/Xaw/Label.h')),
                        INC+xinc):        
         context.env['CPPPATH'] = oldpath + [path,] 
         res = context.TryCompile(text,'.c')
@@ -413,7 +413,7 @@ def cxx(context):
             context.env['CXXFLAGS'] = oldflag
 
 fortran = {'g77':'f2cFortran',
-           'gfortran':'f2cFortran',
+           'gfortran':'NAGf90Fortran', # used to be f2cFortran
            'f2c':'f2cFortran'}
 
 def f77(context):

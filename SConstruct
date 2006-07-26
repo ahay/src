@@ -65,21 +65,6 @@ for dir in subdirs:
     SConscript(dirs=build,name='SConstruct')
     Default(build)
 
-if env.has_key('F90'):
-    modsuffix = env.get('F90MODSUFFIX')
-    F90 = os.path.basename(env.get('F90'))
-    if modsuffix:
-        if 'ifort'==F90 or 'gfortran'==F90:
-            mod = '#/rsf'+modsuffix
-        else:
-            mod = '#/RSF'+modsuffix
-        env.Install(incdir,mod)
-        Clean(build,mod)
-    elif 'ifc' == F90: # old Intel compiler quirks
-        env.InstallAs(os.path.join(incdir,'rsf.pc'),'work.pc')
-        env.Install(incdir,'rsf.d')
-        Clean(build,['rsf.d','work.pc'])
-
 ##########################################################################
 # PLOT BUILD
 ##########################################################################

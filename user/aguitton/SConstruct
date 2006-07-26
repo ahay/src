@@ -15,35 +15,34 @@ try:  # distributed version
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
     dir = string.replace(os.getcwd(),'/build','')
-    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.f90')))
 except: # local version
     root = None
     env = Environment()
     opts=Options('../../config.py')
     configure.options(opts)
     opts.Update(env)
-    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    SConscript('../../filt/lib/SConstruct')
-    src = glob.glob('[a-z]*.c')
-    env.Append(BUILDERS={'Include':configure.Header},
-               SCANNERS=[configure.Include])
+    env['F90FLAGS'] = string.replace(env.get('F90FLAGS',''),'-O2','-g')
+    src = glob.glob('[a-z]*.f90')
 
-env.Prepend(CPPPATH=['../../include'],
+F90 = env.get('F90')
+api = string.split(string.lower(str(env.get('API',''))),',')
+ 
+env.Prepend(F90PATH=['../../include'],
             LIBPATH=['../../filt/lib'],
-            LIBS=['rsf'])
-
-for source in src:
-    inc = env.Include(source,prefix='')
-    obj = env.StaticObject(source)
-    env.Depends(obj,inc)
+            LIBS=['rsff90','rsf'])
 
 mains = Split(progs)
-for prog in mains:
-    sources = ['M' + prog]
-    configure.depends(env,sources,'M'+prog)
-    prog = env.Program(prog,map(lambda x: x + '.c',sources))
-    if root:
-        env.Install(bindir,prog)
+
+if 'fortran-90' in api or 'fortran90' in api or 'f90' in api and F90:  
+    map(env.StaticObject,src)
+    for prog in mains:
+        sources = ['M' + prog]
+        configure.depends90(env,sources,'M'+prog)
+        prog = env.Program(prog,map(lambda x: x + '.f90',sources),
+                           LINK=F90)
+        if root:
+            env.Install(bindir,prog)
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -52,8 +51,8 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
-    env.Depends(docs,'#/python/rsfdoc.py')	
+    docs = map(lambda prog: env.Doc(prog,'M'+prog+'.f90',lang='f90'),mains)
+    env.Depends(docs,'#/python/rsfdoc.py')
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)

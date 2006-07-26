@@ -34,7 +34,7 @@ void sf_init_f(void)
     char** argv1, *argvi, arg[256];
 
 #ifdef GFORTRAN
-    argc1 = _gfortran_iargc();
+    argc1 = 1+_gfortran_iargc();
 #else
     argc1 = 1+IARGC(); 
 #endif   
