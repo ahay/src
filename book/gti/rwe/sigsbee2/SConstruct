@@ -2,15 +2,20 @@ from rsfproj import *
 import rwezo,zomig,fdmod
 
 par = {    
-    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z unit1=kft',  
-    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x unit2=kft',
+    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z unit1=km',  
+    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x unit2=km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
-    'ng':400,  'dg':1.0,    'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
+    'ng':400,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
     'kt':100,    # wavelet delay 
     'nT':1600, 'dT':0.004,    'oT':0,
     'ow':1,
     'nsz':7,'nsx':7
     }
+
+par['dx']=0.3048*par['dx']
+par['ox']=0.3048*par['ox']
+par['dz']=0.3048*par['dz']
+par['oz']=0.3048*par['oz']
 
 # compute parameters
 rwezo.param(par)
@@ -39,6 +44,7 @@ par['nzpad']=799
 Flow('vraw','zvelo',
      '''
      scale rscale=0.001 |
+     scale rscale=0.3048 |
      put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x |
      window n2=%(nxcut)d
      ''' % par)
@@ -70,12 +76,12 @@ Flow('velo','padx padz',
      '''
      cat axis=1 space=n ${SOURCES[1]}
      ''')
-Flow('dens','velo','math output=10')
+Flow('dens','velo','math output=2.5')
 
 Plot  ('velo',rwezo.cgrey('allpos=y pclip=95',par))
 Result('velo',rwezo.cgrey('allpos=y pclip=95',par))
 
-Flow(  'salt','velo','add add=-14 | clip clip=1')
+Flow(  'salt','velo','add add=-4.26 | clip clip=0.3048')
 #Result('salt',rwezo.cgrey('allpos=y pclip=100',par))
 
 # ------------------------------------------------------------
@@ -86,7 +92,7 @@ Flow(  'edge','edgez edgex',
        'math z=${SOURCES[0]} x=${SOURCES[1]} output="z+x"')
 Result('edge','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
 
-Flow(  'mask','edge','mask min=0.002')
+Flow(  'mask','edge','mask min=0.0006')
 Result('mask','sfdd type=float |' + rwezo.cgrey('pclip=100',par))
 
 for x in ('x1','x2'):
@@ -190,8 +196,8 @@ Flow('vel1','velo','smooth rect1=351 rect2=351 repeat=3')
 Flow('s_',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g' % par)
 
 # coordinate system: rays(g,t)
-Flow('mzs1','s_','math output="04+0.058*x1"' % par)
-Flow('mxs1','s_','math output="56+0.050*x1"' % par)
+Flow('mzs1','s_','math output="01.0+0.0175*x1"' % par)
+Flow('mxs1','s_','math output="17.0+0.0150*x1"' % par)
 Flow('sou1','mxs1 mzs1',
      'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
@@ -209,11 +215,11 @@ Flow('cos1','hwt1',
      ''' % par)
 
 # ------------------------------------------------------------
-Flow('vel2','velo','math output=10')
+Flow('vel2','velo','math output=3')
 
 # coordinate system: rays(g,t)
-Flow('mzs2','s_','math output="-25+0.160*x1"' % par)
-Flow('mxs2','s_','math output="-60-0.040*x1"' % par)
+Flow('mzs2','s_','math output="-07.50+0.045*x1"' % par)
+Flow('mxs2','s_','math output="-18.25-0.013*x1"' % par)
 Flow('sou2','mxs2 mzs2',
      'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
