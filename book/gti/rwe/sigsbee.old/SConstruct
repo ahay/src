@@ -138,6 +138,12 @@ Plot('oo','window n1=2 | dd type=complex | window j2=10 | '
 
 Result('model','velo ss oo','Overlay')
 
+Flow('surf',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nz)d d1=%(dz)g o1=%(oz)g k1=2 |
+     spray axis=2       n=%(nx)d  d=%(dx)g  o=%(ox)g
+     ''' % par)
+
 # ------------------------------------------------------------
 # wavelet
 Flow('wav',None,
@@ -236,6 +242,13 @@ for i in ('1','2'):
     Result('sloRC'+i,'transp |'
            + rwezo.rgrey('pclip=99 allpos=y color=j bias=0.065',par))
 
+    # surface and salt
+    Result('edgeRC'+i,['edge','surf','cos'+i],
+           '''
+           add ${SOURCES[1]} | transp |
+           c2r rays=${SOURCES[2]} adj=n | transp | bandpass fhi=10 |
+           '''+ rwezo.rgrey('pclip=99',par))
+    
     # ------------------------------------------------------------
     # coordinate system coefficients (A,B,M=mask) and references (A,B)
     rwezo.abm(    'abmRC'+i,'abrRC'+i,'sloRC'+i,'cos'+i,par)

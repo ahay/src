@@ -12,11 +12,6 @@ par = {
     'nsz':7,'nsx':7
     }
 
-par['dx']=0.3048*par['dx']
-par['ox']=0.3048*par['ox']
-par['dz']=0.3048*par['dz']
-par['oz']=0.3048*par['oz']
-
 # compute parameters
 rwezo.param(par)
 zomig.migpar(par)
@@ -174,7 +169,7 @@ Result('wo',
        + rwezo.cgrey('pclip=99 gainpanel=a',par))
 Result('do','window j2=4 | transp memsize=1000 |' + rwezo.dgrey('',par))
 
-for j in range(20,320,20):
+for j in range(20,300,20):
     par['j'] = j
     
     Plot('wo'+str(j/20),'wo',
