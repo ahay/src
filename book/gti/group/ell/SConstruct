@@ -74,5 +74,6 @@ Plot('ane','cane tane','Overlay')
 Plot('aner','aray tane','Overlay')
 
 Result('const','iso ane','SideBySideIso')
+Result('constr','isor aner','SideBySideIso')
 
 End()

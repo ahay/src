@@ -31,8 +31,9 @@ An addition operation can be performed by sfstack.
 
 int main(int argc, char* argv[])
 {
-    int i, i1, i2, n1, n2, len, nkey;
+    int i, i1, i2, n1, n2, nt, len, mem, nkey;
     sf_file in, out;
+    off_t memsize;
     char *eq, *output, *key, *arg;
     float **ftra, **fbuf, **fst, d2, o2;
 
@@ -83,30 +84,38 @@ int main(int argc, char* argv[])
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Describes the output in a mathematical notation. */
 
+    if (!sf_getint("memsize",&mem)) mem = 100;
+    /* Available memory size (in Mb) */
+    memsize = mem * (1 << 20); /* convert Mb to bytes */
+
     len = sf_math_parse (output,out,SF_FLOAT);
     
-    ftra = sf_floatalloc2(n1,n2);
-    fbuf = sf_floatalloc2(n2,n1+3);
-    fst  = sf_floatalloc2(n2,len+3);
+    /* number of traces for optimal I/O */
+    nt = SF_MAX(1,memsize/((2*n1+len+6)*sizeof(float)));
+
+    ftra = sf_floatalloc2(n1,nt);
+    fbuf = sf_floatalloc2(nt,n1+3);
+    fst  = sf_floatalloc2(nt,len+3);
     
-    sf_floatread(ftra[0],n1*n2,in);
+    for (; n2 > 0; n2 -= nt) {
+	if (n2 < nt) nt=n2;
 
-    for (i2=0; i2 < n2; i2++) {
-	fbuf[0][i2]=(float) i2;  /* N */
-	fbuf[1][i2]=o2+i2*d2;    /* T */
-	fbuf[2][i2]=ftra[0][i2]; /* input */ 
-    }
-    for (i1=0; i1 < n1; i1++) {
-	for (i2=0; i2 < n2; i2++) {
-	    fbuf[i1+3][i2]=ftra[i2][i1];
+	sf_floatread(ftra[0],n1*nt,in);
+
+	for (i2=0; i2 < nt; i2++) {
+	    fbuf[0][i2]=(float) i2;  /* N */
+	    fbuf[1][i2]=o2+i2*d2;    /* T */
+	    fbuf[2][i2]=ftra[0][i2]; /* input */ 
 	}
+	for (i1=0; i1 < n1; i1++) {
+	    for (i2=0; i2 < nt; i2++) {
+		fbuf[i1+3][i2]=ftra[i2][i1];
+	    }
+	}
+
+	sf_math_evaluate (len, nt, fbuf, fst);
+	sf_floatwrite(fst[1],nt,out);
     }
-
-    free (ftra[0]);
-    free (ftra);
-
-    sf_math_evaluate (len, n2, fbuf, fst);
-    sf_floatwrite(fst[1],n2,out);
 
     exit(0);
 }

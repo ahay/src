@@ -21,6 +21,7 @@
 
 #include "araytrace.h"
 #include "grid2a.h"
+#include "grid3a.h"
 #include "runge.h"
 
 #ifndef _araytrace_h
@@ -35,6 +36,7 @@ struct aRayTrace {
     int dim, nt;
     float dt, z0;
     grid2a grd2;
+    grid3a grd3;
 };
 /* concrete data type */
 
@@ -47,12 +49,10 @@ static void aniso_rhs(void* par, float* y, float* f)
     rt = (araytrace) par;
     dim = rt->dim;
 
-    switch (dim) {
-	case 2:
-	    grid2a_rhs(rt->grd2,y,f);
-	    break;
-	default:
-	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
+    if (2==dim) {
+	grid2a_rhs(rt->grd2,y,f);
+    } else {
+	grid3a_rhs(rt->grd3,y,f);
     }
 }
 
@@ -60,15 +60,15 @@ static int term(void* par, float* y)
 /* grid termination */
 {
     araytrace rt;
-    
-    rt = (araytrace) par;
+    int dim;
 
-    switch (rt->dim) {
-	case 2:
-	    return grid2a_term(rt->grd2,y);
-	default:
-	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,rt->dim);
-	    return 0;
+    rt = (araytrace) par;
+    dim = rt->dim;
+
+    if (2==dim) {
+	return grid2a_term(rt->grd2,y);
+    } else {
+	return grid3a_term(rt->grd3,y);
     }
 }
 
@@ -79,7 +79,7 @@ araytrace araytrace_init(int dim            /* dimensionality (2 or 3) */,
 			 float* o, float* d /* velocity grid [dim] */,
 			 float* vz2         /* vertical velocity squared [n3*n2*n1] */, 
 			 float* vx2         /* horizontal velocity squared [n3*n2*n1] */,
-			 float* q           /* analepticity */,
+			 float* q           /* anallepticity [n3*n2*n1] */,
 			 int order          /* interpolation order */)
 /*< Initialize ray tracing object. 
  * Increasing order increases accuracy but
@@ -97,14 +97,17 @@ araytrace araytrace_init(int dim            /* dimensionality (2 or 3) */,
     rt->dt = dt;
     rt->z0 = o[0];
     
-    switch (dim) {
-	case 2:
-	    rt->grd2 = grid2a_init (n[0], o[0], d[0], 
-				    n[1], o[1], d[1],
-				    vz2, vx2, q, order);
-	    break;
-	default:
-	    sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
+    if (2==dim) {
+	rt->grd2 = grid2a_init (n[0], o[0], d[0], 
+				n[1], o[1], d[1],
+				vz2, vx2, q, order);
+	rt->grd3=NULL;
+    } else {
+	rt->grd2=NULL;
+	rt->grd3 = grid3a_init (n[0], o[0], d[0], 
+				n[1], o[1], d[1],
+				n[2], o[2], d[2],
+				vz2, vx2, q, order);
     }
 
     return rt;
@@ -113,10 +116,10 @@ araytrace araytrace_init(int dim            /* dimensionality (2 or 3) */,
 void araytrace_close (araytrace rt)
 /*< Free internal storage >*/
 {
-    switch (rt->dim) {
-	case 2:
-	    grid2a_close (rt->grd2);
-	    break;
+    if (2==rt->dim) {
+	grid2a_close (rt->grd2);
+    } else {
+	grid3a_close (rt->grd3);
     }
     free (rt);
 }

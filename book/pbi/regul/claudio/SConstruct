@@ -1,0 +1,56 @@
+from rsfproj import *
+import math
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+parts = []
+for x in range(16):
+    # pattern substitution
+    segy = 'S076_1P1765_SSL%d_HDRSRMC.sgy' % (x+1)
+    # get the data
+    Fetch(segy,'claudio',private)
+
+    # convert segy to RSF
+    part = 'part%d' % x
+    Flow([part,part+'.asc',part+'.bin'],segy,
+         '''
+         segyread tape=$SOURCE tfile=${TARGETS[0]} read=h
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]}
+         ''',stdin=0,stdout=0)
+    parts.append(part)
+
+# merged parts
+Flow('head',parts,'cat axis=2 ${SOURCES[1:16]}')
+
+# integer to floating point
+Flow('fhead','head','dd type=float')
+
+az = 0.78 + 0.5*math.pi
+sin = math.sin(az)
+cos = math.cos(az)
+
+for key in ('s','g'):
+    Flow(key+'x','fhead',
+         '''
+         headermath output="((%g)*%sx+(%g)*%sy)/10000"
+         ''' % (cos,key,sin,key))
+    Flow(key+'y','fhead',
+         '''
+         headermath output="((%g)*%sx+(%g)*%sy)/10000"
+         ''' % (-sin,key,cos,key))
+
+    Plot(key,[key+'x',key+'y'],
+         '''
+         cmplx $SOURCES |
+         window j2=100 |
+         graph symbol=%s title="%s Distribution"
+         label1=%sx label2=%sy unit1=km unit2=km
+         transp=y
+         ''' % (key,('Source','Receiver')[key=='g'],key,key),
+         stdin=0)
+
+Result('geom','s g','SideBySideAniso')
+
+End()

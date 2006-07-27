@@ -41,7 +41,7 @@ struct Eno2 {
 /* concrete data type */
 
 sf_eno2 sf_eno2_init (int order      /* interpolation order */, 
-		int n1, int n2 /* data dimensions */)
+		      int n1, int n2 /* data dimensions */)
 /*< Initialize interpolation object >*/
 {
     sf_eno2 pnt;
@@ -100,11 +100,11 @@ void sf_eno2_close (sf_eno2 pnt)
 }
 
 void sf_eno2_apply (sf_eno2 pnt, 
-		 int i, int j     /* grid location */, 
-		 float x, float y /* offset from grid */, 
-		 float* f         /* output data value */, 
-		 float* f1        /* output derivative [2] */,
-		 der what         /* what to compute [FUNC,DER,BOTH] */)
+		    int i, int j     /* grid location */, 
+		    float x, float y /* offset from grid */, 
+		    float* f         /* output data value */, 
+		    float* f1        /* output derivative [2] */,
+		    der what         /* what to compute [FUNC,DER,BOTH] */)
 /*< Apply interpolation. >*/
 {
     int k, b2;

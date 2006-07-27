@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
 
         /* transform eta to q */
 	for(im = 0; im < nm; im++) {
-	    q[im] = 1./(1.+2.*q[i]);
+	    q[im] = 1./(1.+2.*q[im]);
 	}
 
 	free(velfile);
