@@ -23,6 +23,17 @@ def contour(title):
 Flow('ciso','vm','eikonalvti order=1 zshot=5 yshot=5')
 Plot('ciso',contour('Isotropic'))
 
+def rgraph(title):
+    return '''
+    window j1=25 | transp |
+    graph screenratio=1 title="%s"
+    min1=0 min2=0 max1=10 max2=10
+    transp=y yreverse=y
+    ''' % title
+
+Flow('iray','vm','rays2a zshot=5 yshot=5 nr=361 nt=600 dt=0.004')
+Plot('iray',rgraph('Isotropic'))
+
 da = math.pi/180
 graph = '''
 graph wanttitle=n wantaxis=n dash=1
@@ -38,11 +49,18 @@ Flow('tiso',None,
 Plot('tiso',graph)
 
 Plot('iso','ciso tiso','Overlay')
+Plot('isor','iray tiso','Overlay')
 
 Flow('cane','vz vx et',
      'eikonalvti vx=${SOURCES[1]} eta=${SOURCES[2]} order=1 zshot=5 yshot=5')
 Plot('cane',contour('VTI Anelliptic'))
 
+Flow('aray','vz vx et',
+     '''
+     rays2a vx=${SOURCES[1]} eta=${SOURCES[2]}
+     zshot=5 yshot=5 nr=361 nt=600 dt=0.004
+     ''')
+Plot('aray',rgraph('VTI Anelliptic'))
 
 Flow('tane',None,
      '''
@@ -53,6 +71,7 @@ Flow('tane',None,
 Plot('tane',graph)
 
 Plot('ane','cane tane','Overlay')
+Plot('aner','aray tane','Overlay')
 
 Result('const','iso ane','SideBySideIso')
 
