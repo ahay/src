@@ -5,7 +5,7 @@ import os
 #global FILES
 
 CWD = os.getcwd()
-SOURCES=["amoco", "bpait", "marmousi", "marmousi2","sigsbee","pluto","other"]
+SOURCES=["amoco", "bpait", "marmousi", "marmousi2","sigsbee","pluto","wggom"]
 #SELECTFILES = ['No files selected','Please Select']                #Global SELECTFILES
 class Madagascar:
 
@@ -15,7 +15,7 @@ class Madagascar:
 ###     Labels          ###
 ###########################
         Label(master, text="Sources",fg="blue",font=("Helvetica", 14)).grid(row=1,columnspan=3) 
-        Label(master, text="Files",fg="blue",font=("Helvetica", 14)).grid(row=1,column=5,columnspan=5)
+        Label(master, text="Files",fg="blue",font=("Helvetica", 14)).grid(row=1,column=4,columnspan=5)
         Label(master, text="Header Info",fg="blue",font=("Helvetica", 14)).grid(row=20,column=0,columnspan=3)
         Label(master, text="Images and Plots",fg="blue",font=("Helvetica", 14)).grid(row=30,column=0,columnspan=3)
 
@@ -99,12 +99,18 @@ class Madagascar:
         self.fetch = Button(master, text="Fetch Files", command=self.fetch)      
         self.fetch.grid(row=4, column=13,sticky=E+W)
         
+        self.convert = Button(master, text="Convert Files", command=self.convert)
+        self.convert.grid(row=5,column=13,sticky=E+W)
+
         self.view = Button(master, text="View File Info", command=self.view)
-        self.view.grid(row=5,column=13,sticky=E+W)
+        self.view.grid(row=6,column=13,sticky=E+W)
         
         self.header = Button(master, text="Update Header",command=self.header)
         self.header.grid(row=21, column=13,sticky=E+W)
     
+        self.archive = Button(master, text="Archive", command=self.archive)
+        self.archive.grid(row=41, column=13, sticky=E+W)
+        
 ############################
 ### Source List Box      ###
 ############################
@@ -155,6 +161,8 @@ class Madagascar:
             LOCATION = "Amoco"
         if LOCATION == "marmousi2":
             LOCATION = "marm2"
+        if LOCATION == "wggom":
+            Location = "gom"
         input = open(location,'r')
         FILES = input.readlines()
         lengthFiles = len(FILES)
@@ -282,7 +290,7 @@ class Madagascar:
             Label(headerOutputWindow,text=Labels[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=labelRow,column=7)
             labelRow = labelRow+1
             counter=counter+1
-        ###   Unitd Data Collection 
+        ###   Unit Data Collection 
         unitRow=1
         counter=0
         for item in ['1','2','3']:
@@ -291,14 +299,33 @@ class Madagascar:
             Label(headerOutputWindow,text=Unit[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=unitRow,column=9)
             unitRow = unitRow+1
             counter=counter+1
-        
 
+        ###  RSFPut function 
+            os.system("mkdir files")
+        for file in SELECTFILES:
+            newHeaderInfo = " o1="+ o1 +" o2="+ o2 + " o3=" + o3 + \
+                            " d1="+ d1 +" d2="+ d2 + " d3=" + d3 + \
+                            " n1="+ n1 +" n2="+ n2 + " n3=" + n3 + \
+                            " label1=" + label1 + " label2=" + label2 + " label3=" + label3 + \
+                            " unit1=" + unit1 + " unit2=" + unit2 + " unit3=" + unit3 
+            #print newHeaderInfo 
+            input = "Flow(\'" +"update_" + file + "\',\'" + file + "\',\'put " + newHeaderInfo + "\', stdin=0)"
+            print input
+       #     SConstruct=open("files/SConstruct",'w')
+       #     SConstruct.write("from rsfproj import *")
+       #     SConstruct.write("\n")
+       #     SConstruct.write(input)
+       #     SConstruct.write("\n") 
+       #     SConstruct.close()
+       #     command = "cd files \n  pwd \n  scons "
+       #     os.system(command)
+            
 #--------------------
 # Fetch Files   
 #--------------------
     def fetch(self):
     #    location = os.system("pwd")
-    #    os.system("mkdir files")
+        os.system("mkdir files")
         SConstruct=open("files/SConstruct",'w')
         SConstruct.write("from rsfproj import *")
         SConstruct.write("\n")
@@ -308,11 +335,33 @@ class Madagascar:
             SConstruct.write("\n") 
         print file
         SConstruct.close()
-        command = "cd files \n  pwd \n  scons "# + file
+        command = "cd files \n  pwd \n  scons "
         os.system(command)
         #os.system("pwd")
 
     def view(self):
+        fileInfo = Toplevel()
+        fileNameRow=0
+        columnNum = 0
+        for file in SELECTFILES:
+            Label(fileInfo,text=file,fg="black",font=("Helvetica",12)).grid(row=fileNameRow,column=columnNum)
+            os.system("pwd")
+            command = "cd files \nsfin " + file + "> info_" + file
+            makeFile = os.system(command)
+            readFile = open("files/info_" + file,'r')
+            info = readFile.readlines()
+            readFile.close()
+            fileInfoRow=1
+            for item in info:
+                Label(fileInfo,text=item,fg="red",font=("Helvetica",10,"italic")).grid(row=fileInfoRow,column=columnNum)
+                fileInfoRow = fileInfoRow + 1
+            columnNum=columnNum+1
+    
+    def convert(self):
+        for file in SELECTFILES:
+            print file
+
+    def archive(self):
         pass
 
 #########################################################################################################
@@ -326,7 +375,7 @@ class Madagascar:
 root = Tk()
 title=Label(root,text='Madagascar',height=2,borderwidth=1,font=("Helvetica", 16,"bold"))
 title.grid(row=0,column=3,columnspan=3)
-#MadagascarGUI=
+#logo=PhotoImage(file="Madagascar2.xbm")
 #logo.grid(row=0,column=0,columnspan=3)
 app = Madagascar(root)
 root.mainloop()
