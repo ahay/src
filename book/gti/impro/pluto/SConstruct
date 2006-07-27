@@ -1,0 +1,73 @@
+from rsfproj import *
+import fdmod,spmig
+
+
+par = {
+    'nx':800,  'ox':40.125, 'dx':0.075, 'lx':'label2=x unit2=kft',
+    'nz':1000, 'oz':0,      'dz':0.025, 'lz':'label1=z unit1=kft',
+    'nt':1126, 'ot':0,      'dt':0.008, 'lt':'label1=t unit1=s',
+    'kt':1,'ft':0,
+    'nw':200,'ow':3,'jw':1,
+    'ns':1,'fs':0,'js':1
+    }
+fdmod.param(par)
+
+#velo = 'pluto.velo.hh'
+#shot = 'pluto.shot.hh'
+velo = 'pvelo.hh'
+shot = 'pshot.hh'
+
+#Fetch(velo,'pluto')
+#Fetch(shot,'pluto')
+
+# ------------------------------------------------------------
+Flow('velo',velo,
+     '''
+     dd form=native |
+     window f2=1000 n2=%(nx)d n1=%(nz)d |
+     put d1=%(dz)g o1=%(oz)g
+         d2=%(dx)g o2=%(ox)g |
+     math "output=input/1000"
+     ''' % par)
+Result('velo',fdmod.cgrey('bias=4.9 allpos=y',par))
+
+Flow('ss','velo',
+     '''
+     math "output=1/input" |
+     transp |
+     spray axis=2 n=1 o=0 d=1 |
+     put label2=y
+     ''')
+# ------------------------------------------------------------
+Flow('shot',shot,
+     '''
+     dd form=native |
+     pad beg2=11 n2out=400 |
+     put o1=0
+         o2=0     d2=0.075
+         o3=67.5  d3=0.150 |
+     mutter half=n t0=0.5 v0=6 
+     ''')
+Result('shot','grey')
+
+# ------------------------------------------------------------
+Flow('wave',None,
+     '''
+     spike nsp=1 mag=1 k1=%(kt)d
+     n1=%(nt)d d1=%(dt)g o1=%(ot)g |
+     ricker1 frequency=9
+         ''' % par )    
+Result('wave','wave','graph')
+
+# ------------------------------------------------------------
+spmig.wflds('d0s','d0r','wave','shot',par)
+
+Plot('d0s','window | real | transp | grey pclip=100')
+Plot('d0r','window | real | transp | grey pclip=100')
+
+Result('data',['d0s','d0r'],'Movie')
+# ------------------------------------------------------------
+spmig.imagePW('ii','cc','ss','d0s','d0r',par)
+Result('ii','window | transp |' + fdmod.cgrey('pclip=99.9',par))
+
+End()
