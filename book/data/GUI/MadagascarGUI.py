@@ -1,7 +1,5 @@
 from Tkinter import *
 import os
-from rsfproj import *
-
 #global SOURCES
 #global CWD
 #global FILES
@@ -94,12 +92,19 @@ class Madagascar:
 ###########################
         self.select = Button(master, text="Select File(s)", fg="black", command=self.select)
         self.select.grid(row=3,column=13,sticky=E+W)
+        
         self.load = Button(master, text="Load Source", command=self.load)
         self.load.grid(row=2, column=13,sticky=E+W)
-        self.load = Button(master, text="Fetch Files")            #, command=self.fetch)
-        self.load.grid(row=4, column=13,sticky=E+W) 
-        self.load = Button(master, text="Update Header",command=self.header)
-        self.load.grid(row=21, column=13,sticky=E+W)
+        
+        self.fetch = Button(master, text="Fetch Files", command=self.fetch)      
+        self.fetch.grid(row=4, column=13,sticky=E+W)
+        
+        self.view = Button(master, text="View File Info", command=self.view)
+        self.view.grid(row=5,column=13,sticky=E+W)
+        
+        self.header = Button(master, text="Update Header",command=self.header)
+        self.header.grid(row=21, column=13,sticky=E+W)
+    
 ############################
 ### Source List Box      ###
 ############################
@@ -142,6 +147,14 @@ class Madagascar:
         lengthCWD = len(CWD)
         lengthCWD = lengthCWD-3
         location = str(CWD[0:lengthCWD]) + str(SOURCES[int(source[0])])+'/FILES'
+        global LOCATION                   # Used by function fetch
+        LOCATION=str(SOURCES[int(source[0])])
+        if LOCATION == "marmousi":
+            LOCATION = "marm"
+        if LOCATION == "amoco":
+            LOCATION = "Amoco"
+        if LOCATION == "marmousi2":
+            LOCATION = "marm2"
         input = open(location,'r')
         FILES = input.readlines()
         lengthFiles = len(FILES)
@@ -280,8 +293,40 @@ class Madagascar:
             counter=counter+1
         
 
+#--------------------
+# Fetch Files   
+#--------------------
+    def fetch(self):
+    #    location = os.system("pwd")
+    #    os.system("mkdir files")
+        SConstruct=open("files/SConstruct",'w')
+        SConstruct.write("from rsfproj import *")
+        SConstruct.write("\n")
+        for file in SELECTFILES:
+            input = "Fetch(\"" + file + "\"," + "\"" + LOCATION + "\")"
+            SConstruct.write(input)
+            SConstruct.write("\n") 
+        print file
+        SConstruct.close()
+        command = "cd files \n  pwd \n  scons "# + file
+        os.system(command)
+        #os.system("pwd")
+
+    def view(self):
+        pass
+
+#########################################################################################################
+#########################################################################################################
+#########################################################################################################
+
+## Declare Root Frame
+## Run App Madagascar on root frame
+## Create Title Bar and insert Logo
+
 root = Tk()
 title=Label(root,text='Madagascar',height=2,borderwidth=1,font=("Helvetica", 16,"bold"))
-title.grid(row=0,column=0,columnspan=3)
+title.grid(row=0,column=3,columnspan=3)
+#MadagascarGUI=
+#logo.grid(row=0,column=0,columnspan=3)
 app = Madagascar(root)
 root.mainloop()
