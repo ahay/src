@@ -67,7 +67,7 @@ Flow('vo',None,
 Flow('va','vo','window')
 Flow('vb','vo',
      '''
-     noise mean=0 range=2.0 |
+     noise mean=0 range=.25 |
      add add=-1.5 |
      window f1=35 |
      pad  beg1=35 |
@@ -82,11 +82,11 @@ Flow('vc','vo','window')
 Flow('ro','vo','math output=2')
 Flow('ra',None,
      '''
-     spike nsp=1 mag=3
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=345 l1=355
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=395 l2=405 |
+     spike nsp=1 mag=5
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=349 l1=351
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=399 l2=401 |
      add add=2 |
-     smooth rect1=3 rect2=3 repeat=3
+     smooth rect1=3 rect2=3
      ''' % par)
 Flow('rb','ra','window')
 # ------------------------------------------------------------
