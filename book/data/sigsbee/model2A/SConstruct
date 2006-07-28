@@ -36,4 +36,9 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
         Result(v,v,'grey color=j scalebar=y allpos=y title=Stratigraphic\ Velocity')
     if(c=='reflection_coefficients'):
 	Result(v,v,'grey color=i scalebar=y minval=0 maxval=.1 title=Reflection\ Coefficients')
+
+# TFlow('blah.txt','blah.rsf', tsfin(${SOURCES[0]},${TARGETS[0]}))
+#
+#
+        
 End()

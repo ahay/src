@@ -22,6 +22,8 @@ def param(par):
     par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
     par['height']=14.0*par['ratio']
 
+    if(not par.has_key('ntap')): par['ntap']=10
+
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
@@ -162,11 +164,11 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
 
         Flow(migRC+sfx,[frqRC,abmRC,abrRC],
              '''
-             rwezomig ntap=10 adj=n verb=y %s
+             rwezomig ntap=%d adj=n verb=y %s
              abm=${SOURCES[1]}
              abr=${SOURCES[2]} |
              put label1=g label2=t
-             ''' % method)
+             ''' % (par['ntap'],method))
 
         Flow(migCC+sfx,[migRC+sfx,cos],
              '''
@@ -200,12 +202,12 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
         
         Flow(modRC+sfx,[migRC+sfx,abmRC,abrRC],
              '''
-             rwezomig ntap=10 adj=y verb=y %s
+             rwezomig ntap=%d adj=y verb=y %s
              nw=%d ow=%g dw=%g 
              abm=${SOURCES[1]}
              abr=${SOURCES[2]} |
              put label1=g label2=t label3=w
-             ''' % (method,par['nw'],par['ow'],par['dw']) )
+             ''' % (par['ntap'],method,par['nw'],par['ow'],par['dw']) )
         Result(modRC+sfx,'window j3=10 | real | transp |'
                + rgrey('title= gainpanel=a',par))
 
