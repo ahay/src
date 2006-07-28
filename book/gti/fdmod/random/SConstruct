@@ -24,7 +24,7 @@ fdmod.param(par)
 Flow('wav',None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-         ricker1 frequency=25 |
+         ricker1 frequency=35 |
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    
@@ -67,7 +67,7 @@ Flow('vo',None,
 Flow('va','vo','window')
 Flow('vb','vo',
      '''
-     noise mean=0 range=.25 |
+     noise mean=0 range=.5 |
      add add=-1.5 |
      window f1=35 |
      pad  beg1=35 |
@@ -94,7 +94,6 @@ Flow('rb','ra','window')
 for i in ('o','a','b'):
     Plot('v'+i,fdmod.cgrey('color=j allpos=y bias=1.5 pclip=100',par))
     Plot('r'+i,fdmod.cgrey('        allpos=y bias=2.0 pclip=100',par))
-    
     Result('v'+i,['v'+i,'ss','rr'],'Overlay')
     Result('r'+i,['r'+i,'ss','rr'],'Overlay')
     
@@ -103,6 +102,8 @@ for i in ('o','a','b'):
     Result('d'+i,'transp |' + fdmod.dgrey('pclip=99',par))
 
 Flow('dc','db','window')
+Plot('vc',fdmod.cgrey('color=j allpos=y bias=1.5 pclip=100',par))
+Result('vc',['vc','ss','rr'],'Overlay')
 
 # ------------------------------------------------------------
 # S-R migration
