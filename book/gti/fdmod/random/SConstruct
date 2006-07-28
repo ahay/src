@@ -2,105 +2,36 @@
  # F-D modeling in random media
  ##
 from rsfproj import *
-import spmig
+import spmig,fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':2000,   # no of time steps
-    'dt':0.0005, #       time sampling
-    'ot':0,      #       time origing
-    'kt':50,     # wavelet delay
-    #
-    'ns':1,      # no of shots
-    'os':0.5,   #       shots origin
-    'ds':0.025,     #       shots sampling
-    #
-    'nr':401,    # no of receivers
-    'or':0,      #       receivers origin
-    'dr':0.0025,    #       receivers sampling
-    #
-    'nx':401, 'ox':0, 'dx':0.0025,
-    'nz':201, 'oz':0, 'dz':0.0025,
+    'nt':4000,'dt':0.0005,'ot':0,'lt':'label1=t unit1=s',
+    'kt':150,     # wavelet delay
+    'nx':801, 'ox':0, 'dx':0.0025,'lx':'label2=x unit2=km',
+    'nz':401, 'oz':0, 'dz':0.0025,'lz':'label1=z unit1=km',
     #
     'nw':100,'ow':1,'jw':1,'fs':0,'js':1,
-    'nrmax':5,'dtmax':0.00001
+    'nrmax':5,'dtmax':0.00001,
+    'nbz':200,'nbx':200,
+    'tx':0.0015,'tz':0.0015
     }
-par['xmin']=par['ox']
-par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
-par['zmin']=par['oz']
-par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
-par['tmin']=par['ot']
-par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
+fdmod.param(par)
 # ------------------------------------------------------------
-
-# ------------------------------------------------------------
-# plotting functions
-
-def igrey(custom,par):
-    return '''
-    grey labelrot=n wantaxis=y wanttitle=y wantscalebar=y
-    title="" pclip=99
-    label1="z" unit1=km label2="x" unit2=km %s
-    min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.5 screenht=7
-    ''' % (custom,par['zmin'],par['zmax'],par['xmin'],par['xmax'])
-
-def dgrey(custom,par):
-    return '''
-    grey labelrot=n wantaxis=y wanttitle=n
-    title="" pclip=99
-    label1="t" unit1=s label2="x" unit2=km %s
-    min2=%g max2=%g
-    ''' % (custom,par['xmin'],par['xmax'])
-
-def pgraph(custom,par):
-    return '''
-    graph labelrot=n  %s
-    yreverse=y symbolsz=4 wantaxis=n title=" " wantscalebar=y
-    min1=%g max1=%g min2=%g max2=%g
-    screenratio=0.5 screenht=7
-    ''' % (custom,par['xmin'],par['xmax'],par['zmin'],par['zmax'])
-
-def wgrey(custom,par):
-    return '''
-    window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
-    title="" pclip=100 gainpanel=a
-    label1="z" unit1=km label2="x" unit2=km %s
-    screenratio=0.5 screenht=7
-    ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],custom)
-
-# ------------------------------------------------------------
-# modeling function
-def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
-    Flow( [dat,wfl],[wav,vel,den,sou,rec],
-         '''
-         afmodP ompchunk=1
-         verb=y abc=y free=y dens=y snap=y jsnap=1 %s
-         nbz=100 tz=0.0035
-         nbx=100 tx=0.0035
-         vel=${SOURCES[1]}
-         den=${SOURCES[2]}
-         sou=${SOURCES[3]}
-         rec=${SOURCES[4]}
-         wfl=${TARGETS[1]}
-         ''' % custom)
 
 # ------------------------------------------------------------
 # wavelet
 Flow('wav',None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-         ricker1 frequency=50 |
+         ricker1 frequency=25 |
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    
-Result('wav','window n1=200 | graph title="" label1="t" label2=')
+Result('wav','window n1=400 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
-# experiments
-
-Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=0' % par)
+Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
 Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
 
 # receivers
@@ -112,11 +43,11 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + pgraph('symbol=* plotcol=6',par))
+     + fdmod.cgraph('symbol=* plotcol=6',par))
 
 # sources
 Flow('zs','s_','math output=0')
-Flow('xs','s_','math output=0.5')
+Flow('xs','s_','math output=1')
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -124,17 +55,17 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + pgraph('symbol=v plotcol=6',par))
+     + fdmod.cgraph('symbol=v plotcol=6',par))
 
 # ------------------------------------------------------------
-# smooth background
+# velocity
 Flow('vo',None,
      '''
      math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1.5+0.0*x1" |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
-# random perturbation
-Flow('vx','vo',
+Flow('va','vo','window')
+Flow('vb','vo',
      '''
      noise mean=0 range=2.0 |
      add add=-1.5 |
@@ -143,85 +74,79 @@ Flow('vx','vo',
      add add=1.5 |
      smooth rect1=3 rect2=3
      ''')
-
-Flow('ro',None,
-     '''
-     spike nsp=1 mag=2
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g
-     ''' % par)
-
-Flow('rx',None,
-     '''
-     spike nsp=1 mag=1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=180 l1=181
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g  |
-     add add=2
-     ''' % par)
-
-Plot('vo',igrey('color=j allpos=y bias=1.5 pclip=100',par))
-Plot('vx',igrey('color=j allpos=y bias=1.5 pclip=100',par))
-Plot('ro',igrey('        allpos=y bias=2.0 pclip=100',par))
-Plot('rx',igrey('        allpos=y bias=2.0 pclip=100',par))
-
-Result('vo',['vo','ss','rr'],'Overlay')
-Result('vx',['vx','ss','rr'],'Overlay')
-Result('ro',['ro','ss','rr'],'Overlay')
-Result('rx',['rx','ss','rr'],'Overlay')
-
-amodel('dd','ww','wav','vo','ro','ss','rr','free=y dens=y')
-amodel('do','wo','wav','vo','rx','ss','rr','free=y dens=y')
-amodel('dx','wx','wav','vx','rx','ss','rr','free=y dens=y')
-
-Result('dd','transp |' + dgrey('pclip=99',par))
-Result('do','transp |' + dgrey('pclip=99',par))
-Result('dx','transp |' + dgrey('pclip=99',par))
-
-Flow('dot','do dd','add ${SOURCES[1]} scale=1,-1')
-Flow('dxt','dx dd','add ${SOURCES[1]} scale=1,-1')
-
-Result('dot','transp |' + dgrey('pclip=99',par))
-Result('dxt','transp |' + dgrey('pclip=99',par))
+Flow('vc','vo','window')
 
 # ------------------------------------------------------------
 
-Flow('so','vo','math output=1/input | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
-Flow('sx','vx','math output=1/input | transp | spray axis=2 n=1 o=0 d=1 | put label2=y')
+# scatterers
+Flow('ro','vo','math output=2')
+Flow('ra',None,
+     '''
+     spike nsp=1 mag=3
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=345 l1=355
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=395 l2=405 |
+     add add=2 |
+     smooth rect1=3 rect2=3 repeat=3
+     ''' % par)
+Flow('rb','ra','window')
+# ------------------------------------------------------------
+# F-D modeling
+for i in ('o','a','b'):
+    Plot('v'+i,fdmod.cgrey('color=j allpos=y bias=1.5 pclip=100',par))
+    Plot('r'+i,fdmod.cgrey('        allpos=y bias=2.0 pclip=100',par))
+    
+    Result('v'+i,['v'+i,'ss','rr'],'Overlay')
+    Result('r'+i,['r'+i,'ss','rr'],'Overlay')
+    
+    fdmod.amodel('d'+i,'w'+i,'wav','v'+i,'r'+i,'ss','rr','dens=y',par)
+    Result('w'+i,             fdmod.wgrey('pclip=99',par))
+    Result('d'+i,'transp |' + fdmod.dgrey('pclip=99',par))
 
+Flow('dc','db','window')
+
+# ------------------------------------------------------------
+# S-R migration
+
+# source data (frequency)
 Flow('dos','wav',
      '''
-     pad beg2=200 end2=200 |
+     pad beg2=400 n2out=%(nx)d |
      put o2=%(ox)g d2=%(dx)g |
      fft1 inv=n opt=n |
      window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-     put label1=w label2=x unit2=km |
+     put label1=w label2=x |
      transp plane=12 | transp plane=23
      ''' % par)
 
-Flow('dow','dot',
-     '''
-     transp |
-     fft1 inv=n opt=n |
-     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-     put label1=w label2=x unit=km |
-     transp plane=12 | transp plane=23
-     ''' % par)
+for i in ('a','b','c'):
+    # slowness 
+    Flow('s'+i,'v'+i,
+         '''
+         math output=1/input |
+         transp |
+         spray axis=2 n=1 o=0 d=1 |
+         put label2=y
+         ''')
+    
+    # recorded data (time)
+    Flow(  'd'+i+'t',['d'+i,'do'],'add ${SOURCES[1]} scale=1,-1')
+    Result('d'+i+'t','transp |' + fdmod.dgrey('pclip=99',par))
+    
+    # recorded data (frequency)
+    Flow('d'+i+'w','d'+i+'t',
+         '''
+         transp |
+         fft1 inv=n opt=n |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         put label1=w label2=x |
+         transp plane=12 | transp plane=23
+         ''' % par)
+    
+    # migration
+    spmig.imagePW('i'+i,'c'+i,'s'+i,'dos','d'+i+'w',par)
+    Result('i'+i,'window | transp |'
+           + fdmod.cgrey('pclip=100 title=i%s' %i,par))
 
-Flow('dxw','dxt',
-     '''
-     transp |
-     fft1 inv=n opt=n |
-     window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
-     put label1=w label2=x unit=km |
-     transp plane=12 | transp plane=23
-     ''' % par)
 
-spmig.imagePW('io','co','so','dos','dow',par)
-spmig.imagePW('ix','cx','sx','dos','dxw',par)
-spmig.imagePW('ii','ci','so','dos','dxw',par)
-
-Result('io','window | transp |' + igrey('pclip=100 title=io',par))
-Result('ix','window | transp |' + igrey('pclip=100 title=ix',par))
-Result('ii','window | transp |' + igrey('pclip=100 title=ii',par))
 
 End()
