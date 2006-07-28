@@ -6,10 +6,10 @@ import zomig,spmig,fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':4000, 'dt':0.001,'ot':0, 'lt':'label1=time unit1=s',
-    'kt':100,    # wavelet delay
-    'nx':401, 'ox':0, 'dx':0.01,  'lx':'label2=x unit2=km',
-    'nz':301, 'oz':0, 'dz':0.01,  'lz':'label1=z unit1=km',
+    'nt':8000, 'dt':0.0005,'ot':0, 'lt':'label1=time unit1=s',
+    'kt':200,    # wavelet delay
+    'nx':801, 'ox':0, 'dx':0.01,  'lx':'label2=x unit2=km',
+    'nz':401, 'oz':0, 'dz':0.01,  'lz':'label1=z unit1=km',
     #
     'nw':150,'ow':3,'jw':1,
     'verb':'y','tmx':20, 'jsnap':50
@@ -26,7 +26,7 @@ Flow('wav',None,
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    
-Result('wav','window n1=200 | graph title="" label1="t" label2=')
+Result('wav','window n1=800 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # experiment setup
@@ -61,8 +61,9 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 # model
 Flow('vo',None,
      '''
-     math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1.5+0.25*x1" |
-     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+     math output="1.5+0.55*x1+0.55*x2"
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 Flow('vx',None,
      '''
@@ -96,7 +97,7 @@ fdmod.amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y',par)
 Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
 # source wavefield
 Flow('dw','wav',
-     'pad beg2=200 end2=200 | put o2=%(ox)g d2=%(dx)g | transp' % par)
+     'pad beg2=200 n2out=%(nx)d | put o2=%(ox)g d2=%(dx)g | transp' % par)
 
 Result('wo',fdmod.wgrey('pclip=95',par))
 Result('ww',fdmod.wgrey('pclip=95',par))
@@ -131,8 +132,10 @@ zomig.wflds('drw0','drt0',par)
 spmig.imagePW('ii','cc','so','dsw0','drw0',par)
 Result('ii','window | transp |' + fdmod.cgrey('pclip=100',par))
 
+nl = int((par['zmax'] - par['zmin'] ) / 0.1)
+
 # datuming
-for i in range(30):
+for i in range(nl):
     j = i + 1
 
     # datuming slabs
@@ -159,15 +162,15 @@ for i in range(30):
     drtbot = 'drt' + str(j)
     dimbot = 'dim' + str(j)
 
-    Flow(dstbot,dswbot,'window | transp | pad beg1=12 n1out=2001 | fft1 inv=y opt=n')
-    Flow(drtbot,drwbot,'window | transp | pad beg1=12 n1out=2001 | fft1 inv=y opt=n')
+    Flow(dstbot,dswbot,'window | transp | pad beg1=12 n1out=4001 | fft1 inv=y opt=n')
+    Flow(drtbot,drwbot,'window | transp | pad beg1=12 n1out=4001 | fft1 inv=y opt=n')
     Flow(dimbot,[dstbot,drtbot],'add mode=p ${SOURCES[0]} ${SOURCES[1]}',stdin=0)
     
 # ------------------------------------------------------------
 # wavefield plots
-alls = map(lambda x: 'dst%d' % x,range(31))
-allr = map(lambda x: 'drt%d' % x,range(31))
-alli = map(lambda x: 'dim%d' % x,range(31))
+alls = map(lambda x: 'dst%d' % x,range(nl+1))
+allr = map(lambda x: 'drt%d' % x,range(nl+1))
+alli = map(lambda x: 'dim%d' % x,range(nl+1))
 
 for k in ('s','r','i'):
     all = 'all' + k
@@ -179,11 +182,11 @@ for k in ('s','r','i'):
     
     Flow([all,bar],grp,
          '''
-         cat axis=3 space=n ${SOURCES[:31]} |
+         cat axis=3 space=n ${SOURCES[:%d]} |
          byte bar=${TARGETS[1]} gainpanel=a pclip=99.5
-         ''',stdin=0)
+         '''% (nl+1),stdin=0)
     
-    for i in range(31):
+    for i in range(nl+1):
         tit = str(i*0.1)
         wfl =   'd' + k + 't' + str(i)
         
@@ -191,7 +194,7 @@ for k in ('s','r','i'):
              'window n3=1 f3=%d |' % i +
              fdmod.dgrey('grid2=y title=%s bar=${SOURCES[1]}',par) % tit )
         
-for i in range(31):
+for i in range(nl+1):
     dst = 'dst' + str(i)
     drt = 'drt' + str(i)
     dim = 'dit' + str(i)
