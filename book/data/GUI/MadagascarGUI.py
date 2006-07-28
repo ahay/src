@@ -96,7 +96,7 @@ class Madagascar:
         self.load = Button(master, text="Load Source", command=self.load)
         self.load.grid(row=2, column=13,sticky=E+W)
         
-        self.fetch = Button(master, text="Fetch Files", command=self.fetch)      
+        self.fetch = Button(master, text="Fetch Files", command=self.fetch)    
         self.fetch.grid(row=4, column=13,sticky=E+W)
         
         self.convert = Button(master, text="Convert Files", command=self.convert)
@@ -181,14 +181,16 @@ class Madagascar:
         for item in filesOut:
             length = len(item)
             extStart = length - 4
-            extStart2 = length -2
-            extStart3 = length - 1
+            extStart2 = length -3
+            extStart3 = length -2
+            extStart4 = length - 1
             extensionOne = item[extStart:length]
             extensionTwo = item[extStart2:length]
             extensionThree = item[extStart3:length]
-            if extensionOne == 'segy' or extensionOne == 'SGY' or extensionOne == 'SEGY' or extensionOne == 'sgy':
+            extensionFour = item[extStart4:length]
+            if extensionOne == 'segy' or extensionOne == 'SEGY' or extensionTwo == 'SGY' or extensionTwo == 'sgy':
                 segyFiles.append(item)
-            if extensionTwo == 'HH' or extensionTwo == 'hh' or extensionThree == 'H' or extensionThree =='h':
+            if extensionThree == 'HH' or extensionThree == 'hh' or extensionFour == 'H' or extensionFour =='h':
                 nativeFiles.append(item)
         FILES=segyFiles + nativeFiles
         self.files.delete(0, END)         # clear Existing entries
@@ -301,32 +303,50 @@ class Madagascar:
             counter=counter+1
 
         ###  RSFPut function 
-            os.system("mkdir files")
-        for file in SELECTFILES:
-            newHeaderInfo = " o1="+ o1 +" o2="+ o2 + " o3=" + o3 + \
-                            " d1="+ d1 +" d2="+ d2 + " d3=" + d3 + \
-                            " n1="+ n1 +" n2="+ n2 + " n3=" + n3 + \
-                            " label1=" + label1 + " label2=" + label2 + " label3=" + label3 + \
-                            " unit1=" + unit1 + " unit2=" + unit2 + " unit3=" + unit3 
-            #print newHeaderInfo 
-            input = "Flow(\'" +"update_" + file + "\',\'" + file + "\',\'put " + newHeaderInfo + "\', stdin=0)"
-            print input
-       #     SConstruct=open("files/SConstruct",'w')
-       #     SConstruct.write("from rsfproj import *")
-       #     SConstruct.write("\n")
-       #     SConstruct.write(input)
-       #     SConstruct.write("\n") 
-       #     SConstruct.close()
-       #     command = "cd files \n  pwd \n  scons "
-       #     os.system(command)
-            
+        newHeaderInfo = ''    
+        rsfFiles = RSFfiles
+        counter = 0
+        for file in rsfFiles:
+            if o1 is not "":
+                newHeaderInfo = " o1="+ o1 
+            if o2 is not "":
+                newHeaderInfo = newHeaderInfo + " o2="+ o2 
+            if o3 is not "":
+                newHeaderInfo = newHeaderInfo + " o3="+ o3 
+            if d1 is not "":
+                newHeaderInfo = newHeaderInfo + " d1="+ d1
+            if d2 is not "":
+                newHeaderInfo = newHeaderInfo + " d2="+ d2
+            if d3 is not "":
+                newHeaderInfo = newHeaderInfo + " d3="+ d3
+            if n1 is not "":
+                newHeaderInfo = newHeaderInfo + " n1="+ n1
+            if n2 is not "":
+                newHeaderInfo = newHeaderInfo + " n2="+ n2
+            if n3 is not "":
+                newHeaderInfo = newHeaderInfo + " n3="+ n3
+            input = "Flow(\'" +"update_" + file + "\',\'" + file + "\',\'put " + newHeaderInfo + "\')"
+            command=LOCATION + "/SConstruct"
+            SConstruct=open(command,'a')
+            SConstruct.write(input)
+            SConstruct.write('\n')
+            SConstruct.close()
+            newFile = "update_"+file
+            RSFfiles.append(newFile)
+        command = "cd " + LOCATION + "\n  pwd \n  scons "
+        os.system(command)
+        print "rsf files"
+        print RSFfiles
 #--------------------
 # Fetch Files   
 #--------------------
     def fetch(self):
     #    location = os.system("pwd")
-        os.system("mkdir files")
-        SConstruct=open("files/SConstruct",'w')
+        command = "mkdir " + LOCATION
+        os.system(command)
+        command2=LOCATION + '/SConstruct' 
+        print command2
+        SConstruct=open(command2,'w')
         SConstruct.write("from rsfproj import *")
         SConstruct.write("\n")
         for file in SELECTFILES:
@@ -335,7 +355,7 @@ class Madagascar:
             SConstruct.write("\n") 
         print file
         SConstruct.close()
-        command = "cd files \n  pwd \n  scons "
+        command = "cd " + LOCATION + " \n  pwd \n  scons "
         os.system(command)
         #os.system("pwd")
 
@@ -343,12 +363,12 @@ class Madagascar:
         fileInfo = Toplevel()
         fileNameRow=0
         columnNum = 0
-        for file in SELECTFILES:
+        for file in RSFfiles:
             Label(fileInfo,text=file,fg="black",font=("Helvetica",12)).grid(row=fileNameRow,column=columnNum)
-            os.system("pwd")
-            command = "cd files \nsfin " + file + "> info_" + file
+            command = "cd " + LOCATION + "\nsfin " + file + ".rsf > info_" + file
             makeFile = os.system(command)
-            readFile = open("files/info_" + file,'r')
+            command2=LOCATION + "/info_" + file
+            readFile = open(command2,'r')
             info = readFile.readlines()
             readFile.close()
             fileInfoRow=1
@@ -358,8 +378,30 @@ class Madagascar:
             columnNum=columnNum+1
     
     def convert(self):
+        global RSFfiles
+        RSFfiles=[]
+        command2=LOCATION + '/SConstruct' 
+        SConstruct=open(command2,'a')
+        SConstruct.write("#Convert Files to RSF\n")
         for file in SELECTFILES:
-            print file
+            for file2 in segyFiles:
+                if file is file2:
+                    fileOut = ''
+                    fileLength =len(file)
+                    for letter in file[0:fileLength]:
+                        if letter is not '.':
+                            fileOut = fileOut + letter
+                        if letter == '.':
+                            break
+                    RSFfiles.append(fileOut)
+                    command = "Flow(\'"+ fileOut + "\',\'" + file + "\', 'segyread tape=$SOURCE',stdin=0)"
+                    SConstruct.write(command)
+                    SConstruct.write('\n')
+            for file3 in nativeFiles:
+                if file is file3:
+                    print file
+        command3="cd "+LOCATION+"\n" + "scons"
+        os.system(command3)
 
     def archive(self):
         pass
