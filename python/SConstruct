@@ -19,13 +19,13 @@ for src in ('doc','proj','prog','tex','book'):
 # clean .pyc files?
 
 env.Install(libdir,'suproj.py')
-env.Install(libdir,'latex2wiki.py')
 
-env.Install(bindir,'sfdoc')
-env.Install(bindir,'sftour')
+for src in ('latex2wiki','vplot2eps','vplot2gif'):
+    env.Install(libdir,src+'.py')
+    env.InstallAs(os.path.join(bindir,src),src+'.py')
 
-if WhereIs('units'):
-    env.Install(bindir,'sfunits')
+for src in ('doc','tour','units'):
+    env.Install(bindir,'sf'+src)
 
 use = os.path.join(libdir,'rsfuse.py')
 env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')

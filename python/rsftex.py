@@ -14,9 +14,9 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, re, glob, string, types, pwd, tempfile
+import os, re, glob, string, types, pwd
 import cStringIO, token, tokenize, cgi, sys, keyword
-import rsfconf, rsfdoc, rsfprog, latex2wiki
+import rsfconf, rsfdoc, rsfprog, latex2wiki, vplot2eps
 
 import SCons
 
@@ -196,51 +196,13 @@ def latex2mediawiki(target=None,source=None,env=None):
     tex.close()
     return 0
 
-ppi = 72 # points per inch resolution
-vppen = os.path.join(bindir,'vppen')    
-pspen = os.path.join(bindir,'pspen')
-
 def pstexpen(target=None,source=None,env=None):
     "Convert vplot to EPS"
-    vplot = str(source[0])
+    vpl = str(source[0])
     eps = str(target[0])
-    space = os.environ.get('PSBORDER')
-    if not space:
-        space=0.
-    else:
-        space=float(space)
-    opts = os.environ.get(os.path.splitext(os.path.basename(eps))[0]+'.pspen')
-    if not opts:
-        opts = os.environ.get('PSTEXPENOPTS',
-                              'color=n fat=1 fatmult=1.5 invras=y')
-    print opts
-    # bounding box
-    getbb = vppen + ' big=n stat=l %s < %s | %s -1' % (opts,vplot,
-                                                          WhereIs('head'))
-    
-    out = os.popen(getbb)
-    head = string.split(out.read())
-    out.close() 
 
-    bb = []
-    for x in (7, 12, 9, 14):
-        bb.append(int((float(head[x])-space)*ppi))
     try:
-        file = open(eps,"w")
-        file.write("%\!PS-Adobe-2.0 EPSF-2.0\n")
-        file.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(bb))
-
-        name = tempfile.mktemp()
-        command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)
-        os.system(command)
-
-        ps = open(name,'r')        
-        file.write(ps.read())
-        ps.close()
-        os.unlink(name)
-        
-        file.write("\n")
-        file.close()
+        vplot2eps.convert(vpl,eps)
     except:
         return 1
     return 0
