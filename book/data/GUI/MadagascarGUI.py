@@ -1,24 +1,28 @@
 from Tkinter import *
 import os
-#global SOURCES
-#global CWD
-#global FILES
-
 CWD = os.getcwd()
 SOURCES=["amoco", "bpait", "marmousi", "marmousi2","sigsbee","pluto","wggom"]
-#SELECTFILES = ['No files selected','Please Select']                #Global SELECTFILES
+
+
 class Madagascar:
 
     def __init__(self, master):
-    
-###########################
-###     Labels          ###
-###########################
+  
+############################ 
+# ######################## #
+# #      LABELS          # #
+# ######################## #
+############################
+
         Label(master, text="Sources",fg="blue",font=("Helvetica", 14)).grid(row=1,columnspan=3) 
         Label(master, text="Files",fg="blue",font=("Helvetica", 14)).grid(row=1,column=4,columnspan=5)
         Label(master, text="Header Info",fg="blue",font=("Helvetica", 14)).grid(row=20,column=0,columnspan=3)
+#        Label(master, text="Processing Operations",fg='blue',font=('Helvetica',14)).grid(row=28,column=0,columnspan=4)
         Label(master, text="Images and Plots",fg="blue",font=("Helvetica", 14)).grid(row=30,column=0,columnspan=3)
 
+###############################
+## SF PUT FUNCTION OPTIONS   ##   (HEADER INFO)
+###############################
         Label(master, text="n1").grid(row=21)
         Label(master, text="n2").grid(row=22)
         Label(master, text="n3").grid(row=23)
@@ -39,11 +43,37 @@ class Madagascar:
         Label(master, text="Units 2").grid(row=22,column=8)
         Label(master, text="Units 3").grid(row=23,column=8)
 
-#        displayRow=7
-#        for file in SELECTFILES:
-#            Label(master,text=file,fg="red",font=("Helvetica",10,"italic")).grid(row=displayRow)
-#            displayRow=displayRow+1
+###############################
+## SFWINDOW FUNCTION OPTIONS ##  (WINDOW)
+###############################        
+        Label(master, text="Window Data",fg="blue",font=("Helvetica",12,'bold')).grid(row=31,column=4,columnspan=3) 
+
+        Label(master, text="Sampling",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=1,columnspan=1)
+        Label(master, text="Start",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=3,columnspan=1)
+        Label(master, text="Jump",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=5,columnspan=1) 
+        Label(master, text="Min",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=6,columnspan=1)
+        Label(master, text="Max",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=7,columnspan=1)
+        Label(master, text="Size",fg="black",font=("Helvetica",10,"underline",'bold')).grid(row=32,column=8,columnspan=1)
+
+        Label(master, text="time:").grid(row=33,column=0,sticky=W)
+        Label(master, text="offset:").grid(row=34,column=0,sticky=W)
+        Label(master, text="shot:").grid(row=35,column=0,sticky=W)            
+
+###############################
+## SF GREY FUNCTION OPTIONS  ##   (RASTOR PLOT)
+###############################      
+        Label(master, text="Raster Plot",fg="blue",font=("Helvetica",12,'bold')).grid(row=39,column=4,columnspan=3)
+        Label(master, text="Color Scheme").grid(row=40,column=0,sticky=W)
+        Label(master, text="Gainpanel").grid(row=40,column=2)
+        Label(master, text="Clip (%)").grid(row=40,column=4)
         
+         
+############################ 
+# ######################## #
+# #    ENTRY CELLS       # #
+# ######################## #
+############################
+
 ###########################
 ###   Header Entry      ###
 ###########################    
@@ -86,10 +116,69 @@ class Madagascar:
         self.unit1.grid(row=21, column=9)
         self.unit2.grid(row=22, column=9)
         self.unit3.grid(row=23, column=9)
+        
 
-###########################
-###     Buttons         ###
-###########################
+##########################
+###   WINDOW ENTRY     ### 
+########################## 
+        self.samp1 = Entry(master,width=5)
+        self.samp2 = Entry(master,width=5)
+        self.samp3 = Entry(master,width=5)
+        
+        self.samp1.grid(row=33, column=1)
+        self.samp2.grid(row=34, column=1)
+        self.samp3.grid(row=35, column=1)
+
+        self.start1 = Entry(master,width=5)
+        self.start2 = Entry(master,width=5)
+        self.start3 = Entry(master,width=5)
+        
+        self.start1.grid(row=33, column=3)
+        self.start2.grid(row=34, column=3)
+        self.start3.grid(row=35, column=3)
+        
+        self.jump1 = Entry(master,width=5)
+        self.jump2 = Entry(master,width=5)
+        self.jump3 = Entry(master,width=5)
+        
+        self.jump1.grid(row=33, column=5)
+        self.jump2.grid(row=34, column=5)
+        self.jump3.grid(row=35, column=5)
+        
+        self.min1 = Entry(master,width=5)
+        self.min2 = Entry(master,width=5)
+        self.min3 = Entry(master,width=5)
+        
+        self.min1.grid(row=33, column=6)
+        self.min2.grid(row=34, column=6)
+        self.min3.grid(row=35, column=6)
+   
+        self.max1 = Entry(master,width=5)
+        self.max2 = Entry(master,width=5)
+        self.max3 = Entry(master,width=5)
+        
+        self.max1.grid(row=33, column=7)
+        self.max2.grid(row=34, column=7)
+        self.max3.grid(row=35, column=7)
+
+        self.size1 = Entry(master,width=5)
+        self.size2 = Entry(master,width=5)
+        self.size3 = Entry(master,width=5)
+        
+        self.size1.grid(row=33, column=8)
+        self.size2.grid(row=34, column=8)
+        self.size3.grid(row=35, column=8)
+
+        self.clip = Entry(master,width=3)
+        
+        self.clip.grid(row=40, column=5)
+
+############################ 
+# ######################## #
+# #      BUTTONS         # #
+# ######################## #
+############################
+
         self.select = Button(master, text="Select File(s)", fg="black", command=self.select)
         self.select.grid(row=3,column=13,sticky=E+W)
         
@@ -103,14 +192,24 @@ class Madagascar:
         self.convert.grid(row=5,column=13,sticky=E+W)
 
         self.view = Button(master, text="View File Info", command=self.view)
-        self.view.grid(row=6,column=13,sticky=E+W)
+        self.view.grid(row=21,column=13,sticky=E+W)
         
         self.header = Button(master, text="Update Header",command=self.header)
-        self.header.grid(row=21, column=13,sticky=E+W)
+        self.header.grid(row=22, column=13,sticky=E+W)
     
         self.archive = Button(master, text="Archive", command=self.archive)
+        self.archive.grid(row=51, column=13, sticky=E+W)
+    
+        self.archive = Button(master, text="Plot", command=self.plot)
         self.archive.grid(row=41, column=13, sticky=E+W)
-        
+       
+ 
+############################ 
+# ######################## #
+# #     LIST BOXES       # #
+# ######################## #
+############################
+
 ############################
 ### Source List Box      ###
 ############################
@@ -130,10 +229,37 @@ class Madagascar:
                               relief=RAISED,height=10,width=40)
         for item in ['To view files','load a source']:
             self.files.insert(END, item)
-        self.fileScrollBar.config(command=self.files.yview)
+      #  self.fileScrollBar.config(command=self.files.yview)
         self.fileScrollBar.grid(column=9,row=2,rowspan=5,sticky=N+S)
         self.files.grid(column=4,row=2,rowspan=5,columnspan=5)
         self.current = None
+
+#########################
+### Color List Box    ###
+#########################
+        global colorOpts
+        colorOpts = ['I','J','K']
+    #    self.colorScrollBar=Scrollbar(master,orient=VERTICAL)
+        self.color = Listbox(master,selectmode=SINGLE,relief=RAISED,height=3,width=2)
+        for item in colorOpts:
+            self.color.insert(END, item)
+    #    self.colorScrollBar.config(command=self.color.yview)
+    #    self.colorScrollBar.grid(column=2,row=40,rowspan=5,sticky=N+S)
+        self.color.grid(column=1,row=40,rowspan=1,columnspan=1)
+        self.current = None
+
+#########################
+### Gain Panel List   ###
+#########################
+        global gainpanelOpts
+        gainpanelOpts = ['a','e']
+        self.gainpanel = Listbox(master,selectmode=BROWSE,relief=RAISED,height=2,width=2)
+        for item in gainpanelOpts:
+            self.gainpanel.insert(END, item)
+
+        self.gainpanel.grid(column=3,row=40,rowspan=1,columnspan=1)
+        self.gainpanel.current = 0
+        self.gainpanel.set = 'a'
 
 
 ########################################
@@ -211,7 +337,6 @@ class Madagascar:
         for item in selection:
             selectFiles =  FILES[int(item)]
             SELECTFILES.append(selectFiles)
-#        print SELECTFILES
         fileOutputWindow = Toplevel()
         displayRow=1
         title=Label(fileOutputWindow,text='Selected File List')
@@ -252,61 +377,23 @@ class Madagascar:
         unit3=self.unit3.get()
         Unit=[unit1,unit2,unit3]
 
-        headerOutputWindow = Toplevel()
-        title=Label(headerOutputWindow,text='Header Info')
-        title.grid(row=0,column=0,columnspan=3)
-
-        ###   N Data Collection
-        nRow=1
-        counter=0
-        for item in ['1','2','3']:
-            labelText='n'+item
-            Label(headerOutputWindow,text=labelText,fg="black",font=("Helvetica",10,"italic")).grid(row=nRow)
-            Label(headerOutputWindow,text=N[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=nRow,column=1)
-            nRow = nRow+1
-            counter=counter+1
-        ###   O Data Collection 
-        oRow=1
-        counter=0
-        for item in ['1','2','3']:
-            labelText='o'+item
-            Label(headerOutputWindow,text=labelText,fg="black",font=("Helvetica",10,"italic")).grid(row=oRow,column=2)
-            Label(headerOutputWindow,text=O[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=oRow,column=3)
-            oRow = oRow+1
-            counter=counter+1
-        ###   D Data Collection 
-        dRow=1
-        counter=0
-        for item in ['1','2','3']:
-            labelText='d'+item
-            Label(headerOutputWindow,text=labelText,fg="black",font=("Helvetica",10,"italic")).grid(row=dRow,column=4)
-            Label(headerOutputWindow,text=D[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=dRow,column=5)
-            dRow = dRow+1
-            counter=counter+1
-        ###   Label Data Collection 
-        labelRow=1
-        counter=0
-        for item in ['1','2','3']:
-            labelText='Label '+item
-            Label(headerOutputWindow,text=labelText,fg="black",font=("Helvetica",10,"italic")).grid(row=labelRow,column=6)
-            Label(headerOutputWindow,text=Labels[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=labelRow,column=7)
-            labelRow = labelRow+1
-            counter=counter+1
-        ###   Unit Data Collection 
-        unitRow=1
-        counter=0
-        for item in ['1','2','3']:
-            labelText='Unit'+item
-            Label(headerOutputWindow,text=labelText,fg="black",font=("Helvetica",10,"italic")).grid(row=unitRow,column=8)
-            Label(headerOutputWindow,text=Unit[counter],fg='red',font=("Helvetica",10,"italic")).grid(row=unitRow,column=9)
-            unitRow = unitRow+1
-            counter=counter+1
-
         ###  RSFPut function 
+        command=LOCATION + '/SConstruct'
+        input=open(command,'r')
+        OldSConstruct = input.readlines()
+        input.close()
+        SConstruct = open(command,'w')
+        sectionHead = '#Update Header \n'
+        for item in OldSConstruct:
+            if item != sectionHead:
+                SConstruct.write(item)
+            if item == sectionHead:
+                break
+        SConstruct.write(sectionHead)
         newHeaderInfo = ''    
-        rsfFiles = RSFfiles
         counter = 0
-        for file in rsfFiles:
+        newFiles = []
+        for file in RSFfiles:
             if o1 is not "":
                 newHeaderInfo = " o1="+ o1 
             if o2 is not "":
@@ -325,6 +412,18 @@ class Madagascar:
                 newHeaderInfo = newHeaderInfo + " n2="+ n2
             if n3 is not "":
                 newHeaderInfo = newHeaderInfo + " n3="+ n3
+            if label1 is not "":
+                newHeaderInfo = newHeaderInfo + " label1=" + label1
+            if label2 is not "":
+                newHeaderInfo = newHeaderInfo + " label2=" + label2
+            if label3 is not "":
+                newHeaderInfo = newHeaderInfo + " label3=" + label3
+            if unit1 is not "":
+                newHeaderInfo = newHeaderInfo + " unit1=" + unit1
+            if unit2 is not "":
+                newHeaderInfo = newHeaderInfo + " unit2=" + unit2
+            if unit3 is not "":
+                newHeaderInfo = newHeaderInfo + " unit3=" + unit3
             input = "Flow(\'" +"update_" + file + "\',\'" + file + "\',\'put " + newHeaderInfo + "\')"
             command=LOCATION + "/SConstruct"
             SConstruct=open(command,'a')
@@ -332,11 +431,15 @@ class Madagascar:
             SConstruct.write('\n')
             SConstruct.close()
             newFile = "update_"+file
-            RSFfiles.append(newFile)
+            newFiles.append(newFile)
         command = "cd " + LOCATION + "\n  pwd \n  scons "
         os.system(command)
-        print "rsf files"
-        print RSFfiles
+        for file in newFiles:
+            RSFfiles.reverse()
+            trash = RSFfiles.pop()
+            RSFfiles.append(file)
+            RSFfiles.reverse()
+
 #--------------------
 # Fetch Files   
 #--------------------
@@ -345,7 +448,6 @@ class Madagascar:
         command = "mkdir " + LOCATION
         os.system(command)
         command2=LOCATION + '/SConstruct' 
-        print command2
         SConstruct=open(command2,'w')
         SConstruct.write("from rsfproj import *")
         SConstruct.write("\n")
@@ -353,9 +455,8 @@ class Madagascar:
             input = "Fetch(\"" + file + "\"," + "\"" + LOCATION + "\")"
             SConstruct.write(input)
             SConstruct.write("\n") 
-        print file
         SConstruct.close()
-        command = "cd " + LOCATION + " \n  pwd \n  scons "
+        command = "cd " + LOCATION + " \n  pwd \n  scons &"
         os.system(command)
         #os.system("pwd")
 
@@ -399,8 +500,134 @@ class Madagascar:
                     SConstruct.write('\n')
             for file3 in nativeFiles:
                 if file is file3:
-                    print file
-        command3="cd "+LOCATION+"\n" + "scons"
+                    fileOut = ''
+                    fileLength = len(file)
+                    for letter in file[0:fileLength]:
+                        if letter is not '.':
+                            fileOut = fileOut + letter
+                        if letter == '.':
+                            break
+                    RSFfiles.append(fileOut)
+                    command = "Flow(\'"+ fileOut + "\',\'" + file + "\', 'dd form=native')"
+                    SConstruct.write(command)
+                    SConstruct.write('\n')
+        SConstruct.close()
+        command3="cd "+LOCATION+"\n" + "scons &"
+        os.system(command3)
+
+    def plot(self):
+        command=LOCATION + '/SConstruct'
+        input=open(command,'r')
+        OldSConstruct = input.readlines()
+        input.close()
+        SConstruct = open(command,'w')
+        sectionHeader = '# Plotting Section\n'
+        for item in OldSConstruct:
+            if item != sectionHeader:
+                SConstruct.write(item)
+            if str(item) == sectionHeader:
+                break 
+        SConstruct.write(sectionHeader)
+ 
+##
+## Get Values to Plug into SFwindow and SFgrey
+##
+        samp1=self.samp1.get()
+        samp2=self.samp2.get()
+        samp3=self.samp3.get()
+
+        start1=self.start1.get()
+        start2=self.start2.get()
+        start3=self.start3.get()
+        
+        jump1=self.jump1.get()
+        jump2=self.jump2.get()
+        jump3=self.jump3.get()
+
+        min1=self.min1.get()
+        min2=self.min2.get()
+        min3=self.min3.get()
+
+        max1=self.max1.get()
+        max2=self.max2.get()
+        max3=self.max3.get()
+
+        size1=self.size1.get()
+        size2=self.size2.get()
+        size3=self.size3.get()
+
+        clip=self.clip.get()
+
+        if self.color.curselection() is not ():
+            colorTuple = self.color.curselection()
+            selection = int(colorTuple[0])
+            color = colorOpts[selection]
+        else:
+            color = 'I'
+
+        if self.gainpanel.curselection() is not ():
+            gainTuple = self.gainpanel.curselection()
+            choice = int(gainTuple[0])
+            gainpanel = gainpanelOpts[choice]
+        else:
+            gainpanel = 'a'
+
+        for file in RSFfiles:
+            windowInfo = ''
+            if samp1 is not '':
+                windowInfo = windowInfo + ' d1='+ samp1
+            if samp2 is not '':
+                windowInfo = windowInfo + ' d2='+ samp2
+            if samp3 is not '':
+                windowInfo = windowInfo + ' d3='+ samp3
+            if start1 is not '':
+                windowInfo = windowInfo + ' f1='+ start1
+            if start2 is not '':
+                windowInfo = windowInfo + ' f2='+ start2
+            if start3 is not '':
+                windowInfo = windowInfo + ' f3='+ start3
+            if jump1 is not '':
+                windowInfo = windowInfo + ' j1='+ jump1
+            if jump2 is not '':
+                windowInfo = windowInfo + ' j2='+ jump2
+            if jump3 is not '':
+                windowInfo = windowInfo + ' j3='+ jump3
+            if min1 is not '':
+                windowInfo = windowInfo + ' min1='+ min1
+            if min2 is not '':
+                windowInfo = windowInfo + ' min2='+ min2
+            if min3 is not '':
+                windowInfo = windowInfo + ' min3='+ min3
+            if max1 is not '':
+                windowInfo = windowInfo + ' max1='+ max1
+            if max2 is not '':
+                windowInfo = windowInfo + ' max2='+ max2
+            if max3 is not '':
+                windowInfo = windowInfo + ' max3='+ max3
+            if size1 is not '':
+                windowInfo = windowInfo + ' size1='+ size1
+            if size2 is not '':
+                windowInfo = windowInfo + ' size2='+ size2
+            if size3 is not '':
+                windowInfo = windowInfo + ' size3='+ size3
+
+            greyInfo=''
+            if clip is not '':
+                greyInfo = greyInfo + ' pclip=' + clip
+            if color is not '':
+                greyInfo = greyInfo + ' color=' + color
+            if gainpanel is not '':
+                greyInfo = greyInfo + ' gainpanel=' + gainpanel            
+            
+            windowCommand = '\'window $SOURCE ' + windowInfo            
+            command = "Result(\'"+ file +"\',"+ windowCommand + ' | grey ' + greyInfo  + '\')'
+            
+            SConstruct.write(command)
+            SConstruct.write('\n')
+        
+        SConstruct.write('End()')
+        SConstruct.close()    
+        command3="cd "+LOCATION+"\n" + "scons view &"
         os.system(command3)
 
     def archive(self):
