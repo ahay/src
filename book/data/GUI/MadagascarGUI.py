@@ -226,7 +226,7 @@ class Madagascar:
 ############################
         self.fileScrollBar=Scrollbar(master,orient=VERTICAL)
         self.files = Listbox(master,yscrollcommand=self.fileScrollBar.set,selectmode=MULTIPLE,
-                              relief=RAISED,height=10,width=40)
+                              relief=RAISED,height=10,width=40,exportselection=0)
         for item in ['To view files','load a source']:
             self.files.insert(END, item)
       #  self.fileScrollBar.config(command=self.files.yview)
@@ -240,7 +240,7 @@ class Madagascar:
         global colorOpts
         colorOpts = ['I','J','K']
     #    self.colorScrollBar=Scrollbar(master,orient=VERTICAL)
-        self.color = Listbox(master,selectmode=SINGLE,relief=RAISED,height=3,width=2)
+        self.color = Listbox(master,selectmode=SINGLE,relief=RAISED,height=3,width=2,exportselection=0)
         for item in colorOpts:
             self.color.insert(END, item)
     #    self.colorScrollBar.config(command=self.color.yview)
@@ -253,13 +253,11 @@ class Madagascar:
 #########################
         global gainpanelOpts
         gainpanelOpts = ['a','e']
-        self.gainpanel = Listbox(master,selectmode=BROWSE,relief=RAISED,height=2,width=2)
+        self.gainpanel = Listbox(master,selectmode=SINGLE,relief=RAISED,height=2,width=2,exportselection=0)
         for item in gainpanelOpts:
             self.gainpanel.insert(END, item)
-
         self.gainpanel.grid(column=3,row=40,rowspan=1,columnspan=1)
-        self.gainpanel.current = 0
-        self.gainpanel.set = 'a'
+        self.gainpanel.current = None
 
 
 ########################################
@@ -383,17 +381,17 @@ class Madagascar:
         OldSConstruct = input.readlines()
         input.close()
         SConstruct = open(command,'w')
-        sectionHead = '#Update Header \n'
+        sectionHead = '# Update Header \n'
         for item in OldSConstruct:
             if item != sectionHead:
                 SConstruct.write(item)
             if item == sectionHead:
                 break
         SConstruct.write(sectionHead)
-        newHeaderInfo = ''    
         counter = 0
         newFiles = []
         for file in RSFfiles:
+            newHeaderInfo = ''
             if o1 is not "":
                 newHeaderInfo = " o1="+ o1 
             if o2 is not "":
@@ -434,12 +432,19 @@ class Madagascar:
             newFiles.append(newFile)
         command = "cd " + LOCATION + "\n  pwd \n  scons &"
         os.system(command)
-        for file in newFiles:
-            RSFfiles.reverse()
+        print 'newFiles'
+        print newFiles
+        length = len(RSFfiles)
+        for file in RSFfiles:
             trash = RSFfiles.pop()
+        if length > 1:
+            trash = RSFfiles.pop()
+        print 'midRSF'
+        print RSFfiles
+        for file in newFiles:
             RSFfiles.append(file)
-            RSFfiles.reverse()
-
+        print 'RSF'
+        print RSFfiles
 #--------------------
 # Fetch Files   
 #--------------------
@@ -451,6 +456,8 @@ class Madagascar:
         SConstruct=open(command2,'w')
         SConstruct.write("from rsfproj import *")
         SConstruct.write("\n")
+        sectionHeader = '# Fetch Files from repository \n'
+        SConstruct.write(sectionHeader)
         for file in SELECTFILES:
             input = "Fetch(\"" + file + "\"," + "\"" + LOCATION + "\")"
             SConstruct.write(input)
@@ -483,7 +490,7 @@ class Madagascar:
         RSFfiles=[]
         command2=LOCATION + '/SConstruct' 
         SConstruct=open(command2,'a')
-        SConstruct.write("#Convert Files to RSF\n")
+        SConstruct.write("# Convert Files to RSF\n")
         for file in SELECTFILES:
             for file2 in segyFiles:
                 if file is file2:
@@ -655,20 +662,22 @@ class Madagascar:
         OldSConstruct = input.readlines()
         input.close()
         SConstruct = open(command,'w')
-        sectionHeader = '# Cat Files\n'
+        plotHeader = '# Plotting Section\n'
+        sectionHeader = '# Concatinate Files \n'
         for item in OldSConstruct:
-            if item != sectionHeader:
+            if item != plotHeader:
                 SConstruct.write(item)
-            if str(item) == sectionHeader:
+            if str(item) == plotHeader:
                 break 
         SConstruct.write(sectionHeader)    
         catRules ='\'cat ${SOURCES[0:2]} axis=' + axisNum + '\''
         command2 = 'Flow(\'catFile_'+ LOCATION + '\',' + str(CATfiles) + ',' + catRules +  ',stdin=0)'
         SConstruct.write(command2)
-        command3="cd "+LOCATION+"\n" + "scons view &"
+        command3="cd "+LOCATION+"\n" + "scons &"
         os.system(command3) 
         for file in RSFfiles:
-            trash = RSFfiles.pop()   
+            trash = RSFfiles.pop()  
+        trash = RSFfiles.pop()            # Remove last entry 
         newFile='catFile_' + LOCATION 
         RSFfiles.append(newFile)
         print RSFfiles
