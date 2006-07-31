@@ -190,6 +190,9 @@ class Madagascar:
         
         self.convert = Button(master, text="Convert Files", command=self.convert)
         self.convert.grid(row=5,column=13,sticky=E+W)
+        
+        self.convert = Button(master, text="Concatinate Files", command=self.loadCat)
+        self.convert.grid(row=23,column=13,sticky=E+W)
 
         self.view = Button(master, text="View File Info", command=self.view)
         self.view.grid(row=21,column=13,sticky=E+W)
@@ -213,12 +216,9 @@ class Madagascar:
 ############################
 ### Source List Box      ###
 ############################
-        #self.scrollbar=Scrollbar(frame,orient=VERTICAL)          #Activate for second Scrollbar on Sources
         self.sources = Listbox(master,selectmode=SINGLE,relief=RAISED,height=10,exportselection=0)
         for item in SOURCES:
             self.sources.insert(END, item)
-        #self.scrollbar.config(command=self.sources.yview)
-        #self.scrollbar.pack(side=LEFT,fill=Y)
         self.sources.grid(row=2,column=0,rowspan=5,columnspan=3)
 
 ############################
@@ -288,7 +288,7 @@ class Madagascar:
         if LOCATION == "marmousi2":
             LOCATION = "marm2"
         if LOCATION == "wggom":
-            Location = "gom"
+            LOCATION = "gom"
         input = open(location,'r')
         FILES = input.readlines()
         lengthFiles = len(FILES)
@@ -432,7 +432,7 @@ class Madagascar:
             SConstruct.close()
             newFile = "update_"+file
             newFiles.append(newFile)
-        command = "cd " + LOCATION + "\n  pwd \n  scons "
+        command = "cd " + LOCATION + "\n  pwd \n  scons &"
         os.system(command)
         for file in newFiles:
             RSFfiles.reverse()
@@ -630,6 +630,49 @@ class Madagascar:
         command3="cd "+LOCATION+"\n" + "scons view &"
         os.system(command3)
 
+    def loadCat(self): 
+        Label(root, text="Select Files To Combine").grid(row=25,column=0,columnspan=2,pady=2) 
+        Label(root, text="Cat Axis").grid(row=25,column=7,columnspan=1,pady=2)  
+        self.catFiles = Listbox(root,selectmode=MULTIPLE,relief=RAISED,height=3,width=35,exportselection=0)
+        for item in RSFfiles:
+            self.catFiles.insert(END, item)
+        self.catFiles.grid(row=25,column=2,rowspan=3,columnspan=5)
+        self.catAxis = Entry(root,width=3)
+        self.catAxis.grid(row=25, column=8,pady=2) 
+        self.concatinate = Button(root, text="Combine", command=self.cat)
+        self.concatinate.grid(row=25,column=13,sticky=E+W)
+
+    def cat(self):
+        choices = self.catFiles.curselection()
+        axisNum=self.catAxis.get()
+        CATfiles = []
+        for item in choices:
+            number = int(item)
+            selectFiles =  RSFfiles[number]
+            CATfiles.append(selectFiles)
+        command=LOCATION + '/SConstruct'
+        input=open(command,'r')
+        OldSConstruct = input.readlines()
+        input.close()
+        SConstruct = open(command,'w')
+        sectionHeader = '# Cat Files\n'
+        for item in OldSConstruct:
+            if item != sectionHeader:
+                SConstruct.write(item)
+            if str(item) == sectionHeader:
+                break 
+        SConstruct.write(sectionHeader)    
+        catRules ='\'cat ${SOURCES[0:2]} axis=' + axisNum + '\''
+        command2 = 'Flow(\'catFile_'+ LOCATION + '\',' + str(CATfiles) + ',' + catRules +  ',stdin=0)'
+        SConstruct.write(command2)
+        command3="cd "+LOCATION+"\n" + "scons view &"
+        os.system(command3) 
+        for file in RSFfiles:
+            trash = RSFfiles.pop()   
+        newFile='catFile_' + LOCATION 
+        RSFfiles.append(newFile)
+        print RSFfiles
+        
     def archive(self):
         pass
 
