@@ -79,7 +79,7 @@ void grid2a_rhs(void* par /* grid */,
 /*< right-hand side for the ray tracing system >*/
 {
     grid2a grd;
-    float x, y, vz, vx, q, q2, a, ax, az, e, d, r2, r, v, num, den;
+    float x, y, vz, vx, q, q2, a, ax, az, e, d, r2, r, v, v2, num, den, one;
     float vz1[2], vx1[2], q1[2];
     int i, j;
     
@@ -92,7 +92,8 @@ void grid2a_rhs(void* par /* grid */,
     sf_eno2_apply(grd->px, i, j, x, y, &vx, vx1, BOTH);
     sf_eno2_apply(grd->pq, i, j, x, y, &q, q1, BOTH);
 
-    a = xy[2]/hypotf(xy[2],xy[3]);
+    one = hypotf(xy[2],xy[3]);
+    a = xy[2]/one;
     /* cosine of phase angle from the symmetry axis */
     az = a*a;  /* cosine squared */
     ax = 1-az; /* sine squared */
@@ -103,12 +104,27 @@ void grid2a_rhs(void* par /* grid */,
 
     r2 = d*d + 4.*ax*az*q2;
     r = sqrtf(r2);
+
+    /* phase velocity */
+    v2 = 0.5*(e+r);
+    v = sqrtf(v2);
+
+    g[2] = -(q1[0]*2.*vx*vz*ax*az +
+	     vx1[0]*ax*(r-d+2*az*vz*q) +
+	     vz1[0]*az*(r+d+2*ax*vx*q))/(4*r*v2*grd->d1);
+    g[3] = -(q1[1]*2.*vx*vz*ax*az +
+	     vx1[1]*ax*(r-d+2*az*vz*q) +
+	     vz1[1]*az*(r+d+2*ax*vx*q))/(4*r*v2*grd->d2);
+    
+    xy[2] /= v*one;
+    xy[3] /= v*one;
+
     num = d*d*r2+ax*az*q2*q2;
     den = d*d+2*(az-ax)*d*r+r2;
 
-    v = 2.*(e+r)*num/(r2*den);
-    v = sqrtf(v);
     /* group velocity */
+    v2 *= 4*num/(r2*den);
+    v = sqrtf(v2);
     
     /* group angle */
     if (ax > az) {
@@ -121,12 +137,6 @@ void grid2a_rhs(void* par /* grid */,
 
     g[0] = SF_SIG(xy[2])*v*sqrtf(az);
     g[1] = SF_SIG(xy[3])*v*sqrtf(1.-az);
-    g[2] = -(q1[0]*2.*vx*vz*ax*az +
-	     vx1[0]*ax*(r-d+2*az*vz*q) +
-	     vz1[0]*az*(r+d+2*ax*vx*q))/(2.*r*(e+r)*grd->d1);
-    g[3] = -(q1[1]*2.*vx*vz*ax*az +
-	     vx1[1]*ax*(r-d+2*az*vz*q) +
-	     vz1[1]*az*(r+d+2*ax*vx*q))/(2.*r*(e+r)*grd->d2);
 }
 
 int grid2a_term (void* par /* grid */, 

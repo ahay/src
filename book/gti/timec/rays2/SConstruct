@@ -30,7 +30,7 @@ for sym in (0,1):
     rays = 'sy%drays2' % sym
     fronts = 'sy%dfronts2' % sym
     
-    Flow(rays,'symes','rays2 %s sym=%d' % (par,sym))
+    Flow(rays,'symes','rays2a %s sym=%d' % (par,sym))
     Plot(rays,'window j2=5 |' + graph)
     Plot(fronts,rays,'window j1=100 | transp |' + graph)
 

@@ -1,0 +1,43 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for par in ('vel','delta','eps'):
+    mod = 'gx_%s_sm_50m.HH' % par
+    Fetch(mod,'xom',private)
+    Flow(par,mod,'dd form=native')
+
+    # 2-D slice
+    Flow(par+'2',par,'window n3=1 f3=161')
+
+Plot('vel2',
+     '''
+     grey color=j bias=3000 scalebar=y wanttitle=n
+     label1=Depth label2=Surface unit1=m unit2=m labelsz=5
+     barlabel=Velocity barunit=m/s screenratio=0.3 screenht=4
+     ''')
+
+graph2 = '''
+graph screenratio=0.3 screenht=4
+min2=0 max2=19150 scalebar=y 
+min1=0 max1=6000
+plotcol=7 transp=1
+wanttitle=n wantaxis=n
+yreverse=y
+'''
+
+for case in ('','a'):
+    rays2 = 'rays2'+case
+    fronts2 = 'fronts2'+case
+
+    Flow(rays2,'vel2',rays2 + ' nr=1000 nt=4000 dt=0.001 yshot=15000')
+
+    Plot(rays2,'window j2=5 |' + graph2)
+    Result(rays2,['vel2',rays2],'Overlay')
+
+    Plot(fronts2,rays2,'window j1=100 | transp |' + graph2)
+    Result(fronts2,['vel2',fronts2],'Overlay')
+
+End()

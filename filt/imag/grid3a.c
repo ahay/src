@@ -76,13 +76,13 @@ grid3a grid3a_init (int n1, float o1, float d1 /* first axis */,
     return grd;
 }
 
-void grid3a_rhs(void* par       /* grid */, 
-		const float* xy /* coordinate [6] */,
-		float* g        /* right-hand side [6] */)
+void grid3a_rhs(void* par /* grid */, 
+		float* xy /* coordinate [6] */,
+		float* g  /* right-hand side [6] */)
 /*< right-hand side for the ray tracing system >*/
 {
     grid3a grd;
-    float x, y, z, vz, vx, q, q2, a, ax, az, e, d, r2, r, v, num, den;
+    float x, y, z, vz, vx, q, q2, a, ax, az, e, d, r2, r, v, v2, num, den, one;
     float vz1[3], vx1[3], q1[3];
     int i, j, k;
     
@@ -96,7 +96,8 @@ void grid3a_rhs(void* par       /* grid */,
     eno3_apply(grd->px, i, j, k, x, y, z, &vx, vx1, BOTH);
     eno3_apply(grd->pq, i, j, k, x, y, z, &q, q1, BOTH);
 
-    a = xy[3]/sqrtf(xy[3]*xy[3]+xy[4]*xy[4]+xy[5]*xy[5]);
+    one = sqrtf(xy[3]*xy[3]+xy[4]*xy[4]+xy[5]*xy[5]);
+    a = xy[3]/one;
     /* cosine of phase angle from the symmetry axis */
     az = a*a;  /* cosine squared */
     ax = 1-az; /* sine squared */
@@ -107,12 +108,31 @@ void grid3a_rhs(void* par       /* grid */,
 
     r2 = d*d + 4.*ax*az*q2;
     r = sqrtf(r2);
+
+    /* phase velocity */
+    v2 = 0.5*(e+r);
+    v = sqrtf(v2);
+    
+    g[3] = -(q1[0]*2.*vx*vz*ax*az +
+	     vx1[0]*ax*(r-d+2*az*vz*q) +
+	     vz1[0]*az*(r+d+2*ax*vx*q))/(4*r*v2*grd->d1);
+    g[4] = -(q1[1]*2.*vx*vz*ax*az +
+	     vx1[1]*ax*(r-d+2*az*vz*q) +
+	     vz1[1]*az*(r+d+2*ax*vx*q))/(4*r*v2*grd->d2);
+    g[5] = -(q1[2]*2.*vx*vz*ax*az +
+	     vx1[2]*ax*(r-d+2*az*vz*q) +
+	     vz1[2]*az*(r+d+2*ax*vx*q))/(4*r*v2*grd->d3);
+    
+    xy[3] /= v*one;
+    xy[4] /= v*one;
+    xy[5] /= v*one;
+
     num = d*d*r2+ax*az*q2*q2;
     den = d*d+2*(az-ax)*d*r+r2;
 
-    v = 2.*(e+r)*num/(r2*den);
-    v = sqrtf(v);
     /* group velocity */
+    v *= 4*num/(r2*den);
+    v = sqrtf(v);
     
     /* group angle */
     if (ax > az) {
@@ -126,15 +146,6 @@ void grid3a_rhs(void* par       /* grid */,
     g[0] = SF_SIG(xy[3])*v*sqrtf(az);
     g[1] = v*sqrtf(1.-az)*xy[4]/hypotf(xy[4],xy[5]);
     g[2] = v*sqrtf(1.-az)*xy[5]/hypotf(xy[4],xy[5]);
-    g[3] = -(q1[0]*2.*vx*vz*ax*az +
-	     vx1[0]*ax*(r-d+2*az*vz*q) +
-	     vz1[0]*az*(r+d+2*ax*vx*q))/(2.*r*(e+r)*grd->d1);
-    g[4] = -(q1[1]*2.*vx*vz*ax*az +
-	     vx1[1]*ax*(r-d+2*az*vz*q) +
-	     vz1[1]*az*(r+d+2*ax*vx*q))/(2.*r*(e+r)*grd->d2);
-    g[5] = -(q1[2]*2.*vx*vz*ax*az +
-	     vx1[2]*ax*(r-d+2*az*vz*q) +
-	     vz1[2]*az*(r+d+2*ax*vx*q))/(2.*r*(e+r)*grd->d3);
 }
 
 int grid3a_term (void* par /* grid */, 

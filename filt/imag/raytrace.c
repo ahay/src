@@ -173,15 +173,27 @@ int trace_ray (raytrace rt  /* ray tracing object */,
  >*/
 {
     int i, dim, it=0, nt;
-    float y[6];
+    float y[6], s2;
 
     dim = rt->dim;
     nt = rt->nt;
 
     if (!rt->sym) {
+	switch (dim) {
+	    case 2:
+		s2 = grid2_vel(rt->grd2,y);
+	    break;
+	    case 3:
+		s2 = grid3_vel(rt->grd3,y);
+		break;
+	    default:
+		s2 = 0.;
+		sf_error("%s: Cannot raytrace with dim=%d",__FILE__,dim);
+	}
+
 	for (i=0; i < dim; i++) {
 	    y[i] = x[i];
-	    y[i+dim] = p[i];
+	    y[i+dim] = p[i]*sqrtf(s2);
 	}
 
 	runge_init(2*dim, nt, rt->dt);
