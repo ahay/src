@@ -213,7 +213,13 @@ int main (int argc, char* argv[])
 	
 	if (NULL != sf_getstring("pout")) {
 	    pout = sf_output("pout");
-	    sf_fileflush(pout,out);
+	    sf_putint(pout,"n1",nx);
+	    sf_putint(pout,"n2",ny);
+	    sf_putint(pout,"n3",nt);
+	    sf_putfloat (pout,"o1",x0); sf_putfloat (pout,"d1",dx);
+	    sf_putfloat (pout,"o2",y0); sf_putfloat (pout,"d2",dy);
+	    if (sf_histfloat(in,"o2",&t0)) sf_putfloat(pout,"o3",t0);
+	    if (sf_histfloat(in,"d2",&dt)) sf_putfloat(pout,"d3",dt);
 	}
     } else {
 	laplac2_init(nx,ny);

@@ -25,26 +25,38 @@ for x in range(16):
 Flow('head',parts,'cat axis=2 ${SOURCES[1:16]}')
 
 # integer to floating point
-Flow('fhead','head','dd type=float')
+refx = 311000  # reference point
+refy = 3004700 # reference point
 
-az = 0.78 + 0.5*math.pi
+header = {'sx':21,'sy':22,'gx':23,'gy':24}
+keys = header.keys()
+
+for key in keys:
+    # window a particular key, subtract the reference, convert to float
+    Flow(key,'head',
+         '''
+         window n1=1 f1=%d |
+         add add=-%d |
+         dd type=float
+         ''' % (header[key],(refx,refy)[key[1]=='y']))
+
+az = 0.79 + 0.5*math.pi
 sin = math.sin(az)
 cos = math.cos(az)
+rotate = '''
+math
+sx=${SOURCES[0]} sy=${SOURCES[1]}
+gx=${SOURCES[2]} gy=${SOURCES[3]}
+output="((%g)*%sx+(%g)*%sy)/1000"
+'''
 
 for key in ('s','g'):
-    Flow(key+'x','fhead',
-         '''
-         headermath output="((%g)*%sx+(%g)*%sy)/10000"
-         ''' % (cos,key,sin,key))
-    Flow(key+'y','fhead',
-         '''
-         headermath output="((%g)*%sx+(%g)*%sy)/10000"
-         ''' % (-sin,key,cos,key))
-
-    Plot(key,[key+'x',key+'y'],
+    Flow(key+'x2',keys,rotate % (cos,key,sin,key)) 
+    Flow(key+'y2',keys,rotate % (-sin,key,cos,key))
+    Plot(key,[key+'x2',key+'y2'],
          '''
          cmplx $SOURCES |
-         window j2=100 |
+         window j1=100 |
          graph symbol=%s title="%s Distribution"
          label1=%sx label2=%sy unit1=km unit2=km
          transp=y
@@ -52,5 +64,25 @@ for key in ('s','g'):
          stdin=0)
 
 Result('geom','s g','SideBySideAniso')
+
+# Create a geometry cube [4 (sx,sy,gx,gy) * receivers * shots]
+Flow('hmat','sx2 sy2 gx2 gy2',
+     '''
+     cat axis=2 ${SOURCES[1:4]} |
+     transp |
+     headersort head=$SOURCE |
+     put n2=2544 n3=1799
+     ''')
+
+Result('hmat',
+       '''
+       window j2=2 | dd type=complex |
+       transp | graph symbol=* symbolsz=6,2 wanttitle=n
+       ''')
+
+# Offsets
+Flow('hx','hmat','headermath sx=0 gx=1 output=gx-sx')
+Flow('hy','hmat','headermath sy=0 gy=1 output=gy-sy')
+
 
 End()
