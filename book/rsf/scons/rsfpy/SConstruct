@@ -6,7 +6,7 @@ clip = 120
 
 def grey(title='',transp='n',label1='',label2=''):
     return '''
-    grey title=%s transp=%s minval=%f maxval=%f clip=%f
+    sfgrey title=%s transp=%s minval=%f maxval=%f clip=%f
     screenratio=1 label1=%s label2=%s titlesz=14
     ''' % (title,transp,minval,maxval,clip,label1,label2)
 
@@ -15,7 +15,8 @@ max = 50
 
 def graph(title=''):
     return '''
-    graph min2=%f max2=%f title=%s titlesz=14 screenratio=.75
+    sfgraph min2=%f max2=%f title=%s titlesz=14
+    screenratio=.75
     ''' % (min,max,title)
 
 # fetch the data on BEG FTP server
@@ -24,12 +25,12 @@ Flow('lena','lena.img',
      '''
      echo n1=512 n2=513 d1=1 d2=1 in=$SOURCE
      data_format=native_uchar |
-     dd type=float | window f2=1 | 
-     math output="input-99.0512"
+     sfdd type=float | sfwindow f2=1 | 
+     sfmath output="input-99.0512"
      ''',stdin=0)
 
 # add noise to lena
-Flow('nlena','lena','noise seed=2006 var=1400')
+Flow('nlena','lena','sfnoise seed=2006 var=1400')
 
 # plots and FX spectra
 titles = {'lena':'Lena',
@@ -38,7 +39,7 @@ for name in titles.keys():
     Plot(name,grey(titles[name]) )
     # look at FX domain
     cftitle = titles[name]+' in the FX domain'
-    Flow('fx'+name,name,'spectra')
+    Flow('fx'+name,name,'sfspectra')
     Plot('fx'+name,grey('%s in the FX domain','y',
                         'Frequency','Position') %cftitle )
 
@@ -48,31 +49,31 @@ Plot('fxlenas','fxlena fxnlena','SideBySideAniso')
 Result('panel1','lenas fxlenas','OverUnderAniso')
 
 # denoising using LP filtering
-Flow('lplena','nlena','bandpass fhi=.075')
+Flow('lplena','nlena','sfbandpass fhi=.075')
 Plot('lplena',grey('Noisy Lena LP filtered'))
 
 # thresholding
 lg = 100.
 thr = lg/6.
-Flow('range',None,'math n1=%d output="x1-%f" ' %(lg,lg/2))
+Flow('range',None,'sfmath n1=%d output="x1-%f" ' %(lg,lg/2))
 Flow('thr',None,
-     'math n1=%d n2=2 output="(2*x2-1)*%f" ' %(lg,thr))
+     'sfmath n1=%d n2=2 output="(2*x2-1)*%f" ' %(lg,thr))
 
 Plot('range',graph('Data with threshold level') )
 Plot('thr',graph()+' dash=1')
 Plot('data','range thr','Overlay')
 
-Flow('hdata','range','thr thr=%f mode=hard' %thr)
+Flow('hdata','range','sfthr thr=%f mode=hard' %thr)
 Plot('hdata',graph('Thresholded data') )
 Result('hthr','data hdata','SideBySideAniso')
 
 # denoising using thresholding in the Fourier domain
-fft2 = 'fft1 sym=y | fft3 sym=y'
-ifft2 = 'fft3 sym=y inv=y | fft1 sym=y inv=y '
+fft2 = 'sffft1 sym=y | sffft3 sym=y'
+ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
 fthr = float(ARGUMENTS.get('fthr', 70))
 
 Flow('fnlena','nlena',fft2)
-Flow('fthrlena','fnlena','thr thr=%f mode="hard"' %fthr)
+Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' %fthr)
 Flow('thrlena','fthrlena',ifft2)
 Plot('thrlena',grey('Thresholding in the Fourier domain') )
 

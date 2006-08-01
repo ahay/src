@@ -1,21 +1,16 @@
 from rsfproj import *
-
 Fetch('lena.img','imgs')
-
 Flow('ulena','lena.img',
      '''
      echo n1=512 n2=513 d1=1 d2=1
      in=$SOURCE data_format=native_uchar
      ''',stdin=0)
 Flow('flena','ulena','sfdd type=float')
-Flow('flena512','flena','sfwindow f2=1')
-Flow('zmflena512','flena512',
-     'sfmath output="input-99.0512" ')
-
+Flow('zmflena512','flena',
+     'sfwindow f2=1 | sfmath output="input-99.0512" ')
 Result('lena','zmflena512',
        '''
-       sfgrey title="Lena" transp=n minval=-150
+       sfgrey title="" transp=n minval=-150
        maxval=150 clip=120 screenratio=1 titlesz=14
        ''')
-
 End()

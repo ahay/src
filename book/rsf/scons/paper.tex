@@ -216,41 +216,59 @@ reproducible research in scientific computing.
 
 \subsection{Paper organization}
 
-%This paper is organized ``by example''. We will take a small project
-%typical for geophysical data processing and show how it can be
-%organized with SCons.  The example is taken from the collection of
-%demos in Seismic Unix \cite[]{su}.  Next, we reproduce a similar
-%example using the newly developed RSF (regularly sampled file)
-%software package. Finally, we show how to adopt SCons for generating
-%documents such as the one you are reading now.
-
 \newpage
-\section{Setting up projects}
-\subsection{Getting started with RSF}
+\section{Creating a reproducible script}
+%
+First of all, let's go through the SConstruct commands that are set in
+our reproducible research environment.
 
-In this example, we will download an image from an anonymous data
-server, perform basic manipulations, and display the result.
+\noindent\texttt{Fetch(filename,dir[,ftp\_server\_info])}\\
+\indent A rule to download \texttt{filename} from a specific
+directory \texttt{dir} of an FTP server
+(\texttt{ftp\_server\_info}).
 
+\noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\
+\indent A rule to generate \texttt{target[s]} from \texttt{source[s]}
+using \texttt{command[s]}
+
+\noindent\texttt{Plot(intermediate\_plot[,source],plot\_command)} or\\
+\texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\
+\indent A rule to generate an intermediate plot (vpl file in the
+working directory).
+
+\noindent\texttt{Result(plot[,source],plot\_command)} or\\ 
+\texttt{Result(plot,intermediate\_plots,combination})\\
+\indent A rule to generate a final plot (vpl file in the Fig folder of
+the working directory).
+
+\subsection{Example 1}
+%
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[firstline=1,lastline=16,frame=single]{easystart/SConstruct}
 
-Open a file named ``SConstruct'' in your favorite editor and start it
-with the line
-%
+This reproducible script illustrates the basic use of some of the
+commands presented in the previous section. An image is downloaded
+from an anonymous data server, converted to Madagascar file format,
+manipulated, and displayed. But let's have a closer look at the script
+and decorticate it.\\
+
 \lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
 %
-This loads the RSF project management module \texttt{rsfproj}, which
-provides our extention to SCons.
+is a standard Python command that loads the Madagascar project
+management module ``rsfproj.py'' which provides our extension to
+SCons.\\
+
+\lstinputlisting[firstline=2,lastline=2,frame=single]{easystart/SConstruct}
 %
-Add a Fetch command as follows
-\lstinputlisting[firstline=3,lastline=3,frame=single]{easystart/SConstruct}
-which instructs SCons to connect to an anonymous data server (default
-is BEG FTP server) and extract (fetch) the data file ``lena.img'' from
-the ``data/imgs'' directory. By running \texttt{scons lena.img}
-%
-the file ``lena.img'' is downloaded to your current folder. The
-equivalent command lines are \footnote{use login: anonymous, password:
-  anonymous}
+instructs SCons to connect to BEG FTP server (default behavior if no
+FTP server information is provided) and fetch the data file
+``lena.img'' from the ``data/imgs'' directory. Note that Madagascar
+expects a ``data'' folder on top of the specified directory (i.e.
+``imgs''). In the directory where you have your SConstruct, running
+\texttt{scons lena.img} on the command line will download the file
+``lena.img''.  The equivalent command lines are \footnote{use login:
+  anonymous, password: anonymous}
 \begin{verbatim}
 bash$ ftp egl.beg.utexas.edu
 ftp> bin
@@ -259,32 +277,29 @@ ftp> get lena.img
 ftp> bye
 \end{verbatim}
 %
-Add now the following Flow command
+\lstinputlisting[firstline=3,lastline=7,frame=single]{easystart/SConstruct}
 %
-\lstinputlisting[firstline=5,lastline=9,frame=single]{easystart/SConstruct}
-%
-to prepare the RSF header file. A Flow is a rule to generate target(s)
-from source(s) using command(s). In this specific case, the Flow has
-one source ``lena.img'' and one target ``ulena.rsf'' (the default
-extension for sources and targets is .rsf) The target is obtained from
-the source by running
+prepares the Madagascar header file ``ulena.rsf'' using the standard
+Unix command ``echo''. Note that, if no extension is specified, the
+default extension ``.rsf'' will be appended to source and target
+names. The equivalent command lines is
 %
 \begin{verbatim}
 bash$ echo n1=512 n2=513 d1=1 d2=1 in=lena.img \
 data_format=native_uchar > ulena.rsf
 \end{verbatim}
 %
-Since echo does not take a standard input, stdin is set to 0 in the
-Flow command otherwise the first source is the standard input.
+Since \texttt{echo} does not take a standard input, stdin is set to 0
+in the Flow command otherwise the first source is the standard input.
 Likewise, the first target is the standard output unless otherwise
 specified. Note the triple quotes used because the actual command is
 broken into several lines in the SConstruct. Note also that
 ``lena.img'' is refered as ``\$SOURCE'' in the command. Run
 \texttt{scons ulena.rsf} to execute the Flow command and obtain the
 ASCII header file ``ulena.rsf''.  The next step is to convert the
-binary data ``lena.img'' into a RSF file.  To do so add
-%
-\lstinputlisting[firstline=10,lastline=10,frame=single]{easystart/SConstruct}
+binary data ``lena.img'' into a RSF file.\\
+
+\lstinputlisting[firstline=8,lastline=8,frame=single]{easystart/SConstruct}
 %
 The equivalent command line is
 %
@@ -292,55 +307,85 @@ The equivalent command line is
 bash$ < ulena.rsf sfdd type=float > flena.rsf
 \end{verbatim}
 %
-Run \texttt{scons flena.rsf}. At this point the Lena image is
-converted to RSF file format with a header file ``flena.rsf'' in the
-current directory and a binary file ``flena.rsf@'' in the data
-directory (environment variable DATAPATH). The last two steps before
-displaying Lena (we know you are impatient...)  is windowing the image
-and subtracting its mean. Add the following Flow command
+Run \texttt{scons flena.rsf}. The Lena image is now converted to RSF
+file format with a header file ``flena.rsf'' in the current directory
+and a binary file ``flena.rsf@'' in the data directory (environment
+variable DATAPATH). The last two steps before displaying Lena (don't
+be so impatient...)  is windowing the image and subtracting its mean.\\
+
+\lstinputlisting[firstline=9,lastline=10,frame=single]{easystart/SConstruct}
 %
-\lstinputlisting[firstline=11,lastline=11,frame=single]{easystart/SConstruct}
+The equivalent command line is
 %
-to remove the first sample along the second axis. Run \texttt{scons
-  flena512.rsf}. Finally
+\begin{verbatim}
+bash$ < flena.rsf sfwindow f2=1 | sfmath \ 
+output=``input-99.0512''  > zmflena512.rsf
+\end{verbatim}
 %
-\lstinputlisting[firstline=12,lastline=13,frame=single]{easystart/SConstruct}
+Run \texttt{scons zmflena512.rsf} to obtain ``zmflena512.rsf''. Use
+\texttt{sfin zmflena512.rsf} to check the header of our new file
+(DATAPATH is set to '.')
 %
-to substract the mean. Note the keyword ``input'' in the output
-formula which refers to the standard input of the ``sfmath'' function.
-Run \texttt{scons zmflena512.rsf}. It is now time to display Lena...
-Add the Result command
+\begin{verbatim}
+zmflena512.rsf:
+    in="./zmflena512.rsf@"
+    esize=4 type=float form=native 
+    n1=512         d1=1           o1=0          
+    n2=512         d2=1           o2=1          
+        262144 elements 1048576 bytes
+\end{verbatim}
 %
-\lstinputlisting[firstline=15,lastline=19,frame=single]{easystart/SConstruct}
+and \texttt{sfattr want=mean $<$zmflena512.rsf} to double check the
+image has 0 mean. It is now high time to display Lena!\\
+%
+\lstinputlisting[firstline=11,lastline=15,frame=single]{easystart/SConstruct}
 %
 which command line equivalent is
 \begin{verbatim}
 bash$ < zmflena512.rsf sfgrey title="Lena" transp=n minval=-150 \
-maxval=150 clip=120 screenratio=1 titlesz=14 | tube
+maxval=150 clip=120 screenratio=1 titlesz=14 | xtpen
 \end{verbatim}
 %
-Running \texttt{scons lena.view} displays the Lena image. It also
-create a ``Fig'' directory in the current folder where it stores the
-result ``lena.vpl''. End the SConstruct with
+Running \texttt{scons lena.view} displays Fig.~\ref{fig:lena}.
 %
-\lstinputlisting[firstline=21,lastline=21,frame=single]{easystart/SConstruct}
+\inputdir{easystart}
+\plot{lena}{height=.25\textheight}{Lena}
+%
+It also create a ``Fig'' directory in the current folder where it
+stores the result ``lena.vpl''. The Madagascar reproducible script
+ends with\\
+%
+\lstinputlisting[firstline=16,lastline=16,frame=single]{easystart/SConstruct}
 
-\subsection{Combining RSF and Python in SConstruct}
+\subsection{Example 2}
+
+Since SConstructs are Python scripts, we can also use all the
+flexibility and sophistication of the Python language in our
+Madagascar reproducible scripts. A demo script is available at XXX
+but, rather than commenting it line-by-line, we select some parts of
+interest.
+
+In a Madagascar reproducible script (i.e. SConstruct) we can declare
+and use standard Python variable\\
+
+\lstinputlisting[firstline=3,lastline=5,frame=single]{rsfpy/SConstruct}
+
+\noindent that can be used later, for example, in a Python function\\
+
+\lstinputlisting[firstline=7,lastline=11,frame=single]{rsfpy/SConstruct}
+
+
 
 \lstinputlisting[firstline=1,lastline=83,frame=single]{rsfpy/SConstruct}
 
 \subsection{LaTeX example}
 
-\section{Command summary}
+%\noindent\texttt{Paper(texdoc\textit{,use})}\\
+%\indent A rule to generate \texttt{texdoc.pdf} from the simplified
+%\LaTeX\ document \texttt{texdoc.tex}.
 
-The following is a summary of SConstruct commands and default SCons
-targets that are set in our reproducible research environment.
-
-\begin{description}
-\item[\texttt{Flow(target,source,command)}] \dotfill \pageref{flow} \\
-  A rule to generate \texttt{target} from \texttt{source} using
-  \texttt{command}.
-\end{description}
+%\noindent\texttt{Book(xxx)}\\
+%\indent I DO NOT KNOW HOW TO USE IT...
 
 \section{Open source availability}
 
