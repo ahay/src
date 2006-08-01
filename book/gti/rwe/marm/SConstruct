@@ -9,7 +9,8 @@ par = {
     'nT':1250, 'dT':0.002,'oT':0, 'kT':1000,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
-    'spx':750
+    'spx':750,
+    'prefix':'M-'
     }
 
 # compute parameters
@@ -47,11 +48,11 @@ Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
 rwezo.cos('cos',20,20,par)
-Result('cos','vel cos','Overlay')
+Result(par['prefix']+'cos' % par,'vel cos','Overlay')
 
 # slowness
 rwezo.slow('sloCC','sloRC','vel','cos',par)
-Result('sloRC','transp |'
+Result(par['prefix']+'sloRC','sloRC','transp |' % par
        + rwezo.rgrey('pclip=100 allpos=y bias=0.18',par))
 
 # ------------------------------------------------------------
@@ -70,7 +71,7 @@ Flow('datCC',None,
      smooth rect2=3 |
      put label1=t label2=x
      ''' % par )
-Result('datCC','grey pclip=100 wanttitle=n')
+Result(par['prefix']+'datCC' % par,'datCC','grey pclip=100 wanttitle=n')
 
 # ------------------------------------------------------------
 # frequency data RC: (g,w)
@@ -80,7 +81,7 @@ rwezo.frq('frqRC','frqCC','datCC','cos',par)
 # WEM image CC: (z,x)
 zomig.image('imgCC','sloCC','frqCC',par)
 Plot  ('imgCC','window | transp |' + rwezo.cgrey('pclip=99',par))
-Result('imgCC',['imgCC','cos'],'Overlay')
+Result(par['prefix']+'imgCC',['imgCC','cos'],'Overlay')
 
 # ------------------------------------------------------------
 # RWE image

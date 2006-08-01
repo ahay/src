@@ -22,7 +22,7 @@ fdmod.param(par)
 Flow('wav',None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-         ricker1 frequency=10 |
+         ricker1 frequency=30 |
          scale axis=123 |
          put label1=t label2=x label3=y 
          ''' % par)    

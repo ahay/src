@@ -5,13 +5,12 @@ par = {
     'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z unit1=km',  
     'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x unit2=km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
-    'ng':400,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
+    'ng':800,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
     'kt':100,    # wavelet delay 
-    'nT':1600, 'dT':0.004,    'oT':0,
+    'nT':1600, 'dT':0.004,  'oT':0,
     'ow':1,
     'nbz':250,'nbx':250
     }
-
 par['ox']*=0.3048
 par['dx']*=0.3048
 par['oz']*=0.3048
@@ -182,7 +181,7 @@ for j in range(20,300,20):
          window n3=1 f3=%(j)d
          min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |
          ''' % par
-         + rwezo.cgrey('pclip=100',par))
+         + rwezo.cgrey('pclip=99',par))
     Result('wo'+str(j/20),['wo'+str(j/20),'cos1','ss'],'Overlay')
 
 Flow(  'dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
@@ -196,8 +195,8 @@ Flow('vel1','velo','smooth rect1=351 rect2=351 repeat=3')
 Flow('s_',None,'spike nsp=1 n1=%(ng)d d1=%(dg)g o1=%(og)g' % par)
 
 # coordinate system: rays(g,t)
-Flow('mzs1','s_','math output="01.0+0.0175*x1"' % par)
-Flow('mxs1','s_','math output="17.0+0.0150*x1"' % par)
+Flow('mzs1','s_','math output="01.0+0.009*x1"' % par)
+Flow('mxs1','s_','math output="17.0+0.008*x1"' % par)
 Flow('sou1','mxs1 mzs1',
      'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
@@ -211,15 +210,15 @@ Flow('cos1','hwt1',
      '''
      reverse which=2 |
      put o2=0 d2=%(dt)g |
-     window j2=8
+     window j1=2 j2=8
      ''' % par)
 
 # ------------------------------------------------------------
 Flow('vel2','velo','math output=2.75')
 
 # coordinate system: rays(g,t)
-Flow('mzs2','s_','math output="-07.5+0.04*x1"' % par)
-Flow('mxs2','s_','math output="-18.0-0.01*x1"' % par)
+Flow('mzs2','s_','math output="-06.5+0.025*x1"' % par)
+Flow('mxs2','s_','math output="-17.0-0.005*x1"' % par)
 Flow('sou2','mxs2 mzs2',
      'cat axis=2 space=n ${SOURCES[1]} | transp | dd type=complex | window')
 
@@ -229,7 +228,7 @@ Flow('hwt2','vel2 sou2',
      hwtex verb=n sou=${SOURCES[1]}
      nt=%(nt)d ot=%(ot)g dt=%(dt)g
      ''' % par)
-Flow('cos2','hwt2','window j2=8')
+Flow('cos2','hwt2','window j2=4')
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
@@ -247,7 +246,7 @@ Result('imgCC',['imgCC','cos1'],'Overlay')
 # 2 - Cartesian  coordinate system
 for i in ('1','2'):
     # coordinate system plot
-    rwezo.cos(   'cos'+i,10,50,par)
+    rwezo.cos(   'cos'+i,20,100,par)
     Result('cos'+i,['velo','cos'+i],'Overlay')
     
     # slowness
@@ -260,7 +259,8 @@ for i in ('1','2'):
            '''
            add ${SOURCES[1]} | transp |
            c2r rays=${SOURCES[2]} adj=n | transp | bandpass fhi=10 |
-           '''+ rwezo.rgrey('pclip=99',par))
+           scale axis=123 |
+           '''+ rwezo.rgrey('pclip=99 scalebar=y',par))
     
     # ------------------------------------------------------------
     # coordinate system coefficients (A,B,M=mask) and references (A,B)
@@ -281,32 +281,40 @@ for i in ('1','2'):
 
 # ------------------------------------------------------------
 zoompar = {    
-    'nz':7,  'dz':1,  'oz':2,           'lz':'label1=z unit1=km',  
-    'nx':10, 'dx':1, 'ox':12,           'lx':'label2=x unit2=km',
+    'nz':7,    'dz':1,      'oz':2,     'lz':'label1=z unit1=km',  
+    'nx':10,   'dx':1,      'ox':12,    'lx':'label2=x unit2=km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
     'ng':400,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
-    'nT':1600, 'dT':0.004,   'oT':0
+    'nT':1600, 'dT':0.004,  'oT':0
     }
 rwezo.param(zoompar)
 
 Plot('zoomvel','velo',rwezo.cgrey('',zoompar))
-Flow('vscale','velo','scale axis=123 | add add=-0.6')
+Flow('vscaleCC','sloCC',
+     'window | transp | math output=1/input | scale axis=123 | add add=-0.6')
 
 for i in ('1','2'):
-    Flow('zoomcos'+i,'cos'+i,'window')
-    rwezo.cos('zoomcos'+i,5,25,zoompar)
+    Flow('vscaleRC'+i,'sloRC'+i,
+         'transp | math output=1/input | scale axis=123 | add add=-0.6')
 
-    Result('zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
+    Flow(     'zoomcos'+i,'cos'+i,'window')
+    rwezo.cos('zoomcos'+i,5,25,zoompar)
+    Result(   'zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
     Plot('zoomvel-ovl'+i,['zoomvel','zoomcos'+i],'Overlay')
 
     for j in (['SSF','FFD','PSC',
                'F15','F45','F60']):
         sfx = i + '-' + j
 
-        Flow('iscale'+sfx,'migCC'+sfx,'transp | scale axis=123')
-        Flow('comp'+sfx,['vscale','iscale'+sfx],
+        Flow('iscaleCC'+sfx,'migCC'+sfx,'transp | scale axis=123')
+        Flow('compCC'+sfx,['vscaleCC','iscaleCC'+sfx],
              'math a=${SOURCES[0]} b=${SOURCES[1]} output="0.5*a+b"')
-        Plot(  'comp'+sfx,rwezo.cgrey('pclip=100',zoompar))
-        Result('comp'+sfx,['comp'+sfx,'zoomcos'+i],'Overlay')
+        Plot(  'compCC'+sfx,rwezo.cgrey('pclip=100',zoompar))
+        Result('compCC'+sfx,['compCC'+sfx,'zoomcos'+i],'Overlay')
+
+        Flow('iscaleRC'+sfx,'migRC'+sfx,'transp | scale axis=123')
+        Flow('compRC'+sfx,['vscaleRC'+i,'iscaleRC'+sfx],
+             'math a=${SOURCES[0]} b=${SOURCES[1]} output="0.5*a+b"')
+        Result('compRC'+sfx,rwezo.rgrey('pclip=100 min1=10',zoompar))
         
 End()
