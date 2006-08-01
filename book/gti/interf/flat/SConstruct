@@ -99,7 +99,7 @@ Result('rm',['rm','ss','rr'],'Overlay')
 fdmod.amodel('do','wo','wav','vm','rm','ss','rr','free=y dens=n',par)
 fdmod.amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y',par)
 
-Flow('wx','ww wo','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
+Flow('wx','ww wo','add ${SOURCES[1]} scale=1,-1')
 
 Result('wo',fdmod.wgrey('pclip=99',par))
 Result('ww',fdmod.wgrey('pclip=99',par))
