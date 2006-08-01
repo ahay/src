@@ -37,7 +37,6 @@ titles = {'lena':'Lena',
           'nlena':'Noisy Lena'}
 for name in titles.keys():
     Plot(name,grey(titles[name]) )
-    # look at FX domain
     cftitle = titles[name]+' in the FX domain'
     Flow('fx'+name,name,'sfspectra')
     Plot('fx'+name,grey('%s in the FX domain','y',
@@ -68,9 +67,9 @@ Plot('hdata',graph('Thresholded data') )
 Result('hthr','data hdata','SideBySideAniso')
 
 # denoising using thresholding in the Fourier domain
+fthr = float(ARGUMENTS.get('fthr', 70))
 fft2 = 'sffft1 sym=y | sffft3 sym=y'
 ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
-fthr = float(ARGUMENTS.get('fthr', 70))
 
 Flow('fnlena','nlena',fft2)
 Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' %fthr)

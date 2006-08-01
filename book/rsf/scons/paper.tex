@@ -366,17 +366,46 @@ but, rather than commenting it line-by-line, we select some parts of
 interest.
 
 In a Madagascar reproducible script (i.e. SConstruct) we can declare
-and use standard Python variable\\
+Python variable\\
 
 \lstinputlisting[firstline=3,lastline=5,frame=single]{rsfpy/SConstruct}
 
-\noindent that can be used later, for example, in a Python function\\
+\noindent that can be used later, for example, to define a Python function\\
 
 \lstinputlisting[firstline=7,lastline=11,frame=single]{rsfpy/SConstruct}
 
+This Python function, named ``grey()'', can then be used in Plot or Result
+commands, e.g.\\
 
+\lstinputlisting[firstline=52,lastline=52,frame=single]{rsfpy/SConstruct}
 
-\lstinputlisting[firstline=1,lastline=83,frame=single]{rsfpy/SConstruct}
+We can define a Python dictionary, e.g.\\
+
+\lstinputlisting[firstline=36,lastline=37,frame=single]{rsfpy/SConstruct}
+
+\noindent and loop over its entries, e.g.\\
+
+\lstinputlisting[firstline=38,lastline=43,frame=single]{rsfpy/SConstruct}
+
+Note that the title of the plots is obtained by concatenating Python
+strings\\
+
+\lstinputlisting[firstline=40,lastline=40,frame=single]{rsfpy/SConstruct}
+
+Python strings can also be used to define sequences of commands used
+in several Flows, e.g.\\
+
+\lstinputlisting[firstline=71,lastline=74,frame=single]{rsfpy/SConstruct}
+
+Finally, in our Madagascar reproducible script, we may want the option
+to pass command line arguments when running SCons or use default
+values otherwise, e.g.\\
+
+\lstinputlisting[firstline=70,lastline=70,frame=single]{rsfpy/SConstruct}
+
+This is by no mean an exhaustive list of options but, hopefully, it
+gives you a flavor of the powerful tool you have in hands. Sit back
+and enjoy!
 
 \subsection{LaTeX example}
 
