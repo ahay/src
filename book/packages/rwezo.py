@@ -23,6 +23,8 @@ def param(par):
     par['height']=14.0*par['ratio']
 
     if(not par.has_key('ntap')): par['ntap']=10
+    if(not par.has_key('prefix')): par['prefix']=''
+    
 
 def cgrey(custom,par):
     return '''
@@ -117,15 +119,14 @@ def abm(abmRC,abrRC,sloRC,cos,par):
     Flow(abmRC+'m',abmRC+'tmp','window n3=1 f3=2')
 
     Flow(abmRC,[abmRC+'a',abmRC+'b',abmRC+'m'],
-         'cat axis=3 space=n ${SOURCES[1:3]}'
-         )
+         'cat axis=3 space=n ${SOURCES[1:3]}')
 
 def abmplot(abmRC,par):
-    Result(abmRC+'a',abmRC,'window n3=1 f3=0 | transp |'
+    Result(par['prefix']+abmRC+'a',abmRC,'window n3=1 f3=0 | transp |' % par
          + rgrey('pclip=100 bias=1 scalebar=y',par))
-    Result(abmRC+'b',abmRC,'window n3=1 f3=1 | transp |'
+    Result(par['prefix']+abmRC+'b',abmRC,'window n3=1 f3=1 | transp |' % par
          + rgrey('pclip=100 allpos=y scalebar=y',par))
-    Result(abmRC+'m',abmRC,'window n3=1 f3=2 | transp |'
+    Result(par['prefix']+abmRC+'m',abmRC,'window n3=1 f3=2 | transp |' % par
          + rgrey('pclip=100 allpos=y',par))
 
 def frq(frqRC,frqCC,datCC,cos,par):
@@ -146,7 +147,7 @@ def frq(frqRC,frqCC,datCC,cos,par):
          c2r rays=${SOURCES[1]} adj=n linear=n nsz=%(nsz)d nsx=%(nsx)d |
          put label1=g label2=t label3=w
          ''' % par)
-    Result(frqRC,'window j3=10 | real | transp |'
+    Result(par['prefix']+frqRC,frqRC,'window j3=10 | real | transp |' % par
            + rgrey('title= gainpanel=a',par))
 
 # run migration
@@ -180,12 +181,12 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
 
         Plot  (migRC+sfx,'window | transp |'
                + rgrey('',par))
-        Result(migRC+sfx,'window | transp |'
+        Result(par['prefix']+migRC+sfx,migRC+sfx,'window | transp |' % par
                + rgrey('',par))
         
         Plot(migCC+sfx,'window | transp |'
              + cgrey('pclip=100',par))
-        Result(migCC+sfx,[migCC+sfx,cos],'Overlay')
+        Result(par['prefix']+migCC+sfx,[migCC+sfx,cos],'Overlay' % par)
 
 # run modeling
 def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
@@ -208,7 +209,7 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
              abr=${SOURCES[2]} |
              put label1=g label2=t label3=w
              ''' % (par['ntap'],method,par['nw'],par['ow'],par['dw']) )
-        Result(modRC+sfx,'window j3=10 | real | transp |'
+        Result(par['prefix']+modRC+sfx,modRC+sfx,'window j3=10 | real | transp |' % par
                + rgrey('title= gainpanel=a',par))
 
         par['nzcut']=20
@@ -230,29 +231,29 @@ def mod(modCC,modRC,migRC,abmRC,abrRC,cos,par):
              put label1=t label2=x
              ''' % (int(par['ow']/par['dw']),par['nT']/2+1))
         
-        Result(modCC+sfx,
-               'grey pclip=100 wanttitle=n grid=y label1=t unit1=s label2=x unit2=km')
+        Result(par['prefix']+modCC+sfx,modCC+sfx,
+               'grey pclip=100 wanttitle=n grid=y label1=t unit1=s label2=x unit2=km' % par)
 
 # produce plots
 def plots(par):
-    pplot.p3x2('iCCall',
+    pplot.p3x2(par['prefix']+'iCCall',
                'migCC-SSF','migCC-PSC','migCC-FFD',
                'migCC-F15','migCC-F45','migCC-F60',
                0.3,0.3,-8,-12)
-    pplot.p3x2('iRCall',
+    pplot.p3x2(par['prefix']+'iRCall',
                'migRC-SSF','migRC-PSC','migRC-FFD',
                'migRC-F15','migRC-F45','migRC-F60',
                0.3,0.3,-10,-12)
 
-    Result('icomp','imgCC migCC-FFD migCC-F60','Movie')
-    Result('imgCC',['imgCC','cos'],'Overlay')
+    Result(par['prefix']+'icomp',['imgCC','migCC-FFD','migCC-F60'],'Movie')
+    Result(par['prefix']+'imgCC',['imgCC','cos'],'Overlay')
 
     Plot  ('imgCC',
            'window | transp |' + cgrey('pclip=100',par))
     Plot  ('imgRC','migCC-FFD',
            '         transp |' + cgrey('pclip=100',par))
     Plot('imgRC-ovl',['imgRC','cos'],'Overlay')
-    pplot.p2x1('CCvsRC','imgRC-ovl','imgCC',0.5,0.5,-9)
+    pplot.p2x1(par['prefix']+'CCvsRC','imgRC-ovl','imgCC',0.5,0.5,-9)
     
 #    Result('CCvsRC',['imgRC-ovl','imgCC'],'OverUnderIso')
 

@@ -163,8 +163,8 @@ for i in range(nl):
     drtbot = 'drt' + str(j)
     dimbot = 'dim' + str(j)
 
-    Flow(dstbot,dswbot,'window | transp | pad beg1=12 n1out=4001 | fft1 inv=y opt=n')
-    Flow(drtbot,drwbot,'window | transp | pad beg1=12 n1out=4001 | fft1 inv=y opt=n')
+    Flow(dstbot,dswbot,'window | transp | pad beg1=12 n1out=1501 | fft1 inv=y opt=n')
+    Flow(drtbot,drwbot,'window | transp | pad beg1=12 n1out=1501 | fft1 inv=y opt=n')
     Flow(dimbot,[dstbot,drtbot],'add mode=p ${SOURCES[0]} ${SOURCES[1]}',stdin=0)
     
 # ------------------------------------------------------------

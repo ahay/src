@@ -90,5 +90,21 @@ def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
     
-
+def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [odat,wfld],[idat,velo,dens,sou,rec],
+          '''
+          awe ompchunk=%(ompchunk)d
+          verb=y abc=y free=n dens=y
+          snap=%(snap)s jsnap=%(jsnap)d
+          nbz=%(nbz)d tz=%(tz)g
+          nbx=%(nbx)d tx=%(tx)g
+          vel=${SOURCES[1]}
+          den=${SOURCES[2]}
+          sou=${SOURCES[3]}
+          rec=${SOURCES[4]}
+          wfl=${TARGETS[1]}
+          %(fdcustom)s
+          ''' % par)
 

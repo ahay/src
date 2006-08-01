@@ -3,7 +3,9 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-afmod afmodP erfdm off2abs off2abs3
+awe
+afmod afmodP erfdm
+off2abs off2abs3
 '''
 
 try:  # distributed version
