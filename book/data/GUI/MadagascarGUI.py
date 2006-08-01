@@ -518,6 +518,7 @@ class Madagascar:
                     command = "Flow(\'"+ fileOut + "\',\'" + file + "\', 'dd form=native')"
                     SConstruct.write(command)
                     SConstruct.write('\n')
+                    SConstruct.write('# Update Header \n')
         SConstruct.close()
         command3="cd "+LOCATION+"\n" + "scons &"
         os.system(command3)
@@ -671,7 +672,7 @@ class Madagascar:
                 break 
         SConstruct.write(sectionHeader)    
         catRules ='\'cat ${SOURCES[0:2]} axis=' + axisNum + '\''
-        command2 = 'Flow(\'catFile_'+ LOCATION + '\',' + str(CATfiles) + ',' + catRules +  ',stdin=0)'
+        command2 = 'Flow(\'catFile_'+ LOCATION + '\',' + str(CATfiles) + ',' + catRules +  ',stdin=0) \n'
         SConstruct.write(command2)
         command3="cd "+LOCATION+"\n" + "scons &"
         os.system(command3) 
@@ -683,7 +684,10 @@ class Madagascar:
         print RSFfiles
         
     def archive(self):
-        pass
+        command = 'cd ' + LOCATION + '\n' '\\rm update* info*'
+        print command
+        os.system(command)
+       
 
 #########################################################################################################
 #########################################################################################################
