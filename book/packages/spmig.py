@@ -61,7 +61,7 @@ def wflds(swfl,rwfl,wave,shot,par):
          swf=${TARGETS[1]}
          ''' % par )
 
-    # sqfl(nx,ny,nw,ne)
+    # swfl(nx,ny,nw,ne)
     # rwfl(nx,ny,nw,ne)
     Flow(swfl,_ssss,
          '''
@@ -264,3 +264,6 @@ def i2s(dimag,dslow,swfld,rwfld,bslow,par):
          rwf=${SOURCES[2]}
          slo=${SOURCES[3]}
          ''' % param(par))
+
+
+

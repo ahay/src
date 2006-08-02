@@ -153,3 +153,51 @@ def i2s(dimag,dslow,bwfld,bslow,par):
          wfl=${SOURCES[1]}
          slo=${SOURCES[2]}
          ''' % param(par))
+
+# ------------------------------------------------------------
+def wem(imag,sdat,rdat,velo,custom,par):
+
+    sfrq = imag + sdat + '_f'
+    rfrq = imag + rdat + '_f'
+
+    swfl = imag + sdat + '_w'
+    rwfl = imag + rdat + '_w'
+
+    slow = imag + velo + '_s'
+    
+    Flow(sfrq,sdat,
+         '''
+         transp |
+         fft1 inv=n opt=n |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         transp plane=12 |
+         transp plane=23
+         ''' % par )
+    
+    Flow(rfrq,rdat,
+         '''
+         transp |
+         fft1 inv=n opt=n |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         transp plane=12 |
+         transp plane=23
+         ''' % par )
+
+    Flow(slow,velo,
+         '''
+         math output=1/input |
+         transp plane=12 |
+         transp plane=23
+         ''')
+
+    Cwfone(swfl,sfrq,slow,par)
+    Awfone(rwfl,rfrq,slow,par)
+
+    Flow(imag,[swfl,rwfl],
+         '''
+         math s=${SOURCES[0]} r=${SOURCES[1]} output="r*conj(s)" |
+         window |
+         stack axis=3 |
+         real |
+         transp
+         ''',stdin=0)

@@ -55,7 +55,7 @@ int main (int argc, char *argv[])
     if (NULL == (mode = sf_getstring("mode"))) mode = "m";
 
     if (!sf_getbool(  "verb",&verb  ))  verb = false; /* verbosity flag */
-    if (!sf_getbool("incore",&incore))incore = false; /* in core execution */
+    if (!sf_getbool("incore",&incore))incore =  true; /* in core execution */
     if (!sf_getfloat(  "eps",&eps   ))   eps =  0.01; /* stability parameter */
     if (!sf_getbool(   "inv",&inv   ))   inv = false; /* y=modeling; n=migration */
     if (!sf_getbool("causal",&causal)) causal= false; /* y=causal; n=anti-causal */

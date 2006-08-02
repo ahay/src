@@ -348,7 +348,7 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 		if(causal) {
 		    w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 		} else {
-		    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
+		    w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 		}
 
 		fslice_get(wfld,iw+ie*aw.n,wx[0]);
@@ -367,7 +367,7 @@ void zodtm(bool inv    /* forward/adjoint flag */,
 		fslice_put(data,iw+ie*aw.n,wx[0]);
 	    } else { /* DOWNWARD DATUMING */
 		if(causal) {
-		    w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
+		    w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 		} else {
 		    w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 		}
@@ -410,7 +410,7 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 	    if(causal) {
 		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 	    } else {
-		w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
+		w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 	    }
 	    
 	    fslice_get(data,iw,wx[0]);
@@ -433,7 +433,7 @@ void zowfl(bool inv    /* forward/adjoint flag */,
 
 	} else {  /* DOWNWARD EXTRAPOLATION */
 	    if(causal) {
-		w = sf_cmplx(eps*aw.d,aw.o+iw*aw.d);
+		w = sf_cmplx(eps*aw.d,  aw.o+iw*aw.d );
 	    } else {
 		w = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d));
 	    }

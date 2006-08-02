@@ -1,17 +1,26 @@
 ## 
- # 
+ # Borcea et al model
  ##
 from rsfproj import *
 import fdmod,zomig
 
 # ------------------------------------------------------------
 par = {
-    'nt':1000, 'ot':0, 'dt':0.001, 'lt':'label1=time unit1=s',
-    'nx':401,  'ox':0, 'dx':0.005, 'lx':'label2=x unit2=km',
-    'nz':201,  'oz':0, 'dz':0.005, 'lz':'label1=z unit1=km',
+    'lo':0.01, # wavelength
+    'co':3,    # velocity
+    'nt':4000, 'ot':0, 'dt':0.0001, 'lt':'label1=time unit1=s',
+    'nx':1500, 'ox':0,              'lx':'label2=x unit2=km',
+    'nz':1500, 'oz':0,              'lz':'label1=z unit1=km',
     'kt':50,    # wavelet delay
-    'verb':'y','tmx':20, 'jsnap':50
+    'nbx':250, 'tx':0.001,
+    'nbz':250, 'tz':0.001,
+    'jsnap':50,
+    'height':10
     }
+par['dx']=par['lo']/par['nx']*100
+par['dz']=par['lo']/par['nz']*100
+par['fo']=par['co']/par['lo']
+
 # add F-D modeling parameters
 fdmod.param(par)
 
@@ -20,7 +29,7 @@ fdmod.param(par)
 Flow('wav',None,
      '''
      spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-     ricker1 frequency=35 |
+     ricker1 frequency=%(fo)g |
      scale axis=123 |
      put label1=t label2=x label3=y 
      ''' % par)
@@ -28,8 +37,9 @@ Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # experiment setup
-Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=1' % par)
-Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=1'  % par)
+Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
+#Flow('s_',None,'math n1=36     d1=10     o1=0      output=x1' % par)
 
 # receiver positions
 Flow('zr','r_','math output="0" ')
@@ -43,8 +53,10 @@ Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
      + fdmod.cgraph('symbol=* plotcol=6',par))
 
 # source positions
-Flow('zs','s_','math output=0')
-Flow('xs','s_','math output=1.0')
+Flow('zs','s_','math output="0"')
+Flow('xs','s_','math output="0.5"')
+#Flow('zs','s_','math output="0.9+0.002*sin(3.1415*input/180.)"')
+#Flow('xs','s_','math output="0.5+0.002*cos(3.1415*input/180.)"')
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -52,17 +64,33 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=v plotcol=6',par))
+     + fdmod.cgraph('symbol=o plotcol=2',par))
 
 # ------------------------------------------------------------
 # model
-Flow('vo',None,
+Flow('va',None,
      '''
-     math output="2.0+0.25*x1"
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     spike nsp=1 mag=-%(co)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=1395 l1=1405
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=745  l2=755
      ''' % par)
-Flow('vv','vo','noise mean=0 range=2 | smooth rect1=2 rect2=2')
+Flow('vn','va',
+     '''
+     math output=1 |
+     noise mean=0 range=1 type=y |
+     smooth rect1=11 rect2=11 |
+     add add=-1 |
+     scale axis=123 |
+     scale rscale=0.25
+     ''')
+Flow('vo','va',
+     '''
+     math output=%(co)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     add ${SOURCES[0]}
+     ''' % par)
+Flow('vv','vo vn','add ${SOURCES[1]}')
 Flow('rm',None,
      '''
      spike nsp=1 mag=+0.5
@@ -73,7 +101,7 @@ Flow('rm',None,
 
 Plot('vo',fdmod.cgrey('allpos=y bias=2.0 pclip=100',par))
 Plot('vv',fdmod.cgrey('allpos=y bias=2.0 pclip=100',par))
-Plot('rm',fdmod.cgrey('allpos=y bias=2.0 pclip=100',par))
+Plot('rm',fdmod.cgrey('allpos=y bias=3.0 pclip=100',par))
 
 Result('vo',['vo','ss','rr'],'Overlay')
 Result('vv',['vv','ss','rr'],'Overlay')
@@ -81,40 +109,9 @@ Result('rm',['rm','ss','rr'],'Overlay')
 
 # ------------------------------------------------------------
 # finite-differences modeling
-fdmod.amodel('do','wo','wav','vv','rm','ss','rr','free=y dens=n',par)
-fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=y dens=y',par)
-
-Flow('wx','ww wo','add ${SOURCES[1]} scale=1,-1')
-
-Result('wo',fdmod.wgrey('pclip=99',par))
+fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',fdmod.wgrey('pclip=99',par))
-Result('wx',fdmod.wgrey('pclip=99',par))
+Result('dd','transp|' + fdmod.dgrey('pclip=99',par))
 
-# source wavefield
-Flow('dw','wav',
-     'pad beg2=200 n2out=%(nx)d | put o2=%(ox)g d2=%(dx)g | transp' % par)
-
-# ------------------------------------------------------------
-# RTM
-Flow('dx','dd do','add ${SOURCES[1]} scale=1,-1')
-
-fdmod.rtm('io','dw','dx','vo','rm','rr','rr','free=y dens=n',par)
-fdmod.rtm('ii','dw','dx','vv','rm','rr','rr','free=y dens=n',par)
-
-Result('io',fdmod.cgrey('pclip=100',par))
-Result('ii',fdmod.cgrey('pclip=100',par))
-
-# ------------------------------------------------------------
-# WEM
-wpar={'nw':100, 'ow':1, 'jw':1,'nrmax':1}
-par.update(wpar)
-
-zomig.wem('jo','dw','dx','vo','',par)
-zomig.wem('jj','dw','dx','vv','',par)
-
-Result('jo',fdmod.cgrey('pclip=100',par))
-Result('jj',fdmod.cgrey('pclip=100',par))
-
-# ------------------------------------------------------------
 
 End()

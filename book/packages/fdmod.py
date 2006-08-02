@@ -108,3 +108,24 @@ def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
+def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,par):
+
+    swfl = imag+'_us'
+    rwfl = imag+'_ur'
+    sout = imag+'_ds'
+    rout = imag+'_dr'
+
+    tdat = imag+'_tds'
+    twfl = imag+'_tur'
+    tout = imag+'_tdr'
+
+    Flow(tdat,rdat,'reverse which=2 opt=i')
+    
+    awe(sout,swfl,sdat,velo,dens,sacq,sacq,custom+' jsnap=1 ',par)
+    awe(tout,twfl,tdat,velo,dens,racq,racq,custom+' jsnap=1 ',par)
+
+    Flow(rwfl,twfl,'reverse which=4 opt=i')
+    Flow(rout,tout,'reverse which=2 opt=i')
+
+    Flow(imag,[swfl,rwfl],'add mode=p ${SOURCES[1]} | stack axis=3')
+
