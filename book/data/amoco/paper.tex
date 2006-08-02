@@ -1,8 +1,23 @@
 \title{Amoco model}
-\author{}
+\author{Trevor Irons}
 \maketitle
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\noindent
+\textbf {Data Type:} \emph{Synthetic 2D acoustic model and data set}\\
+\textbf {Source:} \emph{British Petroleum}\\
+\textbf {Location:} \emph{http://www.software.seg.org}\\
+\textbf {Format:} \emph{Native} \\
+\textbf{Date of origin:} \emph{Model was produced for an SEG convention presented in 1998}\\
 
 \section{Introduction}
+The "Amoco" dataset found within the \emph{RSF} repository was created in 1997 and presented formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.
 
+\section{Model}
+The velocity model was described by it's creator :
 \inputdir{model}
-\plot{velo}{width=\textwidth}{Velocity model}
+%\plot{velmodel}{width=\textwidth}{Amoco velocity model}
+%\plot{velsmooth}{width=\textwidth}{Amoco smoothed velocity model}
+\multiplot{2}{velmodel,velsmooth}{width=.45\textwidth}{Amoco velocity models.}
+
+

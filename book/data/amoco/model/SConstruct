@@ -1,45 +1,14 @@
 from rsfproj import *
-import dataSConstruct
-#######################################################################################################
-#                                                                                                     #
-#   The class process found within dataSConstruct of the RSF Repository, found at RSF/book/packages   #
-#   and processing Flows.  To use simply use the notation below:                                      #
-#                                                                                                     #
-#   Define basic parameters:                                                                          #
-#       source='string'                                                 --> Location of data files.   #
-#       nativeFiles=['fileOne.ext','fileTwo.ext']                       --> Enter as list of strings  #
-#       nativeHeader=['d1=# n1=# o1=# label1=str units1=str',           --> Enter header info as      #
-#                     'd2=# n2=#      label2=str units2=str']               needed.  Omissions OK,    # 
-#       segyFiles=['fileName.ext']                                          but each file must be     #
-#       segyHeader= []                                                      specified separately      #
-#       catRules=                                                       --> Use to combine datasets   #
-#       plotTitle=['String','String']                                   --> Specify plot titles       #
-#                                                                                                     #
-#######################################################################################################      
-
-source='Amoco'
-nativeFiles=['velmodel.hh','velsmooth.HH','velsmoother.HH']
-nativeHeader=['label1=z unit1=km label2=x unit2=km title=Velocity_Model','','']
-catRules=''
-plotTypes=['movie','shot','zero']
-plotTitles=['Velocity\ Model\ ','Smoothed\ Velocity\ Model','Smoothed\ Velocity\ Model']
-segyFiles=[]
-segyHeader=[]
-
-
-#######################################################################################################
-#################        LINES BELOW THIS SHOULD NOT NEED TO BE MODIFIED       ########################
-#######################################################################################################
-input={   
-        'source':source,
-        'segyFiles':segyFiles,
-        'segyHeader':segyHeader,
-        'nativeFiles':nativeFiles,
-        'nativeHeader':nativeHeader,
-        'catRules':catRules,
-        'plotTypes':plotTypes,
-        'plotTitles':plotTitles
-      }
-
-dataSConstruct.process(input)
+# Fetch Files from repository
+Fetch("velsmooth.HH","Amoco")
+Fetch("velmodel.hh","Amoco")
+# Convert Files to RSF
+Flow('velsmooth','velsmooth.HH', 'dd form=native')
+Flow('velmodel','velmodel.hh', 'dd form=native')
+# Plotting Section
+Result('velsmooth','''window $SOURCE  max1=4 | 
+                      grey  color=I gainpanel=a 
+                      title=Smoothed\ Velocity\ Model''')
+Result('velmodel','''window $SOURCE  max1=4 | grey  
+                     color=I gainpanel=a title=Velocity\ Model''')
 End()
