@@ -1,48 +1,12 @@
 from rsfproj import *
-import dataSConstruct
-#######################################################################################################
-#                                                                                                     #
-#   The class process found within dataSConstruct of the RSF Repository, found at RSF/book/packages   #
-#   and processing Flows.  To use simply use the notation below:                                      #
-#                                                                                                     #
-#   Define basic parameters:                                                                          #
-#       source='string'                                                 --> Location of data files.   #
-#       nativeFiles=['fileOne.ext','fileTwo.ext']                       --> Enter as list of strings  #
-#       nativeHeader=['d1=# n1=# o1=# label1=str units1=str',           --> Enter header info as      #
-#                     'd2=# n2=#      label2=str units2=str']               needed.  Omissions OK,    # 
-#       segyFiles=['fileName.ext']                                          but each file must be     #
-#       segyHeader= []                                                      specified separately      #
-#       catRules= 'cat ${SOURCES[0:2]} axis=3'                          --> Use to combine datasets   #
-#       plotTitle=['String','String']                                   --> Specify plot titles       #
-#                                                                                                     #
-#######################################################################################################      
-
-source='Amoco'
-nativeFiles=['shots.hh']
-nativeHeader=[''' dd form=native | put
-                  label1=z          unit1=s
-                  label2=x          unit2=km
-                  label3=Shot       title=Shots''']
-catRules=''
-plotTypes=['movie','shot','zero']
-plotTitles=['Amoco\ Shots']
-segyFiles=[]
-segyHeader=[]
-
-
-#######################################################################################################
-#################        LINES BELOW THIS SHOULD NOT NEED TO BE MODIFIED       ########################
-#######################################################################################################
-input={   
-        'source':source,
-        'segyFiles':segyFiles,
-        'segyHeader':segyHeader,
-        'nativeFiles':nativeFiles,
-        'nativeHeader':nativeHeader,
-        'catRules':catRules,
-        'plotTypes':plotTypes,
-        'plotTitles':plotTitles
-      }
-
-dataSConstruct.process(input)
+# Fetch Files from repository
+Fetch("shots.hh","Amoco")
+# Convert Files to RSF
+Flow('shots','shots.hh', '''dd form=native | 
+    put  label1=time label2=offset label3=Shot unit1=km unit2=km unit3=km''')
+# Plotting Section
+Result('zero','shots','''window $SOURCE  min2=0 max2=0 size2=1 | 
+    grey  pclip=96 color=I gainpanel=a title=Zero\ Offset\ Data label2=x''')
+Result('shot40','shots','''window $SOURCE  min3=2 max3=2 size3=1 | 
+    grey  pclip=99 color=I gainpanel=a title=Shot\ 40''')
 End()

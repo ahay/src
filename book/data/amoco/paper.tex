@@ -4,20 +4,83 @@
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
 \noindent
-\textbf {Data Type:} \emph{Synthetic 2D acoustic model and data set}\\
+\textbf {Data Type:} \emph{2D subset of a synthetic 3D acoustic model}\\
 \textbf {Source:} \emph{British Petroleum}\\
 \textbf {Location:} \emph{http://www.software.seg.org}\\
 \textbf {Format:} \emph{Native} \\
 \textbf{Date of origin:} \emph{Model was produced for an SEG convention presented in 1998}\\
 
 \section{Introduction}
-The "Amoco" dataset found within the \emph{RSF} repository was created in 1997 and presented formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.
+The "Amoco" dataset found within the \emph{RSF} repository was created in 1997 and presented formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.  The model presented here is a single 2D line from the 3D model presented at the talk.  The information presented here was taken from the abstract to their paper which can be found at the SEG website.  
+
+The \emph{Madagascar} Amoco repository contains all the files listed in table \ref{tbl:FILES}.  The repository contains several velocity models of varying smoothness as well as a shot record.   
+
+\tabl{FILES}{A list of files contained within the Madagascar amoco dataset repository}
+{
+\tiny
+\lstinputlisting[frame=single]{FILES}
+\normalsize
+}
 
 \section{Model}
-The velocity model was described by it's creator :
+This model is a 2D subset of a 3D model, however the model does not vary perpendicularily to this line.  The velocity model is 22 km across and 4 km in depth.
+
+The \emph{velmodel.hh} file did not need to be updated appreciably in this example.  However, the appropriate header settings are found in table \ref{tbl:modelHeader}.  Datums were spread every 12.5 meters to produce a 22km by 4 km grid.  
+ 
+\begin{center}
+\tabl{modelHeader}{Amoco unsmoothed velocity model header information}
+{
+\begin{tabular}[t]{|clllllc|}
+        \hline
+          &  n1=321   &      d1=0.0125    &   o1=0        &       label1=Depth  &       unit1=km &  \\
+          &  n2=1761  &      d2=0.0125    &   o2=0        &       label2=Position &     unit2=km &  \\
+        \hline
+\end{tabular}
+}
+\end{center}
+
+A python \emph{SConstruct} script that fetches the data sets, appends the header slightly and plots the velocity model can be found in table \ref{tbl:modelSConstruct}.  An image of the velocity profile is found in figure \ref{fig:velmodel} while the smoothed model is shown in figure \ref{fig:velsmooth}. 
+
+\tabl{modelSConstruct}{\emph{Scons} script that generates \emph{RSF} formatted Amoco velocity model}
+{
+\tiny
+\lstinputlisting[frame=single]{model/SConstruct}
+\normalsize
+}
+
+Typing command \ref{eq:SCvel} within the \emph{amoco\slash model} directory runs the script.
+\begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
 \inputdir{model}
-%\plot{velmodel}{width=\textwidth}{Amoco velocity model}
-%\plot{velsmooth}{width=\textwidth}{Amoco smoothed velocity model}
 \multiplot{2}{velmodel,velsmooth}{width=.45\textwidth}{Amoco velocity models.}
 
+\section{Shots}
+A synthetic off-end survey was performed on the model.  Shots were fired every 50 meters along the model while 256 receivers with 25 meter spacing were pushed to the right.  Each receiver receiver recorded 384 time samples per shot with gates every 9.9 milliseconds.  The header should be formatted as is shown in table \ref{tbl:shotHeader} 
 
+\tabl{shotHeader}{Amoco shot header information}
+{
+\begin{tabular}[frame=single]{|lllll|}
+        \hline
+    n1=384  &       d1=0.0099  &    o1=0  &        label1=t       &   unit1=s  \\
+    n2=256  &       d2=0.025   &    o2=0  &        label2=Offset  &   unit2=km   \\
+    n3=385  &       d3=0.05    &    o3=0  &        label3=Shot    &   unit3=km   \\
+        \hline
+\end{tabular}
+}
+
+The file \emph{amoco/shots/SConstruct} is presented in table \ref{tbl:shotsSConstruct}.  This file fetches the shot data, appends the header slightly and produces several images from the record.
+
+\tabl{shotsSConstruct}{\emph{Scons} script that generates \emph{RSF} formatted Amoco velocity model}
+{
+\tiny
+\lstinputlisting[frame=single]{shots/SConstruct}
+\normalsize
+}
+
+Typing command \ref{eq:SCshot} within the \emph{amoco\slash shots} directory runs the script.
+\begin{equation}\label{eq:SCshot} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+
+\inputdir{shots}
+\plot{zero}{width=\textwidth}{Amoco zero offset shot data.}
+\plot{shot40}{width=\textwidth}{Amoco data shot number 40}
