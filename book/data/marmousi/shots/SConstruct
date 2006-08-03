@@ -1,0 +1,15 @@
+from rsfproj import *
+# Fetch Files from repository
+Fetch("marmrefl.hh","marm")
+# Convert Files to RSF and update header
+Flow('marmrefl','marmrefl.hh', '''dd form=native | put
+    label1=Depth\ Z label2=Offset unit2=meters unit1=sec
+    label3=Shot-coord unit3=meters''')
+# Plotting Section
+Result('nearOffset','marmrefl','''window $SOURCE min2=425 max2=425 size2=1 | 
+    grey  color=I gainpanel=a title=Near\ Offset\ Data''')
+
+Result('shot20','marmrefl','''window $SOURCE min3=3500 max3=3500 size3=1 | 
+    grey  color=I gainpanel=a title=Shot\ 20''')
+End()
+

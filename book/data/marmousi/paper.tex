@@ -11,7 +11,7 @@
 \textbf{Date of origin:} \emph{1988}\\
 
 \section{Introduction}
-The Marmousi model was created in 1988 by the Institut Fran\c{c}ais du P\'{e}trole (IFP) in 1988.  The geometry of this model is based on a profile through the North Quenguela trough in the Cuanza basin Versteeg. The geometry and velocity model were created to produce a complex seismic data which requiere advanced processing techniques to obtain a correct earth image. The Marmousi dataset was used for the workshop on practical aspects of seismic data inversion at the 52nd EAEG meeting in 1990.
+The Marmousi model was created in 1988 by the Institut Fran\c{c}ais du P\'{e}trole (IFP) in 1988.  The geometry of this model is based on a profile through the North Quenguela trough in the Cuanza basin Versteeg. The geometry and velocity model were created to produce complex seismic data which require advanced processing techniques to obtain a correct earth image. The Marmousi dataset was used for the workshop on practical aspects of seismic data inversion at the 52nd EAEG meeting in 1990.
 
 Since its inception in 1990 Marmousi has come be a sort of industry standard and almost classic dataset. The Madagascar repository contains the Marmousi files shown in table \ref{tbl:FILES}.
 
@@ -37,7 +37,7 @@ The velocity model found in the Madagascar repository, \emph{marmvel.hh} can eas
 \end{tabular}
 }
 
-The script found at \emph{marmousi/model/SConstruct} was written to obtain the Marmousi model datasets, append the headers as necessary and display the  data.  This file is presented in table \ref{tbl:velSConstruct}.
+The script found at \emph{marmousi/model/SConstruct} was written to obtain the Marmousi model datasets, append the headers as necessary and display the  data.  This file is presented in table \ref{tbl:velSConstruct} while the velocity model image is displayed in figure \ref{fig:marmvel}.
  
 \tabl{velSConstruct}{\emph{SConstruct} script generating the Marmousi velocity model images}
 {
@@ -46,7 +46,41 @@ The script found at \emph{marmousi/model/SConstruct} was written to obtain the M
 \normalsize
 }
 
+
+Typing command \ref{eq:SCmdl} within the \emph{pluto} directory runs the script.
+\begin{equation}\label{eq:SCmdl} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
 \inputdir{model}
 \plot{marmvel}{width=\textwidth}{Velocity model}
 
-%\section{Shot Records}
+\section{Shot Records}
+The file \emph{marmrefl.hh} contains the shot data collected on the Marmousi model.  The survey was an off end survey with receivers to the left of the source being pulled towards the right.  Receiver as well as shot spacing is every 25 meters.  Near offset is 425 meters from the source.  726 time gates were recorded with 4ms spacing for roughly 3 seconds of data collection.  Madagascar correctly converts this file according to its header, but the correct shot header values are reproduced in table \ref{tbl:shotHeader}.   
+
+\tabl{shotHeader}{Shot header information for Marmousi.}
+{
+	\begin{tabular}{|llllll|}
+	\hline  
+	    n1=726 &  d1=0.004 &  o1=0     &  label1=Depth\ Z   &   unit1=sec     & \\
+    	    n2=96  &  d2=-25   &  o2=2575  &  label2=Offset     &   unit2=meters  & \\
+            n3=240 &  d3=25    &  o3=3000  &  label3=Shot-coord &   unit3=meters  & \\
+	\hline
+	\end{tabular}
+}
+
+The file \emph{marmousi/shots/SConstruct} gathers shot data, appends the header as necessary and produces several plots of the data.  This file is reproduced here in figure \ref{tbl:shotSConstruct}
+
+
+\tabl{shotSConstruct}{\emph{SConstruct} script generating the Marmousi shot images}
+{
+\tiny
+\lstinputlisting[frame=single]{shots/SConstruct}
+\normalsize
+}
+
+
+Typing command \ref{eq:SCvel} within the \emph{pluto} directory runs the script.
+\begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+\inputdir{shots}
+\plot{shot20}{width=\textwidth}{Shot number 20 of Marmousi dataset}
+\plot{nearOffset}{width=\textwidth}{Near offset data for Marmousi model}
