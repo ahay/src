@@ -8,17 +8,16 @@ import fdmod,zomig
 par = {
     'lo':0.01, # wavelength
     'co':3,    # velocity
-    'nt':4000, 'ot':0, 'dt':0.0001, 'lt':'label1=time unit1=s',
+    'nt':5000, 'ot':0, 'dt':0.0001, 'lt':'label1=time unit1=s',
     'nx':1500, 'ox':0,              'lx':'label2=x unit2=km',
-    'nz':1500, 'oz':0,              'lz':'label1=z unit1=km',
+    'nz':600,  'oz':0,              'lz':'label1=z unit1=km',
     'kt':50,    # wavelet delay
     'nbx':250, 'tx':0.001,
     'nbz':250, 'tz':0.001,
-    'jsnap':50,
-    'height':10
+    'jsnap':250
     }
-par['dx']=par['lo']/par['nx']*100
-par['dz']=par['lo']/par['nz']*100
+par['dx']=par['lo']/par['nx']*150
+par['dz']=par['lo']/par['nz']*60
 par['fo']=par['co']/par['lo']
 
 # add F-D modeling parameters
@@ -54,7 +53,7 @@ Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
 
 # source positions
 Flow('zs','s_','math output="0"')
-Flow('xs','s_','math output="0.5"')
+Flow('xs','s_','math output="0.75"')
 #Flow('zs','s_','math output="0.9+0.002*sin(3.1415*input/180.)"')
 #Flow('xs','s_','math output="0.5+0.002*cos(3.1415*input/180.)"')
 Flow('rs','s_','math output=1')
@@ -71,14 +70,14 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 Flow('va',None,
      '''
      spike nsp=1 mag=-%(co)g
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=1395 l1=1405
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=745  l2=755
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=495 l1=505
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=745 l2=755
      ''' % par)
 Flow('vn','va',
      '''
      math output=1 |
      noise mean=0 range=1 type=y |
-     smooth rect1=11 rect2=11 |
+     smooth rect1=7 rect2=7 |
      add add=-1 |
      scale axis=123 |
      scale rscale=0.25
