@@ -11,9 +11,13 @@
 \textbf{Date of origin:} \emph{Model was produced for an SEG convention presented in 1998}\\
 
 \section{Introduction}
-The "Amoco" dataset found within the \emph{RSF} repository was created in 1997 and presented formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.  The model presented here is a single 2D line from the 3D model presented at the talk.  The information presented here was taken from the abstract to their paper which can be found at the SEG website.  
+The "Amoco" dataset found within the Madagascar repository was created in 1997 and presented 
+formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack 
+migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.  
+The model presented here is a single 2D line from the 3D model presented at the talk.  
+The information presented here was taken from the abstract to their paper which can be found at the SEG website.  
 
-The \emph{Madagascar} Amoco repository contains all the files listed in table \ref{tbl:FILES}.  The repository contains several velocity models of varying smoothness as well as a shot record.   
+The Madagascar Amoco repository contains all the files listed in table \ref{tbl:FILES}.  The repository contains several velocity models of varying smoothness as well as a shot record.   
 
 \tabl{FILES}{A list of files contained within the Madagascar amoco dataset repository}
 {
@@ -39,7 +43,7 @@ The \emph{velmodel.hh} file did not need to be updated appreciably in this examp
 }
 \end{center}
 
-A python \emph{SConstruct} script that fetches the data sets, appends the header slightly and plots the velocity model can be found in table \ref{tbl:modelSConstruct}.  An image of the velocity profile is found in figure \ref{fig:velmodel} while the smoothed model is shown in figure \ref{fig:velsmooth}. 
+A python \emph{SConstruct} script that fetches the data sets, appends the header slightly and plots the velocity model can be found in table \ref{tbl:modelSConstruct}.  An image of the velocity profile is found in figure \ref{fig:velmodel}. 
 
 \tabl{modelSConstruct}{\emph{Scons} script that generates \emph{RSF} formatted Amoco velocity model}
 {
@@ -52,7 +56,7 @@ Typing command \ref{eq:SCvel} within the \emph{amoco\slash model} directory runs
 \begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
 
 \inputdir{model}
-\multiplot{2}{velmodel,velsmooth}{width=.45\textwidth}{Amoco velocity models.}
+\plot{velmodel}{width=\textwidth}{Amoco velocity model.}
 
 \section{Shots}
 A synthetic off-end survey was performed on the model.  Shots were fired every 50 meters along the model while 256 receivers with 25 meter spacing were pushed to the right.  Each receiver receiver recorded 384 time samples per shot with gates every 9.9 milliseconds.  The header should be formatted as is shown in table \ref{tbl:shotHeader} 

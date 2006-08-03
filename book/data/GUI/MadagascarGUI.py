@@ -238,7 +238,7 @@ class Madagascar:
 ### Color List Box    ###
 #########################
         global colorOpts
-        colorOpts = ['I','J','K']
+        colorOpts = ['i','I','J','K','F','R','W','G','T' ]
     #    self.colorScrollBar=Scrollbar(master,orient=VERTICAL)
         self.color = Listbox(master,selectmode=SINGLE,relief=RAISED,height=3,width=2,exportselection=0)
         for item in colorOpts:

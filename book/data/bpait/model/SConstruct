@@ -6,7 +6,7 @@ Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
     label1=Depth\ Z label2=Distance\ X unit1=m unit2=m''')
 # Plotting Section
 Result('bpaitvel','''window $SOURCE  | grey  
-color=I gainpanel=a title=BPait\ Velocity\ Model
-scalebar=y allpos=y''')
+    color=I gainpanel=a title=BPait\ Velocity\ Model
+    scalebar=y allpos=y''')
 End()
 
