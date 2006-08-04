@@ -1,9 +1,23 @@
 from rsfproj import *
 # Fetch Files from repository
-Fetch("obc_curl_v_1.segy","marm2")
-Fetch("obc_curl_v_2.segy","marm2")
+#Fetch("obc_curl_v_1.segy","marm2")
+#Fetch("obc_curl_v_2.segy","marm2")
+
 # Convert Files to RSF and update header
-Flow('obc_div_v_1','obc_div_v_1.segy', '''segyread tape=$SOURCE |
-        put n2=1381 n3=320 o1=0 o2=0 o3=0''',stdin=0)
-Flow('obc_div_v_2','obc_div_v_2.segy', '''segyread tape=$SOURCE | 
-        put n2=1381 n3=160 o1=0 o2=0 o3=0''',stdin=0)
+Flow('obc_curl_v_1','obc_curl_v_1.segy','''segyread tape=$SOURCE 
+        | put n2=1381 n3=320 o1=0 o2=0 o3=3000
+        d2=12.32 d3=25 label1=Z label2=X label3=Shot
+        unit1=s unit2=m unit2=m''',stdin=0)
+Flow('obc_curl_v_2','obc_curl_v_2.segy','''segyread tape=$SOURCE 
+        | put n2=1381 n3=160 o1=0 o2=0 o3=11025
+        d2=12.32 d3=25 label1=Z label2=X label2=Shot
+        unit1=s unit2=m unit3=m''',stdin=0)
+# Concatinate Datasets
+Flow('curl',['obc_curl_v_1','obc_curl_v_2'],'cat ${SOURCES[0:2]} axis=3',stdin=0)
+
+# Plot Data
+Result('curlShot50','curl','''window $SOURCE
+               min3=4250 max3=4250 size3=1 |
+               grey color=I gainpanel=a
+               title=OBC\ Curl\ Shot\ 50''')
+End()

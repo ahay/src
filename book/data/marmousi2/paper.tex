@@ -1,8 +1,8 @@
 \title{Marmousi2 model}
-\author{}
+\author{Trevor Irons}
 \lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
-
 \maketitle
+
 \noindent
 \textbf {Data Type:} \emph{Synthetic 2D elastic model}\\
 \textbf {Source:} \emph{Allied Geophysical Laboratories (AGL)}\\
@@ -68,19 +68,13 @@ appends the header information as necessary and produces plots of the models.  T
 \section{Shots}
 Three sets of data were collected over this model.  A near surface streamer survey, a vertical souding profile (VSP), and 
 an ocean bottom cable (OBC) survey.  Several sets of shot records are included in the Marmousi2 repository; 
-the "shear phone" data from the VSP found in \emph{obc\_div\_v\_\#.segy} and \emph{obc\_curl\_v\_\#.segy}, the 
-streamer cable data found in \emph{surface\_p\#.segy} as well as multicomponent OBC data found in \emph{obc\_vx\_\#.segy} 
-and\emph{obc\_vz\_\#.segy}.  Each of these files was split into components to make them more managable and the segments must be
-concatinated.  The  \# symbol above corresponts to either part number 1 or 2. 
+multicomponent OBC data found in \emph{obc\_vx\_\#.segy} and\emph{obc\_vz\_\#.segy},  
+reduced data from the OBC cable found in \emph{obc\_div\_v\_\#.segy} and \emph{obc\_curl\_v\_\#.segy}, and
+streamer cable data found in \emph{surface\_p\#.segy}.  Each of these files was split into components to make them more 
+managable.  The  \# symbol above corresponts to either part number 1 or 2. 
 
 In all cases the source was an airgun located on a ship at depth of 10 m.  The source began firing at 3 000 m along the horizontal x 
 coordinate and continued firing every 25 m until 14 975 m.  
-
-The streamers were spaced every 12.5 meters and were at a depth of 5 m.  The 
-
-The streamer hydrophones 
-were single component (naturally) and recorded only pressure.  The VSP was located at 10300 meters in the x direction and extended to a depth of 3500 meters with 12.5 
-meter "shear phone" spacing.
 
 \subsection{OBC Surveys}
 The OBC cable was placed on the ocean floor at a depth of roughly 450 m.  Multicomponent phones were spaced every 12.32 m along the
@@ -124,6 +118,33 @@ in table \ref{tbl:VxSConstruct}
 }
 
 
+\subsubsection{OBC div data}
+The file \emph{marmousi2 \slash div \slash SConstruct} contains a list of rules that tell Madagascar to gather the 
+div data files, append the header and produce plots of the data.  This script is reproduced 
+in table \ref{tbl:divSConstruct} and a plot of shot 50 is shown in figure \ref{fig:divShot50}
+
+\tabl{divSConstruct}{SCons script generating images of the Marmousi2 Vx data}
+{
+\tiny
+\lstinputlisting[frame=single]{div/SConstruct}
+\normalsize
+}
+
+\inputdir{div}
+\plot{divShot50}{width=\textwidth}{Marmousi2 shot 50 of div data.}
+
+
+\subsubsection{OBC curl data}
+The file \emph{marmousi2 \slash curl \slash SConstruct} contains a list of rules that tell Madagascar to gather the 
+curl data files, append the header and produce plots of the data.  This script is reproduced 
+in table \ref{tbl:curlSConstruct}
+\tabl{curlSConstruct}{SCons script generating images of the Marmousi2 curl data}
+{
+\tiny
+\lstinputlisting[frame=single]{curl/SConstruct}
+\normalsize
+}
+
 \subsection{Streamer Surveys}
 The streamer survey was not traditional in the sense that it employed a 17 km long static streamer which spanned the entire
 model.  In total there were 1 361 single component hydrophones spaced every 12.5 m at a depth of 5 m.  This unrealistic geometry
@@ -140,5 +161,3 @@ values that streamer data files headers should have.
         \hline
 \end{tabular}
 }
-
-\subsection{VSP Survey}
