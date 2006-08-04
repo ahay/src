@@ -1,0 +1,9 @@
+from rsfproj import *
+# Fetch Files from repository
+Fetch("obc_curl_v_1.segy","marm2")
+Fetch("obc_curl_v_2.segy","marm2")
+# Convert Files to RSF and update header
+Flow('obc_div_v_1','obc_div_v_1.segy', '''segyread tape=$SOURCE |
+        put n2=1381 n3=320 o1=0 o2=0 o3=0''',stdin=0)
+Flow('obc_div_v_2','obc_div_v_2.segy', '''segyread tape=$SOURCE | 
+        put n2=1381 n3=160 o1=0 o2=0 o3=0''',stdin=0)
