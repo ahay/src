@@ -43,9 +43,7 @@ void tcaf1_lop(bool adj, bool add, int nb, int ny, float *bb, float *yy)
     sf_adjnull (adj, add, nb, ny, bb, yy);
 
     for (b=0; b < nb; b++) {
-	for (x=0; x < nx; x++) {                  
-	    y = x + b;
-
+	for (x=0; x < nx; x++) { y = x + b;
 	    if( adj) bb[b] += yy[y] * xx[x];
 	    else     yy[y] += bb[b] * xx[x];
         }

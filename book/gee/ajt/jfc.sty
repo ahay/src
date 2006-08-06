@@ -1,0 +1,35 @@
+\RequirePackage{listings}
+\lstset{language=c,numbers=left,numberstyle=\tiny,frame=single,showstringspaces=false}
+
+\RequirePackage{varioref}
+
+% make bold and index
+\newcommand{\bx}[1]{\textbf{#1}\index{#1}} 
+% secondary index entries
+\newcommand{\sx}[1]{\index{#1}}
+% bold first, index second
+\newcommand{\bxbx}[2]{\textbf{#1}\index{#2}}
+\newcommand{\opdex}[5]{\index{#1 operator module}%
+  \index{operator!\texttt{#1}, #2}%
+  \lstinputlisting[float=htbp,label=lst:#1,title=#5/#1.c,firstline=#3,lastline=#4]{\RSF/#5/#1.c}
+}
+\newcommand{\moddex}[5]{\index{#1 module}%
+  \index{operator!\texttt{#1}, #2}%
+  \lstinputlisting[float=htbp,label=lst:#1,title=#5/#1.c,firstline=#3,lastline=#4]{\RSF/#5/#1.c}
+}
+
+\newcommand{\bold}[1]{\mathbf{#1}}
+\newcommand{\eq}{\quad=\quad}
+\newcommand{\boxit}[1]{\noindent\fbox{\parbox{0.95\textwidth}{#1}}}
+
+\newcommand{\FIG}[1]{\ref{fig:#1}}
+\newcommand{\EQN}[1]{(\ref{eqn:#1})}
+
+\newcounter{exercount}
+\newenvironment{exer}{%
+  \subsubsection*{{\rmfamily EXERCISES:}}
+  \begin{list}{\arabic{exercount}}
+    {\usecounter{exercount}\setcounter{exercount}{0}
+      \setlength{\leftmargin}{20pt}
+      \setlength{\labelsep}{10pt}}}
+  {\end{list}}

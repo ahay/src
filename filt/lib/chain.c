@@ -33,8 +33,8 @@ void sf_chain( sf_operator oper1     /* outer operator */,
 	       /*@out@*/ float* mod  /* [nm] model */, 
 	       /*@out@*/ float* dat  /* [nd] data */, 
 	       float* tmp            /* [nt] intermediate */) 
-/*< Chains two operators, computing oper1{oper2{mod}} or its adjoint.
-  The tmp array is used for temporary storage. >*/
+/*< Chains two operators, computing oper1{oper2{mod}} 
+  or its adjoint. The tmp array is used for temporary storage. >*/
 {
     if (adj) {
 	oper1 (true, false, nt, nd, tmp, dat);
@@ -55,8 +55,8 @@ void sf_array( sf_operator oper1     /* top operator */,
 	       /*@out@*/ float* mod  /* [nm] model */, 
 	       /*@out@*/ float* dat1 /* [nd1] top data */, 
 	       /*@out@*/ float* dat2 /* [nd2] bottom data */) 
-/*< Constructs an array of two operators, computing {oper1{mod},oper2{mod}} 
-  or its adjoint. >*/
+/*< Constructs an array of two operators, 
+  computing {oper1{mod},oper2{mod}} or its adjoint. >*/
 {
     if (adj) {
 	oper1 (true, add,  nm, nd1, mod, dat1);

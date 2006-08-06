@@ -43,8 +43,7 @@ void tcai1_lop (bool adj, bool add, int nx, int ny, float* xx, float* yy)
     sf_adjnull (adj, add, nx, ny, xx, yy);
     
     for( b=0; b < nb; b++) {
-	for( x=0; x < nx; x++) {
-	    y = x + b;
+	for( x=0; x < nx; x++) { y = x + b;
 	    if( adj) xx[x] += yy[y] * bb[b];
 	    else     yy[y] += xx[x] * bb[b];
 	}

@@ -45,13 +45,11 @@ void imospray_init (float slow /* slowness */,
 }
 
 void imospray_lop(bool adj, bool add, int n1, int n2, 
-		   float *stack, float *gather)
+		  float *stack, float *gather)
 /*< linear operator >*/
 {
     int ix;
     float x;
-
-    if (n1 != nt || n2 != nt*nx) sf_error("%s: wrong dimensions",__FILE__);
 
     sf_adjnull(adj,add,n1,n2,stack,gather);
 

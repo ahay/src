@@ -1,4 +1,4 @@
-/* Simple matrix multiplication operator */
+/* 1-D internal convolution, adjoint is the filter */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -16,31 +16,38 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
+ 
 #include <rsf.h>
-/*^*/
 
-#include "matmult.h"
+#include "icaf1.h"
 
-static float** Bb;
+static int nx, lag;
+static float* xx;
 
-void matmult_init (float** bb) 
-/*< initialize with a pointer to a matrix >*/
+void icaf1_init (int ny    /* filter length */, 
+		 float* yy /* data [nx] */, 
+		 int lag1  /* filter lag (lag=1 is causal) */) 
+/*< initialize >*/
 {
-    Bb = bb;
+    nx = ny;
+    xx = yy;
+    lag = lag1;
 }
 
-void matmult_lop (bool adj, bool add, 
-		  int nx, int ny, float* x, float*y) 
+void icaf1_lop (bool adj, bool add, int nb, int ny, float* bb, float* yy) 
 /*< linear operator >*/
 {
-    int ix, iy;
-    sf_adjnull (adj, add, nx, ny, x, y);
-    for (ix = 0; ix < nx; ix++) {
-	for (iy = 0; iy < ny; iy++) {
-	    if (adj) x[ix] += Bb[iy][ix] * y[iy];
-	    else     y[iy] += Bb[iy][ix] * x[ix];
+    int b, x, y;
+
+    if(ny != nx) sf_error("%s: size problem: %d != %d",__FILE__,ny,nx);
+    sf_adjnull (adj, add, nb, ny, bb, yy);
+    
+    for( b=0; b < nb; b++) {
+	for( y = nb; y <= ny; y++) { x = y - b - 1;
+	    if( adj) bb[b] += yy[y-lag] * xx[x];
+	    else     yy[y-lag] += bb[b] * xx[x];
 	}
     }
 }
 
+/* 	$Id: icaf1.c 838 2004-10-25 11:10:38Z fomels $	 */

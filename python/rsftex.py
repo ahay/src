@@ -258,7 +258,6 @@ def colorize(target=None,source=None,env=None):
      "Colorize python source"
      py = str(source[0])
      html = str(target[0])
-     tgz = re.sub('\.html$','.tgz',html)
 
      src = open(py,'r').read()
      raw = string.strip(string.expandtabs(src))
@@ -299,12 +298,10 @@ def colorize(target=None,source=None,env=None):
      align="bottom" border="0" alt="up" src="paper_html/icons/up.%s"></a>
      <a href="paper.pdf"><img src="paper_html/icons/pdf.%s" alt="[pdf]"
      width="32" height="32" border="0"></a>
-     <a href="%s"><img src="paper_html/icons/tgz.%s" alt="[tgz]"
-     width="32" height="32" border="0"></a>
      </div>
      <div class="scons">
      <table><tr><td>
-     ''' % (itype,itype,tgz,itype))
+     ''' % (itype,itype))
 
      # store line offsets in self.lines
      lines = [0, 0]
@@ -589,9 +586,7 @@ class TeXPaper(Environment):
                               'Pdf':Pdf,
                               'Wiki':Wiki,
                               'Build':Build,
-                              'Color':Color},
-                    TARFLAGS = '-cvz',
-                    TARSUFFIX = '.tgz')
+                              'Color':Color})
         dir = os.getcwd()
         self.docdir = string.replace(dir,'book','doc/book',1)
         if self.docdir == dir:
@@ -626,14 +621,6 @@ class TeXPaper(Environment):
             html = dir+'.html'
             self.Color(html,scons)
             self.scons.append(html)
-            tgz = dir+'.tgz'
-            self.Tar(tgz,dir)
-            self.scons.append(tgz)
-        # non-reproducible directories
-        for dir in filter(os.path.isdir,glob.glob('%s/[A-Z]*' % topdir)):
-            tgz = dir+'.tgz'
-            self.Tar(tgz,dir)
-            self.scons.append(tgz)
         if self.scons:
             self.Install2(self.docdir,self.scons)
         self.Alias('install',self.docdir)        

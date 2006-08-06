@@ -33,28 +33,29 @@ void hypotenusei_init(int nt1)
     iz = sf_intalloc(nt);
 }
 
-void hypotenusei_set(float t0 /* time origin */, 
-		     float dt /* time sampling */, 
-		     float xs /* offset times slowness */)
-/*< set up >*/
-{
-    int it;
-    float t, zsquared;
-
-    for (it=0; it < nt; it++) {  
-	t = t0 + dt*it;
-        zsquared =  t * t - xs * xs;
-	iz[it] = ( zsquared >= 0.)? 0.5 + (sqrtf( zsquared) - t0) /dt: -1;
-    }
-}
-
 void hypotenusei_close(void)
 /*< free allocated storage >*/
 {
     free(iz);
 }
 
-void hypotenusei_lop(bool adj, bool add, int n1, int n2, float *zz, float *tt)
+void hypotenusei_set(float t0 /* time origin */, 
+		     float dt /* time sampling */, 
+		     float xs /* offset times slowness */)
+/*< set up >*/
+{
+    int it;
+    float t, z2;
+
+    for (it=0; it < nt; it++) {  
+	t = t0 + dt*it;
+        z2 =  t * t - xs * xs;
+	iz[it] = ( z2 >= 0.)? 0.5 + (sqrtf(z2) - t0) /dt: -1;
+    }
+}
+
+void hypotenusei_lop(bool adj, bool add, 
+		     int n1, int n2, float *zz, float *tt)
 /*< linear operator >*/
 {
     int  it;

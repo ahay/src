@@ -1,6 +1,6 @@
-/* Simple matrix multiplication operator */
+/* Zero pad.  Surround data by zeros. 1-D */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,31 +16,17 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
-/*^*/
 
-#include "matmult.h"
-
-static float** Bb;
-
-void matmult_init (float** bb) 
-/*< initialize with a pointer to a matrix >*/
+void zpad1_lop(bool adj, bool add, int nd, int np, float *data,  float *padd)
 {
-    Bb = bb;
-}
+    int p,d;
 
-void matmult_lop (bool adj, bool add, 
-		  int nx, int ny, float* x, float*y) 
-/*< linear operator >*/
-{
-    int ix, iy;
-    sf_adjnull (adj, add, nx, ny, x, y);
-    for (ix = 0; ix < nx; ix++) {
-	for (iy = 0; iy < ny; iy++) {
-	    if (adj) x[ix] += Bb[iy][ix] * y[iy];
-	    else     y[iy] += Bb[iy][ix] * x[ix];
-	}
+    sf_adjnull(adj,add,nd,np,data,padd);
+
+    for (d=0; d < nd; d++) { 
+	p = d + (np-nd)/2;
+	if (adj) data[d] += padd[p];
+	else     padd[p] += data[d];
     }
 }
-
