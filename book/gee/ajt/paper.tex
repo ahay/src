@@ -465,12 +465,11 @@ else {       yy(i)   += xx(i+1)
              yy(i)   -= xx(i)
            }
 \end{verbatim}
-where we see that each component of the matrix is handled both
-by the operator and the adjoint.
-Think about the forward operator
-``pulling'' a sum into {\tt yy(i)}, and
-think about the adjoint operator
-``pushing'' or ``spraying'' the impulse {\tt yy(i)} back into {\tt xx()}.
+where we see that each component of the matrix is handled both by the
+operator and the adjoint.  Think about the forward operator
+``pulling'' a sum into {\tt yy(i)}, and think about the adjoint
+operator ``pushing'' or ``spraying'' the impulse {\tt yy(i)} back into
+{\tt xx()}.
 \end{comment}
 
 %Something odd happens at the ends of the adjoint only if we take the
@@ -481,16 +480,16 @@ think about the adjoint operator
 \inputdir{igrad1}
 
 \par
-Figure \FIG{stangrad} illustrates the use of module \texttt{igrad1}
-for each north-south line of a topographic map.
-We observe that the gradient gives an impression of
-illumination from a low sun angle.
-\plot{stangrad}{width=6in,height=8.4in}{
-  Topography near Stanford (top) southward slope (bottom).
-}
+Figure \ref{fig:stangrad} illustrates the use of module
+\texttt{igrad1} for each north-south line of a topographic map.  We
+observe that the gradient gives an impression of illumination from a
+low sun angle.
 
-To apply \texttt{igrad1} along the 1-axis
-for each point on the 2-axis of a two-dimensional map, we use the loop 
+\plot{stangrad}{width=6in,height=8.4in}{ Topography
+  near Stanford (top) southward slope (bottom).  }
+
+To apply \texttt{igrad1} along the 1-axis for each point on the 2-axis
+of a two-dimensional map, we use the loop
 \begin{verbatim}
 for (iy=0; iy < ny; iy++) 
      igrad1_lop(adj, add, nx, nx, map[iy], ruf[iy])
@@ -1495,7 +1494,7 @@ as we did with leaky integration.
 
 
 \par
-A module to backsolve \EQN{polydiv} is \texttt{recfilt}.
+A module to backsolve~(\ref{eqn:polydiv}) is \texttt{recfilt}.
 \opdex{recfilt}{deconvolve}{48}{76}{filt/lib}
 
 \par
