@@ -37,27 +37,27 @@ the modeling operator.
 \par
 If you will permit me a poet's license with words,
 I will offer you the following table
-of \bx{operator}s and their \bx{adjoint}s:
-\begin{tabbing}
-indent \= operator.operator.operator.oper \=  conjugate.conjugate.conjugate \= \kill
-\>\bx{matrix multiply}          \>conjugate-transpose matrix multiply \\
-\>convolve                      \>crosscorrelate        \\
-\>truncate                      \>zero pad      \\
-\>replicate, scatter, spray     \>sum or stack  \\
-\>spray into neighborhoods      \>sum within bins   \\
-\>derivative (slope)            \>negative derivative   \\
-\>causal integration            \>anticausal integration        \\
-\>add functions                 \>do integrals  \\
-\>assignment statements         \>added terms   \\
-\>plane-wave superposition      \>slant stack / beam form       \\
-\>superpose curves          	\>sum along a curve \\
-\>stretch                       \>squeeze       \\
-\>scalar field gradient         \>negative of vector field divergence       \\
-\>upward continue               \>downward continue \\
-\>diffraction modeling          \>imaging by migration  \\
-\>hyperbola modeling            \>CDP stacking  \\
-\>ray tracing                   \>\bx{tomography}       \\
-\end{tabbing}
+of \bx{operator}s and their \bx{adjoint}s: 
+
+\begin{tabular}{p{2em}lp{1em}l}
+&\bx{matrix multiply}          &&conjugate-transpose matrix multiply \\
+&convolve                      &&crosscorrelate        \\
+&truncate                      &&zero pad      \\
+&replicate, scatter, spray     &&sum or stack  \\
+&spray into neighborhoods      &&sum within bins   \\
+&derivative (slope)            &&negative derivative   \\
+&causal integration            &&anticausal integration        \\
+&add functions                 &&do integrals  \\
+&assignment statements         &&added terms   \\
+&plane-wave superposition      &&slant stack / beam form       \\
+&superpose curves              &&sum along a curve \\
+&stretch                       &&squeeze       \\
+&scalar field gradient         &&negative of vector field divergence       \\
+&upward continue               &&downward continue \\
+&diffraction modeling          &&imaging by migration  \\
+&hyperbola modeling            &&CDP stacking  \\
+&ray tracing                   &&\bx{tomography}       \\
+\end{tabular}
 
 \par
 The left column above is often called ``\bx{modeling},''
@@ -492,15 +492,16 @@ illumination from a low sun angle.
 To apply \texttt{igrad1} along the 1-axis
 for each point on the 2-axis of a two-dimensional map, we use the loop 
 \begin{verbatim}
-do iy=1,ny
-      stat = igrad1_lop( adj, add, map(:,iy), ruf(:,iy))
+for (iy=0; iy < ny; iy++) 
+     igrad1_lop(adj, add, nx, nx, map[iy], ruf[iy])
 \end{verbatim}
+\begin{comment}
 On the other hand, to see the east-west gradient, we use the loop
 \begin{verbatim}
 do ix=1,nx 
       stat = igrad1_lop( adj, add, map(ix,:), ruf(ix,:))
 \end{verbatim}
-
+\end{comment}
 
 %\par
 %The C/C++/Java family of computer languages allows
@@ -1172,17 +1173,18 @@ When
 module \texttt{spraysum} is given
 the input dimensions and output dimensions stated below,
 the operations stated alongside are implied.
-\begin{tabbing}
-dent \= input.input.input\=  input.input.input\= \kill
-\>{\tt (n1,n2,n3)}  \>{\tt (1,1,1)}     \>Sum a cube into a value.      \\
-\>{\tt (1,1,1)}     \>{\tt (n1,n2,n3)}  \>Spray a value into a cube.\\
-\>{\tt (n1,1,1)}    \>{\tt (n1,n2,1)}   \>Spray a column into a matrix.\\
-\>{\tt (1,n2,1)}    \>{\tt (n1,n2,1)}   \>Spray a row into a matrix.\\
-\>{\tt (n1,n2,1)}   \>{\tt (n1,n2,n3)}  \>Spray a plane into a cube.\\
-\>{\tt (n1,n2,1)}   \>{\tt (n1,1,1)}    \>Sum rows of a matrix into a column.\\
-\>{\tt (n1,n2,1)}   \>{\tt (1,n2,1)}    \>Sum columns of a matrix into a row.\\
-\>{\tt (n1,n2,n3)}  \>{\tt (n1,n2,n3)}  \>Copy and add the whole cube.
-\end{tabbing}
+
+\begin{tabular}{p{1em}lll}
+&{\tt (n1,n2,n3)}  &{\tt (1,1,1)}     &Sum a cube into a value.      \\
+&{\tt (1,1,1)}     &{\tt (n1,n2,n3)}  &Spray a value into a cube.\\
+&{\tt (n1,1,1)}    &{\tt (n1,n2,1)}   &Spray a column into a matrix.\\
+&{\tt (1,n2,1)}    &{\tt (n1,n2,1)}   &Spray a row into a matrix.\\
+&{\tt (n1,n2,1)}   &{\tt (n1,n2,n3)}  &Spray a plane into a cube.\\
+&{\tt (n1,n2,1)}   &{\tt (n1,1,1)}    &Sum rows of a matrix into a column.\\
+&{\tt (n1,n2,1)}   &{\tt (1,n2,1)}    &Sum columns of a matrix into a row.\\
+&{\tt (n1,n2,n3)}  &{\tt (n1,n2,n3)}  &Copy and add the whole cube.
+\end{tabular}
+
 If an axis is not of unit length on either input or output,
 then both lengths must be the same; otherwise, there is an error.
 Normally, after (possibly) erasing the output,
