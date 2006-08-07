@@ -1,0 +1,5 @@
+from rsftex import *
+
+End(options='short',use='jfc,hyperref',
+    include='\\newcommand{\\RSF}{../../..}')
+
