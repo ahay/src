@@ -1,4 +1,4 @@
-\title{Sigsbee Models}
+\title{Sigsbee2 Models}
 \author{Trevor Irons}
 \maketitle
 
@@ -6,28 +6,68 @@
 
 \noindent
 \textbf	{Data Type:} \emph{2D model and acoustic finite difference synthetic data set with constant density}\\
-\textbf	{Source:} \emph{SMAART consortium comprised of BHPBilliton Petroleum, BP, and the ChevronTexaco Exploration and Production Technology Company}\\
+\textbf	{Source:} \emph{SMAART consortium comprised of BHPBilliton Petroleum, BP, and the ChevronTexaco Exploration 
+and Production Technology Company}\\
 \textbf {Location:} \emph{http://www.delphi.tudelft.nl/SMAART/sigsbee2a.htm}\\
 \textbf	{Format:} \emph{SEGY} \\
-\textbf{
-	Date of origin:} \emph{Data were publically released between September 2001 and November 2002.}\\ 
+\textbf{Date of origin:} \emph{Data were publicly released between September 2001 and November 2002.}\\ 
 
 \section{Introduction}
-The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several data sets between September 2001 and November 2002.  These synthetic data model the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico.  Additional information may be found at: \emph{http://www.delphi.tudelft.nl/SMAART/}.  The data sets remain the property of SMAART and are used under the agreement found at: \emph{http://www.delphi.tudelft.nl/SMAART/DataReleaseAgreement.pdf}.  
+The Subsalt Multiples Attenuation and Reduction Technology Joint Venture (SMAART JV) publicly released several data sets 
+between September 2001 and November 2002.  These synthetic data model the geologic setting found on the Sigsbee escarpment 
+in the deep water Gulf of Mexico.  Additional information may be found at: \emph{www.delphi.tudelft.nl/SMAART/}.  
+The data sets remain the property of SMAART and are used under the agreement found at the SMAART site listed above.  
 
-The file \emph{sigsbee/FILES} lists all files contained in the \emph{sigsbee} repository of Madagascar.  These files may all be downloaded to local machines using ftp protocols.  \emph{Files} is reproduced in \emph{table~\ref{tbl:FILES}} for reference.  
-\tabl{FILES}{\emph{FILES} containes a list of all available files in the Madagascar repository} 
+The file \emph{sigsbee/FILES} lists all files contained in the Sigsbee2 repository of Madagascar and is reproduced below in
+table \ref{tbl:FILES}.  Any of these files may be downloaded to local machines using ftp protocols.  
+
+The Sigsbee2 data are separated into two distinct categories, A and B.  They share the same general model geometry and structure,
+however, the A model has a soft water to seafloor boundary while the B model features a more realistic hard boundary.  As a result 
+data produced in the B model features multiple events.  The Sigsbee2B data set is featured in paper SP3.8 "Observations from the 
+Sigsbee2B synthetic data set" at the 2002 SEG meeting in Salt Lake City.  
+
+\tabl{FILES}{List of all available files in the Madagascar Sigsbee2 repository} 
 {
 \tiny
 \lstinputlisting[frame=single]{FILES}
 \normalsize
 }
 
-\section{Sigsbee 2A}
-\emph{Sigsbee2A} models the geologic setting found in on the Sigsbee escarpment in the deep water Gulf of Mexico. The model exhibits illumination problems due to the complex salt shape with rugose salt top found in this area. The data set was calculated with an absorbing free surface condition and a weaker than normal water bottom reflection, i.e. the data do not contain free surface multiples and less than normal internal multiples.  A number of normal and thrust faults separate sedimentary blocks. The syncline segments of the salt top focus reflection energy from the salt bottom and the sub salt reflections and produce non-hyperbolic arrival travel time curves.
+\section{Sigsbee Models}
+This model contains a sedimentary sequence brocken up by a number of normal and thrust faults.  Additionally there is a complex 
+salt structure found within the model that results in illumination problems when processing and migrating the data.   
 
-\subsection{Sigsbee 2A velocity models}
-\textbf{Madagascar} can easily display the velocity model used by \emph{Sigsbee2a}.  While \textbf{Madagascar} functions may be called from the terminal command line \textbf{SCons} scripts offer more elegant way to process data.  A \textbf{SCons} script, \emph{SConstruct}, is found within the \emph{RSF/book/data/sigsbee/model2A/} directory of the \emph{RSF book repository} and is presented in \emph{table ~\ref{tbl:2ASConstruct}}. 
+The Sigsbee2A model features an absorbing free surface condition and a weaker than normal water bottom reflection, 
+resulting in data do not contain free surface multiples and less than normal internal multiples.  
+
+The Sigsbee 2B model uses the same structural model as Sigsbee2A but the velocity contrast at the water bottom has been 
+increased to a normal level thus generating significant internal and FS multiples. 
+
+The Sigsbee2 models found in the Madagascar repository share the same dimensions and sampling rate.  The model is 30 000 ft in 
+depth and 80 000 ft across.  The models are created with 25 foot spacing except for the migrated models which have 37.5 foot spacing.
+  Table \ref{tbl:modelHeader} displays the correct values 
+that Sigsbee2 headers should contain. 
+
+\tabl{modelHeader}{Header information for Sigsbee2 models, note that the model starts at 10 000 ft in the x direction and that the
+migrated models are sampled more coarsely}
+{
+\begin{tabular}[t]{|llllll|}
+        \hline
+	\textbf{Stratographic Models}	& & & & &			              \\ 
+        n1=1201  &   d1=25	&  o1=0     &    label1=Depth\ Z    &   unit1=ft   &  \\
+	n2=3201	 &   d2=25 	&  o2=10000 &    label2=Distance\ X &   unit2=ft   &  \\
+	\textbf{Migrated Models}        & & & & &                                     \\
+	n1=1201  &   d1=25      &  o1=0     &    label1=Depth\ Z    &   unit1=ft   &  \\
+	n2=2133  &   d2=37.5    &  o2=10025 &    label2=Distance\ X &   unit2=ft   &  \\ 
+        \hline
+\end{tabular}
+}
+
+\subsection{Sigsbee 2A Models}
+The Sigsbee2A velocity and reflection coefficient models are easily viewed using Madagascar.  There are 2 velocity models, a smooth 
+migrated model and a true stratigraphic model.  The SCons script \emph{sigsbee/model2A} contains a set of rules that tell Madagascar
+to fetch the data append the headers and plot it. 
+This \emph{SConstruct} script is reproduced in table \ref{tbl:2ASConstruct}.    
 
 \tabl{2ASConstruct}{Contents of \emph{model2A/SConstruct} script.}
 {
@@ -35,46 +75,24 @@ The file \emph{sigsbee/FILES} lists all files contained in the \emph{sigsbee} re
 \lstinputlisting[frame=single]{model2A/SConstruct}
 \normalsize
 }
-This script can be ran by entering \texttt{\$ scons view} at the terminal command line within the \emph{sigsbee/model2A} directory.  This set of rules produces images of the stratigraphic and smoothed migrated velocity models as shown in \emph{figure~\ref{fig:vmig2A} and ~\ref{fig:vstr2A}.}  
+
+Typing command \ref{eq:SCvel} within the \emph{sigsbee/model2A} directory runs the script.
+\begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+The Sigsbee2A migrated and stratigraphic velocity models are shown in figures \ref{fig:vmig2A} and~\ref{fig:vstr2A} respectively.  
+A plot of the reflection coefficients are shown in figure \emph{figure~\ref{fig:reflectionCoefficients}}.  
 
 \inputdir{model2A}
 \multiplot{2}{vmig2A,vstr2A}{width=.45\textwidth}{Sigsbee 2A velocity models.}
-%\plot{vstr2A}{width=\textwidth}{Sigsbee 2A Stratigraphic velocity.}
-
-A plot of the reflection coefficients are shown in figure \emph{figure~\ref{fig:reflectionCoefficients}}.  
-\inputdir{model2A}
 \plot{reflectionCoefficients}{width=\textwidth}{Sigsbee model 2A reflection coefficients}
 
-\subsection{Sigsbee 2A shot records}
-The \emph{sigsbee 2A} shot records may be displayed using the script found at \emph{data2A/SConstruct} whose contents are displayed in table\emph{~\ref{tbl:data2ASConstruct}.}  This script generates the \textbf{Madagascar} formatted data file \emph{shots.rsf} in addition to shot snapshots.
-  
-\tabl{data2ASConstruct}{Contents of \emph{data2A/SConstruct} script.}
-{
-\tiny
-\lstinputlisting[frame=single]{data2A/SConstruct}
-\normalsize
-}
+\subsection{Sigsbee 2B Models}
+The Sigsbee 2B model contains the same general geometry as the 2A model except for a more realistic water to floor boundary which 
+results in multiple generation when shots are modeled on it.  However, dealing with the files is basically identical the headers should 
+also be calibrated as shown in table \ref{tbl:modelHeader}. 
 
-\textbf{Madagascar} contains the function \emph{sfin} that displays header information about each \emph{.rsf} file that it generates.  The output of the command \texttt{sfin shots.rsf} is shown in table\emph{~\ref{tbl:inShot2A}.}  RSF format requires data to be arranged along three axis: time, offset, and shot number.  These three axis are called 1-3 respectively.  Each axis is further categorized by the parameters n,o,and d; where n is the number of datums o is the initial data offset and d is the sampling rate delta.  
-
-\tabl{inShot2A}{Display of function \textbf{sfin} performed on the file \emph{shots.rsf}.}
-{
-\tiny
-\lstinputlisting[frame=single]{data2A/inShot.rsf}
-\normalsize
-}
-Additionally a plot of the wavefield is produced by the \emph{SConstruct} script and is shown in \emph{figure ~\ref{fig:shot}.}
-
-\inputdir{data2A}
-\plot{shot}{width=\textwidth}{Snapshot of shot performed on \emph{sigsbee 2A}.}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%   Sigsbee 2B
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Sigsbee 2B}
-\subsection{Sigsbee 2B velocity models}
-The \emph{Sigsbee 2B} model uses the same structural model as Sigsbee2A but the velocity contrast at the water bottom has been increased to a normal level thus generating significant internal and FS multiples. These data sets are released in October 2002. The Sigsbee2B data set is featured in paper SP3.8 "Observations from the Sigsbee2B synthetic data set" at the 2002 SEG meeting in Salt Lake City.  
-
-\emph{Table~\ref{tbl:model2BSConstruct}} shows the contents of the \emph{SConstruct} script found in the directory \emph{sigsbee/model2A}.  This file is similar to the \emph{SConstruct} file found in the subsection Sigsbee 2A. 
+Table \ref{tbl:model2BSConstruct} shows the contents of the \emph{sigsbee/model2b/SConstruct} script.  This file is quite similar to 
+the one found in the Sigsbee 2A section and contains a list of rules that fetch the datasets and plot them.  
 
 \inputdir{model2B}
 \tabl{model2BSConstruct}{Contents of \emph{model2B/SConstruct} script.}
@@ -83,16 +101,65 @@ The \emph{Sigsbee 2B} model uses the same structural model as Sigsbee2A but the 
 \lstinputlisting[frame=single]{model2B/SConstruct}
 \normalsize
 }
-This script may be ran similarly by typing \texttt{scons view} at the command line.  The resulting plots are shown in \emph{figures~\ref{fig:vmig2B}, \ref{fig:vstr2B} and ~\ref{fig:reflectionCoefficientsB}.}
+
+Typing command \ref{eq:SCvel2} within the \emph{sigsbee/model2B} directory runs the script.
+\begin{equation}\label{eq:SCvel2} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+ 
+A Plot of the migrated velocity model is shown below figure \ref{fig:vmig2B} while the stratigraphic model can be seen 
+in figure \ref{fig:vstr2B}.  A plot of the reflection coefficients are shown in figure \ref{fig:reflectionCoefficientsB}.
+
 \inputdir{model2B}
 \multiplot{2}{vmig2B,vstr2B}{width=.45\textwidth}{Sigsbee 2B Velocity Models}
 \plot{reflectionCoefficientsB}{width=\textwidth}{Sigsbee 2B reflection coefficients}
 
+
+\section{Shot Records}
+Several sets of data were acquired on the Sigsbee models.  The Madagascar repository contains one survey taken on the 
+Sigsbee2A model which was performed without a free surface boundary condition.  Two surveys were conducted on the Sigsbee2B  
+models one with a free surface boundary and one without.  
+
+The three surveys shared the same acquisition geometry.  Each receiver recorded data every .008 seconds for 1 500 samples resulting 
+in 12 seconds of data.  A 26 100 foot long streamer cable was deployed with 348 hydrophones spaced 75 feet apart.  Shots were fired
+every 150 feet starting at 10 925 feet.  Table \ref{tbl:shotHeader} shows the values that Sigsbee shot headers should contain.  
+
+\tabl{shotHeader}{Appropriate header values for Sigsbee shot records, the number of shots, n3, varies slightly between the surveys}
+{
+\begin{tabular}[t]{|llllll|}
+        \hline 
+        n1=1500  &   d1=0.008	&  o1=0     &    label1=Depth\ Z    &   unit1=s    &  \\
+	n2=348	 &   d2=75 	&  o2=0     &    label2=Offset\ X   &   unit2=ft   &  \\
+	n3=500 or 496   &   d3=150     &  o3=10925 &    label3=Shot-Coord  &   unit3=ft   &  \\
+        \hline
+\end{tabular}
+}
+
+\subsection{Sigsbee 2A shot records}
+The survey performed on the Sigsbee2A model did not have a free surface boundary condition.  The script found at 
+\emph{data2A/SConstruct} whose contents are displayed in table \ref{tbl:data2ASConstruct} generates a Madagascar 
+formatted data file \emph{shots.rsf} and also produces several shot images. 
+  
+\tabl{data2ASConstruct}{Contents of \emph{data2A/SConstruct} script.}
+{
+\tiny
+\lstinputlisting[frame=single]{data2A/SConstruct}
+\normalsize
+}
+
+Typing command \ref{eq:SCvel2} within the \emph{sigsbee/data2A} directory runs the script.
+\begin{equation}\label{eq:SCvel2} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+A plot of shot 70  is produced by the \emph{SConstruct} script and is shown below in figure \ref{fig:shot}
+\inputdir{data2A}
+\plot{shot}{width=\textwidth}{Snapshot of shot performed on \emph{sigsbee 2A}.}
+
+
 \subsection{Sigsbee 2B Shot Records}
-The \emph{Sigsbee 2B} library contains two sets of shot data, \emph{nfs} and \emph{fs}.  These shots were modeled with free and non free surface boundary conditions.  
+The Sigsbee 2B library contains two sets of shot data, \emph{nfs} and \emph{fs}.  These shots were modeled with free and non free surface boundary conditions.  
 
 \subsubsection{Free surface model}  
-A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in table~\ref{tbl:fsSConstruct}.  This script reads the \emph{segy} source file and converts it to Madagascar's \emph{RSF} format, \emph{shotFs2B.rsf}.  The contents of this file are displayed in table~\ref{tbl:inShotFs2B}.  The familiar \emph{n,o,} and \emph{d} paramaters are displayed there.  
+A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in table~\ref{tbl:fsSConstruct}.  
+This script reads the \emph{segy} source file and converts it to Madagascar's \emph{RSF} format and appends the header as 
+necessary. 
 
 \tabl{fsSConstruct}{Contents of \emph{data2B/fs/SConstruct} script.}
 {
@@ -101,19 +168,15 @@ A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in 
 \normalsize
 }
 
-\tabl{inShotFs2B}{Output of \textbf{sfin} function performed on file \emph{shotFs2B.rsf}}
-{
-\tiny
-\lstinputlisting[frame=single]{fs2B/inShotFs2B.rsf}
-\normalsize
-}
-Shot number 70 is plotted in figure~\ref{fig:shotFs2B}.   
+
+Shot number 70 is plotted in figure \ref{fig:shotFs2B}.   
 
 \inputdir{fs2B}
 \plot{shotFs2B}{width=\textwidth}{Shot 70 performed on \emph{sigsbee 2B FS} model.}
 
 \subsubsection{No free surface model}
-A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in table~\ref{tbl:nfsSConstruct}.  This script translates the \emph{segy} source data file and converts it into \emph{rsf} format.  The header of the \emph{shotFs2B} file is shown in table~\ref{tbl:inShotNfs2B}. 
+A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in table~\ref{tbl:nfsSConstruct}.  This script 
+translates the \emph{segy} source data file and converts it into \emph{rsf} format.  
 
 \tabl{nfsSConstruct}{Contents of \emph{data2B/nfs/SConstruct} script.}
 {
@@ -121,11 +184,7 @@ A \emph{SConsctuct} script found at \textit{sigsbee/data2B/fs/} is presented in 
 \lstinputlisting[frame=single]{nfs2B/SConstruct}
 \normalsize
 }
-\tabl{inShotNfs2B}{Output of \textbf{sfin} on \emph{shotNfs2B.rsf}.}
-{
-\tiny
-\lstinputlisting[frame=single]{nfs2B/inShotNfs2B.rsf}
-}
+
 
 \inputdir{nfs2B}
 \plot{shotNfs2B}{width=\textwidth}{Shot 70 performed in \emph{Sigsbee 2B NFS} model.}

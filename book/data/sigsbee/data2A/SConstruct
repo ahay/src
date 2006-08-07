@@ -34,14 +34,11 @@ Flow('sraw','zdata os',
      ''')
 Flow('shot','sraw',
      '''
-     put                label1=t unit1=s
-        d2=75           label2=o unit2=ft
-        d3=150 o3=10925 label3=s unit2=ft |
+     put                label1=Depth\ Z unit1=s
+        d2=75           label2=Offset\ x unit2=ft
+        d3=150 o3=10925 label3=Shot-coord unit3=ft |
      mutter half=false t0=1.0 v0=6000
      ''')
-
-#----- Create sfin file -------------------#
-Flow('inShot','shot','in $SOURCE')
 
 #---------------- Plot Data ---------------#
 Result('shot','window $SOURCE n3=1 f3=70 | grey title=Shot\ 70')
