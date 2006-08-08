@@ -2,26 +2,38 @@ from rsfproj import *
 # Fetch Files from repository
 Fetch("int_depth_vp.sgy","pluto")
 Fetch("P15VPint_25f_padded.SEGY","pluto")
+
 # Convert Files to RSF
 Flow('velocityProfileStd','int_depth_vp.sgy', '''segyread tape=$SOURCE |
-        put  d2=.015 label1=Depth o2=0 
-        label2=Distance unit1=ft*1000 
+        put  d2=.025 label1=Depth o2=-34.875 
+        label2=Position unit1=ft*1000 
         unit2=ft*1000''',stdin=0)
 
-
 Flow('velocityProfileMetric','int_depth_vp.sgy', '''segyread tape=$SOURCE |
-        put d1=.00760 d2=.00460 o2=0 
-        label1=Z\ Depth label2=Distance 
-        unit1=km unit2=km''',stdin=0)
-
+        put d1=.00760 d2=.00760 o2=-10.629
+        label1=Depth label2=Position 
+        unit1=km unit2=km | scale rscale=.0003048''')
+    
 Flow('velocityProfilePadded','P15VPint_25f_padded.SEGY', '''segyread tape=$SOURCE |
-        put  d1=.0076 d2=.0046 label1=Depth\ Z o2=0
-        label2=Distance unit1=km unit2=km''',stdin=0)
+        put  d1=.0076 d2=.00760 o2=-10.629 label1=Depth
+        label2=Position unit1=km unit2=km |
+        scale rscale=.0003048''')
 
 # Plotting Section
-for item in ['Std','Metric','Padded']:
-    Result('velocityProfile' + item,'''window $SOURCE  | grey scalebar=y 
-        color=I allpos=y gainpanel=a title=P-Wave\ Velocity\ Profile''')
+mins=[0,0,-10.5]
+maxs=['105','32','42.5']
+counter=0
+for item in ['Std','Metric']:
+    Result('velocityProfile' + item,'''window $SOURCE | grey scalebar=y 
+        color=I allpos=y gainpanel=a title=P-Wave\ Velocity\ Profile
+        max2=%s min2=0 screenratio=.28125 screenht=2 barlabel=\(km/s\)
+        labelsz=4 title= ''' % maxs[counter])
+    counter=counter+1
+
+Result('velocityProfilePadded','''window $SOURCE | grey scalebar=y 
+        color=I allpos=y gainpanel=a title=P-Wave\ Velocity\ Profile
+        screenratio=.28 125 screenht=2 labelsz=4 title= barlabel=\(km/s\)
+       ''')
 
 End()
 

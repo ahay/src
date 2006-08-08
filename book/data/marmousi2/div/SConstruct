@@ -1,7 +1,7 @@
 from rsfproj import *
 # Fetch Files from repository
-#Fetch("obc_div_v_1.segy","marm2")
-#Fetch("obc_div_v_2.segy","marm2")
+Fetch("obc_div_v_1.segy","marm2")
+Fetch("obc_div_v_2.segy","marm2")
 
 # Convert Files to RSF and update header
 Flow('obc_div_v_1','obc_div_v_1.segy', '''segyread tape=$SOURCE |
@@ -17,7 +17,7 @@ Flow('obc_div_v_2','obc_div_v_2.segy', '''segyread tape=$SOURCE |
 Flow('div',['obc_div_v_1','obc_div_v_2'],'cat ${SOURCES[0:2]} axis=3',stdin=0)
 
 # Plot Data
-Result('divShot50','div','''window $SOURCE  
+Result('movie','div','''window $SOURCE  
                min3=4250 max3=4250 size3=1 |
                grey color=I gainpanel=a 
                title=OBC\ Div\ Shot\ 50''')

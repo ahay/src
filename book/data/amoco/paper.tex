@@ -11,9 +11,11 @@
 \textbf{Date of origin:} \emph{Model was produced for an SEG convention presented in 1998}\\
 
 \section{Introduction}
-The "Amoco" dataset found within the Madagascar repository was created in 1997 and presented 
+The Amoco dataset found within the Madagascar repository was created in 1997 and presented 
 formally at the talk \emph{Strike shooting, dip shooting, widepatch shooting -- Does prestack 
-migration care? A model study'} given by John Etgen and Carl Regone at the 1998 SEG convention.  
+migration care? A model study} given by John Etgen and Carl Regone at the 1998 SEG convention.  
+Its creators describe the model as the Carpatheans thrusting over the North Sea.  
+The model was specifically created to illustrate the limitation of Kirchhoff migration.  
 The model presented here is a single 2D line from the 3D model presented at the talk.  
 The information presented here was taken from the abstract to their paper which can be found at the SEG website.  
 
@@ -27,7 +29,7 @@ The Madagascar Amoco repository contains all the files listed in table \ref{tbl:
 }
 
 \section{Model}
-This model is a 2D subset of a 3D model, however the model does not vary perpendicularily to this line.  The velocity model is 22 km across and 4 km in depth.
+This model is a 2D subset of a 3D model, however the model does not vary perpendicularly to this line.  The velocity model is 22 km across and 4 km in depth.
 
 The \emph{velmodel.hh} file did not need to be updated appreciably in this example.  However, the appropriate header settings are found in table \ref{tbl:modelHeader}.  Datums were spread every 12.5 meters to produce a 22km by 4 km grid.  
  
@@ -84,7 +86,8 @@ The file \emph{amoco/shots/SConstruct} is presented in table \ref{tbl:shotsSCons
 Typing command \ref{eq:SCshot} within the \emph{amoco\slash shots} directory runs the script.
 \begin{equation}\label{eq:SCshot} \texttt{bash-3.1\$\ scons\ view} \end{equation}
 
+Several plots are produced.  Figures \ref{fig:zeroOne} and \ref{fig:zeroTwo} show the zero offset data acquired on the Amoco model.  The plots are split as the large velocity contrast between the left and right side of the model muddles the image when the gainpanel filter plots the data.  
 
 \inputdir{shots}
-\plot{zero}{width=\textwidth}{Amoco zero offset shot data.}
-\plot{shot40}{width=\textwidth}{Amoco data shot number 40}
+\multiplot{2}{zeroOne,zeroTwo}{width=.45\textwidth}{Amoco zero offset shot data, plot (a) goes from 0 to 10.6 km and (b) goes from 10.6 to 20 km.  The plots were split as the large velocity contrast in the model makes it difficult to plot both sides on one scale.}
+\plot{shot40}{width=\textwidth}{Amoco shot number 280; the source is 14 km from origin}

@@ -11,8 +11,8 @@ for item in ['rsf1','rsf2']:
     Flow(item,files[counter], '''
             segyread tape=$SOURCE | put  
             o1=0 o2=0 o3=0 d2=.02286 d3=.0457 n2=350 n3=347  
-            label1=Depth  label2=Position X 
-            label3=Shot unit1=s unit2=m''',stdin=0)
+            label1=Time  label2=Position unit1=s unit2=km 
+            label3=Shot''',stdin=0)
     counter = counter + 1
 
 # Concatinate Files
@@ -24,6 +24,6 @@ Result('zero','plutoShots','''window $SOURCE  min2=0 max2=0 size2=1 |
                grey  color=I gainpanel=a label2=Position\ X unit2=km
                title=Zero\ Offset\ Data''')
 Result('shot30','plutoShots','''window $SOURCE  min3=1.371
-               max3=1.371 size3=1 | grey color=I 
-               gainpanel=a title=Shot\ 30''')
+               max3=1.371 size3=1 | grey color=I wantframenum=y  
+               gainpanel=a title=Shot\ \#\ 30''')
 End()
