@@ -192,6 +192,8 @@ window of width, say $\Delta\omega$
 which this corresponds inversely to a time interval over which we smooth.
 Choosing a numerical value for  $\epsilon$ has not such a simple interpretation.
 
+\inputdir{antoine}
+
 \par
 We jump from simple mathematical theorizing
 towards a genuine practical application when I grab some real data,
@@ -260,11 +262,11 @@ It is much easier to make physical sense of choosing a smoothing window.
 The smoothing window is in $(\omega,k_x)$ space,
 but Fourier transformation tells us its effect in $(t,x)$ space.
 
-\activeplot{antoine11}{width=6in,height=8.0in}{ER}{
-	Equation~(\ref{eqn:z7}) (left) and
-	equation~(\ref{eqn:z8}) (right).
-	Both ways of dividing by zero give similar results.
-	}
+\plot{antoine11}{width=6in,height=8.0in}{
+  Equation~(\ref{eqn:z7}) (left) and
+  equation~(\ref{eqn:z8}) (right).
+  Both ways of dividing by zero give similar results.
+}
 
 \subsection{Imaging}
 The example of dividing a function by itself $(1=F/F)$ might not
@@ -1412,10 +1414,7 @@ It happens that the amazing conjugate-direction method
 would reach the bottom in just two jumps
 (because $(x_1,x_2)$ is a two dimensional space.)
 
-
-
 \todo{Missing figure (ls-sawtooth) A search path for steepest descent.}
-
 
 \subsection{Conjugate direction}
 In the \bx{conjugate-direction method}, not a line, but rather a plane,
@@ -1602,10 +1601,10 @@ find $\alpha$ and $\beta$ with (\ref{eqn:twobytwosln}) and then
 update the solution with (\ref{eqn:xupdate}) and
 update the residual with (\ref{eqn:Rupdate}).
 Thus we package these activities in a subroutine
-named \texttt{cgstep()}.
+named \texttt{cgstep}.
 To use that subroutine we will have a computation \bx{template}
 like we had for steepest descents, except that we
-will have the repetitive work done by subroutine {\tt cgstep()}.
+will have the repetitive work done by subroutine {\tt cgstep}.
 This template (or pseudocode) for minimizing the residual
 $\bold 0\approx \bold r = \bold F \bold x - \bold d$
 by the conjugate-direction method is
@@ -1665,15 +1664,16 @@ an inner part that is used almost without change
 over a wide variety of applications,
 and an outer part containing memory allocations,
 operator invocations, and initializations.
-\end{comment}
+
 Because \bx{Fortran} does not recognize the difference between upper- and
 lower-case letters,
-the conjugate vectors $G$ and $S$ in the program are denoted by
+\end{comment}
+The conjugate vectors $G$ and $S$ in the program are denoted by
 {\tt gg} and {\tt ss}.
 The inner part of the conjugate-direction task is in
 function {\tt cgstep()}.%
 %\moddex[f90]{cgstep}{one step of CD}
-\moddex{cgstep}{one step of CD}
+\moddex{cgstep}{one step of CD}{38}{96}{filt/lib}
 \par
 Observe the \texttt{cgstep()} function has a logical parameter
 called \texttt{forget}.
@@ -1722,36 +1722,35 @@ The operator entrance is for the geophysicist,
 who formulates the estimation problem.
 The solver entrance is for the specialist in numerical algebra,
 who designs a new optimization method.
-The Fortran-90 programming language allows us
+The C programming language allows us
 to achieve this design goal by means of generic function interfaces.
 \par
-A basic solver is \texttt{solver_tiny()}.
+A basic solver is \texttt{tinysolver}.
 
-
-\moddex{solver_tiny}{tiny solver}
+\moddex{tinysolver}{tiny solver}{23}{53}{user/gee}
 
 \par
-The two most important arguments in \texttt{solver_tiny()}
+The two most important arguments in \texttt{tinysolver()}
 are the operator function \texttt{Fop},
 which is defined by the interface from Chapter \ref{ajt/paper:ajt},
 and the stepper function \texttt{stepper},
 which implements one step of an iterative estimation.
 For example, a practitioner who choses to use our new
-\texttt{cgstep()} \vpageref{/prog:cgstep}
+\texttt{cgstep()} \vpageref{lst:cgstep}
 for iterative solving the operator
-\texttt{matmult} \vpageref{/prog:matmult}
+\texttt{matmult} \vpageref{lst:matmult}
 would write the call
 \par
-\texttt{call solver_tiny ( matmult\_lop, cgstep, ...}
+\texttt{tinysolver ( matmult\_lop, cgstep, ...}
 \par\noindent
-so while you are reading the \texttt{solver_tiny} module,
+so while you are reading the \texttt{tinysolver} module,
 you should visualize the \texttt{Fop()} function
-as being \texttt{matmult_lop}, and
+as being \texttt{matmult\_lop}, and
 you should visualize the \texttt{stepper()} function
 as being \texttt{cgstep}.
 
 \par
-The other required parameters to \texttt{solver_tiny()} 
+The other required parameters to \texttt{tinysolver()} 
 are \texttt{d} (the data we want to fit),
 \texttt{m} (the model we want to estimate),
 and \texttt{niter} (the maximum number of iterations).
@@ -1765,22 +1764,22 @@ We will watch how the list of optional parameters
 to the generic solver routine grows
 as we attack more and more complex problems in later chapters.
 
-\subsection{Why Fortran 90 is much better than Fortran 77}
+\subsection{Why C is much better than Fortran 77}
 I'd like to digress from our geophysics-mathematics themes
-to explain why Fortran 90 has been a great step forward
+to explain why C has been a great step forward
 over Fortran 77.
 All the illustrations in this book were originally computed in F77.
 Then module
-\texttt{solver_tiny} \vpageref{/prog:solver_tiny}
+\texttt{tinysolver} \vpageref{lst:tinysolver}
 was simply a subroutine.
 It was not one module for the whole book, as it is now,
 but it was many conceptually identical subroutines,
 dozens of them, one subroutine for each application.
-The reason for the proliferation was that F77 lacks the ability of F90
+The reason for the proliferation was that F77 lacks the ability of C
 to represent operators as having two ways to enter,
 one for science and another for math.
 On the other hand, F77 did not require the half a page
-of definitions that we see here in F90.
+of definitions that we see here in C.
 But the definitions are not difficult to understand,
 and they are a clutter that we must see once and never again.
 Another benefit is that the book in F77 had no easy way to switch
@@ -1790,9 +1789,9 @@ from the \texttt{cgstep} solver to other solvers.
 \subsection{Test case: solving some simultaneous equations}
 \par
 Now we assemble a module \texttt{cgmeth} for solving simultaneous equations.
-Starting with the conjugate-direction module {\tt cgstep\_mod} 
-\vpageref{/prog:cgstep}
-we insert the module \texttt{matmult} \vpageref{/prog:matmult} as the linear operator.
+Starting with the conjugate-direction module {\tt cgstep} 
+\vpageref{lst:cgstep}
+we insert the module \texttt{matmult} \vpageref{lst:matmult} as the linear operator.
 \moddex{cgmeth}{demonstrate CD}
 
 \par
@@ -1882,9 +1881,9 @@ it is gratifying to see good convergence occurring
 after the first four iterations.
 The fitting is done by module {\tt invstack},
 which is just like
-\texttt{cgmeth} \vpageref{/prog:cgmeth} except that the matrix-multiplication operator
-\texttt{matmult} \vpageref{/prog:matmult} has been replaced by
-\texttt{imospray} \vpageref{/prog:imospray}.
+\texttt{cgmeth} \vpageref{lst:cgmeth} except that the matrix-multiplication operator
+\texttt{matmult} \vpageref{lst:matmult} has been replaced by
+\texttt{imospray} \vpageref{lst:imospray}.
 Studying the program,
 you can deduce that,
 except for a scale factor,
@@ -2099,7 +2098,7 @@ $\ln |r_a r_b| + i\Delta \phi_{ab}$.
 \end{equation}
 which gives the information needed to fill in the right-hand side of
 (\ref{eqn:diffgrad}), as done by subroutine \texttt{igrad2init()} from
-module \texttt{unwrap} \vpageref{/prog:unwrap}.
+module \texttt{unwrap} \vpageref{lst:unwrap}.
 % \progdex{igrad2init}{gradient 2-D init.}
 
 %\begin{notforlecture}
@@ -2216,8 +2215,8 @@ but as expected, we see considerably fewer.
 \subsection{Estimating the inverse gradient}
 To optimize the fitting goal (\ref{eqn:diffgrad}),
 module \texttt{unwrap()} uses the conjugate-direction method
-like the modules \texttt{cgmeth()} \vpageref{/prog:cgmeth} and 
-\texttt{invstack()} \vpageref{/prog:invstack}.
+like the modules \texttt{cgmeth()} \vpageref{lst:cgmeth} and 
+\texttt{invstack()} \vpageref{lst:invstack}.
 
 %\end{notforlecture}
 
@@ -2291,7 +2290,7 @@ not measured from sea level but from the satellite level.
 \item
   
  At iterations determined by
- \texttt{klick()} \vpageref{/prog:klick}
+ \texttt{klick()} \vpageref{lst:klick}
  make snapshots 
  {\tt call snap( 'resphz.H', n1,n2, phz)}
  of a residual phase
@@ -2311,13 +2310,13 @@ boundary conditions are often (1) a specified function value
 or (2) a specified derivative.
 These are associated with (1) transient convolution
 or (2) internal convolution.
-Gradient operator \texttt{igrad2} \vpageref{/prog:igrad2}
+Gradient operator \texttt{igrad2} \vpageref{lst:igrad2}
 is based on internal convolution with the filter $(1,-1)$.
 Revise \texttt{igrad2} to make a module called {\tt tgrad2}
 which has transient boundaries.
 %Hint: Compare with
-%\texttt{icai2} \vpageref{/prog:icai2} and
-%\texttt{tcai2} \vpageref{/prog:tcai2}.
+%\texttt{icai2} \vpageref{lst:icai2} and
+%\texttt{tcai2} \vpageref{lst:tcai2}.
 \end{exer}
 
 \activeplot{synmod90}{width=6in,height=1.5in}{ER}{ 
@@ -2598,7 +2597,7 @@ What we should do is test that the residual really does decrease,
 and if it does not we should revert
 to steepest descent with a smaller step size.
 Perhaps we should test an incremental variation on the status quo:
-where inside \texttt{solver} \vpageref{/prog:solver_tiny},
+where inside \texttt{solver} \vpageref{lst:tinysolver},
 we check to see if the residual
 diminished in the {\it previous} step, and if it did not,
 restart the iteration (choose the {\it current} step to be steepest descent instead of CD).
@@ -2628,7 +2627,7 @@ converge to the answer in $n$ (or fewer) steps.  The various methods
 differ in numerical accuracy, treatment of underdetermined systems,
 accuracy in treating ill-conditioned systems, space requirements, and
 numbers of dot products.  Technically, the method of CD used in the
-\texttt{cgstep} module \vpageref{/prog:cgstep} is not the
+\texttt{cgstep} module \vpageref{lst:cgstep} is not the
 conjugate-gradient method itself, but is equivalent to it.  This
 method is more properly called the \bx{conjugate-direction method}
 with a memory of one step.  I chose this method for its clarity and
@@ -2698,10 +2697,10 @@ susceptible to rounding error as is {\tt LSQR}.
 
 %The Paige and
 %Saunders method is reviewed by Nolet in a geophysical context.
-%I include module \texttt{lsqr} \vpageref{/prog:lsqr} without explaining
+%I include module \texttt{lsqr} \vpageref{lst:lsqr} without explaining
 %why it works.
 %The interface is similar to \texttt{solver}
-%\vpageref{/prog:smallsolver}. Note that the residual vector does not appear
+%\vpageref{lst:smallsolver}. Note that the residual vector does not appear
 %explicitly in the program and that we cannot start from a nonzero
 %initial model.  \moddex{lsqr}{LSQR solver}
 
@@ -2968,11 +2967,11 @@ $\beta \padarrow \frac{ (\Delta \bold x \cdot \Delta \bold x )}
 \>      \> \}                                                   
 \end{tabbing}
 
-%Module \texttt{conjgrad} \vpageref{/prog:conjgrad} provides an
+%Module \texttt{conjgrad} \vpageref{lst:conjgrad} provides an
 %implementation of this method. The interface is exactly similar to
-%that of \texttt{cgstep} \vpageref{/prog:cgstep}, therefore you can
+%that of \texttt{cgstep} \vpageref{lst:cgstep}, therefore you can
 %use \texttt{conjgrad} as an argument to \texttt{solver}
-%\vpageref{/prog:smallsolver}. 
+%\vpageref{lst:smallsolver}. 
 %
 %When the orthogonality of the gradients, (implied by the classical
 %conjugate-gradient method) is not numerically assured, the
