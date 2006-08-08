@@ -1,4 +1,4 @@
-/* Testing conjugate gradients */
+/* NMO stack by inverse of forward modeling */
 /*
   Copyright (C) 2006 University of Texas at Austin
   
@@ -18,14 +18,16 @@
 */
 #include <rsf.h>
 
-#include "matmult.h"
+#include "imospray.h"
 
-void cgtest(int nx, int ny, float *x, 
-	    const float *yy, float **fff, int niter) 
-/*< testing conjugate gradients with matrix multiplication >*/
+void invstack(int nt, float *model, int nx, const float *gather, 
+	      float t0, float x0, 
+	      float dt, float dx, float slow, int niter) 
+/*< NMO stack by inverse of forward modeling */
 {
-    matmult_init( fff);
-    sf_tinysolver( matmult_lop, sf_cgstep, nx, ny, x, yy, niter);
-    sf_cgstep_close();
+    imospray_init( slow, x0,dx, t0,dt, nt, nx);
+    sf_tinysolver( imospray_lop, sf_cgstep, 
+		   nt, nt*nx, model, gather, niter);
+    sf_cgstep_close ();  
+    imospray_close ();  /* garbage collection */
 }
-

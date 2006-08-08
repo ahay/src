@@ -36,30 +36,23 @@ static double dotprod (int n, const float* x, const float* y);
 /* double-precision dot product */
 
 void sf_cgstep( bool forget     /* restart flag */, 
-		int nx          /* model size */, 
-		int ny          /* data size */, 
+		int nx, int ny  /* model size, data size */, 
 		float* x        /* current model [nx] */, 
 		const float* g  /* gradient [nx] */, 
 		float* rr       /* data residual [ny] */, 
 		const float* gg /* conjugate gradient [ny] */) 
-/*< Step of conjugate-gradient iteration. 
-  The data residual is rr = A x - dat
->*/
+/*< Step of conjugate-gradient iteration. >*/
 {
     double sds, gdg, gds, determ, gdr, sdr, alfa, beta;
     int i;
-    if (Allocated == false) {
+    if (!Allocated) {
 	Allocated = forget = true;
 	S  = sf_floatalloc (nx);
 	Ss = sf_floatalloc (ny);
     }
-    if ( forget == true) {
-	for (i = 0; i < nx; i++) {
-	    S[i] = 0.;
-	}
-	for (i = 0; i < ny; i++) {
-	    Ss[i] = 0.;
-	}    
+    if (forget) {
+	for (i = 0; i < nx; i++) S[i] = 0.;
+	for (i = 0; i < ny; i++) Ss[i] = 0.;
 	beta = 0.0;
 	alfa = dotprod( ny, gg, gg);
 	if (alfa <= 0.) return;
@@ -72,14 +65,9 @@ void sf_cgstep( bool forget     /* restart flag */,
 	sds = dotprod( ny, Ss, Ss);       
 	gds = dotprod( ny, gg, Ss);       
 	if (gdg == 0. || sds == 0.) return;
-
 	determ = 1.0 - (gds/gdg)*(gds/sds);
-	if (determ > EPSILON) {
-	    determ *= gdg * sds;
-	} else {
-	    determ = gdg * sds * EPSILON;
-	}
-
+	if (determ > EPSILON) determ *= gdg * sds;
+	else determ = gdg * sds * EPSILON;
 	gdr = - dotprod( ny, gg, rr);
 	sdr = - dotprod( ny, Ss, rr);
 	alfa = ( sds * gdr - gds * sdr ) / determ;

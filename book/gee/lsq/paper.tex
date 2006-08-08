@@ -3,6 +3,8 @@
 \title{Model fitting by least squares}
 \author{Jon Claerbout}
 
+\maketitle
+
 \label{paper:lsq}
 
 %\def\figdir{Fig}
@@ -1673,7 +1675,7 @@ The conjugate vectors $G$ and $S$ in the program are denoted by
 The inner part of the conjugate-direction task is in
 function {\tt cgstep()}.%
 %\moddex[f90]{cgstep}{one step of CD}
-\moddex{cgstep}{one step of CD}{38}{96}{filt/lib}
+\moddex{cgstep}{one step of CD}{38}{84}{filt/lib}
 \par
 Observe the \texttt{cgstep()} function has a logical parameter
 called \texttt{forget}.
@@ -1727,7 +1729,7 @@ to achieve this design goal by means of generic function interfaces.
 \par
 A basic solver is \texttt{tinysolver}.
 
-\moddex{tinysolver}{tiny solver}{23}{53}{user/fomels}
+\moddex{tinysolver}{tiny solver}{23}{53}{filt/lib}
 
 \par
 The two most important arguments in \texttt{tinysolver()}
@@ -1792,7 +1794,7 @@ Now we assemble a module \texttt{cgtest} for solving simultaneous equations.
 Starting with the conjugate-direction module {\tt cgstep} 
 \vpageref{lst:cgstep}
 we insert the module \texttt{matmult} \vpageref{lst:matmult} as the linear operator.
-\moddex{cgtest}{demonstrate CD}{24}{31}{user/fomels}
+\moddex{cgtest}{demonstrate CD}{23}{30}{user/fomels}
 
 \par
 Below shows the solution to $5 \times 4$ set of simultaneous equations.
@@ -1884,13 +1886,13 @@ The fitting is done by module {\tt invstack},
 which is just like
 \texttt{cgtest} \vpageref{lst:cgtest} except that the matrix-multiplication operator
 \texttt{matmult} \vpageref{lst:matmult} has been replaced by
-\texttt{imospray} \vpageref{lst:imospray}.
+\texttt{imospray}. % \vpageref{lst:imospray}.
 Studying the program,
 you can deduce that,
 except for a scale factor,
 the output at {\tt niter=0} is identical to the stack $\bold M' \bold d$.
 All the signals in Figure~\ref{fig:invstack} are intrinsically the same scale.%
-\moddex{invstack}{inversion stacking}
+\moddex{invstack}{inversion stacking}{23}{33}{filt/proc}
 \par
 This simple inversion is inexpensive.
 Has anything been gained over conventional stack?

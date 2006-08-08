@@ -32,12 +32,13 @@ for case in ('fft2','smoo','divn'):
          ''')
 
 def plot(one,two):
-    n1 = (15-len(one))/2
-    n2 = (15-len(two))/2
+    n1 = (18-len(one))/2
+    n2 = (18-len(two))/2
     return '''
     merge axis=2 nspace=5 ${SOURCES[1]} |
     grey title="%s%s%s | %s%s%s"
     label1=Time unit1=s wantaxis2=n crowd=0.87
+    screenht=10 screenwd=7.5 labelsz=4 titlesz=5
     ''' % ('. '*n1,one,' .'*n1,
            '. '*n2,two,' .'*n2)
 
@@ -49,6 +50,6 @@ Result('antoine10','left right',plot('F\'F','Input'))
 Flow('right2','back_smoo','window max2=0 | tpow tpow=0.5 | byte')
 Flow('left2', 'back_divn','window max2=0 | tpow tpow=0.5 | byte')
 
-Result('antoine11','left2 right2',plot('F\'F/(F\'F+eps)','F\'F/<<F\'F>> '))
+Result('antoine11','left2 right2',plot('F\'F/(F\'F+eps)',' F\'F/<<F\'F>> '))
 
 End()

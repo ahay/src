@@ -16,17 +16,17 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
-
+#include "_solver.h"
+#include "alloc.h"
 #include "tinysolver.h"
 
-void tinysolver (sf_operator oper   /* linear operator */, 
-		 sf_solverstep solv /* stepping function */, 
-		 int nx             /* size of x */, 
-		 int ny             /* size of dat */, 
-		 float* x           /* estimated model */, 
-		 const float* dat   /* data */, 
-		 int niter          /* number of iterations */)
+void sf_tinysolver (sf_operator oper   /* linear operator */, 
+		    sf_solverstep solv /* stepping function */, 
+		    int nx             /* size of x */, 
+		    int ny             /* size of dat */, 
+		    float* x           /* estimated model */, 
+		    const float* dat   /* data */, 
+		    int niter          /* number of iterations */)
 /*< Generic linear solver. Solves oper{x} =~ dat >*/
 {
     int i, iter;
