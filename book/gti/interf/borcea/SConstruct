@@ -94,15 +94,14 @@ Flow('vn','va mask',
      ''')
 
 # background + anomaly
-Flow('vo','va mask',
+Flow('vo','va',
      '''
      math output=%(co)g
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
-     add ${SOURCES[0]}
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 # background + anomaly + noise
-Flow('vv','vo vn','add ${SOURCES[1]}')
+Flow('vv','vo va vn','add ${SOURCES[1]} ${SOURCES[2]}')
 
 Flow('rm',None,
      '''
@@ -131,18 +130,32 @@ fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('dd','transp|' + fdmod.dgrey('pclip=99',par))
 
-
-
 # ------------------------------------------------------------
-# RTM
-Flow('dw','wav',
+# source data
+Flow('ds','wav',
      '''
      pad beg2=400 n2out=%(nx)d |
      put o2=%(ox)g d2=%(dx)g |
      transp
      ''' % par)
 
-fdmod.rtm('ii','dw','dd','vo','rm','rr','rr','free=n dens=n',par)
+# receiver data
+Flow('dr','dd do','add ${SOURCES[1]} scale=1,-1')
+
+Result('ds','transp|' + fdmod.dgrey('pclip=100',par))
+Result('dr','transp|' + fdmod.dgrey('pclip=100',par))
+
+# ------------------------------------------------------------
+# RTM
+fdmod.rtm('ii','ds','dr','vo','rm','rr','rr','free=n dens=n',4000,par)
 Result('ii',fdmod.cgrey('pclip=100',par))
+
+# ------------------------------------------------------------
+
+Flow('js','ii_us','window n3=500')
+Flow('jr','ii_ur','window n3=500')
+
+Flow('j1','js jr','   add mode=p ${SOURCES[1]}')
+Flow('j2','js jr','paradd mode=p ${SOURCES[1]} memsize=4000')
 
 End()

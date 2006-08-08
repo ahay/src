@@ -266,7 +266,7 @@ int main(int argc, char* argv[])
     tt=sf_floatalloc2(nz2,nx2);
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nx2,nz2,um,uo,up,ud,tt)
+#pragma omp parallel for schedule(guided) private(iz,ix) shared(nx2,nz2,um,uo,up,ud,tt)
 #endif
     for (iz=0; iz<nz2; iz++) {
 	for (ix=0; ix<nx2; ix++) {
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
     ro=sf_floatalloc2(nz2,nx2);
     
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nz,nx,vp,ro,vv,ee)
+#pragma omp parallel for schedule(guided) private(iz,ix) shared(nz,nx,vp,ro,vv,ee)
 #endif
     for (iz=0; iz<nz; iz++) {
 	for (ix=0; ix<nx; ix++) {
@@ -366,7 +366,7 @@ int main(int argc, char* argv[])
 
 	/* 4th order Laplacian operator */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z,idx,idz)
+#pragma omp parallel for schedule(guided) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z,idx,idz)
 #endif
 	for (ix=nop; ix<nx2-nop; ix++) {
 	    for (iz=nop; iz<nz2-nop; iz++) {
@@ -382,7 +382,7 @@ int main(int argc, char* argv[])
 	/* density terms */
 	if(dens) {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,idz,idx)
+#pragma omp parallel for schedule(guided) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,idz,idx)
 #endif
 	    for (ix=nop; ix<nx2-nop; ix++) {
 		for (iz=nop; iz<nz2-nop; iz++) {
@@ -403,7 +403,7 @@ int main(int argc, char* argv[])
 	}
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,ud,uo,um,up,vp,dt2)
+#pragma omp parallel for schedule(guided) private(ix,iz) shared(nx2,nz2,ud,uo,um,up,vp,dt2)
 #endif
 	for (ix=0; ix<nx2; ix++) {
 	    for (iz=0; iz<nz2; iz++) {
@@ -420,7 +420,7 @@ int main(int argc, char* argv[])
 	/* one-way ABC apply */	
 	if(abc) {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
+#pragma omp parallel for schedule(guided) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
 #endif
 	    for(ix=0;ix<nx2;ix++) {
 		for(iop=0;iop<nop;iop++) {
@@ -439,7 +439,7 @@ int main(int argc, char* argv[])
 	    }
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
+#pragma omp parallel for schedule(guided) private(ix,iz,iop) shared(nx2,nz2,nop,uo,um,bzl,bzh)
 #endif
 	    for(iop=0;iop<nop;iop++) {
 		for(iz=0;iz<nz2;iz++) {
@@ -461,7 +461,7 @@ int main(int argc, char* argv[])
 	/* sponge ABC apply */
 	if(abc) {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,uo,um,ud,tt)
+#pragma omp parallel for schedule(guided) private(ix,iz) shared(nx2,nz2,uo,um,ud,tt)
 #endif
 	    for (ix=0; ix<nx2; ix++) {
 		for (iz=0; iz<nz2; iz++) {
@@ -479,7 +479,7 @@ int main(int argc, char* argv[])
 
 	/* collect data */
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,1) private(ir) shared(dd,rr,uo,jzr,wr00,wr01,wr10,wr11)
+#pragma omp parallel for schedule(guided) private(ir) shared(dd,rr,uo,jzr,wr00,wr01,wr10,wr11)
 #endif
 	for (ir=0;ir<nr;ir++) {
 	    dd[it][ir] =

@@ -1,9 +1,10 @@
 /* Mathematical operations on data files.
+   
+Known functions: 
+cos,  sin,  tan,  acos,  asin,  atan, 
+cosh, sinh, tanh, acosh, asinh, atanh,
+exp,  log,  sqrt, abs, conj (for complex data).
 
-Known functions: cos,  sin,  tan,  acos,  asin,  atan, 
-                 cosh, sinh, tanh, acosh, asinh, atanh,
-                 exp,  log,  sqrt, abs, conj (for complex data).
-                 
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
 
@@ -45,8 +46,13 @@ See also: sfheadermath.
 
 #include <rsf.h>
 
-static void check_compat (size_t nin, sf_file *in, int dim, const int *n, 
-			  float *d, float* o, sf_datatype type);
+static void check_compat (size_t      nin, 
+			  sf_file*    in, 
+			  int         dim, 
+			  const int*  n, 
+			  float*      d, 
+			  float*      o, 
+			  sf_datatype type);
 
 int main (int argc, char* argv[])
 {
@@ -58,11 +64,14 @@ int main (int argc, char* argv[])
     sf_complex **cbuf, **cst;
     sf_datatype type;
 
+
+    /* init RSF */
     sf_init (argc,argv);
     
     in = (sf_file*) sf_alloc ((size_t) argc-1,sizeof(sf_file));    
     out = sf_output ("out");
 
+    /* find number of input files */
     if (!sf_stdin()) { /* no input file in stdin */
 	nin=0;
     } else {
@@ -70,15 +79,17 @@ int main (int argc, char* argv[])
 	sf_putint(out,"input",0);
 	nin=1;
     }
-
+    
     for (i=1; i< argc; i++) { /* collect inputs */
 	arg = argv[i];
-	eq =  strchr(arg,'=');
+	eq  = strchr(arg,'=');
 	if (NULL == eq) continue; /* not a parameter */
 	if (0 == strncmp(arg,"output",6) ||
-	    0 == strncmp(arg,"type",4)   ||
+	    0 == strncmp(arg,  "type",4) ||
 	    (eq-arg == 2 &&
-	     (arg[0] == 'n' || arg[0] == 'd' || arg[0] == 'o') &&
+	     (arg[0] == 'n' || 
+	      arg[0] == 'd' || 
+	      arg[0] == 'o') &&
 	     isdigit(arg[1])) ||
 	    (eq-arg == 6 &&
 	     0 == strncmp(arg,"label",5) &&
@@ -102,7 +113,7 @@ int main (int argc, char* argv[])
 	type = sf_gettype(in[0]);
 	if (SF_FLOAT != type && SF_COMPLEX != type) 
 	    sf_error("Need float or complex input");
-
+	
 	dim = sf_filedims(in[0],n);
 	for (i=0; i < dim; i++) {
 	    (void) snprintf(xkey,3,"d%d",i+1);
@@ -119,24 +130,28 @@ int main (int argc, char* argv[])
 	} else {
 	    type = SF_FLOAT;
 	}
-
+	
 	dim = 1;
 	for (i=0; i < SF_MAX_DIM; i++) {
 	    (void) snprintf(xkey,3,"n%d",i+1);
 	    if (!sf_getint(xkey,n+i)) break;
 	    if (n[i] > 0) dim=i+1;
 	    sf_putint(out,xkey,n[i]);
+
 	    (void) snprintf(xkey,3,"d%d",i+1);
 	    if (!sf_getfloat(xkey,d+i)) d[i] = 1.;
 	    sf_putfloat(out,xkey,d[i]);
+
 	    (void) snprintf(xkey,3,"o%d",i+1);
 	    if (!sf_getfloat(xkey,o+i)) o[i] = 0.;
 	    sf_putfloat(out,xkey,o[i]);
+
 	    (void) snprintf(xkey,7,"label%d",i+1);
 	    if (NULL != (label = sf_getstring(xkey))) {
 		sf_putstring(out,xkey,label);
 		free(label);
 	    }
+
 	    (void) snprintf(xkey,6,"unit%d",i+1);
 	    if (NULL != (unit = sf_getstring(xkey))) {
 		sf_putstring(out,xkey,unit);
@@ -148,34 +163,34 @@ int main (int argc, char* argv[])
 	    }
 	}
     }
-
+    
     for (nsiz=1, i=0; i < dim; i++) {
 	sprintf(xkey,"x%d",i+1);
 	
 	if (NULL != sf_histstring(out,xkey)) 
 	    sf_error("illegal use of %s parameter",xkey);
 	sf_putint(out,xkey,nin+i);
-
+	
 	nsiz *= n[i];
     }
-
+    
     if (SF_COMPLEX == type) sf_putint(out,"I",nin+dim);
     
     if (nin) check_compat(nin,in,dim,n,d,o,type);
 
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Mathematical description of the output */
-
+    
     len = sf_math_parse (output,out,type);
     
-    if (SF_FLOAT == type) {
+    if (SF_FLOAT == type) { /* float type */
 	nbuf = BUFSIZ/sizeof(float);
 	
 	fbuf = sf_floatalloc2(nbuf,nin+dim);
 	fst  = sf_floatalloc2(nbuf,len+2);
 	cbuf = NULL;
 	cst  = NULL; 
-    } else {
+    } else {                /* complex type */
 	nbuf = BUFSIZ/sizeof(sf_complex);
 	
 	fbuf = NULL;
@@ -191,7 +206,7 @@ int main (int argc, char* argv[])
 	sf_settype(out,type);
 	sf_setform(out,SF_NATIVE);
     }
-
+    
     if (SF_FLOAT == type) {
 	for (j=0; nsiz > 0; nsiz -= nbuf) {
 	    if (nbuf > nsiz) nbuf = nsiz;
@@ -232,8 +247,14 @@ int main (int argc, char* argv[])
     exit(0);
 }
 
-static void check_compat (size_t nin, sf_file *in, int dim, const int *n, 
-			  float *d, float* o, sf_datatype type) 
+/*------------------------------------------------------------*/
+static void check_compat (size_t      nin, 
+			  sf_file*    in, 
+			  int         dim, 
+			  const int*  n, 
+			  float*      d, 
+			  float*      o, 
+			  sf_datatype type) 
 {
     int ni, id;
     size_t i;
@@ -259,5 +280,3 @@ static void check_compat (size_t nin, sf_file *in, int dim, const int *n,
 	}
     }
 }
-
-/* 	$Id$	 */

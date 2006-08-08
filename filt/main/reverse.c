@@ -22,8 +22,11 @@
 
 #include <rsf.h>
 
-static void mirror (size_t n1, int dim, 
-		    const int* n, const bool* f, /*@out@*/ size_t *k);
+static void mirror (size_t n1, 
+		    int dim, 
+		    const int* n, 
+		    const bool* f, 
+		    /*@out@*/ size_t *k);
 
 int main(int argc, char* argv[])
 {
@@ -34,17 +37,19 @@ int main(int argc, char* argv[])
     int i, dim, dim1, dim2, mem;
     int n[SF_MAX_DIM], esize, which;
     off_t pos=0, pos3=0, memsize;
-    size_t n1, i1, i2, i3, n2, n3, size, *k1 = NULL, *k2 = NULL;
+    size_t n1, n2, n3, size, *k1 = NULL, *k2 = NULL;
+    size_t i1, i2, i3;
     unsigned int mask;
     bool f[SF_MAX_DIM], verb;
 /* Flags; 0=leave alone, 1=reverse this dimension */
     float o, d;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+
+    in  = sf_input(  "in");
     out = sf_output("out");
 
-    dim = sf_filedims(in,n);
+    dim   = sf_filedims(in,n);
     esize = sf_esize(in);
     
     if (!sf_getint("which",&which)) which=-1;
@@ -97,7 +102,7 @@ int main(int argc, char* argv[])
     /* dim2 is the last dimension involved */
 
     sf_fileflush(out,in);
-    sf_setform(in,SF_NATIVE);
+    sf_setform( in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
 
     n1=n2=n3=1;
@@ -165,6 +170,8 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
+/*------------------------------------------------------------*/
+
 static void mirror (size_t n1, int dim, 
 		    const int* n, const bool* f, /*@out@*/ size_t *k)
 /* compute map of reversals k */
@@ -182,5 +189,3 @@ static void mirror (size_t n1, int dim,
 	k[i]=m;
     }
 }
-
-/* 	$Id$	 */

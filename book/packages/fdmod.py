@@ -108,24 +108,28 @@ def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
-def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,par):
+def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
 
-    swfl = imag+'_us'
-    rwfl = imag+'_ur'
-    sout = imag+'_ds'
-    rout = imag+'_dr'
+    swfl = imag+'_us' #   source wavefield
+    rwfl = imag+'_ur' # receiver wavefield
+    sout = imag+'_ds' #   source data (not the input sdat)
+    rout = imag+'_dr' # receiver data (not the input rdat)
 
+    # source wavefield (z,x,t)
+    awe(sout,swfl,sdat,velo,dens,sacq,sacq,custom+' jsnap=1 ',par)
+
+    # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     twfl = imag+'_tur'
     tout = imag+'_tdr'
 
-    Flow(tdat,rdat,'reverse which=2 opt=i')
-    
-    awe(sout,swfl,sdat,velo,dens,sacq,sacq,custom+' jsnap=1 ',par)
+    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
     awe(tout,twfl,tdat,velo,dens,racq,racq,custom+' jsnap=1 ',par)
+    Flow(rwfl,twfl,'reverse which=4 opt=i verb=y memsize=1000')
+    Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
-    Flow(rwfl,twfl,'reverse which=4 opt=i')
-    Flow(rout,tout,'reverse which=2 opt=i')
+    corr = imag+'_cor'
 
-    Flow(imag,[swfl,rwfl],'add mode=p ${SOURCES[1]} | stack axis=3')
-
+    # conventional (cross-correlation zero-lag) imaging condition
+    Flow(corr,[swfl,rwfl],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
+    Flow(imag,corr,'stack axis=3')

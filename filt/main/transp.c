@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     float f;
 
     sf_init (argc,argv);
-    in = sf_input ("in");
+    in  = sf_input  ( "in");
     out = sf_output ("out");
 
     if (!sf_getint("memsize",&mem)) mem = 100;
@@ -182,5 +182,3 @@ static void make_map (int dim1, int dim2,
 	map[i2] = j;
     }
 }
-
-/* 	$Id$	 */

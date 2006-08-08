@@ -2,16 +2,6 @@
 
 Takes: [< file0.rsf] file1.rsf file2.rsf ...
 
-The various operations, if selected, occur in the following order:
-
-(1) Take absolute value, abs=
-(2) Add a scalar, add=
-(3) Take the natural logarithm, log=
-(4) Take the square root, sqrt=
-(5) Multiply by a scalar, scale=
-(6) Compute the base-e exponential, exp=
-(7) Add, multiply, or divide the data sets, mode=
-
 sfadd operates on integer, float, or complex data, but all the input
 and output files must be of the same data type.
 
@@ -19,7 +9,7 @@ An alternative to sfadd is sfmath, which is more versatile, but may be
 less efficient.
 */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -43,65 +33,68 @@ less efficient.
 
 #include <rsf.h>
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 static void check_compat(int        esize, 
 			 size_t     nin, 
 			 sf_file*   in, 
 			 int        dim, 
 			 const int *n);
-static void add_float (bool   collect, 
-		       size_t nbuf, 
-		       float* buf, 
-		       float* bufi, 
-		       char   cmode, 
-		       float  scale, 
-		       float  add, 
-		       bool   abs_flag, 
-		       bool   log_flag, 
-		       bool   sqrt_flag, 
-		       bool   exp_flag);
-static void add_int (bool     collect, 
-		     size_t   nbuf, 
-		     int*     buf, 
-		     int*     bufi, 
-		     char     cmode, 
-		     float    scale, 
-		     float    add, 
-		     bool     abs_flag, 
-		     bool     log_flag, 
-		     bool     sqrt_flag, 
-		     bool     exp_flag);
+
+static void add_float   (bool        collect, 
+			 char        cmode, 
+			 size_t      nbuf, 
+			 float*      buf, 
+			 float*      bufi, 
+			 float       scale, 
+			 float       add);
+
+static void add_int     (bool        collect, 
+			 char        cmode, 
+			 size_t      nbuf, 
+			 int*        buf, 
+			 int*        bufi, 
+			 float       scale, 
+			 float       add);
+
 static void add_complex (bool        collect, 
+			 char        cmode, 
 			 size_t      nbuf, 
 			 sf_complex* buf, 
 			 sf_complex* bufi, 
-			 char        cmode, 
 			 float       scale, 
-			 float       add, 
-			 bool        abs_flag, 
-			 bool        log_flag, 
-			 bool        sqrt_flag, 
-			 bool        exp_flag);
+			 float       add);
 
+/*------------------------------------------------------------*/
+/*------------------------------------------------------------*/
 int main (int argc, char* argv[])
 {
     int      i, dim, n[SF_MAX_DIM], esize;
-    size_t   j, nin, nsiz;
+    size_t   j, nin;
     sf_file *in, out;
     float   *scale, *add;
-    bool    *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
+    bool collect;
     char cmode, *mode;
     sf_datatype type;
 
-    size_t nbuf=BUFSIZ;
-    char    buf[BUFSIZ];
-    char   bufi[BUFSIZ];
+    int   mem;
+    off_t memsize;
+    
+    size_t nbuf,nsiz;
+    char *bufi,*bufo;
 
     /* init RSF */
     sf_init (argc, argv);
 
+    /*------------------------------------------------------------*/
+
     in = (sf_file*) sf_alloc ((size_t) argc,sizeof(sf_file));
     out = sf_output ("out");
-    
+
+    /*------------------------------------------------------------*/
+
     /* find number of input files */
     if (0 != isatty(fileno(stdin))) { /* no input file in stdin */
 	nin=0;
@@ -109,52 +102,31 @@ int main (int argc, char* argv[])
 	in[0] = sf_input("in");
 	nin=1;
     }
-
     for (i=1; i< argc; i++) { /* collect inputs */
 	if (NULL != strchr(argv[i],'=')) continue; /* not a file */
 	in[nin] = sf_input(argv[i]);
 	nin++;
     }
     if (0==nin) sf_error ("no input");
-    /* end find number of input files */
     /* nin = no of input files*/
-
+    /*------------------------------------------------------------*/
     /* default coefficients and flags */
     scale     = sf_floatalloc (nin);
-    add       = sf_floatalloc (nin);  
-    sqrt_flag = sf_boolalloc  (nin);
-    abs_flag  = sf_boolalloc  (nin);
-    log_flag  = sf_boolalloc  (nin);
-    exp_flag  = sf_boolalloc  (nin);
-    
+    add       = sf_floatalloc (nin);      
     for (j = 0; j < nin; j++) {
 	scale[j] = 1.;
 	add[j]   = 0.;
-	sqrt_flag[j] = abs_flag[j] = log_flag[j] = exp_flag[j] = false;
     }
-
-    /* Scalar values to multiply each dataset with */
     (void) sf_getfloats("scale",scale,nin); 
-
-    /* Scalar values to add to each dataset */
     (void) sf_getfloats("add",add,nin);
-
-    /* If true (1) take square root */
-    (void) sf_getbools("sqrt",sqrt_flag,nin);
-    /* If true (1) take absolute value */
-    (void) sf_getbools("abs",abs_flag,nin);
-    /* If true (1) take logarithm */
-    (void) sf_getbools("log",log_flag,nin);
-    /* If true (1) compute exponential */
-    (void) sf_getbools("exp",exp_flag,nin);
-
+    /*------------------------------------------------------------*/
     /* 'a' means add (default), 
        'p' or 'm' means multiply, 
        'd' means divide 
     */
     mode = sf_getstring("mode");
     cmode = (NULL==mode)? 'a':mode[0];
-
+    /*------------------------------------------------------------*/
     /* verify file compatibility */
     dim = sf_filedims(in[0],n); /* input files dimensions */
     for (nsiz=1, i=0; i < dim; i++) {
@@ -162,209 +134,194 @@ int main (int argc, char* argv[])
     }                           /* number of elements in input files */
     esize = (int) sf_esize(in[0]);
     check_compat(esize,nin,in,dim,n);
-    /* end verify file compatibility */
-
+    /*------------------------------------------------------------*/
+    /* prepare output file */
     sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
+    /*------------------------------------------------------------*/
+
+    if (!sf_getint("memsize",&mem)) mem = 100;
+    /* Available memory size (in Mb) */
+    memsize = mem * (1 << 20); /* convert Mb to bytes */
+
+    sf_warning("nsiz=%d",nsiz);
+    nbuf = memsize/esize/2;
+    if(nbuf>nsiz) nbuf=nsiz;
+    sf_warning("nbuf=%d",nbuf);
+
+    bufi = (char*) sf_alloc( nbuf, sizeof(char));
+    bufo = (char*) sf_alloc( nbuf, sizeof(char));
+    
+    /*------------------------------------------------------------*/
 
     type = sf_gettype (out); /* input/output files format */
     
     for (nbuf /= esize; nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
-	for (j=0; j < nin; j++) {
-	    collect = (bool) (j != 0);
-	    switch(type) {
-		case SF_FLOAT:
-		    sf_floatread((float*) bufi,
-				 nbuf,
-				 in[j]);	    
-		    add_float(collect, 
-			      nbuf,
-			      (float*) buf,
-			      (float*) bufi, 
-			      cmode, 
-			      scale[j], 
-			      add[j], 
-			      abs_flag[j], 
-			      log_flag[j], 
-			      sqrt_flag[j], 
-			      exp_flag[j]);
-		    break;
-		case SF_COMPLEX:		    
-		    sf_complexread((sf_complex*) bufi,
-				   nbuf,
-				   in[j]);
-		    add_complex(collect, 
-				nbuf,
-				(sf_complex*) buf,
-				(sf_complex*) bufi, 
-				cmode, 
-				scale[j], 
-				add[j], 
-				abs_flag[j], 
-				log_flag[j], 
-				sqrt_flag[j], 
-				exp_flag[j]);
-		    break;
-		case SF_INT:
-		    sf_intread((int*) bufi,
-			       nbuf,
-			       in[j]);
-		    add_int(collect, 
-			    nbuf,
-			    (int*) buf,
-			    (int*) bufi, 
-			    cmode, 
-			    scale[j], 
-			    add[j], 
-			    abs_flag[j], 
-			    log_flag[j], 
-			    sqrt_flag[j], 
-			    exp_flag[j]);
-		    break;
-		default:
-		    sf_error("wrong type");
-		    break;
-	    }
-	}
-
 	switch(type) {
 	    case SF_FLOAT:
-		sf_floatwrite((float*) buf,nbuf,out);
+		for (j=0; j < nin; j++) {
+		    collect = (bool) (j != 0);
+		    sf_floatread((float*) bufi,nbuf,in[j]);	    
+		    add_float(collect, cmode, nbuf,
+			      (float*) bufo, (float*) bufi, 
+			      scale[j], add[j]
+			);
+		}
+		sf_floatwrite((float*) bufo,nbuf,out);
 		break;
 	    case SF_COMPLEX:
-		sf_complexwrite((sf_complex*) buf,nbuf,out);
+		for (j=0; j < nin; j++) {
+		    collect = (bool) (j != 0);
+		    sf_complexread((sf_complex*) bufi,nbuf,in[j]);
+		    add_complex(collect, cmode, nbuf,
+				(sf_complex*) bufo, (sf_complex*) bufi, 
+				scale[j], add[j]
+			);
+		}
+		sf_complexwrite((sf_complex*) bufo,nbuf,out);
 		break;
 	    case SF_INT:
-		sf_intwrite((int*) buf,nbuf,out);
+		for (j=0; j < nin; j++) {
+		    collect = (bool) (j != 0);
+		    sf_intread((int*) bufi,nbuf,in[j]);
+		    add_int(collect, cmode, nbuf,
+			    (int*) bufo,(int*) bufi,
+			    scale[j], add[j]
+			);
+		}
+		sf_intwrite((int*) bufo,nbuf,out);
 		break;
 	    default:
 		sf_error("wrong type");
 		break;
 	}	
-	
     }
-    
     exit (0);
 }
 
+/*------------------------------------------------------------*/
 static void add_float (bool   collect, 
-		       size_t nbuf, 
-		       float* buf, 
-		       float* bufi, 
 		       char   cmode, 
+		       size_t nbuf, 
+		       float* bufo, 
+		       float* bufi, 
 		       float  scale, 
-		       float  add, 
-		       bool   abs_flag, 
-		       bool   log_flag, 
-		       bool   sqrt_flag, 
-		       bool   exp_flag)
+		       float  add)
 {
-    size_t j;
+    size_t jbuf;
     float f;
 
-    for (j=0; j < nbuf; j++) {
-	f = bufi[j];
-	if (abs_flag)    f = fabsf(f);
-	f += add;
-	if (log_flag)    f = logf(f);
-	if (sqrt_flag)   f = sqrtf(f);
-	if (1. != scale) f *= scale;
-	if (exp_flag)    f = expf(f);
-	if (collect) {
-	    switch (cmode) {
-		case 'p':
-		case 'm':
-		    buf[j] *= f;
-		    break;
-		case 'd':
-		    if (f != 0.) buf[j] /= f;
-		    break;
-		default:
-		    buf[j] += f;
-		    break;
-	    }
-	} else {
-	    buf[j] = f;
+    if (collect) {
+	switch (cmode) {
+	    case 'p':
+	    case 'm':
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    bufo[jbuf] *= scale*(bufi[jbuf] + add);
+		}
+		break;
+	    case 'd':
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf,f) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    f = scale*(bufi[jbuf] + add);
+		    if (f != 0.) bufo[jbuf] /= f;
+		}
+		break;
+	    default:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    bufo[jbuf] +=scale*(bufi[jbuf] + add);
+		}
+		break;
+	}
+    } else {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+	for(jbuf=0;jbuf<nbuf;jbuf++){
+	    bufo[jbuf] = scale*(bufi[jbuf] + add);
 	}
     }
 }
 
+/*------------------------------------------------------------*/
 static void add_int (bool   collect, 
-		     size_t nbuf, 
-		     int*   buf, 
-		     int*   bufi, 
 		     char   cmode, 
+		     size_t nbuf, 
+		     int*   bufo, 
+		     int*   bufi, 
 		     float  scale, 
-		     float  add, 
-		     bool   abs_flag, 
-		     bool   log_flag, 
-		     bool   sqrt_flag, 
-		     bool   exp_flag)
+		     float  add)
 {
-    size_t j;
+    size_t jbuf;
     float f;
 
-    for (j=0; j < nbuf; j++) {
-	f = (float) bufi[j];
-	if (abs_flag)    f = fabsf(f);
-	f += add;
-	if (log_flag)    f = logf(f);
-	if (sqrt_flag)   f = sqrtf(f);
-	if (1. != scale) f *= scale;
-	if (exp_flag)    f = expf(f);
-	if (collect) {
-	    switch (cmode) {
-		case 'p':
-		case 'm':
-		    buf[j] *= f;
-		    break;
-		case 'd':
-		    if (f != 0.) buf[j] /= f;
-		    break;
-		default:
-		    buf[j] += f;
-		    break;
-	    }
-	} else {
-	    buf[j] = f;
+    if (collect) {
+	switch (cmode) {
+	    case 'p':
+	    case 'm':
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    bufo[jbuf] *= scale*( (float) bufi[jbuf] + add);
+		}
+		break;
+	    case 'd':
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf,f) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    f = scale*( (float) bufi[jbuf] + add);
+		    if (f != 0.) bufo[jbuf] /= f;
+		}
+		break;
+	    default:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+		for(jbuf=0;jbuf<nbuf;jbuf++){
+		    bufo[jbuf] +=scale*( (float) bufi[jbuf] + add);
+		}
+		break;
+	}
+    } else {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#endif
+	for(jbuf=0;jbuf<nbuf;jbuf++){
+	    bufo[jbuf] = scale*( (float) bufi[jbuf] + add);
 	}
     }
 }
 
+/*------------------------------------------------------------*/
 static void add_complex (bool        collect, 
-			 size_t      nbuf, 
-			 sf_complex* buf, 
-			 sf_complex* bufi, 
 			 char        cmode, 
+			 size_t      nbuf, 
+			 sf_complex* bufo, 
+			 sf_complex* bufi, 
 			 float       scale, 
-			 float       add, 
-			 bool        abs_flag, 
-			 bool        log_flag, 
-			 bool        sqrt_flag, 
-			 bool        exp_flag)
+			 float       add)
 {
     size_t j;
     sf_complex c;
     
     for (j=0; j < nbuf; j++) {
 	c = bufi[j];
-	if (abs_flag)  {
-#ifdef SF_HAS_COMPLEX_H
-	    c = cabsf(c);
-#else
-	    c.r = cabsf(c);
-	    c.i = 0.;
-#endif
-	}
 #ifdef SF_HAS_COMPLEX_H
 	c += add;
 #else
 	c.r += add;
 #endif
-	if (log_flag)    c = clogf(c);
-	if (sqrt_flag)   c = csqrtf(c);
 	if (1. != scale) {
 #ifdef SF_HAS_COMPLEX_H
 	    c *= scale;
@@ -372,36 +329,35 @@ static void add_complex (bool        collect,
 	    c = sf_crmul(c,scale);
 #endif
 	}
-	if (exp_flag)    c = cexpf(c);
 	if (collect) {
 	    switch (cmode) {
 		case 'p':
 		case 'm':
 #ifdef SF_HAS_COMPLEX_H
-		    buf[j] *= c;
+		    bufo[j] *= c;
 #else
-		    buf[j] = sf_cmul(buf[j],c);
+		    bufo[j] = sf_cmul(bufo[j],c);
 #endif
 		    break;
 		case 'd':
 		    if (cabsf(c) != 0.) {
 #ifdef SF_HAS_COMPLEX_H			
-			buf[j] /= c;
+			bufo[j] /= c;
 #else
-			buf[j] = sf_cdiv(buf[j],c);
+			bufo[j] = sf_cdiv(bufo[j],c);
 #endif	
 		    }
 		    break;
 		default:
 #ifdef SF_HAS_COMPLEX_H	
-		    buf[j] += c;
+		    bufo[j] += c;
 #else
-		    buf[j] = sf_cadd(buf[j],c);
+		    bufo[j] = sf_cadd(bufo[j],c);
 #endif
 		    break;
 	    }
 	} else {
-	    buf[j] = c;
+	    bufo[j] = c;
 	}
     }
 }

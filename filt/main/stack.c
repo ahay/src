@@ -39,8 +39,9 @@ int main(int argc, char* argv[])
     sf_datatype type;
 
     sf_init (argc, argv);
-    in = sf_input ("in");
-    out = sf_output ("out");
+
+    in  = sf_input ( "in");
+    out = sf_output("out");
 
     if (!sf_getint("axis",&axis)) axis=2;
     /* which axis to stack */
@@ -92,8 +93,6 @@ int main(int argc, char* argv[])
         sf_putstring(out,key2,val);
     }
 
-    /* jennings 3/14/05 added min and max   */
-    
     if (!sf_getbool("rms",&rms)) rms = false;
     /* If y, compute the root-mean-square instead of stack. */
     if (rms || !sf_getbool("norm",&norm)) norm = true;
@@ -150,4 +149,3 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-/*  $Id$   */

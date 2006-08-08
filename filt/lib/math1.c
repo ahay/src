@@ -99,10 +99,10 @@ static sf_stack st1, st2;
 static void check (void);
 
 
-void sf_math_evaluate (int len /* stack length */, 
-		       int nbuf /* buffer length */, 
+void sf_math_evaluate (int     len  /* stack length */, 
+		       int     nbuf /* buffer length */, 
 		       float** fbuf /* number buffers */, 
-		       float** fst /* stack */)
+		       float** fst  /* stack */)
 /*< Evaluate a mathematical expression from stack (float numbers) >*/
 {
     char *op;
@@ -181,8 +181,8 @@ void sf_math_evaluate (int len /* stack length */,
     }
 }
 
-void sf_complex_math_evaluate (int len              /* stack length */, 
-			       int nbuf             /* buffer length */, 
+void sf_complex_math_evaluate (int          len  /* stack length */, 
+			       int          nbuf /* buffer length */, 
 			       sf_complex** fbuf /* number buffers */, 
 			       sf_complex** fst  /* stack */)
 /*< Evaluate a mathematical expression from stack (complex numbers) >*/
@@ -191,7 +191,7 @@ void sf_complex_math_evaluate (int len              /* stack length */,
     int *indx, i;
     sf_complex *num, f, *farr;
     cfunc fun;
-
+    
     sf_stack_set(st2,len);
 
     while (sf_full (st2)) {
@@ -289,8 +289,8 @@ void sf_complex_math_evaluate (int len              /* stack length */,
     }
 }
 
-size_t sf_math_parse (char* output /* expression */, 
-		      sf_file out  /* parameter file */,
+size_t sf_math_parse (char*       output /* expression */, 
+		      sf_file     out    /* parameter file */,
 		      sf_datatype datatype)
 /*< Parse a mathematical expression, returns stack length >*/ 
 {
@@ -510,5 +510,3 @@ static void check (void)
 	sf_error ("%s[%d]: syntax error in output",
 		  __FILE__,__LINE__);
 }
-
-/* 	$Id$	 */
