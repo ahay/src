@@ -19,20 +19,14 @@
 #include <rsf.h>
 
 #include "matmult.h"
+#include "tinysolver.h"
 
-#ifdef testit
-
-cgtest( x, yy, rr, fff, niter) {
-    real, dimension (:), intent (out) :: x, rr
-    real, dimension (:), intent (in)  :: yy
-    real, dimension (:,:), pointer    :: fff
-    integer,             intent (in)  :: niter
-    call matmult_init( fff)
-    call solver_tiny( m=x, d=yy, &
-	Fop=matmult_lop, stepper=cgstep, &
-	niter=niter, resd=rr)
-    call cgstep_close ()
-  }
+void cgtest(int nx, int ny, float *x, 
+	    const float *yy, float **fff, int niter) 
+/*< testing conjugate gradients with matrix multiplication >*/
+{
+    matmult_init( fff);
+    tinysolver( matmult_lop, sf_cgstep, nx, ny, x, yy, niter);
+    sf_cgstep_close();
 }
 
-#endif

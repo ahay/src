@@ -1727,7 +1727,7 @@ to achieve this design goal by means of generic function interfaces.
 \par
 A basic solver is \texttt{tinysolver}.
 
-\moddex{tinysolver}{tiny solver}{23}{53}{user/gee}
+\moddex{tinysolver}{tiny solver}{23}{53}{user/fomels}
 
 \par
 The two most important arguments in \texttt{tinysolver()}
@@ -1788,11 +1788,11 @@ from the \texttt{cgstep} solver to other solvers.
 
 \subsection{Test case: solving some simultaneous equations}
 \par
-Now we assemble a module \texttt{cgmeth} for solving simultaneous equations.
+Now we assemble a module \texttt{cgtest} for solving simultaneous equations.
 Starting with the conjugate-direction module {\tt cgstep} 
 \vpageref{lst:cgstep}
 we insert the module \texttt{matmult} \vpageref{lst:matmult} as the linear operator.
-\moddex{cgmeth}{demonstrate CD}
+\moddex{cgtest}{demonstrate CD}{24}{31}{user/fomels}
 
 \par
 Below shows the solution to $5 \times 4$ set of simultaneous equations.
@@ -1832,7 +1832,7 @@ One way to remove a mean value $m$ from signal $s(t)= \bold s$
 is with the fitting goal $\bold 0 \approx \bold s - m$.
 What operator matrix is involved?
 \item
-What linear operator subroutine from Chapter \ref{ajt/paper:ajt}
+What linear operator subroutine from Chapter \ref{paper:ajt}
 can be used for finding the mean?
 \item
 How many CD iterations should be required to get the exact mean value?
@@ -1843,6 +1843,7 @@ Write a mathematical expression for finding the mean by the CG method.
 %\end{notforlecture}
 
 \section{INVERSE NMO STACK}
+\inputdir{invstack}
 
 \sx{NMO stack}
 To illustrate an example of solving a huge set of simultaneous
@@ -1850,18 +1851,18 @@ equations without ever writing down the matrix of coefficients
 we consider how
 {\it \bx{back projection}} can be upgraded towards
 {\it \bx{inversion}} in the application called \bx{moveout and stack}.
-\activesideplot{invstack90}{width=3in}{ER}{
-        Top is a model trace $\bold m$.
-        Next are the synthetic data traces, $\bold d = \bold M \bold m$.
-        Then, labeled {\tt niter=0} is the \protect\bx{stack},
-        a result of processing by adjoint modeling.
-        Increasing values of {\tt niter} show $\bold x$
-        as a function of iteration count in the fitting goal
-        $\bold d \approx \bold M \bold m$.
-        (Carlos Cunha-Filho)
-        }
+\sideplot{invstack}{width=3in}{
+  Top is a model trace $\bold m$.
+  Next are the synthetic data traces, $\bold d = \bold M \bold m$.
+  Then, labeled {\tt niter=0} is the \protect\bx{stack},
+  a result of processing by adjoint modeling.
+  Increasing values of {\tt niter} show $\bold x$
+  as a function of iteration count in the fitting goal
+  $\bold d \approx \bold M \bold m$.
+  (Carlos Cunha-Filho)
+}
 \par
-The seismograms at the bottom of Figure~\ref{fig:invstack90}
+The seismograms at the bottom of Figure~\ref{fig:invstack}
 show the first four iterations of conjugate-direction inversion.
 You see the original rectangle-shaped waveform returning
 as the iterations proceed.
@@ -1881,14 +1882,14 @@ it is gratifying to see good convergence occurring
 after the first four iterations.
 The fitting is done by module {\tt invstack},
 which is just like
-\texttt{cgmeth} \vpageref{lst:cgmeth} except that the matrix-multiplication operator
+\texttt{cgtest} \vpageref{lst:cgtest} except that the matrix-multiplication operator
 \texttt{matmult} \vpageref{lst:matmult} has been replaced by
 \texttt{imospray} \vpageref{lst:imospray}.
 Studying the program,
 you can deduce that,
 except for a scale factor,
 the output at {\tt niter=0} is identical to the stack $\bold M' \bold d$.
-All the signals in Figure~\ref{fig:invstack90} are intrinsically the same scale.%
+All the signals in Figure~\ref{fig:invstack} are intrinsically the same scale.%
 \moddex{invstack}{inversion stacking}
 \par
 This simple inversion is inexpensive.
@@ -1909,11 +1910,12 @@ NMO soon fails,
 but wave-equation forward modeling
 offers interesting opportunities for inversion.
 
+\begin{comment}
 \section{VESUVIUS PHASE UNWRAPPING}
 \sx{Vesuvius}
 \sx{phase unwrapping}
 \sx{phase}
-Figure \ref{fig:vesuvio90} shows
+Figure \ref{fig:vesuvio} shows
 radar\footnote{
 	Here we do not require knowledge of radar fundamentals.
 	Common theory and practice is briefly surveyed in
@@ -1934,29 +1936,29 @@ The signals are very high frequency
 They were Fourier transformed
 and one multiplied by the complex conjugate of the other,
 getting the product $Z=S_1(\omega) \bar S_2(\omega)$.
-The product's amplitude and phase are shown in Figure \ref{fig:vesuvio90}.
+The product's amplitude and phase are shown in Figure \ref{fig:vesuvio}.
 Examining the data,
 you can notice that where the signals are strongest (darkest on the left),
 the phase (on the right)
 is the most spatially consistent.
 Pixel by pixel evaluation with the two frames in a movie program
 shows that there are a few somewhat large local amplitudes
-(clipped in Figure \ref{fig:vesuvio90})
+(clipped in Figure \ref{fig:vesuvio})
 but because these generally have spatially consistent phase,
 I would not describe the data as containing noise bursts.
-\activeplot{vesuvio90}{width=6in,height=3in}{ER}{
-        Radar image of Mt. Vesuvius.
-        Left is the amplitude.
-        Non-reflecting ocean in upper left corner.
-        Right is the phase.
-        (Umberto Spagnolini)
-        }
+%\plot{vesuvio}{width=6in,height=3in}{
+%  Radar image of Mt. Vesuvius.
+%  Left is the amplitude.
+%  Non-reflecting ocean in upper left corner.
+%  Right is the phase.
+%  (Umberto Spagnolini)
+%}
 
 \par
 To reduce the time needed for analysis and printing,
 I reduced the data size two different ways,
 by decimation and by local averaging,
-as shown in Figure \ref{fig:squeeze90}.
+as shown in Figure \ref{fig:squeeze}.
 The decimation was to about 1 part in 9 on each axis,
 and the local averaging was done in $9\times 9$ windows
 giving the same spatial resolution in each case.
@@ -1965,13 +1967,13 @@ plane of the real part and the plane of the imaginary part.
 Putting them back together again showed that the phase
 angle of the averaged data behaves much more consistently.
 This adds evidence that the data is not troubled by noise bursts.
-\activeplot{squeeze90}{width=6in,height=3in}{ER}{
-        Phase based on decimated data (left)
-        and smoothed data (right).
-        }
+%\plot{squeeze}{width=6in,height=3in}{ER}{
+%  Phase based on decimated data (left)
+%  and smoothed data (right).
+%}
 
 \par
-From Figures \ref{fig:vesuvio90} and \ref{fig:squeeze90}
+From Figures \ref{fig:vesuvio} and \ref{fig:squeeze}
 we see that \bx{contour}s of constant phase
 appear to be contours of constant altitude;
 this conclusion leads us to suppose that a study of radar theory
@@ -2198,24 +2200,24 @@ Otherwise,
 with probability 1/6 each, they summed to $\pm2\pi$.
 The nonvanishing curl represents a phase that is changing
 too rapidly between the mesh points.
-Figure \ref{fig:screw90} shows the locations
+Figure \ref{fig:screw} shows the locations
 at Vesuvius where bad data occurs.
 This is shown at two different resolutions.
 The figure shows a tendency for
 bad points with curl $2\pi$ to have a neighbor with $-2\pi$.
 If Vesuvius were random noise instead of good data,
-the planes in Figure \ref{fig:screw90} would be one-third covered with dots
+the planes in Figure \ref{fig:screw} would be one-third covered with dots
 but as expected, we see considerably fewer.
-\activeplot{screw90}{width=6in,height=3in}{ER}{ 
-        Values of curl at Vesuvius.
-        The bad data locations at both coarse and fine resolution
-        tend to occur in pairs of opposite polarity.
-        }
+%\plot{screw}{width=6in,height=3in}{ 
+%  Values of curl at Vesuvius.
+%  The bad data locations at both coarse and fine resolution
+%  tend to occur in pairs of opposite polarity.
+% }
 
 \subsection{Estimating the inverse gradient}
 To optimize the fitting goal (\ref{eqn:diffgrad}),
 module \texttt{unwrap()} uses the conjugate-direction method
-like the modules \texttt{cgmeth()} \vpageref{lst:cgmeth} and 
+like the modules \texttt{cgtest()} \vpageref{lst:cgtest} and 
 \texttt{invstack()} \vpageref{lst:invstack}.
 
 %\end{notforlecture}
@@ -2225,17 +2227,17 @@ An open question is whether the required number of iterations is reasonable
 or whether we would need to uncover a preconditioner
 or more rapid solution method.
 I adjusted the frame size 
-(by the amount of smoothing in Figure \ref{fig:squeeze90})
+(by the amount of smoothing in Figure \ref{fig:squeeze})
 so that I would get the solution in about ten seconds with 400 iterations.
 Results are shown in
-Figure~\ref{fig:veshigh90}.
-\activeplot{veshigh90}{width=6in,height=3in}{ER}{ 
-        Estimated altitude.
-        }
+Figure~\ref{fig:veshigh}.
+%\plot{veshigh}{width=6in,height=3in}{ 
+%  Estimated altitude.
+%}
 To summarize, the input is the phase map
-Figure~\ref{fig:vesuvio90}
+Figure~\ref{fig:vesuvio}
 and the output is the altitude map in
-Figure~\ref{fig:veshigh90}.
+Figure~\ref{fig:veshigh}.
 Oddly, the input looks maybe nicer than the output
 because it already looks something like a contour plot.
 So if we have a beauty contest, then the input beats
@@ -2244,8 +2246,9 @@ the (normalized) altitude $h(x,y)$,
 not the phase of $e^{ih(x,y)}$,
 then you need to solve the least squares problem.
 
+\end{comment}
 \begin{comment}
-When we are working with figures like Figure~\ref{fig:veshigh90},
+When we are working with figures like Figure~\ref{fig:veshigh},
 the number of iterations often exceeds the number of intermediate
 output frames that we care to deal with.
 The computer function \texttt{klick()} is a simple tool
@@ -2253,10 +2256,11 @@ to detect logarithmically spaced intervals for taking snapshots
 of iterative descent.
 \progdex{klick}{Logarithmic increment detect}
 \end{comment}
+\begin{comment}
 
 \subsection{Discontinuity in the solution}
 The viewing angle (23 degrees off vertical)
-in Figure \ref{fig:vesuvio90} might be such
+in Figure \ref{fig:vesuvio} might be such
 that the mountain blocks some of the landscape behind it.
 This leads to the interesting possibility
 that the phase function must have a discontinuity
@@ -2265,10 +2269,10 @@ It will be interesting to discover whether
 we can estimate functions with such discontinuities.
 I am not certain that the Vesuvius data
 really has such a shadow zone, so I prepared the synthetic
-data in Figure \ref{fig:synmod90},
+data in Figure \ref{fig:synmod},
 which is noise free and definitely has one.
 \par
-We notice the polarity of the synthetic data in \ref{fig:synmod90}
+We notice the polarity of the synthetic data in \ref{fig:synmod}
 is opposite that of the Vesuvius data. 
 This means that the radar altitude of Vesuvius is
 not measured from sea level but from the satellite level.
@@ -2286,6 +2290,7 @@ not measured from sea level but from the satellite level.
 %is like the faults we find in the earth.
 
 \begin{exer}
+\end{comment}
 \begin{comment}
 \item
   
@@ -2304,6 +2309,7 @@ not measured from sea level but from the satellite level.
  Has the iteration converged?
  Does it look like the correct answer was obtained?  Why or why not?
 \end{comment}
+\begin{comment}
 \item
 In differential equations,
 boundary conditions are often (1) a specified function value
@@ -2319,12 +2325,10 @@ which has transient boundaries.
 %\texttt{tcai2} \vpageref{lst:tcai2}.
 \end{exer}
 
-\activeplot{synmod90}{width=6in,height=1.5in}{ER}{ 
-        Synthetic mountain with hidden backside.
-        For your estimation enjoyment.
-        }
-
-
+%\plot{synmod}{width=6in,height=1.5in}{ 
+%  Synthetic mountain with hidden backside.
+%  For your estimation enjoyment.
+%}
 
 \subsection{Fourier solution}
 
@@ -2491,15 +2495,7 @@ You have measured all possible time lags $\tau_{i,j}$
 between station $i$ and station $j$.
 What operator would you be giving to the solver?
 
-
-
-
-
-
-
-
-
-
+\end{comment}
 
 %\begin{notforlecture}
 \section{THE WORLD OF CONJUGATE GRADIENTS}
