@@ -43,27 +43,39 @@ for key in keys:
 az = 0.79 + 0.5*math.pi
 sin = math.sin(az)
 cos = math.cos(az)
+dx = 50
+dy = 50
 rotate = '''
 math
 sx=${SOURCES[0]} sy=${SOURCES[1]}
 gx=${SOURCES[2]} gy=${SOURCES[3]}
-output="((%g)*%sx+(%g)*%sy)/1000"
+output="%g+((%g)*%sx+(%g)*%sy)/1000"
 '''
 
 for key in ('s','g'):
-    Flow(key+'x2',keys,rotate % (cos,key,sin,key)) 
-    Flow(key+'y2',keys,rotate % (-sin,key,cos,key))
+    Flow(key+'x2',keys,rotate % (dx, cos,key,sin,key)) 
+    Flow(key+'y2',keys,rotate % (dy,-sin,key,cos,key))
     Plot(key,[key+'x2',key+'y2'],
          '''
          cmplx $SOURCES |
          window j1=100 |
-         graph symbol=%s title="%s Distribution"
+         graph symbol=%s title="%s Distribution" 
          label1=%sx label2=%sy unit1=km unit2=km
-         transp=y
+         transp=n
          ''' % (key,('Source','Receiver')[key=='g'],key,key),
          stdin=0)
 
-Result('geom','s g','SideBySideAniso')
+# Plot receivers in the coordinate frame of the water bottom
+Plot('g2','gx2 gy2',
+     '''
+     cmplx $SOURCES |
+     window j1=100 |
+     graph symbol=x wanttitle=n
+     transp=n min1=0 max1=100.4 min2=0 max2=46 pad=n
+     screenratio=0.4 screenht=6 scalebar=y wantaxis=n
+     ''', stdin=0)
+
+Result('geom','s g','OverUnderAniso')
 
 # Create a geometry cube [4 (sx,sy,gx,gy) * receivers * shots]
 Flow('hmat','sx2 sy2 gx2 gy2',
@@ -80,9 +92,149 @@ Result('hmat',
        transp | graph symbol=* symbolsz=6,2 wanttitle=n
        ''')
 
-# Offsets
-Flow('hx','hmat','headermath sx=0 gx=1 output=gx-sx')
-Flow('hy','hmat','headermath sy=0 gy=1 output=gy-sy')
 
+# Offsets
+Flow('hx','hmat','headermath sx=0 gx=2 output=gx-sx')
+Flow('hy','hmat','headermath sy=1 gy=3 output=gy-sy')
+Flow('off','hx hy','cmplx $SOURCES[:2]',stdin=0)
+Flow('roff','hx hy','cat ${SOURCES[1]} axis=1')
+
+# Watter bottom
+wb = 'waz_q_wb_feet'
+
+# xyz points in ascii format
+Fetch(wb,'claudio',private)
+
+# convert to RSF format 
+Flow('xyz','./'+wb,
+     '''
+     echo in=$SOURCE data_format=ascii_float n1=3 n2=463305 |
+     dd form=native
+     ''',stdin=0)
+
+# Extract z, put on an xy 2-D grid, convert from ft to km
+Flow('z','xyz',
+     '''
+     window n1=1 f1=2 |
+     put n1=461 n2=1005 o1=0 d1=0.1 o2=0 d2=0.1
+     label2=West-East unit2=km label1=South-North unit1=km |
+     scale dscale=0.0003048 | transp
+     ''')
+
+Plot('z',
+     '''
+     grey pclip=100  bias=1.5 scalebar=y title="Watter Bottom"
+     screenratio=0.4 screenht=6 barlabel=Depth barunit=km
+     yreverse=n transp=n
+     ''')
+
+# Make sampling 25 m instead of 100 m
+Flow('zdens','z',
+     '''
+     remap1 n1=4017 d1=0.025 o1=0 |
+     transp |
+     remap1 n1=1841 d1=0.025 o1=0 |
+     transp
+     ''')
+
+# Reflector slope inline
+Flow('zx','zdens','deriv')
+# Reflector slope crossline
+Flow('zy','zdens','transp | deriv | transp')
+
+Result('wb','z g2','Overlay')
+
+# select receiver geometry
+Flow('recr','hmat','window f1=2')
+
+# select source geometry
+Flow('offset','hmat recr','window n1=2 | add scale=-1,1 ${SOURCES[1]}')
+
+Flow('shot','hmat','window n1=2 n2=1 squeeze=n')
+
+# Merge receiver and shot geometries in compact form
+
+Flow('geom','recr shot','cat axis=2 ${SOURCES[1]}')
+
+# Select one shot
+
+Flow('geom1','geom','window n3=1 f3=900')
+Flow('off1','off','window n3=1 f3=900')
+Flow('roff1','roff','window n3=1 f3=900')
+
+Flow('geom100','geom','window n3=100')
+
+##### Kirchhoff modeling ######
+
+# Modeling to irregular geometry
+
+Flow('kmodl1','zdens zx zy geom1',
+     '''
+     kirmod3 dipx=${SOURCES[1]} dipy=${SOURCES[2]} head=${SOURCES[3]} 
+     nt=1501 dt=0.004 vel=1.5 aper=5
+     ''')
+
+# Binning to a regular grid
+
+nx=318
+x0=-0.025
+dx=-0.025
+
+ny=15
+y0=-1.025
+dy=0.100
+
+Plot('roff1',
+     '''
+     dd type=complex |
+     graph symbol=x plotcol=6 wanttitle=Irregular
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (x0+(nx-1)*dx,x0,y0,y0+(ny-1)*dy))
+Flow('xx',None,'math n1=%d o1=%g d1=%g n2=%d output=x1' % (nx,x0,dx,ny))
+Flow('yy',None,'math n2=%d o2=%g d2=%g n1=%d output=x2' % (ny,y0,dy,nx))
+Plot('regul','xx yy',
+     '''
+     cmplx ${SOURCES[:2]} |
+     graph symbol=x plotcol=5 wanttitle=Regular
+     min1=%g max1=%g min2=%g max2=%g
+     ''' % (x0+(nx-1)*dx,x0,y0,y0+(ny-1)*dy))
+
+Plot('flip','roff1 regul','Movie')
+
+Flow('bin1 fold1','kmodl1 roff1',
+     '''
+     transp memsize=500 |
+     bin head=${SOURCES[1]} fold=${TARGETS[1]} xkey=0 ykey=1
+     nx=%d x0=%g dx=%g
+     ny=%d y0=%g dy=%g |
+     transp plane=23 memsize=500 | transp memsize=500
+     ''' % (nx,x0,dx,ny,y0,dy))
+
+Result('bin1',
+       '''
+       window min1=2 | byte gainpanel=all | grey3 title="Binned Shot"
+       frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9
+       ''')
+
+# Modeling to regular geometry
+
+Flow('kmodr1','zdens zx zy',
+     '''
+     kirmod3 dipx=${SOURCES[1]} dipy=${SOURCES[2]}
+     nsx=1 s0x=53.85 dsx=1
+     nsy=1 s0y=23.37 dsy=1
+     nhx=%d h0x=%g dhx=%g
+     nhy=%d h0y=%g dhy=%g
+     nt=1501 dt=0.004 vel=1.5 aper=5
+     ''' % (nx,x0,dx,ny,y0,dy))
+
+Result('kmodr1',
+       '''
+       window min1=2 | byte | grey3 title="Regular Shot"
+       frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9
+       ''')
+
+Flow('kmodl100','z geom100',
+     'kirmod3 head=${SOURCES[1]} nt=1001 dt=0.004 vel=1.5 freq=25')
 
 End()

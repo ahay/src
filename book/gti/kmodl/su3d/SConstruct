@@ -18,8 +18,8 @@ Flow('test','reft',
 Result('test',
        '''
        byte gainpanel=all |
-       grey3 frame1=60 frame2=50 frame3=50 title=Test flat=y
-       label2="In-line (km)" label3="Cross-line (km)"
+       grey3 frame1=50 frame2=50 frame3=50 title=Test flat=y
+       label2=In-line unit2=km label3=Cross-line unit3=km
        ''')
 
 End()

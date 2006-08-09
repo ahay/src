@@ -1,6 +1,7 @@
 from rsfproj import *
 
-Flow('vrms',None,'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
+Flow('vrms',None,
+     'math d1=0.004 n1=1001 o1=0 output="x1*125+2000+50*sin(9*x1)" ')
 
 Flow('synt',None,
      '''
@@ -15,7 +16,8 @@ Flow('cmp0','synt vrms',
      'inmo velocity=${SOURCES[1]} half=n | noise seed=2007 var=0.01')
 
 Flow('top','synt','window n1=400')
-Flow('mid','synt','window f1=400 n1=300 | math output="input*(1-x2*%g)" ' % (2.0/3500))
+Flow('mid','synt',
+     'window f1=400 n1=300 | math output="input*(1-x2*%g)" ' % (2.0/3500))
 Flow('bot','synt','window f1=700')
 
 Flow('cmp1','top mid bot vrms',

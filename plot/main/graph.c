@@ -36,7 +36,7 @@ static void getminmax(const float* f, float* min, float* max);
 
 int main(int argc, char* argv[])
 {
-    bool transp, start;
+    bool transp;
     int n1, n2, n3, i1, i2, i3, len;
     float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    

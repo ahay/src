@@ -31,7 +31,7 @@ An addition operation can be performed by sfstack.
 
 int main(int argc, char* argv[])
 {
-    int i, i1, i2, n1, n2, nt, len, mem, nkey;
+    int i, i1, i2, n1, n2, n3, n, nt, len, mem, nkey;
     sf_file in, out;
     off_t memsize;
     char *eq, *output, *key, *arg;
@@ -69,6 +69,7 @@ int main(int argc, char* argv[])
 
     if (!sf_histint(in,"n1",&n1)) n1=1;
     if (!sf_histint(in,"n2",&n2)) n2=1;
+    n3 = sf_leftsize(in,2); /* left dimensions after the first two */
     if (n1 > 1) { 
 	if (n2 > 1) { /* input: many keys */
 	    sf_putint(out,"n1",1);
@@ -96,9 +97,9 @@ int main(int argc, char* argv[])
     ftra = sf_floatalloc2(n1,nt);
     fbuf = sf_floatalloc2(nt,n1+3);
     fst  = sf_floatalloc2(nt,len+3);
-    
-    for (; n2 > 0; n2 -= nt) {
-	if (n2 < nt) nt=n2;
+
+    for (n=n2*n3; n > 0; n -= nt) {
+	if (n < nt) nt=n;
 
 	sf_floatread(ftra[0],n1*nt,in);
 
@@ -112,7 +113,7 @@ int main(int argc, char* argv[])
 		fbuf[i1+3][i2]=ftra[i2][i1];
 	    }
 	}
-
+	
 	sf_math_evaluate (len, nt, fbuf, fst);
 	sf_floatwrite(fst[1],nt,out);
     }

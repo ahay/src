@@ -15,9 +15,10 @@
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import pydoc
-import re, sys, os, string, glob, commands, string
+import re, sys, os, string, glob, string
 
 progs = {}
+data = {}
 
 def subdirs():
     return filter(lambda x: x[-5:] != '_html',
@@ -47,16 +48,27 @@ def use(target=None,source=None,env=None):
                 print "...%s" % chapter
                 for project in subdirs():
                     os.chdir(project)
-                    (status,progs) = \
-                    commands.getstatusoutput('scons -s .sf_uses')
-                    if status:
-                        print ('No uses found in book/%s/%s/%s/: %s' %
-                               (book,chapter,project,progs))
-                    elif string.find(progs,'scons') < 0:
-                        for prog in string.split(progs):
-                            doc.append(
-                                'rsfdoc.progs["%s"].use("%s","%s","%s")' %
-                                (prog,book,chapter,project))
+
+                    #  (status,progs) = \
+                    #  commands.getstatusoutput('scons -s .sf_uses')
+
+                    for case in ('uses',):
+                        sin, sout, serr = os.popen3('scons -s .sf_'+case)
+                        sin.close()
+                        progs = sout.read()
+                        sout.close()
+                        status = serr.read()
+                        serr.close() 
+
+                        if status:
+                            print ('No %s found in book/%s/%s/%s/: %s' %
+                                   (case,book,chapter,project,status))
+                        elif string.find(progs,'scons') < 0:
+                            for prog in string.split(progs):
+                                doc.append(
+                                    'rsfdoc.%s["%s"].use("%s","%s","%s")' %
+                                    (('progs','data')[case=='data'],
+                                     prog,book,chapter,project))
                     os.chdir('..')
                 os.chdir('..')
             os.chdir('..')
@@ -194,6 +206,17 @@ class rsfpar:
         tex = '\\underline{%s} & \\textbf{%s%s} & %s & ' % \
               (self.type,name,self.default,self.range)
         return tex + self.desc + '\\\\ \n'
+
+class rsfdata:
+    def __init__(self,name):
+        self.name = name
+        self.uses = {}
+    def use (self,book,chapter,project):
+        if not self.uses.has_key(book):
+            self.uses[book]={}
+        if not self.uses[book].has_key(chapter):
+            self.uses[book][chapter] = []
+        self.uses[book][chapter].append(project)
         
 class rsfprog:
     def __init__(self,name,file,desc=None):

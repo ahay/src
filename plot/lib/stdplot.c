@@ -1268,7 +1268,7 @@ void vp_frame(void)
 
 	    num = label2->max+(frame1+0.5)*d1;
 	    if (fabsf(d1) > FLT_EPSILON && 
-		fabsf(num) < FLT_EPSILON) num=0.;
+		fabsf(num) < 0.001*fabsf(d1)) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 
 	    vp_tjust (TH_CENTER, TV_TOP);

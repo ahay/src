@@ -35,34 +35,22 @@ typedef struct Velocity3 {
 
 #endif
 
-static int nh;
-static float fx, dx, fy, dy, s0x, dsx, s0y, dsy, h0x, dhx, h0y, dhy;
+static float fx, dx, fy, dy;
 static velocity3 v;
 static char type;
 static float ***curve, ***dipx, ***dipy; 
 
-void kirmod3_init(float s0x1, float dsx1           /* source inline */,
-		  float s0y1, float dsy1           /* source crossline */,
-		  int nhx, float h0x1, float dhx1  /* offset inline */,
-		  int nhy, float h0y1, float dhy1  /* offset crossline */,
-		  float fx1, float dx1,
+void kirmod3_init(float fx1, float dx1,
 		  float fy1, float dy1             /* reflector sampling */,
 		  velocity3 v1                     /* velocity attributes */,
 		  char type1                       /* velocity distribution */,
 		  float ***curve1                  /* reflectors */,
 		  float ***dipx1                   /* reflector inline dip */,
-		  float ***dipy1                   /* reflector crossline dip */)
+		  float ***dipy1                   /* reflector cross dip */)
 /*< Initialize >*/ 
 {
-    s0x = s0x1; dsx = dsx1;
-    s0y = s0y1; dsy = dsy1;
-
-    h0x = h0x1; dhx = dhx1;
-    h0y = h0y1; dhy = dhy1;
-
     dx = dx1; fx = fx1;
     dy = dy1; fy = fy1;
-    nh = nhx*nhy;
 
     v = v1;
     type = type1;
@@ -71,21 +59,17 @@ void kirmod3_init(float s0x1, float dsx1           /* source inline */,
     dipy = dipy1;
 }
 
-void kirmod3_map(ktable ta, int isx, int isy, int ihx, int ihy, int ix, int iy, int ic) 
+void kirmod3_map(ktable ta          /* ray attribute object */,
+		 const float *xy    /* surface position */,
+		 int ix, int iy     /* point on the surface */,
+		 int ic             /* surface number */) 
 /*< Compute traveltimes and amplitudes >*/
 {
-    float sx, sy, x, y, z, x2, y2, zx, zy, x1, y1, px, py, pz, r, v1, g, gy, gx, gz, dz;
-
-    sy = s0y + isy*dsy;
-    sx = s0x + isx*dsx;    
-
-    if (ihx < nh) {
-	x1 = sx + h0x + ihx*dhx;
-	y1 = sy + h0y + ihy*dhy;
-    } else {
-	x1 = sx;
-	y1 = sy;
-    }
+    float x, y, z, x2, y2, zx, zy, x1, y1;
+    float px, py, pz, r, v1, g, gy, gx, gz, dz;
+    
+    x1 = xy[0];
+    y1 = xy[1];
 
     v1 = (v->v0)+
 	(v->gy)*(y1-(v->y0))+

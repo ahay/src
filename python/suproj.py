@@ -94,6 +94,7 @@ class SUProject(rsfproj.Project):
         else:
             self.Command('view',None,'echo "There is nothing to view" ')
         self.Command('.sf_uses',None,'echo %s' % string.join(self.coms,' '))
+        self.Command('.sf_data',None,'echo %s' % string.join(self.data,' '))
 
 def little_endian():
     "check for endianness"

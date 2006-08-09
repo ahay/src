@@ -29,13 +29,15 @@
 int main(int argc, char* argv[]) 
 {
     int nx,ny, nt, nsx,nsy, nhx,nhy, nc, nxyc, isx,isy, ihx,ihy, ix,iy, ic;
+    int ns,nh, two, is, ih;
     float ***rfl, ***rgd, ***crv, ***dipx, ***dipy, *trace;
-    float slow, dx, x0, dy, y0, dt, t0, dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
-    float theta, ava, amp, obl, ***time, ***ampl, ***delt, freq;
+    float slow, dx, x0, dy, y0, dt, t0, aper, x, y, dx1, dy1, dx2, dy2;
+    float dsx, dsy, s0x, s0y, dhx, h0x, dhy, h0y, r0;
+    float theta, ava, amp, obl, ***time, ***ampl, ***delt, **geom, freq;
     char *type;
     velocity3 vel;
     ktable ts, tg;
-    sf_file refl, curv, modl;
+    sf_file refl, curv, modl, head;
     
     sf_init(argc,argv);
     curv = sf_input("in");
@@ -68,51 +70,76 @@ int main(int argc, char* argv[])
     
     /*** Initialize shots ***/
     
-    if (!sf_getint("nsx",&nsx)) nsx=nx;
-    /* number of inline shots */
-    if (!sf_getfloat("s0x",&s0x)) s0x=x0;
-    /* first inline shot */
-    if (!sf_getfloat("dsx",&dsx)) dsx=dx;
-    /* inline shot increment */
-    
-    sf_putfloat(modl,"o4",s0x);
-    sf_putfloat(modl,"d4",dsx);
-    sf_putint(modl,"n4",nsx);
-    
-    if (!sf_getint("nsy",&nsy)) nsy=ny;
-    /* number of crossline shots */
-    if (!sf_getfloat("s0y",&s0y)) s0y=y0;
-    /* first crossline shot */
-    if (!sf_getfloat("dsy",&dsy)) dsy=dy;
-    /* crossline shot increment */
+    if (NULL != sf_getstring("head")) {
+	/* source-receiver geometry (optional) */
 
-    sf_putfloat(modl,"o5",s0y);
-    sf_putfloat(modl,"d5",dsy);
-    sf_putint(modl,"n5",nsy);
+	/* possibly irregular geometry in a file */
+	head = sf_input("head");
+
+	if (SF_FLOAT != sf_gettype(head)) sf_error("Need float type in head");
+	if (!sf_histint(head,"n1",&two) || two != 2) 
+	    sf_error("Need n1=2 in head");
+	if (!sf_histint(head,"n2",&nh) || nh < 2) 
+	    sf_error("Need n2 >=2 in head"); 
+	nh--; /* nh includes shot */
+	if (!sf_histint(head,"n3",&ns)) ns=1;
+
+	sf_putint(modl,"n2",nh);
+	sf_putint(modl,"n3",ns);	    
+    } else {
+	/* assume regular geometry */
+	head = NULL;
+
+	if (!sf_getint("nsx",&nsx)) nsx=nx;
+	/* number of inline shots */
+	if (!sf_getfloat("s0x",&s0x)) s0x=x0;
+	/* first inline shot */
+	if (!sf_getfloat("dsx",&dsx)) dsx=dx;
+	/* inline shot increment */
     
-    /*** Initialize offsets ***/
-
-    if (!sf_getint  ("nhx",&nhx)) nhx=nx;
-    /* number of inline offsets */
-    if (!sf_getfloat("h0x",&h0x)) h0x=0.;
-    /* first inline offset */
-    if (!sf_getfloat("dhx",&dhx)) dhx=dx;
-    /* inline offset increment */
-
-    sf_putint  (modl,"n2",nhx);
-    sf_putfloat(modl,"o2",h0x);
-    sf_putfloat(modl,"d2",dhx);
+	sf_putfloat(modl,"o4",s0x);
+	sf_putfloat(modl,"d4",dsx);
+	sf_putint(modl,"n4",nsx);
     
-    if (!sf_getint  ("nhy",&nhy)) nhy=ny;
-    /* number of crossline offsets */
-    if (!sf_getfloat("h0y",&h0y)) h0y=0.;
-    /* first crossline offset */
-    if (!sf_getfloat("dhy",&dhy)) dhy=dy;
-    /* crossline offset increment */
+	if (!sf_getint("nsy",&nsy)) nsy=ny;
+	/* number of crossline shots */
+	if (!sf_getfloat("s0y",&s0y)) s0y=y0;
+	/* first crossline shot */
+	if (!sf_getfloat("dsy",&dsy)) dsy=dy;
+	/* crossline shot increment */
+	
+	sf_putfloat(modl,"o5",s0y);
+	sf_putfloat(modl,"d5",dsy);
+	sf_putint(modl,"n5",nsy);
+    
+	ns = nsx*nsy;
 
-    sf_putint  (modl,"n3",nhy);
-    sf_putfloat(modl,"o3",h0y);
-    sf_putfloat(modl,"d3",dhy);
+	/*** Initialize offsets ***/
+	
+	if (!sf_getint  ("nhx",&nhx)) nhx=nx;
+	/* number of inline offsets */
+	if (!sf_getfloat("h0x",&h0x)) h0x=0.;
+	/* first inline offset */
+	if (!sf_getfloat("dhx",&dhx)) dhx=dx;
+	/* inline offset increment */
+
+	sf_putint  (modl,"n2",nhx);
+	sf_putfloat(modl,"o2",h0x);
+	sf_putfloat(modl,"d2",dhx);
+	
+	if (!sf_getint  ("nhy",&nhy)) nhy=ny;
+	/* number of crossline offsets */
+	if (!sf_getfloat("h0y",&h0y)) h0y=0.;
+	/* first crossline offset */
+	if (!sf_getfloat("dhy",&dhy)) dhy=dy;
+	/* crossline offset increment */
+
+	sf_putint  (modl,"n3",nhy);
+	sf_putfloat(modl,"o3",h0y);
+	sf_putfloat(modl,"d3",dhy);
+
+	nh = nhx*nhy;
+    }
 
     /*** Initialize reflector ***/
 
@@ -218,17 +245,16 @@ int main(int argc, char* argv[])
     }
 	
     if (!sf_getfloat("refx",&(vel->x0))) (vel->x0)=x0;
+    if (!sf_getfloat("refy",&(vel->y0))) (vel->y0)=y0;
     if (!sf_getfloat("refz",&(vel->z0))) (vel->z0)=0.;
     /* reference coordinates for velocity */
+
+    if (!sf_getfloat("aper",&aper)) aper=hypotf(nx*dx,ny*dy);
+    /* aperture */
+    aper *= aper;
     
     /*** Allocate space ***/    
-    kirmod3_init(s0x, dsx, 
-		 s0y, dsy,
-		 nhx, h0x, dhx, 
-		 nhy, h0y, dhy, 
-		 x0, dx, 
-		 y0, dy,
-		 vel, type[0], crv, dipx, dipy);
+    kirmod3_init(x0, dx, y0, dy, vel, type[0], crv, dipx, dipy);
     ts = (ktable) sf_alloc(1,sizeof(*ts));
     tg = (ktable) sf_alloc(1,sizeof(*tg));
 
@@ -239,20 +265,58 @@ int main(int argc, char* argv[])
     time = sf_floatalloc3(nx,ny,nc);
     ampl = sf_floatalloc3(nx,ny,nc);
     delt = sf_floatalloc3(nx,ny,nc);
+    geom = sf_floatalloc2(2,nh+1);
 
     if (!sf_getfloat("freq",&freq)) freq=0.2/dt;
     /* peak frequency for Ricker wavelet */
     ricker_init(nt*2,freq*dt,2);
 
     /*** Main loop ***/
-    for (isy=0; isy < nsy; isy++) { for (isx=0; isx < nsx; isx++) {
-	if (0==(isx+nsx*isy)%(nx*nsy/10+1)) sf_warning("source %d of %d",isx+nsx*isy+1,nsx*nsy);
+    /* loop over sources */
+    for (is=0; is < ns; is++) { 
+	if (0==is%(ns/10+1)) sf_warning("source %d of %d",is+1,ns);
+	
+	if (NULL == head) { /* regular */
+	    isy = is/nsx;
+	    isx = is - isy*nsx;
 
-	for (ihy=0; ihy < nhy; ihy++) { for (ihx=0; ihx < nhx; ihx++) {
+	    geom[nh][0] = s0x + isx*dsx;
+	    geom[nh][1] = s0y + isy*dsy;
+	} else { /* irregular */
+	    sf_floatread(geom[0],2*(nh+1),head);
+	}
+
+
+	/* loop over offsets */
+	for (ih=0; ih < nh; ih++) { 
+	    if (NULL == head) { /* regular */		
+		ihy = ih/nhx;
+		ihx = ih - ihy*nhx;
+		
+		geom[ih][0] = geom[nh][0] + h0x + ihx*dhx;
+		geom[ih][1] = geom[nh][1] + h0y + ihy*dhy;
+	    }	
+
+	    /* loop over surface */
 	    for (iy=0; iy < ny; iy++) { for (ix=0; ix < nx; ix++) {
+		x = x0+ix*dx; dx1 = x-geom[nh][0]; dx2 = x-geom[ih][0];
+		y = y0+iy*dy; dy1 = y-geom[nh][1]; dy2 = y-geom[ih][1];
+
+		/* skip if outside the aperture */
+		if (aper < dx1*dx1 + dy1*dy1 ||
+		    aper < dx2*dx2 + dy2*dy2) {
+		    for (ic=0; ic < nc; ic++) {
+			time[ic][iy][ix] = t0+2.*nt*dt;
+			ampl[ic][iy][ix] = 0.;
+			delt[ic][iy][ix] = dt;
+		    }
+		    continue;
+		}
+
+		/* loop over surface number */
 		for (ic=0; ic < nc; ic++) {
-		    kirmod3_map(ts,isx,isy,nhx*nhy,0,    ix,iy,ic);
-		    kirmod3_map(tg,isx,isy,ihx,    ihy,  ix,iy,ic);
+		    kirmod3_map(ts,geom[nh],ix,iy,ic);
+		    kirmod3_map(tg,geom[ih],ix,iy,ic);
 		    
 		    time[ic][iy][ix] = ts->t + tg->t;
 		    
@@ -284,8 +348,8 @@ int main(int argc, char* argv[])
 	    sf_freqfilt(nt,trace);
 	    
 	    sf_floatwrite(trace,nt,modl);
-	}}
-    }}
+	} /* ih */
+    } /* is */
   
     exit(0);
 }
