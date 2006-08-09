@@ -118,11 +118,6 @@ int main (int argc, char* argv[])
     buf = sf_charalloc(nbuf);
     bufi = sf_charalloc(nbuf);
     
-    out = sf_output ("out");
-    
-    scale = sf_floatalloc (nin);
-    add   = sf_floatalloc (nin);  
-
     /* default coefficients and flags */
     scale     = sf_floatalloc (nin);
     add       = sf_floatalloc (nin);  
