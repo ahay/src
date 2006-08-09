@@ -48,7 +48,7 @@ $.
 Likewise, on a one-dimensional cartesian mesh,
 \par\noindent
 the function $
-\mathcal b =
+\mathcal{B} =
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
  1&1&0&0& \cdots& 0& 1&1
         \\ \hline
@@ -56,7 +56,7 @@ the function $
 $
 \par\noindent
 has the autocorrelation
-$ \mathcal r =
+$ \mathcal{R} =
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
  1&2&1&0&\cdots&0&2&4&2&0&\cdots&1&2&1
         \\ \hline
@@ -698,7 +698,7 @@ and see how 2-D is the same as 1-D.
 The function
 \begin{equation}
 \label{eqn:2dlapin1d}
-\mathcal r
+\mathcal{R}
 \eq
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|} \hline
 -1&0&\cdots&0&-1&4&-1&0& \cdots&0&-1
@@ -716,9 +716,9 @@ Digging out our old textbooks\footnote{
 we discover
 how to compute a causal wavelet with this autocorrelation.
 I used the ``Kolmogoroff spectral-factorization method''
-to find this wavelet $\mathcal h$:
+to find this wavelet $\mathcal{H}$:
 \begin{equation}
-{\mathcal h}
+{\mathcal{H}}
 \eq
 \begin{array}{|r|r|r|r|r|r|r|r|r|r|r|r|r|r|r|}
 \hline
@@ -729,35 +729,35 @@ to find this wavelet $\mathcal h$:
 \end{equation}
 According to the Kolmogoroff theory,
 if we form the autocorrelation of
-$\mathcal h$,
-we will get $\mathcal r$.
+$\mathcal{H}$,
+we will get $\mathcal{R}$.
 This is not obvious from the numbers themselves
 because the computation requires a little work.
 \par
 Let the time reversed version of
-$\mathcal h$
+$\mathcal{H}$
 be denoted
-$\mathcal h'$.
+$\mathcal {H}'$.
 This notation is consistant with an idea from
 Chapter \ref{ajt/paper:ajt} that the adjoint of a filter matrix
 is another filter matrix with a reversed filter.
 In engineering it is conventional to use the asterisk symbol
 ``$\ast$'' to denote convolution.
 Thus, the idea that the autocorrelation of a 
-signal $\mathcal h$
+signal $\mathcal{H}$
 is a convolution of the
-signal $\mathcal h$
+signal $\mathcal{H}$
 with its time reverse (adjoint)
 can be written as
-$ \mathcal h' \ast \mathcal h = \mathcal h \ast \mathcal h' = \mathcal r$.
+$ \mathcal{H}' \ast \mathcal{H} = \mathcal{H} \ast \mathcal{H}' = \mathcal{R}$.
 
 
 
 \par
-Wind the signal $\mathcal r$ around a
-vertical-axis helix to see its two-dimensional shape $\mathcal R$:
+Wind the signal $\mathcal{R}$ around a
+vertical-axis helix to see its two-dimensional shape $\mathcal{R}_2$:
 \begin{equation}
-\mathcal r
+\mathcal{R}
 \quad
 \xrightarrow{\rm helical \; boundaries}
 \quad
@@ -770,7 +770,7 @@ vertical-axis helix to see its two-dimensional shape $\mathcal R$:
 \hline
 \end{array}
 \eq
-\mathcal R
+\mathcal{R}_2
 \label{eqn:lap2d}
 \end{equation}
 
@@ -779,11 +779,11 @@ This 2-D filter is the negative of the finite-difference representation
 of the Laplacian operator, generally denoted
 $\nabla^2= {\partial^2\over \partial x^2} + {\partial^2\over \partial y^2} $.
 Now for the magic:
-Wind the signal $\mathcal h$ around the same helix
-to see its two-dimensional shape $\mathcal H$
+Wind the signal $\mathcal{H}$ around the same helix
+to see its two-dimensional shape $\mathcal{H}_2$
 \begin{equation}
 \label{eqn:lapfac}
-{\mathcal H}
+ {\mathcal{H}_2}
 \eq
     \begin{array} {|r|r|r|r|r|r|r|r|r|} \hline
              &      &       &       & 1.791 &  -.651 & -.044  & -.024& \cdots \\
@@ -803,16 +803,16 @@ if you drop the small values, say 0.2 and smaller.
 \inputdir{helocut}
 
 \par
-Since the autocorrelation of $\mathcal H$ is
-$\mathcal H' \ast \mathcal H = \mathcal R =-\nabla^2$
+Since the autocorrelation of $\mathcal{H}$ is
+$\mathcal{H}' \ast \mathcal{H} = \mathcal{R} =-\nabla^2$
 is a second derivative,
-the operator $\mathcal H$ must be something like a first derivative.
+the operator $\mathcal{H}$ must be something like a first derivative.
 As a geophysicist, I found it natural to compare
 the operator ${\partial\over\partial y}$
-with $\mathcal H$ by applying them to a local topographic map.
+with $\mathcal{H}$ by applying them to a local topographic map.
 The result shown in
 Figure \ref{fig:helocut}
-is that $\mathcal H$ enhances drainage patterns whereas
+is that $\mathcal{H}$ enhances drainage patterns whereas
 ${\partial\over\partial y}$ enhances mountain ridges.
 
 
@@ -821,18 +821,18 @@ ${\partial\over\partial y}$ enhances mountain ridges.
 }
 
 \par
-The operator $\mathcal H$ has
+The operator $\mathcal{H}$ has
 curious similarities and differences
 with the familiar gradient and divergence operators.
 In two-dimensional physical space,
 the gradient maps one field to {\em two} fields
 (north slope and east slope).
 The factorization of $-\nabla^2$ with the helix
-gives us the operator $\mathcal H$
+gives us the operator $\mathcal{H}$
 that maps one field to {\em  one} field.
 Being a one-to-one transformation
 (unlike gradient and divergence)
-the operator $\mathcal H$ is potentially invertible
+the operator $\mathcal{H}$ is potentially invertible
 by deconvolution (recursive filtering).
 
 \par
@@ -844,14 +844,14 @@ I have chosen the name\footnote{
         and the helix concept led me to it.
         }
 ``helix derivative''
-or ``helical derivative'' for the operator $\mathcal H$.
+or ``helical derivative'' for the operator $\mathcal{H}$.
 A telephone pole has a narrow shadow behind it.
 The helix integral (middle frame of Figure \ref{fig:lapfac})
 and the helix derivative (left frame)
 show shadows with an angular bandwidth approaching $180^\circ$.
 
 \par
-Our construction makes $\mathcal H$ have the energy spectrum $k_x^2+k_y^2$,
+Our construction makes $\mathcal{H}$ have the energy spectrum $k_x^2+k_y^2$,
 so the magnitude of the Fourier transform is $\sqrt{k_x^2+k_y^2}$.
 It is a cone
 centered and with value zero at the origin.
@@ -888,9 +888,9 @@ Using $\mathcal{H}$ in one-dimensional polynomial division,
 we can solve many formerly difficult problems very rapidly.
 Consider the Laplace equation with sources (Poisson's equation).
 Polynomial division and its reverse (adjoint) gives us
-$\mathcal{p} =(\mathcal{q}/\mathcal{H})/\mathcal{H}'$
+$\mathcal{P} =(\mathcal{Q}/\mathcal{H})/\mathcal{H}'$
 which means that we have solved
-$\nabla^2 \mathcal{p} = -\mathcal{q}$
+$\nabla^2 \mathcal{P} = -\mathcal{Q}$
 by using polynomial division on a helix.
 Using the seven coefficients shown,
 the cost is fourteen multiplications
@@ -901,9 +901,9 @@ An example is shown in Figure \ref{fig:lapfac}.
   Deconvolution by a filter whose autocorrelation
   is the two-dimensional Laplacian operator.
   Amounts to solving the Poisson equation.
-  Left is $\mathcal{q}$;
-  Middle is $\mathcal{q}/\mathcal{H}$;
-  Right is $(\mathcal{q}/\mathcal{H})/\mathcal{H}'$.
+  Left is $\mathcal{Q}$;
+  Middle is $\mathcal{Q}/\mathcal{H}$;
+  Right is $(\mathcal{Q}/\mathcal{H})/\mathcal{H}'$.
 }
 
 \par
@@ -1014,13 +1014,13 @@ The method we use is triangular factorization.
 
 \par
 
-Although the autocorrelation $\mathcal r$ has mostly zero values,
-the factored autocorrelation $\mathcal a$ has a great number of nonzero terms,
+Although the autocorrelation $\mathcal{R}$ has mostly zero values,
+the factored autocorrelation $\mathcal{A}$ has a great number of nonzero terms,
 but fortunately they seem to be converging rapidly (in the middle)
 so truncation (of the middle coefficients) seems reasonable.
 I wish I could show you a larger matrix, but all I can do is to pack
-the signal $\mathcal a$ into shifted columns of
-a lower triangular matrix $\bold A$ like this:
+the signal $\mathcal{A}$ into shifted columns of
+a lower triangular matrix $\mathbf{A}$ like this:
 \begin{equation}
 \bold A \ = \ \ 
 \left[

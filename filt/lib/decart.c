@@ -19,10 +19,10 @@
 
 #include "decart.h"
 
-void sf_line2cart( int dim       /* number of dimensions */, 
-		   const int* nn /* box size [dim] */, 
-		   int i         /* line coordinate */, 
-		   int* ii       /* cartesian coordinates [dim] */)
+void sf_line2cart(int dim       /* number of dimensions */, 
+		  const int* nn /* box size [dim] */, 
+		  int i         /* line coordinate */, 
+		  int* ii       /* cartesian coordinates [dim] */)
 /*< Convert line to Cartesian >*/
 {
     int axis;
@@ -33,9 +33,9 @@ void sf_line2cart( int dim       /* number of dimensions */,
     }
 }
 
-int sf_cart2line( int dim       /* number of dimensions */, 
-		  const int* nn /* box size [dim] */, 
-		  const int* ii /* cartesian coordinates [dim] */) 
+int sf_cart2line(int dim       /* number of dimensions */, 
+		 const int* nn /* box size [dim] */, 
+		 const int* ii /* cartesian coordinates [dim] */) 
 /*< Convert Cartesian to line >*/
 {
     int i, axis;

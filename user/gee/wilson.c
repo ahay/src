@@ -68,8 +68,8 @@ float wilson_factor(int niter /* number of iterations */,
     helicon_init( aa);           /* multiply polynoms */
     polydiv_init( n2, aa);       /* divide   polynoms */
     for(iter=0; iter < niter; iter++) {
-	polydiv_lop(false,false, n2, n2, au, bb);  /* bb = S/A */
-	polydiv_lop(true, false, n2, n2, cc, bb);  /* cc = S/(AA') */
+	polydiv_lop(false,false, n2, n2, au, bb);  /* S/A */
+	polydiv_lop(true, false, n2, n2, cc, bb);  /* S/(AA') */
 	eps = 0.;
 	for(i=1; i < n; i++) {   /* b = plusside(1+cc) */
 	  b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
