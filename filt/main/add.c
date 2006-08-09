@@ -84,17 +84,13 @@ static void add_complex (bool        collect,
 
 int main (int argc, char* argv[])
 {
-    int      i, dim, n[SF_MAX_DIM], esize;
-    size_t   j, nin, nsiz;
+    int i, dim, n[SF_MAX_DIM], esize;
+    size_t j, nin, nbuf, nsiz;
     sf_file *in, out;
-    float   *scale, *add;
-    bool    *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
-    char cmode, *mode;
+    float *scale, *add;
+    bool *sqrt_flag, *abs_flag, *log_flag, *exp_flag, collect;
+    char cmode, *mode, *buf, *bufi;
     sf_datatype type;
-
-    size_t nbuf=BUFSIZ;
-    char    buf[BUFSIZ];
-    char   bufi[BUFSIZ];
 
     /* init RSF */
     sf_init (argc, argv);
@@ -116,8 +112,16 @@ int main (int argc, char* argv[])
 	nin++;
     }
     if (0==nin) sf_error ("no input");
-    /* end find number of input files */
     /* nin = no of input files*/
+
+    nbuf = sf_bufsiz(in[0]);
+    buf = sf_charalloc(nbuf);
+    bufi = sf_charalloc(nbuf);
+    
+    out = sf_output ("out");
+    
+    scale = sf_floatalloc (nin);
+    add   = sf_floatalloc (nin);  
 
     /* default coefficients and flags */
     scale     = sf_floatalloc (nin);

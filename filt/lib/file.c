@@ -53,6 +53,7 @@
 /* #include <rpc/rpc.h> */
 #include <rpc/xdr.h>
 
+#include "_defs.h"
 #include "file.h"
 #include "getpar.h"
 #include "alloc.h"
@@ -332,9 +333,29 @@ void sf_setpars (sf_file file)
     }
 }
 
+size_t sf_bufsiz(sf_file file)
+/*< return buffer size for efficient I/O >*/
+{
+    size_t bufsiz;
+    int filedes;
+    struct stat buf;
+
+    filedes = fileno(file->stream);
+    if (fstat(filedes,&buf)) {
+	bufsiz = BUFSIZ;
+    } else {
+	bufsiz = buf.st_blksize;
+	if (bufsiz <=0) bufsiz = BUFSIZ;
+    } 
+    
+    return bufsiz;
+}	
+
 void sf_setform (sf_file file, sf_dataform form)
 /*< set file form >*/
 {
+    size_t bufsiz;
+
     file->form = form;
     
     switch(form) {
@@ -347,8 +368,9 @@ void sf_setform (sf_file file, sf_dataform form)
 	    break;
 	case SF_XDR:
 	    if (NULL == file->buf) {
-		file->buf = sf_charalloc(BUFSIZ);
-		xdrmem_create(&(file->xdr),file->buf,BUFSIZ,file->op);
+		bufsiz = sf_bufsiz(file);
+		file->buf = sf_charalloc(bufsiz);
+		xdrmem_create(&(file->xdr),file->buf,bufsiz,file->op);
 	    }
 	    break;
 	case SF_NATIVE:
@@ -769,7 +791,7 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 /*< write a complex array arr[size] to file >*/
 {
     char* buf;
-    size_t i, left, nbuf;
+    size_t i, left, nbuf, bufsiz;
     sf_complex c;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
@@ -792,8 +814,9 @@ void sf_complexwrite (sf_complex* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(sf_complex);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
@@ -812,7 +835,7 @@ void sf_complexread (/*@out@*/ sf_complex* arr, size_t size, sf_file file)
 /*< read a complex array arr[size] from file >*/
 {
     char* buf;
-    size_t i, left, nbuf, got;
+    size_t i, left, nbuf, got, bufsiz;
     float re, im;
 
     switch (file->form) {
@@ -826,8 +849,9 @@ void sf_complexread (/*@out@*/ sf_complex* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(sf_complex);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
@@ -849,7 +873,7 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 /*< write a char array arr[size] to file >*/
 {
     char* buf;
-    size_t i, left, nbuf;
+    size_t i, left, nbuf, bufsiz;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
 
@@ -867,8 +891,9 @@ void sf_charwrite (char* arr, size_t size, sf_file file)
 	    break;
 	case SF_XDR:
 	    buf = arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("sf_file: trouble writing xdr");
@@ -885,7 +910,7 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
 /*< write an unsigned char array arr[size] to file >*/
 {
     char* buf;
-    size_t i, left, nbuf;
+    size_t i, left, nbuf, bufsiz;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
 
@@ -903,8 +928,9 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
 	    break;
 	case SF_XDR:
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
 				(xdrproc_t) xdr_u_char))
@@ -922,7 +948,7 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 /*< read a char array arr[size] from file >*/
 {
     char* buf;
-    size_t i, left, nbuf, got;
+    size_t i, left, nbuf, got, bufsiz;
     int c;
 
     switch (file->form) {
@@ -936,8 +962,9 @@ void sf_charread (/*@out@*/ char* arr, size_t size, sf_file file)
 	    break;
 	case SF_XDR:
 	    buf = arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
@@ -957,7 +984,7 @@ void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
 /*< read a uchar array arr[size] from file >*/
 {
     char* buf;
-    size_t i, left, nbuf, got;
+    size_t i, left, nbuf, got, bufsiz;
     int c;
 
     switch (file->form) {
@@ -971,8 +998,9 @@ void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
 	    break;
 	case SF_XDR:
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
@@ -993,7 +1021,7 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 /*< write an int array arr[size] to file >*/
 {
     char* buf;
-    size_t i, left, nbuf;
+    size_t i, left, nbuf, bufsiz;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
     switch(file->form) {
@@ -1013,8 +1041,9 @@ void sf_intwrite (int* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(int);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(int),sizeof(int),
@@ -1033,7 +1062,7 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 /*< read an int array arr[size] from file >*/
 {
     char* buf;
-    size_t i, left, nbuf, got;
+    size_t i, left, nbuf, got, bufsiz;
 
     switch (file->form) {
 	case SF_ASCII:
@@ -1045,8 +1074,9 @@ void sf_intread (/*@out@*/ int* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(int);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
@@ -1068,7 +1098,7 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 /*< write a float array arr[size] to file >*/
 {
     char* buf;
-    size_t i, left, nbuf;
+    size_t i, left, nbuf, bufsiz;
 
     if (NULL != file->dataname) sf_fileflush (file,infile);
     switch(file->form) {
@@ -1088,8 +1118,9 @@ void sf_floatwrite (float* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(float);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (!xdr_vector(&(file->xdr),buf-left,
 				nbuf/sizeof(float),sizeof(float),
@@ -1108,7 +1139,7 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 /*< read a float array arr[size] from file >*/
 {
     char* buf;
-    size_t i, left, nbuf, got;
+    size_t i, left, nbuf, got, bufsiz;
 
     switch (file->form) {
 	case SF_ASCII:
@@ -1120,8 +1151,9 @@ void sf_floatread (/*@out@*/ float* arr, size_t size, sf_file file)
 	case SF_XDR:
 	    size *= sizeof(float);
 	    buf = (char*)arr+size;
+	    bufsiz = sf_bufsiz(file);
 	    for (left = size; left > 0; left -= nbuf) {
-		nbuf = (BUFSIZ < left)? BUFSIZ : left;
+		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
@@ -1195,22 +1227,27 @@ void sf_seek (sf_file file, off_t offset, int whence)
 void sf_unpipe (sf_file file, off_t size) 
 /*< Redirect a pipe input to a direct access file >*/
 {
-    off_t nbuf, len;
+    off_t nbuf, len, bufsiz;
     char *dataname=NULL;
     FILE* tmp;
-    char buf[BUFSIZ];
+    char *buf;
 
     if (!(file->pipe)) return;
 	
     tmp = sf_tempfile(&dataname,"wb");
 
+    bufsiz = sf_bufsiz(file);
+    buf = sf_charalloc(SF_MIN(bufsiz,size));
+
     while (size > 0) {
-	nbuf = (BUFSIZ < size)? BUFSIZ : size;
+	nbuf = (bufsiz < size)? bufsiz : size;
 	if (nbuf != fread(buf,1,nbuf,file->stream) ||
 	    nbuf != fwrite(buf,1,nbuf,tmp))
 	    sf_error ("%s: trouble unpiping:",__FILE__);
 	size -= nbuf;
     }
+
+    free(buf);
 
     if (NULL != file->dataname ) {
 	len = strlen(dataname)+1;
