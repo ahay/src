@@ -36,17 +36,16 @@ void polydiv_init( int nd    /* data size */,
     tt = sf_floatalloc (nd);
 }
 
-void polydiv_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
+void polydiv_lop( bool adj, bool add, 
+		  int nx, int ny, float* xx, float*yy) 
 /*< linear operator >*/
 {
     int ia, iy, ix;
     
     sf_adjnull( adj, add, nx, ny, xx, yy);
     
-    for (ix=0; ix < nx; ix++) {
-	tt[ix] = 0.;
-    }
-
+    for (ix=0; ix < nx; ix++) tt[ix] = 0.;
+    
     if (adj) {
 	for (ix = nx-1; ix >= 0; ix--) {  
 	    tt[ix] = yy[ix];
@@ -56,9 +55,7 @@ void polydiv_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
 		tt[ix] -= aa->flt[ia] * tt[iy];
 	    }
 	}
-	for (ix=0; ix < nx; ix++) {
-	    xx[ix] += tt[ix];
-	}
+	for (ix=0; ix < nx; ix++) xx[ix] += tt[ix];
     } else {
 	for (iy = 0; iy < ny; iy++) { 
 	    tt[iy] = xx[iy];
@@ -68,9 +65,7 @@ void polydiv_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
 		tt[iy] -= aa->flt[ia] * tt[ix];
 	    }
 	}
-	for (iy=0; iy < ny; iy++) {
-	    yy[iy] += tt[iy];
-	}
+	for (iy=0; iy < ny; iy++) yy[iy] += tt[iy];
     }
 }
 

@@ -33,7 +33,8 @@ void helicon_init( filter bb)
     aa = bb;
 }
 
-void helicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy) 
+void helicon_lop( bool adj, bool add, 
+		  int nx, int ny, float* xx, float*yy) 
 /*< linear operator >*/
 {
     int ia, iy, ix;

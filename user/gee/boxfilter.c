@@ -39,14 +39,14 @@ void box (int dim           /* number of dimaneions */,
     for (ia=0; ia < nc; ia++) {
 	cube[ia] = 0.;
     }
-    lag0a = sf_cart2line(dim, na, center);  /* locate the 1.0 in na_cube. */
+    lag0a = sf_cart2line(dim, na, center);  /* 1.0 in na. */
     cube[lag0a] = 1.;                       /* place it. */
-    lag0d = sf_cart2line(dim, nd, center);  /* locate the 1.0 in nd_cube. */
+    lag0d = sf_cart2line(dim, nd, center);  /* 1.0 in nd. */
     for (j=0; j < aa->nh; j++) { /* inspect the entire helix */
 	id = aa->lag[j] + lag0d;
-	sf_line2cart(dim, nd, id, ii);	/* ii = cartesian indices  */
-	ia = sf_cart2line(dim, na, ii);	/* ia = linear index in aa */
-	cube[ia] = aa->flt[j];		/* copy the filter coefficient */
+	sf_line2cart(dim, nd, id, ii);	/* ii = cartesian  */
+	ia = sf_cart2line(dim, na, ii);	/* ia = linear in aa */
+	cube[ia] = aa->flt[j];		/* copy the filter */
     }
 }
 

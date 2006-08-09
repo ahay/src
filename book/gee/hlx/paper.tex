@@ -131,7 +131,7 @@ on a helix is a sparse 1-D filter with long empty gaps.
 
 %\activeplot{sergey-helix}{width=6.0in,bb=210 315 630 545}{} {
 %\activeplot{sergey-helix}{width=6.0in,bb=186 134 657 380}{} {
-\plot{sergey-helix}{width=6.0in}{
+\plot{sergey-helix}{width=6.0in,bb=210 155 630 390}{
   Filtering on a helix.
   The same filter coefficients overlay the same data values
   if the 2-D coils are unwound into 1-D strips.
@@ -412,12 +412,12 @@ by a code line like {\tt iy=ix+lag},
 Module
 \texttt{helicon} \vpageref{lst:helicon}
 ignores the many zero filter values on backside of the tube
-by using the code {\tt iy=ix+lag(ia)}
+by using the code {\tt iy=ix+lag[ia]}
 where a counter {\tt ia} ranges over the nonzero filter coefficients.
 Before operator {\tt helicon} is invoked,
 we need to prepare two lists,
-one list containing nonzero filter coefficients {\tt flt(ia)},
-and the other list containing the corresponding lags {\tt lag(ia)}
+one list containing nonzero filter coefficients {\tt flt[ia]},
+and the other list containing the corresponding lags {\tt lag[ia]}
 measured to include multiple wraps around the helix.
 For example, the 2-D Laplace operator
 can be thought of as the 1-D filter
@@ -458,12 +458,12 @@ requires the filter inputs:
 \par\noindent
 \footnotesize
 \begin{verbatim}
-                i    lag(i)   flt(i)
+                i    lag[i]   flt[i]
                ---   ------   -----
-                1      999      1
-                2     1000     -4
-                3     1001      1
-                4     2000      1
+                0      999      1
+                1     1000     -4
+                2     1001      1
+                3     2000      1
 \end{verbatim}
 \normalsize
 
@@ -479,7 +479,7 @@ The helix filter consists of three vectors,
 a real valued vector of filter coefficients,
 an integer valued vector of filter lags,
 and an optional vector
-that has logical values ``\texttt{.TRUE.}''~for
+that has logical values ``\texttt{true}''~for
 output locations that will not be computed
 (either because of boundary conditions or because of missing inputs).
 The filter vectors are the size of the nonzero filter coefficents
@@ -525,7 +525,7 @@ the operator
 is a {\it multidimensional} filter
 with considerable flexibility (because of the \texttt{mis} vector)
 to work around boundaries and missing data.
-\opdex{helicon}{helical convolution}{36}{54}{user/gee}
+\opdex{helicon}{helical convolution}{36}{55}{user/gee}
 The code fragment
 \verb#aa->lag[ia]#
 corresponds to 
@@ -554,7 +554,7 @@ Although convolution allows us to work around missing input values,
 deconvolution does not
 (any input affects all subsequent outputs),
 so \texttt{polydiv} never references \verb#aa->mis[ia]#.
-\opdex{polydiv}{helical deconvolution}{55}{74}{user/gee}
+\opdex{polydiv}{helical deconvolution}{39}{70}{user/gee}
 
 \begin{exer}
 \item
@@ -884,13 +884,13 @@ Wilson-Burg spectral-factorization method
 produces not merely a causal wavelet
 with the required autocorrelation.
 It produces one that is stable in deconvolution.
-Using $\mathcal H$ in one-dimensional polynomial division,
+Using $\mathcal{H}$ in one-dimensional polynomial division,
 we can solve many formerly difficult problems very rapidly.
 Consider the Laplace equation with sources (Poisson's equation).
 Polynomial division and its reverse (adjoint) gives us
-$\mathcal p =(\mathcal q/\mathcal H)/\mathcal H'$
+$\mathcal{p} =(\mathcal{q}/\mathcal{H})/\mathcal{H}'$
 which means that we have solved
-$\nabla^2 \mathcal p = -\mathcal q$
+$\nabla^2 \mathcal{p} = -\mathcal{q}$
 by using polynomial division on a helix.
 Using the seven coefficients shown,
 the cost is fourteen multiplications
@@ -901,9 +901,9 @@ An example is shown in Figure \ref{fig:lapfac}.
   Deconvolution by a filter whose autocorrelation
   is the two-dimensional Laplacian operator.
   Amounts to solving the Poisson equation.
-  Left is $\mathcal q$;
-  Middle is $\mathcal q/\mathcal H$;
-  Right is $(\mathcal q/\mathcal H)/\mathcal H'$.
+  Left is $\mathcal{q}$;
+  Middle is $\mathcal{q}/\mathcal{H}$;
+  Right is $(\mathcal{q}/\mathcal{H})/\mathcal{H}'$.
 }
 
 \par
@@ -1424,9 +1424,11 @@ attributes it to an old paper by Wilson
 (I find Burg's explanation, below, much clearer than Wilson's.)
 \par
 %\begin{notforlecture}
+\begin{comment}
 Below find subroutine \texttt{lapfac()} which
 was used in the previous section
 to factor the Laplacian operator.
+\end{comment}
 To invoke the factorization subroutine,
 you need to supply one side of an autocorrelation function.
 For example, let us specify the negative of the 2-D Laplacian
@@ -1435,9 +1437,9 @@ in a vector {\tt n = }$256\times 256$ points long.
 \par\noindent
 \footnotesize
 \begin{verbatim}
-        rr(1)     =  4.
-        rr(2)     = -1.
-        rr(1+256) = -1.
+        rr[0]   =  4.
+        rr[1]   = -1.
+        rr[256] = -1.
 \end{verbatim}
 \normalsize
 %\par\noindent
@@ -1568,9 +1570,10 @@ but their lead coefficients are extracted off,
 so for example, 
 $A(z) = (a_0) + (a_1 Z + a_2 Z^2 + \cdots)$
 is broken into the two parts \texttt{a0} and \texttt{aa}.
-\moddex{wilson}{Wilson-Burg spectral factorization}
+\moddex{wilson}{Wilson-Burg spectral factorization}{48}{87}{user/gee}
 %
 \begin{exer}
+\begin{comment}
 \item
 You hear from three different people
 that a more isotropic representation
@@ -1584,6 +1587,7 @@ $$
 $$
 What changes need to be made to subroutine \texttt{lapfac()}?
 %
+\end{comment}
 \item
 Fomel's factorization:
 A simple trick to avoid division in square root computation is to run
@@ -1639,6 +1643,8 @@ not nearly so severe as that of either component of the gradient,
 the two components having wholly different spectra,
 amplitude $|k_x|$ or $|k_y|$.
 
+\inputdir{mam}
+
 \par
 It is nice having the 2-D helix derivative,
 but we can imagine even nicer 2-D low-cut filters.
@@ -1658,15 +1664,15 @@ but along the way
 I found a simpler parameter that is very effective in practice.
 We'll look at it first.
 
-\activesideplot{mam}{width=3.8in,height=3.8in}{} {
-	Mammogram (medical X-ray).
-	The cancer is the ``spoked wheel.''
-	(I apologize for the inability of paper publishing technology
-	to exhibit a clear grey image.)
-	The white circles are metal foil used for navigation.
-	The little halo around a circle exhibits the impulse
-	response of the helix derivative.
-	}
+\sideplot{mam}{width=3.5in,height=3.5in}{
+  Mammogram (medical X-ray).
+  The cancer is the ``spoked wheel.''
+  (I apologize for the inability of paper publishing technology
+  to exhibit a clear grey image.)
+  The white circles are metal foil used for navigation.
+  The little halo around a circle exhibits the impulse
+  response of the helix derivative.
+}
 
 \par
 First I had a problem preparing Figure \ref{fig:mam}.
@@ -1693,6 +1699,8 @@ and I did use more coefficients,
 but simply removing the mean saved me
 from needing a costly number of filter coefficients.
 
+\inputdir{helgal}
+
 \par
 We can visualize a plot of the magnitude of the 2-D
 Fourier transform of the filter
@@ -1711,10 +1719,10 @@ I did not do that subtraction in Figure
 \ref{fig:helgal}
 which explains the whiteness in the middle of the lake.
 
-\activeplot{helgal}{width=6in,height=3.7in}{} {
-        Galilee roughened by gradient and
-        by helical derivative.
-        }
+\plot{helgal}{width=6in,height=3.7in}{
+  Galilee roughened by gradient and
+  by helical derivative.
+}
 
 
 %Experimentation with this figure showed that the helix filter
@@ -1830,6 +1838,8 @@ directly in the Fourier domain where there is only one adjustable parameter,
 the cutoff frequency $k_0$,
 and there is no filter length to confuse the issue and puff-up the costs.
 
+\inputdir{mam}
+
 \par
 A final word about the doctor.
 As she was about to leave my office she suddenly asked
@@ -1856,17 +1866,16 @@ had the effect enhancing the visibility of the scratch on
 the mammogram itself.
 Now Figure \ref{fig:scratch} shows it to be
 perhaps even clearer than on the helix derivative.
-\activeplot{scratch}{width=6in,height=3.0in}{} {
-	Not a scratch
-	}
+\plot{scratch}{width=6in,height=3.0in}{
+  Not a scratch.
+}
 
-
+\begin{comment}
 \par
 An operator for applying the helix filter is
 \texttt{helderiv} \vpageref{lst:helderiv}.
 \opdex{helderiv}{helix-derivative filter}
-
-
+\end{comment}
 
 \section{THE MULTIDIMENSIONAL HELIX}
 Till now
@@ -1880,6 +1889,8 @@ with a one-dimensional deconvolutional program
 which is ``magic'',
 i.e.~many novel applications will follow.
 
+\inputdir{XFig}
+
 \par
 We do multidimensional deconvolution with causal (one-sided)
 one-dimensional filters.
@@ -1890,9 +1901,9 @@ The top plane in Figure~\ref{fig:3dpef}
 is the 2-D filter seen in equation (\ref{eqn:2dpef}).
 The top plane can be visualized as the area around the end of a helix.
 Above the top plane are zero-valued anticausal filter coefficients.
-\activesideplot{3dpef}{width=2.3in}{NR}{
-        A 3-D causal filter at the starting end of a 3-D helix.
-        }
+\sideplot{3dpef}{width=2.3in}{
+  A 3-D causal filter at the starting end of a 3-D helix.
+}
 
 \par
 It is natural to ask,
@@ -1932,7 +1943,7 @@ Basic utilities transform back and forth between
 multidimensional matrix coordinates and helix coordinates.
 The essential module used repeatedly in applications
 later in this book is
-\texttt{createhelixmod} \vpageref{lst:createhelixmod}.
+\texttt{createhelix} \vpageref{lst:createhelix}.
 We begin here from its intricate underpinnings.
 
 \par
@@ -2004,7 +2015,7 @@ the formula for \texttt{ia} is
 %The fortran compiler knows how to convert from the multidimensional
 %cartesian indices to the linear index.
 %We will need to do that, as well as the converse.
-Module \texttt{cartesian} below contains
+Module \texttt{decart} below contains
 two subroutines that
 explicitly provide us the transformations
 between the linear index
@@ -2014,7 +2025,7 @@ and the multidimensional indices
 The two subroutines have the logical names
 \texttt{cart2line} and
 \texttt{line2cart}.
-\moddex{cartesian}{helical-cartesian coordinate conversion}
+\moddex{decart}{helical-cartesian coordinate conversion}{22}{50}{filt/lib}
 
 \par
 The fortran linear index is closely related to the helix.
@@ -2027,7 +2038,7 @@ which is usually taken at
 \texttt{center= (1+a1/2, 1+a2/2, ..., 1)}.
 (On the last dimension, there is no shift because nobody stores the
 volume of zero values that would occur before the 1.0.)
-The \texttt{cartesian} module fails for negative subscripts.
+The \texttt{decart} module fails for negative subscripts.
 Thus we need to be careful to avoid thinking of the filter's 1.0 
 (shown in Figure \ref{fig:3dpef})
 as the origin of the multidimensional coordinate system
@@ -2092,7 +2103,7 @@ has already an implicit
 
 \par
 Module
-\texttt{createhelixmod} \vpageref{lst:createhelixmod}
+\texttt{createhelix} \vpageref{lst:createhelix}
 allocates memory for a helix filter and builds
 filter lags along the helix from the hypercube description.
 The hypercube description is not the literal cube
@@ -2104,7 +2115,7 @@ the parameter \texttt{center} identifying
 the location of the filter's ``1.0'',
 and a \texttt{gap} parameter used in a later chapter.
 To find the lag table,
-module \texttt{createhelixmod} %\vpageref{lst:createhelixmod}
+module \texttt{createhelix} %\vpageref{lst:createhelixmod}
 first finds the
 fortran linear index of the \texttt{center} point on the filter hypercube.
 Everything before that has negative lag on the helix and can be ignored.
@@ -2114,7 +2125,7 @@ so their lags can be ignored too.)
 Then it sweeps from the center point over the rest of the filter hypercube
 calculating for a data-sized cube \texttt{nd},
 the fortran linear index of each filter element.
-\moddex{createhelixmod}{constructing helix filter in N-D} 
+\moddex{createhelix}{constructing helix filter in N-D}{39}{83}{user/gee}
 Near
 the end of the code you see the calculation of a parameter \texttt{lag0d}.
 This is the count of the number of zeros that
@@ -2132,15 +2143,16 @@ the zeros preceding the ``1.0'' are explicitly present
 so \texttt{lag0} needs to be added back in to get the fortran subscript.
 To convert a helix filter \texttt{aa} to fortran's multidimensional hypercube
 \texttt{cube(n1,n2,...)} is
-module \texttt{box}: %\vpageref{lst:box}.
-\moddex{box}{Convert helix filter to (n1,n2,...)}
-The \texttt{box} module is normally used
+module \texttt{boxfilter}: %\vpageref{lst:boxfilter}.
+\moddex{boxfilter}{Convert helix filter to (n1,n2,...)}{27}{51}{user/gee}
+The \texttt{boxfilter} module is normally used
 to display or manipulate a filter
 that was estimated in helical form
 (usually estimated by the least-squares method).
 
+\begin{comment}
 \par
-The inverse process to \texttt{box} is to
+The inverse process to \texttt{boxfilter} is to
 convert a fortran hypercube to a helix filter.
 For this we have module \texttt{unbox}. %\vpageref{lst:unbox}.
 It abandons all zero-valued coefficients
@@ -2151,18 +2163,19 @@ in the helix convolution module \texttt{helicon} \vpageref{lst:helicon}.
 An example of using \texttt{unbox} would be copying some numbers
 such as the factored laplacian in equation (\ref{eqn:lapfac})
 into a cube and then converting it to a helix.
+\end{comment}
 
 \par
 A reasonable arrangement for a small 3-D filter is 
-\texttt{na=(5,3,2)}
+\texttt{na=\{5,3,2\}}
 and
-\texttt{center=(3,2,1)}.
+\texttt{center=\{3,2,1\}}.
 Using these arguments, I used 
-\texttt{createhelixmod} \vpageref{lst:createhelixmod} to create a filter.
+\texttt{createhelix} \vpageref{lst:createhelix} to create a filter.
 I set all the helix filter coefficients to 2.
-Then I used module \texttt{box} \vpageref{lst:box}
+Then I used module \texttt{boxfilter} \vpageref{lst:boxfilter}
 to put it in a convenient form for display.
-After this conversion, the coefficient \texttt{aa(3,2,1)} is 1, not 2.
+%After this conversion, the coefficient \texttt{aa(3,2,1)} is 1, not 2.
 Finally, I printed it:
 \par\noindent
 \footnotesize
@@ -2219,7 +2232,7 @@ He explains his \texttt{regrid} module thus:
         to return to a relative coordinate system.
         \end{quotation}
 
-\moddex{regrid}{Convert filter to different data size}
+\moddex{regrid}{Convert filter to different data size}{27}{46}{user/gee}
 
 %Sergey Fomel comments,
 %\begin{quotation}

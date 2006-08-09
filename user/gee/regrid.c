@@ -36,9 +36,9 @@ void regrid( int dim         /* number of dimensions */,
 	ii[i] = nold[i]/2-1;
     }
   
-    h0 = sf_cart2line( dim, nold, ii); /* lag of near middle point on nold */
-    h1 = sf_cart2line( dim, nnew, ii); /* lag                      on nnew */
-    for (i=0; i < aa->nh; i++) { /* forall given filter coefficients */
+    h0 = sf_cart2line( dim, nold, ii); /* midpoint lag on nold */
+    h1 = sf_cart2line( dim, nnew, ii); /*              on nnew */
+    for (i=0; i < aa->nh; i++) { /* for all filter coefficients */
 	h = aa->lag[i] + h0;
 	sf_line2cart( dim, nold, h, ii);
 	aa->lag[i] = sf_cart2line( dim, nnew, ii) - h1;

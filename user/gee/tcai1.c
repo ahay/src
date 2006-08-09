@@ -23,10 +23,10 @@
 #include "tcai1.h"
 
 static int nb;
-static float* bb;
+static const float* bb;
 
-void tcai1_init (int na    /* filter size */, 
-		 float* aa /* filter [na] */) 
+void tcai1_init (int na          /* filter size */, 
+		 const float* aa /* filter [na] */) 
 /*< initialize >*/
 {
     nb = na;

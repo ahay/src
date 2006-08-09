@@ -56,9 +56,7 @@ float wilson_factor(int niter /* number of iterations */,
     float eps;
     int i, iter;
     
-    for(i=0; i < n2; i++) {
-	au[i] = 0.;
-    }
+    for(i=0; i < n2; i++) au[i] = 0.;
     au[n-1] = s0;
     b[0] = 1.;       /* initialize */
 		     
@@ -67,14 +65,13 @@ float wilson_factor(int niter /* number of iterations */,
 	au[n-1-ss->lag[i]] =  ss->flt[i];
     }                   
 
-    helicon_init( aa);                      /* multiply polynoms */
-    polydiv_init( n2, aa);                  /* divide   polynoms */
+    helicon_init( aa);           /* multiply polynoms */
+    polydiv_init( n2, aa);       /* divide   polynoms */
     for(iter=0; iter < niter; iter++) {
 	polydiv_lop(false,false, n2, n2, au, bb);  /* bb = S/A */
 	polydiv_lop(true, false, n2, n2, cc, bb);  /* cc = S/(AA') */
 	eps = 0.;
-	for(i=1; i < n; i++) {      
-	  /* b = plusside(1+cc) */
+	for(i=1; i < n; i++) {   /* b = plusside(1+cc) */
 	  b[i] = 0.5*(cc[n-1+i] + cc[n-1-i]) / cc[n-1]; 
 	  if (fabs(b[i]) > eps) eps = fabs(b[i]);
 	}
@@ -83,9 +80,8 @@ float wilson_factor(int niter /* number of iterations */,
 
 	helicon_lop( false, false, n, n, b, c);   /* c = A b */
       
-	for(i=0; i < aa->nh; i++) {              /* put on helix */
-	    aa->flt[i] = c[aa->lag[i]];
-	}                
+        /* put on helix */
+	for(i=0; i < aa->nh; i++) aa->flt[i] = c[aa->lag[i]];              
     } 
     return sqrtf(cc[n-1]);
 }

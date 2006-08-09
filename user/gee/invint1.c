@@ -23,7 +23,7 @@
 
 void invint1(int niter                  /* number of iterations */,
 	     int nd                     /* data size */,
-	     const float *coord         /* data coordinates */, 
+	     float *coord               /* data coordinates */, 
 	     const float *dd            /* data values */, 
 	     int n1, float o1, float d1 /* model grid */, 
 	     int na, const float *aa    /* filter */, 

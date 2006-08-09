@@ -22,10 +22,11 @@
 
 #include "lint1.h"
 
-static float o1, d1, *coord;
+static float o1, d1;
+static const float *coord;
 
 void lint1_init (float o1_in, float d1_in /* regular axis sampling */, 
-		 float *coord_in          /* irregular coordinates */)
+		 const float *coord_in    /* irregular coordinates */)
 /*< initialize >*/
 {
     o1 = o1_in;
