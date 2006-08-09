@@ -31,7 +31,8 @@ void laplac2_init(int m1, int m2)
     n2 = m2;
 }
 
-void laplac2_lop(bool adj, bool add, int np, int nr, float *p, float *r)
+void laplac2_lop(bool adj, bool add, 
+		 int np, int nr, float *p, float *r)
 /*< linear operator >*/
 {
     int i1,i2,j;

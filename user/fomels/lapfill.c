@@ -66,11 +66,11 @@ void lapfill(int niter   /* number of iterations */,
 /*< interpolate >*/
 {
     if (grad) {
-	sf_solver (igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, niter, 
-		   "x0", mm, "known", known, "end");
+	sf_solver (igrad2_lop, sf_cgstep, n12, 2*n12, mm, zero, 
+		   niter, "x0", mm, "known", known, "end");
     } else {
-	sf_solver (laplac2_lop, sf_cgstep, n12, n12, mm, zero, niter, 
-		   "x0", mm, "known", known, "end");
+	sf_solver (laplac2_lop, sf_cgstep, n12, n12, mm, zero, 
+		   niter, "x0", mm, "known", known, "end");
     }
     sf_cgstep_close ();
 }

@@ -27,7 +27,7 @@ def grey(title,clip='allpos=y clip=2000'):
 for data in sets:
     file = data[0]+'2000'
     Fetch(file+'.5','chevron')
-    env.Chevron(file)
+    env.Chevron(file+'.T',file+'.5')
     Flow(file,file+'.T','dd form=native')
     Flow(data,file,
          '''
