@@ -147,7 +147,7 @@ Result('dr','transp|' + fdmod.dgrey('pclip=100',par))
 
 # ------------------------------------------------------------
 # RTM
-fdmod.rtm('ii','ds','dr','vo','rm','rr','rr','free=n dens=n',4000,par)
+fdmod.rtm('ii','ds','dr','vo','rm','rr','rr','free=n dens=n',2000,par)
 Result('ii',fdmod.cgrey('pclip=100',par))
 
 # ------------------------------------------------------------
