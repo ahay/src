@@ -5,16 +5,16 @@ import fdmod
 Fetch("P15VPint_25f_padded.SEGY","pluto")
 
 Flow('velocityProfilePadded','P15VPint_25f_padded.SEGY', '''segyread tape=$SOURCE |
-        put  d1=.0076 d2=.0046 label1=Depth\ Z o2=0
-        label2=Distance unit1=km unit2=km''',stdin=0)
+        put  d1=.025 d2=.025 label1=Depth o2=-34.875
+        label2=Distance unit1=kft unit2=kft''',stdin=0)
 
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':5000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'kt':100,    # wavelet delay
-    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
-    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
+    'nx':6960, 'ox':0,       'dx':.00762 ,'lx':'label2=x unit2=km',
+    'nz':1401, 'oz':0,       'dz':.00762 ,'lz':'label1=z unit1=km'
     }
 # add F-D modeling parameters
 fdmod.param(par)
@@ -32,13 +32,6 @@ Result('wav','window n1=200 | graph title="" label1="t" label2=')
 # ------------------------------------------------------------
 
 # experiment setup
-
-Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
-
-# receiver positions
-
-
 
 Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
 Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
@@ -71,10 +64,11 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 # density
 Flow('vel','velocityProfilePadded',
      '''
+     scale rscale=.0003048 | 
      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
      ''' % par)
 
-Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
+Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=98',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------

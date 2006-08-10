@@ -34,6 +34,4 @@ Result('velocityProfilePadded','''window $SOURCE | grey scalebar=y
         color=I allpos=y gainpanel=a title=P-Wave\ Velocity\ Profile
         screenratio=.28 125 screenht=2 labelsz=4 title= barlabel=\(km/s\)
        ''')
-
 End()
-
