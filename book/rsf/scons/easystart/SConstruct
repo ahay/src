@@ -3,7 +3,7 @@ Fetch('lena.img','imgs')
 Flow('ulena','lena.img',
      '''
      echo n1=512 n2=513 d1=1 d2=1
-     in=$SOURCE data_format=native_uchar
+     in=${SOURCES[0]} data_format=native_uchar
      ''',stdin=0)
 Flow('flena','ulena','sfdd type=float')
 Flow('zmflena512','flena',

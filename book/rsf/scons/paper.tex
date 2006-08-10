@@ -217,10 +217,31 @@ reproducible research in scientific computing.
 \subsection{Paper organization}
 
 \newpage
+\section{Madagascar source code \& community}
+%
+Madagascar's homepage is \url{http://rsf.sourceforge.net}. Madagascar
+source code is proposed in two versions:
+\href{https://sourceforge.net/project/showfiles.php?group_id=162909}{stable}
+and
+\href{http://rsf.sourceforge.net/wiki/index.php/Svn-url}{development}.
+The stable version is a snapshot of Madagascar at a given time. It was
+installed on different platforms and tested before being released.
+Updates are typically done every few months as opposed to the
+development version which is updated every few hours or days by a
+dynamic team of developers. As such, there is no guarantee that the
+development version will be fully functional and stable at any given
+point in time. In the remaining of this paper, we assume that you have
+successfully installed Madagascar stable version.
+
+Madagascar users are invited to share their experiences and problems
+on the \href{mailto:rsf-user@lists.sourceforge.net}{rsf-user mailing
+  list}. Madagascar developers communicate using the
+\href{mailto:rsf-devel@lists.sourceforge.net}{rsf-devel mailing list}.
+
 \section{Creating a reproducible script}
 %
-First of all, the SConstruct commands that are set in our reproducible
-research environment are
+First of all, the SConstruct commands set in our reproducible research
+environment are
 
 \noindent\texttt{Fetch(filename,dir[,ftp\_server\_info])}\\
 \indent A rule to download \texttt{filename} from a specific
@@ -241,16 +262,22 @@ working directory).
 \indent A rule to generate a final plot (vpl file in the Fig folder of
 the working directory).
 
+These commands are defined in \textit{\$RSFROOT/lib/rsfproj.py} where
+\textit{RSFROOT} is the environmental variable to the directory where
+Madagascar is installed.
+
 \subsection{Example 1}
 %
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
 \lstinputlisting[firstline=1,lastline=16,frame=single]{easystart/SConstruct}
 
-This reproducible script illustrates the basic use of some of the
-commands presented in the previous section. An image is downloaded
-from an anonymous data server, converted to Madagascar file format,
-manipulated, and displayed. But let's have a closer look at the script
+This reproducible script, available in the
+\textit{rsf/scons/easystart} directory of Madagascar book section,
+illustrates the basic use of some of the commands presented in the
+previous section. An image is downloaded from an anonymous data
+server, converted to Madagascar file format, manipulated, and
+displayed. But let's have a closer look at the script
 and decorticate it.\\
 
 \lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
@@ -282,7 +309,7 @@ ftp> bye
 prepares the Madagascar header file ``ulena.rsf'' using the standard
 Unix command ``echo''. Note that, if no extension is specified, the
 default extension ``.rsf'' will be appended to source and target
-names. The equivalent command lines is
+names. The equivalent command line is
 %
 \begin{verbatim}
 bash$ echo n1=512 n2=513 d1=1 d2=1 in=lena.img \
@@ -294,9 +321,10 @@ in the Flow command otherwise the first source is the standard input.
 Likewise, the first target is the standard output unless otherwise
 specified. Note the triple quotes used because the actual command is
 broken into several lines in the SConstruct. Note also that
-``lena.img'' is refered as ``\$SOURCE'' in the command. Run
-\texttt{scons ulena.rsf} to execute the Flow command and obtain the
-ASCII header file ``ulena.rsf''.  The next step is to convert the
+``lena.img'' is refered as ``\$\{SOURCES[0]\}'' (i.e.  first element
+of the \$SOURCES list) in the command. Run \texttt{scons ulena.rsf} to
+execute the Flow command and obtain the ASCII header file
+``ulena.rsf''.  The next step is to convert the
 binary data ``lena.img'' into a RSF file.\\
 
 \lstinputlisting[firstline=8,lastline=8,frame=single]{easystart/SConstruct}
@@ -361,12 +389,13 @@ ends with\\
 
 Since SConstructs are Python scripts, we can also use all the
 flexibility and sophistication of the Python language in our
-Madagascar reproducible scripts. A demo script is available at XXX
-but, rather than commenting it line-by-line, we select some parts of
+Madagascar reproducible scripts. A demo script is available in the
+\textit{rsf/scons/rsfpy} directory of Madagascar book section, but,
+rather than commenting it line-by-line, we select some parts of
 interest.
 
 In a Madagascar reproducible script (i.e. SConstruct) we can declare
-Python variable\\
+Python variables\\
 
 \lstinputlisting[firstline=3,lastline=5,frame=single]{rsfpy/SConstruct}
 
@@ -374,7 +403,7 @@ Python variable\\
 
 \lstinputlisting[firstline=7,lastline=11,frame=single]{rsfpy/SConstruct}
 
-This Python function, named ``grey()'', can then be used in Plot or Result
+This Python function, named ``grey()'', can then be called in Plot or Result
 commands, e.g.\\
 
 \lstinputlisting[firstline=52,lastline=52,frame=single]{rsfpy/SConstruct}
@@ -403,11 +432,20 @@ values otherwise, e.g.\\
 
 \lstinputlisting[firstline=70,lastline=70,frame=single]{rsfpy/SConstruct}
 
+Running \texttt{scons} only, the default value set for fthr (i.e. 70)
+is used whereas running \texttt{scons fthr=68} set fthr to a command
+line specified value.
+
 This is by no mean an exhaustive list of options but, hopefully, it
 gives you a flavor of the powerful tool you have in hands. Sit back
 and enjoy!
 
-\section{Creating a reproducible report using \LaTeX}
+\section{Creating a reproducible paper}
+
+A Madagascar reproducible paper is a paper written in \LaTeX\ and
+whose figures are generated by Madagascar reproducible scripts, e.g.
+this paper!  (\textit{paper.tex} available in the \textit{rsf/scons/}
+directory of Madagascar book section).
 
 %\noindent\texttt{Paper(texdoc\textit{,use})}\\
 %\indent A rule to generate \texttt{texdoc.pdf} from the simplified
@@ -415,12 +453,6 @@ and enjoy!
 
 %\noindent\texttt{Book(xxx)}\\
 %\indent I DO NOT KNOW HOW TO USE IT...
-
-\section{Open source availability}
-
-SU software package is available from... RSF is available from... The
-RSF distribution also contains \texttt{suproj} and \texttt{rsfproj}
-modules used in the examples of this paper.
 
 \bibliographystyle{seg}
 \bibliography{SEG,SEP2,scons}
