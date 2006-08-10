@@ -146,7 +146,7 @@ int main (int argc, char* argv[])
 
     sf_warning("nsiz=%d",nsiz);
     nbuf = memsize/esize/2;
-    if(nbuf>nsiz) nbuf=nsiz;
+    if(nsiz>0 && nbuf>nsiz) nbuf=nsiz;
     sf_warning("nbuf=%d",nbuf);
 
     bufi = (char*) sf_alloc( nbuf, sizeof(char));
