@@ -1,26 +1,31 @@
 ## 
- #
+ # Borcea et al model
+ # passive source setup
  ##
 from rsfproj import *
 import fdmod,zomig
 
 # ------------------------------------------------------------
 par = {
-    'lo':0.02, # wavelength
-    'co':3,    # velocity
-    'fo':50,
-    'nt':3000, 'ot':0, 'dt':0.0005, 'lt':'label1=time unit1=s',
-    'nx':800,  'ox':0, 'dx':0.005, 'lx':'label2=x unit2=km',
-    'nz':300,  'oz':0, 'dz':0.005, 'lz':'label1=z unit1=km',
-    'kt':100,    # wavelet delay
-    'nbx':250, 'tx':0.001,
-    'nbz':250, 'tz':0.001,
-    'jsnap':100
+    'lo':3,    # wavelength (m)
+    'co':3000, # velocity (m/s)
+    'fo':1000, # central frequency (Hz)
+    'nt':8000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
+    'ox':0,                         'lx':'label2=x unit2=m',
+    'oz':0,                         'lz':'label1=z unit1=m',
+    'kt':100,  # wavelet delay
+    'nbx':250, 'tx':0.002,
+    'nbz':250, 'tz':0.002,
+    'jsnap':100, 'height':10
     }
-#par['dx']=par['lo']/par['nx']*160
-#par['dz']=par['lo']/par['nz']*60
-#par['fo']=par['co']/par['lo']
-#print par['fo']
+
+par['smp']=20.
+
+par['dx']=par['lo']/par['smp']
+par['nx']=100*par['smp']+1
+
+par['dz']=par['lo']/par['smp']
+par['nz']=100*par['smp']+1
 
 # add F-D modeling parameters
 fdmod.param(par)
@@ -34,7 +39,7 @@ Flow('wav',None,
      scale axis=123 |
      put label1=t label2=x label3=y 
      ''' % par)
-Result('wav','window n1=500 | graph title="" label1="t" label2=')
+Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # experiment setup
@@ -53,8 +58,8 @@ Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
      + fdmod.cgraph('symbol=* plotcol=6',par))
 
 # source positions
-Flow('zs','s_','math output="0"')
-Flow('xs','s_','math output="2.0"')
+Flow('zs','s_','math output="%g"' % (par['oz']+90*par['lo']) )
+Flow('xs','s_','math output="%g"' % (par['ox']+par['nx']/2*par['dx']))
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -77,19 +82,19 @@ Flow('mask',None,
 # anomaly
 Flow('va',None,
      '''
-     spike nsp=1 mag=-%(co)g
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=198 l1=203
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=398 l2=403
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 # random noise (clutter)
 Flow('vn','va mask',
      '''
      math output=1 |
-     noise mean=0 range=2 type=y |
-     smooth rect1=3 rect2=3 |
+     noise mean=0 range=2 type=y|
+     smooth rect1=15 rect2=15 |
      add add=-1 |
      scale axis=123 |
-     scale rscale=0.25 |
+     scale rscale=500 |
      math m=${SOURCES[1]} output="input*m"
      ''')
 
@@ -111,9 +116,9 @@ Flow('rm',None,
      add add=2
      ''' % par)
 
-Plot('vo',fdmod.cgrey('allpos=y bias=2.0 pclip=100',par))
-Plot('vv',fdmod.cgrey('allpos=y bias=2.0 pclip=100',par))
-Plot('rm',fdmod.cgrey('allpos=y bias=3.0 pclip=100',par))
+Plot('vo',fdmod.cgrey('allpos=y bias=2500 pclip=100',par))
+Plot('vv',fdmod.cgrey('allpos=y bias=2500 pclip=100',par))
+Plot('rm',fdmod.cgrey('allpos=y bias=3000 pclip=100',par))
 
 Result('vo',['vo','ss','rr'],'Overlay')
 Result('vv',['vv','ss','rr'],'Overlay')
@@ -124,38 +129,20 @@ Result('rm',['rm','ss','rr'],'Overlay')
 
 fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
 Result('wo',            fdmod.wgrey('pclip=99',par))
-Result('do','transp|' + fdmod.dgrey('pclip=99',par))
+Result('do','transp|' + fdmod.dgrey('',par))
 
 fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
-Result('dd','transp|' + fdmod.dgrey('pclip=99',par))
-
-# ------------------------------------------------------------
-# source data
-Flow('ds','wav',
-     '''
-     pad beg2=400 n2out=%(nx)d |
-     put o2=%(ox)g d2=%(dx)g |
-     transp
-     ''' % par)
-
-# receiver data
-Flow('dr','dd do','add ${SOURCES[1]} scale=1,-1')
-
-Result('ds','transp|' + fdmod.dgrey('pclip=100',par))
-Result('dr','transp|' + fdmod.dgrey('pclip=100',par))
+Result('dd','transp|' + fdmod.dgrey('',par))
 
 # ------------------------------------------------------------
 # RTM
-fdmod.rtm('ii','ds','dr','vo','rm','rr','rr','free=n dens=n',2000,par)
+
+fdmod.zom('io','do','vo','rm','rr','free=n dens=n',2000,par)
+Result('io',fdmod.cgrey('pclip=100',par))
+
+fdmod.zom('ii','dd','vo','rm','rr','free=n dens=n',2000,par)
 Result('ii',fdmod.cgrey('pclip=100',par))
-
 # ------------------------------------------------------------
-
-Flow('js','ii_us','window n3=500')
-Flow('jr','ii_ur','window n3=500')
-
-Flow('j1','js jr','   add mode=p ${SOURCES[1]}')
-Flow('j2','js jr','paradd mode=p ${SOURCES[1]} memsize=4000')
 
 End()

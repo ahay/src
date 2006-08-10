@@ -98,8 +98,8 @@ Flow('dw','wav',
 # RTM
 Flow('dx','dd do','add ${SOURCES[1]} scale=1,-1')
 
-fdmod.rtm('io','dw','dx','vo','rm','rr','rr','free=y dens=n',par)
-fdmod.rtm('ii','dw','dx','vv','rm','rr','rr','free=y dens=n',par)
+fdmod.rtm('io','dw','dx','vo','rm','rr','rr','free=y dens=n',2000,par)
+fdmod.rtm('ii','dw','dx','vv','rm','rr','rr','free=y dens=n',2000,par)
 
 Result('io',fdmod.cgrey('pclip=100',par))
 Result('ii',fdmod.cgrey('pclip=100',par))
