@@ -38,7 +38,7 @@ int main(int argc, char* argv[])
 {
     bool transp;
     int n1, n2, n3, i1, i2, i3, len;
-    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi;
+    float min1, max1, min2, max2, o3, d3, o1, d1, xi, yi, tt;
     float **x, **y, **tmp, *symbolsz=NULL, symsize, xc, yc;    
     float*** data=NULL;
     char* symbol, sym[2]=" ";
@@ -127,11 +127,15 @@ int main(int argc, char* argv[])
 	}
 	getminmax(y[0],&min2,&max2);
 	
-	if (transp) {tmp=x; x=y; y=tmp;}
-
 	vp_stdplot_init (min1, max1, min2, max2,
 			 transp,false,false,true);
 	vp_frame_init(in,"blt",false);
+
+	if (transp) {
+	    tmp=x; x=y; y=tmp;
+	    tt=max1; max1=max2; max2=tt;
+	    tt=min1; min1=min2; min2=tt;
+	}
 
 	if (i3 > 0) vp_erase();
 	vp_frame();
@@ -168,7 +172,11 @@ int main(int argc, char* argv[])
 	    }
 	}
 	
-	if (transp) {tmp=x; x=y; y=tmp;}
+	if (transp) {
+	    tmp=x; x=y; y=tmp;
+	    tt=max1; max1=max2; max2=tt;
+	    tt=min1; min1=min2; min2=tt;
+	}
     } 
    
     exit (0);

@@ -36,8 +36,8 @@ Flow('piks','scan','picks nt=8281 dt=100000')
 
 Plot('scan2',['scan','rms'],'Overlay')
 
-Flow('weight',['stack','rms'],'slice pick=${SOURCES[1]}')
-Plot('weight',graph('Weight') + ' label2=Amplitude')
+Flow('weight',['scan','rms'],'slice pick=${SOURCES[1]}')
+Plot('weight',graph('Weight') + ' label2=Semblance')
 
 Result('clapp',['cmp','scan2','weight'],'SideBySideAniso')
 
