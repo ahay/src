@@ -11,8 +11,8 @@ par = {
     'co':3000, # velocity (m/s)
     'fo':1000, # central frequency (Hz)
     'nt':8000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
-    'ox':0,                         'lx':'label2=x unit2=m',
-    'oz':0,                         'lz':'label1=z unit1=m',
+    'ox':0,                          'lx':'label2=x unit2=m',
+    'oz':0,                          'lz':'label1=z unit1=m',
     'kt':100,  # wavelet delay
     'nbx':250, 'tx':0.002,
     'nbz':250, 'tz':0.002,
@@ -26,6 +26,13 @@ par['nx']=100*par['smp']+1
 
 par['dz']=par['lo']/par['smp']
 par['nz']=100*par['smp']+1
+
+# ------------------------------------------------------------
+
+par['jx']=par['lo']/par['dx']
+par['dr']=par['dx']*par['jx']
+par['nr']=par['nx']/par['jx']
+par['or']=par['dx']*par['jx']/2
 
 # add F-D modeling parameters
 fdmod.param(par)
@@ -42,24 +49,15 @@ Flow('wav',None,
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
-# experiment setup
-Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=1' % par)
+# target coordinates
+zt = par['oz']+90*par['lo']
+xt = par['ox']+par['nx']/2*par['dx']
+
 Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
 
-# receiver positions
-Flow('zr','r_','math output="0" ')
-Flow('xr','r_','math output="x1"')
-Flow('rr',['xr','zr'],
-     '''
-     cat axis=2 sace=n
-     ${SOURCES[0]} ${SOURCES[1]} | transp
-     ''', stdin=0)
-Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* plotcol=6',par))
-
-# source positions
-Flow('zs','s_','math output="%g"' % (par['oz']+90*par['lo']) )
-Flow('xs','s_','math output="%g"' % (par['ox']+par['nx']/2*par['dx']))
+# source position
+Flow('zs','s_','math output="%g"' % zt)
+Flow('xs','s_','math output="%g"' % xt)
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -67,7 +65,45 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=o plotcol=2',par))
+     + fdmod.cgraph('symbol=* plotcol=2',par))
+
+# ------------------------------------------------------------
+# experiment setup
+Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=1' % par)
+
+# receiver positions
+Flow('zr','r_','math output="%g"'% (10*par['dz']) )
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],
+     '''
+     cat axis=2 sace=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
+     + fdmod.cgraph('symbol=. plotcol=6',par))
+
+# ------------------------------------------------------------
+# receivers around target
+nq = 101
+oq = xt - (nq-1)/2 * par['dx']
+dq =                 par['dx']
+
+Flow('q_',None,'math n1=%d d1=%g o1=%g output=1' % (nq,dq,oq) )
+for iq in range(nq):
+    zz = zt + (iq-nq/2)*par['dz']
+
+    Flow('zq'+str(iq),'q_','math output="%g"' % zz)
+    Flow('xq'+str(iq),'q_','math output="x1"')
+    Flow('qq'+str(iq),['xq'+str(iq),'zq'+str(iq)],
+         '''
+         cat axis=2 sace=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+    
+allq = map(lambda x: 'qq%d' % x,range(nq))
+Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq)
+Plot('qq','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=. plotcol=0',par))
 
 # ------------------------------------------------------------
 Flow('mask',None,
@@ -79,50 +115,43 @@ Flow('mask',None,
      ''' % par)
 
 # ------------------------------------------------------------
-# anomaly
-Flow('va',None,
+# background
+Flow('vo',None,
      '''
-     spike nsp=1 mag=0
+     spike nsp=1 mag=%(co)g
      n1=%(nz)d o1=%(oz)g d1=%(dz)g
      n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
-# random noise (clutter)
-Flow('vn','va mask',
-     '''
-     math output=1 |
-     noise mean=0 range=2 type=y|
-     smooth rect1=15 rect2=15 |
-     add add=-1 |
-     scale axis=123 |
-     scale rscale=500 |
-     math m=${SOURCES[1]} output="input*m"
-     ''')
 
-# background + anomaly
-Flow('vo','va',
+# clutter
+Flow('vv','vo',
      '''
-     math output=%(co)g
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g
-     ''' % par)
-# background + anomaly + noise
-Flow('vv','vo va vn','add ${SOURCES[1]} ${SOURCES[2]}')
+     math output=0 |
+     noise mean=0 range=1 type=y |
+     scale rscale=0.5 |
+     add add=1 |
+     smooth rect1=7 rect2=7 |
+     add add=-1 |
+     scale rscale=7 |
+     add add=+1 |
+     math output="3000/sqrt(input)" |
+     clip clip=3500
+     ''')
 
 Flow('rm',None,
      '''
-     spike nsp=1 mag=+0.5
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=101 l1=%(nz)d
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=1   l2=200 |
-     add add=2
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 
-Plot('vo',fdmod.cgrey('allpos=y bias=2500 pclip=100',par))
-Plot('vv',fdmod.cgrey('allpos=y bias=2500 pclip=100',par))
+Plot('vo',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
+Plot('vv',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
 Plot('rm',fdmod.cgrey('allpos=y bias=3000 pclip=100',par))
 
-Result('vo',['vo','ss','rr'],'Overlay')
-Result('vv',['vv','ss','rr'],'Overlay')
-Result('rm',['rm','ss','rr'],'Overlay')
+Result('vo',['vo','rr','qq','ss'],'Overlay')
+Result('vv',['vv','rr','qq','ss'],'Overlay')
+Result('rm',['rm','rr','qq','ss'],'Overlay')
 
 # ------------------------------------------------------------
 # F-D modeling
@@ -135,6 +164,9 @@ fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('dd','transp|' + fdmod.dgrey('',par))
 
+fdmod.wom('wom','ww','vv',par)
+Result('wom',           fdmod.wgrey('pclip=97',par))
+
 # ------------------------------------------------------------
 # RTM
 
@@ -144,5 +176,7 @@ Result('io',fdmod.cgrey('pclip=100',par))
 fdmod.zom('ii','dd','vo','rm','rr','free=n dens=n',2000,par)
 Result('ii',fdmod.cgrey('pclip=100',par))
 # ------------------------------------------------------------
+
+#fdmod.awe('dq','wq','dd','vo','rm','rr','qq','free=n dens=n jsnap=8000',par)
 
 End()
