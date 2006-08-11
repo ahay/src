@@ -12,6 +12,8 @@ def param(par):
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
 
+    if(not par.has_key('tmin')):     par['tmin']=par['ot']
+    if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
     if(not par.has_key('xmin')):     par['xmin']=par['ox']
     if(not par.has_key('xmax')):     par['xmax']=par['ox'] + (par['nx']-1) * par['dx']
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
@@ -24,8 +26,8 @@ def param(par):
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=n wantscalebar=n
-    title="" pclip=99
+    grey labelrot=n wantaxis=y title="" wantscalebar=n
+    pclip=100
     min1=%g max1=%g %s
     min2=%g max2=%g %s
     screenratio=%g screenht=%g
@@ -38,8 +40,8 @@ def cgrey(custom,par):
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y wanttitle=y wantscalebar=n
-    title="" pclip=100 gainpanel=a
+    grey labelrot=n wantaxis=y title="" wantscalebar=n
+    pclip=100 gainpanel=a
     screenratio=%g screenht=%g
     %s %s %s
     ''' % (par['zmin'],par['zmax'],
@@ -50,8 +52,7 @@ def wgrey(custom,par):
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n
-    yreverse=y wantaxis=n title=" " 
+    graph labelrot=n wantaxis=n title="" yreverse=y 
     min2=%g max2=%g %s
     min1=%g max1=%g %s
     screenratio=%g screenht=%g
@@ -64,11 +65,13 @@ def cgraph(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=99
+    grey labelrot=n wantaxis=y title=""
+    pclip=100
+    min1=%g max1=%g %s
     min2=%g max2=%g %s
     %s
-    ''' % (par['xmin'],par['xmax'],par['lx'],
+    ''' % (par['tmin'],par['tmax'],par['lt'],
+           par['xmin'],par['xmax'],par['lx'],
            custom)
 
 # execute acoustic finite-differences modeling
@@ -77,7 +80,7 @@ def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
     
     Flow( [data,wfld],[wavl,velo,dens,sou,rec],
           '''
-          afmodP ompchunk=%(ompchunk)d
+          afmod ompchunk=%(ompchunk)d
           verb=y abc=y free=n dens=y
           snap=%(snap)s jsnap=%(jsnap)d
           nbz=%(nbz)d tz=%(tz)g
@@ -133,3 +136,37 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
     # conventional (cross-correlation zero-lag) imaging condition
     Flow(corr,[swfl,rwfl],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
     Flow(imag,corr,'stack axis=3')
+
+def zom(imag,rdat,velo,dens,racq,custom,mem,par):
+
+    rwfl = imag+'_ur' # receiver wavefield
+    rout = imag+'_dr' # receiver data (not the input rdat)
+
+    # receiver wavefield (z,x,t)
+    tdat = imag+'_tds'
+    twfl = imag+'_tur'
+    tout = imag+'_tdr'
+
+    par['jsnap'] = par['nt']
+    Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
+    awe(tout,imag,tdat,velo,dens,racq,racq,custom,par)
+
+def wom(wom,wfld,velo,par):
+
+    chop = wfld+'_chop'
+    Flow(chop,wfld,
+         '''
+         window
+         min1=%(zmin)g max1=%(zmax)g
+         min2=%(xmin)g max2=%(xmax)g |
+         scale axis=123
+         ''' % par)
+
+    Flow(wom,[velo,chop],
+         '''
+         scale axis=123 |
+         spray axis=3 n=%d o=%g d=%g |
+         math w=${SOURCES[1]} output="(input-0.5)+5*w"
+         ''' % (par['nt']/par['jsnap'],
+                par['ot'],
+                par['dt']*par['jsnap']))
