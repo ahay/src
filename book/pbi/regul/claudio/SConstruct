@@ -210,11 +210,12 @@ Flow('bin1 fold1','kmodl1 roff1',
      transp plane=23 memsize=500 | transp memsize=500
      ''' % (nx,x0,dx,ny,y0,dy))
 
+cube = 'frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9'
+
 Result('bin1',
        '''
        window min1=2 | byte gainpanel=all | grey3 title="Binned Shot"
-       frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9
-       ''')
+       ''' + cube)
 
 # Modeling to regular geometry
 
@@ -231,10 +232,82 @@ Flow('kmodr1','zdens zx zy',
 Result('kmodr1',
        '''
        window min1=2 | byte | grey3 title="Regular Shot"
-       frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9
-       ''')
+       ''' + cube)
 
 Flow('kmodl100','z geom100',
      'kirmod3 head=${SOURCES[1]} nt=1001 dt=0.004 vel=1.5 freq=25')
+
+# Local slope estimation from regular data
+
+Flow('dipr','kmodr1','dip rect1=50 rect2=5 rect3=5 nj1=2')
+
+# Window inline and crossline slopes
+Flow('dipr1','dipr','window n4=1')
+Flow('dipr2','dipr','window f4=1')
+
+Result('dipr1',
+       '''
+       window min1=2 |
+       byte bar=bar.rsf clip=1.5 |
+       grey3 color=j scalebar=y title="Inline Slope"
+       maxval=1.5 minval=-0.5
+       ''' + cube)
+Result('dipr2',
+       '''
+       window min1=2 |
+       byte bar=bar.rsf clip=2 |
+       grey3 color=j scalebar=y title="Crossline Slope"
+       maxval=2 minval=-2
+       ''' + cube)
+
+# Local slope estimation from irregular (binned) data
+
+# extend fold to 3-D to create a 3-D mask for empty bins
+Flow('mask','fold1','spray axis=1 n=1501 d=0.004 o=0')
+
+Flow('dipi','bin1 mask',
+     'dip rect1=50 rect2=5 rect3=5 nj1=2 mask=${SOURCES[1]}')
+
+# Window inline and crossline slopes
+Flow('dipi1','dipi','window n4=1')
+Flow('dipi2','dipi','window f4=1')
+
+Result('dipi1',
+       '''
+       window min1=2 |
+       byte bar=bar.rsf clip=1.5 |
+       grey3 color=j scalebar=y title="Inline Slope (Irregular)"
+       maxval=1.5 minval=-0.5
+       ''' + cube)
+Result('dipi2',
+       '''
+       window min1=2 |
+       byte bar=bar.rsf clip=2 |
+       grey3 color=j scalebar=y title="Crossline Slope (Irregular)"
+       maxval=2 minval=-2
+       ''' + cube)
+
+# Regularization with local slopes
+
+Flow('reg1','bin1 dipi mask',
+     '''
+     planemis3 nj1=2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y
+     niter=1000
+     ''')
+
+Result('reg1',
+       '''
+       window min1=2 | byte gainpanel=all | grey3 title="Regularized"
+       ''' + cube)
+
+# Regularization with local slopes from regular data
+
+Flow('rreg1','bin1 dipr mask',
+     'planemis3 nj1=2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
+
+Result('rreg1',
+       '''
+       window min1=2 | byte gainpanel=all | grey3 title="Regularized"
+       ''' + cube)
 
 End()

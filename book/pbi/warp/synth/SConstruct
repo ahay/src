@@ -3,7 +3,7 @@ import math
 
 sizes = (10,100,1000)
 
-graph = "graph plotfat=10 label1='Time (s)' wanttitle=n labelsz=10 label2=%s"
+graph = "graph plotfat=10 label1=Time unit1=s wanttitle=n labelsz=10 label2=%s"
 
 def vgraph(min1,max1,min2,max2):
     return '''
@@ -18,7 +18,7 @@ difplot = '''
 add scale=1,-1 ${SOURCES[1]} |
 cat ${SOURCES[0]} ${SOURCES[1]} axis=2 |
 dots gaineach=0 Xscreenwd=9.225 Xscreenht=5.2 Xyyscale=0.8
-labels="Difference:PS warped:PP" label1="Time (s)"
+labels="Difference:PS warped:PP" label1=Time unit1=s
 '''
 reshape = '''
 reshape in2=${SOURCES[1]}
@@ -50,7 +50,7 @@ rick = 'spectra | ricker niter=1000 ma=$TARGET m=20'
 
 def greyscan(min,max):
     return '''grey title="Warping Scan" min2=%g max2=%g allpos=y min1=0 max1=1
-    color=j pclip=100 label1="Time (s)" label2="Gamma"
+    color=j pclip=100 label1=Time unit1=s label2="Gamma"
     wanttitle=n label1='Time' label2="Gamma"''' % (min,max)
 
 def pickplot(min,max):
@@ -131,7 +131,7 @@ for mode in ['pp','ps']:
 
 iphase = '''
 cat axis=2 ${SOURCES[1]} |
-graph title="Instantaneous Frequency" label1="Time (s)"
+graph title="Instantaneous Frequency" label1=Time unit1=s
 '''
 
 getmask = 'add scale=1,-1 ${SOURCES[1]} | mask min=0 | dd type=float'
@@ -200,7 +200,7 @@ for f in ['s','h','c']: # ['h','c','s']
                   ''',stdin=0)
         Plot(vpvs,vpvs+'0',
               '''
-              graph symbol='*' label1='Time (s)' label2='Vp/Vs'
+              graph symbol='*' label1=Time unit1=s label2='Vp/Vs'
               wanttitle=n wherexlabel=t wheretitle=b crowd1=0.8 labelsz=10 
               min1=0 max1=1 min2=1 max2=%d symbolsz=8 plotcol=5
               ''' % vmax[f])
@@ -210,7 +210,7 @@ for f in ['s','h','c']: # ['h','c','s']
         ##################################################################
         for x in all:
             grey = grey2 + ' title=%s'
-            if x == 'ss': grey = grey + ' label1="Time (s)"'
+            if x == 'ss': grey = grey + ' label1=Time unit1=s'
             Plot(sized('g' + x),sized(x),grey % string.upper(x))
             Plot(sized('g-' + x),[sized('g' + x),x + 'nail'],'Overlay')
         Plot(sized('bot'),map(lambda x: sized('g-' + x),all),'OverUnderAniso')
@@ -227,7 +227,7 @@ for f in ['s','h','c']: # ['h','c','s']
         Plot(sized('morph-bot'),f + 'swrp',
                   '''math output=0 |
                   graph plotcol=2
-                  label1=' ' label2='Time Error (s)'
+                  label1= unit1= label2="Time Error" unit2=s
                   wanttitle=n wherexlabel=t wheretitle=b 
                   min1=0 max1=1 crowd=0.8 labelsz=10
                   title="Traveltime Error (s)"

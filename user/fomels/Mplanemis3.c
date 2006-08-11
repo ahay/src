@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n3, n123;
+    int i, niter, nw, n1, n2, n3, n123, nj1, nj2;
     float *mm, *dd, *pp, *qq;
     bool *known, verb;
     sf_file in, out, dip, mask;
@@ -44,6 +44,10 @@ int main(int argc, char* argv[])
     /* [1,2,3] accuracy order */
     if (nw < 1 || nw > 3) 
 	sf_error ("Unsupported nw=%d, choose between 1 and 3",nw);
+
+    if (!sf_getint("nj1",&nj1)) nj1=1;
+    if (!sf_getint("nj2",&nj2)) nj2=1;
+    /* antialiasing */
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
@@ -77,8 +81,8 @@ int main(int argc, char* argv[])
 	dd[i] = 0.;
     }
 
-    allpass3_init(allpass_init(nw, 1, n1,n2,n3, pp),
-		  allpass_init(nw, 1, n1,n2,n3, qq));
+    allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),
+		  allpass_init(nw, nj2, n1,n2,n3, qq));
     sf_solver(allpass3_lop, sf_cgstep, n123, 2*n123, mm, dd, niter,
 	      "known", known, "x0", mm, "verb", verb, "end");
 

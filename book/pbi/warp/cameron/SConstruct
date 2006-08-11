@@ -12,7 +12,7 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 
 for mode in ['pz','ps']:
     Fetch(data[mode],'cameron',private)
-    Flow([mode,mode+'hhead',mode+'bhead',mode+'head'],data[mode],
+    Flow([mode,mode+'hhead.asc',mode+'bhead.bin',mode+'head'],data[mode],
               '''segyread tape=$SOURCE
               hfile=${TARGETS[1]} bfile=${TARGETS[2]} tfile=${TARGETS[3]}
               ''',stdin=0)

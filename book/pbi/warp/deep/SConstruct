@@ -220,10 +220,10 @@ htable = '''
 6 4.927
 '''
 
-Flow('./htable',None,
+Flow('htable.asc',None,
      'echo %s n1=2 n2=3 in=$TARGET data_format=ascii_float' %
      string.join(Split(htable),' '))
-Flow('rswrp','htable swrp','dd form=native | spline pattern=${SOURCES[1]}')
+Flow('rswrp','htable.asc swrp','dd form=native | spline pattern=${SOURCES[1]}')
 
 Flow('rspps','rswrp',warp2gamma)
 Plot('rspps',graph2)
@@ -269,7 +269,7 @@ Flow('warpl1 morphl1 varp7',
      'rimorph2 ripp2 pickl rswrp',warp1(1,500))
 Plot('warpl1',warp2gamma + '| ' + graph2)
 Plot('morphl2-top','vpvs warpl1','Overlay')
-Plot('morphl2-bot','warpl1 rswrp',botplot(-300,300))
+Plot('morphl2-bot','warpl1 rswrp',botplot(-400,400))
 Result('morphl2','morphl2-top morphl2-bot','OverUnderAniso')
 
 Result('morphl2s','morphl1 ripp2',difplot)
