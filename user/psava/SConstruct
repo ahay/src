@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 awe 
-afmodP erfdm
+afmod erfdm
 off2abs off2abs3
 paradd
 '''

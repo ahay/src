@@ -49,7 +49,8 @@ static void add_float   (bool        collect,
 			 float*      buf, 
 			 float*      bufi, 
 			 float       scale, 
-			 float       add);
+			 float       add,
+                         int ompchunk);
 
 static void add_int     (bool        collect, 
 			 char        cmode, 
@@ -57,7 +58,8 @@ static void add_int     (bool        collect,
 			 int*        buf, 
 			 int*        bufi, 
 			 float       scale, 
-			 float       add);
+			 float       add,
+                         int ompchunk);
 
 static void add_complex (bool        collect, 
 			 char        cmode, 
@@ -65,7 +67,8 @@ static void add_complex (bool        collect,
 			 sf_complex* buf, 
 			 sf_complex* bufi, 
 			 float       scale, 
-			 float       add);
+			 float       add,
+                         int ompchunk);
 
 /*------------------------------------------------------------*/
 /*------------------------------------------------------------*/
@@ -84,9 +87,13 @@ int main (int argc, char* argv[])
     
     size_t nbuf,nsiz;
     char *bufi,*bufo;
+    
+    int ompchunk;  /* OpenMP data chunk size */
 
     /* init RSF */
     sf_init (argc, argv);
+
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
 
     /*------------------------------------------------------------*/
 
@@ -166,7 +173,8 @@ int main (int argc, char* argv[])
 		    sf_floatread((float*) bufi,nbuf,in[j]);	    
 		    add_float(collect, cmode, nbuf,
 			      (float*) bufo, (float*) bufi, 
-			      scale[j], add[j]
+			      scale[j], add[j],
+			      ompchunk
 			);
 		}
 		sf_floatwrite((float*) bufo,nbuf,out);
@@ -177,7 +185,8 @@ int main (int argc, char* argv[])
 		    sf_complexread((sf_complex*) bufi,nbuf,in[j]);
 		    add_complex(collect, cmode, nbuf,
 				(sf_complex*) bufo, (sf_complex*) bufi, 
-				scale[j], add[j]
+				scale[j], add[j],
+				ompchunk
 			);
 		}
 		sf_complexwrite((sf_complex*) bufo,nbuf,out);
@@ -188,7 +197,8 @@ int main (int argc, char* argv[])
 		    sf_intread((int*) bufi,nbuf,in[j]);
 		    add_int(collect, cmode, nbuf,
 			    (int*) bufo,(int*) bufi,
-			    scale[j], add[j]
+			    scale[j], add[j],
+			    ompchunk
 			);
 		}
 		sf_intwrite((int*) bufo,nbuf,out);
@@ -208,7 +218,8 @@ static void add_float (bool   collect,
 		       float* bufo, 
 		       float* bufi, 
 		       float  scale, 
-		       float  add)
+		       float  add,
+                       int    ompchunk)
 {
     size_t jbuf;
     float f;
@@ -218,7 +229,7 @@ static void add_float (bool   collect,
 	    case 'p':
 	    case 'm':
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    bufo[jbuf] *= scale*(bufi[jbuf] + add);
@@ -226,7 +237,7 @@ static void add_float (bool   collect,
 		break;
 	    case 'd':
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf,f) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf,f) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    f = scale*(bufi[jbuf] + add);
@@ -235,7 +246,7 @@ static void add_float (bool   collect,
 		break;
 	    default:
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    bufo[jbuf] +=scale*(bufi[jbuf] + add);
@@ -244,7 +255,7 @@ static void add_float (bool   collect,
 	}
     } else {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 	for(jbuf=0;jbuf<nbuf;jbuf++){
 	    bufo[jbuf] = scale*(bufi[jbuf] + add);
@@ -259,7 +270,8 @@ static void add_int (bool   collect,
 		     int*   bufo, 
 		     int*   bufi, 
 		     float  scale, 
-		     float  add)
+		     float  add,
+		     int ompchunk)
 {
     size_t jbuf;
     float f;
@@ -269,7 +281,7 @@ static void add_int (bool   collect,
 	    case 'p':
 	    case 'm':
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    bufo[jbuf] *= scale*( (float) bufi[jbuf] + add);
@@ -277,7 +289,7 @@ static void add_int (bool   collect,
 		break;
 	    case 'd':
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf,f) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf,f) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    f = scale*( (float) bufi[jbuf] + add);
@@ -286,7 +298,7 @@ static void add_int (bool   collect,
 		break;
 	    default:
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 		for(jbuf=0;jbuf<nbuf;jbuf++){
 		    bufo[jbuf] +=scale*( (float) bufi[jbuf] + add);
@@ -295,7 +307,7 @@ static void add_int (bool   collect,
 	}
     } else {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(guided) private(jbuf) shared(scale,add,bufi) 
+#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
 #endif
 	for(jbuf=0;jbuf<nbuf;jbuf++){
 	    bufo[jbuf] = scale*( (float) bufi[jbuf] + add);
@@ -310,7 +322,8 @@ static void add_complex (bool        collect,
 			 sf_complex* bufo, 
 			 sf_complex* bufi, 
 			 float       scale, 
-			 float       add)
+			 float       add,
+                         int ompchunk)
 {
     size_t j;
     sf_complex c;

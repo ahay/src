@@ -1,8 +1,4 @@
-/* Time-domain acoustic FD modeling.
-   
-pcs 2006
-*/
-
+/* Time-domain acoustic FD modeling */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
