@@ -96,12 +96,12 @@ for iq in range(nq):
     Flow('xq'+str(iq),'q_','math output="x1"')
     Flow('qq'+str(iq),['xq'+str(iq),'zq'+str(iq)],
          '''
-         cat axis=2 sace=n
+         cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
     
 allq = map(lambda x: 'qq%d' % x,range(nq))
-Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq)
+Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq, stdin=0)
 Plot('qq','window n1=2 | dd type=complex | window | '
      + fdmod.cgraph('symbol=. plotcol=0',par))
 
@@ -156,9 +156,9 @@ Result('rm',['rm','rr','qq','ss'],'Overlay')
 # ------------------------------------------------------------
 # F-D modeling
 
-#fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-#Result('wo',            fdmod.wgrey('pclip=99',par))
-#Result('do','transp|' + fdmod.dgrey('',par))
+fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+Result('wo',            fdmod.wgrey('pclip=99',par))
+Result('do','transp|' + fdmod.dgrey('',par))
 
 fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
@@ -170,14 +170,14 @@ Result('wom',           fdmod.wgrey('pclip=95',par))
 # ------------------------------------------------------------
 # RTM
 
-#fdmod.zom('io','do','vo','rm','rr','free=n dens=n',par)
-#Result('io',fdmod.cgrey('pclip=100',par))
+fdmod.zom('io','uo','do','vo','rm','rr','qq','free=n dens=n',par)
+Result('io',fdmod.cgrey('pclip=100',par))
 
-#fdmod.zom('ii','dd','vo','rm','rr','free=n dens=n',par)
-#Result('ii',fdmod.cgrey('pclip=100',par))
+fdmod.zom('ii','uu','dd','vo','rm','rr','qq','free=n dens=n',par)
+Result('ii',fdmod.cgrey('pclip=100',par))
 # ------------------------------------------------------------
 
-fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
-#fdmod.awe('dq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
+#fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
+#Result('iq',fdmod.cgrey('',par))
 
 End()
