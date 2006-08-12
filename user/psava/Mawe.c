@@ -46,14 +46,16 @@ int main(int argc, char* argv[])
 
     /* cube axes */
     sf_axis at,az,ax,as,ar;
-    int it,iz,ix,is,ir, iop;
-    int nt,nz,nx,ns,nr,nz2,nx2;
-    float z0,dz,x0,dx,idx,idz,dt,dt2;
+    int     it,iz,ix,is,ir, iop;
+    int     nt,nz,nx,ns,nr, nz2,nx2;
+    float z0,dz,idz;
+    float x0,dx,idx;
+    float dt,dt2;
 
     /* arrays */
     pt2d   *ss, *rr; /* source/receiver locations */
     float **ww=NULL; /* input data */
-    float **dd=NULL; /* output data */
+    float  *dd=NULL; /* output data */
     float **vv=NULL; /* velocity */
     float **ee=NULL; /* density  */
 
@@ -99,12 +101,12 @@ int main(int argc, char* argv[])
 
     if(dens) Fe = sf_input("den"); /* density */
 
-    /* read axes*/
+    /* read axes */
     at=sf_iaxa(Fw,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
     az=sf_iaxa(Fv,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
-    ax=sf_iaxa(Fv,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* space */
-    as=sf_iaxa(Fs,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* source */
-    ar=sf_iaxa(Fr,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receiver */
+    ax=sf_iaxa(Fv,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* position */
+    as=sf_iaxa(Fs,2); sf_setlabel(as,"s"); if(verb) sf_raxa(as); /* sources */
+    ar=sf_iaxa(Fr,2); sf_setlabel(ar,"r"); if(verb) sf_raxa(ar); /* receivers */
 
     nt=sf_n(at); dt=sf_d(at);
     nz=sf_n(az);
@@ -153,6 +155,10 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fu,at,3);
     }
 
+    sf_fileflush(Fd,Fw);
+    sf_fileflush(Fu,Fw);
+/*------------------------------------------------------------*/
+
     /* Laplacian coefficients */
     c0=-30./12.; 
     c1=+16./12.;
@@ -188,20 +194,18 @@ int main(int argc, char* argv[])
     /* allocate source/receiver point arrays */
     ss = (pt2d*) sf_alloc(ns,sizeof(*ss)); 
     rr = (pt2d*) sf_alloc(nr,sizeof(*rr)); 
-
     pt2dread1(Fs,ss,ns,2); /* read 2 elements (x,z) */
     pt2dread1(Fr,rr,nr,2); /* read 2 elements (x,z) */
 
-    dd=sf_floatalloc2(nr,nt);
+    dd=sf_floatalloc(nr);
     for(ir=0;ir<nr;ir++) {
-	for(it=0;it<nt;it++) {
-	    dd[it][ir]=0;
-	}
+	dd[ir]=0;
     }
 
     jzs=sf_intalloc(ns); fzs=sf_floatalloc(ns); 
-    jzr=sf_intalloc(nr); fzr=sf_floatalloc(nr);
     jxs=sf_intalloc(ns); fxs=sf_floatalloc(ns);
+
+    jzr=sf_intalloc(nr); fzr=sf_floatalloc(nr);
     jxr=sf_intalloc(nr); fxr=sf_floatalloc(nr);
 
     ws00 = sf_floatalloc(ns); wr00 = sf_floatalloc(nr); 
@@ -222,7 +226,7 @@ int main(int argc, char* argv[])
 	    jxs[is] = (int)( (ss[is].x-x0)/dx);
 	    fxs[is] =        (ss[is].x-x0)/dx - jxs[is];
 
-	    ss[iz].v=1;
+	    ss[is].v=1;
 	} else {
 	    jzs[is] = 0; jxs[is] = 0;
 	    fzs[is] = 1; fxs[is] = 0;
@@ -487,18 +491,18 @@ int main(int argc, char* argv[])
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ir) shared(dd,rr,uo,jzr,wr00,wr01,wr10,wr11)
 #endif
 	for (ir=0;ir<nr;ir++) {
-	    dd[it][ir] = 
+	    dd[ir] = 
 		uo[ jxr[ir]  ][ jzr[ir]  ] * wr00[ir] +
 		uo[ jxr[ir]  ][ jzr[ir]+1] * wr01[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]  ] * wr10[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
-	    dd[it][ir] *= rr[ir].v;
+	    dd[ir] *= rr[ir].v;
 	}
+	/* write data */
+	sf_floatwrite(dd,nr,Fd);
+	
     }
     if(verb) fprintf(stderr,"\n");    
-
-    /* write data */
-    sf_floatwrite(dd[0],nr*nt,Fd);
     
     exit (0);
 }

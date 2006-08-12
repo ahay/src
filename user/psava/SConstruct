@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-awe 
+awe
 afmod erfdm
 off2abs off2abs3
 paradd

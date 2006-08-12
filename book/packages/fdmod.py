@@ -111,6 +111,7 @@ def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
+# shot-record reverse-time migration
 def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
 
     swfl = imag+'_us' #   source wavefield
@@ -137,7 +138,8 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
     Flow(corr,[swfl,rwfl],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
     Flow(imag,corr,'stack axis=3')
 
-def zom(imag,rdat,velo,dens,racq,custom,mem,par):
+# exploding-reflector reverse-time migration
+def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 
     rwfl = imag+'_ur' # receiver wavefield
     rout = imag+'_dr' # receiver data (not the input rdat)
@@ -145,12 +147,13 @@ def zom(imag,rdat,velo,dens,racq,custom,mem,par):
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
     twfl = imag+'_tur'
-    tout = imag+'_tdr'
 
-    par['jsnap'] = par['nt']
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(tout,imag,tdat,velo,dens,racq,racq,custom,par)
+    awe(data,twfl,tdat,velo,dens,sacq,racq,custom,par)
 
+    Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']) )
+
+# wavefield-over-model plots
 def wom(wom,wfld,velo,par):
 
     chop = wfld+'_chop'
@@ -166,7 +169,7 @@ def wom(wom,wfld,velo,par):
          '''
          scale axis=123 |
          spray axis=3 n=%d o=%g d=%g |
-         math w=${SOURCES[1]} output="(input-0.5)+5*w"
+         math w=${SOURCES[1]} output="(input-0.5)+10*w"
          ''' % (par['nt']/par['jsnap'],
                 par['ot'],
                 par['dt']*par['jsnap']))

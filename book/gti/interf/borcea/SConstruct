@@ -1,6 +1,6 @@
 ## 
  # Borcea et al model
- # passive source setup
+ # active source setup
  ##
 from rsfproj import *
 import fdmod,zomig
@@ -10,12 +10,12 @@ par = {
     'lo':3,    # wavelength (m)
     'co':3000, # velocity (m/s)
     'fo':1000, # central frequency (Hz)
-    'nt':8000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
+    'nt':6000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
     'ox':0,                          'lx':'label2=x unit2=m',
     'oz':0,                          'lz':'label1=z unit1=m',
     'kt':100,  # wavelet delay
-    'nbx':250, 'tx':0.002,
-    'nbz':250, 'tz':0.002,
+    'nbx':250, 'tx':0.0015,
+    'nbz':250, 'tz':0.0015,
     'jsnap':100, 'height':10
     }
 
@@ -84,7 +84,7 @@ Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
 
 # ------------------------------------------------------------
 # receivers around target
-nq = 101
+nq = 10  * par['lo']/par['dx']
 oq = xt - (nq-1)/2 * par['dx']
 dq =                 par['dx']
 
@@ -130,9 +130,9 @@ Flow('vv','vo',
      noise mean=0 range=1 type=y |
      scale rscale=0.5 |
      add add=1 |
-     smooth rect1=7 rect2=7 |
+     smooth rect1=6 rect2=6 |
      add add=-1 |
-     scale rscale=7 |
+     scale rscale=8 |
      add add=+1 |
      math output="3000/sqrt(input)" |
      clip clip=3500
@@ -156,27 +156,28 @@ Result('rm',['rm','rr','qq','ss'],'Overlay')
 # ------------------------------------------------------------
 # F-D modeling
 
-fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-Result('wo',            fdmod.wgrey('pclip=99',par))
-Result('do','transp|' + fdmod.dgrey('',par))
+#fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+#Result('wo',            fdmod.wgrey('pclip=99',par))
+#Result('do','transp|' + fdmod.dgrey('',par))
 
 fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('dd','transp|' + fdmod.dgrey('',par))
 
 fdmod.wom('wom','ww','vv',par)
-Result('wom',           fdmod.wgrey('pclip=97',par))
+Result('wom',           fdmod.wgrey('pclip=95',par))
 
 # ------------------------------------------------------------
 # RTM
 
-fdmod.zom('io','do','vo','rm','rr','free=n dens=n',2000,par)
-Result('io',fdmod.cgrey('pclip=100',par))
+#fdmod.zom('io','do','vo','rm','rr','free=n dens=n',par)
+#Result('io',fdmod.cgrey('pclip=100',par))
 
-fdmod.zom('ii','dd','vo','rm','rr','free=n dens=n',2000,par)
-Result('ii',fdmod.cgrey('pclip=100',par))
+#fdmod.zom('ii','dd','vo','rm','rr','free=n dens=n',par)
+#Result('ii',fdmod.cgrey('pclip=100',par))
 # ------------------------------------------------------------
 
-#fdmod.awe('dq','wq','dd','vo','rm','rr','qq','free=n dens=n jsnap=8000',par)
+fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
+#fdmod.awe('dq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
 
 End()
