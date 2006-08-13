@@ -217,7 +217,7 @@ reproducible research in scientific computing.
 \subsection{Paper organization}
 
 \newpage
-\section{Madagascar source code \& community}
+\section{Madagascar open source code}
 %
 Madagascar's homepage is \url{http://rsf.sourceforge.net}. Madagascar
 source code is proposed in two versions:
@@ -231,12 +231,9 @@ development version which is updated every few hours or days by a
 dynamic team of developers. As such, there is no guarantee that the
 development version will be fully functional and stable at any given
 point in time. In the remaining of this paper, we assume that you have
-successfully installed Madagascar stable version.
-
-Madagascar users are invited to share their experiences and problems
-on the \href{mailto:rsf-user@lists.sourceforge.net}{rsf-user mailing
-  list}. Madagascar developers communicate using the
-\href{mailto:rsf-devel@lists.sourceforge.net}{rsf-devel mailing list}.
+successfully installed Madagascar stable version and that you have an
+Internet connection\footnote{XXX provide alternate mean to download
+  Lena.img if no Internet connection XXX}.
 
 \section{Creating a reproducible script}
 %
@@ -244,23 +241,23 @@ First of all, the SConstruct commands set in our reproducible research
 environment are
 
 \noindent\texttt{Fetch(filename,dir[,ftp\_server\_info])}\\
-\indent A rule to download \texttt{filename} from a specific
-directory \texttt{dir} of an FTP server
-(\texttt{ftp\_server\_info}).
+\indent A rule to download \textit{$<$filename$>$} from a specific
+directory \textit{$<$dir$>$} of an FTP server
+\textit{$<$ftp\_server\_info$>$}.
 
 \noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\
-\indent A rule to generate \texttt{target[s]} from \texttt{source[s]}
-using \texttt{command[s]}
+\indent A rule to generate \textit{$<$target[s]$>$} from
+\textit{$<$source[s]$>$} using \texttt{command[s]}
 
 \noindent\texttt{Plot(intermediate\_plot[,source],plot\_command)} or\\
 \texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\
-\indent A rule to generate an intermediate plot (vpl file in the
-working directory).
+\indent A rule to generate \textit{$<$intermediate\_plot$>$} (VPL file
+in the working directory).
 
 \noindent\texttt{Result(plot[,source],plot\_command)} or\\ 
 \texttt{Result(plot,intermediate\_plots,combination})\\
-\indent A rule to generate a final plot (vpl file in the Fig folder of
-the working directory).
+\indent A rule to generate a final \textit{$<$plot$>$} (VPL file in
+the \textit{Fig} folder of the working directory).
 
 These commands are defined in \textit{\$RSFROOT/lib/rsfproj.py} where
 \textit{RSFROOT} is the environmental variable to the directory where
@@ -272,7 +269,7 @@ Madagascar is installed.
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
 \lstinputlisting[firstline=1,lastline=16,frame=single]{easystart/SConstruct}
 
-This reproducible script, available in the
+This reproducible script (i.e. SConstruct), available in the
 \textit{rsf/scons/easystart} directory of Madagascar book section,
 illustrates the basic use of some of the commands presented in the
 previous section. An image is downloaded from an anonymous data
@@ -283,19 +280,19 @@ and decorticate it.\\
 \lstinputlisting[firstline=1,lastline=1,frame=single]{easystart/SConstruct}
 %
 is a standard Python command that loads the Madagascar project
-management module ``rsfproj.py'' which provides our extension to
+management module \textit{rsfproj.py} which provides our extension to
 SCons.\\
 
 \lstinputlisting[firstline=2,lastline=2,frame=single]{easystart/SConstruct}
 %
 instructs SCons to connect to BEG FTP server (default behavior if no
 FTP server information is provided) and fetch the data file
-``lena.img'' from the ``data/imgs'' directory. Note that Madagascar
-expects a ``data'' folder on top of the specified directory (i.e.
-``imgs''). In the directory where you have your SConstruct, running
-\texttt{scons lena.img} on the command line will download the file
-``lena.img''.  The equivalent command lines are \footnote{use login:
-  anonymous, password: anonymous}
+\textit{lena.img} from the \textit{data/imgs} directory. Note that
+Madagascar expects a \textit{data} folder on top of the specified
+directory (i.e.  \textit{imgs}). In the directory where you have your
+SConstruct, running \texttt{scons lena.img} on the command line will
+download the file \textit{lena.img}.  The equivalent command lines are
+\footnote{use login: anonymous, password: anonymous}
 \begin{verbatim}
 bash$ ftp egl.beg.utexas.edu
 ftp> bin
@@ -306,10 +303,10 @@ ftp> bye
 %
 \lstinputlisting[firstline=3,lastline=7,frame=single]{easystart/SConstruct}
 %
-prepares the Madagascar header file ``ulena.rsf'' using the standard
-Unix command ``echo''. Note that, if no extension is specified, the
-default extension ``.rsf'' will be appended to source and target
-names. The equivalent command line is
+prepares the Madagascar header file \textit{ulena.rsf} using the
+standard Unix command \texttt{echo}. Note that, if no extension is
+specified, the default extension ``.rsf'' will be appended to source
+and target names. The equivalent command line is
 %
 \begin{verbatim}
 bash$ echo n1=512 n2=513 d1=1 d2=1 in=lena.img \
@@ -321,11 +318,11 @@ in the Flow command otherwise the first source is the standard input.
 Likewise, the first target is the standard output unless otherwise
 specified. Note the triple quotes used because the actual command is
 broken into several lines in the SConstruct. Note also that
-``lena.img'' is refered as ``\$\{SOURCES[0]\}'' (i.e.  first element
-of the \$SOURCES list) in the command. Run \texttt{scons ulena.rsf} to
-execute the Flow command and obtain the ASCII header file
-``ulena.rsf''.  The next step is to convert the
-binary data ``lena.img'' into a RSF file.\\
+\textit{lena.img} is refered as \textit{\$\{SOURCES[0]\}} (i.e.  first
+element of the \textit{\$SOURCES} list) in the command. Run
+\texttt{scons ulena.rsf} to execute the Flow command and obtain the
+ASCII header file \textit{ulena.rsf}.  The next step is to convert the
+binary data \textit{lena.img} into a Madagascar file.\\
 
 \lstinputlisting[firstline=8,lastline=8,frame=single]{easystart/SConstruct}
 %
@@ -335,10 +332,11 @@ The equivalent command line is
 bash$ < ulena.rsf sfdd type=float > flena.rsf
 \end{verbatim}
 %
-Run \texttt{scons flena.rsf}. The Lena image is now converted to RSF
-file format with a header file ``flena.rsf'' in the current directory
-and a binary file ``flena.rsf@'' in the data directory (environment
-variable DATAPATH). The last two steps before displaying Lena (don't
+Run \texttt{scons flena.rsf}. The Lena image is now converted to
+Madagascar file format with a header file \textit{flena.rsf} in the
+current directory and a binary file \textit{flena.rsf@} in the data
+directory (environment variable \textit{DATAPATH}). The last two steps
+before displaying Lena (don't
 be so impatient...)  is windowing the image and subtracting its mean.\\
 
 \lstinputlisting[firstline=9,lastline=10,frame=single]{easystart/SConstruct}
@@ -350,9 +348,9 @@ bash$ < flena.rsf sfwindow f2=1 | sfmath \
 output=``input-99.0512''  > zmflena512.rsf
 \end{verbatim}
 %
-Run \texttt{scons zmflena512.rsf} to obtain ``zmflena512.rsf''. Use
-\texttt{sfin zmflena512.rsf} to check the header of our new file
-(DATAPATH is set to '.')
+Run \texttt{scons zmflena512.rsf} to obtain \textit{zmflena512.rsf}.
+Use \texttt{sfin zmflena512.rsf} to check the header of our new file
+(\textit{DATAPATH} is set to '.')
 %
 \begin{verbatim}
 zmflena512.rsf:
@@ -379,9 +377,9 @@ Running \texttt{scons lena.view} displays Fig.~\ref{fig:lena}.
 \inputdir{easystart}
 \plot{lena}{height=.25\textheight}{Lena}
 %
-It also create a ``Fig'' directory in the current folder where it
-stores the result ``lena.vpl''. The Madagascar reproducible script
-ends with\\
+It also create a \textit{Fig} directory in the current folder where it
+stores the result \textit{lena.vpl}. The Madagascar reproducible
+script ends with\\
 %
 \lstinputlisting[firstline=16,lastline=16,frame=single]{easystart/SConstruct}
 
@@ -399,7 +397,8 @@ Python variables\\
 
 \lstinputlisting[firstline=3,lastline=5,frame=single]{rsfpy/SConstruct}
 
-\noindent that can be used later, for example, to define a Python function\\
+\noindent that can be used later, for example, to define our customized plot
+command as a Python function\\
 
 \lstinputlisting[firstline=7,lastline=11,frame=single]{rsfpy/SConstruct}
 
@@ -440,19 +439,94 @@ This is by no mean an exhaustive list of options but, hopefully, it
 gives you a flavor of the powerful tool you have in hands. Sit back
 and enjoy!
 
-\section{Creating a reproducible paper}
+\subsection{Useful SCons commands for reproducible scripts}
 
+On top of SCons standard options (\texttt{scons --help} for more
+details), Madagascar has its own SCons options. We already saw
+\texttt{scons plot.view} that displays \textit{plot.vpl} (in the
+\textit{Fig} folder) obtained in a Result command. \texttt{scons view}
+displays the result plots one after the other.
+
+It is also possible to check parameters for Madagascar programs in
+SCons Flow commands using the CHECKPAR option (\texttt{scons
+  CHECKPAR=y target}). Note that CHECKPAR is an experimental option
+and will be enhanced in the future to include parameter ranges and
+other safety checks.
+
+To time the execution of processing flows in a SConstruct use the
+TIMER option (\texttt{scons TIMER=y target}).
+
+\texttt{scons lock} is used to secure result plots and copy them from
+the \textit{Fig} folder of your working directory to your
+\textit{\$RSFFIGS} folder where \textit{RSFFIGS} is the environmental
+variable to the directory where you want Madagascar to put your key
+Madagascar result plots. Note that this is a necessary step before
+creating a reproducible documentation. \texttt{scons plot.flip} runs
+\texttt{xtpen Fig/plot.vpl /locked/figures/plot.vpl} to flip between
+the new and locked figure. This is useful when detecting changes.
+
+\section{Creating a reproducible documentation}
+%
 A Madagascar reproducible paper is a paper written in \LaTeX\ and
-whose figures are generated by Madagascar reproducible scripts, e.g.
-this paper!  (\textit{paper.tex} available in the \textit{rsf/scons/}
-directory of Madagascar book section).
+whose figures are either generated by Madagascar reproducible scripts
+or available for download, e.g.  this paper!  (\textit{paper.tex}
+available in the \textit{rsf/scons/} directory of Madagascar book
+section).
 
-%\noindent\texttt{Paper(texdoc\textit{,use})}\\
-%\indent A rule to generate \texttt{texdoc.pdf} from the simplified
-%\LaTeX\ document \texttt{texdoc.tex}.
+The main SConstruct command set in our reproducible research
+environment and related to documentation is
 
-%\noindent\texttt{Book(xxx)}\\
-%\indent I DO NOT KNOW HOW TO USE IT...
+\noindent\texttt{Paper(paper\_name,[,use][,lclass])}\\
+\indent A rule to compile \textit{$<$paper\_name$>$} (Madagascar
+\LaTeX\ document) using the \LaTeX\ packages specified in \textit{use}
+and the \LaTeX\ style specified in \textit{lclass} (default is
+\textit{geophysics.cls}).
+
+This command is defined in \textit{\$RSFROOT/lib/rsftex.py}.
+
+\subsection{Example}
+
+\lstinputlisting[firstline=1,lastline=3,frame=single]{SConstruct}
+
+This SConstruct generates this paper but it can also compile
+\textit{velan.tex} in the same directory. Note that there is no Paper
+command for \textit{paper.tex} since it is the default documentation
+name. Optional \LaTeX\ packages and style used in \textit{paper.tex}
+are passed in the End command.
+
+Let's now have a closer look at \textit{paper.tex} to understand how
+the figures of the documentation are linked to the reproducible
+scripts that created them. First of all, note that \textit{paper.tex}
+is not a regular \LaTeX\ document but only its body (no
+$\backslash$documentclass, $\backslash$usepackage, etc.). In our
+paper, Fig.~\ref{fig:lena} was created in the project folder
+\textit{easystart} (sub-folder of our documentation folder) by the
+result plot \textit{lena.vpl}. In the \LaTeX\ source code, it
+translates as\\
+
+\lstset{language=[LaTeX]TeX,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
+\lstinputlisting[firstline=377,lastline=378,frame=single]{paper.tex}
+
+The $\backslash$inputdir command points to the project directory and
+the $\backslash$plot command calls \textit{$<$result\_name$>$}. The
+\LaTeX\ tag of the figure is \textit{fig:$<$result\_name$>$}. Only the
+first time the paper is compiled, the VPL result file is automatically
+converted to PDF file format unless the VPL result file is updated and
+locked in which case, the PDF file is also automatically updated at
+the next paper compilation.
+
+\subsection{Useful SCons commands for reproducible documentation}
+
+To actually compile this paper you first need to run and lock the
+\textit{easystart} project. Go in the \textit{easystart} folder and
+run \texttt{scons lock}. Go back to the documentation folder and run
+\texttt{scons pdf} (alternatively \texttt{scons
+  $<$paper\_name$>$.pdf}). Use \texttt{scons read} (alternatively
+\texttt{scons $<$paper\_name$>$.read}) or your favorite PDF reader to
+read this paper reproduced by yourself...
+
+SERGEY: COULD YOU PLEASE HELP ME WITH scons wiki \& scons html IF YOU
+WANT TO INCLUDE THEM?
 
 \bibliographystyle{seg}
 \bibliography{SEG,SEP2,scons}

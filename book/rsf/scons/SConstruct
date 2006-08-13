@@ -1,6 +1,4 @@
 from rsftex import *
-
 Paper('velan',use='hyperref,listings,color')
-
 End(use='hyperref,listings,color')
 
