@@ -87,7 +87,7 @@ int main(int argc, char* argv[])
       thr = 1;
   }
 
-  if (thr<=0) sf_error("Threshold must be >0");
+  if (thr<0) sf_error("Threshold must be >=0");
   
   mode = sf_getstring("mode");
   /* 'soft', 'hard', 'nng' (default: soft)*/
