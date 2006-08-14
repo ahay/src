@@ -1,0 +1,221 @@
+## 
+ # Borcea et al model
+ # active array setup
+ ##
+from rsfproj import *
+import fdmod,zomig
+
+# ------------------------------------------------------------
+par = {
+    'lo':3,    # wavelength (m)
+    'co':3000, # velocity (m/s)
+    'fo':1000, # central frequency (Hz)
+    'nt':12000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
+    'ox':0,                           'lx':'label2=x unit2=m',
+    'oz':0,                           'lz':'label1=z unit1=m',
+    'kt':100,  # wavelet delay
+    'nbx':250, 'tx':0.0015,
+    'nbz':250, 'tz':0.0015,
+    'jsnap':100, 'height':10
+    }
+
+par['smp']=20.
+
+par['dx']=par['lo']/par['smp']
+par['nx']=100*par['smp']+1
+
+par['dz']=par['lo']/par['smp']
+par['nz']=100*par['smp']+1
+
+# ------------------------------------------------------------
+
+par['jx']=par['lo']/par['dx']
+par['dr']=par['dx']*par['jx']
+par['nr']=par['nx']/par['jx']
+par['or']=par['dx']*par['jx']/2
+
+# add F-D modeling parameters
+fdmod.param(par)
+
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+     ricker1 frequency=%(fo)g |
+     scale axis=123 |
+     put label1=t label2=x label3=y 
+     ''' % par)
+Result('wav','window n1=200 | graph title="" label1="t" label2=')
+
+# ------------------------------------------------------------
+# source coordinates
+zt = par['oz']+90*par['lo']
+xt = par['ox']+par['nx']/2*par['dx']
+
+zs = 10*par['dz']
+xs = xt
+
+par['jzt'] = zt / par['dz']
+par['jxt'] = xt / par['dx']
+
+Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
+
+# source position
+Flow('zs','s_','math output="%g"' % zs)
+Flow('xs','s_','math output="%g"' % xs)
+Flow('rs','s_','math output=1')
+Flow('ss',['xs','zs','rs'],
+     '''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=* plotcol=2',par))
+
+# ------------------------------------------------------------
+# experiment setup
+Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=1' % par)
+
+# receiver positions
+Flow('zr','r_','math output="%g"'% (10*par['dz']) )
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],
+     '''
+     cat axis=2 sace=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
+     + fdmod.cgraph('symbol=. plotcol=6',par))
+
+# ------------------------------------------------------------
+# receivers around target
+nq = 10  * par['lo']/par['dx']
+oq = xt - (nq-1)/2 * par['dx']
+dq =                 par['dx']
+
+Flow('q_',None,'math n1=%d d1=%g o1=%g output=1' % (nq,dq,oq) )
+for iq in range(nq):
+    zz = zt + (iq-nq/2)*par['dz']
+
+    Flow('zq'+str(iq),'q_','math output="%g"' % zz)
+    Flow('xq'+str(iq),'q_','math output="x1"')
+    Flow('qq'+str(iq),['xq'+str(iq),'zq'+str(iq)],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+    
+allq = map(lambda x: 'qq%d' % x,range(nq))
+Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq, stdin=0)
+Plot('qq','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=. plotcol=0',par))
+
+# ------------------------------------------------------------
+Flow('mask',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=100 l1=%(nz)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     smooth rect1=25
+     ''' % par)
+
+# ------------------------------------------------------------
+# background
+Flow('vo',None,
+     '''
+     spike nsp=1 mag=-%(co)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzt)d l1=%(jzt)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxt)d l2=%(jxt)d |
+     add add=%(co)g
+     ''' % par)
+
+# clutter
+Flow('vv','vo mask',
+     '''
+     math output=0 |
+     noise mean=0 range=1 type=y |
+     add mode=p ${SOURCES[1]} | 
+     scale rscale=0.5 |
+     add add=1 |
+     smooth rect1=6 rect2=6 |
+     add add=-1 |
+     scale rscale=8 |
+     add add=+1 |
+     math output="3000/sqrt(input)" |
+     clip clip=3500
+     ''')
+
+Flow('rm',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     ''' % par)
+
+Plot('vo',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
+Plot('vv',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
+Plot('rm',fdmod.cgrey('allpos=y bias=3000 pclip=100',par))
+
+Result('vo',['vo','rr','qq','ss'],'Overlay')
+Result('vv',['vv','rr','qq','ss'],'Overlay')
+Result('rm',['rm','rr','qq','ss'],'Overlay')
+
+# ------------------------------------------------------------
+# F-D modeling
+
+fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Result('wo',            fdmod.wgrey('pclip=99',par))
+Result('to','transp|' + fdmod.dgrey('',par))
+
+fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
+Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Result('ww',            fdmod.wgrey('pclip=99',par))
+Result('tt','transp|' + fdmod.dgrey('',par))
+
+fdmod.wom('wom','ww','vv',par)
+Result('wom',           fdmod.wgrey('pclip=95',par))
+
+# ------------------------------------------------------------
+# RTM
+
+fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
+Plot('io',fdmod.cgrey('pclip=100',par))
+Result('io',['io','ss','rr'],'Overlay')
+
+fdmod.zom('ii','uu','tt','vo','rm','rr','qq','free=n dens=n',par)
+Plot('ii',fdmod.cgrey('pclip=100',par))
+Result('ii',['ii','ss','rr'],'Overlay')
+# ------------------------------------------------------------
+
+for k in ('jj','jo'):
+
+    if (k=='jj'):
+        u='uu'
+    else:
+        u='uo'
+
+    Flow(k,u,
+         '''
+         put
+         n1=%d o1=%g d1=%g label1=x unit1=m
+         n2=%d o2=%g d2=%g label2=z unit2=m
+         n3=%d o3=%g d3=%g label3=t unit3=s |
+         window min3=0.1
+         ''' % (nq,oq,par['dx'],
+                nq,zt-nq/2*par['dz'],par['dz'],
+                par['nt'], par['ot'],par['dt']) )
+    Result(k,
+           '''
+           window j3=10 | transp |
+           grey title="" gainpanel=a screenratio=1
+           min1=%g max1=%g
+           min2=%g max2=%g
+           ''' % (par['zmin'],par['zmax'],
+                  par['xmin'],par['xmax']))
+
+#fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
+#Result('iq',fdmod.cgrey('',par))
+
+End()
