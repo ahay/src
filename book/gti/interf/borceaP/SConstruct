@@ -1,6 +1,6 @@
 ## 
  # Borcea et al model
- # active source setup
+ # passive array setup
  ##
 from rsfproj import *
 import fdmod,zomig
@@ -49,15 +49,21 @@ Flow('wav',None,
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
-# target coordinates
+# source coordinates
 zt = par['oz']+90*par['lo']
 xt = par['ox']+par['nx']/2*par['dx']
+
+zs = zt
+xs = xt
+
+par['jzt'] = zt / par['dz']
+par['jxt'] = xt / par['dx']
 
 Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
 
 # source position
-Flow('zs','s_','math output="%g"' % zt)
-Flow('xs','s_','math output="%g"' % xt)
+Flow('zs','s_','math output="%g"' % zs)
+Flow('xs','s_','math output="%g"' % xs)
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
      '''
@@ -109,7 +115,7 @@ Plot('qq','window n1=2 | dd type=complex | window | '
 Flow('mask',None,
      '''
      spike nsp=1 mag=1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=50 l1=%(nz)d
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=100 l1=%(nz)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
      smooth rect1=25
      ''' % par)
@@ -118,16 +124,18 @@ Flow('mask',None,
 # background
 Flow('vo',None,
      '''
-     spike nsp=1 mag=%(co)g
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzt)d l1=%(jzt)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxt)d l2=%(jxt)d |
+     add add=%(co)g
      ''' % par)
 
 # clutter
-Flow('vv','vo',
+Flow('vv','vo mask',
      '''
      math output=0 |
      noise mean=0 range=1 type=y |
+     add mode=p ${SOURCES[1]} |
      scale rscale=0.5 |
      add add=1 |
      smooth rect1=6 rect2=6 |
