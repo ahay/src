@@ -157,12 +157,14 @@ Result('rm',['rm','rr','qq','ss'],'Overlay')
 # F-D modeling
 
 fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('wo',            fdmod.wgrey('pclip=99',par))
-Result('do','transp|' + fdmod.dgrey('',par))
+Result('to','transp|' + fdmod.dgrey('',par))
 
 fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
+Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
-Result('dd','transp|' + fdmod.dgrey('',par))
+Result('tt','transp|' + fdmod.dgrey('',par))
 
 fdmod.wom('wom','ww','vv',par)
 Result('wom',           fdmod.wgrey('pclip=95',par))
@@ -170,12 +172,40 @@ Result('wom',           fdmod.wgrey('pclip=95',par))
 # ------------------------------------------------------------
 # RTM
 
-fdmod.zom('io','uo','do','vo','rm','rr','qq','free=n dens=n',par)
-Result('io',fdmod.cgrey('pclip=100',par))
+fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
+Plot('io',fdmod.cgrey('pclip=100',par))
+Result('io',['io','ss','rr'],'Overlay')
 
-fdmod.zom('ii','uu','dd','vo','rm','rr','qq','free=n dens=n',par)
-Result('ii',fdmod.cgrey('pclip=100',par))
+fdmod.zom('ii','uu','tt','vo','rm','rr','qq','free=n dens=n',par)
+Plot('ii',fdmod.cgrey('pclip=100',par))
+Result('ii',['ii','ss','rr'],'Overlay')
 # ------------------------------------------------------------
+
+for k in ('jj','jo'):
+
+    if (k=='jj'):
+        u='uu'
+    else:
+        u='uo'
+
+    Flow(k,u,
+         '''
+         put
+         n1=%d o1=%g d1=%g label1=x unit1=m
+         n2=%d o2=%g d2=%g label2=z unit2=m
+         n3=%d o3=%g d3=%g label3=t unit3=s |
+         window min3=0.1
+         ''' % (nq,oq,par['dx'],
+                nq,zt-nq/2*par['dz'],par['dz'],
+                par['nt'], par['ot'],par['dt']) )
+    Result(k,
+           '''
+           window j3=10 | transp |
+           grey title="" gainpanel=a screenratio=1
+           min1=%g max1=%g
+           min2=%g max2=%g
+           ''' % (par['zmin'],par['zmax'],
+                  par['xmin'],par['xmax']))
 
 #fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
 #Result('iq',fdmod.cgrey('',par))
