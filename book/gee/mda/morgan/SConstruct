@@ -2,32 +2,32 @@ from rsfproj import *
 
 g = 'grey color=I crowd1=0.96 crowd2=0.85 titlesz=20 wantaxis=0 title="%s" '
 
-textures = ['granite','wood','herr','brick','ridges','WGstack']
+textures = ['granite','wood','herr','brick','ridges','fabric','WGstack']
 
-for file in textures[0:5]:
-    Fetch(file + '.h','textures')
-    Flow(file,file + '.h','dd form=native')
+for txtr in textures[0:6]:
+    Fetch(txtr + '.h','textures')
+    Flow(txtr,txtr + '.h','dd form=native')
 
 Fetch('WGstack.H','book/iee')
 Flow('WGstack','WGstack.H','window f2=500 j2=2 n2=125 n1=250 j1=2')
 
 makepef = 'pef niter=40 a=10,10 maskin=$SOURCE lag=${TARGETS[1]}'
 
-for file in textures:
-    Plot(file,g % 'Training Image')
+for txtr in textures:
+    Plot(txtr,g % 'Training Image')
 
     #------------------------------------------------------------
     # Minimize ||Data*PEF||^2 for unknown PEF.
     #------------------------------------------------------------
-    pef = file + '-pef'
-    lag = file + '-lag'
-    Flow([pef,lag],file,makepef)
+    pef = txtr + '-pef'
+    lag = txtr + '-lag'
+    Flow([pef,lag],txtr,makepef)
 
     #------------------------------------------------------------
     # Synthesized texture = Random #'s/PEF  ("/" = poly. div.)
     #------------------------------------------------------------
-    syn = file + '-syn'
-    Flow(syn,[file,pef],
+    syn = txtr + '-syn'
+    Flow(syn,[txtr,pef],
               '''noise type=0 range=127.5 mean=0 rep=y seed=2003 | 
               helicon filt=${SOURCES[1]} div=1''')
     Plot(syn,g % 'Synthesized Image')
@@ -35,19 +35,31 @@ for file in textures:
     #------------------------------------------------------------
     # Compute residual for known PEF: res = Data*PEF
     #------------------------------------------------------------
-    wht = file + '-wht'
-    Flow(wht,[file,pef],'helicon filt=${SOURCES[1]}')
+    wht = txtr + '-wht'
+    Flow(wht,[txtr,pef],'helicon filt=${SOURCES[1]}')
     Plot(wht,g % 'TI * PEF')
 
-    Result(file,[file,syn,wht],'SideBySideAniso')
+    Result(txtr,[txtr,syn,wht],'SideBySideAniso')
 
-for file in textures[1:5]:
+    #------------------------------------------------------------
+    # Find appropriate scaling
+    #------------------------------------------------------------
+    scale = txtr + '-scale.par'
+    Flow(scale,[syn,txtr],
+         '''
+         attr want=rms > junk &&
+         attr < ${SOURCES[1]} want=rms >> junk &&
+         awk '{a[++i]=$3} END {print "scale="a[i-1]/$3",-1"}' < junk > $TARGET &&
+         \\rm junk
+         ''',stdout=-1)
+
+for txtr in textures[1:5]+[textures[6]]:
     #------------------------------------------------------------
     # Punch hole in data files.
     #------------------------------------------------------------
-    hole = file + '-hole'
-    known = file + '-known'
-    Flow([hole,known],file,'hole maskout=${TARGETS[1]}')
+    hole = txtr + '-hole'
+    known = txtr + '-known'
+    Flow([hole,known],txtr,'hole maskout=${TARGETS[1]}')
     Plot(hole,g % 'Gapped')
 
     pef = hole + '-pef'
@@ -62,7 +74,20 @@ for file in textures[1:5]:
               'miss filt=${SOURCES[2]} mask=${SOURCES[1]} padin=20')
     Plot(fill,g % 'Restored')
 
-    Result(fill,[hole,file,fill],'SideBySideAniso')
+    #------------------------------------------------------------
+    # Fill hole in data using texture (a realization)
+    #------------------------------------------------------------
+    fillr = hole + '-fillr'
+    Flow(fillr,[hole,known,pef,txtr + '-syn',txtr + '-scale.par'],
+              '''
+              add par=${SOURCES[4]} ${SOURCES[3]} |
+              miss filt=${SOURCES[2]} mask=${SOURCES[1]} padin=20 |
+              add ${SOURCES[3]}
+              ''')
+    Plot(fillr,g % 'Random Realization')
+
+    Result(fill,[hole,txtr,fill],'SideBySideAniso')
+    Result(fillr,[hole,fill,fillr],'SideBySideAniso')
     
 ###########################################################################
 

@@ -34,57 +34,43 @@ void bound (int dim         /* number of dimensions */,
 	    const filter aa /* helix filter */) 
 /*< Mark helix filter outputs where input is off data. >*/
 {
-    int nb[SF_MAX_DIM], ii[SF_MAX_DIM];
+    int iy, my, ib, mb, i, nb[SF_MAX_DIM], ii[SF_MAX_DIM];
     float *xx, *yy;
-    int iy, my, ib, mb, i;
     
     my = mb = 1;
     for (i=0; i < dim; i++) {
-	nb[i] = nd[i] + 2*na[i]; /* nb is a bigger space to pad into. */   
+	nb[i] = nd[i] + 2*na[i]; /* nb is a bigger space. */   
 	mb *= nb[i];
 	my *= nd[i];
     }
 
-    /* two large spaces, equal size */
-    xx = sf_floatalloc(mb);
-    yy = sf_floatalloc(mb);
+    xx = sf_floatalloc(mb); yy = sf_floatalloc(mb);
 
-    for (ib=0; ib < mb; ib++) {
-	xx[ib] = 0.;  /* zeros */
-	/* surround the zeros with many ones */
-	sf_line2cart(dim, nb, ib, ii);           /* ii( ib) */
-	for (i=0; i < dim; i++) {
+    for (ib=0; ib < mb; ib++) { 
+	sf_line2cart(dim, nb, ib, ii);    
+	xx[ib] = 0.;  	
+	for (i=0; i < dim; i++) 
 	    if(ii[i]+1 <= na[i] ||  ii[i]+1 > nb[i]-na[i]) {
 		xx[ib] = 1.; 
 		break;
 	    }
-	}	
     }
-    helicon_init( aa);		     /* give aa to helicon.lop */
+    helicon_init( aa);		  
     regrid(dim, nold, nb, aa);  
-    for (i=0; i < aa->nh; i++) {
-	aa->flt[i] = 1.;		/* put all 1's in filter */
-    }
+    for (i=0; i < aa->nh; i++) aa->flt[i] = 1.;		
     helicon_lop(false, false, mb, mb, xx, yy);	/* apply filter */
     regrid(dim, nb, nd, aa);  
-    for (i=0; i < aa->nh; i++) {
-	aa->flt[i] = 0.;		/* remake filter for orig data */
-    }
+    for (i=0; i < aa->nh; i++) aa->flt[i] = 0.;
 
-    aa->mis = sf_boolalloc(my); /* attach missing designation to y_filter */
-
-    for (iy = 0; iy < my; iy++) {  /* map from unpadded to padded space */
+    aa->mis = sf_boolalloc(my); /* attach missing designation */
+    for (iy = 0; iy < my; iy++) {  /* map to padded space */
 	sf_line2cart(dim, nd, iy, ii);
-	for (i=0; i < dim; i++) {
-	    ii[i] += na[i];
-	}
+	for (i=0; i < dim; i++) ii[i] += na[i];
 	ib = sf_cart2line(dim, nb, ii);
-	
-	aa->mis[iy] = (bool) (yy[ib] > 0.);  /* true where inputs missing */
+	aa->mis[iy] = (bool) (yy[ib] > 0.);  
     }
     
-    free (xx);
-    free (yy);
+    free (xx); free (yy);
 } 
 
 /* 	$Id$	 */

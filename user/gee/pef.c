@@ -32,8 +32,8 @@ void find_pef(int nd    /* data size */,
 /*< find PEF >*/ 
 {
     hconest_init( dd, aa);
-    sf_solver(hconest_lop, sf_cgstep, aa->nh, nd, aa->flt, dd, niter, 
-	   "x0", aa->flt, "end");
+    sf_solver(hconest_lop, sf_cgstep, aa->nh, nd, aa->flt, dd, 
+	      niter, "x0", aa->flt, "end");
     sf_cgstep_close();
 }
 

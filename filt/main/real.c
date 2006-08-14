@@ -26,9 +26,9 @@ int main(int argc, char* argv[])
 {
     int esize, shift;
     off_t size;
-    size_t i, nleft, nbuf, e_size, len;
+    size_t i, nleft, nbuf, e_size, len, bufsiz;
     sf_file real, cmplx;
-    char rbuf[BUFSIZ], *cbuf, *rformat, *cformat, *prog;
+    char *rbuf, *cbuf, *rformat, *cformat, *prog;
 
     sf_init(argc,argv);
     cmplx = sf_input ( "in");
@@ -63,10 +63,12 @@ int main(int argc, char* argv[])
 	shift=0;
     }
 
-    cbuf = sf_charalloc(2*BUFSIZ);
+    bufsiz = sf_bufsiz(cmplx);
+    rbuf = sf_charalloc(bufsiz);
+    cbuf = sf_charalloc(2*bufsiz);
     
     for (nleft=size*e_size; nleft > 0; nleft -= nbuf) {
-	nbuf = (BUFSIZ < nleft)? BUFSIZ: nleft;
+	nbuf = (bufsiz < nleft)? bufsiz: nleft;
 	sf_charread(cbuf,2*nbuf,cmplx);
 	for (i=0; i < nbuf; i += e_size) {
 	    memcpy(rbuf+i,cbuf+2*i+shift,e_size);

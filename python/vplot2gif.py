@@ -35,19 +35,22 @@ def convert(infile,outfile):
     
     random = time.time()
 
-    os.system("vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" %
-              (random,infile))
+    run = "vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" % (random,infile)
+    sys.stderr.write(run+"\n")
+    os.system(run)
 
     gifs = []
     for i in range(frames):
         vppen = 'vppen.%d.%s' % (i,random)
         gif = '%s.%d' % (outfile,i)
         gifs.append(gif)
- 
-        os.system ("ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d "
-                   "xcenter=%d ycenter=%d in=%s | pnmscale %g  | "
-                   "pnmquant 256 | pnmcrop | ppmtogif -interlace > %s" %
-                   (height,width,ppi,xcen,ycen,vppen,scale,gif))
+
+        run = "ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d " \
+              "xcenter=%d ycenter=%d %s | pnmscale %g  | " \
+              "pnmquant 256 | pnmcrop | ppmtogif -interlace > %s" % \
+              (height,width,ppi,xcen,ycen,vppen,scale,gif)
+        sys.stderr.write(run+"\n")
+        os.system (run)
         os.unlink(vppen)
 
     if outfile[-1] != '/':

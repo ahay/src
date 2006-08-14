@@ -48,6 +48,7 @@
 
 extern int      allow_pipe;
 extern int      first_time;
+extern FILE *pltout;
 
 bool             vpbig = true;
 bool             vpdumb = false;
@@ -103,6 +104,9 @@ int             vpfat = 0;
 
 int		vpscoltabinfo[VPPEN_NUM_COL][4];
 int		vpsetcoltabanyway = NO;
+
+static int vpopen_name (int num);
+static void vp_check_filep (FILE *plot);
 
 void vpattributes (int command, int value, int v1, int v2, int v3)
 /*< attributes >*/
@@ -695,8 +699,8 @@ int      vpframecount = -1;
 void vperase (int command)
 /*< erase >*/
 {
-int ii;
-extern int vpsetcoltabanyway;
+    int newout, ii;
+    extern int vpsetcoltabanyway;
 
 
     if (vparray[0] == 0)
@@ -708,6 +712,7 @@ extern int vpsetcoltabanyway;
 	    break;
 	case ERASE_MIDDLE:
 	    vpframecount++;
+	    newout = vpopen_name (vpframecount);
 	    vp_erase ();
 	    if (!vpdumb && vpstyle)
 	    {
@@ -716,7 +721,7 @@ extern int vpsetcoltabanyway;
 	    lost = YES;
 	    vpsetflag = NO;
 
-	    if (!vpdumb)
+	    if (!vpdumb && newout)
 	    {
 /*
  * If this is a new output file, then explicitly set the entire
@@ -1103,8 +1108,99 @@ void vpopen (int argc, char* argv[])
  */
     message = dev.message;
 
+    if (!vpstat) vpopen_name(0);
+/*
+ * The very first time we don't care whether vpopen_name opened an
+ * output file or not; we'd have to initialize everything in any case!
+ */
+
     cachepipe = true;
 }
+
+static int vpopen_name (int num)
+{
+    char            *string, string2[20];
+    char            *outname;
+    static FILE    *vp_pltout = NULL;
+    static int      gotwhich = 0;
+    int		newout;
+
+
+/*
+ * If last time we opened a file for output, then this time
+ * we'll also want to re-write the color table.
+ */
+    if (gotwhich > 0)
+    {
+	newout = 1;
+    } else {
+	newout = 0;
+    }
+
+    gotwhich = 0;
+
+    if (NULL != (string = sf_getstring ("outN+")))
+    {
+	gotwhich = 2;
+    }
+    else if (NULL != (string = sf_getstring ("outN")))
+    {
+	gotwhich = 1;
+    }
+
+    if (gotwhich)
+    {
+	outname = sf_charalloc(120);
+	snprintf (outname, 120, string, num);
+    } else {
+	snprintf (string2, 20, "out%d+", num);
+	if (NULL != (outname = sf_getstring (string2)))
+	{
+	    gotwhich = 2;
+	}
+	else
+	{
+	    snprintf (string2, 20, "out%d", num);
+	    if (NULL != (outname = sf_getstring (string2)))
+		gotwhich = 1;
+	}
+    }
+
+    if (gotwhich)
+    {
+	if (vp_pltout != (FILE *) NULL)
+	    fclose (vp_pltout);
+
+	if (gotwhich == 2)
+	    vp_pltout = fopen (outname, "a");
+	else
+	    vp_pltout = fopen (outname, "w");
+
+	if (vp_pltout == (FILE *) NULL)
+	{
+	    ERR (WARN, name, "Can't open %s", outname);
+	    vp_check_filep (pltout);
+	    vp_pltout = (FILE *) NULL;
+	}
+	else
+	{
+	    vp_check_filep (vp_pltout);
+/*
+ * If we're opening a new file for output, then
+ * we'll need to re-write the color table at the start of it.
+ */
+	    newout = 1;
+	}
+    }
+    else
+    {
+	vp_check_filep (pltout);
+	vp_pltout = (FILE *) NULL;
+    }
+
+    return newout;
+}
+
 
 void vpplot (int x, int y, int draw)
 /*< plot >*/
@@ -1346,4 +1442,13 @@ int             d1, d2;
  * Above can be inefficient, but that's a rare case and it's hard
  * to get around. (Very hard.) This works!
  */
+}
+
+static void vp_check_filep (FILE *plot)
+{
+    if (isatty (fileno (plot)))
+	ERR (FATAL, name,
+	     "Dumping binary data to your terminal is unhealthy.");
+
+    pltout = plot;
 }
