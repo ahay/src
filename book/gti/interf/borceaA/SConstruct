@@ -142,7 +142,7 @@ Flow('vv','vo mask',
      add add=-1 |
      scale rscale=8 |
      add add=+1 |
-     math output="3000/sqrt(input)" |
+     math v=${SOURCES[0]} output="v/sqrt(input)" |
      clip clip=3500
      ''')
 
