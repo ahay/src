@@ -318,15 +318,15 @@ The error-filter family are filters with one coefficient constrained
 to be unity and various other coefficients constrained to be zero.
 Otherwise, the filter coefficients are chosen to have minimum power output.
 Names for various error filters follow:
-\begin{tabbing}
-operator.operator.operator.operator.operator \=  conjugate.conjugate.conjugate \= \kill
-$(1, a_1,a_2,a_3, \cdots ,a_n)$  \>
-\bxbx{prediction-error (PE) filter}{prediction-error filter}    \\
-$(1, 0, 0, a_3,a_4,\cdots ,a_n) $\>
-gapped PE filter with a gap \\
-$(a_{-m}, \cdots, a_{-2}, a_{-1}, 1, a_1, a_2, a_3, \cdots ,a_n)$ \>
-\bxbx{interpolation-error (IE) filter}{interpolation-error filter}
-\end{tabbing}
+
+\begin{tabular}{ll}
+  $(1, a_1,a_2,a_3, \cdots ,a_n)$  &
+  \bxbx{prediction-error (PE) filter}{prediction-error filter}    \\
+  $(1, 0, 0, a_3,a_4,\cdots ,a_n)$ &
+  gapped PE filter with a gap \\
+  $(a_{-m}, \cdots, a_{-2}, a_{-1}, 1, a_1, a_2, a_3, \cdots ,a_n)$ &
+  \bxbx{interpolation-error (IE) filter}{interpolation-error filter}
+\end{tabular}
 \sx{filter ! prediction-error}
 \sx{filter ! interpolation-error}
 
@@ -2140,7 +2140,7 @@ wrap around the 2-axis.
 \par
 Suppose you acquire data on a hexagonal mesh as below
 \par\noindent
-\scriptsize
+%\scriptsize
 \begin{verbatim}
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
@@ -2155,14 +2155,14 @@ Suppose you acquire data on a hexagonal mesh as below
                 . . . . . . . . . . . . . . . .
                  . . . . . . . . . . . . . . . .
 \end{verbatim}
-\normalsize
+%\normalsize
 \par\noindent
 and some of the data values are missing.
 How can we apply the methods of this chapter?
 The solution is to append the given data by more missing data
 shown by the commas below.
 \par\noindent
-\scriptsize
+%\scriptsize
 \begin{verbatim}
                  . . . . . . . . . . . . . . . . , , , , , ,
                 . . . . . . . . . . . . . . . . , , , , , ,
@@ -2178,7 +2178,7 @@ shown by the commas below.
       , , , , , . . . . . . . . . . . . . . . . ,
      , , , , , , . . . . . . . . . . . . . . . . 
 \end{verbatim}
-\normalsize
+%\normalsize
 \par\noindent
 Now we have a familiar two-dimensional coordinate system
 in which we can find missing values,
