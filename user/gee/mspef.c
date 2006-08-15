@@ -41,8 +41,8 @@ void find_pef(int nd      /* data size */,
     }
 
     mshconest_init( dd, aa);
-    sf_solver(mshconest_lop, sf_cgstep, aa->nh, nd*ns, aa->flt, ee, niter, 
-	      "x0", aa->flt, "end");
+    sf_solver(mshconest_lop, sf_cgstep, aa->nh, nd*ns, aa->flt, 
+	      ee, niter, "x0", aa->flt, "end");
     sf_cgstep_close();
 
     free(ee);

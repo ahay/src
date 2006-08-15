@@ -56,30 +56,24 @@ msfilter createmshelix(int ndim    /* number of dimensions */,
 
     msaa = msallocate(nh, ns);
     for (is=0; is < ns; is++) {
-	for (ih=0; ih < nh; ih++) {
-	    msaa->lag[is][ih] = aa->lag[ih]*jump[is]; /* expanded scale lags */
-	}
+	for (ih=0; ih < nh; ih++) /* expanded scale lags */
+	    msaa->lag[is][ih] = aa->lag[ih]*jump[is]; 
+	
     }
     deallocatehelix(aa);
 
     n123=1;
-    for (id=0; id < ndim; id++) {
-	n123 *= nd[id];
-    }
-    
+    for (id=0; id < ndim; id++) n123 *= nd[id];    
     msaa->mis = sf_boolalloc2(n123,ns);
-    aa = msaa->one;
 
+    aa = msaa->one;
     for (is=0; is < ns; is++) { /* for all scales */
 	onescale( is, msaa); /* extract a filter */  
 	aa->mis = NULL;
-	for (id=0; id < ndim; id++) {
-	    nb[id] = na[id]*jump[is];
-	}
+	for (id=0; id < ndim; id++) nb[id] = na[id]*jump[is];
 	bound(ndim, nd, nd, nb, aa); /* set up its boundaries */
-	for (id=0; id < n123; id++) {
+	for (id=0; id < n123; id++) 
 	    msaa->mis[is][id] = aa->mis[id];  /* save them */
-	}
 	free (aa->mis);
     }
  
