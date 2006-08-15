@@ -40,7 +40,7 @@ for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'kt':100,    # wavelet delay
     'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
     'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
