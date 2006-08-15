@@ -37,6 +37,13 @@ typedef struct mshelixfilter {
 
 #endif
 
+void onescale(int i, msfilter aa) 
+/*< select one scale from multiple scales >*/
+{
+    aa->one->lag = aa->lag[i];
+    if (NULL != aa->mis) aa->one->mis = aa->mis[i];
+}
+
 msfilter msallocate(int nh /* filter size */, 
 		    int ns /* number of scales */) 
 /*< allocate filter >*/
@@ -68,13 +75,6 @@ void msdeallocate( msfilter aa)
     }
     free( aa->one);
     free( aa);
-}
-
-void onescale(int i, msfilter aa) 
-/*< select one scale from multiple scales >*/
-{
-    aa->one->lag = aa->lag[i];
-    if (NULL != aa->mis) aa->one->mis = aa->mis[i];
 }
 
 /* 	$Id$	 */
