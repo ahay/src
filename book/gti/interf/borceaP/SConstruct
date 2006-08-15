@@ -138,13 +138,13 @@ Flow('vv','vo mask',
      add mode=p ${SOURCES[1]} |
      scale rscale=0.5 |
      add add=1 |
-     smooth rect1=6 rect2=6 |
+     smooth rect1=%d rect2=%d |
      add add=-1 |
      scale rscale=8 |
      add add=+1 |
      math v=${SOURCES[0]} output="v/sqrt(input)" |
      clip clip=3500
-     ''')
+     ''' % (par['smp']/2,par['smp']/2) )
 
 Flow('rm',None,
      '''
