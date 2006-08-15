@@ -31,8 +31,7 @@
 #
 # $Id: latex2twiki.py,v 1.2 2005/07/27 12:40:53 poulhies Exp $
 
-
-import re, string
+import re, string, os
 
 bdoc = None
 verbatim_mode = 0
@@ -45,6 +44,9 @@ refs = {}
 gref = []
 fullref = None
 insert = ""
+
+lang = "text"
+code = ""
 
 def dummy(s):
     pass
@@ -153,6 +155,37 @@ def blank():
     else:
         return ""
 
+def lstset(s):
+    global lang
+    lang = s.group(1)
+    if lang == "c++":
+        lang = "cpp"
+
+def putcode():
+    global lang, code
+    return "<%s>\n%s</%s>\n" % (lang,code,lang)
+
+def getcode(s):
+    global code
+    options = s.group(1)
+    name = string.replace(s.group(2),'\\RSF',os.environ.get('RSFSRC'))
+    line = {'first':1,'last':9999}
+    for mark in line.keys():
+        if options:
+            match = re.search('%sline=(\d+)' % mark,options)
+            if match:
+                line[mark] = int(match.group(1))
+    fd = open(name,"r")
+    code = ''
+    num = 1
+    for each in fd.readlines():
+        if num > line['last']:
+            break
+        if num >= line['first']:
+            code = code + each
+        num = num + 1
+    fd.close()
+                
 braces = r"\{((?:[^\}\{]*)(?:[^\{\}]*\{[^\}]*\}[^\{\}]*)*)\}"
 # matches the contents of {} allowing a single level of nesting
 
@@ -191,6 +224,8 @@ tr_list2 = [
     (r"\\begin{enumerate}", (lambda : "\n"), enums),
     (r"\\end{enumerate}", in_list, end_list),
     (r"\\item (.*?)", (lambda :   r"\n" + item + r"\1"), dummy),
+    (r"\\lstset{[^\}]*language=([\w\+]+)[^\}]*}",None,lstset),
+    (r"\\lstinputlisting(?:\[([^\]]*)\])?{([^\}]+)}", putcode, getcode),
     (r"\\begin{equation[*]*}", (lambda :"<center><math>"), toggle_math),
     (r"\\end{equation[*]*}", (lambda :"</math></center>"), toggle_math),
     (r"\\\[", (lambda :"<center><math>"), toggle_math),
