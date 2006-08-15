@@ -417,9 +417,10 @@ and ``stretch'' its lags on the 1-axis.
 We do not need to stretch its lags on the 2-axis
 because the data has not yet been interlaced by zero traces.
 \moddex{lace}{fill missing traces by rescaling PEF}{31}{69}{user/gee}
-The line \texttt{ii(1)=ii(1)*jump}
+The line \texttt{ii[0] *= jump}
 means we interlace the 1-axis but not the 2-axis because
 the data has not yet been interlaced with zero traces.
+\begin{comment}
 For a 3-D filter
 \texttt{aa(na1,na2,na3)},
 the somewhat obtuse expression
@@ -427,6 +428,7 @@ the somewhat obtuse expression
 is a three component
 vector containing
 \texttt{(na1*jump, na2, na3)}.
+\end{comment}
 \par
 After the PEF has been found, we can get missing data in
 the usual way with with module
@@ -739,12 +741,12 @@ where the first output signal is the ordinary one
 and the second output signal used a filter interlaced with zeros.
 We prepare subroutines that allow for more output signals,
 each with its own filter interlace parameter
-given in the table {\tt jump(ns)}.
+given in the table {\tt jump[ns]}.
 Each entry in the jump table corresponds to
 a particular scaling of a filter axis.
 The number of output signals is {\tt ns} and the
 number of zeros interlaced between filter points 
-for the {\tt j}-th signal is {\tt jump(j)-1}.
+for the {\tt j}-th signal is {\tt jump[j]-1}.
 %Also, there is the weighting scale factor for each scaling,
 %{\tt wt(ns)}.
 %\progdex{msicaf1}{multiscale conv 1-D}
