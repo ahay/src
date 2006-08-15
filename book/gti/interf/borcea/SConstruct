@@ -140,14 +140,14 @@ Flow('rm',None,
 Plot(  'vo',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
 Result('vo',['vo','rr','qq','ss'],'Overlay')
 
-#fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-#Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
-#Result('wo',            fdmod.wgrey('pclip=99',par))
-#Result('to','transp|' + fdmod.dgrey('',par))
+fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Result('wo',            fdmod.wgrey('pclip=99',par))
+Result('to','transp|' + fdmod.dgrey('',par))
 
-#fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
-#Plot(  'io',fdmod.cgrey('pclip=100',par))
-#Result('io',['io','ss','rr'],'Overlay')
+fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
+Plot(  'io',fdmod.cgrey('pclip=100',par))
+Result('io',['io','ss','rr'],'Overlay')
 
 for k in ('05','10','15','20','25'):
 
@@ -171,21 +171,21 @@ for k in ('05','10','15','20','25'):
     # ------------------------------------------------------------
     # F-D modeling
 
-#    fdmod.amodel('dd'+k,'ww'+k,'wav','vv'+k,'rm','ss','rr','free=n dens=n',par)
-#    Flow('tt'+k,'dd'+k,
-#         'window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
-#    Result('ww'+k,            fdmod.wgrey('pclip=99',par))
-#    Result('tt'+k,'transp|' + fdmod.dgrey('',par))
+    fdmod.amodel('dd'+k,'ww'+k,'wav','vv'+k,'rm','ss','rr','free=n dens=n',par)
+    Flow('tt'+k,'dd'+k,
+         'window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+    Result('ww'+k,            fdmod.wgrey('pclip=99',par))
+    Result('tt'+k,'transp|' + fdmod.dgrey('',par))
     
-#    fdmod.wom('wom'+k,'ww'+k,'vv'+k,par)
-#    Result(   'wom'+k,fdmod.wgrey('pclip=95',par))
+    fdmod.wom('wom'+k,'ww'+k,'vv'+k,par)
+    Result(   'wom'+k,fdmod.wgrey('pclip=95',par))
 
     # ------------------------------------------------------------
     # RTM
     
-#    fdmod.zom('ii'+k,'uu'+k,'tt'+k,'vo','rm','rr','qq','free=n dens=n',par)
-#    Plot('ii'+k,fdmod.cgrey('pclip=100',par))
-#    Result('ii'+k,['ii'+k,'ss','rr'],'Overlay')
+    fdmod.zom('ii'+k,'uu'+k,'tt'+k,'vo','rm','rr','qq','free=n dens=n',par)
+    Plot('ii'+k,fdmod.cgrey('pclip=100',par))
+    Result('ii'+k,['ii'+k,'ss','rr'],'Overlay')
     # ------------------------------------------------------------
 
 End()
