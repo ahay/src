@@ -22,8 +22,8 @@ Flow('plutoShots',['rsf1', 'rsf2'],'''
 # Plotting Section
 Result('zero','plutoShots','''window $SOURCE  min2=0 max2=0 size2=1 | 
                grey  color=I gainpanel=a label2=Position\ X unit2=km
-               title=Zero\ Offset\ Data''')
+               title=Zero\ Offset\ Data label2=Distance''')
 Result('shot30','plutoShots','''window $SOURCE  min3=1.371
                max3=1.371 size3=1 | grey color=I wantframenum=y  
-               gainpanel=a title=Shot\ \#\ 30''')
+               gainpanel=a title=Shot\ \#\ 30 label2=Offset''')
 End()
