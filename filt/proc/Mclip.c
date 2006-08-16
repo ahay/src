@@ -41,7 +41,7 @@ int main(int argc, char* argv[])
     /* clip value */
 
     /* allocate floating point array */
-    nbuf = BUFSIZ/sizeof(float);
+    nbuf = sf_bufsiz(in)/sizeof(float);
     trace = sf_floatalloc (nbuf);
 
     /* loop over traces */

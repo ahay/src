@@ -99,37 +99,80 @@ Flow('hy','hmat','headermath sy=1 gy=3 output=gy-sy')
 Flow('off','hx hy','cmplx $SOURCES[:2]',stdin=0)
 Flow('roff','hx hy','cat ${SOURCES[1]} axis=1')
 
-# Watter bottom
-wb = 'waz_q_wb_feet'
+# number of xyz triples
+np = {
+    'wb': 463305,
+    'ts1': 31509,
+    'ts2': 278120
+    }
 
-# xyz points in ascii format
-Fetch(wb,'claudio',private)
+az = 0.782 + 0.5*math.pi
+scale = 0.0003048
+sin = math.sin(az)*scale
+cos = math.cos(az)*scale
+rotate = '''
+headermath x=0 y=1
+output="(%g)*x+(%g)*y-(%g)"
+'''
+dy = -2547.8294
+dx = 1696.8207
 
-# convert to RSF format 
-Flow('xyz','./'+wb,
-     '''
-     echo in=$SOURCE data_format=ascii_float n1=3 n2=463305 |
-     dd form=native
-     ''',stdin=0)
+for surf in np.keys():
+    # substitute pattern
+    asc = 'waz_q_%s_feet' % surf
 
-# Extract z, put on an xy 2-D grid, convert from ft to km
-Flow('z','xyz',
-     '''
-     window n1=1 f1=2 |
-     put n1=461 n2=1005 o1=0 d1=0.1 o2=0 d2=0.1
-     label2=West-East unit2=km label1=South-North unit1=km |
-     scale dscale=0.0003048 | transp
-     ''')
+    # xyz points in ascii format
+    Fetch(asc,'claudio',private)
 
-Plot('z',
-     '''
-     grey pclip=100  bias=1.5 scalebar=y title="Watter Bottom"
-     screenratio=0.4 screenht=6 barlabel=Depth barunit=km
-     yreverse=n transp=n
-     ''')
+    xyz = 'xyz_'+surf
+
+    # convert to RSF format 
+    Flow(xyz,'./'+asc,
+         '''
+         echo in=$SOURCE data_format=ascii_float n1=3 n2=%d |
+         dd form=native
+         ''' % np[surf],stdin=0)
+
+# Merge two top-salt surfaces
+Flow('xyz_ts','xyz_ts1 xyz_ts2','cat axis=2 ${SOURCES[1]}')
+
+for surf in ('wb','ts'):
+    # Extract x and y, rotate, convert ft to km
+    xyz = 'xyz_'+surf
+    xy = 'xy_'+surf
+    Flow('x'+surf,xyz,rotate % ( cos,sin,dx)) 
+    Flow('y'+surf,xyz,rotate % (-sin,cos,dy))
+    Flow(xy,['x'+surf,'y'+surf],'cat axis=1 ${SOURCES[1]}')
+
+    Flow(['z'+surf,'f'+surf],[xyz,xy],
+         '''
+         window n1=1 f1=2 |
+         bin head=${SOURCES[1]} fold=${TARGETS[1]} xkey=0 ykey=1
+         interp=1
+         nx=461  x0=0 dx=0.1
+         ny=1005 y0=0 dy=0.1 |
+         scale dscale=%g | transp
+         ''' % scale)
+
+    # Create mask from fold
+    Flow('m'+surf,'f'+surf,'transp')
+
+    # Interpolate holes
+    Flow(surf,['z'+surf,'m'+surf],
+         'miss3 mask=${SOURCES[1]} rect1=10 rect2=10 verb=y')
+    Plot(surf,
+         '''
+         grey pclip=100  bias=1.5 scalebar=y title="%s"
+         screenratio=0.4 screenht=6 barlabel=Depth barunit=km
+         yreverse=n transp=n
+         ''' % ('Water Bottom','Top Salt')[surf=='ts'])
+    Result(surf,[surf,'g2'],'Overlay')
+
+# Put two surfaces together
+Flow('surf','wb ts','cat axis=3 ${SOURCES[1]}')
 
 # Make sampling 25 m instead of 100 m
-Flow('zdens','z',
+Flow('zdens','surf',
      '''
      remap1 n1=4017 d1=0.025 o1=0 |
      transp |
@@ -141,8 +184,6 @@ Flow('zdens','z',
 Flow('zx','zdens','deriv')
 # Reflector slope crossline
 Flow('zy','zdens','transp | deriv | transp')
-
-Result('wb','z g2','Overlay')
 
 # select receiver geometry
 Flow('recr','hmat','window f1=2')

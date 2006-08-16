@@ -92,12 +92,11 @@ scons: done reading SConscript files.
 scons: Building targets ...
 retrieve(["Txx.HH"], [])
 < Txx.HH /path/to/RSF/bin/sfwiggle > Fig/wiggle0.vpl
-/path/to/SEP/bin/xtpen Fig/wiggle0.vpl
+/path/to/RSF/bin/xtpen Fig/wiggle0.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:wiggle0} appearing on your screen.
 
-\plot{wiggle0}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~wiggle0.view}}
+\plot{wiggle0}{width=6in}{To see this figure on your screen, run \texttt{scons~wiggle0.view}}
 
 \section{Processing exercises}
 
@@ -109,7 +108,7 @@ following line to the \texttt{SConstruct} file:
 \lstinputlisting[firstline=23,lastline=23,frame=single]{rsftour/SConstruct}
 
 The window command selects the first ten traces and the time window between
-$0.4$ and $0.8$ seconds.
+0.4 and 0.8 seconds.
 
 We will plot the windowed data with three different plotting programs.
 
@@ -131,7 +130,7 @@ bash$ scons -Q wiggle.view
 < Txx.HH /path/to/RSF/bin/sfwindow n2=10 n1=200 f1=200 > windowed.rsf
 < windowed.rsf /path/to/RSF/bin/sfwiggle transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/wiggle.vpl
-/path/to/SEP/bin/xtpen Fig/wiggle.vpl
+/path/to/RSF/bin/xtpen Fig/wiggle.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:wiggle} appearing on your
 screen. The \texttt{-Q} switch tells SCons to run in a quiet mode,
@@ -142,30 +141,27 @@ keyboard or by hitting the ``quit'' button.
 Run \texttt{scons -Q view}, and you should see simply
 \begin{verbatim}
 bash$ scons -Q view
-/path/to/SEP/bin/xtpen Fig/wiggle.vpl
+/path/to/RSF/bin/xtpen Fig/wiggle.vpl
 \end{verbatim}
 Since the \texttt{wiggle.vpl} figure is up to date, SCons does not rebuild
 it. After quitting the figure, SCons will resume processing with
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfcontour transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/contour.vpl
-/path/to/SEP/bin/xtpen Fig/contour.vpl
+/path/to/RSF/bin/xtpen Fig/contour.vpl
 \end{verbatim}
 and a figure similar to Figure~\ref{fig:contour} appearing on your
 screen. Quitting the figure, produces
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfgrey transp=y poly=y yreverse=y 
 pclip=100 nc=200 > Fig/grey.vpl
-/path/to/SEP/bin/xtpen Fig/grey.vpl
+/path/to/RSF/bin/xtpen Fig/grey.vpl
 \end{verbatim}
 and Figure~\ref{fig:grey}.
 
-\plot{wiggle}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~wiggle.view}} 
-\plot{contour}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~contour.view}}
-\plot{grey}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~grey.view}}
+\plot{wiggle}{width=6in}{To see this figure on your screen, run \texttt{scons~wiggle.view}} 
+\plot{contour}{width=6in}{To see this figure on your screen, run \texttt{scons~contour.view}}
+\plot{grey}{width=6in}{To see this figure on your screen, run \texttt{scons~grey.view}}
 
 \subsection{Resampling}
 
@@ -208,8 +204,7 @@ Figure~\ref{fig:resampled}. Comparing this result with
 Figure~\ref{fig:wiggle}, we can verify a fairly accurate reconstruction.
 \lstinputlisting[firstline=43,lastline=43,frame=single]{rsftour/SConstruct}
 
-\plot{resampled}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~resampled.view}} 
+\plot{resampled}{width=6in}{To see this figure on your screen, run \texttt{scons~resampled.view}} 
 
 As an exercise, try subsampling the data by a factor of 4 and see if you can
 still reconstruct the original data with the Fourier method.
@@ -225,17 +220,16 @@ Running \texttt{scons -Q nmo.view} produces
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfnmostretch v0=2.05 half=n | 
 /path/to/RSF/bin/sfwiggle pclip=100 max1=0.6 poly=y > Fig/nmo.vpl
-/path/to/SEP/bin/xtpen Fig/nmo.vpl
+/path/to/RSF/bin/xtpen Fig/nmo.vpl
 \end{verbatim}
 and Figure~\ref{fig:nmo}. Note that SCons does not recreate the
 \texttt{windowed.rsf} file if that file is up to date. You can
 experiment with the NMO velocity (2.05~km/s) or with plotting
-parameters to get different results. As \cite[]{Dellinger.sep.73.461}
+parameters to get different results. As \cite{Dellinger.sep.73.461}
 point out, the NMO velocity of 2.05~km/s ``appears to split the
 difference between two distinctly non-hyperbolic shear waves''.
 
-\plot{nmo}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~nmo.view}}
+\plot{nmo}{width=6in}{To see this figure on your screen, run \texttt{scons~nmo.view}}
 
 \subsection{Advanced plotting}
 
@@ -260,20 +254,20 @@ The plots are combined by overlaying or by putting them side by side.
 
 The resultant plots are shown in Figures~\ref{fig:overplot} and~\ref{fig:sidebyside}. 
 
-\plot{overplot}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~overplot.view}}
+\plot{overplot}{width=6in}{To see this figure on your screen, run \texttt{scons~overplot.view}}
 
-\plot{sidebyside}{width=6in}{To see this figure on your screen, run
-  \texttt{scons~sidebyside.view}}
+\plot{sidebyside}{width=6in}{To see this figure on your screen, run \texttt{scons~sidebyside.view}}
 
+\begin{comment}
 Running \texttt{scons -Q overplot.view} produces 
 \begin{verbatim}
 < windowed.rsf /path/to/RSF/bin/sfgrey wheretitle=t wherexlabel=b transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > grey.vpl
 < windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=0 plotfat=10 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle1.vpl
 < windowed.rsf /path/to/RSF/bin/sfwiggle plotcol=7 plotfat=3 transp=y poly=y yreverse=y pclip=100 nc=100 allpos=n min1=.4 max1=.8 max2=1. min2=.05 poly=n > wiggle2.vpl
-/path/to/SEP/bin/vppen erase=o vpstyle=n grey.vpl wiggle1.vpl wiggle2.vpl > Fig/overplot.vpl
-/path/to/SEP/bin/xtpen Fig/overplot.vpl
+/path/to/RSF/bin/vppen erase=o vpstyle=n grey.vpl wiggle1.vpl wiggle2.vpl > Fig/overplot.vpl
+/path/to/RSF/bin/xtpen Fig/overplot.vpl
 \end{verbatim}
+\end{comment}
 
 \section{Conclusions}
 

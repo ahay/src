@@ -83,14 +83,23 @@ def decide_el():
     return el
 
 def decide_math():
-    global math_mode
+    global math_mode, verbatim_mode
     if verbatim_mode:
+        math_mode = 0
         return "&#36;"
     elif math_mode:
         return "<math>"
     else:
         return "</math>"
-		
+
+def line_math():
+    global math_mode, verbatim_mode, in_math
+    if verbatim_mode:
+        return r"&#36;\1&#36;"
+    else:
+        in_math = 1
+        return r"<math>\1</math>"
+    
 def start_verbatim(s):
     global verbatim_mode
     verbatim_mode = 1
@@ -102,10 +111,6 @@ def end_verbatim(s):
 def toggle_math(s):
     global math_mode, in_math
     math_mode = 1 - math_mode
-    in_math = 1
-
-def line_math(s):
-    global in_math
     in_math = 1
 
 def cite(s):
@@ -149,11 +154,18 @@ def insert_file():
     return insert
 
 def blank():
-    global verbatim_mode
-    if verbatim_mode:
+    global verbatim_mode, math_mode
+    if verbatim_mode or math_mode:
         return r"\1"
     else:
         return ""
+
+def brace():
+    global verbatim_mode, math_mode
+    if verbatim_mode or math_mode:
+        return r"\1"
+    else:
+        return r"\2"
 
 def lstset(s):
     global lang
@@ -253,7 +265,7 @@ tr_list2 = [
     #	(r"[^\\]?\{", None, dummy),
     #	(r"[^\\]?\}", None, dummy),
     (r"\\\$",(lambda : r"&#36;"),dummy),
-    (r"\\\'a",(lambda : r"&#225;"),dummy),
+    (r"\\\'[\{]?a[\}]?",(lambda : r"&#225;"),dummy),
     #	(r"\$(.*?)\$",(lambda :r"<math>\1</math>"),dummy),
     (r"%.*$",None, dummy),
     (r"\\r{(.*?)}", (lambda : r"\\mathrm{\1}"), dummy),
@@ -274,12 +286,13 @@ tr_list2 = [
     (r"\\LaTeX",(lambda : "L<sup>A</sup>TEX"), dummy),
     (r"\\\\", (lambda : "\n"), dummy),
     (r"\\ ",(lambda: " "), dummy),
-    (r"\$([^\$]+)\$",(lambda : r"<math>\1</math>"),line_math),
+    (r"\$([^\$]+)\$",line_math,toggle_math),
+    (r"\$",decide_math,toggle_math),
     # unknown command
-    (r"\\\w+",None, dummy),
+    (r"(\\\w+)",blank, dummy),
     # remove braces
-    (r"[{}](\w)",(lambda : r"\1"), dummy),
-    (r"(\w)[{}]",(lambda : r"\1"), dummy),
+    (r"([{}](\w))",brace, dummy),
+    (r"((\w)[{}])",brace, dummy),
     (r"^[{}]+$",None, dummy),
     ]
 
@@ -313,7 +326,7 @@ def parse_bbl(bbl):
         
 def convert(in_stream,out_stream):
     "Convert LaTeX to MediaWiki"
-    global reg, in_math
+    global reg, math_mode, in_math
     for i in in_stream.readlines():
 	mystr = i
 

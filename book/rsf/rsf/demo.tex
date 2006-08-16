@@ -15,10 +15,7 @@
 
 \section{Introduction}
 This section presents time-domain 
-finite-difference modeling
-\footnote{
-``Hello world'' of seismic imaging.
-}
+finite-difference modeling \footnote{``Hello world'' of seismic imaging.}
 written with the RSF library.
 The program is demonstrated with the C, C++ and Fortran 90 interfaces.
 
@@ -46,11 +43,10 @@ represent the propagating wavefield at various time steps.
 
 \newpage
 \section{C program}
-\def\FDMc{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
 
 \tiny
-\lstinputlisting[frame=single]{\FDMc}
+\lstinputlisting[frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \begin{itemize}
@@ -60,7 +56,7 @@ represent the propagating wavefield at various time steps.
 \texttt{Fr} for reflectivity, and
 \texttt{Fo} for output wavefield.
 \tiny
-\lstinputlisting[firstline=9,lastline=9,frame=single]{\FDMc}
+\lstinputlisting[firstline=9,lastline=9,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Declare RSF cube axes:
@@ -68,58 +64,58 @@ represent the propagating wavefield at various time steps.
 \texttt{ax} space axis,
 \texttt{az} depth axis.
 \tiny
-\lstinputlisting[firstline=10,lastline=10,frame=single]{\FDMc}
+\lstinputlisting[firstline=10,lastline=10,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Declare multi-dimensional arrays for input, output and computations.
 \tiny
-\lstinputlisting[firstline=14,lastline=15,frame=single]{\FDMc}
+\lstinputlisting[firstline=14,lastline=15,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Open files for input/output.
 \tiny
-\lstinputlisting[firstline=22,lastline=25,frame=single]{\FDMc}
+\lstinputlisting[firstline=22,lastline=25,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Read axes from input files; write axes to output file.
 \tiny
-\lstinputlisting[firstline=28,lastline=34,frame=single]{\FDMc}
+\lstinputlisting[firstline=28,lastline=34,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Allocate arrays and read wavelet, velocity and reflectivity.
 \tiny
-\lstinputlisting[firstline=41,lastline=43,frame=single]{\FDMc}
+\lstinputlisting[firstline=41,lastline=43,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Allocate temporary arrays.
 \tiny
-\lstinputlisting[firstline=46,lastline=49,frame=single]{\FDMc}
+\lstinputlisting[firstline=46,lastline=49,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=62,lastline=62,frame=single]{\FDMc}
+\lstinputlisting[firstline=62,lastline=62,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=66,lastline=75,frame=single]{\FDMc}
+\lstinputlisting[firstline=66,lastline=75,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=78,lastline=82,frame=single]{\FDMc}
+\lstinputlisting[firstline=78,lastline=82,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=85,lastline=89,frame=single]{\FDMc}
+\lstinputlisting[firstline=85,lastline=89,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=92,lastline=102,frame=single]{\FDMc}
+\lstinputlisting[firstline=92,lastline=102,frame=single]{\RSF/user/psava/rsfdemo/AFDMc__.c}
 \normalsize
 
 \end{itemize}
@@ -128,10 +124,9 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \newpage
 \section{C++ program}
 \lstset{language=c++,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\def\FDMcc{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 
 \tiny
-\lstinputlisting[frame=single]{\FDMcc}
+\lstinputlisting[frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 \newpage
 
@@ -139,7 +134,7 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \item Declare input, output and auxiliary file cubes 
 (of type \texttt{CUB}).
 \tiny
-\lstinputlisting[firstline=19,lastline=22,frame=single]{\FDMcc}
+\lstinputlisting[firstline=19,lastline=22,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Declare, read and write RSF cube axes:
@@ -147,51 +142,51 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \texttt{ax} space axis,
 \texttt{az} depth axis.
 \tiny
-\lstinputlisting[firstline=25,lastline=32,frame=single]{\FDMcc}
+\lstinputlisting[firstline=25,lastline=32,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for input, output and read data.
 \tiny
-\lstinputlisting[firstline=39,lastline=41,frame=single]{\FDMcc}
+\lstinputlisting[firstline=39,lastline=41,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Declare multi-dimensional 
 \texttt{valarrays} for temporary storage.
 \tiny
-\lstinputlisting[firstline=44,lastline=47,frame=single]{\FDMcc}
+\lstinputlisting[firstline=44,lastline=47,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Initialize multidimensional \texttt{valarray} 
 index counter (of type \texttt{VAI}).
 \tiny
-\lstinputlisting[firstline=50,lastline=50,frame=single]{\FDMcc}
+\lstinputlisting[firstline=50,lastline=50,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=54,lastline=54,frame=single]{\FDMcc}
+\lstinputlisting[firstline=54,lastline=54,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=58,lastline=67,frame=single]{\FDMcc}
+\lstinputlisting[firstline=58,lastline=67,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=70,lastline=70,frame=single]{\FDMcc}
+\lstinputlisting[firstline=70,lastline=70,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=73,lastline=73,frame=single]{\FDMcc}
+\lstinputlisting[firstline=73,lastline=73,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=76,lastline=78,frame=single]{\FDMcc}
+\lstinputlisting[firstline=76,lastline=78,frame=single]{\RSF/user/psava/rsfdemo/AFDMc++.cc}
 \normalsize
 
 \end{enumerate}
@@ -199,17 +194,16 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \newpage
 \section{Fortran 90 program}
 \lstset{language=fortran,numbers=left,numberstyle=\tiny,showstringspaces=false}
-\def\FDMf{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 
 \tiny
-\lstinputlisting[frame=single]{\FDMf}
+\lstinputlisting[frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 \newpage
 
 \begin{itemize}
 \item Declare input, output and auxiliary file tags.
 \tiny
-\lstinputlisting[firstline=11,lastline=11,frame=single]{\FDMf}
+\lstinputlisting[firstline=11,lastline=11,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Declare RSF cube axes:
@@ -217,58 +211,58 @@ $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \texttt{ax} space axis,
 \texttt{az} depth axis.
 \tiny
-\lstinputlisting[firstline=12,lastline=12,frame=single]{\FDMf}
+\lstinputlisting[firstline=12,lastline=12,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Declare multi-dimensional arrays for input, output and computations.
 \tiny
-\lstinputlisting[firstline=16,lastline=17,frame=single]{\FDMf}
+\lstinputlisting[firstline=16,lastline=17,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Open files for input/output.
 \tiny
-\lstinputlisting[firstline=23,lastline=26,frame=single]{\FDMf}
+\lstinputlisting[firstline=23,lastline=26,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Read axes from input files; write axes to output file.
 \tiny
-\lstinputlisting[firstline=29,lastline=30,frame=single]{\FDMf}
+\lstinputlisting[firstline=29,lastline=30,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Allocate arrays and read wavelet, velocity and reflectivity.
 \tiny
-\lstinputlisting[firstline=37,lastline=39,frame=single]{\FDMf}
+\lstinputlisting[firstline=37,lastline=39,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Allocate temporary arrays.
 \tiny
-\lstinputlisting[firstline=42,lastline=45,frame=single]{\FDMf}
+\lstinputlisting[firstline=42,lastline=45,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Loop over time.
 \tiny
-\lstinputlisting[firstline=48,lastline=48,frame=single]{\FDMf}
+\lstinputlisting[firstline=48,lastline=48,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Compute Laplacian: $\Delta U$.
 \tiny
-\lstinputlisting[firstline=52,lastline=61,frame=single]{\FDMf}
+\lstinputlisting[firstline=52,lastline=61,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Inject source wavelet: $\left[ \Delta U - f(t) \right]$
 \tiny
-\lstinputlisting[firstline=64,lastline=64,frame=single]{\FDMf}
+\lstinputlisting[firstline=64,lastline=64,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Scale by velocity: $\left[ \Delta U - f(t) \right] v^2$
 \tiny
-\lstinputlisting[firstline=67,lastline=67,frame=single]{\FDMf}
+\lstinputlisting[firstline=67,lastline=67,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \item Time step: 
 $U_{i+1} = \left[ \Delta U -f(t) \right] v^2 \Delta t^2 + 2 U_{i} - U_{i-1}$
 \tiny
-\lstinputlisting[firstline=70,lastline=72,frame=single]{\FDMf}
+\lstinputlisting[firstline=70,lastline=72,frame=single]{\RSF/user/psava/rsfdemo/AFDMf90.f90}
 \normalsize
 
 \end{itemize}
