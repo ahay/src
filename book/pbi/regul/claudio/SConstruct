@@ -99,6 +99,12 @@ Flow('hy','hmat','headermath sy=1 gy=3 output=gy-sy')
 Flow('off','hx hy','cmplx $SOURCES[:2]',stdin=0)
 Flow('roff','hx hy','cat ${SOURCES[1]} axis=1')
 
+# Absolute offset
+Flow('aoff','hx hy',
+     '''
+     math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x*x+y*y)"
+     ''')
+
 # number of xyz triples
 np = {
     'wb': 463305,
@@ -199,9 +205,8 @@ Flow('geom','recr shot','cat axis=2 ${SOURCES[1]}')
 
 # Select one shot
 
-Flow('geom1','geom','window n3=1 f3=900')
-Flow('off1','off','window n3=1 f3=900')
-Flow('roff1','roff','window n3=1 f3=900')
+for case in ('geom','off','roff','aoff'):
+    Flow(case+'1',case,'window n3=1 f3=900')
 
 Flow('geom100','geom','window n3=100')
 
@@ -214,6 +219,13 @@ Flow('kmodl1','zdens zx zy geom1',
      kirmod3 dipx=${SOURCES[1]} dipy=${SOURCES[2]} head=${SOURCES[3]} 
      nt=1501 dt=0.004 vel=1.5 aper=5
      ''')
+
+# Velocity profile
+Flow('vel','kmodl1','window n2=1 | math output=1.5')
+
+# Apply NMO
+Flow('nmol','kmodl1 vel aoff1',
+     'nmo velocity=${SOURCES[1]} offset=${SOURCES[2]} half=n str=0')
 
 # Binning to a regular grid
 
@@ -233,6 +245,14 @@ Plot('roff1',
      ''' % (x0+(nx-1)*dx,x0,y0,y0+(ny-1)*dy))
 Flow('xx',None,'math n1=%d o1=%g d1=%g n2=%d output=x1' % (nx,x0,dx,ny))
 Flow('yy',None,'math n2=%d o2=%g d2=%g n1=%d output=x2' % (ny,y0,dy,nx))
+
+# Absolute offset for regular data
+Flow('aoffr','xx yy',
+     '''
+     math x=${SOURCES[0]} y=${SOURCES[1]} output="sqrt(x*x+y*y)" |
+     put n1=4770 n2=1
+     ''')
+
 Plot('regul','xx yy',
      '''
      cmplx ${SOURCES[:2]} |
@@ -251,11 +271,42 @@ Flow('bin1 fold1','kmodl1 roff1',
      transp plane=23 memsize=500 | transp memsize=500
      ''' % (nx,x0,dx,ny,y0,dy))
 
+# Bin NMO-corrected data
+Flow('nbin1 nfold1','nmol roff1',
+     '''
+     transp memsize=500 |
+     bin head=${SOURCES[1]} fold=${TARGETS[1]} xkey=0 ykey=1
+     nx=%d x0=%g dx=%g
+     ny=%d y0=%g dy=%g |
+     transp plane=23 memsize=500 | transp memsize=500
+     ''' % (nx,x0,dx,ny,y0,dy))
+
+ncube = 'frame1=200 frame2=150 frame3=7 point1=0.9 point2=0.9'
+
+Result('nbin1',
+       '''
+       window min1=1.5 max1=3 |
+       byte gainpanel=all | grey3 title="NMO + Binning"
+       ''' + ncube)
+
+# Inverse NMO
+Flow('inbin1','nbin1 vel aoffr',
+     '''
+     put n2=4770 n3=1 |
+     inmo velocity=${SOURCES[1]} offset=${SOURCES[2]} half=n |
+     put n2=318 n3=15
+     ''')
+     
 cube = 'frame1=750 frame2=150 frame3=7 point1=0.9 point2=0.9'
 
 Result('bin1',
        '''
-       window min1=2 | byte gainpanel=all | grey3 title="Binned Shot"
+       window min1=1.5 | byte gainpanel=all | grey3 title="Binned Shot"
+       ''' + cube)
+
+Result('inbin1',
+       '''
+       window min1=1.5 | byte gainpanel=all | grey3 title="Binned Shot (NMO)"
        ''' + cube)
 
 # Modeling to regular geometry
@@ -272,7 +323,7 @@ Flow('kmodr1','zdens zx zy',
 
 Result('kmodr1',
        '''
-       window min1=2 | byte | grey3 title="Regular Shot"
+       window min1=1.5 | byte | grey3 title="Regular Shot"
        ''' + cube)
 
 Flow('kmodl100','z geom100',
@@ -288,14 +339,14 @@ Flow('dipr2','dipr','window f4=1')
 
 Result('dipr1',
        '''
-       window min1=2 |
+       window min1=1.5 |
        byte bar=bar.rsf clip=1.5 |
        grey3 color=j scalebar=y title="Inline Slope"
        maxval=1.5 minval=-0.5
        ''' + cube)
 Result('dipr2',
        '''
-       window min1=2 |
+       window min1=1.5 |
        byte bar=bar.rsf clip=2 |
        grey3 color=j scalebar=y title="Crossline Slope"
        maxval=2 minval=-2
@@ -306,8 +357,8 @@ Result('dipr2',
 # extend fold to 3-D to create a 3-D mask for empty bins
 Flow('mask','fold1','spray axis=1 n=1501 d=0.004 o=0')
 
-Flow('dipi','bin1 mask',
-     'dip rect1=50 rect2=5 rect3=5 nj1=2 mask=${SOURCES[1]}')
+Flow('dipi','nbin1 mask',
+     'dip rect1=50 rect2=5 rect3=5 mask=${SOURCES[1]}')
 
 # Window inline and crossline slopes
 Flow('dipi1','dipi','window n4=1')
@@ -315,30 +366,43 @@ Flow('dipi2','dipi','window f4=1')
 
 Result('dipi1',
        '''
-       window min1=2 |
+       window min1=1.5 max1=3 |
        byte bar=bar.rsf clip=1.5 |
        grey3 color=j scalebar=y title="Inline Slope (Irregular)"
        maxval=1.5 minval=-0.5
-       ''' + cube)
+       ''' + ncube)
 Result('dipi2',
        '''
-       window min1=2 |
+       window min1=1.5 max1=3 |
        byte bar=bar.rsf clip=2 |
        grey3 color=j scalebar=y title="Crossline Slope (Irregular)"
        maxval=2 minval=-2
-       ''' + cube)
+       ''' + ncube)
 
 # Regularization with local slopes
 
-Flow('reg1','bin1 dipi mask',
+Flow('nreg1','nbin1 dipi mask',
      '''
-     planemis3 nj1=2 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y
-     niter=1000
+     planemis3 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y
      ''')
 
+Result('nreg1',
+       '''
+       window min1=1.5 max1=3 |
+       byte gainpanel=all | grey3 title="NMO + Binning"
+       ''' + ncube)
+
+# Inverse NMO
+Flow('reg1','nreg1 vel aoffr',
+     '''
+     put n2=4770 n3=1 |
+     inmo velocity=${SOURCES[1]} offset=${SOURCES[2]} half=n |
+     put n2=318 n3=15
+     ''')
+  
 Result('reg1',
        '''
-       window min1=2 | byte gainpanel=all | grey3 title="Regularized"
+       window min1=1.5 | byte gainpanel=all | grey3 title="Regularized"
        ''' + cube)
 
 # Regularization with local slopes from regular data
@@ -348,7 +412,7 @@ Flow('rreg1','bin1 dipr mask',
 
 Result('rreg1',
        '''
-       window min1=2 | byte gainpanel=all | grey3 title="Regularized"
+       window min1=1.5 | byte gainpanel=all | grey3 title="Regularized"
        ''' + cube)
 
 End()

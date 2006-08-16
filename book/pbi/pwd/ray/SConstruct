@@ -128,6 +128,12 @@ Plot('marmdeal','grey yreverse=y transp=y poly=y title=Interpolated')
 
 Result('marm-deal','marm marmdeal','OverUnderAniso')
 
+Result('marmdeal',
+       '''
+       window j2=2 | put d2=1 |
+       wiggle transp=y yreverse=y poly=y wanttitle=n
+       ''')
+
 Flow('marmcomp','marmdeal marmdip4',
      'pwdsigk dips=${SOURCES[1]} verb=y eps=10')
 Plot('mcomp1','marmcomp','window f3=1 | grey title="First Component" ')
