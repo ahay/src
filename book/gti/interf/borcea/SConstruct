@@ -53,25 +53,45 @@ Result('wav','window n1=200 | graph title="" label1="t" label2=')
 zt = par['oz']+90*par['lo']
 xt = par['ox']+par['nx']/2*par['dx']
 
-zs = zt
-xs = xt
+ls = 6*par['lo']
+zs0 = zt+ls
+xs0 = xt
+
+zs1 = zt-0.50*ls
+xs1 = xt-0.86*ls
+
+zs2 = zt-0.50*ls
+xs2 = xt+0.86*ls
 
 par['jzt'] = zt / par['dz']
 par['jxt'] = xt / par['dx']
 
 Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
 
-# source position
-Flow('zs','s_','math output="%g"' % zs)
-Flow('xs','s_','math output="%g"' % xs)
-Flow('rs','s_','math output=1')
-Flow('ss',['xs','zs','rs'],
-     '''
-     cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
-     ''', stdin=0)
+# source positions
+Flow('zs0','s_','math output="%g"' % zs0)
+Flow('xs0','s_','math output="%g"' % xs0)
+Flow('rs0','s_','math output=1')
+
+Flow('zs1','s_','math output="%g"' % zs1)
+Flow('xs1','s_','math output="%g"' % xs1)
+Flow('rs1','s_','math output=1')
+
+Flow('zs2','s_','math output="%g"' % zs2)
+Flow('xs2','s_','math output="%g"' % xs2)
+Flow('rs2','s_','math output=1')
+
+for j in range(3):
+    Flow('ss'+str(j),['xs'+str(j),'zs'+str(j),'rs'+str(j)],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
+Flow('ss','ss0 ss1 ss2','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]}')
+
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=* plotcol=2',par))
+     + fdmod.cgraph('symbol=* plotcol=0',par))
 
 # ------------------------------------------------------------
 # experiment setup
@@ -90,7 +110,7 @@ Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
 
 # ------------------------------------------------------------
 # receivers around target
-nq = 10  * par['lo']/par['dx']
+nq = 20  * par['lo']/par['dx']
 oq = xt - (nq-1)/2 * par['dx']
 dq =                 par['dx']
 
@@ -149,7 +169,7 @@ fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
 Plot(  'io',fdmod.cgrey('pclip=100',par))
 Result('io',['io','ss','rr'],'Overlay')
 
-for k in ('05','10','15','20','25'):
+for k in ('05','10','15','20','25','30','35','40','45','50'):
 
     # clutter
     Flow('vv'+k,'vo mask',
@@ -166,7 +186,7 @@ for k in ('05','10','15','20','25'):
          ''' % (k,k) )
 
     Plot(  'vv'+k,fdmod.cgrey('bias=3000 pclip=100 color=j',par))
-    Result('vv'+k,['vv'+k,'rr','qq','ss'],'Overlay')
+    Result('vv'+k,['vv'+k,'rr','ss'],'Overlay')
     
     # ------------------------------------------------------------
     # F-D modeling
@@ -184,7 +204,7 @@ for k in ('05','10','15','20','25'):
     # RTM
     
     fdmod.zom('ii'+k,'uu'+k,'tt'+k,'vo','rm','rr','qq','free=n dens=n',par)
-    Plot('ii'+k,fdmod.cgrey('pclip=100',par))
+    Plot(  'ii'+k,fdmod.cgrey('pclip=100',par))
     Result('ii'+k,['ii'+k,'ss','rr'],'Overlay')
     # ------------------------------------------------------------
 
