@@ -54,14 +54,15 @@ zt = par['oz']+90*par['lo']
 xt = par['ox']+par['nx']/2*par['dx']
 
 ls = 6*par['lo']
-zs0 = zt+ls
+
+zs0 = zt+2*ls/3
 xs0 = xt
 
-zs1 = zt-0.50*ls
-xs1 = xt-0.86*ls
+zs1 = zt-ls/3
+xs1 = xt-0.58*ls
 
-zs2 = zt-0.50*ls
-xs2 = xt+0.86*ls
+zs2 = zt-ls/3
+xs2 = xt+0.58*ls
 
 par['jzt'] = zt / par['dz']
 par['jxt'] = xt / par['dx']
