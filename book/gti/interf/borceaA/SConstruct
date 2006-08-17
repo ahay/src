@@ -13,7 +13,7 @@ par = {
     'nt':12000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
     'ox':0,                           'lx':'label2=x unit2=m',
     'oz':0,                           'lz':'label1=z unit1=m',
-    'kt':100,  # wavelet delay
+    'kt':50,  # wavelet delay
     'nbx':250, 'tx':0.0015,
     'nbz':250, 'tz':0.0015,
     'jsnap':100, 'height':10
@@ -56,8 +56,28 @@ xt = par['ox']+par['nx']/2*par['dx']
 zs = 10*par['dz']
 xs = xt
 
+ls = 6*par['lo']
+
+zs0 = zt+2*ls/3
+xs0 = xt
+
+zs1 = zt-ls/3
+xs1 = xt-0.58*ls
+
+zs2 = zt-ls/3
+xs2 = xt+0.58*ls
+
 par['jzt'] = zt / par['dz']
 par['jxt'] = xt / par['dx']
+
+par['jzs0'] = zs0 / par['dz']
+par['jxs0'] = xs0 / par['dx']
+
+par['jzs1'] = zs1 / par['dz']
+par['jxs1'] = xs1 / par['dx']
+
+par['jzs2'] = zs2 / par['dz']
+par['jxs2'] = xs2 / par['dx']
 
 Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
 
@@ -71,7 +91,7 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=* plotcol=2',par))
+     + fdmod.cgraph('symbol=o plotcol=0 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # experiment setup
@@ -86,7 +106,7 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
-     + fdmod.cgraph('symbol=. plotcol=6',par))
+     + fdmod.cgraph('symbol=. plotcol=0 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # receivers around target
@@ -109,7 +129,7 @@ for iq in range(nq):
 allq = map(lambda x: 'qq%d' % x,range(nq))
 Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq, stdin=0)
 Plot('qq','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=. plotcol=0',par))
+     + fdmod.cgraph('symbol=. plotcol=0 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 Flow('mask',None,
@@ -119,32 +139,57 @@ Flow('mask',None,
      n2=%(nx)d o2=%(ox)g d2=%(dx)g |
      smooth rect1=25
      ''' % par)
+Flow('dask',None,
+     '''
+     spike nsp=3 mag=1,1,1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzs0)d,%(jzs1)d,%(jzs2)d l1=%(jzs0)d,%(jzs1)d,%(jzs2)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxs0)d,%(jxs1)d,%(jxs2)d l2=%(jxs0)d,%(jxs1)d,%(jxs2)d |
+     smooth rect1=10 rect2=10 repeat=5 |
+     scale axis=123 |
+     mask min=0.5 max=1 |
+     dd type=float |
+     scale rscale=-1 |
+     add add=1
+     ''' % par)
+
+Result('dask',fdmod.cgrey('pclip=100 grid=y gridcol=2 g2num=%(lo)g g1num=%(lo)g'% par,par))
 
 # ------------------------------------------------------------
 # background
-Flow('vo',None,
+Flow('vx',None,
      '''
-     spike nsp=1 mag=-%(co)g
+     spike nsp=1 mag=0
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzt)d l1=%(jzt)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxt)d l2=%(jxt)d |
      add add=%(co)g
      ''' % par)
 
+Flow('vo','dask',
+     '''
+     spike nsp=1 mag=0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzt)d l1=%(jzt)d
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxt)d l2=%(jxt)d |
+     add add=%(co)g |
+     add mode=p ${SOURCES[0]}
+     ''' % par)
+
 # clutter
-Flow('vv','vo mask',
+Flow('vv','vo mask dask',
      '''
      math output=0 |
-     noise mean=0 range=1 type=y |
-     add mode=p ${SOURCES[1]} | 
-     scale rscale=0.5 |
-     add add=1 |
-     smooth rect1=%d rect2=%d |
-     add add=-1 |
-     scale rscale=8 |
+     noise mean=0 range=1 type=n |
+     add mode=p ${SOURCES[1]} |
+     smooth rect1=15 rect2=15 |
+     scale axis=123 |
+     scale rscale=0.1 |
      add add=+1 |
      math v=${SOURCES[0]} output="v/sqrt(input)" |
-     clip clip=3500
-     ''' % (par['smp']/2,par['smp']/2) )
+     add add=-%g |
+     scale axis=123 |
+     scale rscale=500 |
+     add add=%g |
+     add mode=p ${SOURCES[2]}
+     ''' % (par['co'],par['co']))
 
 Flow('rm',None,
      '''
@@ -153,69 +198,50 @@ Flow('rm',None,
      n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 
-Plot('vo',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
-Plot('vv',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
-Plot('rm',fdmod.cgrey('allpos=y bias=3000 pclip=100',par))
+Plot('vx',fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
+Plot('vo',fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
+Plot('vv','add add=-3000 | clip clip=500 | add add=3000 |' +
+     fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
+Plot('rm',fdmod.cgrey('allpos=y pclip=100 wantscalebar=y',par))
 
-Result('vo',['vo','rr','qq','ss'],'Overlay')
-Result('vv',['vv','rr','qq','ss'],'Overlay')
+Result('vx',['vx','rr',     'ss'],'Overlay')
+Result('vo',['vo','rr',     'ss'],'Overlay')
+Result('vv',['vv','rr',     'ss'],'Overlay')
 Result('rm',['rm','rr','qq','ss'],'Overlay')
 
 # ------------------------------------------------------------
 # F-D modeling
 
+fdmod.amodel('dx','wx','wav','vx','rm','ss','rr','free=n dens=n',par)
+
 fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Flow('to','do dx','add ${SOURCES[1]} scale=1,-1 | window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('wo',            fdmod.wgrey('pclip=99',par))
 Result('to','transp|' + fdmod.dgrey('',par))
 
 fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
-Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Flow('tt','dd dx','add ${SOURCES[1]} scale=1,-1 | window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('tt','transp|' + fdmod.dgrey('',par))
 
 fdmod.wom('wom','ww','vv',par)
-Result('wom',           fdmod.wgrey('pclip=95',par))
+Result(   'wom',fdmod.wgrey('pclip=95',par))
 
 # ------------------------------------------------------------
 # RTM
 
-fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
-Plot('io',fdmod.cgrey('pclip=100',par))
-Result('io',['io','ss','rr'],'Overlay')
+# source wavefield
+Flow('dw','wav',
+     '''
+	pad beg2=%d n2out=%d |
+	put o2=%g d2=%g | 
+	transp
+	''' % (50,100,3,1.5))
 
-fdmod.zom('ii','uu','tt','vo','rm','rr','qq','free=n dens=n',par)
-Plot('ii',fdmod.cgrey('pclip=100',par))
-Result('ii',['ii','ss','rr'],'Overlay')
-# ------------------------------------------------------------
+fdmod.rtm('io','dw','do','vo','rm','rr','rr','free=y dens=n',2000,par)
+fdmod.rtm('ii','dw','dd','vv','rm','rr','rr','free=y dens=n',2000,par)
 
-for k in ('jj','jo'):
-
-    if (k=='jj'):
-        u='uu'
-    else:
-        u='uo'
-
-    Flow(k,u,
-         '''
-         put
-         n1=%d o1=%g d1=%g label1=x unit1=m
-         n2=%d o2=%g d2=%g label2=z unit2=m
-         n3=%d o3=%g d3=%g label3=t unit3=s |
-         window min3=0.1
-         ''' % (nq,oq,par['dx'],
-                nq,zt-nq/2*par['dz'],par['dz'],
-                par['nt'], par['ot'],par['dt']) )
-    Result(k,
-           '''
-           window j3=10 | transp |
-           grey title="" gainpanel=a screenratio=1
-           min1=%g max1=%g
-           min2=%g max2=%g
-           ''' % (par['zmin'],par['zmax'],
-                  par['xmin'],par['xmax']))
-
-#fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
-#Result('iq',fdmod.cgrey('',par))
+Result('io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+Result('ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
 
 End()

@@ -13,7 +13,7 @@ par = {
     'nt':6000, 'ot':0, 'dt':0.000025,'lt':'label1=t unit1=s',
     'ox':0,                          'lx':'label2=x unit2=m',
     'oz':0,                          'lz':'label1=z unit1=m',
-    'kt':100,  # wavelet delay
+    'kt':50,  # wavelet delay
     'nbx':250, 'tx':0.0015,
     'nbz':250, 'tz':0.0015,
     'jsnap':100, 'height':10
@@ -92,7 +92,7 @@ for j in range(3):
 Flow('ss','ss0 ss1 ss2','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]}')
 
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=* plotcol=0',par))
+     + fdmod.cgraph('symbol=o plotcol=0 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # experiment setup
@@ -107,7 +107,7 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
-     + fdmod.cgraph('symbol=. plotcol=6',par))
+     + fdmod.cgraph('symbol=. plotcol=6 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # receivers around target
@@ -130,7 +130,7 @@ for iq in range(nq):
 allq = map(lambda x: 'qq%d' % x,range(nq))
 Flow('qq',allq,'cat axis=2 space=n ${SOURCES[:%d]}' % nq, stdin=0)
 Plot('qq','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=. plotcol=0',par))
+     + fdmod.cgraph('symbol=. plotcol=0 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 Flow('mask',None,
@@ -158,11 +158,12 @@ Flow('rm',None,
      n2=%(nx)d o2=%(ox)g d2=%(dx)g
      ''' % par)
 
-Plot(  'vo',fdmod.cgrey('bias=3000 pclip=100 color=j',par))
+Plot(  'vo',
+       fdmod.cgrey('bias=3000 pclip=100 color=j wantscalebar=y',par))
 Result('vo',['vo','rr','qq','ss'],'Overlay')
 
 fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Flow(  'to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('wo',            fdmod.wgrey('pclip=99',par))
 Result('to','transp|' + fdmod.dgrey('',par))
 
@@ -173,20 +174,23 @@ Result('io',['io','ss','rr'],'Overlay')
 for k in ('05','10','15','20','25','30','35','40','45','50'):
 
     # clutter
-    Flow('vv'+k,'vo mask',
+    Flow('vv'+k,'vo',
          '''
          math output=0 |
-         noise mean=0 range=1 type=y |
-         add mode=p ${SOURCES[1]} |
+         noise mean=0 range=1 type=n |
          smooth rect1=%s rect2=%s |
          scale axis=123 |
          scale rscale=0.1 |
          add add=+1 |
          math v=${SOURCES[0]} output="v/sqrt(input)" |
-         clip clip=3500
-         ''' % (k,k) )
+         add add=-%g |
+         scale axis=123 |
+         scale rscale=500 |
+         add add=%g
+         ''' % (k,k,par['co'],par['co']) )
 
-    Plot(  'vv'+k,fdmod.cgrey('bias=3000 pclip=100 color=j',par))
+    Plot(  'vv'+k,
+           fdmod.cgrey('bias=3000 pclip=100 color=j wantscalebar=y grid=y g2num=%(lo)g g1num=%(lo)g'%par,par))
     Result('vv'+k,['vv'+k,'rr','ss'],'Overlay')
     
     # ------------------------------------------------------------
@@ -196,7 +200,7 @@ for k in ('05','10','15','20','25','30','35','40','45','50'):
     Flow('tt'+k,'dd'+k,
          'window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
     Result('ww'+k,            fdmod.wgrey('pclip=99',par))
-    Result('tt'+k,'transp|' + fdmod.dgrey('',par))
+    Result('tt'+k,'transp|' + fdmod.dgrey('pclip=99',par))
     
     fdmod.wom('wom'+k,'ww'+k,'vv'+k,par)
     Result(   'wom'+k,fdmod.wgrey('pclip=95',par))
@@ -205,7 +209,7 @@ for k in ('05','10','15','20','25','30','35','40','45','50'):
     # RTM
     
     fdmod.zom('ii'+k,'uu'+k,'tt'+k,'vo','rm','rr','qq','free=n dens=n',par)
-    Plot(  'ii'+k,fdmod.cgrey('pclip=100',par))
+    Plot(  'ii'+k,fdmod.cgrey('pclip=100 wantscalebar=y',par))
     Result('ii'+k,['ii'+k,'ss','rr'],'Overlay')
     # ------------------------------------------------------------
 
