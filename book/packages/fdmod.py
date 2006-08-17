@@ -112,7 +112,7 @@ def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
           ''' % par)
 
 # shot-record reverse-time migration
-def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
+def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
 
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
@@ -120,7 +120,7 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
     rout = imag+'_dr' # receiver data (not the input rdat)
 
     # source wavefield (z,x,t)
-    awe(sout,swfl,sdat,velo,dens,sacq,sacq,custom+' jsnap=1 ',par)
+    awe(sout,swfl,sdat,velo,dens,sacq,iacq,custom,par)
 
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
@@ -128,7 +128,7 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,custom,mem,par):
     tout = imag+'_tdr'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(tout,twfl,tdat,velo,dens,racq,racq,custom+' jsnap=1 ',par)
+    awe(tout,twfl,tdat,velo,dens,racq,iacq,custom,par)
     Flow(rwfl,twfl,'reverse which=4 opt=i verb=y memsize=1000')
     Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
