@@ -10,7 +10,10 @@ def cubeplot(title,clip='',extra=''):
 
 Flow('qdome',None,
      '''
-     qdome n1=200 n2=150 n3=100 d1=0.01 d2=0.01 d3=0.01 o1=0 o2=0.4 o3=-0.06 |
+     qdome
+     n1=200 n2=150 n3=100
+     d1=0.01 d2=0.01 d3=0.01
+     o1=0 o2=0.4 o3=-0.06 |
      smooth rect1=3 diff1=1 | smooth rect1=4
      ''')
 Result('qdome',cubeplot('Input'))
@@ -25,16 +28,18 @@ Flow('dip1','dip',
 Flow('dip2','dip',
      'window f4=1 | spray axis=4 n=1 o=0 d=1 | patch inv=y weight=y verb=y')
 
-Result('dip1',cubeplot('Inline dip','allpos=y bar=bar.rsf',
-                       '''
-                       color=j scalebar=y bar=bar.rsf bartype=v wanttitle=n
-                       barlabel="Inline Dip"
-                       '''))
-Result('dip2',cubeplot('Crossline dip','allpos=y bar=bar.rsf',
-                       '''
-                       color=j scalebar=y bar=bar.rsf bartype=h wanttitle=n
-                       barlabel="Crossline Dip"
-                       '''))
+Result('dip1',
+       cubeplot('Inline dip','allpos=y bar=bar.rsf',
+                '''
+                color=j scalebar=y bar=bar.rsf bartype=v wanttitle=n
+                barlabel="Inline Dip"
+                '''))
+Result('dip2',
+       cubeplot('Crossline dip','allpos=y bar=bar.rsf',
+                '''
+                color=j scalebar=y bar=bar.rsf bartype=h wanttitle=n
+                barlabel="Crossline Dip"
+                '''))
 
 Flow('cost1','dip1','stack axis=1 rms=y norm=n')
 Flow('cost2','dip2','stack axis=1 rms=y norm=n')
@@ -43,20 +48,51 @@ Flow('cost','cost1 cost2','cat axis=3 ${SOURCES[1]}')
 
 Plot('cost1',
      '''
-     grey color=j scalebar=y bartype=h allpos=y
+     grey color=j scalebar=y bartype=h allpos=y 
      title="West-East cost" transp=n yreverse=n
      ''')
 Plot('cost2',
      '''
-     grey color=j scalebar=y bartype=h allpos=y
+     grey color=j scalebar=y bartype=h allpos=y 
      title="South-North cost" transp=n yreverse=n
      ''')
 Result('cost','cost1 cost2','SideBySideAniso')
 
+Flow('shift1','qdome','window f2=1 | pad n2=150')
+Flow('shift2','qdome','window f3=1 | pad n3=100')
+Flow('corr1','shift1 qdome','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+Flow('corr2','shift2 qdome','add mode=p ${SOURCES[1]} | stack axis=1 norm=n')
+
+Flow('qdome2','qdome','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('shift12','shift1','add mode=p $SOURCE | stack axis=1 norm=n')
+Flow('shift22','shift2','add mode=p $SOURCE | stack axis=1 norm=n')
+
+Flow('cos1','corr1 qdome2 shift12',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos2','corr2 qdome2 shift22',
+     '''
+     math s1=${SOURCES[1]} s2=${SOURCES[2]} output="(s1*s2)/(input*input)"
+     ''')
+Flow('cos','cos1 cos2','cat axis=3 ${SOURCES[1]}')
+
+Plot('cos1',
+     '''
+     grey color=j scalebar=y bartype=h allpos=y bias=1 
+     title="West-East cost" transp=n yreverse=n
+     ''')
+Plot('cos2',
+     '''
+     grey color=j scalebar=y bartype=h allpos=y bias=1
+     title="South-North cost" transp=n yreverse=n
+     ''')
+Result('cos','cos1 cos2','SideBySideAniso')
+
 paths = [3*[25,50,75,100,125],5*[25]+5*[50]+5*[75]]
 pnames = map(lambda x,y: 'path%d-%d' % (x,y),paths[0],paths[1])
 
-Flow(['time']+pnames,'cost',
+Flow(['time']+pnames,'cos',
      '''
      dijkstra ref1=100 ref2=50
      nf=%d paths=%s fin1=%s fin2=%s

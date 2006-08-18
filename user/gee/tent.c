@@ -23,10 +23,6 @@
 
 #include "tent.h"
 
-#ifndef MAX
-#define MAX(x,y) ((x) > (y) ? (x) : (y))
-#endif
-
 void tent (int dim           /* number of dimensions */, 
 	   const int* nwind  /* window size [dim] */, 
 	   const int* center /* filter center [dim] */, 
@@ -54,7 +50,7 @@ void tent (int dim           /* number of dimensions */,
 	for (j=0; j < dim; j++) {
 	    if (x[j] >= start[j] && x[j] <= end[j]) {
 		w = (x[j]-mid[j])/wid[j];
-		windwt[i] *= MAX(0.,1.-fabs(w));
+		windwt[i] *= SF_MAX(0.,1.-fabs(w));
 	    }	else {
 		windwt[i] = 0.;
 	    }
