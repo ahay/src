@@ -1,53 +1,26 @@
 from rsfproj import *
 import fdmod
-
 ## 
  # Sigsbee 2A
 ##
-
-PRFX = 'sigsbee2a_'
-SUFX = '.sgy' 
-
-for c in ('migration_velocity','stratigraphy','reflection_coefficients'):
-
-    if(c=='migration_velocity'):
-        v='vmig2A'
-        o=10025
-        d=37.5
-    if(c=='stratigraphy'):
-        v='vstr2A'
-        o=10000
-        d=25
-    if(c=='reflection_coefficients'):
-        v='reflectionCoefficients'
-    h = c + 'head'
-    t = PRFX + c + SUFX
-    Fetch(t,'sigsbee')
-
-    Flow([v,h],t,
+data='sigsbee2a_stratigraphy.sgy'
+#Fetch(data,'sigsbee')
+Flow(['vstr2A','vstr2Ahead'],data,
          '''
          segyread tape=$SOURCE tfile=${TARGETS[1]} |
          put
-         o1=0  d1=25   label1=z unit1=ft
-         o2=%f d2=%f   label2=x unit2=ft
-         ''' %(o,d) ,stdin=0)
-    if(c=='migration_velocity'):
-        Result(v,v,'grey color=j scalebar=y allpos=y title=Migration\ Velocity')
-    if(c=='stratigraphy'):
-        Result(v,v,'grey color=j scalebar=y allpos=y title=Stratigraphic\ Velocity')
-    if(c=='reflection_coefficients'):
-	Result(v,v,'grey color=i scalebar=y minval=0 maxval=.1 title=Reflection\ Coefficients')
-
+         o1=0  d1=25     label1=z unit1=ft
+         o2=10000 d2=25  label2=x unit2=ft
+         ''',stdin=0)
 # ------------------------------------------------------------
 par = {
     'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'kt':100,    # wavelet delay
-    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=x unit2=km',
-    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=z unit1=km'
+    'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=Position unit2=km',
+    'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=Depth    unit1=km'
     }
 # add F-D modeling parameters
 fdmod.param(par)
-
 # ------------------------------------------------------------
 # wavelet
 Flow('wav',None,
@@ -58,13 +31,10 @@ Flow('wav',None,
          put label1=t label2=x label3=y 
          ''' % par)    
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
-
 # ------------------------------------------------------------
 # experiment setup
-
 Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
 Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
-
 # receiver positions
 Flow('zr','r_','math output="0" ')
 Flow('xr','r_','math output="x1"')
@@ -74,10 +44,9 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* plotcol=6',par))
-
+     + fdmod.cgraph('symbol=* plotcol=6 symbolsz=6',par))
 # source positions
-Flow('zs','s_','math output=1')
+Flow('zs','s_','math output=.01')
 Flow('xs','s_','math output=10.0')
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
@@ -86,7 +55,7 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=* plotcol=2 symbolsz=4',par))
+     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=6',par))
 
 # ------------------------------------------------------------
 
@@ -97,7 +66,7 @@ Flow('vel','vstr2A',
      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
      ''' % par)
 
-Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
+Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100 title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------

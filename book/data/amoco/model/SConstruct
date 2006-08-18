@@ -2,18 +2,18 @@ from rsfproj import *
 import fdmod
 
 # Fetch Files from repository
-Fetch("velsmooth.HH","Amoco")
-Fetch("velmodel.hh","Amoco")
+#Fetch("velsmooth.HH","Amoco")
+#Fetch("velmodel.hh","Amoco")
 # Convert Files to RSF
 Flow('velsmooth','velsmooth.HH', '''dd form=native | put
     unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model''')
 
-Flow('velmodel','velmodel.hh', '''dd form=native | put
-    unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model | 
-    scale rscale=.0003048''')
+Flow('velmodel','velmodel.hh', '''dd form=native | scale rscale=.001 | put
+    unit1=km unit2=km label1=Depth\ Z label2=Position title=Velocity\ Model  
+    ''')
 
 Result('velmodel','''window $SOURCE  max1=4 | grey  scalebar=y
                      color=I gainpanel=a allpos=y screenratio=.18 screenht=2
-                     scalebar=y barlabel=\(km/s\) minval=0 maxval=2 title= 
-                     labelsz=4 ''')
+                     scalebar=y barlabel=\(km/s\) title=Amoco\ Velocity\ Model 
+                     labelsz=4 titlesz=6 wheretitle=t''')
 End()
