@@ -135,8 +135,8 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
     corr = imag+'_cor'
 
     # conventional (cross-correlation zero-lag) imaging condition
-    Flow(corr,[swfl,rwfl],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
-    Flow(imag,corr,'stack axis=3')
+    Flow(corr,[sout,rout],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
+    Flow(imag,corr,'stack axis=2')
 
 # exploding-reflector reverse-time migration
 def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
@@ -151,7 +151,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
     awe(data,twfl,tdat,velo,dens,sacq,racq,custom,par)
 
-    Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']) )
+    Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']-1) )
 
 # wavefield-over-model plots
 def wom(wom,wfld,velo,par):

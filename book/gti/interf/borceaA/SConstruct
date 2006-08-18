@@ -254,10 +254,19 @@ Flow('dw','wav',
 	transp
 	''' % (50,100,3,1.5))
 
-fdmod.rtm('io','dw','do','vo','rm','rr','rr','free=y dens=n',2000,par)
-fdmod.rtm('ii','dw','dd','vv','rm','rr','rr','free=y dens=n',2000,par)
+fdmod.rtm('tio','dw','do','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
+fdmod.rtm('tii','dw','dd','vv','rm','rr','rr','qq','free=y dens=n',2000,par)
+
+for i in ('io','ii'):
+    Flow(i,'t'+i,
+         '''
+         put
+         n1=%d o1=%g d1=%g
+         n2=%d o2=%g d2=%g 
+         ''' % (np,op,dp,nq,oq,dq) )
 
 Result('io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
 Result('ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
 
 End()
+
