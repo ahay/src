@@ -168,17 +168,10 @@ Flow('vx',None,
      add add=%(co)g
      ''' % par)
 
-Flow('vo','dask',
-     '''
-     spike nsp=1 mag=0
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzt)d l1=%(jzt)d
-     n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxt)d l2=%(jxt)d |
-     add add=%(co)g |
-     add mode=p ${SOURCES[0]}
-     ''' % par)
+Flow('vo','vx dask','add mode=p ${SOURCES[1]}')
 
 # clutter
-Flow('vv','vo mask dask',
+Flow('vv','vx mask dask',
      '''
      math output=0 |
      noise mean=0 range=1 type=n |
@@ -255,7 +248,7 @@ Flow('dw','wav',
 	''' % (50,100,3,1.5))
 
 fdmod.rtm('tio','dw','do','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
-fdmod.rtm('tii','dw','dd','vv','rm','rr','rr','qq','free=y dens=n',2000,par)
+fdmod.rtm('tii','dw','dd','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
 
 for i in ('io','ii'):
     Flow(i,'t'+i,
@@ -265,8 +258,11 @@ for i in ('io','ii'):
          n2=%d o2=%g d2=%g 
          ''' % (np,op,dp,nq,oq,dq) )
 
-Result('io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
-Result('ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+Plot('io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+Plot('ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+
+Result('io',['io','ss','rr'],'Overlay')
+Result('ii',['ii','ss','rr'],'Overlay')
 
 End()
 
