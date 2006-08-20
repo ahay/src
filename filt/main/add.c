@@ -43,7 +43,7 @@ less efficient.
 
 #include <rsf.h>
 
-static void check_compat(int        esize, 
+static void check_compat(sf_datatype type, 
 			 size_t     nin, 
 			 sf_file*   in, 
 			 int        dim, 
@@ -51,7 +51,7 @@ static void check_compat(int        esize,
 static void add_float (bool   collect, 
 		       size_t nbuf, 
 		       float* buf, 
-		       float* bufi, 
+		       const float* bufi, 
 		       char   cmode, 
 		       float  scale, 
 		       float  add, 
@@ -62,7 +62,7 @@ static void add_float (bool   collect,
 static void add_int (bool     collect, 
 		     size_t   nbuf, 
 		     int*     buf, 
-		     int*     bufi, 
+		     const int*     bufi, 
 		     char     cmode, 
 		     float    scale, 
 		     float    add, 
@@ -73,7 +73,7 @@ static void add_int (bool     collect,
 static void add_complex (bool        collect, 
 			 size_t      nbuf, 
 			 sf_complex* buf, 
-			 sf_complex* bufi, 
+			 const sf_complex* bufi, 
 			 char        cmode, 
 			 float       scale, 
 			 float       add, 
@@ -84,7 +84,7 @@ static void add_complex (bool        collect,
 
 int main (int argc, char* argv[])
 {
-    int i, dim, n[SF_MAX_DIM], esize;
+    int i, dim, n[SF_MAX_DIM];
     size_t j, nin, nbuf, nsiz;
     sf_file *in, out;
     float *scale, *add;
@@ -99,7 +99,8 @@ int main (int argc, char* argv[])
     out = sf_output ("out");
     
     /* find number of input files */
-    if (0 != isatty(fileno(stdin))) { /* no input file in stdin */
+    if (isatty(fileno(stdin))) { 
+        /* no input file in stdin */
 	nin=0;
     } else {
 	in[0] = sf_input("in");
@@ -107,7 +108,7 @@ int main (int argc, char* argv[])
     }
 
     for (i=1; i< argc; i++) { /* collect inputs */
-	if (NULL != strchr(argv[i],'=')) continue; /* not a file */
+	if (NULL != strchr(argv[i],'=')) continue; 
 	in[nin] = sf_input(argv[i]);
 	nin++;
     }
@@ -132,26 +133,29 @@ int main (int argc, char* argv[])
 	sqrt_flag[j] = abs_flag[j] = log_flag[j] = exp_flag[j] = false;
     }
 
-    /* Scalar values to multiply each dataset with */
     (void) sf_getfloats("scale",scale,nin); 
+    /* Scalar values to multiply each dataset with */
 
-    /* Scalar values to add to each dataset */
     (void) sf_getfloats("add",add,nin);
+    /* Scalar values to add to each dataset */
 
-    /* If true (1) take square root */
     (void) sf_getbools("sqrt",sqrt_flag,nin);
-    /* If true (1) take absolute value */
-    (void) sf_getbools("abs",abs_flag,nin);
-    /* If true (1) take logarithm */
-    (void) sf_getbools("log",log_flag,nin);
-    /* If true (1) compute exponential */
-    (void) sf_getbools("exp",exp_flag,nin);
+    /* If true take square root */
 
+    (void) sf_getbools("abs",abs_flag,nin);
+    /* If true take absolute value */
+
+    (void) sf_getbools("log",log_flag,nin);
+    /* If true take logarithm */
+
+    (void) sf_getbools("exp",exp_flag,nin);
+    /* If true compute exponential */
+
+    mode = sf_getstring("mode");
     /* 'a' means add (default), 
        'p' or 'm' means multiply, 
        'd' means divide 
     */
-    mode = sf_getstring("mode");
     cmode = (NULL==mode)? 'a':mode[0];
 
     /* verify file compatibility */
@@ -159,16 +163,14 @@ int main (int argc, char* argv[])
     for (nsiz=1, i=0; i < dim; i++) {
 	nsiz *= n[i];
     }                           /* number of elements in input files */
-    esize = (int) sf_esize(in[0]);
-    check_compat(esize,nin,in,dim,n);
+    type = sf_gettype(in[0]);
+    check_compat(type,nin,in,dim,n);
     /* end verify file compatibility */
 
     sf_setformat(out,sf_histstring(in[0],"data_format"));
     sf_fileflush(out,in[0]);
-
-    type = sf_gettype (out); /* input/output files format */
     
-    for (nbuf /= esize; nsiz > 0; nsiz -= nbuf) {
+    for (nbuf /= sf_esize(in[0]); nsiz > 0; nsiz -= nbuf) {
 	if (nbuf > nsiz) nbuf=nsiz;
 
 	for (j=0; j < nin; j++) {
@@ -181,7 +183,7 @@ int main (int argc, char* argv[])
 		    add_float(collect, 
 			      nbuf,
 			      (float*) buf,
-			      (float*) bufi, 
+			      (const float*) bufi, 
 			      cmode, 
 			      scale[j], 
 			      add[j], 
@@ -197,7 +199,7 @@ int main (int argc, char* argv[])
 		    add_complex(collect, 
 				nbuf,
 				(sf_complex*) buf,
-				(sf_complex*) bufi, 
+				(const sf_complex*) bufi, 
 				cmode, 
 				scale[j], 
 				add[j], 
@@ -213,7 +215,7 @@ int main (int argc, char* argv[])
 		    add_int(collect, 
 			    nbuf,
 			    (int*) buf,
-			    (int*) bufi, 
+			    (const int*) bufi, 
 			    cmode, 
 			    scale[j], 
 			    add[j], 
@@ -248,17 +250,18 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-static void add_float (bool   collect, 
-		       size_t nbuf, 
-		       float* buf, 
-		       float* bufi, 
-		       char   cmode, 
-		       float  scale, 
-		       float  add, 
-		       bool   abs_flag, 
-		       bool   log_flag, 
-		       bool   sqrt_flag, 
-		       bool   exp_flag)
+static void add_float (bool   collect,    /* if collect */
+		       size_t nbuf,       /* buffer size */
+		       float* buf,        /* output [nbuf] */
+		       const float* bufi, /* input  [nbuf] */  
+		       char   cmode,      /* operation */
+		       float  scale,      /* scale factor */
+		       float  add,        /* add factor */
+		       bool   abs_flag,   /* if abs */
+		       bool   log_flag,   /* if log */
+		       bool   sqrt_flag,  /* if sqrt */
+		       bool   exp_flag    /* if exp */)
+/* Add floating point numbers */
 {
     size_t j;
     float f;
@@ -273,14 +276,14 @@ static void add_float (bool   collect,
 	if (exp_flag)    f = expf(f);
 	if (collect) {
 	    switch (cmode) {
-		case 'p':
-		case 'm':
+		case 'p': /* product */
+		case 'm': /* multiply */
 		    buf[j] *= f;
 		    break;
-		case 'd':
+		case 'd': /* delete */
 		    if (f != 0.) buf[j] /= f;
 		    break;
-		default:
+		default:  /* add */
 		    buf[j] += f;
 		    break;
 	    }
@@ -293,7 +296,7 @@ static void add_float (bool   collect,
 static void add_int (bool   collect, 
 		     size_t nbuf, 
 		     int*   buf, 
-		     int*   bufi, 
+		     const int*   bufi, 
 		     char   cmode, 
 		     float  scale, 
 		     float  add, 
@@ -335,7 +338,7 @@ static void add_int (bool   collect,
 static void add_complex (bool        collect, 
 			 size_t      nbuf, 
 			 sf_complex* buf, 
-			 sf_complex* bufi, 
+			 const sf_complex* bufi, 
 			 char        cmode, 
 			 float       scale, 
 			 float       add, 
@@ -406,21 +409,25 @@ static void add_complex (bool        collect,
 }
 
 /*------------------------------------------------------------*/
-static void check_compat (int        esize, 
-			  size_t     nin, 
-			  sf_file*   in, 
-			  int        dim, 
-			  const int* n) 
+static void 
+check_compat (sf_datatype type /* data type */, 
+	      size_t      nin  /* number of files */, 
+	      sf_file*    in   /* input files [nin] */, 
+	      int         dim  /* file dimensionality */, 
+	      const int*  n    /* dimensions [dim] */)
+/* Check that the input files are compatible. 
+   Issue error for type mismatch or size mismatch.
+   Issue warning for grid parameters mismatch. */
 {
     int ni, id;
     size_t i;
     float d, di, o, oi;
     char key[3];
-    const float tol=1.e-5;
+    const float tol=1.e-5; /* tolerance for comparison */
     
     for (i=1; i < nin; i++) {
-	if ((int) sf_esize(in[i]) != esize) 
-	    sf_error ("esize mismatch: need %d",esize);
+	if (sf_gettype(in[i]) != type) 
+	    sf_error ("type mismatch: need %d",type);
 	for (id=1; id <= dim; id++) {
 	    (void) snprintf(key,3,"n%d",id);
 	    if (!sf_histint(in[i],key,&ni) || ni != n[id-1])
@@ -435,9 +442,9 @@ static void check_compat (int        esize,
 	    }
 	    (void) snprintf(key,3,"o%d",id);
 	    if (sf_histfloat(in[0],key,&o) && 
-		(!sf_histfloat(in[i],key,&oi) || (fabsf(oi-o) > tol*fabsf(d))))
+		(!sf_histfloat(in[i],key,&oi) || 
+		 (fabsf(oi-o) > tol*fabsf(d))))
 		sf_warning("%s mismatch: need %g",key,o);
 	}
     }
 }
-

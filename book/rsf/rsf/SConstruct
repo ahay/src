@@ -39,14 +39,8 @@ Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('adding',options='short',use='hyperref')
 
-Paper('prog',use='hyperref,amsmath,fancybox',
-      include='''
-      \\newcommand{\\prog}[1]{
-      \\noindent\\fbox{
-      \\parbox{\\textwidth}{
-      \\input{sf#1}
-      }}}
-      ''')
+Paper('prog',use='hyperref,amsmath,fancybox,jfc',
+      include='\\newcommand{\\RSF}{../../..}')
 
 Paper('abstract',lclass='eage',
       include=r'''

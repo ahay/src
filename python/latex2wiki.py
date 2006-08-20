@@ -47,6 +47,8 @@ insert = ""
 
 lang = "text"
 code = ""
+coderef = ""
+repos = "http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk"
 
 def dummy(s):
     pass
@@ -197,7 +199,25 @@ def getcode(s):
             code = code + each
         num = num + 1
     fd.close()
-                
+
+def getmode(s):
+    global code, coderef, lang
+    lang = 'c'
+    coderef = os.path.join(s.group(4),s.group(1))+'.'+lang
+    name = os.path.join(os.environ.get('RSFSRC'),coderef)
+    first = int(s.group(2))
+    last = int(s.group(3))
+    fd = open(name,"r")
+    code = ''
+    num = 1
+    for each in fd.readlines():
+        if num > last:
+            break
+        if num >= first:
+            code = code + each
+        num = num + 1
+    fd.close()
+
 braces = r"\{((?:[^\}\{]*)(?:[^\{\}]*\{[^\}]*\}[^\{\}]*)*)\}"
 # matches the contents of {} allowing a single level of nesting
 
@@ -238,6 +258,8 @@ tr_list2 = [
     (r"\\item (.*?)", (lambda :   r"\n" + item + r"\1"), dummy),
     (r"\\lstset{[^\}]*language=([\w\+]+)[^\}]*}",None,lstset),
     (r"\\lstinputlisting(?:\[([^\]]*)\])?{([^\}]+)}", putcode, getcode),
+    (r"\\moddex{([^\}]+)}{(?:[^\}]+)}{([^\}]+)}{([^\}]+)}{([^\}]+)}",
+     putcode,getmode),
     (r"\\begin{equation[*]*}", (lambda :"<center><math>"), toggle_math),
     (r"\\end{equation[*]*}", (lambda :"</math></center>"), toggle_math),
     (r"\\\[", (lambda :"<center><math>"), toggle_math),
