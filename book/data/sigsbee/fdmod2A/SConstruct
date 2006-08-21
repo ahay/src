@@ -14,7 +14,7 @@ Flow(['vstr2A','vstr2Ahead'],data,
          ''',stdin=0)
 # ------------------------------------------------------------
 par = {
-    'nt':500, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':7000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'kt':100,    # wavelet delay
     'nx':3201, 'ox':0, 'dx':0.00762,  'lx':'label2=Position unit2=km',
     'nz':1201, 'oz':0, 'dz':0.00762,  'lz':'label1=Depth    unit1=km'
@@ -59,7 +59,7 @@ Plot('ss','window n1=2 | dd type=complex | window | '
 
 # ------------------------------------------------------------
 
-# density
+# Velocity
 Flow('vel','vstr2A',
      '''
      scale rscale=.0003048 |
@@ -78,7 +78,14 @@ Flow('den','vel','math output=1')
 # finite-differences modeling
 fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
-Result('wfl',fdmod.wgrey('pclip=99',par))
-Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
+Result('wfl',fdmod.wgrey('pclip=99 title=Wavefield\ Movie labelsz=4 titlesz=6 wheretitle=t',par))
 
+times=['1','2','3','4']
+cntr=0
+for item in ['9','19','29','39']:
+    Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a
+              pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(s\) labelsz=4
+              titlesz=6 screenratio=.375 screenht=2 wheretitle=t''' % (item,times[cntr]))
+    cntr = cntr + 1
+Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
 End()

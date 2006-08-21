@@ -1,0 +1,80 @@
+from rsfproj import *
+import fdmod
+# Fetch Files from repository
+data='bpaitvel.hh'
+source='bpait'
+## Fetch(data,source)
+## # Convert Files to RSF
+Flow('velmodel',data, '''dd form=native | scale
+    rscale=.001 | put
+    unit1=km unit2=km label1=z label2=x title='' ''')
+# Make image of velocity model
+Result('model','velmodel','''window $SOURCE  max1=4 | grey  scalebar=y
+                     color=I gainpanel=a allpos=y screenratio=.18 screenht=2
+                     scalebar=y barlabel=\(km/s\) title=''
+                     labelsz=4 ''')
+# ------------------------------------------------------------
+par = {
+    'nt':5000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'kt':100,    # wavelet delay
+    'nx':1761, 'ox':0,  'dx':.0125 ,'lx':'label2=Position unit2=km',
+    'nz':321, 'oz':0,   'dz':.0125 ,'lz':'label1=Depth    unit1=km'
+    }
+# add F-D modeling parameters
+fdmod.param(par)
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+         '''spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=15 | scale axis=123 |
+         put label1=t label2=x label3=y''' % par)
+Result('wav','window n1=200 | graph title="" label1="t" label2=')
+# ------------------------------------------------------------
+# experiment setup
+Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+# receiver positions
+Flow('zr','r_','math output=.025')
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],'''cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
+     + fdmod.cgraph('symbol=* symbolsz=6 plotcol=6',par))
+# source positions
+Flow('zs','s_','math output=.01')
+Flow('xs','s_','math output=10.0')
+Flow('rs','s_','math output=1')
+Flow('ss',['xs','zs','rs'],'''
+     cat axis=2 space=n
+     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+     ''', stdin=0)
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=6',par))
+# ------------------------------------------------------------
+# density
+Flow('vel','velmodel',
+      '''
+      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
+      ''' % par)
+Plot('vel',fdmod.cgrey('''allpos=y bias=1.5 pclip=97 title=Survey\ Design
+                          titlesz=6 labelsz=4 wheretitle=t''',par))
+Result('vel',['vel','rr','ss'],'Overlay')
+# ------------------------------------------------------------
+# density
+Flow('den','vel','math output=1')
+# ------------------------------------------------------------
+# finite-differences modeling
+fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
+
+Result('wfl',fdmod.wgrey('pclip=99',par))
+Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offset
+            wheretitle=t titlesz=6 labelsz=4''',par))
+times=['5','10','15','20']
+cntr=0
+for item in ['5','10','15','20']:
+    Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a
+              pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(ms\) labelsz=4
+              titlesz=6 screenratio=.18 screenht=2 wheretitle=t''' % (item,item))
+End()
+

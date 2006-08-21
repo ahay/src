@@ -23,7 +23,7 @@ Table \ref{tbl:FILES}.  Any of these files may be downloaded to local machines u
 
 The Sigsbee2 data are separated into two distinct categories, A and B.  They share the same general model geometry and structure,
 however, the A model has a soft water to seafloor boundary while the B model features a more realistic hard boundary.  As a result 
-data produced in the B model features multiple events.  The Sigsbee2B data set is featured in paper SP3.8 "Observations from the 
+data produced in the B model features multiple events.  The Sigsbee2B data set was featured in paper SP3.8 "Observations from the 
 Sigsbee2B synthetic data set" at the 2002 SEG meeting in Salt Lake City.  
 
 \tabl{FILES}{List of all available files in the Madagascar Sigsbee2 repository} 
@@ -34,17 +34,17 @@ Sigsbee2B synthetic data set" at the 2002 SEG meeting in Salt Lake City.
 }
 
 \section{Sigsbee Models}
-This model contains a sedimentary sequence brocken up by a number of normal and thrust faults.  Additionally there is a complex 
+This model contains a sedimentary sequence broken up by a number of normal and thrust faults.  Additionally, there is a complex 
 salt structure found within the model that results in illumination problems when processing and migrating the data.   
 
 The Sigsbee2A model features an absorbing free surface condition and a weaker than normal water bottom reflection, 
 resulting in data do not contain free surface multiples and less than normal internal multiples.  
 
 The Sigsbee 2B model uses the same structural model as Sigsbee2A but the velocity contrast at the water bottom has been 
-increased to a normal level thus generating significant internal and FS multiples. 
+increased to a normal level thus generating significant internal and free surface multiples. 
 
 The Sigsbee2 models found in the Madagascar repository share the same dimensions and sampling rate.  The model is 9.144 km (30 000 ft) in 
-depth and 24.384 km (80 000 ft) in length.  All the models contain 7.62 m (25 ft) grid spacing excepth for the migrated models that have
+depth and 24.384 km (80 000 ft) in length.  All the models contain 7.62 m (25 ft) grid spacing except for the migrated models that have
 11.43 m (37.5 ft) lateral grid spacing.  Throughout this article both standard and metric units will be presented in tabular form but all
 figures will exclusively utilize metric units.   
 
@@ -161,7 +161,7 @@ formatted data file \emph{shots.rsf} and also produces several shot images.
 Typing Command \ref{eq:shot2A} within the \emph{sigsbee/data2A} directory runs the script.
 \begin{equation}\label{eq:shot2A} \texttt{bash-3.1\$\ scons\ view} \end{equation}
 
-A plot of shot 70  is produced by the \emph{SConstruct} script and is shown below in Figure \ref{fig:shot}  The zero offset 
+A plot of shot 70  is produced by the \emph{SConstruct} script and is shown below in Figure \ref{fig:shot70}  The zero offset 
 data is presented in Figure \ref{fig:zero}.
 
 \inputdir{data2A}
@@ -186,7 +186,7 @@ necessary.  The free surface boundary present within this model allows for the g
 
 
 Shot number 70 is plotted in Figure \ref{fig:shot702Bfs} this shot was taken approximately 7 km along the survey.  The precise coordinates
-of the shot are shown in the lower lefthand corner of the figure.  The zero offset data is presented in Figure \ref{fig:zero2Bfs}.     
+of the shot are shown in the lower left hand corner of the figure.  The zero offset data is presented in Figure \ref{fig:zero2Bfs}.     
 
 \inputdir{fs2B}
 \plot{shot702Bfs}{width=\textwidth}{Shot 70 performed on \emph{sigsbee 2B FS} model.}
@@ -210,3 +210,54 @@ translates the \emph{segy} source data file and converts it into \emph{rsf} form
 \plot{shot702Bnfs}{width=\textwidth}{Shot 70 performed in \emph{Sigsbee 2B NFS} model.}
 \plot{zero2Bnfs}{width=\textwidth}{Sigsbee 2B reflecting surface zero offset data, notice the decreased multiples from the free surface
 model}
+
+\section{Finite Difference Modeling}
+Finite difference (FD) shot and data modeling can be performed on the Sigsbee model using Madagascar.  
+
+For the purposes of this example a shot will be fired at 10 km along the horizontal coordinate and at a depth of 10 meters.  Receivers are
+spread at a depth of 0 meters every 7.62 m (25 ft) along the entire scope of the model.  This long receiver cable is impractical but useful for these
+purposes.  Data is recorded on every receiver at time increments of 1 ms 3000 times resulting in 3 seconds of data.
+
+An \emph{SConstruct} file located within \emph{sigsbee/fdmod2A/} properly formats the model and inputs necessary parameters to perform a shot on
+the Sigsbee model.  This file is reproduced below in Table \ref{tbl:fdmodSConstruct}.
+
+\tabl{fdmodSConstruct}{\emph{Scons} script that performs a finite difference synthetic shot on the Sigsbee model.}
+{
+\tiny
+\lstinputlisting[frame=single]{fdmod2A/SConstruct}
+\normalsize
+}
+
+Typing Command \ref{eq:SCfdmod} within the \emph{sigsbee/fdmod2A/} directory runs the FD modeling script.
+\begin{equation}\label{eq:SCfdmod} \texttt{bash-3.1\$\ scons\ view} \end{equation}
+
+This script first constructs the survey acquisition geometry as was previously mentioned.  An image of the survey is created and presented
+in Figure \ref{fig:vel}.
+
+\inputdir{fdmod2A}
+\plot{vel}{width=\textwidth}{FD model geometry as performed on the Sigsbee 2A velocity model.  The \emph{X} represents the shot while the smaller
+\emph{*} symbols represent receivers. The receivers extent along the right hand side although it is not clear in this image.}
+
+Firing the shot results the propagation of a wavefield which can be seen in the movie \emph{wfl.vpl} that is generated.  Typing
+Command \ref{eq:viewMov} within the \emph{sigsbee/fdmod2A/Fig} directory displays the wavefield movie.
+
+\begin{equation}\label{eq:viewMov} \texttt{bash-3.1\$\ xtpen\ wfl.vpl} \end{equation}
+
+
+Four frames from this movie are presented in Figure \ref{fig:time9,time19,time29,time39}  illustrating the
+propagation of the wavefield in the model.
+
+\inputdir{fdmod2A}
+\multiplot{4}{time9,time19,time29,time39}{width=.45\textwidth}{Images of the propagating wavefield in the Sigsbee model generated by a finite
+difference model.}
+
+
+The resulting data is then presented in the file \emph{dat.vpl}.  This plot is reproduced here in Figure \ref{fig:dat}.  
+
+\plot{dat}{width=\textwidth}{Data gathered by the receivers in the FD model survey.}
+
+
+FD models can be performed on the Sigsbee2B model in a similiar fashion.  The primary change would be in appending line six, the 
+model input file, in the \emph{SConstruct} file shown in Table \ref{tbl:fdmodSConstruct}.    
+
+

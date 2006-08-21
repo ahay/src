@@ -1,7 +1,7 @@
 from rsfproj import *
 import fdmod
 # Fetch Files from repository
-Fetch('bpaitvel.hh','bpait')
+#Fetch('bpaitvel.hh','bpait')
 # Convert Files to RSF and append header
 Flow('bpaitvel','bpaitvel.hh', '''dd form=native | put
     label1=Depth\ Z label2=Distance\ X unit1=m unit2=m''')
