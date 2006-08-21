@@ -91,7 +91,7 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=o plotcol=0 wantscalebar=y',par))
+     + fdmod.cgraph('symbol=o plotcol=2 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # experiment setup
@@ -110,7 +110,7 @@ Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
 
 # ------------------------------------------------------------
 # receivers around target
-nq = 10  * par['lo']/par['dx']
+nq = 20  * par['lo']/par['dx']
 oq =     xt - nq/2 * par['dx']
 dq =                 par['dx']
 np =     nq
@@ -148,7 +148,7 @@ Flow('dask',None,
      spike nsp=3 mag=1,1,1
      n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=%(jzs0)d,%(jzs1)d,%(jzs2)d l1=%(jzs0)d,%(jzs1)d,%(jzs2)d
      n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=%(jxs0)d,%(jxs1)d,%(jxs2)d l2=%(jxs0)d,%(jxs1)d,%(jxs2)d |
-     smooth rect1=10 rect2=10 repeat=5 |
+     smooth rect1=5 rect2=5 repeat=5 |
      scale axis=123 |
      mask min=0.5 max=1 |
      dd type=float |
@@ -247,8 +247,8 @@ Flow('dw','wav',
 	transp
 	''' % (50,100,3,1.5))
 
-fdmod.rtm('tio','dw','do','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
-fdmod.rtm('tii','dw','dd','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
+fdmod.rtm('tio','dw','do','vx','rm','rr','rr','qq','free=y dens=n',2000,par)
+fdmod.rtm('tii','dw','dd','vx','rm','rr','rr','qq','free=y dens=n',2000,par)
 
 for i in ('io','ii'):
     Flow(i,'t'+i,

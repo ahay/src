@@ -92,7 +92,7 @@ for j in range(3):
 Flow('ss','ss0 ss1 ss2','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]}')
 
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=o plotcol=0 wantscalebar=y',par))
+     + fdmod.cgraph('symbol=o plotcol=2 wantscalebar=y',par))
 
 # ------------------------------------------------------------
 # experiment setup
@@ -111,7 +111,7 @@ Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
 
 # ------------------------------------------------------------
 # receivers around target
-nq = 10  * par['lo']/par['dx']
+nq = 20  * par['lo']/par['dx']
 oq =     xt - nq/2 * par['dx']
 dq =                 par['dx']
 np =     nq
