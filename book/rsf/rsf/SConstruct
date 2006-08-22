@@ -39,7 +39,7 @@ Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('demo',use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
 Paper('adding',options='short',use='hyperref')
 
-Paper('prog',use='hyperref,amsmath,fancybox,jfc',
+Paper('prog',use='hyperref,amsmath,fancybox,listings,jfc',
       include='\\newcommand{\\RSF}{../../..}')
 
 Paper('abstract',lclass='eage',
@@ -64,17 +64,17 @@ Paper('abstract',lclass='eage',
 Depends2('install',map(lambda x: x+'.install',
                        Split('api format install prog tour demo')))
 
-Paper('vienna',lclass='beamer',use='helvet,hyperref',
-     include=r'''
-     \mode<presentation>
-     {
-     \usetheme{Madrid}
-     \usecolortheme{albatross}
-     % or ...
+#Paper('vienna',lclass='beamer',use='helvet,hyperref',
+#     include=r'''
+#     \mode<presentation>
+#     {
+#     \usetheme{Madrid}
+#     \usecolortheme{albatross}
+#     % or ...
          
-     %  \setbeamercovered{transparent}
-     % or whatever (possibly just delete it)
-     }
-     ''')
+#     %  \setbeamercovered{transparent}
+#     % or whatever (possibly just delete it)
+#     }
+#     ''')
 
 End(use='hyperref')
