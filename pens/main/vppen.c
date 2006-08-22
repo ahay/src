@@ -1070,7 +1070,7 @@ void vpopen (int argc, char* argv[])
     aspect_ratio = 1.;
     num_col = VPPEN_NUM_COL;
     if (vparray[0] == 0)
-	size = ABSOLUTE;
+	size = VP_ABSOLUTE;
 
 
 /*

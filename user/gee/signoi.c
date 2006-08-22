@@ -54,8 +54,6 @@ void signoi_lop (bool adj, bool add, int n1, int n2, float *data, float *sign)
     helicon_init (nn);
     polydiv_init (nd, ss); 
 
-    if (nd != n1 || nd != n2) sf_error("%s: wrong dimensions",__FILE__);
-
     sf_adjnull(adj,add,n1,n2,data,sign);
 
     helicon_lop (false, false, n1, n1, data, dd);

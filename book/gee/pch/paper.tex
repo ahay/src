@@ -94,7 +94,7 @@ Getting and putting all the patches is shown later in module
 \par
 The $i$-th patch is denoted by the scalar counter \texttt{ipatch}.
 Typical patch extraction begins by taking
-\texttt{ipatch}, a fortran linear index,
+\texttt{ipatch}, a C linear index,
 and converting it to a multidimensional subscript \texttt{jj}
 each component of which is less than \texttt{npatch}.
 The patches cover all edges and corners of the given data plane
@@ -461,7 +461,7 @@ to be that of the previous patch.
 I have been running patching code for several years
 and my first general comment is that realistic applications
 often call for patches of different sizes and different shapes.
-(Tutorial, non-interactive Fortran code is poorly suited to this need.)
+(Tutorial, non-interactive C code is poorly suited to this need.)
 Raw seismic data in particular seems more suited to triangular shapes.
 It is worth noting that the basic concepts in this chapter
 have ready extension to other shapes.
@@ -758,6 +758,7 @@ a ship tows a hydrophone streamer,
 the above filter might be better in the interior too.
 
 \subsection{Are field arrays really needed?}
+\inputdir{mideast}
 Field arrays
 \sx{field arrays}
 cancel random noise but their main function,
@@ -775,9 +776,9 @@ The strong hyperbolas are \bx{ground roll} seen in a line
 that does not include the shot.
 The open question here is,
 how should we formulate the problem of ground-roll removal in 3-D?
-\activeplot{dune3D}{height=4in,width=6in}{ER}{
-        Sand dunes.  One shot, six parallel receiver lines.
-        }
+\plot{dune3D}{height=4in,width=6in}{
+  Sand dunes.  One shot, six parallel receiver lines.
+}
 
 \subsection{Which coefficients are really needed?}
 Steep-dip decon is a heavy consumer of computer time.
@@ -1134,7 +1135,7 @@ Let us express the fitting goal in the form needed in computation.
 %$\Delta \bold s$.
 %Finally, it defines noise by $\bold n = \bold d - \bold s$.
 
-\opdex{signoi}{signal and noise separation}
+\opdex{signoi}{signal and noise separation}{51}{66}{user/gee}
 As with the missing-data subroutines,
 the potential number of iterations is large,
 because the dimensionality of the space of unknowns
@@ -1164,19 +1165,20 @@ Experience shows that helix preconditioning saves the day.
 \subsection{Signal/noise decomposition examples}
 \sx{filter ! multidip}
 \sx{multidip filtering}
+\inputdir{signoi}
 Figure~\ref{fig:signoi} demonstrates the
 signal/noise decomposition concept on synthetic data.
 The signal and noise have similar frequency spectra
 but different dip spectra.
 
-\activeplot{signoi}{width=6in,height=2.0in}{ER}{
-        The input signal is on the left.
-        Next is that signal with noise added.
-        Next,
-        for my favorite value of
-        {\tt epsilon=1.},
-        is the estimated signal and the estimated noise.
-        }
+\plot{signoi}{width=6in,height=2.0in}{
+  The input signal is on the left.
+  Next is that signal with noise added.
+  Next,
+  for my favorite value of
+  {\tt epsilon=1.},
+  is the estimated signal and the estimated noise.
+}
 
 \par
 %\par
@@ -1214,14 +1216,14 @@ When $\epsilon$ is too large,
 (Figure~\ref{fig:signeps}
 rescales both signal and noise images for the clearest display.)
 
-\activeplot{signeps}{width=6in,height=2.0in}{ER}{
-        Left is an estimated signal-noise pair where {\tt epsilon=4}
-	has improved the appearance of the estimated signal but
-		some coherent events have been pushed into the noise.
-        Right is a signal-noise pair where {\tt epsilon=.25},
-	has improved the appearance of the estimated noise but
-		the estimated signal looks no better than original data.
-        }
+\plot{signeps}{width=6in,height=2.0in}{
+  Left is an estimated signal-noise pair where {\tt epsilon=4}
+  has improved the appearance of the estimated signal but
+  some coherent events have been pushed into the noise.
+  Right is a signal-noise pair where {\tt epsilon=.25},
+  has improved the appearance of the estimated noise but
+  the estimated signal looks no better than original data.
+}
 \par
 Notice that the leveling operators
 $\bold S$ and $\bold N$ were both estimated
@@ -1328,13 +1330,8 @@ a PEF estimate on $\bold u$ is the required $A_s$ in numerator form because
 A_u \eq A_d / A_n \eq A_s
 \end{equation}
 
-
-
-
-
-
-
 \subsection{Noise removal on Shearer's data}
+\inputdir{ida}
 Professor Peter \bx{Shearer}\footnote{
         I received the data for this stack from Peter Shearer
         at the \bx{Cecil and Ida Green} Institute of Geophysics
@@ -1363,20 +1360,19 @@ compensating for amplitude in various ways,
 and planning time and filtering compensations.
 
 \par
-Figure~\ref{fig:sneps+2} shows a test of noise subtraction
+Figure~\ref{fig:sneps} shows a test of noise subtraction
 by multidip narrow-pass filtering
 on the \bx{Shearer-IDA stack}.
 As with prediction there is a general reduction of the noise.
 Unlike with prediction, weak events are preserved
 and noise is subtracted from them too.
 
-\activeplot{sneps+2}{width=6.5in,height=8.0in}{ER}{
-        Stack of Shearer's IDA data (left).
-        Multidip filtered (right).
-        It is pleasing that the noise is reduced while
-        weak events are preserved.
-        }
-
+\plot{sneps}{width=6.5in,height=8.0in}{
+  Stack of Shearer's IDA data (left).
+  Multidip filtered (right).
+  It is pleasing that the noise is reduced while
+  weak events are preserved.
+}
 
 \par
 Besides the difference in theory,
@@ -1433,12 +1429,12 @@ Further, the eye can follow a moving object and perform the same
 averaging.
 I have learned, however, that the eye really cannot follow two objects
 at two different speeds and average them both over time.
-Now think of the third dimension in Figure~\ref{fig:sneps+2}.
+Now think of the third dimension in Figure~\ref{fig:sneps}.
 It is the dimension that I summed over to make the figure.
 It is the $1^\circ$ range bin.
 If we were viewing the many earthquakes in each bin,
 we would no longer be able to see the out-of-plane information
-which is the in-plane information in Figure~\ref{fig:sneps+2}.
+which is the in-plane information in Figure~\ref{fig:sneps}.
 
 \par
 To view genuinely 3-D information we must see a movie,
@@ -1453,8 +1449,8 @@ If the local smoothing has motion
 (out of plane dip) of various velocities (various dips),
 then the desired process of smoothing the out of plane direction
 is what we did in the in-plane direction
-in Figure~\ref{fig:sneps+2}.
-But Figure~\ref{fig:sneps+2} amounts to more than that.
+in Figure~\ref{fig:sneps}.
+But Figure~\ref{fig:sneps} amounts to more than that.
 It amounts to a kind of simultaneous smoothing in the {\it two}
 most coherent directions
 whereas in 3-D your eye can smooth in only {\it one} direction
@@ -1608,15 +1604,15 @@ The data type for nonstationary filters
 is introduced in module
 	\texttt{nhelix}, which is a simple modification of module
 	\texttt{helix} \vpageref{lst:helix}.
-	\moddex{nhelix}{non-stationary convolution}
+	\moddex{nhelix}{non-stationary convolution}{12}{17}{user/gee}
 What is new is the integer valued vector \texttt{pch(nd)}
 the size of the one-dimensional (helix) output data space.
 Every filter output point is to be assigned to a patch.
 All filters of a given patch number will be the same filter.
 Nonstationary helixes are created with
-	\texttt{createnhelixmod}, which is a simple modification of module
-	\texttt{createhelixmod} \vpageref{lst:createhelixmod}.
-	\moddex{createnhelixmod}{create non-stationary helix}
+	\texttt{createnhelix}, which is a simple modification of module
+	\texttt{createhelix} \vpageref{lst:createhelix}.
+	\moddex{createnhelix}{create non-stationary helix}{29}{68}{user/gee}
 Notice that the user must define the \texttt{pch(product(nd))}
 vector before creating a nonstationary helix.
 For a simple 1-D time-variable filter,
@@ -1628,9 +1624,10 @@ For multidimensional patching we need to think a little more.
 Finally, we are ready for the convolution operator.
 The operator \texttt{nhconest} \vpageref{lst:nhconest}
 allows for a different filter in each patch.
-\opdex{nhconest}{non-stationary convolution}
-A filter output \texttt{y(iy)}
-has its filter from the patch \texttt{ip=aa\%pch(iy)}.
+\opdex{nhconest}{non-stationary convolution}{51}{68}{user/gee}
+A filter output \texttt{y[iy]}
+has its filter from the patch \texttt{ip=aa->pch[iy]}.
+\begin{comment}
 The line
 \texttt{t=a(ip,:)}
 extracts the filter for the \texttt{ip}th patch.
@@ -1640,6 +1637,7 @@ maybe now is the time to have a look at beyond Loptran
 to the Fortran version.\footnote{
 	http://sepwww.stanford.edu/sep/prof/gee/Lib/
 	}
+\end{comment}
 %\end{notforlecture}
 \par
 Because of the massive increase in the number of filter coefficients,
@@ -1685,7 +1683,7 @@ for the smoothing operator $\bold R^{-1}$ we can use nonstationary
 polynomial division
 with operator \texttt{npolydiv()}:
 %\begin{notforlecture}
-\opdex{npolydiv}{non-stationary polynomial division}
+\opdex{npolydiv}{non-stationary polynomial division}{56}{90}{user/gee}
 
 Now we have all the pieces we need.
 As we previously estimated stationary filters with
@@ -1693,11 +1691,12 @@ the module \texttt{pef} \vpageref{lst:pef},
 now we can estimate nonstationary PEFs with
 the module \texttt{npef} \vpageref{lst:npef}.
 The steps are hardly any different.
-\moddex{npef}{non-stationary PEF}
+\moddex{npef}{non-stationary PEF}{29}{61}{user/gee}
 Near the end
 of module \texttt{npef}
 is a filter \texttt{reshape}
 from a 1-D array to a 2-D array.
+\begin{comment}
 If you find it troublesome that
 \texttt{nhconest} \vpageref{lst:nhconest}
 was using the filter
@@ -1707,6 +1706,9 @@ it is time to examine the Fortran code.
 The answer is that there has been a conversion
 back and forth partially hidden by Loptran.
 %\end{notforlecture}
+\end{comment}
+
+\inputdir{tvdecon}
 
 \par
 Figure~\ref{fig:tvdecon} shows a synthetic data example using these programs.
@@ -1720,10 +1722,10 @@ per output point.
 The roughening operator $\bold R$ was taken to be $(1,-2,1)$
 which was factored into
 causal and anticausal finite difference.
-\activeplot{tvdecon}{width=6.0in,height=3in}{ER}{
-        Time variable deconvolution with
-        two free filter coefficients and a gap of 6.
-        }
+\plot{tvdecon}{width=6.0in,height=3in}{
+  Time variable deconvolution with
+  two free filter coefficients and a gap of 6.
+}
 \par
 I hope also to find a test case with field data,
 but experience in seismology

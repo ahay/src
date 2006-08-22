@@ -68,6 +68,7 @@ extern FILE * fdopen (int fd, const char *mode);
 #include	<string.h>
 
 #include <rsfplot.h>
+/*^*/
 
 #include	"../include/params.h"	/* for machine dependencies */
 #include	"../include/enum.h"
@@ -218,8 +219,8 @@ bool             colormask[5];
 /*
  * filter options - enumerated
  */
-int             style = NO_STYLE_YET;
-int             default_style = STYLE;
+vp_plotstyle    style = VP_NO_STYLE_YET;
+vp_plotstyle    default_style = VP_STANDARD;
 int             rotate;
 int             size = RELATIVE;
 int             erase = FORCE_INITIAL | DO_LITERALS;
@@ -485,15 +486,15 @@ void init_vplot (int argc, char* argv[])
     {
 	if ((stringptr[0] == 'r') || (stringptr[0] == 'R') ||
 	    (stringptr[0] == 'm') || (stringptr[0] == 'M'))
-	    default_style = ROTATED;
+	    default_style = VP_ROTATED;
 	else
 	if ((stringptr[0] == 'o') || (stringptr[0] == 'O'))
-	    default_style = OLD;
+	    default_style = VP_OLD;
 	else
 	if ((stringptr[0] == 'a') || (stringptr[0] == 'A'))
-	    default_style = ABSOLUTE;
+	    default_style = VP_ABSOLUTE;
 	else
-	    default_style = STANDARD;
+	    default_style = VP_STANDARD;
     }
 
 /*
@@ -530,13 +531,15 @@ void init_vplot (int argc, char* argv[])
     if (NULL != (string = sf_getstring ("size")))
     {
 	if ((string[0] == 'a') || (string[0] == 'A'))
-	    user_size = ABSOLUTE;
+	    user_size = VP_ABSOLUTE;
 	else
 	    user_size = RELATIVE;
     }
 
-    if (!sf_getfloat ("hshift xshift",  &user_hshift)) user_hshift = 0.;
-    if (!sf_getfloat ("vshift yshift",  &user_vshift)) user_vshift = 0.;
+    if (!sf_getfloat ("hshift",  &user_hshift) &&
+	!sf_getfloat ("xshift",  &user_hshift)) user_hshift = 0.;
+    if (!sf_getfloat ("vshift",  &user_vshift) &&
+	!sf_getfloat ("yshift",  &user_vshift)) user_vshift = 0.;
 
     user_xwmax_flag = sf_getfloat ("xwmax",  &user_xwmax);
     user_ywmax_flag = sf_getfloat ("ywmax",  &user_ywmax);
@@ -630,7 +633,7 @@ int             ii;
     }
 }
 
-void setstyle (int new_style)
+void setstyle (vp_plotstyle new_style)
 /*< set style >*/
 {
     /*
@@ -675,28 +678,28 @@ int             ix, iy;
  * Pretty much dead now. Still useful for some old programs nobody's
  * wanted to update.
  */
-    case OLD:
-	txscale /= 3.;
-	fatmult /= 3.;
-	scale *= 3.;
-	inches = VP_STANDARD_HEIGHT;
-	break;
+	case VP_OLD:
+	    txscale /= 3.;
+	    fatmult /= 3.;
+	    scale *= 3.;
+	    inches = VP_STANDARD_HEIGHT;
+	    break;
 /*
  * The old standard on the machine mazama. A useful coordinate system
  * for geological sorts of plots. 
  * The Y axis goes the long way, across the screen, which is the device's
  * horizontal axis.
  */
-    case ROTATED:
-	rotate += 90;
-	inches = VP_ROTATED_HEIGHT;
-	break;
-    case ABSOLUTE:
-	size = ABSOLUTE;
-    case STANDARD:
-    default:
-	inches = VP_STANDARD_HEIGHT;
-	break;
+	case VP_ROTATED:
+	    rotate += 90;
+	    inches = VP_ROTATED_HEIGHT;
+	    break;
+	case VP_ABSOLUTE:
+	    size = VP_ABSOLUTE;
+	case VP_STANDARD:
+	default:
+	    inches = VP_STANDARD_HEIGHT;
+	    break;
     }
 
     if (rotate >= 0)
@@ -709,7 +712,7 @@ int             ix, iy;
     mxy = sin (2. * 3.14159 * rotate / 360.);
     myx = -sin (2. * 3.14159 * rotate / 360.);
 
-    if (size == ABSOLUTE)
+    if (size == VP_ABSOLUTE)
     {
 	vdevscale = pixels_per_inch / (float) (RPERIN * aspect_ratio);
 	hdevscale = pixels_per_inch / (float) RPERIN;
@@ -739,7 +742,7 @@ int             ix, iy;
     hshift = default_hshift;
     vshift = default_vshift;
 
-    if (style == ROTATED)
+    if (style == VP_ROTATED)
     {
 	vshift += dev_ymax - dev_ymin;
     }

@@ -1681,7 +1681,7 @@ char           *spooldirnm;
 	dev_ymax = VP_MAX * RPERIN * VP_SCREEN_RATIO;
 	dev_xmin = 0;
 	dev_ymin = 0;
-	size = ABSOLUTE;
+	size = VP_ABSOLUTE;
 	label[0] = '\0';
     }
 

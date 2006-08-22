@@ -12,6 +12,8 @@ Plot('sean',grey('Original'))
 Flow('sean2','sean','window j2=2')
 Plot('sean2',grey('Decimated'))
 
+Result('sean2','sean sean2','SideBySideAniso')
+
 def twodip2(extra):
     return 'twodip2 order=2 nj1=2 nj2=2 eps=8 verb=y gauss=n ' + extra 
 

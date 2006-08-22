@@ -1,12 +1,13 @@
 from rsfproj import *
 
-Fetch('ida.H','ida')
+#Fetch('ida.H','ida')
 
 Flow('ida','ida.H','dd form=native | window n1=600')
 Plot('ida','grey gpow=0.5 crowd=0.85 title="stack (gpow=0.5)" ')
 
 Flow('npef nlag','ida','lopef a=5,1 w=81,11 k=12,30 lag=${TARGETS[1]}')
-Flow('spef slag','ida','lopef a=9,3 w=81,11 k=12,30 gap=0,1 lag=${TARGETS[1]}')
+Flow('spef slag','ida',
+     'lopef a=9,3 w=81,11 k=12,30 gap=0,1 lag=${TARGETS[1]}')
 
 eps = 2
 

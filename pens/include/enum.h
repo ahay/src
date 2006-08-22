@@ -15,15 +15,6 @@
 #endif
 
 /*
- * styles
- */
-#define NO_STYLE_YET	-1
-#define STANDARD	0
-#define ROTATED		1
-#define OLD		2
-#define ABSOLUTE 	3
-
-/*
  * size
  */
 #define RELATIVE 	0	/* ABSOLUTE is also a scale */

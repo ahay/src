@@ -199,7 +199,7 @@ extern int      xorigin, yorigin;
 extern float    scale;
 extern float    xscale;
 extern float    yscale;
-extern int      default_style;
+extern vp_plotstyle default_style;
 extern int      default_txfont, default_txprec, default_txovly;
 extern bool     default_overlay;
 extern int      color_set[MAX_COL + 1][_NUM_PRIM];
@@ -444,13 +444,13 @@ char            string[MAXFLEN + 1];
 	case VP_SETSTYLE:	/* set the style */
 	    c = getc (pltin);
 	    if ((c == 'r') || (c == 'R') || (c == 'm') || (c == 'M'))
-		new_style = ROTATED;
+		new_style = VP_ROTATED;
 	    else if ((c == 'o') || (c == 'O'))
-		new_style = OLD;
+		new_style = VP_OLD;
 	    else if ((c == 'a') || (c == 'A'))
-		new_style = ABSOLUTE;
+		new_style = VP_ABSOLUTE;
 	    else
-		new_style = STANDARD;
+		new_style = VP_STANDARD;
 	    setstyle (new_style);
 
 	    if (framewindows)

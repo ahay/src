@@ -2226,7 +2226,7 @@ void xtopen (int argc, char* argv[])
 		NULL, ZERO,
 		&xtargc, argv,
 		fallback_resources,
-		NULL, ZERO);
+		NULL);
     
     /* get app data from the resource database */
     xt_app_data( xtpen );

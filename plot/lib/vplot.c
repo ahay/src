@@ -124,7 +124,7 @@ typedef enum {
 		   to the right, X-axis vertical and increasing down,
 		   scaled so that the maximum X value (bottom of  the
 		   screen)  is VP_ROTATED_HEIGHT.  Use is discouraged */
-    VP_NORM,
+    VP_OLD,
     VP_ABSOLUTE /* Origin  in  lower left, plotted in physical inches
 		   on the device */
 } vp_plotstyle;
