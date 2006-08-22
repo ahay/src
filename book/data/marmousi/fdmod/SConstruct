@@ -25,8 +25,8 @@ for file in raw:
 
 # ------------------------------------------------------------
 par = {
-    'nt':5000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
-    'kt':100,    # wavelet delay
+    'nt':10000, 'dt':0.00025,'ot':0,     'lt':'label1=time unit1=s',
+    'kt':400,    # wavelet delay
     'nx':2301, 'ox':0, 'dx':.004, 'lx':'label2=Position unit2=km',
     'nz':751,  'oz':0, 'dz':.004, 'lz':'label1=Depth    unit1=km'
     }
@@ -38,7 +38,7 @@ Flow('wav',None,
          '''spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
          ricker1 frequency=15 | scale axis=123 |
          put label1=t label2=x label3=y''' % par)
-Result('wav','window n1=200 | graph title="" label1="t" label2=')
+Result('wav','window n1=1000 | graph title="" label1="t" label2=')
 # ------------------------------------------------------------
 # experiment setup
 Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
@@ -82,7 +82,7 @@ Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offs
             wheretitle=t titlesz=6 labelsz=4''',par))
 times=['5','10','15','20']
 cntr=0
-for item in ['5','10','15','20']:
+for item in ['20','40','60','80']:
     Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a 
               pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(ms\) labelsz=4 
               titlesz=6 screenratio=.18 screenht=2 wheretitle=t''' % (item,item))
