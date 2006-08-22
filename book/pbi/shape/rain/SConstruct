@@ -85,12 +85,12 @@ for niter in cases:
             name = "Laplacian Regularization"
             extra = 'shape=n'
             files = lapinter
-            Flow(files,'raindata',
-                 '''
-                 shapebin niter=%d xkey=0 ykey=1 filt1=25
-                 nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
-                 %s
-                 ''' % (niter,extra))
+        Flow(files,'raindata',
+             '''
+             shapebin niter=%d xkey=0 ykey=1 filt1=25
+             nx=376 ny=253 dx=1.00997 dy=1.00997 x0=-185.556 y0=-127.262
+             %s
+             ''' % (niter,extra))
     Plot('g'+lapinter,lapinter,
               '''grey scalebar=y yreverse=n transp=n allpos=y
               minval=0 maxval=525
