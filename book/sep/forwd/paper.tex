@@ -525,10 +525,10 @@ function $W$, as follows:
 Here the amplitude function $A$ is defined according to the general
 theory of asymptotically pseudo-inverse operators as
 \begin{equation}
-  \label{eq:weight}
-  A = \frac{1}{\left(2\,\pi\right)^{m/2}} \,
-\left|F\,\widehat{F}\right|^{1/4}\,
-\left|\frac{\partial \theta}{\partial t}\right|^{(m+2)/4}\;,
+A = {\frac{1}{\left(2\,\pi\right)^{m/2}}}\,
+{\left|F\,\widehat{F}\right|^{1/4}\,
+\left|\frac{\partial \theta}{\partial t}\right|^{(m+2)/4}}\;,
+\label{eq:weight}
 \end{equation}
 where
 \begin{eqnarray}
@@ -563,9 +563,9 @@ and the dual summation path $\widehat{\theta}$ is a hyperbola
 The corresponding pseudo-unitary amplitude function is found from
 formula (\ref{eq:weight}) to be \cite[]{Fomel.sep.92.267}
 \begin{equation}
-  \label{eq:zomig}
-  A = \frac{1}{\left(2\,\pi\right)^{m/2}} \,
-\frac{\sqrt{t/z}}{v^m z^{m/2}}\;.
+  A = {\frac{1}{\left(2\,\pi\right)^{m/2}}}\,
+  {\frac{\sqrt{t/z}}{v^m z^{m/2}}}\;.
+\label{eq:zomig}
 \end{equation}
 Substituting formula (\ref{eq:zomig}) into (\ref{eq:apu}), we derive
 the corresponding interpolation function
@@ -583,15 +583,15 @@ where $z = \theta(\mathbf{x};t,\mathbf{y})$, and $z_n =
 case), we can apply the known properties of the delta function to
 simplify formula (\ref{eq:pumig}) further to the form
 \begin{equation}
-  \label{eq:2dmig}
   W
-  = \frac{v}{\pi} \,
-  \left|\frac{\partial}{\partial t}\right|^{1/2}
-  \left|\frac{\partial}{\partial t_n}\right|^{1/2}
-  \frac{\sqrt{t\,t_n}}{\sqrt{
-      \left[(\mathbf{y}-\mathbf{y}_n)^2 - v^2 (t - t_n)^2\right]
-      \left[v^2 (t + t_n)^2 - (\mathbf{y}-\mathbf{y}_n)^2\right]
-      }}\;.
+  = {\frac{v}{\pi}}\,
+  {\left|\frac{\partial}{\partial t}\right|^{1/2}
+    \left|\frac{\partial}{\partial t_n}\right|^{1/2}
+    \frac{\sqrt{t\,t_n}}{\sqrt{
+	\left[(\mathbf{y}-\mathbf{y}_n)^2 - v^2 (t - t_n)^2\right]
+	\left[v^2 (t + t_n)^2 - (\mathbf{y}-\mathbf{y}_n)^2\right]
+  }}}\;.
+  \label{eq:2dmig}
 \end{equation}
 The result is an interpolant for zero-offset seismic sections.  Like
 the sinc interpolant in equation~(\ref{eq:w-cft}), which is based on

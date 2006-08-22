@@ -33,7 +33,8 @@ else:
 #############################################################################
 
 bibtex      = WhereIs('bibtex')
-acroread    = WhereIs('acroread') or WhereIs('xpdf') or WhereIs('gv')
+acroread    = WhereIs('acroread')
+pdfread     = acroread or WhereIs('xpdf') or WhereIs('gv')
 epstopdf    = WhereIs('epstopdf')
 if epstopdf:
     latex       = WhereIs('pdflatex')
@@ -44,6 +45,7 @@ else:
 fig2dev     = WhereIs('fig2dev')
 latex2html  = WhereIs('latex2html')
 pdf2ps      = WhereIs('pdf2ps')
+ps2eps      = WhereIs('ps2epsi')
 pstoimg     = WhereIs('pstoimg')
 mathematica = WhereIs('mathematica')
 if mathematica:
@@ -443,11 +445,11 @@ Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
 
-if acroread:
-    Read = Builder(action = acroread + " $SOURCES",
+if pdfread:
+    Read = Builder(action = pdfread + " $SOURCES",
                    src_suffix='.pdf',suffix='.read')
     Print = Builder(action =
-                    'cat $SOURCES | %s -toPostScript | lpr' % acroread,
+                    'cat $SOURCES | %s -toPostScript | lpr' % pdfread,
                     src_suffix='.pdf',suffix='.print')
 
 Build = Builder(action = Action(pstexpen),
@@ -468,7 +470,12 @@ if pstoimg:
      PNGBuild = Builder(action = Action(eps2png),
                         suffix='.'+itype,src_suffix=pssuffix)
 
-if pdf2ps:
+if acroread and ps2eps:
+    PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
+                      ' junk.ps && %s junk.ps $TARGET && rm junk.ps' % \
+                      (acroread,ps2eps),
+                      suffix=pssuffix,src_suffix='.pdf')
+elif pdf2ps:
     PSBuild = Builder(action = pdf2ps + ' $SOURCE $TARGET',
                       suffix=pssuffix,src_suffix='.pdf')
 
@@ -587,11 +594,19 @@ class TeXPaper(Environment):
                               'Wiki':Wiki,
                               'Build':Build,
                               'Color':Color})
-        dir = os.getcwd()
-        self.docdir = string.replace(dir,'book','doc/book',1)
-        if self.docdir == dir:
-            self.docdir = os.path.join(dir,'doc')
-        if acroread:
+        cwd = os.getcwd()
+        # create a hierarcical structure
+        (book,chap,proj) = (os.path.basename(
+            os.path.dirname(os.path.dirname(cwd))),
+                            os.path.basename(os.path.dirname(cwd)),
+                            os.path.basename(cwd))
+        self.doc = os.path.join(os.environ.get('RSFROOT'),'doc')
+        for level in (book,chap,proj):
+            if level:
+                self.doc = os.path.join(self.doc,level)
+                if not os.path.exists(self.doc):
+                    os.mkdir(self.doc)
+        if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
             self.Append(BUILDERS={'PDFBuild':PDFBuild})
@@ -602,7 +617,7 @@ class TeXPaper(Environment):
             if pstoimg:
                 self.Append(BUILDERS={'PNGBuild':PNGBuild})
                 self.imgs = []
-        if pdf2ps:
+        if (acroread and ps2eps) or pdf2ps:
             self.Append(BUILDERS={'PSBuild':PSBuild})
         if mathematica and epstopdf:
             self.Append(BUILDERS={'Math':Math})
@@ -622,8 +637,8 @@ class TeXPaper(Environment):
             self.Color(html,scons)
             self.scons.append(html)
         if self.scons:
-            self.Install2(self.docdir,self.scons)
-        self.Alias('install',self.docdir)        
+            self.Install(self.doc,self.scons)
+        self.Alias('install',self.doc)        
         # reproducible figures
         erfigs = []
         vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
@@ -631,7 +646,7 @@ class TeXPaper(Environment):
         for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
              eps = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
                           r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),fig)
-             resdir2 = os.path.join(self.docdir,os.path.dirname(eps))
+             resdir2 = os.path.join(self.doc,os.path.dirname(eps))
              self.Build(eps,fig)
              if epstopdf:
                   pdf = re.sub(pssuffix+'$','.pdf',eps)
@@ -655,7 +670,7 @@ class TeXPaper(Environment):
                 if mathematica and epstopdf:
                     self.Math(pdf,mth)
                 crfigs.append(pdf)
-            mathdir = os.path.join(self.docdir,'Math')
+            mathdir = os.path.join(self.doc,'Math')
             self.Install2(mathdir,mths)
             self.Alias('install',mathdir)
         # matlab figures
@@ -667,7 +682,7 @@ class TeXPaper(Environment):
                 if matlab and epstopdf:
                     self.Matlab(pdf,mtl)
                 crfigs.append(pdf)
-            matlabdir = os.path.join(self.docdir,'Matlab')
+            matlabdir = os.path.join(self.doc,'Matlab')
             self.Install2(matlabdir,mtls)
             self.Alias('install',matlabdir)
         # xfig figures:
@@ -679,21 +694,21 @@ class TeXPaper(Environment):
                 if fig2dev:
                     self.XFig(pdf,fig)
                 crfigs.append(pdf)
-            resdir2 = os.path.join(self.docdir,'XFig')
+            resdir2 = os.path.join(self.doc,'XFig')
             self.Install2(resdir2,figs)
             self.Alias('install',resdir2)
         # non-reproducible figures
         nrfigs = crfigs + glob.glob(
             os.path.join(topdir,os.path.join(resdir,'*.pdf'))) 
         for pdf in nrfigs:
-             if pdf2ps:
+             if (acroread and ps2eps) or pdf2ps:
                 eps = re.sub('.pdf$',pssuffix,pdf)
                 self.PSBuild(eps,pdf)
                 if latex2html and pstoimg:
                     png = re.sub(pssuffix+'$','.'+itype,eps)
                     self.PNGBuild(png,eps)
                     self.imgs.append(png)
-                    resdir2 = os.path.join(self.docdir,os.path.dirname(png))
+                    resdir2 = os.path.join(self.doc,os.path.dirname(png))
                     self.Install2(resdir2,[png,pdf])
                     self.Alias('install',resdir2)
         self.figs.extend(nrfigs)
@@ -704,9 +719,9 @@ class TeXPaper(Environment):
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         wiki = self.Wiki(target=paper,source=[paper+'.ltx',pdf])
         pdf[0].target_scanner = LaTeX
-        pdfinstall = self.Install2(self.docdir,paper+'.pdf')
+        pdfinstall = self.Install(self.doc,paper+'.pdf')
         self.Alias(paper+'.install',pdfinstall)
-        if acroread:
+        if pdfread:
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
         if latex2html and l2hdir:
@@ -724,7 +739,7 @@ class TeXPaper(Environment):
             self.Depends(html,css)
             self.Depends(html,icons)
             self.Alias(paper+'.html',html)
-            docdir = os.path.join(self.docdir,dir)
+            docdir = os.path.join(self.doc,dir)
             dochtml = os.path.join(docdir,'index.html')
             self.Command(dochtml,html,
                          'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
