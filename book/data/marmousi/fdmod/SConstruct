@@ -50,7 +50,7 @@ Flow('rr',['xr','zr'],'''cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* symbolsz=6 plotcol=6',par))
+     + fdmod.cgraph('symbol=* symbolsz=10 plotcol=7',par))
 # source positions
 Flow('zs','s_','math output=.01')
 Flow('xs','s_','math output=5.0')
@@ -60,7 +60,7 @@ Flow('ss',['xs','zs','rs'],'''
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=6',par))
+     + fdmod.cgraph('symbol=X plotcol=7 symbolsz=10',par))
 # ------------------------------------------------------------
 # density
 Flow('vel','marmvel', 
@@ -68,7 +68,7 @@ Flow('vel','marmvel',
       put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
       ''' % par)
 Plot('vel',fdmod.cgrey('''allpos=y bias=1.5 pclip=97 title=Survey\ Design 
-                          titlesz=6 labelsz=4 wheretitle=t''',par))
+                  color=F titlesz=6 labelsz=4 wheretitle=t barrevers=y''',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 # ------------------------------------------------------------
 # density
@@ -80,10 +80,12 @@ fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 Result('wfl',fdmod.wgrey('pclip=99',par))
 Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offset 
             wheretitle=t titlesz=6 labelsz=4''',par))
-times=['5','10','15','20']
+
+times=['.5','1.0','1.5','2.0']
 cntr=0
 for item in ['20','40','60','80']:
     Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 | grey gainpanel=a 
-              pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(ms\) labelsz=4 
-              titlesz=6 screenratio=.18 screenht=2 wheretitle=t''' % (item,item))
+              pclip=99 wantframenum=y title=Wavefield\ at\ %s\ \(s\) labelsz=4 
+              titlesz=6 screenratio=.18 screenht=2 wheretitle=t''' % (item,times[cntr]))
+    cntr=cntr+1
 End()

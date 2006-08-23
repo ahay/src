@@ -44,7 +44,7 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* plotcol=6 symbolsz=6',par))
+     + fdmod.cgraph('symbol=* plotcol=6 symbolsz=8',par))
 # source positions
 Flow('zs','s_','math output=.01')
 Flow('xs','s_','math output=10.0')
@@ -55,7 +55,7 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=6',par))
+     + fdmod.cgraph('symbol=X plotcol=6 symbolsz=8',par))
 
 # ------------------------------------------------------------
 
@@ -66,7 +66,7 @@ Flow('vel','vstr2A',
      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
      ''' % par)
 
-Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100 title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t',par))
+Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100 color=F title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------

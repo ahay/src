@@ -11,7 +11,7 @@ Flow('velocityProfilePadded','P15VPint_25f_padded.SEGY', '''segyread tape=$SOURC
 
 # ------------------------------------------------------------
 par = {
-    'nt':5000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':10000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'kt':100,    # wavelet delay
     'nx':6960, 'ox':0,       'dx':.00762 ,'lx':'label2=x unit2=km',
     'nz':1401, 'oz':0,       'dz':.00762 ,'lz':'label1=z unit1=km'

@@ -17,7 +17,7 @@ which require advanced processing techniques to obtain a correct earth image. Th
 aspects of seismic data inversion at the 52nd EAEG meeting in 1990.
 
 Since its inception in 1990 Marmousi has come be a sort of industry standard and almost classic dataset. The Madagascar repository contains 
-the Marmousi files shown in table \ref{tbl:FILES}.
+the Marmousi files shown in Table \ref{tbl:FILES}.
 
 \tabl{FILES}{A list of all files contained in the Marmousi repository}
 {
@@ -41,7 +41,9 @@ The velocity model found in the Madagascar repository, \emph{marmvel.hh} can eas
 \end{tabular}
 }
 
-The script found at \emph{marmousi/model/SConstruct} was written to obtain the Marmousi model datasets, append the headers as necessary and display the  data.  This file is presented in table \ref{tbl:velSConstruct} while the velocity model image is displayed in figure \ref{fig:marmvel}.
+The script found at \emph{marmousi/model/SConstruct} was written to obtain the Marmousi model datasets, append the 
+headers as necessary and display the  data.  This file is presented in Table \ref{tbl:velSConstruct} while the 
+velocity model image is displayed in Figure \ref{fig:marmvel}.
  
 \tabl{velSConstruct}{\emph{SConstruct} script generating the Marmousi velocity model images}
 {
@@ -51,14 +53,18 @@ The script found at \emph{marmousi/model/SConstruct} was written to obtain the M
 }
 
 
-Typing command \ref{eq:SCmdl} within the \emph{Marmousi\slash model} directory runs the script.
+Typing Command \ref{eq:SCmdl} within the \emph{Marmousi\slash model} directory runs the script.
 \begin{equation}\label{eq:SCmdl} \texttt{bash-3.1\$\ scons\ view} \end{equation}
 
 \inputdir{model}
 \plot{marmvel}{width=\textwidth}{Velocity model}
 
 \section{Shot Records}
-The file \emph{marmrefl.hh} contains the shot data collected on the Marmousi model.  The survey was an off end survey with receivers to the left of the source being pulled towards the right.  Receiver as well as shot spacing is every 25 meters.  Near offset is 425 meters from the source.  726 time gates were recorded with 4ms spacing for roughly 3 seconds of data collection.  Madagascar correctly converts this file according to its header, but the correct shot header values are reproduced in table \ref{tbl:shotHeader}.   
+The file \emph{marmrefl.hh} contains the shot data collected on the Marmousi model.  The survey was an off end survey with 
+receivers to the left of the source being pulled towards the right.  Receiver as well as shot spacing is every 25 meters.  
+Near offset is 425 meters from the source.  726 time gates were recorded with 4ms spacing for roughly 3 seconds of data collection.  
+Madagascar correctly converts this file according to its header; however, the correct shot header values are reproduced in 
+Table \ref{tbl:shotHeader}.   
 
 \tabl{shotHeader}{Shot header information for Marmousi.}
 {
@@ -71,7 +77,7 @@ The file \emph{marmrefl.hh} contains the shot data collected on the Marmousi mod
 	\end{tabular}
 }
 
-The file \emph{marmousi/shots/SConstruct} gathers shot data, appends the header as necessary and produces several plots of the data.  This file is reproduced here in figure \ref{tbl:shotSConstruct}
+The file \emph{marmousi/shots/SConstruct} gathers shot data, appends the header as necessary and produces several plots of the data.  This file is reproduced here in Figure \ref{tbl:shotSConstruct}
 
 
 \tabl{shotSConstruct}{\emph{SConstruct} script generating the Marmousi shot images}
@@ -82,11 +88,12 @@ The file \emph{marmousi/shots/SConstruct} gathers shot data, appends the header 
 }
 
 
-To run the script type command \ref{eq:SCvel} within the \emph{marmousi\slash shots} directory.
+To run the script type Command \ref{eq:SCvel} within the \emph{marmousi\slash shots} directory.
 \begin{equation}\label{eq:SCvel} \texttt{bash-3.1\$\ scons\ view} \end{equation}
 
 \inputdir{shots}
-\plot{shot20}{width=\textwidth}{Shot number 20 of Marmousi dataset}
+\plot{shot20}{width=\textwidth}{Shot number 20 of Marmousi synthetic survey dataset.  Shot position in km is shown in the lower left 
+hand corner.}
 \plot{nearOffset}{width=\textwidth}{Near offset data for Marmousi model}
 
 \section{Finite Difference Modeling}
@@ -115,8 +122,7 @@ This script first constructs the survey acquisition geometry as was previously m
 in Figure \ref{fig:vel}.
 
 \inputdir{fdmod}
-\plot{vel}{width=\textwidth}{FD model geometry as performed on the Marmousi velocity model.  The \emph{X} represents the shot while the smaller
-\emph{*} symbols represent receivers.}
+\plot{vel}{width=\textwidth}{FD model geometry as performed on the Marmousi velocity model.  The \emph{X} represents the shot while the \emph{*} symbols represent receivers.}
 
 Firing the shot results the propagation of a wavefield which can be seen in the movie \emph{wfl.vpl} that is generated.  Typing
 Command \ref{eq:viewMov} within the \emph{marmousi/fdmod/Fig} directory displays the wavefield movie.
