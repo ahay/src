@@ -201,3 +201,31 @@ def wem(imag,sdat,rdat,velo,custom,par):
          real |
          transp
          ''',stdin=0)
+
+# ------------------------------------------------------------
+# zero-offset migration
+def zom(imag,data,velo,par):
+
+    slow = imag + velo + '_s'
+    Flow(slow,velo,
+         '''
+         math output=1/input |
+         transp plane=12 |
+         transp plane=23
+         ''')
+
+    freq = imag + data + '_f'
+    Flow(freq,data,
+         '''
+         transp |
+         fft1 inv=n opt=n |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
+         transp plane=12 |
+         transp plane=23
+         ''' % par )
+    
+    Flow(imag,[freq,slow],
+         '''
+         zomig mode=m inv=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))

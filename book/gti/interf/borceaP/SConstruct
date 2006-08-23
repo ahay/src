@@ -29,7 +29,8 @@ par['nz']=100*par['smp']+1
 
 # ------------------------------------------------------------
 
-par['jx']=par['lo']/par['dx']
+#par['jx']=par['lo']/par['dx']
+par['jx']=1
 par['dr']=par['dx']*par['jx']
 par['nr']=par['nx']/par['jx']
 par['or']=par['dx']*par['jx']/2
@@ -241,8 +242,5 @@ for k in ('jj','jo'):
            min2=%g max2=%g
            ''' % (par['zmin'],par['zmax'],
                   par['xmin'],par['xmax']))
-
-#fdmod.zom('iq','wq','dd','vo','rm','rr','qq','free=n dens=n',par)
-#Result('iq',fdmod.cgrey('',par))
 
 End()

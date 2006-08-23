@@ -124,12 +124,10 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
 
     # receiver wavefield (z,x,t)
     tdat = imag+'_tds'
-    twfl = imag+'_tur'
     tout = imag+'_tdr'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(tout,twfl,tdat,velo,dens,racq,iacq,custom,par)
-    Flow(rwfl,twfl,'reverse which=4 opt=i verb=y memsize=1000')
+    awe(tout,rwfl,tdat,velo,dens,racq,iacq,custom,par)
     Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
     corr = imag+'_cor'
