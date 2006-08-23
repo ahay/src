@@ -22,7 +22,7 @@
 
 int main(int argc, char* argv[])
 {   
-    int i,k,len_filter,n_signal,n_layer,j;
+    int i,k,len_filter,n_layer,j;
 
     float *s,*ainverse;
     float *ch,*cl,*ch2,*cl2;
@@ -50,14 +50,14 @@ int main(int argc, char* argv[])
     if (!sf_getint("n_layer",&n_layer)) n_layer=2;
     /* number of wavelet transform layers */
 
-    ch=sf_floatalloc(n_layer*n_signal);
-    cl=sf_floatalloc(n_signal);
-    ch2=sf_floatalloc(n_layer*n_signal);
-    cl2=sf_floatalloc(n_signal);
+    ch=sf_floatalloc(n_layer*n_number);
+    cl=sf_floatalloc(n_number);
+    ch2=sf_floatalloc(n_layer*n_number);
+    cl2=sf_floatalloc(n_number);
     
-    s=sf_floatalloc(n_signal);
-    s_orgi=sf_floatalloc(n_signal);
-    ainverse=sf_floatalloc(n_signal);
+    s=sf_floatalloc(n_number);
+    s_orgi=sf_floatalloc(n_number);
+    ainverse=sf_floatalloc(n_number);
     
     /* loop over traces */
     for(k=0;k<n_trace;k++)
@@ -67,16 +67,16 @@ int main(int argc, char* argv[])
 	for(j=0;j<n_number;j++)
 	    s_orgi[j]=s[j];
 
-        multi_fwavelet(s,n_signal,n_layer,cl,ch);
+        multi_fwavelet(s,n_number,n_layer,cl,ch);
 
-	multi_fwavelet(ch,n_signal,n_layer,cl2,ch2);
+	multi_fwavelet(ch,n_number,n_layer,cl2,ch2);
 
-	for(i=0;i<n_signal;i++)
+	for(i=0;i<n_number;i++)
 	    ch2[i]=ratio*ch2[i];
 
-	multi_iwavelet(cl2,ch2,n_signal,n_layer,ch);
+	multi_iwavelet(cl2,ch2,n_number,n_layer,ch);
         
-	multi_iwavelet(cl,ch,n_signal,n_layer,ainverse);
+	multi_iwavelet(cl,ch,n_number,n_layer,ainverse);
 	
 	sf_floatwrite(ainverse,n_number,out);
     }

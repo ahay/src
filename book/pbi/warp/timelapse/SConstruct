@@ -99,4 +99,26 @@ Result('warp','data1 warp diff2',
        yreverse=y gaineach=n
        ''')
 
+# Add random noise
+Flow('noisy','data1','noise seed=2006 var=0.0000001')
+
+# Denoising with SWT
+
+Flow('clean','noisy','swtdenoise ratio=0 n_layer=1')
+
+Result('swt','noisy clean',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots labels=Before:After label1=Time unit1=s
+       yreverse=y gaineach=n
+       ''')
+
+Result('spec','noisy clean',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       spectra |
+       dots labels=Before:After label1=Frequency unit1=Hz
+       yreverse=y gaineach=n
+       ''')
+
 End()
