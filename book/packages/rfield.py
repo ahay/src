@@ -466,8 +466,8 @@ def rfield (real_par,grid_par,covar_par):
     aspec      = real_par['name']+'aspec'
     aspec_real = real_par['name']+'aspec_real'
 
-    Flow (aspec,pspec_real,'clip2 lower=0 | rtoc | add sqrt=1')
-    Flow (aspec_real,aspec,'real')
+    Flow (aspec_real,pspec_real,'clip2 lower=0 | add sqrt=1')
+    Flow (aspec,     aspec_real,'rtoc')
 
 #
 # Combine the amplitude spectrum and noise.

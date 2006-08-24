@@ -26,13 +26,13 @@ Input and output are complex data. The input is padded by factor pad.
 
 int main (int argc, char **argv)
 {
-    int n1, nx, n3, axis, dim, n[SF_MAX_DIM];	/* dimensions */
-    int i1, ix, i3, j;       /* loop counters 	*/
-    int nk;		     /* number of wavenumbers */	
+    int n1, nx, n3, dim, n[SF_MAX_DIM];  /* dimensions */
+    int i1, ix, i3, j;       /* loop counters */
+    int nk;                  /* number of wavenumbers */   
     int npad;                /* padding */
 
-    float dx;		     /* space sampling interval */
-    float dk;	             /* wavenumber sampling interval */
+    float dx;                /* space sampling interval */
+    float dk;                /* wavenumber sampling interval */
     float x0;                /* staring space */
     float k0;                /* starting wavenumber */
     float wt;                /* Fourier scaling */
@@ -43,6 +43,7 @@ int main (int argc, char **argv)
     bool sym;                /* symmetric scaling */
     bool opt;                /* optimal padding */
     int sign;                /* transform sign */
+    int axis;                /* transform axis */
 
     char varname[12];        /* variable name */
     char *label;             /* transformed axis label */
@@ -75,76 +76,76 @@ int main (int argc, char **argv)
 
     n1=n3=1;
     for (j=0; j < dim; j++) {
-	if      (j < axis-1) n1 *= n[j];
-	else if (j > axis-1) n3 *= n[j]; 
+    if      (j < axis-1) n1 *= n[j];
+    else if (j > axis-1) n3 *= n[j]; 
     }
     
     if (inv) { 
-	sprintf(varname,"n%d",axis);
-	if (!sf_histint  (in,varname,&nk)) sf_error("No %s= in input",varname);
-	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dk)) sf_error("No %s= in input",varname);
+    sprintf(varname,"n%d",axis);
+    if (!sf_histint  (in,varname,&nk)) sf_error("No %s= in input",varname);
+    sprintf(varname,"d%d",axis);
+    if (!sf_histfloat(in,varname,&dk)) sf_error("No %s= in input",varname);
 
-	sprintf(varname,"fft3_n%d",axis);
-	if (!sf_histint  (in,varname,&nx)) nx=nk;
-	sprintf(varname,"fft3_o%d",axis);
-	if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
-	sprintf(varname,"fft3_label%d",axis);
-	label = sf_histstring(in,varname);
+    sprintf(varname,"fft3_n%d",axis);
+    if (!sf_histint  (in,varname,&nx)) nx=nk;
+    sprintf(varname,"fft3_o%d",axis);
+    if (!sf_histfloat(in,varname,&x0)) x0 = 0.; 
+    sprintf(varname,"fft3_label%d",axis);
+    label = sf_histstring(in,varname);
 
-	dx = 1./(nk*dk);
+    dx = 1./(nk*dk);
 
-	sprintf(varname,"n%d",axis);
-	sf_putint (out,varname,nx);
-	sprintf(varname,"d%d",axis);
-	sf_putfloat (out,varname,dx);
-	sprintf(varname,"o%d",axis);
-	sf_putfloat (out,varname,x0);
-	sprintf(varname,"label%d",axis);
-	if (NULL != label) {
-	    sf_putstring(out,varname,label);
-	} else if (NULL != (label = sf_histstring(in,varname))) {
-	    (void) fix_label(axis,label,out);
-	}
+    sprintf(varname,"n%d",axis);
+    sf_putint (out,varname,nx);
+    sprintf(varname,"d%d",axis);
+    sf_putfloat (out,varname,dx);
+    sprintf(varname,"o%d",axis);
+    sf_putfloat (out,varname,x0);
+    sprintf(varname,"label%d",axis);
+    if (NULL != label) {
+        sf_putstring(out,varname,label);
+    } else if (NULL != (label = sf_histstring(in,varname))) {
+        (void) fix_label(axis,label,out);
+    }
     } else { 
-	sprintf(varname,"n%d",axis);
-	if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
-	sprintf(varname,"d%d",axis);
-	if (!sf_histfloat(in,varname,&dx)) sf_error("No %s= in input",varname);
-	sprintf(varname,"o%d",axis);
-	if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
-	sprintf(varname,"label%d",axis);
-	label = sf_histstring(in,varname);
+    sprintf(varname,"n%d",axis);
+    if (!sf_histint  (in,varname,&nx)) sf_error("No %s= in input",varname);
+    sprintf(varname,"d%d",axis);
+    if (!sf_histfloat(in,varname,&dx)) sf_error("No %s= in input",varname);
+    sprintf(varname,"o%d",axis);
+    if (!sf_histfloat(in,varname,&x0)) x0 = 0.;
+    sprintf(varname,"label%d",axis);
+    label = sf_histstring(in,varname);
 
-	sprintf(varname,"fft3_n%d",axis);
-	sf_putint(out,varname,nx);
-	sprintf(varname,"fft3_o%d",axis);
-	sf_putfloat(out,varname,x0);
-	if (NULL != label) {
-	    sprintf(varname,"fft3_label%d",axis);
-	    sf_putstring(out,varname,label);
-	}
+    sprintf(varname,"fft3_n%d",axis);
+    sf_putint(out,varname,nx);
+    sprintf(varname,"fft3_o%d",axis);
+    sf_putfloat(out,varname,x0);
+    if (NULL != label) {
+        sprintf(varname,"fft3_label%d",axis);
+        sf_putstring(out,varname,label);
+    }
 
-	if (!sf_getint("pad",&npad)) npad=2;
-	/* padding factor */
+    if (!sf_getint("pad",&npad)) npad=2;
+    /* padding factor */
 
-	/* determine wavenumber sampling */
-	nk = opt? sf_fft_size(nx*npad): nx*npad;
-	if (nk != nx) sf_warning("padded to %d",nk);
+    /* determine wavenumber sampling */
+    nk = opt? sf_fft_size(nx*npad): nx*npad;
+    if (nk != nx) sf_warning("padded to %d",nk);
 
-	dk = 1./(nk*dx);
-	k0 = -0.5/dx;
+    dk = 1./(nk*dx);
+    k0 = -0.5/dx;
 
-	sprintf(varname,"n%d",axis);
-	sf_putint (out,varname,nk);
-	sprintf(varname,"d%d",axis);
-	sf_putfloat (out,varname,dk);
-	sprintf(varname,"o%d",axis);
-	sf_putfloat (out,varname,k0);
-	if (NULL != label && !fix_label(axis,label,out)) {
-	    sprintf(varname,"label%d",axis);
-	    sf_putstring(out,varname,"Wavenumber");
-	}
+    sprintf(varname,"n%d",axis);
+    sf_putint (out,varname,nk);
+    sprintf(varname,"d%d",axis);
+    sf_putfloat (out,varname,dk);
+    sprintf(varname,"o%d",axis);
+    sf_putfloat (out,varname,k0);
+    if (NULL != label && !fix_label(axis,label,out)) {
+        sprintf(varname,"label%d",axis);
+        sf_putstring(out,varname,"Wavenumber");
+    }
     }
     fix_unit(axis,in,out);
     
@@ -157,60 +158,60 @@ int main (int argc, char **argv)
     wt = sym? 1./sqrtf((float) nk): 1./nk;
     
     for (i3=0; i3<n3; i3++) {
-	if (inv) {
-	    sf_floatread((float*) cp[0],n1*nk*2,in);
+    if (inv) {
+        sf_floatread((float*) cp[0],n1*nk*2,in);
 
-	    for (i1=0; i1 < n1; i1++) {
-		/* Fourier transform k to x */
-		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
-		
-		for (ix=0; ix<nx; ix++) {
-		    cp[ix][i1] = sf_crmul(ctrace[ix],ix%2? -wt: wt);
-		}
-	    }
+        for (i1=0; i1 < n1; i1++) {
+        /* Fourier transform k to x */
+        kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
+        
+        for (ix=0; ix<nx; ix++) {
+            cp[ix][i1] = sf_crmul(ctrace[ix],ix%2? -wt: wt);
+        }
+        }
       
-	    sf_floatwrite((float*) cp[0],n1*nx*2,out);
-	} else {
-	    sf_floatread((float*) cp[0],n1*nx*2,in);
-	    
-	    /* FFT centering */
-	    for (ix=1; ix<nx; ix+=2) {
-		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1] = sf_cneg(cp[ix][i1]);
-		}
-	    }
+        sf_floatwrite((float*) cp[0],n1*nx*2,out);
+    } else {
+        sf_floatread((float*) cp[0],n1*nx*2,in);
+        
+        /* FFT centering */
+        for (ix=1; ix<nx; ix+=2) {
+        for (i1=0; i1<n1; i1++) {
+            cp[ix][i1] = sf_cneg(cp[ix][i1]);
+        }
+        }
 
-	    if (sym) {
-		for (ix=0; ix<nx; ix++) {
-		    for (i1=0; i1 < n1; i1++) {
-			cp[ix][i1] = sf_crmul(cp[ix][i1],wt);
-		    }
-		}
-	    }
+        if (sym) {
+        for (ix=0; ix<nx; ix++) {
+            for (i1=0; i1 < n1; i1++) {
+            cp[ix][i1] = sf_crmul(cp[ix][i1],wt);
+            }
+        }
+        }
 
-	    /* pad with zeros */
-	    for (ix=nx; ix<nk; ix++) {
-		for (i1=0; i1<n1; i1++) {
-		    cp[ix][i1].r = 0.;
-		    cp[ix][i1].i = 0.;
-		}
-	    }
+        /* pad with zeros */
+        for (ix=nx; ix<nk; ix++) {
+        for (i1=0; i1<n1; i1++) {
+            cp[ix][i1].r = 0.;
+            cp[ix][i1].i = 0.;
+        }
+        }
     
-	    for (i1=0; i1 < n1; i1++) {
-		/* Fourier transform x to k */
-		kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
+        for (i1=0; i1 < n1; i1++) {
+        /* Fourier transform x to k */
+        kiss_fft_stride(cfg,cp[0]+i1,ctrace,n1);
 
-		/* Transpose */
-		for (ix=0; ix<nk; ix++) {
-		    cp[ix][i1] = ctrace[ix];
-		}
-	    }
-	    
-	    sf_floatwrite((float*) cp[0],n1*nk*2,out);
-	}
+        /* Transpose */
+        for (ix=0; ix<nk; ix++) {
+            cp[ix][i1] = ctrace[ix];
+        }
+        }
+        
+        sf_floatwrite((float*) cp[0],n1*nk*2,out);
+    }
     }
     
     exit (0);
 }
 
-/* 	$Id$	 */
+/*  $Id$  */

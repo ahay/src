@@ -35,8 +35,6 @@ from rsfproj import *
 #   Computers and Geosciences, v. 22, n. 10, pp. 1175-1186.
 # 
 
-def variogram (par):
-
 # 
 # Input parameter explanations.
 #
@@ -93,6 +91,12 @@ def variogram (par):
 # End of input parameter explanations.
 #
 
+# 
+# Array parameter computations and rule set up.
+#
+
+def paramaters (par):
+
 #
 # Compute padded (double), augmented (plus one), and half grid dimensions 
 #
@@ -139,32 +143,16 @@ def variogram (par):
     par['oz'] = -par['nz_half']*par['dz']
 
 #
-# Square the data values
+# Set up forward and inverse FFT rules 
 #
 
-    ind     = par['ind']
-    val     = par['val']
-    val_sqr = val + '_sqr'
-
-    Flow (val_sqr,val,'math output="input^2"')
-
-#
-# Pad the arrays and compute FFTs
-#
-
-    for i in ([ind,val,val_sqr]):
-        Flow (i+'_fft',i,
-              '''
-              pad n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d | 
-              rtoc | 
-              fft3 axis=1 pad=1 |
-              fft3 axis=2 pad=1 |
-              fft3 axis=3 pad=1
-              ''' % par)
-
-#
-# Compute the pair counts
-#
+    fft_rule =      '''
+                    pad n1=%(nx_pad)d n2=%(ny_pad)d n3=%(nz_pad)d | 
+                    rtoc | 
+                    fft3 axis=1 pad=1 |
+                    fft3 axis=2 pad=1 |
+                    fft3 axis=3 pad=1
+                    ''' % par
 
     inv_fft_rule =  '''
                     fft3 axis=3 pad=1 inv=y | 
@@ -183,28 +171,75 @@ def variogram (par):
                         d1=%(dx)g d2=%(dy)g d3=%(dz)g
                     ''' % par
                     
-    rule = inv_fft_rule + '|' + rotate_rule + '|' + window_rule
+    par['fft_rule'] = fft_rule
+    par['inv_rule'] = inv_fft_rule + '|' + rotate_rule + '|' + window_rule
     
-    pairs   = val + '_pairs'
-    ind_fft = ind + '_fft'
+def pairs (par):
 
-    Flow (pairs,ind_fft,
-          'math output="ind*conj(ind)" ind=$SOURCE | %s' % rule, stdin=0)
+#
+# Pair count computation
+#
+
+#
+# Compute the FFT of the indicator array
+#
+
+    Flow (par['ind']+'_fft',par['ind'],par['fft_rule'])
+
+#
+# Compute the pair counts
+#
+
+    Flow (par['ind']+'_pairs',par['ind']+'_fft',
+          '''
+          math output="ind*conj(ind)" ind=$SOURCE |
+          %(inv_rule)s
+          ''' % par, stdin=0)
+
+def variogram (par):
+
+#
+# Variogram computation
+#
+
+#
+# Set up file names
+#
+
+    ind     = par['ind']
+    val     = par['val']
+
+    pairs       = ind + '_pairs'
+    sum         = val + '_sum'
+    ind_fft     = ind + '_fft'
+    val_var     = val + '_var'
+    val_fft     = val + '_fft'
+    val_sqr     = val + '_sqr'
+    val_sqr_fft = val_sqr + '_fft'
+    
+#
+# Square the data values
+#
+
+    Flow (val_sqr,val,'math output="input^2"')
+
+#
+# Compute FFTs
+#
+
+    Flow (val_fft,    val,    par['fft_rule'])
+    Flow (val_sqr_fft,val_sqr,par['fft_rule'])
 
 #
 # Compute the variogram
 #
 
-    sum         = val + '_sum'
-    val_var     = val + '_var'
-    val_fft     = val + '_fft'
-    val_sqr_fft = val_sqr + '_fft'
-    
     Flow (sum,[ind_fft,val_fft,val_sqr_fft],
           '''
           math output="(ind*conj(val2)+val2*conj(ind))/2-val*conj(val)"
-          ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} | %s
-          ''' % rule, stdin=0)
+          ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} |
+          %(inv_rule)s
+          ''' % par, stdin=0)
 
     Flow (val_var,[pairs,sum],
           'clip2 lower=1 | math output="sum/input" sum=${SOURCES[1]}')

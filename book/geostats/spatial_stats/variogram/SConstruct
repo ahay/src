@@ -120,6 +120,8 @@ for i in range(3):
 #
 
 for i in range(3): 
+    spatial_stats.paramaters(par[i])
+    spatial_stats.pairs(par[i])
     spatial_stats.variogram(par[i])
 
 #          
@@ -131,7 +133,7 @@ plots = range(3)
 for i in range(3): 
     plots[i] = [par[i]['ind'],
                 par[i]['val'],
-                par[i]['val']+'_pairs',
+                par[i]['ind']+'_pairs',
                 par[i]['val']+'_var']
 
 #          
