@@ -111,8 +111,7 @@ def libs(context):
     #include <rpc/xdr.h>
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
     
     res = context.TryLink(text,'.c')
     if res:
@@ -191,8 +190,7 @@ def x11(context):
     #include <X11/Xaw/Label.h>
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
     
     context.Message("checking for X11 headers ... ")
     INC = context.env.get('XINC','')
@@ -267,8 +265,7 @@ def ppm(context):
     #include <ppm.h>
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
     
     res = context.TryLink(text,'.c')
     if res:
@@ -292,8 +289,7 @@ def jpeg(context):
     #include <jpeglib.h>
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
     
     res = context.TryLink(text,'.c')
     if res:
@@ -327,8 +323,8 @@ def cc(context):
     text = '''
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
+    
     context.Message("checking if %s works ... " % CC)
     res = context.TryLink(text,'.c')
     context.Result(res)
@@ -371,8 +367,8 @@ def c99(context):
     float f;
     f = cabsf(ccosf(c));
     return (int) f;
-    }
-    '''
+    }\n'''
+
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
@@ -392,8 +388,8 @@ def cxx(context):
     #include <valarray>
     int main(int argc,char* argv[]) {
     return 0;
-    }
-    '''
+    }\n'''
+
     context.Message("checking if %s works ... " % CXX)
     res = context.TryLink(text,'.cc')
     context.Result(res)
