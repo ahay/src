@@ -58,7 +58,7 @@ def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
 # ------------------------------------------------------------
 # model
 velo = 'sigsbee2a_stratigraphy.sgy'
-Fetch(velo,'sigsbee')
+#Fetch(velo,'sigsbee')
 
 Flow('zvelo tzvelo ./vhead ./bvhead',velo,
      '''
@@ -79,6 +79,30 @@ Plot  ('velo',igrey('allpos=y pclip=95',par))
 Result('velo',igrey('allpos=y pclip=95',par))
 
 Flow('dens','velo','math output=2000')
+
+# ------------------------------------------------------------
+vmig = 'sigsbee2a_migvel.sgy'
+
+Flow('zvmig tzvmig ./vmighead ./bvmighead',vmig,
+     '''
+     segyread
+     tape=$SOURCE
+     tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]}
+     bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('vmig','zvmig',
+     '''
+     scale rscale=0.001 |
+     put d1=%(dz)g o2=%(ox)g d2=0.0375 label1=z label2=x |
+     transp |
+     remap1 n1=%(nx)d d1=%(dx)g order=1|
+     transp
+     ''' % par)
+
+Plot  ('vmig',igrey('allpos=y pclip=95',par))
+Result('vmig',igrey('allpos=y pclip=95',par))
 
 # ------------------------------------------------------------
 
