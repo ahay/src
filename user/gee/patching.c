@@ -37,10 +37,7 @@ void patching(sf_operator oper /* operator */,
     float *winmodl, *windata, *wallwt;
     int i, j, iw, ip, np, n, nw;
 
-    np = 1; 
-    n = 1;
-    nw = 1;
-
+    np = n = nw = 1; 
     for (j=0; j < dim; j++) {
 	np *= npatch[j];
 	n *= nwall[j];
@@ -51,9 +48,7 @@ void patching(sf_operator oper /* operator */,
     windata = sf_floatalloc(nw);
     wallwt  = sf_floatalloc(n);
 
-    for (i=0; i < n; i++) {
-	data[i] = 0.;
-    }
+    for (i=0; i < n; i++) data[i] = 0.;
 
     patch_init(dim, npatch, nwall, nwind);
     for (ip = 0; ip < np; ip++) {
@@ -62,9 +57,7 @@ void patching(sf_operator oper /* operator */,
 	/* winmodl -> windata */
 	oper(false, false, nw, nw, winmodl, windata);
 	/* apply window weighting */
-	for (iw=0; iw < nw; iw++) {
-	    windata[iw] *= windwt[iw];
-	}
+	for (iw=0; iw < nw; iw++) windata[iw] *= windwt[iw];
 	/* data <- windata */
 	patch_lop(true, true, n, nw, data, windata);
 	patch_close();
@@ -74,9 +67,7 @@ void patching(sf_operator oper /* operator */,
     mkwallwt(dim, npatch, nwall, nwind, windwt, wallwt);
 
     /* apply wall weighting */
-    for (i=0; i < n; i++) {
-	data[i] *= wallwt[i];
-    }
+    for (i=0; i < n; i++) data[i] *= wallwt[i];
 
     free (winmodl);
     free (windata);

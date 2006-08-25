@@ -32,7 +32,8 @@ void loconvol_init(filter aa_in)
     aa = aa_in;
 }
 
-void loconvol_lop(bool adj, bool add, int nx, int ny, float *xx, float *yy)
+void loconvol_lop(bool adj, bool add, int nx, int ny, 
+		  float *xx, float *yy)
 /*< convolve >*/
 {
     helicon_init(aa);

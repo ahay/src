@@ -38,7 +38,7 @@ void tent (int dim           /* number of dimensions */,
 	start[j] = a[j]-center[j];
 	end[j] = nwind[j]-center[j];
 	mid[j]= (end[j]+start[j])/2.;
-	wid[j]= (end[j]-start[j])/2.;
+	wid[j]= (end[j]-start[j]+1.)/2.;
 	nw *= nwind[j]; /* compute window size */
     }
 

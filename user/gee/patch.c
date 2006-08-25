@@ -38,7 +38,8 @@ void patch_init(int dim_in     /* number of dimensions */,
     ipatch = 0;
 }
 
-void patch_lop (bool adj, bool add, int nx, int ny, float* wall, float* wind)
+void patch_lop (bool adj, bool add, int nx, int ny, 
+		float* wall, float* wind)
 /*< patch operator >*/
 {
     int i, j, shift;

@@ -113,7 +113,7 @@ You might wish to review the utilities
 which convert between multidimensional array subscripts
 and the linear memory subscript
 before looking at the patch extraction-putback code:
-\opdex{patch}{extract patches}{41}{66}{user/gee}
+\opdex{patch}{extract patches}{41}{67}{user/gee}
 The cartesian vector \texttt{jj}
 points to the beginning of a patch, where on the wall
 the (1,1,..) coordinate of the patch lies.
@@ -255,7 +255,7 @@ Mathematically, this is
 $ [\bold W_{\rm wall} \bold P' \bold W_{\rm wind} \bold F \bold P ] \bold d$.
 It is assumed that the input and output sizes for the operator
 \texttt{oper} are equal.
-\moddex{patching}{generic patching}{27}{84}{user/gee}
+\moddex{patching}{generic patching}{51}{70}{user/gee}
 
 \par
 %The first code of this nature we will examine
@@ -348,7 +348,7 @@ without having interference with edges),
 we can get ``triangle tent'' weights
 from {\tt tentn()} if we set filter dimensions and lags to unity,
 as shown in Figure~\ref{fig:wind0wt}.
-\sideplot{wind0wt}{width=3.00in}{
+\sideplot{wind1wt}{width=3.00in}{
   Window weights from {\tt tentn()}
   with
   %	{\tt         w1=61, w2=19 a1=1, a2=1, lag1=1, lag2=1 }.
@@ -373,7 +373,7 @@ In practice we may chose window shapes and overlaps for
 reasons other than the constancy of the sum of weights,
 because \texttt{mkwallwt} \vpageref{lst:mkwallwt} accounts for that.
 
-\sideplot{wall0wt}{width=3.00in}{
+\sideplot{wall1wt}{width=3.00in}{
   (Inverse) wall weights with
   {\tt n1=100, w1=61, k1=2, n2=30, w2=19, k2=2 }
 }
@@ -419,7 +419,7 @@ the input patches back in Figure~\ref{fig:idempatch}.
 Here in Figure~\ref{fig:cinloip},
 both axes need more window density.
 \sideplot{cinloip}{width=3.00in}{
-  Filtering in patches 
+  Filtering in patches Mid
   with the same parameters
   as in Figures~\protect\ref{fig:parcel} and~\protect\ref{fig:idempatch}.
   Additionally, the filter parameters are
@@ -447,7 +447,7 @@ The output of this subroutine is an array of helix-type filters,
 which can be used, for example,
 in a local convolution operator
 \texttt{loconvol} \vpageref{lst:loconvol}.
-\moddex{lopef}{local PEF}{61}{84}{user/gee}
+\moddex{lopef}{local PEF}{61}{85}{user/gee}
 We notice that when a patch has fewer regression equations
 than the filter has coefficients, then the filter is taken
 to be that of the previous patch.
@@ -1135,7 +1135,7 @@ Let us express the fitting goal in the form needed in computation.
 %$\Delta \bold s$.
 %Finally, it defines noise by $\bold n = \bold d - \bold s$.
 
-\opdex{signoi}{signal and noise separation}{51}{66}{user/gee}
+\opdex{signoi}{signal and noise separation}{51}{67}{user/gee}
 As with the missing-data subroutines,
 the potential number of iterations is large,
 because the dimensionality of the space of unknowns

@@ -48,7 +48,8 @@ void signoi_init(filter nn_in /* noise PEF */,
     dd = sf_floatalloc(nd);
 }
 
-void signoi_lop (bool adj, bool add, int n1, int n2, float *data, float *sign)
+void signoi_lop (bool adj, bool add, int n1, int n2, 
+		 float *data, float *sign)
 /*< linear operator >*/
 {
     helicon_init (nn);
@@ -57,8 +58,8 @@ void signoi_lop (bool adj, bool add, int n1, int n2, float *data, float *sign)
     sf_adjnull(adj,add,n1,n2,data,sign);
 
     helicon_lop (false, false, n1, n1, data, dd);
-    sf_solver_prec(helicon_lop, sf_cgstep, polydiv_lop, nd, nd, nd, sign, dd,
-		   niter, eps, "end");
+    sf_solver_prec(helicon_lop, sf_cgstep, polydiv_lop, 
+		   nd, nd, nd, sign, dd, niter, eps, "end");
     sf_cgstep_close();
 
     nn++;
