@@ -1,16 +1,22 @@
 from rsfproj import *
+
+# Download the input data file
 Fetch('lena.img','imgs')
-Flow('ulena','lena.img',
-     '''
-     echo n1=512 n2=513 d1=1 d2=1
-     in=${SOURCES[0]} data_format=native_uchar
-     ''',stdin=0)
-Flow('flena','ulena','sfdd type=float')
-Flow('zmflena512','flena',
-     'sfwindow f2=1 | sfmath output="input-99.0512" ')
-Result('lena','zmflena512',
+
+# Create RSF header
+Flow('lena.hdr','lena.img',
+     'echo n1=512 n2=513 d1=1 d2=1 in=$SOURCE data_format=native_uchar',
+     stdin=0)
+
+# Convert to floating point and window out first trace
+Flow('lena','lena.hdr','dd type=float | window f2=1')
+
+# Display
+Result('lena',
        '''
-       sfgrey title="" transp=n minval=-150
-       maxval=150 clip=120 screenratio=1 titlesz=14
+       sfgrey title="Hello, World!" transp=n color=b bias=128
+       clip=100 screenratio=1 
        ''')
+
+# Wrap up
 End()

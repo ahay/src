@@ -170,7 +170,7 @@ def velcon(data,        # data name
          ''' % (vm,units,units))
     Plot(dix+'0',
          '''grey pclip=100 color=j bias=%g 
-         scalebar=y title="Predicted RMS Velocity" barlabel=Velocity barunit="%s/s"
+         scalebar=y title="Predicted Migration Velocity" barlabel=Velocity barunit="%s/s"
          label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
          ''' % (vm,units,units))
     Result(dix,[dix,dix+'0'],'SideBySideAniso')
@@ -193,7 +193,7 @@ def velcon(data,        # data name
     Plot(pdx+'0',
          '''
          grey pclip=100 color=j bias=%g
-         scalebar=y title="Predicted RMS Velocity"
+         scalebar=y title="Predicted Migration Velocity"
          label1=Time unit1=s label2="Lateral Position" unit2=%s 
          barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (vm,units,units))
@@ -233,11 +233,11 @@ def velcon(data,        # data name
          '''
          window f2=10 n2=%d |
          grey pclip=100 color=j bias=%g
-         scalebar=y title="Predicted RMS Velocity"
+         scalebar=y title="Predicted MIgration Velocity"
          label1=Time unit1=s label2="Lateral Position" unit2=%s 
          barlabel=Velocity barunit="%s/s" barreverse=y
          ''' % (nx,vm,units,units))
-    Result(shp,[shp,shp+'1'],'SideBySideAniso')
+    Result(shp,[shp+'1',shp+'0'],'SideBySideAniso')
 
     Plot(agc+'w',agc,
          '''

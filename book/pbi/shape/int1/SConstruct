@@ -64,8 +64,10 @@ for case in (1,2):
        '''
        cat axis=2 ${SOURCES[1]} |
        graph title="Spectrum Shaping %d"
-       label1="Frequency (cycles)" max1=0.3 dash=0,1
+       label1="Frequency (cycle)" max1=0.3 dash=0,1
+       label2="Relative Magnitude"
        ''' % case)
+Result('spec','spec2','Overlay')
 Result('spec1','sm spec1','SideBySideAniso')
 Result('spec2','zm spec2','SideBySideAniso')
 
