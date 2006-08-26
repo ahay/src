@@ -23,21 +23,20 @@ Flow('off','tgath',
      window n3=1 
      ''')
 
-grey = 'grey wanttitle=n label2=Trace grid2=y gridcol=2'
+grey = 'grey title="(a)" label2=Trace grid2=y gridcol=2'
 
-def wiggle(title):
-    return '''
-    wiggle xpos=${SOURCES[1]} title="%s"
-    transp=y yreverse=y poly=y label2=Offset unit2=kft
-    wheretitle=b wherexlabel=t
-    ''' % title
+wiggle = '''
+wiggle xpos=${SOURCES[1]} title="(b)"
+transp=y yreverse=y poly=y label2=Offset unit2=kft
+wheretitle=b wherexlabel=t
+''' 
 
 for g in range(5):
     gath = 'gath%d' % g
     
     Flow(gath,'gaths','window n3=1 f3=%d' % g)
     Plot(gath,grey)
-    Plot('w'+gath,[gath,'off'],wiggle('Input'))
+    Plot('w'+gath,[gath,'off'],wiggle)
     Result(gath,[gath,'w'+gath],'SideBySideAniso')
 
     for case in ('','avo'):
@@ -54,7 +53,7 @@ for g in range(5):
                  '''
                  grey title="%s Scan" color=j allpos=y
                  label2="Residual Curvature" unit2="s\^2\_/kft\^2"
-                 ''' % ('Semblance','AVO-Friendly Semblance')[case=='avo'])
+                 ''' % ('(a) Semblance','(b) AVO-Friendly Semblance')[case=='avo'])
 
             Flow(pick,scan,'pick rect1=20 vel0=0 | window')
             Plot(pick,
@@ -71,7 +70,7 @@ for g in range(5):
                  half=n slowness=y squared=y
                  ''')
             Plot(nmod,grey)
-            Plot('w'+nmod,[nmod,'off'],wiggle('Corrected'))
+            Plot('w'+nmod,[nmod,'off'],wiggle)
             Result(nmod,[nmod,'w'+nmod],'SideBySideAniso')
 
     scan = 'scan%d' % g

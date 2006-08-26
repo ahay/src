@@ -12,7 +12,7 @@ Flow('synt',None,
      spray axis=2 n=141 d=25 o=0 label=Offset unit=m 
      ''')
 
-Flow('cmp0','synt vrms',
+Flow('cmpa','synt vrms',
      'inmo velocity=${SOURCES[1]} half=n | noise seed=2007 var=0.01')
 
 Flow('top','synt','window n1=400')
@@ -20,26 +20,26 @@ Flow('mid','synt',
      'window f1=400 n1=300 | math output="input*(1-x2*%g)" ' % (2.0/3500))
 Flow('bot','synt','window f1=700')
 
-Flow('cmp1','top mid bot vrms',
+Flow('cmpb','top mid bot vrms',
      '''
      cat axis=1 ${SOURCES[1:3]} |
      inmo velocity=${SOURCES[3]} half=n |
      noise seed=2007 var=0.01
      ''')
 
-for case in range(2):
-    cmp = 'cmp%d' % case
-    Plot(cmp,'grey title="CMP %d" ' % (case+1))
+for case in ('a','b'):
+    cmp = 'cmp' + case
+    Plot(cmp,'grey title="(%s)" ' % case)
 
     for avo in ('','avo'):
-        scn = '%sscn%d' % (avo,case)
+        scn = avo + 'scn' + case
         Flow(scn,cmp,'vscan half=n v0=2000 dv=10 nv=101 %ssemblance=y' % avo)
         Plot(scn+'0',scn,
              '''
-             grey color=j allpos=y title="%s Semblance %d" pclip=100
-             ''' % (string.upper(avo),case+1))
+             grey color=j allpos=y title="(%s) %s Semblance" pclip=100
+             ''' % (case,string.upper(avo)))
 
-        pik = '%spik%d' % (avo,case)
+        pik = avo + 'pik' + case
         Flow(pik,scn,'scale axis=2 | pick rect1=50')
         Plot(pik,
              '''
@@ -49,15 +49,15 @@ for case in range(2):
 
         Plot(scn,[scn+'0',pik],'Overlay')
 
-        nmo = '%snmo%d' % (avo,case)
+        nmo = avo + 'nmo' + case
         Flow(nmo,[cmp,pik],'nmo half=n velocity=${SOURCES[1]} str=0.4')
         Plot(nmo,
              '''
-             grey title="%s NMO %d"
+             grey title="(%s) %s NMO"
              grid2=y gridcol=6 gridfat=7 g2num=0.5
-             ''' % (string.upper(avo),case+1))
+             ''' % (case,string.upper(avo)))
 
 for plot in ('cmp','scn','avoscn','nmo','avonmo'):    
-    Result(plot,[plot+'0',plot+'1'],'SideBySideAniso')
+    Result(plot,[plot+'a',plot+'b'],'SideBySideAniso')
 
 End()
