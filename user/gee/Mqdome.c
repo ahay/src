@@ -137,7 +137,7 @@ int main (int argc, char* argv[])
 	    
 	    /* deep beds */
 	    for (i1=n1b; i1 < n1; i1++) {
-		t = i1-1. +.3 * (i2+1.) +.2 * (i3+1.);
+		t = i1+1. +.3 * (i2+1.) +.2 * (i3+1.);
 		it1  = t;
 		it2  = t+1;
 		frac = t - it1;
@@ -147,8 +147,8 @@ int main (int argc, char* argv[])
 		earth[i3][i2][i1] = 1.0   + interval;
 	    }
 
-	    for (i1=n1a; i1 < n1b; i1++) {
-		z = (float) ( i1 - n1a) / (n1b - n1a); /* 0 to 1 */
+	    for (i1=n1a-1; i1 < n1b; i1++) {
+		z = ( i1+1. - n1a) / (n1b - n1a); /* 0 to 1 */
 		zcap = z * gaussvel /4.0;
 		z = dz + (1-2*dz) * z;   /* dz to 1-dz */
 
@@ -213,6 +213,15 @@ int main (int argc, char* argv[])
 	sf_triangle_close (tr);
     }
 
+    for (i3=0; i3 < n3; i3++) {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=n1; i1 >= 1; i1--) {
+		earth[i3][i2][i1] -= earth[i3][i2][i1-1];
+	    }
+	    earth[i3][i2][0] = 0.;
+	}
+    }
+    
     f1 = (float) endtaper;
     for (i3=0; i3 < n3; i3++) {
 	for (i2=0; i2 < n2; i2++) {
