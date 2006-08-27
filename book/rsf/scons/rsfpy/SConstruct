@@ -39,7 +39,7 @@ for name in titles.keys():
     Plot(name,grey(titles[name]) )
     cftitle = titles[name]+' in the FX domain'
     Flow('fx'+name,name,'sfspectra')
-    Plot('fx'+name,grey('%s in the FX domain','y',
+    Plot('fx'+name,grey('%s','y',
                         'Frequency','Position') %cftitle )
 
 # display 2x2 figs
