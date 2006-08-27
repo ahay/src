@@ -6,7 +6,7 @@ clip = 120
 
 def grey(title='',transp='n',label1='',label2=''):
     return '''
-    sfgrey title=%s transp=%s minval=%f maxval=%f clip=%f
+    sfgrey title="%s" transp=%s minval=%f maxval=%f clip=%f
     screenratio=1 label1=%s label2=%s titlesz=14
     ''' % (title,transp,minval,maxval,clip,label1,label2)
 
