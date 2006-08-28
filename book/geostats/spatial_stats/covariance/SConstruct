@@ -1,5 +1,5 @@
 #
-# Fast variogram computation with FFTs  
+# Fast covariance computation with FFTs  
 #
 # James W. Jennings Jr.
 # Research Scientist
@@ -79,7 +79,7 @@ ind_covar_par = {   'taper_switch':1,       # covariance taper switch
                     'rw'  :1}
 
 #
-# Set up 1D, 2D, and 3D example variogram parameter dictionaries
+# Set up 1D, 2D, and 3D example covariance parameter dictionaries
 #
 
 par = grid_par
@@ -116,13 +116,13 @@ for i in range(3):
           'add mode=m ${SOURCES[1]}')
 
 #
-# Calculate the variograms
+# Calculate the covariances
 #
 
 targets = [{},{},{}]
 
 for i in range(3): 
-    spatial_stats.variogram(par[i],targets[i])
+    spatial_stats.covariance(par[i],targets[i])
     list = targets[i].keys()
     list.sort()
     for targ in list:
@@ -138,7 +138,7 @@ for i in range(3):
     plots[i] = [par[i]['ind'],
                 par[i]['val'],
                 par[i]['ind']+'_pairs',
-                par[i]['val']+'_var']
+                par[i]['val']+'_cov']
 
 #          
 # 1D plots

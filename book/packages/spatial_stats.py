@@ -29,7 +29,7 @@ from rsfproj import *
 #
 # Fast variogram computation with FFTs.
 #
-# Algorithm from:
+# Algorithm inspired from:
 #
 # Marcotte, D., 1996, Fast variogram computation with FFT, 
 #   Computers and Geosciences, v. 22, n. 10, pp. 1175-1186.
@@ -174,37 +174,13 @@ def paramaters (par):
     par['fft_rule'] = fft_rule
     par['inv_rule'] = inv_fft_rule + '|' + rotate_rule + '|' + window_rule
     
-def pairs (par):
-
 #
-# Pair count computation
+# Rules for variogram computation
 #
 
-#
-# Compute the FFT of the indicator array
-#
+def variogram (par,rules):
 
-    Flow (par['ind']+'_fft',par['ind'],par['fft_rule'])
-
-#
-# Compute the pair counts
-#
-
-    Flow (par['ind']+'_pairs',par['ind']+'_fft',
-          '''
-          math output="ind*conj(ind)" ind=$SOURCE |
-          %(inv_rule)s
-          ''' % par, stdin=0)
-
-def variogram (par):
-
-#
-# Variogram computation
-#
-
-#
-# Set up file names
-#
+    paramaters(par)
 
     ind     = par['ind']
     val     = par['val']
@@ -217,29 +193,82 @@ def variogram (par):
     val_sqr     = val + '_sqr'
     val_sqr_fft = val_sqr + '_fft'
     
+# Data squaring rule
+
+    rules[val_sqr] = [val,'math output="input^2"']
+
+# FFT rules
+
+    rules[ind_fft]     = [ind,    par['fft_rule']]
+    rules[val_fft]     = [val,    par['fft_rule']]
+    rules[val_sqr_fft] = [val_sqr,par['fft_rule']]
+
+# Pair count rule
+
+    rules[pairs] = [ind_fft,
+        'math output="input*conj(input)" | %(inv_rule)s' % par]
+
+# Variogram rules
+
+    rules[sum] = [[ind_fft,val_fft,val_sqr_fft],
+        '''
+        math output="(ind*conj(val2)+val2*conj(ind))/2-val*conj(val)"
+        ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} |
+        %(inv_rule)s
+        ''' % par]
+
+    rules[val_var] = [[pairs,sum],
+        'clip2 lower=1 | math output="sum/input" sum=${SOURCES[1]}']
+
 #
-# Square the data values
+# Rules for covariance computation
 #
 
-    Flow (val_sqr,val,'math output="input^2"')
+def covariance (par,rules):
 
-#
-# Compute FFTs
-#
+    paramaters(par)
 
-    Flow (val_fft,    val,    par['fft_rule'])
-    Flow (val_sqr_fft,val_sqr,par['fft_rule'])
+    ind     = par['ind']
+    val     = par['val']
 
-#
-# Compute the variogram
-#
+    pairs       = ind + '_pairs'
+    sumvv       = val + '_sumvv'
+    sumiv       = val + '_sumiv'
+    sumvi       = val + '_sumvi'
+    ind_fft     = ind + '_fft'
+    val_cov     = val + '_cov'
+    val_fft     = val + '_fft'
+    
+# FFT rules
 
-    Flow (sum,[ind_fft,val_fft,val_sqr_fft],
-          '''
-          math output="(ind*conj(val2)+val2*conj(ind))/2-val*conj(val)"
-          ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} |
-          %(inv_rule)s
-          ''' % par, stdin=0)
+    rules[ind_fft] = [ind,par['fft_rule']]
+    rules[val_fft] = [val,par['fft_rule']]
 
-    Flow (val_var,[pairs,sum],
-          'clip2 lower=1 | math output="sum/input" sum=${SOURCES[1]}')
+# Pair count rule
+
+    rules[pairs] = [ind_fft,
+        'math output="input*conj(input)" | %(inv_rule)s' % par]
+
+# Sum rules
+
+    rules[sumvv] = [val_fft,
+        'math output="input*conj(input)" | %(inv_rule)s' % par]
+
+    rules[sumiv] = [[ind_fft,val_fft],
+        '''
+        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+    rules[sumvi] = [[ind_fft,val_fft],
+        '''
+        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+    rules[val_cov] = [[pairs,sumvv,sumiv,sumvi],
+        '''
+        clip2 lower=1 | 
+        math output="(sumvv-sumiv*sumvi/input)/input"
+        sumvv=${SOURCES[1]} sumiv=${SOURCES[2]} sumvi=${SOURCES[3]}
+        ''']
