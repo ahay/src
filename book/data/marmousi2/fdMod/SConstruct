@@ -2,30 +2,26 @@ from rsfproj import *
 import fdmod
 
 # Fetch Files from repository
-modelFiles=['vp_marmousi-ii.segy','vs_marmousi-ii.segy','density_marmousi-ii.segy']
-outputFiles=['vp','vs','density']
-for file in modelFiles:
-    Fetch(file,"marm2")
+modelFiles=['vp_marmousi-ii.segy'] #,'density_marmousi-ii.segy']
+outputFiles=['vp'] #,'density']
+#for file in modelFiles:
+#    Fetch(file,"marm2")
 # Convert Files to RSF
 counter=0
 for file in modelFiles:
     Flow(outputFiles[counter],file, ''' segyread tape=$SOURCE | put
-        d1=.001249 d2=.001249 o1=0 o2=0 label1=Depth label2=Distance
-        unit1=km unit2=km | 
-        scale rscale=000.3048
-
+        d1=.001249  d2=.001249 o1=0 o2=0 label1=Depth label2=Distance
+        unit1=km unit2=km
                                     ''')
-#        scale rscale=3.048 
     Result(outputFiles[counter],'grey scalebar=y')
     counter = counter+1
   
-
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
-    'kt':100,    # wavelet delay
-    'nx':13601, 'ox':0, 'dx':.001249, 'lx':'label2=x unit2=km',
-    'nz':2801,  'oz':0, 'dz':.001249, 'lz':'label1=z unit1=km'
+    'nt':10000, 'dt':0.0001,'ot':0,     'lt':'label1=time unit1=s',
+    'kt':800,    # wavelet delay
+    'nx':13601, 'ox':0,  'dx':0.001249, 'lx':'label2=Distance unit2=km',
+    'nz':2801,  'oz':0,  'dz':0.001249, 'lz':'label1=Depth    unit1=km'
     }
 # add F-D modeling parameters
 fdmod.param(par)
@@ -39,15 +35,15 @@ Flow('wav',None,
          scale axis=123 |
          put label1=t label2=x label3=y
          ''' % par)
-Result('wav','window n1=200 | graph title="" label1="t" label2=')
+Result('wav','window n1=1000 | graph title="" label1="t" label2=')
 # ------------------------------------------------------------
 
 # experiment setup
-Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
+Flow('r_',None,'math n1=13601  d1=.001249  o1=0   output=0' % par)
+Flow('s_',None,'math n1=1      d1=0        o1=0   output=0' % par)
 
 # receiver positions
-Flow('zr','r_','math output="0" ')
+Flow('zr','r_','math output=".450" ') #'0'
 Flow('xr','r_','math output="x1"')
 Flow('rr',['xr','zr'],
      '''
@@ -55,10 +51,10 @@ Flow('rr',['xr','zr'],
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* plotcol=6',par))
+     + fdmod.cgraph('symbol=* plotcol=6 symbolsz=4',par))
 
 # source positions
-Flow('zs','s_','math output=2')
+Flow('zs','s_','math output=0')
 Flow('xs','s_','math output=2')
 Flow('rs','s_','math output=1')
 Flow('ss',['xs','zs','rs'],
@@ -67,39 +63,40 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
 Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=4',par))
+     + fdmod.cgraph('symbol=X plotcol=2 symbolsz=6 allpos=y',par))
 
 # ------------------------------------------------------------
 
 # density
 Flow('vel','vp',
-     '''
+     ''' 
      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g 
      ''' % par)
 
-#     scale rscale=.0003048 |
-
-Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=98 scalebar=y',par))
-Result('vel',['vel','rr','ss'],'Overlay')
+Plot('vp',fdmod.cgrey('allpos=y bias=1.5 pclip=98 scalebar=y',par))
+Result('vel',['vp','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------
 
 # density
-
 Flow('den','vel','math output=1')
 
 #Flow('den','density','''
 #    put o1=%(oz)g  d1=%(dz)g  o2=%(oz)g d2=%(dz)g
 #    ''' % par)
-
-Plot('den',fdmod.cgrey('allpos=y bias=1.5 pclip=98',par))
-Result('den',['den','rr','ss'],'Overlay')
+#Plot('den',fdmod.cgrey('allpos=y bias=1.5 pclip=98',par))
+#Result('den',['den','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------
 # finite-differences modeling
 fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=n',par)
 
-Result('wfl',fdmod.wgrey('pclip=99',par))
-Result('dat','transp |' + fdmod.dgrey('pclip=99',par))
+Result('wfl',fdmod.wgrey('pclip=99 min2=0 max2=4 min1=0 max1=1',par))
+for item in ['10','25','45','65']:
+    Result('time'+item,'wfl','''window f3=%s n3=1 min1=0 min2=0 min2=0 max2=4 min1=0 max1=1
+              | grey gainpanel=a pclip=99 wantframenum=y 
+              title=Wavefield\ at\ %s\ \(ms\) labelsz=4
+              titlesz=6 screenratio=.18 screenht=2 wheretitle=t''' % (item,item))
 
+Result('dat','transp |' + fdmod.dgrey('pclip=99 min2=0 max2=4 min1=0 max1=1',par))
 End()
