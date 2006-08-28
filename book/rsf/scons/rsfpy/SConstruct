@@ -1,14 +1,13 @@
 from rsfproj import *
 
-minval = -150
-maxval = 150
-clip = 120
+clip = 100
 
-def grey(title='',transp='n',label1='',label2=''):
+def grey(title='',transp='n'):
     return '''
-    sfgrey title="%s" transp=%s minval=%f maxval=%f clip=%f
-    screenratio=1 label1=%s label2=%s titlesz=14
-    ''' % (title,transp,minval,maxval,clip,label1,label2)
+    sfgrey title="%s" transp=%s clip=%g
+    screenht=10 screenwd=10 crowd2=0.85 crowd1=0.8
+    label1= label2= bias=128 
+    ''' % (title,transp,clip)
 
 min = -50
 max = 50
@@ -19,17 +18,16 @@ def graph(title=''):
     screenratio=.75
     ''' % (min,max,title)
 
-# fetch the data on BEG FTP server
+# fetch the data from the data server
 Fetch('lena.img','imgs')
 Flow('lena','lena.img',
      '''
-     echo n1=512 n2=513 d1=1 d2=1 in=$SOURCE
+     echo n1=512 n2=513 in=$SOURCE
      data_format=native_uchar |
-     sfdd type=float | sfwindow f2=1 | 
-     sfmath output="input-99.0512"
+     sfdd type=float | sfwindow f2=1 
      ''',stdin=0)
 
-# add noise to lena
+# add noise 
 Flow('nlena','lena','sfnoise seed=2006 var=1400')
 
 # plots and FX spectra
@@ -37,17 +35,15 @@ titles = {'lena':'Lena',
           'nlena':'Noisy Lena'}
 for name in titles.keys():
     Plot(name,grey(titles[name]) )
-    cftitle = titles[name]+' in the FX domain'
+    cftitle = titles[name]+' in FX domain'
     Flow('fx'+name,name,'sfspectra')
-    Plot('fx'+name,grey('%s','y',
-                        'Frequency','Position') %cftitle )
+    Plot('fx'+name,grey(cftitle,'y'))
 
 # display 2x2 figs
-Plot('lenas','lena nlena','SideBySideAniso')
-Plot('fxlenas','fxlena fxnlena','SideBySideAniso')
-Result('panel1','lenas fxlenas','OverUnderAniso')
+Result('panel1','lena nlena fxlena fxnlena','TwoRows',
+       vppen='xsize=10 ysize=10')
 
-# denoising using LP filtering
+# denoising using low-pass filtering
 Flow('lplena','nlena','sfbandpass fhi=.075')
 Plot('lplena',grey('Noisy Lena LP filtered'))
 
@@ -72,13 +68,12 @@ fft2 = 'sffft1 sym=y | sffft3 sym=y'
 ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
 
 Flow('fnlena','nlena',fft2)
-Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' %fthr)
+Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' % fthr)
 Flow('thrlena','fthrlena',ifft2)
 Plot('thrlena',grey('Thresholding in the Fourier domain') )
 
-# combine figures (2x2 figs)
-Plot('pan2row1','lena nlena','SideBySideAniso')
-Plot('pan2row2','lplena thrlena','SideBySideAniso')
-Result('panel2','pan2row1 pan2row2','OverUnderAniso')
+# combine figures 
+Result('panel2','lplena thrlena','SideBySideIso',
+       vppen='xsize=10 ysize=10')
 
 End()

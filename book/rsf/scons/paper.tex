@@ -11,18 +11,22 @@
 \maketitle
 
 \begin{abstract}
-SCons (from Software Construction) is
+  SCons (from Software Construction) is a famous open-source system
+  designing primarily for building software. In this paper, we
+  describe our method of extending SCons for managing data processing
+  flows and reproducible computational experiments. We argue that...
+  and demonstrate our usage of SCons with a couple of simple examples.
 \end{abstract}
 
 \section{Introduction}
 
-This paper introduces a computational environment for reproducible
-computational experiments developed as part of the ``Madagascar''
-software package. To reproduce the example experiments in this paper,
-you can download Madagascar from \url{http://rsf.sourceforge.net/}. At
-the momemnt, the main Madagascar interface is the Unix shell command
-line so that you will need a Unix/POSIX system (Linux, Mac OS X,
-Solaris, etc.) or a Unix emulation under Windows (Cygwin, SFU, etc.)
+This paper introduces an environment for reproducible computational
+experiments developed as part of the ``Madagascar'' software package.
+To reproduce the example experiments in this paper, you can download
+Madagascar from \url{http://rsf.sourceforge.net/}. At the momemnt, the
+main Madagascar interface is the Unix shell command line so that you
+will need a Unix/POSIX system (Linux, Mac OS X, Solaris, etc.) or a
+Unix emulation under Windows (Cygwin, SFU, etc.)
 
 Our focus, however, is not only on particular
 tools we use in our research but also on the general philosophy of
@@ -225,7 +229,7 @@ the main advantages of SCons are:
   ``make depend'', ``make clean'', or multiple build passes of
   touching and reordering targets to get all of the dependencies.
 \item SCons has built-in support for many programming languages and
-  systems: C, C++, Fortran, Java, LaTeX, CVS, and others.
+  systems: C, C++, Fortran, Java, LaTeX, and others.
 \item While ``make'' relies on timestamps for detecting file changes
   (creating numerous problems on platforms with different system
   clocks), SCons uses by default a much more reliable detection
@@ -249,8 +253,10 @@ reproducible research in scientific computing.
 
 \subsection{Paper organization}
 
-To demonstrate our adoption of SCons for reproducible computational
-experiments, we will follow simple examples. 
+To demonstrate our adoption of SCons for reproducible numerical
+research, we first follow a couple of simple examples of computational
+experiments and then also show how SCons helps us document our
+research results.
 
 \begin{comment}
 \newpage
@@ -279,29 +285,29 @@ Internet connection\footnote{XXX provide alternate mean to download
 The main \texttt{SConstruct} commands defined in our reproducible
 research environment are collected in Table~\ref{tbl:commands}.
 
-\tabl{commands}{Basic \texttt{rsfproj} methods.}{
+\tabl{commands}{Basic methods of an \texttt{rsfproj} object.}{
 \begin{center}
 \begin{tabular}{|p{0.9\textwidth}|} \hline
-\noindent\texttt{Fetch(data\_file,dir[,ftp\_server\_info])}\\
+\noindent\texttt{Fetch(data\_file,dir[,ftp\_server\_info])}\\ \ \\
 \indent A rule to download \texttt{$<$data\_file$>$} from a specific
 directory \texttt{$<$dir$>$} of an FTP server
 \texttt{$<$ftp\_server\_info$>$}. \\
 \hline 
-\noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\
+\noindent\texttt{Flow(target[s],source[s],command[s][,stdin][,stdout])}\\ \ \\
 \indent A rule to generate \texttt{$<$target[s]$>$} from
 \texttt{$<$source[s]$>$} using \texttt{command[s]} \\
 \hline 
 \noindent\texttt{Plot(intermediate\_plot[,source],plot\_command)} or\\
-\texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\
+\texttt{Plot(intermediate\_plot,intermediate\_plots,combination})\\ \ \\
 \indent A rule to generate \texttt{$<$intermediate\_plot$>$} 
 in the working directory. \\
 \hline 
 \noindent\texttt{Result(plot[,source],plot\_command)} or\\ 
-\texttt{Result(plot,intermediate\_plots,combination})\\
+\texttt{Result(plot,intermediate\_plots,combination})\\ \ \\
 \indent A rule to generate a final \texttt{$<$plot$>$} in
 the special \texttt{Fig} folder of the working directory. \\
 \hline 
-\noindent\texttt{End()} \\ 
+\noindent\texttt{End()} \\ \ \\
 \indent A rule to collect default targets. \\
 \hline 
 \end{tabular}
@@ -313,6 +319,7 @@ Madagascar is installed. The source of this file is in
 \href{http://svn.sourceforge.net/viewvc/rsf/trunk/python/rsfproj.py?view=markup}{python/rsfproj.py}.
 
 \subsection{Example 1}
+\inputdir{easystart} 
 
 To follow the first example, select a working project directory and
 copy the following code
@@ -322,9 +329,9 @@ to a file named \texttt{SConstruct}\footnote{The source of this file is also acc
 %
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
 \lstset{language=Python,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
-\lstinputlisting[firstline=1,lastline=16,frame=single]{easystart/SConstruct}
+\lstinputlisting[frame=single]{easystart/SConstruct}
 
-This is our ``Hello, World'' example that illustrates the basic use of
+This is our ``hello  world'' example that illustrates the basic use of
 some of the commands presented in Table~\ref{tbl:commands}. The plan
 for this experiment is simply to download data from a public data
 server, to convert it to an appropriate file format and to generate a
@@ -378,14 +385,16 @@ standard Unix command \texttt{echo}.
 %
 \begin{verbatim}
 bash$ scons -Q lena.hdr
-echo n1=512 n2=513 d1=1 d2=1 in=lena.img data_format=native_uchar > lena.hdr
+echo n1=512 n2=513 in=lena.img data_format=native_uchar > lena.hdr
 \end{verbatim}
 %
 Since \texttt{echo} does not take a standard input, stdin is set to 0
 in the Flow command otherwise the first source is the standard input.
 Likewise, the first target is the standard output unless otherwise
-specified. Note the triple quotes used because the actual command is
-broken into several lines in the SConstruct. Note also that
+specified. 
+%Note the triple quotes used because the actual command is
+%broken into several lines in the SConstruct. 
+Note that
 \texttt{lena.img} is refered as \texttt{\$SOURCE} in the command. This
 allows us to change the name of the source file without changing the command.
 
@@ -406,7 +415,7 @@ What happened? In the absence of the file suffix, the \texttt{Flow}
 command assumes that the target file suffix is ``\texttt{.rsf}''. Let us try again.
 \begin{verbatim}
 scons -Q lena.rsf
-< lena.hdr /path/to/RSF/bin/sfdd type=float | /path/to/RSF/bin/sfwindow f2=1 > lena.rsf
+< lena.hdr /RSF/bin/sfdd type=float | /RSF/bin/sfwindow f2=1 > lena.rsf
 \end{verbatim}
 Notice that Madagascar modules \texttt{sfdd} and \texttt{sfwindow} get
 substituted for the corresponding short names in the
@@ -438,8 +447,8 @@ figure \texttt{Fig/lena.vpl} generated in a specially created
 \texttt{Fig} directory and displayed on the screen. The output should
 look like Figure~\ref{fig:lena}.
 %
-\inputdir{easystart}
-\sideplot{lena}{height=.25\textheight}{The result of Example 1.}
+\sideplot{lena}{height=.25\textheight}{The output
+  of the first numerical experiment.}
 %
 The reproducible script ends with\\
 %
@@ -447,22 +456,116 @@ The reproducible script ends with\\
 
 Ready to experiment? Try some of the following:
 \begin{enumerate}
-\item clean
-\item clip
-\item timer 
-\item checkpar
+\item Run \texttt{scons -c}. The \texttt{-c} (clean) option tells
+  SCons to remove all default targets (the \texttt{Fig/lena.vpl} image
+  file in our case) and also all intermediate targets that it generated. 
+\begin{verbatim}
+bash$ scons -c -Q
+Removed lena.img
+Removed lena.hdr
+Removed lena.rsf
+Removed /datapath/lena.rsf@
+Removed Fig/lena.vpl
+\end{verbatim}
+Run \texttt{scons} again, and the default target will be regenerated.
+\begin{verbatim}
+bash$ scons -Q
+retrieve(["lena.img"], [])
+echo n1=512 n2=513 in=lena.img data_format=native_uchar > lena.hdr
+< lena.hdr /RSF/bin/sfdd type=float | /RSF/bin/sfwindow f2=1 > lena.rsf
+< lena.rsf /RSF/bin/sfgrey title="Hello, World!" transp=n color=b \
+bias=128 clip=100 screenratio=1 > Fig/lena.vpl
+\end{verbatim}
+\item Edit your \texttt{SConstruct} file and change some of the
+  plotting parameters. For example, change the value of \texttt{clip}
+  from \texttt{clip=100} to \texttt{clip=50}. Run \texttt{scons} again
+  and observe that only the last part of the processing flow
+  (precisely, the part affected by the parameter change) is being run:
+\begin{verbatim}
+bash$ scons -Q view
+< lena.rsf /RSF/bin/sfgrey title="Hello, World!" transp=n color=b \
+bias=128 clip=50 screenratio=1 > Fig/lena.vpl
+/RSF/bin/xtpen Fig/lena.vpl
+\end{verbatim}
+  SCons is smart enough to recognize that your editing did not affect
+  any of the previous results in the data flow chain! Keeping track of
+  dependencies is the main feature that separates data processing and
+  computational experimenting with SCons from using linear shell
+  scripts.  For computational demanding processing flows, this feature
+  can save you a lot of time and make your experiments more
+  interactive and enjoyable.
+\item A special parameter to SCons (defined in \texttt{rsfproj.py})
+  can time the execution of each step in the processing flow. Try
+  running \texttt{scons TIMER=y}.
+\item The \texttt{rsfproj} module has direct access to the database
+  that stores parameters of all Madagascar modules. Try running
+  \texttt{scons CHECKPAR=y} to see parameter checking enforced before
+  computations\footnote{This feature is new and experimental and may
+    not work properly yet}.
 \end{enumerate}
 
-The summary of SCons commands is given in Table~\ref{tbl:scons}.
+The summary of SCons commands is given in Table~\ref{tbl:proj}.
+
+\tabl{proj}{SCons commands and options defined in \texttt{rsfproj}.}{
+\begin{center}
+\begin{tabular}{|p{0.9\textwidth}|}
+  \hline 
+  \noindent\texttt{scons $<$file$>$} \\ \ \\
+  \indent Generate \texttt{$<$file$>$} (usually requires \texttt{.rsf} suffix for \texttt{Flow} targets and \texttt{.vpl} suffix for \texttt{Plot} targets.) \\
+ \hline
+  \noindent\texttt{scons}\\ \ \\
+  \indent Generate default targets (usually 
+  figures specified in \texttt{Result}.) \\
+  \hline 
+  \noindent\texttt{scons view} or \texttt{scons $<$result$>$.view} \\ \ \\
+  \indent Generate \texttt{Result} figures and display them on the screen. \\
+  \hline 
+  \noindent\texttt{scons print} or \texttt{scons $<$result$>$.print} \\ \ \\
+  \indent Generate \texttt{Result} figures and print them. \\
+  \hline 
+  \noindent\texttt{scons lock} or \texttt{scons $<$result$>$.lock} \\ \ \\
+  \indent Generate \texttt{Result} figures and install them in a separate location. \\
+  \hline 
+  \noindent\texttt{scons test} or \texttt{scons $<$result$>$.test} \\ \ \\
+  \indent Generate \texttt{Result} figures and compare them with the corresponding ``locked'' figures stored in a separate location (regression testing). \\
+  \hline 
+  \noindent\texttt{scons $<$result$>$.flip} \\ \ \\
+  \indent Generate the \texttt{$<$result$>$} figure and compare it with the corresponding ``locked'' figure stored in a separate location by flipping between the two figures on the screen. \\
+  \\
+  \hline 
+  \noindent\texttt{scons TIMER=y ...} \\ \ \\
+  \indent Time the execution of each step in the processing flow (using the Unix \texttt{time} utility.) \\
+  \hline 
+  \noindent\texttt{scons CHECKPAR=y ...} \\ \ \\
+  \indent Check the names and values of all parameters supplied to Madagascar modules in the processing flows before executing anything (guards against incorrect input.) This option is new and experimental. \\
+  \hline 
+\end{tabular}
+\end{center}}
 
 \subsection{Example 2}
+\inputdir{rsfpy}
+
+The plan for this experiment is to add random noise to the test
+``Lena'' image and then to attempt removing it by low-pass filtering
+and by soft thresholding of coefficients in the Fourier domain. The
+result images are shown in Figure~\ref{fig:panel1}
+and~\ref{fig:panel2}.  
+
+\plot{panel1}{height=0.5\textheight}{Top left: original image. Top
+  right: random noise added. Bottom left: orginal image spectrum in
+  the Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in
+  the Fourier ($F$-$X$) domain.}
+
+\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass filtering.
+  Right: denoising by soft thresholding in the Fourier domain.}
 
 Since SConstructs are Python scripts, we can also use all the
-flexibility and power of the Python language in our
-Madagascar reproducible scripts. A demo script is available in the
-\texttt{rsf/scons/rsfpy} directory of Madagascar book section, but,
-rather than commenting it line-by-line, we select some parts of
-interest.
+flexibility and power of the Python language in our Madagascar
+reproducible scripts. A demo script is available in the
+\texttt{rsf/scons/rsfpy} directory of Madagascar \texttt{book}
+directory, but, rather than commenting it line-by-line, we select some
+parts of interest.
+
 
 In a Madagascar reproducible script (i.e. SConstruct) we can declare
 Python variables\\
