@@ -1,13 +1,13 @@
 from rsfproj import *
 
-clip = 100
+bias = 128
 
-def grey(title='',transp='n'):
+def grey(title,transp='n',bias=bias):
     return '''
-    sfgrey title="%s" transp=%s clip=%g
+    sfgrey title="%s" transp=%s bias=%g clip=100
     screenht=10 screenwd=10 crowd2=0.85 crowd1=0.8
-    label1= label2= bias=128 
-    ''' % (title,transp,clip)
+    label1= label2= 
+    ''' % (title,transp,bias)
 
 min = -50
 max = 50
@@ -37,7 +37,7 @@ for name in titles.keys():
     Plot(name,grey(titles[name]) )
     cftitle = titles[name]+' in FX domain'
     Flow('fx'+name,name,'sfspectra')
-    Plot('fx'+name,grey(cftitle,'y'))
+    Plot('fx'+name,grey(cftitle,'y',100))
 
 # display 2x2 figs
 Result('panel1','lena nlena fxlena fxnlena','TwoRows',
@@ -62,13 +62,16 @@ Flow('hdata','range','sfthr thr=%f mode=hard' %thr)
 Plot('hdata',graph('Thresholded data') )
 Result('hthr','data hdata','SideBySideAniso')
 
+# 2-D FFT
+fft2 = 'sffft1 sym=y | sffft3 sym=y'
+Flow('fnlena','nlena',fft2)
+
 # denoising using thresholding in the Fourier domain
 fthr = float(ARGUMENTS.get('fthr', 70))
-fft2 = 'sffft1 sym=y | sffft3 sym=y'
-ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
-
-Flow('fnlena','nlena',fft2)
 Flow('fthrlena','fnlena','sfthr thr=%f mode="hard"' % fthr)
+
+# 2-D inverse FFT
+ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y '
 Flow('thrlena','fthrlena',ifft2)
 Plot('thrlena',grey('Thresholding in the Fourier domain') )
 
