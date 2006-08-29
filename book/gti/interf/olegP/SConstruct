@@ -1,0 +1,230 @@
+## 
+ # Oleg Polyannikov
+ # passive array setup
+ ##
+from rsfproj import *
+import fdmod,zomig
+import math
+
+par = {
+    'lo':3,    # wavelength (m)
+    'co':3000, # velocity (m/s)
+    'fo':1000, # central frequency (Hz)
+    'nt':10000, 'ot':0, 'dt':0.000002,'lt':'label1=t unit1=s',
+    'ox':0,                           'lx':'label2=x unit2=m',
+    'oz':0,                           'lz':'label1=z unit1=m',
+    'kt':500,  # wavelet delay
+    'nbx':250, 'tx':0.0015,
+    'nbz':250, 'tz':0.0015,
+    'jsnap':50, 'height':10
+    }
+
+par['dx']=0.02
+par['nx']=2500
+
+par['dz']=0.02
+par['nz']=2500
+
+par['To'] = 1./par['fo']
+par['pi'] = 4*math.atan(1.)
+
+# ------------------------------------------------------------
+
+par['jx']=1
+par['dr']=par['dx']*par['jx']
+par['nr']=par['nx']/par['jx']
+par['or']=par['dx']*par['jx']/2
+
+# add F-D modeling parameters
+fdmod.param(par)
+
+# ------------------------------------------------------------
+# wavelet
+Flow('wav',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+     ricker1 frequency=%(fo)g |
+     scale axis=123 |
+     put label1=t label2=x label3=y
+     ''' % par)
+Result('wav','window n1=1000 | graph title="" label1="t" label2=')
+
+# ------------------------------------------------------------
+# source coordinates
+zt = par['oz']+15*par['lo']
+xt = par['ox']+par['nx']/2*par['dx']
+
+ls = 2*par['lo']
+
+zs0 = zt+2*ls/3
+xs0 = xt
+
+zs1 = zt-ls/3
+xs1 = xt-0.58*ls
+
+zs2 = zt-ls/3
+xs2 = xt+0.58*ls
+
+par['jzt'] = zt / par['dz']
+par['jxt'] = xt / par['dx']
+
+Flow('s_',None,'math n1=1      d1=1      o1=0      output=0' % par)
+
+# source positions
+Flow('zs0','s_','math output="%g"' % zs0)
+Flow('xs0','s_','math output="%g"' % xs0)
+Flow('rs0','s_','math output=1')
+
+Flow('zs1','s_','math output="%g"' % zs1)
+Flow('xs1','s_','math output="%g"' % xs1)
+Flow('rs1','s_','math output=1')
+
+Flow('zs2','s_','math output="%g"' % zs2)
+Flow('xs2','s_','math output="%g"' % xs2)
+Flow('rs2','s_','math output=1')
+
+for j in range(3):
+    Flow('ss'+str(j),['xs'+str(j),'zs'+str(j),'rs'+str(j)],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
+Flow('ss','ss0 ss1 ss2','cat axis=2 space=n ${SOURCES[1]} ${SOURCES[2]}')
+
+Plot('ss','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=o plotcol=0 wantscalebar=y',par))
+
+# ------------------------------------------------------------
+# experiment setup
+Flow('r_',None,'math n1=%(nr)d d1=%(dr)g o1=%(or)g output=1' % par)
+
+# receiver positions
+Flow('zr','r_','math output="%g"'% (par['lo']) )
+Flow('xr','r_','math output="x1"')
+Flow('rr',['xr','zr'],
+     '''
+     cat axis=2 sace=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+Plot('rr','window n1=2 | dd type=complex | window j2=1 | '
+     + fdmod.cgraph('symbol=. plotcol=0 wantscalebar=y',par))
+
+# ------------------------------------------------------------
+# receivers around target
+nq = 4  * par['lo']/par['dx']
+oq =     xt - nq/2 * par['dx']
+dq =                 par['dx']
+np =     nq
+op =     zt - np/2 * par['dz']
+dp =                 par['dz']
+
+Flow('q_',None,
+     '''
+     math output=1
+     n1=%d d1=%g o1=%g
+     n2=%d d2=%g o2=%g
+     ''' % (np,dp,op,nq,dq,oq) )
+
+Flow('zq','q_','math output="x1" | put n1=%d n2=1' % (np*nq))
+Flow('xq','q_','math output="x2" | put n1=%d n2=1' % (np*nq))
+Flow('qq',['xq','zq'],
+     '''
+     cat axis=2 sace=n
+     ${SOURCES[0]} ${SOURCES[1]} | transp
+     ''', stdin=0)
+
+Plot('qq','window n1=2 | dd type=complex | window | '
+     + fdmod.cgraph('symbol=. plotcol=6 wantscalebar=y',par))
+
+# ------------------------------------------------------------
+# velocity
+
+Flow('vo',None,
+     '''
+     spike nsp=1 mag=%(co)g
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g 
+     n2=%(nx)d o2=%(ox)g d2=%(dx)g |
+     put label1=z label2=x
+     ''' % par)
+
+Flow('nu','vo',
+     '''
+     math output=0 |
+     noise mean=0 range=1 type=n |
+     smooth rect1=10 rect2=10 |
+     scale axis=123 |
+     scale rscale=0.75
+     ''')
+
+Flow('vv','vo nu',
+     '''
+     math v=${SOURCES[0]} n=${SOURCES[1]} output="v/sqrt(1+n)"
+     ''')
+
+Flow('rm','vo','math output=1')
+
+Plot('vo',fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
+Plot('vv','add add=-3000 | clip clip=500 | add add=3000 |' +
+     fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
+Plot('rm',fdmod.cgrey('allpos=y pclip=100 wantscalebar=y',par))
+
+Result('vo',['vo','rr','qq','ss'],'Overlay')
+Result('vv',['vv','rr','qq','ss'],'Overlay')
+Result('rm',['rm','rr','qq','ss'],'Overlay')
+
+# ------------------------------------------------------------
+# F-D modeling
+
+fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
+Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Result('wo',            fdmod.wgrey('pclip=99',par))
+Result('to','transp|' + fdmod.dgrey('pclip=99',par))
+
+fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
+Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+Result('ww',            fdmod.wgrey('pclip=99',par))
+Result('tt','transp|' + fdmod.dgrey('',par))
+
+fdmod.wom('wom','ww','vv',par)
+Result(   'wom',fdmod.wgrey('pclip=95',par))
+
+# ------------------------------------------------------------
+# RTM
+
+fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
+Plot(  'io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+Result('io',['io','ss','rr'],'Overlay')
+
+fdmod.zom('ii','uu','tt','vo','rm','rr','qq','free=n dens=n',par)
+Plot(  'ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
+Result('ii',['ii','ss','rr'],'Overlay')
+# ------------------------------------------------------------
+
+for k in ('jj','jo'):
+
+    if (k=='jj'):
+        u='uu'
+    else:
+        u='uo'
+
+    Flow(k,u,
+         '''
+         put
+         n1=%d o1=%g d1=%g label1=x unit1=m
+         n2=%d o2=%g d2=%g label2=z unit2=m
+         n3=%d o3=%g d3=%g label3=t unit3=s |
+         window min3=0.1
+         ''' % (nq,oq,par['dx'],
+                nq,zt-nq/2*par['dz'],par['dz'],
+                par['nt'], par['ot'],par['dt']) )
+    Result(k,
+           '''
+           window j3=10 | transp |
+           grey title="" gainpanel=a screenratio=1
+           min1=%g max1=%g
+           min2=%g max2=%g
+           ''' % (par['zmin'],par['zmax'],
+                  par['xmin'],par['xmax']))
+
+End()
