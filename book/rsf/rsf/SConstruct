@@ -77,4 +77,9 @@ Depends2('install',map(lambda x: x+'.install',
 #     }
 #     ''')
 
+Paper('vancouver',lclass='beamer',use='helvet,hyperref',
+      include=r'''
+      \mode<presentation>{\usetheme{Madrid}}
+      ''')
+
 End(use='hyperref')

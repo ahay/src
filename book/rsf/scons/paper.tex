@@ -153,7 +153,8 @@ popularized in the statistics and wavelet theory community by
 \cite{donoho}. It is referenced in several popular wavelet theory
 books \cite[]{hubbard,mallat}. Pledges for reproducible research
 appear nowadays in fields as diverse as bioinformatics
-\cite[]{bioconductor}, geoinformatics \cite[]{geo}, and computational
+\cite[]{bioconductor}, 
+geoinformatics \cite[]{geo}, and computational
 wave propagation \cite[]{randy}. However, the adoption or reproducible
 research practice by computational scientists has been slow.
 Partially, this is caused by difficult and inadequate tools.
@@ -175,24 +176,24 @@ Partially, this is caused by difficult and inadequate tools.
 \subsection{Tools for reproducible research}
 
 The reproducible research system developed at Stanford is based on
-``make \cite[]{make}''\footnote{Originally, SEP used ``cake'', a
-dialect of ``make''
+``make \cite[]{make}'', a Unix software construction utility.
+Originally, SEP used ``cake'', a dialect of ``make''
 \cite[]{Nichols.sep.61.341,Claerbout.sep.67.145,Claerbout.sep.73.451,Claerbout.sep.77.427}.
 The system was converted to ``GNU make'', a more standard dialect, by
-\cite{Schwab.sep.89.217}.}, a Unix software construction utility.  The
-``make'' program keeps track of dependencies between different
-components of the system and the software construction targets, which,
-in the case of a reproducible research system, turn into figures and
-manuscripts. The targets and commands for their construction are
-specified by the author in ``makefiles'', which serve as databases for
-defining source and target dependencies. A dependency-based system
-leads to rapid development, because when one of the sources changes,
-only parts that depend on this source get recomputed.  \cite{donoho}
-based their system on MATLAB, a popular integrated development
-environment produced by MathWorks \cite[]{matlab}.  While MATLAB is an
-adequate tool for prototyping numerical algorithms, it may not be
-sufficient for large-scale computations typical for many applications
-in computational geophysics.
+\cite{Schwab.sep.89.217}.  The ``make'' program keeps track of
+dependencies between different components of the system and the
+software construction targets, which, in the case of a reproducible
+research system, turn into figures and manuscripts. The targets and
+commands for their construction are specified by the author in
+``makefiles'', which serve as databases for defining source and target
+dependencies. A dependency-based system leads to rapid development,
+because when one of the sources changes, only parts that depend on
+this source get recomputed.  \cite{donoho} based their system on
+MATLAB, a popular integrated development environment produced by
+MathWorks \cite[]{matlab}.  While MATLAB is an adequate tool for
+prototyping numerical algorithms, it may not be sufficient for
+large-scale computations typical for many applications in
+computational geophysics.
 
 ``Make'' is an extremely useful utility employed by thousands of
 software development projects. Unfortunately, it is not
@@ -246,9 +247,7 @@ the main advantages of SCons are:
   OS X, Solaris, etc.) and Windows.
 \item The stability of SCons is assured by an incremental development
   methodology utilizing comprehensive regression tests.
-\item SCons is publicly released under a liberal open-source license\footnote{As of
-    time of this writing, SCons is in a beta version 0.96 approaching
-    the 1.0 official release. See \url{http://www.scons.org/}.}
+\item SCons is publicly released under a liberal open-source license\footnote{As of time of this writing, SCons is in a beta version 0.96 approaching the 1.0 official release. See \url{http://www.scons.org/}.}
 \end{itemize}
 
 In this paper, we propose to adopt SCons as a new platform for
@@ -325,8 +324,7 @@ installation directory. The source of this file is in
 
 To follow the first example, select a working project directory and
 copy the following code
-to a file named \texttt{SConstruct}\footnote{The source of this file is also accessible at
-  \href{http://svn.sourceforge.net/viewvc/rsf/trunk/book/rsf/scons/easystart/SConstruct?view=markup}{book/rsf/scons/easystart/SConstruct}.}.
+to a file named \texttt{SConstruct}\footnote{The source of this file is also accessible at \href{http://svn.sourceforge.net/viewvc/rsf/trunk/book/rsf/scons/easystart/SConstruct?view=markup}{book/rsf/scons/easystart/SConstruct}.}.
 
 %
 \definecolor{frame}{rgb}{0.905,0.905,0.905}
@@ -422,10 +420,7 @@ scons -Q lena.rsf
 Notice that Madagascar modules \texttt{sfdd} and \texttt{sfwindow} get
 substituted for the corresponding short names in the
 \texttt{SConstruct} file. The file \texttt{lena.rsf} is in a regularly
-sampled format\footnote{See
-\url{http://rsf.sourceforge.net/wiki/index.php/Format}} and can be
-examined, for example, with \texttt{sfin lena.rsf}\footnote{See
-\url{http://rsf.sourceforge.net/wiki/index.php/Programs\#sfin}.}.
+sampled format\footnote{See \url{http://rsf.sourceforge.net/wiki/index.php/Format}} and can be examined, for example, with \texttt{sfin lena.rsf}\footnote{See \url{http://rsf.sourceforge.net/wiki/index.php/Programs\#sfin}.}.
 \begin{verbatim}
 bash$ sfin lena.rsf
 lena.rsf:
@@ -450,8 +445,7 @@ figure \texttt{Fig/lena.vpl} generated in a specially created
 look like Figure~\ref{fig:lena}.
 %
 \inputdir{easystart} 
-\sideplot{lena}{height=.25\textheight}{The output
-  of the first numerical experiment.}
+\sideplot{lena}{height=.25\textheight}{The output of the first numerical experiment.}
 %
 The reproducible script ends with\\
 %
@@ -554,13 +548,9 @@ and by hard thresholding of coefficients in the Fourier domain. The
 result images are shown in Figure~\ref{fig:panel1}
 and~\ref{fig:panel2}.  
 
-\plot{panel1}{height=0.5\textheight}{Top left: original image. Top
-  right: random noise added. Bottom left: original image spectrum in
-  the Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in
-  the Fourier ($F$-$X$) domain.}
+\plot{panel1}{height=0.5\textheight}{Top left: original image. Top  right: random noise added. Bottom left: original image spectrum in the Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in the Fourier ($F$-$X$) domain.}
 
-\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass filtering.
-  Right: denoising by hard thresholding in the Fourier domain.}
+\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass filtering.  Right: denoising by hard thresholding in the Fourier domain.}
 
 Since the \texttt{SConstruct|} file is a Python script, we can also use all the
 flexibility and power of the Python language in our Madagascar

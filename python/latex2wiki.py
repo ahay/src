@@ -237,7 +237,7 @@ tr_list2 = [
     (r"\\end\{document}", None, dummy),
     (r"\\begin\{document}", None, start_doc),
     (r"\\inputdir{(\w+)}",None,dummy),
-    (r"\\plot{([^}]+)}{[^}]*}{(.*)}",
+    (r"\\(?:side)?plot{([^}]+)}{[^}]*}{(.*)}",
      (lambda : r"[[Image:\1.png|frame|center|\2]]"),dummy),
     (r"\\label{(.*?)}", (lambda :r" (\1)"), dummy),
     (r"\\ref{(.*?)}", (lambda :r"(\1)"), dummy),
