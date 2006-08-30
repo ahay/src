@@ -27,6 +27,7 @@
 from rsfproj import *
 from math    import pi
 import rfield
+import os
 
 # 
 # Input parameter explanations.
@@ -248,9 +249,12 @@ def format_props (target=None, source=None, env=None):
 def get_props (private=None):
 
     for type in ('skew','pos'):         # get skew and pos arrays from server
-        Fetch (type+'_data.rsf','jim',private)
+        if not os.path.exists(type+'_data.rsf'):
+            Fetch (type+'_data.rsf','jim',private)
     
-    Fetch ('props.dat','jim',private)   # get props table from server
+    if not os.path.exists('props.dat'): # get props table from server
+        Fetch ('props.dat','jim',private)
+        
                                         # make a builder
     Props = Builder(action=Action(format_props),src_suffix='.dat',suffix='.asc')
     env   = Environment(BUILDERS={'Props':Props})

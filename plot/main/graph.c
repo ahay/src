@@ -143,6 +143,7 @@ int main(int argc, char* argv[])
 	for (i2=0; i2 < n2; i2++) {
 	    vp_plot_set (i2);
 	    
+	    symsize = 2./33.;
 	    if (NULL != symbol) {
 		sym[0] = symbol[i2];
 		symsize = symbolsz[i2];
