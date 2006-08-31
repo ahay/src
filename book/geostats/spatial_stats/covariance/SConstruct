@@ -15,7 +15,7 @@
 # mailto:jim.jennings@beg.utexas.edu
 # http://www.beg.utexas.edu/staffinfo/jennings01.htm
 #
-# February 2006
+# August 2006
 #
 # $Id$
 #
@@ -119,14 +119,14 @@ for i in range(3):
 # Calculate the covariances
 #
 
-targets = [{},{},{}]
+rules = [{},{},{}]
 
 for i in range(3): 
-    spatial_stats.covariance(par[i],targets[i])
-    list = targets[i].keys()
+    spatial_stats.covariance(par[i],rules[i])
+    list = rules[i].keys()
     list.sort()
-    for targ in list:
-        Flow (targ,targets[i][targ][0],targets[i][targ][1])
+    for target in list:
+        Flow (target,rules[i][target][0],rules[i][target][1])
 
 #          
 # Plot results

@@ -1,5 +1,5 @@
 #
-# Fast variogram computation with FFTs  
+# Fast correlogram computation with FFTs  
 #
 # James W. Jennings Jr.
 # Research Scientist
@@ -15,7 +15,7 @@
 # mailto:jim.jennings@beg.utexas.edu
 # http://www.beg.utexas.edu/staffinfo/jennings01.htm
 #
-# February 2006
+# August 2006
 #
 # $Id$
 #
@@ -79,7 +79,7 @@ ind_covar_par = {   'taper_switch':1,       # covariance taper switch
                     'rw'  :1}
 
 #
-# Set up 1D, 2D, and 3D example variogram parameter dictionaries
+# Set up 1D, 2D, and 3D example correlogram parameter dictionaries
 #
 
 par = grid_par
@@ -116,13 +116,13 @@ for i in range(3):
           'add mode=m ${SOURCES[1]}')
 
 #
-# Calculate the variograms
+# Calculate the correlograms
 #
 
 rules = [{},{},{}]
 
 for i in range(3): 
-    spatial_stats.variogram(par[i],rules[i])
+    spatial_stats.correlogram(par[i],rules[i])
     list = rules[i].keys()
     list.sort()
     for target in list:
@@ -138,7 +138,7 @@ for i in range(3):
     plots[i] = [par[i]['ind'],
                 par[i]['val'],
                 par[i]['ind']+'_pairs',
-                par[i]['val']+'_var']
+                par[i]['val']+'_cor']
 
 #          
 # 1D plots

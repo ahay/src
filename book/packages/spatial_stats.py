@@ -27,7 +27,10 @@
 from rsfproj import *
 
 #
-# Fast variogram computation with FFTs.
+# Fast spatial statistics computation with FFTs:
+#   semi-variogram
+#   covariance
+#   correlogram
 #
 # Algorithm inspired from:
 #
@@ -51,11 +54,11 @@ from rsfproj import *
 #
 # Value and indicator data files: par['ind','val']
 #
-# This function will compute a variogram grid from the data values
-# stored in the file named in par['val'].  The data must be stored in a
-# regular 1, 2, or 3 dimensional array with array and cell sizes
-# specified elsewhere in the dictionary "par" (see below).  However,
-# missing values are allowed.
+# These functions will compute a spatial statistics grid from the data
+# values stored in the file named in par['val'].  The data must be
+# stored in a regular 1, 2, or 3 dimensional array with array and cell
+# sizes specified elsewhere in the dictionary "par" (see below). 
+# However, missing values are allowed.
 #
 # The array named in par['ind'] should contain only zeros and ones
 # indicating the absence (zero) or presence (one) of data in the
@@ -186,7 +189,7 @@ def variogram (par,rules):
     val     = par['val']
 
     pairs       = ind + '_pairs'
-    sum         = val + '_sum'
+    sumvar      = val + '_sumvar'
     ind_fft     = ind + '_fft'
     val_var     = val + '_var'
     val_fft     = val + '_fft'
@@ -210,15 +213,15 @@ def variogram (par,rules):
 
 # Variogram rules
 
-    rules[sum] = [[ind_fft,val_fft,val_sqr_fft],
+    rules[sumvar] = [[ind_fft,val_fft,val_sqr_fft],
         '''
         math output="(ind*conj(val2)+val2*conj(ind))/2-val*conj(val)"
         ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} |
         %(inv_rule)s
         ''' % par]
 
-    rules[val_var] = [[pairs,sum],
-        'clip2 lower=1 | math output="sum/input" sum=${SOURCES[1]}']
+    rules[val_var] = [[pairs,sumvar],
+        'clip2 lower=1 | math output="sumvar/input" sumvar=${SOURCES[1]}']
 
 #
 # Rules for covariance computation
@@ -266,9 +269,94 @@ def covariance (par,rules):
         %(inv_rule)s
         ''' % par]
 
+# Covariance rule
+
     rules[val_cov] = [[pairs,sumvv,sumiv,sumvi],
         '''
         clip2 lower=1 | 
         math output="(sumvv-sumiv*sumvi/input)/input"
         sumvv=${SOURCES[1]} sumiv=${SOURCES[2]} sumvi=${SOURCES[3]}
         ''']
+
+#
+# Rules for correlogram computation
+#
+
+def correlogram (par,rules):
+
+    paramaters(par)
+
+    ind     = par['ind']
+    val     = par['val']
+
+    pairs       = ind + '_pairs'
+    sumvv       = val + '_sumvv'
+    sumiv       = val + '_sumiv'
+    sumiv2      = val + '_sumiv2'
+    sumvi       = val + '_sumvi'
+    sumv2i      = val + '_sumv2i'
+    ind_fft     = ind + '_fft'
+    val_cor     = val + '_cor'
+    val_fft     = val + '_fft'
+    val_sqr     = val + '_sqr'
+    val_sqr_fft = val_sqr + '_fft'
+    
+# Data squaring rule
+
+    rules[val_sqr] = [val,'math output="input^2"']
+    
+# FFT rules
+
+    rules[ind_fft]     = [ind,    par['fft_rule']]
+    rules[val_fft]     = [val,    par['fft_rule']]
+    rules[val_sqr_fft] = [val_sqr,par['fft_rule']]
+
+# Pair count rule
+
+    rules[pairs] = [ind_fft,
+        'math output="input*conj(input)" | %(inv_rule)s' % par]
+
+# Sum rules
+
+    rules[sumvv] = [val_fft,
+        'math output="input*conj(input)" | %(inv_rule)s' % par]
+
+    rules[sumiv] = [[ind_fft,val_fft],
+        '''
+        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+    rules[sumiv2] = [[ind_fft,val_sqr_fft],
+        '''
+        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+    rules[sumvi] = [[ind_fft,val_fft],
+        '''
+        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+    rules[sumv2i] = [[ind_fft,val_sqr_fft],
+        '''
+        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
+        %(inv_rule)s
+        ''' % par]
+
+# Correlogram rule
+
+    corr_rule = """
+                     (sumvv -sumiv*sumvi/input)/
+                sqrt((sumiv2-sumiv*sumiv/input)*(sumv2i-sumvi*sumvi/input))
+                """
+
+    rules[val_cor] = [[pairs,sumvv,sumiv,sumiv2,sumvi,sumv2i],
+        '''
+        clip2 lower=1 | 
+        math output="%s"
+        sumvv=${SOURCES[1]} 
+        sumiv=${SOURCES[2]} sumiv2=${SOURCES[3]}
+        sumvi=${SOURCES[4]} sumv2i=${SOURCES[5]}
+        ''' % (corr_rule)]
