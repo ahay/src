@@ -29,8 +29,15 @@ from rsfproj import *
 #
 # Fast spatial statistics computation with FFTs:
 #   semi-variogram
+#   general relative semi-variogram
 #   covariance
 #   correlogram
+#
+# Definitions for these spatial statistics can be found in:
+#
+# Deutsch, C. V., and Journel, A. G., 1998, GSLIB-Geostatistical
+#   software library and user's guide: New York, Oxford University Press,
+#   pp 44-45.
 #
 # Algorithm inspired from:
 #
@@ -95,10 +102,10 @@ from rsfproj import *
 #
 
 # 
-# Array parameter computations and rule set up.
+# Array parameter computations, rules, and target names.
 #
 
-def paramaters (par):
+def paramaters (par,rules):
 
 #
 # Compute padded (double), augmented (plus one), and half grid dimensions 
@@ -174,104 +181,103 @@ def paramaters (par):
                         d1=%(dx)g d2=%(dy)g d3=%(dz)g
                     ''' % par
                     
-    par['fft_rule'] = fft_rule
-    par['inv_rule'] = inv_fft_rule + '|' + rotate_rule + '|' + window_rule
-    
+    inv_rule = inv_fft_rule + '|' + rotate_rule + '|' + window_rule
 #
-# Rules for variogram computation
+# Set up common rules and target names
 #
 
-def variogram (par,rules):
+# Target names
 
-    paramaters(par)
+    ind           = par['ind']
+    val           = par['val']
 
-    ind     = par['ind']
-    val     = par['val']
+    ind_fft       = ind + '_fft'
+    val_fft       = val + '_fft'
+    val_sqr       = val + '_sqr'
+    val_sqr_fft   = val_sqr + '_fft'
 
-    pairs       = ind + '_pairs'
-    sumvar      = val + '_sumvar'
-    ind_fft     = ind + '_fft'
-    val_var     = val + '_var'
-    val_fft     = val + '_fft'
-    val_sqr     = val + '_sqr'
-    val_sqr_fft = val_sqr + '_fft'
-    
+    par['pairs']  = ind + '_pairs'
+    par['sumvar'] = val + '_sumvar'
+    par['sumvv']  = val + '_sumvv'
+    par['sumiv']  = val + '_sumiv'
+    par['sumiv2'] = val + '_sumiv2'
+    par['sumvi']  = val + '_sumvi'
+    par['sumv2i'] = val + '_sumv2i'
+
 # Data squaring rule
 
     rules[val_sqr] = [val,'math output="input^2"']
 
 # FFT rules
 
-    rules[ind_fft]     = [ind,    par['fft_rule']]
-    rules[val_fft]     = [val,    par['fft_rule']]
-    rules[val_sqr_fft] = [val_sqr,par['fft_rule']]
+    rules[ind_fft]     = [ind,    fft_rule]
+    rules[val_fft]     = [val,    fft_rule]
+    rules[val_sqr_fft] = [val_sqr,fft_rule]
 
-# Pair count rule
+# Sum rules
 
-    rules[pairs] = [ind_fft,
-        'math output="input*conj(input)" | %(inv_rule)s' % par]
+    rules[par['pairs']]  = [ind_fft,
+    'math output="input*conj(input)" | %s' % inv_rule]
 
-# Variogram rules
+    rules[par['sumvv']]  = [val_fft,
+    'math output="input*conj(input)" | %s' % inv_rule]
 
-    rules[sumvar] = [[ind_fft,val_fft,val_sqr_fft],
+    rules[par['sumiv']]  = [[ind_fft,val_fft],
+    'math output="i*conj(v)" i=${SOURCES[0]} v=${SOURCES[1]} | %s' % inv_rule]
+
+    rules[par['sumiv2']] = [[ind_fft,val_sqr_fft],
+    'math output="i*conj(v)" i=${SOURCES[0]} v=${SOURCES[1]} | %s' % inv_rule]
+
+    rules[par['sumvi']]  = [[ind_fft,val_fft],
+    'math output="v*conj(i)" i=${SOURCES[0]} v=${SOURCES[1]} | %s' % inv_rule]
+
+    rules[par['sumv2i']] = [[ind_fft,val_sqr_fft],
+    'math output="v*conj(i)" i=${SOURCES[0]} v=${SOURCES[1]} | %s' % inv_rule]
+
+    rules[par['sumvar']] = [[ind_fft,val_fft,val_sqr_fft],
         '''
-        math output="(ind*conj(val2)+val2*conj(ind))/2-val*conj(val)"
-        ind=${SOURCES[0]} val=${SOURCES[1]} val2=${SOURCES[2]} |
-        %(inv_rule)s
-        ''' % par]
+        math output="(i*conj(v2)+v2*conj(i))/2-v*conj(v)"
+        i=${SOURCES[0]} v=${SOURCES[1]} v2=${SOURCES[2]} | %s
+        ''' % inv_rule]
 
-    rules[val_var] = [[pairs,sumvar],
+#
+# Variogram rules
+#
+
+def variogram (par,rules):
+
+    paramaters(par,rules)
+
+    rules[par['val']+'_var'] = [[par['pairs'],par['sumvar']],
         'clip2 lower=1 | math output="sumvar/input" sumvar=${SOURCES[1]}']
 
 #
-# Rules for covariance computation
+# General relative variogram rules
+#
+
+def gr_variogram (par,rules):
+
+    paramaters(par,rules)
+
+    sources = [par['pairs'],par['sumvar'],par['sumiv'],par['sumvi']]
+
+    rules[par['val']+'_vgr'] = [sources,
+        '''
+        math output="4*input*sumvar/((sumiv+sumvi)^2)"
+        sumvar=${SOURCES[1]} sumiv=${SOURCES[2]} sumvi=${SOURCES[3]}
+        ''']
+
+#
+# Covariance rules
 #
 
 def covariance (par,rules):
 
-    paramaters(par)
-
-    ind     = par['ind']
-    val     = par['val']
-
-    pairs       = ind + '_pairs'
-    sumvv       = val + '_sumvv'
-    sumiv       = val + '_sumiv'
-    sumvi       = val + '_sumvi'
-    ind_fft     = ind + '_fft'
-    val_cov     = val + '_cov'
-    val_fft     = val + '_fft'
+    paramaters(par,rules)
     
-# FFT rules
+    sources = [par['pairs'],par['sumvv'],par['sumiv'],par['sumvi']]
 
-    rules[ind_fft] = [ind,par['fft_rule']]
-    rules[val_fft] = [val,par['fft_rule']]
-
-# Pair count rule
-
-    rules[pairs] = [ind_fft,
-        'math output="input*conj(input)" | %(inv_rule)s' % par]
-
-# Sum rules
-
-    rules[sumvv] = [val_fft,
-        'math output="input*conj(input)" | %(inv_rule)s' % par]
-
-    rules[sumiv] = [[ind_fft,val_fft],
-        '''
-        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-    rules[sumvi] = [[ind_fft,val_fft],
-        '''
-        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-# Covariance rule
-
-    rules[val_cov] = [[pairs,sumvv,sumiv,sumvi],
+    rules[par['val']+'_cov'] = [sources,
         '''
         clip2 lower=1 | 
         math output="(sumvv-sumiv*sumvi/input)/input"
@@ -279,80 +285,23 @@ def covariance (par,rules):
         ''']
 
 #
-# Rules for correlogram computation
+# Correlogram rules
 #
 
 def correlogram (par,rules):
 
-    paramaters(par)
+    paramaters(par,rules)
 
-    ind     = par['ind']
-    val     = par['val']
-
-    pairs       = ind + '_pairs'
-    sumvv       = val + '_sumvv'
-    sumiv       = val + '_sumiv'
-    sumiv2      = val + '_sumiv2'
-    sumvi       = val + '_sumvi'
-    sumv2i      = val + '_sumv2i'
-    ind_fft     = ind + '_fft'
-    val_cor     = val + '_cor'
-    val_fft     = val + '_fft'
-    val_sqr     = val + '_sqr'
-    val_sqr_fft = val_sqr + '_fft'
-    
-# Data squaring rule
-
-    rules[val_sqr] = [val,'math output="input^2"']
-    
-# FFT rules
-
-    rules[ind_fft]     = [ind,    par['fft_rule']]
-    rules[val_fft]     = [val,    par['fft_rule']]
-    rules[val_sqr_fft] = [val_sqr,par['fft_rule']]
-
-# Pair count rule
-
-    rules[pairs] = [ind_fft,
-        'math output="input*conj(input)" | %(inv_rule)s' % par]
-
-# Sum rules
-
-    rules[sumvv] = [val_fft,
-        'math output="input*conj(input)" | %(inv_rule)s' % par]
-
-    rules[sumiv] = [[ind_fft,val_fft],
-        '''
-        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-    rules[sumiv2] = [[ind_fft,val_sqr_fft],
-        '''
-        math output="ind*conj(val)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-    rules[sumvi] = [[ind_fft,val_fft],
-        '''
-        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-    rules[sumv2i] = [[ind_fft,val_sqr_fft],
-        '''
-        math output="val*conj(ind)" ind=${SOURCES[0]} val=${SOURCES[1]} | 
-        %(inv_rule)s
-        ''' % par]
-
-# Correlogram rule
+    sources = [par['pairs'],par['sumvv'],
+               par['sumiv'],par['sumiv2'],
+               par['sumvi'],par['sumv2i']]
 
     corr_rule = """
                      (sumvv -sumiv*sumvi/input)/
                 sqrt((sumiv2-sumiv*sumiv/input)*(sumv2i-sumvi*sumvi/input))
                 """
 
-    rules[val_cor] = [[pairs,sumvv,sumiv,sumiv2,sumvi,sumv2i],
+    rules[par['val']+'_cor'] = [sources,
         '''
         clip2 lower=1 | 
         math output="%s"
