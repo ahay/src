@@ -19,7 +19,7 @@ def param(par):
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-    if(not par.has_key('ratio')):    par['ratio']=(par['zmax']- par['zmin'])/(par['xmax']- par['xmin'])
+    if(not par.has_key('ratio')):    par['ratio']=(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
     if(not par.has_key('height')):   par['height']=par['ratio']*14
 
 # ------------------------------------------------------------
@@ -152,7 +152,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']-1) )
 
 # wavefield-over-model plots
-def wom(wom,wfld,velo,par):
+def wom(wom,wfld,velo,vmean,par):
 
     chop = wfld+'_chop'
     Flow(chop,wfld,
@@ -165,9 +165,11 @@ def wom(wom,wfld,velo,par):
 
     Flow(wom,[velo,chop],
          '''
+         add add=-%g |
          scale axis=123 |
          spray axis=3 n=%d o=%g d=%g |
-         math w=${SOURCES[1]} output="(input-0.5)+10*w"
-         ''' % (par['nt']/par['jsnap'],
+         math w=${SOURCES[1]} output="0.1*input+w"
+         ''' % (vmean,
+                par['nt']/par['jsnap'],
                 par['ot'],
                 par['dt']*par['jsnap']))

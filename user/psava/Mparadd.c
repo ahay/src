@@ -8,6 +8,7 @@ and output files must be of the same data type.
 An alternative to sfadd is sfmath, which is more versatile, but may be
 less efficient.
 */
+
 /*
   Copyright (C) 2006 Colorado School of Mines
   
@@ -45,27 +46,9 @@ static void check_compat(int        esize,
 
 static void add_float   (bool        collect, 
 			 char        cmode, 
-			 size_t      nbuf, 
+			 off_t       nbuf, 
 			 float*      buf, 
 			 float*      bufi, 
-			 float       scale, 
-			 float       add,
-                         int ompchunk);
-
-static void add_int     (bool        collect, 
-			 char        cmode, 
-			 size_t      nbuf, 
-			 int*        buf, 
-			 int*        bufi, 
-			 float       scale, 
-			 float       add,
-                         int ompchunk);
-
-static void add_complex (bool        collect, 
-			 char        cmode, 
-			 size_t      nbuf, 
-			 sf_complex* buf, 
-			 sf_complex* bufi, 
 			 float       scale, 
 			 float       add,
                          int ompchunk);
@@ -85,8 +68,8 @@ int main (int argc, char* argv[])
     int   mem;
     off_t memsize;
     
-    size_t nbuf,nsiz;
-    char *bufi,*bufo;
+    off_t nbuf,nsiz;
+    float *bufi,*bufo;
     
     int ompchunk;  /* OpenMP data chunk size */
 
@@ -149,72 +132,44 @@ int main (int argc, char* argv[])
 
     if (!sf_getint("memsize",&mem)) mem = 100;
     /* Available memory size (in Mb) */
-    memsize = mem * (1 << 20); /* convert Mb to bytes */
-
-    sf_warning("nsiz=%d",nsiz);
-    nbuf = memsize/esize/2;
+    /* convert Mb to bytes */
+    nbuf = mem/esize*1024*1024;
     if(nsiz>0 && nbuf>nsiz) nbuf=nsiz;
-    sf_warning("nbuf=%d",nbuf);
-
-    bufi = (char*) sf_alloc( nbuf, sizeof(char));
-    bufo = (char*) sf_alloc( nbuf, sizeof(char));
+    sf_warning("nbuf=%ld",nbuf);
+    
+    bufi = sf_floatalloc( nbuf);
+    bufo = sf_floatalloc( nbuf);
     
     /*------------------------------------------------------------*/
-
     type = sf_gettype (out); /* input/output files format */
     
-    for (nbuf /= esize; nsiz > 0; nsiz -= nbuf) {
+    for (; nsiz > 0; nsiz -= nbuf) {
+	sf_warning("nsiz=%ld nbuf=%ld",nsiz,nbuf);
 	if (nbuf > nsiz) nbuf=nsiz;
 
-	switch(type) {
-	    case SF_FLOAT:
-		for (j=0; j < nin; j++) {
-		    collect = (bool) (j != 0);
-		    sf_floatread((float*) bufi,nbuf,in[j]);	    
-		    add_float(collect, cmode, nbuf,
-			      (float*) bufo, (float*) bufi, 
-			      scale[j], add[j],
-			      ompchunk
-			);
-		}
-		sf_floatwrite((float*) bufo,nbuf,out);
-		break;
-	    case SF_COMPLEX:
-		for (j=0; j < nin; j++) {
-		    collect = (bool) (j != 0);
-		    sf_complexread((sf_complex*) bufi,nbuf,in[j]);
-		    add_complex(collect, cmode, nbuf,
-				(sf_complex*) bufo, (sf_complex*) bufi, 
-				scale[j], add[j],
-				ompchunk
-			);
-		}
-		sf_complexwrite((sf_complex*) bufo,nbuf,out);
-		break;
-	    case SF_INT:
-		for (j=0; j < nin; j++) {
-		    collect = (bool) (j != 0);
-		    sf_intread((int*) bufi,nbuf,in[j]);
-		    add_int(collect, cmode, nbuf,
-			    (int*) bufo,(int*) bufi,
-			    scale[j], add[j],
-			    ompchunk
-			);
-		}
-		sf_intwrite((int*) bufo,nbuf,out);
-		break;
-	    default:
-		sf_error("wrong type");
-		break;
-	}	
+	for (j=0; j < nin; j++) {
+	    collect = (bool) (j != 0);
+	    
+	    sf_floatread(bufi,nbuf,in[j]);	    
+	    
+	    add_float(collect, cmode, nbuf,
+		      bufo, bufi, 
+		      scale[j], add[j],
+		      ompchunk
+		);
+	}
+	sf_floatwrite(bufo,nbuf,out);
     }
+
+    free(bufi);
+    free(bufo);
     exit (0);
 }
 
 /*------------------------------------------------------------*/
 static void add_float (bool   collect, 
 		       char   cmode, 
-		       size_t nbuf, 
+		       off_t  nbuf, 
 		       float* bufo, 
 		       float* bufi, 
 		       float  scale, 
@@ -259,118 +214,6 @@ static void add_float (bool   collect,
 #endif
 	for(jbuf=0;jbuf<nbuf;jbuf++){
 	    bufo[jbuf] = scale*(bufi[jbuf] + add);
-	}
-    }
-}
-
-/*------------------------------------------------------------*/
-static void add_int (bool   collect, 
-		     char   cmode, 
-		     size_t nbuf, 
-		     int*   bufo, 
-		     int*   bufi, 
-		     float  scale, 
-		     float  add,
-		     int ompchunk)
-{
-    size_t jbuf;
-    float f;
-
-    if (collect) {
-	switch (cmode) {
-	    case 'p':
-	    case 'm':
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
-#endif
-		for(jbuf=0;jbuf<nbuf;jbuf++){
-		    bufo[jbuf] *= scale*( (float) bufi[jbuf] + add);
-		}
-		break;
-	    case 'd':
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf,f) shared(scale,add,bufi) 
-#endif
-		for(jbuf=0;jbuf<nbuf;jbuf++){
-		    f = scale*( (float) bufi[jbuf] + add);
-		    if (f != 0.) bufo[jbuf] /= f;
-		}
-		break;
-	    default:
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
-#endif
-		for(jbuf=0;jbuf<nbuf;jbuf++){
-		    bufo[jbuf] +=scale*( (float) bufi[jbuf] + add);
-		}
-		break;
-	}
-    } else {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(jbuf) shared(scale,add,bufi) 
-#endif
-	for(jbuf=0;jbuf<nbuf;jbuf++){
-	    bufo[jbuf] = scale*( (float) bufi[jbuf] + add);
-	}
-    }
-}
-
-/*------------------------------------------------------------*/
-static void add_complex (bool        collect, 
-			 char        cmode, 
-			 size_t      nbuf, 
-			 sf_complex* bufo, 
-			 sf_complex* bufi, 
-			 float       scale, 
-			 float       add,
-                         int ompchunk)
-{
-    size_t j;
-    sf_complex c;
-    
-    for (j=0; j < nbuf; j++) {
-	c = bufi[j];
-#ifdef SF_HAS_COMPLEX_H
-	c += add;
-#else
-	c.r += add;
-#endif
-	if (1. != scale) {
-#ifdef SF_HAS_COMPLEX_H
-	    c *= scale;
-#else
-	    c = sf_crmul(c,scale);
-#endif
-	}
-	if (collect) {
-	    switch (cmode) {
-		case 'p':
-		case 'm':
-#ifdef SF_HAS_COMPLEX_H
-		    bufo[j] *= c;
-#else
-		    bufo[j] = sf_cmul(bufo[j],c);
-#endif
-		    break;
-		case 'd':
-		    if (cabsf(c) != 0.) {
-#ifdef SF_HAS_COMPLEX_H			
-			bufo[j] /= c;
-#else
-			bufo[j] = sf_cdiv(bufo[j],c);
-#endif	
-		    }
-		    break;
-		default:
-#ifdef SF_HAS_COMPLEX_H	
-		    bufo[j] += c;
-#else
-		    bufo[j] = sf_cadd(bufo[j],c);
-#endif
-		    break;
-	    }
-	} else {
-	    bufo[j] = c;
 	}
     }
 }
