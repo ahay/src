@@ -139,9 +139,11 @@ sf_file sf_input (/*@null@*/ const char* tag)
     }
 /*    setbuf(file->stream,file->buf); */
 
+    /* create a parameter table */
     file->pars = sf_simtab_init (tabsize);
     file->head = tmpfile();
 
+    /* read the parameter table from the file */
     sf_simtab_input (file->pars,file->stream,file->head);
 
     if (NULL == filename) {

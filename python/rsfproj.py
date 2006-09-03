@@ -245,7 +245,9 @@ class Project(Environment):
                          'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
                          'XAUTHORITY':
-                         os.path.join(os.environ.get('HOME'),'.Xauthority'),
+                         os.environ.get('XAUTHORITY',
+                                        os.path.join(os.environ.get('HOME'),
+                                                     '.Xauthority')),
                          'DISPLAY': os.environ.get('DISPLAY'),
                          'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
                          'HOME': os.environ.get('HOME'),

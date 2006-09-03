@@ -77,9 +77,10 @@ Depends2('install',map(lambda x: x+'.install',
 #     }
 #     ''')
 
-Paper('vancouver',lclass='beamer',use='helvet,hyperref',
+Paper('vancouver',lclass='beamer',use='helvet,hyperref,listings',
       include=r'''
       \mode<presentation>{\usetheme{Madrid}}
-      ''')
+      \newcommand{\TEXMF}{%s/texmf}
+      ''' % os.environ.get('HOME'))
 
 End(use='hyperref')
