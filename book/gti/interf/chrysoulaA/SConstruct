@@ -47,17 +47,12 @@ Flow('del',None,
      math output="x1" |
      math output="%(pi)g*%(fo)g*(input-%(To)g)"
      ''' % par)
-
-Flow('wav','del',
-     '''
-     math output="-2*2*%(pi)g*%(fo)g*input*exp(-input*input)"
-     ''' % par )
-
+Flow(  'wav','del','math output="-2*2*%(pi)g*%(fo)g*input*exp(-input*input)"' % par )
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # source coordinates
-zt = par['oz']+90*par['lo']
+zt = par['oz']+85*par['lo']
 xt = par['ox']+par['nx']/2*par['dx']
 
 zs = par['lo']
@@ -192,67 +187,62 @@ Plot('vv','add add=-3000 | clip clip=500 | add add=3000 |' +
 Plot('rm',fdmod.cgrey('allpos=y pclip=100 wantscalebar=y',par))
 
 Result('vx',['vx','rr',     'ss'],'Overlay')
-Result('vo',['vo','rr',     'ss'],'Overlay')
-Result('vv',['vv','rr',     'ss'],'Overlay')
 Result('rm',['rm','rr','qq','ss'],'Overlay')
 
 # ------------------------------------------------------------
-# F-D modeling
-
-fdmod.amodel('dx','wx','wav','vx','rm','ss','rr','free=n dens=n',par)
-
-fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-Flow('to','do dx',
-     '''
-     add ${SOURCES[1]} scale=1,-1 |
-     window f2=%(kt)d |
-     pad end2=%(kt)d |
-     put o2=%(ot)g
-     ''' % par)
-Result('wo',            fdmod.wgrey('pclip=99',par))
-Result('to','transp|' + fdmod.dgrey('',par))
-
-fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
-Flow('tt','dd dx',
-     '''
-     add ${SOURCES[1]} scale=1,-1 |
-     window f2=%(kt)d |
-     pad end2=%(kt)d |
-     put o2=%(ot)g
-     ''' % par)
-Result('ww',            fdmod.wgrey('pclip=99',par))
-Result('tt','transp|' + fdmod.dgrey('',par))
-
-fdmod.wom('wom','ww','vv',par)
-Result(   'wom',fdmod.wgrey('pclip=95',par))
-
-# ------------------------------------------------------------
-# RTM
-
 # source wavefield
 Flow('dw','wav',
      '''
-	pad beg2=%d n2out=%d |
-	put o2=%g d2=%g | 
-	transp
-	''' % (par['nr']/2,par['nr'],par['or'],par['dr']))
+     pad beg2=%d n2out=%d |
+     put o2=%g d2=%g | 
+     transp
+     ''' % (par['nr']/2,par['nr'],par['or'],par['dr']))
 
-fdmod.rtm('tio','dw','do','vx','rm','rr','rr','qq','free=y dens=n',2000,par)
-fdmod.rtm('tii','dw','dd','vx','rm','rr','rr','qq','free=y dens=n',2000,par)
+# ------------------------------------------------------------
+fdmod.amodel('dx','wx','wav','vx','rm','ss','rr','free=n dens=n',par)
 
-for i in ('io','ii'):
-    Flow(i,'t'+i,
+# ------------------------------------------------------------
+for kt in ('to','tt'):
+    if(kt=='to'):
+        kw='wo'
+        kd='do'
+        kv='vo'
+        ki='io'
+    else:
+        kw='ww'
+        kd='dd'
+        kv='vv'
+        ki='ii'
+
+    Result(kv,[kv,'rr',     'ss'],'Overlay')
+
+    # FDM
+    fdmod.amodel(kd,kw,'wav',kv,'rm','ss','rr','free=n dens=n',par)
+    Flow(kt,[kd,'dx'],
+         '''
+         add ${SOURCES[1]} scale=1,-1 |
+         window f2=%(kt)d |
+         pad end2=%(kt)d |
+         put o2=%(ot)g
+         ''' % par)
+    Result(kw,            fdmod.wgrey('pclip=99',par))
+    Result(kt,'transp|' + fdmod.dgrey('',par))
+
+    # RTM
+    fdmod.rtm('t'+ki,'dw',kd,'vx','rm','rr','rr','qq','free=y dens=n',2000,par)
+    Flow(ki,'t'+ki,
          '''
          put
          n1=%d o1=%g d1=%g
          n2=%d o2=%g d2=%g 
          ''' % (np,op,dp,nq,oq,dq) )
+    
+    Plot(ki,fdmod.cgrey('pclip=100 wantscalebar=y',par))
+    Result(ki,[ki,'ss','rr'],'Overlay')
 
-Plot('io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
-Plot('ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
-
-Result('io',['io','ss','rr'],'Overlay')
-Result('ii',['ii','ss','rr'],'Overlay')
+# ------------------------------------------------------------
+fdmod.wom('wom','ww','vv',par['co'],par)
+Result(   'wom',fdmod.wgrey('pclip=95',par))
 
 End()
 

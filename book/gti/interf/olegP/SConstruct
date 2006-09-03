@@ -186,7 +186,7 @@ Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('tt','transp|' + fdmod.dgrey('',par))
 
-fdmod.wom('wom','ww','vv',par)
+fdmod.wom('wom','ww','vv',par['co'],par)
 Result(   'wom',fdmod.wgrey('pclip=95',par))
 
 # ------------------------------------------------------------
@@ -210,11 +210,11 @@ for k in ('jj','jo'):
 
     Flow(k,u,
          '''
+	window min2=0.1 |
          put
          n1=%d o1=%g d1=%g label1=x unit1=m
          n2=%d o2=%g d2=%g label2=z unit2=m
-         n3=%d o3=%g d3=%g label3=t unit3=s |
-         window min3=0.1
+         n3=%d o3=%g d3=%g label3=t unit3=s
          ''' % (nq,oq,par['dx'],
                 nq,zt-nq/2*par['dz'],par['dz'],
                 par['nt'], par['ot'],par['dt']) )

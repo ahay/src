@@ -202,7 +202,7 @@ Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
 Result('ww',            fdmod.wgrey('pclip=99',par))
 Result('tt','transp|' + fdmod.dgrey('',par))
 
-fdmod.wom('wom','ww','vv',par)
+fdmod.wom('wom','ww','vv',par['co'],par)
 Result(   'wom',fdmod.wgrey('pclip=95',par))
 
 # ------------------------------------------------------------

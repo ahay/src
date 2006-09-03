@@ -6,6 +6,7 @@ from rsfproj import *
 import fdmod,zomig
 import math
 
+# ------------------------------------------------------------
 par = {
     'lo':3,    # wavelength (m)
     'co':3000, # velocity (m/s)
@@ -46,17 +47,12 @@ Flow('del',None,
      math output="x1" |
      math output="%(pi)g*%(fo)g*(input-%(To)g)"
      ''' % par)
-
-Flow('wav','del',
-     '''
-     math output="-2*2*%(pi)g*%(fo)g*input*exp(-input*input)"
-     ''' % par )
-
+Flow(  'wav','del','math output="-2*2*%(pi)g*%(fo)g*input*exp(-input*input)"' % par )
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # source coordinates
-zt = par['oz']+90*par['lo']
+zt = par['oz']+85*par['lo']
 xt = par['ox']+par['nx']/2*par['dx']
 
 ls = 6*par['lo']
@@ -154,46 +150,39 @@ Plot('vv','add add=-3000 | clip clip=500 | add add=3000 |' +
      fdmod.cgrey('allpos=y bias=2500 pclip=100 color=j wantscalebar=y',par))
 Plot('rm',fdmod.cgrey('allpos=y pclip=100 wantscalebar=y',par))
 
-Result('vo',['vo','rr','qq','ss'],'Overlay')
-Result('vv',['vv','rr','qq','ss'],'Overlay')
 Result('rm',['rm','rr','qq','ss'],'Overlay')
 
 # ------------------------------------------------------------
-# F-D modeling
-
-fdmod.amodel('do','wo','wav','vo','rm','ss','rr','free=n dens=n',par)
-Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
-Result('wo',            fdmod.wgrey('pclip=99',par))
-Result('to','transp|' + fdmod.dgrey('pclip=99',par))
-
-fdmod.amodel('dd','ww','wav','vv','rm','ss','rr','free=n dens=n',par)
-Flow('tt','dd','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
-Result('ww',            fdmod.wgrey('pclip=99',par))
-Result('tt','transp|' + fdmod.dgrey('',par))
-
-fdmod.wom('wom','ww','vv',par)
-Result(   'wom',fdmod.wgrey('pclip=95',par))
-
-# ------------------------------------------------------------
-# RTM
-
-fdmod.zom('io','uo','to','vo','rm','rr','qq','free=n dens=n',par)
-Plot(  'io',fdmod.cgrey('pclip=100 wantscalebar=y',par))
-Result('io',['io','ss','rr'],'Overlay')
-
-fdmod.zom('ii','uu','tt','vo','rm','rr','qq','free=n dens=n',par)
-Plot(  'ii',fdmod.cgrey('pclip=100 wantscalebar=y',par))
-Result('ii',['ii','ss','rr'],'Overlay')
-# ------------------------------------------------------------
-
-for k in ('jj','jo'):
-
-    if (k=='jj'):
-        u='uu'
+for kt in ('to','tt'):
+    if(kt=='to'):
+        kw='wo'
+        kd='do'
+        kv='vo'
+        ki='io'
+        ku='uo'
+        kj='jo'
     else:
-        u='uo'
+        kw='ww'
+        kd='dd'
+        kv='vv'
+        ki='ii'
+        ku='uu'
+        kj='jj'
 
-    Flow(k,u,
+    Result(kv,[kv,'rr',     'ss'],'Overlay')
+
+    # FDM
+    fdmod.amodel(kd,kw,'wav',kv,'rm','ss','rr','free=n dens=n',par)
+    Flow(kt,kd,'window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
+    Result(kw,            fdmod.wgrey('pclip=99' ,par))
+    Result(kt,'transp|' + fdmod.dgrey('pclip=100',par))
+
+    # RTM
+    fdmod.zom(ki,ku,kt,'vo','rm','rr','qq','free=n dens=n',par)    
+    Plot(  ki,fdmod.cgrey('pclip=100 wantscalebar=y',par))
+    Result(ki,[ki,'ss','rr'],'Overlay')
+
+    Flow(kj,ku,
          '''
          put
          n1=%d o1=%g d1=%g label1=x unit1=m
@@ -203,7 +192,7 @@ for k in ('jj','jo'):
          ''' % (nq,oq,par['dx'],
                 nq,zt-nq/2*par['dz'],par['dz'],
                 par['nt'], par['ot'],par['dt']) )
-    Result(k,
+    Result(kj,
            '''
            window j3=10 | transp |
            grey title="" gainpanel=a screenratio=1
@@ -211,5 +200,9 @@ for k in ('jj','jo'):
            min2=%g max2=%g
            ''' % (par['zmin'],par['zmax'],
                   par['xmin'],par['xmax']))
+    
+# ------------------------------------------------------------
+fdmod.wom('wom','ww','vv',par['co'],par)
+Result(   'wom',fdmod.wgrey('pclip=99',par))
 
 End()
