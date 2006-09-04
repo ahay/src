@@ -210,7 +210,7 @@ Theoretically about $2n$ comparisons
 are expected to find the median of a list of $n$ values.
 The code below (from Sergey Fomel)
 for this task is \texttt{quantile}.
-\moddex{quantile}{percentile}
+\moddex{quantile}{percentile}{22}{48}{filt/lib}
 
 %\par
 %An interesting application of medians is eliminating \bx{noise spikes}
@@ -269,7 +269,7 @@ and in other applications, the weighting operator $\bold W$
 may be an operator,
 like the derivative along a data recording trajectory
 (so then $\bold W \ne \bold W'$).
-\par\newslide
+%\par\newslide
 \def\padarrow{\quad\longleftarrow\quad}
 \begin{tabbing}
 mmmmmm \= mmmmmm \= mmmmm \kill
@@ -414,6 +414,7 @@ in equation (\ref{eqn:gradwt}).
 \bold W \eq \ {\bf diag} \left(  {1\over\sqrt{\sqrt{1+r_i^2/\bar r^2}}}  \right)
 \label{eqn:fourthroot}
 \end{equation}
+\begin{comment}
 \par
 % begin Sergey's insertion
 %  XXX
@@ -428,6 +429,7 @@ set of arguments from the \texttt{solver()} subroutine
 the iterative scheme.
 \moddex{solver_irls}{iteratively reweighted optimization} 
 % end Sergey's insertion
+\end{comment}
 \par
 We can ask whether {\tt cgstep()}, which was not designed
 with nonlinear least-squares in mind, is doing the right thing
