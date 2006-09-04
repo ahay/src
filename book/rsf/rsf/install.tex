@@ -43,33 +43,36 @@ Microsoft's \href{http://www.microsoft.com/technet/interopmigration/unix/sfu/def
 
 \subsection{Environmental variables}
 
-Set the \texttt{RSFROOT} environmental variable to the directory where
-you want RSF installed. To use RSF effectively, you may also want to add
-\texttt{\$RSFROOT/bin} to your \texttt{PATH} environmental variable, set
-\texttt{PYTHONPATH} to \texttt{\$RSFROOT/lib}, add set \texttt{DATAPATH} to
-the directory for storing temporary data files. 
+\begin{enumerate}
+\item  Set the \texttt{RSFROOT} environmental variable to the directory where you want RSF installed.
+\item Set the \texttt{PYTHONPATH} environmental variable to include \texttt{\$RSFROOT/lib}. 
+\end{enumerate}
 
-Example configuration for \texttt{csh} and \texttt{tcsh}:
+You may also want to add \texttt{\$RSFROOT/bin} to your \texttt{PATH}
+environmental variable add set \texttt{DATAPATH} to the directory for
+storing temporary data files. 
+
+Example configuration for csh and tcsh:
 \begin{verbatim}
 setenv RSFROOT /usr/local/rsf
-set path = ($path $RSFROOT/bin)
 if ($?PYTHONPATH) then
    setenv PYTHONPATH ${PYTHONPATH}:$RSFROOT/lib
 else
    setenv PYTHONPATH $RSFROOT/lib
 endif
+set path = ($path $RSFROOT/bin)
 setenv DATAPATH /var/tmp/
 \end{verbatim}
 
 Example configuration for \texttt{bash}:
 \begin{verbatim}
 export RSFROOT=/usr/local/rsf
-export PATH=$PATH:$RSFROOT/bin
 if [ -n "$PYTHONPATH" ]; then
    export PYTHONPATH=${PYTHONPATH}:$RSFROOT/lib
 else
    export PYTHONPATH=$RSFROOT/lib
 fi
+export PATH=$PATH:$RSFROOT/bin
 export DATAPATH=/var/tmp/
 \end{verbatim}
 
