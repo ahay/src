@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int n1, n2, n12, n3, i3, nd, id, niter, iter, nw, nj;
-    float **dat, *dip, *inc, **aa, *b;
+    float **dat, *dip, *dip0, *inc, **aa, *b;
     bool verb;
     sf_file in, out;
 
@@ -43,6 +43,7 @@ int main(int argc, char* argv[])
 
     dat = sf_floatalloc2(n1,n2);
     dip = sf_floatalloc(nd);
+    dip0 = sf_floatalloc(nd);
     inc = sf_floatalloc(nd);
     aa = sf_floatalloc2(nd,n12);
     b = sf_floatalloc(n12);
@@ -64,10 +65,17 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
     
+    if (!sf_getfloats("dips",dip0,nd)) { 
+	/* initial dips */
+	for (id=0; id < nd; id++) {
+	    dip0[id] = (nd > 1)? -1.+2.*id/(nd-1): 0.;
+	}
+    }
+
     for (i3=0; i3 < n3; i3++) {
 	/* initialize dips */
 	for (id=0; id < nd; id++) {
-	    dip[id] = (nd > 1)? -1.+2.*id/(nd-1): 0.;
+	    dip[id] = dip0[id];
 	}
 	
 	for (iter=0; iter < niter; iter++) {
