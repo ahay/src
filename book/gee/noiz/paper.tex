@@ -491,7 +491,7 @@ A plot of this function is found in Figure \ref{fig:cauchy}.
 \par
 Because the second derivative is not positive everywhere,
 the Cauchy function introduces the possibility of multiple solutions,
-but because of the good results we see in Figure \ref{fig:burst90},
+but because of the good results we see in Figure \ref{fig:burst},
 you might like to try it anyway.
 Perhaps the reason it seems to work so well is that
 it uses mostly residuals of ``average size,''
@@ -506,27 +506,28 @@ $\bar r$.
 Module \texttt{irls} \vpageref{/prog:irls} supplies two useful
 weighting functions that can be interchanged as arguments to the
 reweighted scheme \vpageref{/prog:solver_irls}.
-\moddex{irls}{weighting functions for iterative reweighting}
+\moddex{irls}{weighting functions for iterative reweighting}{40}{72}{filt/lib}
 % end Sergey's insertion
 %\end{notforlecture}
 
 
 
 \section{NOISE BURSTS}
+\inputdir{burst}
 Sometimes noise comes in isolated \bx{spikes}.
 Sometimes it comes in \bx{bursts} or bunches (like grapes).
-Figure \ref{fig:burst90} is a simple one-dimensional example
+Figure \ref{fig:burst} is a simple one-dimensional example
 of a periodic signal plus spikes and bursts.
 Three processes are applied to this data,
 \bx{despike} and two flavors of \bx{deburst}.
 Here we will examine the processes used.
-(For even better results, see Figure \ref{fig:pefdeburst90}.)
-\activeplot{burst90}{width=6.0in,height=2.25in}{ER}{
-        Top is synthetic data with noise spikes and bursts.
-        (Most bursts are a hundred times larger than shown.)
-        Next is after running medians.
-        Bottom is after the two processes described here.
-        }
+(For even better results, see Figure \ref{fig:pefdeburst}.)
+\plot{burst}{width=6.0in,height=2.25in}{
+  Top is synthetic data with noise spikes and bursts.
+  (Most bursts are a hundred times larger than shown.)
+  Next is after running medians.
+  Bottom is after the two processes described here.
+}
 
 \subsection{De-spiking with median smoothing}
 
@@ -534,7 +535,7 @@ Here we will examine the processes used.
 \sx{median smoothing}
 The easiest method to remove spikes is to pass a moving window
 across the data and output the median value in the window.
-This method of despiking was done in Figure \ref{fig:burst90},
+This method of despiking was done in Figure \ref{fig:burst},
 which shows a problem of the method:
 The window is not long enough to clean the long bursts,
 but it is already so long
@@ -563,11 +564,11 @@ from the observed data $\bold d$ with the fitting problem
 where $\bold W$ is a diagonal matrix with weights sprinkled along the diagonal,
 and where $\nabla^2$ is a matrix
 with a roughener like $(1,-2,1)$ distributed along the diagonal.
-This is shown in Figure \ref{fig:burst90} with $\epsilon = 1$.
+This is shown in Figure \ref{fig:burst} with $\epsilon = 1$.
 Experience showed similar performances
 for $0 \approx \nabla \bold h$ and $0 \approx \nabla^2 \bold h$.
 Better results, however, will be found later in Figure
-\ref{fig:pefdeburst90},
+\ref{fig:pefdeburst},
 where the $\nabla^2$ operator is replaced
 by an operator designed to predict this very predictable signal.
 
@@ -740,7 +741,7 @@ For this choice in subroutine \texttt{rnpef1()}, I chose the median.
 We can use the same technique to throw out fitting equations
 from defective data that we use for missing data.
 Recall the theory and discussion leading up to 
-Figure \ref{fig:burst90}.
+Figure \ref{fig:burst}.
 There we identified defective data by its lack
 of continuity.  We used the fitting equations
 $0\approx w_i (y_{i+1} -2y_i + y_{i-1})$
@@ -755,8 +756,8 @@ Having the PEF, we use it to fill in the missing data.
 
 \moddex{pefest}{estimate PEF in 1-D avoiding bad data}
 The result of this ``PEF-deburst'' processing
-is shown in Figure \ref{fig:pefdeburst90}.
-\activeplot{pefdeburst90}{width=6.0in,height=3in}{ER}{
+is shown in Figure \ref{fig:pefdeburst}.
+\activeplot{pefdeburst}{width=6.0in,height=3in}{ER}{
         Top is synthetic data with noise spikes and bursts.
         (Some bursts are fifty times larger than shown.)
         Next is after running medians.

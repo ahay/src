@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     char *buf, *buf2, *opt, copt, key[3];
 /* Want them to be arbitrary, neither float nor complex */
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
-    int i, dim, dim1, dim2, mem;
+    int i, dim, dim1, dim2;
     int n[SF_MAX_DIM], esize, which;
     off_t pos=0, pos3=0, memsize;
     size_t n1, n2, n3, size, *k1 = NULL, *k2 = NULL;
@@ -72,9 +72,8 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
-    if (!sf_getint("memsize",&mem)) mem = 1; 
+    memsize = sf_memsize(1);
     /* Available memory size (in Mb) */
-    memsize = mem * (1 << 20); /* convert Mb to bytes */
    
     if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
     for (i=0, mask=1; i < dim; i++, mask <<= 1) {

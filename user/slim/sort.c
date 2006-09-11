@@ -62,7 +62,8 @@ static float *dataloader(sf_file in, int n, bool complex_data)
 
 int main(int argc, char* argv[])
 {
-  int n1, mem, memsize, n, nbchunks, nfit, i, j;
+  int n1, n, nbchunks, nfit, i, j;
+  off_t memsize;
   float *data;
   float *tmp;
   FILE **fp;
@@ -82,9 +83,8 @@ int main(int argc, char* argv[])
   /* standard output */
   out = sf_output("out");
   
-  if (!sf_getint("memsize",&mem)) mem = 500;
+  memsize = sf_memsize(500);
   /* Available memory size (in Mb) */
-  memsize = mem * (1 << 20); /* convert Mb to bytes */
   
   if (!sf_getbool("ascmode",&ascmode)) ascmode = false;
   /* y=ascending; n=descending */

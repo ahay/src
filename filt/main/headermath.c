@@ -31,7 +31,7 @@ An addition operation can be performed by sfstack.
 
 int main(int argc, char* argv[])
 {
-    int i, i1, i2, n1, n2, n3, n, nt, len, mem, nkey;
+    int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
     sf_file in, out;
     off_t memsize;
     char *eq, *output, *key, *arg;
@@ -85,10 +85,7 @@ int main(int argc, char* argv[])
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Describes the output in a mathematical notation. */
 
-    if (!sf_getint("memsize",&mem)) mem = 100;
-    /* Available memory size (in Mb) */
-    memsize = mem * (1 << 20); /* convert Mb to bytes */
-
+    memsize = sf_memsize(100);
     len = sf_math_parse (output,out,SF_FLOAT);
     
     /* number of traces for optimal I/O */
