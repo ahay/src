@@ -642,10 +642,11 @@ by an operator designed to predict this very predictable signal.
 
 
 \section{MEDIAN BINNING}
+\inputdir{rbst}
 We usually add data into bins.
 When the data has erratic noise,
 we might prefer to take the median of the values in each bin.
-Subroutine \texttt{medianbin2()}
+Subroutine \texttt{medbin()}
 (in the library, but not listed here)
 performs the chore.
 It is a little tricky because we first need to find out
@@ -658,7 +659,7 @@ A small annoyance with medians
 is that when bins have an even number of points,
 like two, there no middle.
 To handle this problem,
-subroutine \texttt{medianbin2()}
+subroutine \texttt{medbin()}
 uses the average of the middle two points.
 
 %\progdex{medianbin2}{median in bin}      %XXX used for one figure.
@@ -677,12 +678,12 @@ If our search target is small,
 recalculate the residual with the high-resolution model
 and reexamine the suspicious data values.
 
-\activeplot{medbin90}{width=6in,height=3.8in}{ER}{
-        Galilee water depth binned and roughened.
-        Left is binning with the mean, right with the median.
-        }
+\plot{medbin}{width=6in,height=3.8in}{
+  Galilee water depth binned and roughened.
+  Left is binning with the mean, right with the median.
+}
 \par
-Figure \ref{fig:medbin90} compares the water depth in the Sea of Galilee
+Figure \ref{fig:medbin} compares the water depth in the Sea of Galilee
 with and without median binning.
 The difference does not seem great here
 but it is more significant than it looks.
@@ -693,7 +694,7 @@ it often records an erroneously near-zero depth.
 This will make a mess of our later processing
 (missing data fill)
 unless we cast out those data values.
-This was done by median binning in Figure \ref{fig:medbin90}
+This was done by median binning in Figure \ref{fig:medbin}
 but the change is disguised by the many empty bins.
 
 \par
@@ -1693,7 +1694,7 @@ which tends to leave data-acquisition tracks in the resulting image.
 
 \par
 The Galilee data set was introduced in chapter \ref{iin/paper:iin}
-and recently plotted in Figure~\ref{fig:medbin90}.
+and recently plotted in Figure~\ref{fig:medbin}.
 Actually, that figure is a view of 2-D model space.
 One of the first things I learned (the hard way) is the importance
 of viewing both the model space and the residuals in data space.
@@ -1750,7 +1751,7 @@ the fitting goal (\ref{eq0}) takes an average.
 %The bin size is 60 $\times$ 50 m so that the number of data points per bin
 %is roughly constant and the aspect ratio of the lake is roughly preserved
 %in the number of samples in the vertical and horizontal directions. 
-Figure~\ref{fig:medbin90}
+Figure~\ref{fig:medbin}
 is a display of simple binning of the raw data.
 (Some data points are outside the lake.
 These must represent navigation errors.)
