@@ -1,0 +1,17 @@
+Sergey Fomel <sergey.fomel@beg.utexas.edu> 
+Gilles Hennenfent <ghennenfent@eos.ubc.ca>
+Jim Jennings <jim.jennings@beg.utexas.edu> 
+Henryk Modzelewski <henryk_modzelewski@mac.com>
+Colin Russell <crussell@eos.ubc.ca>
+Paul Sava <psava@mines.edu>
+
+Vplot authors:
+
+Steve Cole
+Joe Dellinger
+Dave Nichols
+
+Includes kiss_fft by Mark Borgerding
+Includes mt19937ar by Takuji Nishimura and Makoto Matsumoto
+Includes predicates by Jonathan Richard Shewchuk
+

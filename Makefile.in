@@ -1,0 +1,12 @@
+
+all:
+	$(SCONS)
+
+install:
+	$(SCONS) install
+
+clean:
+	$(SCONS) -c
+
+distclean:
+	$(SCONS) -c install

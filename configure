@@ -1,0 +1,61 @@
+#! /bin/sh
+
+python=`which python`
+if test ! -n "$python"; then
+    python="no"
+fi
+echo "Checking for Python ... $python"
+if test "$python" == "no"; then
+    echo "Please install Python before proceeding: http://www.python.org"
+    exit 1
+fi
+
+root=${RSFROOT}
+if test ! -n "$root"; then
+    root="no"
+fi
+echo "Checking for RSFROOT ... $root"
+if test "$root" == "no"; then
+    root=$HOME/RSF
+    if test ! -d $root; then
+	mkdir $root
+    fi
+    echo "I am temporarily setting RSFROOT to \"$root\"."
+    echo "Please adjust your shell settings to set it permanently!"
+    export RSFROOT=$root
+fi
+export PYTHONPATH=${RSFROOT}/lib
+
+scons=`which scons`
+if test ! -n "$scons"; then
+    scons="no"
+fi
+echo "Checking for SCons ... $scons"
+if test "$scons" == "no"; then
+    here=`pwd`
+    cd scons
+    tar xvzf scons-*.tar.gz > /dev/null
+    cd `ls -d scons-* | grep '[^mz]$'`
+    $python setup.py install --prefix=${RSFROOT} > /dev/null
+    cd $here
+    scons="${RSFROOT}/bin/scons"
+    if test ! -x "$scons"; then
+	scons="failed"
+    fi
+    echo "Installing SCons ... $scons"
+    if test "$scons" == "failed"; then
+	echo "SCons installation failed."
+	echo "Please check your Python installation!"
+	exit 2
+    fi
+fi
+
+echo "Running $scons config..."
+rm -rf .scon* config.py
+echo "------------------------"
+$scons config
+echo "------------------------"
+echo "Done with configuration."
+echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile
+cat Makefile.in >> Makefile
+exit 0
