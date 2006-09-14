@@ -78,13 +78,21 @@ Plot('rm',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
 Result('vm',['vm','ss','rr'],'Overlay')
 Result('rm',['rm','ss','rr'],'Overlay')
 
+Flow('mask',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nx)d d1=%(dx)g o1=%(ox)g k1=50 l1=351
+     n2=%(nt)d d2=%(dt)g o2=%(ot)g |
+     smooth rect1=25 rect2=25 repeat=3
+     ''' % par)
+
 # ------------------------------------------------------------
 # finite-differences modeling
 fdmod.amodel('do','wo','wav','vm','rm','ss','rr','dens=n',par)
 fdmod.amodel('dd','ww','wav','vm','rm','ss','rr','dens=y',par)
 
 # receiver data
-Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
+Flow('dx','dd do mask','math a=${SOURCES[0]} b=${SOURCES[1]} m=${SOURCES[2]} "output=m*(a-b)"')
 # source data
 Flow('dw',None,
          '''
@@ -196,5 +204,47 @@ for i in range(21):
     dim = 'dit' + str(i)
     dat = 'dat' + str(i)
     Result(dat,[dst,drt,dim],'SideBySideAniso')
+
+# ------------------------------------------------------------
+
+np = 20
+allcubs = map(lambda x: 'cubs%d' % x,range(par['nx']))
+allcubr = map(lambda x: 'cubr%d' % x,range(par['nx']))
+
+Flow('pads','dst7','pad beg2=%d end2=%d' %(np,np) )
+Flow('padr','drt7','pad beg2=%d end2=%d' %(np,np) )
+
+for j in range(par['nx']):
+    Flow('cubs'+str(j),'pads','window f2=%d n2=%d | put o2=0' %(j,2*np) )
+    Flow('cubr'+str(j),'padr','window f2=%d n2=%d | put o2=0' %(j,2*np) )
+
+Flow('cubs',allcubs,'cat axis=3 space=n ${SOURCES[0:%(nx)d]}' % par, stdin=0)
+Flow('cubr',allcubr,'cat axis=3 space=n ${SOURCES[0:%(nx)d]}' % par, stdin=0)
+
+njump = 20
+Flow('rads','cubs','window j3=%d | radon verb=y adj=y p0=-1 np=200 dp=0.01' % njump)
+Flow('radr','cubr','window j3=%d | radon verb=y adj=y p0=-1 np=200 dp=0.01' % njump)
+Flow('radi','rads radr','add mode=p ${SOURCES[1]}')
+
+for k in ('s','r','i'):
+    all = 'rad' + k
+    grp = 'grp' + k
+    bar = 'rad' + k + 'bar'
+
+    Flow([grp,bar],all,
+         'byte bar=${TARGETS[1]} gainpanel=a pclip=100')
+
+    for i in range( par['nx']/njump):
+        tit = str(i*par['dx']*njump)
+        
+        Plot(grp+str(i),[grp,bar],
+             'window n3=1 f3=%d | grey bar=${SOURCES[1]} title=%s' % (i,tit) )
+
+for i in range(par['nx']/njump):
+    grps = 'grps' + str(i)
+    grpr = 'grpr' + str(i)
+    grpi = 'grpi' + str(i)
+    grpa = 'grpa' + str(i)
+    Result(grpa,[grps,grpr,grpi],'SideBySideAniso')
 
 End()

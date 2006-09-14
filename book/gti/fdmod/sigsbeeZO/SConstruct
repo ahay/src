@@ -44,7 +44,7 @@ def dgrey(custom,par):
 def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
     Flow( [dat,wfl],[wav,vel,den,sou,rec],
          '''
-         afmodP ompchunk=1
+         afmod ompchunk=1
          verb=y abc=y free=n snap=y jsnap=100 %s
          nbz=250 tz=0.001
          nbx=250 tx=0.001
@@ -58,7 +58,7 @@ def amodel(dat,wfl,  wav,vel,den,sou,rec,custom):
 # ------------------------------------------------------------
 # model
 velo = 'sigsbee2a_stratigraphy.sgy'
-#Fetch(velo,'sigsbee')
+Fetch(velo,'sigsbee')
 
 Flow('zvelo tzvelo ./vhead ./bvhead',velo,
      '''
@@ -82,6 +82,7 @@ Flow('dens','velo','math output=2000')
 
 # ------------------------------------------------------------
 vmig = 'sigsbee2a_migvel.sgy'
+Fetch(vmig,'sigsbee')
 
 Flow('zvmig tzvmig ./vmighead ./bvmighead',vmig,
      '''

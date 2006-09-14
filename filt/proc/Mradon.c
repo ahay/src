@@ -27,6 +27,7 @@
 
 int main (int argc, char **argv)
 {
+    bool verb;                /* verbosity flag */
     int nt,it;                /* number of time samples, time counter */
     int nt2;                  /* extended number of time samples */
     int nx,ix;                /* number of offsets, offset counter */ 
@@ -69,6 +70,7 @@ int main (int argc, char **argv)
     /* if y, perform inverse operation */
     if (!sf_getbool("spk",&spk)) spk=inv;
     /* if y, use spiking (hi-res) inversion */
+    if (!sf_getbool ("verb",&verb)) verb=false; /* verbosity flag */
 
     /* read input file parameters */
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
@@ -79,18 +81,21 @@ int main (int argc, char **argv)
 	if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 
 	/* specify slope axis */
-	if (!sf_getint("np",&np)) sf_error("Need np=");
 	/* number of p values (if adj=y) */
-	if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
 	/* p sampling (if adj=y) */
-	if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
 	/* p origin (if adj=y) */
 
-	sf_putint(out,"n2",np);
+	if (!sf_getint  ("np",&np)) sf_error("Need np=");
+	if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
+	if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
+
+	sf_putint(  out,"n2",np);
 	sf_putfloat(out,"d2",dp);
 	sf_putfloat(out,"o2",p0);
+
     } else { /* modeling */
-	if (!sf_histint(in,"n2",&np)) sf_error("No n2= in input");
+
+	if (!sf_histint  (in,"n2",&np)) sf_error("No n2= in input");
 	if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
 	if (!sf_histfloat(in,"o2",&p0)) sf_error("No o2= in input");
 
@@ -100,16 +105,16 @@ int main (int argc, char **argv)
 	} else {
 	    if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
 	}
-
+	
 	sf_putint(out,"n2",nx);
     }
-
+    
     nc = sf_leftsize(in,2);
-
+    
     /* determine frequency sampling (for real to complex FFT) */
     nt2 = sf_fftr_size(2*nt);
-    nw = nt2/2+1;
-    dw = 2.0*SF_PI/(nt2*dt);
+    nw  = nt2/2+1;
+    dw  = 2.0*SF_PI/(nt2*dt);
 
     forw = kiss_fftr_alloc(nt2,0,NULL,NULL);
     invs = kiss_fftr_alloc(nt2,1,NULL,NULL);
@@ -125,7 +130,7 @@ int main (int argc, char **argv)
     dd = sf_complexalloc(nx);
     mm = sf_complexalloc(np);
     xx = sf_floatalloc(nx);
-
+    
     if (NULL != offset) {
 	sf_floatread(xx,nx,offset);
     } else {
@@ -136,11 +141,11 @@ int main (int argc, char **argv)
 	    if (!sf_getfloat("ox",&ox)) sf_error("Need ox=");
 	    if (!sf_getfloat("dx",&dx)) sf_error("Need dx=");
 	}
-
+	
 	for (ix=0; ix < nx; ix++) {
 	    xx[ix] = ox + ix*dx;
 	}
-
+	
 	if (!adj) {
 	    sf_putfloat(out,"o2",ox);
 	    sf_putfloat(out,"d2",dx);
@@ -151,7 +156,6 @@ int main (int argc, char **argv)
     /* if y, parabolic Radon transform */
     if (!sf_getfloat("x0",&x0)) x0=1.;
     /* reference offset */
-
 
     /* normalize offsets */
     for (ix=0; ix < nx; ix++) {
@@ -184,6 +188,8 @@ int main (int argc, char **argv)
     cd = sf_complexalloc2 (nw,nx);
 
     for (ic = 0; ic < nc; ic++) { /* loop over CMPs */
+	if(verb) sf_warning("i=%d of %d",ic+1,nc);
+
 	if (adj) {
 	    for (ix=0; ix < nx; ix++) { /* loop over offsets */
 		sf_floatread(tt,nt,in);
