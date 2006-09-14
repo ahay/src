@@ -21,5 +21,32 @@ velcon.velcon('sig',
               rect1=100,  # vertical smoothing
               rect2=10)  # lateral  smoothing
 
+Plot('vel','sig-vlf2',
+     '''
+     window min3=1 n3=1 | contour nc=50 title="Velocity Continuation"
+     ''')
+
+Flow('mva','sig-cip',
+     'vscan v0=2 dv=-0.01 nv=100 half=y semblance=y v1=2')
+
+Plot('mva',
+     '''
+     window min3=1 n3=1 |
+     contour nc=50 title="Conventional Velocity Analysis"
+     ''')
+
+Result('sig-mva1','vel mva','SideBySideAniso')
+
+Flow('pick','mva','pick rect1=100 rect2=10 | transp plane=23')
+Flow('conv','sig-cip pick',
+     '''
+     vscan v0=2 dv=-0.01 nv=100 half=y v1=2 |
+     slice pick=${SOURCES[1]} | transp plane=23
+     ''')
+Plot('conv','grey title="Conventional Velocity Analysis" ')
+Plot('velc','sig-fmg','grey title="Velocity Continuation" ')
+
+Result('sig-all','sig-migr1 sig-migr velc conv','TwoRows')
+
 End()
        

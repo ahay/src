@@ -589,6 +589,7 @@ I demonstrate the performance of the method using a simple 2-D synthetic
 test and a field data example from the North Sea.
 
 \subsection{Synthetic Test}
+\inputdir{sigvc}
 
 The synthetic test uses constant-velocity prestack modeling and migration to
 check the validity of the method when all the theoretical requirements are
@@ -638,19 +639,20 @@ vertical and lateral shifts in the image position.}
   image after only conventional NMO correction.}
 
 \subsection{\uline{Field} Data Example}
+\inputdir{elfvc}
 
-Figure \ref{fig:elfmigr} compares the result of a constant-velocity prestack
+Figure \ref{fig:elf-migr} compares the result of a constant-velocity prestack
 migration with the velocity of 2 km/s, applied to a dataset from the North Sea
 (courtesy of Elf Aquitaine) and the result of velocity continuation to the
 same velocity from a migration with a smaller velocity of 1.4 km/s (Figure
-\ref{fig:elfmigr}a). The two images (Figures \ref{fig:elfmigr}b and
-\ref{fig:elfmigr}c) look remarkably similar, in full accordance with the
+\ref{fig:elf-migr}a). The two images (Figures \ref{fig:elf-migr}b and
+\ref{fig:elf-migr}c) look remarkably similar, in full accordance with the
 theory.
 
-\plot{elfmigr}{width=6in,height=9in}{Constant-offset section of the
-  North Sea dataset after migration with the velocity of 1.4 km/s (a),
-  migration with the velocity of 2 km/s (b), migration with the
-  velocity of 1.4 km/s and velocity continuation to 2 km/s (c).}
+\plot{elf-migr}{width=6in}{Constant-offset section of the North Sea
+  dataset after migration with the velocity of 1.4 km/s (a), migration
+  with the velocity of 2 km/s (b), migration with the velocity of 1.4
+  km/s and velocity continuation to 2 km/s (c).}
 
 Figure~\ref{fig:elffpk} shows a result of two-dimensional velocity
 picking after velocity continuation. I used values of $\epsilon=0.1$

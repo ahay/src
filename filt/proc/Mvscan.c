@@ -26,16 +26,26 @@ Inverse of sfvelmod
 
 #include "fint1.h"
 
-static float v, h;
+static float v, h, v1;
 
 static float hyperb(float t, int it) 
 { 
     return hypotf(t,v);
 } 
 
+static float hyperb1(float t, int it) 
+{ 
+    return sqrtf(t*t+v*v-v1*v1*h*h);
+} 
+
 static float curved(float t, int it) 
 {
     return sqrtf(t*t+v*h);
+}
+
+static float curved1(float t, int it) 
+{
+    return sqrtf(t*t+v*h-v1*h*h);
 }
 
 int main(int argc, char* argv[])
@@ -48,6 +58,7 @@ int main(int argc, char* argv[])
     char *time, *space, *unit;
     size_t len;
     sf_file cmp, scan, offset, msk;
+    mapfunc nmofunc;
 
     sf_init (argc,argv);
     cmp = sf_input("in");
@@ -127,6 +138,13 @@ int main(int argc, char* argv[])
     if (!sf_getbool("squared",&squared)) squared=false;
     /* if y, the slowness or velocity is squared */
 
+    if (!sf_getfloat("v1",&v1)) {
+	nmofunc = squared? curved: hyperb;
+    } else {
+	nmofunc = squared? curved1: hyperb1;
+	if (!slow) v1 = 1./v1;
+    }
+
     if (NULL != (time = sf_histstring(cmp,"unit1")) &&
 	NULL != (space = sf_histstring(cmp,"unit2"))) {
 	len = strlen(time)+strlen(space)+2;
@@ -191,8 +209,7 @@ int main(int argc, char* argv[])
 		v = v0 + iv * dv;
 		v = slow? h*v: h/v;
 
-		stretch(nmo,squared? curved: hyperb,
-			nt,dt,t0,nt,dt,t0,trace,str);
+		stretch(nmo,nmofunc,nt,dt,t0,nt,dt,t0,trace,str);
 
 		for (it=0; it < nt; it++) {
 		    amp = weight? fabsf(v)*trace[it]: trace[it];
