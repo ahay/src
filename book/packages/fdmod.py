@@ -74,6 +74,59 @@ def dgrey(custom,par):
            par['xmin'],par['xmax'],par['lx'],
            custom)
 
+# ------------------------------------------------------------
+# create wavelet
+def wavelet(wav,frequency,par):
+    par['frequency'] = frequency
+    
+    Flow(wav,None,
+         '''
+         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         ricker1 frequency=%(frequency)g |
+         scale axis=123 |
+         put label1=t label2=x label3=y 
+         ''' % par)    
+
+# ------------------------------------------------------------
+def horizontal(cc,coord,par):
+    par['coord'] = coord
+    
+    Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
+    Flow(cc+'_z',cc+'_','math output="%(coord)g" ' % par)
+    Flow(cc+'_x',cc+'_','math output="x1" ')
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
+def vertical(cc,coord,par):
+    par['coord'] = coord
+    
+    Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
+    Flow(cc+'_x',cc+'_','math output="%(coord)g" ' % par)
+    Flow(cc+'_z',cc+'_','math output="x1" ')
+    
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
+def point(cc,xcoord,zcoord,magnitude,par):
+
+    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
+    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
+    Flow(cc+'_r',cc+'_','math output="%g"' % magnitude)
+    
+    Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+    
+# ------------------------------------------------------------
 # execute acoustic finite-differences modeling
 def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
@@ -92,7 +145,28 @@ def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
           wfl=${TARGETS[1]}
           %(fdcustom)s
           ''' % par)
-    
+
+def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
+    par['fdcustom'] = custom
+
+    Flow([ data,wfld,ldata,lwfld],[wavl,velo,refl,sou,rec],
+         '''
+         born2d
+         verb=y abc=y free=n
+         snap=%(snap)s jsnap=%(jsnap)d
+         nbz=%(nbz)d tz=%(tz)g
+         nbx=%(nbx)d tx=%(tx)g
+         vel=${SOURCES[1]}
+         ref=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         lid=${TARGETS[2]}
+         liw=${TARGETS[3]}
+         %(fdcustom)s
+         ''' % par)
+
+# F-D modeling from arbitrary source/receiver geometry
 def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
