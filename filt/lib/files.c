@@ -54,7 +54,7 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     return dim;
 }
 
-off_t sf_memsize(int def)
+off_t sf_memsize(int mem)
 /*< Returns memory size by checking
   1. "memsize" command-line parameter
   2. MEMSIZE environmental variable

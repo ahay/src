@@ -1,0 +1,36 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+segy = 'GOM-SHOTS.segy'
+
+Fetch(segy,'tury',private)
+
+Flow('gom tgom gom.asc gom.bin',segy,
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+Flow('shot','gom',
+     '''
+     intbin xk=tracf yk=fldr | window f3=1749 |
+     put
+     o3=2900 d3=25 label3=Shot unit3=m
+     o2=-162.6 d2=-12.5 label2=Half-offset unit2=m
+     ''')
+
+for coord in ('s','g'):
+    Flow(coord+'x','tgom',
+         '''
+         dd type=float |
+         headermath output=%sx |
+         intbin xk=tracf yk=fldr head=$SOURCE |
+         window f3=1749
+         ''' % coord)
+
+Result('tzo','shot','window n2=0 | grey title="Near Offset" ')
+
+End()
