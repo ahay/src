@@ -64,7 +64,12 @@ void slant_close (void)
     halfint_close();
 }
 
-void slant_lop (bool adj, bool add, int nm, int nd, float *modl, float *data)
+void slant_lop (bool adj, 
+		bool add, 
+		int   nm, 
+		int   nd, 
+		float *modl, 
+		float *data)
 /*< linear operator >*/
 {
     int ix, is, it;
