@@ -62,7 +62,7 @@ else:
 ##############################################################################
 # TESTING
 ##############################################################################
-for file in Split('banded eno2 file getpar quantile simtab'):
+for file in Split('banded eno2 fft file getpar quantile simtab'):
     test = env.StaticObject('Test' + file + '.c')
     prog = env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
     env.Depends(test,includes) # remove later 
