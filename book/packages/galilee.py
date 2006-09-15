@@ -11,7 +11,7 @@ def Galilee(name,nx=280,ny=440,interp=1):
     '''Extracts the Sea of Galiee dataset and bins it'''
     global base
 
-     Flow(name,'triplets',
+    Flow(name,'triplets',
          '''
          window n1=1 f1=2 |
          math output=%g-input |
