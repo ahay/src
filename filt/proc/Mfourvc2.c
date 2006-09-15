@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nb",&nb)) nb=2;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getint("pad",&n2)) n2=n1;
-    if (!sf_getint("pad2",&n3)) n3=sf_fftr_size(n2);
+    if (!sf_getint("pad2",&n3)) n3=2*kiss_fft_next_fast_size((n2+1)/2);
 
     nw = n3/2+1;
     forw = kiss_fftr_alloc(n3,0,NULL,NULL);
@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
 	free(space);
     }
     
-    dx = 2.*SF_PI/(sf_fftr_size(2*(nx-1))*dx);
+    dx = SF_PI/(kiss_fft_next_fast_size(nx-1)*dx);
 
     stack = sf_floatalloc3(n1,nx,nv);
     stack2 = sf_floatalloc3(n1,nx,nv);

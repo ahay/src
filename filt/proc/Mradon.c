@@ -112,7 +112,7 @@ int main (int argc, char **argv)
     nc = sf_leftsize(in,2);
     
     /* determine frequency sampling (for real to complex FFT) */
-    nt2 = sf_fftr_size(2*nt);
+    nt2 = 2*kiss_fft_next_fast_size(nt);
     nw  = nt2/2+1;
     dw  = 2.0*SF_PI/(nt2*dt);
 

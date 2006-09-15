@@ -17,7 +17,6 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "fftsize.h"
 #include "alloc.h"
 #include "kiss_fftr.h"
 
@@ -33,7 +32,7 @@ void sf_cosft_init(int n1_in)
 /*< initialize >*/ 
 {
     n1 = n1_in;
-    nt = sf_fftr_size(2*(n1-1));
+    nt = 2*kiss_fft_next_fast_size(n1-1);
     nw = nt/2+1;
     p  = sf_floatalloc (nt);
     pp = (kiss_fft_cpx*) sf_complexalloc(nw);

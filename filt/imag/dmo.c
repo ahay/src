@@ -51,7 +51,7 @@ void dmo_init (float vel1 /* velocity */,
     n = n1;
     type = type1;
 
-    nt2 = sf_fftr_size(nt);
+    nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
     ntx = nt*nx;
     tmax=1./(t0+(nt-1)*dt);
 

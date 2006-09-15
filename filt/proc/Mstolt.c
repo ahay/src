@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getint ("pad",&nw)) nw=nt;
     /* padding on the time axis */
-    nw=sf_fftr_size(2*(nw-1));
+    nw=2*kiss_fft_next_fast_size(nw-1);
 
     sf_cosft_init(nw/2+1);
     dw = 2 * SF_PI/(nw*dt);

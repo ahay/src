@@ -31,6 +31,19 @@ for coord in ('s','g'):
          window f3=1749
          ''' % coord)
 
-Result('tzo','shot','window n2=0 | grey title="Near Offset" ')
+Result('tzo','shot','window n2=1 | grey title="Near Offset" ')
+
+Flow('cmp mask','shot',
+     'reverse which=2 | shot2cmp mask=${TARGETS[1]} positive=n')
+
+Flow('cmp1','cmp','window n3=1 f3=1000')
+
+
+Flow('scan1','cmp mask',
+     '''
+     window n3=1 f3=1000 |
+     vscan semblance=y mask=${SOURCES[1]}
+     v0=1.5 dv=0.01 nv=201
+     ''')
 
 End()

@@ -199,7 +199,7 @@ int main (int argc, char **argv)
     }
 
     /* determine frequency sampling */    
-    nt2 = sf_fftr_size2(nt,2*nt);
+    nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
 
     if (NULL == (rule = sf_getstring("rule"))) rule="simple";
     /* phase-shift interpolation rule (simple, midpoint, linear) */

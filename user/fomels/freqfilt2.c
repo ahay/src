@@ -37,7 +37,7 @@ void freqfilt2_init(int n1, int n2 /* data dimensions */,
     m1 = n1;
     nw = nw1;
     m2 = n2;
-    nfft = sf_fftr_size(n1);
+    nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
 
     tfor = kiss_fftr_alloc(nfft,0,NULL,NULL);
     tinv = kiss_fftr_alloc(nfft,1,NULL,NULL);

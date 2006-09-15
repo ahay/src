@@ -73,6 +73,7 @@ int main(int argc, char* argv[])
 
 	sf_putint(msk,"n1",nh2);
 	sf_putint(msk,"n2",ny);
+	sf_putint(msk,"n3",1);
 
 	mask = sf_intalloc(nh2);
     } else {

@@ -58,7 +58,7 @@ int main (int argc, char *argv[])
 	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nt = opt? sf_fftr_size(n1): n1;
+	nt = opt? 2*kiss_fft_next_fast_size((n1+1)/2): n1;
 	if (nt%2) nt++;
 	nw = nt/2+1;
 	dw = 1./(nt*d1);

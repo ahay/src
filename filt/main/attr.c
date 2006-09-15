@@ -84,6 +84,7 @@ int main(int argc, char* argv[])
     fmin = +FLT_MAX;
     fmax = -FLT_MAX;
     nzero = 0;
+    c = sf_cmplx(0.,0.);
 
     for (nleft=nsiz; nleft > 0; nleft -= nbuf) {
 	nbuf = (bufsiz < nleft)? bufsiz: nleft;

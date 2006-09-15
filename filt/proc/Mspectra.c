@@ -48,7 +48,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&o1)) o1=0.;
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = sf_fftr_size(n1);
+    nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 

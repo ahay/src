@@ -53,12 +53,12 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"o2",&o2)) o2=0.;
 
     /* determine frequency sampling (for real to complex FFT) */
-    nfft = sf_fftr_size(n1);
+    nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
     nw = nfft/2+1;
     dw = 1./(nfft*d1);
 
     /* determine wavenumber sampling (for complex FFT) */
-    nk = sf_fft_size(n2);
+    nk = kiss_fft_next_fast_size(n2);
     dk = 1./(nk*d2);
     k0 = -0.5/d2;
 

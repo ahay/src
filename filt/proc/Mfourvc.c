@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
 
     if (!sf_getfloat("eps",&eps)) eps=0.01;
     if (!sf_getint("pad",&n2)) n2=n1;
-    if (!sf_getint("pad2",&n3)) n3=sf_fftr_size2(n2,2*n2);
+    if (!sf_getint("pad2",&n3)) n3=2*kiss_fft_next_fast_size((n2+1)/2);
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */

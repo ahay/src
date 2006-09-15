@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
 
 	/* determine wavenumber sampling (for real to complex FFT) */
-	nfft = sf_fftr_size(n1);
+	nfft = 2*kiss_fft_next_fast_size((n1+1)/2);
 	trace = sf_floatalloc(nfft);
 	
 	sf_floatread(trace,n1,in);

@@ -66,7 +66,6 @@ int main (int argc, char* argv[])
     sf_datatype type;
 
     int   mem;
-    off_t memsize;
     
     off_t nbuf,nsiz;
     float *bufi,*bufo;

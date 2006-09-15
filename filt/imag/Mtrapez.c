@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     }
 
     trace = sf_floatalloc(n1);
-    trapez_init(sf_fftr_size(n1),freq);
+    trapez_init(2*kiss_fft_next_fast_size((n1+1)/2),freq);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(trace,n1,in);

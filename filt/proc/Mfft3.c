@@ -130,7 +130,7 @@ int main (int argc, char **argv)
     /* padding factor */
 
     /* determine wavenumber sampling */
-    nk = opt? sf_fft_size(nx*npad): nx*npad;
+    nk = opt? kiss_fft_next_fast_size(nx*npad): nx*npad;
     if (nk != nx) sf_warning("padded to %d",nk);
 
     dk = 1./(nk*dx);
