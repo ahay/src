@@ -17,7 +17,7 @@ Flow('gom tgom gom.asc gom.bin',segy,
 Flow('shot','gom',
      '''
      intbin xk=tracf yk=fldr | window f3=1749 |
-     put
+     put label1=Time unit1=s
      o3=2900 d3=25 label3=Shot unit3=m
      o2=-162.6 d2=-12.5 label2=Half-offset unit2=m
      ''')
@@ -37,13 +37,24 @@ Flow('cmp mask','shot',
      'reverse which=2 | shot2cmp mask=${TARGETS[1]} positive=n')
 
 Flow('cmp1','cmp','window n3=1 f3=1000')
+Flow('mask1','mask','window n2=1 f2=1000')
+
+Flow('scan1','cmp1 mask1',
+     'vscan semblance=y mask=${SOURCES[1]} v0=1400 dv=20 nv=161')
+
+Flow('pick1','scan1','mutter inner=y half=n x0=1400 v0=100 | pick rect1=100')
+
+Flow('nmo1','cmp1 pick1','nmo velocity=${SOURCES[1]}')
 
 
-Flow('scan1','cmp mask',
-     '''
-     window n3=1 f3=1000 |
-     vscan semblance=y mask=${SOURCES[1]}
-     v0=1.5 dv=0.01 nv=201
-     ''')
+Flow('scan','cmp mask',
+     'vscan semblance=y mask=${SOURCES[1]} v0=1400 dv=20 nv=161')
+Flow('pick','scan','mutter inner=y half=n x0=1400 v0=100 | pick rect1=100 rect2=100')
+Flow('nmo','cmp pick','nmo velocity=${SOURCES[1]}')
+
+Flow('stack','nmo','stack')
+
+Result('stack','agc rect1=250 | grey title=Stack')
+
 
 End()
