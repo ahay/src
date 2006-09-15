@@ -4,7 +4,7 @@ import fdmod,zomig
 par = {
     'nz':1201, 'dz':0.025,  'oz':0,  'lz':'label1=z unit1=km', 
     'nx':3201, 'dx':0.025,  'ox':10, 'lx':'label2=x unit2=km',
-    'nt':8000, 'dt':0.001,  'ot':0,  'lt':'label1=t unit1=s',
+    'nt':5000, 'dt':0.001,  'ot':0,  'lt':'label1=t unit1=s',
     'kt':100,
     'nw':400,'ow':0,'jw':1,'verb':'y','tmx':20,'dtmax':0.0001,'nrmax':3
     }
@@ -74,47 +74,35 @@ Flow('ss',['xs','zs','rs'],
 
 # ------------------------------------------------------------
 # receiver coordinates
-Flow('ro',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-Flow('zo','ro','math output="%g"' % par['oz'])
-Flow('xo','ro','math output="x1"')
-Flow('oo',['xo','zo'],
-     '''
-     cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} | transp
-     ''', stdin=0)
+fdmod.horizontal('oo',par['oz'],par)
 
 # ------------------------------------------------------------
 # wavelet
-Flow('wav',None,
-     '''
-     spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-     ricker1 frequency=20 | 
-     put label1=t label2=x label3=y 
-     ''' % par)    
-Result('wav','wav','window n1=200 | graph title=" "')
+fdmod.wavelet('wav',20,par)
+Result('wav','window n1=200 | graph title=" "')
 
 # ------------------------------------------------------------
 # F-D modeling
 fdmod.amodel('do','wo','wav','velo','dens','ss','oo','free=n',par)
-
-Flow('to','do','window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g' % par)
-Result('to','window j2=5 | transp|'  + fdmod.dgrey('pclip=100',par))
-
+Flow(  'to','do',
+       '''
+       window f2=%(kt)d | pad end2=%(kt)d | put o2=%(ot)g |
+       transp | bandpass flo=3 | transp
+       ''' % par)
+Result('to','window j2=4 | transp |' + fdmod.dgrey('pclip=100',par))
 Result('wo','window n3=1 f3=10 |'    + fdmod.wgrey('gainpanel=a pclip=99',par))
-Result('do','window j2=4 | transp |' + fdmod.dgrey('pclip=99',par))
 
 # ------------------------------------------------------------
 # WE migration
-Flow('dd','do','window f2=%(kt)d | put o2=0 d2=0.002' % par)
-Result('dd','window j2=4 | transp |' + fdmod.dgrey('',par))
+Flow(  'dd','to','put o2=%g d2=%g' % (par['ot'],2*par['dt']) )
+Result('dd','window j2=4 | transp |' + fdmod.dgrey('max1=10',par))
 
 zomig.zom('ii','dd','velo',par)
-Result('ii','window | transp | bandpass flo=1 |' + fdmod.cgrey('pclip=99',par))
+Result(   'ii','window | transp | bandpass flo=0.5 |' + fdmod.cgrey('pclip=99',par))
 
 # ------------------------------------------------------------
 # RT migration
-
 fdmod.zom('io','uo','to','velo','dens','oo','oo','dens=n',par)
-Result('io','bandpass flo=1 |' + fdmod.cgrey('pclip=99',par))
+Result(   'io', 'bandpass flo=0.5 |' + fdmod.cgrey('pclip=99',par))
 
 End()
