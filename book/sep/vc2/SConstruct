@@ -1,3 +1,7 @@
+import os
+
+os.environ['elf-npk.pspen'] = 'color=y fat=1 fatmult=1.5'
+
 from rsftex import *
 
 

@@ -1,5 +1,3 @@
-\renewcommand{\uline}[1]{#1}
-
 \def\figdir{./Fig}
 \def\cakedir{.}
 
@@ -7,55 +5,59 @@
 \righthead{Velocity continuation}
 \footer{SEP--92}
 
-\title{\uline{Time} migration velocity analysis by velocity continuation}
+\title{Time migration velocity analysis by velocity continuation}
 
 \email{sergey@sep.stanford.edu}
 \author{Sergey Fomel}
+\maketitle
 
-\ABS{\uline{Time} migration velocity analysis can be performed by velocity
-  continuation, an \uline{incremental} process that \uline{transforms}
+\begin{abstract}
+Time migration velocity analysis can be performed by velocity
+  continuation, an incremental process that transforms
   migrated seismic sections according to changes in the migration velocity.
-  Velocity continuation enhances residual \uline{normal moveout} correction by
+  Velocity continuation enhances residual \new{normal moveout} correction by
   properly taking into account both vertical and lateral movements of
-  \uline{events on seismic images}. Finite-difference and spectral algorithms
+  \new{events on seismic images}. Finite-difference and spectral algorithms
   provide efficient practical implementations for velocity continuation.
   Synthetic and field data examples demonstrate the performance of the method
-  and confirm theoretical expectations.}
+  and confirm theoretical expectations.
+\end{abstract}
 
 \section{Introduction}
 %%%%%%%%%%%%%%%%%%
 Migration velocity analysis is a routine part of prestack time
 migration applications. It serves both as a tool for velocity
-estimation \cite{FBR08.06.02240234} and as a tool for optimal stacking
-of migrated seismic sections prior to modeling zero-offset data for depth
-migration \cite{GEO62-02-05680576}. In the most common form, migration
-velocity analysis amounts to residual moveout correction on CIP
-(common image point) gathers. However, in the case of dipping
-reflectors, this correction does not provide optimal focusing of
-reflection energy, since it does not account for lateral movement of
-reflectors caused by the change in migration velocity. In other words,
-different points on a stacking hyperbola in a CIP gather can
-correspond to different reflection points at the actual reflector. The
-situation is similar to that of the conventional \uline{normal moveout} (NMO)
-velocity analysis, where the reflection point dispersal problem is
-usually overcome with the help of \uline{dip moveout} \cite{FBR04.07.00070024,dmo}. An
-analogous correction is required for optimal focusing in the
-post-migration domain. In this paper, I propose and test velocity
-continuation as a method of migration velocity analysis. The method
-enhances the conventional residual moveout correction by taking into
-account lateral movements of migrated reflection events.
+estimation \cite[]{FBR08-06-02240234} and as a tool for optimal
+stacking of migrated seismic sections prior to modeling zero-offset
+data for depth migration \cite[]{GEO62-02-05680576}. In the most
+common form, migration velocity analysis amounts to residual moveout
+correction on CIP (common image point) gathers. However, in the case
+of dipping reflectors, this correction does not provide optimal
+focusing of reflection energy, since it does not account for lateral
+movement of reflectors caused by the change in migration velocity. In
+other words, different points on a stacking hyperbola in a CIP gather
+can correspond to different reflection points at the actual reflector.
+The situation is similar to that of the conventional \new{normal
+  moveout} (NMO) velocity analysis, where the reflection point
+dispersal problem is usually overcome with the help of \new{dip
+  moveout} \cite[]{FBR04-07-00070024,dmo}. An analogous correction is
+required for optimal focusing in the post-migration domain. In this
+paper, I propose and test velocity continuation as a method of
+migration velocity analysis. The method enhances the conventional
+residual moveout correction by taking into account lateral movements
+of migrated reflection events.
 
 Velocity continuation is a process of transforming time migrated images
 according to the changes in migration velocity. This process has wave-like
 properties, which have been described in earlier papers
-\cite{me,Fomel.segab.97,first}.  \longcite{hubral} and
-\longcite{GEO62-02-05890597} use the term \emph{image waves} to describe a
-similar concept. \longcite{adlerSEG,adler} generalizes the velocity
+\cite[]{me,SEG-1997-1762,first}.  \cite{hubral} and
+\cite{GEO62-02-05890597} use the term \emph{image waves} to describe a
+similar concept. \cite{adlerSEG,adler} generalizes the velocity
 continuation approach for the case of variable background velocities, using
-the term \emph{Kirchhoff image propagation}. \uline{Although the velocity
+the term \emph{Kirchhoff image propagation}. \new{Although the velocity
 continuation concept is tailored for time migration, it finds important
 applications in depth migration velocity analysis by recursive methods} 
-\cite{SEG-1999-17231726,SEG-2000-08740877}.
+\cite[]{SEG-1999-17231726,SEG-2000-08740877}.
 
 \par
 Applying velocity continuation to migration velocity analysis involves
@@ -72,13 +74,13 @@ the following steps:
 The first step transforms the data to the image space. The regularity of this
 space can be exploited for devising efficient algorithms for the next two
 steps. The idea of slicing through the velocity space goes back to the work of
-\longcite{shurtleff}, \longcite{SEG-1984-S1.8,Fowler.sepphd.58}, and
-\longcite{GEO57-01-00510059}. While the previous slicing methods constructed
+\cite{shurtleff}, \cite{SEG-1984-S1.8,Fowler.sepphd.58}, and
+\cite{GEO57-01-00510059}. While the previous slicing methods constructed
 the velocity space by repeated migration with different velocities, velocity
 continuation navigates directly in the migration velocity space without
 returning to the original data. This leads to both more efficient algorithms
 and a better understanding of the theoretical continuation properties
-\cite{first}.
+\cite[]{first}.
 
 In this paper, I demonstrate all three steps, using both synthetic data and a
 North Sea dataset. I introduce and exemplify two methods for the efficient
@@ -91,15 +93,15 @@ investigation may be required to extend the method to the multi-azimuth case.
 
 It is also important to note that although the velocity continuation result
 could be achieved in principle by using prestack residual migration in
-Kirchhoff \cite{Etgen.sepphd.68} or frequency-wavenumber
-\cite{GEO61-02-06050607} formulation, the first is inferior in efficiency, and
+Kirchhoff \cite[]{Etgen.sepphd.68} or frequency-wavenumber
+\cite[]{GEO61-02-06050607} formulation, the first is inferior in efficiency, and
 the second is not convenient for the conventional velocity analysis across
 different offsets, because it mixes them in the Fourier domain
-\cite{SEG-2000-09920995}.  \uline{Fourier-domain angle-gather analysis}
-\cite{SEG-2001-02960299,sandf} \uline{opens new possibilities for the future
+\cite[]{SEG-2000-09920995}.  \new{Fourier-domain angle-gather analysis}
+\cite[]{SEG-2001-02960299,sandf} \new{opens new possibilities for the future
 development of the Fourier-domain velocity continuation. New insights into the
 possibility of extending the method to depth migration can follow from the
-work of} \longcite{adler}.
+work of} \cite{adler}.
 
 \section{Numerical velocity continuation in the post-stack domain}
 \par
@@ -107,8 +109,8 @@ The post-stack velocity continuation process is governed by a partial
 differential equation in the domain, composed by the seismic image
 coordinates (midpoint $x$ and vertical time $t$) and the additional
 velocity coordinate $v$. Neglecting some amplitude-correcting terms
-\cite{first}, the equation takes the form
-\cite{Claerbout.sep.48.79}
+\cite[]{first}, the equation takes the form
+\cite[]{Claerbout.sep.48.79}
 \begin{equation}
   \label{PDE}
   {{\partial^2 P} \over {\partial v\, \partial t}} +
@@ -130,9 +132,9 @@ corresponds to ``modeling'' (demigration); the latter case, to seismic
 migration.
 \par
 Mathematically, equations (\ref{PDE}) and (\ref{BC}) define a
-Goursat-type problem \cite{kurant2}. Its analytical solution can be
+Goursat-type problem \cite[]{kurant2}. Its analytical solution can be
 constructed by a variation of the Riemann method in the form of an
-integral operator \cite{me,first}:
+integral operator \cite[]{me,first}:
 \begin{equation}
   \label{kirch}
   P(t,x,v) = \frac{1}{(2\,\pi)^{m/2}}\,\int\, 
@@ -144,14 +146,14 @@ where $\rho = \sqrt{(v^2-v_0^2)\,t^2 + (x - x_0)^2}$, $m=1$ in the 2-D
 case, and $m=2$ in the 3-D case. In the case of continuation from zero
 velocity $v_0=0$, operator (\ref{kirch}) is equivalent (up to the
 amplitude weighting) to conventional Kirchoff time migration
-\cite{GEO43.01.00490076}.  Similarly, in the frequency-wavenumber
+\cite[]{GEO43-01-00490076}.  Similarly, in the frequency-wavenumber
 domain, velocity continuation takes the form
 \begin{equation}
   \label{stolt}
   \hat{P} (\omega,k,v) = \hat{P}_0 (\sqrt{\omega^2+k^2 (v^2-v_0^2)},k)\;,
 \end{equation}
 which is equivalent (up to scaling coefficients) to Stolt migration
-\cite{GEO43.01.00230048}, regarded as the most efficient constant-velocity
+\cite[]{GEO43-01-00230048}, regarded as the most efficient constant-velocity
 migration method.
 \par
 If our task is to create many constant-velocity slices, there are
@@ -162,7 +164,7 @@ subsections.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 The differential equation~(\ref{PDE}) has a mathematical form analogous to
 that of the 15-degree wave extrapolation equation
-\cite{Claerbout.blackwell.76}. Its finite-difference implementation, first
+\cite[]{Claerbout.blackwell.76}. Its finite-difference implementation, first
 described by Claerbout \shortcite{Claerbout.sep.48.79} and Li
 \shortcite{Li.sep.48.85}, is also analogous to that of the 15-degree equation,
 except for the variable coefficients. One can write the implicit
@@ -187,7 +189,7 @@ and $a_{j}^{i} = v_j\,t_i\,{\Delta v\,\Delta t}$.
 In the two-dimensional case, equation \ref{eqn:fds} reduces to a
 tridiagonal system of linear equations, which can be easily inverted.
 In 3-D, a straightforward extension can be obtained by using either
-directional splitting or helical schemes \cite{SEG-1998-1124}. The
+directional splitting or helical schemes \cite[]{SEG-1998-1124}. The
 direction of stable propagation is either forward in velocity and
 backward in time or backward in velocity and forward in time as shown
 in Figure \ref{fig:vlcfds}.
@@ -201,31 +203,32 @@ and forward in time (b).}
 
 In order to test the performance of the finite-difference velocity
 continuation method, I use a simple synthetic model from
-\longcite{Claerbout.bei.95}. The reflectivity model is shown in
+\cite{Claerbout.bei.95}. The reflectivity model is shown in
 Figure \ref{fig:mod}. It contains several features that challenge the
 migration performance: dipping beds, unconformity, syncline,
-anticline, and fault. \uline{The velocity is taken to be constant 
+anticline, and fault. \new{The velocity is taken to be constant 
 $v=1.5\,\mbox{km/s}$.}
 
 \sideplot{mod}{height=2.5in}{Synthetic model for testing
 finite-difference migration by velocity continuation.}
 
-\uline{Figures~\ref{fig:vlckaa}--\ref{fig:vlcspv}} compare invertability of different
+\new{Figures~\ref{fig:vlckaa}--\ref{fig:vlcspv}} compare invertability of different
 migration methods. In all cases, constant-velocity modeling (demigration) 
-%by the adjoint operator \cite{Claerbout.blackwell.92}
-was followed by migration
-with the correct velocity.  Figures \ref{fig:vlckaa} and \ref{fig:vlcsto} show the
-results of modeling and migration with the Kirchhoff \cite{GEO43.01.00490076}
-and $f$-$k$ \cite{GEO43.01.00230048} methods, respectively. These figures
-should be compared with Figure \ref{fig:vlcvel}, showing the analogous result of
-the finite-difference velocity continuation.  The comparison reveals a
-remarkable invertability of velocity continuation, which reconstructs
-accurately the main features and frequency content of the model. Since the
-forward operators were different for different migrations, this comparison did
-not test the migration properties themselves. For such a test, I compare the
-results of the Kirchhoff and velocity-continuation migrations after Stolt
-modeling.  The result of velocity continuation, shown in Figure \ref{fig:vlcspv},
-is noticeably more accurate than that of the Kirchhoff method.
+%by the adjoint operator \cite[]{Claerbout.blackwell.92}
+was followed by migration with the correct velocity.  Figures
+\ref{fig:vlckaa} and \ref{fig:vlcsto} show the results of modeling and
+migration with the Kirchhoff \cite[]{GEO43-01-00490076} and $f$-$k$
+\cite[]{GEO43-01-00230048} methods, respectively. These figures should
+be compared with Figure \ref{fig:vlcvel}, showing the analogous result
+of the finite-difference velocity continuation.  The comparison
+reveals a remarkable invertability of velocity continuation, which
+reconstructs accurately the main features and frequency content of the
+model. Since the forward operators were different for different
+migrations, this comparison did not test the migration properties
+themselves. For such a test, I compare the results of the Kirchhoff
+and velocity-continuation migrations after Stolt modeling.  The result
+of velocity continuation, shown in Figure \ref{fig:vlcspv}, is
+noticeably more accurate than that of the Kirchhoff method.
 
 %\activeplot{vlckir}{width=6in,height=2.5in}{ER}{Result of modeling and
 %migration with the fast Kirchhoff method. Left plot shows the
@@ -266,12 +269,12 @@ reconstructed models. Right plots show the reconstruction errors.}
 
 These tests confirm that finite-difference velocity continuation is an
 attractive migration method. It possesses remarkable invertability properties,
-which may be useful in applications that \uline{require inversion. While the
+which may be useful in applications that \new{require inversion. While the
   traditional migration methods transform the data between two completely
   different domains (data-space and image-space), velocity continuation
   accomplishes the same trans\-for\-ma\-ti\-on by propagating the data in the
   extended domain along the velocity direction. Inverse propagation restores
-  the original data.} According to \longcite{Li.sep.48.85}, the computational
+  the original data.} According to \cite{Li.sep.48.85}, the computational
 speed of this method compares favorably with that of Stolt migration. The
 advantage is apparent for cascaded migration or migration with multiple
 velocity models. In these cases, the cost of Stolt migration increases in
@@ -313,7 +316,7 @@ an explicit analytical solution
 which leads to a very simple algorithm for the numerical velocity
 continuation. The algorithm consists of the following steps:
 \begin{enumerate}
-\item \uline{Input the zero-offset (post-stack) data migrated with velocity $v_0$ (or
+\item \new{Input the zero-offset (post-stack) data migrated with velocity $v_0$ (or
   unmigrated if $v_0=0$).}
 \item Transform the input from a regular grid in $t$ to a regular grid
   in $\sigma$.
@@ -346,7 +349,7 @@ events.
   transform.  Right: the real part of the velocity continuation
   operator (continuation from 0 to 1 km/s) in the Fourier domain.}
 
-\uline{The described algorithm}
+\new{The described algorithm}
  is very attractive from the practical point of view
 because of its efficiency (based on the FFT algorithm). The operation count is
 roughly the same as in the Stolt migration implemented with equation
@@ -354,12 +357,12 @@ roughly the same as in the Stolt migration implemented with equation
 transform with interpolation (one complex-number transform in the case of
 Stolt migration). The velocity continuation algorithm can be more efficient
 than the Stolt method because of the simpler structure of the innermost loop
-\uline{(step 4 in the algorithm)}. 
+\new{(step 4 in the algorithm)}. 
 
-\section{\uline{Numerical velocity continuation in the prestack domain}}
+\section{Numerical velocity continuation in the prestack domain}
 
 To generalize the algorithm of the previous section to the prestack case, it is
-first necessary to include the residual NMO term \cite{first}.  Residual normal
+first necessary to include the residual NMO term \cite[]{first}.  Residual normal
 moveout can be formulated with the help of the differential equation:
 \begin{equation}
 {{\partial P} \over {\partial v}} + 
@@ -392,9 +395,9 @@ with the analytical frequency-domain phase-shift solution
 To obtain a Fourier-domain prestack velocity continuation algorithm, one just
 needs to combine the phase-shift operators in equations (\ref{ODEsol}) and
 (\ref{eqn:ResNMOshift}) and to include stacking across different offsets. 
-\uline{The
+\new{The
 exact velocity continuation theory also includes the residual DMO term}
-\cite{first}, \uline{which has a second-order effect, pronounced only at small
+\cite[]{first}, \new{which has a second-order effect, pronounced only at small
 depths. It is neglected here for simplicity.}  The algorithm takes the
 following form:
 \begin{enumerate}
@@ -414,23 +417,24 @@ following form:
           \frac{1}{v^2}\right)}\;.
     \end{equation}
     To save memory, the continuation step is immediately followed
-    by stacking. \uline{For velocity analysis purposes, a semblance measure}
-    \cite{GEO36-03-04820497} \uline{is computed in addition to the simple stack
+    by stacking. \new{For velocity analysis purposes, a semblance measure}
+    \cite[]{GEO36-03-04820497} \new{is computed in addition to the simple stack
     analogously to the standard practice of stacking velocity analysis.}
     
-    \uline{Implementing the residual moveout correction in the Fourier domain allows
-    one to package it conveniently with the phase-shift operator without the
-    need to transform the continuation result back to the time domain. The
-    offset dimension in equation~(\ref{eqn:zophase2}) is replaced by the
-    velocity dimension similarly to the velocity transform of the conventional
-    stacking velocity analysis} \cite{IG202-00-10012027}.
+  \new{Implementing the residual moveout correction in the Fourier
+    domain allows one to package it conveniently with the phase-shift
+    operator without the need to transform the continuation result
+    back to the time domain. The offset dimension in
+    equation~(\ref{eqn:zophase2}) is replaced by the velocity
+    dimension similarly to the velocity transform of the conventional
+    stacking velocity analysis} \cite[]{yilmaz}.
 
   \item Apply an inverse FFT to transform from $\Omega$ and $k$ to
     $\sigma$ and $x$.
   \item Apply an inverse time stretch to transform from $\sigma$ to $t$.
   \end{enumerate}  
   One can design similar algorithms by using the finite difference method.
-  \uline{Although the finite-difference approach offers a faster continuation speed,
+  \new{Although the finite-difference approach offers a faster continuation speed,
   the spectral algorithm has a higher accuracy while maintaining an acceptable
   cost.}
 
@@ -438,7 +442,7 @@ following form:
 
 %The complete theory of prestack velocity continuation also requires a
 %residual DMO operator
-%\cite{Etgen.sepphd.68,Fomel.sep.92.159,Fomel.segab.97}. However, the
+%\cite[]{Etgen.sepphd.68,Fomel.sep.92.159,Fomel.segab.97}. However, the
 %difficulty of implementing this operator is not fully compensated by
 %its contribution to the full velocity continuation. For simplicity, I
 %decided not to include residual DMO in the current implementation.
@@ -446,14 +450,14 @@ following form:
 Figure~\ref{fig:velimp} shows impulse responses of prestack velocity
 continuation. The input for producing this figure was a time-migrated
 constant-offset section, corresponding to an offset of 1 km and a constant
-migration velocity of 1 km/s. In full accordance with the theory \cite{first},
+migration velocity of 1 km/s. In full accordance with the theory \cite[]{first},
 three spikes in the input section transformed into shifted ellipsoids after
 continuation to a higher velocity and into shifted hyperbolas after
-continuation to a smaller velocity. \uline{
+continuation to a smaller velocity. \new{
 Padding of the time axis helps to avoid
 the wrap-around artifacts of the Fourier method. Alternatively, one could use
 the artifact-free but more expensive Chebyshev spectral method}
-\cite{Fomel.sep.97.sergey2}.
+\cite[]{Fomel.sep.97.sergey2}.
 
 \plot{velimp}{width=6in}{Impulse responses of prestack velocity
   continuation. Left plot: continuation from 1 km/s to 1.5 km/s.
@@ -467,7 +471,7 @@ way as the result of common-midpoint or common-reflection-point velocity
 analysis. The important difference is that velocity continuation provides an
 optimal focusing of the reflection energy by properly taking into account both
 vertical and lateral movements of reflector images with changing migration
-velocity. \uline{An experimental evidence for this conclusion is provided in
+velocity. \new{An experimental evidence for this conclusion is provided in
   the examples section of this paper.}
 
 \begin{comment}
@@ -490,10 +494,10 @@ the velocity picking step in more detail.
 
 After the velocity continuation process has created a time-midpoint-velocity
 cube, one can pick the best focusing velocity from that cube and create an
-optimally focused image by slicing through the cube. \uline{This step is common in
+optimally focused image by slicing through the cube. \new{This step is common in
 other methods that involve velocity slicing}
-\cite{shurtleff,SEG-1984-S1.8,GEO57-01-00510059}. \uline{The algorithm described
-below has been also adopted by} \longcite{SEG-2000-09920995} \uline{for velocity
+\cite[]{shurtleff,SEG-1984-S1.8,GEO57-01-00510059}. \new{The algorithm described
+below has been also adopted by} \cite{SEG-2000-09920995} \new{for velocity
 analysis in wave-equation migration.}
 
 A simple automatic velocity picking algorithm follows from solving the
@@ -501,41 +505,41 @@ following regularized least-squares system:
 \begin{equation}
   \label{eqn:pick}
   \left\{\begin{array}{rcl}
-      \bold{W}\,\bold{x} & \approx & \bold{W}\,\bold{p} \\
-      \epsilon \bold{D} \bold{x} & \approx & \bold{0}
+      \mathbf{W}\,\mathbf{x} & \approx & \mathbf{W}\,\mathbf{p} \\
+      \epsilon \mathbf{D} \mathbf{x} & \approx & \mathbf{0}
     \end{array}\right.\;.
 \end{equation}
-\uline{In the more standard notation, the solution $\bold{x}$ minimizes the
+\new{In the more standard notation, the solution $\mathbf{x}$ minimizes the
 least-squares objective function}
 \begin{equation}
   \label{eqn:ofpick}
-(\bold{x}-\bold{p})^{T}\, \bold{W}^2\,(\bold{x}-\bold{p}) +
-\epsilon^2\,\bold{x}^T\,\bold{D}^T\,\bold{D}\,\bold{x}
+(\mathbf{x}-\mathbf{p})^{T}\, \mathbf{W}^2\,(\mathbf{x}-\mathbf{p}) +
+\epsilon^2\,\mathbf{x}^T\,\mathbf{D}^T\,\mathbf{D}\,\mathbf{x}
 \end{equation}
-Here $\bold{p}$ is the vector of blind maximum-semblance picks (possibly in a
-predefined fairway), $\bold{x}$ is the estimated velocity picks, $\bold{W}$ is
+Here $\mathbf{p}$ is the vector of blind maximum-semblance picks (possibly in a
+predefined fairway), $\mathbf{x}$ is the estimated velocity picks, $\mathbf{W}$ is
 the weighting operator with the weight corresponding to the semblance values
-at $\bold{p}$, $\epsilon$ is the scalar regularization parameter, $\bold{D}$
-is a roughening operator, and $\bold{D}^T$ is the adjoint operator.  The first
+at $\mathbf{p}$, $\epsilon$ is the scalar regularization parameter, $\mathbf{D}$
+is a roughening operator, and $\mathbf{D}^T$ is the adjoint operator.  The first
 least-squares fitting goal in (\ref{eqn:pick}) states that the estimated
 velocity picks should match the measured picks where the semblance is high
 enough\footnote{Of course, this goal might be dangerous, if the original picks
-  $\bold{p}$ include regular noise (such as multiple reflections) with high
-  semblance value \cite{Toldi.sepphd.43}. For simplicity, and to preserve the
+  $\mathbf{p}$ include regular noise (such as multiple reflections) with high
+  semblance value \cite[]{Toldi.sepphd.43}. For simplicity, and to preserve the
   linearity of the problem, I assume that this is not the case.}.  The second
 fitting goal tries to find the smoothest velocity function possible.  The
 least-squares solution of problem (\ref{eqn:pick}) takes the form
 \begin{equation}
   \label{eqn:LS}
-  \bold{x} = 
-  \left(\bold{W}^2 + 
-    \epsilon^2\,\bold{D}^T\,\bold{D}\right)^{-1}\,\bold{W}^2\,\bold{p}\;.
+  \mathbf{x} = 
+  \left(\mathbf{W}^2 + 
+    \epsilon^2\,\mathbf{D}^T\,\mathbf{D}\right)^{-1}\,\mathbf{W}^2\,\mathbf{p}\;.
 \end{equation}
 
 \inputdir{beivc}
 
 In the case of picking a one-dimensional velocity function from a single
-semblance panel, one can simplify the algorithm by choosing $\bold{D}$ to be a
+semblance panel, one can simplify the algorithm by choosing $\mathbf{D}$ to be a
 convolution with the derivative filter $(1,-1)$. It is easy to see that in
 this case the inverted matrix in formula (\ref{eqn:LS}) has a tridiagonal
 structure and therefore can be easily inverted with a linear-time algorithm.
@@ -551,34 +555,34 @@ Higher values of
 
 \par
 In the case of picking two- or three-dimensional velocity functions,
-one could generalize problem (\ref{eqn:pick}) by defining $\bold{D}$
+one could generalize problem (\ref{eqn:pick}) by defining $\mathbf{D}$
 as a 2-D or 3-D roughening operator. I chose to use a more simplistic
 approach, which retains the one-dimensional structure of the algorithm. 
 I transform system (\ref{eqn:pick}) to the form
 \begin{equation}
   \label{eqn:pick2}
   \left\{\begin{array}{rcl}
-      \bold{W}\,\bold{x} & \approx & \bold{W}\,\bold{p} \\
-      \epsilon \bold{D} \bold{x} & \approx & \bold{0} \\
-      \lambda \bold{x} & \approx & \lambda \bold{x_0}
+      \mathbf{W}\,\mathbf{x} & \approx & \mathbf{W}\,\mathbf{p} \\
+      \epsilon \mathbf{D} \mathbf{x} & \approx & \mathbf{0} \\
+      \lambda \mathbf{x} & \approx & \lambda \mathbf{x_0}
     \end{array}\right.\;,
 \end{equation}
-where $\bold{x}$ is still one-dimensional, and $\bold{x}_0$ is the
+where $\mathbf{x}$ is still one-dimensional, and $\mathbf{x}_0$ is the
 estimate from the previous midpoint location. The scalar parameter
 $\lambda$ controls the amount of lateral continuity in the estimated
 velocity function. The least-squares solution to system
 (\ref{eqn:pick2}) takes the form
 \begin{equation}
   \label{eqn:LS2}
-  \bold{x} = 
-  \left(\bold{W}^2 + \epsilon^2\,\bold{D}^T\,\bold{D}
-    + \lambda^2\,\bold{I}\right)^{-1}\,
-  \left(\bold{W}^2\,\bold{p} + \lambda^2 \bold{x_0}\right)\;,
+  \mathbf{x} = 
+  \left(\mathbf{W}^2 + \epsilon^2\,\mathbf{D}^T\,\mathbf{D}
+    + \lambda^2\,\mathbf{I}\right)^{-1}\,
+  \left(\mathbf{W}^2\,\mathbf{p} + \lambda^2 \mathbf{x_0}\right)\;,
 \end{equation}
-where $\bold{I}$ denotes the identity matrix. Formula (\ref{eqn:LS2})
+where $\mathbf{I}$ denotes the identity matrix. Formula (\ref{eqn:LS2})
 also reduces to an efficient tridiagonal matrix inversion.
 
-\uline{After the velocity has been picked, an optimally focused image is constructed
+\new{After the velocity has been picked, an optimally focused image is constructed
 by slicing in the time-midpoint-velocity cube. I used simple linear
 interpolation for slicing between the velocity grid values. A more accurate
 interpolation technique can be easily adopted.}
@@ -623,11 +627,11 @@ Figure~\ref{fig:sig-all}. For comparison, Figure~\ref{fig:sig-all} also shows
 the result of migration with the correct velocity (the top left plot), initial
 velocity (the top right plot), and the result of velocity slicing after the
 simple NMO correction, corresponding to the conventional MVA (the bottom right
-plot). \uline{The same velocity picking and slicing program was used in both cases.}
+plot). \new{The same velocity picking and slicing program was used in both cases.}
 The comparison clearly shows that, in this simple example, velocity
 continuation is able to accurately reproduce the correct image without using
 any prior information about the migration velocity and without any need for
-repeating the prestack migration procedure. \uline{Velocity continuation correctly
+repeating the prestack migration procedure. \new{Velocity continuation correctly
 images events with conflicting dips by properly taking into account both
 vertical and lateral shifts in the image position.}
 
@@ -638,7 +642,7 @@ vertical and lateral shifts in the image position.}
   continuation. Bottom right: the result from picking migration
   image after only conventional NMO correction.}
 
-\subsection{\uline{Field} Data Example}
+\subsection{\new{Field} Data Example}
 \inputdir{elfvc}
 
 Figure \ref{fig:elf-migr} compares the result of a constant-velocity prestack
@@ -654,7 +658,7 @@ theory.
   with the velocity of 2 km/s (b), migration with the velocity of 1.4
   km/s and velocity continuation to 2 km/s (c).}
 
-Figure~\ref{fig:elffpk} shows a result of two-dimensional velocity
+Figure~\ref{fig:elf-npk} shows a result of two-dimensional velocity
 picking after velocity continuation. I used values of $\epsilon=0.1$
 and $\lambda=0.1$. The first parameter controls the vertical smoothing
 of velocities, while the second parameter controls the amount of
@@ -670,21 +674,21 @@ lateral continuity.
 %\plot{beivpk}{width=6in,height=3.5in}{Automatic picks of 2-D RMS velocity
 %  after residual NMO. The contour spacing is 0.1 km/s, starting from 1.5 km/s.}
 
-\plot{elffpk}{angle=90,totalheight=8.5in,width=6in}{Automatically
+\plot{elf-npk}{angle=90,totalheight=8.5in,width=6in}{Automatically
   picked migration velocity after velocity continuation.}
 
-Figure \ref{fig:elffmg} shows the final result of velocity
+Figure \ref{fig:elf-fmg} shows the final result of velocity
 continuation: an image, obtained by slicing through the velocity cube
 with the picked imaging velocities. The edges of the salt body in the middle
 of the section have been sharply focused by the velocity
 continuation process. To transform the already well focused image into the
 depth domain, one may proceed in a way similar to
 \emph{hybrid migration}: demigration to zero-offset, followed by
-post-stack depth migration \cite{GEO62-02-05680576}. This step
+post-stack depth migration \cite[]{GEO62-02-05680576}. This step
 would require constructing an interval velocity model from the picked imaging
 velocities.
 
-\plot{elffmg}{angle=90,totalheight=8.5in,width=6in}{Final result of
+\plot{elf-fmg}{angle=90,totalheight=8.5in,width=6in}{Final result of
   velocity continuation: seismic image, obtained by slicing through
   the velocity cube.}
 
@@ -694,13 +698,13 @@ and \ref{fig:img} show picked imaging velocities and the velocity
 continuation image for the Blake Outer Ridge data, shown in many other
 papers in this report.
 
-\plot{pck}{width=6in,height=3.5in}{Blake Outer Ridge data. Automatic
-  picks of 2-D imaging velocity after velocity continuation. The contour
-  spacing is 0.01 km/s, starting from 1.5 km/s.}
+%\plot{pck}{width=6in,height=3.5in}{Blake Outer Ridge data. Automatic
+%  picks of 2-D imaging velocity after velocity continuation. The contour
+%  spacing is 0.01 km/s, starting from 1.5 km/s.}
 
-\plot{img}{angle=90,totalheight=8.5in,width=6in}{Blake Outer Ridge
-  data. Final result of velocity continuation: seismic image, obtained
-  by slicing through the velocity cube.}
+%\plot{img}{angle=90,totalheight=8.5in,width=6in}{Blake Outer Ridge
+%  data. Final result of velocity continuation: seismic image, obtained
+%  by slicing through the velocity cube.}
 \end{comment}
 
 \section{Conclusions}
@@ -716,11 +720,11 @@ post-stack (zero-offset) setting, velocity continuation can be used as a
 computationally attractive method of time migration. Both finite-difference
 and spectral approaches possess remarkable invertability properties:
 continuation to a lower velocity reverses continuation to a higher velocity.
-\uline{For the finite-difference algorithm, this property is confirmed by synthetic
+\new{For the finite-difference algorithm, this property is confirmed by synthetic
 tests. For the spectral algorithm, it follows from the fact that velocity
 continuation reduces to a simple phase-shift unitary operator.}
 
-\uline{Including velocity continuation in the practice of migration velocity analysis
+\new{Including velocity continuation in the practice of migration velocity analysis
 can improve the focusing power of time migration and reduce the production
 time by avoiding the need for iterative velocity refinement. No prior velocity
 model is required for this type of velocity analysis. This conclusion is
@@ -731,13 +735,13 @@ confirmed by synthetic and field data examples.}
 I thank Jon Claerbout, Biondo Biondi, and Bill Symes for useful and
 stimulating discussions, the sponsors of the Stanford Exploration Project for
 their financial support, and Elf Aquitaine for providing the data used in this
-work. \uline{I am also grateful to Paul Fowler, Samuel Gray, Hugh Geiger, and one
+work. \new{I am also grateful to Paul Fowler, Samuel Gray, Hugh Geiger, and one
 anonymous reviewer for thorough and helpful reviews that improved the quality
 of the paper.}
 
 \newpage
-\bibliographystyle{sep}
-\bibliography{SEP,MISC,GEOTLE,EAEG,SEG,paper,spec,velcon}
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper,spec,velcon}
 
 %%% Local Variables: 
 %%% mode: latex
