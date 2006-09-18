@@ -738,6 +738,7 @@ For this choice in subroutine \texttt{rnpef1()}, I chose the median.
 
 
 \section{DEBURST}
+\inputdir{burst}
 \par
 We can use the same technique to throw out fitting equations
 from defective data that we use for missing data.
@@ -755,16 +756,16 @@ Here we will first use the second derivative
 while we determine the PEF.
 Having the PEF, we use it to fill in the missing data.
 
-\moddex{pefest}{estimate PEF in 1-D avoiding bad data}
+\moddex{pefest}{estimate PEF in 1-D avoiding bad data}{38}{53}{user/gee}
 The result of this ``PEF-deburst'' processing
 is shown in Figure \ref{fig:pefdeburst}.
-\activeplot{pefdeburst}{width=6.0in,height=3in}{ER}{
-        Top is synthetic data with noise spikes and bursts.
-        (Some bursts are fifty times larger than shown.)
-        Next is after running medians.
-        Next is Laplacian filter Cauchy deburst processing.
-        Last is PEF-deburst processing.
-        }
+\plot{pefdeburst}{width=6.0in,height=3in}{
+  Top is synthetic data with noise spikes and bursts.
+  (Some bursts are fifty times larger than shown.)
+  Next is after running medians.
+  Next is Laplacian filter Cauchy deburst processing.
+  Last is PEF-deburst processing.
+}
 \par
 Given the PEF that comes out of \texttt{pefest1()}\footnote{
         If you are losing track of subroutines defined earlier,
@@ -777,7 +778,7 @@ anomalous large outputs.  For each that is found, the input data is
 declared defective and set to zero.  Then subroutine \texttt{mis1()}
 \vpageref{/prog:mis2} is invoked to replace the zeroed values by
 reasonable ones.
-\moddex{fixbad}{restore damaged data}
+\moddex{fixbad}{restore damaged data}{41}{48}{user/gee}
 
 
 
@@ -827,6 +828,7 @@ is easily extendable to four dimensions (prestack 3-D data).
 
 %\begin{notforlecture}
 \section{TWO 1-D PEFS VERSUS ONE 2-D PEF}
+\inputdir{duel}
 %       Waveforms are commonly recorded
 %       on crossing lines such as shown in Figure \FIG{duelin}.
 %       Obviously we can fill in between lines
@@ -837,7 +839,7 @@ is easily extendable to four dimensions (prestack 3-D data).
 
 Here we look at the difference between using two 1-D PEFs,
 and one 2-D PEF.
-Figure \ref{fig:duelin90} shows an example of sparse tracks;
+Figure \ref{fig:duelin} shows an example of sparse tracks;
 it is not realistic
 in the upper-left corner
 (where it will be used for testing),
@@ -851,13 +853,13 @@ because at any place you put the filter
 unknown filter coefficients will multiply missing data.
 So every fitting goal is nonlinear
 and hence abandoned by the algorithm.
-\activeplot{duelin90}{width=6in,height=3.0in}{ER}{
-        Synthetic wavefield (left) and as observed over survey lines (right).
-        The wavefield is a superposition of waves from three directions.
-        }
+\plot{duelin}{width=6in,height=3.0in}{
+  Synthetic wavefield (left) and as observed over survey lines (right).
+  The wavefield is a superposition of waves from three directions.
+}
 
 \par
-The set of test data shown in Figure \ref{fig:duelin90}
+The set of test data shown in Figure \ref{fig:duelin}
 is a superposition of three functions like plane waves.
 One plane wave looks like low-frequency horizontal layers.
 Notice that the various layers vary in strength with depth.
@@ -888,7 +890,7 @@ where $\bold d$ is data (or binned data) and $(\bold I-\bold J)$
 masks the map onto the data.
 
 \par
-Figure \ref{fig:dueleither90} shows
+Figure \ref{fig:dueleither} shows
 the result of using a single one-dimensional PEF
 along either the vertical or the horizontal axis.
 
@@ -902,10 +904,10 @@ along either the vertical or the horizontal axis.
 %In this figure
 %the second PEF {\tt bb(,)} required by the subroutine is taken zero.
 
-\activeplot{dueleither90}{width=6in,height=3.0in}{ER}{
-        Interpolation by 1-D PEF along the vertical axis (left)
-        and along the horizontal axis (right).
-        }
+\plot{dueleither}{width=6in,height=3.0in}{
+  Interpolation by 1-D PEF along the vertical axis (left)
+  and along the horizontal axis (right).
+}
 
 \par
 %The same solver subroutine {\tt maski2()}
@@ -921,14 +923,14 @@ along either the vertical or the horizontal axis.
 %The purpose for cheating here is to establish motivation
 %for the more difficult task of doing the nonlinear estimation
 %on data lines where cheating would be impossible.
-Figure \ref{fig:duelversus90} compares
+Figure \ref{fig:duelversus} compares
 the use of a pair of 1-D PEFs versus a single 2-D PEF
-(which needs the ``cheat'' corner in Figure \ref{fig:duelin90}.
-\activeplot{duelversus90}{width=6in,height=3.0in}{ER}{
-        Data infilled by a pair of 1-D PEFs (left)
-        and by a single 2-D PEF (right).
-        }
-Studying Figure \ref{fig:duelversus90} we conclude
+(which needs the ``cheat'' corner in Figure \ref{fig:duelin}.
+\plot{duelversus}{width=6in,height=3.0in}{
+  Data infilled by a pair of 1-D PEFs (left)
+  and by a single 2-D PEF (right).
+}
+Studying Figure \ref{fig:duelversus} we conclude
 (what theory predicts) that
 \begin{itemize}
         \item These waves are predictable with a pair of 1-D filters:
@@ -998,7 +1000,7 @@ Their orbits would be north-south lines,
 but the earth's rotation causes them to appear to drift westward
 (with the sun) so the north-going runs leave northwest-going tracks
 and the southward runs leave southwest-going tracks.
-Figure~\ref{fig:synsat90} shows an interesting topography
+Figure~\ref{fig:synsat} shows an interesting topography
 striated in two non-orthogonal directions
 (much like superposed plane waves {\tt ;-)} and some tracks.
 For my convenience I have plotted northwest tracks in a vertical
@@ -1015,7 +1017,7 @@ but either map looks much like each other
 and both look like the satellite altimeter map,
 the differences being mainly in calibration and spatial filtering.
 
-\activeplot{synsat90}{width=6in,height=1.8in}{ER}{
+\activeplot{synsat}{width=6in,height=1.8in}{ER}{
         Synthetic topography (left),
         northward tracks (center), and
         southward tracks (right).
@@ -1040,7 +1042,7 @@ that causes each track to have a different mean, or more generally,
 a very low-frequency, along-the-track noise.
 
 \par
-Although the geometry of Figure~\ref{fig:synsat90} is somewhat unusual,
+Although the geometry of Figure~\ref{fig:synsat} is somewhat unusual,
 it is an attractive example for study for several reasons.
 First, it exhibits the familiar problem that survey lines
 are never as dense as we wish them to be.
@@ -1057,20 +1059,20 @@ kind of smoothness criterion.
 For example, we could have the solution
 fit the track data exactly and between the tracks
 we could have the solution satisfy Laplace's equation.
-For Figure~\ref{fig:seasat90},
+For Figure~\ref{fig:seasat},
 I chose instead to minimize the {\it energy} in the output
 of the \bx{Laplacian operator}
 (which amounts to satisfying the {\it squared} Laplace equation).
 The problem with either of these approaches
 is the implicit presumption of isotropy,
 i.e., that the interpolation be independent of orientation.
-The best result is obviously the last one in  Figure~\ref{fig:seasat90}
+The best result is obviously the last one in  Figure~\ref{fig:seasat}
 and we'll explore that next.
 
 \subsection{A deeper model than anisotropy}
 \par
 From the data south of $30^\circ$ latitude
-in Figure~\ref{fig:synsat90},
+in Figure~\ref{fig:synsat},
 we see the orientation of the two \bx{striations}
 (along with the third striation of along-the-track noise).
 But there are two orientations in the topography,
@@ -1084,13 +1086,13 @@ so instead I seek a filter with minimum power out.
 I first find this filter in the region of good spatial coverage.
 Then I carry it north to the area of sparse coverage
 where I find the solution by the principle of minimum power out.
-The result is shown on the right in Figure~\ref{fig:seasat90}.
+The result is shown on the right in Figure~\ref{fig:seasat}.
 The result is overwhelmingly better than the isotropic approach.
 The result is almost perfect but the solutions
 might still be a little weaker in the middle of large track gaps
 because I limited the number of conjugate-direction iterations to 20.
 (The figure computes in a few seconds.)
-\activeplot{seasat90}{width=6in,height=1.8in}{ER}{
+\activeplot{seasat}{width=6in,height=1.8in}{ER}{
         Adjoint reconstruction (left),
         reconstruction by Laplacian (center), and
         reconstruction by 2-D PEF (right).
@@ -1151,7 +1153,7 @@ $\bold d$ is data,
 $\bold h$ is altitude,
 $\bold T$ is the operator that makes data tracks from an altitude map, and
 $\epsilon$ is the usual damping parameter.
-Figure~\ref{fig:seasat90} uses two different values of $\bold A_h$,
+Figure~\ref{fig:seasat} uses two different values of $\bold A_h$,
 one a Laplacian and one a PEF.
 
 \par

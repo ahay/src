@@ -1,28 +1,26 @@
-/* Synthetics with bursts of noise.
- */
+/* Synthetics with bursts of noise. */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 
 #include <rsf.h>
 
 #include "random.h"
-
 
 int main(int argc, char* argv[])
 {
@@ -48,10 +46,16 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc(n1);
 
-    random_init (121094);
-
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(data,n1,in);
+
+	random_init (121794);
+	
+	for (i=0; i < n1; i++) {
+	    data[i] += (random0()-0.5)*0.001;
+	}
+	
+	random_init (121094);
 
 	i=0;
 	while (i < n1) {

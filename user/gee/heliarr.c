@@ -1,6 +1,6 @@
-/* Remove burst noise, 1-D */
+/* An array of two helix convolutions */	
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,25 +16,32 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
 #include <rsf.h>
+
+#include "helix.h"
 /*^*/
 
-#include "deburst.h"
-#include "icai1.h"
+#include "helicon.h"
 
-void deburst (int n           /* data length */, 
-	      int niter       /* number of iterations */, 
-	      sf_weight wght  /* weight operator */, 
-	      float eps       /* regularization */, 
-	      const float *dd /* input data */, 
-	      float *hh       /* output model */) 
-/*< debursting by optimization >*/
+static filter aa1, aa2;
+
+void heliarr_init (filter a1, filter a2)
+/*< initialize >*/
 {
-    float aa[] = {-1.,2.,-1.}; /* laplacian filter */
+    aa1 = a1;
+    aa2 = a2;
+}
 
-    icai1_init (3, aa, 1); 
-    sf_solver_reg(sf_copy_lop, sf_cgstep, icai1_lop, n, n, n, hh, dd, 
-		  niter, eps, "wght", wght, "nfreq", 1, "nmem", 0, "end");
-    sf_cgstep_close();
+void heliarr_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
+/*< linear operator >*/
+{
+    if (ny != 2*nx) sf_error("%s: wrong dimensions: %d != 2*%d",
+			     __FILE__,ny,nx);
+
+    sf_adjnull(adj,add,nx,ny,xx,yy);
+
+    helicon_init(aa1);
+    helicon_lop (adj,true,nx,nx,xx,yy);
+    helicon_init(aa2);
+    helicon_lop (adj,true,nx,nx,xx,yy+nx); 
 }

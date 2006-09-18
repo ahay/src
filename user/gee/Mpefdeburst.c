@@ -1,6 +1,6 @@
-/* Remove bursty noise by IRLS. */
+/* Burst noise removal using PEF. */
 /*
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2006 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -19,60 +19,60 @@
 
 #include <rsf.h>
 
-#include "deburst.h"
+#include "pefest.h"
+#include "fixbad.h"
+#include "bound.h"
+#include "printfilter.h"
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, i2, niter;
-    char *norm;
-    float *data, *model, eps;
+    int n1, i1, na, ia, niter, center=0;
+    float *data;
+    filter aa;
     sf_file in, out;
-    sf_weight weight=NULL;
 
     sf_init(argc,argv);
     in = sf_input("in");
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
-
-    data = sf_floatalloc(n1);
-    model = sf_floatalloc(n1);
+    
+    if (!sf_getint("na",&na)) na=3; 
+    /* PEF length */
+    na--;
 
     if (!sf_getint("niter",&niter)) niter=10;
     /* number of iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1.;
-    /* regularization parameter */
-    if (NULL == (norm = sf_getstring("norm"))) {
-	/* norm to use in IRLS (cauchy,l1) */
-	weight=sf_cauchy;
-    } else {
-	sf_warning("got %s",norm);
 
-	switch(norm[0]) {
-	    case 'c': case 'C':
-		weight=sf_cauchy;
-		break;
-	    case 'l': case 'L':
-		weight=sf_l1;
-		break;
-	    default:
-		sf_error("unknown norm %s",norm);
-		break;
-	}
+    data = sf_floatalloc(n1);
+    aa = allocatehelix(na);
+
+    sf_floatread(data,n1,in);
+
+    aa->flt[0]=-2;
+    aa->flt[1]=1;
+
+    for (ia=0; ia < na; ia++) {
+	aa->lag[ia] = ia+1;
     }
 
-    sf_irls_init(n1);
+    bound (1, &n1, &n1, &na, aa);
+    pefest (na * 2, n1, data, aa);
 
-    for (i2=0; i2 < n2; i2++) {
-	sf_floatread (data,n1,in);
-
-	deburst (n1, niter, weight, eps, data, model);
-
-	sf_floatwrite (model,n1,out);
+    for (i1=0; i1 < n1; i1++) {
+	aa->mis[i1] = false;
     }
+
+    na++;
+    print (1, &n1, &center, &na, aa);
+  
+    fixbad (niter, aa, n1, data);
+
+    sf_floatwrite(data,n1,out);
 
     exit(0);
 }
 
-/* 	$Id$	 */
+
+
+
