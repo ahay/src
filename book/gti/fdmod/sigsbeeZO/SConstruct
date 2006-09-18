@@ -2,8 +2,8 @@ from rsfproj import *
 import fdmod,zomig
 
 par = {
-    'nz':1201, 'dz':0.025,  'oz':0,  'lz':'label1=z unit1=km', 
-    'nx':3201, 'dx':0.025,  'ox':10, 'lx':'label2=x unit2=km',
+    'nz':1201, 'dz':0.025,  'oz':0,  'lz':'label1=z unit1=kft', 
+    'nx':3201, 'dx':0.025,  'ox':10, 'lx':'label2=x unit2=kft',
     'nt':5000, 'dt':0.001,  'ot':0,  'lt':'label1=t unit1=s',
     'kt':100,
     'nw':400,'ow':0,'jw':1,'verb':'y','tmx':20,'dtmax':0.0001,'nrmax':3
@@ -31,6 +31,7 @@ Flow('dens','velo','math output=2000')
 
 Result('velo',fdmod.cgrey('allpos=y pclip=95',par))
 # ------------------------------------------------------------
+
 # reflectivity
 refl = 'sigsbee2a_reflection_coefficients.sgy'
 Fetch(refl,'sigsbee')
@@ -46,8 +47,6 @@ Flow('refl','zrefl','put d1=%(dz)g o2=%(ox)g d2=%(dx)g label1=z label2=x' % par)
 
 Result('refl',fdmod.cgrey('pclip=99',par))
 
-
-# ------------------------------------------------------------
 # source coordinates (exploding reflectors)
 for x in ('x1','x2'):
     if(x=='x1'): o='zs'
@@ -70,6 +69,7 @@ Flow('ss',['xs','zs','rs'],
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp |
      window j2=2
      ''', stdin=0)
+
 # ------------------------------------------------------------
 
 # ------------------------------------------------------------
