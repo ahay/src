@@ -6,7 +6,7 @@
 \author{Sergey Fomel\/\footnotemark[1] and Gilles Hennenfent\/\footnotemark[2]}
 
 \footnotetext[1]{University of Texas at Austin, E-mail: sergey.fomel@beg.utexas.edu}
-\footnotetext[2]{University of British Columbia, E-mail: ghennenfent@eos.ubc.ca}
+\footnotetext[2]{Earth \& Ocean Sciences, University of British Columbia, E-mail: ghennenfent@eos.ubc.ca}
 
 \maketitle
 
@@ -132,22 +132,6 @@ research requires the author of a publication to document creation of
 numerical results from the input data and software sources to let
 others test and verify the result reproducibility
 \cite[]{SEG-1992-0601,matt}.
-%% In Claerbout's words
-%% \footnote{http://sepwww.stanford.edu/research/redoc/IRIS.html},
-%% \begin{quote}
-%%   The purpose of reproducible research is to facilitate someone going a step
-%%   further by changing something. The first step that someone will want to make
-%%   is to be sure that your work is reproducible before they change and improve
-%%   upon it. 
-%% \end{quote}
-%% \begin{quote}
-%%   It takes some effort to organize your research to be reproducible.
-%%   We found that although the effort seems to be directed to helping other
-%%   people stand up on your shoulders, the principal beneficiary is generally
-%%   the author herself. This is because time turns each one of us into another
-%%   person, and by making effort to communicate with strangers, we help
-%%   ourselves to communicate with our future selves.
-%% \end{quote}
 The discipline of reproducible research was also adopted and
 popularized in the statistics and wavelet theory community by
 \cite{donoho}. It is referenced in several popular wavelet theory
@@ -158,20 +142,6 @@ geoinformatics \cite[]{geo}, and computational
 wave propagation \cite[]{randy}. However, the adoption or reproducible
 research practice by computational scientists has been slow.
 Partially, this is caused by difficult and inadequate tools.
-
-%What kind of documentation is required to make geophysical numerical
-%experiments reproducible? Geophysical data analysis involves remote datasets
-%that are typically passed through several data processing steps before a final
-%image is created and some information about the subsurface geology is
-%inferred.  Keeping a precise record of the processing history is necessary for
-%reproducing and verifying the result. 
-
-%The closest analog from other
-%disciplines is medicine. Both geosciences and medical sciences study unique
-%objects (the Earth planet and the human organism respectively). Each
-%geophysical dataset is in some sense as unique as each medical patient, and
-%keeping a careful log of the data analysis history is essential for scientific
-%validation of the methods applied to it.
 
 \subsection{Tools for reproducible research}
 
@@ -255,31 +225,46 @@ reproducible research in scientific computing.
 
 \subsection{Paper organization}
 
-To demonstrate our adoption of SCons for reproducible research, we
-first describe a couple of simple examples of computational
-experiments and then show how SCons helps us document our
-computational results.
+We first give a brief overview of ``Madagascar'' software package and
+define the different levels of user interactions. To demonstrate our
+adoption of SCons for reproducible research, we then describe a couple
+of simple examples of computational experiments and finally show how
+SCons helps us document our computational results.
 
-\begin{comment}
-\newpage
-\section{Madagascar open source code}
+\section{Madagascar software package overview}
 %
-Madagascar's homepage is \url{http://rsf.sourceforge.net}. Madagascar
-source code is proposed in two versions:
-\href{https://sourceforge.net/project/showfiles.php?group_id=162909}{stable}
-and
-\href{http://rsf.sourceforge.net/wiki/index.php/Svn-url}{development}.
-The stable version is a snapshot of Madagascar at a given time. It was
-installed on different platforms and tested before being released.
-Updates are typically done every few months as opposed to the
-development version which is updated every few hours or days by a
-dynamic team of developers. As such, there is no guarantee that the
-development version will be fully functional and stable at any given
-point in time. In the remaining of this paper, we assume that you have
-successfully installed Madagascar stable version and that you have an
-Internet connection\footnote{XXX provide alternate mean to download
-  Lena.img if no Internet connection XXX}.
-\end{comment}
+\inputdir{.}
+\plot{rsf_diag}{width=\textwidth}{caption}
+%
+``Madagascar'' is a multi-layered software package
+(Fig.~\ref{fig:rsf_diag}). Users can thus use it in different ways:
+%
+\begin{itemize}
+\item \textbf{command line}: ``Madagascar'' is first of all a
+  collection of command line programs. Most programs act as filters on
+  input data and can be chained in a Unix pipeline, e.g.
+\begin{verbatim}sfspike n1=200 n2=50 | sfnoise rep=y >noise.rsf\end{verbatim}\\
+Although these programs mainly focus at this point on geophysical
+applications, users can use the API (application programmer's
+interface) for writing their own software to manipulate Regularly
+Sampled Format (RSF) files, ``Madagascar'' file format. The main
+software language of ``Madagascar'' is C. Interfaces to other
+languages (C++, Fortran-77, Fortran-90, Python) are also provided.
+\item \textbf{processing flows}: ``Madagascar'' is also an environment
+  for reproducible numerical experiments in a very broad sense. These
+  numerical experiments (or ``computational recipes'') can be done not
+  only using ``Madagascar'' command line programs but also Matlab,
+  Mathematica, Python, or other seismic packages (e.g. SEP, Seismic
+  Unix). We adopted SCons for this part as we shall demonstrate later.
+\item \textbf{documentation}: the most upper layer of ``Madagascar''
+  and maybe the most critical for reproducible research is
+  documentation. ``Madagascar'' establishes a direct link between the
+  figures of a paper or a report and the codes that were used to
+  generate them. This layer uses SCons in combination with \LaTeX\ to
+  generate PDF, HTML, and MediaWiki files real easy and undoubtly
+  makes ``Madagascar'' an environment of choice for technology
+  transfer, report, thesis, and peer-reviewed publication writing.
+\end{itemize}
 
 \section{Example experiments}
 
