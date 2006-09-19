@@ -1,0 +1,29 @@
+\title{Multiples in imaging}
+\author{Greg Wimpey}
+\email{blah@blah}
+
+\maketitle
+
+% redo model (no overlaping P and M)
+% migrate (dens=n) and analyze and think
+% migrate (dens=y) and analyze and think
+% look at wavefields
+
+
+\section{Theory}
+
+
+\section{Examples}
+
+\inputdir{greg}
+
+\plot{vm}{width=\textwidth}{Velocity}
+\plot{rm}{width=\textwidth}{Density}
+
+\plot{dw}{width=\textwidth}{Source data}
+\plot{dx}{width=\textwidth}{Receiver data}
+
+\plot{kk}{width=\textwidth}{Image w/o density}
+\plot{ko}{width=\textwidth}{Image w/  density}
+
+\multiplot{4}{vm,rm,kk,ko}{angle=90,width=0.30\textwidth}{Model and Images}

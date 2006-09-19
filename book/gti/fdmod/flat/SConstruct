@@ -7,9 +7,9 @@ import zomig,spmig,fdmod
 # ------------------------------------------------------------
 par = {
     'nt':3000, 'dt':0.001,'ot':0, 'lt':'label1=time unit1=s',
+    'nx':401,  'ox':0,    'dx':0.01,  'lx':'label2=x unit2=km',
+    'nz':201,  'oz':0,    'dz':0.01,  'lz':'label1=z unit1=km',
     'kt':100,    # wavelet delay
-    'nx':401, 'ox':0, 'dx':0.01,  'lx':'label2=x unit2=km',
-    'nz':201, 'oz':0, 'dz':0.01,  'lz':'label1=z unit1=km',
     #
     'nw':100,'ow':0,'jw':1,
     'verb':'y','tmx':20, 'jsnap':50
@@ -19,41 +19,17 @@ fdmod.param(par)
 
 # ------------------------------------------------------------
 # wavelet
-Flow('wav',None,
-         '''
-         spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
-         ricker1 frequency=15 |
-         scale axis=123 |
-         put label1=t label2=x label3=y 
-         ''' % par)    
+fdmod.wavelet('wav',15,par)
 Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
-# experiment setup
-
-Flow('r_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-Flow('s_',None,'math n1=1      d1=0      o1=0      output=0' % par)
-
 # receiver positions
-Flow('zr','r_','math output="0" ')
-Flow('xr','r_','math output="x1"')
-Flow('rr',['xr','zr'],
-     '''
-     cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} | transp
-     ''', stdin=0)
+fdmod.horizontal('rr',0,par)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
      + fdmod.cgraph('symbol=* plotcol=6',par))
 
 # source positions
-Flow('zs','s_','math output=0')
-Flow('xs','s_','math output=2.0')
-Flow('rs','s_','math output=1')
-Flow('ss',['xs','zs','rs'],
-     '''
-     cat axis=2 space=n
-     ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
-     ''', stdin=0)
+fdmod.point('ss',2,0,1,par)
 Plot('ss','window n1=2 | dd type=complex | window | '
      + fdmod.cgraph('symbol=v plotcol=6',par))
 

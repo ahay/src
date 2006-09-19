@@ -97,8 +97,11 @@ Result('alld','dx dw',
 
 fdmod.rtm('ii','dw','dx','vm','rm','rr','rr','qq','free=y dens=n',1000,par)
 Flow('kk','ii','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)
-Result('kk',fdmod.cgrey('pclip=100',par))
+Result('kk',fdmod.cgrey('pclip=99',par))
 
+fdmod.rtm('io','dw','dx','vm','rm','rr','rr','qq','free=y dens=y',1000,par)
+Flow('ko','io','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)
+Result('ko',fdmod.cgrey('pclip=99',par))
 
 Flow('wr','ii_tdr',
      '''
