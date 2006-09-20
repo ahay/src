@@ -19,8 +19,9 @@ for mode in ['pp','ss']:
     data = 'bend_l1_%cmig_enhanc.sgy' % mode[1]
     Fetch(data,'vecta',private)
     Flow(mode,data,
-         'segyread tape=$SOURCE read=data | window n2=471 | scale axis=2',
+         'segyread tape=$SOURCE read=data | window n2=471 | scale axis=2 | put label2=Trace',
          stdin=0)
+    Result(mode,mode,'Overlay')
     Result('v'+mode,[mode,'line'],'Overlay')
 
 nails = Split('''
@@ -68,5 +69,8 @@ warp.warp2('vec','pp','ss','fit0',
            frame1=285,
            iter=2,
            clip=0.39)
+
+Result('pi','ppi','Overlay')
+Result('si','vec-si-0','Overlay')
 
 End()

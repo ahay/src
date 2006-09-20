@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
 	    for (it=0; it < type; it++) {
 		iy = sign? it + type*(is + ih - nh + 1): type*(is - ih) - it;
 		if (iy >= 0 && iy < ny) {
-		    sf_seek(in,pos+(iy*nh+ih)*nt,SEEK_SET);
+		    sf_seek(in,pos+(off_t)(iy*nh+ih)*nt,SEEK_SET);
 		    sf_charread(trace,nt,in);
 		    sf_charwrite(trace,nt,out);
 		} else {

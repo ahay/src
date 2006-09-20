@@ -19,7 +19,8 @@ Flow('shot','gom',
      intbin xk=tracf yk=fldr | window f3=1749 |
      put label1=Time unit1=s
      o3=2900 d3=25 label3=Shot unit3=m
-     o2=-162.6 d2=-12.5 label2=Half-offset unit2=m
+     o2=-162.6 d2=-12.5 label2=Half-offset unit2=m |
+     reverse which=2
      ''')
 
 for coord in ('s','g'):
@@ -31,30 +32,92 @@ for coord in ('s','g'):
          window f3=1749
          ''' % coord)
 
-Result('tzo','shot','window n2=1 | grey title="Near Offset" ')
+Result('tzo','shot','window n2=1 f2=103 | agc rect1=250 | grey title="Near Offset" ')
 
-Flow('cmp mask','shot',
-     'reverse which=2 | shot2cmp mask=${TARGETS[1]} positive=n')
+Flow('cmp mask','shot','shot2cmp mask=${TARGETS[1]}')
 
-Flow('cmp1','cmp','window n3=1 f3=1000')
+Flow('cmp1','cmp','window n3=1 f3=1000 | mutter v0=1400')
 Flow('mask1','mask','window n2=1 f2=1000')
 
-Flow('scan1','cmp1 mask1',
-     'vscan semblance=y mask=${SOURCES[1]} v0=1400 dv=20 nv=161')
+vscan = 'vscan semblance=y mask=${SOURCES[1]} v0=1400 dv=25 nv=184'
 
-Flow('pick1','scan1','mutter inner=y half=n x0=1400 v0=100 | pick rect1=100')
-
+Flow('scan1','cmp1 mask1',vscan)
+Flow('pick1','scan1','pick rect1=100')
 Flow('nmo1','cmp1 pick1','nmo velocity=${SOURCES[1]}')
 
+Flow('left1','nmo1','window n2=10 f2=42 | pad n2=17')
+Flow('rite1','left1','window n2=16 | reverse which=2')
+Flow('hole1','left1 rite1','cat axis=2 ${SOURCES[1]}')
+Flow('twod1','hole1','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
+Flow('fill1','hole1 twod1','planemis2 dip=${SOURCES[1]}')
+Flow('end1','fill1','window f2=10 n2=7')
+Flow('ecmp1','nmo1 end1 pick1','cat axis=2 ${SOURCES[1]} | inmo velocity=${SOURCES[2]}')
 
-Flow('scan','cmp mask',
-     'vscan semblance=y mask=${SOURCES[1]} v0=1400 dv=20 nv=161')
-Flow('pick','scan','mutter inner=y half=n x0=1400 v0=100 | pick rect1=100 rect2=100')
-Flow('nmo','cmp pick','nmo velocity=${SOURCES[1]}')
+Flow('scan','cmp mask',vscan)
+Flow('pick','scan','pick rect1=50 rect2=25')
+
+Result('pick',
+       '''
+       window |
+       grey color=j bias=1400 allpos=y scalebar=y title="Stacking Velocity"
+       ''')
+
+Flow('nmo','cmp pick','mutter v0=1400 | nmo velocity=${SOURCES[1]}')
 
 Flow('stack','nmo','stack')
 
 Result('stack','agc rect1=250 | grey title=Stack')
 
+# Interpolate near offsets
+Flow('left','nmo','window n2=10 f2=42 | pad n2=17')
+Flow('rite','left','window n2=16 | reverse which=2')
+Flow('hole','left rite','cat axis=2 ${SOURCES[1]}')
+Flow('twod','hole','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
+Flow('fill','hole twod','planemis2 dip=${SOURCES[1]}')
+Flow('end','fill','window f2=10 n2=7')
+Flow('ecmp','nmo end pick','cat axis=2 ${SOURCES[1]} | inmo velocity=${SOURCES[2]}')
+
+Flow('inmo','nmo pick','inmo velocity=${SOURCES[1]} | mutter mutter v0=1400')
+
+Flow('shot1','shot','window n3=1 f3=436')
+
+Plot('shot1','pad n2=233 | grey title="Original Shot Gather" ')
+
+Flow('eshot','ecmp','cmp2shot | window n3=872 min3=2900 n2=117')
+
+Flow('cmp2','eshot',
+     '''
+     math output=0 |
+     interleave $SOURCE axis=3 |
+     put d3=12.5 o3=2887.5 |
+     shot2cmp 
+     ''')
+
+Flow('cmp2r','cmp2',
+     'window n2=116 | reverse which=2 opt=n memsize=500')
+Flow('cmps','cmp2 cmp2r','cat axis=2 ${SOURCES[1]}')
+Flow('shot2','cmps','cmp2shot | window n3=872 min3=2900 j3=2')
+
+Flow('shotc','shot2','transp | bandpass fhi=0.02 | transp')
+
+Flow('shot21','shotc','window n3=1 f3=436')
+
+Plot('shot21','grey title="Double-Sided Shot Gather" ')
+
+Result('shot1','shot1 shot21','SideBySideAniso')
+
+radon = 'radon adj=y inv=y spk=n p0=-0.004 np=801 dp=0.00001 verb=y'
+
+Flow('rad1','shot21','radon adj=y inv=y spk=n p0=-0.004 np=801 dp=0.00001')
+
+Plot('rad1','window min2=-0.002 max2=0.002 | grey label2=Slope unit2=s/m title="Slant Stack" ')
+
+Flow('rad2','rad1','radon adj=n nx=233 dx=12.5 ox=-1450.1')
+
+Plot('rad2','grey title="Shot Reconstruction" ')
+
+Result('rad','rad1 rad2','SideBySideAniso')
+
+Flow('rad','shotc',radon)
 
 End()

@@ -18,6 +18,7 @@
 */
 
 #include <math.h>
+#include <float.h>
 
 #include "conjgrad.h"
 #include "alloc.h"
@@ -129,7 +130,11 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
     } 
     
     dg = g0 = b0 = gnp = 0.;
-    r0 = verb? norm(nr,r): 0.;
+    r0 = norm(nr,r);
+    if (r0 < DBL_EPSILON) {
+	if (verb) sf_warning("zero residual: r0=%g",r0);
+	return;
+    }
 
     for (iter=0; iter < niter; iter++) {
 	for (i=0; i < np; i++) {

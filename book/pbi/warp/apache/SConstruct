@@ -30,6 +30,7 @@ Result('pp2','pp2','Overlay')
 
 warp.warp2('apa','pp2','pscube','warp0',
            nx=326,
+           o2=375,
            tmax=1.1,
            inter=2,
            trace=600,

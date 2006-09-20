@@ -13,7 +13,7 @@ Flow('chirp2',None,
 
 Plot('chirp',
      '''
-     graph title="Chirp Signal" label1="Time (s)" label2=Amplitude
+     graph title="(a) Chirp Signal" label1="Time (s)" label2=Amplitude
      labelsz=10 titlesz=12
      ''') 
 
@@ -23,7 +23,7 @@ for case in (1,2):
          '''     
          iphase order=200 rect1=%d hertz=y |
          window min1=0 n1=1024 |
-         graph title="Chirp %s Frequency" min2=0 max2=30 plotcol=5
+         graph title="(a) Chirp %s Frequency" min2=0 max2=30 plotcol=5
          label1="Time (s)" label2="Frequency (Hz)"
          labelsz=10 titlesz=12
          ''' % ((1,"Instantaneous"),(10,"Local"))[case-1])
@@ -43,7 +43,7 @@ Flow('conv','refl','ricker1')
 plots = {'ai1':'Acoustic Impedance',
          'refl':'Reflectivity',
          'ricker': 'Wavelet',
-         'conv': 'Synthetic Trace'}
+         'conv': '(b) Synthetic Trace'}
 for plot in plots.keys():
     Plot(plot,
          '''
@@ -65,7 +65,7 @@ for case in (1,2):
     Plot(sf,
          '''
          scale dscale=0.05 |
-         graph title="Synthetic %s Frequency"
+         graph title="(b) Synthetic %s Frequency"
          wantaxis1=n min2=-5 max2=100
          label2="Frequency (Hz)" plotcol=5
          labelsz=10 titlesz=12
@@ -80,7 +80,7 @@ Flow('pptrace1','pptrace.rsf','dd form=native | window max1=5')
 
 Plot('seis','pptrace1',
      '''
-     graph title="Seismic Trace" label1="Time (s)" label2=Amplitude
+     graph title="(c) Seismic Trace" label1="Time (s)" label2=Amplitude
      labelsz=10 titlesz=12
      ''')
 
@@ -89,7 +89,7 @@ for case in (1,2):
     Plot(seis,'pptrace1',
          '''
          iphase rect1=%d order=10 hertz=y |
-         graph title="Seismic %s Frequency"
+         graph title="(c) Seismic %s Frequency"
          min2=-20 max2=100 plotcol=5
          label1="Time (s)" label2="Frequency (Hz)"
          labelsz=10 titlesz=12
