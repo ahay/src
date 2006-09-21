@@ -118,6 +118,30 @@ Plot('rad2','grey title="Shot Reconstruction" ')
 
 Result('rad','rad1 rad2','SideBySideAniso')
 
-Flow('rad','shotc',radon)
+# Flow('rad','shotc',radon)
+
+for p in (-1,0,1):
+    plane = 'plane%d' % p
+
+    pg = 0.0005*p
+    Flow(plane,'rad','window n2=1 min2=%g' % pg)
+    Plot(plane,
+           '''
+           grey title="Plane-Wave Section (p=%g s/m)"
+           label2=Source unit2=m 
+           ''' % pg)
+
+    slp = 'slp%d' % p
+    Flow(slp,plane,'dip rect1=50 rect2=25')
+
+    pwd = 'pwd%d' % p
+    Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
+    Plot(pwd,
+         '''
+         grey title="Diffractions (p=%g s/m)"
+         label2=Source unit2=m 
+         ''' % pg)
+
+    Result(plane,[plane,pwd],'SideBySideAniso')
 
 End()

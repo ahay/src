@@ -24,7 +24,7 @@
 int main(int argc, char *argv[])
 {
     int n1, i2, n2;
-    bool inv, adj;
+    bool inv, adj, unit;
     char *type;
     float *pp, *qq;
     sf_file in, out;
@@ -46,10 +46,13 @@ int main(int argc, char *argv[])
     if (!sf_getbool("adj",&adj)) adj=false;
     /* if y, do adjoint transform */
 
+    if (!sf_getbool("unit",&unit)) unit=false;
+    /* if y, use unitary scaling (orthonormal transform) */
+
     if (NULL == (type=sf_getstring("type"))) type="linear";
     /* wavelet type */
 
-    wavelet_init(n1,inv,type[0]);
+    wavelet_init(n1,inv,unit,type[0]);
 
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);

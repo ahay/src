@@ -59,14 +59,14 @@ int main(int argc, char* argv[])
 
     slv = ctridiagonal_init (nx);
 
-    if (dh > 0.) {
+    if ((dh > 0. && h0 >= 0.) || (dh < 0. && h0 <= 0.)) {
 	n1 = nh-1; 
 	ns = -1;
-	n2 = -0.5 - h0/dh;		    
+	n2 = -0.5 - h0/dh;
     } else {
-	n1 = 0; 
+	n1 = 0;
 	ns = 1;
-	n2 = 0.5 - h0/dh;
+	n2 = nh - h0/dh - 0.5;
     }
 
     if (stack) {

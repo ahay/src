@@ -3,8 +3,8 @@ import random, string
 
 random.seed(2005)
 
-Fetch('lena.img','imgs')
-Flow('lena','lena.img',
+Fetch('mona.img','imgs')
+Flow('mona','mona.img',
      '''
      echo n1=512 n2=513 in=$SOURCE data_format=native_uchar |
      dd type=float |
@@ -17,31 +17,31 @@ def grey(title,allpos=1):
     color=b screenratio=1 wantaxis=n
     ''' % (allpos,title)
 
-Result('lena',grey('Lena'))
+Result('mona',grey('Mona Lisa'))
 
-Flow('haar1','lena','transp | dwt type=h | transp')
+Flow('haar1','mona','transp | dwt type=h | transp')
 Result('haar1',grey('1-D Haar Transform'))
 
 Flow('haar2','haar1','dwt type=h')
 Result('haar2',grey('2-D Haar Transform'))
 
-Flow('linear1','lena','transp | dwt type=l | transp')
+Flow('linear1','mona','transp | dwt type=l | transp')
 Result('linear1',grey('1-D Wavelet Transform'))
 
 Flow('linear2','linear1','dwt type=l')
 Result('linear2',grey('2-D Wavelet Transform'))
 
 for scale in (2,4,8,16,32,64,128,256):
-    lena = 'lena%d' % scale
-    Flow(lena,'linear2',
+    mona = 'mona%d' % scale
+    Flow(mona,'linear2',
          '''
          cut f2=%d f1=%d |
          dwt type=l inv=y adj=y |
          transp | dwt type=l inv=y adj=y | transp
          ''' % (scale,scale))
-    Result(lena,grey('Scale=%d' % scale))
+    Result(mona,grey('Scale=%d' % scale))
 
-Flow('slena','lena',
+Flow('smona','mona',
      '''
      transp |
      put d1=0.004 d2=0.01 o2=0 o1=0 |
@@ -51,7 +51,7 @@ Flow('slena','lena',
      bandpass flo=15 fhi=45 |
      transp
      ''')
-Result('slena',grey('Seismic Lena',0))
+Result('smona',grey('Seismic Mona Lisa',0))
 
 
 nsp = 100
@@ -83,8 +83,8 @@ for type in ('haar','linear'):
     allpos=y color=j
     ''' % Type)
 
-title = {'lena': 'Lena',
-         'slena': 'Seismic Lena',
+title = {'mona': 'Mona Lisa',
+         'smona': 'Seismic Mona Lisa',
          'imps': 'Wavelets'}
 
 for case in title.keys():
@@ -97,13 +97,13 @@ for case in title.keys():
        label2=Wavenumber label1=Frequency allpos=y
        ''' % title[case])
 
-Flow('sdip','slena','transp | dip rect1=20 rect2=20 order=1')
+Flow('sdip','smona','transp | dip rect1=20 rect2=20 order=1')
 Result('sdip','grey color=j title="Seismic Slope" scalebar=y')
 
-Flow('spwd','slena sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
+Flow('spwd','smona sdip','transp | pwd order=1 dip=${SOURCES[1]} | transp')
 Result('spwd',grey('Seismic Residual',0) + ' clip=34.4275')
 
-Flow('seis','slena sdip',
+Flow('seis','smona sdip',
      'transp | seislet dip=${SOURCES[1]} eps=0.01 adj=y inv=y | transp')
 Result('seis',grey('Seislet Transform',0))
 
@@ -112,12 +112,12 @@ Flow('sinv','seis sdip',
 Result('sinv',grey('Inverse Seislet Transform',0))
 
 for scale in (2,4,8,16,32,64,128,256):
-    slena = 'slena%d' % scale
-    Flow(slena,'seis sdip',
+    smona = 'smona%d' % scale
+    Flow(smona,'seis sdip',
          '''
          transp | cut f2=%d | seislet dip=${SOURCES[1]} | transp
          ''' % scale)
-    Result(slena,grey('Scale=%d' % scale,0))
+    Result(smona,grey('Scale=%d' % scale,0))
 
 for c in (1,5):
     rec = 'srec%d' % c
@@ -139,7 +139,7 @@ for c in (1,5):
     Result(wrec,grey('Inverse Wavelet Transform (%d%%)' % c))
     
     srec = 'wsrec%d' % c
-    Flow(srec,'slena',
+    Flow(srec,'smona',
          'dwt | threshold pclip=%d | dwt adj=y inv=y' % c)
     Result(srec,grey('Inverse Wavelet Transform (%d%%)' % c,0))
 

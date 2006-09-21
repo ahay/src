@@ -23,7 +23,7 @@
 static int nt;
 static bool inv;
 static void (*transform)(bool);
-static float *t;
+static float *t, s;
 
 static void linear(bool adj) 
 /* Lifting linear-interpolation transform in place */
@@ -97,7 +97,34 @@ static void haar(bool adj)
     }
 }
 
-void wavelet_init(int n, bool inv1, char type) 
+static void uhaar(bool adj) 
+/* Unitary Haar transform */
+{
+    int i, j;
+    float a, b;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		a = (t[i]+t[i+j])*s;
+		b = (t[i]-t[i+j])*s;
+		t[i+j] = a;
+		t[i] = b;
+	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		a = (t[i+j]-t[i])*s;
+		b = (t[i+j]+t[i])*s;
+		t[i+j] = a;
+		t[i] = b;
+	    }	    
+	}
+    }
+}
+
+void wavelet_init(int n /* data size */, bool inv1, bool unit, char type) 
 /*< allocate space >*/
 {
     inv = inv1;
@@ -105,9 +132,11 @@ void wavelet_init(int n, bool inv1, char type)
     for (nt=1; nt < n; nt *= 2) ;
     t = sf_floatalloc(nt);
 
+    if (unit) s = sqrtf(0.5);
+
     switch(type) {
 	case 'h': 
-	    transform = haar;
+	    transform = unit? uhaar: haar;
 	    break;
 	case 'l':
 	    transform = linear;

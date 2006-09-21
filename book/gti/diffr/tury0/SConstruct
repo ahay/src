@@ -24,8 +24,8 @@ stack.stack('tury',
 #            vslope=0.67, #
 #            vx0=1.5,     #
             tmax=6,
-            f1=15,
+            f1=190,
             an=2,
-            nout=2048)
+            nout=1500)
 
 End()

@@ -73,8 +73,7 @@ def stack(name,
          '''
          window f1=%d | logstretch nout=%d |
          fft1 | transp plane=13 memsize=500 |
-         finstack |
-         transp memsize=500 |
+         finstack | transp memsize=500 |
          fft1 inv=y | window n1=%d |
          logstretch inv=y | pad beg1=%d
          ''' % (f1,nout,nout,f1))
@@ -161,12 +160,12 @@ def diffimg(name,
     Flow(pwd,[stk,dip],'pwd dip=${SOURCES[1]}')
     Result(pwd,grey('Separated Diffractions'))
 
+    ref=name+'-ref'
+    Flow(ref,[stk,dip],'pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d' %  (srect1,srect2))
+    Result(ref,grey('Separated Reflections'))
+
     shp=name+'-shp'
-    Flow(shp,[stk,dip],
-         '''
-         pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d |
-         add ${SOURCES[0]} scale=-1,1
-         ''' % (srect1,srect2))
+    Flow(shp,[stk,ref],'add ${SOURCES[1]} scale=1,-1')
     Result(shp,grey('Diffractions'))
 
 #    dips = name+'-dips'
