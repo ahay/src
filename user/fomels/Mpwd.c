@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
+    int ir, nr, n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
     off_t pos=0;
@@ -43,6 +43,7 @@ int main (int argc, char *argv[])
     n12 = n1*n2;
     n13 = n1*n3;
     n123 = n1*n2*n3;
+    nr = sf_leftsize(in,3);
 
     if (!sf_histint(dip,"n1",&m1) || m1 != n1) 
 	sf_error("Need n1=%d in dip",n1);
@@ -73,53 +74,54 @@ int main (int argc, char *argv[])
     if (!sf_getint("nj2",&nj2)) nj2=1;
     /* cross-line aliasing */
 
-    
-    if (1 != n4) { /* in-line */
-	u1 = sf_floatalloc(n12);
-	u2 = sf_floatalloc(n12);
-	p  = sf_floatalloc(n12);
-
-	for (i3=0; i3 < n3; i3++) {
-	    /* read data */
-	    sf_floatread(u1,n12,in);
-
-	    /* read t-x dip */
-	    sf_floatread(p,n12,dip);
+    for (ir=0; ir < nr; ir++) {
+	if (1 != n4) { /* in-line */
+	    u1 = sf_floatalloc(n12);
+	    u2 = sf_floatalloc(n12);
+	    p  = sf_floatalloc(n12);
 	    
-	    ap = allpass_init (nw,nj1,n1,n2,1,p);
+	    for (i3=0; i3 < n3; i3++) {
+		/* read data */
+		sf_floatread(u1,n12,in);
+		
+		/* read t-x dip */
+		sf_floatread(p,n12,dip);
+		
+		ap = allpass_init (nw,nj1,n1,n2,1,p);
+		
+		/* apply */
+		allpass1(false, ap, u1, u2);
+		
+		/* write t-x destruction */
+		sf_floatwrite(u2,n12,out);
+	    }
 	    
-	    /* apply */
-	    allpass1(false, ap, u1, u2);
+	    free(u1);
+	    free(u2);
+	    free(p);
 	    
-	    /* write t-x destruction */
-	    sf_floatwrite(u2,n12,out);
 	}
 
-	free(u1);
-	free(u2);
-	free(p);
-
-    }
-
-    if (0 != n4) { /* cross-line */
-	u1 = sf_floatalloc(n123);
-	u2 = sf_floatalloc(n123);
-	p  = sf_floatalloc(n123);
-
-        /* read data */
-	sf_seek(in,pos,SEEK_SET);
-	sf_floatread(u1,n123,in);
-
-	/* read t-y dip */
-	sf_floatread(p,n123,dip);
-	
-	ap = allpass_init(nw,nj2,n1,n2,n3,p);
-  
-	/* apply */
-	allpass2(false, ap, u1, u2);
-
-	/* write t-y destruction */
-	sf_floatwrite(u2,n123,out);
+	if (0 != n4) { /* cross-line */
+	    u1 = sf_floatalloc(n123);
+	    u2 = sf_floatalloc(n123);
+	    p  = sf_floatalloc(n123);
+	    
+	    /* read data */
+	    sf_seek(in,pos,SEEK_SET);
+	    sf_floatread(u1,n123,in);
+	    
+	    /* read t-y dip */
+	    sf_floatread(p,n123,dip);
+	    
+	    ap = allpass_init(nw,nj2,n1,n2,n3,p);
+	    
+	    /* apply */
+	    allpass2(false, ap, u1, u2);
+	    
+	    /* write t-y destruction */
+	    sf_floatwrite(u2,n123,out);
+	}
     }
     
     sf_close();

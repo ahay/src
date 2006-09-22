@@ -50,8 +50,8 @@ Flow('rite1','left1','window n2=16 | reverse which=2')
 Flow('hole1','left1 rite1','cat axis=2 ${SOURCES[1]}')
 Flow('twod1','hole1','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
 Flow('fill1','hole1 twod1','planemis2 dip=${SOURCES[1]}')
-Flow('end1','fill1','window f2=10 n2=7')
-Flow('ecmp1','nmo1 end1 pick1','cat axis=2 ${SOURCES[1]} | inmo velocity=${SOURCES[2]}')
+Flow('end1','fill1 pick1','window f2=10 n2=7 | inmo velocity=${SOURCES[1]}')
+Flow('ecmp1','cmp1 end1','cat axis=2 ${SOURCES[1]}')
 
 Flow('scan','cmp mask',vscan)
 Flow('pick','scan','pick rect1=50 rect2=25')
@@ -74,10 +74,8 @@ Flow('rite','left','window n2=16 | reverse which=2')
 Flow('hole','left rite','cat axis=2 ${SOURCES[1]}')
 Flow('twod','hole','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
 Flow('fill','hole twod','planemis2 dip=${SOURCES[1]}')
-Flow('end','fill','window f2=10 n2=7')
-Flow('ecmp','nmo end pick','cat axis=2 ${SOURCES[1]} | inmo velocity=${SOURCES[2]}')
-
-Flow('inmo','nmo pick','inmo velocity=${SOURCES[1]} | mutter mutter v0=1400')
+Flow('end','fill pick','window f2=10 n2=7 | inmo velocity=${SOURCES[1]}')
+Flow('ecmp','cmp end','cat axis=2 ${SOURCES[1]}')
 
 Flow('shot1','shot','window n3=1 f3=436')
 

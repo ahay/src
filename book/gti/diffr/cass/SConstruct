@@ -48,7 +48,7 @@ Result('cd0',
 Flow('cdi0','czo cd0','pwd dip=${SOURCES[1]}')
 
 Result('cdi0',
-       'grey title="Diffractions" label2="Lateral (km)" label1="Time (s)" ')
+       'byte | equal | grey title="Diffractions" label2="Lateral (km)" label1="Time (s)" ')
 
 Flow('csi0','czo cd0',
      '''
@@ -58,7 +58,7 @@ Flow('csi0','czo cd0',
 
 Result('csi0',
        '''
-       grey title="Diffractions (Shaping)"
+       byte | equal | grey title="Diffractions (Shaping)"
        label2="Lateral (km)" label1="Time (s)"
        ''')
 
