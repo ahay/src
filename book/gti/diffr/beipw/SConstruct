@@ -1,0 +1,107 @@
+from rsfproj import *
+
+Fetch('midpts.hh','midpts')
+Flow('bei','midpts.hh','dd form=native | put d2=0.067 o2=0.132')
+
+Flow('scan','bei','mutter v0=1.4 | vscan semblance=y v0=1.4 nv=48 dv=0.025')
+Flow('pick','scan','mutter x0=1.5 v0=0.67 half=n | pick rect1=40 rect2=10')
+
+Result('bpick','pick',
+       '''
+       window |
+       grey color=j scalebar=y bias=2 barlabel=Velocity barunit=km/s
+       barreverse=y
+       ''')
+
+Flow('nmo','bei pick','mutter v0=1.4 | nmo velocity=${SOURCES[1]}')
+
+# Interpolate near offsets
+for case in ('nmo','pick','bei'):
+    Flow(case+'1',case,'window n3=1 f3=125')
+
+Flow('rite1','nmo1','window n2=10 | pad beg2=2')
+Flow('left1','rite1','window f2=1 | reverse which=2 opt=n')
+Flow('hole1','left1 rite1','cat axis=2 ${SOURCES[1]}')
+
+Flow('twod1','hole1','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
+Flow('fill1','hole1 twod1','planemis2 dip=${SOURCES[1]}')
+
+Flow('end1','fill1 pick1','window f2=11 n2=2 | inmo velocity=${SOURCES[1]}')
+Flow('ecmp1','end1 bei1','cat axis=2 ${SOURCES[1]}')
+
+Flow('rite','nmo','window n2=10 | pad beg2=2')
+Flow('left','rite','window f2=1 | reverse which=2 opt=n')
+Flow('hole','left rite','cat axis=2 ${SOURCES[1]}')
+
+Flow('twod','hole','twodip2 eps=100 lam=10 mask=$SOURCE both=n p0=0') 
+Flow('fill','hole twod','planemis2 dip=${SOURCES[1]}')
+
+Flow('end','fill pick','window f2=11 n2=2 | inmo velocity=${SOURCES[1]}')
+Flow('ecmp','end bei','cat axis=2 ${SOURCES[1]}')
+
+Flow('eshot','ecmp','cmp2shot')
+
+Flow('cmp2','eshot',
+     '''
+     math output=0 |
+     interleave $SOURCE axis=3 |
+     put d3=0.0335 o3=5.9945 |
+     shot2cmp |
+     window min3=7.705 n3=250
+     ''')
+Flow('cmps','cmp2','window f2=1 | reverse which=2 opt=n | cat axis=2 $SOURCE')
+
+Flow('shot','cmps','mutter v0=1.4 | cmp2shot | window j3=2 f3=1')
+
+Flow('shot1','eshot','mutter v0=1.4 | window f2=2 n3=1 min3=12')
+Flow('shot2','shot','window n3=1 min3=12')
+
+Plot('shot1','grey label1=Time unit1=s label2=Half-offset unit2=km title="Original Shot Gather" ')
+Plot('shot2','grey label1=Time unit1=s label2=Half-offset unit2=km title="Double-Sided Shot Gather" ')
+
+Result('bshot','shot1 shot2','SideBySideAniso')
+
+radon = 'radon adj=y inv=y spk=n p0=-4 np=801 dp=0.01 verb=y'
+
+Flow('rad1','shot2',radon)
+
+Plot('rad1','window min2=-1.5 max2=1.5 | grey label1=Time unit1=s label2=Slope unit2=s/km title="Slant Stack" ')
+
+Flow('rad2','rad1','radon adj=n nx=103 dx=0.0335 ox=-1.7105')
+
+Plot('rad2','grey label1=Time unit1=s label2=Half-offset title="Shot Reconstruction" ')
+
+Result('brad','rad1 rad2','SideBySideAniso')
+
+Flow('rad','shot',radon)
+
+for p in (-1,0,1):
+    plane = 'bplane%d' % p
+
+    pg = 0.5*p
+    Flow(plane,'rad','window n2=1 min2=%g min3=7.705 max3=16.0465' % pg)
+    Plot(plane,
+           '''
+           byte | equal |
+           grey title="p=%g s/m" label1=Time unit1=s 
+           label2=Source unit2=km label1=Time unit1=s
+           ''' % pg)
+
+    slp = 'slp%d' % p
+    Flow(slp,plane,'dip rect1=50 rect2=25')
+
+    pwd = 'bpwd%d' % p
+    Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
+    Plot(pwd,
+           '''
+           byte | equal |
+           grey title="p=%g s/m" label1=Time unit1=s 
+           label2=Source unit2=km pclip=98 label1=Time unit1=s
+           ''' % pg)
+
+Result('bplane','bplane-1 bplane0 bplane1','SideBySideAniso')
+Result('bpwd','bpwd-1 bpwd0 bpwd1','SideBySideAniso')
+
+Flow('plane','rad','transp memsize=500 plane=23 | transp memsize=500 plane=34')
+
+End()

@@ -108,7 +108,7 @@ Result('shot1','shot1 shot21','SideBySideAniso')
 
 radon = 'radon adj=y inv=y spk=n p0=-0.004 np=801 dp=0.00001 verb=y'
 
-Flow('rad1','shot21','radon adj=y inv=y spk=n p0=-0.004 np=801 dp=0.00001')
+Flow('rad1','shot21',radon)
 
 Plot('rad1','window min2=-0.002 max2=0.002 | grey label2=Slope unit2=s/m title="Slant Stack" ')
 
@@ -143,5 +143,7 @@ for p in (-1,0,1):
          ''' % pg)
 
     Result(plane,[plane,pwd],'SideBySideAniso')
+
+Flow('patch','rad','transp plane=23 memsize=500 | patch w=1500,801,50')
 
 End()

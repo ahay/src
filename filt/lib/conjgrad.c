@@ -131,7 +131,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
     
     dg = g0 = b0 = gnp = 0.;
     r0 = norm(nr,r);
-    if (r0 < DBL_EPSILON) {
+    if (r0 == 0.) {
 	if (verb) sf_warning("zero residual: r0=%g",r0);
 	return;
     }

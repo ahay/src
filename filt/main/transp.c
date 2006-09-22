@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
     map = sf_intalloc (n2);
     make_map (dim1, dim2, n, n2, map);
 
-    if (n1*n2 < memsize) {
+    if ((off_t) n1*n2 < memsize) {
 	dat1 = sf_charalloc2 (n1,n2);
 	dat2 = sf_charalloc2 (n1,n2);
 	
@@ -137,7 +137,7 @@ int main(int argc, char* argv[])
 	}
     } else {
 	sf_warning("Going out of core... "
-		   "(increase memsize=%d for in-core)",mem);
+		   "(increase memsize=%d for in-core)",memsize/(1 << 20));
 	sf_unpipe(in,(off_t) n1*n2*n3);
 
 	buf = sf_charalloc (n1);

@@ -9,6 +9,7 @@ stack.stack('bei',
             nv=48,
             dv=0.025,
             x0=7.705,
+            dx=0.0335,
             nx=250,
             nt=751,
             padx=521,
@@ -16,8 +17,8 @@ stack.stack('bei',
             rect2=10,
             srect1=1,
             srect2=5,
-            vslope=0.67, #
-            vx0=1.5,     #
+            vslope=0.67, 
+            vx0=1.5,     
             tmax=4,
             f1=15,
             an=2,
@@ -30,7 +31,7 @@ for cig in (41,83,110,137,165):
 
     Plot(panel,'bei-foc',
          '''
-         window min1=0.5 max1=3.5 n3=1 f3=%d | grey allpos=y
+         window min1=1 max1=4 n3=1 f3=%d | grey allpos=y
          label1=Time unit1=s label2=Velocity unit2=km/s
          labelsz=15 titlesz=18 color=j bias=3 title="IG at %d km"
          ''' % (cig,int(7.705+0.0335*cig)))

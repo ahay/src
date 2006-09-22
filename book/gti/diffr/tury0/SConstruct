@@ -14,18 +14,19 @@ stack.stack('tury',
             nv=184,
             dv=25,
             x0=2724.9,
+            dx=12.5,
             nx=1640,
             nt=1500,
             padx=2049,
-            rect1=50,
-            rect2=25,
+            rect1=100,
+            rect2=50,
             srect1=1,
             srect2=5,
 #            vslope=0.67, #
 #            vx0=1.5,     #
             tmax=6,
-            f1=190,
+            f1=30,
             an=2,
-            nout=1500)
+            nout=2048)
 
 End()

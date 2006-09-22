@@ -75,8 +75,9 @@ def stack(name,
          fft1 | transp plane=13 memsize=500 |
          finstack | transp memsize=500 |
          fft1 inv=y | window n1=%d |
-         logstretch inv=y | pad beg1=%d
-         ''' % (f1,nout,nout,f1))
+         logstretch inv=y | pad beg1=%d |
+         transp | bandpass fhi=%g | transp
+         ''' % (f1,nout,nout,f1,0.75*0.5/dx))
     Result(stk+'2',grey('DMO Stack'))
 
     diffimg(name,stk+'2',v0,nv,dv,nx,padx,nt,tmin,tmax,
@@ -143,13 +144,6 @@ def diffimg(name,
         color=j scalebar=y bias=%g barlabel=Velocity barunit="%s/s"
         barreverse=y
         ''' % (v0+0.5*nv*dv,units)
-
-    if vslope:
-        pick = 'mutter x0=%g v0=%g half=n | ' % (vx0,vslope)
-    else:
-        pick = ''
-
-    pick = pick + 'scale axis=2 | pick an=%g rect1=%d rect2=%d | window' % (an,rect1,rect2)
 
     dip = name+'-dip'
     Flow(dip,stk,'dip rect1=%d rect2=%d' % (rect1,rect2))
@@ -218,6 +212,14 @@ def diffimg(name,
 
     pik=name+'-pik'
 
+    if vslope:
+        pick = 'mutter x0=%g v0=%g half=n | ' % (vx0,vslope)
+    else:
+        pick = ''
+
+    pick = pick + 'clip clip=8 | scale axis=2 | pick an=%g rect1=%d rect2=%d | window' % (an,rect1,rect2)
+
+
     if j3 > 1:
         pick2 = pick + ''' |
         transp |
@@ -243,3 +245,15 @@ def diffimg(name,
     Flow(slc+'1',slc+'2','agc rect1=200')
 
     Result(slc+'1',grey('Migrated Stack'))
+
+    Flow(vlf+'0',ref,velcon)
+    Flow(slc+'0',[vlf+'0',pik],'slice pick=${SOURCES[1]}')
+
+    Result(slc+'0',grey('Migrated Reflections'))
+
+    Flow(slc+'3',slc+'0','agc rect1=200')
+
+    Result(slc+'3',grey('Migrated Reflections'))
+
+
+
