@@ -31,12 +31,12 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb; /* verbosity flag */
-    bool abc;  /* absorbing boundary conditions flag */
-    bool free; /* free surface flag*/
-    bool snap; /* wavefield snapshots flag */
+    bool verb;
+    bool abc;
+    bool free;
+    bool snap; 
     bool dens;
-    int  jsnap;/* save wavefield every *jsnap* time steps */
+    int  jsnap;
 
     /* I/O files */
     sf_file Fw,Fs,Fr;
@@ -72,25 +72,24 @@ int main(int argc, char* argv[])
     float c0, c1, c2;  /* Laplacian operator coefficients */
     float co,c1x,c2x,c1z,c2z;
 
-    int  nbz,nbx; /* boundary size */
-    float tz, tx; /* sponge boundary decay coefficients */
+    int  nbz,nbx;
+    float tz, tx;
     float dp;
     float ws;     /* injected data */
 
-    int ompchunk;  /* OpenMP data chunk size */
+    int ompchunk; 
 
 /*------------------------------------------------------------*/
 
     /* init RSF */
     sf_init(argc,argv);
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;
-
-    if(! sf_getbool("verb",&verb)) verb=false;
-    if(! sf_getbool( "abc",&abc ))  abc=false;
-    if(! sf_getbool("snap",&snap)) snap=false;
-    if(! sf_getbool("free",&free)) free=false;
-    if(! sf_getbool("dens",&dens)) dens=false;
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
+    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+    if(! sf_getbool( "abc",&abc ))  abc=false; /* absorbing boundary conditions flag */
+    if(! sf_getbool("snap",&snap)) snap=true;  /* wavefield snapshots flag */
+    if(! sf_getbool("free",&free)) free=false; /* free surface flag*/
+    if(! sf_getbool("dens",&dens)) dens=false; /* variable density flag*/
 
     Fw = sf_input ("in" ); /* input data */
     Fv = sf_input ("vel"); /* velocity */
@@ -116,21 +115,24 @@ int main(int argc, char* argv[])
 
     /* configure wavefield snapshots */
     if(snap) {
-	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
+	if(! sf_getint("jsnap",&jsnap)) jsnap=nt; /* save wavefield every *jsnap* time steps */
     }
 
 /*------------------------------------------------------------*/
 
     /* expand domain for absorbing boundary conditions */
     if(abc) {
-	if(! sf_getint("nbz",&nbz)) nbz=nop; if(nbz<nop) nbz=nop;
-	if(! sf_getint("nbx",&nbx)) nbx=nop; if(nbx<nop) nbx=nop;
+	if(! sf_getint("nbz",&nbz)) nbz=nop;   /* boundary size */ 
+	if(! sf_getint("nbx",&nbx)) nbx=nop;   /* boundary size */
+
+	if(nbz<nop) nbz=nop;
+	if(nbx<nop) nbx=nop;
 	
-	if(! sf_getfloat("tz",&tz)) tz=0.025;
-	if(! sf_getfloat("tx",&tx)) tx=0.025;
+	if(! sf_getfloat("tz",&tz)) tz=0.025;  /* sponge boundary decay coefficients */
+	if(! sf_getfloat("tx",&tx)) tx=0.025;  /* sponge boundary decay coefficients */
     } else {
-	nbz=nop;
-	nbx=nop;
+	nbz=nop; /* boundary size */
+	nbx=nop; /* boundary size */
     }
     /* expanded domain ( az+2 nz, ax+2 nx ) */
     nz2=nz+2*nbz; dz=sf_d(az); z0=sf_o(az)-nbz*dz; 
