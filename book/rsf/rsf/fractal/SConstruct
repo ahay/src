@@ -28,4 +28,16 @@ Plot('fern','mask',
      wantaxis=n title="Fractal Fern" symbol=. plotcol=4
      ''')
 
+Flow('man',None,'mandelbrot n1=1000 n2=1250')
+
+Result('man','dd type=float | grey allpos=y transp=n color=h screenht=10 screenwd=12.5 title=Mandelbrot')
+
+x0   = -0.747835
+xmax = -0.745985
+y0   = 0.106252
+ymax = 0.108248
+
+Flow('spiral',None,'mandelbrot n1=1000 n2=1000 niter=5000 x0=%g y0=%g xmax=%g ymax=%g' % (x0,y0,xmax,ymax))
+Result('spiral','dd type=float | grey color=j bias=500 transp=n yreverse=n color=j title=Spiral')
+
 End()
