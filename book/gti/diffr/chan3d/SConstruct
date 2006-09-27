@@ -9,6 +9,9 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 Fetch('zovol.HH','jim',private)
 Flow('zovol','zovol.HH','dd form=native | window min1=1.7 max1=2.2')
 
+Fetch('zovel.HH','jim',private)
+Flow('zovel','zovel.HH','dd form=native')
+
 def plot3(title):
     return '''
     byte gainpanel=all bar=bar.rsf |
@@ -16,6 +19,17 @@ def plot3(title):
     title="%s"
     label1="Time (s)" label2="In-line (m)" label3="Cross-line (m)"
     ''' % title
+
+zplot = '''
+byte bar=bar.rsf gainpanel=all pclip=100 bias=2297 allpos=y |
+grey3 scalebar=y bartype=h wanttitle=n labelrot=n flat=y wherebarlabel=t
+frame1=140 frame2=220 frame3=145
+point1=0.85 point2=0.90 Xscreenratio=0.7 Xscreenht=9
+label1=y label2=x label3=Depth unit3=m barlabel=Velocity barunit=km/s color=j
+'''
+
+Result('zovel',
+       'transp memsize=512 plane=13 |' + zplot)
 
 Result('zovol',plot3('Zero-Offset Data'))
 

@@ -107,6 +107,10 @@ Flow('plane','rad','transp memsize=500 plane=23 | transp memsize=500 plane=34')
 Flow('dip','plane','dip rect1=50 rect2=25')
 Flow('pwd','plane dip','pwd dip=${SOURCES[1]}')
 
+Flow('pat','rad','transp memsize=500 plane=23 | patch w=1000,176,200')
+Flow('dip0','pat','dip rect1=50 rect2=25 rect3=3 n4=0 verb=y')
+Flow('dips','dip0','patch inv=y weight=y')
+
 Flow('brad','pwd','window | transp memsize=500 plane=23')
 
 Flow('bshot','brad','radon adj=n nx=103 dx=0.0335 ox=-1.7105 verb=y')

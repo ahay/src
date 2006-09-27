@@ -94,7 +94,7 @@ Flow('cmp2','eshot',
 Flow('cmp2r','cmp2',
      'window n2=116 | reverse which=2 opt=n memsize=500')
 Flow('cmps','cmp2 cmp2r','cat axis=2 ${SOURCES[1]}')
-Flow('shot2','cmps','cmp2shot | window n3=872 min3=2900 j3=2')
+Flow('shot2','cmps','mutter v0=1400 | cmp2shot | window n3=872 min3=2900 j3=2')
 
 Flow('shotc','shot2','transp | bandpass fhi=0.02 | transp')
 
@@ -116,7 +116,7 @@ Plot('rad2','grey title="Shot Reconstruction" ')
 
 Result('rad','rad1 rad2','SideBySideAniso')
 
-# Flow('rad','shotc',radon)
+Flow('rad','shotc',radon)
 
 for p in (-1,0,1):
     plane = 'plane%d' % p

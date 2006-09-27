@@ -66,8 +66,8 @@ Flow('shot','dat','window n3=1 f3=210')
 
 Plot('shot',
      '''
-     window max1=4 |
-     grey title="Original Shot Gather" color=G
+     window max1=4 | byte | equal |
+     grey title="Original Shot Gather" 
      label2="Half-Offset (km)" label1="Time (s)"
      ''')
 
@@ -92,8 +92,8 @@ Flow('shot2','dat2','window n3=1 f3=210')
 
 Plot('shot2',
      '''
-     window max1=4 |
-     grey title="Extended Shot Gather" color=G
+     window max1=4 | byte | equal |
+     grey title="Extended Shot Gather" 
      label2="Half-Offset (km)" label1="Time (s)"
      ''')
 
@@ -103,7 +103,7 @@ Flow('rad2','shot2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
 
 Plot('rad2',
      '''
-     window max1=4 |
+     window max1=4 | byte | equal |
      grey label2="Slope (s/km)" title="Radon Transform"
      label1="Time (s)"
      ''')
@@ -112,14 +112,14 @@ Flow('rad','rad2','radon adj=n nx=281 dx=0.0125 ox=-1.75')
 
 Plot('rad',
      '''
-     window max1=4 |
+     window max1=4 | byte | equal |
      grey title="Shot Reconstruction"
      label2="Half-Offset (km)" label1="Time (s)"
      ''')
 
 Result('rad','rad2 rad','SideBySideAniso')
 
-#Flow('radon','dat2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006')
+Flow('radon','dat2','radon adj=y inv=y spk=n p0=-1.5 np=501 dp=0.006 verb=y')
 
 for p in (-1,0,1):
     plane = 'plane%d' % p
@@ -128,8 +128,8 @@ for p in (-1,0,1):
     Flow(plane,'radon','window n2=1 min2=%g' % pg)
     Plot(plane,
          '''
-         window max1=3.5 |
-         grey title="Plane-Wave Section (p=%g)"
+         window max1=3.5 | byte | equal |
+         grey title="p=%g s/km"
          label2="Source (km)" label1="Time (s)"
          ''' % pg)
 
@@ -140,16 +140,16 @@ for p in (-1,0,1):
     Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
     Plot(pwd,
          '''
-         window max1=3.5 |
-         grey title="Diffractions (p=%g)"
+         window max1=3.5 | byte | equal |
+         grey title="p=%g s/km"
          label2="Source (km)" label1="Time (s)"
          ''' % pg)
-
-    Result(plane,[plane,pwd],'SideBySideAniso')
+Result('plane','plane-1 plane0 plane1','SideBySideAniso')
+Result('pwd','pwd-1 pwd0 pwd1','SideBySideAniso')
 
 Flow('patch','radon','transp memsize=500 plane=23 | patch w=1251,501,50')
 Flow('dip','patch','dip rect1=20 rect2=10 rect3=2 liter=40 n4=0 verb=y')
-#Flow('dips','dip','patch inv=y weight=y')
+Flow('dips','dip','patch inv=y weight=y')
 
 Flow('pwd','radon dips',
      '''
