@@ -151,7 +151,7 @@ def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
 
     Flow([ data,wfld,ldata,lwfld],[wavl,velo,refl,sou,rec],
          '''
-         born2d
+         aborn ompchunk=%(ompchunk)d
          verb=y abc=y free=n
          snap=%(snap)s jsnap=%(jsnap)d
          nbz=%(nbz)d tz=%(tz)g

@@ -693,7 +693,7 @@ void rweone_zoi(
     if(adj) { /* modeling */
 	for(ig=0;ig<ag.n;ig++) {
 #ifdef SF_HAS_COMPLEX_H
-	    ddd[ig] += iii[ig];
+	    ddd[ig]   += iii[ig];
 #else
 	    ddd[ig].r += iii[ig];
 #endif
@@ -719,9 +719,9 @@ void rweone_spi(
     rweone_tap(rwf);
     for(ig=0;ig<ag.n;ig++) {
 #ifdef SF_HAS_COMPLEX_H
-	iii[ig] += crealf( conjf(swf[ig]) * rwf[ig] );
+	iii[ig] += crealf(        conjf(swf[ig]) * rwf[ig]  );
 #else
-	iii[ig] += crealf(sf_cmul(conjf(swf[ig]),rwf[ig]) );
+	iii[ig] += crealf(sf_cmul(conjf(swf[ig]),  rwf[ig]) );
 #endif
     }
 }
