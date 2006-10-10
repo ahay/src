@@ -6,7 +6,7 @@ import fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=t unit1=s',
     'nx':401,  'ox':0,    'dx':0.01,  'lx':'label2=x unit2=km',
     'nz':201,  'oz':0,    'dz':0.01,  'lz':'label1=z unit1=km',
     'kt':100
@@ -90,12 +90,21 @@ for i in ('0','1','2'):
     Plot(  'dens'+i,fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
     Result('dens'+i,['dens'+i,'srcs','rcvs'],'Overlay')
 
-    fdmod.amodel('data'+i,'wfld'+i,'wav',
+    fdmod.amodel('raw'+i,'temp'+i,'wav',
                  'velo','dens'+i,
-                 'srcs','rcvs','free=y dens=y',par)
-
-    Result('wfld'+i,             fdmod.wgrey('pclip=95',par))
-    Result('data'+i,'transp |' + fdmod.dgrey('pclip=99',par))
+                 'srcs','qq','free=y dens=y',par)
+    Flow('wfld'+i,'raw'+i,
+         '''
+         put
+         n1=%d o1=%g d1=%g label1=z unit1=km
+         n2=%d o2=%g d2=%g label2=x unit2=km
+         n3=%d o3=%g d3=%g label3=t unit3=ks
+         ''' % (par['nz'],par['oz'],par['dz'],
+                par['nx'],par['ox'],par['dx'],
+                par['nt'],par['ot'],par['dt']))      
+    Result('wfld'+i,
+           'window j3=%(jsnap)d |'% par + fdmod.wgrey('pclip=95',par))
+    Result('data'+i,'transp |'          + fdmod.dgrey('pclip=99',par))
 
 for i in ('1','2'):
 
@@ -125,7 +134,7 @@ for i in ('1','2'):
              ''' % par)
         Result('image'+i+k,fdmod.cgrey('pclip=99',par))
 
-        Flow('wfld'+i+k,'raw'+i+k+'_tdr',
+        Flow('wfld'+i+k,'raw'+i+k+'_dr',
              '''
              put
              n1=%d o1=%g d1=%g label1=z unit1=km
@@ -136,5 +145,57 @@ for i in ('1','2'):
                     par['nt'],par['ot'],par['dt']))        
         Result('wfld'+i+k,
                'window j3=%(jsnap)d |' % par + fdmod.wgrey('pclip=95',par))
+
+        # cross-correlation product
+        Flow('wfld'+i+k+'x',['wfld0','wfld'+i+k],'paradd mode=p ${SOURCES[1]} memsize=1000')
+
+# ------------------------------------------------------------
+# I.C.
+
+# '0'       - source wavefield
+# '1n','1y' - receiver wavefields
+
+
+zstep=25
+
+for k in ('0','1n','1y','1nx','1yx'):
+    
+    # window wavefield
+    Flow('t'+k,'wfld'+k,
+         '''
+         window min1=%g max1=%g min2=%g max2=%g |
+         window j1=%d |
+         transp plane=13
+         ''' % (par['zmin'],par['zmax'],par['xmin'],par['xmax'],zstep))
+    
+    # convert to bytes
+    Flow(['u'+k,'u'+k+'bar'],'t'+k,'byte bar=${TARGETS[1]} gainpanel=a pclip=100')
+
+
+for i in range(par['nz']/zstep):
+    tit = str(i*zstep*par['dz'])
+    
+    for k in ('0','1n','1y','1nx','1yx'):
+        Plot('u'+k+str(i),['u'+k,'u'+k+'bar'],
+             'window n3=1 f3=%d |' % i +
+             fdmod.dgrey('grid=y title=%s bar=${SOURCES[1]}',par) % tit )
+
+    uun = 'uun' + str(i)
+    uuy = 'uuy' + str(i)
+        
+    u0 = 'u0'   + str(i)
+    
+    u1n = 'u1n' + str(i)
+    u1y = 'u1y' + str(i)
+
+    x1n= 'u1nx'+ str(i)
+    x1y= 'u1yx'+ str(i)
+        
+    Plot(uun,[u0,u1n,x1n],'SideBySideAniso')
+    Plot(uuy,[u0,u1y,x1y],'SideBySideAniso')
+
+Result('all1n', map(lambda x: 'uun%d' % x,range(par['nz']/zstep)),'Movie')
+Result('all1y', map(lambda x: 'uuy%d' % x,range(par['nz']/zstep)),'Movie')
+    
 
 End()
