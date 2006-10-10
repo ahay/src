@@ -6,7 +6,7 @@ import fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0, 'lt':'label1=time unit1=s',
+    'nt':3000, 'dt':0.001,'ot':0,     'lt':'label1=time unit1=s',
     'nx':401,  'ox':0,    'dx':0.01,  'lx':'label2=x unit2=km',
     'nz':201,  'oz':0,    'dz':0.01,  'lz':'label1=z unit1=km',
     'kt':100
@@ -20,13 +20,13 @@ Result('wav','window n1=200 | graph title="" label1="t" label2=')
 
 # ------------------------------------------------------------
 # receiver positions
-fdmod.horizontal('rr',0,par)
-Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
+fdmod.horizontal('rcvs',0,par)
+Plot('rcvs','window n1=2 | dd type=complex | window j2=10 | '
      + fdmod.cgraph('symbol=* plotcol=6',par))
 
 # source positions
-fdmod.point('ss',2,0,1,par)
-Plot('ss','window n1=2 | dd type=complex | window | '
+fdmod.point('srcs',2,0,1,par)
+Plot('srcs','window n1=2 | dd type=complex | window | '
      + fdmod.cgraph('symbol=v plotcol=6',par))
 
 # image points
@@ -46,73 +46,95 @@ Flow('qq',['xq','zq'],
      ''', stdin=0)
 
 # ------------------------------------------------------------
-# smooth model
-Flow('vm',None,
+# velocity
+Flow('velo',None,
      '''
      math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="1.5+0.5*x1" |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
      ''' % par)
-Flow('rm',None,
+
+Plot(  'velo',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
+Result('velo',['velo','srcs','rcvs'],'Overlay')
+
+# ------------------------------------------------------------
+# density
+Flow('dens0',None,
+     '''
+     spike nsp=3 mag=0,0,0
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=31,51,91 l1=50,90,%(nz)d |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
+     add add=2
+     ''' % par)
+Flow('dens1',None,
+     '''
+     spike nsp=1 mag=1
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=76 l1=%(nz)d |
+     spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
+     add add=2
+     ''' % par)
+Flow('dens2',None,
      '''
      spike nsp=3 mag=+0.5,-0.5,1
-     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=31,51,91 l1=50,90,200 |
+     n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=31,51,91 l1=50,90,%(nz)d |
      spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g |
      add add=2
      ''' % par)
 
-Plot('vm',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
-Plot('rm',fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
-Result('vm',['vm','ss','rr'],'Overlay')
-Result('rm',['rm','ss','rr'],'Overlay')
-
 # ------------------------------------------------------------
-# finite-differences modeling
+# source data
+Flow(  'sour','wav','pad beg2=200 end2=200 | put o2=%(ox)g d2=%(dx)g | transp' % par)
+Result('sour','transp |' + fdmod.dgrey('pclip=100',par))
 
-fdmod.amodel('do','wo','wav','vm','rm','ss','rr','free=y dens=n',par)
-fdmod.amodel('dd','ww','wav','vm','rm','ss','rr','free=y dens=y',par)
+# FD modeling
+for i in ('0','1','2'):
+    Plot(  'dens'+i,fdmod.cgrey('allpos=y bias=1.5 pclip=100',par))
+    Result('dens'+i,['dens'+i,'srcs','rcvs'],'Overlay')
 
-# receiver data
-Flow('dx','dd do','math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
-# source wavefield
-Flow('dw','wav',
-     'pad beg2=200 end2=200 | put o2=%(ox)g d2=%(dx)g | transp' % par)
+    fdmod.amodel('data'+i,'wfld'+i,'wav',
+                 'velo','dens'+i,
+                 'srcs','rcvs','free=y dens=y',par)
 
-Result('wo',fdmod.wgrey('pclip=95',par))
-Result('ww',fdmod.wgrey('pclip=95',par))
+    Result('wfld'+i,             fdmod.wgrey('pclip=95',par))
+    Result('data'+i,'transp |' + fdmod.dgrey('pclip=99',par))
 
-Result('do','transp |' + fdmod.dgrey('pclip=99',par))
-Result('dd','transp |' + fdmod.dgrey('pclip=99',par))
-Result('dx','transp |' + fdmod.dgrey('pclip=99',par))
-Result('dw','transp |' + fdmod.dgrey('pclip=100',par))
+for i in ('1','2'):
 
-Result('alld','dx dw',
-       '''
-       cat axis=3 space=n ${SOURCES[1:2]} |
-       transp |
-       grey gainpanel=e pclip=100
-       ''')
+    # receiver data
+    Flow('rcvr'+i,['data'+i,'data0'],
+         'math a=${SOURCES[0]} b=${SOURCES[1]} "output=a-b"')
+    Result('rcvr'+i,'transp |' + fdmod.dgrey('pclip=99',par))
 
-# ------------------------------------------------------------
-# RT migration
+    Result('all_data'+i,['rcvr'+i,'sour'],
+           '''
+           cat axis=3 space=n ${SOURCES[1:2]} |
+           transp |
+           grey gainpanel=e pclip=100 title=""
+           ''')
 
-fdmod.rtm('ii','dw','dx','vm','rm','rr','rr','qq','free=y dens=n',1000,par)
-Flow('kk','ii','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)
-Result('kk',fdmod.cgrey('pclip=99',par))
+    for k in ('n','y'):
+        
+        # RT migration
+        fdmod.rtm('raw'+i+k,'sour','rcvr'+i,'velo','dens'+i,
+                  'rcvs','rcvs','qq',
+                  'free=y dens='+k,400,par)
+        Flow('image'+i+k,'raw'+i+k,
+             '''
+             put
+             n1=%(nz)d o1=%(oz)g d1=%(dz)g
+             n2=%(nx)d o2=%(ox)g d2=%(dx)g
+             ''' % par)
+        Result('image'+i+k,fdmod.cgrey('pclip=99',par))
 
-fdmod.rtm('io','dw','dx','vm','rm','rr','rr','qq','free=y dens=y',1000,par)
-Flow('ko','io','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)
-Result('ko',fdmod.cgrey('pclip=99',par))
-
-Flow('wr','ii_tdr',
-     '''
-     put
-     n1=%d o1=%g d1=%g label1=z unit1=km
-     n2=%d o2=%g d2=%g label2=x unit2=km
-     n3=%d o3=%g d3=%g label3=t unit3=ks
-     ''' % (par['nz'],par['oz'],par['dz'],
-            par['nx'],par['ox'],par['dx'],
-            par['nt'],par['ot'],par['dt']))
-
-Result('wr','window j3=%(jsnap)d |' % par + fdmod.wgrey('pclip=95',par))
+        Flow('wfld'+i+k,'raw'+i+k+'_tdr',
+             '''
+             put
+             n1=%d o1=%g d1=%g label1=z unit1=km
+             n2=%d o2=%g d2=%g label2=x unit2=km
+             n3=%d o3=%g d3=%g label3=t unit3=ks
+             ''' % (par['nz'],par['oz'],par['dz'],
+                    par['nx'],par['ox'],par['dx'],
+                    par['nt'],par['ot'],par['dt']))        
+        Result('wfld'+i+k,
+               'window j3=%(jsnap)d |' % par + fdmod.wgrey('pclip=95',par))
 
 End()
