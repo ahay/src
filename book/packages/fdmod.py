@@ -219,11 +219,10 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
     awe(tout,rwfl,tdat,velo,dens,racq,iacq,custom,par)
     Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
+    # conventional (cross-correlation zero-lag) imaging condition
     Flow(imag,[sout,rout],'xcor uu=${SOURCES[1]} axis=2 verb=y nbuf=100')
-
+    
 #    corr = imag+'_cor'
-#
-#    # conventional (cross-correlation zero-lag) imaging condition
 #    Flow(corr,[sout,rout],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
 #    Flow(imag,corr,'stack axis=2')
 
