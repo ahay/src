@@ -84,7 +84,7 @@ def wavelet(wav,frequency,par):
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
          ricker1 frequency=%(frequency)g |
          scale axis=123 |
-         put label1=t label2=x label3=y 
+         put label1=t 
          ''' % par)    
 
 # ------------------------------------------------------------
@@ -106,7 +106,6 @@ def vertical(cc,coord,par):
     Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
     Flow(cc+'_x',cc+'_','math output="%(coord)g" ' % par)
     Flow(cc+'_z',cc+'_','math output="x1" ')
-    
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
@@ -118,14 +117,30 @@ def point(cc,xcoord,zcoord,magnitude,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
     Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Flow(cc+'_r',cc+'_','math output="%g"' % magnitude)
-    
+    Flow(cc+'_r',cc+'_','math output="%g"' % magnitude)    
     Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
          '''
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
          ''', stdin=0)
+
+def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
+
+    Flow(cc+'_',None,
+         '''
+         math output=1
+         n1=%d d1=%g o1=%g
+         n2=%d d2=%g o2=%g
+         ''' % (nz,dz,oz,nx,dx,ox) )
+    Flow(cc+'_z',cc+'_','math output="x1" | put n1=%d n2=1' % (nz*nx))
+    Flow(cc+'_x',cc+'_','math output="x2" | put n1=%d n2=1' % (nz*nx))
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
     
+
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
 def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
