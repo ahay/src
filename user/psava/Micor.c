@@ -1,4 +1,4 @@
-/* Cross-correlation of time series */
+/* Interferometric cross-correlation of time series (zero-lag output) */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
@@ -32,10 +32,11 @@ int main(int argc, char* argv[])
     /* cube axes */
     sf_axis at,az,ax,aa;
     int     nt,nz,nx, nhz,nhx;
-    int     it,iz,ix, ihz,ihx;
+    int        iz,ix, ihz,ihx;
+    int     nbuf,ibuf;
 
     /* arrays */
-    float **ii=NULL, **us=NULL,**ur=NULL;
+    float **ii=NULL, ***us=NULL,***ur=NULL;
 
     int ompchunk; 
 
@@ -46,6 +47,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
+    if(! sf_getint("nbuf",&nbuf)) nbuf=1;              /* buffer size */
 
     if(! sf_getint("nhz",&nhz)) nhz=0;
     if(! sf_getint("nhx",&nhx)) nhx=0;
@@ -67,9 +69,11 @@ int main(int argc, char* argv[])
     nx = sf_n(ax);
     nt = sf_n(at);
 
+    nbuf = SF_MIN(nbuf,nt);
+
     /* allocate work arrays */
-    us=sf_floatalloc2(nz,nx);
-    ur=sf_floatalloc2(nz,nx);
+    us=sf_floatalloc3(nz,nx,nbuf);
+    ur=sf_floatalloc3(nz,nx,nbuf);
     ii=sf_floatalloc2(nz,nx);
 
     /* init output */
@@ -79,28 +83,29 @@ int main(int argc, char* argv[])
 	}
     }
 
-    if(verb) fprintf(stderr,"\n");
-    for(it=0; it<nt; it++) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+    for (; nt > 0; nt -= nbuf) {
+	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nbuf);
+	if (nbuf > nt) nbuf=nt;
 
-	sf_floatread(us[0],nz*nx,Fs);
-	sf_floatread(ur[0],nz*nx,Fr);
+	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
+	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix,ihz,ihx) shared(nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx) shared(nbuf,nz,nx,ii,us,ur)
 #endif
-	for(    ihz=-nhz; ihz<nhz+1; ihz++) {
-	    for(ihx=-nhx; ihx<nhx+1; ihx++) {
-		for(    iz=0+SF_ABS(ihz); iz<nz-SF_ABS(ihz); iz++) {
-		    for(ix=0+SF_ABS(ihx); ix<nx-SF_ABS(ihx); ix++) {
-			ii[ix][iz] += us[ix-ihx][iz-ihz] * ur[ix+ihx][iz+ihz];
-		    } // nx
-		} // nz
-	    } // nhx
-	} // nhz
-
-    }
-    if(verb) fprintf(stderr,"\n");
+	for(ibuf=0; ibuf<nbuf; ibuf++) {
+	    for(    ihz=-nhz; ihz<nhz+1; ihz++) {
+		for(ihx=-nhx; ihx<nhx+1; ihx++) {
+		    for(    iz=0+SF_ABS(ihz); iz<nz-SF_ABS(ihz); iz++) {
+			for(ix=0+SF_ABS(ihx); ix<nx-SF_ABS(ihx); ix++) {
+			    ii[ix][iz] += us[ibuf][ix-ihx][iz-ihz] 
+				*         ur[ibuf][ix+ihx][iz+ihz];
+			} // nx
+		    } // nz
+		} // nhx
+	    } // nhz
+	} // nbuf
+    } // nt
 
     sf_floatwrite(ii[0],nz*nx,Fi);
 

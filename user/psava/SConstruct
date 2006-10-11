@@ -6,7 +6,7 @@ progs = '''
 awe
 afmod aborn erfdm
 off2abs off2abs3
-paradd corr
+paradd icor xcor
 '''
 
 try:  # distributed version
