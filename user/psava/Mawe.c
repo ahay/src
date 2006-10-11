@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
     float *ws00,*ws01,*ws10,*ws11;
     float *wr00,*wr01,*wr10,*wr11;
 
-    float **um,**uo,**up,**ud,**vp,**ro,**tt;
+    float **um,**uo,**up,**ud,**vp,**ro,**tt,**ut;
     float  *bzl,*bzh,*bxl,*bxh;  /* boundary */
 
     int   nop=2;       /* Laplacian operator size */
@@ -375,35 +375,45 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 
-	/* 4th order Laplacian operator */
+	if(dens) {  	/* variable density */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z,idx,idz)
 #endif
-	for (ix=nop; ix<nx2-nop; ix++) {
-	    for (iz=nop; iz<nz2-nop; iz++) {
-		ud[ix][iz] = 
-		    co * uo[ix  ][iz  ] + 
-		    c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
-		    c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
-		    c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
-		    c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	  
-	    }
-	}
-	
-	/* density terms */
-	if(dens) {
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,idz,idx)
-#endif
 	    for (ix=nop; ix<nx2-nop; ix++) {
 		for (iz=nop; iz<nz2-nop; iz++) {
+
+		    /* 4th order Laplacian operator */
+		    ud[ix][iz] = 
+			co * uo[ix  ][iz  ] + 
+			c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+			c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+			c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+			c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);	 
+		    
+		    /* density terms */
 		    ud[ix][iz] -= (
 			D1(uo,ix,iz,idz) * D1(ro,ix,iz,idz) +
 			D2(uo,ix,iz,idx) * D2(ro,ix,iz,idx) ) / ro[ix][iz];
 		}
-	    }   
-	}    
+	    }
+	} else {	/* constant density */
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z,idx,idz)
+#endif
+	    for (ix=nop; ix<nx2-nop; ix++) {
+		for (iz=nop; iz<nz2-nop; iz++) {
 
+		    /* 4th order Laplacian operator */
+		    ud[ix][iz] = 
+			co * uo[ix  ][iz  ] + 
+			c1x*(uo[ix-1][iz  ] + uo[ix+1][iz  ]) +
+			c2x*(uo[ix-2][iz  ] + uo[ix+2][iz  ]) +
+			c1z*(uo[ix  ][iz-1] + uo[ix  ][iz+1]) +
+			c2z*(uo[ix  ][iz-2] + uo[ix  ][iz+2]);
+		}
+	    }
+	}
+	
 	/* inject data */
 	for (is=0;is<ns;is++) {
 	    ws = ww[it][is];
@@ -412,22 +422,25 @@ int main(int argc, char* argv[])
 	    ud[ jxs[is]+1][ jzs[is]  ] -= ws * ws10[is];
 	    ud[ jxs[is]+1][ jzs[is]+1] -= ws * ws11[is];
 	}
-
+	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,ud,uo,um,up,vp,dt2)
 #endif
 	for (ix=0; ix<nx2; ix++) {
 	    for (iz=0; iz<nz2; iz++) {
-
 		/* time step and velocity scale*/
-		up[ix][iz] = 2*uo[ix][iz] - 
-		               um[ix][iz] + 
-		               ud[ix][iz] * vp[ix][iz] * dt2; 
-		um[ix][iz] =   uo[ix][iz];
-		uo[ix][iz] =   up[ix][iz];
+		up[ix][iz] = 
+		    uo[ix][iz]*2 - 
+		    um[ix][iz]   + 
+		    ud[ix][iz]* vp[ix][iz] * dt2; 
 	    }
 	}
-	
+	/* circulate arrays */
+	ut=um;
+	um=uo;
+	uo=up;
+	up=ut;
+
 	/* one-way ABC apply */	
 	if(abc) {
 #ifdef _OPENMP

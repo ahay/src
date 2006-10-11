@@ -84,8 +84,8 @@ int main(int argc, char* argv[])
     }
 
     for (; nt > 0; nt -= nbuf) {
-	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nbuf);
 	if (nbuf > nt) nbuf=nt;
+	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nbuf);
 
 	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
 	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);

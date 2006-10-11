@@ -220,7 +220,7 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
     Flow(rout,tout,'reverse which=2 opt=i verb=y')
 
     # conventional (cross-correlation zero-lag) imaging condition
-    Flow(imag,[sout,rout],'xcor uu=${SOURCES[1]} axis=2 verb=y nbuf=100')
+    Flow(imag,[sout,rout],'xcor uu=${SOURCES[1]} axis=2 verb=y nbuf=500')
     
 #    corr = imag+'_cor'
 #    Flow(corr,[sout,rout],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)

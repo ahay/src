@@ -63,7 +63,7 @@ int main(int argc, char* argv[])
     float *ws00,*ws01,*ws10,*ws11;
     float *wr00,*wr01,*wr10,*wr11;
 
-    float **um,**uo,**up,**ud,**vp,**ro,**tt;
+    float **um,**uo,**up,**ud,**vp,**ro,**tt,**ut;
     float  *bzl,*bzh,*bxl,*bxh;  /* boundary */
 
     int   nop=2;       /* Laplacian operator size */
@@ -362,7 +362,6 @@ int main(int argc, char* argv[])
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
 	if(dens) { 	/* variable density */
-
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,co,c1x,c1z,c2x,c2z,idx,idz)
 #endif
@@ -422,11 +421,15 @@ int main(int argc, char* argv[])
 		up[ix][iz] = 2*uo[ix][iz] - 
 		               um[ix][iz] + 
 		               ud[ix][iz] * vp[ix][iz] * dt2; 
-		um[ix][iz] =   uo[ix][iz];
-		uo[ix][iz] =   up[ix][iz];
 	    }
 	}
-	
+	/* circulate arrays */
+	ut=um;
+	um=uo;
+	uo=up;
+	up=ut;
+
+
 	/* one-way ABC apply */	
 	if(abc) {
 #ifdef _OPENMP
