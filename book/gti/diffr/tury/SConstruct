@@ -116,16 +116,17 @@ Plot('rad2','grey title="Shot Reconstruction" ')
 
 Result('rad','rad1 rad2','SideBySideAniso')
 
-Flow('rad','shotc',radon)
+#Flow('rad','shotc','radon adj=y inv=y spk=n p0=-0.004 np=401 dp=0.00002 verb=y')
 
 for p in (-1,0,1):
     plane = 'plane%d' % p
 
     pg = 0.0005*p
-    Flow(plane,'rad','window n2=1 min2=%g' % pg)
+#    Flow(plane,'rad','window n2=1 min2=%g' % pg)
     Plot(plane,
            '''
-           grey title="Plane-Wave Section (p=%g s/m)"
+           byte | equal |
+           grey title="p=%g s/m"
            label2=Source unit2=m 
            ''' % pg)
 
@@ -136,11 +137,14 @@ for p in (-1,0,1):
     Flow(pwd,[plane,slp],'pwd dip=${SOURCES[1]}')
     Plot(pwd,
          '''
-         grey title="Diffractions (p=%g s/m)"
+         byte | equal |
+         grey title="p=%g s/m"
          label2=Source unit2=m 
          ''' % pg)
 
-    Result(plane,[plane,pwd],'SideBySideAniso')
+Result('plane','plane0 plane1','SideBySideAniso')
+Result('pwd','pwd0 pwd1','SideBySideAniso')
+
 
 Flow('patch','rad','transp plane=23 memsize=500 | patch w=1500,801,50')
 

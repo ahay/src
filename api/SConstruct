@@ -21,7 +21,7 @@ spike n1=1000 n2=100 n3=10 nsp=1 k1=500 | ./%s.exe clip=0.5 | attr
 test_matlab = '''
 spike n1=1000 n2=100 n3=10 nsp=1 k1=500 > ${TARGETS[1]} &&
 MATLABPATH=%s %s -nosplash -nojvm -nodesktop
--r clip('${TARGETS[1]}','${TARGETS[2]}',0.5);quit &&
+-r "clip('${TARGETS[1]}','${TARGETS[2]}',0.5);quit" &&
 attr < ${TARGETS[2]} > ${TARGETS[0]}
 '''
 

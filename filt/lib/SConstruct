@@ -194,7 +194,7 @@ if mex and 'matlab' in api:
         file = 'rsf_'+inp
         mexfile = env.Command(file+suffix,[file+'.c',lib],
                               "%s CFLAGS='%s %s' "
-                              "$SOURCE %s %s -output $TARGET" %
+                              "$SOURCES %s %s -output $TARGET" %
                               (WhereIs('mex'),env['_CPPINCFLAGS'],
                                env['CCFLAGS'],env['_LIBDIRFLAGS'],
                                env['_LIBFLAGS']))

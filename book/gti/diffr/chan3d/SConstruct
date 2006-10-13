@@ -14,18 +14,18 @@ Flow('zovel','zovel.HH','dd form=native')
 
 def plot3(title):
     return '''
-    byte gainpanel=all bar=bar.rsf |
+    byte gainpanel=all |
     grey3 frame1=80 frame2=220 frame3=140
     title="%s"
     label1="Time (s)" label2="In-line (m)" label3="Cross-line (m)"
     ''' % title
 
 zplot = '''
-byte bar=bar.rsf gainpanel=all pclip=100 bias=2297 allpos=y |
-grey3 scalebar=y bartype=h wanttitle=n labelrot=n flat=y wherebarlabel=t
-frame1=140 frame2=220 frame3=145
+byte gainpanel=all pclip=100 bias=2297 allpos=y |
+grey3 wanttitle=n labelrot=n flat=y 
+frame1=140 frame2=220 frame3=140
 point1=0.85 point2=0.90 Xscreenratio=0.7 Xscreenht=9
-label1=y label2=x label3=Depth unit3=m barlabel=Velocity barunit=km/s color=j
+label1=y unit1=m label2=x unit2=m label3=z unit3=m color=j
 '''
 
 Result('zovel',
@@ -38,8 +38,8 @@ Flow('zdip','zovol','dip rect1=10 rect2=40 rect3=40')
 Flow('xdip','zdip','window n4=1')
 Flow('ydip','zdip','window f4=1')
 
-Result('xdip',plot3('In-line Slope') + ' color=j scalebar=y')
-Result('ydip',plot3('Cross-line Slope') + ' color=j scalebar=y')
+Result('xdip',plot3('In-line Slope') + ' color=j')
+Result('ydip',plot3('Cross-line Slope') + ' color=j')
 
 Flow('zpwd','zovol zdip','pwd dip=${SOURCES[1]}')
 
@@ -71,5 +71,45 @@ Flow('vlc','vlf',
      cosft sign3=-1
      ''')
 Flow('pat','vlc','patch w=201,440,280')
+
+Flow('slo','zovel','math "output=1/input" | transp memsize=250 plane=12 | transp memsize=250 plane=23')
+
+Flow('dat','zovol','fft1 | transp memsize=512 plane=12 | transp memsize=512 plane=23')
+
+Fetch('over.HH','jim',private)
+Flow('over','over.HH','dd form=native')
+
+Flow('mig','dat slo over',
+     '''
+     zomig mode=d inv=y causal=y twoway=y readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
+     zomig mode=m inv=n readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
+     ''')
+
+Result('zomig','mig',
+       '''
+       transp memsize=512 plane=12 |
+       byte gainpanel=all |
+       grey3 wanttitle=n labelrot=n flat=y 
+       frame1=140 frame2=220 frame3=140
+       point1=0.85 point2=0.90 Xscreenratio=0.7 Xscreenht=9
+       label1=y unit1=m label2=x unit2=m label3=z unit3=m 
+       ''')
+
+
+Flow('pwdat','xpwd','fft1 | transp memsize=512 plane=12 | transp memsize=512 plane=23')
+Flow('pwmig','pwdat slo over',
+     '''
+     zomig mode=d inv=y causal=y twoway=y readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[2]} |
+     zomig mode=m inv=n readwrite=y verb=y nrmax=1 dtmax=5e-05 eps=0.01 tmx=16 tmy=16 pmx=0 pmy=0 incore=y slo=${SOURCES[1]}
+     ''')
+Result('pwmig',
+       '''
+       transp memsize=512 plane=12 |
+       byte gainpanel=all |
+       grey3 wanttitle=n labelrot=n flat=y 
+       frame1=140 frame2=220 frame3=140
+       point1=0.85 point2=0.90 Xscreenratio=0.7 Xscreenht=9
+       label1=y unit1=m label2=x unit2=m label3=z unit3=m 
+       ''')
 
 End()
