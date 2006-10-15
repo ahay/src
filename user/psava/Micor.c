@@ -26,17 +26,13 @@ int main(int argc, char* argv[])
 {
     bool verb;
 
-    /* I/O files */
-    sf_file Fi,Fs,Fr;
+    sf_file Fi,Fs,Fr;      /* I/O files */
+    sf_axis at,az,ax,aa;   /* cube axes */
 
-    /* cube axes */
-    sf_axis at,az,ax,aa;
-    int     nt,nz,nx, nhz,nhx;
-    int        iz,ix, ihz,ihx;
-    int     nbuf,ibuf;
+    int     nt,nz,nx, nhz,nhx, nbuf;
+    int        iz,ix, ihz,ihx, ibuf;
 
-    /* arrays */
-    float **ii=NULL, ***us=NULL,***ur=NULL;
+    float **ii=NULL, ***us=NULL,***ur=NULL; /* arrays */
 
     int ompchunk; 
 
@@ -94,16 +90,16 @@ int main(int argc, char* argv[])
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx) shared(nbuf,nz,nx,ii,us,ur)
 #endif
 	for(ibuf=0; ibuf<nbuf; ibuf++) {
-	    for(    ihz=-nhz; ihz<nhz+1; ihz++) {
-		for(ihx=-nhx; ihx<nhx+1; ihx++) {
-		    for(    iz=0+SF_ABS(ihz); iz<nz-SF_ABS(ihz); iz++) {
-			for(ix=0+SF_ABS(ihx); ix<nx-SF_ABS(ihx); ix++) {
+	    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
+		for(ihz=-nhz; ihz<nhz+1; ihz++) {
+		    for(    ix=0+SF_ABS(ihx); ix<nx-SF_ABS(ihx); ix++) {
+			for(iz=0+SF_ABS(ihz); iz<nz-SF_ABS(ihz); iz++) {
 			    ii[ix][iz] += us[ibuf][ix-ihx][iz-ihz] 
 				*         ur[ibuf][ix+ihx][iz+ihz];
-			} // nx
-		    } // nz
-		} // nhx
-	    } // nhz
+			} // nz
+		    } // nx
+		} // nhz
+	    } // nhx
 	} // nbuf
     } // nt
 

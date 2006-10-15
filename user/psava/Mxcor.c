@@ -26,21 +26,16 @@ int main(int argc, char* argv[])
 {
     bool verb;
 
-    /* I/O files */
-    sf_file Fi,Fs,Fr;
+    sf_file Fi,Fs,Fr;      /* I/O files */
+    sf_axis ac,a1,a2,aa;   /* cube axes */
 
-    /* cube axes */
-    sf_axis ac,a1,a2,aa;
-    int     nc,nn;
-    int     in;
-    int     nbuf,ibuf;
+    int     nc,nn, nbuf;
+    int        in, ibuf;
 
-    /* arrays */
-    float *ii=NULL, **us=NULL,**ur=NULL;
+    float *ii=NULL, **us=NULL,**ur=NULL; /* arrays */
 
     int ompchunk; 
     int axis;
-
 /*------------------------------------------------------------*/
 
     /* init RSF */
