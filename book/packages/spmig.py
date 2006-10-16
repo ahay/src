@@ -265,5 +265,6 @@ def i2s(dimag,dslow,swfld,rwfld,bslow,par):
          slo=${SOURCES[3]}
          ''' % param(par))
 
+# ------------------------------------------------------------
 
 

@@ -173,7 +173,7 @@ def wem(imag,sdat,rdat,velo,custom,par):
          transp plane=12 |
          transp plane=23
          ''' % par )
-    
+
     Flow(rfrq,rdat,
          '''
          transp |

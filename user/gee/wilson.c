@@ -36,13 +36,13 @@ static float *au, *bb, *cc, *b, *c;
 void wilson_init( int nmax /* maximum data size */) 
 /*< initialize >*/
 {
-    n = nmax;
+    n  = nmax;
     n2 = 2*n-1;
     au = sf_floatalloc (n2);
     bb = sf_floatalloc (n2);
     cc = sf_floatalloc (n2);
-    b = sf_floatalloc (n);
-    c = sf_floatalloc (n);
+    b  = sf_floatalloc (n);
+    c  = sf_floatalloc (n);
 }
 
 float wilson_factor(int niter /* number of iterations */, 
