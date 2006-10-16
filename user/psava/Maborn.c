@@ -539,9 +539,9 @@ int main(int argc, char* argv[])
 		puo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
 	    pdd[ir] *= rr[ir].v;
 	}
+	/* write data */
 	sf_floatwrite(bdd,nr,Bd);
 	sf_floatwrite(pdd,nr,Pd);
-
     }
     if(verb) fprintf(stderr,"\n");    
 

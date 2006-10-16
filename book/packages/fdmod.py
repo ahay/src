@@ -201,7 +201,7 @@ def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
           ''' % par)
 
 # shot-record reverse-time migration
-def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,mem,par):
+def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
@@ -258,7 +258,7 @@ def wom(wom,wfld,velo,vmean,par):
          add add=-%g |
          scale axis=123 |
          spray axis=3 n=%d o=%g d=%g |
-         math w=${SOURCES[1]} output="0.05*input+w"
+         math w=${SOURCES[1]} output="0.005*input+w"
          ''' % (vmean,
                 par['nt']/par['jsnap'],
                 par['ot'],

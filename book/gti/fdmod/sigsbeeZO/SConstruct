@@ -98,11 +98,15 @@ Flow(  'dd','to','put o2=%g d2=%g' % (par['ot'],2*par['dt']) )
 Result('dd','window j2=4 | transp |' + fdmod.dgrey('max1=10',par))
 
 zomig.zom('ii','dd','velo',par)
-Result(   'ii','window | transp | bandpass flo=0.5 |' + fdmod.cgrey('pclip=99',par))
+Result(   'ii','window | transp | bandpass flo=0.5 |'
+          + fdmod.cgrey('pclip=99',par))
 
 # ------------------------------------------------------------
 # RT migration
 fdmod.zom('io','uo','to','velo','dens','oo','oo','dens=n',par)
-Result(   'io', 'bandpass flo=0.5 |' + fdmod.cgrey('pclip=99',par))
+Result(   'io', 'bandpass flo=0.5 |'
+          + fdmod.cgrey('pclip=99',par))
+
+# ------------------------------------------------------------
 
 End()

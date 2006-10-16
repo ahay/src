@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
     /* arrays */
     pt2d   *ss, *rr; /* source/receiver locations */
     float  *ww=NULL; /* wavelet */
-    float **dd=NULL; /* data */
+    float  *dd=NULL; /* data */
     float **vv=NULL; /* velocity */
     float **ee=NULL; /* density  */
 
@@ -192,7 +192,11 @@ int main(int argc, char* argv[])
     pt2dread1(Fs,ss,ns,3); /* read 3 elements (x,z,v) */
     pt2dread1(Fr,rr,nr,2); /* read 2 elements (x,z)   */
 
-    dd=sf_floatalloc2(nr,nt);
+    dd=sf_floatalloc(nr);
+    for(ir=0;ir<nr;ir++) {
+	dd[ir]=0;
+    }
+    
     jzs=sf_intalloc(ns); fzs=sf_floatalloc(ns); 
     jzr=sf_intalloc(nr); fzr=sf_floatalloc(nr);
     jxs=sf_intalloc(ns); fxs=sf_floatalloc(ns);
@@ -495,18 +499,20 @@ int main(int argc, char* argv[])
 #pragma omp parallel for schedule(dynamic,1) private(ir) shared(dd,rr,uo,jzr,wr00,wr01,wr10,wr11)
 #endif
 	for (ir=0;ir<nr;ir++) {
-	    dd[it][ir] =
+	    dd[ir] =
 		uo[ jxr[ir]  ][ jzr[ir]  ] * wr00[ir] +
 		uo[ jxr[ir]  ][ jzr[ir]+1] * wr01[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]  ] * wr10[ir] +
 		uo[ jxr[ir]+1][ jzr[ir]+1] * wr11[ir];
-	    dd[it][ir] *= rr[ir].v;
+	    dd[ir] *= rr[ir].v;
 	}
+	/* write data */
+	sf_floatwrite(dd,nr,Fd);
     }
     if(verb) fprintf(stderr,"\n");    
 
     /* write data */
-    sf_floatwrite(dd[0],nr*nt,Fd);
+/*    sf_floatwrite(dd[0],nr*nt,Fd);*/
     
     exit (0);
 }
