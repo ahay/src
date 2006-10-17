@@ -12,6 +12,10 @@ def param(par):
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
 
+    if(not par.has_key('ot')): par['ot']=0.
+    if(not par.has_key('nt')): par['nt']=1
+    if(not par.has_key('dt')): par['dt']=1.
+
     if(not par.has_key('tmin')):     par['tmin']=par['ot']
     if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
     if(not par.has_key('xmin')):     par['xmin']=par['ox']

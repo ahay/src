@@ -4,8 +4,7 @@ import fdmod,math
 par = {
     'nx':1200,  'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m','ux':0.9806,'vx':-0.1961,
     'nz':800,   'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m','uz':0.1961,'vz':+0.9806,
-    'ru':20,   'rv':5,
-    'a':1
+    'ru':20,'rv':5,'a':1
     }
 fdmod.param(par)
 
@@ -78,3 +77,4 @@ Flow('k','af nf',
 Result('k',fdmod.cgrey('',par))
 
 # ------------------------------------------------------------
+
