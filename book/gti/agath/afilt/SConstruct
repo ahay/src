@@ -51,13 +51,19 @@ Flow('img3','agath','stack')
 
 Result('img3','grey title="Angle Stack Imaging Condition" ')
 
+# Extend stack for amplitude comparison
+Flow('ampl','img3','envelope | spray axis=2 n=201 o=-2 d=0.02')
+
 # Mask small values
-Flow('amask','agath',
+amin=1 # amplitude threshold
+
+Flow('amask','agath ampl',
      '''
-     envelope | smooth rect1=100 rect2=10 |
-     mask min=5 | dd type=float |
-     add mode=p $SOURCE
-     ''')
+     envelope |
+     add mode=d ${SOURCES[1]} |
+     mask min=%g | dd type=float |
+     add mode=p ${SOURCES[0]}
+     ''' % amin)
 
 # Stack over angle (usual imaging condition)
 Flow('img4','amask','stack')
@@ -78,14 +84,19 @@ Flow('img5','asmoo','stack | halfint adj=n inv=y | halfint adj=y inv=y')
 
 Result('img5','grey title="Filtered Angle Stack Imaging Condition" ')
 
+# Extend stack for amplitude comparison
+Flow('ampl2','img5','envelope | spray axis=2 n=201 o=-2 d=0.02')
+
+
 # Mask small values
-Flow('asmask','asmoo',
+Flow('asmask','asmoo ampl2',
      '''
      halfint adj=n inv=y | halfint adj=y inv=y |
-     envelope | smooth rect1=100 rect2=10 |
-     mask min=0.02 | dd type=float |
-     add mode=p $SOURCE
-     ''')
+     envelope |
+     add mode=d ${SOURCES[1]} |
+     mask min=%g | dd type=float |
+     add mode=p ${SOURCES[0]}
+     ''' % amin)
 
 # Stack over angle 
 Flow('img6','asmask','stack | halfint adj=n inv=y | halfint adj=y inv=y')
