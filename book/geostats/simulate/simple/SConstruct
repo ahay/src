@@ -2,8 +2,8 @@ from rsfproj import *
 import fdmod,math
 
 par = {
-    'nx':1200,  'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m','ux':0.9806,'vx':-0.1961,
-    'nz':800,   'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m','uz':0.1961,'vz':+0.9806,
+    'nx':1200,  'ox':-600, 'dx':1.0, 'lx':'label2=x unit2=m','ux':0.9806,'vx':-0.1961,
+    'nz':800,   'oz':-400, 'dz':1.0, 'lz':'label1=z unit1=m','uz':0.1961,'vz':+0.9806,
     'ru':20,'rv':5,'a':1
     }
 fdmod.param(par)
@@ -38,7 +38,7 @@ Flow('lu','n','math output="(x2*%g + x1*%g)/%g"'% (par['ux'],par['uz'],par['ru']
 Flow('lv','n','math output="(x2*%g + x1*%g)/%g"'% (par['vx'],par['vz'],par['rv']) )
 
 Flow(  'l','lu lv','math lu=${SOURCES[0]} lv=${SOURCES[1]} output="sqrt(lu*lu+lv*lv)"', stdin=0)
-Result('l',fdmod.cgrey('',par))
+Result('l',fdmod.cgrey('color=j allpos=y',par))
 
 # ------------------------------------------------------------
 
@@ -63,13 +63,13 @@ Flow('cf','c',
      fft3 opt=n axis=2
      ''')
 
-Flow('af','cf','real | math output="sqrt(input)" | rtoc')
+Flow('af','cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
 
 # ------------------------------------------------------------
 
 Flow('k','af nf',
      '''
-     add mode=n ${SOURCES[1]} |
+     add mode=m ${SOURCES[1]} |
      fft3 opt=n axis=1 inv=y |
      fft3 opt=n axis=2 inv=y |
      real
