@@ -23,7 +23,7 @@
 int main(int argc, char* argv[])
 {
     int nt, n3, nx, np, i3, ntx, ntp;
-    bool adj,verb;
+    bool adj,verb,rho;
     float o1,d1, x0,dx, anti, p0,dp,p1;
     float *cmp, *vscan;
     sf_file in, out;
@@ -40,9 +40,10 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(in,2);
 
     if (!sf_getbool ("verb",&verb)) verb=false; /* verbosity flag */
-    if (!sf_getbool ( "adj",&adj ))  adj=false; /* adjoint flag */
+    if (!sf_getbool ( "adj",&adj )) adj=false;  /* adjoint flag */
+    if (!sf_getbool ( "rho",&rho )) rho=true;   /* rho filtering */
     if (!sf_getfloat("anti",&anti)) anti=1.;    /* antialiasing */
- 
+
     if (adj) { 
 	if (!sf_histfloat(in,"o2",&x0)) sf_error("No o2= in input");
 	if (!sf_histfloat(in,"d2",&dx)) sf_error("No d2= in input");
@@ -85,7 +86,7 @@ int main(int argc, char* argv[])
     cmp   = sf_floatalloc(ntx);
     vscan = sf_floatalloc(ntp);
 
-    slant_init (true, x0, dx, nx, p0, dp, np, o1, d1, nt, p1, anti);
+    slant_init (true, rho, x0, dx, nx, p0, dp, np, o1, d1, nt, p1, anti);
 
     for (i3=0; i3 < n3; i3++) { 
 	if(verb) sf_warning("i=%d of %d",i3+1,n3);

@@ -1,0 +1,97 @@
+from rsfproj import *
+from math import pi
+
+# Get local offset gathers
+Fetch('SRC0x.hh','sigsbee')
+
+# Transpose so that the axis are z-h-x
+Flow('gath','SRC0x.hh','window | transp plane=14 | window')
+
+# Extract h=0 (usual imaging condition)
+Flow('img0','gath','window n2=1 min2=0')
+
+Result('img0','grey title="Zero Offset Imaging Condition" ')
+
+# Stack over h (weight=1)
+Flow('img1','gath','stack')
+
+Result('img1','grey title="Offset Stack Imaging Condition" ')
+
+# Extract one offset gather
+Flow('gath1','gath','window n3=1 min3=50000')
+
+Plot('gath1','grey title="Local Offset Gather" ')
+
+# Gaussian weighting a=1/(c*c)
+c = 500 # radius
+Flow('wgath','gath','math output="input*exp(-(%g)*x2*x2)" ' % (2./(c*c)))
+
+# Extract one offset gather
+Flow('wgath1','wgath','window n3=1 min3=50000')
+
+Plot('wgath1','grey title="Weighted Local Offset Gather" ')
+
+Result('gath1','gath1 wgath1','SideBySideAniso')
+
+# Stack over h (weight=gauss)
+Flow('img2','wgath','stack')
+
+Result('img2','grey title="Filtered Offset Stack Imaging Condition" ')
+
+# Create angle gathers
+Flow('agath','gath','slant adj=y p0=-2 np=201 dp=0.02 verb=y rho=n')
+
+# Extract one angle gather
+Flow('agath1','agath','window n3=1 min3=50000')
+
+Plot('agath1','grey title="Angle Gather" label2="tan \F10 q" ')
+
+# Stack over angle (usual imaging condition)
+Flow('img3','agath','stack')
+
+Result('img3','grey title="Angle Stack Imaging Condition" ')
+
+# Mask small values
+Flow('amask','agath',
+     '''
+     envelope | smooth rect1=100 rect2=10 |
+     mask min=5 | dd type=float |
+     add mode=p $SOURCE
+     ''')
+
+# Stack over angle (usual imaging condition)
+Flow('img4','amask','stack')
+
+Result('img4','grey title="Normalized Angle Stack Imaging Condition" ')
+
+# Nonstationary smoothing - compute triangle length
+b = 50
+dx = 150
+Flow('rect','agath',
+     'math output="sqrt(1+x2*x2*(%g))" | dd type=int' % \
+     (6*pi*pi*(b*b)/(dx*dx)))
+
+Flow('asmoo','agath rect','nsmooth rect1=${SOURCES[1]}')
+
+# Stack over angle with smoothing plus rho filter
+Flow('img5','asmoo','stack | halfint adj=n inv=y | halfint adj=y inv=y')
+
+Result('img5','grey title="Filtered Angle Stack Imaging Condition" ')
+
+# Mask small values
+Flow('asmask','asmoo',
+     '''
+     halfint adj=n inv=y | halfint adj=y inv=y |
+     envelope | smooth rect1=100 rect2=10 |
+     mask min=0.02 | dd type=float |
+     add mode=p $SOURCE
+     ''')
+
+# Stack over angle 
+Flow('img6','asmask','stack | halfint adj=n inv=y | halfint adj=y inv=y')
+
+Result('img6',
+       'grey title="Normalized and Filtered Angle Stack Imaging Condition" ')
+
+
+End()

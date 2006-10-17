@@ -27,9 +27,10 @@
 static int nt, nx, ns;
 static float x0, dx, s0, ds, s1, t0, dt, anti;
 static float *tmp, *amp, *str, *tx;
-static bool pull;
+static bool pull, rho;
 
 void slant_init (bool pull1                     /* pull or push mode */, 
+		 bool rho1                      /* use rho filter */,
 		 float x01, float dx1, int nx1  /* offset axis */, 
 		 float s01, float ds1, int ns1  /* slowness axis */, 
 		 float t01, float dt1, int nt1  /* time axis */, 
@@ -37,19 +38,21 @@ void slant_init (bool pull1                     /* pull or push mode */,
 		 float anti1                    /* antialiasing */) 
 /*< initialize >*/
 {
-    pull = pull1;
+    pull = pull1, rho = rho1;
     x0 = x01; dx = dx1; nx = nx1;
     s0 = s01; ds = ds1; ns = ns1;
     nt = nt1; dt = dt1; nt = nt1; 
     s1 = s11; 
 
     aastretch_init (nt, t0, dt, nt);
-    halfint_init (true,2*nt,1.-1./nt);
+    if (rho) {
+	halfint_init (true,2*nt,1.-1./nt);
+	tmp  = sf_floatalloc(nt);
+    }
 
     amp  = sf_floatalloc(nt);
     str  = sf_floatalloc(nt);
     tx   = sf_floatalloc(nt);
-    tmp  = sf_floatalloc(nt);
 }
 
 void slant_close (void)
@@ -58,10 +61,12 @@ void slant_close (void)
     free(amp);
     free(str);
     free(tx);
-    free(tmp);
 
     aastretch_close();
-    halfint_close();
+    if (rho) {
+	halfint_close();
+	free(tmp);
+    }
 }
 
 void slant_lop (bool adj, 
@@ -97,11 +102,19 @@ void slant_lop (bool adj,
 	    aastretch_define (str, tx, amp);
 	    
 	    if (pull) {
-		sf_chain(halfint_lop,aastretch_lop,
-			 adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
+		if (rho) {
+		    sf_chain(halfint_lop,aastretch_lop,
+			     adj,true,nt,nt,nt,modl+is*nt,data+ix*nt,tmp);
+		} else {
+		    aastretch_lop(adj,true,nt,nt,modl+is*nt,data+ix*nt);
+		}
 	    } else {
-		sf_chain(aastretch_lop,halfint_lop,
-			 !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
+		if (rho) {
+		    sf_chain(aastretch_lop,halfint_lop,
+			     !adj,true,nt,nt,nt,data+ix*nt,modl+is*nt,tmp);
+		} else {
+		    aastretch_lop(!adj,true,nt,nt,data+ix*nt,modl+is*nt);
+		}
 	    }
 	} /* ix */
     } /* is */

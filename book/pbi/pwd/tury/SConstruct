@@ -1,5 +1,17 @@
 from rsfproj import *
 
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('gathers.segy','tury',private)
+Flow('gath gath.asc gath.bin','gathers.segy',
+     '''
+     segyread tape=$SOURCE read=data
+     hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     put n2=60 n3=4 d2=100 o2=178
+     ''',stdin=0)
+
 Flow('mod',None,
      '''
      math n1=3001 n2=19 o2=1 d2=0.5 o1=-10 d1=0.02
