@@ -31,7 +31,7 @@ def execute(rr,par):
          noise type=y |
          scale axis=123
          ''' % lpar)
-
+    
     # ------------------------------------------------------------    
     # distance
     Flow(rr+'-lu',rr+'-n','math output="(x2*%g + x1*%g)/%g"'% (lpar['ux'],lpar['uz'],lpar['ru']) )
@@ -46,8 +46,8 @@ def execute(rr,par):
     
     # ------------------------------------------------------------
     # FFT
-    Flow(  rr+'-nf',rr+'-n','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')    
-    Flow(  rr+'-cf',rr+'-c','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')    
+    Flow(  rr+'-nf',rr+'-n','rtoc | fft3 opt=y axis=1 | fft3 opt=y axis=2')    
+    Flow(  rr+'-cf',rr+'-c','rtoc | fft3 opt=y axis=1 | fft3 opt=y axis=2')    
     Flow(  rr+'-af',rr+'-cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
     
     # ------------------------------------------------------------
@@ -55,8 +55,8 @@ def execute(rr,par):
     Flow(rr+'-k',[rr+'-af',rr+'-nf'],
          '''
          add mode=m ${SOURCES[1]} |
-         fft3 opt=n axis=1 inv=y |
-         fft3 opt=n axis=2 inv=y |
+         fft3 opt=y axis=1 inv=y |
+         fft3 opt=y axis=2 inv=y |
          real
          ''')
 
