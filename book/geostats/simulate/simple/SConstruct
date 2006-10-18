@@ -1,12 +1,17 @@
 from rsfproj import *
-import fdmod,math
+import fdmod,math,gfield
 
 par = {
-    'nx':1200,  'ox':-600, 'dx':1.0, 'lx':'label2=x unit2=m','ux':0.9806,'vx':-0.1961,
-    'nz':800,   'oz':-400, 'dz':1.0, 'lz':'label1=z unit1=m','uz':0.1961,'vz':+0.9806,
-    'ru':20,'rv':5,'a':1
+    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m','ux':-5,'vx':1,
+    'nz':800,  'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m','uz':1,'vz':5,
+    'ru':20,'rv':3,'a':1,
+    'f':30
     }
 fdmod.param(par)
+
+#par['ux']=math(sinf(par['f']/180*math.pi))
+#par['uz']=math(cosf(par['f']/180*math.pi))
+
 
 # |u|=1
 par['uu']=math.sqrt(par['ux']*par['ux'] + par['uz']*par['uz'])
@@ -49,21 +54,14 @@ Result('c',fdmod.cgrey('color=j allpos=y pclip=99.9',par))
 # ------------------------------------------------------------
 # FFT
 
-Flow('nf','n',
-     '''
-     rtoc |
-     fft3 opt=n axis=1 |
-     fft3 opt=n axis=2
-     ''')
+Flow(  'nf','n','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')
+Result('nf','real | grey color=F pclip=99.9')
 
-Flow('cf','c',
-     '''
-     rtoc |
-     fft3 opt=n axis=1 |
-     fft3 opt=n axis=2
-     ''')
+Flow(  'cf','c','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')
+Result('cf','real | grey color=F pclip=99.9')
 
-Flow('af','cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
+Flow(  'af','cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
+Result('af','real | grey color=F pclip=99.9')
 
 # ------------------------------------------------------------
 
@@ -74,8 +72,17 @@ Flow('k','af nf',
      fft3 opt=n axis=2 inv=y |
      real
      ''')
-Result('k',fdmod.cgrey('',par))
+Result('k',fdmod.cgrey('color=E',par))
 
 # ------------------------------------------------------------
+
+Flow(  'nu','k','window min1=0 min2=0')
+Result('nu',fdmod.cgrey('min1=0 min2=0',par))
+
+
+# ------------------------------------------------------------
+
+gfield.execute('gg',par)
+Result('gg',fdmod.cgrey('min1=0 min2=0',par))
 
 End()
