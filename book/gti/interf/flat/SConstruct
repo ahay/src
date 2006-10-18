@@ -88,8 +88,8 @@ Flow('dw','wav',
 # RTM
 Flow('dx','dd do','add ${SOURCES[1]} scale=1,-1')
 
-fdmod.rtm('io','dw','dx','vo','rm','rr','rr','qq','free=y dens=n',2000,par)
-fdmod.rtm('ii','dw','dx','vv','rm','rr','rr','qq','free=y dens=n',2000,par)
+fdmod.rtm('io','dw','dx','vo','rm','rr','rr','qq','free=y dens=n',par)
+fdmod.rtm('ii','dw','dx','vv','rm','rr','rr','qq','free=y dens=n',par)
 
 Flow('ko','io','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)
 Flow('kk','ii','put n1=%(nz)d o1=%(oz)g d1=%(dz)g n2=%(nx)d o2=%(ox)g d2=%(dx)g' % par)

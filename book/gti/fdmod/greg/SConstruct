@@ -125,7 +125,7 @@ for i in ('1','2'):
         # RT migration
         fdmod.rtm('raw'+i+k,'sour','rcvr'+i,'velo','dens'+i,
                   'rcvs','rcvs','qq',
-                  'free=y dens='+k,400,par)
+                  'free=y dens='+k,par)
         Flow('image'+i+k,'raw'+i+k,
              '''
              put

@@ -4,13 +4,13 @@ import fdmod,gfield
 par = {
     'nx':1200, 'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m',
     'nz':800,  'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m',
-    'ru':30,'rv':5,'aa':1,'ff':15
+    'ru':30,'rv':6,'aa':1,'ff':45
     }
 fdmod.param(par)
 
 # ------------------------------------------------------------
 
 gfield.execute('gg',par)
-Result('gg',fdmod.cgrey('min1=0 min2=0',par))
+Result('gg',fdmod.cgrey('min2=-1200 min1=-800 color=E',par))
 
 End()

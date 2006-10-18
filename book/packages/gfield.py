@@ -43,11 +43,12 @@ def execute(rr,par):
     # ------------------------------------------------------------
     # covariance
     Flow(  rr+'-c',rr+'-l','math output="exp(-(input^%(aa)g))"' % lpar)
+    Flow(  rr+'-d',rr+'-c','rotate rot1=%g rot2=%g' % (par['nx'],par['nz']))
     
     # ------------------------------------------------------------
     # FFT
     Flow(  rr+'-nf',rr+'-n','rtoc | fft3 opt=y axis=1 | fft3 opt=y axis=2')    
-    Flow(  rr+'-cf',rr+'-c','rtoc | fft3 opt=y axis=1 | fft3 opt=y axis=2')    
+    Flow(  rr+'-cf',rr+'-d','rtoc | fft3 opt=y axis=1 | fft3 opt=y axis=2')    
     Flow(  rr+'-af',rr+'-cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
     
     # ------------------------------------------------------------
@@ -55,12 +56,11 @@ def execute(rr,par):
     Flow(rr+'-k',[rr+'-af',rr+'-nf'],
          '''
          add mode=m ${SOURCES[1]} |
-         fft3 opt=y axis=1 inv=y |
          fft3 opt=y axis=2 inv=y |
+         fft3 opt=y axis=1 inv=y |
          real
          ''')
 
     # ------------------------------------------------------------
-    Flow(rr,rr+'-k','window min1=0 min2=0 | scale axis=123')
-
+    Flow(rr,rr+'-k','window min1=%(oz)g min2=%(ox)g | scale axis=123' % par)
 
