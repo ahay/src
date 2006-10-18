@@ -11,6 +11,6 @@ fdmod.param(par)
 # ------------------------------------------------------------
 
 gfield.execute('gg',par)
-Result('gg',fdmod.cgrey('min2=-1200 min1=-800 color=E',par))
+Result('gg',fdmod.cgrey('color=E',par))
 
 End()
