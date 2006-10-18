@@ -1,84 +1,12 @@
 from rsfproj import *
-import fdmod,math,gfield
+import fdmod,gfield
 
 par = {
-    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m','ux':-5,'vx':1,
-    'nz':800,  'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m','uz':1,'vz':5,
-    'ru':20,'rv':3,'a':1,
-    'f':30
+    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m',
+    'nz':800,  'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m',
+    'ru':30,'rv':5,'aa':1,'ff':15
     }
 fdmod.param(par)
-
-#par['ux']=math(sinf(par['f']/180*math.pi))
-#par['uz']=math(cosf(par['f']/180*math.pi))
-
-
-# |u|=1
-par['uu']=math.sqrt(par['ux']*par['ux'] + par['uz']*par['uz'])
-par['ux']=par['ux']/par['uu']
-par['uz']=par['uz']/par['uu']
-
-# |v|=1
-par['vv']=math.sqrt(par['vx']*par['vx'] + par['vz']*par['vz'])
-par['vx']=par['vx']/par['vv']
-par['vz']=par['vz']/par['vv']
-
-# ------------------------------------------------------------
-
-# IID noise
-Flow('n',None,
-     '''
-     math output="0"
-     n1=%(nz)d d1=%(dz)g o1=%(oz)g label1="z" 
-     n2=%(nx)d d2=%(dx)g o2=%(ox)g label2="x" |
-     noise type=y |
-     scale axis=123
-     ''' % par)
-Result('n',fdmod.cgrey('',par))
-
-# ------------------------------------------------------------
-
-# distance
-Flow('lu','n','math output="(x2*%g + x1*%g)/%g"'% (par['ux'],par['uz'],par['ru']) )
-Flow('lv','n','math output="(x2*%g + x1*%g)/%g"'% (par['vx'],par['vz'],par['rv']) )
-
-Flow(  'l','lu lv','math lu=${SOURCES[0]} lv=${SOURCES[1]} output="sqrt(lu*lu+lv*lv)"', stdin=0)
-Result('l',fdmod.cgrey('color=j allpos=y',par))
-
-# ------------------------------------------------------------
-
-# covariance
-Flow(  'c','l','math output="exp(-(input^%(a)g))"' % par)
-Result('c',fdmod.cgrey('color=j allpos=y pclip=99.9',par))
-
-# ------------------------------------------------------------
-# FFT
-
-Flow(  'nf','n','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')
-Result('nf','real | grey color=F pclip=99.9')
-
-Flow(  'cf','c','rtoc | fft3 opt=n axis=1 | fft3 opt=n axis=2')
-Result('cf','real | grey color=F pclip=99.9')
-
-Flow(  'af','cf','real | clip2 lower=0 | math output="sqrt(input)" | rtoc')
-Result('af','real | grey color=F pclip=99.9')
-
-# ------------------------------------------------------------
-
-Flow('k','af nf',
-     '''
-     add mode=m ${SOURCES[1]} |
-     fft3 opt=n axis=1 inv=y |
-     fft3 opt=n axis=2 inv=y |
-     real
-     ''')
-Result('k',fdmod.cgrey('color=E',par))
-
-# ------------------------------------------------------------
-
-Flow(  'nu','k','window min1=0 min2=0')
-Result('nu',fdmod.cgrey('min1=0 min2=0',par))
-
 
 # ------------------------------------------------------------
 

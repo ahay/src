@@ -1,7 +1,22 @@
 from rsfproj import *
+import math
 
 def execute(rr,par):
     lpar = par.copy()
+
+    if(not lpar.has_key('ff')): lpar['ff']=0
+    if(not lpar.has_key('ru')): lpar['ru']=5
+    if(not lpar.has_key('rv')): lpar['rv']=1
+    if(not lpar.has_key('aa')): lpar['aa']=1
+
+    # directions
+    lpar['ux'] = math.cos(math.radians(par['ff']))
+    lpar['uz'] = math.sin(math.radians(par['ff']))
+    
+    lpar['vx'] =  lpar['uz']
+    lpar['vz'] = -lpar['ux']
+
+    # double and center the grid
     lpar['nx']=2*par['nx']
     lpar['nz']=2*par['nz']
     lpar['ox']=-par['nx']*par['dx']
@@ -27,7 +42,7 @@ def execute(rr,par):
     
     # ------------------------------------------------------------
     # covariance
-    Flow(  rr+'-c',rr+'-l','math output="exp(-(input^%(a)g))"' % lpar)
+    Flow(  rr+'-c',rr+'-l','math output="exp(-(input^%(aa)g))"' % lpar)
     
     # ------------------------------------------------------------
     # FFT
