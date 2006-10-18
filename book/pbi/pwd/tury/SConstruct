@@ -10,7 +10,33 @@ Flow('gath gath.asc gath.bin','gathers.segy',
      segyread tape=$SOURCE read=data
      hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
      put n2=60 n3=4 d2=100 o2=178
+     label1=Time unit1=s label2=Offset unit2=m
      ''',stdin=0)
+
+Flow('gath1','gath','window n3=1 f3=3')
+
+Plot('gath1','grey title="CMP Gather" ')
+
+Flow('vscan','gath1','vscan half=n v0=1400 dv=10 nv=161 semblance=y')
+
+Plot('vscan','grey color=j allpos=y title="Semblance Scan" ')
+
+Flow('pick2','vscan',
+     'mutter inner=y half=n x0=1400 t0=1.5 v0=140 | pick rect1=50 | window')
+
+Plot('pick2',
+     '''
+     graph transp=y yreverse=y min2=1400 max2=3000 plotcol=7 plotfat=3
+     pad=n wanttitle=n wantaxis=n
+     ''')
+
+Plot('vscan2','vscan pick2','Overlay')
+
+Flow('nmo2','gath1 pick2','nmo velocity=${SOURCES[1]} half=n str=0.01')
+
+Plot('nmo2','grey title="Hyperbolic NMO" ')
+
+Result('gath','gath1 vscan2 nmo2','SideBySideAniso')
 
 Flow('mod',None,
      '''

@@ -26,12 +26,18 @@ Result('histos',
 Flow('focus','traces','focus rect1=50')
 Result('focus','grey allpos=y color=j pclip=100 title=Focus')
 
-Flow('envcorr','traces','envcorr rect1=50')
+Flow('envelope','ricker','envelope | spray axis=2 n=37')
+
+Flow('envcorr','traces envelope',
+     'similarity other=${SOURCES[1]} rect1=100')
+
 Result('envcorr',
        '''
-       add mode=p $SOURCE |
-       grey allpos=y color=j pclip=100 title="Envelope Correlation"
+       grey allpos=y color=j title="Envelope Correlation"
        ''')
+
+Flow('envpick','envcorr',
+     'window min2=-90 max2=90 | scale axis=2 | pick rect1=100')
 
 Flow('num','traces','math output="input^4" | stack axis=1 norm=no')
 Flow('den','traces',
