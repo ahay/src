@@ -1,0 +1,81 @@
+from rsfproj import *
+import math
+
+Flow('puck',None,
+     '''
+     math type=complex
+     n1=100 o1=0 d1=%g label1=Frequency unit1=cycles
+     n2=200 o2=0.005 d2=0.005 label2=Slope unit2=samples
+     output="(1-x2)+x2*exp(I*x1)" |
+     math output="log(input)" |
+     imag 
+     ''' % (math.pi/100))
+
+Flow('exact','puck','math output="x1*x2" ')
+
+Flow('z','puck','rtoc | math output="exp(I*x1)" ')
+Flow('s1','puck','math output="(1-x2)*(2-x2)/12" | rtoc')
+Flow('s2','puck','math output="(2+x2)*(2-x2)/6"  | rtoc')
+Flow('s3','puck','math output="(1+x2)*(2+x2)/12" | rtoc')
+Flow('pwd3','z s1 s2 s3',
+     '''
+     math z=${SOURCES[0]} s1=${SOURCES[1]} s2=${SOURCES[2]} s3=${SOURCES[3]}
+     output="(s1/z+s2+s3*z)/(s1*z+s2+s3/z)" |
+     math output="log(input)" |
+     imag
+     ''')
+
+Flow('w1','puck','math output="(1-x2)*(2-x2)*(3-x2)*(4-x2)/1680" | rtoc')
+Flow('w2','puck','math output="(4-x2)*(2-x2)*(3-x2)*(4+x2)/420" | rtoc')
+Flow('w3','puck','math output="(4-x2)*(3-x2)*(3+x2)*(4+x2)/280" | rtoc')
+Flow('w4','puck','math output="(4-x2)*(2+x2)*(3+x2)*(4+x2)/420" | rtoc')
+Flow('w5','puck','math output="(1+x2)*(2+x2)*(3+x2)*(4+x2)/1680" | rtoc')
+Flow('pwd5','z w1 w2 w3 w4 w5',
+     '''
+     math z=${SOURCES[0]} %s
+     output="(s1/(z*z)+s2/z+s3+s4*z+s5*z*z)/(s1*z*z+s2*z+s3+s4/z+s5/(z*z))" |
+     math output="log(input)" |
+     imag
+     ''' % \
+     string.join(map(lambda x: 's%d=${SOURCES[%d]}' % (x,x),range(1,6))))
+
+for case in ('puck','pwd3','pwd5'):
+    err = case+'err'
+    Flow(err,[case,'exact'],
+         'math exact=${SOURCES[1]} output="100*abs((input-exact)/exact)" ')
+
+    Plot(case,err,
+         '''
+         grey clip=100 minval=0 maxval=100 color=j allpos=y scalebar=y
+         transp=n yreverse=n barlabel="Relative Error" barunit=%%
+         title="%s Phase Error"
+         ''' % string.upper(case))
+
+    Plot(case+'c',err,
+         '''
+         contour nc=1 c0=5 transp=n yreverse=n scalebar=y
+         wantaxis=n wanttitle=n plotcol=7 
+         ''')
+
+    Result(case,[case,case+'c'],'Overlay')
+
+Flow('puck1','puck',
+     '''
+     rtoc | math output="abs((1-x2)+x2*exp(I*x1))" |
+     real | math output="100*abs(input-1)"
+     ''')
+
+Plot('puck1',
+     '''
+     grey clip=100 minval=0 maxval=100 color=j allpos=y scalebar=y
+     transp=n yreverse=n barlabel="Relative Error" barunit=%
+     title="PUCK Amplitude Error"
+     ''')
+Plot('puck1c','puck1',
+     '''
+     contour nc=1 c0=5 transp=n yreverse=n scalebar=y
+     wantaxis=n wanttitle=n plotcol=7 
+     ''')
+Result('puck1','puck1 puck1c','Overlay')
+
+End()

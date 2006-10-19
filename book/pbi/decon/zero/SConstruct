@@ -23,8 +23,11 @@ Result('histos',
        graph dash=1,0 title=Histogram wantaxis1=n
        ''' % ('$SOURCE '*10))
 
-Flow('focus','traces','focus rect1=50')
-Result('focus','grey allpos=y color=j pclip=100 title=Focus')
+Flow('focus','traces','focus rect1=100')
+Result('focus',
+       '''
+       math output="1/(input^4)" | grey allpos=y color=j title=Focus
+       ''')
 
 Flow('envelope','ricker','envelope | spray axis=2 n=37')
 

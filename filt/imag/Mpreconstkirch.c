@@ -28,7 +28,7 @@ Requires the input to be in (time,cmp x,cmp y,offset)
 
 int main(int argc, char* argv[])
 {
-    bool inv, zero;
+    bool inv, zero, aal;
     int nt,nx,ny, nh, ix,iy,it,ih, ixin,iyin, n123, ix1, ix2, iy1, iy2;
     float dt,dx,dy, t0,x,y, vel0, rx,ry, dh, h0, h, hx, t, sq, ti, t1,t2;
     float *time, *str, *add, *tx, *amp, ***cinp, ***cout, ***stack=NULL;
@@ -42,6 +42,8 @@ int main(int argc, char* argv[])
     /* if y, modeling; if n, migration */
     if (!sf_getbool("zero",&zero)) zero=false;
     /* if y, stack in migration */
+    if (!sf_getbool("aal",&aal)) aal=true;
+    /* if y, apply antialiasing */
 
     if (!sf_histint(in,"n1",&nt)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
@@ -100,6 +102,7 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	t = t0+it*dt;
 	time[it] = t*t;
+	tx[it] = 0.;
     }
 
     aastretch_init (nt, t0, dt, nt);
@@ -153,7 +156,7 @@ int main(int argc, char* argv[])
 			    str[it] = ti;
 			    t1 = rx / ti * 0.5 * (1 + (t - 2.*h)/sq);
 			    t2 = ry * ti / sq;
-			    tx[it] = (t1 > t2)? t1:t2;
+			    if (aal) tx[it] = SF_MAX(t1,t2);
 			    amp[it] = 
 				sqrtf(time[it] * nt * dt) * ti * sqrtf(ti)/
 				(sq * sqrtf(sq));
@@ -167,10 +170,11 @@ int main(int argc, char* argv[])
 			if (t > h) {
 			    sq = t - x + hx/t;
 			    if (sq > 0.) {
-				str[it] = sqrtf(sq);
+				sq = sqrtf(sq);
+				str[it] = sq;
 				t1 = rx*(1.-h/t);
 				t2 = ry;
-				tx[it] = ((t1 > t2)? t1:t2)/str[it];
+				if (aal) tx[it] = SF_MAX(t1,t2)/sq;
 				amp[it] = 1.;
 			    } else {
 				str[it] = t0 - 2.*dt;

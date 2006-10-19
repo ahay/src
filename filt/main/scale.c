@@ -35,6 +35,10 @@ int main (int argc, char* argv[])
     sf_init (argc, argv);
     in = sf_input ("in");
     out = sf_output ("out");
+  
+    type = sf_gettype(in);
+    if (SF_INT == type) sf_settype(out,SF_FLOAT);
+
     sf_fileflush(out,in);
 
     if (!sf_getint("axis",&axis)) axis = 0;
@@ -51,9 +55,10 @@ int main (int argc, char* argv[])
 	if (i < axis) n1 *= n[i];
 	else          n2 *= n[i];
     }
-    
+
+
     if (1 < n1 && 0. == dscale) {
-	switch (type = sf_gettype(in)) {
+	switch (type) {
 	    case SF_FLOAT:
 		fbuf = sf_floatalloc(n1);
 
@@ -102,7 +107,7 @@ int main (int argc, char* argv[])
 
 	nsize = n1*n2;
 
-	switch (type = sf_gettype(in)) {
+	switch (type) {
 	    case SF_COMPLEX:
 		nsize *= 2;
 		sf_settype(in,SF_FLOAT);
@@ -124,14 +129,15 @@ int main (int argc, char* argv[])
 	    case SF_INT:
 		nbuf /= sizeof(int);
 		ibuf = sf_intalloc(nbuf);
-	
+		fbuf = sf_floatalloc(nbuf);
+		
 		while (nsize > 0) {
 		    if (nsize < nbuf) nbuf = nsize;
 		    sf_intread (ibuf,nbuf,in);
 		    for (i=0; i < nbuf; i++) {
-			ibuf[i] *= dscale;
+			fbuf[i] = (double) ibuf[i]*dscale;
 		    }
-		    sf_intwrite (ibuf,nbuf,out);
+		    sf_floatwrite (fbuf,nbuf,out);
 		    nsize -= nbuf;
 		}	
 		break;

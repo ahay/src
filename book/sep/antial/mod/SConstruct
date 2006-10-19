@@ -16,10 +16,26 @@ Flow('mki','mod',
      spray axis=2 o=0 n=1 |
      transp plane=24 |
      halfint inv=y adj=n |
-     preconstkirch vel=3 |
+     preconstkirch vel=3 inv=y aal=n |
      window
      ''')
 Flow('kir','mki',
+     '''
+     spray axis=2 o=0 n=1 |
+     preconstkirch vel=3 aal=n |
+     halfint inv=y adj=y |
+     window
+     ''')
+
+Flow('mka','mod',
+     '''
+     spray axis=2 o=0 n=1 |
+     transp plane=24 |
+     halfint inv=y adj=n |
+     preconstkirch vel=3 inv=y |
+     window
+     ''')
+Flow('kaa','mka',
      '''
      spray axis=2 o=0 n=1 |
      preconstkirch vel=3 |
@@ -37,7 +53,7 @@ for case in mod+mig:
          strings=1 constsep=1 overlap=5.5 transp=1
          ''')
 
-#Result('amomod',mod,'TwoRows')
-#Result('amomig',mig,'TwoRows')
+Result('amomod',mod,'TwoRows')
+Result('amomig',mig,'TwoRows')
 
 End()

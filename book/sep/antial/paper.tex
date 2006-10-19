@@ -231,6 +231,8 @@ degrees.
   in time. The steep parts of the hyperbolas require interpolation in
   space.}
 
+\inputdir{mod}
+
 To compare the proposed antialiasing method with the temporal
 filtering method, I test the antialiased migration program on simple
 2-D synthetic tests. Figure \ref{fig:amomod} shows a simple model and
@@ -254,6 +256,8 @@ in the previous figure . Top right is a migration without
 antialiasing. Bottom left is a migration with reciprocity antialiasing
 (the proposed method). Bottom right is a migration with triangle
 filter antialiasing.}
+
+\inputdir{sig}
 
 These properties are examined more closely in the next synthetic
 example. Figure \ref{fig:amosmo} shows a more sophisticated synthetic
@@ -308,6 +312,7 @@ modeling and migration. Left is the superposition of the flat-dip and
 steep-dip modeling. Right is superposition of the flat-dip and
 steep-dip migration.}
 
+\begin{comment}
 The efficiency of the antialiased migration is compared in the CPU
 time chart in Figure \ref{fig:amochp}.  The test data set included 500
 by 250 data points with $\Delta t=0.004$ sec, and $\Delta x = 25$ m.
@@ -319,9 +324,10 @@ require a smaller number of expensive computations in the steep
 method in application to the curvilinear operators with limited
 aperture (dip moveout, azimuth moveout, shot continuation).
 
-\plot{amochp}{height=1.5in}{CPU time of migration programs
-on HP 9000-735 versus the constant migration velocity used in the
-experiment.}
+%\plot{amochp}{height=1.5in}{CPU time of migration programs
+%on HP 9000-735 versus the constant migration velocity used in the
+%experiment.}
+\end{comment}
 
 \subsection{3-D antialiasing}
 

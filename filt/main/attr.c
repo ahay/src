@@ -220,7 +220,10 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-static void location(size_t loc, size_t dim, const int *n)
+static void location(size_t loc   /* liner location index */, 
+		     size_t dim   /* number of dimensions */, 
+		     const int *n /* hypercube dimensions [dim] */)
+/* print out an event location */
 {
     size_t i;
     int ni;
@@ -232,4 +235,3 @@ static void location(size_t loc, size_t dim, const int *n)
 }
 
 /* 	$Id$	 */
-

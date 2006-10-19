@@ -155,9 +155,11 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
     pythinc = []
     for path in sys.path:
         if string.find(path,'python') >= 0:
-            dir = string.replace(path,'lib','include')
-            if os.path.isdir(dir):
-                pythinc.append(dir)
+            if path[-13:]=='site-packages':
+                pythinc.append(path+'/numpy/core/include')
+            else:
+                pythinc.append(string.replace(path,'lib','include'))
+    pythinc = filter(os.path.isdir,pythinc)
 
     objs = []
     for source in Split(src2):

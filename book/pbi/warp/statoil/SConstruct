@@ -18,29 +18,40 @@ for mode in ('pz','ps'):
          hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
          bandpass flo=5 | window min1=2 | costaper nw1=50
          ''',stdin=0)
-    Result(mode,'grey title=%s' % Mode)
+    Result(mode,'grey title=%s color=G' % Mode)
+
+    shifts = []
+    for a in range(0,180,2):
+        shift = '%s%d' % (mode,a)
+        shifts.append(shift)
+        Flow(shift,mode,'envelope hilb=y phase=%d' % a)
+    Flow(mode+'shifts',shifts,
+         '''
+         cat ${SOURCES[1:%d]} | put o3=0 d3=2
+         ''' % len(shifts))
+    Flow(mode+'env',mode,
+         'envelope | spray axis=3 n=90')
+    Flow(mode+'foc',[mode+'shifts',mode+'env'],
+         'similarity other=${SOURCES[1]} rect1=80 rect2=100')
+    Flow(mode+'pik',mode+'foc',
+         '''
+         transp plane=23 memsize=500 |
+         scale axis=2 | pick rect1=20 rect2=100 vel0=0 |
+         window
+         ''')
+    Flow(mode+'-0',[mode+'shifts',mode+'pik'],
+         '''
+         transp plane=23 memsize=500 |
+         slice pick=${SOURCES[1]} | window
+         ''')
+    Result(mode+'-0','grey title="%s (Zero-Phase Correction)" color=G' % Mode)
 
 Flow('zero','pz','math output=0')
 
-shifts = []
-for a in range(-180,181,2):
-    ricker = 'ricker%d' % a
-    shifts.append(ricker)
-    Flow(ricker,'pz','envelope hilb=y phase=%d' % a)
-Flow('shifts',shifts,
-     '''
-     cat ${SOURCES[1:%d]} | put o3=-180 d3=2
-     ''' % len(shifts))
-Flow('envelope','pz',
-     'envelope | spray axis=3 n=181')
-
-Flow('focus','shifts envelope',
-     'similarity other=${SOURCES[1]} rect1=100 rect2=10')
-
-Flow('pick','focus',
-     'transp plane=23 memsize=500 | pick rect1=10 rect2=1000 vel0=0 | window')
-
-Flow('focus1','focus','window n2=1 f2=675')
+Flow('shifts1','shifts','window n2=1 f2=675')
+Flow('envelope1','envelope','window n2=1 f2=675')
+Flow('focus1','shifts1 envelope1',
+     'similarity other=${SOURCES[1]} rect1=80')
 Flow('pick1','focus1','scale axis=2 | pick vel0=0 rect1=20')
 
 Plot('focus1','grey color=j allpos=y wanttitle=n')
@@ -51,14 +62,16 @@ Plot('pick1',
 
 Result('focus1','focus1 pick1','Overlay')
 
-Flow('slice','shifts pick',
-     '''
-     transp plane=23 memsize=500 |
-     slice pick=${SOURCES[1]} | window
-     ''')
+Flow('slice1','shifts1 pick1','slice pick=${SOURCES[1]} | window')
+Flow('trace1','pz','window n2=1 f2=675')
+
+Result('trace1','trace1 slice1',
+       '''
+       cat axis=2 ${SOURCES[1]} | dots labels=before:after
+       ''')
 
 warp.warp2('sta',       # name prefix
-           'pz','ps',      # PP and PS images
+           'pz-0','ps-0',      # PP and PS images
            'zero',       # initial warp
            nx=1351,         # number of traces
            tmax=5,     # maximum time for display
@@ -68,7 +81,7 @@ warp.warp2('sta',       # name prefix
            o2=0,       # trace start
            gmin=0.75,     # minimum gamma
            gmax=1.25,     # maximum gamma
-           niter=10,     # warping iterations
+           niter=5,     # warping iterations
            fmin=10,     # minimum frequency
            fmax=50,    # maximum frequency
            frect=10,   # frequency smoothing
@@ -78,12 +91,16 @@ warp.warp2('sta',       # name prefix
            pmin=0,     # minimum gamma for picking
            pmax=2,     # maximum gamma for picking
            an=1,     # anisotropy for picking
-           rect1=75,   # vertical smoothing
+           rect1=60,   # vertical smoothing
            rect2=200,  # lateral smoothing
            iter=2,     # number of iterations
            ss=0,       # PP-PS (0) or PP-SS (1)
            inter=8,    # interleaving
            clip=1325   # display clip
            )
+
+Result('pz-1','pz-0','grey title=PZ')
+Result('ps-1','ps-0','grey title=PS')
+Result('ps-2','sta-psw-11','grey title="Corrected PS" ')
          
 End()

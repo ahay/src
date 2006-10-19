@@ -88,6 +88,23 @@ deviation is the square root of the variance. Using \texttt{sfattr}
 is a quick way to see the distribution of data values and check it for
 anomalies.
 
+\subsubsection{Implementation: \href{http://svn.sourceforge.net/viewcvs.cgi/rsf/trunk/filt/main/attr.c?view=markup}{filt/main/attr.c}}
+
+Computations start by finding the input data (\texttt{in}) size
+(\texttt{nsiz}) and dimensions (\texttt{dim}).
+\moddex{attr}{attr}{72}{75}{filt/main}
+
+In the main loop, we read the input data buffer by buffer.
+\moddex{attr}{attr}{89}{108}{filt/main}
+
+The data attributes are accumulated in corresponding double-precision
+variables. 
+\moddex{attr}{attr}{129}{131}{filt/main}
+
+Finally, the attributes are reduced and printed out.
+\moddex{attr}{attr}{161}{166}{filt/main}
+\moddex{attr}{attr}{173}{182}{filt/main}
+
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
 }}
