@@ -1,6 +1,9 @@
 import os, sys, types
-import numarray
 import c_rsf
+try:
+    import numpy as rsfarray
+except:
+    import numarray as rsfarray
 
 #      a=100 Xa=5
 #      float=5.625 cc=fgsg
@@ -105,7 +108,7 @@ class Input(File):
         File.__init__(self)
     def read(self,data,n=-1):
         if n<0:
-            n = numarray.size(data)
+            n = rsfarray.size(data)
         c_rsf.sf_floatread(data,n,self.file)
 
 class Output(File):
@@ -114,7 +117,7 @@ class Output(File):
         File.__init__(self)
     def write(self,data,n=-1):
         if n<0:
-            n = numarray.size(data)       
+            n = rsfarray.size(data)       
         c_rsf.sf_floatwrite(data,n,self.file)
 
 if __name__ == "__main__":
@@ -155,7 +158,7 @@ if __name__ == "__main__":
     output.put('label2','Distance (kft)')
     input.put("n",[100,100])
     assert [100,100] == input.ints("n",2)
-    trace = numarray.zeros(n1,'f')
+    trace = rsfarray.zeros(n1,'f')
     input.read(trace)
     for i in xrange(n2):
         output.write(trace)

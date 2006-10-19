@@ -178,4 +178,8 @@ static void thrsample(sf_file in, sf_file out, bool complex_data, char* mode,
     
     sf_floatwrite(osample,1,out);
   }
+  free(isample);
+  free(osample);
+  free(icsample);
+  free(ocsample);
 }

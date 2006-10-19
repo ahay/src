@@ -34,7 +34,11 @@ int main(int argc, char* argv[])
     cmplx = sf_input ( "in");
     real  = sf_output("out");
 
-    if (SF_COMPLEX != sf_gettype(cmplx)) sf_error("wrong input type");
+    if (SF_COMPLEX != sf_gettype(cmplx))
+      {
+	
+	sf_error("wrong input type");
+      }
     
     cformat = sf_histstring(cmplx,"data_format");
     len = strlen(cformat)+1;

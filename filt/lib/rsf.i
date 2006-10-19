@@ -3,7 +3,7 @@
 %{
 #include <stdio.h>
 
-#include <numarray/libnumarray.h>
+#include <libnumarray.h>
 
 #include "c99.h"
 #include "alloc.h"

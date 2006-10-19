@@ -152,14 +152,25 @@ if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
 ##############################################################################
 if 'python' in api and 'swig' in env.get('TOOLS'):
     # Python includes for SWIG 
+
     pythinc = []
+    try:
+        import numpy
+        numpy_loc = os.path.split(numpy.__file__)[0]
+        pythinc.append(os.path.join(numpy_loc,'numarray','numpy'))
+        pythinc.append(os.path.join(numpy_loc,'core','include'))
+    except:
+        for path in sys.path:
+            if string.find(path,'python') >= 0:
+                dir = os.path.join(string.replace(path,'lib','include'),'numarray')
+                if os.path.isdir(dir):
+                    pythinc.append(dir)
+
     for path in sys.path:
         if string.find(path,'python') >= 0:
-            if path[-13:]=='site-packages':
-                pythinc.append(path+'/numpy/core/include')
-            else:
-                pythinc.append(string.replace(path,'lib','include'))
-    pythinc = filter(os.path.isdir,pythinc)
+            dir = string.replace(path,'lib','include')
+            if os.path.isdir(dir):
+                pythinc.append(dir)                
 
     objs = []
     for source in Split(src2):
