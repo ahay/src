@@ -89,11 +89,13 @@ void sf_tridiagonal_const_define (sf_tris slv /* solver object */,
 	slv->o[0][k-1] = offd / slv->d[0][k-1];
 	slv->d[0][k] = diag - offd * slv->o[0][k-1];
     }
+    if (damp) slv->d[0][slv->n-1] += offd;
     slv->d[1][slv->n-1] = damp? diag+offd: diag;
     for (k = slv->n-2; k >= 0; k--) {
 	slv->o[1][k] = offd / slv->d[1][k+1];
 	slv->d[1][k] = diag - offd * slv->o[1][k];
     }
+    if (damp) slv->d[1][0] += offd;
 }
 
 void sf_tridiagonal_solve (sf_tris slv /* solver object */, 
