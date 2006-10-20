@@ -32,7 +32,7 @@
 
 static float min1,min2, max1,max2, mid1,mid2, inch1,inch2, orig1,orig2, inch3;
 static float labelsz, barlabelsz, barmin, barmax, bar0, dbar, sinth, costh;
-static float d1, d2, d3, frame1;
+static float d1, d2, d3, frame1, l1min, l1max, l2min, l2max, l3min, l3max;
 static int framecol, frame2, frame3, gridcol, gridfat=1;
 static int cubelinecol=VP_WHITE;
 static bool labelrot, transp, wheretics, scalebar, vertbar, wherebartics;
@@ -340,6 +340,26 @@ static void make_labels (sf_file in, char where1, char where2)
     size_t len;
     struct Label *label;
 
+    if (cube) {
+	if (!sf_histint(in,"n1",&n1)) n1=1;
+	if (!sf_histfloat(in,"o1",&o1)) o1=0.;
+	if (!sf_histfloat(in,"d1",&d1)) d1=1.;
+	l2max = o1-0.5*d1;
+	l2min = o1+(n1-0.5)*d1;
+
+	if (!sf_histint(in,"n2",&n2)) n2=1;
+	if (!sf_histfloat(in,"o2",&o2)) o2=0.;
+	if (!sf_histfloat(in,"d2",&d2)) d2=1.;
+	l1min = o2-0.5*d2;
+	l1max = o2+(n2-0.5)*d2;
+
+	n3 = sf_leftsize(in,2);
+	if (!sf_histfloat(in,"o3",&o3)) o3=0.;
+	if (!sf_histfloat(in,"d3",&d3)) d3=1.;
+	l3min = o3-0.5*d3;
+	l3max = o3+(n3-0.5)*d3;
+    }
+
     if (sf_getbool ("wantaxis", &want) && !want) {
 	/* if draw axes */
 	label1 = NULL;
@@ -429,11 +449,8 @@ static void make_labels (sf_file in, char where1, char where2)
 	label1->y = (label1->where == 't') ? yc+vs: yc-vs;
 
 	if (cube) {
-	    if (!sf_histint(in,"n2",&n2)) n2=1;
-	    if (!sf_histfloat(in,"o2",&o2)) o2=0.;
-	    if (!sf_histfloat(in,"d2",&d2)) d2=1.;
-	    label1->min = o2-0.5*d2;
-	    label1->max = o2+(n2-0.5)*d2;
+	    label1->min = l1min;
+	    label1->max = l1max;
 	} else {
 	    label1->min = min1;
 	    label1->max = max1;
@@ -496,11 +513,8 @@ static void make_labels (sf_file in, char where1, char where2)
 	    label3->x = xc+vs*sinth;
 	}
 
-	n3 = sf_leftsize(in,2);
-	if (!sf_histfloat(in,"o3",&o3)) o3=0.;
-	if (!sf_histfloat(in,"d3",&d3)) d3=1.;
-	label3->min = o3-0.5*d3;
-	label3->max = o3+(n3-0.5)*d3;
+	label3->min = l3min;
+	label3->max = l3max;
     }
 
     if (NULL != label2) {
@@ -548,11 +562,8 @@ static void make_labels (sf_file in, char where1, char where2)
 	label2->x = (label2->where == 'l')? xc-vs: xc+vs;
 	
 	if (cube) {
-	    if (!sf_histint(in,"n1",&n1)) n1=1;
-	    if (!sf_histfloat(in,"o1",&o1)) o1=0.;
-	    if (!sf_histfloat(in,"d1",&d1)) d1=1.;
-	    label2->max = o1-0.5*d1;
-	    label2->min = o1+(n1-0.5)*d1;
+	    label2->max = l2max;
+	    label2->min = l2min;
 	} else {
 	    label2->min = min2;
 	    label2->max = max2;
@@ -1250,27 +1261,27 @@ void vp_frame(void)
 	/* draw colored lines */
 	vs = 0.5*labelsz;
 
-	if (NULL != label2) {
-	    yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(label2->min-label2->max);
+	yc = mid2-(mid2-min2)*(frame1+0.5)*d1/(l2min-l2max);
 
-	    vp_color(cubelinecol);
-	    vp_umove(min1,yc);
- 
-	    if (flat) {
-		vp_udraw(max1,yc);
-	    } else {
-		vp_udraw(mid1,yc);
-		vp_udraw(max1,yc+max2-mid2);
-	    }
+	vp_color(cubelinecol);
+	vp_umove(min1,yc);
+	
+	if (flat) {
+	    vp_udraw(max1,yc);
+	} else {
+	    vp_udraw(mid1,yc);
+	    vp_udraw(max1,yc+max2-mid2);
+	}
 
+	if (NULL != label1) {
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
-
-	    num = label2->max+(frame1+0.5)*d1;
+	    
+	    num = l2max+(frame1+0.5)*d1;
 	    if (fabsf(d1) > FLT_EPSILON && 
 		fabsf(num) < 0.001*fabsf(d1)) num=0.;
 	    snprintf (string,32,"%1.5g",num);
-
+	    
 	    vp_tjust (TH_CENTER, TV_TOP);
 	    if (labelrot) {
 		vp_gtext(xc+3.0*vs,yc,0.,-labelsz,labelsz,0.,string);
@@ -1279,53 +1290,53 @@ void vp_frame(void)
 	    }
 	}
 
-	if (NULL != label1) {
-	    xc = min1+(mid1-min1)*(frame2+0.5)*d2/(label1->max-label1->min);
+	xc = min1+(mid1-min1)*(frame2+0.5)*d2/(l1max-l1min);
 
-	    vp_color(cubelinecol);
-	    vp_umove(xc,min2);
-	    
-	    if (flat) {
-		vp_udraw(xc,max2);
-	    } else {
-		vp_udraw(xc,mid2);
-		vp_udraw(xc+max1-mid1,max2);
-	    }
-	    
+	vp_color(cubelinecol);
+	vp_umove(xc,min2);
+	
+	if (flat) {
+	    vp_udraw(xc,max2);
+	} else {
+	    vp_udraw(xc,mid2);
+	    vp_udraw(xc+max1-mid1,max2);
+	}
+	 
+	if (NULL != label2) {
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 	    
-	    num = label1->min+(frame2+0.5)*d2;
+	    num = l1min+(frame2+0.5)*d2;
 	    if (fabsf(d2) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 	    snprintf (string,32,"%1.5g",num);
 	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 	    vp_gtext(xc,yc+0.5*vs, labelsz, 0., 0., labelsz, string);
+	}	    
+
+	yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(l3max-l3min);
+	xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(l3max-l3min);
+
+	vp_color(cubelinecol);
+	
+	if (flat) {
+	    vp_umove(xc,min2);
+	    vp_udraw(xc,mid2);
+	} else {
+	    vp_umove(xc,yc+min2-mid2);
+	    vp_udraw(xc,yc); 
 	}
 
+	if (flat) {
+	    vp_umove(mid1,yc);
+	    vp_udraw(min1,yc);
+	} else {
+	    vp_umove(xc,yc);
+	    vp_udraw(xc+min1-mid1,yc);
+	}
+	
 	if (NULL != label3) {
-	    yc = mid2+(max2-mid2)*(frame3+0.5)*d3/(label3->max-label3->min);
-	    xc = mid1+(max1-mid1)*(frame3+0.5)*d3/(label3->max-label3->min);
-
-	    vp_color(cubelinecol);
-
-	    if (flat) {
-		vp_umove(xc,min2);
-		vp_udraw(xc,mid2);
-	    } else {
-		vp_umove(xc,yc+min2-mid2);
-		vp_udraw(xc,yc); 
-	    }
-
-	    if (flat) {
-		vp_umove(mid1,yc);
-		vp_udraw(min1,yc);
-	    } else {
-		vp_umove(xc,yc);
-		vp_udraw(xc+min1-mid1,yc);
-	    }
-
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 
