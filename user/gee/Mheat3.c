@@ -58,7 +58,6 @@ int main(int argc, char* argv[])
 
     aa = allocatehelix(nf);
     scale = helify(1.,alpha,n1,nf,aa->flt); 
-    scale *= scale;
 
     for (it=0; it < n1; it++) {
 	aa->lag[it] = it+1;

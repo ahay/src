@@ -49,5 +49,5 @@ float helify(float a, float b  /* filter coefficients */,
 	f[i1] = cy[n1+2-nf+i1]*scale;
     }
 
-    return scale;
+    return (scale*scale);
 }
