@@ -1,10 +1,8 @@
- 
-
-%\def\SEPCLASSLIB{../../../../sepclasslib}
-\def\CAKEDIR{.}
-
-\chapter{Field recording geometry}
+\title{Field recording geometry}
+\author{Jon Claerbout} 
 \label{paper:fld}
+
+\maketitle
 
 \pagenumbering{arabic}  % hopefully, this causes page 1 to be on chapter 1 page.
 
@@ -95,6 +93,7 @@ $(h,\ y,\ t = \hbox{const} )$ & time slice \\
 \sx{section!near-trace}
 \sx{section!zero-offset}
 \par
+\inputdir{XFig}
 A diagram of slice names is in Figure~\ref{fig:sg}.
 Figure~\ref{fig:cube} shows three slices from the data volume.
 The first mode of display is ``engineering drawing mode.''
@@ -102,7 +101,7 @@ The second mode of display is on the faces of a cube.
 But notice that although the data is displayed on the surface
 of a cube, the slices themselves are taken from the interior of the cube.
 The intersections of slices across one another are shown by dark lines.
-\activeplot{sg}{width=6.0in}{NR}{
+\plot{sg}{width=6.0in}{
         Top shows field recording of marine seismograms from
         a shot at location  $s$  to geophones at locations labeled  $g$.
         There is a horizontal reflecting layer to aid interpretation.
@@ -125,8 +124,8 @@ The intersections of slices across one another are shown by dark lines.
 %       (Data from Amoco.
 %       Display via Rick Ottolini's movie program).
 %       }
-
-\activeplot{cube}{width=6.00in,height=8.0in}{ER}{
+\inputdir{cube}
+\plot{cube}{width=6.00in,height=8.0in}{
         Slices from within a cube of data.
         Top: Slices displayed as a mechanical drawing.
         Bottom: Same slices shown on perspective of cube faces.
@@ -184,7 +183,8 @@ Figures~\ref{fig:yc02} and~\ref{fig:yc20} show
 typical marine and land \bx{profile}s
 (common-shot gathers).
 
-\activesideplot{yc02}{height=4.0in,width=3.5in}{ER}{
+\inputdir{yc}
+\sideplot{yc02}{height=4.0in,width=3.5in}{
         A seismic land profile.
         There is a gap where there are no receivers near the shot.
         You can see events of three different velocities.
@@ -192,7 +192,7 @@ typical marine and land \bx{profile}s
         (Western Geophysical).
         }
 
-\activesideplot{yc20}{height=4.0in,width=3.5in}{ER}{
+\sideplot{yc20}{height=4.0in,width=3.5in}{
         A marine profile off the Aleutian Islands.
 %        Press button to change plot parameters.
         (Western Geophysical).
@@ -209,6 +209,7 @@ The marine energy source was an air gun.
 These field profiles were each recorded with about 120 geophones.
 
 \subsection{Fast ship versus slow ship}
+\inputdir{sg}
 For marine seismic data,
 the spacing between shots $\Delta s$ is a function of the speed
 of the ship and the time interval between shots.
@@ -231,7 +232,7 @@ $\Delta s = \Delta g$,
 and
 Figure~\ref{fig:geq2s} shows
 $\Delta s = \Delta g/2$. %
-\activesideplot{geqs}{width=2.5in}{ER}{
+\sideplot{geqs}{width=2.5in}{
         $\Delta g = \Delta s$.
         The zero-offset section lies under the zeros.
         Observe the common midpoint gathers.
@@ -257,7 +258,7 @@ the tension on the cable pulls it out of the water near the ship,
 and the practical gains
 of a smaller lead-in are evidently not convincing.
 
-\activesideplot{geq2s}{width=2.5in}{ER}{
+\sideplot{geq2s}{width=2.5in}{
         $\Delta g = 2\Delta s$.
         This is like Figure~\protect\ref{fig:geqs}
         with odd valued receivers omitted.
@@ -287,13 +288,14 @@ though not necessarily with a white spectrum.
 Let us examine the appearance of the resulting field data.
 
 \subsection{Texture of horizontal bedding, marine data}
+\inputdir{synmarine}
 Randomness is introduced into the earth with
 a random function of midpoint  $y$  and depth  $z$.
 This randomness is impressed on
 some geological ``layer cake'' function of depth $z$.
-This is done in the first half of subroutine \texttt{synmarine()} \vpageref{/prog:synmarine}. %
-\progdex{synmarine}{synthetic marine}
-The second half of subroutine \texttt{synmarine()} \vpageref{/prog:synmarine}
+This is done in the first half of program \texttt{Msynmarine} \vpageref{/prog:Msynmarine}. %
+\moddex{Msynmarine}{synthetic marine}{52}{74}{user/gee}
+The second half of program \texttt{Msynmarine} \vpageref{/prog:Msynmarine}
 scans all shot and geophone locations and depths
 and finds the midpoint,
 and the reflection coefficient for that midpoint,
@@ -326,11 +328,13 @@ that produces a cube of data, hence a \bx{movie}.
 This cube is synthetic data for the ideal marine environment.
 And what does the \bx{movie} show?
 
-\activesideplot{synmarine}{width=3in}{ER}{
+\sideplot{synmarine}{width=3in}{
         Output from {\tt synmarine()} subroutine
         (with temporal filtering on the $t$-axis).
 %        Press button for \bx{movie}.
         }
+
+\inputdir{shotmovie}
 
 \par
 A single frame shows hyperbolas with imposed texture.
@@ -354,7 +358,7 @@ partial focusing of waves sometime after they
 reflect from minor topographic irregularities.
 A full explanation awaits more research.
 
-\activesideplot{shotmovie}{width=3in}{ER}{
+\sideplot{shotmovie}{width=3in}{
         Press button for field data \bx{movie}.
         }
 
@@ -389,13 +393,15 @@ In real life, both amplitude and time anomalies are associated
 with both shots and geophones.
 
 \begin{exer}
+\inputdir{XFig}
+
 \item
 Modify the program of Figure~\ref{fig:cube} to produce a movie
 of synthetic %
 {\em midpoint %
 } gathers
 with random shot amplitudes and random geophone time delays.
-\activesideplot{wirecube}{height=1.0in}{NR}{
+\sideplot{wirecube}{height=1.0in}{
         }
 Observing this \bx{movie} you will note the perceptual problem of being
 able to see the leftward motion along with the rightward motion.

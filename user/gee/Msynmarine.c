@@ -50,10 +50,11 @@ int main(int argc, char* argv[]) {
 
     random_init (1992);
     for (iz=0; iz < nz; iz++) {  
-	depth[iz] = random0()*nt;                  /* reflector depth */
-	layer =  2.*random0()-1.;                  /* reflector strength */
+	depth[iz] = random0()*nt; /* reflector depth */
+	layer =  2.*random0()-1.; /* reflector strength */
 	for (iy=0; iy < ny; iy++) {
-	    refl[iy][iz] = (random0()+1.)*layer;   /* texture on layer */
+            /* texture on layer */
+	    refl[iy][iz] = (random0()+1.)*layer;   
 	}
     }
 
@@ -62,9 +63,9 @@ int main(int argc, char* argv[]) {
 	    for (it=0; it < nt; it++) {
 		data[it] = 0.;
 	    }
-	    for (iz=0; iz < nz; iz++) { /* Add hyperbola for each layer */
+	    for (iz=0; iz < nz; iz++) { /* Add hyperbola */
 		iy = (ny-1-is)+(ih-1);  /* y = midpoint */
-		iy = (iy+1)%ny;         /* periodic with midpoint */
+		iy = (iy+1)%ny;         /* periodic midpoint */
 		it = sqrtf(depth[iz]*depth[iz] + 25.*ih*ih);   
 		if (it < nt) data[it] += refl[iy][iz];
 	    }
