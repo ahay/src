@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
-import numarray
+import numpy
 import rsf
 
 par = rsf.Par()
@@ -15,10 +15,10 @@ assert n1
 clip = par.float("clip")
 assert clip
 
-trace = numarray.zeros(n1,'f')
+trace = numpy.zeros(n1,'f')
 
 for i2 in xrange(n2): # loop over traces
     input.read(trace)
-    trace = numarray.clip(trace,-clip,clip)
+    trace = numpy.clip(trace,-clip,clip)
     output.write(trace)
 
