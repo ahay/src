@@ -9,22 +9,25 @@
   with the helix transform}
 
 \email{sergey@sep.stanford.edu, jon@sep.stanford.edu}
-\keywords{depth migration, post-stack, finite-difference, velocity continuation, helix}
+%\keywords{depth migration, post-stack, finite-difference, velocity continuation, helix}
 
 \author{Sergey Fomel and Jon F. Claerbout}
 
-\ABS{ Implicit extrapolation is an efficient and unconditionally
-  stable method of wavefield continuation. Unfortunately, implicit
-  wave extrapolation in three dimensions requires an expensive
-  solution of a large system of linear equations. However, by mapping
-  the computational domain into one dimension via the helix transform,
-  we show that the matrix inversion problem can be recast in terms of
-  an efficient recursive filtering. Apart from the boundary
-  conditions, the solution is exact in the case of constant
-  coefficients (that is, a laterally homogeneous velocity.) We
-  illustrate this fact with an example of three-dimensional velocity
-  continuation and discuss possible ways of attacking the problem of
-  lateral variations.}
+\maketitle
+
+\begin{abstract}
+  Implicit extrapolation is an efficient and unconditionally stable
+  method of wavefield continuation. Unfortunately, implicit wave
+  extrapolation in three dimensions requires an expensive solution of
+  a large system of linear equations. However, by mapping the
+  computational domain into one dimension via the helix transform, we
+  show that the matrix inversion problem can be recast in terms of an
+  efficient recursive filtering. Apart from the boundary conditions,
+  the solution is exact in the case of constant coefficients (that is,
+  a laterally homogeneous velocity.) We illustrate this fact with an
+  example of three-dimensional velocity continuation and discuss
+  possible ways of attacking the problem of lateral variations.
+\end{abstract}
 
 \section{Introduction}
 
@@ -33,7 +36,7 @@ exceptionally important role in the early development of seismic
 migration methods. Using limited-degree approximations to the one-way
 wave equation, implicit schemes have provided efficient and
 unconditionally stable numerical wave extrapolation operators
-\cite{Godfrey.sep.16.83,Claerbout.blackwell.85}. Unfortunately, the
+\cite[]{Godfrey.sep.16.83,Claerbout.blackwell.85}. Unfortunately, the
 advantages of \emph{implicit} methods were lost with the development
 of three-dimensional seismic exploration. While the cost of 2-D
 implicit extrapolation is linearly proportional to the mesh size, the
@@ -41,14 +44,14 @@ same approach, applied in the 3-D case, leads to a nonlinear
 computational complexity. Primarily for this reason, implicit
 extrapolators were replaced in practice by \emph{explicit} ones,
 capable of maintaining linear complexity in all dimensions. A number
-of computational tricks \cite{GEO56.11.17701777} allow the commonly
+of computational tricks \cite[]{GEO56-11-17701777} allow the commonly
 used explicit schemes to behave stably in practical cases.  However,
 their stability is not unconditional and may break in unusual
-situations \cite{etgen}.
+situations \cite[]{SEG-1994-1266}.
 \par
 In this paper, we present an approach to three-dimensional
 extrapolation, based on the helix transform of multidimensional
-filters to one dimension \cite{Claerbout.gem.97}. The traditional
+filters to one dimension \cite[]{Claerbout.gem.97}. The traditional
 approach involves an inversion of a banded matrix (tridiagonal in the
 2-D case and blocked-tridiagonal in the 3-D case). With the help of
 the helix transform, we can recast this problem in terms of inverse
@@ -59,7 +62,7 @@ extrapolation is reduced to a linear function of the computational
 mesh size. This approach doesn't provide an exact solution in the
 presence of lateral velocity variations. Nevertheless, it can be used
 for preconditioning iterative methods, such as those described by
-\longcite{Nichols.sep.70.31}.  In this paper, we demonstrate the
+\cite{Nichols.sep.70.31}.  In this paper, we demonstrate the
 feasibility of 3-D implicit extrapolation on the example of laterally
 invariant velocity continuation and, in the final part, discuss
 possible strategies for solving the problem of lateral variations.
@@ -69,17 +72,17 @@ The main application of finite-difference wave extrapolation is
 for \emph{prestack} common-shot migration is constrained by the
 limited aperture of commonly used seismic acquisition patterns.
 Recently developed acquisition methods, such as the vertical cable
-technique \cite{cable}, open up new possibilities for 3-D wave
+technique \cite[]{SEG-1993-1376}, open up new possibilities for 3-D wave
 extrapolation applications. An alternative approach is common-azimuth
-migration \cite{Biondi.sep.80.109,Biondi.sep.93.1}. Other interesting
+migration \cite[]{Biondi.sep.80.109,Biondi.sep.93.1}. Other interesting
 applications include finite-difference data extrapolation in offset
-\cite{Fomel.sep.84.179}, migration velocity \cite{Fomel.sep.92.159},
-and anisotropy \cite{Alkhalifah.sep.94.tariq3}.
+\cite[]{Fomel.sep.84.179}, migration velocity \cite[]{Fomel.sep.92.159},
+and anisotropy \cite[]{Alkhalifah.sep.94.tariq3}.
 
 \section{Implicit versus Explicit extrapolation}
 
 The difference between implicit and explicit extrapolation is best
-understood through an example. Following \longcite{Claerbout.blackwell.85},
+understood through an example. Following \cite{Claerbout.blackwell.85},
 let us consider, for instance, the diffusion (heat conduction) equation
 of the form
 \begin{equation}
@@ -158,7 +161,7 @@ An \emph{implicit} approach also approximates the ideal filter
 \;.
 \end{equation}
 One way of selecting the coefficients $b_i$ and $c_i$ is to apply an
-appropriate Pad\'{e} approximation \cite{pade}\footnote{If the
+appropriate Pad\'{e} approximation \cite[]{pade}\footnote{If the
   denominator and the numerator have the same order, Pad\'{e}
   approximants are equivalent to the corresponding continuous
   fraction expansions.}.  For example the $[2/2]$ Pad\'{e}
@@ -170,7 +173,7 @@ approximation is
   \;.
 \end{equation}
 This approximation corresponds to the famous Crank-Nicolson implicit
-method \cite{cn}. The error of approximation (\ref{eqn:heatcrank}) as
+method \cite[]{cn}. The error of approximation (\ref{eqn:heatcrank}) as
 a function of $k$ for different values of $a$ is shown in the right
 plot of Figure \ref{fig:error}. Not only is it significantly smaller
 than the error of the same-order explicit approximation, but it also
@@ -190,7 +193,7 @@ Formula (\ref{eqn:d2k}) approximates $-k^2$ well only for small
 wavenumbers $k$. As shown in Appendix A, the implicit scheme allows
 the accuracy of the second-derivative filter to be significantly
 improved by a variation of the ``1/6-th trick''
-\cite{Claerbout.blackwell.85}. The final form of the implicit
+\cite[]{Claerbout.blackwell.85}. The final form of the implicit
 extrapolation filter is
 \begin{equation}
   \label{eqn:heatfk}
@@ -223,7 +226,7 @@ The difference in stability between explicit and implicit schemes is
 even more pronounced in the case of \emph{wave extrapolation}. For
 example, let us consider the ideal depth extrapolation filter in the
 form of the phase-shift operator
-\cite{GEO43.07.13421351,Claerbout.blackwell.85}
+\cite[]{GEO43-07-13421351,Claerbout.blackwell.85}
 \begin{equation}
   \label{eqn:gazdag}
   W (k) = e^{i \sqrt{a^2 - k^2}}\;,
@@ -244,7 +247,7 @@ operator, only with a slightly different phase. For that reason, the
 operator is unconditionally stable for all values of $a$: the total
 wave energy from one depth level to another is preserved. Operator
 (\ref{eqn:gazdag}) corresponds to the Crank-Nicolson scheme for the
-45-degree one-way wave equation \cite{Claerbout.blackwell.85}. Its
+45-degree one-way wave equation \cite[]{Claerbout.blackwell.85}. Its
 phase error as a function of the dip angle $\theta =
 \arcsin{\frac{k}{a}}$ for different values of $a$ is shown in Figure
 \ref{fig:phase}.
@@ -257,7 +260,7 @@ phase error as a function of the dip angle $\theta =
 The unconditional stability property is not achievable with the
 explicit approach, though it is possible to increase the stability of
 explicit operators by using relatively long filters
-\cite{GPR36.02.00990114,GEO56.11.17701777}.
+\cite[]{GPR36-02-00990114,GEO56-11-17701777}.
 
 \section{Spectral factorization and three-dimensional extrapolation}
 
@@ -274,16 +277,16 @@ can put the filter denominator on the other side of the extrapolation
 equation, writing it as
 \begin{equation}
   \label{eqn:heattris}
-  \left(\bold{I} - \frac{a-\beta}{2}\,\bold{D}_2\right) \bold{T}_{t+1} =
-  \left(\bold{I} + \frac{a+\beta}{2}\,\bold{D}_2\right) \bold{T}_t\;,
+  \left(\mathbf{I} - \frac{a-\beta}{2}\,\mathbf{D}_2\right) \mathbf{T}_{t+1} =
+  \left(\mathbf{I} + \frac{a+\beta}{2}\,\mathbf{D}_2\right) \mathbf{T}_t\;,
 \end{equation}
-where $\bold{I}$ is the identity matrix, $\bold{D}$ is the convolution
-matrix for filter (\ref{eqn:d2k}), and $\bold{T}_t$ is the vector of
+where $\mathbf{I}$ is the identity matrix, $\mathbf{D}$ is the convolution
+matrix for filter (\ref{eqn:d2k}), and $\mathbf{T}_t$ is the vector of
 temperature distribution at time level $t$. In the case of
 two-dimensional extrapolation, the matrix on the left side of equation
 (\ref{eqn:heattris}) takes the tridiagonal form
 \begin{equation}\label{eqn:matrix}
-  \bold{A} = \left(\bold{I} -c\,\bold{D}_2\right) =
+  \mathbf{A} = \left(\mathbf{I} -c\,\mathbf{D}_2\right) =
   \left[\begin{array}{cccccc}
   1+2 c_{1}   & -c_{1}     &  0     & \cdots &        & 0      \\
   -c_{2}     & 1+2c_{2}   & -c_{2}     & 0      & \cdots &        \\
@@ -295,7 +298,7 @@ two-dimensional extrapolation, the matrix on the left side of equation
 \end{equation}
 where $c = \frac{a-\beta}{2}$, and where, for simplicity, we assume
 zero-slope boundary conditions. Like any positive-definite tridiagonal
-matrix, matrix $\bold{A}$ can be inverted recursively by an $LU$
+matrix, matrix $\mathbf{A}$ can be inverted recursively by an $LU$
 decomposition into two bidiagonal matrices. The cost of inversion is
 directly proportional to the number of vector components.  The same
 conclusion holds for the case of depth extrapolation [equation
@@ -304,7 +307,7 @@ conclusion holds for the case of depth extrapolation [equation
 \par
 In the case of a laterally constant coefficient $a$, we can take a
 different point of view on the tridiagonal matrix inversion. In this
-case, the matrix $\bold{A}_2$ represents a convolution with a
+case, the matrix $\mathbf{A}_2$ represents a convolution with a
 symmetric three-point filter $1-c\,D_2(k)$. The $LU$
 decomposition of such a matrix is precisely equivalent to filter
 \emph{factorization} into the product of a causal minimum-phase filter
@@ -331,21 +334,21 @@ the commonly used five-point filter $Z_x^{-1} + Z_y^{-1} -4 + Z_x +
 Z_y$, then the matrix on the left side of equation
 (\ref{eqn:heattris}), under the usual mapping of vectors from a
 two-dimensional mesh to one dimension, takes the infamous
-blocked-tridiagonal form \cite{birk}
+blocked-tridiagonal form \cite[]{birk}
 \begin{equation}\label{eqn:matrix2}
-  \tilde{\bold{A}} = \left(\bold{I} -c\,\bold{D}_2\right) =
+  \tilde{\mathbf{A}} = \left(\mathbf{I} -c\,\mathbf{D}_2\right) =
   \left[\begin{array}{cccccc}
-  \bold{A}_1   & -c_1 \,\bold{I}    &  0     & \cdots &        & 0      \\
-  -c_2 \,\bold{I}    & \bold{A}_2   & -c_2 \,\bold{I}    & 0      & \cdots &        \\
-  0      & -c_3 \,\bold{I}     & \cdots & \cdots &        & \cdots \\
+  \mathbf{A}_1   & -c_1 \,\mathbf{I}    &  0     & \cdots &        & 0      \\
+  -c_2 \,\mathbf{I}    & \mathbf{A}_2   & -c_2 \,\mathbf{I}    & 0      & \cdots &        \\
+  0      & -c_3 \,\mathbf{I}     & \cdots & \cdots &        & \cdots \\
   \cdots & 0      & \cdots &        &        &        \\
-         & \cdots &        &        & \cdots & -c_{n-1} \,\bold{I}    \\
-  0      &        &        &        & -c_{n} \,\bold{I}    &
-  \bold{A}_n
+         & \cdots &        &        & \cdots & -c_{n-1} \,\mathbf{I}    \\
+  0      &        &        &        & -c_{n} \,\mathbf{I}    &
+  \mathbf{A}_n
   \end{array}\right]\;.
 \end{equation}
 Inspecting this form more closely, we see that the main diagonal of
-$\tilde{\bold{A}}$, as well as the two offset diagonals formed by the
+$\tilde{\mathbf{A}}$, as well as the two offset diagonals formed by the
 scaled identity matrices, remains continuous, while the second top and
 bottom diagonals are broken. Therefore, even for constant $c$, the
 inverted matrix does not have a simple convolutional structure, and
@@ -353,10 +356,10 @@ the cost of its inversion grows nonlinearly with the number of grid
 points.
 \par
 A \emph{helix transform}, recently proposed by one of the authors
-\cite{Claerbout.sep.95.jon1}, sheds new light on this old problem.
+\cite[]{Claerbout.sep.95.jon1}, sheds new light on this old problem.
 Let us assume that the extrapolation filter is applied by sliding it
 along the $x$ direction in the $\{x,y\}$ plane. The diagonal
-discontinuities in matrix $\tilde{\bold{A}}$ occur exactly in the
+discontinuities in matrix $\tilde{\mathbf{A}}$ occur exactly in the
 places where the forward leg of the filter slides outside the
 computational domain. Let's imagine a situation, where the leg of the
 filter that went to the end of the $x$ column, would immediately
@@ -364,7 +367,7 @@ appear at the beginning of the next column. This situation defines a
 different mapping from two computational dimensions to the one
 dimension of linear algebra. The mapping can be understood as the
 helix transform, illustrated in Figure \ref{fig:helix1} and explained
-in detail by \longcite{Claerbout.sep.95.jon1}. According to this
+in detail by \cite{Claerbout.sep.95.jon1}. According to this
 transform, we replace the original two-dimensional filter with a long
 one-dimensional filter. The new filter is partially filled with zero
 values (corresponding to the back side of the helix), which can be
@@ -377,19 +380,19 @@ safely ignored in the convolutional computation.
   one of the axes.}
 \par
 This is exactly the helix transform that is required to make all the
-diagonals of matrix $\tilde{\bold{A}}$ continuous. In the case of
+diagonals of matrix $\tilde{\mathbf{A}}$ continuous. In the case of
 laterally invariant coefficients, the matrix becomes strictly Toeplitz
 (having constant values along the diagonals) and represents a
 one-dimensional convolution on the helix surface. Moreover, this
 simplified matrix structure applies equally well to larger
 second-derivative filters ( such as those described in Appendix B),
 with the obvious increase of the number of Toeplitz diagonals.
-Inverting matrix $\tilde{\bold{A}}$ becomes once again a simple
+Inverting matrix $\tilde{\mathbf{A}}$ becomes once again a simple
 inverse filtering problem.  To decompose the 2-D filter into a pair
 consisting of a causal minimum-phase filter and its adjoint, we can
 apply spectral factorization methods from the 1-D filtering theory
-\cite{Claerbout.blackwell.76,Claerbout.blackwell.92}, for example,
-Kolmogorov's highly efficient method \cite{kolmog}. Thus, in the case
+\cite[]{Claerbout.blackwell.76,Claerbout.blackwell.92}, for example,
+Kolmogorov's highly efficient method \cite[]{kolmog}. Thus, in the case
 of a laterally invariant implicit extrapolation, matrix inversion
 reduces to a simple and efficient recursive filtering, which we need
 to run twice: first in the forward mode, and second in the adjoint
@@ -434,10 +437,10 @@ lateral variations.
 
 Velocity continuation is a process of navigating in the migration
 velocity space, applicable for time migration, residual migration, and
-migration velocity analysis \cite{Fomel.sep.92.159}. In the
+migration velocity analysis \cite[]{Fomel.sep.92.159}. In the
 zero-offset (post-stack) case, the velocity continuation process is
 described by the simple partial differential equation
-\cite{Claerbout.sep.48.79,me}
+\cite[]{Claerbout.sep.48.79,me}
 \begin{equation}
   \label{eqn:velcon}
   \frac{\partial^2 P}{\partial v\,\partial t} +
@@ -448,7 +451,7 @@ where $t$ is the vertical time coordinate of the migrated image, $x$
 and $y$ are spatial (midpoint) coordinates, and $v$ is the migration
 velocity. Slightly different versions of two-dimensional implicit
 extrapolation with equation (\ref{eqn:velcon}) have been described by
-\longcite{Li.sep.48.85} and \cite{Fomel.sep.92.159}. 
+\cite{Li.sep.48.85} and \cite[]{Fomel.sep.92.159}. 
 
 \plot{velcon}{width=6in}{Impulse responses of the velocity
   continuation operator, computed by an implicit, unconditionally
@@ -464,13 +467,13 @@ implicit helix-based three-dimensional velocity continuation.
   the 3-D velocity continuation program.}
 \par
 Figure \ref{fig:modmig} illustrates the velocity continuation process
-on the Qdome synthetic model \cite{Claerbout.gem.97}, shown in Figure
+on the Qdome synthetic model \cite[]{Claerbout.gem.97}, shown in Figure
 \ref{fig:qdome}. Continuation backward in velocity corresponds to the
 ``modeling'' mode, while forward continuation corresponds to the
 ``migration'' mode. It is possible to balance the amplitudes of the
 two processes so that the finite-difference velocity continuation
 behaves as a unitary operator
-\cite{Fomel.sep.92.159,Fomel.sep.92.267}.
+\cite[]{Fomel.sep.92.159,Fomel.sep.92.267}.
 
 \plot{modmig}{width=6in}{Modeling (left) and migration (right) with
   the Qdome synthetic model, obtained by running the 3-D velocity
@@ -486,52 +489,52 @@ The first idea that comes to mind is to replace the space-invariant
 helix filters with a precomputed set of spatially varying filters,
 which reflect local changes in the velocity fields. This approach
 would merely reproduce the conventional practice of explicit depth
-extrapolators, popularized by \longcite{GPR36.02.00990114} and
-\longcite{GEO56.11.17701777}. However, it hides the danger of losing
+extrapolators, popularized by \cite{GPR36-02-00990114} and
+\cite{GEO56-11-17701777}. However, it hides the danger of losing
 the property of unconditional stability, which is obviously the major
 asset of implicit extrapolators.
 \par
-Another route, partially explored by \longcite{Nichols.sep.70.31}, is
+Another route, partially explored by \cite{Nichols.sep.70.31}, is
 to implement the matrix inversion in the three-dimensional implicit
 scheme by an iterative method. In this case, the helix inversion may
 serve as a powerful preconditioner, providing an immediate answer in
 constant velocity layers and speeding up the convergence in the case
 of velocity variations. To see why this might be true, one can write
-the variable-coefficient matrix $\tilde{\bold{A}}$ in the form
+the variable-coefficient matrix $\tilde{\mathbf{A}}$ in the form
 \begin{equation}
   \label{eqn:golub}
-  \tilde{\bold{A}} = \bold{B} + \bold{D}\;,
+  \tilde{\mathbf{A}} = \mathbf{B} + \mathbf{D}\;,
 \end{equation}
-where matrix $\bold{B}$ corresponds to some constant average velocity,
-and $\bold{D}$ is the matrix of velocity perturbations. The system of
+where matrix $\mathbf{B}$ corresponds to some constant average velocity,
+and $\mathbf{D}$ is the matrix of velocity perturbations. The system of
 linear equations that we need to solve is then
 \begin{equation}
   \label{eqn:system}
-  \left(\bold{B} + \bold{D}\right) \bold{m} = \bold{d}\;,
+  \left(\mathbf{B} + \mathbf{D}\right) \mathbf{m} = \mathbf{d}\;,
 \end{equation}
-where $\bold{m}$ is the vector of extrapolated wavefield, and
-$\bold{d}$ is an appropriate righthand side. The helix transform
-provides us with the operator $\bold{B}^{-1}$, which we can use to
+where $\mathbf{m}$ is the vector of extrapolated wavefield, and
+$\mathbf{d}$ is an appropriate righthand side. The helix transform
+provides us with the operator $\mathbf{B}^{-1}$, which we can use to
 precondition system (\ref{eqn:system}). Introducing the change of
 variables
 \begin{equation}
   \label{eqn:prec}
-  \bold{m} = \bold{B}^{-1} \bold{x}\;,
+  \mathbf{m} = \mathbf{B}^{-1} \mathbf{x}\;,
 \end{equation}
 we can transform the original system (\ref{eqn:system}) to the form
 \begin{equation}
   \label{eqn:system2}
-  \bold{d} = \left(\bold{B} + \bold{D}\right) \bold{B}^{-1} \bold{x} = 
-  \bold{x} + \bold{D}\,\bold{B}^{-1} \bold{x}\;.
+  \mathbf{d} = \left(\mathbf{B} + \mathbf{D}\right) \mathbf{B}^{-1} \mathbf{x} = 
+  \mathbf{x} + \mathbf{D}\,\mathbf{B}^{-1} \mathbf{x}\;.
 \end{equation}
 When the velocity perturbation is small\footnote{In the
   linear-algebraic sense, this means that the spectral radius of
-  operator $\bold{D}\,\bold{B}^{-1}$ is strictly less than one.}, even
+  operator $\mathbf{D}\,\mathbf{B}^{-1}$ is strictly less than one.}, even
 the simple iteration
 \begin{eqnarray}
   \label{ralg}
-  \bold{x}_0 & = & \bold{d}\;; \\
-  \bold{x}_k & = & \bold{d} - \bold{D}\,\bold{B}^{-1} \bold{x}_{k+1}\;
+  \mathbf{x}_0 & = & \mathbf{d}\;; \\
+  \mathbf{x}_k & = & \mathbf{d} - \mathbf{D}\,\mathbf{B}^{-1} \mathbf{x}_{k+1}\;
 \end{eqnarray}
 will converge rapidly to the desired solution. This interesting
 possibility needs thorough testing.
@@ -539,7 +542,7 @@ possibility needs thorough testing.
 The third untested possibility (Papanicolaou, personal communication)
 is to implement a clever patching in the velocity domain, applying a
 constant-velocity filter locally inside each patch. Recently developed
-fast wavelet transform techniques \cite{wavelet}, in particular the
+fast wavelet transform techniques \cite[]{wavelet}, in particular the
 \emph{local cosine transform}, provide a formal framework for that
 approach.
 
@@ -564,12 +567,11 @@ exploring different roads to that goal.
 We thank Biondo Biondi for useful discussions and for sharing his
 three-dimensional expertise.
 
-\bibliographystyle{sep}
-\bibliography{SEP,MISC,EAEG,GEOTLE,paper}
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,paper}
 
-\APPENDIX{A}
-\section{The 1/6-th trick}
-
+\append{The 1/6-th trick}
+\inputdir{Math}
 Given the filter $D_2 (k)$, defined in formula (\ref{eqn:d2k}), we can
 construct an accurate approximation to the second derivative operator
 $-k^2$ by considering a filter ratio (another Pad\'{e}-type
@@ -578,7 +580,7 @@ approximation) of the form
   \label{eqn:ratio}
   -k^2 \approx \frac{D_2(k)}{1 + \beta D_2 (k)}\;,
 \end{equation}
-where $\beta$ is an adjustable constant \cite{Claerbout.blackwell.85}.
+where $\beta$ is an adjustable constant \cite[]{Claerbout.blackwell.85}.
 The actual Pad\'{e} coefficient is $\beta=1/12$.  As pointed out by
 Francis Muir, the value of $\beta = 1/4 - 1/\pi^2 \approx 1/6.726$
 gives an exact fit at the Nyquist frequency $k = \pi$. Fitting the
@@ -586,11 +588,10 @@ derivative operator in the $L_1$ norm yields the value of $\beta
 \approx 1/8.13$. All these approximations are shown in Figure
 \ref{fig:sixth}.
 
-\activesideplot{sixth}{width=2.5in}{CR}{The second-derivative operator
-  in the wavenumber domain and its approximations.}
+\sideplot{sixth}{width=2.5in}{The second-derivative operator in the
+  wavenumber domain and its approximations.}
 
-\APPENDIX{B}
-\section{Constructing an ``isotropic'' Laplacian operator}
+\append{Constructing an ``isotropic'' Laplacian operator}
 \inputdir{Math}
 The problem of approximating the Laplacian operator in two dimensions
 not only inherits the inaccuracies of the one-dimensional
@@ -643,7 +644,7 @@ Therefore, we can reduce the problem to estimating a single
 coefficient $\gamma$. Another way of expressing this conclusion is to
 represent filter $F_9$ in equation (\ref{eqn:l9k}) as a linear
 combination of filter $F_5$ from equation (\ref{eqn:l9k}) and its
-rotated version \cite{cole}, as follows:
+rotated version \cite[]{cole}, as follows:
 \begin{equation}
 \label{eqn:new2}
 F_9 = \gamma\, 
@@ -672,7 +673,7 @@ F_9 = \begin{array}{|r|r|r|}
 \end{array}
 \end{equation}
 and corresponds precisely to the nine-point McClellan filter
-\cite{mc,GEO56.11.17781785}. On the other hand, the value of
+\cite[]{mc,GEO56-11-17781785}. On the other hand, the value of
 $\gamma=2/3$ gives the least error in the vicinity of the zero
 wavenumber $k$. In this case, the filter is
 \begin{equation}
@@ -687,7 +688,7 @@ F_9 = \begin{array}{|r|r|r|}
 Errors of different approximations are plotted in Figure
 \ref{fig:laplace}\footnote{Another way of constructing
   circular-symmetric filters is suggested by the rotated McClellan
-  transform \cite{Biondi.sep.77.27}.}
+  transform \cite[]{Biondi.sep.77.27}.}
 
 \plot{laplace}{width=6in}{The numerical anisotropy error of different
   Laplacian approximations. Both the five-point Laplacian (plot a) and
@@ -697,6 +698,8 @@ Errors of different approximations are plotted in Figure
   filter with $\gamma=2/3$ (plot d) has the flattest error around the
   origin.}
 \par
+
+\inputdir{laplace}
 Under the helix transform, a filter of the general form
 (\ref{eqn:new}) becomes equivalent to a one-dimensional filter with
 the $Z$ transform
@@ -755,7 +758,5 @@ works for implicit wavefield extrapolation.
 %
 %\ref{fig:}
 %(\ref{eqn:})
-\clearpage
 
-\clearpage
 
