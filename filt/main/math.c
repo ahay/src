@@ -3,7 +3,9 @@
 Known functions: 
 cos,  sin,  tan,  acos,  asin,  atan, 
 cosh, sinh, tanh, acosh, asinh, atanh,
-exp,  log,  sqrt, abs, conj (for complex data).
+exp,  log,  sqrt, abs,
+erf,  erfc (for float data),
+conj (for complex data).
 
 sfmath will work on float or complex data, but all the input and output
 files must be of the same data type.
@@ -37,6 +39,8 @@ See also: sfheadermath.
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+/* 	$Id$	 */
 
 #include <string.h>
 #include <ctype.h>

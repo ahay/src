@@ -51,7 +51,9 @@ static func functable[] = {
     expf,
     logf,
     sqrtf,
-    fabsf
+    fabsf,
+    erff,
+    erfcf
 };
 
 static sf_complex myabs(sf_complex c)
@@ -400,7 +402,9 @@ size_t sf_math_parse (char*       output /* expression */,
 		} else if (0==strcmp(key,"log"))   { *indx = 13;
 		} else if (0==strcmp(key,"sqrt"))  { *indx = 14;
 		} else if (0==strcmp(key,"abs"))   { *indx = 15;
-		} else if (SF_COMPLEX==datatype && 0==strcmp(key,"conj")) { *indx = 16;
+		} else if (0==strcmp(key,"erf")  && SF_FLOAT==datatype)   { *indx = 16;
+		} else if (0==strcmp(key,"erfc") && SF_FLOAT==datatype)   { *indx = 17;
+		} else if (0==strcmp(key,"conj") && SF_COMPLEX==datatype) { *indx = 16;
 		} else {
 		    sf_error("%s: unrecognized identifier: "
 			     "%s, position %d in output",

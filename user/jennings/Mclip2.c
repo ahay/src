@@ -31,6 +31,8 @@ sfclip < in.rsf > out.rsf clip=x
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
+/* 	$Id$	 */
+
 #include <rsf.h>
 #include <float.h>
 
@@ -80,6 +82,3 @@ int main(int argc, char* argv[])
     
     exit(0);
 }
-
-/* 	$Id$	 */
-      
