@@ -25,6 +25,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
+    int  version;
 
     sf_file Fi,Fs,Fr;      /* I/O files */
     sf_axis at,az,ax,aa;   /* cube axes */
@@ -45,6 +46,7 @@ int main(int argc, char* argv[])
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
     if(! sf_getint("nbuf",&nbuf)) nbuf=1;              /* buffer size */
+    if(! sf_getint("version",&version)) version=0;     /* I.C. version (see paper) */
 
     if(! sf_getint("nhz",&nhz)) nhz=0;
     if(! sf_getint("nhx",&nhx)) nhx=0;
@@ -86,29 +88,55 @@ int main(int argc, char* argv[])
 
 	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
 	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);
-
+	
+	switch (version){
+	    case 1:
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx,ts,tr) shared(nbuf,nz,nx,ii,us,ur)
 #endif
-	for(ibuf=0; ibuf<nbuf; ibuf++) {
-	    for(    ix=0+nhx; ix<nx-nhx; ix++) {
-		for(iz=0+nhz; iz<nz-nhz; iz++) {
-		    
-		    ts = 0;
-		    tr = 0;
-		    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
-			for(ihz=-nhz; ihz<nhz+1; ihz++) {
-			    ts += us[ibuf][ix-ihx][iz-ihz]
-				* us[ibuf][ix+ihx][iz+ihz];
-			    tr += ur[ibuf][ix-ihx][iz-ihz]
-				* ur[ibuf][ix+ihx][iz+ihz];
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for(    ix=0+nhx; ix<nx-nhx; ix++) {
+			for(iz=0+nhz; iz<nz-nhz; iz++) {
+			    
+			    ts = 0;
+			    tr = 0;
+			    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
+				for(ihz=-nhz; ihz<nhz+1; ihz++) {
+				    ts += us[ibuf][ix-ihx][iz-ihz]
+					* us[ibuf][ix+ihx][iz+ihz];
+				    tr += ur[ibuf][ix-ihx][iz-ihz]
+					* ur[ibuf][ix+ihx][iz+ihz];
+				}
+			    }
+			    ii[ix][iz] += ts * tr;
 			}
 		    }
-		    ii[ix][iz] += ts * tr;
 		}
-	    }
-	}
-    }	
+		break;
+	    case 0:
+	    default:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx,ts,tr) shared(nbuf,nz,nx,ii,us,ur)
+#endif
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for(    ix=0+nhx; ix<nx-nhx; ix++) {
+			for(iz=0+nhz; iz<nz-nhz; iz++) {
+			    
+			    ts = us[ibuf][ix][iz];
+			    tr = 0;
+			    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
+				for(ihz=-nhz; ihz<nhz+1; ihz++) {
+				    tr += ur[ibuf][ix-ihx][iz-ihz]
+					* ur[ibuf][ix+ihx][iz+ihz];
+				}
+			    }
+			    ii[ix][iz] += ts * tr;
+			}
+		    }
+		}
+		break;
+	}    
+    }
     sf_floatwrite(ii[0],nz*nx,Fi);
     
     exit (0);

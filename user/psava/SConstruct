@@ -7,6 +7,7 @@ awe
 afmod aborn erfdm
 off2abs off2abs3
 paradd icor xcor tcor
+ic
 '''
 
 try:  # distributed version

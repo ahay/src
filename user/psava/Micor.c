@@ -25,16 +25,21 @@
 int main(int argc, char* argv[])
 {
     bool verb;
+    int  version;
 
-    sf_file Fi,Fs,Fr;      /* I/O files */
-    sf_axis at,az,ax,aa;   /* cube axes */
+    sf_file Fi,Fs,Fr;    /* I/O files */
+    sf_axis at,az,ax,aa; /* cube axes */
 
-    int     nt,nz,nx, nhz,nhx, nbuf;
-    int        iz,ix, ihz,ihx, ibuf;
+    int     nt,nz,nx, nhz,nhx,nht, nbuf;
+    int     it,iz,ix, ihz,ihx,iht, ibuf;
 
     float **ii=NULL, ***us=NULL,***ur=NULL; /* arrays */
 
     int ompchunk; 
+
+    int lox,hix;
+    int loz,hiz;
+    int lot,hit;
 
 /*------------------------------------------------------------*/
 
@@ -44,9 +49,11 @@ int main(int argc, char* argv[])
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
     if(! sf_getint("nbuf",&nbuf)) nbuf=1;              /* buffer size */
+    if(! sf_getint("version",&version)) version=0;     /* I.C. version (see paper) */
 
     if(! sf_getint("nhz",&nhz)) nhz=0;
     if(! sf_getint("nhx",&nhx)) nhx=0;
+    if(! sf_getint("nht",&nht)) nht=1;
 
     Fs = sf_input ("in" ); /*   source wavefield */
     Fr = sf_input ("ur" ); /* receiver wavefield */
@@ -67,6 +74,8 @@ int main(int argc, char* argv[])
 
     nbuf = SF_MIN(nbuf,nt);
 
+    if(version>0) nbuf=nt;
+
     /* allocate work arrays */
     us=sf_floatalloc3(nz,nx,nbuf);
     ur=sf_floatalloc3(nz,nx,nbuf);
@@ -82,28 +91,49 @@ int main(int argc, char* argv[])
     for (; nt > 0; nt -= nbuf) {
 	if (nbuf > nt) nbuf=nt;
 	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nbuf);
-
+	
 	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
 	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);
-
+	switch (version){
+	    case 1:
+		for(        iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nbuf-SF_ABS(iht);
+		    for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx  -SF_ABS(ihx);
+			for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz  -SF_ABS(ihz);
+			    for(        it=lot; it<hit; it++) {
+				for(    ix=lox; ix<hix; ix++) {
+				    for(iz=loz; iz<hiz; iz++) {
+					ii[ix][iz] += us[it-iht][ix-ihx][iz-ihz] 
+					    *         ur[it+iht][ix+ihx][iz+ihz];
+				    } // nz
+				} // nx
+			    } // nbuf
+			} // nhz
+		    } // nhx
+		} // nht
+		break;
+	    case 0:
+	    default:
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx) shared(nbuf,nz,nx,ii,us,ur)
 #endif
-	for(ibuf=0; ibuf<nbuf; ibuf++) {
-	    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
-		for(ihz=-nhz; ihz<nhz+1; ihz++) {
-		    for(    ix=0+SF_ABS(ihx); ix<nx-SF_ABS(ihx); ix++) {
-			for(iz=0+SF_ABS(ihz); iz<nz-SF_ABS(ihz); iz++) {
-			    ii[ix][iz] += us[ibuf][ix-ihx][iz-ihz] 
-				*         ur[ibuf][ix+ihx][iz+ihz];
-			} // nz
-		    } // nx
-		} // nhz
-	    } // nhx
-	} // nbuf
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx  -SF_ABS(ihx);
+			for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz  -SF_ABS(ihz);
+			    for(    ix=lox; ix<hix; ix++) {
+				for(iz=loz; iz<hiz; iz++) {
+				    ii[ix][iz] += us[ibuf][ix-ihx][iz-ihz] 
+					*         ur[ibuf][ix+ihx][iz+ihz];
+				} // nz
+			    } // nx
+			} // nhz
+		    } // nhx
+		} // nbuf
+		break;
+	}
+
     } // nt
-
+    
     sf_floatwrite(ii[0],nz*nx,Fi);
-
+    
     exit (0);
 }

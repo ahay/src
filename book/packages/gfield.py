@@ -8,7 +8,7 @@ def execute(rr,par):
     if(not lpar.has_key('ru')): lpar['ru']=5
     if(not lpar.has_key('rv')): lpar['rv']=1
     if(not lpar.has_key('aa')): lpar['aa']=1
-
+    
     # directions
     lpar['ux'] = math.cos(math.radians(par['ff']))
     lpar['uz'] = math.sin(math.radians(par['ff']))
@@ -34,15 +34,15 @@ def execute(rr,par):
     
     # ------------------------------------------------------------    
     # distance
-    Flow(rr+'-lu',rr+'-n','math output="(x2*%g + x1*%g)/%g"'% (lpar['ux'],lpar['uz'],lpar['ru']) )
-    Flow(rr+'-lv',rr+'-n','math output="(x2*%g + x1*%g)/%g"'% (lpar['vx'],lpar['vz'],lpar['rv']) )
+    Flow(rr+'-lu',rr+'-n','math output="(x2*(%g) + x1*(%g))/(%g)"'% (lpar['ux'],lpar['uz'],lpar['ru']) )
+    Flow(rr+'-lv',rr+'-n','math output="(x2*(%g) + x1*(%g))/(%g)"'% (lpar['vx'],lpar['vz'],lpar['rv']) )
     
     Flow(rr+'-l',[rr+'-lu',rr+'-lv'],
          'math lu=${SOURCES[0]} lv=${SOURCES[1]} output="sqrt(lu*lu+lv*lv)"', stdin=0)
     
     # ------------------------------------------------------------
     # covariance
-    Flow(  rr+'-c',rr+'-l','math output="exp(-(input^%(aa)g))"' % lpar)
+    Flow(  rr+'-c',rr+'-l','math output="exp(-( input^(%(aa)g)) )"' % lpar)
     Flow(  rr+'-d',rr+'-c','rotate rot1=%g rot2=%g' % (par['nx'],par['nz']))
     
     # ------------------------------------------------------------
