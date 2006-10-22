@@ -1,4 +1,4 @@
-/* Imaginc condition */
+/* Imaging condition */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
