@@ -1,0 +1,5 @@
+from rsftex import *
+
+End(options='short',use='hyperref,listings,jfc',
+    include='\\newcommand{\\RSF}{../../..}')
+
