@@ -40,26 +40,25 @@ the modeling operator.
 If you will permit me a poet's license with words,
 I will offer you the following table
 of \bx{operator}s and their \bx{adjoint}s:
-\begin{tabbing}
-indent \= operator.operator.operator.oper \=  conjugate.conjugate.conjugate \= \kill
-\>\bx{matrix multiply}		\>conjugate-transpose matrix multiply \\
-\>convolve 			\>crosscorrelate	\\
-\>truncate			\>zero pad	\\
-\>replicate, scatter, spray	\>sum or stack	\\
-\>spray into neighborhood	\>sum in bins	\\
-\>derivative (slope) 		\>negative derivative	\\
-\>causal integration 		\>anticausal integration	\\
-\>add functions			\>do integrals	\\
-\>assignment statements		\>added terms	\\
-\>plane-wave superposition	\>slant stack / beam form	\\
-\>superpose on a curve		\>sum along a curve \\
-\>stretch			\>squeeze	\\
-\>upward continue		\>downward continue \\
-\>hyperbolic modeling	 	\>normal moveout and CDP stack	\\
-\>diffraction modeling	 	\>imaging by migration	\\
-\>ray tracing			\>\bx{tomography}	\\
-\end{tabbing}
 
+\begin{tabular}{p{2em}lp{1em}l}
+&\bx{matrix multiply}		&&conjugate-transpose matrix multiply \\
+&convolve 			&&crosscorrelate	\\
+&truncate			&&zero pad	\\
+&replicate, scatter, spray	&&sum or stack	\\
+&spray into neighborhood	&&sum in bins	\\
+&derivative (slope) 		&&negative derivative	\\
+&causal integration 		&&anticausal integration	\\
+&add functions			&&do integrals	\\
+&assignment statements		&&added terms	\\
+&plane-wave superposition	&&slant stack / beam form	\\
+&superpose on a curve		&&sum along a curve \\
+&stretch			&&squeeze	\\
+&upward continue		&&downward continue \\
+&hyperbolic modeling	 	&&normal moveout and CDP stack	\\
+&diffraction modeling	 	&&imaging by migration	\\
+&ray tracing			&&\bx{tomography}
+\end{tabular}
 \par
 The left column above is often called ``\bx{modeling},''
 and the adjoint operators on the right are often
@@ -160,8 +159,7 @@ indent \= atechars \= atechars \=  atechars \= \kill
 \>	\>	\>y(iy) = y(iy) + b(iy,ix) $\times$ x(ix)	\\
 \>	\>if adjoint	\\
 \>	\>	\>x(ix) = x(ix) + b(iy,ix) $\times$ y(iy)	\\
-\>	\}
-\>	\}
+\>	\>\}\}
 \end{tabbing} }
 \par
 
@@ -173,10 +171,11 @@ so observe carefully the similarities and differences between the operation
 and its adjoint.
 
 \par
-A formal subroutine\footnote{
-	The programming language used in this book is Ratfor,
-	a dialect of Fortran.
-	For more details, see Appendix A.}
+A formal subroutine
+%\footnote{
+%	The programming language used in this book is Ratfor,
+%	a dialect of Fortran.
+%	For more details, see Appendix A.}
 for \bx{matrix multiply} and its adjoint is found below.
 The first step is a subroutine, \texttt{adjnull()},
 for optionally erasing the output.
@@ -505,6 +504,7 @@ we can simply apply the adjoint of \texttt{bin2()} to pseudo data of all ones.
 
 
 \subsection{Linear interpolation}
+\inputdir{XFig}
 \par
 The \bx{linear interpolation}
 operator is much like the binning operator but a little fancier.
@@ -524,7 +524,7 @@ and a third data point exactly in the middle.
 Then for a model space 6 points long,
 as shown in Figure \ref{fig:helgerud},
 we have the operator in (\ref{eqn:lintseq}).
-\sideplot{helgerud}{width=3in}{} {
+\sideplot{helgerud}{width=3in}{
   Uniformly sampled model space
   and irregularly sampled data space corresponding
   to \protect(\ref{eqn:lintseq}).
@@ -568,7 +568,7 @@ when data values pile up in some places and gaps remain elsewhere,
 the adjoint would be far from the inverse.
 \par
 Subroutine \texttt{lint1()} does linear interpolation and its adjoint.
-\progdex{lint1}{linear interp}
+\opdex{lint1}{linear interp}{45}{59}{user/gee}
 
 
 \subsection{Causal integration}
@@ -681,10 +681,11 @@ learned earlier.
 To understand the adjoint, you need to inspect
 the detailed form of the expression $\tilde{\bold x} = \bold C' \bold y$
 and take care to get the ends correct.
-\progdex{causint}{causal integral}
+\opdex{causint}{causal integral}{35}{46}{filt/lib}
 \par
 %\activesideplot{causint}{width=3.00in,height=3.2in}{ER}{
-\activesideplot{causint}{width=3.00in}{ER}{
+\inputdir{causint}
+\sideplot{causint}{width=3.00in}{
 	{\tt in1} is an input pulse.
 	{\tt C in1} is its causal integral.
 	{\tt C' in1} is the anticausal integral of the pulse.
