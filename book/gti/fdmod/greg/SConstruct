@@ -119,6 +119,8 @@ Result('wo',fdmod.wgrey('pclip=99.9',par))
 Result('ww',fdmod.wgrey('pclip=99.9',par))
 
 # ------------------------------------------------------------
+# RTM wavefields
+
 Flow('sou','wav','transp')
 fdmod.awe('ds','us','sou','vo','ro','ss','rr','free=y dens=n jsnap=1',par)
 
@@ -143,7 +145,7 @@ wtplot('tmovie','ws','wr',par)
 wzplot('zmovie','ws','wr',par)
 
 # ------------------------------------------------------------
-# image
+# RTM images
 
 eps = 0.01
 
