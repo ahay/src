@@ -157,17 +157,17 @@ for k in ('n','y'):
 
     for i in range(2):
 	for k in ('n','y'):
-		Result('mm'+str(i)+k,fdmod.cgrey('pclip=99',par))
-        	Result('aa'+str(i)+k,'mm'+str(i)+k,
-               	'''
-               		window n1=10 f1=155 |
-               		envelope |
-               		transp | stack |
-               		scale axis=123 |
-               		graph min2=0 max2=+1 wantaxis=y title="" wherexlabel=t label2="" unit2=""
-               		screenratio=%(ratio)g screenht=%(height)g
-               	''' % par)
-    
+            Result('mm'+str(i)+k,fdmod.cgrey('pclip=99',par))
+            Result('aa'+str(i)+k,'mm'+str(i)+k,
+                   '''
+                   window n1=10 f1=155 |
+                   envelope |
+                   transp | stack |
+                   scale axis=123 |
+                   graph min2=0 max2=+1 wantaxis=y title="" wherexlabel=t label2="" unit2=""
+                   screenratio=%(ratio)g screenht=%(height)g
+                   ''' % par)
+            
 # ------------------------------------------------------------
 
 End()
