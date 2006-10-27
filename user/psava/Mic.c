@@ -49,7 +49,6 @@ int main(int argc, char* argv[])
     int ompchunk; 
 
 /*------------------------------------------------------------*/
-
     /* init RSF */
     sf_init(argc,argv);
 
@@ -106,7 +105,7 @@ int main(int argc, char* argv[])
     }
 
     switch (version){
-	case 3:
+	case 3: // SUM(Us Ur) / sqrt( SUM(Us Us) SUM(Ur Ur) )
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -130,7 +129,7 @@ int main(int argc, char* argv[])
 	    } // nt
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
-		    ii[ix][iz] = t1[ix][iz] / sqrt( t2[ix][iz] * t3[ix][iz] );
+		    ii[ix][iz] = t1[ix][iz] / ( sqrt( t2[ix][iz] * t3[ix][iz] ) + (nz*nx*nb)*eps);
 		}
 	    }
 	    sf_floatwrite(ii[0],nz*nx,Fi);	
@@ -138,7 +137,7 @@ int main(int argc, char* argv[])
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 2:
+	case 2: // SUM( Us Ur) / SUM (Us Us)
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -161,14 +160,14 @@ int main(int argc, char* argv[])
 	    } // nt
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
-		    ii[ix][iz] = t1[ix][iz] / ( t2[ix][iz] + eps*eps);
+		    ii[ix][iz] = t1[ix][iz] / ( t2[ix][iz] + (nz*nx*nb)*eps*(nz*nx*nb)*eps);
 		}
 	    }
 	    sf_floatwrite(ii[0],nz*nx,Fi);	    
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 1:
+	case 1: // SUM( (Us Ur)/(Us Us) )
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -192,7 +191,7 @@ int main(int argc, char* argv[])
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 0:
+	case 0: // Us * Ur
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);

@@ -16,7 +16,7 @@ int main(int argc, char* argv[])
     float **um,**uo,**up,**ud;/* tmp arrays */
 
     sf_init(argc,argv);
-    if(! sf_getbool("verb",&verb)) verb=0;
+    if(! sf_getbool("verb",&verb)) verb=0; /* verbose flag */
 
     /* setup I/O files */
     Fw = sf_input ("in" );
@@ -48,8 +48,8 @@ int main(int argc, char* argv[])
     up=sf_floatalloc2(nz,nx);
     ud=sf_floatalloc2(nz,nx);
     
-    for (iz=0; iz<nz; iz++) {
-	for (ix=0; ix<nx; ix++) {
+    for (ix=0; ix<nx; ix++) {
+	for (iz=0; iz<nz; iz++) {
 	    um[ix][iz]=0;
 	    uo[ix][iz]=0;
 	    up[ix][iz]=0;
