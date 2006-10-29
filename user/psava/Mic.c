@@ -31,7 +31,6 @@ int main(int argc, char* argv[])
     sf_file Fi,Fs,Fr;    /* I/O files */
 
     sf_axis at,az,ax,aa; /* cube axes */
-
     int     nt,nz,nx,nb;
     int        iz,ix,ib;
 
@@ -77,10 +76,10 @@ int main(int argc, char* argv[])
 
     nb = SF_MIN(nb,nt);
 
+/*------------------------------------------------------------*/
     /* allocate arrays */
     us=sf_floatalloc3(nz,nx,nb);  //   source wavefield
     ur=sf_floatalloc3(nz,nx,nb);  // receiver wavefield
-
     ii=sf_floatalloc2(nz,nx);     // image
     if(version>1) {
 	t3=sf_floatalloc2(nz,nx);
@@ -112,10 +111,12 @@ int main(int argc, char* argv[])
 		
 		sf_floatread(us[0][0],nz*nx*nb,Fs);
 		sf_floatread(ur[0][0],nz*nx*nb,Fr);	
+
+		for(ib=0; ib<nb; ib++) {
+		    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ib,iz,ix) shared(nb,nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(ib,nz,nx,ii,us,ur)
 #endif
-		for(        ib=0; ib<nb; ib++) {
 		    for(    ix=0; ix<nx; ix++) {
 			for(iz=0; iz<nz; iz++) {
 			    ts = us[ib][ix][iz];
@@ -126,6 +127,7 @@ int main(int argc, char* argv[])
 			} // nz
 		    } // nx 
 		} // nb
+		if(verb) fprintf(stderr,"\b\b\b\b\b");
 	    } // nt
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
@@ -144,10 +146,12 @@ int main(int argc, char* argv[])
 		
 		sf_floatread(us[0][0],nz*nx*nb,Fs);
 		sf_floatread(ur[0][0],nz*nx*nb,Fr);	
+
+		for(ib=0; ib<nb; ib++) {
+		    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ib,iz,ix) shared(nb,nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(ib,nz,nx,ii,us,ur)
 #endif
-		for(        ib=0; ib<nb; ib++) {
 		    for(    ix=0; ix<nx; ix++) {
 			for(iz=0; iz<nz; iz++) {
 			    ts = us[ib][ix][iz];
@@ -157,6 +161,7 @@ int main(int argc, char* argv[])
 			} // nz
 		    } // nx 
 		} // nb
+		if(verb) fprintf(stderr,"\b\b\b\b\b");
 	    } // nt
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
@@ -174,10 +179,12 @@ int main(int argc, char* argv[])
 		
 		sf_floatread(us[0][0],nz*nx*nb,Fs);
 		sf_floatread(ur[0][0],nz*nx*nb,Fr);	
+
+		for(ib=0; ib<nb; ib++) {
+		    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ib,iz,ix) shared(nb,nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(ib,nz,nx,ii,us,ur)
 #endif
-		for(        ib=0; ib<nb; ib++) {
 		    for(    ix=0; ix<nx; ix++) {
 			for(iz=0; iz<nz; iz++) {
 			    ts = us[ib][ix][iz];
@@ -186,6 +193,7 @@ int main(int argc, char* argv[])
 			} // nz
 		    } // nx 
 		} // nb
+		if(verb) fprintf(stderr,"\b\b\b\b\b");
 	    } // nt
 	    sf_floatwrite(ii[0],nz*nx,Fi);
 	    break;
@@ -198,10 +206,12 @@ int main(int argc, char* argv[])
 		
 		sf_floatread(us[0][0],nz*nx*nb,Fs);
 		sf_floatread(ur[0][0],nz*nx*nb,Fr);
+
+		for(ib=0; ib<nb; ib++) {
+		    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ib,iz,ix) shared(nb,nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(ib,nz,nx,ii,us,ur)
 #endif
-		for(        ib=0; ib<nb; ib++) {
 		    for(    ix=0; ix<nx; ix++) {
 			for(iz=0; iz<nz; iz++) {    
 			    ii[ix][iz] += us[ib][ix][iz]
@@ -209,6 +219,7 @@ int main(int argc, char* argv[])
 			} // nz
 		    } // nx 
 		} // nb
+		if(verb) fprintf(stderr,"\b\b\b\b\b");
 	    } // nt
 	    sf_floatwrite(ii[0],nz*nx,Fi);	    
 	    break;
