@@ -25,6 +25,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
+    float sig;
 
     sf_file Fi=NULL; /* input   */
     sf_file Fo=NULL; /* output  */
@@ -40,6 +41,8 @@ int main(int argc, char* argv[])
     sf_axis a1,a2,aa,ll;
     int     n1,n2,na,nl;
     int     i1,i2,ia,il;
+    int     j1,j2;
+    int     h1,h2;
     float oa,da,a;
     float ol, dl,l,l1,l2;
     float o1,d1,f1;
@@ -55,6 +58,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
+    if(! sf_getbool("sig",&sig))    sig=1.0;
 
     Fi = sf_input ("in" );
     Fo = sf_output("out");
@@ -68,7 +72,7 @@ int main(int argc, char* argv[])
     sf_setunit (aa,"");
 
     /* length axis (in samples) */
-    if(! sf_getint  ("nl",&nl)) nl=1;
+    if(! sf_getint  ("nl",&nl)) nl=0;
     if(! sf_getfloat("dl",&dl)) dl=1.;
     if(! sf_getfloat("ol",&ol)) ol=0.;
     ll=sf_maxa(nl,ol,dl);
@@ -99,17 +103,20 @@ int main(int argc, char* argv[])
     dd=sf_floatalloc2(n1,n2); /* data */
     ss=sf_floatalloc2(n1,n2); /* slant-stack */ 
 
-    gg=sf_floatalloc (  2*nl);
-    ww=sf_floatalloc3(4,2*nl,na);
-    k1=sf_intalloc3  (4,2*nl,na);
-    k2=sf_intalloc3  (4,2*nl,na);
+    gg=sf_floatalloc (  2*nl+1);
+    ww=sf_floatalloc3(4,2*nl+1,na);
+    k1=sf_intalloc3  (4,2*nl+1,na);
+    k2=sf_intalloc3  (4,2*nl+1,na);
     
 /*------------------------------------------------------------*/
     /* taper */
-    for(il=0;il<2*nl;il++) {
+    for(il=0;il<2*nl+1;il++) {
 	l = ol + (il-nl)*dl;
 	l /= (nl/2);
+	l /= sig;
 	gg[il] = exp(-l*l);
+/*	gg[il] = 1;*/
+	sf_warning("%g",gg[il]);
     }
 
 /*------------------------------------------------------------*/
@@ -118,7 +125,7 @@ int main(int argc, char* argv[])
 	a  = oa + ia * da;
 	a *= SF_PI/180.;
 	
-	for(il=0;il<2*nl;il++){
+	for(il=0;il<2*nl+1;il++){
 	    l = ol + (il-nl)*dl;   
 	    
 	    l1 = l*sin(a);
@@ -158,26 +165,32 @@ int main(int argc, char* argv[])
     for(ia=0;ia<na;ia++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",ia);
 
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,il,ic) shared(ia,n1,n2,nl,ss,ww,dd,k1,k2)
-#endif
-	for(    i2=nl; i2<n2-nl; i2++) {
-	    for(i1=nl; i1<n1-nl; i1++) {	
-		
-		ss[i2][i1]=0;
-		for(il=0;il<2*nl;il++) {
-		    for(ic=0;ic<4;ic++) {
-			ss[i2][i1] += ww[ia][il][ic] *
-			    dd[ i2+k2[ia][il][ic] ][ i1+k1[ia][il][ic] ];
-		    }
-		}
-		
+	for(    i2=0; i2<n2; i2++) {
+	    for(i1=0; i1<n1; i1++) {	
+		ss[i2][i1] = 0;
 	    }
 	}
 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,il,ic,j1,j2,h1,h2) shared(ia,n1,n2,nl,ss,ww,dd,k1,k2)
+#endif
+	for(    il=0;il<2*nl+1;il++) {
+	    for(ic=0;ic<4;     ic++) {
+		j1=k1[ia][il][ic]; h1 = SF_ABS(j1);
+		j2=k2[ia][il][ic]; h2 = SF_ABS(j2);
+
+		for(    i2=h2; i2<n2-h2; i2++) {
+		    for(i1=h1; i1<n1-h1; i1++) {
+			ss[i2][i1] += ww[ia][il][ic] * dd[i2+j2][i1+j1];
+		    } // 2 loop
+		}     // 1 loop
+		
+	    }         // c loop
+	}             // l loop
+
 	/* write output */
 	sf_floatwrite(ss[0],n1*n2,Fo);
-    }
+    } // a loop
     if(verb) fprintf(stderr,"\n");
 
     exit (0);
