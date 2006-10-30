@@ -1032,6 +1032,31 @@ d1=1
 One of the three possible behaviors may be desirable depending on the
 application.
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfrm}
+  }}
+
+\texttt{sfrm} is a program for removing RSF files. Its arguments mimic
+the arguments of the standard Unix \texttt{rm} utility: \texttt{-v}
+for verbosity, \texttt{-i} for interactive inquiry, \texttt{-f} for
+force removal of suspicious files. Unlike the Unix \texttt{rm},
+\texttt{sfrm} removes both the RSF header files and the binary files
+that the headers point to. 
+
+Example:
+\begin{verbatim}
+bash$ sfspike n1=10 > spike.rsf datapath=./
+bash$ sfget in < spike.rsf
+in=./spike.rsf@
+bash$ ls spike*
+spike.rsf  spike.rsf@
+bash$ sfrm -v spike.rsf
+sfrm: sf_rm: Removing header spike.rsf
+sfrm: sf_rm: Removing data ./spike.rsf@
+bash$ ls spike*
+ls: No match.
+\end{verbatim}
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
