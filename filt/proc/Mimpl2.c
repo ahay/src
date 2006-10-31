@@ -23,10 +23,11 @@
 
 int main(int argc, char* argv[])
 {
-    int n1, n2, n3, i3;
-    float r1, r2, tau, pclip, **dat;
-    bool up;
-    sf_file in, out;
+    int n1, n2, n12, n3, i3, ns;
+    float r1, r2, tau, pclip, **dat, *dist;
+    bool up, verb;
+    char *file;
+    sf_file in, out, dst, snp;
 
     sf_init (argc,argv);
     in = sf_input("in");
@@ -35,6 +36,7 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
     if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
     n3 = sf_leftsize(in,2);
+    n12 = n1*n2;
 
     if (!sf_getfloat("rect1",&r1)) sf_error("Need rect1=");
     /* vertical smoothing */
@@ -46,15 +48,38 @@ int main(int argc, char* argv[])
     /* percentage clip for the gradient */
     if (!sf_getbool ("up",&up)) up=false;
     /* smoothing style */
+    if (!sf_getbool ("verb",&verb)) verb=false;
+    /* verbosity flag */
+    if (!sf_getint("nsnap",&ns)) ns=1;
+    /* number of snapshots */
+    
+    if (NULL != (file = sf_getstring("dist"))) {
+	/* inverse distance file (input) */
+	dst = sf_input(file);
+	dist = sf_floatalloc(n12);
+    } else {
+	dst = NULL;
+	dist = NULL;
+    }
 
-    impl2_init (r1, r2, n1, n2, tau, pclip, up);
+    if (NULL != (file = sf_getstring("snap"))) {
+	/* snapshot file (output) */
+	snp = sf_output(file);
+    } else {
+	snp = NULL;
+    }
+
+    impl2_init (r1, r2, n1, n2, tau, pclip, up, verb, dist, ns, snp);
 
     dat = sf_floatalloc2(n1,n2);
 
     for (i3=0; i3 < n3; i3++) {
-	sf_floatread (dat[0],n1*n2,in);
+	sf_floatread (dat[0],n12,in);
+	if (NULL != dst) sf_floatread(dist,n12,dst);
+
 	impl2_apply (dat,true,false);
-	sf_floatwrite (dat[0],n1*n2,out);
+
+	sf_floatwrite (dat[0],n12,out);
     }
 
     exit(0);

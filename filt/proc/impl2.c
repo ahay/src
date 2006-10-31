@@ -8,16 +8,21 @@
 #include "impl2.h"
 #include "edge.h"
 
-static float t1, t2, **y, **w, *tmp, *d1, *d2, *w1, *w2, **t;
-static int nstep, n1, n2, n, nclip;
-static bool up;
+static float t1, t2, **y, **w, **ww, *tmp, *d1, *d2, *w1, *w2, **t, *dist;
+static int nstep, n1, n2, n, nclip, ns;
+static bool up, verb;
 static sf_tris slv1, slv2;
+static sf_file snap;
 
 void impl2_init (float r1, float r2   /* radius */, 
 		 int n1_in, int n2_in /* data size */, 
 		 float tau            /* duration */, 
 		 float pclip          /* percentage clip */, 
-		 bool up_in           /* weighting case */)
+		 bool up_in           /* weighting case */,
+		 bool verb_in         /* verbosity flag */,
+		 float *dist_in       /* optional distance function */,
+		 int nsnap            /* number of snapshots */,
+		 sf_file snap_in      /* snapshot file */)
 /*< initialize >*/
 {
     int i;
@@ -25,23 +30,28 @@ void impl2_init (float r1, float r2   /* radius */,
     t1 = (r1*r1-1.)/12.;
     t2 = (r2*r2-1.)/12.;
 
-    nstep = (t1>t2? t1:t2)/tau;
+    nstep = SF_MAX(t1,t2)/tau;
     if (nstep > 1) {
 	t1 /= nstep;
 	t2 /= nstep;
     } else {
 	nstep = 1;
     }
+    ns = SF_MAX(nstep/nsnap,1);
 
     n1 = n1_in;
     n2 = n2_in;
     up = up_in;
+    verb = verb_in;
+    dist = dist_in;
+    snap = snap_in;
     n = n1*n2;
 
     y = sf_floatalloc2(n1,n2);
     w = sf_floatalloc2(n1,n2);
     t = sf_floatalloc2(n1,n2);
     tmp = sf_floatalloc(n);
+    ww = sf_floatalloc2(n1,n2);
 
     d1 = sf_floatalloc(n1);
     w1 = sf_floatalloc(n1);
@@ -75,6 +85,8 @@ void impl2_close (void)
     free(*w);
     free(w);
     free(tmp);
+    free(*ww);
+    free(ww);
     free(d1);
     free(w1);
     free(d2);
@@ -102,16 +114,20 @@ void impl2_set(float ** x)
 
     for (i=0; i < n; i++) {
 	w[0][i] = sqrtf(1.+w[0][i]/a);
-	if (up) w[0][i] = 1./w[0][i];
+	ww[0][i] = 1./w[0][i];
+	if (up) w[0][i] = ww[0][i];
+	if (NULL != dist) ww[0][i] *= dist[i];
     }
 
-    wsum = xsum = 0.;
-    for (i=0; i < n; i++) {
-	wsum += w[0][i];
-	xsum += x[0][i]*x[0][i];
-    }
+    if (verb) {
+	wsum = xsum = 0.;
+	for (i=0; i < n; i++) {
+	    wsum += w[0][i];
+	    xsum += x[0][i]*x[0][i];
+	}
 
-    sf_warning("xsum=%g, wsum=%g, a=%g", xsum, wsum, a);
+	sf_warning("xsum=%g, wsum=%g, a=%g", xsum, wsum, a);
+    }
 }
 
 void impl2_apply (float **x, bool set, bool adj)
@@ -120,6 +136,8 @@ void impl2_apply (float **x, bool set, bool adj)
     int istep, i1, i2, i;
 
     for (istep=0; istep < nstep; istep++) {
+	if (NULL != snap && 0==istep%ns) sf_floatwrite(x[0],n,snap);
+
 	if (set) impl2_set(x);
 
 	for (i=0; i < n; i++) {
@@ -129,12 +147,7 @@ void impl2_apply (float **x, bool set, bool adj)
 
 	for (i1=0; i1 < n1; i1++) {
 	    for (i2=0; i2 < n2; i2++) {
-		d2[i2] = w[i2][i1];
-		if (up) {
-		    w2[i2] = -t2*d2[i2];
-		} else {
-		    w2[i2] = -t2/d2[i2];
-		}
+		w2[i2] = -t2*ww[i2][i1];
 		tmp[i2] = x[i2][i1];
 	    }
 	    d2[0] -= w2[0];
@@ -154,12 +167,7 @@ void impl2_apply (float **x, bool set, bool adj)
 
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {
-		d1[i1] = w[i2][i1];
-		if (up) {
-		    w1[i1] = -t1*d1[i1];
-		} else {
-		    w1[i1] = -t1/d1[i1];
-		}
+		w1[i1] = -t1*ww[i2][i1];
 	    }
 	    d1[0] -= w1[0];
 	    for (i1=1; i1 < n1-1; i1++) {
@@ -176,12 +184,7 @@ void impl2_apply (float **x, bool set, bool adj)
 
 	for (i1=0; i1 < n1; i1++) {
 	    for (i2=0; i2 < n2; i2++) {
-		d2[i2] = w[i2][i1];
-		if (up) {
-		    w2[i2] = -t2*d2[i2];
-		} else {
-		    w2[i2] = -t2/d2[i2];
-		}
+		w2[i2] = -t2*ww[i2][i1];
 		tmp[i2] = y[i2][i1];
 	    }
 	    d2[0] -= w2[0];

@@ -20,7 +20,7 @@ int main(void) {
 	}
     }
 
-    impl2_init(r1, r2, n1, n2, tau, pclip, up);
+    impl2_init(r1, r2, n1, n2, tau, pclip, up, false, NULL, 1, NULL);
     impl2_set(x);
 
     sf_dot_test(impl2_lop, n1*n2, n1*n2, dot1, dot2);
