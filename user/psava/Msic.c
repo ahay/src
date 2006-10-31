@@ -25,34 +25,38 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-
+    float sig;
+    
     sf_file Fs=NULL; /* input   */
     sf_file Fr=NULL; /* input   */
     sf_file Fi=NULL; /* output  */
 
     float ***us=NULL;
     float ***ur=NULL;
-    float  **ii=NULL;
+    float   *ii=NULL;
 
     float   *gg=NULL; /*  taper */
     float ***ww=NULL; /* weight */
-    int   ***kz=NULL; /* slant-stack index on axis 1*/
+    int   ***kt=NULL; /* slant-stack index on axis 1*/
     int   ***kx=NULL; /* slant-stack index on axis 2*/
+
+    float **ts=NULL;
+    float **tr=NULL;
 
     /* cube axes */
     sf_axis at,az,ax,aa,ll,ak; /* cube axes */
     int     nt,nz,nx,na,nl,nb;
-    int        iz,ix,ia,il,ib;
-    int        jz,jx;
+    int        it,ix,ia,il,ib;
+    int        jt,jx;
+    float      ht,hx;
     float oa,da,a;
-    float ol, dl,l,lz,lx;
-    float oz,dz,fz;
+    float ol, dl,l,lt,lx;
+    float oz,dz;
+    float ot,dt,ft;
     float ox,dx,fx;
 
     int ic;
     int ompchunk; 
-
-    float ts,tr;
 
 /*------------------------------------------------------------*/
 
@@ -62,6 +66,7 @@ int main(int argc, char* argv[])
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",   &verb))     verb=false;  /* verbosity flag */
     if(! sf_getint("nbuf",    &nb))       nb=1;        /* buffer size */
+    if(! sf_getfloat("sig",   &sig))     sig=1.0;
 
     Fs = sf_input ("in" );
     Fr = sf_input ("ur" );
@@ -84,11 +89,13 @@ int main(int argc, char* argv[])
     sf_setunit (ll,"");
 
     /* input axes */
-    az = sf_iaxa(Fs,1); sf_setlabel(az,"z"); sf_setunit(az,"");
+    at = sf_iaxa(Fs,1); sf_setlabel(at,"t"); sf_setunit(at,""); 
     ax = sf_iaxa(Fs,2); sf_setlabel(ax,"x"); sf_setunit(ax,""); 
-    at = sf_iaxa(Fs,3); sf_setlabel(at,"t"); sf_setunit(at,""); 
-    nz = sf_n(az); oz=sf_o(az); dz=sf_d(az);
+    az = sf_iaxa(Fs,3); sf_setlabel(az,"z"); sf_setunit(az,"");
+
+    nt = sf_n(at); ot=sf_o(at); dt=sf_d(at);
     nx = sf_n(ax); ox=sf_o(ax); dx=sf_d(ax);
+    nz = sf_n(az); oz=sf_o(az); dz=sf_d(az);
 
     if(verb) {
 	sf_raxa(az);
@@ -102,72 +109,67 @@ int main(int argc, char* argv[])
     ak=sf_maxa(1,0,1); 
 
     /* setup output header */
-    sf_oaxa(Fi,az,1);
-    sf_oaxa(Fi,ax,2);
+    sf_oaxa(Fi,ax,1);
+    sf_oaxa(Fi,az,2);
     sf_oaxa(Fi,ak,3);
 
-    nz = sf_n(az);
+    nz = sf_n(az); nb = SF_MIN(nb,nz);
     nx = sf_n(ax);
     nt = sf_n(at);
     
-    nb = SF_MIN(nb,nt);
-
 /*------------------------------------------------------------*/
 
     /* allocate arrays */
-    us=sf_floatalloc3(nz,nx,nb);  //   source wavefield
-    ur=sf_floatalloc3(nz,nx,nb);  // receiver wavefield
-    ii=sf_floatalloc2(nz,nx);     // image
+    us=sf_floatalloc3(nt,nx,nb);  //   source wavefield
+    ur=sf_floatalloc3(nt,nx,nb);  // receiver wavefield
+    ii=sf_floatalloc (   nx);     // image
 
-    /* init output */
-    for (ix=0; ix<nx; ix++) {
-	for (iz=0; iz<nz; iz++) {
-	    ii[ix][iz]=0;
-	}
-    }
-
-    gg=sf_floatalloc (  2*nl);
-    ww=sf_floatalloc3(4,2*nl,na);
-    kz=sf_intalloc3  (4,2*nl,na);
-    kx=sf_intalloc3  (4,2*nl,na);
+    ts=sf_floatalloc2(nt,nx);
+    tr=sf_floatalloc2(nt,nx);
+    
+    gg=sf_floatalloc (  2*nl+1);
+    ww=sf_floatalloc3(4,2*nl+1,na);
+    kt=sf_intalloc3  (4,2*nl+1,na);
+    kx=sf_intalloc3  (4,2*nl+1,na);
     
 /*------------------------------------------------------------*/
     /* taper */
-    for(il=0;il<2*nl;il++) {
+    for(il=0;il<2*nl+1;il++) {
 	l = ol + (il-nl)*dl;
 	l /= (nl/2);
+	l /= sig;
 	gg[il] = exp(-l*l);
     }
 
 /*------------------------------------------------------------*/
-    /* compute indices and weight */
+    /* compute bilinear interpolation indices and weights */
     for(ia=0;ia<na;ia++) {
 	a  = oa + ia * da;
 	a *= SF_PI/180.;
 	
-	for(il=0;il<2*nl;il++){
+	for(il=0;il<2*nl+1;il++){
 	    l = ol + (il-nl)*dl;   
 	    
-	    lz = l*sin(a);
+	    lt = l*sin(a);
 	    lx = l*cos(a);	    
 	    
-	    kz[ia][il][0] = (floor)(lz);
-	    kz[ia][il][1] = kz[ia][il][0] +1;
-	    kz[ia][il][2] = kz[ia][il][0];
-	    kz[ia][il][3] = kz[ia][il][0] +1;
+	    kt[ia][il][0] = (floor)(lt);
+	    kt[ia][il][1] = kt[ia][il][0] +1;
+	    kt[ia][il][2] = kt[ia][il][0];
+	    kt[ia][il][3] = kt[ia][il][0] +1;
 	    
 	    kx[ia][il][0] = (floor)(lx);
 	    kx[ia][il][1] = kx[ia][il][0];
 	    kx[ia][il][2] = kx[ia][il][0] +1;
 	    kx[ia][il][3] = kx[ia][il][0] +1;
 	    
-	    fz = lz-kz[ia][il][0];
+	    ft = lt-kt[ia][il][0];
 	    fx = lx-kx[ia][il][0];
 	    
-	    ww[ia][il][0] = (1-fz)*(1-fx);
-	    ww[ia][il][1] =    fz *(1-fx);
-	    ww[ia][il][2] = (1-fz)*   fx ;
-	    ww[ia][il][3] =    fz *   fx ;
+	    ww[ia][il][0] = (1-ft)*(1-fx);
+	    ww[ia][il][1] =    ft *(1-fx);
+	    ww[ia][il][2] = (1-ft)*   fx ;
+	    ww[ia][il][3] =    ft *   fx ;
 
 	    for(ic=0;ic<4;ic++) {
 		ww[ia][il][ic] *= gg[il];
@@ -177,43 +179,60 @@ int main(int argc, char* argv[])
     
 /*------------------------------------------------------------*/
 
-    for (; nt > 0; nt -= nb) {
-	if (nb > nt) nb=nt;
-	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
+    for (; nz > 0; nz -= nb) {
+	if (nb > nz) nb=nz;
+	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nz,nb);
 
-	sf_floatread(us[0][0],nz*nx*nb,Fs);
-	sf_floatread(ur[0][0],nz*nx*nb,Fr);
+	sf_floatread(us[0][0],nt*nx*nb,Fs);
+	sf_floatread(ur[0][0],nt*nx*nb,Fr);
 
 	for(            ib=0;  ib<nb;    ib++) {
 	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
+	    
+	    for(    ix=0; ix<nx; ix++) {
+		ii[ix] = 0;
+	    }
+
+	    for(        ia=0;ia<na;    ia++) {	
+		if(verb) fprintf(stderr,"%3d",ia);
+		
+		for(    ix=0; ix<nx; ix++) {
+		    for(it=0; it<nt; it++) {	
+			ts[ix][it] = 0;
+			tr[ix][it] = 0;
+		    }
+		}
+
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ia,ix,iz,il,ic,ts,tr) shared(na,nz,nx,nl,ii,us,ur,ww,kx,kz,)
-#endif
-	    for(        ix=nl; ix<nx-nl; ix++) {
-		for(    iz=nl; iz<nz-nl; iz++) {
+#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,ix,it,jx,jt,ht,hx) shared(ia,kt,kx,nl,nx,nt,ts,tr,ww,us,ur)
+#endif	
+		for(    il=0;il<2*nl+1;il++) {
+		    for(ic=0;ic<4;     ic++) {
+			jt=kt[ia][il][ic]; ht = SF_ABS(jt);
+			jx=kx[ia][il][ic]; hx = SF_ABS(jx);
+			
+			for(    ix=hx; ix<nx-hx; ix++) {
+			    for(it=ht; it<nt-ht; it++) {
+				ts[ix][it] += ww[ia][il][ic] * us[ib][ ix+jx ][ it+jt ];
+				tr[ix][it] += ww[ia][il][ic] * ur[ib][ ix+jx ][ it+jt ];
+			    } // x loop
+			}     // t loop
+		    }         // c loop
+		}             // l loop
 
-		    for(ia=0;  ia<na;    ia++) {			
-			ts=0;
-			tr=0;
-			for(il=0;il<2*nl;il++) {
-			    for(ic=0;ic<4;ic++) {
-				jz = iz+kz[ia][il][ic];
-				jx = ix+kx[ia][il][ic];
+		for(    ix=0; ix<nx; ix++) {
+		    for(it=0; it<nt; it++) {
+			ii[ix] += ts[ix][it] * tr[ix][it];
+		    }
+		}
 
-				ts += ww[ia][il][ic] * us[ib][ jx ][ jz ];
-				tr += ww[ia][il][ic] * ur[ib][ jx ][ jz ];
-			    }
-			}
-			ii[ix][iz] += ts*tr;
-		    } // ia
+		if(verb) fprintf(stderr,"\b\b\b");
+	    } // a loop
 
-		} // iz
-	    } // ix
-	} // ib
-	if(verb) fprintf(stderr,"\b\b\b\b\b");
-
-    }
-    sf_floatwrite(ii[0],nz*nx,Fi);
-    
+	    sf_floatwrite(ii,nx,Fi);
+	    if(verb) fprintf(stderr,"\b\b\b\b\b");
+	} // b loop
+    } // z loop
+	
     exit (0);
 }

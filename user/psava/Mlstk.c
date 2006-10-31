@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
-    if(! sf_getbool("sig",&sig))    sig=1.0;
+    if(! sf_getfloat("sig",&sig))    sig=1.0;
 
     Fi = sf_input ("in" );
     Fo = sf_output("out");
@@ -115,8 +115,6 @@ int main(int argc, char* argv[])
 	l /= (nl/2);
 	l /= sig;
 	gg[il] = exp(-l*l);
-/*	gg[il] = 1;*/
-	sf_warning("%g",gg[il]);
     }
 
 /*------------------------------------------------------------*/
