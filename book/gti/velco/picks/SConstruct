@@ -3,6 +3,9 @@ from rsfproj import *
 Fetch('elf-fmg.rsf','masha')
 Flow('fmg','elf-fmg.rsf','dd form=native')
 
+Fetch('elf-stk2.rsf','masha')
+Flow('stk','elf-stk2.rsf','dd form=native')
+
 
 
 End()

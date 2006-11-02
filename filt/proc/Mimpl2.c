@@ -65,6 +65,7 @@ int main(int argc, char* argv[])
     if (NULL != (file = sf_getstring("snap"))) {
 	/* snapshot file (output) */
 	snp = sf_output(file);
+	sf_putint(snp,"n3",ns);
     } else {
 	snp = NULL;
     }

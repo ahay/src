@@ -1,0 +1,90 @@
+from rsfproj import *
+
+# Get local offset gathers
+Fetch('SRC0x.hh','sigsbee')
+
+# Extract h=0 (usual imaging condition)
+Flow('img','SRC0x.hh',
+     '''
+     window n4=1 min4=0 | transp | agc rect1=200 rect2=200 |
+     put label1=Depth label2=Lateral unit1=kft unit2=kft
+     d2=0.150 o2=10.925 d1=0.025 o1=0
+     ''')
+
+Plot('img','grey wanttitle=n ')
+Result('img','Overlay')
+
+picks = '''
+20850 2700
+29100 6000
+31350 7900
+43050 8100
+53100 17600
+58950 17400
+63150 15500
+67650 13700
+72450 13300
+72300 9700
+71100 9300
+69150 9200
+66750 6700
+58950 2900
+53550 5500
+51000 9800
+45900 3100
+41700 3000
+39600 1700
+36450 5100
+37350 3400
+26700 2700
+28200 2500
+29700 2400
+31350 2400
+33150 2500
+'''
+
+Flow('picks.txt',None,
+     'echo %s n1=2 n2=26 in=$TARGET data_format=ascii_int' % picks)
+Flow('picks','picks.txt','dd form=native')
+Flow('xy','picks x',
+     '''
+     window f1=1 | cat axis=2 ${SOURCES[1]} | transp |
+     dd type=float | scale dscale=0.001
+     ''')
+
+for col in (6,7):
+    Plot('xy'+str(col),'xy',
+         '''
+         dd type=complex | graph plotcol=%d transp=y yreverse=y symbol=+
+         min1=0 max1=26.4 min2=10.925 max2=85.775 pad=n wantaxis=n wanttitle=n
+         symbolsz=5 plotfat=5
+         ''' % col)
+
+Result('xy','img xy6','Overlay')
+
+Flow('env','img','envelope')
+Flow('vel','env','math output="1+0.1*input*input" ')
+Flow('vel0','vel','math output=1')
+
+Result('vel','grey allpos=y bias=1 wanttitle=n')
+
+for case in ('','0'):
+    dist = 'dist'+case
+    Flow(dist,['xy','vel'+case],'pad n1=3 | distance velocity=${SOURCES[1]}')
+    Plot(dist,'grey color=j allpos=y wanttitle=n pclip=100')
+    Result(dist,[dist,'xy7'],'Overlay')
+
+Flow('start','img','math output="(x1-11)^2+0.1*(x2-50)^2-120" ')
+
+med = 4.51294
+
+Flow('disti','dist',
+     'math output="1+input/%g" | math output="1/(input*input)"' % med)
+
+Flow('next snap','start disti',
+     '''
+     impl2 up=y tau=1 rect1=200 rect2=200 dist=${SOURCES[1]}
+     snap=${TARGETS[1]} nsnap=50
+     ''')
+
+End()

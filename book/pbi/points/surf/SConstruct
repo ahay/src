@@ -38,21 +38,23 @@ Plot('dist10',dist)
 Result('dist10','dist10 points10','Overlay')
 
 Flow('start','dist','math output="x1*x1+x2*x2-2" ')
-Flow('disti','dist10','math output="1/(input*input+0.001)" ')
-Flow('next','start disti',
-     'impl2 up=y tau=1 rect1=200 rect2=200 dist=${SOURCES[1]}')
+
+med = 0.712229
+
+Flow('disti','dist10',
+     'math output="1+input/%g" | math output="1/(input*input)"' % med)
+Flow('next snap','start disti',
+     '''
+     impl2 up=y tau=1 rect1=200 rect2=200 dist=${SOURCES[1]}
+     snap=${TARGETS[1]} nsnap=50
+     ''')
 
 Plot('next',
      '''
+     window n3=1 f3=45 | 
      contour allpos=y c0=0 nc=1 min1=-2 max1=2 min2=-2 max2=2
      wanttitle=n wantaxis=n allpos=n transp=n yreverse=n scalebar=y 
      ''')
-Result('dist11','dist10 points10 next','Overlay')
-
-for rect in range(10,100,10):
-    next = 'next%d' % rect
-    Flow(next,'start disti',
-         'impl2 up=y tau=1 rect1=%d rect2=%d dist=${SOURCES[1]}' % (rect,rect))
-    Result(next,'grey')
+Result('dist11','dist10 next','Overlay')
 
 End()

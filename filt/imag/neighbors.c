@@ -225,7 +225,7 @@ static int dist(int k, float x1, float x2, float x3)
 {
     float ti;
 
-    ti = hypotf(x1,hypotf(x2,x3));
+    ti = sqrtf(vv[k])*hypotf(x1,hypotf(x2,x3));
     if (SF_OUT == in[k]) {
 	in[k] = SF_IN;
 	ttime[k] = ti;
@@ -238,7 +238,8 @@ static int dist(int k, float x1, float x2, float x3)
     return 0;
 }
 
-int neighbors_distance(int np         /* number of points */, 
+int neighbors_distance(int np         /* number of points */,
+		       float *vv1     /* slowness squared */,
 		       float **points /* point coordinates[np][3] */,
 		       float *d       /* grid sampling [3] */,
 		       float *o       /* grid origin [3] */)
@@ -249,13 +250,12 @@ int neighbors_distance(int np         /* number of points */,
 
     n123 = n[0]*n[1]*n[2];
 
-    vv = sf_floatalloc(n123);
+    vv = vv1;
 
     /* initialize everywhere */
     for (i=0; i < n123; i++) {
 	in[i] = SF_OUT;
 	ttime[i] = big_value;
-	vv[i] = 1.;
     }
 
     for (ip=0; ip < np; ip++) {

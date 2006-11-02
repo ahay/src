@@ -38,6 +38,7 @@ void distance_init (int n3,int n2,int n1)
 void distance (int np         /* number of points */, 
 	       float **points /* point coordinates [np][3] */,
 	       float* dist    /* distance */, 
+	       float* v       /* slowness squared */,
 	       int* in                    /* in/front/out flag */, 
 	       int n3,int n2,int n1       /* dimensions */,
 	       float o3,float o2,float o1 /* origin */,
@@ -55,7 +56,7 @@ void distance (int np         /* number of points */,
     sf_pqueue_start();
     neighbors_init (in, d, n, order, dist);
 
-    for (npoints =  neighbors_distance (np, points, d, o);
+    for (npoints =  neighbors_distance (np, v, points, d, o);
 	 npoints > 0;
 	 npoints -= neighbours(i)) {
 	/* Pick smallest value in the NarrowBand
