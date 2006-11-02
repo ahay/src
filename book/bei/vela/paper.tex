@@ -437,7 +437,7 @@ equations~(\ref{eqn:NMOarray}) and (\ref{eqn:NMOTarray})
 is {\tt nmo0()}.
 Because of the limited alphabet of programming languages,
 I used the keystroke {\tt z} to denote $\tau$.%
-\opdex{nmo0}{normal moveout}{48}{57}{user/gee}
+\opdex{nmo0}{normal moveout}{52}{61}{user/gee}
 A program is a ``pull'' program if the loop creating the output
 covers each location in the output and gathers the input from wherever
 it may be.
@@ -593,7 +593,7 @@ is evidence that in practice traveltime curves do cross.
 \ref{wvs/fig:wzl.20} and
 \ref{wvs/fig:wzl.32}
 crossing traveltime curves are even more significant elsewhere in the world.)
-Comparing Figure~\ref{fig:nmoalfa0} to Figure~\ref{fig:nmoalfa0.5}
+Comparing Figure~\ref{fig:nmoalfa0} to Figure~\ref{fig:nmoalfa1}
 we see that an effect of the velocity gradient
 is to degrade the \bx{stack}'s reconstruction of the model.
 Velocity gradient has ruined the waveform on the shallowest event,
@@ -602,13 +602,14 @@ If the plot were made on a finer mesh
 with higher frequencies,
 we could expect ruined waveforms a little deeper too.
 
-\sideplot{nmoalfa0.5}{width=3in}{
+\sideplot{nmoalfa1}{width=3in}{
   Synthetic CMP gather 
   for velocity linearly increasing with depth
   (typical of Gulf of Mexico)
   and reconstruction.
 }
 
+\begin{comment}
 \par
 Our NMO and stack subroutines can be used for modeling or for data processing.
 In designing these programs we gave no thought to signal \bx{amplitude}s
@@ -675,6 +676,7 @@ and harder to include others
 (surface ghosts and arrays).
 We omit detailed modeling here
 because it is the topic of so many other studies.
+\end{comment}
 
 \subsection{Ideal weighting functions for stacking}
 The difference between \bx{stack}ing as defined by
@@ -706,6 +708,7 @@ perhaps we should filter with opposing filters
 before and after \bx{NMO} and stack.
 
 \subsection{Gulf of Mexico stack and AGC}
+\inputdir{vscan}
 \par
 Next we create a ``CDP stack'' of our the Gulf of Mexico data set.
 Recall the moved out common-midpoint (CMP) gather
@@ -715,9 +718,9 @@ Each gather is summed over its offset axis.
 Figure~\ref{fig:wgstack} shows the result of stacking over offset,
 at each midpoint.
 The result is an image of a cross section of the earth.
-\activeplot{wgstack}{width=6.00in,height=3.6in}{ER}{
-	Stack done with a given velocity profile for all midpoints.
-	}
+\plot{wgstack}{width=6.00in,height=3.6in}{
+  Stack done with a given velocity profile for all midpoints.
+}
 
 In Figure~\ref{fig:wgstack} the early signals are too weak to see.
 This results from the small number of traces
@@ -746,9 +749,9 @@ To make Figure~\ref{fig:agcstack} I made the divisor by smoothing
 in triangle shaped windows about a half second long.
 To do this, I used subroutine \texttt{triangle()} \vpageref{/prog:triangle}.
 
-\activeplot{agcstack}{width=6.00in,height=3.6in}{ER}{
-	Stack of Figure~\protect\ref{fig:wgstack} after AGC.
-	}
+\plot{agcstack}{width=6.00in,height=3.6in}{
+  Stack of Figure~\protect\ref{fig:wgstack} after AGC.
+}
 
 %\subsection{Jon's stack weighting function fantasy}
 %The code is sprinkled around in vela/Trueamp.
@@ -866,19 +869,19 @@ Figure~\ref{fig:velvel} illustrates this smoothing by starting
 from points in velocity space, transforming to offset,
 and then back and forth again.
 
-\activeplot{velvel}{width=5.50in}{ER}{
-	Iteration between spaces.
-	Left are model spaces.
-	Right are data spaces.
-	Right derived from left.
-	Lower model space derived from upper data space.
-	}
+\plot{velvel}{width=5.50in}{
+  Iteration between spaces.
+  Left are model spaces.
+  Right are data spaces.
+  Right derived from left.
+  Lower model space derived from upper data space.
+}
 
 \par
 There is one final complication relating to weighting.
 The most symmetrical approach is to put
 $w$ into both $\bold A$ and $\bold A'$.
-This is what subroutine \texttt{velsimp()} \vpageref{/prog:velsimp} does.
+%This is what subroutine \texttt{velsimp()} \vpageref{/prog:velsimp} does.
 Thus, because of the weighting by $\sqrt{x}$,
 the synthetic data in Figure~\ref{fig:velvel} is
 nonphysical.
@@ -887,18 +890,19 @@ An alternate view is to {\em  define} $\bold A$
 and then for reverse transformation
 use $w^2\bold A'$.
 
-\progdex{velsimp}{velocity spectra}
+%\progdex{velsimp}{velocity spectra}
 
 \par
-An example of applying subroutine \texttt{velsimp()} \vpageref{/prog:velsimp}
-to field data is shown in Figure~\ref{fig:mutvel}.
+An example %of applying subroutine \texttt{velsimp()} \vpageref{/prog:velsimp}
+%to field data 
+is shown in Figure~\ref{fig:mutvel}.
 
-\activeplot{mutvel}{width=6.00in,height=3.6in}{ER}{
-	Transformation of data as a function of offset (left)
-	to data as a function of slowness (velocity scans)
-	on the right
-	using subroutine {\tt velsimp()}.
-	}
+\plot{mutvel}{width=6.00in,height=3.6in}{
+  Transformation of data as a function of offset (left)
+  to data as a function of slowness (velocity scans)
+  on the right
+  using subroutine {\tt velsimp()}.
+}
 
 \subsection{Velocity picking}
 \sx{velocity!picking}
@@ -951,12 +955,12 @@ the desired result is near the guessed center of the range.
 Otherwise, the moment is biased towards the initial guess.
 This bias can be reduced in stages.
 At each stage we shrink the width of the zone used to compute the moment.
-This procedure is used in subroutine \texttt{slowfit()} \vpageref{/prog:slowfit}
-which
-after smoothing to be described,
-gives the oscillatory curve you see in Figure~\ref{fig:slowfit}.
+%This procedure is used in subroutine \texttt{slowfit()} \vpageref{/prog:slowfit}
+%which
+%after smoothing to be described,
+%gives the oscillatory curve you see in Figure~\ref{fig:slowfit}.
 
-\progdex{slowfit}{velocity est.}
+%\progdex{slowfit}{velocity est.}
 
 A more customary way to view velocity space
 is to square the velocity scans
@@ -968,6 +972,7 @@ Since in practice, reliability seems somehow proportional to \bx{amplitude}
 the disadvantage of normalization
 is that reliability becomes more veiled.
 
+\begin{comment}
 \par
 An appealing visualization of velocity is shown in the right side
 of Figure~\ref{fig:slowfit}.
@@ -977,13 +982,23 @@ leaky integral function.
 (See PVI page 57).
 An example is shown on the right side of Figure~\ref{fig:slowfit}.
 
-\activeplot{slowfit}{width=6.00in,height=3.6in}{ER}{
-	Left is the slowness scans.
-	Right is the slowness scans after absolute value,
-	smoothing a little in time,
-	and antisymmetric leaky integration over slowness.
-	Overlaying both is the line of slowness picks.
-	}
+%\plot{slowfit}{width=6.00in,height=3.6in}{
+  Left is the slowness scans.
+  Right is the slowness scans after absolute value,
+  smoothing a little in time,
+  and antisymmetric leaky integration over slowness.
+  Overlaying both is the line of slowness picks.
+}
+\end{comment}
+
+\sideplot{fit}{width=3.00in,height=3.6in}{
+  Slowness scans.
+%  Right is the slowness scans after absolute value,
+%  smoothing a little in time,
+%  and antisymmetric leaky integration over slowness.
+  Overlaying is the line of slowness picks.
+}
+
 %
 % The plot below is not stable enough to include.
 %
@@ -1009,10 +1024,10 @@ $$
 t^2 \eq \tau^2 + \frac{4h^2}{V^2(\tau)}  \nonumber
 $$
 \par
-Routine~\texttt{vint2rms()} \vpageref{/prog:vint2rms}
-converts from interval velocity to \RMS\ velocity
-and vice versa.
-\progdex{vint2rms}{interval to/from RMS vel}
+%Routine~\texttt{vint2rms()} \vpageref{/prog:vint2rms}
+%converts from interval velocity to \RMS\ velocity
+%and vice versa.
+%\progdex{vint2rms}{interval to/from RMS vel}
 The forward conversion follows 
 in straightforward steps: square, integrate, square root.
 The inverse conversion, like an adjoint,
@@ -1029,6 +1044,7 @@ deriving an \bx{interval velocity} begins as does a derivative,
 roughening the function further.
 We soon find ourselves taking square roots of negative numbers,
 which requires judgement to proceed.
+\begin{comment}
 The technique used in \texttt{vint2rms()} \vpageref{/prog:vint2rms}
 is to average the squared interval velocity
 in ever expanding neighborhoods until there are no longer
@@ -1055,6 +1071,10 @@ is in figure~\ref{fig:vrmsint}.
 	\RMS\ velocity of Figure~\protect\ref{fig:rufsmo}.
 	Pushbutton allows experimentation with {\tt vminallow}.
 	}
+\end{comment}
+\plot{wgvel1}{width=\textwidth}{Left is a superposition of \RMS\
+  velocities, the raw one, and one constrained to have realistic
+  interval velocities. Right is the nterval velocity.}
 
 
 
