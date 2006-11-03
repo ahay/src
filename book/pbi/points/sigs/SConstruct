@@ -74,16 +74,20 @@ for case in ('','0'):
     Plot(dist,'grey color=j allpos=y wanttitle=n pclip=100')
     Result(dist,[dist,'xy7'],'Overlay')
 
-Flow('start','img','math output="(x1-11)^2+0.1*(x2-50)^2-120" ')
+
 
 med = 4.51294
 
 Flow('disti','dist',
-     'math output="1+input/%g" | math output="1/(input*input)"' % med)
-
-Flow('next snap','start disti',
      '''
-     impl2 up=y tau=1 rect1=200 rect2=200 dist=${SOURCES[1]}
+     math output="1+input/%g" | math output="1/(input*input)" |
+     pad beg1=200 end1=200 beg2=200 end2=200 | add add=0.01
+     ''' % med)
+Flow('start','disti','math output="120-(x1-11)^2-0.1*(x2-50)^2" ')
+
+Flow('nexti snapi','start disti',
+     '''
+     impl2 up=y tau=1 rect1=500 rect2=500 dist=${SOURCES[1]}
      snap=${TARGETS[1]} nsnap=50
      ''')
 

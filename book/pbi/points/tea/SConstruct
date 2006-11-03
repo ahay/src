@@ -1,0 +1,51 @@
+from rsfproj import *
+
+Fetch('teapot.26103.pts','points')
+
+Flow('teapot.xyz','teapot.26103.pts',
+     "awk '$1==\"p\" {print $2,$3,$4}' ")
+
+Flow('teapot','teapot.xyz',
+     '''
+     echo in=$SOURCE n1=3 n2=26103 data_format=ascii_float |
+     dd form=native
+     ''',stdin=0)
+
+Flow('teapot0','teapot','window j2=10')
+
+matlab = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' % \
+         (os.path.join(os.environ.get('RSFROOT'),'lib'),WhereIs('matlab'))
+epstopdf = WhereIs('epstopdf')
+
+med=0.169546
+
+Flow('start','dist','math output="0.36-(x1-0.5)^2-(x2-0.5)^2-(x3-0.3)^2" ')
+
+for case in ('','0'):
+    teap = 'teapot'+case
+    dist = 'dist'+case
+    Flow([teap+'.eps',teap+'.pdf'],[teap,'points.m'],
+         '''
+         %s -r "points('${SOURCES[0]}','${TARGETS[0]}');quit" &&
+         %s ${TARGETS[0]}
+         ''' % (matlab,epstopdf),stdout=-1)
+    Flow(dist,teap,
+         '''
+         distance n1=141 n2=141 n3=141
+         o1=-0.2 d1=0.01 o2=-0.2 d2=0.01 o3=-0.4 d3=0.01
+         ''')
+    Flow([dist+'.eps',dist+'.pdf'],[dist,'distance.m'],
+         '''
+         %s -r "distance('${SOURCES[0]}','${TARGETS[0]}',0.01);quit" &&
+         %s ${TARGETS[0]}
+         ''' % (matlab,epstopdf),stdout=-1)
+
+    disti = dist+'i'
+    Flow(disti,dist,
+         'math output="1+input/%g" | math output="1/(input*input)"' % med)
+
+    next = 'next'+case
+    Flow(next,['start',disti],
+         'impl3 up=y tau=1 rect1=200 rect2=200 rect3=200 dist=${SOURCES[1]}')
+
+End()

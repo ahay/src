@@ -105,7 +105,7 @@ void impl2_set(float ** x)
     int i;
     float a, xsum, wsum;
 
-    grad9(n1,n2,x,w);
+    sobel2(n1,n2,x,w);
 
     for (i=0; i < n; i++) {
 	tmp[i] = w[0][i];

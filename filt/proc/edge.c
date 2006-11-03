@@ -90,10 +90,10 @@ void sobel (int n1, int n2         /* data size */,
     }
 }
 
-void grad9 (int n1, int n2 /* data size */, 
-	    float **x      /* input data */, 
-	    float **w      /* output gradient squared */)
-/*< smooth 9-point gradient squared >*/
+void sobel2 (int n1, int n2  /* data size */, 
+	    float **x        /* input data [n2][n1] */, 
+	    float **w        /* output gradient squared [n2][n1] */)
+/*< Sobel's gradient squared >*/
 {
     int i1, i2;
     float w1, w2;
@@ -103,18 +103,69 @@ void grad9 (int n1, int n2 /* data size */,
 	    if (i2 == 0 || i2 == n2-1 || i1 == 0 || i1 == n1-1) {
 		w[i2][i1] = 0.;
 	    } else {
-		w1 = b*(x[i2-1][i1-1] + x[i2+1][i1-1] + 
-			x[i2+1][i1+1] + x[i2-1][i1+1]) +
-		    a*(x[i2-1][i1] + x[i2+1][i1] - 2.*x[i2][i1]) +
-		    (0.5-2.*b)*x[i2][i1+1] - (0.5+2.*b)*x[i2][i1-1];
-		w2 = b*(x[i2-1][i1-1] + x[i2+1][i1-1] +
-			x[i2+1][i1+1] + x[i2-1][i1+1]) +
-		    a*(x[i2][i1-1] + x[i2][i1+1] - 2.*x[i2][i1]) +
-		    (0.5-2.*b)*x[i2+1][i1] - (0.5+2.*b)*x[i2-1][i1];
+		w1 =
+		    x[i2+1][i1+1] - x[i2+1][i1-1] +
+		    2*(x[i2][i1+1] - x[i2][i1-1]) +
+		    x[i2-1][i1+1] - x[i2-1][i1-1];
+		w2 =
+		    x[i2+1][i1+1] - x[i2-1][i1+1] +
+		    2*(x[i2+1][i1] - x[i2-1][i1]) +
+		    x[i2+1][i1-1] - x[i2-1][i1-1];
 		w[i2][i1] = w1*w1 + w2*w2;
 	    }
 	}
     }
 }
 
+void sobel32 (int n1, int n2, int n3  /* data size */, 
+	      float ***x              /* input data [n3][n2][n1] */, 
+	      float ***w              /* output gradient squared */)
+/*< Sobel's gradient squared in 3-D>*/
+{
+    int i1, i2, i3;
+    float w1, w2, w3;
 
+    for (i3=0; i3 < n2; i3++) {
+	for (i2=0; i2 < n2; i2++) {
+	    for (i1=0; i1 < n1; i1++) {
+		if (i3 == 0 || i3 == n3-1 || 
+		    i2 == 0 || i2 == n2-1 || 
+		    i1 == 0 || i1 == n1-1) {
+		    w[i3][i2][i1] = 0.;
+		} else {
+		    w1 =
+			x[i3-1][i2-1][i1+1] - x[i3-1][i2-1][i1-1] +
+			x[i3+1][i2-1][i1+1] - x[i3+1][i2-1][i1-1] +
+			x[i3-1][i2+1][i1+1] - x[i3-1][i2+1][i1-1] +
+			x[i3+1][i2+1][i1+1] - x[i3+1][i2+1][i1-1] +
+			4*(x[i3-1][i2][i1+1] - x[i3-1][i2][i1-1] +
+			   x[i3+1][i2][i1+1] - x[i3+1][i2][i1-1] +
+			   x[i3][i2-1][i1+1] - x[i3][i2-1][i1-1] +
+			   x[i3][i2+1][i1+1] - x[i3][i2+1][i1-1] +
+			   x[i3][i2][i1+1] - x[i3][i2][i1-1]);
+		    w2 =
+			x[i3-1][i2+1][i1-1] - x[i3-1][i2-1][i1-1] +
+			x[i3+1][i2+1][i1-1] - x[i3+1][i2-1][i1-1] +
+			x[i3-1][i2+1][i1+1] - x[i3-1][i2-1][i1+1] +
+			x[i3+1][i2+1][i1+1] - x[i3+1][i2-1][i1+1] +
+			4*(x[i3-1][i2+1][i1] - x[i3-1][i2-1][i1] +
+			   x[i3+1][i2+1][i1] - x[i3+1][i2-1][i1] +
+			   x[i3][i2+1][i1-1] - x[i3][i2-1][i1-1] +
+			   x[i3][i2+1][i1+1] - x[i3][i2-1][i1+1] +
+			   x[i3][i2+1][i1] - x[i3][i2-1][i1]);
+		    w3 =
+			x[i3+1][i2-1][i1-1] - x[i3-1][i2-1][i1-1] +
+			x[i3+1][i2+1][i1-1] - x[i3-1][i2+1][i1-1] +
+			x[i3+1][i2-1][i1+1] - x[i3-1][i2-1][i1+1] +
+			x[i3+1][i2+1][i1+1] - x[i3-1][i2+1][i1+1] +
+			4*(x[i3+1][i2-1][i1] - x[i3-1][i2-1][i1] +
+			   x[i3+1][i2+1][i1] - x[i3-1][i2+1][i1] +
+			   x[i3+1][i2][i1-1] - x[i3-1][i2][i1-1] +
+			   x[i3+1][i2][i1+1] - x[i3-1][i2][i1+1] +
+			   x[i3+1][i2][i1] - x[i3-1][i2][i1]);		    
+		    w[i3][i2][i1] = (w1*w1 + w2*w2 + w3*w3)/36.;
+		}
+	    }
+	}
+    }
+}
