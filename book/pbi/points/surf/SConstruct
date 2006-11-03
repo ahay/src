@@ -10,7 +10,7 @@ Flow('one','sin','scale dscale=0')
 points = '''
 cat axis=2 ${SOURCES[1]} | transp | dd type=complex |
 graph symbol=o plotcol=7 wanttitle=n min1=-2 max1=2 min2=-2 max2=2
-scalebar=y wantaxis=n
+screenratio=1 wantaxis=n
 '''
 
 Plot('points','cos sin',points)
@@ -18,7 +18,7 @@ Flow('points','cos sin one','cat axis=2 ${SOURCES[1:3]} | transp')
 Flow('dist','points','distance n1=401 n2=401 o1=-2 o2=-2 d1=0.01 d2=0.01')
 
 dist = '''
-grey color=j scalebar=y min1=-2 max1=2 min2=-2 max2=2
+grey color=j screenratio=1 min1=-2 max1=2 min2=-2 max2=2
 title=Distance allpos=y pclip=100 transp=n yreverse=n
 '''
 
@@ -39,22 +39,35 @@ Result('dist10','dist10 points10','Overlay')
 
 Flow('start','dist','math output="x1*x1+x2*x2-2" ')
 
-med = 0.712229
+med = 0.0439845
 
 Flow('disti','dist10',
      'math output="1+input/%g" | math output="1/(input*input)"' % med)
 Flow('next snap','start disti',
      '''
-     impl2 up=y tau=1 rect1=200 rect2=200 dist=${SOURCES[1]}
-     snap=${TARGETS[1]} nsnap=50
+     impl2 up=y tau=1 rect1=500 rect2=500 dist=${SOURCES[1]}
+     snap=${TARGETS[1]} nsnap=100
      ''')
 
-Plot('next',
-     '''
-     window n3=1 f3=45 | 
-     contour allpos=y c0=0 nc=1 min1=-2 max1=2 min2=-2 max2=2
-     wanttitle=n wantaxis=n allpos=n transp=n yreverse=n scalebar=y 
-     ''')
+contour = '''
+contour c0=0 nc=1 min1=-2 max1=2 min2=-2 max2=2 plotcol=7 plotfat=3
+wanttitle=n wantaxis=n allpos=n transp=n yreverse=n screenratio=1
+'''
+
+Plot('next',contour)
 Result('dist11','dist10 next','Overlay')
+
+Plot('dist11','dist10',dist+' wanttitle=n wantaxis=n')
+
+picts = []
+for snap in range(33):
+    pict = 'pict%d' % snap
+    Plot(pict+'c','snap',
+         '''
+         window n3=1 f3=%d | %s
+         ''' % (snap,contour))
+    Plot(pict,['dist11',pict+'c'],'Overlay')
+    picts.append(pict)
+Plot('movie',picts,'Movie')
 
 End()

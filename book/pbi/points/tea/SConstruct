@@ -46,6 +46,9 @@ for case in ('','0'):
 
     next = 'next'+case
     Flow(next,['start',disti],
-         'impl3 up=y tau=1 rect1=200 rect2=200 rect3=200 dist=${SOURCES[1]}')
+         '''
+         impl3 up=y tau=0.3 rect1=200 rect2=200 rect3=200
+         dist=${SOURCES[1]} 
+         ''')
 
 End()

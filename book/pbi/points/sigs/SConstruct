@@ -8,7 +8,7 @@ Flow('img','SRC0x.hh',
      '''
      window n4=1 min4=0 | transp | agc rect1=200 rect2=200 |
      put label1=Depth label2=Lateral unit1=kft unit2=kft
-     d2=0.150 o2=10.925 d1=0.025 o1=0
+     d2=0.150 o2=10.925 d1=0.025 o1=0 
      ''')
 
 Plot('img','grey wanttitle=n ')
@@ -46,6 +46,7 @@ picks = '''
 Flow('picks.txt',None,
      'echo %s n1=2 n2=26 in=$TARGET data_format=ascii_int' % picks)
 Flow('picks','picks.txt','dd form=native')
+Flow('x','picks','window n1=1 | add add=10925')
 Flow('xy','picks x',
      '''
      window f1=1 | cat axis=2 ${SOURCES[1]} | transp |
@@ -74,9 +75,7 @@ for case in ('','0'):
     Plot(dist,'grey color=j allpos=y wanttitle=n pclip=100')
     Result(dist,[dist,'xy7'],'Overlay')
 
-
-
-med = 4.51294
+med = 0.0037559
 
 Flow('disti','dist',
      '''
@@ -87,8 +86,16 @@ Flow('start','disti','math output="120-(x1-11)^2-0.1*(x2-50)^2" ')
 
 Flow('nexti snapi','start disti',
      '''
-     impl2 up=y tau=1 rect1=500 rect2=500 dist=${SOURCES[1]}
+     impl2 up=y tau=1 rect1=250 rect2=250 dist=${SOURCES[1]}
      snap=${TARGETS[1]} nsnap=50
      ''')
+Plot('nexti',
+     '''
+     window f1=200 f2=200 n1=1057 n2=500 |
+     contour c0=0 nc=1 plotfat=3
+     wanttitle=n wantaxis=n allpos=n 
+     ''')
+
+Result('disti','img nexti','Overlay')
 
 End()
