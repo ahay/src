@@ -75,6 +75,8 @@ for case in ('','0'):
     Plot(dist,'grey color=j allpos=y wanttitle=n pclip=100')
     Result(dist,[dist,'xy7'],'Overlay')
 
+Flow('eiko','dist','eikonal zshot=10 yshot=70')
+
 med = 0.0037559
 
 Flow('disti','dist',
