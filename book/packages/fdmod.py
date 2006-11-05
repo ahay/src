@@ -32,12 +32,12 @@ def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title="" wantscalebar=n
     pclip=100
-    min1=%g max1=%g %s
-    min2=%g max2=%g %s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g
     %s
-    ''' % (par['zmin'],par['zmax'],par['lz'],
-           par['xmin'],par['xmax'],par['lx'],
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],
            custom)
 
@@ -47,23 +47,26 @@ def wgrey(custom,par):
     grey labelrot=n wantaxis=y title="" wantscalebar=n
     pclip=100 gainpanel=a
     screenratio=%g screenht=%g
-    %s %s %s
+    label1=%s unit1=%s
+    label2=%s unit2=%s
+    %s
     ''' % (par['zmin'],par['zmax'],
            par['xmin'],par['xmax'],
            par['ratio'],par['height'],
-           par['lz'],par['lx'],
+           par['lz'],par['uz'],
+           par['lx'],par['ux'],
            custom)
 
 def cgraph(custom,par):
     return '''
     graph labelrot=n wantaxis=n title="" yreverse=y 
-    min2=%g max2=%g %s
-    min1=%g max1=%g %s
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g
     %s
     ''' % (
-           par['zmin'],par['zmax'],par['lz'],
-           par['xmin'],par['xmax'],par['lx'],
+           par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],
            custom)
 
@@ -71,13 +74,23 @@ def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g %s
-    min2=%g max2=%g %s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     %s
-    ''' % (par['tmin'],par['tmax'],par['lt'],
-           par['xmin'],par['xmax'],par['lx'],
+    ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
            custom)
 
+def egrey(custom,par):
+    return '''
+    grey labelrot=n wantaxis=y title=""
+    pclip=100
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    %s
+    ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+           par['zmin'],par['zmax'],par['lz'],par['uz'],
+           custom)
 # ------------------------------------------------------------
 # create wavelet
 def wavelet(wav,frequency,par):
