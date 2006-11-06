@@ -106,13 +106,14 @@ int main(int argc, char* argv[])
 					* us[ibuf][ix+ihx][iz+ihz];
 				    tr += ur[ibuf][ix-ihx][iz-ihz]
 					* ur[ibuf][ix+ihx][iz+ihz];
-				}
-			    }
+				} // nhz
+			    } // nhx
 			    ii[ix][iz] += ts * tr;
-			}
-		    }
-		}
+			} // nz
+		    } // nx
+		} // nbuf
 		break;
+
 	    case 0:
 	    default:
 #ifdef _OPENMP
@@ -128,12 +129,13 @@ int main(int argc, char* argv[])
 				for(ihz=-nhz; ihz<nhz+1; ihz++) {
 				    tr += ur[ibuf][ix-ihx][iz-ihz]
 					* ur[ibuf][ix+ihx][iz+ihz];
-				}
-			    }
+				} // nhz
+			    } // nhx
 			    ii[ix][iz] += ts * tr;
-			}
-		    }
-		}
+
+			} // nz
+		    } // nx
+		} // nbuf
 		break;
 	}    
     }

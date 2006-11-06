@@ -2,9 +2,9 @@ from rsfproj import *
 import fdmod,zomig
 
 par = {
-    'nz':1201, 'dz':0.025,  'oz':0,  'lz':'label1=z unit1=kft', 
-    'nx':3201, 'dx':0.025,  'ox':10, 'lx':'label2=x unit2=kft',
-    'nt':5000, 'dt':0.001,  'ot':0,  'lt':'label1=t unit1=s',
+    'nz':1201, 'dz':0.025,  'oz':0,  'lz':'z','uz':'kft',
+    'nx':3201, 'dx':0.025,  'ox':10, 'lx':'x','ux':'kft',
+    'nt':5000, 'dt':0.001,  'ot':0,  'lt':'t','ut':'s',
     'kt':100,
     'nw':400,'ow':0,'jw':1,'verb':'y','tmx':20,'dtmax':0.0001,'nrmax':3
     }

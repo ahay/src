@@ -6,10 +6,10 @@ import zomig,spmig,fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0, 'lt':'label1=time unit1=s',
+    'nt':3000, 'dt':0.001,'ot':0, 'lt':'t','ut':'s',
     'kt':100,    # wavelet delay
-    'nx':401, 'ox':0, 'dx':0.01,  'lx':'label2=x unit2=km',
-    'nz':201, 'oz':0, 'dz':0.01,  'lz':'label1=z unit1=km',
+    'nx':401, 'ox':0, 'dx':0.01,  'lx':'x','ux':'km',
+    'nz':201, 'oz':0, 'dz':0.01,  'lz':'z','uz':'km',
     #
     'nw':150,'ow':3,'jw':1,
     'verb':'y','tmx':20, 'jsnap':200,

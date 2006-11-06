@@ -6,9 +6,9 @@ import zomig,spmig,fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':3000, 'dt':0.001,'ot':0, 'lt':'label1=time unit1=s',
-    'nx':401,  'ox':0,    'dx':0.01,  'lx':'label2=x unit2=km',
-    'nz':201,  'oz':0,    'dz':0.01,  'lz':'label1=z unit1=km',
+    'nt':3000, 'dt':0.001,'ot':0,   'lt':'t','ut':'s',
+    'nx':401,  'ox':0,    'dx':0.01,'lx':'x','ux':'km',
+    'nz':201,  'oz':0,    'dz':0.01,'lz':'z','uz':'km',
     'kt':100,    # wavelet delay
     #
     'nw':100,'ow':0,'jw':1,

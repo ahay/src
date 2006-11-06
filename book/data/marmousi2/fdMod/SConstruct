@@ -18,10 +18,10 @@ for file in modelFiles:
   
 # ------------------------------------------------------------
 par = {
-    'nt':10000, 'dt':0.0001,'ot':0,     'lt':'label1=time unit1=s',
+    'nt':10000, 'dt':0.0001,'ot':0,     'lt':'t','ut':'s',
     'kt':800,    # wavelet delay
-    'nx':13601, 'ox':0,  'dx':0.001249, 'lx':'label2=Distance unit2=km',
-    'nz':2801,  'oz':0,  'dz':0.001249, 'lz':'label1=Depth    unit1=km'
+    'nx':13601, 'ox':0,  'dx':0.001249, 'lx':'x','ux':'km',
+    'nz':2801,  'oz':0,  'dz':0.001249, 'lz':'z','uz':'km',
     }
 # add F-D modeling parameters
 fdmod.param(par)

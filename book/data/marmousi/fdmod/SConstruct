@@ -25,10 +25,10 @@ for file in raw:
 
 # ------------------------------------------------------------
 par = {
-    'nt':10000, 'dt':0.00025,'ot':0,     'lt':'label1=time unit1=s',
-    'kt':400,    # wavelet delay
-    'nx':2301, 'ox':0, 'dx':.004, 'lx':'label2=Position unit2=km',
-    'nz':751,  'oz':0, 'dz':.004, 'lz':'label1=Depth    unit1=km'
+    'nt':10000, 'dt':0.00025,'ot':0,'lt':'t','ut':'s',
+    'nx':2301, 'ox':0, 'dx':.004, 'lx':'x','ux':'km',
+    'nz':751,  'oz':0, 'dz':.004, 'lz':'z','uz':'km',
+    'kt':400    # wavelet delay
     }
 # add F-D modeling parameters
 fdmod.param(par)

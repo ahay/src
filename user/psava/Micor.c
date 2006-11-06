@@ -95,7 +95,10 @@ int main(int argc, char* argv[])
 	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
 	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);
 	switch (version){
-	    case 1:
+	    case 1: /* w/  time averaging */
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(it,iz,ix,iht,ihz,ihx,lot,loz,lox,hit,hiz,hix) shared(nt,nz,nx,nht,nhz,nhx,ii,us,ur)
+#endif		
 		for(        iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nbuf-SF_ABS(iht);
 		    for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx  -SF_ABS(ihx);
 			for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz  -SF_ABS(ihz);
@@ -111,10 +114,11 @@ int main(int argc, char* argv[])
 		    } // nhx
 		} // nht
 		break;
-	    case 0:
+
+	    case 0: /* w/o time averaging */
 	    default:
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx) shared(nbuf,nz,nx,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx,lox,loz,hix,hiz) shared(nbuf,nz,nx,ii,us,ur)
 #endif
 		for(ibuf=0; ibuf<nbuf; ibuf++) {
 		    for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx  -SF_ABS(ihx);

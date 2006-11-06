@@ -6,9 +6,9 @@ import fdmod
 
 # ------------------------------------------------------------
 par = {
-    'nt':2000,'ot':0, 'dt':0.0005, 'lt':'label1=t unit1=s',
-    'nx':1001,'ox':0, 'dx':2.5,    'lx':'label2=x unit2=m',
-    'nz':401, 'oz':0, 'dz':2.5,    'lz':'label1=z unit1=m',
+    'nt':2000,'ot':0, 'dt':0.0005,'lt':'t','ut':'s',
+    'nx':1001,'ox':0, 'dx':2.5,   'lx':'x','ux':'m',
+    'nz':401, 'oz':0, 'dz':2.5,   'lz':'z','uz':'m',
     'kt':50
     }
 fdmod.param(par)

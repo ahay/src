@@ -2,8 +2,8 @@ from rsfproj import *
 import fdmod,gfield
 
 par = {
-    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'label2=x unit2=m',
-    'nz':800,  'oz':0, 'dz':1.0, 'lz':'label1=z unit1=m',
+    'nx':1200, 'ox':0, 'dx':1.0, 'lx':'x','ux':'m',
+    'nz':800,  'oz':0, 'dz':1.0, 'lz':'z','uz':'m',
     'ru':30,'rv':6,'aa':1,'ff':45
     }
 fdmod.param(par)

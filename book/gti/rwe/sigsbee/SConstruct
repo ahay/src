@@ -2,8 +2,8 @@ from rsfproj import *
 import rwezo,zomig,fdmod
 
 par = {    
-    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z unit1=km',  
-    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x unit2=km',
+    'nz':1201, 'dz':0.025,  'oz':0,     'lz':'z','uz':'km',
+    'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'x','ux':'km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
     'ng':800,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
     'kt':100,    # wavelet delay 

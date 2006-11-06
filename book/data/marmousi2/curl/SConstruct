@@ -16,9 +16,9 @@ Flow('obc_curl_v_2','obc_curl_v_2.segy','''segyread tape=$SOURCE
 
 # Use fdmod for c graphing function 
 par = {
-    'nt':2500, 'dt':0.002,'ot':0,     'lt':'label1=time unit1=s',
-    'nx':1381, 'ox':0, 'dx':12.32 ,'lx':'label2=x unit2=km',
-    'nz':480, 'oz':0,  'dz':12.32 ,'lz':'label1=z unit1=km'
+    'nt':2500, 'dt':0.002,'ot':0,  'lt':'t','ut':'s',
+    'nx':1381, 'ox':0, 'dx':12.32 ,'lx':'x','ux':'km',
+    'nz':480, 'oz':0,  'dz':12.32 ,'lz':'z','uz':'km',
     }
 # add F-D modeling parameters
 fdmod.param(par)
