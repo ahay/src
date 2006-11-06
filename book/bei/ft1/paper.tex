@@ -682,6 +682,7 @@ transform the vectors, and then restore them into the matrix.
 \end{comment}
 
 \section{SETTING UP 2-D FT}
+\begin{comment}
 The program {\tt fth()} is set up so that the vectors transformed
 can be either rows or columns of a two-dimensional array.
 In any computer language there is a way to extract
@@ -696,7 +697,6 @@ or as a long vector
 {\tt (i1 + n1*(i2-1),1)},
 and {\tt call sub(x(i1,i2))} passes the subroutine
 a pointer to the {\tt (i1,i2)} element.
-\begin{comment}
 To transform an entire axis, the subroutines
 {\tt ft1axis()} and
 {\tt ft2axis()} are given.

@@ -86,8 +86,8 @@ understood through an example. Following \cite{Claerbout.blackwell.85},
 let us consider, for instance, the diffusion (heat conduction) equation
 of the form
 \begin{equation}
-  \label{eqn:heat}
-  \frac{\partial T}{\partial t} = a (x) \frac{\partial^2 T}{\partial x^2}\;.
+  {\frac{\partial T}{\partial t}} = {a (x)\,{\frac{\partial^2 T}{\partial x^2}}}\;.
+\label{eqn:heat}
 \end{equation}
 Here $t$ denotes time, $x$ is the space coordinate, $T (x,t)$ is the
 temperature, and $a$ is the heat conductivity coefficient.
@@ -107,8 +107,8 @@ in $x$, the problem can be solved in the wavenumber domain. Indeed,
 after the Fourier transform over the variable $x$, equation
 (\ref{eqn:heat}) transforms to the ordinary differential equation
 \begin{equation}
-  \label{eqn:heatk}
-  \frac{d \hat{T}}{d t} = - a k^2\, \hat{T}\;,
+  {\frac{d \hat{T}}{d t}} = {- a k^2\, \hat{T}}\;,
+  \label{eqn:heatk}	
 \end{equation}
 which has the explicit analytical solution
 \begin{equation}
@@ -442,10 +442,10 @@ zero-offset (post-stack) case, the velocity continuation process is
 described by the simple partial differential equation
 \cite[]{Claerbout.sep.48.79,me}
 \begin{equation}
-  \label{eqn:velcon}
-  \frac{\partial^2 P}{\partial v\,\partial t} +
-  v\,t\,\left(\frac{\partial^2 P}{\partial x^2} + \frac{\partial^2
-      P}{\partial y^2}\right) = 0\;,
+  {\frac{\partial^2 P}{\partial v\,\partial t}} +
+  {v\,t\,\left({\frac{\partial^2 P}{\partial x^2}} + {\frac{\partial^2
+      P}{\partial y^2}}\right)} = 0\;,
+\label{eqn:velcon}
 \end{equation}
 where $t$ is the vertical time coordinate of the migrated image, $x$
 and $y$ are spatial (midpoint) coordinates, and $v$ is the migration
