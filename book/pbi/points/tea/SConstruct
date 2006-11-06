@@ -17,9 +17,15 @@ matlab = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' % \
          (os.path.join(os.environ.get('RSFROOT'),'lib'),WhereIs('matlab'))
 epstopdf = WhereIs('epstopdf')
 
-med=0.169546
+med=0.001
 
 Flow('start','dist','math output="0.36-(x1-0.5)^2-(x2-0.5)^2-(x3-0.3)^2" ')
+
+Flow('next.eps next.pdf','next distance.m',
+     '''
+     %s -r "distance('${SOURCES[0]}','${TARGETS[0]}',0);quit" &&
+     %s ${TARGETS[0]}
+     ''' % (matlab,epstopdf),stdout=-1)
 
 for case in ('','0'):
     teap = 'teapot'+case

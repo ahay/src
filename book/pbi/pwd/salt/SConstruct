@@ -59,11 +59,12 @@ for attr in ('smooth0','shear0','comb0'):
          pick rect1=5 an=1000 gate=5 |
          window
          ''')
-    Plot(pik,'graph yreverse=y min2=1.5 max2=4.74 pad=n wantaxis=n wanttitle=n')
+    Plot(pik,
+         'graph yreverse=y min2=1.5 max2=4.74 pad=n wantaxis=n wanttitle=n')
 
     Result(pik,['line0',pik],'Overlay')
 
-Result('pik0','pwd0 pik','Overlay')
+Result('pik0','pwd0 pik-comb0','Overlay')
 
 Flow('line2','line',
      'window min1=1.9 max1=2.7 min2=500 max2=1500 | bandpass fhi=25')

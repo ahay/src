@@ -88,8 +88,8 @@ Flow('start','disti','math output="120-(x1-11)^2-0.1*(x2-50)^2" ')
 
 Flow('nexti snapi','start disti',
      '''
-     impl2 up=y tau=1 rect1=250 rect2=250 dist=${SOURCES[1]}
-     snap=${TARGETS[1]} nsnap=50
+     impl2 up=y tau=1 rect1=500 rect2=500 dist=${SOURCES[1]}
+     snap=${TARGETS[1]} nsnap=100
      ''')
 Plot('nexti',
      '''
@@ -99,5 +99,7 @@ Plot('nexti',
      ''')
 
 Result('disti','img nexti','Overlay')
+
+Flow('rect','dist','dd type=int | add add=1')
 
 End()
