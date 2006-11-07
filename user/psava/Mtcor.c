@@ -25,19 +25,18 @@
 int main(int argc, char* argv[])
 {
     bool verb;
-    int  version;
 
-    sf_file Fi,Fs,Fr;      /* I/O files */
-    sf_axis at,az,ax,aa;   /* cube axes */
+    sf_file Fi,Fs,Fr;    /* I/O files */
+    sf_axis at,az,ax,aa; /* cube axes */
 
-    int     nt,nz,nx, nhz,nhx, nbuf;
-    int        iz,ix, ihz,ihx, ibuf;
+    int     nt,nz,nx, nhz,nhx,nht;
+    int     it,iz,ix, ihz,ihx,iht;
 
     float **ii=NULL, ***us=NULL,***ur=NULL; /* arrays */
 
     int ompchunk; 
-    float ts,tr;
 
+    float ts,tr;
 /*------------------------------------------------------------*/
 
     /* init RSF */
@@ -45,11 +44,11 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
-    if(! sf_getint("nbuf",&nbuf)) nbuf=1;              /* buffer size */
-    if(! sf_getint("version",&version)) version=0;     /* I.C. version (see paper) */
 
     if(! sf_getint("nhz",&nhz)) nhz=0;
     if(! sf_getint("nhx",&nhx)) nhx=0;
+    if(! sf_getint("nht",&nht)) nht=1;
+    sf_warning("nht=%d nhx=%d nhz=%d",2*nht+1,2*nhx+1,2*nhz+1);
 
     Fs = sf_input ("in" ); /*   source wavefield */
     Fr = sf_input ("ur" ); /* receiver wavefield */
@@ -68,11 +67,9 @@ int main(int argc, char* argv[])
     nx = sf_n(ax);
     nt = sf_n(at);
 
-    nbuf = SF_MIN(nbuf,nt);
-
     /* allocate work arrays */
-    us=sf_floatalloc3(nz,nx,nbuf);
-    ur=sf_floatalloc3(nz,nx,nbuf);
+    us=sf_floatalloc3(nz,nx,nt);
+    ur=sf_floatalloc3(nz,nx,nt);
     ii=sf_floatalloc2(nz,nx);
 
     /* init output */
@@ -82,64 +79,37 @@ int main(int argc, char* argv[])
 	}
     }
 
-    for (; nt > 0; nt -= nbuf) {
-	if (nbuf > nt) nbuf=nt;
-	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nbuf);
+    sf_floatread(us[0][0],nz*nx*nt,Fs);
+    sf_floatread(ur[0][0],nz*nx*nt,Fr);
 
-	sf_floatread(us[0][0],nz*nx*nbuf,Fs);
-	sf_floatread(ur[0][0],nz*nx*nbuf,Fr);
+    if(verb) fprintf(stderr,"  t   x   z \n");
+    if(verb) fprintf(stderr," %3d %3d %3d\n",nt,nx,nz);
+    for(        it=nht; it<nt-nht; it++) {
+	for(    ix=nhx; ix<nx-nhx; ix++) {
+	    for(iz=nhz; iz<nz-nhz; iz++) {
+		if(verb) fprintf(stderr," %3d %3d %3d",it,ix,iz);
+		ts = us[it][ix][iz];
+		tr = 0;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iht,ihx,ihz) shared(tr,ur,nht,nhx,nhz)
+#endif		
+		for(        iht=-nht; iht<nht+1; iht++) {
+		    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
+			for(ihz=-nhz; ihz<nhz+1; ihz++) {
+			    tr += ur[it-iht][ix-ihx][iz-ihz]
+				* ur[it+iht][ix+ihx][iz+ihz];
+			} // nhz
+		    } // nhx
+		} // nht
+		ii[ix][iz] += ts * tr;
 	
-	switch (version){
-	    case 1:
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx,ts,tr) shared(nbuf,nz,nx,ii,us,ur)
-#endif
-		for(ibuf=0; ibuf<nbuf; ibuf++) {
-		    for(    ix=0+nhx; ix<nx-nhx; ix++) {
-			for(iz=0+nhz; iz<nz-nhz; iz++) {
-			    
-			    ts = 0;
-			    tr = 0;
-			    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
-				for(ihz=-nhz; ihz<nhz+1; ihz++) {
-				    ts += us[ibuf][ix-ihx][iz-ihz]
-					* us[ibuf][ix+ihx][iz+ihz];
-				    tr += ur[ibuf][ix-ihx][iz-ihz]
-					* ur[ibuf][ix+ihx][iz+ihz];
-				} // nhz
-			    } // nhx
-			    ii[ix][iz] += ts * tr;
-			} // nz
-		    } // nx
-		} // nbuf
-		break;
+		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
+	    } // nz
+	} // nx
+    } // nt
+    if(verb) fprintf(stderr,"\n");
 
-	    case 0:
-	    default:
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,iz,ix,ihz,ihx,ts,tr) shared(nbuf,nz,nx,ii,us,ur)
-#endif
-		for(ibuf=0; ibuf<nbuf; ibuf++) {
-		    for(    ix=0+nhx; ix<nx-nhx; ix++) {
-			for(iz=0+nhz; iz<nz-nhz; iz++) {
-			    
-			    ts = us[ibuf][ix][iz];
-			    tr = 0;
-			    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
-				for(ihz=-nhz; ihz<nhz+1; ihz++) {
-				    tr += ur[ibuf][ix-ihx][iz-ihz]
-					* ur[ibuf][ix+ihx][iz+ihz];
-				} // nhz
-			    } // nhx
-			    ii[ix][iz] += ts * tr;
+    sf_floatwrite(ii[0],nz*nx,Fi);    
 
-			} // nz
-		    } // nx
-		} // nbuf
-		break;
-	}    
-    }
-    sf_floatwrite(ii[0],nz*nx,Fi);
-    
     exit (0);
 }
