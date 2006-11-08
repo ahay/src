@@ -19,9 +19,6 @@
 
 #include "edge.h"
 
-static const float a=0.51961524227066318806, b=0.028867513459481288225;
-/* a = 0.3*sqrt(3.); b = 0.05/sqrt(3.) */
-
 void grad2 (int n          /* data size */, 
 	    const float *x /* input trace [n] */, 
 	    float *w       /* output gradient squared [n] */)
@@ -36,32 +33,6 @@ void grad2 (int n          /* data size */,
 	w[i] = ww*ww;
     }
     w[n-1] = 0.;
-}
-
-void grad31 (int n1, int n2         /* data size */, 
-	     float **x              /* input data [n2][n1] */, 
-	     float **w1, float **w2 /* output gradient components [n2][n1] */)
-/*< isotropic 9-point gradient >*/
-{
-    int i1, i2;
-
-    for (i2=0; i2 < n2; i2++) {
-	for (i1=0; i1 < n1; i1++) {
-	    if (i2 == 0 || i2 == n2-1 || i1 == 0 || i1 == n1-1) {
-		w1[i2][i1] = 0.;
-		w2[i2][i1] = 0.;
-	    } else {
-		w1[i2][i1] =
-		    (x[i2-1][i1+1] - x[i2-1][i1-1] + 
-		     x[i2+1][i1+1] - x[i2+1][i1-1])/12. +
-		    (x[i2][i1+1] - x[i2][i1-1])/3.;
-		w2[i2][i1] =
-		    (x[i2+1][i1-1] - x[i2-1][i1-1] + 
-		     x[i2+1][i1+1] - x[i2-1][i1+1])/12. +
-		    (x[i2+1][i1] - x[i2+1][i1])/3.;
-	    }
-	}
-    }
 }
 
 void sobel (int n1, int n2         /* data size */, 

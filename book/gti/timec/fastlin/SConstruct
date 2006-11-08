@@ -1,0 +1,19 @@
+from rsfproj import *
+
+spike = '''spike
+n1=51 d1=0.1 label1=x unit1=km
+n2=51 d2=0.1 label2=y unit2=km
+n3=51 d3=0.1 label3=z unit3=km
+'''
+
+Flow('mod',None,spike)
+Flow('box',None,
+     spike + '''
+     nsp=1 k1=26 k2=26 k3=26 mag=0.01 |
+     smooth rect1=10 rect2=10 rect3=10 
+     ''')
+Flow('boxmod','box mod','add ${SOURCES[1]}')
+
+
+
+End()

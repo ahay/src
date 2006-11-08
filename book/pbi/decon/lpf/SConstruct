@@ -1,0 +1,39 @@
+from rsfproj import *
+
+n1=400
+
+Flow('spike',None,'spike n1=%d d1=1 label1=" " ' % n1)
+
+waves = []
+for j in range(n1/15,n1,n1/5):
+    wave = 'wave%d' % j
+    waves.append(wave)
+    Flow(wave,'spike',
+         '''
+         math output="(x1-%(j)d)/%(n1)d" |
+         math output="exp(-input*15)*sin(input*0.95*%(j)d)" |
+         window f1=%(j)d | pad beg1=%(j)d
+         '''
+         % {'n1':n1,'j':j})
+Flow('in',waves,'add ${SOURCES[1:%d]}' % len(waves))
+
+na = 3;
+
+shifts = []
+for s in range(1,na):
+    shift = 's%d' % s
+    Flow(shift,'in','window f1=%d | pad end1=%d' % (s,s))
+    shifts.append(shift)
+Flow('shift',shifts,'cat axis=2 ${SOURCES[1:%d]}' % len(shifts))
+
+Flow('pef pre','shift in',
+     'lpf match=${SOURCES[1]} rect1=5 pred=${TARGETS[1]}')
+Flow('err','pre in','add scale=1,-1 ${SOURCES[1]}')
+
+Result('lpf','in err',
+       '''
+       cat axis=2 ${SOURCES[1]} |
+       dots yreverse=1 strings=1 connect=3 labels=input:decon
+       ''')
+
+End()

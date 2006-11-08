@@ -1,0 +1,30 @@
+from rsfproj import *
+from galilee import Galilee
+
+Galilee('sea',150,150)
+
+Plot('sea',
+     '''
+     grey transp=n yreverse=n clip=40 title="Sea of Galilee - sparse grid"
+     ''')
+
+Galilee('sea2',300,300)
+
+Flow('frame','sea2',
+     '''
+     spike n1=300 n2=300 nsp=8
+     k1=151,151,151,236
+     k2=114,114,163,114
+     l1=236,152,236,237
+     l2=115,163,164,163 |
+     math sea=$SOURCE output="sea*(1-input)+input"
+     ''',stdin=0)
+
+Plot('frame',
+     '''
+     grey transp=n yreverse=n clip=40 title="Sea of Galilee - patch"
+     ''')
+
+Result('galsea','sea frame','SideBySideAniso')
+     
+End()

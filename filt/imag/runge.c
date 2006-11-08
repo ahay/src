@@ -49,6 +49,62 @@ void runge_close(void)
     free(k);
 }
 
+float ode23 (float t /* time integration */,
+	     float* tol /* error tolerance */,
+	     float* y   /* [dim] solution */, 
+	     void* par  /* parameters for function evaluation */,
+	     void (*rhs)(void*,float*,float*) 
+	     /* RHS function */, 
+	     int (*term)(void*,float*)
+	     /* function returning 1 if the ray needs to terminate */)
+/*< ODE solver for dy/dt = f where f comes from rhs(par,y,f)
+  Note: Value of y is changed inside the function.
+  >*/
+{
+    int i;
+    float h, t1;
+    bool pass;
+
+    t1 = 0.;
+    h = dt;
+    
+    while (h > 0.) {
+	if (t1+h >= t) h=t-t1;
+
+	rhs (par, y, k[0]); 
+	for (i=0; i < dim; i++) {
+	    yk[i] = y[i] + 0.5*h*k[0][i];
+	}
+      
+	rhs (par, yk, k[1]); 
+	for (i=0; i < dim; i++) {
+	    yk[i] = y[i] + h*(2.0*k[1][i]-k[0][i]);
+	}
+      
+	rhs (par, yk, k[2]); 
+	pass = true;
+	for (i=0; i < dim; i++) {	    
+	    yk[i] = h*(k[0][i]+4.*k[1][i]+k[2][i])/6.0;
+	    if (fabsf(yk[i]-h*k[1][i]) > tol[i]) {
+		pass = false;
+		break;
+	    }
+	}
+	if (pass) {
+	    for (i=0; i < dim; i++) {
+		y[i] += yk[i];
+	    }
+	    t1 += h;	
+	    if (term != NULL && term (par, y)) return t1;
+	} else {
+	    h *= 0.5;
+	}
+    }
+  
+    return t1;
+}
+
+
 int ode23_step (float* y    /* [dim] solution */, 
 		void* par   /* parameters for function evaluation */,
 		void (*rhs)(void*,float*,float*) 
