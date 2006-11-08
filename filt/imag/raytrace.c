@@ -23,7 +23,6 @@
 #include "grid2.h"
 #include "grid3.h"
 #include "atela.h"
-#include "runge.h"
 
 #ifndef _raytrace_h
 
@@ -196,9 +195,9 @@ int trace_ray (raytrace rt  /* ray tracing object */,
 	    y[i+dim] = p[i]*sqrtf(s2);
 	}
 
-	runge_init(2*dim, nt, rt->dt);
-	it = ode23_step (y, rt,iso_rhs,term,traj);
-	runge_close();
+	sf_runge_init(2*dim, nt, rt->dt);
+	it = sf_ode23_step (y, rt,iso_rhs,term,traj);
+	sf_runge_close();
 
 	for (i=0; i < dim; i++) {
 	    x[i] = y[i];

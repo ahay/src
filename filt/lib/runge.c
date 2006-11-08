@@ -20,17 +20,15 @@
 #include <stdlib.h>
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
-
 #include "runge.h"
+#include "alloc.h"
 
 static int dim, nt;
 static float dt, **k, *yk;
 
-void runge_init(int dim1 /* dimensionality */, 
-		int n1   /* number of ray tracing steps */, 
-		float d1 /* step in time */)
+void sf_runge_init(int dim1 /* dimensionality */, 
+		   int n1   /* number of ray tracing steps */, 
+		   float d1 /* step in time */)
 /*< initialize >*/
 {
     dim = dim1;
@@ -41,7 +39,7 @@ void runge_init(int dim1 /* dimensionality */,
     k = sf_floatalloc2(dim,3);
 }
 
-void runge_close(void)
+void sf_runge_close(void)
 /*< free allocated storage >*/
 {
     free(yk);
@@ -49,13 +47,13 @@ void runge_close(void)
     free(k);
 }
 
-float ode23 (float t /* time integration */,
-	     float* tol /* error tolerance */,
-	     float* y   /* [dim] solution */, 
-	     void* par  /* parameters for function evaluation */,
-	     void (*rhs)(void*,float*,float*) 
-	     /* RHS function */, 
-	     int (*term)(void*,float*)
+float sf_ode23 (float t /* time integration */,
+		float* tol /* error tolerance */,
+		float* y   /* [dim] solution */, 
+		void* par  /* parameters for function evaluation */,
+		void (*rhs)(void*,float*,float*) 
+		/* RHS function */, 
+		int (*term)(void*,float*)
 	     /* function returning 1 if the ray needs to terminate */)
 /*< ODE solver for dy/dt = f where f comes from rhs(par,y,f)
   Note: Value of y is changed inside the function.
@@ -105,13 +103,13 @@ float ode23 (float t /* time integration */,
 }
 
 
-int ode23_step (float* y    /* [dim] solution */, 
-		void* par   /* parameters for function evaluation */,
-		void (*rhs)(void*,float*,float*) 
-		/* RHS function */, 
-		int (*term)(void*,float*)
-		/* function returning 1 if the ray needs to terminate */, 
-		float** traj /* [nt+1][dim] - ray trajectory (output) */) 
+int sf_ode23_step (float* y    /* [dim] solution */, 
+		   void* par   /* parameters for function evaluation */,
+		   void (*rhs)(void*,float*,float*) 
+		   /* RHS function */, 
+		   int (*term)(void*,float*)
+		   /* function returning 1 if the ray needs to terminate */, 
+		   float** traj /* [nt+1][dim] - ray trajectory (output) */) 
 /*< ODE solver for dy/dt = f where f comes from rhs(par,y,f)
   Note:
   1. Value of y is changed inside the function.
