@@ -9,9 +9,9 @@ par = {
     'lo':0.02, # wavelength
     'co':3,    # velocity
     'fo':50,
-    'nt':3000, 'ot':0, 'dt':0.0005, 'lt':'label1=time unit1=s',
-    'nx':800,  'ox':0, 'dx':0.005, 'lx':'label2=x unit2=km',
-    'nz':300,  'oz':0, 'dz':0.005, 'lz':'label1=z unit1=km',
+    'nt':3000, 'ot':0, 'dt':0.0005, 'lt':'t', 'ut':'s',
+    'nx':800,  'ox':0, 'dx':0.005,  'lx':'x', 'ux':'km',
+    'nz':300,  'oz':0, 'dz':0.005,  'lz':'z', 'uz':'km',
     'kt':100,    # wavelet delay
     'nbx':250, 'tx':0.001,
     'nbz':250, 'tz':0.001,

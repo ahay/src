@@ -85,15 +85,15 @@ int main(int argc, char* argv[])
     sf_floatread(us[0][0],nz*nx*nt,Fs);
     sf_floatread(ur[0][0],nz*nx*nt,Fr);
 
-    if(verb) fprintf(stderr,"  ht  hx  hz\n");
-    if(verb) fprintf(stderr," %3d %3d %3d\n",2*nht,2*nhx,2*nhz);
+    if(verb) fprintf(stderr," ht  hx\n");
+    if(verb) fprintf(stderr,"%3d %3d\n",2*nht,2*nhx);
     for(        iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nt-SF_ABS(iht);
 	for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-SF_ABS(ihx);
-	    for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-SF_ABS(ihz);
-		if(verb) fprintf(stderr," %3d %3d %3d",nht+iht,nhx+ihx,nhz+ihz);
+	    if(verb) fprintf(stderr,"%3d %3d",nht+iht,nhx+ihx);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(it,iz,ix) shared(iht,ihx,ihz,lot,hit,lox,hix,loz,hiz,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ihz,it,iz,ix,loz,hiz) shared(iht,ihx,lot,hit,lox,hix,nhz,ii,us,ur)
 #endif		
+	    for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-SF_ABS(ihz);
 		for(        it=lot; it<hit; it++) {
 		    for(    ix=lox; ix<hix; ix++) {
 			for(iz=loz; iz<hiz; iz++) {
@@ -102,8 +102,8 @@ int main(int argc, char* argv[])
 			} // nz
 		    } // nx
 		} // nt
-		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
 	    } // nhz
+	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 	} // nhxx
     } // nht
     if(verb) fprintf(stderr,"\n");

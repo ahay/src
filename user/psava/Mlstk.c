@@ -118,13 +118,13 @@ int main(int argc, char* argv[])
     }
 
 /*------------------------------------------------------------*/
-    /* compute indices and weight */
-    for(ia=0;ia<na;ia++) {
-	a  = oa + ia * da;
-	a *= SF_PI/180.;
+    /* compute bilinear interpolation indices and weights */
+    for(il=0;il<2*nl+1;il++){
+	l = ol + (il-nl)*dl;   
 	
-	for(il=0;il<2*nl+1;il++){
-	    l = ol + (il-nl)*dl;   
+	for(ia=0;ia<na;ia++) {
+	    a  = oa + ia * da;
+	    a *= SF_PI/180.;
 	    
 	    l1 = l*sin(a);
 	    l2 = l*cos(a);	    
@@ -155,20 +155,20 @@ int main(int argc, char* argv[])
     
 /*------------------------------------------------------------*/
 
-    /* read input */
-    sf_floatread(dd[0],n1*n2,Fi);
+    sf_floatread(dd[0],n1*n2,Fi);        /* read input */
     
     /* loop over angles */
-    if(verb) fprintf(stderr,"\n");
+    if(verb) fprintf(stderr,"  a  \n");
+    if(verb) fprintf(stderr," %3d \n",na);
     for(ia=0;ia<na;ia++) {
-	if(verb) fprintf(stderr,"\b\b\b\b\b%d",ia);
+	if(verb) fprintf(stderr," %3d",ia);
 
 	for(    i2=0; i2<n2; i2++) {
 	    for(i1=0; i1<n1; i1++) {	
 		ss[i2][i1] = 0;
 	    }
 	}
-
+	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,il,ic,j1,j2,h1,h2) shared(ia,n1,n2,nl,ss,ww,dd,k1,k2)
 #endif
@@ -180,15 +180,15 @@ int main(int argc, char* argv[])
 		for(    i2=h2; i2<n2-h2; i2++) {
 		    for(i1=h1; i1<n1-h1; i1++) {
 			ss[i2][i1] += ww[ia][il][ic] * dd[i2+j2][i1+j1];
-		    } // 2 loop
-		}     // 1 loop
+		    } // 1 loop
+		}     // 2 loop
 		
 	    }         // c loop
 	}             // l loop
 
-	/* write output */
-	sf_floatwrite(ss[0],n1*n2,Fo);
-    } // a loop
+	sf_floatwrite(ss[0],n1*n2,Fo);	 /* write output */
+	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b");	
+    }                 // a loop
     if(verb) fprintf(stderr,"\n");
 
     exit (0);

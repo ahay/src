@@ -82,17 +82,18 @@ int main(int argc, char* argv[])
     sf_floatread(us[0][0],nz*nx*nt,Fs);
     sf_floatread(ur[0][0],nz*nx*nt,Fr);
 
-    if(verb) fprintf(stderr,"  t   x   z \n");
-    if(verb) fprintf(stderr," %3d %3d %3d\n",nt,nx,nz);
+    if(verb) fprintf(stderr,"   t    x\n");
+    if(verb) fprintf(stderr,"%4d %4d\n",nt,nx);
     for(        it=nht; it<nt-nht; it++) {
 	for(    ix=nhx; ix<nx-nhx; ix++) {
+	    if(verb) fprintf(stderr,"%4d %4d",it,ix);
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(iz,iht,ihx,ihz,ts,tr) shared(ur,nz,nht,nhx,nhz)
+#endif		
 	    for(iz=nhz; iz<nz-nhz; iz++) {
-		if(verb) fprintf(stderr," %3d %3d %3d",it,ix,iz);
 		ts = us[it][ix][iz];
 		tr = 0;
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(iht,ihx,ihz) shared(tr,ur,nht,nhx,nhz)
-#endif		
+		
 		for(        iht=-nht; iht<nht+1; iht++) {
 		    for(    ihx=-nhx; ihx<nhx+1; ihx++) {
 			for(ihz=-nhz; ihz<nhz+1; ihz++) {
@@ -102,9 +103,8 @@ int main(int argc, char* argv[])
 		    } // nhx
 		} // nht
 		ii[ix][iz] += ts * tr;
-	
-		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
 	    } // nz
+	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 	} // nx
     } // nt
     if(verb) fprintf(stderr,"\n");
