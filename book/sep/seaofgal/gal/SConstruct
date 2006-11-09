@@ -3,28 +3,42 @@ from galilee import Galilee
 
 Galilee('sea',150,150)
 
-Plot('sea',
-     '''
-     grey transp=n yreverse=n clip=40 title="Sea of Galilee - sparse grid"
-     ''')
+def grey(title):
+    return '''
+    grey transp=n yreverse=n allpos=y clip=40 title="%s"
+    ''' % title
+
+Plot('sea',grey('Sea of Galilee - sparse grid'))
 
 Galilee('sea2',300,300)
 
-Flow('frame','sea2',
-     '''
-     spike n1=300 n2=300 nsp=8
-     k1=151,151,151,236
-     k2=114,114,163,114
-     l1=236,152,236,237
-     l2=115,163,164,163 |
-     math sea=$SOURCE output="sea*(1-input)+input"
-     ''',stdin=0)
+x = 205
+y = 246
+w = 4
 
-Plot('frame',
+Flow('frame.asc',None,
+     'echo %s n1=10 data_format=ascii_int in=$TARGET' % \
+     string.join(map(str,(x,y,x+w,y,x+w,y+w,x,y+w,x,y))))
+Plot('frame','frame.asc',
      '''
-     grey transp=n yreverse=n clip=40 title="Sea of Galilee - patch"
+     dd type=complex form=native |
+     graph min1=198 max1=212 min2=233 max2=257 pad=n plotfat=10 plotcol=3
+     wantaxis=n wanttitle=n
      ''')
+Plot('sea2',grey('Sea of Galilee - patch'))
+Plot('frame2','sea2 frame','Overlay')
 
-Result('galsea','sea frame','SideBySideAniso')
+Result('galsea','sea frame2','SideBySideAniso')
+
+for case in range(3):
+    pat = 'pat%d' % case
+    n = (25,50,100)[case]
+    title = ('sparse','medium','dense')[case]
+    Galilee(pat,n,n,xmin=x,xmax=x+w,ymin=y,ymax=y+w)
+    Plot(pat,
+         grey('Patch - %s grid' % title) +
+         ' clip=20 bias=20 allpos=n labelsz=12 titlesz=15')
+
+Result('galpat','pat0 pat1 pat2','SideBySideAniso')
      
 End()

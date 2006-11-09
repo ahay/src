@@ -7,7 +7,7 @@ Flow('data','galilee.h','dd form=native')
 Flow('mask','data','window n1=1 f1=2 | mask max=%g' % base)
 Flow('triplets','data mask','headerwindow mask=${SOURCES[1]}')
 
-def Galilee(name,nx=280,ny=440,interp=1):
+def Galilee(name,nx=280,ny=440,interp=1,xmin=198,xmax=212,ymin=233,ymax=257):
     '''Extracts the Sea of Galiee dataset and bins it'''
     global base
 
@@ -16,7 +16,6 @@ def Galilee(name,nx=280,ny=440,interp=1):
          window n1=1 f1=2 |
          math output=%g-input |
          bin interp=%d xkey=0 ykey=1 head=$SOURCE
-         xmin=198 xmax=212 ymin=233 ymax=257
-         nx=%d ny=%d
-         ''' % (base,interp,nx,ny))
+         xmin=%d xmax=%d ymin=%d ymax=%d nx=%d ny=%d
+         ''' % (base,interp,xmin,xmax,ymin,ymax,nx,ny))
  
