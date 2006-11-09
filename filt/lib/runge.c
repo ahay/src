@@ -74,11 +74,13 @@ float sf_ode23 (float t /* time integration */,
 	    yk[i] = y[i] + 0.5*h*k[0][i];
 	}
       
+	if (term != NULL && term (par, yk)) return t1;
 	rhs (par, yk, k[1]); 
 	for (i=0; i < dim; i++) {
 	    yk[i] = y[i] + h*(2.0*k[1][i]-k[0][i]);
 	}
       
+	if (term != NULL && term (par, yk)) return t1;
 	rhs (par, yk, k[2]); 
 	pass = true;
 	for (i=0; i < dim; i++) {	    

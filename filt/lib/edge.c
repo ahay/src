@@ -19,9 +19,9 @@
 
 #include "edge.h"
 
-void grad2 (int n          /* data size */, 
-	    const float *x /* input trace [n] */, 
-	    float *w       /* output gradient squared [n] */)
+void sf_grad2 (int n          /* data size */, 
+	       const float *x /* input trace [n] */, 
+	       float *w       /* output gradient squared [n] */)
 /*< centered finite-difference gradient >*/
 {
     int i;
@@ -35,9 +35,9 @@ void grad2 (int n          /* data size */,
     w[n-1] = 0.;
 }
 
-void sobel (int n1, int n2         /* data size */, 
-	    float **x              /* input data [n2][n1] */, 
-	    float **w1, float **w2 /* output gradient components [n2][n1] */)
+void sf_sobel (int n1, int n2         /* data size */, 
+	       float **x              /* input data [n2][n1] */, 
+	       float **w1, float **w2 /* output gradient [n2][n1] */)
 /*< Sobel's 9-point gradient >*/
 {
     int i1, i2;
@@ -61,9 +61,9 @@ void sobel (int n1, int n2         /* data size */,
     }
 }
 
-void sobel2 (int n1, int n2  /* data size */, 
-	    float **x        /* input data [n2][n1] */, 
-	    float **w        /* output gradient squared [n2][n1] */)
+void sf_sobel2 (int n1, int n2  /* data size */, 
+		float **x        /* input data [n2][n1] */, 
+		float **w        /* output gradient squared [n2][n1] */)
 /*< Sobel's gradient squared >*/
 {
     int i1, i2;
@@ -88,9 +88,9 @@ void sobel2 (int n1, int n2  /* data size */,
     }
 }
 
-void sobel32 (int n1, int n2, int n3  /* data size */, 
-	      float ***x              /* input data [n3][n2][n1] */, 
-	      float ***w              /* output gradient squared */)
+void sf_sobel32 (int n1, int n2, int n3  /* data size */, 
+		 float ***x              /* input data [n3][n2][n1] */, 
+		 float ***w              /* output gradient squared */)
 /*< Sobel's gradient squared in 3-D>*/
 {
     int i1, i2, i3;

@@ -23,7 +23,6 @@
 /*^*/
 
 #include "impl1.h"
-#include "edge.h"
 
 static float t, *w, *d1, *w1;
 static int nstep, n, nclip;
@@ -92,7 +91,7 @@ void impl1_apply (float *x)
 
 
     for (istep=0; istep < nstep; istep++) {
-	grad2(n,x,w);
+	sf_grad2(n,x,w);
 
 	for (i=0; i < n; i++) {
 	    w1[i] = w[i];

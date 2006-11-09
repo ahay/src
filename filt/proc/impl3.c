@@ -6,7 +6,6 @@
 /*^*/
 
 #include "impl3.h"
-#include "edge.h"
 
 static float t1, t2, t3, ***y, ***z, ***w, ***ww, ***t, *dist;
 static float *tmp1, *tmp2, *tmp3, *d1, *d2, *d3, *w1, *w2, *w3; 
@@ -126,7 +125,7 @@ void impl3_set(float *** x)
     int i;
     float a, xsum, wsum, *tmp;
 
-    sobel32(n1,n2,n3,x,w);
+    sf_sobel32(n1,n2,n3,x,w);
     tmp = ww[0][0];
     
     for (i=0; i < n; i++) {

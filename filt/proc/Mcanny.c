@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "edge.h"
-
 int main(int argc, char* argv[])
 {
     int n1, n2, n3, i1, i2, i3, j1, j2, k1, k2, nedge, nold, nmin, nmax, n12;
@@ -60,7 +58,7 @@ int main(int argc, char* argv[])
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp[0],n12,in);
 	/* gradient computation */
-	sobel(n1,n2,pp,w1,w2);
+	sf_sobel(n1,n2,pp,w1,w2);
 
 	for (i2=0; i2 < n2; i2++) {
 	    for (i1=0; i1 < n1; i1++) {

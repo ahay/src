@@ -6,7 +6,6 @@
 /*^*/
 
 #include "impl2.h"
-#include "edge.h"
 
 static float t1, t2, **y, **w, **ww, *tmp, *d1, *d2, *w1, *w2, **t, *dist;
 static int nstep, n1, n2, n, nclip, ns, nsnap;
@@ -105,7 +104,7 @@ void impl2_set(float ** x)
     int i;
     float a, xsum, wsum;
 
-    sobel2(n1,n2,x,w);
+    sf_sobel2(n1,n2,x,w);
 
     for (i=0; i < n; i++) {
 	tmp[i] = w[0][i];

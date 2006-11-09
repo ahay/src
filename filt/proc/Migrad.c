@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 #include "igrad1.h"
-#include "edge.h"
 
 int main(int argc, char* argv[])
 {
@@ -45,7 +44,7 @@ int main(int argc, char* argv[])
     for (i2=0; i2 < n2; i2++) {
 	sf_floatread(pp,n1,in);
 	if (square) {
-	    grad2 (n1,pp,qq);
+	    sf_grad2 (n1,pp,qq);
 	} else {
 	    igrad1_lop (false,false,n1,n1,pp,qq);
 	}

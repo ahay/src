@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include "edge.h"
 
 int main(int argc, char* argv[])
 {
@@ -40,7 +39,7 @@ int main(int argc, char* argv[])
 
     for (i3=0; i3 < n3; i3++) {
 	sf_floatread(pp[0],n1*n2,in);
-	sobel2(n1,n2,pp,qq);
+	sf_sobel2(n1,n2,pp,qq);
 	sf_floatwrite(qq[0],n1*n2,out);
     }
 
