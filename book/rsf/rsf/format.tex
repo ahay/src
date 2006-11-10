@@ -277,7 +277,7 @@ bash$ < sin.rsf sfdisfil
 \end{verbatim}
 Converting the data to the integer type:
 \begin{verbatim}
-bash$ < sin.rsf sfdd data_format=native_int > isin.rsf
+bash$ < sin.rsf type=int > isin.rsf
 bash$ sfin isin.rsf
 isin.rsf:
     in="/tmp/isin.rsf@"
@@ -289,7 +289,7 @@ bash$ < isin.rsf sfdisfil
 \end{verbatim}
 Converting the data to the ASCII form:
 \begin{verbatim}
-bash$ < sin.rsf sfdd data_format=ascii_float > asin.rsf
+bash$ < sin.rsf sfdd form=ascii > asin.rsf
 bash$ < asin.rsf sfdisfil
    0:             0        4.794        8.415        9.975        9.093
    5:         5.985        1.411       -3.508       -7.568       -9.775

@@ -7,21 +7,17 @@ Flow('data',data,'dd form=native')
 
 Result('data','grey title=Data')
 
-Flow('fft','data',
-     '''
-     pad beg2=650 beg1=2048 n2out=2048 n1out=4096 |
-     scale axis=2 | rtoc | fft3 axis=1 pad=1 | fft3 pad=1 inv=y
-     ''')
-Flow('fft2','fft','math output="conj(input)" ')
+Flow('pad','data','pad beg2=650 beg1=2048 n2out=2048 n1out=4096')
 
-# INVERSION WITH EPSILON
+Flow('fft','pad',
+     'scale axis=2 | rtoc | fft3 axis=1 pad=1 | fft3 pad=1 inv=y')
+
 eps = 0.001
-Flow('inv','fft fft2',
-     'math c=${SOURCES[1]} output="c/(c*input+%g)" ' % eps)
+Flow('inv','fft',
+     'math output="conj(input)/(conj(input)*input+%g)" ' % eps)
 
 Flow('back','inv',
      'fft3 pad=1 | fft3 axis=1 pad=1 inv=y | real')
-
 
 Result('back',
        '''
@@ -29,19 +25,19 @@ Result('back',
        grey title="Inverse Data"
        ''')
 
-Flow('mult','back',
+Flow('sig','back',
      '''
-     mutter t0=-1 v0=-20000 |
+     mutter t0=-1 v0=20000 hyper=y | cut min1=-1 | 
      scale axis=2 | rtoc | fft3 axis=1 pad=1 | fft3 pad=1 inv=y |
      math output="conj(input)/(conj(input)*input+%g)" |
      fft3 pad=1 | fft3 axis=1 pad=1 inv=y | real
      ''' % eps)
 
-Result('mult',
+Result('sig',
        '''
        window f2=650 n2=748 min1=0 n1=1216 |
        mutter t0=1 v0=20000 |
-       grey title="Predicted Multiples"
+       grey title="Filtered Data"
        ''')
      
 End()
