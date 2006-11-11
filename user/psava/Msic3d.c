@@ -261,7 +261,7 @@ int main(int argc, char* argv[])
 	    }
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,i1,i2,i3,m1,m2,m3,h1,h2,h3,g1,g2,g3,j1,j2,j3,wo) shared(ia,ib,n1,n2,n3,nl,ss,ww,dd,k1,k2,k3)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,i1,i2,i3,m1,m2,m3,h1,h2,h3,g1,g2,g3,j1,j2,j3,wo) shared(ia,ib,n1,n2,n3,nl,ts,tr,ww,us,ur,k1,k2,k3)
 #endif
 	    for(    il=0;il<2*nl+1;il++) {
 		for(ic=0;ic<nc;    ic++) {
