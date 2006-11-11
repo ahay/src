@@ -369,8 +369,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,ro,co,c1x,c1z,c2x,c2z,idx,idz)
 #endif
-	    for (ix=nop; ix<nx2-nop; ix++) {
-		for (iz=nop; iz<nz2-nop; iz++) {
+	    for(    ix=nop; ix<nx2-nop; ix++) {
+		for(iz=nop; iz<nz2-nop; iz++) {
 
 		    /* 4th order Laplacian operator */
 		    ud[ix][iz] = 
@@ -392,8 +392,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix) shared(nop,nx2,nz2,ud,uo,co,c1x,c1z,c2x,c2z)
 #endif
-	    for (ix=nop; ix<nx2-nop; ix++) {
-		for (iz=nop; iz<nz2-nop; iz++) {
+	    for(    ix=nop; ix<nx2-nop; ix++) {
+		for(iz=nop; iz<nz2-nop; iz++) {
 
 		    /* 4th order Laplacian operator */
 		    ud[ix][iz] = 
@@ -418,8 +418,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,ud,uo,um,up,vp,dt2)
 #endif
-	for (ix=0; ix<nx2; ix++) {
-	    for (iz=0; iz<nz2; iz++) {
+	for(    ix=0; ix<nx2; ix++) {
+	    for(iz=0; iz<nz2; iz++) {
 
 		/* time step and velocity scale*/
 		up[ix][iz] = 2*uo[ix][iz] - 
@@ -480,8 +480,8 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(ix,iz) shared(nx2,nz2,uo,um,ud,tt)
 #endif
-	    for (ix=0; ix<nx2; ix++) {
-		for (iz=0; iz<nz2; iz++) {
+	    for(    ix=0; ix<nx2; ix++) {
+		for(iz=0; iz<nz2; iz++) {
 		    uo[ix][iz] *= tt[ix][iz];
 		    um[ix][iz] *= tt[ix][iz];
 		    ud[ix][iz] *= tt[ix][iz];
@@ -509,10 +509,7 @@ int main(int argc, char* argv[])
 	/* write data */
 	sf_floatwrite(dd,nr,Fd);
     }
-    if(verb) fprintf(stderr,"\n");    
+    if(verb) fprintf(stderr,"\n");
 
-    /* write data */
-/*    sf_floatwrite(dd[0],nr*nt,Fd);*/
-    
     exit (0);
 }

@@ -80,8 +80,8 @@ int main(int argc, char* argv[])
     sf_setunit (ll,"");
 
     /* input axes */
-    a1 = sf_iaxa(Fi,1); sf_setlabel(a1,""); sf_setunit(a1,"");
-    a2 = sf_iaxa(Fi,2); sf_setlabel(a2,""); sf_setunit(a2,""); 
+    a1 = sf_iaxa(Fi,1);
+    a2 = sf_iaxa(Fi,2);
     n1 = sf_n(a1); o1=sf_o(a1); d1=sf_d(a1);
     n2 = sf_n(a2); o2=sf_o(a2); d2=sf_d(a2);
 
@@ -159,9 +159,9 @@ int main(int argc, char* argv[])
     
     /* loop over angles */
     if(verb) fprintf(stderr,"  a  \n");
-    if(verb) fprintf(stderr," %3d \n",na);
+    if(verb) fprintf(stderr,"%3d \n",na);
     for(ia=0;ia<na;ia++) {
-	if(verb) fprintf(stderr," %3d",ia);
+	if(verb) fprintf(stderr,"%3d",ia);
 
 	for(    i2=0; i2<n2; i2++) {
 	    for(i1=0; i1<n1; i1++) {	
@@ -187,7 +187,7 @@ int main(int argc, char* argv[])
 	}             // l loop
 
 	sf_floatwrite(ss[0],n1*n2,Fo);	 /* write output */
-	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b");	
+	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");	
     }                 // a loop
     if(verb) fprintf(stderr,"\n");
 

@@ -31,6 +31,8 @@ int main(int argc, char* argv[])
 
     int     nt,nz,nx, nhz,nhx,nht;
     int     it,iz,ix, ihz,ihx,iht;
+    int     jt,jz,jx;
+    int     kt,kz,kx;
 
     float **ii=NULL, ***us=NULL,***ur=NULL; /* arrays */
 
@@ -91,14 +93,14 @@ int main(int argc, char* argv[])
 	for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-SF_ABS(ihx);
 	    if(verb) fprintf(stderr,"%3d %3d",nht+iht,nhx+ihx);
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ihz,it,iz,ix,loz,hiz) shared(iht,ihx,lot,hit,lox,hix,nhz,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ihz,it,iz,ix,loz,hiz,jt,jx,jz,kt,kx,kz) shared(iht,ihx,lot,hit,lox,hix,nhz,ii,us,ur)
 #endif		
 	    for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-SF_ABS(ihz);
-		for(        it=lot; it<hit; it++) {
-		    for(    ix=lox; ix<hix; ix++) {
-			for(iz=loz; iz<hiz; iz++) {
-			    ii[ix][iz] += us[it-iht][ix-ihx][iz-ihz] 
-				*         ur[it+iht][ix+ihx][iz+ihz];
+		for(        it=lot; it<hit; it++) { jt=it-iht; kt=it+iht;
+		    for(    ix=lox; ix<hix; ix++) { jx=ix-ihx; kx=ix+ihx;
+			for(iz=loz; iz<hiz; iz++) { jz=iz-ihz; kz=iz+ihz;
+			    ii[ix][iz] += us[jt][jx][jz] 
+				*         ur[kt][kx][kz];
 			} // nz
 		    } // nx
 		} // nt
