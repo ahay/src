@@ -49,7 +49,7 @@ int main(int argc, char* argv[])
     /* inversion flag */
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
-    if (!sf_getfloat("eps",&eps)) eps=1.;
+    if (!sf_getfloat("eps",&eps)) eps=0.;
 
     a = sf_floatalloc2(n,n);
     b = sf_floatalloc2(n,n);
@@ -65,10 +65,13 @@ int main(int argc, char* argv[])
 
     if (adj) {
 	if (inv) {
-	    p = sf_floatalloc(n2);
-
+	    p = sf_floatalloc(n2);	    
+/*
 	    sf_conjgrad_init(n2,n2,n2,n2,eps,FLT_EPSILON,true,false);
 	    sf_conjgrad(NULL,kron_lop,sf_copy_lop,p,y,x,niter);
+*/
+	    sf_solver_prec (kron_lop, sf_cgstep, sf_copy_lop, n2, n2, n2,
+			    y, x, niter,  eps, "verb", true, "end");
 	} else {
 	    kron_lop(true,false,n2,n2,y,x);
 	} 

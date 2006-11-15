@@ -61,7 +61,7 @@ This geometry is particularly important because
 any model is a superposition of such point scatterers.
 The point-scatterer geometry for a point
 located at $(x,z)$ is shown in Figure~\ref{fig:pgeometry}. %
-\sideplot{pgeometry}{width=4.0in}{
+\sideplot{pgeometry}{width=3.5in}{
   Geometry of a point scatterer.
 }The equation
 for travel time  $t$  is the sum of the two travel paths is
@@ -87,6 +87,7 @@ accrue from prestack (instead of poststack) migration.
 
 \subsection{Cheops' pyramid}
 \sx{Cheops' pyramid}
+\inputdir{Math}
 \par
 Because of the importance of the point-scatterer model,
 we will go to considerable lengths to visualize the functional dependence
@@ -108,7 +109,7 @@ which is parallel to the $g$-axis.
 \par
 A view of the traveltime pyramid on the  $(s,g)$-plane
 or the  $(y,h)$-plane is shown in Figure~\ref{fig:cheop}a.
-\activeplot{cheop}{height=3.4in}{NR}{
+\plot{cheop}{height=3.4in}{
 	Left is a picture of the traveltime pyramid
 	of equation (\protect(\ref{eqn:dsrsg}))
 	for fixed  $x$  and  $z$.
@@ -116,7 +117,7 @@ or the  $(y,h)$-plane is shown in Figure~\ref{fig:cheop}a.
 	Right is a cross section through the pyramid
 	for large  $t$  (or small  $z$).  (Ottolini)
 	}
-\newslide
+%\newslide
 Notice that a cut through the pyramid at
 large  $t$  is a square, the corners of which have been smoothed.
 At very large  $t$,
@@ -168,7 +169,7 @@ giving a parabola of revolution.
 This describes the eroded peak of the pyramid.
 
 \subsection{Prestack migration ellipse}
-
+\inputdir{dmovplot}
 Denoting the horizontal coordinate $x$ of the scattering point by $y_0$
 Equation (\ref{eqn:dsrsg}) in $(y,h)$-space is
 \begin{equation}
@@ -192,11 +193,11 @@ by sliding a pencil along the string,
 keeping the string tight.
 The string keeps the total distance  $tv$  constant as is shown in
 Figure~\ref{fig:ellipse1}
-\activesideplot{ellipse1}{width=3.5in}{ER}{
+\sideplot{ellipse1}{width=3.5in}{
 	Prestack migration ellipse, the locus of all scatterers with
-	constant traveltime for source S and receiver G.
+	constant traveltime for	source S and receiver G.
 	}
-\newslide
+%\newslide
 \par
 
 Replacing depth $z$ in equation~(\ref{eqn:dsryh})
@@ -214,34 +215,35 @@ t  \eq   {1 \over 2}\
 \end{equation}
 
 \subsection{Constant offset migration}
+\inputdir{matt}
 \sx{constant-offset migration}
 \sx{migration!constant-offset}
 Considering $h$ in equation~(\ref{eqn:dsryhtau})
 to be a constant,
 enables us to write a subroutine for migrating constant-offset sections.
-Subroutine \texttt{flathyp()} \vpageref{/prog:flathyp} is easily prepared
-from subroutine \texttt{kirchfast()} \vpageref{/prog:kirchfast} by
-replacing its hyperbola equation with equation~(\ref{eqn:dsryhtau}).
-\progdex{flathyp}{const offset migration}
-The amplitude in subroutine {\tt flathyp()}
-should be improved when we have time to do so.
+%Subroutine \texttt{flathyp()} \vpageref{/prog:flathyp} is easily prepared
+%from subroutine \texttt{kirchfast()} \vpageref{/prog:kirchfast} by
+%replacing its hyperbola equation with equation~(\ref{eqn:dsryhtau}).
+%\progdex{flathyp}{const offset migration}
+%The amplitude in subroutine {\tt flathyp()}
+%should be improved when we have time to do so.
 Forward and backward responses to impulses
-of subroutine {\tt flathyp()}
-are found in Figures~\ref{fig:Cos.1} and \ref{fig:Cos.0}.
-\activesideplot{Cos.1}{width=3.in,height=3.in}{ER}{
-	Migrating impulses on a constant-offset section
-	with subroutine {\tt flathyp()}.
+%of subroutine {\tt flathyp()}
+are found in Figures~\ref{fig:Cos1} and \ref{fig:Cos0}.
+\sideplot{Cos1}{width=3.in,height=3.in}{
+	Migrating impulses on a constant-offset section.
+%	with subroutine {\tt flathyp()}.
 	Notice that shallow impulses
 	(shallow compared to $h$)
 	appear ellipsoidal
 	while deep ones appear circular.
 	}
-\newslide
-\activesideplot{Cos.0}{width=3.in,height=3.in}{ER}{
+%\newslide
+\sideplot{Cos0}{width=3.in,height=3.in}{
 	Forward modeling
-	from an earth impulse with subroutine {\tt flathyp()}.
+	from an earth impulse. % with subroutine {\tt flathyp()}.
 	}
-\newslide
+%\newslide
 
 \par
 It is not easy to show that equation (\ref{eqn:dsryh}) can be
@@ -317,6 +319,7 @@ An \bx{ellipse} in earth model space corresponds
 to an impulse on a constant-offset section.
 
 \section{INTRODUCTION TO DIP}
+\inputdir{XFig}
 We can consider a data space to be a superposition of points
 and then analyze the point response,
 or we can consider data space
@@ -329,10 +332,10 @@ are more like observational data and earth models.
 The simplest environment for reflection data
 is a single horizontal reflection interface,
 which is shown in Figure~\ref{fig:simple}.
-\activeplot{simple}{height=2.5in}{NR}{
+\plot{simple}{height=2.5in}{
 	Simplest earth model. 
 	}
-\newslide
+%\newslide
 As expected, the zero-offset section mimics the earth model.
 The common-midpoint gather is a hyperbola
 whose asymptotes are straight lines
@@ -367,10 +370,10 @@ If you wish to avoid thinking of
 wave propagation along the air-earth interface
 you can take the reflector to be inclined a slight angle from the vertical,
 as in Figure~\ref{fig:vertlay}.
-\activeplot{vertlay}{height=2.5in}{NR}{
+\plot{vertlay}{height=2.5in}{
 	Near-vertical reflector, a gather, and a section.
 	}
-\newslide
+%\newslide
 \par
 Figure~\ref{fig:vertlay} shows that the travel time
 does not change as the offset changes.
@@ -404,17 +407,18 @@ reflects waves in all directions.
 This geometry is particularly important because
 any model is a superposition of such point scatterers.
 Figure~\ref{fig:twopoint} shows an example.
-\activeplot{twopoint}{height=2.4in}{NR}{
+\plot{twopoint}{height=2.4in}{
 	Response of two point scatterers.
 	Note the flat spots.
 	}
-\newslide
+%\newslide
 The curves in Figure~\ref{fig:twopoint}
 include flat spots for the same reasons
 that some of the curves in Figures~\ref{fig:simple} and \ref{fig:vertlay}
 were straight lines.
 
-\activeplot{shell}{height=6.5in}{NR}{
+\inputdir{.}
+\plot{shell}{height=6.5in}{
 %	TO SEE THIS FIGURE, RENAME IT shell. (instead of unshell)
 	Undocumented data from a recruitment brochure.
 	This data may be assumed to be of textbook quality.
@@ -423,10 +427,11 @@ were straight lines.
 	Is this a common-shotpoint gather or a
 	common-midpoint gather?  (Shell Oil Company)
 	}
-\newslide
+%\newslide
 
 \subsection{The dipping bed}
 \sx{dipping bed}
+\inputdir{XFig}
 \par
 While the traveltime curves resulting from a dipping bed are simple,
 they are not simple to derive.
@@ -468,7 +473,7 @@ In summary, dip increases the stacking velocity.
 Figure~\ref{fig:dipray} depicts some rays from a common-midpoint gather.
 %\activesideplot{dipray}{width=6in}{NR}{  I think this printed OK
 %\activesideplot{dipray}{width=3.8in}{NR}{	 SPARC printer error.
-\activesideplot{dipray}{width=3in}{NR}{
+\sideplot{dipray}{width=3in}{
 	Rays from a common-midpoint gather.
 	}
 Notice that each ray strikes the dipping bed at a different place.
@@ -490,11 +495,11 @@ shows the basic geometry along with an ``image'' source
 on another reflector of twice the dip.
 %\activesideplot{lawcos}{width=3.8in}{NR}{ SPARC printer error
 %\activesideplot{lawcos}{width=3in}{NR}{	I think this was OK.
-\activesideplot{lawcos}{width=3in}{NR}{
+\sideplot{lawcos}{width=3in}{
 	Travel time from image source at  $s'$  to  $g$  may be
 	expressed by the law of cosines.
 	}
-\newslide
+%\newslide
 For convenience, the bed intercepts the surface at  $y_0 \,=\, 0$.
 The length of the line $s'  g$ in Figure~\ref{fig:lawcos} is determined by
 the trigonometric Law of Cosines to be
@@ -523,6 +528,7 @@ at nonzero offset---it too becomes hyperbolic.
 
 
 \subsection{Randomly dipping layers}
+\inputdir{randip}
 On a horizontally layered earth,
 a common shotpoint gather looks like
 a common midpoint gather.
@@ -530,11 +536,11 @@ For an earth model of random dipping planes
 the two kinds of gathers have quite different
 traveltime curves as we see in
 Figure \ref{fig:randip}.
-\activeplot{randip}{width=6in,height=3in}{.}{
+\plot{randip}{width=6in,height=3in}{
 	Seismic arrival times on an earth of random dipping planes.
 	Left is for CSP.  Right is for CMP.
 	}
-\newslide
+%\newslide
 
 \par
 The common-shot gather is more easily understood.
@@ -582,6 +588,7 @@ becomes a ``flat top'' on
 the CMP gather in Figure \ref{fig:randip}.
 
 \par
+\inputdir{.}
 Such strong horizontal events near zero offset
 will match any velocity,
 particularly higher velocities such as primaries.
@@ -589,13 +596,13 @@ Unfortunately such noise events
 thus make a strong contribution to a CMP stack.
 Let us see how these flat-tops in offset create
 the diagonal streaks you see in midpoint in Figure \ref{fig:shelikof}.
-\activeplot{shelikof}{height=3.3in}{.}{
+\plot{shelikof}{height=3.3in}{
         CDP stack with water noise from the Shelikof Strait, Alaska.
         (by permission from
         {\em  Geophysics,}
         Larner et al.{[1983]})   % Don't remove the braces!  Latex bug!
         }
-\newslide
+%\newslide
 
 \par
 Consider 360 rocks of random sizes scattered in an exact
@@ -682,6 +689,7 @@ for events with {\em all} dips is a serious shortcoming,
 which we now wish to understand more quantitatively.
 
 \subsection{Gulf of Mexico example}
+\inputdir{krchdmo}
 \par
 Recall the Gulf of Mexico dataset presented in chapter~\ref{vela/paper:vela}.
 We did a reasonably careful job of NMO velocity analysis
@@ -700,13 +708,13 @@ This phenomenon is consistent with
 the predictions of equation~(\ref{eqn:shuki}),
 which says that dipping events 
 require a {\em higher} NMO velocity than nearby horizontal events.
-\activeplot{cvstacks}{width=6.0in}{ER}{
+\plot{cvstacks}{width=6.0in}{
 	Stacks of Gulf of Mexico data
 	with two different constant NMO velocities.
 	Press button to see a \bx{movie} in which each frame
 	is a stack with a different constant velocity.
 	}
-\newslide
+%\newslide
 %
 \par
 Another way of seeing the same conflict in the data
@@ -718,7 +726,7 @@ In this figure it is easy to see that the velocity
 which is good for the dipping event at 1.5 sec is too high
 for the horizontal events in its vicinity.
 %
-\activesideplot{velscan}{width=4.0in,height=3.3in}{ER}{
+\sideplot{velscan}{width=4.0in,height=3.3in}{
 	Velocity analysis panel of one of the panels
 	in Figure~\protect\ref{fig:cvstacks}
 	before (left) and after (right) DMO.
@@ -726,9 +734,10 @@ for the horizontal events in its vicinity.
 	the main branch at .5 sec/km, and another at .4 sec/km.
 	The faster velocity $s=.4$ is a fault-plane reflection.
 	}
-\newslide
+%\newslide
 
 \section{SHERWOOD'S DEVILISH}
+\inputdir{.}
 The migration process should be thought of as being interwoven with the
 velocity estimation process.
 J.W.C. \bx{Sherwood} [1976] indicated how the two processes,
@@ -759,11 +768,11 @@ and finally two conceptually distinct, quantitative specifications
 of the process.
 \par
 Figure~\ref{fig:digicon} contains a panel from a stacked section.
-\activeplot{digicon}{height=3.8in}{NR}{
+\plot{digicon}{height=3.8in}{
 	Conventional stacks with varying velocity.
 	(distributed by Digicon, Inc.)
 	}
-\newslide
+%\newslide
 The panel is shown several times;
 each time the stacking velocity is different.  
 It should be noted that at the low velocities,
@@ -775,12 +784,12 @@ After the
 correction was applied, the data was restacked as before.
 Figure~\ref{fig:devlish} shows that the stacking velocity
 no longer depends on the dip.
-\activeplot{devlish}{height=3.8in}{NR}{
+\plot{devlish}{height=3.8in}{
 	{\em  Devilish} 
 	stacks with varying velocity.
 	(distributed by Digicon, Inc.)
 	}
-\newslide
+%\newslide
 This means that after 
 {\em  Devilish,}
 the velocity may be determined without regard to dip.
@@ -793,18 +802,19 @@ process should provide better velocities for data with conflicting dips.
 And we can expect a better final stack as well.
 
 \section{ROCCA'S SMEAR OPERATOR}
+\inputdir{matt}
 Fabio \bx{Rocca} developed
 a clear conceptual model for Sherwood's dip corrections.
 Start with an impulse on a common offset section,
-and migrate it getting ellipses like in Figure~\ref{fig:Cos.1}.
-We did this with subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp}
-using some constant-offset  {\tt h}.
+and migrate it getting ellipses like in Figure~\ref{fig:Cos1}.
+%We did this with subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp}
+%using some constant-offset  {\tt h}.
 Although the result is an ellipsoidal curve,
 think of it as a row of many points along an ellipsoidal curve.
 Then diffract the image
 thus turning each of the many points into a hyperbola.
-We do this with the return path of the same subroutine {\tt flathyp()},
-however the path back is taken with {\tt h=0}.
+%We do this with the return path of the same subroutine {\tt flathyp()},
+%however the path back is taken with {\tt h=0}.
 The result is shown in Figure~\ref{fig:frocca}.
 To enhance the appearance of the figure,
 I injected an intermediate step of converting the ellipsoid
@@ -834,12 +844,13 @@ also yield a figure much like Figure~\ref{fig:frocca}.
 This warrants a more careful theoretical study
 to see how to represent the Rocca operator
 directly (rather than as a sequence of two nearly opposite operators).
-\activesideplot{frocca}{width=3in,height=2in}{ER}{
+\sideplot{frocca}{width=3in,height=2in}{
 	Rocca's prestack partial-migration operator is
 	a superposition of hyperbolas, each with its top on an ellipse.
 	}
-\newslide
+%\newslide
 \par
+\inputdir{Math}
 To get a sharper, more theoretical view of the Rocca operator,
 Figure~\ref{fig:rocca2} shows line drawings of the curves in
 a Rocca construction.
@@ -856,12 +867,13 @@ and the velocity independent ellipse continues is, however,
 velocity dependent as we will see.
 The Rocca operator is along the curve of osculation in Figure~\ref{fig:rocca2},
 i.e.,~the smile-shaped curve where the hyperbolas reinforce one another.
-\activeplot{rocca2}{width=5in}{NR}{
+\plot{rocca2}{width=5in}{
 	Rocca's smile. (Ronen)
 	}
-\newslide
+%\newslide
 
 \subsection{Push and pull}
+\inputdir{matt}
 %A program is a ``pull'' program if the loop creating the output
 %covers each location in the output and gathers the input from wherever
 %it may be.
@@ -968,21 +980,23 @@ As before, to make the hyperbolas more distinct,
 I broke the circle into dots along the circle
 and show the result in Figure \ref{fig:sergey}.
 The whole truth is a little more complicated.
-Subroutine \texttt{flathyp()} \vpageref{/prog:flathyp} implements $\bold H$ and $\bold H'$.
+Subroutine %\texttt{flathyp()} \vpageref{/prog:flathyp} 
+implements $\bold H$ and $\bold H'$.
 Since I had no subroutine for $\bold C$,
 figures \ref{fig:frocca} and \ref{fig:sergey}
 were actually made with only $\bold H$ and $\bold H'$.
-\activesideplot{sergey}{width=3in,height=2in}{ER}{
+\sideplot{sergey}{width=3in,height=2in}{
 	The adjoint of Rocca's smile
 	is a superposition of flattened hyperbolas,
 	each with its top on a circle.
         }
-\newslide
+%\newslide
 We discuss the
 $\bold C'_0 \bold C_h$
 representation of $\bold R$ in the next section.
 
 \subsection{Dip moveout with $v(z)$}
+\inputdir{yalei}
 It is worth noticing that the concepts in this section
 are not limited to constant velocity
 but apply as well to $v(z)$.
@@ -1014,27 +1028,28 @@ the hyperbola operator.
 \par
 A summary of the meaning of the Rocca smile
 and its adjoint is found in Figures
-\ref{fig:yalei2} and \ref{fig:yalei1},
-which were computed using subroutine
-\texttt{flathyp()} \vpageref{/prog:flathyp}.
+\ref{fig:yalei2} and \ref{fig:yalei1}.
+%which were computed using subroutine
+%\texttt{flathyp()} \vpageref{/prog:flathyp}.
 
-\activeplot{yalei2}{width=6.in,height=1.5in}{ER}{ 
+\plot{yalei2}{width=6.in,height=1.5in}{ 
 	Impulses on a zero-offset section migrate
 	to semicircles.
 	The corresponding constant-offset section
 	contains the adjoint of the Rocca smile.
 	}
-\newslide
+%\newslide
 
-\activeplot{yalei1}{width=6.in,height=1.5in}{ER}{ 
+\plot{yalei1}{width=6.in,height=1.5in}{ 
 	Impulses on a constant-offset section
 	become ellipses in depth and
 	Rocca smiles on the zero-offset section.
 	}
-\newslide
+%\newslide
 
 
 \section{GARDNER'S SMEAR OPERATOR}
+\inputdir{XFig}
 A task, even in constant velocity media,
 is to find analytic expressions for the travel time
 in the Rocca operator.
@@ -1069,13 +1084,13 @@ to an impulse on the zero-offset section.
 The set of these impulses in the zero offset section
 is the \bx{DMO}+NMO impulse response for a given nonzero offset event.
 
-\activeplot{ell}{width=4.in,height=3.in}{NR}{
+\plot{ell}{width=4.in,height=3.in}{
 	The nonzero offset migration impulse response is an ellipse.
 	This ellipse can be mapped as a superposition
 	of tangential circles with centers along the survey line.
 	These circles correspond to zero offset migration impulse responses.
 	}
-\newslide
+%\newslide
 
 \subsection{Restatement of ellipse equations}
 Recall equation~(\ref{eqn:canellipse})
@@ -1158,6 +1173,7 @@ includes both dip moveout \bx{DMO} and NMO.
 %please see Forel and Gardner's paper \shortcite{GEO53.05.06040610}.
 
 \section{DMO IN THE PROCESSING FLOW}
+\inputdir{matt}
 \par
 Instead of implementing equation (\ref{eqn:opdmo})
 in one step we can split it into two steps. 
@@ -1191,32 +1207,32 @@ Backsolving equation~(\ref{eqn:dmoeq}) for $t_n$ gives
 	{t_0^2 \over 1-b^2/h^2 } .
 \end{equation}
 
-Like subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp},
-our \bx{DMO} subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch} is based on
-subroutine~\texttt{kirchfast()} \vpageref{/prog:kirchfast}.
-It is just the same,
-except where {\tt kirchfast()} has a hyperbola
-we put equation~(\ref{eqn:dmoprog}).
-In the program,
-    the variable $t_0$ is called {\tt z}
-and the variable $t_n$ is called {\tt t}.
-Note, that the velocity {\tt velhalf} does exclusively
-occur in the break condition
-(which we have failed to derive,
-but which is where the circle and ellipse touch at $z=0$).
-\progdex{dmokirch}{fast Kirchhoff dip-moveout}
+%Like subroutine~\texttt{flathyp()} \vpageref{/prog:flathyp},
+%our \bx{DMO} subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch} is based on
+%subroutine~\texttt{kirchfast()} \vpageref{/prog:kirchfast}.
+%It is just the same,
+%except where {\tt kirchfast()} has a hyperbola
+%we put equation~(\ref{eqn:dmoprog}).
+%In the program,
+%    the variable $t_0$ is called {\tt z}
+%and the variable $t_n$ is called {\tt t}.
+%Note, that the velocity {\tt velhalf} does exclusively
+%occur in the break condition
+%(which we have failed to derive,
+%but which is where the circle and ellipse touch at $z=0$).
+%\progdex{dmokirch}{fast Kirchhoff dip-moveout}
 
-Figures ~\ref{fig:dmatt} and ~\ref{fig:coffs}
-were made with subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch}. 
-Notice the big noise reduction over Figure~\ref{fig:frocca}.
-\activesideplot{dmatt}{width=3.in}{ER}{
+In figures ~\ref{fig:dmatt} and ~\ref{fig:coffs},
+%were made with subroutine~\texttt{dmokirch()} \vpageref{/prog:dmokirch}. 
+notice the big noise reduction over Figure~\ref{fig:frocca}.
+\sideplot{dmatt}{width=3.in}{
 	Impulse response of DMO and NMO
 	}
-\newslide
-\activesideplot{coffs}{width=3.in}{ER}{
+%\newslide
+\sideplot{coffs}{width=3.in}{
 	Synthetic Cheop's pyramid
 	}
-\newslide
+%\newslide
 
 \subsection{Residual NMO}
 \sx{residual NMO}
@@ -1277,6 +1293,7 @@ by using $\bold R=\bold H_0\bold H_h'$ from
 equation (\ref{eqn:fourR}).
 
 \subsection{Results of our DMO program}
+\inputdir{krchdmo}
 \par
 We now return to the field data from the Gulf of Mexico,
 which we have processed earlier
@@ -1294,19 +1311,19 @@ in this chapter and in chapter~\ref{vela/paper:vela}.
 %	except that dip-moveout has been applied to the data.
 %	}\newslide
 
-\activeplot{wgdmostk}{width=6.20in,height=7.8in}{ER}{
+\plot{wgdmostk}{width=6.20in,height=7.8in}{
 	Stack after the dip-moveout correction.
 	Compare this result
 	with Figure~\protect\ref{vela/fig:agcstack}.
 	This one has fault plane reflections to the right of the faults.
 	}
-\newslide
+%\newslide
 
-\activeplot{wgdmomig}{width=6.20in,height=7.8in}{ER}{
+\plot{wgdmomig}{width=6.20in,height=7.8in}{
 	Kirchhoff migration of the previous figure.
 	Now the fault plane reflections jump to the fault.
 	}
-\newslide
+%\newslide
 
 %HEY, MAYBE THEY WOULD LIKE TO SEE SOME CONSTANT OFFSET MIGRATIONS
 %FOLLOWED BY STACK?

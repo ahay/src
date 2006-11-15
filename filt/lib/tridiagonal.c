@@ -99,7 +99,7 @@ void sf_tridiagonal_const_define (sf_tris slv /* solver object */,
 }
 
 void sf_tridiagonal_solve (sf_tris slv /* solver object */, 
-			float* b /* in - right-hand side, out - solution */)
+			   float* b /* in - right-hand side, out - solution */)
 /*< invert the matrix >*/
 {
     int k;

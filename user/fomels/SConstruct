@@ -5,7 +5,7 @@ import configure
 progs = '''
 abalance angle angle2 approx bandpass cflow chebvc dealias deblur
 deriv dijkstra dip diplet dips divn dix dixshape dwt envelope equal
-exgr explanesignoi expsignoi fern flat flat3 focus freqest freqlet
+erf exgr explanesignoi expsignoi fern flat flat3 focus freqest freqlet
 green heat iphase kron lapfill lpf mandelbrot matmult miss2 miss3
 monof monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd ofpwd2
 patch pick pick0 pick2 planemis2 planemis3 planesignoi pmshape2

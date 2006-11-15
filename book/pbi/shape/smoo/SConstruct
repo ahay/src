@@ -94,7 +94,11 @@ Flow('spike21','spike-2 one',trismooth)
 Flow('test12','spike1 spike-2 spike12 spike21',
      'add ${SOURCES[1:4]} scale=1,1,-0.5,-0.5')
 
-Result('test12','grey allpos=y wanttitle=n label1=' ' label2=' ' screenratio=1')
+Result('test12',
+       '''
+       grey allpos=y wanttitle=n transp=n
+       unit1= unit2= label1="X Sample" label2="Y Sample" screenratio=1
+       ''')
 
 Flow('spike3',None,'spike n1=41 n2=41 n3=41 k1=21 k2=21 k3=21 d1=1 d2=1 d3=1 unit1= unit2= unit3=')
 
@@ -113,7 +117,7 @@ Result('plane',
        '''byte allpos=y gainpanel=all |
        grey3 flat=n screenratio=1 frame1=20 frame2=20 frame3=20
        point1=0.6 point2=0.6
-       label1=' ' label2=' ' label3=' ' wanttitle=n
+       label1="Y Sample" label2="X Sample" label3="Z Sample" wanttitle=n
        ''')
 
 Flow('plane2','spike3 one3 two3',

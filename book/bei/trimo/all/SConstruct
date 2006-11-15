@@ -16,5 +16,7 @@ Plot('sparse',
 
 Result('oversamp','dense sparse','SideBySideAniso')
 
+Result('nmotraj', None,'nmotraj',prefix=plprefix)
+
 End()
 

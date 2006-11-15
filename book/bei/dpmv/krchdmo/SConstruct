@@ -36,9 +36,12 @@ for input in ('midpts','dmo'):
 Result('cvstacks','midptsfaster midptsslower','OverUnderAniso')
 Result('cvdmostks','dmofaster dmomedium dmoslower','OverUnderAniso')
 
-Flow('wgstack',['dmo','beifit'],
+Flow('wgstack','dmo beifit',
      'nmo velocity=${SOURCES[1]} slowness=y half=n | stack')
 Result('wgdmostk','wgstack','grey title="DMO Stack" ')
 
+Flow('wgdmomig','wgstack beifit',
+     'kirchnew velocity=${SOURCES[1]} | agc')
+Result('wgdmomig','grey title="Migrated DMO Stack" ')
 
 End()
