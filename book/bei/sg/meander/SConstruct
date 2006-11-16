@@ -1,0 +1,8 @@
+from rsfproj import *
+
+Fetch('meandercube.H','meander')
+
+Result('meander','meandercube.H',
+       'dd form=native | grey crowd=1')
+
+End()

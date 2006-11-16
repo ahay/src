@@ -189,6 +189,22 @@ int main(int argc, char *argv[])
 		}
 		break;
 	    case SF_CHAR:
+		nin = bufsiz*ein/eout;
+		if (nin > size) nin=size;
+		sf_charread(bufin,nin,in);
+		switch (otype) {
+		    case SF_FLOAT:
+			fbuf = (float *) bufout;
+			for (i=0; i < nin; i++) {
+			    fbuf[i] = (float) bufin[i];
+			}
+			sf_floatwrite(fbuf,nin,out);
+			break;
+		    default:
+			ddbreak (itype,otype);
+			break;
+		}
+		break;
 	    default:
 		ddbreak (itype,otype);
 		break;
