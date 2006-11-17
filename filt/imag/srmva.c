@@ -133,6 +133,8 @@ void srmva_init(bool verb_,
     so = sf_floatalloc2(alx.n,aly.n); /* slowness */
     sm = sf_floatalloc2 (nrmax,amz.n); /* ref slowness squared*/
     nr = sf_intalloc          (amz.n); /* nr of ref slownesses */
+
+    /* find reference slownesses */
     for (iz=0; iz<amz.n; iz++) {
 	fslice_get(Bslow,iz,ss[0]);
 
@@ -146,21 +148,24 @@ void srmva_init(bool verb_,
     }
 
     /* allocate wavefield storage */
-    bw_s = sf_complexalloc2(amx.n,amy.n);
-    bw_r = sf_complexalloc2(amx.n,amy.n);
 
-    ps   = sf_complexalloc2(amx.n,amy.n);
+    /* background */
+    bw_s  = sf_complexalloc2(amx.n,amy.n);
+    bw_r  = sf_complexalloc2(amx.n,amy.n);
 
-    ds_s = sf_complexalloc2(amx.n,amy.n);
-    ds_r = sf_complexalloc2(amx.n,amy.n);
-    ps_s = sf_complexalloc2(amx.n,amy.n);
-    ps_r = sf_complexalloc2(amx.n,amy.n);
+    /* slowness perturbations */
+    ds_s  = sf_complexalloc2(amx.n,amy.n);
+    ds_r  = sf_complexalloc2(amx.n,amy.n);
+    ps_s  = sf_complexalloc2(amx.n,amy.n);
+    ps_r  = sf_complexalloc2(amx.n,amy.n);
 
-    pw_s = sf_complexalloc2(amx.n,amy.n);
-    pw_r = sf_complexalloc2(amx.n,amy.n);
-    dw_s = sf_complexalloc2(amx.n,amy.n);
-    dw_r = sf_complexalloc2(amx.n,amy.n);
+    /* wavefield perturbations */
+    pw_s  = sf_complexalloc2(amx.n,amy.n);
+    pw_r  = sf_complexalloc2(amx.n,amy.n);
+    dw_s  = sf_complexalloc2(amx.n,amy.n);
+    dw_r  = sf_complexalloc2(amx.n,amy.n);
 
+    ps    = sf_complexalloc2(amx.n,amy.n);
     pwsum = sf_complexalloc2(amx.n,amy.n);
     pssum = sf_complexalloc2(amx.n,amy.n);
 }
@@ -198,7 +203,7 @@ void srmva_close(void)
 
 /*------------------------------------------------------------*/
 
-void srmva(bool inv     /* forward/adjoint flag */, 
+void srmva(bool adj     /* forward/adjoint flag */, 
 	   fslice Pslow /* slowness perturbation [nz][nmy][nmx] */,
 	   fslice Pimag /*    image perturbation [nz][nmy][nmx] */)
 /*< Apply forward/adjoint SR MVA >*/
@@ -206,10 +211,10 @@ void srmva(bool inv     /* forward/adjoint flag */,
     int imz,iw,imy,imx,ilx,ily;
     sf_complex ws,wr;
 
-    if(inv) {
+    if(adj) {
 	LOOP( pssum[imy][imx] = sf_cmplx(0.0,0.0); );
 	for (imz=0; imz<amz.n; imz++) {
-	    fslice_put(Pslow,imz,ps[0]);
+	    fslice_put(Pslow,imz,pssum[0]);
 	}
     } else {
 	LOOP( pwsum[imy][imx] = sf_cmplx(0.0,0.0); );
@@ -225,7 +230,7 @@ void srmva(bool inv     /* forward/adjoint flag */,
 	LOOP( dw_s[imy][imx]=sf_cmplx(0.,0.); 
 	      dw_r[imy][imx]=sf_cmplx(0.,0.); );
 	
-	if (inv) { /* adjoint: image -> slowness */
+	if (adj) { /* adjoint: image -> slowness */
 	    ws = sf_cmplx(eps*aw.d,-(aw.o+iw*aw.d)); /* anti-causal */
 	    wr = sf_cmplx(eps*aw.d,+(aw.o+iw*aw.d)); /*      causal */
 
@@ -238,21 +243,30 @@ void srmva(bool inv     /* forward/adjoint flag */,
 		fslice_get(Bwfls,iw*amz.n+imz,bw_s[0]);
 		fslice_get(Bwflr,iw*amz.n+imz,bw_r[0]);
 
-		if(imz>0) { /* continuation */
+		if(imz<amz.n-1) { /* continuation */
 		    fslice_get(Bslow,imz-1,ss[0]);
-		    ssr_ssf(ws,dw_s,so,ss,nr[imz-1],sm[imz-1]);
-		    ssr_ssf(wr,dw_r,so,ss,nr[imz-1],sm[imz-1]);
+		    ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
+		    ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
 		}
 
 		/* scattering dI -> dS */
 		fslice_get(Pimag,imz,pwsum[0]);
-
 #ifdef SF_HAS_COMPLEX_H
 		LOOP( dw_s [imy][imx] +=
 		      bw_r [imy][imx] * conjf(pwsum[imy][imx]);
 		      dw_r [imy][imx] += 
 		      bw_s [imy][imx] *       pwsum[imy][imx];
+		    );
+
+		lsr_w2s(ws,bw_s,so,dw_s,ps_s);
+		lsr_w2s(wr,bw_r,so,dw_r,ps_r);
+
+		fslice_get(Pslow,imz,pssum[0]);
+
+		LOOP(pssum[imy][imx] += 
+		     ps_s [imy][imx]+ 
+		     ps_r [imy][imx];
 		    );
 #else
 		LOOP( dw_s [imy][imx] = 
@@ -262,17 +276,12 @@ void srmva(bool inv     /* forward/adjoint flag */,
 		      sf_cadd(dw_r [imy][imx],
 			      sf_cmul(bw_s [imy][imx],      pwsum[imy][imx]));
 		    );
-#endif
+
 		lsr_w2s(ws,bw_s,so,dw_s,ps_s);
 		lsr_w2s(wr,bw_r,so,dw_r,ps_r);
 
 		fslice_get(Pslow,imz,pssum[0]);
-#ifdef SF_HAS_COMPLEX_H
-		LOOP(pssum[imy][imx] += 
-		     ps_s [imy][imx]+ 
-		     ps_r [imy][imx];
-		    );
-#else
+
 		LOOP(pssum[imy][imx] = 
 		     sf_cadd(pssum[imy][imx], 
 			     sf_cadd(ps_s [imy][imx], 
@@ -298,42 +307,38 @@ void srmva(bool inv     /* forward/adjoint flag */,
 		lsr_s2w(ws,bw_s,so,pw_s,ps);
 		lsr_s2w(wr,bw_r,so,pw_r,ps);
 
+		/* cross-correlation of background and perturbation wavefields */
 #ifdef SF_HAS_COMPLEX_H
 		LOOP(dw_s[imy][imx] += pw_s[imy][imx]; );
 		LOOP(dw_r[imy][imx] += pw_r[imy][imx]; );
-#else
-		LOOP(dw_s[imy][imx] = 
-		     sf_cadd(dw_s[imy][imx],pw_s[imy][imx]); );
-		LOOP(dw_r[imy][imx] = 
-		     sf_cadd(dw_r[imy][imx],pw_r[imy][imx]); );
-#endif
-		fslice_get(Pimag,imz+1,pwsum[0]);
-#ifdef SF_HAS_COMPLEX_H
+		fslice_get(Pimag,imz,pwsum[0]);
 		LOOP(     pwsum[imy][imx] += 
 		     conjf(bw_s[imy][imx]) * dw_r[imy][imx] +
 		     conjf(dw_s[imy][imx]) * bw_r[imy][imx]; 
 		    );
+		fslice_put(Pimag,imz,pwsum[0]);
 #else
+		LOOP(dw_s[imy][imx] = sf_cadd(dw_s[imy][imx],pw_s[imy][imx]); );
+		LOOP(dw_r[imy][imx] = sf_cadd(dw_r[imy][imx],pw_r[imy][imx]); );
+		fslice_get(Pimag,imz,pwsum[0]);
 		LOOP(     pwsum[imy][imx] =
-			  sf_cadd(
-			      pwsum[imy][imx],
-			      sf_cadd(
-				  sf_cmul(conjf(bw_s[imy][imx]),
-					  dw_r[imy][imx]),
-				  sf_cmul(conjf(dw_s[imy][imx]),
-					  bw_r[imy][imx]))); 
+			  sf_cadd( pwsum[imy][imx],
+				   sf_cadd( sf_cmul(conjf(bw_s[imy][imx]),dw_r[imy][imx]),
+					    sf_cmul(conjf(dw_s[imy][imx]),bw_r[imy][imx]))); 
 		    );
+		fslice_put(Pimag,imz,pwsum[0]);
 #endif
-		fslice_put(Pimag,imz+1,pwsum[0]);
-		/* end scattering */
+		/* end scattering dS -> dI */
 
 		if(imz<amz.n-1) { /* continuation */
 		    fslice_get(Bslow,imz+1,ss[0]);
 		    ssr_ssf(ws,dw_s,so,ss,nr[imz],sm[imz]);
 		    ssr_ssf(wr,dw_r,so,ss,nr[imz],sm[imz]);
 		    SOOP( so[ily][ilx] = ss[ily][ilx]; );
-		}
-	    }
-	}
-    }
+		} /* end if */
+
+	    } /* loop z */
+	} /* end if adjoint */
+    } /* loop w*/
+
 }

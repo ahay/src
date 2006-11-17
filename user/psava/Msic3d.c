@@ -141,18 +141,17 @@ int main(int argc, char* argv[])
 
     ii=sf_floatalloc2(n1,n2); /* image */ 
 
-    gg=sf_floatalloc (   2*nl+1);
-    ww=sf_floatalloc4(nc,2*nl+1,na,nb);
-    k1=sf_intalloc4  (nc,2*nl+1,na,nb);
-    k2=sf_intalloc4  (nc,2*nl+1,na,nb);
-    k3=sf_intalloc4  (nc,2*nl+1,na,nb);
+    gg=sf_floatalloc (   nl+1);
+    ww=sf_floatalloc4(nc,nl+1,na,nb);
+    k1=sf_intalloc4  (nc,nl+1,na,nb);
+    k2=sf_intalloc4  (nc,nl+1,na,nb);
+    k3=sf_intalloc4  (nc,nl+1,na,nb);
     
 /*------------------------------------------------------------*/
     /* taper */
-    for(il=0;il<2*nl+1;il++) {
-	l = ol + (il-nl)*dl;
-	l /= (nl/2);
-	l /= sig;
+    for(il=0;il<nl+1;il++) {
+	l = ol + il*dl;
+	l/= sig;
 	gg[il] = exp(-l*l);
     }
 
@@ -166,8 +165,8 @@ int main(int argc, char* argv[])
 	    a  = oa + ia * da;
 	    a *= SF_PI/180.;
 	    
-	    for(il=0;il<2*nl+1;il++){
-		l = ol + (il-nl)*dl;   
+	    for(il=0;il<nl+1;il++){
+		l = ol + il*dl;   
 		
 		l1 = l*sin(b);        // z
 		l2 = l*cos(b)*cos(a); // x  
@@ -244,8 +243,8 @@ int main(int argc, char* argv[])
     sf_floatread(ur[0][0],n1*n2*n3,Fr);        /* read receiver wavefield */
     
     /* loop over angles */
-    if(verb) fprintf(stderr,"  b   a \n");
-    if(verb) fprintf(stderr,"%3d %3d \n",nb-1,na-1);
+    if(verb) fprintf(stderr,"  b   a\n");
+    if(verb) fprintf(stderr,"%3d %3d\n",nb-1,na-1);
 
     for(    ib=0;ib<nb;ib++) {
 	for(ia=0;ia<na;ia++) {
@@ -261,13 +260,13 @@ int main(int argc, char* argv[])
 	    }
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,i1,i2,i3,m1,m2,m3,h1,h2,h3,g1,g2,g3,j1,j2,j3,wo) shared(ia,ib,n1,n2,n3,nl,ts,tr,ww,us,ur,k1,k2,k3)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,i1,i2,i3,m1,m2,m3,j1,j2,j3,wo) shared(ia,ib,n1,n2,n3,nl,ts,tr,ww,us,ur,k1,k2,k3,h1,h2,h3,g1,g2,g3)
 #endif
 	    for(    il=0;il<2*nl+1;il++) {
 		for(ic=0;ic<nc;    ic++) {
-		    m1=k1[ib][ia][il][ic]; h1 = SF_ABS(m1); g1 = n1-h1;
-		    m2=k2[ib][ia][il][ic]; h2 = SF_ABS(m2); g2 = n2-h2;
-		    m3=k3[ib][ia][il][ic]; h3 = SF_ABS(m3); g3 = n3-h3;
+		    m1=k1[ib][ia][il][ic]; h1=m1; g1=n1-m1; 
+		    m2=k2[ib][ia][il][ic]; h2=m2; g2=n2-m2; 
+		    m3=k3[ib][ia][il][ic]; h3=m3; g3=n3-m3; 
 		    wo=ww[ib][ia][il][ic];
 		    
 		    for(        i3=h3; i3<g3; i3++) { j3=i3+m3;

@@ -48,12 +48,15 @@ int main(int argc, char* argv[])
     int     nt,nz,nx,na,nl,nb;
     int        it,ix,ia,il,ib;
     int        jt,jx;
-    float      ht,hx;
+    int        mt,mx;
+    int        ht,hx;
+    int        gt,gx;
     float oa,da,a;
     float ol, dl,l,lt,lx;
     float oz,dz;
     float ot,dt,ft;
     float ox,dx,fx;
+    float wo;
 
     int ic;
     int ompchunk; 
@@ -181,20 +184,19 @@ int main(int argc, char* argv[])
 
     for (; nz > 0; nz -= nb) {
 	if (nb > nz) nb=nz;
-	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nz,nb);
 
 	sf_floatread(us[0][0],nt*nx*nb,Fs);
 	sf_floatread(ur[0][0],nt*nx*nb,Fr);
 
-	for(            ib=0;  ib<nb;    ib++) {
-	    if(verb) fprintf(stderr,"\b\b\b\b\b%d",ib);
-	    
+	if(verb) fprintf(stderr,"  z   a\n");
+	if(verb) fprintf(stderr,"%3d %3d\n",nb-1,na-1);
+	for(            ib=0;  ib<nb;    ib++) {	    
 	    for(    ix=0; ix<nx; ix++) {
 		ii[ix] = 0;
 	    }
 
 	    for(        ia=0;ia<na;    ia++) {	
-		if(verb) fprintf(stderr,"%3d",ia);
+		if(verb) fprintf(stderr,"%3d %3d",ib,ia);
 		
 		for(    ix=0; ix<nx; ix++) {
 		    for(it=0; it<nt; it++) {	
@@ -204,17 +206,18 @@ int main(int argc, char* argv[])
 		}
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,ix,it,jx,jt,ht,hx) shared(ia,kt,kx,nl,nx,nt,ts,tr,ww,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(il,ic,ix,it,mx,mt,ht,hx,gt,gx,jt,jx,wo) shared(ia,kt,kx,nl,nx,nt,ts,tr,ww,us,ur)
 #endif	
 		for(    il=0;il<2*nl+1;il++) {
 		    for(ic=0;ic<4;     ic++) {
-			jt=kt[ia][il][ic]; ht = SF_ABS(jt);
-			jx=kx[ia][il][ic]; hx = SF_ABS(jx);
-			
-			for(    ix=hx; ix<nx-hx; ix++) {
-			    for(it=ht; it<nt-ht; it++) {
-				ts[ix][it] += ww[ia][il][ic] * us[ib][ ix+jx ][ it+jt ];
-				tr[ix][it] += ww[ia][il][ic] * ur[ib][ ix+jx ][ it+jt ];
+			mt=kt[ia][il][ic]; ht = SF_ABS(mt); gt = nt - ht;
+			mx=kx[ia][il][ic]; hx = SF_ABS(mx); gx = nx - hx;
+			wo=ww[ia][il][ic];
+
+			for(    ix=hx; ix<gx; ix++) { jx = ix+mx;
+			    for(it=ht; it<gt; it++) { jt = it+mt;
+				ts[ix][it] += wo * us[ib][ jx ][ jt ];
+				tr[ix][it] += wo * ur[ib][ jx ][ jt ];
 			    } // x loop
 			}     // t loop
 		    }         // c loop
@@ -225,12 +228,9 @@ int main(int argc, char* argv[])
 			ii[ix] += ts[ix][it] * tr[ix][it];
 		    }
 		}
-
-		if(verb) fprintf(stderr,"\b\b\b");
+		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
 	    } // a loop
-
 	    sf_floatwrite(ii,nx,Fi);
-	    if(verb) fprintf(stderr,"\b\b\b\b\b");
 	} // b loop
     } // z loop
 	

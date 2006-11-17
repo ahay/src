@@ -24,7 +24,7 @@
 
 int main (int argc, char *argv[])
 {
-    bool inv;             /* forward or adjoint */
+    bool adj;             /* forward or adjoint */
     bool twoway;          /* two-way traveltime */
     bool verb;            /* verbosity */
     float eps;            /* dip filter constant */  
@@ -56,7 +56,7 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
-    if (!sf_getbool(   "inv",&inv  ))   inv = false; /* y=ADJ scat; n=FWD scat */
+    if (!sf_getbool(   "adj",&adj  ))   adj = false; /* y=ADJ scat; n=FWD scat */
     if (!sf_getbool("twoway",&twoway))twoway=  true; /* two-way traveltime */
     if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* max number of refs */
     if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
@@ -106,7 +106,7 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
 
-    if(inv) {
+    if(adj) {
 	Pi = sf_input ( "in");
 	if (SF_COMPLEX !=sf_gettype(Pi)) 
 	    sf_error("Need complex image perturbation");
@@ -147,14 +147,14 @@ int main (int argc, char *argv[])
 		nrmax,Bslow,Bwfls,Bwflr);
     
 /*    srmva_aloc();*/
-    srmva(inv,Pslow,Pimag);
+    srmva(adj,Pslow,Pimag);
 /*    srmva_free();*/
 
     srmva_close();
 
     /*------------------------------------------------------------*/
       
-    if(inv) fslice_dump(Ps,Pslow,SF_COMPLEX);
+    if(adj) fslice_dump(Ps,Pslow,SF_COMPLEX);
     else    fslice_dump(Pi,Pimag,SF_COMPLEX);
     fslice_close(Pimag);
     fslice_close(Pslow);

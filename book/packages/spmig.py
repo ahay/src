@@ -249,7 +249,7 @@ def run(img,cig,swf,rwf,slo,imc,par,clspar,cigpar):
 def s2i(dslow,dimag,swfld,rwfld,bslow,par):
     Flow(dimag,[dslow,swfld,rwfld,bslow],
          '''
-         srmva inv=n %s
+         srmva adj=n %s nsc=0
          swf=${SOURCES[1]}
          rwf=${SOURCES[2]}
          slo=${SOURCES[3]}
@@ -259,7 +259,7 @@ def s2i(dslow,dimag,swfld,rwfld,bslow,par):
 def i2s(dimag,dslow,swfld,rwfld,bslow,par):
     Flow(dslow,[dimag,swfld,rwfld,bslow],
          '''
-         srmva inv=y %s
+         srmva adj=y %s nsc=0
          swf=${SOURCES[1]}
          rwf=${SOURCES[2]}
          slo=${SOURCES[3]}

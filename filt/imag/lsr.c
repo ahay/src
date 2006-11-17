@@ -171,8 +171,6 @@ void lsr_s2w(
 	LOOP( wt[iy][ix] = pw[iy][ix]; );
 
 	for( isc=1; isc<=nsc; isc++) {
-/*	    sf_warning("FWD isc=%d csc=%g",isc,csc[isc]);*/
-
 	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = wt[iy][ix]; );
 
@@ -232,7 +230,6 @@ void lsr_w2s(
 	kweight(bs,wo);     /* k-domain weight */
 
 	for( isc=1; isc<=nsc; isc++) {
-/*	    sf_warning("ADJ isc=%d csc=%g",isc,csc[isc]);*/
 
 	    KOOP( wk[iy][ix] = sf_cmplx(0.,0.); );
 	    LOOP( wk[iy][ix] = pw[iy][ix]; );
