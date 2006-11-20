@@ -23,7 +23,7 @@ def param(par):
     if(not par.has_key('zmin')):     par['zmin']=par['oz']
     if(not par.has_key('zmax')):     par['zmax']=par['oz'] + (par['nz']-1) * par['dz']
 
-    if(not par.has_key('ratio')):    par['ratio']=(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
+    if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
     if(not par.has_key('height')):   par['height']=par['ratio']*14
 
 # ------------------------------------------------------------
