@@ -23,7 +23,7 @@ gamma = 2.5
 
 Flow('warp0','pp','math output="%g*x1" ' % (0.5*(gamma-1)))
 
-warp.warp('ap3','pp2','pscube','warp0',
+warp.warp3('ap3','ppcube','pscube','warp0',
            nx=326,
            o2=375,
            tmax=1.1,
