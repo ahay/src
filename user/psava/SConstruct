@@ -6,7 +6,8 @@ progs = '''
 awe
 afmod aborn erfdm
 off2abs off2abs3
-paradd icor xcor tcor ucor
+paradd 
+icor xcor tcor ucor laps
 ic sic sic3d lstk
 '''
 
