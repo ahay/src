@@ -49,7 +49,7 @@ complete toolbox of seismic imaging.
 We start with analyzing the traveltime relations for the basic
 Kirchhoff implementation of angle-gather time migration. The analysis
 follows Fowler's general approach to prestack time migration methods
-\cite[]{fowler}. Next, we derive formulas for the amplitude weighting
+\cite[]{SEG-1997-1571}. Next, we derive formulas for the amplitude weighting
 and discuss some frequency-domain approaches to angle gathers.
 Finally, we present simple synthetic tests of the method and discuss
 further research directions.
@@ -66,7 +66,7 @@ pair of incident and reflected rays and the line between the source
 $s$ and the receiver $r$ form a triangle in space. From the
 trigonometry of that triangle we can derive simple relationships among
 all the variables of the experiment
-\cite[]{Fomel.sep.84.179,Fomel.sep.92.159,Fomel.segab.97}. 
+\cite[]{Fomel.sep.84.179,Fomel.sep.92.159,SEG-1997-1762}.
 \par
 Introducing the dip angle $\alpha$ and the reflection angle $\gamma$,
 the total reflection traveltime $t$ can be expressed from the law of
@@ -141,7 +141,7 @@ Kirchhoff migration. The whole range of such curves for all possible
 values of $\gamma$ covers the diffraction traveltime surface -
 ``Cheops' pyramid'' \cite[]{Claerbout.blackwell.85} in the $\{t,x,h\}$
 space of seismic reflection data.  As pointed out by
-\cite{fowler}, this condition is sufficient for proving the
+\cite{SEG-1997-1571}, this condition is sufficient for proving the
 kinematic validity of the angle-gather approach.  For comparison,
 Figure \ref{fig:coffset} shows the diffraction traveltime pyramid from
 a diffractor at 0.5 km depth.  The pyramid is composed of
@@ -229,7 +229,7 @@ The Jacobian weighting approach, however, does not provide physically
 meaningful amplitudes, when migrated angle gathers are considered
 individually. In order to obtain a physically meaningful amplitude, we
 can turn to the asymptotic theory of true-amplitude migration
-\cite[]{tam,vor,tygel}. The true-amplitude weighting provides an
+\cite[]{tam,GEO58-08-11121126,tygel}. The true-amplitude weighting provides an
 asymptotic high-frequency amplitude proportional to the reflection
 coefficient, with the wave propagation (geometric spreading) effects
 removed. The generic true-amplitude weighting formula
@@ -284,7 +284,7 @@ trivial form
   \tan{\gamma} = \frac{k_h}{k_z}\;.
 \end{equation}
 It indicates that angle gathers can be conveniently formed with the help
-of frequency-domain migration algorithms \cite[]{GEO43.01.00230048}.
+of frequency-domain migration algorithms \cite[]{GEO43-01-00230048}.
 This interesting opportunity requires further research.
 
 \section{Conclusions}
