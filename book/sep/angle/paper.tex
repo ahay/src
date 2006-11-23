@@ -10,7 +10,7 @@
 \title{Angle-gather time migration}
 
 \email{sergey@sep.stanford.edu, marie@sep.stanford.edu}
-\keywords{time migration, AVO}
+%\keywords{time migration, AVO}
 
 \author{Sergey Fomel and Marie Prucha}
 \maketitle
@@ -30,7 +30,7 @@ Angle-gather migration creates seismic images for different
 Angle-gather migration creates seismic images collected by the
 reflection angle at the point of reflection. Major advantages of this
 approach are apparent in the case of prestack depth migration. As
-shown by \longcite{Prucha.sep.100.marie1}, the ray 
+shown by \cite{Prucha.sep.100.marie1}, the ray 
 pattern of angle-gather migration is significantly different from that
 of the conventional common-offset migration. The difference can be
 exploited for overcoming illumination difficulties of the conventional
@@ -49,7 +49,7 @@ complete toolbox of seismic imaging.
 We start with analyzing the traveltime relations for the basic
 Kirchhoff implementation of angle-gather time migration. The analysis
 follows Fowler's general approach to prestack time migration methods
-\cite{fowler}. Next, we derive formulas for the amplitude weighting
+\cite[]{fowler}. Next, we derive formulas for the amplitude weighting
 and discuss some frequency-domain approaches to angle gathers.
 Finally, we present simple synthetic tests of the method and discuss
 further research directions.
@@ -66,7 +66,7 @@ pair of incident and reflected rays and the line between the source
 $s$ and the receiver $r$ form a triangle in space. From the
 trigonometry of that triangle we can derive simple relationships among
 all the variables of the experiment
-\cite{Fomel.sep.84.179,Fomel.sep.92.159,Fomel.segab.97}. 
+\cite[]{Fomel.sep.84.179,Fomel.sep.92.159,Fomel.segab.97}. 
 \par
 Introducing the dip angle $\alpha$ and the reflection angle $\gamma$,
 the total reflection traveltime $t$ can be expressed from the law of
@@ -139,9 +139,9 @@ $\alpha$ for a given position of a reflection (diffraction) point
 $\{z,\xi\}$ have the meaning of summation curves for angle-gather
 Kirchhoff migration. The whole range of such curves for all possible
 values of $\gamma$ covers the diffraction traveltime surface -
-``Cheops' pyramid'' \cite{Claerbout.blackwell.85} in the $\{t,x,h\}$
+``Cheops' pyramid'' \cite[]{Claerbout.blackwell.85} in the $\{t,x,h\}$
 space of seismic reflection data.  As pointed out by
-\longcite{fowler}, this condition is sufficient for proving the
+\cite{fowler}, this condition is sufficient for proving the
 kinematic validity of the angle-gather approach.  For comparison,
 Figure \ref{fig:coffset} shows the diffraction traveltime pyramid from
 a diffractor at 0.5 km depth.  The pyramid is composed of
@@ -229,11 +229,11 @@ The Jacobian weighting approach, however, does not provide physically
 meaningful amplitudes, when migrated angle gathers are considered
 individually. In order to obtain a physically meaningful amplitude, we
 can turn to the asymptotic theory of true-amplitude migration
-\cite{tam,vor,tygel}. The true-amplitude weighting provides an
+\cite[]{tam,vor,tygel}. The true-amplitude weighting provides an
 asymptotic high-frequency amplitude proportional to the reflection
 coefficient, with the wave propagation (geometric spreading) effects
 removed. The generic true-amplitude weighting formula
-\cite{Fomel.sep.92.267} transforms in the case of 2-D angle-gather
+\cite[]{Fomel.sep.92.267} transforms in the case of 2-D angle-gather
 time migration to the form:
 \begin{equation}
   \label{eqn:ta}
@@ -260,7 +260,7 @@ this approach, it might be useful in practice for post-migration
 amplitude-versus-angle studies. Unlike the conventional common-offset
 migration, the angle-gather approach produces the output directly in
 reflection angle coordinates. One can use the generic true-amplitude
-theory \cite{Fomel.sep.92.267} for extending formula (\ref{eqn:ta1})
+theory \cite[]{Fomel.sep.92.267} for extending formula (\ref{eqn:ta1})
 to the 3-D and 2.5-D cases.
 
 \section{Examples}
@@ -269,9 +269,9 @@ to the 3-D and 2.5-D cases.
 
 \section{Frequency-domain considerations}
 
-As pointed out by \longcite{Prucha.sep.100.marie1}, the angle gathers
+As pointed out by \cite{Prucha.sep.100.marie1}, the angle gathers
 can be conveniently formed in the frequency domain. This conclusion
-follows from the simple formula \cite{Fomel.sep.92.159}
+follows from the simple formula \cite[]{Fomel.sep.92.159}
 \begin{equation}
   \label{eqn:freq}
   \tan{\gamma} = \frac{\partial z}{\partial h}\;,
@@ -284,7 +284,7 @@ trivial form
   \tan{\gamma} = \frac{k_h}{k_z}\;.
 \end{equation}
 It indicates that angle gathers can be conveniently formed with the help
-of frequency-domain migration algorithms \cite{GEO43.01.00230048}.
+of frequency-domain migration algorithms \cite[]{GEO43.01.00230048}.
 This interesting opportunity requires further research.
 
 \section{Conclusions}
@@ -309,8 +309,8 @@ results because of their theoretical simplicity.
 
 %\section{Acknowledgments}
 
-\bibliographystyle{sep}
-\bibliography{SEP,MISC,GEOTLE,angle,angle2}
+\bibliographystyle{seg}
+\bibliography{SEP2,SEG,angle}
 
 %\APPENDIX{A}
 

@@ -1,0 +1,32 @@
+from rsfproj import *
+import agmig
+
+nz = 257
+dz = 0.004
+nx = 256
+dx = 0.008
+
+z0 = (nz/3.0 + 1.0) * 0.25
+z1 = nz/3.0 + 0.5 + 3.*z0
+x0 = dx*(nx/2.0 + 1.0) * 0.5
+
+Flow('bot',None,
+     'spike n1=115 d1=%g o1=-0.456 mag=%g' % (dx,dz*z1))
+Flow('top','bot',
+     'math output="%g - %g*sqrt(1-x1*x1*%g)" ' % \
+     (dz*z1,dz*2.*z0,4./(3.*x0*x0)))
+Flow('mod','top bot',
+     'cat axis=2 ${SOURCES[1]} | unif2 d1=%g n1=%d v00=1,2,3' % (dz,nz))
+
+Flow('dome','mod',
+     '''
+     igrad |
+     bandpass flo=10 fhi=50 |
+     pad beg2=71 end2=71 |
+     put n3=1 
+     ''')
+Plot('dome','grey label1=Time label2=Space unit1=s unit2=km title=Model')
+
+agmig.agmig('dome')
+
+End()
