@@ -40,5 +40,27 @@ for case in range(3):
          ' clip=20 bias=20 allpos=n labelsz=12 titlesz=15')
 
 Result('galpat','pat0 pat1 pat2','SideBySideAniso')
-     
+
+Galilee('int',100,100,interp=2,xmin=x,xmax=x+w,ymin=y,ymax=y+w,
+        shape='shape',extra='shape=y filt1=20 niter=100')
+
+Flow('lag.asc',None,
+     'echo 101 n1=1 n=100,100 in=$TARGET data_format=ascii_int')
+Flow('lag','lag.asc','dd form=native')
+Flow('flt.asc','lag',
+     'echo -1 n1=1 lag=$SOURCE in=$TARGET data_format=ascii_int',
+     stdin=0)
+Flow('flt','flt.asc','dd form=native type=float')
+
+Flow('illum','int flt','helicon filt=${SOURCES[1]}')
+
+for case in ('pat2','int','illum'):
+    Plot(case+'-win',case,
+         '''
+         window f1=5 n1=90 f2=5 n2=90 |
+         grey transp=n yreverse=n title="%s"
+         labelsz=12 titlesz=15 
+         ''' % ('Inverse interpolation','Simple binning')[case=='pat2'])
+Result('gallap','int-win illum-win pat2-win','SideBySideAniso')
+
 End()

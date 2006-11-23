@@ -30,7 +30,8 @@
 int main (int argc, char* argv[])
 {
     bool gauss, shape;
-    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp, niter, nliter;
+    int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey;
+    int interp, niter, nliter;
     float *pp, *mm, *mm0=NULL, *dd, **xy, *hdr, filt1, filt2, a[3];
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, eps;
     char *xk, *yk, *header;
