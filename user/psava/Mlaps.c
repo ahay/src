@@ -27,20 +27,20 @@ int main(int argc, char* argv[])
     bool verb;
 
     sf_file Fs,Fr,Fi;    /* I/O files */
-    sf_axis a1,a2,a3,aa; /* cube axes */
+    sf_axis az,ax,at,aa; /* cube axes */
 
-    int     n1,n2,n3, nh1,nh2,nh3;
-    int     i1,i2,i3, ih1,ih2,ih3;
-    int     j1,j2,    jh1,jh2;
-    int     k1,k2;
+    int     nz,nx,nt, nhz,nhx,nht;
+    int     iz,ix,it, ihz,ihx,iht;
+    int     jz,jx,    jhz,jhx;
+    int     kz,kx;
 
     float ****ii=NULL,**us=NULL,**ur=NULL; /* arrays */
 
     int ompchunk; 
 
-    int lo1,hi1;
-    int lo2,hi2;
-    int lo3,hi3;
+    int loz,hiz,scz;
+    int lox,hix,scx;
+    int lot,hit,sct;
 
     int ictype;
 
@@ -58,110 +58,108 @@ int main(int argc, char* argv[])
     Fi = sf_output("out"); /* image */
 
     /* read axes */
-    a1=sf_iaxa(Fs,1); sf_setlabel(a1,"a1"); if(verb) sf_raxa(a1);
-    a2=sf_iaxa(Fs,2); sf_setlabel(a2,"a2"); if(verb) sf_raxa(a2);
-    a3=sf_iaxa(Fs,3); sf_setlabel(a3,"a3"); if(verb) sf_raxa(a3);
+    az=sf_iaxa(Fs,1); sf_setlabel(az,"az"); if(verb) sf_raxa(az);
+    ax=sf_iaxa(Fs,2); sf_setlabel(ax,"ax"); if(verb) sf_raxa(ax);
+    at=sf_iaxa(Fs,3); sf_setlabel(at,"at"); if(verb) sf_raxa(at);
 
-    n1 = sf_n(a1);
-    n2 = sf_n(a2);
-    n3 = sf_n(a3);
+    nz = sf_n(az);
+    nx = sf_n(ax);
+    nt = sf_n(at);
 
-    if(! sf_getint("nh1",&nh1)) nh1=0;
-    if(! sf_getint("nh2",&nh2)) nh2=0;
-    if(! sf_getint("nh3",&nh3)) nh3=0;
-    sf_warning("nh1=%d nh2=%d nh3=%d",2*nh1+1,2*nh2+1,2*nh3+1);
+    if(! sf_getint("nhz",&nhz)) nhz=0;
+    if(! sf_getint("nhx",&nhx)) nhx=0;
+    if(! sf_getint("nht",&nht)) nht=0;
+    sf_warning("nhz=%d nhx=%d nht=%d",2*nhz+1,2*nhx+1,2*nht+1);
+
+    if(! sf_getint("scz",&scz)) scz=1;
+    if(! sf_getint("scx",&scx)) scx=1;
+    if(! sf_getint("sct",&sct)) sct=1;
 
     /* set output axes */
-    aa=sf_maxa(2*nh1+1,-nh1*sf_d(a1),sf_d(a1));
-    sf_setlabel(aa,"h1");
+    aa=sf_maxa(2*nhz+1,-nhz*sf_d(az)*scz,sf_d(az)*scz);
+    sf_setlabel(aa,"hz");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,3);
     
-    aa=sf_maxa(2*nh2+1,-nh2*sf_d(a2),sf_d(a2)); 
-    sf_setlabel(aa,"h2");
+    aa=sf_maxa(2*nhx+1,-nhx*sf_d(ax)*scx,sf_d(ax)*scx); 
+    sf_setlabel(aa,"hx");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,4);
 
-    aa=sf_maxa(2*nh3+1,-nh3*sf_d(a3),sf_d(a3)); 
-    sf_setlabel(aa,"h3");
+    aa=sf_maxa(2*nht+1,-nht*sf_d(at)*sct,sf_d(at)*sct); 
+    sf_setlabel(aa,"ht");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,5);
 
     /* allocate work arrays */
-    us=sf_floatalloc2(n1,n2);
-    ur=sf_floatalloc2(n1,n2);
-    ii=sf_floatalloc4(n1,n2,2*nh1+1,2*nh2+1);
+    us=sf_floatalloc2(nz,nx);
+    ur=sf_floatalloc2(nz,nx);
+    ii=sf_floatalloc4(nz,nx,2*nhz+1,2*nhx+1);
 
-    if(verb) fprintf(stderr," n3   h3\n");
-    if(verb) fprintf(stderr,"%4d %3d \n",n3-1,2*nh3);
+    if(verb) fprintf(stderr," nt   ht\n");
+    if(verb) fprintf(stderr,"%4d %3d \n",nt-1,2*nht);
 
-    for(ih3=-nh3; ih3<nh3+1; ih3++) { lo3=SF_ABS(ih3); hi3=n3-SF_ABS(ih3);
+    for(iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nt-SF_ABS(iht);
 
 	/* seek in input */
-	sf_seek(Fs,(lo3+ih3)*n1*n2*sizeof(float),SEEK_SET);
-	sf_seek(Fr,(lo3-ih3)*n1*n2*sizeof(float),SEEK_SET);
+	sf_seek(Fs,(lot+iht)*nz*nx*sizeof(float),SEEK_SET);
+	sf_seek(Fr,(lot-iht)*nz*nx*sizeof(float),SEEK_SET);
 	
 	/* zero output */
-	for(        ih2=-nh2; ih2<nh2+1; ih2++) { jh2=nh2+ih2;
-	    for(    ih1=-nh1; ih1<nh1+1; ih1++) { jh1=nh1+ih1;
-		for(    i2=0; i2<n2; i2++) { 
-		    for(i1=0; i1<n1; i1++) { 
-			ii[jh2][jh1][i2][i1] = 0;
-		    } // n1
-		} // n2
-	    } // nh1
-	} // nh2
+	for(        ihx=-nhx; ihx<nhx+1; ihx++) { jhx=nhx+ihx;
+	    for(    ihz=-nhz; ihz<nhz+1; ihz++) { jhz=nhz+ihz;
+		for(    ix=0; ix<nx; ix++) { 
+		    for(iz=0; iz<nz; iz++) { 
+			ii[jhx][jhz][ix][iz] = 0;
+		    } // nz
+		} // nx
+	    } // nhz
+	} // nhx
 
-	for(i3=lo3; i3<hi3; i3++) {
+	for(it=lot; it<hit; it++) {
+
 	    /* read input */
-	    sf_floatread(us[0],n1*n2,Fs);
-	    sf_floatread(ur[0],n1*n2,Fr);
+	    sf_floatread(us[0],nz*nx,Fs);
+	    sf_floatread(ur[0],nz*nx,Fr);
 
-	    lo2=nh2; hi2=n2-nh2;
-	    lo1=nh1; hi1=n1-nh1;
-	    
-	    if(verb) fprintf(stderr,"%4d %3d",i3,nh3+ih3);
+	    if(verb) fprintf(stderr,"%4d %3d",it,nht+iht);
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,ih1,ih2,jh1,jh2,j1,j2,k1,k2) shared(lo1,lo2,hi1,hi2,nh1,nh2,ii,us,ur)*/
-/*#endif	  */
-/*	    for(    ih2=0;  ih2<2*nh2+1; ih2++) { j2=i2-(ih2-nh2); k2=i2+(ih2-nh2);*/
-/*		for(ih1=0;  ih1<2*nh1+1; ih1++) { j1=i1-(ih1-nh1); k1=i1+(ih1-nh1);*/
-/*		    for(             i2=lo2; i2<hi2;      i2++) { */
-/*			for(         i1=lo1; i1<hi1;      i1++) {*/
-/*			    ii[ih2][ih1][i2][i1] += us[j2][j1] */
-/*				*                   ur[k2][k1];*/
-/*			}*/
-/*		    }*/
-/*		}*/
-/*	    }*/
-/**/
-
-	    if(SF_ABS(nh2)>0) {
+	    if(SF_ABS(nhx)>0) {
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ih2,ih1,lo2,lo1,hi2,hi1,jh2,jh1,i2,i1,j2,j1,k2,k1) shared(nh2,nh1,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ihx,lox,hix,jhx, ihz,loz,hiz,jhz, ix,iz,jx,jz,kx,kz) shared(nhx,nhz,ii,us,ur)
 #endif		
-		for(        ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-lo2; jh2=nh2+ih2;
-		    for(    ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-lo1; jh1=nh1+ih1;  
-			for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
-			    for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
-				ii[jh2][jh1][i2][i1] += us[j2][j1] 
-				    *                   ur[k2][k1];
-			    } // n1
-			} // n2  
-		    } // nh1
-		} // nh2
+		for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(scx*ihx); hix=nx-lox; jhx=nhx+ihx;
+		    for(      ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(scz*ihz); hiz=nz-loz; jhz=nhz+ihz;  
+			for(    ix=lox;  ix<hix;    ix++) { jx=ix-scx*ihx; kx=ix+scx*ihx;
+			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-scz*ihz; kz=iz+scz*ihz;
+				ii[jhx][jhz][ix][iz] += us[jx][jz] 
+				    *                   ur[kx][kz];
+			    } // nz
+			} // nx  
+		    } // nhz
+		} // nhx
 	    } else {
-		
-		
-	    }
+		for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-lox; jhx=nhx+ihx;		
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ihz,loz,hiz,jhz, ix,iz,jx,jz,kx,kz) shared(ihx,lox,hix,jhx, nhz,ii,us,ur)
+#endif		
+		    for(      ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-loz; jhz=nhz+ihz;  
+			for(    ix=lox;  ix<hix;    ix++) { jx=ix-ihx; kx=ix+ihx;
+			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-ihz; kz=iz+ihz;
+				ii[jhx][jhz][ix][iz] += us[jx][jz] 
+				    *                   ur[kx][kz];
+			    } // nz
+			} // nx  
+		    } // nhz
+		} // nhx	
+	    } // end if 
 
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-	} // n3
+	} // nt
 	
 	/* write output */
-	sf_floatwrite(ii[0][0][0],n1*n2*(2*nh1+1)*(2*nh2+1),Fi);    
-    } // nh3
+	sf_floatwrite(ii[0][0][0],nz*nx*(2*nhz+1)*(2*nhx+1),Fi);    
+    } // nht
     if(verb) fprintf(stderr,"\n");
 	
     exit (0);
