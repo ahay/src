@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 #endif	  
 	    for(    i2=lo2; i2<hi2; i2++) { 
 		for(i1=lo1; i1<hi1; i1++) {
-		    for(        ih2=-nh2; ih2<nh2+1; ih2++) { jh2=nh2+ih1; j2=i2-ih2; k2=i2+ih2;
+		    for(        ih2=-nh2; ih2<nh2+1; ih2++) { jh2=nh2+ih2; j2=i2-ih2; k2=i2+ih2;
 			for(    ih1=-nh1; ih1<nh1+1; ih1++) { jh1=nh1+ih1; j1=i1-ih1; k1=i1+ih1;
 			    ii[jh2][jh1][i2][i1] += us[j2][j1] 
 				*                   ur[k2][k1];
