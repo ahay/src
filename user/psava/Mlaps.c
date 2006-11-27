@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 		    if(verb) fprintf(stderr,"%4d %3d %3d %3d",i3,nh3+ih3,nh2+ih2,nh1+ih1);
 		    
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(i2,i1,j2,j1,k2,k1) shared(jh1,jh2,lo2,lo1,hi2,hi1,ih1,ih2,jh1,jh2,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(i2,i1,j2,j1,k2,k1) shared(jh1,jh2,lo2,lo1,hi2,hi1,ih1,ih2,ii,us,ur)
 #endif		
 		    for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
 			for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
