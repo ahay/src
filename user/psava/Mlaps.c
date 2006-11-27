@@ -121,41 +121,44 @@ int main(int argc, char* argv[])
 	    lo1=nh1; hi1=n1-nh1;
 	    
 	    if(verb) fprintf(stderr,"%4d %3d",i3,nh3+ih3);
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,ih1,ih2,jh1,jh2,j1,j2,k1,k2) shared(lo1,lo2,hi1,hi2,nh1,nh2,ii,us,ur)
-#endif	  
-	    for(    i2=lo2; i2<hi2; i2++) { 
-		for(i1=lo1; i1<hi1; i1++) {
-		    for(        ih2=-nh2; ih2<nh2+1; ih2++) { jh2=nh2+ih2; j2=i2-ih2; k2=i2+ih2;
-			for(    ih1=-nh1; ih1<nh1+1; ih1++) { jh1=nh1+ih1; j1=i1-ih1; k1=i1+ih1;
-			    ii[jh2][jh1][i2][i1] += us[j2][j1] 
-				*                   ur[k2][k1];
-			}
-		    }
-		}
-	    }
 
-
-/*	    for(        ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-SF_ABS(ih2); jh2=nh2+ih2;*/
-/*		for(    ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-SF_ABS(ih1); jh1=nh1+ih1;*/
-/*		    if(verb) fprintf(stderr,"%4d %3d %3d %3d",i3,nh3+ih3,nh2+ih2,nh1+ih1);*/
-		    
 /*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,ompchunk) private(i2,i1,j2,j1,k2,k1) shared(jh1,jh2,lo2,lo1,hi2,hi1,ih1,ih2,ii,us,ur)*/
-/*#endif		*/
-/*		    for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;*/
-/*			for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;*/
-/*			    ii[jh2][jh1][i2][i1] += us[j2][j1] */
+/*#pragma omp parallel for schedule(dynamic,ompchunk) private(i1,i2,ih1,ih2,jh1,jh2,j1,j2,k1,k2) shared(lo1,lo2,hi1,hi2,nh1,nh2,ii,us,ur)*/
+/*#endif	  */
+/*	    for(    ih2=0;  ih2<2*nh2+1; ih2++) { j2=i2-(ih2-nh2); k2=i2+(ih2-nh2);*/
+/*		for(ih1=0;  ih1<2*nh1+1; ih1++) { j1=i1-(ih1-nh1); k1=i1+(ih1-nh1);*/
+/*		    for(             i2=lo2; i2<hi2;      i2++) { */
+/*			for(         i1=lo1; i1<hi1;      i1++) {*/
+/*			    ii[ih2][ih1][i2][i1] += us[j2][j1] */
 /*				*                   ur[k2][k1];*/
-/*			} // n1*/
-/*		    } // n2*/
-		    
-/*		} // nh1*/
-/*	    } // nh2*/
+/*			}*/
+/*		    }*/
+/*		}*/
+/*	    }*/
+/**/
+
+	    if(SF_ABS(nh2)>0) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(ih2,ih1,lo2,lo1,hi2,hi1,jh2,jh1,i2,i1,j2,j1,k2,k1) shared(nh2,nh1,ii,us,ur)
+#endif		
+		for(        ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-lo2; jh2=nh2+ih2;
+		    for(    ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-lo1; jh1=nh1+ih1;  
+			for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
+			    for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
+				ii[jh2][jh1][i2][i1] += us[j2][j1] 
+				    *                   ur[k2][k1];
+			    } // n1
+			} // n2  
+		    } // nh1
+		} // nh2
+	    } else {
+		
+		
+	    }
 
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 	} // n3
-
+	
 	/* write output */
 	sf_floatwrite(ii[0][0][0],n1*n2*(2*nh1+1)*(2*nh2+1),Fi);    
     } // nh3
