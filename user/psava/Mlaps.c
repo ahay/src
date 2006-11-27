@@ -31,10 +31,10 @@ int main(int argc, char* argv[])
 
     int     n1,n2,n3, nh1,nh2,nh3;
     int     i1,i2,i3, ih1,ih2,ih3;
-    int     j1,j2;
+    int     j1,j2,    jh1,jh2;
     int     k1,k2;
 
-    float *****ii=NULL,**us=NULL,**ur=NULL; /* arrays */
+    float ****ii=NULL,**us=NULL,**ur=NULL; /* arrays */
 
     int ompchunk; 
 
@@ -90,44 +90,55 @@ int main(int argc, char* argv[])
     /* allocate work arrays */
     us=sf_floatalloc2(n1,n2);
     ur=sf_floatalloc2(n1,n2);
-    ii=sf_floatalloc5(n1,n2,2*nh1+1,2*nh2+1,2*nh3+1);
+    ii=sf_floatalloc4(n1,n2,2*nh1+1,2*nh2+1);
 
     if(verb) fprintf(stderr," n3   h3  h2  h1\n");
-    if(verb) fprintf(stderr,"%4d %3d %3d %3d\n",n3,2*nh3,2*nh2,2*nh1);
+    if(verb) fprintf(stderr,"%4d %3d %3d %3d\n",n3-1,2*nh3,2*nh2,2*nh1);
+
     for(ih3=-nh3; ih3<nh3+1; ih3++) { lo3=SF_ABS(ih3); hi3=n3-SF_ABS(ih3);
 
 	/* seek in input */
 	sf_seek(Fs,(lo3+ih3)*n1*n2*sizeof(float),SEEK_SET);
 	sf_seek(Fr,(lo3-ih3)*n1*n2*sizeof(float),SEEK_SET);
 	
+	/* zero output */
+	for(        ih2=-nh2; ih2<nh2+1; ih2++) { jh2=nh2+ih2;
+	    for(    ih1=-nh1; ih1<nh1+1; ih1++) { jh1=nh1+ih1;
+		for(    i2=0; i2<n2; i2++) { 
+		    for(i1=0; i1<n1; i1++) { 
+			ii[jh2][jh1][i2][i1] = 0;
+		    } // n1
+		} // n2
+	    } // nh1
+	} // nh2
+
 	for(i3=lo3; i3<hi3; i3++) {
 	    /* read input */
 	    sf_floatread(us[0],n1*n2,Fs);
 	    sf_floatread(ur[0],n1*n2,Fr);
 	    
-	    for(        ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-SF_ABS(ih2);
-		for(    ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-SF_ABS(ih1);
+	    for(        ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-SF_ABS(ih2); jh2=nh2+ih2;
+		for(    ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-SF_ABS(ih1); jh1=nh1+ih1;
 		    if(verb) fprintf(stderr,"%4d %3d %3d %3d",i3,nh3+ih3,nh2+ih2,nh1+ih1);
 		    
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(i2,i1,j2,j1,k2,k1) shared(nh1,nh2,nh3,lo2,lo1,hi2,hi1,ih2,ih3,ih1,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(i2,i1,j2,j1,k2,k1) shared(jh1,jh2,lo2,lo1,hi2,hi1,ih1,ih2,jh1,jh2,ii,us,ur)
 #endif		
 		    for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
 			for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
-			    ii[nh3+ih3][nh2+ih2][nh1+ih1][i2][i1] += us[j2][j1] 
-				*                                    ur[k2][k1];
+			    ii[jh2][jh1][i2][i1] += us[j2][j1] 
+				*                   ur[k2][k1];
 			} // n1
 		    } // n2
 		    
 		    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 		} // nh1
 	    } // nh2
-	    
 	} // n3
+
+	/* write output */
+	sf_floatwrite(ii[0][0][0],n1*n2*(2*nh1+1)*(2*nh2+1),Fi);    
     } // nh3
-    
-    /* write output */
-    sf_floatwrite(ii[0][0][0][0],n1*n2*(2*nh1+1)*(2*nh2+1)*(2*nh3+1),Fi);    
     if(verb) fprintf(stderr,"\n");
 	
     exit (0);
