@@ -1,0 +1,47 @@
+from rsfproj import *
+
+import os, string
+import warp
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for case in ('vp','vs','rho'):
+    rsf = 'il270_%s.rsf' % case
+    Fetch(rsf,'apache',private)
+    Flow(case,rsf,'dd form=native')
+
+Flow('mod','vp vs rho',
+     'cat axis=3 ${SOURCES[1:3]} | smooth rect2=3 | transp plane=23 | modrefl2 dt=0.002 nt=1001')
+Flow('pp','mod','window n2=1 | ricker1 frequency=30 | window max1=0.85 n2=150')
+Flow('ps','mod','window f2=2 | ricker1 frequency=15 | window max1=1.45 n2=150')
+
+for mode in ('pp','ps'):
+    Result(mode,'grey title="%s" color=G' % string.upper(mode))
+
+gamma = 2.5
+
+Flow('warp0','pp','math output="%g*x1" ' % (0.5*(gamma-1)))
+
+warp.warp2('am','pp','ps','warp0',
+           nx=150,
+           tmax=0.85,
+           inter=1,
+           j2=4,
+           o2=489,
+           trace=567,
+           dt=0.002,
+           g0=0.75,
+           gmin=2,
+           gmax=3.5,
+           ng=51,
+           rect1=25,
+           rect2=100,
+           fmin=10,
+           fmax=50,
+           frame1=350,
+           iter=2,
+           clip=0.035)
+
+End()

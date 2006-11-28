@@ -1,5 +1,5 @@
 from rsfproj import *
-import os
+import os, string
 import warp
 
 private = {'login':os.environ.get('BEG_LOGIN'),
@@ -18,29 +18,54 @@ for mode in ('pp','ps'):
          ''' % (1.1,2)[mode=='ps'],stdin=0)
 
     Flow(mode,cube,'intbin')
+    Result(mode,
+       '''
+       byte gainpanel=all |
+       grey3 title="%s" flat=y frame1=400 frame2=%d frame3=%d label1="Time (s)" label2="In-line" label3="Cross-line"
+       ''' % (string.upper(mode),(268,269)[mode=='ps'],(588,589)[mode=='ps']))
+
+    Flow(mode+'2',mode,'window min2=18 n2=521 min3=493 n3=186 | bandpass flo=5')
+
+xyz = 'top_rex_coal.xyz'
+
+Fetch(xyz,'apache',private)
+Flow('xyz',xyz,
+     '''
+     echo in=$SOURCE n1=3 n2=64 n3=178 d2=0.05 d3=0.05 o2=476.3 o3=5768.3 data_format=ascii_float |
+     dd form=native
+     ''',stdin=0)
 
 gamma = 2.5
 
-Flow('warp0','pp','math output="%g*x1" ' % (0.5*(gamma-1)))
+Flow('warp0','pp2','math output="%g*x1" ' % (0.5*(gamma-1)))
 
-warp.warp3('ap3','ppcube','pscube','warp0',
-           nx=326,
-           o2=375,
+warp.warp3('ap3','pp2','ps2','warp0',
+           nx=521,
+           ny=186,
+           j2=4,
+           j3=4,
+           o2=18,
+           o3=493,
+           tmin=0.4,
            tmax=1.1,
-           inter=2,
-           trace=600,
+           inter=5,
+           trace=270,
+           line=590,
            dt=0.002,
-           g0=0.9,
+           g0=0.8,
+           pmin=0.95,
            gmin=2,
-           gmax=3,
+           gmax=3.5,
            ng=51,
            rect1=50,
-           rect2=50,
+           rect2=200,
+           rect3=200,
            fmin=10,
-           fmax=50,
-           frect=9,
+           fmax=70,
+           frect=3,
            frame1=400,
-           iter=2,
+           iter=3,
+           niter=20,
            clip=11.33)
 
 End()
