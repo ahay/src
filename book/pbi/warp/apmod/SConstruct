@@ -10,7 +10,7 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 for case in ('vp','vs','rho'):
     rsf = 'il270_%s.rsf' % case
     Fetch(rsf,'apache',private)
-    Flow(case,rsf,'dd form=native')
+    Flow(case,rsf,'dd form=native | put o2=0 d2=1')
 
 Flow('mod','vp vs rho',
      'cat axis=3 ${SOURCES[1:3]} | smooth rect2=3 | transp plane=23 | modrefl2 dt=0.002 nt=1001')
@@ -29,8 +29,7 @@ warp.warp2('am','pp','ps','warp0',
            tmax=0.85,
            inter=1,
            j2=4,
-           o2=489,
-           trace=567,
+           trace=75,
            dt=0.002,
            g0=0.75,
            gmin=2,
