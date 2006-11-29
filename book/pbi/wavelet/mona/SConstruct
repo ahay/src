@@ -19,17 +19,17 @@ def grey(title,allpos=1):
 
 Result('mona',grey('Mona Lisa'))
 
-Flow('haar1','mona','transp | dwt type=h | transp')
+Flow('haar1','mona','dwt type=h')
 Result('haar1',grey('1-D Haar Transform'))
 
-Flow('haar2','haar1','dwt type=h')
-Result('haar2',grey('2-D Haar Transform'))
+Flow('haar2','haar1','transp | dwt type=h | transp')
+Result('haar2',grey('2-D Haar Transform') + ' clip=42')
 
-Flow('linear1','mona','transp | dwt type=l | transp')
+Flow('linear1','mona','dwt type=l')
 Result('linear1',grey('1-D Wavelet Transform'))
 
-Flow('linear2','linear1','dwt type=l')
-Result('linear2',grey('2-D Wavelet Transform'))
+Flow('linear2','linear1','transp | dwt type=l | transp')
+Result('linear2',grey('2-D Wavelet Transform') + ' clip=42')
 
 for scale in (2,4,8,16,32,64,128,256):
     mona = 'mona%d' % scale

@@ -132,6 +132,26 @@ Plot('rays','x z',
 
 Result('elfvxz','elfvxz rays','Overlay')
 
+Plot('elfvxz1','vxz',
+     '''
+     grey color=j scalebar=y allpos=y bias=1400
+     wanttitle=y barlabel=Velocity barunit=km/s
+     bartype=v 
+     title="Estimated Interval Velocity" barreverse=y
+     ''')
+
+Plot('rays2','x z',
+     '''
+     cmplx ${SOURCES[:2]} | transp | window j2=20 |
+     graph wanttitle=n yreverse=y min1=0 max1=%g min2=0 max2=%g
+     plotcol=7 scalebar=y wantaxis=n
+     bartype=v  
+     ''' % (xmax,zmax),stdin=0)
+
+Plot('elfvxz2','elfvxz1 rays2','Overlay')
+
+Result('elfvxz2','elfvxz2 elfvxz2','SideBySideAniso')
+
 Fetch('elf-stk2.rsf','masha')
 Flow('stk','elf-stk2.rsf','dd form=native')
 
@@ -178,5 +198,7 @@ Result('fmg2','fmg2','Overlay')
 
 
 Result('elfimg','img fmg2','OverUnderAniso') 
+
+Result('elfimg2','img img','SideBySideAniso',vppen='txscale=1.2')
 
 End()
