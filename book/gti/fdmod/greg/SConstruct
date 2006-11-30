@@ -1,61 +1,74 @@
 ##
- # 
+ #  Nov 30 2006
  ##
 from rsfproj import *
 import fdmod
 
 # ------------------------------------------------------------
 par = {
-   'nt':2000,'ot':0, 'dt':0.0005, 'lt':'t','ut':'s',
-   'nx':1001,'ox':0, 'dx':2.5,    'lx':'x','ux':'m',
-   'nz':401, 'oz':0, 'dz':2.5,    'lz':'z','uz':'m',
-   'kt':50
-   }
+  'nt':2000,'ot':0, 'dt':0.0005, 'lt':'t','ut':'s',
+  'nx':1001,'ox':0, 'dx':2.5,    'lx':'x','ux':'m',
+  'nz':401, 'oz':0, 'dz':2.5,    'lz':'z','uz':'m',
+  'kt':50
+  }
 fdmod.param(par)
 
 # ------------------------------------------------------------
 # plotting functions
 def wtplot(wplot,ws,wr,par):
-   _ws = "t_" + ws
-   _wr = "t_" + wr
+  _ws = "t_" + ws
+  _wr = "t_" + wr
 
-   Flow(_ws,ws,
-        '''
-        window j3=50 n3=39 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d |
-        put o3=0
-        ''' % par)
-   Flow(_wr,wr,
-        '''
-        window j3=50 n3=39 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d |
-        put o3=0
-        ''' % par)
-   Result(wplot,[_ws,_wr],
-          '''
-          cat ${SOURCES[1]} axis=2 space=n |
-          grey pclip=97 gainpanel=a title="" screenratio=0.375 screenht=5 grid=y
-          ''')
+  Flow(_ws,ws,
+       '''
+       window j3=50 n3=39 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d |
+       put o3=0
+       ''' % par)
+  Flow(_wr,wr,
+       '''
+       window j3=50 n3=39 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d |
+       put o3=0
+       ''' % par)
+  Result(wplot,[_ws,_wr],
+         '''
+         cat ${SOURCES[1]} axis=2 space=n |
+         grey pclip=97 gainpanel=a title="" screenratio=0.375 screenht=5 grid=y
+         ''')
 
 def wzplot(wplot,ws,wr,par):
-   _ws = "z_" + ws
-   _wr = "z_" + wr
+  _ws = "z_" + ws
+  _wr = "z_" + wr
 
-   Flow(_ws,ws,
-        '''
-        window j1=40 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d n3=1000 |
-        put o3=0 |
-        transp plane=13
-        ''' % par)
-   Flow(_wr,wr,
-        '''
-        window j1=40 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d n3=1000 |
-        put o3=0 |
-        transp plane=13
-        ''' % par)
-   Result(wplot,[_ws,_wr],
-          '''
-          cat ${SOURCES[1]} axis=2 space=n |
-          grey pclip=98 gainpanel=a title="" grid=y
-          ''')
+  Flow(_ws,ws,
+       '''
+       window j1=40 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d n3=1000 |
+       put o3=0 |
+       transp plane=13
+       ''' % par)
+  Flow(_wr,wr,
+       '''
+       window j1=40 min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g f3=%(kt)d n3=1000 |
+       put o3=0 |
+       transp plane=13
+       ''' % par)
+  Result(wplot,[_ws,_wr],
+         '''
+         cat ${SOURCES[1]} axis=2 space=n |
+         grey pclip=98 gainpanel=a title="" grid=y
+         ''')
+
+def boxdgrey(custom,par):
+   return '''
+   grey labelrot=n wantaxis=y title=""
+   pclip=100
+   min1=%g max1=%g label1=%s unit1=%s
+   min2=%g max2=%g label2=%s unit2=%s
+   %s
+   ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+          par['xmin'],par['dx']*(par['nx']+par['nz'])*2,
+          par['lx'],par['ux'],
+          custom)
+
 
 # ------------------------------------------------------------
 # wavelet
@@ -66,39 +79,41 @@ Result('wav','wav','window n1=200 | graph title="" label1="t" label2=')
 # experiment
 fdmod.horizontal('rrt',0,par)
 Plot('rrt','window n1=2 | dd type=complex | window j2=10 | '
-    + fdmod.cgraph('symbol=* plotcol=1 plotfat=10',par))
+   + fdmod.cgraph('symbol=* plotcol=1 plotfat=10',par))
 
 fdmod.horizontal('rrb',1000,par)
+Flow('rrbr','rrb','reverse which=2')
 fdmod.vertical('rrl',0,par)
+Flow('rrlr','rrl','reverse which=2')
 fdmod.vertical('rrr',2500,par)
 
-Flow('rrc','rrt rrb rrl rrr','cat axis=2 ${SOURCES[1:4]}')
+Flow('rrc','rrt rrr rrbr rrlr','cat axis=2 ${SOURCES[1:4]}')
 Plot('rrc','window n1=2 | dd type=complex | window j2=10 | '
-    + fdmod.cgraph('symbol=* plotcol=1 plotfat=10',par))
+   + fdmod.cgraph('symbol=* plotcol=1 plotfat=10',par))
 
 fdmod.point('ss',par['ox']+par['nx']/2*par['dx'],0,1,par)
 Plot('ss','window n1=2 | dd type=complex | window | '
-    + fdmod.cgraph('symbol=. plotcol=2 plotfat=10',par))
+   + fdmod.cgraph('symbol=. plotcol=2 plotfat=10',par))
 
 # ------------------------------------------------------------
 # velocity
 Flow('vo',None,
-    '''
-    math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2000+1*x1" |
-    spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
-    ''' % par)
+   '''
+   math n1=%(nz)d o1=%(oz)g d1=%(dz)g output="2000+1*x1" |
+   spray axis=2 n=%(nx)d o=%(ox)g d=%(dx)g
+   ''' % par)
 Plot(  'vo',fdmod.cgrey('allpos=y bias=2000 pclip=100',par))
 Result('vot',['vo','rrt','ss'],'Overlay')
 Result('voc',['vo','rrc','ss'],'Overlay')
 # ------------------------------------------------------------
 # reflectivity
 Flow('ro',None,
-    '''
-    spike nsp=2 mag=1,1
-    n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=161 l1=%(nz)d
-    n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=001,201 l2=200,%(nx)d |
-    add add=2
-    ''' % par)
+   '''
+   spike nsp=2 mag=1,1
+   n1=%(nz)d o1=%(oz)g d1=%(dz)g k1=161 l1=%(nz)d
+   n2=%(nx)d o2=%(ox)g d2=%(dx)g k2=001,201 l2=200,%(nx)d |
+   add add=2
+   ''' % par)
 Plot  ('ro',fdmod.cgrey('pclip=100 bias=2',par))
 Result('rot',['ro','rrt','ss'],'Overlay')
 Result('roc',['ro','rrc','ss'],'Overlay')
@@ -119,23 +134,29 @@ Flow('sou','wav','transp')
 # ------------------------------------------------------------
 # FD modeling
 for i in ('t','c'):
-   fdmod.amodel('do'+i,'wo'+i,'wav','vo','ro','ss','rr'+i,'free=y dens=n',par)
-   fdmod.amodel('dx'+i,'wx'+i,'wav','vo','ro','ss','rr'+i,'free=y dens=y',par)
+  fdmod.amodel('do'+i,'wo'+i,'wav','vo','ro','ss','rr'+i,'free=y dens=n',par)
+  fdmod.amodel('dx'+i,'wx'+i,'wav','vo','ro','ss','rr'+i,'free=y dens=y',par)
 
-   Flow('dd'+i,'dx'+i+' do'+i,'add scale=1,-1 ${SOURCES[1]}')
-   Flow('ww'+i,'wx'+i+' wo'+i,'add scale=1,-1 ${SOURCES[1]}')
+  Flow('dd'+i,'dx'+i+' do'+i,'add scale=1,-1 ${SOURCES[1]}')
+  Flow('ww'+i,'wx'+i+' wo'+i,'add scale=1,-1 ${SOURCES[1]}')
 
-   Result('do'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
-   Result('dx'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
-   Result('dd'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
+  if (i=='c'):
+     Result('do'+i,'transp |' + boxdgrey('pclip=99.9',par))
+     Result('dx'+i,'transp |' + boxdgrey('pclip=99.9',par))
+     Result('dd'+i,'transp |' + boxdgrey('pclip=99.9',par))
 
-   Result('wo'+i,fdmod.wgrey('pclip=99.9',par))
-   Result('wx'+i,fdmod.wgrey('pclip=99.9',par))
-   Result('ww'+i,fdmod.wgrey('pclip=99.9',par))
+  else:
+     Result('do'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
+     Result('dx'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
+     Result('dd'+i,'transp |' + fdmod.dgrey('pclip=99.9',par))
+
+  Result('wo'+i,fdmod.wgrey('pclip=100.0',par))
+  Result('wx'+i,fdmod.wgrey('pclip=99.9',par))
+  Result('ww'+i,fdmod.wgrey('pclip=99.9',par))
 
 # ------------------------------------------------------------
 # wavefield for RTM
-   Flow('tmp'+i,'dd'+i,'reverse which=2 opt=i')
+  Flow('tmp'+i,'dd'+i,'reverse which=2 opt=i')
 
 # ------------------------------------------------------------
 # combine top, bottom wavefields to make combined (c) wavefield
@@ -146,50 +167,56 @@ for i in ('t','c'):
 #       for j in ('n','y'): # free surface
 
 for l in ('t','c'):    # top (reflection) vs bottom (transmission) vs combined
-   for k in ('n','y'): # density
-       for j in ('y'): # free surface
- 
-           fdmod.awe('ds'+j+k+l,'us'+j+k+l,'sou',  'vo','ro','ss',  'rr'+l,'free=%s dens=%s jsnap=1' % (j,k),par)
-           fdmod.awe('dt'+j+k+l,'ut'+j+k+l,'tmp'+l,'vo','ro','rr'+l,'rr'+l,'free=%s dens=%s jsnap=1' % (j,k),par)
-           Flow('dr'+j+k+l,'dt'+j+k+l,'reverse which=2 opt=i verb=y')
-           Flow('ur'+j+k+l,'ut'+j+k+l,'reverse which=4 opt=i verb=y')
+  for k in ('n','y'): # density
+      for j in ('y'): # free surface
 
-           # ------------------------------------------------------------
-           # data
-           Result('ds'+j+k+l,'transp |' + fdmod.dgrey('pclip=99.9',par))
-           Result('dr'+j+k+l,'transp |' + fdmod.dgrey('pclip=99.9',par))
+          fdmod.awe('ds'+j+k+l,'us'+j+k+l,'sou',  'vo','ro','ss',  'rr'+l,'free=%s dens=%s jsnap=1' % (j,k),par)
+          fdmod.awe('dt'+j+k+l,'ut'+j+k+l,'tmp'+l,'vo','ro','rr'+l,'rr'+l,'free=%s dens=%s jsnap=1' % (j,k),par)
+          Flow('dr'+j+k+l,'dt'+j+k+l,'reverse which=2 opt=i verb=y')
 
-           # ------------------------------------------------------------
-           # wavefield
-           Flow('ws'+j+k+l,'us'+j+k+l,'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)
-           Flow('wr'+j+k+l,'ur'+j+k+l,'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)
+          Flow('ws'+j+k+l,'us'+j+k+l,'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g' % par)
+          Flow('wr'+j+k+l,'ut'+j+k+l,'window min1=%(zmin)g max1=%(zmax)g min2=%(xmin)g max2=%(xmax)g | reverse which=4 opt=i verb=y memsize=2000'% par)
 
-           Result('ws'+j+k+l,'window j3=50 |'+fdmod.wgrey('gainpanel=a pclip=99.9',par))
-           Result('wr'+j+k+l,'window j3=50 |'+fdmod.wgrey('gainpanel=a pclip=99.9',par))
+          # ------------------------------------------------------------
+          # data
+          if (l == 'c'):
+             Result('ds'+j+k+l,'transp |' + boxdgrey('pclip=99.9',par))
+             Result('dr'+j+k+l,'transp |' + boxdgrey('pclip=99.9',par))
+          else:
+             Result('ds'+j+k+l,'transp |' + fdmod.dgrey('pclip=99.9',par))
+             Result('dr'+j+k+l,'transp |' + fdmod.dgrey('pclip=99.9',par))
 
-           wtplot('tmovie'+j+k+l,'ws'+j+k+l,'wr'+j+k+l,par)
-           wzplot('zmovie'+j+k+l,'ws'+j+k+l,'wr'+j+k+l,par)
+          # ------------------------------------------------------------
+          # wavefield
+          Result(   'ws'+j+k+l,           'window j3=50 |'      +fdmod.wgrey('gainpanel=a pclip=99.9',par))
+          Result('figws'+j+k+l,'ws'+j+k+l,'window f3=600 n3=1 |'+fdmod.cgrey('pclip=99.9',par))
+          Result(   'wr'+j+k+l,           'window j3=50 |'      +fdmod.wgrey('gainpanel=a pclip=99.9',par))
+          Result('figwr'+j+k+l,'wr'+j+k+l,'window f3=600 n3=1 |'+fdmod.cgrey('pclip=99.9',par))
 
-           # ------------------------------------------------------------
-           # RTM images
-           Flow('mm0'+j+k+l,['ws'+j+k+l,'wr'+j+k+l],'ic ur=${SOURCES[1]} version=0 nbuf=200 verb=y')
+          wtplot('tmovie'+j+k+l,'ws'+j+k+l,'wr'+j+k+l,par)
+          wzplot('zmovie'+j+k+l,'ws'+j+k+l,'wr'+j+k+l,par)
+
+          # ------------------------------------------------------------
+          # RTM images
+          Flow('mm0'+j+k+l,['ws'+j+k+l,'wr'+j+k+l],
+               'ic ur=${SOURCES[1]} version=0 nbuf=200 verb=y | sfbandpass flo=.1')
 
 #           eps = 0.01
 #           Flow('mm1'+j+k+l,['ws'+j+k+l,'wr'+j+k+l],'ic ur=${SOURCES[1]} version=1 nbuf=200 verb=y eps=%g' % eps)
-           for i in range(1):
-               Result('mm'+str(i)+j+k+l,fdmod.cgrey('pclip=99',par))
-               Result('aa'+str(i)+j+k+l,'mm'+str(i)+j+k+l,
-                      '''
-                      window n1=10 f1=155 |
-                      envelope |
-                      transp | stack |
-                      scale axis=123 |
-                      graph min2=0 max2=+1 wantaxis=y title="" wherexlabel=t label2="" unit2=""
-                      screenratio=%(ratio)g screenht=%(height)g
-                      ''' % par)
+          for i in range(1):
+              Result('mm'+str(i)+j+k+l,fdmod.cgrey('pclip=99.9',par))
+              Result('aa'+str(i)+j+k+l,'mm'+str(i)+j+k+l,
+                     '''
+                     window n1=10 f1=155 |
+                     envelope |
+                     transp | stack |
+                     scale axis=123 |
+                     graph min2=0 max2=+1 wantaxis=y title="" wherexlabel=t label2="" unit2=""
+                     screenratio=%(ratio)g screenht=%(height)g
+                     ''' % par)
 
-       # ------------------------------------------------------------
-       # Image multiple only
+      # ------------------------------------------------------------
+      # Image multiple only
 
 #       Flow('ws_mult'+k+l,['wsn'+k+l,'wsy'+k+l],'add scale=-1,1 ${SOURCES[1]}')
 #       Flow('wr_mult'+k+l,['wrn'+k+l,'wry'+k+l],'add scale=-1,1 ${SOURCES[1]}')
@@ -197,8 +224,8 @@ for l in ('t','c'):    # top (reflection) vs bottom (transmission) vs combined
 #       Result('ws_mult'+k+l,'window j3=50 |'+fdmod.wgrey('gainpanel=a pclip=99.9',par))
 #       Result('wr_mult'+k+l,'window j3=50 |'+fdmod.wgrey('gainpanel=a pclip=99.9',par))
 
-       # ------------------------------------------------------------
-       # RTM images
+      # ------------------------------------------------------------
+      # RTM images
 #       eps = 0.01
 #
 #       Flow('mm0_mult'+k+l,['ws_mult'+k+l,'wr_mult'+k+l],'ic ur=${SOURCES[1]} version=0 nbuf=200 verb=y')

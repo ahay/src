@@ -1,3 +1,9 @@
 from rsftex import *
 Paper('greg',options='short')
+
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,lclass='PCSslides',use='hyperref,amsmath')
+
+
 End()
