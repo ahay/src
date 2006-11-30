@@ -199,14 +199,15 @@ for l in ('t','c'):    # top (reflection) vs bottom (transmission) vs combined
           # ------------------------------------------------------------
           # RTM images
           Flow('mm0'+j+k+l,['ws'+j+k+l,'wr'+j+k+l],
-               'ic ur=${SOURCES[1]} version=0 nbuf=200 verb=y | sfbandpass flo=.1')
+               'ic ur=${SOURCES[1]} version=0 nbuf=500 verb=y')
 
 #           eps = 0.01
 #           Flow('mm1'+j+k+l,['ws'+j+k+l,'wr'+j+k+l],'ic ur=${SOURCES[1]} version=1 nbuf=200 verb=y eps=%g' % eps)
           for i in range(1):
-              Result('mm'+str(i)+j+k+l,fdmod.cgrey('pclip=99.9',par))
+              Result('mm'+str(i)+j+k+l,'bandpass flo=0.01 |'+ fdmod.cgrey('pclip=99.9',par))
               Result('aa'+str(i)+j+k+l,'mm'+str(i)+j+k+l,
                      '''
+                     bandpass flo=0.01 |
                      window n1=10 f1=155 |
                      envelope |
                      transp | stack |
