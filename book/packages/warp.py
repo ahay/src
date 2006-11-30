@@ -418,7 +418,6 @@ def warp2(name,       # name prefix
         si = n('si')
         Flow(si,psw,ifreq)
         Plot(si,freqplot(PS + ' Local Frequency'))
-        Result(si,[pp+'i',si],'OverUnderAniso')
 
         msk = n('msk')
         Flow(msk,[si,pp+'i'],getmask)
@@ -432,14 +431,13 @@ def warp2(name,       # name prefix
         Flow(pr+'0',[msk,si,pp+'i'],pprect(frect))
         Flow(pr,[pp,pr+'0',pp],balance)
 
-        si = si+'2'
         pi = n('pi')
         Flow(pi,pr,ifreq)
-        Flow(si,sr,ifreq)
+        Flow(si+'2',sr,ifreq)
         
-        Plot(si,freqplot(PS + ' Local Frequency'))
+        Plot(si+'2',freqplot(PS + ' Local Frequency'))
         Plot(pi,freqplot('PP Local Frequency'))
-        Result(si,[pi,si],'OverUnderAniso')
+        Result(si,[pp+'i',si,pi,si+'2'],'TwoRows')
 
         s0 = psw+'s0'
         Flow(s0,psw,'spectra all=y')

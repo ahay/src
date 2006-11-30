@@ -36,11 +36,57 @@ warp.warp2('am','pp','ps','warp0',
            gmax=3.5,
            ng=51,
            rect1=25,
-           rect2=100,
+           rect2=25,
            fmin=10,
            fmax=50,
            frame1=350,
            iter=2,
            clip=0.035)
+
+Flow('vp2','vp','smooth rect2=3 | window n2=150')
+Flow('vs2','vs','smooth rect2=3 | window n2=150')
+
+Flow('tpp','vp2',
+     '''
+     math output="4/input" |
+     causint
+     ''')
+Flow('tps','vp2 vs2',
+     '''
+     math vs=${SOURCES[1]} output="2/input+2/vs" |
+     causint
+     ''')
+
+Flow('vpvs','tpp tps',
+     'math tps=${SOURCES[1]} output="2*tps/input-1" ')
+
+Flow('vpvs2','tpp vpvs pp',
+     '''
+     cat ${SOURCES[1]} |
+     transp plane=13 |
+     transp plane=23 |
+     spline pattern=${SOURCES[2]} |
+     window
+     ''')
+
+Result('vpvs2',
+       '''
+       grey color=j scalebar=y clip=0.75 bias=2.75 minval=2 maxval=3.5
+       label1=Time unit1=s title="Exact Vp/Vs"
+       ''')
+
+Result('vp2',
+       '''
+       grey color=j scalebar=y bias=3000
+       label1=Time unit1=s title=Vp
+       barlabel=Velocity barunit=m/s barreverse=y
+       ''')
+
+Result('vs2',
+       '''
+       grey color=j scalebar=y bias=1350
+       label1=Time unit1=s title=Vs
+       barlabel=Velocity barunit=m/s barreverse=y
+       ''')
 
 End()
