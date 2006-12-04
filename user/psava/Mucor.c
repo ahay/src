@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 		    for(    ihx=lox; ihx<hix; ihx++) { jx=ix-ihx; kx=ix+ihx;
 			for(ihz=loz; ihz<hiz; ihz++) { jz=iz-ihz; kz=iz+ihz;
 			    ii[ix][iz] += ur[jt][jx][jz]
-				*         us[kt][kx][kz];
+				*         us[jt][jx][jz];
 			} // nhz
 		    } // nhx
 		} // nht
