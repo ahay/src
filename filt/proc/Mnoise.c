@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "randn.h"
-
 int main (int argc, char* argv[])
 {
     float mean, var, range, a, b, *dat;
@@ -52,7 +50,7 @@ int main (int argc, char* argv[])
 	    a = normal? 2.*range/9. : 2.*range;
 	}
     } else {
-	a = normal? sqrt(var): sqrtf(12*var);
+	a = normal? sqrtf(var): sqrtf(12*var);
     }
 
     if (!sf_getfloat("mean",&mean)) mean=0;
@@ -71,7 +69,7 @@ int main (int argc, char* argv[])
 	if (rep) {
 	    if (normal) {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] = a*randn_one_bm() + b;
+		    dat[i] = a*sf_randn_one_bm() + b;
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {
@@ -83,7 +81,7 @@ int main (int argc, char* argv[])
 	    
 	    if (normal) {
 		for (i=0; i < nbuf; i++) {
-		    dat[i] += a*randn_one_bm() + b;
+		    dat[i] += a*sf_randn_one_bm() + b;
 		}
 	    } else {
 		for (i=0; i < nbuf; i++) {

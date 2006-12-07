@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "randn.h"
-
 int main(int argc, char* argv[])
 {
     int n2, n3, i2, i3, is, **known;
@@ -45,7 +43,7 @@ int main(int argc, char* argv[])
     chance = sf_floatalloc(n2+n3);
 
     init_genrand(2003);
-    random0 (n2+n3,chance);
+    sf_random (n2+n3,chance);
 
     for (i3=0; i3 < n3; i3++) { /* half-offset */
 	for (i2=0; i2 < n2; i2++) { /* midpoint */

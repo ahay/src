@@ -24,6 +24,7 @@ int main(int argc, char* argv[])
 {
     int n1, n2, n3, n12, i3, i2, i1, nw;
     float *slice, *slice2;
+    bool vert;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -38,6 +39,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("nw",&nw)) sf_error("Need nw=");
     /* filter size */
 
+    if (!sf_getbool("vert",&vert)) vert=true;
+    /* include filter on the first axis */
+
     slice = sf_floatalloc(n12);
     slice2 = sf_floatalloc(n12);
 
@@ -45,9 +49,16 @@ int main(int argc, char* argv[])
 	sf_floatread(slice,n12,in);
 
 	if (nw > 2) { 
-	    for (i2=0; i2 < n2; i2++) {
-		spline_post (nw, i2*n1, 1, n1, slice, slice2);
+	    if (vert) {
+		for (i2=0; i2 < n2; i2++) {
+		    spline_post (nw, i2*n1, 1, n1, slice, slice2);
+		}
+	    } else {
+		for (i1=0; i1 < n12; i1++) {
+		    slice2[i1] = slice[i1];
+		}
 	    }
+
 	    for (i1=0; i1 < n1; i1++) {
 		spline_post (nw, i1, n1, n2, slice2, slice);
 	    }

@@ -22,8 +22,6 @@
 
 #include <rsf.h>
 
-#include "randn.h"
-
 static int compare_float (const void *a, const void *b)
 {
     float fa = * ((float*) a);
@@ -181,7 +179,7 @@ int main (int argc, char* argv[])
     }
 
     /* rs - reflection coefficient */
-    randn (nr, rs);
+    sf_randn (nr, rs);
     for (it=0; it < nr; it++) {
 	rs[it] = 0.1/nr + 0.05*rs[it];
 /*	fprintf(stderr,"%g ",rs[it]); */
