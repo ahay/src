@@ -1,0 +1,651 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+# Get data from the server
+
+raw = '3DgatherRAW.segy'
+Fetch(raw,'total',private)
+
+# Convert SEGY to RSF
+
+Flow('traw hraw raw.asc raw.bin',raw,
+     '''
+     segyread tape=$SOURCE
+     tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''',stdin=0)
+
+# Extract shot geometry
+
+Flow('sx','hraw','dd type=float | headermath output=sx/1000')
+Flow('sy','hraw','dd type=float | headermath output=sy/1000')
+
+Flow('shot0','sx sy','cat axis=1 ${SOURCES[1]} | dd type=complex')
+Result('shot0',
+       '''
+       window |
+       graph label1=sx label2=sy title=Geometry symbol=.
+       min1=518.5 max1=530.5 min2=6232.5 max2=6243
+       ''')
+
+# Compute offset
+
+gx = 525157
+gy = 6237880
+
+Flow('hx','hraw','dd type=float | headermath output="(%d-sx)/1000" ' % gx)
+Flow('hy','hraw','dd type=float | headermath output="(%d-sy)/1000" ' % gy)
+
+Flow('shot','hx hy','cat axis=1 ${SOURCES[1]} | dd type=complex')
+Result('shot','window | graph label1=hx label2=hy title=Geometry symbol=.')
+
+# Rotate the azimuth (by converting to complex)
+
+az = 1.13 # guess at the acquisition azimuth (in radians)
+Flow('shot2','shot','math output="input*exp(I*%g)" ' % az)
+Result('shot2',
+       '''
+       window |
+       graph label1=hx label2=hy title=Geometry symbol=.
+       min1=-3.45 max1=3.75
+       min2=-3.6 max2=3.6
+       ''')
+
+# Geometry after regularization
+
+Flow('xreg','sbin','window n3=1 | math output=x1')
+Flow('yreg','sbin','window n3=1 | math output=x2')
+Flow('xyreg','xreg yreg','cmplx ${SOURCES[0:2]}',stdin=0)
+Result('xyreg',
+       '''
+       graph label1=hx label2=hy title="Regular Geometry" symbol=. plotcol=5
+       min1=-3.45 max1=3.75
+       min2=-3.6 max2=3.6
+       ''')
+
+# Geometry from headers
+Flow('xyhead empty','shot2 hraw','intbin head=${SOURCES[1]} mask=${TARGETS[1]} | window | reverse which=3')
+Flow('empty2','empty','reverse which=3')
+Result('xyhead',
+       '''
+       graph label1=hx label2=hy title="Irregular Geometry" symbol=. plotcol=6
+       min1=-3.45 max1=3.75
+       min2=-3.6 max2=3.6
+       ''')
+
+ntr = 139*139
+
+# Geometry shift
+Flow('shift','xyreg xyhead empty2',
+     '''
+     window n1=139 n2=139 f1=1 f2=1 | cat ${SOURCES[1]} | put n1=%d n2=1 | transp plane=13 |
+     window | headerwindow mask=${SOURCES[2]}
+     ''' % ntr)
+
+Flow('shead','shot2','dd type=float')
+
+Result('shift',
+       '''
+       graph label1=hx label2=hy title="Geometry Regularization" plotcol=5
+       min1=-3.45 max1=3.75
+       min2=-3.6 max2=3.6
+       ''')
+
+# Histogram of shifts
+
+Flow('hist','xyreg xyhead empty2',
+     '''
+     window n1=139 n2=139 f1=1 f2=1 | add scale=1,-1 ${SOURCES[1]} | math output="abs(input)" |
+     real | put n1=1 n2=%d | headerwindow mask=${SOURCES[2]} | window | histogram d1=0.001 n1=41 o1=0
+     ''' % ntr)
+
+Result('hist','dd type=float | graph title="Shift Distribution" ')
+
+# Compute direct arrival time
+
+v = 1.5   # water velocity
+z = 0.075 # water depth
+
+Flow('time','shead','headermath x=0 y=1 output="%g*(sqrt(%g+x*x+y*y)-%g)" ' % (1/v,z*z,z))
+
+# Shift data to reduced time
+
+Flow('sraw','traw time','datstretch datum=${SOURCES[1]} dens=2')
+
+# Select line
+
+Flow('mask','hraw','window n1=1 f1=3 | dd type=float | mask min=667 max=667')
+Flow('tline','traw mask','headerwindow mask=${SOURCES[1]}')
+Result('tline','window min1=1.5 max1=4 | tpow tpow=2 | wiggle poly=y transp=y yreverse=y title="Inline 667" ')
+
+Flow('sline','sraw mask','headerwindow mask=${SOURCES[1]}')
+Result('sline','window max1=4 | tpow tpow=1 | wiggle poly=y transp=y yreverse=y title="Inline 667" ')
+
+Flow('mask1','hraw','window n1=1 f1=3 | dd type=float | mask min=712 max=712')
+Flow('tline1','traw mask1','headerwindow mask=${SOURCES[1]}')
+Result('tline1','window max1=4 | tpow tpow=2 | wiggle poly=y transp=y yreverse=y title="Inline 712" ')
+
+Flow('sline1','sraw mask1','headerwindow mask=${SOURCES[1]}')
+Result('sline1','window max1=4 | tpow tpow=1 | wiggle poly=y transp=y yreverse=y title="Inline 667" ')
+
+Flow('x','shot2 mask1','real | headerwindow mask=${SOURCES[1]}')
+Flow('x2','shot2 mask1','imag | headerwindow mask=${SOURCES[1]}')
+Result('wline1','tline1 x',
+       '''
+       window max1=4 | tpow tpow=2 |
+       wiggle poly=y transp=y yreverse=y title="Inline 712" xpos=${SOURCES[1]} label2="Inline Offset" label1=Time
+       ''')
+Result('wsline1','sline1 x',
+       '''
+       window max1=4 | tpow tpow=1 |
+       wiggle poly=y transp=y yreverse=y title="Inline 712" xpos=${SOURCES[1]} label2="Inline Offset" label1=Time
+       ''')
+
+# 2-D line regularization
+
+Flow('bline1 bfld','tline1 x','transp | bin1 head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} nx=141 dx=0.05 x0=-3.35 | transp')
+Result('bline1','window max1=4 | tpow tpow=2 | wiggle poly=y transp=y yreverse=y title="Inline 712 Binned" ')
+
+# Start with coarse binning
+
+Flow('bsline1 bfld1','sline1 x','transp | bin1 head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} nx=36 dx=0.2 x0=-3.35 | transp | tpow tpow=1')
+Result('bsline1','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Binned" ')
+
+# Make mask for missing traces
+
+Flow('miss1','bfld1','spray axis=1 n=4002 o=0 d=0.002')
+
+# Estimate slope
+
+Flow('dip1','bsline1 miss1',
+     '''
+     twodip2 eps=10 lam=1 order=3
+     mask=${SOURCES[1]}
+     ''')
+Result('dip1','window max1=4 n3=1 | grey color=j scalebar=y title=Slope')
+
+# Interpolate it to a denser grid and multiply by 1/2
+Flow('dip12','dip1',
+     '''
+     transp |
+     remap1 n1=71 d1=0.1 o1=-3.35 |
+     transp |
+     scale dscale=0.5
+     ''')
+Flow('dip10','dip12','window n3=1')
+Flow('dip11','dip12','window f3=1')
+
+# Intermediate binning
+
+Flow('bsline2 bfld2','sline1 x','transp | bin1 head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} nx=71 dx=0.1 x0=-3.35 | transp | tpow tpow=1')
+Result('bsline2','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Binned" ')
+
+# Make mask for missing traces
+
+Flow('miss2','bfld2','spray axis=1 n=4002 o=0 d=0.002')
+
+# Estimate slope
+
+Flow('dip2','bsline2 miss2 dip10 dip11',
+     '''
+     twodip2 eps=10 lam=1 dip1=${SOURCES[2]} dip2=${SOURCES[3]}
+     mask=${SOURCES[1]} order=3
+     ''')
+Result('dip2','window max1=4 n3=1 | grey color=j scalebar=y title=Slope')
+
+# Interpolate it to a denser grid and multiply by 1/2
+Flow('dip22','dip2',
+     '''
+     transp |
+     remap1 n1=141 d1=0.05 o1=-3.35 |
+     transp |
+     scale dscale=0.5
+     ''')
+Flow('dip20','dip22','window n3=1')
+Flow('dip21','dip22','window f3=1')
+
+# Dense binning
+
+Flow('bsline3 bfld3','sline1 x','transp | bin1 head=${SOURCES[1]} interp=2 fold=${TARGETS[1]} nx=141 dx=0.05 x0=-3.35 | transp | tpow tpow=1')
+Result('bsline3','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Binned" ')
+
+# Make mask for missing traces
+
+Flow('miss3','bfld3','spray axis=1 n=4002 o=0 d=0.002')
+
+# Estimate slope
+
+Flow('dip3','bsline3 miss3 dip20 dip21',
+     '''
+     twodip2 eps=10 lam=1 dip1=${SOURCES[2]} dip2=${SOURCES[3]}
+     mask=${SOURCES[1]} order=3
+     ''')
+Result('dip3','window max1=4 n3=1 | grey color=j scalebar=y title=Slope')
+
+# Regularize
+
+Flow('sreg1','bsline3 dip3 miss3',
+     'planemis2 dip=${SOURCES[1]} var=0 mask=${SOURCES[2]} niter=40 verb=y order=3')
+Result('sreg1','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Filled" ')
+
+Flow('pwd1','sreg1 dip3','pwd dip=${SOURCES[1]}')
+
+# Unshift to original time
+
+y = 0.9
+Flow('rtime1','sreg1',
+     '''
+     window n1=1 |
+     math output="%g*(sqrt(%g+x1*x1+%g)-%g)"
+     ''' % (1/v,z*z,y*y,z))
+Flow('treg1','sreg1 rtime1','datstretch datum=${SOURCES[1]} inv=y')
+
+Result('treg1','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Filled" ')
+
+#############################################
+
+Flow('mask2','hraw','window n1=1 f1=2 | dd type=float | mask min=80 max=80')
+Flow('tline2','traw mask2','headerwindow mask=${SOURCES[1]}')
+Result('tline2','window max1=4 | tpow tpow=2 | wiggle poly=y transp=y yreverse=y title="Crossline 80" ')
+
+Flow('sline2','sraw mask2','headerwindow mask=${SOURCES[1]}')
+Result('sline2','window max1=4 | tpow tpow=1 | wiggle poly=y transp=y yreverse=y title="Crossline 80" ')
+
+Flow('y','shot2 mask2','imag | headerwindow mask=${SOURCES[1]}')
+Result('wline2','tline2 y',
+       '''
+       window max1=4 | tpow tpow=2 |
+       wiggle poly=y transp=y yreverse=y title="Crossline 80" xpos=${SOURCES[1]} label2="Crossline Offset" label1=Time
+       ''')
+Result('wsline2','sline2 y',
+       '''
+       window max1=4 | tpow tpow=1 |
+       wiggle poly=y transp=y yreverse=y title="Crossline 80" xpos=${SOURCES[1]} label2="Crossline Offset" label1=Time
+       ''')
+
+# Transpose to time slices
+
+Flow('tdat','traw','window max1=4 | transp memsize=500')
+
+# Binning interpolation/stacking to regular grid
+# tbin.rsf is regularly sampled data
+# tfld.rsf is fold
+
+Flow('tbin tfld','tdat shead',
+     '''
+     bin fold=${TARGETS[1]} head=${SOURCES[1]}
+     xkey=0 ykey=1 interp=1
+     nx=141 dx=0.05 x0=-3.35
+     ny=141 dy=0.05 y0=-3.5
+     ''')
+
+# Plot the fold
+
+Result('tfld',
+       '''
+       grey allpos=y pclip=100
+       transp=n yreverse=n scalebar=1
+       label1=In-line label2=Cross-line
+       wheretitle=t wherexlabel=b
+       title="Fold Map" color=j allpos=y
+       ''')
+
+# Transpose and tpow
+Flow('tran','tbin','transp plane=23 | transp plane=12 | tpow tpow=1')
+       
+# Plot binned data
+
+clip=3.77331
+
+Result('tbin','tran',
+       '''
+       window max1=4 | 
+       byte gainpanel=88 pclip=97 |
+       grey3 title="Binned Data"
+       frame1=375 frame2=60 frame3=88
+       ''')
+
+Flow('tbin2 tfld2','tdat shead',
+     '''
+     bin fold=${TARGETS[1]} head=${SOURCES[1]}
+     xkey=0 ykey=1 interp=2
+     nx=561 dx=0.0125 x0=-3.35
+     ny=561 dy=0.0125 y0=-3.5
+     ''')
+
+# Plot the fold
+
+Result('tfld2',
+       '''
+       grey allpos=y pclip=100
+       transp=n yreverse=n scalebar=1
+       label1=In-line label2=Cross-line
+       wheretitle=t wherexlabel=b
+       title="Fold Map" color=j allpos=y
+       ''')
+
+# Bin shifted data
+
+Flow('sdat','sraw','window max1=4 | transp memsize=500')
+
+Flow('sbin2','sdat shead',
+     '''
+     shapebin head=${SOURCES[1]}
+     xkey=0 ykey=1 interp=4
+     verb=n niter=100 filt1=5 filt2=5
+     nx=141 dx=0.05 x0=-3.35
+     ny=141 dy=0.05 y0=-3.5 |
+     postfilter2 nw=4
+     ''')
+Flow('sran2','sbin2','transp plane=23 | transp plane=12 | tpow tpow=1')
+Result('sbin2','sran2',
+       '''
+       byte gainpanel=88 |
+       grey3 title="Spline+Shaping"
+       frame1=250 frame2=60 frame3=88
+       ''')
+
+# Coarse binning
+
+Flow('sbin0 fld0','sdat shead',
+     '''
+     bin head=${SOURCES[1]} fold=${TARGETS[1]}
+     xkey=0 ykey=1 interp=2
+     nx=36 dx=0.2 x0=-3.35
+     ny=36 dy=0.2 y0=-3.5
+     ''')
+
+# Make mask for missing traces
+
+Flow('miss0','fld0','spray axis=1 n=2002 o=0 d=0.002')
+
+# Transpose and tpow
+Flow('sran0','sbin0','transp plane=23 | transp plane=12 | tpow tpow=1')
+       
+# Plot regular data
+
+Result('sbin0','sran0',
+       '''
+       byte gainpanel=22 |
+       grey3 title="Binned Data"
+       frame1=250 frame2=15 frame3=22
+       ''')
+
+# Estimate slopes
+
+Flow('dip0','sran0 miss0',
+     '''
+     twodip2 eps=10 lam=1 order=3
+     mask=${SOURCES[1]}
+     ''')
+Flow('idip0','dip0','window n3=1')
+Flow('xdip0','dip0','window f3=1')
+
+Result('idip0',
+       '''
+       byte gainpanel=22 bar=ibar |
+       grey3 frame1=250 frame2=15 frame3=22
+       color=j scalebar=y title="First Slope" 
+       ''')
+
+Result('xdip0',
+       '''
+       byte gainpanel=22 bar=xbar |
+       grey3 frame1=250 frame2=15 frame3=22
+       color=j scalebar=y title="Second Slope" 
+       ''')
+
+# Denser binning
+
+Flow('sbin-1 fld-1','sdat shead',
+     '''
+     bin head=${SOURCES[1]} fold=${TARGETS[1]}
+     xkey=0 ykey=1 interp=2
+     nx=71 dx=0.1 x0=-3.35
+     ny=71 dy=0.1 y0=-3.5
+     ''')
+
+# Make mask for missing traces
+
+Flow('miss-1','fld-1','spray axis=1 n=2002 o=0 d=0.002')
+
+# Transpose and tpow
+Flow('sran-1','sbin-1','transp plane=23 | transp plane=12 | tpow tpow=1')
+       
+# Plot regular data
+
+Result('sbin-1','sran-1',
+       '''
+       byte gainpanel=44 |
+       grey3 title="Binned Data"
+       frame1=250 frame2=30 frame3=44
+       ''')
+
+# Estimate slopes
+
+# Interpolate to a denser grid and multiply by 1/2
+Flow('dip0-1','dip0',
+     '''
+     transp |
+     remap1 n1=71 d1=0.1 o1=-3.35 |
+     transp |
+     put d4=0.2 o4=-3.5 |
+     transp plane=14 |
+     remap1 n1=71 d1=0.1 o1=-3.5 |
+     transp plane=14 |
+     scale dscale=0.5
+     ''')
+Flow('idip0-1','dip0-1','window n3=1')
+Flow('xdip0-1','dip0-1','window f3=1')
+
+Flow('dip-1','sran-1 miss-1 idip0-1 xdip0-1',
+     '''
+     twodip2 eps=10 lam=1 order=3
+     mask=${SOURCES[1]} dip1=${SOURCES[2]} dip2=${SOURCES[3]}
+     ''')
+Flow('idip-1','dip-1','window n3=1')
+Flow('xdip-1','dip-1','window f3=1')
+
+Result('idip-1',
+       '''
+       byte gainpanel=44 bar=ibar |
+       grey3 frame1=250 frame2=30 frame3=44
+       color=j scalebar=y title="First Slope" 
+       ''')
+
+Result('xdip-1',
+       '''
+       byte gainpanel=44 bar=xbar |
+       grey3 frame1=250 frame2=30 frame3=44
+       color=j scalebar=y title="Second Slope" 
+       ''')
+
+# Dense binning
+
+Flow('sbin-2 fld-2','sdat shead',
+     '''
+     bin head=${SOURCES[1]} fold=${TARGETS[1]}
+     xkey=0 ykey=1 interp=2
+     nx=141 dx=0.05 x0=-3.35
+     ny=141 dy=0.05 y0=-3.5
+     ''')
+
+Flow('sbin fld','sdat shead',
+     '''
+     bin head=${SOURCES[1]} fold=${TARGETS[1]}
+     xkey=0 ykey=1 interp=1
+     nx=141 dx=0.05 x0=-3.35
+     ny=141 dy=0.05 y0=-3.5
+     ''')
+
+# Make mask for missing traces
+
+Flow('miss-2','fld-2','spray axis=1 n=2002 o=0 d=0.002')
+Flow('miss','fld','spray axis=1 n=2002 o=0 d=0.002')
+
+# Transpose and tpow
+Flow('sran-2','sbin-2','transp plane=23 | transp plane=12 | tpow tpow=1')
+Flow('sran','sbin','transp plane=23 | transp plane=12 | tpow tpow=1')
+       
+# Plot regular data
+
+Result('sbin-2','sran-2',
+       '''
+       byte gainpanel=44 |
+       grey3 title="Binned Data"
+       frame1=250 frame2=30 frame3=44
+       ''')
+
+# Estimate slopes
+
+# Interpolate to a denser grid and multiply by 1/2
+Flow('dip1-2','dip-1',
+     '''
+     transp memsize=500 |
+     remap1 n1=141 d1=0.05 o1=-3.35 |
+     transp memsize=500 |
+     put d4=0.1 o4=-3.5 |
+     transp plane=14 memsize=500 |
+     remap1 n1=141 d1=0.05 o1=-3.5 |
+     transp plane=14 memsize=500 |
+     scale dscale=0.5
+     ''')
+Flow('idip1-2','dip1-2','window n3=1')
+Flow('xdip1-2','dip1-2','window f3=1')
+
+Flow('dip-2','sran-2 miss-2 idip1-2 xdip1-2',
+     '''
+     twodip2 eps=10 lam=1 order=3
+     mask=${SOURCES[1]} dip1=${SOURCES[2]} dip2=${SOURCES[3]}
+     ''')
+Flow('idip-2','dip-2','window n3=1')
+Flow('xdip-2','dip-2','window f3=1')
+
+Result('idip-2',
+       '''
+       byte gainpanel=88 bar=ibar |
+       grey3 frame1=250 frame2=60 frame3=88
+       color=j scalebar=y title="First Slope" 
+       ''')
+
+Result('xdip-2',
+       '''
+       byte gainpanel=88 bar=xbar |
+       grey3 frame1=250 frame2=60 frame3=88
+       color=j scalebar=y title="Second Slope" 
+       ''')
+
+# Compute time shift
+
+## Flow('idip','dip empty2','window n4=1 n2=139 n3=139 f2=1 f3=1 | put n3=1 n2=%d | headerwindow mask=${SOURCES[1]}' % ntr)
+## Flow('xdip','dip empty2','window f4=1 n2=139 n3=139 f2=1 f3=1 | put n3=1 n2=%d | headerwindow mask=${SOURCES[1]}' % ntr)
+
+## Flow('dx','xyreg xyhead empty2',
+##      '''
+##      window n1=139 n2=139 f1=1 f2=1 | add scale=1,-1 ${SOURCES[1]} |
+##      spray axis=1 n=1001 o=0 d=0.002 | headerwindow mask=${SOURCES[2]}
+##      ''')
+## Flow('idx','dx','real')
+## Flow('xdx','dx','imag')
+
+## Flow('tshift','idip xdip idx xdx',
+##      '''
+##      math px=${SOURCES[0]} py=${SOURCES[1]} dx=${SOURCES[2]} dy=${SOURCES[3]}
+##      output="(px*dx+py*dy)/0.05"
+##      ''')
+
+# Apply time shift
+## Flow('shifted','sran tshift empty2',
+##      '''
+##      window n2=139 n3=139 f2=1 f3=1 | headerwindow mask=${SOURCES[2]} |
+##      timeshift dip=${SOURCES[1]}
+##      ''')
+
+# New binning
+## Flow('xy','xyhead empty2','spray axis=1 n=1 | headerwindow mask=${SOURCES[1]} | dd type=float')
+
+## Flow('sbin3','shifted xy',
+##      '''
+##      transp memsize=500 |
+##      bin head=${SOURCES[1]}
+##      xkey=0 ykey=1 interp=1
+##      nx=141 dx=0.05 x0=-3.35
+##      ny=141 dy=0.05 y0=-3.5
+##      ''')
+## Flow('sran3','sbin3','transp plane=23 | transp plane=12')
+
+## Result('sbin3','sran3',
+##        '''
+##        byte gainpanel=88 |
+##        grey3 title="Regularized"
+##        frame1=250 frame2=61 frame3=88
+##        ''')
+ 
+# Regularize
+
+Flow('sreg','sran dip miss',
+     'planemis3 dip=${SOURCES[1]} var=0.376741 mask=${SOURCES[2]} niter=20 verb=y')
+
+Flow('pwd','sreg dip','pwd dip=${SOURCES[1]}')
+
+Flow('sreg-2','sran-2 dip-2 miss',
+     'planemis2 dip=${SOURCES[1]} mask=${SOURCES[2]} niter=40 verb=n order=3')
+
+# Plot regularized data
+
+Result('sreg-2',
+       '''
+       byte gainpanel=88 |
+       grey3 title="Regularized Data"
+       frame1=250 frame2=60 frame3=88
+       ''')
+
+# Unshift to original time
+
+Flow('rtime','sreg-2',
+     '''
+     window n1=1 |
+     math output="%g*(sqrt(%g+x1*x1+x2*x2)-%g)"
+     ''' % (1/v,z*z,z))
+Flow('treg','sreg-2 rtime','datstretch datum=${SOURCES[1]} inv=y')
+
+# Plot regularized data
+
+Result('treg',
+       '''
+       byte gainpanel=88 |
+       grey3 title="Regularized Data"
+       frame1=750 frame2=60 frame3=88
+       ''')
+
+# Estimate 3-D dips
+
+Flow('swin','sbin','window max1=2')
+
+Flow('dip','swin miss',
+     '''
+     dip mask=${SOURCES[1]}
+     rect1=40 rect2=10 rect3=10
+     ''')
+     
+Result('idip','dip',
+       '''
+       window n4=1 |
+       byte gainpanel=88 bar=ibar |
+       grey3 frame1=250 frame2=60 frame3=88
+       color=j scalebar=y title="Inline Slope" 
+       ''')
+
+Result('xdip','dip',
+       '''
+       window f4=1 |
+       byte gainpanel=88 bar=xbar |
+       grey3 frame1=250 frame2=60 frame3=88
+       color=j scalebar=y title="Crossline Slope" 
+       ''')
+
+
+
+End()

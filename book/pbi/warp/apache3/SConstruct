@@ -67,7 +67,7 @@ warp.warp3('ap3','pp3','ps2','warp0',
            fmin=10,
            fmax=70,
            frect=3,
-           frame1=200,
+           frame1=86,
            iter=3,
            niter=20,
            clip=11.33)

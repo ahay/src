@@ -45,6 +45,7 @@ for dens in range(1,4):
     dip2 = 'dip2%d' % dens
     dip  = 'dip%d'  % dens
     fill = 'fill%d' % dens
+    reg  = 'reg%d'  % dens
 
     # Bin the data
     Flow([bin,fold],'data offset2',
@@ -78,21 +79,37 @@ for dens in range(1,4):
 
     # Fill the gaps in the binned data using PWD
     Flow(fill,[bin,dip,mask],'planemis2 order=3 dip=${SOURCES[1]} mask=${SOURCES[2]} verb=y')
-    Plot(fill,'grey title="Regularized (nx=%d)"' % nx)
+    Plot(fill,'grey title="Filled (nx=%d)"' % nx)
 
     Result(fill,[bin,dip,fill],'SideBySideAniso')
+
+    Flow(reg,['data','offset2',dip],
+         'planereg2 order=3 head=${SOURCES[1]} dip=${SOURCES[2]} verb=y interp=4 | postfilter2 nw=4 vert=n')
+    Plot(reg,'grey title="Regularized (nx=%d)"' % nx)
+
+    Result(reg,[bin,dip,reg],'SideBySideAniso')
 
     # Double the number of bins
     nx = nx*2
     dx = dx/2
     rect = rect*2
 
+
 # Wiggle trace display of the final result
 Plot('fill','fill3',
+     '''
+     wiggle label2=Offset title=Filled
+     yreverse=y transp=y poly=y
+     ''')
+Result('fill','ireg fill','SideBySideAniso')
+
+# Wiggle trace display of the final result
+Plot('wreg','reg3',
      '''
      wiggle label2=Offset title=Regularized
      yreverse=y transp=y poly=y
      ''')
-Result('fill','ireg fill','SideBySideAniso')
+Result('wreg','ireg wreg','SideBySideAniso')
+
 
 End()

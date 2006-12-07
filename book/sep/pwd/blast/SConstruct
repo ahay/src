@@ -17,7 +17,15 @@ Flow('miss','data mask dip',
      order=2 niter=200 verb=y | bandpass fhi=50
      ''')
 
-for case in ['data','miss']:
+Flow('pwd','miss dip','pwd dip=${SOURCES[1]} order=2')
+
+Flow('miss-rand','data mask dip',
+     '''
+     planemis3 mask=${SOURCES[1]} dip=${SOURCES[2]}
+     order=2 niter=200 verb=y var=8e-8 | bandpass fhi=50
+     ''')
+
+for case in ['data','miss','miss-rand']:
     Flow(case+'bin',case,'byte clip=.0007')
     plots = []
 
@@ -33,5 +41,6 @@ for case in ['data','miss']:
     Plot(case+'bot',plots[8:12],'SideBySideAniso')
     Plot(case,map(lambda x: case+x,['top','mid','bot']),'OverUnderAniso')
 Result('passfill','data miss','SideBySideAniso')
+
 
 End()
