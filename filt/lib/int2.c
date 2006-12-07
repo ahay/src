@@ -116,7 +116,7 @@ void  sf_int2_lop (bool adj, bool add, int nm, int ny, float* x, float* ord)
     }
 }
 
-void int2_close (void)
+void sf_int2_close (void)
 /*< free allocated storage >*/
 {
     if (allocated) {

@@ -487,7 +487,7 @@ Flow('miss','fld','spray axis=1 n=2002 o=0 d=0.002')
 
 # Transpose and tpow
 Flow('sran-2','sbin-2','transp plane=23 | transp plane=12 | tpow tpow=1')
-Flow('sran','sbin','transp plane=23 | transp plane=12 | tpow tpow=1')
+Flow('sran','sbin','transp plane=23 memsize=500 | transp plane=12 memsize=500 | tpow tpow=1')
        
 # Plot regular data
 
@@ -622,7 +622,7 @@ Result('treg',
 
 # Estimate 3-D dips
 
-Flow('swin','sbin','window max1=2')
+Flow('swin','sran','window max1=2')
 
 Flow('dip','swin miss',
      '''
