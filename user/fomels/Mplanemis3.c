@@ -16,14 +16,15 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <time.h>
 
 #include <rsf.h>
 #include "allp3.h"
 
 int main(int argc, char* argv[])
 {
-    int i, niter, nw, n1, n2, n3, n123, nj1, nj2;
-    float *mm, *dd, *pp, *qq;
+    int i, niter, nw, n1, n2, n3, n123, nj1, nj2, seed;
+    float *mm, *dd, *pp, *qq, a, var;
     bool *known, verb;
     sf_file in, out, dip, mask;
 
@@ -51,6 +52,14 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb = false;
     /* verbosity flag */
+    
+    if (!sf_getint("seed",&seed)) seed = time(NULL);
+    /* random seed */
+    init_genrand((unsigned long) seed);
+
+    if (!sf_getfloat("var",&var)) var=0.;
+    /* noise variance */
+    a = sqrtf(var);
 
     pp = sf_floatalloc(n123);
     qq = sf_floatalloc(n123);
@@ -78,7 +87,7 @@ int main(int argc, char* argv[])
     }
 
     for (i=0; i < 2*n123; i++) {
-	dd[i] = 0.;
+	dd[i] = a*sf_randn_one_bm();
     }
 
     allpass3_init(allpass_init(nw, nj1, n1,n2,n3, pp),

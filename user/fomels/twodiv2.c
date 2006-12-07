@@ -34,7 +34,8 @@ void twodiv2_init(int nw             /* number of components */,
 		  int n1, int n2     /* data size */, 
 		  float f1, float f2 /* smoothing radius */, 
 		  int niter1         /* number of iteration */, 
-		  bool gauss1        /* Gaussian or triangle smoothing */, 
+		  bool gauss1        /* Gaussian or triangle smoothing */,
+		  bool verb          /* verbosity flag */,
 		  float* den         /* denominator */) 
 /*< initialize >*/
 {
@@ -49,7 +50,7 @@ void twodiv2_init(int nw             /* number of components */,
 	triangle2_init((int) f1, (int) f2, n1, n2);
 	repeat_init(n,nw,triangle2_lop);
     }
-    sf_conjgrad_init(nw*n, nw*n, n, n, 1., 1.e-6, true, false);
+    sf_conjgrad_init(nw*n, nw*n, n, n, 1., 1.e-6, verb, false);
     p = sf_floatalloc (nw*n);
     weight2_init(nw,n,den);
 }

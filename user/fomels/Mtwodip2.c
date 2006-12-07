@@ -60,7 +60,7 @@ int main (int argc, char *argv[])
     /* if y, estimate both dips */
     
     /* initialize dip estimation */
-    twodip2_init(n1, n2, eps, lam, sign, gauss, both);
+    twodip2_init(n1, n2, eps, lam, sign, gauss, verb, both);
 
     u = sf_floatalloc(n12);
     p = sf_floatalloc2(n12,2);
@@ -97,6 +97,8 @@ int main (int argc, char *argv[])
     }
 
     for (i3=0; i3 < n3; i3++) {
+	sf_warning("slice %d of %d",i3+1,n3);
+
 	/* initialize dips */
 	if (NULL == dip1) {
 	    for(i=0; i < n12; i++) {

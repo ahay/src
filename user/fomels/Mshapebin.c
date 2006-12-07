@@ -29,7 +29,7 @@
 
 int main (int argc, char* argv[])
 {
-    bool gauss, shape;
+    bool gauss, shape, verb;
     int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey;
     int interp, niter, nliter;
     float *pp, *mm, *mm0=NULL, *dd, **xy, *hdr, filt1, filt2, a[3];
@@ -145,21 +145,9 @@ int main (int argc, char* argv[])
     
     /* initialize interpolation */
     if (!sf_getint("interp",&interp)) interp=2;
-    /* [1,2] interpolation method, 1: nearest neighbor, 2: bi-linear */
+    /* interpolation length */
 
-    switch (interp) {
-	case 1:
-	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_bin_int, 1, nd);
-	    sf_warning("Using nearest-neighbor interpolation");
-	    break;
-	case 2:
-	    sf_int2_init (xy, x0,y0,dx,dy,nx,ny, sf_lin_int, 2, nd);
-	    sf_warning("Using linear interpolation");
-	    break;
-	case 3:
-	    sf_error("Unsupported interp=%d",interp);
-	    break;
-    }
+    sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_spline_int, interp, nd);
 
     nm = nx*ny;
     mm = sf_floatalloc(nm);
@@ -176,6 +164,8 @@ int main (int argc, char* argv[])
     /* if y, use gaussian shaping (estimated from the data) */
     if (!sf_getbool("shape",&shape)) shape=true;
     /* if y, use shaping regularization */
+    if (!sf_getbool("verb",&verb)) verb=true;
+    /* verbosity flag */
 
     if (shape) {
 	if (!sf_getfloat("filt1",&filt1)) filt1=3.;
@@ -227,9 +217,10 @@ int main (int argc, char* argv[])
 	pp = NULL;
     }
 
-    sf_conjgrad_init(nm, nm, nd, nd, eps, 1.e-9, true, false);
+    sf_conjgrad_init(nm, nm, nd, nd, eps, 1.e-9, verb, false);
 
     for (it=0; it < nt; it++) { /* loop over time slices */
+	sf_warning("slice %d of %d",it+1,nt);
 	sf_floatread (dd,nd,in);
 
 	if (shape) {

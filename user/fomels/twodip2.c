@@ -39,7 +39,8 @@ static void border(float* u);
 void twodip2_init(int nx, int ny     /* data size */, 
 		  float fx, float fy /* smoothing radius */, 
 		  bool sign1         /* if keep slope signs */, 
-		  bool gauss         /* Gaussian versus triangle smoothing */, 
+		  bool gauss         /* Gaussian versus triangle smoothing */,
+		  bool verb          /* verbosity flag */,
 		  bool both          /* both slopes or one */)
 /*< initialize >*/
 {
@@ -51,7 +52,7 @@ void twodip2_init(int nx, int ny     /* data size */,
 	u1 = sf_floatalloc2(n,2);
 	dp = sf_floatalloc(n*2);
 	p0 = sf_floatalloc(n*2);
-	twodiv2_init(2,n1,n2,fx,fy,niter,gauss,u1[0]);
+	twodiv2_init(2,n1,n2,fx,fy,niter,gauss,verb,u1[0]);
     } else {
 	u1 = sf_floatalloc2(n,1);
 	dp = sf_floatalloc(n);

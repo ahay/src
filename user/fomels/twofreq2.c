@@ -43,7 +43,7 @@ void twofreq2_init(int nx, int ny     /* data size */,
     u2 = sf_floatalloc(n);
     dp = sf_floatalloc(n*4);
 
-    twodiv2_init(4,n1,n2,fx,fy,niter,gauss,u1);
+    twodiv2_init(4,n1,n2,fx,fy,niter,gauss,true,u1);
 }
 
 void twofreq2_close(void)
