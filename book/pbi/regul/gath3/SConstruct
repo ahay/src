@@ -646,6 +646,21 @@ Result('xdip','dip',
        color=j scalebar=y title="Crossline Slope" 
        ''')
 
+Flow('reg','sraw shead dip',
+     '''
+     window max1=2 |
+     planereg3 head=${SOURCES[1]} dip=${SOURCES[2]} verb=y interp=4 xkey=0 ykey=1 eps=0.1 |
+     transp memsize=500 plane=13 |
+     postfilter2 nw=4 |
+     transp memsize=500 plane=13
+     ''')
 
+Result('reg',
+       '''
+       tpow tpow=1 |
+       byte gainpanel=88 |
+       grey3 title="Regularized Data"
+       frame1=250 frame2=61 frame3=88
+       ''')
 
 End()

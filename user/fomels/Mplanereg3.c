@@ -23,7 +23,7 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, nw, n1, n2, n3, n123, nj1, nj2, nk, xkey, ykey, nx, ny, interp, nt, id, nd;
+    int niter, nw, n1, n2, n123, nj1, nj2, nk, xkey, ykey, nx, ny, interp, nt, id, nd;
     float *mm, *dd, *pp, *qq, **xy, x0, dx, y0, dy, eps, *hdr;
     char *header, *xk, *yk;
     bool verb;
@@ -38,7 +38,6 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&nt)) nt=1;
     if (!sf_histint(in,"n2",&nd)) nd=1;
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    n3 = sf_leftsize(in,2);
     
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);
