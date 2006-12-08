@@ -180,5 +180,44 @@ Result('xdip1','dip1',
        title="Crossline Dip" scalebar=y color=j
        ''')
 
+# Interpolate dips
+
+Flow('dip12','dip1',
+     '''
+     transp memsize=500 |
+     remap1 n1=792 d1=0.0125 |
+     transp memsize=500 |
+     transp plane=13 |
+     remap1 n1=157 d1=0.025 |
+     transp plane=13 |
+     scale dscale=0.5
+     ''')
+
+Flow('idip12','dip12','window n4=1 | patch w=1000,157,157')
+Flow('xdip12','dip12','window f4=1 | patch w=1000,157,157')
+Flow('miss','tfld','spray axis=1 n=1000 d=0.003 o=1 | patch w=1000,157,157')
+Flow('pbin2','tbin2','patch w=1000,157,157')
+
+Flow('dip2','pbin2 miss idip12 xdip12',
+     '''
+     dip rect1=10 rect2=20 rect3=10
+     mask=${SOURCES[1]} idip=${SOURCES[2]} xdip=${SOURCES[3]}
+     ''')
+
+Flow('idip','dip2','window n4=1 squeeze=n | patch inv=y weight=y dim=3')
+Flow('xdip','dip2','window f4=1 squeeze=n | patch inv=y weight=y dim=3')
+
+Result('idip',
+       '''
+       byte gainpanel=78 bar=idip |
+       grey3 frame1=500 frame2=210 frame3=78
+       title="Inline Dip" scalebar=y color=j
+       ''')
+Result('xdip',
+       '''
+       byte gainpanel=78 bar=idip |
+       grey3 frame1=500 frame2=210 frame3=78
+       title="Crossline Dip" scalebar=y color=j
+       ''')
 
 End()
