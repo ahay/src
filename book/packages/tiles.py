@@ -1,43 +1,39 @@
 from rsfproj import *
 
-def plot(data,n1,n2,j1,j2,nh1,nh2,custom):
+def plot(plot,data,n1,n2,f1,f2,j1,j2,w1,w2,custom,par):
 
-    Flow(data+'_wind',
+    Flow(plot+'_wind',
          data,
          '''
-         window j1=%d f1=%d j2=%d f2=%d |
+         window n1=%d j1=%d f1=%d n2=%d j2=%d f2=%d |
          transp plane=23 |
          transp plane=12 |
          transp plane=34
-         ''' % (j1,0,j2,0) )
+         ''' % (n1/j1,j1,f1,
+                n2/j2,j2,f2) )
 
-    Flow(data+'_tile',
-         data+'_wind',
+    Flow(plot+'_tile',
+         plot+'_wind',
          '''
-         put n1=%d n2=%d n3=1 n4=1
-         o1=0  o2=0  o3=0 o4=0
+         put
+         n1=%d n2=%d n3=1 n4=1
+         o1=%d o2=%d o3=0 o4=0
          d1=%g d2=%g d3=1 d4=1
-         ''' % (n1/j1*nh1,
-                n2/j2*nh2,
-                1./nh1,
-                1./nh2))
+         ''' % (n1/j1*w1,
+                n2/j2*w2,
+                f1/j1,
+                f2/j2,
+                1./w1,
+                1./w2))
 
-    zmin=0
-    zmax=zmin+n1/j1
-    xmin=0
-    xmax=xmin+n2/j2
-    
-    ratio = 1.0*(zmax-zmin)/(xmax-xmin);
+    ratio = 1.0*(n1/j1*w1)/(n2/j2*w2);
     height= ratio*14
-
-    Result(data,data+'_tile',
+    
+    Result(plot,plot+'_tile',
            '''
-           grey title=""
-           label1="" unit1="" label2="" unit2=""
-           pclip=99.9
+           grey title="" pclip=100 labelsz=4
+           label1="" unit1=" " label2="" unit2=" "
            grid=y g1num=1 g2num=1 gridcol=0
-           min1=%g max1=%g
-           min2=%g max2=%g
            screenratio=%g screenht=%g
            %s
-           ''' % (zmin,zmax,xmin,xmax,ratio,height,custom))
+           ''' % (ratio,height,custom))
