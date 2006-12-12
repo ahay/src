@@ -1,0 +1,235 @@
+# Inversion for von Karman parameters
+# Space correlation in 1-D Fourier domain
+#
+# December 2006
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsfproj import *
+from math import pi
+
+
+# ---------------
+# Spatial 1D grid
+# ---------------
+
+# Master parameters
+#
+# nx = number of points in X
+# dx = space data step sampling
+
+# Slave parameters (spatial frequency content)
+#
+# fpx = 1/dx        = frequency space periodicity (Hz)
+# lx  = nx*dx       = space period
+# dfx = 1/lx        = frequency step
+# fmx = 1/dx - 1/lx = maximum frequency
+# fnx = 1/(2*dx)    = nx/(2*lx) = Nyquist frequency
+#
+# Signal X detecting content (Hz) =  dfx < fx < fnx
+
+# Python dictionary
+
+
+pgrid = {'nx':512, 'ox':0., 'dx':1.}
+
+
+# Create spatial grid
+
+
+Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put label1=x unit1=m' % pgrid)
+
+
+# --------------------
+# Synthetic 1-D curve
+# --------------------
+
+# b   = correlation length scale in x (m)
+# nu  = Hurst exponent 0 < and < 0.5 = Bessel function order
+# gmu = mean of Gaussian white noise
+# gvr = variance of Gaussian white noise = (standard deviation)^2
+# grn = noise range
+# gsd = seed for random generator
+
+
+psyn = {'b':10., 'nu':0.2, 'gmu':0., 'gvr':1., 'grn':1., 'gsd':1347}
+
+
+# Create Gaussian white noise
+
+
+Flow('wgauss','spacegrid','noise mean=%(gmu)g range=%(grn)g rep=y seed=%(gsd)g type=y var=%(gvr)g' % psyn)
+Plot('wgauss','sfgraph title="Gaussian white noise"')
+
+
+# Discrete Fourier Transform (fft) (k=0,N-1)
+#
+# S(k*DF) = DL*sum(n=0,N-1) s(n*DL)*exp(-2*i*pi*k*n/N)
+#
+# s  = spatial signal
+# S  = frequency signal
+# N  = points number in space
+# DF = frequency sampling step = 1/L
+# L  = spatial length of signal = 1/DF
+# DL = space sampling step = L/N = 1/(N*DF)
+# FM = maximum frequency = 1/DL - 1/L
+#
+# Properties
+#
+# Symmetry S(-u) = S*(u)
+# Periodicity S(ix+NX) = S(ix)
+# Physical vectors (k=0,N-1)
+# S(N-1) = S(-1) = S*(1)
+# S(N-2) = S(-2) = S*(2)
+# ...
+# S(N/2+1) = S(-N/2-1) = S*(N/2-1)
+# S(N/2)   = S(-N/2)   = S*(N/2)
+#
+# [fx] = dfx*(-nx/2+1:1:nx/2) 
+
+
+Flow('fwgauss','wgauss','sffft1 sym=y')
+Plot('fwgauss','sfadd abs=y | sfreal | put label1=fx unit1=1/m | sfgraph title="Gaussian white noise spectrum"')
+
+
+# Stochastic process von Karman filter in spectral domain (Lord, 1954)
+
+
+Flow('vnkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)"' % psyn)
+Plot('vnkfilt','sfreal | put label1=fx unit1=1/m | sfgraph title="Filter spectrum F(fx)"')
+
+
+# Logarithmic plot for conical coolie hat inversion method
+
+
+Flow('lvkfilt','vnkfilt','sfreal | sfmath output="log(input)"')
+Flow('lybfilt','lvkfilt','sfmath output="log(1+((%(b)g)*x1)^2)"' % psyn)
+Plot('lvky','lvkfilt lybfilt',
+     '''
+     cmplx ${SOURCES[0:2]} |
+     put label1=1+b2k2 unit1=Ln label2=Amplitude unit2=Ln | sfgraph title="Conical Coolie Hat Ln(A)=F(Ln(Y))"
+     ''',stdin=0)
+
+
+# Display
+
+
+Result('panelwgauss','wgauss fwgauss vnkfilt lvky','TwoRows',vppen='xsize=10 ysize=10')
+
+
+# Spectral filtering of white noise and inverse Fourier transform
+
+
+Flow('fcgauss',['vnkfilt','fwgauss'],'sfmath r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
+Flow('cgauss','fcgauss','sffft1 sym=y inv=y')
+
+
+Flow('rfcgauss','fcgauss','sfadd abs=y | sfreal')
+Plot('cgauss','put label1=x unit1=m | sfgraph title="Correlated Gaussian noise"')
+Plot('rfcgauss','put label1=fx unit1=1/m | sfgraph title="Correlated Gaussian noise spectrum"')
+
+
+# Logarithmic plot for conical coolie hat inversion method
+
+
+Flow('lrfcgauss','rfcgauss','sfmath output="log(input)"')
+Plot('lybfilt','put label1=fx unit1=1/m | sfgraph title="Ln(1+b2k2)"')
+
+Plot('lfcy','lrfcgauss lybfilt',
+     '''
+     cmplx ${SOURCES[0:2]} |
+     put label1=1+b2k2 unit1=Ln label2=Amplitude unit2=Ln | sfgraph title="Conical Coolie Hat Ln(A)=F(Ln(Y))"
+     ''',stdin=0)
+
+
+# Display
+
+
+Result('panelcgly','lybfilt lvky vnkfilt lfcy','TwoRows',vppen='xsize=10 ysize=10')
+
+Result('panelcgauss','wgauss fwgauss cgauss rfcgauss','TwoRows',vppen='xsize=10 ysize=10')
+
+
+# -----------------------------------
+# Inversion for stochastic parameters
+# -----------------------------------
+
+# Estimation of von Karman filter in spectral domain
+# Optimization of b parameter
+
+
+
+# lvkfilt
+#sfricker < in.rsf > out.rsf ma=ma.rsf m=f0+0.25*(na-1)*df niter=100 verb=false
+
+ 
+# Inversion algorithm parameters
+#
+# niter = number of iterations
+# minit = initial guess of b parameter
+
+# Python dictionary
+
+
+#pinv = {'niter':512, 'minit':10.}
+
+              
+#Flow('vnkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)" | sfreal' % psyn)
+
+
+ 
+# ------------------------------------------------------------
+# WAVELET
+# prepare source wavelet file (1-D format: t)
+# ------------------------------------------------------------
+#Flow('wave',None,
+#     '''
+#     spike nsp=1 mag=1 k1=%(kt)d
+#     n1=%(nt)d d1=%(dt)g o1=%(ot)g
+#         ''' % par )    
+#Result('wave','wave','graph title="wavelet"')
+# ------------------------------------------------------------
+
+# ------------------------------------------------------------
+# SHOT-RECORD migration
+# ------------------------------------------------------------
+
+# loop over migration configurations
+#for i in range(2):
+
+#    loc = par.copy()
+#    if  (i==0):
+#        loc['ow']=2
+#    elif(i==1):
+#        loc['nw']=1
+#        loc['ns']=3
+#        loc['fs']=50
+#        loc['js']=150
+
+    # prepare source/receiver data
+#    dos = 'dos' + str(i)
+#    dor = 'dor' + str(i)
+#    spmig.wflds(dos,dor,'wave','shot',loc) # prepare S-R wavefields
+
+    # datum source/receiver data in water
+#    dds = 'dds' + str(i)
+#    ddr = 'ddr' + str(i)
+#    spmig.datum(dds,ddr,'sdt',dos,dor,loc) #   datum S-R wavefields
+
+    # migration
+#    img = 'img' + str(i)  # image (3-D format: x-y-z)
+#    cig = 'cig' + str(i)  # CIGs
+#    spmig.imagePW(img,cig,'slo',dds,ddr,loc)
+
+#    Result(img,'window | transp |'
+#           + igrey('title=i pclip=99',par))
+        
+# ------------------------------------------------------------
+
+
+
+End()
