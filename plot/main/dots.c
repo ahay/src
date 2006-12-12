@@ -55,6 +55,7 @@ int main (int argc, char* argv[])
 
     sf_init(argc,argv);
     in = sf_input ("in");
+    vp_init();
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if(!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");

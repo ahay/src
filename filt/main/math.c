@@ -95,9 +95,8 @@ int main (int argc, char* argv[])
 	      arg[0] == 'd' || 
 	      arg[0] == 'o') &&
 	     isdigit(arg[1])) ||
-	    (eq-arg == 6 &&
-	     0 == strncmp(arg,"label",5) &&
-	     isdigit(arg[5])) ||
+	    (0 == strncmp(arg,"label",5) &&
+	     ((eq-arg == 5) || (eq-arg == 6 && isdigit(arg[5])))) ||
 	    (0 == strncmp(arg,"unit",4) && 
 	     ((eq-arg == 4) || (eq-arg == 5 && isdigit(arg[4]))))
 	    ) continue; /* not a file */
@@ -155,7 +154,10 @@ int main (int argc, char* argv[])
 		sf_putstring(out,xkey,label);
 		free(label);
 	    }
-
+	    if (NULL != (label = sf_getstring("label"))) {
+		sf_putstring(out,"label",label);
+		free(label);
+	    }
 	    (void) snprintf(xkey,6,"unit%d",i+1);
 	    if (NULL != (unit = sf_getstring(xkey))) {
 		sf_putstring(out,xkey,unit);

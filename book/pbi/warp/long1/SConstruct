@@ -1,0 +1,15 @@
+from rsfproj import *
+
+for case in ('time1','time2','time2_over'):
+    src = 'vel_%s.rsf' % case
+    Fetch(src,'long')
+    Flow(case,src,'dd form=native')
+
+    Result(case,
+           '''
+           grey color=j allpos=y bias=1.5
+           scalebar=y label2=Trace wanttitle=n
+           barreverse=y
+           ''')
+
+End()

@@ -38,7 +38,7 @@ If inv=y, the number of output dimensions is half the number of input dimensions
 int main (int argc, char *argv[])
 {
     bool inv, verb, weight;
-    int dim,w12,p12, j, ip, iw;
+    int dim, dim0, w12,p12, j, ip, iw;
     int n[SF_MAX_DIM], p[SF_MAX_DIM], w[SF_MAX_DIM]; 
     off_t nall, n12;
     float *u, *t, *r;
@@ -62,7 +62,9 @@ int main (int argc, char *argv[])
     /* if y, apply weighting to each patch */
 
     if (inv) {
-	if (!sf_getint("dim",&dim)) dim = sf_filedims(in,w)/2;
+	dim0 = sf_filedims(in,w)/2;
+
+	if (!sf_getint("dim",&dim)) dim=dim0; 
 	for (j=0; j < dim; j++) {
 	    p[j]=w[dim+j];
 	}

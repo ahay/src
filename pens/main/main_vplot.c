@@ -307,7 +307,6 @@ int main (int argc, char* argv[])
 
     /* All done */
     exit (0);
-    return 0;
 }
 
 /* routine to copy a file to a temporary file, used to copy stdin so that

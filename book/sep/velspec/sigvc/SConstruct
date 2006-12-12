@@ -12,9 +12,9 @@ Plot('mod','grey title="Ideal image" ')
 
 Flow('dat','mod',
      '''
-     cosft sign2=1 |
+     pad n2=1025 | cosft sign2=1 |
      stolt pad=513 vel=-1.5 |
-     cosft sign2=-1
+     cosft sign2=-1 | window n2=200
      ''')
 Plot('dat','grey title="Input data" ')
 

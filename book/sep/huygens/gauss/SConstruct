@@ -1,0 +1,22 @@
+from rsfproj import *
+
+dx = 0.5
+
+for case in range(2):
+    letter = 'np'[case]
+    velocity = 'g%s-velocity' % letter
+    Flow(velocity,None,
+         '''
+         math
+         o1=0.0 n1=751 d1=0.004 label1=z unit1=km
+         o2=4.0 n2=501 d2=0.008 label2=x unit2=km
+         label=Velocity unit=km/s
+         output="%g+(%g)*exp(-%g*((x1-1)^2+(x2-6)^2))"
+         ''' % ((3,2)[case],(-2,2)[case],1.0/(dx*dx)))
+    Result(velocity,
+           '''
+           grey allpos=y bias=%g wanttitle=n
+           wantscalebar=y bartype=h 
+           ''' % (2,1)[case])
+
+End()

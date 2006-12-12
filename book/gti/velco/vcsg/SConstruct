@@ -51,6 +51,7 @@ for case in (90,100,110):
          window n3=1 |
          math output="sqrt(%g+%g*x1*x1)" |
          graph min2=0 max2=2 yreverse=y
+         wantaxis=n wanttitle=n
          ''' % (v2,(1./v2-1.)))
 
     Result(imag,[imag,theor],'Overlay')

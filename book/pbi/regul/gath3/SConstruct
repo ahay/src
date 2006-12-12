@@ -244,6 +244,11 @@ Flow('treg1','sreg1 rtime1','datstretch datum=${SOURCES[1]} inv=y')
 
 Result('treg1','window max1=4 | wiggle poly=y transp=y yreverse=y title="Inline 712 Filled" ')
 
+Flow('sreg2','sline1 x dip3',
+     'planereg2 order=3 head=${SOURCES[1]} dip=${SOURCES[2]} verb=y interp=4 | postfilter2 nw=4 vert=n')
+Result('sreg2','window max1=4 | tpow tpow=1 | wiggle poly=y transp=y yreverse=y title="Inline 712 Regularized" ')
+
+
 #############################################
 
 Flow('mask2','hraw','window n1=1 f1=2 | dd type=float | mask min=80 max=80')
@@ -661,6 +666,18 @@ Result('reg',
        byte gainpanel=88 |
        grey3 title="Regularized Data"
        frame1=250 frame2=61 frame3=88
+       ''')
+
+Flow('treg2','reg rtime','pad n1=2002 | datstretch datum=${SOURCES[1]} inv=y | window max1=2')
+
+# Plot regularized data
+
+Result('treg2',
+       '''
+       tpow tpow=1 |
+       byte gainpanel=88 |
+       grey3 title="Regularized Data"
+       frame1=750 frame2=60 frame3=88
        ''')
 
 End()

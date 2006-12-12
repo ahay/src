@@ -64,13 +64,14 @@ float monof(float *data /*input [nk] */,
 	f2 += f*f;
     }
 
-    a = a0;
+    a = a0; /* initial a */
     aa = 1.;
 
     if (verb) sf_warning("got a0=%g i0=%d niter=%d nk=%d dk=%g",
 			 a0,i0,niter,nk,dk);
 	
-    for (iter = 0; iter < niter; iter++) {
+    /* Gauss-Newton iterations */
+    for (iter = 0; iter < niter; iter++) { 
 	ee = eps;
 	fe = fep = eep = epep = 0.;
 	for (ik = 0; ik < nk; ik++) {
@@ -78,7 +79,7 @@ float monof(float *data /*input [nk] */,
 	    k *= k;
 	    e = expf(-a*k);
 	    e2 = e*e;
-	    ep = -k*e;
+	    ep = -k*e; /* derivative of e with respect to a */
 	    
 	    f = data[ik];
 	    
@@ -89,18 +90,18 @@ float monof(float *data /*input [nk] */,
 	    epep += ep*ep;
 	}
               
-	aa = fe/ee;
+	aa = fe/ee;  /* amplitude */
 	da = (fep - 2.*aa*eep)/ee;
 	num = aa*(aa*eep + da*(ee+eps));
 	den = aa*aa*epep + da*(2.*aa*eep + da*(ee-eps));
         
-	da = num/den;
+	da = num/den; /* delta a */
         
 	r2 = f2 - aa*aa*(ee+eps); /* residual squared */
 	if (verb) sf_warning("monof: iter=%d r2=%g da=%g aa=%g a=%g",
 			     iter,r2,da,aa,a);
 
-	a += da;
+	a += da;     /* update a */
 	if (r2 < eps || da*da < eps) break;
     }
         

@@ -176,11 +176,19 @@ static int font=-1, prec=-1, ovly=-1;    /* font, precision, and overlay */
 static int xjust=0, yjust=0;             /* x and y text justification */
 
 static void pout (float xp, float  yp, bool down);
+static FILE *pltout;
+
+void vp_filep(FILE *file)
+/*< set the output file >*/
+{
+    pltout = file;
+}
 
 void vp_init(void)
 /*< Initialize output to vplot >*/
 {
-    if (isatty(fileno(stdout)))
+    pltout = stdout; 
+    if (isatty(fileno(pltout)))
 	sf_error("You don't want to dump binary to terminal.");
 }
 
@@ -201,10 +209,10 @@ void vp_putint (int w)
     char j;
     
     j = w & 255;        /* low order byte of halfword value */
-    (void) putchar (j);
+    (void) putc (j, pltout);
     
     j = (w >> 8) & 255;	/* high order byte of halfword value */
-    (void) putchar (j);
+    (void) putc (j, pltout);
 }
 
 void vp_putfloat (float w)
@@ -223,19 +231,19 @@ void vp_putfloat0 (float w)
 void vp_egroup (void)
 /*< end group >*/
 {
-    (void) putchar (VP_END_GROUP);
+    (void) putc (VP_END_GROUP, pltout);
 }
 
 void vp_erase (void)
 /*< erase screen >*/
 {
-    (void) putchar (VP_ERASE);
+    (void) putc (VP_ERASE, pltout);
 }
 
 void vp_fat (int f)
 /*< set line width >*/
 {
-    (void) putchar (VP_FAT);
+    (void) putc (VP_FAT, pltout);
     vp_putint (f);
 }
 
@@ -246,7 +254,7 @@ void vp_fill (const float *xp /* [np] */,
 {
     int i;
 
-    (void) putchar (VP_AREA);
+    (void) putc (VP_AREA, pltout);
     vp_putint (np);
 
     for (i = 0; i < np; i++) {
@@ -263,7 +271,7 @@ void vp_ufill (const float *xp /* [np] */,
     int i;
     float x, y;
 
-    (void) putchar (VP_AREA);
+    (void) putc (VP_AREA, pltout);
     vp_putint (np);
 
     for (i = 0; i < np; i++) {
@@ -286,7 +294,7 @@ void vp_area (const float *xp, const float *yp /* points [np] */,
 {
     int i;
 
-    (void) putchar (VP_OLDAREA);
+    (void) putc (VP_OLDAREA, pltout);
     vp_putint (np);
     vp_putint (fat);
     vp_putint (xmask);
@@ -304,7 +312,7 @@ void vp_uarea (const float *xp, const float *yp, int np,
     int i;
     float x, y;
 
-    (void) putchar (VP_OLDAREA);
+    (void) putc (VP_OLDAREA, pltout);
     vp_putint (np);
     vp_putint (fat);
     vp_putint (xmask);
@@ -327,7 +335,7 @@ void vp_coltab (int color /* color index */,
     g *= MAX_GUN; g += (g < 0.0)? -0.5: +0.5;
     b *= MAX_GUN; b += (b < 0.0)? -0.5: +0.5;
 
-    (void) putchar (VP_SET_COLOR_TABLE);
+    (void) putc (VP_SET_COLOR_TABLE, pltout);
     vp_putint (color);
     vp_putint ((int) r);
     vp_putint ((int) g);
@@ -344,14 +352,14 @@ void vp_gtext (float x, float y         /* reference point */,
   precision,  and text  alignment >*/
 {
     pout (x, y, false);
-    (void) putchar (VP_GTEXT);
+    (void) putc (VP_GTEXT, pltout);
     vp_putfloat (TEXTVECSCALE * xpath);
     vp_putfloat (TEXTVECSCALE * ypath);
     vp_putfloat (TEXTVECSCALE * xup);
     vp_putfloat (TEXTVECSCALE * yup);
 
     do {
-	(void) putchar (*string);
+	(void) putc (*string, pltout);
     } while (*string++ != '\0');
 }
 
@@ -381,7 +389,7 @@ void vp_hatchload (int angle  /* line angle */,
 {
     int c, i;
 
-    (void) putchar (VP_PATLOAD);
+    (void) putc (VP_PATLOAD, pltout);
     vp_putint (angle);
     vp_putint (-1);
     vp_putint (nhatch);
@@ -397,10 +405,10 @@ void vp_hatchload (int angle  /* line angle */,
 void vp_message (const char *string)
 /*< output message >*/
 {
-    (void) putchar (VP_MESSAGE);
+    (void) putc (VP_MESSAGE, pltout);
 
     do {
-	(void) putchar (*string);
+	(void) putc (*string, pltout);
     } while (*string++);
 }
 
@@ -440,7 +448,7 @@ void vp_patload (int ppi          /* pixels per inch */,
 {
     int c, i;
 
-    (void) putchar (VP_PATLOAD);
+    (void) putc (VP_PATLOAD, pltout);
     c = ppi;
     vp_putint (c);
     c = nx;
@@ -483,7 +491,7 @@ void vp_pline (const float *xp /* [np] */,
 {
     int i;
 
-    (void) putchar (VP_PLINE);
+    (void) putc (VP_PLINE, pltout);
     vp_putint (np);
     for (i = 0; i < np; i++) {
 	vp_putfloat (xp[i]);
@@ -499,7 +507,7 @@ void vp_upline (const float *xp /* [np] */,
     int i;
     float x, y;
 
-    (void) putchar (VP_PLINE);
+    (void) putc (VP_PLINE, pltout);
     vp_putint (np);
     for (i = 0; i < np; i++) {
 	x = fx + (xp[i]-ufx) * xscl;
@@ -568,7 +576,7 @@ static void pout (float xp, float  yp, bool down)
     else if (xp < -VP_MAX) xp = -VP_MAX;
     if      (yp >  VP_MAX) yp =  VP_MAX;
     else if (yp < -VP_MAX) yp = -VP_MAX;
-    (void) putchar ((down ? VP_DRAW : VP_MOVE));
+    (void) putc ((down ? VP_DRAW : VP_MOVE), pltout);
     vp_putfloat (xp);
     vp_putfloat (yp);
 }
@@ -593,7 +601,7 @@ void vp_pmark (int npts, int mtype, int msize,
 {
     int i;
 
-    (void) putchar (VP_PMARK);
+    (void) putc (VP_PMARK, pltout);
     vp_putint (npts);
     vp_putint (mtype);
     vp_putint (msize);
@@ -607,8 +615,8 @@ void vp_pmark (int npts, int mtype, int msize,
 void vp_purge (void)
 /*< Flush the output >*/
 {
-    (void) putchar (VP_PURGE);
-    (void) fflush (stdout);
+    (void) putc (VP_PURGE, pltout);
+    (void) fflush (pltout);
 }
 
 void vp_rascoltab (int nreserve, const char *colname)
@@ -678,7 +686,7 @@ void vp_raster (unsigned char **array,
     int i, n, nn;
     unsigned char obyte;
 
-    (void) putchar (bit? VP_BIT_RASTER: VP_BYTE_RASTER);
+    (void) putc (bit? VP_BIT_RASTER: VP_BYTE_RASTER, pltout);
 
     if (orient >= 0) {
 	orient %= 4;
@@ -712,18 +720,18 @@ void vp_raster (unsigned char **array,
 		    ((array[i][n+5] != 0) << 2) |
 		    ((array[i][n+6] != 0) << 1) |
 		    ((array[i][n+7] != 0) << 0);
-		(void) putchar ((char) obyte);
+		(void) putc ((char) obyte, pltout);
 	    }
 	    if (n < xpix) {
 		obyte = 0x00;
 		for (nn = 7; n < xpix; n++, nn--) {
 		    obyte |= ((array[i][n] != 0) << nn);
 		}
-		(void) putchar ((char) obyte);
+		(void) putc ((char) obyte, pltout);
 	    }
 	} else {
 	    for (n = 0; n < xpix; n++) {
-		(void) putchar ((char) array[i][n]);
+		(void) putc ((char) array[i][n], pltout);
 	    }
 	}
     }
@@ -772,17 +780,17 @@ void vp_style (vp_plotstyle st)
 /*< set vpplot style >*/
 {
     style = st;
-    (void) putchar (VP_SETSTYLE);
+    (void) putc (VP_SETSTYLE, pltout);
     switch (style) {
 	case VP_ROTATED:
-	    (void) putchar ('r');
+	    (void) putc ('r', pltout);
 	    break;
 	case VP_ABSOLUTE:
-	    (void) putchar ('a');
+	    (void) putc ('a', pltout);
 	    break;
 	case VP_STANDARD:
 	default:
-	    (void) putchar ('s');
+	    (void) putc ('s', pltout);
 	    break;
     }
 }
@@ -797,12 +805,12 @@ void vp_text (float x, float y    /* coordinate of the reference point */,
     if (0 == size) return;
 
     pout (x, y, false);
-    (void) putchar (VP_TEXT);
+    (void) putc (VP_TEXT, pltout);
     vp_putint (size);
     vp_putint (orient);
 
     do {
-	(void) putchar (*string);
+	(void) putc (*string, pltout);
     }
     while (*string++);
 }
@@ -824,7 +832,7 @@ void vp_tfont (int font1 /* which font to use */,
     prec = prec1;
     ovly = ovly1;
 
-    (void) putchar (VP_TXFONTPREC);
+    (void) putc (VP_TXFONTPREC, pltout);
     vp_putint (font);
     vp_putint (prec);
     vp_putint (ovly);
@@ -836,7 +844,7 @@ void vp_tjust (int xjust1, int yjust1)
     xjust = xjust1;
     yjust = yjust1;
 
-    (void) putchar (VP_TXALIGN);
+    (void) putc (VP_TXALIGN, pltout);
     vp_putint (xjust);
     vp_putint (yjust);
 }
@@ -844,7 +852,7 @@ void vp_tjust (int xjust1, int yjust1)
 void vp_clip (float xmin, float ymin, float xmax, float ymax)
 /*< set rectangular clip >*/
 {
-    (void) putchar (VP_WINDOW);
+    (void) putc (VP_WINDOW, pltout);
     vp_putfloat (xmin);
     vp_putfloat (ymin);
     vp_putfloat (xmax);
@@ -872,7 +880,7 @@ void vp_where (float *x, float *y)
 void vp_color (int col)
 /*< set drawing color >*/
 {
-    (void) putchar (VP_COLOR);
+    (void) putc (VP_COLOR, pltout);
     vp_putint (col);
 }
 
@@ -996,7 +1004,7 @@ void vp_setdash (const float *dash, const float *gapp, int np)
 {
     int i;
 
-    (void) putchar (VP_SETDASH);
+    (void) putc (VP_SETDASH, pltout);
     vp_putint (np);
     for (i = 0; i < np; i++) {
 	vp_putfloat (dash[i]);
@@ -1009,16 +1017,16 @@ void vp_bgroup(char *string /* group name */)
 {
     char c;
     
-    (void) putchar (VP_BEGIN_GROUP);
+    (void) putc (VP_BEGIN_GROUP, pltout);
 
     while ((c = *string++)) {
-	(void) putchar (c);
+	(void) putc (c, pltout);
     }
-    (void) putchar('\0');    
+    (void) putc('\0', pltout);    
 }
 
 void vp_break(void)
 /*< Interrupt the output processing >*/
 {
-    (void) putchar (VP_BREAK);
+    (void) putc (VP_BREAK, pltout);
 }

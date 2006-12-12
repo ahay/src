@@ -1450,5 +1450,5 @@ static void vp_check_filep (FILE *plot)
 	ERR (FATAL, name,
 	     "Dumping binary data to your terminal is unhealthy.");
 
-    pltout = plot;
+    vp_filep (plot);
 }
