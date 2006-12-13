@@ -36,7 +36,7 @@ def convert(infile,outfile):
     random = time.time()
 
     run = "vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" % (random,infile)
-    sys.stderr.write(run+"\n")
+#    sys.stderr.write(run+"\n")
     os.system(run)
 
     gifs = []
@@ -47,9 +47,9 @@ def convert(infile,outfile):
 
         run = "ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d " \
               "xcenter=%d ycenter=%d %s | pnmscale %g  | " \
-              "pnmquant 256 | pnmcrop | ppmtogif -interlace > %s" % \
+              "ppmquant 256 | pnmcrop | ppmtogif -interlace > %s" % \
               (height,width,ppi,xcen,ycen,vppen,scale,gif)
-        sys.stderr.write(run+"\n")
+#        sys.stderr.write(run+"\n")
         os.system (run)
         os.unlink(vppen)
 
@@ -57,7 +57,7 @@ def convert(infile,outfile):
         gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
         run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
                                          string.join(gifs),outfile)
-        print run
+#        print run
         os.system (run)
 
     map(os.unlink,gifs)
