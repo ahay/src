@@ -5,7 +5,7 @@ if test ! -n "$python"; then
     python="no"
 fi
 echo "Checking for Python ... $python"
-if test "$python" == "no"; then
+if test "$python" = "no"; then
     echo "Please install Python before proceeding: http://www.python.org"
     exit 1
 fi
@@ -15,7 +15,7 @@ if test ! -n "$root"; then
     root="no"
 fi
 echo "Checking for RSFROOT ... $root"
-if test "$root" == "no"; then
+if test "$root" = "no"; then
     root=$HOME/RSF
     if test ! -d $root; then
 	mkdir $root
@@ -31,7 +31,7 @@ if test ! -n "$scons"; then
     scons="no"
 fi
 echo "Checking for SCons ... $scons"
-if test "$scons" == "no"; then
+if test "$scons" = "no"; then
     here=`pwd`
     cd scons
     tar xvzf scons-*.tar.gz > /dev/null
