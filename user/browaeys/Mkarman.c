@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
-    if (!sf_getint("a0",&a0)) a0=-0.25;
+    if (!sf_getfloat("a0",&a0)) a0=-0.25;
     /* initial slope value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -136,7 +136,7 @@ int main(int argc, char* argv[])
     }
         
     for (ik = 0; ik < nk; ik++) {
-	k = (ik-i0)*dk;
+	k = ik*dk + k0;
 	k *= k;
 	data[ik] = exp(aa*log(1+a*k));
     }
