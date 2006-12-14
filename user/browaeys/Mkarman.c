@@ -1,4 +1,4 @@
-/* Logarithm of von Karman spectrum estimation. */
+/* Estimating the logarithm of a von Karman 1-D spectrum by nonlinear least squares */
 /*
   Copyright (C) 2006 University of Texas at Austin
   
@@ -22,112 +22,123 @@
 
 #include <rsf.h>
 
+/*
+  Input data and function
+
+  f  = log(data)
+  l  = log(1 + a*k*k)
+  aa = -(nu/2+1/4)
+
+  Formulas for separable least squares:
+
+  aa = f.l/(l.l + eps)
+  ap = (f.lp-2*a*l.lp)/(l.l + eps)
+  num = a*(a*l.lp + ap*(l.l + 2.*eps))
+  den = ap*ap*l.l + 2*a*ap*l.lp + a*a*lp.lp
+  da = num/den
+
+  Requires:
+
+  fl   -> f.l
+  ll   -> l.l + eps
+  flp  -> f.lp
+  llp  -> l.lp
+  lplp -> lp.lp
+*/
+
+
 int main(int argc, char* argv[])
 {
-    int n2, i2, na, ia, niter, iter;
-    float f0, df, f, f2, m, m0, m2, m3, *data, *r, *rp;
-    float rd, r2, rpd, rp2, rpr, ap, num, den, a, e, dm, eps, di, d2;
-    bool verb;
-    sf_file in, out, ma;
+
+    float *data /*input [nk] */; 
+    int i0      /* maximum location */; 
+    int niter   /* number of iterations */; 
+    float a0    /* initial value */;
+    int nk      /* data length */;
+    float dk    /* data sampling */; 
+    bool verb   /* verbosity flag */;
+    int ik, iter;
+    float f2, fl, ll, flp, llp, lplp, k, da, aa, f, l2;
+    float lp, eps, num, den, r2, a, l, s;
+    sf_file in, out;
+
+    /* Estimate shape (Caution: data gets corrupted) */ 
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    ma = sf_output("ma");
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    if (!sf_histint(in,"n1",&na)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
-
-    if (!sf_histfloat(in,"d1",&df)) sf_error("No d1= in input");
-    if (!sf_histfloat(in,"o1",&f0)) sf_error("No o1= in input");
-
-    if (!sf_getfloat("m",&m0)) m0=f0+0.25*(na-1)*df;
-    /* initial frequency */
+    if (!sf_histint(in,"n1",&nk)) sf_error("No n1= in input");
+    if (!sf_histfloat(in,"d1",&dk)) sf_error("No d1= in input");
+ 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    sf_putint(ma,"n1",2);
-    sf_putint(ma,"nf",na);
-    sf_putfloat(ma,"df",df);
-    sf_putfloat(ma,"f0",f0);
-    sf_fileflush(ma,in);
-
-    data = sf_floatalloc(na);
-    r = sf_floatalloc(na);
-    rp = sf_floatalloc(na);
+    data = sf_floatalloc(nk);
 
     eps = 10.*FLT_EPSILON;
     eps *= eps;
 
-    for (i2=0; i2 < n2; i2++) {
-	sf_floatread(data,na,in);
-
-	d2 = 0.;
-	for (ia=0; ia < na; ia++) {
-	    di = data[ia];
-	    if (di < 0.) data[ia] = -di;
-	    d2 += di*di;
-	}
-
-	m = m0;
-
-	for (iter = 0; iter < niter; iter++) {
-	    m2 = m*m;
-	    m3 = m2*m;
-           
-	    rd = r2 = rpd = rp2 = rpr = 0.;
-	    for (ia = 0; ia < na; ia++) {
-		f = f0 + ia*df;
-		f2 = f*f;
-		e = exp(-f2/m2);
-              
-		r[ia] = e*f2/m2;
-		rp[ia] = 2.*e*f2*(f2-m2)/(m3*m2);
-		
-		rd += r[ia]*data[ia];
-		r2 += r[ia]*r[ia];
-		rpd += rp[ia]*data[ia];
-		rp2 += rp[ia]*rp[ia];
-		rpr += rp[ia]*r[ia];
-	    }
-              
-	    a = rd/(r2 + eps);
-	    ap = (rpd-2.*rpr*a)/(r2 + eps);
-	    num =  a*(rpd-rpr*a)+ap*(rd-r2*a);
-	    den = a*a*rp2 + 2.*a*ap*rpr + ap*ap*(r2+eps) + eps;
-        
-	    dm = num/den;
-        
-	    r2 = d2 - 2.*rd*a + r2*a*a;
-	    rp2 = dm*dm;
-
-	    if (verb) sf_warning("iter=%d r2=%g rp2=%g m=%g a=%g",
-				 iter,r2,rp2,m,a);
-
-	    m += dm;
-	    if (r2 < eps || rp2 < eps) break;
-	}
-        
-	m = fabsf(m);
-	m2 = m*m;
-        
-	sf_floatwrite(&m2,1,ma);
-	sf_floatwrite(&a,1,ma);
-        
-	for (ia = 0; ia < na; ia++) {
-	    f = f0 + ia*df;
-	    f2 = f*f;
-	    data[ia] = a*exp(-f2/m2)*f2/m2;
-	}
-        
-	if (verb) sf_warning("m=%g a=%g",m,a*m*sqrtf(SF_PI)*0.5);
-	if (verb) sf_warning ("%d of %d, %d iterations", i2+1, n2, iter);
-        
-	sf_floatwrite (data,na,out);
+    f2 = 0.;
+    for (ik=0; ik < nk; ik++) {
+	f = log(data[ik]);
+	f2 += f*f;
     }
+
+    a = a0; /* initial a */
+    aa = 0.25;
+
+    if (verb) sf_warning("got a0=%g i0=%d niter=%d nk=%d dk=%g",
+			 a0,i0,niter,nk,dk);
+	
+    /* Gauss-Newton iterations */
+    for (iter = 0; iter < niter; iter++) { 
+	ll = eps;
+	fl = flp = llp = lplp = 0.;
+	for (ik = 0; ik < nk; ik++) {
+	    k = (ik-i0)*dk;
+	    k *= k;
+            s = 1 + a*k;
+	    l = log(s);
+	    l2 = l*l;
+	    lp = k/s; /* derivative of l with respect to a */
+	    
+	    f = log(data[ik]);
+	    
+	    ll += l2;
+	    fl += f*l;
+	    flp += f*lp;
+	    llp += lp*l;
+	    lplp += lp*lp;
+	}
+              
+	aa = fl/ll;  /* amplitude */
+	da = (flp - 2.*aa*llp)/ll;
+	num = aa*(aa*llp + da*(ll+eps));
+	den = aa*aa*lplp + da*(2.*aa*llp + da*(ll-eps));
+        
+	da = num/den; /* delta a */
+        
+	r2 = f2 - aa*aa*(ll+eps); /* residual squared */
+	if (verb) sf_warning("iter=%d r2=%g da=%g aa=%g a=%g",
+			     iter,r2,da,aa,a);
+
+	a += da;     /* update a */
+	if (r2 < eps || da*da < eps) break;
+    }
+        
+    for (ik = 0; ik < nk; ik++) {
+	k = (ik-i0)*dk;
+	k *= k;
+	data[ik] = exp(aa*log(1+a*k));
+    }
+ 
+    if (verb) sf_warning ("%d iterations", iter);        
+	
+    sf_floatwrite (data,nk,out);
     
     exit (0);
 }
