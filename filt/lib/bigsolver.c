@@ -427,7 +427,8 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
     float* resm = NULL;
     float* wht = NULL;
     float *g, *rr, *gg, *tr, *td = NULL;
-    int i, iter, dprd, dprm, dpx, dpg;
+    float dpr, dpg, dpr0, dpg0;
+    int i, iter;
     bool forget = false;
 
     va_start (args, eps);
@@ -513,6 +514,9 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
     }
 
+    dpr0 = norm(ny, rr);
+    dpg0 = 1.;
+
     for (iter=0; iter < niter; iter++) {
 	if ( nmem >= 0) {  /* restart */
 	    forget = (bool) (iter >= nmem);
@@ -552,13 +556,23 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	    forget = (bool) (iter%nfreq == 0);
 	}
 
-	if (verb) {
-	    dprd = (int) norm (ny, rr);
-	    dprm = (int) norm (nreg, rr+ny);
-	    dpx  = (int) norm (nx, x);
-	    dpg  = (int) norm (nx, g);
-	    sf_warning ("iteration %d res dat %d res mod %d mod %d grad %d",
-			iter, dprd, dprm, dpx, dpg);
+	if (iter == 0) {
+	    dpg0  = norm (nx, g);
+	    dpr = 1.;
+	    dpg = 1.;
+	} else {
+	    dpr = norm (ny, rr)/dpr0;	    
+	    dpg = norm (nx, g)/dpg0;
+	} 
+
+	if (verb) 
+	    sf_warning ("iteration %d res dat %f res mod %f mod %f grad %f",
+			iter, dpr, norm (nreg, rr+ny), norm (nx, x), dpg);
+
+	if (dpr < TOLERANCE || dpg < TOLERANCE) {
+	    if (verb) 
+		sf_warning("convergence in %d iterations",iter+1);
+	    break;
 	}
 
 	solv (forget, nx, ny+nreg, x, g, rr, gg);

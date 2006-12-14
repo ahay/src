@@ -651,6 +651,8 @@ Result('xdip','dip',
        color=j scalebar=y title="Crossline Slope" 
        ''')
 
+# Regularize
+
 Flow('reg','sraw shead dip',
      '''
      window max1=2 |

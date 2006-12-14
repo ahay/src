@@ -68,7 +68,7 @@ int main (int argc, char *argv[])
 	for (j=0; j < dim; j++) {
 	    p[j]=w[dim+j];
 	}
-	if (!sf_histints(in,"n0",n,dim) && !sf_getints("n0",n,dim))
+	if (!sf_getints("n0",n,dim) && !sf_histints(in,"n0",n,dim))
 	    sf_error("Need n0=");
 	/* data dimensions (for inv=y) */
 

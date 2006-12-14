@@ -1,4 +1,5 @@
 from rsfproj import *
+import warp
 
 mods = ['vp','vs','density']
 for case in mods:
@@ -22,8 +23,8 @@ Flow('ref',mods,
      ''')
 
 freq = {
-    'pp': ['5,10,60,80','35'],
-    'ps': ['2.5,5,30,40','17.5']
+    'pp': ['5,10,60,80','17.5'], #,'35'],
+    'ps': ['2.5,5,30,40','8.75'] #'17.5']
     }
 window = {
     'pp': 'n1=1251',
@@ -39,7 +40,29 @@ for mode in ('pp','ps'):
              freq[mode][case])
         Result(modec,grey)
         win = modec+'win'
-        Flow(win,modec,'window max2=5')
+        Flow(win,modec,'window max2=5 | scale axis=2')
         Result(win,grey)
+
+gamma = 2
+Flow('warp0','pp1win','math output="%g*x1" ' % (0.5*(gamma-1)))
+
+warp.warp2('mrm','pp1win','ps1win','warp0',
+           nx=4001,
+           tmax=2.5,
+           inter=1,
+           j2=4,
+           trace=3,
+           dt=0.002,
+           g0=0.8,
+           gmin=1,
+           gmax=3,
+           ng=101,
+           rect1=100,
+           rect2=25,
+           fmin=0,
+           fmax=20,
+           frame1=350,
+           iter=2,
+           clip=0.035)
 
 End()

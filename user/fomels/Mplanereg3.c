@@ -23,7 +23,8 @@
 
 int main(int argc, char* argv[])
 {
-    int niter, nw, n1, n2, n123, nj1, nj2, nk, xkey, ykey, nx, ny, interp, nt, id, nd;
+    int niter, nw, n1, n2, n123, nj1, nj2, nk, xkey, ykey, nx, ny;
+    int n3, i3, interp, nt, id, nd;
     float *mm, *dd, *pp, *qq, **xy, x0, dx, y0, dy, eps, *hdr;
     char *header, *xk, *yk;
     bool verb;
@@ -38,7 +39,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(in,"n1",&nt)) nt=1;
     if (!sf_histint(in,"n2",&nd)) nd=1;
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
-    
+    n3 = sf_leftsize(in,2);
+
     /* create coordinates */
     xy = sf_floatalloc2(2,nd);
     
@@ -96,6 +98,7 @@ int main(int argc, char* argv[])
     sf_putint(out,"n3",ny);
     sf_putfloat(out,"o3",y0);
     sf_putfloat(out,"d3",dy);
+    sf_putint(out,"n4",n3);
 
     /* initialize interpolation */
     if (!sf_getint("interp",&interp)) interp=2;
@@ -126,20 +129,23 @@ int main(int argc, char* argv[])
     pp = sf_floatalloc(n123);
     qq = sf_floatalloc(n123);
 
-    sf_floatread(pp,n123,dip);
-    sf_floatread(qq,n123,dip);
-
     mm = sf_floatalloc(n123);
     dd = sf_floatalloc(nt*nd);
-
-    sf_floatread(dd,nt*nd,in);
 
     allpass3_init(allpass_init(nw, nj1, nt,nx,ny, pp),
 		  allpass_init(nw, nj2, nt,nx,ny, qq));
 
-    sf_solver_reg(int2_lop, sf_cgstep, allpass3_lop, 2*n123, n123, nt*nd, mm, dd, niter, eps, "verb", verb, "end");
+    for (i3=0; i3 < n3; i3++) {
+	sf_floatread(pp,n123,dip);
+	sf_floatread(qq,n123,dip);
 
-    sf_floatwrite (mm,n123,out);
+	sf_floatread(dd,nt*nd,in);
+
+	sf_solver_reg(int2_lop, sf_cgstep, allpass3_lop, 2*n123, n123, nt*nd, mm, dd, niter, eps, "verb", verb, "end");
+	sf_cgstep_close();
+
+	sf_floatwrite (mm,n123,out);
+    }
     
     exit(0);
 }

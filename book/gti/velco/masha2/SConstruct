@@ -64,7 +64,7 @@ Flow('elfvxz','vsmooth_levset.dat',
 Flow('vxz','elfvxz','window max1=%g' % zmax)
 
 for coord in ('x','z'):
-    dat = 'elf%s.dat' % coord
+    dat = 'smooth_elf_%s.dat' % coord
     Fetch(dat,'masha')
     Flow(coord,dat,
          '''
@@ -74,8 +74,8 @@ for coord in ('x','z'):
          dd form=native 
          ''',stdin=0)
 
-for coord in ('x0','t0'):
-    dat = 'good%s.dat' % coord
+for coord in ('x0','t'):
+    dat = 'smooth_elf_%s.dat' % coord
     Fetch(dat,'masha')
     Flow(coord,dat,
          '''
@@ -90,7 +90,7 @@ for coord in ('x0','t0'):
          transp 
          ''' % (nx,dx,nz,dz),stdin=0)
 
-Flow('coord','t0 x0',
+Flow('coord','t x0',
      'scale dscale=2 | cat axis=3 ${SOURCES[1]} | transp plane=23 | transp')
     
 Fetch('elf-fmg.rsf','masha')
@@ -148,9 +148,9 @@ Plot('rays2','x z',
      bartype=v  
      ''' % (xmax,zmax),stdin=0)
 
-Plot('elfvxz2','elfvxz1 rays2','Overlay')
+Result('elfvxz2','elfvxz1 rays2','Overlay')
 
-Result('elfvxz2','elfvxz2 elfvxz2','SideBySideAniso')
+#Result('elfvxz2','elfvxz2 elfvxz2','SideBySideAniso')
 
 Fetch('elf-stk2.rsf','masha')
 Flow('stk','elf-stk2.rsf','dd form=native')
