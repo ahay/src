@@ -26,16 +26,17 @@
   Input data and function
 
   f  = log(data)
-  l  = log(1 + a*k*k)
+  l  = log(1 + a*a*k*k)
   aa = -(nu/2+1/4)
+  lp = derivative of l with respect to a
 
-  Formulas for separable least squares:
+  Formulas for separable least squares and Gauss Newton:
 
-  aa = f.l/(l.l + eps)
-  ap = (f.lp-2*a*l.lp)/(l.l + eps)
-  num = a*(a*l.lp + ap*(l.l + 2.*eps))
-  den = ap*ap*l.l + 2*a*ap*l.lp + a*a*lp.lp
-  da = num/den
+  aa = f.l/(l.l + eps)                          linear slope 
+  ap = (f.lp-2*aa*l.lp)/(l.l + eps)             linear slope derivative with respect to a
+  num = aa*(aa*l.lp + ap*(l.l + 2.*eps))
+  den = ap*ap*l.l + 2*aa*ap*l.lp + aa*aa*lp.lp
+  da = num/den                                  increment for a
 
   Requires:
 
@@ -76,7 +77,7 @@ int main(int argc, char* argv[])
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
-    if (!sf_getfloat("a0",&a0)) a0=-0.25;
+    if (!sf_getfloat("a0",&a0)) a0=10.;
     /* initial slope value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -94,7 +95,7 @@ int main(int argc, char* argv[])
     }
 
     a = a0; /* initial a */
-    aa = 0.25;
+    aa = -0.5;
 
     if (verb) sf_warning("got a0=%g k0=%g niter=%d nk=%d dk=%g",
 			 a0,k0,niter,nk,dk);
@@ -106,10 +107,10 @@ int main(int argc, char* argv[])
 	for (ik = 0; ik < nk; ik++) {
 	    k = ik*dk + k0;
 	    k *= k;
-            s = 1 + a*k;
+            s = 1 + a*a*k;
 	    l = log(s);
 	    l2 = l*l;
-	    lp = k/s; /* derivative of l with respect to a */
+	    lp = 2.*a*k/s; /* derivative of l with respect to a */
 	    
 	    f = log(data[ik]);
 	    
@@ -138,7 +139,7 @@ int main(int argc, char* argv[])
     for (ik = 0; ik < nk; ik++) {
 	k = ik*dk + k0;
 	k *= k;
-	data[ik] = exp(aa*log(1+a*k));
+	data[ik] = exp(aa*log(1+a*a*k));
     }
  
     if (verb) sf_warning ("%d iterations", iter);        
