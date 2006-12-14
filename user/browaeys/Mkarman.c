@@ -81,7 +81,8 @@ int main(int argc, char* argv[])
 
     eps = 10.*FLT_EPSILON;
     eps *= eps;
-
+    
+    sf_floatread(data,nk,in);
     f2 = 0.;
     for (ik=0; ik < nk; ik++) {
 	f = log(data[ik]);
