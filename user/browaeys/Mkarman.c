@@ -51,12 +51,13 @@ int main(int argc, char* argv[])
 {
 
     float *data /*input [nk] */; 
-    int i0      /* maximum location */; 
     int niter   /* number of iterations */; 
     float a0    /* initial value */;
     int nk      /* data length */;
     float dk    /* data sampling */; 
+    float k0    /* initial location */;
     bool verb   /* verbosity flag */;
+
     int ik, iter;
     float f2, fl, ll, flp, llp, lplp, k, da, aa, f, l2;
     float lp, eps, num, den, r2, a, l, s;
@@ -71,9 +72,12 @@ int main(int argc, char* argv[])
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
     if (!sf_histint(in,"n1",&nk)) sf_error("No n1= in input");
     if (!sf_histfloat(in,"d1",&dk)) sf_error("No d1= in input");
+    if (!sf_histfloat(in,"o1",&k0)) sf_error("No o1= in input");
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
+    if (!sf_getint("a0",&a0)) a0=-0.25;
+    /* initial slope value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
@@ -92,15 +96,15 @@ int main(int argc, char* argv[])
     a = a0; /* initial a */
     aa = 0.25;
 
-    if (verb) sf_warning("got a0=%g i0=%d niter=%d nk=%d dk=%g",
-			 a0,i0,niter,nk,dk);
+    if (verb) sf_warning("got a0=%g k0=%g niter=%d nk=%d dk=%g",
+			 a0,k0,niter,nk,dk);
 	
     /* Gauss-Newton iterations */
     for (iter = 0; iter < niter; iter++) { 
 	ll = eps;
 	fl = flp = llp = lplp = 0.;
 	for (ik = 0; ik < nk; ik++) {
-	    k = (ik-i0)*dk;
+	    k = ik*dk + k0;
 	    k *= k;
             s = 1 + a*k;
 	    l = log(s);
@@ -139,6 +143,12 @@ int main(int argc, char* argv[])
  
     if (verb) sf_warning ("%d iterations", iter);        
 	
+
+    /* 
+    Optimized parameters for f = log(data) = aa*log(1+a*k*k)
+    with a=b*b and aa = -(nu/2+1/4)
+    */
+    sf_warning ("b=%g nu=%g",sqrt(a),-2*aa-0.5);
     sf_floatwrite (data,nk,out);
     
     exit (0);
