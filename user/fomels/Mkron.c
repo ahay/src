@@ -19,13 +19,14 @@
 
 #include <rsf.h>
 
-#include "kron.c"
+#include "kron.h"
+#include "weight.h"
 
 int main(int argc, char* argv[])
 {
     bool adj, inv;
-    int n, n2, niter;
-    float *x, *y, *p, **a, **b, eps;
+    int n, n2, i2, niter, nliter, iter;
+    float *x, *y, *w, **a, **b, eps;
     sf_file in, out, mat1, mat2;
 
     sf_init(argc,argv);
@@ -50,13 +51,17 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* maximum number of iterations */
     if (!sf_getfloat("eps",&eps)) eps=0.;
+    /* regularization */
+    if (!sf_getint("nliter",&nliter)) nliter=1;
+    /* number of nonlinear iterations */
 
     a = sf_floatalloc2(n,n);
     b = sf_floatalloc2(n,n);
 
     x = sf_floatalloc(n2);
     y = sf_floatalloc(n2);
-
+    w = sf_floatalloc(n2);
+    
     kron_init(n,a,b);
 
     sf_floatread(x,n2,in);
@@ -65,13 +70,18 @@ int main(int argc, char* argv[])
 
     if (adj) {
 	if (inv) {
-	    p = sf_floatalloc(n2);	    
-/*
-	    sf_conjgrad_init(n2,n2,n2,n2,eps,FLT_EPSILON,true,false);
-	    sf_conjgrad(NULL,kron_lop,sf_copy_lop,p,y,x,niter);
-*/
-	    sf_solver_prec (kron_lop, sf_cgstep, sf_copy_lop, n2, n2, n2,
-			    y, x, niter,  eps, "verb", true, "end");
+	    weight_init(w);
+	    for (i2=0; i2 < n2; i2++) {
+		w[i2] = 1.;
+	    }
+	    for (iter=0; iter < nliter; iter++) {
+		sf_solver_prec (kron_lop, sf_cgstep, weight_lop, n2, n2, n2,
+				y, x, niter,  eps, "verb", true, "end");
+		sf_cgstep_close();
+		for (i2=0; i2 < n2; i2++) {
+		    w[i2] = y[i2];
+		}
+	    }
 	} else {
 	    kron_lop(true,false,n2,n2,y,x);
 	} 
@@ -81,5 +91,13 @@ int main(int argc, char* argv[])
 
     sf_floatwrite(y,n2,out);
 
+
+/*
+  p = sf_floatalloc(n2);	    
+  sf_conjgrad_init(n2,n2,n2,n2,eps,FLT_EPSILON,true,false);
+  sf_conjgrad(NULL,kron_lop,sf_copy_lop,p,y,x,niter);
+*/
+
     exit(0);
 }
+

@@ -16,4 +16,12 @@ Flow('inv','gg aa bb',
      ''')
 Result('inv',grey % 'Inversion')
 
+# hi-res inversion
+Flow('inv2','gg aa bb',
+     '''
+     kron adj=y inv=y mat1=${SOURCES[1]} mat2=${SOURCES[2]}
+     eps=0.01 niter=25 nliter=2
+     ''')
+Result('inv2',grey % 'High-Resolution Inversion')
+
 End()

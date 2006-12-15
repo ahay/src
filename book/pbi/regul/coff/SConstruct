@@ -225,14 +225,23 @@ Flow('dips','idip xdip','cat ${SOURCES[1]} axis=4')
 Flow('toff2','toff','patch w=250,52559')
 Flow('dips2','dips','patch w=250,702,157,2')
 
-#Flow('reg2','toff2 geom dips2',
-#     'planereg3 head=${SOURCES[1]} dip=${SOURCES[2]} verb=y interp=4 xkey=1 ykey=0 eps=0.01')
+Flow('reg2','toff2 geom dips2',
+     'planereg3 head=${SOURCES[1]} dip=${SOURCES[2]} verb=y interp=4 xkey=1 ykey=0 eps=0.1')
 
 Flow('reg','reg2','patch dim=3 n0=1000,702,157 inv=y weight=y')
 
-#transp memsize=500 plane=13 |
-#     postfilter2 nw=4 |
-#     transp memsize=500 plane=13
+Flow('treg','reg',
+     '''
+     transp memsize=500 plane=13 |
+     postfilter2 nw=4 |
+     transp memsize=500 plane=13
+     ''')
 
+Result('treg',
+       '''
+       byte gainpanel=78 |
+       grey3 frame1=500 frame2=210 frame3=78
+       title=Regularized
+       ''')
 
 End()

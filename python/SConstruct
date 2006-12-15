@@ -20,7 +20,7 @@ for src in ('doc','proj','prog','tex','book'):
 
 env.Install(libdir,'suproj.py')
 
-for src in ('latex2wiki','vplot2eps','vplot2gif'):
+for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi'):
     env.Install(libdir,src+'.py')
     env.InstallAs(os.path.join(bindir,src),src+'.py')
 
