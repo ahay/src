@@ -77,8 +77,5 @@ if root:
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
-
-    # clean compiled python: sfslim.pyc
-    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
 #####################################################################
 
