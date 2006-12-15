@@ -1,4 +1,4 @@
-/* Estimating the logarithm of a von Karman 1-D spectrum by nonlinear least squares */
+/* Estimating von Karman 1-D spectrum by nonlinear separable least squares */
 /*
   Copyright (C) 2006 University of Texas at Austin
   
@@ -84,7 +84,7 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc(nk);
 
-    eps = 10.*FLT_EPSILON;
+    eps = 2.*FLT_EPSILON;
     eps *= eps;
     
     sf_floatread(data,nk,in);
@@ -146,10 +146,10 @@ int main(int argc, char* argv[])
 	
 
     /* 
-    Optimized parameters for f = log(data) = aa*log(1+a*k*k)
-    with a=b*b and aa = -(nu/2+1/4)
+    Optimized parameters for f = log(data) = aa*log(1+a*a*k*k)
+    with a=b and aa = -(nu/2+1/4)
     */
-    sf_warning ("b=%g nu=%g",sqrt(a),-2*aa-0.5);
+    sf_warning ("b=%g nu=%g",a,-2*aa-0.5);
     sf_floatwrite (data,nk,out);
     
     exit (0);
