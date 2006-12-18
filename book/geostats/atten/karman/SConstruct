@@ -1,5 +1,4 @@
-# Inversion for von Karman parameters
-# Space correlation in 1-D Fourier domain
+# Inversion for von Karman spatial autocorrelation parameters in 1-D Fourier domain
 #
 # December 2006
 #
@@ -32,8 +31,6 @@ from math import pi
 #
 # Signal X detecting content (Hz) =  dfx < fx < fnx
 
-# Python dictionary
-
 
 pgrid = {'nx':512, 'ox':0., 'dx':1.}
 
@@ -56,7 +53,7 @@ Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put lab
 # gsd = seed for random generator
 
 
-psyn = {'b':10., 'nu':0.2, 'gmu':0., 'gvr':1., 'grn':1., 'gsd':1347}
+psyn = {'b':50., 'nu':0.4, 'gmu':0., 'gvr':9., 'grn':1., 'gsd':1317}
 
 
 # Create Gaussian white noise
@@ -89,147 +86,113 @@ Plot('wgauss','sfgraph title="Gaussian white noise"')
 # S(N/2+1) = S(-N/2-1) = S*(N/2-1)
 # S(N/2)   = S(-N/2)   = S*(N/2)
 #
-# [fx] = dfx*(-nx/2+1:1:nx/2) 
+# Dimension in Fourier space [0,nx/2] is nx/2+1
+# [fx] = dfx*(-nx/2+1:1:nx/2)
 
 
 Flow('fwgauss','wgauss','sffft1 sym=y')
-Plot('fwgauss','sfadd abs=y | sfreal | put label1=fx unit1=1/m | sfgraph title="Gaussian white noise spectrum"')
+Plot('fwgauss',
+     '''
+     sfadd abs=y | sfreal | put label1=kx unit1=1/m |
+     sfgraph title="Gaussian white noise spectrum"
+     ''')
 
 
-# Stochastic process von Karman filter in spectral domain (Lord, 1954)
+# Amplitude of white spectrum
 
 
-Flow('vnkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)"' % psyn)
-Plot('vnkfilt','sfreal | put label1=fx unit1=1/m | sfgraph title="Filter spectrum F(fx)"')
+Flow('mfwgauss','fwgauss',
+     '''
+     add abs=y | real | stack axis=1 norm=n |
+     math output="input*%g" | spray axis=1 n=%d
+     ''' % (1./(pgrid['nx']/2+1),pgrid['nx']/2+1))
 
 
-# Logarithmic plot for conical coolie hat inversion method
+# Stochastic process von Karman 1-D filter in spectral domain (Lord, 1954)
 
 
-Flow('lvkfilt','vnkfilt','sfreal | sfmath output="log(input)"')
-Flow('lybfilt','lvkfilt','sfmath output="log(1+((%(b)g)*x1)^2)"' % psyn)
-Plot('lvky','lvkfilt lybfilt',
+Flow('vkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)"' % psyn)
+Plot('vkfilt','sfreal | put label1=kx unit1=1/m | sfgraph title="Filter spectrum F(kx)"')
+
+
+# Logarithmic plot for separable least square inversion method ("Conical Coolie Hat")
+
+
+Flow('lvkfilt','vkfilt','sfreal | sfmath output="log(input)"')
+Flow('llbfilt','lvkfilt','sfmath output="log(1+((%(b)g)*x1)^2)"' % psyn)
+Plot('llfilt','lvkfilt llbfilt',
      '''
      cmplx ${SOURCES[0:2]} |
-     put label1=1+b2k2 unit1=Ln label2=Amplitude unit2=Ln | sfgraph title="Conical Coolie Hat Ln(A)=F(Ln(Y))"
+     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | sfgraph title="Ln[F(kx)] = p*Ln(1+b2kx2)"
      ''',stdin=0)
 
 
-# Display
+# Display panel 1
 
 
-Result('panelwgauss','wgauss fwgauss vnkfilt lvky','TwoRows',vppen='xsize=10 ysize=10')
+Result('panel1','wgauss fwgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
 
 
 # Spectral filtering of white noise and inverse Fourier transform
 
 
-Flow('fcgauss',['vnkfilt','fwgauss'],'sfmath r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
+Flow('fcgauss',['vkfilt','fwgauss'],'sfmath r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
 Flow('cgauss','fcgauss','sffft1 sym=y inv=y')
-
 
 Flow('rfcgauss','fcgauss','sfadd abs=y | sfreal')
 Plot('cgauss','put label1=x unit1=m | sfgraph title="Correlated Gaussian noise"')
-Plot('rfcgauss','put label1=fx unit1=1/m | sfgraph title="Correlated Gaussian noise spectrum"')
+Plot('rfcgauss','put label1=kx unit1=1/m | sfgraph title="Correlated Gaussian noise spectrum"')
 
 
-# Logarithmic plot for conical coolie hat inversion method
+# Logarithmic plot for separable least square inversion method ("Conical Coolie Hat")
 
 
-Flow('lrfcgauss','rfcgauss','sfmath output="log(input)"')
-Plot('lybfilt','put label1=fx unit1=1/m | sfgraph title="Ln(1+b2k2)"')
-
-Plot('lfcy','lrfcgauss lybfilt',
+Flow('lrfcgauss',['rfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="log(r)-log(m)"')
+Plot('llgauss','lrfcgauss llbfilt',
      '''
      cmplx ${SOURCES[0:2]} |
-     put label1=1+b2k2 unit1=Ln label2=Amplitude unit2=Ln | sfgraph title="Conical Coolie Hat Ln(A)=F(Ln(Y))"
+     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | sfgraph title="Ln[F(kx)/F(0)] = p*Ln(1+b2kx2)"
      ''',stdin=0)
 
 
-# Display
+# Display panels 2 and 3
 
 
-Result('panelcgly','lybfilt lvky vnkfilt lfcy','TwoRows',vppen='xsize=10 ysize=10')
-
-Result('panelcgauss','wgauss fwgauss cgauss rfcgauss','TwoRows',vppen='xsize=10 ysize=10')
+Result('panel2','rfcgauss llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
+Result('panel3','wgauss fwgauss cgauss rfcgauss','TwoRows',vppen='xsize=10 ysize=10')
 
 
 # -----------------------------------
 # Inversion for stochastic parameters
 # -----------------------------------
 
-# Estimation of von Karman filter in spectral domain
-# Optimization of b parameter
+# Estimation of von Karman filter logarithm in spectral domain
+# Optimization of (b,nu) parameters by separate least square and Gauss Newton algorithm
 
 
-
-# lvkfilt
-#sfricker < in.rsf > out.rsf ma=ma.rsf m=f0+0.25*(na-1)*df niter=100 verb=false
-
- 
-# Inversion algorithm parameters
-#
-# niter = number of iterations
-# minit = initial guess of b parameter
-
-# Python dictionary
+Flow('erfcgauss',['rfcgauss','mfwgauss'],
+     '''
+     math r=${SOURCES[0]} m=${SOURCES[1]} output="r/m" |
+     sfkarman verb=y niter=100 a0=30.
+     ''')
 
 
-#pinv = {'niter':512, 'minit':10.}
+# Display panel 4
 
-              
-#Flow('vnkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)" | sfreal' % psyn)
+Flow('prfcgauss',['erfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="r*m"')
+
+Plot('fitfilt','prfcgauss rfcgauss',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1=kx unit1=1/m | sfgraph title="Filter estimated spectrum F(kx)"
+     ''',stdin=0)
+
+Result('panel4','fitfilt llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
 
 
- 
-# ------------------------------------------------------------
-# WAVELET
-# prepare source wavelet file (1-D format: t)
-# ------------------------------------------------------------
-#Flow('wave',None,
-#     '''
-#     spike nsp=1 mag=1 k1=%(kt)d
-#     n1=%(nt)d d1=%(dt)g o1=%(ot)g
-#         ''' % par )    
-#Result('wave','wave','graph title="wavelet"')
-# ------------------------------------------------------------
-
-# ------------------------------------------------------------
-# SHOT-RECORD migration
-# ------------------------------------------------------------
-
-# loop over migration configurations
-#for i in range(2):
-
-#    loc = par.copy()
-#    if  (i==0):
-#        loc['ow']=2
-#    elif(i==1):
-#        loc['nw']=1
-#        loc['ns']=3
-#        loc['fs']=50
-#        loc['js']=150
-
-    # prepare source/receiver data
-#    dos = 'dos' + str(i)
-#    dor = 'dor' + str(i)
-#    spmig.wflds(dos,dor,'wave','shot',loc) # prepare S-R wavefields
-
-    # datum source/receiver data in water
-#    dds = 'dds' + str(i)
-#    ddr = 'ddr' + str(i)
-#    spmig.datum(dds,ddr,'sdt',dos,dor,loc) #   datum S-R wavefields
-
-    # migration
-#    img = 'img' + str(i)  # image (3-D format: x-y-z)
-#    cig = 'cig' + str(i)  # CIGs
-#    spmig.imagePW(img,cig,'slo',dds,ddr,loc)
-
-#    Result(img,'window | transp |'
-#           + igrey('title=i pclip=99',par))
-        
-# ------------------------------------------------------------
-
+# -----------
+# Termination
+# -----------
 
 
 End()
