@@ -1,4 +1,4 @@
-/* Estimating von Karman 1-D spectrum by nonlinear separable least squares */
+/* Estimating von Karman autocorrelation 1D spectrum. */
 /*
   Copyright (C) 2006 University of Texas at Austin
   
@@ -23,20 +23,20 @@
 #include <rsf.h>
 
 /*
-  Input data and function
+  Input data and functions:
 
   f  = log(data)
-  l  = log(1 + a*a*k*k)
+  l  = log(1 + b*b*k*k)
   aa = -(nu/2+1/4)
-  lp = derivative of l with respect to a
+  lp = derivative of l with respect to b
 
-  Formulas for separable least squares and Gauss Newton:
+  Formulas for nonlinear separable least squares and Gauss Newton:
 
   aa = f.l/(l.l + eps)                          linear slope 
-  ap = (f.lp-2*aa*l.lp)/(l.l + eps)             linear slope derivative with respect to a
+  ap = (f.lp-2*aa*l.lp)/(l.l + eps)             derivative of linear slope with respect to b
   num = aa*(aa*l.lp + ap*(l.l + 2.*eps))
   den = ap*ap*l.l + 2*aa*ap*l.lp + aa*aa*lp.lp
-  da = num/den                                  increment for a
+  db = num/den                                  increment for b
 
   Requires:
 
@@ -53,15 +53,15 @@ int main(int argc, char* argv[])
 
     float *data /*input [nk] */; 
     int niter   /* number of iterations */; 
-    float a0    /* initial value */;
+    float b0    /* initial value */;
     int nk      /* data length */;
     float dk    /* data sampling */; 
     float k0    /* initial location */;
     bool verb   /* verbosity flag */;
 
     int ik, iter;
-    float f2, fl, ll, flp, llp, lplp, k, da, aa, f, l2;
-    float lp, eps, num, den, r2, a, l, s;
+    float f2, fl, ll, flp, llp, lplp, k, db, aa, f, l2, da;
+    float lp, eps, num, den, r2, b, l, r;
     sf_file in, out;
 
     /* Estimate shape (Caution: data gets corrupted) */ 
@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
-    if (!sf_getfloat("a0",&a0)) a0=10.;
+    if (!sf_getfloat("b0",&b0)) b0=10.;
     /* initial slope value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
@@ -94,11 +94,11 @@ int main(int argc, char* argv[])
 	f2 += f*f;
     }
 
-    a = a0; /* initial a */
+    b = b0; /* initial b */
     aa = -0.5;
 
-    if (verb) sf_warning("got a0=%g k0=%g niter=%d nk=%d dk=%g",
-			 a0,k0,niter,nk,dk);
+    if (verb) sf_warning("got b0=%g k0=%g niter=%d nk=%d dk=%g",
+			 b0,k0,niter,nk,dk);
 	
     /* Gauss-Newton iterations */
     for (iter = 0; iter < niter; iter++) { 
@@ -107,10 +107,10 @@ int main(int argc, char* argv[])
 	for (ik = 0; ik < nk; ik++) {
 	    k = ik*dk + k0;
 	    k *= k;
-            s = 1 + a*a*k;
-	    l = log(s);
+            r = 1 + b*b*k;
+	    l = log(r);
 	    l2 = l*l;
-	    lp = 2.*a*k/s; /* derivative of l with respect to a */
+	    lp = 2.*b*k/r; /* derivative of l with respect to a */
 	    
 	    f = log(data[ik]);
 	    
@@ -126,30 +126,30 @@ int main(int argc, char* argv[])
 	num = aa*(aa*llp + da*(ll+eps));
 	den = aa*aa*lplp + da*(2.*aa*llp + da*(ll-eps));
         
-	da = num/den; /* delta a */
+	db = num/den; /* delta b */
         
 	r2 = f2 - aa*aa*(ll+eps); /* residual squared */
-	if (verb) sf_warning("iter=%d r2=%g da=%g aa=%g a=%g",
-			     iter,r2,da,aa,a);
+	if (verb) sf_warning("iter=%d r2=%g db=%g aa=%g b=%g",
+			     iter,r2,db,aa,b);
 
-	a += da;     /* update a */
-	if (r2 < eps || da*da < eps) break;
+	b += db;     /* update b */
+	if (r2 < eps || db*db < eps) break;
     }
         
     for (ik = 0; ik < nk; ik++) {
 	k = ik*dk + k0;
 	k *= k;
-	data[ik] = exp(aa*log(1+a*a*k));
+	data[ik] = exp(aa*log(1+b*b*k));
     }
  
     if (verb) sf_warning ("%d iterations", iter);        
 	
 
     /* 
-    Optimized parameters for f = log(data) = aa*log(1+a*a*k*k)
+    Optimized parameters for f = log(data) = aa*log(1+b*b*k*k)
     with a=b and aa = -(nu/2+1/4)
     */
-    sf_warning ("b=%g nu=%g",a,-2*aa-0.5);
+    sf_warning ("b=%g nu=%g",b,-2*aa-0.5);
     sf_floatwrite (data,nk,out);
     
     exit (0);
