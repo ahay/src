@@ -161,6 +161,24 @@ Result('elfstk','stk',
        label1=Time unit1=s label2=Lateral unit2=m
        ''')
 
+Fetch('vdix.rsf','masha')
+Flow('vdix2','vdix.rsf','dd form=native')
+Flow('vdix1','vdix2',
+     '''
+     
+     time2depth velocity=$SOURCE
+     nz=640 dz=5.005 intime=y
+     ''')
+
+Plot('vdix1',
+     '''
+     grey color=j scalebar=y allpos=y bias=1400
+     wanttitle=y barlabel=Velocity barunit=km/s
+     bartype=v label1=Depth uni1=m label2=Lateral unit2=m
+     title="Dix Velocity Converted to Depth" barreverse=y
+     ''')
+Result('vels','vdix1 elfvxz1','SideBySideAniso')
+
 par = {
     'nx':nx,'ox':0,'dx':dx,
     'nt':nt,'ot':0,'dt':dt,
@@ -170,35 +188,37 @@ par = {
     #
     'verb':'y','eps':0.01,'nrmax':10
     }
-
-Flow('slo','vxz',
-     '''
-     transp plane=12 |
-     transp plane=23 |
-     math "output=1/input" |
-     put label1=x label2=y label3=z
-     ''')
-
 zomig.wflds ('dat','stk',par)
-zomig.image('img','slo','dat',par)
 
-Plot('img',
-     '''
-     window |
-     transp | agc |
-     grey title="Post-Stack Depth Migration"
-     label1=Depth unit1=m label2=Lateral unit2=m
-     ''')
+for vel in ('vxz','vdix1'):
+    slo = 'slo-'+vel
+    Flow(slo,vel,
+         '''
+         transp plane=12 |
+         transp plane=23 |
+         math "output=1/input" |
+         put label1=x label2=y label3=z
+         ''')
+    img = 'img-'+vel
+    zomig.image(img,slo,'dat',par)
+    Plot(img,
+         '''
+         window |
+         transp | agc |
+         grey title="Post-Stack Depth Migration"
+         label1=Depth unit1=m label2=Lateral unit2=m
+         ''')
 
-Result('img','img','Overlay')
+Result('img','img-vxz','Overlay')
 Result('fmg2','fmg2','Overlay')
 
 #     screenht=%g screenwd=%g labelsz=4 titlesz=4
 #       ''' % (0.001*zmax,0.001*xmax))
 
 
-Result('elfimg','img fmg2','OverUnderAniso') 
+Result('elfimg','img-vxz fmg2','OverUnderAniso') 
+Result('elfimg2','img-vxz img','SideBySideAniso',vppen='txscale=1.2')
 
-Result('elfimg2','img img','SideBySideAniso',vppen='txscale=1.2')
+Result('elfimg0','img-vdix1 img','SideBySideAniso')
 
 End()
