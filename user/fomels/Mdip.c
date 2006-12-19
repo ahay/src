@@ -161,7 +161,7 @@ int main (int argc, char *argv[])
 		p[i] = q0;
 	    }
 	}	
-
+	
 	/* estimate t-y dip */
 	dip3(2, niter, order, nj2, verb, u, p, m2, pmin, pmax);
 	

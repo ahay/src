@@ -185,7 +185,7 @@ Result('xdip1','dip1',
 Flow('dip12','dip1',
      '''
      transp memsize=500 |
-     remap1 n1=792 d1=0.0125 |
+     remap1 n1=702 d1=0.0125 |
      transp memsize=500 |
      transp plane=13 |
      remap1 n1=157 d1=0.025 |

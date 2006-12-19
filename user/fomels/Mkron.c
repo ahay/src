@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
 				y, x, niter,  eps, "verb", true, "end");
 		sf_cgstep_close();
 		for (i2=0; i2 < n2; i2++) {
-		    w[i2] = y[i2];
+		    w[i2] = fabsf(y[i2]);
 		}
 	    }
 	} else {
