@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
             r = 1 + b*b*k;
 	    l = log(r);
 	    l2 = l*l;
-	    lp = 2.*b*k/r; /* derivative of l with respect to a */
+	    lp = 2.*b*k/r; /* derivative of l with respect to b */
 	    
 	    f = log(data[ik]);
 	    
