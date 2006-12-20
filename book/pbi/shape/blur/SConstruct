@@ -8,19 +8,26 @@ for case in ('A','B','F','G'):
     Flow(case2,case+'.rsf','dd form=native')
     Result(case2,grey % case)
 
+Flow('dd','gg aa bb',
+     '''
+     math output=0.5 |
+     kron adj=n inv=n mat1=${SOURCES[1]} mat2=${SOURCES[2]} |
+     add scale=-1,1 ${SOURCES[0]}
+     ''')
+
 # simple inversion
-Flow('inv','gg aa bb',
+Flow('inv','dd aa bb',
      '''
      kron adj=y inv=y mat1=${SOURCES[1]} mat2=${SOURCES[2]}
-     eps=0.01 niter=25
+     eps=0.01 niter=25 | add add=0.5
      ''')
 Result('inv',grey % 'Inversion')
 
 # hi-res inversion
-Flow('inv2','gg aa bb',
+Flow('inv2','dd aa bb',
      '''
      kron adj=y inv=y mat1=${SOURCES[1]} mat2=${SOURCES[2]}
-     eps=0.01 niter=25 nliter=3
+     eps=0.01 niter=25 nliter=3 | add add=0.5
      ''')
 Result('inv2',grey % 'High-Resolution Inversion')
 

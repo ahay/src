@@ -186,15 +186,19 @@ Flow('dip12','dip1',
      '''
      transp memsize=500 |
      remap1 n1=702 d1=0.0125 |
-     transp memsize=500 |
-     transp plane=13 |
+     transp memsize=500
+     ''')
+
+Flow('dip13','dip12',
+     '''
+     transp plane=13 memsize=500 |
      remap1 n1=157 d1=0.025 |
-     transp plane=13 |
+     transp plane=13 memsize=500 |
      scale dscale=0.5
      ''')
 
-Flow('idip12','dip12','window n4=1 | patch w=1000,157,157')
-Flow('xdip12','dip12','window f4=1 | patch w=1000,157,157')
+Flow('idip12','dip13','window n4=1 | patch w=1000,157,157')
+Flow('xdip12','dip13','window f4=1 | patch w=1000,157,157')
 Flow('miss','tfld','spray axis=1 n=1000 d=0.003 o=1 | patch w=1000,157,157')
 Flow('pbin2','tbin2','patch w=1000,157,157')
 
