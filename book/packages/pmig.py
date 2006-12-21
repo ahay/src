@@ -1,13 +1,11 @@
 from rsfproj import *
 import string, sys
+import version
 
 def pmig(data,hdip,ydip,frame1=1,frame2=1,frame3=1):
 
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    if map(int, version) < [2, 2, 0]:
+    if version.old_version():
         return # think how to do it better
-
     def grey3(title,color='I'):
         return '''byte bar=bar.rsf | transp plane=23 | grey3 title="%s"
         frame1=%d frame2=%d frame3=%d color=%s flat=y point1=0.75 point2=0.75

@@ -1,5 +1,6 @@
 from rsfproj import *
 import string, sys
+import version
 
 
 def stack(name,
@@ -28,9 +29,7 @@ def stack(name,
           nout=2048,
           vx0=None):
 
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    if map(int, version) < [2, 2, 0]:
+    if version.old_version():
         return # think how to do it better
 
     scn = name+'-scn'

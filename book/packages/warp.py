@@ -1,5 +1,6 @@
 from rsfproj import *
 import math, string, sys
+import version
 
 warp0 = '''
 warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
@@ -99,9 +100,7 @@ def warp3(name,       # name prefix
           clip=6      # display clip
           ):
 
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    if map(int, version) < [2, 2, 0]:
+    if version.old_version():
         return # think how to do it better
 
     if line:
@@ -291,10 +290,8 @@ def warp2(name,       # name prefix
           clip=6      # display clip
           ):
 
-    
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    if map(int, version) < [2, 2, 0]:
+
+    if version.old_version():
         return # think how to do it better
 
     interg = 'pad n2=%d | put n2=%d n3=%d | stack' % ((nx/inter+1)*inter,inter,nx/inter+1)
@@ -583,9 +580,7 @@ def warp1(name,      # name prefix
           ss=0
           ):
 
-    version = string.replace(sys.version,"+","")
-    version = string.split(string.split(version)[0], ".")
-    if map(int, version) < [2, 2, 0]:
+    if version.old_version():
         return # think how to do it better
 
     graph = '''

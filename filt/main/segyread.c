@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
     if (!sf_getbool("su",&su)) su=false;
     /* y if input is SU, n if input is SEGY */
     if (!sf_getbool("endian",&xdr) || xdr) sf_endian();
-    /* big/little endian flag, the default is estimated automatically */
+    /*< endian big/little endian flag, the default is estimated automatically >*/
     
     if (NULL == (filename = sf_getstring("tape"))) /* input data */
 	sf_error("Need to specify tape=");
