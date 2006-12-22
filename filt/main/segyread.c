@@ -136,7 +136,7 @@ igi:       instrument early or initial gain 122
 
 corr:      correlated:
 1 = no
-2 = yes 124     
+2 = yes 124
 
 sfs:       sweep frequency at start 126 
 
@@ -147,7 +147,7 @@ slen:      sweep length in ms 130
 styp:      sweep type code:
 1 = linear
 2 = cos-squared
-3 = other 132    
+3 = other 132
 
 stas:      sweep trace length at start in ms 134 
 
@@ -184,40 +184,40 @@ sec:       second of minute 164
 timbas:    time basis code:
 1 = local
 2 = GMT
-3 = other 166    
+3 = other 166
 
 trwf:      trace weighting factor, defined as 1/2^N
 volts for the least sigificant bit 168 
 
 grnors:    geophone group number of roll switch
-position one 170 
+position one 170
 
 grnofr:    geophone group number of trace one within
-original field record 172 
+original field record 172
 
 grnlof:    geophone group number of last trace within
-original field record 174 
+original field record 174
 
 gaps:      gap size (total number of groups dropped) 176 
 
 otrav:     overtravel taper code:
 1 = down (or behind)
-2 = up (or ahead) 
+2 = up (or ahead)
 
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
-  
+
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
   the Free Software Foundation; either version 2 of the License, or
   (at your option) any later version.
-  
+
   This program is distributed in the hope that it will be useful,
   but WITHOUT ANY WARRANTY; without even the implied warranty of
   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
   GNU General Public License for more details.
-  
+
   You should have received a copy of the GNU General Public License
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
@@ -247,14 +247,17 @@ int main(int argc, char *argv[])
     extern off_t ftello (FILE *stream);
 
     sf_init(argc, argv);
-    
+
     if (!sf_getbool("verbose",&verbose)) verbose=false;
     /* Verbosity flag */
+
     if (!sf_getbool("su",&su)) su=false;
     /* y if input is SU, n if input is SEGY */
-    if (!sf_getbool("endian",&xdr) || xdr) sf_endian();
-    /*< endian big/little endian flag, the default is estimated automatically >*/
-    
+
+    if (!sf_getbool("endian",&xdr)) xdr=true;
+    /* Whether to automatically estimate endianness or not */
+    if (xdr) sf_endian();
+
     if (NULL == (filename = sf_getstring("tape"))) /* input data */
 	sf_error("Need to specify tape=");
 
@@ -280,13 +283,13 @@ int main(int argc, char *argv[])
 	if (NULL == (head = fopen(headname,"w")))
 	    sf_error("Cannot open file \"%s\" for writing ascii header:",
 		     headname);
-    
+
 	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, head)) 
 	    sf_error("Error writing ascii header");
 	fclose (head);
 
 	if (verbose) sf_warning("ASCII header written to \"%s\"",headname);
-    
+
 	if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, file))
 	    sf_error("Error reading binary header");
 
@@ -296,7 +299,7 @@ int main(int argc, char *argv[])
 	if (NULL == (head = fopen(headname,"wb")))
 	    sf_error("Cannot open file \"%s\" for writing binary header:",
 		     headname);
-    
+
 	if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, head)) 
 	    sf_error("Error writing binary header");
 	fclose (head);
@@ -357,7 +360,7 @@ int main(int argc, char *argv[])
 
     if (verbose) sf_warning("Expect %d traces",ntr);
 
-    
+
     if (NULL != sf_getstring("mask")) {
 	/* optional header mask for reading only selected traces */
 	msk = sf_input("mask");
@@ -402,7 +405,7 @@ int main(int argc, char *argv[])
     }
 
     if (NULL != out) sf_fileflush(out,NULL);
-    
+
     switch (read[0]) {
 	case 'h': /* header only */
 	    trace = sf_charalloc (SF_HDRBYTES);
