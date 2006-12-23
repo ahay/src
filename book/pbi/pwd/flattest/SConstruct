@@ -53,6 +53,8 @@ Result('rhs','dpdx dp2dt rhs','SideBySideAniso')
 Flow('pflat','planes dip','flat dip=${SOURCES[1]}')
 Result('pflat','grey title=Flattened')
 
+Flow('pwpick','dip','remap1 n1=300 | pwpick | bandpass fhi=0.25 | window n1=256')
+
 Flow('pick','dip','pick0')
 
 for plot in [0,1]:
@@ -63,7 +65,14 @@ for plot in [0,1]:
          min1=0 max1=127 min2=0 max2=255
          wanttitle=n wantaxis=n
          ''' % ((0,5)[plot],(10,1)[plot]))
+    Plot('pwpick%d' % plot,'pwpick',
+         '''
+         contour c0=0 dc=10 nc=100
+         transp=y yreverse=y plotcol=%d plotfat=%d
+         wanttitle=n wantaxis=n
+         ''' % ((0,5)[plot],(10,1)[plot]))
 Result('pick','planes pick0 pick1','Overlay')
+Result('pwpick','planes pwpick0 pwpick1','Overlay')
 
 seislet('planes',256,128,nsp=100)
 

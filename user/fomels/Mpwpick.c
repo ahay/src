@@ -1,4 +1,4 @@
-/* Moveout flattening. */
+/* Picking by plane-wave construction. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -23,18 +23,17 @@
 int main (int argc, char *argv[])
 {
     bool verb;
-    int n1,n2,n3, i3, i0;
-    float eps, **u, **p, **v;
-    sf_file in, out, dip;
+    int n1,n2,n3, i1,i2,i3, i0;
+    float eps, **u, **p, *trace, t0, dt;
+    sf_file out, dip;
 
     sf_init(argc,argv);
-    in = sf_input("in");
+    dip = sf_input("in");
     out = sf_output("out");
-    dip = sf_input("dip");
 
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    if (!sf_histint(in,"n2",&n2)) sf_error("No n2= in input");
-    n3 = sf_leftsize(in,2);
+    if (!sf_histint(dip,"n1",&n1)) sf_error("No n1= in input");
+    if (!sf_histint(dip,"n2",&n2)) sf_error("No n2= in input");
+    n3 = sf_leftsize(dip,2);
 
     if (!sf_getbool("verb",&verb)) verb=false;
     if (!sf_getfloat("eps",&eps)) eps=0.01;
@@ -43,24 +42,44 @@ int main (int argc, char *argv[])
     if (!sf_getint("i0",&i0)) i0=0;
     /* reference trace */
 
+    if (!sf_histfloat(dip,"d1",&dt)) dt=1.;
+    if (!sf_histfloat(dip,"o1",&t0)) t0=0.;
+
     predict_init (n1, n2, eps*eps, 1);
 
     u = sf_floatalloc2(n1,n2);
     p = sf_floatalloc2(n1,n2);
-    v = sf_floatalloc2(n1,n2);
+    trace = sf_floatalloc(n1);
+
+    for (i1=0; i1 < n1; i1++) {
+	u[i0][i1] = t0+i1*dt;
+    }
 
     for (i3=0; i3 < n3; i3++) {
 	if (verb) fprintf(stderr,"cmp %d of %d\n",i3+1,n3);
-
-	sf_floatread(u[0],n1*n2,in);
 	sf_floatread(p[0],n1*n2,dip);
-
-	predict_flat(i0, u, v, p);
-
-	sf_floatwrite(v[0],n1*n2,out);
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = u[i0][i1];
+	}
+	for (i2=i0-1; i2 >= 0; i2--) {
+	    predict_step(false,false,trace,p[i2]);
+	    for (i1=0; i1 < n1; i1++) {
+		u[i2][i1] = trace[i1];
+	    }
+	}
+	for (i1=0; i1 < n1; i1++) {
+	    trace[i1] = u[i0][i1];
+	}
+	for (i2=i0+1; i2 < n2; i2++) {
+	    predict_step(false,true,trace,p[i2-1]);
+	    for (i1=0; i1 < n1; i1++) {
+		u[i2][i1] = trace[i1];
+	    }
+	}
+	sf_floatwrite(u[0],n1*n2,out);
     }
 
     exit (0);
 }
 
-/* 	$Id$	 */
+/* 	$Id: Mflat.c 1131 2005-04-20 18:19:10Z fomels $	 */

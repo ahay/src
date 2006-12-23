@@ -58,6 +58,10 @@ Flow('flat2','zeng2 dip2','flat i0=125 dip=${SOURCES[1]}')
 Plot('flat2','grey title=Flattened')
 Plot('aft2','flat2','bandpass fhi=60 | grey title=Flattened min1=1 max1=3')
 
+Flow('pick2','dip2','pwpick i0=125')
+Plot('pick2','window min1=1 max1=3 | contour c0=0 dc=0.05 nc=100 wanttitle=n plotcol=3 wantaxis=n')
+Result('over2','bef2 pick2','Overlay')
+
 Result('zflt2','zeng2 flat2','SideBySideAniso')
 Result('zba2','bef2 aft2','SideBySideAniso')
 
