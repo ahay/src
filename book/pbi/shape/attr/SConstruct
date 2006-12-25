@@ -66,7 +66,7 @@ for case in (1,2):
          '''
          scale dscale=0.05 |
          graph title="(b) Synthetic %s Frequency"
-         wantaxis1=n min2=-5 max2=100
+         label1=Time unit1=s min2=-5 max2=100
          label2="Frequency (Hz)" plotcol=5
          labelsz=10 titlesz=12
          ''' % ('Instantaneous','Local')[case-1])
