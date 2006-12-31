@@ -148,14 +148,16 @@ Plot('simperr',grey % 'error: (shot1+shot3)/2-shot2')
 Result('shot3','shot1 shot3 simp simperr','TwoRows')
 
 Flow('shotftd','shot',
-     '''window f1=50 | logstretch nout=256 |
-     fft1 | transp | transp plane=23''')
+     '''
+     window f1=50 | logstretch nout=256 |
+     fft1 | transp | transp plane=23
+     ''')
 Flow('shots','shotftd','window n2=2 f2=227 j2=2')
 Flow('shotin','shots','infill | window n2=1 f2=1')
 Flow('shotnd','shotin',
      '''
-     pad n2=136 | transp | fft1 inv=y |
-     window n1=256 | logstretch inv=y | pad beg1=50 
+     transp | fft1 inv=y |
+     logstretch inv=y | pad beg1=50 
      ''')
 Flow('shoterr','shotnd shot2','add scale=1,-1 ${SOURCES[1]}')
 

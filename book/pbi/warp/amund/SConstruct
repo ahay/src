@@ -20,8 +20,8 @@ Flow('dat','z vp vs rho',
      modrefl vp=${SOURCES[1]} vs=${SOURCES[2]} rho=${SOURCES[3]}
      nt=5000 dt=0.004
      ''')
-Flow('pp','dat','window n2=1 | ricker1 freq=0.04')
-Flow('ps','dat','window f2=1 | ricker1 freq=0.02')
+Flow('pp','dat','window n2=1 | ricker1 frequency=4')
+Flow('ps','dat','window f2=1 | ricker1 frequency=2')
 
 graph = 'graph plotfat=10 label1="Time (s)" wanttitle=n labelsz=10 label2=%s'
 

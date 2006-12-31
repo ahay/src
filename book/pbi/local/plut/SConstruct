@@ -1,0 +1,19 @@
+from rsfproj import *
+
+for case in ('ref','mod'):
+    sgy = 'pluto1.5_%s.sgy' % case
+    Fetch(sgy,'pluto')
+
+    Flow([case,case+'.asc',case+'.bin'],sgy,
+         '''
+         segyread tape=$SOURCE read=d
+         hfile=${TARGETS[1]} bfile=${TARGETS[2]} |
+         cut n1=50
+         ''',stdin=0)
+
+Flow('mod2','mod','window f1=100 | pad end1=100')
+
+Result('ref','grey title=Reference label1=Time unit1=s label2=Trace')
+Result('mod','grey title=Model label1=Time unit1=s label2=Trace')
+
+End()
