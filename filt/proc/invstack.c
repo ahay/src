@@ -18,6 +18,7 @@
 */
 #include <rsf.h>
 
+#include "invstack.h"
 #include "imospray.h"
 
 void invstack(int nt, float *model, int nx, const float *gather, 
