@@ -1,6 +1,6 @@
 # Inversion for von Karman spatial autocorrelation parameters in 2-D Fourier domain
 #
-# December 2006
+# January 2007
 #
 # Thomas Jules Browaeys 
 # Bureau of Economic Geology
@@ -33,7 +33,7 @@ from math import pi
 # Signal Y detecting content (Hz) =  dfy < fy < fny
 
 
-pgrid = {'nx':256, 'ox':0., 'dx':1., 'ny':256, 'oy':0., 'dy':1}
+pgrid = {'nx':256, 'ox':0., 'dx':1., 'ny':256, 'oy':0., 'dy':1.}
 
 
 # Create spatial grid
@@ -51,8 +51,8 @@ Flow('spacegrid',None,
 # ---------------------
 
 # bx,by   = correlation length scale in x,y (m)
-# nu      = Hurst exponent 0 < and < 0.5 = Bessel function order
-# gmu     = mean of Gaussian white noise
+# nu      = Hurst exponent -0.5 < and < 0.5
+# gmu     = Gaussian white noise mean
 # gvr     = variance of Gaussian white noise = (standard deviation)^2
 # grn     = noise range
 # gsd     = seed for random generator
@@ -112,8 +112,8 @@ Flow('mfwgauss','fwgauss',
      add abs=y | real |
      stack axis=2 norm=n | math output="input*%g" |
      stack axis=1 norm=n | math output="input*%g" |
-     spray axis=1 n=%d | spray axis=2 n=%d 
-     ''' % (0.5/pgrid['ny'],1./(pgrid['nx']/2+1),pgrid['nx']/2+1,2*pgrid['ny']))
+     spray axis=1 n=%d d=%g o=0 | spray axis=2 n=%d d=%g o=%g 
+     ''' % (0.5/pgrid['ny'],1./(pgrid['nx']/2+1),pgrid['nx']/2+1,1./pgrid['nx'],2*pgrid['ny'],0.5/pgrid['ny'],-0.5/pgrid['dy']))
 
 
 # Stochastic process von Karman 2-D filter in spectral domain (Lord, 1954)
@@ -188,27 +188,28 @@ Result('panel3','wgauss fwgauss cgauss rfcgauss','TwoRows',vppen='xsize=10 ysize
 # -----------------------------------
 
 # Estimation of von Karman filter logarithm in spectral domain
-# Optimization of (b,nu) parameters by separate least square and Gauss Newton algorithm
+# Optimization of (bx,bxy,by,nu) parameters by separate least square and Gauss Newton algorithm
 
 
-#Flow('erfcgauss',['rfcgauss','mfwgauss'],
-#     '''
-#     math r=${SOURCES[0]} m=${SOURCES[1]} output="r/m" |
-#     sfkarman verb=y niter=100 a0=30.
-#     ''')
+Flow('erfcgauss',['rfcgauss','mfwgauss'],
+     '''
+     math r=${SOURCES[0]} m=${SOURCES[1]} output="r/m" |
+     sfkarman2 verb=y niter=100 a0=100. b0=5. c0=1000.
+     ''')
 
 
 # Display panel 4
 
-#Flow('prfcgauss',['erfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="r*m"')
 
-#Plot('fitfilt','prfcgauss rfcgauss',
-#     '''
-#     cat ${SOURCES[0:2]} axis=2 |
-#     put label1=kx unit1=1/m | sfgraph title="Filter estimated spectrum F(kx)"
-#     ''',stdin=0)
+Flow('prfcgauss',['erfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="r*m"')
 
-#Result('panel4','fitfilt llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
+Plot('prfcgauss',
+     '''
+     put label1=kx unit1=1/m label2=ky unit2=1/m |
+     sfgrey color=j title="Filter estimated spectrum F(kx,ky)"
+     ''')
+
+Result('panel4','prfcgauss llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
 
 # -----------
 # Termination
