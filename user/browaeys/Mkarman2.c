@@ -1,6 +1,6 @@
-/* Estimating von Karman autocorrelation 2D spectrum. */
+/* Estimation of von Karman autocorrelation 2D spectrum by nonlinear separable least squares. */
 /*
-  Copyright (C) 2006 University of Texas at Austin
+  Copyright (C) 2007 University of Texas at Austin
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -23,17 +23,17 @@
 #include <rsf.h>
 
 /*
-  Input 2D data and functions:
+  Input in 2D:
 
   f  = log(data)
-  l  = log(1 + k.A.k) where k = kx + ky and A real symmetric correlation matrix
+  l  = log(1 + k.A.k) where k = (kx ,ky) and A real symmetric correlation matrix
   aa = -(nu/2+1/2)
   lp = derivative of l with respect to A
 
   Formulas for nonlinear separable least squares and Gauss Newton:
 
   aa = f.l/(l.l + eps)                          linear slope 
-  ap = (f.lp-2*aa*l.lp)/(l.l + eps)             derivative of linear slope with respect to A
+  ap = (f.lp-2*aa*l.lp)/(l.l + eps)             derivative of aa with respect to A
   num = aa*(aa*l.lp + ap*(l.l + 2.*eps))
   den = ap*ap*l.l + 2*aa*ap*l.lp + aa*aa*lp.lp
   da = num/den                                  increment for A
@@ -47,20 +47,18 @@
   lplp -> lp.lp
 */
 
-
 int main(int argc, char* argv[])
 {
 
     float **data               /* input [ny][nx] */;
     int niter                  /* number of iterations */; 
-    float* a                   /* estimated parameters [3] */; 
-    int nx, ny                /* axis */;
+    int nx, ny                 /* axis */;
     float dx, dy, x0, y0       /* axis and initials */;
     bool verb                  /* verbosity flag */;
 
-    int ix, iy, iter, i, j;
+    int ix, iy, iter, j;
     float f2, fl, ll, flp[3], llp[3], lplp[6], x, y, da[3], aa, f, l2;
-    float lp[3], eps, num[3], den[6], r2, l, x2, y2, xy, det, r;
+    float lp[3], eps, num[3], den[6], r2, a[3], l, x2, y2, xy, det, r;
     sf_file in, out;
     
     /* Estimate shape (Caution: data gets corrupted) */ 
@@ -78,12 +76,12 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"d2",&dy)) sf_error("No d2= in input");
     if (!sf_histfloat(in,"o2",&y0)) sf_error("No o2= in input");
 
-    if (!sf_getfloat("a0",&a[0])) a[0]=100.;
+    if (!sf_getfloat("a0",&a[0])) a[0]=1000.;
     /* starting correlation length in xx */
     if (!sf_getfloat("b0",&a[1])) a[1]=0.;
-    /* starting  correlation length in xy */
-    if (!sf_getfloat("c0",&a[2])) a[2]=20.;
-    /* starting  correlation length in yy */
+    /* starting correlation length in xy */
+    if (!sf_getfloat("c0",&a[2])) a[2]=400.;
+    /* starting correlation length in yy */
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
@@ -92,15 +90,13 @@ int main(int argc, char* argv[])
 
     data = sf_floatalloc2(nx,ny);
 
-    sf_floatread(data[0],nx*ny,in);
+    /* Inversion */
 
     eps = 10.*FLT_EPSILON;
     eps *= eps;
+	    
+    sf_floatread(data[0],nx*ny,in);
 
-    if (verb) sf_warning("got a0=%g b0=%g c0=%g niter=%d\n"
-		         "nx=%d dx=%g x0=%g ny=%d dy=%g y0=%g",
-		         a[0],a[1],a[2],niter,nx,dx,x0,ny,dy,y0);
-	
     f2 = 0.;
     for (iy=0; iy < ny; iy++) {
         for (ix=0; ix < nx; ix++) {
@@ -109,6 +105,10 @@ int main(int argc, char* argv[])
 	}
     }
     aa = -0.5;
+
+    if (verb) sf_warning("got a0=%g b0=%g c0=%g niter=%d\n"
+		         "nx=%d dx=%g x0=%g ny=%d dy=%g y0=%g",
+		         a[0],a[1],a[2],niter,nx,dx,x0,ny,dy,y0);
 
     /* Gauss-Newton iterations */
 
@@ -163,18 +163,18 @@ int main(int argc, char* argv[])
         }
         den[0] = aa*aa*lplp[0] + da[0]*(2.*aa*llp[0] + da[0]*(ll-eps));
         den[1] = aa*(aa*lplp[1] + da[1]*llp[0]) + 
-		da[0]*(aa*llp[1] + da[1]*(ll-eps));
+	       da[0]*(aa*llp[1] + da[1]*(ll-eps));
 	den[2] = aa*(aa*lplp[2] + da[2]*llp[0]) + 
-		da[0]*(aa*llp[2] + da[2]*(ll-eps));
+	       da[0]*(aa*llp[2] + da[2]*(ll-eps));
 	den[3] = aa*aa*lplp[3] + da[1]*(2.*aa*llp[1] + da[1]*(ll-eps));
         den[4] = aa*(aa*lplp[4] + da[1]*llp[2]) + 
-		da[2]*(aa*llp[1] + da[1]*(ll-eps));
+	       da[2]*(aa*llp[1] + da[1]*(ll-eps));
 	den[5] = aa*aa*lplp[5] + da[2]*(2.*aa*llp[2] + da[2]*(ll-eps));
 	    
         det = 
-		den[2]*(den[2]*den[3] - den[1]*den[4]) + 
-		den[1]*(den[1]*den[5] - den[2]*den[4]) + 
-		den[0]*(den[4]*den[4] - den[3]*den[5]);
+	    den[2]*(den[2]*den[3] - den[1]*den[4]) + 
+	    den[1]*(den[1]*den[5] - den[2]*den[4]) + 
+	    den[0]*(den[4]*den[4] - den[3]*den[5]);
 	    
         if (det > 0. && eps > det) {
 		det = eps;
@@ -203,7 +203,8 @@ int main(int argc, char* argv[])
         if (verb) sf_warning("iter=%d r2=%g da=(%g,%g,%g) "
 				 "aa=%g a=(%g,%g,%g)",
 				 iter,r2,da[0],da[1],da[2],aa,a[0],a[1],a[2]);
-	    
+  	
+        /* Update a */
 	for (j=0; j < 3; j++) {
 		a[j] += da[j];
         }
@@ -233,7 +234,7 @@ int main(int argc, char* argv[])
          with a=b*b and aa = -(nu/2+1/2)
     */
 
-    sf_warning ("axx=%g axy=%g ayy=%g nu=%g",sqrt(a[0]),a[1],sqrt(a[2]),-2*aa-0.5);
+    sf_warning ("axx=%g axy=%g ayy=%g nu=%g",a[0],a[1],a[2],-2*aa-1.);
     
     sf_floatwrite (data[0],nx*ny,out);
 
