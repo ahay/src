@@ -43,7 +43,7 @@ def execute(rr,par):
     # ------------------------------------------------------------
     # covariance
     Flow(  rr+'-c',rr+'-l','math output="exp(-( input^(%(aa)g)) )"' % lpar)
-    Flow(  rr+'-d',rr+'-c','rotate rot1=%g rot2=%g' % (par['nz'],par['nx']))
+    Flow(  rr+'-d',rr+'-c','rotate rot1=%g rot2=%g' % (par['nz']/2,par['nx']/2))
     
     # ------------------------------------------------------------
     # FFT
