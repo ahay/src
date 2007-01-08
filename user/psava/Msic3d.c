@@ -1,4 +1,4 @@
-/* Local slant stacks (2D) */
+/* Local slant stacks (3D) */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
@@ -141,16 +141,17 @@ int main(int argc, char* argv[])
 
     ii=sf_floatalloc2(n1,n2); /* image */ 
 
-    gg=sf_floatalloc (   nl+1);
-    ww=sf_floatalloc4(nc,nl+1,na,nb);
-    k1=sf_intalloc4  (nc,nl+1,na,nb);
-    k2=sf_intalloc4  (nc,nl+1,na,nb);
-    k3=sf_intalloc4  (nc,nl+1,na,nb);
+    gg=sf_floatalloc (   2*nl+1);
+    ww=sf_floatalloc4(nc,2*nl+1,na,nb);
+    k1=sf_intalloc4  (nc,2*nl+1,na,nb);
+    k2=sf_intalloc4  (nc,2*nl+1,na,nb);
+    k3=sf_intalloc4  (nc,2*nl+1,na,nb);
     
 /*------------------------------------------------------------*/
     /* taper */
-    for(il=0;il<nl+1;il++) {
-	l = ol + il*dl;
+    for(il=0;il<2*nl+1;il++) {
+	l = ol + (il-nl)*dl;
+	l /= (nl/2);
 	l/= sig;
 	gg[il] = exp(-l*l);
     }
@@ -165,12 +166,16 @@ int main(int argc, char* argv[])
 	    a  = oa + ia * da;
 	    a *= SF_PI/180.;
 	    
-	    for(il=0;il<nl+1;il++){
-		l = ol + il*dl;   
+	    for(il=0;il<2*nl+1;il++){
+		l = ol + (il-nl)*dl;   
 		
-		l1 = l*sin(b);        // z
-		l2 = l*cos(b)*cos(a); // x  
-		l3 = l*cos(b)*sin(a); // t
+/*		l1 = l*sin(b);        // z*/
+/*		l2 = l*cos(b)*cos(a); // x  */
+/*		l3 = l*cos(b)*sin(a); // t*/
+
+		l1 = l * cos(a) * sin(b);
+		l2 = l * cos(a) * cos(b);
+		l3 = l * sin(a);
 
 		/* 
 		   b=0: SS in   x-t plane 
@@ -249,7 +254,8 @@ int main(int argc, char* argv[])
     for(    ib=0;ib<nb;ib++) {
 	for(ia=0;ia<na;ia++) {
 	    if(verb) fprintf(stderr,"%3d %3d",ib,ia);
-	    
+/*	    fprintf(stderr,"\n");*/
+
 	    for(        i3=0; i3<n3; i3++) {
 		for(    i2=0; i2<n2; i2++) {
 		    for(i1=0; i1<n1; i1++) {	
@@ -264,11 +270,17 @@ int main(int argc, char* argv[])
 #endif
 	    for(    il=0;il<2*nl+1;il++) {
 		for(ic=0;ic<nc;    ic++) {
-		    m1=k1[ib][ia][il][ic]; h1=m1; g1=n1-m1; 
-		    m2=k2[ib][ia][il][ic]; h2=m2; g2=n2-m2; 
-		    m3=k3[ib][ia][il][ic]; h3=m3; g3=n3-m3; 
+		    m1=k1[ib][ia][il][ic]; h1=SF_ABS(m1); g1=n1-h1; 
+		    m2=k2[ib][ia][il][ic]; h2=SF_ABS(m2); g2=n2-h2; 
+		    m3=k3[ib][ia][il][ic]; h3=SF_ABS(m3); g3=n3-h3; 
 		    wo=ww[ib][ia][il][ic];
 		    
+/*		    fprintf(stderr,"%d %d %d %d | %3d %3d %3d %3d %3d %3d\n",*/
+/*			    ib,ia,il,ic,*/
+/*			    h3,g3, */
+/*			    h2,g2, */
+/*			    h1,g1);*/
+
 		    for(        i3=h3; i3<g3; i3++) { j3=i3+m3;
 			for(    i2=h2; i2<g2; i2++) { j2=i2+m2;
 			    for(i1=h1; i1<g1; i1++) { j1=i1+m1;
@@ -277,8 +289,10 @@ int main(int argc, char* argv[])
 			    } // 1 loop
 			}     // 2 loop
 		    }         // 3 loop
+
 		}             // c loop
 	    }                 // l loop
+/*	    fprintf(stderr,"\n done SS \n");*/
 
 	    for(        i3=0; i3<n3; i3++) {
 		for(    i2=0; i2<n2; i2++) {
@@ -287,11 +301,15 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-
+/*	    fprintf(stderr,"\n done IC \n");*/
+	    
+/*	    fprintf(stderr,"\n");*/
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");	
 	}                     // a loop
     }                         // b loop
     if(verb) fprintf(stderr,"\n");
+
+/*    fprintf(stderr,"\n prepare to write \n");*/
 
     sf_floatwrite(ii[0],n1*n2,Fi);	 /* write image */
 
