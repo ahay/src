@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 			     iter,r2,db,aa,b,dd);
 
 	b += db;     /* update b */
-	if (r2 < eps || db*db < eps) break;
+	/* if (r2 < eps || db*db < eps) break;*/
     }
         
     for (ik = 0; ik < nk; ik++) {
