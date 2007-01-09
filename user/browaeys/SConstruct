@@ -5,6 +5,7 @@ import configure
 progs = '''
 karman
 karman2
+karmans
 '''
 
 try:  # distributed version
