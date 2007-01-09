@@ -1,4 +1,4 @@
-/* Estimating von Karman autocorrelation 1D spectrum. */
+/* Inversion for von Karman autocorrelation 1D spectrum. */
 /*
   Copyright (C) 2007 University of Texas at Austin
   
@@ -25,26 +25,27 @@
 /*
   Input data and functions:
 
-  f  = log(data)
-  l  = log(1 + b*b*k*k)
+  f  = log[data(k)]
+  l  = log[1+b*b*k*k]
   aa = -(nu/2+1/4)
-  dd = log(amplitude)
+  dd = log(d0)
 
   s  = data length
   sf = sum of f  
   sl = sum of l
+
   lp = derivative of l with respect to b
   sp = derivative of sl with respect to b
 
-  Formulas for nonlinear separable least squares for parameters (aa,dd)
+  Formulae for nonlinear separable least squares for parameters (aa,dd)
 
-  aa = [s*f.l-sf*sl]/[s*l.l-sl*sl]      linear slope 
-  dd = [sf*l.l-sl*f.l]/[s*l.l-sl*sl]    origin constant
+  aa = [s*f.l-sf*sl]/[s*(l.l+eps)-sl*sl]      linear slope 
+  dd = [sf*l.l-sl*f.l]/[s*(l.l+eps)-sl*sl]    origin constant
 
   Derivatives with respect to b
 
-  ap = [s*f.lp-sf*sp-2*aa*(s*l.lp-sl*sp)]/[s*l.l-sl*sl)]              linear slope
-  dp = [2*sf*l.lp-sp*f.l-sl*f.lp-2*dd*(s*l.lp-sl*sp)]/[s*l.l-sl*sl)]  origin constant
+  ap = [s*f.lp-sf*sp-2*aa*(s*l.lp-sl*sp)]/[s*(l.l+eps)-sl*sl]              linear slope
+  dp = [2*sf*l.lp-sp*f.l-sl*f.lp-2*dd*(s*l.lp-sl*sp)]/[s*(l.l+eps)-sl*sl]  origin constant
 
   Gauss Newton inversion for nonlinear parameter b
 
@@ -53,14 +54,15 @@
       - dd*(ap*sl + aa*sp + dp*s)   
   den = ap*ap*l.l + aa*aa*lp.lp + dp*dp*s
       + 2*(aa*ap*l.lp + dp*ap*sl + dp*aa*sp)
-  db = num/den                                      increment for b
+  db = num/den
 
   Requires:
 
-  s,sf,sl,sp,lp
+  s,sf
+  lp,sl,sp
 
   fl   -> f.l
-  ll   -> l.l
+  ll   -> l.l + eps
   flp  -> f.lp
   llp  -> l.lp
   lplp -> lp.lp
@@ -79,10 +81,10 @@ int main(int argc, char* argv[])
     bool verb   /* verbosity flag */;
 
     int ik, iter;
-    float fl, ll, flp, llp, lplp;
-    float s, sf, sl, sp, lp, eps;
-    float k, db, aa, dd, f, l2, da, dp, dv, vv;
-    float f2, num, den, r2, b, l, r;
+    float f, l, fl, ll, flp, llp, lplp, s, sf, lp, sl, sp;
+    float aa, dd, ap, dp, num, den, eps;
+    float k, r, f2, l2, b, db, r2, vv, dv;
+
     sf_file in, out;
 
     /* Estimate shape (Caution: data gets corrupted) */ 
@@ -98,14 +100,14 @@ int main(int argc, char* argv[])
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
-    if (!sf_getfloat("b0",&b0)) b0=10.;
+    if (!sf_getfloat("b0",&b0)) b0=50.;
     /* initial nonlinear parameter value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
     data = sf_floatalloc(nk);
 
-    eps = 2.*FLT_EPSILON;
+    eps = 10.*FLT_EPSILON;
     eps *= eps;
     
     sf_floatread(data,nk,in);
@@ -119,14 +121,14 @@ int main(int argc, char* argv[])
 
     b = b0; /* initial b */
     aa = -0.5;
-    dd = 1.;
+    dd = 3.;
 
     if (verb) sf_warning("got b0=%g k0=%g niter=%d nk=%d dk=%g",
 			 b0,k0,niter,nk,dk);
 	
     /* Gauss-Newton iterations */
-    for (iter = 0; iter < niter; iter++) { 
-	ll = eps;
+    for (iter = 0; iter < niter; iter++) {
+        ll = eps;
 	fl = flp = llp = lplp = sl = sp = 0.;
 	for (ik = 0; ik < nk; ik++) {
 	    k = ik*dk + k0;
@@ -147,25 +149,25 @@ int main(int argc, char* argv[])
 	    lplp += lp*lp;
 	}
 
-        vv = (s*ll-sl*sl);
-	aa = (s*fl-sl*sf)/vv;  /* amplitude slope */
-	dd = (sf*ll-sl*fl)/vv; /* amplitude constant */
+        vv = s*ll - sl*sl;
+	aa = (s*fl - sf*sl)/vv;  /* amplitude slope */
+	dd = (sf*ll - sl*fl)/vv; /* amplitude constant */
 
         dv = s*llp - sl*sp;
-        da = (s*flp - sf*sp - 2.*aa*dv)/vv;              /* derivative slope */
+        ap = (s*flp - sf*sp - 2.*aa*dv)/vv;              /* derivative slope */
         dp = (2.*sf*llp - sp*fl - sl*flp - 2.*dd*dv)/vv; /* derivative constant */
 
-        num = da*fl + aa*flp + dp*sf - aa*(da*ll+aa*llp+dp*sl) - dd*(da*sl+aa*sp+dp*s);
-        den = da*da*ll + aa*aa*lplp + dp*dp*s + 2.*(aa*da*llp+dp*da*sl+dp*aa*sp); 
+        num = ap*fl + aa*flp + dp*sf - aa*(ap*ll + aa*llp + dp*sl) - dd*(sl*ap + sp*aa + s*dp);
+        den = ap*ap*ll + aa*aa*lplp + s*dp*dp + 2.*(aa*ap*llp + sl*dp*ap + sp*dp*aa); 
 
 	db = num/den; /* delta b */
-        
-	r2 = f2 - aa*aa*(ll+eps); /* residual squared */
+
+	r2 = f2 - (s*dd*dd + aa*aa*(ll+eps) + 2.*dd*aa*sl); /* residual squared */
 	if (verb) sf_warning("iter=%d r2=%g db=%g aa=%g b=%g dd=%g",
 			     iter,r2,db,aa,b,dd);
 
 	b += db;     /* update b */
-	/* if (r2 < eps || db*db < eps) break;*/
+	if (r2 < eps || db*db < eps) break;
     }
         
     for (ik = 0; ik < nk; ik++) {
@@ -179,7 +181,7 @@ int main(int argc, char* argv[])
     /* 
     Optimized parameters for 
     f = log(data) = dd + aa*log(1+b*b*k*k)
-    with a=b and aa = -(nu/2+1/4)
+    with aa = -(nu/2+1/4)
     */
     sf_warning ("b=%g nu=%g c=%g",b,-2*aa-0.5,exp(dd));
     sf_floatwrite (data,nk,out);
