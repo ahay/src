@@ -1,0 +1,19 @@
+from rsfproj import *
+
+Fetch('elf-stk2.rsf','masha')
+Flow('data','elf-stk2.rsf','dd form=native')
+
+def grey(title):
+    return '''
+    window n1=751 |
+    grey  pclip=99 title="%s" label2=" " crowd=0.85
+    ''' % title
+
+Plot('data',grey('(a) DMO-stack data'))
+
+Flow('fk','data','cosft sign2=1')
+Flow('stolt','fk','stolt vel=2000 pad=2049 | cosft sign2=-1')
+
+Plot('stolt',grey('(b) Stolt migration (v0 = 2000 m/s)'))
+
+End()

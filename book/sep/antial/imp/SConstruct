@@ -1,3 +1,6 @@
 from rsfproj import *
 
+Fetch('trace.HH','mig')
+Flow('trace','trace.HH','dd form=native')
+
 End()

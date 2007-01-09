@@ -1,0 +1,52 @@
+from rsfproj import *
+
+for i in range(6):
+    m = 'm%d' % i
+
+    # Get a migrated image for month i
+    hh = m + '_stack.HH'
+    Fetch(hh,'dury')
+
+    # Filter: Bandpass and AGC 
+    Flow(m,hh,
+         '''
+         dd form=native |
+         bandpass flo=20 fhi=250 |
+         agc window=100 |
+         window max1=0.3
+         ''')
+
+    # Select 2-D slice
+    slice = 'slice%i' % i
+    Flow(slice,m,'window f3=35 n3=1')
+    Plot(slice,'grey wanttitle=n wheretitle=t wherexlabel=b')
+
+    Flow('clip.par','slice0','byte | get clip')
+
+    # take difference with base
+    if i > 0:
+        diff = 'diff%i' % i
+        Flow(diff,[slice,'slice0'],'add scale=1,-1 ${SOURCES[1]}')
+        Plot(diff,[diff,'clip.par'],
+             'grey par=${SOURCES[1]} wanttitle=n wheretitle=t wherexlabel=b')        
+
+Plot('s0',None,'box x0=2.350000 y0=9.5 label="NO STEAM" xt=0.000000 yt=0.000000')
+Plot('s1',None,'box x0=7.000000 y0=9.5 label="2 MONTHS STEAM" xt=0.000000 yt=0.000000')
+Plot('s2',None,'box x0=11.538333 y0=9.5 label="5 MONTHS STEAM" xt=0.000000 yt=0.000000')
+Plot('s3',None,'box x0=2.350000 y0=9.5 label="9 MONTHS STEAM" xt=0.000000 yt=0.000000')
+Plot('s4',None,'box x0=7.000000 y0=9.5 label="13 MONTHS STEAM" xt=0.000000 yt=0.000000')
+Plot('s5',None,'box x0=11.538333 y0=9.5 label="19 MONTHS STEAM" xt=0.000000 yt=0.000000')
+
+Plot('stka','slice0 slice1 slice2','SideBySideAniso')
+Result('stka','stka s0 s1 s2','Overlay')
+
+Plot('stkb','slice3 slice4 slice5','SideBySideAniso')
+Result('stkb','stkb s3 s4 s5','Overlay')
+
+Plot('difa','slice0 diff1 diff2','SideBySideAniso')
+Result('difa','difa s0 s1 s2','Overlay')
+
+Plot('difb','diff3 diff4 diff5','SideBySideAniso')
+Result('difb','difb s3 s4 s5','Overlay')
+
+End()
