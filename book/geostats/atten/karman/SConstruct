@@ -1,6 +1,6 @@
-# Inversion for von Karman spatial autocorrelation parameters in 1-D Fourier domain
+# Inversion synthetic test for von Karman autocorrelation in 1D Fourier domain
 #
-# December 2006
+# January 2007
 #
 # Thomas Jules Browaeys 
 # Bureau of Economic Geology
@@ -9,18 +9,17 @@
 
 
 from rsfproj import *
-from math import pi
 
 
-# ---------------
+#----------------
 # Spatial 1D grid
-# ---------------
-
+#----------------
+#
 # Master parameters
 #
 # nx = number of points in X
 # dx = space data step sampling
-
+#
 # Slave parameters (spatial frequency content)
 #
 # fpx = 1/dx        = frequency space periodicity (Hz)
@@ -34,33 +33,22 @@ from math import pi
 
 pgrid = {'nx':512, 'ox':0., 'dx':1.}
 
-
-# Create spatial grid
-
-
 Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put label1=x unit1=m' % pgrid)
 
 
-# --------------------
-# Synthetic 1-D curve
-# --------------------
-
+# Synthetic 1D Gaussian white noise
+#
 # b   = correlation length scale in x (m)
-# nu  = Hurst exponent 0 < and < 0.5 = Bessel function order
-# gmu = mean of Gaussian white noise
-# gvr = variance of Gaussian white noise = (standard deviation)^2
+# nu  = Hurst exponent -0.5 < and < 0.8
+# gmu = Gaussian white noise mean
+# gvr = Gaussian white noise variance = (standard deviation)^2
 # grn = noise range
 # gsd = seed for random generator
 
 
-psyn = {'b':50., 'nu':0.4, 'gmu':0., 'gvr':9., 'grn':1., 'gsd':1317}
-
-
-# Create Gaussian white noise
-
+psyn = {'b':40., 'nu':0.2, 'gmu':0., 'gvr':9., 'grn':1., 'gsd':1213}
 
 Flow('wgauss','spacegrid','noise mean=%(gmu)g range=%(grn)g rep=y seed=%(gsd)g type=y var=%(gvr)g' % psyn)
-Plot('wgauss','sfgraph title="Gaussian white noise"')
 
 
 # Discrete Fourier Transform (fft) (k=0,N-1)
@@ -90,104 +78,73 @@ Plot('wgauss','sfgraph title="Gaussian white noise"')
 # [fx] = dfx*(-nx/2+1:1:nx/2)
 
 
-Flow('fwgauss','wgauss','sffft1 sym=y')
-Plot('fwgauss',
+Flow('fwgauss','wgauss','fft1 sym=y')
+
+# Stochastic process von Karman 1D filter in spectral domain (Lord, 1954)
+
+Flow('vkfilt','fwgauss','math output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)"' % psyn)
+Flow('rvkfilt','vkfilt','add abs=y | real | put label1=kx unit1=1/m')
+
+# Filtering and inverse Fourier transform
+
+Flow('fcgauss',['vkfilt','fwgauss'],'math r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
+Flow('rfcgauss','fcgauss','add abs=y | real | put label1=kx unit1=1/m')
+Flow('cgauss','fcgauss','fft1 sym=y inv=y')
+
+# Plots
+
+Plot('wgauss','graph title="Gaussian white noise"')
+Plot('fwgauss','add abs=y | real | put label1=kx unit1=1/m | graph title="Gaussian white noise spectrum"')
+Plot('rfcgauss','graph title="Correlated Gaussian spectrum"')
+Plot('rvkfilt','graph title="Filter VK spectrum"')
+Plot('cgauss','put label1=x unit1=m | graph title="Correlated Gaussian noise"')
+Plot('vkcfilt','rvkfilt rfcgauss',
      '''
-     sfadd abs=y | sfreal | put label1=kx unit1=1/m |
-     sfgraph title="Gaussian white noise spectrum"
-     ''')
+     cat ${SOURCES[0:2]} axis=2 | graph title="Correlated Gaussian spectrum"
+     ''',stdin=0)
+
+Result('panel1','wgauss fwgauss vkcfilt cgauss','TwoRows',vppen='xsize=10 ysize=10')
 
 
-# Amplitude of white spectrum
-
-
-Flow('mfwgauss','fwgauss',
-     '''
-     add abs=y | real | stack axis=1 norm=n |
-     math output="input*%g" | spray axis=1 n=%d
-     ''' % (1./(pgrid['nx']/2+1),pgrid['nx']/2+1))
-
-
-# Stochastic process von Karman 1-D filter in spectral domain (Lord, 1954)
-
-
-Flow('vkfilt','fwgauss','sfmath output="(1+(%(b)g*x1)^2)^(-0.25-0.5*%(nu)g)"' % psyn)
-Plot('vkfilt','sfreal | put label1=kx unit1=1/m | sfgraph title="Filter spectrum F(kx)"')
-
-
+# -----------------------------------------------------------------------------------
 # Logarithmic plot for separable least square inversion method ("Conical Coolie Hat")
+# -----------------------------------------------------------------------------------
 
 
-Flow('lvkfilt','vkfilt','sfreal | sfmath output="log(input)"')
-Flow('llbfilt','lvkfilt','sfmath output="log(1+((%(b)g)*x1)^2)"' % psyn)
+Flow('llbfilt','rvkfilt','math output="log(1+((%(b)g)*x1)^2)"' % psyn)
+Flow('lvkfilt','rvkfilt','math output="log(input)"')
+Flow('lfcgauss','rfcgauss','math output="log(input)"')
 Plot('llfilt','lvkfilt llbfilt',
      '''
      cmplx ${SOURCES[0:2]} |
-     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | sfgraph title="Ln[F(kx)] = p*Ln(1+b2kx2)"
+     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | graph title="Ln[F(kx)] = p*Ln(1+b2kx2)"
      ''',stdin=0)
-
-
-# Display panel 1
-
-
-Result('panel1','wgauss fwgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
-
-
-# Spectral filtering of white noise and inverse Fourier transform
-
-
-Flow('fcgauss',['vkfilt','fwgauss'],'sfmath r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
-Flow('cgauss','fcgauss','sffft1 sym=y inv=y')
-
-Flow('rfcgauss','fcgauss','sfadd abs=y | sfreal')
-Plot('cgauss','put label1=x unit1=m | sfgraph title="Correlated Gaussian noise"')
-Plot('rfcgauss','put label1=kx unit1=1/m | sfgraph title="Correlated Gaussian noise spectrum"')
-
-
-# Logarithmic plot for separable least square inversion method ("Conical Coolie Hat")
-
-
-Flow('lrfcgauss',['rfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="log(r)-log(m)"')
-Plot('llgauss','lrfcgauss llbfilt',
+Plot('llgauss','lfcgauss llbfilt',
      '''
      cmplx ${SOURCES[0:2]} |
-     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | sfgraph title="Ln[F(kx)/F(0)] = p*Ln(1+b2kx2)"
+     put label1='Ln(1+b2kx2)' unit1= label2='Ln[F(kx)]' | graph title="Ln[F(kx)] = p*Ln(1+b2kx2)"
      ''',stdin=0)
 
-
-# Display panels 2 and 3
-
-
-Result('panel2','rfcgauss llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
-Result('panel3','wgauss fwgauss cgauss rfcgauss','TwoRows',vppen='xsize=10 ysize=10')
+Result('panel2','rvkfilt rfcgauss llfilt llgauss','TwoRows',vppen='xsize=10 ysize=10')
 
 
 # -----------------------------------
 # Inversion for stochastic parameters
 # -----------------------------------
-
+#
 # Estimation of von Karman filter logarithm in spectral domain
-# Optimization of (b,nu) parameters by separate least square and Gauss Newton algorithm
+# Separate least square (nu,d)
+# Gauss Newton algorithm on nonlinear paraemeter b
 
 
-Flow('erfcgauss',['rfcgauss','mfwgauss'],
-     '''
-     math r=${SOURCES[0]} m=${SOURCES[1]} output="r/m" |
-     sfkarman verb=y niter=100 a0=30.
-     ''')
-
-
-# Display panel 4
-
-Flow('prfcgauss',['erfcgauss','mfwgauss'],'math r=${SOURCES[0]} m=${SOURCES[1]} output="r*m"')
-
-Plot('fitfilt','prfcgauss rfcgauss',
+Flow('irfcgauss','rfcgauss','karmans verb=y niter=100 a0=10.')
+Plot('fitfilt','irfcgauss rfcgauss',
      '''
      cat ${SOURCES[0:2]} axis=2 |
-     put label1=kx unit1=1/m | sfgraph title="Filter estimated spectrum F(kx)"
+     put label1=kx unit1=1/m | graph title="Filter estimated spectrum F(kx)"
      ''',stdin=0)
 
-Result('panel4','fitfilt llgauss vkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
+Result('panel4','fitfilt llgauss rvkfilt llfilt','TwoRows',vppen='xsize=10 ysize=10')
 
 
 # -----------
