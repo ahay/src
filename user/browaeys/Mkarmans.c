@@ -39,30 +39,30 @@
 
   Formulae for nonlinear separable least squares for parameters (aa,dd)
 
-  aa = [s*f.l-sf*sl]/[s*(l.l+eps)-sl*sl]      linear slope 
-  dd = [sf*l.l-sl*f.l]/[s*(l.l+eps)-sl*sl]    origin constant
+  aa = [s*f.l-(sl+eps)*sf]/[s*l.l-(sl+eps)^2]      linear slope 
+  dd = [sf*l.l-(sl+eps)*f.l]/[s*l.l-(sl+eps)^2]    origin constant
 
   Derivatives with respect to b
-
-  ap = [s*f.lp-sf*sp-2*aa*(s*l.lp-sl*sp)]/[s*(l.l+eps)-sl*sl]              linear slope
-  dp = [2*sf*l.lp-sp*f.l-sl*f.lp-2*dd*(s*l.lp-sl*sp)]/[s*(l.l+eps)-sl*sl]  origin constant
+ 
+  ap = [s*f.lp-sp*sf-2*aa*(s*l.lp-(sl+eps)*sp)]/[s*l.l-(sl+eps)^2]                   linear slope
+  dp = [2*sf*l.lp-sp*f.l-(sl+eps)*f.lp-2*dd*(s*l.lp-(sl+eps)*sp)]/[s*l.l-(sl+eps)^2] origin constant
 
   Gauss Newton inversion for nonlinear parameter b
 
   num = ap*f.l + aa*f.lp + dp*sf
-      - aa*(ap*l.l + aa*l.lp + dp*sl)
-      - dd*(ap*sl + aa*sp + dp*s)   
+      - aa*(ap*l.l + aa*l.lp + dp*(sl+eps))
+      - dd*(ap*(sl+eps) + aa*sp + dp*s)   
   den = ap*ap*l.l + aa*aa*lp.lp + dp*dp*s
-      + 2*(aa*ap*l.lp + dp*ap*sl + dp*aa*sp)
+      + 2*(aa*ap*l.lp + dp*ap*(sl+eps) + dp*aa*sp)
   db = num/den
 
   Requires:
 
-  s,sf
-  lp,sl,sp
+  s,sf,lp,sp
 
+  sl   -> sl + eps
   fl   -> f.l
-  ll   -> l.l + eps
+  ll   -> l.l
   flp  -> f.lp
   llp  -> l.lp
   lplp -> lp.lp
@@ -81,7 +81,7 @@ int main(int argc, char* argv[])
     bool verb   /* verbosity flag */;
 
     int ik, iter;
-    float f, l, fl, ll, flp, llp, lplp, s, sf, lp, sl, sp;
+    float f, l, fl, ll, flp, llp, lplp, s, sf, sl, lp, sp;
     float aa, dd, ap, dp, num, den, eps;
     float k, r, f2, l2, b, db, r2, vv, dv;
 
@@ -108,7 +108,6 @@ int main(int argc, char* argv[])
     data = sf_floatalloc(nk);
 
     eps = 10.*FLT_EPSILON;
-    eps *= eps;
     
     sf_floatread(data,nk,in);
     f2 = 0.;
@@ -128,8 +127,8 @@ int main(int argc, char* argv[])
 	
     /* Gauss-Newton iterations */
     for (iter = 0; iter < niter; iter++) {
-        ll = eps;
-	fl = flp = llp = lplp = sl = sp = 0.;
+        sl = eps;
+	ll = fl = flp = llp = lplp = sp = 0.;
 	for (ik = 0; ik < nk; ik++) {
 	    k = ik*dk + k0;
 	    k *= k;
@@ -183,7 +182,7 @@ int main(int argc, char* argv[])
     f = log(data) = dd + aa*log(1+b*b*k*k)
     with aa = -(nu/2+1/4)
     */
-    sf_warning ("b=%g nu=%g c=%g",b,-2*aa-0.5,exp(dd));
+    sf_warning ("b=%g nu=%g d0=%g",b,-2*aa-0.5,exp(dd));
     sf_floatwrite (data,nk,out);
     
     exit (0);
