@@ -85,7 +85,7 @@ int main(int argc, char* argv[])
     float aa, dd, ap, dp, num, den, eps;
     float k, r, f2, l2, b, db, r2, vv, dv;
 
-    sf_file in, out;
+    sf_file in, out, pa;
 
     /* Estimate shape (Caution: data gets corrupted) */ 
 
@@ -105,12 +105,19 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
+    sf_putint(pa,"n1",3);
+    sf_putint(pa,"nk",nk);
+    sf_putfloat(pa,"dk",dk);
+    sf_putfloat(pa,"k0",k0);
+    sf_fileflush(pa,in);
+
     data = sf_floatalloc(nk);
 
     eps = 10.*FLT_EPSILON;
+    eps *= eps;
     
     sf_floatread(data,nk,in);
-    f2 = 0.;
+    f2 = sf = s = 0.;
     for (ik=0; ik < nk; ik++) {
 	f = log(data[ik]);
 	f2 += f*f;
@@ -119,8 +126,8 @@ int main(int argc, char* argv[])
     }
 
     b = b0; /* initial b */
-    aa = -0.5;
-    dd = 3.;
+    aa = -1.;
+    dd = 1.;
 
     if (verb) sf_warning("got b0=%g k0=%g niter=%d nk=%d dk=%g",
 			 b0,k0,niter,nk,dk);
@@ -161,9 +168,9 @@ int main(int argc, char* argv[])
 
 	db = num/den; /* delta b */
 
-	r2 = f2 - (s*dd*dd + aa*aa*(ll+eps) + 2.*dd*aa*sl); /* residual squared */
-	if (verb) sf_warning("iter=%d r2=%g db=%g aa=%g b=%g dd=%g",
-			     iter,r2,db,aa,b,dd);
+	r2 = f2 - (s*dd*dd + aa*aa*ll + 2.*dd*aa*(sl+eps)); /* residual squared */
+	if (verb) sf_warning("iter=%d r2=%g db=%g aa=%g dd=%g b=%g",
+			     iter,r2,db,aa,dd,b);
 
 	b += db;     /* update b */
 	if (r2 < eps || db*db < eps) break;
@@ -177,12 +184,13 @@ int main(int argc, char* argv[])
  
     if (verb) sf_warning ("%d iterations", iter);        
 	
-    /* 
-    Optimized parameters for 
-    f = log(data) = dd + aa*log(1+b*b*k*k)
-    with aa = -(nu/2+1/4)
-    */
+    /* Optimized parameters for f = log(data) = dd + aa*log(1+b*b*k*k) where aa = -(nu/2+1/4) */
     sf_warning ("b=%g nu=%g d0=%g",b,-2*aa-0.5,exp(dd));
+
+    sf_floatwrite(&b,1,pa);
+    sf_floatwrite(&aa,1,pa);
+    sf_floatwrite(&dd,1,pa);
+
     sf_floatwrite (data,nk,out);
     
     exit (0);
