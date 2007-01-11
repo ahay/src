@@ -1,4 +1,5 @@
-/* Transpose two axes in a dataset. */
+/* Transpose two axes in a dataset. 
+If you get a "Cannot allocate memory" error, give the program a memsize=1 command-line parameter to force out-of-core operation.*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
