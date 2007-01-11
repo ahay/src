@@ -49,4 +49,71 @@ Result('difa','difa s0 s1 s2','Overlay')
 Plot('difb','diff3 diff4 diff5','SideBySideAniso')
 Result('difb','difb s3 s4 s5','Overlay')
 
+g0=0.9  # starting change 
+g1=2-g0  # last change
+ng=101   # number of changes to scan
+dg = (g1-g0)/(ng-1)
+
+for i in range(1,6):
+    slice = 'slice%d' % i
+
+    # Warping scan
+    ##############
+    scan = 'scan%d' % i
+    Flow(scan,[slice,'slice0'],
+         '''
+         warpscan other=${SOURCES[1]} niter=100
+         ng=%d g0=%g dg=%g rect1=20 rect3=3 | 
+         math output='(1+input)^4'
+         ''' % (ng,g0,dg))
+    Result(scan,
+           '''
+           byte allpos=y |
+           grey3 flat=n frame1=200 frame2=50 frame3=36
+           color=j wanttitle=n
+           label1=Time unit1=s
+           label2="Relative Stretch"
+           label3="X distance" unit3=km
+           ''')
+
+    # Pick the stretch
+    pick = 'pick%d' % i
+    Flow(pick,scan,'pick rect1=20 rect2=10 vel0=1 | window')
+    Result(pick,
+           '''
+           grey color=j scalebar=y wanttitle=n
+           label1=Time unit1=s label2=Trace bias=1
+           ''')
+
+    # Convert stretch to shift
+    shift = 'shift%d' % i
+    Flow(shift,pick,'math output="(input-1)*x1" ')
+        
+    # Apply the stretch
+    warp = 'warp%d' % i
+    Flow(warp,[slice,'slice0',shift],
+         '''
+         warp1 other=${SOURCES[1]} warpin=${SOURCES[2]}
+         verb=1 nliter=0 
+         ''')
+    diff = 'dif%d' % i    
+    Flow(diff,[warp,'slice0'],'add scale=1,-1 ${SOURCES[1]}')
+
+    # display
+    Plot(warp,'grey wanttitle=n wheretitle=t wherexlabel=b')
+    Plot(diff,[diff,'clip.par'],
+         'grey par=${SOURCES[1]} wanttitle=n wheretitle=t wherexlabel=b')  
+
+Plot('stka2','slice0 warp1 warp2','SideBySideAniso')
+Result('stka2','stka2 s0 s1 s2','Overlay')
+
+Plot('stkb2','warp3 warp4 warp5','SideBySideAniso')
+Result('stkb2','stkb2 s3 s4 s5','Overlay')
+
+Plot('difa2','slice0 dif1 dif2','SideBySideAniso')
+Result('difa2','difa2 s0 s1 s2','Overlay')
+
+Plot('difb2','dif3 dif4 dif5','SideBySideAniso')
+Result('difb2','difb2 s3 s4 s5','Overlay')
+
 End()
