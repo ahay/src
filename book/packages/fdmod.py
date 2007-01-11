@@ -261,6 +261,8 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 # wavefield-over-model plots
 def wom(wom,wfld,velo,vmean,par):
 
+    if(not par.has_key('wweight')): par['wweight']=10
+
     chop = wfld+'_chop'
     Flow(chop,wfld,
          '''
@@ -275,8 +277,21 @@ def wom(wom,wfld,velo,vmean,par):
          add add=-%g |
          scale axis=123 |
          spray axis=3 n=%d o=%g d=%g |
-         math w=${SOURCES[1]} output="0.25*input+2*w"
+         math w=${SOURCES[1]} output="input+%g*w"
          ''' % (vmean,
                 par['nt']/par['jsnap'],
                 par['ot'],
-                par['dt']*par['jsnap']))
+                par['dt']*par['jsnap'],
+                par['wweight']))
+
+def wframe(frame,movie,index,custom,par):
+
+    Flow([movie+'_plt',movie+'_bar'],movie,
+         'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
+
+    Result(frame,[movie+'_plt',movie+'_bar'],
+           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
+    
+
+
+    
