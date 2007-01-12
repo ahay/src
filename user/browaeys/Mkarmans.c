@@ -23,49 +23,58 @@
 #include <rsf.h>
 
 /*
-  Input data and functions:
+  Input data and model vector
 
-  f  = log[data(k)]
-  l  = log[1+b*b*k*k]
-  aa = -(nu/2+1/4)
-  dd = log(d0)
+  f  = ln[data(k)]
 
-  s  = data length
-  sf = sum of f  
-  sl = sum of l
+  x1 = ln(amplitude)
+  x2 = -(nu/2+1/4)
+  x3 = correlation length
 
-  lp = derivative of l with respect to b
-  sp = derivative of sl with respect to b
+  s = 1+x3*x3*k*k
+  l = ln(s)
 
-  Formulae for nonlinear separable least squares for parameters (aa,dd)
+  Full Newton method with component of R(x) residual vector
+   
+  r(k) = x1 + x2*l(k,x3) - f
 
-  aa = [s*f.l-(sl+eps)*sf]/[s*l.l-(sl+eps)^2]      linear slope 
-  dd = [sf*l.l-(sl+eps)*f.l]/[s*l.l-(sl+eps)^2]    origin constant
+  Jacobian 
 
-  Derivatives with respect to b
- 
-  ap = [s*f.lp-sp*sf-2*aa*(s*l.lp-(sl+eps)*sp)]/[s*l.l-(sl+eps)^2]                   linear slope
-  dp = [2*sf*l.lp-sp*f.l-(sl+eps)*f.lp-2*dd*(s*l.lp-(sl+eps)*sp)]/[s*l.l-(sl+eps)^2] origin constant
+  J(k,1) = 1
+  J(k,2) = ln(s) = l
+  J(k,3) = 2*x2*x3*k*k/s
 
-  Gauss Newton inversion for nonlinear parameter b
+  Requires
 
-  num = ap*f.l + aa*f.lp + dp*sf
-      - aa*(ap*l.l + aa*l.lp + dp*(sl+eps))
-      - dd*(ap*(sl+eps) + aa*sp + dp*s)   
-  den = ap*ap*l.l + aa*aa*lp.lp + dp*dp*s
-      + 2*(aa*ap*l.lp + dp*ap*(sl+eps) + dp*aa*sp)
-  db = num/den
+  sm = sum of l
+  s2 = sum of l*l
+  y1 = sum of residual r
+  y2 = sum of r*l
+  y3 = sum of 2*x2*x3*r*k*k/s
+  sk = sum of k*k/s
+  s1 = sum of k*k*(x1+2*x2*l-f)/s
+  s3 = sum of k*k*(2*x2*x3*x3*k*k+(1-x3*x3*k*k)*r)/(s*s)
 
-  Requires:
+  [J(x)^t R(x)]^t = (y1,y2,y3)
 
-  s,sf,lp,sp
+  a = J^t(x)J(x) + S(x) is
 
-  sl   -> sl + eps
-  fl   -> f.l
-  ll   -> l.l
-  flp  -> f.lp
-  llp  -> l.lp
-  lplp -> lp.lp
+  nk    sm    2*x2*x3*sk
+        s2    2*x3*s1
+              2*x2*s3
+
+  Determinant should not be zero
+  d = a11*(a22*a33 - a23*a23) + 2*a12*a13*a23 - a33*a12*a12 - a22*a13*a13
+  b = symmetric inverse matrix (to divide by d) is
+
+  a22*a33-a23*a23     a13*a23-a12*a33     a12*a23-a13*a22
+                      a11*a33-a13*a13     a12*a13-a23*a11
+                                          a11*a22-a12*a12
+  Update
+
+  dx1 = -1/d*[b11*y1 + b12*y2 + b13*y3]
+  dx2 = -1/d*[b12*y1 + b22*y2 + b23*y3]
+  dx3 = -1/d*[b13*y1 + b23*y2 + b33*y3]
 */
 
 
@@ -73,26 +82,26 @@ int main(int argc, char* argv[])
 {
 
     float *data /*input [nk] */; 
-    int niter   /* number of iterations */; 
-    float b0    /* initial value */;
     int nk      /* data length */;
     float dk    /* data sampling */; 
     float k0    /* initial location */;
     bool verb   /* verbosity flag */;
+    int niter   /* number of iterations */; 
 
     int ik, iter;
-    float f, l, fl, ll, flp, llp, lplp, s, sf, sl, lp, sp;
-    float aa, dd, ap, dp, num, den, eps;
-    float k, r, f2, l2, b, db, r2, vv, dv;
-
-    sf_file in, out, pa;
+    float x1, x2, x3, dx1, dx2, dx3, x10, x20, x30, x4, x5;
+    float k, f, s, l, r, p, q, s2, y1, y2, y3, sk, s1, s3;
+    float a11, a12, a13, a22, a23, a33, a2, a3, a4, a5, a6, d;
+    float b11, b12, b13, b22, b23, b33, eps, r2; 
+    
+    sf_file in, out, prm;
 
     /* Estimate shape (Caution: data gets corrupted) */ 
 
     sf_init (argc,argv);
     in = sf_input("in");
     out = sf_output("out");
-    pa = sf_output("pa");
+    prm = sf_output("prm");
 
 
     if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
@@ -102,96 +111,115 @@ int main(int argc, char* argv[])
  
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
-    if (!sf_getfloat("b0",&b0)) b0=50.;
-    /* initial nonlinear parameter value */
+    if (!sf_getfloat("x10",&x10)) x10=6.;
+    /* initial nonlinear parameter x1 value */
+    if (!sf_getfloat("x20",&x20)) x20=-0.5;
+    /* initial nonlinear parameter x2 value */
+    if (!sf_getfloat("x30",&x30)) x30=200.;
+    /* initial nonlinear parameter x3 value */
     if (!sf_getbool("verb",&verb)) verb=false;
     /* verbosity flag */
 
-    sf_putint(pa,"n1",3);
-    sf_putint(pa,"nk",nk);
-    sf_putfloat(pa,"dk",dk);
-    sf_putfloat(pa,"k0",k0);
-    sf_fileflush(pa,in);
+    sf_putint(prm,"n1",3);
+    sf_putint(prm,"nk",nk);
+    sf_putfloat(prm,"dk",dk);
+    sf_putfloat(prm,"k0",k0);
+    sf_fileflush(prm,in);
 
     data = sf_floatalloc(nk);
+    
+    sf_floatread(data,nk,in);
+
+    x1 = x10; /* initial x1 */
+    x2 = x20; /* initial x2 */
+    x3 = x30; /* initial x3 */
+    x4 = x3*x3;
 
     eps = 10.*FLT_EPSILON;
     eps *= eps;
-    
-    sf_floatread(data,nk,in);
-    f2 = sf = s = 0.;
-    for (ik=0; ik < nk; ik++) {
-	f = log(data[ik]);
-	f2 += f*f;
-        sf += f;
-        s += 1.;
-    }
+    a11 = (float)nk;
 
-    b = b0; /* initial b */
-    aa = -1.;
-    dd = 1.;
-
-    if (verb) sf_warning("got b0=%g k0=%g niter=%d nk=%d dk=%g",
-			 b0,k0,niter,nk,dk);
+    if (verb) sf_warning("got x10=%g x20=%g x30=%g k0=%g niter=%d nk=%d dk=%g",
+			 x10,x20,x30,k0,niter,nk,dk);
 	
-    /* Gauss-Newton iterations */
+    /* Gauss iterations */
     for (iter = 0; iter < niter; iter++) {
-        sl = eps;
-	ll = fl = flp = llp = lplp = sp = 0.;
+        x5 = 2.*x2*x3;
+        s2 = y1 = y2 = y3 = sk = s1 = s3 = a12 = r2 = 0.;
 	for (ik = 0; ik < nk; ik++) {
 	    k = ik*dk + k0;
 	    k *= k;
-            r = 1 + b*b*k;
-	    l = log(r);
-	    l2 = l*l;
-	    lp = 2.*b*k/r; /* derivative of l with respect to b */
-	    sl += l;
-	    sp += lp;
+            s = 1. + x4*k;
+	    l = log(s);
+            q = 1./s;
+	    p = k*q;
+            
+            s2 += l*l;
+            sk += p;
+            a12 += l;
 
-	    f = log(data[ik]);            
-	    
-	    ll += l2;
-	    fl += f*l;
-	    flp += f*lp;
-	    llp += lp*l;
-	    lplp += lp*lp;
+	    f = log(data[ik]);       
+	    r = x1 + x2*l - f;
+
+	    y1 += r;
+	    y2 += r*l;
+	    y3 += r*p;
+	    s1 += p*(r + x2*l);
+            s3 += p*q*(2.*x2*x4*k + r*(1.-x4*k));
+
+	    r2 += r*r;
 	}
 
-        vv = s*ll - sl*sl;
-	aa = (s*fl - sf*sl)/vv;  /* amplitude slope */
-	dd = (sf*ll - sl*fl)/vv; /* amplitude constant */
+        y3 *= x5;
 
-        dv = s*llp - sl*sp;
-        ap = (s*flp - sf*sp - 2.*aa*dv)/vv;              /* derivative slope */
-        dp = (2.*sf*llp - sp*fl - sl*flp - 2.*dd*dv)/vv; /* derivative constant */
+	a13 = x5*sk;
+	a22 = s2;
+        a23 = 2.*x3*s1;
+	a33 = 2.*x2*s3;
 
-        num = ap*fl + aa*flp + dp*sf - aa*(ap*ll + aa*llp + dp*sl) - dd*(sl*ap + sp*aa + s*dp);
-        den = ap*ap*ll + aa*aa*lplp + s*dp*dp + 2.*(aa*ap*llp + sl*dp*ap + sp*dp*aa); 
+	a2 = a12*a12;
+	a3 = a12*a13;
+	a4 = a13*a13;
+        a5 = a23*a23;
+        a6 = a22*a33;
 
-	db = num/den; /* delta b */
+        d = 1./(a11*(a6-a5) + 2.*a3*a23 - a33*a2 - a22*a4);
 
-	r2 = f2 - (s*dd*dd + aa*aa*ll + 2.*dd*aa*(sl+eps)); /* residual squared */
-	if (verb) sf_warning("iter=%d r2=%g db=%g aa=%g dd=%g b=%g",
-			     iter,r2,db,aa,dd,b);
+	b11 = a6-a5;
+        b12 = a13*a23-a12*a33;
+	b13 = a12*a23-a13*a22;
+	b22 = a11*a33-a4;
+	b23 = a3-a23*a11;
+	b33 = a11*a22-a2;
 
-	b += db;     /* update b */
-	if (r2 < eps || db*db < eps) break;
+	dx1 = -d*(b11*y1 + b12*y2 + b13*y3);
+	dx2 = -d*(b12*y1 + b22*y2 + b23*y3);
+	dx3 = -d*(b13*y1 + b23*y2 + b33*y3);
+
+	x1 += dx1;
+	x2 += dx2;
+	x3 += dx3;
+        x4 = x3*x3;
+	
+        if (verb) sf_warning("iter=%d r2=%g dx1=%g dx2=%g dx3=%g x1=%g x2=%g x3=%g",
+			     iter,r2,dx1,dx2,dx3,x1,x2,x3);
+	if (r2 < eps || (dx1*dx1+dx2*dx2+dx3*dx3) < eps) break;    
     }
-        
+ 
     for (ik = 0; ik < nk; ik++) {
 	k = ik*dk + k0;
 	k *= k;
-	data[ik] = exp(dd+aa*log(1+b*b*k));
+	data[ik] = exp(x1+x2*log(1.+x4*k));
     }
  
     if (verb) sf_warning ("%d iterations", iter);        
 	
-    /* Optimized parameters for f = log(data) = dd + aa*log(1+b*b*k*k) where aa = -(nu/2+1/4) */
-    sf_warning ("b=%g nu=%g d0=%g",b,-2*aa-0.5,exp(dd));
+    /* Optimized parameters for f = log(data) = log(d0) + a*log(1+b*b*k*k) where a = -(nu/2+1/4) */
+    sf_warning ("b=%g nu=%g d0=%g",x3,-2*x2-0.5,exp(x1));
 
-    sf_floatwrite(&b,1,pa);
-    sf_floatwrite(&aa,1,pa);
-    sf_floatwrite(&dd,1,pa);
+    sf_floatwrite(&x3,1,prm);
+    sf_floatwrite(&x2,1,prm);
+    sf_floatwrite(&x1,1,prm);
 
     sf_floatwrite (data,nk,out);
     
