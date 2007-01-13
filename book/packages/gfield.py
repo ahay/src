@@ -17,10 +17,10 @@ def execute(rr,par):
     lpar['vz'] = -lpar['ux']
 
     # double and center the grid
-    lpar['nx']=2*par['nx']
-    lpar['nz']=2*par['nz']
-    lpar['ox']=-par['nx']*par['dx']
-    lpar['oz']=-par['nz']*par['dz']
+    lpar['nx']=2*(par['nx'] + par['ox']/par['dx'])
+    lpar['nz']=2*(par['nz'] + par['oz']/par['dz'])
+    lpar['ox']=-lpar['nx']*par['dx']/2
+    lpar['oz']=-lpar['nz']*par['dz']/2
     
     # IID noise
     Flow(rr+'-n',None,
