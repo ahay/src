@@ -30,6 +30,7 @@ int main(int argc, char* argv[])
 {
     int i, dim, n[SF_MAX_DIM], n1, n2, n3;
     int dim1, dim2, i2, i3, *map;
+    int mem; /* for avoiding int to off_t typecast warning */
     off_t pos, memsize;
     char key1[7], key2[7], *val, **dat1, **dat2, *buf;
     sf_file in, out;
@@ -39,10 +40,10 @@ int main(int argc, char* argv[])
     in  = sf_input  ( "in");
     out = sf_output ("out");
 
-    if (!sf_getint("memsize",&memsize))
-        memsize=sf_memsize();
+    if (!sf_getint("memsize",&mem))
+        mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize *= (1<<20); /* convert Mb to bytes */
+    memsize = mem * (1<<20); /* convert Mb to bytes */
 
     dim = sf_filedims(in,n);
 

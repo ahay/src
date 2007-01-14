@@ -33,6 +33,7 @@ int main(int argc, char* argv[])
 {
     int i, i1, i2, n1, n2, n3, n, nt, len, nkey;
     sf_file in, out;
+    int mem; /* for avoiding int to off_t typecast warning */
     off_t memsize;
     char *eq, *output, *key, *arg;
     float **ftra, **fbuf, **fst, d2, o2;
@@ -85,10 +86,10 @@ int main(int argc, char* argv[])
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Describes the output in a mathematical notation. */
 
-    if (!sf_getint("memsize",&memsize))
-        memsize=sf_memsize();
+    if (!sf_getint("memsize",&mem))
+        mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize *= (1<<20); /* convert Mb to bytes */
+    memsize = mem * (1<<20); /* convert Mb to bytes */
 
     len = sf_math_parse (output,out,SF_FLOAT);
 

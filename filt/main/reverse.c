@@ -36,6 +36,7 @@ int main(int argc, char* argv[])
 /* Just pretend they are character pointers so we multiply offsets ourselves.*/
     int i, dim, dim1, dim2;
     int n[SF_MAX_DIM], esize, which;
+    int mem; /* for avoiding int to off_t typecast warning */
     off_t pos=0, pos3=0, memsize;
     size_t n1, n2, n3, size, *k1 = NULL, *k2 = NULL;
     size_t i1, i2, i3;
@@ -73,10 +74,10 @@ int main(int argc, char* argv[])
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
 
-    if (!sf_getint("memsize",&memsize))
-        memsize=sf_memsize();
+    if (!sf_getint("memsize",&mem))
+        mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize *= (1<<20); /* convert Mb to bytes */
+    memsize = mem * (1<<20); /* convert Mb to bytes */
 
     if (verb) fprintf(stderr,"%s: Reversing over",sf_getprog());
     for (i=0, mask=1; i < dim; i++, mask <<= 1) {

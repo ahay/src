@@ -57,14 +57,14 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     return dim;
 }
 
-off_t sf_memsize()
+int sf_memsize()
 /*< Returns memory size by:
   1. checking RSFMEMSIZE environmental variable
   2. using hard-coded "def" constant
   >*/
 {
     char *memenv;
-    off_t memsize;
+    int memsize;
     const int def=100; /* default value (Mbytes) */
 
     if (NULL != (memenv = getenv("RSFMEMSIZE"))) {
