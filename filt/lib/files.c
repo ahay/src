@@ -63,7 +63,6 @@ off_t sf_memsize()
   2. using hard-coded "def" constant
   >*/
 {
-
     char *memenv;
     off_t memsize;
     const int def=100; /* default value (Mbytes) */
