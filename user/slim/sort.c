@@ -64,6 +64,7 @@ int main(int argc, char* argv[])
 {
   int n1, n, nbchunks, nfit, i, j;
   off_t memsize;
+  int mem; /* for avoiding int to off_t typecast warning */
   float *data;
   float *tmp;
   FILE **fp;
@@ -72,20 +73,22 @@ int main(int argc, char* argv[])
   float *currentext;
   int icurrentext;
   bool complex_data = false; /* true if input data is complex */
-  bool ascmode;              
+  bool ascmode;
   sf_file in, out; /* Input and output files */
-  
+
   /* Initialize RSF */
   sf_init(argc,argv);
-  
+
   /* standard input */
   in = sf_input("in");
   /* standard output */
   out = sf_output("out");
-  
-  memsize = sf_memsize(500);
-  /* Available memory size (in Mb) */
-  
+
+  if (!sf_getint("memsize",&mem))
+      mem=sf_memsize();
+  /* Max amount of RAM (in Mb) to be used */
+  memsize = mem * (1<<20); /* convert Mb to bytes */
+
   if (!sf_getbool("ascmode",&ascmode)) ascmode = false;
   /* y=ascending; n=descending */
 
