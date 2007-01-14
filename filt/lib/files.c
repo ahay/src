@@ -57,28 +57,24 @@ Outputs the number of dimensions dim and a dimension array n[dim] >*/
     return dim;
 }
 
-off_t sf_memsize(int def)
-/*< Returns memory size by checking
-  1. "memsize" command-line parameter
-  2. MEMSIZE environmental variable
-  3. using def Mbytes
+off_t sf_memsize()
+/*< Returns memory size by:
+  1. checking RSFMEMSIZE environmental variable
+  2. using hard-coded "def" constant
   >*/
 {
-    int mem;
+
     char *memenv;
     off_t memsize;
+    const int def=100; /* default value (Mbytes) */
 
-    if (!sf_getint("memsize",&mem)) {
-	/* Available memory size (in Mb) */
-	if (NULL != (memenv = getenv("MEMSIZE"))) {
-	    mem = strtol(memenv,NULL,10);
-	    if (ERANGE == errno || mem < INT_MIN || mem > INT_MAX) 
-		sf_error("wrong value in MEMSIZE environmental variable");
-	} else {
-	    mem = def;
-	}
+    if (NULL != (memenv = getenv("RSFMEMSIZE"))) {
+	memsize = strtol(memenv,NULL,10);
+	if (ERANGE == errno || memsize < INT_MIN || memsize > INT_MAX) 
+	    sf_error("wrong value in RSFMEMSIZE environmental variable");
+    } else {
+	memsize = def;
     }
-    memsize = mem * (1 << 20); /* convert Mb to bytes */
     return memsize;
 }
 

@@ -50,9 +50,12 @@ int main(int argc, char* argv[])
 
     if (!sf_getbool("verb",&verb)) verb=false;
     /* Verbosity flag */
-    memsize = sf_memsize(1);
-    /* Available memory size (in Mb) */
-   
+
+    if (!sf_getint("memsize",&memsize))
+        memsize=sf_memsize();
+    /* Max amount of RAM (in Mb) to be used */
+    memsize *= (1<<20); /* convert Mb to bytes */
+
     dim2=0;
     for (i=0; i < dim; i++) {	
 	snprintf(key,5,"rot%d",i+1);

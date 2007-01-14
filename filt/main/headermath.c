@@ -81,13 +81,17 @@ int main(int argc, char* argv[])
 
     if (!sf_histfloat(in,n1>1? "d2":"d1",&d2)) d2=1.;
     if (!sf_histfloat(in,n1>1? "o2":"o1",&o2)) o2=0.;
-    
+
     if (NULL == (output = sf_getstring("output"))) sf_error("Need output=");
     /* Describes the output in a mathematical notation. */
 
-    memsize = sf_memsize(100);
+    if (!sf_getint("memsize",&memsize))
+        memsize=sf_memsize();
+    /* Max amount of RAM (in Mb) to be used */
+    memsize *= (1<<20); /* convert Mb to bytes */
+
     len = sf_math_parse (output,out,SF_FLOAT);
-    
+
     /* number of traces for optimal I/O */
     nt = SF_MAX(1,memsize/((2*n1+len+6)*sizeof(float)));
 
