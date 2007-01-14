@@ -77,6 +77,17 @@ def included(node,env,path):
 
 Include = Scanner(name='Include',function=included,skeys=['.c'])
 
+def read_api_options(context):
+    api = string.split(string.lower(context.env.get('API','')),',')
+    valid_api_options = ['c++', 'fortran', 'f77', 'fortran-90', 'f90', 'python', 'matlab']
+    # Specifying API=matlab is not necessary, but not wrong either.
+    for option in api:
+	if not option in valid_api_options:
+	    sys.stderr.write(option+" not a valid API option, will be ignored.\n")
+	    # Eliminate it from list
+	    api = [elem for elem in api if elem != option]
+    return api
+
 def check_all(context):
     cc(context)
     ar(context)
@@ -85,10 +96,10 @@ def check_all(context):
     x11(context)
     ppm(context)
     jpeg(context)
-    api = string.split(string.lower(context.env.get('API','')),',')
+    api = read_api_options(context)
     if 'c++' in api:
         cxx(context)
-    if 'fortran' in api:
+    if 'fortran' or 'f77' in api:
         f77(context)
     if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
         f90(context)
