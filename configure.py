@@ -421,8 +421,11 @@ def numpy(context):
 	try:
 	    import numarray
 	    context.Result(1)
+	    context.Message("numarray development has stopped; plan to migrate to numpy")
 	except:
 	    context.Result(0)
+	    sys.stderr.write("Please install numpy (preferred) or numarray.\n")
+            sys.exit(1)
 
 fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran', # used to be f2cFortran
