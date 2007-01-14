@@ -81,14 +81,16 @@ void stretch_define (map str, const float* coord)
 	str->diag[i1] = str->eps;
 	str->offd[i1] = -0.5*str->eps;
     }
-    if (! str->narrow) {
+    if (str->narrow) {
+	str->diag[str->nt-1] = str->eps;
+    } else {
 	str->diag[0] = 0.5*str->eps;
 	str->diag[str->nt-1] = 0.5*str->eps;
     }
     
     for (id = 0; id < str->nd; id++) {
 	rx = (coord[id] - str->t0)/str->dt; 
-	ix = floor(rx); 
+	ix = floorf(rx); 
 	rx = rx - ix;
 	if (ix < 0 || ix > str->nt - 2) {
 	    str->m[id] = true; 

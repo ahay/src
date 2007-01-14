@@ -67,7 +67,7 @@ Flow('kaa','mka',
      ''')
 
 for plot in plots.keys():
-    Plot(plot+'w',
+    Plot(plot+'w',plot,
          '''
          window n1=100 n2=100 f1=50 f2=50 |
          grey Xlabelsz=16 Xtitlesz=20 title="%s"

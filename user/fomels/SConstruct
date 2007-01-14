@@ -6,13 +6,13 @@ progs = '''
 abalance agmig angle angle2 approx bandpass cflow chebvc dealias
 deblur deriv dijkstra dip diplet dips divn dix dixshape dwt envelope
 equal erf exgr explanesignoi expsignoi fern flat flat3 focus freqest
-freqlet green heat iphase kron lapfill lpf mandelbrot matmult miss2
-miss3 monof monof2 nsmooth nsmooth1 ocparcel octentwt ofilp ofpwd
-ofpwd2 patch pick pick0 pick2 planemis2 planemis3 planereg2 planereg3
-planesignoi pmshape2 predict pwd pwdix pwpick pwdsigk pwdsmooth2
-seislet seisigk shapebin shapebin1 shapesigk shearer similarity
-threshold timeshift tomo tree trismooth2 twodip2 twofreq2 velcon warp1
-warpadd warpscan ztrace
+freqlet green heat iphase kron lapfill lpf mandelbrot matmult mig3
+miss2 miss3 monof monof2 nsmooth nsmooth1 ocparcel octentwt ofilp
+ofpwd ofpwd2 patch pick pick0 pick2 planemis2 planemis3 planereg2
+planereg3 planesignoi pmshape2 predict pwd pwdix pwpick pwdsigk
+pwdsmooth2 seislet seisigk shapebin shapebin1 shapesigk shearer
+similarity threshold timeshift tomo tree trismooth2 twodip2 twofreq2
+velcon warp1 warpadd warpscan ztrace
 '''
 
 try:  # distributed version

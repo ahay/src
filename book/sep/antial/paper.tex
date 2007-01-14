@@ -4,6 +4,7 @@
   parameterization}
 
 \author{Sergey Fomel}
+\maketitle
 
 \input{intro}
 
@@ -12,9 +13,9 @@
 I start with reviewing the existing approaches to operator
 antialiasing and discussing their main principles and limitations. The
 two reviewed approaches are temporal filtering, as suggested by
-\longcite{gray} and \longcite{SEG-1994-1282}, and Hale's spatial
+\cite{GPR40-05-05650572} and \cite{SEG-1994-1282}, and Hale's spatial
 filtering technique, developed originally for an integral
-implementation of the dip moveout operator \cite{GEO56.06.07950805}.
+implementation of the dip moveout operator \cite[]{GEO56-06-07950805}.
 
 \subsection{Temporal filtering}
 %%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +32,7 @@ sampling interval. In the steep parts of the traveltime curve, the
 sampling criterion (\ref{eqn:Nyquist}) is not satisfied, which causes
 aliasing artifacts in the output data. To overcome this problem, the
 method of local triangle filtering
-\cite{Claerbout.sep.73.371,SEG-1994-1282} suggests convolving the
+\cite[]{Claerbout.sep.73.371,SEG-1994-1282} suggests convolving the
 traces of the generated impulse response with a triangle-shaped filter
 of the length
 \begin{equation}
@@ -45,11 +46,12 @@ Cascading operators of causal and anticausal numerical integration is
 an efficient way to construct the desired filter shape.
 
 Triangle filters approximate the ideal (sinc) low-pass time filters.
-The idea of using low-pass filtering for antialiasing \cite{gray} is
-illustrated in Figure \ref{fig:amolow}. When a steeply dipping event
-is included in the operator, its counterpart in the frequency domain
-wraps around to produce the aliasing artifacts. Those are removed by a
-dip-dependent low-pass filtering.
+The idea of using low-pass filtering for antialiasing
+\cite[]{GPR40-05-05650572} is illustrated in Figure \ref{fig:amolow}.
+When a steeply dipping event is included in the operator, its
+counterpart in the frequency domain wraps around to produce the
+aliasing artifacts. Those are removed by a dip-dependent low-pass
+filtering.
 
 \plot{amolow}{width=4.5in,height=1.5in}{Schematic
 illustration of low-pass antialiasing (triangle filters). The aliased
@@ -61,9 +63,9 @@ The width of the low-pass filter depends on dips of the aliased events.}
 The method of low-pass filtering is less evident in the case of a
 three-dimensional integral operator. We can take the length of a
 triangle filter proportional to the absolute value of the time
-gradient \cite{SEG-1994-1282}, the maximum of the gradient
+gradient \cite[]{SEG-1994-1282}, the maximum of the gradient
 components in the two directions of the operator space
-\cite{geo64-06-17831792}, or the sum of these components. The latter
+\cite[]{GEO64-06-17831792}, or the sum of these components. The latter
 follows from considering the 3-D operator as a double integration in
 space. Decoupling the 3-D integral into a cascade of two 2-D operators
 suggests convolving two triangle filters designed with respect to two
@@ -94,19 +96,19 @@ the output can be distorted, causing a loss in the image resolution.
 \subsection{Hale's method}
 %%%%%%%%%%%%%%%%%%%%
 
-Considering the case of integral dip moveout, Hale
-\shortcite{GEO56.06.07950805} points out that the steep parts of the
-operator, while aliased in the space (midpoint) coordinate, are not
-aliased with respect to the time coordinate. He suggests replacing the
-conventional $t(x)$ parameterization of the DMO impulse response by
-$x(t)$ parameterization. Conventionally, the integral operators are
+Considering the case of integral dip moveout, \cite{GEO56-06-07950805}
+points out that the steep parts of the operator, while aliased in the
+space (midpoint) coordinate, are not aliased with respect to the time
+coordinate. He suggests replacing the conventional $t(x)$
+parameterization of the DMO impulse response by $x(t)$
+parameterization. Conventionally, the integral operators are
 implemented by shifting the input traces in space and transforming
 them in time.  According to Hale's method, the traces are shifted in
 time and transformed along the $x(t)$ trajectories in space.
 Interpolation in time, required in the conventional approach, is
 replaced by interpolation in space. The idea of Hale's method is
 related to the idea of the ``pixel-precise velocity transform''
-\cite{Claerbout.blackwell.92}.
+\cite[]{Claerbout.blackwell.92}.
 
 The steep parts of the operator satisfy the criterion
 \begin{equation}
@@ -142,7 +144,7 @@ traces (the operator is a straight line as in the slant stack case),
 Hale's approach will produce essentially the same result as that of
 temporal filtering. Triangle filters in this case approximately
 correspond to linear interpolation in space between adjacent traces
-\cite{Nichols.sep.77.283}. The difference between the two approaches
+\cite[]{Nichols.sep.77.283}. The difference between the two approaches
 occurs if the local dip varies in space as in the case of a curved
 operator, such as DMO. In this case, Hale's approach provides a more
 accurate space interpolation of the operator and preserves the
@@ -219,14 +221,14 @@ interval.}
 
 \inputdir{flt}
 
-Figure \ref{fig:amotra}, borrowed from \longcite{Claerbout.bei.95},
+Figure \ref{fig:amotra}, borrowed from \cite{Claerbout.bei.95},
 illustrates the basic idea of the proposed technique. It clearly shows
 the difference between the flat and steep parts of migration
 hyperbolas. To observe the reciprocity, rotate the figure by 90
 degrees.
 
 \plot{amotra}{height=2in}{Figure borrowed from
-  \longcite{Claerbout.bei.95} to illustrate the reciprocity
+  \cite{Claerbout.bei.95} to illustrate the reciprocity
   antialiasing. The flat parts of the hyperbolas require interpolation
   in time. The steep parts of the hyperbolas require interpolation in
   space.}
@@ -262,7 +264,7 @@ filter antialiasing.}
 These properties are examined more closely in the next synthetic
 example. Figure \ref{fig:amosmo} shows a more sophisticated synthetic
 model that contains a fault, an unconformity and layered structures
-\cite{Claerbout.bei.95}. For better displaying, I extract the central
+\cite[]{Claerbout.bei.95}. For better displaying, I extract the central
 part of the model and compare it with the migration results of
 different methods in Figure \ref{fig:amosmi}. Comparing the plots
 shows that the reciprocity method successfully removes the aliasing
@@ -330,6 +332,7 @@ aperture (dip moveout, azimuth moveout, shot continuation).
 \end{comment}
 
 \subsection{3-D antialiasing}
+\inputdir{imp}
 
 The proposed method of antialiasing is easily generalized to the case
 of a three-dimensional integral operator. In this case, we need to
@@ -347,7 +350,7 @@ and      $\Delta y \geq {{\Delta x} \, {|\partial y / \partial x|}}$,
 use $y(t,x)$.
 \end{itemize}
 
-Following \longcite{Biondi.geo.alias.98}, I illustrate 3-D
+Following \cite{GEO66-02-06540666}, I illustrate 3-D
 antialiasing by applying prestack time migration on a single input
 trace. The results are shown in Figures~\ref{fig:imp-noa},
 \ref{fig:imp-aal} and \ref{fig:imp-all}. The result without any
@@ -399,7 +402,6 @@ I thank Biondo Biondi for many helpful discussions. The financial
 support for this work was provided by the sponsors of the Stanford
 Exploration Project.
 
-\newpage
 \bibliographystyle{seg}
-\bibliography{antial,SEG}
+\bibliography{antial,SEG,SEP2}
 
