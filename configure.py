@@ -79,7 +79,7 @@ Include = Scanner(name='Include',function=included,skeys=['.c'])
 
 def read_api_options(context):
     api = string.split(string.lower(context.env.get('API','')),',')
-    valid_api_options = ['c++', 'fortran', 'f77', 'fortran-90', 'f90', 'python', 'matlab']
+    valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90', 'f90', 'python', 'matlab']
     # Specifying API=matlab is not necessary, but not wrong either.
     for option in api:
 	if not option in valid_api_options:
