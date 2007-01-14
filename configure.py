@@ -92,6 +92,8 @@ def check_all(context):
         f77(context)
     if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
         f90(context)
+    if 'python' in api:
+	numpy(context)
 
 def libs(context):
     context.Message("checking libraries ... ")
@@ -408,6 +410,20 @@ def cxx(context):
         if not res:
             context.env['CXXFLAGS'] = oldflag
 
+def numpy(context):
+    context.Message("checking if numpy is present ... ")
+    try:
+	import numpy
+	context.Result(1)
+    except:
+	context.Result(0)
+	context.Message("checking if numarray is present ... ")
+	try:
+	    import numarray
+	    context.Result(1)
+	except:
+	    context.Result(0)
+
 fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran', # used to be f2cFortran
            'f2c':'f2cFortran'}
@@ -451,7 +467,7 @@ def f77(context):
     context.env['CFORTRAN'] = cfortran 
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
-    
+
 def f90(context):
     context.Message("checking F90 compiler ... ")
     F90 = context.env.get('F90')
