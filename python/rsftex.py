@@ -387,6 +387,8 @@ def colorize(target=None,source=None,env=None):
                      out.write('</div><p><div class="progs">')
                      out.write(rsfdoc.multicolumn(items,_proglink))
                  else:
+                     while 'PRIVATE' in items:
+                         items.remove('PRIVATE')
                      out.write('</div><p><div class="dsets">')
                      out.write(rsfdoc.multicolumn(items,_datalink))
  

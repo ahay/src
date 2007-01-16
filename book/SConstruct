@@ -2,13 +2,33 @@ import os, string
 import rsfdoc
 import rsfprog
 
+def publicproj(project):
+    '''Check if the project is publicly accessible'''
+    os.chdir(project)
+    # OK if all=y on the command line
+    if ARGUMENTS.get('all', 'n') == 'y':
+        return 1
+    # OK if no PRIVATE data
+    sin, sout, serr = os.popen3('scons -s .sf_data')
+    sin.close()
+    data = sout.read()
+    sout.close()
+    status = serr.read()
+    serr.close()
+    if not status:
+        items = string.split(data)
+        if 'PRIVATE' in items:
+            return 0
+    return 1
+
 def progtest(target=None,source=None,env=None):
     for project in env.get('projects'):
-        print 'Testing in %s' % project
-        print '-----------' + '-'*len(project)
-        run = 'cd %s && scons test && cd ../../..' % project
-        if os.system(run):
-            return 1
+        if publicproj(project):
+            print 'Testing in %s' % project
+            print '-----------' + '-'*len(project)
+            if os.system('scons test'):
+                return 1
+        os.chdir('../../..')            
     return 0
 
 env = Environment()
