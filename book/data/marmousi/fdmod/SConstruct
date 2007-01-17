@@ -3,7 +3,7 @@ import fdmod
 # Fetch Files from repository
 raw=['marmvel.hh','marmsmooth.HH']
 for file in raw:
-#    Fetch(file,"marm")
+    Fetch(file,"marm")
     if file is 'marmvel.hh':
         d=.004
         fileOut='marmvel'

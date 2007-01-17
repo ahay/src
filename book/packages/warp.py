@@ -239,6 +239,9 @@ def warp3(name,       # name prefix
         warp = n('wrp')
         Flow([warp,psw+'2'],[sr,pr,pk,wrp],warpit,stdout=-1)
         Result(psw+'2',plot3('Warped ' + PS))        
+
+        Flow(psw+'1',[ps,pp,warp],warp0)
+        Result(psw+'1',plot3('Warped ' + PS))
         
         gamma = n('gamma2')
         Flow(gamma,warp,warp2gamma(ss))        

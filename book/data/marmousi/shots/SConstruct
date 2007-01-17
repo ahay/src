@@ -1,6 +1,6 @@
 from rsfproj import *
 # Fetch Files from repository
-# Fetch("marmrefl.hh","marm")
+Fetch("marmrefl.hh","marm")
 
 # Convert Files to RSF and update header
 Flow('marmrefl','marmrefl.hh', '''dd form=native | put
