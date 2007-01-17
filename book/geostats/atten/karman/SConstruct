@@ -1,4 +1,4 @@
-# Inversion synthetic test for von Karman autocorrelation in 1D Fourier domain
+# Optimization synthetic for von Karman autocorrelation in 1D Fourier domain
 #
 # January 2007
 #
@@ -46,7 +46,7 @@ Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put lab
 # gsd = seed for random generator
 
 
-psyn = {'b':40., 'nu':0.2, 'gmu':0., 'gvr':9., 'grn':1., 'gsd':1213}
+psyn = {'b':3., 'nu':0.3, 'gmu':0., 'gvr':1., 'grn':1., 'gsd':1213}
 
 Flow('wgauss','spacegrid','noise mean=%(gmu)g range=%(grn)g rep=y seed=%(gsd)g type=y var=%(gvr)g' % psyn)
 
@@ -133,11 +133,14 @@ Result('panel2','rvkfilt rfcgauss llfilt llgauss','TwoRows',vppen='xsize=10 ysiz
 # -----------------------------------
 #
 # Estimation of von Karman filter logarithm in spectral domain
-# Separate least square (nu,d)
-# Gauss Newton algorithm on nonlinear paraemeter b
+# Separate least square for exponent and amplitude
+# Newton algorithm on nonlinear parameter b*b
 
+# Scaling and initial guess
 
-Flow('irfcgauss','rfcgauss','karmans verb=y niter=100 a0=10.')
+# Iterative inversion
+
+Flow('irfcgauss','rfcgauss','karman verb=y niter=100')
 Plot('fitfilt','irfcgauss rfcgauss',
      '''
      cat ${SOURCES[0:2]} axis=2 |
