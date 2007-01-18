@@ -1,4 +1,6 @@
 /* Inversion for von Karman autocorrelation 1D spectrum. */
+/* Full Newton on 3 parameters */
+
 /*
   Copyright (C) 2007 University of Texas at Austin
   
