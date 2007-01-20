@@ -47,10 +47,14 @@ int main(int argc, char* argv[])
 	    }
 	}
     }
-    if (NULL == real || NULL == imag)
-	sf_error ("not enough input");
+    if (NULL == imag) {
+	if (NULL == real) sf_error ("not enough input");
+	/* if only one input, real is in stdin */
+	imag = real;
+	real = sf_input("in");
+    }
     cmplx = sf_output ("out");
-
+    
     if (SF_FLOAT != sf_gettype(real) ||
 	SF_FLOAT != sf_gettype(imag))
 	sf_error("wrong input type");
@@ -63,10 +67,9 @@ int main(int argc, char* argv[])
     strcpy(strstr(cformat,"float"),"complex");
     sf_setformat(cmplx,cformat);
 
-    if (!sf_histint(real,"esize",&resize)) resize=4;
-    if (!sf_histint(imag,"esize",&iesize)) iesize=4;
+    resize = sf_esize(real);
+    iesize = sf_esize(imag);
     if (resize != iesize) sf_error("esize mismatch: %d != %d",resize,iesize);
-    if (resize <= 0) sf_error("wrong esize=%d",resize);
     
     rsize = sf_filesize (real);
     isize = sf_filesize (imag);
