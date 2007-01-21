@@ -77,47 +77,132 @@ def included(node,env,path):
 
 Include = Scanner(name='Include',function=included,skeys=['.c'])
 
-def read_api_options(context):
-    api = string.split(string.lower(context.env.get('API','')),',')
-    valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90', 'f90', 'python', 'matlab']
-    # Specifying API=matlab is not necessary, but not wrong either.
-    for option in api:
-	if not option in valid_api_options:
-	    sys.stderr.write(option+" not a valid API option, will be ignored.\n")
-	    # Eliminate it from list
-	    api = [elem for elem in api if elem != option]
-    return api
-
+# The functions called inside check_all
+# are found further down, in the order they are called
+# FDNSI = Failure Does Not Stop Installation
 def check_all(context):
-    cc(context)
-    ar(context)
-    libs(context)
-    c99(context)
-    x11(context)
-    ppm(context)
-    jpeg(context)
+    myplatform = identify_platform()
+    cc  (context, myplatform)
+    ar  (context, myplatform)
+    libs(context, myplatform)
+    c99 (context, myplatform) # FDNSI
+    x11 (context, myplatform) # FDNSI
+    ppm (context, myplatform) # FDNSI
+    jpeg(context, myplatform) # FDNSI
     api = read_api_options(context)
     if 'c++' in api:
-        cxx(context)
-    if 'fortran' or 'f77' in api:
-        f77(context)
+        cxx(context, myplatform)
+    if 'fortran' in api or 'f77' in api:
+        f77(context, myplatform)
     if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
-        f90(context)
+        f90(context, myplatform)
     if 'python' in api:
-	numpy(context)
+        numpy(context, myplatform)
 
-def libs(context):
-    context.Message("checking libraries ... ")
+
+def identify_platform():
+    # Hey everybody, add a test for your platform here!
+
+    # The 'OS' and 'distro' terms below are somewhat loose
+    p={'OS': 'unknown', 'distro': 'unknown'}
+
+    if sys.platform[:5] == 'linux':
+        p['OS'] = 'linux'
+        from platform import uname
+        if uname()[2].split('.')[-1] == 'fc6':
+            p['distro'] = 'fc6' # Fedora Core 6
+        del uname
+    elif sys.platform[:5] == 'sunos':
+	p['OS'] = 'sunos' # SunOS
+    elif sys.platform[:6] == 'cygwin':
+        p['OS'] = 'cygwin'
+    elif sys.platform[:6] == 'darwin':
+        p['OS'] = 'darwin' # Mac OS X
+    elif sys.platform[:7] == 'interix':
+        p['OS'] = 'interix' # Microsoft Windows Services for UNIX
+    else:
+	p['OS'] = sys.platform
+    return p
+
+
+# A C compiler is needed by most Madagascar programs
+# Failing this test stops the installation.
+def cc(context, myplatform):
+    context.Message("checking for C compiler ... ")
+    CC = context.env.get('CC',WhereIs('gcc'))
+    if CC:
+        context.Result(CC)   
+    else:
+        context.Result(0)
+        if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: gcc.\n")
+        sys.exit(1)
+    text = '''
+    int main(int argc,char* argv[]) {
+    return 0;
+    }\n'''
+
+    context.Message("checking if %s works ... " % CC)
+    res = context.TryLink(text,'.c')
+    context.Result(res)
+    if not res:
+        sys.exit(1)
+    if CC[-3:]=='gcc':
+        oldflag = context.env.get('CCFLAGS')
+        for flag in ('-std=gnu99 -Wall -pedantic',
+                     '-std=gnu9x -Wall -pedantic',
+                     '-Wall -pedantic'):
+            context.Message("checking if gcc accepts '%s' ... " % flag)
+            context.env['CCFLAGS'] = oldflag + ' ' + flag
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if res:
+                break
+        if not res:
+            context.env['CCFLAGS'] = oldflag
+        # large file support
+        (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
+        if not status:
+            oldflag = context.env.get('CCFLAGS')
+            context.Message("checking if gcc accepts '%s' ... " % lfs)
+            context.env['CCFLAGS'] = oldflag + ' ' + lfs
+            res = context.TryCompile(text,'.c')
+            context.Result(res)
+            if not res:
+                context.env['CCFLAGS'] = oldflag
+    elif sys.platform[:5] == 'sunos':
+        context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
+                                                '-O2','-xO2')
+
+
+# ar creates, modifies, and extracts from archives
+# Failing this test stops the installation.
+def ar(context, myplatform):
+    context.Message("checking for ar ... ")
+    AR = context.env.get('AR',WhereIs('ar'))
+    if AR:
+        context.Result(AR)
+        context.env['AR'] = AR
+    else:
+        context.Result(0)
+	if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: binutils.\n")
+        sys.exit(1)
+
+
+# Failing this check stops the installation.
+def libs(context, myplatform):
+    context.Message("checking for RPC libraries ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    if sys.platform[:5] == 'sunos':
+    if myplatform['OS'] == 'sunos':
         LIBS.append('nsl')
-    elif sys.platform[:6] == 'cygwin':
+    elif myplatform['OS'] == 'cygwin':
         LIBS.append('rpc')
-    elif sys.platform[:6] == 'darwin':
+    elif myplatform['OS'] == 'darwin':
         LIBS.append('mx')
-    elif sys.platform[:7] == 'interix':
+    elif myplatform['OS'] == 'interix':
         LIBS.append('rpclib')
     text = '''
     #include <rpc/types.h>
@@ -125,16 +210,42 @@ def libs(context):
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
-    
+
     res = context.TryLink(text,'.c')
     if res:
         context.Result(str(LIBS))
         context.env['LIBS'] = LIBS
     else:
         context.Result(0)
-        context.Message("Please install RPC libraries.\n")
+        if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: glibc-headers.\n")
         sys.exit(1)
 
+
+# Complex number support according to ISO C99 standard
+def c99(context, myplatform):
+    context.Message("checking complex support ... ")
+    text = '''
+    #include <complex.h>
+    #include <math.h>
+    int main(int argc,char* argv[]) {
+    float complex c;
+    float f;
+    f = cabsf(ccosf(c));
+    return (int) f;
+    }\n'''
+
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+    else:
+        context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
+        context.Result(0)
+        if myplatform['distro'] == 'fc6':
+            context.Message("Package needed for ISO C99 support: glibc-headers")
+
+
+# The two lists below only used in the x11 check
 xinc = [
     '/usr/X11/include',
     '/usr/X11R6/include',
@@ -197,14 +308,16 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
-def x11(context):
+# If this check is failed and you do not have SEPlib installed,
+# you will not be able to display .vpl images
+def x11(context, myplatform):
     text = '''
     #include <X11/Intrinsic.h>
     #include <X11/Xaw/Label.h>
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
-    
+
     context.Message("checking for X11 headers ... ")
     INC = context.env.get('XINC','')
     if type(INC) is not types.ListType:
@@ -215,7 +328,7 @@ def x11(context):
     res = None
     for path in filter(lambda x:
                        os.path.isfile(os.path.join(x,'X11/Xaw/Label.h')),
-                       INC+xinc):        
+                       INC+xinc):
         context.env['CPPPATH'] = oldpath + [path,] 
         res = context.TryCompile(text,'.c')
 
@@ -226,6 +339,9 @@ def x11(context):
 
     if not res:
         context.Result(0)
+	context.Message("xtpen (for displaying .vpl images) will not be built.")
+        if myplatform['distro'] == 'fc6':
+            context.Message("Package needed for xtpen: libXaw-devel.")
         context.env['XINC'] = None
         return
 
@@ -242,18 +358,18 @@ def x11(context):
         if type(XLIBS) is not types.ListType:
             XLIBS = string.split(XLIBS)
     else:
-        if  sys.platform[:7] == 'interix':
+        if  myplatform['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
-        elif sys.platform[:5] == 'linux':
+        elif myplatform['OS'] == 'linux':
             XLIBS = ['Xaw','Xt']
         else:
             XLIBS = ['Xaw','Xt','X11']
 
     res = None
-    for path in filter(os.path.isdir,LIB+xlib):        
+    for path in filter(os.path.isdir,LIB+xlib):
         context.env['LIBPATH'] = oldlibpath + [path,] 
         res = context.TryLink(text,'.c')
-        
+
         if res:
             context.Result(path)
             context.env['XLIBPATH'] = context.env['LIBPATH']
@@ -263,12 +379,12 @@ def x11(context):
         context.Result(0)
         context.env['XLIBPATH'] = None
 
-    context.env['CPPPATH'] = oldpath        
+    context.env['CPPPATH'] = oldpath
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
-def ppm(context):
-    context.Message("checking ppm ... ")
+def ppm(context, myplatform):
+    context.Message("checking for ppm ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -279,19 +395,24 @@ def ppm(context):
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
-    
+
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
         context.env['PPM'] = ppm
     else:
         context.Result(0)
+	context.Message("ppmpen will not be built.")
+        if myplatform['distro'] == 'fc6':
+            context.Message("Package needed for ppmpen: netpbm-devel")
         context.env['PPM'] = None
 
     LIBS.pop()
 
-def jpeg(context):
-    context.Message("checking jpeg ... ")
+# If this test is failed, no writing to jpeg files
+# Used by a single program right now.
+def jpeg(context, myplatform):
+    context.Message("checking for jpeg devel lib ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -303,7 +424,7 @@ def jpeg(context):
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
-    
+
     res = context.TryLink(text,'.c')
     if res:
         context.Result(res)
@@ -311,104 +432,48 @@ def jpeg(context):
     else:
         context.Result(0)
         context.env['JPEG'] = None
+        context.Message("sfbyte2jpg will not be built.")
+        if myplatform['distro'] == 'fc6':
+            context.Message("For sfbyte2jpg, install package libjpeg-devel")
 
     LIBS.pop()
 
 
-def ar(context):
-    context.Message("checking ar ... ")
-    AR = context.env.get('AR',WhereIs('ar'))
-    if AR:
-        context.Result(AR)
-        context.env['AR'] = AR
-    else:
-        context.Result(0)
-        sys.exit(1)
+def read_api_options(context):
+    api = string.split(string.lower(context.env.get('API','')),',')
+    valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90', 
+    			'f90', 'python', 'matlab']
+    # Specifying API=matlab is not necessary, but not wrong either.
+    for option in api:
+	if not option in valid_api_options:
+	    sys.stderr.write(option+" not a valid API option, will be ignored.\n")
+	    # Eliminate it from list
+	    api = [elem for elem in api if elem != option]
+    return api
 
-def cc(context):
-    context.Message("checking C compiler ... ")
-    CC = context.env.get('CC',WhereIs('gcc'))
-    if CC:
-        context.Result(CC)   
-    else:
-        context.Result(0)
-        sys.exit(1)
-    text = '''
-    int main(int argc,char* argv[]) {
-    return 0;
-    }\n'''
-    
-    context.Message("checking if %s works ... " % CC)
-    res = context.TryLink(text,'.c')
-    context.Result(res)
-    if not res:
-        sys.exit(1)
-    if CC[-3:]=='gcc':
-        oldflag = context.env.get('CCFLAGS')
-        for flag in ('-std=gnu99 -Wall -pedantic',
-                     '-std=gnu9x -Wall -pedantic',
-                     '-Wall -pedantic'):
-            context.Message("checking if gcc accepts '%s' ... " % flag)
-            context.env['CCFLAGS'] = oldflag + ' ' + flag
-            res = context.TryCompile(text,'.c')
-            context.Result(res)
-            if res:
-                break
-        if not res:
-            context.env['CCFLAGS'] = oldflag
-        # large file support
-        (status,lfs) = commands.getstatusoutput('getconf LFS_CFLAGS')
-        if not status:
-            oldflag = context.env.get('CCFLAGS')
-            context.Message("checking if gcc accepts '%s' ... " % lfs)
-            context.env['CCFLAGS'] = oldflag + ' ' + lfs
-            res = context.TryCompile(text,'.c')
-            context.Result(res)
-            if not res:
-                context.env['CCFLAGS'] = oldflag
-    elif sys.platform[:5] == 'sunos':
-        context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
-                                                '-O2','-xO2')
 
-def c99(context):
-    context.Message("checking complex support ... ")
-    text = '''
-    #include <complex.h>
-    #include <math.h>
-    int main(int argc,char* argv[]) {
-    float complex c;
-    float f;
-    f = cabsf(ccosf(c));
-    return (int) f;
-    }\n'''
-
-    res = context.TryLink(text,'.c')
-    if res:
-        context.Result(res)
-    else:
-        context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
-        context.Result(0)
-
-def cxx(context):
-    context.Message("checking C++ compiler ... ")
+# For the C++ API
+def cxx(context, myplatform):
+    context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
     if CXX:
-        context.Result(CXX)   
+        context.Result(CXX)
     else:
         context.Result(0)
-        return
+        if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: gcc-c++")
+        sys.exit(1)
+    context.Message("checking if %s works ... " % CXX)
     text = '''
     #include <valarray>
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
-
-    context.Message("checking if %s works ... " % CXX)
     res = context.TryLink(text,'.cc')
     context.Result(res)
     if not res:
         del context.env['CXX']
-        return
+        sys.exit(1)
     if CXX == 'g++':
         oldflag = context.env.get('CXXFLAGS')
         for flag in ['-Wall -pedantic']:
@@ -421,29 +486,15 @@ def cxx(context):
         if not res:
             context.env['CXXFLAGS'] = oldflag
 
-def numpy(context):
-    context.Message("checking if numpy is present ... ")
-    try:
-	import numpy
-	context.Result(1)
-    except:
-	context.Result(0)
-	context.Message("checking if numarray is present ... ")
-	try:
-	    import numarray
-	    context.Result(1)
-	    context.Message("numarray development has stopped; plan to migrate to numpy")
-	except:
-	    context.Result(0)
-	    sys.stderr.write("Please install numpy (preferred) or numarray.\n")
-            sys.exit(1)
 
+# Used in checks for both f77 and f90
 fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran', # used to be f2cFortran
            'f2c':'f2cFortran'}
 
-def f77(context):
-    context.Message("checking F77 compiler ... ")
+
+def f77(context, myplatform):
+    context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')
     if not F77:
         compilers = ['g77','f77','f90','f95','xlf90','pgf90',
@@ -459,7 +510,9 @@ def f77(context):
         context.Result(F77)
     else:
         context.Result(0)
-        return
+        if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: gcc-gfortran")
+        sys.exit(1)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
@@ -474,7 +527,6 @@ def f77(context):
     context.env['LINK'] = oldlink
     context.Result(res)
     if not res:
-        sys.stderr.write("No working F77 compiler detected.\n")
         del context.env['F77']
         sys.exit(1)
     cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
@@ -482,8 +534,9 @@ def f77(context):
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
 
-def f90(context):
-    context.Message("checking F90 compiler ... ")
+
+def f90(context, myplatform):
+    context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
         compilers = ['gfortran','f90','f95','xlf90','pgf90',
@@ -499,7 +552,9 @@ def f90(context):
         context.Result(F90)
     else:
         context.Result(0)
-        return
+        if myplatform['distro'] == 'fc6':
+            sys.stderr.write("Needed package: gcc-gfortran")
+        sys.exit(1)
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
         context.env.Append(F90FLAGS=' -Vaxlib')
@@ -517,13 +572,12 @@ def f90(context):
     context.env['LINK'] = oldlink
     context.Result(res1 and res2)
     if not res1 or not res2:
-        sys.stderr.write("No working F90 compiler detected.\n")
         del context.env['F90']
         sys.exit(1)
     base = os.path.basename(F90)
     context.Message("checking %s type for cfortran.h ... " % base)
     cfortran = fortran.get(base,'NAGf90Fortran')
-    context.env['CFORTRAN90'] = cfortran 
+    context.env['CFORTRAN90'] = cfortran
     context.Result(cfortran)
     context.Message("checking F90 module extension ... ")
     f90module = re.compile(r'(?:testf90|TESTF90)(\.\w+)$')
@@ -537,6 +591,29 @@ def f90(context):
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
 
+
+# For some reason,the Python API needs numpy or numarray
+def numpy(context, myplatform):
+    context.Message("checking if numpy is present ... ")
+    try:
+	import numpy
+	context.Result(1)
+    except:
+	context.Result(0)
+	context.Message("checking if numarray is present ... ")
+	try:
+	    import numarray
+	    context.Result(1)
+	    context.Message("numarray development has stopped; plan to migrate to numpy")
+	except:
+	    context.Result(0)
+            if myplatform['distro'] == 'fc6':
+		sys.stderr.write("Needed package: numpy")
+	    else:
+	        sys.stderr.write("Install numpy (preferred) or numarray.\n")
+            sys.exit(1)
+
+
 def intel(context):
     '''Trying to fix wierd intel setup.'''
     libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
@@ -547,6 +624,7 @@ def intel(context):
         license = os.environ.get(key) 
         if license:
             context.env.Append(ENV={key:license})
+
 
 def options(opts):
     opts.Add('ENV','SCons environment')
