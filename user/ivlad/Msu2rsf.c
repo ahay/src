@@ -1,9 +1,7 @@
 /* Convert a SU dataset to RSF.
-
 Same as sfsegyread su=n. Split from sfsegyread to decrease the number of
 options of sfsuread, and to improve readability 
-of both codes. See sfsegyread help for more info.
-*/
+of both codes. See sfsegyread help for more info.*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
