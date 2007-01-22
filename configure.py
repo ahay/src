@@ -108,12 +108,15 @@ def identify_platform():
 
     if sys.platform[:5] == 'linux':
         p['OS'] = 'linux'
-        from platform import uname
-        if uname()[2].split('.')[-1] == 'fc6':
-            p['distro'] = 'fc6' # Fedora Core 6
-        del uname
+        try:
+            from platform import uname
+            if uname()[2].split('.')[-1] == 'fc6':
+                p['distro'] = 'fc6' # Fedora Core 6
+            del uname
+        except: # platform module not installed.
+            pass # this Python is probably < 2.3
     elif sys.platform[:5] == 'sunos':
-	p['OS'] = 'sunos' # SunOS
+        p['OS'] = 'sunos' # SunOS
     elif sys.platform[:6] == 'cygwin':
         p['OS'] = 'cygwin'
     elif sys.platform[:6] == 'darwin':
@@ -242,7 +245,7 @@ def c99(context, myplatform):
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(0)
         if myplatform['distro'] == 'fc6':
-            context.Message("Package needed for ISO C99 support: glibc-headers")
+            context.Message("  Package needed for ISO C99 support: glibc-headers")
 
 
 # The two lists below only used in the x11 check
@@ -339,9 +342,9 @@ def x11(context, myplatform):
 
     if not res:
         context.Result(0)
-	context.Message("xtpen (for displaying .vpl images) will not be built.")
+	context.Message("  xtpen (for displaying .vpl images) will not be built.\n")
         if myplatform['distro'] == 'fc6':
-            context.Message("Package needed for xtpen: libXaw-devel.")
+            context.Message("  Package needed for xtpen: libXaw-devel.\n")
         context.env['XINC'] = None
         return
 
@@ -402,9 +405,9 @@ def ppm(context, myplatform):
         context.env['PPM'] = ppm
     else:
         context.Result(0)
-	context.Message("ppmpen will not be built.")
+	context.Message("  ppmpen will not be built.")
         if myplatform['distro'] == 'fc6':
-            context.Message("Package needed for ppmpen: netpbm-devel")
+            context.Message("  Package needed for ppmpen: netpbm-devel")
         context.env['PPM'] = None
 
     LIBS.pop()
@@ -432,9 +435,9 @@ def jpeg(context, myplatform):
     else:
         context.Result(0)
         context.env['JPEG'] = None
-        context.Message("sfbyte2jpg will not be built.")
+        context.Message("  sfbyte2jpg will not be built.")
         if myplatform['distro'] == 'fc6':
-            context.Message("For sfbyte2jpg, install package libjpeg-devel")
+            context.Message("  For sfbyte2jpg, install package libjpeg-devel")
 
     LIBS.pop()
 
@@ -461,7 +464,7 @@ def cxx(context, myplatform):
     else:
         context.Result(0)
         if myplatform['distro'] == 'fc6':
-            sys.stderr.write("Needed package: gcc-c++")
+            sys.stderr.write("Needed package: gcc-c++\n")
         sys.exit(1)
     context.Message("checking if %s works ... " % CXX)
     text = '''
@@ -511,7 +514,7 @@ def f77(context, myplatform):
     else:
         context.Result(0)
         if myplatform['distro'] == 'fc6':
-            sys.stderr.write("Needed package: gcc-gfortran")
+            sys.stderr.write("Needed package: gcc-gfortran\n")
         sys.exit(1)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
@@ -553,7 +556,7 @@ def f90(context, myplatform):
     else:
         context.Result(0)
         if myplatform['distro'] == 'fc6':
-            sys.stderr.write("Needed package: gcc-gfortran")
+            sys.stderr.write("Needed package: gcc-gfortran\n")
         sys.exit(1)
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
@@ -604,11 +607,11 @@ def numpy(context, myplatform):
 	try:
 	    import numarray
 	    context.Result(1)
-	    context.Message("numarray development has stopped; plan to migrate to numpy")
+	    context.Message("  numarray development has stopped; plan to migrate to numpy")
 	except:
 	    context.Result(0)
             if myplatform['distro'] == 'fc6':
-		sys.stderr.write("Needed package: numpy")
+		sys.stderr.write("Needed package: numpy\n")
 	    else:
 	        sys.stderr.write("Install numpy (preferred) or numarray.\n")
             sys.exit(1)
@@ -621,7 +624,7 @@ def intel(context):
                    libdirs)
     context.env.Append(ENV={'LD_LIBRARY_PATH':string.join(libs,':')})
     for key in ('INTEL_FLEXLM_LICENSE','INTEL_LICENSE_FILE','IA32ROOT'):
-        license = os.environ.get(key) 
+        license = os.environ.get(key)
         if license:
             context.env.Append(ENV={key:license})
 
