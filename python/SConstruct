@@ -21,8 +21,11 @@ for src in ('doc','proj','prog','tex','book'):
 env.Install(libdir,'suproj.py')
 
 for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi'):
-    env.Install(libdir,src+'.py')
-    env.InstallAs(os.path.join(bindir,src),src+'.py')
+    if src == 'vplot2gif' and not env.get('PPM'):
+        pass
+    else:
+        env.Install(libdir,src+'.py')
+        env.InstallAs(os.path.join(bindir,src),src+'.py')
 
 for src in ('doc','tour','units'):
     env.Install(bindir,'sf'+src)

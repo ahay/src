@@ -178,8 +178,7 @@ def cc(context, myplatform):
                                                 '-O2','-xO2')
 
 
-# ar creates, modifies, and extracts from archives
-# Failing this test stops the installation.
+# Used for building libraries.
 def ar(context, myplatform):
     context.Message("checking for ar ... ")
     AR = context.env.get('AR',WhereIs('ar'))
@@ -386,6 +385,7 @@ def x11(context, myplatform):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
+# ppm needed for vplot2gif, rarely used otherwise
 def ppm(context, myplatform):
     context.Message("checking for ppm ... ")
     LIBS = context.env.get('LIBS','m')
@@ -405,9 +405,9 @@ def ppm(context, myplatform):
         context.env['PPM'] = ppm
     else:
         context.Result(0)
-	context.Message("  ppmpen will not be built.")
+        context.Message("  ppmpen and vplot2gif will not be built.\n")
         if myplatform['distro'] == 'fc6':
-            context.Message("  Package needed for ppmpen: netpbm-devel")
+            context.Message("  Package needed for them: netpbm-devel\n")
         context.env['PPM'] = None
 
     LIBS.pop()
