@@ -9,7 +9,7 @@ g1=2-g0  # last change
 ng=101   # number of changes to scan
 dg = (g1-g0)/(ng-1)
 niter = 100 # number of iterations
-rect1 = 10 # vertical smoothing
+rect1 = 25 # vertical smoothing
 
 # time sampling
 dt = 0.002
@@ -24,7 +24,12 @@ for c in range(4):
 
     # get model from data server
     Fetch(src,'long')
-    Flow(case,src,'dd form=native')
+    Flow(case,src,
+         '''
+         dd form=native |
+         window f2=1 |
+         put label=Velocity unit=km/s label1=Depth unit1=km
+         ''')
 
     # display
     Result(case,
@@ -43,7 +48,7 @@ for c in range(4):
          modrefl2 dt=%g nt=%d |
          window n2=1 |
          ricker1 frequency=30 |
-         noise seed=%d var=1e-8
+         noise seed=%d var=5e-8
          ''' % (dt,nt,10*c))
 
     # display
@@ -54,7 +59,18 @@ for c in range(4):
     Flow(trace,seis,'window n2=1 f2=50')
 
     if c > 0:
+        # Model difference
+        mdif = 'mdif-'+case
+        Flow(mdif,[case,'time1'],'add scale=1,-1 ${SOURCES[1]}')
+        Result(mdif,
+               '''
+               grey color=j 
+               scalebar=y label2=Trace wanttitle=n
+               barreverse=y
+               ''')
+        
         # Analyze one trace
+        ###################
         
         # Take time-lapse difference
         dif = 'tdif-'+case
@@ -98,11 +114,7 @@ for c in range(4):
 
         # Pick the stretch
         pick = 'tpick-'+case
-        Flow(pick,scan,
-             '''
-             pick rect1=%d vel0=1 an=%d |
-             window''' % (2*rect1,an))
-
+        Flow(pick,scan,'pick rect1=%d vel0=1 | window' % rect1)
         Plot(pick,
              '''
              graph transp=y min2=%g max2=%g 
@@ -163,7 +175,8 @@ for c in range(4):
         dif = 'dif-'+case
         Flow(dif,[seis,'seis-time1'],'add scale=1,-1 ${SOURCES[1]}')
 
-        Result(dif,'grey label2=Trace label1=Time unit1=s wanttitle=n')
+        Result(dif,
+               'grey label2=Trace label1=Time unit1=s wanttitle=n ')
 
         bot = 'bot-'+case
         Flow(bot,seis,'window f1=%d' % n1)
@@ -179,14 +192,14 @@ for c in range(4):
         Flow(scan,[bot,bot0],
              '''
              warpscan other=${SOURCES[1]} niter=%d
-             ng=%d g0=%g dg=%g rect1=%d rect3=3 | 
+             ng=%d g0=%g dg=%g rect1=%d rect3=2 | 
              math output='(1+input)^4'
              ''' % (niter,ng,g0,dg,rect1))
 
         Result(scan,
                '''
                byte allpos=y |
-               grey3 flat=n frame1=%d frame2=51 frame3=50
+               grey3 flat=n frame1=%d frame2=50 frame3=49
                color=j wanttitle=n
                label1=Time unit1=s
                label2="Relative Stretch"
@@ -195,7 +208,8 @@ for c in range(4):
 
         # Pick the stretch
         pick = 'pick-'+case
-        Flow(pick,scan,'pick rect1=%d rect2=2 vel0=1 an=%d | window' % (2*rect1,an))
+        Flow(pick,scan,
+             'pick rect1=%d rect2=3 gate=100 vel0=1 | window' % (rect1/2))
 
         Result(pick,
                '''
@@ -226,6 +240,7 @@ for c in range(4):
         dif2 = 'dif2-'+case
         Flow(dif2,[warp2,'seis-time1'],'add scale=1,-1 ${SOURCES[1]}')
 
-        Result(dif2,'grey label2=Trace label1=Time unit1=s wanttitle=n')
+        Result(dif2,
+               'grey label2=Trace label1=Time unit1=s wanttitle=n')
 
 End()

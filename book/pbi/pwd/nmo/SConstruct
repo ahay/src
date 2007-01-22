@@ -89,7 +89,7 @@ Plot('svin',
      '''
      envelope |
      grey allpos=y label2="Interval Velocity" unit2=m/s
-     title="Oriented Velocity Map" min2=2000 max2=3000
+     wanttitle=n min2=2000 max2=3000
      ''')
 Result('svin','svin vint','Overlay')
 
