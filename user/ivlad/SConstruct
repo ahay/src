@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-su2rsf segy2rsf
+su2rsf segy2rsf quantile
 '''
 
 try:  # distributed version
