@@ -1,0 +1,26 @@
+# Author: G. Hennenfent
+#         Seismic Laboratory for Imaging and Modeling
+#         Department of Earch & Ocean Sciences
+#         The University of British Columbia
+#         
+# Date  : January, 07
+
+from rsfproj import *
+import os
+
+rsfroot = os.environ.get('RSFROOT')+'/bin/'
+
+Flow('model',None,
+     'sfsigmoid n1=300 n2=400')
+Result('model','sfgrey title="Model" ')
+
+Flow('data','model','sfnoise var=1e-4 ')
+Result('data','sfgrey title="Data" ')
+
+Flow('res','data',
+     '''%(rsfroot)ssffdct nbs=6 nba=32 ac=1 adj=n |
+     sfthr thr=4e-3 |
+     %(rsfroot)ssffdct nbs=6 nba=32 ac=1 adj=y'''%vars() )
+Result('res','sfgrey title="Denoised image" ')
+
+End()
