@@ -54,7 +54,7 @@ if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
 
-api = string.split(string.lower(str(env.get('API',''))),',')
+api = env.get('API',[])
 
 ##############################################################################
 # FORTRAN-77 BINDING

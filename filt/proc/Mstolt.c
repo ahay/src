@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
     dx *= SF_PI * fabsf (vel);
     dy *= SF_PI * fabsf (vel);	
 
-    if (!sf_getfloat("stretch", &st)) st=1.;
+    if (!sf_getfloat("stretch", &st) && !sf_histfloat(in,"stretch",&st)) st=1.;
     /* Stolt stretch parameter */
     if (vel < 0) st = 2.-st;
     a = (1.-1./st);

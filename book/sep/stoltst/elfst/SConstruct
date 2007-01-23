@@ -1,7 +1,7 @@
 from rsfproj import *
 
 Fetch('elf-stk2.rsf','masha')
-Flow('data','elf-stk2.rsf','dd form=native')
+Flow('data','elf-stk2.rsf','dd form=native | put o1=0')
 
 def grey(title):
     return '''
@@ -15,5 +15,55 @@ Flow('fk','data','cosft sign2=1')
 Flow('stolt','fk','stolt vel=2000 pad=2049 | cosft sign2=-1')
 
 Plot('stolt',grey('(b) Stolt migration (v0 = 2000 m/s)'))
+
+Fetch('vsmooth_levset.dat','masha')
+
+nx=1000
+dx=13.3333
+
+nz=1000
+dz=5.005
+
+Flow('vel','vsmooth_levset.dat',
+     '''
+     echo in=$SOURCE
+     n1=%d o1=0 d1=%g
+     n2=%d o2=0 d2=%g
+     label1=Lateral unit1=m
+     label2=Depth unit2=m
+     label=Velocity unit="km/s"
+     data_format=ascii_float |
+     dd form=native |
+     transp 
+     ''' % (nx,dx,nz,dz),stdin=0)
+
+Flow('vt','vel','depth2time velocity=$SOURCE nt=800 dt=0.004 t0=0')
+Flow('bot','vt','window n1=1 f1=650 | spray axis=1 n=150')
+Flow('vt2','vt bot','window n1=650 | cat axis=1 ${SOURCES[1]}')
+Flow('vt1','vt2','stack | spray axis=2 n=1000 d=13.3333 o=0')
+
+v0 = 1800
+
+Flow('str','data vt1','stoltstretch velocity=${SOURCES[1]} vel=%g pad=1250' % v0)
+Flow('stfk','str','cosft sign2=1')
+
+par = {
+    'good': '',
+    'bad': 'stretch=0.5'
+    }
+
+for case in par.keys():
+    stolt = 'stolt-'+case
+    Flow(stolt,'stfk vt1',
+         '''
+         stolt vel=%g pad=4097 %s |
+         cosft sign2=-1 |
+         stoltstretch velocity=${SOURCES[1]} vel=%g inv=y
+         ''' % (v0,par[case],v0))
+    
+Plot('stolt-bad',grey('(c) Stolt-stretch migration (W=0.5)'))
+Plot('stolt-good',grey('(a) Stolt-stretch migration (optimal W)'))
+
+Result('data-stolt-ststr','data stolt stolt-bad','OverUnderAniso',vppen='xscale=1.7')
 
 End()

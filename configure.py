@@ -77,67 +77,72 @@ def included(node,env,path):
 
 Include = Scanner(name='Include',function=included,skeys=['.c'])
 
+plat = {'OS': 'unknown',
+        'distro': 'unknown'}
+
 # The functions called inside check_all
 # are found further down, in the order they are called
 # FDNSI = Failure Does Not Stop Installation
 def check_all(context):
-    myplatform = identify_platform()
-    cc  (context, myplatform)
-    ar  (context, myplatform)
-    libs(context, myplatform)
-    c99 (context, myplatform) # FDNSI
-    x11 (context, myplatform) # FDNSI
-    ppm (context, myplatform) # FDNSI
-    jpeg(context, myplatform) # FDNSI
-    api = read_api_options(context)
+    identify_platform(context)
+    cc  (context)
+    ar  (context)
+    libs(context)
+    c99 (context) # FDNSI
+    x11 (context) # FDNSI
+    ppm (context) # FDNSI
+    jpeg(context) # FDNSI
+    mpi (context)
+    api = api_options(context)
     if 'c++' in api:
-        cxx(context, myplatform)
+        cxx(context)
     if 'fortran' in api or 'f77' in api:
-        f77(context, myplatform)
+        f77(context)
     if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
-        f90(context, myplatform)
+        f90(context)
     if 'python' in api:
-        numpy(context, myplatform)
+        numpy(context)
 
-
-def identify_platform():
+def identify_platform(context):
+    global plat
+    context.Message("checking platform ... ")
+    
     # Hey everybody, add a test for your platform here!
-
-    # The 'OS' and 'distro' terms below are somewhat loose
-    p={'OS': 'unknown', 'distro': 'unknown'}
-
     if sys.platform[:5] == 'linux':
-        p['OS'] = 'linux'
+        plat['OS'] = 'linux'
         try:
             from platform import uname
-            if uname()[2].split('.')[-1] == 'fc6':
-                p['distro'] = 'fc6' # Fedora Core 6
+            name = uname()[2].split('.')[-1]
+            if name[:2] == 'fc':
+                plat['distro'] = 'fc' # Fedora Core
+            elif name[:2] == 'EL':
+                plat['distro'] = 'EL' # Redhat Enterprise
             del uname
         except: # platform module not installed.
             pass # this Python is probably < 2.3
     elif sys.platform[:5] == 'sunos':
-        p['OS'] = 'sunos' # SunOS
+        plat['OS'] = 'sunos' # SunOS
     elif sys.platform[:6] == 'cygwin':
-        p['OS'] = 'cygwin'
+        plat['OS'] = 'cygwin'
     elif sys.platform[:6] == 'darwin':
-        p['OS'] = 'darwin' # Mac OS X
+        plat['OS'] = 'darwin' # Mac OS X
     elif sys.platform[:7] == 'interix':
-        p['OS'] = 'interix' # Microsoft Windows Services for UNIX
+        plat['OS'] = 'interix' # Microsoft Windows Services for UNIX
     else:
-	p['OS'] = sys.platform
-    return p
+	plat['OS'] = sys.platform
 
+    context.Result('%(OS)s [%(distro)s]' % plat)
 
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
-def cc(context, myplatform):
+def cc(context):
     context.Message("checking for C compiler ... ")
     CC = context.env.get('CC',WhereIs('gcc'))
     if CC:
         context.Result(CC)   
     else:
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
+        if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc.\n")
         sys.exit(1)
     text = '''
@@ -179,7 +184,7 @@ def cc(context, myplatform):
 
 
 # Used for building libraries.
-def ar(context, myplatform):
+def ar(context):
     context.Message("checking for ar ... ")
     AR = context.env.get('AR',WhereIs('ar'))
     if AR:
@@ -187,24 +192,24 @@ def ar(context, myplatform):
         context.env['AR'] = AR
     else:
         context.Result(0)
-	if myplatform['distro'] == 'fc6':
+	if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: binutils.\n")
         sys.exit(1)
 
 
 # Failing this check stops the installation.
-def libs(context, myplatform):
+def libs(context):
     context.Message("checking for RPC libraries ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    if myplatform['OS'] == 'sunos':
+    if plat['OS'] == 'sunos':
         LIBS.append('nsl')
-    elif myplatform['OS'] == 'cygwin':
+    elif plat['OS'] == 'cygwin':
         LIBS.append('rpc')
-    elif myplatform['OS'] == 'darwin':
+    elif plat['OS'] == 'darwin':
         LIBS.append('mx')
-    elif myplatform['OS'] == 'interix':
+    elif plat['OS'] == 'interix':
         LIBS.append('rpclib')
     text = '''
     #include <rpc/types.h>
@@ -219,13 +224,13 @@ def libs(context, myplatform):
         context.env['LIBS'] = LIBS
     else:
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
+        if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: glibc-headers.\n")
         sys.exit(1)
 
 
 # Complex number support according to ISO C99 standard
-def c99(context, myplatform):
+def c99(context):
     context.Message("checking complex support ... ")
     text = '''
     #include <complex.h>
@@ -243,8 +248,8 @@ def c99(context, myplatform):
     else:
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
-            context.Message("  Package needed for ISO C99 support: glibc-headers")
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  Package needed for ISO C99 support: glibc-headers\n")
 
 
 # The two lists below only used in the x11 check
@@ -312,7 +317,7 @@ xlib = [
 
 # If this check is failed and you do not have SEPlib installed,
 # you will not be able to display .vpl images
-def x11(context, myplatform):
+def x11(context):
     text = '''
     #include <X11/Intrinsic.h>
     #include <X11/Xaw/Label.h>
@@ -341,9 +346,9 @@ def x11(context, myplatform):
 
     if not res:
         context.Result(0)
-	context.Message("  xtpen (for displaying .vpl images) will not be built.\n")
-        if myplatform['distro'] == 'fc6':
-            context.Message("  Package needed for xtpen: libXaw-devel.\n")
+	sys.stderr.write("\n  xtpen (for displaying .vpl images) will not be built.\n")
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  Package needed for xtpen: libXaw-devel.\n")
         context.env['XINC'] = None
         return
 
@@ -360,9 +365,9 @@ def x11(context, myplatform):
         if type(XLIBS) is not types.ListType:
             XLIBS = string.split(XLIBS)
     else:
-        if  myplatform['OS'] == 'interix':
+        if  plat['OS'] == 'interix':
             XLIBS =  ['Xaw','Xt','Xmu','X11','Xext','SM','ICE']
-        elif myplatform['OS'] == 'linux':
+        elif plat['OS'] == 'linux':
             XLIBS = ['Xaw','Xt']
         else:
             XLIBS = ['Xaw','Xt','X11']
@@ -386,7 +391,7 @@ def x11(context, myplatform):
     context.env['LIBS'] = oldlibs
 
 # ppm needed for vplot2gif, rarely used otherwise
-def ppm(context, myplatform):
+def ppm(context):
     context.Message("checking for ppm ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
@@ -405,17 +410,17 @@ def ppm(context, myplatform):
         context.env['PPM'] = ppm
     else:
         context.Result(0)
-        context.Message("  ppmpen and vplot2gif will not be built.\n")
-        if myplatform['distro'] == 'fc6':
-            context.Message("  Package needed for them: netpbm-devel\n")
+        sys.stderr.write("\n  ppmpen and vplot2gif will not be built.\n")
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  Package needed for them: netpbm-devel\n")
         context.env['PPM'] = None
 
     LIBS.pop()
 
 # If this test is failed, no writing to jpeg files
 # Used by a single program right now.
-def jpeg(context, myplatform):
-    context.Message("checking for jpeg devel lib ... ")
+def jpeg(context):
+    context.Message("checking for jpeg ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
@@ -435,35 +440,58 @@ def jpeg(context, myplatform):
     else:
         context.Result(0)
         context.env['JPEG'] = None
-        context.Message("  sfbyte2jpg will not be built.")
-        if myplatform['distro'] == 'fc6':
-            context.Message("  For sfbyte2jpg, install package libjpeg-devel")
+        sys.stderr.write("\n  sfbyte2jpg will not be built.\n")
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  For sfbyte2jpg, install package libjpeg-devel.\n")
 
     LIBS.pop()
 
+def mpi(context):
+    context.Message("checking for MPI ... ")
+    mpicc = WhereIs('mpicc')
+    if mpicc:
+        text = '''
+        #include <mpi.h>
+        int main(int argc,char* argv[]) {
+        MPI_Init(&argc,&argv);
+        MPI_Finalize();
+        }\n'''
+        cc = context.env.get('CC')
+        context.env['CC'] = mpicc
+        res = context.TryLink(text,'.c')
+        context.env['CC'] = cc
+    else:
+        res = None
+    if res:
+        context.Result(res)
+        context.env['MPICC'] = mpicc
+    else:
+        context.Result(0)
+        context.env['MPICC'] = None
 
-def read_api_options(context):
+def api_options(context):
+    context.Message("checking API options ... ")
     api = string.split(string.lower(context.env.get('API','')),',')
     valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90', 
     			'f90', 'python', 'matlab']
     # Specifying API=matlab is not necessary, but not wrong either.
     for option in api:
 	if not option in valid_api_options:
-	    sys.stderr.write(option+" not a valid API option, will be ignored.\n")
 	    # Eliminate it from list
 	    api = [elem for elem in api if elem != option]
+    context.Result(str(api))
+    context.env['API'] = api
     return api
 
-
 # For the C++ API
-def cxx(context, myplatform):
+def cxx(context):
     context.Message("checking for C++ compiler ... ")
     CXX = context.env.get('CXX')
     if CXX:
         context.Result(CXX)
     else:
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
+        if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-c++\n")
         sys.exit(1)
     context.Message("checking if %s works ... " % CXX)
@@ -496,7 +524,7 @@ fortran = {'g77':'f2cFortran',
            'f2c':'f2cFortran'}
 
 
-def f77(context, myplatform):
+def f77(context):
     context.Message("checking for F77 compiler ... ")
     F77 = context.env.get('F77')
     if not F77:
@@ -513,7 +541,7 @@ def f77(context, myplatform):
         context.Result(F77)
     else:
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
+        if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-gfortran\n")
         sys.exit(1)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
@@ -537,8 +565,7 @@ def f77(context, myplatform):
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
 
-
-def f90(context, myplatform):
+def f90(context):
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
     if not F90:
@@ -555,7 +582,7 @@ def f90(context, myplatform):
         context.Result(F90)
     else:
         context.Result(0)
-        if myplatform['distro'] == 'fc6':
+        if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-gfortran\n")
         sys.exit(1)
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
@@ -594,9 +621,8 @@ def f90(context, myplatform):
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
 
-
-# For some reason,the Python API needs numpy or numarray
-def numpy(context, myplatform):
+# Python API needs numpy or numarray
+def numpy(context):
     context.Message("checking if numpy is present ... ")
     try:
 	import numpy
@@ -607,15 +633,14 @@ def numpy(context, myplatform):
 	try:
 	    import numarray
 	    context.Result(1)
-	    context.Message("  numarray development has stopped; plan to migrate to numpy")
+	    sys.stderr.write("\n  numarray development has stopped; plan to migrate to numpy\n")
 	except:
 	    context.Result(0)
-            if myplatform['distro'] == 'fc6':
+            if plat['distro'] == 'fc':
 		sys.stderr.write("Needed package: numpy\n")
 	    else:
-	        sys.stderr.write("Install numpy (preferred) or numarray.\n")
+	        sys.stderr.write("Install numpy.\n")
             sys.exit(1)
-
 
 def intel(context):
     '''Trying to fix wierd intel setup.'''

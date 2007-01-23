@@ -2,8 +2,7 @@ import rsfproj
 import string
 
 proj = rsfproj.Project()
-
-api = string.split(string.lower(proj.get('API','')),',')
+api = proj.get('API',[])
 
 # C api
 

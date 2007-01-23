@@ -43,12 +43,15 @@ void sf_l1 (int n, const float *res, float *weight)
     float rbar;
     int i;
 
+   /* take absolute value */
     for (i=0; i < n; i++) {
 	abs1[i] = fabsf(res[i]);
     }
 
+    /* find median (rbar) */
     rbar = sf_quantile(n/2,n,abs1);
 
+    /* weight = 1/sqrt(sqrt(1+(res/rbar)^2)) */
     for (i=0; i < n; i++) {
 	weight[i] = 1./sqrtf(hypotf(1.,res[i]/rbar));
     }
@@ -60,12 +63,15 @@ void sf_cauchy (int n, const float *res, float *weight)
     float rbar;
     int i;
 
+    /* take absolute value */
     for (i=0; i < n; i++) {
 	abs1[i] = fabsf(res[i]);
     }
 
+    /* find median (rbar) */
     rbar = sf_quantile(n/2,n,abs1);
 
+    /* weight = 1/sqrt(1+(res/rbar)^2) */
     for (i=0; i < n; i++) {
 	weight[i] = 1./hypotf(1.,res[i]/rbar);
     }

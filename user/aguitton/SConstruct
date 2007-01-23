@@ -26,7 +26,7 @@ except: # local version
     src = glob.glob('[a-z]*.f90')
 
 F90 = env.get('F90')
-api = string.split(string.lower(str(env.get('API',''))),',')
+api = env.get('API',[])
  
 env.Prepend(F90PATH=['../../include'],
             LIBPATH=['../../filt/lib'],

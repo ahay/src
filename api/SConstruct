@@ -33,7 +33,7 @@ proj.Program('clip.c')
 ctest = proj.Flow('c','clip.exe',test % 'clip',suffix='.attr',stdin=0)
 Default(ctest)
 
-api = string.split(string.lower(proj.get('API','')),',')
+api = proj.get('API',[])
 
 ############################################################################
 # C++ API

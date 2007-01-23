@@ -24,7 +24,7 @@ def program(prog):
     exe = proj.Program(prog+'.c')
     return str(exe[0])
 
-api = string.split(string.lower(proj.get('API','')),',')
+api = proj.get('API',[])
 
 if 'fortran' in api:
     fproj = Project()
