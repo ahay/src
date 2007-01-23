@@ -1,9 +1,13 @@
-import os, sys, re, string, glob
+import os, sys, re, string, glob,shutil
 sys.path.append('../..')
 import configure
 
 progs = '''
 thr sort
+'''
+
+py_progs = '''
+fdct
 '''
 
 cpp_progs = 'clipcc'
@@ -44,12 +48,15 @@ for prog in mains:
     if root:
         env.Install(bindir,mainc[0])
 
+
+######################################################################
+# PROGRAMS WHICH NEED SPECIFIC API
+######################################################################
+api = string.split(string.lower(env.get('API','')),',')
+
 ######################################################################
 # C++ PROGRAMS
 ######################################################################
-
-api = string.split(string.lower(env.get('API','')),',')
-
 if 'c++' in api:
     cpp_mains = Split(cpp_progs)
     
@@ -63,6 +70,19 @@ if 'c++' in api:
 else:
     cpp_mains = [] 
 
+######################################################################
+# PYTHON PROGRAMS
+######################################################################
+if 'python' in api:
+    py_mains = Split(py_progs)
+
+    if root:
+        for prog in py_mains:
+            # no compilation but rename
+            pwd = os.path.join(root,'user/slim')
+            env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,prog+'.py'))
+else:
+    py_mains = []
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -78,4 +98,3 @@ if root:
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
 #####################################################################
-
