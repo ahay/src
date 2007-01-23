@@ -1,6 +1,9 @@
+import os
 from rsftex import *
 
-End(use='hyperref,amsmath,amsfonts,fancybox',
+os.environ['PSTEXPENOPTS'] = 'color=y fat=3 invras=y'
+
+End(use='hyperref,amsmath,amsfonts,fancybox',options='10pt',
     include='''
     \\newcommand{\\prog}[1]{
     \\noindent\\fbox{

@@ -1,20 +1,46 @@
-\title{Guide to SLIM programs in RSF}
+\title{User's manual for SLIM programs in Madagascar}
 \email{ghennenfent@eos.ubc.ca}
 \author{Gilles Hennenfent}
-\lefthead{Hennenfent}
-\righthead{SLIM programs in RSF}
 
+\footnotetext[1]{\emph{Seismic Laboratory for Imaging and Modeling,
+    Dept. of Earth and Ocean Sciences, the University of British
+    Columbia, Vancouver, BC, Canada}}
 \maketitle
 
 \begin{abstract}
-  This guide introduces the RSF programs written at the Seismic
-  Laboratory for Imaging and Modeling
+  This guide documents the contributions to Madagascar made by authors
+  from the Seismic Laboratory for Imaging and Modeling
   (\href{http://slim.eos.ubc.ca}{SLIM}) at the University of British
-  Columbia (\href{http://www.ubc.ca}{UBC}) and illustrates their usage
-  with examples.
+  Columbia (\href{http://www.ubc.ca}{UBC}).
 \end{abstract}
 
-\subsection{sfthr: threshold RSF datasets}
+\section{Copyright}
+%
+Copyright (c) The University of British Columbia at Vancouver,
+2005-2007.
+
+\section{License}
+%
+\noindent This program is free software; you can redistribute it
+and/or modify it under the terms of the GNU General Public License as
+published by the Free Software Foundation; either version 2 of the
+License, or (at your option) any later version.
+
+\section{Disclaimer}
+%
+This program is distributed in the hope that it will be useful, but
+WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+General Public License for more details.\\
+%
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307
+USA.
+
+\newpage
+\section{Utilities}
+\subsection{sfthr -- thresholding function}
 
 \begin{verbatim}
 NAME
@@ -34,9 +60,9 @@ COMMENTS
         Created: February 2006
 
 PARAMETERS
-        string  fthr=   varying threshold level (>0) 
+        string  fthr=   varying threshold level (>=0) 
         string  mode=   'soft', 'hard', 'nng' (default: soft)
-        float   thr=    threshold level (>0)
+        float   thr=    threshold level (>=0)
 SOURCE
         user/slim/thr.c
 \end{verbatim}
@@ -69,14 +95,14 @@ Finally, non-negative Garrote (nng) thresholding is defined as
 
 \inputdir{sfthr}
 \multiplot{4}{data,soft,hard,nng}{width=.45\textwidth}{Thresholding
-  example of a line whose range is symmetric about the origin.}
+  example. Line whose range is symmetric about the origin (a)
+  thresholded using soft (b), hard (c), and NNG (d) methods.}
 
 The extension to positive varying threshold level is straightforward
 by replacing $\gamma$ by $\gamma_i$ in
 Eq.'s~\eqref{eq:soft},\eqref{eq:hard}, and \eqref{eq:nng}.
 
-In RSF, to soft threshold a dataset with a constant, use the following
-commands
+In Madagascar, to soft threshold a dataset with a constant, use e.g.
 %
 \begin{verbatim}
 bash$ sfmath n1=100 n2=1 output='1' | sfnoise rep=y >data.rsf
@@ -112,7 +138,7 @@ Note that thresholding is an element-wise operation. \texttt{sfthr}
 can thus deal with arbitrarily large datasets.
 %
 \newpage
-\subsection{sfsort: sort RSF vectors}
+\subsection{sfsort -- sort trace amplitudes}
 
 \begin{verbatim}
 NAME
@@ -134,21 +160,44 @@ SOURCE
 \end{verbatim}
 
 \noindent
-\texttt{sfsort} is useful for sorting RSF vectors either in ascending
-or descending order with respect to the absolute value of their
-entries. The sorting is done using \texttt{qsort} from stdlib.h. This
-function is an implementation of the quicksort algorithm.
-\texttt{sfsort} has two modes: 1) in-core if the user-specified
-memsize is big enough to load the full dataset in memory and sort it,
-and else 2) out-of-core. In the latter case, we implemented a divide
-and conquer approach. The large dataset is first divided in pieces
-that fit in memory. These pieces are sorted and written to disk in
-temporary files. The second step is a merge process of the temporary
-files.
+\texttt{sfsort} is useful for sorting Madagascar vectors either in
+ascending or descending order with respect to their amplitudes. The
+sorting is done using \texttt{qsort} from stdlib.h.  This function is
+an implementation of the quicksort algorithm. \texttt{sfsort} has two
+modes: 1) in-core if the user-specified memsize is big enough to load
+the full dataset in memory and sort it, and else 2) out-of-core. In
+the latter case, we implemented a divide and conquer approach. The
+large dataset is first divided into pieces that fit in memory. These
+pieces are sorted and written to disk in temporary files. The second
+step is a merge process of the temporary files.
 
 \inputdir{sfsort}
-\multiplot{3}{datasort,incore,outofcore}{width=.45\textwidth}{Sorting
+\multiplot{3}{datasort,incore,outofcore}{width=.3\textwidth}{Sorting
   example.}
+
+\newpage
+\section{Transforms}
+\subsection{sffdct - 2D fast discrete curvelet transform}
+
+\begin{verbatim}
+NAME
+        sffdct
+SYNOPSIS
+        sffdct < in.rsf > out.rsf nbs= nba= ac=n adj=n
+COMMENTS
+        Fast Discrete Curvelet Transform
+
+        Written by: Gilles Hennenfent, UBC
+        Created: January, 2007
+        
+PARAMETERS
+        int     nbs             number of scales
+        int     nba             number of angles at the 2nd coarsest scale
+        bool    ac=n [y/n]      curvelets at the finest scale, wavelets otherwise.
+        bool    adj=n [y/n]     forward transform, adjoint/inverse otherwise
+SOURCE
+        user/slim/fdct.py
+\end{verbatim}
 
 %%% Local Variables: 
 %%% mode: latex
