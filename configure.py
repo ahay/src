@@ -92,7 +92,7 @@ def check_all(context):
     x11 (context) # FDNSI
     ppm (context) # FDNSI
     jpeg(context) # FDNSI
-    mpi (context)
+    mpi (context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
@@ -108,32 +108,36 @@ def identify_platform(context):
     context.Message("checking platform ... ")
     # Hey everybody, add a test for your platform here!
 
-    try:
-        from platform import uname
-        name = uname()[2].split('.')[-1]
-        if name[:2] == 'fc':
-            plat['distro'] = 'fc' # Fedora Core
-        elif name[:2] == 'EL':
-            plat['distro'] = 'EL' # Redhat Enterprise
-        elif name[:2] == '10':
-            plat['distro'] = '10' # Solaris 10
-        del uname
-    except: # platform module not installed.
-        pass # this Python is probably < 2.3
-    
+    # Check for OS or Unix environment
     if sys.platform[:5] == 'linux':
         plat['OS'] = 'linux'
     elif sys.platform[:5] == 'sunos':
         plat['OS'] = 'sunos' # SunOS
-    elif sys.platform[:6] == 'cygwin':
-        plat['OS'] = 'cygwin'
     elif sys.platform[:6] == 'darwin':
         plat['OS'] = 'darwin' # Mac OS X
+    elif sys.platform[:6] == 'cygwin':
+        plat['OS'] = 'cygwin'
     elif sys.platform[:7] == 'interix':
         plat['OS'] = 'interix' # Microsoft Windows Services for UNIX
     else:
-	plat['OS'] = sys.platform
+        plat['OS'] = sys.platform
 
+    # Check for distributions / OS versions
+    try:
+        from platform import uname
+        name = uname()[2].split('.')[-1]
+        if plat['OS'] == 'linux':
+            if name[:2] == 'fc':
+                plat['distro'] = 'fc' # Fedora Core
+            elif name[:2] == 'EL':
+                plat['distro'] = 'EL' # Redhat Enterprise
+        elif plat['OS'] == 'sunos':
+            if name[:2] == '10':
+                plat['distro'] = '10' # Solaris 10
+        del uname
+    except: # "platform" not installed. Python < 2.3
+        pass # For each OS with Python < 2.3, should use specific
+             # commands through os.system to find distro/version
     context.Result('%(OS)s [%(distro)s]' % plat)
 
 # A C compiler is needed by most Madagascar programs
@@ -393,7 +397,6 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
-# ppm needed for vplot2gif, rarely used otherwise
 def ppm(context):
     context.Message("checking for ppm ... ")
     LIBS = context.env.get('LIBS','m')
@@ -421,7 +424,6 @@ def ppm(context):
     LIBS.pop()
 
 # If this test is failed, no writing to jpeg files
-# Used by a single program right now.
 def jpeg(context):
     context.Message("checking for jpeg ... ")
     LIBS = context.env.get('LIBS','m')
@@ -471,6 +473,9 @@ def mpi(context):
     else:
         context.Result(0)
         context.env['MPICC'] = None
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  For MPI, install: openmpi, openmpi-devel, openmpi-libs.\n")
+
 
 def api_options(context):
     context.Message("checking API options ... ")
