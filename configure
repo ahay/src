@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 python=`which python`
 if test ! -n "$python"; then
@@ -24,7 +24,8 @@ if test "$root" = "no"; then
     echo "Please adjust your shell settings to set it permanently!"
     export RSFROOT=$root
 fi
-export PYTHONPATH=${RSFROOT}/lib
+PYTHONPATH=${RSFROOT}/lib
+export PYTHONPATH
 
 scons=`which scons`
 if test ! -n "$scons"; then

@@ -106,20 +106,23 @@ def check_all(context):
 def identify_platform(context):
     global plat
     context.Message("checking platform ... ")
-    
     # Hey everybody, add a test for your platform here!
+
+    try:
+        from platform import uname
+        name = uname()[2].split('.')[-1]
+        if name[:2] == 'fc':
+            plat['distro'] = 'fc' # Fedora Core
+        elif name[:2] == 'EL':
+            plat['distro'] = 'EL' # Redhat Enterprise
+        elif name[:2] == '10':
+            plat['distro'] = '10' # Solaris 10
+        del uname
+    except: # platform module not installed.
+        pass # this Python is probably < 2.3
+    
     if sys.platform[:5] == 'linux':
         plat['OS'] = 'linux'
-        try:
-            from platform import uname
-            name = uname()[2].split('.')[-1]
-            if name[:2] == 'fc':
-                plat['distro'] = 'fc' # Fedora Core
-            elif name[:2] == 'EL':
-                plat['distro'] = 'EL' # Redhat Enterprise
-            del uname
-        except: # platform module not installed.
-            pass # this Python is probably < 2.3
     elif sys.platform[:5] == 'sunos':
         plat['OS'] = 'sunos' # SunOS
     elif sys.platform[:6] == 'cygwin':
