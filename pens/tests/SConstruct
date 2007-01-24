@@ -26,10 +26,10 @@ def program(prog):
 
 api = proj.get('API',[])
 
-if 'fortran' in api:
+if 'f77' in api:
     fproj = Project()
     fproj.Prepend(LIBS=['rsfplotf','rsfplot'])
-    
+
     def fprogram(prog):
         exe = fproj.Program(prog+'.f',
                             LINK=fproj.get('F77'),
@@ -70,7 +70,7 @@ for prog in Split('ras ctext poly ufill'):
 example = 'libvplot_example'
 Result('example',[example+'.dat',program(example)],'./${SOURCES[1]}')
 
-if 'fortran' in api:    
+if 'f77' in api:
     for prog in Split('fras ftext marker'):
         Result(prog,fprogram(prog+'test'),'./$SOURCE',stdin=0)
 

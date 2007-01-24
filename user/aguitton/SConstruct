@@ -34,7 +34,7 @@ env.Prepend(F90PATH=['../../include'],
 
 mains = Split(progs)
 
-if 'fortran-90' in api or 'fortran90' in api or 'f90' in api and F90:  
+if 'f90' in api and F90:
     map(env.StaticObject,src)
     for prog in mains:
         sources = ['M' + prog]

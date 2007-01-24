@@ -56,7 +56,7 @@ if 'c++' in api:
 # Fortran-77 API
 ############################################################################
 
-if 'fortran' in api:
+if 'f77' in api:
     proj.Program('clip.f',
                  PROGSUFFIX='f.exe',
                  OBJSUFFIX='f.o',
@@ -70,7 +70,7 @@ if 'fortran' in api:
 # Fortran-90 API
 ############################################################################
 
-if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:    
+if 'f90' in api:
     proj.Program('clip.f90',
                  PROGSUFFIX='.exe',
                  OBJSUFFIX='f90.o',

@@ -52,13 +52,13 @@ for source in Split(src2):
 lib = env.StaticLibrary('rsf',objects+sources)
 inc = env.Command('rsf.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
-   
+
 if root:
     env.Install(libdir,lib)
     env.Install(incdir,inc)
 else:
     env.Alias('install',install)
-    
+
 ##############################################################################
 # TESTING
 ##############################################################################
@@ -91,7 +91,7 @@ if 'c++' in api:
 ##############################################################################
 # FORTRAN-77 BINDING
 ##############################################################################
-if 'fortran' in api:
+if 'f77' in api:
     env.Object('fortran.o','fortran.c',
                CCFLAGS=env.get('CCFLAGS')+' -D$CFORTRAN')
     libf = env.StaticLibrary('rsff','fortran.o')                         
@@ -108,7 +108,7 @@ if 'fortran' in api:
 ##############################################################################
 # FORTRAN-90 BINDING
 ##############################################################################
-if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
+if 'f90' in api:
     if env.has_key('F90'):
         F90 = env.get('F90')
         F90base =  os.path.basename(F90)

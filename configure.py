@@ -96,9 +96,9 @@ def check_all(context):
     api = api_options(context)
     if 'c++' in api:
         cxx(context)
-    if 'fortran' in api or 'f77' in api:
+    if 'f77' in api:
         f77(context)
-    if 'fortran-90' in api or 'fortran90' in api or 'f90' in api:
+    if 'f90' in api:
         f90(context)
     if 'python' in api:
         numpy(context)
@@ -480,14 +480,34 @@ def mpi(context):
 def api_options(context):
     context.Message("checking API options ... ")
     api = string.split(string.lower(context.env.get('API','')),',')
-    valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90', 
-    			'f90', 'python', 'matlab']
-    # Specifying API=matlab is not necessary, but not wrong either.
+    valid_api_options = ['','c++', 'fortran', 'f77', 'fortran-90',
+                         'f90', 'python', 'matlab']
+
     for option in api:
-	if not option in valid_api_options:
-	    # Eliminate it from list
-	    api = [elem for elem in api if elem != option]
-    context.Result(str(api))
+        if not option in valid_api_options:
+            api.remove(option)
+
+    # Make tests for fortrans in API easy
+    for i in range(len(api)):
+        if api[i] == 'fortran':
+            api[i] = 'f77'
+        elif api[i] == 'fortran-90':
+            api[i] = 'f90'
+
+    # Eliminate duplicates if user was redundant
+    try: # sets module was introduced in Py 2.3
+        import sets
+        api = list(sets.Set(api))
+        del sets
+    except:
+        pass # Not a big deal if this is not done
+
+    # Readable output. For non-pythonistas,
+    # [''] represents an emoticon, not "empty list"
+    if api == ['']:
+        context.Result('none')
+    else:
+        context.Result(str(api))
     context.env['API'] = api
     return api
 
@@ -680,7 +700,7 @@ def options(opts):
     opts.Add('XLIBS','X11 libraries')
     opts.Add('XINC','Location of X11 headers')
     opts.Add('PROGPREFIX','The prefix used for executable file names','sf')
-    opts.Add('API','Support for additional languages (possible values: c++, fortran, fortran-90, python)')
+    opts.Add('API','Support for additional languages. Possible values: c++, fortran or f77, fortran-90 or f90, matlab, python')
     opts.Add('CXX','The C++ compiler')
     opts.Add('CXXFLAGS','General options that are passed to the C++ compiler',
              '-O2')
