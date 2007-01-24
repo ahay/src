@@ -27,6 +27,7 @@ Flow('cmp','elf','window n2=128 n3=1 f3=500')
 
 data='cmp'
 n1=800
+d1=0.004
 n2=128          # data dimensions
 o2=50
 d2=12.5         # lateral scale
@@ -34,13 +35,23 @@ clip=5          # clip percentile
 eps=0.1         # regularization
 nsp=200         # number of spikes
 np = 101
-p0 = 0
-dp = 0.02
+v0 = 1400
+dv = 25
+nv = 120
+
 
 Plot(data,'grey unit1=s unit2=m  title=Input')
 
+dips = []
+for iv in range(nv):
+    dip = 'dip%d' % iv
+    v = v0 + iv*dv
+    Flow(dip,data,'math output="%g*x2/(x1+0.001)" | clip clip=3' % (4*d2/(v*v*d1)))
+    dips.append(dip)
+Flow('dips',dips,'cat axis=3 ${SOURCES[1:%d]}' % nv)
+
 dipl = data+'dipl'
-Flow(dipl,data,'diplet eps=%g inv=y np=%d p0=%g dp=%g' % (eps,np,p0,dp))
+Flow(dipl,[data,'dips'],'diplet eps=%g adj=y inv=y dips=${SOURCES[1]}' % eps)
 
 wsort = data+'wsort'
 dsort = data+'dsort'
@@ -63,20 +74,20 @@ nr = np
 k3 = string.join(map(rnd,range(nsp)),',')
 
 imps = data+'imps'
-Flow(imps,thr,
+Flow(imps,[thr,'dips'],
      '''
      spike nsp=%d k1=%s k2=%s k3=%s
-     n1=%d n2=%d n3=%d o2=%g d2=%g o3=%g d3=%g label2="Half offset" |
-     diplet eps=%g
-     ''' % (nsp,k1,k2,k3,n1,n2,np,o2,d2,p0,dp,eps),stdin=0)
-Plot(imps,'grey unit1=s unit2=m title=Diplets')
+     n1=%d n2=%d n3=%d o2=%g d2=%g label2="Half offset" |
+     diplet eps=%g dips=${SOURCES[1]} 
+     ''' % (nsp,k1,k2,k3,n1,n2,nv,o2,d2,eps),stdin=0)
+Plot(imps,'grey unit1=s unit2=m title="Seislet Frame Members" ')
 
 rec = data+'rec'
-Flow(rec,thr,'diplet eps=%g' % eps)
+Flow(rec,[thr,'dips'],'diplet eps=%g dips=${SOURCES[1]}' % eps)
 Plot(rec,
      '''
      mutter v0=1300 |
-     grey unit1=s unit2=m  title="Inverse Diplet Transform (%g%%)"
+     grey unit1=s unit2=m  title="Inverse Seislet Frame (%g%%)"
      ''' % pclip)
 
 Result(data,[data,imps,rec],'SideBySideAniso')
