@@ -150,8 +150,8 @@ if 'f90' in api:
 ##############################################################################
 # PYTHON BINDING
 ##############################################################################
-if 'python' in api and 'swig' in env.get('TOOLS'):
-    # Python includes for SWIG 
+if 'python' in api:
+    # Python includes for SWIG
 
     pythinc = []
     try:
@@ -170,7 +170,7 @@ if 'python' in api and 'swig' in env.get('TOOLS'):
         if string.find(path,'python') >= 0:
             dir = string.replace(path,'lib','include')
             if os.path.isdir(dir):
-                pythinc.append(dir)                
+                pythinc.append(dir)
 
     objs = []
     for source in Split(src2):

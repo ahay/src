@@ -101,7 +101,7 @@ def check_all(context):
     if 'f90' in api:
         f90(context)
     if 'python' in api:
-        numpy(context)
+        python(context)
 
 def identify_platform(context):
     global plat
@@ -649,25 +649,36 @@ def f90(context):
     context.env['F90MODSUFFIX'] = suffix
     context.Result(suffix)
 
-# Python API needs numpy or numarray
-def numpy(context):
-    context.Message("checking if numpy is present ... ")
+
+def python(context):
+    context.Message("checking for SWIG ... ")
+    if 'swig' in Environment().get('TOOLS'):
+        context.Result(1)
+    else:
+        context.Result(0)
+        if plat['distro'] == 'fc':
+            sys.stderr.write("\n  Needed package: swig\n")
+        else:
+             sys.stderr.write("\n  Please install SWIG.\n")
+        sys.exit(1)
+
+    context.Message("checking for numpy ... ")
     try:
-	import numpy
-	context.Result(1)
+        import numpy
+        context.Result(1)
     except:
-	context.Result(0)
-	context.Message("checking if numarray is present ... ")
-	try:
-	    import numarray
-	    context.Result(1)
-	    sys.stderr.write("\n  numarray development has stopped; plan to migrate to numpy\n")
-	except:
-	    context.Result(0)
+        context.Result(0)
+        context.Message("checking for numarray ... ")
+        try:
+            import numarray
+            context.Result(1)
+            sys.stderr.write("\n  numarray development has stopped; plan to migrate to numpy\n")
+        except:
+            context.Result(0)
             if plat['distro'] == 'fc':
-		sys.stderr.write("Needed package: numpy\n")
-	    else:
-	        sys.stderr.write("Install numpy.\n")
+                sys.stderr.write("\n  Needed package: numpy\n")
+            else:
+                sys.stderr.write("\n  Please install numpy.\n")
             sys.exit(1)
 
 def intel(context):
