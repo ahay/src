@@ -194,25 +194,19 @@ if 'python' in api:
 # MATLAB BINDING
 ##############################################################################
 
-mex = WhereIs('mex')
-
-if mex and 'matlab' in api:
-    # suffix is different on different platforms
-    if sys.platform[:6] == 'darwin':
-        suffix = '.mexmac'
-    else:
-        suffix = '.mexglx'
+if 'matlab' in api:
+    mex = env.get('MEX')
+    suffix = env.get('MEXSUFFIX')
 
     for inp in Split('par dim read write create'):
-        file = 'rsf_'+inp
+        file = 'rsf_' + inp
         mexfile = env.Command(file+suffix,[file+'.c',lib],
                               "%s CFLAGS='%s %s' "
                               "$SOURCES %s %s -output $TARGET" %
-                              (WhereIs('mex'),env['_CPPINCFLAGS'],
-                               env['CCFLAGS'],env['_LIBDIRFLAGS'],
-                               env['_LIBFLAGS']))
+                              (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
+                               env['_LIBDIRFLAGS'], env['_LIBFLAGS']))
         if root:
-            env.Install(libdir,mexfile)   
+            env.Install(libdir,mexfile)
 
 ##############################################################################
 # LINT

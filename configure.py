@@ -10,6 +10,11 @@ else:  # old style
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
+# CONSTANTS -- DO NOT CHANGE
+context_success = 1
+context_failure = 0
+unix_failure = 1
+
 toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
                       '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
 kandr = re.compile(r'\s*\{?\s*$') # K&R style function definitions end with {
@@ -78,7 +83,8 @@ def included(node,env,path):
 Include = Scanner(name='Include',function=included,skeys=['.c'])
 
 plat = {'OS': 'unknown',
-        'distro': 'unknown'}
+        'distro': 'unknown',
+        'arch': 'unknown'}
 
 # The functions called inside check_all
 # are found further down, in the order they are called
@@ -100,6 +106,8 @@ def check_all(context):
         f77(context)
     if 'f90' in api:
         f90(context)
+    if 'matlab' in api:
+        matlab(context)
     if 'python' in api:
         python(context)
 
@@ -124,7 +132,8 @@ def identify_platform(context):
 
     # Check for distributions / OS versions
     try:
-        from platform import uname
+        from platform import architecture, uname
+        plat['arch'] = architecture()[0]
         name = uname()[2].split('.')[-1]
         if plat['OS'] == 'linux':
             if name[:2] == 'fc':
@@ -134,7 +143,7 @@ def identify_platform(context):
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
-        del uname
+        del architecture, uname
     except: # "platform" not installed. Python < 2.3
         pass # For each OS with Python < 2.3, should use specific
              # commands through os.system to find distro/version
@@ -146,12 +155,12 @@ def cc(context):
     context.Message("checking for C compiler ... ")
     CC = context.env.get('CC',WhereIs('gcc'))
     if CC:
-        context.Result(CC)   
+        context.Result(CC)
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc.\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
     text = '''
     int main(int argc,char* argv[]) {
     return 0;
@@ -161,7 +170,7 @@ def cc(context):
     res = context.TryLink(text,'.c')
     context.Result(res)
     if not res:
-        sys.exit(1)
+        sys.exit(unix_failure)
     if CC[-3:]=='gcc':
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
@@ -198,10 +207,10 @@ def ar(context):
         context.Result(AR)
         context.env['AR'] = AR
     else:
-        context.Result(0)
+        context.Result(context_failure)
 	if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: binutils.\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
 
 
 # Failing this check stops the installation.
@@ -230,10 +239,10 @@ def libs(context):
         context.Result(str(LIBS))
         context.env['LIBS'] = LIBS
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: glibc-headers.\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
 
 
 # Complex number support according to ISO C99 standard
@@ -254,7 +263,7 @@ def c99(context):
         context.Result(res)
     else:
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("\n  Package needed for ISO C99 support: glibc-headers\n")
 
@@ -352,7 +361,7 @@ def x11(context):
             break
 
     if not res:
-        context.Result(0)
+        context.Result(context_failure)
 	sys.stderr.write("\n  xtpen (for displaying .vpl images) will not be built.\n")
         if plat['distro'] == 'fc':
             sys.stderr.write("\n  Package needed for xtpen: libXaw-devel.\n")
@@ -390,7 +399,7 @@ def x11(context):
             context.env['XLIBS'] = XLIBS
             break
     if not res:
-        context.Result(0)
+        context.Result(context_failure)
         context.env['XLIBPATH'] = None
 
     context.env['CPPPATH'] = oldpath
@@ -415,7 +424,7 @@ def ppm(context):
         context.Result(res)
         context.env['PPM'] = ppm
     else:
-        context.Result(0)
+        context.Result(context_failure)
         sys.stderr.write("\n  ppmpen and vplot2gif will not be built.\n")
         if plat['distro'] == 'fc':
             sys.stderr.write("\n  Package needed for them: netpbm-devel\n")
@@ -443,7 +452,7 @@ def jpeg(context):
         context.Result(res)
         context.env['JPEG'] = jpeg
     else:
-        context.Result(0)
+        context.Result(context_failure)
         context.env['JPEG'] = None
         sys.stderr.write("\n  sfbyte2jpg will not be built.\n")
         if plat['distro'] == 'fc':
@@ -451,10 +460,13 @@ def jpeg(context):
 
     LIBS.pop()
 
+# If this test is failed, it is unknown what capabilities are lost
 def mpi(context):
-    context.Message("checking for MPI ... ")
+    context.Message("checking for mpicc ... ")
     mpicc = WhereIs('mpicc')
     if mpicc:
+        context.Message("checking if MPI works ... ")
+        # Try linking with mpicc instead of cc
         text = '''
         #include <mpi.h>
         int main(int argc,char* argv[]) {
@@ -465,13 +477,14 @@ def mpi(context):
         context.env['CC'] = mpicc
         res = context.TryLink(text,'.c')
         context.env['CC'] = cc
-    else:
+    else: # mpicc not found
+        context.Result(context_failure)
         res = None
     if res:
         context.Result(res)
         context.env['MPICC'] = mpicc
     else:
-        context.Result(0)
+        context.Result(context_failure)
         context.env['MPICC'] = None
         if plat['distro'] == 'fc':
             sys.stderr.write("\n  For MPI, install: openmpi, openmpi-devel, openmpi-libs.\n")
@@ -518,10 +531,10 @@ def cxx(context):
     if CXX:
         context.Result(CXX)
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-c++\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
     context.Message("checking if %s works ... " % CXX)
     text = '''
     #include <valarray>
@@ -532,7 +545,7 @@ def cxx(context):
     context.Result(res)
     if not res:
         del context.env['CXX']
-        sys.exit(1)
+        sys.exit(unix_failure)
     if CXX == 'g++':
         oldflag = context.env.get('CXXFLAGS')
         for flag in ['-Wall -pedantic']:
@@ -568,10 +581,10 @@ def f77(context):
     if F77:
         context.Result(F77)
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-gfortran\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
         context.env.Append(F77FLAGS=' -Vaxlib')
@@ -587,7 +600,7 @@ def f77(context):
     context.Result(res)
     if not res:
         del context.env['F77']
-        sys.exit(1)
+        sys.exit(unix_failure)
     cfortran = fortran.get(os.path.basename(F77),'NAGf90Fortran')
     context.env['CFORTRAN'] = cfortran 
     context.Message("checking %s type for cfortran.h ... " % F77)
@@ -609,10 +622,10 @@ def f90(context):
     if F90:
         context.Result(F90)
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("Needed package: gcc-gfortran\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
         context.env.Append(F90FLAGS=' -Vaxlib')
@@ -631,7 +644,7 @@ def f90(context):
     context.Result(res1 and res2)
     if not res1 or not res2:
         del context.env['F90']
-        sys.exit(1)
+        sys.exit(unix_failure)
     base = os.path.basename(F90)
     context.Message("checking %s type for cfortran.h ... " % base)
     cfortran = fortran.get(base,'NAGf90Fortran')
@@ -650,39 +663,88 @@ def f90(context):
     context.Result(suffix)
 
 
+def matlab(context):
+    context.Message("checking for Matlab ... ")
+    matlab = WhereIs('matlab')
+    if matlab:
+        context.Result(matlab)
+        context.env['MATLAB'] = matlab
+    else:
+        context.Result(context_failure)
+        sys.stderr.write("\n  Please install Matlab.\n")
+        context.env['MATLAB'] = None
+        sys.exit(unix_failure)
+
+    context.Message("checking for mex ... ")
+    mex = WhereIs('mex')
+    if mex:
+        context.Result(mex)
+        context.env['MEX'] = mex
+    else:
+        context.Result(context_failure)
+        sys.stderr.write("\n  Please install mex.\n")
+        context.env['MEX'] = None
+        sys.exit(unix_failure)
+
+    context.Message("checking if $RSFROOT/lib in MATLABPATH ... ")
+    if plat['OS'] == 'linux':
+        RSFLIBS = os.path.join(context.env.get('RSFROOT'),'libs')
+        command = 'echo path | matlab -nosplash -nojvm | grep ' + RSFLIBS
+        from commands import getoutput # UNIX-specific module
+        if getoutput(command) != RSFLIBS:
+            context.Result(context_failure)
+            sys.stderr.write("\n  Please add $RSFROOT/libs to MATLABPATH.\n")
+            sys.exit(unix_failure)
+    else:
+        context.Result('check not implemented for this OS')
+
+    # See http://www.mathworks.com/access/helpdesk/help/techdoc/ref/mex.html
+    if plat['OS'] == 'linux':
+        if plat['arch'] == '32bit':
+            suffix = 'glx'
+        else:
+            suffix = 'a64'
+    elif plat['OS'] == 'sunos':
+        suffix = 'sol'
+    elif plat['OS'] == 'darwin':
+        suffix = 'mac'
+    else:
+        suffix == 'glx'
+    context.env['MEXSUFFIX'] = '.mex' + suffix
+
 def python(context):
     context.Message("checking for SWIG ... ")
     if 'swig' in Environment().get('TOOLS'):
-        context.Result(1)
+        context.Result( WhereIs('swig') )
     else:
-        context.Result(0)
+        context.Result(context_failure)
         if plat['distro'] == 'fc':
             sys.stderr.write("\n  Needed package: swig\n")
         else:
              sys.stderr.write("\n  Please install SWIG.\n")
-        sys.exit(1)
+        sys.exit(unix_failure)
 
     context.Message("checking for numpy ... ")
     try:
         import numpy
-        context.Result(1)
+        context.Result(context_success)
     except:
-        context.Result(0)
+        context.Result(context_failure)
         context.Message("checking for numarray ... ")
         try:
             import numarray
-            context.Result(1)
+            context.Result(context_success)
             sys.stderr.write("\n  numarray development has stopped; plan to migrate to numpy\n")
         except:
-            context.Result(0)
+            context.Result(context_failure)
             if plat['distro'] == 'fc':
                 sys.stderr.write("\n  Needed package: numpy\n")
             else:
                 sys.stderr.write("\n  Please install numpy.\n")
-            sys.exit(1)
+            sys.exit(unix_failure)
 
 def intel(context):
-    '''Trying to fix wierd intel setup.'''
+    '''Trying to fix weird intel setup.'''
     libdirs = string.split(os.environ.get('LD_LIBRARY_PATH',''),':')
     libs = filter (lambda x: re.search('intel',x) and os.path.isdir(x),
                    libdirs)
