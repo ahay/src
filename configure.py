@@ -668,7 +668,14 @@ def matlab(context):
     matlab = WhereIs('matlab')
     if matlab:
         context.Result(matlab)
-        context.env['MATLAB'] = matlab
+        RSFROOT_lib = os.path.join(context.env.get('RSFROOT'),'lib')
+        MATLABPATH = os.environ.get('MATLABPATH')
+        if MATLABPATH:
+            MATLABPATH += ':' + RSFROOT_lib
+        else:
+            MATLABPATH = RSFROOT_lib
+        context.env['MATLAB'] = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' % \
+                                MATLABPATH, matlab
     else:
         context.Result(context_failure)
         sys.stderr.write("\n  Please install Matlab.\n")
@@ -685,18 +692,6 @@ def matlab(context):
         sys.stderr.write("\n  Please install mex.\n")
         context.env['MEX'] = None
         sys.exit(unix_failure)
-
-    context.Message("checking if $RSFROOT/lib in MATLABPATH ... ")
-    if plat['OS'] == 'linux':
-        RSFLIBS = os.path.join(context.env.get('RSFROOT'),'libs')
-        command = 'echo path | matlab -nosplash -nojvm | grep ' + RSFLIBS
-        from commands import getoutput # UNIX-specific module
-        if getoutput(command) != RSFLIBS:
-            context.Result(context_failure)
-            sys.stderr.write("\n  Please add $RSFROOT/libs to MATLABPATH.\n")
-            sys.exit(unix_failure)
-    else:
-        context.Result('check not implemented for this OS')
 
     # See http://www.mathworks.com/access/helpdesk/help/techdoc/ref/mex.html
     if plat['OS'] == 'linux':
