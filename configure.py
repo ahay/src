@@ -427,9 +427,9 @@ def ppm(context):
         context.env['PPM'] = ppm
     else:
         context.Result(context_failure)
-        sys.stderr.write("\n  ppmpen and vplot2gif will not be built.\n")
+        sys.stderr.write("\n  ppmpen, vplot2gif, vplot2avi will not be built.\n")
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  Package needed for them: netpbm-devel\n")
+            sys.stderr.write("\n  Package needed: netpbm-devel\n")
         context.env['PPM'] = None
 
     LIBS.pop()
@@ -464,7 +464,7 @@ def jpeg(context):
 
 # If this test is failed, it is unknown what capabilities are lost
 def mpi(context):
-    context.Message("checking for mpicc ... ")
+    context.Message("checking for MPI ... ")
     mpicc = WhereIs('mpicc')
     if mpicc:
         context.Message("checking if MPI works ... ")
