@@ -51,10 +51,10 @@ if test "$scons" = "no"; then
     fi
 fi
 
-echo "Running $scons config..."
+echo "Running $scons $* config..."
 rm -rf .scon* config.py
 echo "------------------------"
-$scons config
+$scons $* config
 echo "------------------------"
 echo "Done with configuration."
 echo "SCONS = RFSROOT=$root PYTHONPATH=$PYTHONPATH $scons" > Makefile

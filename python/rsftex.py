@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os, re, glob, string, types, pwd
+import os, re, glob, string, types, pwd, shutil
 import cStringIO, token, tokenize, cgi, sys, keyword
 import rsfconf, rsfdoc, rsfprog, latex2wiki, vplot2eps
 
@@ -86,11 +86,15 @@ isplot = re.compile(r'^[^%]*\\(?:side|full)?plot\*?\s*(?:\[[htbp]+\])?\{([^\}]+)
 ismplot = re.compile(r'^[^%]*\\multiplot\*?\{[^\}]+\}\s*\{([^\}]+)')
 isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
-input = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
+linput = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
 chdir = re.compile(r'[^%]*\\inputdir\s*\{([^\}]+)')
 subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
 beamer = re.compile(r'\\documentclass[^\{]*\{beamer\}')
 hastoc =  re.compile(r'\\tableofcontents')
+figure = re.compile(r'\\contentsline \{figure\}\{\\numberline \{([^\}]+)')
+subfigure = re.compile(r'\\contentsline \{subfigure\}\{\\numberline \{\(([\w])')
+logfigure = re.compile(r'\s*\<use ([^\>]+)')
+suffix = re.compile('\.[^\.]+$')
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -132,7 +136,7 @@ def latify(target=None,source=None,env=None):
 
 def latex_emit(target=None, source=None, env=None):
     tex = str(source[0])    
-    stem = re.sub('\.[^\.]+$','',tex)
+    stem = suffix.sub('',tex)
     target.append(stem+'.aux')
     target.append(stem+'.log')
     contents = source[0].get_contents()
@@ -151,7 +155,7 @@ def latex2dvi(target=None,source=None,env=None):
     "Convert LaTeX to DVI/PDF"
     tex = str(source[0])
     dvi = str(target[0])
-    stem = re.sub('\.[^\.]+$','',dvi)    
+    stem = suffix.sub('',dvi)    
     run = string.join([latex,tex],' ')
     # First latex run
     if os.system(run):
@@ -179,6 +183,51 @@ def latex2dvi(target=None,source=None,env=None):
             break
         os.system(run)
     return 0
+
+def listoffigs(target=None,source=None,env=None):
+    "Copy figures"
+    pdf = str(source[0])
+    stem = suffix.sub('',pdf)
+
+    try:
+        lof = open(stem+'.lof')
+        log = open(stem+'.log')
+    except:
+        return target, source
+
+    figs = []
+    for line in lof.readlines():
+        fig = figure.match(line)
+        if fig:
+            figs.append(fig.group(1))
+        else:
+            subfig = subfigure.match(line)
+            if subfig:
+                last = figs.pop()
+                if re.search('[a-z]$',last):
+                    figs.append(last)
+                    figs.append(last[:-1]+subfig.group(1))
+                else:
+                    figs.append(last+subfig.group(1))
+    lof.close()
+
+    for line in log.readlines():
+        fil = logfigure.match(line)
+        if fil:
+            fig = figs.pop(0)
+            for ext in ('eps','pdf'):
+                src = suffix.sub('.'+ext,fil.group(1))
+                dst = 'Fig%s.%s' % (fig,ext)
+                print 'cp %s %s' % (src,dst)
+                try:
+                    shutil.copy(src,dst)
+                    target.append(dst)
+                    env.Precious(dst)
+                except:
+                    sys.stderr.write('Cannot copy %s' % src)
+    log.close()
+
+    return target, source
 
 def latex2mediawiki(target=None,source=None,env=None):
     "Convert LaTeX to MediaWiki"
@@ -446,6 +495,8 @@ Latify = Builder(action = Action(latify,
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
+Figs = Builder(action= 'ls ${TARGETS[1:]} > ${TARGETS[0]}',
+               src_suffix='.pdf',emitter=listoffigs)
 
 if pdfread:
     Read = Builder(action = pdfread + " $SOURCES",
@@ -526,7 +577,7 @@ def latexscan(node,env,path):
     contents = node.get_contents()
     inputs = filter(os.path.isfile,
                     map(lambda x: x+('.tex','')[os.path.isfile(x)],
-                        input.findall(contents)))
+                        linput.findall(contents)))
     inputs.append(str(node))
     resdir = env.get('resdir','Fig')
     inputdir = env.get('inputdir','.')
@@ -595,7 +646,8 @@ class TeXPaper(Environment):
                               'Pdf':Pdf,
                               'Wiki':Wiki,
                               'Build':Build,
-                              'Color':Color})
+                              'Color':Color,
+                              'Figs':Figs})
         cwd = os.getcwd()
         # create a hierarcical structure
         (book,chap,proj) = (os.path.basename(
@@ -716,10 +768,11 @@ class TeXPaper(Environment):
         self.figs.extend(nrfigs)
     def Paper(self,paper,lclass='geophysics',
               use=None,include=None,options=None):
-        self.Latify(target=paper+'.ltx',source=paper+'.tex',
-                    use=use,lclass=lclass,options=options,include=include)
+        ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
+                          use=use,lclass=lclass,options=options,include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
-        wiki = self.Wiki(target=paper,source=[paper+'.ltx',pdf])
+        self.Figs(target=paper+'.figs',source=paper+'.pdf')
+        wiki = self.Wiki(target=paper,source=[ltx,pdf])
         pdf[0].target_scanner = LaTeX
         pdfinstall = self.Install(self.doc,paper+'.pdf')
         self.Alias(paper+'.install',pdfinstall)
@@ -755,6 +808,7 @@ class TeXPaper(Environment):
             self.Alias('print',paper+'.print')
             self.Alias('html',paper+'.html')
             self.Alias('install',paper+'.install')
+            self.Alias('figs',paper+'.figs')
             self.Default('pdf')
          self.Command('dummy.tex',self.figs,Action(dummy))
 #         apply(self.Paper,('dummy','dummy.tex'),kw)

@@ -140,6 +140,8 @@ def identify_platform(context):
                 plat['distro'] = 'fc' # Fedora Core
             elif name[:2] == 'EL':
                 plat['distro'] = 'EL' # Redhat Enterprise
+            elif name[-7:] == 'generic':
+                plat['distro'] = 'generic' # Ubuntu
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
