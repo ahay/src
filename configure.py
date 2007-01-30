@@ -15,6 +15,10 @@ context_success = 1
 context_failure = 0
 unix_failure = 1
 
+# Make sure error messages stand out visually
+def stderr_write(message):
+    sys.stderr.write('\n  %s\n' % message)
+
 toheader = re.compile(r'\n((?:\n[^\n]+)+)\n'                     
                       '\s*\/\*(\^|\<(?:[^>]|\>[^*]|\>\*[^/])*\>)\*\/')
 kandr = re.compile(r'\s*\{?\s*$') # K&R style function definitions end with {
@@ -161,7 +165,7 @@ def cc(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: gcc.\n")
+            stderr_write('Needed package: gcc.')
         sys.exit(unix_failure)
     text = '''
     int main(int argc,char* argv[]) {
@@ -210,8 +214,8 @@ def ar(context):
         context.env['AR'] = AR
     else:
         context.Result(context_failure)
-	if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: binutils.\n")
+        if plat['distro'] == 'fc':
+            stderr_write('Needed package: binutils.')
         sys.exit(unix_failure)
 
 
@@ -243,7 +247,7 @@ def libs(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: glibc-headers.\n")
+            stderr_write('Needed package: glibc-headers.')
         sys.exit(unix_failure)
 
 
@@ -267,7 +271,7 @@ def c99(context):
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  Package needed for ISO C99 support: glibc-headers\n")
+            stderr_write('Package needed for ISO C99 support: glibc-headers')
 
 
 # The two lists below only used in the x11 check
@@ -364,9 +368,9 @@ def x11(context):
 
     if not res:
         context.Result(context_failure)
-	sys.stderr.write("\n  xtpen (for displaying .vpl images) will not be built.\n")
+        stderr_write('xtpen (for displaying .vpl images) will not be built.')
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  Package needed for xtpen: libXaw-devel.\n")
+            stderr_write('Package needed for xtpen: libXaw-devel.')
         context.env['XINC'] = None
         return
 
@@ -427,9 +431,9 @@ def ppm(context):
         context.env['PPM'] = ppm
     else:
         context.Result(context_failure)
-        sys.stderr.write("\n  ppmpen, vplot2gif, vplot2avi will not be built.\n")
+        stderr_write('ppmpen, vplot2gif, vplot2avi will not be built.')
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  Package needed: netpbm-devel\n")
+            stderr_write('Package needed: netpbm-devel')
         context.env['PPM'] = None
 
     LIBS.pop()
@@ -456,9 +460,9 @@ def jpeg(context):
     else:
         context.Result(context_failure)
         context.env['JPEG'] = None
-        sys.stderr.write("\n  sfbyte2jpg will not be built.\n")
+        stderr_write('sfbyte2jpg will not be built.')
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  For sfbyte2jpg, install package libjpeg-devel.\n")
+            stderr_write('For sfbyte2jpg, install package libjpeg-devel.')
 
     LIBS.pop()
 
@@ -489,7 +493,7 @@ def mpi(context):
         context.Result(context_failure)
         context.env['MPICC'] = None
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  For MPI, install: openmpi, openmpi-devel, openmpi-libs.\n")
+            stderr_write('For MPI, install: openmpi, openmpi-devel, openmpi-libs.')
 
 
 def api_options(context):
@@ -535,7 +539,7 @@ def cxx(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: gcc-c++\n")
+            stderr_write('Needed package: gcc-c++')
         sys.exit(unix_failure)
     context.Message("checking if %s works ... " % CXX)
     text = '''
@@ -585,7 +589,7 @@ def f77(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: gcc-gfortran\n")
+            stderr_write('Needed package: gcc-gfortran')
         sys.exit(unix_failure)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
@@ -626,7 +630,7 @@ def f90(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("Needed package: gcc-gfortran\n")
+            stderr_write('Needed package: gcc-gfortran')
         sys.exit(unix_failure)
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
@@ -680,7 +684,7 @@ def matlab(context):
                                 MATLABPATH, matlab
     else:
         context.Result(context_failure)
-        sys.stderr.write("\n  Please install Matlab.\n")
+        stderr_write('Please install Matlab.')
         context.env['MATLAB'] = None
         sys.exit(unix_failure)
 
@@ -691,7 +695,7 @@ def matlab(context):
         context.env['MEX'] = mex
     else:
         context.Result(context_failure)
-        sys.stderr.write("\n  Please install mex.\n")
+        stderr_write('Please install mex.')
         context.env['MEX'] = None
         sys.exit(unix_failure)
 
@@ -716,9 +720,9 @@ def python(context):
     else:
         context.Result(context_failure)
         if plat['distro'] == 'fc':
-            sys.stderr.write("\n  Needed package: swig\n")
+            stderr_write('Needed package: swig')
         else:
-             sys.stderr.write("\n  Please install SWIG.\n")
+             stderr_write('Please install SWIG.')
         sys.exit(unix_failure)
 
     context.Message("checking for numpy ... ")
@@ -731,13 +735,13 @@ def python(context):
         try:
             import numarray
             context.Result(context_success)
-            sys.stderr.write("\n  numarray development has stopped; plan to migrate to numpy\n")
+            stderr_write('numarray development has stopped; plan to migrate to numpy')
         except:
             context.Result(context_failure)
             if plat['distro'] == 'fc':
-                sys.stderr.write("\n  Needed package: numpy\n")
+                stderr_write('Needed package: numpy')
             else:
-                sys.stderr.write("\n  Please install numpy.\n")
+                stderr_write('Please install numpy.')
             sys.exit(unix_failure)
 
 def intel(context):
