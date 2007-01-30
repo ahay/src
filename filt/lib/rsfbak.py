@@ -90,7 +90,7 @@ class Par:
     def bool(self,key,default=None):
         """Returns bool argument given to program"""
         val = self.__get(key, default)
-        val = lower(val) # No, combining with line above does not work
+        val = lower(str(val)) # No, combining with line above does not work
         if val == 'y' or val == 'true':
             return True
         elif val =='n' or val == 'false':
