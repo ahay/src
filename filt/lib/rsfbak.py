@@ -1,8 +1,9 @@
-""" "Emergency backup" replacement for the "official" rsf module.
+"""
+Emergency backup replacement for the 'official' rsf module.
 Installed if swig or numpy/numarray not present or did not work properly.
 No facilities that make use of arrays are present. Only parameter reading.
-Attribute noArrays allows distinguishing between the two modules."""
-
+Attribute noArrays allows distinguishing between the two modules.
+"""
 # Copyright (C) 2007 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
@@ -57,7 +58,7 @@ class Par:
         """Obtains value of argument from dictionary"""
         if self.__args.has_key(key):
             return self.__args[key]
-        elif default:
+        elif str(default):
             return default
         else:
             sys.stderr.write( '\n  Argument %s= not given to %s \n' %
