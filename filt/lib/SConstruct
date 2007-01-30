@@ -150,6 +150,10 @@ if 'f90' in api:
 ##############################################################################
 # PYTHON BINDING
 ##############################################################################
+# Minimum-functionality backup to rsf python module in case python api fails to install
+if root:
+    env.Install(libdir,'rsfbak.py')
+
 if 'python' in api:
     # Python includes for SWIG
 
