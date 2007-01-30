@@ -6,10 +6,14 @@ progs = '''
 su2rsf segy2rsf quantile
 '''
 
+py_progs = '''
+pclip
+'''
+
 try:  # distributed version
     Import('env')
     env = env.Copy()
-    
+
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
@@ -46,12 +50,24 @@ for prog in mains:
         env.Install(bindir,prog)
 
 ######################################################################
+# PYTHON METAPROGRAMS (python API not needed)
+######################################################################
+
+py_mains = Split(py_progs)
+
+if root: # no compilation but rename
+    for prog in py_mains:
+        print os.getcwd()
+        pwd = os.path.join(os.getcwd(),'../../../user/ivlad')
+        env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,prog+'.py'))
+
+######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-    
+
     docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
     env.Depends(docs,'#/python/rsfdoc.py')	
 
