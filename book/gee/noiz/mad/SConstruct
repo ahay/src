@@ -42,4 +42,21 @@ for dat in ('a','d'):
 
 Flow('tris','atris dtris','cat axis=2 ${SOURCES[1]}')
 
+for case in range(2):
+    bin = 'bin%d' % case
+    
+    Flow(bin,'tris',
+         '''
+         window n1=1 f1=2 |
+         bin fold=${TARGETS[1]} xkey=0 ykey=1 head=$SOURCE
+         nx=400 ny=400 interp=2 norm=%d
+         ''' % case)
+    Plot(bin,
+         '''
+         grey pclip=98 crowd2=.83 crowd1=.89 allpos=y
+         yreverse=n wanttitle=n label1=latitude label2=longitude
+         ''')
+
+Result('jesse1','bin0 bin1','SideBySideAniso')
+
 End()

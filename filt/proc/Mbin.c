@@ -26,6 +26,7 @@
 
 int main (int argc, char* argv[])
 {
+    bool norm;
     int id, nk, nd, im, nm, nt, it, nx, ny, n2, xkey, ykey, interp;
     float *mm, *count=NULL, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, clip;
@@ -165,6 +166,9 @@ int main (int argc, char* argv[])
 	    break;
     }
 
+    if (!sf_getbool("norm",&norm)) norm=true;
+    /* if normalize */
+
     nm = nx*ny;
     mm = sf_floatalloc(nm);
     dd = sf_floatalloc(nd);
@@ -191,12 +195,14 @@ int main (int argc, char* argv[])
 	    sf_fileclose (fold);
 	}
 	
-	if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
-	/* clip for fold normalization */
-
-	for (im=0; im<nm; im++) {
-	    if (clip < count[im]) count[im]=1./fabsf(count[im]);
-	    else                  count[im]=0.;
+	if (norm) {
+	    if (!sf_getfloat("clip",&clip)) clip = FLT_EPSILON;
+	    /* clip for fold normalization */
+	    
+	    for (im=0; im<nm; im++) {
+		if (clip < count[im]) count[im]=1./fabsf(count[im]);
+		else                  count[im]=0.;
+	    }
 	}
     }
 
@@ -204,8 +210,10 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 	if (interp) {
 	    sf_int2_lop (true,false,nm,nd,mm,dd);
-	    for (im=0; im<nm; im++) {
-		mm[im] *= count[im];
+	    if (norm) {
+		for (im=0; im<nm; im++) {
+		    mm[im] *= count[im];
+		}
 	    }
 	} else {
 	    medbin (dd,mm);

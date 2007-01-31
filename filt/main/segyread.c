@@ -235,7 +235,7 @@ otrav:     overtravel taper code:
 
 int main(int argc, char *argv[])
 {
-    bool verbose, su, xdr;
+    bool verbose, su, xdr, suxdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
     char *headname, *filename, *trace, *read;
     sf_file out, hdr, msk=NULL;
@@ -254,15 +254,24 @@ int main(int argc, char *argv[])
     if (!sf_getbool("su",&su)) su=false;
     /* y if input is SU, n if input is SEGY */
 
+    if (su) {
+	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
+	/* y, SU has XDR support */
+    } else {
+	suxdr = true;
+    }
+
     if (!sf_getbool("endian",&xdr)) xdr=true;
     /* Whether to automatically estimate endianness or not */
     if (xdr) sf_endian();
 
-    if (NULL == (filename = sf_getstring("tape"))) /* input data */
-	sf_error("Need to specify tape=");
-
-    if (NULL == (file = fopen(filename,"rb")))
+    if (NULL == (filename = sf_getstring("tape"))) {
+	/* input data */ 
+	file = stdin;
+    } else {
+	if (NULL == (file = fopen(filename,"rb")))
 	sf_error("Cannot open \"%s\" for reading:",filename);
+    }
 
     fseeko(file,0,SEEK_END);
     pos = ftello(file); /* pos is the filesize in bytes */
@@ -271,7 +280,22 @@ int main(int argc, char *argv[])
     if (NULL == (read = sf_getstring("read"))) read = "b";
     /* what to read: h - header, d - data, b - both (default) */
 
-    if (!su) {
+    if (su) { /* figure out ns and ntr */
+	trace = sf_charalloc (SF_HDRBYTES);
+	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
+	    sf_error ("Error reading first trace header");
+	fseeko(file,0,SEEK_SET);
+
+	sf_segy2head(trace, itrace, SF_NKEYS);
+	ns = itrace[sf_segykey("ns")];
+	dt = itrace[sf_segykey("dt")]/1000000.;
+	free (trace);
+
+	nsegy = SF_HDRBYTES + ns*4;
+	ntr = pos/nsegy;	
+
+	if (suxdr) format=5;
+    } else { /* get data headers */
 	if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, file)) 
 	    sf_error("Error reading ebcdic header");
 	
@@ -341,26 +365,9 @@ int main(int argc, char *argv[])
 	dt = sf_segydt (bhead);
 	nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
 	ntr = (pos - SF_EBCBYTES - SF_BNYBYTES)/nsegy;
-    } else {
-	/* figure out ns and ntr */
-
-	trace = sf_charalloc (SF_HDRBYTES);
-	if (SF_HDRBYTES != fread(trace, 1, SF_HDRBYTES, file))
-	    sf_error ("Error reading first trace header");
-	fseeko(file,0,SEEK_SET);
-
-	sf_segy2head(trace, itrace, SF_NKEYS);
-	ns = itrace[sf_segykey("ns")];
-	dt = itrace[sf_segykey("dt")]/1000000.;
-	free (trace);
-
-	nsegy = SF_HDRBYTES + ns*4;
-	ntr = pos/nsegy;
-    }
-
+    } 
     if (verbose) sf_warning("Expect %d traces",ntr);
-
-
+    
     if (NULL != sf_getstring("mask")) {
 	/* optional header mask for reading only selected traces */
 	msk = sf_input("mask");
@@ -385,7 +392,7 @@ int main(int argc, char *argv[])
 	sf_putfloat(out,"d1",dt);
 	sf_putfloat(out,"o1",0.);
 	sf_setformat(out, "native_float");    
-	ftrace = su? NULL: sf_floatalloc (ns);
+	ftrace = suxdr? sf_floatalloc (ns): NULL;
     } else {
 	out = NULL;
 	ftrace = NULL;
@@ -438,12 +445,12 @@ int main(int argc, char *argv[])
 			sf_error ("Error reading trace data %d",itr+1);
 		}
 
-		if (su) {
-		    sf_charwrite (trace,ns*sizeof(float),out);
-		} else {
+		if (suxdr) {
 		    sf_segy2trace(trace, ftrace, ns,format);
 		    sf_floatwrite (ftrace,ns,out);
-		}
+		} else {
+		    sf_charwrite (trace,ns*sizeof(float),out);
+		} 
 	    }
 
 	    break;
@@ -461,12 +468,12 @@ int main(int argc, char *argv[])
 		sf_segy2head(trace, itrace, SF_NKEYS);
 		sf_intwrite(itrace,SF_NKEYS,hdr);
 
-		if (su) {
-		    sf_charwrite (trace + SF_HDRBYTES,ns*sizeof(float),out);
-		} else {
+		if (suxdr) {
 		    sf_segy2trace(trace + SF_HDRBYTES, ftrace, ns,format);
 		    sf_floatwrite (ftrace,ns,out);
-		}
+		} else {
+		    sf_charwrite (trace + SF_HDRBYTES,ns*sizeof(float),out);
+		} 
 	    }
 	    break;
     }
