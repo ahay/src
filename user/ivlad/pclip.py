@@ -29,7 +29,6 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from commands import getoutput
 from os import system
 import sys
 
@@ -37,15 +36,6 @@ try:
     import rsf
 except:
     import rsfbak as rsf
-
-def readaxis( inp, axisnr ):
-    '''Reads n,o,d for one axis of a Madagascar hypercube'''
-
-    sfget = '<' + inp + ' sfget parform=n '
-    n = int(   getoutput( sfget + 'n' + str( axisnr )))
-    o = float( getoutput( sfget + 'o' + str( axisnr )))
-    d = float( getoutput( sfget + 'd' + str( axisnr )))
-    return (n,o,d)
 
 def main(argv=sys.argv):
 
