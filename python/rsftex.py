@@ -217,8 +217,7 @@ def listoffigs(target=None,source=None,env=None):
             fig = figs.pop(0)
             for ext in ('eps','pdf'):
                 src = suffix.sub('.'+ext,fil.group(1))
-                dst = 'Fig%s.%s' % (fig,ext)
-                print 'cp %s %s' % (src,dst)
+                dst = '%s-Fig%s.%s' % (stem,fig,ext)
                 try:
                     shutil.copy(src,dst)
                     target.append(dst)

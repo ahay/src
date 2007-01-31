@@ -57,7 +57,6 @@ py_mains = Split(py_progs)
 
 if root: # no compilation but rename
     for prog in py_mains:
-        print os.getcwd()
         pwd = os.path.join(os.getcwd(),'../../../user/ivlad')
         env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,prog+'.py'))
 
