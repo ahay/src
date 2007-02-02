@@ -25,13 +25,15 @@
 #include "weight2.h"
 
 static float *p;
+static bool prec;
 
-void multidivn_init(int nw     /* number of components */, 
-		    int ndim   /* number of dimensions */, 
-		    int n     /* data size */, 
-		    int *ndat  /* data dimensions [ndim] */, 
-		    int *nbox  /* smoothing radius [ndim] */,
-		    float* den  /* denominator [nw*nd] */)
+void multidivn_init(int nw       /* number of components */, 
+		    int ndim     /* number of dimensions */, 
+		    int n        /* data size */, 
+		    int *ndat    /* data dimensions [ndim] */, 
+		    int *nbox    /* smoothing radius [ndim] */,
+		    float* den   /* denominator [nw*nd] */,
+		    sf_filter aa /* data filter */)
 /*< initialize >*/
 {
     int n2;
@@ -44,6 +46,9 @@ void multidivn_init(int nw     /* number of components */,
     sf_conjgrad_init(n2, n2, n, n, 1., 1.e-6, true, false);
     p = sf_floatalloc (n2);
     weight2_init(nw,n,den);
+
+    prec = (NULL != aa);
+    if (prec) sf_helicon_init(aa);
 }
 
 void multidivn_close (void)
@@ -60,7 +65,7 @@ void multidivn (float* num  /* numerator */,
 		int niter   /* number of iterations */)
 /*< smoothly divide num/rat >*/
 {
-    sf_conjgrad(NULL,weight2_lop,repeat_lop,p,rat,num,niter);
+    sf_conjgrad(prec? sf_helicon_lop: NULL,weight2_lop,repeat_lop,p,rat,num,niter);
 }
 
 /* 	$Id: multidivn.c 1136 2005-04-20 20:43:14Z fomels $	 */

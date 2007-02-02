@@ -18,7 +18,6 @@
 */
 #include <rsf.h>
 
-#include "helicon.h"
 #include "misinput.h"
 #include "pef.h"
 
@@ -35,8 +34,8 @@ void pefest(int niter    /* number of iterations */,
     rabs = sf_floatalloc(ny);
     mask = sf_intalloc(ny);
 
-    helicon_init(aa);                /* starting guess */
-    helicon_lop(false,false,ny,ny,yy,rr);
+    sf_helicon_init(aa);                /* starting guess */
+    sf_helicon_lop(false,false,ny,ny,yy,rr);
     for (iy=0; iy < ny; iy++) {
 	rabs[iy] = fabsf(rr[iy]);
     }

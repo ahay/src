@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "mis2.h"
-#include "helicon.h" 
 #include "polydiv.h" 
 
 void mis2(int niter         /* number of iterations */, 
@@ -47,8 +46,8 @@ void mis2(int niter         /* number of iterations */,
 	    dd[ix]=0.;
 	}
 
-	helicon_init(aa);
-	sf_solver (helicon_lop, sf_cgstep, nx, nx, xx, dd, niter, 
+	sf_helicon_init(aa);
+	sf_solver (sf_helicon_lop, sf_cgstep, nx, nx, xx, dd, niter, 
 		   "known", known, "x0", xx, "end");
 	free(dd);
     }

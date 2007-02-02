@@ -18,7 +18,6 @@
 */
 #include <rsf.h>
 
-#include "helicon.h"
 #include "mis2.h"
 
 void fixbad (int niter    /* number of iterations */, 
@@ -35,8 +34,8 @@ void fixbad (int niter    /* number of iterations */,
     rabs = sf_floatalloc(ny);
     known = sf_boolalloc(ny);
 
-    helicon_init(aa);
-    helicon_lop (false,false,ny,ny,yy,rr); 
+    sf_helicon_init(aa);
+    sf_helicon_lop (false,false,ny,ny,yy,rr); 
     for (iy=0; iy < ny; iy++) 
 	rabs[iy] = fabsf (rr[iy]);
     rbar = sf_quantile(ny/2,ny,rabs);

@@ -19,8 +19,6 @@
 #include <rsf.h>
 
 #include "pefhel.h"
-
-#include "helicon.h"
 #include "hconest.h"
 
 static int n;
@@ -31,7 +29,7 @@ void pefhel_init (sf_filter aa /* PEF */,
 /*< initialize >*/
 {
     n = ny;
-    helicon_init(aa);
+    sf_helicon_init(aa);
     hconest_init(yy,aa);
 }
 
@@ -41,6 +39,6 @@ void pefhel_lop(bool adj, bool add, int nx, int nr, float *x, float *r)
 {
     sf_adjnull(adj,add,nx,nr,x,r);
 
-    helicon_lop (adj, true, n,    nr, x,   r);
+    sf_helicon_lop (adj, true, n,    nr, x,   r);
     hconest_lop (adj, true, nx-n, nr, x+n, r);
 }

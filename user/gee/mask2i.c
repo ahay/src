@@ -18,7 +18,6 @@
 */
 #include <rsf.h>
 
-#include "helicon.h"
 #include "heliarr.h"
 
 void maski (int niter       /* number of iterations */, 
@@ -45,9 +44,9 @@ void maski (int niter       /* number of iterations */,
 	sf_solver_reg(sf_mask_lop,sf_cgstep,
 		      heliarr_lop,2*nx,nx,nx,xx,dd,niter,1.,"end");
     } else {
-	helicon_init (aa1);
+	sf_helicon_init (aa1);
 	sf_solver_reg(sf_mask_lop,sf_cgstep,
-		      helicon_lop,nx,nx,nx,xx,dd,niter,1.,"end");
+		      sf_helicon_lop,nx,nx,nx,xx,dd,niter,1.,"end");
     }
 
     sf_cgstep_close();

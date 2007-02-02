@@ -16,22 +16,24 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
-/*^*/
+#include <stdlib.h>
 
 #include "helicon.h"
+#include "copy.h"
+
+#include "helix.h"
+/*^*/
 
 static sf_filter aa;
 
-void helicon_init( sf_filter bb) 
+void sf_helicon_init( sf_filter bb) 
 /*<  Initialized with the filter. >*/
 {
     aa = bb;
 }
 
-void helicon_lop( bool adj, bool add, 
-		  int nx, int ny, float* xx, float*yy) 
+void sf_helicon_lop( bool adj, bool add, 
+		     int nx, int ny, float* xx, float*yy) 
 /*< linear operator >*/
 {
     int ia, iy, ix;

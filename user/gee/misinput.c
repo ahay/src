@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "misinput.h" 
-#include "helicon.h"
 
 void find_mask(int n            /* data size */, 
 	       const int *known /* mask for known data [n] */, 
@@ -36,13 +35,13 @@ void find_mask(int n            /* data size */,
 	dfre[i] = known[i]? 0.:1.;
     }
     
-    helicon_init(aa);
+    sf_helicon_init(aa);
 
     for (ih=0; ih < aa->nh; ih++) {
 	aa->flt[ih] = 1.;
     }
 
-    helicon_lop(false,false,n,n,dfre,rr);
+    sf_helicon_lop(false,false,n,n,dfre,rr);
 
     for (ih=0; ih < aa->nh; ih++) {
 	aa->flt[ih] = 0.;

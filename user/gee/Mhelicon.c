@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helicon.h"
 #include "polydiv.h"
 #include "regrid.h"
 
@@ -98,8 +97,8 @@ int main(int argc, char* argv[])
 	polydiv_lop (adj,false,nx,nx,pp,qq);
 	polydiv_close();
     } else {
-	helicon_init (aa);
-	helicon_lop (adj,false,nx,nx,pp,qq);
+	sf_helicon_init (aa);
+	sf_helicon_lop (adj,false,nx,nx,pp,qq);
     }
 
     if (adj) {

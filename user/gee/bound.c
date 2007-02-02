@@ -23,7 +23,6 @@
 #include <rsf.h>
 
 #include "bound.h"
-#include "helicon.h"
 #include "regrid.h"
 
 void bound (int dim         /* number of dimensions */, 
@@ -54,10 +53,10 @@ void bound (int dim         /* number of dimensions */,
 		break;
 	    }
     }
-    helicon_init( aa);		  
+    sf_helicon_init( aa);		  
     regrid(dim, nold, nb, aa);  
     for (i=0; i < aa->nh; i++) aa->flt[i] = 1.;		
-    helicon_lop(false, false, mb, mb, xx, yy);	/* apply filter */
+    sf_helicon_lop(false, false, mb, mb, xx, yy);	/* apply filter */
     regrid(dim, nb, nd, aa);  
     for (i=0; i < aa->nh; i++) aa->flt[i] = 0.;
 

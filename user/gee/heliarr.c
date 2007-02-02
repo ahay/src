@@ -18,8 +18,6 @@
 */
 #include <rsf.h>
 
-#include "helicon.h"
-
 static sf_filter aa1, aa2;
 
 void heliarr_init (sf_filter a1, sf_filter a2)
@@ -37,8 +35,8 @@ void heliarr_lop (bool adj, bool add, int nx, int ny, float *xx, float *yy)
 
     sf_adjnull(adj,add,nx,ny,xx,yy);
 
-    helicon_init(aa1);
-    helicon_lop (adj,true,nx,nx,xx,yy);
-    helicon_init(aa2);
-    helicon_lop (adj,true,nx,nx,xx,yy+nx); 
+    sf_helicon_init(aa1);
+    sf_helicon_lop (adj,true,nx,nx,xx,yy);
+    sf_helicon_init(aa2);
+    sf_helicon_lop (adj,true,nx,nx,xx,yy+nx); 
 }

@@ -24,7 +24,6 @@
 /*^*/
 
 #include "wilson2.h"
-#include "helicon.h"
 #include "polydiv.h"
 
 static int n, n2;
@@ -58,12 +57,12 @@ float wilson2_factor(int niter   /* number of iterations */,
 	au[i] = 0.;
     }
 
-    helicon_init( aa);                      /* multiply polynoms */
+    sf_helicon_init( aa);                      /* multiply polynoms */
     polydiv_init( n2, aa);                  /* divide   polynoms */
 
     au[n-1] = -a0*a0;
-    helicon_lop(false, false, n2, n2, au, bb);
-    helicon_lop(true,  false, n2, n2, au, bb);
+    sf_helicon_lop(false, false, n2, n2, au, bb);
+    sf_helicon_lop(true,  false, n2, n2, au, bb);
 
     au[n-1] += s0;		     
     for(i=0; i < ss->nh; i++) {  /* symmetrize input auto */
@@ -86,7 +85,7 @@ float wilson2_factor(int niter   /* number of iterations */,
 	    b[i] = 0.5*(cc[n-1+i] + cc[n-1-i])/a0; 
 	}
 
-	helicon_lop( false, false, n, n, b, c);   /* c = A b */
+	sf_helicon_lop( false, false, n, n, b, c);   /* c = A b */
 	
 	a0 = 2.*(c[0]+g0);      
 	for(i=0; i < aa->nh; i++) {              /* put on helix */

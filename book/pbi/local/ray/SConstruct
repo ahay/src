@@ -4,10 +4,18 @@ for case in Split('data mult ddata dmult'):
     segy = case + '.segy'
     Fetch(segy,'ray')
     Flow(case,segy,'segyread what=d')
-    Plot(case,'grey wanttitle=n')
+    Plot(case,'grey title="%s" clip=0.12' % ('Data','Multiple Model')[case[-4:]=='mult'])
 
 nt=251
 ns=7
+
+Flow('lag.asc',None,
+     'echo %d n1=1 n=%d,100 data_format=ascii_int in=$TARGET' % (nt,nt))
+Flow('lag','lag.asc','dd form=native')
+
+Flow('pef.asc','lag',
+     'echo -1 a0=1 n1=1 data_format=ascii_float in=$TARGET lag=$SOURCE',stdin=0)
+Flow('pef','pef.asc','dd form=native')
 
 for c in ('','d'):
     mult = c+'mult'
@@ -26,12 +34,12 @@ for c in ('','d'):
     pred = c+'pred'
     prim = c+'prim'
     filt = c+'filt'
-    Flow([filt,pred],[c+'shifts',data],
-         'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=10 rect2=3 niter=400')
+    Flow([filt,pred],[c+'shifts',data,'pef'],
+         'lpf match=${SOURCES[1]} pred=${TARGETS[1]} pef=${SOURCES[2]} rect1=3 rect2=3 niter=400')
     Flow(prim,[data,pred],'add scale=1,-1 ${SOURCES[1]}')
 
-    Plot(prim,'grey wanttitle=n')
-    Plot(pred,'grey wanttitle=n')
+    Plot(prim,'grey title="Estimated Signal" clip=0.12')
+    Plot(pred,'grey title="Matched Multiples" clip=0.12')
 
 Result('planes','data mult prim pred','TwoRows')
 Result('curves','ddata dmult dprim dpred','TwoRows')

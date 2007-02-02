@@ -934,8 +934,7 @@ void sf_ucharwrite (unsigned char* arr, size_t size, sf_file file)
 	    for (left = size; left > 0; left -= nbuf) {
 		nbuf = (bufsiz < left)? bufsiz : left;
 		(void) xdr_setpos(&(file->xdr),0);
-		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
-				(xdrproc_t) xdr_u_char))
+		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("sf_file: trouble writing xdr");
 		fwrite(file->buf,1,nbuf,file->stream);
 	    }
@@ -1006,8 +1005,7 @@ void sf_ucharread (/*@out@*/ unsigned char* arr, size_t size, sf_file file)
 		(void) xdr_setpos(&(file->xdr),0);
 		if (nbuf != fread(file->buf,1,nbuf,file->stream))
 		    sf_error ("%s: trouble reading:",__FILE__);
-		if (!xdr_vector(&(file->xdr),buf-left,nbuf,1,
-				(xdrproc_t) xdr_u_char))
+		if (!xdr_opaque(&(file->xdr),buf-left,nbuf))
 		    sf_error ("%s: trouble reading xdr",__FILE__);
 	    }
 	    break;

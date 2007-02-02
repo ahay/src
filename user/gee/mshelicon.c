@@ -4,7 +4,6 @@
 /*^*/
 
 #include "mshelicon.h"
-#include "helicon.h"
 
 #include "mshelix.h"
 /*^*/
@@ -26,8 +25,8 @@ void mshelicon_lop( bool adj, bool add, int nx, int ny, float* xx, float*yy)
     
     for (is=0; is < aa->ns; is++) {
 	onescale(is,aa);
-	helicon_init(aa->one);
-	helicon_lop(adj,true,nx,nx,xx,yy+is*nx);
+	sf_helicon_init(aa->one);
+	sf_helicon_lop(adj,true,nx,nx,xx,yy+is*nx);
     }
 }
 

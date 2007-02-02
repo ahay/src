@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helicon.h"
 #include "tent.h"
 #include "patching.h"
 
@@ -80,8 +79,8 @@ int main(int argc, char* argv[])
 	sf_fileclose(wind);
     }
 
-    helicon_init (aa);
-    patching (helicon_lop, wall, data, 2, k, n, w, windwt);
+    sf_helicon_init (aa);
+    patching (sf_helicon_lop, wall, data, 2, k, n, w, windwt);
 
     for (i=0; i < n12; i+= n[0]) {
 	data[i] = 0.;

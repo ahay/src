@@ -17,11 +17,10 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "loconvol.h"
-#include "helicon.h"
-
 #include <rsf.h>
 /*^*/
+
+#include "loconvol.h"
 
 static sf_filter aa;
 
@@ -35,8 +34,8 @@ void loconvol_lop(bool adj, bool add, int nx, int ny,
 		  float *xx, float *yy)
 /*< convolve >*/
 {
-    helicon_init(aa);
+    sf_helicon_init(aa);
     aa++;
 
-    helicon_lop(adj, add, nx, ny, xx, yy);
+    sf_helicon_lop(adj, add, nx, ny, xx, yy);
 }

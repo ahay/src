@@ -24,10 +24,11 @@
 int main(int argc, char* argv[])
 {
     int n[SF_MAX_DIM], m[SF_MAX_DIM], rect[SF_MAX_DIM];
-    int ndim, mdim, nd, na, n12, i, j, niter;
-    float *d, *f, *g, mean;
-    char key[6];
-    sf_file dat, flt, mat, pre;
+    int ndim, mdim, nd, ns, n12, i, j, niter, na, ia;
+    float *d, *f, *g, mean, a0;
+    char key[6], *peffile, *lagfile;
+    sf_filter aa;
+    sf_file dat, flt, mat, pre, pef, lag;
 
     sf_init(argc,argv);
 
@@ -49,21 +50,46 @@ int main(int argc, char* argv[])
 	snprintf(key,6,"rect%d",j+1);
 	if (!sf_getint(key,rect+j)) rect[j]=1;
     }
-    for (na = 1; j < ndim; j++) {
-	na *= n[j];
+    for (ns = 1; j < ndim; j++) {
+	ns *= n[j];
 	snprintf(key,6,"n%d",j+1);
 	sf_putint(pre,key,1);
     }
-    n12 = nd*na;
+    n12 = nd*ns;
 
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
+
+    if (NULL == (peffile = sf_getstring("pef"))) { /* signal PEF file (optional) */
+	aa = NULL;
+    } else {
+	pef = sf_input(peffile);
+	if (!sf_histint(pef,"n1",&na)) sf_error("No n1= in pef");
+	aa = sf_allocatehelix (na);
+	
+	if (!sf_histfloat(pef,"a0",&a0)) a0=1.;
+	sf_floatread (aa->flt,na,pef);
+	for( ia=0; ia < na; ia++) {
+	    aa->flt[ia] /= a0;
+	}
+	if (NULL != (lagfile = sf_getstring("lag")) /* file with PEF lags (optional) */
+	    || 
+	    NULL != (lagfile = sf_histstring(pef,"lag"))) {
+	    lag = sf_input(lagfile);
+	    sf_intread(aa->lag,na,lag);
+	    sf_fileclose(lag);
+	} else {
+	    for( ia=0; ia < na; ia++) {
+		aa->lag[ia] = ia+1;
+	    }
+	}
+    }
 
     d = sf_floatalloc(n12);
     f = sf_floatalloc(n12);
     g = sf_floatalloc(nd);
 
-    multidivn_init(na, mdim, nd, m, rect, d); 
+    multidivn_init(ns, mdim, nd, m, rect, d, aa); 
     
     sf_floatread(d,n12,dat);
     sf_floatread(g,nd,mat);
