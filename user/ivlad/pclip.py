@@ -29,13 +29,33 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-from os import system
 import sys
 
 try:
     import rsf
 except:
     import rsfbak as rsf
+
+try:
+    import subprocess
+    have_subprocess=True
+except: # Python < 2.4
+    have_subprocess=False
+    from os import system
+    from commands import getoutput
+
+def assemble_cmd(cmd, arg, stdin, stdout):
+    command = cmd+' '+arg
+    if stdin:
+        command = '< ' + stdin + ' ' + command
+    if stdout:
+        command = command+'>'+stdout
+    return command
+
+def print_cmd(verb, cmd, arg, stdin, stdout):
+    if verb:
+        command=assemble_cmd(cmd, arg, stdin, stdout)
+        print(command)
 
 def main(argv=sys.argv):
 
@@ -56,28 +76,41 @@ def main(argv=sys.argv):
         sys.stderr.write('pclip must be between 0 and 100\n')
         return error
 
-    inp = '< ' + inp
-    out = ' > '+ out
+    cmd = 'sfquantile'
+    arg = 'pclip=' + str(pclip)
+    finp= open(inp,'r')
 
-    command = inp + ' sfquantile pclip=' + str(pclip)
-
-    if verb:
-        print(command)
-
-    clip = getoutput( command )
+    if have_subprocess:
+        if verb:
+            print_cmd(verb, cmd, arg, inp, None)
+        clip=subprocess.Popen([cmd,arg],stdin=finp,stdout=subprocess.PIPE).communicate()[0]
+    else:
+        command = assemble_cmd(cmd, arg, inp, None)
+        if verb:
+            print command
+        clip = getoutput( command )
 
     if not clip:
         sys.stderr.write('sfquantile did not return anything!\n')
+        return error
 
     if verb:
         print(clip)
 
-    command = inp + ' sfclip clip=' + clip + out
+    cmd = 'sfclip'
+    arg = 'clip=' + str(clip)
+    finp= open(inp,'r')
+    fout= open(out,'w')
 
-    if verb:
-        print(command)
-
-    system(command)
+    if have_subprocess:
+        if verb:
+            print_cmd(verb, cmd, arg, inp, out)
+        clip=subprocess.Popen([cmd,arg],stdin=finp,stdout=fout).wait()
+    else:
+        command = assemble_cmd(cmd, arg, inp, out)
+        if verb:
+            print command
+        system(command)
 
     return success
 
