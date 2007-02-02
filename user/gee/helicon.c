@@ -22,12 +22,9 @@
 
 #include "helicon.h"
 
-#include "helix.h"
-/*^*/
+static sf_filter aa;
 
-static filter aa;
-
-void helicon_init( filter bb) 
+void helicon_init( sf_filter bb) 
 /*<  Initialized with the filter. >*/
 {
     aa = bb;

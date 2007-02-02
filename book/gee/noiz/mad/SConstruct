@@ -26,6 +26,7 @@ for dat in ('a','d'):
     Flow(xy,tri,'window n1=2 | scale dscale=1.e-6')
     Flow(z,tri,'window n1=1 f1=2 squeeze=n | dd type=float')
 
+    # filter out jumps in z
     Flow(dz,z,
          '''
          window f2=1 squeeze=n | pad end2=1 | add scale=1,-1 $SOURCE |
@@ -42,6 +43,13 @@ for dat in ('a','d'):
 
 Flow('tris','atris dtris','cat axis=2 ${SOURCES[1]}')
 
+Result('jesse5','tris',
+       '''
+       window n2=500000 n1=1 f1=2 |
+       put n1=10000 n2=50 |
+       wiggle title=data crowd=.87 clip=17000
+       ''')
+
 for case in range(2):
     bin = 'bin%d' % case
     
@@ -51,12 +59,22 @@ for case in range(2):
          bin fold=${TARGETS[1]} xkey=0 ykey=1 head=$SOURCE
          nx=400 ny=400 interp=2 norm=%d
          ''' % case)
-    Plot(bin,
-         '''
-         grey pclip=98 crowd2=.83 crowd1=.89 allpos=y
-         yreverse=n wanttitle=n label1=latitude label2=longitude
-         ''')
+    Plot(bin,'''
+    grey pclip=98 crowd2=.83 crowd1=.89 allpos=y
+    yreverse=n wanttitle=n label1=latitude label2=longitude
+    ''')
 
 Result('jesse1','bin0 bin1','SideBySideAniso')
+
+from helderiv import Helderiv
+
+Helderiv('hder',na=15)
+
+Flow('hbin1','bin1 hder','helicon filt=${SOURCES[1]}')
+Result('jesse2','hbin1',
+       '''
+       grey pclip=90 color=IC yreverse=n wanttitle=n
+       label1=latitude label2=longitude crowd=.9
+       ''')
 
 End()

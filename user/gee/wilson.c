@@ -27,9 +27,6 @@
 #include "helicon.h"
 #include "polydiv.h"
 
-#include "helix.h"
-/*^*/
-
 static int n, n2;
 static float *au, *bb, *cc, *b, *c;    
 
@@ -45,12 +42,12 @@ void wilson_init( int nmax /* maximum data size */)
     c  = sf_floatalloc (n);
 }
 
-float wilson_factor(int niter /* number of iterations */, 
-		    float s0  /* zero-lag auto-correlation */, 
-		    filter ss /* input auto-correlation */, 
-		    filter aa /* output factor */, 
-		    bool verb /* verbosity flag */,
-		    float tol /* tolerance */)
+float wilson_factor(int niter    /* number of iterations */, 
+		    float s0     /* zero-lag auto-correlation */, 
+		    sf_filter ss /* input auto-correlation */, 
+		    sf_filter aa /* output factor */, 
+		    bool verb    /* verbosity flag */,
+		    float tol    /* tolerance */)
 /*< Factor >*/ 
 {
     float eps;

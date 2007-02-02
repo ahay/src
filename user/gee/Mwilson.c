@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "wilson.h"
 #include "wilson2.h"
 #include "compress.h"
@@ -28,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int ns, na, niter, maxlag, ia;
     float a0, s0, eps;
-    filter ss, aa;
+    sf_filter ss, aa;
     bool verb, stable;
     char *file;
     sf_file in, out, lag0, lag, flt0;
@@ -38,7 +37,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&ns)) sf_error("No n1= in input");
-    ss = allocatehelix (ns);
+    ss = sf_allocatehelix (ns);
 
     if (NULL == (file = sf_histstring(in,"lag"))) {
 	if (NULL == (file = sf_getstring("lag"))) {
@@ -79,7 +78,7 @@ int main(int argc, char* argv[])
 	if (!sf_getint("n1",&na)) na=maxlag;
 	/* output filter length */
 
-	aa = allocatehelix (na);
+	aa = sf_allocatehelix (na);
 
 	for (ia=0; ia < na; ia++) {	    
 	    aa->lag[ia]=ia+1;
@@ -93,7 +92,7 @@ int main(int argc, char* argv[])
 	if (!sf_histint(lag0,"n1",&na)) 
 	    sf_error("No n1= in lag file '%s'",file);
 
-	aa = allocatehelix (na);
+	aa = sf_allocatehelix (na);
 
 	sf_intread(aa->lag,na,lag0);
     }

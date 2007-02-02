@@ -20,18 +20,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#include <rsf.h>
+
 #include "bound.h"
 #include "helicon.h"
 #include "regrid.h"
-
-#include "helix.h"
-/*^*/
 
 void bound (int dim         /* number of dimensions */, 
 	    const int *nold /* old data coordinates [dim] */, 
 	    const int *nd   /* new data coordinates [dim] */, 
 	    const int *na   /* filter box size [dim] */, 
-	    const filter aa /* helix filter */) 
+	    const sf_filter aa /* helix filter */) 
 /*< Mark helix filter outputs where input is off data. >*/
 {
     int iy, my, ib, mb, i, nb[SF_MAX_DIM], ii[SF_MAX_DIM];

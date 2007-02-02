@@ -33,17 +33,14 @@
 
 #include "createhelix.h"
 
-#include "helix.h"
-/*^*/
-
-filter createhelix(int ndim    /* number of dimensions */, 
-		   int* nd     /* data size [ndim] */, 
-		   int* center /* filter center [ndim] */, 
-		   int* gap    /* filter gap [ndim] */, 
-		   int* na     /* filter size [ndim] */)
+sf_filter createhelix(int ndim    /* number of dimensions */, 
+		      int* nd     /* data size [ndim] */, 
+		      int* center /* filter center [ndim] */, 
+		      int* gap    /* filter gap [ndim] */, 
+		      int* na     /* filter size [ndim] */)
 /*< allocate and output a helix filter >*/ 
 {
-    filter aa;
+    sf_filter aa;
     int ii[SF_MAX_DIM], na123, ia, nh, lag0a,lag0d, *lag, i;
     bool skip;
 
@@ -72,7 +69,7 @@ filter createhelix(int ndim    /* number of dimensions */,
     }
     /* center shift for nd cube */
     lag0d = sf_cart2line(ndim,  nd, center); 
-    aa = allocatehelix(nh); /* nh becomes size of filter */
+    aa = sf_allocatehelix(nh); /* nh becomes size of filter */
 
     for (ia=0; ia < nh; ia++) {
 	aa->lag[ia] = lag[ia] - lag0d; 

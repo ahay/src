@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "helicon.h"
 #include "polydiv.h"
 #include "regrid.h"
@@ -29,7 +28,7 @@ int main(int argc, char* argv[])
     int i, ia, na, nx, dim, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float a0, *pp, *qq;
     bool adj, inv;
-    filter aa;
+    sf_filter aa;
     char* lagfile;
     sf_file in, out, filt, lag;
 
@@ -41,7 +40,7 @@ int main(int argc, char* argv[])
     dim = sf_filedims (in,n);
 
     if (!sf_histint(filt,"n1",&na)) sf_error("No n1= in filt");
-    aa = allocatehelix (na);
+    aa = sf_allocatehelix (na);
 
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
     sf_floatread (aa->flt,na,filt);

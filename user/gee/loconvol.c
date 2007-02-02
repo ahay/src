@@ -21,12 +21,11 @@
 #include "helicon.h"
 
 #include <rsf.h>
-#include "helix.h"
 /*^*/
 
-static filter aa;
+static sf_filter aa;
 
-void loconvol_init(filter aa_in)
+void loconvol_init(sf_filter aa_in)
 /*< initialize with the first filter >*/
 {
     aa = aa_in;

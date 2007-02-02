@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "helicon.h"
 #include "tent.h"
 #include "patching.h"
@@ -28,7 +27,7 @@ int main(int argc, char* argv[])
 {
     int n[2], w[2], k[2], a[2], l[2], n12, w12, i;
     float *wall, *data, *windwt;
-    filter aa;
+    sf_filter aa;
     sf_file wind, out;
 
     sf_init (argc, argv);
@@ -65,7 +64,7 @@ int main(int argc, char* argv[])
 	wall[i] = 1.;
     }
 
-    aa = allocatehelix (1);
+    aa = sf_allocatehelix (1);
     aa->lag[0] = 1;
 
     tent (2, w, l, a, windwt);

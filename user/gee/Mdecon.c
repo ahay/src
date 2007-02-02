@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "tent.h"
 #include "patching.h"
 #include "loconvol.h"
@@ -36,7 +35,7 @@ int main(int argc, char* argv[])
     float *data, *wind, *resi, *sign, signvar, datavar, di, dabs;
     char varname[6], *lagfile;
     bool predictive;
-    filter aa, bb, cc;
+    sf_filter aa, bb, cc;
     sf_triangle tr=NULL;
     sf_file in, out, filt, lag;
 
@@ -70,7 +69,7 @@ int main(int argc, char* argv[])
     }
 
     if (!sf_histint(filt,"n1",&na)) sf_error("No n1= in sfilt");
-    bb = allocatehelix(na);
+    bb = sf_allocatehelix(na);
     
     if (NULL == (lagfile = sf_histstring(filt,"lag")) &&
 	NULL == (lagfile = sf_getstring("lag"))) 
@@ -100,8 +99,7 @@ int main(int argc, char* argv[])
 	data[i] /= dabs;
     }
 
-
-    aa = (filter) sf_alloc(nk,sizeof(*aa));
+    aa = (sf_filter) sf_alloc(nk,sizeof(*aa));
 
     for (ik=0; ik < nk; ik++) {
 	cc = aa+ik;

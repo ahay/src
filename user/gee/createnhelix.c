@@ -35,7 +35,7 @@ nfilter createnhelix(int dim     /* number of dimensions */,
 /*< allocate and output a non-stationary filter >*/ 
 {
     nfilter nsaa;
-    filter aa;
+    sf_filter aa;
     int n123, np, ip, *nh, i;
 
     aa = createhelix(dim, nd, center, gap, na);
@@ -62,7 +62,7 @@ nfilter createnhelix(int dim     /* number of dimensions */,
 	nbound(ip, dim, nd, na, nsaa); 
     }
 
-    deallocatehelix(aa);
+    sf_deallocatehelix(aa);
 
     return nsaa;
 }

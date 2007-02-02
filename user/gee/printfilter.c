@@ -25,14 +25,11 @@
 #include "printfilter.h"
 #include "boxfilter.h"
 
-#include "helix.h"
-/*^*/
-
-void print (int dim           /* number of dimensions */, 
-	    const int *nd     /* data size [dim] */, 
-	    const int *center /* filter center [dim] */, 
-	    const int *na     /* filter size [dim] */, 
-	    const filter aa   /* filter to print */) 
+void print (int dim            /* number of dimensions */, 
+	    const int *nd      /* data size [dim] */, 
+	    const int *center  /* filter center [dim] */, 
+	    const int *na      /* filter size [dim] */, 
+	    const sf_filter aa /* filter to print */) 
 /*< print a filter >*/ 
 {
     float* filt; 

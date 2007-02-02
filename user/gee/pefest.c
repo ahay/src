@@ -18,17 +18,14 @@
 */
 #include <rsf.h>
 
-#include "helix.h"
-/*^*/
-
 #include "helicon.h"
 #include "misinput.h"
 #include "pef.h"
 
-void pefest(int niter       /* number of iterations */,
-	    int ny          /* data size */,
-	    float *yy       /* input data */, 
-	    filter aa       /* estimated PEF */) 
+void pefest(int niter    /* number of iterations */,
+	    int ny       /* data size */,
+	    float *yy    /* input data */, 
+	    sf_filter aa /* estimated PEF */) 
 /*< estimate PEF avoiding zeros and bursty noise >*/
 {
     int iy, *mask;

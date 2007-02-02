@@ -48,7 +48,7 @@ msfilter createmshelix(int ndim    /* number of dimensions */,
 /*< allocate and output a multiscale helix filter >*/
 {
     msfilter msaa;
-    filter aa;
+    sf_filter aa;
     int is, ih, nh, id, n123, nb[SF_MAX_DIM];
 
     aa = createhelix(ndim, nd, center, gap, na);
@@ -60,7 +60,7 @@ msfilter createmshelix(int ndim    /* number of dimensions */,
 	    msaa->lag[is][ih] = aa->lag[ih]*jump[is]; 
 	
     }
-    deallocatehelix(aa);
+    sf_deallocatehelix(aa);
 
     n123=1;
     for (id=0; id < ndim; id++) n123 *= nd[id];    

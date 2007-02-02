@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "mis2.h"
 #include "bound.h"
 
@@ -29,7 +28,7 @@ int main(int argc, char* argv[])
     float a0, *mm, *kk, eps;
     bool prec, exact, *known;
     int n[SF_MAX_DIM], m[SF_MAX_DIM], a[SF_MAX_DIM];
-    filter aa;
+    sf_filter aa;
     char *lagfile;
     sf_file in, out, filt, lag, mask;
 
@@ -58,7 +57,7 @@ int main(int argc, char* argv[])
     n[dim-1] += padin + padout;
 
     if (!sf_histint(filt,"n1",&na)) sf_error("No n1= in filt");
-    aa = allocatehelix (na);
+    aa = sf_allocatehelix (na);
 
     if (!sf_histfloat(filt,"a0",&a0)) a0=1.;
  

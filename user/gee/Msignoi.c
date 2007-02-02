@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "signoi.h"
 #include "regrid.h"
 
@@ -28,7 +27,7 @@ int main(int argc, char* argv[])
     int niter, sa, na, j, dim, nx, n[SF_MAX_DIM], m[SF_MAX_DIM];
     float *dd, *ss, eps, na0, sa0;
     char varname[6], *lagfile;
-    filter naa, saa;
+    sf_filter naa, saa;
     sf_file spef, npef, dat, signoi, slag, nlag;
 
     sf_init(argc,argv);
@@ -43,8 +42,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(spef,"n1",&sa)) sf_error("No n1= in sfilt");
     if (!sf_histint(npef,"n1",&na)) sf_error("No n1= in nfilt");
 
-    naa = allocatehelix(na);
-    saa = allocatehelix(sa);
+    naa = sf_allocatehelix(na);
+    saa = sf_allocatehelix(sa);
 
     if (NULL == (lagfile = sf_histstring(spef,"lag")) &&
 	NULL == (lagfile = sf_getstring("slag"))) 

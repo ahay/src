@@ -1,0 +1,42 @@
+from rsfproj import *
+
+for case in ('data','mult'):
+    sep = 'gom%s.H' % case
+    Fetch(sep,'antoine')
+    Flow(case,sep,
+         '''
+         dd form=native |
+         tpow tpow=2 |
+         scale dscale=0.001 |
+         put label1=Time unit1=s label2=Offset unit2=m
+         ''')
+    
+Plot('data','grey title="(a) Input Data"')
+Plot('mult','grey title="(b) Multiple Model"')
+Result('inp','data mult','SideBySideAniso')
+    
+nt=1250
+ns=21
+
+shifts = ['mult']
+for s in range(1,ns):
+    shift = 'shift-%d' % s
+    Flow(shift,'mult','window f1=%d | pad end1=%d' % (s,s))
+    shifts.append(shift)
+
+    shift = 'shift+%d' % s
+    Flow(shift,'mult','window n1=%d | pad beg1=%d' % (nt-s,s))
+    shifts.append(shift)
+Flow('shifts',shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
+
+Flow('filt pred','shifts data',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=20 rect2=20 niter=100')
+Flow('prim','data pred','add scale=1,-1 ${SOURCES[1]}')
+
+Plot('prim','grey title="(a) Estimated Signal" ')
+Plot('pred','grey title="(b) Predicted Multiples" ')
+Result('out','prim pred','SideBySideAniso')
+
+
+
+End()

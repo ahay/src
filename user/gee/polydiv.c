@@ -22,14 +22,11 @@
 
 #include "polydiv.h"
 
-#include "helix.h"
-/*^*/
-
-static filter aa;
+static sf_filter aa;
 static float* tt;
 
-void polydiv_init( int nd    /* data size */, 
-		   filter bb /* filter */) 
+void polydiv_init( int nd       /* data size */, 
+		   sf_filter bb /* filter */) 
 /*< initialize >*/
 {
     aa = bb;

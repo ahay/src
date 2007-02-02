@@ -28,7 +28,7 @@ int main(int argc, char* argv[])
 {
     int n1, i1, na, ia, niter, center=0;
     float *data;
-    filter aa;
+    sf_filter aa;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -45,7 +45,7 @@ int main(int argc, char* argv[])
     /* number of iterations */
 
     data = sf_floatalloc(n1);
-    aa = allocatehelix(na);
+    aa = sf_allocatehelix(na);
 
     sf_floatread(data,n1,in);
 

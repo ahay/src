@@ -18,14 +18,11 @@
 */
 #include <rsf.h>
 
-#include "helix.h"
-/*^*/
-
 #include "helicon.h"
 
-static filter aa1, aa2;
+static sf_filter aa1, aa2;
 
-void heliarr_init (filter a1, filter a2)
+void heliarr_init (sf_filter a1, sf_filter a2)
 /*< initialize >*/
 {
     aa1 = a1;

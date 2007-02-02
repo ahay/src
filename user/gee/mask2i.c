@@ -18,9 +18,6 @@
 */
 #include <rsf.h>
 
-#include "helix.h"
-/*^*/
-
 #include "helicon.h"
 #include "heliarr.h"
 
@@ -29,8 +26,8 @@ void maski (int niter       /* number of iterations */,
 	    const float *dd /* data */, 
 	    float *xx       /* model */, 
 	    int *known      /* mask for known data */, 
-	    filter aa1      /* first PEF */, 
-	    filter aa2      /* second PEF */) 
+	    sf_filter aa1   /* first PEF */, 
+	    sf_filter aa2   /* second PEF */) 
 /*< interpolate >*/
 {
     bool *mask;

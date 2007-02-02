@@ -17,15 +17,14 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
-#include "helix.h"
-/*^*/
+#include <rsf.h>
 
 #include "compress.h"
 
-filter conv(const filter aa, const filter bb) 
+sf_filter conv(const sf_filter aa, const sf_filter bb) 
 /*< convolve aa and bb >*/
 {
-    filter ss;
+    sf_filter ss;
     int na, nb, amax, bmax, ns, ia, ib, i;
         
     na = aa->nh;
@@ -40,7 +39,7 @@ filter conv(const filter aa, const filter bb)
 	if (bb->lag[i] > bmax) bmax = bb->lag[i];
     }
     ns = amax+bmax;
-    ss = allocatehelix(ns);
+    ss = sf_allocatehelix(ns);
     for (i=0; i < ns; i++) {
 	ss->lag[i] = i+1;
 	ss->flt[i] = 0.;

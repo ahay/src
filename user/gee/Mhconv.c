@@ -18,13 +18,12 @@
 */
 #include <rsf.h>
 
-#include "helix.h"
 #include "conv.h"
 
 int main(int argc, char* argv[]) 
 {
     int na, nb, ns;
-    filter ss, aa, bb;
+    sf_filter ss, aa, bb;
     char* file;
     sf_file inp, oth, out, lagin, lagout;
 
@@ -34,7 +33,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(inp,"n1",&na)) sf_error("No n1= in input");
-    aa = allocatehelix(na);
+    aa = sf_allocatehelix(na);
     if (NULL == (file = sf_histstring(inp,"lag"))) sf_error("No lag= in input");
     lagin = sf_input(file);
     sf_intread(aa->lag,na,lagin);
@@ -43,7 +42,7 @@ int main(int argc, char* argv[])
     free(file);
 
     if (!sf_histint(oth,"n1",&nb)) sf_error("No n1= in other");
-    bb = allocatehelix(nb);
+    bb = sf_allocatehelix(nb);
     if (NULL == (file = sf_histstring(oth,"lag"))) sf_error("No lag= in other");
     lagin = sf_input(file);
     sf_intread(bb->lag,nb,lagin);

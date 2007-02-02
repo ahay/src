@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "wilson.h"
 #include "compress.h"
 
@@ -29,7 +28,7 @@ int main(int argc, char* argv[])
     int i, j, na, niter;
     float s0, a0, t, eps;
     char *file;
-    filter ss, aa;
+    sf_filter ss, aa;
     sf_file flt, lag;
 
     sf_init(argc,argv);
@@ -44,7 +43,7 @@ int main(int argc, char* argv[])
     lag = sf_output(file);
     sf_setformat(lag,"native_int");    
 
-    ss = allocatehelix (12);
+    ss = sf_allocatehelix (12);
     ss->lag[0] = 1;
     ss->lag[1] = 2;
     i=2;
@@ -72,7 +71,7 @@ int main(int argc, char* argv[])
     ss->flt[10] = ss->flt[2];
     ss->flt[11] = ss->flt[7];
 
-    aa = allocatehelix (2*n1+2);
+    aa = sf_allocatehelix (2*n1+2);
     for (i=0; i < 2*n1+2; i++) {
 	aa->lag[i] = i+1;
 	aa->flt[i] = 0.;

@@ -1,0 +1,33 @@
+from rsfproj import *
+
+Fetch('shot.H','antoine')
+Flow('trace','shot.H','dd form=native | window min2=200 n2=1 min1=1.45 max1=1.6')
+Flow('noise','trace',
+     '''
+     pad n1=49 |
+     reverse which=1 |
+     pad n1=59 |
+     scale dscale=3 |
+     spray axis=2 n=27 d=1 o=0
+     ''')
+
+gradient=1.05
+Flow('sign','noise','math output="input*(%g)^x2" ' % gradient)
+Flow('data','noise sign','add ${SOURCES[1]}')
+Flow('modl','noise','envelope hilb=y')
+
+def wiggle(title):
+    return '''
+    wiggle poly=y transp=y 
+    wantaxis2=n wantaxis1=n title="%s"
+    crowd2=0.8 crowd1=.9 clip=8.
+    ''' % title
+
+Plot('sign',wiggle('(a) - Signal'))
+Plot('noise',wiggle('(b) - Noise'))
+Plot('data',wiggle('(c) - Data = Signal + Noise'))
+Plot('modl',wiggle('(d) - Noise model'))
+
+Result('synth','sign noise data modl','TwoRows')
+
+End()

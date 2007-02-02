@@ -79,8 +79,7 @@ if 'python' in api:
     if root:
         for prog in py_mains:
             # no compilation but rename
-            pwd = os.path.join(root,'user/slim')
-            env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,prog+'.py'))
+            env.InstallAs(os.path.join(bindir,'sf'+prog),prog+'.py')
 else:
     py_mains = []
 

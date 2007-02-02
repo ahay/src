@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "wilson.h"
 #include "compress.h"
 
@@ -28,7 +27,7 @@ int main(int argc, char* argv[])
     int nt, i, j, k, niter, np, ip, *nh, n2[2];
     float s0, p, a0, dp, p2, pmax, p0, eps, p21;
     char *lagname, *nhname;
-    filter ss, aa;
+    sf_filter ss, aa;
     sf_file out, nhh, lag;
 
     sf_init (argc,argv);
@@ -52,7 +51,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("nt",&nt)) nt=40;
     /* length of the fast axis */
 
-    ss = allocatehelix (24);
+    ss = sf_allocatehelix (24);
     ss->lag[0] = 1; ss->lag[1] = 2; ss->lag[2] = 3;
     j = 3;
     for (k=1; k <= 3; k++) {
@@ -116,7 +115,7 @@ int main(int argc, char* argv[])
 	ss->flt[22] = -8.*(49.*p + 9.*p2 + 45.);
 	ss->flt[23] = -7.*p - 3.*p21;
 
-	aa = allocatehelix (120);
+	aa = sf_allocatehelix (120);
 	for (i=0; i < 120; i++) {
 	    aa->flt[i] = 0.;
 	}
@@ -147,7 +146,7 @@ int main(int argc, char* argv[])
 	sf_intwrite (aa->lag,aa->nh,lag);
 
 	nh[ip] = aa->nh;
-	deallocatehelix (aa);
+	sf_deallocatehelix (aa);
     }
     sf_intwrite (nh,np,nhh);
 

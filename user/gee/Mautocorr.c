@@ -19,7 +19,6 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "autocorr.h"
 
 int main(int argc, char* argv[])
@@ -27,7 +26,7 @@ int main(int argc, char* argv[])
     int i, na, ns;
     float s0, a0;
     char* lagfile;
-    filter ss, aa;
+    sf_filter ss, aa;
     sf_file in, out, lag0, lag;
 
     sf_init (argc,argv);
@@ -35,7 +34,7 @@ int main(int argc, char* argv[])
     out = sf_output("out");
 
     if (!sf_histint(in,"n1",&na)) sf_error("No n1= in input");
-    aa = allocatehelix (na);
+    aa = sf_allocatehelix (na);
 
     if (NULL == (lagfile = sf_histstring(in,"lag"))) {
 	if (NULL == (lagfile = sf_getstring("lag"))) {

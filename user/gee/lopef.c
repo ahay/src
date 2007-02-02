@@ -24,22 +24,19 @@
 #include "misinput.h"
 #include "pef.h"
 
-#include "helix.h"
-/*^*/
-
-void find_lopef(int dim     /* number of dimensions */, 
-		float *wall /* whole data */, 
-		filter aa   /* PEF */, 
-		int *npatch /* number of patches [dim] */, 
-		int *nwall  /* data size [dim] */, 
-		int *nwind  /* patch size [dim] */, 
-		float *mask /* mask for known data */)
+void find_lopef(int dim      /* number of dimensions */, 
+		float *wall  /* whole data */, 
+		sf_filter aa /* PEF */, 
+		int *npatch  /* number of patches [dim] */, 
+		int *nwall   /* data size [dim] */, 
+		int *nwind   /* patch size [dim] */, 
+		float *mask  /* mask for known data */)
 /*< estimate local PEF >*/ 
 {
     float *windata, *winmask;
     int *known;
     int mis, ih, ip, iw, j, nw, np, n, nh;
-    filter bb;
+    sf_filter bb;
 
     nw = np = n = 1;
     for (j=0; j < dim; j++) {

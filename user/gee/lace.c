@@ -20,27 +20,23 @@
 #include <rsf.h>
 
 #include "lace.h"
-
-#include "helix.h"
-/*^*/
-
 #include "createhelix.h" 
 #include "bound.h"
 #include "pef.h"
 
-filter lace_pef(int dim     /* number of dimensions */, 
-		float *dd   /* data */, 
-		int jump    /* filter stretch */, 
-		int n       /* data size */, 
-		int *nd     /* data dimensions [dim] */, 
-		int *center /* filter center [dim] */, 
-		int *gap    /* filter gap [dim] */, 
-		int *na     /* filter size [dim] */)  
+sf_filter lace_pef(int dim     /* number of dimensions */, 
+		   float *dd   /* data */, 
+		   int jump    /* filter stretch */, 
+		   int n       /* data size */, 
+		   int *nd     /* data dimensions [dim] */, 
+		   int *center /* filter center [dim] */, 
+		   int *gap    /* filter gap [dim] */, 
+		   int *na     /* filter size [dim] */)  
 /*< estimate PEF >*/
 {
     int *savelags, ii[SF_MAX_DIM]; /* holding place */
     int ih, nh, lag0, j;
-    filter aa;
+    sf_filter aa;
 
     aa = createhelix(dim, nd, center, gap, na);  
     savelags = aa->lag;

@@ -21,13 +21,10 @@
 
 #include "regrid.h"
 
-#include "helix.h"
-/*^*/
-
 void regrid( int dim         /* number of dimensions */, 
 	     const int* nold /* old data size [dim] */, 
 	     const int* nnew /* new data size [dim] */, 
-	     filter aa       /* modified filter */) 
+	     sf_filter aa    /* modified filter */) 
 /*< change data size >*/
 {
     int i, h0, h1, h, ii[SF_MAX_DIM];

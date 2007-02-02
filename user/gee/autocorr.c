@@ -16,26 +16,24 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <rsf.h>
 
 #include "autocorr.h"
 #include "compress.h"
 
-#include "helix.h"
-/*^*/
-
-filter autocorr(const filter aa /* input filter */, 
-		float a0        /* input zero lag */, 
-		float *s0       /* output zero lag */, 
-		float eps       /* tolerance for compression */)
+sf_filter autocorr(const sf_filter aa /* input filter */, 
+		   float a0        /* input zero lag */, 
+		   float *s0       /* output zero lag */, 
+		   float eps       /* tolerance for compression */)
 /*< Output the autocorrelation (positive side only) of the input filter >*/
 {
     int i, j, k, n, na;
     float f, b0;
-    filter ss;
+    sf_filter ss;
 
     na = aa->nh;
 
-    ss = allocatehelix (na*(na+1)/2);
+    ss = sf_allocatehelix (na*(na+1)/2);
  
     b0 = a0*a0;
     for (i=0; i < na; i++) {

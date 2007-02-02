@@ -22,13 +22,10 @@
 #include "pef.h"
 #include "hconest.h"
 
-#include "helix.h"
-/*^*/
-
-void find_pef(int nd    /* data size */, 
-	      float* dd /* data [nd] */, 
-	      filter aa /* estimated filter */, 
-	      int niter /* number of iterations */)
+void find_pef(int nd       /* data size */, 
+	      float* dd    /* data [nd] */, 
+	      sf_filter aa /* estimated filter */, 
+	      int niter    /* number of iterations */)
 /*< find PEF >*/ 
 {
     hconest_init( dd, aa);

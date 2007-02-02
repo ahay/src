@@ -19,7 +19,6 @@
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "bound.h"
 #include "misinput.h"
 #include "pef.h"
@@ -33,7 +32,7 @@ int main(int argc, char* argv[])
     int a[SF_MAX_DIM], center[SF_MAX_DIM], gap[SF_MAX_DIM];
     int dim, n123, i, niter, na, *kk;
     float *dd;
-    filter aa;   
+    sf_filter aa;   
     char varname[6], *lagfile;
     sf_file in, filt, lag, mask;
 
@@ -76,7 +75,7 @@ int main(int argc, char* argv[])
 	    n0[i] = n[i];
 	}
     } else {
-	aa =  allocatehelix (na);
+	aa =  sf_allocatehelix (na);
 	if (!sf_getints ("lags", aa->lag, na)) sf_error("Need lags=");
 	if (!sf_getints ("n", n0, dim)) {
 	    for (i=0; i < dim; i++) {	    

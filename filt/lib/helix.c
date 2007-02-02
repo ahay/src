@@ -16,30 +16,32 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
-/*^*/
+#include <stdlib.h>
 
 #include "helix.h"
+#include "alloc.h"
 
-#ifndef _helix_h
+#include "_bool.h"
+/*^*/
 
-typedef struct helixfilter {
+#ifndef _sf_helix_h
+
+typedef struct sf_helixfilter {
     int nh;
     float* flt;
     int* lag;
     bool* mis;
-} *filter;
+} *sf_filter;
 /*^*/
 
 #endif
 
-filter allocatehelix( int nh) 
+sf_filter sf_allocatehelix( int nh) 
 /*< allocation >*/
 {
-    filter aa;
+    sf_filter aa;
 
-    aa = (filter) sf_alloc(1,sizeof(*aa));
+    aa = (sf_filter) sf_alloc(1,sizeof(*aa));
     aa->nh = nh;
     aa->flt = sf_floatalloc(nh);
     aa->lag = sf_intalloc(nh);
@@ -48,7 +50,7 @@ filter allocatehelix( int nh)
     return aa;
 }
 
-void deallocatehelix( filter aa) 
+void sf_deallocatehelix( sf_filter aa) 
 /*< deallocation >*/
 {
     free( aa->flt);
@@ -57,4 +59,4 @@ void deallocatehelix( filter aa)
     free( aa);
 }
 
-/* 	$Id$	 */
+/* 	$Id: helix.c 838 2004-10-25 11:10:38Z fomels $	 */

@@ -24,14 +24,11 @@
 
 #include "compress.h"
 
-#include "helix.h"
-/*^*/
-
-filter compress( filter aa /* filter */, 
-		 float eps /* threshold */) 
+sf_filter compress( sf_filter aa /* filter */, 
+		    float eps    /* threshold */) 
 /*< return a new filter with coefficients less than eps removed >*/
 {
-    filter bb;
+    sf_filter bb;
     bool* keep;
     int i, k;
 
@@ -45,7 +42,7 @@ filter compress( filter aa /* filter */,
 	    keep[i] = false;
 	}
     }
-    bb = allocatehelix( k);
+    bb = sf_allocatehelix( k);
     k = 0;
     for(i=0; i < aa->nh; i++) {
 	if (keep[i]) {
@@ -54,7 +51,7 @@ filter compress( filter aa /* filter */,
 	    k++;
 	}
     }
-    deallocatehelix( aa);
+    sf_deallocatehelix( aa);
     free (keep);
 
     return bb;

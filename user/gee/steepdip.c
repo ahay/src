@@ -23,20 +23,17 @@
 
 #include "steepdip.h"
 
-#include "helix.h"
-/*^*/
-
-filter steep(int dim    /* number of dimensions */, 
-	     int *n     /* data size [dim] */, 
-	     int *a     /* filter size [dim] */, 
-	     float *d   /* axis sampling [dim] */, 
-	     float vel  /* velocity */, 
-	     float tgap /* time gap */) 
+sf_filter steep(int dim    /* number of dimensions */, 
+		int *n     /* data size [dim] */, 
+		int *a     /* filter size [dim] */, 
+		float *d   /* axis sampling [dim] */, 
+		float vel  /* velocity */, 
+		float tgap /* time gap */) 
 /*< define PEF >*/
 {
     int *lag, c[SF_MAX_DIM], i, h, na, nx, it, j;
     float x, t0;
-    filter aa;
+    sf_filter aa;
 
     na = 1;
     for (j=0; j < dim; j++) {
@@ -69,7 +66,7 @@ filter steep(int dim    /* number of dimensions */,
 	}
     }
 
-    aa = allocatehelix(h);
+    aa = sf_allocatehelix(h);
 
     for (i=0; i < h; i++) {
 	aa->lag[i] = lag[i];

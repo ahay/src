@@ -21,16 +21,13 @@
 
 #include "boxfilter.h"
 
-#include "helix.h"
-/*^*/
-
-void box (int dim           /* number of dimaneions */, 
-	  const int *nd     /* data size [dim] */, 
-	  const int *center /* filter center [dim] */, 
-	  const int *na     /* filter size [dim] */, 
-	  const filter aa   /* input filter */, 
-	  int nc            /* box size */, 
-	  float* cube       /* output box [nc] */)
+void box (int dim            /* number of dimaneions */, 
+	  const int *nd      /* data size [dim] */, 
+	  const int *center  /* filter center [dim] */, 
+	  const int *na      /* filter size [dim] */, 
+	  const sf_filter aa /* input filter */, 
+	  int nc             /* box size */, 
+	  float* cube        /* output box [nc] */)
 /*< box it >*/ 
 {
     int ii[SF_MAX_DIM];

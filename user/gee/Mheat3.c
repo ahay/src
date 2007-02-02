@@ -19,7 +19,6 @@
 #include <rsf.h>
 
 #include "helify.h"
-#include "helix.h"
 #include "polydiv.h"
 
 int main(int argc, char* argv[])
@@ -27,7 +26,7 @@ int main(int argc, char* argv[])
     const int nx = 100, ny = 100, nxy=10000, a = 2, nf = 17, n1 = 8;
     const float gamma = 0.666666;
     float q[nxy], d[nxy];
-    filter aa;
+    sf_filter aa;
     float alpha, scale, middle;
     int it, ix, iy, nt, nh;
     sf_file out;
@@ -56,7 +55,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-    aa = allocatehelix(nf);
+    aa = sf_allocatehelix(nf);
     scale = helify(1.,alpha,n1,nf,aa->flt); 
 
     for (it=0; it < n1; it++) {

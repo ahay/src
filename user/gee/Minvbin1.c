@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     int id, nd, nt, it, nx, filt, niter, three=3, i;
     float *mm, *dd, *offset, *aa, x0, dx, xmin, xmax, f, eps;
     char *header;
-    filter bb;
+    sf_filter bb;
     sf_file in, out, head;
 
     sf_init (argc,argv);
@@ -144,7 +144,7 @@ int main (int argc, char* argv[])
 	sf_cgstep_close();
 
 	if (pef) {
-	    bb = allocatehelix (2);
+	    bb = sf_allocatehelix (2);
 	    aa = sf_floatalloc (3);
 	    aa[0] = 1.;
 	    bb->lag[0] = 1;

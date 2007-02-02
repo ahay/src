@@ -25,19 +25,16 @@
 #include "helicon.h"
 #include "polydiv.h"
 
-#include "helix.h"
-/*^*/
-
 static int niter, nd;
 static float eps, *dd;
-static filter nn, ss;
+static sf_filter nn, ss;
 
 
-void signoi_init(filter nn_in /* noise PEF */, 
-		 filter ss_in /* signal PEF */, 
-		 int niter_in /* number of iterations */, 
-		 int nd_in    /* data size */, 
-		 float eps_in /* regularization parameter (signal/noise) */)
+void signoi_init(sf_filter nn_in /* noise PEF */, 
+		 sf_filter ss_in /* signal PEF */, 
+		 int niter_in    /* number of iterations */, 
+		 int nd_in       /* data size */, 
+		 float eps_in    /* regularization parameter (signal/noise) */)
 /*< initialize >*/
 {
     nn = nn_in;

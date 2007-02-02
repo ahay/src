@@ -18,8 +18,6 @@
 */
 
 #include <rsf.h>
-#include "helix.h"
-/*^*/
 
 #include "mis2.h"
 #include "helicon.h" 
@@ -28,7 +26,7 @@
 void mis2(int niter         /* number of iterations */, 
 	  int nx            /* model size */, 
 	  float *xx         /* model */, 
-	  filter aa         /* helix filter */, 
+	  sf_filter aa      /* helix filter */, 
 	  const bool *known /* mask for known data */,
 	  float eps         /* regularization parameter */,
 	  bool doprec       /* to apply preconditioning */) 

@@ -20,17 +20,14 @@
 
 #include "pefhel.h"
 
-#include "helix.h"
-/*^*/
-
 #include "helicon.h"
 #include "hconest.h"
 
 static int n;
 
-void pefhel_init (filter aa /* PEF */, 
-		  int ny    /* data size */,
-		  float *yy /* data */)
+void pefhel_init (sf_filter aa /* PEF */, 
+		  int ny       /* data size */,
+		  float *yy    /* data */)
 /*< initialize >*/
 {
     n = ny;

@@ -18,11 +18,9 @@
 */
 
 #include <rsf.h>
+/*^*/
 
 #include "mshelix.h"
-
-#include "helix.h"
-/*^*/
 
 #ifndef _mshelix_h
 
@@ -31,7 +29,7 @@ typedef struct mshelixfilter {
     float* flt;
     int** lag;
     bool** mis;
-    filter one;
+    sf_filter one;
 } *msfilter;
 /*^*/
 
@@ -56,7 +54,7 @@ msfilter msallocate(int nh /* filter size */,
     aa->flt = sf_floatalloc(nh);
     aa->lag = sf_intalloc2(nh,ns);
     aa->mis = NULL;
-    aa->one = (filter) sf_alloc(1,sizeof(*aa->one));
+    aa->one = (sf_filter) sf_alloc(1,sizeof(*aa->one));
     aa->one->flt = aa->flt;
     aa->one->nh = nh;
 

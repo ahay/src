@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int dim, i, niter, n12, n[SF_MAX_DIM], a[SF_MAX_DIM], b[SF_MAX_DIM];
     int center[SF_MAX_DIM], gap[SF_MAX_DIM], *known;
     float *dd, *hh;
-    filter aa, bb;
+    sf_filter aa, bb;
     sf_file in, out, mask;
 
     sf_init (argc,argv);

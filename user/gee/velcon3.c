@@ -20,7 +20,6 @@
 
 #include "velcon3.h"
 #include "helify.h"
-#include "helix.h" 
 #include "polydiv.h"
 
 static float *r, *ld, *rd, *rhs, *w, *a, *b1, *b2, **pt, **flt;
@@ -28,7 +27,7 @@ static float v1, v2, dv, t0, dt, a0, cr, g2;
 static const float g1 = 0.631974, b = 0.122996;
 static int n, nt, nx, nv, inv;
 static const int nf = 17, n1 = 8;
-static filter aa;
+static sf_filter aa;
 
 static void diffxx (const float *f, float *fxx)
 /* helix laplacian */
@@ -80,7 +79,7 @@ void velcon3_init (int inv1, float w1, float w2, float d0,
     b1 = sf_floatalloc(nt);
     b2 = sf_floatalloc(nt);
 
-    aa = allocatehelix(nf);
+    aa = sf_allocatehelix(nf);
     free (aa->flt);
 
     for (it=0; it < n1; it++) {

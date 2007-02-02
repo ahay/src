@@ -1,17 +1,15 @@
 /* Non-stationary helical filter */
 
 #include <rsf.h>
+/*^*/
 
 #include "nhelix.h"
-
-#include "helix.h"
-/*^*/
 
 #ifndef _nhelix_h
 
 typedef struct nhelixfilter {
     int np;    
-    filter* hlx;
+    sf_filter* hlx;
     bool* mis;
     int *pch;
 } *nfilter;
@@ -31,10 +29,10 @@ nfilter nallocate(int np   /* number of patches */,
     aa = (nfilter) sf_alloc(1,sizeof(*aa));
 
     aa->np = np;
-    aa->hlx = (filter*) sf_alloc(np,sizeof(filter));
+    aa->hlx = (sf_filter*) sf_alloc(np,sizeof(sf_filter));
 
     for (ip=0; ip < np; ip++) {
-	aa->hlx[ip] = allocatehelix(nh[ip]);
+	aa->hlx[ip] = sf_allocatehelix(nh[ip]);
     }
     
     aa->pch = sf_intalloc(nd);
@@ -52,7 +50,7 @@ void ndeallocate(nfilter aa)
     int ip;
     
     for (ip=0; ip < aa->np; ip++) {
-	deallocatehelix(aa->hlx[ip]);
+	sf_deallocatehelix(aa->hlx[ip]);
     }
     free (aa->hlx);
     free (aa->pch);

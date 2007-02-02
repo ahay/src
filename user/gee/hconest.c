@@ -22,13 +22,10 @@
 
 #include "hconest.h"
 
-#include "helix.h"
-/*^*/
-
 static float *x;
-static filter aa;
+static sf_filter aa;
 
-void hconest_init(float *x_in, filter aa_in)
+void hconest_init(float *x_in, sf_filter aa_in)
 /*< initialize >*/
 {
     x = x_in;

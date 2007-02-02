@@ -4,26 +4,25 @@ Signal and noise separation by inversion (super-deconvolution).
 Uses the helix and patching technologies.
 */
 /*
-Copyright (C) 2004 University of Texas at Austin
-
-This program is free software; you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation; either version 2 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+  Copyright (C) 2004 University of Texas at Austin
+  
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation; either version 2 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU General Public License
+  along with this program; if not, write to the Free Software
+  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 
 #include <rsf.h>
 
-#include "helix.h"
 #include "tent.h"
 #include "patching.h"
 #include "signoi.h"
@@ -35,7 +34,7 @@ int main(int argc, char* argv[])
     int sa[SF_MAX_DIM], na[SF_MAX_DIM], sc[SF_MAX_DIM], nc[SF_MAX_DIM];
     float *data, *wind, *sign, eps, di, dabs;
     char varname[6], *lagfile;
-    filter saa, naa, sbb, nbb, scc, ncc;
+    sf_filter saa, naa, sbb, nbb, scc, ncc;
     sf_file dat, signal, spef, npef, slag, nlag;
 
     sf_init (argc,argv);
@@ -74,8 +73,8 @@ int main(int argc, char* argv[])
     if (!sf_histint(spef,"n1",&sf)) sf_error("No n1= in sfilt");
     if (!sf_histint(npef,"n1",&nf)) sf_error("No n1= in nfilt");
 
-    sbb = allocatehelix(sf);
-    nbb = allocatehelix(nf);
+    sbb = sf_allocatehelix(sf);
+    nbb = sf_allocatehelix(nf);
 
     if (NULL == (lagfile = sf_histstring(spef,"lag")) &&
 	NULL == (lagfile = sf_getstring("slag"))) 
@@ -109,9 +108,8 @@ int main(int argc, char* argv[])
 	data[i] /= dabs;
     }
 
-
-    saa = (filter) sf_alloc(nk,sizeof(*saa));
-    naa = (filter) sf_alloc(nk,sizeof(*naa));
+    saa = (sf_filter) sf_alloc(nk,sizeof(*saa));
+    naa = (sf_filter) sf_alloc(nk,sizeof(*naa));
 
     for (ik=0; ik < nk; ik++) {
 	scc = saa+ik;

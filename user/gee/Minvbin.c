@@ -34,7 +34,7 @@ int main (int argc, char* argv[])
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, a0, eps;
     char *xk, *yk, *lagfile, *nhfile, *header;
     bool stat;
-    filter aa;
+    sf_filter aa;
     nfilter naa=NULL;
     sf_file in, out, head, flt, lag, nhh, pch=NULL;
 
@@ -180,7 +180,7 @@ int main (int argc, char* argv[])
 
     if (stat) {
 	if (!sf_histint(flt,"n1",&na)) sf_error("No n1= in filt");
-	aa = allocatehelix (na);
+	aa = sf_allocatehelix (na);
 
 	if (!sf_histfloat(flt,"a0",&a0)) a0=1.;
 	sf_floatread (aa->flt,na,flt);

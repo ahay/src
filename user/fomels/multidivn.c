@@ -24,22 +24,20 @@
 #include "repeat.h"
 #include "weight2.h"
 
-static int n;
 static float *p;
 
 void multidivn_init(int nw     /* number of components */, 
 		    int ndim   /* number of dimensions */, 
-		    int nd     /* data size */, 
+		    int n     /* data size */, 
 		    int *ndat  /* data dimensions [ndim] */, 
 		    int *nbox  /* smoothing radius [ndim] */,
-		    float* den  /* denominator [nw*nd] */) 
+		    float* den  /* denominator [nw*nd] */)
 /*< initialize >*/
 {
     int n2;
 
-    n = nd;
     n2 = n*nw;
-
+    
     trianglen_init(ndim, nbox, ndat);
     repeat_init(n,nw,trianglen_lop);
 

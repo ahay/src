@@ -18,16 +18,13 @@
 */
 #include <rsf.h>
 
-#include "helix.h"
-/*^*/
-
 #include "helicon.h"
 #include "mis2.h"
 
-void fixbad (int niter /* number of iterations */, 
-	     filter aa /* PEF */, 
-	     int ny    /* data size */,
-	     float *yy /* in - data, out - deburst */) 
+void fixbad (int niter    /* number of iterations */, 
+	     sf_filter aa /* PEF */, 
+	     int ny       /* data size */,
+	     float *yy    /* in - data, out - deburst */) 
 /*< find bad data and restore it >*/
 {
     int iy;

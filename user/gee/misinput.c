@@ -16,16 +16,14 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+#include <rsf.h>
 
 #include "misinput.h" 
 #include "helicon.h"
 
-#include "helix.h"
-/*^*/
-
 void find_mask(int n            /* data size */, 
 	       const int *known /* mask for known data [n] */, 
-	       filter aa        /* helical filter */) 
+	       sf_filter aa     /* helical filter */) 
 /*< create a filter mask >*/
 {
     int i, ih;
