@@ -4,7 +4,7 @@ import fdmod
  # Sigsbee 2A
 ##
 data='sigsbee2a_stratigraphy.sgy'
-#Fetch(data,'sigsbee')
+Fetch(data,'sigsbee')
 Flow(['vstr2A','vstr2Ahead'],data,
          '''
          segyread tape=$SOURCE tfile=${TARGETS[1]} |

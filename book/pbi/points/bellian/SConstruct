@@ -1,0 +1,25 @@
+from rsfproj import *
+
+import os
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+xyzi = 'DS_10cmDecimated.xyzi'
+Fetch(xyzi+'.gz','bellian',private)
+Flow(xyzi,xyzi+'.gz','gunzip -c $SOURCE',stdin=0)
+
+Flow('xyz',xyzi,
+     '''
+     echo n1=4 n2=59561394 in=$SOURCE data_format=ascii_float |
+     dd form=native |
+     window n1=3
+     ''',stdin=0)
+
+Flow('dist','xyz',
+     '''
+     distance n1=101 n2=111 n3=91
+     o1=-50 d1=0.01 o2=-50 d2=0.01 o3=-40 d3=0.01
+     ''')
+
+End()
