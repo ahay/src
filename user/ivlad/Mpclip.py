@@ -12,7 +12,7 @@ PARAMETERS
 	bool   verb=n [y/n] 	If y, print system commands, outputs
 	float  pclip=99.0	Percentile clip
 SOURCE
-	user/ivlad/pclip.py
+	user/ivlad/Mpclip.py
 """
 # Copyright (C) 2007 Ioan Vlad
 #
@@ -32,12 +32,16 @@ SOURCE
 
 
 import sys
-from rsfuser.ivlad import send_to_os
+
 try:
     import rsf
 except: # Madagascar's Python API not installed
     import rsfbak as rsf
 
+try: # Give precedence to local version
+    from ivlad import send_to_os
+except: # Use distributed version
+    from rsfuser.ivlad import send_to_os
 
 def main(argv=sys.argv):
 
