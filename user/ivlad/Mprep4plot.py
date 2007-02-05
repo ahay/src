@@ -74,9 +74,18 @@ def main(argv=sys.argv):
         return error
     del leftsize
 
-    n1=0; o1=0; d1=0; (n1, o1, d1) = readaxis( inp, 1 )
-    n2=0; o2=0; d2=0; (n2, o2, d2) = readaxis( inp, 2 )
-    del o1, o2
+    n1 = send_to_os('sfget',
+                    arg = ['parform=n','n1'],
+                    stdin = inp,
+                    want = 'stdout',
+                    verb = verb)
+    n2 = send_to_os('sfget',
+                    arg = ['parform=n','n2'],
+                    stdin = inp,
+                    want = 'stdout',
+                    verb = verb)
+    n1 = int(n1)
+    n2 = int(n2)
 
     # Read and check the h and w parameters
     # The debacle below could be avoided if rsf had a function specifying
@@ -167,11 +176,23 @@ def main(argv=sys.argv):
         sys.stderr.write('sanity check failed\n')
         return error
 
+    # Put tmp files together with the binaries,
+    # so that if prep4plot crashes, user is not
+    # left with junk files all over his dir
+    tmp = os.path.join(os.environ['DATAPATH'],
+                       os.path.split(inp)[1],
+                       '.prep4plot_junk_')
+
     # Interpolation and, if needed, bandpass 
     if h:
-        d1 *= (n1-1)/float(h-1)
+        d1 = send_to_os('sfget',
+                   arg = ['parform=n','d1'],
+                   stdin = inp,
+                   want = 'stdout',
+                   verb = verb)
+        d1 = float(d1) * (n1-1)/float(h-1)
         if h < n1:
-            ready_for_remap_1 = inp+'.prep4plot_junk1'
+            ready_for_remap_1 = tmp + '1'
             send_to_os('sfbandpass',
                        arg='fhi='+str(0.5/d1),
                        stdin=inp,
@@ -182,7 +203,7 @@ def main(argv=sys.argv):
             ready_for_remap_1 = inp
             rem2del_junk1 = False
         if w:
-            out_remap1 = inp+'.prep4plot_junk2'
+            out_remap1 = tmp + '2'
             rem2del_junk2 = True
         else:
             out_remap1 = out
@@ -201,8 +222,13 @@ def main(argv=sys.argv):
         rem2del_junk2 = False
 
     if w:
-        d2 *= (n2-1)/float(w-1)
-        out_transp1 = inp+'.prep4plot_junk3'
+        d2 = send_to_os('sfget',
+                   arg = ['parform=n','d2'],
+                   stdin = inp,
+                   want = 'stdout',
+                   verb = verb)
+        d2 = float(d2) * (n2-1)/float(w-1)
+        out_transp1 = tmp + '3'
         send_to_os('sftransp',
                    stdin=out_remap1,
                    stdout=out_transp1,
@@ -212,8 +238,8 @@ def main(argv=sys.argv):
                        arg=out_remap1,
                        verb=verb)
         if w < n2:
-            ready_for_remap_2 = inp+'.prep4plot_junk4'
-	    send_to_os('sfbandpass',
+            ready_for_remap_2 = tmp + '4'
+            send_to_os('sfbandpass',
                        arg='fhi='+str(0.5/d2),
                        stdin=out_transp1,
                        stdout=ready_for_remap_2,
@@ -222,7 +248,7 @@ def main(argv=sys.argv):
         else:
             ready_for_remap_2 = out_transp1
             rem2del_junk4 = False
-        ready_for_transp2 = inp+'.prep4plot_junk5'
+        ready_for_transp2 = tmp + '5'
         send_to_os('sfremap1',
                    arg=['n1='+str(w), 'd1='+str(d2)],
                    stdin=ready_for_remap_2,
