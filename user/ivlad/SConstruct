@@ -4,12 +4,12 @@ import configure
 
 # C mains
 progs = '''
-su2rsf segy2rsf quantile
+su2rsf segy2rsf quantile leftsize
 '''
 
 # Python mains that do not need SWIG+numpy
 py_meta = '''
-pclip
+pclip prep4plot
 '''
 
 # Python modules that do not need SWIG+numpy

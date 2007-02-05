@@ -54,7 +54,7 @@ def main(argv=sys.argv):
 
     inp = par.string('inp')
     out = par.string('out')
-    if (inp == None) or (out == None):
+    if None in (inp, out):
         sys.stderr.write(__doc__) # self-doc
         return error
 

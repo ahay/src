@@ -56,10 +56,6 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
         if stdout and want == 'stdout':
             sys.stderr.write('No stdout= should be given to send_to_os when want="stdout"')
             sys.exit(error)
-    else: # no want= given
-        if not stdout:
-            sys.stderr.write('send_to_os must receive either stdout= or want=')
-            sys.exit(error)
 
     # Build the [prog, args] list
     if arg:
@@ -90,12 +86,15 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
             finp = None
         if stdout:
             fout = open(stdout,'w')
-            subprocess.Popen(cmdlist,stdin=finp,stdout=fout).wait()
-            return None
-        elif want == 'stdout':
+        else:
+            fout = None
+        if want == 'stdout':
             s = subprocess.Popen(cmdlist,stdin=finp,stdout=subprocess.PIPE)
             output = s.communicate()[0]
             return output.rstrip('\n') # Remove the newline character
+        else:
+            subprocess.Popen(cmdlist,stdin=finp,stdout=fout).wait()
+            return None
     else: # no subprocess module present
         if want == 'stdout':
             s = getoutput( command )
@@ -103,3 +102,28 @@ def send_to_os(prog, arg=None, stdin=None, stdout=None, want=None, verb=False):
         elif stdout:
             system(command)
             return None
+
+def readaxis( inp, axisnr, verb=False ):
+    '''Reads n,o,d for one axis of a Madagascar hypercube
+    - inp: filename. STRING.
+    - axisnr: INT
+    - verb: BOOL'''
+
+    ax = str(axisnr)
+
+    n = send_to_os('sfget',
+                   arg = ['parform=n','n'+ax],
+                   stdin = inp,
+                   want = 'stdout',
+                   verb = verb)
+    o = send_to_os('sfget',
+                   arg = ['parform=n','o'+ax],
+                   stdin = inp,
+                   want = 'stdout',
+                   verb = verb)
+    d = send_to_os('sfget',
+                   arg = ['parform=n','d'+ax],
+                   stdin = inp,
+                   want = 'stdout',
+                   verb = verb)
+    return( int(n), float(o), float(d))
