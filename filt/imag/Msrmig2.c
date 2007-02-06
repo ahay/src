@@ -136,14 +136,14 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* CIGS */
 
-    if(!sf_getint  ("jcx",&jcx)) jcx=1;
-    if(!sf_getint  ("jcy",&jcy)) jcy=1;
-    if(!sf_getint  ("jcz",&jcz)) jcz=1;
+    if(!sf_getint ("jcx",&jcx) || nx==1) jcx=1;
+    if(!sf_getint ("jcy",&jcy) || ny==1) jcy=1;
+    if(!sf_getint ("jcz",&jcz) || nz==1) jcz=1;
     /* CIGs windowing */
 
-    acx = sf_maxa(nx/jcx,sf_o(amx),dx*jcx); sf_setlabel(acx,"cx");
-    acy = sf_maxa(ny/jcy,sf_o(amy),dy*jcy); sf_setlabel(acy,"cy");
-    acz = sf_maxa(nz/jcz,sf_o(amz),dz*jcz); sf_setlabel(acz,"cz");
+    acx = sf_maxa(SF_MAX(1,nx/jcx),sf_o(amx),dx*jcx); sf_setlabel(acx,"cx");
+    acy = sf_maxa(SF_MAX(1,ny/jcy),sf_o(amy),dy*jcy); sf_setlabel(acy,"cy");
+    acz = sf_maxa(SF_MAX(1,nz/jcz),sf_o(amz),dz*jcz); sf_setlabel(acz,"cz");
     n = sf_n(acx)*sf_n(acy)*sf_n(acz);
 
     Fc = sf_output("cig"); sf_settype(Fc,SF_FLOAT);
@@ -169,9 +169,9 @@ int main (int argc, char *argv[])
 	    break;
 	case 'x':
 	    if(verb) sf_warning("Space offset imaging condition");
-	    if(!sf_getint("nhx",&nhx)) nhx=1;
-	    if(!sf_getint("nhy",&nhy)) nhy=1;
-	    if(!sf_getint("nhz",&nhz)) nhz=1;
+	    if(!sf_getint("nhx",&nhx) || nx==1) nhx=1;
+	    if(!sf_getint("nhy",&nhy) || ny==1) nhy=1;
+	    if(!sf_getint("nhz",&nhz) || nz==1) nhz=1;
 	    ahx = sf_maxa(nhx,0.,dx); sf_setlabel(ahx,"hx");
 	    ahy = sf_maxa(nhy,0.,dy); sf_setlabel(ahy,"hy");
 	    ahz = sf_maxa(nhz,0.,dz); sf_setlabel(ahz,"hz");
@@ -183,9 +183,9 @@ int main (int argc, char *argv[])
 		if(nhz>1) { sf_seto(ahz,-nhz*dz); sf_setn(ahz,nhz*2); }
 	    }
 
-	    sf_oaxa(Fc,ahx,4);
-	    sf_oaxa(Fc,ahy,5);
-	    sf_oaxa(Fc,ahz,6);
+	    sf_oaxa(Fc,ahx,4); sf_raxa(ahx);
+	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
+	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 
 	    n *= sf_n(ahx)*sf_n(ahy)*sf_n(ahz);
 	    cigs = fslice_init(n,1,sizeof(float));
@@ -282,6 +282,8 @@ int main (int argc, char *argv[])
 	case 'g':          img2h_close(imag,cigs); break;
 	case 'o': default: img2o_close(imag,cigs); break;
     }
+
+    sf_warning("dump cigs");
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */

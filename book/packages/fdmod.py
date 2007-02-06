@@ -99,7 +99,9 @@ def wavelet(wav,frequency,par):
     Flow(wav,None,
          '''
          spike nsp=1 mag=1 n1=%(nt)d d1=%(dt)g o1=%(ot)g k1=%(kt)d |
+         pad end1=%(nt)d |
          ricker1 frequency=%(frequency)g |
+         window n1=%(nt)d |
          scale axis=123 |
          put label1=t 
          ''' % par)    
@@ -262,6 +264,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 def wom(wom,wfld,velo,vmean,par):
 
     if(not par.has_key('wweight')): par['wweight']=10
+    if(not par.has_key('wclip')):   par['wclip']=1.0
 
     chop = wfld+'_chop'
     Flow(chop,wfld,
@@ -269,7 +272,8 @@ def wom(wom,wfld,velo,vmean,par):
          window
          min1=%(zmin)g max1=%(zmax)g
          min2=%(xmin)g max2=%(xmax)g |
-         scale axis=123
+         scale axis=123 |
+         clip clip=%(wclip)g
          ''' % par)
 
     Flow(wom,[velo,chop],
@@ -291,6 +295,9 @@ def wframe(frame,movie,index,custom,par):
 
     Result(frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
+
+    Plot(frame,[movie+'_plt',movie+'_bar'],
+         'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     
 
 

@@ -239,7 +239,6 @@ int main(int argc, char* argv[])
 	ws01[is] = (  fzs[is])*(1-fxs[is]);
 	ws10[is] = (1-fzs[is])*(  fxs[is]);
 	ws11[is] = (  fzs[is])*(  fxs[is]);
-
     }
 
     for (ir=0;ir<nr;ir++) {
