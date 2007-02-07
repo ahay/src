@@ -1,19 +1,6 @@
 #! /usr/bin/env python
-"""
-NAME
-	sfpclip
-DESCRIPTION
-	Percentile clip. Shell for sfclip(sfquantile(input)).
-SYNOPSIS
-	sfpclip inp= out= verb=n pclip=99.0
-PARAMETERS
-	string inp=		Input file
-	string out=		Output file
-	bool   verb=n [y/n] 	If y, print system commands, outputs
-	float  pclip=99.0	Percentile clip
-SOURCE
-	user/ivlad/Mpclip.py
-"""
+'Percentile clip. Shell for sfclip(sfquantile(input)).'
+
 # Copyright (C) 2007 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
@@ -30,7 +17,6 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
 import sys
 
 try:
@@ -43,6 +29,8 @@ try: # Give precedence to local version
 except: # Use distributed version
     from rsfuser.ivlad import send_to_os
 
+import rsfprog
+
 def main(argv=sys.argv):
 
     # Constants
@@ -52,20 +40,22 @@ def main(argv=sys.argv):
     # Parse arguments into a parameter table
     par = rsf.Par(argv)
 
-    inp = par.string('inp')
-    out = par.string('out')
+    inp = par.string('inp') # input file
+    out = par.string('out') # output file
     if None in (inp, out):
-        sys.stderr.write(__doc__) # self-doc
+        rsfprog.selfdoc()   # self-doc
+        #        sys.stderr.write(__doc__) 
         return error
 
-    verb = par.bool('verb', False)
-    pclip = par.float('pclip',99)
+    verb = par.bool('verb', False) # if y, print system commands, outputs
+    pclip = par.float('pclip',99)  # percentile clip
 
     if pclip <0 or pclip>100:
         sys.stderr.write('pclip must be between 0 and 100\n')
         return error
 
-    clip = send_to_os('sfquantile', arg='pclip='+str(pclip), stdin=inp, want='stdout', verb=verb)
+    clip = send_to_os('sfquantile', arg='pclip='+str(pclip),
+                      stdin=inp, want='stdout', verb=verb)
 
     if not clip:
         sys.stderr.write('sfquantile did not return anything!\n')

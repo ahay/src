@@ -89,11 +89,14 @@ if root:
     user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
 
-    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
+               py_mains_meta)
     env.Depends(docs,'#/python/rsfdoc.py')	
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
+    
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)

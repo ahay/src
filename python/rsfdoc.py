@@ -27,10 +27,14 @@ def subdirs():
 def getprogs(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
     dirs = env.get('dirs')
+    out.write('import sys, os\n\n')
     out.write('import rsfdoc\n\n')
     for mod in dirs:
         out.write('import sf%s\n' % mod)
     out.write('\nimport vpplot\n\nimport rsfuse\n')
+    out.write('def selfdoc():\n')
+    out.write('   prog = rsfdoc.progs.get(os.path.basename(sys.argv[0]))\n')
+    out.write('   prog.document()\n')
     out.close()
 
 def use(target=None,source=None,env=None):
@@ -418,75 +422,97 @@ def html(dir):
     file.write(page('RSF Programs',content))
     file.close()
 
+# regular expressions
+comment = {}
+param = {}
+params = {}
+param2 = {}
+params2 = {}
+stringpar = {}
+synopsis = {}
+inpout = {}
+version = {}
+
+comment['python'] = re.compile(r'[^\'\"]*[\'\"]+([^\'\"]+)')
+param['python'] = re.compile(r'par\.(?P<type>bool|int|float|string)'
+                             '\s*\(\s*[\"\'](?P<name>\w+)[\"\']\s*'
+                             '(?:\,\s*(?P<default>[^\)]+))?\)' 
+                             '(?:\s*\#\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                             '(?P<desc>[^#\n]+\S))?')
+synopsis['python'] = re.compile(r'\s*\#\s*Takes\s*\:\s*'
+                                '((?:[^\n]|\n\#[^\n])+)((?:.|\n)*)$')
+inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
+                                'rsf\.(?P<io>Input|Output)'
+                                '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
+version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
+
+comment['f90'] = re.compile(r'\!([^!]+)')
+param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
+                          '\s*(?P<var>[\w\_]+)\s*'
+                          '(?:\,\s*(?P<default>[^\)]+))?\)' 
+                          '(?:\s*\!\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                          '(?P<desc>[^!\n]+\S))?') 
+synopsis['f90'] = re.compile(r'\s*\!\s*Takes\s*\:\s*'
+                             '((?:[^\n]|\n\![^\n])+)((?:.|\n)*)$')
+inpout['f90'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
+                    'rsf_(?P<io>input|output)'
+                    '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
+version['f90'] = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
+
+comment['c'] = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')      
+param['c'] = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
+                        '(?P<type>bool|int|float)'
+                        '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
+                        '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'
+                        '(?:[\{]|' # either \{ or
+                        '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|' 
+                        'sf_[^\;]+)?' # or sf_error
+                        '[\;])\s*' # ending with ;
+                        '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                        '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
+                         '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
+                         '\s*(?P<var>[\w\_\[\]]+)\s*\,'
+                         '\s*(?P<size>[\w\_]+)\s*\)\s*'
+                         '[^\;\{]*[\;\{]\s*' # ending with ; or {
+                         '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
+                         '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
+param2['c'] = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*'
+                    '\([^/]+\/\*\<\s*(?P<name>[\w\#]+)'
+                    '(?:=(?P<default>\S+))?'
+                    '\s*(?P<desc>[^\>]+)\>\*\/')
+params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
+                     '\s*\([^\,]+\,[^\,]+\,'
+                     '\s*(?P<size>[\w\_]+)\s*\)[^/]+'             
+                     '\/\*\<\s*(?P<name>[\w\#]+)'
+                     '(?:=(?P<default>\S+))?'
+                     '\s*(?P<desc>[^\>]+)\>\*\/')
+stringpar['c'] = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
+                       '[^\;\{]*[\;\{]\s*(?:\/\*'
+                       '\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
+synopsis['c'] = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
+                      '((?:.|\n)*)$')
+inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
+                    'sf_(?P<io>input|output)'
+                    '\s*\(\s*\"(?P<tag>\w+)\"')            
+version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
+
+
 def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl'):
     global comment, param, params, param2, params2, \
            synopsis, stringpar, inpout, version
-    if not comment:
-        if lang == 'f90':
-            comment = re.compile(r'\!([^!]+)')
-            param = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                               '\s*(?P<var>[\w\_]+)\s*'
-                               '(?:\,\s*(?P<default>[^\)]+))?\)' 
-                               '(?:\s*\!\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                               '(?P<desc>[^!\n]+\S))?') # comment
-            params = None
-            param2 = None
-            params2 = None
-            stringpar = None
-            synopsis = re.compile(r'\s*\!\s*Takes\s*\:\s*'
-                                  '((?:[^\n]|\n\![^\n])+)((?:.|\n)*)$')
-            inpout = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
-                                'rsf_(?P<io>input|output)'
-                                '\s*\(\s*(?:\"(?P<tag>\w+)\")?')
-            version = re.compile(r'\!\s*\$Id\:\s*(.+\S)\s*\$/')
-        else: # c
-            comment = re.compile(r'\/\*((?:[^*]+|\*[^/])+)\*\/')      
-            param = re.compile(r'(?:if\s*\(\!)?\s*sf_get'
-                               '(?P<type>bool|int|float)'
-                               '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                               '\s*\&(?P<var>[\w\_\[\]]+)\s*[\)]\s*[\)]?\s*'
-                               '(?:[\{]|' # either \{ or
-                               '(?:(?P=var)\s*\=\s*(?P<default>[^\;]+)|' 
-                               'sf_[^\;]+)?' # or sf_error
-                               '[\;])\s*' # ending with ;
-                               '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                               '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
-            params = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
-                                '\s*\(\s*\"(?P<name>\w+)\"\s*\,'
-                                '\s*(?P<var>[\w\_\[\]]+)\s*\,'
-                                '\s*(?P<size>[\w\_]+)\s*\)\s*'
-                                '[^\;\{]*[\;\{]\s*' # ending with ; or {
-                                '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
-                                '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
-            param2 = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*'
-                                '\([^/]+\/\*\<\s*(?P<name>[\w\#]+)'
-                                '(?:=(?P<default>\S+))?'
-                                '\s*(?P<desc>[^\>]+)\>\*\/')
-            params2 = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
-                                 '\s*\([^\,]+\,[^\,]+\,'
-                                 '\s*(?P<size>[\w\_]+)\s*\)[^/]+'             
-                                 '\/\*\<\s*(?P<name>[\w\#]+)'
-                                 '(?:=(?P<default>\S+))?'
-                                 '\s*(?P<desc>[^\>]+)\>\*\/')
-            stringpar = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
-                                   '[^\;\{]*[\;\{]\s*(?:\/\*'
-                                   '\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
-            synopsis = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
-                                  '((?:.|\n)*)$')
-            inpout = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
-                                'sf_(?P<io>input|output)'
-                                '\s*\(\s*\"(?P<tag>\w+)\"')            
-            version = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
     name = rsfprefix + re.sub('^M','',os.path.basename(file))
-    if lang[0] =='f':
+    if lang[:2] == 'py':
+        name = re.sub('\.py$','',name)
+    elif lang[0] =='f':
         name = re.sub('\.f\d*$','',name)
     else:
         name = re.sub('\.cc?$','',name)
     src = open(file,"r")   # open source
     text = string.join(src.readlines(),'')
     src.close()
-    first = comment.match(text)
+    first = comment[lang].match(text)
     if first:
         tops = string.split(first.group(1),"\n")
         desc = string.lstrip(tops.pop(0))
@@ -498,24 +524,28 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     out.write("%s = rsfdoc.rsfprog('%s','%s','''%s''')\n" %
               (name,name,file,desc))
     parline = ''
-    if params:
-        pars = params.findall(text)
-    else:
-        pars = []
-    for par in pars:
-        type = par[0]
-        parname = par[1]
-        size = par[3]
-        range = par[4]
-        desc = par[5] + ' [%s]' % size
+    pars = params.get(lang)
+    if pars:
+        for par in pars.findall(text):
+            type = par[0]
+            parname = par[1]
+            size = par[3]
+            range = par[4]
+            desc = par[5] + ' [%s]' % size
 
-        prog.par(parname,rsfpar(type,None,range,desc))
-        out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                  (name,parname,type,'',range,desc))
-        parline = parline + " %s=" % parname
-    pars = param.findall(text)
+            prog.par(parname,rsfpar(type,None,range,desc))
+            out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
+                      (name,parname,type,'',range,desc))
+            parline = parline + " %s=" % parname
+    pars = param[lang].findall(text)
     for par in pars:
-        if lang == 'f90':
+        if lang == 'python':
+            type = par[0]
+            parname = par[1]
+            default = par[2]
+            range = par[3]
+            desc = par[4]
+        elif lang == 'f90':
             type = ''
             parname = par[0]
             default = par[2]
@@ -528,54 +558,54 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             range = par[4]
             desc = par[5]
 
+        if type == 'bool':
+            if default == 'true' or default == 'True':
+                default = 'y'
+            elif default == 'false' or default == 'False':
+                default = 'n'
+                
         prog.par(parname,rsfpar(type,default,range,desc))
         out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
                   (name,parname,type,default,range,desc))
         parline = parline + " %s=%s" % (parname,default)
-    if params2:
-        pars = params2.findall(text)
-    else:
-        pars = []
-    for par in pars:
-        type = par[0]
-        size = par[1]
-        parname = par[2]
-        default = par[3]
-        range = '' # for now
-        desc = par[4] + ' [%s]' % size
+    pars = params2.get(lang)
+    if pars:
+        for par in pars.findall(text):
+            type = par[0]
+            size = par[1]
+            parname = par[2]
+            default = par[3]
+            range = '' # for now
+            desc = par[4] + ' [%s]' % size
         
-        prog.par(parname,rsfpar(type,default,range,desc))
-        out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                  (name,parname,type,default,range,desc))
-        parline = parline + " %s=%s" % (parname,default)
-    if param2: 
-        pars = param2.findall(text)
-    else:
-        pars = []
-    for par in pars:
-        type = par[0]
-        parname = par[1]
-        default = par[2]
-        range = '' # for now
-        desc = par[3]
-
-        prog.par(parname,rsfpar(type,default,range,desc))
-        out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
-                  (name,parname,type,default,range,desc))
-        parline = parline + " %s=%s" % (parname,default)
-    if stringpar:
-        pars = stringpar.findall(text)
-    else:
-        pars = []
-    for par in pars:
-        type = 'string '
-        parname = par[0]
-        desc = par[1]
-        prog.par(parname,rsfpar(type,desc=desc))
-        out.write("%s.par('%s',rsfdoc.rsfpar('%s',desc='''%s'''))\n" %
-                  (name,parname,type,desc))
-        parline = parline + " %s=" % (parname)
-    files = inpout.findall(text)
+            prog.par(parname,rsfpar(type,default,range,desc))
+            out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
+                      (name,parname,type,default,range,desc))
+            parline = parline + " %s=%s" % (parname,default)
+    pars = param2.get(lang)
+    if pars: 
+        for par in pars.findall(text):
+            type = par[0]
+            parname = par[1]
+            default = par[2]
+            range = '' # for now
+            desc = par[3]
+            
+            prog.par(parname,rsfpar(type,default,range,desc))
+            out.write("%s.par('%s',rsfdoc.rsfpar('%s','%s','%s','''%s'''))\n" %
+                      (name,parname,type,default,range,desc))
+            parline = parline + " %s=%s" % (parname,default)
+    pars = stringpar.get(lang)
+    if pars:
+        for par in pars.findall(text):
+            type = 'string '
+            parname = par[0]
+            desc = par[1]
+            prog.par(parname,rsfpar(type,desc=desc))
+            out.write("%s.par('%s',rsfdoc.rsfpar('%s',desc='''%s'''))\n" %
+                      (name,parname,type,desc))
+            parline = parline + " %s=" % (parname)
+    files = inpout[lang].findall(text)
     snps = name
     valid = {}
     for par in files:
@@ -594,14 +624,14 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if re.match(rsfplotprefix,name):
         snps = snps + ' > plot.' + rsfplotsuffix
     snps = snps + parline
-    vers = version.search(text)
+    vers = version[lang].search(text)
     if vers:
         prog.version(vers.group(1))
         out.write("%s.version('''%s''')\n" % (name,vers.group(1)))
     if not first:
         first = ''
     else:
-        info = synopsis.match(first)
+        info = synopsis[lang].match(first)
         if info:
             snps = snps + ' ' + string.lstrip(info.group(1))
             first = string.lstrip(info.group(2))
