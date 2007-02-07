@@ -69,7 +69,7 @@ int sf_memsize()
 
     if (NULL != (memenv = getenv("RSFMEMSIZE"))) {
 	memsize = strtol(memenv,NULL,10);
-	if (ERANGE == errno || memsize < INT_MIN || memsize > INT_MAX) 
+	if (ERANGE == errno || memsize < 0 || memsize > INT_MAX) 
 	    sf_error("wrong value in RSFMEMSIZE environmental variable");
     } else {
 	memsize = def;
