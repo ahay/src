@@ -1,5 +1,6 @@
 import os, sys, re, string, glob
-sys.path.append('../..')
+srcroot = os.environ.get('RSFSRC', '../..')
+sys.path.append(srcroot)
 import configure
 
 # C mains
@@ -30,17 +31,17 @@ try:  # distributed version
 except: # local version
     root = None
     env = Environment()
-    opts=Options('../../config.py')
+    opts=Options(os.path.join(srcroot,'config.py'))
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    SConscript('../../filt/lib/SConstruct')
+    SConscript(os.path.join(srcroot,'filt','lib','SConstruct'))
     src = glob.glob('[a-z]*.c')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
 
-env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../../filt/lib'],
+env.Prepend(CPPPATH=[os.path.join(srcroot,'include')],
+            LIBPATH=[os.path.join(srcroot,'filt','lib')],
             LIBS=['rsf'])
 
 for source in src:
@@ -61,7 +62,9 @@ for prog in mains:
 ######################################################################
 
 if root: # no compilation but rename
-    pwd = os.path.join(os.getcwd(),'../../../user/ivlad')
+    # builds are done... in the build directory! Compute original dir
+    user = os.path.basename(os.getcwd())
+    pwd = os.path.join(os.getcwd(),'../../../user/',user)
     # Python main programs
     py_mains_meta = Split(py_meta)
     for prog in py_mains_meta:
@@ -86,9 +89,7 @@ if root: # no compilation but rename
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
-    user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
-
     docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
                py_mains_meta)
@@ -96,7 +97,7 @@ if root:
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)
-    
+
 #####################################################################
 
 env['SCANNERS'].remove(configure.Include)
