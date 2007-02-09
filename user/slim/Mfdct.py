@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+
+'''
+Madagascar wrapper to the Fast Discrete Curvelet Transform (FDCT)
+
+Requirements:
+- Python API enable in Madagascar
+- PyCurveLab (https://wave.eos.ubc.ca/Software/Licenced/)
+- CurveLab (http://www.curvelet.org/)
+'''
  
 # Author: G. Hennenfent
 #         Seismic Laboratory for Imaging and Modeling
@@ -40,16 +49,13 @@ output = sf.Output()
 assert 'float' == input.type,"sffdct needs float input"
 
 ### read FDCT parameters from cmd line
-# number of scale for the decomposition
-nbs = par.int("nbs") 
-# number of angle at the 2nd coarsest scale
-nba = par.int("nba")
-# curvelets at finest scale
-ac = par.bool("ac") 
+nbs = par.int("nbs") # number of scale for the decomposition
+nba = par.int("nba") # number of angle at the 2nd coarsest scale
+ac = par.bool("ac") # curvelets at finest scale
 if ac is None:
     ac = False
-# adj/inv transform
-adj = par.bool("adj",False) 
+
+adj = par.bool("adj",False) # adj/inv transform
 
 if adj:
     ### inverse transform
