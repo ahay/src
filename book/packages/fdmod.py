@@ -3,7 +3,15 @@ from rsfproj import *
 # overwrite default parameters
 def param(par):
     if(not par.has_key('nb')):       par['nb']=0
-    
+
+    if(not par.has_key('lt')):       par['lt']='t'
+    if(not par.has_key('lz')):       par['lz']='z'
+    if(not par.has_key('lx')):       par['lx']='x'
+
+    if(not par.has_key('ut')):       par['ut']='s'
+    if(not par.has_key('uz')):       par['uz']='m'
+    if(not par.has_key('ux')):       par['ux']='m'
+
     if(not par.has_key('nbz')):      par['nbz']=100
     if(not par.has_key('nbx')):      par['nbx']=100
     if(not par.has_key('tz')):       par['tz']=0.0035
@@ -93,6 +101,15 @@ def egrey(custom,par):
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            custom)
+
+# plot wavelet
+def waveplot(custom,par):
+    return '''
+    graph min2=-1 max2=+1 title=""
+    label1=%s unit1=%s label2="" unit2=""
+    %s
+    ''' % (par['lt'],par['ut'],custom)
+
 # ------------------------------------------------------------
 # create wavelet
 def wavelet(wav,frequency,par):
@@ -331,9 +348,8 @@ def wframe(frame,movie,index,custom,par):
 
     Result(frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
-
-    Plot(frame,[movie+'_plt',movie+'_bar'],
-         'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
+    Plot  (frame,[movie+'_plt',movie+'_bar'],
+           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     
 
 
