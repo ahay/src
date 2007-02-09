@@ -21,7 +21,8 @@ def param(par):
     if(not par.has_key('jsnap')):    par['jsnap']=100
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
-
+    if(not par.has_key('free')):     par['free']='n'
+   
     if(not par.has_key('ot')): par['ot']=0.
     if(not par.has_key('nt')): par['nt']=1
     if(not par.has_key('dt')): par['dt']=1.
@@ -221,12 +222,13 @@ def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
 
 # ------------------------------------------------------------
 # acoustic modeling
-def awefd(dat,wfl,  wav,vel,den,sou,rec,custom,par):
+def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
-    Flow( [dat,wfl],[wav,vel,den,sou,rec],
+    Flow( [odat,owfl],[idat,velo,dens,sou,rec],
          '''
          awefd
+         ompchunk=%(ompchunk)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
          vel=${SOURCES[1]}
          den=${SOURCES[2]}
@@ -237,12 +239,13 @@ def awefd(dat,wfl,  wav,vel,den,sou,rec,custom,par):
          ''' % par)
 
 # elastic modeling
-def ewefd(dat,wfl,  wav,ccc,den,sou,rec,custom,par):
+def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
-    Flow( [dat,wfl],[wav,ccc,den,sou,rec],
+    Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
          ewefd
+         ompchunk=%(ompchunk)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
          ccc=${SOURCES[1]}
          den=${SOURCES[2]}
@@ -254,7 +257,7 @@ def ewefd(dat,wfl,  wav,ccc,den,sou,rec,custom,par):
 
 
 # F-D modeling from arbitrary source/receiver geometry
-def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
+def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
     Flow( [odat,wfld],[idat,velo,dens,sou,rec],
@@ -277,8 +280,8 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
     swfl = imag+'_us' #   source wavefield
     rwfl = imag+'_ur' # receiver wavefield
-    sout = imag+'_ds' #   source data (not the input sdat)
-    rout = imag+'_dr' # receiver data (not the input rdat)
+    sout = imag+'_ds' #   source data (not the input sdat!)
+    rout = imag+'_dr' # receiver data (not the input rdat!)
 
     # source wavefield (z,x,t)
     awe(sout,swfl,sdat,velo,dens,sacq,iacq,custom,par)
