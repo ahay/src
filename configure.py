@@ -94,6 +94,7 @@ plat = {'OS': 'unknown',
 # are found further down, in the order they are called
 # FDNSI = Failure Does Not Stop Installation
 def check_all(context):
+    
     identify_platform(context)
     cc  (context)
     ar  (context)
@@ -680,8 +681,7 @@ def matlab(context):
             MATLABPATH += ':' + RSFROOT_lib
         else:
             MATLABPATH = RSFROOT_lib
-        context.env['MATLAB'] = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' % \
-                                MATLABPATH, matlab
+        context.env['MATLAB'] = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' %(MATLABPATH,matlab)
     else:
         context.Result(context_failure)
         stderr_write('Please install Matlab.')
@@ -787,6 +787,9 @@ def options(opts):
              '-O2')
     opts.Add('CFORTRAN90','Type of the Fortran-90 compiler (for cfortran.h)')
     opts.Add('F90MODSUFFIX','Suffix of Fortran-90 module interface files')
+    opts.Add('MEXSUFFIX','Suffix for mex files')
+    opts.Add('MEX','Mex cmd')
+    opts.Add('MATLAB','Matlab program')
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
