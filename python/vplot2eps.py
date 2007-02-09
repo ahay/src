@@ -57,6 +57,8 @@ def convert(vplot,eps,
     out.close()
 
 if __name__ == "__main__":
+    # own user interface instead of that provided by RSF's Python API
+    # because this script has users that do not have RSF
     argc = len(sys.argv)
     prog = sys.argv.pop(0)
     

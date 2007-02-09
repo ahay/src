@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import sys, os, glob, signal, string
 
+# own user interface instead of that provided by RSF's Python API
+# because this script has users that do not have RSF
 if len(sys.argv) < 2:
     print '''
     Usage: %s [-q] command
