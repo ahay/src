@@ -2,6 +2,8 @@ from rsfproj import *
 
 # overwrite default parameters
 def param(par):
+    if(not par.has_key('nb')):       par['nb']=0
+    
     if(not par.has_key('nbz')):      par['nbz']=100
     if(not par.has_key('nbx')):      par['nbx']=100
     if(not par.has_key('tz')):       par['tz']=0.0035
@@ -199,6 +201,40 @@ def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
          liw=${TARGETS[3]}
          %(fdcustom)s
          ''' % par)
+
+# ------------------------------------------------------------
+# acoustic modeling
+def awefd(dat,wfl,  wav,vel,den,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [dat,wfl],[wav,vel,den,sou,rec],
+         '''
+         awefd
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+
+# elastic modeling
+def ewefd(dat,wfl,  wav,ccc,den,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [dat,wfl],[wav,ccc,den,sou,rec],
+         '''
+         ewefd
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
+         ccc=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+
 
 # F-D modeling from arbitrary source/receiver geometry
 def awe(odat,wfld,  idat,velo,dens,sou,rec,custom,par):
