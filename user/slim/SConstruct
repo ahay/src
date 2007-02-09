@@ -7,10 +7,10 @@ thr sort
 '''
 
 py_progs = '''
-fdct
+fdct killtraces
 '''
 
-cpp_progs = 'clipcc'
+cpp_progs = ''
 
 try:  # distributed version
     Import('env')
