@@ -201,11 +201,15 @@ def cc(context):
             context.Result(res)
             if not res:
                 context.env['CCFLAGS'] = oldflag
+	# if Mac OS X and fink installed, update CPPPATH and LIBPATH
+	if sys.platform[:6] == 'darwin' and os.path.isdir('/sw'):
+	    context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + ['/sw/include',]
+	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + ['/sw/lib',]
+
     elif sys.platform[:5] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
-
-
+    
 # Used for building libraries.
 def ar(context):
     context.Message("checking for ar ... ")
@@ -364,7 +368,7 @@ def x11(context):
 
         if res:
             context.Result(path)
-            context.env['XINC'] = context.env['CPPPATH']
+            context.env['XINC'] = [path,]
             break
 
     if not res:
@@ -402,7 +406,7 @@ def x11(context):
 
         if res:
             context.Result(path)
-            context.env['XLIBPATH'] = context.env['LIBPATH']
+            context.env['XLIBPATH'] = [path,]
             context.env['XLIBS'] = XLIBS
             break
     if not res:
