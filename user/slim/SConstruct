@@ -1,4 +1,4 @@
-import os, sys, re, string, glob,shutil
+import os, sys, re, string, glob,shutil,sets
 sys.path.append('../..')
 import configure
 
@@ -6,9 +6,8 @@ progs = '''
 thr sort
 '''
 
-py_progs = '''
-fdct killtraces
-'''
+py_progs = {'fdct':'numpy pyct',
+	    'killtraces':'numpy'}
 
 cpp_progs = ''
 
@@ -78,11 +77,16 @@ if 'python' in api:
         user = os.path.basename(os.getcwd())
         pwd = os.path.join(os.getcwd(),'../../../user/',user)
 
+	pymodules = set(env.get('PYMODULES'))
+	
         # Python main programs
-        py_mains = Split(py_progs)
-        for prog in py_mains:
-            # no compilation but rename
-            env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,'M'+prog+'.py'))
+        py_mains = []
+        for prog,depts in py_progs.iteritems():
+	    depts = set(string.split(depts))
+	    if set.intersection(pymodules,depts) == depts:
+		py_mains.append(prog)
+		# no compilation but rename
+		env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,'M'+prog+'.py'))
 else:
     py_mains = []
 

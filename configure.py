@@ -737,6 +737,7 @@ def python(context):
     try:
         import numpy
         context.Result(context_success)
+	context.env['PYMODULES'] = ['numpy']
     except:
         context.Result(context_failure)
         context.Message("checking for numarray ... ")
@@ -744,6 +745,7 @@ def python(context):
             import numarray
             context.Result(context_success)
             stderr_write('numarray development has stopped; plan to migrate to numpy')
+	    context.env['PYMODULES'] = ['numarray']
         except:
             context.Result(context_failure)
             if plat['distro'] == 'fc':
@@ -751,6 +753,22 @@ def python(context):
             else:
                 stderr_write('Please install numpy.')
             sys.exit(unix_failure)
+
+    context.Message("checking for scipy ... ")
+    try:
+        import scipy
+        context.Result(context_success)
+	context.env.Append(PYMODULES='scipy')
+    except:
+        context.Result(context_failure)
+
+    context.Message("checking for pyct ... ")
+    try:
+        import pyct
+        context.Result(context_success)
+	context.env.Append(PYMODULES='pyct')
+    except:
+        context.Result(context_failure)
 
 def intel(context):
     '''Trying to fix weird intel setup.'''
@@ -798,6 +816,7 @@ def options(opts):
     opts.Add('MEXSUFFIX','Suffix for mex files')
     opts.Add('MEX','Mex cmd')
     opts.Add('MATLAB','Matlab program')
+    opts.Add('PYMODULES','List of Python modules available')
 
 local_include = re.compile(r'\s*\#include\s*\"([^\"]+)')
 
