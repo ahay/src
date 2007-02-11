@@ -653,7 +653,7 @@ class TeXPaper(Environment):
             os.path.dirname(os.path.dirname(cwd))),
                             os.path.basename(os.path.dirname(cwd)),
                             os.path.basename(cwd))
-        self.doc = os.path.join(os.environ.get('RSFROOT'),'doc')
+	self.doc = os.environ.get('RSFDOC',os.path.join(os.environ.get('RSFROOT'),'doc'))
         for level in (book,chap,proj):
             if level:
                 self.doc = os.path.join(self.doc,level)
