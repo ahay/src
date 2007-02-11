@@ -56,20 +56,20 @@ if root:
 #######
 
 inc = env.get('XINC')
-if inc:
-    lib = env.get('XLIBPATH')
+lib = env.get('XLIBPATH')
 
-    if lib:
-        env.Include('xtpen',prefix='pen_')
-        obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
-        env.Depends(obj,'xtpen.h')
-        main = env.Program('xtpen',[obj,]+objects,
-                           LIBPATH=env.get('LIBPATH',[])+lib,
-                           LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
-
-        if root:
-            env.Install(bindir,main[0])
-
+if inc and lib:
+    env.Include('xtpen',prefix='pen_')
+    obj = env.StaticObject('xtpen.c',CPPPATH=env.get('CPPPATH',[])+inc)
+    env.Depends(obj,'xtpen.h')
+    main = env.Program('xtpen',[obj,]+objects,
+                       LIBPATH=env.get('LIBPATH',[])+lib,
+                       LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
+    
+    if root:
+        env.Install(bindir,main[0])
+elif root:
+    env.InstallAs(os.path.join(bindir,'xtpen'),'xtpen.py')
 
 # pspen
 #######
