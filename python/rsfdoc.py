@@ -640,6 +640,8 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     out.write("rsfdoc.progs['%s']=%s\n\n" % (name,name))
 
 def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
+    # Implements own UI instead of Madagascar's standard Python API
+    # for UI compatibility with pydoc
     import getopt
     import rsfprog
 
