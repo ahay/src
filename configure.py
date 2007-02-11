@@ -422,26 +422,30 @@ def ppm(context):
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    ppm = context.env.get('PPM','netpbm')
-    LIBS.append(ppm)
     text = '''
     #include <ppm.h>
     int main(int argc,char* argv[]) {
     return 0;
     }\n'''
+    for ppm in [context.env.get('PPM','netpbm'),'netpbm.10']:
+	LIBS.append(ppm)
+	res = context.TryLink(text,'.c')
+	
+	if res:
+	    context.Result(res)
+	    context.env['PPM'] = ppm
+	    break
+	else:
+	    LIBS.pop()
 
-    res = context.TryLink(text,'.c')
-    if res:
-        context.Result(res)
-        context.env['PPM'] = ppm
-    else:
+    if not res:
         context.Result(context_failure)
         stderr_write('ppmpen, vplot2gif, vplot2avi will not be built.')
         if plat['distro'] == 'fc':
             stderr_write('Package needed: netpbm-devel')
         context.env['PPM'] = None
 
-    LIBS.pop()
+#    LIBS.pop()
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
