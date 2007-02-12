@@ -1,4 +1,7 @@
 import os, sys, re, string, glob
+# The two lines below should not be needed, and rsfconf
+# should be imported instead of configure, but there
+# is an error when importing it.
 srcroot = os.environ.get('RSFSRC', '../..')
 sys.path.append(srcroot)
 import configure
@@ -21,7 +24,6 @@ ivlad
 try:  # distributed version
     Import('env')
     env = env.Copy()
-
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
@@ -35,13 +37,15 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    SConscript(os.path.join(srcroot,'filt','lib','SConstruct'))
+    #SConscript(os.path.join(srcroot,'filt','lib','SConstruct'))
     src = glob.glob('[a-z]*.c')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
 
-env.Prepend(CPPPATH=[os.path.join(srcroot,'include')],
-            LIBPATH=[os.path.join(srcroot,'filt','lib')],
+rsfroot = os.environ.get('RSFROOT','/usr/local/rsf')
+
+env.Prepend(CPPPATH=[os.path.join(rsfroot,'include')],
+            LIBPATH=[os.path.join(rsfroot,'lib')],
             LIBS=['rsf'])
 
 for source in src:
@@ -62,7 +66,7 @@ for prog in mains:
 ######################################################################
 
 if root: # no compilation but rename
-    # builds are done... in the build directory! Compute original dir
+    # builds are done... in the build directory! Find original dir
     user = os.path.basename(os.getcwd())
     pwd = os.path.join(os.getcwd(),'../../../user/',user)
     # Python main programs
@@ -77,7 +81,7 @@ if root: # no compilation but rename
         os.mkdir(rsfuser)
     if not os.path.isfile(rsfuser_module_flag):
         try:
-            os.mknod(rsfuser_module_flag) 
+            os.mknod(rsfuser_module_flag)
         except: # Python < 2.3
             open(rsfuser_module_flag, "w").close()
         os.chmod(rsfuser_module_flag, 0666)
