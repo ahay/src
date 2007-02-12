@@ -1,28 +1,20 @@
 #! /usr/bin/env python
-"""
-NAME
-	sfprep4plot
-DESCRIPTION
-	Interpolates a 2d dataset with 2 passes of 1-D ENO interpolation
-SYNOPSIS
-	sfprep4plot inp= out= verb=n h= w= prar=y unit= ppi=
-COMMENTS
-	When prar=y, h and w represent a maximum bounding box for the image,
-		and at least one of the dimensions of output will be h or w
-	When prar=n, output will have dimensions h by w
-	A low-pass antialiasing filter is applied prior to interp if needed
-PARAMETERS
-	string inp=		Input file
-	string out=		Output file
-	bool   verb=n [y/n] 	If y, print system commands, outputs
-	int    h=		Output height
-	int    w=		Output width
-	bool   prar=y [y/n] 	Whether to PReserve Aspect Ratio of input
-	string unit=px [mm,cm,in,px] Unit for h and w values
-	int    ppi=		Output resolution (px/in). Necessary when unit!=px
-SOURCE
-	user/ivlad/Mprep4plot.py
-"""
+'''Resamples a 2-D dataset to the desired picture resolution, with antialias
+For a figure that does not need the aspect ratio preserved, 
+and needs to fill a 1280x1024 projector display:
+
+sfprep4plot inp=file1.rsf out=file2.rsf w=1280 h=1024 prar=n
+
+For a print figure that has to fit in a 6x8in box
+at a resolution of 250 dpi, preserving the amplitude ratio:
+
+sfprep4plot inp=file1.rsf out=file2.rsf w=6 h=8 unit=in ppi=250
+
+Only one of the h and w parameters needs to be specified.
+If prar=n, no action will be taken on axis for which h/w was not specified
+If prar=y and only one par (h or w) is specified, the picture will scale
+along both axes until it is of the specified dimension.'''
+
 # Copyright (C) 2007 Ioan Vlad
 #
 # This program is free software; you can redistribute it and/or modify
@@ -39,8 +31,7 @@ SOURCE
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-
-import sys
+import sys, rsfprog
 
 try:
     import rsf
@@ -59,15 +50,16 @@ def main(argv=sys.argv):
     error   = 1
     par = rsf.Par(argv)
 
-    inp = par.string('inp')
-    out = par.string('out')
+    inp = par.string('inp') # input file
+    out = par.string('out') # output file
     if None in (inp, out):
-        sys.stderr.write(__doc__)
+        rsfprog.selfdoc()
         return error
 
-    verb = par.bool('verb', False)
+    verb = par.bool('verb', False) # if y, print system commands, outputs
 
-    leftsize = int(send_to_os('sfleftsize', arg='i=2', stdin=inp, want='stdout', verb=verb))
+    leftsize = int(send_to_os('sfleftsize', arg='i=2', stdin=inp,
+                              want='stdout', verb=verb))
 
     if leftsize > 1:
         sys.stderr.write('Input must be 2-D file\n')
@@ -88,12 +80,13 @@ def main(argv=sys.argv):
     n2 = int(n2)
 
     # Read and check the h and w parameters
-    # The debacle below could be avoided if rsf had a function specifying
+    # The debacle below could be avoided if rsf module had a function specifying
     # whether a parameter for whom a default value is required was given at the
     # command line or not.
     impossible=-100000
-    h = par.int('h', impossible)
-    w = par.int('w', impossible)
+    none=impossible #even uglier hack, for self-doc to show user-friendly message
+    h = par.int('h', none) # output height
+    w = par.int('w', none) # output width
 
     if w==impossible:
         if h==impossible:
@@ -123,13 +116,14 @@ def main(argv=sys.argv):
     # Now h and w are either None, or have a value worth doing interpolation on.
 
     # Transform h and w to pixels, if they are not
-    unit = par.string('unit') # No default value. Quirk of rsf, replicated in rsfbak
+    # No default value for par.string -- Quirk of rsf, replicated in rsfbak
+    unit = par.string('unit') # unit of h and w. Can be: px(default), mm, cm, in
     if unit: # something was read from command line
         if unit not in ('mm','cm','in','px'):
             sys.stderr.write('unit must be: mm/cm/in/px\n')
             return error
         if unit != 'px':
-            ppi = par.int('ppi')
+            ppi = par.int('ppi') # output resolution (px/in). Necessary when unit!=px
             if ppi <= 0:
                 sys.stderr.write('ppi must be > 0\n')
                 return error
@@ -152,7 +146,7 @@ def main(argv=sys.argv):
 
     # If prar=y, then h and/or w define a bounding box.
     # Find the dimensions of the image inside this box
-    prar = par.bool('prar', True)
+    prar = par.bool('prar', True) # if y, PReserve Aspect Ratio of input
     if prar: # preserve aspect ratio
         if h and not w:
             w = n2 * float(h) / n1
