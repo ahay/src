@@ -30,42 +30,7 @@ constraint
 
 import rsf as sf
 import numpy as np
-
-def killtraces(N,perc,maxfactor,seed=None):
-
-    if seed is not None:
-        np.random.seed(seed)
-
-    if maxfactor<1:
-        print "ERROR: maxfactor must be >=1"
-        return
-
-    if perc<=0 or perc>=100:
-        print "ERROR: 0 < perc < 100"
-        return        
-        
-    unifdist = 100./perc
-    numtraces = np.int(round(N*perc/100.))
-    maxdist = maxfactor * unifdist
-    meandist = unifdist + (maxfactor-1.)*unifdist/2.
-    randstart = (np.random.rand()*(meandist-unifdist))
-    initpick = randstart + np.arange(0,N,meandist)
-
-    randfactor = (np.random.rand(initpick.size)-.5)*(meandist-unifdist)  
-    initpick = np.round(initpick + randfactor)
-    
-    initpick = np.sort(np.unique(initpick.clip(1,N-1)))
-    RemainingTrLocs = np.setxor1d(initpick,np.array(range(N)))
-    np.random.shuffle(RemainingTrLocs)
-
-    if (numtraces-len(initpick))>0:
-        pickinginds = np.union1d(initpick,RemainingTrLocs[:(numtraces-len(initpick))])
-    else:
-        pickinginds = initpick
-    picking = np.zeros(N)
-    picking.put(np.ones(len(pickinginds)),list(pickinginds))
-
-    return picking
+from hegilles import killtraces
 
 par = sf.Par()
 

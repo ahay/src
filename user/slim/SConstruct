@@ -6,10 +6,12 @@ progs = '''
 thr sort
 '''
 
+cpp_progs = ''
+
 py_progs = {'fdct':'numpy pyct',
 	    'killtraces':'numpy'}
 
-cpp_progs = ''
+py_mods = {'hegilles':'numpy'}
 
 try:  # distributed version
     Import('env')
@@ -87,6 +89,25 @@ if 'python' in api:
 		py_mains.append(prog)
 		# no compilation but rename
 		env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,'M'+prog+'.py'))
+
+        # Python modules
+        rsfuser = os.path.join(libdir,'rsfuser')
+        rsfuser_module_flag = os.path.join(rsfuser, '__init__.py')
+        for mod,depts in py_mods.iteritems():
+	    depts = set(string.split(depts))
+	    if set.intersection(pymodules,depts) == depts:
+                if not os.path.isdir(rsfuser):
+                    os.mkdir(rsfuser)
+                if not os.path.isfile(rsfuser_module_flag):
+                    try:
+                        os.mknod(rsfuser_module_flag)
+                    except: # Python < 2.3
+                        open(rsfuser_module_flag, "w").close()
+                    os.chmod(rsfuser_module_flag, 0666)
+                for module in py_mods.keys():
+                    module+='.py'
+                    env.InstallAs(os.path.join(rsfuser,module),os.path.join(pwd,module))
+
 else:
     py_mains = []
 
