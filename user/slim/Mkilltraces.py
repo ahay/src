@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 '''
-Remove random traces from a 2-D gather using a maximum gap size
-constraint
+Return mask to remove random traces from a 2-D gather using a maximum
+gap size constraint
 '''
 
 # Author: G. Hennenfent

@@ -27,21 +27,21 @@ Utilities for Python-based Madagascar programs in RSFROOT/user/slim
 #  along with this program; if not, write to the Free Software
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import numpy as np
+import numpy as __np
 
-def killtraces(N,perc,maxfactor,seed=None):
+def killtraces(N,perc=50,maxfactor=1,seed=None):
     '''
-    Return a mask to remove random traces from a 2-D gather using a
+    Return a mask to remove random samples from an N-vector using a
     maximum gap size constraint.
 
     Parameters:
-    N          number of traces in the 2-D gather
-    perc       percentage of traces to remove (0 < perc < 1)
+    N          length of the vector
+    perc       percentage of samples to retain (0 < perc < 100)
     maxfactor  maximum gap factor (>=1)
     seed       seed for random number generator
     '''
     if seed is not None:
-        np.random.seed(seed)
+        __np.random.seed(seed)
 
     if maxfactor<1:
         print "ERROR: maxfactor must be >=1"
@@ -52,25 +52,25 @@ def killtraces(N,perc,maxfactor,seed=None):
         return        
         
     unifdist = 100./perc
-    numtraces = np.int(round(N*perc/100.))
+    numtraces = __np.int(round(N*perc/100.))
     maxdist = maxfactor * unifdist
     meandist = unifdist + (maxfactor-1.)*unifdist/2.
-    randstart = (np.random.rand()*(meandist-unifdist))
-    initpick = randstart + np.arange(0,N,meandist)
+    randstart = (__np.random.rand()*(meandist-unifdist))
+    initpick = randstart + __np.arange(0,N,meandist)
 
-    randfactor = (np.random.rand(initpick.size)-.5)*(meandist-unifdist)  
-    initpick = np.round(initpick + randfactor)
+    randfactor = (__np.random.rand(initpick.size)-.5)*(meandist-unifdist)  
+    initpick = __np.round(initpick + randfactor)
     
-    initpick = np.sort(np.unique(initpick.clip(1,N-1)))
-    RemainingTrLocs = np.setxor1d(initpick,np.array(range(N)))
-    np.random.shuffle(RemainingTrLocs)
+    initpick = __np.sort(__np.unique(initpick.clip(1,N-1)))
+    RemainingTrLocs = __np.setxor1d(initpick,__np.array(range(N)))
+    __np.random.shuffle(RemainingTrLocs)
 
     if (numtraces-len(initpick))>0:
-        pickinginds = np.union1d(initpick,RemainingTrLocs[:(numtraces-len(initpick))])
+        pickinginds = __np.union1d(initpick,RemainingTrLocs[:(numtraces-len(initpick))])
     else:
         pickinginds = initpick
-    picking = np.zeros(N)
-    picking.put(np.ones(len(pickinginds)),list(pickinginds))
+    picking = __np.zeros(N)
+    picking.put(__np.ones(len(pickinginds)),list(pickinginds))
 
     return picking
 
