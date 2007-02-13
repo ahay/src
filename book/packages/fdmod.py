@@ -81,6 +81,19 @@ def cgraph(custom,par):
            par['ratio'],par['height'],
            custom)
 
+def ccont(custom,par):
+    return '''
+    contour labelrot=n wantaxis=n title="" yreverse=y 
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
+    screenratio=%g screenht=%g
+    %s
+    ''' % (
+           par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
+           par['ratio'],par['height'],
+           custom)
+
 def dgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
@@ -178,7 +191,6 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
          cat axis=2 space=n
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
-    
 
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
