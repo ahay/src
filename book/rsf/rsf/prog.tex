@@ -1057,6 +1057,46 @@ bash$ ls spike*
 ls: No match.
 \end{verbatim}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfrotate}
+  }}
+
+\inputdir{XFig}
+
+\texttt{sfrotate} modifies the input dataset by splitting it into
+parts and putting the parts back in a different order. Here is a quick example.
+\begin{verbatim}
+bash$ sfmath n1=5 d1=1 n2=3 d2=1 output=x1+x2 > test.rsf
+bash$ < test.rsf sfdisfil
+   0:             0            1            2            3            4
+   5:             1            2            3            4            5
+  10:             2            3            4            5            6
+\end{verbatim}
+Rotating the first axis by putting the last two columns in front:
+\begin{verbatim}
+bash$ < test.rsf sfrotate rot1=2 | sfdisfil
+   0:             3            4            0            1            2
+   5:             4            5            1            2            3
+  10:             5            6            2            3            4
+\end{verbatim}
+Rotating the second axis by putting the last row in front:
+\begin{verbatim}
+bash$ < test.rsf sfrotate rot2=1 | sfdisfil
+   0:             2            3            4            5            6
+   5:             0            1            2            3            4
+  10:             1            2            3            4            5
+\end{verbatim}
+Rotating both the first and the second axis:
+\begin{verbatim}
+bash$ < test.rsf sfrotate rot1=3 rot2=1 | sfdisfil
+   0:             4            5            6            2            3
+   5:             2            3            4            0            1
+  10:             3            4            5            1            2
+\end{verbatim}
+The transformation is shown schematically in Figure~\ref{fig:rotate}.
+
+\plot{rotate}{width=\textwidth}{Schematic transformation of data with \texttt{sfrotate}.}
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 

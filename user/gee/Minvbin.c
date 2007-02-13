@@ -25,6 +25,7 @@
 #include "polydiv.h"
 #include "npolydiv.h"
 #include "regrid.h"
+#include "gradint2.h"
 
 int main (int argc, char* argv[])
 {
@@ -33,7 +34,7 @@ int main (int argc, char* argv[])
     float *mm, *dd, **xy, *hdr;
     float x0, y0, dx, dy, xmin, xmax, ymin, ymax, f, dt, t0, a0, eps;
     char *xk, *yk, *lagfile, *nhfile, *header;
-    bool stat;
+    bool stat, der;
     sf_filter aa;
     nfilter naa=NULL;
     sf_file in, out, head, flt, lag, nhh, pch=NULL;
@@ -151,7 +152,14 @@ int main (int argc, char* argv[])
     if (!sf_getint("interp",&interp)) interp=2;
     /* interpolation length */
 
-    sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_spline_int, interp, nd);
+    if (!sf_getbool("der",&der)) der=false;
+    /* if y, apply derivative filter on the residual */
+
+    if (der) {
+	gradint2_init (xy, x0,y0, dx,dy, nx,ny, sf_spline_int, interp, nd);
+    } else {
+	sf_int2_init (xy, x0,y0, dx,dy, nx,ny, sf_spline_int, interp, nd);
+    }
 
     nm = nx*ny;
     mm = sf_floatalloc(nm);
@@ -253,8 +261,13 @@ int main (int argc, char* argv[])
 	sf_floatread (dd,nd,in);
 
 	if (stat) {
-	    sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
-			    nm, nm, nd, mm, dd, niter, eps, "end");
+	    if (der) {
+		sf_solver_prec (gradint2_lop, sf_cgstep, polydiv_lop,
+				nm, nm, nd, mm, dd, niter, eps, "end");
+	    } else {
+		sf_solver_prec (sf_int2_lop, sf_cgstep, polydiv_lop,
+				nm, nm, nd, mm, dd, niter, eps, "end");
+	    }
 	} else {
 	    sf_intread(naa->pch,nm,pch);
 

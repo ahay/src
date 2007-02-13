@@ -16,14 +16,14 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-
-#include <rsf.h>
+#include "_bool.h"
 /*^*/
 
 #include "igrad1.h"
+#include "adjnull.h"
 
-void  igrad1_lop(bool adj, bool add, 
-		 int nx, int ny, float *xx, float *yy)
+void  sf_igrad1_lop(bool adj, bool add, 
+		    int nx, int ny, float *xx, float *yy)
 /*< linear operator >*/
 {
     int i;

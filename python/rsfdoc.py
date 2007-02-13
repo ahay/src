@@ -332,7 +332,7 @@ class rsfprog:
             for par in pars:
                 contents = contents + self.pars[par].latex(par)
             contents = contents + '\\end{tabular}\n'
-        contents = re.sub('_','\_',contents)
+        contents = re.sub('([_#])',r'\\\1',contents)
         file.write(contents)
         file.close()
     def html(self,dir,rep):

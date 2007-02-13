@@ -18,7 +18,6 @@
 */
 
 #include <rsf.h>
-#include "igrad1.h"
 
 int main(int argc, char* argv[])
 {
@@ -46,7 +45,7 @@ int main(int argc, char* argv[])
 	if (square) {
 	    sf_grad2 (n1,pp,qq);
 	} else {
-	    igrad1_lop (false,false,n1,n1,pp,qq);
+	    sf_igrad1_lop (false,false,n1,n1,pp,qq);
 	}
 	sf_floatwrite(qq,n1,out);
     }

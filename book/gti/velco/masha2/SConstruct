@@ -103,10 +103,8 @@ Plot('fmg2',
      window max1=%g | agc |
      grey title="Prestack Migration Time -> Depth"
      label1=Depth unit1=m label2=Lateral unit2=m
-     ''' % zmax)
-
-#       screenht=%g screenwd=%g labelsz=4 titlesz=4
-#       ''' % (zmax,0.001*zmax,0.001*xmax))
+     screenht=%g screenwd=%g labelsz=4 titlesz=4
+     ''' % (zmax,0.001*zmax,0.001*xmax))
 
 ## Result('elfh',
 ##        '''
@@ -120,6 +118,7 @@ Plot('elfvxz','vxz',
      wanttitle=y barlabel=Velocity barunit=km/s
      screenht=%g screenwd=%g bartype=v labelsz=4 titlesz=4
      title="Estimated Interval Velocity" barreverse=y
+     wanttitle=n
      ''' % (0.001*zmax,0.001*xmax))
 
 Plot('rays','x z',
@@ -170,14 +169,15 @@ Flow('vdix1','vdix2',
      nz=640 dz=5.005 intime=y
      ''')
 
-Plot('vdix1',
-     '''
-     grey color=j scalebar=y allpos=y bias=1400
-     wanttitle=y barlabel=Velocity barunit=km/s
-     bartype=v label1=Depth uni1=m label2=Lateral unit2=m
-     title="Dix Velocity Converted to Depth" barreverse=y
-     ''')
-Result('vels','vdix1 elfvxz1','SideBySideAniso')
+Result('vels','vdix1',
+       '''
+       grey color=j scalebar=y allpos=y bias=1400
+       wanttitle=y barlabel=Velocity barunit=km/s
+       bartype=v label1=Depth uni1=m label2=Lateral unit2=m
+       title="Dix Velocity Converted to Depth" barreverse=y
+       screenht=%g screenwd=%g bartype=v labelsz=4 titlesz=4
+       wanttitle=n barreverse=y
+       ''' % (0.001*zmax,0.001*xmax))
 
 par = {
     'nx':nx,'ox':0,'dx':dx,
@@ -207,16 +207,18 @@ for vel in ('vxz','vdix1'):
          transp | agc |
          grey title="Post-Stack Depth Migration"
          label1=Depth unit1=m label2=Lateral unit2=m
-         ''')
+         screenht=%g screenwd=%g labelsz=4 titlesz=4
+         ''' % (0.001*zmax,0.001*xmax))
 
 Result('img','img-vxz','Overlay')
+Result('img0','img-vdix1','Overlay')
 Result('fmg2','fmg2','Overlay')
 
 #     screenht=%g screenwd=%g labelsz=4 titlesz=4
 #       ''' % (0.001*zmax,0.001*xmax))
 
 
-Result('elfimg','img-vxz fmg2','OverUnderAniso') 
+Result('elfimg','img-vdix1 img-vxz fmg2','OverUnderAniso') 
 Result('elfimg2','img-vxz img','SideBySideAniso',vppen='txscale=1.2')
 
 Result('elfimg0','img-vdix1 img','SideBySideAniso')

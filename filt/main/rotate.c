@@ -1,9 +1,4 @@
-/* Rotate a portion of one or more axes in the data hypercube. 
-
-Takes: rot1=0 rot2=0 ... 
-
-rotN defines the length on the N-th axis that is moved to the end.
-*/
+/* Rotate a portion of one or more axes in the data hypercube. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -62,6 +57,7 @@ int main(int argc, char* argv[])
 	snprintf(key,5,"rot%d",i+1);
 	if (!sf_getint(key,rot+i) ||
 	    0 > rot[i]) rot[i]=0;
+	/*< rot#=(0,0,...) length of #-th axis that is moved to the end >*/  
 	if (rot[i] >= n[i]) 
 	    sf_error("rot%d=%d must be smaller than n%d=%d",
 		     i,rot[i],i,n[i]);

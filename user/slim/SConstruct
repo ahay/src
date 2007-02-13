@@ -79,7 +79,7 @@ if 'python' in api:
         user = os.path.basename(os.getcwd())
         pwd = os.path.join(os.getcwd(),'../../../user/',user)
 
-	pymodules = set(env.get('PYMODULES'))
+	pymodules = set(env.get('PYMODULES',[]))
 	
         # Python main programs
         py_mains = []
