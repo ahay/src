@@ -397,7 +397,7 @@ stringpar = None
 synopsis = None
 
 def link(name):
-    return '<a href="%s.html">%s</a>' % (progs[name].name, name)
+    return '<a href="%s.html" title="%s">%s</a>' % (progs[name].name, progs[name].desc, name)
 
 def html(dir):
     if not os.path.isdir(dir):
