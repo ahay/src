@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
 '''
-Return mask to remove random traces from a 2-D gather using a maximum
-gap size constraint
+Return mask to remove random traces in 2D and 3D using a maximum gap
+size constraint
 '''
 
 # Author: G. Hennenfent
@@ -40,21 +40,28 @@ output = sf.Output()
 n1 = input.int("n1")
 n2 = input.int("n2")
 ni = input.size(2)
-assert ni == 1,"sfkilltraces needs 2D input"
+if ni != 1:
+    n3 = ni
+    ni = input.size(3)
+else:
+    n3 = 1
+assert ni == 1,"sfkilltraces needs 2D or 3D input"
 
 perc = par.float("perc",.75) # percentage of traces to remove
 assert (perc>0 and perc<1),"perc should be between 0 and 1"
 
-maxfactor = par.float("maxfactor",1) # maximum gap factor
+maxfactor = par.float("maxfactor",1.) # maximum gap factor
 assert maxfactor>=1,"maxfactor should be greater or equal to 1"
 
-seed = par.int("seed",None) # seed for random number generator
+seed = par.int("seed",np.random.randn() ) # seed for random number generator
 
 output.put("n1",n2)
-output.put("n2",1)
+output.put("n2",n3)
+output.put("n3",1)
 
-mask = np.float32(killtraces(n2,100*(1-perc),maxfactor,seed))
-
-output.write(mask)
+for i in range(n3):
+    mask = np.float32(killtraces(n2,100*(1-perc),maxfactor,seed))
+    output.write(mask)
+    seed += 1
 
 # $Id$
