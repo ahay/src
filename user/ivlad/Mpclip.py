@@ -17,7 +17,7 @@
 # along with this program; if not, write to the Free Software
 # Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import sys
+import sys, rsfprog
 
 try:
     import rsf
@@ -29,13 +29,28 @@ try: # Give precedence to local version
 except: # Use distributed version
     from rsfuser.ivlad import send_to_os
 
-import rsfprog
+# Use exceptions for elegant unit testing
+
+class Error(Exception):
+    '''Base class for exceptions in this module.'''
+    def __str__(self):
+        return 'Pclip exception: ' + self.message
+
+class PclipWrongVal(Error):
+    '''exception: pclip out of range'''
+    def __init__(self):
+        self.message = 'pclip must be between 0 and 100'
+
+class NoReturnFromQuantile(Error):
+    '''exception: sfquantile failed'''
+    def __init__(self):
+        self.message = 'sfquantile did not return anything'
+
+# Global constants -- Unix return codes
+success = 0
+error   = 1
 
 def main(argv=sys.argv):
-
-    # Constants
-    success = 0
-    error   = 1
 
     # Parse arguments into a parameter table
     par = rsf.Par(argv)
@@ -43,27 +58,32 @@ def main(argv=sys.argv):
     inp = par.string('inp') # input file
     out = par.string('out') # output file
     if None in (inp, out):
-        rsfprog.selfdoc()   # self-doc
-        #        sys.stderr.write(__doc__) 
-        return error
+        rsfprog.selfdoc()
+        return
 
     verb = par.bool('verb', False) # if y, print system commands, outputs
     pclip = par.float('pclip',99)  # percentile clip
 
     if pclip <0 or pclip>100:
-        sys.stderr.write('pclip must be between 0 and 100\n')
-        return error
+        raise PclipWrongVal
 
     clip = send_to_os('sfquantile', arg='pclip='+str(pclip),
                       stdin=inp, want='stdout', verb=verb)
 
     if not clip:
-        sys.stderr.write('sfquantile did not return anything!\n')
-        return error
+        raise NoReturnFromQuantile
 
     send_to_os('sfclip', arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
 
     return success
 
 if __name__ == '__main__':
-    sys.exit(main()) # Exit with the success or error code returned by main
+
+    status = error
+
+    try:
+        status = main()
+    except (PclipWrongVal,NoReturnFromQuantile), e:
+        print e.message
+
+    sys.exit(status)
