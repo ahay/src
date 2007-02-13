@@ -25,7 +25,7 @@
 int main(int argc, char* argv[])
 {
     int nt,nx,it,ix,ix0;
-    float *wave, *data, cycles;
+    float *wave, *data, cycles, slow;
     sf_file out;
     
     sf_init(argc,argv);
@@ -42,6 +42,9 @@ int main(int argc, char* argv[])
     if (!sf_getint("ix0",&ix0)) ix0=0; 
     /* central trace */
     /* try ix0=2 */
+
+    if (!sf_getfloat("slow",&slow)) slow=0.1;
+    /* slowness */
 
     sf_putint(out,"n1",nt);
     sf_putint(out,"n2",nx);
@@ -60,7 +63,7 @@ int main(int argc, char* argv[])
     }
 
     for (ix=0; ix < nx; ix++) {
-	it = nt*sqrtf(1. + 0.01*(ix-ix0)*(ix-ix0))/3.;
+	it = nt*hypotf(1.,slow*(ix-ix0))/3.;
 	if (it > nt) it=nt;
 	if (it > 0)  sf_floatwrite(data,it,out);
 	if (nt > it) sf_floatwrite(wave,nt-it,out);

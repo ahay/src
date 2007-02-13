@@ -197,11 +197,12 @@ that all these signals have the same amplitude.
 
 
 \par
+\inputdir{subsamp}
 Figure \ref{fig:subsampvrsaa} shows a quasisinusoidal signal
 and compares subsampling to antialiasing
 via field arrays as in
 Figure \ref{fig:oversamp}.
-\activeplot{subsampvrsaa}{width=6.00in,height=2.25in}{ER}{
+\plot{subsampvrsaa}{width=6.00in,height=2.25in}{
 	500 channels (left),
 	subsampled to 20 (middle),
 	added in groups of 25(right).
@@ -244,6 +245,7 @@ and weak aliased events still being visible.
 
 
 \subsection{Adjoint of data acquisition}
+\inputdir{mod}
 Knowing how data is recorded,
 or how we would like it to be recorded,
 suggests various possibilities for data processing.
@@ -254,12 +256,12 @@ along with migrations,
 with and without attention to aliasing the horizontal space axis.
 The figure shows that migration without attention to aliasing
 leads to systematic noise and (apparently) random noise.
-\activeplot{migalias}{width=4.30in}{ER}{
-	Top left is a synthetic image.
-	Top right is synthetic data from the synthetic image.
-	Bottom are migrations of the data with and without
-	antialiasing.
-	}
+\plot{migalias}{width=4.30in}{
+  Top left is a synthetic image.
+  Top right is synthetic data from the synthetic image.
+  Bottom are migrations of the data with and without
+  antialiasing.
+}
 \par
 This figure is based on realistic parameters
 except that I compute and display the results
