@@ -47,7 +47,7 @@ env['USERS']=user
 Export('env')
 SConscript(dirs='python',name='SConstruct')
 
-env.Append(BUILDERS={'Include':configure.Header},
+env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
            SCANNERS=[configure.Include])
 
 ##########################################################################

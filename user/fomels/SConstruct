@@ -34,7 +34,7 @@ except: # local version
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     SConscript('../../filt/lib/SConstruct')
     src = glob.glob('[a-z]*.c')
-    env.Append(BUILDERS={'Include':configure.Header},
+    env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
                SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'],
@@ -58,11 +58,10 @@ jpeg = env.get('JPEG')
 if jpeg:
     libs=env.get('LIBS')+[jpeg]
     prog = env.Program('sfbyte2jpg',['_byte2jpg.c','_jpeg.c'],LIBS=libs)
-    if root:
-        env.Install(bindir,prog)
-elif root:
-    env.Place(os.path.join(bindir,'sfbyte2jpg'),None,
-              var='JPEG',package='libjpeg-devel')
+else:
+    prog = env.Place('sfbyte2jpg',None,var='JPEG',package='libjpeg-devel')
+if root:
+    env.Install(bindir,prog)
 
 for prog in Split(
     '''

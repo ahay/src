@@ -21,7 +21,7 @@ except: # local version
     if  sys.platform[:5] == 'sunos':
 	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
     SConscript('../genlib/SConstruct')
-    env.Append(BUILDERS={'Include':configure.Header},
+    env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
                SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'],
@@ -65,12 +65,12 @@ if inc and lib:
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
+else:
+    main = env.Place('xtpen',None,
+                     var='XINC and XLIBPATH',package='libXaw-devel')
     
-    if root:
-        env.Install(bindir,main[0])
-elif root:
-    env.Place(os.path.join(bindir,'xtpen'),None,
-              var='XINC and XLIBPATH',package='libXaw-devel')
+if root:
+    env.Install(bindir,main[0])
 
 # pspen
 #######
@@ -94,9 +94,8 @@ if ppm:
     env.Depends(obj,'raspen.h')
     main = env.Program('ppmpen',[obj,]+objects,
                        LIBS=[ppm]+env.get('LIBS',[]))
+else:
+    main = env.Place('ppmpen',None,var='PPM',package='netpbm-devel')
     
-    if root:
-        env.Install(bindir,main[0])
-elif root:
-    env.Place(os.path.join(bindir,'ppmpen'),None,
-              var='PPM',package='netpbm-devel')
+if root:
+    env.Install(bindir,main[0])
