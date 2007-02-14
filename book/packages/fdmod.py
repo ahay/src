@@ -120,6 +120,7 @@ def egrey(custom,par):
 def waveplot(custom,par):
     return '''
     graph min2=-1 max2=+1 title=""
+    plotfat=4
     label1=%s unit1=%s label2="" unit2=""
     %s
     ''' % (par['lt'],par['ut'],custom)
