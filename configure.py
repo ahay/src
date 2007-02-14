@@ -781,7 +781,6 @@ def intel(context):
         if license:
             context.env.Append(ENV={key:license})
 
-
 def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')

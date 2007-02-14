@@ -69,7 +69,7 @@ if inc and lib:
     if root:
         env.Install(bindir,main[0])
 elif root:
-    env.InstallAs(os.path.join(bindir,'xtpen'),'xtpen.py')
+    env.Place(os.path.join(bindir,'xtpen'),None,var='XINC and XLIBPATH')
 
 # pspen
 #######
@@ -96,3 +96,5 @@ if ppm:
     
     if root:
         env.Install(bindir,main[0])
+elif root:
+    env.Place(os.path.join(bindir,'ppmpen'),None,var='PPM')

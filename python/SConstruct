@@ -38,7 +38,8 @@ index = os.path.join(docdir,'index.html')
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
-env.Command(index,None,'%s python/sfdoc -w %s -r %s' % (WhereIs('python'),docdir,repos))
+env.Command(index,None,
+            '%s python/sfdoc -w %s -r %s' % (WhereIs('python'),docdir,repos))
 Depends(index,use)
 
 ##########################################################################
@@ -46,4 +47,5 @@ Depends(index,use)
 ##########################################################################
 Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix','lang']),
                src_suffix='.c',suffix='.py')
-env.Append(BUILDERS = {'Doc' : Doc})
+Place = Builder (action = Action(rsfdoc.placeholder,varlist=['var']))
+env.Append(BUILDERS = {'Doc' : Doc, 'Place' : Place})
