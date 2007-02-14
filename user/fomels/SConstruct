@@ -61,7 +61,8 @@ if jpeg:
     if root:
         env.Install(bindir,prog)
 elif root:
-    env.Place(os.path.join(bindir,'sfbyte2jpg'),None,var='JPEG')
+    env.Place(os.path.join(bindir,'sfbyte2jpg'),None,
+              var='JPEG',package='libjpeg-devel')
 
 for prog in Split(
     '''

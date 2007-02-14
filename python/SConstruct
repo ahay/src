@@ -47,5 +47,5 @@ Depends(index,use)
 ##########################################################################
 Doc = Builder (action = Action(rsfdoc.selfdoc,varlist=['rsfprefix','lang']),
                src_suffix='.c',suffix='.py')
-Place = Builder (action = Action(rsfdoc.placeholder,varlist=['var']))
+Place = Builder (action = Action(rsfdoc.placeholder,varlist=['var','package']))
 env.Append(BUILDERS = {'Doc' : Doc, 'Place' : Place})

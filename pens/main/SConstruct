@@ -69,7 +69,8 @@ if inc and lib:
     if root:
         env.Install(bindir,main[0])
 elif root:
-    env.Place(os.path.join(bindir,'xtpen'),None,var='XINC and XLIBPATH')
+    env.Place(os.path.join(bindir,'xtpen'),None,
+              var='XINC and XLIBPATH',package='libXaw-devel')
 
 # pspen
 #######
@@ -97,4 +98,5 @@ if ppm:
     if root:
         env.Install(bindir,main[0])
 elif root:
-    env.Place(os.path.join(bindir,'ppmpen'),None,var='PPM')
+    env.Place(os.path.join(bindir,'ppmpen'),None,
+              var='PPM',package='netpbm-devel')

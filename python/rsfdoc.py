@@ -98,8 +98,11 @@ def placeholder(target=None,source=None,env=None):
     out.write('import sys\n\n')
     out.write('sys.stderr.write(\'\'\'\n%s is not installed.\n')
     out.write('Check $RSFROOT/lib/rsfconfig.py for ' + var)
-    out.write('\nand reinstall if necessary.\n\'\'\' % sys.argv[0])\n')
-    out.write('sys.exit(1)\n')
+    out.write('\nand reinstall if necessary.')
+    package = env.get('package')
+    if package:
+        out.write('\nPossible missing packages: ' + package)
+    out.write('\n\'\'\' % sys.argv[0])\nsys.exit(1)\n')
     out.close()
     os.chmod(filename,0775)
     return 0
