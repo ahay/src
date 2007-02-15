@@ -314,7 +314,7 @@ void abcone2d_apply(float**   uo,
 
 	    // top BC
 	    if(!abc->free) { // not free surface, apply ABC
-		i1 = nop-iop;
+		i1 = nop-iop-1;
 		uo      [i2][i1  ] 
 		    = um[i2][i1+1] 
 		    +(um[i2][i1  ]
@@ -337,7 +337,7 @@ void abcone2d_apply(float**   uo,
 	for(iop=0;iop<nop;iop++) {
 
 	    // left BC
-	    i2 = nop-iop;
+	    i2 = nop-iop-1;
 	    uo      [i2  ][i1] 
 		= um[i2+1][i1] 
 		+(um[i2  ][i1]
@@ -397,7 +397,7 @@ void sponge2d_apply(float**   uu,
 /*#endif*/
 	for(i2=0; i2<fdm->n2pad; i2++) {
 	    uu[i2][           ib  ] *= w; //    top sponge
-	    uu[i2][fdm->n2pad-ib-1] *= w; // bottom sponge
+	    uu[i2][fdm->n1pad-ib-1] *= w; // bottom sponge
 	}
     }
 }

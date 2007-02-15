@@ -23,9 +23,9 @@ def param(par):
     if(not par.has_key('ompchunk')): par['ompchunk']=1
     if(not par.has_key('free')):     par['free']='n'
    
-    if(not par.has_key('ot')): par['ot']=0.
-    if(not par.has_key('nt')): par['nt']=1
-    if(not par.has_key('dt')): par['dt']=1.
+    if(not par.has_key('ot')):       par['ot']=0.
+    if(not par.has_key('nt')):       par['nt']=1
+    if(not par.has_key('dt')):       par['dt']=1.
 
     if(not par.has_key('tmin')):     par['tmin']=par['ot']
     if(not par.has_key('tmax')):     par['tmax']=par['ot'] + (par['nt']-1) * par['dt']
@@ -36,6 +36,7 @@ def param(par):
 
     if(not par.has_key('ratio')):    par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
     if(not par.has_key('height')):   par['height']=par['ratio']*14
+    if(par['height']>10): par['height']=10
 
 # ------------------------------------------------------------
 # plotting functions
