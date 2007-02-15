@@ -36,8 +36,8 @@ for case in ('a','b'):
         Flow(scn,cmp,'vscan half=n v0=2000 dv=10 nv=101 %ssemblance=y' % avo)
         Plot(scn+'0',scn,
              '''
-             grey color=j allpos=y title="(%s) %s Semblance" pclip=100
-             ''' % (case,string.upper(avo)))
+             grey color=j allpos=y title="(%s)" pclip=100
+             ''' % case)
 
         pik = avo + 'pik' + case
         Flow(pik,scn,'scale axis=2 | pick rect1=50')
@@ -49,15 +49,24 @@ for case in ('a','b'):
 
         Plot(scn,[scn+'0',pik],'Overlay')
 
+        slc = avo + 'slc' + case
+        Flow(slc,[scn,'avopik'+case],'slice pick=${SOURCES[1]}')
+
         nmo = avo + 'nmo' + case
         Flow(nmo,[cmp,pik],'nmo half=n velocity=${SOURCES[1]} str=0.4')
         Plot(nmo,
              '''
-             grey title="(%s) %s NMO"
+             grey title="(%s)"
              grid2=y gridcol=6 gridfat=7 g2num=0.5
-             ''' % (case,string.upper(avo)))
+             ''' % case)
 
-for plot in ('cmp','scn','avoscn','nmo','avonmo'):    
+    attr = 'attr'+case
+    Flow(attr,['avoslc'+case,'slc'+case],
+         'add mode=d ${SOURCES[1]} | smooth rect1=25 | spray axis=2 n=141 d=25 o=0')
+    Plot(attr,['avonmo'+case,attr],
+         'add ${SOURCES[1]} | grey color=j title="(%s)" allpos=y clip=5' % case)
+
+for plot in Split('cmp scn avoscn nmo avonmo attr'):    
     Result(plot,[plot+'a',plot+'b'],'SideBySideAniso')
 
 End()

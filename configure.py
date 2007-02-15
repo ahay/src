@@ -342,8 +342,8 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
-# If this check is failed and you do not have SEPlib installed,
-# you will not be able to display .vpl images
+# If this check is failed 
+# you may not be able to display .vpl images on the screen
 def x11(context):
     text = '''
     #include <X11/Intrinsic.h>
