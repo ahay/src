@@ -19,7 +19,7 @@ Flow('xyz',xyzi,
 Flow('dist','xyz',
      '''
      distance n1=101 n2=111 n3=91
-     o1=-50 d1=0.01 o2=-50 d2=0.01 o3=-40 d3=0.01
+     o1=-50 d1=1 o2=-50 d2=1 o3=-40 d3=1
      ''')
 
 End()
