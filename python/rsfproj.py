@@ -241,7 +241,6 @@ class Project(Environment):
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                              figdir+'/\\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
-        self.runmanager = os.environ.get('RUN_MANAGER','') # serialrun, etc.
         self.Append(ENV={'DATAPATH':self.path,
                          'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
@@ -324,7 +323,6 @@ class Project(Environment):
                     rsfprog = None
                     if re.match(r'[^/]+\.exe$',command): # local program
                         command = os.path.join('.',command)
-                command = self.runmanager + command
                 pars.insert(0,command)
                 # special rule for solvers
                 if rsfprog == prefix+'conjgrad' or \
