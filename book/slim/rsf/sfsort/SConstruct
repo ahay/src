@@ -10,7 +10,7 @@ Flow('data',None,
      math output="abs(input)"
      ''' % n1 )
 Flow('incore','data','sort')
-Flow('outofcore','data','sort memsize=.01 ascmode=y')
+Flow('outofcore','data','sort memsize=1 ascmode=y')
 
 # Plots
 Result('datasort','data','graph title="Data" ')

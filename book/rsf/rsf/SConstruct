@@ -21,17 +21,6 @@ for prog in rsfdoc.progs.keys():
 Alias('progs',progs)
 Alias('wprogs',wprogs)
 
-wprogs = []
-for prog in rsfdoc.progs.keys():
-    progs.append(prog+'.tex')
-    Command2(prog+'.tex',sfdoc,
-             'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE -l . %s' % \
-             (os.environ.get('PYTHONPATH'),
-              os.environ.get('LD_LIBRARY_PATH'),
-              prog))
-
-Alias('progs',progs)
-
 Paper('install',use='[bookmarks=true]hyperref')
 Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')

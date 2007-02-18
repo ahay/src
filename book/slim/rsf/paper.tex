@@ -40,32 +40,10 @@ USA.
 
 \newpage
 \section{Utilities}
-\subsection{sfthr -- thresholding function}
 
-\begin{verbatim}
-NAME
-        sfthr
-SYNOPSIS
-        sfthr < in.rsf > out.rsf fthr=fthr.rsf thr= fthr= mode=
-COMMENTS
-        Threshold float/complex inputs given a constant/varying
-        threshold level.
-
-        Methods available:
-        - soft
-        - hard
-        - non-negative Garrote (nng)
-
-        Written by: Gilles Hennenfent & Colin Russell, UBC
-        Created: February 2006
-
-PARAMETERS
-        string  fthr=   varying threshold level (>=0) 
-        string  mode=   'soft', 'hard', 'nng' (default: soft)
-        float   thr=    threshold level (>=0)
-SOURCE
-        user/slim/thr.c
-\end{verbatim}
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfthr}
+}}
 
 \noindent
 Consider the vector $\vector{x}:=\{x_i\}_{0\leq i <m}\in\mathbb{R}^m$.
@@ -115,17 +93,17 @@ or replace the last command by
 bash$ sfthr <data.rsf thr=2 method=soft >res2.rsf
 \end{verbatim}
 %
-This is also equivalent to soft thresholding data.rsf with a vector of
-same size mythr.rsf whose entries are all set to 2.
+This is also equivalent to soft thresholding \texttt{data.rsf} with a
+vector of same size \texttt{mythr.rsf} whose entries are all set to 2.
 %
 \begin{verbatim}
 bash$ sfmath n1=100 n2=1 output='2' >mythr.rsf
 bash$ sfthr <data.rsf fthr=mythr.rsf method=soft >res3.rsf
 \end{verbatim}
 %
-If thr=.5 and fthr=mythr.rsf are specified at the same time, the
-effective threshold level is 1, obtained by multiplying mythr.rsf
-entries by 0.5
+If \texttt{thr=.5} and \texttt{fthr=mythr.rsf} are specified at the
+same time, the effective threshold level is 1, obtained by multiplying
+\texttt{mythr.rsf} entries by 0.5
 %
 \begin{verbatim}
 bash$ sfthr <data.rsf thr=.5 fthr=mythr.rsf method=soft >res4.rsf
@@ -136,28 +114,10 @@ bash$ sfthr <data.rsf thr=.5 fthr=mythr.rsf method=soft >res4.rsf
 
 Note that thresholding is an element-wise operation. \texttt{sfthr}
 can thus deal with arbitrarily large datasets.
-%
-\newpage
-\subsection{sfsort -- sort trace amplitudes}
 
-\begin{verbatim}
-NAME
-        sfsort
-SYNOPSIS
-        sfsort < in.rsf > out.rsf memsize=500 ascmode=n
-COMMENTS
-        Sort in ascending/descending order absolute value entries of a
-        float/complex vector.
-        
-        Written by: Gilles Hennenfent & Henryk Modzelewski, UBC
-        Created: February 2006
-        
-PARAMETERS
-        bool    ascmode=n [y/n] y=ascending; n=descending 
-        int     memsize=500     Available memory size (in Mb)
-SOURCE
-        user/slim/sort.c
-\end{verbatim}
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sfsort}
+}}
 
 \noindent
 \texttt{sfsort} is useful for sorting Madagascar vectors either in
@@ -175,29 +135,11 @@ step is a merge process of the temporary files.
 \multiplot{3}{datasort,incore,outofcore}{width=.3\textwidth}{Sorting
   example.}
 
-\newpage
 \section{Transforms}
-\subsection{sffdct - 2D fast discrete curvelet transform}
 
-\begin{verbatim}
-NAME
-        sffdct
-SYNOPSIS
-        sffdct < in.rsf > out.rsf nbs= nba= ac=n adj=n
-COMMENTS
-        Fast Discrete Curvelet Transform
-
-        Written by: Gilles Hennenfent, UBC
-        Created: January, 2007
-        
-PARAMETERS
-        int     nbs             number of scales
-        int     nba             number of angles at the 2nd coarsest scale
-        bool    ac=n [y/n]      curvelets at the finest scale, wavelets otherwise.
-        bool    adj=n [y/n]     forward transform, adjoint/inverse otherwise
-SOURCE
-        user/slim/fdct.py
-\end{verbatim}
+\noindent\doublebox{\parbox{\textwidth}{
+\input{sffdct}
+}}
 
 \inputdir{sffdct}
 \multiplot{3}{model,data,res}{width=.3\textwidth}{Data denoising. (a)
