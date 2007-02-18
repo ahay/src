@@ -166,7 +166,8 @@ if 'python' in api:
     except:
         for path in sys.path:
             if string.find(path,'python') >= 0:
-                dir = os.path.join(string.replace(path,'lib','include'),'numarray')
+                dir = os.path.join(string.replace(path,'lib','include'),
+                                   'numarray')
                 if os.path.isdir(dir):
                     pythinc.append(dir)
 
@@ -182,17 +183,16 @@ if 'python' in api:
         env.Depends(obj,source+'.h')
         objs.append(obj)
 
-    python = env.SharedLibrary('rsf',['rsf.i']+sources+objs,
-                               SWIGFLAGS='-python',
+    wrap = env.CFile('rsf','rsf.i',SWIGFLAGS='-python')
+    python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
 
-
     if root:
         env.Install(libdir,python)
-        env.Install(libdir,'c_rsf.py')
+        env.Install(libdir,wrap[1])
         env.Install(libdir,'rsf.py')
-        Clean(python,['c_rsf.py','c_rsf.pyc'])
+        Clean(python,[wrap[1],wrap[1]+'c'])
 
 ##############################################################################
 # MATLAB BINDING
