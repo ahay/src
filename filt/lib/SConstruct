@@ -192,7 +192,6 @@ if 'python' in api:
         env.Install(libdir,python)
         env.Install(libdir,wrap[1])
         env.Install(libdir,'rsf.py')
-        Clean(python,[wrap[1],wrap[1]+'c'])
 
 ##############################################################################
 # MATLAB BINDING
