@@ -2,7 +2,7 @@ from rsfproj import *
 
 n1=400
 
-Flow('spike',None,'spike n1=%d d1=1 label1=" " ' % n1)
+Flow('spike',None,'spike n1=%d d1=1 o1=1 label1=Sample unit1=' % n1)
 
 waves = []
 for j in range(n1/15,n1,n1/5):
@@ -28,7 +28,7 @@ Flow('shift',shifts,'cat axis=2 ${SOURCES[1:%d]}' % len(shifts))
 
 Flow('pef pre','shift in',
      'lpf match=${SOURCES[1]} rect1=5 pred=${TARGETS[1]}')
-Flow('err','pre in','add scale=1,-1 ${SOURCES[1]}')
+Flow('err','pre in','add scale=-1,1 ${SOURCES[1]}')
 
 Result('lpf','in err',
        '''
