@@ -257,6 +257,35 @@ def pstexpen(target=None,source=None,env=None):
         return 1
     return 0
 
+def uses(target=None,source=None,env=None):
+    "Collect RSF program uses"
+    project = os.path.dirname(str(source[0]))
+
+    out = open(str(target[0]),"w")
+    os.chdir(project)
+
+    sin, sout, serr = os.popen3('scons -s .sf_uses')
+    sin.close()
+
+    progs = sout.read()
+    sout.close()
+
+    status = serr.read()
+    serr.close() 
+
+    if status:
+        print ('No uses found in %s: %s' % (project,status))
+    elif string.find(progs,'scons') < 0:
+        tree = env.get('tree')
+        doc = map(lambda prog:
+                  'rsfdoc.progs["%s"].use("%s","%s","%s")' %
+                  (prog,tree[1],tree[2],project),string.split(progs))
+        out.write(string.join(doc,'\n') + '\n')
+        
+    os.chdir('..')
+    out.close()
+    return 0
+
 _KEYWORD = token.NT_OFFSET + 1
 _TEXT    = token.NT_OFFSET + 2
 
@@ -506,6 +535,7 @@ if pdfread:
 
 Build = Builder(action = Action(pstexpen),
                 src_suffix=vpsuffix,suffix=pssuffix)
+Uses = Builder(action = Action(uses),varlist=['tree'])
 
 if epstopdf:
     epstopdf = 'LD_LIBRARY_PATH=%s %s' % (os.environ.get('LD_LIBRARY_PATH',''),
@@ -646,15 +676,16 @@ class TeXPaper(Environment):
                               'Wiki':Wiki,
                               'Build':Build,
                               'Color':Color,
-                              'Figs':Figs})
+                              'Figs':Figs,
+                              'Uses':Uses})
         cwd = os.getcwd()
         # create a hierarcical structure
-        (book,chap,proj) = (os.path.basename(
-            os.path.dirname(os.path.dirname(cwd))),
-                            os.path.basename(os.path.dirname(cwd)),
-                            os.path.basename(cwd))
+        self.tree = (
+            os.path.basename(os.path.dirname(os.path.dirname(cwd))),
+            os.path.basename(os.path.dirname(cwd)),
+            os.path.basename(cwd))
 	self.doc = os.environ.get('RSFDOC',os.path.join(os.environ.get('RSFROOT'),'doc'))
-        for level in (book,chap,proj):
+        for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
                 if not os.path.exists(self.doc):
@@ -689,6 +720,8 @@ class TeXPaper(Environment):
             html = dir+'.html'
             self.Color(html,scons)
             self.scons.append(html)
+            uses = dir+'.uses'
+            self.Uses(uses,scons,tree=self.tree)
         if self.scons:
             self.Install(self.doc,self.scons)
         self.Alias('install',self.doc)        

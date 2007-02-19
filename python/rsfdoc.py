@@ -49,31 +49,16 @@ def use(target=None,source=None,env=None):
             print "%s..." % book
             for chapter in subdirs():
                 os.chdir(chapter)
-                print "...%s" % chapter
+                print "...%s" % chapter        
                 for project in subdirs():
-                    os.chdir(project)
-
-                    #  (status,progs) = \
-                    #  commands.getstatusoutput('scons -s .sf_uses')
-
-                    for case in ('uses',):
-                        sin, sout, serr = os.popen3('scons -s .sf_'+case)
-                        sin.close()
-                        progs = sout.read()
-                        sout.close()
-                        status = serr.read()
-                        serr.close() 
-
-                        if status:
-                            print ('No %s found in book/%s/%s/%s/: %s' %
-                                   (case,book,chapter,project,status))
-                        elif string.find(progs,'scons') < 0:
-                            for prog in string.split(progs):
-                                doc.append(
-                                    'rsfdoc.%s["%s"].use("%s","%s","%s")' %
-                                    (('progs','data')[case=='data'],
-                                     prog,book,chapter,project))
-                    os.chdir('..')
+                    uses = project+'.uses'
+                    os.system('scons -s ' + uses)
+                    try:
+                        use = open(uses)
+                        doc.extend(use.readlines())
+                        use.close()
+                    except:
+                        pass
                 os.chdir('..')
             os.chdir('..')
         os.chdir(cwd)
