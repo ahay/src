@@ -66,7 +66,9 @@ Flow('vel','vstr2A',
      put o1=%(oz)g d1=%(dz)g  o2=%(oz)g d2=%(dz)g
      ''' % par)
 
-Plot('vel',fdmod.cgrey('allpos=y bias=1.5 pclip=100 color=F title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t',par))
+Plot('vel',fdmod.cgrey('''
+allpos=y bias=1.5 pclip=100 color=F title=Survey\ Design labelsz=4 titlesz=6 wheretitle=t
+''',par))
 Result('vel',['vel','rr','ss'],'Overlay')
 
 # ------------------------------------------------------------

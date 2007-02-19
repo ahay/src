@@ -36,7 +36,7 @@ for dip in range(2):
 
 
 Flow('vg','line2 dip',
-     'pwdsigk dips=${SOURCES[1]} verb=y nliter=2 niter=1000 eps=8')
+     'pwdsigk dips=${SOURCES[1]} verb=y nliter=2 niter=1000 eps=10')
 Result('vg','stack axis=3 | grey wanttitle=n label1=Time unit1=s label2=Trace')
 
 End()
