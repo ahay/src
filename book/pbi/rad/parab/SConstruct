@@ -13,17 +13,17 @@ Flow('dat_spike','mod_spike','radon parab=y nx=60 ox=0 dx=0.025 adj=n')
 
 gmod = '''
 grey transp=y poly=y yreverse=y crowd=0.89
-label2="q s.km^2" label1="time(s)" title="radon domain"
+label2="q s.km^2" label1=time unit1=s title="radon domain"
 '''
 
 wmod = '''
 wiggle transp=y poly=y yreverse=y crowd=0.89
-label2="q s.km^2" label1="time(s)" title="radon domain"
+label2="q s.km^2" label1=time unit1=s title="radon domain"
 '''
 
 gdat = '''
 grey transp=y poly=y yreverse=y crowd=0.89
-label2="offset(km)" label1="time(s)" title="cmp domain"
+label2="offset(km)" label1=time unit1=s title="cmp domain"
 '''
 
 Plot('mod_spike',gmod + ' pclip=100')
