@@ -33,6 +33,7 @@ env.Command(use,None,action=Action(rsfdoc.use,varlist=['book']),book='book')
 Depends(use,map(lambda x: os.path.join(libdir,'sf'+x+'.py'),dirs))
 Depends(use,os.path.join(libdir,'vpplot.py'))
 Depends(use,os.path.join(libdir,'suproj.py'))
+Depends(use,os.path.join(libdir,'vplot2eps.py'))
 
 index = os.path.join(docdir,'index.html')
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
