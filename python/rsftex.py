@@ -274,7 +274,7 @@ def uses(target=None,source=None,env=None):
     serr.close() 
 
     if status:
-        print ('No uses found in %s: %s' % (project,status))
+        sys.stderr.write('No uses found in %s: %s\n' % (project,status))
     elif string.find(progs,'scons') < 0:
         tree = env.get('tree')
         doc = map(lambda prog:
@@ -684,7 +684,9 @@ class TeXPaper(Environment):
             os.path.basename(os.path.dirname(os.path.dirname(cwd))),
             os.path.basename(os.path.dirname(cwd)),
             os.path.basename(cwd))
-	self.doc = os.environ.get('RSFDOC',os.path.join(os.environ.get('RSFROOT'),'doc'))
+	self.doc = os.environ.get(
+             'RSFDOC',
+             os.path.join(os.environ.get('RSFROOT'),'doc'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
@@ -709,6 +711,7 @@ class TeXPaper(Environment):
             self.Append(BUILDERS={'Matlab':Matlab})
         self.scons = []
         self.figs = []
+        self.uses = []
         self.Dir()
     def Install2(self,dir,fil):
         dir2 = mkdir(dir)
@@ -722,6 +725,7 @@ class TeXPaper(Environment):
             self.scons.append(html)
             uses = dir+'.uses'
             self.Uses(uses,scons,tree=self.tree)
+            self.uses.append(uses)
         if self.scons:
             self.Install(self.doc,self.scons)
         self.Alias('install',self.doc)        
@@ -843,7 +847,10 @@ class TeXPaper(Environment):
             self.Alias('figs',paper+'.figs')
             self.Default('pdf')
          self.Command('dummy.tex',self.figs,Action(dummy))
-#         apply(self.Paper,('dummy','dummy.tex'),kw)
+         if self.uses:
+              self.Command('.sf_uses',self.uses,'cat $SOURCES')
+         else:
+              self.Command('.sf_uses',None,'echo ')
 
 default = TeXPaper()
 def Dir(**kw):

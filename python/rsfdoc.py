@@ -39,7 +39,7 @@ def getprogs(target=None,source=None,env=None):
 
 def use(target=None,source=None,env=None):
     out = open(str(target[0]),'w')
-    doc = ['import rsfdoc\n']
+    doc = 'import rsfdoc\n'
     cwd = os.getcwd()
     bookdir = env.get('book')
     if os.path.isdir(bookdir):
@@ -49,20 +49,16 @@ def use(target=None,source=None,env=None):
             print "%s..." % book
             for chapter in subdirs():
                 os.chdir(chapter)
-                print "...%s" % chapter        
-                for project in subdirs():
-                    uses = project+'.uses'
-                    os.system('scons -s ' + uses)
-                    try:
-                        use = open(uses)
-                        doc.extend(use.readlines())
-                        use.close()
-                    except:
-                        pass
+                print "...%s" % chapter
+
+                sout = os.popen('scons -s .sf_uses')
+                doc = doc + sout.read()
+                sout.close()
+
                 os.chdir('..')
             os.chdir('..')
         os.chdir(cwd)
-    out.write(string.join(doc,'\n') + '\n')
+    out.write(doc)
     out.close()
 
 def selfdoc(target=None,source=None,env=None):
