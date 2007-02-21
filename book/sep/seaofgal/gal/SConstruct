@@ -13,7 +13,7 @@ Plot('sea',grey('Sea of Galilee - sparse grid'))
 Galilee('sea2',300,300)
 
 x = 205
-y = 246
+y = 242
 w = 4
 
 Flow('frame.asc',None,
@@ -42,7 +42,7 @@ for case in range(3):
 Result('galpat','pat0 pat1 pat2','SideBySideAniso')
 
 Galilee('int',100,100,interp=2,xmin=x,xmax=x+w,ymin=y,ymax=y+w,
-        shape='shape',extra='shape=y filt1=20 niter=100')
+        shape='shape',extra='shape=y filt1=5 niter=100')
 
 Flow('lag.asc',None,
      'echo 101 n1=1 n=100,100 in=$TARGET data_format=ascii_int')
