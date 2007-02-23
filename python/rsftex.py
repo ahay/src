@@ -184,10 +184,14 @@ def latex2dvi(target=None,source=None,env=None):
         os.system(run)
     return 0
 
+loffigs = {}
+
 def listoffigs(target=None,source=None,env=None):
     "Copy figures"
+    global loffigs
+    
     pdf = str(source[0])
-    stem = suffix.sub('',pdf)
+    stem = suffix.sub('',pdf)   
 
     try:
         lof = open(stem+'.lof')
@@ -218,15 +222,24 @@ def listoffigs(target=None,source=None,env=None):
             for ext in ('eps','pdf'):
                 src = suffix.sub('.'+ext,fil.group(1))
                 dst = '%s-Fig%s.%s' % (stem,fig,ext)
-                try:
-                    shutil.copy(src,dst)
-                    target.append(dst)
-                    env.Precious(dst)
-                except:
-                    sys.stderr.write('Cannot copy %s' % src)
+
+                loffigs[dst]=src
+                target.append(dst)
+                env.Precious(dst)
     log.close()
 
     return target, source
+
+def copyfigs(target=None,source=None,env=None):
+     "Copy figures"
+     for fig in target[1:]:
+          dst = str(fig)
+          src = loffigs[dst]
+          try:
+               shutil.copy(src,dst)
+          except:
+               sys.stderr.write('Cannot copy %s' % src)
+     return 0
 
 def latex2mediawiki(target=None,source=None,env=None):
     "Convert LaTeX to MediaWiki"
@@ -523,7 +536,7 @@ Latify = Builder(action = Action(latify,
 Pdf = Builder(action=Action(latex2dvi,varlist=['latex']),
               src_suffix='.ltx',suffix='.pdf',emitter=latex_emit)
 Wiki = Builder(action=Action(latex2mediawiki),src_suffix='.ltx',suffix='.wiki')
-Figs = Builder(action= 'ls ${TARGETS[1:]} > ${TARGETS[0]}',
+Figs = Builder(action=Action(copyfigs),
                src_suffix='.pdf',emitter=listoffigs)
 
 if pdfread:
