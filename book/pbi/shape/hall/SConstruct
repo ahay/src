@@ -1,0 +1,16 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+#Hall_Original+Gaussian_Noise_Sigma1.asc
+#Hall_Original+Spiky_Noise_1in20.asc
+#Hall_Original+Gaussian_Noise_Sigma2.asc
+#Hall_Original_Waveclass_8class.asc
+#Hall_Original_horizon.asc
+
+orig = 'Hall_Original_horizon.asc'
+Fetch(orig,'hall',private)
+
+End()

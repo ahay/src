@@ -25,7 +25,8 @@ int main(int argc, char* argv[])
     bool verb;
     int nt, nx, np, n3, i, it, ix, ip, i3, ntx, ntp;
     int interp, rect1, rect2, niter;
-    float t0, dt, x0, dx, x, p0, dp, p, eps, *dtx, *dtp, **tp, **tx, *pp;
+    float t0, dt, t, x0, dx, x, p0, dp, p, eps;
+    float *dtx, *dtp, **tp, **tx, *pp;
     sf_file in, dip, out, dip2;
 
     sf_init(argc,argv);
@@ -86,6 +87,7 @@ int main(int argc, char* argv[])
 
     dtx = sf_floatalloc(ntx);
     dtp = sf_floatalloc(ntp);
+    pp  = sf_floatalloc(ntp);
     tp = sf_floatalloc2(2,ntx);
     tx = sf_floatalloc2(2,ntp);
 
@@ -93,14 +95,15 @@ int main(int argc, char* argv[])
 	/* push slope */
 	sf_floatread(dtx,ntx,dip);
 	
-	for (ix=0; ix < nx; ix++) {
+	for (i=ix=0; ix < nx; ix++) {
 	    x = x0+ix*dx;
-	    for (it=0; it < nt; it++) {
-		i = ix*nt+it;
+	    for (it=0; it < nt; it++, i++) {
+		t = t0+it*dt;
+
 		p = dtx[i]*dt/dx;
 		dtx[i] = -x*dp/dt;
 
-		tp[i][0] = t0+it*nt-p*x;
+		tp[i][0] = t-p*x;
 		tp[i][1] = p;
 	    }
 	}
@@ -113,13 +116,13 @@ int main(int argc, char* argv[])
 
 	/* pull data */
 	sf_floatread(dtx,ntx,in);
-	for (ip=0; ip < np; ip++) {
+	for (i=ip=0; ip < np; ip++) {
 	    p = p0+ip*dp;
-	    for (it=0; it < nt; it++) {
-		i = ip*nt+it;
+	    for (it=0; it < nt; it++, i++) {
+		t = t0+it*dt;
 		x = -dtp[i]*dt/dp;
 
-		tx[i][0] = t0+it*nt+p*x;
+		tx[i][0] = t+p*x;
 		tx[i][1] = x;
 	    }
 	}

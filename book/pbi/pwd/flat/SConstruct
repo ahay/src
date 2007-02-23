@@ -59,7 +59,7 @@ Flow('sigmoid',None,
      sigmoid n1=200 n2=210 d2=0.008 |
      smooth rect1=3 diff1=1 | smooth rect1=3
      ''')
-Plot('sigmoid','grey title=Input')
+Plot('sigmoid','grey title="(a) Input" ')
 
 Result('sigin','sigmoid','grey title=Input scalebar=y')
 Result('sigin2','sigmoid','grey title=Input')
@@ -67,6 +67,8 @@ Result('sigin2','sigmoid','grey title=Input')
 Flow('sdip','sigmoid',
      'dip order=2 p0=0 verb=y niter=10 rect1=3 rect2=3')
 Flow('sdip0','sigmoid','dip p0=0 verb=y rect1=1 rect2=1')
+
+Plot('sdip','grey color=j title="(b) Dip" scalebar=y')
 
 Result('sigdip','sdip','grey color=j title="Smooth Dip" scalebar=y')
 Result('sigdip0','sdip0','grey color=j title="Unsmoothed Dip" scalebar=y')
@@ -76,11 +78,37 @@ Flow('spwd','sigmoid sdip',
 Result('sigpwd','spwd','grey title=Residual')
 
 Flow('sflat','sigmoid sdip','flat dip=${SOURCES[1]} i0=105 eps=0.05')
-Plot('sflat','sflat','grey title=Flattened')
+Plot('sflat','sflat','grey title="(c) Flattened" ')
 
-Result('sflat','sigmoid sflat','SideBySideAniso')
+Flow('spick','sdip',
+     '''
+     remap1 o1=-0.1 n1=250 | pwpick i0=105 eps=0.05 |
+     bandpass fhi=50 | window n1=200 min1=0
+     ''')
+Plot('spick0','spick',
+     '''
+     grey color=j allpos=y
+     scalebar=y barreverse=y
+     title="(d) Relative Age" clip=0.8
+     minval=0 maxval=0.8
+     ''')
+Plot('spick1','spick',
+     '''
+     clip clip=0.8 |
+     contour c0=0 dc=0.04 nc=20
+     transp=y yreverse=y plotcol=7 plotfat=5
+     scalebar=y barreverse=y barlabel=" " 
+     wanttitle=n wantaxis=n
+     minval=0 maxval=0.8
+     ''')
+Plot('spick2','spick0 spick1','Overlay')
+
+Result('pick','planes pick0 pick1','Overlay')
+
+Result('sflat','sigmoid sdip sflat spick2','TwoRows')
 
 Result('sigflt','sflat','grey title=Flattened')
-    
+
+
 ###########################################################################
 End()
