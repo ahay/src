@@ -42,7 +42,7 @@ def param(par):
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" wantscalebar=n
+    grey labelrot=n wantaxis=y title="" wantscalebar=n labelsz=5 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -56,22 +56,22 @@ def cgrey(custom,par):
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y title="" wantscalebar=n
+    grey labelrot=n wantaxis=y title="" wantscalebar=n labelsz=5 labelfat=3
     pclip=100 gainpanel=a
-    screenratio=%g screenht=%g
     label1=%s unit1=%s
     label2=%s unit2=%s
+    screenratio=%g screenht=%g
     %s
     ''' % (par['zmin'],par['zmax'],
            par['xmin'],par['xmax'],
-           par['ratio'],par['height'],
            par['lz'],par['uz'],
            par['lx'],par['ux'],
+           par['ratio'],par['height'],
            custom)
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n wantaxis=n title="" yreverse=y 
+    graph labelrot=n wantaxis=n title="" yreverse=y  labelsz=5 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g
@@ -84,7 +84,7 @@ def cgraph(custom,par):
 
 def ccont(custom,par):
     return '''
-    contour labelrot=n wantaxis=n title="" yreverse=y 
+    contour labelrot=n wantaxis=n title="" yreverse=y  labelsz=5 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g
@@ -97,7 +97,7 @@ def ccont(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey labelrot=n wantaxis=y title=""  labelsz=5 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -108,7 +108,7 @@ def dgrey(custom,par):
 
 def egrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""
+    grey labelrot=n wantaxis=y title=""  labelsz=5 labelfat=3
     pclip=100
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
@@ -120,7 +120,7 @@ def egrey(custom,par):
 # plot wavelet
 def waveplot(custom,par):
     return '''
-    graph min2=-1 max2=+1 title=""
+    graph min2=-1 max2=+1 title="" labelsz=5 labelfat=3
     plotfat=4
     label1=%s unit1=%s label2="" unit2=""
     %s
