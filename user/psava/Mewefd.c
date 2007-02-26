@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
 /*	    lint2d_inject(t11,ww[it][0],cs);*/
 /*	    lint2d_inject(t22,ww[it][0],cs);*/
 	    lint2d_bell(t11,ww[it][0],cs);
-	    lint2d_bell(t22,ww[it][1],cs);
+	    lint2d_bell(t22,ww[it][0],cs);
 	}
 
 	/*------------------------------------------------------------*/
