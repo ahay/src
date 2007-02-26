@@ -23,7 +23,7 @@ Flow('elf','elf0.H',
      bandpass flo=5 fhi=60
      ''')
 
-Flow('cmp','elf','window n2=128 n3=1 f3=500')
+#Flow('cmp','elf','window n2=128 n3=1 f3=500')
 
 data='cmp'
 n1=800
@@ -40,7 +40,7 @@ dv = 25
 nv = 120
 
 
-Plot(data,'grey unit1=s unit2=m  title=Input')
+Result(data,'grey unit1=s unit2=m  title=Input')
 
 dips = []
 for iv in range(nv):
@@ -80,16 +80,14 @@ Flow(imps,[thr,'dips'],
      n1=%d n2=%d n3=%d o2=%g d2=%g label2="Half offset" |
      diplet eps=%g dips=${SOURCES[1]} 
      ''' % (nsp,k1,k2,k3,n1,n2,nv,o2,d2,eps),stdin=0)
-Plot(imps,'grey unit1=s unit2=m title="Seislet Frame Members" ')
+Result(imps,'grey unit1=s unit2=m title="Seislet Frame Members" ')
 
 rec = data+'rec'
 Flow(rec,[thr,'dips'],'diplet eps=%g dips=${SOURCES[1]}' % eps)
-Plot(rec,
-     '''
-     mutter v0=1300 |
-     grey unit1=s unit2=m  title="Inverse Seislet Frame (%g%%)"
-     ''' % pclip)
-
-Result(data,[data,imps,rec],'SideBySideAniso')
+Result(rec,
+       '''
+       mutter v0=1300 |
+       grey unit1=s unit2=m  title="Inverse Seislet Frame (%g%%)"
+       ''' % pclip)
 
 End()

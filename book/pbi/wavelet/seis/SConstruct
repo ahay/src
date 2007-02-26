@@ -1,5 +1,5 @@
 from rsfproj import *
-from seislet import seislet
+from seislet import seislet, diplet
 
 #############################################################################
 
@@ -10,6 +10,7 @@ Flow('sigmoid',None,
      ''')
 
 seislet('sigmoid',200,256,d2=0.008)
+diplet('sigmoid',200,256,d2=0.008,pmin=-1.35,pmax=1.35,np=401)
 
 #############################################################################
 

@@ -99,4 +99,48 @@ def seislet(data,              # data name
      ''' % (nsp,k1,k2,n1,n2,o2,d2,eps),stdin=0)
     Result(impw,'grey  title=Wavelets')
 
+def diplet(data,              # data name
+           n1,n2,             # data dimensions
+           o2=0,d2=1,         # lateral scale
+           pmin=-2.0,         # minimum dip
+           pmax=2.0,          # maximum dip
+           np=101,            # number of dips
+           clip=3,            # clip percentile
+           eps=0.1,           # regularization
+           nsp=200            # number of spikes
+           ):
+    'Seislet frame fun'
     
+    global nr
+    
+    dips = data+'dips'
+    Flow(dips,data,'spray axis=3 n=%d o=%g d=%g | math output=x3' % (np,pmin,(pmax-pmin)/(np-1)))
+    
+    dipl = data+'dipl'
+    Flow(dipl,[data,dips],'diplet dips=${SOURCES[1]} eps=%g adj=y inv=y' % eps)
+
+    for c in (1,clip,25):
+        rec = '%sdrec%d' % (data,c)
+        Flow(rec,[dipl,dips],
+             '''
+             threshold pclip=%d |
+             diplet dips=${SOURCES[1]} eps=%g
+             ''' % (c,eps))
+        Result(rec,'grey  title="Inverse Seislet Frame (%d%%)" ' % c)
+
+    nr = n1
+    k1 = string.join(map(rnd,range(nsp)),',')
+    nr = n2
+    k2 = string.join(map(rnd,range(nsp)),',')
+    nr = np
+    k3 = string.join(map(rnd,range(nsp)),',')
+
+    imps = data+'dimps'
+    Flow(imps,dips,
+         '''
+         spike nsp=%d k1=%s k2=%s k3=%s n1=%d n2=%d n3=%d o2=%g d2=%g |
+         diplet dips=$SOURCE eps=%g
+         ''' % (nsp,k1,k2,k3,n1,n2,np,o2,d2,eps),stdin=0)
+    Result(imps,'grey  title="Seislet Frame Members" ')
+
+   

@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     for (i=0; i < SF_MAX_DIM; i++) {
 	snprintf(key,3,"n%d",i+1);
 	if (!sf_getint(key,n+i)) break;
-	/*< n# dimension of #-th axis >*/  
+	/*< n# size of #-th axis >*/  
 	sf_putint(spike,key,n[i]);
     }
 
@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"o%d",i+1);
 	if (!sf_getfloat(key,&f)) f=0.;
-	/*< o#=(0,...) origin on #-th axis >*/  
+	/*< o#=(0,0,...) origin on #-th axis >*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,3,"d%d",i+1);
