@@ -11,15 +11,14 @@ sfdoc  = os.path.join(bindir,'sfdoc')
 run = 'PYTHONPATH=%s LD_LIBRARY_PATH=%s $SOURCE' % \
       (os.environ.get('PYTHONPATH'),os.environ.get('LD_LIBRARY_PATH'))
 
-progs = []
-wprogs = []
+output = {'.tex':'l',
+          '.wiki':'m'}
+
 for prog in rsfdoc.progs.keys():
-    progs.append(prog+'.tex')
-    wprogs.append(prog+'.wiki')
-    Command2(prog+'.tex',sfdoc,'%s -l . %s' % (run,prog))
-    Command2(prog+'.wiki',sfdoc,'%s -m . %s' % (run,prog))
-Alias('progs',progs)
-Alias('wprogs',wprogs)
+    for out in output.keys():
+        Command2(prog+out, sfdoc,'%s -%s . %s' % (run,output[out],prog))
+    Depends('prog.ltx',prog+'.tex')
+    Depends('prog.wiki',prog+'.wiki')
 
 Paper('install',use='[bookmarks=true]hyperref')
 Paper('tour',use='listings,color,hyperref')
