@@ -359,7 +359,7 @@ void abcone2d_apply(float**   uo,
 
 	    // top BC
 	    if(!abc->free) { // not free surface, apply ABC
-		i1 = nop-iop-1;
+		i1 = nop-iop;
 		uo      [i2][i1  ] 
 		    = um[i2][i1+1] 
 		    +(um[i2][i1  ]
@@ -382,7 +382,7 @@ void abcone2d_apply(float**   uo,
 	for(iop=0;iop<nop;iop++) {
 
 	    // left BC
-	    i2 = nop-iop-1;
+	    i2 = nop-iop;
 	    uo      [i2  ][i1] 
 		= um[i2+1][i1] 
 		+(um[i2  ][i1]

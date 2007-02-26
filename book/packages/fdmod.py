@@ -234,6 +234,74 @@ def lmodel(data,wfld,ldata,lwfld,  wavl,velo,refl,sou,rec,custom,par):
          ''' % par)
 
 # ------------------------------------------------------------
+# isotropic stiffness tensor
+def isotropic(cc,vp,vs,ro,par):
+    
+    # Lame parameters
+    # lambda = ro * (vp^2 - 2 vs^2)
+    Flow(cc+'lambda',[ro,vp,vs],
+         '''
+         math output="ro*(vp*vp-2*vs*vs)"
+         ro=${SOURCES[0]}
+         vp=${SOURCES[1]}
+         vs=${SOURCES[2]}     
+         ''')
+    
+    #     mu = ro *           vs^2
+    Flow(cc+'mu',[ro,vs],
+         '''
+         math output="ro*vs*vs"
+         ro=${SOURCES[0]}
+         vs=${SOURCES[1]}
+         ''')
+    
+    # c11 = lambda + 2 mu
+    # c33 = lambda + 2 mu
+    # c13 = lambda
+    # c44 = mu
+    Flow(cc+'11',[cc+'lambda',cc+'mu'],
+         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l+2*m"')
+    Flow(cc+'13',[cc+'lambda',cc+'mu'],
+         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l"')
+    Flow(cc+'33',[cc+'lambda',cc+'mu'],
+         'math l=${SOURCES[0]} m=${SOURCES[1]} output="l+2*m"')
+    Flow(cc+'44',[cc+'lambda',cc+'mu'],
+         'math l=${SOURCES[0]} m=${SOURCES[1]} output="m"')
+    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
+         'cat axis=3 space=n ${SOURCES[1:4]}')
+
+# anisotropic stiffness tensor
+def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
+    Flow(cc+'33',[vp,ro],
+         '''
+         math output="ro*vp*vp"
+         vp=${SOURCES[0]}
+         ro=${SOURCES[1]}
+         ''')    
+    Flow(cc+'44',[vs,ro],
+         '''
+         math output="ro*vs*vs"
+         vs=${SOURCES[0]}
+         ro=${SOURCES[1]}
+         ''')
+    Flow(cc+'11',[cc+'33',epsilon],
+         '''
+         math output="2*epsilon*c33+c33"
+         c33=${SOURCES[0]}
+         epsilon=${SOURCES[1]}
+         ''')
+    Flow(cc+'13',[cc+'33',cc+'44',delta],
+         '''
+         math output="sqrt(2*c33*(c33-c44)*delta+(c33-c44)*(c33-c44))-c44"
+         c33=${SOURCES[0]}
+         c44=${SOURCES[1]}
+         delta=${SOURCES[2]}
+         ''')
+    
+    Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
+         'cat axis=3 space=n ${SOURCES[1:4]}')
+    
+# ------------------------------------------------------------
 # acoustic modeling
 def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
