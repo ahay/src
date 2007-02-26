@@ -4,7 +4,7 @@ import configure
 
 progs = '''
 awe
-afmod aborn erfdm awefd ewefd
+afmod aborn erfdm awefd ewefd hdefd
 off2abs off2abs3
 paradd 
 icor xcor tcor ucor laps

@@ -2,8 +2,6 @@ from rsfproj import *
 
 # overwrite default parameters
 def param(par):
-    if(not par.has_key('nb')):       par['nb']=0
-
     if(not par.has_key('lt')):       par['lt']='t'
     if(not par.has_key('lz')):       par['lz']='z'
     if(not par.has_key('lx')):       par['lx']='x'
@@ -12,6 +10,7 @@ def param(par):
     if(not par.has_key('uz')):       par['uz']='m'
     if(not par.has_key('ux')):       par['ux']='m'
 
+    if(not par.has_key('nb')):       par['nb']=0
     if(not par.has_key('nbz')):      par['nbz']=100
     if(not par.has_key('nbx')):      par['nbx']=100
     if(not par.has_key('tz')):       par['tz']=0.0035

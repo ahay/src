@@ -61,6 +61,8 @@ int main(int argc, char* argv[])
     float **vp=NULL;           /* velocity in expanded domain */
     float **ro=NULL;           /* density  in expanded domain */
 
+    float **vt=NULL; /* temporary vp */
+
     float **um,**uo,**up,**ua,**ut; /* wavefield: um = U @ t-1; uo = U @ t; up = U @ t+1 */
 
     /* cube axes */
@@ -174,14 +176,21 @@ int main(int argc, char* argv[])
 
     vpin=sf_floatalloc2(n1,   n2   ); 
     vp  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
+    vt  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     sf_floatread(vpin[0],n1*n2,Fvel);
     expand(vpin,vp,fdm);
 
-    /* force free surface if free=y */
+    for    (i2=0; i2<fdm->n2pad; i2++) {
+	for(i1=0; i1<fdm->n1pad; i1++) {
+	    vt[i2][i1] = vp[i2][i1] * vp[i2][i1] * dt2;
+	}
+    }
+
+    /* free surface */
     if(free) {
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->nb; i1++) {
-		vp[i2][i1]=0;
+		vt[i2][i1]=0;
 	    }
 	}
     }
@@ -242,14 +251,14 @@ int main(int argc, char* argv[])
 	lint2d_inject(ua,ww[it],cs);
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,um,up,vp,dt2)
+#pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,um,up,vt,dt2)
 #endif
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->n1pad; i1++) {
 		/* step forward in time */
 		up[i2][i1] = 2*uo[i2][i1] 
 		    -          um[i2][i1] 
-		    +          ua[i2][i1] * vp[i2][i1]*vp[i2][i1] * dt2;
+		    +          ua[i2][i1] * vt[i2][i1];
 	    }
 	}
 	/* circulate wavefield arrays */
@@ -269,7 +278,6 @@ int main(int argc, char* argv[])
 
 	if(snap && it%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
 	sf_floatwrite(dd,nr,Fdat);
-
     }
     if(verb) fprintf(stderr,"\n");    
 

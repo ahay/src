@@ -75,9 +75,10 @@ fdm2d fdutil_init(bool verb_,
     fdm->free=free_;
     fdm->verb=verb_;
 
+    fdm->nb=nb_;
+
     fdm->n1=sf_n(a1_);
     fdm->n2=sf_n(a2_);
-    fdm->nb=nb_;
 
     fdm->d1=sf_d(a1_);
     fdm->d2=sf_d(a2_);
@@ -117,6 +118,28 @@ void expand(float** a,
 	}
     }
 
+    for     (i2=0; i2<fdm->nb;    i2++) {
+	for (i1=0; i1<fdm->n1pad; i1++) {
+	    b[           i2  ][i1] = b[           fdm->nb  ][i1];
+	    b[fdm->n2pad-i2-1][i1] = b[fdm->n2pad-fdm->nb-1][i1];
+	}
+    }
+}
+
+/*------------------------------------------------------------*/
+void bfill(float** b, 
+	   fdm2d fdm)
+/*< fill boundaries >*/
+{
+    int i1,i2;
+    
+    for     (i2=0; i2<fdm->n2pad; i2++) {
+	for (i1=0; i1<fdm->nb;    i1++) {
+	    b[i2][           i1  ] = b[i2][           fdm->nb  ];
+	    b[i2][fdm->n1pad-i1-1] = b[i2][fdm->n1pad-fdm->nb-1];
+	}
+    }
+    
     for     (i2=0; i2<fdm->nb;    i2++) {
 	for (i1=0; i1<fdm->n1pad; i1++) {
 	    b[           i2  ][i1] = b[           fdm->nb  ][i1];
@@ -174,6 +197,28 @@ lint2d lint2d_make(int    na,
     }
 
     return ca;
+}
+
+/*------------------------------------------------------------*/
+void lint2d_hold(float**uu,
+		 float *ww,
+		 lint2d ca)
+/*< hold fixed value in field >*/
+{
+    int   ia;
+    float wa;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ia,wa) shared(ca,ww,uu)
+#endif
+    for (ia=0;ia<ca->n;ia++) {
+	wa = ww[ia];
+	
+	uu[ ca->j2[ia]   ][ ca->j1[ia]   ] = wa;
+	uu[ ca->j2[ia]   ][ ca->j1[ia]+1 ] = wa;
+	uu[ ca->j2[ia]+1 ][ ca->j1[ia]   ] = wa;
+	uu[ ca->j2[ia]+1 ][ ca->j1[ia]+1 ] = wa;
+    }
 }
 
 /*------------------------------------------------------------*/
@@ -360,14 +405,15 @@ sponge2d sponge2d_make(fdm2d fdm)
 {
     sponge2d spo;
     int   ib;
-    float sb;
+    float sb,fb;
     
     spo = (sponge2d) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(fdm->nb);
 
-    sb = 4*fdm->nb;
+    sb = 4.0*fdm->nb;               //                 sigma
     for(ib=0; ib<fdm->nb; ib++) {
-	spo->w[ib] = exp(-(ib/sb)*(ib/sb));
+	fb = ib/(sqrt(2.0)*sb);     //  x / (sqrt(2) * sigma)
+	spo->w[ib] = exp(-fb*fb);
     }
     return spo;
 }
@@ -378,26 +424,26 @@ void sponge2d_apply(float**   uu,
 		    fdm2d    fdm)
 /*< apply boundary sponge >*/
 {
-    int i1,i2,ib;
+    int i1,i2,ib,ib1,ib2;
     float w;
 
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ib,i1,i2,ib1,ib2,w) shared(fdm,uu)
+#endif
     for(ib=0; ib<fdm->nb; ib++) {
 	w = spo->w[fdm->nb-ib-1];
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(i1) shared(fdm,ib,uu,w)*/
-/*#endif*/
-	for(i1=0; i1<fdm->n1pad; i1++) {
-	    uu[           ib  ][i1] *= w; //   left sponge
-	    uu[fdm->n2pad-ib-1][i1] *= w; //  right sponge
+	ib1 = fdm->n1pad-ib-1;
+	for(i2=0; i2<fdm->n2pad; i2++) {
+	    uu[i2][ib ] *= w; //    top sponge
+	    uu[i2][ib1] *= w; // bottom sponge
 	}
 
-/*#ifdef _OPENMP*/
-/*#pragma omp parallel for schedule(dynamic,1) private(i2) shared(fdm,ib,uu,w)*/
-/*#endif*/
-	for(i2=0; i2<fdm->n2pad; i2++) {
-	    uu[i2][           ib  ] *= w; //    top sponge
-	    uu[i2][fdm->n1pad-ib-1] *= w; // bottom sponge
+	ib2 = fdm->n2pad-ib-1;
+	for(i1=0; i1<fdm->n1pad; i1++) {
+	    uu[ib ][i1] *= w; //   left sponge
+	    uu[ib2][i1] *= w; //  right sponge
 	}
+
     }
 }

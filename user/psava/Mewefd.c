@@ -106,7 +106,8 @@ int main(int argc, char* argv[])
     abcone2d abcp,abcs;     /* abc */
     sponge2d spo;
 
-    int ompchunk; 
+    int ompchunk;
+    int nbell;
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -118,6 +119,9 @@ int main(int argc, char* argv[])
     if(! sf_getbool("free",&free)) free=false; /* free surface flag */
     if(! sf_getbool("ssou",&ssou)) ssou=false; /* stress source */
     if(! sf_getbool("opot",&opot)) opot=false; /* output potential */
+
+    if(! sf_getint("nbell",&nbell)) nbell=1;  /* bell size */
+    sf_warning("nbell=%d",nbell);
 
     Fwav = sf_input ("in" ); /* wavelet   */
     Fccc = sf_input ("ccc"); /* velocity  */
@@ -151,9 +155,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
-    
+
     fdm=fdutil_init(verb,free,a1,a2,nb,ompchunk);
-/*    fdbell_init(5);*/
+    fdbell_init(nbell);
 
     sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
     sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
@@ -178,11 +182,6 @@ int main(int argc, char* argv[])
     /* source array */
     ww=sf_floatalloc3(ns,nc,nt); 
     sf_floatread(ww[0][0],nt*nc*ns,Fwav);
-
-    // ww[it][ic][is]
-/*    for(it=0;it<nt;it++) {*/
-/*	sf_warning("h=%f v=%f",ww[it][0][0],ww[it][1][0]);*/
-/*    }*/
 
     /* data array */
     dd=sf_floatalloc2(nr,nc);
@@ -347,8 +346,10 @@ int main(int argc, char* argv[])
 	/* inject stress source                                       */
 	/*------------------------------------------------------------*/
 	if(ssou) {
-	    lint2d_inject(t11,ww[it][0],cs);
-	    lint2d_inject(t22,ww[it][0],cs);
+/*	    lint2d_inject(t11,ww[it][0],cs);*/
+/*	    lint2d_inject(t22,ww[it][0],cs);*/
+	    lint2d_bell(t11,ww[it][0],cs);
+	    lint2d_bell(t22,ww[it][1],cs);
 	}
 
 	/*------------------------------------------------------------*/
@@ -376,10 +377,10 @@ int main(int argc, char* argv[])
 	/* inject acceleration source                                 */
 	/*------------------------------------------------------------*/
 	if(!ssou) {
-	    lint2d_inject(ua1,ww[it][0],cs);
-	    lint2d_inject(ua2,ww[it][1],cs);
-/*	    lint2d_bell(ua1,ww[it][0],cs);*/
-/*	    lint2d_bell(ua2,ww[it][1],cs);*/
+/*	    lint2d_inject(ua1,ww[it][0],cs);*/
+/*	    lint2d_inject(ua2,ww[it][1],cs);*/
+	    lint2d_bell(ua1,ww[it][0],cs);
+	    lint2d_bell(ua2,ww[it][1],cs);
 	}
 
 	/*------------------------------------------------------------*/
@@ -414,6 +415,9 @@ int main(int argc, char* argv[])
 	abcone2d_apply(uo1,um1,NOP,abcs,fdm);
 	abcone2d_apply(uo2,um2,NOP,abcs,fdm);
 
+	/*------------------------------------------------------------*/
+	/* sponge abc                                                 */
+	/*------------------------------------------------------------*/
 	sponge2d_apply(um1,spo,fdm);
 	sponge2d_apply(uo1,spo,fdm);
 	sponge2d_apply(up1,spo,fdm);
