@@ -62,9 +62,15 @@ for case in ('a','b'):
 
     attr = 'attr'+case
     Flow(attr,['avoslc'+case,'slc'+case],
-         'add mode=d ${SOURCES[1]} | smooth rect1=25 | spray axis=2 n=141 d=25 o=0')
+         '''
+         add mode=d ${SOURCES[1]} | smooth rect1=25 |
+         spray axis=2 n=141 d=25 o=0
+         ''')
     Plot(attr,['avonmo'+case,attr],
-         'add ${SOURCES[1]} | grey color=j title="(%s)" allpos=y clip=5' % case)
+         '''
+         add ${SOURCES[1]} |
+         grey color=j title="(%s)" allpos=y clip=5
+         ''' % case)
 
 for plot in Split('cmp scn avoscn nmo avonmo attr'):    
     Result(plot,[plot+'a',plot+'b'],'SideBySideAniso')
