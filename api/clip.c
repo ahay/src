@@ -11,7 +11,7 @@ int main(int argc, char* argv[])
     /* Initialize RSF */
     sf_init(argc,argv);
     /* standard input */
-    in = sf_input("in");
+    in  = sf_input("in");
     /* standard output */
     out = sf_output("out");
 
@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     /* loop over traces */
     for (i2=0; i2 < n2; i2++) {
 
-	/*read a trace */
+	/* read a trace */
 	sf_floatread(trace,n1,in);
 
 	/* loop over samples */
