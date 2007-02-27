@@ -318,11 +318,11 @@ int main(int argc, char* argv[])
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->n1pad; i1++) {
 		
-		s11 = c11[i2][i1] * t11[i2][i1] 
+		s11 = c33[i2][i1] * t11[i2][i1] 
 		    + c13[i2][i1] * t22[i2][i1];
 		
 		s22 = c13[i2][i1] * t11[i2][i1] 
-		    + c33[i2][i1] * t22[i2][i1];
+		    + c11[i2][i1] * t22[i2][i1];
 		
 		s12 = c44[i2][i1] * t12[i2][i1];
 
