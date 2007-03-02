@@ -80,6 +80,9 @@ if not datapath:
         datapath = './' # the ultimate fallback
 dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
 tmpdatapath = os.environ.get('TMPDATAPATH',datapath)
+# split into directory
+pathdir = os.path.dirname(datapath)
+pathbase = os.path.basename(datapath)
 
 # directory tree for executable files
 top = os.environ.get('RSFROOT')
@@ -216,7 +219,7 @@ class Project(Environment):
         opts.Add('CHECKPAR','Whether to check parameters')
         opts.Update(self)
         cwd = os.getcwd()
-        self.path = datapath
+        self.path = pathdir
         if not os.path.exists(self.path):
             os.mkdir(self.path)        
         if datapath[:2] != './':
@@ -230,7 +233,7 @@ class Project(Environment):
                     self.path = os.path.join(self.path,level)
                     if not os.path.exists(self.path):
                         os.mkdir(self.path)
-            self.path = self.path + os.sep
+            self.path = os.path.join(self.path,pathbase)
         if db=='gdbm':
             self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
         elif db=='dbhash':
