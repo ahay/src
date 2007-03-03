@@ -1,6 +1,6 @@
 from rsfproj import *
 
-# overwrite default parameters
+# default parameters
 def param(par):
     if(not par.has_key('lt')):       par['lt']='t'
     if(not par.has_key('lz')):       par['lz']='z'
@@ -15,6 +15,8 @@ def param(par):
     if(not par.has_key('nbx')):      par['nbx']=100
     if(not par.has_key('tz')):       par['tz']=0.0035
     if(not par.has_key('tx')):       par['tx']=0.0035
+
+    if(not par.has_key('nbell')):    par['nbell']=1
 
     if(not par.has_key('snap')):     par['snap']='y'
     if(not par.has_key('jsnap')):    par['jsnap']=100
@@ -37,66 +39,68 @@ def param(par):
     if(not par.has_key('height')):   par['height']=par['ratio']*14
     if(par['height']>10): par['height']=10
 
+    if(not par.has_key('scalebar')): par['scalebar']='n'
+
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" wantscalebar=n labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
-    screenratio=%g screenht=%g
+    screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['ratio'],par['height'],
+           par['ratio'],par['height'],par['scalebar'],
            custom)
 
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y title="" wantscalebar=n labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
     pclip=100 gainpanel=a
     label1=%s unit1=%s
     label2=%s unit2=%s
-    screenratio=%g screenht=%g
+    screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['zmin'],par['zmax'],
            par['xmin'],par['xmax'],
            par['lz'],par['uz'],
            par['lx'],par['ux'],
-           par['ratio'],par['height'],
+           par['ratio'],par['height'],par['scalebar'],
            custom)
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n wantaxis=n title="" yreverse=y  labelsz=5 labelfat=3
+    graph labelrot=n wantaxis=n title="" yreverse=y labelsz=6 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
-    screenratio=%g screenht=%g
+    screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['ratio'],par['height'],
+           par['ratio'],par['height'],par['scalebar'],
            custom)
 
 def ccont(custom,par):
     return '''
-    contour labelrot=n wantaxis=n title="" yreverse=y  labelsz=5 labelfat=3
+    contour labelrot=n wantaxis=n title="" yreverse=y labelsz=6 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
-    screenratio=%g screenht=%g
+    screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['ratio'],par['height'],
+           par['ratio'],par['height'],par['scalebar'],
            custom)
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""  labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -107,7 +111,7 @@ def dgrey(custom,par):
 
 def egrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title=""  labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
     pclip=100
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
@@ -327,7 +331,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          '''
          ewefd
          ompchunk=%(ompchunk)d 
-         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
@@ -336,7 +340,21 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
-
+# heat modeling
+def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [dat,wfl],[wav,con,sou,rec],
+          '''
+          hdefd
+          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
+          con=${SOURCES[1]}
+          sou=${SOURCES[2]}
+          rec=${SOURCES[3]}
+          wfl=${TARGETS[1]}
+          %(fdcustom)s
+          ''' % par)
+    
 # F-D modeling from arbitrary source/receiver geometry
 def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
