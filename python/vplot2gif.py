@@ -1,19 +1,22 @@
 #!/usr/bin/env python
 
-import sys, os, time, string, re, commands
+import sys, os, time, string, re, shutil
  
 def convert(infile,outfile):
-    spacing = os.environ.get('GIFBORDER',0.25)
-    ppi = os.environ.get('PPI',75)
-    scale = os.environ.get('PPMSCALE',1)
-    delay = os.environ.get('GIFDELAY',100)
+    spacing = float(os.environ.get('GIFBORDER',0.25))
+    ppi = int(os.environ.get('PPI',75))
+    delay = int(os.environ.get('GIFDELAY',100))
     
-    stat = string.split(
-        commands.getoutput("vppen vpstyle=n stat=l < %s | head -1" % infile))
-    total = commands.getoutput("vppen vpstyle=n stat=l < %s | tail -1" % infile)
+    # Use vppen to find out how big and where on the page the plot is.
+    stats = os.popen('vppen size=a stat=l < %s' % infile)
+    lines = stats.readlines()
+    stats.close()
     
+    stat = string.split(lines[0])
+
+    # find the number of frames
     retot = re.compile('Total\s+(\d+)')
-    match = retot.search(total)
+    match = retot.search(lines[-1])
     if match:
         frames = int(match.group(1))
     else:
@@ -27,16 +30,16 @@ def convert(infile,outfile):
     ymax = float(stat[14]) + spacing
     ycen = (ymin+ymax)/2.
 
-    width  = int((xmax-xmin)*ppi+0.5)
-    height = int((ymax-ymin)*ppi+0.5)
+    width  = int((xmax-xmin)*ppi+0.9999)
+    height = int((ymax-ymin)*ppi+0.9999)
     
-    cwidth  = int((xmax-xmin-2*spacing)*ppi+0.5)
-    cheight = int((ymax-ymin-2*spacing)*ppi+0.5)
+    sys.stderr.write('''
+    %s will be %d pixels wide, %d pixels tall,
+    at %d pixels per inch, with borders %g inches wide.
+    ''' % (outfile,width,height,ppi,spacing))
     
     random = time.time()
-
-    run = "vppen vpstyle=n outN=vppen.%%d.%s < %s >/dev/null" % (random,infile)
-#    sys.stderr.write(run+"\n")
+    run = 'vppen size=a outN=vppen.%%d.%s < %s >/dev/null' % (random,infile)
     os.system(run)
 
     gifs = []
@@ -45,22 +48,23 @@ def convert(infile,outfile):
         gif = '%s.%d' % (outfile,i)
         gifs.append(gif)
 
-        run = "ppmpen vpstyle=n break=i n2=%d n1=%d ppi=%d " \
-              "xcenter=%d ycenter=%d %s | pnmscale %g  | " \
-              "ppmquant 256 | pnmcrop | ppmtogif -interlace > %s" % \
-              (height,width,ppi,xcen,ycen,vppen,scale,gif)
-#        sys.stderr.write(run+"\n")
+        run = 'ppmpen break=i n1=%d n2=%d ppi=%d size=a ' \
+              'xcenter=%g ycenter=%g %s | ' \
+              'ppmquant 256 | ppmtogif -interlace > %s' % \
+              (width,height,ppi,xcen,ycen,vppen,gif)
         os.system (run)
         os.unlink(vppen)
 
-    if outfile[-1] != '/':
-        gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
-        run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
-                                         string.join(gifs),outfile)
-#        print run
-        os.system (run)
-
-    map(os.unlink,gifs)
+    if frames > 1:
+        if not os.path.isdir(outfile): # if not directory
+            # combine frames into an animated gif (requires gifsicle)
+            gifsicle = 'gifsicle --merge --loopcount=forever --optimize'
+            run = '%s --delay=%d %s > %s' % (gifsicle,int(delay),
+                                             string.join(gifs),outfile)
+            os.system (run)
+            map(os.unlink,gifs)
+    else:
+        shutil.move(gifs[0],outfile)
 
 if __name__ == "__main__":
     # own user interface instead of that provided by RSF's Python API
@@ -68,7 +72,34 @@ if __name__ == "__main__":
     argc = len(sys.argv)
 
     if argc < 2:
-        print "No input"
+        print '''
+        vplot2gif myplot.vpl [myplot.gif]
+
+        Convert Vplot format to GIF format at 75 dots per inch, ideal
+	for WWW documents. Default output is input file name with
+	suffix changed to ".gif".
+
+	vplot2gif finds the smallest bounding box containing the input
+	plot, and makes a gif output just big enough to contain that
+	image, plus a border of .25 inches all around. (The position
+	of the plot on the vplot virtual page is irrelevant!)
+
+	You can override the 75. dots per inch by setting the
+	environment variable PPI.
+
+	You can override the .25 inch border by setting the
+	environment variable GIFBORDER. (Note, GIFBORDER will only
+	come out in physical units if PPI happens to be accurate for
+	your display device.)
+
+        In case of multiple frames, vplot2gif creates an animated
+        GIF. The time delay between movie frames is 100 ms (controlled
+        by GIFDELAY environmental variable).
+
+        If the output file is a directory, the individual frames are
+        not combined into an animation.
+        '''
+        
         sys.exit(1)
 
     infile = sys.argv[1]

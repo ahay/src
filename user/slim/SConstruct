@@ -2,16 +2,10 @@ import os, sys, re, string, glob,shutil,sets
 sys.path.append('../..')
 import configure
 
-progs = '''
-thr sort
-'''
-
+progs = 'thr sort'
 cpp_progs = ''
-
-py_progs = {'fdct':'numpy pyct',
-	    'killtraces':'numpy'}
-
-py_mods = {'hegilles':'numpy'}
+py_progs = 'fdct killtraces'
+py_mods = 'hegilles'
 
 try:  # distributed version
     Import('env')
@@ -74,42 +68,20 @@ else:
 ######################################################################
 # PYTHON PROGRAMS
 ######################################################################
-if 'python' in api:
-    if root:
-        user = os.path.basename(os.getcwd())
-        pwd = os.path.join(os.getcwd(),'../../../user/',user)
-
-	pymodules = set(env.get('PYMODULES',[]))
+if root:
+    user = os.path.basename(os.getcwd())
 	
-        # Python main programs
-        py_mains = []
-        for prog,depts in py_progs.iteritems():
-	    depts = set(string.split(depts))
-	    if set.intersection(pymodules,depts) == depts:
-		py_mains.append(prog)
-		# no compilation but rename
-		env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,'M'+prog+'.py'))
+    # Python main programs
+    py_mains = Split(py_progs)
+    for prog in py_mains:
+        # no compilation but rename
+        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
 
-        # Python modules
-        rsfuser = os.path.join(libdir,'rsfuser')
-        rsfuser_module_flag = os.path.join(rsfuser, '__init__.py')
-        for mod,depts in py_mods.iteritems():
-	    depts = set(string.split(depts))
-	    if set.intersection(pymodules,depts) == depts:
-                if not os.path.isdir(rsfuser):
-                    os.mkdir(rsfuser)
-                if not os.path.isfile(rsfuser_module_flag):
-                    try:
-                        os.mknod(rsfuser_module_flag)
-                    except: # Python < 2.3
-                        open(rsfuser_module_flag, "w").close()
-                    os.chmod(rsfuser_module_flag, 0666)
-                for module in py_mods.keys():
-                    module+='.py'
-                    env.InstallAs(os.path.join(rsfuser,module),os.path.join(pwd,module))
-
-else:
-    py_mains = []
+    # Python modules
+    rsfuser = os.path.join(libdir,'rsfuser')
+    env.Install(rsfuser,'__init__.py')
+    for module in Split(py_mods):
+        env.Install(rsfuser,module+'.py')
 
 ######################################################################
 # SELF-DOCUMENTATION
@@ -120,7 +92,8 @@ if root:
     
     docs = map(lambda prog: env.Doc(prog+'.c'),mains) + \
            map(lambda prog: env.Doc(prog+'.cc'),cpp_mains) + \
-           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),py_mains)
+           map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),
+               py_mains)
     env.Depends(docs,'#/python/rsfdoc.py')
 
     doc = env.Command(main,docs,configure.docmerge)
