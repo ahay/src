@@ -45,7 +45,7 @@ def param(par):
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -59,7 +59,7 @@ def cgrey(custom,par):
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
     pclip=100 gainpanel=a
     label1=%s unit1=%s
     label2=%s unit2=%s
@@ -74,7 +74,7 @@ def wgrey(custom,par):
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n wantaxis=n title="" yreverse=y labelsz=6 labelfat=3
+    graph labelrot=n wantaxis=n title="" yreverse=y labelsz=5 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
@@ -87,7 +87,7 @@ def cgraph(custom,par):
 
 def ccont(custom,par):
     return '''
-    contour labelrot=n wantaxis=n title="" yreverse=y labelsz=6 labelfat=3
+    contour labelrot=n wantaxis=n title="" yreverse=y labelsz=5 labelfat=3
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
@@ -100,7 +100,7 @@ def ccont(custom,par):
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -111,7 +111,7 @@ def dgrey(custom,par):
 
 def egrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=6 labelfat=3
+    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
     pclip=100
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
