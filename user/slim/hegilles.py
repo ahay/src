@@ -74,4 +74,34 @@ def killtraces(N,perc=50,maxfactor=1,seed=None):
 
     return picking
 
+def jitter(N,perc=50.,jit=None,seed=None):
+    '''
+    Return a mask to remove random samples from an N-vector using
+    jittered sampling
+
+    Parameters:
+    N          length of the vector
+    perc       percentage of samples to retain (0 < perc < 100)
+    seed       seed for random number generator
+    '''
+
+    if seed is not None:
+        __np.random.seed(seed)
+    
+    if perc<=0 or perc>=100:
+        print "ERROR: 0 < perc < 100"
+        return        
+
+    sub = 100/perc
+
+    if jit is None:
+        jit = sub
+
+    y = __np.zeros(N)
+    inipos = __np.arange(0,N,sub)
+    pos = __np.array(__np.round(inipos +__np.float(jit)*__np.random.rand(inipos.size)-jit/2.)%N,dtype='i')
+    y.put(__np.ones(pos.size),pos)
+    
+    return y
+    
 # $Id$
