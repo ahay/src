@@ -1,4 +1,4 @@
-/* Extend a dataset by duplicating in the second axis dimension.
+/* Extend a dataset by duplicating in the specified axis dimension.
    This operation is adjoint to sfstack.
 */
 /*
