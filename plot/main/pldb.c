@@ -1,7 +1,4 @@
-/* Plot Debugger - convert vplot to ascii.
-
-Takes: < plot.vpl > plot.asc
-*/
+/* Plot Debugger - convert vplot to ascii. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -29,9 +26,35 @@ Takes: < plot.vpl > plot.asc
 
 static void text (void);
 
+static char  *documentation[] = {
+    "",
+    "",
+    "NAME",
+    "		 sfpldb -- (PLot DeBugger) ",
+    "SYNOPSIS",
+    "		sfpldb < file.vpl > file.asc",
+    "-----------------------------------------------------------------------",
+    "	Reads the standard input stream, writes standard out",
+    "",
+    "	Input: 	vplot metafile format (mixed ASCII and binary)",
+    "	Output:	Human-readable representations of vplot vector plot",
+    "		commands",
+    "	plas returns pldb output to vplot format.",
+    "	Useful with pen output filters.",
+    "OPTIONS:",
+    "      -v: use vplot units (default)",
+    "      -i: use inches",
+    "      -c: use centimeters",
+    "  Note that these options apply to ALL geometric attributes,",
+    "  including line width and character height.",
+    "SEE ALSO",
+    "	 sfplas"
+};
+
 int main (int argc, char* argv[])
 {
-    int c, a, ix, iy, iz, npts, mtype, key, col_tab_no, byte, i;
+    char units='v';
+    int c, a, ix, iy, iz, npts, mtype, key, col_tab_no, byte, i, ic, ndoc;
     int ii, num_byte, nmul, nx, ny, xmask, ymask, orient;
     int ras_orient, ras_offset, xpix, ypix, num_rep, num_pat, pos;
     int ibyte=0, ipat, col, j, bit;
@@ -39,14 +62,47 @@ int main (int argc, char* argv[])
     float xmin, ymin, xmax, ymax, xvplot, yvplot, off, rep;
     float fatscale, txvecscale, txscale, scale, colscale, hscale;
 
-    fatscale = 1.;
-    txvecscale = 1.;
-    txscale = 1.;
-    scale = 1.;
-    colscale = 1.;
-    hscale = 1.;
+    if (1==argc && isatty(fileno(stdin))) { /* no input - do selfdoc */
+	ndoc = sizeof(documentation)/sizeof(documentation[0]);
+	for (i = 0; i < ndoc; i++) {
+	    printf ("%s\n", documentation[i]);
+	}
+	exit(1);
+    }
 
-    printf ("#plas: Vplot units used in this file\n");
+    for (ic=1; ic < argc; ic++) {
+	if ('-' == argv[ic][0]) units=argv[ic][1];
+    }
+    switch (units) {
+	case 'i':
+	    printf ("#plas: Inches used in this file\n");
+	    fatscale = 1. / FATPERIN;
+	    txvecscale = 1. / TEXTVECSCALE;
+	    txscale = 1. / TXPERIN;
+	    scale = 1. / RPERIN;
+	    colscale = 1. / MAX_GUN;
+	    hscale = 1. / RPERIN;
+	    break;
+	case 'c':
+	    printf ("#plas: Centimeters used in this file\n");
+	    fatscale = 1. / (FATPERIN / 2.54);
+	    txvecscale = 1. / TEXTVECSCALE;
+	    txscale = 1. / (TXPERIN / 2.54);
+	    scale = 1. / (RPERIN / 2.54);
+	    colscale = 1. / MAX_GUN;
+	    hscale = 1. / (RPERIN / 2.54);
+	    break;
+	case 'v':
+	default:
+	    printf ("#plas: Vplot units used in this file\n");
+	    fatscale = 1.;
+	    txvecscale = 1.;
+	    txscale = 1.;
+	    scale = 1.;
+	    colscale = 1.;
+	    hscale = 1.;
+	    break;
+    }
 
     while (EOF != (c = getchar ())) {
 	switch (c) {

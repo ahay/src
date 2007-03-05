@@ -1,7 +1,4 @@
-/* Plot Assembler - convert ascii to vplot.
-
-Takes: < plot.asc > plot.vpl
-*/
+/* Plot Assembler - convert ascii to vplot. */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -29,65 +26,69 @@ Takes: < plot.asc > plot.vpl
 #define MAXLINE 2016
 
 static void text (void);
+static void setunits(char c);
+
+static float fatscale, txvecscale, txscale, scale, colscale, hscale;
+static char  *documentation[] = {
+    "",
+    "",
+    "NAME",
+    "		sfplas 	(PLot ASsembler) -- deformat vector plot commands",
+    "SYNOPSIS",
+    "		sfplas < plot.asc > plot.vpl",
+    "------------------------------------------------------------------------",
+    "	Reads stdin; writes stdout.  Complement to 'pldb'.",
+    "	Converts vplot-language files in ascii (human-readable) form",
+    "	into the hybrid ascii/binary form that the 'pen' filters understand.",
+    "",
+    "   A backslash at the end of a line of text allows multi-line strings.",
+    "Options",
+    "      -v: Use vplot units (the default)",
+    "      -i: Use inches",
+    "      -c: Use centimeters",
+    "  Note that these options apply to ALL geometric attributes,",
+    "  including line width and character height scale factors.",
+    "",
+    "The default may be set within the file by having as the first line",
+    "#plas: X",
+    "where X is one of V, C, or I for Vplot, Cm, or Inches",
+    "SEE ALSO",
+    "	sfpldb."
+};
 
 int main (int argc, char* argv[])
 {
-    int npat, line_count, ix, iy, iz, npts, mtype, orient, maskx, masky;
+    char units='v';
+    int npat, line_count, ix, iy, iz, npts, mtype, orient, maskx, masky, ic;
     int i, j, nmul, ipat, col, ras_orient, ras_offset, col_tab_no, nx, ny;
-    int xpix, ypix, num_rep, count, num_pat, num_byte, byte, ibyte=0;
-    float fatscale, txvecscale, txscale, scale, colscale, hscale;
+    int xpix, ypix, num_rep, count, num_pat, num_byte, byte, ibyte=0, ndoc;
     float x, y, xcor, ycor, msize, size, fat, off, rep, red, green, blue;
     float xmin, ymin, xmax, ymax, xvplot, yvplot;
     char line[MAXLINE], c, a, *ptr;
 
+    if (isatty(fileno(stdin))) { /* no input - do selfdoc */
+	ndoc = sizeof(documentation)/sizeof(documentation[0]);
+	for (i = 0; i < ndoc; i++) {
+	    printf ("%s\n", documentation[i]);
+	}
+	exit(1);
+    }
+
     vp_init();
 
-    fatscale = 1.;
-    txvecscale = 1.;
-    txscale = 1.;
-    scale = 1.;
-    colscale = 1.;
-    hscale = 1.;
+    for (ic=1; ic < argc; ic++) {
+	if ('-' == argv[ic][0]) units=argv[ic][1];
+    }
+    setunits (units);
 
     npat=0;
-
     for (line_count=0; fgets (line, MAXLINE, stdin) != NULL; line_count++) {
 	c = line[0];
 
 	switch (c) {
 	    case '#':
 		if (0 == line_count &&
-		    0 == strncmp (line, "#plas: ", 7)) {
-		    switch (line[7]) {
-			case 'V':
-			case 'v':
-			    fatscale = 1.;
-			    txvecscale = 1.;
-			    txscale = 1.;
-			    scale = 1.;
-			    colscale = 1.;
-			    hscale = 1;
-			    break;
-			case 'I':
-			case 'i':
-			    fatscale = FATPERIN;
-			    txvecscale = TEXTVECSCALE;
-			    txscale = TXPERIN;
-			    scale = RPERIN;
-			    colscale = MAX_GUN;
-			    hscale = RPERIN;
-			    break;
-			case 'C':
-			case 'c':
-			    fatscale = FATPERIN / 2.54;
-			    txvecscale = TEXTVECSCALE;
-			    txscale = TXPERIN / 2.54;
-			    scale = RPERIN / 2.54;
-			    colscale = MAX_GUN;
-			    hscale = RPERIN / 2.54;
-			    break;
-		    }
-		}
+		    0 == strncmp (line, "#plas: ", 7)) setunits (line[7]);
 		break;
 	    case VP_MESSAGE:
 		putchar (c);
@@ -334,6 +335,39 @@ static void text (void)
 	}
     }
     putchar ('\0');
+}
+
+static void setunits(char c) {
+    switch (c) {
+	case 'I':
+	case 'i':
+	    fatscale = FATPERIN;
+	    txvecscale = TEXTVECSCALE;
+	    txscale = TXPERIN;
+	    scale = RPERIN;
+	    colscale = MAX_GUN;
+	    hscale = RPERIN;
+	    break;
+	case 'C':
+	case 'c':
+	    fatscale = FATPERIN / 2.54;
+	    txvecscale = TEXTVECSCALE;
+	    txscale = TXPERIN / 2.54;
+	    scale = RPERIN / 2.54;
+	    colscale = MAX_GUN;
+	    hscale = RPERIN / 2.54;
+	    break;
+	case 'V':
+	case 'v':
+	default:
+	    fatscale = 1.;
+	    txvecscale = 1.;
+	    txscale = 1.;
+	    scale = 1.;
+	    colscale = 1.;
+	    hscale = 1;
+	    break;
+    }
 }
 
 /* 	$Id$	 */
