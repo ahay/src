@@ -19,10 +19,10 @@
 #include <rsf.h>
 #include "fdutil.h"
 
-//#define C1 +0.800000 /* 672/840 */
-//#define C2 -0.200000 /* 168/840 */
-//#define C3 +0.038095 /*  32/840 */
-//#define C4 -0.003571 /*   3/840*/
+/*#define C1 +0.800000 /* 672/840 */
+/*#define C2 -0.200000 /* 168/840 */
+/*#define C3 +0.038095 /*  32/840 */
+/*#define C4 -0.003571 /*   3/840*/
 
 #define NOP 4 /* derivative operator half-size */
 
@@ -285,10 +285,10 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	/* from displacement to strain                                */
 	/*------------------------------------------------------------*/
-	// ezz(x     ,z     ) = Fz( uz(x     ,z-dz/2) )
-	// exx(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) 
-	// exz(x-dx/2,z-dz/2) = Bx( uz(x     ,z-dz/2) ) +
-	//                      Bz( ux(x-dx/2,z     ) )
+	/* ezz(x     ,z     ) = Fz( uz(x     ,z-dz/2) )
+	   exx(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) 
+	   exz(x-dx/2,z-dz/2) = Bx( uz(x     ,z-dz/2) ) + */
+	/*                      Bz( ux(x-dx/2,z     ) )   */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,t11,t12,t22,uo1,uo2,id1,id2)
 #endif
@@ -307,11 +307,11 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	/* from strain to stress                                      */
 	/*------------------------------------------------------------*/
-	// szz(x     ,z     ) = c11(x     ,z     ) ezz(x     ,z     ) +
-	//                      c13(x     ,z     ) exx(x     ,z     )
-	// sxx(x     ,z     ) = c13(x     ,z     ) ezz(x     ,z     ) +
-	//                      c33(x     ,z     ) exx(x     ,z     )
-	// sxz(x-dx/2,z-dz/2) = c44(x-dx/2,z-dz/2) exz(x-dx/2,z-dz/2)
+	/* szz(x     ,z     ) = c11(x     ,z     ) ezz(x     ,z     ) + */
+	/*                      c13(x     ,z     ) exx(x     ,z     )   */
+	/* sxx(x     ,z     ) = c13(x     ,z     ) ezz(x     ,z     ) + */
+	/*                      c33(x     ,z     ) exx(x     ,z     )   */
+	/* sxz(x-dx/2,z-dz/2) = c44(x-dx/2,z-dz/2) exz(x-dx/2,z-dz/2)   */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2,s11,s12,s22) shared(fdm,t11,t12,t22,c11,c13,c33,c44)
 #endif
@@ -355,10 +355,10 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	/* from stress to acceleration                                */
 	/*------------------------------------------------------------*/
-	// az(x,z-dz/2) = Fx( sxz(x-dx/2,z-dz/2) ) +
-	//                Bz( szz(x     ,z     ) )
-	// ax(x-dx/2,z) = Bx( sxx(x     ,z     ) ) +
-	//                Fz( sxz(x-dx/2,z-dz/2) )
+	/* az(x,z-dz/2) = Fx( sxz(x-dx/2,z-dz/2) ) + */
+	/*                Bz( szz(x     ,z     ) )   */
+	/* ax(x-dx/2,z) = Bx( sxx(x     ,z     ) ) + */
+	/*                Fz( sxz(x-dx/2,z-dz/2) )   */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i1,i2) shared(fdm,t11,t12,t22,ua1,ua2,id1,id2)
 #endif
@@ -429,10 +429,10 @@ int main(int argc, char* argv[])
 	/*------------------------------------------------------------*/
 	/* compute potentials                                         */
 	/*------------------------------------------------------------*/
-	// qp(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) +
-	//                     Fz( uz(x     ,z-dz/2) )
-	// qs(x-dx/2,z-dz/2) = Bz( ux(x-dx/2,z     ) ) +
-	//                     Bz( ux(x     ,z-dz/2) )
+	/* qp(x     ,z     ) = Fx( ux(x-dx/2,z     ) ) + */
+	/*                     Fz( uz(x     ,z-dz/2) )   */
+	/* qs(x-dx/2,z-dz/2) = Bz( ux(x-dx/2,z     ) ) + */
+	/*                     Bz( ux(x     ,z-dz/2) )   */
 
 	if(opot) {
 #ifdef _OPENMP
