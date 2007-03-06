@@ -21,11 +21,13 @@
 #include "helify.h"
 #include "polydiv.h"
 
+#define NXY 10000
+
 int main(int argc, char* argv[])
 {
-    const int nx = 100, ny = 100, nxy=10000, a = 2, nf = 17, n1 = 8;
+    const int nx = 100, ny = 100, a = 2, nf = 17, n1 = 8;
     const float gamma = 0.666666;
-    float q[nxy], d[nxy];
+    float q[NXY], d[NXY];
     sf_filter aa;
     float alpha, scale, middle;
     int it, ix, iy, nt, nh;
@@ -46,7 +48,7 @@ int main(int argc, char* argv[])
     middle = 4.*(gamma + (1.-gamma)*0.5);
 
     /* Initial temperature step */
-    for (ix=0; ix < nxy; ix++) {
+    for (ix=0; ix < NXY; ix++) {
 	q[ix] = 0.;
     }
     for (ix = ny/2-nh-1; ix < ny/2+nh; ix++) {
@@ -66,23 +68,23 @@ int main(int argc, char* argv[])
 	aa->lag[it] = nx + 2 - nf + it;
 	sf_warning("aa[%d]=%g",aa->lag[it],aa->flt[it]);
     }
-    polydiv_init (nxy, aa);
+    polydiv_init (NXY, aa);
 
     for (it=0; it < nt; it++) { 
-	sf_floatwrite (q,nxy,out);
+	sf_floatwrite (q,NXY,out);
 
-	for (ix=0; ix < nxy; ix++) {
+	for (ix=0; ix < NXY; ix++) {
 	    d[ix] = 0.;
 	}
-	for (ix = nx+1; ix < nxy-nx-1; ix++) {
+	for (ix = nx+1; ix < NXY-nx-1; ix++) {
 	    d[ix] = (1. - alpha*middle) * q[ix] + 
 		alpha*gamma * (q[ix-1] + q[ix+1] + q[ix-nx] + q[ix+nx]) + 
 		0.5*alpha*(1. - gamma) * 
 		(q[ix-nx-1] + q[ix-nx+1] + q[ix+nx-1] + q[ix+nx+1]); 
 	}
-	polydiv_lop (true, false,  nxy, nxy, q, d);
-	polydiv_lop (false, false, nxy, nxy, q, d);
-	for (ix=0; ix < nxy; ix++) {   
+	polydiv_lop (true, false,  NXY, NXY, q, d);
+	polydiv_lop (false, false, NXY, NXY, q, d);
+	for (ix=0; ix < NXY; ix++) {   
 	    q[ix] = d[ix]*scale;
 	}
     }
