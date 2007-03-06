@@ -357,8 +357,8 @@ void abcone2d_apply(float**   uo,
     for(i2=0;i2<fdm->n2pad;i2++) {
 	for(iop=0;iop<nop;iop++) {
 
-	    // top BC
-	    if(!abc->free) { // not free surface, apply ABC
+	    /* top BC */
+	    if(!abc->free) { /* not free surface, apply ABC */
 		i1 = nop-iop;
 		uo      [i2][i1  ] 
 		    = um[i2][i1+1] 
@@ -366,7 +366,7 @@ void abcone2d_apply(float**   uo,
 		      - uo[i2][i1+1]) * abc->b1l[i2];
 	    }
 
-	    // bottom BC
+	    /* bottom BC */
 	    i1 = fdm->n1pad-nop+iop-1;
 	    uo      [i2][i1  ] 
 		= um[i2][i1-1]
@@ -381,14 +381,14 @@ void abcone2d_apply(float**   uo,
     for(i1=0;i1<fdm->n1pad;i1++) {
 	for(iop=0;iop<nop;iop++) {
 
-	    // left BC
+	    /* left BC */
 	    i2 = nop-iop;
 	    uo      [i2  ][i1] 
 		= um[i2+1][i1] 
 		+(um[i2  ][i1]
 		- uo[i2+1][i1]) * abc->b2l[i1];
 
-	    // right BC
+	    /* right BC */
 	    i2 = fdm->n2pad-nop+iop-1;
 	    uo      [i2  ][i1] 
 		= um[i2-1][i1]
@@ -410,9 +410,9 @@ sponge2d sponge2d_make(fdm2d fdm)
     spo = (sponge2d) sf_alloc(1,sizeof(*spo));    
     spo->w = sf_floatalloc(fdm->nb);
 
-    sb = 4.0*fdm->nb;               //                 sigma
+    sb = 4.0*fdm->nb;               /*                 sigma */
     for(ib=0; ib<fdm->nb; ib++) {
-	fb = ib/(sqrt(2.0)*sb);     //  x / (sqrt(2) * sigma)
+	fb = ib/(sqrt(2.0)*sb);     /*  x / (sqrt(2) * sigma) */
 	spo->w[ib] = exp(-fb*fb);
     }
     return spo;
@@ -435,14 +435,14 @@ void sponge2d_apply(float**   uu,
 
 	ib1 = fdm->n1pad-ib-1;
 	for(i2=0; i2<fdm->n2pad; i2++) {
-	    uu[i2][ib ] *= w; //    top sponge
-	    uu[i2][ib1] *= w; // bottom sponge
+	    uu[i2][ib ] *= w; /*    top sponge */
+	    uu[i2][ib1] *= w; /* bottom sponge */
 	}
 
 	ib2 = fdm->n2pad-ib-1;
 	for(i1=0; i1<fdm->n1pad; i1++) {
-	    uu[ib ][i1] *= w; //   left sponge
-	    uu[ib2][i1] *= w; //  right sponge
+	    uu[ib ][i1] *= w; /*   left sponge */
+	    uu[ib2][i1] *= w; /*  right sponge */
 	}
 
     }
