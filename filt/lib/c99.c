@@ -128,6 +128,10 @@ float expf(float x)
 /*< float exp >*/
 { return (float) exp(x);}
 
+float erff(float x) 
+/*< float exp >*/
+{ return (float) erf(x);}
+
 float fabsf(float x) 
 /*< float fabs >*/
 { return (float) fabs(x);}
