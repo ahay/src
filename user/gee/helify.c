@@ -20,25 +20,27 @@
 
 #include "kolmog.h"
 
+#define N12 4096
+
 float helify(float a, float b  /* filter coefficients */, 
 	     int k2            /* filter breakpoint */,
 	     int nf            /* filter size */, 
 	     float* f          /* filter */)
 /*< Factor an isotropic Laplacian on a helix >*/
 {
-    const int n1 = 64, n2 = 64, n12=4096;
+    const int n1 = 64, n2 = 64;
     const float gamma = 0.631974;
-    float cy[n12], middle, z1, z2, scale;
+    float cy[N12], middle, z1, z2, scale;
     int i1;
 
     middle = 4.*(gamma + (1.-gamma)*0.5);
-    for (i1=0; i1 < n12; i1++) {
+    for (i1=0; i1 < N12; i1++) {
 	z1 = cosf (2*SF_PI*i1/(n1*n2));
 	z2 = cosf (2*SF_PI*i1/(   n2));
 	cy[i1] = a + b*(middle -2*gamma*(z1+z2) - 2*(1-gamma)*z1*z2); 
     }
 
-    kolmog_init(n12);
+    kolmog_init(N12);
     kolmog2(cy);
 
     scale = 1./cy[0];
