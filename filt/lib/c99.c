@@ -129,8 +129,12 @@ float expf(float x)
 { return (float) exp(x);}
 
 float erff(float x) 
-/*< float exp >*/
+/*< float erf >*/
 { return (float) erf(x);}
+
+float erfcf(float x) 
+/*< float erfc >*/
+{ return (float) erfc(x);}
 
 float fabsf(float x) 
 /*< float fabs >*/
