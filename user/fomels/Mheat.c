@@ -18,11 +18,13 @@
 */
 #include <rsf.h>
 
+#define NX 100
+#define NT 10
+
 int main(int argc, char* argv[])
 {
-    const int nx = 100, nt = 10;
     const float beta = 0.122996;
-    float q[nx], d[nx], alpha, b1, b2;
+    float q[NX], d[NX], alpha, b1, b2;
     int it, ix;
     bool impl;
     sf_tris slv;
@@ -31,8 +33,8 @@ int main(int argc, char* argv[])
     sf_init(argc,argv);
     out = sf_output("out");
     sf_setformat(out,"native_float");
-    sf_putint(out,"n1",nx);
-    sf_putint(out,"n2",nt);
+    sf_putint(out,"n1",NX);
+    sf_putint(out,"n2",NT);
 
     if (!sf_getbool("impl",&impl)) impl=false;
     /* if y, use implicit scheme */
@@ -40,11 +42,11 @@ int main(int argc, char* argv[])
     alpha *= 0.5;
 
     /* initial temperature */
-    for (ix=0; ix < nx/2-1; ix++) {
+    for (ix=0; ix < NX/2-1; ix++) {
 	q[ix]=0.;
     }
-    q[nx/2-1] = 0.5;
-    for (ix=nx/2; ix < nx; ix++) {
+    q[NX/2-1] = 0.5;
+    for (ix=NX/2; ix < NX; ix++) {
 	q[ix] = 1.;
     }
 
@@ -53,21 +55,21 @@ int main(int argc, char* argv[])
 	b2 = alpha - 0.5*beta;
 	alpha = b1;
 
-	slv = sf_tridiagonal_init (nx);
+	slv = sf_tridiagonal_init (NX);
 	sf_tridiagonal_const_define (slv,1.+2.*b2,-b2,true);
     } else {
 	slv = NULL;
     }
 
-    for (it=0; it < nt; it++) { 
-	sf_floatwrite(q,nx,out);
+    for (it=0; it < NT; it++) { 
+	sf_floatwrite(q,NX,out);
    
 	d[0] = q[0] + alpha*(q[1]-q[0]);
-	for (ix=1; ix < nx-1; ix++) {
+	for (ix=1; ix < NX-1; ix++) {
 	    d[ix] = q[ix] + alpha*(q[ix-1]-2.*q[ix]+q[ix+1]);
 	}
-	d[nx-1] = q[nx-1] + alpha*(q[nx-2]-q[nx-1]);
-	for (ix=0; ix < nx; ix++) {
+	d[NX-1] = q[NX-1] + alpha*(q[NX-2]-q[NX-1]);
+	for (ix=0; ix < NX; ix++) {
 	    q[ix] = d[ix];
 	} 
 

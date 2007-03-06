@@ -97,7 +97,7 @@ Plot('tamean','amean',
      min2=-0.01 max2=1.01
      ''')
 
-Result('amean','amean tamean mean tmean','Overlay')
+Result('amean','amean tamean','Overlay')
 
 Flow('vari',varis,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('vari',
