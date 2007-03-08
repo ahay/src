@@ -19,17 +19,13 @@
 #include <rsf.h>
 #include "fdutil.h"
 
-/*#define C1 +0.800000 /* 672/840 */
-/*#define C2 -0.200000 /* 168/840 */
-/*#define C3 +0.038095 /*  32/840 */
-/*#define C4 -0.003571 /*   3/840*/
-
 #define NOP 4 /* derivative operator half-size */
 
-#define C1 +0.598144
-#define C2 -0.039876
-#define C3 +0.004785
-#define C4 -0.000348
+/* Muir's derivative operator */
+#define C1 +0.598144 // 1225/ 1024      /2
+#define C2 -0.039876 //-1225/(1024*  15)/2
+#define C3 +0.004785 // 1225/(1024* 125)/2
+#define C4 -0.000348 //-1225/(1024*1715)/2
 
 /*  forward FD derivative stencils */
 #define F1(a,i2,i1,s) (C4*(a[i2  ][i1+4] - a[i2  ][i1-3]) +	\
@@ -264,7 +260,7 @@ int main(int argc, char* argv[])
     for    (i2=0; i2<fdm->n2pad; i2++) {
 	for(i1=0; i1<fdm->n1pad; i1++) {
 	    vp[i2][i1] = sqrt( c11[i2][i1]/ro[i2][i1] );
-	    vs[i2][i1] = sqrt( c11[i2][i1]/ro[i2][i1] );
+	    vs[i2][i1] = sqrt( c13[i2][i1]/ro[i2][i1] );
 	}
     }
     abcp = abcone2d_make(NOP,dt,vp,free,fdm);
