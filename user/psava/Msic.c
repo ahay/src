@@ -185,12 +185,13 @@ int main(int argc, char* argv[])
     for (; nz > 0; nz -= nb) {
 	if (nb > nz) nb=nz;
 
-	sf_floatread(us[0][0],nt*nx*nb,Fs);
-	sf_floatread(ur[0][0],nt*nx*nb,Fr);
+	sf_floatread(us[0][0],nt*nx*nb,Fs);  /* read   source wavefield */
+	sf_floatread(ur[0][0],nt*nx*nb,Fr);  /* read receiver wavefield */
 
 	if(verb) fprintf(stderr,"  z   a\n");
 	if(verb) fprintf(stderr,"%3d %3d\n",nb-1,na-1);
-	for(            ib=0;  ib<nb;    ib++) {	    
+
+	for(        ib=0; ib<nb; ib++) {	    
 	    for(    ix=0; ix<nx; ix++) {
 		ii[ix] = 0;
 	    }
@@ -216,10 +217,11 @@ int main(int argc, char* argv[])
 
 			for(    ix=hx; ix<gx; ix++) { jx = ix+mx;
 			    for(it=ht; it<gt; it++) { jt = it+mt;
-				ts[ix][it] += wo * us[ib][ jx ][ jt ];
-				tr[ix][it] += wo * ur[ib][ jx ][ jt ];
+				ts[ ix ][ it ] += wo * us[ib][ jx ][ jt ];
+				tr[ ix ][ it ] += wo * ur[ib][ jx ][ jt ];
 			    } // x loop
 			}     // t loop
+
 		    }         // c loop
 		}             // l loop
 
@@ -229,10 +231,13 @@ int main(int argc, char* argv[])
 		    }
 		}
 		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
-	    } // a loop
+	    }                 // a loop
+	    if(verb) fprintf(stderr,"\n");
+
 	    sf_floatwrite(ii,nx,Fi);
-	} // b loop
-    } // z loop
+
+	}                     // z loop (in block)
+    }                         // z loop (blocks)
 	
     exit (0);
 }

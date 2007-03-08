@@ -254,8 +254,6 @@ int main(int argc, char* argv[])
     for(    ib=0;ib<nb;ib++) {
 	for(ia=0;ia<na;ia++) {
 	    if(verb) fprintf(stderr,"%3d %3d",ib,ia);
-/*	    fprintf(stderr,"\n");*/
-
 	    for(        i3=0; i3<n3; i3++) {
 		for(    i2=0; i2<n2; i2++) {
 		    for(i1=0; i1<n1; i1++) {	
@@ -275,12 +273,6 @@ int main(int argc, char* argv[])
 		    m3=k3[ib][ia][il][ic]; h3=SF_ABS(m3); g3=n3-h3; 
 		    wo=ww[ib][ia][il][ic];
 		    
-/*		    fprintf(stderr,"%d %d %d %d | %3d %3d %3d %3d %3d %3d\n",*/
-/*			    ib,ia,il,ic,*/
-/*			    h3,g3, */
-/*			    h2,g2, */
-/*			    h1,g1);*/
-
 		    for(        i3=h3; i3<g3; i3++) { j3=i3+m3;
 			for(    i2=h2; i2<g2; i2++) { j2=i2+m2;
 			    for(i1=h1; i1<g1; i1++) { j1=i1+m1;
@@ -292,7 +284,6 @@ int main(int argc, char* argv[])
 
 		}             // c loop
 	    }                 // l loop
-/*	    fprintf(stderr,"\n done SS \n");*/
 
 	    for(        i3=0; i3<n3; i3++) {
 		for(    i2=0; i2<n2; i2++) {
@@ -301,15 +292,10 @@ int main(int argc, char* argv[])
 		    }
 		}
 	    }
-/*	    fprintf(stderr,"\n done IC \n");*/
-	    
-/*	    fprintf(stderr,"\n");*/
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");	
 	}                     // a loop
     }                         // b loop
     if(verb) fprintf(stderr,"\n");
-
-/*    fprintf(stderr,"\n prepare to write \n");*/
 
     sf_floatwrite(ii[0],n1*n2,Fi);	 /* write image */
 
