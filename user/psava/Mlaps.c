@@ -111,10 +111,10 @@ int main(int argc, char* argv[])
 		for(    ix=0; ix<nx; ix++) { 
 		    for(iz=0; iz<nz; iz++) { 
 			ii[jhx][jhz][ix][iz] = 0;
-		    } // nz
-		} // nx
-	    } // nhz
-	} // nhx
+		    } /* nz */
+		} /* nx */
+	    } /* nhz */
+	} /* nhx */
 
 	for(it=lot; it<hit; it++) {
 
@@ -134,10 +134,10 @@ int main(int argc, char* argv[])
 			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-scz*ihz; kz=iz+scz*ihz;
 				ii[jhx][jhz][ix][iz] += us[jx][jz] 
 				    *                   ur[kx][kz];
-			    } // nz
-			} // nx  
-		    } // nhz
-		} // nhx
+			    } /* nz */
+			} /* nx */  
+		    } /* nhz */
+		} /* nhx */
 	    } else {
 		for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-lox; jhx=nhx+ihx;		
 #ifdef _OPENMP
@@ -148,18 +148,18 @@ int main(int argc, char* argv[])
 			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-ihz; kz=iz+ihz;
 				ii[jhx][jhz][ix][iz] += us[jx][jz] 
 				    *                   ur[kx][kz];
-			    } // nz
-			} // nx  
-		    } // nhz
-		} // nhx	
-	    } // end if 
+			    } /* nz */
+			} /* nx */  
+		    } /* nhz */
+		} /* nhx */	
+	    } /* end if */ 
 
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-	} // nt
+	} /* nt */
 	
 	/* write output */
 	sf_floatwrite(ii[0][0][0],nz*nx*(2*nhz+1)*(2*nhx+1),Fi);    
-    } // nht
+    } /* nht */
     if(verb) fprintf(stderr,"\n");
 	
     exit (0);
