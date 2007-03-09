@@ -41,11 +41,14 @@ def param(par):
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
 
+    if(not par.has_key('labelattr')): par['labelattr']=' labelsz=5 labelfat=3 '
+
+
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
@@ -54,12 +57,12 @@ def cgrey(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           custom)
+           par['labelattr']+' '+custom)
 
 def wgrey(custom,par):
     return '''
     window min1=%g max1=%g min2=%g max2=%g |
-    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     label1=%s unit1=%s
     label2=%s unit2=%s
@@ -70,11 +73,11 @@ def wgrey(custom,par):
            par['lz'],par['uz'],
            par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           custom)
+           par['labelattr']+custom)
 
 def cgraph(custom,par):
     return '''
-    graph labelrot=n wantaxis=n title="" yreverse=y labelsz=5 labelfat=3
+    graph labelrot=n wantaxis=n title="" yreverse=y
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
@@ -83,11 +86,11 @@ def cgraph(custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           custom)
+           par['labelattr']+custom)
 
 def ccont(custom,par):
     return '''
-    contour labelrot=n wantaxis=n title="" yreverse=y labelsz=5 labelfat=3
+    contour labelrot=n wantaxis=n title="" yreverse=y
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
@@ -96,38 +99,38 @@ def ccont(custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           custom)
+           par['labelattr']+custom)
 
 def dgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title=""
     pclip=100
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           custom)
+           par['labelattr']+custom)
 
 def egrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y title="" labelsz=5 labelfat=3
+    grey labelrot=n wantaxis=y title=""
     pclip=100
     min2=%g max2=%g label2=%s unit2=%s
     min1=%g max1=%g label1=%s unit1=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
-           custom)
+           par['labelattr']+custom)
 
 # plot wavelet
 def waveplot(custom,par):
     return '''
-    graph min2=-1 max2=+1 title="" labelsz=5 labelfat=3
+    graph min2=-1 max2=+1 title=""
     plotfat=4
     label1=%s unit1=%s label2="" unit2=""
     %s
-    ''' % (par['lt'],par['ut'],custom)
+    ''' % (par['lt'],par['ut'],par['labelattr']+custom)
 
 # ------------------------------------------------------------
 # create wavelet
