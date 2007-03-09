@@ -180,15 +180,15 @@ int main(int argc, char* argv[])
 		for(    i2=h2; i2<n2-h2; i2++) {
 		    for(i1=h1; i1<n1-h1; i1++) {
 			ss[i2][i1] += ww[ia][il][ic] * dd[i2+j2][i1+j1];
-		    } // 1 loop
-		}     // 2 loop
+		    } /* 1 loop */
+		}     /* 2 loop */
 		
-	    }         // c loop
-	}             // l loop
+	    }         /* c loop */
+	}             /* l loop */
 
 	sf_floatwrite(ss[0],n1*n2,Fo);	 /* write output */
 	if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");	
-    }                 // a loop
+    }                 /* a loop */
     if(verb) fprintf(stderr,"\n");
 
     exit (0);
