@@ -116,7 +116,7 @@ Plot('pick',
 Result('scan100','scan pick','Overlay')
 
 # Convert stretch to shift
-Flow('shift','pick100','math output="(input-1)*x1" ')
+Flow('shift','pick','math output="(input-1)*x1" ')
 
 # Interpolate at time locations
 Flow('tint','shift time',

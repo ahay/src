@@ -211,8 +211,9 @@ for c in range(4):
         Flow(pick,scan,
              'pick rect1=%d rect2=3 gate=100 vel0=1 | window' % (rect1/2))
 
-        Result(pick,
+        Result(pick,[top0,pick],
                '''
+               math output=1 | cat axis=1 ${SOURCES[1]} |
                grey color=j scalebar=y wanttitle=n
                label1=Time unit1=s label2=Trace bias=1
                ''')
