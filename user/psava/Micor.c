@@ -101,13 +101,13 @@ int main(int argc, char* argv[])
 			for(iz=loz; iz<hiz; iz++) { jz=iz-ihz; kz=iz+ihz;
 			    ii[ix][iz] += us[jt][jx][jz] 
 				*         ur[kt][kx][kz];
-			} // nz
-		    } // nx
-		} // nt
-	    } // nhz
+			} /* nz */
+		    } /* nx */
+		} /* nt */
+	    } /* nhz */
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-	} // nhxx
-    } // nht
+	} /* nhx */
+    } /* nht */
     if(verb) fprintf(stderr,"\n");
 
     sf_floatwrite(ii[0],nz*nx,Fi);    

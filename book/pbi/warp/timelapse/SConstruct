@@ -4,7 +4,7 @@ from rsfproj import *
 
 depth = [300,500,600,700,800]
 veloc = [[1500,1700,2000,2300,2400,2500],
-         [1500,1800,2200,2300,2400,2500]]
+         [1500,1700,2200,2300,2400,2500]]
 nl = len(depth) # number of layers
 
 # Depth of interfaces
@@ -39,13 +39,20 @@ for case in range(2):
     Flow(vel2,vel,'spray axis=1 n=2 | put n2=1 n1=%d' % (2*nl+2))
     Plot(vel,['depth1',vel2],
          '''
-         cmplx ${SOURCES[1]} | window n1=%d |
+         cmplx ${SOURCES[1]} | 
          graph label1=Depth unit1=m label2=Velocity unit2=m/s
          dash=%d wanttitle=n
-         ''' % (2*nl,case))
+         ''' % case)
+    Plot('t'+vel,['dtime1',vel2],
+         '''
+         cmplx ${SOURCES[1]} | 
+         graph label1=Time unit1=s label2=Velocity unit2=m/s
+         dash=%d wanttitle=n
+         ''' % case)
 
 # Display data
 Result('modl','veloc1 veloc2','Overlay')
+Result('tmodl','tveloc1 tveloc2','Overlay')
 
 # Make constant Vs and density
 Flow('vs','veloc1','math output=1000')
@@ -77,7 +84,7 @@ Result('data','data1 data2 diff',
        yreverse=y gaineach=n
        ''')
 
-g0=0.9   # starting change 
+g0=0.95  # starting change 
 g1=2-g0  # last change
 ng=101   # number of changes to scan
 dg = (g1-g0)/(ng-1)
@@ -134,6 +141,8 @@ for rat in ('rat','trat'):
          ''' % (2*nl,(0,1)[rat=='rat']))
 
 Result('rat','rat trat','Overlay')
+
+
     
 # Apply the stretch
 Flow('warp','data2 data1 shift',
@@ -152,6 +161,8 @@ Result('warp','data1 warp diff2',
        dots labels=Before:After:Difference label1=Time unit1=s
        yreverse=y gaineach=n
        ''')
+
+####################################################################################
 
 # Add random noise
 Flow('noisy','data1','noise seed=2006 var=0.0000001')
