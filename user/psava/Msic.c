@@ -232,7 +232,6 @@ int main(int argc, char* argv[])
 		}
 		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
 	    }                 // a loop
-	    if(verb) fprintf(stderr,"\n");
 
 	    sf_floatwrite(ii,nx,Fi);
 
