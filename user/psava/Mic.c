@@ -124,11 +124,11 @@ int main(int argc, char* argv[])
 			    t1[ix][iz] += (ts * tr);
 			    t2[ix][iz] += (ts * ts);
 			    t3[ix][iz] += (tr * tr);
-			} // nz
-		    } // nx 
-		} // nb
+			} /* nz */
+		    } /* nx */ 
+		} /* nb */
 		if(verb) fprintf(stderr,"\b\b\b\b\b");
-	    } // nt
+	    } /* nt */
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
 		    ii[ix][iz] = t1[ix][iz] / ( sqrt( t2[ix][iz] * t3[ix][iz] ) + (nz*nx*nb)*eps);
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 2: // SUM( Us Ur) / SUM (Us Us)
+	case 2: /* SUM( Us Ur) / SUM (Us Us) */
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);

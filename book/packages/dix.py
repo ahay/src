@@ -1,7 +1,9 @@
 from rsfproj import *
 
-def dix(agc,         # migrated image
+def dix(data,        # data name
+        agc,         # migrated image
         npk,         # migration velocity
+        smb,         # semblance slice
         v0,          # minimum velocity
         vm,          # median velocity
         nx,          # lateral dimension
@@ -63,8 +65,7 @@ def dix(agc,         # migrated image
 
     
     dix = data+'-dix'
-    Flow(agc+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
-    Flow([dix,dix+'0'],[npk,agc+'2'],
+    Flow([dix,dix+'0'],[npk,smb],
          '''
          dix rect1=%d rect2=%d
          weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
@@ -85,7 +86,7 @@ def dix(agc,         # migrated image
     Result(dix+'0',[npk,dix+'0'],'SideBySideAniso')
 
     pdx = data+'-pdx'
-    Flow([pdx,pdx+'0'],[npk,agc+'2',slp],
+    Flow([pdx,pdx+'0'],[npk,smb,slp],
          '''
          pwdix slope=${SOURCES[2]}
          weight=${SOURCES[1]} vrmsout=${TARGETS[1]}

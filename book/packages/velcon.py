@@ -106,6 +106,8 @@ def velcon(data,        # data name
            '''
            grey title=Picked pclip=98 label1="Time" unit1=s label2="Lateral Position" unit2=%s
            ''' % units)
+
+    Flow(agc+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
     
 ##     # To estimate uncertainty: measure dt/dv, measure dv, multiply
 ##     ref = data+'-ref'
