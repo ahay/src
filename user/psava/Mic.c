@@ -78,9 +78,9 @@ int main(int argc, char* argv[])
 
 /*------------------------------------------------------------*/
     /* allocate arrays */
-    us=sf_floatalloc3(nz,nx,nb);  //   source wavefield
-    ur=sf_floatalloc3(nz,nx,nb);  // receiver wavefield
-    ii=sf_floatalloc2(nz,nx);     // image
+    us=sf_floatalloc3(nz,nx,nb);  /*  source wavefield  */
+    ur=sf_floatalloc3(nz,nx,nb);  /* receiver wavefield */
+    ii=sf_floatalloc2(nz,nx);     /* image */
     if(version>1) {
 	t3=sf_floatalloc2(nz,nx);
 	t2=sf_floatalloc2(nz,nx);
@@ -104,7 +104,7 @@ int main(int argc, char* argv[])
     }
 
     switch (version){
-	case 3: // SUM(Us Ur) / sqrt( SUM(Us Us) SUM(Ur Ur) )
+	case 3: /* SUM(Us Ur) / sqrt( SUM(Us Us) SUM(Ur Ur) ) */
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -158,11 +158,11 @@ int main(int argc, char* argv[])
 			    tr = ur[ib][ix][iz];			    
 			    t1[ix][iz] += (ts * tr);
 			    t2[ix][iz] += (ts * ts);
-			} // nz
-		    } // nx 
-		} // nb
+			} /* nz */
+		    } /* nx */ 
+		} /* nb */
 		if(verb) fprintf(stderr,"\b\b\b\b\b");
-	    } // nt
+	    } /* nt */
 	    for (ix=0; ix<nx; ix++) {
 		for (iz=0; iz<nz; iz++) {
 		    ii[ix][iz] = t1[ix][iz] / ( t2[ix][iz] + (nz*nx*nb)*eps*(nz*nx*nb)*eps);
@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 1: // SUM( (Us Ur)/(Us Us) )
+	case 1: /* SUM( (Us Ur)/(Us Us) ) */
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -190,16 +190,16 @@ int main(int argc, char* argv[])
 			    ts = us[ib][ix][iz];
 			    tr = ur[ib][ix][iz];			    
 			    ii[ix][iz] += (ts * tr) / (ts * ts + eps*eps);
-			} // nz
-		    } // nx 
-		} // nb
+			} /* nz */
+		    } /* nx */ 
+		} /* nb */
 		if(verb) fprintf(stderr,"\b\b\b\b\b");
-	    } // nt
+	    } /* nt */
 	    sf_floatwrite(ii[0],nz*nx,Fi);
 	    break;
 	    
 	    /*------------------------------------------------------------*/
-	case 0: // Us * Ur
+	case 0: /* Us * Ur */
 	    for (; nt > 0; nt -= nb) {
 		if (nb > nt) nb=nt;
 		if(verb) sf_warning("nsiz=%ld nbuf=%ld",nt,nb);
@@ -216,14 +216,14 @@ int main(int argc, char* argv[])
 			for(iz=0; iz<nz; iz++) {    
 			    ii[ix][iz] += us[ib][ix][iz]
 				*         ur[ib][ix][iz];
-			} // nz
-		    } // nx 
-		} // nb
+			} /* nz */
+		    } /* nx */ 
+		} /* nb */
 		if(verb) fprintf(stderr,"\b\b\b\b\b");
-	    } // nt
+	    } /* nt */
 	    sf_floatwrite(ii[0],nz*nx,Fi);	    
 	    break;
-    } // switch
+    } /* switch */
     
     exit (0);
 }
