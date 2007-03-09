@@ -123,9 +123,9 @@ int main(int argc, char* argv[])
 /*------------------------------------------------------------*/
 
     /* allocate arrays */
-    us=sf_floatalloc3(nt,nx,nb);  //   source wavefield
-    ur=sf_floatalloc3(nt,nx,nb);  // receiver wavefield
-    ii=sf_floatalloc (   nx);     // image
+    us=sf_floatalloc3(nt,nx,nb);  /*   source wavefield */
+    ur=sf_floatalloc3(nt,nx,nb);  /* receiver wavefield */
+    ii=sf_floatalloc (   nx);     /* image */
 
     ts=sf_floatalloc2(nt,nx);
     tr=sf_floatalloc2(nt,nx);
@@ -219,11 +219,11 @@ int main(int argc, char* argv[])
 			    for(it=ht; it<gt; it++) { jt = it+mt;
 				ts[ ix ][ it ] += wo * us[ib][ jx ][ jt ];
 				tr[ ix ][ it ] += wo * ur[ib][ jx ][ jt ];
-			    } // x loop
-			}     // t loop
+			    } /* x loop */
+			}     /* t loop */
 
-		    }         // c loop
-		}             // l loop
+		    }         /* c loop */
+		}             /* l loop */
 
 		for(    ix=0; ix<nx; ix++) {
 		    for(it=0; it<nt; it++) {
@@ -231,12 +231,12 @@ int main(int argc, char* argv[])
 		    }
 		}
 		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
-	    }                 // a loop
+	    }                 /* a loop */
 
 	    sf_floatwrite(ii,nx,Fi);
 
-	}                     // z loop (in block)
-    }                         // z loop (blocks)
+	}                     /* z loop (in block) */
+    }                         /* z loop (blocks) */
 	
     exit (0);
 }
