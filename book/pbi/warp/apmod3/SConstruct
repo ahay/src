@@ -1,0 +1,16 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+model = 'coronation_reservoir.sgy'
+Fetch(model,'apache',private)
+
+Flow('mod mod.asc mod.bin',model,
+     '''
+     segyread read=d afile=${TARGETS[1]} bfile=${TARGETS[2]} |
+     put n2=127 d2=1 o2=1 n3=355 d3=1 o3=1
+     ''')
+
+End()

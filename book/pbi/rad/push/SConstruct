@@ -23,9 +23,15 @@ Plot('rad','grey title="Radon Transform" label2=Slope unit2=s/m')
 Result('rad','gath rad','SideBySideAniso')
 
 Flow('prad dip2','gath dip',
-     'pradon adj=y inv=n p0=0 dp=0.00001 np=151 dip2=${TARGETS[1]} dip=${SOURCES[1]} verb=y')
+     'pradon adj=y inv=n p0=0 dp=0.00001 np=151 dip2=${TARGETS[1]} dip=${SOURCES[1]} rect1=10 rect2=10 verb=y')
 Plot('prad','grey title="Phase-Space Radon Transform" label2=Slope unit2=s/m')
 
 Result('prad','gath prad','SideBySideAniso')
+
+Flow('rdip','rad','dip rect1=10 rect2=10')
+Plot('rdip','grey clip=3.5 unit1=s unit2=m  color=j title=Slope1 scalebar=y minval=-3.5 maxval=0')
+Plot('dip2','grey clip=3.5 unit1=s unit2=m  color=j title=Slope2 scalebar=y minval=-3.5 maxval=0')
+
+Result('dips','rdip dip2','SideBySideAniso')
 
 End()

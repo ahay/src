@@ -1,4 +1,5 @@
 from rsfproj import *
+import dix
 
 def velcon(data,        # data name
            nv,          # continuation steps
@@ -93,21 +94,7 @@ def velcon(data,        # data name
 
     npk = data+'-npk'
     Flow(npk,vlf2,pick)
-    Plot(npk,
-         '''
-         grey pclip=100 color=j bias=%g 
-         scalebar=y title="Picked Migration Velocity"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         barlabel=Velocity barunit="%s/s" barreverse=y
-         ''' % (vm,units,units))
-    for line in (0,1):
-        Plot(npk+str(line),npk,
-             '''
-             contour nc=40 wanttitle=n plotcol=%d plotfat=%d
-             scalebar=y wantaxis=n barlabel=Velocity barunit="%s/s"
-             ''' % ((0,10,units),(7,1,units))[line])
-    Result(npk,[npk,npk+'0',npk+'1'],'Overlay')
-
+        
     fmg = data+'-fmg'
     Flow(fmg,[vlf,npk],'slice pick=${SOURCES[1]} | transp plane=23')
     Result(fmg,
@@ -120,274 +107,137 @@ def velcon(data,        # data name
            grey title=Picked pclip=98 label1="Time" unit1=s label2="Lateral Position" unit2=%s
            ''' % units)
     
-    Plot(fmg,agc,
-         '''
-         grey title="Time-Migrated Image"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         ''' % units)
-    Result(fmg+'2',[fmg,npk],'SideBySideAniso',vppen='txscale=1.2')
+##     # To estimate uncertainty: measure dt/dv, measure dv, multiply
+##     ref = data+'-ref'
+##     Flow(ref,[vlf,npk],
+##          '''
+##          transp | refer ref=${SOURCES[1]} | window n1=9 f1=%d | transp
+##          ''' % (nv-5))
 
-    slp = data+'-slp'
-    Flow(slp,agc,'dip liter=40 rect1=%d rect2=%d' % (rect1,rect2))
-    Plot(slp,
-         '''
-         grey title="Estimated Dips" scalebar=y color=j
-         label1=Time unit1=s label2="Lateral Position" unit2=%s pclip=100
-         barlabel="Dip (samples)"
-         ''' % units)
-    Result(slp,[fmg,slp],'SideBySideAniso')
-
-    vg = data+'-vg'
-    Flow(vg,[agc,slp],
-         'pwdsigk dips=${SOURCES[1]} verb=y nliter=5 niter=100')
-    Plot(vg,
-         '''
-         grey title="Structure Enhancing"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         ''' % units)
-    Plot(vg+'2',[agc,vg],
-         '''
-         add scale=1,-1 ${SOURCES[1]} | cat ${SOURCES[0]} |
-         byte gainpanel=2 | window n3=1 |
-         grey title="Removed Noise" 
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         ''' % units)    
-    Result(vg,[vg,vg+'2'],'SideBySideAniso')
-
-    dix = data+'-dix'
-    Flow(fmg+'2',[vlf2,npk],'slice pick=${SOURCES[1]} | window')
-    Flow([dix,dix+'0'],[npk,fmg+'2'],
-         '''
-         dix rect1=%d rect2=%d
-         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
-         niter=30
-         ''' % (rect1/2,rect2/2))
-    Plot(dix,
-         '''
-         grey pclip=100 color=j bias=%g 
-         scalebar=y title="Interval Velocity" barlabel=Velocity barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
-         ''' % (vm,units,units))
-    Plot(dix+'0',
-         '''grey pclip=100 color=j bias=%g 
-         scalebar=y title="Predicted Migration Velocity" barlabel=Velocity barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
-         ''' % (vm,units,units))
-    Result(dix,[dix,dix+'0'],'SideBySideAniso')
-    Result(dix+'0',[npk,dix+'0'],'SideBySideAniso')
-
-    pdx = data+'-pdx'
-    Flow([pdx,pdx+'0'],[npk,fmg+'2',slp],
-         '''
-         pwdix slope=${SOURCES[2]}
-         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
-         niter=50 verb=y ncycle=10 rect1=%d
-         ''' % (4*rect1))
-    Plot(pdx,
-         '''
-         grey pclip=100 color=j bias=%g allpos=y
-         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s
-         wanttitle=n 
-         ''' % (v0,units,units))
-    Plot(pdx+'0',
-         '''
-         grey pclip=100 color=j bias=%g
-         scalebar=y title="Predicted Migration Velocity"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s 
-         barlabel=Velocity barunit="%s/s" barreverse=y
-         ''' % (vm,units,units))
-    Result(pdx,[npk,pdx+'0'],'SideBySideAniso')
-
-    shp = data+'-shp'
-    ext = data+'-ext'
-
-    for inp in (npk,fmg+'2',slp):
-        Flow(inp+'_b',inp,'window n2=1 | spray axis=2 n=10 o=%g d=%g' % (x0-10*dx,dx))
-        Flow(inp+'_e',inp,'window n2=1 f2=%d | spray axis=2 n=10' % (nx-1))
-        Flow(inp+'_',[inp+'_b',inp,inp+'_e'],'cat ${SOURCES[1:3]} axis=2')
+##     if vslope:
+##         refer = '''
+##         mutter x0=%g v0=%g half=n |
+##         transp | refer ref=${SOURCES[1]} | transp
+##         ''' % (vx0,vslope)
+##     else:
+##         refer = '''
+##         transp | refer ref=${SOURCES[1]} | transp
+##         '''
     
-    Flow([shp,shp+'0'],[npk+'_',fmg+'2_',slp+'_'],
-         '''
-         dixshape dip=${SOURCES[2]}
-         weight=${SOURCES[1]} vrmsout=${TARGETS[1]}
-         niter=50 verb=y rect1=%d rect2=5 lam=0.1
-         ''' % (2*rect1))
-    Plot(shp,
-         '''
-         window f2=10 n2=%d |
-         grey pclip=100 color=j bias=%g allpos=y
-         scalebar=y barlabel="Estimated Interval Velocity" barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
-         wanttitle=n 
-         ''' % (nx,v0,units,units))
-    Plot(shp+'1',shp,
-         '''
-         window f2=10 n2=%d |
-         grey pclip=100 color=j bias=%g allpos=y
-         scalebar=y barlabel="Velocity" barunit="%s/s"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s barreverse=y
-         title="Interval Velocity" 
-         ''' % (nx,v0,units,units))
-    Plot(shp+'0',
-         '''
-         window f2=10 n2=%d |
-         grey pclip=100 color=j bias=%g
-         scalebar=y title="Predicted MIgration Velocity"
-         label1=Time unit1=s label2="Lateral Position" unit2=%s 
-         barlabel=Velocity barunit="%s/s" barreverse=y
-         ''' % (nx,vm,units,units))
-    Result(shp,[shp+'1',shp+'0'],'SideBySideAniso')
+##     Flow(ref+'2',[vlf2,npk],refer)
 
-    Plot(agc+'w',agc,
-         '''
-         window j2=2 |
-         wiggle transp=y yreverse=y scalebar=y wantaxis=n wanttitle=n
-         plotcol=7 poly=y
-         ''')
+##     dtdv = data+'-dtdv'
+##     Flow(dtdv,ref,
+##          '''
+##          dip n4=0 rect1=%d rect2=5 rect3=%d |
+##          window n2=1 min2=0 |
+##          scale dscale=%g
+##          ''' % (rect1,rect2,dt/dv))
+##     Flow(dtdv+'0',[slp,npk],
+##          'math vel=${SOURCES[1]} output="vel*x1*input*input" ')
+##     Result(dtdv,
+##            '''
+##            grey title="Structural Sensitivity"
+##            label1=Time unit1=s label2="Lateral Position" unit2=%s
+##            scalebar=y color=j allpos=y
+##            ''' % units)
+
+##     dxdv = data+'-dxdv'
+##     Flow(dxdv,ref,
+##          '''
+##          transp plane=13 |
+##          dip n4=0 rect1=%d rect2=5 rect3=%d |
+##          window n2=1 min2=0 |
+##          scale dscale=%g | transp
+##          ''' % (rect1,rect2,dx/dv))
+##     Result(dxdv,
+##            '''
+##            grey title="Structural Sensitivity"
+##            label1=Time unit1=s label2="Lateral Position" unit2=%s
+##            scalebar=y color=j 
+##            ''' % units)
+
+##     ddv = data+'-ddv'
+##     Flow(ref+'3',ref+'2','stack norm=n')
+##     Flow(ddv,[ref+'2',ref+'3'],
+##          '''
+##          math output="x2*x2*input" |
+##          stack norm=n |
+##          add mode=d ${SOURCES[1]} |
+##          math output="sqrt(input)"
+##          ''')   
+##     Result(ddv,
+##            '''
+##            grey title="Velocity Uncertainty" allpos=y
+##            label1=Time unit1=s label2="Lateral Position" unit2=%s
+##            scalebar=y color=j barlabel=Velocity barunit="%s/s"
+##            ''' % (units,units))
+
+##     unc = data+'-unc'
+##     Flow(unc,[dtdv,ddv],'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
+##     Result(unc,
+##            '''
+##            grey title="Structural Uncertainty"
+##            scalebar=y color=j allpos=y
+##            label1=Time unit1=s label2="Lateral Position" unit2=%s
+##            barlabel="Vertical Uncertainty (s)"
+##            ''' % units)
+##     Flow(unc+'2',[dxdv,ddv],
+##          'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
+##     Result(unc+'2',
+##            '''
+##            grey title="Structural Uncertainty"
+##            scalebar=y color=j allpos=y
+##            label1=Time unit1=s label2="Lateral Position" unit2=%s
+##            barlabel="Lateral Uncertainty (%s)"
+##            ''' % (units,units))
     
-    Plot(vg+'w',vg,
-         '''
-         window j2=2 |
-         wiggle transp=y yreverse=y scalebar=y wantaxis=n wanttitle=n
-         plotcol=7 poly=y
-         ''')
-    
-    Result(dix+'w',[dix,agc+'w'],'Overlay')
-    Result(pdx+'w',[pdx,vg+'w'],'Overlay')
-    Result(shp+'w',[shp,agc+'w'],'Overlay')
+##     ddip=data+'-ddip'
+##     Flow(ddip,data,
+##          '''
+##          window |
+##          dip rect1=%d rect2=%d rect3=1
+##          ''' % (rect1,rect2))
+##     dpwd=data+'-dpwd'
+##     Flow(dpwd,[data,ddip],'window | pwd dip=${SOURCES[1]}')
 
-    # To estimate uncertainty: measure dt/dv, measure dv, multiply
-    ref = data+'-ref'
-    Flow(ref,[vlf,npk],
-         '''
-         transp | refer ref=${SOURCES[1]} | window n1=9 f1=%d | transp
-         ''' % (nv-5))
+##     data2 = data+'2'
+##     Flow(data2,dpwd,'window n4=1 | spray axis=2 n=1')
 
-    if vslope:
-        refer = '''
-        mutter x0=%g v0=%g half=n |
-        transp | refer ref=${SOURCES[1]} | transp
-        ''' % (vx0,vslope)
-    else:
-        refer = '''
-        transp | refer ref=${SOURCES[1]} | transp
-        '''
-    
-    Flow(ref+'2',[vlf2,npk],refer)
+##     mig2=data2+'-mig'
+##     Flow(mig2,data2,'preconstkirch vel=%g' % v0)
 
-    dtdv = data+'-dtdv'
-    Flow(dtdv,ref,
-         '''
-         dip n4=0 rect1=%d rect2=5 rect3=%d |
-         window n2=1 min2=0 |
-         scale dscale=%g
-         ''' % (rect1,rect2,dt/dv))
-    Flow(dtdv+'0',[slp,npk],
-         'math vel=${SOURCES[1]} output="vel*x1*input*input" ')
-    Result(dtdv,
-           '''
-           grey title="Structural Sensitivity"
-           label1=Time unit1=s label2="Lateral Position" unit2=%s
-           scalebar=y color=j allpos=y
-           ''' % units)
+##     cip2=data2+'-cip'
+##     Flow(cip2,mig2,mig2cip)
 
-    dxdv = data+'-dxdv'
-    Flow(dxdv,ref,
-         '''
-         transp plane=13 |
-         dip n4=0 rect1=%d rect2=5 rect3=%d |
-         window n2=1 min2=0 |
-         scale dscale=%g | transp
-         ''' % (rect1,rect2,dx/dv))
-    Result(dxdv,
-           '''
-           grey title="Structural Sensitivity"
-           label1=Time unit1=s label2="Lateral Position" unit2=%s
-           scalebar=y color=j 
-           ''' % units)
+##     if padx:
+##         pad2=data2+'-pad'
+##         Flow(pad2,cip2,'pad n3=%d' % padx)
+##     else:
+##         pad2=cip2
 
-    ddv = data+'-ddv'
-    Flow(ref+'3',ref+'2','stack norm=n')
-    Flow(ddv,[ref+'2',ref+'3'],
-         '''
-         math output="x2*x2*input" |
-         stack norm=n |
-         add mode=d ${SOURCES[1]} |
-         math output="sqrt(input)"
-         ''')   
-    Result(ddv,
-           '''
-           grey title="Velocity Uncertainty" allpos=y
-           label1=Time unit1=s label2="Lateral Position" unit2=%s
-           scalebar=y color=j barlabel=Velocity barunit="%s/s"
-           ''' % (units,units))
-
-    unc = data+'-unc'
-    Flow(unc,[dtdv,ddv],'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
-    Result(unc,
-           '''
-           grey title="Structural Uncertainty"
-           scalebar=y color=j allpos=y
-           label1=Time unit1=s label2="Lateral Position" unit2=%s
-           barlabel="Vertical Uncertainty (s)"
-           ''' % units)
-    Flow(unc+'2',[dxdv,ddv],
-         'math dv=${SOURCES[1]} output="abs(0.5*input*dv)" ')
-    Result(unc+'2',
-           '''
-           grey title="Structural Uncertainty"
-           scalebar=y color=j allpos=y
-           label1=Time unit1=s label2="Lateral Position" unit2=%s
-           barlabel="Lateral Uncertainty (%s)"
-           ''' % (units,units))
-    
-    ddip=data+'-ddip'
-    Flow(ddip,data,
-         '''
-         window |
-         dip rect1=%d rect2=%d rect3=1
-         ''' % (rect1,rect2))
-    dpwd=data+'-dpwd'
-    Flow(dpwd,[data,ddip],'window | pwd dip=${SOURCES[1]}')
-
-    data2 = data+'2'
-    Flow(data2,dpwd,'window n4=1 | spray axis=2 n=1')
-
-    mig2=data2+'-mig'
-    Flow(mig2,data2,'preconstkirch vel=%g' % v0)
-
-    cip2=data2+'-cip'
-    Flow(cip2,mig2,mig2cip)
-
-    if padx:
-        pad2=data2+'-pad'
-        Flow(pad2,cip2,'pad n3=%d' % padx)
-    else:
-        pad2=cip2
-
-    ckx2=data2+'-ckx'
-    vlf2=data2+'-vlf'
-    Flow(ckx2,pad2,'cosft sign3=1')
-    Flow(vlf2,ckx2,
-         '''
-         fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d |
-         cosft sign3=-1 | window n3=%d
-         ''' % (nv,dv,v0,padt,padt2,nx))
+##     ckx2=data2+'-ckx'
+##     vlf2=data2+'-vlf'
+##     Flow(ckx2,pad2,'cosft sign3=1')
+##     Flow(vlf2,ckx2,
+##          '''
+##          fourvc nv=%d dv=%g v0=%g pad=%d pad2=%d |
+##          cosft sign3=-1 | window n3=%d
+##          ''' % (nv,dv,v0,padt,padt2,nx))
 
     
-    vlf22=data2+'-vlf2'
-    Flow(vlf22,pad2,
-         '''
-         transp plane=23 memsize=500 |
-         fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
-         window n2=%d | transp plane=23 memsize=500
-         ''' % (nv,dv,v0,padt,padt2,nx))
+##     vlf22=data2+'-vlf2'
+##     Flow(vlf22,pad2,
+##          '''
+##          transp plane=23 memsize=500 |
+##          fourvc2 nv=%d dv=%g v0=%g pad=%d pad2=%d |
+##          window n2=%d | transp plane=23 memsize=500
+##          ''' % (nv,dv,v0,padt,padt2,nx))
 
     
-    foc=data2+'-foc'
-    Flow(foc,[vlf2,vlf22],
-         '''
-         focus rect1=%d rect3=%d |
-         math vlf=${SOURCES[1]} output=vlf/input
-         ''' % (2*rect1,2*rect2))
+##     foc=data2+'-foc'
+##     Flow(foc,[vlf2,vlf22],
+##          '''
+##          focus rect1=%d rect3=%d |
+##          math vlf=${SOURCES[1]} output=vlf/input
+##          ''' % (2*rect1,2*rect2))

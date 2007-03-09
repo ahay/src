@@ -1,0 +1,11 @@
+from rsftex import *
+
+os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
+
+Paper('seg2005',lclass='segabs')
+
+Paper('summary',include=r'\thispagestyle{empty}',options='manuscript')
+
+End(options='twocolumn,twoside')
+
+

@@ -22,10 +22,10 @@
 #define NOP 4 /* derivative operator half-size */
 
 /* Muir's derivative operator */
-#define C1 +0.598144 // 1225/ 1024      /2
-#define C2 -0.039876 //-1225/(1024*  15)/2
-#define C3 +0.004785 // 1225/(1024* 125)/2
-#define C4 -0.000348 //-1225/(1024*1715)/2
+#define C1 +0.598144 /*  1225/ 1024      /2 */
+#define C2 -0.039876 /* -1225/(1024*  15)/2 */
+#define C3 +0.004785 /*  1225/(1024* 125)/2 */
+#define C4 -0.000348 /* -1225/(1024*1715)/2 */
 
 /*  forward FD derivative stencils */
 #define F1(a,i2,i1,s) (C4*(a[i2  ][i1+4] - a[i2  ][i1-3]) +	\
