@@ -1,0 +1,53 @@
+\section{Time-shift imaging in Kirchhoff migration}
+The imaging condition described in the preceding section
+has an equivalent formulation in Kirchhoff imaging.
+Traditional construction of common-image gathers using
+Kirchhoff migration is represented by the expression
+\beq \label{eqn:KirOld}
+\RR \lp \mm,\ho \rp =
+\sum_{\mo} 
+\Uo \left[\mo,\ho, 
+        t_s \lp \mm,\mo-\ho \rp +
+        t_r \lp \mm,\mo+\ho \rp
+    \right]
+\;,
+\eeq
+where $\Uo\lp\mo,\ho,t\rp$ is the recorded wavefield at 
+the surface as a function of surface 
+midpoint $\mo$ and offset $\ho$ (Figure~\ref{fig:kir}).
+$t_s$ and $t_r$ stand for traveltimes from sources and 
+receivers at coordinates $\mo-\ho$ and $\mo+\ho$ to points 
+in the subsurface at coordinates $\mm$.
+For simplicity, the amplitude and phase correction term 
+$A \lp \mm,\mo,\ho \rp \frac{\partial}{\partial t}$
+is omitted in \req{KirOld}.
+% ------------------------------------------------------------
+\inputdir{XFig}
+\plot{kir}{width=3.0in}{
+Notations for Kirchhoff imaging.
+S is a source and R is a receiver.}
+% ------------------------------------------------------------
+The time-shift imaging condition can be implemented 
+in Kirchhoff imaging using a modification
+of \req{KirOld} that is equivalent to 
+\reqs{imgT} and \ren{imgTw}:
+\beq \label{eqn:KirNew}
+\RR \lp \mm,\tt \rp=\sum_{\mo} \sum_{\ho}
+\Uo \left[                \mo,\ho, 
+              t_s \lp \mm,\mo-\ho \rp +
+              t_r \lp \mm,\mo+\ho \rp + 2 \tt
+    \right] \;.
+\eeq
+
+Images obtained by Kirchhoff migration as discussed in 
+\req{KirNew} differ from image constructed with \req{KirOld}.
+Relation~\ren{KirNew} involves a double summation over
+surface midpoint $\mo$ and offset $\ho$ to produce an image 
+at location $\mm$. Therefore, the entire input data contributes
+potentially to every image location.
+This is advantageous because migrating using
+relation~\ren{KirOld} different offsets $\ho$ independently
+may lead to imaging artifacts as discussed by 
+\cite{GEO69-02-05620575}.
+After Kirchhoff migration using relation~\ren{KirNew},
+images can be converted to the angle domain using \req{angT}.
