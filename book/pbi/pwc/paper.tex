@@ -1,6 +1,5 @@
-\title{\old{Model preconditioning by plane-wave construction in
-geophysical estimation problems} \new{Regularizing seismic inverse
-problems by model re-parameterization using plane-wave construction}}
+\title{Regularizing seismic inverse
+problems by model re-parameterization using plane-wave construction}
 
 \renewcommand{\thefootnote}{\fnsymbol{footnote}}
 
@@ -207,19 +206,13 @@ In this section, we describe three practical applications of
 plane-wave construction in solving inverse problems with
   model \old{preconditioning} \new{re-parameterization}.
 
+\subsection{Coherency enhancement}
+
 \plot{bei-slp}{width=0.9\columnwidth}{Left: seismic image after prestack time
   migration. Right: local dips estimated with plane-wave destruction.}
 \plot{bei-vg}{width=0.9\columnwidth}{Left: seismic image after coherency
   enhancing. Right: difference between the coherency-enhanced image and the
   original image.}
-\plot*{bei-pdxw}{width=0.88\textwidth}{Seismic image from
-Figure~\ref{fig:bei-vg} overlaid on top of the interval velocity model
-estimated by PWC-parameterized Dix inversion.}
-\plot{bei-pdx}{width=0.9\columnwidth}{Left: migration velocity used for
-  prestack time migration. Right: migration velocity predicted by regularized
-  Dix inversion.}
-
-\subsection{Coherency enhancement}
 
 The simplest kind of regularized inversion involves $\mathbf{L}$ as
 the identity operator $\mathbf{I}_N$. The corresponding application of
@@ -252,6 +245,14 @@ similar effect was described by \cite{TLE21-03-02380243}, who called
 it ``Van Gogh'' filtering.
 
 \subsection{Velocity estimation}
+
+\plot*{bei-pdxw}{width=0.88\textwidth}{Seismic image from
+Figure~\ref{fig:bei-vg} overlaid on top of the interval velocity model
+estimated by PWC-parameterized Dix inversion.}
+\plot{bei-pdx}{width=0.9\columnwidth}{Left: migration velocity used for
+  prestack time migration. Right: migration velocity predicted by regularized
+  Dix inversion.}
+
 
 %Plane-wave construction can be used as a model preconditioning
 %operator \cite[]{GEO59-05-08180829,GEO68-02-05770588} for regularizing
