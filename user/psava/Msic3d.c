@@ -71,8 +71,7 @@ int main(int argc, char* argv[])
 
     int ompchunk; 
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
 
@@ -138,8 +137,7 @@ int main(int argc, char* argv[])
     nx = sf_n(ax);
     nt = sf_n(at);
     
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* allocate arrays */
     us=sf_floatalloc3(nt,nx,nz);  /*   source wavefield */
     ur=sf_floatalloc3(nt,nx,nz);  /* receiver wavefield */
@@ -148,21 +146,21 @@ int main(int argc, char* argv[])
     ts=sf_floatalloc3(nt,nx,nz);
     tr=sf_floatalloc3(nt,nx,nz);
     
-    gg=sf_floatalloc (  2*nl+1);
+    gg=sf_floatalloc(2*nl+1);
 
-    kt=sf_intalloc3  (  2*nl+1,na,nb);
-    kx=sf_intalloc3  (  2*nl+1,na,nb);
-    kz=sf_intalloc3  (  2*nl+1,na,nb);
+    kt=sf_intalloc3(2*nl+1,na,nb);
+    kx=sf_intalloc3(2*nl+1,na,nb);
+    kz=sf_intalloc3(2*nl+1,na,nb);
 
-    ht=sf_intalloc3  (  2*nl+1,na,nb);
-    hx=sf_intalloc3  (  2*nl+1,na,nb);
-    hz=sf_intalloc3  (  2*nl+1,na,nb);
+    ht=sf_intalloc3(2*nl+1,na,nb);
+    hx=sf_intalloc3(2*nl+1,na,nb);
+    hz=sf_intalloc3(2*nl+1,na,nb);
 
-    gt=sf_intalloc3  (  2*nl+1,na,nb);
-    gx=sf_intalloc3  (  2*nl+1,na,nb);
-    gz=sf_intalloc3  (  2*nl+1,na,nb);
+    gt=sf_intalloc3(2*nl+1,na,nb);
+    gx=sf_intalloc3(2*nl+1,na,nb);
+    gz=sf_intalloc3(2*nl+1,na,nb);
     
-/*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
     /* taper */
     for(il=0;il<2*nl+1;il++) {
 	l = ol + (il-nl)*dl;
@@ -171,7 +169,7 @@ int main(int argc, char* argv[])
 	gg[il] = exp(-l*l);
     }
 
-/*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
     /* nearest neighbor interpolation */
     for(ib=0;ib<nb;ib++) {
 	b  = ob + ib * db;
@@ -203,8 +201,7 @@ int main(int argc, char* argv[])
 	}
     }
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     for( iz=0;iz<nz;iz++) {
 	for(    ix=0; ix<nx; ix++) {     /* init image */
 	    ii[iz][ix] = 0;
