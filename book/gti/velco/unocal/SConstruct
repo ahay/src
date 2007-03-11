@@ -97,14 +97,21 @@ Result('top','agc',
 Result('bot','agc',
        'window min1=4 | grey title=Bottom  label1=Time unit1=s label2=CMP ')
 
-Flow('cmp0','bin','window n3=1 f3=100')
-Flow('off0','off','window n3=1 f3=100')
+Flow('cmp0','bin','window n3=1 f3=1170')
+Flow('off0','off','window n3=1 f3=1170')
 
 Result('cmp','cmp0 off0',
        '''
        wiggle transp=y yreverse=y poly=y xpos=${SOURCES[1]}
-       title="CMP" label2="Offset" label1="Time (s)" zplot=0.5
+       title="CMP" label2=Offset label1=Time unit1=s zplot=0.5
        wherexlabel=t wheretitle=b
+       ''')
+
+Result('cmp0','cmp0 off0',
+       '''
+       agc rect1=250 | 
+       window min1=2 | transp | bin1 head=${SOURCES[1]} nx=40 | transp |
+       grey title="CMP Gather" label2=Offset unit2=km label1=Time unit1=s 
        ''')
 
 Flow('scan','scn','window n3=1 f3=1170')
@@ -113,6 +120,18 @@ Plot('scan',
      grey color=j allpos=y title="Semblance Scan"
      label1=Time unit1=s label2=Velocity unit2=km/s
      ''')
+
+Flow('scan0','cmp0 off0',
+     '''
+     vscan offset=${SOURCES[1]} semblance=y half=n
+     v0=1.4 dv=0.005 nv=141
+     ''')
+Result('scan0',
+       '''
+       window min1=2 |
+       grey color=j allpos=y title="Semblance Scan"
+       label1=Time unit1=s label2=Velocity unit2=km/s
+       ''')
 
 Flow('pick','scan',
      '''
