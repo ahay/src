@@ -40,9 +40,7 @@ def param(par):
     if(par['height']>10): par['height']=10
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
-
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=5 labelfat=3 '
-
 
 # ------------------------------------------------------------
 # plotting functions
