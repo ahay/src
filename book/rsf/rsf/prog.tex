@@ -1097,6 +1097,36 @@ The transformation is shown schematically in Figure~\ref{fig:rotate}.
 
 \plot{rotate}{width=\textwidth}{Schematic transformation of data with \texttt{sfrotate}.}
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfrotate}
+  }}
+
+The input can be any type=float dataset:
+\begin{verbatim}
+bash$ sfspike n1=10 n2=20 n3=30 >real.rsf
+bash$ sfin real.rsf
+real.rsf:
+    in="/var/tmp/real.rsf@"
+    esize=4 type=float form=native 
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=20          d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=30          d3=0.1         o3=0          label3="Distance" unit3="km" 
+        6000 elements 24000 bytes
+\end{verbatim}
+The output dataset will have type=complex, and its binary will be
+twice the size of the input:
+\begin{verbatim}
+bash$ <real.rsf sfrtoc >complex.rsf
+bash$ sfin complex.rsf 
+complex.rsf:
+    in="/var/tmp/complex.rsf@"
+    esize=8 type=complex form=native 
+    n1=10          d1=0.004       o1=0          label1="Time" unit1="s" 
+    n2=20          d2=0.1         o2=0          label2="Distance" unit2="km" 
+    n3=30          d3=0.1         o3=0          label3="Distance" unit3="km" 
+        6000 elements 48000 bytes
+\end{verbatim}
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 
