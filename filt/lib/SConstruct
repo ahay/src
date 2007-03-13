@@ -186,7 +186,7 @@ if 'python' in api:
         objs.append(obj)
 
 
-    wrap = env.CFile('rsf_wrap.c', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
+    wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
     print wrap
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
