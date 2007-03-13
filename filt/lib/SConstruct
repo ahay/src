@@ -1,4 +1,4 @@
-import os, sys, string
+import os, sys, string, re
 sys.path.append('../..')
 import configure
 
@@ -175,9 +175,9 @@ if 'python' in api:
 
     for path in sys.path:
         if string.find(path,'python') >= 0:
-            dir = string.replace(path,'lib','include')
-            if os.path.isdir(dir):
-                pythinc.append(dir)
+            pydir = re.sub('lib(?:64)?','include',path)
+            if os.path.isdir(pydir):
+                pythinc.append(pydir)
 
     objs = []
     for source in Split(src2):
@@ -187,7 +187,6 @@ if 'python' in api:
 
 
     wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
-    print wrap
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
                                SWIGFLAGS='-python',
