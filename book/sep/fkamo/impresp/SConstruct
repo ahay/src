@@ -1,0 +1,30 @@
+from rsfproj import *
+
+Flow('micspike',None,
+     '''
+     spike
+     n1=128 o1=0.4    d1=0.0032 k1=65
+     n2=256 o2=-1.536 d2=0.012  k2=129
+     n3=128 o3=-1.024 d3=0.016  k3=65
+     ''')
+Flow('fft3','micspike',
+     '''
+     stretch rule=L dens=4 |
+     fft1 | fft3 axis=2 | fft3 axis=3
+     ''')
+Flow('micoper','fft3','fkamo h2=2 f2=10 h1=1.8 f1=30')
+Flow('micamo','fft3 micoper',
+     '''
+     add mode=prod ${SOURCES[1]} |
+     fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y |
+     stretch rule=L dens=4 inv=y
+     ''')
+
+Flow('micbyte','micamo','byte pclip=100 gainpanel=a')
+
+Result('impresp1','micbyte',
+       'grey3 frame1=65 frame2=129 frame3=65 point1=0.333 wanttitle=n')
+Result('impresp2','micbyte',
+       'grey3 frame1=65 frame2=97 frame3=97 point1=0.333 wanttitle=n')
+
+End()
