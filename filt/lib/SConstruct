@@ -157,6 +157,8 @@ if root:
 if 'python' in api:
     # Python includes for SWIG
 
+    EnsureSConsVersion(0,96,95)
+
     pythinc = []
     try:
         import numpy
@@ -183,7 +185,7 @@ if 'python' in api:
         env.Depends(obj,source+'.h')
         objs.append(obj)
 
-    python = env.SharedLibrary('rsf',['rsf.i']+sources+objs,
+    python = env.SharedLibrary('rsf',['rsf_wrap.c']+sources+objs,
                                SWIGFLAGS='-python',
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
