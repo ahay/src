@@ -1,0 +1,48 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+for case in ('pp0','water'):
+    Fetch(case+'.rsf','statoil',private)
+    Flow('s'+case,case,'dd form=native')
+
+Flow('water2','swater','scale dscale=2 | despike | smooth rect1=100')
+Flow('p0','spp0 water2','pad end1=2000 | datstretch datum=${SOURCES[1]} inv=y')
+Flow('p1','p0','window min1=1.8 max1=3.5 | agc rect1=250')
+
+Result('p1','grey title=PP')
+
+Flow('dip','p1','dip rect1=50 rect2=50')
+
+Result('dip','grey title=Slope color=j scalebar=y')
+
+Flow('pwd','p1 dip','pwd dip=${SOURCES[1]}')
+
+Result('pwd','grey title=Diffractions')
+
+pkx = '''
+pad n2=2000 |
+cosft sign2=1 verb=y |
+spray axis=2 n=1 o=0 d=12.5 |
+put o4=0
+'''
+
+Flow('pkx','pwd',pkx)
+
+velcon = '''
+fourvc pad=2024 pad2=4096 nv=200 dv=20 v0=0.00001
+'''
+
+transp = '''
+transp plane=23 | cosft sign2=-1 | window n2=1200 | transp plane=23
+'''
+
+Flow('plf','pkx',velcon)
+Flow('tra','plf',transp)
+
+Flow('poc','tra',
+     'window j3=50 | focus rect1=50 | math output=1/input')
+
+End()

@@ -1098,10 +1098,10 @@ The transformation is shown schematically in Figure~\ref{fig:rotate}.
 \plot{rotate}{width=\textwidth}{Schematic transformation of data with \texttt{sfrotate}.}
 
 \noindent\doublebox{\parbox{\textwidth}{
-    \input{sfrotate}
+    \input{sfrtoc}
   }}
 
-The input can be any type=float dataset:
+The input to \texttt{sfrtoc} can be any \texttt{type=float} dataset:
 \begin{verbatim}
 bash$ sfspike n1=10 n2=20 n3=30 >real.rsf
 bash$ sfin real.rsf
@@ -1113,7 +1113,7 @@ real.rsf:
     n3=30          d3=0.1         o3=0          label3="Distance" unit3="km" 
         6000 elements 24000 bytes
 \end{verbatim}
-The output dataset will have type=complex, and its binary will be
+The output dataset will have \texttt{type=complex}, and its binary will be
 twice the size of the input:
 \begin{verbatim}
 bash$ <real.rsf sfrtoc >complex.rsf
@@ -1126,6 +1126,47 @@ complex.rsf:
     n3=30          d3=0.1         o3=0          label3="Distance" unit3="km" 
         6000 elements 48000 bytes
 \end{verbatim}
+
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{sfscale}
+  }}
+
+\texttt{sfscale} scales the input dataset by a factor. Here
+are some simple examples. First, let us create a test dataset.
+\begin{verbatim}
+bash$ sfmath n1=5 n2=3 o1=1 o2=1 output="x1*x2" > test.rsf
+bash$ < test.rsf sfdisfil   
+   0:             1            2            3            4            5
+   5:             2            4            6            8           10
+  10:             3            6            9           12           15
+\end{verbatim}
+Scale every data point by 2:
+\begin{verbatim}
+bash$ < test.rsf sfscale dscale=2 | sfdisfil
+   0:             2            4            6            8           10
+   5:             4            8           12           16           20
+  10:             6           12           18           24           30
+\end{verbatim}
+Divide every trace by its maximum value:
+\begin{verbatim}
+bash$ < test.rsf sfscale axis=1 | sfdisfil
+   0:           0.2          0.4          0.6          0.8            1
+   5:           0.2          0.4          0.6          0.8            1
+  10:           0.2          0.4          0.6          0.8            1
+\end{verbatim}
+Divide by the maximum value in the whole 2-D dataset:
+\begin{verbatim}
+bash$ < test.rsf sfscale axis=2 | sfdisfil
+   0:       0.06667       0.1333          0.2       0.2667       0.3333
+   5:        0.1333       0.2667          0.4       0.5333       0.6667
+  10:           0.2          0.4          0.6          0.8            1
+\end{verbatim}
+The \texttt{rscale=} parameter is synonymous to \texttt{dscale=} except
+when it is equal to zero. With \texttt{sfscale dscale=0}, the dataset gets
+multiplied by zero. If using \texttt{rscale=0}, the other parameters are
+used to define scaling.  Thus, \texttt{sfscale rscale=0 axis=1} is
+equivalent to \texttt{sfscale axis=1}, and \texttt{sfscale rscale=0}
+is equivalent to \texttt{sfscale dscale=1}.
 
 \bibliographystyle{seg}
 \bibliography{SEG}

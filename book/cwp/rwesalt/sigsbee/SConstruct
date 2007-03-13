@@ -171,7 +171,7 @@ fdmod.amodel('do','wo','wav','velo','dens','ss','oo','free=n',par)
 Result('wo',
        'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
        + rwezo.cgrey('pclip=99 gainpanel=a',par))
-Result('do','window j2=4 | transp memsize=1000 |' + rwezo.dgrey('',par))
+Result('do','window j2=4 | transp |' + rwezo.dgrey('',par))
 
 for j in range(20,300,20):
     par['j'] = j
@@ -185,7 +185,7 @@ for j in range(20,300,20):
     Result('wo'+str(j/20),['wo'+str(j/20),'cos1','ss'],'Overlay')
 
 Flow(  'dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
-Result('dd','transp memsize=1000 |' + rwezo.dgrey('',par))
+Result('dd','transp |' + rwezo.dgrey('',par))
 
 # ------------------------------------------------------------
 
@@ -232,7 +232,7 @@ Flow('cos2','hwt2','window j2=4')
 
 # ------------------------------------------------------------
 # time data CC: (t,x)
-Flow  ('datCC','dd','transp memsize=1000')
+Flow  ('datCC','dd','transp')
 Result('datCC','grey pclip=99 wanttitle=n label1=t unit1=s label2=x unit2=km')
 
 # ------------------------------------------------------------

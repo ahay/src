@@ -1,6 +1,6 @@
 /* Scale data.
 
-To scale by a constant factor, you can also use sfmath or sfheadermath.
+To scale by a constant factor, you can also use sfmath.
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
