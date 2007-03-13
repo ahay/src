@@ -88,9 +88,9 @@ def cgraph(custom,par):
 
 def ccont(custom,par):
     return '''
-    contour labelrot=n wantaxis=n title="" yreverse=y
-    min2=%g max2=%g label2=%s unit2=%s
+    contour labelrot=n wantaxis=n title=""
     min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (
@@ -198,6 +198,24 @@ def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
+def ssplot(custom,par):
+    return '''
+    window n1=2 |
+    dd type=complex |
+    ''' + cgraph('symbol=o plotcol=2 plotfat=10 %s' % custom,par)
+
+def rrplot(custom,par):
+    return '''
+    window n1=2 |
+    dd type=complex |
+    ''' + cgraph('symbol=. plotcol=1 plotfat=10 %s' % custom,par)
+
+def qqplot(custom,par):
+    return '''
+    window n1=2 |
+    dd type=complex |
+    ''' + cgraph('symbol=. plotcol=5 plotfat=3 %s' % custom,par)
+
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
 def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):
@@ -275,6 +293,7 @@ def isotropic(cc,vp,vs,ro,par):
     Flow(cc,[cc+'11',cc+'13',cc+'33',cc+'44'],
          'cat axis=3 space=n ${SOURCES[1:4]}')
 
+# ------------------------------------------------------------
 # anisotropic stiffness tensor
 def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
     Flow(cc+'33',[vp,ro],
@@ -324,6 +343,7 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
+# ------------------------------------------------------------
 # elastic modeling
 def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
@@ -341,6 +361,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
+# ------------------------------------------------------------
 # heat modeling
 def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
     par['fdcustom'] = custom
@@ -355,7 +376,8 @@ def hdefd(dat,wfl,  wav,con,sou,rec,custom,par):
           wfl=${TARGETS[1]}
           %(fdcustom)s
           ''' % par)
-    
+
+# ------------------------------------------------------------    
 # F-D modeling from arbitrary source/receiver geometry
 def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
@@ -375,6 +397,7 @@ def awe(odat,wfld,idat,velo,dens,sou,rec,custom,par):
           %(fdcustom)s
           ''' % par)
 
+# ------------------------------------------------------------
 # shot-record reverse-time migration
 def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 
@@ -401,6 +424,7 @@ def rtm(imag,sdat,rdat,velo,dens,sacq,racq,iacq,custom,par):
 #    Flow(corr,[sout,rout],'paradd mode=p ${SOURCES[1]} memsize=%d' %mem)
 #    Flow(imag,corr,'stack axis=2')
 
+# ------------------------------------------------------------
 # exploding-reflector reverse-time migration
 def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 
@@ -416,6 +440,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
 
     Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']-1) )
 
+# ------------------------------------------------------------
 # wavefield-over-model plots
 def wom(wom,wfld,velo,vmean,par):
 
@@ -444,6 +469,8 @@ def wom(wom,wfld,velo,vmean,par):
                 par['dt']*par['jsnap'],
                 par['wweight']))
 
+# ------------------------------------------------------------
+# wavefield snapshot plots
 def wframe(frame,movie,index,custom,par):
 
     Flow([movie+'_plt',movie+'_bar'],movie,
@@ -453,7 +480,4 @@ def wframe(frame,movie,index,custom,par):
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     Plot  (frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
-    
-
-
     
