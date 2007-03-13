@@ -185,14 +185,17 @@ if 'python' in api:
         env.Depends(obj,source+'.h')
         objs.append(obj)
 
-    python = env.SharedLibrary('rsf',['rsf_wrap.c']+sources+objs,
-                               SWIGFLAGS='-python',
+
+    wrap = env.CFile('rsf_wrap.c', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
+    print wrap
+    python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
+                               SWIGFLAGS='-python',
                                SHLIBPREFIX='_c_')
 
     if root:
         env.Install(libdir,python)
-        env.Install(libdir,'c_rsf.py')
+        env.Install(libdir,wrap[1])
         env.Install(libdir,'rsf.py')
 
 ##############################################################################
