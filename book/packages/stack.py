@@ -187,9 +187,11 @@ def diffimg(name,
     pad n2=%d beg1=%d | cosft sign2=1 | 
     stolt vel=%g nf=4 | spray axis=2 n=1 o=0 d=1 |
     fourvc nv=%d dv=%g v0=%g |
-    cosft sign3=-1 | 
-    window n3=%d f1=%d |
-    put o3=%g
+    transp plane=23 |
+    cosft sign2=-1 | 
+    window n2=%d f1=%d |
+    put o2=%g |
+    transp plane=23
     ''' % (padx,beg1,v0,nv,dv,v0,nx,beg1,x0)
 
     vlf=name+'-vlf'
