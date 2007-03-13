@@ -30,6 +30,7 @@ stack.diffimg('st',
               srect2=5,
               frect1=40,
               frect2=10,
+              j3=5,
               units='m',
               beg1=1800)
 
