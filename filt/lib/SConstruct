@@ -157,7 +157,11 @@ if root:
 if 'python' in api:
     # Python includes for SWIG
 
-    EnsureSConsVersion(0,96,95)
+    try:
+        EnsureSConsVersion(0,96,95)
+    except:
+        print "\n\n\tPlease upgrade SCons to version >= 0.96.95\n\n"
+        sys.exit(1)
 
     pythinc = []
     try:
