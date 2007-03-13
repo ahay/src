@@ -384,9 +384,8 @@ def html(dir):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     file = open (os.path.join(dir,'index.html'),'w')
-    name = '<big><big><strong>RSF Programs</strong></big></big>'
+    name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
-    content = content + 'Add a search feature later.'
     dirs = {}
     for prog in progs.keys():
         dir = os.path.dirname(progs[prog].file)
@@ -400,7 +399,7 @@ def html(dir):
         names.sort()
         content = content + bigsection(dir,'#ffffff', '#ee77aa',
                                        multicolumn(names,link))
-    file.write(page('RSF Programs',content))
+    file.write(page('all programs',content))
     file.close()
 
 # regular expressions
