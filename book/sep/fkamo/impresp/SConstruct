@@ -3,6 +3,8 @@ from rsfproj import *
 fft3 = 'fft1 | fft3 axis=2 | fft3 axis=3'
 ifft3 = 'fft3 axis=3 inv=y | fft3 axis=2 inv=y | fft1 inv=y'
 
+# o1 below is t_c (min. cutoff time) on pag. 1 in paper
+
 Flow('spike',None,
      '''
      spike
