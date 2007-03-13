@@ -1,6 +1,6 @@
 /* Local slant stacks I.C. */
 /*
-  Copyright (C) 2006 Colorado School of Mines
+  Copyright (C) 2007 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -139,26 +139,26 @@ int main(int argc, char* argv[])
     
     /*------------------------------------------------------------*/
     /* allocate arrays */
-    us=sf_floatalloc3(nt,nx,nz);  /*   source wavefield */
-    ur=sf_floatalloc3(nt,nx,nz);  /* receiver wavefield */
-    ii=sf_floatalloc2(   nx,nz);  /* image */
+    us=sf_floatalloc3(nt,nx,nz);  //   source wavefield
+    ur=sf_floatalloc3(nt,nx,nz);  // receiver wavefield
+    ii=sf_floatalloc2(   nx,nz);  // image
 
     ts=sf_floatalloc3(nt,nx,nz);
     tr=sf_floatalloc3(nt,nx,nz);
     
-    gg=sf_floatalloc(2*nl+1);
+    gg=sf_floatalloc (  2*nl+1);
 
-    kt=sf_intalloc3(2*nl+1,na,nb);
-    kx=sf_intalloc3(2*nl+1,na,nb);
-    kz=sf_intalloc3(2*nl+1,na,nb);
+    kt=sf_intalloc3  (  2*nl+1,na,nb);
+    kx=sf_intalloc3  (  2*nl+1,na,nb);
+    kz=sf_intalloc3  (  2*nl+1,na,nb);
 
-    ht=sf_intalloc3(2*nl+1,na,nb);
-    hx=sf_intalloc3(2*nl+1,na,nb);
-    hz=sf_intalloc3(2*nl+1,na,nb);
+    ht=sf_intalloc3  (  2*nl+1,na,nb);
+    hx=sf_intalloc3  (  2*nl+1,na,nb);
+    hz=sf_intalloc3  (  2*nl+1,na,nb);
 
-    gt=sf_intalloc3(2*nl+1,na,nb);
-    gx=sf_intalloc3(2*nl+1,na,nb);
-    gz=sf_intalloc3(2*nl+1,na,nb);
+    gt=sf_intalloc3  (  2*nl+1,na,nb);
+    gx=sf_intalloc3  (  2*nl+1,na,nb);
+    gz=sf_intalloc3  (  2*nl+1,na,nb);
     
     /*------------------------------------------------------------*/
     /* taper */
@@ -175,6 +175,7 @@ int main(int argc, char* argv[])
 	b  = ob + ib * db;
 	b *= SF_PI/180.;
 	
+
 	for(ia=0;ia<na;ia++) {
 	    a  = oa + ia * da;
 	    a *= SF_PI/180.;
@@ -182,9 +183,13 @@ int main(int argc, char* argv[])
 	    for(il=0;il<2*nl+1;il++){
 		l = ol + (il-nl)*dl;   
 		
-		lt = l*cos(b)*sin(a);
-		lx = l*cos(b)*cos(a);	    
-		lz = l*sin(b);
+/*		lt = l*cos(b)*sin(a);*/
+/*		lx = l*cos(b)*cos(a);*/
+/*		lz = l*sin(b);*/
+
+		lz = l*cos(a) * sin(b);
+		lx = l*cos(a) * cos(b);
+		lt = l*sin(a);
 
 		kt[ib][ia][il] = (floor)(lt);	    
 		kx[ib][ia][il] = (floor)(lx);
@@ -202,17 +207,17 @@ int main(int argc, char* argv[])
     }
 
     /*------------------------------------------------------------*/
-    for( iz=0;iz<nz;iz++) {
-	for(    ix=0; ix<nx; ix++) {     /* init image */
+    for(    iz=0; iz<nz; iz++) {
+	for(ix=0; ix<nx; ix++) {         /* init image */
 	    ii[iz][ix] = 0;
 	}
     }	
     sf_floatread(us[0][0],nt*nx*nz,Fs);  /* read   source wavefield */
     sf_floatread(ur[0][0],nt*nx*nz,Fr);  /* read receiver wavefield */
-    
+
+    /*------------------------------------------------------------*/    
     if(verb) fprintf(stderr,"  b   a\n");
     if(verb) fprintf(stderr,"%3d %3d\n",nb-1,na-1);    
-
     for(ib=0;ib<nb;ib++) {    
 	for(ia=0;ia<na;ia++) {
 	    if(verb) fprintf(stderr,"%3d %3d",ib,ia);
@@ -225,9 +230,9 @@ int main(int argc, char* argv[])
 		    for(it=0; it<nt; it++) {	
 			ts[iz][ix][it] = 0;
 			tr[iz][ix][it] = 0;
-		    }
-		}
-	    }
+		    }     // t
+		}         // x
+	    }             // z
 
 	    pkt = kt[ib][ia];
 	    pkx = kx[ib][ia];
@@ -264,10 +269,11 @@ int main(int argc, char* argv[])
 			for(it=lht; it<lgt; it++) { jt = it+lkt;
 			    ts[ iz ][ ix ][ it ] += lgg * us[ jz ][ jx ][ jt ];
 			    tr[ iz ][ ix ][ it ] += lgg * ur[ jz ][ jx ][ jt ];
-			} /* t loop */
-		    }     /* x loop */		
-		}         /* z loop */
-	    }	          /* l loop */
+			} // ht loop
+		    }     // hx loop		
+		}         // hz loop
+
+	    }	          //  l loop
 	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix,it) shared(nz,nx,nt,ts,tr,ii)
@@ -276,13 +282,13 @@ int main(int argc, char* argv[])
 		for(    ix=0; ix<nx; ix++) {
 		    for(it=0; it<nt; it++) {
 			ii[iz][ix] += ts[iz][ix][it] * tr[iz][ix][it];
-		    }
-		}
-	    }
+		    }     // t
+		}         // x
+	    }             // z
 	    
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
-	}                 /* a loop */
-    }                 /* b loop */
+	}                 // a loop
+    }                     // b loop
     
     if(verb) fprintf(stderr,"\n");
     
