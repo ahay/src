@@ -155,6 +155,7 @@ def i2s(dimag,dslow,bwfld,bslow,par):
          ''' % param(par))
 
 # ------------------------------------------------------------
+# simulate shot-record migration
 def wem(imag,sdat,rdat,velo,custom,par):
 
     sfrq = imag + sdat + '_f'

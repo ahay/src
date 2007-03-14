@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,iht,ihx,ihz,ts,tr,loz,hiz,jt,kt,jx,kx,jz,kz) shared(ur,nz,nhz,lot,hit,lox,hix)
 #endif		
 	    for(iz=nhz; iz<nz-nhz; iz++) { loz=-nhz; hiz=nhz+1;
-		ts = us[it][ix][iz];
+		ts = us[it][ix][iz]*us[it][ix][iz];
 		tr = 0;
 		
 		for(        iht=lot; iht<hit; iht++) { jt=it-iht; kt=it+iht;

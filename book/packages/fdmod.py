@@ -469,6 +469,26 @@ def wom(wom,wfld,velo,vmean,par):
                 par['dt']*par['jsnap'],
                 par['wweight']))
 
+def iom(iom,imag,velo,vmean,par):
+
+    if(not par.has_key('wweight')): par['wweight']=10
+    if(not par.has_key('wclip')):   par['wclip']=1.0
+
+    chop = imag+'_chop'
+    Flow(chop,imag,
+         '''
+         scale axis=123 |
+         clip clip=%(wclip)g
+         ''' % par)
+
+    Flow(iom,[velo,chop],
+         '''
+         add add=-%g |
+         scale axis=123 |
+         math w=${SOURCES[1]} output="input+w"
+         ''' % vmean)
+
+
 # ------------------------------------------------------------
 # wavefield snapshot plots
 def wframe(frame,movie,index,custom,par):
