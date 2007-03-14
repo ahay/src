@@ -20,6 +20,14 @@ import re, sys, os, string, glob, string
 progs = {}
 data = {}
 
+# documented programs
+docprogs = string.split('''
+add attr cat cmplx conjgrad cp cut dd disfil dottest get headerattr
+headercut headermath headersort headerwindow in interleave mask math
+pad put real reverse rm rotate rtoc scale segyread segywrite spike
+spray stack transp window
+''')
+
 def subdirs():
     return filter(lambda x: x[-5:] != '_html',
                   filter(os.path.isdir,glob.glob('[a-z]*')))
@@ -181,7 +189,7 @@ class rsfpar:
         return self.type + " " + \
                "<strong>" + name + self.default + \
                "</strong>" + self.range
-    def wiki(self,name):
+    def mwiki(self,name):
         desc = string.replace(self.desc,'\n','<br>')
         desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
         desc = re.sub(r'(?:\s*<br>)+$','',desc)
@@ -212,6 +220,7 @@ class rsfprog:
         self.cmts = None
         self.also = None
         self.vers = None
+        self.wiki = None
         self.uses = {}
         self.pars = {}
     def check(self,par):
@@ -229,7 +238,9 @@ class rsfprog:
             if mypar:
                 return mypar.check(key,val) 
         sys.stderr.write('No parameter "%s" in %s\n' % (key,self.name))
-        return 1       
+        return 1
+    def weblink(self,wiki):
+        self.wiki = wiki
     def version(self,vers):
         self.vers = vers
     def synopsis (self,snps,cmts):
@@ -272,10 +283,12 @@ class rsfprog:
                         usedoc = usedoc + '%s/%s/%s\n' % (book,chapter,project)
             doc = doc + section('used in',string.rstrip(usedoc))
         doc = doc + section('source',self.file)
+        if self.wiki:
+            doc = doc + section('documentation',underline(self.wiki))
         if self.vers:
             doc = doc + section('version',self.vers)
         pydoc.pager(doc)
-    def wiki(self,dir):
+    def mwiki(self,dir):
         file = open (os.path.join(dir,self.name + '.wiki'),'w')
         contents = '==%s==\n{| class="wikitable" align="center"\n' % \
                    self.name
@@ -291,7 +304,7 @@ class rsfprog:
         if pars:
             pars.sort()
             for par in pars:
-                contents = contents + self.pars[par].wiki(par)
+                contents = contents + self.pars[par].mwiki(par)
         contents = contents+'|}\n'
         file.write(contents)
         file.close()
@@ -321,10 +334,14 @@ class rsfprog:
         name = '<big><big><strong>%s</strong></big></big>' % self.name
         if self.vers:
             name = name + " (%s)" % self.vers
+        if self.wiki:
+            wiki = '<br><a href="%s">Documentation</a>' % self.wiki
+        else:
+            wiki = ''
         contents = heading(name,'#ffffff','#7799ee',
                            '<a href="./index.html">index</a><br>'+
-                           '<a href="%s/%s?view=markup">%s</a>' %
-                           (rep,self.file,self.file))
+                           '<a href="%s/%s?view=markup">%s</a>%s' %
+                           (rep,self.file,self.file,wiki))
         if self.desc:
             contents = contents + self.desc
         if self.snps:
@@ -604,6 +621,11 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     if re.match(rsfplotprefix,name):
         snps = snps + ' > plot.' + rsfplotsuffix
     snps = snps + parline
+    base = name[len(rsfprefix):]
+    if base in docprogs:
+        wiki = r'http://rsf.sourceforge.net/wiki/index.php/Programs#sf'+base
+        prog.weblink(wiki)
+        out.write("%s.weblink('%s')\n" % (name,wiki))
     vers = version[lang].search(text)
     if vers:
         prog.version(vers.group(1))
@@ -672,7 +694,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 if hdir:
                     main.html(hdir,rep)
                 elif mdir:
-                    main.wiki(mdir)
+                    main.mwiki(mdir)
                 elif ldir:
                     main.latex(ldir)
                 else:
