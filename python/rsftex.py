@@ -703,8 +703,7 @@ class TeXPaper(Environment):
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)
-                if not os.path.exists(self.doc):
-                    os.mkdir(self.doc)
+        mkdir(self.doc)
         if pdfread:
             self.Append(BUILDERS={'Read':Read,'Print':Print})
         if epstopdf:
