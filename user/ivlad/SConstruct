@@ -66,33 +66,22 @@ for prog in mains:
 ######################################################################
 
 if root: # no compilation but rename
-    # builds are done... in the build directory! Find original dir
-    user = os.path.basename(os.getcwd())
-    pwd = os.path.join(os.getcwd(),'../../../user/',user)
+
     # Python main programs
     py_mains_meta = Split(py_meta)
-    for prog in py_mains_meta:
-        env.InstallAs(os.path.join(bindir,'sf'+prog),os.path.join(pwd,'M'+prog+'.py'))
+    for prog in  Split(py_meta):
+        env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
+        
     # User modules
-    py_libs_meta  = Split(pylibs_meta)
     rsfuser = os.path.join(libdir,'rsfuser')
-    rsfuser_module_flag = os.path.join(rsfuser, '__init__.py')
-    if not os.path.isdir(rsfuser):
-        os.mkdir(rsfuser)
-    if not os.path.isfile(rsfuser_module_flag):
-        try:
-            os.mknod(rsfuser_module_flag)
-        except: # Python < 2.3
-            open(rsfuser_module_flag, "w").close()
-        os.chmod(rsfuser_module_flag, 0666)
-    for module in py_libs_meta:
-        module+='.py'
-        env.InstallAs(os.path.join(rsfuser,module),os.path.join(pwd,module))
+    for module in Split(pylibs_meta):
+        env.Install(rsfuser,module+'.py')
 
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################
 if root:
+    user = os.path.basename(os.getcwd())
     main = 'sf%s.py' % user
     docs = map(lambda prog: env.Doc(prog,'M'+prog),mains) + \
            map(lambda prog: env.Doc(prog,'M'+prog+'.py',lang='python'),

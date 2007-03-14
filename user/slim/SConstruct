@@ -77,9 +77,8 @@ if root:
         # no compilation but rename
         env.InstallAs(os.path.join(bindir,'sf'+prog),'M'+prog+'.py')
 
-    # Python modules
+    # Python modules    
     rsfuser = os.path.join(libdir,'rsfuser')
-    env.Install(rsfuser,'__init__.py')
     for module in Split(py_mods):
         env.Install(rsfuser,module+'.py')
 
