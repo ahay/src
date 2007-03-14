@@ -193,7 +193,6 @@ if 'python' in api:
     wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
-                               SWIGFLAGS='-python',
                                SHLIBPREFIX='_c_')
 
     if root:
