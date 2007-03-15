@@ -216,8 +216,13 @@ int main(int argc, char* argv[])
 	for(ix=0; ix<nx; ix++) {         /* init image */
 	    ii[iz][ix] = 0;
 	}
-    }	
-    sf_floatwrite(ii[0],nx*nz,Fi);      
+    }
+    if(stack)
+	sf_floatwrite(ii[0],nx*nz,Fi);      
+    else
+	for (ib=0; ib<nb; ib++) {
+	    sf_floatwrite(ii[0],nx*nz,Fi);      
+	}
     sf_seek(Fi,0,SEEK_SET);
 
     sf_floatread(us[0][0],nt*nx*nz,Fs);  /* read   source wavefield */
