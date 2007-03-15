@@ -1,7 +1,7 @@
 #!/bin/sh
 
 python=`which python`
-if test ! -n "$python"; then
+if [ $? -ne 0 ]; then
     python="no"
 fi
 echo "Checking for Python ... $python"
@@ -28,23 +28,27 @@ PYTHONPATH=${RSFROOT}/lib
 export PYTHONPATH
 
 scons=`which scons`
-if test ! -n "$scons"; then
+if [ $? -ne 0 ]; then
     scons="no"
+else
+    scons="scons"
 fi
 echo "Checking for SCons ... $scons"
 if test "$scons" = "no"; then
     here=`pwd`
     cd scons
-    tar xvzf scons-*.tar.gz > /dev/null
-    cd `ls -d scons-* | grep '[^mz]$'`
-    $python setup.py install --prefix=${RSFROOT} > /dev/null
+    archive=`ls scons-*.tar.gz`
+    gunzip < $archive | tar xvf - > /dev/null
+    dir=`ls -d scons-* | grep '[^mz]$'`
+    cd $dir
+    python setup.py install --prefix=${RSFROOT} > /dev/null
     cd $here
     scons="${RSFROOT}/bin/scons"
     if test ! -x "$scons"; then
 	scons="failed"
     fi
     echo "Installing SCons ... $scons"
-    if test "$scons" == "failed"; then
+    if test "$scons" = "failed"; then
 	echo "SCons installation failed."
 	echo "Please check your Python installation!"
 	exit 2
