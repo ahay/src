@@ -40,6 +40,7 @@ int main(int argc, char* argv[])
 {
     bool verb,free,snap; 
     int  jsnap;
+    int  jdata;
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
@@ -113,6 +114,7 @@ int main(int argc, char* argv[])
     n1 = sf_n(a1); d1 = sf_d(a1);
     n2 = sf_n(a2); d2 = sf_d(a2);
 
+    if(! sf_getint("jdata",&jdata)) jdata=1;
     if(snap) {  /* save wavefield every *jsnap* time steps */
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
     }
@@ -129,6 +131,9 @@ int main(int argc, char* argv[])
 
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
+
+    sf_setn(at,nt/jdata);
+    sf_setd(at,dt*jdata);
     sf_oaxa(Fdat,at,2);
 
     /* setup output wavefield header */
@@ -277,7 +282,7 @@ int main(int argc, char* argv[])
 	lint2d_extract(uo,dd,cr);
 
 	if(snap && it%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
-	sf_floatwrite(dd,nr,Fdat);
+	if(        it%jdata==0) sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 

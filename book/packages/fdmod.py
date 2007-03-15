@@ -214,7 +214,7 @@ def qqplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=. plotcol=5 plotfat=3 %s' % custom,par)
+    ''' + cgraph('symbol=. plotcol=1 plotfat=3 %s' % custom,par)
 
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling

@@ -12,7 +12,7 @@ def dipline(mod,s1,s2,e1,e2,vi,vt,n1,o1,d1,n2,o2,d2):
 
     layers = (
         ((s2,s1),(e2,e1)),
-        ((min2,max1),(max2,max1))
+        ((min2,min1),(max2,max1))
         )
 
     ra = (e1-s1)/(e2-s2)
