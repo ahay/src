@@ -25,6 +25,7 @@
 int main(int argc, char* argv[])
 {
     bool verb;
+    bool stack;
     float sig;
     
     sf_file Fs=NULL; /* input   */
@@ -77,6 +78,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",   &verb))     verb=false;  /* verbosity flag */
+    if(! sf_getbool("stack",  &stack))   stack=false;
     if(! sf_getfloat("sig",   &sig))     sig=1.0;
 
     Fs = sf_input ("in" );
@@ -126,8 +128,11 @@ int main(int argc, char* argv[])
     }    
 
     /* set output axes */
-    ak=sf_maxa(1,0,1); 
-
+    if(stack)
+	ak=sf_maxa(1,0,1); 
+    else
+	ak=sf_maxa(nb,0,1);
+    
     /* setup output header */
     sf_oaxa(Fi,ax,1);
     sf_oaxa(Fi,az,2);
@@ -293,7 +298,7 @@ int main(int argc, char* argv[])
 	}                 // a loop
 
 	sf_floatwrite(ii[0],nx*nz,Fi);      
-	sf_seek(Fi,0,SEEK_SET);
+	if(stack) sf_seek(Fi,0,SEEK_SET);
     }                     // b loop
     
     if(verb) fprintf(stderr,"\n");
