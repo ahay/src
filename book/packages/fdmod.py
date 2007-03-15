@@ -41,7 +41,8 @@ def param(par):
 
     if(not par.has_key('scalebar')): par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=' labelsz=5 labelfat=3 '
-
+    
+    par['labelattr']=' '+par['labelattr']+' '
 # ------------------------------------------------------------
 # plotting functions
 def cgrey(custom,par):

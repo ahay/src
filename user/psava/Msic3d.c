@@ -212,6 +212,9 @@ int main(int argc, char* argv[])
 	    ii[iz][ix] = 0;
 	}
     }	
+    sf_floatwrite(ii[0],nx*nz,Fi);      
+    sf_seek(Fi,0,SEEK_SET);
+
     sf_floatread(us[0][0],nt*nx*nz,Fs);  /* read   source wavefield */
     sf_floatread(ur[0][0],nt*nx*nz,Fr);  /* read receiver wavefield */
 
@@ -288,10 +291,12 @@ int main(int argc, char* argv[])
 	    
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
 	}                 // a loop
+
+	sf_floatwrite(ii[0],nx*nz,Fi);      
+	sf_seek(Fi,0,SEEK_SET);
     }                     // b loop
     
     if(verb) fprintf(stderr,"\n");
-    
-    sf_floatwrite(ii[0],nx*nz,Fi);       
+
     exit (0);
 }
