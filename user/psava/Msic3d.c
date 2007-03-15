@@ -232,6 +232,13 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"  b   a\n");
     if(verb) fprintf(stderr,"%3d %3d\n",nb-1,na-1);    
     for(ib=0;ib<nb;ib++) {    
+
+	for(    iz=0; iz<nz; iz++) {
+	    for(ix=0; ix<nx; ix++) {         /* init image */
+		ii[iz][ix] = 0;
+	    }
+	}
+
 	for(ia=0;ia<na;ia++) {
 	    if(verb) fprintf(stderr,"%3d %3d",ib,ia);
 
