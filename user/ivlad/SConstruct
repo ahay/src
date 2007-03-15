@@ -37,15 +37,15 @@ except: # local version
     configure.options(opts)
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
-    #SConscript(os.path.join(srcroot,'filt','lib','SConstruct'))
+    SConscript('../../filt/lib/SConstruct')
     src = glob.glob('[a-z]*.c')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
 
 rsfroot = os.environ.get('RSFROOT','/usr/local/rsf')
 
-env.Prepend(CPPPATH=[os.path.join(rsfroot,'include')],
-            LIBPATH=[os.path.join(rsfroot,'lib')],
+env.Prepend(CPPPATH=['../../include'],
+            LIBPATH=['../../filt/lib'],
             LIBS=['rsf'])
 
 for source in src:
