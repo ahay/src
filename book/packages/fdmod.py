@@ -81,8 +81,7 @@ def cgraph(custom,par):
     min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
-    ''' % (
-           par['zmin'],par['zmax'],par['lz'],par['uz'],
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
            par['labelattr']+custom)
@@ -94,8 +93,7 @@ def ccont(custom,par):
     min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
-    ''' % (
-           par['zmin'],par['zmax'],par['lz'],par['uz'],
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
            par['labelattr']+custom)
@@ -217,6 +215,18 @@ def qqplot(custom,par):
     dd type=complex |
     ''' + cgraph('symbol=. plotcol=1 plotfat=3 %s' % custom,par)
 
+# ------------------------------------------------------------
+# rays plot
+def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,par):
+
+    Plot(hwt+'ray',hwt,'window j1=%d j2=%d f2=%d | transp |' %(j1ray,j2ray,j2wft)
+         + cgraph('plotcol=1',par))
+    Plot(hwt+'wft',hwt,'window j1=%d j2=%d f2=%d |'          %(j1wft,j2wft,j2wft)
+         + cgraph('plotcol=2 symbol=.',par))
+
+    Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
+    Result(hwt,[hwt+'ray',hwt+'wft'],'Overlay')
+  
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
 def amodel(data,wfld,  wavl,velo,dens,sou,rec,custom,par):

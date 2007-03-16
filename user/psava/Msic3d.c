@@ -101,7 +101,7 @@ int main(int argc, char* argv[])
     sf_setlabel(bb,"b"); 
     sf_setunit (bb,"");
 
-    /* length axis (in samples) */
+    /* length axis (in samples!!!) */
     if(! sf_getint  ("nl",&nl)) nl=1;
     if(! sf_getfloat("dl",&dl)) dl=1.;
     if(! sf_getfloat("ol",&ol)) ol=0.;
@@ -151,19 +151,19 @@ int main(int argc, char* argv[])
     ts=sf_floatalloc3(nt,nx,nz);
     tr=sf_floatalloc3(nt,nx,nz);
     
-    gg=sf_floatalloc (  2*nl+1);
+    gg=sf_floatalloc(2*nl+1);
 
-    kt=sf_intalloc3  (  2*nl+1,na,nb);
-    kx=sf_intalloc3  (  2*nl+1,na,nb);
-    kz=sf_intalloc3  (  2*nl+1,na,nb);
+    kt=sf_intalloc3 (2*nl+1,na,nb);
+    kx=sf_intalloc3 (2*nl+1,na,nb);
+    kz=sf_intalloc3 (2*nl+1,na,nb);
 
-    ht=sf_intalloc3  (  2*nl+1,na,nb);
-    hx=sf_intalloc3  (  2*nl+1,na,nb);
-    hz=sf_intalloc3  (  2*nl+1,na,nb);
+    ht=sf_intalloc3 (2*nl+1,na,nb);
+    hx=sf_intalloc3 (2*nl+1,na,nb);
+    hz=sf_intalloc3 (2*nl+1,na,nb);
 
-    gt=sf_intalloc3  (  2*nl+1,na,nb);
-    gx=sf_intalloc3  (  2*nl+1,na,nb);
-    gz=sf_intalloc3  (  2*nl+1,na,nb);
+    gt=sf_intalloc3 (2*nl+1,na,nb);
+    gx=sf_intalloc3 (2*nl+1,na,nb);
+    gz=sf_intalloc3 (2*nl+1,na,nb);
     
     /*------------------------------------------------------------*/
     /* taper */
