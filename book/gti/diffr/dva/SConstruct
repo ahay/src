@@ -1,0 +1,104 @@
+from rsfproj import *
+
+Flow('mod',None,
+     '''
+     math n1=2001 o1=-10 d1=0.02 n2=5 o2=1 d2=1 
+     output=x2
+     ''')
+Flow('mod2','mod',
+     '''
+     window min1=0 max1=20 |
+     transp | pad beg1=1 | remap1 n1=121 d1=0.05 |
+     math output="1.5+0.3*x1"
+     ''')
+Plot('mod2',
+     '''
+     grey color=j allpos=y title=Model scalebar=y
+     barlabel=Velocity barunit=km/s min1=0 max1=6
+     label1=Depth unit1=km label2=Lateral unit2=km
+     barreverse=y pclip=100 
+     ''')
+
+Flow('mod1','mod','window n2=2 f2=1 j2=2 n1=1001')
+Flow('mod0','mod','window j2=2')
+
+for case in ('mod0','mod1'):
+    Plot(case+'b',case,
+         '''
+         graph yreverse=y pad=n min2=0 max2=6 min1=0 max1=20
+         plotcol=0 plotfat=20 wantaxis=n wanttitle=n scalebar=y
+         ''')
+    Plot(case+'w',case,
+         '''
+         graph yreverse=y pad=n min2=0 max2=6 min1=0 max1=20
+         plotcol=7 plotfat=5 wantaxis=n wanttitle=n scalebar=y
+         ''')
+    Flow(case+'dat',case,
+         '''
+         kirmod nt=2001 dt=0.004 freq=10
+         ns=201 s0=5 ds=0.05
+         nh=401 h0=-10 dh=0.05
+         vel=1.5 gradz=0.3 type=v
+         ''')
+    
+Result('model','mod2 mod0b mod0w mod1b mod1w','Overlay')
+
+Flow('data','mod0dat mod1dat','add ${SOURCES[1]}')
+radon = 'radon adj=y inv=y spk=n p0=-0.6 np=481 dp=0.0025 verb=y'
+Flow('radon','data',radon)
+
+Flow('plane','radon','window max1=5 | transp plane=23')
+Flow('diff','plane','transp | deriv | transp | transp plane=23')
+
+for shot in (8,10,12):
+    data = 'data%d' % shot
+    Plot(data,'data',
+         '''
+         window n3=1 min3=%d |
+         tpow tpow=1 |
+         grey label1=Time unit1=s label2=Offset unit2=km title=Data
+         ''')
+    radon = 'radon%d' % shot
+    Plot(radon,'radon',
+         '''
+         window max1=5 n3=1 min3=%d | 
+         grey label1=Time unit1=s label2=Slope unit2=s/km
+         title="Radon Transform (shot=%d km)"
+         ''' % (shot,shot))
+    Result(radon,[data,radon],'SideBySideAniso')
+    diff = 'diffr%d' % shot
+    Flow(diff,'diff','window max1=5 n3=1 min3=%d' % shot)
+    Plot(diff,
+         '''
+         grey label1=Time unit1=s label2=Slope unit2=s/km
+         title="Diffractions (shot=%d km)"
+         ''' % shot)
+    vscan = 'vscan%d' % shot
+    Flow(vscan,diff,'dimag v0=1.5 nv=101 dv=0.02 x0=10')
+    Plot(vscan,
+         '''
+         grey label1=Time unit1=s label2=Velocity unit2=km/s
+         wanttitle=n
+         ''')
+    Result(vscan,[diff,vscan],'SideBySideAniso')
+
+for case in (-1,0,1):
+    plane= 'plane%d' % case
+    slope = 0.3*case
+    Flow(plane,'plane','window n3=1 min3=%g' % slope)
+    Plot(plane,
+           '''
+           grey title="Plane (slope=%g s/km)"
+           label1=Time unit1=s label2=Shot unit2=km
+           ''' % slope)
+
+    diff = 'diff%d' % case
+    Flow(diff,plane,'transp | deriv | transp')
+    Plot(diff,
+           '''
+           grey title="Diffractions (slope=%g s/km)"
+           label1=Time unit1=s label2=Shot unit2=km
+           ''' % slope)
+    Result(plane,[plane,diff],'SideBySideAniso')
+
+End()

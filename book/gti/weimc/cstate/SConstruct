@@ -1,0 +1,93 @@
+from rsfproj import *
+
+Flow('mod',None,
+     '''
+     math n1=1001 n2=5 o2=1 d2=1 o1=0 d1=0.02
+     output=x2
+     ''')
+Flow('mod2','mod',
+     'transp | pad beg1=1 | remap1 n1=121 d1=0.05 | math output="1.5+0.3*x1" ')
+Plot('mod2',
+     '''
+     grey color=j allpos=y title=Model scalebar=y
+     barlabel=Velocity barunit=km/s min1=0 max1=6
+     label1=Depth unit1=km label2=Lateral unit2=km
+     barreverse=y pclip=100 
+     ''')
+
+Plot('mod1','mod',
+     '''
+     graph yreverse=y pad=n min2=0 max2=6 
+     plotcol=0 plotfat=20 wantaxis=n wanttitle=n scalebar=y
+     ''')
+Plot('mod0','mod',
+     '''
+     graph yreverse=y pad=n min2=0 max2=6 
+     plotcol=7 plotfat=5 wantaxis=n wanttitle=n scalebar=y
+     ''')
+Result('mod','mod2 mod1 mod0','Overlay')
+
+Flow('dat','mod',
+     '''
+     kirmod nt=2001 dt=0.004 freq=10
+     ns=1 s0=10 ds=0.5
+     nh=401 h0=-10 dh=0.05
+     vel=1.5 gradz=0.3 type=v
+     ''')
+Flow('dat2','dat',
+     '''
+     tpow tpow=1 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+
+Result('dat','dat2','grey title=Data')
+
+Flow('wav',None,'spike n1=2001 d1=0.004 k1=1 | fft1 | window max1=30')
+
+Flow('slo','mod2','transp | spray axis=2 n=1 d=0.02 | math output=1/input')
+
+Flow('rwfl swfl','dat wav',
+     '''
+     fft1 | window max1=30 |
+     spray axis=3 n=1 o=0 d=1 |
+     spray axis=5 n=1 o=0 d=1 |
+     srsyn nx=1001 dx=0.02 ox=0 wav=${SOURCES[1]} swf=swf.rsf |
+     transp plane=12 | transp plane=23 > ${TARGETS[0]} &&
+     transp plane=12 < swf.rsf | transp plane=23 > ${TARGETS[1]} &&
+     rm swf.rsf
+     ''',stdout=-1)
+
+# Migrate and create common-image gathers
+
+Flow('image cigs','swfl rwfl slo',
+     '''
+     srmig2 slo=${SOURCES[2]} rwf=${SOURCES[1]} cig=${TARGETS[1]}
+     itype=x nhx=100 nhz=1 hsym=y jcx=1 readwrite=y verb=y 
+     ''')
+
+Result('image',
+       '''
+       window | transp |
+       grey label1=Depth unit1=km label2=Lateral unit2=km title=Image
+       ''')
+
+rect=(0.05,0.1)
+
+for case in range(2):
+    image = 'image%d' % case
+    radius = rect[case]
+    Flow(image,'cigs',
+         '''
+         window |
+         math output="input*exp(-2*x3*x3/%g)" |
+         stack axis=3 norm=n |
+         transp |
+         halfint inv=y
+         ''' % (radius*radius))
+    Result(image,
+           '''
+           grey label1=Depth unit1=km label2=Lateral unit2=km
+           title="Snell Filtering (radius=%g km)"
+           ''' % radius)
+
+End()
