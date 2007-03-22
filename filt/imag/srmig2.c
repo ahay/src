@@ -229,7 +229,7 @@ void srmig2_pw(fslice sdat /* source   data [nw][ny][nx] */,
 	       fslice rdat /* receiver data [nw][ny][nx] */,
 	       fslice imag /*         image [nz][ny][nx] */,
 	       fslice cigs,
-	       void (*imop)( fslice,fslice, int)
+	       void (*imop)(int)
     )
 /*< Apply S/R migration >*/
 {
@@ -259,7 +259,7 @@ void srmig2_pw(fslice sdat /* source   data [nw][ny][nx] */,
 		img2store(imz,ww_s,ww_r);
 	    } /* z */
 	    
-	    imop(imag,cigs,iw);
+	    imop(iw);
 	} /* w */
     } /* e */
 }
@@ -270,7 +270,7 @@ void srmig2_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	       fslice rdat /* receiver data [nw][ny][nx] */,
 	       fslice imag /*         image [nz][ny][nx] */,
 	       fslice cigs,
-	       void (*imop)( fslice,fslice,int)
+	       void (*imop)(int)
     )
 /*< Apply S/R migration >*/
 {
@@ -303,7 +303,7 @@ void srmig2_cw(fslice sdat /* source   data [nw][ny][nx] */,
 		img2store(imz,ww_s,ww_r);
 	    } /* z */
 
-	    imop(imag,cigs,iw);
+	    imop(iw);
 	} /* w */
     } /* e */
 }

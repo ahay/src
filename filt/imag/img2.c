@@ -72,6 +72,8 @@ static sf_axa aw;
 static sf_complex  **tt; /* phase shift for time offset */
 static sf_complex ***qs,***qr;
 static float         ***qi;
+static float         ***qi2;
+static float         ***wt;
 
 static float         ***qo;
 static float      ******qx;
@@ -83,6 +85,8 @@ static int LOy,HIy;
 static int LOz,HIz;
 
 static float vpvs;
+static int dec=0;
+static float eps=0.;
 
 static float corr(sf_complex a, sf_complex b)
 {
@@ -106,6 +110,12 @@ static float wcorr(sf_complex a, sf_complex b, sf_complex w)
     return crealf(c);
 }
 
+void img2dec(int dec1, float eps1) 
+/*< set deconvolution count >*/
+{
+    dec = dec1;
+    eps = eps1;
+}
 
 /*------------------------------------------------------------*/
 
@@ -152,6 +162,14 @@ void img2o_init(sf_axis amx_,
     /* allocate image storage */
     qi = sf_floatalloc3(amx.n,amy.n,amz.n);
     MLOOP( qi[imz][imy][imx] = 0.0; );
+
+    if (dec) {
+	qi2 = sf_floatalloc3(amx.n,amy.n,amz.n);
+	MLOOP( qi2[imz][imy][imx] = 0.; );
+	wt = sf_floatalloc3(amx.n,amy.n,amz.n);
+	MLOOP( wt[imz][imy][imx] = 1.; );
+    }
+
 
     /* allocate cigs storage */
     qo = sf_floatalloc3(acx.n,acy.n,acz.n);
@@ -323,9 +341,7 @@ void img2h_init(sf_axis amx_,
 
 /*------------------------------------------------------------*/
 
-void img2o( fslice imag,
-	    fslice cigs,
-	    int      iw)
+void img2o(int iw)
 /*< Apply o-offset imaging condition >*/
 {
     int imx,imy,imz;
@@ -338,6 +354,14 @@ void img2o( fslice imag,
 	     qr[imz][imy][imx]);
 	);
 
+    if (dec) {
+	MLOOP(
+	    ;   qi2[imz][imy][imx] +=
+	    corr(qs[imz][imy][imx],    
+		 qs[imz][imy][imx]);
+	    );	
+    }
+
     /* cigs */
     CLOOP(
 	;    qo[icz    ][icy    ][icx    ] +=
@@ -346,9 +370,7 @@ void img2o( fslice imag,
 	);
 }
 
-void img2x( fslice imag,
-	    fslice cigs,
-	    int      iw)
+void img2x(int iw)
 /*< Apply x-offset imaging condition >*/
 {
     int imx, imy, imz;
@@ -414,9 +436,7 @@ void img2x( fslice imag,
     }
 }
 
-void img2t( fslice imag,
-	    fslice cigs,
-	    int      iw)
+void img2t(int iw)
 /*< Apply t-offset imaging condition >*/
 {
     int imx,imy,imz,iht;
@@ -440,9 +460,7 @@ void img2t( fslice imag,
     }
 }
 
-void img2h( fslice imag,
-	    fslice cigs,
-	    int      iw)
+void img2h(int iw)
 /*< Apply h-offset imaging condition >*/
 {
     int imx,imy,imz;
@@ -516,9 +534,7 @@ void img2h( fslice imag,
     }         /* hh */
 }
 
-void img2g( fslice imag,
-	    fslice cigs,
-	    int      iw)
+void img2g(int iw)
 /*< Apply h-offset imaging condition >*/
 {
     int imx,imy,imz;
@@ -598,6 +614,18 @@ void img2o_close(fslice imag,
 		 fslice cigs)
 /*< deallocate >*/
 {
+    int imz, imy, imx, id;
+
+    if (dec) {
+	for (id=0; id < dec; id++) {	    
+	    MLOOP(wt[imz][imy][imx] *=  wt[imz][imy][imx];
+		  wt[imz][imy][imx] =  
+		  wt[imz][imy][imx]*qi[imz][imy][imx]/
+		  (wt[imz][imy][imx]*qi2[imz][imy][imx]+eps););
+	}
+	MLOOP(qi[imz][imy][imx] = wt[imz][imy][imx];);
+    }
+
     fslice_put(imag,0,qi[0][0]);
     fslice_put(cigs,0,qo[0][0]);
 

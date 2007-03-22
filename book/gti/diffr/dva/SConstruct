@@ -19,6 +19,21 @@ Plot('mod2',
      barreverse=y pclip=100 
      ''')
 
+Flow('vel','mod2','window n2=1')
+#Flow('vrms','vel',
+#     '''
+#     add mode=p $SOURCE |
+#     depth2time velocity=$SOURCE nt=1251 t0=0 dt=0.004 |
+#     causint | scale dscale=0.004 |
+#     math output="sqrt(input/(x1+0.004))"
+#     ''')
+Plot('vrms',
+     '''
+     graph transp=y yreverse=y
+     min2=1.5 max2=2.5
+     wanttitle=n pad=n wantaxis=n
+     ''')
+
 Flow('mod1','mod','window n2=2 f2=1 j2=2 n1=1001')
 Flow('mod0','mod','window j2=2')
 
@@ -57,7 +72,7 @@ for shot in (8,10,12):
          window n3=1 min3=%d |
          tpow tpow=1 |
          grey label1=Time unit1=s label2=Offset unit2=km title=Data
-         ''')
+         ''' % shot)
     radon = 'radon%d' % shot
     Plot(radon,'radon',
          '''
@@ -68,19 +83,20 @@ for shot in (8,10,12):
     Result(radon,[data,radon],'SideBySideAniso')
     diff = 'diffr%d' % shot
     Flow(diff,'diff','window max1=5 n3=1 min3=%d' % shot)
-    Plot(diff,
-         '''
-         grey label1=Time unit1=s label2=Slope unit2=s/km
-         title="Diffractions (shot=%d km)"
-         ''' % shot)
+#    Plot(diff,
+#         '''
+#         grey label1=Time unit1=s label2=Slope unit2=s/km
+#         title="Diffractions (shot=%d km)"
+#         ''' % shot)
     vscan = 'vscan%d' % shot
-    Flow(vscan,diff,'dimag v0=1.5 nv=101 dv=0.02 x0=10')
-    Plot(vscan,
-         '''
-         grey label1=Time unit1=s label2=Velocity unit2=km/s
-         wanttitle=n
-         ''')
-    Result(vscan,[diff,vscan],'SideBySideAniso')
+    Flow(vscan,diff,'dimag v0=1.5 nv=101 dv=0.01 x0=10 semblance=y')
+#    Plot(vscan,
+#         '''
+#         grey label1=Time unit1=s label2=Velocity unit2=km/s
+#         wanttitle=n allpos=y pclip=100
+#         ''')
+    Plot(vscan+'c',[vscan,'vrms'],'Overlay')
+    Result(vscan,[diff,vscan+'c'],'SideBySideAniso')
 
 for case in (-1,0,1):
     plane= 'plane%d' % case

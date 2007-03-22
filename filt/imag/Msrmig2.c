@@ -40,6 +40,10 @@ int main (int argc, char *argv[])
 			  */
     bool hsym;
     float vpvs;
+    int dec;
+    float deceps;
+    void (*imop)(int);
+    void (*close)(fslice,fslice);
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -154,6 +158,12 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init output files */
 
+    if (!sf_getint("dec",&dec)) dec=0;
+    if (dec) {
+	if (!sf_getfloat("deceps",&deceps)) deceps=0.01;
+	img2dec(dec,deceps);
+    }
+    
     switch(itype[0]) {
 	case 't':
 	    if(verb) sf_warning("Time-offset imaging condition");
@@ -166,6 +176,8 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init(n*nh,1,sizeof(float));
 
 	    img2t_init(amx,amy,amz,jcx,jcy,jcz,aht,aw,imag);
+	    imop = img2t;
+	    close = img2t_close;
 	    break;
 	case 'x':
 	    if(verb) sf_warning("Space offset imaging condition");
@@ -191,6 +203,8 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag);
+	    imop = img2x;
+	    close = img2x_close;
 	    break;
 	case 'g':
 	case 'h':
@@ -224,7 +238,8 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init( n*nh,1,sizeof(float));
 
 	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag,vpvs);
-
+	    imop = img2h;
+	    close = img2x_close;
 	    break;
 	case 'o':
 	default:
@@ -232,6 +247,8 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2o_init(amx,amy,amz,jcx,jcy,jcz,imag);
+	    imop = img2o;
+	    close = img2o_close;
 	    break;
     }
 
@@ -253,35 +270,16 @@ int main (int argc, char *argv[])
     
     if(cw) { 
 	srmig2_cw_init (dtmax,nrmax,slo_s,slo_r);
-	switch(itype[0]) {
-	    case 't':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2t); break;
-	    case 'x':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2x); break;
-	    case 'h':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2h); break;
-	    case 'g':          srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2g); break;
-	    case 'o': default: srmig2_cw(wfl_s,wfl_r,imag,cigs, &img2o); break;
-	}
+	srmig2_cw(wfl_s,wfl_r,imag,cigs, imop); 
 	srmig2_cw_close();
     } else { 
 	srmig2_pw_init (dtmax,nrmax,slo_s);
-	switch(itype[0]) {
-	    case 't':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2t); break;
-	    case 'x':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2x); break;
-	    case 'h':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2h); break;
-	    case 'g':          srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2g); break;
-	    case 'o': default: srmig2_pw(wfl_s,wfl_r,imag,cigs, &img2o); break;
-	}
+	srmig2_pw(wfl_s,wfl_r,imag,cigs, imop); 
 	srmig2_pw_close();
     }
     
     srmig2_close();
-
-    switch(itype[0]) {
-	case 't':          img2t_close(imag,cigs); break;
-	case 'x':          img2x_close(imag,cigs); break;
-	case 'h':          img2h_close(imag,cigs); break;
-	case 'g':          img2h_close(imag,cigs); break;
-	case 'o': default: img2o_close(imag,cigs); break;
-    }
+    close(imag,cigs); 
 
     sf_warning("dump cigs");
 
