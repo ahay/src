@@ -444,6 +444,8 @@ def ppm(context):
         stderr_write('ppmpen, vplot2gif, vplot2avi will not be built.')
         if plat['distro'] == 'fc':
             stderr_write('Package needed: netpbm-devel')
+        elif plat['distro'] == 'cygwin':
+            stderr_write('Package needed: libnetpbm-devel (Setup...Devel)')
         context.env['PPM'] = None
 
 #    LIBS.pop()
