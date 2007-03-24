@@ -253,6 +253,8 @@ def libs(context):
         context.Result(context_failure)
         if plat['distro'] == 'fc':
             stderr_write('Needed package: glibc-headers.')
+        elif plat['distro'] == 'cygwin':
+            stderr_write('Needed package: sunrpc (Setup...Libs)')
         sys.exit(unix_failure)
 
 
@@ -443,9 +445,9 @@ def ppm(context):
         context.Result(context_failure)
         stderr_write('ppmpen, vplot2gif, vplot2avi will not be built.')
         if plat['distro'] == 'fc':
-            stderr_write('Package needed: netpbm-devel')
+            stderr_write('Needed package: netpbm-devel')
         elif plat['distro'] == 'cygwin':
-            stderr_write('Package needed: libnetpbm-devel (Setup...Devel)')
+            stderr_write('Needed package: libnetpbm-devel (Setup...Devel)')
         context.env['PPM'] = None
 
 #    LIBS.pop()
@@ -474,7 +476,7 @@ def jpeg(context):
         context.env['JPEG'] = None
         stderr_write('sfbyte2jpg will not be built.')
         if plat['distro'] == 'fc':
-            stderr_write('For sfbyte2jpg, install package libjpeg-devel.')
+            stderr_write('Package needed for sfbyte2jpg: libjpeg-devel.')
 
     LIBS.pop()
 
