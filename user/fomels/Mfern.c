@@ -31,15 +31,15 @@
 probability     0.01      0.07      0.07      0.85
 */
 
-static const float a1[] = {0.0,0.2,-0.15,0.75};
-static const float a2[] = {0.0,0.2,-0.15,0.85};
-static const float b[] = {0.0,-0.26,0.28,0.04};
-static const float c[] = {0.0,0.23,0.26,-0.04};
-static const float d[] = {0.16,0.22,0.24,0.85};
-static const float e[] = {0.0,0.0,0.0,0.0};
-static const float f[] = {0.0,1.6,0.44,1.6};
-static const double p1[] = {0.1,0.18,0.26};
-static const double p2[] = {0.01,0.07,0.15};
+static const float  a1[] = {0.00, 0.20,-0.15, 0.75};
+static const float  a2[] = {0.00, 0.20,-0.15, 0.85};
+static const float  b [] = {0.00,-0.26, 0.28, 0.04};
+static const float  c [] = {0.00, 0.23, 0.26,-0.04};
+static const float  d [] = {0.16, 0.22, 0.24, 0.85};
+static const float  e [] = {0.00, 0.00, 0.00, 0.00};
+static const float  f [] = {0.00, 1.60, 0.44, 1.60};
+static const double p1[] = {0.10, 0.18, 0.26};
+static const double p2[] = {0.01, 0.07, 0.15};
 
 int main(int argc,char *argv[])
 {
@@ -88,6 +88,7 @@ int main(int argc,char *argv[])
             k = 2;
 	else
             k = 3;
+
          x2 = a[k] * x + b[k] * y + e[k];
          y2 = c[k] * x + d[k] * y + f[k];
          x = x2;
