@@ -73,17 +73,17 @@ def cgraph(custom,par):
            custom)
 
 # plot coordinate system
-def cos(cos,jray,jwft,par):
+def cos(cos,jray,jwft,custom,par):
     wft = cos + '-wft'
     ray = cos + '-ray'
 
     par['jray']=jray
     par['jwft']=jwft
 
-    Plot(ray,cos,'window j1=%(jray)d | transp |' % par
-         + cgraph('plotcol=1',par))
+    Plot(ray,cos,'window j1=%(jray)d f2=%(jwft)d | transp |' % par
+         + cgraph('plotcol=1 '+custom,par))
     Plot(wft,cos,'window j2=%(jwft)d |' % par
-         + cgraph('plotcol=2',par))
+         + cgraph('plotcol=2 '+custom,par))
     
     Plot(cos,[ray,wft],'Overlay')
 
@@ -180,9 +180,9 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
              ''' % par)
 
         Plot  (migRC+sfx,'window | transp |'
-               + rgrey('',par))
+               + rgrey('pclip=99.9',par))
         Result(par['prefix']+migRC+sfx,migRC+sfx,'window | transp |' % par
-               + rgrey('',par))
+               + rgrey('pclip=99.9',par))
         
         Plot(migCC+sfx,'window | transp |'
              + cgrey('pclip=100',par))
