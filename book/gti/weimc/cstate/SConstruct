@@ -137,11 +137,11 @@ Flow('image2 cigs2','swfl2 rwfl2 slo',
      itype=x nhx=100 nhz=1 hsym=y jcx=1 readwrite=y verb=y 
      ''')
 
-#Result('image2',
-#       '''
-#       window | transp |
-#       grey label1=Depth unit1=km label2=Lateral unit2=km title=Image
-#       ''')
+Result('image2',
+       '''
+       window | transp |
+       grey label1=Depth unit1=km label2=Lateral unit2=km title=Image
+       ''')
 
 rect=(0.05,0.1)
 
@@ -155,16 +155,11 @@ Flow('zero',None,
 
 for case in range(2):
     radius = rect[case]
-    for exper in ('',): # '2'):
+    for exper in ('','2'):
         image = 'image%d%s' % (case,exper)
-        clean = 'clean%d%s' % (case,exper)
-        Flow(clean,['cigs'+exper,'zero'],
+        Flow(image,'cigs'+exper,
              '''
              window | transp | transp plane=23 |
-             pwdsigk dips=${SOURCES[1]} eps=10
-             ''')
-        Flow(image,clean,
-             '''
              math output="input*exp(-2*x2*x2/%g)" |
              stack axis=2 norm=n |
              window |

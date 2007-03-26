@@ -79,13 +79,13 @@ def get_authors(source,default):
         dir = os.path.basename(os.path.dirname(str(src)))
         author = get_author(src,default,dir)
         if author:
-            print "%s: %s" % (dir,author)
+            print "%s: '%s'" % (dir,author)
             for person in re.split(r'\s*\band\b\s*',author):
                 names = string.split(person)
                 if names:
-                    person = names.pop(0)
+                    person = names.pop(0) # first name
                     if names:
-                        last = names.pop()
+                        last = names.pop() # last name
                         person = string.join((person,last),'~')
                         authors[person]=last
     all = map(lambda k: (authors[k],k),authors.keys())
@@ -95,7 +95,8 @@ def get_authors(source,default):
         author = lastone(1)
         print "The author is " + lastone
     elif len(all) == 1:
-        author = '%s and %s' % (author,lastone[1])
+        firstone = all.pop()
+        author = '%s and %s' % (firstone[1],lastone[1])
         print "The authors are " + author
     else:                
         author = string.join(map(lambda k: k[1],all),', ')
@@ -110,7 +111,7 @@ def report_toc(target=None,source=None,env=None):
         ['%% This file is automatocally generated, DO NOT EDIT',
          '\\cleardoublepage',
          '\\renewcommand{\REPORT}{%s}' % report, 
-         '\\title{\REPORT\ --- TABLE OF CONTENTS}',
+         '\\maintitle{\REPORT\ --- TABLE OF CONTENTS}',
          '\\maketitle',
          '%% start entries\n'],'\n'))
     sections = env.get('sections',{})
@@ -143,15 +144,15 @@ def report_tpg(target=None,source=None,env=None):
     "Build the title page"
     tpg = open(str(target[0]),'w')
     tpg.write('%% This file is automatocally generated, DO NOT EDIT\n\n')
-    tpg.write('\\title{%s}\n' % env.get('group',full.get(group)))
+    tpg.write('\\maintitle{%s}\n' % string.upper(env.get('group',full.get(group))))
     title = env.get('title1')
     if title:
         tpg.write('\\vfill\n\title{%s}\n' % title)
     authors = env.get('authors',{})
-    tpg.write('\\author{%s}\n' % get_authors(source,authors))
+    tpg.write('\\mainauthor{%s}\n' % get_authors(source,authors))
     title = env.get('title2')
     if title:
-        tpg.write('\\vfill\n\title{%s}\n' % title)
+        tpg.write('\\vfill\n\maintitle{%s}\n' % title)
     line = env.get('line')
     if line:
         tpg.write('\\vfill\n\\begin{center}\n'
@@ -225,3 +226,4 @@ class RSFReport(Environment):
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
     return apply(book.Papers,(papers,),kw)
+

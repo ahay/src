@@ -189,8 +189,11 @@ if 'python' in api:
         env.Depends(obj,source+'.h')
         objs.append(obj)
 
-
-    wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
+    
+    if root:    
+        wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
+    else:
+        wrap = env.CFile('rsf', 'rsf.i',SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')

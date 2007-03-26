@@ -1,0 +1,10 @@
+from rsfbook import *
+from rsftex import *
+
+Papers(copyr='Colorado School of Mines',group='Center for Wave Phenomena',authors={'rwesalt':'Paul Sava'})
+
+for file in ('toc','tpg'):
+    Paper(file,lclass='georeport')
+
+End(lclass='georeport')
+
