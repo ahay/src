@@ -84,7 +84,8 @@ int main(int argc, char* argv[])
 	tpp[i1] = tp;
 	tps[i1] = ts;
 	app[i1] = (a2-a1)/(a2+a1) + (r2-r1)/(r2+r1);
-	aps[i1] = 4.*(b2-b1)/(a2+a1) + (1.+2.*(b2+b1)/(a2+a1))*(r2-r1)/(r2+r1);
+	aps[i1] = 4.*(b2-b1)/(a2+a1) + 
+	    (1.+2.*(b2+b1)/(a2+a1))*(r2-r1)/(r2+r1);
     }
 
     spline = sf_floatalloc(nt);

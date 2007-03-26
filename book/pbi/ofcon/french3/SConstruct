@@ -28,7 +28,8 @@ Result('french3','refl',
 
 Flow('shot3','refl dipx dipy',
      '''
-     kirmod3 nt=601 dt=0.010265 vel=2000 dipx=${SOURCES[1]} dipy=${SOURCES[2]}
+     kirmod3 nt=601 dt=0.010265 vel=2000
+     dipx=${SOURCES[1]} dipy=${SOURCES[2]}
      h0x=-6159 dhx=102.65 nhx=121
      h0y=-6159 dhy=102.65 nhy=121
      nsx=1 s0x=4 dsx=51.325
