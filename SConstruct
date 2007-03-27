@@ -102,6 +102,6 @@ for dir in map(lambda x: os.path.join('pens',x), pdirs):
 rsfuser = os.path.join(libdir,'rsfuser')
 env.Install(rsfuser,'__init__.py')
 
-env.Alias('install',[bindir,libdir,rsfuser,incdir,docdir])
+env.Alias('install',[bindir,incdir,libdir,rsfuser,docdir])
 
 # 	$Id$

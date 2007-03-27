@@ -443,7 +443,7 @@ inpout['python'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                                 '\s*\(\s*(?:[\"\'](?P<tag>\w+)[\"\'])?')
 version['python'] = re.compile(r'\#\s*\$Id\:\s*(.+\S)\s*\$/')
 
-comment['f90'] = re.compile(r'\!([^!]+)')
+comment['f90'] = re.compile(r'(?:\!([^!\n]+)\n)+')
 param['f90'] = re.compile(r'from_par\s*\(\s*\"(?P<name>\w+)\"\s*\,'
                           '\s*(?P<var>[\w\_]+)\s*'
                           '(?:\,\s*(?P<default>[^\)]+))?\)' 

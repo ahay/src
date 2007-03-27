@@ -19,6 +19,7 @@ module RSF
      module procedure from_history_int
      module procedure from_history_int_array
      module procedure from_history_real
+     module procedure from_history_string
 !!$     module procedure from_history_real_array
 !!$     module procedure from_history_char
      module procedure from_history_dim
@@ -43,6 +44,7 @@ module RSF
      module procedure to_history_int
      module procedure to_history_int_array
      module procedure to_history_real
+     module procedure to_history_string
 !!$     module procedure to_history_real_array
 !!$     module procedure to_history_bool
 !!$     module procedure to_history_char
@@ -272,6 +274,19 @@ contains
        end if
     end if
   end subroutine from_history_real
+
+  subroutine from_history_string (hist, name, value, default)
+    type (file),         intent (in)  :: hist
+    character (len = *), intent (in)  :: name
+    character (len = *), intent (out) :: value
+    character (len = *), intent (in), optional :: default
+
+    character sf_histstring
+    external sf_histstring
+    
+    if (present (default)) value = default
+    value = sf_histstring(hist%tag,name)
+  end subroutine from_history_string
 
 !!$  subroutine from_history_real_array (hist,name, value, default)
 !!$    type (file),         intent (in)            :: hist
@@ -537,6 +552,14 @@ contains
    
     call sf_putfloat (hist%tag,name,value)
   end subroutine to_history_real
+
+  subroutine to_history_string (hist, name, value)
+    type (file),         intent (in) :: hist
+    character (len = *), intent (in) :: name
+    character (len = *), intent (in) :: value
+   
+    call sf_putstring (hist%tag,name,value)
+  end subroutine to_history_string
 
 !!$ subroutine to_history_real_array (name, value,tag)
 !!$    character (len = *), intent (in) :: name

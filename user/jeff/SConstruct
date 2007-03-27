@@ -3,7 +3,7 @@ sys.path.append('../..')
 import configure
 
 progs = '''
-aclip
+rwe2d
 '''
 
 try:  # distributed version
