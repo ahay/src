@@ -1,4 +1,4 @@
-import os, sys, re, string, glob,shutil,sets
+import os, sys, re, string, glob, shutil
 sys.path.append('../..')
 import configure
 
