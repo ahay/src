@@ -1,7 +1,4 @@
 from rsftex import *
-import glob, os
 
-for homework in glob.glob('homework*.tex'):
-    Paper(os.path.splitext(homework)[0],lclass='handout')
+End(lclass='handout')
 
-End()

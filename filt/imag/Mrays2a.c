@@ -196,7 +196,11 @@ int main(int argc, char* argv[])
 	    if (it < 0) it = -it; /* keep side-exiting rays */
 	    
 	    for (i=0; i < nt1; i++) {
-		sf_floatwrite (traj[SF_MIN(i,it)],ndim,rays);
+		if (0==it || it > i) {
+		    sf_floatwrite (traj[i],ndim,rays);
+		} else {
+		    sf_floatwrite (traj[it],ndim,rays);
+		}
 	    }
 	}
     }

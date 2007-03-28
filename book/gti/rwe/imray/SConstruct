@@ -97,19 +97,19 @@ sq = math.sqrt((smin+g*xc)**2-(g*zc)**2)
 x0 = (2*smin*xc - g2*zc*zc)/(smin-g*xc+sq)
 t0 = math.sqrt(2.0)*zc*(2*smin+2*g*xc+sq)/(3*math.sqrt(smin+g*xc+sq))
 
-Flow('txz','vxz','rays2a nt=3000 dt=0.001 sym=n nr=361 a0=-180 amax=180 zshot=%g yshot=%g' % (zc,xc))
+Flow('txt','vdix',
+     '''
+     math output=1 |
+     rays2a nt=3000 dt=0.001 sym=n nr=361 a0=-180 amax=180
+     zshot=%g yshot=%g vx=$SOURCE
+     ''' % (t0,x0))
 
-Plot('txz',
+Plot('txt',
      '''
      window j1=100 | transp |
-     graph transp=y yreverse=y min1=0 max1=%g min2=0 max2=%g wanttitle=n screenht=%g screenwd=%g plotcol=7
+     graph transp=y yreverse=y min1=0 max1=%g min2=0 max2=%g wanttitle=n plotcol=7
      scalebar=y
-     ''' % (zmax,xmax,zmax,xmax))
-
-
-Flow('txt','vdix','math output=1 | eikonalvti vx=$SOURCE zshot=%g yshot=%g order=1' % (t0,x0))
-
-Plot('txt','contour scalebar=y nc=30 c0=0 dc=0.1 wanttitle=n plotcol=7')
+     ''' % (tmax,xmax))
 
 Result('txt','vdix txt','Overlay')
 

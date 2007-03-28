@@ -156,7 +156,7 @@ def report_tpg(target=None,source=None,env=None):
     line = env.get('line')
     if line:
         tpg.write('\\vfill\n\\begin{center}\n'
-                  '\\bfseries%\n%s\n\\end{center}\n' % line)
+                  '\\bfseries%%\n%s\n\\end{center}\n' % line)
     fig = env.get('fig')
     if fig:
         dir = env.get('dir','.')
@@ -201,6 +201,7 @@ def report_all(target=None,source=None,env=None):
     for src in source:
         dir = os.path.basename(os.path.dirname(str(src)))
         all.write('\\GEOpaper{%s}\t\\include{%s/paper}\n' % (dir,dir))
+    all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
     return 0
 

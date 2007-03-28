@@ -7,13 +7,13 @@ between the source and receiver wavefields,
 followed by image extraction at zero time:
 \beqa
 \UU  \lp \mm, t   \rp &=& 
-\UR  \lp \mm, t   \rp \star
+\UR  \lp \mm, t   \rp \ast
 \US  \lp \mm, t   \rp \;,
 \\ 
 \RR  \lp \mm      \rp &=&
 \UU  \lp \mm,t=0  \rp \;,
 \eeqa
-where the symbol $\star$ denotes cross-correlation in time.
+where the symbol $\ast$ denotes cross-correlation in time.
 Here, 
 $\mm=\mv$ is a vector describing the locations of image points,
 $\US(\mm,t)$ and 
@@ -27,7 +27,7 @@ estimates image reflectivity using cross-correlation in space and time,
 followed by image extraction at zero time:
 \beqa \label{eqn:imgX}
 \UU  \lp \mm,\hh, t  \rp &=&
-\UR  \lp \mm+\hh, t  \rp \star
+\UR  \lp \mm+\hh, t  \rp \ast
 \US  \lp \mm-\hh, t  \rp \;,
 \\   \label{eqn:imgXb}
 \RR  \lp \mm,\hh     \rp &=&
@@ -58,7 +58,7 @@ wavefields in time, as opposed to space,
 followed by image extraction at zero time:
 \beqa \label{eqn:imgT}
 \UU  \lp \mm,t,\tt \rp &=&
-\UR  \lp \mm,t+\tt \rp \star
+\UR  \lp \mm,t+\tt \rp \ast
 \US  \lp \mm,t-\tt \rp \;,
 \\   \label{eqn:imgTb}
 \RR  \lp \mm,\tt     \rp &=&
@@ -84,7 +84,7 @@ involving both space-shift and time-shift,
 followed by image extraction at zero time:
 \beqa \label{eqn:imgA}
 \UU  \lp \mm,\hh, t     \rp &=&
-\UR  \lp \mm+\hh, t+\tt \rp \star
+\UR  \lp \mm+\hh, t+\tt \rp \ast
 \US  \lp \mm-\hh, t-\tt \rp \;,
 \\   \label{eqn:imgAb}
 \RR  \lp \mm,\hh,\tt      \rp &=&
