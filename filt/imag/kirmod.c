@@ -70,8 +70,13 @@ void kirmod_table(char type    /* type of velocity distribution */,
 	case 's': /* linear sloth */
 	    v0 = 0.5*(v1+v2);
 	    rad = v0*v0-r*r*g*g;           /* => v0^2=1/v^4 */
-	    if (rad < 0.) 
-		sf_error("%s: shadow zone, fix later",__FILE__);
+	    if (rad < 0.) { /* shadow zone */
+	      table->t = -FLT_MAX;
+	      table->a = 0.;
+	      table->ar = 0.;
+	      table->tn = 0.;
+	      break;
+	    }
 	    rad = sqrtf(rad);              /* => v0=1/v^2 */
 	    sigma = r*sqrtf(2./(v0+rad));  /* => r*v */
 	    table->t = sigma*(2*v0+rad)/3.;       /* => r/v */

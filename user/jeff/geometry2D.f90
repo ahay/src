@@ -80,8 +80,8 @@ contains
 
     ref = rsf_output("ref.H")
     call to_par(ref,"n1",nref)
-    call to_par(ref,"n2",nz-2)
-    call to_par(ref,"n3",4)
+    call to_par(ref,"n3",nz-2)
+    call to_par(ref,"n2",4)
     call to_par(ref,"o1",0.)
     call to_par(ref,"o2",0.)
     call to_par(ref,"d1",1.)
@@ -90,8 +90,8 @@ contains
 
     a = rsf_output("a.H")
     call to_par(a,"n1",nx)
-    call to_par(a,"n2",nz-2)
-    call to_par(a,"n3",4)
+    call to_par(a,"n3",nz-2)
+    call to_par(a,"n2",4)
     call to_par(a,"o1",0.)
     call to_par(a,"o2",0.)
     call to_par(a,"d1",1.)
@@ -111,20 +111,11 @@ contains
 !!		4) gnorm  - normalization array
   subroutine geometry_calc(rays,Vel,fields,refs,mask,gnorm)
     !! Main subroutine dealing with geometry
-    integer :: iz,inn,mask(:,:),t1,t2,t3,t4,t5,t6
+    integer :: iz,inn,mask(:,:),ix
     integer, allocatable :: masky(:,:)
     real    :: rays(:,:,:),Vel(:,:),fields(:,:,:),refs(:,:,:),gnorm(:,:)
-    logical          :: logic
 
     allocate( masky(nx,nz) );    masky=0
-!!$
-!!$    logic=init_sep_timers()
-!!$    logic=setup_next_timer("ZL",t1)
-!!$    logic=setup_next_timer("C1",t2)
-!!$    logic=setup_next_timer("C2",t3)
-!!$    logic=setup_next_timer("C3",t4)
-!!$    logic=setup_next_timer("C4",t5)
-!!$    logic=setup_next_timer("LL",t6)
 
     !! 2D Constants
     m12=0.
@@ -138,31 +129,40 @@ contains
     iG23 = 0. 
 
     do iz=2,nz-1 !! For all extrapolation steps
-!       call start_timer_num(t1)
 
        !! Metric tensor calculation
-!       call start_timer_num(t2)
        call calc_g11_2d(rays(iz-1:iz+1,:,:),g11);
        call calc_g13_2d(rays(iz-1:iz+1,:,:),g13); 
        if ( maxval(abs(g13)) .lt. 0.01) then
           g13=0.
-          write(0,*) 'SET g13=0.'
        end if
        call calc_g33_2d(rays(iz-1:iz+1,:,:),g33);
        call calc_determinant(g11,g13,g33,gdetr)
-!       call stop_timer_num(t2)
 
 	!! Inverse metric tensor calculation
-!       call start_timer_num(t3)
-       iG11 = g33 / gdetr**2
-       iG13 =-g13 / gdetr**2
-       iG33 = g11 / gdetr**2
+       do ix=1,nx
+          iG11(ix) = g33(ix) / gdetr(ix)**2
+       end do
+       do ix=1,nx
+          iG13(ix) =-g13(ix) / gdetr(ix)**2
+       end do
+       do ix=1,nx
+          iG33(ix) = g11(ix) / gdetr(ix)**2
+       end do
 
 	!! Weighted metric tensor calculation
-       m11=gdetr*iG11
-       m13=gdetr*iG13
-       m22=gdetr
-       m33=gdetr*iG33
+       do ix=1,nx
+          m11(ix)=gdetr(ix)*iG11(ix)
+       end do
+       do ix=1,nx
+          m13(ix)=gdetr(ix)*iG13(ix)
+       end do
+       do ix=1,nx
+          m22(ix)=gdetr(ix)
+       end do
+       do ix=1,nx
+          m33(ix)=gdetr(ix)*iG33(ix)
+       end do
        
 !        call geom_report()
 
@@ -170,64 +170,96 @@ contains
        call calc_n_2d(m11,m12,m13,n1)
        call calc_n_2d(m12,m22,m23,n2)
        call calc_n_2d(m13,m23,m33,n3)
-!       call stop_timer_num(t3)
 
-!       call start_timer_num(t4)
        !! Non-stationary coefficient fields
-       gfields(:,1) = iG13/iG33
-       gfields(:,2) = sqrt(1./(Vel(iz,:)**2*iG33))
-       gfields(:,3) = sqrt(abs(iG11/iG33 - (iG13/iG33)**2))
-       gfields(:,4)= n3/m33
-!       call stop_timer_num(t4)
-
+       do ix=1,nx
+          gfields(ix,1) = iG13(ix)/iG33(ix)
+       end do
+       do ix=1,nx
+             gfields(ix,2) = sqrt(1./(Vel(iz,ix)**2*iG33(ix)))
+       end do
+       do ix=1,nx
+          gfields(ix,3) = sqrt(abs(iG11(ix)/iG33(ix) - (iG13(ix)/iG33(ix))**2))
+       end do
+       do ix=1,nx
+          gfields(ix,4)= n3(ix)/m33(ix)
+       end do
        !! Compute Reference Fields and Masks using N-D Lloyds algorithm
-!       call start_timer_num(t5)
        call get_references(gfields,grefs,gmask)
-!       call stop_timer_num(t5)
 
-		!! Store all fields in arrays
-!       call start_timer_num(t6)
-       gnorm (iz,:   ) = gdetr
-       fields(: ,:,iz) = gfields
-       masky (: ,  iz) = gmask
-       refs  (: ,:,iz) = grefs
-!       call stop_timer_num(t6)
 
-!       call stop_timer_num(t1)
+       !! Store all fields in arrays
+       do ix=1,nx
+          gnorm (iz,ix   ) = gdetr(ix)
+       end do
+
+       do ix=1,nx
+          fields(ix,1:4,iz) = gfields(ix,1:4)
+       end do
+
+       do ix=1,nx
+          masky (ix,iz) = gmask(ix)
+       end do
+
+       do ix=1,nref
+          refs  (ix,1:4,iz) = grefs(ix,1:4)
+       end do
 
     end do
 
     !! Treat ends
-    gnorm(1 ,:)=gnorm(2   ,:)
-    gnorm(nz,:)=gnorm(nz-1,:)
+    do ix=1,nx
+       gnorm(1 ,ix)=gnorm(2   ,ix)
+    end do
+    do ix=1,nx
+       gnorm(nz,ix)=gnorm(nz-1,ix)
+    end do
 
-    fields(:,:,1 )=fields(:,:,2); 
-    fields(:,:,nz)=fields(:,:,nz-1)
+    do ix=1,nx
+       fields(ix,1:4,1 )=fields(ix,1:4,2); 
+    end do
+    do ix=1,nx
+       fields(ix,1:4,nz)=fields(ix,1:4,nz-1)
+    end do
+    
+    do ix=1,nref
+        refs(ix,1:4,1 )=refs(ix,1:4,2   ) 
+    end do
+    do ix=1,nref
+       refs(ix,1:4,nz)=refs(ix,1:4,nz-1)
+    end do
 
-    refs(1:nref,1:4,1 )=refs(1:nref,1:4,2   ) 
-    refs(1:nref,1:4,nz)=refs(1:nref,1:4,nz-1)
-
-    masky (:,1   )=masky (:,2   ) 
-    masky (:,nz  )=masky (:,nz-1)
-
-    mask=masky
+    do ix=1,nx
+       masky (ix,1 )=masky (ix,2   ) 
+    end do
+    do ix=1,nx
+       masky (ix,nz)=masky (ix,nz-1)
+    end do
+    
+    do iz=1,nz
+       do ix=1,nx
+          mask(ix,iz)=masky(ix,iz)
+       end do
+    end do
 
     write(0,*) 'Computed reference Parameters and Geometry'
     call coeff_report(fields,refs)
     deallocate ( masky )
-!    call print_timers()
+
   end subroutine geometry_calc
  
  !----------------------------------------------------------------
 
   subroutine calc_g11_2d(ray,g11)
+    integer          :: ix
     real,intent(in ) :: ray(:,:,:)
     real,intent(out) :: g11(:)
 
-    g11(2:nx-1) = &
-    ( ( ray(2,3:nx,1)-ray(2,1:nx-2,1) ) / (2.*dx) )**2 + &
-    ( ( ray(2,3:nx,2)-ray(2,1:nx-2,2) ) / (2.*dx) )**2 
-
+    do ix=2,nx-1
+    g11(ix) = &
+         ( ( ray(2,ix+1,1)-ray(2,ix-1,1) ) / (2.*dx) )**2 + &
+         ( ( ray(2,ix+1,2)-ray(2,ix-1,2) ) / (2.*dx) )**2 
+     end do
     g11(1 ) = g11(   2) 
     g11(nx) = g11(nx-1)
 
@@ -236,27 +268,30 @@ contains
    !----------------------------------------------------------------
 
   subroutine calc_g33_2d(ray,g33)
+    integer          :: ix
     real,intent(in ) :: ray(:,:,:)
     real,intent(out) :: g33(:)
 
-   g33 = &
-    ( ( ray(3,:,1)-ray(1,:,1) ) / (2.*dz) )**2 + &
-    ( ( ray(3,:,2)-ray(1,:,2) ) / (2.*dz) )**2 
-
+    do ix=1,nx 
+       g33(ix) = &
+           ( ( ray(3,ix,1)-ray(1,ix,1) ) / (2.*dz) )**2 + &
+           ( ( ray(3,ix,2)-ray(1,ix,2) ) / (2.*dz) )**2 
+    end do
   end subroutine calc_g33_2d
 
   !----------------------------------------------------------------
 
    subroutine calc_g13_2d(ray,g13)
+     integer          :: ix
      real,intent(in ) :: ray(:,:,:)
      real,intent(out) :: g13(:)
-
-     g13(2:nx-1) = &
-     ( ray(2,3:nx  ,1)-ray(2,1:nx-2,1) ) * &
-     ( ray(3,2:nx-1,1)-ray(1,2:nx-1,1) ) / (4.*dx*dz) + &
-     ( ray(2,3:nx  ,2)-ray(2,1:nx-2,2) ) * &
-     ( ray(3,2:nx-1,2)-ray(1,2:nx-1,2) ) / (4.*dx*dz) 
-
+     do ix=2,nx-1
+        g13(ix) = &
+             ( ray(2,ix+1,1)-ray(2,ix-1,1) ) * &
+             ( ray(3,ix  ,1)-ray(1,ix  ,1) ) / (4.*dx*dz) + &
+             ( ray(2,ix+1,2)-ray(2,ix-1,2) ) * &
+             ( ray(3,ix  ,2)-ray(1,ix  ,2) ) / (4.*dx*dz) 
+     end do
      g13(1 ) = g13(   2) 
      g13(nx) = g13(nx-1)
 
@@ -265,38 +300,54 @@ contains
   !----------------------------------------------------------------
 
   subroutine calc_determinant(g11,g13,g33,gdetr)
+    integer                        :: ix
     real, dimension(:),intent(in ) :: g11,g13,g33
     real, dimension(:),intent(out) :: gdetr
 
-    gdetr = sqrt( abs(g11*g33-g13**2) )	
-
+    do ix=1,nx
+       gdetr(ix) = sqrt( abs(g11(ix)*g33(ix)-g13(ix)**2) )	
+    end do
   end subroutine calc_determinant
 
   !----------------------------------------------------------------
 
   subroutine calc_inverse(g11,g13,g33,iG11,iG12,iG13,iG22,iG23,iG33,gdetr)
+    integer           :: ix
     real,dimension(:) :: g11,g13,g33,gdetr
     real,dimension(:) :: iG11,iG12,iG13,iG22,iG23,iG33
 
-    iG11 = g33 / gdetr**2
-    iG12 = 0. 
-    iG13 =-g13 / gdetr**2
-    iG22 = 1. 
-    iG23 = 0. 
-    iG33 = g11 / gdetr**2
+    do ix=1,nx
+       iG11(ix) = g33(ix) / gdetr(ix)**2
+    end do
+    do ix=1,nx
+       iG12(ix) = 0. 
+    end do
+    do ix=1,nx
+       iG13(ix) =-g13(ix) / gdetr(ix)**2
+    end do
+    do ix=1,nx
+       iG22(ix) = 1. 
+    end do
+    do ix=1,nx
+       iG23(ix) = 0. 
+    end do
+    do ix=1,nx
+       iG33(ix) = g11(ix) / gdetr(ix)**2
+    end do
 
   end subroutine calc_inverse
 
   !----------------------------------------------------------------
 
   subroutine calc_n_2d(m11,m12,m13,n)
+    integer                        :: ix
     real, intent(in) :: m11(:),m12(:),m13(:)
     real, intent(out):: n(:)
-
-       n(2:nx-1) = ( m11(3:nx) - m11(1:nx-2) )/ (2.*dx)
-
-       n(1 ) = n(   2) 
-       n(nx) = n(nx-1)
+    do ix=2,nx-1
+       n(ix) = ( m11(ix+1) - m11(ix-1) )/ (2.*dx)
+    end do
+    n(1 ) = n(   2) 
+    n(nx) = n(nx-1)
 
     end subroutine calc_n_2d
 
@@ -319,14 +370,12 @@ contains
 
       scaly=0.
 !      nstart = (/ 2,8,4,4 /)
-      nstart = (/ 6,6,6,6 /)
+      nstart = (/ 1,6,6,1 /)
       
-!      scaly(1) = maxval(abs(gfields(:,1)))
-      scaly(1) = 1.! sum(abs(gfields(:,1)))/dble(nx) 
-      scaly(2) = sum(abs(gfields(:,2)))/dble(nx) !!(minval(gfields(:,2)))
-      scaly(3) = sum(abs(gfields(:,3)))/dble(nx) !!(minval(gfields(:,3))) 
-      scaly(4) = 1.!sum(abs(gfields(:,4)))/dble(nx) 
-!      scaly(4) = maxval(abs(gfields(:,4)))
+      scaly(1) = 1.
+      scaly(2) = (minval(gfields(:,2)))
+      scaly(3) = (minval(gfields(:,3))) 
+      scaly(4) = 1.
 
       where (scaly .eq. 0.) 
          have_zeros = 0.
@@ -348,9 +397,7 @@ contains
          end if
       end do
 
-
       iref=lloyd_go(slice,grefs,nref,iregion,nstart) 
-
 
       do ii=1,4  
          if ( have_zeros(ii) .eq. 1.) then

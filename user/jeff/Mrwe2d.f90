@@ -58,7 +58,6 @@ program Mrwe2D
   !!		6) niter_lloyd=25 the number of iterations of Lloyds code
   !!		7) nloop=4 number of smoothing iterations for merging wavefields 
   !!                      from different references
-  !!		8) migapp=1024 migration aperature split evenly about shotpoint
   !!		9) forward=1 Forward/Backscattering switch (0/1)
   !!		10) norm=1 Normalize by Jacobian of matrix
   !!		11/12) zmin/zmax min/max output Cartesian image z-locations
@@ -81,16 +80,16 @@ program Mrwe2D
   implicit none
   type(myaxis) :: ax,az,aw,ar,as 	!! axes types 
 
-  integer :: ix,iz,ii,iw,ishot(1),iis,mxl,mxr,oldn
-  integer :: nref,nsx,nsz,norm,cnx,cnz,migapp
+  integer :: ix,iz,ii,iw,ishot(1),iis,nx,nz,ir,it
+  integer :: nref,nsx,nsz,norm,cnx,cnz
   real    :: forward,xmin,zmin,xmax,zmax,dxx,dzz
   real,    allocatable,dimension(:,:,:):: raysin     !! Input rays		
-  real,    allocatable,dimension(:,:)  :: Vel,gnorm  !! Velocity model, norm matrix
+  real,    allocatable,dimension(:,:)  :: Vel,RVel,gnorm  !! Velocity model, norm matrix
   complex, pointer    ,dimension(:,:  ):: rwf, swf   !! receiver and source wavefiels
-  real,    allocatable,dimension(:,:)  :: CCimg, Pimg!! Cartesian/ray coordinate images
-  logical                              :: verbose,kin
+  real,    allocatable,dimension(:,:)  :: CCimg, Pimg,Image!! Cartesian/ray coordinate images
+  logical                              :: verbose,kin,adj
   character(len=128) :: name
-  type (file) :: rwfile, rays, image, Rimage, velfile, swfile
+  type (file) :: rwfile, rays, imfile, Rimage, velfile, swfile
 
   !! Geometry calculations
   integer, allocatable :: mask(:,:),cutmask(:,:)
@@ -101,7 +100,7 @@ program Mrwe2D
   swfile = rsf_input("swf")
   velfile = rsf_input("vel")
   rays = rsf_input("rays")
-  image = rsf_output("image")
+  imfile = rsf_output("image")
   Rimage = rsf_output("Rimage")
 
   !!		Routines to enable parallel processing with
@@ -109,7 +108,7 @@ program Mrwe2D
 !  call getch_add_string("head=/dev/null")
 !  call getch_add_string("noheader=y")
 !  call set_no_putch()
-!  call sep_begin_prog()
+!  call sep_begin_prog() 
 
   name="rays"
 
@@ -135,13 +134,13 @@ program Mrwe2D
 
   !! 		Parameter input section.  
   !!	 	Call from command line, Makefile or a "par=pars.P" file
-  call from_par("migapp",migapp,ax%n)
   call from_par("forward",forward,0.) 	! Forward scattering option
   call from_par("nref",nref,256)        	! starting number of points for calculating reference velocities
   call from_par("verbose",verbose,.false.)	! level of verbosity
   call from_par("kinematic",  kin,.true.)	! Kinematic approximation 
   call from_par("norm",norm,1)		! Whether (1) or not (0) to normalize by gnorm
-
+  call from_par("nsx",nsx,3)
+  call from_par("nsz",nsz,3)
 
   write(0,*) 'DEPTH',az%n,az%o,az%d
   write(0,*) 'X1   ',ax%n,ax%o,ax%d
@@ -149,29 +148,37 @@ program Mrwe2D
   write(0,*) 'FREQ ',aw%n,aw%o,aw%d
 
   !! Define output Cartesian grid
-  call from_par("xmin",xmin,ax%o)
-  call from_par("zmin",zmin,az%o)
-  call from_par("xmax",xmax,(ax%n-1)*ax%d+ax%o)
-  call from_par("zmax",zmax,(az%n-1)*az%d+az%o)
-  call from_par("dxx",dxx,ax%d)
-  call from_par("dzz",dzz,az%d)
-  call from_par("nsx",nsx,3)
-  call from_par("nsz",nsz,3)
-  cnx = floor((xmax - xmin)/dxx)+1
-  cnz = floor((zmax - zmin)/dzz)+1
+!  call from_par("xmin",xmin,ax%o)
+!  call from_par("zmin",zmin,az%o)
+!  call from_par("xmax",xmax,(ax%n-1)*ax%d+ax%o)
+!  call from_par("zmax",zmax,(az%n-1)*az%d+az%o)
+!  call from_par("dxx",dxx,ax%d)
+!  call from_par("dzz",dzz,az%d)
+
+  call from_par(velfile,"n1",cnz)
+  call from_par(velfile,"n2",cnx)
+  call from_par(velfile,"o1",zmin)
+  call from_par(velfile,"o2",xmin)
+  call from_par(velfile,"d1",dzz) 
+  call from_par(velfile,"d2",dxx)
+
+  write(0,*) 'CARTESIAN OUTPUT'
+  write(0,*) 'nz,nx: ',cnz,cnx
+  write(0,*) 'dz,dx: ',dzz,dxx
+  write(0,*) 'oz,ox  ',zmin,xmin
 
   !! Create output header file associated with "image" tag
   !! . . Output Image in Cartesian coordinates
-  call to_par(image,"n1",cnz)
-  call to_par(image,"n2",cnx)
-  call to_par(image,"n3",as%n)
-  call to_par(image,"d1",dzz )
-  call to_par(image,"d2",dxx )
-  call to_par(image,"d3",as%d)
-  call to_par(image,"o1",zmin)
-  call to_par(image,"o2",xmin)
-  call to_par(image,"o3",as%o)
-  call settype(image,sf_float)
+  call to_par(imfile,"n1",cnz)
+  call to_par(imfile,"n2",cnx)
+  call to_par(imfile,"n3",1)
+  call to_par(imfile,"d1",dzz )
+  call to_par(imfile,"d2",dxx )
+  call to_par(imfile,"d3",1.)
+  call to_par(imfile,"o1",zmin)
+  call to_par(imfile,"o2",xmin)
+  call to_par(imfile,"o3",0.)
+  call settype(imfile,sf_float)
 
   !! Create output header file associated with "image" tag
   !! . . Output Image in RWE coordinates
@@ -187,118 +194,93 @@ program Mrwe2D
   call settype(Rimage,sf_float)
 
   !!	Allocate required arrays
-  allocate( rwf(migapp,aw%n), swf(migapp,aw%n) )
+  allocate( rwf(ax%n,aw%n), swf(ax%n,aw%n),Image(cnz,cnx)  )
   allocate( raysin(az%n,ax%n,2),Vel(az%n,ax%n),gnorm(az%n,ax%n) )
   allocate( mask(ax%n  ,az%n), refs(nref,4,az%n),fields(ax%n,4,az%n))
-  allocate( cutmask(migapp,az%n), cutfields(migapp,4,az%n) )
-  allocate( CCimg(cnz,cnx) , Pimg(az%n,migapp) )
+  allocate( cutmask(ax%n,az%n), cutfields(ax%n,4,az%n) )
+  allocate( CCimg(cnz,cnx) , Pimg(az%n,ax%n),RVel(az%n,ax%n)  )
 
   !! Zero all arrays
   rwf=0.;  	swf=0.; 	gnorm = 0.; raysin=0
   Vel=0.;	mask=0;	refs=0.;	fields=0.
-  cutmask=0.;	cutfields=0.; CCimg=0.; Pimg=0.
+  cutmask=0.;	cutfields=0.; CCimg=0.; Pimg=0. ; RVel=0.; Image=0.;
 
   !!	Read in rays file
   call rsf_read(rays,raysin)
 
+
+  write(0,*) 'RAY REPORT'
+  write(0,*) 'FIRST STEP: min/max x', minval(raysin(1,:,1)),maxval(raysin(1,:,1))
+  write(0,*) 'FIRST STEP: min/max z', minval(raysin(1,:,2)),maxval(raysin(1,:,2))
+  write(0,*) 'LAST STEP : min/max x', minval(raysin(az%n,:,1)),maxval(raysin(az%n,:,1))
+  write(0,*) 'LAST STEP : min/max z', minval(raysin(az%n,:,2)),maxval(raysin(az%n,:,2))
+
   !! Read in Velocity file
   call rsf_read(velfile,Vel)
-
   write(0,*) 'VELOCITY MIN/MAX', minval(Vel),maxval(Vel)
-
-
-  !!----------------------------------------------------------------------------------
-  !!
-  !! GEOMETRY SECTION
-  !!
-  !! . . Initialize module file
-
-  call geometry_init(az%n,ax%n,az%d,ax%d,kin,nref,verbose)
-
-  !! . . Calculate the appropriate coefficients
-  !! . . INPUT:
-  !!		1) raysin - the coordinate mesh used to image
-  !!		2) Vel - velocity model
-  !!
-  !!	. . OUTPUT:
-  !!		1) fields - the coefficient fields for entire coordinate system (used in SSF)
-  !!		2) refs - a sparse representation of 'fields"' used in the PSPI program
-  !!		3) mask - an integer matrix listing the closest refs to each field value
-  !!		4) gnorm - weight matrix for normalization 
-
-  call geometry_calc(raysin,Vel,fields,refs,mask,gnorm)
-  call geometry_close()
-  deallocate( Vel )
-  write(0,*) 'GNORM',minval(gnorm),maxval(gnorm)
 
   !!-------------------------------------------------------------------------------
   !!
   !! MIGRATION SECTION
   !!
   !! . . Initialize module and image space
-  oldn=ax%n
-  ax%n=migapp
   !! . . Initialize the wave-equation migration driver
+  call geometry_init(az%n,ax%n,az%d,ax%d,kin,nref,verbose)
   call wemig_init(ax,az,aw,ar,forward,kin,nref,verbose)
 
   !! Initialize the RWE to Cartesian interpolation routine
-  call C2R_init(nsx,nsz,norm,dxx,dzz,cnx,cnz,migapp,az%n,xmin,zmin)
+
+  CCimg = 0. !! . . Zero total image
 
   do ii=1,as%n   !! . . Loop over shot points
-     swf  = 0.; rwf   = 0.
+     swf  = 0.; rwf   = 0.;    RVel=0.; Pimg = 0.;  gnorm=0.
+
+     !! Read in WF's
      call rsf_read(rwfile,rwf)  !! Read in only current receiver wavefield
-     call rsf_read(swfile,swf)	 !! Read in only currrent source wavefield
-     Pimg = 0.; CCimg = 0.	 !! zero image
+     call rsf_read(swfile,swf)	!! Read in only currrent source wavefield
+     
+     !! Get velocity model
+     adj=.false.
+     call C2R_init(0,0,norm,dxx,dzz,cnx,cnz,ax%n,az%n,xmin,zmin)
+     call C2R_run(RVel,raysin,Vel,gnorm,adj)  
+     call C2R_close()
+     
+     !! Calculate geometry
+     call geometry_calc(raysin,RVel,fields,refs,mask,gnorm)
+     !call geometry_close()
+    
+     !! Propagate wavefield
+     call wemig(rwf,swf,Pimg,ii,fields,refs,mask )
 
-     !! Find shot location to determine migration aperature
-     !! Not important when aperature is full width
+     !! Do RWE -> Cart Image Interpolation
+     adj=.true.
+     call C2R_init(nsx,nsz,norm,dxx,dzz,cnx,cnz,ax%n,az%n,xmin,zmin)
+     call C2R_run(Pimg,raysin,CCimg,gnorm,adj)
+     call C2R_close()
 
-     ishot = maxloc(cabs(swf(:,1)));
-     iis=ishot(1)
-     mxl = max(   1,iis-migapp/2)
-     mxr = min(oldn,iis+migapp/2)
-     if (mxl .eq. 1   ) mxr=migapp
-     if (mxr .eq. oldn) mxl=oldn-migapp+1
-     write(0,*) 'ISHOT',iis,mxl,mxr
-     write(0,*) 'RWF MIN/MAX', minval(abs(rwf)),maxval(abs(rwf))
-     write(0,*) 'SWF MIN/MAX', minval(abs(swf)),maxval(abs(swf))
+     !! Add single image to global image
+     do ix=1,cnx
+        do iz=1,cnz  
+           Image(iz,ix) = Image(iz,ix) + CCimg(iz,ix) 
+        end do
+     end do
 
-     !! Window fields and mask by aperture
-     cutfields = fields(mxl:mxr,:,:)
-     cutmask   = mask  (mxl:mxr,:  )
-
-     !! Call to migration subroutine
-
-     !! INPUT
-     !!		1) rwf - receiver wavefield
-     !!		2) swf - source wavefield
-     !!		4)	ii - the shot number
-     !!		5) cutfields - the values of coefficients (for SSF)
-     !!		6) refs - reference values for (PSPI/SSF)
-     !! 		7) cutmask - integer for closest reference value
-     !!
-     !!	INPUT/OUTPUT
-     !!		3) Pimg - the RWE-based image
-
-     call wemig(rwf,swf,Pimg,ii,cutfields,refs,cutmask )
-
-     !! Write out RWE-based image field
+     !! Advance rays to next step
+     do ir=1,ax%n
+        do it=1,az%n
+           raysin(it,ir,1)=raysin(it,ir,1)+as%d
+        end do
+     end do
+     
+     !! Write(0,*) out individual shot
      call rsf_write(Rimage,Pimg)
-
-     !! RWE-to-Cartesian Interpolation Program
-     write(0,*) "Pimg", maxval(Pimg),minval(Pimg)
-     write(0,*) "Real Rays", maxval(raysin(:,:,1)),minval(raysin(:,:,1))
-     write(0,*) "Imag Rays", maxval(raysin(:,:,2)),minval(raysin(:,:,2))
-     write(0,*) "Gnorm", maxval(gnorm),minval(gnorm)
-
-     call C2R_run(Pimg,raysin(:,mxl:mxr,:),CCimg,gnorm(:,mxl:mxr))
-     write(0,*) "CCimg",maxval(CCimg),minval(CCimg)
-
-     !! Write out Cartesian-based image
-     call rsf_write(image,CCimg)
-
+     
+     write(0,*) 'JUST DID SHOT ', ii ,' ************************'
   end do !! . . End Shot-point loop
-
+  
+  !! Write(0,*) out final image
+  call rsf_write(imfile,Image)
+  
 !  call sep_end_prog()
   call exit()
 end program Mrwe2D

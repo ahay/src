@@ -17,19 +17,18 @@ module RWE2D_wemig
   real,    private :: dz,dx,dw,oz,ox,ow,okx,dkx,forward,eps,pi,sixth,c1,c2
   logical, private :: kin,verbose
 
-	!! PRIVATE ARRAYS FOR PROPAGATION
+  !! PRIVATE ARRAYS FOR PROPAGATION
   integer, allocatable,private :: allmask(:)
   real,    allocatable,private :: msk(:),mtt(:),tap(:),ikz2d(:)
   real,    allocatable,private :: allrefs(:,:),allfields(:,:)
   complex, allocatable,private :: swfl(:),swtt(:),rwfl(:),rwtt(:),rdax(:),sdax(:)
 
+  !! Finite Difference stuff
   complex, allocatable, private :: lk(:),rk(:),ck(:)
   complex, allocatable, private :: a(:),b(:),c(:),u(:)
-
   real,                 private :: kmu,   knu,    kro 
   real,    allocatable, private :: mu(  :),nu(  :),ro(  :)
   real,    allocatable, private :: m0(:),n0(:),r0(:)
-
 
 contains
 
@@ -47,6 +46,11 @@ contains
     dz=az%d;    dx=ax%d;    dw=aw%d * 2.*pi
     oz=az%o;    ox=ax%o;    ow=aw%o * 2.*pi
 
+    write(0,*) 'RWE PARAMs: '
+    write(0,*) 'nz,nx: ',nx,nz
+    write(0,*) 'dz,dx: ',dz,dx
+    write(0,*) 'oz,ox: ',oz,ox
+    write(0,*) 'nw,dw,ow: ',nw,dw,ow
     nref=nref_in
 
     call from_par("ntap",ntap,5)  	!! Width of cosine taper
@@ -60,16 +64,17 @@ contains
     kin=kin_in
     verbose=verbose_in;    
     eps=0.0000001
+
+    !! Finit Difference
     allocate(lk(nx),rk(nx),ck(nx))
     allocate(a(nx),b(nx-1),c(nx-1),u(nx))
-
+    allocate(m0(nx),n0(nx),r0(nx))
+    allocate(mu(nx),nu(nx),ro(nx))
     kmu = 1./ dz         !! 1/ dz
     knu = 1./(2.*dx**2)  !! 1/( 2 dx^2)
     kro = 1./(dz*dx**2)  !! 1/(dz dx^2)
 
-    allocate(m0(nx),n0(nx),r0(nx))
-    allocate(mu(nx),nu(nx),ro(nx))
-
+    !! Wavefield and references
     allocate(rdax(nx),sdax(nx))
     allocate(ikz2d(nx),swfl(nx))
     allocate(swtt(nx),rwfl(nx))
@@ -103,76 +108,79 @@ contains
   !!	end frequencies
   !!
   subroutine wemig(rwf,swf,Pimg,iss,cutfields,refs,cutmask)
-    integer          :: iw,iz,ix,ir,iss,cutmask(:,:)!,t1,t2,t3,t4,t5,t6
+    integer          :: iw,iz,ix,ir,iss,cutmask(:,:)
     real             :: rarg,saxmax,sarg,w
     real             :: Pimg(:,:),refs(:,:,:),cutfields(:,:,:)
     complex,pointer  :: rwf(:,:),swf(:,:),rax(:),sax(:)
-!    logical          :: logic !! For timers
 
-	!! Timer parameters
-!!$    logic=init_sep_timers()
-!!$    logic=setup_next_timer("WLoop",t1)
-!!$    logic=setup_next_timer("PHS",t2)
-!!$    logic=setup_next_timer("SSF",t3)
-!!$    logic=setup_next_timer("REF",t4)
 
     !! . . Forward Scattering Option
-    sarg=-1.; !! if ( forward .ne. 0. ) sarg=1.
-    rarg= 1.
+    sarg=1.; !! if ( forward .ne. 0. ) sarg=1.
+    rarg=-1.
     write(0,*) 'STARTING MIGRATION'
-    write(0,*) 'USING REFERENCE MAX OF :',nref
+    write(0,*) 'Average REFERENCE #: ',nz
 	
     do iw=1,nw  !! FREQUENCY LOOP         
-!       call start_timer_num(t1)
-
        w=ow+(iw-1)*dw 		!! Assign frequency
-       rax => rwf(:,iw)			!! Choose receiver wavefield frequency
-       sax => swf(:,iw)			!! Choose source wavefield frequency
+       rax => rwf(:,iw)		!! Choose receiver wavefield frequency
+       sax => swf(:,iw)		!! Choose source wavefield frequency
        saxmax=maxval(cabs(sax)) !! Max for normalization
 
        do iz=2,nz		!! DEPTH LOOP
 
 	  !! Apply Split-step Fourier propagation
-!          call start_timer_num(t3)
           call wemig_ssfboth(sax,rax,w,cutmask(:,iz),cutfields(:,:,iz),&
-                                       refs(:,:,iz),rarg,sarg)
-!          call stop_timer_num(t3)
+                                        refs(:,:,iz),sarg,rarg)
 			
 	  !! Assign temp wavefields
-          rwtt=rax;rax=0. 
-          swtt=sax;sax=0.
+          do ix=1,nx
+             rwtt(ix)=rax(ix)
+          end do
+
+          do ix=1,nx
+             swtt(ix)=sax(ix)
+          end do
+ 
+          do ix=1,nx
+             rax(ix)=0.
+          end do
+
+          do ix=1,nx
+             sax(ix)=0.
+          end do
 
 	  !! FFT both wavefields
           call fth(.false.,.false.,swtt)
           call fth(.false.,.false.,rwtt)
 
           do ir=1,nref  !! REFERENCE VELOCITY LOOP
-             if (refs(ir,2,iz) .lt. 0.000000001) cycle 
-				!! Assign temp wavefields
-             rwfl=rwtt
-             swfl=swtt
+             if (refs(ir,2,iz) .lt. 0.0000001) cycle 
+			
+             !! Assign temp wavefields
+             do ix=1,nx
+                rwfl(ix)=rwtt(ix)
+             end do
+
+             do ix=1,nx
+                swfl(ix)=swtt(ix)
+             end do
 
 	     !! Phase-shift wavefields
-!             call start_timer_num(t2)
-             call wemig_phsboth(swfl,rwfl,w,iz,ir,refs(:,:,iz),rarg,sarg)
-!             call stop_timer_num(t2)
+             call wemig_phsboth(swfl,rwfl,w,iz,ir,refs(:,:,iz),sarg,rarg)
 	
 	     !! IFFT wavefields
              call fth( .true.,.false.,swfl)
              call fth( .true.,.false.,rwfl)
 
              !! Screen
-!             call start_timer_num(t5)
-             call wemig_psc_coef(cutfields(:,2,iz),cutfields(:,3,iz),&
-                                     refs(ir,2,iz),    refs(ir,3,iz))
-             call wemig_fds(rwfl,w,iz,rarg)
-             call wemig_fds(swfl,w,iz,sarg)
-!             call stop_timer_num(t5)
+             !call wemig_psc_coef(cutfields(:,2,iz),cutfields(:,3,iz),&
+             !                        refs(ir,2,iz),    refs(ir,3,iz))
+             !call wemig_fds(rwfl,w,iz,rarg)
+             !call wemig_fds(swfl,w,iz,sarg)
 
              !! Interpolate wavefields for a PSPI approach
-!             call start_timer_num(t4)
              call wemig_refboth(swfl,rwfl,iz,ir,cutmask(:,iz),sax,rax)
-!             call stop_timer_num(t4)
+
 
           end do !! END Reference loop
 			
@@ -182,49 +190,51 @@ contains
 
 	  !! Apply correlation imaging condition
 	  !! (a deconvolution imaging condition is zeroed out)
-          Pimg(iz,:)=Pimg(iz,:)+real(rax*conjg(sax))!/&
-          !                                  max( maxval(real(sax*conjg(sax))) ,0.01 )
-
+          do ix=1,nx
+             Pimg(iz,ix)=Pimg(iz,ix)+real(rax(ix)*conjg(sax(ix)))
+          end do
        end do !! END Depth loop
 
        write(0,*) "SSF",iw,nw,iss,maxval(abs(Pimg(:,:)))
-!       call stop_timer_num(t1)
 
     end do  !! END Frequency Loop
     write(0,*) 'FINISHED OFF SHOT!'
 
-!    call print_timers() !! Output benchmarking statistics
   end subroutine wemig
 
   !----------------------------------------------------------------
   !!
   !! Split-step Fourier Propagation subroutine 
   !!	
-  subroutine wemig_ssfboth(sdax,rdax,w,allmask,allfields,allrefs,rdir,sdir) 
+  subroutine wemig_ssfboth(sdax,rdax,w,allmask,allfields,allrefs,sdir,rdir) 
     integer :: ix,allmask(:)
     real    :: w,sdir,rdir,allfields(:,:),allrefs(:,:)
     complex :: sdax(:),rdax(:)
 
-!! Calculate w-x domain correction step
+    !! Calculate w-x domain correction step
     do ix=1,nx
-       ikz2d(ix)=-dz*(w**2*allrefs(allmask(ix),2 )*&
-       (allfields(ix,2 )-allrefs(allmask(ix),2))-&
-       allrefs(allmask(ix),4)*(allfields(ix,4)-allrefs(allmask(ix),4)))/&
-       sqrt(abs(allrefs(allmask(ix),2)**2*w**2-allrefs(allmask(ix),4)**2)+eps ) 
+       ikz2d(ix)= -dz*(w**2*allrefs(allmask(ix),2 )*&
+          (allfields(ix,2 )-allrefs(allmask(ix),2))-&
+                            allrefs(allmask(ix),4)*(allfields(ix,4)-allrefs(allmask(ix),4)))/&
+                   sqrt(abs(allrefs(allmask(ix),2)**2*w**2-allrefs(allmask(ix),4)**2)+eps ) 
     end do
 
-!! Apply to each wavefield.  Note rdir and sdir control the direction of propagation
-!! Should be oppposite for backscattering and same for forward-scattering
-    rdax = rdax*cmplx(cos(ikz2d),rdir*sin(ikz2d))
-    sdax = sdax*cmplx(cos(ikz2d),sdir*sin(ikz2d))
+    !! Apply to each wavefield.  Note rdir and sdir control the direction of propagation
+    !! Should be oppposite for backscattering and same for forward-scattering
+    do ix=1,nx
+       rdax(ix) = rdax(ix)*cmplx(cos(ikz2d(ix)),rdir*sin(ikz2d(ix)))
+    end do
 
+    do ix=1,nx
+       sdax(ix) = sdax(ix)*cmplx(cos(ikz2d(ix)),sdir*sin(ikz2d(ix)))
+    end do
   end subroutine wemig_ssfboth
+
   !----------------------------------------------------------------  
   !!
   !! Fourier-domain phase shift
-  !!
- 
-  subroutine wemig_phsboth(sdax,rdax,w,iz,ir,allrefs,rdir,sdir)
+  !! 
+  subroutine wemig_phsboth(sdax,rdax,w,iz,ir,allrefs,sdir,rdir)
     integer :: ix,iz,ir
     real    :: w,kx,rdir,sdir,carg,carg1,allrefs(:,:),pkz
     complex :: kz,rdax(:),sdax(:)
@@ -267,7 +277,10 @@ contains
 
 	!! Find out locations where want to take wavefield for given
 	!! Reference values
-    mtt=0.
+    do ix=1,nx
+       mtt(ix)=0.
+    end do
+
     where( allmask .eq. ir) 
        mtt=1.
     end where
@@ -278,17 +291,22 @@ contains
        do ix=2,nx-1
           msk(ix)=( mtt(ix-1)+mtt(ix+1) )/2.
        end do
-       mtt=msk
+       do ix=1,nx
+          mtt(ix)=msk(ix)
+       end do
     end do
 	!! Interpolate Wavefields
-	
-    sdax = sdax + msk*swfl
-    rdax = rdax + msk*rwfl
+    do ix=1,nx
+       sdax(ix) = sdax(ix) + msk(ix)*swfl(ix)
+    end do
 
+    do ix=1,nx
+       rdax(ix) = rdax(ix) + msk(ix)*rwfl(ix)
+    end do
   end subroutine wemig_refboth
 
   !----------------------------------------------------------------
-!! Taper Initialization Program
+  !! Taper Initialization Program
   subroutine rwetaper_init()
     integer :: itap,jtap,ix
     real :: pi
@@ -310,18 +328,21 @@ contains
 
   end subroutine rwetaper_init
 
-!!----------------------------------------------------------------
-!!
-!! Apply Taper to wavefield
-!!
+  !!----------------------------------------------------------------
+  !!
+  !! Apply Taper to wavefield
+  !!
   subroutine rwetaper(dax)
+    integer           :: ix
     complex, pointer  :: dax(:)
-    dax = dax * tap
+    do ix=1,nx
+       dax(ix) = dax(ix) * tap(ix)
+    end do
   end subroutine rwetaper
 
-!----------------------------------------------------------------
-!! . . REINSERTED FD STUFF 
-!----------------------------------------------------------------
+  !----------------------------------------------------------------
+  !! . . REINSERTED FD STUFF 
+  !----------------------------------------------------------------
   subroutine wemig_psc_coef(aa,bb,a0,b0)
     real    :: aa(:),bb(:)
     real    :: a0,  b0
