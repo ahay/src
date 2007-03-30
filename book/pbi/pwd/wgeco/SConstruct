@@ -15,7 +15,7 @@ for case in input.keys():
     data = 'd'+case
     Flow([data,'./b'+case,'./h'+case,'t'+case],input[case],
          '''
-         segyread tape=$SOURCE verbose=y tfile=${TARGETS[3]}
+         segyread tape=$SOURCE verb=y tfile=${TARGETS[3]}
          bfile=${TARGETS[1]} hfile=${TARGETS[2]}
          ''',stdin=0)
     Flow(case,data,'put n2=150 n3=45')

@@ -33,7 +33,7 @@ int
 main (int argc, char *argv[])
 {
   const bool su = false;
-  bool verbose, xdr;
+  bool verb, xdr;
   char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
   char *headname, *filename;
   int format, ns, ntr, itrace[SF_NKEYS];
@@ -44,8 +44,8 @@ main (int argc, char *argv[])
   /**** Start common code with su2rsf (16 lines) ****/
   sf_init (argc, argv);
 
-  if (!sf_getbool ("verbose", &verbose))
-    verbose = false;
+  if (!sf_getbool ("verb", &verb))
+    verb = false;
   /* Verbosity flag */
 
   if (!sf_getbool ("endian", &xdr))
@@ -78,7 +78,7 @@ main (int argc, char *argv[])
     sf_error ("Error writing ascii header");
   fclose (head);
 
-  if (verbose)
+  if (verb)
     sf_warning ("ASCII header written to \"%s\"", headname);
 
   if (SF_BNYBYTES != fread (bhead, 1, SF_BNYBYTES, file))
@@ -95,7 +95,7 @@ main (int argc, char *argv[])
     sf_error ("Error writing binary header");
   fclose (head);
 
-  if (verbose)
+  if (verb)
     sf_warning ("Binary header written to \"%s\"", headname);
 
   if (!sf_getint ("format", &format))
@@ -110,19 +110,19 @@ main (int argc, char *argv[])
   switch (format)
     {
     case 1:
-      if (verbose)
+      if (verb)
 	sf_warning ("Assuming IBM floating point format");
       break;
     case 2:
-      if (verbose)
+      if (verb)
 	sf_warning ("Assuming 4 byte integer format");
       break;
     case 3:
-      if (verbose)
+      if (verb)
 	sf_warning ("Assuming 2 byte integer format");
       break;
     case 5:
-      if (verbose)
+      if (verb)
 	sf_warning ("Assuming IEEE floating point format");
       break;
     default:
@@ -136,14 +136,14 @@ main (int argc, char *argv[])
   if (0 >= ns)
     sf_error ("Number of samples is not set in binary header");
 
-  if (verbose)
+  if (verb)
     sf_warning ("Detected trace length of %d", ns);
 
   dt = sf_segydt (bhead);
   nsegy = SF_HDRBYTES + ((3 == format) ? ns * 2 : ns * 4);
   ntr = (pos - SF_EBCBYTES - SF_BNYBYTES) / nsegy;
 
-  su_or_segy_to_rsf (verbose, su, ntr, format, ns, itrace, nsegy, file, dt);
+  su_or_segy_to_rsf (verb, su, ntr, format, ns, itrace, nsegy, file, dt);
 
   exit (0);
 }

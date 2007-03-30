@@ -248,7 +248,7 @@ int main(int argc, char *argv[])
 
     sf_init(argc, argv);
 
-    if (!sf_getbool("verbose",&verbose)) verbose=false;
+    if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
 
     if (!sf_getbool("su",&su)) su=false;

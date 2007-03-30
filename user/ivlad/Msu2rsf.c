@@ -33,7 +33,7 @@ int
 main (int argc, char *argv[])
 {
   const bool su = true;
-  bool verbose, xdr;
+  bool verb, xdr;
   char *filename, *trace;
   int format, ns, ntr, itrace[SF_NKEYS];
   off_t pos, nsegy;
@@ -44,8 +44,8 @@ main (int argc, char *argv[])
 /**** Start common code with segy2rsf (16 lines) ****/
   sf_init (argc, argv);
 
-  if (!sf_getbool ("verbose", &verbose))
-    verbose = false;
+  if (!sf_getbool ("verb", &verb))
+    verb = false;
   /* Verbosity flag */
 
   if (!sf_getbool ("endian", &xdr))
@@ -78,7 +78,7 @@ main (int argc, char *argv[])
   nsegy = SF_HDRBYTES + ns * 4;
   ntr = pos / nsegy;
 
-  su_or_segy_to_rsf (verbose, su, ntr, format, ns, itrace, nsegy, file, dt);
+  su_or_segy_to_rsf (verb, su, ntr, format, ns, itrace, nsegy, file, dt);
 
   exit (0);
 }

@@ -42,7 +42,7 @@ readfilesize (FILE * file)
 }
 
 void
-su_or_segy_to_rsf (bool verbose, bool su, int ntr, int format, int ns,
+su_or_segy_to_rsf (bool verb, bool su, int ntr, int format, int ns,
 		   int itrace[SF_NKEYS], off_t nsegy, FILE * file, float dt)
 /*< Common block of code for both segy2rsf and su2rsf >*/
 {
@@ -69,7 +69,7 @@ su_or_segy_to_rsf (bool verbose, bool su, int ntr, int format, int ns,
   /* Why declare it by hand? It is included in stdio.h */
   extern int fseeko (FILE * stream, off_t offset, int whence);
 
-  if (verbose)
+  if (verb)
     sf_warning ("Expect %d traces", ntr);
 
   if (NULL == (read = sf_getstring ("read")))

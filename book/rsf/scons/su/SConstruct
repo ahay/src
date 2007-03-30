@@ -45,7 +45,7 @@ def ref(refl):
 Flow('data',None,
      '''
      susynlv v00=5 fpeak=25 ndpfz=10 dvdz=2 ob=0
-     dt=0.004 nt=501 verbose=0 %s
+     dt=0.004 nt=501 verb=0 %s
      nxo=64 fxo=0.1 dxo=0.1
      nxs=12 fxs=1.4 dxs=-0.1 |
      suchw key1=cdp key2=gx key3=sx b=1 c=1 d=2 |

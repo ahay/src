@@ -22,7 +22,7 @@ ls=0                    # =1 for line source; default is point source
 ob=1                    # =1 to include obliquity factors  (pas touche)
 smooth=1                # =1 for smooth (piecewise cubic spline) reflectors
 ndpfz=1000              # number of diffractors per Fresnel zone
-verbose=1
+
 REF1="-0.55555555555556:0,2.;3.5,2.;4.5,2.5;5.,2.25;5.5,2.;6.5,2.5;10,2.5"
 REF2="-0.55555555555556:0,2.5;10,3.5"
 REF3="-0.55555555555556:0,3.2;3.5,3.2;5,3.7;6.5,4.2;10,4.2"

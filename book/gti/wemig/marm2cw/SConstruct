@@ -73,7 +73,7 @@ psgy = 'obc_div_v_1.segy'
 Fetch(psgy,'marm2')
 Flow(['pdat','phdr'],psgy,
      '''
-     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verb=y |
      put n2=1381 o2=0 d2=0.01232
          n3=320  o3=3 d3=0.025
          label1=t label2=x label3=s
@@ -83,7 +83,7 @@ ssgy = 'obc_curl_v_1.segy'
 Fetch(ssgy,'marm2')
 Flow(['sdat','shdr'],ssgy,
      '''
-     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verb=y |
      put n2=1381 o2=0 d2=0.01232
          n3=320  o3=3 d3=0.025
          label1=t label2=x label3=s

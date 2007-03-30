@@ -82,7 +82,7 @@ sgy = 'surface_p1.segy'
 Fetch(sgy,'marm2')
 Flow(['dat','hdr'],sgy,
      '''
-     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verbose=y |
+     segyread tape=$SOURCE tfile=${TARGETS[1]} format=5 verb=y |
      put n2=1361 o2=0   d2=0.0125
          n3=320  o3=3.0 d3=0.025
      label1=t label2=x label3=s
