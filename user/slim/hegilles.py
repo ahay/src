@@ -28,6 +28,7 @@ Utilities for Python-based Madagascar programs in RSFROOT/user/slim
 #  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
 import numpy as __np
+import re as __re
 
 def killtraces(N,perc=50,maxfactor=1,seed=None):
     '''
@@ -41,7 +42,7 @@ def killtraces(N,perc=50,maxfactor=1,seed=None):
     seed       seed for random number generator
     '''
     if seed is not None:
-        __np.random.seed(seed)
+        __np.random.seed(int(seed))
 
     if maxfactor<1:
         print "ERROR: maxfactor must be >=1"
@@ -70,7 +71,12 @@ def killtraces(N,perc=50,maxfactor=1,seed=None):
     else:
         pickinginds = initpick
     picking = __np.zeros(N)
-    picking.put(__np.ones(len(pickinginds)),list(pickinginds))
+
+    if __re.findall('^([\d|.]+)',__np.__version__) < ['1.0'] or (__re.search('rc',__np.__version__) and __re.findall('^([\d|.]+)',__np.__version__) <= ['1.0']):
+	print "WARNING: Consider upgrading to NumPy 1.0 or greater."
+	picking.put(__np.ones(len(pickinginds)),list(pickinginds))
+    else:
+	picking.put(list(pickinginds),__np.ones(len(pickinginds)))
 
     return picking
 
@@ -86,7 +92,7 @@ def jitter(N,perc=50.,jit=None,seed=None):
     '''
 
     if seed is not None:
-        __np.random.seed(seed)
+        __np.random.seed(int(seed))
     
     if perc<=0 or perc>=100:
         print "ERROR: 0 < perc < 100"
@@ -100,8 +106,13 @@ def jitter(N,perc=50.,jit=None,seed=None):
     y = __np.zeros(N)
     inipos = __np.arange(0,N,sub)
     pos = __np.array(__np.round(inipos +__np.float(jit)*__np.random.rand(inipos.size)-jit/2.)%N,dtype='i')
-    y.put(__np.ones(pos.size),pos)
-    
+
+    if __re.findall('^([\d|.]+)',__np.__version__) < ['1.0'] or (__re.search('rc',__np.__version__) and __re.findall('^([\d|.]+)',__np.__version__) <= ['1.0']):
+	print "WARNING: Consider upgrading to NumPy 1.0 or greater."
+	y.put(__np.ones(pos.size),pos)
+    else:
+	y.put(pos,__np.ones(pos.size))
+
     return y
     
 # $Id$
