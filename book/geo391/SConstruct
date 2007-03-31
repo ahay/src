@@ -1,0 +1,8 @@
+from rsfbook import *
+from rsftex import *
+
+Papers(copyr='The University of Texas at Austin',
+       group='Seismic Wavefield Imaging',
+       papers=map(lambda x: 'hw%d/paper.tex' % x,range(1,6)))
+
+End(lclass='georeport',use='color')

@@ -1,0 +1,23 @@
+from rsfbook import *
+from rsftex import *
+
+Papers(copyr='University of Texas at Austin',
+       group='Madagascar Documentation',
+       papers=Split('''
+       rsf/paper.tex
+       rsf/install.tex
+       rsf/prog.tex
+       rsf/format.tex
+       rsf/tour.tex
+       rsf/api.tex
+       rsf/demo.tex
+       rsf/adding.tex
+       scons/paper.tex
+       '''),
+       authors={'scons':'Sergey Fomel and Gilles Hennenfent'})
+       
+for file in ('toc','tpg'):
+    Paper(file,lclass='georeport')
+
+End(lclass='georeport',use='hyperref,color')
+

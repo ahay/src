@@ -1,12 +1,42 @@
 from rsfbook import *
 from rsftex import *
 
+papers = '''
+angle
+antial
+cdstep
+fkamo
+fmsec
+oc1
+pwd
+specfac
+stack
+vc2
+aniso
+burg
+findif
+fmeiko
+forwd
+norm
+oc2
+precon
+rwe
+spitz
+vc1
+velspec
+'''
+
 Papers(sections={'fmeiko':'Traveltime'},
        authors={'aniso':'Sergey Fomel and Vladimir Grechka',
                 'precon':'Sergey Fomel and Jon Claerbout',
                 'norm': 'Sergey Fomel and Norman Bleistein',
-                'rwe':'Paul Sava and Sergey Fomel'},
-       copyr='Stanford University')
+                'rwe':'Paul Sava and Sergey Fomel',
+                'burg':'''Sergey Fomel and Paul Sava and
+                James Rickett and Jon F. Claerbout'''
+                },
+       copyr='Stanford University',
+       group='Stanford Exploration Project',
+       papers=map(lambda x: x+'/paper.tex',Split(papers)))
 
 Paper('toc',lclass='georeport')
        
