@@ -53,6 +53,7 @@ for source in Split(src2):
 lib = env.StaticLibrary('rsf',objects+sources)
 inc = env.Command('rsf.h',includes,Action(configure.merge))
 install = env.Install('../../include',inc)
+env.Precious('../../include')
 
 if root:
     env.Install(libdir,lib)
@@ -116,26 +117,20 @@ if 'f90' in api and env.has_key('F90'):
 
     if F90base == 'gfortran':
         F90flags = F90flags + ' -DGFORTRAN'
+        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
 
     env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
-        
-    obj = env.Object('rsf.o','rsf.f90')
-    libf90 = env.StaticLibrary('rsff90',[obj[0],'fortran90.o'])
+    objf90 = env.Object('rsf.f90',)
+    libf90 = env.StaticLibrary('rsff90',[objf90[0],'fortran90.o'])
+    mod = objf90[1]
 
-    if root: # f90 compiler places the mod file in the top directory
-        mod = '#/'+str(obj[1])
-    else:
-        mod = obj[1]
-        
-    installf90 = env.Install('../../include',[obj[0],mod])
+    installf90 = env.Install('../../include',mod)
              
     if root:
         env.Install(incdir,mod)
+        env.Install(libdir,libf90)
     else:
         env.Alias('install',installf90)
-        
-    if root:
-        env.Install(libdir,libf90)
             
     for file in ['getpar','file']:
         test = 'Test' + file + '.f90'
