@@ -118,6 +118,8 @@ if 'f90' in api and env.has_key('F90'):
     if F90base == 'gfortran':
         F90flags = F90flags + ' -DGFORTRAN'
         env['F90FLAGS'] = env.get('F90FLAGS','') + ' -J${SOURCE.dir}'
+    elif F90base == 'ifort':
+        env['F90FLAGS'] = env.get('F90FLAGS','') + ' -module ${SOURCE.dir}'
 
     env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
     objf90 = env.Object('rsf.f90',)
