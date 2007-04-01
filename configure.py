@@ -91,6 +91,15 @@ Include = Scanner(name='Include',function=included,skeys=['.c'])
 plat = {'OS': 'unknown',
         'distro': 'unknown',
         'arch': 'unknown'}
+package = {}
+
+def needed_package(type,fatal=1):
+    global package, plat
+    pack = package[type].get(plat['distro'])
+    if pack:
+        stderr_write('Needed package: ' + pack)
+    if fatal:
+        sys.exit(unix_failure)
 
 # The functions called inside check_all
 # are found further down, in the order they are called
@@ -158,6 +167,9 @@ def identify_platform(context):
              # commands through os.system to find distro/version
     context.Result('%(OS)s [%(distro)s]' % plat)
 
+package['gcc'] = {'fc':'gcc'}
+package['libc'] = {'generic':'libc6-dev'}
+
 # A C compiler is needed by most Madagascar programs
 # Failing this test stops the installation.
 def cc(context):
@@ -167,9 +179,7 @@ def cc(context):
         context.Result(CC)
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: gcc.')
-        sys.exit(unix_failure)
+        needed_package('gcc')
     text = '''
     int main(int argc,char* argv[]) {
     return 0;
@@ -179,7 +189,7 @@ def cc(context):
     res = context.TryLink(text,'.c')
     context.Result(res)
     if not res:
-        sys.exit(unix_failure)
+        needed_package('libc')
     if CC[-3:]=='gcc':
         oldflag = context.env.get('CCFLAGS')
         for flag in ('-std=gnu99 -Wall -pedantic',
@@ -205,12 +215,17 @@ def cc(context):
                 context.env['CCFLAGS'] = oldflag
 	# if Mac OS X and fink installed, update CPPPATH and LIBPATH
 	if plat['OS'] == 'darwin' and os.path.isdir('/sw'):
-	    context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + ['/sw/include',]
-	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + ['/sw/lib',]
+	    context.env['CPPPATH'] = context.env.get('CPPPATH',[]) + \
+                                     ['/sw/include',]
+	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
+                                     ['/sw/lib',]
 
     elif plat['OS'] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
                                                 '-O2','-xO2')
+
+package['ar']={'fc':'binutils'}
+
 
 # Used for building libraries.
 def ar(context):
@@ -221,10 +236,10 @@ def ar(context):
         context.env['AR'] = AR
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: binutils.')
-        sys.exit(unix_failure)
+        needed_package('ar')
 
+package['libs'] = {'fc':'glibc-headers',
+                   'cygwin':'sunrpc (Setup...Libs)'}
 
 # Failing this check stops the installation.
 def libs(context):
@@ -253,12 +268,9 @@ def libs(context):
         context.env['LIBS'] = LIBS
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: glibc-headers.')
-        elif plat['distro'] == 'cygwin':
-            stderr_write('Needed package: sunrpc (Setup...Libs)')
-        sys.exit(unix_failure)
+        needed_package('libs')
 
+package['c99'] = {'fc':'glibc-headers'}
 
 # Complex number support according to ISO C99 standard
 def c99(context):
@@ -279,9 +291,7 @@ def c99(context):
     else:
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','')+' -DNO_COMPLEX'
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Package needed for ISO C99 support: glibc-headers')
-
+        needed_package('c99',0)
 
 # The two lists below only used in the x11 check
 xinc = [
@@ -347,6 +357,9 @@ xlib = [
     '/usr/openwin/share/lib'
     ]
 
+package['xaw']={'fc':'libXaw-devel',
+                'generic':'libxaw7-dev'}
+
 # If this check is failed 
 # you may not be able to display .vpl images on the screen
 def x11(context):
@@ -379,8 +392,7 @@ def x11(context):
     if not res:
         context.Result(context_failure)
         stderr_write('xtpen (for displaying .vpl images) will not be built.')
-        if plat['distro'] == 'fc':
-            stderr_write('Package needed for xtpen: libXaw-devel.')
+        needed_package('xaw',0)
         context.env['XINC'] = None
         return
 
@@ -422,6 +434,10 @@ def x11(context):
     context.env['LIBPATH'] = oldlibpath
     context.env['LIBS'] = oldlibs
 
+package['netpbm'] = {'fc':'netpbm-devel',
+                     'generic':'libnetpbm10-dev',
+                     'cygwin':'libnetpbm-devel (Setup...Devel)'}
+
 def ppm(context):
     context.Message("checking for ppm ... ")
     LIBS = context.env.get('LIBS','m')
@@ -438,21 +454,20 @@ def ppm(context):
 	
 	if res:
 	    context.Result(res)
-	    context.env['PPM'] = ppm
+	    context.env['PPM'] = ppm           
 	    break
 	else:
 	    LIBS.pop()
 
-    if not res:
+    if res:
+        LIBS.pop()
+    else:
         context.Result(context_failure)
-        stderr_write('ppmpen, vplot2gif, vplot2avi will not be built.')
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: netpbm-devel')
-        elif plat['distro'] == 'cygwin':
-            stderr_write('Needed package: libnetpbm-devel (Setup...Devel)')
+        needed_package('netpbm',0)
         context.env['PPM'] = None
 
-#    LIBS.pop()
+package['jpeg'] = {'fc':'libjpeg-devel',
+                   'generic':'libjpeg62-dev'}
 
 # If this test is failed, no writing to jpeg files
 def jpeg(context):
@@ -475,12 +490,13 @@ def jpeg(context):
         context.env['JPEG'] = jpeg
     else:
         context.Result(context_failure)
-        context.env['JPEG'] = None
         stderr_write('sfbyte2jpg will not be built.')
-        if plat['distro'] == 'fc':
-            stderr_write('Package needed for sfbyte2jpg: libjpeg-devel.')
+        needed_package('jpeg',0)
+        context.env['JPEG'] = None
 
     LIBS.pop()
+
+package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
 
 # If this test is failed, it is unknown what capabilities are lost
 def mpi(context):
@@ -507,10 +523,8 @@ def mpi(context):
         context.env['MPICC'] = mpicc
     else:
         context.Result(context_failure)
+        needed_package('mpi',0)
         context.env['MPICC'] = None
-        if plat['distro'] == 'fc':
-            stderr_write('For MPI, install: openmpi, openmpi-devel, openmpi-libs.')
-
 
 def api_options(context):
     context.Message("checking API options ... ")
@@ -546,6 +560,9 @@ def api_options(context):
     context.env['API'] = api
     return api
 
+package['c++'] = {'fc':'gcc-c++',
+                  'generic':'g++'}
+
 # For the C++ API
 def cxx(context):
     context.Message("checking for C++ compiler ... ")
@@ -554,9 +571,7 @@ def cxx(context):
         context.Result(CXX)
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: gcc-c++')
-        sys.exit(unix_failure)
+        needed_package('c++')
     context.Message("checking if %s works ... " % CXX)
     text = '''
     #include <valarray>
@@ -586,6 +601,8 @@ fortran = {'g77':'f2cFortran',
            'gfortran':'NAGf90Fortran', # used to be f2cFortran
            'f2c':'f2cFortran'}
 
+package['f77'] = {'fc':'gcc-gfortran',
+                  'generic':'g77'}
 
 def f77(context):
     context.Message("checking for F77 compiler ... ")
@@ -604,8 +621,7 @@ def f77(context):
         context.Result(F77)
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: gcc-gfortran')
+        needed_package('f77')
         sys.exit(unix_failure)
     if os.path.basename(F77) == 'ifc' or os.path.basename(F77) == 'ifort':
         intel(context)
@@ -628,6 +644,9 @@ def f77(context):
     context.Message("checking %s type for cfortran.h ... " % F77)
     context.Result(cfortran)
 
+package['f90'] = {'fc':'gcc-gfortran',
+                  'generic':'gfortran'}
+
 def f90(context):
     context.Message("checking for F90 compiler ... ")
     F90 = context.env.get('F90')
@@ -645,9 +664,8 @@ def f90(context):
         context.Result(F90)
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: gcc-gfortran')
-        sys.exit(unix_failure)
+        needed_package('f90')
+
     if os.path.basename(F90) == 'ifc' or os.path.basename(F90) == 'ifort':
         intel(context)
         context.env.Append(F90FLAGS=' -Vaxlib')
@@ -696,7 +714,9 @@ def matlab(context):
             MATLABPATH += ':' + RSFROOT_lib
         else:
             MATLABPATH = RSFROOT_lib
-        context.env['MATLAB'] = 'MATLABPATH=%s %s -nosplash -nojvm -nodesktop' %(MATLABPATH,matlab)
+        context.env['MATLAB'] = 'MATLABPATH=%s %s ' \
+                                '-nosplash -nojvm -nodesktop' %(MATLABPATH,
+                                                                matlab)
     else:
         context.Result(context_failure)
         stderr_write('Please install Matlab.')
@@ -728,17 +748,19 @@ def matlab(context):
         suffix == 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
+package['swig'] = {'fc':'swig',
+                   'generic':'swig'}
+package['numpy'] = {'fc':'numpy',
+                    'generic':'python-scipy, python-numpy-dev'}
+
 def python(context):
     context.Message("checking for SWIG ... ")
     if 'swig' in Environment().get('TOOLS'):
         context.Result( WhereIs('swig') )
     else:
         context.Result(context_failure)
-        if plat['distro'] == 'fc':
-            stderr_write('Needed package: swig')
-        else:
-             stderr_write('Please install SWIG.')
-        sys.exit(unix_failure)
+        stderr_write('Please install SWIG.')
+        needed_package('swig')
 
     context.Message("checking for numpy ... ")
     try:
@@ -751,15 +773,13 @@ def python(context):
         try:
             import numarray
             context.Result(context_success)
-            stderr_write('numarray development has stopped; plan to migrate to numpy')
+            stderr_write('numarray development has stopped; '
+                         'plan to migrate to numpy')
 	    context.env['PYMODULES'] = ['numarray']
         except:
             context.Result(context_failure)
-            if plat['distro'] == 'fc':
-                stderr_write('Needed package: numpy')
-            else:
-                stderr_write('Please install numpy.')
-            sys.exit(unix_failure)
+            stderr_write('Please install numpy.')
+            needed_package('numpy')
 
     context.Message("checking for scipy ... ")
     try:

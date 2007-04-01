@@ -6,6 +6,7 @@ Jim Jennings <jim.jennings@beg.utexas.edu>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Colin Russell <crussell@eos.ubc.ca>
 Paul Sava <psava@mines.edu>
+Jeffrey Shragge <jshragge@gmail.com>
 Ioan Vlad <i.vlad@yahoo.com>
 
 Vplot authors:

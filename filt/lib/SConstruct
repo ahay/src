@@ -29,7 +29,8 @@ except: # local version
     opts.Update(env)
     env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
     if  sys.platform[:5] == 'sunos':
-	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),
+                                        '-xO2','-g')
     env.Append(BUILDERS={'Include':configure.Header},
                SCANNERS=[configure.Include])
 
@@ -108,50 +109,44 @@ if 'f77' in api:
 ##############################################################################
 # FORTRAN-90 BINDING
 ##############################################################################
-if 'f90' in api:
-    if env.has_key('F90'):
-        F90 = env.get('F90')
-        F90base =  os.path.basename(F90)
-        F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
+if 'f90' in api and env.has_key('F90'):
+    F90 = env.get('F90')
+    F90base =  os.path.basename(F90)
+    F90flags = env.get('CCFLAGS')+' -D$CFORTRAN90'
 
-        if F90base == 'gfortran':
-            F90flags = F90flags + ' -DGFORTRAN'
+    if F90base == 'gfortran':
+        F90flags = F90flags + ' -DGFORTRAN'
 
-        env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
-        env.Object('rsf.o','rsf.f90')
-        libf90 = env.StaticLibrary('rsff90',['rsf.o','fortran90.o'])
-
-        modsuffix = env.get('F90MODSUFFIX')
-        if modsuffix:
-            if 'ifort'==F90base or 'gfortran'==F90base:
-                mod = 'rsf'+modsuffix
-            else:
-                mod = 'RSF'+modsuffix
-            if root:
-                mod = '#/'+mod
-            env.Depends(mod,libf90)
-
-            installf90 = env.Install('../../include',mod)
-             
-            if root:
-                env.Install(incdir,mod)
-            else:
-                env.Alias('install',installf90)
+    env.Object('fortran90.o','fortran.c',CCFLAGS=F90flags)
         
-        if root:
-            env.Install(libdir,libf90)
+    obj = env.Object('rsf.o','rsf.f90')
+    libf90 = env.StaticLibrary('rsff90',[obj[0],'fortran90.o'])
+
+    if root: # f90 compiler places the mod file in the top directory
+        mod = '#/'+str(obj[1])
+    else:
+        mod = obj[1]
+        
+    installf90 = env.Install('../../include',[obj[0],mod])
+             
+    if root:
+        env.Install(incdir,mod)
+    else:
+        env.Alias('install',installf90)
+        
+    if root:
+        env.Install(libdir,libf90)
             
-        for file in ['getpar','file']:
-            test = 'Test' + file + '.f90'
-            env.Program([test,libf90,lib],
-                        PROGSUFFIX='f90.x',PROGPREFIX='',
-                        OBJSUFFIX='f90.o',
-                        LINK=F90,LINKFLAGS=env.get('F90FLAGS'))
-            
+    for file in ['getpar','file']:
+        test = 'Test' + file + '.f90'
+        env.Program([test,libf90,lib],
+                    PROGSUFFIX='f90.x',PROGPREFIX='',OBJSUFFIX='f90.o',
+                    LINK=F90,LINKFLAGS=env.get('F90FLAGS'))
+
 ##############################################################################
 # PYTHON BINDING
 ##############################################################################
-# Minimum-functionality backup to rsf python module in case python api fails to install
+# Minimum-functionality backup to rsf python module in case python api fails
 if root:
     env.Install(libdir,'rsfbak.py')
 
@@ -191,10 +186,12 @@ if 'python' in api:
         objs.append(obj)
 
     
-    if root:    
-        wrap = env.CFile('rsf', '#/filt/lib/rsf.i',SWIGFLAGS='-python')
+    if root:
+        ifile = '#/filt/lib/rsf.i'
     else:
-        wrap = env.CFile('rsf', 'rsf.i',SWIGFLAGS='-python')
+        ifile = 'rsf.i'
+        
+    wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
     python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
