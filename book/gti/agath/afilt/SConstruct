@@ -1,26 +1,38 @@
+# Angle decomposition of the imaging condition
+#
+# March 2007
+#
+# Thomas Jules Browaeys
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
 from rsfproj import *
 from math import pi
 
-# Get local offset gathers
+# Get sigsbee local offset gathers
 Fetch('SRC0x.hh','sigsbee')
 
-# Transpose so that the axis are z-h-x
+# Transpose from axis x-z-h to axis z-h-x
 Flow('gath','SRC0x.hh','window | transp plane=14 | window')
 
 # Extract h=0 (usual imaging condition)
+# Real screen ratio = 0.35233 
 Flow('img0','gath','window n2=1 min2=0')
 
 Result('img0','grey title="Zero Offset Imaging Condition" ')
 
-# Stack over h (weight=1)
+# Stack over h with weight=1
 Flow('img1','gath','stack')
 
-Result('img1','grey title="Offset Stack Imaging Condition" ')
+Result('img1','grey screenratio=0.35233 title="Offset Stack Imaging Condition" ')
 
 # Extract one offset gather
 Flow('gath1','gath','window n3=1 min3=50000')
 
 Plot('gath1','grey title="Local Offset Gather" ')
+
+
 
 # Gaussian weighting a=1/(c*c)
 c = 500 # radius

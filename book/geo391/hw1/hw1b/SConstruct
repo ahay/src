@@ -1,6 +1,7 @@
 ## 
- # GEO391 - Homework 1 (part b)
- ##
+# GEO391 - Homework 1 (part b)
+##
+
 from rsfproj import *
 
 # ------------------------------------------------------------
