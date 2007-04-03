@@ -447,9 +447,9 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     twfl = imag+'_tur'
 
     Flow(tdat,rdat,'reverse which=2 opt=i verb=y')
-    awe(data,twfl,tdat,velo,dens,sacq,racq,custom,par)
+    awe(data,twfl,tdat,velo,dens,sacq,racq,custom+' jsnap=%d' % par['nt'],par)
 
-    Flow(imag,twfl,'window n3=1 f3=%d' % (par['nt']/par['jsnap']-1) )
+    Flow(imag,twfl,'window n3=1')
 
 # ------------------------------------------------------------
 # wavefield-over-model plots
@@ -482,22 +482,22 @@ def wom(wom,wfld,velo,vmean,par):
 
 def iom(iom,imag,velo,vmean,par):
 
-    if(not par.has_key('wweight')): par['wweight']=10
-    if(not par.has_key('wclip')):   par['wclip']=1.0
+    if(not par.has_key('iweight')): par['iweight']=10
+    if(not par.has_key('iclip')):   par['iclip']=1.0
 
     chop = imag+'_chop'
     Flow(chop,imag,
          '''
          scale axis=123 |
-         clip clip=%(wclip)g
+         clip clip=%(iclip)g
          ''' % par)
 
     Flow(iom,[velo,chop],
          '''
          add add=-%g |
          scale axis=123 |
-         math w=${SOURCES[1]} output="input+w"
-         ''' % vmean)
+         math w=${SOURCES[1]} output="input+%g*w"
+         ''' % (vmean,par['iweight']))
 
 
 # ------------------------------------------------------------
