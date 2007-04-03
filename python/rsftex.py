@@ -106,7 +106,7 @@ def latify(target=None,source=None,env=None):
     ltx = open(str(target[0]),'w')
     lclass = env.get('lclass','geophysics')
     if lclass == 'segabs':
-        size = '10pt'
+        size = '11pt'
     else:
         size = '12pt'
     options = env.get('options',size)
