@@ -430,7 +430,8 @@ figure \texttt{Fig/lena.vpl} generated in a specially created
 look like Figure~\ref{fig:lena}.
 %
 \inputdir{easystart} 
-\sideplot{lena}{height=.25\textheight}{The output of the first numerical experiment.}
+\sideplot{lena}{height=.25\textheight}{The output of the first 
+numerical experiment.}
 %
 The reproducible script ends with\\
 %
@@ -533,9 +534,14 @@ and by hard thresholding of coefficients in the Fourier domain. The
 result images are shown in Figure~\ref{fig:panel1}
 and~\ref{fig:panel2}.  
 
-\plot{panel1}{height=0.5\textheight}{Top left: original image. Top  right: random noise added. Bottom left: original image spectrum in the Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in the Fourier ($F$-$X$) domain.}
+\plot{panel1}{height=0.5\textheight}{Top left: original image. Top
+right: random noise added. Bottom left: original image spectrum in the
+Fourier ($F$-$X$) domain. Bottom right: noisy image spectrum in the
+Fourier ($F$-$X$) domain.}
 
-\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass filtering.  Right: denoising by hard thresholding in the Fourier domain.}
+\plot{panel2}{height=0.25\textheight}{Left: denoising by low-pass
+filtering.  Right: denoising by hard thresholding in the Fourier
+domain.}
 
 Since the \texttt{SConstruct|} file is a Python script, we can also use all the
 flexibility and power of the Python language in our Madagascar
@@ -715,7 +721,7 @@ result plot \texttt{lena.vpl}. In the \LaTeX\ source code, it
 translates as\\
 
 \lstset{language=[LaTeX]TeX,backgroundcolor=\color{frame},showstringspaces=false,numbers=left,numberstyle=\tiny}
-\lstinputlisting[firstline=452,lastline=454,frame=single]{paper.tex}
+\lstinputlisting[firstline=432,lastline=434,frame=single]{paper.tex}
 
 The $\backslash$inputdir command points to the project directory and
 the $\backslash$sideplot command calls \texttt{$<$result\_name$>$}. The

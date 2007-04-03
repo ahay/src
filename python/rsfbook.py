@@ -161,7 +161,7 @@ def report_tpg(target=None,source=None,env=None):
     if fig:
         dir = env.get('dir','.')
         size = env.get('size','')
-        tpg.write('\\renewcommand{\\plotdir}{%s}\n'
+        tpg.write('\\renewcommand{\\plotdir}{%s/Fig}\n'
                   '\\vfill\n\\begin{center}\n'
                   '\\plotbox{%s}{%s}\n\\end{center}\n' % (dir,fig,size))
     year = get_year(env.get('year'))
@@ -199,8 +199,10 @@ def report_all(target=None,source=None,env=None):
          ])
     all.write('%% start of paper list\n')
     for src in source:
-        dir = os.path.basename(os.path.dirname(str(src)))
-        all.write('\\GEOpaper{%s}\t\\include{%s/paper}\n' % (dir,dir))
+        paper = str(src)
+        dir = os.path.basename(os.path.dirname(paper))
+        stem = os.path.splitext(paper)[0]
+        all.write('\\GEOpaper{%s}\t\\include{%s}\n' % (dir,stem))
     all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
     return 0

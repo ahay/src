@@ -3,6 +3,8 @@ from rsftex import *
 
 Papers(copyr='The University of Texas at Austin',
        group='Seismic Wavefield Imaging',
-       papers=map(lambda x: 'hw%d/paper.tex' % x,range(1,6)))
+       papers=map(lambda x: 'hw%d/paper.tex' % x,range(1,6)),
+       line='Homework Assignments',
+       dir='hw2/blake',fig='ray',size='width=\\textwidth')
 
 End(lclass='georeport',use='color')
