@@ -126,14 +126,14 @@ S(Z) & = & A_t(Z)\bar A_t(1/Z)+
 \;,
 \label{eqn:wilson}
 \end{eqnarray}
-where $A_t(Z)$ denotes the signal estimate at iteration $t$. Starting from
-some initial estimate $A_0(Z)$, such as $A_0(Z)=1$, one iteratively solves the
-linear system~(\ref{eqn:wilson}) for the updated signal $A_{t+1}(Z)$. Wilson
-\shortcite{mywilson} presents a rigorous proof that
-iteration~(\ref{eqn:wilson}) operates with minimum-phase signals provided that
-the initial estimate $A_0(Z)$ is minimum-phase. The original algorithm
-estimates the new approximation $A_{t+1}(Z)$ by matrix inversion implied in
-the solution of the system.
+where $A_t(Z)$ denotes the signal estimate at iteration $t$. Starting
+from some initial estimate $A_0(Z)$, such as $A_0(Z)=1$, one
+iteratively solves the linear system~(\ref{eqn:wilson}) for the
+updated signal $A_{t+1}(Z)$. \cite{mywilson} presents a rigorous proof
+that iteration~(\ref{eqn:wilson}) operates with minimum-phase signals
+provided that the initial estimate $A_0(Z)$ is minimum-phase. The
+original algorithm estimates the new approximation $A_{t+1}(Z)$ by
+matrix inversion implied in the solution of the system.
 
 Burg (1998, personal communication) recognized that dividing both
 sides of equation (\ref{eqn:wilson}) by $\bar A_t(1/Z) A_t(Z)$ leads

@@ -1,0 +1,18 @@
+from rsfbook import *
+from rsftex import *
+
+papers = '''
+amoco
+marmousi
+pluto
+sigsbee
+'''
+
+Papers(copyr='Colorado School of Mines',
+       group='Madagascar Datasets',
+       papers=map(lambda x: x+'/paper.tex',Split(papers)),
+       fig=('marmousi/model','marmvel','width=\\textwidth'))
+
+Paper('toc',lclass='georeport')
+       
+End(lclass='georeport')

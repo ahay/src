@@ -162,14 +162,14 @@ Two alternative approaches are discussed in the next two
 subsections.
 \subsection{Finite-difference approach}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-The differential equation~(\ref{PDE}) has a mathematical form analogous to
-that of the 15-degree wave extrapolation equation
-\cite[]{Claerbout.blackwell.76}. Its finite-difference implementation, first
-described by Claerbout \shortcite{Claerbout.sep.48.79} and Li
-\shortcite{Li.sep.48.85}, is also analogous to that of the 15-degree equation,
-except for the variable coefficients. One can write the implicit
-unconditionally stable finite-difference scheme for the velocity continuation
-equation in the form
+The differential equation~(\ref{PDE}) has a mathematical form
+analogous to that of the 15-degree wave extrapolation equation
+\cite[]{Claerbout.blackwell.76}. Its finite-difference implementation,
+first described by \cite{Claerbout.sep.48.79} and \cite{Li.sep.48.85},
+is also analogous to that of the 15-degree equation, except for the
+variable coefficients. One can write the implicit unconditionally
+stable finite-difference scheme for the velocity continuation equation
+in the form
 \begin{equation}
 ({\bf I} + a_{j+1}^{i+1}\,{\bf T})\,{\bf P}_{j+1}^{i+1} - 
 ({\bf I} - a_{j}^{i+1}\,{\bf T})\,{\bf P}_{j}^{i+1} -

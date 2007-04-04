@@ -3,7 +3,7 @@ from rsftex import *
 
 Papers(copyr='Colorado School of Mines',group='Center for Wave Phenomena',
        authors={'rwesalt':'Paul Sava'},line='Example Report, March 2007',
-       dir='rwesalt/sigsbee',fig='compCC1-F15',size='width=\\textwidth')
+       fig=('rwesalt/sigsbee','compCC1-F15','width=\\textwidth'))
 
 for file in ('toc','tpg'):
     Paper(file,lclass='georeport')

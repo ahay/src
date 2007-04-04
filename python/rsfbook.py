@@ -92,8 +92,8 @@ def get_authors(source,default):
     all.sort()
     lastone = all.pop()
     if len(all) == 0:
-        author = lastone(1)
-        print "The author is " + lastone
+        author = lastone[1]
+        print "The author is " + author
     elif len(all) == 1:
         firstone = all.pop()
         author = '%s and %s' % (firstone[1],lastone[1])
@@ -122,7 +122,7 @@ def report_toc(target=None,source=None,env=None):
         author = get_author(src,authors,dir)
         title = re_title.search(paper)
         if sections.has_key(dir):
-            toc.write('\n\\section{%s}\n' % sections[dir])
+            toc.write('\n\\geosection*{%s}\n' % sections[dir])
         if author and title:
             title = re.sub(r'\\',' ',title.group(1)) # remove line breaks 
             toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
@@ -159,11 +159,10 @@ def report_tpg(target=None,source=None,env=None):
                   '\\bfseries%%\n%s\n\\end{center}\n' % line)
     fig = env.get('fig')
     if fig:
-        dir = env.get('dir','.')
-        size = env.get('size','')
+        print fig
         tpg.write('\\renewcommand{\\plotdir}{%s/Fig}\n'
                   '\\vfill\n\\begin{center}\n'
-                  '\\plotbox{%s}{%s}\n\\end{center}\n' % (dir,fig,size))
+                  '\\plotbox{%s}{%s}\n\\end{center}\n' % tuple(fig))
     year = get_year(env.get('year'))
     copyr = env.get('copyr')
     tpg.write('\n\\newpage\\GEOcopyr{%s}{%s}\n' % (year,copyr))

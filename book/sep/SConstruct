@@ -2,31 +2,38 @@ from rsfbook import *
 from rsftex import *
 
 papers = '''
-angle
-antial
 cdstep
-fkamo
-fmsec
-oc1
-pwd
-specfac
 stack
-vc2
-aniso
-burg
-findif
-fmeiko
 forwd
-norm
-oc2
-precon
-rwe
 spitz
+oc2
+pwd
+
+precon
+findif
+burg
+specfac
+
+antial
+angle
+fmeiko
+fmsec
+
+oc1
+norm
+fkamo
+
+aniso
 vc1
 velspec
+vc2
 '''
 
-Papers(sections={'fmeiko':'Traveltime'},
+Papers(sections={'cdstep':'Optimization',
+                 'precon':'Helix Transform',
+                 'antial':'Imaging',
+                 'oc1':'Azimuth Moveout',
+                 'aniso':'Velocities'},
        authors={'aniso':'Sergey Fomel and Vladimir Grechka',
                 'precon':'Sergey Fomel and Jon Claerbout',
                 'norm': 'Sergey Fomel and Norman Bleistein',
@@ -36,9 +43,10 @@ Papers(sections={'fmeiko':'Traveltime'},
                 },
        copyr='Stanford University',
        group='Stanford Exploration Project',
+       line='Selected papers',
        papers=map(lambda x: x+'/paper.tex',Split(papers)))
 
 Paper('toc',lclass='georeport')
        
-End(lclass='georeport',use='hyperref,listings',
-    include='\\newcommand{\\RSF}{../..}')
+End(lclass='georeport',use='hyperref,listings,amsmath',
+    include='\\newcommand{\\RSF}{../../..}')

@@ -16,7 +16,7 @@ Papers(copyr='Madagascar Community',
        '''),
        authors={'scons':'Sergey Fomel and Gilles Hennenfent'},
        line='\\url{http://rsf.sourceforge.net/}',
-       dir='rsf/sfmath',fig='rose',size='width=0.5\\textwidth')
+       fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
 for file in ('toc','tpg'):
     Paper(file,lclass='georeport')
