@@ -99,9 +99,9 @@ Flow('scan','data2 data1',
      ''' % (niter,ng,g0,dg))
 Plot('scan',
      '''
-     grey title="Stretch Scan" allpos=y 
+     grey wanttitle=n allpos=y 
      color=j pclip=100 transp=n yreverse=y
-     label1=Time unit1=s label2=Gamma
+     label1=Time unit1=s label2="Relative Stretch"
      wheretitle=t wherexlabel=b
      ''')
 
@@ -137,7 +137,7 @@ for rat in ('rat','trat'):
          '''
          cmplx ${SOURCES[1]} | window n1=%d |
          graph label1=Time unit1=s label2="V\_1\^/V\_2"
-         title="Velocity Ratio" dash=%d min2=0.8 max2=1.2
+         wanttitle=n dash=%d min2=0.8 max2=1.2
          ''' % (2*nl,(0,1)[rat=='rat']))
 
 Result('rat','rat trat','Overlay')
