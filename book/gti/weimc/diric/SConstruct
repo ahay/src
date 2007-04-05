@@ -10,13 +10,23 @@ dz=0.01
 nx=1024
 nz=601
 
+vel = 2.0
+gradz = 0.3
+
+nrefl = 5
+
+# Reflectors
+
 Flow('mod',None,
      '''
-     math n1=%d n2=5 o2=1 d2=1 o1=0 d1=%g
+     math n1=%d o1=0 d1=%g n2=%d o2=1 d2=1
      output=x2
-     ''' % (nx,dx))
+     ''' % (nx,dx,nrefl))
+
+# Background velocity
+
 Flow('mod2','mod',
-     'transp | pad beg1=1 | remap1 n1=%d d1=%g | math output="1.5+0.3*x1" ' % (nz,dz))
+     'transp | pad beg1=1 | remap1 n1=%d d1=%g | math output="%g+%g*x1" ' % (nz,dz,vel,gradz))
 Plot('mod2',
      '''
      grey color=j allpos=y title=Model scalebar=y
@@ -41,36 +51,54 @@ Result('mod','mod2 mod1 mod0','Overlay')
 # Generating data
 #################
 
+# Source/receiver
+ns = 2
+s0 = 8
+ds = 4
+
+# Offset
+h0 = -10
+
 Flow('dat','mod',
      '''
      kirmod nt=2001 dt=0.004 freq=10
-     ns=2 s0=8 ds=4
-     nh=401 h0=-10 dh=0.05
-     vel=1.5 gradz=0.3 type=v |
+     ns=%d s0=%g ds=%g
+     nh=401 h0=%g dh=0.05
+     vel=%g gradz=%g type=v |
      tpow tpow=1 |
      put
      label1=Time unit1=s
      label2=Offset unit2=km
      label3=Shot unit3=km
-     ''')
+     ''' % (ns,s0,ds,h0,vel,gradz))
 
-Plot('dat1','dat','window n3=1 f3=0 | grey title="Shot 1"')
-Plot('dat2','dat','window n3=1 f3=1 | grey title="Shot 2"')
-Result('dat','dat1 dat2','SideBySideAniso')
+Flow('dat1','dat','window n3=1 f3=0 | put o2=%g | window min2=%g | window max1=6 '% (s0+h0,s0+h0+ds))
+Flow('dat2','dat','window n3=1 f3=1 | put o2=%g | window max2=%g | window max1=6 '% (s0+h0+ds,s0-h0))
+
+Result('dat',['dat1','dat2'],
+       '''
+       math da=${SOURCES[0]} db=${SOURCES[1]} output="da+db" | grey title="Shots"
+       ''')
+
 
 # Wave-equation migration
 #########################
 
+# Extend window frequency > 30
+
+wavw = 30
+
 # Waveform
-Flow('wav',None,'spike n1=2001 d1=0.004 k1=1 | fft1 | window max1=30')
+Flow('wav',None,'spike n1=2001 d1=0.004 k1=1 | fft1 | window max1=%g'% (wavw))
 
 # Velocity to slowness
 Flow('slo','mod2','transp | spray axis=2 n=1 d=%g | math output=1/input' % dx)
 
 # Source and receiver wavefield at the surface
+
 Flow('rwfl swfl','dat wav',
      '''
-     fft1 | window max1=30 |
+     fft1 | window max1=%g |
      spray axis=3 n=1 o=0 d=1 |
      spray axis=5 n=1 o=0 d=1 |
      srsyn nx=%d dx=%g ox=0 wav=${SOURCES[1]} swf=swf.rsf |
@@ -79,9 +107,10 @@ Flow('rwfl swfl','dat wav',
      transp plane=12 < swf.rsf |
      transp plane=23 | stack axis=4 norm=n > ${TARGETS[1]} &&
      rm swf.rsf
-     ''' % (nx,dx),stdout=-1)
+     ''' % (wavw,nx,dx),stdout=-1)
 
 # Migrate and create common-image gathers
+
 Flow('image cigs','swfl rwfl slo',
      '''
      srmig2 slo=${SOURCES[2]} rwf=${SOURCES[1]} cig=${TARGETS[1]}
@@ -96,14 +125,15 @@ def implot(title):
 
 Plot('image',implot('Image'))
 
+
 # Snell filtering
 #################
 
-# Smoothing horizontally
-
 slow = 0.30303 # minimum slowness
 freq = 2*math.pi*0.12207 # minimum frequency
-omega = 1/(16*slow*freq)
+omega = 1/(16*slow*freq) # offset resolution radius
+
+# Smoothing horizontally
 
 Flow('image2','image','smooth rect1=%d repeat=3' % int(omega/dx))
 Plot('image2',implot('Smoothed Image'))
@@ -126,14 +156,20 @@ Plot('stack2',implot('Smoothed and Weighted Image'))
 
 Result('image','image stack image2 stack2','TwoRows')
 
+
 # Velocity model
 ################
 
+samp = 0.45
+
+# Reflectors
+
 Flow('smod',None,
      '''
-     math n1=%d n2=5 o2=1 d2=1 o1=0 d1=%g
-     output="x2+0.15*sin(x1)"
-     ''' % (nx,dx))
+     math n1=%d o1=0 d1=%g n2=%d o2=1 d2=1
+     output="x2+%g*sin(x1)"
+     ''' % (nx,dx,nrefl,samp))
+
 Plot('smod1','smod',
      '''
      graph yreverse=y pad=n min2=0 max2=6 
@@ -146,37 +182,46 @@ Plot('smod0','smod',
      ''')
 Result('smod','mod2 smod1 smod0','Overlay')
 
+
 # Generating data
 #################
 
-# dip
-Flow('sdip','smod','math output="0.15*cos(x1)" ')
+# Dip
+
+Flow('sdip','smod','math output="%g*sin(x1)" '% (samp))
+Flow('cdip','smod','math output="%g*cos(x1)" '% (samp))
 
 Flow('sdat','smod sdip',
      '''
      kirmod nt=2001 dt=0.004 freq=10
-     ns=2 s0=8 ds=4 dip=${SOURCES[1]}
-     nh=401 h0=-10 dh=0.05
-     vel=1.5 gradz=0.3 type=v |
+     ns=%d s0=%g ds=%g dip=${SOURCES[1]}
+     nh=401 h0=%g dh=0.05
+     vel=%g gradz=%g type=v |
      tpow tpow=1 |
      put
      label1=Time unit1=s
      label2=Offset unit2=km
      label3=Shot unit3=km
-     ''')
+     '''% (ns,s0,ds,h0,vel,gradz))
 
-Plot('sdat1','sdat','window n3=1 f3=0 | grey title="Shot 1"')
-Plot('sdat2','sdat','window n3=1 f3=1 | grey title="Shot 2"')
-Result('sdat','sdat1 sdat2','SideBySideAniso')
+
+Flow('sdat1','sdat','window n3=1 f3=0 | put o2=%g | window min2=%g | window max1=6 ' % (s0+h0,s0+h0+ds))
+Flow('sdat2','sdat','window n3=1 f3=1 | put o2=%g | window max2=%g | window max1=6 '% (s0+h0+ds,s0-h0))
+
+Result('sdat',['sdat1','sdat2'],
+       '''
+       math da=${SOURCES[0]} db=${SOURCES[1]} output="da+db" | grey title="Shots"
+       ''')
 
 
 # Wave-equation migration
 #########################
 
 # Source and receiver wavefield at the surface
+
 Flow('srwfl sswfl','sdat wav',
      '''
-     fft1 | window max1=30 |
+     fft1 | window max1=%g |
      spray axis=3 n=1 o=0 d=1 |
      spray axis=5 n=1 o=0 d=1 |
      srsyn nx=%d dx=%g ox=0 wav=${SOURCES[1]} swf=swf.rsf |
@@ -185,14 +230,14 @@ Flow('srwfl sswfl','sdat wav',
      transp plane=12 < swf.rsf |
      transp plane=23 | stack axis=4 norm=n > ${TARGETS[1]} &&
      rm swf.rsf
-     ''' % (nx,dx),stdout=-1)
+     ''' % (wavw,nx,dx),stdout=-1)
 
 # Migrate and create common-image gathers
 
 Flow('simage scigs','sswfl srwfl slo',
      '''
      srmig2 slo=${SOURCES[2]} rwf=${SOURCES[1]} cig=${TARGETS[1]}
-     itype=x nhz=25 hsym=y jcz=1 readwrite=y verb=y 
+     itype=x nhx=10 nhz=10 hsym=y jcz=1 readwrite=y verb=y 
      ''')
 
 Plot('simage',implot('Image'))
@@ -203,37 +248,54 @@ Plot('simage',implot('Image'))
 
 # Smoothing along the reflector
 
-# dip field
-Flow('dip','sdip','window n2=1 | scale dscale=%g | spray axis=1 n=%d d=%g o=0' % (dx/dz,nz,dz))
+# Dip field
+seistc = 32
+Flow('dip','cdip','window n2=1 | scale dscale=%g | spray axis=1 n=%d d=%g o=0' % (dx/dz,nz,dz))
 
-# seislet transform
+# Seislet transform
 Flow('seis','simage dip','window | transp | seislet dip=${SOURCES[1]} adj=y inv=y type=l')
 
-Result('seis','grey title="Seislet Transform" ')
+Plot('seis','grey title="Seislet Transform" ')
 
-Flow('simage2','seis dip','cut f2=32 | seislet dip=${SOURCES[1]} adj=n type=l | transp')
+Flow('simage2','seis dip','cut f2=%g | seislet dip=${SOURCES[1]} adj=n type=l | transp'% (seistc))
+
 Plot('simage2',implot('Smoothed Image'))
 
-#Result('simage','simage simage2','SideBySideIso')
 
-# Weighting perpendicular to the reflector
+# Weighting along the local normal to the reflector
 
-Flow('sstack','scigs',
+Flow('ddip','cdip',
      '''
-     window |
-     math output="input*exp(-((x3)/%g)^2)" |
-     stack axis=3 norm=n
-     ''' % (4.*omega))
+     put o2=0 | window n2=1 |
+     spray axis=2 n=%d d=%g o=0 |
+     spray axis=3 n=20 d=0.02 o=-0.2 |
+     spray axis=4 n=20 d=0.01 o=-0.1 |
+     spray axis=5 n=1 d=1 o=0
+     ''' % (nz,dz))
+
+Flow('cnn','ddip','math output="1./sqrt(1.+(input*input))"')
+Flow('scigs2','scigs','window')
+
+smfac = 50000
+
+Flow('sstack','scigs2 ddip cnn',
+     '''
+     math a=${SOURCES[0]} cc=${SOURCES[1]} cn=${SOURCES[2]}
+     output="a*exp(-((cc*x3 - x4)*cn/%g)^2- %g*((x3 + cc*x4)*cn)^2)" |
+     stack axis=3 norm=n | stack axis=3 norm=n
+     ''' % (4.*omega,smfac))
 
 Plot('sstack',implot('Weighted Image'))
 
-# Smooth horizontally and weight vertically
+# Smooth along the reflector and weight perpendicular
 
 Flow('seis2','sstack dip','window | transp | seislet dip=${SOURCES[1]} adj=y inv=y type=l')
 
-Result('seis2','grey title="Seislet Transform After Weighted" ')
+Plot('seis2','grey title="Seislet Transform After Weighted" ')
 
-Flow('sstack2','seis2 dip','cut f2=32 | seislet dip=${SOURCES[1]} adj=n type=l | transp')
+Result('seist','seis seis2','TwoRows')
+
+Flow('sstack2','seis2 dip','cut f2=%g | seislet dip=${SOURCES[1]} adj=n type=l | transp'% (seistc))
 
 Plot('sstack2',implot('Smoothed and Weighted Image'))
 
@@ -241,3 +303,4 @@ Result('simage','simage sstack simage2 sstack2','TwoRows')
 
 
 End()
+
