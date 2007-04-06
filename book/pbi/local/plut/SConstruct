@@ -21,7 +21,9 @@ def grey(title):
 Result('ref',grey('Reference'))
 Result('mod',grey('Model'))
 
-Result('ref2','ref','window max1=6 | ' + grey('') + ' wanttitle=n')
+screen = ' wanttitle=n screenht=7.68 screenratio=0.5625 labelsz=5'
+
+Result('ref2','ref','window max1=6 | ' + grey('') + screen)
 
 nt = 1126
 
@@ -43,7 +45,7 @@ Flow('sig','ref pre','add scale=1,-1 ${SOURCES[1]}')
 Result('pre',grey('Matched Multiples'))
 Result('sig',grey('Estimated Signal'))
 
-Result('sig2','sig','window max1=6 | ' + grey('') + ' wanttitle=n')
+Result('sig2','sig','window max1=6 | ' + grey('') + screen)
 
 Result('zero','flt','window n3=1 f3=10 | %s color=j' % grey('Zero Coefficient'))
 Result('csum','flt','stack axis=3 norm=n | %s color=j' % grey('Coefficient Sum'))
