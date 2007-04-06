@@ -818,7 +818,7 @@ class TeXPaper(Environment):
                     self.Install2(resdir2,[png,pdf])
                     self.Alias('install',resdir2)
         self.figs.extend(nrfigs)
-    def Paper(self,paper,lclass='geophysics',
+    def Paper(self,paper,lclass='geophysics',scons=1,
               use=None,include=None,options=None):
         ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
                           use=use,lclass=lclass,options=options,include=include)
@@ -832,21 +832,22 @@ class TeXPaper(Environment):
             self.Alias(paper+'.read',self.Read(paper))
             self.Alias(paper+'.print',self.Print(paper))
         if latex2html and l2hdir:
-            dir = paper+'_html'
-            css  = os.path.join(dir,paper+'.css')
-            html = os.path.join(dir,'index.html')
-            icons = os.path.join(dir,'icons')
+            hdir = paper+'_html'
+            css  = os.path.join(hdir,paper+'.css')
+            html = os.path.join(hdir,'index.html')
+            icons = os.path.join(hdir,'icons')
             self.InstallAs(css,css0)
             self.Install(icons,glob.glob('%s/*.%s' % (icons0,itype)))
             self.HTML(html,paper+'.ltx')
             self.Depends(self.imgs,pdf)
             self.Depends(html,self.imgs)
-            self.Depends(html,self.scons)
+            if scons:
+                self.Depends(html,self.scons)
             self.Depends(html,pdf)
             self.Depends(html,css)
             self.Depends(html,icons)
             self.Alias(paper+'.html',html)
-            docdir = os.path.join(self.doc,dir)
+            docdir = os.path.join(self.doc,hdir)
             dochtml = os.path.join(docdir,'index.html')
             self.Command(dochtml,html,
                          'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')

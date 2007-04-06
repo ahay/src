@@ -1,5 +1,4 @@
 from rsfbook import *
-from rsftex import *
 
 papers = '''
 amoco
@@ -13,6 +12,4 @@ Papers(copyr='Colorado School of Mines',
        papers=map(lambda x: x+'/paper.tex',Split(papers)),
        fig=('marmousi/model','marmvel','width=\\textwidth'))
 
-Paper('toc',lclass='georeport')
-       
-End(lclass='georeport')
+End()

@@ -1,5 +1,4 @@
 from rsfbook import *
-from rsftex import *
 
 Papers(copyr='Madagascar Community',
        group='Madagascar Documentation',
@@ -18,9 +17,6 @@ Papers(copyr='Madagascar Community',
        line='\\url{http://rsf.sourceforge.net/}',
        fig=('rsf/sfmath','rose','width=0.5\\textwidth'))
        
-for file in ('toc','tpg'):
-    Paper(file,lclass='georeport')
-
-End(lclass='georeport',use='hyperref,color,amsmath,fancybox,jfc',
+End(use='hyperref,color,amsmath,fancybox,jfc',
     include='\\newcommand{\\RSF}{../../..}')
 

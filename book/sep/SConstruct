@@ -1,5 +1,4 @@
 from rsfbook import *
-from rsftex import *
 
 papers = '''
 cdstep
@@ -46,7 +45,5 @@ Papers(sections={'cdstep':'Optimization',
        line='Selected papers',
        papers=map(lambda x: x+'/paper.tex',Split(papers)))
 
-Paper('toc',lclass='georeport')
-       
-End(lclass='georeport',use='hyperref,listings,amsmath',
+End(use='hyperref,listings,amsmath',
     include='\\newcommand{\\RSF}{../../..}')

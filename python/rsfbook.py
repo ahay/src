@@ -59,8 +59,13 @@ def get_year(default):
     year = string.join([str(int(year)-1),year[-2:]],'-')
     return year
 
-def get_author(source,default,dir):
-    author = default.get(dir)
+def paper_tag(paper):
+    return (os.path.basename(os.path.dirname(paper)),
+            re.sub('-paper','',
+                   re.sub(r'/([^/]+)\.tex$',r'-\1',paper)))
+
+def get_author(source,default,tag):
+    author = default.get(tag[1])
     if not author:
         paper = source.get_contents()
         author = re_author.search(paper)
@@ -76,10 +81,10 @@ def get_author(source,default,dir):
 def get_authors(source,default):
     authors = {}
     for src in source:
-        dir = os.path.basename(os.path.dirname(str(src)))
-        author = get_author(src,default,dir)
+        tag = paper_tag(str(src))
+        author = get_author(src,default,tag)
         if author:
-            print "%s: '%s'" % (dir,author)
+            print "%s: '%s'" % (tag[1],author)
             for person in re.split(r'\s*\band\b\s*',author):
                 names = string.split(person)
                 if names:
@@ -117,16 +122,16 @@ def report_toc(target=None,source=None,env=None):
     sections = env.get('sections',{})
     authors = env.get('authors',{})
     for src in source:
-        dir = os.path.basename(os.path.dirname(str(src)))
+        tag = paper_tag(str(src))
         paper = src.get_contents()
-        author = get_author(src,authors,dir)
+        author = get_author(src,authors,tag)
         title = re_title.search(paper)
-        if sections.has_key(dir):
-            toc.write('\n\\geosection*{%s}\n' % sections[dir])
+        if sections.has_key(tag[1]):
+            toc.write('\n\\geosection*{%s}\n' % sections[tag[1]])
         if author and title:
             title = re.sub(r'\\',' ',title.group(1)) # remove line breaks 
             toc.write('\TOCentry[%s]{%s}{\pageref{%s.start}}\n' %
-                      (author,title,dir))
+                      (author,title,tag[1]))
         else:
             print "Could not find author or title"
     year = get_year(env.get('year'))
@@ -144,7 +149,8 @@ def report_tpg(target=None,source=None,env=None):
     "Build the title page"
     tpg = open(str(target[0]),'w')
     tpg.write('%% This file is automatocally generated, DO NOT EDIT\n\n')
-    tpg.write('\\maintitle{%s}\n' % string.upper(env.get('group',full.get(group))))
+    tpg.write('\\maintitle{%s}\n' % \
+              string.upper(env.get('group',full.get(group))))
     title = env.get('title1')
     if title:
         tpg.write('\\vfill\n\title{%s}\n' % title)
@@ -159,7 +165,6 @@ def report_tpg(target=None,source=None,env=None):
                   '\\bfseries%%\n%s\n\\end{center}\n' % line)
     fig = env.get('fig')
     if fig:
-        print fig
         tpg.write('\\renewcommand{\\plotdir}{%s/Fig}\n'
                   '\\vfill\n\\begin{center}\n'
                   '\\plotbox{%s}{%s}\n\\end{center}\n' % tuple(fig))
@@ -199,10 +204,10 @@ def report_all(target=None,source=None,env=None):
     all.write('%% start of paper list\n')
     for src in source:
         paper = str(src)
-        dir = os.path.basename(os.path.dirname(paper))
+        tag = paper_tag(paper)
         stem = os.path.splitext(paper)[0]
-        all.write('\\GEOpaper{%s}\t\\include{%s}\n' % (dir,stem))
-    all.write('\\cleardoublepage')
+        all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
+        all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
     return 0
 
@@ -213,10 +218,12 @@ class RSFReport(Environment):
         kw.update({'action':Action(report_toc),
                    'varlist':['year','sections','authors']})
         apply(self.Command,('toc.tex',papers),kw)
+        rsftex.Paper('toc',lclass='georeport',scons=0)
         kw.update({'action':Action(report_tpg),
                    'varlist':['group','title1','authors','title2','line',
-                              'fig','dir','size','year','copyr']})
+                              'fig','year','copyr']})
         apply(self.Command,('tpg.tex',papers),kw)
+        rsftex.Paper('tpg',lclass='georeport',scons=0)
         kw.update({'action':Action(report_all),'varlist':['group']})
         apply(self.Command,('paper.tex',papers),kw)
         for file in ['tpg.tex','toc.tex']:
@@ -228,4 +235,13 @@ class RSFReport(Environment):
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
     return apply(book.Papers,(papers,),kw)
+def End(**kw):
+    kw.update({'lclass':'georeport'})
+    return apply(rsftex.End,[],kw)
+
+
+
+
+
+
 

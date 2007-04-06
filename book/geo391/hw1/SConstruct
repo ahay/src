@@ -1,4 +1,4 @@
 from rsftex import *
 
-End(lclass='handout')
+End() #lclass='handout')
 

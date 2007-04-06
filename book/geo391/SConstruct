@@ -1,5 +1,4 @@
 from rsfbook import *
-from rsftex import *
 
 Papers(copyr='The University of Texas at Austin',
        group='Seismic Wavefield Imaging',
@@ -7,4 +6,4 @@ Papers(copyr='The University of Texas at Austin',
        line='Homework Assignments',
        fig=('hw2/blake','ray','width=\\textwidth'))
 
-End(lclass='georeport',use='color')
+End(use='color')
