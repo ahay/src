@@ -20,12 +20,12 @@ for src in ('doc','proj','prog','tex','book'):
 
 env.Install(libdir,'suproj.py')
 
-for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi'):
+for src in ('latex2wiki','vplot2eps','vplot2gif','vplot2avi','sftour'):
     if (src != 'vplot2gif' and src != 'vplot2avi' ) or env.get('PPM'):
         env.Install(libdir,src+'.py')
         env.InstallAs(os.path.join(bindir,src),src+'.py')
 
-for src in ('doc','tour','units'):
+for src in ('doc','units'):
     env.Install(bindir,'sf'+src)
 
 use = os.path.join(libdir,'rsfuse.py')

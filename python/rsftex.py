@@ -35,6 +35,7 @@ else:
 bibtex      = WhereIs('bibtex')
 acroread    = WhereIs('acroread')
 pdfread     = acroread or WhereIs('xpdf') or WhereIs('gv')
+pdftops     = WhereIs('pdftops')
 epstopdf    = WhereIs('epstopdf')
 if epstopdf:
     latex       = WhereIs('pdflatex')
@@ -569,7 +570,10 @@ if pstoimg:
      PNGBuild = Builder(action = Action(eps2png),
                         suffix='.'+itype,src_suffix=pssuffix)
 
-if acroread and ps2eps:
+if pdftops:
+    PSBuild = Builder(action = pdftops + ' -eps $SOURCE $TARGET',
+                      suffix=pssuffix,src_suffix='.pdf')
+elif acroread and ps2eps:
     PSBuild = Builder(action = '%s -toPostScript -size ledger -pairs $SOURCE'
                       ' junk.ps && %s junk.ps $TARGET && rm junk.ps' % \
                       (acroread,ps2eps),
@@ -821,7 +825,8 @@ class TeXPaper(Environment):
     def Paper(self,paper,lclass='geophysics',scons=1,
               use=None,include=None,options=None):
         ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
-                          use=use,lclass=lclass,options=options,include=include)
+                          use=use,lclass=lclass,options=options,
+                          include=include)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])

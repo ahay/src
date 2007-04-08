@@ -13,7 +13,7 @@
 ##   You should have received a copy of the GNU General Public License
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
-import os, string, re, glob, time
+import os, string, re, glob, time, types
 
 import SCons
 
@@ -25,7 +25,7 @@ else:
     import SCons.Script.SConscript
     globals().update(SCons.Script.SConscript.BuildDefaultGlobals())
 
-import rsftex
+import rsftex, sftour
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -211,10 +211,46 @@ def report_all(target=None,source=None,env=None):
     all.write('%% end of paper list\n')
     return 0
 
+def tour(target=None,source=None,env=None):
+    dirs = map(os.path.dirname,map(str,source))
+    command = env.get('command')
+    sftour.tour(dirs,command,0)
+    return 0
+
+Tour = Builder(action = Action(tour),varlist=['command'])
+
+def Sections(report):
+    sections = {}
+    for section in report:
+        first = Split(section[1])[0]
+        sections[first]= section[0]
+    return sections
+
 class RSFReport(Environment):
     def __init__(self,**kw):
         apply(Environment.__init__,(self,),kw)
+        self.Append(BUILDERS={'Tour':Tour})
+        cwd = os.getcwd()
+        # create a hierarcical structure
+        self.tree = (os.path.basename(os.path.dirname(cwd)),
+                     os.path.basename(cwd))
+        self.doc = os.environ.get(
+            'RSFDOC',os.path.join(os.environ.get('RSFROOT'),'doc'))
+        for level in self.tree:
+            if level:
+                self.doc = os.path.join(self.doc,level)
+        rsftex.mkdir(self.doc)
+        self.paper = 1
     def Papers(self,papers,**kw):
+        if type(papers[0]) is types.TupleType:
+            kw.update({'sections':Sections(papers)})
+            papers = Split(string.join(map(lambda x: x[1],papers)))
+        for i in range(len(papers)):
+            paper = papers[i]
+            if paper[-4:] != '.tex':
+                papers[i] = paper + '/paper.tex'
+            elif '/' in paper:
+                self.paper = 0
         kw.update({'action':Action(report_toc),
                    'varlist':['year','sections','authors']})
         apply(self.Command,('toc.tex',papers),kw)
@@ -225,23 +261,44 @@ class RSFReport(Environment):
         apply(self.Command,('tpg.tex',papers),kw)
         rsftex.Paper('tpg',lclass='georeport',scons=0)
         kw.update({'action':Action(report_all),'varlist':['group']})
-        apply(self.Command,('paper.tex',papers),kw)
+        apply(self.Command,('book.tex',papers),kw)
         for file in ['tpg.tex','toc.tex']:
             map(lambda tex: self.Depends(file,tex),
                 filter(os.path.isfile,misc.keys()))
-            self.Depends('paper.tex',file)
+            self.Depends('book.tex',file)
+        # Touring individual papers
+        for target in ('html','pdf','install'):
+            if self.paper:
+                comm = 'scons -Q ' + target
+            else:
+                comm = map(lambda x: 'scons -Q %s.%s' % \
+                           (os.path.splitext(os.path.basename(x))[0],target),
+                           papers)
+            self.Tour(target+'s',papers,command=comm)
+    def End(self,**kw):
+        kw.update({'lclass':'georeport'})
+        apply(rsftex.Paper,('book',),kw)
+        self.Alias('pdf','book.pdf')
+        self.Depends('book.pdf','pdfs')
+        self.Alias('read','book.read')
+        self.Alias('print','book.print')
+        self.Alias('html','toc_html')
+        self.Depends('toc_html/index.html','htmls')
+        self.Depends('html','htmls')
+        self.Install(self.doc,'book.pdf')
+        html = os.path.join(self.doc,'index.html')
+        self.Command(html,'toc_html/index.html',
+                    'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
+        self.Depends(html,'installs')
+        self.Alias('www',self.doc)
+        self.Default('pdf')
 
 # Default report
 book = RSFReport()
 def Papers(papers=glob.glob('[a-z]*/paper.tex'),**kw):
     return apply(book.Papers,(papers,),kw)
 def End(**kw):
-    kw.update({'lclass':'georeport'})
-    return apply(rsftex.End,[],kw)
-
-
-
-
+    return apply(book.End,(),kw)
 
 
 

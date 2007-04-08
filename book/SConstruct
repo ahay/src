@@ -1,6 +1,23 @@
 import os, string
 import rsfdoc
 import rsfprog
+import sftour
+
+books =
+'''
+bei
+gee
+'''
+
+reports =
+'''
+cwp
+data
+geo391
+rsf
+sep
+slim
+'''
 
 def publicproj(project):
     '''Check if the project is publicly accessible'''
@@ -31,7 +48,12 @@ def progtest(target=None,source=None,env=None):
         os.chdir('../../..')            
     return 0
 
+def www(target=None,source=None,env=None):
+    sftour.tour(map(str,source),'scons -Q book.tex www')
+    return 0
+
 env = Environment()
+env.Command('www',Split(reports),Action(www))
 
 for prog in rsfdoc.progs.keys():
     uses = rsfdoc.progs[prog].uses

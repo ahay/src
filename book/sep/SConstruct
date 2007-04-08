@@ -1,49 +1,21 @@
 from rsfbook import *
 
-papers = '''
-cdstep
-stack
-forwd
-spitz
-oc2
-pwd
+report = (('Optimization','cdstep stack forwd spitz oc2 pwd'),
+          ('Helix Transform','precon findif burg specfac'),
+          ('Imaging','antial angle fmeiko fmsec'),
+          ('Azimuth Moveout','oc1 norm fkamo'),
+          ('Velocities','aniso vc1 velspec vc2'))
 
-precon
-findif
-burg
-specfac
-
-antial
-angle
-fmeiko
-fmsec
-
-oc1
-norm
-fkamo
-
-aniso
-vc1
-velspec
-vc2
-'''
-
-Papers(sections={'cdstep':'Optimization',
-                 'precon':'Helix Transform',
-                 'antial':'Imaging',
-                 'oc1':'Azimuth Moveout',
-                 'aniso':'Velocities'},
-       authors={'aniso':'Sergey Fomel and Vladimir Grechka',
+Papers(authors={'aniso':'Sergey Fomel and Vladimir Grechka',
                 'precon':'Sergey Fomel and Jon Claerbout',
                 'norm': 'Sergey Fomel and Norman Bleistein',
                 'rwe':'Paul Sava and Sergey Fomel',
                 'burg':'''Sergey Fomel and Paul Sava and
-                James Rickett and Jon F. Claerbout'''
-                },
+                James Rickett and Jon F. Claerbout'''},
        copyr='Stanford University',
        group='Stanford Exploration Project',
        line='Selected papers',
-       papers=map(lambda x: x+'/paper.tex',Split(papers)))
+       papers=report)
 
 End(use='hyperref,listings,amsmath',
     include='\\newcommand{\\RSF}{../../..}')

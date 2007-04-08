@@ -7,9 +7,8 @@ pluto
 sigsbee
 '''
 
-Papers(copyr='Colorado School of Mines',
-       group='Madagascar Datasets',
-       papers=map(lambda x: x+'/paper.tex',Split(papers)),
+Papers(Split(papers),
+       copyr='Colorado School of Mines',group='Madagascar Datasets',
        fig=('marmousi/model','marmvel','width=\\textwidth'))
 
 End()
