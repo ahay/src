@@ -1,0 +1,8 @@
+from rsfbook import *
+
+Papers(copyr='The University of British Columbia',
+       group='Seismic Laboratory for Imaging and Modeling',
+       papers=['rsf'])
+       
+End(use='hyperref,fancybox,amsmath,amsfonts',options='10pt')
+
