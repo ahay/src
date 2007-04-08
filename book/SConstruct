@@ -3,14 +3,12 @@ import rsfdoc
 import rsfprog
 import sftour
 
-books =
-'''
+books = '''
 bei
 gee
 '''
 
-reports =
-'''
+reports = '''
 cwp
 data
 geo391

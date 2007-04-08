@@ -6,6 +6,6 @@ os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
 
 #Paper('summary',include=r'\thispagestyle{empty}',options='manuscript')
 
-End(options='twocolumn,twoside')
+End() # options='twocolumn,twoside')
 
 
