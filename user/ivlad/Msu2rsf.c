@@ -35,7 +35,7 @@ main (int argc, char *argv[])
   const bool su = true;
   bool verb, xdr;
   char *filename, *trace;
-  int format, ns, ntr, itrace[SF_NKEYS];
+  int format=0, ns, ntr, itrace[SF_NKEYS];
   off_t pos, nsegy;
   float dt;
   FILE *file;
