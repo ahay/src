@@ -5,7 +5,7 @@ def showdat(title):
     return '''
     window f2=10 f1=10 |
     grey labelrot=n
-    label1="t (s)" label2="x (m)" title="%s"
+    label1="t" unit1="s" label2="x" unit2="m" title="%s"
     ''' % title
 def igrey(custom):
     return '''
@@ -30,51 +30,32 @@ par = {
     'pmy':0
     }
 # ------------------------------------------------------------
-
-# near offset data (use as "zero offset")
 Fetch('gomnearoffset.H','gom')
+
+# ------------------------------------------------------------
+# near offset data (use as "zero offset")
+# ------------------------------------------------------------
 Flow  ('zof','gomnearoffset.H','dd form=native | window n2=%(nx)d' % par)
 Plot  ('zof','zof',showdat('Data'))
 Result('zof','zof',showdat('Data'))
 
+# ------------------------------------------------------------
 # dip
+# ------------------------------------------------------------
 Flow  ('dip','zof','dip verb=y order=3 rect1=5 rect2=20 liter=100')
 Result('dip',
        showdat('Dominant Dip') + ' color=j scalebar=y')
 
 # ------------------------------------------------------------
-# PWD
-# ------------------------------------------------------------
 # diffractions
+# ------------------------------------------------------------
 Flow  ('dec','zof dip','pwd order=3 dip=${SOURCES[1]}')
 Plot  ('dec',      showdat('Residual'))
 Result('dec','dec',showdat('Residual'))
-# ------------------------------------------------------------
 
 # ------------------------------------------------------------
-# van Gogh
-# ------------------------------------------------------------
-Flow('dwg','zof dip',
-     'pwdsigk dips=${SOURCES[1]} verb=n eps=5 niter=1000 nliter=3')
-Result('dwg',showdat('Structure Enhanced'))
-
-Flow('zofs','zof','pad n2=1024')
-Flow('dips','dip','transp | remap1 n1=1024 | transp')
-
-Flow('seis','zofs dips','seislet adj=y inv=y dip=${SOURCES[1]}')
-Flow('swg','seis dips','cut f2=256 | seislet adj=n dip=${SOURCES[1]} | window n2=900')
-
-Result('swg',showdat('Structure Enhanced'))
-
-Flow  ('dns','zof dwg','add scale=1,-1 ${SOURCES[1]}')
-Result('dns',showdat('Diffractions Enhanced'))
-
-Flow  ('sns','zof swg','add scale=1,-1 ${SOURCES[1]}')
-Result('sns',showdat('Diffractions Enhanced'))
-
-# ------------------------------------------------------------
-
 # data (frequency)
+# ------------------------------------------------------------
 Flow('frq','dec',
      '''
      pad end1=%(nt)d |
@@ -85,6 +66,7 @@ Flow('frq','dec',
      put label1=x label2=y label3=w
      ''' % par)
 
+# ------------------------------------------------------------
 # velocity & slowness
 Flow('vel',None,
      '''
@@ -100,9 +82,32 @@ Flow('slo','vel',
      put label1=x label2=y label3=z
      ''')
 
-# migration
-zomig.image('img','slo','frq',par)
+# ------------------------------------------------------------
+# van Gogh transform
+# ------------------------------------------------------------
+Flow(  'dwg','zof dip','pwdsigk dips=${SOURCES[1]} verb=n eps=5 niter=1000 nliter=3')
+Result('dwg',showdat('Structure Enhanced'))
 
+Flow  ('dns','zof dwg','add scale=1,-1 ${SOURCES[1]}')
+Result('dns',showdat('Diffractions Enhanced'))
+
+# ------------------------------------------------------------
+# seislet transform
+# ------------------------------------------------------------
+Flow('zofs','zof','pad n2=1024')
+Flow('dips','dip','transp | remap1 n1=1024 | transp')
+Flow('seis','zofs dips','seislet adj=y inv=y dip=${SOURCES[1]}')
+
+Flow(  'swg','seis dips','cut f2=256 | seislet adj=n dip=${SOURCES[1]} | window n2=900')
+Result('swg',showdat('Structure Enhanced'))
+
+Flow  ('sns','zof swg','add scale=1,-1 ${SOURCES[1]}')
+Result('sns',showdat('Diffractions Enhanced'))
+
+# ------------------------------------------------------------
+# zero offset migration
+# ------------------------------------------------------------
+zomig.image('img','slo','frq',par)
 
 # ------------------------------------------------------------
 # LOOP over velocities
@@ -113,7 +118,7 @@ for k in range(n):
 #    print k,scale
     
     slo = 'slo' + str(k)
-    Flow(slo,['slo'],'math output="input*%g"' % scale)
+    Flow(slo,'slo','math output="input*%g"' % scale)
 
     img = 'img' + str(k)
     zomig.image(img,slo,'frq',par)
@@ -129,7 +134,7 @@ Result('timg',allimg,
        transp plane=23 | transp plane=12 |
        ''' % len(allimg)
        + igrey('gainpanel=a pclip=99')
-       , stdin=0)
+       ,stdin=0)
 
 allfoc = map(lambda x: 'foc%d' % x,range(n))
 Result('tfoc',allfoc,
@@ -138,5 +143,6 @@ Result('tfoc',allfoc,
        ''' % len(allfoc)
        + igrey('gainpanel=a pclip=100 color=j allpos=y')
        ,stdin=0)
+# ------------------------------------------------------------
 
 End()
