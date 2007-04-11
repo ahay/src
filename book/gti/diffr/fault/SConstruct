@@ -38,4 +38,21 @@ for cig in (41,83,110,137,165):
 
 Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 
+Flow('pwk','bei-dip',
+     'remap1 n1=1500 | pwpick i0=125 eps=0.05 | window n1=1000')
+Plot('pwk',
+     '''
+     contour c0=0 dc=0.16 nc=25
+     transp=y yreverse=y plotcol=6 plotfat=5
+     wanttitle=n wantaxis=n
+     ''')
+
+Plot('bei-stk2',
+     '''
+     grey title="Stack" 
+     label1=Time unit1=s label2=Lateral unit2=km
+     ''')
+
+Result('pwk','bei-stk2 pwk','Overlay')
+
 End()

@@ -147,14 +147,15 @@ def diffimg(name,
     dip = name+'-dip'
     Flow(dip,stk,'dip rect1=%d rect2=%d' % (rect1,rect2))
     Result(dip,grey('Dominant Slope') + \
-           ' color=j scalebar=y barlabel=Slope barunit=samples ')
+           ' color=j scalebar=y barlabel=Slope barunit=samples ')   
     
     pwd=name+'-pwd'
     Flow(pwd,[stk,dip],'pwd dip=${SOURCES[1]}')
     Result(pwd,grey('Separated Diffractions'))
 
     ref=name+'-ref'
-    Flow(ref,[stk,dip],'pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d' %  (srect1,srect2))
+    Flow(ref,[stk,dip],
+         'pwdsmooth2 dip=${SOURCES[1]} rect1=%d rect2=%d' %  (srect1,srect2))
     Result(ref,grey('Separated Reflections'))
 
     shp=name+'-shp'
