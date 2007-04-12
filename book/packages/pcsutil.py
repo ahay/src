@@ -133,11 +133,11 @@ def plotpolar(cc,cz,cx,custom):
 # ------------------------------------------------------------
 def polargrid(cc,custom,par):
     
-    Flow(cc+'t_',None,'math n1=90  d1=1 o1=0  output="x1"')
+    Flow(cc+'t_',None,'math n1=60  d1=1 o1=30 output="x1"')
     for k in range(0,360,30):
         Flow(cc+'tz'+str(k),cc+'t_','math output="input*sin(%g)" ' % (k*pi/180.))
         Flow(cc+'tx'+str(k),cc+'t_','math output="input*cos(%g)" ' % (k*pi/180.))
-        plotpolar(cc+'t'+str(k),cc+'tz'+str(k),cc+'tx'+str(k),custom+' plotcol=4')
+        plotpolar(cc+'t'+str(k),cc+'tz'+str(k),cc+'tx'+str(k),custom+'')
         
     allt =  map(lambda x: cc+'t%d.vpl' % x,range(0,360,30))
     Plot(cc+'t',allt,'Overlay')
@@ -146,7 +146,7 @@ def polargrid(cc,custom,par):
     for l in range(30,91,30):
         Flow(cc+'pz'+str(l),cc+'p_','math output="%d*sin(input)" ' % l)
         Flow(cc+'px'+str(l),cc+'p_','math output="%d*cos(input)" ' % l)
-        plotpolar(cc+'p'+str(l),cc+'pz'+str(l),cc+'px'+str(l),custom+' plotcol=2')
+        plotpolar(cc+'p'+str(l),cc+'pz'+str(l),cc+'px'+str(l),custom+'')
 
     allp =  map(lambda x: cc+'p%d.vpl' % x,range(30,91,30))
     Plot(cc+'p',allp,'Overlay')
