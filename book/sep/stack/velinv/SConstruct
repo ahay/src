@@ -23,6 +23,41 @@ for psun in (0,1):
 
 Plot('vscan','scan1','grey title="Least-squares Velocity Scan" ')
 
+Flow('scan err','cmp',iscan(0,1,1,0))
+Flow('scan2 err2','scan',iscan(0,1,1,0) + ' adj=1 | ' + iscan(0,1,1,0))
+
+nx = 1000
+ny = 60
+
+shifts = []
+shifts2 = []
+for x  in range(-3,4):
+    for y in range(-3,4):
+        shift = 'shift%d%d' % (x,y)
+        if x > 0:
+            if y > 0:
+                tra = 'window f1=%d f2=%d | pad end1=%d end2=%d' % (x,y,x,y)
+            else:
+                tra = 'window f1=%d n2=%d | pad end1=%d beg2=%d' % (x,ny+y,x,-y)
+        else:
+            if y > 0:
+                tra = 'window n1=%d f2=%d | pad beg1=%d end2=%d' % (nx+x,y,-x,y)
+            else:
+                tra = 'window n1=%d n2=%d | pad beg1=%d beg2=%d' % (nx+x,ny+y,-x,-y)
+        Flow(shift,'scan',tra)
+        Flow(shift+'2','scan2',tra)
+        shifts.append(shift)
+        shifts2.append(shift+'2')
+        
+Flow('shifts',shifts,'cat ${SOURCES[1:%d]}' % len(shifts))
+Flow('shifts2',shifts2,'cat ${SOURCES[1:%d]}' % len(shifts))
+
+Flow('flt pre','shifts2 scan',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=20 rect2=10')
+
+Flow('inv','shifts flt','add mode=p ${SOURCES[1]} | stack axis=3 norm=n')
+
+
 scale = 6.382e-09 # 1/(cmp*cmp)
 
 Result('cgiter','err0 err1',

@@ -19,6 +19,9 @@ for ps in (0,1):
     Flow([mig,err],'mkaa vel',
          'kirchinv velocity=${SOURCES[1]} ps=%d err=${TARGETS[1]}' % ps)
 
+Flow('mig','mkaa vel','kirchnew velocity=${SOURCES[1]} ps=1 adj=1')
+     
+
 Result('migiter','err0 err1',
        '''
        cat axis=2 ${SOURCES[1]} |

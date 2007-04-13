@@ -48,7 +48,18 @@ for c in ('','d'):
     Plot(prim,'grey title="(c) Estimated Signal" clip=0.12')
     Plot(pred,'grey title="(d) Matched Multiples" clip=0.12')
 
+    Flow(filt+'0',filt,'window n3=1     ')
+    Plot(filt+'0','grey title="(a) Zero Coefficient" scalebar=y')
+    
+    Flow(filt+'s',filt,'stack axis=3')
+    Plot(filt+'s','grey title="(b) Mean Coefficient" scalebar=y')
+
+    Result(filt,[filt+'0',filt+'s'],'SideBySideIso')
+    
 Result('planes','data mult prim pred','TwoRows')
 Result('curves','ddata dmult dprim dpred','TwoRows')
+
+
+
 
 End()
