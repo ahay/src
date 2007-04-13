@@ -1,9 +1,21 @@
 #!/bin/sh
 
-python=`which python`
-if [ $? -ne 0 ]; then
-    python="no"
-fi
+findprog ()
+{
+    sifs=$IFS
+    IFS=:
+    prog="no"
+    for dir in $PATH; do
+	if [ -x $dir/$1 ] ; then
+	    prog="$dir/$1"
+	    break
+	fi
+    done
+    IFS=$sifs
+}
+
+findprog python
+python=$prog
 echo "Checking for Python ... $python"
 if test "$python" = "no"; then
     echo "Please install Python before proceeding: http://www.python.org"
@@ -27,12 +39,8 @@ fi
 PYTHONPATH=${RSFROOT}/lib
 export PYTHONPATH
 
-scons=`which scons`
-if [ $? -ne 0 ]; then
-    scons="no"
-else
-    scons="scons"
-fi
+findprog scons
+scons=$prog
 echo "Checking for SCons ... $scons"
 if test "$scons" = "no"; then
     here=`pwd`

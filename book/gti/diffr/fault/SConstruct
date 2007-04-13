@@ -29,12 +29,24 @@ for cig in (41,83,110,137,165):
     panel = 'cig%d' % cig
     panels.append(panel)
 
-    Plot(panel,'bei-foc',
+    Plot(panel+'g','bei-foc',
          '''
          window min1=1 max1=4 n3=1 f3=%d | grey allpos=y
          label1=Time unit1=s label2=Velocity unit2=km/s
          labelsz=15 titlesz=18 color=j bias=3 title="IG at %d km"
          ''' % (cig,int(7.705+0.0335*cig)))
+
+    pik = 'pik%d' % cig
+    Plot(pik,'bei-pik',
+         '''
+         window min1=1 max1=4 n2=1 f2=%d |
+         graph transp=y yreverse=y pad=n
+         wanttitle=n labelsz=15 titlesz=18 wantaxis=n
+         min2=1.425 max2=2.6 plotcol=7 plotfat=10
+         ''' % cig)
+
+    Plot(panel,[panel+'g',pik],'Overlay')
+    
 
 Result('panel',panels,'SideBySideAniso',vppen='txscale=1.2')
 

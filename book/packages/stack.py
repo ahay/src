@@ -49,7 +49,7 @@ def stack(name,
         return '''
         window n1=%d |
         grey title="%s" 
-        label1=Time unit1=s label2=Lateral unit2="%s"
+        label1=Time unit1=s label2=Distance unit2="%s"
         ''' % (nt,title,units)
 
     def velgrey(title):
@@ -68,7 +68,8 @@ def stack(name,
     Flow(stk,nmo,'stack')
     Result(stk,grey('NMO Stack'))
 
-    Flow(stk+'2',nmo,
+    stk2=stk+'2'
+    Flow(stk2,nmo,
          '''
          window f1=%d | logstretch nout=%d |
          fft1 | transp plane=13 memsize=500 |
@@ -77,9 +78,10 @@ def stack(name,
          logstretch inv=y | pad beg1=%d |
          transp | bandpass fhi=%g | transp
          ''' % (f1,nout,nout,f1,0.75*0.5/dx))
-    Result(stk+'2',grey('DMO Stack'))
+    Result(stk2,grey('DMO Stack'))
 
-    diffimg(name,stk+'2',v0,nv,dv,nx,padx,nt,tmin,tmax,
+    diffimg(name,stk2,v0,nv,dv,nx,padx,nt,tmin,tmax,
+            c0,dc,nc,
             rect1,
             rect2,
             srect1,
@@ -107,6 +109,9 @@ def diffimg(name,
             nt,
             tmin=0,
             tmax=10,
+            c0=0,
+            dc=1,
+            nc=10,
             rect1=10,
             rect2=10,
             srect1=1,
@@ -135,7 +140,7 @@ def diffimg(name,
         return '''
         window n1=%d |
         grey title="%s" 
-        label1=Time unit1=s label2=Lateral unit2="%s"
+        label1=Time unit1=s label2=Distance unit2="%s"
         ''' % (nt,title,units)
 
     def velgrey(title):
@@ -148,6 +153,11 @@ def diffimg(name,
     Flow(dip,stk,'dip rect1=%d rect2=%d' % (rect1,rect2))
     Result(dip,grey('Dominant Slope') + \
            ' color=j scalebar=y barlabel=Slope barunit=samples ')   
+
+    pwk = name+'-pwk'
+    Flow(pwk,dip,
+         'noise rep=y seed=2007 | pwdsmooth2 dip=$SOURCE rect1=3 rect2=%d' %  srect2)
+    Result(pwk,grey('Pattern'))
     
     pwd=name+'-pwd'
     Flow(pwd,[stk,dip],'pwd dip=${SOURCES[1]}')

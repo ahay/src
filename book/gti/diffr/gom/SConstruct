@@ -4,7 +4,7 @@ import stack
 Fetch('gomnearoffset.H','gom')
 
 Flow('gom','gomnearoffset.H','dd form=native')
-Result('gom','window n1=251 | grey label1=Time unit1=s label2=Midpoint unit2=km title="Near Offset" ')
+Result('gom','window n1=251 | grey label1=Time unit1=s label2=Distance unit2=m title="Near Offset" ')
 
 stack.diffimg('gom',
               'gom',
@@ -17,6 +17,9 @@ stack.diffimg('gom',
               an=10,
               tmin=1.6,
               tmax=2.8,
+              c0=1.8,
+              dc=0.05,
+              nc=50,
               rect1=10,
               rect2=40,
               srect1=1,
