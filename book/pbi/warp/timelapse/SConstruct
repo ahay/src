@@ -41,14 +41,14 @@ for case in range(2):
          '''
          cmplx ${SOURCES[1]} | 
          graph label1=Depth unit1=m label2=Velocity unit2=m/s
-         dash=%d wanttitle=n
-         ''' % case)
+         dash=%d plotcol=%d wanttitle=n
+         ''' % (case,6-case))
     Plot('t'+vel,['dtime1',vel2],
          '''
          cmplx ${SOURCES[1]} | 
          graph label1=Time unit1=s label2=Velocity unit2=m/s
-         dash=%d wanttitle=n
-         ''' % case)
+         dash=%d plotcol=%d wanttitle=n
+         ''' % (case,6-case))
 
 # Display data
 Result('modl','veloc1 veloc2','Overlay')
@@ -137,8 +137,8 @@ for rat in ('rat','trat'):
          '''
          cmplx ${SOURCES[1]} | window n1=%d |
          graph label1=Time unit1=s label2="V\_1\^/V\_2"
-         wanttitle=n dash=%d min2=0.8 max2=1.2
-         ''' % (2*nl,(0,1)[rat=='rat']))
+         wanttitle=n dash=%d plotcol=%d min2=0.8 max2=1.2
+         ''' % (2*nl,(0,1)[rat=='rat'],(6,5)[rat=='rat']))
 
 Result('rat','rat trat','Overlay')
 

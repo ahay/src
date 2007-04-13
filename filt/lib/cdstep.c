@@ -54,14 +54,15 @@ void sf_cdstep(bool forget     /* restart flag */,
   The data residual is rr = A x - dat
 >*/
 {
-    float *s, *si;
+    float *s, *si, *ss;
     double alpha, beta;
     int i, n, ix, iy;
 
     s = sf_floatalloc(nx+ny);
+    ss = s+nx;
 
-    for (ix=0; ix < nx; ix++) { s[ix]    = g[ix]; }
-    for (iy=0; iy < ny; iy++) { s[nx+iy] = gg[iy]; }
+    for (ix=0; ix < nx; ix++) {  s[ix] = g[ix]; }
+    for (iy=0; iy < ny; iy++) { ss[iy] = gg[iy]; }
 
     sf_llist_rewind (steps);
     n = sf_llist_depth (steps);
@@ -79,10 +80,10 @@ void sf_cdstep(bool forget     /* restart flag */,
 
     sf_llist_add (steps, s, beta);
     if (forget) sf_llist_chop (steps);
-    alpha = - dotprod (ny, rr, s+nx) / beta;
+    alpha = - dotprod (ny, rr, ss) / beta;
     
-    for (ix=0; ix < nx; ix++) { x[ix]  += alpha * s[ix]; }
-    for (iy=0; iy < ny; iy++) { rr[iy] += alpha * s[nx+iy]; }
+    for (ix=0; ix < nx; ix++) {  x[ix] += alpha *  s[ix]; }
+    for (iy=0; iy < ny; iy++) { rr[iy] += alpha * ss[iy]; }
 }
 
 void sf_cdstep_diag(int nx, float *res /* [nx] */)

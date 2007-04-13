@@ -69,7 +69,7 @@ void sf_llist_add(sf_list l, float *g, double gn)
 {    
     l->current->g = g;
     l->current->gn = gn;
-    l->current->next = (struct Entry *) sf_alloc(1,sizeof(struct Entry));
+    l->current->next = (struct Entry *) sf_alloc(1,sizeof(struct Entry));    
     l->depth++;
 }
 

@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	sf_putint(out,"n2",nx);
     } else {
 	sf_putstring(out,"label2","Slowness Squared");
-	sf_putstring(out,"unit2","s^2/km^2");
+	sf_putstring(out,"unit2","s\\^2\\_/km\\^2");
 	sf_putfloat(out,"o2",s0);
 	sf_putfloat(out,"d2",ds);
 	sf_putint(out,"n2",nv);
