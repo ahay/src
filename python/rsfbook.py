@@ -289,8 +289,8 @@ class RSFReport(Environment):
         html = os.path.join(self.doc,'index.html')
         self.Command(html,'toc_html/index.html',
                     'cd $SOURCE.dir && cp -R * $TARGET.dir && cd ..')
-        self.Depends(html,'installs')
         self.Alias('www',self.doc)
+        self.Depends('www','installs')
         self.Default('pdf')
 
 # Default report
