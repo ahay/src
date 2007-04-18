@@ -6,7 +6,7 @@ findprog ()
     IFS=:
     prog="no"
     for dir in $PATH; do
-	if [ -x $dir/$1 ] ; then
+	if [ -x $dir/$1 -a ! -d $dir/$1 ] ; then
 	    prog="$dir/$1"
 	    break
 	fi
