@@ -23,7 +23,7 @@ pspen = os.path.join(bindir,'pspen')
 
 def convert(vplot,eps,
             options='color=n fat=1 fatmult=1.5 invras=y',
-            psborder=0,
+            psborder=0.05,
             ppi=72 # points per inch resolution
             ):
     "Convert vplot to EPS"
@@ -38,11 +38,12 @@ def convert(vplot,eps,
     head = string.split(out.read())
     out.close() 
 
-    bb = map(lambda x: int((float(head[x])-space)*ppi),[7, 12, 9, 14])
+    bbp = map(lambda x: int((float(head[x])+space)*ppi)+1,[9, 14])
+    bbm = map(lambda x: int((float(head[x])-space)*ppi),[7, 12])
 
     out = open(eps,"w")
-    out.write("%\!PS-Adobe-2.0 EPSF-2.0\n")
-    out.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(bb))
+    out.write("%!PS-Adobe-2.0 EPSF-2.0\n")
+    out.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(bbm+bbp))
     
     name = tempfile.mktemp()
     command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)
