@@ -243,7 +243,7 @@ package['libs'] = {'fc':'glibc-headers',
 
 # Failing this check stops the installation.
 def libs(context):
-    context.Message("checking for RPC libraries ... ")
+    context.Message("checking for libraries ... ")
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)

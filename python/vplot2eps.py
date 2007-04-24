@@ -39,16 +39,16 @@ def convert(vplot,eps,
     out.close() 
 
     # Compute bounding box
-    bb = map(lambda x: (float(head[x])+space)*ppi,[7,12,9,14])
+    bbm = map(lambda x: (float(head[x])-space)*ppi,[7,12])
+    bbp = map(lambda x: (float(head[x])+space)*ppi,[9,14])
     # Round to integer
-    bbi = map(int,bb)
-    bbi[2] = bbi[2]+1
-    bbi[3] = bbi[3]+1
+    ibbm = map(int,bbm)
+    ibbp = map(lambda x: int(x)+1,bbp)
  
     out = open(eps,"w")
     out.write("%!PS-Adobe-2.0 EPSF-2.0\n")
-    out.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(bbi))
-    out.write("%%%%HiResBoundingBox: %g %g %g %g\n" % tuple(bb))
+    out.write("%%%%BoundingBox: %d %d %d %d\n" % tuple(ibbm+ibbp))
+    out.write("%%%%HiResBoundingBox: %g %g %g %g\n" % tuple(bbm+bbp))
     
     name = tempfile.mktemp()
     command = pspen + ' size=a tex=y %s < %s > %s' % (opts,vplot,name)
