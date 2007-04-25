@@ -49,14 +49,14 @@ void taper2_init(int n2_, int n1_ /* cube dimensions */,
 	tap1 = sf_floatalloc(nt1);
 	for (it=0; it < nt1; it++) {
 	    gain = sinf(0.5*SF_PI*it/nt1);
-	    tap1[it]=gain*gain;
+	    tap1[it]=(1+gain)/2.;
 	}
     }
     if (nt2 > 0) {
 	tap2 = sf_floatalloc(nt2);
 	for (it=0; it < nt2; it++) {
 	    gain = sinf(0.5*SF_PI*it/nt2);
-	    tap2[it]=gain*gain;
+	    tap2[it]=(1+gain)/2.;
 	}
     }
 }
@@ -98,22 +98,22 @@ void taper3_init(
     if (nt1 > 0) {
 	tap1 = sf_floatalloc(nt1);
 	for (it=0; it < nt1; it++) {
-	    gain = sinf(0.5*SF_PI*(it+1)/nt1);
-	    tap1[it]=gain*gain;
+	    gain = sinf(0.5*SF_PI*it/nt1);
+	    tap1[it]=(1+gain)/2.;
 	}
     }
     if (nt2 > 0) {
 	tap2 = sf_floatalloc(nt2);
 	for (it=0; it < nt2; it++) {
-	    gain = sinf(0.5*SF_PI*(it+1)/nt2);
-	    tap2[it]=gain*gain;
+	    gain = sinf(0.5*SF_PI*it/nt2);
+	    tap2[it]=(1+gain)/2.;
 	}
     }
     if (nt3 > 0) {
 	tap3 = sf_floatalloc(nt3);
 	for (it=0; it < nt3; it++) {
-	    gain = sinf(0.5*SF_PI*(it+1)/nt3);
-	    tap3[it]=gain*gain;
+	    gain = sinf(0.5*SF_PI*it/nt3);
+	    tap3[it]=(1+gain)/2.;
 	}
     }
 }
