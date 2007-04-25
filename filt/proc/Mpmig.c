@@ -43,9 +43,9 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(cmp,"d1",&dt)) sf_error("No d1= in input");
     if (!sf_histfloat(cmp,"o1",&t0)) sf_error("No o1= in input");
 
-    if (!sf_histint(cmp,"n3",&nh)) sf_error("No n2= in input");
-    if (!sf_histfloat(cmp,"d3",&dh)) sf_error("No d2= in input");
-    if (!sf_histfloat(cmp,"o3",&h0)) sf_error("No o2= in input");
+    if (!sf_histint(cmp,"n3",&nh)) sf_error("No n3= in input");
+    if (!sf_histfloat(cmp,"d3",&dh)) sf_error("No d3= in input");
+    if (!sf_histfloat(cmp,"o3",&h0)) sf_error("No o3= in input");
 
     if (!sf_histint(cmp,"n2",&nx)) sf_error("No n2= in input");
     if (!sf_histfloat(cmp,"d2",&dx)) sf_error("No d2= in input");
