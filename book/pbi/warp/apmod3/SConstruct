@@ -7,10 +7,46 @@ private = {'login':os.environ.get('BEG_LOGIN'),
 model = 'coronation_reservoir.sgy'
 Fetch(model,'apache',private)
 
-Flow('mod mod.asc mod.bin',model,
+Flow('res res.asc res.bin',model,
      '''
      segyread read=d afile=${TARGETS[1]} bfile=${TARGETS[2]} |
      put n2=127 d2=1 o2=1 n3=355 d3=1 o3=1
      ''')
+
+mods = Split('vp vs rho')
+
+for case in mods:
+    model = 'coronation_%s.rsf' % case
+    Fetch(model,'apache',private)
+    Flow(case,model,'dd form=native | despike3 wide=3')
+
+Flow('mod',mods,
+     '''
+     cat axis=4 ${SOURCES[1:3]} |
+     smooth rect2=2 rect3=2 |
+     transp plane=34 |
+     transp plane=23 |
+     modrefl2 dt=0.002 nt=1001
+     ''')
+
+pp = []
+ps = []
+for freq in (14,28,46,68):
+    ppf = 'pp%d' % freq
+    Flow(ppf,'mod','window n2=1 | ricker1 frequency=%d | window max1=0.85' % freq)
+    pp.append(ppf)
+
+    psf = 'ps%d' % freq
+    Flow(psf,'mod','window n2=1 | ricker1 frequency=%d | window max1=1.45' % (freq/2))
+    ps.append(psf)
+Flow('pp',pp,'add ${SOURCES[1:%d]}' % len(pp))
+Flow('ps',ps,'add ${SOURCES[1:%d]}' % len(ps))
+
+Result('pp',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=370 frame2=100 frame3=250
+       title=PP 
+       ''')
 
 End()

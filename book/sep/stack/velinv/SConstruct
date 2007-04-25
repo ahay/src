@@ -56,7 +56,7 @@ Flow('flt pre','shifts2 scan',
      'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=20 rect2=10')
 
 Flow('inv','shifts flt','add mode=p ${SOURCES[1]} | stack axis=3 norm=n')
-
+Flow('cmp2','scan1',iscan(0,1,1,0) + ' adj=1')
 
 scale = 6.382e-09 # 1/(cmp*cmp)
 
