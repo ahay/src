@@ -23,7 +23,7 @@ for case in mods:
 Flow('mod',mods,
      '''
      cat axis=4 ${SOURCES[1:3]} |
-     smooth rect2=2 rect3=2 |
+     smooth rect2=2 rect3=4 |
      transp plane=34 |
      transp plane=23 |
      modrefl2 dt=0.002 nt=1001
@@ -37,7 +37,7 @@ for freq in (14,28,46,68):
     pp.append(ppf)
 
     psf = 'ps%d' % freq
-    Flow(psf,'mod','window n2=1 | ricker1 frequency=%d | window max1=1.45' % (freq/2))
+    Flow(psf,'mod','window f2=2 | ricker1 frequency=%d | window max1=1.45' % (freq/2))
     ps.append(psf)
 Flow('pp',pp,'add ${SOURCES[1:%d]}' % len(pp))
 Flow('ps',ps,'add ${SOURCES[1:%d]}' % len(ps))
@@ -47,6 +47,13 @@ Result('pp',
        byte gainpanel=all |
        grey3 frame1=370 frame2=100 frame3=250
        title=PP 
+       ''')
+
+Result('ps',
+       '''
+       byte gainpanel=all |
+       grey3 frame1=650 frame2=100 frame3=250
+       title=PS
        ''')
 
 End()
