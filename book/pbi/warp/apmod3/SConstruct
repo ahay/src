@@ -20,6 +20,14 @@ for case in mods:
     Fetch(model,'apache',private)
     Flow(case,model,'dd form=native | despike3 wide=3')
 
+    Flow(['b'+case,'ba'+case],case,
+         'byte gainpanel=all allpos=y bar=${TARGETS[1]}')
+    Result(case,'b'+case,
+           '''
+           grey3 color=j frame1=498 frame2=100 frame3=250
+           title=%s scalebar=y
+           ''' % case)
+
 Flow('mod',mods,
      '''
      cat axis=4 ${SOURCES[1:3]} |
