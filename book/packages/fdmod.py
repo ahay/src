@@ -452,7 +452,7 @@ def zom(imag,data,rdat,velo,dens,sacq,racq,custom,par):
     Flow(imag,twfl,'window n3=1')
 
 # ------------------------------------------------------------
-# wavefield-over-model plots
+# wavefield-over-model plot
 def wom(wom,wfld,velo,vmean,par):
 
     if(not par.has_key('wweight')): par['wweight']=10
@@ -480,6 +480,7 @@ def wom(wom,wfld,velo,vmean,par):
                 par['dt']*par['jsnap'],
                 par['wweight']))
 
+# image-over-model plot
 def iom(iom,imag,velo,vmean,par):
 
     if(not par.has_key('iweight')): par['iweight']=10
@@ -488,6 +489,9 @@ def iom(iom,imag,velo,vmean,par):
     chop = imag+'_chop'
     Flow(chop,imag,
          '''
+         window
+         min1=%(zmin)g max1=%(zmax)g
+         min2=%(xmin)g max2=%(xmax)g |
          scale axis=123 |
          clip clip=%(iclip)g
          ''' % par)

@@ -17,8 +17,8 @@ def execute(rr,par):
     lpar['vz'] = -lpar['ux']
 
     # double and center the grid
-    lpar['nx']=2*(par['nx'] + par['ox']/par['dx'])
-    lpar['nz']=2*(par['nz'] + par['oz']/par['dz'])
+    lpar['nx']=2*(par['nx'] + abs(par['ox'])/par['dx'])
+    lpar['nz']=2*(par['nz'] + abs(par['oz'])/par['dz'])
     lpar['ox']=-lpar['nx']*par['dx']/2
     lpar['oz']=-lpar['nz']*par['dz']/2
     
