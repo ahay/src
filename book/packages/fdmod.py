@@ -503,7 +503,6 @@ def iom(iom,imag,velo,vmean,par):
          math w=${SOURCES[1]} output="input+%g*w"
          ''' % (vmean,par['iweight']))
 
-
 # ------------------------------------------------------------
 # wavefield snapshot plots
 def wframe(frame,movie,index,custom,par):
