@@ -1,4 +1,8 @@
-/* Convert shots to CMPs for regular 2-D geometry. */
+/* Convert shots to CMPs for regular 2-D geometry. 
+
+The axes in the input are {time,offset,shot}
+The axes in the output are {time,offset,midpoint}
+*/
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -25,7 +29,7 @@ int main(int argc, char* argv[])
 {
     int type;
     off_t pos;
-    bool sign;
+    bool sign, half;
     int   ns,    ny,    nh, nh2, nt;
     int   is,    iy,    ih, ih2=0, *mask;
     float os,ds, oy,dy, oh,dh;
@@ -48,6 +52,14 @@ int main(int argc, char* argv[])
     
     if (!sf_getbool("positive",&sign)) sign=true;
     /* initial offset orientation */
+
+    if (!sf_getbool("half",&half)) half=true;
+    /* if y, the second axis is half-offset instead of full offset*/
+
+    if (!half) {
+	dh /= 2;
+	oh /= 2;
+    }
 
     type = 0.5 + ds/dh;
     

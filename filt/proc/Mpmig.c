@@ -131,4 +131,4 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-/* 	$Id: Minmo.c 729 2004-07-29 18:22:16Z fomels $	 */
+/* 	$Id$	 */
