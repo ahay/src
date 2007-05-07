@@ -1090,6 +1090,7 @@ void vp_frame(void)
 /*< Drawing frame >*/
 {
     int i;
+    bool need;
     float num, xc, yc, vs, xp[4], yp[4];
     char string[32];
 
@@ -1273,7 +1274,11 @@ void vp_frame(void)
 	    vp_udraw(max1,yc+max2-mid2);
 	}
 
-	if (NULL != label1) {
+	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark1",&need))
+	    need = (NULL != label1);
+	/* to put numbers at frame ends */
+
+	if (need) {
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 	    
@@ -1301,8 +1306,12 @@ void vp_frame(void)
 	    vp_udraw(xc,mid2);
 	    vp_udraw(xc+max1-mid1,max2);
 	}
+
+	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark2",&need))
+	    need = (NULL != label2);
+	/* to put numbers at frame ends */
 	 
-	if (NULL != label2) {
+	if (need) {
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
 	    
@@ -1336,15 +1345,19 @@ void vp_frame(void)
 	    vp_udraw(xc+min1-mid1,yc);
 	}
 	
-	if (NULL != label3) {
+	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark3",&need))
+	    need = (NULL != label3);
+	/* to put numbers at frame ends */
+
+	if (need) {
 	    vp_color(VP_YELLOW);
 	    vp_where(&xc,&yc);
-
+	    
 	    num = label3->min+(frame3+0.5)*d3;
 	    if (fabsf(d3) > FLT_EPSILON && 
 		fabsf(num) < FLT_EPSILON) num=0.;
 	    snprintf (string,32,"%1.5g",num);
-
+	    
 	    vp_tjust (TH_CENTER, TV_BOTTOM);
 
 	    if (flat) {
@@ -1360,7 +1373,7 @@ void vp_frame(void)
 	    }
 	} /* label3 */
     } /* if cube */
-
+    
     vp_uclip (min1, min2, max1, max2);
 }
 
