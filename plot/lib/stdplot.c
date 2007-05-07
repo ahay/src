@@ -1274,7 +1274,7 @@ void vp_frame(void)
 	    vp_udraw(max1,yc+max2-mid2);
 	}
 
-	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark1",&need))
+	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel1",&need))
 	    need = (NULL != label1);
 	/* to put numbers at frame ends */
 
@@ -1307,7 +1307,7 @@ void vp_frame(void)
 	    vp_udraw(xc+max1-mid1,max2);
 	}
 
-	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark2",&need))
+	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel2",&need))
 	    need = (NULL != label2);
 	/* to put numbers at frame ends */
 	 
@@ -1345,7 +1345,7 @@ void vp_frame(void)
 	    vp_udraw(xc+min1-mid1,yc);
 	}
 	
-	if (!sf_getbool("framemark",&need) && !sf_getbool("framemark3",&need))
+	if (!sf_getbool("framelabel",&need) && !sf_getbool("framelabel3",&need))
 	    need = (NULL != label3);
 	/* to put numbers at frame ends */
 
