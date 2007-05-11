@@ -1,0 +1,117 @@
+from rsfproj import *
+
+# get model from data server
+model = 'vel_time2_over_compaction.rsf'
+Fetch(model,'long')
+
+# reformat and display
+Flow('vel',model,
+     '''
+     dd form=native |
+     window f2=1 |
+     put label=Velocity unit=km/s
+     label1=Depth unit1=km
+     label2=Distance unit2=km o2=0 d2=0.020
+     ''')
+Result('vel',
+       '''
+       grey color=j allpos=y bias=1.5
+       scalebar=y wanttitle=n
+       barreverse=y
+       ''')
+
+# module for zero-offset (exploding reflector) wave equation modeling
+import zomig
+
+# parameters for zomig
+
+dt = 0.001
+
+par = {
+    'nz':200,  'dz':0.01,  'oz':0, #'zmin':0, 'zmax':150,
+    'nx':10800,'dx':0.50,  'ox':0, #'xmin':0, 'xmax':5400,
+    'nt': int(3.5/dt+1.5), 'dt': dt, 'ot':0, 'kt':400, 'fone':20, 'ftwo':400,
+    #
+    'nrmax':10,'dtmax':0.001,
+    # tapering
+    'tmx':0,'tmy':0,
+    # padding
+    'pmx':0,'pmy':0,
+    # frequency axis
+    'nw':500, 'ow': 0, 'dw': 0.277778, 
+#    
+    'nbz':50,'tz':0.006125,
+    'nbx':50,'tx':0.006125,
+    'verb':'n', 'abc':'y', 'free':'n',
+    'snap':'n', 'jsnap':100,
+    #    's_o':1500,'s_d':100, 's_n':1,
+    #    'r_o':000, 'r_d':6,   'r_n':400
+    }
+
+# convert velocity to slowness
+Flow('slo','vel',
+     '''
+     math "output=1/input" |
+     transp plane=12 | transp plane=23 |
+     put label1=x label2=y label3=z
+     ''')
+
+# reflectivity
+Flow('ref','vel',
+     '''
+     ai2refl |
+     scale axis=12 |
+     depth2time velocity=$SOURCE dt=%(dt)g nt=%(nt)d |
+     ricker1 frequency=%(fone)s | halfint | halfint |
+     math output=-input |
+     time2depth velocity=$SOURCE dz=%(dz)g nz=%(nz)d |
+     transp plane=12 | transp plane=23
+     ''' % par)
+Result('ref','window | transp | grey title="Exploding Reflectors" ')
+
+# One-way wave-equation modeling
+
+zomig.model('dat','slo','ref',par)
+
+Flow('data','dat',
+     '''
+     window | transp |
+     pad n1out=1801 |
+     fft1 inv=y |
+     window n1=1751 |
+     put label1=Time label2=Distance
+     ''')
+Result('data','grey title=Data')
+
+# Remove horizontal reflections
+
+Flow('nohor','data','transp | deriv | transp')
+Result('nohor','grey title="Removed Horizontal Reflections" ')
+
+# Estimate dominant slope
+
+Flow('slope','nohor','dip rect1=50 rect2=50')
+Result('slope','grey color=j title="Dominant Slope" scalebar=y')
+
+# Find plane-wave prediction residual
+
+Flow('res','nohor slope','pwd dip=${SOURCES[1]}')
+Result('res','grey title="Extracted Diffractions" ')
+
+# Migrate diffractions
+
+Flow('dat2','res',
+     '''
+     pad n1=3501 |
+     fft1 |
+     window n1=500 |
+     transp |
+     spray axis=2 n=1 
+     ''')
+zomig.image('img','slo','dat2',par)
+
+Flow('image','img',
+     'window | transp | put label1=Depth label2=Distance')
+Result('image','grey title="Migrated Diffractions" ')
+
+End()
