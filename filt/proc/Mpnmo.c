@@ -133,7 +133,7 @@ int main (int argc, char* argv[])
 			    sqrtf(fabsf(sqrtf(g)*h/
 					(dt*(f*str[it]+eps))));
 			etr[it] = 
-			    ((g-dh*dh)*t/(dt*(f*h+eps*dh))+dh)/
+			    - ((g-dh*dh)*t/(dt*(f*h+eps*dh))+dh)/
 			    (8.*sqrtf(g)+eps*dh);
 		    }
 		}
