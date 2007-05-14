@@ -1,0 +1,30 @@
+from rsfproj import *
+
+for case in range(2):
+    data = ('diff_no_noise.txt','diff_noise.txt')[case]
+    Fetch(data,'long')
+
+    title = ('No Noise','Noise')[case]
+
+    modl = 'diff%d' % case
+    Flow(modl,data,
+         'echo n1=64 n2=64 in=$SOURCE data_format=ascii_float | dd form=native | transp')
+    Plot(modl,'grey color=j allpos=y title="%s" ' % title)
+
+    edge = 'edge%d' % case
+    Flow(edge,modl,'canny min=50 | dd type=float')
+    Plot(edge,'grey allpos=y wanttitle=n')
+
+    Result(modl,[modl,edge],'SideBySideIso')
+
+    impl = 'impl%d' % case
+    Flow(impl,modl,'impl2 rect1=64 rect2=64 tau=1')
+    Plot(impl,'grey color=j allpos=y title="%s Smoothed" ' % title)
+
+    idge = 'idge%d' % case
+    Flow(idge,impl,'canny min=50 | dd type=float')
+    Plot(idge,'grey allpos=y wanttitle=n')
+
+    Result(impl,[impl,idge],'SideBySideIso')
+
+End()
