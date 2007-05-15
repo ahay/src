@@ -489,7 +489,7 @@ The \texttt{helix} module allocates and frees memory for a helix filter.
 By default, the logical vector is not allocated but
 is set to \texttt{null}
 with the \texttt{nullify} operator and ignored.
-\moddex{helix}{definition for helix-type filters}{27}{32}{filt/lib}
+\moddex{helix}{definition for helix-type filters}{29}{34}{filt/lib}
 \par
 For those of you with no C  experience,
 the ``\verb#->#'' appearing in the helix module denotes a pointer.
@@ -525,7 +525,7 @@ the operator
 is a {\it multidimensional} filter
 with considerable flexibility (because of the \texttt{mis} vector)
 to work around boundaries and missing data.
-\opdex{helicon}{helical convolution}{36}{55}{filt/lib}
+\opdex{helicon}{helical convolution}{35}{54}{filt/lib}
 The code fragment
 \verb#aa->lag[ia]#
 corresponds to 
@@ -554,7 +554,7 @@ Although convolution allows us to work around missing input values,
 deconvolution does not
 (any input affects all subsequent outputs),
 so \texttt{polydiv} never references \verb#aa->mis[ia]#.
-\opdex{polydiv}{helical deconvolution}{39}{70}{user/gee}
+\opdex{polydiv}{helical deconvolution}{36}{67}{user/gee}
 
 \begin{exer}
 \item
@@ -1570,7 +1570,7 @@ but their lead coefficients are extracted off,
 so for example, 
 $A(z) = (a_0) + (a_1 Z + a_2 Z^2 + \cdots)$
 is broken into the two parts \texttt{a0} and \texttt{aa}.
-\moddex{wilson}{Wilson-Burg spectral factorization}{48}{87}{user/gee}
+\moddex{wilson}{Wilson-Burg spectral factorization}{44}{83}{user/gee}
 %
 \begin{exer}
 \begin{comment}
@@ -2125,7 +2125,7 @@ so their lags can be ignored too.)
 Then it sweeps from the center point over the rest of the filter hypercube
 calculating for a data-sized cube \texttt{nd},
 the fortran linear index of each filter element.
-\moddex{createhelix}{constructing helix filter in N-D}{39}{83}{user/gee}
+\moddex{createhelix}{constructing helix filter in N-D}{36}{80}{user/gee}
 Near
 the end of the code you see the calculation of a parameter \texttt{lag0d}.
 This is the count of the number of zeros that
@@ -2144,7 +2144,7 @@ so \texttt{lag0} needs to be added back in to get the fortran subscript.
 To convert a helix filter \texttt{aa} to fortran's multidimensional hypercube
 \texttt{cube(n1,n2,...)} is
 module \texttt{boxfilter}: %\vpageref{lst:boxfilter}.
-\moddex{boxfilter}{Convert helix filter to (n1,n2,...)}{27}{51}{user/gee}
+\moddex{boxfilter}{Convert helix filter to (n1,n2,...)}{24}{48}{user/gee}
 The \texttt{boxfilter} module is normally used
 to display or manipulate a filter
 that was estimated in helical form
@@ -2232,7 +2232,7 @@ He explains his \texttt{regrid} module thus:
         to return to a relative coordinate system.
         \end{quotation}
 
-\moddex{regrid}{Convert filter to different data size}{27}{46}{user/gee}
+\moddex{regrid}{Convert filter to different data size}{24}{43}{user/gee}
 
 %Sergey Fomel comments,
 %\begin{quotation}
