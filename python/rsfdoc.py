@@ -189,6 +189,8 @@ class rsfpar:
         return self.type + " " + \
                "<strong>" + name + self.default + \
                "</strong>" + self.range
+    def text(self,name):
+        return string.join([self.type,name,self.default,self.range,self.desc],' | ')
     def mwiki(self,name):
         desc = string.replace(self.desc,'\n','<br>')
         desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
@@ -327,6 +329,20 @@ class rsfprog:
                 contents = contents + self.pars[par].latex(par)
             contents = contents + '\\end{tabular}\n'
         contents = re.sub('([_#])',r'\\\1',contents)
+        file.write(contents)
+        file.close()
+    def text(self,dir):
+        file = open (os.path.join(dir,self.name + '.txt'),'w')
+        contents = 'Program %s | %s\n' % (self.name,self.desc)
+        if self.snps:
+            contents = contents + '%s\n' % self.snps
+        if self.cmts:            
+            contents = contents + '%s\n' % self.cmts
+        pars =  self.pars.keys()
+        if pars:
+            pars.sort()
+            for par in pars:
+                contents = contents + self.pars[par].text(par)
         file.write(contents)
         file.close()
     def html(self,dir,rep):
@@ -651,18 +667,14 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
     class BadUsage: pass
 
     try:
-        opts, args = getopt.getopt(sys.argv, 'k:w:m:l:r:')
-        hdir = None
-        mdir = None
-        ldir = None
+        opts, args = getopt.getopt(sys.argv, 'k:w:t:m:l:r:')
+        dir = None
+        typ = None
         rep = os.getcwd()
         for opt, val in opts:
-            if opt == '-w':
-                hdir = val
-            if opt == '-m':
-                mdir = val
-            if opt == '-l':
-                ldir = val
+            if opt == '-w' or opt == '-t' or opt == '-m' or opt == '-l':
+                dir = val
+                typ = opt[1]
             if opt == '-r':
                 rep = val
             if opt == '-k':
@@ -676,12 +688,19 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 return
     
         if not args:
-            if hdir:
-                html(hdir)
+            if typ == 'w':
+                html(dir)
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
-                        main.html(hdir,rep)
+                        main.html(dir,rep)
+            elif typ == 't':
+                if not os.path.isdir(dir):
+                    os.mkdir(dir)
+                for prog in progs.keys():
+                    main = progs.get(prog)
+                    if main:
+                        main.text(dir)
             else:
                 raise BadUsage
 
@@ -691,12 +710,14 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 prog = rsfprefix + prog
             main = progs.get(prog)
             if main:
-                if hdir:
-                    main.html(hdir,rep)
-                elif mdir:
-                    main.mwiki(mdir)
-                elif ldir:
-                    main.latex(ldir)
+                if   typ == 'w':
+                    main.html(dir,rep)
+                elif typ == 't':
+                    main.text(dir)
+                elif typ == 'm':
+                    main.mwiki(dir)
+                elif typ == 'l':
+                    main.latex(dir)
                 else:
                     main.document()
             else:
@@ -708,7 +729,10 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
 %(prog)s <prog1> <prog2> ... 
     Show documentation on programs.
 
-%(prog)s -w <dir> [-r <rep>] <prog1> <prog2> ... 
+%(prog)s -t <dir> [<prog1> <prog2> ... ]
+    Write plain text documentation in <dir> directory
+
+%(prog)s -w <dir> [-r <rep>] [<prog1> <prog2> ...] 
     Write program HTML documentaton in <dir> directory, optional <rep> referes to repository.
 
 %(prog)s -m <dir>  <prog1> <prog2> ...
