@@ -190,7 +190,8 @@ class rsfpar:
                "<strong>" + name + self.default + \
                "</strong>" + self.range
     def text(self,name):
-        return string.join([self.type,name,self.default,self.range,self.desc],' | ')
+        return string.join([self.type,name,self.default,self.range,self.desc],
+                           ' | ')
     def mwiki(self,name):
         desc = string.replace(self.desc,'\n','<br>')
         desc = re.sub(r'<br>\s+(\w)',r'\n:\1',desc)
@@ -335,11 +336,12 @@ class rsfprog:
         file = open (os.path.join(dir,self.name + '.txt'),'w')
         contents = 'Program %s | %s\n' % (self.name,self.desc)
         if self.snps:
-            contents = contents + '%s\n' % self.snps
+            contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
         if self.cmts:            
-            contents = contents + '%s\n' % self.cmts
+            contents = contents + '[COMMENTS]\n%s\n' % self.cmts
         pars =  self.pars.keys()
         if pars:
+            contents = contents + '[PARAMETERS]\n'
             pars.sort()
             for par in pars:
                 contents = contents + self.pars[par].text(par)
