@@ -1,0 +1,72 @@
+from rsfproj import *
+
+sgy = 'boonsvillel249.sgy'
+
+Fetch(sgy,'boonsville')
+Flow('boon tboon boon.asc boon.bin',sgy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]} |
+     put label1=Time unit1=s label2=Trace o2=1 d2=1
+     ''')
+
+Result('boon','grey wanttitle=n')
+
+Flow('trace','boon','window n2=1 min2=100')
+
+
+shifts = []
+for a in range(-90,91,2):
+    shift = 'shift%d' % a
+    shifts.append(shift)
+    Flow(shift,'trace','envelope hilb=y phase=%d' % a)
+Flow('shifts',shifts,
+     '''
+     cat ${SOURCES[1:%d]} | put o3=-90 d3=2 
+     ''' % len(shifts))
+
+Result('shifts',
+       '''
+       window |
+       wiggle poly=y transp=y yreverse=y wanttitle=n
+       label2="Phase Shift (\^o\_)" 
+       ''')
+
+Flow('env','trace','envelope | spray axis=3 n=91')
+Flow('foc','shifts env',
+     'similarity other=${SOURCES[1]} rect1=80')
+
+Plot('foc','window | grey allpos=y wanttitle=n color=j bias=0.06')
+
+Flow('pik','foc',
+     '''
+     transp plane=23 memsize=500 |
+     scale axis=2 | pick rect1=80 vel0=0 |
+     window
+     ''')
+
+Plot('pik',
+     '''
+     graph transp=y yreverse=y min2=-90 max2=90 plotcol=7 plotfat=5
+     pad=n wanttitle=n wantaxis=n
+     ''')
+
+Result('foc','foc pik','Overlay')
+
+Flow('zero','shifts pik',
+     '''
+     transp plane=23 memsize=500 |
+     slice pick=${SOURCES[1]} | window
+     ''')
+
+for case in ('min','max'):
+    Plot(case,'trace zero',
+         '''
+         cat axis=2 ${SOURCES[1]} |
+         window %s1=1 |
+         wiggle poly=y wanttitle=n wantaxis2=n zplot=0.4
+         transp=y yreverse=y
+         ''' % case)
+
+Result('zero','max min','SideBySideAniso')
+
+End()
