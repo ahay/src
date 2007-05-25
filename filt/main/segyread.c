@@ -2,6 +2,8 @@
 
 Data headers and trace headers are separated from the data.
 
+"suread" is equivalent to "segyread su=y"
+
 SEGY key names:
 
 tracl: trace sequence number within line 0
@@ -237,7 +239,7 @@ int main(int argc, char *argv[])
 {
     bool verbose, su, xdr, suxdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *headname, *filename, *trace, *read;
+    char *headname, *filename, *trace, *read, *prog;
     sf_file out, hdr, msk=NULL;
     int format, ns, itr, ntr, n2, itrace[SF_NKEYS], *mask;
     off_t pos, nsegy;
@@ -251,8 +253,18 @@ int main(int argc, char *argv[])
     if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
 
-    if (!sf_getbool("su",&su)) su=false;
-    /* y if input is SU, n if input is SEGY */
+    if (!sf_getbool("su",&su)) {
+	/* y if input is SU, n if input is SEGY */
+	prog = sf_getprog();
+	if (NULL != strstr (prog, "suread")) {
+	    su = true;
+	} else if (NULL != strstr (prog, "segyread")) {
+	    su = false;
+	} else {
+	    sf_warning("%s is neither suread nor segyread, assume segyread",prog);
+	    su = false;
+	}
+    }
 
     if (su) {
 	if (!sf_getbool("suxdr",&suxdr)) suxdr=false;
