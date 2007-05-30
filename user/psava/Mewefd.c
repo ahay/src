@@ -103,13 +103,22 @@ int main(int argc, char* argv[])
     abcone2d abcp,abcs;     /* abc */
     sponge2d spo;
 
-    int ompchunk;
     int nbell;
+    int ompchunk;
+    int ompnth,ompath;
 
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  /* OpenMP available threads */
+#ifdef _OPENMP
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+#endif
+    sf_warning("setting nth=%d",ompnth);
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */

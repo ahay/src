@@ -22,6 +22,7 @@ def param(par):
     if(not par.has_key('jsnap')):    par['jsnap']=100
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
+    if(not par.has_key('ompnth')):   par['ompnth']=0
     if(not par.has_key('free')):     par['free']='n'
    
     if(not par.has_key('ot')):       par['ot']=0.
@@ -344,7 +345,7 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     Flow( [odat,owfl],[idat,velo,dens,sou,rec],
          '''
          awefd
-         ompchunk=%(ompchunk)d 
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
          vel=${SOURCES[1]}
          den=${SOURCES[2]}
@@ -362,7 +363,7 @@ def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):
     Flow( [odat,owfl],[idat,cccc,dens,sou,rec],
          '''
          ewefd
-         ompchunk=%(ompchunk)d 
+         ompchunk=%(ompchunk)d  ompnth=%(ompnth)d 
          verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d nbell=%(nbell)d
          ccc=${SOURCES[1]}
          den=${SOURCES[2]}
