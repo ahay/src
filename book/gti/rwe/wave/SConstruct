@@ -77,7 +77,7 @@ Flow('hwt','vsm sou',
 Flow('cos','hwt','window min2=%(ot)g n2=%(nt)d' % par)
 
 # coordinate system plot
-rwezo.cos('cos',10,20,par)
+rwezo.cos('cos',10,20,'',par)
 Result('cos','vel cos','Overlay')
 
 # slowness

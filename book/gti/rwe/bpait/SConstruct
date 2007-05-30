@@ -188,7 +188,7 @@ Result('imgCC',['imgCC','cos1'],'Overlay')
 # 2 - Cartesian  coordinate system
 for i in ('1','2'):
     # coordinate system plot
-    rwezo.cos(   'cos'+i,10,50,par)
+    rwezo.cos(   'cos'+i,10,50,'',par)
     Result('cos'+i,['velo','cos'+i],'Overlay')
     
     # slowness
@@ -225,7 +225,7 @@ rwezo.param(zoompar)
 
 Plot('zoomvel','velo',rwezo.cgrey('',zoompar))
 Flow('zoomcos','cos1','window')
-rwezo.cos('zoomcos',5,25,zoompar)
+rwezo.cos('zoomcos',5,25,'',zoompar)
 Result('zoomcos','zoomvel zoomcos','Overlay')
 
 Plot('zoomvel-ovl',['zoomvel','zoomcos'],'Overlay')
