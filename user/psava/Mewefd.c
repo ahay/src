@@ -117,8 +117,8 @@ int main(int argc, char* argv[])
     ompath=omp_get_num_threads();
     if(ompnth<1) ompnth=ompath;
     omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
 #endif
-    sf_warning("setting nth=%d",ompnth);
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
