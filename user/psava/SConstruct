@@ -9,6 +9,7 @@ off2abs off2abs3
 paradd 
 icor xcor tcor ucor laps
 ic sic sic3d lstk
+wigner
 '''
 
 try:  # distributed version

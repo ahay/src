@@ -35,13 +35,14 @@ int main(int argc, char* argv[])
     int ihz,ihx,iht;
     int  nz, nx, nt;
     int  iz, ix, it;
-
-    float st,stp,stm;
-    float sx,sxp,sxm;
-    float sz,szp,szm;
+    int  jz, jx, jt;
+    int  kz, kx, kt;
 
     int ompchunk;
 
+    int lox,hix;
+    int loz,hiz;
+    int lot,hit;
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -73,78 +74,31 @@ int main(int argc, char* argv[])
     /* read input */
     sf_floatread(uu[0][0],nz*nx*nt,Fu);
 
-    st = 0;
-    for        (iht=-nht; iht<=nht; iht++) {
-	for    (ihx=-nhx; ihx<=nhx; ihx++) {
-	    for(ihz=-nhz; ihz<=nhz; ihz++) {
-		st += 
-		    uu[nht-iht][nhx-ihx][nhz-ihz] *
-		    uu[nht+iht][nhx+ihx][nhz+ihz];
-	    }
-	}
-    }
+    if(verb) fprintf(stderr," ht  hx  hz\n");
+    if(verb) fprintf(stderr,"%3d %3d %3d\n",2*nht,2*nhx,2*nhz);
+    for(        iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nt-SF_ABS(iht);
+	for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-SF_ABS(ihx);
+	    for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-SF_ABS(ihz);
 
-    if(verb) fprintf(stderr,"\n");
-    for(it=nht; it<nt-nht-1; it++) {
-	sx = st;
+		if(verb) fprintf(stderr,"%3d %3d %3d",nht+iht,nhx+ihx,nhz+ihz);
 
-	for(ix=nhx; ix<nx-nhx-1; ix++) {
-	    sz = sx;
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) private(it,iz,ix,jt,jx,jz,kt,kx,kz) shared(iht,ihx,ihz,lot,hit,lox,hix,loz,hiz,uu,ww)
+#endif	
+		for(        it=lot; it<hit; it++) { jt=it-iht; kt=it+iht;
+		    for(    ix=lox; ix<hix; ix++) { jx=ix-ihx; kx=ix+ihx;
+			for(iz=loz; iz<hiz; iz++) { jz=iz-ihz; kz=iz+ihz;
+			    ww[it][ix][iz] += uu[jt][jx][jz] 
+				*             uu[kt][kx][kz];
+			} /* nz */
+		    }     /* nx */
+		}         /* nt */
 
-	    for(iz=nhz; iz<nz-nhz-1; iz++) {
-		if(verb) fprintf(stderr,"%3d %3d %3d",it,ix,iz);
-
-		szp=0;
-		szm=0;
-		for    (iht=-nht; iht<=nht; iht++) {
-		    for(ihx=-nhx; ihx<=nhx; ihx++) {
-			szp += 
-			    uu[it-iht][ix-ihx][iz+nhz+1] *
-			    uu[it+iht][ix+ihx][iz+nhz+1];
-			szm += 
-			    uu[it-iht][ix-ihx][iz-nhz  ] *
-			    uu[it+iht][ix+ihx][iz-nhz  ];
-		    }
-		}
-		sz += szp;
-		sz -= szm;
-
-		ww[it][ix][iz] = sz;
 		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
-	    }
 
-	    sxp=0;
-	    sxm=0;
-	    for    (iht=-nht; iht<=nht; iht++) {
-		for(ihz=-nhz; ihz<=nhz; ihz++) {
-		    sxp += 
-			uu[it-iht][ix+nhx+1][iz-ihz] *
-			uu[it+iht][ix+nhx+1][iz+ihz];
-		    sxm += 
-			uu[it-iht][ix-nhx  ][iz-ihz] *
-			uu[it+iht][ix-nhx  ][iz+ihz];
-		}
-	    }
-	    sx += sxp;
-	    sx -= sxm;
-	}
-
-	stp=0;
-	stm=0;
-	for    (ihz=-nhz; ihz<=nhz; ihz++) {
-	    for(ihx=-nhx; ihx<=nhx; ihx++) {
-		stp += 
-		    uu[it-nht  ][ix-ihx][iz-ihz] *
-		    uu[it-nht  ][ix+ihx][iz+ihz];
-		stm += 
-		    uu[it+nht+1][ix-ihx][iz-ihz] *
-		    uu[it+nht+1][ix+ihx][iz+ihz];
-	    }
-	}
-	st += stp;
-	st -= stm;
-    }
-    if(verb) fprintf(stderr,"\n");
+	    } /* nhz */
+	}     /* nhx */
+    }         /* nht */
     
     /* write output */
     sf_floatwrite(ww[0][0],nz*nx*nt,Fw);  
