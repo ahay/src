@@ -1,0 +1,88 @@
+
+INSTALLATION:
+
+1. Get sources from SVN server
+
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk RSF
+
+------------------------------------------------------------------------------
+
+2. Configure bash for installation
+
+export RSFROOT=/usr/local/rsf
+if [ -n "$PYTHONPATH" ]; then
+export PYTHONPATH=${PYTHONPATH}:$RSFROOT/lib
+else
+export PYTHONPATH=$RSFROOT/lib
+fi
+export PATH=$PATH:$RSFROOT/bin
+export DATAPATH=/var/tmp/
+
+------------------------------------------------------------------------------
+
+3. mkdir $RSFROOT (open read/write permissions to non-root users)
+
+------------------------------------------------------------------------------
+
+4. Configure and install RSF
+
+cd ~/RSF
+install scons (if needed; available in ~/RSF/scons)
+./configure
+scons install
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+NOTES
+
+1. The tested codes are
+~/RSF/user/psava/Mawefd.c (used for target da.rsf)
+and
+~/RSF/user/psava/Mewefd.c (used for target de.rsf)
+
+------------------------------------------------------------------------------
+
+2. The output files consist of 
+- a text header file (e.g. da.rsf)
+- a binary data file
+  - find the location of the binary by running
+    sfin da.rsf
+
+  - the binary file is the one listed as
+    in="..."
+
+    e.g. in="/scratch/cwp/emodel/bpait/da.rsf@"
+
+------------------------------------------------------------------------------
+3. Change the number of processors used for testing by editing the SConstruct
+file in ~/RSF/book/cwp/emodel/bpait and updating the parameter ompnth
+
+e.g. 'ompnth':4 for paralel execution with 4 threads
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+TEST
+
+1. Run example
+
+cd ~/RSF/book/cwp/emodel/bpait
+scons da.rsf (to run acoustic modeling)
+scons de.rsf (to run elastic modeling)
+
+for values of ompnth=1,2,4,8,16
+
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+------------------------------------------------------------------------------
+
+RESULTS
+
+1. return total execution times for all values of ompnth
+
+2. return da.rsf and the binary from in="..." for the run with ompnth=16
+
+3. return de.rsf and the binary from in="..." for the run with ompnth=16
