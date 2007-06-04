@@ -7,7 +7,7 @@ import fdmod, emodel
 
 # ------------------------------------------------------------
 par = {
-    'ot':0,      'dt':0.00050, 'nt':40000, 'lt':'t', 'ut':'s',
+    'ot':0,      'dt':0.00050, 'nt':10000, 'lt':'t', 'ut':'s',
     'ox':8,      'dx':0.01250, 'nx':1201,  'lx':'x', 'ux':'km',
     'oz':0,      'dz':0.00625, 'nz':1201,  'lz':'z', 'uz':'km',
     'og':-90,    'dg':0.1,     'ng':1800,  'lg':'g', 'ug':'deg',
@@ -16,7 +16,8 @@ par = {
     'frq':8,'nb':250,'nbell':5,
     'scalebar':'n',
     'wweight':10,
-    'wclip':0.5
+    'wclip':0.5,
+    'ompnth':4
     }
 fdmod.param(par)
 par['zsou']=par['oz']
