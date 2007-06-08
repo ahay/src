@@ -11,15 +11,18 @@ def execute(vp,par):
     # HWT
     Flow('hwt',vp,
          '''
-         smooth rect1=100 rect2=100 repeat=5 |
+         smooth rect1=10 rect2=10 repeat=5 |
          hwt2d verb=n xsou=%(xsou)g zsou=%(zsou)g
          nt=%(nt)d ot=%(ot)g dt=%(dt)g
          ng=%(ng)d og=%(og)g dg=%(dg)g
          ''' % par)
+
+    fdmod.rayplot('hwt',10,50,2,50,par)
+    Result('hwtvel',[vp,'hwt'],'Overlay')
     
-    Plot('ray','hwt','window j1=40 j2=50 | transp |'+ fdmod.cgraph('wantaxis=n plotcol=0 plotfat=3',par))
-    Plot('wft','hwt','window j1=1  j2=500 |'        + fdmod.cgraph('wantaxis=n plotcol=0 plotfat=3 symbol=.',par))
-    Result('hwt',[vp,'ray','wft'],'Overlay')
+#    Plot('ray','hwt','window j1=40 j2=50 | transp |'+ fdmod.cgraph('wantaxis=n plotcol=0 plotfat=3',par))
+#    Plot('wft','hwt','window j1=1  j2=500 |'        + fdmod.cgraph('wantaxis=n plotcol=0 plotfat=3 symbol=.',par))
+#    Result('hwt',[vp,'ray','wft'],'Overlay')
     
     # FME
     Flow('fme',vp,'eikonal zshot=0 yshot=%(xsou)g' % par)    
