@@ -1,0 +1,20 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('stack.segy','yemen',private)
+Flow('stack tstack stack.asc stack.bin','stack.segy',
+     'segyread tfile=${TARGETS[1]} afile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
+Flow('win','stack','window min1=1 max1=2')
+Result('win','grey title=Stack')
+
+Flow('wdip','win','dip rect1=100 rect2=100')
+Result('wdip','grey title=Slope color=j scalebar=y')
+
+Flow('wpwd','win wdip','pwd dip=${SOURCES[1]}')
+Result('wpwd','grey title=Diffractions')
+
+End()
