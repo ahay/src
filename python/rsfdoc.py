@@ -345,6 +345,9 @@ class rsfprog:
             pars.sort()
             for par in pars:
                 contents = contents + self.pars[par].text(par)
+        group = re.sub('([^/]+/[^/]+).*',r'\1',self.file)
+        if group:
+            contents = contents + '[DIRECTORY]\n%s\n' % group            
         file.write(contents)
         file.close()
     def html(self,dir,rep):
