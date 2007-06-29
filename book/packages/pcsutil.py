@@ -96,9 +96,9 @@ def polar(cart,polar,par):
     Flow(cart+'ang',None,
          '''
          math
-         o1=-90 d1=0.6 n1=301
-         o2=-90 d2=0.6 n2=301
-         output="x2&x1"
+         o1=+90 d1=-0.6 n1=301
+         o2=+90 d2=-0.6 n2=301
+         output="-x2&x1"
          ''')
     Flow(cart+'coord',[cart+'rad',cart+'ang'],
          'cat ${SOURCES[1]} | transp plane=13')
