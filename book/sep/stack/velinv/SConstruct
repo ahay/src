@@ -5,10 +5,38 @@ from rsfproj import *
 # Mobil AVO CMP gather 807 at well4 location
 Fetch('cmp807_raw.HH','rad')
 
-Flow('cmp','cmp807_raw.HH',
-     'dd form=native | tpow tpow=2 | mutter half=n v0=1.3 tp=0.2')
-Plot('cmp','grey title="Input CMP Gather" ')
+clip=187.628
 
+# Preprocessing
+Flow('cmp','cmp807_raw.HH',
+     '''
+     dd form=native | tpow tpow=2 | mutter half=n v0=1.3 tp=0.2 |
+     put label1=Time unit1=s label2=Offset unit2=km
+     ''')
+Plot('cmp','grey title="Input CMP Gather" clip=%g' % clip)
+
+# Velocity Transform
+Flow('veltran','cmp','veltran s02=0.25 v0=1.250 dv=0.025 nv=60 adj=y')
+Plot('veltran','grey title="Velocity Scan" ')
+
+# Display Side by Side
+Result('veltran','cmp veltran','SideBySideAniso')
+
+# Least-Squares Optimization
+Flow('velinv','cmp veltran',
+     '''
+     conjgrad veltran s02=0.25 v0=1.250 dv=0.025 nv=60 niter=20
+     mod=${SOURCES[1]}
+     ''')
+Plot('velinv','grey title="Least-Squares Velocity Scan" ')
+
+# Data Prediction Error
+
+for case in ('tran','inv'):
+    err = 'err'+case
+    Flow(err,['vel'+case,'cmp'],'veltran adj=n | add scale=1,-1 ${SOURCES[1]}')
+    Plot(err,'grey title="Data Residual" clip=%g' % clip)
+    Result(err,[err,'vel'+case],'SideBySideAniso')
 
 def iscan(miter,psun1,psun2,niter=10):
     return '''
@@ -70,8 +98,6 @@ Result('cgiter','err0 err1',
 Result('dircvv','cmp vscan','SideBySideAniso')
 
 Flow('cmp2','scan1',iscan(0,1,1,0) + ' adj=1')
-
-clip=187.628
 
 Plot('cmp2','grey title="Predicted Data" clip=%g' % clip)
 
