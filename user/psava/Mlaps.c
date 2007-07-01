@@ -1,4 +1,4 @@
-/* Lagged-products */
+/* Compute lagged-products */
 /*
   Copyright (C) 2006 Colorado School of Mines
   
@@ -17,6 +17,13 @@
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
 #include <rsf.h>
+
+
+/* 
+ * inputs are wavefields organized as z-x-t
+ * output is lagged product image organized as z-x-hz-hz-ht
+ */
+
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -42,16 +49,12 @@ int main(int argc, char* argv[])
     int lox,hix,scx;
     int lot,hit,sct;
 
-    int ictype;
-
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
-    if(! sf_getint("ictype",&ictype)) ictype=0;        /* I.C. type */
     
     Fs = sf_input ("in" ); /*   source wavefield */
     Fr = sf_input ("ur" ); /* receiver wavefield */
@@ -66,14 +69,14 @@ int main(int argc, char* argv[])
     nx = sf_n(ax);
     nt = sf_n(at);
 
-    if(! sf_getint("nhz",&nhz)) nhz=0;
-    if(! sf_getint("nhx",&nhx)) nhx=0;
-    if(! sf_getint("nht",&nht)) nht=0;
+    if(! sf_getint("nhz",&nhz)) nhz=0; /* number of lags on the z axis */
+    if(! sf_getint("nhx",&nhx)) nhx=0; /* number of lags on the x axis */
+    if(! sf_getint("nht",&nht)) nht=0; /* number of lags on the t axis */
     sf_warning("nhz=%d nhx=%d nht=%d",2*nhz+1,2*nhx+1,2*nht+1);
 
-    if(! sf_getint("scz",&scz)) scz=1;
-    if(! sf_getint("scx",&scx)) scx=1;
-    if(! sf_getint("sct",&sct)) sct=1;
+    if(! sf_getint("scz",&scz)) scz=1; /* skip on the z axis */
+    if(! sf_getint("scx",&scx)) scx=1; /* skip on the x axis */
+    if(! sf_getint("sct",&sct)) sct=1; /* skip on the t axis */
 
     /* set output axes */
     aa=sf_maxa(2*nhz+1,-nhz*sf_d(az)*scz,sf_d(az)*scz);
@@ -99,6 +102,7 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr," nt   ht\n");
     if(verb) fprintf(stderr,"%4d %3d \n",nt-1,2*nht);
 
+    /* t-lag loop */
     for(iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nt-SF_ABS(iht);
 
 	/* seek in input */
@@ -116,6 +120,7 @@ int main(int argc, char* argv[])
 	    } /* nhz */
 	} /* nhx */
 
+	/* t loop */
 	for(it=lot; it<hit; it++) {
 
 	    /* read input */
