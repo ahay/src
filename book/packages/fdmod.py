@@ -202,28 +202,28 @@ def ssplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=o plotcol=2 plotfat=10 %s' % custom,par)
+    ''' + cgraph('symbol=o plotcol=2 plotfat=10 wantaxis=n %s' % custom,par)
 
 def rrplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=. plotcol=1 plotfat=10 %s' % custom,par)
+    ''' + cgraph('symbol=. plotcol=1 plotfat=10 wantaxis=n %s' % custom,par)
 
 def qqplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=. plotcol=1 plotfat=3 %s' % custom,par)
+    ''' + cgraph('symbol=. plotcol=1 plotfat=3 wantaxis=n %s' % custom,par)
 
 # ------------------------------------------------------------
 # rays plot
 def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,par):
 
     Plot(hwt+'ray',hwt,'window j1=%d j2=%d f2=%d | transp |' %(j1ray,j2ray,j2wft)
-         + cgraph('plotcol=1',par))
+         + cgraph('plotcol=1 wantaxis=n',par))
     Plot(hwt+'wft',hwt,'window j1=%d j2=%d f2=%d |'          %(j1wft,j2wft,j2wft)
-         + cgraph('plotcol=2 symbol=.',par))
+         + cgraph('plotcol=2 wantaxis=n symbol=.',par))
 
     Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
 #    Result(hwt,[hwt+'ray',hwt+'wft'],'Overlay')
