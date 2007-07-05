@@ -20,7 +20,7 @@ for prog in rsfdoc.progs.keys():
     Depends('prog.ltx',prog+'.tex')
     Depends('prog.wiki',prog+'.wiki')
 
-Paper('install',use='[bookmarks=true]hyperref')
+Paper('install',use=['[bookmarks=true]hyperref','color','listings'])
 Paper('tour',use='listings,color,hyperref')
 Paper('format',use='hyperref')
 Paper('api', use='hyperref,listings',include='\\newcommand{\\RSF}{../../..}')
