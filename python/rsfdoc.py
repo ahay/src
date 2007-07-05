@@ -541,6 +541,29 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
     file = re.sub('^[^\/]*\/','',file)
     out.write("%s = rsfdoc.rsfprog('%s','%s','''%s''')\n" %
               (name,name,file,desc))
+    files = inpout[lang].findall(text)
+    snps = name
+    valid = {}
+    for par in files:
+        filename = par[0]
+        if valid.get(filename,1):
+            io = par[1]
+            tag = par[2]
+            if tag == 'in' or (not tag and io == 'input'):
+                iostring = ' < %s.%s' % (filename,rsfsuffix)
+            elif tag == 'out' or (not tag and io == 'output'):
+                iostring = ' > %s.%s' % (filename,rsfsuffix)
+            else:
+                iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
+                type = 'string '
+                desc = 'auxiliary %s file name' % io
+                prog.par(tag,rsfpar(type,desc=desc))
+                out.write("%s.par('%s',rsfdoc.rsfpar('%s',desc='''%s'''))\n" %
+                          (name,tag,type,desc))
+            snps = snps + iostring
+        valid[filename]=0
+    if re.match(rsfplotprefix,name):
+        snps = snps + ' > plot.' + rsfplotsuffix
     parline = ''
     pars = params.get(lang)
     if pars:
@@ -619,28 +642,17 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             type = 'string '
             parname = par[0]
             desc = par[1]
+            if parname in prog.pars: # defined previously as file
+                filedesc = string.strip(prog.pars[parname].desc)
+                if desc:
+                    desc = desc + '(%s)' % filedesc
+                else:
+                    desc = filedesc
+            else:
+                parline = parline + " %s=" % (parname)
             prog.par(parname,rsfpar(type,desc=desc))
             out.write("%s.par('%s',rsfdoc.rsfpar('%s',desc='''%s'''))\n" %
                       (name,parname,type,desc))
-            parline = parline + " %s=" % (parname)
-    files = inpout[lang].findall(text)
-    snps = name
-    valid = {}
-    for par in files:
-        filename = par[0]
-        if valid.get(filename,1):
-            io = par[1]
-            tag = par[2]
-            if tag == 'in' or (not tag and io == 'input'):
-                iostring = ' < %s.%s' % (filename,rsfsuffix)
-            elif tag == 'out' or (not tag and io == 'output'):
-                iostring = ' > %s.%s' % (filename,rsfsuffix)
-            else:
-                iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
-            snps = snps + iostring
-        valid[filename]=0
-    if re.match(rsfplotprefix,name):
-        snps = snps + ' > plot.' + rsfplotsuffix
     snps = snps + parline
     base = name[len(rsfprefix):]
     if base in docprogs:

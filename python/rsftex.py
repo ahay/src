@@ -34,7 +34,7 @@ else:
 
 bibtex      = WhereIs('bibtex')
 acroread    = WhereIs('acroread')
-pdfread     = acroread or WhereIs('xpdf') or WhereIs('gv')
+pdfread     = acroread or WhereIs('kpdf') or WhereIs('xpdf') or WhereIs('gv')
 pdftops     = WhereIs('pdftops')
 epstopdf    = WhereIs('epstopdf')
 if epstopdf:
