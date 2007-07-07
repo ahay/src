@@ -16,33 +16,46 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+#include <math.h>
 #include <rsf.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+
+/* 
+ * input:  uu(n1,n2,n3)
+ * output: ww(n1,n2,n3,nw)
+ */
+
 int main(int argc, char* argv[])
 {
     bool verb;
 
     sf_file Fu,Fw; /* I/O files */
-    sf_axis at,az,ax; /* cube axes */
+    sf_axis a1,a2,a3; /* cube axes */
 
     float ***uu=NULL, ***ww=NULL;
     
-    int nhz,nhx,nht;
-    int ihz,ihx,iht;
-    int  nz, nx, nt;
-    int  iz, ix, it;
-    int  jz, jx, jt;
-    int  kz, kx, kt;
+    int nh1,nh2,nh3;
+    int ih1,ih2,ih3;
+    int  n1, n2, n3;
+    int  i1, i2, i3;
+    int  j1, j2, j3;
+    int  k1, k2, k3;
 
     int ompchunk;
 
-    int lox,hix;
-    int loz,hiz;
-    int lot,hit;
+    int lo1,hi1;
+    int lo2,hi2;
+    int lo3,hi3;
+
+    float h1,h2,h3,wh;
+    float wk;
+    sf_complex w;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -50,58 +63,65 @@ int main(int argc, char* argv[])
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
     if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
     
-    if(! sf_getint("nhz",&nhz)) nhz=0;
-    if(! sf_getint("nhx",&nhx)) nhx=0;
-    if(! sf_getint("nht",&nht)) nht=0;
-    sf_warning("nht=%d nhx=%d nhz=%d",2*nht+1,2*nhx+1,2*nhz+1);
+    if(! sf_getint("nh1",&nh1)) nh1=0;
+    if(! sf_getint("nh2",&nh2)) nh2=0;
+    if(! sf_getint("nh3",&nh3)) nh3=0;
+    sf_warning("nh1=%d nh2=%d nh3=%d",2*nh1+1,2*nh2+1,2*nh3+1);
     
-    Fu = sf_input ("in" ); /*   input field */
+    if(! sf_getfloat("wk",&wk)) wk=0.0;
+
+    Fu = sf_input ("in" ); /*  input field */
     Fw = sf_output("out"); /* wigner distribution */
 
     /* read axes */
-    az=sf_iaxa(Fu,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az); /* depth */
-    ax=sf_iaxa(Fu,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax); /* position */
-    at=sf_iaxa(Fu,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
+    a1=sf_iaxa(Fu,1); sf_setlabel(a1,"a1"); if(verb) sf_raxa(a1);
+    a2=sf_iaxa(Fu,2); sf_setlabel(a2,"a2"); if(verb) sf_raxa(a2);
+    a3=sf_iaxa(Fu,3); sf_setlabel(a3,"a3"); if(verb) sf_raxa(a3);
 
-    nz = sf_n(az);
-    nx = sf_n(ax);
-    nt = sf_n(at);
+    n1 = sf_n(a1);
+    n2 = sf_n(a2);
+    n3 = sf_n(a3);
 
     /* allocate work arrays */
-    uu=sf_floatalloc3(nz,nx,nt);
-    ww=sf_floatalloc3(nz,nx,nt);
+    uu=sf_floatalloc3(n1,n2,n3);
+    ww=sf_floatalloc3(n1,n2,n3);
 
     /* read input */
-    sf_floatread(uu[0][0],nz*nx*nt,Fu);
+    sf_floatread(uu[0][0],n1*n2*n3,Fu);
 
-    if(verb) fprintf(stderr," ht  hx  hz\n");
-    if(verb) fprintf(stderr,"%3d %3d %3d\n",2*nht,2*nhx,2*nhz);
-    for(        iht=-nht; iht<nht+1; iht++) { lot=SF_ABS(iht); hit=nt-SF_ABS(iht);
-	for(    ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-SF_ABS(ihx);
-	    for(ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-SF_ABS(ihz);
+    if(verb) fprintf(stderr," h3  h2  h1\n");
+    if(verb) fprintf(stderr,"%3d %3d %3d\n",2*nh3,2*nh2,2*nh1);
+    for(        ih3=-nh3; ih3<nh3+1; ih3++) { lo3=SF_ABS(ih3); hi3=n3-SF_ABS(ih3);
+	for(    ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-SF_ABS(ih2);
+	    for(ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-SF_ABS(ih1);
+		if(verb) fprintf(stderr,"%3d %3d %3d",nh3+ih3,nh2+ih2,nh1+ih1);
 
-		if(verb) fprintf(stderr,"%3d %3d %3d",nht+iht,nhx+ihx,nhz+ihz);
-
+		h1 = ih1 * sf_d(a1); h1*=h1;
+		h2 = ih2 * sf_d(a2); h2*=h2;
+		h3 = ih3 * sf_d(a3); h3*=h3;
+		wh = sqrt(h1+h2+h3);
+		w = cexpf( - sf_cmplx(0.,wh*wk));
+		
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(it,iz,ix,jt,jx,jz,kt,kx,kz) shared(iht,ihx,ihz,lot,hit,lox,hix,loz,hiz,uu,ww)
+#pragma omp parallel for schedule(dynamic,ompchunk) private(i3,i2,i1,j3,j2,j1,k3,k2,k1) shared(ih3,ih2,ih1,lo3,hi3,lo2,hi2,lo1,hi1,uu,ww)
 #endif	
-		for(        it=lot; it<hit; it++) { jt=it-iht; kt=it+iht;
-		    for(    ix=lox; ix<hix; ix++) { jx=ix-ihx; kx=ix+ihx;
-			for(iz=loz; iz<hiz; iz++) { jz=iz-ihz; kz=iz+ihz;
-			    ww[it][ix][iz] += uu[jt][jx][jz] 
-				*             uu[kt][kx][kz];
-			} /* nz */
-		    }     /* nx */
-		}         /* nt */
+		for(        i3=lo3; i3<hi3; i3++) { j3=i3-ih3; k3=i3+ih3;
+		    for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
+			for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
+			    ww[i3][i2][i1] += uu[j3][j2][j1] 
+				*             uu[k3][k2][k1] * w;
+			} /* n1 */
+		    }     /* n2 */
+		}         /* n3 */
 
 		if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 
-	    } /* nhz */
-	}     /* nhx */
-    }         /* nht */
+	    } /* nh1 */
+	}     /* nh2 */
+    }         /* nh3 */
     
     /* write output */
-    sf_floatwrite(ww[0][0],nz*nx*nt,Fw);  
+    sf_floatwrite(ww[0][0],n1*n2*n3,Fw);  
 
     exit (0);
 }
