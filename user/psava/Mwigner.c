@@ -91,16 +91,18 @@ int main(int argc, char* argv[])
 
     if(verb) fprintf(stderr," h3  h2  h1\n");
     if(verb) fprintf(stderr,"%3d %3d %3d\n",2*nh3,2*nh2,2*nh1);
-    for(        ih3=-nh3; ih3<nh3+1; ih3++) { lo3=SF_ABS(ih3); hi3=n3-SF_ABS(ih3);
-	for(    ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-SF_ABS(ih2);
-	    for(ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-SF_ABS(ih1);
+    for(        ih3=-nh3; ih3<nh3+1; ih3++) { lo3=SF_ABS(ih3); hi3=n3-lo3;
+	for(    ih2=-nh2; ih2<nh2+1; ih2++) { lo2=SF_ABS(ih2); hi2=n2-lo2;
+	    for(ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=n1-lo1;
 		if(verb) fprintf(stderr,"%3d %3d %3d",nh3+ih3,nh2+ih2,nh1+ih1);
 
-		h1 = ih1 * sf_d(a1); h1*=h1;
-		h2 = ih2 * sf_d(a2); h2*=h2;
-		h3 = ih3 * sf_d(a3); h3*=h3;
-		wh = sqrt(h1+h2+h3);
-		w = cexpf( - sf_cmplx(0.,wh*wk));
+/*		sf_warning('%d %d ',lo3,hi3);*/
+		
+/*		h1 = ih1 * sf_d(a1); h1*=h1;*/
+/*		h2 = ih2 * sf_d(a2); h2*=h2;*/
+/*		h3 = ih3 * sf_d(a3); h3*=h3;*/
+/*		wh = sqrt(h1+h2+h3);*/
+/*		w = cexpf( - sf_cmplx(0.,wh*wk));*/
 		
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(i3,i2,i1,j3,j2,j1,k3,k2,k1) shared(ih3,ih2,ih1,lo3,hi3,lo2,hi2,lo1,hi1,uu,ww)
@@ -109,7 +111,8 @@ int main(int argc, char* argv[])
 		    for(    i2=lo2; i2<hi2; i2++) { j2=i2-ih2; k2=i2+ih2;
 			for(i1=lo1; i1<hi1; i1++) { j1=i1-ih1; k1=i1+ih1;
 			    ww[i3][i2][i1] += uu[j3][j2][j1] 
-				*             uu[k3][k2][k1] * w;
+				*             uu[k3][k2][k1];
+/*			    ww[i3][i2][i1] +=1;*/
 			} /* n1 */
 		    }     /* n2 */
 		}         /* n3 */
