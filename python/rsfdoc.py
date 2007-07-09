@@ -512,7 +512,7 @@ synopsis['c'] = re.compile(r'\s*Takes\s*\:\s*((?:[^\n]|[\n][^\n])+)'
                       '((?:.|\n)*)$')
 inpout['c'] = re.compile(r'\s*(?P<name>\w+)\s*=\s*'
                     'sf_(?P<io>input|output)'
-                    '\s*\(\s*\"(?P<tag>\w+)\"')            
+                    '\s*\(\s*\"?(?P<tag>\w+)\"?')            
 version['c'] = re.compile(r'\/\*\s*\$Id\:\s*(.+\S)\s*\$\s*\*\/')
 
 

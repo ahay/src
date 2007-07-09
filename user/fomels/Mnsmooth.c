@@ -1,9 +1,4 @@
-/* N-D non-stationary smoothing. 
-
-Takes: rect1=rect1.rsf rect2=rect2.rsf ... 
-
-rectN defines the sizes of the smoothing stencils in N-th dimension.
-*/
+/* N-D non-stationary smoothing. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -46,9 +41,10 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (NULL != sf_getstring(key)) {
+	    /*< rect# size of the smoothing stencil in #-th dimension 
+	      (auxiliary input file) >*/
 	    rect[i] = sf_input(key);
 	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
-
 	    dim1 = i;
 	} else {
 	    rect[i] = NULL;

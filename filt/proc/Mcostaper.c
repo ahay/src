@@ -1,9 +1,4 @@
-/* Cosine taper around the borders (N-D). 
-
-Takes: nw1= nw2= ...
-
-nwN defines tapering on Nth axis
-*/
+/* Cosine taper around the borders (N-D). */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -44,6 +39,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,4,"nw%d",i+1);
 	if (!sf_getint(key,nw+i)) nw[i]=0;
+	/*< nw#=0 tapering on #-th axis >*/
 	if (nw[i] > 0) {
 	    dim1 = i;
 	    w[i] = sf_floatalloc(nw[i]);

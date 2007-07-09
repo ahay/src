@@ -1,11 +1,5 @@
 /* Multi-dimensional cosine transform.
 
-Takes: sign1=0 sign2=0 ... 
-
-signN defines transform along N-th dimension. 
-signN=+1: forward transform.
-signN=-1: inverse transform.
-
 The input and output are real and have the same dimensions. 
 Pad the data if you need to suppress wrap-around effects.
 */
@@ -50,6 +44,8 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"sign%d",i+1);
 	if (!sf_getint(key,sign+i)) sign[i]=0;
+	/*< sign#=0 transform along #-th dimension 
+	  (+1 forward or -1 backward) >*/ 
 	if (sign[i]) {
 	    dim1 = i;
 	    snprintf(key,3,"o%d",i+1);
