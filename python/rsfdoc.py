@@ -555,7 +555,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
                 iostring = ' > %s.%s' % (filename,rsfsuffix)
             else:
                 iostring = ' %s=%s.%s' % (tag,filename,rsfsuffix)
-                type = 'string '
+                type = 'file   '
                 desc = 'auxiliary %s file name' % io
                 prog.par(tag,rsfpar(type,desc=desc))
                 out.write("%s.par('%s',rsfdoc.rsfpar('%s',desc='''%s'''))\n" %

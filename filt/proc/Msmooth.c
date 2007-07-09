@@ -1,10 +1,4 @@
-/* Multi-dimensional smoothing.
-
-Takes: rect1=1 rect2=1 ... diff1=n diff2=n ... 
-
-rectN defines the size of the smoothing stencil in N-th dimension.
-diffN is a flag for differentiating
-*/
+/* Multi-dimensional triangle smoothing. */
 /*
   Copyright (C) 2004 University of Texas at Austin
 
@@ -46,9 +40,11 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (!sf_getint(key,rect+i)) rect[i]=1;
+	/*< rect#=(1,1,...) smoothing radius on #-th axis >*/ 
 	if (rect[i] > 1) dim1 = i;
 	snprintf(key,6,"diff%d",i+1);
 	if (!sf_getbool(key,diff+i)) diff[i]=false;
+	/*< diff#=(n,n,...) differentiation on #-th axis >*/  
     }
 
     n1 = n2 = 1;

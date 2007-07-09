@@ -243,11 +243,13 @@ int main (int argc, char* argv[])
 	    for (i=0; i < nin; i++) {
 		sf_complexread(cbuf[i],nbuf,in[i]);
 	    }
+	    /* fill x1, x2, etc */
 	    for (k=0; k < nbuf; k++, j++) {
 		sf_line2cart(dim,n,j,ii);
 		for (i=0; i < dim; i++) {
 		    cbuf[nin+i][k] = sf_cmplx(o[i]+ii[i]*d[i],0.);
 		}
+		/* fill I */
 		cbuf[nin+dim][k] = sf_cmplx(0.,1.);
 	    }
 	    

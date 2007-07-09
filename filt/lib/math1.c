@@ -185,13 +185,14 @@ void sf_math_evaluate (int     len  /* stack length */,
 
 void sf_complex_math_evaluate (int          len  /* stack length */, 
 			       int          nbuf /* buffer length */, 
-			       sf_complex** fbuf /* number buffers */, 
-			       sf_complex** fst  /* stack */)
+			       sf_complex** cbuf /* number buffers */, 
+			       sf_complex** cst  /* stack */)
 /*< Evaluate a mathematical expression from stack (complex numbers) >*/
 {
     char *op;
     int *indx, i;
-    sf_complex *num, f, *farr;
+    float *fnum;
+    sf_complex *num, c, *carr;
     cfunc fun;
     
     sf_stack_set(st2,len);
@@ -199,87 +200,87 @@ void sf_complex_math_evaluate (int          len  /* stack length */,
     while (sf_full (st2)) {
 	switch (sf_top (st2)) {
 	    case NUM: 
-		farr = *(++fst);
-		num = (sf_complex*) sf_pop(st2);
-		f = *num;
-		for (i=0; i < nbuf; i++) { farr[i] = f; }
+		carr = *(++cst);
+		fnum = (float*) sf_pop(st2);
+		c = sf_cmplx(*fnum,0.);
+		for (i=0; i < nbuf; i++) { carr[i] = c; }
 		break;
 	    case INDX:
-		farr = *(++fst);
+		carr = *(++cst);
 		indx = (int*) sf_pop(st2);
 		/* convert index to number */
-		num = *(fbuf + (*indx));
-		for (i=0; i < nbuf; i++) { farr[i] = num[i]; }
+		num = *(cbuf + (*indx));
+		for (i=0; i < nbuf; i++) { carr[i] = num[i]; }
 		break;
 	    case FUN:
 		indx = (int*) sf_pop(st2);
 		fun = cfunctable[*indx];
-		farr = *fst;
-		for (i=0; i < nbuf; i++) { farr[i] = fun(farr[i]); }
+		carr = *cst;
+		for (i=0; i < nbuf; i++) { carr[i] = fun(carr[i]); }
 		break;
 	    case UNARY:
 		op = (char*) sf_pop(st2);
-		farr = *fst;
+		carr = *cst;
 		if ('-' == *op) {
 		    for (i=0; i < nbuf; i++) {
 #ifdef SF_HAS_COMPLEX_H 
-			farr[i] = -farr[i];
+			carr[i] = -carr[i];
 #else
-			farr[i] = sf_cneg(farr[i]);
+			carr[i] = sf_cneg(carr[i]);
 #endif
 		    }
 		}
 		break;
 	    case POW:
 		op = (char*) sf_pop(st2);
-		num = *fst;
-		farr = *(--fst);
+		num = *cst;
+		carr = *(--cst);
 		if ('^' == *op) {
 		    for (i=0; i < nbuf; i++) { 
-			farr[i] = cpowf(farr[i],num[i]);
+			carr[i] = cpowf(carr[i],num[i]);
 		    }
 		} 
 		break;
 	    case MULDIV:
 		op = (char*) sf_pop(st2);
-		num = *fst;
-		farr = *(--fst);
+		num = *cst;
+		carr = *(--cst);
 		if ('*' == *op) {
 		    for (i=0; i < nbuf; i++) { 
 #ifdef SF_HAS_COMPLEX_H
-			farr[i] *= num[i];
+			carr[i] *= num[i];
 #else
-			farr[i] = sf_cmul(farr[i],num[i]);
+			carr[i] = sf_cmul(carr[i],num[i]);
 #endif 
 		    }
 		} else {
 		    for (i=0; i < nbuf; i++) { 
 #ifdef SF_HAS_COMPLEX_H
-			farr[i] /= num[i]; 
+			carr[i] /= num[i]; 
 #else
-			farr[i] = sf_cdiv(farr[i],num[i]);
+			carr[i] = sf_cdiv(carr[i],num[i]);
 #endif
 		    }
 		}
 		break;
 	    case PLUSMIN:
 		op = (char*) sf_pop(st2);
-		num = *fst;
-		farr = *(--fst);
+		num = *cst;
+		carr = *(--cst);
 		if ('+' == *op) {
 		    for (i=0; i < nbuf; i++) {
 #ifdef SF_HAS_COMPLEX_H
-			farr[i] += num[i]; 
+			carr[i] += num[i]; 
 #else
-			farr[i] = sf_cadd(farr[i],num[i]);
+			carr[i] = sf_cadd(carr[i],num[i]);
 #endif
 		    }
 		} else {
 		    for (i=0; i < nbuf; i++) { 
 #ifdef SF_HAS_COMPLEX_H
-			farr[i] -= num[i]; 
+			carr[i] -= num[i]; 
 #else
-			farr[i] = sf_csub(farr[i],num[i]);
+			carr[i] = sf_csub(carr[i],num[i]);
 #endif
 		    }
 		}
