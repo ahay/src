@@ -291,10 +291,11 @@ class rsfprog:
         if self.vers:
             doc = doc + section('version',self.vers)
         pydoc.pager(doc)
-    def mwiki(self,dir):
-        file = open (os.path.join(dir,self.name + '.wiki'),'w')
-        contents = '==%s==\n{| class="wikitable" align="center"\n' % \
-                   self.name
+    def mwiki(self,dir,name=None):
+        if not name:
+            name = self.name
+        file = open (os.path.join(dir,name + '.wiki'),'w')
+        contents = '==%s==\n{| class="wikitable" align="center"\n' % name
         desc = '! colspan="4" style="background:#ffdead;" | %s\n' % self.desc
         contents = contents + desc
         if self.snps:
@@ -311,10 +312,12 @@ class rsfprog:
         contents = contents+'|}\n'
         file.write(contents)
         file.close()
-    def latex(self,dir):
-        file = open (os.path.join(dir,self.name + '.tex'),'w')
+    def latex(self,dir,name=None):
+        if not name:
+            name = self.name
+        file = open (os.path.join(dir,name + '.tex'),'w')
         contents = '\\footnotesize\n'
-        name = '\\subsection{%s: %s}\n' % (self.name,self.desc)
+        name = '\\subsection{%s: %s}\n' % (name,self.desc)
         contents = contents + name
         if self.snps:
             contents = contents + '\\texttt{%s}\n' % self.snps
@@ -332,9 +335,11 @@ class rsfprog:
         contents = re.sub('([_#])',r'\\\1',contents)
         file.write(contents)
         file.close()
-    def text(self,dir):
-        file = open (os.path.join(dir,self.name + '.txt'),'w')
-        contents = 'Program %s | %s\n' % (self.name,self.desc)
+    def text(self,dir,name=None):
+        if not name:
+            name = self.name
+        file = open (os.path.join(dir,name + '.txt'),'w')
+        contents = 'Program %s | %s\n' % (name,self.desc)
         if self.snps:
             contents = contents + '[SYNOPSIS]\n%s\n' % self.snps
         if self.cmts:            
@@ -730,11 +735,11 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 if   typ == 'w':
                     main.html(dir,rep)
                 elif typ == 't':
-                    main.text(dir)
+                    main.text(dir,prog)
                 elif typ == 'm':
-                    main.mwiki(dir)
+                    main.mwiki(dir,prog)
                 elif typ == 'l':
-                    main.latex(dir)
+                    main.latex(dir,prog)
                 else:
                     main.document()
             else:
