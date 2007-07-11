@@ -71,4 +71,4 @@ Depends2('install',map(lambda x: x+'.install',
 #      \newcommand{\TEXMF}{%s/texmf}
 #      ''' % os.environ.get('HOME'))
 
-End(use='hyperref')
+End(use='[bookmarks=true]hyperref')
