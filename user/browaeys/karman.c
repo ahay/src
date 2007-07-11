@@ -1,6 +1,6 @@
 /* Nonlinear optimization for von Karman autocorrelation 1D spectrum with weighted least squares */
 /* 1 - Separable least squares for 2 parameters */
-/* 2 - Gauss Newton on 1 non linear parameter */
+/* 2 - Gauss Newton on 1 nonlinear parameter */
 /*
   Copyright (C) 2007 University of Texas at Austin
   
@@ -93,6 +93,9 @@ void karman(float *data                /* input [nk] */,
 
     eps = 10.*FLT_EPSILON;
     eps *= eps;
+
+    dk = 2.*acos(-1.)*dk;
+    k0 = 2.*acos(-1.)*k0;
     
     if (verb) sf_warning("got x0=%g y0=%g z0=%g\n"
 			 "nk=%d dk=%g k0=%g",

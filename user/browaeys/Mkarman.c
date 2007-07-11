@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     if (!sf_histfloat(in,"o1",&k0)) sf_error("No o1= in input");
 
     if (!sf_getfloat("x0",&x[0])) x[0]=1.;
-    /* initial length scale */
+    /* initial squared length scale */
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
     if (!sf_getint("nliter",&nliter)) nliter=1;
