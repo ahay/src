@@ -98,7 +98,7 @@ struct sf_File {
     enum xdr_op op;
     sf_datatype type;
     sf_dataform form;
-    bool pipe, rw;
+    bool pipe, rw, dryrun;
 };
 
 /*@null@*/ static sf_file infile=NULL;
@@ -274,6 +274,7 @@ Should do output after sf_input. >*/
     if (NULL != headname) free(headname);
 
     if (!sf_getbool("readwrite",&(file->rw))) file->rw=false;
+    if (!sf_getbool("dryrun",&(file->dryrun))) file->dryrun=false;
 
     return file;
 }
@@ -705,9 +706,9 @@ Prepares file for writing binary data >*/
     }    
     
     sf_simtab_output(file->pars,file->stream);
-   
+
     if (0==strcmp(file->dataname,"stdout")) { 
-        /* keep stream, write the header end code */
+	/* keep stream, write the header end code */
 	fprintf(file->stream,"\tin=\"stdin\"\n\n%c%c%c",
 		SF_EOL,SF_EOL,SF_EOT);
     } else {
@@ -716,9 +717,14 @@ Prepares file for writing binary data >*/
 	    sf_error ("%s: Cannot write to data file %s:",
 		      __FILE__,file->dataname);	
     }
-
+    
     free (file->dataname);
     file->dataname=NULL;
+
+    if (file->dryrun) {
+	sf_warning("aborting due to dryrun"); 
+	exit(0);
+    }
 }
 
 void sf_putint (sf_file file, const char* key, int par)
