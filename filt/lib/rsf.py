@@ -89,6 +89,8 @@ class File:
         return self.__gets(c_rsf.histints,key,num,default)    
     def bytes(self):
         return c_rsf.sf_bytes(self.file)
+    def fileclose(self):
+        return c_rsf.sf_fileclose(self.file)
     def put(self,key,val):
         what = type(val)
         if what is types.IntType:
