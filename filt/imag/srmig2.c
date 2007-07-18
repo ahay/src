@@ -48,6 +48,7 @@ static fslice        slow_s,slow_r,slow; /* slowness slice */
 static float         **ss_s,**ss_r,**ss; /* slowness */
 static float         **so_s,**so_r,**so; /* slowness */
 
+/*------------------------------------------------------------*/
 void srmig2_init(bool verb_,
 		 float eps_,
 		 float dtmax,
@@ -103,7 +104,6 @@ void srmig2_init(bool verb_,
     ww_r = sf_complexalloc2(amx.n,amy.n);
 }
 /*------------------------------------------------------------*/
-
 void srmig2_pw_init(float  dtmax,
 		    int    nrmax,   /* maximum number of references */
 		    fslice slow_)
@@ -135,7 +135,6 @@ void srmig2_pw_init(float  dtmax,
 }
 
 /*------------------------------------------------------------*/
-
 void srmig2_cw_init(float  dtmax,
 		    int    nrmax,   /* maximum number of references */
 		    fslice slow_s_,
@@ -187,7 +186,6 @@ void srmig2_cw_init(float  dtmax,
 }
 
 /*------------------------------------------------------------*/
-
 void srmig2_pw_close(void)
 /*< free slowness storage (P waves) >*/
 {
@@ -198,7 +196,6 @@ void srmig2_pw_close(void)
 }
 
 /*------------------------------------------------------------*/
-
 void srmig2_cw_close(void)
 /*< free slowness storage (C waves) >*/
 {
@@ -214,7 +211,6 @@ void srmig2_cw_close(void)
 }
 
 /*------------------------------------------------------------*/
-
 void srmig2_close(void)
 /*< free allocated storage >*/
 {
@@ -265,7 +261,6 @@ void srmig2_pw(fslice sdat /* source   data [nw][ny][nx] */,
 }
 
 /*------------------------------------------------------------*/
-
 void srmig2_cw(fslice sdat /* source   data [nw][ny][nx] */,
 	       fslice rdat /* receiver data [nw][ny][nx] */,
 	       fslice imag /*         image [nz][ny][nx] */,

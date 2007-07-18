@@ -52,7 +52,6 @@ static sf_complex **wk;
 static float         **wt;
 
 /*------------------------------------------------------------*/
-
 void ssr_init( sf_axis az_,
 	       sf_axis ax_,
 	       sf_axis ay_,
@@ -130,7 +129,6 @@ void ssr_init( sf_axis az_,
 }
 
 /*------------------------------------------------------------*/
-
 void ssr_close(void)
 /*< free allocated storage >*/
 {
@@ -147,7 +145,6 @@ void ssr_close(void)
 }
 
 /*------------------------------------------------------------*/
-
 void ssr_ssf(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
@@ -164,14 +161,11 @@ void ssr_ssf(
 
 #ifdef SF_HAS_COMPLEX_H
     w2 = w*w;
-
     /* w-x part 1 */
     LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] *= cexpf(-w*s*az.d); );
-
 #else
     w2 = sf_cmul(w,w);
-
     /* w-x part 1 */
     LOOP( s = 0.5 * so[ ly[iy] ][ lx[ix] ];
 	  wx[iy][ix] = sf_cmul( wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
@@ -237,7 +231,6 @@ void ssr_ssf(
 }
 
 /*------------------------------------------------------------*/
-
 void ssr_sso(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
@@ -306,7 +299,6 @@ void ssr_sso(
 }
 
 /*------------------------------------------------------------*/
-
 void ssr_phs(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
@@ -376,6 +368,7 @@ void ssr_phs(
     taper2(wx);
 }
 
+/*------------------------------------------------------------*/
 void ssr_pho(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
