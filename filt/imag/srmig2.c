@@ -104,6 +104,7 @@ void srmig2_init(bool verb_,
     ww_r = sf_complexalloc2(amx.n,amy.n);
 }
 /*------------------------------------------------------------*/
+
 void srmig2_pw_init(float  dtmax,
 		    int    nrmax,   /* maximum number of references */
 		    fslice slow_)

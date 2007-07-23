@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     float co,ca2,cb2,ca1,cb1;
 
     int ompchunk; 
-    int ompnth,ompath;
+    int ompnth;
 
     /*------------------------------------------------------------*/
     /* init RSF */

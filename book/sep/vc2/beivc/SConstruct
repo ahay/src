@@ -37,11 +37,11 @@ Result('arr',
        min1=0 max1=3 min2=7.705 max2=16.0465 pad=n
        transp=y yreverse=y
        wheretitle=b wherexlabel=t
-       label1="Time (s)" label2="Lateral (km)"       
+       label1=Time unit1=s label2=Lateral unit2=km       
        ''')
 
 Flow('scan','bei-vlf2','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
-Plot('scan','grey color=j allpos=y title="Semblance Scan" label1="Time (s)" label2="Velocity (km/s)" ')
+Plot('scan','grey color=j allpos=y title="Semblance Scan" label1=Time unit1=s label2=Velocity unit2=km/s')
 
 Flow('pick','scan','pick rect1=15')
 
@@ -57,7 +57,7 @@ Plot('pick1','pick',graph(7,1))
 Result('scan','scan pick0 pick1','Overlay')
 
 Flow('slice','bei-vlf','window n3=1 min3=10 | mutter half=n v0=0.67 x0=1.5')
-Plot('slice','grey title="Velocity Continuation" label1="Time (s)" label2="Velocity (km/s)" ')
+Plot('slice','grey title="Velocity Continuation" label1=Time unit1=s label2=Velocity unit2=km/s ')
 
 Result('slice','slice pick0 pick1','Overlay')
 

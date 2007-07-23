@@ -105,7 +105,7 @@ int main(int argc, char* argv[])
 
     int nbell;
     int ompchunk;
-    int ompnth,ompath;
+    int ompnth;
 
     /*------------------------------------------------------------*/
     /* init RSF */
