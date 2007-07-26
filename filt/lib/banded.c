@@ -123,6 +123,48 @@ void sf_banded_const_define (sf_bands slv,
     }
 }
 
+void sf_banded_const_define_reflect (sf_bands slv, 
+				     float diag        /* diagonal */, 
+				     const float* offd /* off-diagonal [band] */)
+/*< define matrix with constant diagonal coefficients  
+  and reflecting b.c. >*/
+{
+    int k, m, n, b, i;
+    float t;
+    
+    b = slv->band;
+    
+    slv->d[0] = diag+offd[0];
+    for (k = 0; k < b-1; k++) {
+	for (m = k; m >= 0; m--) {
+	    i = 2*k-m+1;
+	    t = (i < b)? offd[m]+offd[i]: offd[m];
+	    for (n = m+1; n < k-1; n++) 
+		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
+	    slv->o[m][k-m] = t/slv->d[k-m];
+	}
+	i = 2*(k+1);
+	t = (i < b)? diag + offd[i]: diag;
+	for (m = 0; m <= k; m++)
+	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*(slv->d[k-m]);
+	slv->d[k+1] = t;
+    }
+    for (k = b-1; k < slv->n-1; k++) {
+	for (m = b-1; m >= 0; m--) {
+	    i = 2*k-m+1;
+	    t = (i < b)? offd[m]+offd[i]: offd[m];
+	    for (n = m+1; n < b; n++) 
+		t -= (slv->o[n][k-n])*(slv->o[n-m-1][k-n])*(slv->d[k-n]);
+	    slv->o[m][k-m] = t/(slv->d[k-m]);
+	}
+	i = 2*(k+1);
+	t = (i < b)? diag + offd[i]: diag;
+	for (m = 0; m < b; m++) 
+	    t -= (slv->o[m][k-m])*(slv->o[m][k-m])*slv->d[k-m];
+	slv->d[k+1] = t;
+    }
+}
+
 void sf_banded_solve (sf_bands slv, float* b)
 /*< invert (in place) >*/
 {

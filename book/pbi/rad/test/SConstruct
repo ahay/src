@@ -1,0 +1,42 @@
+from rsfproj import *
+
+Fetch('cdp1750.sgy','rad')
+
+Flow('cdp tcdp cdp.asc cdp.bin','cdp1750.sgy',
+     '''
+     segyread tfile=${TARGETS[1]}
+     hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     ''')
+
+Flow('offset','tcdp','dd type=float | headermath output=offset')
+
+Flow('acdp','cdp','agc rect1=250')
+
+Result('cdp','acdp offset',
+       '''
+       wiggle xpos=${SOURCES[1]} transp=y yreverse=y poly=y
+       title="CDP 1750"
+       ''')
+
+Flow('bcdp','cdp',
+     '''
+     intbin xk=cdpt yk=cdp x0=204 dx=25 nx=118 ny=1 |
+     put o2=204 d2=25 label2=Offset unit2=m
+     label1=Time unit1=s
+     ''')
+
+Result('bcdp','grey title=CDP')
+
+# Velocity analysis
+
+Flow('vscan','bcdp','vscan v0=1200 dv=20 nv=201 half=n semblance=y')
+
+Result('vscan','grey color=j allpos=y title="Velocity Analysis" ')
+
+# Demultiple
+
+# Compare radon and slant
+
+# Port Doug's slant and compare
+
+End()
