@@ -12,6 +12,7 @@ Flow('rand',None,
 means = []
 ameans = []
 varis = []
+avaris = []
 for i in range(ns):
     rand = 'rand%d' % i
     Flow(rand,'rand','window n2=%d' % (i+1))
@@ -62,8 +63,17 @@ for i in range(ns):
         amean = 'amean%d' % i    
         Flow(amean,avo,'stack axis=1 norm=n | scale dscale=%g' % (1.0/nr))
         
-        ameans.append(amean)
+        avari = 'avari%d' % i
+        Flow(avari,[amean,avo],
+             '''
+             spray axis=1 n=%d o=1 d=1 |
+             add scale=1,-1 ${SOURCES[1]} |
+             math output="input*input" | stack axis=1 norm=n |
+             math output="sqrt(input/%d)"
+             ''' % (nr,nr))
 
+        ameans.append(amean)
+        avaris.append(avari)
 
 Flow('mean',means,'cat axis=1 ${SOURCES[1:%d]}' % ns)
 Plot('mean',
@@ -115,5 +125,23 @@ Plot('tvari','vari',
      ''')
 
 Result('vari','vari tvari','Overlay')
+
+Flow('avari',avaris,'cat axis=1 ${SOURCES[1:%d]} | put o1=2' % (ns-1))
+Plot('avari',
+     '''
+     graph symbol=o title="AVO Semblance Standard Deviation"
+     label1=N label2= unit1= unit2=
+     min2=-0.01 max2=0.37 symbolsz=5
+     ''')
+
+Plot('tavari','avari',
+     '''
+     math output="sqrt(4*(x1-2)/(x1+2))/x1" |
+     graph plotcol=5 wanttitle=n wantaxis=n
+     min2=-0.01 max2=0.37
+     ''')
+
+Result('avari','avari tavari','Overlay')
+
 
 End()

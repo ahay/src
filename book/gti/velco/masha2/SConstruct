@@ -102,7 +102,7 @@ Plot('fmg2',
      '''
      window max1=%g | agc |
      grey title="Prestack Migration Time -> Depth"
-     label1=Depth unit1=m label2=Lateral unit2=m
+     label1=Depth unit1=m label2="Lateral Position" unit2=m
      screenht=%g screenwd=%g labelsz=4 titlesz=4
      ''' % (zmax,0.001*zmax,0.001*xmax))
 
@@ -157,7 +157,7 @@ Flow('stk','elf-stk2.rsf','dd form=native')
 Result('elfstk','stk',
        '''
        grey title=Stack
-       label1=Time unit1=s label2=Lateral unit2=m
+       label1=Time unit1=s label2="Lateral Position" unit2=m
        ''')
 
 Fetch('vdix.rsf','masha')
@@ -173,7 +173,7 @@ Result('vels','vdix1',
        '''
        grey color=j scalebar=y allpos=y bias=1400
        wanttitle=y barlabel=Velocity barunit=km/s
-       bartype=v label1=Depth uni1=m label2=Lateral unit2=m
+       bartype=v label1=Depth uni1=m label2="Lateral Position" unit2=m
        title="Dix Velocity Converted to Depth" barreverse=y
        screenht=%g screenwd=%g bartype=v labelsz=4 titlesz=4
        wanttitle=n barreverse=y
@@ -206,7 +206,7 @@ for vel in ('vxz','vdix1'):
          window |
          transp | agc |
          grey title="Post-Stack Depth Migration"
-         label1=Depth unit1=m label2=Lateral unit2=m
+         label1=Depth unit1=m label2="Lateral Position" unit2=m
          screenht=%g screenwd=%g labelsz=4 titlesz=4
          ''' % (0.001*zmax,0.001*xmax))
 

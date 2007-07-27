@@ -49,6 +49,7 @@ def zgrey(title):
     screenwd=%g screenht=%g 
     labelsz=6 minval=2 maxval=3.2 wanttitle=y
     barlabel=Velocity barunit=km/s wanttitle=n
+    label2="Lateral Position"
     ''' % (title,1.4*xmax,1.4*zmax)
 
 Result('ve',zgrey('Interval Velocity'))
