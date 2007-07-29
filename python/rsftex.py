@@ -701,6 +701,9 @@ class TeXPaper(Environment):
                               'Color':Color,
                               'Figs':Figs,
                               'Uses':Uses})
+        # on MacOS with Fink, PATH includes /sw/bin
+        if sys.platform[:6] == 'darwin' and os.path.isdir('/sw/bin'):
+            self['ENV']['PATH'] = self['ENV']['PATH'] + ':/sw/bin/'
         cwd = os.getcwd()
         # create a hierarcical structure
         self.tree = (
