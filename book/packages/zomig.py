@@ -57,6 +57,17 @@ def wflds(wfld,data,par):
          put label1=mx label2=my label3=w
          ''' % par )
 
+def slow(slow,velo,par):
+    Flow(slow,velo,
+         '''
+         math output="1/input" |
+         transp plane=12 memsize=500|
+         transp plane=23 memsize=500|
+         put label1=mx label2=my label3=z
+         ''')
+
+# ------------------------------------------------------------
+
 # zero-offset modeling
 def model(data,slow,imag,par):
     Flow(data,[imag,slow],

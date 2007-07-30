@@ -1,6 +1,57 @@
 from rsfproj import *
 from math import *
 
+
+# ------------------------------------------------------------
+def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
+
+    min1=o1
+    max1=o1+(n1-1)*d1
+    min2=o2
+    max2=o2+(n2-1)*d2
+
+    ll = 1000*sqrt(d1*d1 + d2*d2)
+
+    aa = aa / d1 * d2
+    ra = aa/180.*pi
+    e1 = s1 + ll*sin(ra)
+    e2 = s2 + ll*cos(ra)
+
+    layers = (
+        ((s2,s1),(e2,e1)),
+        ((min2,min1),(max2,max1))
+        )
+
+    vels = "%s,%s,%s" %(vi,vt,vt)
+    drvs = "%s,%s" %(tan(ra),tan(ra))
+
+    dim1 = 'd1=%g o1=%g n1=%d' % (d2,o2,n2)
+    dim2 = 'd2=%g o2=%g n2=%d' % (d1,o1,n1)
+
+    for i in range(len(layers)):
+        inp = mod+'inp%d.rsf' % (i+1)
+        Flow('./'+inp,None,
+             'echo %s in=$TARGET data_format=ascii_float n1=2 n2=%d' % \
+             (string.join(map(lambda x: string.join(map(str,x)),layers[i]),
+                          ' '),
+              len(layers[i])))
+        
+    Flow(mod+'lay1',mod+'inp1','dd form=native | spline %s fp=%s' % (dim1,drvs))
+    Flow(mod+'lay2',mod+'inp2','dd form=native | spline %s fp=%s' % (dim1,drvs))
+
+    Flow(    mod+'layers',[mod+'lay1',mod+'lay2'],'cat axis=2 ${SOURCES[1:2]}')
+
+    Flow(mod+'1',mod+'layers',
+         '''
+         unif2 v00=%s n1=%d d1=%g o1=%g
+         ''' % (vels,n1,d1,o1) )
+    Flow(mod+'2',mod+'1',
+         '''
+         pad beg1=1 | window n1=%d
+         ''' % (n1) )
+    Flow(mod,[mod+'1',mod+'2'],'add ${SOURCES[1]} scale=1,-1')
+
+
 # ------------------------------------------------------------
 # make a model with a dipping linear interface
 # defined by coordinates [start](s1,s2) and [end](e1,e2)
