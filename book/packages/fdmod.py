@@ -73,7 +73,7 @@ def wgrey(custom,par):
            par['lz'],par['uz'],
            par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def cgraph(custom,par):
     return '''
@@ -85,7 +85,7 @@ def cgraph(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def ccont(custom,par):
     return '''
@@ -97,7 +97,7 @@ def ccont(custom,par):
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],par['scalebar'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def dgrey(custom,par):
     return '''
@@ -108,7 +108,7 @@ def dgrey(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 def egrey(custom,par):
     return '''
@@ -119,7 +119,7 @@ def egrey(custom,par):
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
            par['zmin'],par['zmax'],par['lz'],par['uz'],
-           par['labelattr']+custom)
+           par['labelattr']+' '+custom)
 
 # plot wavelet
 def waveplot(custom,par):
@@ -128,7 +128,8 @@ def waveplot(custom,par):
     plotfat=4
     label1=%s unit1=%s label2="" unit2=""
     %s
-    ''' % (par['lt'],par['ut'],par['labelattr']+custom)
+    ''' % (par['lt'],par['ut'],
+           par['labelattr']+' '+custom)
 
 # ------------------------------------------------------------
 # create wavelet
