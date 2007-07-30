@@ -52,9 +52,11 @@ int main(int argc, char* argv[])
     int lo2,hi2;
     int lo3,hi3;
 
+/*
     float h1,h2,h3,wh;
     float wk;
     sf_complex w;
+*/
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -68,7 +70,9 @@ int main(int argc, char* argv[])
     if(! sf_getint("nh3",&nh3)) nh3=0;
     sf_warning("nh1=%d nh2=%d nh3=%d",2*nh1+1,2*nh2+1,2*nh3+1);
     
+/*
     if(! sf_getfloat("wk",&wk)) wk=0.0;
+*/
 
     Fu = sf_input ("in" ); /*  input field */
     Fw = sf_output("out"); /* wigner distribution */
