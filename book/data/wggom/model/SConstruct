@@ -103,7 +103,7 @@ for file in nativeFiles:
         RSFfiles.append(fileOut)
 
  #######################################
- #        Concatinate Data             #
+ #        Concatenate Data             #
  #######################################
 if catData == 'y':
     Flow('RSFfile',RSFfiles,catRules,stdin=0)
