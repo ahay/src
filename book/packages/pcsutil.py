@@ -12,8 +12,6 @@ def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
     e2 = max2
     e1 = s1 + aa * (e2-s2)
 
-    print s1,s2,e1,e2
-
     layers = (
         ((s2,s1),(e2,e1)),
         ((min2,min1),(max2,max1))
@@ -46,7 +44,7 @@ def plane(mod,s1,s2,aa,vi,vt,n1,o1,d1,n2,o2,d2):
          '''
          pad beg1=1 | window n1=%d
          ''' % (n1) )
-    Flow(mod,[mod+'1',mod+'2'],'add ${SOURCES[1]} scale=1,-1')
+    Flow(mod,[mod+'1',mod+'2'],'add ${SOURCES[1]} scale=1,-1 | scale axis=123')
 
 
 # ------------------------------------------------------------
