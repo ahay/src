@@ -94,7 +94,7 @@ int main (int argc, char *argv[])
 	    n = sf_n(amx)*sf_n(amy);
 	    nw = sf_n(aw);
 
-	    data = fslice_init(n,nw,sizeof(sf_complex));
+	    data = fslice_init(n,   nw,sizeof(sf_complex));
 	    wfld = fslice_init(n,nz*nw,sizeof(sf_complex));
 
 	    fslice_load(Fd,data,SF_COMPLEX);
