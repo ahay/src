@@ -20,6 +20,7 @@ def param(par):
 
     if(not par.has_key('snap')):     par['snap']='y'
     if(not par.has_key('jsnap')):    par['jsnap']=100
+    if(not par.has_key('jdata')):    par['jdata']=1
 
     if(not par.has_key('ompchunk')): par['ompchunk']=1
     if(not par.has_key('ompnth')):   par['ompnth']=0
@@ -347,7 +348,8 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          '''
          awefd
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
-         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d nb=%(nb)d
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d
          vel=${SOURCES[1]}
          den=${SOURCES[2]}
          sou=${SOURCES[3]}
@@ -482,6 +484,7 @@ def wom(wom,wfld,velo,vmean,par):
                 par['dt']*par['jsnap'],
                 par['wweight']))
 
+# ------------------------------------------------------------
 # image-over-model plot
 def iom(iom,imag,velo,vmean,par):
 
