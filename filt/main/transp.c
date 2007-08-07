@@ -23,17 +23,17 @@ If you get a "Cannot allocate memory" error, give the program a memsize=1 comman
 
 #include <rsf.h>
 
-static void make_map (int dim1, int dim2, 
-		      const int* n, int n2, int* map);
+static int make_map (int dim1, int dim2, const int* n, int i2);
 
 int main(int argc, char* argv[])
 {
-    int i, dim, n[SF_MAX_DIM], n1, n2, n3;
+    int i, dim, n[SF_MAX_DIM], n1, n3, nbuf;
     int dim1, dim2, i2, i3, *map;
     int mem; /* for avoiding int to off_t typecast warning */
-    off_t pos, memsize;
-    char key1[7], key2[7], *val, **dat1, **dat2, *buf;
+    off_t pos, memsize, n2, nsiz;
+    char key1[7], key2[7], *val, **dat1, **dat2, *buf, *mapf;
     sf_file in, out;
+    FILE *mapfile;
     float f;
 
     sf_init (argc,argv);
@@ -118,8 +118,28 @@ int main(int argc, char* argv[])
 	}
     }
 
-    map = sf_intalloc (n2);
-    make_map (dim1, dim2, n, n2, map);
+    if (n2 < memsize) { /* keep map incore */
+	map = sf_intalloc (n2);
+
+	for (i2=0; i2 < n2; i2++) {
+	    map[i2] = make_map (dim1, dim2, n, i2);
+	}
+
+	mapfile = NULL;
+    } else { /* put map out of core */
+	nbuf = BUFSIZ/sizeof(int);
+	map = sf_intalloc(nbuf);
+	mapfile = sf_tempfile(&mapf,"w+b");
+
+	for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
+	    if (nbuf > nsiz) nbuf=nsiz;
+	    for (i=0; i < nbuf; i++, i2++) {
+		map[i] = make_map (dim1, dim2, n, i2);
+	    }
+	    if (nbuf != fwrite(map,sizeof(int),nbuf,mapfile)) 
+		sf_error("map write error:");
+	}
+    }
 
     if ((off_t) n1*n2 < memsize) {
 	dat1 = sf_charalloc2 (n1,n2);
@@ -141,12 +161,30 @@ int main(int argc, char* argv[])
 	
 	pos = sf_tell(in);
 	for (i3=0; i3 < n3; i3++) {
-	    for (i2=0; i2 < n2; i2++) {
-		sf_seek(in,pos+(off_t) (map[i2]+i3*n2)*n1,SEEK_SET);
-		sf_charread (buf,n1,in);
-		sf_charwrite(buf,n1,out);
+	    if (NULL == mapfile) {
+		for (i2=0; i2 < n2; i2++) {
+		    sf_seek(in,pos+(off_t) (map[i2]+i3*n2)*n1,SEEK_SET);
+		    sf_charread (buf,n1,in);
+		    sf_charwrite(buf,n1,out);
+		}
+	    } else {
+		if (0 > fseeko(mapfile,0,SEEK_SET))
+		    sf_error ("map seek error:");
+
+		for (i2=0, nsiz=n2; nsiz > 0; nsiz -= nbuf) {
+		    if (nbuf > nsiz) nbuf=nsiz;
+		    if (nbuf != fread(map,sizeof(int),nbuf,mapfile)) 
+			sf_error("map read error:");
+		    for (i=0; i < nbuf; i++) {
+			sf_seek(in,pos+(off_t) (map[i]+i3*n2)*n1,SEEK_SET);
+			sf_charread (buf,n1,in);
+			sf_charwrite(buf,n1,out);
+		    }
+		}
 	    }
 	}
+
+	if (NULL != mapfile) unlink(mapf);
 	
 	sf_close();
     }
@@ -154,28 +192,25 @@ int main(int argc, char* argv[])
     exit (0);
 }
 
-static void make_map (int dim1, int dim2,
-		      const int* n, int n2, int* map)
+static int make_map (int dim1, int dim2, const int* n, int i2)
 {
-    int i, j, i2;
+    int i, j;
     int ii[SF_MAX_DIM];
 
-    for (i2=0; i2 < n2; i2++) {
-
-	/* from line (output) to cartesian */
-	ii[dim2-1] = i2%n[dim2-1];
-	j = i2/n[dim2-1];
-	for (i = dim1; i < dim2-1; i++) {
-	    ii[i] = j%n[i];
-	    j /= n[i];
-	}
-	ii[dim1-1] = j;
-
-	/* back to line (input) */
-	j = ii[dim2-1];
-	for (i = dim2-2; i >= dim1-1; i--) {
-	    j = j*n[i] + ii[i];
-	}
-	map[i2] = j;
+    /* from line (output) to cartesian */
+    ii[dim2-1] = i2%n[dim2-1];
+    j = i2/n[dim2-1];
+    for (i = dim1; i < dim2-1; i++) {
+	ii[i] = j%n[i];
+	j /= n[i];
     }
+    ii[dim1-1] = j;
+    
+    /* back to line (input) */
+    j = ii[dim2-1];
+    for (i = dim2-2; i >= dim1-1; i--) {
+	j = j*n[i] + ii[i];
+    }
+
+    return j;
 }
