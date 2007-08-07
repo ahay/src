@@ -583,7 +583,7 @@ def cxx(context):
     if not res:
         del context.env['CXX']
         sys.exit(unix_failure)
-    if CXX == 'g++':
+    if CXX[-3:]=='g++':
         oldflag = context.env.get('CXXFLAGS')
         for flag in ['-Wall -pedantic']:
             context.Message("checking if g++ accepts '%s' ... " % flag)
