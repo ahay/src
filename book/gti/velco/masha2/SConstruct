@@ -118,7 +118,7 @@ Plot('elfvxz','vxz',
      wanttitle=y barlabel=Velocity barunit=km/s
      screenht=%g screenwd=%g bartype=v labelsz=4 titlesz=4
      title="Estimated Interval Velocity" barreverse=y
-     wanttitle=n
+     wanttitle=n label2="Lateral Position"
      ''' % (0.001*zmax,0.001*xmax))
 
 Plot('rays','x z',
@@ -218,9 +218,8 @@ Result('fmg2','fmg2','Overlay')
 #       ''' % (0.001*zmax,0.001*xmax))
 
 
-Result('elfimg','img-vdix1 img-vxz fmg2','OverUnderAniso') 
-Result('elfimg2','img-vxz img','SideBySideAniso',vppen='txscale=1.2')
-
-Result('elfimg0','img-vdix1 img','SideBySideAniso')
+#Result('elfimg','img-vdix1 img-vxz fmg2','OverUnderAniso') 
+#Result('elfimg2','img-vxz img','SideBySideAniso',vppen='txscale=1.2')
+#Result('elfimg0','img-vdix1 img','SideBySideAniso')
 
 End()

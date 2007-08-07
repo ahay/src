@@ -1,0 +1,21 @@
+from rsfproj import *
+
+sgy = 'ALL-gathers.sgy'
+
+# Download data
+Fetch(sgy,'dragon')
+
+# Convert from SEGY to RSF
+Flow('gathers tgathers gathers.asc gathers.bin',sgy,
+     '''
+     segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
+     cdp=192 cdpt=196
+     ''')
+
+# Window out one line
+Flow('mask','tgathers','dd type=float | headermath output=cdpt | mask min=250 max=250')
+
+Flow('line','gathers mask','headerwindow mask=${SOURCES[1]}')
+
+
+End()

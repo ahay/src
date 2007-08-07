@@ -66,7 +66,7 @@ int main(int argc, char* argv[])
 	sf_putint(out,key,1);
     }
 
-    sf_unpipe(in,n1*n2);
+    sf_unpipe(in,(off_t) n1*n2);
     sf_fileflush(out,in);
     sf_setform(in,SF_NATIVE);
     sf_setform(out,SF_NATIVE);
@@ -74,7 +74,7 @@ int main(int argc, char* argv[])
     pos = sf_tell(in);
     for (i2=0; i2<n2; i2++) {
 	if (mask[i2]) {
-	    sf_seek(in,pos+i2*n1,SEEK_SET);
+	    sf_seek(in,pos+ (off_t) i2*n1,SEEK_SET);
 	    sf_charread(trace,n1,in);
 	    sf_charwrite(trace,n1,out);
 	}
