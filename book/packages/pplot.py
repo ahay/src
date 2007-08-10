@@ -55,6 +55,7 @@ def p2x1(plot,p0,p1,ys,xs,yc):
     Plot(j0,p0,'Overlay',vppen='yscale=%f xscale=%f ycenter=0  xcenter=0'% (ys,xs   ))
     Plot(j1,p1,'Overlay',vppen='yscale=%f xscale=%f ycenter=%f xcenter=0'% (ys,xs,yc))
 
+    Plot  (plot,[j0,j1],'Overlay')
     Result(plot,[j0,j1],'Overlay')
 
 def p3x1(plot,p0,p1,p2,ys,xs,yc):

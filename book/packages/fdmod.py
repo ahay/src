@@ -220,12 +220,12 @@ def qqplot(custom,par):
 
 # ------------------------------------------------------------
 # rays plot
-def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,par):
+def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
 
     Plot(hwt+'ray',hwt,'window j1=%d j2=%d f2=%d | transp |' %(j1ray,j2ray,j2wft)
-         + cgraph('plotcol=1 wantaxis=n',par))
+         + cgraph('plotcol=1 wantaxis=n '+custom,par))
     Plot(hwt+'wft',hwt,'window j1=%d j2=%d f2=%d |'          %(j1wft,j2wft,j2wft)
-         + cgraph('plotcol=2 wantaxis=n symbol=.',par))
+         + cgraph('plotcol=2 wantaxis=n symbol=. '+custom,par))
 
     Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
 #    Result(hwt,[hwt+'ray',hwt+'wft'],'Overlay')
