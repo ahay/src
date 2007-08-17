@@ -11,7 +11,7 @@ Flow('cmp','marm','shot2cmp positive=n')
 Flow('mrm','cmp','window j3=2 | transp plane=24')
 
 velcon.velcon('mrm',
-              nv=120,      # continuation steps
+              nv=80,      # continuation steps
               v0=1400,     # initial velocity
               dv=25,       # velocity step
               nx=288,     # lateral dimension
