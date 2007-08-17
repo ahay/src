@@ -1,0 +1,153 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+data = 'line2D_40Hz_950shots.sgy'
+
+Fetch(data,'wemi',private)
+
+# Convert to RSF
+
+Flow('shots tshots shots.bin shots.asc',data,
+     '''
+     segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
+     ''')
+
+# Sort in shot gathers
+
+Flow('data','shots','intbin xk=tracf yk=fldr')
+
+#     o1=0.    d1=0.002 n1=1250 label1=Traces   unit1=s
+#     o2=152   d2=6.096 n2=871  label2=Source   unit2=m
+#     o3=152.4 d3=6.096 n3=940  label3=Receiver unit3=m
+
+# Midpoint and offset coordinates
+
+Flow('sc','tshots','window n1=1 f1=2 squeeze=n')
+Flow('rc','tshots','window n1=1 f1=3 squeeze=n')
+
+Flow('m','rc sc','add ${SOURCES[1]}')
+Flow('h','rc sc','add scale=1,-1 ${SOURCES[1]}')
+Flow('mh','m h','cat axis=1 ${SOURCES[1]}')
+
+Flow('cmps','shots mh','intbin head=${SOURCES[1]} xkey=1 ykey=0')
+
+# Window useful part
+
+Flow('wcmps','cmps',
+     '''
+     window n3=942 min2=-450 max2=450 |
+     put o3=152.4 d3=6.096 o2=-1371.6 d2=3.048
+     ''')
+
+# Get velocity
+
+Fetch('vp.bin','wemi',private)
+Flow('vp.rsf','vp.bin',
+     '''
+     echo in=$SOURCE
+     n1=875 o1=0 d1=0.003048 label1=z unit1=km
+     n2=991 o2=0 d2=0.006096 label2=x unit2=km
+     label=Velocity unit=km/s
+     data_format=native_float      
+     ''',stdin=0)
+
+# Convert depth to time
+
+Flow('vpt','vp','depth2time velocity=$SOURCE nt=1250 dt=0.002')
+
+Result('vp',
+       '''
+       grey title="Interval Velocity" color=j allpos=y scalebar=y
+       barreverse=y bias=1.5
+       ''')
+Result('vpt',
+       '''
+       grey title="Interval Velocity" color=j allpos=y scalebar=y
+       barreverse=y bias=1.5 label1=t unit1=s
+       ''')
+
+# Convert interval to RMS
+
+Flow('vrms','vpt','add mode=p $SOURCE | causint | math output="sqrt(input*0.002/(x1+0.002))" ')
+
+Result('vrms',
+       '''
+       grey title="RMS Velocity" color=j allpos=y scalebar=y
+       barreverse=y bias=1.5 label1=t unit1=s
+       ''')
+
+# 1-D RMS Velocity (converted to m/s)
+
+Flow('vrms1','vrms','stack | scale dscale=1000')
+
+Result('vrms1','graph transp=y yreverse=y title="RMS Velocity" label1=t unit1=s')
+
+# Replicate
+
+Flow('vnmo','vrms1','spray axis=2 n=942')
+
+# Mask non-zero traces
+
+#Flow('mask','wcmps','window n1=1 min1=1.5 max1=2 | math output="input*input" | stack axis=1 | mask min=1e-6')
+Flow('mask','wcmps','window min1=1.5 max1=2 | math output="abs(input)" | stack axis=1 | mask min=1e-12')
+
+Flow('wnmo','wcmps vnmo mask',
+     '''
+     nmo velocity=${SOURCES[1]} mask=${SOURCES[2]} verb=y |
+     window min1=1.5 max1=2
+     ''')
+
+
+
+#Result('wcmps','window max3=152. | grey title="Shots"')
+#Plot('tshots','grey title="Tshots"')
+#Result('shotimage','shots tshots','TwoRows')
+
+
+# Velocity profil windowed
+
+
+
+# Time migration by velocity continuation after NMO
+
+#Flow('fft-mig','dat',
+#     '''
+#     pad n2=513 | cosft sign2=1 |
+#     spray  axis=2 n=1 o=0 d=1 | fourvc pad=400 pad2=512 nv=1 dv=1.5 v0=0.0001 | 
+#     cosft sign3=-1 | window n3=200
+#     ''')
+
+Flow('wnmom','wnmo',
+     '''
+     fourvc0 nv=10 dv=103 v0=1524
+     ''')
+
+
+#Flow('srwfl sswfl','sdat wav',
+#     '''
+#     fft1 | window max1=%g |
+#     spray axis=3 n=1 o=0 d=1 |
+#     spray axis=5 n=1 o=0 d=1 |
+#     srsyn nx=%d dx=%g ox=0 wav=${SOURCES[1]} swf=swf.rsf |
+#     transp plane=12 |
+#     transp plane=23 | stack axis=4 norm=n > ${TARGETS[0]} &&
+#     transp plane=12 < swf.rsf |
+#     transp plane=23 | stack axis=4 norm=n > ${TARGETS[1]} &&
+#     rm swf.rsf
+#     ''' % (wavw,nx,dx),stdout=-1)
+
+# Migrate and create common-image gathers
+
+#Flow('simage scigs','sswfl srwfl slo',
+#     '''
+#     srmig2 slo=${SOURCES[2]} rwf=${SOURCES[1]} cig=${TARGETS[1]}
+#     itype=x nhx=10 nhz=10 hsym=y jcz=1 readwrite=y verb=y 
+#     ''')
+
+#Plot('simage',implot('Image'))
+
+
+End()

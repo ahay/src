@@ -42,12 +42,20 @@ v0 = 1.60308
 vmax = 3.53254
 dvdz = (vmax-v0)/z
 
+# Vp velocity with water layer removed
 Flow('vp2','./vp','window f1=%d' % nw)
 
-Flow('inc','vp2',
-     'math output="input-(%g+%g*(x1-%g))" ' % (v0,dvdz,z0))
+# Extract 1-D background
+Flow('vp1d','vp2','stack')
 
+# Compare with line
+Result('vp1d',
+       '''
+       math output="%g+%g*(x1-%g)" | cat axis=2 $SOURCE |
+       graph title="1-D Background" label2=Velocity unit2=km/s
+       ''' % (v0,dvdz,z0))
 
+# Mask the reflector
 Flow('mask','vp2',
      '''
      deriv | mask max=0 | dd type=float |
@@ -55,6 +63,7 @@ Flow('mask','vp2',
      deriv | mask min=0.17 
      ''')
 
+# Extract x1 and x2 coordinates for the reflector
 for x in range(2):
     xc = 'x%d' % (x+1)
     Flow(xc,'vp2 mask',
@@ -64,6 +73,8 @@ for x in range(2):
          headerwindow mask=${SOURCES[1]} |
          window j2=2
          ''' % (xc,nz*nx))
+
+# Spline interpolation for the reflector surface
 
 nsp = 703
 
@@ -96,8 +107,10 @@ Plot('spl',
 
 Result('edge','vp2 spl','Overlay')
 
+# Surfaces above and below the reflector
 Flow('spl0','spl','math output=input-%g' % (2*dz))
 Flow('spl1','spl','math output=input+%g' % (2*dz))
+
 
 for case in ('vp','vs','rho'):
     for s in ('0','1'):
@@ -127,8 +140,10 @@ Flow('rgrad','dvp dvs drho ab',
      ''')
 Plot('rgrad','graph title="AVA Gradient" ')
 
+# Display AVA intercept and gradient
 Result('ava','refl rgrad','SideBySideAniso')
 
+# Linearized AVA
 Flow('ar','refl','spray axis=3 n=101 o=0 d=0.45')
 Flow('ag','rgrad','spray axis=3 n=101 o=0 d=0.45')
 Flow('avas','ar ag',
@@ -144,9 +159,17 @@ Plot('avas',
      label1=Angle unit1=degrees
      ''')
 
+# Kirchhoff modeling
+
 for ava in ('refl','rgrad'):
     Flow(ava+'2',[ava,'spl2'],
          'pad n1=%d | remap1 pattern=${SOURCES[1]}' % nx)
+
+# spl2 is reflector shape z(x)
+# dip2 is reflector dip z'(x)
+# refl2 and rgrad2 are AVA intercept and gradient
+
+# Model one shot gather
 
 Flow('shot','spl2 dip2 refl2 rgrad2',
      '''
@@ -161,6 +184,8 @@ Flow('shot','spl2 dip2 refl2 rgrad2',
 
 Plot('shot','window min2=0 | grey title="Shot 0" pclip=100')
 
+# Model all shots
+
 Flow('shots','spl2 dip2 refl2 rgrad2',
      '''
      kirmod dip=${SOURCES[1]} verb=y
@@ -172,12 +197,17 @@ Flow('shots','spl2 dip2 refl2 rgrad2',
      type=v vel=%g gradz=%g
      ''' % (nx/10,x0,dx*10,2*nx-1,-nx*dx,dx,v0,dvdz))
 
+# water layer slowness
+
 Flow('slow','./vp',
      '''
      window n1=%d |
      math output=1/input |
      transp | spray axis=2 n=1 d=%g
      ''' % (nw,dx))
+
+# shot datuming
+
 Flow('wvld','shot',
      '''
      fft1 | transp plane=12 | transp plane=23
@@ -192,5 +222,9 @@ Flow('shot2','datm','window | transp | fft1 inv=y')
 Plot('shot2','window min2=0 | grey title="Redatumed Shot 0" pclip=100')
 
 Result('shot','shot shot2','SideBySideAniso')
+
+# Sort in CMP and offset
+
+Flow('cmps','shots','put d2=%g o2=%g | shot2cmp' % (dx/2,-nx*dx/2))
 
 End()

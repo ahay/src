@@ -131,7 +131,7 @@ Plot('image',implot('Image'))
 
 slow = 0.30303 # minimum slowness
 freq = 2*math.pi*0.12207 # minimum frequency
-omega = 1/(16*slow*freq) # offset resolution radius
+omega = 1/(8*slow*freq) # offset resolution radius
 
 # Smoothing horizontally
 
@@ -251,6 +251,7 @@ Plot('simage',implot('Image'))
 # Dip field
 seistc = 32
 Flow('dip','cdip','window n2=1 | scale dscale=%g | spray axis=1 n=%d d=%g o=0' % (dx/dz,nz,dz))
+Result('dip','grey color=j')
 
 # Seislet transform
 Flow('seis','simage dip','window | transp | seislet dip=${SOURCES[1]} adj=y inv=y type=l')
