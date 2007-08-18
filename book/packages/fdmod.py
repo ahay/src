@@ -520,3 +520,34 @@ def wframe(frame,movie,index,custom,par):
     Plot  (frame,[movie+'_plt',movie+'_bar'],
            'window n3=1 f3=%d bar=${SOURCES[1]} |'% index + wgrey(custom,par))
     
+# ------------------------------------------------------------
+# elastic wavefield movie
+def emovie(wfld,custom,axis,par):
+
+    # loop over wavefield components
+    for i in range(2):
+        Flow(wfld+str(i+1),wfld,
+             '''
+             window n3=1 f3=%d |
+             window min1=%g max1=%g min2=%g max2=%g
+             ''' % (i,par['zmin'],par['zmax'],par['xmin'],par['xmax']))
+
+    # join component wavefields
+    Flow(wfld+'all',[wfld+'1',wfld+'2'],
+         'cat axis=%d space=n ${SOURCES[1:2]}' % axis)
+
+    if(axis==1):        
+        height=2*par['height']
+        if(height>10): height=10
+        ratio =2*par['ratio']
+    if(axis==2):
+        height=par['height']
+        if(height>10): height=10
+        ratio =0.5*par['ratio']
+    
+    Result(wfld,wfld+'all',
+           '''
+           grey title="" wantaxis=y screenratio=%f screenht=%f
+           gainpanel=a pclip=99 %s
+           %s
+           ''' % (ratio,height,par['labelattr'],custom) )
