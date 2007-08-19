@@ -94,6 +94,7 @@ def ccont(custom,par):
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
+    plotcol=5 plotfat=3
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -204,13 +205,13 @@ def ssplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=o plotcol=2 plotfat=10 wantaxis=n %s' % custom,par)
+    ''' + cgraph('symbol=o plotcol=6 plotfat=10 wantaxis=n %s' % custom,par)
 
 def rrplot(custom,par):
     return '''
     window n1=2 |
     dd type=complex |
-    ''' + cgraph('symbol=. plotcol=1 plotfat=10 wantaxis=n %s' % custom,par)
+    ''' + cgraph('symbol=. plotcol=4 plotfat=5 wantaxis=n %s' % custom,par)
 
 def qqplot(custom,par):
     return '''
@@ -551,3 +552,37 @@ def emovie(wfld,custom,axis,par):
            gainpanel=a pclip=99 %s
            %s
            ''' % (ratio,height,par['labelattr'],custom) )
+
+# ------------------------------------------------------------
+# elastic wavefield movie
+def eframe(frame,movie,index,custom,axis,par):
+
+    if(axis==1):        
+        height=2*par['height']
+        if(height>10): height=10
+        ratio =2*par['ratio']
+    if(axis==2):
+        height=par['height']
+        if(height>10): height=10
+        ratio =0.5*par['ratio']
+
+    Flow([movie+'_plt',movie+'_bar'],movie,
+         'byte bar=${TARGETS[1]} gainpanel=a pclip=100 %s' % custom)
+    
+    Result(frame,[movie+'_plt',movie+'_bar'],
+           'window n3=1 f3=%d bar=${SOURCES[1]} |'% index +
+           '''
+           grey title="" wantaxis=y screenratio=%f screenht=%f
+           gainpanel=a pclip=99 %s
+           %s
+           ''' % (ratio,height,par['labelattr'],custom) )
+    
+# ------------------------------------------------------------
+# plot elastic wavelet
+def ewavelet(wavelet,custom,par):
+    
+    for i in range(2):
+        Plot(wavelet+str(i+1),wavelet,
+             'window n2=1 f2=%d | transp | window |'%i +
+             waveplot('%d %s'% (i,custom) ,par))
+    Result(wavelet,[wavelet+'1',wavelet+'2'],'SideBySideIso')

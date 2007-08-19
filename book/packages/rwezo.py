@@ -1,5 +1,5 @@
 from rsfproj import *
-import pplot
+import pplot,fdmod
 
 def param(par):
     if(not par.has_key('nsz')): par['nsz']=3
@@ -41,14 +41,16 @@ def cgrey(custom,par):
 
 def rgrey(custom,par):
     return '''
-    grey labelrot=n wantaxis=y wanttitle=y
-    title="" pclip=100
+    grey labelrot=n wantaxis=y title=""
+    pclip=100
     min1=%g max1=%g %s
     min2=%g max2=%g %s
+    screenratio=%g screenht=%g wantscalebar=%s
     %s
     ''' % (par['tmin'],par['tmax'],par['lt'],
            par['gmin'],par['gmax'],par['lg'],
-           custom)
+           par['ratio'],par['height'],par['scalebar'],
+           par['labelattr']+' '+custom)
 
 def dgrey(custom,par):
     return '''
@@ -80,7 +82,7 @@ def cos(cos,jray,jwft,custom,par):
     par['jray']=jray
     par['jwft']=jwft
 
-    Plot(ray,cos,'window j1=%(jray)d f2=%(jwft)d | transp |' % par
+    Plot(ray,cos,'window j1=%(jray)d | transp |' % par
          + cgraph('plotcol=1 '+custom,par))
     Plot(wft,cos,'window j2=%(jwft)d |' % par
          + cgraph('plotcol=2 '+custom,par))
@@ -185,7 +187,7 @@ def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
                + rgrey('pclip=99.9',par))
         
         Plot(migCC+sfx,'window | transp |'
-             + cgrey('pclip=100',par))
+             + fdmod.cgrey('pclip=100',par))
         Result(par['prefix']+migCC+sfx,[migCC+sfx,cos],'Overlay' % par)
 
 # run modeling
@@ -249,9 +251,9 @@ def plots(par):
     Result(par['prefix']+'imgCC',['imgCC','cos'],'Overlay')
 
     Plot  ('imgCC',
-           'window | transp |' + cgrey('pclip=100',par))
+           'window | transp |' + fdmod.cgrey('pclip=100',par))
     Plot  ('imgRC','migCC-FFD',
-           '         transp |' + cgrey('pclip=100',par))
+           '         transp |' + fdmod.cgrey('pclip=100',par))
     Plot('imgRC-ovl',['imgRC','cos'],'Overlay')
     pplot.p2x1(par['prefix']+'CCvsRC','imgRC-ovl','imgCC',0.5,0.5,-9)
     
