@@ -46,6 +46,9 @@ class Par:
     def bools(self,key,num,default=None):
         return self.__gets(c_rsf.getbools,key,num,default)
 
+# default parameters for interactive runs
+par = Par(['self','-'])
+
 datatype = ('uchar','char','int','float','complex')
 dataform = ('ascii','xdr','native')
 
@@ -111,7 +114,10 @@ class Input(File):
     def read(self,data,n=-1):
         if n<0:
             n = rsfarray.size(data)
-        c_rsf.sf_floatread(data,n,self.file)
+        if self.type == 'float':
+            c_rsf.sf_floatread(data,n,self.file)
+        else:
+            raise TypeError, 'Unsupported file type %s' % self.type
 
 class Output(File):
     def __init__(self,tag="out"):
@@ -119,8 +125,11 @@ class Output(File):
         File.__init__(self)
     def write(self,data,n=-1):
         if n<0:
-            n = rsfarray.size(data)       
-        c_rsf.sf_floatwrite(data,n,self.file)
+            n = rsfarray.size(data)
+        if self.type == 'float':
+            c_rsf.sf_floatwrite(data,n,self.file)
+        else:
+            raise TypeError, 'Unsupported file type %s' % self.type
 
 if __name__ == "__main__":
     # Testing getpar

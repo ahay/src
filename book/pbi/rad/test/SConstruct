@@ -8,9 +8,9 @@ Flow('cdp tcdp cdp.asc cdp.bin','cdp1750.sgy',
      hfile=${TARGETS[2]} bfile=${TARGETS[3]}
      ''')
 
-Flow('offset','tcdp','dd type=float | headermath output=offset')
+Flow('offset','tcdp','dd type=float | headermath output=offset/1000')
 
-Flow('acdp','cdp','agc rect1=250')
+Flow('acdp','cdp offset','agc rect1=250 | mutter offset=${SOURCES[1]} half=n v0=1.6')
 
 Result('cdp','acdp offset',
        '''
@@ -18,10 +18,10 @@ Result('cdp','acdp offset',
        title="CDP 1750"
        ''')
 
-Flow('bcdp','cdp',
+Flow('bcdp','acdp',
      '''
      intbin xk=cdpt yk=cdp x0=204 dx=25 nx=118 ny=1 |
-     put o2=204 d2=25 label2=Offset unit2=m
+     put o2=204 d2=0.025 o2=0.204 label2=Offset unit2=km
      label1=Time unit1=s
      ''')
 
@@ -29,13 +29,23 @@ Result('bcdp','grey title=CDP')
 
 # Velocity analysis
 
-Flow('vscan','bcdp','vscan v0=1200 dv=20 nv=201 half=n semblance=y')
+Flow('vscan','bcdp','vscan v0=1.2 dv=0.02 nv=201 half=n semblance=y')
 
 Result('vscan','grey color=j allpos=y title="Velocity Analysis" ')
 
 # Demultiple
 
 # Compare radon and slant
+
+Flow('radon','acdp offset',
+     'radon offset=${SOURCES[1]} adj=y inv=y p0=0 np=201 dp=0.005')
+
+Result('radon','grey title="F-X Radon" ')
+
+Flow('slant','bcdp',
+     'slant adj=y p0=0 np=201 dp=0.005')
+
+Result('slant','grey title="T-X Radon" ')
 
 # Port Doug's slant and compare
 

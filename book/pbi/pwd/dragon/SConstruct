@@ -9,13 +9,20 @@ Fetch(sgy,'dragon')
 Flow('gathers tgathers gathers.asc gathers.bin',sgy,
      '''
      segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}
-     cdp=192 cdpt=196
      ''')
 
-# Window out one line
-Flow('mask','tgathers','dd type=float | headermath output=cdpt | mask min=250 max=250')
+# Collect CMP bins
 
-Flow('line','gathers mask','headerwindow mask=${SOURCES[1]}')
+Flow('bin','gathers','intbin xk=cdpt yk=cdp')
 
+Flow('off','tgathers',
+     '''
+     dd type=float |
+     headermath output=offset |
+     intbin xk=cdpt yk=cdp head=$SOURCE 
+     ''')
+
+Flow('scn','bin off',
+     'vscan offset=${SOURCES[1]} semblance=y half=n v0=1400 dv=20 nv=101')
 
 End()
