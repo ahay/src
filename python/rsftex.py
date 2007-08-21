@@ -742,7 +742,9 @@ class TeXPaper(Environment):
         dir2 = mkdir(dir)
         self.Install(dir2,fil)
     def Dir(self,topdir='.',resdir='Fig'):
-        # reproducible directories
+        
+        # reproducible figures
+        erfigs = []
         for scons in glob.glob('%s/[a-z]*/SConstruct' % topdir):
             dir = os.path.dirname(scons)
             html = dir+'.html'
@@ -751,29 +753,32 @@ class TeXPaper(Environment):
             uses = dir+'.uses'
             self.Uses(uses,scons,tree=self.tree)
             self.uses.append(uses)
+
+            vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
+                            figdir+'/\\1',os.path.abspath(os.path.realpath(dir)))
+            
+            for fig in glob.glob('%s/*%s' % (vpldir,vpsuffix)):
+                eps = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
+                             r'%s/%s/\2%s' % (dir,resdir,pssuffix),fig)
+
+                resdir2 = os.path.join(self.doc,os.path.dirname(eps))
+                self.Build(eps,fig)
+                if epstopdf:
+                    pdf = re.sub(pssuffix+'$','.pdf',eps)
+                    self.PDFBuild(pdf,eps)
+                    erfigs.append(pdf)
+                if latex2html and pstoimg:
+                    png = re.sub(pssuffix+'$','.'+itype,eps)
+                    self.PNGBuild(png,eps)
+                    self.imgs.append(png)
+                    self.Install2(resdir2,[png,pdf])
+                    self.Alias('figinstall',resdir2)
+        self.figs.extend(erfigs)
+
         if self.scons:
             self.Install(self.doc,self.scons)
-        self.Alias('figinstall',self.doc)        
-        # reproducible figures
-        erfigs = []
-        vpldir = re.sub(r'.*\/((?:[^\/]+)\/(?:[^\/]+))$',
-                        figdir+'/\\1',os.path.abspath(topdir)) 
-        for fig in glob.glob('%s/[a-z]*/*%s' % (vpldir,vpsuffix)):
-             eps = re.sub(r'.*\/([^\/]+)\/([^\/]+)'+vpsuffix+'$',
-                          r'%s/\1/%s/\2%s' % (topdir,resdir,pssuffix),fig)
-             resdir2 = os.path.join(self.doc,os.path.dirname(eps))
-             self.Build(eps,fig)
-             if epstopdf:
-                  pdf = re.sub(pssuffix+'$','.pdf',eps)
-                  self.PDFBuild(pdf,eps)
-                  erfigs.append(pdf)
-             if latex2html and pstoimg:
-                  png = re.sub(pssuffix+'$','.'+itype,eps)
-                  self.PNGBuild(png,eps)
-                  self.imgs.append(png)
-                  self.Install2(resdir2,[png,pdf])
-                  self.Alias('figinstall',resdir2)
-        self.figs.extend(erfigs)
+        self.Alias('figinstall',self.doc)
+        
         # conditionally reproducible figures
         crfigs = []
         # mathematica figures:
