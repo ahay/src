@@ -359,6 +359,23 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
+def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow( [odat,owfl],[idat,velo,dens,sou,rec],
+         '''
+         awefd1
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         sou=${SOURCES[3]}
+         rec=${SOURCES[4]}
+         wfl=${TARGETS[1]}
+         %(fdcustom)s
+         ''' % par)
+    
 # ------------------------------------------------------------
 # elastic modeling
 def ewefd(odat,owfl,idat,cccc,dens,sou,rec,custom,par):

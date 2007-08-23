@@ -244,6 +244,27 @@ void lint2d_inject(float**uu,
 }
 
 /*------------------------------------------------------------*/
+void lint2d_inject1(float**uu,
+		    float  ww,
+		    lint2d ca)
+/*< inject into wavefield >*/
+{
+    int   ia;
+
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,1) private(ia) shared(ca,ww,uu)
+#endif
+    for (ia=0;ia<ca->n;ia++) {
+	uu[ ca->j2[ia]   ][ ca->j1[ia]   ] -= ww * ca->w00[ia];
+	uu[ ca->j2[ia]   ][ ca->j1[ia]+1 ] -= ww * ca->w01[ia];
+	uu[ ca->j2[ia]+1 ][ ca->j1[ia]   ] -= ww * ca->w10[ia];
+	uu[ ca->j2[ia]+1 ][ ca->j1[ia]+1 ] -= ww * ca->w11[ia];
+    }
+}
+
+
+
+/*------------------------------------------------------------*/
 void lint2d_extract(float**uu,
 		    float* dd,
 		    lint2d ca)
