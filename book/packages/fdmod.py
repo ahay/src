@@ -345,7 +345,7 @@ def anisotropic(cc,vp,vs,ro,epsilon,delta,par):
 def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
     par['fdcustom'] = custom
     
-    Flow( [odat,owfl],[idat,velo,dens,sou,rec],
+    Flow([odat,owfl],[idat,velo,dens,sou,rec],
          '''
          awefd
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
@@ -359,10 +359,30 @@ def awefd(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          %(fdcustom)s
          ''' % par)
 
-def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
+def lwefd(bdat,bwfl,sdat,swfl,idat,velo,dens,refl,sou,rec,custom,par):
     par['fdcustom'] = custom
     
-    Flow( [odat,owfl],[idat,velo,dens,sou,rec],
+    Flow([bdat,bwfl,sdat,swfl],[idat,velo,dens,sou,rec],
+         '''
+         lwefd
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         ref=${SOURCES[3]}
+         sou=${SOURCES[4]}
+         rec=${SOURCES[5]}
+         wfl=${TARGETS[1]}
+         lid=${TARGETS[2]}
+         liw=${TARGETS[3]}
+         %(fdcustom)s
+         ''' % par)
+
+def awefd1(odat,owfl,wavl,velo,dens,sou,rec,custom,par):
+    par['fdcustom'] = custom
+    
+    Flow([odat,owfl],[wavl,velo,dens,sou,rec],
          '''
          awefd1
          ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
@@ -375,6 +395,27 @@ def awefd1(odat,owfl,idat,velo,dens,sou,rec,custom,par):
          wfl=${TARGETS[1]}
          %(fdcustom)s
          ''' % par)
+
+def lwefd1(bdat,bwfl,sdat,swfl,wavl,velo,dens,refl,sou,rec,custom,par):
+    par['fdcustom'] = custom
+
+    Flow([bdat,bwfl,sdat,swfl],[wavl,velo,dens,refl,sou,rec],
+         '''
+         lwefd1
+         ompchunk=%(ompchunk)d ompnth=%(ompnth)d 
+         verb=y free=n snap=%(snap)s jsnap=%(jsnap)d
+         nb=%(nb)d
+         vel=${SOURCES[1]}
+         den=${SOURCES[2]}
+         ref=${SOURCES[3]}
+         sou=${SOURCES[4]}
+         rec=${SOURCES[5]}
+         wfl=${TARGETS[1]}
+         lid=${TARGETS[2]}
+         liw=${TARGETS[3]}
+         %(fdcustom)s
+         ''' % par)
+
     
 # ------------------------------------------------------------
 # elastic modeling

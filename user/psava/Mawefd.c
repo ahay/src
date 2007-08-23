@@ -53,7 +53,6 @@ int main(int argc, char* argv[])
 
     /* I/O arrays */
     float **ww=NULL;           /* wavelet   */
-    float  *dd=NULL;           /* data      */
     pt2d   *ss=NULL;           /* sources   */
     pt2d   *rr=NULL;           /* receivers */
 
@@ -62,8 +61,9 @@ int main(int argc, char* argv[])
     float **vp=NULL;           /* velocity in expanded domain */
     float **ro=NULL;           /* density  in expanded domain */
 
-    float **vt=NULL; /* temporary vp */
+    float **vt=NULL;           /* temporary vp*vp * dt*dt */
 
+    float  *dd=NULL;           /* data      */
     float **um,**uo,**up,**ua,**ut; /* wavefield: um = U @ t-1; uo = U @ t; up = U @ t+1 */
 
     /* cube axes */
@@ -264,12 +264,12 @@ int main(int argc, char* argv[])
 	/* inject acceleration source */
 	lint2d_inject(ua,ww[it],cs);
 
+	/* step forward in time */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,um,up,vt,dt2)
 #endif
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->n1pad; i1++) {
-		/* step forward in time */
 		up[i2][i1] = 2*uo[i2][i1] 
 		    -          um[i2][i1] 
 		    +          ua[i2][i1] * vt[i2][i1];
