@@ -1,6 +1,10 @@
 from rsfproj import *
 
+# Make a trace with a Ricker wavelet
+
 Flow('ricker',None,'spike n1=101 k1=51 | ricker1')
+
+# Phase rotation
 
 traces = []
 for a in range(-180,190,10):
@@ -15,6 +19,8 @@ Flow('traces',traces,
      'cat ${SOURCES[1:%d]} axis=2 | put o2=-180 d2=10' % len(traces))
 Result('traces','dots')
 
+# Histogram of amplitudes
+
 Flow('histos','histog0 histog90','cat ${SOURCES[1]} axis=2')
 Result('histos',
        '''
@@ -23,6 +29,8 @@ Result('histos',
        graph dash=1,0 title=Histogram wantaxis1=n
        ''' % ('$SOURCE '*10))
 
+# Local focusing measure
+
 Flow('focus','traces','focus rect1=100')
 Result('focus',
        '''
@@ -30,6 +38,8 @@ Result('focus',
        ''')
 
 Flow('envelope','ricker','envelope | spray axis=2 n=37')
+
+# Local correlation with envelope
 
 Flow('envcorr','traces envelope',
      'similarity other=${SOURCES[1]} rect1=100')

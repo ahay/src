@@ -15,21 +15,21 @@ Flow('shots tshots shots.bin shots.asc',data,
      segyread tfile=${TARGETS[1]} bfile=${TARGETS[2]} hfile=${TARGETS[3]}
      ''')
 
-# Sort in shot gathers
+# Sort in shot gathers and bin for some incomplete traces
 
 Flow('data','shots','intbin xk=tracf yk=fldr')
 
-#     o1=0.    d1=0.002 n1=1250 label1=Traces   unit1=s
-#     o2=152   d2=6.096 n2=871  label2=Source   unit2=m
-#     o3=152.4 d3=6.096 n3=940  label3=Receiver unit3=m
+# o1=0.    d1=0.002 n1=1250 label1=Trace     unit1=s
+# o2=152.4 d2=6.096 n2=942  label2=Receiver  unit2=m
+# o3=152   d3=6.096 n3=871  label3=Source    unit3=m
 
 # Midpoint and offset coordinates
 
-Flow('sc','tshots','window n1=1 f1=2 squeeze=n')
-Flow('rc','tshots','window n1=1 f1=3 squeeze=n')
+Flow('sc','tshots','window n1=1 f1=2 squeeze=n | put o1=1')
+Flow('rc','tshots','window n1=1 f1=3 squeeze=n | put o1=1')
 Flow('mc','rc sc','add ${SOURCES[1]} | add add=-1')
 
-# insert mc as the cdp number
+# Insert mc as the cdp number
 
 Flow('top','tshots','window n1=5')
 Flow('bot','tshots','window f1=6')
@@ -46,14 +46,21 @@ Flow('mh','m h','cat axis=1 ${SOURCES[1]}')
 
 Flow('cmps','shots mh','intbin head=${SOURCES[1]} xkey=1 ykey=0')
 
+# o1=0.    d1=0.002  n1=1250  label1=Trace     unit1=s
+# o2=-870  d2=1      n2=1812  label2=Offset    unit2=m
+# o3= 2    d3=1      n3=1811  label3=Midpoint  unit3=m
 
 # Window useful part
 
 Flow('wcmps','cmps',
      '''
      window min2=-450 max2=450 |
-     put o3=152.4 d3=6.096 o2=-1371.6 d2=3.048
+     put o3=152.2 d3=6.096 o2=-1371.6 d2=3.048
      ''')
+
+# o1=0.        d1=0.002  n1=1250  label1=Trace     unit1=s
+# o2=-1371.6   d2=3.048  n2=901   label2=Offset    unit2=m
+# o3=152.2     d3=6.096  n3=1811  label3=Midpoint  unit3=m
 
 # Get velocity
 
@@ -100,44 +107,100 @@ Result('vrms1','graph transp=y yreverse=y title="RMS Velocity" label1=t unit1=s'
 
 # Replicate
 
-Flow('vnmo','vrms1','spray axis=2 n=942')
+Flow('vnmo','vrms1','spray axis=2 n=1811 | put o2=152.2 d2=6.096')
 
 # Mask non-zero traces
 
 #Flow('mask','wcmps','window n1=1 min1=1.5 max1=2 | math output="input*input" | stack axis=1 | mask min=1e-6')
 Flow('mask','wcmps','window min1=1.5 max1=2 | math output="abs(input)" | stack axis=1 | mask min=1e-12')
 
-Flow('wnmo','wcmps vnmo mask',
+
+# < wcmps.rsf sfwindow n2=1 min2=0 | sffft1 | sffft3 axis=2 | sfdipfilter v1=-2000 v2=-1500 v3=1500 v4=2000 taper=2 pass=0 dim=2 | sffft3 axis=2 inv=y | sffft1 inv=y |
+# sfwindow min1=1.5 max1=2 | sfcat zero.rsf | sfgrey gainpanel=all | xtpen
+
+# Filter out high-dipping noise
+Flow('wfilt','wcmps',
+     '''
+     costaper nw1=250 |
+     transp plane=23 memsize=2000 | fft1 | fft3 axis=2 |
+     dipfilter v1=-4000 v2=-3000 v3=3000 v4=4000 taper=2 pass=0 dim=2 |
+     fft3 axis=2 inv=y | fft1 inv=y | transp plane=23 memsize=2000
+     ''')
+
+Flow('wnmo','wfilt vnmo mask',
      '''
      nmo velocity=${SOURCES[1]} mask=${SOURCES[2]} verb=y |
      window min1=1.5 max1=2
+    ''')
+
+# o1=1.5       d1=0.002    n1=251   label1=Trace     unit1=s
+# o2=-1371.6   d2=3.048    n2=901   label2=Offset    unit2=m
+# o3=152.2     d3=6.09599  n3=1811  label3=Midpoint  unit3=m
+
+
+Flow('wnmo2','wnmo',
+     '''
+     window f3=1 j3=2 f2=1 j2=2 |
+     bandpass fhi=60 flo=5
      ''')
 
-Flow('wnmo2','wnmo','window f3=1 j3=2 f2=1 j2=2')
-
-#Result('wcmps','window max3=152. | grey title="Shots"')
-#Plot('tshots','grey title="Tshots"')
-#Result('shotimage','shots tshots','TwoRows')
+# Apply DMO
 
 
-# Velocity profil windowed
+#Flow('wdmo','wnmo2',
+#     '''
+#     window min2=0 | logstretch | fft1 | transp plane=13 memsize=500 |
+#     finstack stack=n |
+#     transp plane=13 memsize=500 | fft1 inv=y | logstretch inv=y
+#     ''')
 
+# Select zero-offset
 
+Flow('zero','wnmo2','window n2=1 min2=0')
+
+Result('zero','grey title="Zero Offset" ')
+
+Flow('stack','wnmo2','stack')
+
+Result('stack','grey title="Stack" ')
+
+# Velocity continuation
+
+Flow('velco','zero',
+     '''
+      cosft sign2=1 |
+      spray  axis=2 n=1 o=0 d=1 |
+      fourvc nv=241 dv=25 v0=0.0001 verb=y |
+      cosft sign3=-1
+      ''')
+
+# Velocity slice
+
+Flow('vmig','vnmo',
+     '''
+     window min1=1.5 max1=2 f2=1 j2=2 |
+     scale dscale=2
+     ''')
+
+Flow('mig','velco vmig','slice pick=${SOURCES[1]} | window | put o2=158.296')
+
+Result('mig','grey title="Migration" ')
 
 # Time migration by velocity continuation after NMO
 
-#Flow('fft-mig','dat',
-#     '''
-#     pad n2=513 | cosft sign2=1 |
-#     spray  axis=2 n=1 o=0 d=1 | fourvc pad=400 pad2=512 nv=1 dv=1.5 v0=0.0001 | 
-#     cosft sign3=-1 | window n3=200
-#     ''')
-
-Flow('wnmom','wnmo',
+Flow('cosft','wnmo2',
      '''
-     fourvc0 nv=10 dv=103 v0=1524
+     spray  axis=4 n=1 o=0 d=1 | 
+     transp plane=24 memsize=2000 |
+     transp plane=23 memsize=2000 |
+     cosft sign2=1
      ''')
 
+Flow('wvelco','cosft',
+     '''
+     fourvc0 nv=121 dv=50 v0=0.0001 verb=y |
+     cosft sign3=-1
+     ''')
 
 #Flow('srwfl sswfl','sdat wav',
 #     '''
