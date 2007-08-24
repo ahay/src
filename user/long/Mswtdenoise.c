@@ -75,7 +75,6 @@ int main(int argc, char* argv[])
 	    ch2[i]=ratio*ch2[i];
 
 	multi_iwavelet(cl2,ch2,n_number,n_layer,ch);
-        
 	multi_iwavelet(cl,ch,n_number,n_layer,ainverse);
 	
 	sf_floatwrite(ainverse,n_number,out);
