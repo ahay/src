@@ -94,7 +94,7 @@ def ccont(custom,par):
     min1=%g max1=%g label1=%s unit1=%s
     min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
-    plotcol=5 plotfat=3
+    plotcol=2 plotfat=3
     %s
     ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['xmin'],par['xmax'],par['lx'],par['ux'],
@@ -127,7 +127,7 @@ def egrey(custom,par):
 def waveplot(custom,par):
     return '''
     graph min2=-1 max2=+1 title=""
-    plotfat=4
+    plotfat=5 plotcol=2
     label1=%s unit1=%s label2="" unit2=""
     %s
     ''' % (par['lt'],par['ut'],
