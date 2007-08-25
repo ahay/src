@@ -2,7 +2,7 @@ from rsfproj import *
 import zomig,rwezo
 
 par = {
-    'nz':751,  'dz':0.004,'oz':0,     'lz':'z':'uz':'km',                 # CC axis 1
+    'nz':751,  'dz':0.004,'oz':0,     'lz':'z','uz':'km',                 # CC axis 1
     'nx':1500, 'dx':0.004,'ox':2,     'lx':'x','ux':'km',                 # CC axis 2
     'nt':550,  'dt':0.002,'ot':0,     'lt':'"\F10 t\F3 "','ut':'s',     # RC axis 1
     'ng':512,  'dg':0.350,'og':-89.6, 'lg':'"\F10 g\F3 "','ug':'"\^o\_"', # RC axis 2

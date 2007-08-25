@@ -4,7 +4,7 @@ import zomig,rwezo
 par = {
     'nz':350,  'dz':0.010,    'oz':0,     'lz':'z', 'uz':'km',             # CC axis 1
     'nt':400,  'dt':0.005,    'ot':1.5,   'lt':'"\F10 t\F3 "', 'ut':'s', # RC axis 1
-    'nx':360,  'dx':0.020,    'ox':0,     'lx':'x', 'ux':km',             # CC axis 2
+    'nx':360,  'dx':0.020,    'ox':0,     'lx':'x', 'ux':'km',             # CC axis 2
     'ng':300,  'dg':0.020,    'og':0.5,   'lg':'x', 'ug':'km',             # RC axis 2
     'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
