@@ -2,10 +2,10 @@ from rsfproj import *
 import zomig,rwezo
 
 par = {
-    'nz':350,  'dz':0.010,    'oz':0,     'lz':'label2=1 unit2=km',                # CC axis 1
-    'nt':400,  'dt':0.005,    'ot':1.25,  'lt':'label1="\F10 t\F3 " unit1="s"',    # RC axis 1
-    'nx':360,  'dx':0.020,    'ox':0,     'lx':'label2=x unit2=km',                # CC axis 2
-    'ng':360,  'dg':0.250,    'og':-45,   'lg':'label2="\F10 g\F3 " unit2="\^o\_"',# RC axis 2
+    'nz':350,  'dz':0.010,    'oz':0,     'lz':'1','uz':'km',                # CC axis 1
+    'nt':400,  'dt':0.005,    'ot':1.25,  'lt':'"\F10 t\F3 "','ut':'s',    # RC axis 1
+    'nx':360,  'dx':0.020,    'ox':0,     'lx':'x','ux':'km',                # CC axis 2
+    'ng':360,  'dg':0.250,    'og':-45,   'lg':'"\F10 g\F3 "','ug':'"\^o\_"',# RC axis 2
     'nT':1600, 'dT':0.004,    'oT':0,      'kT':800,    # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':1,
     'ow':1, 'incore':'y',
