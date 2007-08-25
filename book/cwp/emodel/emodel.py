@@ -17,7 +17,7 @@ def execute(vp,par):
          ng=%(ng)d og=%(og)g dg=%(dg)g
          ''' % par)
 
-    fdmod.rayplot('hwt',10,50,2,50,par)
+    fdmod.rayplot('hwt',10,50,2,50,'',par)
     Result('hwtvel',[vp,'hwt'],'Overlay')
     
 #    Plot('ray','hwt','window j1=40 j2=50 | transp |'+ fdmod.cgraph('wantaxis=n plotcol=0 plotfat=3',par))
