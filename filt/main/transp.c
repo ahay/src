@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
     } else {
 	sf_warning("Going out of core... "
 		   "(increase memsize=%lld for in-core)",
-                   memsize/(off_t)(1 << 20));
+                   memsize/(1 << 20));
 	sf_unpipe(in,(off_t) n1*n2*n3);
 
 	buf = sf_charalloc (n1);
