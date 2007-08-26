@@ -46,7 +46,7 @@ int main(int argc, char* argv[])
     if (!sf_getint("memsize",&mem))
         mem=sf_memsize();
     /* Max amount of RAM (in Mb) to be used */
-    memsize = mem * (1<<20); /* convert Mb to bytes */
+    memsize = (off_t) mem * (1<<20); /* convert Mb to bytes */
 
     dim = sf_filedims(in,n);
 
@@ -157,7 +157,8 @@ int main(int argc, char* argv[])
 	}
     } else {
 	sf_warning("Going out of core... "
-		   "(increase memsize=%d for in-core)",memsize/(1 << 20));
+		   "(increase memsize=%lld for in-core)",
+                   memsize/(off_t)(1 << 20));
 	sf_unpipe(in,(off_t) n1*n2*n3);
 
 	buf = sf_charalloc (n1);

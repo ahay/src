@@ -116,6 +116,8 @@ class Input(File):
             n = rsfarray.size(data)
         if self.type == 'float':
             c_rsf.sf_floatread(data,n,self.file)
+        elif self.type == 'complex':
+            c_rsf.sf_complexread(data,n,self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
@@ -128,6 +130,8 @@ class Output(File):
             n = rsfarray.size(data)
         if self.type == 'float':
             c_rsf.sf_floatwrite(data,n,self.file)
+        elif self.type == 'complex':
+            c_rsf.sf_complexwrite(data,n,self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 

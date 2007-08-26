@@ -249,6 +249,9 @@ long sf_bytes (sf_file file);
 void sf_floatwrite (float* arr, size_t size, sf_file file);
 void sf_floatread (float* arr, size_t size, sf_file file);
 
+void sf_complexwrite (sf_complex* arr, size_t size, sf_file file);
+void sf_complexread (sf_complex* arr, size_t size, sf_file file);
+
 long sf_tell (sf_file file);
 void sf_seek (sf_file file, long offset, int whence);
 void sf_unpipe (sf_file file, size_t size);
