@@ -83,14 +83,21 @@ int main(int argc, char* argv[])
     float co,ca2,cb2,ca1,cb1;
 
     int ompchunk; 
+
+#ifdef _OPENMP
     int ompnth,ompath;
+#endif
 
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
-    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  /* OpenMP available threads */
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
+    /* OpenMP data chunk size */
+
 #ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
+    /* OpenMP available threads */
+
 #pragma omp parallel
     ompath=omp_get_num_threads();
     if(ompnth<1) ompnth=ompath;
