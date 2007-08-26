@@ -141,13 +141,13 @@ int main(int argc, char* argv[])
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
 
-    sf_setn(at,nt/jdata);
+    sf_setn(at,(int)(1.0*nt/jdata));
     sf_setd(at,dt*jdata);
     sf_oaxa(Fdat,at,2);
 
     /* setup output wavefield header */
     if(snap) {
-	sf_setn(at,nt/jsnap);
+	sf_setn(at,(int)(1.0*nt/jsnap)+1);
 	sf_setd(at,dt*jsnap);
 
 	sf_oaxa(Fwfl,a1,1);
@@ -155,8 +155,8 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,at,3);
     }
 
-    ww  =sf_floatalloc(nt); sf_floatread(  ww,nt,Fwav);
-    dd  =sf_floatalloc(nr);
+    ww = sf_floatalloc(nt); sf_floatread(  ww,nt,Fwav);
+    dd = sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
     /* setup source/receiver coordinates */

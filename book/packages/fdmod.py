@@ -229,7 +229,6 @@ def rayplot(hwt,j1ray,j2ray,j1wft,j2wft,custom,par):
          + cgraph('plotcol=2 wantaxis=n symbol=. '+custom,par))
 
     Plot  (hwt,[hwt+'ray',hwt+'wft'],'Overlay')
-#    Result(hwt,[hwt+'ray',hwt+'wft'],'Overlay')
   
 # ------------------------------------------------------------
 # execute acoustic finite-differences modeling
