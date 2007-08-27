@@ -123,6 +123,7 @@ int main(int argc, char* argv[])
 
     if (n2 < memsize) { /* keep map incore */
 	map = sf_intalloc (n2);
+	nbuf = 0;
 
 	for (i2=0; i2 < n2; i2++) {
 	    map[i2] = make_map (dim1, dim2, n, i2);
