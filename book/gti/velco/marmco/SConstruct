@@ -8,9 +8,9 @@ Flow('marm','marmrefl.hh',
 
 Flow('cmp','marm','shot2cmp positive=n')
 
-Flow('mrm','cmp','window j3=2 | transp plane=24')
+Flow('mrm1','cmp','window j3=2 | transp plane=24')
 
-velcon.velcon('mrm',
+velcon.velcon('mrm1',
               nv=80,      # continuation steps
               v0=1400,     # initial velocity
               dv=25,       # velocity step
