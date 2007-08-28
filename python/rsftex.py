@@ -98,6 +98,7 @@ figure = re.compile(r'\\contentsline \{figure\}\{\\numberline \{([^\}]+)')
 subfigure = re.compile(r'\\contentsline \{subfigure\}\{\\numberline \{\(([\w])')
 logfigure = re.compile(r'\s*\<use ([^\>]+)')
 suffix = re.compile('\.[^\.]+$')
+cwpslides = re.compile(r'\\documentclass[^\{]*\{cwpslides\}')
 
 #############################################################################
 # CUSTOM BUILDERS
@@ -156,6 +157,11 @@ def latex_emit(target=None, source=None, env=None):
         target.append(stem+'.nav')
         target.append(stem+'.out')
         target.append(stem+'.snm')
+    if cwpslides.search(contents):
+        target.append(stem+'.nav')
+        target.append(stem+'.out')
+        target.append(stem+'.snm')
+        target.append(stem+'.toc')
     return target, source
 
 def latex2dvi(target=None,source=None,env=None):
