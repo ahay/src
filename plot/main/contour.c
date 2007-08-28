@@ -30,10 +30,11 @@ Run "sfdoc stdplot" for more parameters.
 int main (int argc, char* argv[])
 {
     int n1, n2, n3, i3, nc0, nc, ic, n12, i1, i2;
+    char *cfilename;
     float **z, zi, dc, c0, zmin=0., zmax=0., *c;
     float  min1, min2, max1, max2, bmin, bmax, o1, o2, d1, d2;
     bool hasc, hasdc, hasc0, scalebar, nomin=false, nomax=false, pos, transp;
-    sf_file in;
+    sf_file in, cfile;
     
     sf_init(argc,argv);
     in = sf_input("in");
@@ -55,18 +56,37 @@ int main (int argc, char* argv[])
     if (!sf_getfloat("max2",&max2)) max2=o2+(n2-1)*d2;
     /* data window to plot */
 
-    if (!sf_getint("nc",&nc0)) nc0=50;
-    /* number of contours */
-    nc=nc0;
+    hasc = (NULL != (cfilename = sf_getstring("cfile")));
+    /* contours in a file */
+
+    if (hasc) {
+	cfile = sf_input(cfilename);
+	nc = sf_filesize(cfile);
+	nc0 = nc;
+    } else {
+	cfile = NULL;
+	if (!sf_getint("nc",&nc0)) nc0=50;
+	/* number of contours */
+	nc=nc0;
+    }
 
     c = sf_floatalloc(nc);
     vp_plot_init(nc);
 
-    hasc = sf_getfloats("c",c,nc);
-    hasdc = sf_getfloat("dc",&dc);
-    /* contour increment */
-    hasc0 = sf_getfloat("c0",&c0);
-    /* first contour */
+    if (hasc) {
+	sf_floatread(c,nc,cfile);
+	sf_fileclose(cfile);
+
+	hasdc = false;
+	hasc0 = false;
+    } else {
+	hasc = sf_getfloats("c",c,nc);
+
+	hasdc = sf_getfloat("dc",&dc);
+	/* contour increment */
+	hasc0 = sf_getfloat("c0",&c0);
+	/* first contour */
+    }
 
     if (!sf_getbool ("transp",&transp)) transp=true;
     /* if y, transpose the axes */

@@ -79,7 +79,7 @@ Flow('dat','mod',
 
 Flow('dat2','dat',
      '''
-     tpow tpow=1 |
+     tpow tpow=1 | costaper nw1=250 | 
      put label1=Time unit1=s label2=Offset unit2=km
      ''')
 
@@ -100,7 +100,7 @@ Plot('pick',
      '''
      window min1=0.5 max1=6.5 | 
      graph yreverse=y transp=y pad=n min2=1.2 max2=4.2
-     plotcol=7 plotfat=5 Xwantaxis=n wanttitle=n 
+     plotcol=7 plotfat=5 wantaxis=n wanttitle=n 
      ''')
 
 Plot('scan','scan2 pick','Overlay')
@@ -109,5 +109,30 @@ Flow('nmo','dat2 pick','nmo velocity=${SOURCES[1]} half=n')
 Plot('nmo','window min1=0.5 max1=6.5 | grey title=NMO')
 
 Result('nmo','scan nmo','SideBySideAniso')
+
+Flow('nmo0','dat2','nmostretch half=n v0=2')
+Plot('nmo0','grey title="Partial NMO" ')
+
+Flow('dip0','nmo0','dip rect1=50 rect2=5')
+Plot('dip0','grey title=Slope color=j scalebar=y')
+
+Result('nmo0','nmo0 dip0','SideBySideAniso')
+
+Flow('flt0','nmo0 dip0','flat dip=${SOURCES[1]}')
+Plot('flt0','grey title=Flattened')
+
+Flow('picks npicks','nmo0',
+     '''
+     window n2=1 |
+     envelope | smooth rect1=10 |
+     max1 picks=${TARGETS[1]} np=25 |
+     window f1=1 n1=20
+     ''')
+
+Flow('pick0','dip0','pwpick eps=0.05')
+Plot('pick0','pick0 picks',
+     'contour cfile=${SOURCES[1]} wantaxis=n wanttitle=n')
+
+Plot('nmopick0','nmo0 pick0','Overlay')
     
 End()

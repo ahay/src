@@ -7,7 +7,7 @@ abalance agmig angle angle2 approx bandpass cflow chebvc dealias
 deblur deriv dijkstra dip diplet dips divn dix dixshape dwt envelope
 equal erf exgr explanesignoi expsignoi fern flat flat3 focus freqest
 freqlet gaussmooth green heat iphase kron lapfill lpf mandelbrot
-matmult mig3 miss2 miss3 monof monof2 nsmooth nsmooth1 ocparcel
+matmult max1 mig3 miss2 miss3 monof monof2 nsmooth nsmooth1 ocparcel
 octentwt ofilp ofpwd ofpwd2 patch pick pick0 pick2 planemis2 planemis3
 planereg2 planereg3 planesignoi pmshape2 pradon predict pwd pwdix
 pwpick pwdsigk pwdsmooth2 seislet seisigk shapebin shapebin1 shapesigk
