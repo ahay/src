@@ -91,7 +91,7 @@ Flow('rrc','rrt rrr rrbr rrlr','cat axis=2 ${SOURCES[1:4]}')
 Plot('rrc','window n1=2 | dd type=complex | window j2=10 | '
    + fdmod.cgraph('symbol=* plotcol=1 plotfat=10',par))
 
-fdmod.point('ss',par['ox']+par['nx']/2*par['dx'],0,1,par)
+fdmod.point('ss',par['ox']+par['nx']/2*par['dx'],0,par)
 Plot('ss','window n1=2 | dd type=complex | window | '
    + fdmod.cgraph('symbol=. plotcol=2 plotfat=10',par))
 

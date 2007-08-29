@@ -23,7 +23,7 @@ Result('wav','window n1=200 | graph title="" label1="t" label2=')
 # ------------------------------------------------------------
 # experiment setup
 fdmod.horizontal('rr',0,par)
-fdmod.point('ss',1,0,1,par)
+fdmod.point('ss',1,0,par)
 Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
      + fdmod.cgraph('symbol=* plotcol=6',par))
 Plot('ss','window n1=2 | dd type=complex | window | '

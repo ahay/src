@@ -124,7 +124,7 @@ def execute(vp,par):
     
     # ------------------------------------------------------------
     # source/receiver coordinates
-    fdmod.point('ss',par['xsou'],par['zsou'],1,par)
+    fdmod.point('ss',par['xsou'],par['zsou'],par)
     fdmod.horizontal('rr',par['oz'],par)
 
     Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
