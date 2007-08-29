@@ -150,10 +150,8 @@ def wavelet(wav,frequency,par):
 
 # ------------------------------------------------------------
 def horizontal(cc,coord,par):
-    par['coord'] = coord
-    
     Flow(cc+'_',None,'math n1=%(nx)d d1=%(dx)g o1=%(ox)g output=0' % par)
-    Flow(cc+'_z',cc+'_','math output="%(coord)g" ' % par)
+    Flow(cc+'_z',cc+'_','math output="%g" ' % coord)
     Flow(cc+'_x',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
@@ -162,10 +160,8 @@ def horizontal(cc,coord,par):
          ''', stdin=0)
 
 def vertical(cc,coord,par):
-    par['coord'] = coord
-    
     Flow(cc+'_',None,'math n1=%(nz)d d1=%(dz)g o1=%(oz)g output=0' % par)
-    Flow(cc+'_x',cc+'_','math output="%(coord)g" ' % par)
+    Flow(cc+'_x',cc+'_','math output="%g" '% coord)
     Flow(cc+'_z',cc+'_','math output="x1" ')
     Flow(cc,[cc+'_x',cc+'_z'],
          '''
@@ -173,20 +169,17 @@ def vertical(cc,coord,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
-def point(cc,xcoord,zcoord,magnitude,par):
-
+def point(cc,xcoord,zcoord,par):
     Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
     Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
     Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
-    Flow(cc+'_r',cc+'_','math output="%g"' % magnitude)    
-    Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
+    Flow(cc,[cc+'_x',cc+'_z'],
          '''
          cat axis=2 space=n
-         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
-
     Flow(cc+'_',None,
          '''
          math output=1
