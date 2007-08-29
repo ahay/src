@@ -66,7 +66,7 @@ main (int argc, char *argv[])
   /* Figure out ns and ntr */
 
   trace = sf_charalloc (SF_HDRBYTES);
-  if (SF_HDRBYTES != fread (trace, 1, SF_HDRBYTES, stdin))
+  if (SF_HDRBYTES != fread (trace, 1, SF_HDRBYTES, file))
     sf_error ("Error reading first trace header");
   fseeko (file, 0, SEEK_SET);
 
