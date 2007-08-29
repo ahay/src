@@ -82,8 +82,7 @@ int main(int argc, char* argv[])
     /* FD operator size */
     float co,ca2,cb2,ca1,cb1;
 
-    int ompchunk; 
-
+    int ompchunk;
 #ifdef _OPENMP
     int ompnth,ompath;
 #endif
@@ -91,9 +90,9 @@ int main(int argc, char* argv[])
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
+
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
     /* OpenMP data chunk size */
-
 #ifdef _OPENMP
     if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
     /* OpenMP available threads */
@@ -148,13 +147,13 @@ int main(int argc, char* argv[])
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
 
-    sf_setn(at,(int)(1.0*nt/jdata));
+    sf_setn(at,nt/jdata);
     sf_setd(at,dt*jdata);
     sf_oaxa(Fdat,at,2);
 
     /* setup output wavefield header */
     if(snap) {
-	sf_setn(at,(int)(1.0*nt/jsnap)+1);
+	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
 	sf_oaxa(Fwfl,a1,1);
@@ -162,7 +161,7 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,at,3);
     }
 
-    ww = sf_floatalloc(nt); sf_floatread(  ww,nt,Fwav);
+    ww = sf_floatalloc( 1);
     dd = sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
@@ -247,6 +246,9 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
+	/* read source data */
+	sf_floatread(ww,1,Fwav);
+
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
 #endif
@@ -269,7 +271,7 @@ int main(int argc, char* argv[])
 	}   
 	
 	/* inject acceleration source */
-	lint2d_inject1(ua,ww[it],cs);
+	lint2d_inject1(ua,ww[0],cs);
 
 	/* step forward in time */
 #ifdef _OPENMP
@@ -297,8 +299,8 @@ int main(int argc, char* argv[])
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
 
-	if(snap && it%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
-	if(        it%jdata==0) sf_floatwrite(dd,nr,Fdat);
+	if(snap && (it+1)%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
+	if(         it   %jdata==0) sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 

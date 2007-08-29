@@ -186,10 +186,9 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fliw,at,3);
     }
 
-    ww  =sf_floatalloc(nt); sf_floatread(  ww,nt,Fwav);
-
-    bdd  =sf_floatalloc (nr);
-    sdd  =sf_floatalloc (nr);
+    ww  =sf_floatalloc( 1);
+    bdd =sf_floatalloc(nr);
+    sdd =sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
     /* setup source/receiver coordinates */
@@ -287,6 +286,9 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+
+	/* read source data */
+	sf_floatread(ww,1,Fwav);
 	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,bua,buo,sua,suo,co,ca2,ca1,cb2,cb1,id2,id1)
@@ -319,7 +321,7 @@ int main(int argc, char* argv[])
 	}   
 	
 	/* inject acceleration source */
-	lint2d_inject1(bua,ww[it],cs);
+	lint2d_inject1(bua,ww[0],cs);
 
 	/* single scattering */
 #ifdef _OPENMP
@@ -373,7 +375,7 @@ int main(int argc, char* argv[])
 	lint2d_extract(buo,bdd,cr);
 	lint2d_extract(suo,sdd,cr);
 
-	if(snap && it%jsnap==0) {
+	if(snap && (it+1)%jsnap==0) {
 	    sf_floatwrite(buo[0],fdm->n1pad*fdm->n2pad,Fwfl);
 	    sf_floatwrite(suo[0],fdm->n1pad*fdm->n2pad,Fliw);
 	}

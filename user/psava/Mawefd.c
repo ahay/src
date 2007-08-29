@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     sf_file Fwfl=NULL; /* wavefield */
 
     /* I/O arrays */
-    float **ww=NULL;           /* wavelet   */
+    float  *ww=NULL;           /* wavelet   */
     pt2d   *ss=NULL;           /* sources   */
     pt2d   *rr=NULL;           /* receivers */
 
@@ -93,9 +93,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
     /* OpenMP data chunk size */
-
 #ifdef _OPENMP
-
     if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
     /* OpenMP available threads */
 
@@ -163,8 +161,8 @@ int main(int argc, char* argv[])
 	sf_oaxa(Fwfl,at,3);
     }
 
-    ww  =sf_floatalloc2(ns,nt); sf_floatread(  ww[0],nt*ns,Fwav);
-    dd  =sf_floatalloc (nr);
+    ww = sf_floatalloc(ns);
+    dd = sf_floatalloc(nr);
 
     /*------------------------------------------------------------*/
     /* setup source/receiver coordinates */
@@ -247,6 +245,9 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"\n");
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
+
+	/* read source data */
+	sf_floatread(ww,ns,Fwav);
 	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,co,ca2,ca1,cb2,cb1,id2,id1)
@@ -270,7 +271,7 @@ int main(int argc, char* argv[])
 	}   
 	
 	/* inject acceleration source */
-	lint2d_inject(ua,ww[it],cs);
+	lint2d_inject(ua,ww,cs);
 
 	/* step forward in time */
 #ifdef _OPENMP
@@ -298,8 +299,8 @@ int main(int argc, char* argv[])
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
 
-	if(snap && it%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
-	if(        it%jdata==0) sf_floatwrite(dd,nr,Fdat);
+	if(snap && (it+1)%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
+	if(        it    %jdata==0) sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 
