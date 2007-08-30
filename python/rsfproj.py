@@ -91,6 +91,8 @@ libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
+libs = os.environ.get('LIBS')
+
 resdir = None
 
 def set_dir(dir='Fig'):
@@ -262,7 +264,7 @@ class Project(Environment):
                               'Test':Test},
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
-                    LIBS=['rsf','m'],
+                    LIBS=['rsf','m',libs],
                     PROGSUFFIX='.exe')
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
