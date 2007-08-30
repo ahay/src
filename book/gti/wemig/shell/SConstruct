@@ -40,6 +40,8 @@ Flow('line2D.sgy','shots tshots2 shots.bin shots.asc',
      segywrite tape=$TARGET tfile=${SOURCES[1]} bfile=${SOURCES[2]} hfile=${SOURCES[3]}
      ''',stdout=0)
 
+# Shot gathers sorting and binning
+
 Flow('m','rc sc','add ${SOURCES[1]}')
 Flow('h','rc sc','add scale=1,-1 ${SOURCES[1]}')
 Flow('mh','m h','cat axis=1 ${SOURCES[1]}')
@@ -50,7 +52,7 @@ Flow('cmps','shots mh','intbin head=${SOURCES[1]} xkey=1 ykey=0')
 # o2=-870  d2=1      n2=1812  label2=Offset    unit2=m
 # o3= 2    d3=1      n3=1811  label3=Midpoint  unit3=m
 
-# Window useful part
+# Window useful part of offset
 
 Flow('wcmps','cmps',
      '''
@@ -65,7 +67,7 @@ Flow('wcmps','cmps',
 # Get velocity
 
 Fetch('vp.bin','wemi',private)
-Flow('./vp.rsf','vp.bin',
+Flow('vp.rsf','vp.bin',
      '''
      echo in=$SOURCE
      n1=875 o1=0 d1=0.003048 label1=z unit1=km
@@ -78,26 +80,14 @@ Flow('./vp.rsf','vp.bin',
 
 Flow('vpt','vp','depth2time velocity=$SOURCE nt=1250 dt=0.002')
 
-Result('vp',
-       '''
-       grey title="Interval Velocity" color=j allpos=y scalebar=y
-       barreverse=y bias=1.5
-       ''')
-Result('vpt',
-       '''
-       grey title="Interval Velocity" color=j allpos=y scalebar=y
-       barreverse=y bias=1.5 label1=t unit1=s
-       ''')
+Result('vp','grey title="Interval Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5')
+Result('vpt','grey title="Interval Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5 label1=t unit1=s')
 
 # Convert interval to RMS
 
 Flow('vrms','vpt','add mode=p $SOURCE | causint | math output="sqrt(input*0.002/(x1+0.002))" ')
 
-Result('vrms',
-       '''
-       grey title="RMS Velocity" color=j allpos=y scalebar=y
-       barreverse=y bias=1.5 label1=t unit1=s
-       ''')
+Result('vrms','grey title="RMS Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5 label1=t unit1=s')
 
 # 1-D RMS Velocity (converted to m/s)
 
@@ -111,14 +101,10 @@ Flow('vnmo','vrms1','spray axis=2 n=1811 | put o2=152.2 d2=6.096')
 
 # Mask non-zero traces
 
-#Flow('mask','wcmps','window n1=1 min1=1.5 max1=2 | math output="input*input" | stack axis=1 | mask min=1e-6')
 Flow('mask','wcmps','window min1=1.5 max1=2 | math output="abs(input)" | stack axis=1 | mask min=1e-12')
 
-
-# < wcmps.rsf sfwindow n2=1 min2=0 | sffft1 | sffft3 axis=2 | sfdipfilter v1=-2000 v2=-1500 v3=1500 v4=2000 taper=2 pass=0 dim=2 | sffft3 axis=2 inv=y | sffft1 inv=y |
-# sfwindow min1=1.5 max1=2 | sfcat zero.rsf | sfgrey gainpanel=all | xtpen
-
 # Filter out high-dipping noise
+
 Flow('wfilt','wcmps',
      '''
      costaper nw1=250 |
@@ -126,6 +112,8 @@ Flow('wfilt','wcmps',
      dipfilter v1=-4000 v2=-3000 v3=3000 v4=4000 taper=2 pass=0 dim=2 |
      fft3 axis=2 inv=y | fft1 inv=y | transp plane=23 memsize=2000
      ''')
+
+# NMO correction and time window of traces
 
 Flow('wnmo','wfilt vnmo mask',
      '''
@@ -137,6 +125,7 @@ Flow('wnmo','wfilt vnmo mask',
 # o2=-1371.6   d2=3.048    n2=901   label2=Offset    unit2=m
 # o3=152.2     d3=6.09599  n3=1811  label3=Midpoint  unit3=m
 
+# Correct resampling and frequency filtering
 
 Flow('wnmo2','wnmo',
      '''
@@ -144,8 +133,11 @@ Flow('wnmo2','wnmo',
      bandpass fhi=60 flo=5
      ''')
 
-# Apply DMO
+# o1=1.5       d1=0.002    n1=251   label1=Trace     unit1=s
+# o2=-1368.5   d2=6.096    n2=450   label2=Offset    unit2=m
+# o3=158.296   d3=12.192   n3=905   label3=Midpoint  unit3=m
 
+# Apply DMO
 
 #Flow('wdmo','wnmo2',
 #     '''
@@ -160,11 +152,13 @@ Flow('zero','wnmo2','window n2=1 min2=0')
 
 Result('zero','grey title="Zero Offset" ')
 
+# Select stacking
+
 Flow('stack','wnmo2','stack')
 
 Result('stack','grey title="Stack" ')
 
-# Velocity continuation
+#  Time migration by velocity continuation after NMO on zero offset
 
 Flow('velco','zero',
      '''
@@ -174,7 +168,11 @@ Flow('velco','zero',
       cosft sign3=-1
       ''')
 
-# Velocity slice
+# o1=1.5     d1=0.002    n1=251   label1=Trace     unit1=s
+# o2=25      d2=25       n2=241   label2=Velocity  unit2=m
+# o3=0       d3=12.192   n3=905   label3=Midpoint  unit3=m
+
+# Velocity slice - Correct resampling and time window of traces
 
 Flow('vmig','vnmo',
      '''
@@ -184,9 +182,11 @@ Flow('vmig','vnmo',
 
 Flow('mig','velco vmig','slice pick=${SOURCES[1]} | window | put o2=158.296')
 
+# Zero offset migration
+
 Result('mig','grey title="Migration" ')
 
-# Time migration by velocity continuation after NMO
+# Time migration by velocity continuation after NMO on prestack
 
 Flow('cosft','wnmo2',
      '''
@@ -202,28 +202,99 @@ Flow('wvelco','cosft',
      cosft sign3=-1
      ''')
 
-#Flow('srwfl sswfl','sdat wav',
-#     '''
-#     fft1 | window max1=%g |
-#     spray axis=3 n=1 o=0 d=1 |
-#     spray axis=5 n=1 o=0 d=1 |
-#     srsyn nx=%d dx=%g ox=0 wav=${SOURCES[1]} swf=swf.rsf |
-#     transp plane=12 |
-#     transp plane=23 | stack axis=4 norm=n > ${TARGETS[0]} &&
-#     transp plane=12 < swf.rsf |
-#     transp plane=23 | stack axis=4 norm=n > ${TARGETS[1]} &&
-#     rm swf.rsf
-#     ''' % (wavw,nx,dx),stdout=-1)
+Flow('wvelco2','wvelco',
+     '''
+     window |
+     put label1=Time unit1=s
+     label2=Velocity unit2=km/s 
+     label3=Midpoint unit3=km o3=158.296
+     label4=Offset unit4=km d4=6.096 o4=-1368.5 
+     ''')
 
-# Migrate and create common-image gathers
+Flow('vmig2','vmig','spray axis=3 n=450')
 
-#Flow('simage scigs','sswfl srwfl slo',
-#     '''
-#     srmig2 slo=${SOURCES[2]} rwf=${SOURCES[1]} cig=${TARGETS[1]}
-#     itype=x nhx=10 nhz=10 hsym=y jcz=1 readwrite=y verb=y 
-#     ''')
+Flow('wmig','wvelco2 vmig2',
+     'slice pick=${SOURCES[1]} | window')
 
-#Plot('simage',implot('Image'))
+# Prestack migration
+
+# Zero offset
+
+Result('wmig','window n3=1 f3=0 | grey title="Prestack migration" ')
+
+# Stack
+
+Flow('wstack','wmig','stack axis=3 norm=y')
+
+Result('wstack','grey title="Stack of prestack migration" ')
+
+# Extract 3 gathers : water - water/oil - oil
+
+Flow('wmigg1','wmig','window n2=1 min2=2500')
+Flow('wmigg2','wmig','window n2=1 min2=3700')
+Flow('wmigg3','wmig','window n2=1 min2=4400')
+
+Result('wmigg1','grey title="CDP Gather - Water" ')
+Result('wmigg2','grey title="CDP Gather - Water and Oil" ')
+Result('wmigg3','grey title="CDP Gather - Oil" ')
+
+# Convert to SEG-Y with header including (CDP,trace,offset,fold)
+
+nt = 905*450
+ns = 251
+
+Flow('cdp','wmig',
+     '''
+     window n1=1 squeeze=n |
+     math output="x2"
+     ''')
+
+Flow('cdpt','wmig',
+     '''
+     window n1=1 squeeze=n | put d3=1 o3=1 |
+     math output="x3" | put d3=6.096 o3=-1368.5
+     ''')
+
+Flow('offset','wmig',
+     '''
+     window n1=1 squeeze=n |
+     math output="x3"
+     ''')
+
+# Insert CDP           number  5
+# Insert CDPT          number  6
+# Insert full offset   number 11
+# Insert ns number of samples in this trace   number 38
+# Insert dt sample interval in micro-seconds  number 39
+
+Flow('nst','cdp','math output=251')
+Flow('dtt','cdp','math output=2000')
+
+Flow('unit5','cdp','math output=1 | spray axis=1 n=5 | window')
+
+Flow('zero4','cdp','math output=0 | spray axis=1 n=4 | window')
+
+Flow('zero26','cdp','math output=0 | spray axis=1 n=26 | window')
+
+# Header dimension (n1=71 n2=905*450)
+
+Flow('theader','unit5 cdp cdpt zero4 offset zero26 nst dtt',
+     '''
+     cat axis=1 ${SOURCES[1:8]} | pad n1=71 | dd type=int | window |
+     put n3=1 n2=407250
+     ''')
+
+# Write out SEGY
+
+#Flow('wmig.asc','shots.asc','window n1=407250')
+#Flow('wmig.bin','shots.bin','window n1=407250')
+
+Flow('gathermig2D.sgy','wmig theader shots.asc shots.bin',
+     '''
+     put n3=1 n2=407250 |
+     segywrite su=n tape=$TARGET ns=251
+     tfile=${SOURCES[1]} hfile=${SOURCES[2]} bfile=${SOURCES[3]}
+     ''',stdout=-1)
 
 
 End()
