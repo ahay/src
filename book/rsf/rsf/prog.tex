@@ -1168,6 +1168,96 @@ used to define scaling.  Thus, \texttt{sfscale rscale=0 axis=1} is
 equivalent to \texttt{sfscale axis=1}, and \texttt{sfscale rscale=0}
 is equivalent to \texttt{sfscale dscale=1}.
 
+\noindent\doublebox{\parbox{\textwidth}{
+    \input{segyread}
+  }}
+
+The SEG Y format is an open standard for the exchange of geophysical
+data. It is controlled by the non-profit SEG Technical Standards
+Committee. There are two versions of this standard: rev0 (1975)[3] and
+rev1 (2002)[4]. The implementation in sfsegyread is a mixture of rev0
+(i.e. no checks for Extended Textual Headers) and rev1 (IEEE floating
+point format allowed for trace data samples).
+
+A SEG-Y file as understood by sfsegyread contains a "Reel
+Identification Header" (3200 bytes in EBCDIC followed by 400 bytes in
+a binary encoding), followed by a number of "Trace Blocks". Each
+"Trace Block" contains a 240-byte "Trace Header" (binary) followed by
+"Trace Data" -- a sequence of ns samples. Binary values in both reel
+headers and trace headers are two's complement integers, either two
+bytes or four bytes long. There are no floating-point values defined
+in the headers. Trace Data samples can have various encodings, either
+floating point or integer, described further down, but they are all
+big-endian. To convert from SEG-Y to RSF, sfsegyread will strip the
+tape reel EBCDIC header and convert it to ASCII, will extract the reel
+binary header without changing it, and will put the trace headers into
+one RSF file, and the traces themselves on another.
+
+A SU file is nothing more than a SEG-Y file without the reel headers,
+and with the Trace Data samples in the native encoding of the CPU the
+file was created on (Attention -- limited portability!). So, to
+convert from SU to RSF, sfsegyread will just separate headers and
+traces into two RSF files. Now it is easy to understand the
+parameters:
+
+* tape= specifies the input data. Stdin could not be used because
+sfsegyread has to work with tapes, and needs to fseek back and forth
+through the input file. Thankfully, output is on stdout.
+
+* su= specifies if the input file is SU or SEG-Y. Default is su=n
+(SEG-Y file).
+
+* suxdr= specifies whether the input file was created with a SU
+package with XDR support enabled. If you have access to the source
+code of your SU install (try $CWPROOT/src), type: grep 'XDRFLAG ='
+$CWPROOT/src/Makefile.config and look at the last uncommented entry.
+If no value is given for XDRFLAG, the package was not compiled with
+XDR support.
+
+* hfile= specifies the name of the file in which the EBCDIC reel
+header will be put after conversion to ASCII. If you are certain there
+is no useful information in it, hfile=/dev/null works just fine. If
+you do not specify anything for this parameter you will get an ASCII
+file named header in the current directory.
+
+* bfile= specifies name of the file in which the binary reel header
+(the 400-bytes thing following the 3600-bytes EBCDIC) will be put
+without any conversion. The default name is "binary". Unless you have
+software that knows how to read exactly this special type of file, it
+will be completely useless, so do bfile=/dev/null
+
+* read= specifies what parts of the "Trace Blocks" will be read. It
+can be read=t (only trace data is read), read=h (only trace headers
+are read) or read=b (both are read).
+
+* tfile= gives the name of the RSF file to which trace headers are
+written. Obviously, it should be only specified with read=h or read=b.
+
+* format= specifies the format in which the trace data samples are in
+the SEG-Y input file. This is read from the binary reel header of the
+SEG-Y file. Valid values are 1(IBM floating point), 2 (4-byte
+integer), 3 (2-byte integer) and 5 (IEEE floating point). If the input
+file is SU, the format will be assumed to be the native float format.
+
+* mask= is an optional parameter specifying the name of a mask that
+says which traces will be read. The mask is a 1-D RSF file with
+integers. The number of samples in the mask is the same as the number
+of traces in the unmasked SEG-Y. In places corresponding to unwanted
+traces there should be zeros in the mask.
+
+* ns= specifies the number of samples in a trace. For SEG-Y files, the
+default is taken from the binary reel header, and for SU files, from
+the header of the first trace. This parameter is however critical
+enough that a command line override was given for it.
+
+* verbose= is the verbosity flag. Can be y or n.
+
+* endian= is a y/n flag (default y), specifying whether to
+automatically estimate or not if samples in the Trace Data blocks are
+big-endian or little-endian. Try it if you are in trouble and do not
+know what else to do, otherwise let the automatic estimation do its
+job.
+
 \bibliographystyle{seg}
 \bibliography{SEG}
 

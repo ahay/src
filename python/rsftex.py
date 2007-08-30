@@ -757,6 +757,7 @@ class TeXPaper(Environment):
             uses = dir+'.uses'
             self.Uses(uses,scons,tree=self.tree)
             self.uses.append(uses)
+
         if self.scons:
             self.Install(self.doc,self.scons)
         self.Alias('figinstall',self.doc)        
@@ -795,6 +796,7 @@ class TeXPaper(Environment):
                 self.Install2(resdir2,[png,pdf])
                 self.Alias('figinstall',resdir2)
         self.figs.extend(erfigs)
+
         # conditionally reproducible figures
         crfigs = []
         # mathematica figures:
