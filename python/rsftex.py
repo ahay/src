@@ -180,7 +180,11 @@ def latex2dvi(target=None,source=None,env=None):
             os.system(string.join([bibtex,stem],' '))
             os.system(run)
             os.system(run)
-            break        
+            break
+        elif re.search("beamer@",line):
+            os.system(run)
+            os.system(run)
+            break
     aux.close()
     # (Add makeindex later)
     # Check if rerun is needed

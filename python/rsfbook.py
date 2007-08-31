@@ -61,7 +61,7 @@ def get_year(default):
 
 def paper_tag(paper):
     return (os.path.basename(os.path.dirname(paper)),
-            re.sub('-paper','',
+            re.sub('-paper$','',
                    re.sub(r'/([^/]+)\.tex$',r'-\1',paper)))
 
 def get_author(source,default,tag):
