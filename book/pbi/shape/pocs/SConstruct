@@ -23,27 +23,26 @@ Flow('fft','mona',forw)
 
 # Show amplitude and phase
 
-Flow('amp','fft','math output="abs(input)" | ' + back )
+Flow('abs','fft','math output="abs(input)" ')
+Flow('amp','abs',back)
 Result('amp',grey('Amplitude',0))
 
-Flow('log','fft','math output="log(input)" | sfimag | sfrtoc | ' + back )
+Flow('pha','fft abs','math den=${SOURCES[1]} output=input/den')
+Flow('log','pha',back)
 Result('log',grey('Phase',0))
 
 # Do POCS iterations
 
-Flow('flog','fft','math output="log(input)" ')
+Flow('amp0','abs','math output=1')
+Flow('pha0','amp0 pha','math phase=${SOURCES[1]} output="abs(input)*phase" ')
+Flow('log0','pha0',back)
+Flow('pos0','log0','mask min=0 | dd type=float | add mode=p $SOURCE')
+Plot('pos0',grey('Interation 0'))
 
-amp = 'abs'
-#Flow(amp,log,'math output=1')
-
-for iter in range(1,2):
-    sig = 'sig%d' % iter
-
-    # assign phase
-    Flow(sig,[amp,'flog'],
-         forw + '| math phase=${SOURCES[1]} output="input*exp(phase)" | ' +
-         back)
-
-
+Flow('fft1','pos0',forw)
+Flow('pha1','fft1 pha','math phase=${SOURCES[1]} output="abs(input)*phase" ')
+Flow('log1','pha1',back)
+Flow('pos1','log1','mask min=0 | dd type=float | add mode=p $SOURCE')
+Plot('pos1',grey('Interation 1'))
 
 End()
