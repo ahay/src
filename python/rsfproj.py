@@ -91,7 +91,7 @@ libdir = os.path.join(top,'lib')
 incdir = os.path.join(top,'include')
 figdir = os.environ.get('RSFFIGS',os.path.join(top,'figs'))
 
-libs = os.environ.get('LIBS')
+libs = os.environ.get('LIBS',"")
 
 resdir = None
 
