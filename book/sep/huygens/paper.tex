@@ -33,18 +33,19 @@ in complex velocity media.
 The tradeoff between speed and accuracy becomes apparent in the choice
 between the two most commonly used methods, ray tracing and numerical
 solutions to the eikonal equation. Other methods reported in the literature
-(dynamic programming \cite{GEO56.01.00590067}, wavefront construction
-\cite{GEO58.8..11571166}, etc.) are less common in practice
-\cite{Audebert.sep.80.25}.
+(dynamic programming \cite[]{GEO56-01-00590067}, wavefront construction
+\cite[]{GEO58-08-11571166}, etc.) are less common in practice
+\cite[]{Audebert.sep.80.25}.
 \par
-Eikonal solvers provide a relatively fast and robust method of traveltime
-computations \cite{GEO55.05.05210526,GEO56.06.08120821}. They also avoid
-the problem of traveltime interpolation to a regular grid which imaging
-applications require. However, the eikonal solvers compute first-arrival
-traveltimes and lack the important ability to track multiple arrivals. In
-complex velocity structures, the first arrival does not necessarily
-correspond to the most energetic wave, and other arrivals can be crucially
-important for accurate modeling and imaging \cite{fa,km}.
+Eikonal solvers provide a relatively fast and robust method of
+traveltime computations \cite[]{GEO55-05-05210526,GEO56-06-08120821}.
+They also avoid the problem of traveltime interpolation to a regular
+grid which imaging applications require. However, the eikonal solvers
+compute first-arrival traveltimes and lack the important ability to
+track multiple arrivals. In complex velocity structures, the first
+arrival does not necessarily correspond to the most energetic wave,
+and other arrivals can be crucially important for accurate modeling
+and imaging \cite[]{GEO58-04-05640575,GEO59-05-08100817}.
 \par
 On the other hand, one-point ray tracing can compute multiple arrivals
 with great accuracy. Unfortunately, it lacks the robustness of eikonal
@@ -53,7 +54,7 @@ complex velocity variations raises the cost of the method and makes
 it prohibitively expensive for routine large-scale applications.
 Mathematically, ray tracing amounts to a numerical solution of the
 initial value problem for a system of ordinary differential equations
-\cite{Cerveny.SeiTom.99.87}.  These ray equations describe
+\cite[]{Cerveny.SeiTom.99.87}.  These ray equations describe
 characteristic lines of the eikonal partial differential equation.
 \par
 Here, we propose a somewhat different approach to traveltime computation,
@@ -103,20 +104,20 @@ Thus, we will refer to the following two-dimensional form of equation
 \end{equation}
 
 For a point source, $\gamma$ can be chosen as the initial ray angle at
-the source.  \longcite{Zhang.sepphd.76} shows that $\gamma$ as a
+the source.  \cite{Zhang.sepphd.76} shows that $\gamma$ as a
 function of spatial coordinates satisfies the simple partial
 differential equation
 \begin{equation}
+  {\frac{\partial \tau}{\partial x}\,\frac{\partial \gamma}{\partial x}}  +
+  {\frac{\partial \tau}{\partial z}\,\frac{\partial \gamma}{\partial z}} = 0\;.
   \label{eqn:gamma}
-  \frac{\partial \tau}{\partial x}\,\frac{\partial \gamma}{\partial x}  +
-  \frac{\partial \tau}{\partial z}\,\frac{\partial \gamma}{\partial z} = 0\;.
 \end{equation}
 Equation (\ref{eqn:gamma}) merely expresses the fact that in an
 isotropic medium, rays are locally orthogonal to wavefronts. The field
 $\gamma (x,z)$ has not only theoretical interest as it provides one of
 the possible ways for evaluating propagation amplitudes. In particular,
 the geometrical spreading factor $J (x,z)$ is connected to $\gamma$ by
-the simple relationship \cite{Zhang.sepphd.76}
+the simple relationship \cite[]{Zhang.sepphd.76}
 \begin{equation}
   \label{eqn:spread}
   \left(\frac{\partial \gamma}{\partial x}\right)^2 +
@@ -151,9 +152,9 @@ $\tau (x,z)$ and $\gamma (x,z)$. The resultant expressions take the form
 \end{equation}
 and
 \begin{equation}
+  {\frac{\partial x}{\partial \tau}\,\frac{\partial x}{\partial \gamma}}  +
+  {\frac{\partial z}{\partial \tau}\,\frac{\partial z}{\partial \gamma}} = 0\;.
   \label{eqn:two}
-  \frac{\partial x}{\partial \tau}\,\frac{\partial x}{\partial \gamma}  +
-  \frac{\partial z}{\partial \tau}\,\frac{\partial z}{\partial \gamma} = 0\;.
 \end{equation}
 \par
 Comparing equations (\ref{eqn:one}) and (\ref{eqn:two}) with the original
@@ -363,7 +364,9 @@ these models to check the validity, accuracy, and stability of the HWT
 method. The third example concerns the very complex Marmousi 2-D
 model, which is one of the most difficult benchmarks for ray tracing
 methods. Throughout the test, we have compared our results with those
-obtained with Rekdal's PRT program \cite{Rekdal.sep.80.67} for accuracy,
+obtained with a ray tracing program
+%Rekdal's PRT program \cite[]{Rekdal.sep.80.67} 
+for accuracy,
 speed, and stability.
 
 \subsection{Gaussian velocity anomalies}
@@ -426,6 +429,7 @@ points on the rays obtained with the PRT method and with the HWT
 method. Distances are given in meters.}
 
 \subsection{The Marmousi model}
+\inputdir{marmousi}
    
 In the third example, we have applied the same method to trace rays in
 the far more complex Marmousi 2-D Model. Figure \ref{fig:m-velocity}
@@ -513,7 +517,7 @@ faster in comparison to other conventional 3-D ray tracing methods.
 %\section{Acknowledgments}
 
 \bibliographystyle{seg} 
-\bibliography{SEG,paper}
+\bibliography{SEG,SEP2,paper}
 
 %\APPENDIX{A}
 

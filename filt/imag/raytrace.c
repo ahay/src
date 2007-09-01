@@ -180,10 +180,10 @@ int trace_ray (raytrace rt  /* ray tracing object */,
     if (!rt->sym) {
 	switch (dim) {
 	    case 2:
-		s2 = grid2_vel(rt->grd2,y);
+		s2 = grid2_vel(rt->grd2,x);
 	    break;
 	    case 3:
-		s2 = grid3_vel(rt->grd3,y);
+		s2 = grid3_vel(rt->grd3,x);
 		break;
 	    default:
 		s2 = 0.;

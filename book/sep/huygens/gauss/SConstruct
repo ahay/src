@@ -15,11 +15,11 @@ for case in range(3):
          ''' % ((3,2,2)[case],(-2,2,0)[case],1.0/(dx*dx)))
     Result(velocity,
            '''
-           grey allpos=y bias=%g wanttitle=n
+           grey allpos=y bias=1 wanttitle=n
            wantscalebar=y bartype=h 
-           ''' % (2,1,1)[case])
+           ''')
     Plot(velocity,
-         'grey allpos=y bias=%g wanttitle=n ' % (2,1,1)[case])
+         'grey allpos=y bias=1 wanttitle=n')
 
     rays = 'rays%d' % case
     Flow(rays,velocity,
@@ -30,9 +30,9 @@ for case in range(3):
     Plot(rays,
          '''
          window n1=131 n2=90 f2=5 |
-         graph min2=4 max2=8 min1=0 max1=3 transp=y yreverse=y plotcol=0
+         graph min2=4 max2=8 min1=0 max1=3 transp=y yreverse=y plotcol=%d
          title="Ray Tracing" wantaxis=n wheretitle=b wherexlabel=t
-         ''')
+         ''' % (7,0,0)[case])
     Plot('o'+rays,[velocity,rays],'Overlay')
     
     hwt = 'hwt%d' % case
@@ -41,9 +41,9 @@ for case in range(3):
          '''
          window n2=131 n1=90 f1=5 |
          transp |
-         graph min1=4 max1=8 min2=0 max2=3 yreverse=y plotcol=0
+         graph min1=4 max1=8 min2=0 max2=3 yreverse=y plotcol=%d
          title="Wavefront Tracing" wantaxis=n wheretitle=b wherexlabel=t
-         ''')
+         ''' % (7,0,0)[case])
     Plot('o'+hwt,[velocity,hwt],'Overlay')
     comp = 'g%s-velrw' % letter
     Result(comp,['o'+rays,'o'+hwt],'SideBySideIso')
