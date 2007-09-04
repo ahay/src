@@ -1,0 +1,181 @@
+# Low frequency scattering attenuation in 3-D isotropic fractal medium
+#
+# April 2007
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsfproj import *
+from math import pi
+
+
+# Frequency 1-D grid
+# ------------------
+# nx = points number
+# dx = frequency steps
+
+
+pgrid = {'nx':300, 'ox':1., 'dx':1.}
+Flow('fgrd',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put label1=f unit1=Hz' % pgrid)
+Flow('lfgrd','fgrd','math output="log(x1)/log(10.)"')
+
+
+# Stochastic medium
+# -----------------
+# b  = correlation length (m)
+# hu = Hurst exponent
+# cu = spectrum constant
+# sp = P wave standard deviation 
+# ss = S wave standard deviation
+# cp = P wave velocity 
+# cs = S wave velocity
+
+
+parq = {'b':5., 'hu':0.75, 'cu':1.3317, 'sp':0.3, 'ss':0.3, 'cp':2700., 'cs':1230.}
+ss2 = parq['ss']*parq['ss']
+sp2 = parq['sp']*parq['sp']
+
+
+# Wave vectors VS and VP
+# ----------------------
+
+
+Flow('ksb','fgrd','math output="(%g)*x1/(%g)"' % (2.*pi*parq['b'],parq['cs']))
+Flow('ksb2','ksb','math output="input*input"')
+
+Flow('kpb','fgrd','math output="(%g)*x1/(%g)"' % (2.*pi*parq['b'],parq['cp']))
+Flow('kpb2','kpb','math output="input*input"')
+
+
+# Exponential correlation
+# -----------------------
+
+
+# - S waves -
+
+# Dispersion velocity
+Flow('dvse','ksb2','math k2=${SOURCES[0]} output="1./(1.+(%g)*(0.5+4.*k2)/(1.+4.*k2))"' % (ss2))
+
+# Attenuation 1/Q 
+Flow('qse','ksb2 ksb','math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*(k2*k)/(1.+4.*k2)"' % (8.*ss2))
+
+# Depth penetration
+Flow('depthse','ksb2','math k2=${SOURCES[0]} output="(%g)/(%g)*(1.+4.*k2)/(k2*k2)"' % (0.25*parq['b'],ss2))
+
+
+# Depth length VS
+# Flow('depthloclse','ksb2 ksb',
+#     '''
+#     math k2=${SOURCES[0]} k=${SOURCES[1]} output="1./((%g)*k*(%g))*(1.+1./(4.*k2))"
+#     ''' % (s2,parq['b']))
+
+
+# - P waves -
+
+# Dispersion velocity
+Flow('dvpe','kpb2','math k2=${SOURCES[0]} output="1./(1.+(%g)*(0.5+4.*k2)/(1.+4.*k2))"' % (sp2))
+
+# Attenuation 1/Q 
+Flow('qpe','kpb2 kpb','math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*(k2*k)/(1.+4.*k2)"' % (8.*sp2))
+
+# Depth penetration
+Flow('depthpe','kpb2','math k2=${SOURCES[0]} output="(%g)/(%g)*(1.+4.*k2)/(k2*k2)"' % (0.25*parq['b'],sp2))
+
+
+# - Results -
+
+Flow('lfdvse','lfgrd dvse','cmplx ${SOURCES[0:2]}',stdin=0)
+Flow('lfdvpe','lfgrd dvpe','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Flow('lqse','qse','math output="log(input)/log(10.)"')
+Flow('lqpe','qpe','math output="log(input)/log(10.)"')
+
+Flow('lfqse','lfgrd lqse','cmplx ${SOURCES[0:2]}',stdin=0)
+Flow('lfqpe','lfgrd lqpe','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Result('lldve','lfdvpe lfdvse',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='f(Hz)' unit1='log' label2='c/c\_0\^' unit2= |
+     graph dash=0,3 title="Dispersion velocity - b=5m Hu=0.5" min1=0. max1=2.5 min2=0.9 max2=1.
+     ''',stdin=0)
+
+Result('llqe','lfqpe lfqse',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='f(Hz)' unit1='log' label2='1/Q' unit2='log' | 
+     graph dash=0,3 title="Attenuation - b=5m Hu=0.5" min1=0. max1=2.5 max2=0. min2=-6.
+     ''',stdin=0)
+
+Flow('cdepthse','depthse','window')
+Flow('cdepthpe','depthpe','window')
+
+Result('depthle','cdepthpe cdepthse',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label2='d' unit2='m' |
+     graph dash=0,3 title="Penetration depth - b=5m Hu=0.5" min1=0. max1=80. min2=0. max2=2500.
+     ''',stdin=0)
+
+
+# Fractal correlation
+# -------------------
+
+
+# - S waves -
+
+# Attenuation 1/Q 
+Flow('qsf','ksb2 ksb',
+     '''
+     math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*k*(1.-(1.+4.*k2)^(-(%g)-0.5))"
+     ''' % (2.*ss2*parq['cu'],parq['hu']))
+
+# Depth penetration
+Flow('depthsf','qsf ksb','math q=${SOURCES[0]} k=${SOURCES[1]} output="2./q/k"')
+
+
+# - P waves -
+
+# Attenuation 1/Q
+Flow('qpf','kpb2 kpb',
+     '''
+     math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*k*(1.-(1.+4.*k2)^(-(%g)-0.5))"
+     ''' % (2.*sp2*parq['cu'],parq['hu']))
+
+# Depth penetration
+Flow('depthpf','qpf kpb','math q=${SOURCES[0]} k=${SOURCES[1]} output="2./q/k"')
+
+
+# - Results -
+
+Flow('lqsf','qsf','math output="log(input)/log(10.)"')
+Flow('lqpf','qpf','math output="log(input)/log(10.)"')
+
+Flow('lfqsf','lfgrd lqsf','cmplx ${SOURCES[0:2]}',stdin=0)
+Flow('lfqpf','lfgrd lqpf','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Result('llqf','lfqpf lfqsf',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='f(Hz)' unit1='log' label2='1/Q' unit2='log' |
+     graph dash=0,3 title="Attenuation - b=5m Hu=0.75" min1=0 max1=2.5 max2=0. min2=-6.
+     ''',stdin=0)
+
+Flow('cdepthsf','depthsf','window')
+Flow('cdepthpf','depthpf','window')
+
+Result('depthlf','cdepthpf cdepthsf',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label2='d' unit2='m' |
+     graph dash=0,3 title="Penetration depth - b=5m Hu=0.75" min1=0. max1=80. min2=0. max2=2500.
+     ''',stdin=0)
+
+
+# Termination
+
+
+End()

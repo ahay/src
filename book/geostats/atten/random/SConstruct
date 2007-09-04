@@ -1,0 +1,164 @@
+# Generate VTI/isotropic 2D random medium with fractal correlation
+# 
+# May 2007
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsfproj import *
+from math import pi
+
+
+# Grid 2D in space/frequency
+# --------------------------
+
+# - Master parameters -
+
+# NX,NZ   = number of points in X,Z
+# DLX,DLZ = space data step sampling
+
+# - Slave parameters -
+
+# FPX = 1/DLX = frequency space periodicity in X (Hz)
+# FPZ = 1/DLZ = frequency space periodicity in Z (Hz)
+
+# LX = NX*DLX = space period in X
+# LZ = NZ*DLZ = space period in Z
+
+# DFX = 1/LX = frequency step in X
+# DFZ = 1/LZ = frequency step in Z
+
+# FMX = 1/DLX - 1/LX = maximum frequency in X
+# FMZ = 1/DLZ - 1/LZ = maximum frequency in Z
+
+# FNX = 1/(2*DLX) = NX/(2*LX) = Nyquist frequency in X
+# FNZ = 1/(2*DLZ) = NZ/(2*LZ) = Nyquist frequency in Z
+
+# Signal X detecting content (Hz) =  DFX < FX < FNX
+# Signal Z detecting content (Hz) =  DFZ < FZ < FNZ
+
+
+pgrid = {'nz':302, 'oz':200., 'dz':1., 'nx':8177, 'ox':952., 'dx':1.}
+Flow('spacegrid',None,
+     '''
+     spike mag=1 n1=%(nz)d n2=%(nx)d d1=%(dz)g d2=%(dx)g o1=%(oz)g o2=%(ox)g label1="z" label2="x" unit1="m" unit2="m"
+     ''' % pgrid)
+
+
+# Frequency window clipping
+
+
+fcb = {'fzc':0.0025, 'fzm':0.25, 'fxc':-0.0294, 'fxm':0.0294, 'fmwx':0.025, 'fmwz':0.5, 'bcg':0.1}
+
+
+# Medium heterogeneities
+# ----------------------
+# bx = correlation length in x (m)
+# bz = correlation length in z (m)
+# nu = Hurst exponent
+# wst = standard deviation
+
+
+pmd = {'bz':5., 'bx':1000., 'nu':0.7, 'wst':0.2}
+
+
+# Gaussian white noise
+# --------------------
+# wmu = mean
+# wvr = variance
+# wrn = noise range
+# wsd = seed for random generator
+
+
+pwhite = {'wmu':0., 'wvr':pmd['wst']*pmd['wst'],'wrn':30., 'wsd':911}
+Flow('wgauss','spacegrid','noise mean=%(wmu)g range=%(wrn)g seed=%(wsd)g var=%(wvr)g rep=y type=y' % pwhite)
+Result('wgauss','grey color=j title="Gaussian white noise"')
+
+
+# Discrete Fourier Transform (fft) (k=0,N-1)
+# ------------------------------------------
+
+# S(k*DF) = DL*sum(n=0,N-1) s(n*DL)*exp(-2*i*pi*k*n/N)
+
+# s  = spatial signal
+# S  = frequency signal
+# N  = points number in space
+# DF = frequency sampling step = 1/L
+# L  = spatial length of signal = 1/DF
+# DL = space sampling step = L/N = 1/(N*DF)
+# FM = maximum frequency = 1/DL - 1/L
+
+# Discrete Fourier Transform properties
+# Symmetry = S(-u,-v) = S*(u,v)
+# Periodicity = S(ix+NX,iy+NY) = S(ix,iy)
+# Physical vectors (k=0,N-1)
+# S(N-1) = S(-1) = S*(1)
+# S(N-2) = S(-2) = S*(2)
+# ...
+# S(N/2+1) = S(-N/2-1) = S*(N/2-1)
+# S(N/2)   = S(-N/2)   = S*(N/2)
+
+# Spectral domain with centered DC component for radial filtering
+# [fx,fy] = (dfx*(-nx/2+1:1:nx/2),dfz*(-nz/2+1:1:nz/2))
+
+
+fft2 = 'fft1 sym=y | fft3 sym=y'
+Flow('fwgauss','wgauss',fft2)
+Result('fwgauss',
+       '''
+       math output="input*conj(input)" | real | window min1=%(fzc)g max1=%(fzm)g min2=%(fxc)g max2=%(fxm)g |
+       put label1=fz label2=fx unit1=1/m unit2=1/m |
+       grey color=j title="White noise energy spectrum" allpos=y
+       ''' % fcb)
+
+
+# Energy density spectrum - von Karman
+# ------------------------------------
+# specm = zero frequency amplitude
+
+
+specm = pmd['nu']*4.*pi*pmd['bx']*pmd['bz']
+Flow('specsde','fwgauss',
+     ''' math output="(1.+(x1*2.*(%g))^2+(x2*2.*(%g))^2)^(%g)"
+     ''' % (pi*pmd['bz'],pi*pmd['bx'],-pmd['nu']-1.))
+Result('specsde',
+       '''
+       real | put label1=fz label2=fx unit1=1/m unit2=1/m |
+       window min1=%(fzc)g max1=%(fzm)g min2=%(fxc)g max2=%(fxm)g |
+       grey color=j title="Energy density spectrum" allpos=y
+       ''' % fcb)
+Flow('specsdez','specsde','window n2=1 min2=0 | real')
+Flow('specsdex','specsde','window n1=1 min1=0 | real')
+dash = {'x':0,'z':3}
+fmws = {'x':fcb['fmwx'],'z':fcb['fmwz']}
+for case in ('x','z'):    
+    Plot('specsde'+case,
+         '''
+         put label1="f" unit1="1/m" label2="Energy" unit2= |
+         graph dash=%d title="Spectrum vertical and horizontal" max1=%g min1=0. 
+         ''' % (dash[case],fmws[case]))
+Result('specsdexz','specsdex specsdez','SideBySideAniso')
+
+
+# Radial spectral filtering of Gaussian white noise
+
+
+Flow('fcgauss',['specsde','fwgauss'],'math r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="sqrt(r*(%g))*p"'% (specm))
+Result('fcgauss',
+       '''
+       math output="input*conj(input)" | real | window min1=%(fzc)g max1=%(fzm)g min2=%(fxc)g max2=%(fxm)g |
+       put label1=fz label2=fx unit1=1/m unit2=1/m |
+       grey color=j allpos=y title="Energy density spectrum"
+       ''' % fcb)
+ifft2 = 'sffft3 sym=y inv=y | sffft1 sym=y inv=y'
+Flow('cgauss','fcgauss',ifft2)
+Result('cgauss','grey color=j bias=%(bcg)g title="bx=1000m bz=5m Hu=0.7"' % fcb)
+
+
+# End of program
+
+
+End()

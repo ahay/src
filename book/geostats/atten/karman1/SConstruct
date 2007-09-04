@@ -1,0 +1,180 @@
+# Nonlinear optimization in 1D Fourier domain on synthetic von Karman autocorrelation
+#
+# April 2007
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsfproj import *
+from math import pi
+
+
+# Spatial 1D grid
+# ---------------
+# Master parameters
+#
+# nx = number of points in X
+# dx = space data step sampling
+
+# Slave parameters (spatial frequency content)
+#
+# fpx = 1/dx        = frequency space periodicity (Hz)
+# lx  = nx*dx       = space period
+# dfx = 1/lx        = frequency step
+# fmx = 1/dx - 1/lx = maximum frequency
+# fnx = 1/(2*dx)    = nx/(2*lx) = Nyquist frequency
+#
+# Signal X detecting content (Hz) =  dfx < fx < fnx
+
+
+pgrid = {'nx':4056, 'ox':1., 'dx':0.25}
+Flow('spacegrid',None,'spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g | put label1=z unit1=m' % pgrid)
+wdcp = {'xmax':1000., 'smax':0.5, 'smin':-0.5, 'wnsmax':2.}
+
+
+# Synthetic Gaussian 1-D signal
+# -----------------------------
+# b   = correlation length (m)  = 5  10
+# nu  = Hurst exponent > -0.5   = 0.25   0.5  0.75   1.0
+# ca  = Hurst spectrum constant = 0.5991 1.0  1.3317 1.57
+# wmu = mean of Gaussian white noise
+# wdd = standard deviation of Gaussian white noise
+# wvr = variance of Gaussian white noise
+# wrn = noise range
+# wsd = seed for random generator
+# b   = correlation length scale (m)
+
+
+# psyn = {'b':5., 'nu':0.75, 'ca':1.3317, 'wmu':0., 'wdd':0.2, 'wrn':1., 'wsd':213}
+psyn = {'b':5., 'nu':0.15, 'ca':0.51, 'wmu':0., 'wdd':0.25, 'wrn':1., 'wsd':913}
+psyn['wvr'] = psyn['wdd']*psyn['wdd']
+Flow('wgauss','spacegrid','noise mean=%(wmu)g range=%(wrn)g rep=y seed=%(wsd)g type=y var=%(wvr)g' % psyn)
+
+
+# Discrete Fourier Transform (fft) (k=0,N-1)
+#
+# S(k*DF) = DL*sum(n=0,N-1) s(n*DL)*exp(-2*i*pi*k*n/N)
+# s  = spatial signal
+# S  = frequency signal
+# N  = points number in space
+# DF = frequency sampling step = 1/L
+# L  = spatial length of signal = 1/DF
+# DL = space sampling step = L/N = 1/(N*DF)
+# FM = maximum frequency = 1/DL - 1/L
+#
+# Symmetry S(-u) = S*(u)
+# Periodicity S(ix+NX) = S(ix)
+# Physical vectors (k=0,N-1)
+# S(N-1) = S(-1) = S*(1)
+# S(N-2) = S(-2) = S*(2)
+# ...
+# S(N/2+1) = S(-N/2-1) = S*(N/2-1)
+# S(N/2)   = S(-N/2)   = S*(N/2)
+#
+# Dimension in Fourier space [0,nx/2] is nx/2+1
+# [fx] = dfx*(-nx/2+1:1:nx/2)
+
+
+Flow('fwgauss','wgauss','fft1 sym=y')
+
+
+# Stochastic process von Karman 1D filter in spectral domain
+
+
+Flow('vkfilt','fwgauss','math output="sqrt((%g))*(1.+((%g)*x1)^2)^(%g)"' % (2.*psyn['b']*psyn['ca'],2.*pi*psyn['b'],-0.25-0.5*psyn['nu']))
+Flow('rvkfilt','vkfilt','add abs=y | real | put label1=f unit1=1/m | math output="input*(%(wdd)g)"' % psyn)
+
+
+# Filtering and inverse Fourier transform
+
+
+Flow('fcgauss',['vkfilt','fwgauss'],'math r=${SOURCES[0]} p=${SOURCES[1]} type=complex output="r*p"')
+Flow('rfcgauss','fcgauss','add abs=y | real | put label1=f unit1=1/m')
+Flow('cgauss','fcgauss','fft1 sym=y inv=y | put label1=Depth unit1=m')
+
+
+# Plots
+
+
+Plot('wgauss','graph min1=0. max1=%(xmax)g min2=%(smin)g max2=%(smax)g title="White Gaussian noise"'% wdcp)
+Plot('fwgauss','add abs=y | real | put label1=f unit1=1/m | graph min1=0. max1=%(wnsmax)g min2=0. title="White noise spectrum"'% wdcp)
+Plot('rvkfilt','graph title="Filter spectrum"')
+Plot('rfcgauss','graph title="Correlated noise spectrum"')
+Plot('cgauss','graph label1=Depth min1=0. max1=%(xmax)g min2=%(smin)g max2=%(smax)g title="Correlated Gaussian signal"'% wdcp)
+Plot('vkcfilt','rfcgauss rvkfilt',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     graph min1=0. title="Correlated Gaussian spectrum"
+     ''',stdin=0)
+Result('panel1','wgauss fwgauss vkcfilt cgauss','TwoRows',vppen='xsize=10 ysize=10')
+Result('cgauss','graph label1=Depth min1=0. max1=%(xmax)g min2=%(smin)g max2=%(smax)g title="Correlated Gaussian signal - Hu=0.75"'% wdcp)
+
+
+# Logarithmic plot for separable least square nonlinear method
+# ------------------------------------------------------------
+
+
+Flow('llbfilt','rvkfilt','math output="log(1.+((%g)*x1)^2)"' % (2.*pi*psyn['b']))
+Flow('lvkfilt','rvkfilt','math output="log(input)"')
+Flow('lfcgauss','rfcgauss','math output="log(input)"')
+
+Flow('llfilt','llbfilt lvkfilt','cmplx ${SOURCES[0:2]}',stdin=0)
+Flow('llgauss','llbfilt lfcgauss','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Plot('llgaussf','llgauss llfilt',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='Ln[1+(kb)\^2\_]' unit1= label2='Ln[F(k)]' |
+     graph min1=0. title="Spectral logarithm filter"
+     ''',stdin=0)
+
+
+# Iterative inversion for stochastic parameters
+# ---------------------------------------------
+# Estimation of von Karman filter logarithm in spectral domain
+# Separate least square for exponent and amplitude
+# Newton algorithm on nonlinear parameter b*b
+
+
+Flow('irfcgauss','rfcgauss','karman verb=y niter=100 x0=1.')
+Flow('lifcgauss','irfcgauss','math output="log(input)"')
+Flow('illgauss','llbfilt lifcgauss','cmplx ${SOURCES[0:2]}',stdin=0)
+
+Plot('lligaussf','llgauss illgauss',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='Ln[1+(kb)\^2\_]' unit1= label2='Ln[F(k)]' |
+     graph min1=0. title="Estimation of spectral logarithm filter"
+     ''',stdin=0)
+
+Plot('fitfilt','rfcgauss irfcgauss',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1=f unit1=1/m | graph min1=0. title="Estimation of correlated spectrum  F(k)"
+     ''',stdin=0)
+
+Result('panel2','llgaussf vkcfilt lligaussf fitfilt','TwoRows',vppen='xsize=10 ysize=10')
+
+Result('lligaussf','llgauss illgauss',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1='Ln[1+(kb)\^2\_]' unit1= label2='Ln[F(k)]' |
+     graph min1=0. max1=8.2 title="Estimation - Synthetic Hu=0.25"
+     ''',stdin=0)
+
+Result('fitfilt','rfcgauss irfcgauss',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label1=f unit1=1/m | graph min1=0. min2=0. title="Correlated spectrum b=5m Hu=0.25" max1=1. max2=2.5
+     ''',stdin=0)
+
+
+# -----------
+# Termination
+# -----------
+
+
+End()

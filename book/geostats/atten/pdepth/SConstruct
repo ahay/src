@@ -1,0 +1,143 @@
+# Dominant frequency versus depth for wave in random medium
+#
+# April 2007
+#
+# Thomas Jules Browaeys 
+# Bureau of Economic Geology
+# University of Texas at Austin
+# mailto:jules.browaeys@beg.utexas.edu
+
+
+from rsfproj import *
+from math import pi
+
+
+# Depth and frequency grid
+#-------------------------
+# nx = points number
+# dx = frequency steps
+# nz = points number
+# dz = depth steps
+
+
+pgrid = {'nx':150, 'ox':1., 'dx':1.,'nz':150, 'oz':1., 'dz':10.}
+
+Flow('dfgrd',None,
+     '''
+     spike nsp=1 mag=1 n1=%(nx)d d1=%(dx)g o1=%(ox)g n2=%(nz)d d2=%(dz)g o2=%(oz)g |
+     put label1=f unit1=Hz label2=z unit2=m
+     ''' % pgrid)
+
+
+# Stochastic medium
+# -----------------
+# b  = correlation length (m)
+# hu = Hurst exponent
+# cu = spectrum constant
+# sd = standard deviation
+# cp = P wave velocity
+# cs = S wave velocity
+# f0 = Ricker wavelet frequency
+
+
+parq = {'b':5., 'hu':0.25, 'cu':0.5991, 'sd':0.3, 'cp':2700., 'cs':1230., 'f0':60.}
+s2 = parq['sd']*parq['sd']
+
+
+# Ricker wavelet
+
+
+Flow('srick','dfgrd','math output="(x1/(%g))^2" | math output="input*exp(-input)"' % (parq['f0']))
+Flow('psrick','srick','window n2=1 f2=1 | window | put label2=S unit2=')
+
+
+# Wave vectors VS and VP
+# ----------------------
+
+
+Flow('ksb','dfgrd','math output="(%g)*x1/(%g)"' % (2.*pi*parq['b'],parq['cs']))
+Flow('ksb2','ksb','math output="input*input"')
+
+Flow('kpb','dfgrd','math output="(%g)*x1/(%g)"' % (2.*pi*parq['b'],parq['cp']))
+Flow('kpb2','kpb','math output="input*input"')
+
+
+# Frequency dependence for 3-D exponential correlation
+# ----------------------------------------------------
+
+
+# Depth penetration VS
+Flow('depthse','ksb2','math k2=${SOURCES[0]} output="(%g)*(1.+4.*k2)/(k2*k2)"' % (0.25*parq['b']/s2))
+
+# Depth penetration VP
+Flow('depthpe','kpb2','math k2=${SOURCES[0]} output="(%g)*(1.+4.*k2)/(k2*k2)"' % (0.25*parq['b']/s2))
+
+
+# Peak frequency versus depth VS
+
+Flow('specse','depthse srick','math lc=${SOURCES[0]} s=${SOURCES[1]} output="s*exp(-x2/lc)"')
+Flow('sumse','specse','stack axis=1 norm=n | window')
+Flow('fumse','specse','math output="x1*input" | stack axis=1 norm=n | window')
+Flow('fdomse','fumse sumse','math f=${SOURCES[0]} s=${SOURCES[1]} output="f/s" | put unit1=m unit2=Hz label2=f')
+
+
+# Peak frequency versus depth VP
+
+Flow('specpe','depthpe srick','math lc=${SOURCES[0]} s=${SOURCES[1]} output="s*exp(-x2/lc)"')
+Flow('sumpe','specpe','stack axis=1 norm=n | window')
+Flow('fumpe','specpe','math output="x1*input" | stack axis=1 norm=n | window')
+Flow('fdompe','fumpe sumpe','math f=${SOURCES[0]} s=${SOURCES[1]} output="f/s" | put unit1=m unit2=Hz label2=f')
+
+
+# Frequency dependence for 3-D fractal correlation
+#-------------------------------------------------
+
+
+# Attenuation 1/Q VS
+Flow('qsf','ksb2 ksb',
+     '''
+     math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*k*(1.-(1.+4.*k2)^(-(%g)-0.5))"
+     ''' % (2.*s2*parq['cu'],parq['hu']))
+
+# Depth penetration VS
+Flow('depthsf','qsf ksb','math q=${SOURCES[0]} k=${SOURCES[1]} output="2./q/k"')
+
+
+# Attenuation 1/Q VP
+Flow('qpf','kpb2 kpb',
+     '''
+     math k2=${SOURCES[0]} k=${SOURCES[1]} output="(%g)*k*(1.-(1.+4.*k2)^(-(%g)-0.5))"
+     ''' % (2.*s2*parq['cu'],parq['hu']))
+
+# Depth penetration VP
+Flow('depthpf','qpf kpb','math q=${SOURCES[0]} k=${SOURCES[1]} output="2./q/k"')
+
+
+# Peak frequency versus depth VS
+
+Flow('specsf','depthsf srick','math lc=${SOURCES[0]} s=${SOURCES[1]} output="s*exp(-x2/lc)"')
+Flow('sumsf','specsf','stack axis=1 norm=n | window')
+Flow('fumsf','specsf','math output="x1*input" | stack axis=1 norm=n | window')
+Flow('fdomsf','fumsf sumsf','math f=${SOURCES[0]} s=${SOURCES[1]} output="f/s" | put unit1=m unit2=Hz label2=f')
+
+
+# Peak frequency versus depth VP
+
+Flow('specpf','depthpf srick','math lc=${SOURCES[0]} s=${SOURCES[1]} output="s*exp(-x2/lc)"')
+Flow('sumpf','specpf','stack axis=1 norm=n | window')
+Flow('fumpf','specpf','math output="x1*input" | stack axis=1 norm=n | window')
+Flow('fdompf','fumpf sumpf','math f=${SOURCES[0]} s=${SOURCES[1]} output="f/s" | put unit1=m unit2=Hz label2=f')
+
+
+Result('fdomf','fdompf fdomsf',
+     '''
+     cat ${SOURCES[0:2]} axis=2 |
+     put label2='f' unit2='Hz' |
+     graph dash=0,3 title="Dominant frequency b=5m Hu=0.25" min1=0. max1=1500. min2=0.
+     ''',stdin=0)
+
+
+# Termination
+
+
+End()
