@@ -33,15 +33,15 @@ int main (int argc, char *argv[])
     int   tmx,tmy;        /* boundary taper size */
     bool cw;              /* converted waves flag */
     char *itype;          /* imaging type 
-			     o = zero offset (default)
-			     x = space offset
-			     h = absolut offset
-			     t = time offset
+			     o = zero lag (default)
+			     x = space-lags
+			     h = absolute space-lag
+			     t = time-lag
 			  */
-    bool hsym;
+    bool  hsym;
     float vpvs;
-    int dec;
-    float deceps;
+/*    int dec;*/
+/*    float deceps;*/
     void (*imop)(int);
     void (*close)(fslice,fslice);
 
@@ -50,7 +50,7 @@ int main (int argc, char *argv[])
     sf_axis aw,ae;
     sf_axis ahx,ahy,ahz,aht;
     sf_axis acx,acy,acz;
-    int jcx,jcy,jcz;
+    int     jcx,jcy,jcz;
     sf_axis ahh,aha,ahb; /* |h|,alpha,beta */
 
     int n,nz,nx,ny,nh,nhx,nhy,nhz,nha,nhb,nw;
@@ -73,10 +73,10 @@ int main (int argc, char *argv[])
 
     if (NULL == (itype = sf_getstring("itype"))) itype = "o";
     /* imaging condition type 
-       o = zero offset (default)
-       x = space offset
-       h = absolut offset
-       t = time offset
+       o = zero lag (default)
+       x = space-lags
+       h = space-lags magnitude
+       t = time-lag
     */
 
     /* converted waves flag */
@@ -121,13 +121,16 @@ int main (int argc, char *argv[])
     Fw_s = sf_input( "in");
     Fw_r = sf_input("rwf");
     
-    if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("Need complex   source data");
-    if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("Need complex receiver data");
+    if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("need complex   source data");
+    if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("need complex receiver data");
     
-    amx = sf_iaxa(Fw_s,1); nx=sf_n(amx); dx=sf_d(amx); sf_setlabel(amx,"mx");
-    amy = sf_iaxa(Fw_s,2); ny=sf_n(amy); dy=sf_d(amy); sf_setlabel(amy,"my");
+    amx = sf_iaxa(Fw_s,1); sf_setlabel(amx,"x");
+    amy = sf_iaxa(Fw_s,2); sf_setlabel(amy,"y");
     aw  = sf_iaxa(Fw_s,3); sf_setlabel(aw, "w");
     ae  = sf_iaxa(Fw_s,4); sf_setlabel(ae, "e"); /* experiments */
+
+    nx=sf_n(amx); dx=sf_d(amx);
+    ny=sf_n(amy); dy=sf_d(amy);
 
     Fi   = sf_output("out"); sf_settype(Fi,SF_FLOAT);
     sf_oaxa(Fi,amx,1);
@@ -136,7 +139,8 @@ int main (int argc, char *argv[])
     sf_putint(Fi,"n4",1);
     sf_putint(Fi,"n5",1);
 
-    imag = fslice_init( nx*ny*nz,1,sizeof(float));    
+    imag = fslice_init( nx*ny*nz,1,sizeof(float));
+    
     /*------------------------------------------------------------*/
     /* CIGS */
 
@@ -158,15 +162,15 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init output files */
 
-    if (!sf_getint("dec",&dec)) dec=0;
-    if (dec) {
-	if (!sf_getfloat("deceps",&deceps)) deceps=0.01;
-	img2dec(dec,deceps);
-    }
-    
+/*    if (!sf_getint("dec",&dec)) dec=0;*/
+/*    if (dec) {*/
+/*	if (!sf_getfloat("deceps",&deceps)) deceps=0.01;*/
+/*	img2dec(dec,deceps);*/
+/*    }*/
+
     switch(itype[0]) {
 	case 't':
-	    if(verb) sf_warning("Time-offset imaging condition");
+	    if(verb) sf_warning("time-lag I.C.");
 	    if(!sf_getint  ("nht",&nh)) nh=1;
 	    if(!sf_getfloat("oht",&oh)) oh=0;
 	    if(!sf_getfloat("dht",&dh)) dh=0.1;
@@ -176,11 +180,11 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init(n*nh,1,sizeof(float));
 
 	    img2t_init(amx,amy,amz,jcx,jcy,jcz,aht,aw,imag);
-	    imop = img2t;
+	    imop  = img2t;
 	    close = img2t_close;
 	    break;
 	case 'x':
-	    if(verb) sf_warning("Space offset imaging condition");
+	    if(verb) sf_warning("space-lags I.C.");
 	    if(!sf_getint("nhx",&nhx) || nx==1) nhx=1;
 	    if(!sf_getint("nhy",&nhy) || ny==1) nhy=1;
 	    if(!sf_getint("nhz",&nhz) || nz==1) nhz=1;
@@ -203,12 +207,12 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag);
-	    imop = img2x;
+	    imop  = img2x;
 	    close = img2x_close;
 	    break;
 	case 'g':
 	case 'h':
-	    if(verb) sf_warning("absolute offset imaging condition");
+	    if(verb) sf_warning("space-lag magnitude I.C.");
 
 	    if(!sf_getint  ("nhh",&nh)) nh=1;
 	    if(!sf_getfloat("ohh",&oh)) oh=0;
@@ -238,20 +242,21 @@ int main (int argc, char *argv[])
 	    cigs = fslice_init( n*nh,1,sizeof(float));
 
 	    img2h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag,vpvs);
-	    imop = img2h;
-	    close = img2x_close;
+	    imop  = img2h;
+	    close = img2h_close;
 	    break;
 	case 'o':
 	default:
-	    if(verb) sf_warning("zero offset imaging condition");
+	    if(verb) sf_warning("zero-lag I.C.");
 	    cigs = fslice_init(n,1,sizeof(float));
 
 	    img2o_init(amx,amy,amz,jcx,jcy,jcz,imag);
-	    imop = img2o;
+	    imop  = img2o;
 	    close = img2o_close;
 	    break;
     }
 
+    /*------------------------------------------------------------*/
     /* slice management (temp files) */
     nw = sf_n(aw)*sf_n(ae);
 
@@ -263,7 +268,6 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* MIGRATION */
-
     srmig2_init (verb,eps,dtmax,
 		 ae,aw,amx,amy,amz,alx,aly,
 		 tmx,tmy,pmx,pmy);
@@ -281,11 +285,12 @@ int main (int argc, char *argv[])
     srmig2_close();
     close(imag,cigs); 
 
-    sf_warning("dump cigs");
-
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
+    if(verb) sf_warning("dump imag");
     fslice_dump(Fi,imag,SF_FLOAT);
+
+    if(verb) sf_warning("dump cigs");
     fslice_dump(Fc,cigs,SF_FLOAT)
 
     ;      fslice_close(slo_s);

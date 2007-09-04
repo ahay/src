@@ -19,20 +19,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  */
 
 static kiss_fft_cpx *scratchbuf=NULL;
-static size_t nscratchbuf=0;
-static kiss_fft_cpx *tmpbuf=NULL;
-static size_t ntmpbuf=0;
+static size_t       nscratchbuf=0;
+static kiss_fft_cpx     *tmpbuf=NULL;
+static size_t           ntmpbuf=0;
 
+/*------------------------------------------------------------*/
 #define CHECKBUF(buf,nbuf,n) \
     do { \
         if ( nbuf < (size_t)(n) ) {\
             free(buf); \
-            buf = (kiss_fft_cpx*)KISS_FFT_MALLOC(sizeof(kiss_fft_cpx)*(n)); \
+            buf  = (kiss_fft_cpx*)KISS_FFT_MALLOC(sizeof(kiss_fft_cpx)*(n)); \
             nbuf = (size_t)(n); \
         } \
    }while(0)
 
-
+/*------------------------------------------------------------*/
 static void kf_bfly2(
         kiss_fft_cpx * Fout,
         const size_t fstride,
@@ -56,6 +57,7 @@ static void kf_bfly2(
     }while (--m);
 }
 
+/*------------------------------------------------------------*/
 static void kf_bfly4(
         kiss_fft_cpx * Fout,
         const size_t fstride,
@@ -74,7 +76,7 @@ static void kf_bfly4(
     do {
         C_FIXDIV(*Fout,4); C_FIXDIV(Fout[m],4); C_FIXDIV(Fout[m2],4); C_FIXDIV(Fout[m3],4);
 
-        C_MUL(scratch[0],Fout[m] , *tw1 );
+        C_MUL(scratch[0],Fout[m]  , *tw1 );
         C_MUL(scratch[1],Fout[m2] , *tw2 );
         C_MUL(scratch[2],Fout[m3] , *tw3 );
 
@@ -89,13 +91,13 @@ static void kf_bfly4(
         C_ADDTO( *Fout , scratch[3] );
 
         if(st->inverse) {
-            Fout[m].r = scratch[5].r - scratch[4].i;
-            Fout[m].i = scratch[5].i + scratch[4].r;
+            Fout[m].r  = scratch[5].r - scratch[4].i;
+            Fout[m].i  = scratch[5].i + scratch[4].r;
             Fout[m3].r = scratch[5].r + scratch[4].i;
             Fout[m3].i = scratch[5].i - scratch[4].r;
         }else{
-            Fout[m].r = scratch[5].r + scratch[4].i;
-            Fout[m].i = scratch[5].i - scratch[4].r;
+            Fout[m].r  = scratch[5].r + scratch[4].i;
+            Fout[m].i  = scratch[5].i - scratch[4].r;
             Fout[m3].r = scratch[5].r - scratch[4].i;
             Fout[m3].i = scratch[5].i + scratch[4].r;
         }
@@ -103,6 +105,7 @@ static void kf_bfly4(
     }while(--k);
 }
 
+/*------------------------------------------------------------*/
 static void kf_bfly3(
          kiss_fft_cpx * Fout,
          const size_t fstride,
@@ -147,6 +150,7 @@ static void kf_bfly3(
      }while(--k);
 }
 
+/*------------------------------------------------------------*/
 static void kf_bfly5(
         kiss_fft_cpx * Fout,
         const size_t fstride,
@@ -179,10 +183,10 @@ static void kf_bfly5(
         C_MUL(scratch[3] ,*Fout3, tw[3*u*fstride]);
         C_MUL(scratch[4] ,*Fout4, tw[4*u*fstride]);
 
-        C_ADD( scratch[7],scratch[1],scratch[4]);
+        C_ADD( scratch[7], scratch[1],scratch[4]);
         C_SUB( scratch[10],scratch[1],scratch[4]);
-        C_ADD( scratch[8],scratch[2],scratch[3]);
-        C_SUB( scratch[9],scratch[2],scratch[3]);
+        C_ADD( scratch[8], scratch[2],scratch[3]);
+        C_SUB( scratch[9], scratch[2],scratch[3]);
 
         Fout0->r += scratch[7].r + scratch[8].r;
         Fout0->i += scratch[7].i + scratch[8].i;
@@ -190,8 +194,8 @@ static void kf_bfly5(
         scratch[5].r = scratch[0].r + S_MUL(scratch[7].r,ya.r) + S_MUL(scratch[8].r,yb.r);
         scratch[5].i = scratch[0].i + S_MUL(scratch[7].i,ya.r) + S_MUL(scratch[8].i,yb.r);
 
-        scratch[6].r =  S_MUL(scratch[10].i,ya.i) + S_MUL(scratch[9].i,yb.i);
-        scratch[6].i = -S_MUL(scratch[10].r,ya.i) - S_MUL(scratch[9].r,yb.i);
+        scratch[6].r =   S_MUL(scratch[10].i,ya.i) + S_MUL(scratch[9].i,yb.i);
+        scratch[6].i = - S_MUL(scratch[10].r,ya.i) - S_MUL(scratch[9].r,yb.i);
 
         C_SUB(*Fout1,scratch[5],scratch[6]);
         C_ADD(*Fout4,scratch[5],scratch[6]);
@@ -199,7 +203,7 @@ static void kf_bfly5(
         scratch[11].r = scratch[0].r + S_MUL(scratch[7].r,yb.r) + S_MUL(scratch[8].r,ya.r);
         scratch[11].i = scratch[0].i + S_MUL(scratch[7].i,yb.r) + S_MUL(scratch[8].i,ya.r);
         scratch[12].r = - S_MUL(scratch[10].i,yb.i) + S_MUL(scratch[9].i,ya.i);
-        scratch[12].i = S_MUL(scratch[10].r,yb.i) - S_MUL(scratch[9].r,ya.i);
+        scratch[12].i =   S_MUL(scratch[10].r,yb.i) - S_MUL(scratch[9].r,ya.i);
 
         C_ADD(*Fout2,scratch[11],scratch[12]);
         C_SUB(*Fout3,scratch[11],scratch[12]);
@@ -208,6 +212,7 @@ static void kf_bfly5(
     }
 }
 
+/*------------------------------------------------------------*/
 /* perform the butterfly for one stage of a mixed radix FFT */
 static void kf_bfly_generic(
         kiss_fft_cpx * Fout,
@@ -247,8 +252,8 @@ static void kf_bfly_generic(
     }
 }
 
-static
-void kf_work(
+/*------------------------------------------------------------*/
+static void kf_work(
         kiss_fft_cpx * Fout,
         const kiss_fft_cpx * f,
         const size_t fstride,
@@ -285,12 +290,12 @@ void kf_work(
     }
 }
 
+/*------------------------------------------------------------*/
 /*  facbuf is populated by p1,m1,p2,m2, ...
     where 
     p[i] * m[i] = m[i-1]
     m0 = n                  */
-static 
-void kf_factor(int n,int * facbuf)
+static void kf_factor(int n,int * facbuf)
 {
     int p=4;
     double floor_sqrt;
@@ -313,6 +318,7 @@ void kf_factor(int n,int * facbuf)
     } while (n > 1);
 }
 
+/*------------------------------------------------------------*/
 /*
  *
  * User-callable function to allocate all necessary storage space for the fft.
@@ -351,9 +357,7 @@ kiss_fft_cfg kiss_fft_alloc(int nfft,int inverse_fft,void * mem,size_t * lenmem 
     return st;
 }
 
-
-
-    
+/*------------------------------------------------------------*/
 void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,int in_stride)
 {
     if (fin == fout) {
@@ -365,12 +369,14 @@ void kiss_fft_stride(kiss_fft_cfg st,const kiss_fft_cpx *fin,kiss_fft_cpx *fout,
     }
 }
 
+/*------------------------------------------------------------*/
 void kiss_fft(kiss_fft_cfg cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout)
 {
     kiss_fft_stride(cfg,fin,fout,1);
 }
 
 
+/*------------------------------------------------------------*/
 /* not really necessary to call, but if someone is doing in-place ffts, they may want to free the 
    buffers from CHECKBUF
  */ 
@@ -384,6 +390,7 @@ void kiss_fft_cleanup(void)
     ntmpbuf=0;
 }
 
+/*------------------------------------------------------------*/
 int kiss_fft_next_fast_size(int n)
 {
     while(1) {

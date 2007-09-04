@@ -31,7 +31,6 @@ par = {
 # ------------------------------------------------------------
 data = 'sigsbee2a_nfs.sgy'
 velo = 'sigsbee2a_migvel.sgy'
-
 Fetch(data,'sigsbee')
 Fetch(velo,'sigsbee')
 

@@ -69,7 +69,7 @@ static sf_axa aht;
 static sf_axa ahh,aha,ahb;
 static sf_axa aw;
 
-static sf_complex  **tt; /* phase shift for time offset */
+static sf_complex  **tt; /* phase shift for time-lag I.C. */
 static sf_complex ***qs,***qr;
 static float         ***qi;
 static float         ***qi2;
@@ -99,6 +99,7 @@ static float corr(sf_complex a, sf_complex b)
     return crealf(c);
 }
 
+/*------------------------------------------------------------*/
 static float wcorr(sf_complex a, sf_complex b, sf_complex w)
 {
     sf_complex c;
@@ -110,6 +111,7 @@ static float wcorr(sf_complex a, sf_complex b, sf_complex w)
     return crealf(c);
 }
 
+/*------------------------------------------------------------*/
 void img2dec(int dec1, float eps1) 
 /*< set deconvolution count >*/
 {
@@ -118,7 +120,6 @@ void img2dec(int dec1, float eps1)
 }
 
 /*------------------------------------------------------------*/
-
 void img2store( int imz,
 		sf_complex **ww_s,
 		sf_complex **ww_r
@@ -140,7 +141,7 @@ void img2o_init(sf_axis amx_,
 		int jcz_,
 		fslice imag
     )
-/*< initialize o-offset imaging condition >*/
+/*< initialize zero-lag I.C. >*/
 {
     int imx,imy,imz;
     int icx,icy,icz;
@@ -187,7 +188,7 @@ void img2x_init(sf_axis amx_,
 		sf_axis ahz_,
 		fslice imag
     )
-/*< initialize x-offset imaging condition >*/
+/*< initialize x-lag I.C. >*/
 {
     int imx,imy,imz;
     int icx,icy,icz;
@@ -238,7 +239,7 @@ void img2t_init(sf_axis amx_,
 		sf_axis aw_,
 		fslice imag
     )
-/*< initialize t-offset imaging condition >*/
+/*< initialize t-lag I.C. >*/
 {
     int imx,imy,imz;
     int icx,icy,icz;
@@ -301,7 +302,7 @@ void img2h_init(sf_axis amx_,
 		fslice imag,
 		float vpvs_
     )
-/*< initialize h-offset imaging condition >*/
+/*< initialize abs x-lag I.C. >*/
 {
     int imx,imy,imz;
     int icx,icy,icz;
@@ -340,9 +341,8 @@ void img2h_init(sf_axis amx_,
 }
 
 /*------------------------------------------------------------*/
-
 void img2o(int iw)
-/*< Apply o-offset imaging condition >*/
+/*< apply zero-lag I.C. >*/
 {
     int imx,imy,imz;
     int icx,icy,icz;
@@ -358,7 +358,7 @@ void img2o(int iw)
 	MLOOP(
 	    ;   qi2[imz][imy][imx] +=
 	    corr(qs[imz][imy][imx],    
-		 qs[imz][imy][imx]);
+		 qr[imz][imy][imx]);
 	    );	
     }
 
@@ -370,8 +370,9 @@ void img2o(int iw)
 	);
 }
 
+/*------------------------------------------------------------*/
 void img2x(int iw)
-/*< Apply x-offset imaging condition >*/
+/*< apply x-lag I.C. >*/
 {
     int imx, imy, imz;
     int icx, icy, icz;
@@ -436,8 +437,9 @@ void img2x(int iw)
     }
 }
 
+/*------------------------------------------------------------*/
 void img2t(int iw)
-/*< Apply t-offset imaging condition >*/
+/*< apply t-lag I.C. >*/
 {
     int imx,imy,imz,iht;
     int icx,icy,icz;
@@ -460,8 +462,9 @@ void img2t(int iw)
     }
 }
 
+/*------------------------------------------------------------*/
 void img2h(int iw)
-/*< Apply h-offset imaging condition >*/
+/*< apply abs x-lag I.C. >*/
 {
     int imx,imy,imz;
     int ihh,iha,ihb;
@@ -534,8 +537,9 @@ void img2h(int iw)
     }         /* hh */
 }
 
+/*------------------------------------------------------------*/
 void img2g(int iw)
-/*< Apply h-offset imaging condition >*/
+/*< apply abs x-lag I.C. >*/
 {
     int imx,imy,imz;
     int ihh,iha,ihb;
@@ -608,11 +612,11 @@ void img2g(int iw)
 	}     /* bb */	
     }         /* hh */
 }
-/*------------------------------------------------------------*/
 
+/*------------------------------------------------------------*/
 void img2o_close(fslice imag,
 		 fslice cigs)
-/*< deallocate >*/
+/*< deallocate zero-lag I.C. >*/
 {
     int imz, imy, imx, id;
 
@@ -636,9 +640,10 @@ void img2o_close(fslice imag,
     free(  qo);
 }
 
+/*------------------------------------------------------------*/
 void img2t_close(fslice imag,
 		 fslice cigs)
-/*< deallocate >*/
+/*< deallocate t-lag I.C. >*/
 {
     fslice_put(imag,0,qi[0][0]);
     fslice_put(cigs,0,qt[0][0][0]);
@@ -654,9 +659,10 @@ void img2t_close(fslice imag,
     free( tt);
 }
 
+/*------------------------------------------------------------*/
 void img2h_close(fslice imag,
 		 fslice cigs)
-/*< deallocate >*/
+/*< deallocate abs x-lag I.C. >*/
 {
     fslice_put(imag,0,qi[0][0]);
     fslice_put(cigs,0,qh[0][0][0]);
@@ -669,9 +675,10 @@ void img2h_close(fslice imag,
     free(   qh);
 }
 
+/*------------------------------------------------------------*/
 void img2x_close(fslice imag,
 		 fslice cigs)
-/*< deallocate >*/
+/*< deallocate x-lag I.C. >*/
 {
     fslice_put(imag,0,qi[0][0]);
     fslice_put(cigs,0,qx[0][0][0][0][0]);
@@ -686,6 +693,7 @@ void img2x_close(fslice imag,
     free(     qx);
 }
 
+/*------------------------------------------------------------*/
 void img2_close()
 /*< deallocate >*/
 {
