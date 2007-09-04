@@ -1,4 +1,4 @@
-/* Tapering */
+/* Tapering (2d and 3d) */
 /*
   Copyright (C) 2007 Colorado School of Mines
    
@@ -19,108 +19,10 @@
 #include <math.h>
 #include <rsf.h>
 
-#include "taper.h"
+#include "taper3.h"
 
 #include "weutil.h"
 /*^*/
-
-/*static int nt1, nt2, nt3;*/
-/*static int  n1,  n2,  n3;*/
-/*static bool b1,  b2,  b3;*/
-/*static float *tap1=NULL, *tap2=NULL, *tap3=NULL;*/
-
-/*------------------------------------------------------------*/
-/*void taper2_init(int n2_, int n1_ ,*/
-/*		 int m2_, int m1_ ,*/
-/*		 bool b2_, bool b1_)*/
-/*< 2-D initialize >*/
-/*{*/
-/*    int it;*/
-/*    float gain;*/
-/**/
-/*    nt1=m1_;*/
-/*    nt2=m2_;*/
-/*    */
-/*    n1 =n1_;*/
-/*    n2 =n2_;*/
-/**/
-/*    b1 =b1_;*/
-/*    b2 =b2_;*/
-/**/
-/*    if (nt1 > 0) {*/
-/*	tap1 = sf_floatalloc(nt1);*/
-/*	for (it=0; it < nt1; it++) {*/
-/*	    gain = sinf(0.5*SF_PI*it/nt1);*/
-/*	    tap1[it]=(1+gain)/2.;*/
-/*	}*/
-/*    }*/
-/*    if (nt2 > 0) {*/
-/*	tap2 = sf_floatalloc(nt2);*/
-/*	for (it=0; it < nt2; it++) {*/
-/*	    gain = sinf(0.5*SF_PI*it/nt2);*/
-/*	    tap2[it]=(1+gain)/2.;*/
-/*	}*/
-/*    }*/
-/*}*/
-
-/*------------------------------------------------------------*/
-void taper2_close(tap3d tap)
-/*< 2-D free allocated storage >*/
-{
-    free(tap->tap1);
-    free(tap->tap2);
-}
-
-/*------------------------------------------------------------*/
-/*void taper3_init(*/
-/*    int n3_, */
-/*    int n2_, */
-/*int n1_,*/
-/*    int m3_, */
-/*    int m2_, */
-/*int m1_,*/
-/*    bool b3_,*/
-/*    bool b2_,*/
-/*    bool b1_)*/
-/*< 3-D initialize >*/
-/*{*/
-/*    int it;*/
-/*    float gain;*/
-/**/
-/*    nt1=m1_;*/
-/*    nt2=m2_;*/
-/*    nt3=m3_;*/
-/**/
-/*    n1 =n1_;*/
-/*    n2 =n2_;*/
-/*    n3 =n3_;*/
-/**/
-/*    b1 =b1_;*/
-/*    b2 =b2_;*/
-/*    b3 =b3_;*/
-/**/
-/*    if (nt1 > 0) {*/
-/*	tap1 = sf_floatalloc(nt1);*/
-/*	for (it=0; it < nt1; it++) {*/
-/*	    gain = sinf(0.5*SF_PI*it/nt1);*/
-/*	    tap1[it]=(1+gain)/2.;*/
-/*	}*/
-/*    }*/
-/*    if (nt2 > 0) {*/
-/*	tap2 = sf_floatalloc(nt2);*/
-/*	for (it=0; it < nt2; it++) {*/
-/*	    gain = sinf(0.5*SF_PI*it/nt2);*/
-/*	    tap2[it]=(1+gain)/2.;*/
-/*	}*/
-/*    }*/
-/*    if (nt3 > 0) {*/
-/*	tap3 = sf_floatalloc(nt3);*/
-/*	for (it=0; it < nt3; it++) {*/
-/*	    gain = sinf(0.5*SF_PI*it/nt3);*/
-/*	    tap3[it]=(1+gain)/2.;*/
-/*	}*/
-/*    }*/
-/*}*/
 
 /*------------------------------------------------------------*/
 tap3d taper_init(int  n1_, 
@@ -177,9 +79,16 @@ tap3d taper_init(int  n1_,
     return tap;
 }
 
+/*------------------------------------------------------------*/
+void taper2d_close(tap3d tap)
+/*< 2-D free allocated storage >*/
+{
+    free(tap->tap1);
+    free(tap->tap2);
+}
 
 /*------------------------------------------------------------*/
-void taper3_close(tap3d tap)
+void taper3d_close(tap3d tap)
 /*< 3-D free allocated storage >*/
 {
     if (tap->nt1 > 0) free(tap->tap1);
@@ -188,43 +97,8 @@ void taper3_close(tap3d tap)
 }
 
 /*------------------------------------------------------------*/
-/*void taper2old(sf_complex** tt,*/
-/*	    tap3d tap)*/
-/*< 2-D taper >*/
-/*{*/
-/*    int it,i2,i1;*/
-/*    float gain;*/
-/**/
-/*    for (it=0; it < nt2; it++) {*/
-/*	gain = tap2[it];*/
-/*	for (i1=0; i1 < n1; i1++) {*/
-/*#ifdef SF_HAS_COMPLEX_H*/
-/*	    if (b2) tt[   it  ][i1] *= gain;*/
-/*	    ;       tt[n2-it-1][i1] *= gain;*/
-/*#else*/
-/*	    if (b2) tt[   it  ][i1] = sf_crmul(tt[   it  ][i1],gain);*/
-/*	    ;       tt[n2-it-1][i1] = sf_crmul(tt[n2-it-1][i1],gain);*/
-/*#endif*/
-/*	}*/
-/*    }*/
-/**/
-/*    for (it=0; it < nt1; it++) {*/
-/*	gain = tap1[it];*/
-/*	for (i2=0; i2 < n2; i2++) {*/
-/*#ifdef SF_HAS_COMPLEX_H*/
-/*	    if (b1) tt[i2][        it  ] *= gain;*/
-/*	    ;       tt[i2][n1-it-1] *= gain;*/
-/*#else*/
-/*	    if (b1) tt[i2][        it  ] = sf_crmul(tt[i2][        it  ],gain);*/
-/*	    ;       tt[i2][n1-it-1] = sf_crmul(tt[i2][n1-it-1],gain);*/
-/*#endif*/
-/*	}*/
-/*    }*/
-/*}*/
-
-/*------------------------------------------------------------*/
-void taper2(sf_complex** tt  /* [n2][n1] tapered array (in and out) */,
-	       tap3d tap)
+void taper2d(sf_complex** tt  /* [n2][n1] tapered array (in and out) */,
+	     tap3d tap)
 /*< 2-D taper >*/
 {
     int it,i2,i1;
@@ -258,8 +132,8 @@ void taper2(sf_complex** tt  /* [n2][n1] tapered array (in and out) */,
 }
 
 /*------------------------------------------------------------*/
-void taper3(sf_complex*** tt /* [n3][n2][n1] tapered array (inout) */,
-	    tap3d tap)
+void taper3d(sf_complex*** tt /* [n3][n2][n1] tapered array (inout) */,
+	     tap3d tap)
 /*< 3-D taper >*/
 {
     int it,i1,i2,i3;

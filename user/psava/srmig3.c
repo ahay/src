@@ -28,7 +28,7 @@
 #endif
 
 #include "srmig3.h"
-#include "taper.h"
+#include "taper3.h"
 #include "slowref.h"
 #include "ssr3.h"
 #include "img3.h"
@@ -160,10 +160,11 @@ sroperator3d srmig3_init(bool    verb_,
 }
 
 /*------------------------------------------------------------*/
-void srmig3_close(tap3d tap)
+void srmig3_close(ssr3d ssr,
+		  tap3d tap)
 /*< free allocated storage >*/
 {
-    ssr3_close(tap);
+    ssr3_close(ssr,tap);
     
     free(**ss_s); free( *ss_s); free( ss_s);
     free(**so_s); free( *so_s); free( so_s);
@@ -220,8 +221,8 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
 		fslice_get(rdat,ie*aw.n+iw,ww_r[ompith][0]);
 	    }
 #endif	    
-	    taper2(ww_s[ompith],srop->tap);
-/*	    taper2(ww_r[ompith],srop->tap);	    */
+	    taper2d(ww_s[ompith],srop->tap);
+	    taper2d(ww_r[ompith],srop->tap);	    
 	    
 	    fslice_get(slow_s,0,so_s[ompith][0]);
 	    fslice_get(slow_r,0,so_r[ompith][0]);
@@ -229,8 +230,8 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
 		fslice_get(slow_s,imz+1,ss_s[ompith][0]);
 		fslice_get(slow_r,imz+1,ss_r[ompith][0]);
 
-		ssr3_ssf(ws,ww_s[ompith],so_s[ompith],ss_s[ompith],nr_s[imz],sm_s[imz],ompith,srop->tap);
-		ssr3_ssf(wr,ww_r[ompith],so_r[ompith],ss_r[ompith],nr_r[imz],sm_r[imz],ompith,srop->tap);
+		ssr3_ssf(ws,ww_s[ompith],so_s[ompith],ss_s[ompith],nr_s[imz],sm_s[imz],ompith,srop->ssr,srop->tap);
+		ssr3_ssf(wr,ww_r[ompith],so_r[ompith],ss_r[ompith],nr_r[imz],sm_r[imz],ompith,srop->ssr,srop->tap);
 		
 		SOOP( so_s[ompith][ily][ilx] = ss_s[ompith][ily][ilx]; );
 		SOOP( so_r[ompith][ily][ilx] = ss_r[ompith][ily][ilx]; );

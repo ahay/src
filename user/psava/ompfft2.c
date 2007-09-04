@@ -22,6 +22,8 @@
 
 #include "ompfft2.h"
 
+#include "weutil.h"
+
 static kiss_fft_cfg *forw1;
 static kiss_fft_cfg *invs1; /* FFT on axis 1 */
 static kiss_fft_cfg *forw2;
@@ -34,21 +36,36 @@ static float        fftscale;
 static sf_complex *shf1,*shf2;
 
 /*------------------------------------------------------------*/
-void ompfft2_init(int n1_, 
-		  int n2_,
-		  int ompnth)
+fft2d ompfft2_init(int n1_, 
+		   int n2_,
+		   int ompnth)
 /*< initialize >*/
 {
     int ompith;
+
+    /*------------------------------------------------------------*/
+    fft2d fft;
+    fft = (fft2d) sf_alloc(1,sizeof(*fft));
+
     n1 = n1_;
     n2 = n2_;
 
+    fft->n1 = n1_;
+    fft->n2 = n2_;
+
     ctrace = (kiss_fft_cpx**) sf_complexalloc2(n2,ompnth);
+
+    fft->ctrace = (kiss_fft_cpx**) sf_complexalloc2(fft->n2,ompnth);
 
     forw1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
     invs1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
     forw2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
     invs2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
+
+    fft->forw1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
+    fft->invs1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
+    fft->forw2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
+    fft->invs2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
 
     for(ompith=0; ompith<ompnth; ompith++) {
 	forw1[ompith] = kiss_fft_alloc(n1,0,NULL,NULL);
@@ -56,12 +73,24 @@ void ompfft2_init(int n1_,
 	forw2[ompith] = kiss_fft_alloc(n2,0,NULL,NULL);
 	invs2[ompith] = kiss_fft_alloc(n2,1,NULL,NULL);
 
+	fft->forw1[ompith] = kiss_fft_alloc(n1,0,NULL,NULL);
+	fft->invs1[ompith] = kiss_fft_alloc(n1,1,NULL,NULL);
+	fft->forw2[ompith] = kiss_fft_alloc(n2,0,NULL,NULL);
+	fft->invs2[ompith] = kiss_fft_alloc(n2,1,NULL,NULL);
+
 	if (NULL == forw2[ompith] || NULL == invs2[ompith] || 
 	    NULL == forw1[ompith] || NULL == invs1[ompith]) 
 	    sf_error("%s: KISS FFT allocation error",__FILE__);
+
+	if (NULL == fft->forw2[ompith] || NULL == fft->invs2[ompith] || 
+	    NULL == fft->forw1[ompith] || NULL == fft->invs1[ompith]) 
+	    sf_error("%s: KISS FFT allocation error",__FILE__);
+
     }
 
-    fftscale = 1./sqrtf(n1*n2);
+    fft->fftscale = 1./sqrtf(n1*n2);
+
+    return fft;
 }
 
 /*------------------------------------------------------------*/
