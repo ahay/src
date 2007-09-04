@@ -26,8 +26,9 @@
 #include "ompfft2.h"
 #include "taper.h"
 
-/*#include "slice.h"*/
-/*^*/
+#include "weutil.h"
+
+/*------------------------------------------------------------*/
 
 #define LOOP(a) for(iy=0;iy<ayy.n;iy++){ for(ix=0;ix<axx.n;ix++){ {a} }}
 #define KOOP(a) for(iy=0;iy<byy.n;iy++){ for(ix=0;ix<bxx.n;ix++){ {a} }}
@@ -46,22 +47,22 @@ static float dsmax2;
 static float         **kk; /* wavenumber  */
 static int            *lx;
 static int            *ly;
-static sf_complex ***pk;
-static sf_complex ***wk;
-static float      ***wt;
+static sf_complex   ***pk;
+static sf_complex   ***wk;
+static float        ***wt;
 
 /*------------------------------------------------------------*/
-void ssr3_init( sf_axis az_,
-		sf_axis ax_,
-		sf_axis ay_,
-		sf_axis lx_,
-		sf_axis ly_,
-		int px,
-		int py,
-	       int tx,
-		int ty,
-		float dsmax,
-		int ompnth
+ssr3d ssr3_init( sf_axis az_,
+		 sf_axis ax_,
+		 sf_axis ay_,
+		 sf_axis lx_,
+		 sf_axis ly_,
+		 int px,
+		 int py,
+		 int tx,
+		 int ty,
+		 float dsmax,
+		 int ompnth
     )
 /*< initialize >*/
 {
@@ -70,6 +71,38 @@ void ssr3_init( sf_axis az_,
     int   jx, jy;
     float xx, yy;
     int  ilx,ily;
+
+
+    /*------------------------------------------------------------*/
+
+    ssr3d ssr;
+    ssr = (ssr3d) sf_alloc(1,sizeof(*ssr));
+
+    ssr->ompnth = ompnth;
+
+    ssr->az  = sf_nod(az_);
+    ssr->axx = sf_nod(ax_);
+    ssr->ayy = sf_nod(ay_);
+    ssr->alx = sf_nod(lx_);
+    ssr->aly = sf_nod(ly_);
+
+    X2K(ssr->axx,ssr->bxx,px);
+    X2K(ssr->ayy,ssr->byy,py);
+
+    ssr->kk = sf_floatalloc2(ssr->bxx.n,ssr->byy.n);
+
+    ssr->lx = sf_intalloc(ssr->axx.n);
+    ssr->ly = sf_intalloc(ssr->ayy.n);
+
+    /* allocate K-domain storage */
+    ssr->wk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+    ssr->pk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+
+    /* allocate X-domain storage */
+    ssr->wt = sf_floatalloc3   (ssr->axx.n,ssr->ayy.n,ssr->ompnth);
+
+    /*------------------------------------------------------------*/
+
 
     az  = sf_nod(az_);
     axx = sf_nod(ax_);
@@ -80,10 +113,20 @@ void ssr3_init( sf_axis az_,
     /* construct K-domain axes */
     X2K(axx,bxx,px); sf_raxa(sf_maxa(bxx.n,bxx.o,bxx.d));
     X2K(ayy,byy,py); sf_raxa(sf_maxa(byy.n,byy.o,byy.d));
+
+    /* allocate K-domain storage */
+    wk = sf_complexalloc3 (bxx.n,byy.n,ompnth);
+    pk = sf_complexalloc3 (bxx.n,byy.n,ompnth);
+
+    /* allocate X-domain storage */
+    wt = sf_floatalloc3   (axx.n,ayy.n,ompnth);
+
+
     ompfft2_init(bxx.n,byy.n,ompnth);
 
     /* precompute wavenumbers */
     kk = sf_floatalloc2(bxx.n,byy.n);  /* wavenumber */
+
     for (iy=0; iy<byy.n; iy++) {
 	jy = KMAP(iy,byy.n);
 	ky = byy.o + jy*byy.d;
@@ -91,11 +134,20 @@ void ssr3_init( sf_axis az_,
 	    jx = KMAP(ix,bxx.n);
 	    kx = bxx.o + jx*bxx.d;  
 	    kk[iy][ix] = kx*kx+ky*ky;
-
-/*	    sf_warning("kk[%d][%d]=%g",iy,ix,kk[iy][ix]);*/
 	}
     }    
 
+    for (iy=0; iy<byy.n; iy++) {
+	jy = KMAP(iy,ssr->byy.n);
+	ky = ssr->byy.o + jy*ssr->byy.d;
+	for (ix=0; ix<ssr->bxx.n; ix++) {
+	    jx = KMAP(ix,ssr->bxx.n);
+	    kx = ssr->bxx.o + jx*ssr->bxx.d;  
+	    ssr->kk[iy][ix] = kx*kx+ky*ky;
+	}
+    }
+    
+    
     /* precompute indices */
     lx = sf_intalloc(axx.n);
     ly = sf_intalloc(ayy.n);
@@ -110,30 +162,42 @@ void ssr3_init( sf_axis az_,
 	lx[ix] = BOUND(ilx,alx.n); /* i-line index */
     }
 
+    for (iy=0; iy<ssr->ayy.n; iy++) {
+	yy = ssr->ayy.o + iy*ayy.d;
+	ily    = INDEX( yy,ssr->aly);
+	ssr->ly[iy] = BOUND(ily,ssr->aly.n); /* x-line index */
+    }
+    for (ix=0; ix<ssr->axx.n; ix++) {
+	xx = ssr->axx.o + ix*ssr->axx.d;
+	ilx    = INDEX( xx,ssr->alx);
+	ssr->lx[ix] = BOUND(ilx,ssr->alx.n); /* i-line index */
+    }
+
+    /* initialize FFT */
+    ompfft2_init(ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+
     /* precompute taper */
-    taper2_init(ayy.n,axx.n,
-		SF_MIN(ty,ayy.n-1),
-		SF_MIN(tx,axx.n-1),
-		true,
-		true);
-
-    /* allocate K-domain storage */
-    wk = sf_complexalloc3 (bxx.n,byy.n,ompnth);
-    pk = sf_complexalloc3 (bxx.n,byy.n,ompnth);
-
-    /* allocate X-domain storage */
-    wt = sf_floatalloc3   (axx.n,ayy.n,ompnth);
+/*    taper2_init(ssr->ayy.n,ssr->axx.n,*/
+/*		SF_MIN(ty,ssr->ayy.n-1),*/
+/*		SF_MIN(tx,ssr->axx.n-1),*/
+/*		true,*/
+/*		true);*/
 
     dsmax2 = dsmax*dsmax;
     dsmax2*= dsmax2;
+
+    ssr->dsmax2 = dsmax*dsmax;
+    ssr->dsmax2*= ssr->dsmax2;
+
+    return ssr;
 }
 
 /*------------------------------------------------------------*/
-void ssr3_close(void)
+void ssr3_close(tap3d tap)
 /*< free allocated storage >*/
 {
     ompfft2_close();
-    taper2_close();
+    taper2_close(tap);
 
     free( *kk); free( kk);
     ;           free( lx);
@@ -152,7 +216,8 @@ void ssr3_ssf(
     float         **ss /* slowness  */,
     int             nr /* nr. of ref slo */,
     float          *sm /* ref slo squared */,
-    int         ompith
+    int         ompith,
+    tap3d          tap
     )
 /*< Wavefield extrapolation by SSF >*/
 {
@@ -228,7 +293,7 @@ void ssr3_ssf(
 	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
 #endif
 
-    taper2(wx);
+    taper2(wx,tap);
 }
 
 /*------------------------------------------------------------*/
@@ -239,7 +304,8 @@ void ssr3_sso(
     float      **ss /* slowness  */,
     int          nr /* nr. of ref slo */,
     float       *sm /* ref slo squared */,
-    int         ompith
+    int         ompith,
+    tap3d          tap
     )
 /*< Wavefield extrapolation by SSF w/ one reference slowness >*/
 {
@@ -297,7 +363,7 @@ void ssr3_sso(
 	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*az.d))); );
 #endif
 
-    taper2(wx);
+    taper2(wx,tap);
 }
 
 /*------------------------------------------------------------*/
@@ -308,7 +374,8 @@ void ssr3_phs(
     float      **ss /* slowness  */,
     int          nr /* nr. of ref slo */,
     float       *sm /* ref slo squared */,
-    int         ompith
+    int         ompith,
+    tap3d          tap
     )
 /*< Wavefield extrapolation by phase-shift >*/
 {
@@ -368,7 +435,7 @@ void ssr3_phs(
     LOOP( wx[iy][ix] = sf_crmul(wx[iy][ix],1./wt[ompith][iy][ix]); );
 #endif
 
-    taper2(wx);
+    taper2(wx,tap);
 }
 
 /*------------------------------------------------------------*/
@@ -379,7 +446,8 @@ void ssr3_pho(
     float      **ss /* slowness  */,
     int          nr /* nr. of ref slo */,
     float       *sm /* ref slo squared */,
-    int         ompith
+    int         ompith,
+    tap3d          tap
     )
 /*< Wavefield extrapolation by phase-shift w/ one reference >*/
 {
@@ -421,7 +489,7 @@ void ssr3_pho(
     ompfft2( true,(kiss_fft_cpx**) wk[ompith],ompith);    
     LOOP( wx[iy][ix] = wk[ompith][iy][ix]; );
     
-    taper2(wx);
+    taper2(wx,tap);
     
 }
 

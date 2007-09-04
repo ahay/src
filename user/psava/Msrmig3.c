@@ -26,6 +26,7 @@
 
 #include "srmig3.h"
 #include "img3.h"
+#include "weutil.h"
 
 int main (int argc, char *argv[])
 {
@@ -44,8 +45,11 @@ int main (int argc, char *argv[])
 			  */
     bool  hsym;
     float vpvs;
-    void (*imop)(int,int);
-    void (*imop_close)(fslice,fslice);
+
+    void (*imop)(int,int);              // imaging operator apply
+    void (*imop_close)(fslice,fslice);  // imaging operator close
+
+    sroperator3d srop;
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -282,14 +286,14 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* MIGRATION */
-    srmig3_init (verb,eps,dtmax,
-		 ae,aw,amx,amy,amz,alx,aly,
-		 tmx,tmy,pmx,pmy,
-		 nrmax,slo_s,slo_r,
-		 ompnth);
+    srop = srmig3_init (verb,eps,dtmax,
+			ae,aw,amx,amy,amz,alx,aly,
+			tmx,tmy,pmx,pmy,
+			nrmax,slo_s,slo_r,
+			ompnth);
     
-    srmig3(wfl_s,wfl_r,imag,cigs, imop, ompchunk); 
-    srmig3_close();
+    srmig3(wfl_s,wfl_r,imag,cigs, imop, ompchunk, srop);
+    srmig3_close(srop->tap);
 
     imop_close(imag,cigs); 
 

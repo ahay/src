@@ -36,6 +36,9 @@
 #include "slice.h"
 /*^*/
 
+#include "weutil.h"
+/*^*/
+
 #define SOOP(a) for(ily=0;ily<aly.n;ily++){ \
                 for(ilx=0;ilx<alx.n;ilx++){ {a} }}
 
@@ -54,30 +57,33 @@ static float     ***so_s,***so_r; /* slowness */
 static int ompnth;
 
 /*------------------------------------------------------------*/
-void srmig3_init(bool    verb_,
-		 float   eps_,
-		 float   dtmax,
-		 sf_axis ae_     /* experiments (e.g. shots) */,
-		 sf_axis aw_     /* frequency */,
-		 sf_axis amx_    /* i-line (data) */,
-		 sf_axis amy_    /* x-line (data) */,
-		 sf_axis amz_    /* depth */,
-		 sf_axis alx_    /* i-line (slowness/image) */,
-		 sf_axis aly_    /* x-line (slowness/image) */,
-		 int     tmx, 
-		 int     tmy     /* taper size */,
-		 int     pmx, 
-		 int     pmy,    /* padding in the k domain */
-		 int    nrmax,   /* maximum number of references */
-		 fslice slow_s_,
-		 fslice slow_r_,
-		 int     ompnth_
+sroperator3d srmig3_init(bool    verb_,
+			 float   eps_,
+			 float   dtmax,
+			 sf_axis ae_     /* experiments (e.g. shots) */,
+			 sf_axis aw_     /* frequency */,
+			 sf_axis amx_    /* i-line (data) */,
+			 sf_axis amy_    /* x-line (data) */,
+			 sf_axis amz_    /* depth */,
+			 sf_axis alx_    /* i-line (slowness/image) */,
+			 sf_axis aly_    /* x-line (slowness/image) */,
+			 int     tmx, 
+			 int     tmy     /* taper size */,
+			 int     pmx, 
+			 int     pmy,    /* padding in the k domain */
+			 int    nrmax,   /* maximum number of references */
+			 fslice slow_s_,
+			 fslice slow_r_,
+			 int     ompnth_
     )
 /*< initialize SR migration >*/
 {
     float dsmax;
     int   imz, jj;
 
+    sroperator3d srop;
+    srop = (sroperator3d) sf_alloc(1,sizeof(*srop));
+    
     verb=verb_;
     eps = eps_;
 
@@ -98,22 +104,19 @@ void srmig3_init(bool    verb_,
     dsmax = dtmax/amz.d;
 
     /* SSR */
-    ssr3_init(amz_ ,
-	      amx_,amy_,
-	      alx_,aly_,
-	      pmx ,pmy,
-	      tmx ,tmy,
-	      dsmax,
-	      ompnth);
-
-    /* precompute taper */
-    taper2_init(amy.n,
-		amx.n,
-		SF_MIN(tmy,amy.n-1),
-		SF_MIN(tmx,amx.n-1),
-		true,
-		true);
-
+    srop->ssr = ssr3_init(amz_ ,
+			  amx_,amy_,
+			  alx_,aly_,
+			  pmx ,pmy,
+			  tmx ,tmy,
+			  dsmax,
+			  ompnth);
+    
+    /* taper */
+    srop->tap = taper_init(amx.n,amy.n,1,
+			   SF_MIN(tmx,amx.n-1),SF_MIN(tmy,amy.n-1),0,
+			   true,true,false);
+    
     /* allocate wavefield storage */
     ww_s = sf_complexalloc3(amx.n,amy.n,ompnth);
     ww_r = sf_complexalloc3(amx.n,amy.n,ompnth);
@@ -129,7 +132,6 @@ void srmig3_init(bool    verb_,
 	fslice_get(slow_s,imz,ss_s[0][0]);
 	
 	nr_s[imz] = slowref(nrmax,dsmax,alx.n*aly.n,ss_s[0][0],sm_s[imz]);
-/*	if (verb) sf_warning("nr_s[%d]=%d",imz,nr_s[imz]);*/
     }
     for (imz=0; imz<amz.n-1; imz++) {
 	for (jj=0; jj<nr_s[imz]; jj++) {
@@ -147,7 +149,6 @@ void srmig3_init(bool    verb_,
 	fslice_get(slow_r,imz,ss_r[0][0]);
 	
 	nr_r[imz] = slowref(nrmax,dsmax,alx.n*aly.n,ss_r[0][0],sm_r[imz]);
-/*	if (verb) sf_warning("nr_r[%d]=%d",imz,nr_r[imz]);*/
     }
     for (imz=0; imz<amz.n-1; imz++) {
 	for (jj=0; jj<nr_r[imz]; jj++) {
@@ -155,13 +156,14 @@ void srmig3_init(bool    verb_,
 	}
     }
 
+    return srop;
 }
 
 /*------------------------------------------------------------*/
-void srmig3_close(void)
+void srmig3_close(tap3d tap)
 /*< free allocated storage >*/
 {
-    ssr3_close();
+    ssr3_close(tap);
     
     free(**ss_s); free( *ss_s); free( ss_s);
     free(**so_s); free( *so_s); free( so_s);
@@ -183,7 +185,8 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
 	    fslice imag /*         image [nz][ny][nx] */,
 	    fslice cigs,
 	    void (*imop)(int,int),
-	    int ompchunk
+	    int ompchunk,
+	    sroperator3d srop
     )
 /*< Apply S/R migration >*/
 {
@@ -216,33 +219,22 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
 		fslice_get(sdat,ie*aw.n+iw,ww_s[ompith][0]);
 		fslice_get(rdat,ie*aw.n+iw,ww_r[ompith][0]);
 	    }
-#endif
+#endif	    
+	    taper2(ww_s[ompith],srop->tap);
+/*	    taper2(ww_r[ompith],srop->tap);	    */
 	    
-	    taper2(ww_s[ompith]);
-	    taper2(ww_r[ompith]);	    
-	    
-/*#ifdef _OPENMP	    */
-/*#pragma omp critical*/
-/*	    {*/
-		fslice_get(slow_s,0,so_s[ompith][0]);
-		fslice_get(slow_r,0,so_r[ompith][0]);
-/*	    }*/
-/*#endif*/
+	    fslice_get(slow_s,0,so_s[ompith][0]);
+	    fslice_get(slow_r,0,so_r[ompith][0]);
 	    for (imz=0; imz<amz.n-1; imz++) {
-/*#ifdef _OPENMP	    */
-/*#pragma omp critical*/
-/*		{*/
-		    fslice_get(slow_s,imz+1,ss_s[ompith][0]);
-		    fslice_get(slow_r,imz+1,ss_r[ompith][0]);
-/*		}*/
-/*#endif*/
+		fslice_get(slow_s,imz+1,ss_s[ompith][0]);
+		fslice_get(slow_r,imz+1,ss_r[ompith][0]);
 
-		ssr3_ssf(ws,ww_s[ompith],so_s[ompith],ss_s[ompith],nr_s[imz],sm_s[imz],ompith);
-		ssr3_ssf(wr,ww_r[ompith],so_r[ompith],ss_r[ompith],nr_r[imz],sm_r[imz],ompith);
-
+		ssr3_ssf(ws,ww_s[ompith],so_s[ompith],ss_s[ompith],nr_s[imz],sm_s[imz],ompith,srop->tap);
+		ssr3_ssf(wr,ww_r[ompith],so_r[ompith],ss_r[ompith],nr_r[imz],sm_r[imz],ompith,srop->tap);
+		
 		SOOP( so_s[ompith][ily][ilx] = ss_s[ompith][ily][ilx]; );
 		SOOP( so_r[ompith][ily][ilx] = ss_r[ompith][ily][ilx]; );
-
+		
 		img3store(imz,ww_s,ww_r,ompith);
 		
 	    } // z 
