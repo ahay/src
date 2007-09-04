@@ -37,7 +37,8 @@ Flow('tshots2','top mc bot','cat axis=1 ${SOURCES[1:3]}')
 
 Flow('line2D.sgy','shots tshots2 shots.bin shots.asc',
      '''
-     segywrite tape=$TARGET tfile=${SOURCES[1]} bfile=${SOURCES[2]} hfile=${SOURCES[3]}
+     segywrite tape=$TARGET
+     tfile=${SOURCES[1]} bfile=${SOURCES[2]} hfile=${SOURCES[3]}
      ''',stdout=0)
 
 # Shot gathers sorting and binning
@@ -80,20 +81,37 @@ Flow('vp.rsf','vp.bin',
 
 Flow('vpt','vp','depth2time velocity=$SOURCE nt=1250 dt=0.002')
 
-Result('vp','grey title="Interval Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5')
-Result('vpt','grey title="Interval Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5 label1=t unit1=s')
+Result('vp',
+       '''
+       grey title="Interval Velocity" color=j allpos=y
+       scalebar=y barreverse=y bias=1.5
+       ''')
+Result('vpt',
+       '''
+       grey title="Interval Velocity" color=j allpos=y
+       scalebar=y barreverse=y bias=1.5 label1=t unit1=s
+       ''')
 
 # Convert interval to RMS
 
-Flow('vrms','vpt','add mode=p $SOURCE | causint | math output="sqrt(input*0.002/(x1+0.002))" ')
+Flow('vrms','vpt',
+     '''
+     add mode=p $SOURCE | causint |
+     math output="sqrt(input*0.002/(x1+0.002))"
+     ''')
 
-Result('vrms','grey title="RMS Velocity" color=j allpos=y scalebar=y barreverse=y bias=1.5 label1=t unit1=s')
+Result('vrms',
+       '''
+       grey title="RMS Velocity" color=j allpos=y
+       scalebar=y barreverse=y bias=1.5 label1=t unit1=s
+       ''')
 
 # 1-D RMS Velocity (converted to m/s)
 
 Flow('vrms1','vrms','stack | scale dscale=1000')
 
-Result('vrms1','graph transp=y yreverse=y title="RMS Velocity" label1=t unit1=s')
+Result('vrms1',
+       'graph transp=y yreverse=y title="RMS Velocity" label1=t unit1=s')
 
 # Replicate
 
@@ -101,7 +119,11 @@ Flow('vnmo','vrms1','spray axis=2 n=1811 | put o2=152.2 d2=6.096')
 
 # Mask non-zero traces
 
-Flow('mask','wcmps','window min1=1.5 max1=2 | math output="abs(input)" | stack axis=1 | mask min=1e-12')
+Flow('mask','wcmps',
+     '''
+     window min1=1.5 max1=2 | math output="abs(input)" |
+     stack axis=1 | mask min=1e-12
+     ''')
 
 # Filter out high-dipping noise
 

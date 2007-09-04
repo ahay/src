@@ -3,7 +3,8 @@ from rsfproj import *
 data = 'data-BP2.HH'
 Fetch(data,'bp')
 
-Flow('data',data,'dd form=native')
+Flow('data',data,
+     'dd form=native | put label1=Time unit1=s label2=Offset unit2=ft')
 
 Result('data','grey title=Data')
 
@@ -22,12 +23,19 @@ Flow('back','inv',
 Result('back',
        '''
        window f2=650 n2=748 f1=832 n1=1216 |
-       grey title="Inverse Data"
+       grey title="Inverse Data" clip=60 label2=Offset
        ''')
 
-Flow('sig','back',
+Flow('mute','back','mutter t0=-1 v0=20000 hyper=y | cut min1=-1')
+
+Result('mute',
+       '''
+       window f2=650 n2=748 f1=832 n1=1216 |
+       grey title="Muted Inverse Data" clip=60 label2=Offset
+       ''') 
+
+Flow('sig','mute',
      '''
-     mutter t0=-1 v0=20000 hyper=y | cut min1=-1 | 
      scale axis=2 | rtoc | fft3 axis=1 pad=1 | fft3 pad=1 inv=y |
      math output="conj(input)/(conj(input)*input+%g)" |
      fft3 pad=1 | fft3 axis=1 pad=1 inv=y | real
@@ -37,7 +45,7 @@ Result('sig',
        '''
        window f2=650 n2=748 min1=0 n1=1216 |
        mutter t0=1 v0=20000 |
-       grey title="Filtered Data"
+       grey title="Filtered Data" label2=Offset
        ''')
      
 End()

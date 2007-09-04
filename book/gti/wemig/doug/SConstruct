@@ -1,0 +1,42 @@
+from rsfproj import *
+
+private = {'login':os.environ.get('BEG_LOGIN'),
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
+
+Fetch('gathers1.sgy','wemi',private)
+
+Flow('gathers tgathers gathers.asc gathers.bin',
+     'gathers1.sgy',
+     'segyread tfile=${TARGETS[1]} hfile=${TARGETS[2]} bfile=${TARGETS[3]}')
+
+Flow('gath','gathers','window min1=1.5 | put n2=26 n3=1811')
+
+Flow('dip','gath','dip n4=0 rect1=10 rect2=5')
+
+Flow('flat','gath dip','flat dip=${SOURCES[1]}')
+
+Flow('stack','flat','stack')
+
+for x in (400,1000):
+    cdp = 'cdp%d' % x
+    Flow(cdp,'flat','window n3=1 f3=%d n2=13' % x)
+    Plot(cdp,
+           '''
+           put o2=0 d2=0.25 label2=Offset unit2=km label1=Time unit1=s |
+           wiggle poly=y transp=y yreverse=y title="CIG %d"
+           ''' % (x+1))
+
+Result('cdp','cdp400 cdp1000','SideBySideAniso')
+Result('stack','grey title=Image label2=Trace label1=Time unit1=s')
+
+Flow('gath2','flat','put n3=1 n2=47086 | pad beg1=750')
+
+Flow('gathers2.sgy','gath2 tgathers gathers.asc gathers.bin',
+     '''
+     segywrite tape=$TARGET
+     tfile=${SOURCES[1]} hfile=${SOURCES[2]} bfile=${SOURCES[3]}
+     ''',stdout=-1)
+
+
+End()

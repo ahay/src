@@ -116,7 +116,7 @@ Result('time','time1 asym1',
        '''
        cat axis=2 ${SOURCES[1]} | window max1=50 |
        graph title="Instantaneous Time" dash=0,1
-       label1=Frequency unit1=Hz label2=Time unit2=s min2=0 max2=0.2
+       label1=Frequency unit1=Hz label2=Time unit2=s
        ''')
 
 for w in (10,25,40):

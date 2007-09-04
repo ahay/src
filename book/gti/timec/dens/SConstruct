@@ -142,16 +142,19 @@ Result('wdiff','wvf wrf',
 
 # Ray tracing
 Flow('ray','vv','rays2 nr=2000 nt=1500 dt=0.0005 yshot=400')
-Plot('front','ray',
-     '''
-     window n1=1 f1=550 f2=550 n2=800 | graph 
-     min2=0 max2=1000
-     min1=0 max1=500
-     screenratio=0.5 screenht=7 
-     plotcol=6 transp=1 plotfat=5 dash=1
-     wantaxis=n wheretitle=b wherexlabel=t
-     yreverse=y wanttitle=n
-     ''')
-Result('wrt','wr front','Overlay')
+
+for plot in range(2):
+    front = 'front%d' % plot
+    Plot(front,'ray',
+         '''
+         window n1=1 f1=550 f2=550 n2=800 | graph 
+         min2=0 max2=1000
+         min1=0 max1=500
+         screenratio=0.5 screenht=7 
+         plotcol=%d transp=1 plotfat=%d dash=1
+         wantaxis=n wheretitle=b wherexlabel=t
+         yreverse=y wanttitle=n
+         ''' % ((7,5),(0,1))[plot])
+Result('wrt','wr front0 front1','Overlay')
     
 End()

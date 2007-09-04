@@ -188,7 +188,7 @@ Flow('wave',None,
      spike nsp=1 mag=1 k1=%(kt)d
      n1=%(nt)d d1=%(dt)g o1=%(ot)g
          ''' % par )    
-Result('wave','wave','graph')
+Result('wave','wave','graph wanttitle=n')
 
 #     ricker1 frequency=9
 # ------------------------------------------------------------
