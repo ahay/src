@@ -21,7 +21,7 @@
 
 /* 
  * inputs are wavefields organized as z-x-t
- * output is lagged product image organized as z-x-hz-hz-ht
+ * output is lagged product image organized as z-x-hz-hx-ht
  */
 
 
@@ -61,9 +61,12 @@ int main(int argc, char* argv[])
     Fi = sf_output("out"); /* image */
 
     /* read axes */
-    az=sf_iaxa(Fs,1); sf_setlabel(az,"az"); if(verb) sf_raxa(az);
-    ax=sf_iaxa(Fs,2); sf_setlabel(ax,"ax"); if(verb) sf_raxa(ax);
-    at=sf_iaxa(Fs,3); sf_setlabel(at,"at"); if(verb) sf_raxa(at);
+    az=sf_iaxa(Fs,1); sf_setlabel(az,"z"); if(verb) sf_raxa(az);
+    ax=sf_iaxa(Fs,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax);
+    at=sf_iaxa(Fs,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at);
+
+    sf_oaxa(Fi,az,1);
+    sf_oaxa(Fi,ax,2);
 
     nz = sf_n(az);
     nx = sf_n(ax);
