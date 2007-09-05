@@ -25,8 +25,13 @@
 #endif
 
 #include "srmig3.h"
+#include "taper3.h"
+#include "ssr3.h"
+#include "slow3.h"
 #include "img3.h"
+
 #include "weutil.h"
+/*^*/
 
 int main (int argc, char *argv[])
 {
@@ -48,8 +53,6 @@ int main (int argc, char *argv[])
 
     void (*imop)(int,int);              // imaging operator apply
     void (*imop_close)(fslice,fslice);  // imaging operator close
-
-    sroperator3d srop;
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -76,6 +79,16 @@ int main (int argc, char *argv[])
 
     int ompchunk=1;
     int ompnth=0,ompath=1; 
+
+    cub3d cub; // wavefield hypercube
+    tap3d tap; // tapering
+    ssr3d ssr; // SSR operator
+    slo3d s_s; // slowness 
+    slo3d s_r; // slowness 
+
+    sroperator3d srop;
+
+    float dsmax;
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
@@ -283,17 +296,53 @@ int main (int argc, char *argv[])
     fslice_load(Fw_r,wfl_r,SF_COMPLEX);
 
     /*------------------------------------------------------------*/
-    /* MIGRATION */
-    srop = srmig3_init (verb,eps,dtmax,
-			ae,aw,amx,amy,amz,alx,aly,
-			tmx,tmy,pmx,pmy,
-			nrmax,slo_s,slo_r,
-			ompnth);
+    /* manage structures */
+    cub = srmig3_cube(verb,
+		      amx,amy,amz,
+		      alx,aly,
+		      aw,
+		      ae,
+		      eps,
+		      ompnth);
+
+    tap = taper_init(cub,
+		     SF_MIN(tmx,cub->amx.n-1), // tmx
+		     SF_MIN(tmy,cub->amy.n-1), // tmy
+		     0,                        // tmz
+		     true,true,false);
+
+    dsmax = dtmax/cub->amz.d;
+    ssr = ssr3_init(cub,
+		    pmx ,pmy,
+		    tmx ,tmy,
+		    dsmax,
+		    cub->ompnth);
     
-    srmig3(wfl_s,wfl_r,imag,cigs, imop, ompchunk, srop);
+    s_s = slow3_init(cub,
+		     slo_s,
+		     nrmax,
+		     dsmax);
+    s_r = slow3_init(cub,
+		     slo_r,
+		     nrmax,
+		     dsmax);
 
-    srmig3_close(srop->ssr,srop->tap,srop->s_s,srop->s_r,srop);
+    /*------------------------------------------------------------*/
+    /* MIGRATION */
+    srop = srmig3_init (cub);
 
+    srmig3(cub,ssr,tap,s_s,s_r,
+	   wfl_s,wfl_r,
+	   imag,cigs, 
+	   imop, ompchunk, srop);
+
+    srmig3_close(srop);
+
+    slow3_close(s_s);
+    slow3_close(s_r);
+    ssr3_close(ssr);
+    taper2d_close(tap);
+    
     imop_close(imag,cigs); 
 
     /*------------------------------------------------------------*/

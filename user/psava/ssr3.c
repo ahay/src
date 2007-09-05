@@ -31,9 +31,9 @@
 
 /*------------------------------------------------------------*/
 
-#define LOOP(a) for(iy=0;iy<ssr->ayy.n;iy++){ for(ix=0;ix<ssr->axx.n;ix++){ {a} }}
+#define LOOP(a) for(iy=0;iy<cub->amy.n;iy++){ for(ix=0;ix<cub->amx.n;ix++){ {a} }}
 #define KOOP(a) for(iy=0;iy<ssr->byy.n;iy++){ for(ix=0;ix<ssr->bxx.n;ix++){ {a} }}
-#define SOOP(a) for(iy=0;iy<ssr->aly.n;iy++){ for(ix=0;ix<ssr->alx.n;ix++){ {a} }}
+#define SOOP(a) for(iy=0;iy<cub->aly.n;iy++){ for(ix=0;ix<cub->alx.n;ix++){ {a} }}
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
@@ -41,11 +41,7 @@
 #define X2K(a,b,p) b.n=a.n+p; b.d=2.0*SF_PI/(b.n*a.d); b.o=(1==b.n)?0:-SF_PI/a.d;
 
 /*------------------------------------------------------------*/
-ssr3d ssr3_init( sf_axa az_,
-		 sf_axa ax_,
-		 sf_axa ay_,
-		 sf_axa lx_,
-		 sf_axa ly_,
+ssr3d ssr3_init( cub3d cub,
 		 int px,
 		 int py,
 		 int tx,
@@ -65,28 +61,19 @@ ssr3d ssr3_init( sf_axa az_,
     ssr3d ssr;
     ssr = (ssr3d) sf_alloc(1,sizeof(*ssr));
 
-    ssr->ompnth = ompnth;
-
-    ssr->az  = az_;
-    ssr->axx = ax_;
-    ssr->ayy = ay_;
-    ssr->alx = lx_;
-    ssr->aly = ly_;
-
-    X2K(ssr->axx,ssr->bxx,px);
-    X2K(ssr->ayy,ssr->byy,py);
+    X2K(cub->amx,ssr->bxx,px);
+    X2K(cub->amy,ssr->byy,py);
 
     ssr->kk = sf_floatalloc2(ssr->bxx.n,ssr->byy.n);
-
-    ssr->lx = sf_intalloc(ssr->axx.n);
-    ssr->ly = sf_intalloc(ssr->ayy.n);
+    ssr->lx = sf_intalloc(cub->amx.n);
+    ssr->ly = sf_intalloc(cub->amy.n);
 
     /* allocate K-domain storage */
-    ssr->wk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,ssr->ompnth);
-    ssr->pk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+    ssr->wk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,cub->ompnth);
+    ssr->pk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,cub->ompnth);
 
     /* allocate X-domain storage */
-    ssr->wt = sf_floatalloc3   (ssr->axx.n,ssr->ayy.n,ssr->ompnth);
+    ssr->wt = sf_floatalloc3   (cub->amx.n,cub->amy.n,cub->ompnth);
 
     for (iy=0; iy<ssr->byy.n; iy++) {
 	jy = KMAP(iy,ssr->byy.n);
@@ -99,19 +86,19 @@ ssr3d ssr3_init( sf_axa az_,
     }
     
     /* precompute indices */
-    for (iy=0; iy<ssr->ayy.n; iy++) {
-	yy = ssr->ayy.o + iy*ssr->ayy.d;
-	ily    = INDEX( yy,ssr->aly);
-	ssr->ly[iy] = BOUND(ily,ssr->aly.n); /* x-line index */
+    for (iy=0; iy<cub->amy.n; iy++) {
+	yy = cub->amy.o + iy*cub->amy.d;
+	ily    = INDEX( yy,cub->aly);
+	ssr->ly[iy] = BOUND(ily,cub->aly.n); /* x-line index */
     }
-    for (ix=0; ix<ssr->axx.n; ix++) {
-	xx = ssr->axx.o + ix*ssr->axx.d;
-	ilx    = INDEX( xx,ssr->alx);
-	ssr->lx[ix] = BOUND(ilx,ssr->alx.n); /* i-line index */
+    for (ix=0; ix<cub->amx.n; ix++) {
+	xx = cub->amx.o + ix*cub->amx.d;
+	ilx    = INDEX( xx,cub->alx);
+	ssr->lx[ix] = BOUND(ilx,cub->alx.n); /* i-line index */
     }
 
     /* initialize FFT */
-    ssr->fft = ompfft2_init(ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+    ssr->fft = ompfft2_init(ssr->bxx.n,ssr->byy.n,cub->ompnth);
 
     ssr->dsmax2 = dsmax*dsmax;
     ssr->dsmax2*= ssr->dsmax2;
@@ -120,12 +107,10 @@ ssr3d ssr3_init( sf_axa az_,
 }
 
 /*------------------------------------------------------------*/
-void ssr3_close(ssr3d ssr,
-		tap3d tap)
+void ssr3_close(ssr3d ssr)
 /*< free allocated storage >*/
 {
     ompfft2_close(ssr->fft);
-    taper2d_close(tap);
 
     free( *ssr->kk); free( ssr->kk);
     ;           free( ssr->lx);
@@ -140,6 +125,7 @@ void ssr3_close(ssr3d ssr,
 void ssr3_ssf(
     sf_complex       w /* frequency */,
     sf_complex    **wx /* wavefield */,
+    cub3d          cub,
     ssr3d          ssr,
     tap3d          tap,
     slo3d          slo,
@@ -156,12 +142,12 @@ void ssr3_ssf(
     w2 = w*w;
     /* w-x part 1 */
     LOOP( s = 0.5 * slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] *= cexpf(-w*s*ssr->az.d); );
+	  wx[iy][ix] *= cexpf(-w*s*cub->amz.d); );
 #else
     w2 = sf_cmul(w,w);
     /* w-x part 1 */
     LOOP( s = 0.5 * slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] = sf_cmul( wx[iy][ix],cexpf(sf_crmul(w,-s*ssr->az.d))); );
+	  wx[iy][ix] = sf_cmul( wx[iy][ix],cexpf(sf_crmul(w,-s*cub->amz.d))); );
 #endif
 
     /* FFT */
@@ -177,14 +163,14 @@ void ssr3_ssf(
 	co =       csqrtf(w2 * slo->sm[imz][jr]);
 	KOOP( cc = csqrtf(w2 * slo->sm[imz][jr] + ssr->kk[iy][ix]);
 	      ssr->wk[ompith][iy][ix] = 
-	      ssr->pk[ompith][iy][ix] * cexpf((co-cc)*ssr->az.d); 
+	      ssr->pk[ompith][iy][ix] * cexpf((co-cc)*cub->amz.d); 
 	    );
 #else
 	co =       csqrtf(sf_crmul(w2,slo->sm[imz][jr]));
 	KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,slo->sm[imz][jr]),
 				  sf_cmplx(ssr->kk[iy][ix],0.)));
 	      ssr->wk[ompith][iy][ix] = 
-	      sf_cmul(pk[ompith][iy][ix],cexpf(sf_crmul(sf_csub(co,cc),ssr->az.d))); 
+	      sf_cmul(pk[ompith][iy][ix],cexpf(sf_crmul(sf_csub(co,cc),cub->amz.d))); 
 	    );
 #endif
 	
@@ -212,12 +198,12 @@ void ssr3_ssf(
     LOOP( wx[iy][ix] /= ssr->wt[ompith][iy][ix]; );
     /* w-x part 2 */
     LOOP( s = 0.5 * slo->ss[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] *= cexpf(-w*s*ssr->az.d); );
+	  wx[iy][ix] *= cexpf(-w*s*cub->amz.d); );
 #else
     LOOP( wx[iy][ix] = sf_crmul(wx[iy][ix],1./ssr->wt[ompith][iy][ix]); );
     /* w-x part 2 */
     LOOP( s = 0.5 * slo->ss[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*ssr->az.d))); );
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*cub->amz.d))); );
 #endif
 
     taper2d(wx,tap);
@@ -227,6 +213,7 @@ void ssr3_ssf(
 void ssr3_sso(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
+    cub3d          cub,
     ssr3d          ssr,
     tap3d          tap,
     slo3d          slo,
@@ -243,12 +230,12 @@ void ssr3_sso(
     w2 = w*w;
     /* w-x part 1 */
     LOOP( s = 0.5 * slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] *= cexpf(-w*s*ssr->az.d); );
+	  wx[iy][ix] *= cexpf(-w*s*cub->amz.d); );
 #else
     w2 = sf_cmul(w,w);
     /* w-x part 1 */
     LOOP( s = 0.5 * slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*ssr->az.d))); );
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*cub->amz.d))); );
 #endif
 
     /* FFT */
@@ -261,20 +248,20 @@ void ssr3_sso(
     co =       csqrtf(w2 * slo->sm[imz][jr]);
     KOOP( cc = csqrtf(w2 * slo->sm[imz][jr] + ssr->kk[iy][ix]);
 	  ssr->wk[ompith][iy][ix] = 
-	  ssr->pk[ompith][iy][ix] * cexpf((co-cc)*ssr->az.d); 
+	  ssr->pk[ompith][iy][ix] * cexpf((co-cc)*cub->amz.d); 
 	);
 
     KOOP( ssr->wk[ompith][iy][ix] = 
-	  ssr->pk[ompith][iy][ix] * cexpf((co)*ssr->az.d); );
+	  ssr->pk[ompith][iy][ix] * cexpf((co)*cub->amz.d); );
 #else
     co =       csqrtf(sf_crmul(w2,slo->sm[imz][jr]));
     KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,slo->sm[imz][jr]),
 			      sf_cmplx(ssr->kk[iy][ix],0.)));
 	  ssr->wk[ompith][iy][ix] = sf_cmul(ssr->pk[ompith][iy][ix],
-			       cexpf(sf_crmul(sf_csub(co,cc),ssr->az.d))); 
+			       cexpf(sf_crmul(sf_csub(co,cc),cub->amz.d))); 
 	);
 
-    KOOP( ssr->wk[ompith][iy][ix] = sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(co,ssr->az.d))); );
+    KOOP( ssr->wk[ompith][iy][ix] = sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(co,cub->amz.d))); );
 #endif
 
     /* IFT */
@@ -284,10 +271,10 @@ void ssr3_sso(
     /* w-x part 2 */
 #ifdef SF_HAS_COMPLEX_H
     LOOP( s = 0.5 * slo->ss[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] *= cexpf(-w*s*ssr->az.d); );
+	  wx[iy][ix] *= cexpf(-w*s*cub->amz.d); );
 #else
     LOOP( s = 0.5 * slo->ss[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ];
-	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*ssr->az.d))); );
+	  wx[iy][ix] = sf_cmul(wx[iy][ix],cexpf(sf_crmul(w,-s*cub->amz.d))); );
 #endif
 
     taper2d(wx,tap);
@@ -297,6 +284,7 @@ void ssr3_sso(
 void ssr3_phs(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
+    cub3d          cub,
     ssr3d          ssr,
     tap3d          tap,
     slo3d          slo,
@@ -327,13 +315,13 @@ void ssr3_phs(
 #ifdef SF_HAS_COMPLEX_H
 	KOOP( cc = csqrtf(w2 * slo->sm[imz][jr] + ssr->kk[iy][ix]);
 	      ssr->wk[ompith][iy][ix] = 
-	      ssr->pk[ompith][iy][ix] * cexpf((-cc)*ssr->az.d); 
+	      ssr->pk[ompith][iy][ix] * cexpf((-cc)*cub->amz.d); 
 	    );
 #else
 	KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,slo->sm[imz][jr]),
 				  sf_cmplx(ssr->kk[iy][ix],0.)));
 	      ssr->wk[ompith][iy][ix] = 
-	      sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(cc,-ssr->az.d))); 
+	      sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(cc,-cub->amz.d))); 
 	    );
 #endif
 
@@ -368,6 +356,7 @@ void ssr3_phs(
 void ssr3_pho(
     sf_complex    w /* frequency */,
     sf_complex **wx /* wavefield */,
+    cub3d          cub,
     ssr3d          ssr,
     tap3d          tap,
     slo3d          slo,
@@ -398,7 +387,7 @@ void ssr3_pho(
 	cc = csqrtf(w2 * slo->sm[imz][jr] + ssr->kk[iy][ix]);
 	
 	ssr->wk[ompith][iy][ix] = 
-	ssr->pk[ompith][iy][ix] * cexpf(-cc*ssr->az.d); 
+	ssr->pk[ompith][iy][ix] * cexpf(-cc*cub->amz.d); 
 	);
 #else
     KOOP(
@@ -406,7 +395,7 @@ void ssr3_pho(
 			    sf_cmplx(ssr->kk[iy][ix],0.)));
 	
 	ssr->wk[ompith][iy][ix] = 
-	sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(cc,-ssr->az.d))); 
+	sf_cmul(ssr->pk[ompith][iy][ix],cexpf(sf_crmul(cc,-cub->amz.d))); 
 	);
 #endif
     

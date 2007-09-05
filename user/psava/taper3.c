@@ -25,15 +25,13 @@
 /*^*/
 
 /*------------------------------------------------------------*/
-tap3d taper_init(int  n1_, 
-		 int  n2_, 
-		 int  n3_ /* cube dimensions */,
-		 int  m1_, 
-		 int  m2_, 
-		 int  m3_ /* taper lengths */,
-		 bool b1_,
-		 bool b2_,
-		 bool b3_)
+tap3d taper_init(cub3d cub,
+		 int   nt1_, 
+		 int   nt2_, 
+		 int   nt3_ /* taper lengths */,
+		 bool  b1_,
+		 bool  b2_,
+		 bool  b3_)
 /*< 3-D initialize >*/
 {
     int it;
@@ -42,13 +40,13 @@ tap3d taper_init(int  n1_,
     tap3d tap;
     tap = (tap3d) sf_alloc(1,sizeof(*tap));
 
-    tap->nt1=m1_;
-    tap->nt2=m2_;
-    tap->nt3=m3_;
+    tap->n1 =cub->amx.n;
+    tap->n2 =cub->amy.n;
+    tap->n3 =cub->amz.n;
 
-    tap->n1 =n1_;
-    tap->n2 =n2_;
-    tap->n3 =n3_;
+    tap->nt1=nt1_;
+    tap->nt2=nt2_;
+    tap->nt3=nt3_;
 
     tap->b1 =b1_;
     tap->b2 =b2_;
