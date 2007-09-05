@@ -110,7 +110,7 @@ ssr3d ssr3_init( sf_axis az_,
     }
 
     /* initialize FFT */
-    ompfft2_init(ssr->bxx.n,ssr->byy.n,ssr->ompnth);
+    ssr->fft = ompfft2_init(ssr->bxx.n,ssr->byy.n,ssr->ompnth);
 
     ssr->dsmax2 = dsmax*dsmax;
     ssr->dsmax2*= ssr->dsmax2;
@@ -123,7 +123,7 @@ void ssr3_close(ssr3d ssr,
 		tap3d tap)
 /*< free allocated storage >*/
 {
-    ompfft2_close();
+    ompfft2_close(ssr->fft);
     taper2d_close(tap);
 
     free( *ssr->kk); free( ssr->kk);
@@ -168,7 +168,7 @@ void ssr3_ssf(
     /* FFT */
     KOOP( ssr->pk[ompith][iy][ix] = sf_cmplx(0.,0.); );
     LOOP( ssr->pk[ompith][iy][ix] = wx[iy][ix]; );
-    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith);
+    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith,ssr->fft);
 
     LOOP( wx[iy][ix] = sf_cmplx(0.,0.);
 	  ssr->wt[ompith][iy][ix] = 0; );
@@ -190,7 +190,7 @@ void ssr3_ssf(
 #endif
 	
 	/* IFT */
-	ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith);
+	ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith,ssr->fft);
 	
 	/* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
@@ -257,7 +257,7 @@ void ssr3_sso(
     /* FFT */
     KOOP( ssr->pk[ompith][iy][ix] = sf_cmplx(0.,0.); );
     LOOP( ssr->pk[ompith][iy][ix] = wx[iy][ix]; );
-    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith);
+    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith,ssr->fft);
 
     jr=0;
 #ifdef SF_HAS_COMPLEX_H
@@ -281,7 +281,7 @@ void ssr3_sso(
 #endif
 
     /* IFT */
-    ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith);
+    ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith,ssr->fft);
     LOOP( wx[iy][ix] = ssr->wk[ompith][iy][ix]; );
     
     /* w-x part 2 */
@@ -323,7 +323,7 @@ void ssr3_phs(
     /* FFT */
     KOOP( ssr->pk[ompith][iy][ix] = sf_cmplx(0.,0.); );
     LOOP( ssr->pk[ompith][iy][ix] = wx[iy][ix]; );
-    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith);
+    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith,ssr->fft);
 
     LOOP( wx[iy][ix] = sf_cmplx(0.,0.);
 	  ssr->wt[ompith][iy][ix] = 0; );
@@ -343,7 +343,7 @@ void ssr3_phs(
 #endif
 
 	/* IFT */
-	ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith);
+	ompfft2(true,(kiss_fft_cpx**) ssr->wk[ompith],ompith,ssr->fft);
 
 	/* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
@@ -397,7 +397,7 @@ void ssr3_pho(
     /* FFT */
     KOOP( ssr->pk[ompith][iy][ix] = sf_cmplx(0.,0.); );
     LOOP( ssr->pk[ompith][iy][ix] = wx[iy][ix]; );
-    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith);
+    ompfft2(false,(kiss_fft_cpx**) ssr->pk[ompith],ompith,ssr->fft);
 
     jr=0;
 #ifdef SF_HAS_COMPLEX_H
@@ -418,7 +418,7 @@ void ssr3_pho(
 #endif
     
     /* IFT */
-    ompfft2( true,(kiss_fft_cpx**) ssr->wk[ompith],ompith);    
+    ompfft2( true,(kiss_fft_cpx**) ssr->wk[ompith],ompith,ssr->fft);    
     LOOP( wx[iy][ix] = ssr->wk[ompith][iy][ix]; );
     
     taper2d(wx,tap);
