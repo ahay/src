@@ -24,14 +24,17 @@
 #include "weutil.h"
 /*^*/
 
+#define SOOP(a) for(ily=0;ily<slo->aly.n;ily++){ \
+                for(ilx=0;ilx<slo->alx.n;ilx++){ {a} }}
+
 /*------------------------------------------------------------*/
-slo3d slow_init(fslice slow_,   /* slowness slice */
-		sf_axa  alx_    /* i-line (slowness/image) */,
-		sf_axa  aly_    /* x-line (slowness/image) */,
-		sf_axa  amz_    /* depth */,
-		int    nrmax,   /* maximum number of references */
-		float  dsmax,
-		int   ompnth
+slo3d slow3_init(fslice slice_,   /* slowness slice */
+		 sf_axa   alx_    /* i-line (slowness/image) */,
+		 sf_axa   aly_    /* x-line (slowness/image) */,
+		 sf_axa   amz_    /* depth */,
+		 int     nrmax,   /* maximum number of references */
+		 float   dsmax,
+		 int    ompnth
     )
 /*< initialize slowness >*/
 {
@@ -41,7 +44,7 @@ slo3d slow_init(fslice slow_,   /* slowness slice */
     slo3d slo;
     slo = (slo3d) sf_alloc(1,sizeof(*slo));
 
-    slo->slow=slow_;
+    slo->slice=slice_;
     slo->alx=alx_;
     slo->aly=aly_;
     slo->amz=amz_;
@@ -55,13 +58,13 @@ slo3d slow_init(fslice slow_,   /* slowness slice */
     slo->nr = sf_intalloc              (slo->amz.n);  /* nr of ref slownesses */
     
     for (imz=0; imz<slo->amz.n; imz++) {
-	fslice_get(slo->slow,imz,slo->ss[0][0]);
+	fslice_get(slo->slice,imz,slo->ss[0][0]);
 	
-	slo->nr[imz] = slow(slo->nrmax,
-			    slo->dsmax,
-			    slo->alx.n*slo->aly.n,
-			    slo->ss[0][0],
-			    slo->sm[imz]);
+	slo->nr[imz] = slow3(slo->nrmax,
+			     slo->dsmax,
+			     slo->alx.n*slo->aly.n,
+			     slo->ss[0][0],
+			     slo->sm[imz]);
     }
     for (imz=0; imz<slo->amz.n-1; imz++) {
 	for (jj=0; jj<slo->nr[imz]; jj++) {
@@ -73,11 +76,11 @@ slo3d slow_init(fslice slow_,   /* slowness slice */
 }
 
 /*------------------------------------------------------------*/
-int slow(int nr           /* maximum number of references */, 
-	 float ds         /* minimum slowness separation */, 
-	 int ns           /* number of slownesses */, 
-	 const float* ss  /* [ns] slowness array */, 
-	 float* sr        /* [nr] reference slownesses squared */) 
+int slow3(int nr           /* maximum number of references */, 
+	  float ds         /* minimum slowness separation */, 
+	  int ns           /* number of slownesses */, 
+	  const float* ss  /* [ns] slowness array */, 
+	  float* sr        /* [nr] reference slownesses squared */) 
 /*< compute reference slownesses, return their number >*/
 {
     int is,jr,ir;
@@ -108,11 +111,22 @@ int slow(int nr           /* maximum number of references */,
 }
 
 /*------------------------------------------------------------*/
-void slow_close( slo3d slo)
+void slow3_close( slo3d slo)
 /*< close slowness >*/
 {
     free(**slo->ss); free( *slo->ss); free( slo->ss);
     free(**slo->so); free( *slo->so); free( slo->so);
     ;                free( *slo->sm); free( slo->sm);
     ;                                 free( slo->nr);
+}
+
+/*------------------------------------------------------------*/
+void slow3_advance( slo3d slo,
+		    int ompith)
+/*< close slowness >*/
+{
+    int ilx,ily;
+
+    SOOP( slo->so[ompith][ily][ilx] = slo->ss[ompith][ily][ilx]; );
+
 }

@@ -64,7 +64,7 @@ typedef struct slo *slo3d;
 /*^*/
 
 struct slo{
-    fslice     slow; /* slowness slice */
+    fslice    slice; /* slowness slice */
     int         *nr; /* number of references */
     float      **sm; /* ref slo squared */
     float     ***ss; /* slowness */
@@ -98,6 +98,8 @@ struct sroperator{
     sf_axa amy;
     sf_axa alx;
     sf_axa aly;
+    sf_complex ***ww_s;
+    sf_complex ***ww_r;
 };
 /*^*/
 
