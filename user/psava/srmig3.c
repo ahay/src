@@ -29,7 +29,7 @@
 
 #include "srmig3.h"
 #include "taper3.h"
-#include "slowref.h"
+#include "slow3.h"
 #include "ssr3.h"
 #include "img3.h"
 

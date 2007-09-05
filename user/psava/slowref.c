@@ -1,7 +1,6 @@
 /* Computing reference slownesses */
 /*
-  Copyright (C) 2006 Colorado School of Mines
-  Copyright (C) 2004 University of Texas at Austin
+  Copyright (C) 2007 Colorado School of Mines
    
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -20,7 +19,7 @@
 
 #include <rsf.h>
 
-#include "slowref.h"
+#include "slow3.h"
 
 #include "weutil.h"
 /*^*/
