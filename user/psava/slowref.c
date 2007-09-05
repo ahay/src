@@ -22,11 +22,63 @@
 
 #include "slowref.h"
 
-int slowref(int nr           /* maximum number of references */, 
-	    float ds         /* minimum slowness separation */, 
-	    int ns           /* number of slownesses */, 
-	    const float* ss  /* [ns] slowness array */, 
-	    float* sr        /* [nr] reference slownesses squared */) 
+#include "weutil.h"
+/*^*/
+
+/*------------------------------------------------------------*/
+slo3d slow_init(fslice slow_,   /* slowness slice */
+		sf_axa  alx_    /* i-line (slowness/image) */,
+		sf_axa  aly_    /* x-line (slowness/image) */,
+		sf_axa  amz_    /* depth */,
+		int    nrmax,   /* maximum number of references */
+		float  dsmax,
+		int   ompnth
+    )
+/*< initialize slowness >*/
+{
+    int imz, jj;
+
+    /*------------------------------------------------------------*/
+    slo3d slo;
+    slo = (slo3d) sf_alloc(1,sizeof(*slo));
+
+    slo->slow=slow_;
+    slo->alx=alx_;
+    slo->aly=aly_;
+    slo->amz=amz_;
+    slo->nrmax=nrmax;
+    slo->dsmax=dsmax;
+    slo->ompnth=ompnth;
+
+    slo->ss = sf_floatalloc3(slo->alx.n,slo->aly.n,slo->ompnth);  /* slowness */
+    slo->so = sf_floatalloc3(slo->alx.n,slo->aly.n,slo->ompnth);  /* slowness */
+    slo->sm = sf_floatalloc2(slo->nrmax,slo->amz.n);  /* ref slowness squared */
+    slo->nr = sf_intalloc              (slo->amz.n);  /* nr of ref slownesses */
+    
+    for (imz=0; imz<slo->amz.n; imz++) {
+	fslice_get(slo->slow,imz,slo->ss[0][0]);
+	
+	slo->nr[imz] = slow(slo->nrmax,
+			    slo->dsmax,
+			    slo->alx.n*slo->aly.n,
+			    slo->ss[0][0],
+			    slo->sm[imz]);
+    }
+    for (imz=0; imz<slo->amz.n-1; imz++) {
+	for (jj=0; jj<slo->nr[imz]; jj++) {
+	    slo->sm[imz][jj] = 0.5*(slo->sm[imz][jj]+slo->sm[imz+1][jj]);
+	}
+    }
+
+    return slo;
+}
+
+/*------------------------------------------------------------*/
+int slow(int nr           /* maximum number of references */, 
+	 float ds         /* minimum slowness separation */, 
+	 int ns           /* number of slownesses */, 
+	 const float* ss  /* [ns] slowness array */, 
+	 float* sr        /* [nr] reference slownesses squared */) 
 /*< compute reference slownesses, return their number >*/
 {
     int is,jr,ir;
@@ -54,4 +106,14 @@ int slowref(int nr           /* maximum number of references */,
     
     free(ss2);
     return jr;
+}
+
+/*------------------------------------------------------------*/
+void slow_close( slo3d slo)
+/*< close slowness >*/
+{
+    free(**slo->ss); free( *slo->ss); free( slo->ss);
+    free(**slo->so); free( *slo->so); free( slo->so);
+    ;                free( *slo->sm); free( slo->sm);
+    ;                                 free( slo->nr);
 }

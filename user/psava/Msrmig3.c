@@ -293,7 +293,7 @@ int main (int argc, char *argv[])
 			ompnth);
     
     srmig3(wfl_s,wfl_r,imag,cigs, imop, ompchunk, srop);
-    srmig3_close(srop->ssr,srop->tap);
+    srmig3_close(srop->ssr,srop->tap,srop->s_s,srop->s_r);
 
     imop_close(imag,cigs); 
 

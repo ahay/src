@@ -62,7 +62,7 @@
 
 static sf_axa amx,amy,amz;
 static sf_axa acx,acy,acz;
-static int jcx,jcy,jcz;
+static int    jcx,jcy,jcz;
 static sf_axa ahx,ahy,ahz;
 static sf_axa aht;
 static sf_axa ahh,aha,ahb;

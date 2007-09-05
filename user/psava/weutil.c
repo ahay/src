@@ -1,5 +1,8 @@
 #include <rsf.h>
 
+#include "slice.h"
+/*^*/
+
 #include "weutil.h"
 /*^*/
 
@@ -56,14 +59,45 @@ struct tap{
 };
 /*^*/
 
+/*------------------------------------------------------------*/
+typedef struct slo *slo3d;
+/*^*/
+
+struct slo{
+    fslice     slow; /* slowness slice */
+    int         *nr; /* number of references */
+    float      **sm; /* ref slo squared */
+    float     ***ss; /* slowness */
+    float     ***so; /* slowness */
+    sf_axa      alx;
+    sf_axa      aly;
+    sf_axa      amz;
+    int       nrmax;
+    float     dsmax;
+    int      ompnth;
+};
+/*^*/
+
 
 /*------------------------------------------------------------*/
 typedef struct sroperator *sroperator3d;
 /*^*/
 
 struct sroperator{
-    ssr3d ssr;
-    tap3d tap;
+    bool verb;
+    float eps;
+    int ompnth;
+    ssr3d ssr; // SSR operator
+    tap3d tap; // taper parameters
+    slo3d s_s; //   source slowness
+    slo3d s_r; // receiver slowness
+    sf_axa aw;
+    sf_axa ae;
+    sf_axa amz;
+    sf_axa amx;
+    sf_axa amy;
+    sf_axa alx;
+    sf_axa aly;
 };
 /*^*/
 
