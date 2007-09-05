@@ -74,10 +74,8 @@ int main (int argc, char *argv[])
     fslice imag=NULL;
     fslice cigs=NULL;
 
-    int ompchunk;
-#ifdef _OPENMP
-    int ompnth,ompath; 
-#endif
+    int ompchunk=1;
+    int ompnth=0,ompath=1; 
 
     /*------------------------------------------------------------*/
     sf_init(argc,argv);
