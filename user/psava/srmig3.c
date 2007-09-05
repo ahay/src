@@ -141,7 +141,6 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
 {
     int imz,iw,ie;
     sf_complex ws,wr;
-    
     int ompith=0;
 
     for (ie=0; ie<srop->ae.n; ie++) {
@@ -152,8 +151,8 @@ void srmig3(fslice sdat /* source   data [nw][ny][nx] */,
     shared(sdat,rdat,ie,srop)
 #endif
 	for (iw=0; iw<srop->aw.n; iw++) {
-	    ompith=omp_get_thread_num();
 #ifdef _OPENMP	    
+	    ompith=omp_get_thread_num();
 #pragma omp critical
 	    if(srop->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
 				 ompith,iw+1,srop->aw.n,ie+1,srop->ae.n);
