@@ -143,6 +143,8 @@ def identify_platform(context):
         plat['OS'] = 'cygwin'
     elif sys.platform[:7] == 'interix':
         plat['OS'] = 'interix' # Microsoft Windows Services for UNIX
+    elif sys.platform[:4] == 'irix':
+        plat['OS'] = 'irix' # Irix
     else:
         plat['OS'] = sys.platform
 
@@ -161,6 +163,8 @@ def identify_platform(context):
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
+        elif plat['OS'] == 'irix':
+             plat['distro'] = uname()[2]
         del architecture, uname
     except: # "platform" not installed. Python < 2.3
         pass # For each OS with Python < 2.3, should use specific
