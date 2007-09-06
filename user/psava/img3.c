@@ -31,19 +31,27 @@
 /*^*/
 
 #define  LOOP(a) for( imy=0; imy< cub->amy.n; imy++){ \
-                 for( imx=0; imx< cub->amx.n; imx++){ {a} }}
+                 for( imx=0; imx< cub->amx.n; imx++){ \
+		     {a} \
+		 }}
 
 #define MLOOP(a) for( imz=0; imz< cub->amz.n; imz++){ \
                  for( imy=0; imy< cub->amy.n; imy++){ \
-                 for( imx=0; imx< cub->amx.n; imx++){ {a} }}}
+                 for( imx=0; imx< cub->amx.n; imx++){ \
+		     {a} \
+		 }}}
 
 #define HLOOP(a) for( ihz=img->LOz; ihz<img->HIz; ihz++){ \
                  for( ihy=img->LOy; ihy<img->HIy; ihy++){ \
-                 for( ihx=img->LOx; ihx<img->HIx; ihx++){ {a} }}}
+                 for( ihx=img->LOx; ihx<img->HIx; ihx++){ \
+		     {a} \
+		 }}}
 
 #define CLOOP(a) for( icz=0; icz< img->acz.n; icz++){ \
                  for( icy=0; icy< img->acy.n; icy++){ \
-                 for( icx=0; icx< img->acx.n; icx++){ {a} }}}
+                 for( icx=0; icx< img->acx.n; icx++){ \
+		     {a} \
+		 }}}
 
 #define XLOOP(a) for(imz  = abs(ihz); imz<cub->amz.n-abs(ihz); imz++){ \
                      imzs = imz - ihz; \
@@ -349,11 +357,12 @@ void img3o(cub3d cub,
     /* cigs */
     fslice_get(img->cigs,0,img->qc[0][0]);
     CLOOP(
-	;    img->qc        [icz         ][icy         ][icx         ] +=
+	img->qc        [icz         ][icy         ][icx         ] +=
 	corr(img->qs[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx], 
 	     img->qr[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx]);
 	);
     fslice_put(img->cigs,0,img->qc[0][0]);
+
 }
 
 /*------------------------------------------------------------*/
@@ -391,7 +400,7 @@ void img3x(cub3d cub,
 			    imyr = icy*img->jcy + ihy;
 			    if(imys>=0 && imys<cub->amy.n && 
 			       imyr>=0 && imyr<cub->amy.n) {
-				
+
 				for( icx=0; icx<img->acx.n; icx++){
 				    imxs = icx*img->jcx - ihx;
 				    imxr = icx*img->jcx + ihx;

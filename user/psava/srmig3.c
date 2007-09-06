@@ -130,20 +130,21 @@ void srmig3(sroperator3d srop,
 #ifdef _OPENMP	    
 	    ompith=omp_get_thread_num();
 #pragma omp critical
+#endif
 	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
 				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
-#endif
 	    
 	    ws = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); //      causal
 	    wr = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); // anti-causal
 	    
 #ifdef _OPENMP	    
 #pragma omp critical
+#endif	    
 	    {
 		fslice_get(sdat,ie*cub->aw.n+iw,srop->ww_s[ompith][0]);
 		fslice_get(rdat,ie*cub->aw.n+iw,srop->ww_r[ompith][0]);
 	    }
-#endif	    
+
 	    taper2d(srop->ww_s[ompith],tap);
 	    taper2d(srop->ww_r[ompith],tap);	    
 	    
