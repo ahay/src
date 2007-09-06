@@ -138,6 +138,15 @@ def imageCW(imag,cigs,sslo,rslo,swlf,rwfl,par):
          cig=${TARGETS[1]}
          ''' % param(par))
 
+def imageCW3(imag,cigs,sslo,rslo,swlf,rwfl,par):
+    Flow([imag,cigs],[swlf,sslo,rslo,rwfl],
+         '''
+         srmig3 %s
+         slo=${SOURCES[1]}
+         sls=${SOURCES[2]}
+         rwf=${SOURCES[3]}
+         cig=${TARGETS[1]}
+         ''' % param(par))
     
 # migrate (cluster call)
 #def cimage(imag,slow,swlf,rwfl,par):

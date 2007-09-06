@@ -84,6 +84,21 @@ def image(imag,slow,data,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+# zero-offset modeling
+def model3(data,slow,imag,par):
+    Flow(  data,    [imag,slow],
+         '''
+         zomig3 mode=m inv=y %s %s
+         slo=${SOURCES[1]}
+         ''' % (param(par),freqs(par)))
+# zero-offset migration
+def image3(imag,slow,data,par):
+    Flow(  imag,    [data,slow],
+         '''
+         zomig3 mode=m inv=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+    
 # ------------------------------------------------------------
 
 #      causal datuming (forward in time, causal=y)
@@ -91,13 +106,13 @@ def image(imag,slow,data,par):
 def Cdtone(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig mode=d inv=n causal=y twoway=n %s
+         zomig3 mode=d inv=n causal=y twoway=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
 def Cdttwo(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig mode=d inv=n causal=y twoway=y %s
+         zomig3 mode=d inv=n causal=y twoway=y %s
          slo=${SOURCES[1]}
          ''' % param(par))
     
@@ -106,13 +121,13 @@ def Cdttwo(wfld,data,slow,par):
 def Adtone(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig mode=d inv=n causal=n twoway=n %s
+         zomig3 mode=d inv=n causal=n twoway=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
 def Adttwo(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
-         zomig mode=d inv=n causal=n twoway=y %s
+         zomig3 mode=d inv=n causal=n twoway=y %s
          slo=${SOURCES[1]}
          ''' % param(par))
 # ------------------------------------------------------------
