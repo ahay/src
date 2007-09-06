@@ -8,7 +8,6 @@
 
 #ifndef _weutil_h
 
-
 /*------------------------------------------------------------*/
 typedef struct cub *cub3d;
 /*^*/
@@ -20,7 +19,8 @@ struct cub{
     sf_axa  aw;
     sf_axa  ae;
     float   eps;
-    int     ompnth;
+    int  ompnth;
+    int  ompchunk;
 };
 /*^*/
 /*------------------------------------------------------------*/
@@ -29,14 +29,14 @@ typedef struct fft *fft2d;
 
 struct fft{
     int            n1,n2;
-    kiss_fft_cfg  *forw1; /* FFT on axis 1 */
+    kiss_fft_cfg  *forw1; //   FFT on axis 1
     kiss_fft_cfg  *invs1;
-    sf_complex     *shf1;
-    kiss_fft_cfg  *forw2; /* FFT on axis 2 */
+    sf_complex     *shf1; // shift on axis 1
+    kiss_fft_cfg  *forw2; //   FFT on axis 2
     kiss_fft_cfg  *invs2;
-    sf_complex     *shf2;
-    kiss_fft_cpx**ctrace;
-    float       fftscale;
+    sf_complex     *shf2; // shift on axis 2
+    kiss_fft_cpx**ctrace; // temp array
+    float       fftscale; // FFT scale 
 };
 /*^*/
 
@@ -83,6 +83,29 @@ struct slo{
     float     ***so; /* slowness */
     int       nrmax;
     float     dsmax;
+};
+/*^*/
+
+/*------------------------------------------------------------*/
+typedef struct img *img3d;
+/*^*/
+
+struct img{
+    fslice imag;
+    fslice cigs;
+    sf_complex ****qs;      // source wavefield
+    sf_complex ****qr;      // receiver wavefield
+    float       ***qi;      // image
+    float       ***qc;      // cigs
+    sf_axa  acx,acy,acz;
+    int     jcx,jcy,jcz;
+    sf_axa  ahx,ahy,ahz,aht;
+    sf_axa  ahh,aha,ahb;
+    sf_complex   **tt;      // time-lag I.C. weight
+    int LOx,HIx;
+    int LOy,HIy;
+    int LOz,HIz;            // space-lags I.C.
+    float vpvs;             // abs-lag I.C.
 };
 /*^*/
 

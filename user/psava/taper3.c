@@ -95,7 +95,7 @@ void taper3d_close(tap3d tap)
 }
 
 /*------------------------------------------------------------*/
-void taper2d(sf_complex** tt  /* [n2][n1] tapered array (in and out) */,
+void taper2d(sf_complex **tt  /* [n2][n1] tapered array (in and out) */,
 	     tap3d tap)
 /*< 2-D taper >*/
 {

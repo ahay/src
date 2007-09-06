@@ -50,7 +50,8 @@ cub3d srmig3_cube(bool    verb_,
 		  sf_axis aw_,
 		  sf_axis ae_,
 		  float   eps_,
-		  int     ompnth_
+		  int     ompnth_,
+		  int     ompchunk_
     )
 /*< initialize SR migration space >*/
 {
@@ -69,8 +70,10 @@ cub3d srmig3_cube(bool    verb_,
     cub->aw.d *= 2.*SF_PI; /* from hertz to radians */
     cub->aw.o *= 2.*SF_PI;
 
-    cub->eps    = eps_;
-    cub->ompnth = ompnth_;
+    cub->eps      = eps_;
+
+    cub->ompnth   = ompnth_;
+    cub->ompchunk = ompchunk_;
 
     return cub;
 }
@@ -97,18 +100,18 @@ void srmig3_close(sroperator3d srop)
 }
 
 /*------------------------------------------------------------*/
-void srmig3(cub3d cub,
+void srmig3(sroperator3d srop,
+	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
 	    slo3d s_s,
 	    slo3d s_r,
+	    img3d img,
 	    fslice sdat /* source   data [nw][ny][nx] */,
 	    fslice rdat /* receiver data [nw][ny][nx] */,
 	    fslice imag /*         image [nz][ny][nx] */,
 	    fslice cigs,
-	    void (*imop)(int,int),
-	    int ompchunk,
-	    sroperator3d srop
+	    void (*imop)(cub3d,img3d,int,int)
     )
 /*< Apply S/R migration >*/
 {
@@ -158,12 +161,14 @@ void srmig3(cub3d cub,
 		slow3_advance(cub,s_s,ompith);
 		slow3_advance(cub,s_r,ompith);
 
-		img3store(imz,srop->ww_s,srop->ww_r,ompith);
+		img3store(cub,img,imz,srop->ww_s,srop->ww_r,ompith);
 		
 	    } // z 
 
-	    imop(iw,ompith); // imaging operator
-	    
+#ifdef _OPENMP	    
+#pragma omp critical
+	    imop(cub,img,iw,ompith); // imaging condition
+#endif	 
 	} // w
 	
     } // e

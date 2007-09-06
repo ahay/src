@@ -26,9 +26,9 @@
 /*^*/
 
 /*------------------------------------------------------------*/
-fft2d ompfft2_init(int n1_, 
-		   int n2_,
-		   int ompnth)
+fft2d ompfft2_init(cub3d cub,
+		   int n1_, 
+		   int n2_)
 /*< initialize >*/
 {
     int ompith;
@@ -40,14 +40,14 @@ fft2d ompfft2_init(int n1_,
     fft->n1 = n1_;
     fft->n2 = n2_;
 
-    fft->ctrace = (kiss_fft_cpx**) sf_complexalloc2(fft->n2,ompnth);
+    fft->ctrace = (kiss_fft_cpx**) sf_complexalloc2(fft->n2,cub->ompnth);
 
-    fft->forw1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
-    fft->invs1 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
-    fft->forw2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
-    fft->invs2 = (kiss_fft_cfg*) sf_alloc(ompnth,sizeof(kiss_fft_cfg));
+    fft->forw1 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs1 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->forw2 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs2 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
 
-    for(ompith=0; ompith<ompnth; ompith++) {
+    for(ompith=0; ompith<cub->ompnth; ompith++) {
 	fft->forw1[ompith] = kiss_fft_alloc(fft->n1,0,NULL,NULL);
 	fft->invs1[ompith] = kiss_fft_alloc(fft->n1,1,NULL,NULL);
 	fft->forw2[ompith] = kiss_fft_alloc(fft->n2,0,NULL,NULL);

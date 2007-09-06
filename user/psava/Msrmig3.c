@@ -51,8 +51,8 @@ int main (int argc, char *argv[])
     bool  hsym;
     float vpvs;
 
-    void (*imop)(int,int);              // imaging operator apply
-    void (*imop_close)(fslice,fslice);  // imaging operator close
+    void (*imop)(cub3d,img3d,int,int);              // imaging operator apply
+    void (*imop_close)(img3d,fslice,fslice);  // imaging operator close
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -62,8 +62,10 @@ int main (int argc, char *argv[])
     int     jcx,jcy,jcz;
     sf_axis ahh,aha,ahb; /* |h|,alpha,beta */
 
-    int n,nz,nx,ny,nh,nhx,nhy,nhz,nha,nhb,nw;
-    float dz,dx,dy,oh,dh,oha,dha,ohb,dhb;
+    int             nhx,nhy,nhz,nw;
+    int n,nz,nx,ny, nht,nh,nha,nhb;
+    float           oht,oh,oha,ohb;
+    float dz,dx,dy, dht,dh,dha,dhb;
 
     /* I/O files */
     sf_file Fw_s=NULL,Fw_r=NULL; /* wavefield file W ( nx, ny,nw) */
@@ -85,6 +87,7 @@ int main (int argc, char *argv[])
     ssr3d ssr; // SSR operator
     slo3d s_s; // slowness 
     slo3d s_r; // slowness 
+    img3d img; // imaging 
 
     sroperator3d srop;
 
@@ -124,13 +127,13 @@ int main (int argc, char *argv[])
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
     if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* max number of refs */
-    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
     if (!sf_getint(    "pmx",&pmx  ))   pmx =     0; /* padding on x */
     if (!sf_getint(    "pmy",&pmy  ))   pmy =     0; /* padding on y */
     if (!sf_getint(    "tmx",&tmx  ))   tmx =     0; /* taper on x   */
     if (!sf_getint(    "tmy",&tmy  ))   tmy =     0; /* taper on y   */
+    if (!sf_getfloat( "vpvs",&vpvs))   vpvs =    1.;
+    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
 
-    if (!sf_getfloat( "vpvs",&vpvs))   vpvs = 1.;
     /*------------------------------------------------------------*/
     /* SLOWNESS */
 
@@ -155,9 +158,8 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/    
     /* WAVEFIELD/IMAGE */
 
-    Fw_s = sf_input( "in");
-    Fw_r = sf_input("rwf");
-    
+    Fw_s = sf_input( "in"); //   source data
+    Fw_r = sf_input("rwf"); // receiver data    
     if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("need complex receiver data");
     
@@ -177,7 +179,7 @@ int main (int argc, char *argv[])
     sf_putint(Fi,"n5",1);
 
     imag = fslice_init( nx*ny*nz,1,sizeof(float));
-    
+
     /*------------------------------------------------------------*/
     /* CIGS */
 
@@ -197,19 +199,32 @@ int main (int argc, char *argv[])
     sf_oaxa(Fc,acz,3);
 
     /*------------------------------------------------------------*/
+    /* wavefield hypercube */
+    cub = srmig3_cube(verb,
+		      amx,amy,amz,
+		      alx,aly,
+		      aw,
+		      ae,
+		      eps,
+		      ompnth,
+		      ompchunk);
+    
+    dsmax = dtmax/cub->amz.d;
+
+    /*------------------------------------------------------------*/
     /* init output files */
     switch(itype[0]) {
 	case 't':
 	    if(verb) sf_warning("time-lag I.C.");
-	    if(!sf_getint  ("nht",&nh)) nh=1;
-	    if(!sf_getfloat("oht",&oh)) oh=0;
-	    if(!sf_getfloat("dht",&dh)) dh=0.1;
-	    aht = sf_maxa(nh,oh,dh); sf_setlabel(aht,"ht");
+	    if(!sf_getint  ("nht",&nht)) nht=1;
+	    if(!sf_getfloat("oht",&oht)) oht=0;
+	    if(!sf_getfloat("dht",&dht)) dht=0.1;
+	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
 	    
 	    sf_oaxa(Fc,aht,4);
-	    cigs = fslice_init(n*nh,1,sizeof(float));
+	    cigs = fslice_init(n,nht,sizeof(float));
 
-	    img3t_init(amx,amy,amz,jcx,jcy,jcz,aht,aw,imag,ompnth);
+	    img=img3t_init(cub,imag,cigs,jcx,jcy,jcz,aht);
 	    imop       = img3t;
 	    imop_close = img3t_close;
 	    break;
@@ -233,10 +248,9 @@ int main (int argc, char *argv[])
 	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 
-	    n *= sf_n(ahx)*sf_n(ahy)*sf_n(ahz);
-	    cigs = fslice_init(n,1,sizeof(float));
+	    cigs = fslice_init(n,sf_n(ahx)*sf_n(ahy)*sf_n(ahz),sizeof(float));
 
-	    img3x_init(amx,amy,amz,jcx,jcy,jcz,ahx,ahy,ahz,imag,ompnth);
+	    img=img3x_init(cub,imag,cigs,jcx,jcy,jcz,ahx,ahy,ahz);
 	    imop       = img3x;
 	    imop_close = img3x_close;
 	    break;
@@ -268,9 +282,9 @@ int main (int argc, char *argv[])
 	    sf_raxa(ahb);
 
 	    sf_oaxa(Fc,ahh,4);
-	    cigs = fslice_init( n*nh,1,sizeof(float));
+	    cigs = fslice_init( n,nh,sizeof(float));
 
-	    img3h_init(amx,amy,amz,jcx,jcy,jcz,ahh,aha,ahb,aw,imag,vpvs,ompnth);
+	    img=img3h_init(cub,imag,cigs,jcx,jcy,jcz,ahh,aha,ahb,vpvs);
 	    imop       = img3h;
 	    imop_close = img3h_close;
 	    break;
@@ -279,7 +293,7 @@ int main (int argc, char *argv[])
 	    if(verb) sf_warning("zero-lag I.C.");
 	    cigs = fslice_init(n,1,sizeof(float));
 
-	    img3o_init(amx,amy,amz,jcx,jcy,jcz,imag,ompnth);
+	    img=img3o_init(cub,imag,cigs,jcx,jcy,jcz);
 	    imop       = img3o;
 	    imop_close = img3o_close;
 	    break;
@@ -296,54 +310,46 @@ int main (int argc, char *argv[])
     fslice_load(Fw_r,wfl_r,SF_COMPLEX);
 
     /*------------------------------------------------------------*/
-    /* manage structures */
-    cub = srmig3_cube(verb,
-		      amx,amy,amz,
-		      alx,aly,
-		      aw,
-		      ae,
-		      eps,
-		      ompnth);
-
+    /* init structures */
     tap = taper_init(cub,
 		     SF_MIN(tmx,cub->amx.n-1), // tmx
 		     SF_MIN(tmy,cub->amy.n-1), // tmy
 		     0,                        // tmz
 		     true,true,false);
 
-    dsmax = dtmax/cub->amz.d;
-    ssr = ssr3_init(cub,
-		    pmx ,pmy,
-		    tmx ,tmy,
-		    dsmax,
-		    cub->ompnth);
+    ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);
     
-    s_s = slow3_init(cub,
-		     slo_s,
-		     nrmax,
-		     dsmax);
-    s_r = slow3_init(cub,
-		     slo_r,
-		     nrmax,
-		     dsmax);
+    s_s = slow3_init(cub,slo_s,nrmax,dsmax);
+    s_r = slow3_init(cub,slo_r,nrmax,dsmax);
 
     /*------------------------------------------------------------*/
     /* MIGRATION */
-    srop = srmig3_init (cub);
+    srop = srmig3_init(cub);
 
-    srmig3(cub,ssr,tap,s_s,s_r,
-	   wfl_s,wfl_r,
-	   imag,cigs, 
-	   imop, ompchunk, srop);
+    srmig3(srop,  // shot-record migration operator
+	   cub,   // wavefield hypercube dimensions
+	   ssr,   // SSR operator
+	   tap,   // tapering operator
+	   s_s,   // source slowness
+	   s_r,   // receiver slowness
+	   img,   // image
+	   wfl_s, // source wavefield
+	   wfl_r, // receiver wavefield
+	   imag,  // image
+	   cigs,  // CIGs
+	   imop   // imaging operator
+	);
 
     srmig3_close(srop);
 
+    /*------------------------------------------------------------*/
+    /* close structures   */
     slow3_close(s_s);
     slow3_close(s_r);
     ssr3_close(ssr);
     taper2d_close(tap);
     
-    imop_close(imag,cigs); 
+    imop_close(img,imag,cigs); 
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */
@@ -351,8 +357,9 @@ int main (int argc, char *argv[])
     fslice_dump(Fi,imag,SF_FLOAT);
 
     if(verb) sf_warning("dump cigs");
-    fslice_dump(Fc,cigs,SF_FLOAT)
+    fslice_dump(Fc,cigs,SF_FLOAT);
 
+    /*------------------------------------------------------------*/
     ;      fslice_close(slo_s);
     if(cw) fslice_close(slo_r);
     ;      fslice_close(wfl_s);
