@@ -117,6 +117,16 @@ def imagePW3(imag,cigs,slow,swlf,rwfl,par):
          slo=${SOURCES[2]}
          cig=${TARGETS[1]}
          ''' % param(par))
+
+def modelPW3(data,slow,wfld,refl,par):
+    Flow(    data,[    wfld,refl,slow],
+          '''
+          srmod3 %s
+          ref=${SOURCES[1]}
+          slo=${SOURCES[2]}
+          ''' % param(par))
+
+
     
 def imageCW(imag,cigs,sslo,rslo,swlf,rwfl,par):
     Flow([imag,cigs],[swlf,sslo,rslo,rwfl],

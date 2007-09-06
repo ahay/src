@@ -51,7 +51,7 @@ int main (int argc, char *argv[])
     bool  hsym;
     float vpvs;
 
-    void (*imop)(cub3d,img3d,int,int);              // imaging operator apply
+    void (*imop)(cub3d,img3d,int,int);        // imaging operator apply
     void (*imop_close)(img3d,fslice,fslice);  // imaging operator close
 
     sf_axis amx,amy,amz;
@@ -109,6 +109,13 @@ int main (int argc, char *argv[])
     sf_warning("using %d threads of a total of %d",ompnth,ompath);
 #endif
 
+    /* converted waves flag */
+    if (NULL != sf_getstring("sls")) {
+	cw=true;
+    } else {
+	cw=false;
+    }
+
     if (NULL == (itype = sf_getstring("itype"))) itype = "o";
     /* imaging condition type 
        o = zero lag (default)
@@ -116,13 +123,6 @@ int main (int argc, char *argv[])
        h = space-lags magnitude
        t = time-lag
     */
-
-    /* converted waves flag */
-    if (NULL != sf_getstring("sls")) {
-	cw=true;
-    } else {
-	cw=false;
-    }
 
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
@@ -360,11 +360,11 @@ int main (int argc, char *argv[])
     fslice_dump(Fc,cigs,SF_FLOAT);
 
     /*------------------------------------------------------------*/
-    ;      fslice_close(slo_s);
-    if(cw) fslice_close(slo_r);
-    ;      fslice_close(wfl_s);
-    ;      fslice_close(wfl_r);
-    ;      fslice_close(imag);
+    fslice_close(slo_s);
+    fslice_close(slo_r);
+    fslice_close(wfl_s);
+    fslice_close(wfl_r);
+    fslice_close(imag);
 
     exit (0);
 }

@@ -1,4 +1,4 @@
-/* 3-D SSR migration/modeling using extended split-step */
+/* 3-D SSR migration using extended SSF */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
@@ -107,13 +107,13 @@ void srmig3(sroperator3d srop,
 	    slo3d s_s,
 	    slo3d s_r,
 	    img3d img,
-	    fslice sdat /* source   data [nw][ny][nx] */,
-	    fslice rdat /* receiver data [nw][ny][nx] */,
+	    fslice swfl /* source   data [nw][ny][nx] */,
+	    fslice rwfl /* receiver data [nw][ny][nx] */,
 	    fslice imag /*         image [nz][ny][nx] */,
 	    fslice cigs,
 	    void (*imop)(cub3d,img3d,int,int)
     )
-/*< Apply S/R migration >*/
+/*< apply SR migration >*/
 {
     int imz,iw,ie;
     sf_complex ws,wr;
@@ -124,7 +124,7 @@ void srmig3(sroperator3d srop,
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)   \
     private(ompith,iw,ws,wr,imz)	    \
-    shared(sdat,rdat,ie,srop,cub,ssr,tap,s_s,s_r)
+    shared(swfl,rwfl,ie,srop,cub,ssr,tap,s_s,s_r)
 #endif
 	for (iw=0; iw<cub->aw.n; iw++) {
 #ifdef _OPENMP	    
@@ -141,8 +141,8 @@ void srmig3(sroperator3d srop,
 #pragma omp critical
 #endif	    
 	    {
-		fslice_get(sdat,ie*cub->aw.n+iw,srop->ww_s[ompith][0]);
-		fslice_get(rdat,ie*cub->aw.n+iw,srop->ww_r[ompith][0]);
+		fslice_get(swfl,ie*cub->aw.n+iw,srop->ww_s[ompith][0]);
+		fslice_get(rwfl,ie*cub->aw.n+iw,srop->ww_r[ompith][0]);
 	    }
 
 	    taper2d(srop->ww_s[ompith],tap);
