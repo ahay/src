@@ -79,28 +79,28 @@ cub3d srmig3_cube(bool    verb_,
 }
 
 /*------------------------------------------------------------*/
-sroperator3d srmig3_init(cub3d cub)
+weoperator3d srmig3_init(cub3d cub)
 /*< initialize SR migration >*/
 {
-    sroperator3d srop;
-    srop = (sroperator3d) sf_alloc(1,sizeof(*srop));
+    weoperator3d weop;
+    weop = (weoperator3d) sf_alloc(1,sizeof(*weop));
     
-    srop->ww_s = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
-    srop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
+    weop->ww_s = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
+    weop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
 
-    return srop;
+    return weop;
 }
 
 /*------------------------------------------------------------*/
-void srmig3_close(sroperator3d srop)
+void srmig3_close(weoperator3d weop)
 /*< free allocated storage >*/
 {
-    free(**srop->ww_s); free( *srop->ww_s); free( srop->ww_s);
-    free(**srop->ww_r); free( *srop->ww_r); free( srop->ww_r);
+    free(**weop->ww_s); free( *weop->ww_s); free( weop->ww_s);
+    free(**weop->ww_r); free( *weop->ww_r); free( weop->ww_r);
 }
 
 /*------------------------------------------------------------*/
-void srmig3(sroperator3d srop,
+void srmig3(weoperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
@@ -124,7 +124,7 @@ void srmig3(sroperator3d srop,
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)   \
     private(ompith,iw,ws,wr,imz)	    \
-    shared(swfl,rwfl,ie,srop,cub,ssr,tap,s_s,s_r)
+    shared(swfl,rwfl,ie,weop,cub,ssr,tap,s_s,s_r)
 #endif
 	for (iw=0; iw<cub->aw.n; iw++) {
 #ifdef _OPENMP	    
@@ -141,12 +141,12 @@ void srmig3(sroperator3d srop,
 #pragma omp critical
 #endif	    
 	    {
-		fslice_get(swfl,ie*cub->aw.n+iw,srop->ww_s[ompith][0]);
-		fslice_get(rwfl,ie*cub->aw.n+iw,srop->ww_r[ompith][0]);
+		fslice_get(swfl,ie*cub->aw.n+iw,weop->ww_s[ompith][0]);
+		fslice_get(rwfl,ie*cub->aw.n+iw,weop->ww_r[ompith][0]);
 	    }
 
-	    taper2d(srop->ww_s[ompith],tap);
-	    taper2d(srop->ww_r[ompith],tap);	    
+	    taper2d(weop->ww_s[ompith],tap);
+	    taper2d(weop->ww_r[ompith],tap);	    
 	    
 	    fslice_get(s_s->slice, 0, s_s->so[ompith][0]);
 	    fslice_get(s_r->slice, 0, s_r->so[ompith][0]);
@@ -156,13 +156,13 @@ void srmig3(sroperator3d srop,
 		fslice_get(s_s->slice, imz+1, s_s->ss[ompith][0]);
 		fslice_get(s_r->slice, imz+1, s_r->ss[ompith][0]);
 
-		ssr3_ssf(ws,srop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
-		ssr3_ssf(wr,srop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
+		ssr3_ssf(ws,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
+		ssr3_ssf(wr,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
 		
 		slow3_advance(cub,s_s,ompith);
 		slow3_advance(cub,s_r,ompith);
 
-		img3store(cub,img,imz,srop->ww_s,srop->ww_r,ompith);
+		img3store(cub,img,imz,weop->ww_s,weop->ww_r,ompith);
 		
 	    } // z 
 

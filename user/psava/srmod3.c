@@ -32,18 +32,16 @@
 #include "slow3.h"
 #include "ssr3.h"
 
-#include "taper.h"
-#include "slowref.h"
-#include "ssr.h"
-
 #include "slice.h"
 /*^*/
 
 #include "weutil.h"
 /*^*/
 
-#define LOOP(a) for(imy=0;imy<cub->amy.n;imy++){		\
-                for(imx=0;imx<cub->amx.n;imx++){ {a} }}
+#define LOOP(a) for(imy=0;imy<cub->amy.n;imy++){ \
+                for(imx=0;imx<cub->amx.n;imx++){ \
+		    {a} \
+		}} // loop in x-domain
 
 /*------------------------------------------------------------*/
 cub3d srmod3_cube(bool    verb_,
@@ -84,34 +82,34 @@ cub3d srmod3_cube(bool    verb_,
 }
 
 /*------------------------------------------------------------*/
-sroperator3d srmod3_init(cub3d cub)
+weoperator3d srmod3_init(cub3d cub)
 /*< initialize SR modeling >*/
 {
-    sroperator3d srop;
-    srop = (sroperator3d) sf_alloc(1,sizeof(*srop));
+    weoperator3d weop;
+    weop = (weoperator3d) sf_alloc(1,sizeof(*weop));
     
-    srop->ww_s = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
-    srop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
+    weop->ww_s = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
+    weop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
 
-    srop->rr   = sf_floatalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
-    srop->wtmp = fslice_init   (cub->amx.n*cub->amy.n,cub->amz.n*cub->ompnth,sizeof(sf_complex));
+    weop->rr   = sf_floatalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
+    weop->wtmp = fslice_init   (cub->amx.n*cub->amy.n,cub->amz.n*cub->ompnth,sizeof(sf_complex));
 
-    return srop;
+    return weop;
 }
 
 /*------------------------------------------------------------*/
-void srmod3_close(sroperator3d srop)
+void srmod3_close(weoperator3d weop)
 /*< free allocated storage >*/
 {
-    free(**srop->ww_s); free( *srop->ww_s); free( srop->ww_s);
-    free(**srop->ww_r); free( *srop->ww_r); free( srop->ww_r);
+    free(**weop->ww_s); free( *weop->ww_s); free( weop->ww_s);
+    free(**weop->ww_r); free( *weop->ww_r); free( weop->ww_r);
     
-    free( **srop->rr); free( *srop->rr); free( srop->rr);
-    fslice_close(srop->wtmp);
+    free( **weop->rr); free( *weop->rr); free( weop->rr);
+    fslice_close(weop->wtmp);
 }
 
 /*------------------------------------------------------------*/
-void srmod3(sroperator3d srop,
+void srmod3(weoperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
@@ -131,14 +129,14 @@ void srmod3(sroperator3d srop,
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)		\
     private(ompith,iw,w,imz,kth)			\
-    shared(swfl,rwfl,srop,cub,ssr,tap,s_s,s_r)
+    shared(swfl,rwfl,weop,cub,ssr,tap,s_s,s_r)
 #endif
     for (iw=0; iw<cub->aw.n; iw++) {
 #ifdef _OPENMP	    
 	ompith=omp_get_thread_num();
 #pragma omp critical
 #endif
-	if(cub->verb) sf_warning("(ith=%d) ... iw=%3d of %3d",
+	if(cub->verb) sf_warning("(ith=%d) ... <iw=%3d of %3d>",
 				 ompith,iw+1,cub->aw.n);
 
 	kth = ompith*cub->amz.n; // tmp file thread I/O shift
@@ -146,27 +144,27 @@ void srmod3(sroperator3d srop,
 	
 	/*------------------------------------------------------------*/
 	/* source wavefield */
-	fslice_get(swfl,iw,srop->ww_s[ompith][0]); 
-	taper2d(srop->ww_s[ompith],tap);
-	fslice_put(srop->wtmp,kth+0,srop->ww_s[ompith][0]);
+	fslice_get(swfl,iw,weop->ww_s[ompith][0]); 
+	taper2d(weop->ww_s[ompith],tap);
+	fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
 	
 	fslice_get(s_s->slice,0,s_s->so[ompith][0]);
 	for (imz=0; imz<cub->amz.n-1; imz++) {
 	    fslice_get(s_s->slice,imz+1,s_s->ss[ompith][0]);
 	    
-	    ssr3_ssf(w,srop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
+	    ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
 	    
 	    slow3_advance(cub,s_s,ompith);
 	
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
-	    fslice_put(srop->wtmp,kth+imz+1,srop->ww_s[ompith][0]);
+	    fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
 	} // z (down-going)
 	
 	/*------------------------------------------------------------*/
 	/* receiver wavefield */
-	LOOP( srop->ww_r[ompith][imy][imx] = sf_cmplx(0.,0.); );
+	LOOP( weop->ww_r[ompith][imy][imx] = sf_cmplx(0.,0.); );
 
 	fslice_get(s_r->slice,cub->amz.n-1,s_r->so[ompith][0]);
 	for (imz=cub->amz.n-1; imz>0; imz--) {
@@ -175,25 +173,25 @@ void srmod3(sroperator3d srop,
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif   
-	    fslice_get(srop->wtmp,kth+imz,srop->ww_s[ompith][0]); 
+	    fslice_get(weop->wtmp,kth+imz,weop->ww_s[ompith][0]); 
 
-	    fslice_get(refl,imz,srop->rr[ompith][0]);
+	    fslice_get(refl,imz,weop->rr[ompith][0]);
 	    
 #ifdef SF_HAS_COMPLEX_H
-	    LOOP( srop->ww_s[ompith][imy][imx] *= srop->rr[ompith]  [imy][imx];
-		  srop->ww_r[ompith][imy][imx] += srop->ww_s[ompith][imy][imx]; );
+	    LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
+		  weop->ww_r[ompith][imy][imx] += weop->ww_s[ompith][imy][imx]; );
 #else
-	    LOOP( srop->ww_s[ompith][imy][imx] = sf_crmul(srop->ww_s[ompith][imy][imx],srop->rr[ompith][imy][imx]);
-		  srop->ww_r[ompith][imy][imx] = sf_cadd(ww_r[ompith][imy][imx],ww_s[imy][imx]); );
+	    LOOP( weop->ww_s[ompith][imy][imx] = sf_crmul(weop->ww_s[ompith][imy][imx],weop->rr[ompith][imy][imx]);
+		  weop->ww_r[ompith][imy][imx] = sf_cadd(ww_r[ompith][imy][imx],ww_s[imy][imx]); );
 #endif
 	    
-	    ssr3_ssf(w,srop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
+	    ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
 	    
 	    slow3_advance(cub,s_r,ompith);
 	} // z (up-going)
 	
-	taper2d(srop->ww_r[ompith],tap);
-	fslice_put(rwfl,iw,srop->ww_r[ompith][0]);
+	taper2d(weop->ww_r[ompith],tap);
+	fslice_put(rwfl,iw,weop->ww_r[ompith][0]);
     } // w
 }
 

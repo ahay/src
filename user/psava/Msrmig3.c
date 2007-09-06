@@ -36,6 +36,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;            /* verbosity */
+    bool twoway;          /* two-way traveltime */
     float eps;            /* dip filter constant */  
     int   nrmax;          /* number of reference velocities */
     float dtmax;          /* time error */
@@ -89,7 +90,7 @@ int main (int argc, char *argv[])
     slo3d s_r; // slowness 
     img3d img; // imaging 
 
-    sroperator3d srop;
+    weoperator3d weop;
 
     float dsmax;
 
@@ -133,6 +134,7 @@ int main (int argc, char *argv[])
     if (!sf_getint(    "tmy",&tmy  ))   tmy =     0; /* taper on y   */
     if (!sf_getfloat( "vpvs",&vpvs))   vpvs =    1.;
     if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
+    if (!sf_getbool("twoway",&twoway)) twoway=false; /* two-way traveltime */
 
     /*------------------------------------------------------------*/
     /* SLOWNESS */
@@ -319,14 +321,14 @@ int main (int argc, char *argv[])
 
     ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);
     
-    s_s = slow3_init(cub,slo_s,nrmax,dsmax);
-    s_r = slow3_init(cub,slo_r,nrmax,dsmax);
+    s_s = slow3_init(cub,slo_s,nrmax,dsmax,twoway);
+    s_r = slow3_init(cub,slo_r,nrmax,dsmax,twoway);
 
     /*------------------------------------------------------------*/
     /* MIGRATION */
-    srop = srmig3_init(cub);
+    weop = srmig3_init(cub);
 
-    srmig3(srop,  // shot-record migration operator
+    srmig3(weop,  // shot-record migration operator
 	   cub,   // wavefield hypercube dimensions
 	   ssr,   // SSR operator
 	   tap,   // tapering operator
@@ -340,7 +342,7 @@ int main (int argc, char *argv[])
 	   imop   // imaging operator
 	);
 
-    srmig3_close(srop);
+    srmig3_close(weop);
 
     /*------------------------------------------------------------*/
     /* close structures   */

@@ -34,6 +34,7 @@
 int main (int argc, char *argv[])
 {
     bool verb;            /* verbosity */
+    bool twoway;          /* two-way traveltime */
     float eps;            /* dip filter constant */  
     int   nrmax;          /* number of reference velocities */
     float dtmax;          /* time error */
@@ -66,7 +67,7 @@ int main (int argc, char *argv[])
     slo3d s_s; // slowness 
     slo3d s_r; // slowness 
 
-    sroperator3d srop;
+    weoperator3d weop;
 
     float dsmax;
 
@@ -101,7 +102,8 @@ int main (int argc, char *argv[])
     if (!sf_getint(  "pmy",  &pmy ))     pmy =     0; /* padding on y */
     if (!sf_getint(  "tmx",  &tmx ))     tmx =     0; /* taper on x   */
     if (!sf_getint(  "tmy",  &tmy ))     tmy =     0; /* taper on y   */
-    
+    if (!sf_getbool("twoway",&twoway)) twoway= false; /* two-way traveltime */
+
     /*------------------------------------------------------------*/
     /* SLOWNESS */
     ;      Fs_s = sf_input("slo");
@@ -170,14 +172,14 @@ int main (int argc, char *argv[])
 
     ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);
     
-    s_s = slow3_init(cub,slo_s,nrmax,dsmax);
-    s_r = slow3_init(cub,slo_r,nrmax,dsmax);
+    s_s = slow3_init(cub,slo_s,nrmax,dsmax,twoway);
+    s_r = slow3_init(cub,slo_r,nrmax,dsmax,twoway);
 
     /*------------------------------------------------------------*/
     /* MODELING */
-    srop = srmod3_init(cub);
+    weop = srmod3_init(cub);
     
-    srmod3(srop,  // shot-record migration operator
+    srmod3(weop,  // shot-record migration operator
 	   cub,   // wavefield hypercube dimensions
 	   ssr,   // SSR operator
 	   tap,   // tapering operator
@@ -188,7 +190,14 @@ int main (int argc, char *argv[])
 	   refl   // reflectivity
 	);
 	   
-    srmod3_close(srop);
+    srmod3_close(weop);
+
+    /*------------------------------------------------------------*/
+    /* close structures   */
+    slow3_close(s_s);
+    slow3_close(s_r);
+    ssr3_close(ssr);
+    taper2d_close(tap);
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */

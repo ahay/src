@@ -11,7 +11,7 @@ paradd
 icor xcor tcor ucor laps
 ic sic sic3d lstk
 wigner wdf
-srmig3 srmod3
+srmig3 srmod3 zomig3
 '''
 
 try:  # distributed version

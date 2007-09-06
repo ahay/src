@@ -25,17 +25,21 @@
 /*^*/
 
 #define SOOP(a) for(ily=0;ily<cub->aly.n;ily++){ \
-                for(ilx=0;ilx<cub->alx.n;ilx++){ {a} }}
+                for(ilx=0;ilx<cub->alx.n;ilx++){ \
+		    {a} \
+		}}
 
 /*------------------------------------------------------------*/
 slo3d slow3_init(cub3d   cub,
 		 fslice  slice_,   /* slowness slice */
 		 int     nrmax,   /* maximum number of references */
-		 float   dsmax
+		 float   dsmax,
+		 float  twoway
     )
 /*< initialize slowness >*/
 {
     int imz, jj;
+    int ompith=0;
 
     /*------------------------------------------------------------*/
     slo3d slo;
@@ -45,6 +49,10 @@ slo3d slow3_init(cub3d   cub,
     slo->nrmax=nrmax;
     slo->dsmax=dsmax;
 
+    if(twoway) { slo->twoway = 2;
+    } else {     slo->twoway = 1;
+    }
+
     slo->ss = sf_floatalloc3(cub->alx.n,cub->aly.n,cub->ompnth);  /* slowness */
     slo->so = sf_floatalloc3(cub->alx.n,cub->aly.n,cub->ompnth);  /* slowness */
     slo->sm = sf_floatalloc2(slo->nrmax,cub->amz.n);  /* ref slowness squared */
@@ -52,7 +60,8 @@ slo3d slow3_init(cub3d   cub,
     
     for (imz=0; imz<cub->amz.n; imz++) {
 	fslice_get(slo->slice,imz,slo->ss[0][0]);
-	
+	slow3_twoway(cub,slo,slo->ss,ompith);
+
 	slo->nr[imz] = slow3(slo->nrmax,
 			     slo->dsmax,
 			     cub->alx.n*cub->aly.n,
@@ -124,3 +133,18 @@ void slow3_advance( cub3d cub,
     SOOP( slo->so[ompith][ily][ilx] = slo->ss[ompith][ily][ilx]; );
 
 }
+
+/*------------------------------------------------------------*/
+void slow3_twoway( cub3d     cub,
+		   slo3d     slo,
+		   float ***slow,
+		   int    ompith)
+/*< close slowness >*/
+{
+    int ilx,ily;
+
+    SOOP( slow[ompith][ily][ilx]*= slo->twoway; );
+
+}
+
+

@@ -1,4 +1,4 @@
-/*#include <rsf.h>*/
+#include <rsf.h>
 
 #include "slice.h"
 /*^*/
@@ -82,6 +82,7 @@ struct slo{
     float     ***so; /* slowness */
     int       nrmax;
     float     dsmax;
+    float    twoway; // two-way traveltime
 };
 /*^*/
 
@@ -109,14 +110,16 @@ struct img{
 /*^*/
 
 /*------------------------------------------------------------*/
-typedef struct sroperator *sroperator3d;
+typedef struct weoperator *weoperator3d;
 /*^*/
 
-struct sroperator{
-    sf_complex ***ww_s; // source wavefield
+struct weoperator{
+    sf_complex ***ww_s; //   source wavefield
     sf_complex ***ww_r; // receiver wavefield
-    fslice        wtmp; // tmp wavefield (for modeling)
-    float      ***rr;   // reflectivity (for modeling) 
+    sf_complex ***ww  ; //          wavefield        
+    fslice        wtmp; // tmp wavefield (for SR modeling)
+    float      ***rr;   //  reflectivity (for SR modeling) 
+    float       **qq;   // image (for ZO modeling/migration)
 };
 /*^*/
 
