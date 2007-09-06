@@ -4,7 +4,7 @@ Sample output from "sfspike n1=100 | sfbandpass fhi=60 | sfattr"
 ******************************************* 
 rms = 0.992354 
 mean value = 0.987576 
-norm value = 9.92354 
+2-norm value = 9.92354 
 variance = 0.00955481 
 standard deviation = 0.0977487 
 maximum value = 1.12735 at 97 
@@ -15,7 +15,7 @@ total number of samples = 100
 
 rms                = sqrt[ sum(data^2) / n ]
 mean               = sum(data) / n
-norm               = sqrt[ sum(data^2) ]
+norm               = sum(abs(data)^lval)^(1/lval)
 variance           = [ sum(data^2) - n*mean^2 ] / [ n-1 ]
 standard deviation = sqrt [ variance ]
 */
@@ -49,11 +49,11 @@ int main(int argc, char* argv[])
 {
     sf_file in;
     char *want, buf[BUFSIZ];
-    int n[SF_MAX_DIM], nzero;
+    int n[SF_MAX_DIM], nzero, lval;
     size_t i, nsiz, nbuf, nleft, dim, minloc=0, maxloc=0;
     size_t bufsiz=BUFSIZ, minloc1=0, minloc2=0, maxloc1=0, maxloc2=0;
     float f, fmin, fmax;
-    double fsum, fsqr, frms, fmean, fnorm, fvar, fstd;
+    double fsum, fsqr, flval, frms, fmean, fnorm, fvar, fstd;
     sf_complex c, cmin1, cmin2, cmax1, cmax2;
     sf_datatype type;
     
@@ -61,12 +61,16 @@ int main(int argc, char* argv[])
     want = sf_getstring("want");
     /* 'all' (default), 'rms', 'mean', 'norm', 'var', 'std', 'max', 'min', 'short' 
         want=   'rms' displays the root mean square
+        want=   'norm' displays the square norm, otherwise specified by lval.
         want=   'var' displays the variance
         want=   'std' displays the standard deviation
         want=   'short' displays a short one-line version
      */ 
     if (NULL != want && 0==strcmp(want,"all")) want=NULL;
     
+    if (!sf_getint("lval",&lval)) lval=2;
+    /* want=norm option, lval is a positive integer, computes the vector lval-norm */
+ 
     in = sf_input("in");
 
     dim = (size_t) sf_filedims (in,n);
@@ -80,7 +84,7 @@ int main(int argc, char* argv[])
     cmin1 = sf_cmplx(+FLT_MAX,0.); cmin2 = sf_cmplx(0.,+FLT_MAX);
     cmax1 = sf_cmplx(-FLT_MAX,0.); cmax2 = sf_cmplx(0.,-FLT_MAX);
     
-    fsum = fsqr = 0.0;
+    fsum = fsqr = flval = 0.0;
     fmin = +FLT_MAX;
     fmax = -FLT_MAX;
     nzero = 0;
@@ -128,6 +132,7 @@ int main(int argc, char* argv[])
 	    }
 	    fsum += f;
 	    fsqr += f*f;
+	    if (lval != 2) flval += pow(fabs(f),lval);
 	    if (0. == f) nzero++;
 	    if (SF_COMPLEX==type) {
 		if (crealf(c) > crealf(cmax1)) {
@@ -159,13 +164,14 @@ int main(int argc, char* argv[])
 	}
     }
     fmean = fsum/nsiz;
-    fnorm = sqrt(fsqr);
-    frms  = sqrt(fsqr/nsiz);
+    if (lval == 2) fnorm = sqrt(fsqr);
+    else fnorm = pow(flval,1./lval);
+    frms = sqrt(fsqr/nsiz);
     if (nsiz > 1) fvar = (fsqr-nsiz*fmean*fmean)/(nsiz-1);
     else          fvar = 0.0;
     fstd = sqrt(fvar);
 
-    if( NULL==want){
+    if(NULL==want){
 	printf("******************************************* \n");
 	if(SF_COMPLEX==type) 
 	    printf("   rms, mean, norm, var, and std refer to amplitude\n\n");
@@ -175,7 +181,7 @@ int main(int argc, char* argv[])
     if(NULL==want || 0==strcmp(want,"mean"))
 	printf("mean value = %g \n",(float) fmean);
     if(NULL==want || 0==strcmp(want,"norm"))
-	printf("norm value = %g \n",(float) fnorm);
+	printf("%d-norm value = %g \n",lval,(float) fnorm);
     if(NULL==want || 0==strcmp(want,"var"))
 	printf("variance = %g \n",(float) fvar);
     if(NULL==want || 0==strcmp(want,"std"))
@@ -212,7 +218,7 @@ int main(int argc, char* argv[])
 	printf("total number of samples = %d \n",(int) nsiz);
 	printf("******************************************* \n");
     }
-    if(NULL != want && 0==strcmp( want,"short")) {
+    if(NULL != want && 0==strcmp(want,"short")) {
 	printf("%6.2f%% zeros min: %g max: %g \n",
 	       100.*((double)nzero)/((double)nsiz),fmin,fmax);  
     }
