@@ -170,7 +170,8 @@ void ssr3_ssf(
 	KOOP( cc = csqrtf(sf_cadd(sf_crmul(w2,slo->sm[imz][jr]),
 				  sf_cmplx(ssr->kk[iy][ix],0.)));
 	      ssr->wk[ompith][iy][ix] = 
-	      sf_cmul(pk[ompith][iy][ix],cexpf(sf_crmul(sf_csub(co,cc),cub->amz.d))); 
+	      sf_cmul(ssr->pk[ompith][iy][ix],
+		      cexpf(sf_crmul(sf_csub(co,cc),cub->amz.d))); 
 	    );
 #endif
 	
@@ -180,16 +181,19 @@ void ssr3_ssf(
 	/* accumulate wavefield */
 #ifdef SF_HAS_COMPLEX_H
 	LOOP( d = fabsf(slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] * 
-			slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] - slo->sm[imz][jr]);
+			slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] - 
+			slo->sm[imz][jr]);
 	      d = ssr->dsmax2/(d*d+ssr->dsmax2);
 	      wx[iy][ix] += ssr->wk[ompith][iy][ix]*d;
 	      ssr->wt[ompith][iy][ix] += d; 
 	    );
 #else
 	LOOP( d = fabsf(slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] * 
-			slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] - slo->sm[jr]);
+			slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] - 
+			slo->sm[jr]);
 	      d = ssr->dsmax2/(d*d+ssr->dsmax2);
-	      wx[iy][ix] = sf_cadd(wx[iy][ix],sf_crmul(ssr->wk[ompith][iy][ix],d));
+	      wx[iy][ix] = sf_cadd(wx[iy][ix],
+				   sf_crmul(ssr->wk[ompith][iy][ix],d));
 	      ssr->wt[ompith][iy][ix] += d; 
 	    );
 #endif

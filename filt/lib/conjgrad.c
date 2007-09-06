@@ -98,7 +98,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 		 int niter         /* number of iterations */) 
 /*< Conjugate gradient solver with shaping >*/
 {
-    double gn, gnp, alpha, beta, g0, dg, r0, b0;
+    double gn, gnp, alpha, beta, g0, dg, r0;
     int i, iter;
     
     if (NULL != prec) {
@@ -129,7 +129,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 	}
     } 
     
-    dg = g0 = b0 = gnp = 0.;
+    dg = g0 = gnp = 0.;
     r0 = norm(nr,r);
     if (r0 == 0.) {
 	if (verb) sf_warning("zero residual: r0=%g",r0);
@@ -165,7 +165,6 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 
 	if (iter==0) {
 	    g0 = gn;
-	    b0 = fabs(gn + eps*(norm(nr,gr)-norm(nx,gx)));
 
 	    for (i=0; i < np; i++) {
 		sp[i] = gp[i];
@@ -200,14 +199,6 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 	}
 
 	beta = norm(nr,sr) + eps*(norm(np,sp) - norm(nx,sx));
-
-	/*
-	if (beta/b0 < tol) {
-	    if (verb) 
-		sf_warning("convergence in %d iterations, beta=%g",iter,beta);
-	    break;
-	}
-	*/
 	
 	if (verb) sf_warning("iteration %d res: %f grad: %f",
 			     iter,norm(nr,r)/r0,dg);
