@@ -124,8 +124,8 @@ void zomig3(weoperator3d weop,
     }
     
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)   \
-    private(ompith,iw,w,imz)	    \
+#pragma omp parallel for schedule(static)	\
+    private(ompith,iw,w,imx,imy,imz)		\
     shared(data,weop,cub,ssr,tap,slo)
 #endif
     for (iw=0; iw<cub->aw.n; iw++) {
