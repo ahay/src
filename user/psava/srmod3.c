@@ -181,8 +181,12 @@ void srmod3(weoperator3d weop,
 	    LOOP( weop->ww_s[ompith][imy][imx] *= weop->rr[ompith]  [imy][imx];
 		  weop->ww_r[ompith][imy][imx] += weop->ww_s[ompith][imy][imx]; );
 #else
-	    LOOP( weop->ww_s[ompith][imy][imx] = sf_crmul(weop->ww_s[ompith][imy][imx],weop->rr[ompith][imy][imx]);
-		  weop->ww_r[ompith][imy][imx] = sf_cadd(ww_r[ompith][imy][imx],ww_s[imy][imx]); );
+	    LOOP( weop->ww_s[ompith][imy][imx] = 
+		  sf_crmul(weop->ww_s[ompith][imy][imx],
+			   weop->rr[ompith][imy][imx]);
+		  weop->ww_r[ompith][imy][imx] = 
+		  sf_cadd(weop->ww_r[ompith][imy][imx],
+			  weop->ww_s[ompith][imy][imx]); );
 #endif
 	    
 	    ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
