@@ -1,0 +1,235 @@
+\author{Isaac Newton} 
+%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 1}
+
+
+\begin{abstract}
+  This homework has three parts. In the theoretical part, you will
+  derive some new forms of ray tracing equations and their solutions.
+  In the computational part, you will experiment with wave propagation
+  in a simple synthetic model.  In the programming part, you can
+  modify the modeling program to implement anisotropic wave propagation.
+\end{abstract}
+
+\section{Prerequisites}
+
+Completing the computational part of this homework assignment requires
+\begin{itemize}
+\item \texttt{Madagascar} software environment available from \\
+\url{http://rsf.sourceforge.net}
+\item \LaTeX\ environment with \texttt{SEGTeX} available from \\ 
+\url{http://segtex.sourceforge.net}
+\end{itemize}
+
+You are welcome to do the assignment on your personal computer by
+installing the required environments. In this case, you can obtain all
+homework assignments from the \texttt{Madagascar} repository by running
+\begin{verbatim}
+svn co https://rsf.svn.sourceforge.net/svnroot/rsf/trunk/book/geo384w 
+\end{verbatim}
+
+The necessary environment is also installed in your class account on
+all Unix computers in the Department of Geological Sciences.
+
+\section{Theoretical part}
+
+You can either write your answers on paper or edit them in the file
+\verb#hw1/paper.tex#. Please show all the mathematical
+derivations that you perform.
+
+\begin{enumerate}
+\item In class, we used a mysterious parameter $\sigma$ to represent a
+  variable continuously increasing along a ray. There are other
+  variables that can play a similar role.
+  \begin{enumerate}
+  \item Transform the isotropic ray tracing system
+    \begin{eqnarray}
+      \label{eq:xsigma}
+      \frac{d \mathbf{x}}{d \sigma} & = & \mathbf{p} \\
+      \label{eq:psigma}
+      \frac{d \mathbf{p}}{d \sigma} & = & S(\mathbf{x})\,\nabla S \\
+      \label{eq:tsigma}
+      \frac{d T}{d \sigma} & = & S^2(\mathbf{x})
+    \end{eqnarray}
+    into an equivalent system that uses $\lambda$ instead of
+    $\sigma$, where $\lambda$ represents the length of the ray trajectory:
+    \begin{eqnarray} 
+      \label{eq:xlambda}
+      \frac{d \mathbf{x}}{d \lambda} & = & \\
+      \label{eq:plambda}
+      \frac{d \mathbf{p}}{d \lambda} & = & \\ 
+      \label{eq:tlambda}
+      \frac{d T}{d \lambda} & = & S(\mathbf{x})\;.
+    \end{eqnarray}
+    Remember to check physical dimensions.
+  \item Suppose you are given $T(\mathbf{x})$ -- the traveltime from
+  the source to all points $\mathbf{x}$ in the domain of
+  interest. Your task is to find $\lambda(\mathbf{x})$ - the length of
+  the ray trajectory at all $\mathbf{x}$. Derive a first-order partial
+  differential equation that connects $\nabla \lambda$ and $\nabla T$.
+  \end{enumerate}
+
+\item The elliptically anisotropic 2-D eikonal
+  equation has the form
+  \begin{equation}
+    \label{eq:eleik}
+    V_1^2(\mathbf{x})\,\left(\frac{\partial T}{\partial x_1}\right)^2 +
+    V_2^2(\mathbf{x})\,\left(\frac{\partial T}{\partial x_2}\right)^2 = 1\;,
+  \end{equation}
+  where $\mathbf{x}=\{x_1,x_2\}$ is a point in space, $T(\mathbf{x})$
+  is the traveltime, $V_1(\mathbf{x})$ is the horizontal velocity, and
+  $V_2(\mathbf{x})$ is the vertical velocity.
+  \begin{enumerate}
+  \item Derive the ray tracing system
+    \begin{eqnarray}
+      \label{eq:xt}
+      \frac{d x_1}{d T} & = & \hspace{5in} \\
+      \label{eq:zt}
+      \frac{d x_2}{d T} & = & \\
+      \label{eq:pxt}
+      \frac{d p_1}{d T} & = & \\
+      \label{eq:pzt}
+      \frac{d p_2}{d T} & = & 
+    \end{eqnarray}
+    where $p_1$ represents $\partial T/\partial x_1$ and 
+    $p_2$ represents $\partial T/\partial x_2$.
+  \item Assuming constant (but unequal) velocities $V_1$ and $V_2$,
+    solve the ray tracing system for a point source at the origin
+    $x_1(0)=0$, $x_2(0)=0$ to show that the wavefronts in this case
+    have an elliptical shape.
+  \item The isotropic eikonal equation
+    \begin{equation}
+      \label{eq:iso}
+      \left(\frac{\partial T}{\partial x_1}\right)^2 +
+      \left(\frac{\partial T}{\partial x_2}\right)^2 = S^2(\mathbf{x})
+    \end{equation}
+    describes wavefronts of the wave equation
+    \begin{equation}
+      \label{eq:isowave}
+    S^2(\mathbf{x})\,\frac{\partial^2 P}{\partial t^2} =
+    \nabla^2 P + \cdots
+  \end{equation}
+  with omitted possible first- and zero-order terms. 
+  equation~(\ref{eq:eleik})? What wave equation corresponds to equation~(\ref{eq:eleik})?
+  \begin{equation}
+    {\frac{\partial^2 P}{\partial t^2}} =
+    \label{eq:anisowave}
+  \end{equation}
+  \end{enumerate}
+\end{enumerate}
+
+\section{Computational part}
+\inputdir{simple}
+
+In this part, we will simulate and observe acoustic wave propagation
+in a simple velocity model shown in Figure~\ref{fig:model}. A wave snapshot is shown in Figure~\ref{fig:snap}.
+
+\multiplot{2}{model,snap}{width=0.8\textwidth}{(a) Velocity model for simple wave propagation experiments. (b) Wave snapshot with overlaid first-arrival wavefront.}
+
+\begin{enumerate}
+\item Change directory to \verb#geo384w/hw1/simple#
+\item Run
+\begin{verbatim}
+scons model.view
+\end{verbatim}
+to generate and view the velocity model from Figure~\ref{fig:model}.
+\item Run
+\begin{verbatim}
+scons wave.vpl
+\end{verbatim}
+to generate and observe a propagating wave on your screen.
+\item Run
+\begin{verbatim}
+scons fronts.vpl
+\end{verbatim}
+to generate and observe a propagating wavefront on your screen.
+\item Run
+\begin{verbatim}
+scons snap.view
+\end{verbatim}
+to generate and view a wave snapshot selected at 1~s as shown in Figure~\ref{fig:snap}.
+\item Open the file \texttt{SConstruct} in your favorite editor. Your task is to make the following modifications in it:
+\begin{itemize}
+\item Find a parameter responsible for selecting the time frame for the snapshot in Figure~\ref{fig:snap}. 
+Modify it to increase the time from 1~s to your favorite point in the movie. Run \texttt{scons snap.view} again to verify your change.
+\item Can you observe a geometrical part of the wave that is not captured by the wavefront? What is its physical meaning?
+\item Find a parameter in the \texttt{SConstruct} file 
+responsible for the vertical smoothness of the model in Figure~\ref{fig:model}. Modify it to increase the smoothness of the model in such a way 
+that the first-arrival wavefront follows the wave geometry exactly. Run \texttt{scons snap.view} again to verify your change.
+\item (EXTRA CREDIT) For extra credit, modify  \texttt{SConstruct} to generate a movie of pictures like Figure~\ref{fig:snap} for a gradually increasing smoothness.
+\end{itemize}
+\item When you are satisfied with your results, run
+\begin{verbatim}
+scons lock
+\end{verbatim}
+to lock the figures.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{simple/SConstruct}
+
+\section{Programming part (extra credit)}
+\inputdir{code}
+
+For extra credit, you can modify the wave modeling program to include
+anisotropic wave propagation effects. The program below (slightly
+modified from the original version by Paul Sava) implements wave
+modeling with equation
+\begin{equation}
+   \label{eq:isowave2}
+      S^2(\mathbf{x})\,\frac{\partial^2 P}{\partial t^2} =
+             \nabla^2 P + F(\mathbf{x},t)\;,
+\end{equation} 
+where $F(\mathbf{x},t)$ is the source term. The implementation uses
+finite-difference discretization (second-order in time and fourth-order in space). 
+Stepping in time involves the following computations:
+\begin{equation}
+\mathbf{P}_{t+\Delta t} = \left[ \nabla^2 \mathbf{P}_t - F(\mathbf{x},t)\right] V^2(\mathbf{x}) \Delta t^2 + 2 \mathbf{P}_{t} - \mathbf{P}_{t-\Delta t} \;,
+\label{eq:step}
+\end{equation}
+where $\mathbf{P}$ represents the propagating wavefield discretized at different time steps.
+
+\lstset{language=c,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{code/afdmc.c}
+
+Your task is to modify the code to implement your anisotropic
+equation~(\ref{eq:anisowave}). You will test your implementation using a constant velocity example shown in Figure~\ref{fig:wave}.
+
+\plot{wave}{width=\textwidth}{Wavefield snapshot for propagation from a point-source in a homogeneous medium. Modify the code to make wave propagation anisotropic.}
+
+\begin{enumerate}
+\item Change directory to \verb#geo384w/hw1/code#
+\item Run
+\begin{verbatim}
+scons wave.vpl
+\end{verbatim}
+to compile and run the program and to observe a propagating wave on your screen.
+\item Open the file \texttt{afdmc.c} in your favorite editor and modify it to implement the wave operator from equation~(\ref{eq:anisowave}).
+\item Run
+\begin{verbatim}
+scons wave.vpl
+\end{verbatim}
+again to compile and test your program. If you want to add additional tests, modify the file \texttt{SConstruct}.
+\item When you are satisfied with your results, run
+\begin{verbatim}
+scons lock
+\end{verbatim}
+to lock the figures.
+\end{enumerate}
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+\lstinputlisting[frame=single]{code/SConstruct}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#geo384w/hw1#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+first line to have your name instead of Newton's.
+\item Run
+\begin{verbatim}
+> scons pdf
+\end{verbatim}
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+e-mail.
+\end{enumerate}

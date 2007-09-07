@@ -1,0 +1,48 @@
+from rsfproj import *
+
+# Program compilation
+#####################
+
+exe = Program('afdmc.c')
+
+# Constant velocity test
+########################
+
+# Velocity model
+Flow('v1',None,
+     '''
+     spike n1=201 n2=301 d1=0.01 d2=0.01
+     label1=x1 unit1=km label2=x2 unit2=km
+     ''')
+Flow('v2','v1','scale dscale=1.5')
+
+# Source wavelet
+Flow('wavelet',None,
+     '''
+     spike nsp=1 n1=1000 d1=0.001 k1=201 |
+     ricker1 frequency=10
+     ''')
+
+# Source location
+Flow('source',None,'spike n1=201 n2=301 k1=101 k2=151')
+
+# Modeling
+Flow('wave','wavelet %s source v1 v2' % exe[0],
+     '''
+     ./${SOURCES[1]} source=${SOURCES[2]}
+     vel1=${SOURCES[3]} vel2=${SOURCES[4]} 
+     ''')
+
+Plot('wave',
+     '''
+     window j3=5 f3=200 |
+     grey gainpanel=all title=Wave
+     ''',view=1)
+
+Result('wave',
+       '''
+       window n3=1 min3=0.9 |
+       grey title=Wave screenht=8 screenwd=12
+       ''')
+
+End()
