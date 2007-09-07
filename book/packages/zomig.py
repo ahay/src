@@ -109,10 +109,23 @@ def Cdtone(wfld,data,slow,par):
          zomig mode=d inv=n causal=y twoway=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
+def Cdtone3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=d inv=n causal=y twoway=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+    
 def Cdttwo(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
          zomig mode=d inv=n causal=y twoway=y %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+def Cdttwo3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=d inv=n causal=y twoway=y %s
          slo=${SOURCES[1]}
          ''' % param(par))
     
@@ -124,10 +137,23 @@ def Adtone(wfld,data,slow,par):
          zomig mode=d inv=n causal=n twoway=n %s
          slo=${SOURCES[1]}
          ''' % param(par))
+def Adtone3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=d inv=n causal=n twoway=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+    
 def Adttwo(wfld,data,slow,par):
     Flow(wfld,[data,slow],
          '''
          zomig mode=d inv=n causal=n twoway=y %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+def Adttwo3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=d inv=n causal=n twoway=y %s
          slo=${SOURCES[1]}
          ''' % param(par))
 # ------------------------------------------------------------

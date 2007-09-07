@@ -82,6 +82,11 @@ def datum(swf1,rwf1,slow,swf0,rwf0,par):
     zomig.Cdtone(swf1,swf0,slow,par) #      causal
     zomig.Adtone(rwf1,rwf0,slow,par) # anti-causal
 
+def datum3(swf1,rwf1,slow,swf0,rwf0,par):
+    
+    zomig.Cdtone3(swf1,swf0,slow,par) #      causal
+    zomig.Adtone3(rwf1,rwf0,slow,par) # anti-causal
+
 # migrate
 def image(imag,slow,swlf,rwfl,par):
     Flow(imag,[swlf,slow,rwfl],
@@ -90,14 +95,14 @@ def image(imag,slow,swlf,rwfl,par):
          slo=${SOURCES[1]}
          rwf=${SOURCES[2]}
          ''' % param(par))
-def image_cw(imag,sslo,rslo,swlf,rwfl,par):
-    Flow(imag,[swlf,sslo,rslo,rwfl],
-         '''
-         srmig %s
-         slo=${SOURCES[1]}
-         sls=${SOURCES[2]}
-         rwf=${SOURCES[3]}
-         ''' % param(par))
+#def image_cw(imag,sslo,rslo,swlf,rwfl,par):
+#    Flow(imag,[swlf,sslo,rslo,rwfl],
+#         '''
+#         srmig %s
+#         slo=${SOURCES[1]}
+#         sls=${SOURCES[2]}
+#         rwf=${SOURCES[3]}
+#         ''' % param(par))
 
 # model
 def modelPW3(data,slow,wfld,refl,par):
@@ -176,14 +181,14 @@ def model(data,slow,wfld,refl,par):
           ''' % param(par))
 
 # shot-profile modeling (converted waves)
-def model_cw(data,sslo,rslo,wfld,refl,par):
-    Flow(data,[wfld,sslo,rslo,refl],
-          '''
-          srmod %s
-          slo=${SOURCES[1]}
-          sls=${SOURCES[2]}
-          ref=${SOURCES[3]}
-          ''' % param(par))
+#def model_cw(data,sslo,rslo,wfld,refl,par):
+#    Flow(data,[wfld,sslo,rslo,refl],
+#          '''
+#          srmod %s
+#          slo=${SOURCES[1]}
+#          sls=${SOURCES[2]}
+#          ref=${SOURCES[3]}
+#          ''' % param(par))
 
 # ------------------------------------------------------------
 
