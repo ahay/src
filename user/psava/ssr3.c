@@ -189,7 +189,7 @@ void ssr3_ssf(
 #else
 	LOOP( d = fabsf(slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] * 
 			slo->so[ompith][ ssr->ly[iy] ][ ssr->lx[ix] ] - 
-			slo->sm[jr]);
+			slo->sm[imz][jr]);
 	      d = ssr->dsmax2/(d*d+ssr->dsmax2);
 	      wx[iy][ix] = sf_cadd(wx[iy][ix],
 				   sf_crmul(ssr->wk[ompith][iy][ix],d));
