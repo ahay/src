@@ -25,7 +25,8 @@ except: # local version
                SCANNERS=[configure.Include])
 
 env.Prepend(CPPPATH=['../../include'],
-            LIBPATH=['../utilities','../genlib','../../plot/lib','../../filt/lib'],
+            LIBPATH=['../utilities','../genlib',
+                     '../../plot/lib','../../filt/lib'],
             LIBS=['genpen','util','rsfplot','rsf'])
 
 env['PROGPREFIX'] = ''

@@ -264,8 +264,9 @@ class Project(Environment):
                               'Test':Test},
                     LIBPATH=[libdir],
                     CPPPATH=[incdir],
-                    LIBS=['rsf','m',libs],
+                    LIBS=[libs],
                     PROGSUFFIX='.exe')
+        self.Prepend(LIBS=['rsf'])
         if sys.platform[:6] == 'cygwin':
             self['ENV']['PATH'] = self['ENV']['PATH'] + ':/usr/X11R6/bin'
             self['ENV']['SYSTEMROOT'] = os.environ.get('SYSTEMROOT')
@@ -277,9 +278,6 @@ class Project(Environment):
         self.coms = []
         self.data = []
         sys.path.append('../../../packages')
-    def Exe(self,source,**kw):
-        target = source.replace('.c','.x')
-        return apply(self.Program,(target,source),kw)
     def Flow(self,target,source,flow,stdout=1,stdin=1,rsf=1,
              suffix=sfsuffix,prefix=sfprefix,src_suffix=sfsuffix,rsh=None):
         if not flow:
