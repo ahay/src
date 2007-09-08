@@ -180,7 +180,6 @@ int main (int argc, char* argv[])
     int             ii;
     FILE           *temp;
     char            string[MAXFLEN + 1];
-    int		tempfileindex = -1;
     
     sf_init(argc,argv);
 
@@ -238,15 +237,15 @@ int main (int argc, char* argv[])
 		pltinname[infileno] = sf_charalloc(len+1);
 
 		strncpy( pltinname[infileno],string,len+1);
-		/* remember what number this file is so we can delete it later*/
-		tempfileindex = infileno;
+
 		infileno++;
 	    }
         } else
         {
 	    if (!allow_pipe)
 	    {
-	    	ERR (WARN, name, "cannot use pipes with this device, try cachepipe=y ");
+	    	ERR (WARN, name, 
+		     "cannot use pipes with this device, try cachepipe=y ");
 	    }
 	    else
 	    {
@@ -378,7 +377,6 @@ FILE* tempcopy(FILE* infile,char* filename )
     /* We could unlink the file after we reopen it to make it really
      * temporary but we don't know for sure that a filter isn't going
      * to close the file and try to reopen it.
-     * Hence the buisness with tempfileindex in the main routine.
      */
 
     /* check for zero length input */
