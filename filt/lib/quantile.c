@@ -1,4 +1,4 @@
-/* Computing quantiles by Hoar's algorithm */
+/* Computing quantiles by Hoare's algorithm */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
