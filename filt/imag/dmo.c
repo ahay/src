@@ -25,7 +25,7 @@
 #include "halfint.h"
 
 static bool inv;
-static int nt2,nt,nx,ntx,mint,n,type;
+static int nt2,nt,nx,mint,n,type;
 static float vel,t0,dt,dx,dh,h,h2,d1,tmax, **tmp;
 
 void dmo_init (float vel1 /* velocity */, 
@@ -52,7 +52,6 @@ void dmo_init (float vel1 /* velocity */,
     type = type1;
 
     nt2 = 2*kiss_fft_next_fast_size((nt+1)/2);
-    ntx = nt*nx;
     tmax=1./(t0+(nt-1)*dt);
 
     tmp = sf_floatalloc2(nt2,nx);

@@ -184,7 +184,7 @@ void otherdip2(int niter        /* number of iterations */,
 /*< estimate the second slope only >*/
 {
     int i, iter, k;
-    float mean, usum, psum, qsum, ui, dpi, pi, lam, usum2;
+    float mean, usum, psum, ui, dpi, pi, lam, usum2;
     allpass ap, aq;
  
     ap = allpass_init (nw,nj1,n1,n2,1,pq[0]);
@@ -211,7 +211,6 @@ void otherdip2(int niter        /* number of iterations */,
 
 	usum = 0.;
 	psum = 0.;
-	qsum = 0.;
 
 	for(i=0; i < n; i++) {
 	    u1[0][i]  /= mean;

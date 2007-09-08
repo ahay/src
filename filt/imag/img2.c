@@ -520,9 +520,9 @@ void img2h(int iw)
 		    isz=MM(icz*jcz-dsz,amz);
 		    cs = qs[isz][isy][isx];
 
-		    irx=MM(icx*jcx+dsx,amx);
-		    iry=MM(icy*jcy+dsy,amy);
-		    irz=MM(icz*jcz+dsz,amz);
+		    irx=MM(icx*jcx+drx,amx);
+		    iry=MM(icy*jcy+dry,amy);
+		    irz=MM(icz*jcz+drz,amz);
 		    cr = qr[irz][iry][irx];
 
 		    /* 
@@ -595,9 +595,9 @@ void img2g(int iw)
 		    isz=MM(icz*jcz-dsz,amz);
 		    cs = qs[isz][isy][isx];
 
-		    irx=MM(icx*jcx+dsx,amx);
-		    iry=MM(icy*jcy+dsy,amy);
-		    irz=MM(icz*jcz+dsz,amz);
+		    irx=MM(icx*jcx+drx,amx);
+		    iry=MM(icy*jcy+dry,amy);
+		    irz=MM(icz*jcz+drz,amz);
 		    cr = qr[irz][iry][irx];
 
 		    /* 

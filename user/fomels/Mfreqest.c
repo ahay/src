@@ -28,7 +28,7 @@ rectN defines the size of the smoothing stencil in N-th dimension.
 int main (int argc, char* argv[])
 {
     int n1,n2, i1,i2, i, n12, niter, dim, n[SF_MAX_DIM], rect[SF_MAX_DIM];
-    float *trace, *hilb, *dtrace, *dhilb, *num, *den, *phase, mean, d1;
+    float *trace, *dtrace, *num, *den, *phase, mean, d1;
     char key[6];
     bool hertz;
     sf_file in, out;
@@ -52,9 +52,7 @@ int main (int argc, char* argv[])
     if (!sf_histfloat(in,"d1",&d1)) d1=1.;
 
     trace = sf_floatalloc(n1);
-    hilb = sf_floatalloc(n1);
     dtrace = sf_floatalloc(n1);
-    dhilb = sf_floatalloc(n1);
 
     num = sf_floatalloc(n12);
     den = sf_floatalloc(n12);

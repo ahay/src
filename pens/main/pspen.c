@@ -2113,7 +2113,7 @@ static char     last_size = 0, last_font;
  * But I find that 570 is a better number!
  */
     size = ROUND (path * 1000. / 570.);
-    orient = ROUND (acos (path_orient_dx) * 180 / 3.141592654);
+    orient = ROUND (acos (path_orient_dx) * 180 / SF_PI);
     if (pathy < 0)
 	orient *= -1;
 

@@ -263,7 +263,7 @@ int             nx_mult, ny_mult;
 int             nx_temp, ny_temp;
 int            *tempbuf, *ptemp;
 FILE           *fopen ();
-int             new_style;
+vp_plotstyle    new_style;
 int             starterase = 0;
 int             hacol[NHATCH * 2], hafat[NHATCH * 2], haoff[NHATCH * 2],
                 hasiz[NHATCH * 2], numhatch;

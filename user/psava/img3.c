@@ -521,9 +521,9 @@ void img3h(cub3d cub,
 		    isz=MM(icz*img->jcz-dsz,cub->amz);
 		    cs = img->qs[ompith][isz][isy][isx];
 
-		    irx=MM(icx*img->jcx+dsx,cub->amx);
-		    iry=MM(icy*img->jcy+dsy,cub->amy);
-		    irz=MM(icz*img->jcz+dsz,cub->amz);
+		    irx=MM(icx*img->jcx+drx,cub->amx);
+		    iry=MM(icy*img->jcy+dry,cub->amy);
+		    irz=MM(icz*img->jcz+drz,cub->amz);
 		    cr = img->qr[ompith][irz][iry][irx];
 
 		    /* 
