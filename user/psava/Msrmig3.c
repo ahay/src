@@ -52,8 +52,8 @@ int main (int argc, char *argv[])
     bool  hsym;
     float vpvs;
 
-    void (*imop)(cub3d,img3d,int,int);        // imaging operator apply
-    void (*imop_close)(img3d,fslice,fslice);  // imaging operator close
+    void (*imop)(cub3d,img3d,int,int);        /* imaging operator apply */
+    void (*imop_close)(img3d,fslice,fslice);  /* imaging operator close */
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -83,12 +83,12 @@ int main (int argc, char *argv[])
     int ompchunk=1;
     int ompnth=0,ompath=1; 
 
-    cub3d cub; // wavefield hypercube
-    tap3d tap; // tapering
-    ssr3d ssr; // SSR operator
-    slo3d s_s; // slowness 
-    slo3d s_r; // slowness 
-    img3d img; // imaging 
+    cub3d cub; /* wavefield hypercube */
+    tap3d tap; /* tapering */
+    ssr3d ssr; /* SSR operator */
+    slo3d s_s; /* slowness */
+    slo3d s_r; /* slowness */
+    img3d img; /* imaging */ 
 
     weoperator3d weop;
 
@@ -160,8 +160,8 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/    
     /* WAVEFIELD/IMAGE */
 
-    Fw_s = sf_input( "in"); //   source data
-    Fw_r = sf_input("rwf"); // receiver data    
+    Fw_s = sf_input( "in"); /*   source data */
+    Fw_r = sf_input("rwf"); /* receiver data */ 
     if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("need complex receiver data");
     
@@ -314,9 +314,9 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init structures */
     tap = taper_init(cub,
-		     SF_MIN(tmx,cub->amx.n-1), // tmx
-		     SF_MIN(tmy,cub->amy.n-1), // tmy
-		     0,                        // tmz
+		     SF_MIN(tmx,cub->amx.n-1), /* tmx */
+		     SF_MIN(tmy,cub->amy.n-1), /* tmy */
+		     0,                        /* tmz */
 		     true,true,false);
 
     ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);
@@ -328,18 +328,18 @@ int main (int argc, char *argv[])
     /* MIGRATION */
     weop = srmig3_init(cub);
 
-    srmig3(weop,  // shot-record migration operator
-	   cub,   // wavefield hypercube dimensions
-	   ssr,   // SSR operator
-	   tap,   // tapering operator
-	   s_s,   // source slowness
-	   s_r,   // receiver slowness
-	   img,   // image
-	   wfl_s, // source wavefield
-	   wfl_r, // receiver wavefield
-	   imag,  // image
-	   cigs,  // CIGs
-	   imop   // imaging operator
+    srmig3(weop,  /* shot-record migration operator */
+	   cub,   /* wavefield hypercube dimensions */
+	   ssr,   /* SSR operator */
+	   tap,   /* tapering operator */
+	   s_s,   /* source slowness */
+	   s_r,   /* receiver slowness */
+	   img,   /* image */
+	   wfl_s, /* source wavefield */
+	   wfl_r, /* receiver wavefield */
+	   imag,  /* image */
+	   cigs,  /* CIGs */
+	   imop   /* imaging operator */
 	);
 
     srmig3_close(weop);

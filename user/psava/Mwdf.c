@@ -133,7 +133,7 @@ int main(int argc, char* argv[])
     for(i3=nh3+1;i3<n3-nh3;i3++) {
 	if(verb) fprintf(stderr,"%4d",i3);
 
-	// zero WDF
+	/* zero WDF */
 	ib3=nh3;
 	for(     ib2=0; ib2<nb2; ib2++) {
 	    for( ib1=0; ib1<nb1; ib1++) {
@@ -141,14 +141,14 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	// circulate index to slices
+	/* circulate index to slices */
 	ik = ii[0];
 	for(ib3=0;ib3<nb3-1;ib3++) {
 	    ii[ib3]=ii[ib3+1];
 	}
 	ii[nb3-1]=ik;
 
-	// read new slice
+	/* read new slice */
 	sf_floatread(uu[ ii[nb3-1] ][0],nb1*nb2,Fu);
 
 	for(        ih3=-nh3; ih3<nh3+1; ih3++) { 

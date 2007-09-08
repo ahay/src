@@ -144,9 +144,9 @@ int main(int argc, char* argv[])
     
     /*------------------------------------------------------------*/
     /* allocate arrays */
-    us=sf_floatalloc3(nt,nx,nz);  //   source wavefield
-    ur=sf_floatalloc3(nt,nx,nz);  // receiver wavefield
-    ii=sf_floatalloc2(   nx,nz);  // image
+    us=sf_floatalloc3(nt,nx,nz);  /*   source wavefield */
+    ur=sf_floatalloc3(nt,nx,nz);  /* receiver wavefield */
+    ii=sf_floatalloc2(   nx,nz);  /* image */
 
     ts=sf_floatalloc3(nt,nx,nz);
     tr=sf_floatalloc3(nt,nx,nz);
@@ -251,9 +251,9 @@ int main(int argc, char* argv[])
 		    for(it=0; it<nt; it++) {	
 			ts[iz][ix][it] = 0;
 			tr[iz][ix][it] = 0;
-		    }     // t
-		}         // x
-	    }             // z
+		    }     /* t */
+		}         /* x */
+	    }             /* z */
 
 	    pkt = kt[ib][ia];
 	    pkx = kx[ib][ia];
@@ -290,11 +290,11 @@ int main(int argc, char* argv[])
 			for(it=lht; it<lgt; it++) { jt = it+lkt;
 			    ts[ iz ][ ix ][ it ] += lgg * us[ jz ][ jx ][ jt ];
 			    tr[ iz ][ ix ][ it ] += lgg * ur[ jz ][ jx ][ jt ];
-			} // ht loop
-		    }     // hx loop		
-		}         // hz loop
+			} /* ht loop */
+		    }     /* hx loop */		
+		}         /* hz loop */
 
-	    }	          //  l loop
+	    }	          /*  l loop */
 	
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,ompchunk) private(iz,ix,it) shared(nz,nx,nt,ts,tr,ii)
@@ -303,16 +303,16 @@ int main(int argc, char* argv[])
 		for(    ix=0; ix<nx; ix++) {
 		    for(it=0; it<nt; it++) {
 			ii[iz][ix] += ts[iz][ix][it] * tr[iz][ix][it];
-		    }     // t
-		}         // x
-	    }             // z
+		    }     /* t */
+		}         /* x */
+	    }             /* z */
 	    
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b");
-	}                 // a loop
+	}                 /* a loop */
 
 	sf_floatwrite(ii[0],nx*nz,Fi);      
 	if(stack) sf_seek(Fi,0,SEEK_SET);
-    }                     // b loop
+    }                     /* b loop */
     
     if(verb) fprintf(stderr,"\n");
 

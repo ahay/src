@@ -61,11 +61,11 @@ int main (int argc, char *argv[])
     int ompchunk=1;
     int ompnth=0,ompath=1; 
 
-    cub3d cub; // wavefield hypercube
-    tap3d tap; // tapering
-    ssr3d ssr; // SSR operator
-    slo3d s_s; // slowness 
-    slo3d s_r; // slowness 
+    cub3d cub; /* wavefield hypercube */
+    tap3d tap; /* tapering */
+    ssr3d ssr; /* SSR operator */
+    slo3d s_s; /* slowness */ 
+    slo3d s_r; /* slowness */
 
     weoperator3d weop;
 
@@ -165,9 +165,9 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init structures */
     tap = taper_init(cub,
-		     SF_MIN(tmx,cub->amx.n-1), // tmx
-		     SF_MIN(tmy,cub->amy.n-1), // tmy
-		     0,                        // tmz
+		     SF_MIN(tmx,cub->amx.n-1), /* tmx */
+		     SF_MIN(tmy,cub->amy.n-1), /* tmy */
+		     0,                        /* tmz */
 		     true,true,false);
 
     ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);
@@ -179,15 +179,15 @@ int main (int argc, char *argv[])
     /* MODELING */
     weop = srmod3_init(cub);
     
-    srmod3(weop,  // shot-record migration operator
-	   cub,   // wavefield hypercube dimensions
-	   ssr,   // SSR operator
-	   tap,   // tapering operator
-	   s_s,   // source slowness
-	   s_r,   // receiver slowness
-	   wfl_s, // source wavefield
-	   wfl_r, // receiver wavefield
-	   refl   // reflectivity
+    srmod3(weop,  /* shot-record migration operator */
+	   cub,   /* wavefield hypercube dimensions */
+	   ssr,   /* SSR operator */
+	   tap,   /* tapering operator */
+	   s_s,   /* source slowness */
+	   s_r,   /* receiver slowness */
+	   wfl_s, /* source wavefield */
+	   wfl_r, /* receiver wavefield */
+	   refl   /* reflectivity */
 	);
 	   
     srmod3_close(weop);
