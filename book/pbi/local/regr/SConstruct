@@ -1,0 +1,99 @@
+from rsfproj import *
+
+# Straight line
+Flow('clean',None,'math n1=50 o1=1 d1=1 n2=1 output="3+0.1*x1"')
+Flow('noisy','clean','noise var=0.01 seed=2007')
+Plot('noisy',
+     'graph wanttitle=n symbol=* plotcol=5 label1=X label2=Y min2=2 max2=9')
+
+Result('noisy','Overlay')
+
+Flow('t0','noisy','math output=1')
+Flow('t1','noisy','math output=x1')
+Flow('t2','noisy','math output="x1*x1"')
+Flow('t','t0 t1','cat axis=2 ${SOURCES[1]}')
+Flow('tt','t t2','cat axis=2 ${SOURCES[1]}')
+
+Flow('flt pred','t noisy',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=1000')
+
+Plot('pred','graph title="Y(X)=a+b*X" wantaxis=n min2=2 max2=9 plotcol=3')
+Result('pred','noisy pred','Overlay')
+
+# Curve
+Flow('clean2',None,'math n1=50 o1=1 d1=1 output="sqrt(9+0.025*x1*x1)"')
+Flow('noisy2','clean2','noise var=0.01 seed=2007')
+Plot('noisy2',
+     'graph wanttitle=n symbol=* plotcol=5 label1=X label2=Y min2=2 max2=9')
+
+Result('noisy2','Overlay')
+
+Flow('flt2 pred2','t noisy2',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=1000')
+
+Plot('pred2','graph title="Y(X)=a+b*X" wantaxis=n min2=2 max2=9 plotcol=3')
+Result('pred2','noisy2 pred2','Overlay')
+
+Flow('flt3 pred3','tt noisy2',
+     'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=1000')
+
+Plot('pred3',
+     'graph title="Y(X)=a+b*X+c*X\^2" wantaxis=n min2=2 max2=9 plotcol=3')
+Result('pred3','noisy2 pred3','Overlay')
+
+for case in 'nf':
+    noisy = 'noisy2'+case
+    window = 'window %c1=25' % case
+    Flow(noisy,'noisy2',window)
+
+    pred = 'pred'+case
+    Flow(['flt2'+case,pred],['t',noisy],
+         window + '''|
+         lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=1000
+         ''')
+    Flow(pred+'2',[pred,'noisy2'],'remap1 order=2 pattern=${SOURCES[1]}')
+
+    Plot(pred+'2',
+         '''
+         graph title="Y\_k\^(X)=a\_k\^+b\_k\^*X"
+         wantaxis=n min2=2 max2=9 plotcol=3
+         ''')
+    
+Result('pred4','noisy2 predn2 predf2','Overlay')
+
+errs = []
+for rect in range(2,101):
+    flt = 'pef%d' % rect
+    pre = 'pre%d' % rect
+    err = 'err%d' % rect
+    
+    Flow([flt,pre],'t noisy2',
+         'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=%d' % rect)
+    Plot(pre,
+         '''
+         graph title="Y(X)=a(X)+b(X)*X"
+         wantaxis=n min2=2 max2=9 plotcol=3
+         ''')
+
+    Flow(err,[pre,'noisy2'],
+         '''
+         math d=${SOURCES[1]} output="(input-d)^2" |
+         stack axis=1 norm=n
+         ''')
+    errs.append(err)
+    
+
+Flow('errs',errs,'cat axis=1 ${SOURCES[1:%d]} | put o1=2 d1=1' % len(errs))
+
+Plot('errs1','errs',
+     'graph wanttitle=n label2="Data Misfit" label1="Smoothing Radius" ')
+Plot('errs2','errs',
+     '''
+     window n1=12 |
+     graph wanttitle=n label2="Data Misfit" label1="Smoothing Radius"
+     ''')
+Result('errs','errs1 errs2','SideBySideIso')
+
+Result('pred5','noisy2 pre5','Overlay')
+
+End()
