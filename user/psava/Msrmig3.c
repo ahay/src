@@ -235,16 +235,17 @@ int main (int argc, char *argv[])
 		if(nhy>1) { sf_seto(ahy,-nhy*dy); sf_setn(ahy,nhy*2); }
 		if(nhz>1) { sf_seto(ahz,-nhz*dz); sf_setn(ahz,nhz*2); }
 	    }
-	    sf_oaxa(Fc,ahx,4); sf_raxa(ahx);
-	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
-	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 
 	    /* t-lag */
 	    if(!sf_getint  ("nht",&nht)) nht=1;
 	    if(!sf_getfloat("oht",&oht)) oht=0;
 	    if(!sf_getfloat("dht",&dht)) dht=0.1;
 	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
-	    sf_oaxa(Fc,aht,7);
+
+	    sf_oaxa(Fc,ahx,4); sf_raxa(ahx);
+	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
+	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
+	    sf_oaxa(Fc,aht,7); sf_raxa(aht);
 
 	    cigs = fslice_init(n,sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),sizeof(float));
 
