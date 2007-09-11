@@ -147,6 +147,13 @@ if 'f90' in api and env.has_key('F90'):
 if root:
     env.Install(libdir,'rsfbak.py')
 
+objs = []
+for source in Split(src2):
+    obj = env.SharedObject(source+'.c')
+    env.Depends(obj,source+'.h')
+    objs.append(obj)
+shlib = env.SharedLibrary('rsf',objs)
+
 if 'python' in api:
     # Python includes for SWIG
 
@@ -176,11 +183,6 @@ if 'python' in api:
             if os.path.isdir(pydir):
                 pythinc.append(pydir)
 
-    objs = []
-    for source in Split(src2):
-        obj = env.SharedObject(source+'.c')
-        env.Depends(obj,source+'.h')
-        objs.append(obj)
 
     
     if root:
@@ -189,7 +191,7 @@ if 'python' in api:
         ifile = 'rsf.i'
         
     wrap = env.CFile('rsf',ifile,SWIGFLAGS='-python')
-    python = env.SharedLibrary('rsf',[wrap[0]]+sources+objs,
+    python = env.SharedLibrary('rsf',[wrap[0]]+sources+dynlib,
                                CPPPATH=pythinc,
                                SHLIBPREFIX='_c_')
 
@@ -208,8 +210,7 @@ if 'matlab' in api:
 
     for inp in Split('par dim read write create'):
         cfile = 'rsf_' + inp
-        ofile = env.Object(cfile+'.c')
-        mexfile = env.Command(cfile+suffix,[ofile,lib],
+        mexfile = env.Command(cfile+suffix,[cfile+'.c',shlib],
                               "%s CFLAGS='%s %s' "
                               "$SOURCES %s %s -output $TARGET" %
                               (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
