@@ -140,7 +140,6 @@ img3d img3_init(cub3d cub,
     return img;
 }
 
-
 /*------------------------------------------------------------*/
 img3d img3o_init(cub3d cub,
 		 fslice imag,
@@ -259,6 +258,27 @@ img3d img3h_init(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
+void img3_cout(img3d img,
+	       int i,
+	       int ompith)
+/*< update cigs on disk >*/
+{
+    int icx,icy,icz;
+
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif
+    {
+	fslice_get(img->cigs,i,img->qt[ompith][0][0]);
+	CLOOP(
+	    img->qt[ompith][icz][icy][icx] +=
+	    img->qc[ompith][icz][icy][icx];
+	    );
+	fslice_put(img->cigs,i,img->qt[ompith][0][0]);
+    }   
+}
+
+/*------------------------------------------------------------*/
 void img3o(cub3d cub,
 	   img3d img,
 	   int iw,
@@ -269,24 +289,18 @@ void img3o(cub3d cub,
     int icx,icy,icz;
 
     /* imag */
-    XLOOP(
-	;    img->qi[ompith][imz][imy][imx] +=
-	corr(img->qs[ompith][imz][imy][imx],    
-	     img->qr[ompith][imz][imy][imx]);
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx],    
+	       img->qr[ompith][imz][imy][imx]);
+	);
+
+    CLOOP(;    img->qc[ompith][         icz][         icy][         icx] =
+	  corr(img->qs[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx], 
+	       img->qr[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx]);
 	);
 
     /* cigs */
-#ifdef _OPENMP	    
-#pragma omp critical
-#endif
-    {
-	fslice_get(img->cigs,0,img->qc[ompith][0][0]);
-	CLOOP(;    img->qc[ompith][         icz][         icy][         icx] +=
-	      corr(img->qs[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx], 
-		   img->qr[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx]);
-	    );
-	fslice_put(img->cigs,0,img->qc[ompith][0][0]);
-    }   
+    img3_cout(img,0,ompith);
 }
 
 /*------------------------------------------------------------*/
@@ -303,10 +317,9 @@ void img3x(cub3d cub,
     int imxs,imxr,imzr;
 
     /* imag */
-    XLOOP(
-	;    img->qi[ompith][imz][imy][imx] +=
-	corr(img->qs[ompith][imz][imy][imx], 
-	     img->qr[ompith][imz][imy][imx]);
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx], 
+	       img->qr[ompith][imz][imy][imx]);
 	);
 
     for        ( ihz=img->LOz; ihz<img->HIz; ihz++){ 
@@ -341,18 +354,8 @@ void img3x(cub3d cub,
 		    }
 		}                 // cz
 		
-#ifdef _OPENMP
-#pragma omp critical
-#endif
-		{
-		    fslice_get(img->cigs,IND(ihx,ihy,ihz),img->qt[ompith][0][0]);
-		    CLOOP(
-			img->qt[ompith][icz][icy][icx] +=
-			img->qc[ompith][icz][icy][icx];
-			);
-		    fslice_put(img->cigs,IND(ihx,ihy,ihz),img->qt[ompith][0][0]);
-		}
-		
+		img3_cout(img,IND(ihx,ihy,ihz),ompith);
+
 	    } // hx
 	}     // hy
     }         // hz
@@ -370,35 +373,22 @@ void img3t(cub3d cub,
     sf_complex wt;
 
     /* imag */
-    XLOOP(
-	;    img->qi[ompith][imz][imy][imx] +=
-	corr(img->qs[ompith][imz][imy][imx], 
-	     img->qr[ompith][imz][imy][imx]);
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx], 
+	       img->qr[ompith][imz][imy][imx]);
 	);
 
     /* cigs */
     for(iht=0; iht<img->aht.n; iht++) {
 	wt = img->tt[iw][iht];
 	
-	fslice_get(img->cigs,iht,img->qc[ompith][0][0]);
 	CLOOP(;     img->qc[ompith][icz         ][icy         ][icx         ] = 
 	      wcorr(img->qs[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx], 
 		    img->qr[ompith][icz*img->jcz][icy*img->jcy][icx*img->jcx],
 		    wt);
 	    ); 
+	img3_cout(img,iht,ompith);
 	
-#ifdef _OPENMP	    
-#pragma omp critical
-#endif
-	{
-	    fslice_get(img->cigs,iht,img->qc[ompith][0][0]);
-	    CLOOP(
-		img->qt[ompith][icz][icy][icx] +=
-		img->qc[ompith][icz][icy][icx];
-		);
-	    fslice_put(img->cigs,iht,img->qc[ompith][0][0]);
-	}
-
     } // ihh
 }
 
@@ -425,10 +415,9 @@ void img3h(cub3d cub,
     float hscale;
 
     /* imag */
-    XLOOP(
-	;    img->qi[ompith][imz][imy][imx] +=
-	corr(img->qs[ompith][imz][imy][imx],
-	     img->qr[ompith][imz][imy][imx] );
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx],
+	       img->qr[ompith][imz][imy][imx] );
 	);
     
     /* cigs */
@@ -478,20 +467,8 @@ void img3h(cub3d cub,
 		    ); /* cx,cy,cz */
 	    } /* aa */
 	}     /* bb */	
+	img3_cout(img,ihh,ompith);
 
-#ifdef _OPENMP	    
-#pragma omp critical
-#endif
-	{
-	    fslice_get(img->cigs,ihh,img->qt[ompith][0][0]);
-
-	    CLOOP(
-		img->qt[ompith][icz][icy][icx] +=
-		img->qc[ompith][icz][icy][icx];
-		);
-	    
-	    fslice_put(img->cigs,ihh,img->qt[ompith][0][0]);
-	}
     }         /* hh */
 }
 

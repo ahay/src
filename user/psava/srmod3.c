@@ -128,7 +128,7 @@ void srmod3(weoperator3d weop,
     
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static)		\
-    private(ompith,iw,w,imz,kth)			\
+    private(ompith,iw,w,imx,imy,imz,kth)		\
     shared(swfl,rwfl,weop,cub,ssr,tap,s_s,s_r)
 #endif
     for (iw=0; iw<cub->aw.n; iw++) {
@@ -161,7 +161,7 @@ void srmod3(weoperator3d weop,
 	    ssr3_ssf(w,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
 	    
 	    slow3_advance(cub,s_s,ompith);
-	
+
 #ifdef _OPENMP	    
 #pragma omp critical
 #endif    
