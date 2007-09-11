@@ -152,7 +152,7 @@ for source in Split(src2):
     obj = env.SharedObject(source+'.c')
     env.Depends(obj,source+'.h')
     objs.append(obj)
-shlib = env.SharedLibrary('rsf',objs+sources)
+shlib = env.SharedLibrary('rsfsh',objs+sources)
 
 if 'python' in api:
     # Python includes for SWIG
@@ -211,7 +211,7 @@ if 'matlab' in api:
     for inp in Split('par dim read write create'):
         cfile = 'rsf_' + inp
         mexfile = env.Command(cfile+suffix,[cfile+'.c',shlib],
-                              "%s CFLAGS='%s %s' "
+                              "%s CFLAGS='%s %s -fPIC' "
                               "$SOURCES %s %s -output $TARGET" %
                               (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
                                env['_LIBDIRFLAGS'], env['_LIBFLAGS']))
