@@ -179,6 +179,17 @@ def point(cc,xcoord,zcoord,par):
          ${SOURCES[0]} ${SOURCES[1]} | transp
          ''', stdin=0)
 
+def point3(cc,xcoord,zcoord,magn,par):
+    Flow(cc+'_',None,'math n1=1 d1=1 o1=0 output=0' % par)
+    Flow(cc+'_z',cc+'_','math output="%g"' % zcoord)
+    Flow(cc+'_x',cc+'_','math output="%g"' % xcoord)
+    Flow(cc+'_r',cc+'_','math output="%g"' % magn)
+    Flow(cc,[cc+'_x',cc+'_z',cc+'_r'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
+         ''', stdin=0)
+
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     Flow(cc+'_',None,
          '''

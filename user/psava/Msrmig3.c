@@ -219,22 +219,55 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init output files */
     switch(itype[0]) {
-	case 't':
-	    if(verb) sf_warning("time-lag I.C.");
+	case 'e':
+	    if(verb) sf_warning("E.I.C.");
+
+	    /* x-lags */
+	    if(!sf_getint("nhx",&nhx) || nx==1) nhx=1;
+	    if(!sf_getint("nhy",&nhy) || ny==1) nhy=1;
+	    if(!sf_getint("nhz",&nhz) || nz==1) nhz=1;
+	    ahx = sf_maxa(nhx,0.,dx); sf_setlabel(ahx,"hx");
+	    ahy = sf_maxa(nhy,0.,dy); sf_setlabel(ahy,"hy");
+	    ahz = sf_maxa(nhz,0.,dz); sf_setlabel(ahz,"hz");
+	    if(!sf_getbool("hsym",&hsym)) hsym = false;
+	    if(hsym) {
+		if(nhx>1) { sf_seto(ahx,-nhx*dx); sf_setn(ahx,nhx*2); }
+		if(nhy>1) { sf_seto(ahy,-nhy*dy); sf_setn(ahy,nhy*2); }
+		if(nhz>1) { sf_seto(ahz,-nhz*dz); sf_setn(ahz,nhz*2); }
+	    }
+	    sf_oaxa(Fc,ahx,4); sf_raxa(ahx);
+	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
+	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
+
+	    /* t-lag */
 	    if(!sf_getint  ("nht",&nht)) nht=1;
 	    if(!sf_getfloat("oht",&oht)) oht=0;
 	    if(!sf_getfloat("dht",&dht)) dht=0.1;
 	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
-	    
+	    sf_oaxa(Fc,aht,7);
+
+	    cigs = fslice_init(n,sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),sizeof(float));
+
+	    img=img3e_init(cub,imag,cigs,jcx,jcy,jcz,ahx,ahy,ahz,aht);
+	    imop       = img3e;
+	    imop_close = img3e_close;
+	    break;
+	case 't':
+	    if(verb) sf_warning("t-lag I.C.");
+	    if(!sf_getint  ("nht",&nht)) nht=1;
+	    if(!sf_getfloat("oht",&oht)) oht=0;
+	    if(!sf_getfloat("dht",&dht)) dht=0.1;
+	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
 	    sf_oaxa(Fc,aht,4);
-	    cigs = fslice_init(n,nht,sizeof(float));
+
+	    cigs = fslice_init(n,sf_n(aht),sizeof(float));
 
 	    img=img3t_init(cub,imag,cigs,jcx,jcy,jcz,aht);
 	    imop       = img3t;
 	    imop_close = img3t_close;
 	    break;
 	case 'x':
-	    if(verb) sf_warning("space-lags I.C.");
+	    if(verb) sf_warning("x-lags I.C.");
 	    if(!sf_getint("nhx",&nhx) || nx==1) nhx=1;
 	    if(!sf_getint("nhy",&nhy) || ny==1) nhy=1;
 	    if(!sf_getint("nhz",&nhz) || nz==1) nhz=1;
@@ -248,7 +281,6 @@ int main (int argc, char *argv[])
 		if(nhy>1) { sf_seto(ahy,-nhy*dy); sf_setn(ahy,nhy*2); }
 		if(nhz>1) { sf_seto(ahz,-nhz*dz); sf_setn(ahz,nhz*2); }
 	    }
-
 	    sf_oaxa(Fc,ahx,4); sf_raxa(ahx);
 	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
@@ -260,7 +292,7 @@ int main (int argc, char *argv[])
 	    imop_close = img3x_close;
 	    break;
 	case 'h':
-	    if(verb) sf_warning("space-lag magnitude I.C.");
+	    if(verb) sf_warning("|x|-lag I.C.");
 
 	    if(!sf_getint  ("nhh",&nh)) nh=1;
 	    if(!sf_getfloat("ohh",&oh)) oh=0;
@@ -348,12 +380,13 @@ int main (int argc, char *argv[])
     srmig3_close(weop);
 
     /*------------------------------------------------------------*/
-    /* close structures   */
+    /* close structures */
     slow3_close(s_s);
     slow3_close(s_r);
     ssr3_close(ssr);
     taper2d_close(tap);
     
+    if(verb) sf_warning("imop close");
     imop_close(cub,img,imag,cigs); 
 
     /*------------------------------------------------------------*/
@@ -370,6 +403,7 @@ int main (int argc, char *argv[])
     fslice_close(wfl_s);
     fslice_close(wfl_r);
     fslice_close(imag);
+    fslice_close(cigs);
 
     exit (0);
 }

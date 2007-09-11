@@ -54,9 +54,17 @@
 		     {a} \
 		 }}}
 
-#define IND(ihx,ihy,ihz) (ihz-img->LOz)*(img->ahx.n*img->ahy.n) + \
-                         (ihy-img->LOy)* img->ahx.n             + \
-                         (ihx-img->LOx)
+#define IND(ihx,ihy,ihz) \
+    (ihz-img->LOz)*(img->ahx.n*img->ahy.n) +  \
+    (ihy-img->LOy)* img->ahx.n             +  \
+    (ihx-img->LOx)
+
+#define EICIND(ihx,ihy,ihz,iht) \
+    iht * (img->ahx.n*img->ahy.n*img->ahz.n) + \
+    (ihz-img->LOz)*(img->ahx.n*img->ahy.n)   + \
+    (ihy-img->LOy)* img->ahx.n               + \
+    (ihx-img->LOx)
+
 
 #define MM(i,a) SF_MIN(SF_MAX(i,0),a.n-1)
 
@@ -212,6 +220,54 @@ img3d img3t_init(cub3d cub,
 	fslice_put(img->cigs,iht,img->qc[0][0][0]);
     }
 
+    /* precompute phase shift */
+    img->tt = sf_complexalloc2(img->aht.n,cub->aw.n);
+    for (iw=0; iw<cub->aw.n; iw++) {
+	w = cub->aw.o+iw*cub->aw.d;
+	for (iht=0; iht<img->aht.n; iht++) {
+	    ht = img->aht.o+iht*img->aht.d;
+	    ht *= -2*w;
+	    img->tt[iw][iht] = sf_cmplx(cosf(ht),sinf(ht));
+	}
+    }
+
+    return img;
+}
+
+/*------------------------------------------------------------*/
+img3d img3e_init(cub3d cub,
+		 fslice imag,
+		 fslice cigs,
+		 int jcx_,
+		 int jcy_,
+		 int jcz_,
+		 sf_axis ahx_,
+		 sf_axis ahy_,
+		 sf_axis ahz_,
+		 sf_axis aht_
+    )
+/*< initialize E.I.C. >*/
+{
+    int ihx,ihy,ihz,iht,iw;
+    float ht, w;
+    img3d img;
+    img=img3_init(cub,imag,cigs,jcx_,jcy_,jcz_);
+
+    img->ahx = sf_nod(ahx_);
+    img->ahy = sf_nod(ahy_);
+    img->ahz = sf_nod(ahz_);
+    img->aht = sf_nod(aht_);
+
+    img->LOx = floor(img->ahx.o/img->ahx.d); img->HIx = img->LOx + img->ahx.n;
+    img->LOy = floor(img->ahy.o/img->ahy.d); img->HIy = img->LOy + img->ahy.n;
+    img->LOz = floor(img->ahz.o/img->ahz.d); img->HIz = img->LOz + img->ahz.n;
+    
+    for( iht=0; iht<img->aht.n; iht++) {
+	HLOOP(
+	    fslice_put(img->cigs,EICIND(ihx,ihy,ihz,iht),img->qc[0][0][0]);
+	    );
+    }
+    
     /* precompute phase shift */
     img->tt = sf_complexalloc2(img->aht.n,cub->aw.n);
     for (iw=0; iw<cub->aw.n; iw++) {
@@ -389,7 +445,73 @@ void img3t(cub3d cub,
 	    ); 
 	img3_cout(img,iht,ompith);
 	
-    } // ihh
+    } // iht
+}
+
+/*------------------------------------------------------------*/
+void img3e(cub3d cub,
+	   img3d img,
+	   int iw,
+	   int ompith)
+/*< apply E.I.C. >*/
+{
+    int imx,imy,imz,iht;
+    int icx,icy,icz;
+
+    int ihx, ihy, ihz;
+    int imys,imyr,imzs;
+    int imxs,imxr,imzr;
+
+    sf_complex wt;
+
+    /* imag */
+    XLOOP(;    img->qi[ompith][imz][imy][imx] +=
+	  corr(img->qs[ompith][imz][imy][imx], 
+	       img->qr[ompith][imz][imy][imx]);
+	);
+    
+    for (iht=0; iht<img->aht.n; iht++) {
+	wt = img->tt[iw][iht];
+
+	for        ( ihz=img->LOz; ihz<img->HIz; ihz++){ 
+	    for    ( ihy=img->LOy; ihy<img->HIy; ihy++){
+		for( ihx=img->LOx; ihx<img->HIx; ihx++){
+		    
+		    for( icz=0; icz<img->acz.n; icz++){ 
+			imzs = icz*img->jcz - ihz;
+			imzr = icz*img->jcz + ihz;
+			if ( INBOUND(0,cub->amz.n,imzs) &&
+			     INBOUND(0,cub->amz.n,imzr)) {		    
+			    
+			    for( icy=0; icy<img->acy.n; icy++){
+				imys = icy*img->jcy - ihy;
+				imyr = icy*img->jcy + ihy;
+				if ( INBOUND(0,cub->amy.n,imys) &&
+				     INBOUND(0,cub->amy.n,imyr)) {
+				    
+				    for( icx=0; icx<img->acx.n; icx++){
+					imxs = icx*img->jcx - ihx;
+					imxr = icx*img->jcx + ihx;
+					if ( INBOUND(0,cub->amx.n,imxs) &&
+					     INBOUND(0,cub->amx.n,imxr)) {
+					    
+					    img->qc[ompith][icz] [icy] [icx] =
+						wcorr(img->qs[ompith][imzs][imys][imxs], 
+						      img->qr[ompith][imzr][imyr][imxr],
+						      wt);
+					}
+				    } // cx
+				}
+			    }         // cy
+			}
+		    }                 // cz
+		    
+		    img3_cout(img,EICIND(ihx,ihy,ihz,iht),ompith);
+		    
+		} // hx
+	    }     // hy
+	}         // hz
+    }             // ht
 }
 
 /*------------------------------------------------------------*/
@@ -513,6 +635,19 @@ void img3x_close(cub3d cub,
 /*< deallocate x-lag I.C. >*/
 {
     img3_close(cub,img);
+}
+
+/*------------------------------------------------------------*/
+void img3e_close(cub3d cub,
+		 img3d img,
+		 fslice imag,
+		 fslice cigs)
+/*< deallocate x-lag I.C. >*/
+{
+    img3_close(cub,img);
+
+    free(*img->tt); 
+    free( img->tt);
 }
 
 /*------------------------------------------------------------*/
