@@ -207,9 +207,9 @@ if 'matlab' in api:
     suffix = env.get('MEXSUFFIX')
 
     for inp in Split('par dim read write create'):
-        cfile = 'rsf_' + inp + '.c'
-        ofile = env.Object(cfile)
-        mexfile = env.Command(file+suffix,[ofile,lib],
+        cfile = 'rsf_' + inp
+        ofile = env.Object(cfile+'.c')
+        mexfile = env.Command(cfile+suffix,[ofile,lib],
                               "%s CFLAGS='%s %s' "
                               "$SOURCES %s %s -output $TARGET" %
                               (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
