@@ -152,7 +152,7 @@ for source in Split(src2):
     obj = env.SharedObject(source+'.c')
     env.Depends(obj,source+'.h')
     objs.append(obj)
-shlib = env.SharedLibrary('rsf',objs)
+shlib = env.SharedLibrary('rsf',objs+sources)
 
 if 'python' in api:
     # Python includes for SWIG
