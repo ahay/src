@@ -138,7 +138,7 @@ void dmeig(int n       /* order of matrix */,
 #ifdef TEST
 #include <stdio.h>
 
-main() {
+int main(void) {
     int  i, j, k, n=3;
     float a[9] = {4, -1, 2, -1, 3, -2, 2, -2, 2};
     float eval[3], evec[9], b[9], test[3], sum;

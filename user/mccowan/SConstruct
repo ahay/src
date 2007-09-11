@@ -44,6 +44,11 @@ for prog in mains:
     if root:
         env.Install(bindir,prog)
 
+for cfile in Split('dmeig'):
+    test = env.StaticObject('Test' + cfile + '.o', cfile + '.c',
+                            CFLAGS=' -DTEST')
+    prog = env.Program(test,PROGSUFFIX='.x',PROGPREFIX='')
+
 ######################################################################
 # SELF-DOCUMENTATION
 ######################################################################

@@ -38,6 +38,8 @@ int main(int argc, char* argv[])
     n3 = sf_leftsize(mat,2);
     n2 = n*n;
 
+    sf_putint(evals,"n2",1);
+
     a = sf_floatalloc(n2);
     eval = sf_floatalloc(n);
     evec = sf_floatalloc(n2);

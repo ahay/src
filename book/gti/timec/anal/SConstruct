@@ -1,30 +1,29 @@
 from rsfproj import *
-
 import string
 
 ###########################################################################
 
-grey = '''grey color=j allpos=y screenht=6 screenwd=12
-wanttitle=n label1="Depth (km)" label2="Lateral (km)"
-scalebar=y barlabel="Velocity (km/s)" barreverse=y'''
+grey = '''grey color=j allpos=y screenwd=12 screenht=4
+wanttitle=n label1=Depth unit1=km label2=Lateral unit2=km
+scalebar=y barlabel=Velocity barunit=km/s barreverse=y'''
 
-def rays(extra=''):
+def rays(plotcol=7):
     return '''cell2 nr=1000 nt=4000 yshot=0 traj=traj >/dev/null &&
-    plotrays < traj frame=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=7
-    scalebar=y %s > $TARGET &&
-    /bin/rm traj''' % extra
+    plotrays < traj frame=$SOURCE screenht=6 screenwd=12 jr=5 plotcol=%d
+    scalebar=y screenht=4 > $TARGET &&
+    /bin/rm traj''' % plotcol
 
 contour = '''contour scalebar=y plotcol=7 wanttitle=n
-screenht=6 screenwd=12 c0=0 dc=0.1 nc=30'''
+screenht=4 screenwd=12 c0=0 dc=0.1 nc=30'''
 
 fronts = string.join(['eikonal yshot=0',contour],' | ')
 
 def exact(f3):
     return string.join(['window n3=1 f3=%d' % f3,contour],' | ')
 
-Flow('const',None,"spike n1=601 d1=0.01 n2=1201 d2=0.01 o2=0")
+Flow('const','s2ofz','math output=1')
 Plot('const',grey)
-Plot('cell2','const',rays(),stdout=-1)
+Plot('cell2','const',rays(0),stdout=-1)
 Result('straight','const cell2','Overlay')
 
 Flow('vofz',None,'vofz n=600 s=0')
@@ -40,15 +39,15 @@ Result('cexact','cgrad cexact','Overlay')
 
 Flow('s2ofz',None,'s2ofz n=600 s=0')
 Flow('c2grad','s2ofz','window n3=1')
-Plot('c2grad',grey + ' screenht=4')
-Plot('c2cell2','c2grad',rays('  screenht=4'),stdout=-1)
+Plot('c2grad',grey)
+Plot('c2cell2','c2grad',rays(),stdout=-1)
 Result('parab','c2grad c2cell2','Overlay')
 
-Plot('c2eiko','c2grad',fronts + ' screenht=4')
+Plot('c2eiko','c2grad',fronts)
 Result('c2eiko','c2grad c2eiko','Overlay')
 
-Plot('c2exact1','s2ofz',exact(1) + ' screenht=4')
-Plot('c2exact2','s2ofz',exact(2) + ' screenht=4')
+Plot('c2exact1','s2ofz',exact(1))
+Plot('c2exact2','s2ofz',exact(2))
 Result('c2exact','c2grad c2exact1 c2exact2','Overlay')
     
 ###########################################################################

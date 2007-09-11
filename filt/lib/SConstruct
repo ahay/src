@@ -64,8 +64,8 @@ else:
 ##############################################################################
 # TESTING
 ##############################################################################
-for file in Split('banded eno2 fft file getpar quantile simtab'):
-    test = env.StaticObject('Test' + file + '.c')
+for cfile in Split('banded eno2 fft file getpar quantile simtab'):
+    test = env.StaticObject('Test' + cfile + '.c')
     prog = env.Program([test,lib],PROGSUFFIX='.x',PROGPREFIX='')
     env.Depends(test,includes) # remove later 
 
@@ -83,8 +83,8 @@ if 'c++' in api:
         env.Install(libdir,libcc)
         env.Install(incdir,Split('rsf.hh cub.hh vai.hh'))
 
-    for file in ['getpar','file']:
-        test = 'Test' + file + '.cc'
+    for ccfile in ['getpar','file']:
+        test = 'Test' + ccfile + '.cc'
         
         env.Program([test,libcc,lib],
                     OBJSUFFIX='++.o',CPPPATH='../../include',
@@ -101,8 +101,8 @@ if 'f77' in api:
     if root:
         env.Install(libdir,libf)
         
-    for file in ['getpar','file']:
-        test = 'Test' + file + '.f'
+    for ffile in ['getpar','file']:
+        test = 'Test' + ffile + '.f'
         env.Program([test,libf,lib],PROGSUFFIX='f.x',PROGPREFIX='',
                     OBJSUFFIX='f.o',
                     LINK=env.get('F77'),LINKFLAGS=env.get('F77FLAGS'))
@@ -134,8 +134,8 @@ if 'f90' in api and env.has_key('F90'):
     else:
         env.Alias('install',installf90)
             
-    for file in ['getpar','file']:
-        test = 'Test' + file + '.f90'
+    for f90file in ['getpar','file']:
+        test = 'Test' + f90file + '.f90'
         env.Program([test,libf90,lib],
                     PROGSUFFIX='f90.x',PROGPREFIX='',OBJSUFFIX='f90.o',
                     LINK=F90,LINKFLAGS=env.get('F90FLAGS'))
@@ -207,8 +207,9 @@ if 'matlab' in api:
     suffix = env.get('MEXSUFFIX')
 
     for inp in Split('par dim read write create'):
-        file = 'rsf_' + inp
-        mexfile = env.Command(file+suffix,[file+'.c',lib],
+        cfile = 'rsf_' + inp + '.c'
+        ofile = env.Object(cfile)
+        mexfile = env.Command(file+suffix,[ofile,lib],
                               "%s CFLAGS='%s %s' "
                               "$SOURCES %s %s -output $TARGET" %
                               (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],
