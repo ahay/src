@@ -166,10 +166,7 @@ void srmig3(weoperator3d weop,
 		
 	    } // z 
 
-#ifdef _OPENMP	    
-#pragma omp critical
 	    imop(cub,img,iw,ompith); // imaging condition
-#endif	 
 	} // w
 	
     } // e

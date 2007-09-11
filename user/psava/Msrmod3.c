@@ -59,7 +59,10 @@ int main (int argc, char *argv[])
     fslice refl=NULL;
 
     int ompchunk=1;
-    int ompnth=0,ompath=1; 
+    int ompnth=0;
+#ifdef _OPENMP
+    int ompath=1; 
+#endif
 
     cub3d cub; /* wavefield hypercube */
     tap3d tap; /* tapering */

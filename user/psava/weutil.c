@@ -36,7 +36,7 @@ struct fft{
     sf_complex     *shf1; /* shift on axis 1 */
     sf_complex     *shf2; /* shift on axis 2 */
     kiss_fft_cpx**ctrace; /* temp array */
-    float       fftscale; /* FFT scale */
+    float       fftscale; /* FFT scale  */
 };
 /*^*/
 
@@ -95,8 +95,9 @@ struct img{
     fslice cigs;
     sf_complex ****qs;      /* source wavefield */
     sf_complex ****qr;      /* receiver wavefield */
-    float       ***qi;      /* image */
-    float       ***qc;      /* cigs */
+    float      ****qi;      /* image */
+    float      ****qc;      /* cigs */
+    float      ****qt;
     sf_axa  acx,acy,acz;
     int     jcx,jcy,jcz;
     sf_axa  ahx,ahy,ahz,aht;
@@ -116,9 +117,9 @@ typedef struct weoperator *weoperator3d;
 struct weoperator{
     sf_complex ***ww_s; /*   source wavefield */
     sf_complex ***ww_r; /* receiver wavefield */
-    sf_complex ***ww  ; /*          wavefield */     
+    sf_complex ***ww  ; /*          wavefield */   
     fslice        wtmp; /* tmp wavefield (for SR modeling) */
-    float      ***rr;   /*  reflectivity (for SR modeling) */
+    float      ***rr;   /*  reflectivity (for SR modeling)  */
     float       **qq;   /* image (for ZO modeling/migration) */
 };
 /*^*/

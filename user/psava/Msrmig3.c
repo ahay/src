@@ -52,8 +52,8 @@ int main (int argc, char *argv[])
     bool  hsym;
     float vpvs;
 
-    void (*imop)(cub3d,img3d,int,int);        /* imaging operator apply */
-    void (*imop_close)(img3d,fslice,fslice);  /* imaging operator close */
+    void (*imop)      (cub3d,img3d,int,int);        /* imaging operator apply */
+    void (*imop_close)(cub3d,img3d,fslice,fslice);  /* imaging operator close */
 
     sf_axis amx,amy,amz;
     sf_axis alx,aly;
@@ -81,14 +81,17 @@ int main (int argc, char *argv[])
     fslice cigs=NULL;
 
     int ompchunk=1;
-    int ompnth=0,ompath=1; 
+    int ompnth=0;
+#ifdef _OPENMP
+    int ompath=1; 
+#endif
 
     cub3d cub; /* wavefield hypercube */
     tap3d tap; /* tapering */
     ssr3d ssr; /* SSR operator */
     slo3d s_s; /* slowness */
     slo3d s_r; /* slowness */
-    img3d img; /* imaging */ 
+    img3d img; /* imaging  */
 
     weoperator3d weop;
 
@@ -161,7 +164,7 @@ int main (int argc, char *argv[])
     /* WAVEFIELD/IMAGE */
 
     Fw_s = sf_input( "in"); /*   source data */
-    Fw_r = sf_input("rwf"); /* receiver data */ 
+    Fw_r = sf_input("rwf"); /* receiver data */   
     if (SF_COMPLEX != sf_gettype(Fw_s)) sf_error("need complex   source data");
     if (SF_COMPLEX != sf_gettype(Fw_r)) sf_error("need complex receiver data");
     
@@ -351,7 +354,7 @@ int main (int argc, char *argv[])
     ssr3_close(ssr);
     taper2d_close(tap);
     
-    imop_close(img,imag,cigs); 
+    imop_close(cub,img,imag,cigs); 
 
     /*------------------------------------------------------------*/
     /* slice management (temp files) */

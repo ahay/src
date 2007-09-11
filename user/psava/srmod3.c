@@ -144,8 +144,14 @@ void srmod3(weoperator3d weop,
 	
 	/*------------------------------------------------------------*/
 	/* source wavefield */
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif    
 	fslice_get(swfl,iw,weop->ww_s[ompith][0]); 
 	taper2d(weop->ww_s[ompith],tap);
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif    
 	fslice_put(weop->wtmp,kth+0,weop->ww_s[ompith][0]);
 	
 	fslice_get(s_s->slice,0,s_s->so[ompith][0]);
@@ -195,6 +201,10 @@ void srmod3(weoperator3d weop,
 	} // z (up-going)
 	
 	taper2d(weop->ww_r[ompith],tap);
+
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif  
 	fslice_put(rwfl,iw,weop->ww_r[ompith][0]);
     } // w
 }

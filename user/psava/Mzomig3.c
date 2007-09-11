@@ -66,7 +66,6 @@ int main (int argc, char *argv[])
 
     int ompchunk=1;
     int ompnth=0;
-
 #ifdef _OPENMP
     int ompath=1; 
 #endif
