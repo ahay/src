@@ -247,7 +247,9 @@ int main (int argc, char *argv[])
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 	    sf_oaxa(Fc,aht,7); sf_raxa(aht);
 
-	    cigs = fslice_init(n,sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),sizeof(float));
+	    cigs = fslice_init(n,
+			       sf_n(ahx)*sf_n(ahy)*sf_n(ahz)*sf_n(aht),
+			       sizeof(float));
 
 	    img=img3e_init(cub,imag,cigs,jcx,jcy,jcz,ahx,ahy,ahz,aht);
 	    imop       = img3e;
@@ -261,7 +263,9 @@ int main (int argc, char *argv[])
 	    aht = sf_maxa(nht,oht,dht); sf_setlabel(aht,"ht");
 	    sf_oaxa(Fc,aht,4);
 
-	    cigs = fslice_init(n,sf_n(aht),sizeof(float));
+	    cigs = fslice_init(n,
+			       sf_n(aht),
+			       sizeof(float));
 
 	    img=img3t_init(cub,imag,cigs,jcx,jcy,jcz,aht);
 	    imop       = img3t;
@@ -286,7 +290,9 @@ int main (int argc, char *argv[])
 	    sf_oaxa(Fc,ahy,5); sf_raxa(ahy);
 	    sf_oaxa(Fc,ahz,6); sf_raxa(ahz);
 
-	    cigs = fslice_init(n,sf_n(ahx)*sf_n(ahy)*sf_n(ahz),sizeof(float));
+	    cigs = fslice_init(n,
+			       sf_n(ahx)*sf_n(ahy)*sf_n(ahz),
+			       sizeof(float));
 
 	    img=img3x_init(cub,imag,cigs,jcx,jcy,jcz,ahx,ahy,ahz);
 	    imop       = img3x;
@@ -320,7 +326,9 @@ int main (int argc, char *argv[])
 	    sf_raxa(ahb);
 
 	    sf_oaxa(Fc,ahh,4);
-	    cigs = fslice_init( n,nh,sizeof(float));
+	    cigs = fslice_init(n,
+			       nh,
+			       sizeof(float));
 
 	    img=img3h_init(cub,imag,cigs,jcx,jcy,jcz,ahh,aha,ahb,vpvs);
 	    imop       = img3h;
