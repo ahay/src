@@ -202,10 +202,13 @@ def report_all(target=None,source=None,env=None):
          '\\GEOheader{\\GROUP, Report \\REPORT, \\today}\n'
          ])
     all.write('%% start of paper list\n')
+    resdirs = env.get('resdirs',{})
     for src in source:
         paper = str(src)
         tag = paper_tag(paper)
         stem = os.path.splitext(paper)[0]
+        resdir = resdirs.get(tag[0],'Fig')
+        all.write('\\renewcommand{\\figdir}{%s}' % resdir)
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
         all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
@@ -260,7 +263,7 @@ class RSFReport(Environment):
                               'fig','year','copyr']})
         apply(self.Command,('tpg.tex',papers),kw)
         rsftex.Paper('tpg',lclass='georeport',scons=0)
-        kw.update({'action':Action(report_all),'varlist':['group']})
+        kw.update({'action':Action(report_all),'varlist':['group','resdirs']})
         apply(self.Command,('book.tex',papers),kw)
         for file in ['tpg.tex','toc.tex']:
             map(lambda tex: self.Depends(file,tex),
