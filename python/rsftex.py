@@ -713,7 +713,7 @@ class TeXPaper(Environment):
                               'Uses':Uses})
         path = {'darwin': '/sw/bin',
                 'irix': '/usr/freeware/bin'}
-        for plat in extrapath.keys():
+        for plat in path.keys():
             if sys.platform[:len(plat)] == plat and os.path.isdir(path[plat]):
                 self['ENV']['PATH'] = self['ENV']['PATH'] + ':' + path[plat]
         cwd = os.getcwd()
