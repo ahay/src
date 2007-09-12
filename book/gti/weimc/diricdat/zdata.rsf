@@ -1,0 +1,10 @@
+sfsegyread	gti/weimc/diricdat:	jules@fomel4	Wed Sep 12 16:11:42 2007
+
+	o1=0
+	n2=152684
+	data_format="native_float"
+	head="tzdata.rsf"
+	esize=4
+	in="/mnt/disk2/scratch/gti/weimc/diricdat/zdata.rsf@"
+	d1=0.008
+	n1=1500

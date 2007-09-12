@@ -47,7 +47,6 @@ Plot('mod0','mod',
      ''')
 Result('mod','mod2 mod1 mod0','Overlay')
 
-
 # Generating data
 #################
 

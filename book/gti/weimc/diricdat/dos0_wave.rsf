@@ -1,0 +1,42 @@
+sfspike	gti/weimc/diricdat:	jules@fomel4	Wed Sep 12 12:18:16 2007
+
+	o1=0
+	label1="Time"
+	data_format="native_float"
+	esize=4
+	in="/mnt/disk2/scratch/gti/weimc/diricdat/wave.rsf@"
+	unit1="s"
+	d1=0.008
+	n1=1500
+sffft1	gti/weimc/diricdat:	jules@fomel4	Wed Sep 12 12:18:35 2007
+
+	o1=0
+	label1="Frequency"
+	data_format="native_complex"
+	fft_n1=1500
+	esize=8
+	fft_o1=0
+	in="stdout"
+	fft_label1="Time"
+	unit1="1/s"
+	d1=0.0833333
+	n1=751
+	in="stdin"
+
+sfwindow	gti/weimc/diricdat:	jules@fomel4	Wed Sep 12 12:18:35 2007
+
+	o1=10
+	label1="Frequency"
+	data_format="native_complex"
+	esize=8
+	in="stdout"
+	unit1="1/s"
+	d1=0.0833333
+	n1=1
+	in="stdin"
+
+sfput	gti/weimc/diricdat:	jules@fomel4	Wed Sep 12 12:18:35 2007
+
+	data_format="native_complex"
+	in="/mnt/disk2/scratch/gti/weimc/diricdat/dos0_wave.rsf@"
+	label1=w
