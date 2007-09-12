@@ -123,6 +123,7 @@ def egrey(custom,par):
            par['zmin'],par['zmax'],par['lz'],par['uz'],
            par['labelattr']+' '+custom)
 
+# ------------------------------------------------------------
 # plot wavelet
 def waveplot(custom,par):
     return '''
