@@ -207,7 +207,7 @@ if 'matlab' in api:
 
     for inp in Split('par dim read write create'):
         cfile = 'rsf_' + inp
-        mexfile = env.Command(cfile+suffix,[cfile+'.c',objs],
+        mexfile = env.Command(cfile+suffix,[cfile+'.c',sources,objs],
                               "%s CFLAGS='%s %s -fPIC' "
                               "$SOURCES %s %s -output $TARGET" %
                               (mex,env['_CPPINCFLAGS'],env['CCFLAGS'],

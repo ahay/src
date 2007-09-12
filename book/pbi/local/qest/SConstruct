@@ -1,0 +1,29 @@
+from rsfproj import *
+import math
+
+Fetch('grechka.rsf','attr')
+Flow('data','grechka',
+     'dd form=native | window | put o1=0 d1=0.002 label1=Time unit1=s')
+
+t0 = 0.2
+f0 = 40
+q = 100
+
+Result('data','graph title=Data')
+
+Flow('freq','data','iphase rect1=60 order=10 hertz=y')
+Plot('freq','graph wanttitle=n plotcol=5 min2=0 max2=%g' % f0)
+Result('freq','graph title="Local Frequency" label2=Frequency unit2=Hz')
+
+Flow('peak','data',
+     '''
+     math output="%g*(x1-%g)" |
+     math output="%g*(sqrt(16+%g*input*input)-%g*input)" 
+     ''' % (math.pi/q,t0,0.25*f0,f0*f0,f0))
+Plot('peak','graph wanttitle=n plotcol=5 dash=1 min2=0 max2=%g' % f0)
+Result('peak','graph title="Peak Frequency" label2=Frequency unit2=Hz')
+
+Result('fpeak','freq peak',
+       'cat axis=2 ${SOURCES[1]} | graph wanttitle=n dash=0,1')
+
+End()
