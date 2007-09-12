@@ -857,10 +857,10 @@ class TeXPaper(Environment):
                     self.Alias('figinstall',resdir2)
         self.figs.extend(nrfigs)
     def Paper(self,paper,lclass='geophysics',scons=1,
-              use=None,include=None,options=None):
+              use=None,include=None,options=None,resdir='Fig'):
         ltx = self.Latify(target=paper+'.ltx',source=paper+'.tex',
                           use=use,lclass=lclass,options=options,
-                          include=include)
+                          include=include,resdir=resdir)
         pdf = self.Pdf(target=paper,source=paper+'.ltx')
         self.Figs(target=paper+'.figs',source=paper+'.pdf')
         wiki = self.Wiki(target=paper,source=[ltx,pdf])
