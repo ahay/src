@@ -68,6 +68,8 @@ def get_author(source,default,tag):
     author = default.get(tag[1])
     if not author:
         paper = source.get_contents()
+        # remove comments
+        paper = re.sub(r'[%][^\n]+','',paper)
         author = re_author.search(paper)
         if author:
             author = author.group(1)
@@ -124,6 +126,8 @@ def report_toc(target=None,source=None,env=None):
     for src in source:
         tag = paper_tag(str(src))
         paper = src.get_contents()
+        # remove comments
+        paper = re.sub(r'[%][^\n]+','',paper)
         author = get_author(src,authors,tag)
         title = re_title.search(paper)
         if sections.has_key(tag[1]):

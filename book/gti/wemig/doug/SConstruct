@@ -18,16 +18,17 @@ Flow('flat','gath dip','flat dip=${SOURCES[1]}')
 
 Flow('stack','flat','stack')
 
-for x in (400,1000):
-    cdp = 'cdp%d' % x
-    Flow(cdp,'flat','window n3=1 f3=%d n2=13' % x)
-    Plot(cdp,
-           '''
-           put o2=0 d2=0.25 label2=Offset unit2=km label1=Time unit1=s |
-           wiggle poly=y transp=y yreverse=y title="CIG %d"
-           ''' % (x+1))
+for case in ('gath','flat'):
+    for x in (400,1000):
+        cdp = case + str(x)
+        Flow(cdp,case,'window n3=1 f3=%d n2=13' % x)
+        Plot(cdp,
+             '''
+             put o2=0 d2=0.25 label2=Offset unit2=km label1=Time unit1=s |
+             wiggle poly=y transp=y yreverse=y title="CIG %d"
+             ''' % (x+1))
+    Result(case,[case+'400',case+'1000'],'SideBySideAniso')
 
-Result('cdp','cdp400 cdp1000','SideBySideAniso')
 Result('stack','grey title=Image label2=Trace label1=Time unit1=s')
 
 Flow('gath2','flat','put n3=1 n2=47086 | pad beg1=750')

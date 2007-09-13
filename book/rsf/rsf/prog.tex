@@ -92,18 +92,18 @@ anomalies.
 
 Computations start by finding the input data (\texttt{in}) size
 (\texttt{nsiz}) and dimensions (\texttt{dim}).
-\moddex{attr}{attr}{72}{75}{filt/main}
+\moddex{attr}{attr}{76}{79}{filt/main}
 
 In the main loop, we read the input data buffer by buffer.
-\moddex{attr}{attr}{89}{108}{filt/main}
+\moddex{attr}{attr}{93}{112}{filt/main}
 
 The data attributes are accumulated in corresponding double-precision
 variables. 
-\moddex{attr}{attr}{129}{131}{filt/main}
+\moddex{attr}{attr}{133}{134}{filt/main}
 
 Finally, the attributes are reduced and printed out.
-\moddex{attr}{attr}{161}{166}{filt/main}
-\moddex{attr}{attr}{173}{182}{filt/main}
+\moddex{attr}{attr}{166}{172}{filt/main}
+\moddex{attr}{attr}{179}{188}{filt/main}
 
 \noindent\doublebox{\parbox{\textwidth}{
 \input{sfcat}
@@ -1168,8 +1168,9 @@ used to define scaling.  Thus, \texttt{sfscale rscale=0 axis=1} is
 equivalent to \texttt{sfscale axis=1}, and \texttt{sfscale rscale=0}
 is equivalent to \texttt{sfscale dscale=1}.
 
+\begin{comment}
 \noindent\doublebox{\parbox{\textwidth}{
-    \input{segyread}
+    \input{sfsegyread}
   }}
 
 The SEG Y format is an open standard for the exchange of geophysical
@@ -1257,6 +1258,7 @@ automatically estimate or not if samples in the Trace Data blocks are
 big-endian or little-endian. Try it if you are in trouble and do not
 know what else to do, otherwise let the automatic estimation do its
 job.
+\end{comment}
 
 \bibliographystyle{seg}
 \bibliography{SEG}
