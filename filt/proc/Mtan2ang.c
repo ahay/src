@@ -1,4 +1,4 @@
-/* Compute cos(theta) from 1/|pm| for time-shift imaging condition */
+/* tangent to angle transformation */
 /*
   Copyright (C) 2004 University of Texas at Austin
   
@@ -75,7 +75,7 @@ int main (int argc, char* argv[])
 	    fint1_set(sft,tmp);
 	    
 	    for (ia=0; ia < na; ia++) {
-		a = a0+ia*da;      /* ang */
+		a = a0+ia*da;          /* ang */
 		n = tanf(a/180*SF_PI); /* tan */
 
 		f = (n - sf_o(at)) / sf_d(at);

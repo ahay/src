@@ -2,7 +2,7 @@ from rsfproj import *
 
 # ------------------------------------------------------------
 # lags to slant-stacks
-
+# ------------------------------------------------------------
 # input:  z-h-x        z-t-x
 # output: z-tan(a)-x   z-dt/dx-x
 def cig2ssk(np,op,dp):
@@ -12,10 +12,10 @@ def cig2ssk(np,op,dp):
 
 # ------------------------------------------------------------
 # slant-stacks to angle
-
+# ------------------------------------------------------------
 # input: z-tan(a)-x
 # output z-a-x
-def xsk2ang(na,oa,da):
+def xsk2angold(na,oa,da):
     return '''
     pp2psang2
     dip=${SOURCES[1]}
@@ -25,12 +25,26 @@ def xsk2ang(na,oa,da):
 
 # input: z-dt/dx-x
 # output z-a-x
-def tsk2ang(na,oa,da):
+def tsk2angold(na,oa,da):
     return '''
     pp2pstsic na=%d a0=%g da=%g
     velocity=${SOURCES[1]}
     dip=${SOURCES[2]}
     vpvs=${SOURCES[3]}
+    ''' % (na,oa,da)
+# ------------------------------------------------------------
+def xsk2ang(na,oa,da):
+    return '''
+    xlagtoang2d na=%d oa=%g da=%g
+    dip=${SOURCES[1]}
+    vpvs=${SOURCES[2]}
+    ''' % (na,oa,da)
+def tsk2ang(na,oa,da):
+    return '''
+    tlagtoang2d na=%d oa=%g da=%g
+    dip=${SOURCES[1]}
+    vpvs=${SOURCES[2]}
+    vel=${SOURCES[3]}
     ''' % (na,oa,da)
 
 # ------------------------------------------------------------
@@ -53,4 +67,5 @@ def tgrey(custom,par):
 
 def agrey(custom,par):
     return ciggrey(' label2="\F10 q\F3 " unit2="\^o\_" '%par+custom,par)
+# ------------------------------------------------------------
 
