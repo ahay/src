@@ -208,6 +208,6 @@ for j in range(3):
              ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),
                     WhereIs('matlab')),stdin=0,stdout=-1)
         
-        Result(eig,'put o1=1 d1=1 | graph symbol=* title="%s" ' % title)
+        Result(eig,'put o1=1 d1=1 | sort | graph symbol=* title="%s" ' % title)
              
 End()
