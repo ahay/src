@@ -190,7 +190,7 @@ for j in range(3):
     for case in 'ts':
         mat = case+'mat%d' % j
 
-        title = '''%s Regularization (%s)' % \
+        title = '%s Regularization (%s)' % \
                 (('Tikhonov','Shaping')[case=='s'],pars[case][j])
         
         Flow(mat,rows[case][j],

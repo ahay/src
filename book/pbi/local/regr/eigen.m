@@ -4,4 +4,5 @@ function eigen(in,out)
 dims = rsf_dim(in); 
 mat = zeros(dims');
 rsf_read(mat,in);
-rsf_write(eig(mat),out);
+ev = abs(eig(mat));
+rsf_write(ev,out);
