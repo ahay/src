@@ -23,7 +23,7 @@ int main(int argc, char* argv[])
 {
     int n1, n2, i2;
     float *pp, *qq;
-    bool square;
+    bool square, adj;
     sf_file in, out;
 
     sf_init(argc,argv);
@@ -37,6 +37,9 @@ int main(int argc, char* argv[])
     if (!sf_getbool("square",&square)) square=false;
     /* if y, use gradient squared */
 
+    if (!sf_getbool("adj",&adj)) adj=false;
+    /* adjoint flag */
+
     pp = sf_floatalloc(n1);
     qq = sf_floatalloc(n1);
 
@@ -44,6 +47,8 @@ int main(int argc, char* argv[])
 	sf_floatread(pp,n1,in);
 	if (square) {
 	    sf_grad2 (n1,pp,qq);
+	} else if (adj) {
+	    sf_igrad1_lop (true,false,n1,n1,qq,pp);
 	} else {
 	    sf_igrad1_lop (false,false,n1,n1,pp,qq);
 	}
