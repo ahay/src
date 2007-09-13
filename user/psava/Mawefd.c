@@ -87,6 +87,12 @@ int main(int argc, char* argv[])
     int ompnth,ompath;
 #endif
 
+    sf_axis    c1, c2;
+    int       nq1,nq2;
+    float     oq1,oq2;
+    float     dq1,dq2;
+    float     **uc;
+
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
@@ -153,11 +159,25 @@ int main(int argc, char* argv[])
 
     /* setup output wavefield header */
     if(snap) {
+	if(!sf_getint  ("nq1",&nq1)) nq1=sf_n(a1);
+	if(!sf_getint  ("nq2",&nq2)) nq2=sf_n(a2);
+	if(!sf_getfloat("oq1",&oq1)) oq1=sf_o(a1);
+	if(!sf_getfloat("oq2",&oq2)) oq2=sf_o(a2);
+	dq1=sf_d(a1);
+	dq2=sf_d(a2);
+
+	c1 = sf_maxa(nq1,oq1,dq1);
+	c2 = sf_maxa(nq2,oq2,dq2);
+
+	/* check if the imaging window fits in the wavefield domain */
+
+	uc=sf_floatalloc2(sf_n(c1),sf_n(c2));
+
 	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
-	sf_oaxa(Fwfl,a1,1);
-	sf_oaxa(Fwfl,a2,2);
+	sf_oaxa(Fwfl,c1,1);
+	sf_oaxa(Fwfl,c2,2);
 	sf_oaxa(Fwfl,at,3);
     }
 
@@ -299,8 +319,12 @@ int main(int argc, char* argv[])
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
 
-	if(snap && (it+1)%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
-	if(        it    %jdata==0) sf_floatwrite(dd,nr,Fdat);
+	if(snap && (it+1)%jsnap==0) {
+	    cut2d(uo,uc,fdm,c1,c2);
+	    sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+	}
+	if(        it    %jdata==0) 
+	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 

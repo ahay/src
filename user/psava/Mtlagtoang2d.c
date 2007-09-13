@@ -22,11 +22,6 @@
 #include <rsf.h>
 #include "fint1.h"
 
-/* 
- * input:  z-SS(t,z)-x [SS=slant-stack]
- * output: z-a-x
- */
-
 int main (int argc, char* argv[])
 {
     bool inv, verb;
@@ -118,7 +113,7 @@ int main (int argc, char* argv[])
 	    e = (1-g)*(1-g) / (4*g);
 
 	    for (is = 0; is < sf_n(as); is++) { 
-		/* loop over slant-stack */
+		/* loop over slant-stack index */
 		tmp[is] = stk[is][iz];
 	    }
 	    fint1_set(sft,tmp);

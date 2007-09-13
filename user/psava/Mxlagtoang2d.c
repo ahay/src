@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
 	    d*=(g*g-1.);
 
 	    for (is = 0; is < sf_n(as); is++) { 
-		/* loop over slant-stack */
+		/* loop over slant-stack index */
 		tmp[is] = stk[is][iz];
 	    }
 	    fint1_set(sft,tmp);

@@ -126,6 +126,28 @@ void expand(float** a,
 }
 
 /*------------------------------------------------------------*/
+void cut2d(float**  a,
+	   float**  b,
+	   fdm2d  fdm,
+	   sf_axis c1, 
+	   sf_axis c2)
+/*< cut a rectangular wavefield subset >*/
+{
+    int i1,i2;
+    int f1,f2;
+
+    f1 = (floor)((sf_o(c1)-fdm->o1)/fdm->d1);
+    f2 = (floor)((sf_o(c2)-fdm->o2)/fdm->d2);
+
+    for     (i2=0;i2<sf_n(c2);i2++) {
+	for (i1=0;i1<sf_n(c1);i1++) {
+	    b[i2][i1] = a[fdm->nb+f2+i2][fdm->nb+f1+i1];
+	}
+    }
+
+}
+
+/*------------------------------------------------------------*/
 void bfill(float** b, 
 	   fdm2d fdm)
 /*< fill boundaries >*/
