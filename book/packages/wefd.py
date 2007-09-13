@@ -124,14 +124,14 @@ def ertm(imag,sdat,rdat,cccc,dens,sacq,racq,iacq,custom,par):
     tdat = imag+'_tds'
     Flow(tdat,rdat,'reverse which=4 opt=i verb=y')
     fdmod.ewefd(rout,twfl,tdat,cccc,dens,racq,iacq," ssou=n opot=n" + custom+iwindow,par)
-    Flow(rwfl,twfl,'reverse which=8 opt=i verb=y')
+#    Flow(rwfl,twfl,'reverse which=8 opt=i verb=y')
 
     # ------------------------------------------------------------
     Flow(swfl+'1',swfl,'window n2=1 f2=0')
     Flow(swfl+'2',swfl,'window n2=1 f2=1')
 
-    Flow(rwfl+'1',rwfl,'window n2=1 f2=0')
-    Flow(rwfl+'2',rwfl,'window n2=1 f2=1')    
+    Flow(rwfl+'1',twfl,'window n2=1 f2=0 | reverse which=4 opt=i verb=y')
+    Flow(rwfl+'2',twfl,'window n2=1 f2=1 | reverse which=4 opt=i verb=y')    
     
     # conventional (cross-correlation zero-lag) imaging condition
     for     i in ('1','2'):
