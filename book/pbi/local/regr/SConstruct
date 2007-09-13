@@ -188,16 +188,17 @@ for j in range(3):
         rows['s'][j].append(srow)
 
     for case in 'ts':
-        mat = case+'mat%d' % j    
+        mat = case+'mat%d' % j
+
+        title = '''%s Regularization (%s)' % \
+                (('Tikhonov','Shaping')[case=='s'],pars[case][j])
+        
         Flow(mat,rows[case][j],
              '''
              cat ${SOURCES[1:100]} axis=2 |
              put o1=1 o2=1 d2=1 label1= unit1=
              ''')
-        Result(mat,
-               '''
-               grey title="%s Regularization (%s)" screenratio=1
-               ''' % (('Tikhonov','Shaping')[case=='s'],pars[case][j]))
+        Result(mat,'grey title="%s" screenratio=1' % title)
 
         eig = case+'eig%d' % j
         Flow(eig,[mat,'eigen.m'],
@@ -207,5 +208,6 @@ for j in range(3):
              ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),
                     WhereIs('matlab')),stdin=0,stdout=-1)
         
+        Result(eig,'put o1=1 d1=1 | graph symbol=* title="%s" ' % title)
              
 End()
