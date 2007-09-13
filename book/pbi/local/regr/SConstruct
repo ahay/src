@@ -203,7 +203,7 @@ for j in range(3):
         Flow(eig,[mat,'eigen.m'],
              '''
              MATLABPATH=%s %s -nosplash -nojvm -nodesktop
-             -r "eigen('$TARGET','${SOURCES[0]}',0.5);quit"
+             -r "eigen('${SOURCES[0]}','$TARGET');quit"
              ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),
                     WhereIs('matlab')),stdin=0,stdout=-1)
         
