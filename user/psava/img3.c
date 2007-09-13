@@ -66,9 +66,9 @@
     (ihx-img->LOx)
 
 
-#define MM(i,a) SF_MIN(SF_MAX(i,0),a.n-1)
+#define MM(i,a) (SF_MIN(SF_MAX(i,0),a.n-1))
 
-#define INBOUND(imin,imax,i) (i>=imin && i<imax)?true:false
+#define INBOUND(imin,imax,i) ((i>=imin && i<imax)?true:false)
 
 /*------------------------------------------------------------*/
 static float corr(sf_complex a, sf_complex b)

@@ -122,8 +122,8 @@ void srmig3(weoperator3d weop,
     for (ie=0; ie<cub->ae.n; ie++) {
 
 #ifdef _OPENMP
-#pragma omp parallel for schedule(static)   \
-    private(ompith,iw,ws,wr,imz)	    \
+#pragma omp parallel for schedule(static) \
+    private(ompith,iw,ws,wr,imz)			\
     shared(swfl,rwfl,ie,weop,cub,ssr,tap,s_s,s_r)
 #endif
 	for (iw=0; iw<cub->aw.n; iw++) {
