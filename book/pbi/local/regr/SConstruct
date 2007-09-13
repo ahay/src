@@ -1,4 +1,5 @@
 from rsfproj import *
+import os
 
 # Straight line
 Flow('clean',None,'math n1=50 o1=1 d1=1 n2=1 output="3+0.1*x1"')
@@ -118,44 +119,93 @@ for k in (10,20,30,40):
 
 Result('pred6',['noisy2']+pres,'Overlay')
 
-rows = []
+rows = {'t': ([],[],[]),   's': ([],[],[])}
+pars = {'t': (0.1,1,10), 's': (3,15,75)}
+
 for i in range(100):
     spike = 'spike%d' % i
     Flow(spike,None,'spike n1=100 o1=1 d1=1 k1=%d' % (i+1))
 
-    for case in ('nf'):
-        x = 'x%c%d' % (case,i)
-        Flow(x,spike,'window %c1=50' % case)
+for j in range(3):
+    for i in range(100):
+        spike = 'spike%d' % i
 
-    yn = 'yn%d' % i
-    yf = 'yf%d' % i
-    row = 'y%d' % i
+        for case in ('nf'):
+            x = 'x%c%d' % (case,i)
+            Flow(x,spike,'window %c1=50' % case)
 
-    eps = 10
+        tn = 'tn%d-%d' % (i,j)
+        tf = 'tf%d-%d' % (i,j)
+        trow = 'trow%d-%d' % (i,j)
 
-    Flow(yn,'xn%d xf%d t1' % (i,i),
-         '''
-         igrad | igrad adj=y |
-         math top=${SOURCES[0]} bot=${SOURCES[1]} t1=${SOURCES[2]}
-         output="%g*input+top+t1*bot"
-         ''' % eps)
-    Flow(yf,'xf%d xn%d t1' % (i,i),
-         '''
-         igrad | igrad adj=y |
-         math top=${SOURCES[1]} bot=${SOURCES[0]} t1=${SOURCES[2]}
-         output="%g*input+t1*top+t1*t1*bot"
-         ''' % eps)
+        eps = pars['t'][j]
+        eps = eps*eps
 
-    Flow(row,[yn,yf],'cat ${SOURCES[1]} axis=1')
-    rows.append(row)
-Flow('mat',rows,'cat ${SOURCES[1:100]} axis=2')
+        Flow(tn,'xn%d xf%d t1' % (i,i),
+             '''
+             igrad | igrad adj=y |
+             math top=${SOURCES[0]} bot=${SOURCES[1]} t1=${SOURCES[2]}
+             output="%g*input+top+t1*bot"
+             ''' % eps)
+        Flow(tf,'xf%d xn%d t1' % (i,i),
+             '''
+             igrad | igrad adj=y |
+             math top=${SOURCES[1]} bot=${SOURCES[0]} t1=${SOURCES[2]}
+             output="%g*input+t1*top+t1*t1*bot"
+             ''' % eps)
 
-Result('mat',
-       '''
-       grey title="Tikhonov Regularization" wantaxis=n
-       scalebar=y screenratio=1
-       ''')
+        Flow(trow,[tn,tf],'cat ${SOURCES[1]} axis=1')
+        rows['t'][j].append(trow)
 
-Flow('eig','mat','dmeig eval=$TARGET',stdout=0)
+        sn = 'sn%d-%d' % (i,j)
+        sf = 'sf%d-%d' % (i,j)
+        srow = 'srow%d-%d' % (i,j)
 
+        rect = pars['s'][j]
+    
+        Flow(sn,'xf%d xn%d t1' % (i,i),
+             '''
+             smooth rect1=%d |
+             math  t1=${SOURCES[2]} output="input*t1" |
+             smooth rect1=%d |
+             add ${SOURCES[1]}
+             ''' % (rect,rect))
+        Flow(sf+'t','xn%d t1' % i,
+             '''
+             smooth rect1=%d |
+             math  t1=${SOURCES[1]} output="input*t1" |
+             smooth rect1=%d
+             ''' % (rect,rect))
+        Flow(sf,['xf%d' % i, 't1',sf + 't'], 
+             '''
+             smooth rect1=%d |
+             math  t1=${SOURCES[1]} output="input*(t1*t1-1)" |
+             smooth rect1=%d |
+             add ${SOURCES[0]} ${SOURCES[2]}
+             ''' % (rect,rect))
+
+        Flow(srow,[sn,sf],'cat ${SOURCES[1]} axis=1')
+        rows['s'][j].append(srow)
+
+    for case in 'ts':
+        mat = case+'mat%d' % j    
+        Flow(mat,rows[case][j],
+             '''
+             cat ${SOURCES[1:100]} axis=2 |
+             put o1=1 o2=1 d2=1 label1= unit1=
+             ''')
+        Result(mat,
+               '''
+               grey title="%s Regularization (%s)" screenratio=1
+               ''' % (('Tikhonov','Shaping')[case=='s'],pars[case][j]))
+
+        eig = case+'eig%d' % j
+        Flow(eig,[mat,'eigen.m'],
+             '''
+             MATLABPATH=%s %s -nosplash -nojvm -nodesktop
+             -r "eigen('$TARGET','${SOURCES[0]}',0.5);quit"
+             ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),
+                    WhereIs('matlab')),stdin=0,stdout=-1)
+        
+             
 End()
