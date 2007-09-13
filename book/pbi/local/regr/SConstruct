@@ -9,8 +9,8 @@ Plot('noisy',
 Result('noisy','Overlay')
 
 Flow('t0','noisy','math output=1')
-Flow('t1','noisy','math output=x1')
-Flow('t2','noisy','math output="x1*x1"')
+Flow('t1','noisy','math output="%g*x1"' % (1/29.3002))
+Flow('t2','noisy','math output="%g*x1*x1"' % (1/1146.01))
 Flow('t','t0 t1','cat axis=2 ${SOURCES[1]}')
 Flow('tt','t t2','cat axis=2 ${SOURCES[1]}')
 
@@ -61,9 +61,10 @@ for case in 'nf':
     
 Result('pred4','noisy2 predn2 predf2','Overlay')
 
+pres = []
 errs = []
 for rect in range(2,101):
-    flt = 'pef%d' % rect
+    flt = 'prf%d' % rect
     pre = 'pre%d' % rect
     err = 'err%d' % rect
     
@@ -74,6 +75,7 @@ for rect in range(2,101):
          graph title="Y(X)=a(X)+b(X)*X"
          wantaxis=n min2=2 max2=9 plotcol=3
          ''')
+    pres.append(pre)
 
     Flow(err,[pre,'noisy2'],
          '''
@@ -84,6 +86,7 @@ for rect in range(2,101):
     
 
 Flow('errs',errs,'cat axis=1 ${SOURCES[1:%d]} | put o1=2 d1=1' % len(errs))
+Plot('pres',pres,'Movie',view=1)
 
 Plot('errs1','errs',
      'graph wanttitle=n label2="Data Misfit" label1="Smoothing Radius" ')
@@ -94,6 +97,65 @@ Plot('errs2','errs',
      ''')
 Result('errs','errs1 errs2','SideBySideIso')
 
-Result('pred5','noisy2 pre5','Overlay')
+Result('pred5','noisy2 pre7','Overlay')
+
+pres = []
+for k in (10,20,30,40):
+    for case in 'nf':
+        a = 'a'+case+str(k)
+        Flow(a,'prf8',
+             'window n1=1 %c2=1 f1=%d | spray axis=1 n=50 o=1' % (case,k))
+
+    pre = 'pred'+str(k)
+    Flow(pre,'an%d af%d t1' % (k,k),
+         'math b=${SOURCES[1]} t1=${SOURCES[2]} output="input+b*t1" ')
+    Plot(pre,
+         '''
+         graph title="Y(X)=a(X\_k\^)+b(X\_k\^)*X"
+         wantaxis=n min2=2 max2=9 plotcol=3
+         ''')
+    pres.append(pre)
+
+Result('pred6',['noisy2']+pres,'Overlay')
+
+rows = []
+for i in range(100):
+    spike = 'spike%d' % i
+    Flow(spike,None,'spike n1=100 o1=1 d1=1 k1=%d' % (i+1))
+
+    for case in ('nf'):
+        x = 'x%c%d' % (case,i)
+        Flow(x,spike,'window %c1=50' % case)
+
+    yn = 'yn%d' % i
+    yf = 'yf%d' % i
+    row = 'y%d' % i
+
+    eps = 10
+
+    Flow(yn,'xn%d xf%d t1' % (i,i),
+         '''
+         igrad | igrad adj=y |
+         math top=${SOURCES[0]} bot=${SOURCES[1]} t1=${SOURCES[2]}
+         output="%g*input+top+t1*bot"
+         ''' % eps)
+    Flow(yf,'xf%d xn%d t1' % (i,i),
+         '''
+         igrad | igrad adj=y |
+         math top=${SOURCES[1]} bot=${SOURCES[0]} t1=${SOURCES[2]}
+         output="%g*input+t1*top+t1*t1*bot"
+         ''' % eps)
+
+    Flow(row,[yn,yf],'cat ${SOURCES[1]} axis=1')
+    rows.append(row)
+Flow('mat',rows,'cat ${SOURCES[1:100]} axis=2')
+
+Result('mat',
+       '''
+       grey title="Tikhonov Regularization" wantaxis=n
+       scalebar=y screenratio=1
+       ''')
+
+Flow('eig','mat','dmeig eval=$TARGET',stdout=0)
 
 End()
