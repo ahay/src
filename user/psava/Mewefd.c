@@ -200,8 +200,8 @@ int main(int argc, char* argv[])
 	dq1=sf_d(a1);
 	dq2=sf_d(a2);
 
-	c1 = sf_maxa(nq1,oq1,dq1);
-	c2 = sf_maxa(nq2,oq2,dq2);
+	c1 = sf_maxa(nq1,oq1,dq1); sf_raxa(c1);
+	c2 = sf_maxa(nq2,oq2,dq2); sf_raxa(c2);
 
 	/* check if the imaging window fits in the wavefield domain */
 
@@ -495,9 +495,6 @@ int main(int argc, char* argv[])
 		
 		cut2d(qs,uc,fdm,c1,c2);
 		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
-
-/*		sf_floatwrite(qp[0],fdm->n1pad*fdm->n2pad,Fwfl);*/
-/*		sf_floatwrite(qs[0],fdm->n1pad*fdm->n2pad,Fwfl);*/
 	    }
 	} else {
 
@@ -510,9 +507,6 @@ int main(int argc, char* argv[])
 
 		cut2d(uo2,uc,fdm,c1,c2);
 		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
-
-/*		sf_floatwrite(uo1[0],fdm->n1pad*fdm->n2pad,Fwfl);*/
-/*		sf_floatwrite(uo2[0],fdm->n1pad*fdm->n2pad,Fwfl);*/
 	    }
 	}
 	if(it%jdata==0) sf_floatwrite(dd[0],nr*nc,Fdat);
