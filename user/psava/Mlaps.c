@@ -1,6 +1,7 @@
 /* Compute lagged-products */
+
 /*
-  Copyright (C) 2006 Colorado School of Mines
+  Copyright (C) 2007 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,14 +17,13 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#include <rsf.h>
 
+#include <rsf.h>
 
 /* 
  * inputs are wavefields organized as z-x-t
- * output is lagged product image organized as z-x-hz-hx-ht
+ * output are lagged products organized as z-x-hz-hx-ht
  */
-
 
 #ifdef _OPENMP
 #include <omp.h>
@@ -38,16 +38,19 @@ int main(int argc, char* argv[])
 
     int     nz,nx,nt, nhz,nhx,nht;
     int     iz,ix,it, ihz,ihx,iht;
-    int     jz,jx,    jhz,jhx;
-    int     kz,kx;
+    int     izs,ixs,    jhz,jhx;
+    int     izr,ixr;
 
     float ****ii=NULL,**us=NULL,**ur=NULL; /* arrays */
 
     int ompchunk; 
 
-    int loz,hiz,scz;
-    int lox,hix,scx;
-    int lot,hit,sct;
+    int loz,hiz;
+    int lox,hix;
+    int lot,hit;
+
+    sf_axis acz,acx;
+    int     jcz,jcx;
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -65,6 +68,12 @@ int main(int argc, char* argv[])
     ax=sf_iaxa(Fs,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax);
     at=sf_iaxa(Fs,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at);
 
+    if(!sf_getint ("jcx",&jcx) || nx==1) jcx=1;
+    if(!sf_getint ("jcz",&jcz) || nz==1) jcz=1;
+
+    acx = sf_maxa(SF_MAX(1,sf_n(ax)/jcx),sf_o(ax),sf_d(ax)*jcx); sf_setlabel(acx,"cx");
+    acz = sf_maxa(SF_MAX(1,sf_n(az)/jcz),sf_o(az),sf_d(az)*jcz); sf_setlabel(acz,"cz");
+
     sf_oaxa(Fi,az,1);
     sf_oaxa(Fi,ax,2);
 
@@ -77,22 +86,18 @@ int main(int argc, char* argv[])
     if(! sf_getint("nht",&nht)) nht=0; /* number of lags on the t axis */
     sf_warning("nhz=%d nhx=%d nht=%d",2*nhz+1,2*nhx+1,2*nht+1);
 
-    if(! sf_getint("scz",&scz)) scz=1; /* skip on the z axis */
-    if(! sf_getint("scx",&scx)) scx=1; /* skip on the x axis */
-    if(! sf_getint("sct",&sct)) sct=1; /* skip on the t axis */
-
     /* set output axes */
-    aa=sf_maxa(2*nhz+1,-nhz*sf_d(az)*scz,sf_d(az)*scz);
+    aa=sf_maxa(2*nhz+1,-nhz*sf_d(az),sf_d(az));
     sf_setlabel(aa,"hz");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,3);
     
-    aa=sf_maxa(2*nhx+1,-nhx*sf_d(ax)*scx,sf_d(ax)*scx); 
+    aa=sf_maxa(2*nhx+1,-nhx*sf_d(ax),sf_d(ax)); 
     sf_setlabel(aa,"hx");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,4);
 
-    aa=sf_maxa(2*nht+1,-nht*sf_d(at)*sct,sf_d(at)*sct); 
+    aa=sf_maxa(2*nht+1,-nht*sf_d(at),sf_d(at)); 
     sf_setlabel(aa,"ht");
     if(verb) sf_raxa(aa);
     sf_oaxa(Fi,aa,5);
@@ -125,50 +130,40 @@ int main(int argc, char* argv[])
 
 	/* t loop */
 	for(it=lot; it<hit; it++) {
-
+	    if(verb) fprintf(stderr,"%4d %3d",it,nht+iht);
+	    
 	    /* read input */
 	    sf_floatread(us[0],nz*nx,Fs);
 	    sf_floatread(ur[0],nz*nx,Fr);
-
-	    if(verb) fprintf(stderr,"%4d %3d",it,nht+iht);
-
-	    if(SF_ABS(nhx)>0) {
+	    
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ihx,lox,hix,jhx, ihz,loz,hiz,jhz, ix,iz,jx,jz,kx,kz) shared(nhx,nhz,ii,us,ur)
+#pragma omp parallel for schedule(dynamic,ompchunk) \
+    private(ihx,lox,hix,jhx, ihz,loz,hiz,jhz, ix,iz,ixs,izs,ixr,izr) \
+    shared(nhx,nhz,ii,us,ur)
 #endif		
-		for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(scx*ihx); hix=nx-lox; jhx=nhx+ihx;
-		    for(      ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(scz*ihz); hiz=nz-loz; jhz=nhz+ihz;  
-			for(    ix=lox;  ix<hix;    ix++) { jx=ix-scx*ihx; kx=ix+scx*ihx;
-			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-scz*ihz; kz=iz+scz*ihz;
-				ii[jhx][jhz][ix][iz] += us[jx][jz] 
-				    *                   ur[kx][kz];
-			    } /* nz */
-			} /* nx */  
-		    } /* nhz */
-		} /* nhx */
-	    } else {
-		for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-lox; jhx=nhx+ihx;		
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ihz,loz,hiz,jhz, ix,iz,jx,jz,kx,kz) shared(ihx,lox,hix,jhx, nhz,ii,us,ur)
-#endif		
-		    for(      ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-loz; jhz=nhz+ihz;  
-			for(    ix=lox;  ix<hix;    ix++) { jx=ix-ihx; kx=ix+ihx;
-			    for(iz=loz;  iz<hiz;    iz++) { jz=iz-ihz; kz=iz+ihz;
-				ii[jhx][jhz][ix][iz] += us[jx][jz] 
-				    *                   ur[kx][kz];
-			    } /* nz */
-			} /* nx */  
-		    } /* nhz */
-		} /* nhx */	
-	    } /* end if */ 
+	    for(          ihx=-nhx; ihx<nhx+1; ihx++) { lox=SF_ABS(ihx); hix=nx-lox; jhx=nhx+ihx;
+		for(      ihz=-nhz; ihz<nhz+1; ihz++) { loz=SF_ABS(ihz); hiz=nz-loz; jhz=nhz+ihz;  
 
+		    for(    ix=lox;  ix<hix;    ix++) { ixs=ix-ihx; ixr=ix+ihx;
+			for(iz=loz;  iz<hiz;    iz++) { izs=iz-ihz; izr=iz+ihz;
+
+			    ii[jhx][jhz][ix][iz] += us[ixs][izs] 
+				*                   ur[ixr][izr];
+
+			} /* nz */
+		    } /* nx */  
+
+		} /* nhz */
+	    } /* nhx */
+	    
 	    if(verb) fprintf(stderr,"\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b\b");
 	} /* nt */
 	
 	/* write output */
 	sf_floatwrite(ii[0][0][0],nz*nx*(2*nhz+1)*(2*nhx+1),Fi);    
+
     } /* nht */
     if(verb) fprintf(stderr,"\n");
-	
+    
     exit (0);
 }
