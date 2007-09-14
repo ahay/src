@@ -212,7 +212,7 @@ def report_all(target=None,source=None,env=None):
         tag = paper_tag(paper)
         stem = os.path.splitext(paper)[0]
         resdir = resdirs.get(tag[0],'Fig')
-        all.write('\\renewcommand{\\figdir}{%s}' % resdir)
+        all.write('\\setfigdir{%s}' % resdir)
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
         all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')

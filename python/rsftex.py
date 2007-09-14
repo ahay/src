@@ -91,7 +91,7 @@ isfig  = re.compile(r'^[^%]*\\includegraphics\s*(\[[^\]]*\])?\{([^\}]+)')
 isbib = re.compile(r'\\bibliography\s*\{([^\}]+)')
 linput = re.compile(r'[^%]\\(?:lst)?input(?:listing\[[^\]]+\])?\s*\{([^\}]+)')
 chdir = re.compile(r'[^%]*\\inputdir\s*\{([^\}]+)')
-subdir = re.compile(r'\\renewcommand\s*\{\\figdir}{([^\}]+)')
+subdir = re.compile(r'\\setfigdir{([^\}]+)')
 beamer = re.compile(r'\\documentclass[^\{]*\{beamer\}')
 hastoc =  re.compile(r'\\tableofcontents')
 figure = re.compile(r'\\contentsline \{figure\}\{\\numberline \{([^\}]+)')
@@ -134,7 +134,7 @@ def latify(target=None,source=None,env=None):
     if include:
         ltx.write(include+'\n\n')
     if lclass in ('geophysics','segabs','georeport'):
-        ltx.write('\\renewcommand{\\figdir}{%s}\n\n' % resdir)
+        ltx.write('\\setfigdir{%s}\n\n' % resdir)
     ltx.write('\\begin{document}\n')
     for line in tex.readlines():
         ltx.write(line)

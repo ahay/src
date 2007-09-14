@@ -126,6 +126,8 @@ for i in range(100):
     spike = 'spike%d' % i
     Flow(spike,None,'spike n1=100 o1=1 d1=1 k1=%d' % (i+1))
 
+matlab = WhereIs('matlab')
+
 for j in range(3):
     for i in range(100):
         spike = 'spike%d' % i
@@ -200,14 +202,16 @@ for j in range(3):
              ''')
         Result(mat,'grey title="%s" screenratio=1' % title)
 
-        eig = case+'eig%d' % j
-        Flow(eig,[mat,'eigen.m'],
-             '''
-             MATLABPATH=%s %s -nosplash -nojvm -nodesktop
-             -r "eigen('${SOURCES[0]}','$TARGET');quit"
-             ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),
-                    WhereIs('matlab')),stdin=0,stdout=-1)
+        if matlab:
+            eig = case+'eig%d' % j
+            Flow(eig,[mat,'eigen.m'],
+                 '''
+                 MATLABPATH=%s %s -nosplash -nojvm -nodesktop
+                 -r "eigen('${SOURCES[0]}','$TARGET');quit"
+                 ''' % (os.path.join(os.environ.get('RSFROOT'),'lib'),matlab),
+                 stdin=0,stdout=-1)
         
-        Result(eig,'put o1=1 d1=1 | sort | graph symbol=* title="%s" ' % title)
-             
+            Result(eig,
+                   'put o1=1 d1=1 | sort | graph symbol=* title="%s" ' % title)
+
 End()
