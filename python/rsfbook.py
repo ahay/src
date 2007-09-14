@@ -55,8 +55,8 @@ def get_year(default):
     year = default
     if not year:
         year = time.localtime(time.time())[0]
-    year = str(year)
-    year = string.join([str(int(year)-1),year[-2:]],'-')
+        year = str(year)
+        year = string.join([str(int(year)-1),year[-2:]],'-')
     return year
 
 def paper_tag(paper):
@@ -216,6 +216,7 @@ def report_all(target=None,source=None,env=None):
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
         all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
+    map(all.write, [ include('post'), ])
     return 0
 
 def tour(target=None,source=None,env=None):
