@@ -38,6 +38,7 @@ command = r'\{(?:([^\}\{]*)(?:[^\{\}]*\{[^\}]*\}[^\{\}]*)*)\}'
 
 re_author = re.compile(r'\\author\s*'+command)
 re_title = re.compile(r'\\(?:title|chapter)\s*(?:\[[^\]]+\])?\s*'+command)
+re_bioname = re.compile(r'{\\bf\s*([^\\\}]+)')
 
 report = string.upper(os.path.basename(os.getcwd()))
 group = re.sub('\d+$','',report)
@@ -97,6 +98,9 @@ def get_authors(source,default):
                         authors[person]=last
     all = map(lambda k: (authors[k],k),authors.keys())
     all.sort()
+    return all
+
+def list_authors(all):
     lastone = all.pop()
     if len(all) == 0:
         author = lastone[1]
@@ -110,6 +114,7 @@ def get_authors(source,default):
         author = '%s, and %s' % (author,lastone[1])
         print "The authors are " + author
     return author
+    
 
 def report_toc(target=None,source=None,env=None):
     "Build a table of contents from a collection of papers"
@@ -159,7 +164,7 @@ def report_tpg(target=None,source=None,env=None):
     if title:
         tpg.write('\\vfill\n\title{%s}\n' % title)
     authors = env.get('authors',{})
-    tpg.write('\\mainauthor{%s}\n' % get_authors(source,authors))
+    tpg.write('\\mainauthor{%s}\n' % list_authors(get_authors(source,authors)))
     title = env.get('title2')
     if title:
         tpg.write('\\vfill\n\maintitle{%s}\n' % title)
@@ -175,6 +180,34 @@ def report_tpg(target=None,source=None,env=None):
     year = get_year(env.get('year'))
     copyr = env.get('copyr')
     tpg.write('\n\\newpage\\GEOcopyr{%s}{%s}\n' % (year,copyr))
+    tpg.close()
+    return 0
+
+def report_bio(target=None,source=None,env=None):
+    "Build author biographies"
+    bio = open(str(target[0]),'w')
+    bio.write('\\maintitle{Research Personnel}\n')
+    bio.write('\\begin{bios}\n')
+    bios = env.get('bios')
+    authors = env.get('authors',{})
+    authors = get_authors(source,authors)
+    for author in authors:
+        name = author[1]
+        biofile = bios.get(name)
+        if biofile:
+            pdf = os.path.splitext(biofile)[0]+'.pdf'
+            if os.path.isfile(pdf):
+                bio.write('\\item\\bioplot{%s}{%%\n' % pdf)
+                thisbio = open(biofile)
+                bio.writelines(thisbio.readlines())
+                thisbio.close()
+                bio.write('}\n')
+            else:
+                print 'No picture file for ' + name
+        else:
+            print 'No biography file for ' + name
+    bio.write('\\end{bios}\n')
+    bio.close()
     return 0
 
 def include(file,sep=''):
@@ -216,7 +249,9 @@ def report_all(target=None,source=None,env=None):
         all.write('\\GEOpaper{%s}{%s}\t\\include{%s}\n' % (tag[0],tag[1],stem))
         all.write('\\cleardoublepage')
     all.write('%% end of paper list\n')
-    map(all.write, [ include('post'), ])
+    for tex in misc.keys():
+        all.write(include(os.path.splitext(tex)[0]))
+    all.close()
     return 0
 
 def tour(target=None,source=None,env=None):
@@ -250,6 +285,7 @@ class RSFReport(Environment):
         rsftex.mkdir(self.doc)
         self.paper = 1
     def Papers(self,papers,**kw):
+        # get list of papers
         if type(papers[0]) is types.TupleType:
             kw.update({'sections':Sections(papers)})
             papers = Split(string.join(map(lambda x: x[1],papers)))
@@ -259,21 +295,45 @@ class RSFReport(Environment):
                 papers[i] = paper + '/paper.tex'
             elif '/' in paper:
                 self.paper = 0
+        # make table of contents
         kw.update({'action':Action(report_toc),
                    'varlist':['year','sections','authors']})
         apply(self.Command,('toc.tex',papers),kw)
         rsftex.Paper('toc',lclass='georeport',scons=0)
+        map(lambda tex: self.Depends('toc.tex',tex),
+            filter(os.path.isfile,misc.keys()))
+        # make title page
         kw.update({'action':Action(report_tpg),
                    'varlist':['group','title1','authors','title2','line',
                               'fig','year','copyr']})
         apply(self.Command,('tpg.tex',papers),kw)
         rsftex.Paper('tpg',lclass='georeport',scons=0)
+        # make biographies
+        bios = kw.get('bios')
+        biofiles = {}
+        if bios:
+            for biofile in glob.glob(os.path.join(bios,'*.bio')):
+                bio = open(biofile)
+                line = bio.readline()
+                name = re_bioname.search(line)
+                if name:
+                    name = string.split(name.group(1))
+                    biofiles[string.join([name[0],name[-1]],'~')] = biofile
+                bio.close()
+        if biofiles:
+            kw.update({'action':Action(report_bio),
+                       'varlist':['bios'],
+                       'bios':biofiles})
+            apply(self.Command,('bio.tex',papers),kw)
+            self.Depends('bio.tex','tpg.tex')
+            rsftex.Paper('bio',lclass='georeport',scons=0)
+        # make report
         kw.update({'action':Action(report_all),'varlist':['group','resdirs']})
         apply(self.Command,('book.tex',papers),kw)
-        for file in ['tpg.tex','toc.tex']:
-            map(lambda tex: self.Depends(file,tex),
-                filter(os.path.isfile,misc.keys()))
-            self.Depends('book.tex',file)
+        self.Depends('book.tex','toc.tex')
+        self.Depends('book.tex','tpg.tex')
+        if biofiles:
+            self.Depends('book.tex','bio.tex')
         # Touring individual papers
         for target in ('html','pdf','install'):
             if self.paper:
