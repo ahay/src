@@ -1,15 +1,24 @@
+/* -*- C -*-  (not really, but good for syntax highlighting) */
+
 %module c_rsf
 
 %{
 #include <stdio.h>
-
-#include <libnumarray.h>
 
 #include "c99.h"
 #include "alloc.h"
 #include "file.h"
 #include "getpar.h"
 #include "files.h"
+
+#define SWIG_FILE_WITH_INIT
+%}
+
+/* Get the Numeric typemaps */
+%include numpy.i
+
+%init %{
+    import_array();
 %}
 
 %include typemaps.i
@@ -198,26 +207,12 @@ free ((char*) $1);
          }
 %}
 
-%typemap(in) (float* arr) {
-  import_libnumarray();
-	
-  /* Check if is a numarray */
-  if (NA_NumArrayCheck($input)) {
-     NumarrayType type = NA_NumarrayType($input);
-     if (tFloat64 == type) type = tFloat32; /* This is a bug! */
-     switch (type) {
-        case tFloat64: case tFloat32:
-	     break;
-        default:
-	     PyErr_SetString(PyExc_TypeError,"so wrong data type");
-             break;	
-     }
-     $1 = NA_OFFSETDATA(NA_InputArray($input,type,C_ARRAY));    
-  } else {
-    PyErr_SetString(PyExc_TypeError,"not a NumArray");
-    return NULL;
-  }
-}
+/* Apply the Numeric typemaps for 1D input arrays */
+%numpy_typemaps(float, NPY_FLOAT   , size_t)
+%numpy_typemaps(sf_complex, NPY_CFLOAT   , size_t)
+
+%apply (float*  IN_ARRAY1, size_t DIM1) {(float*  arr, size_t size)};
+%apply (sf_complex*  IN_ARRAY1, size_t DIM1) {(sf_complex*  arr, size_t size)};
 
 #define SF_MAX_DIM 9
 

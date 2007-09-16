@@ -1,9 +1,5 @@
 import os, sys, types
 import c_rsf
-try:
-    import numpy as rsfarray
-except:
-    import numarray as rsfarray
 
 #      a=100 Xa=5
 #      float=5.625 cc=fgsg
@@ -111,13 +107,11 @@ class Input(File):
     def __init__(self,tag="in"):
         self.file = c_rsf.sf_input(tag)
         File.__init__(self)
-    def read(self,data,n=-1):
-        if n<0:
-            n = rsfarray.size(data)
+    def read(self,data):
         if self.type == 'float':
-            c_rsf.sf_floatread(data,n,self.file)
+            c_rsf.sf_floatread(data,self.file)
         elif self.type == 'complex':
-            c_rsf.sf_complexread(data,n,self.file)
+            c_rsf.sf_complexread(data,self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
@@ -125,17 +119,17 @@ class Output(File):
     def __init__(self,tag="out"):
         self.file = c_rsf.sf_output(tag)
         File.__init__(self)
-    def write(self,data,n=-1):
-        if n<0:
-            n = rsfarray.size(data)
+    def write(self,data):
         if self.type == 'float':
-            c_rsf.sf_floatwrite(data,n,self.file)
+            c_rsf.sf_floatwrite(data,self.file)
         elif self.type == 'complex':
-            c_rsf.sf_complexwrite(data,n,self.file)
+            c_rsf.sf_complexwrite(data,self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
 if __name__ == "__main__":
+    import numpy
+    
     # Testing getpar
     par = Par(["prog","a=5","b=as","a=100","par=%s" % sys.argv[0]])
     assert 100 == par.int("a")
@@ -173,7 +167,7 @@ if __name__ == "__main__":
     output.put('label2','Distance (kft)')
     input.put("n",[100,100])
     assert [100,100] == input.ints("n",2)
-    trace = rsfarray.zeros(n1,'f')
+    trace = numpy.zeros(n1,'f')
     input.read(trace)
     for i in xrange(n2):
         output.write(trace)

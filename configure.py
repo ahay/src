@@ -773,17 +773,8 @@ def python(context):
 	context.env['PYMODULES'] = ['numpy']
     except:
         context.Result(context_failure)
-        context.Message("checking for numarray ... ")
-        try:
-            import numarray
-            context.Result(context_success)
-            stderr_write('numarray development has stopped; '
-                         'plan to migrate to numpy')
-	    context.env['PYMODULES'] = ['numarray']
-        except:
-            context.Result(context_failure)
-            stderr_write('Please install numpy.')
-            needed_package('numpy')
+        stderr_write('Please install numpy.')
+        needed_package('numpy')
 
     context.Message("checking for scipy ... ")
     try:
