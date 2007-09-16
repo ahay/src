@@ -369,9 +369,9 @@ def rfield (real_par,grid_par,covar_par):
 
     rotate = real_par['name']+'rotate'
 
-    rotx = max(grid_par['nx']/2,1)
-    roty = max(grid_par['ny']/2,1)
-    rotz = max(grid_par['nz']/2,1)
+    rotx = int(grid_par['nx']/2)
+    roty = int(grid_par['ny']/2)
+    rotz = int(grid_par['nz']/2)
         
     Flow (rotate,[covar,taper],
           '''
