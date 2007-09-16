@@ -45,8 +45,8 @@ class Par:
 # default parameters for interactive runs
 par = Par(['self','-'])
 
-datatype = ('uchar','char','int','float','complex')
-dataform = ('ascii','xdr','native')
+datatype = ['uchar','char','int','float','complex']
+dataform = ['ascii','xdr','native']
 
 class File:
     def __init__(self):
@@ -104,7 +104,7 @@ class File:
                 c_rsf.sf_putints(self.file,key,val)
 
 class Input(File):
-    def __init__(self,tag="in"):
+    def __init__(self,tag='in'):
         self.file = c_rsf.sf_input(tag)
         File.__init__(self)
     def read(self,data):
@@ -116,8 +116,11 @@ class Input(File):
             raise TypeError, 'Unsupported file type %s' % self.type
 
 class Output(File):
-    def __init__(self,tag="out"):
+    def __init__(self,tag='out',src=None):
         self.file = c_rsf.sf_output(tag)
+        if src: # clone source file
+            c_rsf.sf_settype(self.file,datatype.index(src.type))
+            c_rsf.sf_fileflush(self.file,src.file)
         File.__init__(self)
     def write(self,data):
         if self.type == 'float':
