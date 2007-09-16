@@ -143,6 +143,7 @@ def report_toc(target=None,source=None,env=None):
                       (author,title,tag[1]))
         else:
             print "Could not find author or title"
+    toc.write('\n\\geosection*{\ }\n')
     year = get_year(env.get('year'))
     misc['pub.tex'] = '%s article published or in press, %s' % (group,year),
     misc['spons.tex'] = '%s sponsors for %s' % (group,year)
@@ -188,6 +189,7 @@ def report_bio(target=None,source=None,env=None):
     bio = open(str(target[0]),'w')
     bio.write('\\maintitle{Research Personnel}\n')
     bio.write('\\begin{bios}\n')
+    bio.write('\\label{bio.start}\n')
     bios = env.get('bios')
     authors = env.get('authors',{})
     authors = get_authors(source,authors)

@@ -20,7 +20,7 @@ import sys, string, os, signal, types
 
 def handler(signum, frame):
     'signal handler for abortion [Ctrl-C]'
-    sys.stderr.write('\n%s: aborting...\n' % comm)
+    sys.stderr.write('\n[Ctrl-C] Aborting...\n')
     if child:
         os.kill (signal.SIGINT,child)
     sys.exit(-1)
