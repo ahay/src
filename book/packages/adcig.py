@@ -53,7 +53,7 @@ def ciggrey(custom,par):
     grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
-    screenratio=2
+    screenratio=3
     %s
     ''' % (
         par['zmin'],par['zmax'],par['lz'],par['uz'],
