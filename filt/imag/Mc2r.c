@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
 		LOOPCC( comCC[iz][ix][0] = mapCC[iz][ix]; );
 
 		/* IMAGINARY */
-		LOOPRC( mapRC[it][ig] = comRC[it][ig][0]; );
+		LOOPRC( mapRC[it][ig] = comRC[it][ig][1]; );
 		c2r(linear,adj,mapCC,mapRC,rays);
 		LOOPCC( comCC[iz][ix][1] = mapCC[iz][ix]; );
 
