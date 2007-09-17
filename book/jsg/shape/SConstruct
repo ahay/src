@@ -1,0 +1,16 @@
+import os
+
+for fig in ('lapinter','gaussinter',
+            'bei-fmg2','bei-dix','bei-shp','bei-shpw'):
+    os.environ[fig+'.pspen'] = 'color=y fat=1 fatmult=1.5 invras=y'
+
+from rsftex import *
+
+Paper('seg2005',use='newalg',lclass='segabs')
+
+Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+Paper('paper-revised',use='newalg',options='manuscript,revised')
+
+Paper('summary',include=r'\thispagestyle{empty}',options='manuscript')
+
+End(use='newalg',options='manuscript')

@@ -723,8 +723,8 @@ class TeXPaper(Environment):
             os.path.basename(os.path.dirname(cwd)),
             os.path.basename(cwd))
 	self.doc = os.environ.get(
-             'RSFDOC',
-             os.path.join(os.environ.get('RSFROOT'),'doc'))
+            'RSFDOC',
+            os.path.join(os.environ.get('RSFROOT'),'doc'))
         for level in self.tree:
             if level:
                 self.doc = os.path.join(self.doc,level)

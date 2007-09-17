@@ -57,17 +57,4 @@ Flow([lom,lag],example,'lopef a=7,2 w=20,8 lag=${TARGETS[1]}')
 Flow(mpa,[example,lom],'decon filt=${SOURCES[1]} rect1=3')
 Result(example+'-clae',mpa,'grey pclip=100 title=LOMOPLAN' % pclip)
 
-Flow('tris','sigmoid-dip',
-     '''
-     spike n1=200 n2=200 d2=0.008 o2=0 nsp=9
-     k1=50,100,150,50,100,150,50,100,150
-     k2=50,50,50,100,100,100,150,150,150 |
-     pwdsmooth2 dip=$SOURCE rect1=3 rect2=20
-     ''',stdin=0)
-Plot('tris','grey title=d allpos=y')
-Plot('sigmoid2','sigmoid','grey title=a')
-Plot('sigmoid-dip2','sigmoid-dip','grey title=b scalebar=y pclip=100')
-Plot('sigmoid-txr2','sigmoid-txr','grey title=c')
-Result('tris','sigmoid2 sigmoid-dip2 sigmoid-txr2 tris','TwoRows')
-    
 End()
