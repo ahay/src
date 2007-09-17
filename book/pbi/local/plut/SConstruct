@@ -13,17 +13,14 @@ for case in ('ref','mod'):
 
 Flow('mod2','mod','window f1=100 | pad end1=100')
 
-def grey(title):
-    return '''
-    grey title="%s" label1=Time unit1=s label2=Trace
-    ''' % title
+grey = '''
+window max1=6 | 
+grey title="%s" label1=Time unit1=s label2=Trace
+wanttitle=n screenht=7.68 screenratio=0.5625 labelsz=5
+'''
 
-Result('ref',grey('Reference'))
-Result('mod',grey('Model'))
-
-screen = ' wanttitle=n screenht=7.68 screenratio=0.5625 labelsz=5'
-
-Result('ref2','ref','window max1=6 | ' + grey('') + screen)
+Result('ref',grey)
+Result('mod',grey)
 
 nt = 1126
 
@@ -42,12 +39,10 @@ Flow('flt pre','shifts ref',
      'lpf match=${SOURCES[1]} pred=${TARGETS[1]} rect1=20 rect2=10 niter=400')
 Flow('sig','ref pre','add scale=1,-1 ${SOURCES[1]}')
 
-Result('pre',grey('Matched Multiples'))
-Result('sig',grey('Estimated Signal'))
+Result('pre',grey)
+Result('sig',grey)
 
-Result('sig2','sig','window max1=6 | ' + grey('') + screen)
-
-Result('zero','flt','window n3=1 f3=10 | %s color=j' % grey('Zero Coefficient'))
-Result('csum','flt','stack axis=3 norm=n | %s color=j' % grey('Coefficient Sum'))
+Result('zero','flt','window n3=1 f3=10 | %s color=j' % grey)
+Result('csum','flt','stack axis=3 norm=n | %s color=j' % grey)
 
 End()

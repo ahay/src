@@ -1,3 +1,0 @@
-from rsftex import *
-Paper('obj4d',options='short')
-End()

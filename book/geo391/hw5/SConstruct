@@ -1,6 +1,0 @@
-from rsftex import *
-import os
-
-os.environ['PSTEXPENOPTS']='color=y fat=1 fatmult=1.5'
-
-End(use='listings,color',options='11pt')
