@@ -101,8 +101,8 @@ discussion.}
 Let $f(t)$ represent seismic trace as a function of time $t$. The
 corresponding complex trace $c(t)$ is defined as
 \begin{equation}
-  \label{eq:complex}
   c(t) = f(t) + i\,h(t)\;,
+  \label{eq:complex}
 \end{equation}
 where $h(t)$ is the Hilbert transform of the real trace $f(t)$. One
 can also represent the complex trace in terms of the envelope $A(t)$
@@ -118,13 +118,6 @@ instantaneous phase \cite[]{GEO44-06-10411063}
   \omega(t) = \phi'(t) = \mathit{Im}\left[\frac{c'(t)}{c(t)}\right]
   = \frac{f(t)\,h'(t) - f'(t)\,h(t)}{f^2(t) + h^2(t)}\;.
 \end{equation}
-\old{In terms of the input seismic trace and its Hilbert transform, the
-instantaneous frequency can be defined as \\
-\parbox{\textwidth}{
-\begin{equation}
-  \label{eq:instant2}
-  \omega(t) = \frac{f(t)\,h'(t) - f'(t)\,h(t)}{f^2(t) + h^2(t)}\;.
-\end{equation}}}
 Different numerical realizations of equation~\ref{eq:instant} produce
 slightly different algorithms \cite[]{GEO57-11-15201524}.
 
@@ -275,11 +268,10 @@ defined as the functional
   \label{eq:glocor}
   \gamma = \frac{<a(t),b(t)>}{\sqrt{<a(t),a(t)>\,<b(t),b(t)>}}\;,
 \end{equation}
-where $<x(t),y(t)>$ denotes the dot product between two \new{two} signals:
-\begin{equation}
-  \label{eq:dotprod}
+where $<x(t),y(t)>$ denotes the dot product between two signals:
+\[
   <x(t),y(t)> = \int x(t)\,y(t)\,d t\;.
-\end{equation}
+\]
 According to \old{the} definition~\ref{eq:glocor}, the correlation
 coefficient of two identical signals is equal to one, and the
 correlation of two signals with opposite polarity is minus one. In all
