@@ -186,6 +186,34 @@ def Awftwo(wfld,data,slow,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+# causal wavefields by wavefield extrapolation
+def Cwfone3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=y twoway=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+def Cwftwo3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=y twoway=y %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+
+# anti-causal wavefields by wavefield extrapolation
+def Awfone3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=n twoway=n %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+def Awftwo3(wfld,data,slow,par):
+    Flow(wfld,[data,slow],
+         '''
+         zomig3 mode=w inv=n causal=n twoway=y %s
+         slo=${SOURCES[1]}
+         ''' % param(par))
+
 # ------------------------------------------------------------
 
 # first-order scattering (slowness to image)
