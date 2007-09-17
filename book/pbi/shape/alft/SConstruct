@@ -1,9 +1,0 @@
-from rsfproj import *
-
-Flow('mod',None,'spike n1=200 nsp=2 k1=10,50 mag=1,-2')
-
-Flow('dat','mod','cosft sign1=-1')
-
-Result('dat','dots label1=Sample unit1=')
-
-End()
