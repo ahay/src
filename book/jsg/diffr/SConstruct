@@ -2,11 +2,11 @@ from rsftex import *
 
 os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
 
-Paper('total',lclass='article',use='graphicx,subfigure,natbib')
+#Paper('total',lclass='article',use='graphicx,subfigure,natbib')
 
-Paper('seg2006',lclass='segabs')
+#Paper('seg2006',lclass='segabs')
 
-Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
-Paper('paper-revised',options='manuscript,revised')
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Paper('paper-revised',options='manuscript,revised')
 
-End(options='manuscript')
+End() #options='manuscript')
