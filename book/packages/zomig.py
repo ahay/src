@@ -186,6 +186,8 @@ def Awftwo(wfld,data,slow,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+# ------------------------------------------------------------
+
 # causal wavefields by wavefield extrapolation
 def Cwfone3(wfld,data,slow,par):
     Flow(wfld,[data,slow],

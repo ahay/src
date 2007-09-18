@@ -3,11 +3,16 @@ from rsfproj import *
 # ------------------------------------------------------------
 # lags to slant-stacks
 # ------------------------------------------------------------
-# input:  z-h-x        z-t-x
-# output: z-tan(a)-x   z-dt/dx-x
+# input:  z-h-x       OR z-t-x
+# output: z-tan(a)-x  OR z-dt/dx-x
+#def cig2ssk(np,op,dp):
+#    return '''
+#    slant adj=y np=%d p0=%g dp=%g verb=y
+#    ''' % (np,op,dp) 
+
 def cig2ssk(np,op,dp):
     return '''
-    slant adj=y np=%d p0=%g dp=%g verb=y
+    radon adj=y np=%d p0=%g dp=%g verb=y
     ''' % (np,op,dp) 
 
 # ------------------------------------------------------------
@@ -53,7 +58,7 @@ def ciggrey(custom,par):
     grey labelrot=n wantaxis=y title=""
     pclip=100 gainpanel=a
     min1=%g max1=%g label1=%s unit1=%s
-    screenratio=3
+    screenratio=2
     %s
     ''' % (
         par['zmin'],par['zmax'],par['lz'],par['uz'],

@@ -13,6 +13,7 @@ paradd
 wigner wdf
 srmig3 srmod3 zomig3
 xlagtoang2d tlagtoang2d
+stack3
 '''
 
 try:  # distributed version

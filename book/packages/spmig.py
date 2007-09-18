@@ -2,6 +2,7 @@ from rsfproj import *
 import zomig,cluster
 import os
 
+# ------------------------------------------------------------
 def param(par):
     p  = ' '
     p = p + ' readwrite=y'
@@ -24,6 +25,7 @@ def param(par):
     p = p + ' '
     return p
 
+# ------------------------------------------------------------
 # create surface wavefield files
 def wflds(swfl,rwfl,wave,shot,par):
     #
@@ -76,6 +78,7 @@ def wflds(swfl,rwfl,wave,shot,par):
          put label5=
          ''')
 
+# ------------------------------------------------------------
 # datum surface wavefields
 def datum(swf1,rwf1,slow,swf0,rwf0,par):
     
@@ -87,6 +90,7 @@ def datum3(swf1,rwf1,slow,swf0,rwf0,par):
     zomig.Cdtone3(swf1,swf0,slow,par) #      causal
     zomig.Adtone3(rwf1,rwf0,slow,par) # anti-causal
 
+# ------------------------------------------------------------
 # migrate
 def image(imag,slow,swlf,rwfl,par):
     Flow(imag,[swlf,slow,rwfl],
