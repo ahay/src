@@ -25,11 +25,6 @@
 #include <omp.h>
 #endif
 
-/* 
- * input:  uu(n1,n2,n3)
- * output: ww(n1,n3) or ww(n2,n3)
- */
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -44,6 +39,8 @@ int main(int argc, char* argv[])
     float ***us=NULL;
     float ***ur=NULL;
     float  **ii=NULL;
+
+    float scale;
 
     int ompnth=0;
 #ifdef _OPENMP
@@ -90,12 +87,14 @@ int main(int argc, char* argv[])
 	    sf_oaxa(Fi,a2,2);
 	    sf_oaxa(Fi,aa,3);
 	    ii=sf_floatalloc2(sf_n(a1),sf_n(a2)); 
+	    scale = 1./sf_n(a3);
 	    break;
 	case 2:
 	    sf_oaxa(Fi,a1,1);
 	    sf_oaxa(Fi,a3,2);
 	    sf_oaxa(Fi,aa,3);
 	    ii=sf_floatalloc2(sf_n(a1),nbuf); 
+	    scale = 1./sf_n(a2);
 	    break;
 	case 1:
 	default:
@@ -103,6 +102,7 @@ int main(int argc, char* argv[])
 	    sf_oaxa(Fi,a3,2);
 	    sf_oaxa(Fi,aa,3);
 	    ii=sf_floatalloc2(sf_n(a2),nbuf); 
+	    scale = 1./sf_n(a1);
 	    break;
     }
 
@@ -122,7 +122,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,us,ur)
+    shared( nbuf,a1,a2,ii,us,ur,scale)
 #endif
 		for(ibuf=0; ibuf<nbuf; ibuf++) {
 		    for    (i2=0; i2<sf_n(a2); i2++) {
@@ -138,7 +138,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,us,ur)
+    shared( nbuf,a1,a2,ii,us,ur,scale)
 #endif
 		for(ibuf=0; ibuf<nbuf; ibuf++) {
 		    for(i1=0; i1<sf_n(a1); i1++) {
@@ -152,6 +152,11 @@ int main(int argc, char* argv[])
 		    }
 		} // ibuf
 				
+		for    (i2=0; i2<sf_n(a2); i2++) {
+		    for(i1=0; i1<sf_n(a1); i1++) {
+			ii[ibuf][i1] *=scale;
+		    }
+		}
 		sf_floatwrite(ii[0],sf_n(a1)*nbuf,Fi);
 		break;
 		
@@ -160,7 +165,7 @@ int main(int argc, char* argv[])
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,ii,us,ur)
+    shared( nbuf,a1,a2,ii,us,ur,scale)
 #endif
 		for(ibuf=0; ibuf<nbuf; ibuf++) {
 		    for(i2=0; i2<sf_n(a2); i2++) {
@@ -174,6 +179,11 @@ int main(int argc, char* argv[])
 		    }
 		} // ibuf
 
+		for    (i2=0; i2<sf_n(a2); i2++) {
+		    for(i1=0; i1<sf_n(a1); i1++) {
+			ii[ibuf][i2] *=scale;
+		    }
+		}
 		sf_floatwrite(ii[0],sf_n(a2)*nbuf,Fi);   
 		break;
 		
@@ -183,6 +193,11 @@ int main(int argc, char* argv[])
     if(verb) fprintf(stderr,"\n");    
     
     if(axis==3) {
+	for    (i2=0; i2<sf_n(a2); i2++) {
+	    for(i1=0; i1<sf_n(a1); i1++) {
+		ii[i2][i1] *=scale;
+	    }
+	}
 	sf_floatwrite(ii[0],sf_n(a2)*sf_n(a1),Fi);
     }
     

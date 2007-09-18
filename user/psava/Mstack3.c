@@ -25,11 +25,6 @@
 #include <omp.h>
 #endif
 
-/* 
- * input:  uu(n1,n2,n3)
- * output: ww(n1,n3) or ww(n2,n3)
- */
-
 int main(int argc, char* argv[])
 {
     bool verb;
@@ -78,6 +73,7 @@ int main(int argc, char* argv[])
     a1=sf_iaxa(Fi,1); if(verb) sf_raxa(a1);
     a2=sf_iaxa(Fi,2); if(verb) sf_raxa(a2);
     a3=sf_iaxa(Fi,3); if(verb) sf_raxa(a3);
+
     aa=sf_maxa(1,0,1); 
     sf_setlabel(aa,""); 
     sf_setunit (aa,""); 
