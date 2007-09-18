@@ -1,4 +1,4 @@
-/* OpenMP stack on axis 1 or 2 */
+/* OpenMP stack on axis 1,2 or 3 */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
@@ -126,110 +126,154 @@ int main(int argc, char* argv[])
 
 	switch(axis) {
 	    case 3:
-		
-		for(ibuf=0; ibuf<nbuf; ibuf++) {
-		    for    (i2=0; i2<sf_n(a2); i2++) {
-			for(i1=0; i1<sf_n(a1); i1++) {
-			    stk[i2][i1] += dat[ibuf][i2][i1];
-			    if(0.0 != dat[ibuf][i2][i1]) fld[i2][i1]++;
-			}
-		    }
-		}
-		
-		break;
-		
-	    case 2:
+		if(norm) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,stk,fld,dat,norm)
+    shared( nbuf,a1,a2,stk,fld,dat)
 #endif
-		for(ibuf=0; ibuf<nbuf; ibuf++) {
-		    for(i1=0; i1<sf_n(a1); i1++) {
-			stk[ibuf][i1]=0;
-		    }
-		    
-		    for    (i2=0; i2<sf_n(a2); i2++) {
-			for(i1=0; i1<sf_n(a1); i1++) {
-			    stk[ibuf][i1] += dat[ibuf][i2][i1];
-			}
-		    }
-		    
-		    if(norm) {
-			for(i1=0; i1<sf_n(a1); i1++) {
-			    fld[ibuf][i1]=0;
-			}
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[i2][i1] += dat[ibuf][i2][i1];
+				if(0.0 != dat[ibuf][i2][i1]) fld[i2][i1]++;
+			    }
+			}
+		    }
+		} else {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,stk,dat)
+#endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
+			for    (i2=0; i2<sf_n(a2); i2++) {
+			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[i2][i1] += dat[ibuf][i2][i1];
+			    }
+			}
+		    }
+		}
+		break;
+		
+	    case 2:
+		if(norm) {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,stk,fld,dat)
+#endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
+			for(i1=0; i1<sf_n(a1); i1++) {
+			    stk[ibuf][i1]=0;
+			    fld[ibuf][i1]=0;
+			}
+			
+			for    (i2=0; i2<sf_n(a2); i2++) {
+			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[ibuf][i1] += dat[ibuf][i2][i1];
 				if(0.0 != dat[ibuf][i2][i1]) fld[ibuf][i1]++;
 			    }
 			}
+			
 			for(i1=0; i1<sf_n(a1); i1++) {
 			    stk[ibuf][i1] /= fld[ibuf][i1];
 			}
-		    }
+			
+		    } // ibuf
 		    
-		} // ibuf
-		
+		} else {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,stk,dat)
+#endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
+			for(i1=0; i1<sf_n(a1); i1++) {
+			    stk[ibuf][i1]=0;
+			}
+			
+			for    (i2=0; i2<sf_n(a2); i2++) {
+			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[ibuf][i1] += dat[ibuf][i2][i1];
+			    }
+			}
+		    } // ibuf
+
+		}		
 		sf_floatwrite(stk[0],sf_n(a1)*nbuf,Fo);
 		break;
 		
 	    case 1:
 	    default:		
+
+		if(norm) {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \
     private(ibuf,i1,i2)			   \
-    shared( nbuf,a1,a2,stk,fld,dat,norm)
+    shared( nbuf,a1,a2,stk,fld,dat)
 #endif
-		for(ibuf=0; ibuf<nbuf; ibuf++) {
-		    for(i2=0; i2<sf_n(a2); i2++) {
-			stk[ibuf][i2]=0;
-		    }
-		    
-		    for    (i2=0; i2<sf_n(a2); i2++) {
-			for(i1=0; i1<sf_n(a1); i1++) {
-			    stk[ibuf][i2] += dat[ibuf][i2][i1];
-			}
-		    }
-		    
-		    if(norm) {
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
 			for(i2=0; i2<sf_n(a2); i2++) {
+			    stk[ibuf][i2]=0;
 			    fld[ibuf][i2]=0;
 			}
+			
 			for    (i2=0; i2<sf_n(a2); i2++) {
 			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[ibuf][i2] += dat[ibuf][i2][i1];
 				if(0.0 != dat[ibuf][i2][i1]) fld[ibuf][i2]++;
 			    }
 			}
+			
 			for(i2=0; i2<sf_n(a2); i2++) {
 			    stk[ibuf][i2] /= fld[ibuf][i2];
 			}
+			
+		    } // ibuf
+		} else {
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,stk,dat)
+#endif
+		    for(ibuf=0; ibuf<nbuf; ibuf++) {
+			for(i2=0; i2<sf_n(a2); i2++) {
+			    stk[ibuf][i2]=0;
+			}
+			
+			for    (i2=0; i2<sf_n(a2); i2++) {
+			    for(i1=0; i1<sf_n(a1); i1++) {
+				stk[ibuf][i2] += dat[ibuf][i2][i1];
+			    }
+			}
 		    }
-		    
-		} // ibuf
-		
+		}
 		sf_floatwrite(stk[0],sf_n(a2)*nbuf,Fo);   
 		break;
-	}
-	
-    } /* n3 */
+		
+	} /* n3 */
+
+    }
     if(verb) fprintf(stderr,"\n");    
     
     if(axis==3) {
-	for    (i2=0; i2<sf_n(a2); i2++) {
-	    for(i1=0; i1<sf_n(a1); i1++) {
-		stk[i2][i1] /= fld[i2][i1];
+	if(norm) {
+	    for    (i2=0; i2<sf_n(a2); i2++) {
+		for(i1=0; i1<sf_n(a1); i1++) {
+		    stk[i2][i1] /= fld[i2][i1];
+		}
 	    }
 	}
 	
 	sf_floatwrite(stk[0],sf_n(a2)*sf_n(a1),Fo);
     }
-
+    
     /*------------------------------------------------------------*/
     ;            free(*stk); free(stk);
     ;            free(*fld); free(fld);
     free(**dat); free(*dat); free(dat);
     /*------------------------------------------------------------*/
-
+    
     exit (0);
 }

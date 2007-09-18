@@ -1,6 +1,7 @@
-/* Cross-correlation of time series (zero-lag output) */
+/* OpenMP time-domain cross-correlation on axes 1,2,3 */
+
 /*
-  Copyright (C) 2006 Colorado School of Mines
+  Copyright (C) 2007 Colorado School of Mines
   
   This program is free software; you can redistribute it and/or modify
   it under the terms of the GNU General Public License as published by
@@ -16,89 +17,180 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
+
+#include <math.h>
 #include <rsf.h>
 
 #ifdef _OPENMP
 #include <omp.h>
 #endif
 
+/* 
+ * input:  uu(n1,n2,n3)
+ * output: ww(n1,n3) or ww(n2,n3)
+ */
+
 int main(int argc, char* argv[])
 {
     bool verb;
+    int  axis;
 
-    sf_file Fi,Fs,Fr;      /* I/O files */
-    sf_axis ac,a1,a2,aa;   /* cube axes */
+    sf_file Fs,Fr,Fi;    /* I/O files */
+    sf_axis a1,a2,a3,aa; /* cube axes */
+    int     i1,i2,i3;
 
-    int     nc,nn, nbuf;
-    int        in, ibuf;
+    int nbuf,ibuf;
 
-    float *ii=NULL, **us=NULL,**ur=NULL; /* arrays */
+    float ***us=NULL;
+    float ***ur=NULL;
+    float  **ii=NULL;
 
-    int ompchunk; 
-    int axis;
-/*------------------------------------------------------------*/
+    int ompnth=0;
+#ifdef _OPENMP
+    int ompath=1; 
+#endif
 
+    /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
 
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
-    if(! sf_getbool("verb",&verb)) verb=false;         /* verbosity flag */
-    if(! sf_getint("axis",&axis)) axis=2;              /* cross-correlation axis */
-    if(! sf_getint("nbuf",&nbuf)) nbuf=1;              /* buffer size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;
+    /* OpenMP available threads */
+    
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
+    
+    if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
+    if(! sf_getint ("axis",&axis)) axis=2;     /* stack axis */
+    if(! sf_getint ("nbuf",&nbuf)) nbuf=1;     /* buffer size */
 
     Fs = sf_input ("in" );
     Fr = sf_input ("uu" );
     Fi = sf_output("out");
 
-    aa=sf_maxa(1,0,1); 
-
     /* read axes */
-    if (axis==3) {
-	a1=sf_iaxa(Fs,1); sf_setlabel(a1,"a1"); if(verb) sf_raxa(a1);
-	a2=sf_iaxa(Fs,2); sf_setlabel(a2,"a2"); if(verb) sf_raxa(a2);
-	ac=sf_iaxa(Fs,3); sf_setlabel(ac,"ac"); if(verb) sf_raxa(ac);
-	sf_oaxa(Fi,aa,3);
+    a1=sf_iaxa(Fs,1); if(verb) sf_raxa(a1);
+    a2=sf_iaxa(Fs,2); if(verb) sf_raxa(a2);
+    a3=sf_iaxa(Fs,3); if(verb) sf_raxa(a3);
 
-	nn = sf_n(a1)*sf_n(a2);
-    } else {
-	a1=sf_iaxa(Fs,1); sf_setlabel(a1,"a1"); if(verb) sf_raxa(a1);
-	ac=sf_iaxa(Fs,2); sf_setlabel(ac,"ac"); if(verb) sf_raxa(ac);
-	sf_oaxa(Fi,aa,2);
+    aa=sf_maxa(1,0,1); 
+    sf_setlabel(aa,""); 
+    sf_setunit (aa,""); 
 
-	nn = sf_n(a1);
+    nbuf = SF_MIN(nbuf,sf_n(a3));
+
+    switch(axis) {
+	case 3:
+	    sf_oaxa(Fi,a1,1);
+	    sf_oaxa(Fi,a2,2);
+	    sf_oaxa(Fi,aa,3);
+	    ii=sf_floatalloc2(sf_n(a1),sf_n(a2)); 
+	    break;
+	case 2:
+	    sf_oaxa(Fi,a1,1);
+	    sf_oaxa(Fi,a3,2);
+	    sf_oaxa(Fi,aa,3);
+	    ii=sf_floatalloc2(sf_n(a1),nbuf); 
+	    break;
+	case 1:
+	default:
+	    sf_oaxa(Fi,a2,1);
+	    sf_oaxa(Fi,a3,2);
+	    sf_oaxa(Fi,aa,3);
+	    ii=sf_floatalloc2(sf_n(a2),nbuf); 
+	    break;
     }
-    nc = sf_n(ac);
 
-    nbuf = SF_MIN(nbuf,nc);
+    us = sf_floatalloc3(sf_n(a1),sf_n(a2),nbuf);
+    ur = sf_floatalloc3(sf_n(a1),sf_n(a2),nbuf);
 
-    /* allocate work arrays */
-    us=sf_floatalloc2(nn,nbuf);
-    ur=sf_floatalloc2(nn,nbuf);
-    ii=sf_floatalloc (nn);
+    i3=sf_n(a3);
+    for (; i3 > 0; i3 -= nbuf) {
+	if (nbuf > i3) nbuf=i3;
+	if(verb) sf_warning("nsiz=%ld nbuf=%ld",i3,nbuf);
 
-    /* init output */
-    for (in=0; in<nn; in++) {
-	ii[in]=0;
+	sf_floatread(us[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fs);
+	sf_floatread(ur[0][0],sf_n(a1)*sf_n(a2)*nbuf,Fr);
+
+	switch(axis) {
+	    case 3:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,ii,us,ur)
+#endif
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for    (i2=0; i2<sf_n(a2); i2++) {
+			for(i1=0; i1<sf_n(a1); i1++) {
+			    ii[i2][i1] += us[ibuf][i2][i1]*ur[ibuf][i2][i1];
+			}
+		    }
+		} // ibuf
+		
+		break;
+		
+	    case 2:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,ii,us,ur)
+#endif
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for(i1=0; i1<sf_n(a1); i1++) {
+			ii[ibuf][i1]=0;
+		    }
+		    
+		    for    (i2=0; i2<sf_n(a2); i2++) {
+			for(i1=0; i1<sf_n(a1); i1++) {
+			    ii[ibuf][i1] += us[ibuf][i2][i1]*ur[ibuf][i2][i1];
+			}
+		    }
+		} // ibuf
+				
+		sf_floatwrite(ii[0],sf_n(a1)*nbuf,Fi);
+		break;
+		
+	    case 1:
+	    default:
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic) \
+    private(ibuf,i1,i2)			   \
+    shared( nbuf,a1,a2,ii,us,ur)
+#endif
+		for(ibuf=0; ibuf<nbuf; ibuf++) {
+		    for(i2=0; i2<sf_n(a2); i2++) {
+			ii[ibuf][i2]=0;
+		    }
+		    
+		    for    (i2=0; i2<sf_n(a2); i2++) {
+			for(i1=0; i1<sf_n(a1); i1++) {
+			    ii[ibuf][i2] += us[ibuf][i2][i1]*ur[ibuf][i2][i1];
+			}
+		    }
+		} // ibuf
+
+		sf_floatwrite(ii[0],sf_n(a2)*nbuf,Fi);   
+		break;
+		
+	} /* n3 */
+
+    }
+    if(verb) fprintf(stderr,"\n");    
+    
+    if(axis==3) {
+	sf_floatwrite(ii[0],sf_n(a2)*sf_n(a1),Fi);
     }
     
-    for (; nc > 0; nc -= nbuf) {
-	if (nbuf > nc) nbuf=nc;
-	if(verb) sf_warning("nsiz=%ld nbuf=%ld",nc,nbuf);
-
-	sf_floatread(us[0],nn*nbuf,Fs);
-	sf_floatread(ur[0],nn*nbuf,Fr);
-
-#ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ibuf,in) shared(nn,ii,us,ur)
-#endif
-	for(ibuf=0; ibuf<nbuf; ibuf++) {
-	    for(in=0; in<nn; in++) {
-		ii[in] += us[ibuf][in] * ur[ibuf][in];
-	    }
-	}
-    }
-
-    sf_floatwrite(ii,nn,Fi);
-
+    /*------------------------------------------------------------*/
+    ;           free(*ii); free(ii);
+    free(**us); free(*us); free(us);
+    free(**ur); free(*ur); free(ur);
+    /*------------------------------------------------------------*/
+    
     exit (0);
 }
