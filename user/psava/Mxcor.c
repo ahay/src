@@ -150,10 +150,10 @@ int main(int argc, char* argv[])
 			    ii[ibuf][i1] += us[ibuf][i2][i1]*ur[ibuf][i2][i1];
 			}
 		    }
+		    
 		    for(i1=0; i1<sf_n(a1); i1++) {
 			ii[ibuf][i1] *= scale;
 		    }
-
 		} // ibuf
 				
 		sf_floatwrite(ii[0],sf_n(a1)*nbuf,Fi);
@@ -176,6 +176,7 @@ int main(int argc, char* argv[])
 			    ii[ibuf][i2] += us[ibuf][i2][i1]*ur[ibuf][i2][i1];
 			}
 		    }
+
 		    for(i2=0; i2<sf_n(a2); i2++) {
 			ii[ibuf][i2] *= scale;
 		    }
