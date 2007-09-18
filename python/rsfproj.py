@@ -210,6 +210,9 @@ combine ={
     vppen + " vpstyle=n $SOURCES"
     }
 
+# Environmental variables to pass to SCons
+keepenv = ('DISPLAY','VPLOTFONTDIR','HOME','LD_LIBRARY_PATH','RSFMEMSIZE')
+
 #############################################################################
 class Project(Environment):
     def __init__(self,**kw):
@@ -246,17 +249,14 @@ class Project(Environment):
         self.figdir = re.sub('.*\/((?:[^\/]+)\/(?:[^\/]+)\/(?:[^\/]+))$',
                              figdir+'/\\1',cwd)
         self.progsuffix = self['PROGSUFFIX']
-        self.Append(ENV={'DATAPATH':self.path,
-                         'TMPDATAPATH': tmpdatapath,
+        for env in keepenv:
+            self.Append(ENV={env:os.environ.get(env)})
+        self.Append(ENV={'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
                                         os.path.join(os.environ.get('HOME'),
                                                      '.Xauthority')),
-                         'DISPLAY': os.environ.get('DISPLAY'),
-                         'VPLOTFONTDIR': os.environ.get('VPLOTFONTDIR'),
-                         'HOME': os.environ.get('HOME'),
-                         'LD_LIBRARY_PATH': os.environ.get('LD_LIBRARY_PATH'),
                          'RSFROOT':top},
                     BUILDERS={'View':View,
                               'Print':Print,
