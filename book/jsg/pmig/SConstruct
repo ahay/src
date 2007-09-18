@@ -4,15 +4,15 @@ os.environ['PSTEXPENOPTS'] = 'color=y force=n fat=1 fatmult=1.5'
 
 from rsftex import *
 
-Paper('seg2005',lclass='segabs')
+#Paper('seg2005',lclass='segabs')
 
-Paper('gilles')
+#Paper('gilles')
 
-Paper('tury')
+#Paper('tury')
 
-Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
+#Command2('paper-revised.tex','paper.tex','cp $SOURCE $TARGET')
 
-Paper('paper-revised',options='manuscript,revised')
+#Paper('paper-revised',options='manuscript,revised')
 
-End(options='manuscript')
+End() #options='manuscript')
 
