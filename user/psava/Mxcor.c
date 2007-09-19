@@ -42,8 +42,8 @@ int main(int argc, char* argv[])
 
     float scale;
 
-    int ompnth=0;
 #ifdef _OPENMP
+    int ompnth=0;
     int ompath=1; 
 #endif
 

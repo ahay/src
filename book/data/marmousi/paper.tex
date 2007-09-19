@@ -125,9 +125,9 @@ in Figure \ref{fig:vel}.
 \plot{vel}{width=\textwidth}{FD model geometry as performed on the Marmousi velocity model.  The \emph{X} represents the shot while the \emph{*} symbols represent receivers.}
 
 Firing the shot results the propagation of a wavefield which can be seen in the movie \emph{wfl.vpl} that is generated.  Typing
-Command \ref{eq:viewMov} within the \emph{marmousi/fdmod/Fig} directory displays the wavefield movie.
+Command \ref{eq:viewMov} within the \emph{marmousi/fdmod} directory displays the wavefield movie.
 
-\begin{equation}\label{eq:viewMov} \texttt{bash-3.1\$\ xtpen\ wfl.vpl} \end{equation}
+\begin{equation}\label{eq:viewMov} \texttt{bash-3.1\$\ scons\ wfl.vpl} \end{equation}
 
 Four frames from this movie are presented in Figure \ref{fig:time20,time40,time60,time80}  illustrating the
 propagation of the wavefield in the model.

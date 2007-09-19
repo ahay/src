@@ -168,10 +168,10 @@ fdmod.amodel('do','wo','wav','velo','dens','ss','oo','free=n',par)
 
 # ------------------------------------------------------------
 
-Result('wo',
-       'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
-       + rwezo.cgrey('pclip=99 gainpanel=a',par))
-Result('do','window j2=4 | transp |' + rwezo.dgrey('',par))
+Plot('wo',
+     'window j3=20 min1=%(oz)g n1=%(nz)d min2=%(ox)g n2=%(nx)d |' % par
+     + rwezo.cgrey('pclip=99 gainpanel=a',par),view=1)
+Plot('do','window j2=4 | transp |' + rwezo.dgrey('',par),view=1)
 
 for j in range(20,300,20):
     par['j'] = j
@@ -185,7 +185,7 @@ for j in range(20,300,20):
     Result('wo'+str(j/20),['wo'+str(j/20),'cos1','ss'],'Overlay')
 
 Flow(  'dd','do','window f2=%(kt)d | put o2=0 d2=0.001 | window j2=4' % par)
-Result('dd','transp |' + rwezo.dgrey('',par))
+Plot('dd','transp |' + rwezo.dgrey('',par),view=1)
 
 # ------------------------------------------------------------
 
@@ -299,7 +299,7 @@ for i in ('1','2'):
 
     Flow(     'zoomcos'+i,'cos'+i,'window')
     rwezo.cos('zoomcos'+i,5,25,'',zoompar)
-    Result(   'zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
+#    Result(   'zoomcos'+i,  ['zoomvel','zoomcos'+i],'Overlay')
     Plot('zoomvel-ovl'+i,['zoomvel','zoomcos'+i],'Overlay')
 
     for j in (['SSF','FFD','PSC',

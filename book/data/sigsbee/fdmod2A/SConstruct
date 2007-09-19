@@ -80,7 +80,7 @@ Flow('den','vel','math output=1')
 # finite-differences modeling
 fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
-Result('wfl',fdmod.wgrey('pclip=99 title=Wavefield\ Movie labelsz=4 titlesz=6 wheretitle=t',par))
+Plot('wfl',fdmod.wgrey('pclip=99 title=Wavefield\ Movie labelsz=4 titlesz=6 wheretitle=t',par),view=1)
 
 times=['1','2','3','4']
 cntr=0

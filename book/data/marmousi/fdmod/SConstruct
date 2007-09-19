@@ -77,7 +77,7 @@ Flow('den','vel','math output=1')
 # finite-differences modeling
 fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
-Result('wfl',fdmod.wgrey('pclip=99',par))
+Plot('wfl',fdmod.wgrey('pclip=99',par),view=1)
 Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offset 
             wheretitle=t titlesz=6 labelsz=4''',par))
 

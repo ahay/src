@@ -151,8 +151,8 @@ def frq(frqRC,frqCC,datCC,cos,par):
          c2r rays=${SOURCES[1]} adj=n linear=n nsz=%(nsz)d nsx=%(nsx)d |
          put label1=g label2=t label3=w
          ''' % par)
-    Result(par['prefix']+frqRC,frqRC,'window j3=10 | real | transp |' % par
-           + rgrey('title= gainpanel=a',par))
+    Plot(par['prefix']+frqRC,frqRC,'window j3=10 | real | transp |' % par
+         + rgrey('title= gainpanel=a',par),view=1)
 
 # run migration
 def mig(migCC,migRC,frqRC,abmRC,abrRC,cos,par):
