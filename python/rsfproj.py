@@ -251,7 +251,8 @@ class Project(Environment):
         self.progsuffix = self['PROGSUFFIX']
         for env in keepenv:
             self.Append(ENV={env:os.environ.get(env)})
-        self.Append(ENV={'TMPDATAPATH': tmpdatapath,
+        self.Append(ENV={'DATAPATH':self.path,
+                         'TMPDATAPATH': tmpdatapath,
                          'PYTHONPATH': os.environ.get('PYTHONPATH',libdir), 
                          'XAUTHORITY':
                          os.environ.get('XAUTHORITY',
