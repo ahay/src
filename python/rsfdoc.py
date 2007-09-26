@@ -25,7 +25,7 @@ docprogs = string.split('''
 add attr cat cmplx conjgrad cp cut dd disfil dottest get headerattr
 headercut headermath headersort headerwindow in interleave mask math
 pad put real reverse rm rotate rtoc scale segyread segywrite spike
-spray stack transp window
+spray stack stretch transp window
 ''')
 
 def subdirs():
