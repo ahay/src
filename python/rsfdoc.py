@@ -421,7 +421,15 @@ stringpar = None
 synopsis = None
 
 def link(name):
-    return '<a href="%s.html" title="%s">%s</a>' % (progs[name].name, progs[name].desc, name)
+    # for improved readability, 'sf' program name prefix will not be blue and underlined
+    if name[0:2] == 'sf':
+        prefix = '<font color="#778899">sf</font>'
+        inlink = name[2:]
+    else:
+        prefix = ''
+        inlink = name
+    return '%s<a href="%s.html" title="%s">%s</a>' %\
+    (prefix, progs[name].name, progs[name].desc, inlink)
 
 def html(dir):
     if not os.path.isdir(dir):
