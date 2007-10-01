@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
 	egpow = false;
 	if (!sf_getfloat("gpow",&gpow)) {
 	    gpow=1.;
-	    /* raise data to gpow power for display */
+	    /*< gpow=1 raise data to gpow power for display >*/
 	} else if (gpow <= 0.) {
 	    gpow=0.;
 	    egpow = true;
