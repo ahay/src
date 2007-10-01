@@ -158,7 +158,7 @@ int main(int argc, char* argv[])
 	if (!sf_getbool("allpos",&allpos)) allpos=false;
 	/* if y, assume positive data */
 	if (!sf_getfloat("bias",&pbias)) pbias=0.;
-	/* subtract bias from data */
+	/* value mapped to the center of the color table */
 	if (!sf_getbool("polarity",&polarity)) polarity=false;
 	/* if y, reverse polarity (white is high by default) */
 	if (!sf_getbool("verb",&verb)) verb=false;
