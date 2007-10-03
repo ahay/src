@@ -31,9 +31,12 @@ struct Upd {
 };
 
 static int update (float value, int i);
+static int update2 (float value, int i);
 static float qsolve(int i); 
+static float qsolve2(int i); 
 static void stencil (float t, struct Upd *x); 
 static bool updaten (int m, float* res, struct Upd *v[]);
+static bool updaten2 (int m, float* res, struct Upd *v[]);
 static void grid (int *i, const int *n);
 
 static int *in, *n, s[3], order;
@@ -76,6 +79,26 @@ int  neighbours(int i)
     return npoints;
 }
 
+int  neighbours2(int i) 
+/*< Update neighbors of gridpoint i, return number of updated points >*/
+{
+    int j, k, ix, npoints;
+    
+    npoints = 0;
+    for (j=0; j < 3; j++) {
+	ix = (i/s[j])%n[j];
+	if (ix+1 <= n[j]-1) {
+	    k = i+s[j]; 
+	    if (in[k] != SF_IN) npoints += update2(qsolve2(k),k);
+	}
+	if (ix-1 >= 0  ) {
+	    k = i-s[j];
+	    if (in[k] != SF_IN) npoints += update2(qsolve2(k),k);
+	}
+    }
+    return npoints;
+}
+
 static int update (float value, int i)
 /* update gridpoint i with new value */
 {
@@ -84,6 +107,22 @@ static int update (float value, int i)
 	if (in[i] == SF_OUT) { 
 	    in[i] = SF_FRONT;      
 	    sf_pqueue_insert (ttime+i);
+	    return 1;
+	}
+/*	sf_pqueue_update (&(ttime+i)); */
+    }
+    
+    return 0;
+}
+
+static int update2 (float value, int i)
+/* update gridpoint i with new value */
+{
+    if (value > ttime[i]) {
+	ttime[i]   = value;
+	if (in[i] == SF_OUT) { 
+	    in[i] = SF_FRONT;      
+	    sf_pqueue_insert2 (ttime+i);
 	    return 1;
 	}
 /*	sf_pqueue_update (&(ttime+i)); */
@@ -173,6 +212,87 @@ static float qsolve(int i)
     return big_value;
 }
 
+static float qsolve2(int i)
+/* find new traveltime at gridpoint i */
+{
+    int j, k, ix;
+    float a, b, t, res;
+    struct Upd *v[3], x[3], *xj;
+
+    for (j=0; j<3; j++) {
+	ix = (i/s[j])%n[j];
+	
+	if (ix > 0) { 
+	    k = i-s[j];
+	    a = ttime[k];
+	} else {
+	    a = 0.;
+	}
+
+	if (ix < n[j]-1) {
+	    k = i+s[j];
+	    b = ttime[k];
+	} else {
+	    b = 0.;
+	}
+
+	xj = x+j;
+	xj->delta = rdx[j];
+
+	if (a > b) {
+	    xj->stencil = xj->value = a;
+	} else {
+	    xj->stencil = xj->value = b;
+	}
+
+	if (order > 1) {
+	    if (a > b  && ix-2 >= 0) { 
+		k = i-2*s[j];
+		if (in[k] != SF_OUT && a <= (t=ttime[k]))
+		    stencil(t,xj);
+	    }
+	    if (a < b && ix+2 <= n[j]-1) { 
+		k = i+2*s[j];
+		if (in[k] != SF_OUT && b <= (t=ttime[k]))
+		    stencil(t,xj);
+	    }
+	}
+    }
+
+    if (x[0].value >= x[1].value) {
+	if (x[1].value >= x[2].value) {
+	    v[0] = x; v[1] = x+1; v[2] = x+2;
+	} else if (x[2].value >= x[0].value) {
+	    v[0] = x+2; v[1] = x; v[2] = x+1;
+	} else {
+	    v[0] = x; v[1] = x+2; v[2] = x+1;
+	}
+    } else {
+	if (x[0].value >= x[2].value) {
+	    v[0] = x+1; v[1] = x; v[2] = x+2;
+	} else if (x[2].value >= x[1].value) {
+	    v[0] = x+2; v[1] = x+1; v[2] = x;
+	} else {
+	    v[0] = x+1; v[1] = x+2; v[2] = x;
+	}
+    }
+    
+    v1=vv[i];
+
+    if(v[2]->value > 0) {   /* ALL THREE DIRECTIONS CONTRIBUTE */
+	if (updaten2(3, &res, v) || 
+	    updaten2(2, &res, v) || 
+	    updaten2(1, &res, v)) return res;
+    } else if(v[1]->value > 0) { /* TWO DIRECTIONS CONTRIBUTE */
+	if (updaten2(2, &res, v) || 
+	    updaten2(1, &res, v)) return res;
+    } else if(v[0]->value > 0) { /* ONE DIRECTION CONTRIBUTES */
+	if (updaten2(1, &res, v)) return res;
+    }
+	
+    return 0.;
+}
+
 static void stencil (float t, struct Upd *x)
 /* second-order stencil */
 {
@@ -199,8 +319,34 @@ static bool updaten (int m, float* res, struct Upd *v[])
 
     if (discr < 0.) return false;
     
-    t = b +sqrt(discr);
+    t = b + sqrt(discr);
     if (t <= v[m-1]->value) return false;
+
+    *res = t;
+    return true;
+}
+
+static bool updaten2 (int m, float* res, struct Upd *v[]) 
+/* updating */
+{
+    double a, b, c, discr, t;
+    int j;
+
+    a = b = c = 0.;
+
+    for (j=0; j<m; j++) {
+	a += v[j]->delta;
+	b += v[j]->stencil*v[j]->delta;
+	c += v[j]->stencil*v[j]->stencil*v[j]->delta;
+    }
+    b /= a;
+
+    discr=b*b+(v1-c)/a;
+
+    if (discr < 0.) return false;
+    
+    t = b - sqrt(discr);
+    if (t >= v[m-1]->value) return false;
 
     *res = t;
     return true;
@@ -361,6 +507,39 @@ int nearsource(float* xs   /* source location [3] */,
     
     return npoints;
 }
+
+int surface(float* vv1  /* slowness [n[0]*n[1]*n[2]] */,
+	    float* tt0  /* surface traveltime [n[1]*n[2]] */)
+/*< initialize the source >*/
+{
+    int npoints, i, j, ix, iy;
+    
+    /* initialize everywhere */
+    for (i=0; i < n[0]*n[1]*n[2]; i++) {
+	in[i] = SF_OUT;
+	ttime[i] = 0.;
+    }
+
+    vv = vv1;
+
+    npoints = (n[0]-1)*n[1]*n[2];
+
+    for (ix=0; ix < n[2]; ix++) {
+	for (iy=0; iy < n[1]; iy++) {
+	    j = iy + n[1]*ix;
+	    i = j*n[0];
+
+	    ttime[i] = tt0[j];
+	    in[i] = SF_IN;
+
+	    sf_pqueue_insert2 (ttime+i);
+	}
+    }
+    
+    return npoints;
+}
+
+
 
 /* 	$Id$	 */
 
