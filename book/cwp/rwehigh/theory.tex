@@ -1,0 +1,159 @@
+\section{Extrapolation kernels}
+Extrapolation using \req{rwemain} implies that the coefficients
+defining the problem, $a$ and $b$, are not changing spatially. In this
+case, we can perform extrapolation using a simple phase-shift
+operation
+%
+\beq
+\UU_{\tt+\Delta\tt} = \UU_{\tt} e^{i \kt \Delta\tt} \;,
+\eeq
+%
+where $\UU_{\qt+\Delta\qt}$ and $\UU_{\qt}$ represent the acoustic
+wavefield at two successive extrapolation steps, and $\kt$ is the
+extrapolation wavenumber defined by \req{rwemain}.  \par For media
+with lateral variability of the coefficients $a$ and $b$, due to
+either velocity variation or focusing/defocusing of the coordinate
+system, we cannot use in extrapolation the wavenumber computed
+directly using \req{rwemain}. Like for the case of extrapolation in
+Cartesian coordinates, we need to approximate the wavenumber $\kt$
+using expansions relative to $a$ and $b$. Such approximations can be
+implemented in the space-domain, in the Fourier domain or in mixed
+space-Fourier domains.
+
+\subsection{Space-domain extrapolation}
+The space-domain finite-differences solution to \req{rwemain} is
+derived based on a square-root expansion as suggested by Francis Muir
+\cite[]{Claerbout.iei}:
+%
+\beq \label{eqn:rwexfd}
+\kt   \approx  \ww a + \ww \frac{    \nu \yys }
+                                {\mu-\ro \yys } \;,
+\eeq
+%
+where the coefficients $\mu$, $\nu$ and $\ro$ take the form derived in Appendix A:
+%
+\beqa
+\nu &=& - \co a \bas \;,
+\\
+\mu &=&   1          \;,
+\\
+\ro &=&   \ct   \bas \;. 
+\eeqa
+%
+In the special case of Cartesian coordinates, $a=s$ and $b=1$,
+\req{rwexfd} takes the familiar form
+%
+\beq
+\kt   \approx  \ww s - \ww \frac{    \frac{\co}{s}   \yys }
+                                {1  -\frac{\ct}{s^2} \yys } \;,
+\eeq
+%
+where the coefficients $\co$ and $\ct$ take different values for
+different orders of Muir's expansion: $(\co,\ct)=(0.50,0.00)$ for the
+$15^\circ$ equation, and $(\co,\ct)=(0.50,0.25)$ for the $45^\circ$
+equation, etc. For extrapolation in Riemannian coordinates, the
+meaning of $15^\circ$, $45^\circ$ etc is not defined. We use this
+terminology here to indicate orders of accuracy comparable to the ones
+defined in Cartesian coordinates.
+
+\subsection{Mixed-domain extrapolation}
+Mixed-domain solutions to the one-way wave equation consist of
+decompositions of the extrapolation wavenumber defined in
+\req{rwemain} in terms computed in the Fourier domain for a reference
+of the extrapolation medium, followed by a finite-differences
+correction applied in the space-domain. For \req{rwemain}, a generic
+mixed-domain solution has the form:
+%
+\beq \label{eqn:rwemixed}
+\kt \approx \kto + \ww \lp a-\ao \rp + 
+                   \ww \frac{    \nu \yys }
+                            {\mu-\ro \yys } \;,
+\eeq
+%
+where $\ao$ and $\bo$ are reference values for the medium
+characterized by the parameters $a$ and $b$, and the coefficients
+$\mu$, $\nu$ and $\ro$ take different forms according to the type of
+approximation. As for usual Cartesian coordinates, $\kto$ is applied
+in the Fourier domain, and the other two terms are applied in the
+space domain. If we limit the space-domain correction to the thin lens
+term, $\ww \lp a-\ao \rp$, we obtain the equivalent of the split-step
+Fourier (SSF) method \cite[]{GEO55-04-04100421} in Riemannian
+coordinates.
+%
+\par
+%
+Appendix A details the derivations for two types of expansions known
+by the names of pseudo-screen \cite[]{GEO64-05-15241534}, and Fourier
+finite-differences \cite[]{GEO59-12-18821893,GEO67-03-08720882}. Other
+extrapolation approximations are possible, but are not described here,
+for simplicity.
+
+\begin{itemize}
+\item {\bf Pseudo-screen method:}
+\par
+The coefficients for the pseudo-screen approximation to \req{rwemixed} are
+\beqa \label{eqn:rwepsc}
+\nu &=& \ao \lb \co \lp \frac{a}{\ao}-1 \rp - \lp \frac{b}{\bo}-1 \rp\rb \baos \;,
+\\
+\mu &=&   1 \;,
+\\
+\ro &=&3\ct\baos \;,
+\eeqa
+%
+where $\ao$ and $\bo$ are reference values for the medium
+characterized by parameters $a$ and $b$. In the special case of
+Cartesian coordinates, $a=s$ and $b=1$, \req{rwemixed} with
+coefficients \req{rwepsc} takes the familiar form
+%
+\beq
+\kt \approx \kto + \ww
+\lb 1+ \frac{    \frac{ \co}{s_0^2} \yys }
+            {1  -\frac{3\ct}{s_0^2} \yys } 
+\rb \lp s-s_0 \rp \;,
+\eeq
+%
+where the coefficients $\co$ and $\ct$ take different values for
+different orders of the finite-differences term:
+$(\co,\ct)=(0.50,0.00)$, $(\co,\ct)=(0.50,0.25)$, etc. When
+$(\co,\ct)=(0.00,0.00)$ we obtain the usual split-step Fourier
+equation \cite[]{GEO55-04-04100421}.
+
+\item {\bf Fourier finite-differences method:}
+\par
+%
+The coefficients for the Fourier finite-differences solution to \req{rwemixed} are
+%
+\beqa \label{eqn:rweffd}
+\nu &=& \hf\delta_1^2 \;,
+\\
+\mu &=&    \delta_1   \;,
+\\
+\ro &=& \qu\delta_2   \;,
+\eeqa
+where, by definition,
+\beqa
+\delta_1 &=& a\bas - \ao \baos \;,
+\\
+\delta_2 &=& a\baf - \ao \baof \;.
+\eeqa
+%
+$\ao$ and $\bo$ are reference values for the medium characterized by
+the parameters $a$ and $b$. In the special case of Cartesian
+coordinates, $a=s$ and $b=1$, \req{rwemixed} with coefficients
+\req{rweffd} takes the familiar form:
+%
+\beq
+\kt \approx \kto + \ww
+\lb 1+ \frac{          \frac{\co}{s s_0}   \yys }
+            {1-\ct \lp \frac{1}{s^2}   + 
+                       \frac{1}{s s_0} + 
+                       \frac{1}{s_0^2} \rp \yys } 
+\rb \lp s-s_0 \rp \;,
+\eeq
+%
+where the coefficients $\co$ and $\ct$ take different values for
+different orders of the finite-differences term:
+$(\co,\ct)=(0.50,0.00)$ for $15^\circ$, $(\co,\ct)=(0.50,0.25)$ for
+$45^\circ$, etc. When $\co=\ct=0.0$ we obtain the usual split-step
+Fourier equation \cite[]{GEO55-04-04100421}.
+\end{itemize}

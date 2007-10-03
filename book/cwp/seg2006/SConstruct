@@ -1,0 +1,62 @@
+from rsftex  import *
+
+#for slides in glob.glob('slides*.tex'):
+#    slidesname = os.path.splitext(slides)[0]
+#    Paper(slidesname,
+#          lclass='cwpslides',
+#          use='hyperref,amsmath',
+#          include=r'''
+#          \usetheme[]{}
+#          \usefonttheme{structurebold}
+#          \setbeamerfont{title}        {size=\huge}
+#          \setbeamerfont{section}      {size=\huge}
+#          \setbeamerfont{outline}      {size=\huge}
+#          \setbeamerfont{frametitle}   {size=\huge}
+#          \setbeamerfont{framesubtitle}{size=\large}
+#          \setbeamerfont{author}       {size=\Large,     series=\bfseries}
+#          \setbeamerfont{institute}    {size=\normalsize,series=\bfseries}
+#          \setbeamerfont{date}         {size=\normalsize,series=\bfseries}
+#          ''')
+#
+
+for proposal in glob.glob('proposal*.tex'):
+    name = os.path.splitext(proposal)[0]
+    Paper(name,lclass='article',options='12pt',
+          use='')
+
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          options='',
+          use='multicol,color,overpic')
+
+for report in glob.glob('report*.tex'):
+    name = os.path.splitext(report)[0]
+    Paper(name,lclass='cwpreport',use='hyperref,amsmath')
+
+for cover in glob.glob('cover*.tex'):
+    name = os.path.splitext(cover)[0]
+    Paper(name,lclass='geophysics',options='12pt',
+          use='')
+
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='manuscript',
+          use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem',
+          include=r'''
+          \linenumbers*[1]
+          ''')
+    
+# ------------------------------------------------------------
+for segabs in glob.glob('segabs*.tex'):
+    name = os.path.splitext(segabs)[0]
+    Paper(name,lclass='segold',use='times,amsmath,mathptm,natbib,graphicx,color')
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,lclass='eage',options='10pt',use='times,mathptm,natbib,color,amssymb,mathrsfs')
+# ------------------------------------------------------------
+
+End(lclass='geophysics',options='manuscript',use='times,mathptm,natbib,graphicx,palatino')

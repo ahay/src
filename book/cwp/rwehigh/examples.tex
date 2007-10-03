@@ -1,0 +1,167 @@
+\def\COSlabel{Velocity map and Riemannian coordinate system}
+\def\RWElabel{
+Migration impulse responses in Riemannian coordinates.
+(a) Extrapolation with the $15^\circ$ finite-differences equation.
+(c) Extrapolation with the $60^\circ$ finite-differences equation.
+(b) Extrapolation with the pseudo-screen (PSC) equation.
+(d) Extrapolation with the Fourier finite-differences (FFD) equation.
+}
+\def\CARlabel{
+Migration impulse responses in Riemannian coordinates after mapping to Cartesian coordinates.
+(a) Extrapolation with the $15^\circ$ finite-differences equation.
+(c) Extrapolation with the $60^\circ$ finite-differences equation.
+(b) Extrapolation with the pseudo-screen (PSC) equation.
+(d) Extrapolation with the Fourier finite-differences (FFD) equation.
+}
+
+\def\ABlabel{
+Coordinate system coefficients defined in \reqs{rwea} and \ren{rweb}.
+(a) Parameter $a=s \aa$  in ray coordinates.
+(b) Parameter $b=\aa/\jj$ in ray coordinates.
+}
+
+\def\COMPlabel{
+Comparison of extrapolation in Cartesian and Riemannian coordinates.
+(a) Split-step Fourier extrapolation in Cartesian coordinates.
+(b) Split-step Fourier extrapolation in Riemannian coordinates.
+}
+
+% ------------------------------------------------------------
+
+\section{Examples}
+We illustrate the higher-order RWE extrapolators with impulse
+responses for two synthetic models.
+\par
+The first example is based on the Marmousi model
+\cite[]{TLE13-09-09270936}. We construct the coordinate system by ray
+tracing from a point source at the surface in a smooth version of the
+real velocity model. \rFg{M-cos} shows the velocity model with the
+coordinate system overlaid, and \rFgs{M-abmRCa}-\rfn{M-abmRCb} show
+the coordinate system coefficients $a$ and $b$ defined in \reqs{rwea}
+and \ren{rweb}.
+%%
+\inputdir{marm}
+\plot*{M-cos}{width=0.80\textwidth}
+{\COSlabel~for the Marmousi example.}
+%%
+\multiplot{2}{M-abmRCa,M-abmRCb}
+{angle=0,width=0.45\textwidth}
+{\ABlabel}
+%%
+\par
+The goal of this test model is to illustrate the higher-order
+extrapolation kernels in a fairly complex model using a simple
+coordinate system. In this way, the coordinate system and the real
+direction of wave propagation depart from one-another, thus accurate
+extrapolation requires higher order kernels. The coordinate system is
+constructed from a point at the location of the wave source. This
+setting is similar to the case of extrapolation from a point source in
+Cartesian coordinates, where high-angle
+\footnote{
+If the extrapolation axis is time, the meaning of higher angle
+accuracy is not well defined. We can use this terminology to associate
+the mathematical meaning of the approximation for the square-root by
+analogy with the Cartesian equivalents.  } propagation requires
+high-order kernels.
+\par
+\rFgs{M-migRC-F15}-\rfn{M-migRC-FFD} show impulse responses for a 
+point source computed with various extrapolators in ray coordinates
+($\qt$ and $\qg$). Panels (a) and (c) show extrapolation with the
+$15^\circ$ and $60^\circ$, respectively. Panels (b) and (d) show
+extrapolation with the pseudo-screen (PSC) equation, and the Fourier
+finite-differences (FFD) equation, respectively. All plots are
+displayed in ray coordinates. We can observe that the angular accuracy
+of the extrapolator improves for the more accurate extrapolators. The
+finite-differences solutions (panels a and c) show the typical
+behavior of such solutions for the $15^\circ$ and $60^\circ$ equations
+(e.g.  the cardioid for $60^\circ$), but in the more general setting
+of Riemannian extrapolation. The mixed-domain extrapolators (panels b
+and d) are more accurate the finite-differences extrapolators. The
+main differences occur at the highest propagation angles. As for the
+case of Cartesian extrapolation, the most accurate kernel of those
+compared is the equivalent of Fourier finite-differences.
+\par
+\rFgs{M-migCC-F15}-\rfn{M-migCC-FFD} show the corresponding plots 
+in \rFgs{M-migRC-F15}-\rfn{M-migRC-FFD} mapped in the physical
+coordinates. The overlay is an outline of the extrapolation coordinate
+system. After re-mapping to the physical space, the comparison of
+high-angle accuracy for the various extrapolators is more apparent,
+since it now has physical meaning.
+\par
+\rFgs{M-imgCC}-\rfn{M-migCC-SSF} show a side-by-side comparison of 
+equivalent extrapolators in Riemannian and Cartesian coordinates. The
+impulse response in \rFg{M-imgCC} shows the limits of Cartesian
+extrapolation in propagating waves correctly up to $90^\circ$. The
+Riemannian extrapolator in \rFg{M-migCC-SSF} handles much better waves
+propagating at high angles, including energy that is propagating
+upward relative to the physical coordinates.
+%%
+\multiplot{4}{M-migRC-F15,M-migRC-PSC,M-migRC-F60,M-migRC-FFD}
+{angle=0,width=0.45\textwidth}{\RWElabel}
+%%
+\multiplot{4}{M-migCC-F15,M-migCC-SSF,M-migCC-F60,M-migCC-FFD}
+{angle=0,width=0.45\textwidth}{\CARlabel}
+%%
+\multiplot{2}{M-imgCC,M-migCC-SSF}
+{angle=0,width=0.80\textwidth}{\COMPlabel}
+% ------------------------------------------------------------
+
+% ------------------------------------------------------------
+The second example is based on a model with a large lateral gradient
+which makes an incident plane wave overturn. A small Gaussian anomaly,
+not used in the construction of the coordinate system, forces the
+propagating wave to triplicate and move at high angles relative to the
+extrapolation direction. \rFg{D-cos} shows the velocity model with the
+coordinate system overlaid. \rFgs{D-abmRCa}-\rfn{D-abmRCb} show the
+coordinate system coefficients, $a$ and $b$ defined in \reqs{rwea} and
+\ren{rweb}.
+%%
+\inputdir{diving}
+\plot{D-cos}{width=0.80\textwidth}
+{\COSlabel~for the large-gradient model experiment.}
+%%
+\multiplot{2}{D-abmRCa,D-abmRCb}
+{angle=0,width=0.45\textwidth}{\ABlabel}
+%%
+\par
+The goal of this model is to illustrate Riemannian wavefield
+extrapolation in a situation which cannot be handled correctly by
+Cartesian extrapolation, no matter how accurate an extrapolator we
+use. In this example, an incident plane wave is overturning, thus
+becoming evanescent for the solution constructed in Cartesian
+coordinates. Furthermore, the Gaussian anomaly shown in \rFg{D-abmRCa}
+causes wavefield triplication, thus requiring high-order kernels for
+the Riemannian extrapolator.
+\par
+\rFgs{D-migRC-F15}-\rfn{D-migRC-FFD} show impulse responses for an 
+incident plane wave computed with various extrapolators in ray
+coordinates ($\qt$ and $\qg$). Panels (a) and (c) show extrapolation
+with the $15^\circ$ and $60^\circ$ finite-differences equations,
+respectively. Panel (b) and (d) show extrapolation with the
+pseudo-screen (PSC) equation and the Fourier finite-differences (FFD)
+equation, respectively. All plots are displayed in ray coordinates. As
+for the preceding example, we observe higher angular accuracy as we
+increase the order of the extrapolator. The equivalent FFD
+extrapolator shows the highest accuracy of all tested extrapolators.
+\par
+As in the preceding example, \rFgs{D-migCC-F15}-\rfn{D-migCC-FFD} show
+the corresponding plots in \rFgs{D-migRC-F15}-\rfn{D-migRC-FFD} mapped
+in the physical coordinates. The overlay is an outline of the
+extrapolation coordinate system.
+\par
+Finally, \rfgs{D-imgCC-bp} and \rfn{D-migCC-SSF} show a side-by-side
+comparison of equivalent extrapolators in Riemannian and Cartesian
+coordinates. The impulse response in \rFg{D-imgCC-bp} clearly shows
+the failure of the Cartesian extrapolator in propagating waves
+correctly even up to $90^\circ$. The Riemannian extrapolator in
+\rFg{D-migCC-SSF} handles much better overturning waves, including
+energy that is propagating upward relative to the vertical direction.
+%%
+\multiplot{4}{D-migRC-F15,D-migRC-PSC,D-migRC-F60,D-migRC-FFD}
+{angle=0,width=0.45\textwidth}{\RWElabel}
+%%
+\multiplot{4}{D-migCC-F15,D-migCC-PSC,D-migCC-F60,D-migCC-FFD}
+{angle=0,width=0.45\textwidth}{\CARlabel}
+%%
+\multiplot{2}{D-imgCC-bp,D-migCC-SSF}
+{angle=0,width=0.80\textwidth}{\COMPlabel}
