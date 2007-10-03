@@ -104,7 +104,6 @@ dpth = string.join(map(lambda a: str(
     ( 300+1000*tan(a*pi/180) ) / 5
     ),deg),',')
     
-print ppan, psan, tppan, tpsan, dpth    
 # ------------------------------------------------------------
 
 Flow('dip',None,
