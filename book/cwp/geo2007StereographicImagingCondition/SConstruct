@@ -1,0 +1,88 @@
+from rsftex import *
+import glob, os
+
+for handout in glob.glob('handout*.tex'):
+    name = os.path.splitext(handout)[0]
+    Paper(name,
+          lclass='cwphandout',
+          use='hyperref,amsmath,color,listings')
+# ------------------------------------------------------------
+#for slides in glob.glob('slides*.tex'):
+#    slidesname = os.path.splitext(slides)[0]
+#    Paper(slidesname,
+#          lclass='../../../main/PCSslides',
+#          use='hyperref,amsmath,overpic,listings',
+#          include=r'''
+#          \usetheme[hideothersubsections]{PCS}
+#          \newcommand{\new}[1]{\textit{\textcolor{red}{#1}}}
+#          ''')
+
+for slides in glob.glob('slides*.tex'):
+    slidesname = os.path.splitext(slides)[0]
+    Paper(slidesname,
+          lclass='cwpslides',
+          options='',
+          use='multicol,color,overpic')
+    
+for talk in glob.glob('talk*.tex'):
+    talkname = os.path.splitext(talk)[0]
+    Paper(talkname,
+          lclass='cwpslides',
+          options='',
+          use='multicol,color,overpic')
+
+for notes in glob.glob('notes*.tex'):
+    notesname = os.path.splitext(notes)[0]
+    Paper(notesname,
+          lclass='cwpnotes',
+          options='',
+          use='multicol,color,overpic')
+    
+# ------------------------------------------------------------
+for article in glob.glob('article*.tex'):
+    name = os.path.splitext(article)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='manuscript',
+          use='times,mathptm,natbib,color,amssymb,mathrsfs,amsbsy,lineno,ulem',
+          include=r'''
+          \linenumbers*[1]
+          ''')
+
+for report in glob.glob('report*.tex'):
+    name = os.path.splitext(report)[0]
+    Paper(name,lclass='cwpreport',
+          use='mathptm,color,amssymb,mathrsfs',
+          include=r'''
+          \setlength{\paperwidth}{8.5in}
+          \setlength{\paperheight}{11.0in}
+          \usepackage{geometry}
+          \setlength{\topmargin}{-0.25in}
+          \setlength{\textheight}{8.75in}
+          \setlength{\textwidth}{6.5in}
+          \setlength{\oddsidemargin}{+.015625in}
+          \setlength{\evensidemargin}{+.015625in}
+          ''')
+
+for cover in glob.glob('cover*.tex'):
+    name = os.path.splitext(cover)[0]
+    Paper(name,
+          lclass='geophysics',
+          options='12pt',
+          use='')
+# ------------------------------------------------------------
+for segabs in glob.glob('segabs*.tex'):
+    name = os.path.splitext(segabs)[0]
+    Paper(name,
+          lclass='segold',
+          options='',
+          use='times,mathptm,natbib,graphicx,color')
+for eageabs in glob.glob('eageabs*.tex'):
+    name = os.path.splitext(eageabs)[0]
+    Paper(name,
+          lclass='eage',
+          options='11pt',
+          use='times,mathptm,natbib,color,amssymb,mathrsfs')
+# ------------------------------------------------------------
+
+End(lclass='geophysics',options='manuscript',use='times,mathptm,natbib,graphicx')

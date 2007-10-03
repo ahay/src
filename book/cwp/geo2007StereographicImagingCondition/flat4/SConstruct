@@ -1,0 +1,18 @@
+from rsfproj import *
+import fdmod,itest
+
+par=itest.param()
+#par['labelattr']=' wantaxis=n '
+# ------------------------------------------------------------
+itest.thrsou('ss',par)
+itest.thrsou('sx',par)
+itest.flat('refl',par)
+# ------------------------------------------------------------
+itest.run(par)
+# ------------------------------------------------------------
+par['ob']=0
+par['nb']=1
+par['db']=3
+itest.stereo3d(par)
+
+End()
