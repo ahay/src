@@ -24,15 +24,13 @@ tau = Integral[2/v[x,n],{n,0,z}]
 
 #include <rsf.h>
 
-#include "stretch.h"
-
 int main (int argc, char *argv[])
 {
     int nt, nz, nx, iz, ix;
     bool slow;
     float t0, dt, z0, dz, z=0., eps;
     float *time, *depth, *vel;
-    map str;
+    sf_map str;
     sf_file in, out, velocity;
 
     sf_init(argc, argv);
@@ -69,7 +67,7 @@ int main (int argc, char *argv[])
     if (!sf_getfloat ("eps",&eps)) eps = 0.01;
     /* smoothness parameter */
 
-    str = stretch_init (nt, t0, dt, nz, eps, false);
+    str = sf_stretch_init (nt, t0, dt, nz, eps, false);
 
     time = sf_floatalloc (nt);
     depth = sf_floatalloc (nz);
@@ -87,10 +85,10 @@ int main (int argc, char *argv[])
 	    depth[iz] = 2.*dz*z;
 	}
 
-	stretch_define (str, depth);
+	sf_stretch_define (str, depth);
 
 	sf_floatread (depth,nz,in);
-	stretch_apply (str, depth, time);
+	sf_stretch_apply (str, depth, time);
 	sf_floatwrite (time,nt,out);
     }
 

@@ -20,7 +20,6 @@
 #include <rsf.h>
 
 #include "fint1.h"
-#include "stretch.h"
 
 int main (int argc, char *argv[])
 {
@@ -29,7 +28,7 @@ int main (int argc, char *argv[])
     float t0, dt, z0, dz, t=0., z=0., eps;
     float *time, *depth, *vel, *str;
     fint1 fnt;
-    map mp;
+    sf_map mp;
     sf_file in, out, velocity;
 
     sf_init(argc, argv);
@@ -84,7 +83,7 @@ int main (int argc, char *argv[])
 
     if (intime) {
 	fnt = NULL;
-	mp = stretch_init (nz, z0, dz, nt, eps, false);
+	mp = sf_stretch_init (nz, z0, dz, nt, eps, false);
 	str = sf_floatalloc(nt);
     } else {
 	fnt = fint1_init (nw, nt, 0);
@@ -105,8 +104,8 @@ int main (int argc, char *argv[])
 		 }		 
 		 str[it] = t*dt;		 
 	     }
-	    stretch_define (mp,str);
-	    stretch_apply (mp,time,depth);
+	    sf_stretch_define (mp,str);
+	    sf_stretch_apply (mp,time,depth);
 	} else {
 	    fint1_set (fnt, time);
 

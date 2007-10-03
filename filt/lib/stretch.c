@@ -19,21 +19,24 @@
 
 #include <math.h>
 
-#include <rsf.h>
-/*^*/
-
 #include "stretch.h"
 
-#ifndef _stretch_h
+#include "_bool.h"
+/*^*/
 
-typedef struct Map *map;
+#include "tridiagonal.h"
+#include "alloc.h"
+
+#ifndef _sf_stretch_h
+
+typedef struct sf_Map *sf_map;
 /* abstract data type */
 /*^*/
 
 #endif
 
 
-struct Map {
+struct sf_Map {
     int nt, nd, ib, ie;
     float t0,dt, eps;
     int *x; 
@@ -42,15 +45,15 @@ struct Map {
     sf_tris slv;
 };
 
-map stretch_init (int n1, float o1, float d1 /* regular axis */, 
-		  int nd                     /* data length */, 
-		  float eps                  /* regularization */, 
-		  bool narrow                /* if zero boundary */)
+sf_map sf_stretch_init (int n1, float o1, float d1 /* regular axis */, 
+			int nd                     /* data length */, 
+			float eps                  /* regularization */, 
+			bool narrow                /* if zero boundary */)
 /*< initialize >*/
 {
-    map str;
+    sf_map str;
     
-    str = (map) sf_alloc (1, sizeof(*str));
+    str = (sf_map) sf_alloc (1, sizeof(*str));
 
     str->nt = n1; 
     str->t0 = o1; 
@@ -70,7 +73,7 @@ map stretch_init (int n1, float o1, float d1 /* regular axis */,
     return str;
 }
 
-void stretch_define (map str, const float* coord)
+void sf_stretch_define (sf_map str, const float* coord)
 /*< define coordinates >*/
 {
     int id, ix, i1;
@@ -128,7 +131,7 @@ void stretch_define (map str, const float* coord)
     }
 }
 
-void stretch_apply (map str, const float* ord, float* mod)
+void sf_stretch_apply (sf_map str, const float* ord, float* mod)
 /*< convert ordinates to model >*/
 {
     int id, i1, i2;
@@ -161,7 +164,7 @@ void stretch_apply (map str, const float* ord, float* mod)
     }
 }
 
-void stretch_invert (map str, float* ord, const float* mod)
+void sf_stretch_invert (sf_map str, float* ord, const float* mod)
 /*< convert model to ordinates by linear interpolation >*/
 {
     int id, i1, i2;
@@ -177,7 +180,7 @@ void stretch_invert (map str, float* ord, const float* mod)
     }
 }
 
-void stretch_close (map str)
+void sf_stretch_close (sf_map str)
 /*< free allocated storage >*/
 {
     free (str->x);

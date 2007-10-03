@@ -1,5 +1,6 @@
 import os, sys, types
 import c_rsf
+import numpy
 
 #      a=100 Xa=5
 #      float=5.625 cc=fgsg
@@ -109,9 +110,9 @@ class Input(File):
         File.__init__(self)
     def read(self,data):
         if self.type == 'float':
-            c_rsf.sf_floatread(data,self.file)
+            c_rsf.sf_floatread(numpy.reshape(data,(data.size,)),self.file)
         elif self.type == 'complex':
-            c_rsf.sf_complexread(data,self.file)
+            c_rsf.sf_complexread(numpy.reshape(data,(data.size)),self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
 
@@ -124,12 +125,12 @@ class Output(File):
         File.__init__(self)
     def write(self,data):
         if self.type == 'float':
-            c_rsf.sf_floatwrite(data,self.file)
+            c_rsf.sf_floatwrite(numpy.reshape(data,(data.size,)),self.file)
         elif self.type == 'complex':
-            c_rsf.sf_complexwrite(data,self.file)
+            c_rsf.sf_complexwrite(numpy.reshape(data,(data.size,)),self.file)
         else:
             raise TypeError, 'Unsupported file type %s' % self.type
-
+            
 if __name__ == "__main__":
     import numpy
     

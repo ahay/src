@@ -21,15 +21,13 @@ Combine with sfmig3 antialias=flat for the complete response.
 */
 #include <rsf.h>
 
-#include "stretch.h"
-
 int main(int argc, char* argv[])
 {
     int nt, nx, ny, ix, iy, n1, it, iz, ntr, itr;
     float hdr[3], *trace, *x1, *x2, *amp, *xmod, *ymod, ***out;
     float h_in, x_in, y_in, vel, vel2;
     float x,y, z, t, dx, dy, ox, oy, ry, h, sq, tx, ot, dt, ty, rx;
-    map xstr, ystr;
+    sf_map xstr, ystr;
     sf_file in, mig, head;
 
     sf_init (argc,argv);
@@ -70,8 +68,8 @@ int main(int argc, char* argv[])
 	out[0][0][it] = 0.;
     }
 
-    xstr = stretch_init (nx,ox,dx,nt,0.01,true);
-    ystr = stretch_init (ny,oy,dy,nt,0.01,true);
+    xstr = sf_stretch_init (nx,ox,dx,nt,0.01,true);
+    ystr = sf_stretch_init (ny,oy,dy,nt,0.01,true);
 
     for (itr=0; itr < ntr; itr++) {
 	sf_floatread (trace,nt,in);
@@ -112,13 +110,13 @@ int main(int argc, char* argv[])
 		    x2[it] = x_in-x/vel;
 		    amp[it] = trace[it]*dx*vel/ty;
 		}
-		stretch_define (xstr,x1);
-		stretch_apply (xstr,amp,xmod);
+		sf_stretch_define (xstr,x1);
+		sf_stretch_apply (xstr,amp,xmod);
 		for (ix=0; ix < nx; ix++) {
 		    out[iy][ix][iz] += xmod[ix];
 		}
-		stretch_define (xstr,x2);
-		stretch_apply (xstr,amp,xmod);
+		sf_stretch_define (xstr,x2);
+		sf_stretch_apply (xstr,amp,xmod);
 		for (ix=0; ix < nx; ix++) {
 		    out[iy][ix][iz] += xmod[ix];
 		}
@@ -152,13 +150,13 @@ int main(int argc, char* argv[])
 		    x2[it] = y_in-y/vel;
 		    amp[it] = trace[it]*dy*vel/ty;
 		}
-		stretch_define (ystr,x1);
-		stretch_apply (ystr,amp,ymod);
+		sf_stretch_define (ystr,x1);
+		sf_stretch_apply (ystr,amp,ymod);
 		for (iy=0; iy < ny; iy++) {
 		    out[iy][ix][iz] += ymod[iy];
 		}
-		stretch_define (ystr,x2);
-		stretch_apply (ystr,amp,ymod);
+		sf_stretch_define (ystr,x2);
+		sf_stretch_apply (ystr,amp,ymod);
 		for (iy=0; iy < ny; iy++) {
 		    out[iy][ix][iz] += ymod[iy];
 		}
