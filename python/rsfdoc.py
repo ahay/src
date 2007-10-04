@@ -14,7 +14,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import pydoc
+import pydoc, datetime
 import re, sys, os, string, glob, string
 
 progs = {}
@@ -431,12 +431,20 @@ def link(name):
     return '%s<a href="%s.html" title="%s">%s</a>' %\
     (prefix, progs[name].name, progs[name].desc, inlink)
 
+def get_svn_revision_nr():
+    proc = os.popen('svn stat -v SConstruct')
+    raw = proc.read()
+    proc.close()
+    return raw[13:].rsplit()[0]
+
 def html(dir):
     if not os.path.isdir(dir):
         os.mkdir(dir)
     file = open (os.path.join(dir,'index.html'),'w')
     name = '<big><big><strong>Madagascar Programs</strong></big></big>'
     content = heading(name,'#ffffff','#7799ee')
+    content += 'Generated on ' + str(datetime.date.today()) 
+    content += ' from r' + get_svn_revision_nr()
     dirs = {}
     for prog in progs.keys():
         dir = os.path.dirname(progs[prog].file)
