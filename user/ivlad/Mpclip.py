@@ -46,9 +46,9 @@ class NoReturnFromQuantile(Error):
     def __init__(self):
         self.message = 'sfquantile did not return anything'
 
-# Global constants -- Unix return codes
-success = 0
-error   = 1
+# Unix return codes
+os_success = 0
+os_error   = 1
 
 def main(argv=sys.argv):
 
@@ -75,15 +75,14 @@ def main(argv=sys.argv):
 
     send_to_os('sfclip', arg='clip='+clip, stdin=inp, stdout=out, verb=verb)
 
-    return success
+    return os_success
 
 if __name__ == '__main__':
 
-    status = error
-
     try:
         status = main()
-    except (PclipWrongVal,NoReturnFromQuantile), e:
+    except Error, e:
         print e.message
+        status = os_error
 
     sys.exit(status)
