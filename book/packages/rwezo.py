@@ -6,7 +6,7 @@ def param(par):
     if(not par.has_key('nsx')): par['nsx']=3
 
     par['dw']=1/(par['nT']*par['dT'])
-    par['nw']=par['nT']/500*100
+#    par['nw']=par['nT']/500*100
 
     # ------------------------------------------------------------
     par['xmin']=par['ox']                            
@@ -22,22 +22,21 @@ def param(par):
     par['ratio']=1.0*(par['zmax']-par['zmin'])/(par['xmax']-par['xmin'])
     par['height']=14.0*par['ratio']
 
-    if(not par.has_key('ntap')): par['ntap']=10
-    if(not par.has_key('prefix')): par['prefix']=''
-    if(not par.has_key('scalebar')): par['scalebar']='n'
+    if(not par.has_key('ntap')):      par['ntap']=10
+    if(not par.has_key('prefix')):    par['prefix']=''
+    if(not par.has_key('scalebar')):  par['scalebar']='n'
     if(not par.has_key('labelattr')): par['labelattr']=''
-    
 
 def cgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y wanttitle=y
     title="" pclip=100
-    min1=%g max1=%g %s 
-    min2=%g max2=%g %s
+    min1=%g max1=%g label1=%s unit1=%s 
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g
     %s
-    ''' % (par['zmin'],par['zmax'],par['lz'],
-           par['xmin'],par['xmax'],par['lx'],
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'],
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],
            custom)
 
@@ -45,12 +44,12 @@ def rgrey(custom,par):
     return '''
     grey labelrot=n wantaxis=y title=""
     pclip=100
-    min1=%g max1=%g %s
-    min2=%g max2=%g %s
+    min1=%g max1=%g label1=%s unit1=%s
+    min2=%g max2=%g label2=%s unit2=%s
     screenratio=%g screenht=%g wantscalebar=%s
     %s
-    ''' % (par['tmin'],par['tmax'],par['lt'],
-           par['gmin'],par['gmax'],par['lg'],
+    ''' % (par['tmin'],par['tmax'],par['lt'],par['ut'],
+           par['gmin'],par['gmax'],par['lg'],par['ug'],
            par['ratio'],par['height'],par['scalebar'],
            par['labelattr']+' '+custom)
 
@@ -67,12 +66,12 @@ def cgraph(custom,par):
     return '''
     graph labelrot=n
     yreverse=y wantaxis=n title=" " 
-    min2=%g max2=%g %s
-    min1=%g max1=%g %s
+    min2=%g max2=%g label2=%s unit2=%s
+    min1=%g max1=%g label1=%s unit1=%s
     screenratio=%g screenht=%g
     %s
-    ''' % (par['zmin'],par['zmax'],par['lz'], 
-           par['xmin'],par['xmax'],par['lx'],
+    ''' % (par['zmin'],par['zmax'],par['lz'],par['uz'], 
+           par['xmin'],par['xmax'],par['lx'],par['ux'],
            par['ratio'],par['height'],
            custom)
 
