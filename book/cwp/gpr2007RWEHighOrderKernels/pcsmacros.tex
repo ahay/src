@@ -1,0 +1,54 @@
+% LISTS
+\def\bit{\begin{itemize}}
+\def\eit{  \end{itemize}}
+\def\ben{\begin{enumerate}}
+\def\een{  \end{enumerate}}
+\def\itt{\item}
+
+% SEPARATORS
+\def\lp{ \left (}
+\def\rp{\right )}
+\def\lb{ \left [}
+\def\rb{\right ]}
+\def\lc{\left \{}
+\def\rc{\right\}}
+
+% EQUATIONS
+\def\beq {        \begin{equation}}
+\def\eeq {          \end{equation}}
+\def\bea {        \begin{array}}
+\def\eea {          \end{array}}
+\def\beqa{        \begin{eqnarray}}
+\def\eeqa{          \end{eqnarray}}
+\def\beqt{\tiny   \begin{eqnarray}}
+\def\eeqt{\nonumber \end{eqnarray} \normalsize}
+
+% REFERENCE (equations and figures)
+\def\rEq#1{Equation~(\ref{eqn:#1})}
+\def\req#1{equation~(\ref{eqn:#1})}
+\def\rEqs#1{Equations~(\ref{eqn:#1})}
+\def\reqs#1{equations~(\ref{eqn:#1})}
+\def\ren#1{(\ref{eqn:#1})}
+
+\def\rFg#1{Figure~\ref{fig:#1}}
+\def\rfg#1{figure~\ref{fig:#1}}
+\def\rFgs#1{Figures~\ref{fig:#1}}
+\def\rfgs#1{figures~\ref{fig:#1}}
+\def\rfn#1{\ref{fig:#1}}
+
+% PARTIAL DERIVATIVES
+\def\dtwo#1#2  {\frac{\partial^2 #1}{\partial #2^2         }   }
+\def\done#1#2  {\frac{\partial   #1}{\partial #2           }   }
+\def\eone#1#2  {\frac{\partial     }{\partial #2           } #1}
+\def\mtwo#1#2#3{\frac{\partial^2 #1}{\partial #2\partial #3}   }
+
+% MATH SYMBOLS
+\def\LAP{\Delta}
+\def\DEL{\Delta}
+
+% BOX
+\def\pbox#1{ \fbox {$ \displaystyle #1 $}}
+
+% NOTE
+\def\draft#1{ \emph{Submitted to \sc{#1}} } 
+\def\aline{\vspace{0.5in} \hrule \vspace{0.5in}}

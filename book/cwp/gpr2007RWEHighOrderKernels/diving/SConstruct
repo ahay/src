@@ -8,7 +8,7 @@ par = {
     'ng':225,  'dg':0.04,    'og':0.5, 'lg':'label2=x', 'ug':'unit2=km',            # RC axis 2
     'nT':2400, 'dT':0.008,   'oT':0,      # time
     'tmx':10,'eps':0.0000001, 'verb':'y','nrmax':3,
-    'ow':1, 'incore':'y',
+    'ow':1, 'nw': 894, 'incore':'y',
     'prefix':'D-'
     }
 
@@ -113,7 +113,7 @@ zomig.image('imgCC','sloCC','frqCC',par)
 # ------------------------------------------------------------
 # RWE image
 rwezo.mig('migCC','migRC','frqRC','abmRC','abrRC','cos',par)
-rwezo.mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
+# rwezo.mod('modCC','modRC','migRC','abmRC','abrRC','cos',par)
 
 # ------------------------------------------------------------
 # PLOTS
