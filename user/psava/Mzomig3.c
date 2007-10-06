@@ -65,7 +65,7 @@ int main (int argc, char *argv[])
     fslice wfld=NULL;
 
     int ompchunk=1;
-    int ompnth=0;
+    int ompnth=1;
 #ifdef _OPENMP
     int ompath=1; 
 #endif

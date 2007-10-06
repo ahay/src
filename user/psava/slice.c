@@ -126,8 +126,10 @@ void fslice_get(fslice sl, int i2, void* data)
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
 
-    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
-    fread(data,sl->n1,1,sl->file);
+    if (0 > fseeko(sl->file,i2*(sl->n1),SEEK_SET))
+	sf_error ("%s: seek problem:",__FILE__);
+    if (sl->n1 != fread(data,1,sl->n1,sl->file))
+	sf_error ("%s: read problem:",__FILE__);
 }
 
 /*------------------------------------------------------------*/
@@ -136,8 +138,10 @@ void fslice_put(fslice sl, int i2, void* data)
 {
     extern int fseeko(FILE *stream, off_t offset, int whence);
 
-    fseeko(sl->file,i2*(sl->n1),SEEK_SET);
-    fwrite(data,sl->n1,1,sl->file);
+    if (0 > fseeko(sl->file,i2*(sl->n1),SEEK_SET))
+	sf_error ("%s: seek problem:",__FILE__);
+    if (sl-> n1 != fwrite(data,1,sl->n1,sl->file))
+	sf_error ("%s: write problem:",__FILE__);
 }
 
 /*------------------------------------------------------------*/

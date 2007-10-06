@@ -1,8 +1,24 @@
 from rsfbook import *
 
-Papers(copyr='Colorado School of Mines',group='Center for Wave Phenomena',
-       authors={'rwesalt':'Paul Sava'},line='Example Report, March 2007',
-       fig=('rwesalt/sigsbee','compCC1-F15','width=\\textwidth'))
+report = (('2006',
+           '''
+           geo2006TimeShiftImagingCondition
+           jse2006RWEImagingOverturningReflections
+           '''),
+          ('2007',
+           '''
+           gpr2007RWEHighOrderKernels
+           '''))
 
-End()
+Papers(papers=report,
+       copyr='Colorado School of Mines',group='Center for Wave Phenomena',
+       authors={'seg2006ConvertedWavesTSIC': 'Paul Sava and Sergey Fomel',
+                'jse2006RWEImagingOverturningReflections':'Paul Sava',
+                'gpr2007RWEHighOrderKernels':'Paul Sava and Sergey Fomel',
+                'geo2007StereographicImagingCondition':'Paul Sava'},
+       line='Example Report, October 2007',
+       fig=('jse2006RWEImagingOverturningReflections/sigsbee',
+            'compCC1-F15','width=\\textwidth'))
+
+End(use='ulem,color')
 
