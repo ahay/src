@@ -4,6 +4,7 @@ report = (('2006',
            '''
            geo2006TimeShiftImagingCondition
            jse2006RWEImagingOverturningReflections
+           seg2006ConvertedWavesTSIC
            '''),
           ('2007',
            '''

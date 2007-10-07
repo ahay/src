@@ -1,3 +1,3 @@
 from rsftex  import *
 
-End(lclass='segold',use='times,amsmath,mathptm,natbib,graphicx,color')
+End()

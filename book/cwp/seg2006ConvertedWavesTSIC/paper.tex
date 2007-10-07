@@ -9,7 +9,7 @@ Sergey Fomel, Bureau of Economic Geology, University of Texas (Austin), Austin, 
 \input{macro}
 
 % ------------------------------------------------------------
-\section{Summary}
+\begin{abstract}
 A typical imaging condition for seismic reflection data 
 involves source and receiver wavefield matching, e.g. by
 cross-correlation, at every image location. 
@@ -31,6 +31,7 @@ This paper explores the various types of imaging condition
 using space- and time-shifts and
 derives relations for angle decomposition for converted-wave
 imaging.
+\end{abstract}
 
 % ------------------------------------------------------------
 \section{Introduction}
@@ -169,7 +170,7 @@ followed by image extraction at zero time.
 Mathematically, we can represent this process by the relations
 \bea
 \uu  \left(\mm, t  \right) &=&
-\us  \left(\mm, t  \right) \star
+\us  \left(\mm, t  \right) \ast
 \ur  \left(\mm, t  \right) \;,
 \\
 \RR  \left(\mm     \right) &=&
@@ -182,7 +183,7 @@ $\ur(\mm,t)$ are source and receiver wavefields
 respectively, and $\RR(\mm)$ denotes the
 migrated image, proportional to reflectivity at every location
 in space.
-The symbol $\star$ denotes cross-correlation in time.
+The symbol $\ast$ denotes cross-correlation in time.
 
 A typical implementation of this imaging condition is in the
 Fourier domain, where the image is produced using the
@@ -205,7 +206,7 @@ wavefields after shifting in both time and space.
 Mathematically, we can represent this process by the relations
 \bea \label{eqn:imgD}
 \uu  \left(\mm,\hh,t,\tt \right) &=&
-\us  \left(\mm-\hh,t-\tt \right) \star
+\us  \left(\mm-\hh,t-\tt \right) \ast
 \ur  \left(\mm+\hh,t+\tt \right) \;,
 \\
 \RR  \left(\mm,\hh,\tt     \right) &=&
@@ -567,5 +568,5 @@ of this research.
 
 % ------------------------------------------------------------
 \bibliographystyle{seg}
-\bibliography{SEG2005,PCS,MISC}
+\bibliography{SEG,PCS,MISC}
 
