@@ -81,8 +81,8 @@ tap3d taper_init(cub3d cub,
 void taper2d_close(tap3d tap)
 /*< 2-D free allocated storage >*/
 {
-    free(tap->tap1);
-    free(tap->tap2);
+    if (tap->nt1 > 0) free(tap->tap1);
+    if (tap->nt2 > 0) free(tap->tap2);
 }
 
 /*------------------------------------------------------------*/
