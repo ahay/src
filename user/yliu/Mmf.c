@@ -35,7 +35,7 @@ int main (int argc, char* argv[])
 
 	float *trace;
 	float *tempt;
-       float *temp1;
+        float *temp1;
 	float *extendt;
     sf_file in, out;
 
