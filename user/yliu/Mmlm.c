@@ -39,7 +39,7 @@ int main (int argc, char* argv[])
 	float *extendt;
 	float *temp1,*temp2,*temp3,*temp4;
 	float *z,*Y;
-    sf_file in, out;
+        sf_file in, out;
 
     sf_init (argc, argv); 
     in = sf_input("in");
