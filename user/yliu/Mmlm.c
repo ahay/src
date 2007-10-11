@@ -41,21 +41,21 @@ int main (int argc, char* argv[])
 	float *z,*Y;
         sf_file in, out;
 
-    sf_init (argc, argv); 
-    in = sf_input("in");
-    out = sf_output("out");
+        sf_init (argc, argv); 
+        in = sf_input("in");
+        out = sf_output("out");
     
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
+        if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+        n2 = sf_leftsize(in,1);
 	/* get the trace length (n1) and the number of traces (n2)*/
 
-    if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
-    /* filter-window length (positive and odd integer)*/
-    if (nfw < 1)  sf_error("Need positive integer input"); 
-    if (nfw%2 != 0)  nfw = (nfw+1);
-    m=(nfw-1)/2;
+        if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
+        /* filter-window length (positive and odd integer)*/
+        if (nfw < 1)  sf_error("Need positive integer input"); 
+        if (nfw%2 != 0)  nfw = (nfw+1);
+        m=(nfw-1)/2;
 
-    trace = sf_floatalloc(n1*n2);
+        trace = sf_floatalloc(n1*n2);
 	tempt = sf_floatalloc(n1*n2);
 	extendt = sf_floatalloc((n1+2*m)*(n2+2*m));
 	temp1 = sf_floatalloc(nfw);
