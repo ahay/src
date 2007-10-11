@@ -33,7 +33,7 @@ int main (int argc, char* argv[])
         int nfw;    /*nfw is the filter-window length*/
 	int m;
 	float a;   /*temporary variable*/
-
+        /**/
 	float *trace;
 	float *tempt;
 	float *extendt;
