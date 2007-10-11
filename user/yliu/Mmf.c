@@ -30,7 +30,7 @@ int main (int argc, char* argv[])
 {
 	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
 	int i;
-       int nfw;    /*nfw is the filter-window length*/
+        int nfw;    /*nfw is the filter-window length*/
 	int m;
 
 	float *trace;
