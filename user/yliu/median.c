@@ -23,7 +23,8 @@
 
 #include "median.h"
 
-float medianfilter(float *temp,int nfw) /*get a median value*/
+float medianfilter(float *temp,int nfw)
+/*< get a median value >*/
 {   
 	int i,pass;
 	float median,a;

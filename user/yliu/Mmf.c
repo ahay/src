@@ -23,8 +23,8 @@
 
 #include "median.h"
 
-void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);/*extend seismic data*/
-float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
+static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);
+/*extend seismic data*/
 
 int main (int argc, char* argv[]) 
 {
@@ -86,7 +86,8 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seismic data*/
+static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
+/*extend seismic data*/
 {
     int m=(nfw-1)/2;
     int i;

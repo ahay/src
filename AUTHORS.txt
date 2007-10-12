@@ -2,7 +2,8 @@ Jules Browaeys <jules.browaeys@beg.utexas.edu>
 Sergey Fomel <sergey.fomel@beg.utexas.edu> 
 Gilles Hennenfent <ghennenfent@eos.ubc.ca>
 Trevor Irons <tirons@users.sourceforge.net>
-Jim Jennings <jenningsjwj@mac.com> 
+Jim Jennings <jenningsjwj@mac.com>
+Yang Liu <yangliu1979@gmail.com> 
 Doug McCowan <dwmccowan@windstream.net>
 Henryk Modzelewski <henryk_modzelewski@mac.com>
 Colin Russell <crussell@eos.ubc.ca>

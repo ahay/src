@@ -23,9 +23,10 @@
 
 #include "median.h"
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2);/*extend seismic data*/
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j);/*extend temporary seismic data*/
-float medianfilter(float* temp,int nfw); /*get the median value from a queue*/
+static void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2);
+/*extend seismic data*/
+static void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j);
+/*extend temporary seismic data*/
 
 int main (int argc, char* argv[]) 
 {
@@ -142,7 +143,8 @@ int main (int argc, char* argv[])
     exit (0);
 }
 
-void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seismic data*/
+static void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)
+/*extend seismic data*/
 {
 	int m=(nfw-1)/2;
 	int i;
@@ -190,7 +192,8 @@ void extenddata1(float* tempt,float* extendt,int nfw,int n1,int n2)/*extend seis
 	
 }
 
-void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend temporary seismic data*/
+static void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)
+/*extend temporary seismic data*/
 {
 	int k;
 	/*extend trace*/
@@ -241,5 +244,3 @@ void extenddata2(float* temp2,float* temp3,int n1,int tempnfw,int j)/*extend tem
 }
 
 /* 	$Id: Mtvmf.c 1131 2007-10-09 23:25:10Z yang $	 */
-
-
