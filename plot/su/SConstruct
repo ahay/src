@@ -1,0 +1,71 @@
+import os, sys, glob, string
+sys.path.append('../..')
+import configure
+
+progs = '''
+wigb
+'''
+
+try:
+    Import('env')
+    env = env.Copy()
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    bindir = os.path.join(root,'bin')
+    incdir = os.path.join(root,'include')
+
+    dir = string.replace(os.getcwd(),'/build','')
+    src = map(os.path.basename,glob.glob(os.path.join(dir,'[a-z]*.c')))
+except:
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-xO2','-g')
+    SConscript('../lib/SConstruct')
+    src = glob.glob('[a-z]*.c')
+    env.Append(BUILDERS={'Include':configure.Header,'Place':configure.Place},
+               SCANNERS=[configure.Include])
+
+xinc = env.get('XINC')
+xlib = env.get('XLIBPATH')
+
+env.Prepend(CPPPATH=['../../include',xinc],
+            LIBPATH=['../../filt/lib','../lib',xlib],LIBS=['X11','rsf'])
+
+if xinc and xlib:
+    for source in src:
+        inc = env.Include(source,prefix='')
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+
+mains = Split(progs)
+for prog in mains:
+    if xinc and xlib:
+        sources = ['X' + prog]
+        configure.depends(env,sources,'X'+prog)
+        main = env.Program(prog,map(lambda x: x + '.c',sources))
+    else:
+        main = env.Place(prog,None,var='XINC and XLIBPATH')
+        
+    if root:
+        env.Install(bindir,main[0])
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:
+    main = 'sfsuplot.py'
+    
+    docs = map(lambda prog: env.Doc(prog),mains)
+    env.Depends(docs,'#/python/rsfdoc.py')
+
+    doc = env.Command(main,docs,configure.docmerge)
+    env.Install(libdir,doc)
+#####################################################################
+
+# 	$Id: SConstruct 1896 2006-06-05 22:04:49Z fomels $
+
