@@ -8,6 +8,8 @@
 
 #define SF_SIG(a)   ((a) >= 0  ?  1  :  -1 )
 
+#define SF_NINT(x) ((int)((x)>0.0?(x)+0.5:(x)-0.5))
+
 #define SF_PI (3.141592653589793)
 
 #endif

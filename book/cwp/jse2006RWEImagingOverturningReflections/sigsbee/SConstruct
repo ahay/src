@@ -5,7 +5,7 @@ par = {
     'nz':1201, 'dz':0.025,  'oz':0,     'lz':'label1=z', 'uz':'km', 
     'nx':2133, 'dx':0.0375, 'ox':10.925,'lx':'label2=x', 'ux':'km',
     'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"', 'ut':'s',
-    'ng':800,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
+    'ng':800,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."', 'ug': '.',
     'kt':100,    # wavelet delay 
     'nT':1600, 'dT':0.004,  'oT':0,
     'ow':1,
