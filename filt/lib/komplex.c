@@ -191,7 +191,10 @@ kiss_fft_cpx sf_csub(kiss_fft_cpx a, kiss_fft_cpx b)
 kiss_fft_cpx sf_csqrtf (kiss_fft_cpx c)
 /*< complex square root >*/
 {
+
+#if !defined(hpux) && !defined(__hpux)
     extern float copysignf(float x, float y);
+#endif
 
     float d, r, s;
     kiss_fft_cpx v;

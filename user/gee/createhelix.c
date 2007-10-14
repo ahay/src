@@ -24,7 +24,7 @@
 #define alloca __builtin_alloca
 #endif
 #else /* not GNU C  */
-#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi)
+#if (!defined (__STDC__) && defined (sparc)) || defined (__sparc__) || defined (__sparc) || defined (__sgi) || defined(hpux) || defined(__hpux)
 #include <alloca.h>
 #endif
 #endif

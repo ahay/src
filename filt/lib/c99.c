@@ -108,9 +108,15 @@ sf_double_complex sf_dcmplx(double re, double im)
 #if !defined(__cplusplus) && !defined(SF_HAS_COMPLEX_H)
 /*^*/
 
+#if !defined(hpux) && !defined(__hpux)
+/*^*/
+
 float copysignf(float x, float y)
 /*< float copysign >*/
 { return (float) copysign(x,y);}
+
+#endif
+/*^*/
 
 float sqrtf(float x) 
 /*< float sqrt >*/
@@ -136,9 +142,15 @@ float erfcf(float x)
 /*< float erfc >*/
 { return (float) erfc(x);}
 
+#if !defined(hpux) && !defined(__hpux)
+/*^*/
+
 float fabsf(float x) 
 /*< float fabs >*/
 { return (float) fabs(x);}
+
+#endif
+/*^*/
 
 float floorf(float x)
 /*< float floor >*/
@@ -215,6 +227,11 @@ float hypotf(float x, float y)
 /*< float hypot >*/
 { extern double hypot(double x, double y);
  return (float) hypot(x,y);}
+
+#if defined(hpux) || defined(__hpux)
+#define finite(x) isfinite(x)
+#endif
+/*^*/
 
 #endif
 /*^*/

@@ -336,6 +336,8 @@ extern int mkstemp (char *template);
 
 #include <stdio.h>
 #include <string.h>
+
+#include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -1278,7 +1280,7 @@ char            psprintertype[80] = "default";
 void psopen (int argc, char* argv[])
 /*< open >*/
 {
-    char           *user_name, *getlogin ();
+    char           *user_name;
     char            date[50];
     int             i;
     char            units;

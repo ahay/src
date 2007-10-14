@@ -146,6 +146,8 @@ def identify_platform(context):
         plat['OS'] = 'interix' # Microsoft Windows Services for UNIX
     elif sys.platform[:4] == 'irix':
         plat['OS'] = 'irix' # Irix
+    elif sys.platform[:5] == 'hp-ux':
+        plat['OS'] = 'hp-ux' # HP-UX
     else:
         plat['OS'] = sys.platform
 
@@ -166,6 +168,8 @@ def identify_platform(context):
                 plat['distro'] = '10' # Solaris 10
         elif plat['OS'] == 'irix':
              plat['distro'] = uname()[2]
+        elif plat['OS'] == 'hp-ux':
+             plat['distro'] = uname()[2].split('.')[-2]
         del architecture, uname
     except: # "platform" not installed. Python < 2.3
         pass # For each OS with Python < 2.3, should use specific
@@ -254,7 +258,7 @@ def libs(context):
     LIBS = context.env.get('LIBS','m')
     if type(LIBS) is not types.ListType:
         LIBS = string.split(LIBS)
-    if plat['OS'] == 'sunos':
+    if plat['OS'] == 'sunos' or plat['OS'] == 'hp-ux':
         LIBS.append('nsl')
     elif plat['OS'] == 'cygwin':
         LIBS.append('rpc')

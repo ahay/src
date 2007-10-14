@@ -87,11 +87,11 @@ int main(int argc, char* argv[])
     int ompnth,ompath;
 #endif
 
-    sf_axis    c1, c2;
+    sf_axis    c1=NULL, c2=NULL;
     int       nq1,nq2;
     float     oq1,oq2;
     float     dq1,dq2;
-    float     **uc;
+    float     **uc=NULL;
 
     /*------------------------------------------------------------*/
     /* init RSF */
