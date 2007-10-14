@@ -85,8 +85,9 @@ for prog in mains:
 if root:
     main = 'sfsuplot.py'
     
-    docs = map(lambda prog: env.Doc(prog,'X' + prog),xmains) + \
-           map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    docs = map(lambda prog: env.Doc(prog,'M' + prog),mains)
+    if xinc and xlib:
+        docs = docs + map(lambda prog: env.Doc(prog,'X' + prog),xmains)
     env.Depends(docs,'#/python/rsfdoc.py')
 
     doc = env.Command(main,docs,configure.docmerge)
