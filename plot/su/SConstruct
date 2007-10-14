@@ -39,15 +39,20 @@ except:
 xinc = env.get('XINC')
 xlib = env.get('XLIBPATH')
 
-env.Prepend(CPPPATH=['../../include',xinc],
-            LIBPATH=['../../filt/lib','../lib',xlib],LIBS=['X11','rsf'])
-
 if xinc and xlib:
+    
+    env.Prepend(CPPPATH=['../../include',xinc],
+                LIBPATH=['../../filt/lib','../lib',xlib],LIBS=['X11','rsf'])
+    
     for source in src:
         inc = env.Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
 else:
+    
+    env.Prepend(CPPPATH=['../../include'],
+                LIBPATH=['../../filt/lib','../lib'],LIBS=['rsf'])
+    
     for source in map(lambda x: x+'.c',Split(src2)):
         inc = env.Include(source,prefix='')
         obj = env.StaticObject(source)
