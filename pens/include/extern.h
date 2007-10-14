@@ -97,3 +97,6 @@ extern char pltname[];
 extern char group_name[];
 extern int group_number;
 extern int ras_allgrey;		/* david,  10/03/94	*/
+
+extern double   path_orient_dx, path_orient_dy;
+extern double   up_orient_dx, up_orient_dy;

@@ -114,8 +114,6 @@
 #define CR	015
 #define NL	012
 
-static double   path_orient_dx, path_orient_dy;
-static double   up_orient_dx, up_orient_dy;
 static double   xorigin_f, yorigin_f, xold_f, yold_f;
 static int      ttxfont, cur_color_save;
 extern int      cur_color, ipat, need_devcolor;
@@ -133,6 +131,9 @@ struct txalign {
 
 static void load_font (int ifont);
 static void mov (double hadd, double vadd);
+
+double   path_orient_dx, path_orient_dy;
+double   up_orient_dx, up_orient_dy;
 
 #include <stdlib.h>
 

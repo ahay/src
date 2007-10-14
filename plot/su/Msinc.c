@@ -79,4 +79,4 @@ int main(int argc, char* argv[])
     exit(0);
 }
 
-/* 	$Id: Mspline.c 1486 2005-10-07 10:04:48Z fomels $	 */
+/* 	$Id$	 */

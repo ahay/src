@@ -2063,9 +2063,6 @@ int psmaxfont = {(sizeof(psfonts) / sizeof(psfonts[0])) + 100};
 
 extern int      default_ps_font;
 
-static double   path_orient_dx, path_orient_dy;
-static double   up_orient_dx, up_orient_dy;
-
 void pstext (char *string, float pathx, float pathy, float upx, float upy)
 /*< text >*/
 {
@@ -2102,9 +2099,6 @@ static char     last_size = 0, last_font;
     up = sqrt ((double) (fupx * fupx + fupy * fupy));
 
     path_orient_dx = fpathx / path;
-    path_orient_dy = fpathy / path;
-    up_orient_dx = fupx / up;
-    up_orient_dy = fupy / up;
 
 /*
  * Postscript manual says height of "700 units" for the default
