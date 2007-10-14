@@ -73,8 +73,8 @@ void intt8c (int ntable       /* number of tabulated interpolation operators; nt
 	     sf_complex *yin  /* array of input y(x) values:  yin[0] = y(fxin), etc. */,
 	     sf_complex yinl  /* value used to extrapolate yin values to left of yin[0] */, 
 	     sf_complex yinr  /* value used to extrapolate yin values to right of yin[nxin-1] */, 
-	     int nxout        /* number of x values a which y(x) is output */, 
-	     float *xout      /*number of x values a which y(x) is output */, 
+	     int nxout        /* number of x values at which y(x) is output */, 
+	     float *xout      /* x values a which y(x) is output */, 
 	     sf_complex *yout /* array of output y(x) values:  yout[0] = y(xout[0]), etc. */)
 /*< interpolation of a uniformly-sampled complex function y(x)
   via a table of 8-coefficient interpolators 
@@ -184,8 +184,8 @@ void intt8r (int ntable       /* number of tabulated interpolation operators; nt
 	     float *yin       /* array of input y(x) values:  yin[0] = y(fxin), etc. */,
 	     float yinl       /* value used to extrapolate yin values to left of yin[0] */, 
 	     float yinr       /* value used to extrapolate yin values to right of yin[nxin-1] */, 
-	     int nxout        /* number of x values a which y(x) is output */, 
-	     float *xout      /*number of x values a which y(x) is output */, 
+	     int nxout        /* number of x values at which y(x) is output */, 
+	     float *xout      /* x values at which y(x) is output */, 
 	     float *yout      /* array of output y(x) values:  yout[0] = y(xout[0]), etc. */)
 /*< interpolation of a uniformly-sampled complex function y(x)
   via a table of 8-coefficient interpolators 

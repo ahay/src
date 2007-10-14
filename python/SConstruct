@@ -8,7 +8,7 @@ bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 docdir = os.path.join(root,'doc')
 
-dirs = ['main','proc','imag','plot','libplot']+env['USERS']
+dirs = ['main','proc','imag','plot','libplot','suplot']+env['USERS']
 
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)

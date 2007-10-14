@@ -92,7 +92,7 @@ Result('cgiter','err0 err1',
        '''
        cat axis=2 ${SOURCES[1]} | scale dscale=%g |
        graph min2=0 max2=0.4 labelsz=10 titlesz=12 dash=1,0
-       title="Iterative Convergence"
+       title="Iterative Convergence" unit1= unit2=
        ''' % scale)
 
 Result('dircvv','cmp vscan','SideBySideAniso')

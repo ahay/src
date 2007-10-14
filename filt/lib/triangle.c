@@ -23,6 +23,7 @@
 /*^*/
 
 #include "alloc.h"
+#include "blas.h"
 
 #ifndef _sf_triangle_h
 
@@ -159,22 +160,17 @@ static void triple (int o, int d, int nx, int nb, float* x, const float* tmp)
 static void triple2 (int o, int d, int nx, int nb, const float* x, float* tmp)
 {
     int i;
-    float *tmp1, *tmp2;
     float wt;
 
-    tmp1 = tmp + nb;
-    tmp2 = tmp + 2*nb;
     wt = 1./(nb*nb);
     
     for (i=0; i < nx + 2*nb; i++) {
 	tmp[i] = 0;
     }
 
-    for (i=0; i < nx; i++) {
-	tmp1[i] += 2.*x[o+i*d]*wt;
-	tmp[i]  -= x[o+i*d]*wt; 
-	tmp2[i] -= x[o+i*d]*wt;
-    }
+    cblas_saxpy(nx,  -wt,x+o,d,tmp     ,1);
+    cblas_saxpy(nx,2.*wt,x+o,d,tmp+nb  ,1);
+    cblas_saxpy(nx,  -wt,x+o,d,tmp+2*nb,1);
 }
 
 void sf_smooth (sf_triangle tr  /* smoothing object */, 

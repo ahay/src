@@ -23,6 +23,7 @@
 #include "conjgrad.h"
 #include "alloc.h"
 #include "error.h"
+#include "blas.h"
 
 #include "_bool.h"
 #include "_solver.h"
@@ -32,20 +33,6 @@ static int np, nx, nr, nd;
 static float *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
-
-static double norm (int n, const float* x) 
-/* double-precision L2 norm */
-{
-    double prod, xi;
-    int i;
-
-    prod = 0.;
-    for (i = 0; i < n; i++) {
-	xi = (double) x[i];
-	prod += xi*xi;
-    }
-    return prod;
-}
 
 void sf_conjgrad_init(int np1     /* preconditioned size */, 
 		      int nx1     /* model size */, 
@@ -130,7 +117,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
     } 
     
     dg = g0 = gnp = 0.;
-    r0 = norm(nr,r);
+    r0 = cblas_dsdot(nr,r,1,r,1);
     if (r0 == 0.) {
 	if (verb) sf_warning("zero residual: r0=%g",r0);
 	return;
@@ -161,7 +148,7 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 	    oper(false,false,nx,nr,gx,gr);
 	}
 
-	gn = norm(np,gp);
+	gn = cblas_dsdot(np,gp,1,gp,1);
 
 	if (iter==0) {
 	    g0 = gn;
@@ -187,35 +174,26 @@ void sf_conjgrad(sf_operator prec  /* data preconditioning */,
 		break;
 	    }
 
-	    for (i=0; i < np; i++) {
-		sp[i] = gp[i] + alpha * sp[i];
-	    }
-	    for (i=0; i < nx; i++) {
-		sx[i] = gx[i] + alpha * sx[i];
-	    }
-	    for (i=0; i < nr; i++) {
-		sr[i] = gr[i] + alpha * sr[i];
-	    }
+	    cblas_saxpy(np,alpha,sp,1,gp,1);
+	    cblas_sswap(np,sp,1,gp,1);
+
+	    cblas_saxpy(nx,alpha,sx,1,gx,1);
+	    cblas_sswap(nx,sx,1,gx,1);
+
+	    cblas_saxpy(nr,alpha,sr,1,gr,1);
+	    cblas_sswap(nr,sr,1,gr,1);
 	}
 
-	beta = norm(nr,sr) + eps*(norm(np,sp) - norm(nx,sx));
+	beta = cblas_dsdot(nr,sr,1,sr,1) + eps*(cblas_dsdot(np,sp,1,sp,1) - cblas_dsdot(nx,sx,1,sx,1));
 	
 	if (verb) sf_warning("iteration %d res: %f grad: %f",
-			     iter,norm(nr,r)/r0,dg);
+			     iter,cblas_snrm2(nr,r,1)/r0,dg);
 
 	alpha = - gn / beta;
 
-	for (i=0; i < np; i++) {
-	    p[i] += alpha * sp[i];
-	}
-
-	for (i=0; i < nx; i++) {
-	    x[i] += alpha * sx[i];
-	}
-
-	for (i=0; i < nr; i++) {
-	    r[i] += alpha * sr[i];
-	}
+	cblas_saxpy(np,alpha,sp,1,p,1);
+	cblas_saxpy(nx,alpha,sx,1,x,1);
+	cblas_saxpy(nr,alpha,sr,1,r,1);
 
 	gnp = gn;
     }

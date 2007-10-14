@@ -22,6 +22,7 @@
 #include "ccgstep.h"
 #include "alloc.h"
 #include "komplex.h"
+#include "blas.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -36,8 +37,6 @@ static bool Allocated = false; /* if S and Ss are allocated */
 static sf_double_complex dotprod (int n, 
 				  const sf_complex* x, const sf_complex* y);
 /* complex dot product */
-static float norm(int n, const sf_complex* x);
-/* complex norm */
 
 void sf_ccgstep( bool forget             /* restart flag */, 
 		 int nx                  /* model size */, 
@@ -66,7 +65,7 @@ void sf_ccgstep( bool forget             /* restart flag */,
 	}    
 
 	beta = sf_dcmplx(0.0,0.0);
-	if (norm(ny,gg) <= 0.) return;
+	if (cblas_scnrm2(ny,gg,1) <= 0.) return;
 #ifdef SF_HAS_COMPLEX_H
 	alfa = - dotprod( ny, gg, rr) / dotprod(ny, gg, gg);
 #else
@@ -113,6 +112,7 @@ void sf_ccgstep( bool forget             /* restart flag */,
 				 sf_dcmul(sdg,gdr)),determ);
 #endif
     }
+
     for (i = 0; i < nx; i++) {
 #ifdef SF_HAS_COMPLEX_H
 	S[i]  =  alfa * g[i] + beta *  S[i];
@@ -169,23 +169,6 @@ static sf_double_complex dotprod (int n,
 #endif
     }
     return prod;
-}
-
-static float norm (int n, const sf_complex* x) 
-/* complex norm */
-{
-    int i;
-    float xn;
-
-    xn = 0.0;
-    for (i=0; i < n; i++) {
-#ifdef SF_HAS_COMPLEX_H
-	xn += crealf(x[i]*conjf(x[i]));
-#else
-	xn += crealf(sf_cmul(x[i],conjf(x[i])));
-#endif
-    }
-    return xn;
 }
 
 /* 	$Id$	 */

@@ -66,15 +66,16 @@ void rfwtva (int n               /* number of samples in array to rasterize */,
 	     float zmin          /* z values below zmin will be clipped */, 
 	     float zmax          /* z values above zmax will be clipped */, 
 	     float zbase         /* z values between zbase and zmax will be filled */,
-	     int yzmin           /* horizontal raster corresponding to zmin */, 
-	     int yzmax           /* horizontal raster corresponding to zmax */, 
+	     int yzmin           /* horizontal raster coordinate corresponding to zmin */, 
+	     int yzmax           /* horizontal raster coordinate corresponding to zmax */, 
 	     int xfirst          /* vertical raster coordinate of z[0] */, 
 	     int xlast           /* vertical raster coordinate of z[n-1] */,
 	     int wiggle          /* =0 for no wiggle (VA only); =1 for wiggle (with VA)
 				    wiggle 2<=wiggle<=5 for solid/grey coloring of VA option
 				    shade of grey: wiggle=2 light grey, wiggle=5 black */, 
 	     int nbpr            /* number of bytes per row of bits */, 
-	     unsigned char *bits /* pointer to first (top,left) byte in image */)
+	     unsigned char *bits /* pointer to first (top,left) byte in image */,
+	     int endian          /* byte order  =1 big endian  =0 little endian  */)
 /*< Rasterize a float array as wiggle-trace-variable-area.
 
 The raster coordinate of the (top,left) bit in the image is (0,0).
@@ -191,12 +192,12 @@ MODIFIED:  Paul Michaels, Boise State University, 29 December 2000
 
 			/* if wiggle or filling, then set the bit */
 			if (wiggle || y>ybase) { 
-/*				if (endian==0) 
-					*byte |= 1<<(-bit+7);
-					else if (endian==1) */
-					*byte |= 1<<bit;
-/*				else
-  fprintf(stderr,"endian must equal either 0 or 1\n"); */
+			    if (endian==0) 
+				*byte |= 1<<(-bit+7);
+			    else if (endian==1) 
+				*byte |= 1<<bit;
+			    else
+				sf_error("%s: endian must equal either 0 or 1",__FILE__); 
 			}
 
 			
@@ -208,12 +209,12 @@ MODIFIED:  Paul Michaels, Boise State University, 29 December 2000
 					byte--;
 					bit = 0;
 				}
-/*				if (endian==0)
-					*byte |= 1<<(-bit+7);
-					else if (endian==1) */
-					*byte |= 1<<bit;
-/*				else
-  fprintf(stderr,"endian must equal either 0 or 1\n"); */
+				if (endian==0)
+				    *byte |= 1<<(-bit+7);
+				else if (endian==1) 
+				    *byte |= 1<<bit;
+				else
+				    sf_error("%s: endian must equal either 0 or 1",__FILE__);
 			}  /* endwhile */
 
 			/* while y less than base, set more bits (GREY FILL TROUGHS) */
@@ -230,12 +231,12 @@ MODIFIED:  Paul Michaels, Boise State University, 29 December 2000
 						byte++;
 						bit = 7;
 					}
-/*					if (endian==0)
-						*byte |= 1<<(-bit+7); 
-						else if (endian==1) */
+					if (endian==0)
+					    *byte |= 1<<(-bit+7); 
+					else if (endian==1)
 						*byte |= 1<<bit;
-/*					else
-  fprintf(stderr,"endian must equal either 0 or 1\n"); */
+					else
+					    sf_error("%s: endian must equal either 0 or 1",__FILE__);
 				}  /* endwhile  */
 			}  /*  endif igrey   */
 

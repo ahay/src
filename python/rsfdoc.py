@@ -52,8 +52,10 @@ def use(target=None,source=None,env=None):
     bookdir = env.get('book')
     if os.path.isdir(bookdir):
         os.chdir(bookdir)
+        cwtop = os.getcwd()
         for book in subdirs():
             os.chdir(book)
+            cwbook = os.getcwd()
             print "%s..." % book
             for chapter in subdirs():
                 os.chdir(chapter)
@@ -63,8 +65,8 @@ def use(target=None,source=None,env=None):
                 doc = doc + sout.read()
                 sout.close()
 
-                os.chdir('..')
-            os.chdir('..')
+                os.chdir(cwbook)
+            os.chdir(cwtop)
         os.chdir(cwd)
     out.write(doc)
     out.close()
@@ -541,7 +543,7 @@ def getprog(file,out,lang = 'c',rsfprefix = 'sf',rsfsuffix='rsf',
             rsfplotprefix='vp',rsfplotsuffix='vpl'):
     global comment, param, params, param2, params2, \
            synopsis, stringpar, inpout, version
-    name = rsfprefix + re.sub('^M','',os.path.basename(file))
+    name = rsfprefix + re.sub('^[MX]','',os.path.basename(file))
     if lang[:2] == 'py':
         name = re.sub('\.py$','',name)
     elif lang[0] =='f':

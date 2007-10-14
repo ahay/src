@@ -27,24 +27,25 @@ def publicproj(project):
     # OK if no PRIVATE data
     sin, sout, serr = os.popen3('scons -s .sf_data')
     sin.close()
-    data = sout.read()
-    sout.close()
     status = serr.read()
     serr.close()
-    if not status:
+    if not status:    
+        data = sout.read()
+        sout.close()
         items = string.split(data)
         if 'PRIVATE' in items:
             return 0
     return 1
 
 def progtest(target=None,source=None,env=None):
+    cwd = os.getcwd()
     for project in env.get('projects'):
         if publicproj(project):
             print 'Testing in %s' % project
             print '-----------' + '-'*len(project)
             if os.system('scons test'):
                 return 1
-        os.chdir('../../..')            
+        os.chdir(cwd)            
     return 0
 
 def www(target=None,source=None,env=None):

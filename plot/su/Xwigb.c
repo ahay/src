@@ -136,7 +136,7 @@ static XImage *newBitmapCWP (Display *dpy, int width, int height,
 	int n1, float d1, float f1, int n2, float *x2, float *z,
 	float x1beg, float x1end, float x2beg, float x2end,
 	float xcur, float clip, int wt, int va,
-	float *p2begp, float *p2endp, int interp,
+	float *p2begp, float *p2endp, int endian, int interp,
 	int wigclip, int style);
 void xMouseLoc(Display *dpy, Window win, XEvent event, int style, Bool show,
 	int x, int y, int width, int height,
@@ -153,7 +153,7 @@ int main (int argc, char *argv[])
     bool verbose, interp;
     int n1,n2,n1tic,n2tic,wt,va,
 	i2,grid1,grid2,style=0,
-	nz,iz,
+	nz,iz,endian,
 	xbox,ybox,wbox,hbox,
 	xb,yb,wb,hb,
 	x,y,width,height,
@@ -364,12 +364,25 @@ int main (int argc, char *argv[])
     scr = DefaultScreen(dpy);
     black = BlackPixel(dpy,scr);
     white = WhitePixel(dpy,scr);
+
+    if (!sf_getint("endian",&endian)){
+	/* endian for display =0 little endian =1 big endian */
+	if(BitmapBitOrder(dpy)==LSBFirst)
+	    endian=0;
+	else if(BitmapBitOrder(dpy)==MSBFirst)
+	    endian=1;
+	else if (sf_endian())
+	    endian=0;
+	else
+	    endian=1;
+    }
  
     if (!sf_getbool("interp",&interp)) interp = false;
     /* if y, use interpolation */
  
     /* create window */
-    win = xNewWindow(dpy,xbox,ybox,wbox,hbox,(int) black,(int) white,windowtitle);
+    win = xNewWindow(dpy,xbox,ybox,wbox,hbox,
+		     (int) black,(int) white,windowtitle);
 		
     /* make GC for image */
     gci = XCreateGC(dpy,win,0,NULL);
@@ -441,7 +454,7 @@ int main (int argc, char *argv[])
 					n1,d1,f1,n2,x2,z,
 					x1begb,x1endb,x2begb,x2endb,
 					xcur,clip,wt,va,
-					&p2beg,&p2end,interp,
+					&p2beg,&p2end,endian,interp,
 					wigclip,style);
 				imageOutOfDate = 0;
 			}
@@ -786,7 +799,7 @@ static XImage *newBitmapCWP (Display *dpy, int width, int height,
 	int n1, float d1, float f1, int n2, float *x2, float *z,
 	float x1beg, float x1end, float x2beg, float x2end,
 	float xcur, float clip, int wt, int va,
-	float *p2begp, float *p2endp, int interp,
+	float *p2begp, float *p2endp, int endian, int interp,
 	int wigclip, int style)
 {
 	int widthpad,nbpr,i1beg,i1end,if1r,n1r,b1fz,b1lz,i2,i,n2in;
@@ -879,11 +892,11 @@ static XImage *newBitmapCWP (Display *dpy, int width, int height,
 		if (interp==0) { /* don't use interpolation */
 			rfwtva(n1r,&z[if1r],clip1,clip2,va?0:clip2,
 				b2f,b2l,b1fz,b1lz,
-				wt,nbpr,bits);
+				wt,nbpr,bits,endian);
 		} else { /* use 8 point sinc interpolation */
 			rfwtvaint(n1r,&z[if1r],clip1,clip2,va?0:clip2,
 				b2f,b2l,b1fz,b1lz,
-				wt,nbpr,bits);
+				wt,nbpr,bits,endian);
 		}
 		
 	}

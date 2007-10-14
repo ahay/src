@@ -220,9 +220,7 @@ int main(int argc, char* argv[])
 		       if (0 > fseeko(sfile,pos,SEEK_SET))
 			   sf_error ("seek problem");
 
-		       for (i=0; i < mbuf; i++) {
-			   buf[i] += alpha * buf2[i];
-		       }
+		       cblas_saxpy(mbuf,alpha,buf2,1,buf,1);
 		   } 
 		   
 		   MWRITE(sfile); );
@@ -280,14 +278,10 @@ int main(int argc, char* argv[])
 		       if (0 > fseeko(Sfile,pos,SEEK_SET))
 			   sf_error ("seek problem");
 		    
-		       for (i=0; i < dbuf; i++) {
-			   buf[i] += alpha * buf2[i];
-		       }
+		       cblas_saxpy(dbuf,alpha,buf2,1,buf,1);
 		   }
 
-		   for (i=0; i < dbuf; i++) {
-		       beta += (double) buf[i] * buf[i];
-		   }
+		   beta += cblas_dsdot(dbuf,buf,1,buf,1);
 		
 		   DWRITE(Sfile); );
 	    fclose(Sfile);
@@ -322,9 +316,7 @@ int main(int argc, char* argv[])
 		   MREAD(xfile);
 		   MREAD2(sfile); 
 		   
-		   for (i=0; i < mbuf; i++) {
-		       buf[i] += alpha * buf2[i];
-		   }
+		   cblas_saxpy(mbuf,alpha,buf2,1,buf,1);
 
 		   if (0 > fseeko(xfile,pos,SEEK_SET))
 		   sf_error ("seek problem");
@@ -342,9 +334,7 @@ int main(int argc, char* argv[])
 		   DREAD(Rfile);
 		   DREAD2 (Sfile);
 		   
-		   for (i=0; i < dbuf; i++) {
-		       buf[i] += alpha * buf2[i];
-		   }
+		   cblas_saxpy(dbuf,alpha,buf2,1,buf,1);
 
 		   if (0 > fseeko(Rfile,pos,SEEK_SET))
 		   sf_error ("seek problem");

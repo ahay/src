@@ -114,6 +114,7 @@ def check_all(context):
     x11 (context) # FDNSI
     ppm (context) # FDNSI
     jpeg(context) # FDNSI
+    blas(context) # FDNSI
     mpi (context) # FDNSI
     api = api_options(context)
     if 'c++' in api:
@@ -500,9 +501,32 @@ def jpeg(context):
 
     LIBS.pop()
 
+def blas(context):
+    context.Message("checking for BLAS ... ")
+    LIBS = context.env.get('LIBS','m')
+    if type(LIBS) is not types.ListType:
+        LIBS = string.split(LIBS)
+    blas = context.env.get('BLAS','blas')
+    LIBS.append(blas)
+    text = '''
+    #include <cblas.h>
+    int main(int argc,char* argv[]) {
+    float d, x[]={1.,2.,3.}, y[]={3.,2.,1.};
+    d = cblas_sdot(3,x,1,y,1);
+    return 0;
+    }\n'''
+
+    res = context.TryLink(text,'.c')
+    if res:
+        context.Result(res)
+        context.env['LIBS'] = LIBS
+    else:
+        context.Result(context_failure)
+        context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
+        LIBS.pop()
+
 package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
 
-# If this test is failed, it is unknown what capabilities are lost
 def mpi(context):
     context.Message("checking for MPI ... ")
     mpicc = WhereIs('mpicc')
@@ -807,6 +831,7 @@ def options(opts):
     opts.Add('ENV','SCons environment')
     opts.Add('AR','Static library archiver')
     opts.Add('JPEG','The libjpeg library')
+    opts.Add('BLAS','The BLAS library')
     opts.Add('PPM','The netpbm library')
     opts.Add('CC','The C compiler')
     opts.Add('CCFLAGS','General options that are passed to the C compiler',

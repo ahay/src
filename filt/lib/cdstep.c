@@ -22,14 +22,12 @@
 #include "cdstep.h"
 #include "llist.h"
 #include "alloc.h"
+#include "blas.h"
 
 #include "_bool.h"
 /*^*/
 
 static sf_list steps;
-
-static double dotprod (int n, const float* x, const float* y); 
-/* double-precision dot product */
 
 void sf_cdstep_init(void) 
 /*< initialize internal storage >*/
@@ -69,21 +67,19 @@ void sf_cdstep(bool forget     /* restart flag */,
 
     for (i=0; i < n; i++) {
 	sf_llist_down (steps, &si, &beta);
-	alpha = dotprod (ny, gg, si+nx) / beta;
-	for (ix=0; ix < nx+ny; ix++) {
-	    s[ix] -= alpha * si[ix];
-	}
+	alpha = - cblas_dsdot(ny, gg, 1, si+nx, 1) / beta;
+	cblas_saxpy(nx+ny,alpha,si,1,s,1);
     }
     
-    beta = dotprod (ny, s+nx, s+nx);
+    beta = cblas_dsdot(ny, s+nx, 1, s+nx, 1);
     if (beta < DBL_EPSILON) return;
 
     sf_llist_add (steps, s, beta);
     if (forget) sf_llist_chop (steps);
-    alpha = - dotprod (ny, rr, ss) / beta;
+    alpha = -  cblas_dsdot(ny, rr, 1, ss, 1) / beta;
     
-    for (ix=0; ix < nx; ix++) {  x[ix] += alpha *  s[ix]; }
-    for (iy=0; iy < ny; iy++) { rr[iy] += alpha * ss[iy]; }
+    cblas_saxpy(nx,alpha,s, 1,x, 1);
+    cblas_saxpy(ny,alpha,ss,1,rr,1);
 }
 
 void sf_cdstep_diag(int nx, float *res /* [nx] */)
@@ -103,7 +99,7 @@ void sf_cdstep_diag(int nx, float *res /* [nx] */)
     for (i=0; i < n; i++) {
 	sf_llist_down (steps, &s, &sn);
 	for (ix=0; ix < nx; ix++) {
-	    res[ix] += dotprod(nx,s,s)/sn;
+	    res[ix] += cblas_dsdot(nx,s,1,s,1)/sn;
 	}
     }
 }
@@ -132,16 +128,4 @@ void sf_cdstep_mat (int nx, float **res /* [nx][nx] */)
 	    }
 	}
     }
-}
-
-static double dotprod (int n, const float* x, const float* y) 
-/* double-precision dot product */
-{
-    double prod;
-    int i;
-    prod = 0.;
-    for (i = 0; i < n; i++) {
-	prod += ((double) x[i])*y[i];
-    }
-    return prod;
 }

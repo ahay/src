@@ -33,10 +33,9 @@
 #include "alloc.h"
 #include "error.h"
 #include "komplex.h"
+#include "blas.h"
 
 static const float TOLERANCE=1.e-12;
-
-static float norm (int n, const float* x);
 
 void sf_solver_prec (sf_operator oper   /* linear operator */, 
 		     sf_solverstep solv /* stepping function */, 
@@ -231,28 +230,28 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 	} else {
 	    sf_chain (oper, prec, false, false, nprec, ny, nx,  g, gg, x);
 	}
-	for (i=0; i < ny; i++) {
-	    if (wht != NULL) {
-		gg[i] = eps*g[i+nprec] + wht[i]*gg[i];
-	    } else {
-		gg[i] = eps*g[i+nprec] + gg[i];
+	if (wht != NULL) {
+	    for (i=0; i < ny; i++) {
+		gg[i] *= wht[i];
 	    }
 	}
+	cblas_saxpy(ny,eps,g+nprec,1,gg,1);
+
 	if (forget && nfreq != 0) {  /* periodic restart */
 	    forget = (bool) (0 == (iter+1)%nfreq);
 	} 
 	
 	if (iter == 0) {
-	    dprr0 = norm (ny, rr);
-	    dpgm0 = norm (nprec, g);
+	    dprr0 = cblas_snrm2 (ny, rr, 1);
+	    dpgm0 = cblas_snrm2 (nprec, g, 1);
 	    dprr = 1.;
 	    dpgm = 1.;
 	} else {
-	    dprr = norm (ny, rr)/dprr0;
-	    dpgm = norm (nprec, g)/dpgm0;
+	    dprr = cblas_snrm2 (ny, rr, 1)/dprr0;
+	    dpgm = cblas_snrm2 (nprec, g, 1)/dpgm0;
 	}
-	dppd = norm (ny, p+nprec);
-	dppm = norm (nprec, p);
+	dppd = cblas_snrm2 (ny, p+nprec, 1);
+	dppm = cblas_snrm2 (nprec, p, 1);
 
 	if (verb) 
 	    sf_warning("iteration %d res %g prec dat %g prec mod %g grad %g", 
@@ -321,7 +320,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 		rmov[iter][i] =  p[i+nprec] * eps;
 	    }
 	}
-	if (err != NULL) err[iter] = norm(ny, rr);
+	if (err != NULL) err[iter] = cblas_snrm2(ny, rr, 1);
     } /* iter */
 
     if (xp != NULL) {
@@ -346,7 +345,7 @@ void sf_solver_prec (sf_operator oper   /* linear operator */,
 		rmov[iter][i] =  p[i+nprec] * eps;
 	    }
 	}    
-	if (err != NULL) err[iter] = norm(ny, rr);
+	if (err != NULL) err[iter] = cblas_snrm2(ny, rr, 1);
     }  
 
     free (p);
@@ -502,9 +501,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	} else {
 	    reg  (false, false, nx, nreg, x, rr+ny);            
 	}
-	for (i=0; i < nreg; i++) {
-	    rr[i+ny] *= eps;
-	}
+	cblas_sscal(nreg,eps,rr+ny,1);
     } else {
 	for (i=0; i < nx; i++) {
 	    x[i] = 0.0;
@@ -514,7 +511,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
     }
 
-    dpr0 = norm(ny, rr);
+    dpr0 = cblas_snrm2(ny, rr, 1);
     dpg0 = 1.;
 
     for (iter=0; iter < niter; iter++) {
@@ -543,9 +540,9 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	    }
 	} 
 	sf_array (oper, reg, false, false, nx, ny, nreg, g, gg, gg+ny);
-	for (i=0; i < nreg; i++) {
-	    gg[i+ny] *= eps;
-	}
+
+	cblas_sscal(nreg,eps,gg+ny,1);
+
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
 		gg[i] *= wht[i];
@@ -557,17 +554,17 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
 
 	if (iter == 0) {
-	    dpg0  = norm (nx, g);
+	    dpg0  = cblas_snrm2 (nx, g, 1);
 	    dpr = 1.;
 	    dpg = 1.;
 	} else {
-	    dpr = norm (ny, rr)/dpr0;	    
-	    dpg = norm (nx, g)/dpg0;
+	    dpr = cblas_snrm2 (ny, rr, 1)/dpr0;	    
+	    dpg = cblas_snrm2 (nx, g , 1)/dpg0;
 	} 
 
 	if (verb) 
 	    sf_warning ("iteration %d res dat %f res mod %f mod %f grad %f",
-			iter, dpr, norm (nreg, rr+ny), norm (nx, x), dpg);
+			iter, dpr, cblas_snrm2 (nreg, rr+ny, 1), cblas_snrm2 (nx, x, 1), dpg);
 
 	if (dpr < TOLERANCE || dpg < TOLERANCE) {
 	    if (verb) 
@@ -586,9 +583,8 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
 	if (nlreg != NULL) {
 	    nlreg  (false, false, nx, nreg, x, rr+ny); 
-	    for (i=0; i < nreg; i++) {
-		rr[i+ny] *= eps; 
-	    }
+
+	    cblas_sscal(nreg,eps,rr+ny,1);
 	}
 	if (wht != NULL) {
 	    for (i=0; i < ny; i++) {
@@ -608,7 +604,7 @@ void sf_solver_reg (sf_operator oper   /* linear operator */,
 	}
     
 	if (err != NULL) {
-	    err[iter] = norm(ny, rr);
+	    err[iter] = cblas_snrm2(ny, rr, 1);
 	}
     }
 
@@ -767,7 +763,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	} 
     }
 
-    dpr0 = norm(ny, rr);
+    dpr0 = cblas_snrm2(ny, rr, 1);
     dpg0 = 1.;
 
     for (iter=0; iter < niter; iter++) {
@@ -819,17 +815,17 @@ void sf_solver (sf_operator oper   /* linear operator */,
 
 
 	if (iter == 0) {
-	    dpg0  = norm (nx, g);
+	    dpg0  = cblas_snrm2 (nx, g, 1);
 	    dpr = 1.;
 	    dpg = 1.;
 	} else {
-	    dpr = norm (ny, rr)/dpr0;
-	    dpg = norm (nx, g)/dpg0;
+	    dpr = cblas_snrm2 (ny, rr, 1)/dpr0;
+	    dpg = cblas_snrm2 (nx, g , 1)/dpg0;
 	}    
 
 	if (verb) 
 	    sf_warning ("iteration %d res %f mod %f grad %f",
-			iter+1, dpr, norm (nx, x), dpg);
+			iter+1, dpr, cblas_snrm2 (nx, x, 1), dpg);
 	
 
 	if (dpr < TOLERANCE || dpg < TOLERANCE) {
@@ -886,7 +882,7 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	}
     
 	if (err != NULL) {
-	    err[iter] = norm(ny, rr);
+	    err[iter] = cblas_snrm2(ny, rr, 1);
 	}
     }
 
@@ -907,21 +903,6 @@ void sf_solver (sf_operator oper   /* linear operator */,
 	}
     }
 }
-  
-static float norm (int n, const float* x) 
-/* vector norm */
-{
-    int i;
-    float xn;
-
-    xn = 0.0;
-    for (i=0; i < n; i++) {
-	xn += x[i]*x[i];
-    }
-    return xn;
-}
-
-static float cnorm (int n, const sf_complex* x);
 
 void sf_csolver (sf_coperator oper        /* linear operator */, 
 		 sf_csolverstep solv      /* stepping function */, 
@@ -1049,7 +1030,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	} 
     }
 
-    dpr0 = cnorm(ny, rr);
+    dpr0 = cblas_scnrm2(ny, rr, 1);
     dpg0 = 1.;
 
     for (iter=0; iter < niter; iter++) {
@@ -1095,17 +1076,17 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	}
 
 	if (iter == 0) {
-	    dpg0  = cnorm (nx, g);
+	    dpg0  = cblas_scnrm2 (nx, g, 1);
 	    dpr = 1.;
 	    dpg = 1.;
 	} else {
-	    dpr = cnorm (ny, rr)/dpr0;
-	    dpg = cnorm (nx, g)/dpg0;
+	    dpr = cblas_scnrm2 (ny, rr, 1)/dpr0;
+	    dpg = cblas_scnrm2 (nx, g , 1)/dpg0;
 	}    
 
 	if (verb) {
 	    sf_warning ("iteration %d res %f mod %f grad %f",
-			iter+1, dpr, cnorm (nx, x), dpg);
+			iter+1, dpr, cblas_scnrm2 (nx, x, 1), dpg);
 	}
 
 	if (dpr < TOLERANCE || dpg < TOLERANCE) {
@@ -1149,7 +1130,7 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
 	}
     
 	if (err != NULL) {
-	    err[iter] = cnorm(ny, rr);
+	    err[iter] = cblas_scnrm2(ny, rr, 1);
 	}
     }
 
@@ -1171,21 +1152,4 @@ void sf_csolver (sf_coperator oper        /* linear operator */,
     }
 }
   
-static float cnorm (int n, const sf_complex* x) 
-/* norm of a complex vector */
-{
-    int i;
-    float xn;
-
-    xn = 0.0;
-    for (i=0; i < n; i++) {
-#ifdef SF_HAS_COMPLEX_H
-	xn += crealf(x[i]*conjf(x[i]));
-#else
-	xn += crealf(sf_cmul(x[i],conjf(x[i])));
-#endif
-    }
-    return xn;
-}
-
 /* 	$Id$	 */

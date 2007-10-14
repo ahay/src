@@ -20,6 +20,7 @@
 #include "conjprec.h"
 #include "alloc.h"
 #include "error.h"
+#include "blas.h"
 
 #include "_bool.h"
 #include "_solver.h"
@@ -36,20 +37,6 @@ static int nx, nr;
 static float *r, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
-
-static double norm (int n, const float* x) 
-/* double-precision L2 norm */
-{
-    double prod, xi;
-    int i;
-
-    prod = 0.;
-    for (i = 0; i < n; i++) {
-	xi = (double) x[i];
-	prod += xi*xi;
-    }
-    return prod;
-}
 
 void sf_conjprec_init(int nx1     /* preconditioned size */, 
 		      int nr1     /* residual size */, 
@@ -116,7 +103,7 @@ void sf_conjprec(sf_operator oper  /* linear operator */,
     } 
     
     dg = b0 = g0 = gnp = 0.;
-    r0 = verb? norm(nr,r): 0.;
+    r0 = verb? cblas_dsdot(nr,r,1,r,1): 0.;
 
     for (iter=0; iter < niter; iter++) {
 	for (i=0; i < nr; i++) {
@@ -127,7 +114,7 @@ void sf_conjprec(sf_operator oper  /* linear operator */,
 	prec(nx,gx);
 	oper(false,false,nx,nr,gx,gr);
 
-	gn = norm(nr,gp);
+	gn = cblas_dsdot(nr,gp,1,gp,1);
 
 	if (iter==0) {
 	    g0 = gn;
@@ -156,13 +143,14 @@ void sf_conjprec(sf_operator oper  /* linear operator */,
 		break;
 	    }
 
-	    for (i=0; i < nr; i++) {
-		sp[i] = gp[i] + alpha * sp[i];
-		sr[i] = gr[i] + alpha * sr[i];
-	    }
-	    for (i=0; i < nx; i++) {
-		sx[i] = gx[i] + alpha * sx[i];
-	    }
+	    cblas_saxpy(nr,alpha,sp,1,gp,1);
+	    cblas_sswap(nr,sp,1,gp,1);
+
+	    cblas_saxpy(nr,alpha,sr,1,gr,1);
+	    cblas_sswap(nr,sr,1,gr,1);
+
+	    cblas_saxpy(nx,alpha,sx,1,gx,1);
+	    cblas_sswap(nx,sx,1,gx,1);
 	}
 
 	beta = 0.;
@@ -180,18 +168,13 @@ void sf_conjprec(sf_operator oper  /* linear operator */,
 	*/
 	
 	if (verb) sf_warning("iteration %d res: %f grad: %f",
-			     iter,norm(nr,r)/r0,dg);
+			     iter,cblas_sdot(nr,r,1,r,1)/r0,dg);
 
 	alpha = - gn / beta;
 
-	for (i=0; i < nr; i++) {
-	    p[i] += alpha * sp[i];
-	    r[i] += alpha * sr[i];
-	}
-
-	for (i=0; i < nx; i++) {
-	    x[i] += alpha * sx[i];
-	}
+	cblas_saxpy(nr,alpha,sp,1,p,1);
+	cblas_saxpy(nx,alpha,sx,1,x,1);
+	cblas_saxpy(nr,alpha,sr,1,r,1);
 
 	gnp = gn;
     }

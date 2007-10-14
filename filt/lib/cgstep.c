@@ -21,6 +21,7 @@
 
 #include "cgstep.h"
 #include "alloc.h"
+#include "blas.h"
 
 #include "_bool.h"
 /*^*/
@@ -31,9 +32,6 @@ static const float EPSILON=1.e-12;
 static float* S;  /* model step */
 static float* Ss; /* residual step */
 static bool Allocated = false; /* if S and Ss are allocated */
-
-static double dotprod (int n, const float* x, const float* y);
-/* double-precision dot product */
 
 void sf_cgstep( bool forget     /* restart flag */, 
 		int nx, int ny  /* model size, data size */, 
@@ -54,31 +52,35 @@ void sf_cgstep( bool forget     /* restart flag */,
 	for (i = 0; i < nx; i++) S[i] = 0.;
 	for (i = 0; i < ny; i++) Ss[i] = 0.;
 	beta = 0.0;
-	alfa = dotprod( ny, gg, gg);
+	alfa = cblas_dsdot( ny, gg, 1, gg, 1);
 	if (alfa <= 0.) return;
-	alfa = - dotprod( ny, gg, rr) / alfa;
+	alfa = - cblas_dsdot( ny, gg, 1, rr, 1) / alfa;
     } else {
 	/* search plane by solving 2-by-2
 	   G . (R - G*alfa - S*beta) = 0
 	   S . (R - G*alfa - S*beta) = 0 */
-	gdg = dotprod( ny, gg, gg);       
-	sds = dotprod( ny, Ss, Ss);       
-	gds = dotprod( ny, gg, Ss);       
+	gdg = cblas_dsdot( ny, gg, 1, gg, 1);       
+	sds = cblas_dsdot( ny, Ss, 1, Ss, 1);       
+	gds = cblas_dsdot( ny, gg, 1, Ss, 1);       
 	if (gdg == 0. || sds == 0.) return;
 	determ = 1.0 - (gds/gdg)*(gds/sds);
 	if (determ > EPSILON) determ *= gdg * sds;
 	else determ = gdg * sds * EPSILON;
-	gdr = - dotprod( ny, gg, rr);
-	sdr = - dotprod( ny, Ss, rr);
+	gdr = - cblas_dsdot( ny, gg, 1, rr, 1);
+	sdr = - cblas_dsdot( ny, Ss, 1, rr, 1);
 	alfa = ( sds * gdr - gds * sdr ) / determ;
 	beta = (-gds * gdr + gdg * sdr ) / determ;
     }
+    cblas_sscal(nx,beta,S,1);
+    cblas_saxpy(nx,alfa,g,1,S,1);
+
+    cblas_sscal(ny,beta,Ss,1);
+    cblas_saxpy(ny,alfa,gg,1,Ss,1);
+
     for (i = 0; i < nx; i++) {
-	S[i]  =  alfa * g[i] + beta *  S[i];
 	x[i] +=  S[i];
     }
     for (i = 0; i < ny; i++) {
-	Ss[i] = alfa * gg[i] + beta * Ss[i];
 	rr[i] += Ss[i];
     }
 }
@@ -91,18 +93,6 @@ void sf_cgstep_close (void)
 	free (Ss);
 	Allocated = false;
     }
-}
-
-static double dotprod (int n, const float* x, const float* y) 
-/* double-precision dot product */
-{
-    double prod;
-    int i;
-    prod = 0.;
-    for (i = 0; i < n; i++) {
-	prod += ((double) x[i])*y[i];
-    }
-    return prod;
 }
 
 /* 	$Id$	 */

@@ -58,6 +58,7 @@
   School of Mines, partially based on Stanford Exploration Project (SEP) 
   software.
 */
+#include <math.h>
 
 void scaxis (float x1     /* first x value */, 
 	     float x2     /* second x value */, 
@@ -100,11 +101,11 @@ Author:  Dave Hale, Colorado School of Mines, 01/13/89
 	
 	/* determine output parameters, adjusted for roundoff */
 	a = (xmax-xmin)/(float)(n-1);
-	iloga = (int)log10(a);
+	iloga = (int)log10f(a);
 	if (a<1.0) iloga = iloga - 1;
-	b = a/pow(10.0,(double)iloga);
-	for (i=0; i<3 && b>=sqrt(rdint[i]*rdint[i+1]); i++);
-	d = rdint[i]*pow(10.0,(float)iloga);
+	b = a/powf(10.0,(double)iloga);
+	for (i=0; i<3 && b>=sqrtf(rdint[i]*rdint[i+1]); i++);
+	d = rdint[i]*powf(10.0,(float)iloga);
 	f = ((int)(xmin/d))*d-d;
 	eps = 0.0001*(xmax-xmin);
 	while(f<(xmin-eps))

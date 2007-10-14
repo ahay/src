@@ -21,14 +21,11 @@
 
 #include "dottest.h"
 #include "alloc.h"
+#include "randn.h"
+#include "blas.h"
 
 #include "_solver.h"
 /*^*/
-
-static float dotprod (int n, const float* x, const float* y);
-/* dot product */
-static void randvec (int n, /*@out@*/ float* x);
-/* random vector */
 
 void sf_dot_test(sf_operator oper /* linear operator */, 
 		 int nm           /* model size */, 
@@ -47,20 +44,20 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     dat1 = sf_floatalloc (nd);
     dat2 = sf_floatalloc (nd);
 
-    randvec( nm, mod1);
-    randvec( nd, dat2);
+    sf_random( nm, mod1);
+    sf_random( nd, dat2);
 
     oper(false, false, nm, nd, mod1, dat1);
-    dot1[0] = dotprod( nd, dat1, dat2);
+    dot1[0] = cblas_sdot( nd, dat1, 1, dat2, 1);
 
     oper(true, false, nm, nd, mod2, dat2);
-    dot1[1] = dotprod( nm, mod1, mod2);
+    dot1[1] = cblas_sdot( nm, mod1, 1, mod2, 1);
 
     oper(false, true, nm, nd, mod1, dat1);
-    dot2[0] = dotprod( nd, dat1, dat2);
+    dot2[0] = cblas_sdot( nd, dat1, 1, dat2, 1);
 
     oper(true, true, nm, nd, mod2, dat2);
-    dot2[1] = dotprod( nm, mod1, mod2);
+    dot2[1] = cblas_sdot( nm, mod1, 1, mod2, 1);
 
     free (mod1);
     free (mod2);
@@ -68,25 +65,3 @@ void sf_dot_test(sf_operator oper /* linear operator */,
     free (dat2);
 }
 
-static void randvec (int n, /*@out@*/ float* x) 
-/* fills an array x[n] with pseudo-random numbers */
-{
-    int i;
-    
-    for (i = 0; i < n; i++) {
-	x[i] = ((float) rand())/RAND_MAX;
-    }
-}
-
-static float dotprod (int n, const float* x, const float* y) 
-/* returns dot product of two vectors x[n] and y[n] */
-{
-    float prod;
-    int i;
-    
-    prod=0.;
-    for (i = 0; i < n; i++) {
-	prod += x[i]*y[i];
-    }
-    return prod;
-}

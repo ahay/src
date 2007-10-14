@@ -70,9 +70,8 @@ int main (int argc, char* argv[])
 			if (f > dscale) dscale=f;
 		    }
 		    if (dscale > 0.) dscale=1./dscale;
-		    for (i=0; i < n1; i++) {
-			fbuf[i] *= dscale;
-		    }
+
+		    cblas_sscal(n1,dscale,fbuf,1);
 		    sf_floatwrite (fbuf,n1,out);
 		}
 		break;
@@ -119,9 +118,7 @@ int main (int argc, char* argv[])
 		while (nsize > 0) {
 		    if (nsize < nbuf) nbuf = nsize;
 		    sf_floatread (fbuf,nbuf,in);
-		    for (i=0; i < nbuf; i++) {
-			fbuf[i] *= dscale;
-		    }
+		    cblas_sscal(nbuf,dscale,fbuf,1);
 		    sf_floatwrite (fbuf,nbuf,out);
 		    nsize -= nbuf;
 		}	
