@@ -8,9 +8,10 @@ par = {
     'ng':800,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."', 'ug': '.',
     'kt':100,    # wavelet delay 
     'nT':1600, 'dT':0.004,  'oT':0,
-    'ow':1,
+    'ow':1, 'nw': 795,
     'nbz':250,'nbx':250
     }
+
 par['ox']*=0.3048
 par['dx']*=0.3048
 par['oz']*=0.3048
@@ -281,10 +282,10 @@ for i in ('1','2'):
 
 # ------------------------------------------------------------
 zoompar = {    
-    'nz':7,    'dz':1,      'oz':2,     'lz':'label1=z unit1=km',  
-    'nx':10,   'dx':1,      'ox':12,    'lx':'label2=x unit2=km',
-    'nt':30000,'dt':0.0005, 'ot':0,     'lt':'label1="\F10 t\F3 " unit1="s"',
-    'ng':400,  'dg':1,      'og':0,     'lg':'label2="\F10 g\F3 " unit2="."',
+    'nz':7,    'dz':1,      'oz':2,     'lz':'z', 'uz':'km',  
+    'nx':10,   'dx':1,      'ox':12,    'lx':'x', 'ux': 'km',
+    'nt':30000,'dt':0.0005, 'ot':0,     'lt':'\F10 t\F3 ', 'ut': 's',
+    'ng':400,  'dg':1,      'og':0,     'lg':'\F10 g\F3 ', 'ug': '.',
     'nT':1600, 'dT':0.004,  'oT':0
     }
 rwezo.param(zoompar)

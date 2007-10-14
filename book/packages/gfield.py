@@ -9,9 +9,10 @@ def execute(rr,par):
     if(not lpar.has_key('rv')): lpar['rv']=1
     if(not lpar.has_key('aa')): lpar['aa']=1
     
-    # directions
-    lpar['ux'] = math.cos(math.radians(par['ff']))
-    lpar['uz'] = math.sin(math.radians(par['ff']))
+    # directions 
+    lpar['ux'] = math.cos(math.pi*par['ff']/180.)
+    lpar['uz'] = math.sin(math.pi*par['ff']/180.)
+    # cannot use math.radians in old Python
     
     lpar['vx'] =  lpar['uz']
     lpar['vz'] = -lpar['ux']
