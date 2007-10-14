@@ -10,6 +10,8 @@ xprogs = '''
 wigb
 '''
 
+src2 = 'intsinc8 mksinc inttable8 sinc toeplitz' 
+
 try:
     Import('env')
     env = env.Copy()
@@ -42,6 +44,11 @@ env.Prepend(CPPPATH=['../../include',xinc],
 
 if xinc and xlib:
     for source in src:
+        inc = env.Include(source,prefix='')
+        obj = env.StaticObject(source)
+        env.Depends(obj,inc)
+else:
+    for source in map(lambda x: x+'.c',Split(src2)):
         inc = env.Include(source,prefix='')
         obj = env.StaticObject(source)
         env.Depends(obj,inc)
