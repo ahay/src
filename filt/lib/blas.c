@@ -23,7 +23,11 @@
 #ifndef NO_BLAS
 /*^*/
 
+#ifdef __APPLE__
+#include <vecLib/vBLAS.h>
+#else
 #include <cblas.h>
+#endif
 /*^*/
 
 #else

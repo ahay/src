@@ -224,6 +224,8 @@ def cc(context):
                                      ['/sw/include',]
 	    context.env['LIBPATH'] = context.env.get('LIBPATH',[]) + \
                                      ['/sw/lib',]
+            context.env['LDFLAGS'] = context.env.get('LDFLAGS','') + \
+                                     ' -framework Accelerate'
 
     elif plat['OS'] == 'sunos':
         context.env['CCFLAGS'] = string.replace(context.env.get('CCFLAGS',''),
@@ -509,7 +511,11 @@ def blas(context):
     blas = context.env.get('BLAS','blas')
     LIBS.append(blas)
     text = '''
+    #ifdef __APPLE__
+    #include <vecLib/vBLAS.h>
+    #else
     #include <cblas.h>
+    #endif
     int main(int argc,char* argv[]) {
     float d, x[]={1.,2.,3.}, y[]={3.,2.,1.};
     d = cblas_sdot(3,x,1,y,1);
