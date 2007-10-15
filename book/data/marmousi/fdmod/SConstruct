@@ -49,8 +49,7 @@ Flow('xr','r_','math output="x1"')
 Flow('rr',['xr','zr'],'''cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
-Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* symbolsz=10 plotcol=7',par))
+Plot('rr',fdmod.rrplot('',par))
 # source positions
 Flow('zs','s_','math output=.01')
 Flow('xs','s_','math output=5.0')
@@ -59,8 +58,7 @@ Flow('ss',['xs','zs','rs'],'''
      cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
-Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=X plotcol=7 symbolsz=10',par))
+Plot('ss',fdmod.ssplot('',par))
 # ------------------------------------------------------------
 # density
 Flow('vel','marmvel', 
@@ -75,7 +73,7 @@ Result('vel',['vel','rr','ss'],'Overlay')
 Flow('den','vel','math output=1')
 # ------------------------------------------------------------
 # finite-differences modeling
-fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
+fdmod.awefd('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
 Plot('wfl',fdmod.wgrey('pclip=99',par),view=1)
 Result('dat','transp |' + fdmod.dgrey('''pclip=99 title=Data\ Record label2=Offset 
