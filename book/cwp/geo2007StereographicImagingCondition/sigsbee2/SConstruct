@@ -2,14 +2,14 @@ from rsfproj import *
 import fdmod,srules
 
 par=srules.param()
-par['nb']=9
-par['ob']=-6
-par['db']=3
+par['nangb']=9
+par['oangb']=-6
+par['dangb']=3
 
 par['nl']=30
 
-par['na']=60
-par['da']=3.
+par['nanga']=60
+par['danga']=3.
 
 par['tcut']=3
 par['lox']=14

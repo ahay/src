@@ -11,8 +11,8 @@ def param():
         'nw':200,  'ow':1,'jw':1,'verb':'y','nrmax':3,'dtmax':0.0001,
         'pmx':100,'tmx':100,
         #
-        'oa':0,   'na':60,  'da':3.,    # SS angle 1
-        'ob':0,   'nb':1,   'db':5.,    # SS angle 2
+        'oanga':0,   'nanga':60,  'danga':3.,    # SS angle 1
+        'oangb':0,   'nangb':1,   'dangb':5.,    # SS angle 2
                   'nl':100, 'dl':1,     # SS line length
         'sig':1
         }
@@ -173,8 +173,8 @@ def run(par):
     Flow('kk',['qs','qr'],
          '''
          sic3d ur=${SOURCES[1]} nbuf=500 verb=y stack=n
-         oa=%(oa)g na=%(na)d da=%(da)g
-         ob=%(ob)g nb=%(nb)d db=%(db)g
+         oanga=%(oanga)g nanga=%(nanga)d danga=%(danga)g
+         oangb=%(oangb)g nangb=%(nangb)d dangb=%(dangb)g
          nl=%(nl)d dl=%(dl)g
          sig=%(sig)g
          ''' % par)

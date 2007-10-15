@@ -10,9 +10,9 @@ itest.flat('refl',par)
 # ------------------------------------------------------------
 itest.run(par)
 # ------------------------------------------------------------
-par['ob']=0
-par['nb']=1
-par['db']=3
+par['oangb']=0
+par['nangb']=1
+par['dangb']=3
 itest.stereo3d(par)
 
 End()

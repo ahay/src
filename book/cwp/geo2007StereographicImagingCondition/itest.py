@@ -13,10 +13,11 @@ def param():
         'jsnap':4,
         'vprt':0,
         'test':0,
-        'oa':0,   'na':60, 'da':3.,  # SS angle 1
-        'ob':0,   'nb':1,  'db':1,   # SS angle 2
-                  'nl':100,'dl':1.0, # SS line length
-        'sig':1                      # SS gaussian decay
+        'nb':100,
+        'oanga':0,   'nanga':60, 'danga':3.,  # SS angle 1
+        'oangb':0,   'nangb':2,  'dangb':1,   # SS angle 2
+                     'nl':100,   'dl':1.0,    # SS line length
+        'sig':1                               # SS gaussian decay
         }
 
     par['kx']=par['nx']/2-75
@@ -31,18 +32,18 @@ def param():
 # ------------------------------------------------------------
 # sources
 def onesou(ss,par):
-    fdmod.point3(ss+'1',par['ox']+5*par['nx']/10*par['dx'],0,1,par)
+    fdmod.point(ss+'1',par['ox']+5*par['nx']/10*par['dx'],0,par)
     Flow(ss,ss+'1','window')
 
 def twosou(ss,par):
-    fdmod.point3(ss+'0',par['ox']+3.5*par['nx']/10*par['dx'],0,1,par)
-    fdmod.point3(ss+'1',par['ox']+5.0*par['nx']/10*par['dx'],0,1,par)    
+    fdmod.point(ss+'0',par['ox']+3.5*par['nx']/10*par['dx'],0,par)
+    fdmod.point(ss+'1',par['ox']+5.0*par['nx']/10*par['dx'],0,par)    
     Flow(ss,[ss+'0',ss+'1'],'cat axis=2 space=n ${SOURCES[0:2]}', stdin=0)
 
 def thrsou(ss,par):
-    fdmod.point3(ss+'0',par['ox']+3*par['nx']/10*par['dx'],0,1,par)
-    fdmod.point3(ss+'1',par['ox']+5*par['nx']/10*par['dx'],0,1,par)
-    fdmod.point3(ss+'2',par['ox']+6*par['nx']/10*par['dx'],0,1,par)
+    fdmod.point(ss+'0',par['ox']+3*par['nx']/10*par['dx'],0,par)
+    fdmod.point(ss+'1',par['ox']+5*par['nx']/10*par['dx'],0,par)
+    fdmod.point(ss+'2',par['ox']+6*par['nx']/10*par['dx'],0,par)
     Flow(ss,[ss+'0',ss+'1',ss+'2'],'cat axis=2 space=n ${SOURCES[0:3]}', stdin=0)
 
 # ------------------------------------------------------------
@@ -187,8 +188,9 @@ def run(par):
     Plot('sx','window      |' + fdmod.ssplot('plotcol=5',par))
     
     # wavelet
-    fdmod.wavelet('wav',par['frq'],par)
-    Result('wav','window n1=200 |' + fdmod.waveplot('',par))
+    fdmod.wavelet('wav_',par['frq'],par)
+    Flow('wav','wav_','transp')
+    Result('wav','window n2=200 |' + fdmod.waveplot('',par))
     
     # velocity
     Flow('vbck',None,
@@ -234,18 +236,30 @@ def run(par):
     Result('mask','transp |' + fdmod.dgrey('allpos=y pclip=100',par))
         
     # F-D modeling (born)
-    fdmod.lmodel('do','wo','dd','wd','wav','velo','refl','ss','rr','jsnap=100',par)
+    fdmod.lwefd1(
+        'do','wo',
+        'dd','wd',
+        'wav','velo','dens','refl','ss','rr','jsnap=100',par)
     Result('do','transp | window min1=0.25 |' + fdmod.dgrey('min1=0.25 pclip=100',par))
     Result('dd','transp | window min1=0.25 |' + fdmod.dgrey('min1=0.25 pclip=100',par))
+    Result('wo',fdmod.wgrey('',par))
+    Result('wd',fdmod.wgrey('',par))
 
     # source data and wavefield
-    fdmod.amodel('ds','ws','wav','velo','dens','sx','rr','dens=n',par)
+    fdmod.awefd1(
+        'ds','ws',
+        'wav','velo','dens','sx','rr','',par)
+    Result('ws','window j3=20 |' + fdmod.wgrey('',par))
 
     # receiver wavefield
-    Flow('du','dd mask','add mode=p ${SOURCES[1]} | reverse which=2 opt=i verb=y')
-    fdmod.awe('dx','wx','du','velo','refl','rr','rr','dens=n',par)
+    Flow('du','dd mask',
+         'add mode=p ${SOURCES[1]} | reverse which=2 opt=i verb=y')
+    fdmod.awefd(
+        'dx','wx',
+        'du','velo','dens','rr','rr','',par)
     Flow('dr','dx','reverse which=2 opt=i verb=y')
     Flow('wr','wx','reverse which=4 opt=i verb=y')
+    Result('wr','window j3=20 |' + fdmod.wgrey('',par))
 
     for i in range(0,par['nt']/100,1):
         fdmod.wframe('wo'+'-'+str(i),'wo',i,'pclip=99.9',par)
@@ -353,8 +367,8 @@ def stereo3d(par):
     Flow('kk',['qs','qr'],
          '''
          sic3d ur=${SOURCES[1]} nbuf=500 verb=y stack=n
-         oa=%(oa)g na=%(na)d da=%(da)g
-         ob=%(ob)g nb=%(nb)d db=%(db)g
+         oanga=%(oanga)g nanga=%(nanga)d danga=%(danga)g
+         oangb=%(oangb)g nangb=%(nangb)d dangb=%(dangb)g
          nl=%(nl)d dl=%(dl)g
          sig=%(sig)g
          ''' % par )    
@@ -433,8 +447,8 @@ def debug(par):
          '''
          sic3d
          ur=${SOURCES[1]} verb=y
-         oa=%(oa)g na=%(na)d da=%(da)g
-         ob=%(ob)g nb=%(nb)d db=%(db)g
+         oanga=%(oanga)g nanga=%(nanga)d danga=%(danga)g
+         oangb=%(oangb)g nangb=%(nangb)d dangb=%(dangb)g
          nl=%(nl)d dl=%(dl)g
          sig=%(sig)g
          ''' % par )
@@ -442,8 +456,8 @@ def debug(par):
          '''
          ./SICt.x
          ur=${SOURCES[1]} verb=y
-         oa=%(oa)g na=%(na)d da=%(da)g
-         ob=%(ob)g nb=%(nb)d db=%(db)g
+         oanga=%(oanga)g nanga=%(nanga)d danga=%(danga)g
+         oangb=%(oangb)g nangb=%(nangb)d dangb=%(dangb)g
          nl=%(nl)d dl=%(dl)g
          sig=%(sig)g
          ''' % par )
@@ -509,3 +523,35 @@ def dwt(uu,us,ur,par):
         Result(i+'inv','grey title="INV"')
 
     Flow(uu,uu+'inv','window')
+
+
+def new(par):
+
+    fdmod.point3('ssold0',par['ox']+3*par['nx']/10*par['dx'],par['oz'],1,par)
+    fdmod.point3('ssold1',par['ox']+5*par['nx']/10*par['dx'],par['oz'],1,par)
+    fdmod.point3('ssold2',par['ox']+6*par['nx']/10*par['dx'],par['oz'],1,par)
+    Flow('ssold',['ssold0','ssold1','ssold2'],'cat axis=2 space=n ${SOURCES[0:3]}', stdin=0)    
+    Flow('wavold','wav','window')
+    fdmod.lmodel(
+        'doold','woold',
+        'ddold','wdold',
+        'wavold','velo','refl',
+        'ssold','rr','jsnap=100 nbz=100 nbx=100 ',par)
+    
+    Result('woold',fdmod.wgrey('',par))
+    Result('wdold',fdmod.wgrey('',par))
+
+    fdmod.point('ssnew0',par['ox']+3*par['nx']/10*par['dx'],par['oz'],par)
+    fdmod.point('ssnew1',par['ox']+5*par['nx']/10*par['dx'],par['oz'],par)
+    fdmod.point('ssnew2',par['ox']+6*par['nx']/10*par['dx'],par['oz'],par)
+    Flow('ssnew',['ssnew0','ssnew1','ssnew2'],'cat axis=2 space=n ${SOURCES[0:3]}', stdin=0)    
+    Flow('wavnew','wav','window squeeze=n')
+    fdmod.lwefd1(
+        'donew','wonew',
+        'ddnew','wdnew',
+        'wavnew','velo','dens','refl',
+        'ssnew','rr','jsnap=100 nb=100 ',par)
+    
+    Result('wonew',fdmod.wgrey('',par))
+    Result('wdnew',fdmod.wgrey('',par))
+
