@@ -310,7 +310,7 @@ int main(int argc, char* argv[])
 	uo=up;
 	up=ut;
 	
-	/* one-way abc apply*/
+	/* one-way abc apply */
 	abcone2d_apply(uo,um,NOP,abc,fdm);
 	sponge2d_apply(um,spo,fdm);
 	sponge2d_apply(uo,spo,fdm);

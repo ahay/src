@@ -27,8 +27,9 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,free,snap; 
+    bool verb,fsrf,snap; 
     int  jsnap;
+    int  jdata;
 
     /* I/O files */
     sf_file Fwav=NULL; /* wavelet   */
@@ -64,15 +65,35 @@ int main(int argc, char* argv[])
     float co,ca2,cb2,ca1,cb1;
 
     int ompchunk; 
+#ifdef _OPENMP
+    int ompnth,ompath;
+#endif
+
+    sf_axis   ac1=NULL,ac2=NULL;
+    int       nq1,nq2;
+    float     oq1,oq2;
+    float     dq1,dq2;
+    float     **uc=NULL;
 
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
-    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  /* OpenMP data chunk size */
+    if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
+    /* OpenMP data chunk size */
+#ifdef _OPENMP
+    if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
+    /* OpenMP available threads */
+
+#pragma omp parallel
+    ompath=omp_get_num_threads();
+    if(ompnth<1) ompnth=ompath;
+    omp_set_num_threads(ompnth);
+    sf_warning("using %d threads of a total of %d",ompnth,ompath);
+#endif
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
-    if(! sf_getbool("free",&free)) free=false; /* free surface flag*/
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag*/
 
     Fwav = sf_input ("in" ); /* wavelet   */
     Fcon = sf_input ("con"); /* conductivity  */
@@ -94,6 +115,7 @@ int main(int argc, char* argv[])
     n1 = sf_n(a1); d1 = sf_d(a1);
     n2 = sf_n(a2); d2 = sf_d(a2);
 
+    if(! sf_getint("jdata",&jdata)) jdata=1;
     if(snap) {  /* save wavefield every *jsnap* time steps */
 	if(! sf_getint("jsnap",&jsnap)) jsnap=nt;
     }
@@ -102,7 +124,7 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,free,a1,a2,nb,ompchunk);
+    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
 
     sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
     sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
@@ -110,10 +132,27 @@ int main(int argc, char* argv[])
 
     /* setup output data header */
     sf_oaxa(Fdat,ar,1);
+
+    sf_setn(at,nt/jdata);
+    sf_setd(at,dt*jdata);
     sf_oaxa(Fdat,at,2);
 
     /* setup output wavefield header */
     if(snap) {
+	if(!sf_getint  ("nq1",&nq1)) nq1=sf_n(a1);
+	if(!sf_getint  ("nq2",&nq2)) nq2=sf_n(a2);
+	if(!sf_getfloat("oq1",&oq1)) oq1=sf_o(a1);
+	if(!sf_getfloat("oq2",&oq2)) oq2=sf_o(a2);
+	dq1=sf_d(a1);
+	dq2=sf_d(a2);
+
+	ac1 = sf_maxa(nq1,oq1,dq1);
+	ac2 = sf_maxa(nq2,oq2,dq2);
+
+	/* check if the imaging window fits in the wavefield domain */
+
+	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
+
 	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
@@ -153,6 +192,7 @@ int main(int argc, char* argv[])
     kk  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     sf_floatread(kkin[0],n1*n2,Fcon);
     expand(kkin,kk,fdm);
+    free(*kkin); free(kkin);
 
     /*------------------------------------------------------------*/
     /* allocate wavefield arrays */
@@ -185,6 +225,8 @@ int main(int argc, char* argv[])
 #endif
 	for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
 	    for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+
+		/* 4th order Laplacian operator */
 		ua[i2][i1] = 
 		    co * uo[i2  ][i1  ] + 
 		    ca2*(uo[i2-1][i1  ] + uo[i2+1][i1  ]) +
@@ -194,6 +236,7 @@ int main(int argc, char* argv[])
 	    }
 	}   
 	
+	/* step forward in time */
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,ua,uo,up,kk,dt)
 #endif
@@ -203,10 +246,10 @@ int main(int argc, char* argv[])
 		    +        ua[i2][i1] * kk[i2][i1] * dt;
 	    }
 	}
+	/* circulate wavefield arrays */
 	ut=uo;
 	uo=up;
 	up=ut;
-
 
 	/* re-fill boundaries */
 	bfill(uo,fdm);
@@ -214,9 +257,12 @@ int main(int argc, char* argv[])
 	/* extract data */
 	lint2d_extract(uo,dd,cr);
 
-	if(snap && it%jsnap==0) sf_floatwrite(uo[0],fdm->n1pad*fdm->n2pad,Fwfl);
-	sf_floatwrite(dd,nr,Fdat);
-
+	if(snap && it%jsnap==0) {
+	    cut2d(uo,uc,fdm,ac1,ac2);
+	    sf_floatwrite(uo[0],sf_n(ac1)*sf_n(ac2),Fwfl);
+	}
+	if(        it    %jdata==0) 
+	    sf_floatwrite(dd,nr,Fdat);
     }
     if(verb) fprintf(stderr,"\n");    
 

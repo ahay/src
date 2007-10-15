@@ -49,7 +49,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,free,snap,ssou,opot;
+    bool verb,fsrf,snap,ssou,opot;
     int  jsnap;
     int  jdata;
 
@@ -87,8 +87,8 @@ int main(int argc, char* argv[])
     float **t11,**t12,**t22;       /* stress/strain tensor */ 
     float   s11,  s12,  s22;
 
-    float **qp,**qs;               /* potential (P waves, S waves)  */
-    float **vp,**vs;               /* potential (P waves, S waves)  */
+    float **qp=NULL,**qs=NULL;     /* potential (P waves, S waves) */
+    float **vp,     **vs;          /* velocity  (P waves, S waves) */
 
     /* cube axes */
     sf_axis at,a1,a2,as,ar,ac;
@@ -110,11 +110,11 @@ int main(int argc, char* argv[])
     int ompnth,ompath;
 #endif 
 
-    sf_axis    c1, c2;
+    sf_axis   ac1=NULL,ac2=NULL;
     int       nq1,nq2;
     float     oq1,oq2;
     float     dq1,dq2;
-    float     **uc;
+    float     **uc=NULL;
 
     /*------------------------------------------------------------*/
     /* init RSF */
@@ -135,7 +135,7 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
-    if(! sf_getbool("free",&free)) free=false; /* free surface flag */
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
     if(! sf_getbool("ssou",&ssou)) ssou=false; /* stress source */
     if(! sf_getbool("opot",&opot)) opot=false; /* output potential */
 
@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
     sf_warning("nbell=%d",nbell);
 
     Fwav = sf_input ("in" ); /* wavelet   */
-    Fccc = sf_input ("ccc"); /* velocity  */
+    Fccc = sf_input ("ccc"); /* stiffness */
     Fsou = sf_input ("sou"); /* sources   */
     Frec = sf_input ("rec"); /* receivers */
     Fwfl = sf_output("wfl"); /* wavefield */
@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,free,a1,a2,nb,ompchunk);
+    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
     fdbell_init(nbell);
 
     sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
@@ -200,20 +200,20 @@ int main(int argc, char* argv[])
 	dq1=sf_d(a1);
 	dq2=sf_d(a2);
 
-	c1 = sf_maxa(nq1,oq1,dq1); sf_raxa(c1);
-	c2 = sf_maxa(nq2,oq2,dq2); sf_raxa(c2);
+	ac1 = sf_maxa(nq1,oq1,dq1); sf_raxa(ac1);
+	ac2 = sf_maxa(nq2,oq2,dq2); sf_raxa(ac2);
 
 	/* check if the imaging window fits in the wavefield domain */
 
-	uc=sf_floatalloc2(sf_n(c1),sf_n(c2));
+	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
 
 	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
-	sf_oaxa(Fwfl,c1,1);
-	sf_oaxa(Fwfl,c2,2);
-	sf_oaxa(Fwfl,ac,3);
-	sf_oaxa(Fwfl,at,4);
+	sf_oaxa(Fwfl,ac1,1);
+	sf_oaxa(Fwfl,ac2,2);
+	sf_oaxa(Fwfl,ac, 3);
+	sf_oaxa(Fwfl,at, 4);
     }
 
     /* source array */
@@ -241,12 +241,15 @@ int main(int argc, char* argv[])
     id2 = 2/d2;
 
     /*------------------------------------------------------------*/ 
-    /* setup model */
+    /* input density */
     roin=sf_floatalloc2(n1   ,n2   ); 
     ro  =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
     sf_floatread(roin[0],n1*n2,Fden); 
     expand(roin,ro,fdm);
+    free(*roin); free(roin);
 
+    /*------------------------------------------------------------*/
+    /* input stiffness */
     c11in=sf_floatalloc2(n1   ,n2   ); 
     c13in=sf_floatalloc2(n1   ,n2   ); 
     c33in=sf_floatalloc2(n1   ,n2   ); 
@@ -267,6 +270,11 @@ int main(int argc, char* argv[])
     expand(c33in,c33,fdm);
     expand(c44in,c44,fdm);
 
+    free(*c11in); free(c11in);
+    free(*c13in); free(c13in);
+    free(*c33in); free(c33in);
+    free(*c44in); free(c44in);
+
     /*------------------------------------------------------------*/
     /* allocate wavefield arrays */
     um1=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
@@ -279,8 +287,10 @@ int main(int argc, char* argv[])
     up2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
     ua2=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
 
-    qp=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
-    qs=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    if(opot) {
+	qp=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+	qs=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    }
 
     t11=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
     t12=sf_floatalloc2(fdm->n1pad,fdm->n2pad);
@@ -304,8 +314,8 @@ int main(int argc, char* argv[])
 	    vs[i2][i1] = sqrt( c13[i2][i1]/ro[i2][i1] );
 	}
     }
-    abcp = abcone2d_make(NOP,dt,vp,free,fdm);
-    abcs = abcone2d_make(NOP,dt,vs,free,fdm);
+    abcp = abcone2d_make(NOP,dt,vp,fsrf,fdm);
+    abcs = abcone2d_make(NOP,dt,vs,fsrf,fdm);
 
     /* sponge abc setup */
     spo = sponge2d_make(fdm);
@@ -369,7 +379,7 @@ int main(int argc, char* argv[])
 	    }
 	}
 
-	if(free) {
+	if(fsrf) {
 	    for    (i2=0; i2<fdm->n2pad; i2++) {
 		for(i1=0; i1<fdm->nb; i1++) {
 		    t11[i2][i1]=0;
@@ -490,11 +500,11 @@ int main(int argc, char* argv[])
 	    lint2d_extract(qs,dd[1],cr);
 	    
 	    if(snap && it%jsnap==0) {
-		cut2d(qp,uc,fdm,c1,c2);
-		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+		cut2d(qp,uc,fdm,ac1,ac2);
+		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 		
-		cut2d(qs,uc,fdm,c1,c2);
-		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+		cut2d(qs,uc,fdm,ac1,ac2);
+		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 	    }
 	} else {
 
@@ -502,11 +512,11 @@ int main(int argc, char* argv[])
 	    lint2d_extract(uo2,dd[1],cr);
 	    
 	    if(snap && it%jsnap==0) {
-		cut2d(uo1,uc,fdm,c1,c2);
-		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+		cut2d(uo1,uc,fdm,ac1,ac2);
+		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 
-		cut2d(uo2,uc,fdm,c1,c2);
-		sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+		cut2d(uo2,uc,fdm,ac1,ac2);
+		sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 	    }
 	}
 	if(it%jdata==0) sf_floatwrite(dd[0],nr*nc,Fdat);
