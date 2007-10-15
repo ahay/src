@@ -47,8 +47,7 @@ int main (int argc, char *argv[])
     pt2d Pm,Po,Pp; /* points on wft it   */
     pt2d    Qo;    /* point  on wft it+1 */
     
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
 
@@ -77,8 +76,7 @@ int main (int argc, char *argv[])
     if(! sf_getfloat("dg",&dg)) dg= 1;
     ag = sf_maxa(ng,og,dg); sf_setlabel(ag,"g");
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* wavefronts file (g,t) */
     Fw = sf_output("out");
     sf_oaxa(Fw,ag,1); if(verb) sf_raxa(ag);
@@ -88,8 +86,7 @@ int main (int argc, char *argv[])
     sf_putint(Fw,"esize",8);
     sf_settype(Fw,SF_COMPLEX);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* allocate wavefronts */
     wm = pt2dalloc1(ng);
     wo = pt2dalloc1(ng);
@@ -102,26 +99,21 @@ int main (int argc, char *argv[])
 	wm[ig].v=wo[ig].v=wp[ig].v=0;
     }
 
-/*------------------------------------------------------------*/
-    
+    /*------------------------------------------------------------*/
     /* init HWT */
     hwt2d_init(vv,az,ax,at,ag);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* construct it=0 wavefront */
     it=0;
     for( ig=0; ig<ng; ig++) {
 	wm[ig].x=xsou;
 	wm[ig].z=zsou;
 	wm[ig].v=hwt2d_getv(wm[ig]);
-
-/*	printpt2d(wm[ig]);*/
     }
     pt2dwrite1(Fw,wm,ng,2); /* write wavefront it=0 */
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* construct it=1 wavefront */
     it=1;
     for( ig=0; ig<ng; ig++) {
@@ -136,11 +128,11 @@ int main (int argc, char *argv[])
     }
     pt2dwrite1(Fw,wo,ng,2); /* write wavefront it=1 */
 
-/*------------------------------------------------------------*/
+    /*------------------------------------------------------------*/
     /* LOOP over time */
     for (it=2; it<nt; it++) {
 	if(verb) fprintf(stderr,"it=%d\n",it);
-
+	
 	if(ng>3) {
 	    /* boundaries */
 	    ig=0;      wp[ig] = hwt2d_raytr(wm[ig],wo[ig]);
@@ -178,7 +170,7 @@ int main (int argc, char *argv[])
 	}
     } /* end it */
 
-/*------------------------------------------------------------*/    
+    /*------------------------------------------------------------*/    
     exit (0);
 }
 

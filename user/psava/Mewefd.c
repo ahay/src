@@ -1,4 +1,4 @@
-/* Elastic time-domain FD modeling */
+/* elastic time-domain FD modeling */
 /*
   Copyright (C) 2007 Colorado School of Mines
   

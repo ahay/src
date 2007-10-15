@@ -85,17 +85,17 @@ int main(int argc, char* argv[])
     Fi = sf_output("out");
 
     /* angle axis (in degrees) */
-    if(! sf_getint  ("na",&na)) na=1;
-    if(! sf_getfloat("oa",&oa)) oa=0.0;
-    if(! sf_getfloat("da",&da)) da=1.0;
+    if(! sf_getint  ("nanga",&na)) na=1;
+    if(! sf_getfloat("oanga",&oa)) oa=0.0;
+    if(! sf_getfloat("danga",&da)) da=1.0;
     aa=sf_maxa(na,oa,da);
     sf_setlabel(aa,"a"); 
     sf_setunit (aa,"");
 
     /* angle axis (in degrees) */
-    if(! sf_getint  ("nb",&nb)) nb=1;
-    if(! sf_getfloat("ob",&ob)) ob=0.0;
-    if(! sf_getfloat("db",&db)) db=1.0;
+    if(! sf_getint  ("nangb",&nb)) nb=1;
+    if(! sf_getfloat("oangb",&ob)) ob=0.0;
+    if(! sf_getfloat("dangb",&db)) db=1.0;
     bb=sf_maxa(nb,ob,db);
     sf_setlabel(bb,"b"); 
     sf_setunit (bb,"");

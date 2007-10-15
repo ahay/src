@@ -41,8 +41,7 @@ int main (int argc, char *argv[])
     pt2d Pm,Po,Pp; /* points on wft it   */
     pt2d    Qo;    /* point  on wft it+1 */
     
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     sf_init(argc,argv);
     if(! sf_getbool("verb",&verb)) verb=false;
 
@@ -63,8 +62,7 @@ int main (int argc, char *argv[])
     if(! sf_getfloat("dt",&dt)) dt=0.001;
     at = sf_maxa(nt,ot,dt); sf_setlabel(at,"t");
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* wavefronts file */
     Fw = sf_output("out");
     sf_oaxa(Fw,ag,1); if(verb) sf_raxa(ag);
@@ -74,8 +72,7 @@ int main (int argc, char *argv[])
     sf_putint(Fw,"esize",8);
     sf_settype(Fw,SF_COMPLEX);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* wavefronts */
     wm = (pt2d*) sf_alloc(ng,sizeof(*wm));
     wo = (pt2d*) sf_alloc(ng,sizeof(*wo));
@@ -87,13 +84,11 @@ int main (int argc, char *argv[])
 	wm[ig].v=wo[ig].v=wp[ig].v=0;
     }
 
-/*------------------------------------------------------------*/
-    
+    /*------------------------------------------------------------*/
     /* init HWT */
     hwt2d_init(vv,az,ax,at,ag);
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* read initial wavefront (it=0) */
     it=0;
     pt2dread1(Fs,wm,ng,2);
@@ -104,8 +99,7 @@ int main (int argc, char *argv[])
     }
     pt2dwrite1(Fw,wm,ng,2); /* write wavefront it=0 */
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     /* compute second wavefront (it=1) by orthogonal rays */
     it=1;
 
@@ -133,8 +127,7 @@ int main (int argc, char *argv[])
 
     pt2dwrite1(Fw,wo,ng,2); /* write wavefront it=1 */
 
-/*------------------------------------------------------------*/
-
+    /*------------------------------------------------------------*/
     for (it=2; it<nt; it++) {
 	if(verb) fprintf(stderr,"it=%d\n",it);
 
@@ -175,7 +168,7 @@ int main (int argc, char *argv[])
 	    wo[ig] = wp[ig];
 	}
     }
-/*------------------------------------------------------------*/    
+    /*------------------------------------------------------------*/    
     exit (0);
 }
 

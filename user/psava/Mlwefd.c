@@ -38,7 +38,7 @@
 
 int main(int argc, char* argv[])
 {
-    bool verb,free,snap; 
+    bool verb,fsrf,snap,expl; 
     int  jsnap;
     int  jdata;
 
@@ -68,6 +68,9 @@ int main(int argc, char* argv[])
 
     float **vp=NULL;           /* velocity     in expanded domain */
     float **ro=NULL;           /* density      in expanded domain */
+    float **ro1=NULL;          /* normalized 1st derivative of density on axis 1 */
+    float **ro2=NULL;          /* normalized 1st derivative of density on axis 2 */
+
     float **rf=NULL;           /* reflectivity in expanded domain */
 
     float  *bdd=NULL;          /* data (background) */
@@ -99,18 +102,17 @@ int main(int argc, char* argv[])
     int ompnth,ompath;
 #endif
 
-    sf_axis    c1, c2;
+    sf_axis   ac1=NULL,ac2=NULL;
     int       nq1,nq2;
     float     oq1,oq2;
     float     dq1,dq2;
-    float     **uc;
+    float     **uc=NULL;
 
     /*------------------------------------------------------------*/
     /* init RSF */
     sf_init(argc,argv);
     if(! sf_getint("ompchunk",&ompchunk)) ompchunk=1;  
     /* OpenMP data chunk size */
-
 #ifdef _OPENMP
     if(! sf_getint("ompnth",  &ompnth))     ompnth=0;  
     /* OpenMP available threads */
@@ -124,7 +126,8 @@ int main(int argc, char* argv[])
 
     if(! sf_getbool("verb",&verb)) verb=false; /* verbosity flag */
     if(! sf_getbool("snap",&snap)) snap=false; /* wavefield snapshots flag */
-    if(! sf_getbool("free",&free)) free=false; /* free surface flag*/
+    if(! sf_getbool("free",&fsrf)) fsrf=false; /* free surface flag */
+    if(! sf_getbool("expl",&expl)) expl=false; /* "exploding reflector" */
 
     Fwav = sf_input ("in" ); /* wavelet   */
     Fsou = sf_input ("sou"); /* sources   */
@@ -137,8 +140,8 @@ int main(int argc, char* argv[])
     Fwfl = sf_output("wfl"); /* wavefield */
     Fdat = sf_output("out"); /* data      */
 
-    Flid = sf_output("lid"); /* data (scattered) */
     Fliw = sf_output("liw"); /* wavefield (scattered) */
+    Flid = sf_output("lid"); /* data (scattered) */
 
     /* axes */
     at = sf_iaxa(Fwav,2); sf_setlabel(at,"t"); if(verb) sf_raxa(at); /* time */
@@ -162,7 +165,7 @@ int main(int argc, char* argv[])
     /* expand domain for FD operators and ABC */
     if( !sf_getint("nb",&nb) || nb<NOP) nb=NOP;
 
-    fdm=fdutil_init(verb,free,a1,a2,nb,ompchunk);
+    fdm=fdutil_init(verb,fsrf,a1,a2,nb,ompchunk);
 
     sf_setn(a1,fdm->n1pad); sf_seto(a1,fdm->o1pad); if(verb) sf_raxa(a1);
     sf_setn(a2,fdm->n2pad); sf_seto(a2,fdm->o2pad); if(verb) sf_raxa(a2);
@@ -186,26 +189,30 @@ int main(int argc, char* argv[])
 	dq1=sf_d(a1);
 	dq2=sf_d(a2);
 
-	c1 = sf_maxa(nq1,oq1,dq1);
-	c2 = sf_maxa(nq2,oq2,dq2);
+	ac1 = sf_maxa(nq1,oq1,dq1);
+	ac2 = sf_maxa(nq2,oq2,dq2);
 
 	/* check if the imaging window fits in the wavefield domain */
 
-	uc=sf_floatalloc2(sf_n(c1),sf_n(c2));
+	uc=sf_floatalloc2(sf_n(ac1),sf_n(ac2));
 
 	sf_setn(at,nt/jsnap);
 	sf_setd(at,dt*jsnap);
 
-	sf_oaxa(Fwfl,c1,1);
-	sf_oaxa(Fwfl,c2,2);
-	sf_oaxa(Fwfl,at,3);
+	sf_oaxa(Fwfl,ac1,1);
+	sf_oaxa(Fwfl,ac2,2);
+	sf_oaxa(Fwfl,at, 3);
 
-	sf_oaxa(Fliw,c1,1);
-	sf_oaxa(Fliw,c2,2);
-	sf_oaxa(Fliw,at,3);
+	sf_oaxa(Fliw,ac1,1);
+	sf_oaxa(Fliw,ac2,2);
+	sf_oaxa(Fliw,at, 3);
     }
 
-    ww  =sf_floatalloc(ns);
+    if(expl) {
+	ww = sf_floatalloc( 1);
+    } else {
+	ww = sf_floatalloc(ns);
+    }
     bdd =sf_floatalloc(nr);
     sdd =sf_floatalloc(nr);
 
@@ -233,22 +240,41 @@ int main(int argc, char* argv[])
     cb1= CB *          id1*id1;
 
     /*------------------------------------------------------------*/ 
-    /* setup model */
+    /* input density */
     roin=sf_floatalloc2(n1,   n2   ); 
     ro  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
+    ro1 =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+    ro2 =sf_floatalloc2(fdm->n1pad,fdm->n2pad);
+
     sf_floatread(roin[0],n1*n2,Fden); 
     expand(roin,ro,fdm);
 
+    /* normalized density derivatives */
+    for    (i2=NOP; i2<fdm->n2pad-NOP; i2++) {
+	for(i1=NOP; i1<fdm->n1pad-NOP; i1++) {
+	    ro1[i2][i1] = D1(ro,i2,i1,id1) / ro[i2][i1];
+	    ro2[i2][i1] = D2(ro,i2,i1,id2) / ro[i2][i1];
+	}
+    }
+
+    free(*roin); free(roin);
+
+    /*------------------------------------------------------------*/
+    /* input velocity */
     vpin=sf_floatalloc2(n1,   n2   ); 
     vp  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     vt  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     sf_floatread(vpin[0],n1*n2,Fvel);
     expand(vpin,vp,fdm);
+    free(*vpin); free(vpin);
 
+    /*------------------------------------------------------------*/
+    /* input reflectivity */
     rfin=sf_floatalloc2(n1,   n2   ); 
     rf  =sf_floatalloc2(fdm->n1pad,fdm->n2pad); 
     sf_floatread(rfin[0],n1*n2,Fref); 
     expand(rfin,rf,fdm);
+    free(*rfin); free(rfin);
 
     for    (i2=0; i2<fdm->n2pad; i2++) {
 	for(i1=0; i1<fdm->n1pad; i1++) {
@@ -257,7 +283,7 @@ int main(int argc, char* argv[])
     }
 
     /* free surface */
-    if(free) {
+    if(fsrf) {
 	for    (i2=0; i2<fdm->n2pad; i2++) {
 	    for(i1=0; i1<fdm->nb; i1++) {
 		vt[i2][i1]=0;
@@ -293,7 +319,7 @@ int main(int argc, char* argv[])
 
     /*------------------------------------------------------------*/
     /* one-way abc setup */
-    abc = abcone2d_make(NOP,dt,vp,free,fdm);
+    abc = abcone2d_make(NOP,dt,vp,fsrf,fdm);
     /* sponge abc setup */
     spo = sponge2d_make(fdm);
 
@@ -306,9 +332,6 @@ int main(int argc, char* argv[])
     for (it=0; it<nt; it++) {
 	if(verb) fprintf(stderr,"\b\b\b\b\b%d",it);
 	
-	/* read source data */
-	sf_floatread(ww,ns,Fwav);
-
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic,fdm->ompchunk) private(i2,i1) shared(fdm,bua,buo,sua,suo,co,ca2,ca1,cb2,cb1,id2,id1)
 #endif
@@ -331,16 +354,22 @@ int main(int argc, char* argv[])
 		
 		/* density term */
 		bua[i2][i1] -= (
-		    D1(buo,i2,i1,id1) * D1(ro,i2,i1,id1) +
-		    D2(buo,i2,i1,id2) * D2(ro,i2,i1,id2) ) / ro[i2][i1];
+		    D1(buo,i2,i1,id1) * ro1[i2][i1] +
+		    D2(buo,i2,i1,id2) * ro2[i2][i1] );
 		sua[i2][i1] -= (
-		    D1(suo,i2,i1,id1) * D1(ro,i2,i1,id1) +
-		    D2(suo,i2,i1,id2) * D2(ro,i2,i1,id2) ) / ro[i2][i1];		
+		    D1(suo,i2,i1,id1) * ro1[i2][i1] +
+		    D2(suo,i2,i1,id2) * ro2[i2][i1] );
 	    }
 	}   
 	
 	/* inject acceleration source */
-	lint2d_inject(bua,ww,cs);
+	if(expl) {
+	    sf_floatread(ww, 1,Fwav);
+	    lint2d_inject1(bua,ww[0],cs);
+	} else {
+	    sf_floatread(ww,ns,Fwav);	
+	    lint2d_inject(bua,ww,cs);
+	}
 
 	/* single scattering */
 #ifdef _OPENMP
@@ -348,7 +377,7 @@ int main(int argc, char* argv[])
 #endif
 	for     (i2=0; i2<fdm->n2pad; i2++) {
 	    for (i1=0; i1<fdm->n1pad; i1++) {
-		sua[i2][i1] -= buo[i2][i1] * 2*rf[i2][i1];
+		sua[i2][i1] -= bua[i2][i1] * 2*rf[i2][i1];
 	    }
 	}
 
@@ -395,11 +424,11 @@ int main(int argc, char* argv[])
 	lint2d_extract(suo,sdd,cr);
 
 	if(snap && (it+1)%jsnap==0) {
-	    cut2d(buo,uc,fdm,c1,c2);
-	    sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fwfl);
+	    cut2d(buo,uc,fdm,ac1,ac2);
+	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fwfl);
 
-	    cut2d(suo,uc,fdm,c1,c2);
-	    sf_floatwrite(uc[0],sf_n(c1)*sf_n(c2),Fliw);
+	    cut2d(suo,uc,fdm,ac1,ac2);
+	    sf_floatwrite(uc[0],sf_n(ac1)*sf_n(ac2),Fliw);
 	}
 	if(        it%jdata==0) {
 	    sf_floatwrite(bdd,nr,Fdat);
