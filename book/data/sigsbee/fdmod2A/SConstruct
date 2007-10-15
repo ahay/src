@@ -43,8 +43,7 @@ Flow('rr',['xr','zr'],
      cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} | transp
      ''', stdin=0)
-Plot('rr','window n1=2 | dd type=complex | window j2=10 | '
-     + fdmod.cgraph('symbol=* plotcol=6 symbolsz=8',par))
+Plot('rr',fdmod.rrplot('',par))
 # source positions
 Flow('zs','s_','math output=.01')
 Flow('xs','s_','math output=10.0')
@@ -54,8 +53,7 @@ Flow('ss',['xs','zs','rs'],
      cat axis=2 space=n
      ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
      ''', stdin=0)
-Plot('ss','window n1=2 | dd type=complex | window | '
-     + fdmod.cgraph('symbol=X plotcol=6 symbolsz=8',par))
+Plot('ss',fdmod.ssplot('',par))
 
 # ------------------------------------------------------------
 
@@ -78,7 +76,7 @@ Flow('den','vel','math output=1')
 
 # ------------------------------------------------------------
 # finite-differences modeling
-fdmod.amodel('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
+fdmod.awefd('dat','wfl','wav','vel','den','ss','rr','free=y dens=y',par)
 
 Plot('wfl',fdmod.wgrey('pclip=99 title=Wavefield\ Movie labelsz=4 titlesz=6 wheretitle=t',par),view=1)
 
