@@ -37,26 +37,26 @@ int main (int argc, char* argv[])
 	float *tempt;
         float *temp1;
 	float *extendt;
-    sf_file in, out;
+	sf_file in, out;
 
-    sf_init (argc, argv); 
-    in = sf_input("in");
-    out = sf_output("out");
+	sf_init (argc, argv); 
+	in = sf_input("in");
+	out = sf_output("out");
     
-    if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
-    n2 = sf_leftsize(in,1);
+	if (!sf_histint(in,"n1",&n1)) sf_error("No n1= in input");
+	n2 = sf_leftsize(in,1);
 	/* get the trace length (n1) and the number of traces (n2)*/
 
-    if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
-    /* filter-window length (positive and odd integer)*/
-    if (nfw < 1)  sf_error("Need positive integer input"); 
-    if (nfw%2 != 0)  nfw = (nfw+1);
-    m=(nfw-1)/2;
+	if (!sf_getint("nfw",&nfw)) sf_error("Need integer input");
+	/* filter-window length (positive and odd integer)*/
+	if (nfw < 1)  sf_error("Need positive integer input"); 
+	if (nfw%2 != 0)  nfw = (nfw+1);
+	m=(nfw-1)/2;
 
-    trace = sf_floatalloc(n1*n2);
+	trace = sf_floatalloc(n1*n2);
 	tempt = sf_floatalloc(n1*n2);
-       temp1 = sf_floatalloc(nfw);
-	extendt = sf_floatalloc((n1+2*m)*(n2+2*m));
+	temp1 = sf_floatalloc(nfw);
+	extendt = sf_floatalloc((n1+2*m)*n2);
 
 	sf_floatread(trace,n1*n2,in);
 
@@ -83,49 +83,34 @@ int main (int argc, char* argv[])
 
 	sf_floatwrite(trace,n1*n2,out);
 
-    exit (0);
+	exit (0);
 }
 
 static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 /*extend seismic data*/
 {
-    int m=(nfw-1)/2;
-    int i;
-	for(i=0;i<(n1+2*m)*(n2+2*m);i++)
+	int m=(nfw-1)/2;
+	int i;
+	for(i=0;i<(n1+2*m)*(n2);i++)
 	{
 		extendt[i]=0.0;
 	}
-	/*extend trace*/
-	for(i=0;i<m;i++)
-	{
-		for(int j=0;j<n1;j++)
-		{
-			extendt[(n1+2*m)*i+j+m]=0.0;
-		}
-	}
-	for(i=0;i<n2;i++)
-	{
-		for(int j=0;j<n1;j++)
-		{
-			extendt[(n1+2*m)*(i+m)+j+m]=tempt[n1*i+j];
-		}
-	}
-	for(i=0;i<m;i++)
-	{
-		for(int j=0;j<n1;j++)
-		{
-			extendt[(n1+2*m)*(i+m+n2)+j+m]=0.0;
-		}
-	}
 	/*extend the number of samples*/
-	for(i=0;i<(n2+2*m);i++)
+	for(i=0;i<n2;i++)
 	{
 		for(int j=0;j<m;j++)
 		{
 			extendt[(n1+2*m)*i+j]=0.0;
 		}
 	}
-	for(i=0;i<(n2+2*m);i++)
+	for(i=0;i<n2;i++)
+	{
+		for(int j=0;j<n1;j++)
+		{
+			extendt[(n1+2*m)*i+j+m]=tempt[n1*i+j];
+		}
+	}
+	for(i=0;i<n2;i++)
 	{
 		for(int j=0;j<m;j++)
 		{
@@ -136,6 +121,6 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 }
 
 
-/* 	$Id: Mmf.c 1131 2007-10-09 23:25:10Z yang $	 */
+/* 	$Id: Mmf.c 1131 2007-10-15 17:30:10Z yang $	 */
 
 
