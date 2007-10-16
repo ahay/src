@@ -36,8 +36,14 @@ if test "$root" = "no"; then
     echo "Please adjust your shell settings to set it permanently!"
     export RSFROOT=$root
 fi
-PYTHONPATH=${RSFROOT}/lib
-export PYTHONPATH
+
+# if numpy is installed in userspace, then its site-packages subdirectory
+# has to be in PYTHONPATH in order for "import numpy" to work
+if [ -n "$PYTHONPATH" ]; then
+    export PYTHONPATH=${PYTHONPATH}:${RSFROOT}/lib
+else
+    export PYTHONPATH=${RSFROOT}/lib
+fi
 
 findprog scons
 scons=$prog
