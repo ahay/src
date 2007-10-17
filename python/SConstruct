@@ -7,6 +7,9 @@ root = env.get('RSFROOT')
 bindir = os.path.join(root,'bin')
 libdir = os.path.join(root,'lib')
 docdir = os.path.join(root,'doc')
+txtdir = os.path.join(docdir,'txt')
+
+python = WhereIs('python')
 
 dirs = ['main','proc','imag','plot','libplot','suplot']+env['USERS']
 
@@ -40,8 +43,10 @@ repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
 env.Command(index,None,
-            '%s python/sfdoc -w %s -r %s' % (WhereIs('python'),docdir,repos))
+            '%s python/sfdoc -w %s -r %s' % (python,docdir,repos))
 Depends(index,use)
+env.Command(txtdir,None,'%s python/sfdoc -t %s' % (python,txtdir))
+Depends(txtdir,use)
 
 ##########################################################################
 # SELF DOCUMENTATION
