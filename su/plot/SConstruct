@@ -59,9 +59,12 @@ for prog in mains:
 ######################################################################
 if root:
     main = 'sfsuplot.py'
-    
-    docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
-    env.Depends(docs,'#/python/rsfdoc.py')
+
+    if xinc and xlib:
+        docs = map(lambda prog: env.Doc(prog,'X' + prog),mains)
+        env.Depends(docs,'#/python/rsfdoc.py')
+    else:
+        docs = []
 
     doc = env.Command(main,docs,configure.docmerge)
     env.Install(libdir,doc)

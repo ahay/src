@@ -906,8 +906,9 @@ def merge(target=None,source=None,env=None):
     return 0
 
 docmerge = '''echo "import rsfdoc" > $TARGET
-echo "" >> $TARGET
-cat $SOURCES >> $TARGET'''
+echo "" > tmp
+cat tmp $SOURCES >> $TARGET
+rm tmp'''
 
 def docextra(docmerge,source,copy):
     return docmerge + '''
