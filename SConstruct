@@ -73,7 +73,7 @@ oldpath = env.get('LIBPATH',[])
 oldlibs = env.get('LIBS',[])
 
 Export('env')
-pdirs = ('lib','main','test','su')
+pdirs = ('lib','main','test')
 
 Default('build/include')
 for dir in map(lambda x: os.path.join('plot',x), pdirs):
