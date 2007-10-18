@@ -1,0 +1,58 @@
+import os, sys, string, re
+sys.path.append('../..')
+import configure
+
+#############################################################################
+# SU LIBRARY
+#############################################################################
+src = 'intsinc8 inttable8 mksinc sinc toeplitz'
+
+try: # distribution version
+    Import('env')
+    root = env.get('RSFROOT')
+    libdir = os.path.join(root,'lib')
+    incdir = os.path.join(root,'include')
+except: # local version
+    root = None
+    env = Environment()
+    opts=Options('../../config.py')
+    configure.options(opts)
+    opts.Update(env)
+    env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),'-O2','-g')
+    if  sys.platform[:5] == 'sunos':
+	env['CCFLAGS'] = string.replace(env.get('CCFLAGS',''),
+                                        '-xO2','-g')
+    SConscript('../../filt/lib/SConstruct')
+    env.Append(BUILDERS={'Include':configure.Header},
+               SCANNERS=[configure.Include])
+
+env.Prepend(CPPPATH=['../../filt/lib'],
+            LIBS=['rsf'],
+            LIBPATH=['../../filt/lib'])
+
+##############################################################################
+# INCLUDES
+##############################################################################
+
+objects = []
+includes = []
+for source in Split(src):
+    inc = env.Include(source,prefix='sf_')
+    obj = env.StaticObject(source+'.c')
+    env.Depends(obj,inc)
+    objects.append(obj)
+    includes.append(inc)
+
+##############################################################################
+# MAIN LIBRARY
+##############################################################################
+lib = env.StaticLibrary('su',objects)
+inc = env.Command('su.h',includes,Action(configure.merge))
+install = env.Install('../../include',inc)
+env.Precious('../../include')
+
+if root:
+    env.Install(libdir,lib)
+    env.Install(incdir,inc)
+else:
+    env.Alias('install',install)

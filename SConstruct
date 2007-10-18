@@ -69,9 +69,6 @@ for dir in subdirs:
 # PLOT BUILD
 ##########################################################################
 
-oldpath = env.get('LIBPATH',[])
-oldlibs = env.get('LIBS',[])
-
 Export('env')
 pdirs = ('lib','main','test')
 
@@ -90,6 +87,19 @@ pdirs = ('fonts','include','utilities','genlib','main')
 
 Default('build/include')
 for dir in map(lambda x: os.path.join('pens',x), pdirs):
+    build = os.path.join('build',dir)
+    BuildDir(build,dir)
+    SConscript(dirs=build,name='SConstruct')
+    Default(build)
+
+##########################################################################
+# SU BUILD
+##########################################################################
+Export('env')
+sudirs = ('lib','main','plot')
+
+Default('build/include')
+for dir in map(lambda x: os.path.join('su',x), sudirs):
     build = os.path.join('build',dir)
     BuildDir(build,dir)
     SConscript(dirs=build,name='SConstruct')

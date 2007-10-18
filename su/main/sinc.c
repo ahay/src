@@ -21,8 +21,7 @@ Specify either n1= o1= d1= or pattern=
 */
 
 #include <rsf.h>
-
-#include "intsinc8.h"
+#include <su.h>
 
 int main(int argc, char* argv[])
 {

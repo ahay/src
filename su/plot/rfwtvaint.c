@@ -60,8 +60,7 @@
 */
 
 #include <rsf.h>
-
-#include "intsinc8.h"
+#include <su.h>
 
 void rfwtvaint (int n               /* number of samples in array to rasterize */, 
 		float *z            /* [n] array to rasterize */, 

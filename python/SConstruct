@@ -11,7 +11,7 @@ txtdir = os.path.join(docdir,'txt')
 
 python = WhereIs('python')
 
-dirs = ['main','proc','imag','plot','libplot','suplot']+env['USERS']
+dirs = ['main','proc','imag','plot','libplot','sumain','suplot']+env['USERS']
 
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
