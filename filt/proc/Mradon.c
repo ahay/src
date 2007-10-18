@@ -159,7 +159,7 @@ int main (int argc, char **argv)
     /* reference offset */
 
     /* normalize offsets */
-    for (ix=0; ix < nx; ix++) {
+    for (ix=0; ix < nx2; ix++) {
 	if (par) {
 	    xx[ix] *= xx[ix]/(x0*x0); 
 	} else if (1. != x0) {
