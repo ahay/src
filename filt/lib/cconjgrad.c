@@ -24,7 +24,6 @@
 #include "alloc.h"
 #include "error.h"
 #include "komplex.h"
-#include "blas.h"
 
 #include "_bool.h"
 #include "c99.h"
@@ -35,6 +34,21 @@ static int np, nx, nr, nd;
 static sf_complex *r, *d, *sp, *sx, *sr, *gp, *gx, *gr;
 static float eps, tol;
 static bool verb, hasp0;
+
+static double norm (int n, const sf_complex* x) 
+/* double-precision L2 norm of a complex number */
+{
+    double prod, xi, yi;
+    int i;
+
+    prod = 0.;
+    for (i = 0; i < n; i++) {
+	xi = (double) crealf(x[i]);
+	yi = (double) cimagf(x[i]);
+	prod += xi*xi + yi*yi;
+    }
+    return prod;
+}
 
 void sf_cconjgrad_init(int np1     /* preconditioned size */, 
 		       int nx1     /* model size */, 
@@ -127,7 +141,7 @@ void sf_cconjgrad(sf_coperator prec     /* data preconditioning */,
     } 
     
     dg = g0 = b0 = gnp = 0.;
-    r0 = verb? cblas_scnrm2(nr,r,1): 0.;
+    r0 = verb? norm(nr,r): 0.;
 
     for (iter=0; iter < niter; iter++) {
 	for (i=0; i < np; i++) {
@@ -162,11 +176,11 @@ void sf_cconjgrad(sf_coperator prec     /* data preconditioning */,
 	    oper(false,false,nx,nr,gx,gr);
 	}
 
-	gn = cblas_scnrm2(np,gp,1);
+	gn = norm(np,gp);
 
 	if (iter==0) {
 	    g0 = gn;
-	    b0 = fabs(gn + eps*(cblas_scnrm2(nr,gr,1)-cblas_scnrm2(nx,gx,1)));
+	    b0 = fabs(gn + eps*(norm(nr,gr)-norm(nx,gx)));
 
 	    for (i=0; i < np; i++) {
 		sp[i] = gp[i];
@@ -212,7 +226,7 @@ void sf_cconjgrad(sf_coperator prec     /* data preconditioning */,
 	    }
 	}
 
-	beta = cblas_scnrm2(nr,sr,1) + eps*(cblas_scnrm2(np,sp,1) - cblas_scnrm2(nx,sx,1));
+	beta = norm(nr,sr) + eps*(norm(np,sp) - norm(nx,sx));
 
 	/*
 	if (beta/b0 < tol) {
@@ -223,7 +237,7 @@ void sf_cconjgrad(sf_coperator prec     /* data preconditioning */,
 	*/
 	
 	if (verb) sf_warning("iteration %d res: %f grad: %f",
-			     iter,cblas_scnrm2(nr,r,1)/r0,dg);
+			     iter,norm(nr,r)/r0,dg);
 
 	alpha = - gn / beta;
 

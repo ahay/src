@@ -28,6 +28,7 @@
 int main (int argc, char **argv)
 {
     bool verb;                /* verbosity flag */
+    int nx2;                  /* number of entries in the offset file */
     int nt,it;                /* number of time samples, time counter */
     int nt2;                  /* extended number of time samples */
     int nx,ix;                /* number of offsets, offset counter */ 
@@ -58,12 +59,6 @@ int main (int argc, char **argv)
     in = sf_input("in");
     out = sf_output("out");
 
-    if (NULL != sf_getstring("offset")) {
-	offset = sf_input("offset");
-    } else {
-	offset = NULL;
-    }
-
     if (!sf_getbool("adj",&adj)) adj=true;
     /* if y, perform adjoint operation */
     if (!sf_getbool("inv",&inv)) inv=adj;
@@ -81,13 +76,13 @@ int main (int argc, char **argv)
 	if (!sf_histint(in,"n2",&nx)) sf_error("No n2= in input");
 
 	/* specify slope axis */
-	/* number of p values (if adj=y) */
-	/* p sampling (if adj=y) */
-	/* p origin (if adj=y) */
 
 	if (!sf_getint  ("np",&np)) sf_error("Need np=");
+	/* number of p values (if adj=y) */
 	if (!sf_getfloat("dp",&dp)) sf_error("Need dp=");
+	/* p sampling (if adj=y) */
 	if (!sf_getfloat("p0",&p0)) sf_error("Need p0=");
+        /* p origin (if adj=y) */
 
 	sf_putint(  out,"n2",np);
 	sf_putfloat(out,"d2",dp);
@@ -99,17 +94,22 @@ int main (int argc, char **argv)
 	if (!sf_histfloat(in,"d2",&dp)) sf_error("No d2= in input");
 	if (!sf_histfloat(in,"o2",&p0)) sf_error("No o2= in input");
 
-	/* find number of offsets */
-	if (NULL != offset) {
-	    if (!sf_histint(offset,"n1",&nx)) sf_error ("No n1= in offset");
-	} else {
-	    if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
-	}
+	if (!sf_getint("nx",&nx)) sf_error ("Need nx=");
+	/* number of offsets (if adj=n) */
 	
 	sf_putint(out,"n2",nx);
     }
-    
+
     nc = sf_leftsize(in,2);
+
+    if (NULL != sf_getstring("offset")) {
+	offset = sf_input("offset");
+	nx2 = sf_filesize(offset);
+	if (nx2 != nx && nx2 != nc*nx) sf_error("Wrong dimensions in offset");
+    } else {
+	offset = NULL;
+	nx2 = nx;
+    }
     
     /* determine frequency sampling (for real to complex FFT) */
     nt2 = 2*kiss_fft_next_fast_size(nt);
@@ -129,10 +129,11 @@ int main (int argc, char **argv)
 
     dd = sf_complexalloc(nx);
     mm = sf_complexalloc(np);
-    xx = sf_floatalloc(nx);
+    xx = sf_floatalloc(nx2);
     
     if (NULL != offset) {
-	sf_floatread(xx,nx,offset);
+	sf_floatread(xx,nx2,offset);
+	sf_fileclose(offset);
     } else {
 	if (adj) {
 	    if (!sf_histfloat(in,"o2",&ox)) sf_error("No o2= in input");
@@ -233,7 +234,12 @@ int main (int argc, char **argv)
 		}
 	    }
 	    
-	    radon_set (w, xx);
+	    if (nx2 == nx) {
+		radon_set (w, xx);
+	    } else {
+		radon_set (w, xx+ic*nx);
+	    }
+
 	    radon_lop (adj,false,np,nx,mm,dd); /* apply Radon */
         
 	    if (adj && inv) {
