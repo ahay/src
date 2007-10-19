@@ -1,0 +1,121 @@
+from rsfproj import *
+
+#############################################################
+#
+# Get data
+#
+#############################################################
+
+Fetch('cmps-tp.HH','blake')
+
+#############################################################
+#
+# Plot near offset section
+#
+#############################################################
+
+Flow('noff','cmps-tp.HH','window f2=47 | dd form=native')
+Plot('noff',
+     '''
+     grey title="Near Offset Section" 
+     label1=Time unit1=s label2=Distance unit2=km
+     wheretitle=t wherexlabel=b
+     ''')
+Plot('floor',None,
+     'box x0=6.238 y0=6.705 label="Seafloor" xt=-1 yt=1')
+Plot('bsr',None,
+     'box x0=10.918 y0=5.922 label="BSR" xt=1 yt=1')
+
+#############################################################
+#
+# Pick seafloor reflection
+#
+#############################################################
+
+Flow('sfr','noff',
+     '''
+     math output="input*input" | scale axis=2 |
+     window max1=5.5 |
+     transp | pick rect1=30 vel0=5.148 | window
+     ''')
+Plot('sfr',
+     '''
+     graph yreverse=y min2=4 max2=6.496 pad=n
+     wantaxis=n wanttitle=n plotcol=3 plotfat=5
+     ''')
+
+Result('noff','noff floor bsr sfr','Overlay')
+
+#############################################################
+#
+# Water layer
+#
+# MODIFY BELOW !!!
+#
+#############################################################
+
+velw=1  # water velocity (km/s)
+
+Flow('water','noff',
+     '''
+     put d1=0.01 o1=0 |
+     window max1=%g |
+     math output=%g
+     ''' % (velw*3,velw*0.5))
+
+#############################################################
+#
+# Backward time extrapolation
+#
+#############################################################
+
+Flow('time','water sfr','timecont surf=${SOURCES[1]}')
+Plot('time',
+     '''
+     contour allpos=y nc=1 c0=0
+     wanttitle=n wantaxis=n plotfat=5
+     ''')
+
+#############################################################
+#
+# Wave extrapolation
+#
+#############################################################
+
+Flow('water2','water','scale dscale=2')
+Flow('image','noff water2',
+     '''
+     cosft sign2=1 | stolt vel=%g | cosft sign2=-1 |
+     time2depth velocity=${SOURCES[1]}
+     ''' % velw)
+Plot('image',
+     '''
+     grey label1=Depth unit1=km label2=Distance unit2=km
+     title=Image
+     ''')
+
+Result('image','image time','Overlay')
+
+#############################################################
+#
+# Movie
+#
+#############################################################
+
+ts = range(5)
+ts.reverse()
+times = []
+
+for t in ts:
+    time = 'time%d' % t
+    times.append(time)
+
+    ##########################
+    #
+    # ADD COMMANDS HERE
+    #
+    ##########################
+
+Plot('times',times,'Movie')
+
+End()
