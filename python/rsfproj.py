@@ -238,8 +238,7 @@ class Project(Environment):
                     self.path = os.path.join(self.path,level)
                     if not os.path.exists(self.path):
                         os.mkdir(self.path)
-            self.path = os.path.join(self.path,pathbase)
-        self.path = self.path + os.sep
+        self.path = os.path.join(self.path,pathbase)
         if db=='gdbm':
             self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
         elif db=='dbhash':
