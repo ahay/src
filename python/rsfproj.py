@@ -64,18 +64,18 @@ vpsuffix = '.vpl'
 datapath = os.environ.get('DATAPATH')
 if not datapath:
     try:
-        file = open('.datapath','r')
+        pathfile = open('.datapath','r')
     except:
         try:
-            file = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
+            pathfile = open(os.path.join(os.environ.get('HOME'),'.datapath'),'r')
         except:
-            file = None
-    if file:
-        for line in file.readlines():
+            pathfile = None
+    if pathfile:
+        for line in pathfile.readlines():
             check = re.match("(?:%s\s+)?datapath=(\S+)" % os.uname()[1],line)
             if check:
                 datapath = check.group(1)
-        file.close()
+        pathfile.close()
     if not datapath:
         datapath = './' # the ultimate fallback
 dataserver = os.environ.get('RSF_DATASERVER','ftp://egl.beg.utexas.edu/')
@@ -226,7 +226,7 @@ class Project(Environment):
         cwd = os.getcwd()
         self.path = pathdir
         if not os.path.exists(self.path):
-            os.mkdir(self.path)        
+            os.mkdir(self.path)
         if datapath[:2] != './':
             # create a hierarcical structure
             (book,chap,proj) = (os.path.basename(
@@ -239,6 +239,7 @@ class Project(Environment):
                     if not os.path.exists(self.path):
                         os.mkdir(self.path)
             self.path = os.path.join(self.path,pathbase)
+        self.path = self.path + os.sep
         if db=='gdbm':
             self.SConsignFile(self.path+'.sconsign.'+db,gdbm)
         elif db=='dbhash':
