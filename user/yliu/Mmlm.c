@@ -29,7 +29,7 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);
 int main (int argc, char* argv[]) 
 {
 	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
-	int i;
+	int i,j,k,pass;
         int nfw;    /*nfw is the filter-window length*/
 	int m;
 	float a;   /*temporary variable*/
@@ -66,7 +66,7 @@ int main (int argc, char* argv[])
 	Y = sf_floatalloc(3);
 	sf_floatread(trace,n1*n2,in);
 
-	for(int i=0;i<n1*n2;i++)
+	for(i=0;i<n1*n2;i++)
 	{
 		tempt[i]=trace[i];
 	}
@@ -76,9 +76,9 @@ int main (int argc, char* argv[])
 	   /************2D multistage median filter****************/
 	for(i=m;i<(n2+m);i++)
 	{
-		for(int j=m;j<(n1+m);j++)
+		for(j=m;j<(n1+m);j++)
 		{
-			for(int k=0;k<nfw;k++)
+			for(k=0;k<nfw;k++)
 			{
 				temp1[k]=extendt[(n1+2*m)*i+(j-m+k)];     /*vertical*/
 				temp2[k]=extendt[(n1+2*m)*(i-m+k)+j];    /*horizontal*/
@@ -90,9 +90,9 @@ int main (int argc, char* argv[])
 			z[2]=medianfilter(temp3,nfw);
 			z[3]=medianfilter(temp4,nfw);
 
-			for(int pass=1;pass<4;pass++)
+			for(pass=1;pass<4;pass++)
 			{
-				for(int j=0;j<4-pass;j++)
+				for(j=0;j<4-pass;j++)
 				{
 					if(z[j]>z[j+1])
 					{
@@ -118,7 +118,8 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 /*extend seismic data*/
 {
     int m=(nfw-1)/2;
-    int i;
+    int i,j;
+
 	for(i=0;i<(n1+2*m)*(n2+2*m);i++)
 	{
 		extendt[i]=0.0;
@@ -126,21 +127,21 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	/*extend trace*/
 	for(i=0;i<m;i++)
 	{
-		for(int j=0;j<n1;j++)
+		for(j=0;j<n1;j++)
 		{
 			extendt[(n1+2*m)*i+j+m]=0.0;
 		}
 	}
 	for(i=0;i<n2;i++)
 	{
-		for(int j=0;j<n1;j++)
+		for(j=0;j<n1;j++)
 		{
 			extendt[(n1+2*m)*(i+m)+j+m]=tempt[n1*i+j];
 		}
 	}
 	for(i=0;i<m;i++)
 	{
-		for(int j=0;j<n1;j++)
+		for(j=0;j<n1;j++)
 		{
 			extendt[(n1+2*m)*(i+m+n2)+j+m]=0.0;
 		}
@@ -148,14 +149,14 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	/*extend the number of samples*/
 	for(i=0;i<(n2+2*m);i++)
 	{
-		for(int j=0;j<m;j++)
+		for(j=0;j<m;j++)
 		{
 			extendt[(n1+2*m)*i+j]=0.0;
 		}
 	}
 	for(i=0;i<(n2+2*m);i++)
 	{
-		for(int j=0;j<m;j++)
+		for(j=0;j<m;j++)
 		{
 			extendt[(n1+2*m)*i+j+n1+m]=0.0;
 		}

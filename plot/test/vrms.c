@@ -28,7 +28,7 @@ int main(void)
     float xll=1.705,yll=1.37,xur=11.945,yur=8.87,theta3=20.;
     float sn[3],cs[3],vv[3]={1.5,2.0,2.5},dz[3]={1.0,2.0,1.5};
     float zbottom, h, t, x, z, x1,z1, xtxt, ztxt;
-    float xmin, zmin, xmax, zmax, xcenter, zcenter, xscale, zscale;
+    float xmin, zmin, xmax, zmax, xscale, zscale;
     int i, plotcol=6,plotfat=1;
 
     vp_init();
@@ -54,8 +54,6 @@ int main(void)
     zmin = -0.1 * zbottom;
     xmax = -xmin;
     zmax = 1.1*zbottom; if (zmax < 3.) zmax=3.;
-    xcenter=0.5*(xmin+xmax);
-    zcenter=0.5*(zmin+zmax);
 
 /* set vplot scales */
     vp_orig(xll,yur);

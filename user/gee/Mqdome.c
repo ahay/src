@@ -28,7 +28,7 @@ int main (int argc, char* argv[])
     float gaussvel, throw, rand, t1, t2;
     float frac1, frac2, f1, zrad, xnew;
     float thetac, dr, x, y, z, rmax;
-    float xp, yp, rcap, rad1, rad2, dz;
+    float xp, yp, rcap, rad2, dz;
     float r, t, frac, zcap, ynew, interval;
     int large, n1, n2, n3, endtaper;
     int i1,  i2, i3, n1a, n1b, it1, it2, i,slicei;
@@ -118,7 +118,7 @@ int main (int argc, char* argv[])
     xp = 0.75 * x;
     yp = 0.75 * y;
     rcap = 0.3 * rmax;
-    rad1 = (xp*xp + yp*yp) - rcap;
+    /* rad1 = (xp*xp + yp*yp) - rcap; */
     rad2 = (xp*xp + yp*yp);
     n1a = .15 * n1;
     n1b = .8  * n1;

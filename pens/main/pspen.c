@@ -2069,7 +2069,7 @@ void pstext (char *string, float pathx, float pathy, float upx, float upy)
 /*< text >*/
 {
 double          fpathx, fpathy, fupx, fupy;
-double          up, path;
+double          path;
 int             size, orient;
 double          yfact, xfact;
 static char     last_size = 0, last_font;
@@ -2098,7 +2098,7 @@ static char     last_size = 0, last_font;
     fupy = (double) upy;
 
     path = sqrt ((double) (fpathx * fpathx + fpathy * fpathy));
-    up = sqrt ((double) (fupx * fupx + fupy * fupy));
+    /* up = sqrt ((double) (fupx * fupx + fupy * fupy)); */
 
     path_orient_dx = fpathx / path;
 

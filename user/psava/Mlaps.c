@@ -68,17 +68,14 @@ int main(int argc, char* argv[])
     ax=sf_iaxa(Fs,2); sf_setlabel(ax,"x"); if(verb) sf_raxa(ax);
     at=sf_iaxa(Fs,3); sf_setlabel(at,"t"); if(verb) sf_raxa(at);
 
-    if(!sf_getint ("jcx",&jcx) || nx==1) jcx=1;
-    if(!sf_getint ("jcz",&jcz) || nz==1) jcz=1;
-
-    acx = sf_maxa(SF_MAX(1,sf_n(ax)/jcx),sf_o(ax),sf_d(ax)*jcx); sf_setlabel(acx,"cx");
-    acz = sf_maxa(SF_MAX(1,sf_n(az)/jcz),sf_o(az),sf_d(az)*jcz); sf_setlabel(acz,"cz");
+    nx = sf_n(ax); if(!sf_getint ("jcx",&jcx) || nx==1) jcx=1;                                      
+    nz = sf_n(az); if(!sf_getint ("jcz",&jcz) || nz==1) jcz=1;                                            
+    acx = sf_maxa(SF_MAX(1,nx/jcx),sf_o(ax),sf_d(ax)*jcx); sf_setlabel(acx,"cx");
+    acz = sf_maxa(SF_MAX(1,nz/jcz),sf_o(az),sf_d(az)*jcz); sf_setlabel(acz,"cz");
 
     sf_oaxa(Fi,az,1);
     sf_oaxa(Fi,ax,2);
 
-    nz = sf_n(az);
-    nx = sf_n(ax);
     nt = sf_n(at);
 
     if(! sf_getint("nhz",&nhz)) nhz=0; /* number of lags on the z axis */

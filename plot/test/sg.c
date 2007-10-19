@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 int main (int argc, char* argv[])
 {
     char number[100];
-    int	size, is, ns,ng, ih,nh;
+    int	size, is, ns, ih,nh;
     float h, s, g, ds,dg,s0,g0, dgods;
 
     vp_init();
@@ -35,9 +35,7 @@ int main (int argc, char* argv[])
 
     dgods = strtod(argv[1],NULL);
 
-    ns=20; ng=20; size=5;
-    ns=10; ng=10; size=10;
-    ns=13; ng=18; size=10;
+    ns=13; size=10;
     nh=10;
 	
     ds= (10.24-1.)/ns;

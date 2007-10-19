@@ -31,7 +31,7 @@ sf_filter steep(int dim    /* number of dimensions */,
 		float tgap /* time gap */) 
 /*< define PEF >*/
 {
-    int *lag, c[SF_MAX_DIM], i, h, na, nx, it, j;
+    int *lag, c[SF_MAX_DIM], i, h, na, j;
     float x, t0;
     sf_filter aa;
 
@@ -39,9 +39,7 @@ sf_filter steep(int dim    /* number of dimensions */,
     for (j=0; j < dim; j++) {
 	na *= a[j];
     }
-    nx = dim-1;
 
-    it = dim; 
     lag = sf_intalloc(na);
 
     for (h=i=0; i < na; i++) { 

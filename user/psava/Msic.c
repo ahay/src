@@ -53,7 +53,6 @@ int main(int argc, char* argv[])
     int        gt,gx;
     float oa,da,a;
     float ol, dl,l,lt,lx;
-    float oz,dz;
     float ot,dt,ft;
     float ox,dx,fx;
     float wo;
@@ -98,7 +97,7 @@ int main(int argc, char* argv[])
 
     nt = sf_n(at); ot=sf_o(at); dt=sf_d(at);
     nx = sf_n(ax); ox=sf_o(ax); dx=sf_d(ax);
-    nz = sf_n(az); oz=sf_o(az); dz=sf_d(az);
+    nz = sf_n(az); 
 
     if(verb) {
 	sf_raxa(az);

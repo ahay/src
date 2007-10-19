@@ -28,12 +28,11 @@ static float rand01(void);
 int main(void)
 {
     int ix,nx=100, iz, nz=100, degrees=85;
-    float dx, xmin=-4., xmax=7., tmax=9., x,t, x0,t0=0.;
+    float dx, xmin=-4., xmax=7., tmax=9., x,t, x0;
     float alfa, c2a, orig, arg;
 
     vp_init();
 
-    t0 = 0;	
     x0= xmin;
     dx= (xmax-xmin)/(nx-1);
     vp_uorig( -1.+xmin, 0.);

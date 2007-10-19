@@ -45,8 +45,8 @@ int main(int argc, char* argv[])
     int     h1,h2;
     float oa,da,a;
     float ol, dl,l,l1,l2;
-    float o1,d1,f1;
-    float o2,d2,f2;
+    float f1;
+    float f2;
 
     int ic;
     int ompchunk; 
@@ -82,8 +82,8 @@ int main(int argc, char* argv[])
     /* input axes */
     a1 = sf_iaxa(Fi,1);
     a2 = sf_iaxa(Fi,2);
-    n1 = sf_n(a1); o1=sf_o(a1); d1=sf_d(a1);
-    n2 = sf_n(a2); o2=sf_o(a2); d2=sf_d(a2);
+    n1 = sf_n(a1); 
+    n2 = sf_n(a2); 
 
     if(verb) {
 	sf_raxa(a1);

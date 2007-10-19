@@ -29,9 +29,9 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2);
 int main (int argc, char* argv[]) 
 {
 	int n1,n2; /*n1 is trace length, n2 is the number of traces*/
-	int i;
         int nfw;    /*nfw is the filter-window length*/
 	int m;
+        int i,j,k;
 
 	float *trace;
 	float *tempt;
@@ -60,7 +60,7 @@ int main (int argc, char* argv[])
 
 	sf_floatread(trace,n1*n2,in);
 
-	for(int i=0;i<n1*n2;i++)
+	for(i=0;i<n1*n2;i++)
 	{
 		tempt[i]=trace[i];
 	}
@@ -71,9 +71,9 @@ int main (int argc, char* argv[])
 
 	for(i=0;i<n2;i++)
 	{
-		for(int j=0;j<n1;j++)
+		for(j=0;j<n1;j++)
 		{
-			for(int k=0;k<nfw;k++)
+			for(k=0;k<nfw;k++)
 			{
 				temp1[k]=extendt[(n1+2*m)*i+j+k];
 			}
@@ -90,7 +90,8 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 /*extend seismic data*/
 {
 	int m=(nfw-1)/2;
-	int i;
+	int i,j;
+
 	for(i=0;i<(n1+2*m)*(n2);i++)
 	{
 		extendt[i]=0.0;
@@ -98,21 +99,21 @@ static void extenddata(float* tempt,float* extendt,int nfw,int n1,int n2)
 	/*extend the number of samples*/
 	for(i=0;i<n2;i++)
 	{
-		for(int j=0;j<m;j++)
+		for(j=0;j<m;j++)
 		{
 			extendt[(n1+2*m)*i+j]=0.0;
 		}
 	}
 	for(i=0;i<n2;i++)
 	{
-		for(int j=0;j<n1;j++)
+		for(j=0;j<n1;j++)
 		{
 			extendt[(n1+2*m)*i+j+m]=tempt[n1*i+j];
 		}
 	}
 	for(i=0;i<n2;i++)
 	{
-		for(int j=0;j<m;j++)
+		for(j=0;j<m;j++)
 		{
 			extendt[(n1+2*m)*i+j+n1+m]=0.0;
 		}

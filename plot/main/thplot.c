@@ -31,7 +31,7 @@ int main(int argc, char* argv[])
     int nx, ny, n3, titlsz, titlefat, plotfat, plotcolup, plotcoldn;
     int i, i3, i2, i1, axissz, axisfat, gainstep;
     float *max, *min, ***fff, *ff, alpha, alpha2, zc, sz, tt, ee, gg, dx, dy;
-    float pclip, clip, pbias, cosa, sina, tana, xc, scalex, xs, ratio;
+    float pclip, clip, pbias, cosa, sina, xc, scalex, xs, ratio;
     float ax[4], ay[4], dclip, xlen, zlen, zmax, zmin, y, fm, scalez, ys;
     float dz, ox, oy, x2, x1, f2, f1, old, z, x, f, r, y2;
     const float eps=1.e-5;
@@ -66,7 +66,6 @@ int main(int argc, char* argv[])
     alpha2 = alpha * SF_PI / 180.;
     cosa = cosf (alpha2);
     sina = sinf (alpha2);
-    tana = tanf (alpha2);
 
     if (!sf_getint("titlsz",&titlsz)) titlsz=9;
     /* title size */

@@ -23,7 +23,7 @@
 
 int main (int argc, char *argv[])
 {
-    int ir, nr, n1,n2,n3,n4, m1, m2, m3, n12, n13, n123, nw, nj1, nj2, i3;
+    int ir, nr, n1,n2,n3,n4, m1, m2, m3, n12, n123, nw, nj1, nj2, i3;
     float *u1, *u2, *p;
     sf_file in, out, dip;
     off_t pos=0;
@@ -41,8 +41,7 @@ int main (int argc, char *argv[])
     if (!sf_histint(in,"n2",&n2)) n2=1;
     if (!sf_histint(in,"n3",&n3)) n3=1;
     n12 = n1*n2;
-    n13 = n1*n3;
-    n123 = n1*n2*n3;
+    n123 = n12*n3;
     nr = sf_leftsize(in,3);
 
     if (!sf_histint(dip,"n1",&m1) || m1 != n1) 

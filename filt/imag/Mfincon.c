@@ -24,7 +24,7 @@
 int main(int argc, char* argv[])
 {
     int nw,nh,nx, iw,ix,ih, k;
-    float dw, h0,dh,dx, w0,w,w2, h,h2,dh2;
+    float dw, h0,dh,dx, w0,w,w2, h,h2;
     sf_complex diag, diag2, *in, *out, offd, offd2, c1, c2;
     bool all;
     ctris slv;
@@ -63,7 +63,6 @@ int main(int argc, char* argv[])
     
     dh /= dx;
     h0 /= dx;
-    dh2 = dh*dh;
 
     w0 *= 2.*SF_PI;
     dw *= 2.*SF_PI;
