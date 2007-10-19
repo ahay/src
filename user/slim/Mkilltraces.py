@@ -30,7 +30,11 @@ size constraint
 
 import rsf as sf
 import numpy as np
-from hegilles import killtraces
+
+try: # Give precedence to local version
+    from hegilles import killtraces
+except: # Use distributed version
+    from rsfuser.hegilles import killtraces
 
 par = sf.Par()
 

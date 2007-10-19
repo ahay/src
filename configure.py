@@ -533,6 +533,7 @@ def blas(context):
     else:
         context.Result(context_failure)
         context.env['CCFLAGS'] = context.env.get('CCFLAGS','') + ' -DNO_BLAS'
+        context.env['CXXFLAGS'] = context.env.get('CXXFLAGS','') + ' -DNO_BLAS'
         LIBS.pop()
 
 package['mpi'] = {'fc':'openmpi, openmpi-devel, openmpi-libs'}
