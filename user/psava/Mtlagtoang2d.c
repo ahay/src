@@ -119,8 +119,8 @@ int main (int argc, char* argv[])
 	    fint1_set(sft,tmp);
 
 	    for (ia=0; ia < sf_n(aa); ia++) {
-		a = sf_o(aa)+ia*sf_d(aa);          // ang
-		c = cosf(a/180*SF_PI);             // cos
+		a = sf_o(aa)+ia*sf_d(aa);          /* ang */
+		c = cosf(a/180*SF_PI);             /* cos */
 
 		/* 
 		 * mapping from cos(a) to slant-stack value (n)
@@ -135,9 +135,9 @@ int main (int argc, char* argv[])
 		} else {
 		    ang[ia][iz] = 0.;
 		}
-	    } // a
+	    } /* a */	
 
-	} // z
+	} /* z */
 	/*------------------------------------------------------------*/
 	    
 	sf_floatwrite(ang[0],sf_n(az)*sf_n(aa),Fang);

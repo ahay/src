@@ -404,17 +404,17 @@ void img3x(cub3d cub,
 					    corr(img->qs[ompith][imzs][imys][imxs], 
 						 img->qr[ompith][imzr][imyr][imxr]);
 				    }
-				} // cx
+				} /* cx */
 			    }
-			}         // cy
+			}         /* cy */
 		    }
-		}                 // cz
+		}                 /* cz */
 		
 		img3_cout(img,IND(ihx,ihy,ihz),ompith);
 
-	    } // hx
-	}     // hy
-    }         // hz
+	    } /* hx */
+	}     /* hy */
+    }         /* hz */
 }
 
 /*------------------------------------------------------------*/
@@ -445,7 +445,7 @@ void img3t(cub3d cub,
 	    ); 
 	img3_cout(img,iht,ompith);
 	
-    } // iht
+    } /* iht */
 }
 
 /*------------------------------------------------------------*/
@@ -500,18 +500,18 @@ void img3e(cub3d cub,
 						      img->qr[ompith][imzr][imyr][imxr],
 						      wt);
 					}
-				    } // cx
+				    } /* cx */
 				}
-			    }         // cy
+			    }         /* cy */
 			}
-		    }                 // cz
+		    }                 /* cz */
 		    
 		    img3_cout(img,EICIND(ihx,ihy,ihz,iht),ompith);
 		    
-		} // hx
-	    }     // hy
-	}         // hz
-    }             // ht
+		} /* hx */
+	    }     /* hy */
+	}         /* hz */
+    }             /* ht */
 }
 
 /*------------------------------------------------------------*/

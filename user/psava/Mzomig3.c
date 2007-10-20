@@ -70,10 +70,10 @@ int main (int argc, char *argv[])
     int ompath=1; 
 #endif
 
-    cub3d cub; // wavefield hypercube
-    tap3d tap; // tapering
-    ssr3d ssr; // SSR operator
-    slo3d slo; // slowness 
+    cub3d cub; /* wavefield hypercube */
+    tap3d tap; /* tapering */
+    ssr3d ssr; /* SSR operator */
+    slo3d slo; /* slowness */
 
     weoperator3d weop;
 
@@ -241,9 +241,9 @@ int main (int argc, char *argv[])
     /*------------------------------------------------------------*/
     /* init structures */
     tap = taper_init(cub,
-		     SF_MIN(tmx,cub->amx.n-1), // tmx
-		     SF_MIN(tmy,cub->amy.n-1), // tmy
-		     0,                        // tmz
+		     SF_MIN(tmx,cub->amx.n-1), /* tmx */
+		     SF_MIN(tmy,cub->amy.n-1), /* tmy */
+		     0,                        /* tmz */
 		     true,true,false);
 
     ssr = ssr3_init(cub,pmx,pmy,tmx,tmy,dsmax);

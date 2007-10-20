@@ -41,7 +41,7 @@
 #define LOOP(a) for(imy=0;imy<cub->amy.n;imy++){ \
                 for(imx=0;imx<cub->amx.n;imx++){ \
 		    {a} \
-		}} // loop in x-domain
+		}} /* loop in x-domain */
 
 /*------------------------------------------------------------*/
 cub3d srmod3_cube(bool    verb_,
@@ -139,7 +139,7 @@ void srmod3(weoperator3d weop,
 	if(cub->verb) sf_warning("(ith=%d) ... <iw=%3d of %3d>",
 				 ompith,iw+1,cub->aw.n);
 
-	kth = ompith*cub->amz.n; // tmp file thread I/O shift
+	kth = ompith*cub->amz.n; /* tmp file thread I/O shift */
 	w = sf_cmplx(cub->eps*cub->aw.d,cub->aw.o+iw*cub->aw.d);
 	
 	/*------------------------------------------------------------*/
@@ -166,7 +166,7 @@ void srmod3(weoperator3d weop,
 #pragma omp critical
 #endif    
 	    fslice_put(weop->wtmp,kth+imz+1,weop->ww_s[ompith][0]);
-	} // z (down-going)
+	} /* z (down-going) */
 	
 	/*------------------------------------------------------------*/
 	/* receiver wavefield */
@@ -198,7 +198,7 @@ void srmod3(weoperator3d weop,
 	    ssr3_ssf(w,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
 	    
 	    slow3_advance(cub,s_r,ompith);
-	} // z (up-going)
+	} /* z (up-going) */
 	
 	taper2d(weop->ww_r[ompith],tap);
 
@@ -206,6 +206,6 @@ void srmod3(weoperator3d weop,
 #pragma omp critical
 #endif  
 	fslice_put(rwfl,iw,weop->ww_r[ompith][0]);
-    } // w
+    } /* w */
 }
 

@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 			    stk[ibuf][i1] /= fld[ibuf][i1];
 			}
 			
-		    } // ibuf
+		    } /* ibuf */
 		    
 		} else {
 #ifdef _OPENMP
@@ -194,7 +194,7 @@ int main(int argc, char* argv[])
 				stk[ibuf][i1] += dat[ibuf][i2][i1];
 			    }
 			}
-		    } // ibuf
+		    } /* ibuf */
 
 		}		
 		sf_floatwrite(stk[0],sf_n(a1)*nbuf,Fo);
@@ -226,7 +226,7 @@ int main(int argc, char* argv[])
 			    stk[ibuf][i2] /= fld[ibuf][i2];
 			}
 			
-		    } // ibuf
+		    } /* ibuf */
 		} else {
 #ifdef _OPENMP
 #pragma omp parallel for schedule(dynamic) \

@@ -31,9 +31,9 @@
 
 /*------------------------------------------------------------*/
 
-#define LOOP(a) for(iy=0;iy<cub->amy.n;iy++){ for(ix=0;ix<cub->amx.n;ix++){ {a} }} // loop in x-domain
-#define KOOP(a) for(iy=0;iy<ssr->byy.n;iy++){ for(ix=0;ix<ssr->bxx.n;ix++){ {a} }} // loop in k-domain
-#define SOOP(a) for(iy=0;iy<cub->aly.n;iy++){ for(ix=0;ix<cub->alx.n;ix++){ {a} }} // loop in slowness-domain
+#define LOOP(a) for(iy=0;iy<cub->amy.n;iy++){ for(ix=0;ix<cub->amx.n;ix++){ {a} }} /* loop in x-domain */
+#define KOOP(a) for(iy=0;iy<ssr->byy.n;iy++){ for(ix=0;ix<ssr->bxx.n;ix++){ {a} }} /* loop in k-domain */
+#define SOOP(a) for(iy=0;iy<cub->aly.n;iy++){ for(ix=0;ix<cub->alx.n;ix++){ {a} }} /* loop in slowness-domain */
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );

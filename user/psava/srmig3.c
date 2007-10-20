@@ -134,8 +134,8 @@ void srmig3(weoperator3d weop,
 	    if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> ... <ie=%3d of %3d>",
 				      ompith,iw+1,cub->aw.n,ie+1,cub->ae.n);
 	    
-	    ws = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); //      causal
-	    wr = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); // anti-causal
+	    ws = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /*      causal */
+	    wr = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
 	    
 #ifdef _OPENMP	    
 #pragma omp critical
@@ -164,11 +164,11 @@ void srmig3(weoperator3d weop,
 
 		img3store(cub,img,imz,weop->ww_s,weop->ww_r,ompith);
 		
-	    } // z 
+	    } /* z */
 
-	    imop(cub,img,iw,ompith); // imaging condition
-	} // w
+	    imop(cub,img,iw,ompith); /* imaging condition */
+	} /* w */
 	
-    } // e
+    } /* e */
 }
 
