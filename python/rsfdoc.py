@@ -463,6 +463,25 @@ def html(dir):
     file.write(page('all programs',content))
     file.close()
 
+def text(dir):
+    if not os.path.isdir(dir):
+        os.mkdir(dir)
+    file = open (os.path.join(dir,'INDEX.txt'),'w')
+    file.write('Madagascar Programs\n')
+    dirs = {}
+    for prog in progs.keys():
+        dir = os.path.dirname(progs[prog].file)
+        if not dirs.has_key(dir):
+            dirs[dir] = []
+        dirs[dir].append(prog)
+    keys = dirs.keys()
+    keys.sort()
+    for dir in keys:
+        names = dirs[dir]
+        names.sort()
+        file.write('\n[%s]\n\n%s\n' % (dir,string.join(names,'\n')))
+    file.close()
+
 # regular expressions
 comment = {}
 param = {}
@@ -519,15 +538,15 @@ params['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                          '(?:\/\*\s*(?P<range>[\[][^\]]+[\]])?\s*'
                          '(?P<desc>(?:[^*]|\*[^/])+)\*\/)?') # comment
 param2['c'] = re.compile(r'sf_get(?P<type>bool|int|float|string)\s*'
-                    '\([^/]+\/\*\<\s*(?P<name>[\w\#]+)'
+                    '\([^/]+\/\*\(\s*(?P<name>[\w\#]+)'
                     '(?:=(?P<default>\S+))?'
-                    '\s*(?P<desc>[^\>]+)\>\*\/')
+                    '\s*(?P<desc>[^\)]+)\)\*\/')
 params2['c'] = re.compile(r'sf_get(?P<type>bools|ints|floats|strings)'
                      '\s*\([^\,]+\,[^\,]+\,'
                      '\s*(?P<size>[\w\_]+)\s*\)[^/]+'             
-                     '\/\*\<\s*(?P<name>[\w\#]+)'
+                     '\/\*\(\s*(?P<name>[\w\#]+)'
                      '(?:=(?P<default>\S+))?'
-                     '\s*(?P<desc>[^\>]+)\>\*\/')
+                     '\s*(?P<desc>[^\)]+)\)\*\/')
 stringpar['c'] = re.compile(r'sf_getstring\s*\(\s*\"(?P<name>\w+)\"'
                        '[^\;\{]*[\;\{]\s*(?:\/\*'
                        '\s*(?P<desc>(?:[^*]|\*[^/])+)\*\/)?')
@@ -735,8 +754,7 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                     if main:
                         main.html(dir,rep)
             elif typ == 't':
-                if not os.path.isdir(dir):
-                    os.mkdir(dir)
+                text(dir)
                 for prog in progs.keys():
                     main = progs.get(prog)
                     if main:
@@ -745,8 +763,9 @@ def cli(rsfprefix = 'sf',rsfplotprefix='vp'):
                 raise BadUsage
 
         for prog in args:
-            if     not re.match(rsfprefix,prog) and \
-                   not re.match(rsfplotprefix,prog):
+            if prog == 'vppen' or \
+                    not re.match(rsfprefix,prog) and \
+                    not re.match(rsfplotprefix,prog):
                 prog = rsfprefix + prog
             main = progs.get(prog)
             if main:

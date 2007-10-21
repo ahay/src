@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     for (i=0; i < SF_MAX_DIM; i++) {
 	snprintf(key,3,"n%d",i+1);
 	if (!sf_getint(key,n+i)) break;
-	/*< n# size of #-th axis >*/  
+	/*( n# size of #-th axis )*/  
 	sf_putint(spike,key,n[i]);
     }
 
@@ -46,25 +46,25 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"o%d",i+1);
 	if (!sf_getfloat(key,&f)) f=0.;
-	/*< o#=(0,0,...) origin on #-th axis >*/  
+	/*( o#=(0,0,...) origin on #-th axis )*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,3,"d%d",i+1);
 	if (!sf_getfloat(key,&f)) f = (i==0)? 0.004: 0.1;
-	/*< d#=(0.004,0.1,0.1,...) sampling on #-th axis >*/  
+	/*( d#=(0.004,0.1,0.1,...) sampling on #-th axis )*/  
 	sf_putfloat(spike,key,f);
 
 	snprintf(key,7,"label%d",i+1);
 	if (NULL == (label = sf_getstring(key)))
 	    label = (i==0)? "Time":"Distance";
-	/*< label#=(Time,Distance,Distance,...) label on #-th axis >*/  
+	/*( label#=(Time,Distance,Distance,...) label on #-th axis )*/  
 	if (*label != '\0' && (*label != ' ' || *(label+1) != '\0')) 	
 	    sf_putstring(spike,key,label);
 
 	snprintf(key,6,"unit%d",i+1);
 	if (NULL == (unit = sf_getstring(key)))
 	    unit = (i==0)? "s":"km";
-	/*< unit#=[s,km,km,...] unit on #-th axis >*/  
+	/*( unit#=[s,km,km,...] unit on #-th axis )*/  
 	if (*unit != '\0' && (*unit != ' ' || *(unit+1) != '\0')) 	
 	    sf_putstring(spike,key,unit);
     }
@@ -83,7 +83,7 @@ int main(int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,3,"k%d",i+1);
 	if (!sf_getints(key,k[i],nsp)) {
-	    /*< k#=[0,...] spike starting position >*/
+	    /*( k#=[0,...] spike starting position )*/
 	    for (is=0; is < nsp; is++) {
 		k[i][is]=-1;
 	    }
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
 	}
 	snprintf(key,3,"l%d",i+1);
 	if (!sf_getints(key,l[i],nsp)) {
-	    /*< l#=[k1,k2,...] spike ending position >*/
+	    /*( l#=[k1,k2,...] spike ending position )*/
 	    for (is=0; is < nsp; is++) {
 	      l[i][is]=k[i][is];
 	    }
@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
 	}	
 	snprintf(key,3,"p%d",i+1);
 	if (!sf_getfloats(key,p[i],nsp)) {
-	    /*< p#=[0,...] spike inclination (in samples) >*/
+	    /*( p#=[0,...] spike inclination (in samples) )*/
 	    for (is=0; is < nsp; is++) {
 		p[i][is]=0.;
 	    }

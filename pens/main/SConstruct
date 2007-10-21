@@ -10,7 +10,8 @@ try: # distribution version
     root = env.get('RSFROOT')
     libdir = os.path.join(root,'lib')
     bindir = os.path.join(root,'bin')
-    incdir = os.path.join(root,'include')    
+    incdir = os.path.join(root,'include') 
+    docmerge = configure.docmerge   
 except: # local version
     root = None
     env = Environment()
@@ -51,7 +52,7 @@ main = env.Program('vppen',[obj,]+objects)
 if root:
     env.Install(bindir,main[0])
         
-    # do selfdoc later
+pens = ['vppen']
 
 # xtpen
 #######
@@ -66,6 +67,7 @@ if inc and lib:
     main = env.Program('xtpen',[obj,]+objects,
                        LIBPATH=env.get('LIBPATH',[])+lib,
                        LIBS=env.get('XLIBS',[])+env.get('LIBS',[]))
+    pens.append('xtpen')
 else:
     main = env.Place('xtpen',None,
                      var='XINC and XLIBPATH',package='libXaw-devel')
@@ -84,6 +86,8 @@ main = env.Program('pspen',[obj,]+objects)
 if root:
     env.Install(bindir,main[0])
 
+pens.append('pspen')
+
 # raspen
 #######
 
@@ -95,8 +99,32 @@ if ppm:
     env.Depends(obj,'raspen.h')
     main = env.Program('ppmpen',[obj,]+objects,
                        LIBS=[ppm]+env.get('LIBS',[]))
+    docmerge = configure.docextra(docmerge,'sfraspen','sfppmpen')
+    pens.append('raspen')
 else:
     main = env.Place('ppmpen',None,var='PPM',package='netpbm-devel')
     
 if root:
     env.Install(bindir,main[0])
+
+######################################################################
+# SELF-DOCUMENTATION
+######################################################################
+if root:    
+    main = 'sfpens.py'
+
+    for pen in pens:
+        env.Command('M'+pen+'.c',[pen+'.c','init_vplot.c'],
+                    'cat $SOURCES > $TARGET')
+    
+    docs = map(lambda prog: env.Doc(prog,'M'+prog),pens)
+    env.Depends(docs,'#/python/rsfdoc.py')
+
+    doc = env.Command(main,docs,docmerge)
+    env.Install(libdir,doc)
+ 
+    Clean(os.path.join(libdir,main),os.path.join(libdir,main+'c'))
+
+#####################################################################
+
+# 	$Id$	

@@ -1,3 +1,8 @@
+/* Vplot filter for Postscript. 
+
+output is in PostScript language; if not redirected, it is sent to
+lpr -Ppostscript   (override with $PSPRINTER environment variable.)
+*/
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
@@ -1049,7 +1054,9 @@ void psclose (int status)
 	    else
 		strcpy (printer, "colorps");
 
-	    if (NULL != (printer0 = sf_getstring ("printer"))) strcpy(printer,printer0);
+	    if (NULL != (printer0 = sf_getstring ("printer"))) 
+		strcpy(printer,printer0);
+	    /* what printer to send it to */
 
 	    if (ps_set_papersize)
 	    {
@@ -1322,7 +1329,7 @@ void psopen (int argc, char* argv[])
  * GETPAR here it would also search the incoming history file... I think
  * it's safer to require them to be on the command line.)
  */
-    sf_getfloat ("ppi",&pixels_per_inch);
+    sf_getfloat ("ppi",&pixels_per_inch); /* pixels per inch */
 
 
 /*
@@ -1551,7 +1558,9 @@ void psopen (int argc, char* argv[])
  */
     if (!sf_getbool("dumbfat",&dumb_fat)) dumb_fat=false;
     if (!sf_getbool("color",&ps_color)) ps_color=false;
+    /* use color */
     if (!sf_getbool("force",&force_color)) force_color=false;
+    /* if y, don't replace colors with their compliments */
 
     if (ps_color)
     {
@@ -1574,6 +1583,7 @@ void psopen (int argc, char* argv[])
     txprec = DEFAULT_HARDCOPY_PREC;
 
     if (NULL == (label = sf_getstring ("label")))
+	/*( label for pages (default is user name and date) )*/
     {
 	if ((user_name = getlogin ()) == NULL)
 	    user_name = getpwuid (getuid ())->pw_name;
@@ -1688,6 +1698,8 @@ char           *spooldirnm;
     }
 
     if (!sf_getbool("hold",&yesget)) yesget=false;
+    /* tells the printer to not print the job until you
+       add paper through the manual feed slot */
 
     if (yesget)
 	hold = YES;
@@ -1695,6 +1707,7 @@ char           *spooldirnm;
 	hold = NO;
     
     if (!sf_getint("copies",&ncopies_document)) ncopies_document = 1;
+    /* number of copies */
 
 /*
  * Initialize the PostScript file

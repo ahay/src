@@ -60,7 +60,8 @@ int main(int argc, char* argv[])
     if (!sf_getint("niter",&niter)) niter=100;
     /* number of iterations */
 
-    if (NULL == (peffile = sf_getstring("pef"))) { /* signal PEF file (optional) */
+    if (NULL == (peffile = sf_getstring("pef"))) { 
+        /* signal PEF file (optional) */
 	aa = NULL;
     } else {
 	pef = sf_input(peffile);
@@ -72,7 +73,8 @@ int main(int argc, char* argv[])
 	for( ia=0; ia < na; ia++) {
 	    aa->flt[ia] /= a0;
 	}
-	if (NULL != (lagfile = sf_getstring("lag")) /* file with PEF lags (optional) */
+	if (NULL != (lagfile = sf_getstring("lag")) 
+            /* file with PEF lags (optional) */
 	    || 
 	    NULL != (lagfile = sf_histstring(pef,"lag"))) {
 	    lag = sf_input(lagfile);

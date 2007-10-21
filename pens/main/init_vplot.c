@@ -335,6 +335,7 @@ void init_vplot (int argc, char* argv[])
      * before we call dev.open. 
      */
     if (!sf_getbool ("mono",&mono)) mono=false;
+    /* no color */
 
     /*
      * Initialize all patterns to be undefined. (device can create a
@@ -403,10 +404,6 @@ void init_vplot (int argc, char* argv[])
     sf_getfloats ("red",  redmap, 4);
     sf_getfloats ("green",  greenmap, 4);
     sf_getfloats ("blue",  bluemap, 4);
-
-/*
- * Valued arguments
- */
 
     sf_getint ("dither",  &dither);
     sf_getfloat ("greyc",  &greyc);
@@ -547,7 +544,7 @@ void init_vplot (int argc, char* argv[])
     user_ywmin_flag = sf_getfloat ("ywmin",  &user_ywmin);
 
     if (!sf_getint ("fat",  &fatbase)) fatbase = 0;
-
+    /* base line fatness */
 
 
 /*

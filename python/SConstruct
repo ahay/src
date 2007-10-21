@@ -11,7 +11,8 @@ txtdir = os.path.join(docdir,'txt')
 
 python = WhereIs('python')
 
-dirs = ['main','proc','imag','plot','libplot','sumain','suplot']+env['USERS']
+dirs = Split('main proc imag plot libplot pens sumain suplot')
+dirs = dirs + env['USERS']
 
 env.Command('rsfprog.py',None,
             action=Action(rsfdoc.getprogs,varlist=['dirs']),dirs=dirs)
@@ -38,15 +39,16 @@ Depends(use,os.path.join(libdir,'vpplot.py'))
 Depends(use,os.path.join(libdir,'suproj.py'))
 Depends(use,os.path.join(libdir,'vplot2eps.py'))
 
-index = os.path.join(docdir,'index.html')
+htm = os.path.join(docdir,'index.html')
+txt = os.path.join(txtdir,'INDEX.txt')
 repos = os.environ.get('RSF_REPOSITORY',os.getcwd())
 env.Append(ENV={'LD_LIBRARY_PATH':os.environ.get('LD_LIBRARY_PATH'),
                 'PYTHONPATH':os.environ.get('PYTHONPATH')})
-env.Command(index,None,
+env.Command(htm,None,
             '%s python/sfdoc -w %s -r %s' % (python,docdir,repos))
-Depends(index,use)
-env.Command(txtdir,None,'%s python/sfdoc -t %s' % (python,txtdir))
-Depends(txtdir,use)
+env.Command(txt,None,'%s python/sfdoc -t %s' % (python,txtdir))
+Depends(htm,use)
+Depends(txt,use)
 
 ##########################################################################
 # SELF DOCUMENTATION

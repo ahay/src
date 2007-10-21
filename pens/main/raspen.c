@@ -1,3 +1,4 @@
+/* vplot filter for ppm format output. */
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
@@ -281,12 +282,15 @@ void rasopen (int argc, char* argv[])
     num_col = NCOLOR;
 
     sf_getfloat ("aspect", &aspect_ratio);
+    /* aspect ratio */
     sf_getfloat ("ppi", &pixels_per_inch);
+    /* pixels per inch */
     dev_xmax *= pixels_per_inch / o_pixels_per_inch;
     dev_ymax *= (o_aspect_ratio / aspect_ratio) *
      (pixels_per_inch / o_pixels_per_inch);
     sf_getint ("n1", &dev_xmax);
     sf_getint ("n2", &dev_ymax);
+    /* image size */
 
     /*
      * Allocate space for image 

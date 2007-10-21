@@ -50,7 +50,7 @@ int main (int argc, char* argv[])
 	}
 	sprintf(key,"beg%d",i);
 	if(!sf_getint(key,beg+j)) {
-	    /*< beg#=0 the number of zeros to add before the beginning of #-th axis >*/
+	    /*( beg#=0 the number of zeros to add before the beginning of #-th axis )*/
 	    beg[j]=0;
 	} else if (beg[j]<0) {
 	    sf_error("negative beg=%d",beg[j]);
@@ -58,10 +58,10 @@ int main (int argc, char* argv[])
 	sprintf(key,"end%d",i);
 	sprintf(key2,"n%d",i);
 	if(!sf_getint(key,end+j)) {
-	    /*< end#=0 the number of zeros to add after the end of #-th axis >*/
+	    /*( end#=0 the number of zeros to add after the end of #-th axis )*/
 	    sprintf(key,"n%dout",i);
 	    if (sf_getint(key,&nj) || sf_getint(key2,&nj)) {
-		/*< n# the output length of #-th axis (padding at the end) >*/
+		/*( n# the output length of #-th axis (padding at the end) )*/
 		if (0==nj) for (nj++; nj < n[j]; nj *= 2) ;
 		end[j]=nj-n[j]-beg[j];
 		if (end[j]<0)

@@ -138,23 +138,23 @@ int main (int argc, char* argv[])
 	for (i=0; i < SF_MAX_DIM; i++) {
 	    (void) snprintf(xkey,3,"n%d",i+1);
 	    if (!sf_getint(xkey,n+i)) break;
-            /*< n# size of #-th axis >*/
+            /*( n# size of #-th axis )*/
 	    if (n[i] > 0) dim=i+1;
 	    sf_putint(out,xkey,n[i]);
 
 	    (void) snprintf(xkey,3,"d%d",i+1);
 	    if (!sf_getfloat(xkey,d+i)) d[i] = 1.;
-            /*< d#=(1,1,...) sampling on #-th axis >*/
+            /*( d#=(1,1,...) sampling on #-th axis )*/
 	    sf_putfloat(out,xkey,d[i]);
 
 	    (void) snprintf(xkey,3,"o%d",i+1);
 	    if (!sf_getfloat(xkey,o+i)) o[i] = 0.;
-            /*< o#=(0,0,...) origin on #-th axis >*/
+            /*( o#=(0,0,...) origin on #-th axis )*/
 	    sf_putfloat(out,xkey,o[i]);
 
 	    (void) snprintf(xkey,7,"label%d",i+1);
 	    if (NULL != (label = sf_getstring(xkey))) {
-                /*< label# label on #-th axis >*/
+                /*( label# label on #-th axis )*/
 		sf_putstring(out,xkey,label);
 		free(label);
 	    }
@@ -165,7 +165,7 @@ int main (int argc, char* argv[])
 	    }
 	    (void) snprintf(xkey,6,"unit%d",i+1);
 	    if (NULL != (unit = sf_getstring(xkey))) {
-		/*< unit# unit on #-th axis >*/ 
+		/*( unit# unit on #-th axis )*/ 
 		sf_putstring(out,xkey,unit);
 		free(unit);
 	    }

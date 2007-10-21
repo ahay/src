@@ -1,3 +1,11 @@
+/* Vplot filter for the virtual vplot device.
+
+Although it is perhaps not obvious, this program can be used to
+"Capture the screen". Ie, you play with Pen options until you
+get something you like, and then you can use those options with
+this program to make a new vplot file that without any options
+will draw the same thing.
+*/
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
@@ -972,14 +980,19 @@ void vpopen (int argc, char* argv[])
  * Special options
  */
     if (!sf_getbool ("dumb", &vpdumb)) vpdumb=false;
+    /* if y, causes output to only be vectors, erases, and color changes */
     if (!sf_getbool ("blast", &vpblast)) vpblast=true;
+    /* if y, don't try to compact the output.  If n, compaction will
+       be done.  Compaction does run-length encoding and compacts repeated
+       lines.  Compaction can make the vplot file considerably smaller, but
+       it also takes longer to create the file. */
     if (!sf_getint ("bit", &vpbit)) vpbit=0;
+    /* if > 0,  then bit raster is used with bit the color */
     if (!sf_getint ("grid", &vpframe)) vpframe=-1;
+    /* turns on drawing a grid, with the specified fatness */ 
 
-/*
- * stat=L means to insert extra spaces into stat output.
- */
     if (NULL != (vpstat_string = sf_getstring ("stat")))
+	/*( stat=n if y, print plot statistics; if l, insert extra spaces )*/
     {
 	if (vpstat_string[0] == 'y' || vpstat_string[0] == 'Y' ||
 	    vpstat_string[0] == '1')
@@ -992,8 +1005,13 @@ void vpopen (int argc, char* argv[])
     }
 
     if (NULL == (vpaligns = sf_getstring ("align"))) vpaligns="uu";
+    /* aligns plot accoording to xy:
+       x is one of l, r, c, u for left, right, center, unaligned
+       y is one of b, t, c, u for bottom, top, center, unaligned.
+       In all cases the given point is aligned to have coordinate zero. */
     if (!sf_getfloat ("xsize", &xsize)) xsize=0.;
     if (!sf_getfloat ("ysize", &ysize)) ysize=0.;
+    /* scale the vplot image to fit within a given size rectangle */
     if (xsize != 0. || ysize != 0.)
 	vpfit = YES;
     
@@ -1005,6 +1023,9 @@ void vpopen (int argc, char* argv[])
 
     if (!sf_getints ("gridnum", vparray, 2))
 	vparray[0] = vparray[1] = 0;
+    /*( gridnum grids the screen, each part has gridsize=xwidth,ywidth
+      numy defaults to numx. [xy]size default to [xy]screensize /
+      num[xy] )*/
     
     if (vparray[1] == 0)
 	vparray[1] = vparray[0];
@@ -1016,8 +1037,11 @@ void vpopen (int argc, char* argv[])
     }
 
     sf_getbool ("big", &vpbig);
+    /* if y, expand the size of the device's screen (and hence
+       outermost clipping window) to nearly infinity (bad for rotated
+       style!) */
     sf_getbool ("vpstyle", &vpstyle);
-
+    /* if n, omit declaring absolute style in the output file */
     if (vparray[0] != 0)
     {
 
@@ -1144,6 +1168,8 @@ static int vpopen_name (int num)
 	gotwhich = 2;
     }
     else if (NULL != (string = sf_getstring ("outN")))
+	/*( outN redirect frames to corresponding files (include %d in
+	 * the filename template) )*/
     {
 	gotwhich = 1;
     }
@@ -1163,6 +1189,7 @@ static int vpopen_name (int num)
 	    snprintf (string2, 20, "out%d", num);
 	    if (NULL != (outname = sf_getstring (string2)))
 		gotwhich = 1;
+	    /*( out# redirect frame # to corresponding file )*/
 	}
     }
 

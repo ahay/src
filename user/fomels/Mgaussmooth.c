@@ -36,7 +36,7 @@ int main (int argc, char* argv[])
     n2 = sf_leftsize(in,1);
 
     if (!sf_getfloat("rect",&rect)) rect=1;
-    /*< smoothing radius >*/ 
+    /* smoothing radius */ 
     recgauss_init (n1,rect);
 
     data = sf_floatalloc (n1);

@@ -1,3 +1,83 @@
+/*  Vplot filter for X windows using the X Toolkit (Xt). 
+
+ This pen takes all the standard X-toolkit options
+ E.g. -geometry 500x400 -font fixed
+
+ The pen has two display modes
+
+ RUNNING MODE: Runs through all the frames in a loop
+ Active buttons are:
+        QUIT : quits the program
+        STOP : enter frame mode
+
+ FRAME MODE (pause=-1): Pauses after each frame
+ Active buttons are:
+        NEXT : next frame
+        PREV : previous frame
+        QUIT : quits the program
+        RESTART : go to the first frame
+        RUN  : enter running mode
+        STRETCHY/RIGID : make plot fill the frame or preserve aspect ratio
+        FORWARDS/BACKWARDS/BOTH-WAYS : change direction of frame flipping
+        Note that a backwards run will only show those frames already plotted
+        It is advisable to run once through all the frames forwards.
+
+ The following actions are available for binding to keystrokes;
+ xt_quit(): quit program   xt_next(): next frame   xt_prev(): prev frame
+ xt_run(): run mode        xt_stop(): frame mode   xt_restart(): first frame
+ xt_faster(): reduce pause between frames in run mode
+ xt_slower(): increase pause between frames in run mode
+ xt_stretchy(): toggle between stretchy and rigid modes
+ xt_number(digit): enter a digit in the current number
+ xt_reset_number(): reset the current number
+ xt_goto_frame(): goto the frame number given by the current number
+ xt_print_coord(): Print mouse coords in the file given by interact=
+
+ The default key bindings are:
+       <Btn1Down>:            xt_print_coord()  \n\
+       <KeyPress>n:           xt_stop() xt_reset_number() xt_next()  \n\
+       <KeyPress>m:           xt_stop() xt_reset_number() xt_prev()  \n\
+       <KeyPress>r:           xt_run()  \n\
+       <KeyPress>q:           xt_quit()  \n\
+       <KeyPress>.:           xt_stop()  \n\
+       <KeyPress>f:           xt_faster()  \n\
+       <KeyPress>s:           xt_slower()  \n\
+       <KeyPress>t:           xt_stretchy()  \n\
+       <KeyPress>0:           xt_number(0)  \n\
+        ......                  .......
+       <KeyPress>9:           xt_number(9)  \n\
+       <KeyPress>Return:      xt_goto_frame() xt_reset_number()  \n\
+       <KeyPress>Escape:      xt_reset_number()
+
+Here is an example of overriding these in your ~/.Xdefaults file
+ this binds the keypad number 1 to skip to the first frame
+ xtpen*translations: #override\n\
+ <KeyPress>Q:       xt_quit() \n\
+ <KeyPress>KP_1:       xt_number(1) xt_goto_frame() xt_reset_number()
+
+ N.B using prev when you are at the first frame takes you to the last
+ frame plotted so far; this is not necessarily the last frame!
+ You can only jump to a frame if it has already been plotted once.
+ If you give an invalid frame number it will jump to the next frame.
+
+Many parameters may have their defaults set in the Xresource database
+Here are the equivalent names:
+  option name          X-Resource name         Type
+  ===========          ===============         ====
+  stretchy              XTpen.stretchy         Boolean
+  images                XTpen.useImages        Boolean
+  pixmaps               XTpen.usePixmaps       Boolean
+  buttons               XTpen.showButtons      Boolean
+  labels                XTpen.showLabels       Boolean
+  want_text             XTpen.showText         Boolean
+  numcol                XTpen.numCol           int
+  pause                 XTpen.pause            int
+ 
+E.g. If you want xtpen to come up in stretchy mode as a default
+     put this line in your Xdefaults file:
+XTpen.stretchy: True
+*/
+
 /*
  * Copyright 1987 the Board of Trustees of the Leland Stanford Junior
  * University. Official permission to use this software is included in
@@ -2263,6 +2343,7 @@ void xtopen (int argc, char* argv[])
     aspect_ratio = ((int)((aspect_ratio * 100.) + .5)) / 100.;
 
     if (!sf_getbool("x_screen_info", &tellme_resolution)) 
+	/* output the default screen information */
 	tellme_resolution = false;
     if (tellme_resolution) {
 	ERR(COMMENT, name,
@@ -2272,17 +2353,13 @@ void xtopen (int argc, char* argv[])
 	    pixels_per_inch, aspect_ratio);
     }
 
-    /*
-     * Allow override of pixels_per_inch and aspect_ratio from
-     * command line. (If we used GETPAR here it would also search
-     * the incoming history file... I think it's safer to require
-     * them to be on the command line.)
-     */
     sf_getfloat("aspect",&aspect_ratio);
+    /* aspect ratio */
     sf_getfloat("ppi",&pixels_per_inch);
+    /* pixels per inch */
  
-    /* Take a default from the resource database */
     if ( !sf_getint("numcol",&num_col_req) ) num_col_req = app_data.num_col;
+    /* number of colors (take a default from the resource database) */
 
     /* colormap support */
     if( !mono ) x_num_col = DisplayCells(pen_display, pen_screen);
@@ -2366,20 +2443,42 @@ void xtopen (int argc, char* argv[])
 
     if( !sf_getbool("buttons",&want_buttons) ) 
 	want_buttons = (bool) app_data.buttons;
+    /* if y, display a panel of buttons on top of the plot */
     if( !sf_getbool("labels",&want_labels) ) 
 	want_labels = (bool) app_data.labels;
+    /* if y, display frame number and inter-frame delay at the top of plot */
     if( !sf_getbool("want_text",&want_text) ) 
 	want_text = (bool) app_data.textpane;
+    /* if y, display a message window */
     if( !sf_getbool("stretchy",&xt_stretchy) ) 
 	xt_stretchy= (bool) app_data.stretchy;
+    /* if y, use the stretchy mode and fill the window */
 
     if( !sf_getbool("boxy",&boxy) ) boxy = false;
+    /* output coordinates and labels suitable for sfbox */
 
     if( !sf_getbool("see_progress",&see_progress) ) see_progress=false;
+    /* show progress of each frame, slow */
+
     if( !sf_getbool("images",&want_images) ) 
 	want_images = (bool) app_data.images;
+    /* copy the image created by plotting each frame and save it in
+     the client program (xtpen). This will increase memory usage in
+     the machine that runs the pen command. If you have a fast
+     connection to your X-server it will make redisplay of frames
+     faster. If you have a slow connection, it may make replotting
+     slower. */
+
     if( !sf_getbool("pixmaps",&greedy_pixmaps)) 
 	greedy_pixmaps = (bool) app_data.pixmaps;
+    /* Copy the image created by plotting each frame and save it in
+     the X-server. This will increase memory usage of the machine that
+     displays the window! Redisplay of frames will be very fast and
+     the network traffic is very low so this is a suitable option for
+     slow connections.  If your X-server is a workstation with plenty
+     of memory and swap space then this option should be very useful.
+     If your X-server has limited memory, this option may have
+     undesirable effects on the response of your terminal. */
 
     if( want_buttons || want_labels ){
         control_panel = XtCreateManagedWidget("control_panel",boxWidgetClass,

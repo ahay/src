@@ -41,8 +41,8 @@ int main (int argc, char* argv[])
     for (i=0; i < dim; i++) {
 	snprintf(key,6,"rect%d",i+1);
 	if (NULL != sf_getstring(key)) {
-	    /*< rect# size of the smoothing stencil in #-th dimension 
-	      (auxiliary input file) >*/
+	    /*( rect# size of the smoothing stencil in #-th dimension 
+	      (auxiliary input file) )*/
 	    rect[i] = sf_input(key);
 	    if (SF_INT != sf_gettype(rect[i])) sf_error("Need int %s",key);
 	    dim1 = i;
