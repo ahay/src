@@ -65,7 +65,8 @@ void multidivn (float* num  /* numerator */,
 		int niter   /* number of iterations */)
 /*< smoothly divide num/rat >*/
 {
-    sf_conjgrad(prec? sf_helicon_lop: NULL,weight2_lop,repeat_lop,p,rat,num,niter);
+    sf_conjgrad(prec? sf_helicon_lop: NULL,
+		weight2_lop,repeat_lop,p,rat,num,niter);
 }
 
 /* 	$Id: multidivn.c 1136 2005-04-20 20:43:14Z fomels $	 */

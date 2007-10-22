@@ -447,6 +447,7 @@ def x11(context):
 
 package['netpbm'] = {'fc':'netpbm-devel',
                      'generic':'libnetpbm10-dev',
+                     'darwin':'netpbm (fink)',
                      'cygwin':'libnetpbm-devel (Setup...Devel)'}
 
 def ppm(context):
