@@ -29,8 +29,8 @@ from math import pi
 
 
 private = {'login':os.environ.get('BEG_LOGIN'),
-            'password':os.environ.get('BEG_PASSWORD'),
-            'server':os.environ.get('BEG_SERVER')}
+           'password':os.environ.get('BEG_PASSWORD'),
+           'server':os.environ.get('BEG_SERVER')}
 
 
 # DATA (07): z(col=0) rho(col=5) VP (col=6) and VS (col=7)

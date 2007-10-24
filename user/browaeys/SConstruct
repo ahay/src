@@ -6,6 +6,7 @@ progs = '''
 karman
 karman2
 karmans
+autocirc2
 '''
 
 try:  # distributed version
