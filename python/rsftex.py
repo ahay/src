@@ -795,11 +795,12 @@ class TeXPaper(Environment):
                 pdf = re.sub(pssuffix+'$','.pdf',ps)
                 self.PDFBuild(pdf,ps)
                 erfigs.append(pdf)
+		self.Install2(resdir2,pdf)
             if latex2html and pstoimg:
                 png = re.sub(pssuffix+'$','.'+itype,ps)
                 self.PNGBuild(png,ps)
                 self.imgs.append(png)
-                self.Install2(resdir2,[png,pdf])
+                self.Install2(resdir2,png)
                 self.Alias('figinstall',resdir2)
         self.figs.extend(erfigs)
 
