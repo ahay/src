@@ -191,6 +191,20 @@ def point3(cc,xcoord,zcoord,magn,par):
          ${SOURCES[0]} ${SOURCES[1]} ${SOURCES[2]} | transp
          ''', stdin=0)
 
+def circle(cc,xcenter,zcenter,radius,sampling,par):
+    Flow(cc+'_x',None,
+         'math n1=%d d1=%g o1=%g output="%g+%g*cos(x1/180*3.14)"'
+         % (sampling,360./sampling,0.,xcenter,radius) )
+    Flow(cc+'_z',None,
+         'math n1=%d d1=%g o1=%g output="%g+%g*sin(x1/180*3.14)"'
+         % (sampling,360./sampling,0.,zcenter,radius) )
+    Flow(cc,[cc+'_x',cc+'_z'],
+         '''
+         cat axis=2 space=n
+         ${SOURCES[0]} ${SOURCES[1]} | transp
+         ''', stdin=0)
+
+
 def boxarray(cc,nz,oz,dz,nx,ox,dx,par):
     Flow(cc+'_',None,
          '''

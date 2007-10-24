@@ -1,4 +1,4 @@
-/* 3-D S/R migration with extended split-step */
+/* 3-D S/R migration with extended SSF */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
@@ -130,25 +130,27 @@ int main (int argc, char *argv[])
 
     if (!sf_getbool(  "verb",&verb ))  verb =  true; /* verbosity flag */
     if (!sf_getfloat(  "eps",&eps  ))   eps =  0.01; /* stability parameter */
+    if (!sf_getbool("twoway",&twoway)) twoway=false; /* two-way traveltime */
     if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* max number of refs */
+    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
+
     if (!sf_getint(    "pmx",&pmx  ))   pmx =     0; /* padding on x */
     if (!sf_getint(    "pmy",&pmy  ))   pmy =     0; /* padding on y */
+
     if (!sf_getint(    "tmx",&tmx  ))   tmx =     0; /* taper on x   */
     if (!sf_getint(    "tmy",&tmy  ))   tmy =     0; /* taper on y   */
+
     if (!sf_getfloat( "vpvs",&vpvs))   vpvs =    1.;
-    if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* max time error */
-    if (!sf_getbool("twoway",&twoway)) twoway=false; /* two-way traveltime */
 
     /*------------------------------------------------------------*/
-    /* SLOWNESS */
-
+    /* slowness parameters */
     ;      Fs_s = sf_input("slo");
     if(cw) Fs_r = sf_input("sls");
     else   Fs_r = sf_input("slo");
 
     alx = sf_iaxa(Fs_s,1); sf_setlabel(alx,"lx");
     aly = sf_iaxa(Fs_s,2); sf_setlabel(aly,"ly");
-    amz = sf_iaxa(Fs_s,3); sf_setlabel(amz,"mz");
+    amz = sf_iaxa(Fs_s,3); sf_setlabel(amz,"z" );
     /* test here if slo and sls have similar sizes */
 
     n = sf_n(alx)*sf_n(aly);

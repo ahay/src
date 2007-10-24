@@ -64,11 +64,72 @@ fft2d ompfft2_init(cub3d cub,
 }
 
 /*------------------------------------------------------------*/
+fft3d ompfft3_init(cub3d cub,
+		   int n1_, 
+		   int n2_,
+		   int n3_)
+/*< initialize >*/
+{
+    int ompith;
+
+    /*------------------------------------------------------------*/
+    fft3d fft;
+    fft = (fft3d) sf_alloc(1,sizeof(*fft));
+
+    fft->n1 = n1_;
+    fft->n2 = n2_;
+    fft->n3 = n3_;
+
+    fft->ctrace2 = (kiss_fft_cpx**) sf_complexalloc2(fft->n2,cub->ompnth);
+    fft->ctrace3 = (kiss_fft_cpx**) sf_complexalloc2(fft->n3,cub->ompnth);
+
+    fft->forw1 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs1 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->forw2 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs2 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->forw3 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+    fft->invs3 = (kiss_fft_cfg*) sf_alloc(cub->ompnth,sizeof(kiss_fft_cfg));
+
+    for(ompith=0; ompith<cub->ompnth; ompith++) {
+	fft->forw1[ompith] = kiss_fft_alloc(fft->n1,0,NULL,NULL);
+	fft->invs1[ompith] = kiss_fft_alloc(fft->n1,1,NULL,NULL);
+	fft->forw2[ompith] = kiss_fft_alloc(fft->n2,0,NULL,NULL);
+	fft->invs2[ompith] = kiss_fft_alloc(fft->n2,1,NULL,NULL);
+	fft->forw3[ompith] = kiss_fft_alloc(fft->n3,0,NULL,NULL);
+	fft->invs3[ompith] = kiss_fft_alloc(fft->n3,1,NULL,NULL);
+
+	if (NULL == fft->forw3[ompith] || NULL == fft->invs3[ompith] || 
+	    NULL == fft->forw2[ompith] || NULL == fft->invs2[ompith] || 
+	    NULL == fft->forw1[ompith] || NULL == fft->invs1[ompith]) 
+	    sf_error("%s: KISS FFT allocation error",__FILE__);
+    }
+
+    fft->fftscale = 1./sqrtf(fft->n1*fft->n2*fft->n3);
+
+    return fft;
+}
+
+/*------------------------------------------------------------*/
 void ompfft2_close(fft2d fft)
 /*< Free allocated storage >*/
 {
     free(*fft->ctrace); free (fft->ctrace);
 
+    free (*fft->forw2); free (fft->forw2);
+    free (*fft->invs2); free (fft->invs2);
+    free (*fft->forw1); free (fft->forw1);
+    free (*fft->invs1); free (fft->invs1);
+}
+
+/*------------------------------------------------------------*/
+void ompfft3_close(fft3d fft)
+/*< Free allocated storage >*/
+{
+    free(*fft->ctrace3); free (fft->ctrace3);
+    free(*fft->ctrace2); free (fft->ctrace2);
+
+    free (*fft->forw3); free (fft->forw3);
+    free (*fft->invs3); free (fft->invs3);
     free (*fft->forw2); free (fft->forw2);
     free (*fft->invs2); free (fft->invs2);
     free (*fft->forw1); free (fft->forw1);
@@ -85,10 +146,14 @@ void ompfft2(bool inv          /* inverse/forward flag */,
     int i1,i2;
     
     if (inv) {
+
+	/* IFT 1 */
 	for (i2=0; i2 < fft->n2; i2++) {
 #pragma omp critical
 	    kiss_fft(fft->invs1[ompith],pp[i2],pp[i2]);
 	}
+
+	/* IFT 2 */
 	for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
 	    kiss_fft_stride(fft->invs2[ompith],pp[0]+i1,fft->ctrace[ompith],fft->n1);
@@ -96,19 +161,24 @@ void ompfft2(bool inv          /* inverse/forward flag */,
 		pp[i2][i1] = fft->ctrace[ompith][i2];
 	    }
 	}
-	
+
+	/* scaling */
 	for     (i2=0; i2<fft->n2; i2++) {
 	    for (i1=0; i1<fft->n1; i1++) {
 		pp[i2][i1] = sf_crmul(pp[i2][i1],fft->fftscale);
 	    }
 	}
+
     } else {
+
+	/* scaling */
 	for     (i2=0; i2<fft->n2; i2++) {
 	    for (i1=0; i1<fft->n1; i1++) {
 		pp[i2][i1] = sf_crmul(pp[i2][i1],fft->fftscale);
 	    }
 	}
 	
+	/* FFT 2 */
 	for (i1=0; i1 < fft->n1; i1++) {
 #pragma omp critical
 	    kiss_fft_stride(fft->forw2[ompith],pp[0]+i1,fft->ctrace[ompith],fft->n1);
@@ -116,10 +186,103 @@ void ompfft2(bool inv          /* inverse/forward flag */,
 		pp[i2][i1] = fft->ctrace[ompith][i2];
 	    }
 	}
+
+	/* FFT 1 */
 	for (i2=0; i2 < fft->n2; i2++) {
 #pragma omp critical
 	    kiss_fft(fft->forw1[ompith],pp[i2],pp[i2]);
 	}
+    }
+}
+
+/*------------------------------------------------------------*/
+void ompfft3(bool inv          /* inverse/forward flag */, 
+	     kiss_fft_cpx ***pp /* [n1][n2][n3] */,
+	     int ompith,
+	     fft3d fft) 
+/*< Apply 3-D FFT >*/
+{
+    int i1,i2,i3;
+    
+    if (inv) {
+
+	/* IFT 1 */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i2=0; i2 < fft->n2; i2++) {
+#pragma omp critical
+		kiss_fft(fft->invs1[ompith],pp[i3][i2],pp[i3][i2]);
+	    }
+	}
+
+	/* IFT 2 */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i1=0; i1 < fft->n1; i1++) {
+#pragma omp critical
+		kiss_fft_stride(fft->invs2[ompith],pp[i3][0]+i1,fft->ctrace2[ompith],fft->n1);
+		for (i2=0; i2<fft->n2; i2++) {
+		    pp[i3][i2][i1] = fft->ctrace2[ompith][i2];
+		}
+	    }
+	}
+	
+	/* IFT 3 */
+	for (i2=0; i2 < fft->n2; i2++) {
+	    for (i1=0; i1 < fft->n1; i1++) {
+		kiss_fft_stride(fft->invs3[ompith],pp[0][i2]+i1,fft->ctrace3[ompith],fft->n1);
+		for (i3=0; i3 < fft->n3; i3++) {
+		    pp[i3][i2][i1] = fft->ctrace3[ompith][i3];
+		}
+	    }
+	}
+
+	/* scaling */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i2=0; i2 < fft->n2; i2++) {
+		for (i1=0; i1 < fft->n1; i1++) {
+		    pp[i3][i2][i1] = sf_crmul(pp[i3][i2][i1],fft->fftscale);
+		}
+	    }
+	}
+
+
+    } else {
+ 
+	/* scaling */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i2=0; i2 < fft->n2; i2++) {
+		for (i1=0; i1 < fft->n1; i1++) {
+		    pp[i3][i2][i1] = sf_crmul(pp[i3][i2][i1],fft->fftscale);
+		}
+	    }
+	}
+	
+	/* FFT 3 */
+	for (i2=0; i2 < fft->n2; i2++) {
+	    for (i1=0; i1 < fft->n1; i1++) {
+		kiss_fft_stride(fft->forw3[ompith],pp[0][i2]+i1,fft->ctrace3[ompith],fft->n1);
+		for (i3=0; i3 < fft->n3; i3++) {
+		    pp[i3][i2][i1] = fft->ctrace3[ompith][i3];
+		}
+	    }
+	}
+
+	/* FFT 2 */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i1=0; i1 < fft->n1; i1++) {
+		kiss_fft_stride(fft->forw2[ompith],pp[i3][0]+i1,fft->ctrace2[ompith],fft->n1);
+		for (i2=0; i2 < fft->n2; i2++) {
+		    pp[i3][i2][i1] = fft->ctrace2[ompith][i2];
+		}
+	    }
+	}
+
+	/* FFT 1 */
+	for (i3=0; i3 < fft->n3; i3++) {
+	    for (i2=0; i2 < fft->n2; i2++) {
+		kiss_fft(fft->forw1[ompith],pp[i3][i2],pp[i3][i2]);
+	    }
+	}
+
     }
 }
 

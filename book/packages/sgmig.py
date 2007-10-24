@@ -21,6 +21,7 @@ def param(par):
     p = p + ' '
     return p
 
+# ------------------------------------------------------------
 def freqs(par):
     f  = ' '
     if(par.has_key('nw')): f = f + ' nw=' + str(par['nw'])
@@ -29,6 +30,7 @@ def freqs(par):
     f = f + ' '
     return f
 
+# ------------------------------------------------------------
 def wflds(wfld,cmps,par):
     Flow(wfld,cmps,
          '''
@@ -38,7 +40,8 @@ def wflds(wfld,cmps,par):
          spray axis=2 n=1 o=0 d=1 |
          put label1=mx label2=my label3=hx label4=w
          ''' % par )
-    
+
+# ------------------------------------------------------------    
 def datum(wfl1,slow,wfl0,par):
     Flow(wfl1,[wfl0,slow],
          '''
@@ -46,13 +49,15 @@ def datum(wfl1,slow,wfl0,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+# ------------------------------------------------------------
 def model(data,slow,imag,par):
     Flow(data,[imag,slow],
          '''
          camig mode=m inv=y %s %s
          slo=${SOURCES[1]}
          ''' % (param(par),freqs(par)))
-    
+
+# ------------------------------------------------------------    
 def image(imag,slow,data,par):
     Flow(imag,[data,slow],
          '''

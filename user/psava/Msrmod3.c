@@ -115,10 +115,10 @@ int main (int argc, char *argv[])
 
     alx = sf_iaxa(Fs_s,1); sf_setlabel(alx,"lx");
     aly = sf_iaxa(Fs_s,2); sf_setlabel(aly,"ly");
-    amz  = sf_iaxa(Fs_s,3); sf_setlabel(amz , "z");
+    amz = sf_iaxa(Fs_s,3); sf_setlabel(amz,"z" );
     /* test here if slo and sls have similar sizes */
 
-    n = sf_n(alx)*sf_n(aly);
+    n  = sf_n(alx)*sf_n(aly);
     nz = sf_n(amz);
 
     slo_s = fslice_init(n, nz, sizeof(float));
@@ -140,7 +140,7 @@ int main (int argc, char *argv[])
     aw  = sf_iaxa(Fw_s,3); sf_setlabel(aw, "w"); sf_oaxa(Fw_r,aw,3);
     ae  = sf_iaxa(Fw_s,4); sf_setlabel(ae, "e"); /* experiments */
 
-    n = sf_n(amx)*sf_n(amy);
+    n  = sf_n(amx)*sf_n(amy);
     nw = sf_n(aw);
 
     /*------------------------------------------------------------*/

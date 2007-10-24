@@ -64,6 +64,7 @@ cub3d zomig3_cube(bool    verb_,
     cub->amx = sf_nod(amx_);
     cub->amy = sf_nod(amy_);
     cub->amz = sf_nod(amz_);
+
     cub->alx = sf_nod(alx_);
     cub->aly = sf_nod(aly_);
     cub->ae  = sf_nod(ae_);
@@ -97,8 +98,8 @@ weoperator3d zomig3_init(cub3d cub)
 void zomig3_close(weoperator3d weop)
 /*< free allocated storage >*/
 {
-    free( *weop->ww); free( weop->ww);
-    free( *weop->qq); free( weop->qq);
+    free( **weop->ww);free( *weop->ww); free( weop->ww);
+    ;                 free( *weop->qq); free( weop->qq);
 }
 
 /*------------------------------------------------------------*/
@@ -107,7 +108,7 @@ void zomig3(weoperator3d weop,
 	    ssr3d ssr,
 	    tap3d tap,
 	    slo3d slo,
-	    bool inv    /* forward/adjoint flag */, 
+	    bool  inv   /* forward/adjoint flag */, 
 	    fslice data /* data  [nw][nmy][nmx] */,
 	    fslice imag /* image [nz][nmy][nmx] */)
 /*< Apply migration/modeling >*/
@@ -137,7 +138,8 @@ void zomig3(weoperator3d weop,
 				  ompith,iw+1,cub->aw.n);
 	
 	if(inv) { /* MODELING */
-	    w = sf_cmplx(cub->eps*cub->aw.d,cub->aw.o+iw*cub->aw.d); /* causal */
+	    w = sf_cmplx(cub->eps*cub->aw.d,
+			 cub->aw.o+iw*cub->aw.d); /* causal */
 
 	    LOOP( weop->ww[ompith][imy][imx] = sf_cmplx(0.,0.); );  
 	    
@@ -153,10 +155,10 @@ void zomig3(weoperator3d weop,
 		    fslice_get(imag,imz,weop->qq[0]); /* I.C. */
 #ifdef SF_HAS_COMPLEX_H
 		    LOOP( weop->ww[ompith][imy][imx] +=
-			  weop->qq[imy][imx]; );
+			  weop->qq        [imy][imx]; );
 #else
 		    LOOP( weop->ww[ompith][imy][imx].r +=
-			  weop->qq[imy][imx]; );
+			  weop->qq        [imy][imx]; );
 #endif		
 		}
 		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
@@ -184,7 +186,8 @@ void zomig3(weoperator3d weop,
 	    }
 
 	} else { /* MIGRATION */
-	    w = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
+	    w = sf_cmplx(cub->eps*cub->aw.d,
+			 -(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
 	    
 	    /* imaging at z=0 */
 #ifdef _OPENMP

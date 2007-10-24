@@ -15,6 +15,7 @@ typedef struct cub *cub3d;
 struct cub{
     bool    verb;
     sf_axa  amx,amy,amz;
+    sf_axa  ahx,ahy;
     sf_axa  alx,aly;
     sf_axa  aw;
     sf_axa  ae;
@@ -41,6 +42,27 @@ struct fft{
 /*^*/
 
 /*------------------------------------------------------------*/
+typedef struct f3d *fft3d;
+/*^*/
+
+struct f3d{
+    int            n1,n2,n3;
+    kiss_fft_cfg  *forw1; /*   FFT on axis 1 */
+    kiss_fft_cfg  *invs1;
+    kiss_fft_cfg  *forw2; /*   FFT on axis 2 */
+    kiss_fft_cfg  *invs2;
+    kiss_fft_cfg  *forw3; /*   FFT on axis 3 */
+    kiss_fft_cfg  *invs3;
+    sf_complex     *shf1; /* shift on axis 1 */
+    sf_complex     *shf2; /* shift on axis 2 */
+    sf_complex     *shf3; /* shift on axis 3 */
+    kiss_fft_cpx**ctrace2; /* temp array */
+    kiss_fft_cpx**ctrace3; /* temp array */
+    float       fftscale; /* FFT scale  */
+};
+/*^*/
+
+/*------------------------------------------------------------*/
 typedef struct ssr *ssr3d;
 /*^*/
 
@@ -53,6 +75,23 @@ struct ssr{
     float        ***wt;
     float       dsmax2;
     fft2d          fft;
+};
+/*^*/
+
+/*------------------------------------------------------------*/
+typedef struct cam *cam3d;
+/*^*/
+
+struct cam{
+    sf_axa     bmx,bmy,bhx;
+    float     **ksx,**krx;
+    int        **is,**ir;
+    int         *jx,*jy;
+    sf_complex  ****pk;
+    sf_complex  ****wk;
+    float       ****wt;
+    float       dsmax2;
+    fft3d          f3d;
 };
 /*^*/
 
@@ -121,6 +160,16 @@ struct weoperator{
     fslice        wtmp; /* tmp wavefield (for SR modeling) */
     float      ***rr;   /*  reflectivity (for SR modeling)  */
     float       **qq;   /* image (for ZO modeling/migration) */
+};
+/*^*/
+
+/*------------------------------------------------------------*/
+typedef struct camoperator *camoperator3d;
+/*^*/
+
+struct camoperator{
+    sf_complex ****ww; /* wavefield */   
+    float       ***qq;  /* image */   
 };
 /*^*/
 

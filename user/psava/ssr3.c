@@ -1,4 +1,4 @@
-/* 3-D SSR */
+/* 3-D SSR using extended SSF */
 
 /*
   Copyright (C) 2007 Colorado School of Mines
@@ -31,9 +31,10 @@
 
 /*------------------------------------------------------------*/
 
-#define LOOP(a) for(iy=0;iy<cub->amy.n;iy++){ for(ix=0;ix<cub->amx.n;ix++){ {a} }} /* loop in x-domain */
-#define KOOP(a) for(iy=0;iy<ssr->byy.n;iy++){ for(ix=0;ix<ssr->bxx.n;ix++){ {a} }} /* loop in k-domain */
-#define SOOP(a) for(iy=0;iy<cub->aly.n;iy++){ for(ix=0;ix<cub->alx.n;ix++){ {a} }} /* loop in slowness-domain */
+#define LOOP(a) for(iy=0;iy<cub->amy.n;iy++){ \
+	        for(ix=0;ix<cub->amx.n;ix++){ {a} }} /* loop in x-domain */
+#define KOOP(a) for(iy=0;iy<ssr->byy.n;iy++){ \
+	        for(ix=0;ix<ssr->bxx.n;ix++){ {a} }} /* loop in k-domain */
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );
@@ -63,10 +64,6 @@ ssr3d ssr3_init( cub3d cub,
     X2K(cub->amx,ssr->bxx,px);
     X2K(cub->amy,ssr->byy,py);
 
-    ssr->kk = sf_floatalloc2(ssr->bxx.n,ssr->byy.n);
-    ssr->lx = sf_intalloc(cub->amx.n);
-    ssr->ly = sf_intalloc(cub->amy.n);
-
     /* allocate K-domain storage */
     ssr->wk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,cub->ompnth);
     ssr->pk = sf_complexalloc3 (ssr->bxx.n,ssr->byy.n,cub->ompnth);
@@ -74,6 +71,7 @@ ssr3d ssr3_init( cub3d cub,
     /* allocate X-domain storage */
     ssr->wt = sf_floatalloc3   (cub->amx.n,cub->amy.n,cub->ompnth);
 
+    ssr->kk = sf_floatalloc2(ssr->bxx.n,ssr->byy.n);
     for (iy=0; iy<ssr->byy.n; iy++) {
 	jy = KMAP(iy,ssr->byy.n);
 	ky = ssr->byy.o + jy*ssr->byy.d;
@@ -85,6 +83,9 @@ ssr3d ssr3_init( cub3d cub,
     }
     
     /* precompute indices */
+    ssr->lx = sf_intalloc(cub->amx.n);
+    ssr->ly = sf_intalloc(cub->amy.n);
+
     for (iy=0; iy<cub->amy.n; iy++) {
 	yy = cub->amy.o + iy*cub->amy.d;
 	ily    = INDEX( yy,cub->aly);

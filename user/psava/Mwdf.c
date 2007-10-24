@@ -76,7 +76,7 @@ int main(int argc, char* argv[])
     if(! sf_getint("nh2",&nh2)) nh2=0;
     if(! sf_getint("nh3",&nh3)) nh3=0;
     if(n3<=1) nh3=0;
-    sf_warning("nh1=%d nh2=%d nh3=%d",2*nh1+1,2*nh2+1,2*nh3+1);
+    if(verb) sf_warning("nh1=%d nh2=%d nh3=%d",2*nh1+1,2*nh2+1,2*nh3+1);
 
     nb1 = sf_n(a1);
     nb2 = sf_n(a2);
@@ -108,6 +108,11 @@ int main(int argc, char* argv[])
 	    for(ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=nb1-lo1;
 		
 		for(        ib3=lo3; ib3<nh3+1;ib3++) { j3=ii[ib3-ih3]; k3=ii[ib3+ih3];
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) \
+    private(ib1,ib2,j2,j1,k2,k1) \
+    shared(ib3,j3,k3,ih2,ih1,lo2,hi2,lo1,hi1,uu,ww)
+#endif
 		    for(    ib2=lo2; ib2<hi2;  ib2++) { j2=ib2-ih2; k2=ib2+ih2;
 			for(ib1=lo1; ib1<hi1;  ib1++) { j1=ib1-ih1; k1=ib1+ih1;
 			    
@@ -129,9 +134,9 @@ int main(int argc, char* argv[])
     /* loop on axis 3 */
     /*------------------------------------------------------------*/
     if(verb) fprintf(stderr," n3\n");
-    if(verb) fprintf(stderr,"%4d\n",n3-1);
+    if(verb) fprintf(stderr,"%5d\n",n3-1);
     for(i3=nh3+1;i3<n3-nh3;i3++) {
-	if(verb) fprintf(stderr,"%4d",i3);
+	if(verb) fprintf(stderr,"%5d",i3);
 
 	/* zero WDF */
 	ib3=nh3;
@@ -157,7 +162,9 @@ int main(int argc, char* argv[])
 		    
 		    ib3=nh3; j3=ii[ib3-ih3]; k3=ii[ib3+ih3];
 #ifdef _OPENMP
-#pragma omp parallel for schedule(dynamic,ompchunk) private(ib1,ib2,j2,j1,k2,k1) shared(ib3,j3,k3,ih2,ih1,lo2,hi2,lo1,hi1,uu,ww)
+#pragma omp parallel for schedule(dynamic,ompchunk) \
+    private(ib1,ib2,j2,j1,k2,k1) \
+    shared(ib3,j3,k3,ih2,ih1,lo2,hi2,lo1,hi1,uu,ww)
 #endif
 		    for(    ib2=lo2; ib2<hi2; ib2++) { j2=ib2-ih2; k2=ib2+ih2;
 			for(ib1=lo1; ib1<hi1; ib1++) { j1=ib1-ih1; k1=ib1+ih1;
@@ -173,7 +180,7 @@ int main(int argc, char* argv[])
 	
 	sf_floatwrite(ww[nh3][0],nb1*nb2,Fw);
 
-	if(verb) fprintf(stderr,"\b\b\b\b");
+	if(verb) fprintf(stderr,"\b\b\b\b\b");
     }
 
     /*------------------------------------------------------------*/
@@ -184,6 +191,11 @@ int main(int argc, char* argv[])
 	    for(ih1=-nh1; ih1<nh1+1; ih1++) { lo1=SF_ABS(ih1); hi1=nb1-lo1;
 		
 		for(        ib3=nh3+1; ib3<hi3; ib3++) { j3=ii[ib3-ih3]; k3=ii[ib3+ih3];
+#ifdef _OPENMP
+#pragma omp parallel for schedule(dynamic,ompchunk) \
+    private(ib1,ib2,j2,j1,k2,k1) \
+    shared(ib3,j3,k3,ih2,ih1,lo2,hi2,lo1,hi1,uu,ww)
+#endif
 		    for(    ib2=lo2; ib2<hi2; ib2++) { j2=ib2-ih2; k2=ib2+ih2;
 			for(ib1=lo1; ib1<hi1; ib1++) { j1=ib1-ih1; k1=ib1+ih1;
 			    
