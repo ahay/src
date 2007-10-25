@@ -46,12 +46,12 @@ USA.
 }}
 
 \noindent
-Consider the vector $\vector{x}:=\{x_i\}_{0\leq i <m}\in\mathbb{R}^m$.
+Consider the vector $\mathbf{x}:=\{x_i\}_{0\leq i <m}\in\mathbb{R}^m$.
 Soft thresholding is defined as
 %
 \begin{equation}
 \label{eq:soft}
-\mathcal{S}_\gamma(\vector{x}):=\{\mbox{sign}(x_i)\cdot
+\mathcal{S}_\gamma(\mathbf{x}):=\{\mbox{sign}(x_i)\cdot
 \max(|x_i|-\gamma,0)\}_{0\leq i <m},
 \end{equation}
 %
@@ -60,14 +60,14 @@ as
 %
 \begin{equation}
 \label{eq:hard}
-\mathcal{H}_\gamma(\vector{x}):=\{\max(|x_i|-\gamma,0)\cdot x_i\}_{0\leq i <m}.
+\mathcal{H}_\gamma(\mathbf{x}):=\{\max(|x_i|-\gamma,0)\cdot x_i\}_{0\leq i <m}.
 \end{equation}
 %
 Finally, non-negative Garrote (nng) thresholding is defined as
 %
 \begin{equation}
 \label{eq:nng}
-\mathcal{T}^{nng}_\gamma(\vector{x}):=\{\max(|x_i|-\gamma,0)\cdot 
+\mathcal{T}^{nng}_\gamma(\mathbf{x}):=\{\max(|x_i|-\gamma,0)\cdot 
 (x_i-\gamma^2/x_i)\}_{0\leq i <m}.
 \end{equation}
 
