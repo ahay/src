@@ -36,7 +36,7 @@ bibtex      = WhereIs('bibtex')
 acroread    = WhereIs('acroread')
 pdfread     = acroread or WhereIs('kpdf') or WhereIs('xpdf') or WhereIs('gv')
 pdftops     = WhereIs('pdftops')
-epstopdf    = WhereIs('epstopdf')
+epstopdf    = WhereIs('a2ping') or WhereIs('epstopdf')
 if epstopdf:
     latex       = WhereIs('pdflatex')
     ressuffix = '.pdf'

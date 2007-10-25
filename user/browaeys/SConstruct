@@ -6,8 +6,9 @@ progs = '''
 karman
 karman2
 karmans
-autocirc2
 '''
+
+# autocirc2
 
 try:  # distributed version
     Import('env')
