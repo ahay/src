@@ -28,9 +28,12 @@ int main(int argc, char *argv[])
 {
     bool verbose, su, xdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *headname, *filename, *trace;
+    char *headname, *filename, *trace, count[4];
+    const char *myheader[] = {"      This dataset was created",
+			      "     with the Madagascar package",
+			      "     http://rsf.sourceforge.net/"};
     sf_file in, hdr;
-    int format=1, ns, nk, nsegy, itr, ntr, *itrace;
+    int format=1, i, ns, nk, nsegy, itr, ntr, *itrace;
     FILE *head, *file;
     float *ftrace;
 
@@ -43,26 +46,31 @@ int main(int argc, char *argv[])
     if (!sf_getbool("endian",&xdr)) xdr = sf_endian();
     /* big/little endian flag. The default is estimated automatically */
 
-    if (NULL == (filename = sf_getstring("tape")))
-	sf_error("Need to specify tape=");
-
-    if (NULL == (file = fopen(filename,"wb")))
+    if (NULL == (filename = sf_getstring("tape"))) {
+	/* output data */
+	file = stdout;
+    } else if (NULL == (file = fopen(filename,"wb"))) {
 	sf_error("Cannot open \"%s\" for writing:",filename);
+    }
 
     if (!su) {
 	if (NULL == (headname = sf_getstring("hfile"))) headname = "header";
 	/* input text data header file */
 
-	if (NULL == (head = fopen(headname,"r")))
-	    sf_error("Cannot open file \"%s\" for reading ascii header:",
-		     headname);
+	if (NULL != (head = fopen(headname,"r"))) {
+	    if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, head)) 
+		sf_error("Error reading ascii header");
+	    fclose (head);
 
-	if (SF_EBCBYTES != fread(ahead, 1, SF_EBCBYTES, head)) 
-	    sf_error("Error reading ascii header");
-	fclose (head);
-  
-	if (verbose) sf_warning("ASCII header read from \"%s\"",headname);
-	
+	    if (verbose) sf_warning("ASCII header read from \"%s\"",headname);
+	} else {
+	    for (i=0; i < SF_EBCBYTES/80; i++) {
+		snprintf(count,4,"C%-2d",i+1);
+		snprintf(ahead+i*80,81,"%s %-76s\n",count,(i < 3)? myheader[i]:"");
+	    }
+	    if (verbose) sf_warning("ASCII header created on the fly");
+	}
+  	
 	sf_asc2ebc (SF_EBCBYTES, ahead);   
 
 	if (SF_EBCBYTES != fwrite(ahead, 1, SF_EBCBYTES, file)) 

@@ -280,8 +280,7 @@ int main(int argc, char *argv[])
     if (NULL == (filename = sf_getstring("tape"))) {
 	/* input data */ 
 	file = stdin;
-    } else {
-	if (NULL == (file = fopen(filename,"rb")))
+    } else if (NULL == (file = fopen(filename,"rb"))) {
 	sf_error("Cannot open \"%s\" for reading:",filename);
     }
 

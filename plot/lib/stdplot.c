@@ -590,9 +590,11 @@ static void make_baraxis (float min, float max)
     }
 
     if (!sf_getint ("nbartic",&(baraxis->ntic))) baraxis->ntic = 1;
-    /* bar ticmarks */
+    /* nbartic number of scalebar ticmarks */
     if (!sf_getfloat ("dbarnum", &(baraxis->dnum)) ||
-	!sf_getfloat ("obarnum", &(baraxis->num0))) 
+	/* dbarnum scalebar ticmarks increment */
+	!sf_getfloat ("obarnum", &(baraxis->num0)))
+	/* obarnum scalebar ticmarks origin */
 	baraxis->ntic = vp_optimal_scale((vertbar? inch2: inch1)/
 					 (aspect*labelsz), 
 					 min, max, 
