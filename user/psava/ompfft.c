@@ -20,7 +20,7 @@
 #include <rsf.h>
 /*^*/
 
-#include "ompfft2.h"
+#include "ompfft.h"
 
 #include "weutil.h"
 /*^*/

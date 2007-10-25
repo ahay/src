@@ -53,7 +53,6 @@ cub3d camig3_cube(bool   verb_,
 		  sf_axis alx_,
 		  sf_axis aly_,
 		  sf_axis aw_,
-		  sf_axis ae_,
 		  float   eps_,
 		  int     ompnth_,
 		  int     ompchunk_
@@ -71,7 +70,6 @@ cub3d camig3_cube(bool   verb_,
 
     cub->alx = sf_nod(alx_);
     cub->aly = sf_nod(aly_);
-    cub->ae  = sf_nod(ae_);
 
     cub->aw  = sf_nod(aw_);
     cub->aw.d *= 2.*SF_PI; /* from hertz to radians */
@@ -139,8 +137,7 @@ void camig3(camoperator3d weop,
 #endif
 
 	if (inv) { /* MODELING */
-	    w = sf_cmplx(cub->eps*cub->aw.d,
-			 +(cub->aw.o+iw*cub->aw.d)); /* causal */
+	    w = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /* causal */
 
 	    LOOP( weop->ww[ompith][ihx][imy][imx] = sf_cmplx(0,0); );  
 	    
@@ -189,8 +186,7 @@ void camig3(camoperator3d weop,
 	    }
 	    
 	} else { /* MIGRATION */
-	    w = sf_cmplx(cub->eps*cub->aw.d,
-			 -(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
+	    w = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
 
 	    /* imaging at z=0 */
 #ifdef _OPENMP
@@ -238,3 +234,152 @@ void camig3(camoperator3d weop,
     } /* w */
 }
 
+/*------------------------------------------------------------*/
+void cadtm3(camoperator3d weop,
+	    cub3d cub,
+	    cam3d cam,
+	    tap3d tap,
+	    slo3d slo,
+	    bool  inv   /* forward/adjoint flag */, 
+	    fslice data /* data [nw][nmy][nmx] */,
+	    fslice wfld /* wfld [nw][nmy][nmx] */)
+/*< Apply upward/downward datuming >*/
+{
+    int imz,iw;
+    sf_complex w;
+    int ompith=0;
+    
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)	\
+    private(ompith,iw,w,imz)			\
+    shared(data,wfld,weop,cub,cam,tap,slo)
+#endif
+    for (iw=0; iw<cub->aw.n; iw++) {
+#ifdef _OPENMP
+	ompith=omp_get_thread_num();
+#pragma omp critical
+#endif
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
+				  ompith,iw+1,cub->aw.n);
+	
+	if(inv) { /* UPWARD DATUMING */
+	    w = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /* causal */
+
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_get(wfld,iw,weop->ww[ompith][0][0]);
+	    taper3d(weop->ww[ompith],tap);
+	    
+	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    for (imz=cub->amz.n-1; imz>0; imz--) {
+		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);		
+		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
+		slow3_advance(cub,slo,ompith);
+	    }
+	    taper3d(weop->ww[ompith],tap);
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_put(data,iw,weop->ww[ompith][0][0]);
+
+	} else { /* DOWNWARD DATUMING */
+	    w = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
+	    
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    taper3d(weop->ww[ompith],tap);
+	    
+	    fslice_get(slo->slice,0,slo->so[ompith][0]);
+	    for (imz=0; imz<cub->amz.n-1; imz++) {
+		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
+		slow3_advance(cub,slo,ompith);
+	    }
+	    taper3d(weop->ww[ompith],tap);
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_put(wfld,iw,weop->ww[ompith][0][0]);
+	} /* else */
+    } /* w */
+    
+}
+
+
+/*------------------------------------------------------------*/
+void cawfl3(camoperator3d weop,
+	    cub3d cub,
+	    cam3d cam,
+	    tap3d tap,
+	    slo3d slo,
+	    bool  inv   /* forward/adjoint flag */, 
+	    fslice data /*      data [nw][nmy][nmx] */,
+	    fslice wfld /* wavefield [nw][nmy][nmx] */)
+/*< Save wavefield from downward continuation >*/
+{
+    int imz,iw;
+    sf_complex w;
+    int ompith=0;
+    
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)	\
+    private(ompith,iw,w,imz)			\
+    shared(data,wfld,weop,cub,cam,tap,slo)
+#endif
+    for (iw=0; iw<cub->aw.n; iw++) {
+#ifdef _OPENMP
+	ompith=omp_get_thread_num();
+#pragma omp critical
+#endif
+	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
+				  ompith,iw+1,cub->aw.n);
+	
+	if(inv) { /*   UPWARD EXTRAPOLATION */
+	    w = sf_cmplx(cub->eps*cub->aw.d,+(cub->aw.o+iw*cub->aw.d)); /* causal */
+	    
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    taper3d(weop->ww[ompith],tap);
+	    fslice_put(wfld,iw*cub->amz.n+cub->amz.n-1,weop->ww[ompith][0][0]);
+
+	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
+	    for (imz=cub->amz.n-1; imz>0; imz--) {
+		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
+		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
+		slow3_advance(cub,slo,ompith);
+
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+		fslice_put(wfld,iw*cub->amz.n+imz-1,weop->ww[ompith][0][0]);
+	    }
+
+	} else {  /* DOWNWARD EXTRAPOLATION */
+	    w = sf_cmplx(cub->eps*cub->aw.d,-(cub->aw.o+iw*cub->aw.d)); /* anti-causal */
+
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+	    fslice_get(data,iw,weop->ww[ompith][0][0]);
+	    taper3d(weop->ww[ompith],tap);
+	    fslice_put(wfld,iw*cub->amz.n,weop->ww[ompith][0][0]);
+
+	    fslice_get(slo->slice,0,slo->so[ompith][0]);
+	    for (imz=0; imz<cub->amz.n-1; imz++) {	    
+		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
+		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
+		slow3_advance(cub,slo,ompith);
+
+#ifdef _OPENMP	
+#pragma omp critical
+#endif
+		fslice_put(wfld,iw*cub->amz.n+imz+1,weop->ww[ompith][0][0]);
+	    } /* z */
+	} /* else */
+    } /* w */
+}

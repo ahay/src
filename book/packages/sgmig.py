@@ -49,11 +49,25 @@ def datum(wfl1,slow,wfl0,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+def datum3(wfl1,slow,wfl0,par):
+    Flow(wfl1,[wfl0,slow],
+         '''
+         camig3 mode=d inv=n %s verb=y
+         slo=${SOURCES[1]}
+         ''' % param(par))
+
 # ------------------------------------------------------------
 def model(data,slow,imag,par):
     Flow(data,[imag,slow],
          '''
          camig mode=m inv=y %s %s
+         slo=${SOURCES[1]}
+         ''' % (param(par),freqs(par)))
+
+def model3(data,slow,imag,par):
+    Flow(data,[imag,slow],
+         '''
+         camig3 mode=m inv=y %s %s verb=y
          slo=${SOURCES[1]}
          ''' % (param(par),freqs(par)))
 
@@ -65,6 +79,14 @@ def image(imag,slow,data,par):
          slo=${SOURCES[1]}
          ''' % param(par))
 
+def image3(imag,slow,data,par):
+    Flow(imag,[data,slow],
+         '''
+         camig3 mode=m inv=n %s verb=y
+         slo=${SOURCES[1]}
+         ''' % param(par))
+    
+         
 #def cimage(imag,slow,data,par):
 #    Flow(imag,[data,slow],
 #         '''

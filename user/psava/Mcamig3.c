@@ -32,8 +32,6 @@
 #include "weutil.h"
 /*^*/
 
-#include "zomig3.h"
-
 int main (int argc, char *argv[])
 {
     char *mode;           /* mode of osperation */
@@ -49,7 +47,7 @@ int main (int argc, char *argv[])
     sf_axis amx,amy,amz;
     sf_axis ahx;
     sf_axis alx,aly;
-    sf_axis aw,ae;
+    sf_axis aw;
 
     int nz, n, nw;
     float dw, w0;
@@ -78,7 +76,6 @@ int main (int argc, char *argv[])
     slo3d slo; /* slowness */
 
     camoperator3d weop;
-    ssroperator3d sop;
 
     float dsmax;
 
@@ -140,7 +137,6 @@ int main (int argc, char *argv[])
 	    ahx = sf_iaxa(Fd,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fw,ahx,3); 
 	    ;                                           sf_oaxa(Fw,amz,4);
 	    aw  = sf_iaxa(Fd,4); sf_setlabel(aw ,"w" ); sf_oaxa(Fw,aw ,5);
-	    ae  = sf_maxa(1,0,1);
 	    
 	    n  = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 	    nw = sf_n(aw);
@@ -160,10 +156,9 @@ int main (int argc, char *argv[])
 		amy = sf_iaxa(Fw,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
 		ahx = sf_iaxa(Fw,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fd,ahx,3);
 		aw  = sf_iaxa(Fw,4); sf_setlabel(aw , "w"); sf_oaxa(Fd,aw ,4);
-		ae  = sf_iaxa(Fw,5); sf_setlabel(ae,  "e"); sf_oaxa(Fd,ae ,5);
 		
 		n  = sf_n(amx)*sf_n(amy)*sf_n(ahx);
-		nw = sf_n(aw)*sf_n(ae);
+		nw = sf_n(aw);
 		
 		data = fslice_init(n,nw,sizeof(sf_complex));
 		wfld = fslice_init(n,nw,sizeof(sf_complex));
@@ -178,10 +173,9 @@ int main (int argc, char *argv[])
 		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fw,amy,2);
 		ahx = sf_iaxa(Fd,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fw,ahx,3);
 		aw  = sf_iaxa(Fd,4); sf_setlabel(aw , "w"); sf_oaxa(Fw,aw ,4);
-		ae  = sf_iaxa(Fd,5); sf_setlabel(ae , "e"); sf_oaxa(Fw,ae ,5);
 		
 		n  = sf_n(amx)*sf_n(amy)*sf_n(ahx);
-		nw = sf_n(aw)*sf_n(ae);
+		nw = sf_n(aw);
 		
 		data = fslice_init(n,nw,sizeof(sf_complex));
 		wfld = fslice_init(n,nw,sizeof(sf_complex));
@@ -207,7 +201,6 @@ int main (int argc, char *argv[])
 		amy = sf_iaxa(Fi,2); sf_setlabel(amy,"my"); sf_oaxa(Fd,amy,2);
 		ahx = sf_iaxa(Fi,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fd,ahx,3);
 		amz = sf_iaxa(Fi,4); sf_setlabel(amz, "z"); sf_oaxa(Fd,aw ,4);
-		ae = sf_maxa(1,0,1);
 		
 		n = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		
@@ -224,7 +217,6 @@ int main (int argc, char *argv[])
 		amy = sf_iaxa(Fd,2); sf_setlabel(amy,"my"); sf_oaxa(Fi,amy,2);
 		ahx = sf_iaxa(Fd,3); sf_setlabel(ahx,"hx"); sf_oaxa(Fi,ahx,3);
 		aw  = sf_iaxa(Fd,4); sf_setlabel(aw , "w"); sf_oaxa(Fi,amz,4);
-		ae = sf_maxa(1,0,1);
 		
 		n  = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw);
@@ -242,7 +234,6 @@ int main (int argc, char *argv[])
 		      amx,amy,amz,ahx,
 		      alx,aly,
 		      aw,
-		      ae,
 		      eps,
 		      ompnth,
 		      ompchunk);
@@ -264,20 +255,17 @@ int main (int argc, char *argv[])
     slo = slow3_init(cub,slow,nrmax,dsmax,twoway);
     /*------------------------------------------------------------*/
     weop = camig3_init(cub);
-    sop  = zomig3_init(cub);
     
     switch(mode[0]) {
 	case 'w':
-	    ;
-/*	    cawfl3(    data,wfld);*/
+	    cawfl3(weop,cub,cam,tap,slo,inv,data,wfld);
 	    break;
 	case 'd':
-	    ;
-/*	    cadtm3(inv,data,wfld);*/
+	    cadtm3(weop,cub,cam,tap,slo,inv,data,wfld);
 	    break;
 	case 'm':
 	default:
-	    camig3(weop,cub,cam,tap,slo,inv,       data,imag);
+	    camig3(weop,cub,cam,tap,slo,inv,data,imag);
 	    break;
     }
 
