@@ -79,11 +79,11 @@ cub3d srmig3_cube(bool    verb_,
 }
 
 /*------------------------------------------------------------*/
-weoperator3d srmig3_init(cub3d cub)
+ssroperator3d srmig3_init(cub3d cub)
 /*< initialize SR migration >*/
 {
-    weoperator3d weop;
-    weop = (weoperator3d) sf_alloc(1,sizeof(*weop));
+    ssroperator3d weop;
+    weop = (ssroperator3d) sf_alloc(1,sizeof(*weop));
     
     weop->ww_s = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
     weop->ww_r = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
@@ -92,7 +92,7 @@ weoperator3d srmig3_init(cub3d cub)
 }
 
 /*------------------------------------------------------------*/
-void srmig3_close(weoperator3d weop)
+void srmig3_close(ssroperator3d weop)
 /*< free allocated storage >*/
 {
     free(**weop->ww_s); free( *weop->ww_s); free( weop->ww_s);
@@ -100,7 +100,7 @@ void srmig3_close(weoperator3d weop)
 }
 
 /*------------------------------------------------------------*/
-void srmig3(weoperator3d weop,
+void srmig3(ssroperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
@@ -123,7 +123,7 @@ void srmig3(weoperator3d weop,
 
 #ifdef _OPENMP
 #pragma omp parallel for schedule(static) \
-    private(ompith,iw,ws,wr,imz)			\
+    private(ompith,iw,ws,wr,imz)	  \
     shared(swfl,rwfl,ie,weop,cub,ssr,tap,s_s,s_r)
 #endif
 	for (iw=0; iw<cub->aw.n; iw++) {

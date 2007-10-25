@@ -33,10 +33,12 @@
 
 #define LOOP(a) for(ihx=0;ihx<cub->ahx.n;ihx++){ \
                 for(imy=0;imy<cub->amy.n;imy++){ \
-                for(imx=0;imx<cub->amx.n;imx++){ {a} }}} /* loop in x-domain */
+                for(imx=0;imx<cub->amx.n;imx++){ \
+		    {a} }}} /* loop in x-domain */
 #define KOOP(a) for(ihx=0;ihx<cam->bhx.n;ihx++){ \
                 for(imy=0;imy<cam->bmy.n;imy++){ \
-		for(imx=0;imx<cam->bmx.n;imx++){ {a} }}} /* loop in k-domain */
+		for(imx=0;imx<cam->bmx.n;imx++){ \
+		    {a} }}} /* loop in k-domain */
 
 #define INDEX(x,a) 0.5+(x-a.o)/a.d;
 #define BOUND(i,n) (i<0) ? 0 : ( (i>n-1) ? n-1 : i );

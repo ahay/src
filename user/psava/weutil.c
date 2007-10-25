@@ -25,10 +25,10 @@ struct cub{
 };
 /*^*/
 /*------------------------------------------------------------*/
-typedef struct fft *fft2d;
+typedef struct f2d *fft2d;
 /*^*/
 
-struct fft{
+struct f2d{
     int            n1,n2;
     kiss_fft_cfg  *forw1; /*   FFT on axis 1 */
     kiss_fft_cfg  *invs1;
@@ -74,7 +74,7 @@ struct ssr{
     sf_complex   ***wk;
     float        ***wt;
     float       dsmax2;
-    fft2d          fft;
+    fft2d          f2d;
 };
 /*^*/
 
@@ -141,19 +141,19 @@ struct img{
     int     jcx,jcy,jcz;
     sf_axa  ahx,ahy,ahz,aht;
     sf_axa  ahh,aha,ahb;
-    sf_complex   **tt;      /* time-lag I.C. weight */
+    sf_complex   **tt;      /*  time-lag I.C. weight */
     int LOx,HIx;
     int LOy,HIy;
     int LOz,HIz;            /* space-lags I.C. */
-    float vpvs;             /* abs-lag I.C. */
+    float vpvs;             /*    abs-lag I.C. */
 };
 /*^*/
 
 /*------------------------------------------------------------*/
-typedef struct weoperator *weoperator3d;
+typedef struct ssroperator *ssroperator3d;
 /*^*/
 
-struct weoperator{
+struct ssroperator{
     sf_complex ***ww_s; /*   source wavefield */
     sf_complex ***ww_r; /* receiver wavefield */
     sf_complex ***ww  ; /*          wavefield */   

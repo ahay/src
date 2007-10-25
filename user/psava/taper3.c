@@ -25,7 +25,9 @@
 /*^*/
 
 /*------------------------------------------------------------*/
-tap3d taper_init(cub3d cub,
+tap3d taper_init(int n1_,
+		 int n2_,
+		 int n3_,
 		 int   nt1_, 
 		 int   nt2_, 
 		 int   nt3_ /* taper lengths */,
@@ -40,9 +42,9 @@ tap3d taper_init(cub3d cub,
     tap3d tap;
     tap = (tap3d) sf_alloc(1,sizeof(*tap));
 
-    tap->n1 =cub->amx.n;
-    tap->n2 =cub->amy.n;
-    tap->n3 =cub->amz.n;
+    tap->n1 =n1_;
+    tap->n2 =n2_;
+    tap->n3 =n3_;
 
     tap->nt1=nt1_;
     tap->nt2=nt2_;
@@ -75,6 +77,18 @@ tap3d taper_init(cub3d cub,
     }
 
     return tap;
+}
+
+/*------------------------------------------------------------*/
+void taper_report(tap3d tap)
+/*< report taper parameters >*/
+{
+
+    sf_warning("TAPER REPORT");
+    sf_warning(" n1=%d  n2=%d  n3=%d ",tap->n1, tap->n2, tap->n3);
+    sf_warning("nt1=%d nt2=%d nt3=%d",tap->nt1,tap->nt2,tap->nt3);
+    sf_warning(" b1=%d  b2=%d  b3=%b ",tap->b1, tap->b2, tap->b3);
+
 }
 
 /*------------------------------------------------------------*/

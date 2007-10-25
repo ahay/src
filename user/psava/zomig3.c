@@ -1,4 +1,5 @@
 /* 3-D SSR migration/modeling using extended split-step */
+
 /*
   Copyright (C) 2007 Colorado School of Mines
   
@@ -82,11 +83,11 @@ cub3d zomig3_cube(bool    verb_,
 }
 
 /*------------------------------------------------------------*/
-weoperator3d zomig3_init(cub3d cub)
+ssroperator3d zomig3_init(cub3d cub)
 /*< initialize >*/
 {
-    weoperator3d weop;
-    weop = (weoperator3d) sf_alloc(1,sizeof(*weop));
+    ssroperator3d weop;
+    weop = (ssroperator3d) sf_alloc(1,sizeof(*weop));
 
     weop->ww = sf_complexalloc3(cub->amx.n,cub->amy.n,cub->ompnth);
     weop->qq = sf_floatalloc2  (cub->amx.n,cub->amy.n);
@@ -95,7 +96,7 @@ weoperator3d zomig3_init(cub3d cub)
 }
 
 /*------------------------------------------------------------*/
-void zomig3_close(weoperator3d weop)
+void zomig3_close(ssroperator3d weop)
 /*< free allocated storage >*/
 {
     free( **weop->ww);free( *weop->ww); free( weop->ww);
@@ -103,7 +104,7 @@ void zomig3_close(weoperator3d weop)
 }
 
 /*------------------------------------------------------------*/
-void zomig3(weoperator3d weop,
+void zomig3(ssroperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
@@ -231,7 +232,7 @@ void zomig3(weoperator3d weop,
 }
 
 /*------------------------------------------------------------*/
-void zodtm3(weoperator3d weop,
+void zodtm3(ssroperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,
@@ -324,7 +325,7 @@ void zodtm3(weoperator3d weop,
 }
 
 /*------------------------------------------------------------*/
-void zowfl3(weoperator3d weop,
+void zowfl3(ssroperator3d weop,
 	    cub3d cub,
 	    ssr3d ssr,
 	    tap3d tap,

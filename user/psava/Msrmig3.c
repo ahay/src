@@ -93,7 +93,7 @@ int main (int argc, char *argv[])
     slo3d s_r; /* slowness */
     img3d img; /* imaging  */
 
-    weoperator3d weop;
+    ssroperator3d weop;
 
     float dsmax;
 
@@ -359,7 +359,9 @@ int main (int argc, char *argv[])
 
     /*------------------------------------------------------------*/
     /* init structures */
-    tap = taper_init(cub,
+    tap = taper_init(cub->amx.n,
+		     cub->amy.n,
+		     1,
 		     SF_MIN(tmx,cub->amx.n-1), /* tmx */
 		     SF_MIN(tmy,cub->amy.n-1), /* tmy */
 		     0,                        /* tmz */

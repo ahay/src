@@ -23,6 +23,10 @@
 #include <rsf.h>
 /*^*/
 
+#ifdef _OPENMP
+#include <omp.h>
+#endif
+
 #include "camig3.h"
 #include "taper3.h"
 #include "slow3.h"
@@ -36,12 +40,12 @@
 
 #define LOOP(a) for(ihx=0;ihx<cub->ahx.n;ihx++){ \
                 for(imy=0;imy<cub->amy.n;imy++){ \
-                for(imx=0;imx<cub->amx.n;imx++){ {a} }}}
-#define SOOP(a) for(ily=0;ily<cub->aly.n;ily++){ \
-                for(ilx=0;ilx<cub->alx.n;ilx++){ {a} }}
+                for(imx=0;imx<cub->amx.n;imx++){ \
+		    {a} \
+		}}} /* loop in x-domain */
 
 /*------------------------------------------------------------*/
-cub3d camig3_cube(bool    verb_,
+cub3d camig3_cube(bool   verb_,
 		  sf_axis amx_,
 		  sf_axis amy_,
 		  sf_axis amz_,
@@ -63,7 +67,6 @@ cub3d camig3_cube(bool    verb_,
     cub->amx = sf_nod(amx_);
     cub->amy = sf_nod(amy_);
     cub->amz = sf_nod(amz_);
-
     cub->ahx = sf_nod(ahx_);
 
     cub->alx = sf_nod(alx_);
@@ -125,9 +128,15 @@ void camig3(camoperator3d weop,
 	}
     }
     
+#ifdef _OPENMP
+#pragma omp parallel for schedule(static)	\
+    private(ompith,iw,w,imx,imy,imz,ihx)	\
+    shared(data,weop,cub,cam,tap,slo)
+#endif
     for (iw=0; iw<cub->aw.n; iw++) {
-	if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d>",
-				  ompith,iw+1,cub->aw.n);
+#ifdef _OPENMP
+	ompith=omp_get_thread_num();
+#endif
 
 	if (inv) { /* MODELING */
 	    w = sf_cmplx(cub->eps*cub->aw.d,
@@ -137,9 +146,12 @@ void camig3(camoperator3d weop,
 	    
 	    /* upward continuation */
 	    fslice_get(slo->slice,cub->amz.n-1,slo->so[ompith][0]);
-	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
-
 	    for (imz=cub->amz.n-1; imz>0; imz--) {
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+		if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> <iz=%3d of %3d>",
+					  ompith,iw+1,cub->aw.n,imz+1,cub->amz.n);
 
 #ifdef _OPENMP	    
 #pragma omp critical
@@ -155,8 +167,6 @@ void camig3(camoperator3d weop,
 #endif		
 		}
 		fslice_get(slo->slice,imz-1,slo->ss[ompith][0]);
-		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
-
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);	
 		slow3_advance(cub,slo,ompith);
 	    }
@@ -201,11 +211,14 @@ void camig3(camoperator3d weop,
 	    
 	    /* downward continuation */
 	    fslice_get(slo->slice,0,slo->so[ompith][0]);	
-	    slow3_twoway(cub,slo,slo->so,ompith); /* 2way time */
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
+#ifdef _OPENMP
+#pragma omp critical
+#endif
+		if(cub->verb) sf_warning ("(ith=%d) ... <iw=%3d of %3d> <iz=%3d of %3d>",
+					  ompith,iw+1,cub->aw.n,imz+1,cub->amz.n);
+
 		fslice_get(slo->slice,imz+1,slo->ss[ompith][0]);
-		slow3_twoway(cub,slo,slo->ss,ompith); /* 2way time */
-		
 		cam3_ssf(w,weop->ww[ompith],cub,cam,tap,slo,imz,ompith);
 		slow3_advance(cub,slo,ompith);
 
@@ -218,7 +231,9 @@ void camig3(camoperator3d weop,
 			 crealf(weop->ww[ompith][ihx][imy][imx] ); );
 		    fslice_put(imag,imz+1,weop->qq[0][0]);
 		}
+
 	    } /* z */
+
 	} /* else */
     } /* w */
 }

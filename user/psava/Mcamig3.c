@@ -32,9 +32,11 @@
 #include "weutil.h"
 /*^*/
 
+#include "zomig3.h"
+
 int main (int argc, char *argv[])
 {
-    char *mode;           /* mode of operation */
+    char *mode;           /* mode of osperation */
     bool verb;            /* verbosity */
     bool inv;             /* forward or adjoint */
     bool twoway;          /* two-way traveltime */
@@ -76,6 +78,7 @@ int main (int argc, char *argv[])
     slo3d slo; /* slowness */
 
     camoperator3d weop;
+    ssroperator3d sop;
 
     float dsmax;
 
@@ -102,7 +105,7 @@ int main (int argc, char *argv[])
     if (!sf_getfloat("eps",  &eps  ))   eps =  0.01; /* stability parameter */
     if (!sf_getbool( "inv",  &inv  ))   inv = false; /* y=modeling; n=migration */
 
-    if (!sf_getbool("twoway",&twoway))twoway=  true; /* two-way traveltime */
+    if (!sf_getbool("twoway",&twoway))twoway= false; /* two-way traveltime */
     if (!sf_getint(  "nrmax",&nrmax)) nrmax =     1; /* maximum number of refs */
     if (!sf_getfloat("dtmax",&dtmax)) dtmax = 0.004; /* time error */
 
@@ -225,7 +228,7 @@ int main (int argc, char *argv[])
 		
 		n  = sf_n(amx)*sf_n(amy)*sf_n(ahx);
 		nw = sf_n(aw);
-		
+
 		data = fslice_init(n,nw,sizeof(sf_complex));
 		imag = fslice_init(n,nz,sizeof(float));
 		
@@ -236,8 +239,7 @@ int main (int argc, char *argv[])
     
     /*------------------------------------------------------------*/
     cub = camig3_cube(verb,
-		      amx,amy,amz,
-		      ahx,
+		      amx,amy,amz,ahx,
 		      alx,aly,
 		      aw,
 		      ae,
@@ -249,19 +251,21 @@ int main (int argc, char *argv[])
     
     /*------------------------------------------------------------*/
     /* init structures */
-    tap = taper_init(cub,
-		     SF_MIN(thx,cub->ahx.n-1), 
+    tap = taper_init(cub->amx.n,
+		     cub->amy.n,
+		     cub->ahx.n,
 		     SF_MIN(tmx,cub->amx.n-1), 
 		     SF_MIN(tmy,cub->amy.n-1), 
-		     false,true,true);
+		     SF_MIN(thx,cub->ahx.n-1), 
+		     true,false,false);
 
     cam = cam3_init(cub,pmx,pmy,phx,tmx,tmy,thx,dsmax);
-    
+
     slo = slow3_init(cub,slow,nrmax,dsmax,twoway);
-    
     /*------------------------------------------------------------*/
     weop = camig3_init(cub);
-
+    sop  = zomig3_init(cub);
+    
     switch(mode[0]) {
 	case 'w':
 	    ;
@@ -280,7 +284,13 @@ int main (int argc, char *argv[])
     camig3_close(weop);
 
     /*------------------------------------------------------------*/
+    /* close structures   */
+    slow3_close(slo);
+    cam3_close(cam);
+    taper2d_close(tap);
 
+    /*------------------------------------------------------------*/
+    /* slice management (temp files) */
     switch(mode[0]) {
 	case 'w':
 	    fslice_dump(Fw,wfld,SF_COMPLEX);
