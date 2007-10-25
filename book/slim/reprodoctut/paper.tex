@@ -27,7 +27,12 @@ digital image and data processing. The technology developed using the
 which become documented "computational recipes" to be verified,
 exchanged, and modified by the entire \rsf community.
 
-\subsection{Structure of a reproducible scientific publication}
+\subsection{Structure of a Madagascar reproducible document}
+
+\rsf papers typically contain reproducible results from different
+processing flows. Each of these flows is a sequence of processing
+steps done using either \rsf command line programs or some other
+software packages.
 
 \begin{figure}[h]
 \begin{center}
@@ -48,12 +53,30 @@ child {node (flow 2) {Flow 2}
 \end{tikzpicture}
 
 \end{center}
-\caption{Structure of a \rsf reproducible document}\label{fig:struct}
+\caption{Structure of a \rsf reproducible paper}\label{fig:struct}
 \end{figure}
 
 \subsection{How to read this tutorial}
-\subsection{Authors and Acknowledgments}
+
+
 \subsection{Getting help}
+
+Should you encounter a problem while working on your \rsf reproducible
+document, please do the following:
+
+\begin{itemize}
+\item Read (again) this tutorial, at least the part that has to do
+  with your problem.
+\item If that does not solve the problem, try having a look at the
+  \rsf user mailing list
+  (\url{https://lists.sourceforge.net/lists/listinfo/rsf-user}) and
+  \rsf webpage (\url{http://rsf.sourceforge.net/}). Perhaps someone
+  has already reported a similar problem and someone has found a
+  solution.
+\item If you find out your problem was not addressed yet, mail it to
+  the \rsf user mailing list. Someone will likely be able to help you
+  in a timely fashion.
+\end{itemize}
 
 \section{Writing a reproducible scientific publications}
 \subsection{SCons for processing flows}
