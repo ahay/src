@@ -123,10 +123,106 @@ static byte ASCtoEBC[256] = {
     0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0x3F,0xFF
 };
 
-static struct segy {
+typedef struct Segy {
     char *name;
     unsigned int size;
-} segykey[] = {
+} segy;
+
+static const segy bheadkey[] = {
+    {"jobid",4},  /* job identification number */
+    {"lino",4},	  /* line number (only one line per reel) */
+    {"reno",4},	  /* reel number */
+    {"ntrpr",2},  /* number of data traces per record */
+    {"nart",2},	  /* number of auxiliary traces per record */
+    {"hdt",2},    /* sample interval in micro secs for this reel */
+    {"dto",2},    /* same for original field recording */
+    {"hns",2},    /* number of samples per trace for this reel */
+    {"nso",2},    /* same for original field recording */
+    {"format",2}, /* data sample format code:
+		     1 = floating point, 4 byte (32 bits)
+		     2 = fixed point, 4 byte (32 bits)
+		     3 = fixed point, 2 byte (16 bits)
+		     4 = fixed point w/gain code, 4 byte (32 bits)
+		     5 = IEEE floating point, 4 byte (32 bits)
+		     8 = two's complement integer, 1 byte (8 bits)
+		  */
+    {"fold",2},	  /* CDP fold expected per CDP ensemble */
+    {"tsort",2},  /* trace sorting code: 
+		     1 = as recorded (no sorting)
+		     2 = CDP ensemble
+		     3 = single fold continuous profile
+		     4 = horizontally stacked */
+    {"vscode",2}, /* vertical sum code:
+		     1 = no sum
+		     2 = two sum ...
+		     N = N sum (N = 32,767) */
+    
+    {"hsfs",2},	  /* sweep frequency at start */
+    
+    {"hsfe",2},	  /* sweep frequency at end */
+
+    {"hslen",2},  /* sweep length (ms) */
+
+    {"hstyp",2},  /* sweep type code:
+		     1 = linear
+		     2 = parabolic
+		     3 = exponential
+		     4 = other */
+    
+    {"schn",2},	  /* trace number of sweep channel */
+
+    {"hstas",2},  /* sweep trace taper length at start if tapered (the
+		     taper starts at zero time and is effective for
+		     this length) */
+    
+    {"hstae",2},  /* sweep trace taper length at end (the ending taper
+		     starts at sweep length minus the taper length at
+		     end) */
+
+    {"htatyp",2}, /* sweep trace taper type code:
+		     1 = linear
+		     2 = cos-squared
+		     3 = other */
+
+    {"hcorr",2},  /* correlated data traces code:
+		     1 = no
+		     2 = yes */
+
+    {"bgrcv",2},  /* binary gain recovered code:
+		     1 = yes
+		     2 = no */
+
+    {"rcvm",2},	  /* amplitude recovery method code:
+		     1 = none
+		     2 = spherical divergence
+		     3 = AGC
+		     4 = other */
+
+    {"mfeet",2},  /* measurement system code:
+		     1 = meters
+		     2 = feet */
+
+    {"polyt",2},  /* impulse signal polarity code:
+		     1 = increase in pressure or upward
+		     geophone case movement gives
+		     negative number on tape
+		     2 = increase in pressure or upward
+		     geophone case movement gives
+		     positive number on tape */
+
+    {"vpol",2}	  /* vibratory polarity code:
+		     code	seismic signal lags pilot by
+		     1	337.5 to  22.5 degrees
+		     2	 22.5 to  67.5 degrees
+		     3	 67.5 to 112.5 degrees
+		     4	112.5 to 157.5 degrees
+		     5	157.5 to 202.5 degrees
+		     6	202.5 to 247.5 degrees
+		     7	247.5 to 292.5 degrees
+		     8	293.5 to 337.5 degrees */
+};
+
+static const segy segykey[] = {
     {"tracl",  4},  /* trace sequence number within line 0 */
 
     {"tracr",  4},  /* trace sequence number within reel 4 */
@@ -499,11 +595,16 @@ void sf_asc2ebc (int narr, char* arr)
     }
 }
 
-
 int sf_segyformat (const char* bhead)
 /*< extracts SEGY format from binary header >*/
 {
     return convert2(bhead+SF_SEGY_FORMAT);
+}
+
+void sf_set_segyformat (char* bhead, int format)
+/*< set SEGY format in binary header >*/
+{
+    insert2(format,bhead+SF_SEGY_FORMAT);
 }
 
 int sf_segyns (const char* bhead)
@@ -512,10 +613,22 @@ int sf_segyns (const char* bhead)
     return convert2(bhead+SF_SEGY_NS);
 }
 
+void sf_set_segyns(char* bhead, int ns)
+/*< set ns (number of samples) in binary header >*/
+{
+    insert2(ns,bhead+SF_SEGY_NS);
+}
+
 float sf_segydt (const char* bhead)
 /*< extracts dt (sampling) from binary header >*/
 {
     return (float) (convert2(bhead+SF_SEGY_DT)/1000000.);
+}
+
+void sf_set_segydt(char* bhead, float dt)
+/*< set dt (sampling) in binary header >*/    
+{
+    insert2((int) 1000000.*dt,bhead+SF_SEGY_DT);
 }
 
 static void float2ibm (float y, char* num)
@@ -721,6 +834,26 @@ void sf_head2segy(char* buf, const int* trace, int nk)
 	    buf += 4;
 	}
     }
+}
+
+void sf_bhead(char* buf)
+/*< Create a binary header for SEGY >*/
+{
+    int i, val, size;
+
+    for (i=0; i < 3; i++) {
+	if (!sf_getint(bheadkey[i].name,&val)) val=1;
+	insert4(val,buf);
+	buf += 4;
+    }
+
+    for (i=3; i < SF_BHKEYS; i++) {
+	size = bheadkey[i].size;
+	if (sf_getint(bheadkey[i].name,&val)) 
+	    insert2(val,buf);
+	buf += 2;
+    }
+
 }
 
 /* 	$Id$	 */

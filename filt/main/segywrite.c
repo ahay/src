@@ -1,6 +1,8 @@
 /* Convert an RSF dataset to SEGY or SU.
 
 Merges trace headers with data.
+
+"suwrite" is equivalent to "segywrite su=y"
 */
 /*
   Copyright (C) 2004 University of Texas at Austin
@@ -28,23 +30,37 @@ int main(int argc, char *argv[])
 {
     bool verbose, su, xdr;
     char ahead[SF_EBCBYTES], bhead[SF_BNYBYTES];
-    char *headname, *filename, *trace, count[4];
+    char *headname, *filename, *trace, count[4], *prog;
     const char *myheader[] = {"      This dataset was created",
 			      "     with the Madagascar package",
 			      "     http://rsf.sourceforge.net/"};
     sf_file in, hdr;
     int format=1, i, ns, nk, nsegy, itr, ntr, *itrace;
     FILE *head, *file;
-    float *ftrace;
+    float *ftrace, dt;
 
     sf_init(argc, argv);
-
+    in = sf_input("in");
+    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    
     if (!sf_getbool("verb",&verbose)) verbose=false;
     /* Verbosity flag */
-    if (!sf_getbool("su",&su)) su=false; 
-    /* y if output is SU, n if output is SEGY */
     if (!sf_getbool("endian",&xdr)) xdr = sf_endian();
     /* big/little endian flag. The default is estimated automatically */
+
+    if (!sf_getbool("su",&su)) {
+	/* y if input is SU, n if input is SEGY */
+	prog = sf_getprog();
+	if (NULL != strstr (prog, "suwrite")) {
+	    su = true;
+	} else if (NULL != strstr (prog, "segywrite")) {
+	    su = false;
+	} else {
+	    sf_warning("%s is neither suwrite nor segywrite, assume segywrite",
+		       prog);
+	    su = false;
+	}
+    }
 
     if (NULL == (filename = sf_getstring("tape"))) {
 	/* output data */
@@ -66,7 +82,8 @@ int main(int argc, char *argv[])
 	} else {
 	    for (i=0; i < SF_EBCBYTES/80; i++) {
 		snprintf(count,4,"C%-2d",i+1);
-		snprintf(ahead+i*80,81,"%s %-76s\n",count,(i < 3)? myheader[i]:"");
+		snprintf(ahead+i*80,81,"%s %-76s\n",count,
+			 (i < 3)? myheader[i]:"");
 	    }
 	    if (verbose) sf_warning("ASCII header created on the fly");
 	}
@@ -79,15 +96,23 @@ int main(int argc, char *argv[])
 	if (NULL == (headname = sf_getstring("bfile"))) headname = "binary";
 	/* input binary data header file */
 
-	if (NULL == (head = fopen(headname,"rb")))
-	    sf_error("Cannot open file \"%s\" for reading binary header:",
-		     headname);
+	if (NULL == (head = fopen(headname,"rb"))) {
+	    memset(bhead,0,SF_BNYBYTES);
+	    sf_set_segyformat(bhead,1);
+
+	    if (verbose) sf_warning("Binary header created on the fly");
+	} else {
+	    if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, head)) 
+		sf_error("Error reading binary header");
+	    fclose (head);
     
-	if (SF_BNYBYTES != fread(bhead, 1, SF_BNYBYTES, head)) 
-	    sf_error("Error reading binary header");
-	fclose (head);
-    
-	if (verbose) sf_warning("Binary header read from \"%s\"",headname);
+	    if (verbose) sf_warning("Binary header read from \"%s\"",headname);
+	}
+
+	if (sf_histint(in,"n1",&ns)) sf_set_segyns(bhead,ns);
+	if (sf_histfloat(in,"d1",&dt)) sf_set_segydt(bhead,dt);
+	
+	sf_bhead(bhead);
 
 	if (SF_BNYBYTES != fwrite(bhead, 1, SF_BNYBYTES, file))
 	    sf_error("Error writing binary header");
@@ -112,11 +137,10 @@ int main(int argc, char *argv[])
 		break;
 	}
     }
-	
-    in = sf_input("in");
     
-    if (!sf_histint(in,"n1",&ns)) ns = sf_segyns (bhead); 
-    if (SF_FLOAT != sf_gettype(in)) sf_error("Need float input");
+    ns = sf_segyns (bhead); 
+    if (verbose) sf_warning("Detected trace length of %d",ns);
+
     if (su) {
 	if (xdr) {
 	    if (SF_XDR != sf_getform(in)) sf_error("Need xdr input");
@@ -125,7 +149,6 @@ int main(int argc, char *argv[])
 	}
 	sf_setform(in,SF_NATIVE);
     }
-    if (verbose) sf_warning("Detected trace length of %d",ns);
     
     nsegy = SF_HDRBYTES + ((3 == format)? ns*2: ns*4);    
  

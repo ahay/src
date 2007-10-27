@@ -17,7 +17,11 @@ try: # distributed version
     bindir = os.path.join(root,'bin')
     incdir = os.path.join(root,'include')
     docmerge = configure.docmerge
-    alias = {'cat':'merge','real':'imag','cp':'mv','segyread':'suread'}
+    alias = {'cat':'merge',
+             'real':'imag',
+             'cp':'mv',
+             'segyread':'suread',
+             'segywrite':'suwrite'}
 except: # local version
     root = None
     env = Environment()

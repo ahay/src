@@ -261,7 +261,8 @@ int main(int argc, char *argv[])
 	} else if (NULL != strstr (prog, "segyread")) {
 	    su = false;
 	} else {
-	    sf_warning("%s is neither suread nor segyread, assume segyread",prog);
+	    sf_warning("%s is neither suread nor segyread, assume segyread",
+		       prog);
 	    su = false;
 	}
     }
@@ -283,6 +284,8 @@ int main(int argc, char *argv[])
     } else if (NULL == (file = fopen(filename,"rb"))) {
 	sf_error("Cannot open \"%s\" for reading:",filename);
     }
+
+    if (-1 == ftello(file)) sf_error("Cannot read from a pipe");
 
     fseeko(file,0,SEEK_END);
     pos = ftello(file); /* pos is the filesize in bytes */
