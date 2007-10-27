@@ -24,7 +24,7 @@ The primary source of information is the web site:
 
 Compiling
 =========
-See the INSTALL document for build instructions.
+See the INSTALL.txt document for build instructions.
 
 History
 =======
@@ -38,4 +38,4 @@ Karrenbach, Biondo Biondi, and Bob Clapp.
 
 Madagascar was started, under the name RSF (Regularly Sampled Format)
 by Sergey Fomel in 2003. Since then, several other people have
-contributed to it. See the AUTHORS file for an incomplete list.
+contributed to it. See the AUTHORS.txt file for an incomplete list.
