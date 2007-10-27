@@ -536,12 +536,15 @@ def dummy(target=None,source=None,env=None):
          fig = str(src)
          plt = os.path.splitext(os.path.basename(fig))[0]
          plt2 = string.replace(plt,'_','\_')
-         dir = os.path.split(os.path.split(fig)[0])[0]
-         if dir != dirold:
-             tex.write('\n\\section{%s}\n' % dir)
-             tex.write('\\inputdir{%s}\n\n' % dir)
-             dirold = dir
-         tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,dir,plt2))
+         fdir = os.path.split(os.path.split(fig)[0])[0]
+         if fdir != dirold:
+             tex.write('\n\\section{%s}\n' % fdir)
+             if fdir:
+                 tex.write('\\inputdir{%s}\n\n' % fdir)
+             else:
+                 tex.write('\\inputdir{.}\n\n')
+             dirold = fdir
+         tex.write('\\plot{%s}{width=\\textwidth}{%s/%s} ' % (plt,fdir,plt2))
          tex.write('\\clearpage\n')
      tex.close()    
      return 0
