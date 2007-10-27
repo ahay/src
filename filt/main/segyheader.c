@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     }
 
     for (nleft=n2; nleft > 0; nleft -= nbuf) {
-	if (nbuf < nleft) nbuf = nleft;
+	if (nbuf > nleft) nbuf = nleft;
 
 	
 	for (i=0; i < SF_NKEYS; i++) {

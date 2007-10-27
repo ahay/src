@@ -371,11 +371,11 @@ bash$ segyhdrs < plane.su | segywrite tape=plane.segy
 \end{verbatim}
 To convert it to RSF, use either
 \begin{verbatim}
-bash$ sfsegyread tape=plane.su su=y tfile=tfile.rsf endian=0 > plane.rsf
+bash$ sfsuread < plane.su tfile=tfile.rsf endian=0 > plane.rsf
 \end{verbatim}
 or
 \begin{verbatim}
-bash$ sfsegyread tape=plane.segy tfile=tfile.rsf \
+bash$ sfsegyread < plane.segy tfile=tfile.rsf \
 hfile=hfile bfile=bfile endian=0 > plane.rsf
 \end{verbatim}
 The endian flag is needed if the SU file originated from a little-endian
@@ -421,13 +421,26 @@ The  \texttt{bfile} is the binary header file.
 To convert files back from RSF to SEG-Y or SU, use the \texttt{sfsegywrite}
 program and reverse the input and output:
 \begin{verbatim}
-bash$ sfsegywrite tape=spike.su su=y tfile=tfile.rsf endian=0 < spike.rsf
+bash$ sfsuwrite > spike.su tfile=tfile.rsf endian=0 < spike.rsf
 \end{verbatim}
 or
 \begin{verbatim}
-bash$ sfsegywrite tape=spike.segy tfile=tfile.rsf \
+bash$ sfsegywrite > spike.segy tfile=tfile.rsf \
 hfile=hfile bfile=bfile endian=0 < spike.rsf
 \end{verbatim}
+
+If \texttt{hfile=} and \texttt{bfile=} are not supplied to
+\texttt{sfsegywrite}, the corresponding headers will be either picked
+from the default locations (files named \texttt{header} and
+\texttt{binary}) or generated on the fly. The trace header file can be
+generated with \texttt{sfsegyheader}. Here is an example:
+\begin{verbatim}
+bash$ rm header binary
+bash$ sfheadermath < spike.rsf output=N+1 | sfdd type=int > tracl.rsf
+bash$ sfsegyheader < spike.rsf tracl=tracl.rsf > tfile.rsf
+bash$ sfsegywrite  < spike.rsf tfile=tfile.rsf > spike.segy
+\end{verbatim}
+
 
 \subsection{Reading and writing ASCII files}
 
