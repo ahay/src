@@ -96,7 +96,7 @@ int main(int argc, char **argv)
   etime = clock();
 
   cpu = ((double) (etime-stime))/ CLOCKS_PER_SEC;
-  printf("Kernel CPU time = %f\n", cpu);
+  printf("Kernel CPU time = %f s for %d calls\n", cpu, ncalls);
 
   exit(0);
 }
