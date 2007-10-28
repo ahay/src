@@ -16,21 +16,23 @@
   along with this program; if not, write to the Free Software
   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 */
-#define EXPAND 4            /* the expansion factor for the input data */
-#define NPTS 1000
-#define NTIMES 42
-#define NCALLS 5000
-#define KP1MAX 64           /* max half length of triangle aa filter */
+#include <time.h>
 
 #include <rsf.h>
 
-#include "wallsec.h"
 #include "kernel.h"
+
+#define EXPAND 4            /* the expansion factor for the input data */
+#define NPTS 1000
+#define NTIMES 42
+#define KP1MAX 64           /* max half length of triangle aa filter */
 
 int main(int argc, char **argv)
 {
   int   i;
-  float etime, aper;
+  double cpu;
+  clock_t stime, etime;
+  float aper;
   float dtdata=4.0, str_mut=0.35, dtout=4.0, dttab=96.0;
   float sldist2=160000.0, xldist2=640000.0, dxbar=50.0, t0first=500.0;
   float shot_xd=-400.0, shot_yd=1000.0, rcvr_xd=2000.0, rcvr_yd=-1800.0;
@@ -44,7 +46,7 @@ int main(int argc, char **argv)
   float gathers_fold[NPTS/8+10];
 
   sf_init(argc,argv);
-  if (!sf_getint("ncalls",&ncalls)) ncalls=NCALLS;
+  if (!sf_getint("ncalls",&ncalls)) ncalls=5000;
   /* number of calls */
 
   for(i=0; i<EXPAND*NPTS+2*KP1MAX; i++) {
@@ -77,7 +79,7 @@ int main(int argc, char **argv)
       amps[i] = 2;
   }
 
-  etime = wallsec();
+  stime = clock();
 
   for(i=0; i<ncalls; i++) {
       kernel( data1,  EXPAND*in_nsamps,  out_nsamps,
@@ -91,8 +93,10 @@ int main(int argc, char **argv)
 	      dxbar, t0first);
   }
 
-  etime = wallsec()-etime;
-  printf("Kernel time= %f\n", etime);
+  etime = clock();
+
+  cpu = ((double) (etime-stime))/ CLOCKS_PER_SEC;
+  printf("Kernel CPU time = %f\n", cpu);
 
   exit(0);
 }
