@@ -1,6 +1,7 @@
 from rsfproj import *
 import cluster
 
+# ------------------------------------------------------------
 def param(par):
     p  = ' '
     p  = p + ' readwrite=y'
@@ -18,6 +19,8 @@ def param(par):
         p = p + ' pmx='   + str(par['pmx'])
     if(par.has_key('pmy')):
         p = p + ' pmy='   + str(par['pmy'])
+    if(par.has_key('misc')):
+        p = p + ' '      +     par['misc']
     p = p + ' '
     return p
 
@@ -35,11 +38,22 @@ def wflds(wfld,cmps,par):
     Flow(wfld,cmps,
          '''
          fft1 inv=n opt=n |
-         window squeeze=n n1=%(nw)d min1=%(ow)g |
+         window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          transp plane=13 memsize=500 |
          spray axis=2 n=1 o=0 d=1 |
          put label1=mx label2=my label3=hx label4=w
          ''' % par )
+
+# ------------------------------------------------------------
+def slowness(slow,velo,par):
+    Flow(slow,velo,
+         '''
+         window |
+         math "output=1/input" |
+         transp |
+         spray axis=2 n=1 o=0 d=1 |
+         put label2=y unit2=""
+         ''')
 
 # ------------------------------------------------------------    
 def datum(wfl1,slow,wfl0,par):

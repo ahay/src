@@ -1,6 +1,5 @@
 from rsfproj import *
-import zomig,cluster
-import os
+import zomig,cluster,os
 
 # ------------------------------------------------------------
 def param(par):
@@ -26,6 +25,15 @@ def param(par):
     return p
 
 # ------------------------------------------------------------
+def freqs(par):
+    f  = ' '
+    if(par.has_key('nw')): f = f + ' nw=' + str(par['nw'])
+    if(par.has_key('ow')): f = f + ' ow=' + str(par['ow'])
+    if(par.has_key('dw')): f = f + ' dw=' + str(par['dw'])
+    f = f + ' '
+    return f
+
+# ------------------------------------------------------------
 # create surface wavefield files
 def wflds(swfl,rwfl,wave,shot,par):
     #
@@ -42,8 +50,7 @@ def wflds(swfl,rwfl,wave,shot,par):
          window squeeze=n n1=%(nw)d min1=%(ow)g j1=%(jw)d |
          put label1=w
          ''' % par )
-    # _shot(nw,nrx,nry,nsx,nsy)
-#         window n3=%(ns)d f3=%(fs)d j3=%(js)d |
+
     Flow(_shot,shot,
          '''
          fft1 inv=n opt=n |
@@ -77,7 +84,17 @@ def wflds(swfl,rwfl,wave,shot,par):
          transp plane=23 |
          put label5=
          ''')
-
+    
+# ------------------------------------------------------------
+def slowness(slow,velo,par):
+    Flow(slow,velo,
+         '''
+         window |
+         math "output=1/input" |
+         transp |
+         spray axis=2 n=1 o=0 d=1 |
+         put label2=y unit2=""
+         ''')
 # ------------------------------------------------------------
 # datum surface wavefields
 def datum(swf1,rwf1,slow,swf0,rwf0,par):

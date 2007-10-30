@@ -148,20 +148,30 @@ void srmig3(ssroperator3d weop,
 	    taper2d(weop->ww_s[ompith],tap);
 	    taper2d(weop->ww_r[ompith],tap);	    
 	    
-	    fslice_get(s_s->slice, 0, s_s->so[ompith][0]);
-	    fslice_get(s_r->slice, 0, s_r->so[ompith][0]);
-
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
+	    {
+		fslice_get(s_s->slice, 0, s_s->so[ompith][0]);
+		fslice_get(s_r->slice, 0, s_r->so[ompith][0]);
+	    }
+	    
 	    for (imz=0; imz<cub->amz.n-1; imz++) {
-
-		fslice_get(s_s->slice, imz+1, s_s->ss[ompith][0]);
-		fslice_get(s_r->slice, imz+1, s_r->ss[ompith][0]);
-
+		
+#ifdef _OPENMP	    
+#pragma omp critical
+#endif	    
+		{
+		    fslice_get(s_s->slice, imz+1, s_s->ss[ompith][0]);
+		    fslice_get(s_r->slice, imz+1, s_r->ss[ompith][0]);
+		}
+		
 		ssr3_ssf(ws,weop->ww_s[ompith],cub,ssr,tap,s_s,imz,ompith);
 		ssr3_ssf(wr,weop->ww_r[ompith],cub,ssr,tap,s_r,imz,ompith);
 		
 		slow3_advance(cub,s_s,ompith);
 		slow3_advance(cub,s_r,ompith);
-
+		
 		img3store(cub,img,imz,weop->ww_s,weop->ww_r,ompith);
 		
 	    } /* z */
