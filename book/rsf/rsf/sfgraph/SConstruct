@@ -8,8 +8,8 @@ for n in range(2,11):
          'math t2=${SOURCES[1]} output="2*x1*input-t2" ')
 
 title='\s100 \F11 Polinom CHebysheva ' + \
-    '\F3 T\_\s75 n\^\s100 (cos \F10 q) = \F3 cos n\F10 q'
+    '\c3 \F3 T\_\s75 n\^\s100 (cos \F10 q) = \F3 cos n\F10 q'
 
-Result('t10','graph grid=y pad=n title="%s" ' % title)
+Result('t10','graph grid=y gridcol=5 pad=n title="%s" ' % title)
 
 End()
