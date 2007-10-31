@@ -117,13 +117,13 @@ void deriv (const float* trace, float* trace2)
 
     for (i=n; i >= 1; i--) {
 	for (it=1; it < nt-1; it++) {
-	    trace2[it] = 0.5*h[it]-0.25*(h[it+1]+h[it-1]);
+	    trace2[it] = h[it]-0.5*(h[it+1]+h[it-1]);
 	}
 	trace2[0] = trace2[1];
 	trace2[nt-1] = trace2[nt-2];
 
 	for (it=0; it < nt; it++) {
-	    h[it] = trace[it] + trace2[it]*2*i/(2*i+1);
+	    h[it] = trace[it] + trace2[it]*i/(2*i+1);
 	}
     }
 
