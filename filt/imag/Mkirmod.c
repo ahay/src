@@ -33,7 +33,7 @@ int main(int argc, char* argv[])
     float **time, **ampl, **delt, freq, theta, ava, amp, obl;
     float slow, dx, x0, dt, t0, ds, s0, dh, h0, r0;
     char *type, *type2;
-    bool twod;
+    bool twod, verb;
     surface inc, ref;
     velocity vel, vel2;
     ktable ts, tg;
@@ -58,6 +58,9 @@ int main(int argc, char* argv[])
     /* time sampling */
     if (!sf_getfloat("t0",&t0)) t0=0.;
     /* time origin */
+
+    if (!sf_getbool("verb",&verb)) verb=false;
+    /* verbosity flag */
 
     trace = sf_floatalloc(nt+1);
 
@@ -238,6 +241,8 @@ int main(int argc, char* argv[])
 
     /*** Main loop ***/
     for (is=0; is < ns; is++) {
+	if (verb) sf_warning("shot %d of %d",is+1,ns);
+
 	for (ih=0; ih < nh; ih++) {
 	    for (ix=0; ix < nx; ix++) {
 		for (ic=0; ic < nc; ic++) {
