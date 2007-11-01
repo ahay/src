@@ -31,10 +31,11 @@ static kiss_fftr_cfg forw, invs;
 
 void halfint_init (bool inv  /* differentiation or integration */, 
 		   int n1    /* trace length */, 
+		   int m     /* order */,
 		   float rho /* regularization */)
 /*< Initialize >*/
 {
-    int i, j, m=6;
+    int i, j;
     float om, z;
     kiss_fft_cpx cw, cz, cz2;
 

@@ -45,7 +45,7 @@ void veltran_init (bool pull1                     /* pull or push mode */,
     s1 = s11; psun1 = psun11; psun2 = psun21;
 
     aastretch_init (nt, t0, dt, nt);
-    halfint_init (true,2*nt,1.-1./nt);
+    halfint_init (true,2*nt,6,1.-1./nt);
 
     amp  = sf_floatalloc(nt);
     str  = sf_floatalloc(nt);

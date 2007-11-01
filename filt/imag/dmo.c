@@ -81,7 +81,7 @@ void dmo_lop (bool adj, bool add, int n1, int n2, float *dat1, float *dat2)
 
     sf_adjnull(adj,add,n1,n2,dat1,dat2);
 
-    halfint_init(true,nt2,1.-1./nt2);
+    halfint_init(true,nt2,6,1.-1./nt2);
     
     if (!adj) {
 	for (ix=0; ix < nx; ix++) {

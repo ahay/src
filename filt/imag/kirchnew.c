@@ -50,7 +50,7 @@ void kirchnew_init (float *vrms_in /* RMS velocity */,
     ps = ps_in;
     hd = hd_in;
     if (hd) {
-	halfint_init(true,nt,1.-1./nt);
+	halfint_init(true,nt,6,1.-1./nt);
 	tmp = sf_floatalloc2 (nt,nx);
     }
 }
