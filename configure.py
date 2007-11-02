@@ -90,7 +90,8 @@ Include = Scanner(name='Include',function=included,skeys=['.c'])
 
 plat = {'OS': 'unknown',
         'distro': 'unknown',
-        'arch': 'unknown'}
+        'arch': 'unknown',
+        'cpu': 'unknown'}
 package = {}
 
 def needed_package(type,fatal=1):
@@ -166,6 +167,9 @@ def identify_platform(context):
         elif plat['OS'] == 'sunos':
             if name[:2] == '10':
                 plat['distro'] = '10' # Solaris 10
+        elif plat['OS'] == 'darwin':
+             plat['distro'] = uname()[2]
+             plat['cpu'] = uname()[5] # i386 / powerpc
         elif plat['OS'] == 'irix':
              plat['distro'] = uname()[2]
         elif plat['OS'] == 'hp-ux':
@@ -783,9 +787,12 @@ def matlab(context):
     elif plat['OS'] == 'sunos':
         suffix = 'sol'
     elif plat['OS'] == 'darwin':
-        suffix = 'mac'
+        if plat['cpu'] == 'i386':
+            suffix = 'maci'
+        else:
+            suffix = 'mac'
     else:
-        suffix == 'glx'
+        suffix = 'glx'
     context.env['MEXSUFFIX'] = '.mex' + suffix
 
 package['swig'] = {'fc':'swig',
