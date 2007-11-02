@@ -23,7 +23,7 @@
 static int nt;
 static bool inv;
 static void (*transform)(bool);
-static float *t, s;
+static float *t, *tt, s;
 
 static void linear(bool adj) 
 /* Lifting linear-interpolation transform in place */
@@ -70,6 +70,58 @@ static void linear(bool adj)
     }
 }
 
+static void ulinear(bool adj) 
+/* Unitary linear-interpolation transform in place */
+{
+    int i, j;
+
+    if (adj) {
+	for (j=nt/2; j >= 1; j /= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		tt[i+j] = t[i+j]*s;
+		tt[i] = t[i]*s;
+		t[i+j] = 0.;
+		t[i] = 0.;
+	    }
+	    t[0] += tt[0];
+	    t[j] += tt[0];
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		t[i-2*j] -= tt[i]/2;
+		t[i-j] += tt[i];
+		t[i] +=6.0f* tt[i]/2;
+		t[i+j] += tt[i];
+		t[i+2*j] -= tt[i]/2;
+	    }
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		t[i+2*j] -= tt[i+j];
+		t[i+j] += 2*tt[i+j];
+		t[i] -= tt[i+j];
+	    }	 
+	    if (i+j < nt) {
+		t[i+j] += tt[i+j];
+		t[i] -= tt[i+j];
+	    }
+	}
+    } else {
+	for (j=1; j <= nt/2; j *= 2) {
+	    for (i=0; i < nt-2*j; i += 2*j) {
+		tt[i+j] = 2*t[i+j] - (t[i]+t[i+2*j]);
+		/* d = o - P e */
+	    }	 
+	    if (i+j < nt) tt[i+j] = t[i+j]-t[i];    
+	    tt[0] = t[0]+t[j];
+	    for (i=2*j; i < nt-j; i += 2*j) {
+		tt[i] = t[i-j]+t[i+j] + (6.0f*t[i]-t[i-2*j]-t[i+2*j])/2;
+		/* s = e + U d */
+	    }
+	    for (i=0; i < nt-j; i += 2*j) {
+		t[i+j] = tt[i+j]*s;
+		t[i] = tt[i]*s;
+	    }
+	}
+    }
+}
+
 static void haar(bool adj) 
 /* Lifting Haar transform in place */
 {
@@ -106,19 +158,19 @@ static void uhaar(bool adj)
     if (adj) {
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
-		a = (t[i]+t[i+j])*s;
-		b = (t[i]-t[i+j])*s;
-		t[i+j] = a;
-		t[i] = b;
+		a = t[i]+t[i+j];
+		b = t[i]-t[i+j];
+		t[i+j] = a*s;
+		t[i] = b*s;
 	    }
 	}
     } else {
 	for (j=1; j <= nt/2; j *= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
-		a = (t[i+j]-t[i])*s;
-		b = (t[i+j]+t[i])*s;
-		t[i+j] = a;
-		t[i] = b;
+		a = t[i+j]-t[i];
+		b = t[i+j]+t[i];
+		t[i+j] = a*s;
+		t[i] = b*s;
 	    }	    
 	}
     }
@@ -139,18 +191,21 @@ void wavelet_init(int n /* data size */, bool inv1, bool unit, char type)
 	    transform = unit? uhaar: haar;
 	    break;
 	case 'l':
-	    transform = linear;
+	    transform = unit? ulinear: linear;
 	    break;
 	default:
 	    sf_error("Unknown wavelet type=%c",type);
 	    break;
     }
+
+    if (transform == ulinear) tt = sf_floatalloc(nt);
 }
 
 void wavelet_close(void) 
 /*< deallocate space >*/
 {
     free (t);
+    if (transform == ulinear) free(tt);
 }
 
 void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
