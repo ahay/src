@@ -27,6 +27,29 @@
 #include <vecLib/vBLAS.h>
 #else
 #include <cblas.h>
+/*^*/
+
+#ifdef __sgi
+/*^*/
+
+double cblas_dsdot(int n, const float *x, int sx, const float *y, int sy)
+/*< x'y float -> complex >*/
+{
+    int i, ix, iy;
+    double dot;
+
+    dot = 0.;
+
+    for (i=ix=iy=0; i < n; i++, ix += sx, iy += sy) {
+        dot += (double) x[ix] * y[iy];
+    }
+
+    return dot;
+}
+
+#endif
+/*^*/
+
 #endif
 /*^*/
 
