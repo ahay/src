@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
 		    sq = hypotf(t,h);
 		    
 		    str[it] = 0.5*(time[it]+sq);
-		    tx[it] = fabsf(0.5*h/sq)*dt;
+		    tx[it] = fabsf(0.5*h*dh/sq);
 		    amp[it]=1.;
 		}  /* it */
 

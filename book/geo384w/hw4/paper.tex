@@ -1,0 +1,213 @@
+\author{Gustav Kirchhoff} 
+%%%%%%%%%%%%%%%%%%%%%%%%%
+\title{Homework 4}
+
+\begin{abstract}
+  This homework has two parts. In the theoretical part, you will
+  derive analytically the reflection traveltime from a hyperbolic
+  reflector and the geometrical spreading for the case of a constant
+  gradient of slowness squared.  In the computational part, you will
+  experiment with imaging synthetic data using traveltimes and waves.
+\end{abstract}
+
+\section{Theoretical part}
+
+\begin{enumerate}
+\item Consider the source point $s$ and the receiver point $r$ at the
+  surface $z=0$ above a 2-D constant-velocity medium and a hyperbolic
+  reflector defined by the equation 
+  \begin{equation}
+    \label{eq:hyper}
+    z(x) = \sqrt{h^2 +
+      x^2\,\tan^2{\alpha}}\;.
+  \end{equation}
+  \begin{enumerate}
+  \item Apply Fermat's principle to derive the horizontal coordinate of
+    the reflection point $y$ and the reflection traveltime $T$ as 
+    functions of $s$, $r$, $h$, and $\alpha$.
+  \item Test your equations by considering the limiting cases
+    \begin{itemize}
+    \item $h=0$, 
+      when the hyperbolic reflector turns into a dipping 
+      plane $z(x)= x\,\tan{\alpha}$ for positive $x$ (recall Homework 2).
+    \item $\alpha=0$,
+      when the
+      hyperbolic reflector turns into a flat plane $z(x)=h$.
+    \end{itemize}
+  \end{enumerate}
+\item Consider a medium with a constant gradient of slowness squared
+  \begin{equation}
+    S^2(\mathbf{x}) = S_0^2 + 2\,\mathbf{g} \cdot (\mathbf{x}-\mathbf{x}_0)\;.
+  \end{equation}
+  \begin{enumerate}
+  \item Show that, in this kind of medium, the dynamic ray tracing system
+    takes the form
+  \begin{eqnarray}
+    \label{eq:dxds}
+    {\frac{d \mathbf{X}}{d \sigma}} & = & \mathbf{P}\;, \\
+    {\frac{d \mathbf{P}}{d \sigma}} & = & \mathbf{0}\;.
+    \label{eq:dpds}
+  \end{eqnarray}
+\item Consider a point source in the 2-D case. Show that matrices
+  $\mathbf{X}$ and $\mathbf{P}$ can be initialized as
+  \begin{eqnarray}
+    \label{eq:x0}
+    \mathbf{X}(0) & = & \left[\begin{array}{cc} 
+        \frac{\cos \theta}{S_0} & \frac{\sin \theta}{S_0} \\
+        0 & 0 \end{array}\right]\;, \\
+    \mathbf{P}(0) & = & \left[\begin{array}{cc} 
+        0 & 0 \\
+        -S_0\,\sin \theta & S_0\,\cos \theta \end{array}\right]\;, \\
+    \label{eq:p0}
+  \end{eqnarray}
+  where $\theta$ is the initial ray angle.
+\item Solve system~(\ref{eq:dxds}-\ref{eq:dpds}) with initial
+  conditions~(\ref{eq:x0}-\ref{eq:p0}) to find $\mathbf{X}(\sigma)$
+  and $\mathbf{P}(\sigma)$.
+\item Using your derivations, find the two-point geometrical spreading
+  $J$ from a point source in the 2-D case as a function of $S_0$,
+  $\mathbf{g}$, the source location $\mathbf{x}_0$ and the receiver
+  location $\mathbf{x}_1$.
+\end{enumerate}
+
+\end{enumerate}
+
+\section{Computational part}
+
+In this part of the homework, we will use a simple synthetic model to
+explore common-shot imaging with traveltimes and waves. You will study
+the effect of velocities on imaging.
+
+\lstset{language=python,numbers=left,numberstyle=\tiny,showstringspaces=false}
+
+\begin{enumerate}
+\item We will start by exploring traveltime imaging using the
+  hyperbolic reflector model from equation~(\ref{eq:hyper}). The model
+  is shown in Figure~\ref{fig:model}.
+
+  \inputdir{times}
+  \plot{model}{width=\textwidth}{Synthetic velocity model with one reflector.}
+
+{\small
+  \lstinputlisting[frame=single]{times/SConstruct}}
+
+  Figure~\ref{fig:dtime0-0,dtime1-0,dtime2-0} demonstrates the
+  traveltime imaging procedure for three different source locations:
+  forward continuation from the source, backward continuation from the
+  recorded reflection traveltime, and taking the zero level set of
+  their difference as a map of the reflector location.
+
+  \multiplot{3}{dtime0-0,dtime1-0,dtime2-0}{width=\textwidth}{Forward
+    traveltime continuation from the source (left), backward
+    traveltime continuation from the recorded reflection traveltime
+    (center), and their difference (right) for three different source
+    locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, 
+    (c) $s=3\,\mbox{km}$.}
+
+  Combining images from different sources, we obtain the result shown
+  in Figure~\ref{fig:time0}.
+
+  \plot{time0}{width=\textwidth}{Reflector images from traveltime
+    continuation overlayed on top of the velocity model.}
+
+  What happens when the velocity used for traveltime continuation is
+  incorrect? The results are shown in
+  Figures~\ref{fig:dtime0-1,dtime1-1,dtime2-1} and~\ref{fig:time1}.
+
+  \multiplot{3}{dtime0-1,dtime1-1,dtime2-1}{width=\textwidth}{ Imaging
+    in velocity that is 10\% lower than the correct one. Forward
+    traveltime continuation from the source (left), backward
+    traveltime continuation from the recorded reflection traveltime
+    (center), and their difference (right) for three different source
+    locations: (a) $s=1\,\mbox{km}$, (b) $s=2\,\mbox{km}$, (c)
+    $s=3\,\mbox{km}$.}
+
+  \plot{time1}{width=\textwidth}{Imaging in velocity that is 10\%
+    lower than the correct one. Reflector images from traveltime
+    continuation overlaid on top of the velocity model.}
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+> cd ~/geo384w/hw4/times
+\end{verbatim}
+\item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+  to generate figures and display them on your screen.  
+\item Explain the artifacts. Why, even with the correct velocity, images are not perfectly aligned with the reflector?
+\item Edit the \texttt{SConstruct} file to change the reflector shape
+  from plane to hyperbolic. Run 
+\begin{verbatim}
+> scons view
+\end{verbatim}
+  again to observe the differences.
+\item Instead of using the velocity that is 10\% lower, try a velocity that is 10\% higher. 
+Make appropriate changes in the \texttt{SConstruct} file and update the figures.
+\item Explain how traveltime imaging with multiple sources can be used to estimate the correct velocity. 
+\end{enumerate}
+
+\item Now we will turn to imaging with waves. Figure~\ref{fig:shots} shows three synthetic shot gathers generated for the same reflector model.
+Figures~\ref{fig:image} shows an image generated by Kirchhoff
+migration with the correct velocity.
+
+{\small \lstinputlisting[frame=single]{waves/SConstruct}}
+
+\inputdir{waves}
+\plot{shots}{width=\textwidth}{Shot gathers for the hyperbolic reflector model.}
+\plot{image}{width=\textwidth}{Kirchhoff image for the hyperbolic reflector model.}
+
+% ADD ANOTHER FIGURE HERE
+
+\begin{enumerate}
+\item Change directory 
+\begin{verbatim}
+> cd ~/geo384w/hw4/waves
+\end{verbatim}
+\item Run
+\begin{verbatim}
+> scons view
+\end{verbatim}
+  to generate figures and display them on your screen.
+\item Edit the \texttt{SConstruct} file to change the reflector shape
+  from plane to hyperbolic. Run 
+\begin{verbatim}
+> scons view
+\end{verbatim}
+  again to observe the differences.
+\item Create a loop of different images for velocities that are 10\% lower, correct, 
+and 10\% higher. Make appropriate changes in the \texttt{SConstruct} file.
+\item Include your new figures in the \texttt{geo384w/hw4/paper.tex} file following the analogy with 
+Figure~\ref{fig:image}.
+\item Explain how wave imaging with multiple sources can be used to estimate the correct velocity. 
+\end{enumerate}
+
+\end{enumerate}
+
+\section{Completing the assignment}
+
+\begin{enumerate}
+\item Change directory to \verb#~/geo384w/hw4#.
+\item Edit the file \texttt{paper.tex} in your favorite editor and change the
+  first line to have your name instead of Kirchhoff's.
+\item Run
+\begin{verbatim}
+  > sftour scons lock
+\end{verbatim}
+to update all figures.
+\item Run
+\begin{verbatim}
+  > sftour scons -c
+\end{verbatim}
+  to remove intermediate files.
+\item Run
+ \begin{verbatim} 
+  > scons pdf
+\end{verbatim}
+  to create the final document.
+\item Submit your result (file \texttt{paper.pdf}) on paper or by
+  e-mail. If you do your assignment on one of the computers in the
+  Unix lab, you can simply leave the file in your directory.
+\end{enumerate}
+

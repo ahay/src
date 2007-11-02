@@ -1,0 +1,101 @@
+from rsfproj import *
+from math import *
+
+##############################################
+#
+# !!!! CHANGE ME 
+
+h = 0
+
+#
+##############################################
+
+alpha = pi/6
+
+# Make a velocity model 
+Flow('model',None,
+     '''
+     math n1=901 o1=0 d1=0.01 output="sqrt(%g^2+(x1*%g)^2)" |
+     unif2 n1=201 d1=0.01 v00=1,2 |
+     put label1=Depth unit1=km label2=Lateral unit2=km  |
+     smooth rect1=10
+     ''' % (h,tan(alpha)))
+
+# Plot model
+Plot('model',
+     '''
+     window n2=301 |
+     grey color=j allpos=y title=Model bias=1 scalebar=y 
+     barreverse=y barlabel=Velocity barunit=km/s 
+     ''')
+Result('model','Overlay')
+
+# Reflection traveltime
+
+##############################################
+#
+# !!!! CHANGE ME 
+
+equation = 'sqrt(x1^2+x2^2-2*x1*x2*%g)' % cos(2*alpha) 
+
+#
+##############################################
+
+Flow('time','model',
+     '''
+     window n1=1 | 
+     spray axis=2 n=3 o=1 d=1 |
+     math output="%s"
+     ''' % equation)
+
+# Loop over velocities 
+for v in range(2):
+    water = 'water%d' % v
+    Flow(water,'model','math output=%g' % (1,0.9)[v])
+
+    # Loop over shots
+    times = ['model']
+    for s in range(3):
+        time = 'time%d-%d' % (s,v)
+        Flow(time,'time','window n2=1 f2=%d' % s)
+
+        stime = 'stime%d-%d' % (s,v)
+        Flow(stime,water,
+             'eikonal yshot=%g | window n2=301' % (s+1))
+        Plot(stime,
+             '''
+             grey color=j allpos=y scalebar=y title=Forward
+             ''')
+
+        rtime = 'rtime%d-%d' % (s,v)
+        Flow(rtime,[water,time],
+             'timecont surf=${SOURCES[1]} | window n2=301')
+        Plot(rtime,
+             '''
+             grey color=j allpos=y scalebar=y title=Backward
+             ''')
+
+        dtime = 'dtime%d-%d' % (s,v)
+        Flow(dtime,[rtime,stime],
+             'add scale=1,-1 ${SOURCES[1]}')
+        Plot(dtime+'g',dtime,
+             'grey color=j scalebar=y title=Difference')
+        Plot(dtime+'+',dtime,
+             '''
+             contour scalebar=y allpos=n nc=1 c0=0 
+             plotfat=1 plotcol=0 wanttitle=n wantaxis=n
+             ''')
+        Plot(dtime+'-',dtime,
+             '''
+             contour scalebar=y allpos=n nc=1 c0=0 
+             plotfat=6 plotcol=7 wanttitle=n wantaxis=n
+             ''')
+        Plot(dtime,[dtime+'g',dtime+'-',dtime+'+'],'Overlay')
+        times.append(dtime+'-')
+        times.append(dtime+'+')
+        Result(dtime,[stime,rtime,dtime],'SideBySideIso')
+  
+    time = 'time%d' % v
+    Result(time,times,'Overlay')
+
+End()

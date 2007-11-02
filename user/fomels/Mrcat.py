@@ -24,7 +24,7 @@ sfcat = os.path.join(os.environ.get('RSFROOT'),'bin/sfcat')
 def rcat(files,options,out):
     'Call sfcat recursively on a list of files'
     global sfcat
-    if len(files) <= 2:
+    if len(files) <= 3:
         stdout = os.dup(1)
         os.dup2(out,1)
         os.spawnv(os.P_WAIT,sfcat,['sfcat',]+options+files)
