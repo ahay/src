@@ -17,7 +17,7 @@
 ##   along with this program; if not, write to the Free Software
 ##   Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
 
-import os,sys,string
+import os,sys,string,tempfile
 
 sfcat = os.path.join(os.environ.get('RSFROOT'),'bin/sfcat')
 
@@ -34,15 +34,13 @@ def rcat(files,options,out):
         middle = len(files)/2
         first = files[:middle]
         secon = files[middle:]
-        ffile = string.join(first,'_')+'@'
-        sfile = string.join(secon,'_')+'@'
-        rcat(first,options,os.open(ffile,os.O_WRONLY | os.O_CREAT))
-        if sfile != ffile:
-            rcat(secon,options,os.open(sfile,os.O_WRONLY | os.O_CREAT))
+        fd,ffile = tempfile.mkstemp()
+        sd,sfile = tempfile.mkstemp()
+        rcat(first,options,fd)
+        rcat(secon,options,sd)
         rcat([ffile,sfile],options,out)
         os.system('sfrm ' + ffile)
-        if sfile != ffile:
-            os.system('sfrm ' + sfile)
+        os.system('sfrm ' + sfile)
 
 if __name__ == "__main__":
     options = []
