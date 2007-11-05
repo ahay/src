@@ -47,10 +47,10 @@ int main(int argc, char *argv[])
     /* if y, do adjoint transform */
 
     if (!sf_getbool("unit",&unit)) unit=false;
-    /* if y, use unitary scaling (orthonormal transform) */
+    /* if y, use unitary scaling */
 
     if (NULL == (type=sf_getstring("type"))) type="linear";
-    /* wavelet type */
+    /* [haar,linear] wavelet type, the default is linear  */
 
     wavelet_init(n1,inv,unit,type[0]);
 
