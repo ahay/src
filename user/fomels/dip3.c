@@ -73,7 +73,7 @@ void dip3(int dip                 /* 1 - inline, 2 - crossline */,
 /*< estimate local dip >*/
 {
     int i, iter, k;
-    float mean, usum, usum2, psum, ui, pi, lam;
+    float mean, usum, usum2, psum, pi, lam;
     allpass ap;
  
     ap = allpass_init (nw,nj,n1,n2,n3,p);

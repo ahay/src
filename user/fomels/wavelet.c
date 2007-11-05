@@ -23,7 +23,7 @@
 static int nt;
 static bool inv, unit;
 static void (*transform)(bool);
-static float *t, s, si;
+static float *t, *w;
 
 static void linear(bool adj) 
 /* Lifting linear-interpolation transform in place */
@@ -100,13 +100,11 @@ static void haar(bool adj)
 void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type) 
 /*< allocate space >*/
 {
+    int i, j;
+    float wi;
+
     inv = inv1;
     unit = unit1;
-
-    if (unit) {
-	s = sqrtf(2.0f);
-	si = 1.0f/s;
-    }
 
     for (nt=1; nt < n; nt *= 2) ;
     t = sf_floatalloc(nt);
@@ -122,12 +120,25 @@ void wavelet_init(int n /* data size */, bool inv1, bool unit1, char type)
 	    sf_error("Unknown wavelet type=%c",type);
 	    break;
     }
+
+    if (unit) {
+	w = sf_floatalloc(nt);
+
+	w[0] = sqrtf((float) nt);
+	wi = 0.5;	
+	for (j=1; j <= nt/2; j *= 2, wi *= 2) {
+	    for (i=0; i < nt-j; i += 2*j) {
+		w[i+j] = sqrtf(wi);
+	    }
+	}
+    }
 }
 
 void wavelet_close(void) 
 /*< deallocate space >*/
 {
     free (t);
+    if (unit) free(w);
 }
 
 void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
@@ -143,17 +154,18 @@ void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
 		if (it < ny) {
-		    if (unit) {
-			t[i+j]=si*y[it];
-			t[i] *= s;
-		    } else {
-			t[i+j]=y[it];
-		    }
+		    t[i+j]=y[it];
 		    it++;
 		} else {
 		    t[i+j]=0.;
 		}
 	    }	    	    
+	}
+
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		t[it] *= w[it];
+	    }
 	}
     } else {
 	for (it=0; it < nx; it++) {
@@ -164,23 +176,24 @@ void wavelet_lop(bool adj, bool add, int nx, int ny, float *x, float *y)
 	}
     }
 
-    transform(adj);
+    transform(adj);    
 
     if (adj) {
 	for (it=0; it < nx; it++) {
 	    x[it] += t[it];
 	}
     } else {
+	if (unit) {
+	    for (it=0; it < nt; it++) {
+		t[it] *= w[it];
+	    }
+	}
+
 	y[0] += t[0];
 	it = 1;
 	for (j=nt/2; j >= 1; j /= 2) {
 	    for (i=0; i < nt-j; i += 2*j) {
-		if (unit) {
-		    y[it] += si*t[i+j];
-		    t[i]  *= s;
-		} else {
-		    y[it] += t[i+j];
-		}
+		y[it] += t[i+j];
 		it++;
 		if (it >= ny) return;
 	    }	    	    
