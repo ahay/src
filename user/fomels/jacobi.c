@@ -56,18 +56,19 @@ float jacobi(float** a     /* matrix to rotate */,
     s2=s*s;
     cs=c*s;
 
+    aj[j] = a[j][j]*c2+2*a[j][k]*cs+a[k][k]*s2;
+    ak[k] = a[j][j]*s2-2*a[j][k]*cs+a[k][k]*c2;
+    ak[j] = (a[k][k]-a[j][j])*cs+a[j][k]*(c2-s2);
+    aj[k]=ak[j];
+
     for (i=0; i < j; i++) {
 	aj[i] = a[i][k]*s+a[i][j]*c;
 	ak[i] = a[i][k]*c-a[i][j]*s;
     }
-    aj[j] = a[j][j]*c2+2*a[j][k]*cs+a[k][k]*s2;
-    ak[j] = -a[j][j]*cs+a[j][k]*c2-a[j][k]*s2+a[k][k]*cs;
     for (i=j+1; i < k; i++) {
 	aj[i] = a[i][k]*s+a[j][i]*c;
 	ak[i] = a[i][k]*c-a[j][i]*s;
     }
-    aj[k]=ak[j];
-    ak[k] = a[j][j]*s2-2*a[j][k]*cs+a[k][k]*c2;
     for (i=k+1; i < n; i++) {
 	aj[i] = a[k][i]*s+a[j][i]*c;
 	ak[i] = a[k][i]*c-a[j][i]*s;
