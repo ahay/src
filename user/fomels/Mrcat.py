@@ -20,6 +20,7 @@
 import os,sys,string,tempfile
 
 sfcat = os.path.join(os.environ.get('RSFROOT'),'bin/sfcat')
+sfrm  = os.path.join(os.environ.get('RSFROOT'),'bin/sfrm')
 
 def rcat(files,options,out):
     'Call sfcat recursively on a list of files'
@@ -39,8 +40,8 @@ def rcat(files,options,out):
         rcat(first,options,fd)
         rcat(secon,options,sd)
         rcat([ffile,sfile],options,out)
-        os.system('sfrm ' + ffile)
-        os.system('sfrm ' + sfile)
+        os.system(sfrm + ' ' + ffile)
+        os.system(sfrm + ' ' + sfile)
 
 if __name__ == "__main__":
     options = []
